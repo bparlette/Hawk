@@ -127,7 +127,7 @@ video.mini{cursor:pointer;touch-action:manipulation}
 </div></div>
 <header><h1>Shell Shock Live</h1><div class="tag">Official hype trailer · filmed on the cabinet · all 15 levels, start to finale</div></header>
 <main>
-  <p class="dl">Downloads (cabinet cut, sound on): <a href="v/full_trailer.mp4" download>Full trailer · 1:04 · 16.0 MB</a> · every level's mini movie is below</p>
+  <p class="dl">Downloads (cabinet cut, sound on): <a href="#top" id="fullplay">Full trailer · 1:04 · 16.0 MB · plays in the cabinet</a> · every level's mini movie is below</p>
   <a class="play" href="../shell-shock-live/">▶ PLAY NOW<small>Free in your browser · shellshock-live.surge.sh</small></a>
   <nav class="jump"><a href="#levels">All levels</a><a href="#level1">Level 1: HALLWAY FIRE</a><a href="#level2">Level 2: STREET RUMBLE</a><a href="#level3">Level 3: SEWER SHOWDOWN</a><a href="#level4">Level 4: SUNSET SHRED</a><a href="#level5">Level 5: DOCKSIDE DOUBLE-CROSS</a><a href="#level6">Level 6: FROSTBITE BOULEVARD</a><a href="#level7">Level 7: SCRAPYARD SMASH</a><a href="#level8">Level 8: FORTRESS OF RAZORBACK</a><a href="#level9">Level 9: SHADOWS OF EDO</a><a href="#level10">Level 10: PIRATE SHIP</a><a href="#level11">Level 11: WILD WEST TRAIN</a><a href="#level12">Level 12: FUTURE NYC 2105</a><a href="#level13">Level 13: DIMENSION X</a><a href="#level14">Level 14: TECHNODROME PORTAL</a><a href="#level15">Level 15: SHREDDER&#x27;S TOWER</a></nav>
   
@@ -381,4 +381,4 @@ video.mini{cursor:pointer;touch-action:manipulation}
   secs.forEach(function(s){ io.observe(s); });
 })();
 </script>
-</body></html>
+<script>(function(){var a=document.getElementById("fullplay");if(!a)return;a.addEventListener("click",function(e){e.preventDefault();var v=document.getElementById("hv");if(!v)return;(document.getElementById("screen")||v).scrollIntoView({behavior:"smooth",block:"center"});try{v.currentTime=0;var b=document.getElementById("snd");if(v.muted&&b)b.click();}catch(_){}var p=v.play();if(p&&p.catch)p.catch(function(){v.muted=true;v.play();});});})();</script></body></html>
