@@ -1590,7 +1590,7 @@
     if (G.mode === "zoom") return galDrawZoom(G, L);
     text("GALLERY", W / 2, 12, 14, "#fff");
     galBtn(GAL_BACK, "< BACK", false);
-    ptext(L.tiles.filter((t) => t.s.st === 2).length + " PAINTED", W - 34, 12, 1, "#7fd85a", "right");
+    ptext(L.tiles.filter((t) => t.s.st === 2).length + " LIVE", W - 34, 12, 1, "#7fd85a", "right");
     ctx.save(); ctx.beginPath(); ctx.rect(0, GAL_Y0, W, GAL_Y1 - GAL_Y0); ctx.clip();
     for (const h of L.hdr) { const y = GAL_Y0 + h.y - G.sy + 5, c = GAL_GRP[h.g][1]; if (y < GAL_Y0 - 10 || y > GAL_Y1 + 10) continue; rect(GAL_X0, y + 4, GAL_COLS * (GAL_TW + GAL_GAP) - GAL_GAP, 1, c); ctx.globalAlpha = 1; rect(GAL_X0, y - 4, GAL_GRP[h.g][0].length * 6 + 6, 9, "#0c0618"); ptext(GAL_GRP[h.g][0] + " " + h.n, GAL_X0 + 2, y, 1, c, "left"); }
     L.tiles.forEach((tl, i) => {

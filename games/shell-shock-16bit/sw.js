@@ -2,7 +2,7 @@
 // Core shell + engine art are precached on install; every other same-origin GET (level scripts, level art) is cached on first
 // use, so a scene played once loads instantly and works offline. Each deploy gets a new VERSION (content hash) -> new cache;
 // old caches are deleted on activate. index.html / assets.json are network-first (fresh deploys win), everything else cache-first.
-const VERSION = "16bit-3-webp";
+const VERSION = "16bit-4-webp";
 const CACHE = "ssla-" + VERSION;
 const PRECACHE = ["./", "index.html", "assets.json", "manifest.webmanifest", "atlas_amber.webp", "atlas_donny.webp", "atlas_gunner.webp", "atlas_lenny.webp", "atlas_miko.webp", "atlas_ninja.webp", "atlas_rafe.webp", "atlas_ramrod.webp", "atlas_razor.webp", "atlas_scorcher.webp", "atlas_zap.webp", "ball.webp", "drill.webp", "hallway.jpg", "hud_portraits.webp", "icon180.png", "icon192.png", "icon512.png", "l1_lobby.jpg", "l1_twist.webp", "levels/enemies_street.webp", "map_bg.jpg", "room.jpg", "shared_sprites.webp", "sp_donny.webp", "sp_lenny.webp", "sp_miko.webp", "sp_rafe.webp", "stairs.webp", "stick.webp", "title_bg.jpg", "title_logo.webp"];
 self.addEventListener("install", (e) => {
