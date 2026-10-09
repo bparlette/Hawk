@@ -1,0 +1,29 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Shell Shock Arcade</title>
+<style>
+body{margin:0;background:#0d0a14;color:#f2ecff;font-family:system-ui,-apple-system,sans-serif}
+h1{font-size:clamp(28px,6vw,48px);text-align:center;margin:28px 12px 4px;color:#7fd85a;letter-spacing:2px}
+p.sub{text-align:center;color:#b9a9d9;margin:0 12px 24px}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:18px;max-width:1000px;margin:0 auto;padding:0 16px 40px}
+.card{background:#1b1428;border:2px solid #3a2a5a;border-radius:14px;overflow:hidden}
+.card img{width:100%;aspect-ratio:16/9;object-fit:cover;display:block}
+.px img{image-rendering:pixelated}
+.card h2{margin:14px 16px 4px;font-size:22px;color:#ffe040}
+.card p{margin:0 16px 12px;color:#c8b8e0;font-size:14px}
+.btns{display:flex;gap:10px;padding:0 16px 16px}
+.btns a{flex:1;text-align:center;padding:12px;border-radius:10px;font-weight:700;text-decoration:none}
+.play{background:#7fd85a;color:#0d0a14}.home{background:#3a2a5a;color:#f2ecff}
+footer{text-align:center;padding:0 16px 30px}footer a{color:#b9a9d9}
+</style></head><body>
+<h1>SHELL SHOCK</h1><p class="sub">One game, two art styles. 15 levels, Arcade, Speed Run, Boss Rush.</p>
+<div class="grid">
+ <div class="card"><img src="shell-shock-live-home/img/L1_01_combat1.jpg" alt="Shell Shock Live, painted" loading="lazy">
+  <h2>Shell Shock Live</h2><p>The painted original.</p>
+  <div class="btns"><a class="play" href="shell-shock-live/">Play</a><a class="home" href="shell-shock-live-home/">Home &amp; Trailer</a></div></div>
+ <div class="card px"><img src="shell-shock-16bit-home/img/L1_01_combat1.jpg" alt="Shell Shock 16-Bit" loading="lazy">
+  <h2>Shell Shock 16-Bit</h2><p>The same game in a Genesis-style 16-bit look.</p>
+  <div class="btns"><a class="play" href="shell-shock-16bit/">Play</a><a class="home" href="shell-shock-16bit-home/">Home &amp; Trailer</a></div></div>
+</div>
+<footer><a href="sprites/">All sprites</a></footer>
+</body></html>
