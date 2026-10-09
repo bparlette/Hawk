@@ -109,7 +109,7 @@ video.mini{cursor:pointer;touch-action:manipulation}
 #slb .lx{top:14px;right:14px}
 #slb .lp{left:10px;top:50%;transform:translateY(-50%)}
 #slb .ln{right:10px;top:50%;transform:translateY(-50%)}
-</style></head>
+/*secidx*/nav.secidx{display:flex;flex-wrap:wrap;justify-content:center;gap:8px;max-width:980px;margin:-6px auto 22px;padding:0 4px}nav.secidx a{flex:1 1 auto;min-width:140px;white-space:nowrap;display:flex;align-items:center;justify-content:center;text-align:center;min-height:44px;padding:8px 10px;border:2px solid var(--y);border-radius:10px;background:#160f1d;color:var(--y);text-decoration:none;font:900 15px/1.1 Impact,'Arial Black',sans-serif;letter-spacing:1px;touch-action:manipulation;-webkit-tap-highlight-color:transparent}@media (hover:hover){nav.secidx a:hover{background:var(--y);color:#140d1b}}nav.secidx a:focus-visible{background:var(--y);color:#140d1b;outline:none}nav.secidx a:active{transform:translateY(2px)}@media (max-width:480px){nav.secidx{display:grid;grid-template-columns:1fr 1fr}nav.secidx a{min-width:0;white-space:normal}nav.secidx a{font-size:14px}nav.secidx a:last-child:nth-child(odd){grid-column:1/-1}}#hero,section.lvl,section.guide{scroll-margin-top:10px}</style></head>
 <body>
 <div id="hero"><div id="cab">
     <div id="screen" class="crt"><video id="hv" autoplay muted loop playsinline webkit-playsinline disablepictureinpicture disableremoteplayback x-webkit-airplay="deny" preload="auto" poster="v/full_screen.jpg" aria-label="Shell Shock Live trailer playing on the arcade cabinet"><source src="v/full_screen.mp4" type="video/mp4"><source src="v/full_screen.webm" type="video/webm"></video></div>
@@ -129,6 +129,7 @@ video.mini{cursor:pointer;touch-action:manipulation}
 <main>
   <p class="dl">Downloads (cabinet cut, sound on): <a href="#top" id="fullplay">Full trailer · 1:04 · 16.0 MB · plays in the cabinet</a> · every level's mini movie is below</p>
   <a class="play" href="../shell-shock-live/">▶ PLAY NOW<small>Free in your browser · shellshock-live.surge.sh</small></a>
+  <nav class="secidx" aria-label="Jump to a section"><a href="#hero">▶ TRAILER</a><a href="#level1">LEVEL MOVIES</a><a href="#levels">THE LEVELS</a><a href="#cast">THE CAST</a><a href="#versus">PAINTED VS 16-BIT</a></nav>
   <nav class="jump"><a href="#levels">All levels</a><a href="#level1">Level 1: HALLWAY FIRE</a><a href="#level2">Level 2: STREET RUMBLE</a><a href="#level3">Level 3: SEWER SHOWDOWN</a><a href="#level4">Level 4: SUNSET SHRED</a><a href="#level5">Level 5: DOCKSIDE DOUBLE-CROSS</a><a href="#level6">Level 6: FROSTBITE BOULEVARD</a><a href="#level7">Level 7: SCRAPYARD SMASH</a><a href="#level8">Level 8: FORTRESS OF RAZORBACK</a><a href="#level9">Level 9: SHADOWS OF EDO</a><a href="#level10">Level 10: PIRATE SHIP</a><a href="#level11">Level 11: WILD WEST TRAIN</a><a href="#level12">Level 12: FUTURE NYC 2105</a><a href="#level13">Level 13: DIMENSION X</a><a href="#level14">Level 14: TECHNODROME PORTAL</a><a href="#level15">Level 15: SHREDDER&#x27;S TOWER</a></nav>
   
 <section class="lvl" id="level1">
@@ -381,4 +382,13 @@ video.mini{cursor:pointer;touch-action:manipulation}
   secs.forEach(function(s){ io.observe(s); });
 })();
 </script>
-<script>(function(){var a=document.getElementById("fullplay");if(!a)return;a.addEventListener("click",function(e){e.preventDefault();var v=document.getElementById("hv");if(!v)return;(document.getElementById("screen")||v).scrollIntoView({behavior:"smooth",block:"center"});try{v.currentTime=0;var b=document.getElementById("snd");if(v.muted&&b)b.click();}catch(_){}var p=v.play();if(p&&p.catch)p.catch(function(){v.muted=true;v.play();});});})();</script></body></html>
+<script>(function(){var a=document.getElementById("fullplay");if(!a)return;a.addEventListener("click",function(e){e.preventDefault();var v=document.getElementById("hv");if(!v)return;(document.getElementById("screen")||v).scrollIntoView({behavior:"smooth",block:"center"});try{v.currentTime=0;var b=document.getElementById("snd");if(v.muted&&b)b.click();}catch(_){}var p=v.play();if(p&&p.catch)p.catch(function(){v.muted=true;v.play();});});})();</script><script>/*secidx*/(function(){var nav=document.querySelector("nav.secidx");if(!nav)return;var M=10,job=0;
+function stop(){job++;}["wheel","touchstart","keydown"].forEach(function(ev){addEventListener(ev,stop,{passive:true});});
+function go(t){var my=++job,last=-1,still=0,fixes=0,n=0;var top0=t.id==="hero";
+function want(){return top0?0:Math.max(0,Math.min(scrollY+t.getBoundingClientRect().top-M,document.documentElement.scrollHeight-innerHeight));}
+scrollTo({top:want(),behavior:"smooth"});
+(function chk(){if(my!==job||++n>120)return;var y=scrollY;if(Math.abs(y-last)<1)still++;else still=0;last=y;
+if(still>=3){var w=want();if(Math.abs(w-y)>4&&fixes<6){fixes++;still=0;scrollTo({top:w,behavior:fixes>2?"auto":"smooth"});}else return;}
+setTimeout(chk,100);})();}
+nav.addEventListener("click",function(e){var a=e.target.closest&&e.target.closest("a[href^='#']");if(!a)return;var t=document.getElementById(a.getAttribute("href").slice(1));if(!t)return;
+e.preventDefault();go(t);try{history.replaceState(null,"",a.getAttribute("href"));}catch(_){}});})();</script></body></html>
