@@ -106,7 +106,7 @@ body{color:#eee;font:16px/1.4 system-ui,-apple-system,sans-serif;-webkit-tap-hig
     window.__hubGo=a.getAttribute("href");
     setTimeout(function(){ location.href=a.getAttribute("href"); },520); }
   window.__hub={move:move,confirm:confirm,get cur(){return cur;}};
-  addEventListener("pageshow",function(){ busy=false; opts.forEach(function(a){ a.classList.remove("go"); }); });
+  addEventListener("pageshow",function(){ busy=false; held=0; prev={}; opts.forEach(function(a){ a.classList.remove("go"); }); });
 
   /* keyboard */
   addEventListener("keydown",function(e){ var k=e.key;
@@ -119,16 +119,23 @@ body{color:#eee;font:16px/1.4 system-ui,-apple-system,sans-serif;-webkit-tap-hig
     a.addEventListener("mouseenter",function(){ if(!busy && matchMedia("(hover:hover)").matches) setSel(i); });
   });
   /* cabinet stick + buttons */
-  document.getElementById("hit-up").addEventListener("click",function(){ move(-1); });
-  document.getElementById("hit-dn").addEventListener("click",function(){ move(1); });
-  ["a","b","p"].forEach(function(k){ document.getElementById("hit-"+k).addEventListener("click",function(){ confirm(k); }); });
+  /* pointerdown (not click): iOS swallows rapid repeat clicks on the same spot as double-tap gestures */
+  function bindHit(id,fn){ var el=document.getElementById(id), last=0;
+    function go(e){ if(e.cancelable) e.preventDefault(); var n=Date.now(); if(n-last<60) return; last=n; fn(); }
+    if(window.PointerEvent) el.addEventListener("pointerdown",go); else el.addEventListener("touchstart",go,{passive:false});
+    el.addEventListener("click",function(e){ e.preventDefault(); if(Date.now()-last>400){ last=Date.now(); fn(); } }); }
+  bindHit("hit-up",function(){ move(-1); });
+  bindHit("hit-dn",function(){ move(1); });
+  ["a","b","p"].forEach(function(k){ bindHit("hit-"+k,function(){ confirm(k); }); });
+  document.addEventListener("dblclick",function(e){ e.preventDefault(); },{passive:false});
   /* gamepad: d-pad / left stick to move (with repeat), A or Start to select */
   var prev={}, held=0, next=0, raf=0;
   function poll(t){ raf=requestAnimationFrame(poll);
     var pads=navigator.getGamepads?navigator.getGamepads():[]; var up=false, dn=false, ok=false;
     for(var i=0;i<pads.length;i++){ var p=pads[i]; if(!p) continue; var b=p.buttons||[], ax=p.axes||[];
       var pr=function(n){ return !!(b[n]&&(b[n].pressed||b[n].value>0.5)); };
-      if(pr(12)||(ax[1]||0)<-0.5) up=true; if(pr(13)||(ax[1]||0)>0.5) dn=true; if(pr(0)||pr(9)) ok=true; }
+      var ay=p.mapping==="standard"?(ax[1]||0):0; /* non-standard pads: ignore drifting axes, use buttons */
+      if(pr(12)||ay<-0.5) up=true; if(pr(13)||ay>0.5) dn=true; if(pr(0)||pr(9)) ok=true; }
     var dir=up?-1:dn?1:0;
     if(dir!==held){ held=dir; if(dir){ move(dir); next=t+380; } } else if(dir && t>=next){ move(dir); next=t+150; }
     if(ok && !prev.ok) confirm("a"); prev.ok=ok; }
