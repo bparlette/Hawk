@@ -26,7 +26,7 @@ import * as THREE from "./three.module.min.js";
     const up = camera.updateProjectionMatrix;
     camera.updateProjectionMatrix = function () {
       const f = this.fov, a = this.aspect, A = W / H0;
-      if (this.isPerspectiveCamera && a < A * 0.98) { const k = Math.pow(A / a, 0.7); this.fov = Math.min(118, 2 * Math.atan(Math.tan(f * Math.PI / 360) * k) * 360 / Math.PI); this.__efov = this.fov; up.call(this); this.fov = f; }
+      if (this.isPerspectiveCamera && a < A * 0.98) { const k = Math.pow(A / a, 0.7); this.fov = Math.min(100, Math.atan(Math.tan(f * Math.PI / 360) * k) * 360 / Math.PI); /* (radians -> full angle in degrees; cap ~100 deg) */ this.__efov = this.fov; up.call(this); this.fov = f; }
       else { this.__efov = f; up.call(this); }
     };
   }
