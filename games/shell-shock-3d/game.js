@@ -6,7 +6,7 @@
 import * as THREE from "./three.module.min.js";
 (() => {
   "use strict";
-  const W = 384, H = 224;
+  const W = 384; let H = 224;
   const RES = 2; // HUD canvas backing store = 2x the 384x224 world, so the pixel font and painted portraits stay crisp
   const Q = location.search;
   const BOT = /[?&]bot\b/.test(Q), TURBO = Math.max(1, Math.min(12, +((Q.match(/[?&]turbo=(\d+)/) || [])[1] || 1)));
@@ -14,6 +14,22 @@ import * as THREE from "./three.module.min.js";
   const canvas = document.getElementById("game"); // HUD / menus (2D, transparent) over the WebGL canvas
   const glCanvas = document.getElementById("gl");
   canvas.width = W * RES; canvas.height = H * RES;
+
+  /*PFILL*/ const H0 = 224; // portrait fill: H grows with a tall container (see resize), 224 otherwise
+  function pfOn() { return H > H0; }
+  function pfCam() { // portrait: widen the vertical FOV so the hero + nearby action stay framed on a tall screen
+    if (typeof camera === "undefined" || !camera || camera.__pf) return; camera.__pf = 1;
+    const up = camera.updateProjectionMatrix;
+    camera.updateProjectionMatrix = function () {
+      const f = this.fov, a = this.aspect, A = W / H0;
+      if (this.isPerspectiveCamera && a < A * 0.98) { const k = Math.pow(A / a, 0.7); this.fov = Math.min(118, Math.atan(Math.tan(f * Math.PI / 360) * k) * 360 / Math.PI); /* (radians -> full angle in degrees) */ this.__efov = this.fov; up.call(this); this.fov = f; }
+      else { this.__efov = f; up.call(this); }
+    };
+  }
+  function pfBands(oy) { // menus / cards stay 384x224 in the middle of a tall screen: shade the bands around them
+    ctx.save(); ctx.globalAlpha = 1; ctx.fillStyle = STATE.scene === "title" ? "rgba(6,4,12,0.5)" : "rgba(4,3,10,0.9)";
+    ctx.fillRect(0, 0, W, oy); ctx.fillRect(0, oy + H0, W, H - oy - H0); ctx.restore();
+  }
   (function () { // FREEZE FIX from the 16-bit game: negative radii never throw
     const C = window.CanvasRenderingContext2D && CanvasRenderingContext2D.prototype; if (!C || C.__radiusSafe) return; C.__radiusSafe = true;
     const fix = (v) => (v < 0 ? 0 : v), arc = C.arc, ell = C.ellipse;
@@ -371,7 +387,7 @@ import * as THREE from "./three.module.min.js";
       cabEl.style.left = (sa.l + (vw - PW * S) / 2 - PX * S) + "px";
       cabEl.style.top = (sa.t + vh - PH * S - PY * S) + "px";
       const availH = vh - PH * S;
-      let gw = vw, gh = vw * 224 / 384;
+      let gw = vw, gh = portrait ? availH : vw * 224 / 384;
       if (gh > availH) { gh = availH; gw = gh * 384 / 224; }
       scrEl.style.cssText = "position:fixed;z-index:20;left:" + (sa.l + (vw - gw) / 2) + "px;top:" + (sa.t + Math.max(0, (availH - gh) / 2)) + "px;width:" + gw + "px;height:" + gh + "px;border-radius:0";
     } else {
@@ -383,6 +399,7 @@ import * as THREE from "./three.module.min.js";
     }
     const scr = document.getElementById("screen");
     const sw = scr.clientWidth, sh = scr.clientHeight;
+    { const nh = (innerHeight > innerWidth && sw > 0 && sh > 0) ? Math.max(H0, Math.min(Math.round(W * 2.4), Math.round(W * sh / sw))) : H0; if (nh !== H) { H = nh; canvas.height = H * RES; } }
     let cw = sw, ch = cw * H / W;
     if (ch > sh) { ch = sh; cw = ch * W / H; }
     canvas.style.width = cw + "px";
@@ -438,7 +455,7 @@ import * as THREE from "./three.module.min.js";
 
   function toInternal(e) {
     const r = canvas.getBoundingClientRect();
-    return { x: (e.clientX - r.left) / r.width * W, y: (e.clientY - r.top) / r.height * H };
+    return { x: (e.clientX - r.left) / r.width * W, y: (e.clientY - r.top) / r.height * H - (pfOn() && STATE.scene !== "stage" ? Math.round((H - H0) / 2) : 0) };
   }
   function toCab(e) {
     const r = cab.getBoundingClientRect();
@@ -1943,7 +1960,7 @@ import * as THREE from "./three.module.min.js";
       if (front !== "E") ST.wall(mat, x1, z1, x1, z0, 0, h, 0, 0, sideU(z1 - z0), 1, dk);
       if (front !== "W") ST.wall(mat, x0, z0, x0, z1, 0, h, 0, 0, sideU(z1 - z0), 1, dk);
       if (!opts.noRoof) ST.floor(M.roof, x0, z0, x1, z1, h, 5, [0.75, 0.75, 0.8]);
-      WORLD.blds.push({ x0, z0, x1, z1, h });
+      WORLD.blds.push({ x0, z0, x1, z1, h, front, f });
     }
     // block 1 north side (front faces south, z = -11): the burning building sits mid-block
     bld(-40, -36, -12, -11, 14, "S", "B");
@@ -1993,7 +2010,7 @@ import * as THREE from "./three.module.min.js";
     const sky = new THREE.Mesh(new THREE.CylinderGeometry(420, 420, 260, 32, 1, true, 0, Math.PI * 2),
       new THREE.MeshBasicMaterial({ map: skyT, side: THREE.BackSide, fog: false, depthWrite: false }));
     skyT.repeat.set(3, 1); sky.position.set(80, 92, -60); sky.renderOrder = -10; G.street.add(sky);
-    WORLD.sky = sky;
+    WORLD.sky = sky; WORLD.facMats = [M.facA, M.facB, M.facAr, M.facBr, M.facF];
     // ================= ROOFTOPS (roof group) =================
     // three walkable roofs + a plank walkway; parapets from the facade's cornice band
     const parT = tex("tex/facade_b.jpg", true);
@@ -2092,16 +2109,16 @@ import * as THREE from "./three.module.min.js";
     ST.build(G.street); RF.build(G.roof); SW.build(G.sewer);
     // ================= lights (a fixed pool of point lights is moved to the nearest sources) =================
     // street lamps
-    for (const L of WORLD.lampPos) WORLD.lights.push({ reg: "street", x: L[0], y: 5.6, z: L[1], c: 0xffc070, i: 26, d: 15 });
+    for (const L of WORLD.lampPos) WORLD.lights.push({ reg: "street", x: L[0], y: 5.6, z: L[1], c: 0xffc070, i: 26, d: 15, lamp: 1 });
     // neon spill from the painted signs (pink / cyan / green), fire, sewer lamps, lair TV
     [[30, -9.5, 0xff3fa0], [70, -9, 0xff7a20], [100, -9.5, 0x3fd8ff], [140, -9.5, 0x50ff80], [40, 9.5, 0xff40c0], [105, 9.5, 0x40c8ff], [152, -60, 0xff4080], [170, -100, 0x40e0ff], [152, -130, 0xffa040]]
-      .forEach(([x, z, c]) => WORLD.lights.push({ reg: "street", x, y: 3.2, z, c, i: 14, d: 10 }));
+      .forEach(([x, z, c]) => WORLD.lights.push({ reg: "street", x, y: 3.2, z, c, i: 14, d: 10, neon: 1 }));
     // (the tunnels' lamp pools come from buildSewerDetail, one per stretch)
     WORLD.lights.push({ reg: "sewer", x: 90, y: SY + 1.4, z: -9.4, c: 0x60ffd0, i: 10, d: 9, flick: 1 });
     WORLD.lights.push({ reg: "sewer", x: 94, y: SY + 4, z: -8, c: 0xffc080, i: 18, d: 12 });
     WORLD.lights.push({ reg: "sewer", x: 88, y: SY + 3, z: -6, c: 0xffa860, i: 14, d: 10, flick: 1 });
-    for (const r of ROOFS) WORLD.lights.push({ reg: "roof", x: (r.x0 + r.x1) / 2, y: r.y + 4, z: (r.z0 + r.z1) / 2, c: 0x9aa8ff, i: 12, d: 18 });
-    WORLD.lights.push({ reg: "roof", x: 116, y: 16, z: -30, c: 0xff40c0, i: 14, d: 14 });
+    for (const r of ROOFS) WORLD.lights.push({ reg: "roof", x: (r.x0 + r.x1) / 2, y: r.y + 4, z: (r.z0 + r.z1) / 2, c: 0x9aa8ff, i: 12, d: 18, moonFill: 1 });
+    WORLD.lights.push({ reg: "roof", x: 116, y: 16, z: -30, c: 0xff40c0, i: 14, d: 14, neon: 1 });
     buildZones();
   }
   function mergeGeos(gs) { // minimal BufferGeometry merge (non-indexed position/normal/uv)
@@ -2127,7 +2144,7 @@ import * as THREE from "./three.module.min.js";
       WORLD.cols.push({ x, z, r: 0.25 });
     }
     WORLD.groups.street.add(new THREE.Mesh(mergeGeos(gs), lam(null, { color: 0x30343c, vertexColors: false })));
-    WORLD.groups.street.add(new THREE.Mesh(mergeGeos(heads), new THREE.MeshBasicMaterial({ color: 0xffe0a0 })));
+    WORLD.lampHeadMat = new THREE.MeshBasicMaterial({ color: 0xffe0a0 }); WORLD.groups.street.add(new THREE.Mesh(mergeGeos(heads), WORLD.lampHeadMat));
     // light cones under the heads (additive glow quads on the ground) are drawn by the pooled lights
   }
   // ---- vehicles: extruded side silhouettes (painted side art on both faces) ----
@@ -2213,7 +2230,7 @@ import * as THREE from "./three.module.min.js";
       const base = new THREE.Mesh(new THREE.BoxGeometry(2.6, 0.5, 2.0), frameM); base.position.set(x, y + 0.25, z); group.add(base);
       const gl = new THREE.Mesh(new THREE.PlaneGeometry(2.4, 1.8), glass); gl.rotation.x = -Math.PI / 2; gl.position.set(x, y + 0.52, z); group.add(gl);
       WORLD.cols.push({ box: [x - 1.4, z - 1.1, x + 1.4, z + 1.1], y });
-      WORLD.lights.push({ reg: "roof", x, y: y + 1.2, z, c: 0xffb060, i: 6, d: 6 });
+      WORLD.lights.push({ reg: "roof", x, y: y + 1.2, z, c: 0xffb060, i: 6, d: 6, lamp: 1 });
     }
     // AC units + vents
     const acM = new THREE.MeshLambertMaterial({ map: canvasTex(64, 64, (g) => { g.fillStyle = "#8a8e96"; g.fillRect(0, 0, 64, 64); g.fillStyle = "#4a4e56"; for (let i = 6; i < 60; i += 6) g.fillRect(4, i, 56, 2); g.strokeStyle = "#2a2e36"; g.lineWidth = 3; g.strokeRect(1, 1, 62, 62); }) });
@@ -3474,6 +3491,7 @@ import * as THREE from "./three.module.min.js";
       const spr = sk && p.sk.bailT > 0 ? { src: "atlas_" + nm + ".webp", fr: ATLAS[nm][p.sk.bailT > 25 ? "hurt" : "down"], k: TURTLE_K } : actorSprite(p);
       const b = put(p, spr, 0, blink ? 0.45 : 1, sk && (p.sk.air || p.sk.n[1] < 0.95) ? 0 : 0.95, { gx: p.gx, gy: p.gy + (sk && !(p.sk.bailT > 25) ? 0.1 : 0), gz: p.gz, fy: p.fy });
       if (sk && !(p.sk.bailT > 0)) { heroLean(b); b.lean = true; } else b.lean = false;
+      if (p.crouch) { b.mesh.scale.y *= 0.72; b.mesh.scale.x *= 1.08; }
     }
     for (const e of STATE.enemies) {
       if (e.state === "fly" && e.t > 30) continue;
@@ -3545,7 +3563,7 @@ import * as THREE from "./three.module.min.js";
   // =====================================================================================================
   const LEVELS = [];
   let renderer, scene, camera;
-  const CAM = { pos: new THREE.Vector3(-10, 8, 14), look: new THREE.Vector3(0, 1, 0), yaw: 0, right: new THREE.Vector3(1, 0, 0), fwd: new THREE.Vector3(0, 0, -1), uDot: 1, amb: [0.6, 0.6, 0.72], fov: 52, snap: true, fade: 0 };
+  const CAM = { pos: new THREE.Vector3(-10, 8, 14), look: new THREE.Vector3(0, 1, 0), yaw: 0, right: new THREE.Vector3(1, 0, 0), fwd: new THREE.Vector3(0, 0, -1), uDot: 1, amb: [0.6, 0.6, 0.72], fov: 52, snap: true, fade: 0, sr: new THREE.Vector3(1, 0, 0), sf: new THREE.Vector3(0, 0, -1) };
   const LIGHTS = { pts: [], active: [] };
   const REGION = { cur: "street" };
   const HEMI = { street: [0x8a8ac8, 0x3a2a30, 1.25], roof: [0x9aa0d8, 0x3a3040, 1.35], sewer: [0x6a9a70, 0x20281c, 1.1], inside: [0xc8d8c0, 0x3a3020, 1.0], subway: [0xc8d8d0, 0x2a2622, 1.05] };
@@ -3561,6 +3579,8 @@ import * as THREE from "./three.module.min.js";
     moon = new THREE.DirectionalLight(0x9fb0ff, 0.7); moon.position.set(-40, 80, 60); scene.add(moon); scene.add(moon.target);
     for (let i = 0; i < 6; i++) { const L = new THREE.PointLight(0xffffff, 0, 10, 1.6); scene.add(L); LIGHTS.pts.push(L); }
     buildWorld(scene); buildDecor();
+    buildStealth(); buildVan(); buildDay();
+    Object.assign(window.__ss || {}, { STL, CAMS, VAN, DAY, daySkip, camCycle, vanEnter: () => vanEnter(STATE.player), vanExit: () => vanExit(STATE.player) });
     fit3D();
   }
   function fit3D() {
@@ -3570,7 +3590,7 @@ import * as THREE from "./three.module.min.js";
     let pr = Math.min(window.devicePixelRatio || 1, 2);
     if (cw * ch * pr * pr > 1.25e6) pr = Math.sqrt(1.25e6 / (cw * ch));
     renderer.setPixelRatio(pr); renderer.setSize(Math.max(64, Math.round(cw)), Math.max(36, Math.round(ch)), false);
-    camera.aspect = cw / ch; camera.updateProjectionMatrix();
+    pfCam(); camera.aspect = cw / ch; camera.updateProjectionMatrix();
   }
   addEventListener("resize", () => setTimeout(fit3D, 0));
   // ---------- zones ----------
@@ -3624,7 +3644,7 @@ import * as THREE from "./three.module.min.js";
       clear: false, phase: "waves", bossT: 0, kills: 0, playT: 0, tagT: 0, deaths: 0, lives: 3, secrets: 0, ramrodOn: false, bossDown: false, intro: 0, pod: null, win: null, over: null,
       banner: null, lobbySeen: false, subwaySeen: false, trainWarned: false, train: null, elev: null, lairFound: false, roofSeen: false, sewerSeen: false, pBark: null, barkCd: 0, specT: 0, cardT: 150, camX: 0, wave: 0, near: null });
     resetWorldBits(); resetLevel();
-    STATE.hasBoard = false; STATE.slowT = 0; ffReset(); for (const it of WORLD.inter) if (it.kind === "board") it.taken = false; if (WORLD.boardProp) { WORLD.boardProp.visible = true; WORLD.boardRing.visible = true; }
+    STATE.hasBoard = false; STATE.slowT = 0; ffReset(); vanResetAll(); STL.td = 0; STL.spotted = 0; for (const it of WORLD.inter) if (it.kind === "board") it.taken = false; if (WORLD.boardProp) { WORLD.boardProp.visible = true; WORLD.boardRing.visible = true; }
     setZone(zoneById("block1"));
     const p = STATE.player; p.fy = floorAt("street", p.gx, p.gz); p.gy = p.fy;
     CAM.snap = true;
@@ -3642,7 +3662,7 @@ import * as THREE from "./three.module.min.js";
     ["block2", "purple", 160, -97], ["block2", "purple", 164.5, -101], ["block2", "gunner", 157.5, -104], ["block2", "sword", 162, -108], ["block2", "blue", 166, -99], ["block2", "purple", 156, -100.5],
     ["sewerA", "purple", 66, 1], ["sewerA", "blue", 71, -1.5], ["sewerA", "star", 74, 1.8], ["sewerA", "sword", 127, 0.5], ["sewerA", "purple", 131, 1.6],
     ["sewerB", "sword", 162, -49], ["sewerB", "purple", 161, -54], ["sewerB", "dasher", 163.2, -58],
-    ["roofs", "purple", 97, -20], ["roofs", "star", 101, -26], ["roofs", "blue", 94, -28],
+    ["roofs", "purple", 97, -20], ["roofs", "star", 101, -26], ["roofs", "blue", 94, -28], ["roofs", "purple", 146, -19],
     ["subway", "purple", 41, 48.2], ["subway", "sword", 45.5, 47], ["subway", "blue", 49, 49.2], ["subway", "dasher", 52.5, 47.6],
     ["subway", "star", 107, 48.5], ["subway", "purple", 112, 47.4], ["subway", "heavy", 116, 49.2],
   ];
@@ -3660,8 +3680,8 @@ import * as THREE from "./three.module.min.js";
   function leashStep(e, p) {
     if (!e.post) return false;
     const dpx = mDist(p.x, p.y, e.x, e.y), dpost = mDist(e.x, e.y, e.post.x, e.post.y), alive = p.deadT === 0;
-    if (e.state !== "walk") { if (e.idle || e.home) engage(e); return false; } // hit / grabbing / downed: the reused AI owns it
-    if (e.idle && alive && dpx < AGGRO) { engage(e); for (const o of STATE.enemies) if (o.idle && o.post && mDist(o.post.x, o.post.y, e.post.x, e.post.y) < 5) engage(o); }
+    if (e.state !== "walk") { if (e.idle || e.home) { if (e.sentry && e.idle && !e.silent && !e.alerted) stealthAlert(e, p); engage(e); } return false; } // hit / grabbing / downed: the reused AI owns it
+    if (e.idle && alive && dpx < AGGRO && !(e.sentry && roofStealth())) { engage(e); for (const o of STATE.enemies) if (o.idle && o.post && mDist(o.post.x, o.post.y, e.post.x, e.post.y) < 5) engage(o); }
     if (e.home && alive && dpx < AGGRO * 0.6 && dpost < LEASH * 0.7) engage(e);
     if (!e.idle && !e.home && (dpost > LEASH || dpx > LOSE || !alive)) { e.home = true; e.token = false; e.back = 1; e.taunt = 0; }
     if (!e.idle && !e.home) return false;
@@ -3672,7 +3692,7 @@ import * as THREE from "./three.module.min.js";
       if (Math.abs(mx) >= 2) e.x += Math.sign(mx) * Math.min(sp, Math.abs(mx)); if (Math.abs(my) >= 1.5) e.y += Math.sign(my) * Math.min(0.6, Math.abs(my));
       e.facing = mx >= 0 ? 1 : -1; e.walkT++; return true;
     }
-    e.walkT = 0; if (dpx < 16) e.facing = p.x >= e.x ? 1 : -1; // idle: stand the post, watch the player
+    e.walkT = 0; if (dpx < 16 && !e.sentry) e.facing = p.x >= e.x ? 1 : -1; // idle: stand the post, watch the player
     return true;
   }
   function updateLocks(p) { // (name kept from the arena version) camera window + the placed encounters + the win
@@ -3744,17 +3764,17 @@ import * as THREE from "./three.module.min.js";
   function stickToWorld(dx, dy) {
     const z = STATE.zone;
     if (corridor(z)) return { x: z.u[0] * dx + z.v[0] * dy, z: z.u[1] * dx + z.v[1] * dy };
-    return { x: CAM.right.x * dx - CAM.fwd.x * dy, z: CAM.right.z * dx - CAM.fwd.z * dy };
+    return { x: CAM.sr.x * dx - CAM.sf.x * dy, z: CAM.sr.z * dx - CAM.sf.z * dy };
   }
   function worldToStick(wx, wz) {
     const z = STATE.zone;
     if (corridor(z)) return { dx: wx * z.u[0] + wz * z.u[1], dy: wx * z.v[0] + wz * z.v[1] };
-    return { dx: wx * CAM.right.x + wz * CAM.right.z, dy: -(wx * CAM.fwd.x + wz * CAM.fwd.z) };
+    return { dx: wx * CAM.sr.x + wz * CAM.sr.z, dy: -(wx * CAM.sf.x + wz * CAM.sf.z) };
   }
   function move3D(p) {
     const v = inputVec(), z = STATE.zone;
     if (!v) { p.walkT = 0; return; }
-    const sp = (p.attackT > 0 && p.z === 0 ? 0.028 : p.carry ? 0.05 : STATE.locked ? 0.064 : 0.082) * v.mag;
+    const sp = (p.attackT > 0 && p.z === 0 ? 0.028 : p.carry ? 0.05 : STATE.locked ? 0.064 : 0.082) * v.mag * (p.crouch ? 0.45 : sprintK(p));
     const w = stickToWorld(v.dx, v.dy), mx = w.x * sp, mz = w.z * sp;
     const du = mx * z.u[0] + mz * z.u[1], dv = mx * z.v[0] + mz * z.v[1];
     p.x += du / PX; p.y += dv / DY; p.walkT++;
@@ -3776,7 +3796,8 @@ import * as THREE from "./three.module.min.js";
   }
   // ---------- layers: manholes, ladders, fire escapes ----------
   function nearInteract(p) {
-    if (STATE.locked || p.z > 0 || p.attackT > 0 || p.deadT > 0 || p.carry) return null;
+    if (STATE.locked || p.z > 0 || p.attackT > 0 || p.deadT > 0 || p.carry || VAN.on) return null;
+    if (p.layer === "roof") { const t = stealthTarget(p); if (t) return t; }
     for (const it of WORLD.inter) if (!it.taken && it.layer === p.layer && Math.hypot(p.gx - it.x, p.gz - it.z) < it.r) return it;
     // on the live track right under a platform edge: climb up (jumping works too)
     if (p.layer === "subway" && p.fy < SUB.TY + 0.05 && p.gz > SUB.zE - 1.2 && p.gz < SUB.zE && subFloor(p.gx, SUB.zE + 0.9) === SUB.PY) {
@@ -3894,6 +3915,7 @@ import * as THREE from "./three.module.min.js";
     for (const q of STATE.pops || []) q.t++; if (STATE.pops && STATE.pops.length && STATE.pops[0].t > 80) STATE.pops.shift();
     if (STATE.slowT > 0) { STATE.slowT--; if (STATE.slowT % 3 !== 0) return; } // takedown / counter slow motion
     STATE.playT++;
+    dayTick(); camTick(p); stealthTick(p);
     if (p.layer === "subway") updateTrain(p);
     if (p.climb) { updateClimb(p); STATE.fx = STATE.fx.filter((f) => ++f.t < f.life); return; }
     const raw = { a: anyPressed("j") || BTN_A.hit, b: anyPressed("k") || BTN_B.hit, p: anyPressed("l") || BTN_P.hit, e: anyPressed("e") };
@@ -3903,7 +3925,7 @@ import * as THREE from "./three.module.min.js";
     STATE.fx = STATE.fx.filter((f) => ++f.t < f.life);
     if (STATE.fx.length > 240) STATE.fx.splice(0, STATE.fx.length - 240);
     STATE.near = nearInteract(p);
-    if (STATE.near && (raw.p || raw.e) && !p.grabbedBy && p.hurtT === 0 && p.downT === 0) { if (STATE.near.kind === "board") { pickupBoard(p); IBUF.p = 0; return; } if (p.sk && p.sk.on) skateOff(p); startClimb(p, STATE.near); IBUF.p = 0; return; }
+    if (STATE.near && (raw.p || raw.e) && !p.grabbedBy && p.hurtT === 0 && p.downT === 0) { if (STATE.near.kind === "board") { pickupBoard(p); IBUF.p = 0; return; } if (STATE.near.kind === "silent") { stealthTakedown(p, STATE.near.e); IBUF.p = 0; return; } if (STATE.near.kind === "van") { vanEnter(p); IBUF.p = 0; return; } if (p.sk && p.sk.on) skateOff(p); startClimb(p, STATE.near); IBUF.p = 0; return; }
     const cP = IBUF.c > 0, kP = IBUF.k > 0;
     if (p.sk && p.sk.on && (p.hurtT > 0 || p.downT > 0 || p.grabbedBy || p.deadT > 0 || p.layer !== "sewer" || !skAllowedZone(STATE.zone))) { skateOff(p, "hit"); }
     const skating = !!(p.sk && p.sk.on);
@@ -3931,6 +3953,7 @@ import * as THREE from "./three.module.min.js";
       if (p.grabbedBy && p.mash >= (zap ? 8 : 6)) releaseGrab(true);
     } else if (p.downT > 0) { p.downT--; p.walkT = 0; p.x += p.kvx; p.kvx *= 0.9; }
     else if (p.hurtT > 0) p.hurtT--;
+    else if (VAN.on) { vanDrive(p, raw); IBUF.a = IBUF.b = IBUF.p = 0; }
     else if (skating) { skateInput(p, aP, bP, kP); IBUF.k = 0; }
     else if (p.ffL) { ffLungeStep(p); IBUF.c = 0; }
     else if (cP && ffCounter(p)) { IBUF.c = 0; IBUF.a = 0; }
@@ -3958,10 +3981,11 @@ import * as THREE from "./three.module.min.js";
       let hb = 0; if (p.hitSet) for (const o of p.hitSet) if (isFoe(o)) hb++;
       checkPlayerHits(p);
       let ha = 0; if (p.hitSet) for (const o of p.hitSet) if (isFoe(o)) ha++;
-      if (ha > hb) { p.ffHits = (p.ffHits || 0) + ha - hb; ffAddHits(ha - hb, p); }
+      if (ha > hb) { p.ffHits = (p.ffHits || 0) + ha - hb; ffAddHits(ha - hb, p); comicHit(p); }
       if (p.attackT === 0) { if (p.atk && p.atk[0] === "c") { p.comboT = 18; if (p.ffSwing && !p.ffHits && FF.combo > 0) ffBreak("whiff"); } p.ffSwing = false; p.atk = null; p.spec = null; }
     } else { if (p.comboT > 0) p.comboT--; if (p.buf > 0) p.buf--; }
     if (skating && p.sk.on) { skateMove(p); }
+    else if (VAN.on) { /* the van moved the player */ }
     else if (p.ffL) { resolvePlayer(p, ox, oy); p.gy = p.fy + p.z * ZH; }
     else {
     p.z += p.vz;
@@ -3989,7 +4013,7 @@ import * as THREE from "./three.module.min.js";
       const sh = projDef(s).hit; if (p.deadT === 0 && Math.abs(s.x - p.x) < sh[0] && Math.abs(s.y - p.y) < sh[1] && p.z < sh[2] && p.inv === 0) { hurtPlayer(shotDmg(s)); return false; }
       return s.x > STATE.camX - 40 && s.x < STATE.camX + W + 40;
     });
-    if (p.gx !== undefined && !(p.sk && p.sk.on)) { const g = toGlobal(STATE.zone, p.x, p.y); p.gx = g.gx; p.gz = g.gz; }
+    if (p.gx !== undefined && !(p.sk && p.sk.on) && !VAN.on) { const g = toGlobal(STATE.zone, p.x, p.y); p.gx = g.gx; p.gz = g.gz; }
   }
   // 3D aim help: in a full 3D street the stick rarely lines up a row exactly, so a swing turns to the nearest foe in front-ish
   function autoFace(p) {
@@ -4016,24 +4040,25 @@ import * as THREE from "./three.module.min.js";
     CAM.skY = sk ? lerp(CAM.skY === undefined ? p.gy : CAM.skY, p.gy, 0.08) : p.gy;
     _t.set(p.gx, (sk ? WORLD.SY + (CAM.skY - WORLD.SY) * 0.55 : p.gy) + 1.0, p.gz);
     if (p.climb) _t.y = p.gy + 0.9;
+    const transit = oneShot() && (p.climb || CAMS.afterT > 0);
+    if (transit) CAM.snap = false;
+    if (oneShot() && p.climb && p.climb.it.kind === "elev" && STATE.elev) { const to = p.climb.it.to, k = STATE.elev.k, kk = k * k * (3 - 2 * k); _t.x = lerp(_t.x, to.x, kk); _t.z = lerp(_t.z, to.z, kk); _t.y = lerp(_t.y, (floorAt(to.layer, to.x, to.z) || 0) + 1, kk); }
     if (STATE.locked) { const c = toGlobal(z, STATE.camX + W / 2, p.y); _t.x = lerp(_t.x, c.gx, 0.45); _t.z = lerp(_t.z, c.gz, 0.45); }
     _want.copy(_t).addScaledVector(_d, -C.dist); _want.y = _t.y + C.h;
     const B = z.box;
-    if (p.climb && (p.climb.it.kind === "climb" || p.climb.it.kind === "down")) { const sB = zoneById(p.layer === "roof" ? "block1" : p.climb.it.lx > 149 ? "block2" : "block1").box; _want.x = clamp(_want.x, sB[0], sB[2]); _want.z = clamp(_want.z, sB[1], sB[3]); }
+    if (transit && p.climb) { /* one continuous move: no zone box mid-transit */ }
+    else if (p.climb && (p.climb.it.kind === "climb" || p.climb.it.kind === "down")) { const sB = zoneById(p.layer === "roof" ? "block1" : p.climb.it.lx > 149 ? "block2" : "block1").box; _want.x = clamp(_want.x, sB[0], sB[2]); _want.z = clamp(_want.z, sB[1], sB[3]); }
     else { _want.x = clamp(_want.x, B[0], B[2]); _want.z = clamp(_want.z, B[1], B[3]); }
     // when the box pushes the camera in, lift it so the framing distance holds (never through a ceiling)
     const hd = Math.hypot(_want.x - _t.x, _want.z - _t.z); if (hd < C.dist * 0.8) _want.y += (C.dist * 0.8 - hd) * 0.7;
-    _want.y = Math.min(_want.y, B[4]);
-    if (z.reg === "sewer") _want.y = Math.min(_want.y, WORLD.SC - 0.3);
+    if (!(transit && p.climb)) { _want.y = Math.min(_want.y, B[4]); if (z.reg === "sewer") _want.y = Math.min(_want.y, WORLD.SC - 0.3); }
     _look.copy(_t).addScaledVector(_d, 2.6); _look.y = _t.y + (z.reg === "sewer" ? -0.1 : 0.55);
-    const k = CAM.snap ? 1 : 1 - Math.exp(-dt * (4.5 + 4 * (CAM.sk || 0)));
-    CAM.pos.lerp(_want, k); CAM.look.lerp(_look, CAM.snap ? 1 : 1 - Math.exp(-dt * 6));
-    if (z.reg === "sewer") CAM.pos.y = Math.min(CAM.pos.y, WORLD.SC - 0.3);
+    const k = CAM.snap ? 1 : 1 - Math.exp(-dt * (transit ? 2.6 : 4.5 + 4 * (CAM.sk || 0)));
+    CAM.pos.lerp(_want, k); CAM.look.lerp(_look, CAM.snap ? 1 : 1 - Math.exp(-dt * (transit ? 3.2 : 6)));
+    if (z.reg === "sewer" && !transit) CAM.pos.y = Math.min(CAM.pos.y, WORLD.SC - 0.3);
+    else if (z.reg === "sewer" && CAM.pos.y > WORLD.SC - 0.3) CAM.pos.y = lerp(CAM.pos.y, WORLD.SC - 0.3, 1 - Math.exp(-dt * 3));
     CAM.fov = lerp(CAM.fov, C.fov, CAM.snap ? 1 : 0.05); CAM.snap = false;
-    camera.position.copy(CAM.pos);
-    if (STATE.shake > 0) { const s = Math.min(0.25, STATE.shake * 0.012); camera.position.x += rnd(-s, s); camera.position.y += rnd(-s, s); }
-    camera.lookAt(CAM.look);
-    if (Math.abs(camera.fov - CAM.fov) > 0.05) { camera.fov = CAM.fov; camera.updateProjectionMatrix(); }
+    camFinal(dt, p, z);
     camBasis(z);
   }
   function camBasis(z) {
@@ -4049,7 +4074,7 @@ import * as THREE from "./three.module.min.js";
     const x = 20 + (titleT * 2.2) % 110;
     camera.position.set(x - 6, 4.2 + Math.sin(titleT * 0.3) * 0.6, 7.5); camera.lookAt(x + 6, 4.5, -9);
     if (camera.fov !== 55) { camera.fov = 55; camera.updateProjectionMatrix(); }
-    camBasis(zoneById("block1"));
+    camBasis(zoneById("block1")); CAM.sr.copy(CAM.right); CAM.sf.copy(CAM.fwd);
     REGION.cur = "street";
   }
   // ---------- lights: move the fixed pool to the nearest sources ----------
@@ -4064,7 +4089,7 @@ import * as THREE from "./three.module.min.js";
     LIGHTS.pts.forEach((P, i) => {
       const L = LIGHTS.active[i]; if (!L) { P.intensity = 0; return; }
       L.fl = L.flick === 2 ? 0.75 + 0.35 * Math.sin(t * 13 + L.x) * Math.sin(t * 7.3 + L.z) + Math.random() * 0.12 : L.flick === 1 ? 0.8 + 0.25 * Math.sin(t * 20) * Math.sin(t * 3.1) : 1;
-      P.position.set(L.x, L.y, L.z); P.color.setHex(L.c); P.intensity = L.i * L.fl; P.distance = L.d; P.decay = 1.4;
+      P.position.set(L.x, L.y, L.z); P.color.setHex(L.c); P.intensity = L.i * L.fl * dayLightScale(L); P.distance = L.d; P.decay = 1.4;
     });
     moon.intensity = under ? 0 : STATE.player && STATE.player.layer === "roof" ? 1.3 : 0.7;
     const H = HEMI[reg] || HEMI.street; hemi.color.setHex(H[0]); hemi.groundColor.setHex(H[1]); hemi.intensity = H[2];
@@ -4072,6 +4097,8 @@ import * as THREE from "./three.module.min.js";
     renderer.setClearColor(F[0], 1);
     CAM.amb = reg === "sewer" ? [0.55, 0.72, 0.55] : reg === "subway" ? [0.66, 0.7, 0.68] : reg === "inside" ? [0.68, 0.72, 0.64] : STATE.player && STATE.player.layer === "roof" ? [0.62, 0.64, 0.82] : [0.6, 0.6, 0.74];
     const out = !under; WORLD.groups.subway.visible = reg === "subway"; WORLD.groups.street.visible = out; WORLD.groups.roof.visible = out; WORLD.groups.sewer.visible = reg === "sewer"; WORLD.groups.inside.visible = reg === "inside";
+    const fr = CAMS.fromReg; if (oneShot() && fr && fr !== reg) { const fo = fr === "street"; if (fo) { WORLD.groups.street.visible = true; WORLD.groups.roof.visible = true; } else if (WORLD.groups[fr]) WORLD.groups[fr].visible = true; if (out && !fo) { scene.fog.density *= 0.6; } } // one-shot: both spaces exist mid-transit
+    if (STATE.scene !== "title" && STATE.scene !== "boot") dayApply(reg, under); else dayApply(reg, under);
     for (const h of WORLD.hydrants) h.rotation.y = CAM.yaw;
   }
   function render3D(dt, t) {
@@ -4079,14 +4106,14 @@ import * as THREE from "./three.module.min.js";
     if (STATE.zone && STATE.scene !== "title") REGION.cur = STATE.zone.reg;
     updateCamera(dt);
     updateLights(t);
-    stepDecor(dt, t, REGION.cur);
+    stepDecor(dt, t, REGION.cur); stealthDraw(); vanFrame(dt);
     updateArrows(t);
     if (STATE.scene === "stage" || STATE.scene === "card" || STATE.scene === "win" || STATE.scene === "over") { fxStep(); drawEntities(scene); drawBoard3D(); }
     else if (SKB) SKB.visible = false;
     else { for (const b of BILLS.pool) b.hide(); }
-    const ps = renderer.domElement.height / (2 * Math.tan(camera.fov * Math.PI / 360));
+    const ps = renderer.domElement.height / (2 * Math.tan((camera.__efov || camera.fov) * Math.PI / 360));
     for (const k in PART) PART[k].mat.uniforms.scale.value = ps;
-    renderer.render(scene, camera);
+    renderFinal();
   }
 
   // =====================================================================================================
@@ -4529,6 +4556,647 @@ import * as THREE from "./three.module.min.js";
     touchButtons();
   }
 
+  // =====================================================================================================
+  // ---------- DAY / NIGHT (new): a 6-minute day. Sun + moon, sky / fog / ambient colours, street lamps + neon switch on at
+  // dusk, building windows light up one by one, night shortens the rooftop sentries' sight. T skips 3 hours. ----------
+  // =====================================================================================================
+  const DAY = { t: +((Q.match(/[?&]time=([\d.]+)/) || [])[1] || 0.125), len: 360, el: -1, day: 0, night: 1, lamp: 1, lit: 1, dusk: 0, sunDir: new THREE.Vector3(), showT: 0, frozen: /[?&]timefreeze\b/.test(Q) };
+  const _dc = new THREE.Color(), _dc2 = new THREE.Color();
+  const smooth = (a, b, x) => { const k = clamp((x - a) / (b - a), 0, 1); return k * k * (3 - 2 * k); };
+  function dayClock() { const m = Math.floor(DAY.t * 24 * 60) % 1440, h = Math.floor(m / 60), mm = m % 60; return ((h + 11) % 12 + 1) + ":" + String(mm).padStart(2, "0") + (h < 12 ? " AM" : " PM"); }
+  function daySkip() { DAY.t = (DAY.t + 0.125) % 1; DAY.showT = 120; dayCompute(); SFX.menuMove && SFX.menuMove(); }
+  function dayCompute() {
+    const th = (DAY.t - 0.25) * Math.PI * 2; // 6 AM = sunrise in the east, noon overhead, 6 PM sunset
+    DAY.el = Math.sin(th);
+    DAY.sunDir.set(Math.cos(th) * 0.82, Math.sin(th), 0.42).normalize();
+    DAY.day = smooth(-0.1, 0.28, DAY.el); DAY.night = 1 - DAY.day;
+    DAY.dusk = Math.max(0, 1 - Math.abs(DAY.el - 0.02) / 0.22) * 0.9; // orange band around sunrise / sunset
+    DAY.lamp = 1 - smooth(-0.04, 0.14, DAY.el); // lamps + neon on at dusk, off after dawn
+    DAY.lit = 1 - smooth(-0.16, 0.2, DAY.el); // fraction of windows lit (they come on one by one through dusk)
+  }
+  dayCompute();
+  function dayTick() { // one 60 Hz step (stage only)
+    if (anyPressed("t")) daySkip();
+    if (!DAY.frozen) DAY.t = (DAY.t + 1 / 60 / DAY.len) % 1;
+    if (DAY.showT > 0) DAY.showT--;
+    dayCompute();
+  }
+  // ---- build: sky shader, sun + moon discs, window-light masks on the painted facades ----
+  const SKY_FS = "uniform sampler2D map; uniform vec2 rep; uniform float day; uniform float dusk; uniform vec3 top; uniform vec3 haze; uniform vec3 duskc; varying vec2 vUv;\nvoid main(){ vec4 t=texture2D(map, vUv*rep); vec3 c=t.rgb; float l=dot(c, vec3(0.3,0.59,0.11));\n vec3 sky=mix(haze, top, smoothstep(0.38, 0.95, vUv.y)); sky=mix(sky, duskc, dusk*(1.0-smoothstep(0.3,0.8,vUv.y)));\n vec3 dayc=mix(sky, c*1.4+sky*0.35, smoothstep(0.18, 0.5, l)*0.55);\n gl_FragColor=vec4(mix(c, dayc, day), 1.0);\n#include <colorspace_fragment>\n}";
+  function buildDay() {
+    if (WORLD.sky) {
+      const old = WORLD.sky.material, t = old.map;
+      WORLD.sky.material = new THREE.ShaderMaterial({ uniforms: { map: { value: t }, rep: { value: new THREE.Vector2(3, 1) }, day: { value: 0 }, dusk: { value: 0 }, top: { value: new THREE.Color(0x3d7fd8) }, haze: { value: new THREE.Color(0xb8cce0) }, duskc: { value: new THREE.Color(0xff8a50) } },
+        vertexShader: "varying vec2 vUv; void main(){ vUv=uv; gl_Position=projectionMatrix*modelViewMatrix*vec4(position,1.0); }", fragmentShader: SKY_FS, side: THREE.BackSide, depthWrite: false, fog: false });
+    }
+    const disc = (r, col, glow) => { const c = document.createElement("canvas"); c.width = c.height = 128; const g = c.getContext("2d"); const gr = g.createRadialGradient(64, 64, 0, 64, 64, 64); gr.addColorStop(0, col); gr.addColorStop(glow, col); gr.addColorStop(glow + 0.04, "rgba(255,255,255,0.25)"); gr.addColorStop(1, "rgba(255,255,255,0)"); g.fillStyle = gr; g.fillRect(0, 0, 128, 128); const tx = new THREE.CanvasTexture(c); tx.colorSpace = THREE.SRGBColorSpace;
+      const m = new THREE.Mesh(new THREE.PlaneGeometry(r, r), new THREE.MeshBasicMaterial({ map: tx, transparent: true, depthWrite: false, fog: false, blending: THREE.AdditiveBlending })); m.renderOrder = -9; m.frustumCulled = false; WORLD.groups.street.add(m); return m; };
+    DAY.sun = disc(70, "#fff6d8", 0.3); DAY.moon = disc(40, "#e8eeff", 0.42);
+    // facades: windows + neon from the painted art become an emissive mask; by day those pixels turn to dark glass
+    DAY.facPending = (WORLD.facMats || []).filter(Boolean);
+  }
+  function dayFacades() { // once the facade images are loaded: split each into a day map + a night window/neon glow map
+    if (!DAY.facPending || !DAY.facPending.length) return;
+    const done = new Map();
+    DAY.facPending = DAY.facPending.filter((m) => {
+      const t = m.map, im = t && t.image; if (!im || !im.width) return true;
+      const key = im.src || im; let pair = done.get(key) || DAY.facCache && DAY.facCache.get(key);
+      if (!pair) {
+        const w = Math.min(1024, im.width), h = Math.round(im.height * w / im.width), c1 = document.createElement("canvas"), c2 = document.createElement("canvas"); c1.width = c2.width = w; c1.height = c2.height = h;
+        const g1 = c1.getContext("2d"), g2 = c2.getContext("2d"); g1.drawImage(im, 0, 0, w, h); const d = g1.getImageData(0, 0, w, h), D = d.data, E = g2.createImageData(w, h), Ed = E.data;
+        for (let i = 0; i < D.length; i += 4) {
+          const r = D[i], g = D[i + 1], b = D[i + 2], mx = Math.max(r, g, b), mn = Math.min(r, g, b);
+          const warm = mx > 135 && r > b + 35 && r > 120 ? smooth(135, 200, mx) : 0, neon = mx - mn > 100 && mx > 165 ? smooth(100, 160, mx - mn) : 0, cool = b > 150 && b > r + 50 ? smooth(150, 210, b) * 0.8 : 0;
+          const k = Math.min(1, Math.max(warm, neon, cool));
+          Ed[i] = r * k; Ed[i + 1] = g * k; Ed[i + 2] = b * k; Ed[i + 3] = 255;
+          D[i] = r + (34 - r) * k * 0.85; D[i + 1] = g + (44 - g) * k * 0.85; D[i + 2] = b + (56 - b) * k * 0.85;
+        }
+        g1.putImageData(d, 0, 0); g2.putImageData(E, 0, 0);
+        pair = [c1, c2]; done.set(key, pair); (DAY.facCache || (DAY.facCache = new Map())).set(key, pair);
+      }
+      const mk = (c) => { const x = new THREE.CanvasTexture(c); x.colorSpace = THREE.SRGBColorSpace; x.wrapS = t.wrapS; x.wrapT = t.wrapT; x.repeat.copy(t.repeat); x.offset.copy(t.offset); x.anisotropy = t.anisotropy; return x; };
+      m.userData.nightMap = t; m.userData.dayMap = mk(pair[0]);
+      m.emissiveMap = mk(pair[1]); m.emissive = new THREE.Color(m.emissive && m.emissive.getHex() ? m.emissive.getHex() : 0xffffff);
+      if (m.emissive.getHex() !== 0xffffff) m.userData.keepEmissive = m.emissive.clone(), m.emissive.setHex(0xffffff);
+      m.userData.lit = { value: 1 };
+      m.onBeforeCompile = (sh) => { // each window cell switches on at its own moment as the evening goes on
+        sh.uniforms.uLit = m.userData.lit;
+        sh.fragmentShader = sh.fragmentShader.replace("#include <emissivemap_fragment>", "#ifdef USE_EMISSIVEMAP\n vec4 emissiveColor = texture2D( emissiveMap, vEmissiveMapUv ); vec2 cell = floor(vEmissiveMapUv * vec2(28.0, 9.0)); float hsh = fract(sin(dot(cell, vec2(12.9898, 78.233))) * 43758.5453); totalEmissiveRadiance *= emissiveColor.rgb * step(hsh, uLit * 1.02);\n#endif").replace("void main() {", "uniform float uLit;\nvoid main() {");
+      };
+      m.needsUpdate = true; (DAY.facMats || (DAY.facMats = [])).push(m);
+      return false;
+    });
+  }
+  // ---- per render frame: light colours / directions, lamps, sky, discs ----
+  function dayApply(reg, under) {
+    dayFacades();
+    const D = DAY, dy = D.day, nt = D.night;
+    if (D.facMats) for (const m of D.facMats) {
+      const useDay = D.lamp < 0.5; const want = useDay ? m.userData.dayMap : m.userData.nightMap; if (m.map !== want) { m.map = want; m.needsUpdate = true; }
+      m.userData.lit.value = D.lit; m.emissiveIntensity = 0.75 * D.lamp + (m.userData.keepEmissive ? 0.15 : 0);
+    }
+    if (WORLD.lampHeadMat) WORLD.lampHeadMat.color.setRGB(lerp(0.55, 1, D.lamp), lerp(0.56, 0.88, D.lamp), lerp(0.6, 0.63, D.lamp));
+    for (const s of WORLD.signs || []) s.material.color.setScalar(lerp(0.38, 1, D.lamp));
+    if (WORLD.sky && WORLD.sky.material.uniforms) { const U = WORLD.sky.material.uniforms; U.day.value = dy; U.dusk.value = D.dusk; }
+    // sun / moon discs far out along their directions
+    const cp = camera.position;
+    if (D.sun) { D.sun.position.copy(cp).addScaledVector(D.sunDir, 380); D.sun.lookAt(cp); D.sun.visible = !under && D.el > -0.08; D.sun.material.color.setRGB(1, lerp(0.75, 1, smooth(0, 0.3, D.el)), lerp(0.5, 1, smooth(0, 0.3, D.el))); }
+    if (D.moon) { D.moon.position.copy(cp).addScaledVector(D.sunDir, -380); D.moon.lookAt(cp); D.moon.visible = !under && D.el < 0.12; D.moon.material.opacity = smooth(0.12, -0.1, D.el); }
+    if (under) return;
+    // key light: sun by day (warm, orange at the horizon), moon by night (cool) - the old fixed moon is the night look
+    const sunUp = D.el > 0;
+    if (sunUp) moon.position.copy(D.sunDir).multiplyScalar(100); else moon.position.set(-40, 80, 60); // (the moon keeps the old night direction)
+    _dc.setHex(0x9fb0ff); if (sunUp) { _dc.setHex(0xfff0d8); _dc2.setHex(0xff9a58); _dc.lerp(_dc2, D.dusk); }
+    moon.color.copy(_dc); moon.intensity *= sunUp ? lerp(0.6, 2.2, smooth(0, 0.35, D.el)) : 1;
+    // hemisphere + fog + clear colour + sprite ambient: lerp the night values (unchanged) toward day / dusk
+    const Hn = HEMI[reg] || HEMI.street;
+    hemi.color.setHex(Hn[0]).lerp(_dc.setHex(0xc8dcff), dy); hemi.groundColor.setHex(Hn[1]).lerp(_dc.setHex(0x7a6a5c), dy); hemi.intensity = lerp(Hn[2], 2.3, dy);
+    const Fn = FOG.street; _dc.setHex(Fn[0]).lerp(_dc2.setHex(0xa8c0dc), dy).lerp(_dc2.setHex(0xd8906a), D.dusk * 0.55);
+    scene.fog.color.copy(_dc); scene.fog.density = lerp(Fn[1], 0.0052, dy); renderer.setClearColor(_dc2.copy(_dc).lerp(_dc.setHex(0x4a86d8), dy * 0.8), 1);
+    const A = CAM.amb, day3 = [1.08, 1.06, 1.02]; for (let i = 0; i < 3; i++) A[i] = lerp(A[i], day3[i], dy);
+  }
+  function dayLightScale(L) { // how strong a pooled light is at this time of day
+    if (L.lamp) return DAY.lamp; if (L.neon) return 0.2 + 0.8 * DAY.lamp; if (L.moonFill) return 0.15 + 0.85 * DAY.night; return 1;
+  }
+  function drawDayHUD() {
+    const p = STATE.player; if (!p) return;
+    const show = DAY.showT > 0 || /[?&]clock\b/.test(Q);
+    const sx = W - 62, sy = 26; // top right, under the speaker (clear of the hint box + the meters at the bottom)
+    ctx.globalAlpha = show ? 1 : 0.7;
+    const sun = DAY.el > 0; ctx.fillStyle = sun ? "#ffd84a" : "#dfe6ff"; ctx.beginPath(); ctx.arc(sx + 4, sy + 3, 3.4, 0, 7); ctx.fill();
+    if (!sun) { ctx.fillStyle = "#10101c"; ctx.beginPath(); ctx.arc(sx + 5.6, sy + 2, 3, 0, 7); ctx.fill(); }
+    ptext(dayClock(), sx + 11, sy, 1, show ? "#ffe060" : "#c8ccd6", "left");
+    ctx.globalAlpha = 1;
+    if (DAY.showT > 0) ptext("TIME SKIP +3H", W / 2, 34, 1, "#ffe060");
+  }
+
+  // =====================================================================================================
+  // ---------- ROOFTOP STEALTH (new): sentries with sweeping vision cones, crouch-walk (X / SHIFT / SNEAK), cover behind
+  // chimneys, AC units and water-tower pump houses, a detection meter per sentry, and silent takedowns from behind.
+  // A sentry that fills its meter (or gets hit) alerts its pack and the normal freeflow fight takes over. ----------
+  // =====================================================================================================
+  const STL = { det: 0, hid: false, td: 0, spotted: 0, cones: [], hide: [], hold: false, seenT: 0 };
+  const SENTRY_LOOK = { "97,-20": 0.6, "101,-26": Math.PI, "94,-28": -0.4, "146,-19": Math.PI * 0.75 }; // initial look angle per post (world, radians)
+  const roofStealth = () => STATE.zone && STATE.zone.layer === "roof";
+  function buildStealth() {
+    const G = WORLD.groups.roof;
+    // chimneys: brick stacks with a cap (cover you can stand behind)
+    const brickT = canvasTex(64, 128, (g, w, h) => { g.fillStyle = "#5a2e24"; g.fillRect(0, 0, w, h); for (let y = 0; y < h; y += 8) for (let x = (y / 8) % 2 ? -8 : 0; x < w; x += 16) { g.fillStyle = `rgb(${120 + (Math.random() * 40 | 0)},${52 + (Math.random() * 20 | 0)},${40 + (Math.random() * 14 | 0)})`; g.fillRect(x + 1, y + 1, 14, 6); } g.fillStyle = "rgba(0,0,0,0.5)"; g.fillRect(0, 0, w, 10); }, true);
+    const bm = new THREE.MeshLambertMaterial({ map: brickT }), capM = new THREE.MeshLambertMaterial({ color: 0x2a2a30 });
+    const chims = [[95, -21.5, 14], [100, -16.5, 14], [89.5, -24.5, 14], [104, -20.5, 14], [91.5, -14.5, 14], [117, -16, 12], [134, -30, 16], [142, -15.5, 16]];
+    const cg = [], kg = [];
+    for (const [x, z, y] of chims) {
+      const b = new THREE.BoxGeometry(1.1, 1.8, 1.1); b.translate(x, y + 0.9, z); cg.push(b);
+      const c = new THREE.BoxGeometry(1.35, 0.16, 1.35); c.translate(x, y + 1.88, z); kg.push(c);
+      WORLD.cols.push({ box: [x - 0.55, z - 0.55, x + 0.55, z + 0.55], y }); STL.hide.push({ x, z, r: 0.72, h: 1.8, y });
+    }
+    G.add(new THREE.Mesh(mergeGeos(cg), bm)); G.add(new THREE.Mesh(mergeGeos(kg), capM));
+    // pump houses under the walkable roofs' water towers (the barrels sit up on legs - this is the cover)
+    const pm = new THREE.MeshLambertMaterial({ map: canvasTex(64, 64, (g) => { g.fillStyle = "#6a6e76"; g.fillRect(0, 0, 64, 64); g.fillStyle = "#4a4e56"; for (let i = 4; i < 64; i += 10) g.fillRect(0, i, 64, 3); g.fillStyle = "#2a2e36"; g.fillRect(24, 26, 16, 38); }) });
+    for (const [x, z, y] of [[96, -27, 14], [120, -29, 12], [146, -35.2, 16]]) {
+      const m = new THREE.Mesh(new THREE.BoxGeometry(2.0, 1.5, 2.0), pm); m.position.set(x, y + 0.75, z); G.add(m);
+      WORLD.cols.push({ box: [x - 1.0, z - 1.0, x + 1.0, z + 1.0], y }); STL.hide.push({ x, z, r: 1.15, h: 1.5, y });
+    }
+    // the AC units already on the roofs are cover too (low: crouch behind them)
+    for (const c of WORLD.cols) if (c.box && c.y !== undefined && c.box[2] - c.box[0] < 2 && c.box[2] - c.box[0] > 1.7) STL.hide.push({ x: (c.box[0] + c.box[2]) / 2, z: (c.box[1] + c.box[3]) / 2, r: 0.85, h: 1.1, y: c.y });
+    // vision cones: a fan on the roof floor, alpha fading out with distance
+    const fanT = canvasTex(128, 4, (g, w, h) => { const gr = g.createLinearGradient(0, 0, w, 0); gr.addColorStop(0, "rgba(255,255,255,0.95)"); gr.addColorStop(0.75, "rgba(255,255,255,0.5)"); gr.addColorStop(0.97, "rgba(255,255,255,0.75)"); gr.addColorStop(1, "rgba(255,255,255,0)"); g.fillStyle = gr; g.fillRect(0, 0, w, h); });
+    const N = 14, A = 0.72, P = [0, 0, 0], U = [0, 0.5], I = [];
+    for (let i = 0; i <= N; i++) { const a = -A + 2 * A * i / N; P.push(Math.cos(a), 0, Math.sin(a)); U.push(1, 0.5); }
+    for (let i = 1; i <= N; i++) I.push(0, i + 1, i);
+    const geo = new THREE.BufferGeometry(); geo.setAttribute("position", new THREE.Float32BufferAttribute(P, 3)); geo.setAttribute("uv", new THREE.Float32BufferAttribute(U, 2)); geo.setIndex(I);
+    for (let i = 0; i < 6; i++) {
+      const m = new THREE.Mesh(geo, new THREE.MeshBasicMaterial({ map: fanT, transparent: true, depthWrite: false, opacity: 0.3, color: 0xffe040, blending: THREE.AdditiveBlending, side: THREE.DoubleSide, fog: false }));
+      m.renderOrder = 3; m.visible = false; G.add(m); STL.cones.push(m);
+    }
+  }
+  function sentryOf(e) { // roof sentries get a sweeping look direction instead of turning to face the player
+    if (!e.post || STATE.zone.layer !== "roof") return false;
+    if (e.look === undefined) { const g = toGlobal(STATE.zone, e.post.x, e.post.y), key = Math.round(g.gx) + "," + Math.round(g.gz); e.look0 = SENTRY_LOOK[key] !== undefined ? SENTRY_LOOK[key] : (e.facing > 0 ? 0 : Math.PI); e.look = e.look0; e.lookT = (Math.random() * 400) | 0; e.det = 0; e.sentry = true; }
+    return true;
+  }
+  function losBlocked(ax, az, bx, bz, crouch) {
+    const dx = bx - ax, dz = bz - az, L2 = dx * dx + dz * dz || 1;
+    for (const h of STL.hide) {
+      if (!crouch && h.h < 1.6) continue; // low cover only hides you while you crouch
+      const t = ((h.x - ax) * dx + (h.z - az) * dz) / L2; if (t < 0.04 || t > 0.98) continue;
+      const qx = ax + dx * t - h.x, qz = az + dz * t - h.z; if (qx * qx + qz * qz < h.r * h.r) return true;
+    }
+    return false;
+  }
+  const _sp = {};
+  function stealthTick(p) { // 60 Hz: crouch, look sweeps, detection
+    const wantC = (anyHeld("x", "shift") || STL.hold) && !p.climb && !VAN.on && p.z === 0 && p.attackT === 0 && p.deadT === 0 && !(p.sk && p.sk.on) && !p.carry;
+    p.crouch = wantC;
+    STL.det = 0; STL.hid = false;
+    if (!roofStealth() || p.layer !== "roof") return;
+    const R0 = lerp(9.5, 5.5, DAY.night), Rc = p.crouch ? 0.62 : 1;
+    let inRange = 0, blockedAll = true;
+    for (const e of STATE.enemies) {
+      if (!sentryOf(e) || !e.idle || e.alerted || e.hp <= 0 || e.state !== "walk") continue;
+      e.lookT++;
+      if (e.lookT % 520 === 0) e.look0 += Math.PI * (Math.random() < 0.5 ? 0.75 : -0.75); // turn to watch another way
+      e.look = lerp(e.look, e.look0 + 0.55 * Math.sin(e.lookT * 0.013), 0.06);
+      e.facing = Math.cos(e.look) * STATE.zone.u[0] + Math.sin(e.look) * STATE.zone.u[1] >= 0 ? 1 : -1;
+      const g = entPos(STATE.zone, e, _sp), dx = p.gx - g.gx, dz = p.gz - g.gz, d = Math.hypot(dx, dz);
+      const R = R0 * Rc; let da = Math.atan2(dz, dx) - e.look; da = Math.atan2(Math.sin(da), Math.cos(da));
+      const blk = losBlocked(g.gx, g.gz, p.gx, p.gz, p.crouch);
+      if (d < R + 2) { inRange++; if (!blk) blockedAll = false; }
+      let rate = 0;
+      if (d < R && Math.abs(da) < 0.72 && !blk) rate = (0.6 + 2.4 * (1 - d / R)) * (p.crouch ? 0.5 : 1) * (p.attackT > 0 ? 2 : 1);
+      else if (!p.crouch && d < 2.3 && !blk) rate = 0.9; // heard you stomping up behind
+      e.det = rate > 0 ? e.det + rate / 60 : Math.max(0, e.det - 0.3 / 60);
+      if (rate > 0 && e.det > 0.05 && !e.sayT && e.det < 0.5 && !e.huh) { e.huh = true; enemySay(e, "HUH?", 50, 60); }
+      if (e.det >= 1) stealthAlert(e, p);
+      STL.det = Math.max(STL.det, e.det);
+    }
+    STL.hid = p.crouch && inRange > 0 && blockedAll;
+  }
+  function stealthAlert(e, p) { // spotted: the whole pack on this roof wakes and the freeflow fight starts
+    if (e.alerted) return;
+    const g0 = entPos(STATE.zone, e, {});
+    let n = 0;
+    for (const o of STATE.enemies) {
+      if (!o.post || o.alerted) continue; const g = entPos(STATE.zone, o, _sp);
+      if (o !== e && Math.hypot(g.gx - g0.gx, g.gz - g0.gz) > 16) continue;
+      o.alerted = true; o.det = 1; engage(o); n++;
+      if (o.state === "walk") o.facing = p.x >= o.x ? 1 : -1;
+    }
+    STL.spotted++; STL.seenT = 70;
+    if (e.state === "walk") enemySay(e, "INTRUDER! GET 'EM!", 90, 90, true);
+    popText("SPOTTED!", g0.gx, g0.gy + 2.7, g0.gz, "#ff4a3a", true); SFX.charge && SFX.charge(); STATE.shake = Math.max(STATE.shake, 4);
+  }
+  function stealthTarget(p) { // an unaware sentry you're right behind
+    if (!roofStealth() || p.layer !== "roof" || p.z > 0 || p.attackT > 0) return null;
+    let best = null, bd = 1.9;
+    for (const e of STATE.enemies) {
+      if (!e.sentry || !e.idle || e.alerted || e.hp <= 0 || e.state !== "walk" || e.det >= 1) continue;
+      const g = entPos(STATE.zone, e, _sp), dx = p.gx - g.gx, dz = p.gz - g.gz, d = Math.hypot(dx, dz);
+      if (d > bd) continue;
+      const front = (dx * Math.cos(e.look) + dz * Math.sin(e.look)) / (d || 1);
+      if (front > 0.25) continue; // must be behind (or beside-and-behind)
+      bd = d; best = e;
+    }
+    if (!best) return null;
+    const g = entPos(STATE.zone, best, {}), it = STL.it || (STL.it = { layer: "roof", kind: "silent", r: 3, label: "SILENT TAKEDOWN" });
+    it.e = best; it.x = g.gx; it.z = g.gz; return it;
+  }
+  function stealthTakedown(p, e) {
+    e.silent = true; e.det = 0;
+    p.facing = e.x >= p.x ? 1 : -1; p.crouch = false;
+    const sw = SWINGS[p.bro.name.toLowerCase()].c3; startAtk(p, "c3", sw.w + sw.s + sw.r); p.hitSet.add(e); p.ffSwing = false;
+    hitEnemy(e, e.hp + 9, true, p.facing, 2, false); e.silent = true;
+    STATE.slowT = Math.max(STATE.slowT || 0, 30); STATE.score += 300; STL.td++;
+    const g = entPos(STATE.zone, e, {}); popText("SILENT TAKEDOWN", g.gx, g.gy + 2.6, g.gz, "#7fe0ff", true); comicPop(g.gx, g.gy + 1.4, g.gz, "SHHK!");
+    skHint("silent", "SILENT TAKEDOWN!", "STAY OUT OF THE CONES, CROUCH BEHIND COVER, AND HIT " + (STATE.showTouch ? "SPECIAL" : "E") + " FROM BEHIND");
+  }
+  // ---- per render frame: the cones ----
+  function stealthDraw() {
+    let i = 0;
+    if (STATE.scene === "stage" && STATE.zone && STATE.zone.layer === "roof") {
+      const R0 = lerp(9.5, 5.5, DAY.night), p = STATE.player, Rc = p && p.crouch ? 0.62 : 1;
+      for (const e of STATE.enemies) {
+        if (!e.sentry || !e.idle || e.alerted || e.hp <= 0 || e.state !== "walk" || i >= STL.cones.length) continue;
+        const m = STL.cones[i++], g = entPos(STATE.zone, e, _sp);
+        m.visible = true; m.position.set(g.gx, g.fy + 0.06, g.gz); m.rotation.set(0, -e.look, 0); m.scale.set(R0 * Rc, 1, R0 * Rc);
+        const k = Math.min(1, e.det || 0); m.material.color.setRGB(1, lerp(0.88, 0.2, k), lerp(0.25, 0.1, k)); m.material.opacity = 0.34 + 0.3 * k + (k > 0.6 ? 0.15 * Math.sin(STATE.t * 0.6) : 0);
+      }
+    }
+    for (; i < STL.cones.length; i++) STL.cones[i].visible = false;
+  }
+  // ---- HUD: an eye over every sentry that's noticing you, the crouch / hidden tag, the sneak button ----
+  function drawStealthHUD() {
+    const p = STATE.player; if (!p || p.layer !== "roof" || !roofStealth()) { stealthButton(false); return; }
+    for (const e of STATE.enemies) {
+      if (!e.sentry || e.hp <= 0 || e.state !== "walk" || (!e.idle && !e.alerted)) continue;
+      if (e.alerted && STL.seenT <= 0) continue;
+      const k = Math.min(1, e.det || 0); if (k < 0.02 && !e.alerted) continue;
+      const s = localScreen(e, 2.35); if (!s.ok) continue;
+      const x = s.x, y = s.y, red = k >= 1 || e.alerted;
+      ctx.fillStyle = "#000"; ctx.beginPath(); ctx.ellipse(x, y, 9, 5.5, 0, 0, 7); ctx.fill();
+      ctx.save(); ctx.beginPath(); ctx.ellipse(x, y, 8, 4.5, 0, 0, 7); ctx.clip();
+      ctx.fillStyle = "#2a2a3a"; ctx.fillRect(x - 8, y - 5, 16, 10);
+      ctx.fillStyle = red ? "#ff3a2a" : k > 0.6 ? "#ff8c1a" : "#ffe14a"; ctx.fillRect(x - 8, y + 5 - 10 * k, 16, 10 * k);
+      ctx.restore();
+      ctx.fillStyle = "#000"; ctx.beginPath(); ctx.arc(x, y, 2, 0, 7); ctx.fill();
+      if (red) ptext("!", x, y - 15, 1, "#ff3a2a");
+    }
+    if (STL.seenT > 0) STL.seenT--;
+    if (p.crouch) { ptext(STL.hid ? "HIDDEN" : "SNEAKING", W / 2, H - 22, 1, STL.hid ? "#7fe0ff" : "#c8ccd6"); }
+    if (STL.det > 0.02) { const bw = 80; rect(W / 2 - bw / 2, H - 13, bw, 5, "#000"); rect(W / 2 - bw / 2 + 1, H - 12, (bw - 2) * Math.min(1, STL.det), 3, STL.det > 0.6 ? "#ff5a2a" : "#ffe14a"); }
+    if (STATE.enemies.some((e) => e.sentry && e.idle && !e.alerted)) skHint("stealth", "ROOFTOP STEALTH", "HOLD " + (STATE.showTouch ? "SNEAK" : "X / SHIFT") + " TO CROUCH. STAY OUT OF THE CONES, HIDE BEHIND CHIMNEYS + AC UNITS, TAKE THEM DOWN FROM BEHIND");
+    stealthButton(STATE.scene === "stage" && !p.climb && STATE.showTouch);
+  }
+  // hold-to-sneak touch button
+  function stealthButton(on) {
+    const scr = document.getElementById("screen"); if (!scr) return;
+    if (!STL.btn) {
+      const b = document.createElement("div"); b.className = "ss-tb ss-tb-s"; b.textContent = "SNEAK"; b.setAttribute("role", "button"); b.setAttribute("aria-label", "Sneak (hold)");
+      const dn = (ev) => { ev.preventDefault(); ev.stopPropagation(); STL.hold = true; b.classList.add("on"); STATE.showTouch = true; };
+      const up = (ev) => { ev.stopPropagation(); STL.hold = false; b.classList.remove("on"); };
+      b.addEventListener("pointerdown", dn); b.addEventListener("pointerup", up); b.addEventListener("pointercancel", up); b.addEventListener("pointerleave", up);
+      scr.appendChild(b); STL.btn = b;
+    }
+    const v = on ? "flex" : "none"; if (STL.btn.style.display !== v) STL.btn.style.display = v;
+    if (!on) STL.hold = false;
+  }
+
+  // =====================================================================================================
+  // ---------- CAMERA STYLES (new): Q / the CAM button cycles STANDARD -> ONE-SHOT -> COMIC -> CHASE.
+  //  ONE-SHOT: no fades or cuts - manholes, stairs, doors, ladders and the elevator are one continuous camera move.
+  //  COMIC: halftone dots, ink outlines, chromatic offset, the 3D drawn "on twos", onomatopoeia on hits.
+  //  CHASE: a low, wide, trailing rooftop camera with speed lines + FOV kick - also switches on by itself when you
+  //  sprint or leap across the roofs in any style. ----------
+  // =====================================================================================================
+  const CAMS = { mode: Math.max(0, ["std", "oneshot", "comic", "chase"].indexOf((Q.match(/[?&]cam=([a-z]+)/) || [])[1] || "std")), names: ["STANDARD", "ONE-SHOT", "COMIC", "CHASE"], chaseK: 0, afterT: 0, wasClimb: false, fromReg: null, pops: [], frame: 0, cdir: new THREE.Vector3(1, 0, 0), lgx: 0, lgz: 0, spd: 0, vanK: 0, showT: 0 };
+  const _cw = new THREE.Vector3(), _cl = new THREE.Vector3(), _cs = new THREE.Vector3(), _fp = new THREE.Vector3(), _fl = new THREE.Vector3();
+  function camCycle() { CAMS.mode = (CAMS.mode + 1) % 4; CAMS.showT = 110; SFX.menuMove && SFX.menuMove(); if (CAMS.mode === 2) skHint("comic", "COMIC CAMERA", "HALFTONE + INK, DRAWN ON TWOS. EVERY HIT GETS ITS SOUND EFFECT"); }
+  const oneShot = () => CAMS.mode === 1;
+  function camTick(p) { // 60 Hz
+    if (anyPressed("q") || CAMS.tbHit) { CAMS.tbHit = false; camCycle(); }
+    if (CAMS.showT > 0) CAMS.showT--;
+    if (p.climb && !CAMS.wasClimb) CAMS.fromReg = REGION.cur;
+    if (!p.climb && CAMS.wasClimb) CAMS.afterT = 45;
+    CAMS.wasClimb = !!p.climb; if (CAMS.afterT > 0 && !p.climb) CAMS.afterT--;
+    if (CAMS.afterT === 0 && !p.climb) CAMS.fromReg = null;
+    // rooftop sprint: hold a direction at full tilt and the hero opens up
+    const v = inputVec(), run = p.layer === "roof" && v && v.mag > 0.8 && !p.crouch && p.attackT === 0 && !p.climb;
+    p.runT = run ? (p.runT || 0) + 1 : Math.max(0, (p.runT || 0) - 3);
+    const dx = p.gx - CAMS.lgx, dz = p.gz - CAMS.lgz, sp = Math.hypot(dx, dz); CAMS.lgx = p.gx; CAMS.lgz = p.gz;
+    CAMS.spd = lerp(CAMS.spd, sp < 1 ? sp * 60 : 0, 0.2);
+    if (sp > 0.02 && sp < 1) { _cs.set(dx / sp, 0, dz / sp); CAMS.cdir.lerp(_cs, 0.06).normalize(); }
+  }
+  const sprintK = (p) => (p.layer === "roof" && p.runT > 24 ? Math.min(1.42, 1 + (p.runT - 24) * 0.02) : 1);
+  function chaseWanted(p) {
+    if (!p || p.layer !== "roof" || p.climb || STATE.zone.layer !== "roof") return false;
+    if (CAMS.mode === 3) return true;
+    return p.runT > 30 || (p.z > 0 && p.runT > 8) || (p.fy + p.z * ZH > 8 && p.fy < -1); // sprinting, leaping, or falling into an alley
+  }
+  // final camera = the standard follow pose (kept for the stick basis), blended toward chase / van poses
+  function camFinal(dt, p, z) {
+    CAMS.chaseK = lerp(CAMS.chaseK, chaseWanted(p) ? 1 : 0, 1 - Math.exp(-dt * (chaseWanted(p) ? 2.6 : 1.8)));
+    CAMS.vanK = lerp(CAMS.vanK, VAN.on ? 1 : 0, 1 - Math.exp(-dt * 3));
+    _fp.copy(CAM.pos); _fl.copy(CAM.look);
+    let fov = CAM.fov;
+    if (CAMS.chaseK > 0.002) {
+      // trailing: behind the run direction, swung partway from the street-side view so the sprite still reads
+      const sx = CAM.pos.x - p.gx, sz = CAM.pos.z - p.gz, sl = Math.hypot(sx, sz) || 1;
+      _cs.set(-CAMS.cdir.x * 0.72 + sx / sl * 0.5, 0, -CAMS.cdir.z * 0.72 + sz / sl * 0.5).normalize();
+      _cw.set(p.gx + _cs.x * 4.3, p.gy + 1.25, p.gz + _cs.z * 4.3);
+      _cl.set(p.gx + CAMS.cdir.x * 6.5, p.gy + 1.15, p.gz + CAMS.cdir.z * 6.5);
+      const k = CAMS.chaseK * CAMS.chaseK * (3 - 2 * CAMS.chaseK);
+      _fp.lerp(_cw, k); _fl.lerp(_cl, k); fov += k * (14 + Math.min(8, CAMS.spd * 1.2));
+    }
+    if (CAMS.vanK > 0.002) { const V = vanCamPose(dt); const k = CAMS.vanK; _fp.lerp(V.pos, k); _fl.lerp(V.look, k); fov = lerp(fov, V.fov, k); }
+    camera.position.copy(_fp);
+    if (STATE.shake > 0) { const s = Math.min(0.25, STATE.shake * 0.012); camera.position.x += rnd(-s, s); camera.position.y += rnd(-s, s); }
+    camera.lookAt(_fl);
+    if (Math.abs(camera.fov - fov) > 0.05) { camera.fov = fov; camera.updateProjectionMatrix(); }
+    // the stick follows the standard view, so steering never spins with the chase / van camera
+    CAM.sf.set(CAM.look.x - CAM.pos.x, 0, CAM.look.z - CAM.pos.z); if (CAM.sf.lengthSq() < 1e-6) CAM.sf.set(0, 0, -1); CAM.sf.normalize();
+    CAM.sr.set(-CAM.sf.z, 0, CAM.sf.x);
+  }
+  // ---- COMIC post-process ----
+  const COMIC_FS = `uniform sampler2D tCol; uniform sampler2D tDep; uniform vec2 res; uniform float cn; uniform float cf; uniform float seed; varying vec2 vUv;
+float lin(float d){ float z=d*2.0-1.0; return 2.0*cn*cf/(cf+cn-z*(cf-cn)); }
+float lum(vec3 c){ return dot(c, vec3(0.299,0.587,0.114)); }
+void main(){
+  vec2 px = 1.0/res; vec2 uv = vUv;
+  vec2 off = (uv-0.5)*0.007 + vec2(0.0018, 0.0);
+  vec3 c = vec3(texture2D(tCol, uv+off).r, texture2D(tCol, uv).g, texture2D(tCol, uv-off).b);
+  vec3 s = pow(max(c, 0.0), vec3(1.0/2.2));                       // to display space for the print look
+  s = floor(s*6.0 + 0.5)/6.0;                                       // flat poster tones
+  float cs = max(3.5, res.y/150.0);
+  vec2 p = gl_FragCoord.xy; vec2 q = mat2(0.7071,-0.7071,0.7071,0.7071)*p/cs; vec2 f = fract(q)-0.5;
+  float L = lum(s); float rad = sqrt(max(0.0, 1.0-L))*0.6;
+  float dotv = 1.0 - smoothstep(rad-0.06, rad+0.06, length(f));
+  s = mix(s*1.15, s*0.42, dotv*0.6);
+  // magenta / cyan offset print dots in the light areas
+  vec2 q2 = mat2(0.9659,-0.2588,0.2588,0.9659)*p/(cs*1.4); float d2 = 1.0 - smoothstep(0.18, 0.26, length(fract(q2)-0.5));
+  s = mix(s, s*vec3(1.08,0.9,1.06), d2*L*0.35);
+  // ink: depth + colour edges
+  float d0 = lin(texture2D(tDep, uv).r);
+  float dd = abs(lin(texture2D(tDep, uv+vec2(px.x*1.5,0.0)).r)-d0) + abs(lin(texture2D(tDep, uv-vec2(px.x*1.5,0.0)).r)-d0) + abs(lin(texture2D(tDep, uv+vec2(0.0,px.y*1.5)).r)-d0) + abs(lin(texture2D(tDep, uv-vec2(0.0,px.y*1.5)).r)-d0);
+  float ed = smoothstep(0.06, 0.16, dd/max(d0,0.5));
+  float l0 = lum(c), lc = abs(lum(texture2D(tCol, uv+vec2(px.x,0.0)).rgb)-l0) + abs(lum(texture2D(tCol, uv+vec2(0.0,px.y)).rgb)-l0);
+  float ec = smoothstep(0.08, 0.2, lc);
+  s = mix(s, vec3(0.05,0.03,0.08), clamp(max(ed, ec*0.8), 0.0, 1.0));
+  gl_FragColor = vec4(s, 1.0);
+}`;
+  function comicSetup() {
+    const size = renderer.getDrawingBufferSize(new THREE.Vector2());
+    if (CAMS.rt && CAMS.rt.width === size.x && CAMS.rt.height === size.y) return;
+    if (CAMS.rt) { CAMS.rt.dispose(); CAMS.rt.depthTexture && CAMS.rt.depthTexture.dispose(); }
+    const dt = new THREE.DepthTexture(size.x, size.y); dt.type = THREE.UnsignedIntType;
+    CAMS.rt = new THREE.WebGLRenderTarget(size.x, size.y, { depthTexture: dt, depthBuffer: true, samples: 0 });
+    if (!CAMS.post) {
+      CAMS.postCam = new THREE.OrthographicCamera(-1, 1, 1, -1, 0, 1); CAMS.postScene = new THREE.Scene();
+      CAMS.post = new THREE.ShaderMaterial({ uniforms: { tCol: { value: null }, tDep: { value: null }, res: { value: new THREE.Vector2() }, cn: { value: 0.2 }, cf: { value: 900 }, seed: { value: 0 } },
+        vertexShader: "varying vec2 vUv; void main(){ vUv=uv; gl_Position=vec4(position.xy,0.0,1.0); }", fragmentShader: COMIC_FS, depthTest: false, depthWrite: false });
+      const q = new THREE.Mesh(new THREE.PlaneGeometry(2, 2), CAMS.post); q.frustumCulled = false; CAMS.postScene.add(q);
+    }
+    CAMS.rtFresh = false;
+  }
+  function renderFinal() {
+    if (CAMS.mode !== 2) { renderer.render(scene, camera); return; }
+    comicSetup();
+    CAMS.frame++;
+    if (!CAMS.rtFresh || CAMS.frame % 2 === 0) { renderer.setRenderTarget(CAMS.rt); renderer.render(scene, camera); renderer.setRenderTarget(null); CAMS.rtFresh = true; } // on twos
+    const U = CAMS.post.uniforms; U.tCol.value = CAMS.rt.texture; U.tDep.value = CAMS.rt.depthTexture; U.res.value.set(CAMS.rt.width, CAMS.rt.height); U.cn.value = camera.near; U.cf.value = camera.far;
+    renderer.render(CAMS.postScene, CAMS.postCam);
+  }
+  // ---- onomatopoeia ----
+  const COMIC_WORDS = ["THWACK!", "KRAK!", "POW!", "WHAM!", "BAM!", "SMAK!", "KA-CHUNK!", "THOOM!", "BIFF!"];
+  function comicPop(gx, gy, gz, word) {
+    if (CAMS.mode !== 2) return;
+    CAMS.pops.push({ gx, gy, gz, w: word || COMIC_WORDS[(Math.random() * COMIC_WORDS.length) | 0], t: 0, rot: rnd(-0.3, 0.3), c: ["#ffe14a", "#ff5ab4", "#5ae0ff", "#ff8c1a"][(Math.random() * 4) | 0] });
+    if (CAMS.pops.length > 6) CAMS.pops.shift();
+  }
+  function comicHit(p) { // the newest foe in the hit set gets the sound effect
+    if (CAMS.mode !== 2 || !p.hitSet) return; let last = null; for (const o of p.hitSet) if (isFoe(o)) last = o;
+    if (last) { const g = entPos(STATE.zone, last, {}); comicPop(g.gx, g.gy + 1.5, g.gz); }
+  }
+  function drawCamHUD() {
+    const p = STATE.player;
+    // speed lines (chase)
+    if (CAMS.chaseK > 0.25) {
+      const a = (CAMS.chaseK - 0.25) / 0.75; ctx.save(); ctx.strokeStyle = "rgba(255,255,255," + (0.55 * a).toFixed(3) + ")"; ctx.lineWidth = 1;
+      const cx = W / 2, cy = H * 0.46;
+      for (let i = 0; i < 26; i++) { const an = (i * 2.399 + Math.floor(STATE.t / 2) * 0.7) % (Math.PI * 2), r0 = 120 + ((i * 37 + STATE.t * 5) % 60), r1 = r0 + 40 + (i % 3) * 25; ctx.beginPath(); ctx.moveTo(cx + Math.cos(an) * r0, cy + Math.sin(an) * r0 * 0.7); ctx.lineTo(cx + Math.cos(an) * r1, cy + Math.sin(an) * r1 * 0.7); ctx.stroke(); }
+      ctx.restore();
+    }
+    // comic pops: jagged burst + outlined word
+    for (const q of CAMS.pops) {
+      q.t++; const s = project(q.gx, q.gy, q.gz); if (!s.ok) continue;
+      const k = Math.min(1, q.t / 5), sc = (q.t < 5 ? 0.5 + k * 0.7 : 1.2 - Math.min(0.2, (q.t - 5) * 0.01)), fade = q.t > 40 ? Math.max(0, 1 - (q.t - 40) / 15) : 1;
+      ctx.save(); ctx.globalAlpha = fade; ctx.translate(s.x, s.y - 16 - q.t * 0.25); ctx.rotate(q.rot); ctx.scale(sc * 0.72, sc * 0.72);
+      const n = 14, w = q.w.length * 6.5 + 14; ctx.beginPath();
+      for (let i = 0; i < n * 2; i++) { const an = i / (n * 2) * Math.PI * 2, r = i % 2 ? 0.62 : 1; ctx.lineTo(Math.cos(an) * w * 0.62 * r, Math.sin(an) * 17 * r); }
+      ctx.closePath(); ctx.fillStyle = q.c; ctx.fill(); ctx.lineWidth = 2; ctx.strokeStyle = "#000"; ctx.stroke();
+      ptext(q.w, 1, -4, 1, "#000"); ptext(q.w, 0, -5, 1, "#e8102a");
+      ctx.restore();
+    }
+    CAMS.pops = CAMS.pops.filter((q) => q.t < 56);
+    if (CAMS.mode === 2) { ctx.save(); ctx.strokeStyle = "#000"; ctx.lineWidth = 3; ctx.strokeRect(1.5, 1.5, W - 3, H - 3); ctx.restore(); }
+    if (CAMS.showT > 0) { const a = Math.min(1, CAMS.showT / 20); ctx.globalAlpha = a; rect(W / 2 - 70, 88, 140, 22, "rgba(0,0,0,0.75)"); ptext("CAMERA: " + CAMS.names[CAMS.mode], W / 2, 92, 1, "#ffe060"); ptext(["CLASSIC FOLLOW", "NO CUTS - ONE CONTINUOUS SHOT", "HALFTONE + INK, ON TWOS", "ROOFTOP CHASE CAM"][CAMS.mode], W / 2, 102, 1, "#c8ccd6"); ctx.globalAlpha = 1; }
+    camButton(STATE.scene === "stage" && STATE.showTouch);
+  }
+  function camButton(on) {
+    const scr = document.getElementById("screen"); if (!scr) return;
+    if (!CAMS.btn) {
+      const b = document.createElement("div"); b.className = "ss-tb ss-tb-cam"; b.textContent = "CAM"; b.setAttribute("role", "button"); b.setAttribute("aria-label", "Cycle camera style");
+      b.addEventListener("pointerdown", (ev) => { ev.preventDefault(); ev.stopPropagation(); CAMS.tbHit = true; b.classList.add("on"); STATE.showTouch = true; });
+      const up = (ev) => { ev.stopPropagation(); b.classList.remove("on"); }; b.addEventListener("pointerup", up); b.addEventListener("pointercancel", up); b.addEventListener("pointerleave", up);
+      scr.appendChild(b); CAMS.btn = b;
+    }
+    const v = on ? "flex" : "none"; if (CAMS.btn.style.display !== v) CAMS.btn.style.display = v;
+  }
+
+  // =====================================================================================================
+  // ---------- THE PARTY VAN (new, original design): parked on block 1. E / SPECIAL gets in and out. Arcade handling:
+  // stick / arrows = gas, brake + reverse, steer; K / SPACE / JUMP = handbrake (drift); J / H / ATTACK = horn;
+  // G / LIGHTS = headlights. Bumps cars, lamp posts and walls, bowls over thugs and smashes crates. Street blocks only. ----------
+  // =====================================================================================================
+  const VAN = { on: false, x: 9, z: 5.0, yaw: 0, vx: 0, vz: 0, sp: 0, lat: 0, steer: 0, lights: false, hornT: 0, wheel: 0, driftT: 0, hits: 0, props: 0, bumps: 0, maxLat: 0, maxSp: 0, dist: 0, col: null, it: null, L: 5.3, Wd: 2.2 };
+  function vanSideTex(cabRight) {
+    return canvasTex(512, 220, (g, w, h) => {
+      g.fillStyle = "#efe2c0"; g.fillRect(0, 0, w, h);
+      g.fillStyle = "#127566"; g.fillRect(0, h * 0.56, w, h * 0.44);
+      // sunset stripes sweeping up toward the back
+      const cols = ["#ffd23a", "#ff9a1a", "#f2531e", "#b0287a"];
+      cols.forEach((c, i) => { g.fillStyle = c; g.beginPath(); const y0 = h * 0.5 + i * 11, x0 = cabRight ? w : 0, x1 = cabRight ? 0 : w, s = cabRight ? -1 : 1;
+        g.moveTo(x0, y0); g.lineTo(x0 + s * w * 0.45, y0); g.quadraticCurveTo(x0 + s * w * 0.62, y0, x0 + s * w * 0.7, y0 - 40); g.lineTo(x1, y0 - 58); g.lineTo(x1, y0 - 47); g.lineTo(x0 + s * w * 0.72, y0 - 29); g.quadraticCurveTo(x0 + s * w * 0.64, y0 + 11, x0 + s * w * 0.45, y0 + 11); g.lineTo(x0, y0 + 11); g.closePath(); g.fill(); });
+      // cab window + door line
+      const cx = cabRight ? w - 120 : 18; g.fillStyle = "#1a2a3c"; g.beginPath(); g.moveTo(cx, 22); g.lineTo(cx + 102, 22); g.lineTo(cx + (cabRight ? 102 : 102), 92); g.lineTo(cx, 92); g.closePath(); g.fill();
+      g.fillStyle = "rgba(255,255,255,0.25)"; g.fillRect(cx + 10, 28, 18, 56);
+      g.strokeStyle = "rgba(0,0,0,0.5)"; g.lineWidth = 3; g.strokeRect(cabRight ? w - 132 : 8, 14, 124, h - 40);
+      // bubble porthole near the back
+      const px = cabRight ? 92 : w - 92; g.fillStyle = "#c8ccd4"; g.beginPath(); g.arc(px, 70, 44, 0, 7); g.fill(); g.fillStyle = "#28406a"; g.beginPath(); g.arc(px, 70, 36, 0, 7); g.fill(); g.fillStyle = "rgba(255,255,255,0.35)"; g.beginPath(); g.arc(px - 12, 58, 11, 0, 7); g.fill();
+      // lettering (original): SEWER SURF CO.
+      g.save(); g.translate(w / 2 + (cabRight ? -20 : 20), 162); g.rotate(-0.04); g.font = "italic 900 40px Arial Black, Arial"; g.textAlign = "center"; g.lineWidth = 7; g.strokeStyle = "#0a2a24"; g.strokeText("SEWER SURF CO.", 0, 0); g.fillStyle = "#ffe14a"; g.fillText("SEWER SURF CO.", 0, 0); g.restore();
+      // a pizza-slice decal
+      const sx = w / 2 + (cabRight ? 40 : -40); g.fillStyle = "#ffcc4a"; g.beginPath(); g.moveTo(sx, 30); g.lineTo(sx + 26, 92); g.lineTo(sx - 26, 92); g.closePath(); g.fill(); g.fillStyle = "#c83a1a"; for (const [a, b] of [[0, 55], [-9, 76], [10, 78]]) { g.beginPath(); g.arc(sx + a, b, 5, 0, 7); g.fill(); } g.fillStyle = "#b0782a"; g.fillRect(sx - 27, 88, 54, 7);
+      g.fillStyle = "rgba(0,0,0,0.35)"; g.fillRect(0, h - 10, w, 10);
+    });
+  }
+  function buildVan() {
+    const G = new THREE.Group(), L = VAN.L, Wd = VAN.Wd;
+    const body = new THREE.MeshLambertMaterial({ color: 0xefe2c0 }), teal = new THREE.MeshLambertMaterial({ color: 0x127566 }), dark = new THREE.MeshLambertMaterial({ color: 0x1c1e24 }), chrome = new THREE.MeshLambertMaterial({ color: 0xb8bcc6 }), glass = new THREE.MeshLambertMaterial({ color: 0x1a2a3c });
+    const sR = new THREE.MeshLambertMaterial({ map: vanSideTex(true) }), sL = new THREE.MeshLambertMaterial({ map: vanSideTex(false) });
+    const box = (w, h, d, m, x, y, z) => { const b = new THREE.Mesh(new THREE.BoxGeometry(w, h, d), m); b.position.set(x, y, z); G.add(b); return b; };
+    box(L - 0.9, 1.95, Wd, [body, teal, body, dark, sR, sL], -0.45, 1.5, 0);   // box body (+x = front); +z side = cab on the right of the art
+    box(0.95, 1.0, Wd, [teal, teal, body, dark, teal, teal], L / 2 - 0.47, 1.0, 0); // nose / hood
+    const ws = new THREE.Mesh(new THREE.PlaneGeometry(Wd * 0.92, 1.05), glass); ws.position.set(L / 2 - 0.93, 2.0, 0); ws.rotation.set(0, Math.PI / 2, 0); ws.rotateX(-0.35); G.add(ws);
+    box(0.25, 0.3, Wd + 0.1, chrome, L / 2 + 0.02, 0.55, 0); box(0.25, 0.3, Wd + 0.1, chrome, -L / 2 + 0.02, 0.55, 0);
+    box(L - 1.2, 0.08, 1.6, dark, -0.6, 2.52, 0); // roof rack
+    const board = new THREE.Mesh(new THREE.CylinderGeometry(0.32, 0.32, 3.4, 12), new THREE.MeshLambertMaterial({ color: 0xff7a2a })); board.scale.set(1, 1, 0.2); board.rotation.z = Math.PI / 2; board.position.set(-0.6, 2.66, 0.25); G.add(board);
+    const hl = new THREE.MeshBasicMaterial({ color: 0x555544 }), tl = new THREE.MeshBasicMaterial({ color: 0x661010 });
+    VAN.hlMat = hl; VAN.tlMat = tl;
+    for (const s of [-1, 1]) { box(0.06, 0.24, 0.42, hl, L / 2 + 0.0, 1.05, s * 0.72); box(0.06, 0.36, 0.22, tl, -L / 2 - 0.02 - 0.45 + 0.45, 1.3, s * 0.92); }
+    VAN.wheels = [];
+    const wg = new THREE.CylinderGeometry(0.43, 0.43, 0.32, 14); wg.rotateX(Math.PI / 2);
+    const wm = new THREE.MeshLambertMaterial({ color: 0x141418 }), hub = new THREE.MeshLambertMaterial({ color: 0xd8d0b0 });
+    for (const [x, z] of [[1.6, 1], [1.6, -1], [-1.75, 1], [-1.75, -1]]) {
+      const wh = new THREE.Group(); wh.position.set(x, 0.43, z * (Wd / 2 - 0.08)); const t = new THREE.Mesh(wg, wm); wh.add(t); const hb = new THREE.Mesh(new THREE.BoxGeometry(0.5, 0.12, 0.34), hub); wh.add(hb); G.add(wh); VAN.wheels.push(wh);
+    }
+    // headlights: one spot light + two soft additive beams
+    const sp = new THREE.SpotLight(0xfff2cc, 0, 30, 0.55, 0.6, 1.2); sp.position.set(L / 2, 1.1, 0); sp.target.position.set(L / 2 + 10, 0, 0); G.add(sp); G.add(sp.target); VAN.spot = sp;
+    const bm = new THREE.MeshBasicMaterial({ color: 0xfff0c0, transparent: true, opacity: 0.11, depthWrite: false, blending: THREE.AdditiveBlending, side: THREE.DoubleSide });
+    VAN.beams = [];
+    for (const s of [-1, 1]) { const cg = new THREE.ConeGeometry(1.5, 8, 12, 1, true); cg.translate(0, -4, 0); cg.rotateZ(Math.PI / 2); const c = new THREE.Mesh(cg, bm); c.position.set(L / 2 + 0.05, 1.05, s * 0.72); c.rotation.z = -0.07; c.visible = false; G.add(c); VAN.beams.push(c); }
+    WORLD.groups.street.add(G); VAN.mesh = G;
+    VAN.col = { box: [0, 0, 0, 0], van: true }; WORLD.cols.push(VAN.col);
+    VAN.it = { layer: "street", kind: "van", r: 2.3, label: "DRIVE THE PARTY VAN", x: 0, z: 0 }; WORLD.inter.push(VAN.it);
+    vanPlace();
+  }
+  const vanF = () => [Math.cos(VAN.yaw), Math.sin(VAN.yaw)], vanR = () => [-Math.sin(VAN.yaw), Math.cos(VAN.yaw)];
+  function vanPlace() { // mesh, collision box, the "get in" spot (driver's door, on the van's left)
+    const [fx, fz] = vanF(), [rx, rz] = vanR();
+    VAN.mesh.position.set(VAN.x, 0.0, VAN.z); VAN.mesh.rotation.set(0, -VAN.yaw, 0);
+    const ex = Math.abs(fx) * VAN.L / 2 + Math.abs(rx) * VAN.Wd / 2, ez = Math.abs(fz) * VAN.L / 2 + Math.abs(rz) * VAN.Wd / 2;
+    VAN.col.box[0] = VAN.x - ex; VAN.col.box[1] = VAN.z - ez; VAN.col.box[2] = VAN.x + ex; VAN.col.box[3] = VAN.z + ez;
+    if (VAN.on) { VAN.col.box[0] = VAN.col.box[2] = -999; }
+    VAN.it.x = VAN.x - rx * (VAN.Wd / 2 + 0.7) + fx * 0.8; VAN.it.z = VAN.z - rz * (VAN.Wd / 2 + 0.7) + fz * 0.8; VAN.it.taken = VAN.on;
+  }
+  function vanResetAll() { Object.assign(VAN, { on: false, x: 9, z: 5.0, yaw: 0, vx: 0, vz: 0, sp: 0, lat: 0, steer: 0, lights: false }); if (VAN.mesh) vanPlace(); }
+  function vanEnter(p) {
+    VAN.on = true; p.hidden = true; p.walkT = 0; p.attackT = 0; p.atk = null; p.crouch = false; STATE.near = null;
+    if (p.sk && p.sk.on) skateOff(p);
+    if (DAY.lamp > 0.5) VAN.lights = true;
+    SFX.door && SFX.door(); vanPlace(); CAM.snap = false;
+    skHint("van", "THE PARTY VAN", (STATE.showTouch ? "STICK: GAS / STEER   JUMP: HANDBRAKE DRIFT   ATTACK: HORN   SPECIAL: GET OUT" : "UP/DOWN: GAS + BRAKE   LEFT/RIGHT: STEER   K/SPACE: DRIFT   J/H: HORN   G: LIGHTS   E: GET OUT"));
+  }
+  function vanExit(p) {
+    const [fx, fz] = vanF(), [rx, rz] = vanR();
+    const spots = [[-rx * 2.0, -rz * 2.0], [rx * 2.0, rz * 2.0], [-fx * 3.6, -fz * 3.6], [fx * 3.6, fz * 3.6]];
+    let ok = null;
+    for (const [dx, dz] of spots) { const x = VAN.x + dx, z = VAN.z + dz; if (floorAt("street", x, z) !== null && !vanHitsCol(x, z, 0.4, true)) { ok = [x, z]; break; } }
+    if (!ok) { popText("NO ROOM TO GET OUT", VAN.x, 3, VAN.z, "#ff8c1a"); return; }
+    VAN.on = false; VAN.vx = VAN.vz = 0; VAN.sp = 0; p.hidden = false;
+    placeOn(p, "street", ok[0], ok[1]); CAM.snap = false; p.inv = Math.max(p.inv, 40); SFX.door && SFX.door(); vanPlace();
+  }
+  function vanHitsCol(x, z, r, skipVan) {
+    for (const c of WORLD.cols) {
+      if (c.y !== undefined || (c.layer && c.layer !== "street") || (c.van && skipVan)) continue;
+      if (c.box) { if (x > c.box[0] - r && x < c.box[2] + r && z > c.box[1] - r && z < c.box[3] + r) return c; }
+      else if (Math.hypot(x - c.x, z - c.z) < c.r + r) return c;
+    }
+    return null;
+  }
+  function vanBlocked(x, z, yaw) {
+    const fx = Math.cos(yaw), fz = Math.sin(yaw), rx = -fz, rz = fx;
+    for (const [a, b] of [[VAN.L / 2 - 0.1, VAN.Wd / 2 - 0.1], [VAN.L / 2 - 0.1, -VAN.Wd / 2 + 0.1], [-VAN.L / 2 + 0.1, VAN.Wd / 2 - 0.1], [-VAN.L / 2 + 0.1, -VAN.Wd / 2 + 0.1], [0, VAN.Wd / 2 - 0.1], [0, -VAN.Wd / 2 + 0.1]])
+      if (floorAt("street", x + fx * a + rx * b, z + fz * a + rz * b) === null) return "wall";
+    for (const a of [VAN.L / 2 - 0.9, 0, -VAN.L / 2 + 0.9]) if (vanHitsCol(x + fx * a, z + fz * a, 0.95)) return "car";
+    return null;
+  }
+  function vanHorn() {
+    VAN.hornT = 26; popText("HONK!", VAN.x, 3.2, VAN.z, "#ffe14a"); comicPop(VAN.x, 2.8, VAN.z, "HOOONK!");
+    try { if (AC && SFXBUS) { const t = AC.currentTime, g = AC.createGain(); g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(0.22, t + 0.02); g.gain.setValueAtTime(0.22, t + 0.32); g.gain.exponentialRampToValueAtTime(0.0001, t + 0.42); g.connect(SFXBUS);
+      for (const f of [349, 440]) { const o = AC.createOscillator(); o.type = "sawtooth"; o.frequency.value = f; const lp = AC.createBiquadFilter(); lp.type = "lowpass"; lp.frequency.value = 1800; o.connect(lp); lp.connect(g); o.start(t); o.stop(t + 0.45); } } } catch (e) {}
+    for (const e of STATE.enemies) if (e.post && e.idle) { const g = entPos(STATE.zone, e, {}); if (Math.hypot(g.gx - VAN.x, g.gz - VAN.z) < 12) engage(e); } // the noise wakes the block
+  }
+  function vanDrive(p, raw) { // one 60 Hz step at the wheel
+    const dt = 1 / 60;
+    p.inv = Math.max(p.inv, 20); p.walkT = 0; p.hidden = true;
+    if (raw.e || raw.p) { vanExit(p); return; }
+    if (raw.a || anyPressed("h")) vanHorn();
+    if (anyPressed("g") || VAN.tbHit) { VAN.tbHit = false; VAN.lights = !VAN.lights; SFX.menuMove && SFX.menuMove(); }
+    const v = inputVec(); let thr = v ? -v.dy * v.mag : 0, st = v ? v.dx * v.mag : 0;
+    const hb = anyHeld("k", " ") || BTN_B.down || !!VAN.botHB;
+    const [fx, fz] = vanF(), [rx, rz] = vanR();
+    let sp = VAN.vx * fx + VAN.vz * fz, lat = VAN.vx * rx + VAN.vz * rz;
+    if (thr > 0.1) { if (sp < -0.5) sp += 22 * dt * thr; else if (sp < 19) sp += (sp < 8 ? 15 : 9) * dt * thr; }
+    else if (thr < -0.1) { if (sp > 0.5) sp -= 26 * dt * -thr; else if (sp > -7) sp -= 9 * dt * -thr; }
+    else sp *= 1 - dt * 0.7;
+    if (hb) sp *= 1 - dt * 1.4;
+    VAN.steer = lerp(VAN.steer, st, 0.18);
+    const turn = VAN.steer * Math.max(-1, Math.min(1, sp / 5)) * (hb ? 2.9 : 1.9) * (sp < 0 ? 1 : 1);
+    VAN.yaw += turn * dt;
+    lat *= Math.exp(-dt * (hb ? 0.9 : 9)); // grip: the handbrake lets the back step out
+    if (hb && Math.abs(sp) > 6 && Math.abs(VAN.steer) > 0.3) lat += -VAN.steer * Math.sign(sp) * 7 * dt * Math.min(1, Math.abs(sp) / 12); // kick the tail out
+    const [nfx, nfz] = vanF(), [nrx, nrz] = vanR();
+    VAN.vx = nfx * sp + nrx * lat; VAN.vz = nfz * sp + nrz * lat; VAN.sp = sp; VAN.lat = lat;
+    VAN.maxLat = Math.max(VAN.maxLat, Math.abs(lat)); VAN.maxSp = Math.max(VAN.maxSp, Math.abs(sp));
+    const nx = VAN.x + VAN.vx * dt, nz = VAN.z + VAN.vz * dt, blk = vanBlocked(nx, nz, VAN.yaw);
+    if (blk) {
+      const hit = Math.hypot(VAN.vx, VAN.vz);
+      if (hit > 3) { STATE.shake = Math.max(STATE.shake, Math.min(14, hit | 0)); SFX.land && SFX.land(); if (hit > 7) { SFX.hit && SFX.hit(); comicPop(VAN.x + nfx * 2.8, 1.5, VAN.z + nfz * 2.8, "KRUNCH!"); } VAN.bumps++; }
+      VAN.vx *= -0.3; VAN.vz *= -0.3; VAN.yaw -= turn * dt * 0.5;
+      if (vanBlocked(VAN.x, VAN.z, VAN.yaw)) { VAN.yaw += turn * dt * 0.5; }
+    } else { VAN.dist += Math.hypot(nx - VAN.x, nz - VAN.z); VAN.x = nx; VAN.z = nz; }
+    if (Math.abs(lat) > 2.6 && Math.abs(sp) > 4) { VAN.driftT++; if (VAN.driftT % 4 === 0) { const l = toLocal(STATE.zone, VAN.x - nfx * 2.2, VAN.z - nfz * 2.2); fx_(l, "smoke"); } if (VAN.driftT === 30) popText("DRIFT!", VAN.x, 3.4, VAN.z, "#7fe0ff", true); }
+    else VAN.driftT = 0;
+    VAN.wheel += sp * dt / 0.43;
+    // the player rides along: zone follows the van
+    p.gx = VAN.x; p.gz = VAN.z;
+    const zn = zoneAtG("street", VAN.x, VAN.z); if (zn && zn !== STATE.zone) setZone(zn);
+    const l = toLocal(STATE.zone, VAN.x, VAN.z); p.x = l.x; p.y = l.y; p.fy = floorAt("street", VAN.x, VAN.z) || 0; p.z = 0; p.gy = p.fy;
+    // thugs + props in the way
+    const spd = Math.hypot(VAN.vx, VAN.vz);
+    for (const e of STATE.enemies) {
+      if (e.vanCd > 0) { e.vanCd--; continue; }
+      if (e.hp <= 0 || e.state === "dying" || e.gone || (e.z || 0) > 20) continue;
+      const g = entPos(STATE.zone, e, {}), dx = g.gx - VAN.x, dz = g.gz - VAN.z, a = dx * nfx + dz * nfz, b = dx * nrx + dz * nrz;
+      if (Math.abs(a) > VAN.L / 2 + 0.45 || Math.abs(b) > VAN.Wd / 2 + 0.45 || spd < 2.5) continue;
+      const wx = Math.sign(a) >= 0 ? nfx : -nfx, wz = Math.sign(a) >= 0 ? nfz : -nfz, du = (Math.abs(b) > VAN.Wd / 2 ? nrx * Math.sign(b) : wx) * STATE.zone.u[0] + (Math.abs(b) > VAN.Wd / 2 ? nrz * Math.sign(b) : wz) * STATE.zone.u[1];
+      const boss = !!edef(e).boss || e.type === "ramrod" || e.type === "zap";
+      if (e.idle || e.home) engage(e);
+      hitEnemy(e, boss ? 2 : Math.min(e.hp, 3 + Math.round(spd / 4)), true, du >= 0 ? 1 : -1, 9, true);
+      e.vanCd = 45; VAN.hits++; STATE.shake = Math.max(STATE.shake, 6); comicPop(g.gx, g.gy + 1.4, g.gz, ["THUD!", "WHUMP!", "BONK!"][VAN.hits % 3]);
+      VAN.vx *= 0.88; VAN.vz *= 0.88;
+    }
+    for (const pr of STATE.props) {
+      if (pr.state === "broken" || pr.state === "held" || spd < 2) continue;
+      const g = entPos(STATE.zone, pr, {}), dx = g.gx - VAN.x, dz = g.gz - VAN.z, a = dx * nfx + dz * nfz, b = dx * nrx + dz * nrz;
+      if (Math.abs(a) > VAN.L / 2 + 0.3 || Math.abs(b) > VAN.Wd / 2 + 0.3) continue;
+      breakProp(pr, (nfx * STATE.zone.u[0] + nfz * STATE.zone.u[1]) >= 0 ? 1 : -1); VAN.props++;
+    }
+    vanPlace();
+  }
+  function fx_(l, kind) { STATE.fx.push({ kind, x: l.x, y: l.y - 4, t: 0, life: 18 }); }
+  function vanFrame(dt) { // per render frame: wheels, lights, beams
+    if (!VAN.mesh) return;
+    const [fx, fz] = vanF();
+    for (let i = 0; i < VAN.wheels.length; i++) { const w = VAN.wheels[i]; w.children[0].rotation.z = -VAN.wheel; w.children[1].rotation.z = -VAN.wheel; if (i < 2) w.rotation.y = -VAN.steer * 0.45; }
+    const on = VAN.lights; VAN.spot.intensity = on ? 60 : 0; for (const b of VAN.beams) b.visible = on && DAY.lamp > 0.2;
+    VAN.hlMat.color.setHex(on ? 0xfff6d0 : 0x555544); VAN.tlMat.color.setHex(VAN.on && VAN.sp < -0.3 ? 0xffffff : (VAN.on && (BTN_B.down || anyHeld("k", " ") || VAN.botHB)) || on ? 0xff2a1a : 0x661010);
+    VAN.mesh.position.y = VAN.on ? Math.abs(Math.sin(STATE.t * 0.9)) * 0.02 * Math.min(1, Math.abs(VAN.sp) / 4) : 0;
+    VAN.mesh.rotation.x = VAN.on ? VAN.lat * 0.012 : 0; // body roll in the drift
+    if (VAN.hornT > 0) VAN.hornT--;
+  }
+  const _vp = { pos: new THREE.Vector3(), look: new THREE.Vector3(), fov: 62 }, _vw = new THREE.Vector3(), _vl = new THREE.Vector3();
+  function vanCamPose(dt) {
+    const [fx, fz] = vanF(); const ax = VAN.sp < -1 ? -fx : fx, az = VAN.sp < -1 ? -fz : fz;
+    if (!VAN.cdir) VAN.cdir = new THREE.Vector3(ax, 0, az);
+    _vw.set(ax, 0, az); VAN.cdir.lerp(_vw, 1 - Math.exp(-dt * 2.6)).normalize();
+    const back = 8.4 + Math.min(2.2, Math.abs(VAN.sp) * 0.1);
+    _vw.set(VAN.x - VAN.cdir.x * back, 3.5, VAN.z - VAN.cdir.z * back);
+    _vl.set(VAN.x + VAN.cdir.x * 5, 1.1, VAN.z + VAN.cdir.z * 5);
+    if (!VAN.cinit) { _vp.pos.copy(_vw); _vp.look.copy(_vl); VAN.cinit = true; }
+    _vp.pos.lerp(_vw, 1 - Math.exp(-dt * 5)); _vp.look.lerp(_vl, 1 - Math.exp(-dt * 7));
+    _vp.fov = 60 + Math.min(12, Math.abs(VAN.sp) * 0.6);
+    return _vp;
+  }
+  function drawVanHUD() {
+    if (!VAN.on) { vanButton(false); return; }
+    const kmh = Math.round(Math.abs(VAN.sp) * 3.6 * 0.62);
+    const vy = 40; rect(W - 92, vy, 86, 24, "rgba(0,0,0,0.6)"); rect(W - 92, vy, 86, 1, "#ffd23a");
+    ptext(String(kmh).padStart(3, " ") + " MPH", W - 10, vy + 5, 2, "#ffe060", "right");
+    ptext((VAN.lights ? "LIGHTS ON" : "LIGHTS OFF") + (VAN.driftT > 10 ? "  DRIFT" : ""), W - 10, vy + 18, 1, VAN.driftT > 10 ? "#7fe0ff" : "#c8ccd6", "right");
+    vanButton(STATE.showTouch);
+  }
+  function vanButton(on) {
+    const scr = document.getElementById("screen"); if (!scr) return;
+    if (!VAN.btn) {
+      const b = document.createElement("div"); b.className = "ss-tb ss-tb-s"; b.textContent = "LIGHTS"; b.setAttribute("role", "button"); b.setAttribute("aria-label", "Headlights");
+      b.addEventListener("pointerdown", (ev) => { ev.preventDefault(); ev.stopPropagation(); VAN.tbHit = true; b.classList.add("on"); STATE.showTouch = true; });
+      const up = (ev) => { ev.stopPropagation(); b.classList.remove("on"); }; b.addEventListener("pointerup", up); b.addEventListener("pointercancel", up); b.addEventListener("pointerleave", up);
+      scr.appendChild(b); VAN.btn = b;
+    }
+    const v = on ? "flex" : "none"; if (VAN.btn.style.display !== v) VAN.btn.style.display = v;
+  }
+
   // ---------- HUD + menus (2D canvas over the 3D view): the 16-bit HUD, select screen, cards, results ----------
   const PROJ = new THREE.Vector3();
   function project(gx, gy, gz) { PROJ.set(gx, gy, gz).project(camera); return { x: (PROJ.x + 1) / 2 * W, y: (1 - PROJ.y) / 2 * H, ok: PROJ.z < 1 && PROJ.z > -1 }; }
@@ -4548,7 +5216,7 @@ import * as THREE from "./three.module.min.js";
     if (Math.floor(t / 24) % 2 === 0) ptext("PRESS START", W / 2, 150, 2, "#fff");
     ptext("ENTER / TAP / ATTACK", W / 2, 172, 1, "#c8ccd6");
     ptext("ARROWS MOVE  J ATTACK  K JUMP  L SPECIAL  E/L USE", W / 2, 196, 1, "#9aa0b8");
-    ptext("C COUNTER  B SKATEBOARD (SEWERS)  V CRT", W / 2, 208, 1, "#9aa0b8");
+    ptext("C COUNTER  B BOARD  X SNEAK  Q CAMERA  T TIME  V CRT", W / 2, 208, 1, "#9aa0b8");
   }
   function updateTitle3D() {
     if (anyPressed("enter", " ", "j", "k") || tapPoint || BTN_A.hit || BTN_B.hit || BOT) { tapPoint = null; SFX.confirm(); STATE.scene = "select"; selPick = 0; selWipe = 0; if (BOT) botPickT = 20; }
@@ -4590,7 +5258,7 @@ import * as THREE from "./three.module.min.js";
       const s = project(STATE.near.x, (p.layer === "sewer" ? WORLD.SY : p.fy) + (STATE.near.kind === "board" ? 1.5 : 2.3), STATE.near.z);
       if (s.ok) { const lab = (STATE.showTouch ? "SPECIAL > " : "E > ") + STATE.near.label, w = lab.length * 6 + 14; ctx.globalAlpha = 0.85; rect(s.x - w / 2, s.y - 10, w, 13, "#000"); ctx.globalAlpha = 1; rect(s.x - w / 2, s.y + 3, w, 1, "#ffd23a"); ptext(lab, s.x, s.y - 7, 1, Math.floor(STATE.t / 15) % 2 ? "#ffd23a" : "#fff"); }
     }
-    drawFFHUD();
+    drawStealthHUD(); drawFFHUD(); drawCamHUD(); drawVanHUD(); drawDayHUD();
     // ---- the 16-bit HUD (ported): P1 box with portrait, name, score, 10 health pips, lives ----
     rect(4, 3, 150, 26, "#fff"); rect(5, 4, 148, 24, "#10101c");
     rect(7, 6, 20, 20, "#2a2a40"); rect(8, 7, 18, 18, "#000");
@@ -4635,15 +5303,15 @@ import * as THREE from "./three.module.min.js";
     } else if (!bossOn) { HUDS.bossMax = 0; HUDS.boss = 0; HUDS.lastName = ""; }
     if (STATE.bossT > 0 && Math.floor(STATE.t / 10) % 2) ptext(rr && rr.cfg ? "WARNING: " + rr.name + "!" : rr ? "WARNING: RAMROD!" : "WARNING: ZAP-ROLLERS!", W / 2, 64, 2, "#ff4a3a");
     if (STATE.intro > 0 && !rr && Math.floor(STATE.t / 10) % 2) ptext("SOMETHING'S DRILLING UP!", W / 2, 64, 2, "#ff4a3a");
-    if (STATE.clearT > 0) { rect(0, 84, W, 40, "rgba(0,0,0,0.6)"); ptext("AREA CLEAR", W / 2, 98, 3, "#ffe060"); }
+    if (STATE.clearT > 0) { rect(0, H / 2 - 28, W, 40, "rgba(0,0,0,0.6)"); ptext("AREA CLEAR", W / 2, H / 2 - 14, 3, "#ffe060"); }
     if (STATE.banner && !STATE.clearT) {
       const B = STATE.banner, a = B.t < 12 ? B.t / 12 : B.t > 170 ? (200 - B.t) / 30 : 1;
-      ctx.globalAlpha = Math.max(0, a) * 0.7; rect(0, 150, W, 34, "#000"); ctx.globalAlpha = Math.max(0, a);
-      ptext(B.a, W / 2, 154, 2, B.c); ptext(B.b, W / 2, 172, 1, "#fff"); ctx.globalAlpha = 1;
+      ctx.globalAlpha = Math.max(0, a) * 0.7; rect(0, H - 74, W, 34, "#000"); ctx.globalAlpha = Math.max(0, a);
+      ptext(B.a, W / 2, H - 70, 2, B.c); ptext(B.b, W / 2, H - 52, 1, "#fff"); ctx.globalAlpha = 1;
     }
     if (STATE.lock && STATE.locked && !STATE.lock.boss && Math.floor(STATE.t / 30) % 2 === 0 && STATE.enemies.length) ptext("WAVE " + (STATE.waveI + 1) + "/" + STATE.lock.waves.length, W / 2, HUDS.slide > 0 ? 34 : 20, 1, "#c8ccd6");
-    if (CAM.fade > 0) { ctx.globalAlpha = Math.min(1, CAM.fade); rect(0, 0, W, H, "#000"); ctx.globalAlpha = 1; }
-    if (STATE.elev) { // inside the car: the dial counts the floors
+    if (CAM.fade > 0 && !oneShot()) { ctx.globalAlpha = Math.min(1, CAM.fade); rect(0, 0, W, H, "#000"); ctx.globalAlpha = 1; }
+    if (STATE.elev && !oneShot()) { // inside the car: the dial counts the floors
       const E = STATE.elev, fl = Math.max(1, Math.min(5, Math.round(E.up ? 1 + E.k * 4 : 5 - E.k * 4)));
       rect(W / 2 - 60, 70, 120, 70, "#2a2010"); rect(W / 2 - 57, 73, 114, 64, "#120e08");
       ptext("ELEVATOR", W / 2, 80, 1, "#c8a040"); ptext("FLOOR " + (fl === 5 ? "R" : fl), W / 2, 100, 2, "#ffd08a");
@@ -4763,7 +5431,7 @@ import * as THREE from "./three.module.min.js";
     try { render3D(dt, ts / 1000); } catch (err) { ERR.n++; ERR.last = String(err && err.stack || err); if (ERR.n < 5) console.error("render", err); }
     try {
       ctx.setTransform(RES, 0, 0, RES, 0, 0); ctx.imageSmoothingEnabled = false; ctx.clearRect(0, 0, W, H);
-      const S = SCN[STATE.scene]; if (S) S[1]();
+      const S = SCN[STATE.scene]; if (S) { if (pfOn() && STATE.scene !== "stage") { const oy = Math.round((H - H0) / 2), Hs = H; pfBands(oy); ctx.translate(0, oy); H = H0; try { S[1](); } finally { H = Hs; ctx.setTransform(RES, 0, 0, RES, 0, 0); } } else S[1](); }
       drawSpeaker();
     } catch (err) { ERR.n++; ERR.last = String(err && err.stack || err); if (ERR.n < 5) console.error("draw", err); for (let i = 0; i < 16; i++) ctx.restore(); ctx.globalAlpha = 1; }
     try { audioFrame(); updateCabFx(); } catch (err) { }
