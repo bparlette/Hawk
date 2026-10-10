@@ -28,9 +28,9 @@ function skeleton(d, mat) {
   J.d = d; return J;
 }
 const HERO_D = { hip: 0.8, torsoY: 0.06, neckY: 0.66, legX: 0.15, thigh: 0.36, shin: 0.36, shX: 0.37, shY: 0.5, upper: 0.27, fore: 0.25 };
-function buildHero() {
+function buildHero(o = {}) { // o.staff: the partner turtle (bo staff instead of twin blades, own colours)
   const mat = toonMat(); const J = skeleton(HERO_D, mat), d = HERO_D;
-  const SK = '#5ccf3a', SK2 = '#49b52c', PL = '#ffd75e', SH = '#b8672b', RIM = '#ffb43c', BAND = '#1f7bff', WRAP = '#fff0d6', BELT = '#8a4b22';
+  const SK = o.sk || '#5ccf3a', SK2 = o.sk2 || '#49b52c', PL = o.pl || '#ffd75e', SH = o.sh || '#b8672b', RIM = o.rim || '#ffb43c', BAND = o.band || '#1f7bff', WRAP = '#fff0d6', BELT = o.belt || '#8a4b22';
   // hips + belt
   part(J.hips, G.sph(0.25, 0.17, 0.21), SK, 0, 0.02, 0);
   part(J.hips, G.cyl(0.27, 0.27, 0.12, 16), BELT, 0, 0.12, 0);
@@ -46,8 +46,9 @@ function buildHero() {
   part(J.torso, G.sph(0.1, 0.1, 0.05), '#8f4c1e', 0.17, 0.2, -0.33, { outline: false });
   part(J.torso, G.sph(0.1, 0.1, 0.05), '#8f4c1e', -0.17, 0.2, -0.33, { outline: false });
   for (const s of [-1, 1]) part(J.torso, G.box(0.07, 0.62, 0.05), BELT, s * 0.06, 0.32, 0.25, { rot: [0.1, 0, s * 0.55], outline: false });
-  // sword hilts on the back (scabbards)
-  for (const s of [-1, 1]) part(J.torso, G.cyl(0.05, 0.05, 0.7, 8), '#3a2a7a', s * 0.18, 0.42, -0.36, { rot: [0.2, 0, s * 0.5] });
+  // sword hilts on the back (scabbards); the staff turtle wears a knee-pad style shoulder guard instead
+  if (!o.staff) for (const s of [-1, 1]) part(J.torso, G.cyl(0.05, 0.05, 0.7, 8), '#3a2a7a', s * 0.18, 0.42, -0.36, { rot: [0.2, 0, s * 0.5] });
+  else { part(J.torso, G.sph(0.16, 0.1, 0.16), '#3a2a7a', 0.3, 0.55, 0.0); part(J.torso, G.box(0.06, 0.06, 0.06), '#ffd23c', 0.3, 0.63, 0.1, { outline: false }); }
   // head: big round head, snout, bandana band + knot + tails, eyes
   const head = J.head = grp(J.neck, 0, 0, 0); head.userData.mat = mat;
   part(head, G.sph(0.27, 0.25, 0.26), SK, 0, 0.2, 0.0);
@@ -73,6 +74,10 @@ function buildHero() {
     part(J['ha' + k], G.sph(0.105, 0.1, 0.1), SK, 0, -0.04, 0);
     // sword: grip / guard / blade (blade along +y of the sword group)
     const sw = J['sw' + k] = grp(J['ha' + k], 0, -0.05, 0); sw.userData.mat = mat;
+    if (o.staff) { // bo staff: one long pole held at its middle in the right hand (left hand: empty)
+      if (k === 'R') { part(sw, G.cyl(0.042, 0.042, 2.0, 10), '#b9783f', 0, 0.12, 0); for (const y of [-0.82, 0.12, 1.06]) part(sw, G.cyl(0.052, 0.052, 0.16, 10), y === 0.12 ? '#3a2a7a' : '#14101f', 0, y, 0, { outline: false }); }
+      continue;
+    }
     part(sw, G.cyl(0.03, 0.03, 0.24, 8), '#3a2a7a', 0, 0.0, 0);
     part(sw, G.cyl(0.075, 0.075, 0.03, 12), '#ffd23c', 0, 0.13, 0);
     part(sw, G.box(0.055, 0.78, 0.016), '#eafcff', 0, 0.54, 0);

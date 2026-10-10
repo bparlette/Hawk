@@ -4,7 +4,12 @@ const CORNER_PTS = [['SE', 9.3, 9.3], ['E', 24, 0], ['NE', 9.3, -9.3], ['N', 0, 
 const BOTR = { i: 0, log: [], corners: [], t: 0, orbitT: 0, atkT: 0, done: false, fightT: 0, fights: 0, yaws: [] };
 function botThink(dt) {
   BOTR.t += dt; const b = (IN.bot = IN.bot || { mx: 0, my: 0, look: 0 });
-  b.look = 0; if (CINE.intro || CINE_ST.has(hero.state)) { b.mx = b.my = 0; return; }
+  b.look = 0; if (CINE.intro || CINE_ST.has(hero.state) || hero.state === 'ko' || PART.over) { b.mx = b.my = 0; b.actHold = false; return; }
+  // the partner is down: run over and hold ACT on it
+  if (partner.state === 'ko') { const d = Math.hypot(partner.pos.x - hero.pos.x, partner.pos.z - hero.pos.z);
+    if (d < 1.5 || hero.state === 'revive') { b.mx = b.my = 0; b.actHold = true; return; }
+    b.actHold = false; const f = camFwd(CAM.yaw), r = [-f[1], f[0]], dx = partner.pos.x - hero.pos.x, dz = partner.pos.z - hero.pos.z; b.mx = (dx * r[0] + dz * r[1]) / d; b.my = (dx * f[0] + dz * f[1]) / d; BOTR.revRuns = (BOTR.revRuns || 0) + 1; return; }
+  b.actHold = false;
   // QTE: a dizzy thug in reach -> press the action button (after a human-ish reaction delay) instead of swinging
   if (QTE && qteInRange()) { b.mx = b.my = 0; BOTR.qteT = (BOTR.qteT || 0) + dt; if (BOTR.qteT > 0.2) { b.act = true; BOTR.qteT = 0; BOTR.qtePressed = (BOTR.qtePressed || 0) + 1; } return; } else BOTR.qteT = 0;
   const near = enemies.filter((e) => e.alive && e.state !== 'dying' && e.state !== 'return' && e.state !== 'idle' && Math.hypot(e.pos.x - hero.pos.x, e.pos.z - hero.pos.z) < 9);
@@ -79,6 +84,7 @@ function frame(now) {
       S.time += dt;
       countAttackers();
       updateHero(dt);
+      updatePartner(dt);
       for (const e of enemies) updateEnemy(e, dt);
       separate();
       if (k < steps - 1) { updateSprites(rdt); updateSlashes(rdt); PRESS.clear(); camStep(dt, rdt); }
@@ -104,4 +110,4 @@ function frame(now) {
   } catch (err) { __celErr.n++; __celErr.last = String(err && err.stack || err); if (__celErr.n < 4) console.error(err); }
 }
 requestAnimationFrame(frame);
-window.__cel = { S, hero, enemies, CAM, BOTR, FPS, IN, renderer, CINE, ACTIONS, DOOR, PIZZA, LADDER, ROOF, get QTE() { return QTE; }, get lockT() { return lockT; }, press: (k) => PRESS.add(k), tryAction, get frames() { return frames; }, atlasRows: _ay + _arow, THREE, camera, scene };
+window.__cel = { S, hero, partner, PART, BOOST_P, hurtTurtle, reviveTurtle, partnerSlot, get KEYS() { return KEYS; }, enemies, CAM, BOTR, FPS, IN, renderer, CINE, ACTIONS, DOOR, PIZZA, LADDER, ROOF, get QTE() { return QTE; }, get lockT() { return lockT; }, press: (k) => PRESS.add(k), tryAction, get frames() { return frames; }, atlasRows: _ay + _arow, THREE, camera, scene };

@@ -718,9 +718,9 @@ function skeleton(d, mat) {
   J.d = d; return J;
 }
 const HERO_D = { hip: 0.8, torsoY: 0.06, neckY: 0.66, legX: 0.15, thigh: 0.36, shin: 0.36, shX: 0.37, shY: 0.5, upper: 0.27, fore: 0.25 };
-function buildHero() {
+function buildHero(o = {}) { // o.staff: the partner turtle (bo staff instead of twin blades, own colours)
   const mat = toonMat(); const J = skeleton(HERO_D, mat), d = HERO_D;
-  const SK = '#5ccf3a', SK2 = '#49b52c', PL = '#ffd75e', SH = '#b8672b', RIM = '#ffb43c', BAND = '#1f7bff', WRAP = '#fff0d6', BELT = '#8a4b22';
+  const SK = o.sk || '#5ccf3a', SK2 = o.sk2 || '#49b52c', PL = o.pl || '#ffd75e', SH = o.sh || '#b8672b', RIM = o.rim || '#ffb43c', BAND = o.band || '#1f7bff', WRAP = '#fff0d6', BELT = o.belt || '#8a4b22';
   // hips + belt
   part(J.hips, G.sph(0.25, 0.17, 0.21), SK, 0, 0.02, 0);
   part(J.hips, G.cyl(0.27, 0.27, 0.12, 16), BELT, 0, 0.12, 0);
@@ -736,8 +736,9 @@ function buildHero() {
   part(J.torso, G.sph(0.1, 0.1, 0.05), '#8f4c1e', 0.17, 0.2, -0.33, { outline: false });
   part(J.torso, G.sph(0.1, 0.1, 0.05), '#8f4c1e', -0.17, 0.2, -0.33, { outline: false });
   for (const s of [-1, 1]) part(J.torso, G.box(0.07, 0.62, 0.05), BELT, s * 0.06, 0.32, 0.25, { rot: [0.1, 0, s * 0.55], outline: false });
-  // sword hilts on the back (scabbards)
-  for (const s of [-1, 1]) part(J.torso, G.cyl(0.05, 0.05, 0.7, 8), '#3a2a7a', s * 0.18, 0.42, -0.36, { rot: [0.2, 0, s * 0.5] });
+  // sword hilts on the back (scabbards); the staff turtle wears a knee-pad style shoulder guard instead
+  if (!o.staff) for (const s of [-1, 1]) part(J.torso, G.cyl(0.05, 0.05, 0.7, 8), '#3a2a7a', s * 0.18, 0.42, -0.36, { rot: [0.2, 0, s * 0.5] });
+  else { part(J.torso, G.sph(0.16, 0.1, 0.16), '#3a2a7a', 0.3, 0.55, 0.0); part(J.torso, G.box(0.06, 0.06, 0.06), '#ffd23c', 0.3, 0.63, 0.1, { outline: false }); }
   // head: big round head, snout, bandana band + knot + tails, eyes
   const head = J.head = grp(J.neck, 0, 0, 0); head.userData.mat = mat;
   part(head, G.sph(0.27, 0.25, 0.26), SK, 0, 0.2, 0.0);
@@ -763,6 +764,10 @@ function buildHero() {
     part(J['ha' + k], G.sph(0.105, 0.1, 0.1), SK, 0, -0.04, 0);
     // sword: grip / guard / blade (blade along +y of the sword group)
     const sw = J['sw' + k] = grp(J['ha' + k], 0, -0.05, 0); sw.userData.mat = mat;
+    if (o.staff) { // bo staff: one long pole held at its middle in the right hand (left hand: empty)
+      if (k === 'R') { part(sw, G.cyl(0.042, 0.042, 2.0, 10), '#b9783f', 0, 0.12, 0); for (const y of [-0.82, 0.12, 1.06]) part(sw, G.cyl(0.052, 0.052, 0.16, 10), y === 0.12 ? '#3a2a7a' : '#14101f', 0, y, 0, { outline: false }); }
+      continue;
+    }
     part(sw, G.cyl(0.03, 0.03, 0.24, 8), '#3a2a7a', 0, 0.0, 0);
     part(sw, G.cyl(0.075, 0.075, 0.03, 12), '#ffd23c', 0, 0.13, 0);
     part(sw, G.box(0.055, 0.78, 0.016), '#eafcff', 0, 0.54, 0);
@@ -1086,7 +1091,10 @@ class Fighter {
   }
 }
 const hero = new Fighter(buildHero(), { x: 0, z: 31, yaw: Math.PI, hp: 100, r: 0.45 });
-hero.J.mat.userData.flashC.value.set('#fff'); hero.roof = false;
+hero.J.mat.userData.flashC.value.set('#fff'); hero.roof = false; hero.name = 'BLADE';
+// the AI partner: a second original turtle (magenta bandana, bo staff), always computer-controlled (see 06c_partner.js)
+const partner = new Fighter(buildHero({ staff: true, band: '#e0379b', sk: '#43c47e', sk2: '#36a86a', sh: '#8f5a2e', rim: '#f0b64a', pl: '#ffe08a', belt: '#5a3a8a' }), { x: -2.3, z: 30.6, yaw: Math.PI, hp: 100, r: 0.45 });
+partner.J.mat.userData.flashC.value.set('#fff'); partner.roof = false; partner.name = 'RIDGE'; partner.isPartner = true;
 const POSTS = [
   { x: -2.8, z: 17, look: 0, yaw: Math.PI },        // south arm pair (first fight)
   { x: 2.6, z: 18.5, look: 1, yaw: Math.PI },
@@ -1108,7 +1116,7 @@ function drawHp(e) {
   const c = e.hpC.getContext('2d'); c.clearRect(0, 0, 128, 20); c.fillStyle = INK; c.fillRect(0, 0, 128, 20);
   c.fillStyle = '#ff3d6e'; c.fillRect(4, 4, 120 * Math.max(0, e.hp) / e.maxHp, 12); c.fillStyle = 'rgba(255,255,255,.45)'; c.fillRect(4, 4, 120 * Math.max(0, e.hp) / e.maxHp, 4); e.hpT.needsUpdate = true;
 }
-const ALL = [hero, ...enemies];
+const ALL = [hero, partner, ...enemies];
 
 // ---------------- world collision ----------------
 const WALK = SW - 0.45;
@@ -1134,7 +1142,7 @@ function collide(f) {
 }
 function separate() {
   for (let i = 0; i < ALL.length; i++) for (let j = i + 1; j < ALL.length; j++) {
-    const a = ALL[i], b = ALL[j]; if (!a.alive || !b.alive || a.state === 'down' || b.state === 'down' || a.roof || b.roof || CINE_ST.has(a.state) || a.fin || b.fin) continue;
+    const a = ALL[i], b = ALL[j]; if (!a.alive || !b.alive || a.state === 'down' || b.state === 'down' || a.roof || b.roof || CINE_ST.has(a.state) || a.fin || b.fin || a.ghost || b.ghost) continue;
     const dx = b.pos.x - a.pos.x, dz = b.pos.z - a.pos.z, d = Math.hypot(dx, dz), m = a.r + b.r;
     if (d < m && d > 1e-4) { const k = (m - d) / 2; a.pos.x -= dx / d * k; a.pos.z -= dz / d * k; b.pos.x += dx / d * k; b.pos.z += dz / d * k; }
   }
@@ -1190,13 +1198,13 @@ function readInput() {
   if (KEYS.has('q')) look -= 1; if (KEYS.has('r')) look += 1;
   if (TOUCHS.stick !== null) { mx += TOUCHS.x; my -= TOUCHS.y; }
   if (TOUCHS.btn.l) look -= 1; if (TOUCHS.btn.r) look += 1;
-  const pads = navigator.getGamepads ? navigator.getGamepads() : [];
+  const pads = navigator.getGamepads ? navigator.getGamepads() : []; IN.padAct = false;
   for (const gp of pads) {
     if (!gp) continue; const dz = (v) => (Math.abs(v) < 0.18 ? 0 : v);
     mx += dz(gp.axes[0] || 0); my -= dz(gp.axes[1] || 0); look += dz(gp.axes[2] || 0); lookY += dz(gp.axes[3] || 0);
     const b = (i) => !!(gp.buttons[i] && gp.buttons[i].pressed);
     if (b(4)) look -= 1; if (b(5)) look += 1;
-    const prev = PAD_PREV[gp.index] || [];
+    const prev = PAD_PREV[gp.index] || []; if (b(3)) IN.padAct = true;
     if ((b(2) && !prev[2]) || (b(1) && !prev[1])) PRESS.add('j'); if (b(0) && !prev[0]) PRESS.add('k'); if (b(3) && !prev[3]) PRESS.add('e');
     if (gp.buttons.some((x) => x.pressed) || Math.abs(gp.axes[0] || 0) > 0.5) { DEV = 'pad'; if (CINE.intro && CINE.intro.t > 0.4) CINE.intro.skip = true; }
     PAD_PREV[gp.index] = gp.buttons.map((x) => x.pressed);
@@ -1277,9 +1285,9 @@ function pickTarget(dirx, dirz, maxD = 7) {
   }
   return best;
 }
-function hitEnemy(e, dmg, heavy, fromYaw) {
+function hitEnemy(e, dmg, heavy, fromYaw, by = hero) {
   if (!e.alive || e.state === 'dying' || (e.state === 'down' && !heavy)) return false;
-  e.hp -= dmg; e.flash = 1; e.J.mat.userData.flashC.value.set('#fff'); e.hpShow = 2.5; drawHp(e); S.hits++;
+  e.hp -= dmg; e.lastBy = by; e.flash = 1; e.J.mat.userData.flashC.value.set('#fff'); e.hpShow = 2.5; drawHp(e); S.hits++;
   S.combo++; S.comboT = 1.3; S.maxCombo = Math.max(S.maxCombo, S.combo);
   const kx = Math.sin(fromYaw), kz = Math.cos(fromYaw);
   const at = _v.set(e.pos.x, e.pos.y + 1.1 * e.scale, e.pos.z);
@@ -1301,14 +1309,19 @@ function hitEnemy(e, dmg, heavy, fromYaw) {
   if (e.bang) e.bang.life = 0.0001;
   return true;
 }
-function hurtHero(dmg, fromX, fromZ, heavy) {
-  if (hero.inv > 0 || hero.state === 'down' || hero.state === 'getup' || CINE_ST.has(hero.state) || CINE.intro) return;
-  hero.hp = Math.max(0, hero.hp - dmg); hero.flash = 1; hero.J.mat.userData.flashC.value.set('#ff3d6e');
-  const dx = hero.pos.x - fromX, dz = hero.pos.z - fromZ, d = Math.hypot(dx, dz) || 1; hero.yaw = Math.atan2(-dx, -dz);
-  S.combo = 0; S.shake = Math.max(S.shake, 0.5); sfx('hurt'); spawnSprite(FXT.star, _v.set(hero.pos.x, hero.pos.y + 1.2, hero.pos.z), 0.9, 0.2);
-  if (hero.hp <= 0 || heavy) { hero.set('down'); hero.kb.set(dx / d * 6, dz / d * 6); hero.vy = 4; hero.y = 0.01; S.playerDowns++; }
-  else { hero.set('hurt'); hero.kb.set(dx / d * 3, dz / d * 3); }
-  hero.inv = 0.5;
+function hurtHero(dmg, fromX, fromZ, heavy) { hurtTurtle(hero, dmg, fromX, fromZ, heavy); }
+// either turtle takes a hit; at 0 HP it goes down for good ('ko') until the other one revives it
+const NOHURT = new Set(['down', 'getup', 'ko', 'tp', 'hop', 'pclimb', 'boost', 'tag', 'intro']);
+function hurtTurtle(f, dmg, fromX, fromZ, heavy) {
+  if (f.inv > 0 || NOHURT.has(f.state) || CINE_ST.has(f.state) || CINE.intro || f.hp <= 0) return;
+  if (f.isPartner && f.state === 'revive') return; // covering the revive
+  if (f.isPartner) dmg = Math.round(dmg * 0.8);
+  f.hp = Math.max(0, f.hp - dmg); f.flash = 1; f.J.mat.userData.flashC.value.set('#ff3d6e');
+  const dx = f.pos.x - fromX, dz = f.pos.z - fromZ, d = Math.hypot(dx, dz) || 1; f.yaw = Math.atan2(-dx, -dz);
+  if (f === hero) S.combo = 0; S.shake = Math.max(S.shake, f === hero ? 0.5 : 0.25); sfx('hurt'); spawnSprite(FXT.star, _v.set(f.pos.x, f.pos.y + 1.2, f.pos.z), 0.9, 0.2);
+  if (f.hp <= 0 || heavy) { f.set('down'); f.kb.set(dx / d * 6, dz / d * 6); f.vy = 4; f.y = 0.01; if (f === hero) S.playerDowns++; else PART.downs++; }
+  else { f.set('hurt'); f.kb.set(dx / d * 3, dz / d * 3); }
+  f.inv = 0.5;
 }
 const ATK = { // dur, hit time, range, half-cone (rad), dmg, heavy, lunge
   1: { dur: 0.36, hit: 0.3, range: 2.4, cone: 1.15, dmg: 2, heavy: false, pose: 'atk1', slash: 'side', roll: 0.18 },
@@ -1324,13 +1337,13 @@ function startAttack(n) {
   hero.yaw = t ? Math.atan2(t.pos.x - hero.pos.x, t.pos.z - hero.pos.z) : Math.atan2(dx, dz);
   sfx('swing');
 }
-function resolveSwing(A, heavy360) {
+function resolveSwing(A, heavy360, f = hero, skip = null) {
   let any = false;
   for (const e of enemies) {
-    if (!e.alive) continue; const dx = e.pos.x - hero.pos.x, dz = e.pos.z - hero.pos.z, d = Math.hypot(dx, dz);
-    if (d > A.range + e.r * 0.5) continue; if (Math.abs(e.y - hero.y) > 1.6) continue;
-    const ang = Math.abs(angTo(hero.yaw, Math.atan2(dx, dz))); if (!heavy360 && ang > A.cone) continue;
-    if (hitEnemy(e, A.dmg, A.heavy, Math.atan2(dx, dz))) any = true;
+    if (!e.alive || (skip && skip(e))) continue; const dx = e.pos.x - f.pos.x, dz = e.pos.z - f.pos.z, d = Math.hypot(dx, dz);
+    if (d > A.range + e.r * 0.5) continue; if (Math.abs(e.y - f.y) > 1.6) continue;
+    const ang = Math.abs(angTo(f.yaw, Math.atan2(dx, dz))); if (!heavy360 && ang > A.cone) continue;
+    if (hitEnemy(e, A.dmg, A.heavy, Math.atan2(dx, dz), f)) any = true;
   }
   return any;
 }
@@ -1351,6 +1364,7 @@ function updateHero(dt) {
       h.speed = Math.hypot(h.vel.x, h.vel.y);
       pose = h.speed > 0.6 ? HERO_POSES.run(h.at, h.speed) : HERO_POSES.idle(h.at);
       if (h.speed > 4 && Math.random() < dt * 5) dust(h.pos.x, h.pos.y, h.pos.z, 1);
+      if (actHeld() && reviveTarget()) { h.set('revive'); h.rv = 0; h.vel.set(0, 0); break; }
       if (pressed('e', 'f') && tryAction()) break;
       if (atk) startAttack(1); else if (jump) { h.set('air'); h.vy = 8.2; sfx('jump'); dust(h.pos.x, h.pos.y, h.pos.z, 3); }
       break;
@@ -1388,15 +1402,25 @@ function updateHero(dt) {
       }
       break;
     }
-    case 'climb': case 'leap': case 'vault': case 'kick': case 'fin': {
-      pose = cineHero(h, dt); rate = h.state === 'fin' ? 30 : 18; snapTilt = h.state === 'leap' || h.state === 'fin';
+    case 'revive': { // hold ACT next to the downed partner
+      h.vel.set(0, 0); const P = reviveTarget(); pose = HERO_POSES.revive(h.st); rate = 14;
+      if (P) h.yaw += angTo(h.yaw, Math.atan2(P.pos.x - h.pos.x, P.pos.z - h.pos.z)) * (1 - Math.exp(-dt * 12));
+      if (!P || !actHeld()) { h.rv = 0; h.set('move'); break; }
+      h.rv += dt; if (h.rv >= REVIVE_T) { reviveTurtle(P, hero); h.set('move'); }
+      break;
+    }
+    case 'ko': { // 0 HP: stays down until the partner revives (game over only if both turtles are down)
+      h.vel.set(0, 0); pose = HERO_POSES.down(1, true); rate = 14; break;
+    }
+    case 'climb': case 'leap': case 'vault': case 'kick': case 'fin': case 'boost': {
+      pose = cineHero(h, dt); rate = h.state === 'fin' ? 30 : 18; snapTilt = h.state === 'leap' || h.state === 'fin' || h.state === 'boost';
       applyPose(h.J, pose, rate, dt, snapTilt); h.sync(dt); return;
     }
     case 'hurt': { h.vel.set(h.kb.x, h.kb.y); h.kb.multiplyScalar(Math.exp(-dt * 7)); pose = HERO_POSES.hurt(clamp(h.st / 0.35, 0, 1)); rate = 22; if (h.st > 0.35) h.set('move'); break; }
     case 'down': {
       h.vel.set(h.kb.x, h.kb.y); h.kb.multiplyScalar(Math.exp(-dt * 3.5)); h.vy -= 22 * dt; h.y = Math.max(0, h.y + h.vy * dt);
       pose = HERO_POSES.down(h.st, h.y <= 0 && h.st > 0.2); rate = 14;
-      if (h.hp <= 0 && h.st > 1.4) { h.hp = h.maxHp; banner(); h.inv = 2.5; h.set('getup'); }
+      if (h.hp <= 0 && h.st > 0.9 && h.y <= 0) { h.set('ko'); h.kb.set(0, 0); }
       else if (h.hp > 0 && h.st > 1.0) { h.set('getup'); h.inv = 1.0; }
       break;
     }
@@ -1411,10 +1435,12 @@ function updateHero(dt) {
 let ATTACKERS = 0;
 function updateEnemy(e, dt) {
   e.st += dt; e.at += dt; e.cool = Math.max(0, e.cool - dt);
-  const dx = hero.pos.x - e.pos.x, dz = hero.pos.z - e.pos.z, dP = Math.hypot(dx, dz);
-  const toHeroYaw = Math.atan2(dx, dz), heroFromPost = Math.hypot(hero.pos.x - e.post.x, hero.pos.z - e.post.z), fromPost = Math.hypot(e.pos.x - e.post.x, e.pos.z - e.post.z);
+  // target: whichever turtle is nearer (sticky), as long as it is on the street and standing
+  const T0 = enemyTarget(e), tg = T0 || hero; e.tgt = T0;
+  const dx = tg.pos.x - e.pos.x, dz = tg.pos.z - e.pos.z, dP = Math.hypot(dx, dz);
+  const toHeroYaw = Math.atan2(dx, dz), heroFromPost = Math.hypot(tg.pos.x - e.post.x, tg.pos.z - e.post.z), fromPost = Math.hypot(e.pos.x - e.post.x, e.pos.z - e.post.z);
   if (e.fin) { e.sync(dt); return; }
-  const heroOk = hero.state !== 'down' && hero.hp > 0 && !hero.roof && hero.state !== 'climb' && hero.state !== 'leap' && !CINE.intro;
+  const heroOk = !!T0;
   let pose, rate = 14, v = [0, 0];
   const SP = e.big ? 3.0 : 3.7, J = e.J;
   const face = (yaw, k = 10) => { e.yaw += angTo(e.yaw, yaw) * (1 - Math.exp(-dt * k)); };
@@ -1430,8 +1456,8 @@ function updateEnemy(e, dt) {
       const canAtk = e.cool <= 0 && ATTACKERS < 2;
       if (canAtk && dP < (e.armed ? 1.9 : 1.65)) { e.set('windup'); ATTACKERS++; sfx('swing'); break; }
       // approach to striking range if we may attack, else hold a ring around the hero and circle
-      if (canAtk) walkTo(hero.pos.x - dx / dP * 1.3, hero.pos.z - dz / dP * 1.3, SP);
-      else { e.slot += dt * 0.35; const ring = 2.9, a = Math.atan2(-dx, -dz) * 0.6 + e.slot * 0.4; walkTo(hero.pos.x + Math.sin(a) * ring, hero.pos.z + Math.cos(a) * ring, SP * 0.6); face(toHeroYaw, 8); }
+      if (canAtk) walkTo(tg.pos.x - dx / dP * 1.3, tg.pos.z - dz / dP * 1.3, SP);
+      else { e.slot += dt * 0.35; const ring = 2.9, a = Math.atan2(-dx, -dz) * 0.6 + e.slot * 0.4; walkTo(tg.pos.x + Math.sin(a) * ring, tg.pos.z + Math.cos(a) * ring, SP * 0.6); face(toHeroYaw, 8); }
       const sp = Math.hypot(v[0], v[1]); pose = sp > 0.5 ? THUG_POSES.run(e.at, sp, J) : THUG_POSES.idle(e.at, J);
       break;
     }
@@ -1444,7 +1470,7 @@ function updateEnemy(e, dt) {
     case 'attack': {
       pose = THUG_POSES.attack(e.st / 0.3, J); rate = 26; const lunge = e.st < 0.12 ? 4 : 0; v = [Math.sin(e.yaw) * lunge, Math.cos(e.yaw) * lunge];
       if (!e.hitDone && e.st > 0.1) { e.hitDone = true; const ang = Math.abs(angTo(e.yaw, toHeroYaw)); const reach = (e.armed ? 2.0 : 1.7) * e.scale;
-        if (dP < reach && ang < 1.0 && hero.y < 0.9) hurtHero(e.big ? 16 : e.armed ? 11 : 8, e.pos.x, e.pos.z, e.big); }
+        if (dP < reach && ang < 1.0 && tg.y < 0.9 && T0) hurtTurtle(tg, e.big ? 16 : e.armed ? 11 : 8, e.pos.x, e.pos.z, e.big); }
       if (e.st > 0.55) { e.hitDone = false; e.set('chase'); e.cool = rnd(1.1, 2.0) + (e.big ? 0.6 : 0); ATTACKERS = Math.max(0, ATTACKERS - 1); }
       break;
     }
@@ -1468,7 +1494,7 @@ function updateEnemy(e, dt) {
       if (e.st > 0.7) {
         for (let k = 0; k < 6; k++) spawnSprite(FXT.puff, _v.set(e.pos.x + rnd(-0.6, 0.6), e.pos.y + 0.3, e.pos.z + rnd(-0.6, 0.6)), rnd(0.8, 1.3), 0.5, { kind: 'grow', depth: true, vel: new THREE.Vector3(rnd(-2, 2), 1.5, rnd(-2, 2)) });
         spawnSprite(FXT.star, _v.set(e.pos.x, e.pos.y + 0.6, e.pos.z), 1.4, 0.3);
-        e.set('dead'); e.root.visible = false; e.hpS.visible = false; S.kills++; sfx('ko'); e.respawn = 14; e.landed = false; $('kon').textContent = S.kills;
+        e.set('dead'); e.root.visible = false; e.hpS.visible = false; S.kills++; sfx('ko'); if (e.lastBy === partner) PART.kos++; else PART.heroKos++; e.respawn = 14; e.landed = false; $('kon').textContent = S.kills;
       }
       break;
     }
@@ -1496,27 +1522,35 @@ function updateEnemy(e, dt) {
 }
 // windup/attack tokens are counted fresh every frame (robust against interrupted attacks)
 function countAttackers() { ATTACKERS = enemies.filter((e) => e.state === 'windup' || e.state === 'attack').length; }
+function turtleOk(f) { return f.hp > 0 && !f.roof && !CINE.intro && (f === hero ? f.state !== 'down' && f.state !== 'ko' && f.state !== 'climb' && f.state !== 'leap' && f.state !== 'boost' : PART_FIGHT.has(f.state)); }
+function enemyTarget(e) {
+  const a = turtleOk(hero) ? hero : null, b = turtleOk(partner) ? partner : null; if (!a || !b) return a || b;
+  const da = Math.hypot(hero.pos.x - e.pos.x, hero.pos.z - e.pos.z), db = Math.hypot(partner.pos.x - e.pos.x, partner.pos.z - e.pos.z);
+  if (e.tgt === partner) return db < da + 1.5 ? partner : hero; return da < db + 1.5 ? hero : partner;
+}
 
 // ---------------- HUD ----------------
-let hpShown = 100;
+let hpShown = 100, p2Shown = 100, p2Down = false;
 function hud(dt) {
   const pct = hero.hp / hero.maxHp * 100;
   if (Math.abs(pct - hpShown) > 0.1) { hpShown = pct; $('hpfill').style.width = pct + '%'; $('hplag').style.width = pct + '%'; }
+  const pp = Math.round(partner.hp / partner.maxHp * 100); if (pp !== p2Shown) { p2Shown = pp; $('p2fill').style.width = pp + '%'; }
+  const pd = partner.state === 'ko' || partner.hp <= 0; if (pd !== p2Down) { p2Down = pd; $('p2').classList.toggle('dn', pd); }
   S.comboT -= dt; if (S.comboT <= 0 && S.combo) S.combo = 0;
   const cb = $('combo'); if (S.combo >= 2) { cb.classList.add('on'); $('comboN').textContent = S.combo; } else cb.classList.remove('on');
 }
 let bannerT = 0;
-function banner() { $('banner').classList.add('on'); bannerT = 1.6; }
+function banner(txt = 'BACK ON YOUR FEET!', t = 1.6) { $('banner').textContent = txt; $('banner').classList.add('on'); bannerT = t; }
 if (Q.has('nointro')) setTimeout(() => { const h = $('hint'); if (h) h.style.opacity = '0'; }, 9000);
 // prototype nav: open on wide screens, collapsed on phones
 { const p = $('proto'); if (innerWidth >= 700 && !TOUCH) p.classList.add('open'); $('protoT').addEventListener('click', () => p.classList.toggle('open')); }
 
 // ---------------- Cinema City: letterbox, contextual one-button prompts (ladder / rooftop leap / car vault / door kick),
 // dizzy-thug QTE finisher with camera cuts + slow-mo, and the intro camera sweep ----------------
-const CINE_ST = new Set(['climb', 'leap', 'vault', 'kick', 'fin']);
+const CINE_ST = new Set(['climb', 'leap', 'vault', 'kick', 'fin', 'boost']);
 const DIZZY_T = 2.8;
 const ROOF = { x0: 11.75, x1: 23.25, z0: 11.75, z1: 23.25, y: LADDER.roofY, ac: { x0: 13.85, x1: 15.95, z0: 18.7, z1: 20.2 } };
-const CINE = { lb: 0, intro: null, fin: null, cutT: 0, stats: { climbs: 0, leaps: 0, vaults: 0, kicks: 0, finishers: 0, qteOpened: 0, qteMissed: 0, pizza: 0, introDone: false, introSkipped: false, introSec: 0 } };
+const CINE = { lb: 0, intro: null, fin: null, cutT: 0, stats: { climbs: 0, leaps: 0, vaults: 0, kicks: 0, finishers: 0, qteOpened: 0, qteMissed: 0, pizza: 0, introDone: false, introSkipped: false, introSec: 0, boosts: 0, tags: 0, revivesByPlayer: 0, revivesByPartner: 0, gameOvers: 0 } };
 let QTE = null;
 
 // ---- extra poses ----
@@ -1566,7 +1600,9 @@ const PIZZA_W = canvasTex(512, 192, (c) => { comicText(c, 'PIZZA! +50', 256, 100
 
 // ---- the action list: one button, contextual ----
 const ACTIONS = [];
-ACTIONS.push({ kind: 'climb', label: 'CLIMB', x: LADDER.x, z: LADDER.z - 0.45, r: 1.6, y: 2.2, ok: () => !hero.roof, go: startClimb });
+// with the partner close and free, the ladder spot offers a two-turtle BOOST instead of the solo CLIMB
+ACTIONS.push({ kind: 'boost', label: 'BOOST', x: LADDER.x, z: LADDER.z - 0.45, r: 1.9, y: 2.2, ok: () => !hero.roof && boostReady(), go: startBoost });
+ACTIONS.push({ kind: 'climb', label: 'CLIMB', x: LADDER.x, z: LADDER.z - 0.45, r: 1.6, y: 2.2, ok: () => !hero.roof && !boostReady(), go: startClimb });
 ACTIONS.push({ kind: 'drop', label: 'LEAP DOWN', x: 12.35, z: 22.75, r: 1.7, y: 1.9, ok: () => hero.roof, go: startLeap });
 ACTIONS.push({ kind: 'door', label: 'KICK OPEN', x: DOOR.x + 0.85, z: DOOR.z, r: 1.5, y: 2.1, ok: () => !DOOR.open && !hero.roof, go: startKick });
 for (const [cx, cz, alongX] of [[20.5, -5.8, true], [-28, 5.8, true], [5.8, -30, false]]) {
@@ -1599,10 +1635,18 @@ function qteOpen(e) { QTE = { e, t0: S.time }; CINE.stats.qteOpened++; }
 function startClimb() { const h = hero; h.set('climb'); h.cl = { phase: 0, x0: h.pos.x, z0: h.pos.z }; h.vel.set(0, 0); h.yaw = 0; sfx('jump'); cut(); }
 function startLeap() { const h = hero; h.set('leap'); h.lp = { x0: h.pos.x, z0: h.pos.z, x1: 9.3, z1: 23.6, y0: ROOF.y }; h.vel.set(0, 0); h.yaw = -Math.PI / 2; sfx('jump'); cut(); }
 function startVault(A) { const h = hero; h.set('vault'); h.vt = { x0: h.pos.x, z0: h.pos.z, x1: A.bx, z1: A.bz, side: Math.random() < 0.5 ? 1 : -1 }; h.yaw = Math.atan2(A.bx - h.pos.x, A.bz - h.pos.z); h.vel.set(0, 0); sfx('jump'); }
+function startBoost() { // the partner cups its hands at the ladder and launches the hero up the wall
+  const h = hero; h.set('boost'); h.vel.set(0, 0); h.bs = { x0: h.pos.x, z0: h.pos.z, launched: false, yTop: 0 };
+  CINE.boost = { t: 0, shot: -1, px0: partner.pos.x, pz0: partner.pos.z }; partner.set('boost'); partner.vel.set(0, 0);
+  if (Math.hypot(partner.pos.x - BOOST_P.x, partner.pos.z - BOOST_P.z) > 7) { CINE.boost.px0 = BOOST_P.x - 1.2; CINE.boost.pz0 = BOOST_P.z - 1.2; }
+  CINE.stats.boosts++; sfx('jump'); cut();
+}
 function startKick() { const h = hero; h.set('kick'); h.kk = { done: false }; h.vel.set(0, 0); sfx('swing'); }
 function startFinisher(e) {
   const h = hero, dx = h.pos.x - e.pos.x, dz = h.pos.z - e.pos.z, d = Math.hypot(dx, dz) || 1;
   CINE.lastFin = e.id; CINE.fin = { e, t: 0, ux: dx / d, uz: dz / d, sx: h.pos.x, sz: h.pos.z, ex: e.pos.x, ez: e.pos.z, hit: 0, side: Math.random() < 0.5 ? 1 : -1, shot: -1 };
+  // tag team: the partner (free and within ~8 m) cuts in with a staff hit just before the flip strike
+  if (partnerFree() && !partner.roof && Math.hypot(partner.pos.x - e.pos.x, partner.pos.z - e.pos.z) < 8.5) startTag(CINE.fin);
   e.fin = true; e.dz.visible = false; e.hpS.visible = false; e.yaw = Math.atan2(dx, dz); h.set('fin'); h.vel.set(0, 0); h.y = 0; h.vy = 0; QTE = null; lockT = null; sfx('swing');
 }
 function cut() { CINE.cutT = 1; }
@@ -1642,6 +1686,23 @@ function cineHero(h, dt) {
     if (u >= 1) { h.y = 0; h.set('move'); collide(h); dust(h.pos.x, h.pos.y, h.pos.z, 2); CINE.stats.vaults++; }
     return HERO_POSES.vault(u, V.side);
   }
+  if (h.state === 'boost') { // 0-0.45 run in, 0.45-0.7 step into the cupped hands, 0.7 LAUNCH, 0.7-1.45 flip up the wall, 1.45-1.9 vault the parapet
+    const B = CINE.boost, Bh = h.bs; B.t += dt; const t = B.t; let pose;
+    const ax = BOOST_P.x, az = BOOST_P.z - 1.35;
+    if (t < 0.45) { const u = ease(t / 0.45); h.pos.x = lerp(Bh.x0, ax, u); h.pos.z = lerp(Bh.z0, az, u); h.yaw = Math.atan2(BOOST_P.x - h.pos.x, BOOST_P.z - h.pos.z + 0.01); pose = HERO_POSES.run(S.time, 7); }
+    else if (t < 0.7) { const u = (t - 0.45) / 0.25; h.pos.z = lerp(az, BOOST_P.z - 0.35, ease(u)); h.pos.x = ax; h.y = Math.sin(u * Math.PI / 2) * 0.55; h.yaw = 0; pose = HERO_POSES.jump(1); pose.knL = pose.knR = [1.6, 0, 0]; }
+    else if (t < 1.45) {
+      if (!Bh.launched) { Bh.launched = true; sfx('heavy'); S.shake = Math.max(S.shake, 0.6); dust(BOOST_P.x, h.pos.y, BOOST_P.z, 4); word(BOOST_W, BOOST_P.x, h.pos.y + 2.2, BOOST_P.z - 0.4, 1.1); }
+      const u = (t - 0.7) / 0.75, k = 1 - (1 - u) * (1 - u); h.pos.z = lerp(BOOST_P.z - 0.35, LADDER.z, k); h.pos.x = ax;
+      const wy = lerp(h.pos.y + 0.55, ROOF.y + 1.05, k); h.y = wy - h.pos.y; Bh.yTop = wy; h.yaw = 0;
+      pose = HERO_POSES.jump(1); pose.tilt = [ease(clamp(u / 0.85, 0, 1)) * TAU, 0, 0]; pose.lgL = pose.lgR = [-1.3, 0, 0]; pose.knL = pose.knR = [1.9, 0, 0];
+    } else {
+      const u = clamp((t - 1.45) / 0.45, 0, 1); h.pos.z = lerp(LADDER.z, 12.7, ease(u)); const wy = lerp(Bh.yTop, ROOF.y, u) + Math.sin(u * Math.PI) * 0.45; h.y = wy - h.pos.y;
+      pose = HERO_POSES.vault(u, 1); pose.tilt = [0, 0, Math.sin(u * Math.PI) * 0.6];
+      if (u >= 1) { h.roof = true; h.pos.y = ROOF.y; h.y = 0; h.set('move'); CAM.yaw = Math.PI; snapCam(); cut(); CINE.stats.climbs++; CINE.boost = null; dust(h.pos.x, h.pos.y, h.pos.z, 3); boostDone(); }
+    }
+    return pose;
+  }
   if (h.state === 'kick') {
     const u = clamp(h.st / 0.6, 0, 1); h.yaw += angTo(h.yaw, -Math.PI / 2) * (1 - Math.exp(-dt * 16));
     if (!h.kk.done && u > 0.38) {
@@ -1667,14 +1728,14 @@ function cineHero(h, dt) {
   if (F.hit === 0 && t >= 0.4) { F.hit = 1; e.flash = 1; sfx('hit'); spawnSprite(FXT.star, at(e.pos.y + 1.2), 1.3, 0.22, { rot: rnd(0, TAU) }); spawnSlash(_v.set(h.pos.x, h.pos.y + 0.95, h.pos.z), h.yaw + 0.25, 'side', 0.18, 1); word(FXT.words[1], F.ex, e.pos.y + 2.2, F.ez); S.shake = 0.4; }
   if (F.hit === 1 && t >= 0.8) { F.hit = 2; e.flash = 1; sfx('hit'); spawnSprite(FXT.star, at(e.pos.y + 1.3), 1.3, 0.22, { rot: rnd(0, TAU) }); spawnSlash(_v.set(h.pos.x, h.pos.y + 0.95, h.pos.z), h.yaw - 0.25, 'side', -0.18, -1); S.shake = 0.4; }
   if (F.hit === 2 && t >= 1.62) {
-    F.hit = 3; e.fin = false; e.hp = 0; e.dead = true; e.set('down'); e.kb.set(-F.ux * 9, -F.uz * 9); e.vy = 7.5; e.y = 0.01; e.yaw = Math.atan2(F.ux, F.uz);
+    F.hit = 3; e.fin = false; e.hp = 0; e.dead = true; e.lastBy = hero; e.set('down'); e.kb.set(-F.ux * 9, -F.uz * 9); e.vy = 7.5; e.y = 0.01; e.yaw = Math.atan2(F.ux, F.uz);
     e.flash = 1; S.hits += 3; S.combo += 3; S.comboT = 1.5; S.maxCombo = Math.max(S.maxCombo, S.combo); S.shake = 1.1; sfx('heavy');
     spawnSlash(_v.set(F.ex, e.pos.y + 0.6, F.ez), h.yaw, 'spin', 0); word(FXT.words[3], F.ex, e.pos.y + 2.4, F.ez, 1.3); spawnSprite(FXT.star, at(e.pos.y + 1.0), 1.8, 0.3);
     CINE.stats.finishers++;
   }
   if (e.fin && t > 0.22) { // the dizzy thug reels under the hits
-    const k = t < 0.62 ? (t - 0.4) : t < 1.02 ? (t - 0.8) : (t - 1.02) * 0.4; applyPose(e.J, THUG_POSES.hurt(clamp(k > 0 ? k / 0.3 : 0.8, 0, 1), e.J), 22, dt, false);
-    if (t > 1.02) { e.J.tilt.rotation.x = damp(e.J.tilt.rotation.x, -0.5, 6, dt); }
+    const k = t < 0.62 ? (t - 0.4) : t < 1.02 ? (F.tagHit ? t - F.tagHit : t - 0.8) : (t - 1.02) * 0.4; applyPose(e.J, THUG_POSES.hurt(clamp(k > 0 ? k / 0.3 : 0.8, 0, 1), e.J), 22, dt, false);
+    if (t > 1.02) { e.J.tilt.rotation.x = damp(e.J.tilt.rotation.x, F.tagHit ? -0.8 : -0.5, F.tagHit ? 10 : 6, dt); }
   }
   if (t >= 2.1) { h.set('move'); h.y = 0; CINE.fin = null; snapCam(); cut(); }
   return pose;
@@ -1683,7 +1744,7 @@ function snapCam() { CAM.pivot.set(hero.pos.x, hero.pos.y + 1.55, hero.pos.z); C
 
 // ---- cinematic cameras (finisher cuts, climb, leap, intro) ----
 const _c1 = new THREE.Vector3(), _c2 = new THREE.Vector3();
-function cineCamActive() { return !!CINE.fin || hero.state === 'climb' || hero.state === 'leap'; }
+function cineCamActive() { return !!CINE.fin || hero.state === 'climb' || hero.state === 'leap' || hero.state === 'boost'; }
 function cineCamera(rdt) {
   const h = hero; let fov = 50; camera.up.set(0, 1, 0);
   if (CINE.fin) {
@@ -1701,6 +1762,14 @@ function cineCamera(rdt) {
     // keep the cut cameras out of walls
     let tt = 1; for (const b of BLD) { const k = segBox(_c2.x, _c2.y, _c2.z, _c1.x, _c1.y, _c1.z, b, 0.3); if (k < tt) tt = k; }
     if (tt < 1) _c1.lerpVectors(_c2, _c1, Math.max(0.25, tt - 0.05));
+  } else if (h.state === 'boost' && CINE.boost) {
+    const B = CINE.boost, shot = B.t < 0.7 ? 0 : 1; if (shot !== B.shot) { if (B.shot >= 0) cut(); B.shot = shot; }
+    const pk = innerWidth < innerHeight ? 1.45 : 1;
+    if (shot === 0) { // low street-side two-shot: the partner braced at the wall, the hero running in
+      _c1.set(BOOST_P.x - 5.6 * pk, 0.95, BOOST_P.z - 1.3); _c2.set(BOOST_P.x, 1.2, BOOST_P.z - 0.75); fov = 50; // side-on, so the run-in and the cupped hands read
+    } else { // cut: high over the street, looking along the wall as the hero is flung up to the parapet
+      const wy = h.pos.y + h.y; _c1.set(BOOST_P.x - 3.6 * pk, ROOF.y + 2.2, BOOST_P.z - 6.0 * pk); _c2.set(h.pos.x, lerp(wy + 0.6, ROOF.y + 0.6, 0.35), h.pos.z); fov = 56;
+    }
   } else if (h.state === 'climb') { // street-level camera tilting up the fire escape
     const wy = h.pos.y + h.y; _c1.set(LADDER.x - 3.4, 1.1 + wy * 0.42, LADDER.z - 9.5); _c2.set(h.pos.x, wy + 1.0, h.pos.z); fov = 54;
   } else { // leap: low camera at the landing spot looking up at the fall
@@ -1730,6 +1799,8 @@ const ICONS = {
   door: '<path d="M5 21V3h11v18M16 5l4 2v14M12 12h1"/>',
   vault: '<path d="M3 18h18M6 18v-4h12v4M4 9c4-6 12-6 16 0M17 6l3 3-4 1"/>',
   fin: '<path d="M12 2l2.6 6.2L21 9l-5 4.4L17.5 20 12 16.6 6.5 20 8 13.4 3 9l6.4-.8z"/>',
+  boost: '<path d="M12 3v11M7 8l5-5 5 5M4 17c3 3 13 3 16 0M7 21h10"/>',
+  revive: '<path d="M12 20s-7-4.4-7-10a4 4 0 0 1 7-2.6A4 4 0 0 1 19 10c0 5.6-7 10-7 10zM12 9v6M9 12h6"/>',
 };
 function cineUpdate(rdt) {
   const h = hero;
@@ -1737,7 +1808,7 @@ function cineUpdate(rdt) {
   if (QTE && QTE.e.state !== 'dizzy' && !QTE.e.fin) { if (QTE.e.state === 'chase' || QTE.e.state === 'return') CINE.stats.qteMissed++; QTE = null; }
   // letterbox: full in cinematics, half in fights, off when exploring
   const fighting = lockT && lockT.alive && h.state !== 'down';
-  const tgt = CINE.intro || CINE.fin || h.state === 'climb' || h.state === 'leap' ? 1 : h.state === 'vault' || h.state === 'kick' || QTE ? 0.75 : fighting ? 0.5 : 0;
+  const tgt = CINE.intro || CINE.fin || h.state === 'climb' || h.state === 'leap' || h.state === 'boost' || PART.over ? 1 : h.state === 'vault' || h.state === 'kick' || QTE ? 0.75 : fighting ? 0.5 : 0;
   CINE.lb = damp(CINE.lb, tgt, CINE.intro ? 20 : 3.5, rdt);
   const portrait = innerHeight > innerWidth * 1.15, H = Math.round(CINE.lb * Math.min(innerHeight * (portrait ? 0.075 : 0.11), 88));
   if (H !== CINE.lbH) { CINE.lbH = H; $('lbT').style.height = H + 'px'; $('lbB').style.height = H + 'px'; }
@@ -1755,9 +1826,10 @@ function cineUpdate(rdt) {
   // prompt: QTE first, then the nearest contextual action
   let P = null;
   const qe = qteTarget() || (QTE && QTE.e.state === 'dizzy' ? QTE.e : null);
-  if (qe && !CINE.fin && h.state !== 'down' && !h.roof && Math.hypot(qe.pos.x - h.pos.x, qe.pos.z - h.pos.z) < 10) {
+  if (qe && !CINE.fin && h.state !== 'down' && h.state !== 'ko' && !h.roof && Math.hypot(qe.pos.x - h.pos.x, qe.pos.z - h.pos.z) < 10) {
     const e = qe, near = Math.hypot(e.pos.x - h.pos.x, e.pos.z - h.pos.z) < 4.6; P = { kind: 'fin', label: near ? 'FINISH!' : 'GET CLOSE', x: e.pos.x, y: e.pos.y + 2.75 * e.scale, z: e.pos.z, qte: clamp(1 - e.st / DIZZY_T, 0, 1), near };
-  } else if (!CINE.fin) { const A = actionInRange(); if (A) P = { kind: A.kind, label: A.label, x: A.x, y: (h.roof ? ROOF.y : 0) + A.y, z: A.z, near: true }; }
+  } else if (!CINE.fin && (P = revivePrompt())) { /* REVIVE: over whichever turtle is down */ }
+  else if (!CINE.fin) { const A = actionInRange(); if (A) P = { kind: A.kind, label: A.label, x: A.x, y: (h.roof ? ROOF.y : 0) + A.y, z: A.z, near: true }; }
   const el = PRM.el;
   if (P) {
     _v.set(P.x, P.y, P.z).project(camera);
@@ -1765,13 +1837,267 @@ function cineUpdate(rdt) {
     let sx = (_v.x * 0.5 + 0.5) * innerWidth, sy = (-_v.y * 0.5 + 0.5) * innerHeight;
     sx = clamp(sx, 70, innerWidth - 70); sy = clamp(sy, 70 + (CINE.lbH || 0), innerHeight - 90 - (CINE.lbH || 0));
     el.style.transform = `translate(${sx.toFixed(0)}px, ${sy.toFixed(0)}px) translate(-50%, -50%)`;
-    if (PRM.cur !== P.kind + P.label + DEV) { PRM.cur = P.kind + P.label + DEV; PRM.lab.textContent = P.label; PRM.ico.innerHTML = ICONS[P.kind]; PRM.key.textContent = DEV === 'touch' ? 'ACT' : DEV === 'pad' ? 'Y' : 'E'; el.className = 'on ' + P.kind + (DEV === 'touch' ? ' tch' : ''); }
+    if (PRM.cur !== P.kind + P.label + DEV) { PRM.cur = P.kind + P.label + DEV; PRM.lab.textContent = P.label; PRM.ico.innerHTML = ICONS[P.kind]; PRM.key.textContent = P.nokey ? '' : DEV === 'touch' ? 'ACT' : DEV === 'pad' ? 'Y' : 'E'; el.className = 'on ' + P.kind + (DEV === 'touch' ? ' tch' : '') + (P.nokey ? ' nokey' : ''); }
     el.classList.toggle('far', !P.near); el.style.visibility = vis ? 'visible' : 'hidden';
     PRM.ring.style.strokeDashoffset = P.qte !== undefined ? (113 * (1 - P.qte)).toFixed(1) : '0';
     $('bC').classList.toggle('hot', !!P.near);
   } else if (PRM.cur) { PRM.cur = null; el.className = ''; $('bC').classList.remove('hot'); }
-  const cin = !!(CINE.intro || CINE.fin || h.state === 'climb' || h.state === 'leap'); if (cin !== CINE.cinCls) { CINE.cinCls = cin; document.body.classList.toggle('cine', cin); }
+  const cin = !!(CINE.intro || CINE.fin || h.state === 'climb' || h.state === 'leap' || h.state === 'boost'); if (cin !== CINE.cinCls) { CINE.cinCls = cin; document.body.classList.toggle('cine', cin); }
   CINE.prompt = P ? P.kind + ':' + P.label : null;
+}
+
+// ---------------- the AI partner turtle (RIDGE, magenta bandana, bo staff): always computer-controlled ----------------
+// Follows at ~2-4 m on the hero's left (away from the right-shoulder camera), fights thugs engaging either turtle,
+// teleports to catch up when stuck / far behind / on the wrong level, revives the hero, boosts it up the fire escape,
+// and cuts into the QTE finisher (tag team). One cinematic camera: the partner never drives the camera.
+const PART = { kos: 0, heroKos: 0, downs: 0, teleports: 0, hops: 0, climbs: 0, over: false, overT: 0, stuckT: 0, chkT: 0, chkD: 0, tgt: null, combo: 0, rest: 0, mismatchT: 0, fightT: 0, followSamples: 0, followIn: 0, tpLog: [] };
+const PART_FIGHT = new Set(['move', 'atk', 'hurt', 'revive']); // states in which thugs may target the partner
+const REVIVE_T = 1.2, PARTNER_REVIVE_T = 1.5, REVIVE_R = 2.2;
+const BOOST_P = { x: LADDER.x - 1.0, z: LADDER.z - 0.6 }; // where the partner braces for the boost (beside the ladder, clear of the fire escape)
+const INTRO_LAND = { x: -2.3, z: 30.4 }, INTRO_LAND_P = { x: -1.7, z: 29.6 }; // portrait: closer + ahead so it stays in the narrow frame
+const PORTRAIT = () => innerHeight > innerWidth * 1.15;
+const BOOST_W = canvasTex(512, 192, (c) => { comicText(c, 'HUP!', 256, 100, 96, '#2fd3ff', null, { sx: 1 }); });
+const TAG_W = canvasTex(512, 192, (c) => { comicText(c, 'TAG TEAM!', 256, 100, 78, '#ff5fd0', null, { sx: 1 }); });
+const UP_W = canvasTex(512, 192, (c) => { comicText(c, 'GET UP!', 256, 100, 84, '#9dff6b', null, { sx: 1 }); });
+
+HERO_POSES.revive = (t) => { // kneeling, both hands on the downed turtle's shell, shaking it
+  const p = blank(); legsStance(p, 0.22, 0.85); p.y = -0.2; p.lgL = [-1.3, 0, 0.18]; p.knL = [2.1, 0, 0]; p.lgR = [0.1, 0, -0.2]; p.knR = [1.5, 0, 0];
+  p.torso = [0.75, 0, 0]; p.neck = [-0.5, 0, 0]; const s = Math.sin(t * 10) * 0.18;
+  p.shL = [-1.05 + s, 0, 0.3]; p.shR = [-1.05 - s, 0, -0.3]; p.elL = p.elR = [-0.35, 0, 0]; p.swL = [Math.PI / 2 + 1.3, 0, 0.4]; p.swR = [Math.PI / 2 + 1.3, 0, -0.4];
+  return p;
+};
+HERO_POSES.cup = (k) => { // braced at the wall, hands cupped low (k=0) -> arms thrown overhead (k=1)
+  const p = blank(); legsStance(p, 0.28, lerp(1.25, 0.15, k)); p.torso = [lerp(0.55, -0.2, k), 0, 0]; p.neck = [lerp(-0.45, -0.7, k), 0, 0];
+  p.shL = [lerp(-0.7, -3.0, k), 0, 0.12]; p.shR = [lerp(-0.7, -3.0, k), 0, -0.12]; p.elL = p.elR = [lerp(-0.7, -0.1, k), 0, 0]; p.haL = p.haR = [0.5, 0, 0];
+  p.swR = [Math.PI / 2 + 1.4, 0, -0.2]; return p;
+};
+
+function partnerFree() { return !PART.over && partner.hp > 0 && (partner.state === 'move' || partner.state === 'atk') && !CINE.intro; }
+function boostReady() { return partnerFree() && !partner.roof && !hero.roof && Math.hypot(partner.pos.x - hero.pos.x, partner.pos.z - hero.pos.z) < 7.5; }
+function boostDone() { partner.set('pclimb'); partner.pc = { phase: 0, t: 0 }; }
+function startTag(F) { partner.set('tag'); F.tag = { x0: partner.pos.x, z0: partner.pos.z }; F.tagHit = 0; partner.vel.set(0, 0); }
+function actHeld() { return KEYS.has('e') || KEYS.has('f') || TOUCHS.btn.c || IN.padAct || !!(IN.bot && IN.bot.actHold); }
+function reviveTarget() {
+  const P = partner; if (P.state !== 'ko' || PART.over || !!P.roof !== !!hero.roof) return null;
+  return Math.hypot(P.pos.x - hero.pos.x, P.pos.z - hero.pos.z) < REVIVE_R ? P : null;
+}
+function reviveTurtle(f, by) {
+  f.hp = Math.round(f.maxHp * 0.5); f.y = 0; f.vy = 0; f.kb.set(0, 0); f.set('getup'); f.inv = 2.2; f.flash = 1; f.J.mat.userData.flashC.value.set('#9dff6b');
+  if (by === hero) CINE.stats.revivesByPlayer++; else CINE.stats.revivesByPartner++;
+  sfx('ko'); if (f === hero) banner('BACK ON YOUR FEET!'); else spawnSprite(UP_W, _v.set(f.pos.x, f.pos.y + 2.3, f.pos.z), 1.0, 0.9, { kind: 'word', aspect: 512 / 192 });
+}
+function revivePrompt() {
+  if (PART.over) return null;
+  if (hero.state === 'ko') return { kind: 'revive', label: 'REVIVE', x: hero.pos.x, y: hero.pos.y + 1.7, z: hero.pos.z, near: false, nokey: true, qte: partner.state === 'revive' ? clamp(partner.rv / PARTNER_REVIVE_T, 0, 1) : 0 };
+  if (partner.state === 'ko' && hero.hp > 0) {
+    const d = Math.hypot(partner.pos.x - hero.pos.x, partner.pos.z - hero.pos.z); if (d > 30) return null;
+    const near = d < REVIVE_R && !!partner.roof === !!hero.roof;
+    return { kind: 'revive', label: near ? 'HOLD · REVIVE' : 'REVIVE', x: partner.pos.x, y: partner.pos.y + 1.5, z: partner.pos.z, near, qte: hero.state === 'revive' ? clamp(hero.rv / REVIVE_T, 0, 1) : near ? 0 : undefined };
+  }
+  return null;
+}
+function partnerSlot() { // ~2.5 m off the hero's LEFT (the camera rides the right shoulder), a touch ahead
+  const f = camFwd(CAM.yaw), r = [-f[1], f[0]], side = PORTRAIT() ? 1.95 : 2.5, ahead = PORTRAIT() ? 0.9 : 0.35;
+  return { x: hero.pos.x - r[0] * side + f[0] * ahead, z: hero.pos.z - r[1] * side + f[1] * ahead };
+}
+const _tmpF = { pos: new THREE.Vector3(), r: 0.45, roof: false };
+function settle(x, z, roof) { _tmpF.pos.set(x, roof ? ROOF.y : 0, z); _tmpF.roof = roof; for (let i = 0; i < 3; i++) collide(_tmpF); return { x: _tmpF.pos.x, z: _tmpF.pos.z, y: roof ? ROOF.y : groundY(_tmpF.pos.x, _tmpF.pos.z) }; }
+function puffAt(x, y, z, n = 5) { for (let k = 0; k < n; k++) spawnSprite(FXT.puff, _v.set(x + rnd(-0.5, 0.5), y + 0.3 + rnd(0, 0.9), z + rnd(-0.5, 0.5)), rnd(0.8, 1.2), 0.45, { kind: 'grow', depth: true, vel: new THREE.Vector3(rnd(-1.5, 1.5), 1.2, rnd(-1.5, 1.5)) }); }
+function partnerTeleport(x, z, roof, why) { // a smoke-puff catch-up
+  const P = partner; puffAt(P.pos.x, P.pos.y + P.y, P.pos.z);
+  const s = settle(x, z, roof); P.roof = roof; P.pos.set(s.x, s.y, s.z); P.y = 0; P.vy = 0; P.vel.set(0, 0); P.kb.set(0, 0);
+  P.yaw = Math.atan2(hero.pos.x - s.x, hero.pos.z - s.z); puffAt(s.x, s.y, s.z, 6); P.flash = 1; P.J.mat.userData.flashC.value.set('#fff');
+  P.set('tp'); PART.teleports++; PART.stuckT = 0; PART.chkT = 0; PART.lastTp = why; PART.tpLog.push(why + '@' + S.time.toFixed(1)); if (PART.tpLog.length > 20) PART.tpLog.shift(); sfx('jump');
+}
+function partnerHop(x, z) { // a flip down off the roof to the hero's side
+  const P = partner, s = settle(x, z, false);
+  P.hop = { x0: P.pos.x, z0: P.pos.z, wy0: P.pos.y + P.y, x1: s.x, z1: s.z, gy: s.y }; P.set('hop'); P.vel.set(0, 0); PART.hops++; sfx('jump');
+}
+function engagedThugs() {
+  const out = [];
+  for (const e of enemies) {
+    if (!e.alive || e.fin || e.state === 'dying' || e.state === 'idle' || e.state === 'return' || e.state === 'dizzy') continue;
+    const dH = Math.hypot(e.pos.x - hero.pos.x, e.pos.z - hero.pos.z), dP = Math.hypot(e.pos.x - partner.pos.x, e.pos.z - partner.pos.z);
+    if ((e.tgt === hero || e.tgt === partner || dH < 3) && dH < 10 && dP < 13) out.push(e);
+  }
+  return out;
+}
+
+function updatePartner(dt) {
+  const P = partner; P.st += dt; P.at += dt; P.inv = Math.max(0, P.inv - dt); P.ghost = !(P.state === 'move' || P.state === 'atk' || P.state === 'hurt');
+  let pose = null, rate = 16, snapTilt = false;
+  const dH = Math.hypot(P.pos.x - hero.pos.x, P.pos.z - hero.pos.z);
+  const steer = (x, z, sp, acc = 10) => { // run toward (x,z)
+    const dx = x - P.pos.x, dz = z - P.pos.z, d = Math.hypot(dx, dz); if (d < 0.05) { P.vel.x = damp(P.vel.x, 0, acc, dt); P.vel.y = damp(P.vel.y, 0, acc, dt); return d; }
+    const s = Math.min(sp, d * 3.2); P.vel.x = damp(P.vel.x, dx / d * s, acc, dt); P.vel.y = damp(P.vel.y, dz / d * s, acc, dt); return d;
+  };
+  const faceTo = (x, z, k = 12) => { P.yaw += angTo(P.yaw, Math.atan2(x - P.pos.x, z - P.pos.z)) * (1 - Math.exp(-dt * k)); };
+  // ---- intro: drops in off the awning line and settles beside the hero ----
+  if (CINE.intro && P.state !== 'intro' && !P.introDone) { P.set('intro'); P.root.visible = false; }
+  if (P.state === 'intro') {
+    const I = CINE.intro, t = I ? I.t : 99, t0 = 2.2, t1 = 3.3;
+    const L = PORTRAIT() ? INTRO_LAND_P : INTRO_LAND, gy = groundY(L.x, L.z);
+    if (t < t0) { P.root.visible = false; P.pos.set(L.x, gy, L.z); }
+    else if (t < t1) {
+      P.root.visible = true; const u = (t - t0) / (t1 - t0); P.pos.x = lerp(-9.4, L.x, ease(u)); P.pos.z = lerp(24.6, L.z, u); P.pos.y = gy;
+      const wy = lerp(gy + 6.2, gy, u * u) + 2.0 * u * (1 - u); P.y = Math.max(0, wy - gy); P.yaw = Math.atan2(L.x + 9.4, L.z - 24.6);
+      pose = HERO_POSES.jump(-1); pose.tilt = [ease(clamp((u - 0.1) / 0.75, 0, 1)) * TAU, 0, 0]; pose.lgL = pose.lgR = [-1.3, 0, 0]; pose.knL = pose.knR = [2.0, 0, 0]; snapTilt = true;
+    } else {
+      if (!P.landed) { P.landed = true; P.y = 0; dust(P.pos.x, P.pos.y, P.pos.z, 5); S.shake = Math.max(S.shake, 0.35); sfx('heavy'); }
+      P.root.visible = true; P.pos.set(L.x, gy, L.z); P.y = 0; P.yaw += angTo(P.yaw, Math.PI) * (1 - Math.exp(-dt * 5));
+      pose = t - t1 < 0.45 ? HERO_POSES.getup(clamp((t - t1) / 0.45, 0, 1)) : HERO_POSES.idle(P.at);
+    }
+    if (!I) { P.introDone = true; P.root.visible = true; P.pos.set(L.x, gy, L.z); P.y = 0; P.set('move'); }
+    finishPartner(P, pose || HERO_POSES.idle(P.at), rate, dt, snapTilt, false); return;
+  }
+  P.introDone = true;
+  switch (P.state) {
+    case 'tp': { P.vel.set(0, 0); pose = HERO_POSES.getup(clamp(P.st / 0.3, 0, 1)); if (P.st > 0.3) P.set('move'); break; }
+    case 'hop': {
+      const H = P.hop, u = clamp(P.st / 1.0, 0, 1); P.pos.x = lerp(H.x0, H.x1, ease(u)); P.pos.z = lerp(H.z0, H.z1, ease(u)); P.pos.y = H.gy;
+      const wy = lerp(H.wy0, H.gy, u * u) + 2.4 * u * (1 - u); P.y = Math.max(0, wy - H.gy); P.yaw = Math.atan2(H.x1 - H.x0, H.z1 - H.z0);
+      pose = HERO_POSES.jump(-1); pose.tilt = [ease(clamp((u - 0.15) / 0.65, 0, 1)) * TAU, 0, 0]; pose.lgL = pose.lgR = [-1.3, 0, 0]; pose.knL = pose.knR = [2.0, 0, 0]; snapTilt = true;
+      if (u >= 1) { P.roof = false; P.y = 0; dust(P.pos.x, P.pos.y, P.pos.z, 4); P.set('getup'); P.st = 0.1; }
+      finishPartner(P, pose, 18, dt, true, false); return;
+    }
+    case 'boost': { // braced at the wall beside the ladder; hands cupped, then the launch
+      const B = CINE.boost; if (!B) { boostDone(); break; } const t = B.t;
+      const u = clamp(t / 0.4, 0, 1); P.pos.x = lerp(B.px0, BOOST_P.x, ease(u)); P.pos.z = lerp(B.pz0, BOOST_P.z, ease(u)); P.pos.y = groundY(P.pos.x, P.pos.z); P.y = 0;
+      P.yaw = u < 1 ? Math.atan2(BOOST_P.x - B.px0, BOOST_P.z - B.pz0 + 1e-3) : P.yaw + angTo(P.yaw, Math.PI) * (1 - Math.exp(-dt * 20));
+      pose = u < 1 ? HERO_POSES.run(S.time, 7) : HERO_POSES.cup(clamp((t - 0.62) / 0.16, 0, 1)); rate = t > 0.6 ? 26 : 16;
+      finishPartner(P, pose, rate, dt, false, false); return;
+    }
+    case 'pclimb': { // follows the hero up the ladder after a boost (or a solo climb)
+      const C = P.pc; C.t += dt;
+      if (C.phase === 0) {
+        const d = steer(LADDER.x, LADDER.z - 0.45, 6.5); faceTo(LADDER.x, LADDER.z, 10); pose = HERO_POSES.run(P.at, Math.hypot(P.vel.x, P.vel.y));
+        P.pos.x += P.vel.x * dt; P.pos.z += P.vel.y * dt; collide(P);
+        if (d < 0.35) { C.phase = 1; P.st = 0; P.pos.x = LADDER.x; P.pos.z = LADDER.z; P.yaw = 0; P.vel.set(0, 0); }
+        else if (C.t > 6) { partnerTeleport(hero.pos.x, hero.pos.z + 1.5, true, 'climb-stuck'); }
+      } else if (C.phase === 1) { P.y += 8.5 * dt; P.yaw = 0; pose = HERO_POSES.climb(P.y * 3.3); if (P.pos.y + P.y >= ROOF.y + 0.75) { C.phase = 2; P.st = 0; C.yTop = P.pos.y + P.y; } }
+      else {
+        const u = clamp(P.st / 0.45, 0, 1); P.pos.z = lerp(LADDER.z, 12.7, ease(u)); P.y = lerp(C.yTop, ROOF.y, u) + Math.sin(u * Math.PI) * 0.6 - P.pos.y; pose = HERO_POSES.vault(u, -1);
+        if (u >= 1) { P.roof = true; P.pos.y = ROOF.y; P.y = 0; P.set('move'); PART.climbs++; dust(P.pos.x, P.pos.y, P.pos.z, 3); }
+      }
+      if (P.state === 'pclimb' || P.state === 'move') { finishPartner(P, pose || HERO_POSES.idle(P.at), 18, dt, false, false); return; }
+      break;
+    }
+    case 'tag': { // the tag-team hit inside the finisher's slow-mo cut
+      const F = CINE.fin; if (!F || !F.tag) { P.set('move'); break; }
+      const t = F.t, px = -F.uz * F.side, pz = F.ux * F.side;
+      const sx = F.ex - F.ux * 1.45 + px * 0.6, sz = F.ez - F.uz * 1.45 + pz * 0.6; // far side of the thug from the reverse-angle camera, so both turtles read in the slow-mo shot
+      if (t < 0.62) { pose = HERO_POSES.idle(P.at); faceTo(F.ex, F.ez, 8); }
+      else if (t < 1.0) { const u = ease((t - 0.62) / 0.38); P.pos.x = lerp(F.tag.x0, sx, u); P.pos.z = lerp(F.tag.z0, sz, u); P.pos.y = groundY(P.pos.x, P.pos.z); faceTo(F.ex, F.ez, 20); pose = HERO_POSES.run(S.time, 8); }
+      else { P.pos.x = sx; P.pos.z = sz; P.yaw = Math.atan2(F.ex - sx, F.ez - sz); pose = HERO_POSES.atk1(clamp((t - 1.0) / 0.32, 0, 1)); rate = 30; }
+      if (!F.tagHit && t >= 1.1) {
+        F.tagHit = t; const e = F.e; e.flash = 1; sfx('hit'); S.hits++; S.combo++; S.comboT = 1.5; S.maxCombo = Math.max(S.maxCombo, S.combo); S.shake = Math.max(S.shake, 0.5);
+        spawnSprite(FXT.star, _v.set(F.ex, e.pos.y + 1.15, F.ez), 1.4, 0.25, { rot: rnd(0, TAU) }); spawnSlash(_v.set(P.pos.x, P.pos.y + 0.95, P.pos.z), P.yaw + 0.25, 'side', 0.18, 1);
+        spawnSprite(TAG_W, _v.set(F.ex - F.ux * 0.4, e.pos.y + 2.3, F.ez - F.uz * 0.4), 0.9, 0.9, { kind: 'word', aspect: 512 / 192, rot: -0.1 }); CINE.stats.tags++;
+      }
+      if (t >= 1.62) { P.set('move'); P.at = 0; }
+      finishPartner(P, pose, rate, dt, false, false); return;
+    }
+    case 'revive': { // the AI kneels over the downed hero
+      P.vel.set(0, 0); P.inv = Math.max(P.inv, 0.2); faceTo(hero.pos.x, hero.pos.z); pose = HERO_POSES.revive(P.st); rate = 14;
+      if (hero.state !== 'ko') { P.set('move'); break; }
+      P.rv += dt; if (P.rv >= PARTNER_REVIVE_T) { reviveTurtle(hero, P); P.set('move'); }
+      break;
+    }
+    case 'hurt': { P.vel.set(P.kb.x, P.kb.y); P.kb.multiplyScalar(Math.exp(-dt * 7)); pose = HERO_POSES.hurt(clamp(P.st / 0.35, 0, 1)); rate = 22; if (P.st > 0.35) P.set('move'); break; }
+    case 'down': {
+      P.vel.set(P.kb.x, P.kb.y); P.kb.multiplyScalar(Math.exp(-dt * 3.5)); P.vy -= 22 * dt; P.y = Math.max(0, P.y + P.vy * dt);
+      pose = HERO_POSES.down(P.st, P.y <= 0 && P.st > 0.2); rate = 14;
+      if (P.hp <= 0 && P.st > 0.9 && P.y <= 0) { P.set('ko'); P.kb.set(0, 0); }
+      else if (P.hp > 0 && P.st > 1.0) { P.set('getup'); P.inv = 1.0; }
+      break;
+    }
+    case 'ko': { P.vel.set(0, 0); pose = HERO_POSES.down(1, true); rate = 14; break; }
+    case 'getup': { P.vel.set(0, 0); pose = HERO_POSES.getup(clamp(P.st / 0.45, 0, 1)); rate = 14; if (P.st > 0.45) P.set('move'); break; }
+    case 'atk': {
+      const A = ATK[P.atkN], dur = A.dur * 1.08, u = P.st / dur, T = P.atkT; rate = 30;
+      let lsp = 0; if (T && T.alive && T.state !== 'dying') { const dx = T.pos.x - P.pos.x, dz = T.pos.z - P.pos.z, d = Math.hypot(dx, dz); P.yaw += angTo(P.yaw, Math.atan2(dx, dz)) * (1 - Math.exp(-dt * 18)); lsp = u < 0.45 ? clamp((d - 1.3) * 6, 0, 8) : 0; }
+      P.vel.set(Math.sin(P.yaw) * lsp, Math.cos(P.yaw) * lsp);
+      const skip = (e) => e.state === 'dizzy' || e.fin; // dizzy thugs are left for the hero's QTE
+      if (!P.hitDone && P.st >= A.hit * dur) { P.hitDone = true; spawnSlash(_v.set(P.pos.x, P.pos.y + 0.95 + (P.atkN === 3 ? 0.25 : 0), P.pos.z), P.yaw + (P.atkN === 1 ? 0.25 : P.atkN === 2 ? -0.25 : 0), A.slash, A.roll, P.atkN === 2 ? -1 : 1); resolveSwing(A, P.atkN === 3, P, skip); }
+      if (P.atkN === 3 && !P.hit2 && P.st >= 0.62 * dur) { P.hit2 = true; resolveSwing(Object.assign({}, A, { dmg: 1, heavy: true }), true, P, skip); }
+      pose = HERO_POSES[A.pose](Math.min(u, 1)); snapTilt = P.atkN === 3;
+      if (u >= 1) { PART.combo++; const n = PART.combo; P.set('move'); P.at = 0; if (n >= PART.comboLen || !(T && T.alive)) { PART.combo = 0; PART.rest = rnd(0.35, 0.7); } else PART.next = n + 1; }
+      break;
+    }
+    case 'idle': case 'move': default: {
+      P.state = 'move'; PART.rest = Math.max(0, PART.rest - dt);
+      if (PART.over) { P.vel.set(0, 0); pose = HERO_POSES.idle(P.at); break; }
+      const busyHero = hero.state === 'climb' || hero.state === 'leap' || hero.state === 'boost';
+      // 1. the hero is down: get there (teleport if far / other level) and revive
+      if (hero.state === 'ko') {
+        if (!!P.roof !== !!hero.roof || dH > 12) { partnerTeleport(hero.pos.x - 1.1, hero.pos.z + 0.4, !!hero.roof, 'revive'); break; }
+        const d = steer(hero.pos.x, hero.pos.z, 8.6, 14); faceTo(hero.pos.x, hero.pos.z);
+        pose = HERO_POSES.run(P.at, Math.hypot(P.vel.x, P.vel.y));
+        if (d < 1.15) { P.set('revive'); P.rv = 0; P.vel.set(0, 0); }
+        else { PART.chkT += dt; if (PART.chkT > 1.2) { if (PART.chkD - d < 0.5) partnerTeleport(hero.pos.x - 1.1, hero.pos.z + 0.4, !!hero.roof, 'revive-stuck'); PART.chkT = 0; PART.chkD = d; } }
+        break;
+      }
+      // 2. on a different level from the hero: climb after / hop down / teleport
+      if (!!P.roof !== !!hero.roof && !busyHero) {
+        PART.mismatchT += dt;
+        if (hero.roof) { if (Math.hypot(P.pos.x - LADDER.x, P.pos.z - LADDER.z) < 14) { P.set('pclimb'); P.pc = { phase: 0, t: 0 }; } else partnerTeleport(hero.pos.x - 1.5, hero.pos.z + 1.5, true, 'roof'); }
+        else if (PART.mismatchT > 0.35) { const sl = partnerSlot(); if (Math.hypot(sl.x - P.pos.x, sl.z - P.pos.z) < 16) partnerHop(sl.x, sl.z); else partnerTeleport(sl.x, sl.z, false, 'street'); }
+        if (P.state !== 'move') break;
+      } else PART.mismatchT = 0;
+      if (busyHero && !!P.roof !== !!hero.roof) { P.vel.set(0, 0); pose = HERO_POSES.idle(P.at); break; }
+      // 3. far behind (or lost): smoke-puff catch-up
+      if (dH > 16) { const sl = partnerSlot(); partnerTeleport(sl.x, sl.z, !!hero.roof, 'far'); break; }
+      // 4. fight: thugs engaging either turtle (the ones winding up on the hero first)
+      let T = PART.tgt; const eng = engagedThugs();
+      if (!T || !eng.includes(T)) { T = null; let bs = 1e9; for (const e of eng) { const s = Math.hypot(e.pos.x - P.pos.x, e.pos.z - P.pos.z) - ((e.state === 'windup' || e.state === 'attack') && e.tgt === hero ? 2.5 : 0) + (e.state === 'down' ? 3 : 0); if (s < bs) { bs = s; T = e; } } PART.tgt = T; }
+      let gx, gz, sp, d;
+      if (T && !P.roof) {
+        PART.fightT += dt; const dx = T.pos.x - P.pos.x, dz = T.pos.z - P.pos.z, dT = Math.hypot(dx, dz);
+        if (dT < 1.75 && PART.rest <= 0 && T.state !== 'down') { // swing
+          const n = PART.combo > 0 ? PART.next || 1 : 1; if (PART.combo === 0) PART.comboLen = Math.random() < 0.55 ? 3 : 2;
+          P.set('atk'); P.atkN = Math.min(3, n); P.atkT = T; P.hitDone = false; P.hit2 = false; P.yaw = Math.atan2(dx, dz); sfx('swing');
+          pose = HERO_POSES.idle(P.at); break;
+        }
+        gx = T.pos.x - dx / (dT || 1) * 1.35; gz = T.pos.z - dz / (dT || 1) * 1.35; sp = 7.4;
+        d = steer(gx, gz, sp, 12); faceTo(T.pos.x, T.pos.z, 10);
+      } else { // follow: hold the slot on the hero's left, 2-4 m away
+        PART.combo = 0; const sl = partnerSlot(); gx = sl.x; gz = sl.z;
+        const dS = Math.hypot(gx - P.pos.x, gz - P.pos.z);
+        if (dS < 0.9 && dH > 1.6 && dH < 4.3) { P.vel.x = damp(P.vel.x, 0, 10, dt); P.vel.y = damp(P.vel.y, 0, 10, dt); d = dS; const ff = camFwd(CAM.yaw); if (hero.speed < 0.5) faceTo(P.pos.x + ff[0], P.pos.z + ff[1], 3); }
+        else { sp = dS > 4 ? 8.6 : clamp(dS * 2.6, 2.2, 7.0); d = steer(gx, gz, sp, 9); if (Math.hypot(P.vel.x, P.vel.y) > 0.5) faceTo(P.pos.x + P.vel.x, P.pos.z + P.vel.y, 12); }
+        // stay out of the camera's line to the hero (it rides the right shoulder; never stand between it and the hero)
+        const cx = CAM.pos.x, cz = CAM.pos.z, hx = hero.pos.x - cx, hz = hero.pos.z - cz, L2 = hx * hx + hz * hz;
+        if (L2 > 0.5) { const u = ((P.pos.x - cx) * hx + (P.pos.z - cz) * hz) / L2; if (u > 0 && u < 1.05) { const qx = cx + hx * u, qz = cz + hz * u, ox = P.pos.x - qx, oz = P.pos.z - qz, od = Math.hypot(ox, oz);
+          if (od < 1.1) { const nx = od > 1e-3 ? ox / od : -hz / Math.sqrt(L2), nz = od > 1e-3 ? oz / od : hx / Math.sqrt(L2); P.vel.x += nx * 5 * (1.1 - od); P.vel.y += nz * 5 * (1.1 - od); PART.camDodge = (PART.camDodge || 0) + dt; } } }
+        if (dH < 1.5 && dH > 1e-3) { const k = (1.5 - dH) * 6; P.vel.x += (P.pos.x - hero.pos.x) / dH * k; P.vel.y += (P.pos.z - hero.pos.z) / dH * k; } // give the hero room
+        PART.followSamples++; if (dH >= 1.6 && dH <= 4.6) PART.followIn++;
+      }
+      // stuck check against the current goal
+      // (stuck = wants to cover >3 m but has barely moved for a second: blocked by a car / wall / crowd)
+      PART.chkT += dt; if (PART.chkT > 1.0) { const dg = Math.hypot(gx - P.pos.x, gz - P.pos.z), mv = Math.hypot(P.pos.x - (PART.chkX ?? P.pos.x), P.pos.z - (PART.chkZ ?? P.pos.z)); if (dg > 3 && mv < 0.9) PART.stuckT += PART.chkT; else PART.stuckT = 0; PART.chkT = 0; PART.chkX = P.pos.x; PART.chkZ = P.pos.z; }
+      if (PART.stuckT >= 2.0) { const sl = partnerSlot(); partnerTeleport(sl.x, sl.z, !!hero.roof, 'stuck'); break; }
+      const spd = Math.hypot(P.vel.x, P.vel.y); P.speed = spd; pose = spd > 0.6 ? HERO_POSES.run(P.at, spd) : HERO_POSES.idle(P.at);
+      if (spd > 4 && Math.random() < dt * 4) dust(P.pos.x, P.pos.y, P.pos.z, 1);
+      break;
+    }
+  }
+  if (P.state !== 'tp' || P.st > 0) { P.pos.x += P.vel.x * dt; P.pos.z += P.vel.y * dt; }
+  if (P.state !== 'pclimb') collide(P);
+  finishPartner(P, pose || HERO_POSES.idle(P.at), rate, dt, snapTilt, true);
+}
+function finishPartner(P, pose, rate, dt, snapTilt, tails) {
+  applyPose(P.J, pose, rate, dt, snapTilt);
+  for (const [i, t] of P.J.tails.entries()) t.rotation.x = damp(t.rotation.x, 0.5 + clamp(Math.hypot(P.vel.x, P.vel.y) / 6, 0, 1) * 0.9 + Math.sin(S.time * 11 + i + 2) * 0.12, 10, dt);
+  P.sync(dt);
+  // both turtles down = game over: a beat, then both back on their feet at the south end of the street
+  if (!PART.over && hero.state === 'ko' && P.state === 'ko') { PART.over = true; PART.overT = 0; banner('GAME OVER', 3.4); CINE.stats.gameOvers++; }
+  if (PART.over) { PART.overT += dt; if (PART.overT > 3.2) resetTurtles(); }
+}
+function resetTurtles() {
+  PART.over = false; QTE = null;
+  for (const [f, x, z] of [[hero, 0, 31], [partner, INTRO_LAND.x, INTRO_LAND.z]]) { f.roof = false; f.pos.set(x, groundY(x, z), z); f.y = 0; f.vy = 0; f.vel.set(0, 0); f.kb.set(0, 0); f.hp = f.maxHp; f.yaw = Math.PI; f.set('getup'); f.inv = 3; f.root.visible = true; }
+  for (const e of enemies) if (e.alive && e.state !== 'dying') { e.hp = e.maxHp; e.dizzied = false; e.fin = false; e.y = 0; e.set('return'); }
+  CAM.yaw = 0; snapCam(); cut(); banner('TRY AGAIN!', 1.4);
 }
 
 // ---------------- autopilot for tests (?bot=1): walk all four corners, fight every thug met, orbit the camera mid-fight ----------------
@@ -1779,7 +2105,12 @@ const CORNER_PTS = [['SE', 9.3, 9.3], ['E', 24, 0], ['NE', 9.3, -9.3], ['N', 0, 
 const BOTR = { i: 0, log: [], corners: [], t: 0, orbitT: 0, atkT: 0, done: false, fightT: 0, fights: 0, yaws: [] };
 function botThink(dt) {
   BOTR.t += dt; const b = (IN.bot = IN.bot || { mx: 0, my: 0, look: 0 });
-  b.look = 0; if (CINE.intro || CINE_ST.has(hero.state)) { b.mx = b.my = 0; return; }
+  b.look = 0; if (CINE.intro || CINE_ST.has(hero.state) || hero.state === 'ko' || PART.over) { b.mx = b.my = 0; b.actHold = false; return; }
+  // the partner is down: run over and hold ACT on it
+  if (partner.state === 'ko') { const d = Math.hypot(partner.pos.x - hero.pos.x, partner.pos.z - hero.pos.z);
+    if (d < 1.5 || hero.state === 'revive') { b.mx = b.my = 0; b.actHold = true; return; }
+    b.actHold = false; const f = camFwd(CAM.yaw), r = [-f[1], f[0]], dx = partner.pos.x - hero.pos.x, dz = partner.pos.z - hero.pos.z; b.mx = (dx * r[0] + dz * r[1]) / d; b.my = (dx * f[0] + dz * f[1]) / d; BOTR.revRuns = (BOTR.revRuns || 0) + 1; return; }
+  b.actHold = false;
   // QTE: a dizzy thug in reach -> press the action button (after a human-ish reaction delay) instead of swinging
   if (QTE && qteInRange()) { b.mx = b.my = 0; BOTR.qteT = (BOTR.qteT || 0) + dt; if (BOTR.qteT > 0.2) { b.act = true; BOTR.qteT = 0; BOTR.qtePressed = (BOTR.qtePressed || 0) + 1; } return; } else BOTR.qteT = 0;
   const near = enemies.filter((e) => e.alive && e.state !== 'dying' && e.state !== 'return' && e.state !== 'idle' && Math.hypot(e.pos.x - hero.pos.x, e.pos.z - hero.pos.z) < 9);
@@ -1854,6 +2185,7 @@ function frame(now) {
       S.time += dt;
       countAttackers();
       updateHero(dt);
+      updatePartner(dt);
       for (const e of enemies) updateEnemy(e, dt);
       separate();
       if (k < steps - 1) { updateSprites(rdt); updateSlashes(rdt); PRESS.clear(); camStep(dt, rdt); }
@@ -1879,4 +2211,4 @@ function frame(now) {
   } catch (err) { __celErr.n++; __celErr.last = String(err && err.stack || err); if (__celErr.n < 4) console.error(err); }
 }
 requestAnimationFrame(frame);
-window.__cel = { S, hero, enemies, CAM, BOTR, FPS, IN, renderer, CINE, ACTIONS, DOOR, PIZZA, LADDER, ROOF, get QTE() { return QTE; }, get lockT() { return lockT; }, press: (k) => PRESS.add(k), tryAction, get frames() { return frames; }, atlasRows: _ay + _arow, THREE, camera, scene };
+window.__cel = { S, hero, partner, PART, BOOST_P, hurtTurtle, reviveTurtle, partnerSlot, get KEYS() { return KEYS; }, enemies, CAM, BOTR, FPS, IN, renderer, CINE, ACTIONS, DOOR, PIZZA, LADDER, ROOF, get QTE() { return QTE; }, get lockT() { return lockT; }, press: (k) => PRESS.add(k), tryAction, get frames() { return frames; }, atlasRows: _ay + _arow, THREE, camera, scene };

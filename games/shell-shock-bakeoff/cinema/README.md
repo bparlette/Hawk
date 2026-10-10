@@ -2,7 +2,7 @@
 
 Live: https://shellshock-cinema-city.surge.sh
 
-The Cel City intersection (same cel-shaded city, original turtle-shell hero BLADE, the same 5 posted thugs on short leashes, no waves,
+The Cel City intersection (same cel-shaded city, original turtle-shell hero BLADE plus an AI partner turtle RIDGE, the same 5 posted thugs on short leashes, no waves,
 360-degree combat with soft lock-on), presented like a cinematic co-op adventure game:
 
 - Over-the-shoulder camera: low, close, right-shoulder offset, slight handheld sway. It pulls back and up in fights so 360-degree combat stays readable.
@@ -26,3 +26,27 @@ Source: src/0*.js -> ./build.sh -> game.js (ES module, three r160). New in J: sr
 cinematic cameras, intro); the camera, dizzy state and roof walking are in src/06_game.js; the ladder and fire escape are in src/03_city.js.
 Tests: cine.js (intro, door, pizza, vault, climb, roof leap, QTE finisher), bot.js (?bot=1&sim=N autopilot: walks all four corners, fights
 every thug and presses the QTE). Query flags: ?nointro=1 skips the intro, ?pose=1 shows the pose sheet.
+
+## Two turtles: the AI partner (RIDGE)
+
+You play BLADE (blue bandana, twin blades). RIDGE (magenta bandana, bo staff) is always computer-controlled: no 2P, no split screen,
+no mode picker, one cinematic camera. Code: src/06c_partner.js (+ target/hurt/revive hooks in 06_game.js, BOOST + tag in 06b_cine.js).
+
+- Follow: holds a slot ~2.5 m off the hero's LEFT (the camera rides the right shoulder), steps out of the camera-to-hero line and gives the hero room.
+- Fights: goes after thugs engaging either turtle (the ones winding up on the hero first), 2-3 hit staff combos; leaves dizzy thugs for your QTE.
+  Thugs now target whichever turtle is nearer (sticky). Partner KOs are counted separately (PART.kos).
+- Catch-up: smoke-puff teleport to the hero's side when >16 m behind, stuck (wants to move >3 m but barely moved for 2 s), or on the wrong level.
+  It climbs the ladder after you if you go up the roof, and flips down off the roof after your LEAP DOWN.
+- Revive: a turtle at 0 HP stays down with a REVIVE prompt. Hold E / Y / ACT next to RIDGE (~1.2 s) to revive it at 50 HP.
+  If BLADE goes down, RIDGE runs over (teleports if far) and revives you within ~2 s. Both down = GAME OVER, then both restart at the south end.
+- BOOST: at the ladder, with RIDGE free and within ~7.5 m, the CLIMB prompt becomes BOOST: RIDGE braces at the wall, cups its hands and
+  launches you up the wall (low two-shot, then a cut to a high angle along the wall); RIDGE then climbs the ladder after you.
+- Tag-team finisher: if RIDGE is free and within ~8.5 m of the dizzy thug when you press FINISH!, it dashes in during the reverse-angle cut
+  and lands a staff hit (TAG TEAM!) in the slow-mo, just before your flip strike.
+- Intro: RIDGE flips down into the street during the crane sweep and settles beside you. HUD: RIDGE's pip + HP bar under yours (blinks DOWN).
+
+Portrait (e.g. 390x844): the canvas fills the whole screen at the real aspect (no pillarbox); the FOV widens for portrait (up to 84 deg),
+the shoulder offset shrinks, cut cameras pull back, the letterbox bars are thinner, the HUD scales down and the touch controls sit in the bottom corners.
+Landscape is unchanged.
+
+Tests: partner.js <port> <prefix> <w> <h> [sim] [phases] (intro,follow,tp,kos,revive,over,boost,tag); duo2.js grabs the both-turtles fight frame (bakeoff-cinema-city.png); the tag phase writes the tag-finisher frames.

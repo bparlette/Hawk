@@ -35,6 +35,15 @@
   #hpfill, #hplag { position: absolute; left: 0; top: 0; bottom: 0; }
   #hplag { background: #ff3d6e; width: 100%; transition: width .5s .15s; }
   #hpfill { background: linear-gradient(#9dff6b, #3fd13a); width: 100%; transition: width .08s; }
+  /* partner (AI) pip */
+  #p2 { display: flex; align-items: center; gap: 5px; margin-top: 1px; }
+  #p2f { width: 15px; height: 15px; border-radius: 50%; background: #43c47e; border: 2px solid #14101f; position: relative; overflow: hidden; flex: none; box-sizing: border-box; }
+  #p2f::before { content: ""; position: absolute; left: -2px; right: -2px; top: 3px; height: 4px; background: #e0379b; }
+  #p2n { font-size: 12px; letter-spacing: 1px; color: #ff8ad8; -webkit-text-stroke: .6px #14101f; text-shadow: 1px 1px 0 #14101f; font-style: italic; line-height: 1; }
+  #p2bar { width: 78px; height: 8px; transform: skewX(-14deg); background: #14101f; border: 2px solid #14101f; box-shadow: 2px 2px 0 #14101f; position: relative; }
+  #p2fill { position: absolute; left: 0; top: 0; bottom: 0; width: 100%; background: linear-gradient(#ff9be6, #e0379b); transition: width .15s; }
+  #p2.dn #p2n { color: #ff3d6e; } #p2.dn #p2bar { animation: dnb .5s infinite alternate; } #p2.dn #p2n::after { content: " DOWN"; }
+  @keyframes dnb { from { border-color: #14101f; } to { border-color: #ff3d6e; } }
   #ko { font-size: 15px; color: #fff; -webkit-text-stroke: 1px #14101f; text-shadow: 2px 2px 0 #14101f; font-style: italic; line-height: 1; }
   #ko b { color: #ff5fa2; }
 
@@ -73,6 +82,9 @@
   #prompt.fin #pkey { background: #ff3d6e; color: #fff; animation: qp .35s infinite alternate; }
   #prompt.fin .pl { background: #ff3d6e; } #prompt.fin #pico { stroke: #fff; fill: #ffd23c; }
   #prompt.fin svg.r .fg { stroke: #fff; }
+  #prompt.revive .pl { background: #e0379b; } #prompt.revive svg.r .fg { stroke: #9dff6b; } #prompt.revive #pico { stroke: #fff; }
+  #prompt.boost #pico { stroke: #2fd3ff; }
+  #prompt.nokey #pkey { visibility: hidden; }
   #prompt.far { opacity: .6; } #prompt.far #pkey { animation: none; }
   @keyframes qp { from { transform: scale(1); } to { transform: scale(1.18); } }
   #bC { width: 62px; height: 62px; right: calc(env(safe-area-inset-right, 0px) + 124px); bottom: calc(env(safe-area-inset-bottom, 0px) + 92px); background: #fff; font-size: 14px; }
@@ -102,10 +114,10 @@
 </head>
 <body>
 <canvas id="gl" tabindex="0"></canvas>
-<div id="hpbox" class="ui"><div id="hpcol"><div id="hpname">BLADE</div><div id="hpbar"><div id="hplag"></div><div id="hpfill"></div></div><div id="ko">KO <b id="kon">0</b></div></div><div id="face"></div></div>
+<div id="hpbox" class="ui"><div id="hpcol"><div id="hpname">BLADE</div><div id="hpbar"><div id="hplag"></div><div id="hpfill"></div></div><div id="p2"><i id="p2f"></i><span id="p2n">RIDGE</span><div id="p2bar"><div id="p2fill"></div></div></div><div id="ko">KO <b id="kon">0</b></div></div><div id="face"></div></div>
 <div id="combo" class="ui"><div class="n" id="comboN">0</div><div class="w">HITS!</div></div>
 <div id="banner" class="ui">BACK ON YOUR FEET!</div>
-<div id="hint" class="ui"><b>WASD</b> move · <b>J</b> attack · <b>K</b> jump · <b>E</b> action / finisher · <b>Q/R</b> or drag: camera</div>
+<div id="hint" class="ui"><b>WASD</b> move · <b>J</b> attack · <b>K</b> jump · <b>E</b> action / finisher (hold: revive) · <b>Q/R</b> or drag: camera</div>
 <div id="lbT" class="lb"></div><div id="lbB" class="lb"></div><div id="cut"></div>
 <div id="title" class="ui"><div class="s">SHELL SHOCK · J</div><div class="t">CINEMA CITY</div><div class="k">press any key or tap to skip</div></div>
 <div id="prompt"><div class="pk"><svg class="r" viewBox="0 0 42 42"><circle class="bg" cx="21" cy="21" r="18"/><circle class="fg" id="pring" cx="21" cy="21" r="18"/></svg><div id="pkey">E</div></div><div class="pl"><svg id="pico" viewBox="0 0 24 24"></svg><span id="plab">CLIMB</span></div></div>
