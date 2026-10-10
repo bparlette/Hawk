@@ -1094,7 +1094,7 @@ import * as THREE from "./three.module.min.js";
     }
     if (e.z > 0 && e.type !== "ramrod" && (e.state === "hurt" || e.state === "getup" || e.state === "dying" || e.state === "stagger")) { e.vz = (e.vz > 0 ? 0 : e.vz || 0) - 0.3; e.z = Math.max(0, e.z + e.vz); if (e.z === 0) e.vz = 0; } // knocked out of the air: fall
     if (e.x > STATE.camX + 10 && e.x < STATE.camX + W - 10) e.entered = true;
-    if (e.entered) e.x = Math.max(STATE.camX + 8, Math.min(STATE.camX + W - 8, e.x));
+    if (e.entered && STATE.locked) e.x = Math.max(STATE.camX + 8, Math.min(STATE.camX + W - 8, e.x));
   }
   function updateZap(e, p, dxp, dyp) {
     const free = !(p.deadT > 0 || p.grabbedBy || p.downT > 0);
@@ -1831,7 +1831,7 @@ import * as THREE from "./three.module.min.js";
     const key = name + (rep ? ":r" : "");
     if (TEX[key]) return TEX[key];
     const t = TEXL.load(name);
-    t.colorSpace = THREE.SRGBColorSpace; t.anisotropy = 4;
+    t.colorSpace = THREE.SRGBColorSpace; t.anisotropy = 8;
     if (rep) { t.wrapS = t.wrapT = THREE.RepeatWrapping; }
     return (TEX[key] = t);
   }
@@ -1880,7 +1880,7 @@ import * as THREE from "./three.module.min.js";
 
   function buildWorld(scene) {
     const G = WORLD.groups;
-    for (const k of ["street", "roof", "sewer", "inside"]) { G[k] = new THREE.Group(); scene.add(G[k]); }
+    for (const k of ["street", "roof", "sewer", "inside", "subway"]) { G[k] = new THREE.Group(); scene.add(G[k]); }
     // ---- materials ----
     const M = {
       asphalt: lam(tex("tex/asphalt.jpg", true)), side: lam(tex("tex/sidewalk.jpg", true)), roof: lam(tex("tex/roof.jpg", true)),
@@ -1908,8 +1908,16 @@ import * as THREE from "./three.module.min.js";
     const SWH = 0.14;
     const walks = [[-12, -11, 154, -7], [-12, 7, 172, 11], [150, -150, 154, -11], [168, -150, 172, 7]];
     WORLD.walks = walks;
+    // subway kiosk stairwells are cut into two sidewalks (the stairs descend along dx / dz from the open end)
+    WORLD.kiosks = [{ x0: 40, x1: 44.6, z0: -10.4, z1: -8.4, dx: -1, dz: 0, name: "TORTUGA ST" }, { x0: 150.6, x1: 152.6, z0: -122, z1: -117.6, dx: 0, dz: -1, name: "CANAL WORKS" }];
+    const holeyFloor = (x0, z0, x1, z1) => { // the sidewalk slab minus any kiosk opening inside it
+      const h = WORLD.kiosks.find((k) => k.x0 >= x0 && k.x1 <= x1 && k.z0 >= z0 && k.z1 <= z1);
+      if (!h) return ST.floor(M.side, x0, z0, x1, z1, SWH, 3.2);
+      ST.floor(M.side, x0, z0, h.x0, z1, SWH, 3.2); ST.floor(M.side, h.x1, z0, x1, z1, SWH, 3.2);
+      ST.floor(M.side, h.x0, z0, h.x1, h.z0, SWH, 3.2); ST.floor(M.side, h.x0, h.z1, h.x1, z1, SWH, 3.2);
+    };
     for (const [x0, z0, x1, z1] of walks) {
-      ST.floor(M.side, x0, z0, x1, z1, SWH, 3.2);
+      holeyFloor(x0, z0, x1, z1);
       ST.wall(M.curb, x0, z1, x1, z1, 0, SWH, x0 / 3, 0, x1 / 3, 0.05); // south-facing curb face
       ST.wall(M.curb, x1, z0, x0, z0, 0, SWH, x1 / 3, 0, x0 / 3, 0.05);
       ST.wall(M.curb, x1, z1, x1, z0, 0, SWH, 0, 0, 1, 0.05); ST.wall(M.curb, x0, z0, x0, z1, 0, SWH, 0, 0, 1, 0.05);
@@ -2038,47 +2046,49 @@ import * as THREE from "./three.module.min.js";
       for (let i = 0; i < 220; i++) { g.fillStyle = `rgba(${120 + Math.random() * 80 | 0},255,${90 + Math.random() * 60 | 0},${0.12 + Math.random() * 0.3})`; g.beginPath(); g.ellipse(Math.random() * w, Math.random() * h, 6 + Math.random() * 30, 1 + Math.random() * 2.5, 0, 0, 7); g.fill(); }
     }, true);
     const water = new THREE.MeshLambertMaterial({ map: waterT, color: 0x4a8a50, emissive: 0x06260a, transparent: true, opacity: 0.94, vertexColors: true });
+    WORLD.waterM = water;
     WORLD.anim.push((t) => { waterT.offset.x = t * 0.03; waterT.offset.y = Math.sin(t * 0.6) * 0.02; });
     // tunnel A
     SW.floor(M.sfloor, A.x0, -0.9, A.x1 - 6, A.z1, SY, 4);
     SW.floor(water, A.x0, A.z0, A.x1 - 6, -0.9, SY - 0.25, 6);
     SW.wall(M.swall, A.x0, -0.9, A.x1 - 6, -0.9, SY - 0.25, SY, 0, 0, (A.x1 - 6 - A.x0) / 4, 0.06); // channel lip
-    SW.wall(M.swall, A.x0, A.z0, A.x1 - 6, A.z0, SY - 0.25, SC, 0, 0, (A.x1 - 6 - A.x0) / wu, 1); // north wall (faces south)
+    // north wall of A (the one the camera faces) is built in stretches by buildSewerDetail
     // south wall, with an opening into the hidden lair at x 89..95
-    SW.wall(M.swall, 89, A.z1, A.x0, A.z1, SY, SC, 0, 0, (89 - A.x0) / wu, 1);
-    SW.wall(M.swall, A.x1, A.z1, 95, A.z1, SY, SC, 0, 0, (A.x1 - 95) / wu, 1);
-    SW.wall(M.swall, 95, A.z1, 89, A.z1, SY + 2.5, SC, 0, 0.7, 6 / wu, 1); // lintel over the gap
+    SW.wall(M.swall, 89, A.z1, A.x0, A.z1, SY, SC, 0, 0, (89 - A.x0) / wu, 1, [0.62, 0.62, 0.6]);
+    SW.wall(M.swall, A.x1, A.z1, 89, A.z1, SY, SC, 0, 0, (A.x1 - 89) / wu, 1, [0.62, 0.62, 0.6]); // south wall (beside the camera, kept dim)
     SW.wall(M.swall, A.x0, A.z1, A.x0, A.z0, SY - 0.25, SC, 0, 0, 6 / wu, 1); // west end
     SW.floor(M.sceil, A.x0, A.z0, A.x1, A.z1, SC, 6, [0.7, 0.7, 0.7], true);
     // junction + tunnel B
-    SW.floor(M.sfloor, A.x1 - 6, Bt.z0, A.x1, A.z1, SY, 4);
-    SW.wall(M.swall, A.x1, A.z1, A.x1, Bt.z0, SY, SC, 0, 0, (A.z1 - Bt.z0) / wu, 1); // east wall of B (faces west)
-    SW.wall(M.swall, Bt.x0, Bt.z0, Bt.x0, A.z0, SY, SC, 0, 0, (A.z0 - Bt.z0) / wu, 1);  // west wall of B (faces east)
-    SW.wall(M.swall, A.x1 - 6, A.z1, A.x1, A.z1, SY, SC, 0, 0, 6 / wu, 1);
+    SW.floor(M.sfloor, A.x1 - 6, A.z0, A.x1, A.z1, SY, 4); // the corner (tunnel B's own floor + channel come from buildSewerDetail)
+    SW.wall(M.swall, A.x1, Bt.z0, A.x1, A.z1, SY - 0.25, SC, -Bt.z0 / wu, 0, -A.z1 / wu, 1, [0.62, 0.62, 0.6]); // east wall of B (faces west, -x; beside the camera, kept dim)
+    SW.wall(M.swall, A.x1, A.z1, A.x1 - 6, A.z1, SY, SC, 0, 0, 6 / wu, 1); // corner's south wall (faces north)
     SW.wall(M.swall, Bt.x0, Bt.z0, Bt.x1, Bt.z0, SY, SC, 0, 0, 6 / wu, 1); // north end
     SW.floor(M.sceil, Bt.x0, Bt.z0, Bt.x1, A.z0, SC, 6, [0.7, 0.7, 0.7], true);
     // channel down the middle of B
     // the hidden lair: a room south of tunnel A at x 87..97, z 3..11
-    const L = { x0: 85, x1: 99, z0: 3, z1: 11 }; WORLD.lairR = L;
-    SW.floor(M.sfloor, 89, 2.9, 95, L.z0 + 0.1, SY, 4);
+    // the lair: a room NORTH of tunnel A (x 85..99, z -11..-3), entered through a lit archway in the wall the camera faces
+    const L = { x0: 85, x1: 99, z0: -11, z1: -3 }; WORLD.lairR = L;
     SW.floor(lam(tex("tex/sewer_floor.jpg", true), { color: 0xc8b090 }), L.x0, L.z0, L.x1, L.z1, SY, 3);
-    SW.wall(M.lair, L.x1, L.z1, L.x0, L.z1, SY, SY + 5, 0, 0.0, 1, 0.92);           // back wall: couch, TV, pizza boxes
+    SW.wall(M.lair, L.x0, L.z0, L.x1, L.z0, SY, SY + 5, 0, 0.0, 1, 0.92);           // back wall: couch, TV, pizza boxes (faces +z)
     SW.wall(M.swall, L.x1, L.z0, L.x1, L.z1, SY, SY + 5, 0, 0, 8 / wu, 1);
     SW.wall(M.swall, L.x0, L.z1, L.x0, L.z0, SY, SY + 5, 0, 0, 8 / wu, 1);
-    SW.wall(M.swall, L.x0, L.z0, 89, L.z0, SY, SY + 5, 0, 0, 4 / wu, 1);
-    SW.wall(M.swall, 95, L.z0, L.x1, L.z0, SY, SY + 5, 0, 0, 4 / wu, 1);
-    SW.wall(M.swall, 89, L.z0, 95, L.z0, SC, SY + 5, 0, 0.7, 6 / wu, 1);
+    // its front wall seen from inside (faces -z), with the archway (x 89..95) and the window (x 96.4..98.4) cut out
+    SW.wall(M.swall, 89, L.z1, L.x0, L.z1, SY, SY + 5, 0, 0, 4 / wu, 1); SW.wall(M.swall, L.x1, L.z1, 98.4, L.z1, SY, SY + 5, 0, 0, 0.6 / wu, 1); SW.wall(M.swall, 96.4, L.z1, 95, L.z1, SY, SY + 5, 0, 0, 1.4 / wu, 1);
+    SW.wall(M.swall, 95, L.z1, 89, L.z1, SY + 2.5, SY + 5, 0, 0.5, 6 / wu, 1); SW.wall(M.swall, 98.4, L.z1, 96.4, L.z1, SY, SY + 1.0, 0, 0, 2 / wu, 0.2); SW.wall(M.swall, 98.4, L.z1, 96.4, L.z1, SY + 2.2, SY + 5, 0, 0.45, 2 / wu, 1);
+    SW.wall(M.swall, 99, L.z1, 85, L.z1, SC, SY + 5, 0, 0.7, 14 / wu, 1); // above the tunnel ceiling line
     SW.floor(M.sceil, L.x0, L.z0, L.x1, L.z1, SY + 5, 6, [0.6, 0.6, 0.6], true);
     // pipes along tunnel A's walls (cylinders merged)
     {
       const pipeM = lam(null, { color: 0x6a4a32 }), gs = [];
       const cyl = (x0, y, z, len, r, axis) => { const g = new THREE.CylinderGeometry(r, r, len, 8, 1, true); if (axis === "x") g.rotateZ(Math.PI / 2); else g.rotateX(Math.PI / 2); g.translate(x0, y, z); gs.push(g); };
-      cyl((A.x0 + A.x1 - 6) / 2, SC - 0.35, A.z0 + 0.25, A.x1 - 6 - A.x0, 0.18, "x");
+      cyl((A.x0 + 88) / 2, SC - 0.35, A.z0 + 0.25, 88 - A.x0, 0.18, "x"); cyl((96 + A.x1 - 6) / 2, SC - 0.35, A.z0 + 0.25, A.x1 - 6 - 96, 0.18, "x");
+      cyl(A.x1 - 0.25, SC - 0.5, (Bt.z0 + A.z0) / 2, A.z0 - Bt.z0, 0.14, "z");
       cyl((A.x0 + 89) / 2, SC - 0.6, A.z1 - 0.22, 89 - A.x0, 0.14, "x");
       cyl((95 + A.x1) / 2, SC - 0.6, A.z1 - 0.22, A.x1 - 95, 0.14, "x");
       cyl(Bt.x0 + 0.25, SC - 0.4, (Bt.z0 + A.z0) / 2, A.z0 - Bt.z0, 0.18, "z");
       const geo = mergeGeos(gs); const mesh = new THREE.Mesh(geo, pipeM); G.sewer.add(mesh);
     }
+    buildSewerDetail(G, M, SY, SC, wu);
     // ================= props that are geometry: lamp posts, cars, water towers, skylights =================
     buildLamps(ST); buildCars(G.street); buildRoofProps(RF, G.roof);
     ST.build(G.street); RF.build(G.roof); SW.build(G.sewer);
@@ -2088,12 +2098,10 @@ import * as THREE from "./three.module.min.js";
     // neon spill from the painted signs (pink / cyan / green), fire, sewer lamps, lair TV
     [[30, -9.5, 0xff3fa0], [70, -9, 0xff7a20], [100, -9.5, 0x3fd8ff], [140, -9.5, 0x50ff80], [40, 9.5, 0xff40c0], [105, 9.5, 0x40c8ff], [152, -60, 0xff4080], [170, -100, 0x40e0ff], [152, -130, 0xffa040]]
       .forEach(([x, z, c]) => WORLD.lights.push({ reg: "street", x, y: 3.2, z, c, i: 14, d: 10 }));
-    for (let x = 28; x < 160; x += 14) WORLD.lights.push({ reg: "sewer", x, y: SC - 0.5, z: 2.3, c: 0xffb060, i: 7, d: 8 });
-    for (let z = -12; z > -96; z -= 14) WORLD.lights.push({ reg: "sewer", x: 164.3, y: SC - 0.5, z, c: 0xffb060, i: 7, d: 8 });
-    for (let x = 30; x < 160; x += 22) WORLD.lights.push({ reg: "sewer", x, y: SY + 0.3, z: -2, c: 0x40ff60, i: 6, d: 7 });
-    WORLD.lights.push({ reg: "sewer", x: 90, y: SY + 1.4, z: 9.4, c: 0x60ffd0, i: 10, d: 9, flick: 1 });
-    WORLD.lights.push({ reg: "sewer", x: 94, y: SY + 4, z: 8, c: 0xffc080, i: 18, d: 12 });
-    WORLD.lights.push({ reg: "sewer", x: 88, y: SY + 3, z: 6, c: 0xffa860, i: 14, d: 10, flick: 1 });
+    // (the tunnels' lamp pools come from buildSewerDetail, one per stretch)
+    WORLD.lights.push({ reg: "sewer", x: 90, y: SY + 1.4, z: -9.4, c: 0x60ffd0, i: 10, d: 9, flick: 1 });
+    WORLD.lights.push({ reg: "sewer", x: 94, y: SY + 4, z: -8, c: 0xffc080, i: 18, d: 12 });
+    WORLD.lights.push({ reg: "sewer", x: 88, y: SY + 3, z: -6, c: 0xffa860, i: 14, d: 10, flick: 1 });
     for (const r of ROOFS) WORLD.lights.push({ reg: "roof", x: (r.x0 + r.x1) / 2, y: r.y + 4, z: (r.z0 + r.z1) / 2, c: 0x9aa8ff, i: 12, d: 18 });
     WORLD.lights.push({ reg: "roof", x: 116, y: 16, z: -30, c: 0xff40c0, i: 14, d: 14 });
     buildZones();
@@ -2228,36 +2236,32 @@ import * as THREE from "./three.module.min.js";
   }
   // ---------- zones: each is a 2D beat-'em-up frame laid into the city ----------
   // O = near-left corner (metres), u = unit along the zone (screen right), v = unit toward the camera, depth = metres across.
-  // locks: arenas (like the 16-bit LOCKS) at a centre distance along u, holding waves or a boss.
+  // (no arenas: the world is open; enemy posts and encounters live in game.js)
   function buildZones() {
     const Z = (o) => Object.assign({ ents: { enemies: [], props: [], items: [], stars: [] }, locks: [] }, o);
     WORLD.zones = [
       Z({ id: "block2", layer: "street", reg: "street", rects: [[150.6, -150, 171.4, 10.4]], O: [171.4, 10.4], u: [0, -1], v: [1, 0], depth: 20.8,
-        cam: { a: 26, dist: 6.6, h: 2.9, fov: 55 }, box: [150.8, -200, 171.6, 10.6, 99],
-        locks: [{ at: 10.4, boss: "zap" }, { at: 60, waves: [["heavy", "gunner", "star", "dasher", "purple"]] },
-          { at: 112, waves: [["purple", "purple", "purple", "purple"], ["gunner", "sword", "purple", "gunner", "sword", "blue"]] }] }),
+        cam: { a: 26, dist: 6.6, h: 2.9, fov: 55 }, box: [150.8, -200, 171.6, 10.6, 99] }),
       Z({ id: "block1", layer: "street", reg: "street", rects: [[-11.5, -10.6, 150.6, 8.6]], O: [-11.5, 8.6], u: [1, 0], v: [0, 1], depth: 19.2,
-        cam: { a: 26, dist: 6.6, h: 2.9, fov: 55 }, box: [-11, -10.8, 171.6, 10.6, 99],
-        locks: [{ at: 26, waves: [["purple", "blue", "star", "purple"]] }, { at: 78.8, waves: [["purple", "midboss", "blue"]] },
-          { at: 112, waves: [["sword", "dasher", "blue", "purple"]] }] }),
+        cam: { a: 26, dist: 6.6, h: 2.9, fov: 55 }, box: [-11, -10.8, 171.6, 10.6, 99] }),
       Z({ id: "lot", layer: "street", reg: "street", rects: [[128.6, -187.4, 171.4, -150]], O: [171.4, -150], u: [0, -1], v: [1, 0], depth: 42.8,
-        cam: { a: 22, dist: 8, h: 3.6, fov: 56 }, box: [128.8, -187.6, 171.6, -100, 99], locks: [{ at: 18.7, boss: "ramrod" }] }),
+        cam: { a: 22, dist: 8, h: 3.6, fov: 56 }, box: [128.8, -187.6, 171.6, -100, 99] }),
       Z({ id: "sewerB", layer: "sewer", reg: "sewer", rects: [[159.3, -95.4, 164.7, -2.6]], O: [164.7, 2.6], u: [0, -1], v: [1, 0], depth: 5.4,
-        cam: { a: 42, dist: 5.2, h: 1.4, fov: 64 }, box: [159.25, -95.75, 164.75, 2.75, WORLD.SC - 0.3], locks: [{ at: 55, waves: [["sword", "purple", "dasher"]] }] }),
-      Z({ id: "lair", layer: "sewer", reg: "sewer", rects: [[85.4, 3.4, 98.6, 10.6], [89.3, 2.4, 94.7, 3.6]], O: [98.6, 2.6], u: [-1, 0], v: [0, -1], depth: 8,
-        cam: { a: 10, dist: 5, h: 2.8, fov: 70 }, box: [85.6, 3.5, 98.4, 10.7, WORLD.SY + 4.6], lair: true }),
+        cam: { a: 42, dist: 5.2, h: 1.4, fov: 64 }, box: [159.6, -95.75, 164.2, 2.2, WORLD.SC - 0.3] }),
+      Z({ id: "lair", layer: "sewer", reg: "sewer", rects: [[85.4, -10.6, 98.6, -3.4], [89.3, -3.6, 94.7, -2.6]], O: [85.4, -2.6], u: [1, 0], v: [0, 1], depth: 8,
+        cam: { a: 10, dist: 5, h: 2.8, fov: 70 }, box: [85.6, -10.7, 98.4, -3.5, WORLD.SY + 4.6], lair: true }),
       Z({ id: "sewerA", layer: "sewer", reg: "sewer", rects: [[20.4, -2.75, 164.7, 2.6]], O: [20.4, 2.6], u: [1, 0], v: [0, 1], depth: 5.35,
-        cam: { a: 42, dist: 5.2, h: 1.4, fov: 64 }, box: [20.25, -2.75, 164.75, 2.75, WORLD.SC - 0.3], locks: [{ at: 50, waves: [["purple", "blue", "star"]] }] }),
+        cam: { a: 42, dist: 5.2, h: 1.4, fov: 64 }, box: [20.6, -2.75, 164.3, 2.2, WORLD.SC - 0.3] }),
       Z({ id: "lobby", layer: "inside", reg: "inside", rects: [[131.6, -23.3, 146.4, -11.6]], O: [131.6, -11.6], u: [1, 0], v: [0, 1], depth: 11.7,
         cam: { a: 6, dist: 6, h: 2.0, fov: 72 }, box: [131.7, -23.2, 146.3, -11.45, 3.85] }),
       Z({ id: "roofs", layer: "roof", reg: "street", rects: [[82.2, -34.4, 106.6, -11.6], [106.6, -34.4, 108.6, -11.6], [108.6, -34.4, 126, -11.6], [126, -34.4, 128.4, -11.6], [128.4, -39.4, 149.6, -11.6]],
-        O: [82.2, -11.6], u: [1, 0], v: [0, 1], depth: 27.8, cam: { a: 24, dist: 7.2, h: 3.4, fov: 55 }, box: [60, -60, 170, 30, 99],
-        locks: [{ at: 18, waves: [["purple", "star", "blue"]] }] }),
+        O: [82.2, -11.6], u: [1, 0], v: [0, 1], depth: 27.8, cam: { a: 24, dist: 7.2, h: 3.4, fov: 55 }, box: [60, -60, 170, 30, 99] }),
+      Z({ id: "subway", layer: "subway", reg: "subway", rects: [[8.3, 41.1, 209.7, 52.0]], O: [8.3, 52.0], u: [1, 0], v: [0, 1], depth: 10.9,
+        cam: { a: 18, dist: 6.2, h: 2.3, fov: 60 }, box: [8.3, 41.3, 209.7, 51.9, SUB.CY - 0.3] }),
     ];
     for (const z of WORLD.zones) {
       z.FB = 215; z.FT = 215 - z.depth / DY; z.len = 0;
       for (const r of z.rects) for (const [x, zz] of [[r[0], r[1]], [r[2], r[3]], [r[0], r[3]], [r[2], r[1]]]) z.len = Math.max(z.len, ((x - z.O[0]) * z.u[0] + (zz - z.O[1]) * z.u[1]) / PX);
-      for (const L of z.locks) { L.x0 = Math.round(L.at / PX - W / 2); L.done = false; }
     }
   }
   const zoneById = (id) => WORLD.zones.find((z) => z.id === id);
@@ -2279,9 +2283,10 @@ import * as THREE from "./three.module.min.js";
       return 0;
     }
     if (layer === "sewer") {
-      for (const z of WORLD.zones) if (z.layer === "sewer") for (const r of z.rects) if (gx >= r[0] && gx <= r[2] && gz >= r[1] && gz <= r[3]) return gz < -0.9 && gx < 159 ? WORLD.SY - 0.22 : WORLD.SY;
+      for (const z of WORLD.zones) if (z.layer === "sewer") for (const r of z.rects) if (gx >= r[0] && gx <= r[2] && gz >= r[1] && gz <= r[3]) { if (gz < -2.95 && gx > 85 && gx < 99) return WORLD.SY; if (gx > 90.4 && gx < 93.6 && gz < -0.85) return WORLD.SY; return (gz < -0.9 && gx < 159) || (gx >= 159 && gx < 160 && gz < -3.2) ? WORLD.SY - 0.22 : WORLD.SY; }
       return null;
     }
+    if (layer === "subway") return subFloor(gx, gz);
     if (layer === "inside") return gx >= 131.6 && gx <= 146.4 && gz >= -23.3 && gz <= -11.6 ? 0 : null;
     // roofs
     const P = WORLD.plank;
@@ -2291,6 +2296,624 @@ import * as THREE from "./three.module.min.js";
     for (const r of WORLD.roofs) { const w = r.walk; if (gx >= w[0] && gx <= w[2] && gz >= w[1] && gz <= w[3]) return r.y; }
     if (gz > -34.6 && gz < -11.4 && ((gx > 106.5 && gx < 108.7) || (gx > 125.9 && gx < 128.1))) return -40; // an alley gap: nothing underfoot
     return null;
+  }
+
+  // =====================================================================================================
+  // ---------- SEWER DETAIL (new): tunnels A and B broken into stretches that each look different ----------
+  // brick / concrete / old tile walls, original tags + murals, side grates, outflow pipes pouring water, junction alcoves,
+  // coloured lamp pools, crates / a shopping cart / a mattress, rats, a ladder shaft with light coming down,
+  // and the lair's lit archway + window on tunnel A's north wall (the wall the camera faces).
+  // =====================================================================================================
+  const TAGS = ["DRIPZ", "SEWERSIDE", "KRUNCH", "GRIMEY 89", "BLUB!", "NO EXIT", "SLIME CITY", "ZOOT", "WET PAINT", "FLUSH CREW"];
+  function tagTex(word, i) {
+    return canvasTex(512, 192, (g, w, h) => {
+      const cols = [["#ff3fa0", "#ffe14a"], ["#3fe0ff", "#ff7a1a"], ["#7fff3a", "#c040ff"], ["#ffffff", "#ff3a30"], ["#ffb43a", "#30e0a0"]][i % 5];
+      g.translate(w / 2, h / 2); g.rotate((i % 3 - 1) * 0.08); g.translate(-w / 2, -h / 2);
+      g.font = `italic bold ${word.length > 8 ? 74 : 96}px Impact, Arial Black, Arial`; g.textAlign = "center"; g.textBaseline = "middle";
+      g.lineJoin = "round"; g.lineWidth = 16; g.strokeStyle = "#0a0a0a"; g.strokeText(word, w / 2, h / 2);
+      g.lineWidth = 6; g.strokeStyle = cols[1]; g.strokeText(word, w / 2, h / 2);
+      const gr = g.createLinearGradient(0, h * 0.25, 0, h * 0.75); gr.addColorStop(0, cols[0]); gr.addColorStop(1, cols[1]); g.fillStyle = gr; g.fillText(word, w / 2, h / 2);
+      g.fillStyle = cols[0]; for (let k = 0; k < 9; k++) { const x = 60 + Math.random() * (w - 120), y = h / 2 + 20 + Math.random() * 20; g.fillRect(x, y, 4, 20 + Math.random() * 40); } // drips
+      g.fillStyle = "#fff"; for (let k = 0; k < 4; k++) { g.beginPath(); g.arc(80 + Math.random() * (w - 160), 40 + Math.random() * 40, 4, 0, 7); g.fill(); }
+    });
+  }
+  function grateTex() {
+    return canvasTex(128, 96, (g, w, h) => {
+      const gr = g.createRadialGradient(64, 60, 4, 64, 60, 70); gr.addColorStop(0, "#3a7a3a"); gr.addColorStop(1, "#050805"); g.fillStyle = gr; g.fillRect(0, 0, w, h);
+      g.fillStyle = "#2a2622"; g.fillRect(0, 0, w, 10); g.fillRect(0, h - 10, w, 10); g.fillRect(0, 0, 10, h); g.fillRect(w - 10, 0, 10, h);
+      for (let x = 18; x < w - 10; x += 14) { g.fillStyle = "#3a3632"; g.fillRect(x, 10, 6, h - 20); g.fillStyle = "#5a524a"; g.fillRect(x, 10, 2, h - 20); }
+      g.fillStyle = "rgba(120,60,20,0.5)"; for (let i = 0; i < 20; i++) g.fillRect(Math.random() * w, Math.random() * h, 3, 5);
+    });
+  }
+  function lairSignTex() { // hand-painted plank sign over the archway (original)
+    return canvasTex(512, 160, (g, w, h) => {
+      for (let i = 0; i < 4; i++) { g.fillStyle = ["#7a4a24", "#6a3e1e", "#845228", "#70441f"][i]; g.fillRect(0, i * 40, w, 38); }
+      g.fillStyle = "rgba(0,0,0,0.35)"; for (let i = 0; i < 50; i++) g.fillRect(Math.random() * w, Math.random() * h, 10 + Math.random() * 30, 2);
+      g.fillStyle = "#2a1a0e"; for (const [x, y] of [[14, 14], [w - 22, 14], [14, h - 22], [w - 22, h - 22]]) g.fillRect(x, y, 8, 8);
+      g.font = "bold 58px Impact, Arial Black, Arial"; g.textAlign = "center"; g.textBaseline = "middle"; g.lineWidth = 8; g.strokeStyle = "#1a0e06";
+      g.strokeText("HOME SWEET SEWER", w / 2, 62); g.fillStyle = "#ffe14a"; g.fillText("HOME SWEET SEWER", w / 2, 62);
+      g.font = "bold 30px Arial Black, Arial"; g.strokeText("KNOCK 3 TIMES - PIZZA ONLY", w / 2, 122); g.fillStyle = "#7fff6a"; g.fillText("KNOCK 3 TIMES - PIZZA ONLY", w / 2, 122);
+      g.fillStyle = "#ffcf3a"; g.beginPath(); g.moveTo(452, 100); g.lineTo(500, 118); g.lineTo(452, 140); g.closePath(); g.fill(); // a little pizza slice
+    });
+  }
+  function ratTex() {
+    return canvasTex(128, 64, (g) => {
+      g.fillStyle = "#e88a9a"; g.lineWidth = 3; g.strokeStyle = "#e88a9a"; g.beginPath(); g.moveTo(30, 44); g.quadraticCurveTo(8, 40, 4, 56); g.stroke();
+      g.fillStyle = "#4a3e36"; g.beginPath(); g.ellipse(58, 42, 30, 15, 0, 0, 7); g.fill(); g.beginPath(); g.ellipse(92, 40, 16, 11, 0.2, 0, 7); g.fill();
+      g.fillStyle = "#6a5a50"; g.beginPath(); g.ellipse(88, 30, 6, 7, 0, 0, 7); g.fill(); g.fillStyle = "#ff3030"; g.fillRect(98, 36, 4, 4);
+      g.fillStyle = "#e88a9a"; g.fillRect(106, 42, 6, 4); g.fillStyle = "#2a221e"; g.fillRect(44, 54, 5, 8); g.fillRect(70, 54, 5, 8);
+    });
+  }
+  function buildSewerDetail(G, M, SY, SC, wu) {
+    const S = new Builder();
+    const brick = M.swall, conc = lam(tex("tex/tunnel_wall.jpg", true), { color: 0x8a9a80 }), tile = lam(tex("tex/subway_wall.jpg", true), { color: 0x9aa47a });
+    const mPizza = lam(tex("tex/mural_pizza.jpg")), mGator = lam(tex("tex/mural_gator.jpg"));
+    const decal = (t) => new THREE.MeshLambertMaterial({ map: t, transparent: true, alphaTest: 0.08, depthWrite: false, polygonOffset: true, polygonOffsetFactor: -2, vertexColors: true });
+    const H = SC - (SY - 0.25), Y0 = SY - 0.25;
+    const MAT = { brick: [brick, wu], conc: [conc, 4.4], tile: [tile, H * (1024 / 572)] };
+    // wall strip along the north wall of tunnel A (z -3, faces +z) or the west wall of tunnel B (x 159, faces +x); s/e = along coords
+    const wallA = (mat, rep, x0, x1, y0 = Y0, y1 = SC, col) => S.wall(mat, x0, -3, x1, -3, y0, y1, x0 / rep, (y0 - Y0) / H, x1 / rep, (y1 - Y0) / H, col);
+    const wallB = (mat, rep, z0, z1, y0 = Y0, y1 = SC, col) => S.wall(mat, 159, z0, 159, z1, y0, y1, -z0 / rep, (y0 - Y0) / H, -z1 / rep, (y1 - Y0) / H, col); // z0 > z1
+    // ---- stretches: [from, to, wall, lamp colour, flicker] (A runs east along x, B runs north along -z) ----
+    const A = [[20, 34, "brick", 0xffb060, 0], [34, 48, "conc", 0x50ff70, 0], [48, 60, "tile", 0xffc070, 1], [60, 65, "junc", 0xff4a30, 0], [65, 80, "brick", 0x60d8ff, 0],
+      [80, 89, "conc", 0xffa850, 0], [89, 99, "lair", 0xffb070, 0], [99, 112, "tile", 0x50ff70, 1], [112, 126, "conc", 0xc060ff, 0], [126, 140, "brick", 0xffb060, 0],
+      [140, 145, "junc", 0x40ff80, 0], [145, 159, "tile", 0xffc070, 2]];
+    const B = [[-3, -16, "conc", 0xffb060, 0], [-16, -30, "tile", 0x50ff70, 1], [-30, -44, "brick", 0xff7a40, 0], [-44, -49, "junc", 0xff4a30, 0], [-49, -66, "conc", 0xc060ff, 0],
+      [-66, -80, "brick", 0x60d8ff, 0], [-80, -96, "tile", 0xffb060, 2]];
+    WORLD.sewerFx = { falls: [], rats: [], shafts: [] };
+    const lampM = new THREE.MeshBasicMaterial({ color: 0xffffff }), cageM = new THREE.MeshLambertMaterial({ color: 0x2a2622 });
+    const lamp = (x, z, c, fl, alongX) => { // caged wall lamp + its light pool
+      const m = new THREE.Mesh(new THREE.SphereGeometry(0.13, 10, 8), new THREE.MeshBasicMaterial({ color: c })); m.position.set(x, SC - 0.55, z); G.sewer.add(m);
+      const cg = new THREE.Mesh(new THREE.BoxGeometry(alongX ? 0.34 : 0.22, 0.34, alongX ? 0.22 : 0.34), new THREE.MeshLambertMaterial({ color: 0x1a1816, wireframe: true })); cg.position.copy(m.position); G.sewer.add(cg);
+      WORLD.lights.push({ reg: "sewer", x: x + (alongX ? 0 : 0.8), y: SC - 0.7, z: z + (alongX ? 0.8 : 0), c, i: 17, d: 10.5, flick: fl });
+    };
+    const junction = (a, b, alongA) => { // a recess with a dark side tunnel running off it
+      const d = 4;
+      if (alongA) {
+        S.floor(M.sfloor, a, -3 - d, b, -3, SY - 0.22, 4, [0.5, 0.55, 0.5]);
+        S.wall(brick, a, -3 - d, a, -3, Y0, SC, 0, 0, d / wu, 1, [0.7, 0.7, 0.7]); // west side (faces +x)... drawn from both sides below
+        S.wall(brick, a, -3, a, -3 - d, Y0, SC, 0, 0, d / wu, 1, [0.7, 0.7, 0.7]);
+        S.wall(brick, b, -3 - d, b, -3, Y0, SC, 0, 0, d / wu, 1, [0.7, 0.7, 0.7]); S.wall(brick, b, -3, b, -3 - d, Y0, SC, 0, 0, d / wu, 1, [0.7, 0.7, 0.7]);
+        S.wall(brick, a, -3 - d, a + 0.6, -3 - d, Y0, SC, 0, 0, 0.1, 1, [0.6, 0.6, 0.6]); S.wall(brick, b - 0.6, -3 - d, b, -3 - d, Y0, SC, 0, 0, 0.1, 1, [0.6, 0.6, 0.6]);
+        S.wall(brick, a + 0.6, -3 - d, b - 0.6, -3 - d, SY + 2.4, SC, 0, 0.6, 0.6, 1, [0.6, 0.6, 0.6]);
+        S.floor(M.sceil, a, -3 - d, b, -3, SC, 6, [0.5, 0.5, 0.5], true);
+        const dark = new THREE.Mesh(new THREE.PlaneGeometry(b - a - 1.2, 2.7), new THREE.MeshBasicMaterial({ map: canvasTex(64, 64, (g) => { const r = g.createRadialGradient(32, 40, 2, 32, 40, 40); r.addColorStop(0, "#000"); r.addColorStop(1, "#0c140c"); g.fillStyle = r; g.fillRect(0, 0, 64, 64); }) }));
+        dark.position.set((a + b) / 2, Y0 + 1.35, -3 - d + 0.01); G.sewer.add(dark);
+        S.floor(water, a, -3 - d, b, -3, SY - 0.24, 6);
+      } else {
+        S.floor(M.sfloor, 159 - d, a <= b ? a : b, 159, a <= b ? b : a, SY - 0.22, 4, [0.5, 0.55, 0.5]);
+        const zN = Math.min(a, b), zS = Math.max(a, b);
+        S.wall(brick, 159 - d, zS, 159, zS, Y0, SC, 0, 0, d / wu, 1, [0.7, 0.7, 0.7]); S.wall(brick, 159, zS, 159 - d, zS, Y0, SC, 0, 0, d / wu, 1, [0.7, 0.7, 0.7]);
+        S.wall(brick, 159, zN, 159 - d, zN, Y0, SC, 0, 0, d / wu, 1, [0.7, 0.7, 0.7]); S.wall(brick, 159 - d, zN, 159, zN, Y0, SC, 0, 0, d / wu, 1, [0.7, 0.7, 0.7]);
+        S.wall(brick, 159 - d, zS, 159 - d, zS - 0.6, Y0, SC, 0, 0, 0.1, 1, [0.6, 0.6, 0.6]); S.wall(brick, 159 - d, zN + 0.6, 159 - d, zN, Y0, SC, 0, 0, 0.1, 1, [0.6, 0.6, 0.6]);
+        S.wall(brick, 159 - d, zS - 0.6, 159 - d, zN + 0.6, SY + 2.4, SC, 0, 0.6, 0.6, 1, [0.6, 0.6, 0.6]);
+        S.floor(M.sceil, 159 - d, zN, 159, zS, SC, 6, [0.5, 0.5, 0.5], true);
+        const dark = new THREE.Mesh(new THREE.PlaneGeometry(zS - zN - 1.2, 2.7), new THREE.MeshBasicMaterial({ color: 0x020402 })); dark.rotation.y = Math.PI / 2; dark.position.set(159 - d + 0.01, Y0 + 1.35, (zN + zS) / 2); G.sewer.add(dark);
+        S.floor(water, 159 - d, zN, 159, zS, SY - 0.24, 6);
+      }
+    };
+    const water = WORLD.waterM;
+    let ti = 0;
+    for (const [a, b, kind, c, fl] of A) {
+      if (kind === "junc") { junction(a, b, true); lamp((a + b) / 2, -2.85, c, fl, true); continue; }
+      if (kind === "lair") continue; // built below with its openings
+      const [m, rep] = MAT[kind], tint = kind === "conc" ? [0.85, 0.95, 0.85] : [1, 1, 1];
+      wallA(m, rep, a, b, Y0, SC, tint);
+      lamp(a + (b - a) * 0.5, -2.85, c, fl, true);
+    }
+    for (const [a, b, kind, c, fl] of B) {
+      if (kind === "junc") { junction(a, b, false); lamp(159.15, (a + b) / 2, c, fl, false); continue; }
+      const [m, rep] = MAT[kind], tint = kind === "conc" ? [0.85, 0.95, 0.85] : [1, 1, 1];
+      wallB(m, rep, a, b, Y0, SC, tint);
+      lamp(159.15, a + (b - a) * 0.5, c, fl, false);
+    }
+    // the lair stretch: brick with a lit archway (x 89..95) and a barred window (x 96.4..98.4) into the room
+    wallA(brick, wu, 89, 95, SY + 2.5, SC); wallA(brick, wu, 95, 96.4); wallA(brick, wu, 98.4, 99);
+    wallA(brick, wu, 96.4, 98.4, Y0, SY + 1.0); wallA(brick, wu, 96.4, 98.4, SY + 2.2, SC);
+    { // archway trim (lit stone blocks) + bars + the sign + warm spill on the floor
+      const trimM = new THREE.MeshLambertMaterial({ color: 0xb8946a, emissive: 0x3a2008 });
+      for (const [x, w] of [[88.85, 0.3], [95.15, 0.3]]) { const m = new THREE.Mesh(new THREE.BoxGeometry(w, 2.75, 0.3), trimM); m.position.set(x, SY + 1.25, -2.95); G.sewer.add(m); }
+      const top = new THREE.Mesh(new THREE.BoxGeometry(6.6, 0.3, 0.3), trimM); top.position.set(92, SY + 2.62, -2.95); G.sewer.add(top);
+      const barM = new THREE.MeshLambertMaterial({ color: 0x2a2420 });
+      for (let x = 96.6; x < 98.4; x += 0.3) { const m = new THREE.Mesh(new THREE.BoxGeometry(0.05, 1.2, 0.05), barM); m.position.set(x, SY + 1.6, -3.0); G.sewer.add(m); }
+      const sign = new THREE.Mesh(new THREE.PlaneGeometry(3.6, 1.12), new THREE.MeshLambertMaterial({ map: lairSignTex(), emissive: 0x2a1a08 })); sign.position.set(92, SY + 3.15, -2.9); sign.rotation.x = -0.06; G.sewer.add(sign);
+      const spill = new THREE.Mesh(new THREE.PlaneGeometry(8, 5.5), new THREE.MeshBasicMaterial({ map: canvasTex(128, 128, (g) => { const r = g.createRadialGradient(64, 0, 4, 64, 0, 120); r.addColorStop(0, "rgba(255,190,110,0.75)"); r.addColorStop(1, "rgba(255,160,80,0)"); g.fillStyle = r; g.fillRect(0, 0, 128, 128); }), transparent: true, blending: THREE.AdditiveBlending, depthWrite: false }));
+      spill.rotation.x = -Math.PI / 2; spill.position.set(92, SY + 0.02, -0.25); G.sewer.add(spill);
+      WORLD.lights.push({ reg: "sewer", x: 92, y: SY + 1.6, z: -2.2, c: 0xffb070, i: 22, d: 9, fire: true });
+      WORLD.lights.push({ reg: "sewer", x: 97.4, y: SY + 1.6, z: -2.4, c: 0x80ffd8, i: 8, d: 5, flick: 1 }); // TV flicker through the window
+      // plank bridge across the channel to the archway
+      const plank = lam(canvasTex(64, 128, (g, w, h) => { for (let i = 0; i < 4; i++) { g.fillStyle = ["#6e4c2e", "#5f4128", "#7a5534", "#674629"][i]; g.fillRect(i * 16 + 1, 0, 14, h); } }, true));
+      S.floor(plank, 90.4, -3, 93.6, -0.85, SY + 0.04, 2);
+    }
+    // ---- murals + tags ----
+    S.wall(mPizza, 66.5, -2.99, 78.5, -2.99, SY + 0.2, SC - 0.25, 0, 0.3, 1, 1);
+    S.wall(mGator, 114, -2.99, 124, -2.99, SY + 0.1, SC - 0.2, 0.06, 0.08, 0.94, 0.92);
+    S.wall(mGator, 159.01, -50, 159.01, -63, SY + 0.1, SC - 0.2, 0.06, 0.08, 0.94, 0.92, [0.9, 0.9, 0.9]);
+    const tagAt = [[24, 1], [38.5, 0], [51, 0.4], [83.5, 0.2], [101, 0.6], [129, 0.3], [149, 0.5], [-8, 0.4], [-20, 0.1], [-35, 0.5], [-70, 0.3], [-86, 0.5]];
+    tagAt.forEach(([s, y], i) => {
+      const m = decal(tagTex(TAGS[i % TAGS.length], i)); const w = 3.4, h = 1.25;
+      if (s > 0) S.wall(m, s, -2.98, s + w, -2.98, SY + 0.5 + y, SY + 0.5 + y + h, 0, 0, 1, 1);
+      else S.wall(m, 159.02, s, 159.02, s - w, SY + 0.5 + y, SY + 0.5 + y + h, 0, 0, 1, 1);
+    });
+    // ---- side grates (glowing green behind) ----
+    const gm = lam(grateTex());
+    for (const s of [44, 57, 108, 134, -12, -40, -76]) {
+      if (s > 0) S.wall(gm, s, -2.97, s + 1.4, -2.97, SY - 0.2, SY + 0.85, 0, 0, 1, 1); else S.wall(gm, 159.03, s, 159.03, s - 1.4, SY - 0.2, SY + 0.85, 0, 0, 1, 1);
+      WORLD.lights.push({ reg: "sewer", x: s > 0 ? s + 0.7 : 159.6, y: SY + 0.4, z: s > 0 ? -2.4 : s - 0.7, c: 0x40ff60, i: 5, d: 4 });
+    }
+    // ---- outflow pipes pouring water into the channel ----
+    const pipeM = new THREE.MeshLambertMaterial({ color: 0x5a4a3a }), fallT = canvasTex(64, 256, (g, w, h) => { for (let i = 0; i < 40; i++) { g.fillStyle = `rgba(${150 + Math.random() * 60 | 0},255,${170 + Math.random() * 60 | 0},${0.25 + Math.random() * 0.5})`; g.fillRect(8 + Math.random() * 44, Math.random() * h, 3 + Math.random() * 6, 20 + Math.random() * 60); } }, true);
+    const fallM = new THREE.MeshBasicMaterial({ map: fallT, transparent: true, depthWrite: false, blending: THREE.AdditiveBlending, side: THREE.DoubleSide, color: 0x9affb0 });
+    WORLD.anim.push((t) => { fallT.offset.y = t * 1.6; });
+    for (const s of [42, 106, 152, -24, -88]) {
+      const alongA = s > 0, py = SY + 1.6;
+      const pp = new THREE.Mesh(new THREE.CylinderGeometry(0.28, 0.28, 0.6, 12, 1, true), pipeM);
+      const rim = new THREE.Mesh(new THREE.TorusGeometry(0.28, 0.05, 6, 14), pipeM);
+      const fall = new THREE.Mesh(new THREE.PlaneGeometry(0.42, 1.85), fallM);
+      if (alongA) { pp.rotation.x = Math.PI / 2; pp.position.set(s, py, -2.75); rim.position.set(s, py, -2.45); fall.position.set(s, SY + 0.7, -2.42); WORLD.sewerFx.falls.push([s, -2.4]); }
+      else { pp.rotation.z = Math.PI / 2; pp.position.set(159.25, py, s); rim.rotation.y = Math.PI / 2; rim.position.set(159.55, py, s); fall.rotation.y = Math.PI / 2; fall.position.set(159.58, SY + 0.7, s); WORLD.sewerFx.falls.push([159.6, s]); }
+      G.sewer.add(pp); G.sewer.add(rim); G.sewer.add(fall);
+    }
+    // ---- a ladder shaft with street light pouring down (tunnel A x 132, tunnel B z -73) ----
+    const rungM = new THREE.MeshLambertMaterial({ color: 0x6a6460 });
+    const beamT = canvasTex(64, 256, (g, w, h) => { const gr = g.createLinearGradient(0, 0, 0, h); gr.addColorStop(0, "rgba(220,230,255,0.75)"); gr.addColorStop(1, "rgba(200,220,255,0)"); g.fillStyle = gr; g.fillRect(0, 0, w, h); const sg = g.createLinearGradient(0, 0, w, 0); sg.addColorStop(0, "rgba(0,0,0,1)"); sg.addColorStop(0.3, "rgba(0,0,0,0)"); sg.addColorStop(0.7, "rgba(0,0,0,0)"); sg.addColorStop(1, "rgba(0,0,0,1)"); g.globalCompositeOperation = "destination-out"; g.fillStyle = sg; g.fillRect(0, 0, w, h); });
+    const beamM = new THREE.MeshBasicMaterial({ map: beamT, transparent: true, depthWrite: false, blending: THREE.AdditiveBlending, side: THREE.DoubleSide });
+    for (const [x, z, alongA] of [[132, -2.2, true], [160.0, -73, false]]) {
+      for (let y = SY + 0.4; y < SC; y += 0.4) { const r = new THREE.Mesh(new THREE.BoxGeometry(alongA ? 0.6 : 0.05, 0.05, alongA ? 0.05 : 0.6), rungM); r.position.set(alongA ? x : 159.12, y, alongA ? -2.92 : z); G.sewer.add(r); }
+      for (const o of [-0.3, 0.3]) { const r = new THREE.Mesh(new THREE.BoxGeometry(0.05, SC - SY + 1.2, 0.05), rungM); r.position.set(alongA ? x + o : 159.12, (SY + SC) / 2 + 0.6, alongA ? -2.9 : z + o); G.sewer.add(r); }
+      const hole = new THREE.Mesh(new THREE.CircleGeometry(0.55, 16), new THREE.MeshBasicMaterial({ color: 0xc8d8ff })); hole.rotation.x = Math.PI / 2; hole.position.set(alongA ? x : 159.6, SC - 0.01, alongA ? -2.4 : z); G.sewer.add(hole);
+      for (const ry of [0, Math.PI / 2]) { const b = new THREE.Mesh(new THREE.PlaneGeometry(1.4, SC - SY), beamM); b.position.set(alongA ? x : 159.7, (SY + SC) / 2, alongA ? -2.0 : z); b.rotation.y = ry; G.sewer.add(b); }
+      WORLD.lights.push({ reg: "sewer", x: alongA ? x : 160, y: SY + 1.2, z: alongA ? -1.6 : z, c: 0xb8c8ff, i: 18, d: 8 });
+      WORLD.sewerFx.shafts.push([alongA ? x : 159.8, alongA ? -2.0 : z]);
+    }
+    // ---- tunnel B: water channel along the west wall (x 159..160), lip, pipe on the east wall too ----
+    S.floor(water, 159, -95.6, 160, -3.2, SY - 0.25, 6);
+    S.wall(M.swall, 160, -3.2, 160, -95.6, SY - 0.25, SY, 0, 0, 92 / 4, 0.06);
+    S.floor(M.sfloor, 160, -96, 165, -3, SY, 4);
+    // ---- junk: crate stacks, a mattress, a shopping cart in the channel ----
+    const crateM = new THREE.MeshLambertMaterial({ map: canvasTex(64, 64, (g) => { g.fillStyle = "#7a5530"; g.fillRect(0, 0, 64, 64); g.fillStyle = "#5a3c20"; g.fillRect(0, 0, 64, 6); g.fillRect(0, 58, 64, 6); g.fillRect(0, 0, 6, 64); g.fillRect(58, 0, 6, 64); g.save(); g.translate(32, 32); g.rotate(0.78); g.fillRect(-44, -3, 88, 6); g.restore(); }) });
+    for (const [x, z, s, r] of [[55.4, 2.4, 0.9, 0.2], [56.4, 2.45, 0.7, -0.1], [55.8, 2.4, 0.6, 0.5, 1], [148, 2.3, 0.9, 0.1], [163.9, -88, 0.9, 0.3], [164, -86.8, 0.7, 0]]) {
+      const m = new THREE.Mesh(new THREE.BoxGeometry(s, s, s), crateM); m.position.set(x, SY + s / 2 + (r === 0.5 ? 0.9 : 0), z); m.rotation.y = r; G.sewer.add(m);
+    }
+    const matT = canvasTex(128, 96, (g, w, h) => { for (let x = 0; x < w; x += 12) { g.fillStyle = x % 24 ? "#d8d0c0" : "#7a9ac8"; g.fillRect(x, 0, 12, h); } g.fillStyle = "rgba(120,90,30,0.55)"; for (let i = 0; i < 6; i++) { g.beginPath(); g.ellipse(Math.random() * w, Math.random() * h, 10 + Math.random() * 20, 6 + Math.random() * 12, 0, 0, 7); g.fill(); } });
+    const mat = new THREE.Mesh(new THREE.BoxGeometry(1.9, 0.22, 1.3), new THREE.MeshLambertMaterial({ map: matT }));
+    mat.position.set(52.5, SY + 0.95, -2.55); mat.rotation.x = -1.25; G.sewer.add(mat);
+    const mat2 = mat.clone(); mat2.position.set(159.55, SY + 0.95, -33); mat2.rotation.set(0, Math.PI / 2, 0); mat2.rotateX(-1.25); G.sewer.add(mat2);
+    const wireT = canvasTex(64, 64, (g) => { g.strokeStyle = "#c8ccd4"; g.lineWidth = 3; for (let i = 0; i <= 64; i += 10) { g.beginPath(); g.moveTo(i, 0); g.lineTo(i, 64); g.stroke(); g.beginPath(); g.moveTo(0, i); g.lineTo(64, i); g.stroke(); } }, true);
+    const wireM = new THREE.MeshLambertMaterial({ map: wireT, transparent: true, alphaTest: 0.3, side: THREE.DoubleSide });
+    const cart = new THREE.Group(); const basket = new THREE.Mesh(new THREE.BoxGeometry(0.9, 0.55, 0.6), wireM); basket.position.y = 0.55; cart.add(basket);
+    const handle = new THREE.Mesh(new THREE.BoxGeometry(0.04, 0.04, 0.6), cageM); handle.position.set(-0.5, 0.9, 0); cart.add(handle);
+    for (const [dx, dz] of [[-0.35, -0.25], [0.35, -0.25], [-0.35, 0.25], [0.35, 0.25]]) { const w = new THREE.Mesh(new THREE.CylinderGeometry(0.07, 0.07, 0.05, 8), cageM); w.rotation.x = Math.PI / 2; w.position.set(dx, 0.1, dz); cart.add(w); }
+    cart.position.set(84.5, SY - 0.2, -2.0); cart.rotation.set(0.3, 0.4, 0.25); G.sewer.add(cart);
+    const cart2 = cart.clone(); cart2.position.set(159.5, SY - 0.2, -68); cart2.rotation.set(0.2, 1.9, -0.3); G.sewer.add(cart2);
+    // ---- rats: little billboards that scurry along the wall foot, turn, and scurry back ----
+    const rM = new THREE.SpriteMaterial({ map: ratTex(), transparent: true, alphaTest: 0.2 });
+    for (const [a, b, z] of [[22, 46, 2.7], [60, 84, 2.75], [100, 126, 2.7], [138, 156, 2.75]]) { const s = new THREE.Sprite(rM.clone()); s.scale.set(0.5, 0.25, 1); G.sewer.add(s); WORLD.sewerFx.rats.push({ s, a, b, z, x: a + Math.random() * (b - a), v: 2.4 + Math.random(), axis: "x" }); }
+    for (const [a, b] of [[-10, -40], [-56, -90]]) { const s = new THREE.Sprite(rM.clone()); s.scale.set(0.5, 0.25, 1); G.sewer.add(s); WORLD.sewerFx.rats.push({ s, a: b, b: a, z: 164.7, x: (a + b) / 2, v: 2.6, axis: "z" }); }
+    S.build(G.sewer);
+  }
+  function stepSewerFx(dt, t) {
+    const F = WORLD.sewerFx; if (!F) return;
+    for (const [x, z] of F.falls) if (Math.random() < 0.5) PART.sglow.emit(x + rnd(-0.15, 0.15), WORLD.SY - 0.15, z + rnd(-0.15, 0.15), rnd(-0.4, 0.4), rnd(0.4, 1.0), rnd(-0.4, 0.4), rnd(0.3, 0.6), rnd(0.05, 0.1), 0, 0.6, 1, 0.7, 0.6);
+    for (const [x, z] of F.shafts) if (Math.random() < 0.25) PART.sewer.emit(x + rnd(-0.4, 0.4), WORLD.SY + rnd(0.2, 3), z + rnd(-0.4, 0.4), rnd(-0.05, 0.05), rnd(-0.15, -0.05), 0, rnd(2, 3), rnd(0.04, 0.07), 0, 0.85, 0.9, 1, 0.5);
+    for (const r of F.rats) {
+      r.x += r.v * dt * (r.dir || 1);
+      if (r.x > Math.max(r.a, r.b)) r.dir = -1; if (r.x < Math.min(r.a, r.b)) r.dir = 1;
+      const hop = Math.abs(Math.sin(t * 18 + r.a)) * 0.03;
+      if (r.axis === "x") r.s.position.set(r.x, WORLD.SY + 0.13 + hop, r.z); else r.s.position.set(r.z, WORLD.SY + 0.13 + hop, r.x);
+      const sgn = (r.dir || 1) * (r.axis === "x" ? 1 : -1) * (CAM.uDot >= 0 ? 1 : -1); r.s.material.rotation = 0; r.s.scale.x = 0.5 * (r.axis === "x" ? sgn : -sgn);
+    }
+  }
+
+  // =====================================================================================================
+  // ---------- SUBWAY (new): two street kiosks, the X line under the city: TORTUGA ST and CANAL WORKS stations, ----------
+  // ---------- the tunnel between them, and an express that tears through every so often ----------
+  // Layout (y down to -13): far wall z 41, live track z 41.1..45 (floor TY), platforms / tunnel service way z 45..52 (back wall 52.2).
+  // Platform 1 x 8..70, ramp down 70..73, tunnel 73..147 (service way at track level), ramp up 147..150, platform 2 x 150..210.
+  // The camera sits over the platform side looking across the track at the tiled far wall (and the trains).
+  // =====================================================================================================
+  const SUB = { PY: -12, TY: -12.95, CY: -7.4, zW: 41.0, zT: 41.1, zE: 45.0, zB: 52.2, zBw: 52.0, P1: [8, 70], P2: [150, 210], R1: [70, 73], R2: [147, 150], x0: -10, x1: 230,
+    trainZ: 43.05, trainW: 3.2, carL: 12, carGap: 0.45, cars: 4, carH: 3.95 };
+  WORLD.SUB = SUB;
+  function subFloor(gx, gz) {
+    if (gx < SUB.P1[0] + 0.4 || gx > SUB.P2[1] - 0.4) return null;
+    if (gz >= SUB.zT && gz < SUB.zE) return SUB.TY;
+    if (gz < SUB.zE || gz > SUB.zBw) return null;
+    const [a, b] = SUB.P1, [c, d] = SUB.P2;
+    if (gx >= a && gx <= b) return SUB.PY;
+    if (gx > SUB.R1[0] && gx < SUB.R1[1]) return SUB.PY + (SUB.TY - SUB.PY) * (gx - SUB.R1[0]) / (SUB.R1[1] - SUB.R1[0]);
+    if (gx >= SUB.R1[1] && gx <= SUB.R2[0]) return SUB.TY;
+    if (gx > SUB.R2[0] && gx < SUB.R2[1]) return SUB.TY + (SUB.PY - SUB.TY) * (gx - SUB.R2[0]) / (SUB.R2[1] - SUB.R2[0]);
+    if (gx >= c && gx <= d) return SUB.PY;
+    return null;
+  }
+  const onTrack = (gx, gz, gy) => gz >= SUB.zT - 0.05 && gz < SUB.zE - 0.02 && gy < SUB.TY + 1.3;
+  // ---- canvas art: station-name mosaics, hanging signs, posters (original made-up ads), kiosk signs ----
+  function mosaicTex(name) {
+    return canvasTex(1024, 256, (g, w, h) => {
+      const T = 8; // tile px
+      const off = document.createElement("canvas"); off.width = w / T; off.height = h / T; const o = off.getContext("2d");
+      o.fillStyle = "#e9dfc4"; o.fillRect(0, 0, off.width, off.height);
+      o.fillStyle = "#7a1e22"; o.fillRect(0, 0, off.width, 3); o.fillRect(0, off.height - 3, off.width, 3); o.fillRect(0, 0, 3, off.height); o.fillRect(off.width - 3, 0, 3, off.height);
+      o.fillStyle = "#1e6a6a"; for (let i = 0; i < off.width; i += 4) { o.fillRect(i, 1, 2, 1); o.fillRect(i + 2, off.height - 2, 2, 1); }
+      o.fillStyle = "#c8902a"; for (let i = 6; i < off.height - 6; i += 3) { o.fillRect(1, i, 1, 1); o.fillRect(off.width - 2, i, 1, 1); }
+      o.fillStyle = "#14243a"; o.font = "bold 17px Arial, Helvetica"; o.textAlign = "center"; o.textBaseline = "middle"; o.fillText(name, off.width / 2, off.height / 2 + 1);
+      const d = o.getImageData(0, 0, off.width, off.height).data;
+      g.fillStyle = "#6a6458"; g.fillRect(0, 0, w, h); // grout
+      for (let y = 0; y < off.height; y++) for (let x = 0; x < off.width; x++) {
+        const i = (y * off.width + x) * 4; let r = d[i], gg = d[i + 1], b = d[i + 2];
+        if (r + gg + b > 300 && r + gg + b < 600 && Math.abs(r - 233) + Math.abs(gg - 223) + Math.abs(b - 196) > 60) { const k = (r + gg + b) / 3 > 120 ? [233, 223, 196] : [20, 36, 58]; [r, gg, b] = k; } // no anti-alias greys: tiles are one colour
+        const v = (Math.random() - 0.5) * 22; g.fillStyle = `rgb(${r + v | 0},${gg + v | 0},${b + v | 0})`; g.fillRect(x * T + 1, y * T + 1, T - 1.6, T - 1.6);
+        g.fillStyle = "rgba(255,255,255,0.12)"; g.fillRect(x * T + 1.5, y * T + 1.5, T - 4, 1.4);
+      }
+      const gr = g.createLinearGradient(0, 0, 0, h); gr.addColorStop(0, "rgba(40,30,10,0.18)"); gr.addColorStop(1, "rgba(30,20,5,0.32)"); g.fillStyle = gr; g.fillRect(0, 0, w, h);
+      for (let i = 0; i < 7; i++) { g.fillStyle = "rgba(90,60,20,0.18)"; g.fillRect(Math.random() * w, 0, 3 + Math.random() * 4, h * (0.3 + Math.random() * 0.7)); }
+    });
+  }
+  function bullet(g, x, y, r, txt) {
+    g.fillStyle = "#f07a1a"; g.beginPath(); g.arc(x, y, r, 0, 7); g.fill();
+    g.fillStyle = "#fff"; g.font = `bold ${Math.round(r * 1.35)}px Arial, Helvetica`; g.textAlign = "center"; g.textBaseline = "middle"; g.fillText(txt, x, y + r * 0.06);
+  }
+  function hangSignTex(name, sub) {
+    return canvasTex(1024, 192, (g, w, h) => {
+      g.fillStyle = "#0c0c0e"; g.fillRect(0, 0, w, h); g.fillStyle = "#f2f2f2"; g.fillRect(0, 10, w, 5);
+      g.fillStyle = "#fff"; g.font = "bold 92px Arial, Helvetica"; g.textAlign = "left"; g.textBaseline = "middle"; g.fillText(name, 40, 98);
+      const tw = g.measureText(name).width;
+      bullet(g, tw + 120, 98, 46, "X");
+      g.font = "bold 34px Arial, Helvetica"; g.fillStyle = "#cfcfcf"; g.fillText(sub, tw + 190, 98);
+    });
+  }
+  // posters: an atlas of six made-up 80s subway ads (3 x 2 cells, 512 x 300 each)
+  const POSTERS = [
+    (g, w, h) => { const gr = g.createLinearGradient(0, 0, 0, h); gr.addColorStop(0, "#ffcf3a"); gr.addColorStop(1, "#ff7a1a"); g.fillStyle = gr; g.fillRect(0, 0, w, h);
+      g.fillStyle = "#c8281e"; g.beginPath(); g.moveTo(330, 60); g.lineTo(480, 120); g.lineTo(330, 250); g.closePath(); g.fill(); g.fillStyle = "#ffe8a0"; g.beginPath(); g.moveTo(345, 80); g.lineTo(460, 122); g.lineTo(345, 228); g.closePath(); g.fill();
+      g.fillStyle = "#b8201a"; for (const [x, y] of [[380, 120], [410, 150], [372, 180]]) { g.beginPath(); g.arc(x, y, 12, 0, 7); g.fill(); }
+      g.fillStyle = "#3a1208"; g.font = "bold 58px Impact, Arial Black, Arial"; g.textAlign = "left"; g.fillText("SLICE KING", 26, 92); g.font = "bold 30px Arial Black, Arial"; g.fillText("2 SLICES + SODA", 28, 150); g.fillStyle = "#fff"; g.font = "bold 64px Impact, Arial"; g.fillText("$1.99", 30, 228); g.fillStyle = "#3a1208"; g.font = "bold 18px Arial"; g.fillText("OPEN TIL 4 A.M. - CANAL & 3RD", 30, 272); },
+    (g, w, h) => { g.fillStyle = "#12305a"; g.fillRect(0, 0, w, h); g.fillStyle = "#1a4a8a"; g.beginPath(); g.arc(400, 150, 110, 0, 7); g.fill(); g.fillStyle = "#fff"; g.font = "bold 150px Arial Black, Arial"; g.textAlign = "center"; g.fillText("7", 400, 205);
+      g.textAlign = "left"; g.fillStyle = "#ff3a30"; g.font = "bold 50px Arial Black, Arial"; g.fillText("CHANNEL 7", 24, 80); g.fillStyle = "#fff"; g.font = "bold 36px Arial Black, Arial"; g.fillText("NEWS AT 11", 26, 130); g.font = "italic bold 22px Arial"; g.fillStyle = "#ffd84a"; g.fillText("WHEN THE CITY BURNS,", 26, 200); g.fillText("WE'RE ALREADY THERE.", 26, 230); },
+    (g, w, h) => { g.fillStyle = "#f4f0e4"; g.fillRect(0, 0, w, h); g.fillStyle = "#1a1a1a"; g.font = "bold 44px Arial Black, Arial"; g.textAlign = "left"; g.fillText("DROPPED OUT?", 24, 70); g.fillStyle = "#c8201a"; g.font = "bold 70px Impact, Arial"; g.fillText("GET YOUR", 24, 150); g.fillText("DIPLOMA", 24, 222);
+      g.fillStyle = "#1a1a1a"; g.font = "bold 24px Arial"; g.fillText("CALL 1-800-LEARN-UP", 26, 272); g.fillStyle = "#e8b020"; g.beginPath(); g.moveTo(390, 120); g.lineTo(490, 160); g.lineTo(390, 200); g.lineTo(290, 160); g.closePath(); g.fill(); g.fillStyle = "#1a1a1a"; g.fillRect(386, 160, 8, 70); },
+    (g, w, h) => { const gr = g.createLinearGradient(0, 0, w, h); gr.addColorStop(0, "#ff3fa0"); gr.addColorStop(1, "#5a2ad8"); g.fillStyle = gr; g.fillRect(0, 0, w, h);
+      g.fillStyle = "#fff"; g.save(); g.translate(360, 160); g.rotate(-0.35); g.fillRect(-90, -30, 180, 60); g.fillStyle = "#111"; g.fillRect(-90, 22, 180, 12); g.fillStyle = "#ff3fa0"; g.fillRect(-40, -22, 60, 10); g.restore();
+      g.fillStyle = "#fff"; g.font = "italic bold 62px Impact, Arial"; g.textAlign = "left"; g.fillText("KICK-ITS", 24, 84); g.font = "bold 26px Arial Black, Arial"; g.fillText("JUMP HIGHER.", 26, 210); g.fillText("RUN THE BLOCK.", 26, 246); },
+    (g, w, h) => { g.fillStyle = "#e8f4ff"; g.fillRect(0, 0, w, h); g.fillStyle = "#2a8a3a"; g.beginPath(); g.ellipse(400, 160, 80, 100, 0, 0, 7); g.fill(); g.fillStyle = "#fff"; g.beginPath(); g.ellipse(380, 130, 18, 26, 0, 0, 7); g.fill(); g.beginPath(); g.ellipse(420, 130, 18, 26, 0, 0, 7); g.fill();
+      g.fillStyle = "#123"; g.font = "bold 40px Arial Black, Arial"; g.textAlign = "left"; g.fillText("DR. ZEE'S", 24, 70); g.fillStyle = "#2a8a3a"; g.font = "bold 58px Impact, Arial"; g.fillText("ZIT-ZAP", 24, 140); g.fillStyle = "#123"; g.font = "bold 22px Arial"; g.fillText("CLEAR SKIN IN 7 DAYS", 26, 200); g.fillText("OR YOUR MONEY BACK!", 26, 230); },
+    (g, w, h) => { g.fillStyle = "#101018"; g.fillRect(0, 0, w, h); for (let i = 0; i < 70; i++) { g.fillStyle = `rgba(255,255,${180 + Math.random() * 75 | 0},${Math.random()})`; g.fillRect(Math.random() * w, Math.random() * 140, 2, 2); }
+      g.fillStyle = "#2a2a40"; for (let i = 0; i < 9; i++) g.fillRect(250 + i * 28, 300 - (40 + (i * 37) % 120), 24, 200); g.fillStyle = "#ffd84a"; for (let i = 0; i < 40; i++) g.fillRect(254 + (i % 9) * 28 + (i % 3) * 6, 190 + ((i * 13) % 90), 4, 5);
+      g.fillStyle = "#7fe8ff"; g.font = "bold 50px Arial Black, Arial"; g.textAlign = "left"; g.fillText("RIDE THE X", 24, 70); g.fillStyle = "#fff"; g.font = "bold 24px Arial"; g.fillText("ALL NIGHT. ALL TOWN.", 26, 112); g.fillStyle = "#ffb04a"; g.font = "bold 20px Arial"; g.fillText("FARE: ONE TOKEN", 26, 270); },
+  ];
+  function posterAtlas() {
+    return canvasTex(1536, 600, (g) => {
+      POSTERS.forEach((fn, i) => {
+        const cx = (i % 3) * 512, cy = Math.floor(i / 3) * 300;
+        g.save(); g.translate(cx, cy); g.beginPath(); g.rect(0, 0, 512, 300); g.clip(); fn(g, 512, 300);
+        // grime, a torn corner, a marker tag
+        const gr = g.createLinearGradient(0, 0, 0, 300); gr.addColorStop(0, "rgba(30,20,10,0.05)"); gr.addColorStop(1, "rgba(30,20,10,0.35)"); g.fillStyle = gr; g.fillRect(0, 0, 512, 300);
+        if (i % 2 === 0) { g.fillStyle = "#d8d0b8"; g.beginPath(); g.moveTo(512, 300); g.lineTo(440, 300); g.lineTo(512, 236); g.closePath(); g.fill(); }
+        g.strokeStyle = ["#111", "#e02a8a", "#1a1a1a"][i % 3]; g.lineWidth = 5; g.beginPath(); const tx = 60 + (i * 97) % 300, ty = 180 + (i * 53) % 80; g.moveTo(tx, ty);
+        for (let k = 0; k < 7; k++) g.lineTo(tx + k * 14 + Math.sin(k * 2 + i) * 8, ty + Math.cos(k * 1.7 + i) * 18); g.stroke();
+        g.lineWidth = 10; g.strokeStyle = "#c8c0a8"; g.strokeRect(0, 0, 512, 300); g.restore();
+      });
+    });
+  }
+  function kioskSignTex(name) {
+    return canvasTex(768, 128, (g, w, h) => {
+      g.fillStyle = "#0e0f12"; g.fillRect(0, 0, w, h); g.strokeStyle = "#3a3d44"; g.lineWidth = 6; g.strokeRect(3, 3, w - 6, h - 6);
+      g.fillStyle = "#fff"; g.font = "bold 66px Arial, Helvetica"; g.textAlign = "left"; g.textBaseline = "middle"; g.fillText("SUBWAY", 26, 66);
+      bullet(g, 330, 64, 36, "X"); g.font = "bold 40px Arial, Helvetica"; g.fillStyle = "#e8e8e8"; g.fillText(name, 384, 66);
+    });
+  }
+  function frontTex() { // the lead car's cab end: headlights, route bullet, destination sign
+    return canvasTex(256, 320, (g, w, h) => {
+      const gr = g.createLinearGradient(0, 0, w, 0); gr.addColorStop(0, "#6a6e76"); gr.addColorStop(0.5, "#a8acb4"); gr.addColorStop(1, "#5a5e66"); g.fillStyle = gr; g.fillRect(0, 0, w, h);
+      g.fillStyle = "#2a2c30"; for (let y = 6; y < h; y += 14) g.fillRect(0, y, w, 2);
+      g.fillStyle = "#14161a"; g.fillRect(88, 40, 80, 150); g.fillStyle = "#e8b048"; g.fillRect(96, 52, 64, 74); // door window, warm cab light
+      g.fillStyle = "#111"; g.fillRect(14, 50, 64, 34); g.fillStyle = "#ffb43a"; g.font = "bold 20px Arial"; g.textAlign = "center"; g.fillText("CANAL", 46, 74);
+      bullet(g, 210, 66, 26, "X");
+      g.fillStyle = "#1a1a1a"; g.fillRect(20, 214, 52, 40); g.fillRect(184, 214, 52, 40);
+      g.fillStyle = "#fffbe8"; g.beginPath(); g.arc(46, 234, 15, 0, 7); g.fill(); g.beginPath(); g.arc(210, 234, 15, 0, 7); g.fill();
+      g.fillStyle = "#ff3a30"; g.fillRect(28, 270, 22, 10); g.fillRect(206, 270, 22, 10);
+      g.fillStyle = "#e05a1a"; g.font = "bold 16px Arial"; g.fillText("3407", 128, 300);
+      g.fillStyle = "rgba(255,90,200,0.85)"; g.font = "italic bold 30px Impact, Arial"; g.save(); g.translate(128, 170); g.rotate(-0.2); g.fillText("ZOOM!", 0, 0); g.restore();
+    });
+  }
+  // ---- build ----
+  function buildSubway() {
+    const G = WORLD.groups, S = SUB, B = new Builder();
+    const subwall = lam(tex("tex/subway_wall.jpg", true)), tunwall = lam(tex("tex/tunnel_wall.jpg", true), { color: 0x9a9a9a });
+    const pfloor = lam(tex("tex/platform_floor.jpg", true), { color: 0x8a8a88 }), tbed = lam(tex("tex/track_bed.jpg", true), { color: 0x9a948c });
+    const ceilM = lam(canvasTex(128, 128, (g) => { g.fillStyle = "#26282c"; g.fillRect(0, 0, 128, 128); g.fillStyle = "#1a1b1e"; g.fillRect(0, 56, 128, 16); g.fillRect(56, 0, 16, 128); g.fillStyle = "rgba(255,255,255,0.05)"; for (let i = 0; i < 30; i++) g.fillRect(Math.random() * 128, Math.random() * 128, 3, 3); }, true));
+    const concrete = lam(tex("tex/sidewalk.jpg", true), { color: 0x7a7874 });
+    const H = S.CY - S.TY, wallRep = H * (1024 / 572); // metres per wall texture repeat (true aspect)
+    const stations = [[S.P1[0] - 2, S.R1[1] + 1], [S.R2[0] - 1, S.P2[1] + 2]];
+    const inStation = (x) => stations.some(([a, b]) => x >= a && x <= b);
+    // far wall (z 41, faces the camera): tile in the stations, tunnel concrete between, in 3 m strips so the change is clean
+    for (let x = -100; x < 330; x += 3) {
+      const st = inStation(x + 1.5);
+      if (st) B.wall(subwall, x, S.zW, x + 3, S.zW, S.TY, S.CY, x / wallRep, 0, (x + 3) / wallRep, 1);
+      else B.wall(tunwall, x, S.zW, x + 3, S.zW, S.TY, S.CY, x / 5.5, 0, (x + 3) / 5.5, 1);
+    }
+    // niches in the tunnel stretch: dark recesses every 15 m (drawn as dark panels with a lip)
+    const nicheM = lam(null, { color: 0x0c0c0e });
+    for (let x = 80; x < 145; x += 15) B.wall(nicheM, x, S.zW + 0.01, x + 1.4, S.zW + 0.01, S.TY + 0.05, S.TY + 2.2);
+    // back wall (behind the camera) + end walls
+    for (let x = -100; x < 330; x += 3) {
+      const st = inStation(x + 1.5), y0 = st && x >= S.P1[0] && x < S.R1[0] || st && x >= S.P2[0] - 0.01 && x < S.P2[1] ? S.PY : S.TY;
+      if (st) B.wall(subwall, x + 3, S.zB, x, S.zB, y0, S.CY, x / wallRep, 0, (x + 3) / wallRep, 1, [0.8, 0.8, 0.8]);
+      else B.wall(tunwall, x + 3, S.zB, x, S.zB, S.TY, S.CY, x / 5.5, 0, (x + 3) / 5.5, 1, [0.7, 0.7, 0.7]);
+    }
+    // ceiling
+    B.floor(ceilM, -100, S.zW, 330, S.zB, S.CY, 3, [0.8, 0.8, 0.85], true);
+    // live track bed (ties run across): explicit uv so the ties are perpendicular to the track
+    const tieRep = 4.8; // metres per texture repeat along the track
+    B.quad(tbed, [-100, S.TY, S.zE], [330, S.TY, S.zE], [330, S.TY, S.zW], [-100, S.TY, S.zW], [[-100 / tieRep, 0], [330 / tieRep, 0], [330 / tieRep, 1], [-100 / tieRep, 1]]);
+    // the out-of-service track 2 under the tunnel service way (and beyond both stations), same bed, darker
+    for (const [a, b] of [[S.R1[0], S.R2[1]]]) B.quad(tbed, [a, S.TY, S.zB], [b, S.TY, S.zB], [b, S.TY, S.zE], [a, S.TY, S.zE], [[a / tieRep, 0], [b / tieRep, 0], [b / tieRep, 1], [a / tieRep, 1]], [0.62, 0.58, 0.55]);
+    // platforms: top (concrete slabs), yellow edge strip, edge face, end walls
+    const strip = lam(canvasTex(128, 64, (g, w, h) => { g.fillStyle = "#e8c22a"; g.fillRect(0, 0, w, h); g.fillStyle = "#c89e14"; for (let x = 4; x < w; x += 12) for (let y = 6; y < h - 10; y += 12) { g.beginPath(); g.arc(x + (y % 24 ? 6 : 0), y, 3.2, 0, 7); g.fill(); } g.fillStyle = "#f4f0e0"; g.fillRect(0, h - 8, w, 8); g.fillStyle = "rgba(40,30,10,0.25)"; for (let i = 0; i < 16; i++) g.fillRect(Math.random() * w, Math.random() * h, 6, 3); }, true));
+    for (const [a, b] of [S.P1, S.P2]) {
+      B.floor(pfloor, a, S.zE + 0.55, b, S.zB, S.PY, 3.2);
+      B.quad(strip, [a, S.PY + 0.004, S.zE + 0.55], [b, S.PY + 0.004, S.zE + 0.55], [b, S.PY + 0.004, S.zE], [a, S.PY + 0.004, S.zE], [[a / 1.2, 0], [b / 1.2, 0], [b / 1.2, 1], [a / 1.2, 1]]);
+      B.wall(concrete, b, S.zE, a, S.zE, S.TY, S.PY, b / 3, 0, a / 3, 0.3, [0.45, 0.45, 0.45]); // edge face (toward the track)
+    }
+    // platform end walls facing out to the stairs side (x 8 faces +x, x 210 faces -x) with stairwell openings z 46..49.4
+    const SO = [46.0, 49.4];
+    B.wall(subwall, S.P1[0], SO[0], S.P1[0], S.zE, S.TY, S.CY, 0, 0, (SO[0] - S.zE) / wallRep, 1); B.wall(subwall, S.P1[0], S.zB, S.P1[0], SO[1], S.TY, S.CY, 0, 0, (S.zB - SO[1]) / wallRep, 1);
+    B.wall(subwall, S.P1[0], SO[1], S.P1[0], SO[0], S.PY + 2.9, S.CY, 0, 0.5, (SO[1] - SO[0]) / wallRep, 1);
+    B.wall(subwall, S.P2[1], SO[1], S.P2[1], S.zB, S.TY, S.CY, 0, 0, (S.zB - SO[1]) / wallRep, 1); B.wall(subwall, S.P2[1], S.zE, S.P2[1], SO[0], S.TY, S.CY, 0, 0, (SO[0] - S.zE) / wallRep, 1);
+    B.wall(subwall, S.P2[1], SO[0], S.P2[1], SO[1], S.PY + 2.9, S.CY, 0, 0.5, (SO[1] - SO[0]) / wallRep, 1);
+    // below-platform faces at the station ends (the platform is solid down to the bed)
+    B.wall(concrete, S.P1[0], S.zB, S.P1[0], S.zE, S.TY, S.PY, 0, 0, 2, 0.3, [0.4, 0.4, 0.4]);
+    B.wall(concrete, S.P2[1], S.zE, S.P2[1], S.zB, S.TY, S.PY, 0, 0, 2, 0.3, [0.4, 0.4, 0.4]);
+    // stairwells up to the street (steps rising away from the platform, lit from above)
+    const stairs = (x0, dir) => {
+      const n = 14, run = 0.42, rise = 0.21;
+      for (let i = 0; i < n; i++) {
+        const xa = x0 - dir * i * run, xb = xa - dir * run, y = S.PY + (i + 1) * rise;
+        const [l, r] = dir > 0 ? [xb, xa] : [xa, xb];
+        B.floor(concrete, l, SO[0], r, SO[1], y, 1.5, [0.75, 0.75, 0.78]);
+        B.quad(concrete, dir > 0 ? [xa, y - rise, SO[1]] : [xa, y - rise, SO[0]], dir > 0 ? [xa, y - rise, SO[0]] : [xa, y - rise, SO[1]], dir > 0 ? [xa, y, SO[0]] : [xa, y, SO[1]], dir > 0 ? [xa, y, SO[1]] : [xa, y, SO[0]], [[0, 0], [1, 0], [1, 0.1], [0, 0.1]], [0.5, 0.5, 0.52]);
+      }
+      const xe = x0 - dir * n * run;
+      const [l, r] = dir > 0 ? [xe, x0] : [x0, xe];
+      B.wall(subwall, l, SO[0], r, SO[0], S.PY, S.PY + n * rise + 2.6, 0, 0, (r - l) / wallRep, 1, [0.85, 0.85, 0.85]); // side walls
+      B.wall(subwall, r, SO[1], l, SO[1], S.PY, S.PY + n * rise + 2.6, 0, 0, (r - l) / wallRep, 1, [0.85, 0.85, 0.85]);
+      B.quad(ceilM, dir > 0 ? [x0, S.PY + 2.9, SO[0]] : [x0, S.PY + 2.9, SO[1]], dir > 0 ? [x0, S.PY + 2.9, SO[1]] : [x0, S.PY + 2.9, SO[0]], dir > 0 ? [xe, S.PY + n * rise + 2.6, SO[1]] : [xe, S.PY + n * rise + 2.6, SO[0]], dir > 0 ? [xe, S.PY + n * rise + 2.6, SO[0]] : [xe, S.PY + n * rise + 2.6, SO[1]], [[0, 0], [1, 0], [1, 1], [0, 1]]);
+      const glowM = new THREE.MeshBasicMaterial({ map: canvasTex(64, 128, (g, w, h) => { const gr = g.createLinearGradient(0, 0, 0, h); gr.addColorStop(0, "#ffd8a0"); gr.addColorStop(0.6, "#7a6040"); gr.addColorStop(1, "#1a1612"); g.fillStyle = gr; g.fillRect(0, 0, w, h); }), fog: false });
+      const gl = new THREE.Mesh(new THREE.PlaneGeometry(SO[1] - SO[0], 3.2), glowM); gl.position.set(xe + dir * 0.02, S.PY + n * rise + 1.4, (SO[0] + SO[1]) / 2); gl.rotation.y = dir > 0 ? Math.PI / 2 : -Math.PI / 2; G.subway.add(gl);
+      WORLD.lights.push({ reg: "subway", x: x0 - dir * 2.5, y: S.PY + 3.2, z: (SO[0] + SO[1]) / 2, c: 0xffd29a, i: 14, d: 8 });
+    };
+    stairs(S.P1[0], 1); stairs(S.P2[1], -1);
+    // ramps down to the tracks at the platform ends (6 steps), with a warning sign
+    const ramp = (xa, xb) => {
+      const n = 6, up = xb < xa;
+      for (let i = 0; i < n; i++) {
+        const k0 = i / n, k1 = (i + 1) / n, x0 = xa + (xb - xa) * k0, x1 = xa + (xb - xa) * k1, y = S.PY + (S.TY - S.PY) * k1;
+        const [l, r] = x0 < x1 ? [x0, x1] : [x1, x0]; B.floor(concrete, l, S.zE, r, S.zB, y, 1.6, [0.7, 0.7, 0.72]);
+        const yTop = S.PY + (S.TY - S.PY) * k0; if (i > 0) B.quad(concrete, up ? [x0, y, S.zE] : [x0, y, S.zB], up ? [x0, y, S.zB] : [x0, y, S.zE], up ? [x0, yTop, S.zB] : [x0, yTop, S.zE], up ? [x0, yTop, S.zE] : [x0, yTop, S.zB], [[0, 0], [1, 0], [1, 0.1], [0, 0.1]], [0.45, 0.45, 0.48]);
+      }
+    };
+    ramp(S.R1[0], S.R1[1]); ramp(S.R2[1], S.R2[0]);
+    // rails: two running rails + the third rail with its wooden cover board (live track), rusty rails on track 2 (tunnel stretch)
+    {
+      const steel = [], rust = [], board = [];
+      const rail = (arr, x0, x1, z, y, w, h) => { const g = new THREE.BoxGeometry(x1 - x0, h, w); g.translate((x0 + x1) / 2, y + h / 2, z); arr.push(g); };
+      rail(steel, -100, 330, S.trainZ - 0.72, S.TY, 0.08, 0.16); rail(steel, -100, 330, S.trainZ + 0.72, S.TY, 0.08, 0.16);
+      rail(steel, -100, 330, 41.55, S.TY + 0.12, 0.1, 0.12); rail(board, -100, 330, 41.5, S.TY + 0.36, 0.42, 0.04);
+      for (let x = -100; x < 330; x += 2.4) { const g = new THREE.BoxGeometry(0.1, 0.24, 0.1); g.translate(x, S.TY + 0.12, 41.78); board.push(g); }
+      rail(rust, S.R1[0], S.R2[1], 48.0, S.TY, 0.08, 0.15); rail(rust, S.R1[0], S.R2[1], 49.45, S.TY, 0.08, 0.15);
+      G.subway.add(new THREE.Mesh(mergeGeos(steel), new THREE.MeshLambertMaterial({ color: 0x9aa0aa, emissive: 0x15161a })));
+      G.subway.add(new THREE.Mesh(mergeGeos(rust), new THREE.MeshLambertMaterial({ color: 0x6a4030 })));
+      G.subway.add(new THREE.Mesh(mergeGeos(board), new THREE.MeshLambertMaterial({ color: 0x5a3a22 })));
+    }
+    // posters on the far wall (cross-track ads) + station-name mosaics, both stations
+    const pos = posterAtlas(), posM = lam(pos);
+    const mos1 = lam(mosaicTex("TORTUGA ST")), mos2 = lam(mosaicTex("CANAL WORKS"));
+    const putPoster = (x, i) => { const cu = (i % 3) / 3, cv = Math.floor(i / 3) / 2; B.wall(posM, x, S.zW + 0.03, x + 3.2, S.zW + 0.03, S.TY + 1.55, S.TY + 1.55 + 1.875, cu, 1 - cv - 0.5, cu + 1 / 3, 1 - cv); };
+    let pi = 0;
+    for (const [a, b, mm] of [[S.P1[0], S.P1[1], mos1], [S.P2[0], S.P2[1], mos2]]) {
+      for (let x = a + 3; x < b - 6; x += 12) {
+        B.wall(mm, x, S.zW + 0.03, x + 4.4, S.zW + 0.03, S.TY + 3.75, S.TY + 4.85, 0, 0, 1, 1);
+        putPoster(x + 6, pi++ % 6);
+      }
+    }
+    B.build(G.subway);
+    // hanging station signs (both faces) over the platform edge, every 15 m
+    const hang1 = new THREE.MeshBasicMaterial({ map: hangSignTex("Tortuga St", "UPTOWN & CANAL"), color: 0xdddddd }), hang2 = new THREE.MeshBasicMaterial({ map: hangSignTex("Canal Works", "LAST STOP - THE LOT"), color: 0xdddddd });
+    const signGeo = new THREE.PlaneGeometry(3.2, 0.6), rodM = new THREE.MeshLambertMaterial({ color: 0x1a1a1e });
+    for (const [a, b, m] of [[S.P1[0], S.P1[1], hang1], [S.P2[0], S.P2[1], hang2]]) for (let x = a + 8; x < b - 3; x += 15) {
+      for (const ry of [0, Math.PI]) { const s = new THREE.Mesh(signGeo, m); s.position.set(x, S.CY - 0.75, 46.3 + (ry ? -0.01 : 0.01)); s.rotation.y = ry; G.subway.add(s); }
+      for (const dx of [-1.3, 1.3]) { const r = new THREE.Mesh(new THREE.BoxGeometry(0.04, 0.45, 0.04), rodM); r.position.set(x + dx, S.CY - 0.22, 46.3); G.subway.add(r); }
+    }
+    // steel I-beam columns: along the platform edge in the stations, between the tracks in the tunnel (hidden when the camera is close)
+    WORLD.subCols = [];
+    const colM = new THREE.MeshLambertMaterial({ map: canvasTex(32, 128, (g, w, h) => { g.fillStyle = "#2a5a7a"; g.fillRect(0, 0, w, h); g.fillStyle = "#1a3a50"; g.fillRect(0, 0, 4, h); g.fillRect(w - 4, 0, 4, h); g.fillStyle = "rgba(255,255,255,0.12)"; g.fillRect(12, 0, 3, h); g.fillStyle = "#e8e0c8"; g.fillRect(4, 70, w - 8, 10); g.fillStyle = "rgba(60,30,10,0.4)"; for (let i = 0; i < 12; i++) g.fillRect(Math.random() * w, Math.random() * h, 2, 8); }) });
+    const colGeo = new THREE.BoxGeometry(0.34, 1, 0.3);
+    const addCol = (x, z, y0) => { const m = new THREE.Mesh(colGeo, colM); m.scale.y = S.CY - y0; m.position.set(x, (S.CY + y0) / 2, z); G.subway.add(m); WORLD.subCols.push(m); WORLD.cols.push({ layer: "subway", x, z, r: 0.28 }); };
+    for (const [a, b] of [S.P1, S.P2]) for (let x = a + 12; x < b - 12; x += 7.5) addCol(x, 46.15, S.PY);
+    for (let x = S.R1[1] + 4; x < S.R2[0] - 2; x += 6) addCol(x, 45.35, S.TY);
+    // benches (wood slats on steel legs) + the off-hours waiting area sign
+    const benchT = canvasTex(128, 64, (g, w, h) => { for (let i = 0; i < 4; i++) { g.fillStyle = ["#8a5a32", "#7a4e2a", "#946238", "#80522e"][i]; g.fillRect(0, i * 16, w, 14); } g.fillStyle = "rgba(0,0,0,0.3)"; for (let i = 0; i < 18; i++) g.fillRect(Math.random() * w, Math.random() * h, 8, 2); });
+    const benchM = new THREE.MeshLambertMaterial({ map: benchT }), legM = new THREE.MeshLambertMaterial({ color: 0x1e2024 });
+    const bench = (x, z) => {
+      const seat = new THREE.Mesh(new THREE.BoxGeometry(2.4, 0.08, 0.5), benchM); seat.position.set(x, S.PY + 0.48, z); G.subway.add(seat);
+      const back = new THREE.Mesh(new THREE.BoxGeometry(2.4, 0.5, 0.06), benchM); back.position.set(x, S.PY + 0.8, z + 0.25); G.subway.add(back);
+      for (const dx of [-1, 1]) { const l = new THREE.Mesh(new THREE.BoxGeometry(0.08, 0.46, 0.46), legM); l.position.set(x + dx, S.PY + 0.23, z); G.subway.add(l); }
+      WORLD.cols.push({ layer: "subway", box: [x - 1.2, z - 0.28, x + 1.2, z + 0.3] });
+    };
+    for (const x of [24, 31.5, 54]) bench(x, 49.6);
+    for (const x of [166, 181.5, 196]) bench(x, 49.6);
+    const waitM = new THREE.MeshBasicMaterial({ map: canvasTex(512, 160, (g, w, h) => { g.fillStyle = "#f2c81e"; g.fillRect(0, 0, w, h); g.fillStyle = "#111"; g.fillRect(8, 8, w - 16, 6); g.fillRect(8, h - 14, w - 16, 6); g.font = "bold 40px Arial, Helvetica"; g.textAlign = "center"; g.fillText("OFF-HOURS", w / 2, 66); g.font = "bold 46px Arial, Helvetica"; g.fillText("WAITING AREA", w / 2, 120); }), color: 0xdddddd });
+    for (const x of [27.75, 174]) for (const ry of [0, Math.PI]) { const s = new THREE.Mesh(new THREE.PlaneGeometry(2.0, 0.62), waitM); s.position.set(x, S.CY - 0.42, 48.4 + (ry ? -0.01 : 0.01)); s.rotation.y = ry; G.subway.add(s); }
+    // fare control: three turnstiles + an open exit gate by the platform edge; a token booth by the stairs
+    const steelM = new THREE.MeshLambertMaterial({ color: 0x9a9ea6, emissive: 0x101014 }), armM = new THREE.MeshLambertMaterial({ color: 0xd0d4dc });
+    const turn = (x) => {
+      for (let i = 0; i <= 3; i++) { const z = 47.25 + i * 1.6; const h = new THREE.Mesh(new THREE.BoxGeometry(0.42, 0.95, 0.42), steelM); h.position.set(x, S.PY + 0.475, Math.min(z, 51.95)); G.subway.add(h); }
+      for (let i = 0; i < 3; i++) { const z = 47.25 + i * 1.6 + 0.8; for (let k = 0; k < 3; k++) { const a = new THREE.Mesh(new THREE.CylinderGeometry(0.025, 0.025, 0.55, 6), armM); a.rotation.x = Math.PI / 2; a.rotation.y = k * 2.1; a.position.set(x, S.PY + 0.85 - k * 0.07, z); G.subway.add(a); } }
+      const gate = new THREE.Mesh(new THREE.BoxGeometry(0.05, 0.9, 1.1), new THREE.MeshLambertMaterial({ color: 0x8a8e96, transparent: true, opacity: 0.85 })); gate.position.set(x + 0.5, S.PY + 0.65, 46.7); gate.rotation.y = 1.2; G.subway.add(gate);
+      WORLD.cols.push({ layer: "subway", box: [x - 0.25, 47.05, x + 0.25, 52.2] });
+    };
+    turn(15); turn(203);
+    const boothT = canvasTex(256, 160, (g, w, h) => { g.fillStyle = "#3a2a1e"; g.fillRect(0, 0, w, h); g.fillStyle = "#ffd890"; g.fillRect(20, 40, w - 40, 70); g.fillStyle = "rgba(60,40,20,0.5)"; g.fillRect(20, 40, w - 40, 6); g.fillStyle = "#111"; g.fillRect(0, 0, w, 32); g.fillStyle = "#fff"; g.font = "bold 24px Arial"; g.textAlign = "center"; g.fillText("TOKENS", w / 2, 24); g.fillStyle = "#5a4a3a"; g.fillRect(0, 120, w, 40); });
+    for (const [x0, x1] of [[8.3, 12.6], [205.4, 209.7]]) { const m = new THREE.Mesh(new THREE.BoxGeometry(x1 - x0, 2.6, 2.0), [new THREE.MeshLambertMaterial({ map: boothT }), new THREE.MeshLambertMaterial({ map: boothT }), new THREE.MeshLambertMaterial({ color: 0x2a221a }), new THREE.MeshLambertMaterial({ color: 0x2a221a }), new THREE.MeshLambertMaterial({ map: boothT, emissive: 0x2a2010 }), new THREE.MeshLambertMaterial({ map: boothT })]); m.position.set((x0 + x1) / 2, S.PY + 1.3, 51.2); G.subway.add(m); WORLD.cols.push({ layer: "subway", box: [x0, 50.2, x1, 52.2] }); WORLD.lights.push({ reg: "subway", x: (x0 + x1) / 2, y: S.PY + 1.6, z: 49.6, c: 0xffcf80, i: 8, d: 5 }); }
+    const exitM = new THREE.MeshBasicMaterial({ map: canvasTex(512, 128, (g, w, h) => { g.fillStyle = "#0e0f12"; g.fillRect(0, 0, w, h); g.fillStyle = "#fff"; g.font = "bold 52px Arial, Helvetica"; g.textAlign = "center"; g.textBaseline = "middle"; g.fillText("EXIT  \u2191  STREET", w / 2, 66); }), color: 0xdddddd });
+    for (const [x, ry] of [[S.P1[0] + 0.03, Math.PI / 2], [S.P2[1] - 0.03, -Math.PI / 2]]) { const s = new THREE.Mesh(new THREE.PlaneGeometry(2.6, 0.65), exitM); s.position.set(x, S.PY + 3.35, (SO[0] + SO[1]) / 2); s.rotation.y = ry; G.subway.add(s); }
+    // fluorescent fixtures (stations) + work lights / blue phone lamps / signals (tunnel)
+    const tubeM = new THREE.MeshBasicMaterial({ color: 0xe8fff4 });
+    for (const [a, b] of [S.P1, S.P2]) for (let x = a + 2; x < b; x += 4.5) for (const z of [46.9, 50.6]) { const m = new THREE.Mesh(new THREE.BoxGeometry(1.8, 0.07, 0.16), tubeM); m.position.set(x, S.CY - 0.06, z); G.subway.add(m); }
+    for (let x = -8; x < 228; x += 4.5) if (!inStation(x)) { const m = new THREE.Mesh(new THREE.BoxGeometry(0.22, 0.22, 0.12), new THREE.MeshBasicMaterial({ color: 0xffb050 })); m.position.set(x, S.TY + 3.2, S.zW + 0.08); G.subway.add(m); }
+    for (const [a, b] of [S.P1, S.P2]) for (let x = a + 4; x < b; x += 9) WORLD.lights.push({ reg: "subway", x, y: S.CY - 0.4, z: 47.6, c: 0xe2fff0, i: 20, d: 13, flick: x % 4 === 0 ? 1 : 0 });
+    for (let x = -8; x < 228; x += 13.5) if (!inStation(x)) WORLD.lights.push({ reg: "subway", x, y: S.TY + 3.0, z: S.zW + 0.9, c: 0xffa648, i: 15, d: 11 });
+    const blueM = new THREE.MeshBasicMaterial({ color: 0x3a7aff }), redM = new THREE.MeshBasicMaterial({ color: 0xff2a20 }), grnM = new THREE.MeshBasicMaterial({ color: 0x30ff70 });
+    for (const x of [92, 128]) { const m = new THREE.Mesh(new THREE.SphereGeometry(0.16, 10, 8), blueM); m.position.set(x, S.TY + 2.6, S.zW + 0.18); G.subway.add(m); WORLD.lights.push({ reg: "subway", x, y: S.TY + 2.4, z: S.zW + 0.8, c: 0x3a7aff, i: 9, d: 6 }); }
+    WORLD.signals = [];
+    for (const x of [S.R1[1] + 1, S.R2[0] - 1, S.P1[0] - 6, S.P2[1] + 6]) {
+      const box = new THREE.Mesh(new THREE.BoxGeometry(0.3, 0.7, 0.25), legM); box.position.set(x, S.TY + 2.0, S.zW + 0.2); G.subway.add(box);
+      const r = new THREE.Mesh(new THREE.SphereGeometry(0.09, 8, 6), redM); r.position.set(x, S.TY + 2.18, S.zW + 0.34); G.subway.add(r);
+      const gg = new THREE.Mesh(new THREE.SphereGeometry(0.09, 8, 6), grnM); gg.position.set(x, S.TY + 1.88, S.zW + 0.34); G.subway.add(gg);
+      WORLD.signals.push({ r, g: gg });
+    }
+    // dust + third-rail sparks + fight fx for this region
+    PART.sub = new Particles(160, false, G.subway); PART.subg = new Particles(220, true, G.subway);
+    PART.subfx = new Particles(300, false, G.subway); PART.subfxg = new Particles(300, true, G.subway);
+    buildTrain(G.subway);
+    buildKiosks();
+    // interacts: street kiosks <-> station stairs
+    WORLD.inter.push(
+      { layer: "street", x: 45.3, z: -9.4, r: 1.4, kind: "stairs", down: true, ex: 44.4, ez: -9.4, dx: -1, dz: 0, label: "DOWN TO THE SUBWAY", to: { layer: "subway", x: 9.9, z: 47.7, face: 1 } },
+      { layer: "subway", x: 9.4, z: 47.7, r: 1.3, kind: "stairs", down: false, ex: 8.4, ez: 47.7, dx: -1, dz: 0, label: "UP TO THE STREET", to: { layer: "street", x: 46.0, z: -9.0, face: 1 } },
+      { layer: "street", x: 151.6, z: -116.9, r: 1.4, kind: "stairs", down: true, ex: 151.6, ez: -117.8, dx: 0, dz: -1, label: "DOWN TO THE SUBWAY", to: { layer: "subway", x: 208.1, z: 47.7, face: -1 } },
+      { layer: "subway", x: 208.6, z: 47.7, r: 1.3, kind: "stairs", down: false, ex: 209.6, ez: 47.7, dx: 1, dz: 0, label: "UP TO THE STREET", to: { layer: "street", x: 153.3, z: -116.4, face: -1 } },
+    );
+  }
+  // ---- the train: four graffiti cars (painted side art, steel body, cab ends), headlights + a moving light ----
+  function buildTrain(group) {
+    const S = SUB, T = new THREE.Group(); group.add(T); T.visible = false;
+    const sideT = tex("tex/subway_car.webp");
+    const sideM = new THREE.MeshLambertMaterial({ map: sideT, alphaTest: 0.5, side: THREE.DoubleSide, emissive: 0xffffff, emissiveMap: sideT, emissiveIntensity: 0.18 });
+    const bodyM = new THREE.MeshLambertMaterial({ color: 0x5a5e66 }), roofM = new THREE.MeshLambertMaterial({ color: 0x7a7e86 });
+    const fT = frontTex(), frontM = new THREE.MeshLambertMaterial({ map: fT, emissive: 0xffffff, emissiveMap: fT, emissiveIntensity: 0.25 });
+    const L = S.carL, Hh = S.carH, Wd = S.trainW, n = S.cars, total = n * L + (n - 1) * S.carGap;
+    for (let i = 0; i < n; i++) {
+      const cx = -total / 2 + L / 2 + i * (L + S.carGap);
+      for (const sd of [1, -1]) { const p = new THREE.Mesh(new THREE.PlaneGeometry(L, Hh), sideM); p.position.set(cx, Hh / 2, sd * Wd / 2); if (sd < 0) p.rotation.y = Math.PI; T.add(p); }
+      const body = new THREE.Mesh(new THREE.BoxGeometry(L - 0.3, Hh * 0.62, Wd - 0.12), bodyM); body.position.set(cx, Hh * 0.55, 0); T.add(body);
+      const roof = new THREE.Mesh(new THREE.BoxGeometry(L - 0.1, 0.12, Wd - 0.3), roofM); roof.position.set(cx, Hh * 0.97, 0); T.add(roof);
+      for (const e of [-1, 1]) { const f = new THREE.Mesh(new THREE.PlaneGeometry(Wd - 0.1, Hh * 0.78), frontM); f.position.set(cx + e * (L / 2 - 0.02), Hh * 0.52, 0); f.rotation.y = e * Math.PI / 2; T.add(f); }
+    }
+    // headlight glows (additive) on both ends: the leading end shows white, the trailing end red
+    const glowT = canvasTex(128, 128, (g, w) => { const r = g.createRadialGradient(64, 64, 0, 64, 64, 64); r.addColorStop(0, "rgba(255,255,255,1)"); r.addColorStop(0.2, "rgba(255,250,220,0.7)"); r.addColorStop(1, "rgba(255,240,200,0)"); g.fillStyle = r; g.fillRect(0, 0, w, w); });
+    const glows = [];
+    for (const e of [-1, 1]) for (const dz of [-0.9, 0.9]) { const s = new THREE.Sprite(new THREE.SpriteMaterial({ map: glowT, blending: THREE.AdditiveBlending, depthWrite: false, transparent: true, fog: false })); s.position.set(e * (total / 2 + 0.15), Hh * 0.26, dz); s.scale.set(1.6, 1.6, 1); s.userData.e = e; T.add(s); glows.push(s); }
+    const beam = new THREE.Mesh(new THREE.PlaneGeometry(18, 3.4), new THREE.MeshBasicMaterial({ map: canvasTex(256, 64, (g, w, h) => { const gr = g.createLinearGradient(0, 0, w, 0); gr.addColorStop(0, "rgba(255,245,210,0.55)"); gr.addColorStop(1, "rgba(255,245,210,0)"); g.fillStyle = gr; g.fillRect(0, 0, w, h); const v = g.createLinearGradient(0, 0, 0, h); v.addColorStop(0, "rgba(0,0,0,1)"); v.addColorStop(0.5, "rgba(0,0,0,0)"); v.addColorStop(1, "rgba(0,0,0,1)"); g.globalCompositeOperation = "destination-out"; g.fillStyle = v; g.fillRect(0, 0, w, h); }), blending: THREE.AdditiveBlending, transparent: true, depthWrite: false, side: THREE.DoubleSide }));
+    beam.rotation.x = -Math.PI / 2; beam.position.y = 0.06; T.add(beam);
+    const light = { reg: "subway", x: -9999, y: S.TY + 1.6, z: S.trainZ + 0.6, c: 0xfff0d0, i: 0, d: 28, train: true };
+    WORLD.lights.push(light);
+    const tail = { reg: "subway", x: -9999, y: S.TY + 1.2, z: S.trainZ + 0.6, c: 0xff4030, i: 0, d: 10, train: true };
+    WORLD.lights.push(tail);
+    WORLD.train3 = { T, glows, beam, light, tail, total };
+  }
+  // ---- street kiosks: a stairwell cut into the sidewalk, green iron railings, green globe lamps, a SUBWAY sign ----
+  function buildKiosks() {
+    const G = WORLD.groups, K = new Builder();
+    const ironT = canvasTex(128, 64, (g, w, h) => { g.fillStyle = "#1e4a2a"; g.fillRect(0, 0, w, 6); g.fillRect(0, h - 6, w, 6); for (let x = 2; x < w; x += 16) g.fillRect(x, 0, 4, h); g.fillStyle = "#2e6a3c"; g.fillRect(0, 1, w, 2); }, true);
+    const iron = new THREE.MeshLambertMaterial({ map: ironT, transparent: true, alphaTest: 0.4, side: THREE.DoubleSide, vertexColors: true });
+    const tile = lam(tex("tex/subway_wall.jpg", true), { color: 0xc8c8c0 }), stepM = lam(tex("tex/sidewalk.jpg", true), { color: 0x9a9a9e });
+    const postM = new THREE.MeshLambertMaterial({ color: 0x1a3a22 }), globeM = new THREE.MeshBasicMaterial({ color: 0x6aff9a });
+    const glowT = canvasTex(64, 64, (g, w) => { const r = g.createRadialGradient(32, 32, 0, 32, 32, 32); r.addColorStop(0, "rgba(140,255,170,0.9)"); r.addColorStop(1, "rgba(60,255,120,0)"); g.fillStyle = r; g.fillRect(0, 0, w, w); });
+    const RH = 1.05, SW = 0.14;
+    // k: opening x0..x1 / z0..z1, the stairs descend along (dx, dz) from the entry edge
+    const kiosk = (o, name) => {
+      const { x0, x1, z0, z1, dx, dz } = o, n = 16, rise = 0.2;
+      const along = dx !== 0 ? x1 - x0 : z1 - z0, run = along / n;
+      for (let i = 0; i < n; i++) {
+        const y = SW - (i + 1) * rise;
+        if (dx < 0) { const xa = x1 - i * run, xb = xa - run; K.floor(stepM, xb, z0, xa, z1, y, 1.2); K.quad(stepM, [xa, y, z1], [xa, y, z0], [xa, y + rise, z0], [xa, y + rise, z1], [[0, 0], [1, 0], [1, 0.1], [0, 0.1]], [0.6, 0.6, 0.62]); }
+        else { const za = z1 - i * run, zb = za - run; K.floor(stepM, x0, zb, x1, za, y, 1.2); K.quad(stepM, [x0, y, za], [x1, y, za], [x1, y + rise, za], [x0, y + rise, za], [[0, 0], [1, 0], [1, 0.1], [0, 0.1]], [0.6, 0.6, 0.62]); }
+      }
+      const yb = SW - n * rise - 2.4, wr = 3.2;
+      // inner stairwell walls (face inward), the far end wall, a glowing doorway at the bottom
+      if (dx < 0) {
+        K.wall(tile, x0, z0, x1, z0, yb, SW, 0, 0, (x1 - x0) / wr, 1); K.wall(tile, x1, z1, x0, z1, yb, SW, 0, 0, (x1 - x0) / wr, 1);
+        K.wall(tile, x0, z1, x0, z0, yb, SW, 0, 0, (z1 - z0) / wr, 1);
+      } else {
+        K.wall(tile, x0, z1, x0, z0, yb, SW, 0, 0, (z1 - z0) / wr, 1); K.wall(tile, x1, z0, x1, z1, yb, SW, 0, 0, (z1 - z0) / wr, 1);
+        K.wall(tile, x0, z0, x1, z0, yb, SW, 0, 0, (x1 - x0) / wr, 1);
+      }
+      // railings: three sides (open at the entry), as see-through iron panels
+      const rails = dx < 0 ? [[x0, z0, x1, z0], [x0, z1, x1, z1], [x0, z0, x0, z1]] : [[x0, z0, x0, z1], [x1, z0, x1, z1], [x0, z0, x1, z0]];
+      for (const [a, b, c, d] of rails) { const len = Math.hypot(c - a, d - b); K.wall(iron, a, b, c, d, SW, SW + RH, 0, 0, len / 0.9, 1); }
+      // posts + globes at the entry corners
+      const ent = dx < 0 ? [[x1, z0], [x1, z1]] : [[x0, z1], [x1, z1]];
+      for (const [px, pz] of ent) {
+        const post = new THREE.Mesh(new THREE.CylinderGeometry(0.06, 0.09, 2.5, 8), postM); post.position.set(px, SW + 1.25, pz); G.street.add(post);
+        const gl = new THREE.Mesh(new THREE.SphereGeometry(0.22, 16, 12), globeM); gl.position.set(px, SW + 2.72, pz); G.street.add(gl);
+        const sp = new THREE.Sprite(new THREE.SpriteMaterial({ map: glowT, blending: THREE.AdditiveBlending, depthWrite: false, transparent: true })); sp.position.copy(gl.position); sp.scale.set(1.5, 1.5, 1); G.street.add(sp);
+        WORLD.lights.push({ reg: "street", x: px, y: SW + 2.6, z: pz, c: 0x50ff80, i: 12, d: 7 });
+        WORLD.cols.push({ x: px, z: pz, r: 0.15 });
+      }
+      WORLD.lights.push({ reg: "street", x: (x0 + x1) / 2, y: SW - 1.6, z: (z0 + z1) / 2, c: 0xffe0b0, i: 8, d: 5 });
+      // the SUBWAY sign on the street-facing rail
+      const sm = new THREE.Mesh(new THREE.PlaneGeometry(2.9, 0.48), new THREE.MeshBasicMaterial({ map: kioskSignTex(name), color: 0xe0e0e0 }));
+      if (dx < 0) { sm.position.set((x0 + x1) / 2 - 0.2, SW + RH + 0.3, z1 + 0.02); }
+      else { sm.position.set(x1 + 0.02, SW + RH + 0.3, (z0 + z1) / 2 + 0.2); sm.rotation.y = Math.PI / 2; }
+      G.street.add(sm);
+      const bar = new THREE.Mesh(new THREE.BoxGeometry(dx < 0 ? 3.0 : 0.06, 0.06, dx < 0 ? 0.06 : 3.0), postM); bar.position.copy(sm.position); bar.position.y -= 0.27; G.street.add(bar);
+      WORLD.cols.push({ box: [x0 - 0.1, z0 - 0.1, dx < 0 ? x1 - 0.35 : x1 + 0.1, dx < 0 ? z1 + 0.1 : z1 - 0.35] });
+    };
+    for (const h of WORLD.kiosks) kiosk(h, h.name);
+    K.build(G.street);
+  }
+  // ---- sim: the express runs every ~25 s while you're down here; anything on the live track when it passes gets bowled over ----
+  function updateTrain(p) {
+    let T = STATE.train;
+    if (!T) T = STATE.train = { state: "idle", t: 330, x: 0, dir: -1, warned: false, n: 0 };
+    if (T.state === "idle") { if (--T.t <= 0) { T.state = "run"; T.dir = T.n % 2 ? 1 : -1; T.n++; T.x = p.gx - T.dir * 125; T.t = 0; T.hornd = false; } return; }
+    const W3 = WORLD.train3, half = W3.total / 2, sp = 0.42;
+    T.x += T.dir * sp; T.t++;
+    const front = T.x + T.dir * half, dFront = (p.gx - front) * T.dir; // > 0: the front is still coming
+    if (T.t % Math.max(6, Math.round(Math.min(30, Math.abs(dFront) / 3))) === 0) SFX.rumble();
+    if (dFront > 0 && dFront < 75 && !T.hornd) { T.hornd = true; trainHorn(); if (!STATE.trainWarned) { STATE.trainWarned = true; banner("TRAIN COMING!", "STAND CLEAR OF THE TRACKS", "#ffb43a"); } }
+    if (Math.abs(p.gx - T.x) < half + 8) STATE.shake = Math.max(STATE.shake, Math.abs(p.gx - T.x) < half ? 4 : 2);
+    // hits: the player and enemies standing on the live track inside the train's length
+    const inside = (gx) => Math.abs(gx - T.x) < half + 0.4;
+    if (p.layer === "subway" && !p.climb && p.deadT === 0 && inside(p.gx) && onTrack(p.gx, p.gz, p.gy) && p.inv === 0) {
+      hurtPlayer(3, false, T.dir * 1.2); if (p.hp > 0) { p.vz = 5.2; p.z = Math.max(p.z, 0.5); p.fling = 26; } STATE.shake = 14; SFX.boom(); playerBark(true, "WHOA! EXPRESS!"); if (BOT) BOTR.log.push("trainhit:p");
+    }
+    const z = STATE.zone;
+    if (z && z.layer === "subway") for (const e of STATE.enemies) {
+      if (e.trainHit || e.state === "dying" || e.state === "fly" || e.type === "ramrod") continue;
+      const g = toGlobal(z, e.x, e.y);
+      if (inside(g.gx) && onTrack(g.gx, g.gz, SUB.TY + (e.z || 0) * ZH)) { e.trainHit = 60; hitEnemy(e, 8, true, T.dir, 10, true); if (BOT) BOTR.log.push("trainhit:" + e.type); STATE.score += 300; fx("spark", e.x, e.y - 20, 10); }
+    }
+    for (const e of STATE.enemies) if (e.trainHit) e.trainHit--;
+    if (dFront < -(half * 2 + 120)) { T.state = "idle"; T.t = 1500; }
+  }
+  function trainHorn() { try { voice("horn", 0.9, (t, o) => { osc("sawtooth", 196, 194, t, 0.75, 0.11, o); osc("sawtooth", 247, 245, t, 0.75, 0.09, o); osc("square", 98, 97, t, 0.75, 0.05, o); }); } catch (e) { } }
+  // ---- render-side: train meshes + lights, signals, column hiding, dust and rail sparks ----
+  function stepSubway(dt, t) {
+    const W3 = WORLD.train3, T = STATE.train;
+    if (W3) {
+      const run = T && T.state === "run";
+      W3.T.visible = !!run;
+      if (run) {
+        W3.T.position.set(T.x, SUB.TY, SUB.trainZ); W3.T.rotation.y = 0;
+        for (const s of W3.glows) { const lead = s.userData.e === T.dir; s.material.color.setHex(lead ? 0xffffff : 0xff3020); s.scale.setScalar(lead ? 1.8 : 0.7); }
+        W3.beam.position.x = T.dir * (W3.total / 2 + 9); W3.beam.rotation.z = T.dir > 0 ? 0 : Math.PI;
+        W3.light.x = T.x + T.dir * (W3.total / 2 + 4); W3.light.i = 46; W3.tail.x = T.x - T.dir * (W3.total / 2 + 1); W3.tail.i = 12;
+        if (Math.random() < 0.6) { const sx = T.x + (Math.random() - 0.5) * W3.total; PART.subg.emit(sx, SUB.TY + 0.35, 41.75, rnd(-2, 2), rnd(0.5, 2.5), rnd(-0.2, 0.6), rnd(0.2, 0.45), rnd(0.05, 0.1), -0.05, 0.6, 0.85, 1, 1); }
+      } else { W3.light.x = -9999; W3.light.i = 0; W3.tail.x = -9999; W3.tail.i = 0; }
+    }
+    for (const s of WORLD.signals || []) { const busy = T && T.state === "run"; s.r.visible = busy || Math.floor(t * 1.5) % 2 === 0; s.g.visible = !busy; }
+    const cp = camera.position;
+    const pl = STATE.player; // hide a column that sits on the camera, or between the camera and the player
+    for (const c of WORLD.subCols || []) {
+      let hide = Math.abs(c.position.x - cp.x) < 0.9 && Math.abs(c.position.z - cp.z) < 0.9;
+      if (!hide && pl && pl.layer === "subway" && (c.position.z - pl.gz) * (c.position.z - cp.z) < 0) { const k = (c.position.z - cp.z) / (pl.gz - cp.z), lx = cp.x + (pl.gx - cp.x) * k; hide = Math.abs(c.position.x - lx) < 0.75; }
+      c.visible = !hide;
+    }
+    if (Math.random() < 0.35) PART.sub.emit(cp.x + rnd(-8, 8), SUB.PY + rnd(0.5, 3.5), rnd(42, 51), rnd(-0.1, 0.1), rnd(-0.05, 0.05), rnd(-0.05, 0.05), rnd(3, 6), rnd(0.03, 0.06), 0, 0.9, 0.9, 0.8, 0.35);
+    PART.sub.step(dt); PART.subg.step(dt); PART.subfx.step(dt); PART.subfxg.step(dt);
   }
 
   // ---------- decor (new): manholes + steam, the burning building, fire escapes, ladders, neon, graffiti, hydrants ----------
@@ -2503,6 +3126,7 @@ import * as THREE from "./three.module.min.js";
       { layer: "street", x: 151.2, z: -25, r: 1.5, kind: "climb", label: "CLIMB TO THE ROOFS", lx: 150.4, lz: -25, top: 17.0, to: { layer: "roof", x: 148.6, z: -25 } },
     ];
     buildInterior();
+    buildSubway();
   }
   // ---- the walk-in building: a lobby inside the corner building, with an elevator to roof 3 ----
   function buildInterior() {
@@ -2570,10 +3194,43 @@ import * as THREE from "./three.module.min.js";
       }
       if (Math.random() < 0.5) PART.glow.emit(136 + rnd(-0.3, 0.3), 1.5, -176 + rnd(-0.3, 0.3), rnd(-0.2, 0.2), rnd(1, 2), rnd(-0.2, 0.2), rnd(0.8, 1.6), 0.08, -0.02, 1, 0.55, 0.15, 0.9);
       PART.street.step(dt); PART.glow.step(dt); PART.fx.step(dt); PART.fxg.step(dt);
-    } else {
+    } else if (reg === "subway") stepSubway(dt, t);
+    else {
       if (Math.random() < 0.3) PART.sewer.emit(rnd(22, 158), WORLD.SY - 0.1, rnd(-2.8, -1), rnd(-0.1, 0.1), rnd(0.15, 0.35), 0, rnd(2, 4), rnd(0.6, 1.2), 0.4, 0.55, 0.9, 0.55, 0.16); // green mist off the water
       for (const [x, z] of [[34, 2.3], [162, -95.3]]) if (Math.random() < 0.25) PART.sglow.emit(x + rnd(-0.3, 0.3), WORLD.SC - 0.2, z + rnd(-0.2, 0.2), 0, -rnd(1, 1.6), 0, 1.4, 0.05, 0, 0.7, 0.8, 1, 0.5);
+      stepSewerFx(dt, t);
+      if (Math.random() < 0.15) PART.sewer.emit(159.5, WORLD.SY - 0.1, rnd(-94, -4), 0, rnd(0.15, 0.3), 0, rnd(2, 4), rnd(0.5, 1), 0.4, 0.55, 0.9, 0.55, 0.14);
       PART.sewer.step(dt); PART.sglow.step(dt); PART.sfx.step(dt); PART.sfxg.step(dt);
+    }
+  }
+  // ---- interact arrows: a bright bouncing yellow arrow over every usable door / manhole / ladder / elevator / subway stair
+  // (and the lair archway). Shown ~3 s out of every 20 s, and whenever the player is within ~6 m; hidden in climbs / cutscenes.
+  const ARROW_T = canvasTex(128, 160, (g, w, h) => {
+    const path = () => { g.beginPath(); g.moveTo(40, 14); g.lineTo(88, 14); g.lineTo(88, 72); g.lineTo(114, 72); g.lineTo(64, 136); g.lineTo(14, 72); g.lineTo(40, 72); g.closePath(); };
+    g.shadowColor = "rgba(255,220,60,0.95)"; g.shadowBlur = 18; path(); g.fillStyle = "#ffd23a"; g.fill(); g.shadowBlur = 0;
+    path(); g.lineJoin = "round"; g.lineWidth = 9; g.strokeStyle = "#140c00"; g.stroke();
+    path(); const gr = g.createLinearGradient(0, 14, 0, 136); gr.addColorStop(0, "#fff6a0"); gr.addColorStop(0.5, "#ffd23a"); gr.addColorStop(1, "#ff9a10"); g.fillStyle = gr; g.fill();
+    g.fillStyle = "rgba(255,255,255,0.7)"; g.fillRect(46, 22, 10, 44);
+  });
+  const ARROWS = [];
+  function arrowPoints() {
+    if (ARROWS.length) return ARROWS;
+    const pts = WORLD.inter.map((it) => ({ layer: it.layer, x: it.x, z: it.z })).concat([{ layer: "sewer", x: 92, z: -2.3, lair: true }]);
+    for (const P of pts) {
+      const f = floorAt(P.layer, P.x, P.z); P.y = (f === null || f < -30 ? (P.layer === "sewer" ? WORLD.SY : 0) : f) + 2.75;
+      const s = new THREE.Sprite(new THREE.SpriteMaterial({ map: ARROW_T, transparent: true, depthWrite: false, fog: false }));
+      s.scale.set(0.95, 1.2, 1); s.renderOrder = 8; s.visible = false; scene.add(s); P.s = s; P.ph = Math.random() * 6; ARROWS.push(P);
+    }
+    return ARROWS;
+  }
+  function updateArrows(t) {
+    const p = STATE.player, on = STATE.scene === "stage" && p && !p.climb && !(STATE.intro > 0) && !STATE.win && !STATE.over && !STATE.elev && CAM.fade < 0.3;
+    const cyc = (STATE.playT % 1200) < 180;
+    for (const P of arrowPoints()) {
+      let v = on && P.layer === p.layer && !(P.lair && STATE.lairFound);
+      if (v) { const d = Math.hypot(p.gx - P.x, p.gz - P.z); v = d < 6 || (cyc && d < 40); }
+      P.s.visible = v;
+      if (v) { P.s.position.set(P.x, P.y + Math.abs(Math.sin(t * 4.2 + P.ph)) * 0.28, P.z); const k = 1 + Math.sin(t * 8.4 + P.ph) * 0.04; P.s.scale.set(0.95 * k, 1.2 * k, 1); }
     }
   }
 
@@ -2664,10 +3321,15 @@ import * as THREE from "./three.module.min.js";
   // global position of a local entity in zone z
   function entPos(z, e, out) {
     const g = toGlobal(z, e.x, e.y); out.gx = g.gx; out.gz = g.gz;
-    const f = z.layer === "street" ? floorAt("street", g.gx, g.gz) : z.layer === "sewer" ? WORLD.SY : z.layer === "inside" ? 0 : (floorAt("roof", g.gx, g.gz) || 0);
-    out.fy = f === null || f < -10 ? (z.layer === "roof" ? 12 : 0) : f;
+    const f = z.layer === "subway" ? subEntFloor(e, g) : z.layer === "street" ? floorAt("street", g.gx, g.gz) : z.layer === "sewer" ? WORLD.SY : z.layer === "inside" ? 0 : (floorAt("roof", g.gx, g.gz) || 0);
+    out.fy = f === null || f < -30 ? (z.layer === "roof" ? 12 : 0) : f;
     out.gy = out.fy + (e.z || 0) * ZH;
     return out;
+  }
+  function subEntFloor(e, g) { // platform / track: actors ease between the two levels instead of popping (they hop down and climb up)
+    const f = subFloor(g.gx, g.gz), t = f === null ? SUB.PY : f;
+    if (e._fy === undefined || Math.abs(e._fy - t) > 3) e._fy = t;
+    e._fy += (t - e._fy) * 0.2; return e._fy;
   }
   const _pos = {}, _tint = new THREE.Color();
   function drawEntities(scene) {
@@ -2725,12 +3387,12 @@ import * as THREE from "./three.module.min.js";
     const cands = [STATE.player, ...STATE.enemies, ...STATE.props];
     for (const a of cands) { if (!a) continue; const d = Math.abs(a.x - f.x) + (f.y > a.y + 6 ? 40 : 0) + Math.abs(a.y - f.y) * 0.05; if (d < bd) { bd = d; best = a; } }
     const dep = best && bd < 60 ? best.y : f.y, h = Math.max(0, dep - f.y);
-    const g = toGlobal(STATE.zone, f.x, dep); const fl = STATE.zone.layer === "sewer" ? WORLD.SY : STATE.player ? STATE.player.fy : 0;
+    const g = toGlobal(STATE.zone, f.x, dep); const sf = STATE.zone.layer === "subway" ? subFloor(g.gx, g.gz) : null; const fl = STATE.zone.layer === "sewer" ? WORLD.SY : sf !== null ? sf : STATE.player ? STATE.player.fy : 0;
     f.g = { x: g.gx, y: fl + h * ZH, z: g.gz };
   }
   function fxStep() {
     const z = STATE.zone; if (!z) return;
-    const sew = z.reg === "sewer", N = sew ? PART.sfx : PART.fx, A = sew ? PART.sfxg : PART.fxg;
+    const sew = z.reg === "sewer", sb = z.reg === "subway", N = sew ? PART.sfx : sb ? PART.subfx : PART.fx, A = sew ? PART.sfxg : sb ? PART.subfxg : PART.fxg;
     for (const f of STATE.fx) {
       if (f.done3) continue; f.done3 = true;
       if (f.kind === "x" || f.kind === "pop" || f.kind === "pop5" || f.kind === "pop5k") { fxAnchor(f); f.hud = true; f.done3 = true; continue; }
@@ -2757,8 +3419,8 @@ import * as THREE from "./three.module.min.js";
   const CAM = { pos: new THREE.Vector3(-10, 8, 14), look: new THREE.Vector3(0, 1, 0), yaw: 0, right: new THREE.Vector3(1, 0, 0), fwd: new THREE.Vector3(0, 0, -1), uDot: 1, amb: [0.6, 0.6, 0.72], fov: 52, snap: true, fade: 0 };
   const LIGHTS = { pts: [], active: [] };
   const REGION = { cur: "street" };
-  const HEMI = { street: [0x8a8ac8, 0x3a2a30, 1.25], roof: [0x9aa0d8, 0x3a3040, 1.35], sewer: [0x6a9a70, 0x20281c, 1.1], inside: [0xc8d8c0, 0x3a3020, 1.0] };
-  const FOG = { street: [0x1a1426, 0.0085], sewer: [0x0c160c, 0.03], inside: [0x141410, 0.02] };
+  const HEMI = { street: [0x8a8ac8, 0x3a2a30, 1.25], roof: [0x9aa0d8, 0x3a3040, 1.35], sewer: [0x6a9a70, 0x20281c, 1.1], inside: [0xc8d8c0, 0x3a3020, 1.0], subway: [0xc8d8d0, 0x2a2622, 1.05] };
+  const FOG = { street: [0x1a1426, 0.0085], sewer: [0x0c160c, 0.03], inside: [0x141410, 0.02], subway: [0x0b0c0e, 0.026] };
   let hemi, moon;
   function init3D() {
     renderer = new THREE.WebGLRenderer({ canvas: glCanvas, antialias: true, powerPreference: "high-performance", alpha: false, preserveDrawingBuffer: SHOT });
@@ -2795,6 +3457,7 @@ import * as THREE from "./three.module.min.js";
     if (z.lair && !STATE.lairFound) { STATE.lairFound = true; STATE.secrets++; STATE.score += 1000; banner("SECRET LAIR FOUND!", "+1000  HOME SWEET SEWER", "#7fff6a"); SFX.pickup(); playerBark(true, "WE'RE HOME, DUDES!"); }
     if (z.layer === "inside" && !STATE.lobbySeen) { STATE.lobbySeen = true; banner("THE LOBBY", "THE ELEVATOR STILL WORKS - GO UP!", "#ffd08a"); }
     if (z.layer === "roof" && !STATE.roofSeen) { STATE.roofSeen = true; banner("THE ROOFTOPS", "JUMP THE GAPS - MIND THE EDGE", "#9ad8ff"); }
+    if (z.layer === "subway" && !STATE.subwaySeen) { STATE.subwaySeen = true; banner("THE X LINE", "TORTUGA ST - MIND THE GAP", "#ffb43a"); }
     if (z.layer === "sewer" && !z.lair && !STATE.sewerSeen) { STATE.sewerSeen = true; banner("THE SEWERS", "SOMETHING'S DOWN HERE...", "#7fff6a"); }
   }
   function zoneAtG(layer, gx, gz) {
@@ -2809,8 +3472,9 @@ import * as THREE from "./three.module.min.js";
     ["block2", "barrel", 156, -20], ["block2", "crate", 167, -44, "slice"], ["block2", "trash", 152, -70], ["block2", "cone", 160, -86], ["block2", "barrel", 165, -98],
     ["block2", "crate", 153, -112, "slice"], ["block2", "trash", 168, -132, "pizza"], ["lot", "crate", 140, -160, "slice"], ["lot", "barrel", 160, -184],
     ["sewerA", "crate", 52, 1.8, "slice"], ["sewerA", "barrel", 120, 1.4], ["sewerB", "crate", 162, -70, "slice"], ["roofs", "crate", 90, -30, "slice"], ["roofs", "barrel", 116, -26],
+    ["subway", "trash", 28, 51.3], ["subway", "crate", 60, 50.9, "slice"], ["subway", "barrel", 121, 50.6], ["subway", "crate", 186, 51.1, "pizza"],
   ];
-  const ITEMS3D = [["lair", "pizza", 92, 8.2], ["lair", "slice", 87.5, 6], ["lair", "slice", 96.5, 6], ["roofs", "pizza", 144, -36], ["sewerB", "slice", 162, -88]];
+  const ITEMS3D = [["lair", "pizza", 92, -8.2], ["lair", "slice", 87.5, -6], ["lair", "slice", 96.5, -6], ["roofs", "pizza", 144, -36], ["sewerB", "slice", 162, -88], ["subway", "slice", 98, 49.5]];
   function resetLevel() {
     for (const z of WORLD.zones) { z.ents = { enemies: [], props: [], items: [], stars: [] }; for (const L of z.locks) L.done = false; }
     STATE.zone = null; STATE.resetting = true;
@@ -2819,6 +3483,8 @@ import * as THREE from "./three.module.min.js";
       spawnProp({ kind, x: l.x, y: l.y, drop });
     }
     for (const [zid, kind, gx, gz] of ITEMS3D) { const z = zoneById(zid); setZone(z); const l = toLocal(z, gx, gz); spawnItem({ kind, x: l.x, y: l.y, z: 0 }); }
+    for (const [zid, type, gx, gz] of ENEMIES3D) { setZone(zoneById(zid)); placeEnemy(type, gx, gz); }
+    for (const E of ENC3D) E.done = false;
     STATE.zone = null; STATE.resetting = false;
   }
   function startGame(broI) {
@@ -2827,7 +3493,7 @@ import * as THREE from "./three.module.min.js";
       gx: -6, gz: 1.5, gy: 0, fy: 0, layer: "street", climb: null };
     Object.assign(STATE, { enemies: [], stars: [], fx: [], props: [], items: [], targets: [], zones: [], stop: 0, zoom: 0, shake: 0, score: 0, locked: false, lock: null, queue: [], spawnT: 0, goT: 0,
       clear: false, phase: "waves", bossT: 0, kills: 0, playT: 0, tagT: 0, deaths: 0, lives: 3, secrets: 0, ramrodOn: false, bossDown: false, intro: 0, pod: null, win: null, over: null,
-      banner: null, lobbySeen: false, elev: null, lairFound: false, roofSeen: false, sewerSeen: false, pBark: null, barkCd: 0, specT: 0, cardT: 150, camX: 0, wave: 0, near: null });
+      banner: null, lobbySeen: false, subwaySeen: false, trainWarned: false, train: null, elev: null, lairFound: false, roofSeen: false, sewerSeen: false, pBark: null, barkCd: 0, specT: 0, cardT: 150, camX: 0, wave: 0, near: null });
     resetWorldBits(); resetLevel();
     setZone(zoneById("block1"));
     const p = STATE.player; p.fy = floorAt("street", p.gx, p.gz); p.gy = p.fy;
@@ -2837,34 +3503,61 @@ import * as THREE from "./three.module.min.js";
   }
   function beginLevel(broI) { startGame(broI); }
   function pickLevel() { return 1; }
-  // ---------- arenas (the 16-bit LOCKS): walk into one and the street seals until its waves are down ----------
-  function updateLocks(p) {
+  // ---------- open world: no arenas / screen locks. Enemies stand at posts; three placed encounters start when you get near ----------
+  const ENEMIES3D = [ // zone, type, gx, gz (their post)
+    ["block1", "purple", 25, -2], ["block1", "blue", 28.5, 2.5], ["block1", "star", 31, -4], ["block1", "purple", 23, 4.5],
+    ["block1", "purple", 73, 1.5], ["block1", "blue", 85, -3],
+    ["block1", "sword", 107, -2], ["block1", "dasher", 112, 3], ["block1", "blue", 116, -4], ["block1", "purple", 110.5, 5.5],
+    ["block2", "heavy", 161, -47], ["block2", "gunner", 165, -52], ["block2", "star", 157, -45.5], ["block2", "dasher", 163, -56], ["block2", "purple", 158, -51],
+    ["block2", "purple", 160, -97], ["block2", "purple", 164.5, -101], ["block2", "gunner", 157.5, -104], ["block2", "sword", 162, -108], ["block2", "blue", 166, -99], ["block2", "purple", 156, -100.5],
+    ["sewerA", "purple", 66, 1], ["sewerA", "blue", 71, -1.5], ["sewerA", "star", 74, 1.8], ["sewerA", "sword", 127, 0.5], ["sewerA", "purple", 131, 1.6],
+    ["sewerB", "sword", 162, -49], ["sewerB", "purple", 161, -54], ["sewerB", "dasher", 163.2, -58],
+    ["roofs", "purple", 97, -20], ["roofs", "star", 101, -26], ["roofs", "blue", 94, -28],
+    ["subway", "purple", 41, 48.2], ["subway", "sword", 45.5, 47], ["subway", "blue", 49, 49.2], ["subway", "dasher", 52.5, 47.6],
+    ["subway", "star", 107, 48.5], ["subway", "purple", 112, 47.4], ["subway", "heavy", 116, 49.2],
+  ];
+  const ENC3D = [{ zone: "block1", kind: "scorcher", gx: 79, gz: 0, r: 7 }, { zone: "block2", kind: "zap", gx: 161, gz: -2, r: 7 }, { zone: "lot", kind: "ramrod", gx: 150, gz: -168.7, r: 10 }];
+  const AGGRO = 7.5, LEASH = 11, LOSE = 14; // metres: notice the player / chase this far from the post / give up past this
+  function placeEnemy(type, gx, gz) {
+    const z = STATE.zone, l = toLocal(z, gx, gz), e = spawnEnemy(type);
+    Object.assign(e, { x: l.x, y: l.y, post: { x: l.x, y: l.y }, entered: true, idle: true, home: false, back: 1, facing: gx > 80 ? -1 : 1 });
+    return e;
+  }
+  const mDist = (ax, ay, bx, by) => Math.hypot((ax - bx) * PX, (ay - by) * DY);
+  function engage(e) { e.idle = false; e.home = false; e.back = 0; e.cool = Math.max(e.cool || 0, 18); }
+  // posted enemies: idle at the post, wake when the player comes near (with their pack), chase a little way, then walk home.
+  // Returns true when it moved the enemy itself (idle / walking home), false to hand it to the reused AI.
+  function leashStep(e, p) {
+    if (!e.post) return false;
+    const dpx = mDist(p.x, p.y, e.x, e.y), dpost = mDist(e.x, e.y, e.post.x, e.post.y), alive = p.deadT === 0;
+    if (e.state !== "walk") { if (e.idle || e.home) engage(e); return false; } // hit / grabbing / downed: the reused AI owns it
+    if (e.idle && alive && dpx < AGGRO) { engage(e); for (const o of STATE.enemies) if (o.idle && o.post && mDist(o.post.x, o.post.y, e.post.x, e.post.y) < 5) engage(o); }
+    if (e.home && alive && dpx < AGGRO * 0.6 && dpost < LEASH * 0.7) engage(e);
+    if (!e.idle && !e.home && (dpost > LEASH || dpx > LOSE || !alive)) { e.home = true; e.token = false; e.back = 1; e.taunt = 0; }
+    if (!e.idle && !e.home) return false;
+    if (e.flash > 0) e.flash--; if (e.inv > 0) e.inv--; if (e.sayT > 0) e.sayT--; e.t++;
+    if (e.home) {
+      const mx = e.post.x - e.x, my = e.post.y - e.y, sp = (edef(e).speed || 1) * 0.85;
+      if (Math.abs(mx) < 2 && Math.abs(my) < 1.5) { e.home = false; e.idle = true; e.walkT = 0; return true; }
+      if (Math.abs(mx) >= 2) e.x += Math.sign(mx) * Math.min(sp, Math.abs(mx)); if (Math.abs(my) >= 1.5) e.y += Math.sign(my) * Math.min(0.6, Math.abs(my));
+      e.facing = mx >= 0 ? 1 : -1; e.walkT++; return true;
+    }
+    e.walkT = 0; if (dpx < 16) e.facing = p.x >= e.x ? 1 : -1; // idle: stand the post, watch the player
+    return true;
+  }
+  function updateLocks(p) { // (name kept from the arena version) camera window + the placed encounters + the win
     const z = STATE.zone;
-    if (!STATE.locked) {
-      if (STATE.goT > 0) STATE.goT--;
-      for (const L of z.locks) {
-        if (L.done) continue;
-        if (p.x > L.x0 + 40 && p.x < L.x0 + W - 40 && !p.climb) {
-          STATE.locked = true; STATE.lock = L; STATE.camX = L.x0; STATE.spawnT = 30; STATE.waveI = 0; STATE.goT = 0;
-          STATE.queue = L.waves ? L.waves[0].slice() : [];
-          STATE.phase = L.boss ? "boss" : "waves";
-          if (L.boss === "zap") spawnZaps3D();
-          if (L.boss === "ramrod") startRamrod();
-          break;
-        }
-      }
-      if (!STATE.locked) STATE.camX = clamp(p.x - W / 2, -W, LEVEL_W);
-      return;
+    STATE.camX = clamp(p.x - W / 2, -W, LEVEL_W);
+    for (const E of ENC3D) {
+      if (E.done || E.zone !== z.id || p.climb) continue;
+      if (Math.hypot(p.gx - E.gx, p.gz - E.gz) > E.r) continue;
+      E.done = true;
+      if (E.kind === "scorcher") spawnEnemy("midboss");
+      if (E.kind === "zap") spawnZaps3D();
+      if (E.kind === "ramrod") { STATE.phase = "boss"; startRamrod(); }
     }
-    const L = STATE.lock;
-    if (STATE.queue.length && STATE.enemies.length < 5 && --STATE.spawnT <= 0) { spawnEnemy(STATE.queue.shift()); STATE.spawnT = 45; }
     if (STATE.intro > 0) updateRamrodIntro(); else if (STATE.pod && ++STATE.pod.t > 260) STATE.pod = null;
-    if (!STATE.queue.length && !STATE.enemies.length && !(STATE.intro > 0)) {
-      if (L.waves && STATE.waveI + 1 < L.waves.length) { STATE.waveI++; STATE.queue = L.waves[STATE.waveI].slice(); STATE.spawnT = 70; return; }
-      if (L.boss === "ramrod") { if (!STATE.win) { STATE.win = { t: 0 }; } return; }
-      L.done = true; STATE.locked = false; STATE.lock = null; STATE.phase = "waves"; STATE.goT = 180; STATE.score += 200; SFX.door();
-      STATE.clearT = 70;
-    }
+    if (STATE.ramrodOn && STATE.bossDown && !STATE.win && !STATE.enemies.some((e) => e.type === "ramrod" && !e.mid && !e.gone)) STATE.win = { t: 0 };
   }
   function spawnZaps3D() {
     STATE.bossT = 150; SFX.rumble();
@@ -2917,7 +3610,7 @@ import * as THREE from "./three.module.min.js";
   }
   // tunnels: the camera looks down the tunnel, so a camera-relative stick sent the profile sprites sliding toward / away from the
   // camera. In corridor zones the stick follows the zone instead: left/right = along the tunnel, up/down = across it (like the street).
-  const corridor = (z) => z && z.reg === "sewer" && !z.lair;
+  const corridor = (z) => z && ((z.reg === "sewer" && !z.lair) || z.reg === "subway");
   function stickToWorld(dx, dy) {
     const z = STATE.zone;
     if (corridor(z)) return { x: z.u[0] * dx + z.v[0] * dy, z: z.u[1] * dx + z.v[1] * dy };
@@ -2955,6 +3648,11 @@ import * as THREE from "./three.module.min.js";
   function nearInteract(p) {
     if (STATE.locked || p.z > 0 || p.attackT > 0 || p.deadT > 0 || p.carry) return null;
     for (const it of WORLD.inter) if (it.layer === p.layer && Math.hypot(p.gx - it.x, p.gz - it.z) < it.r) return it;
+    // on the live track right under a platform edge: climb up (jumping works too)
+    if (p.layer === "subway" && p.fy < SUB.TY + 0.05 && p.gz > SUB.zE - 1.2 && p.gz < SUB.zE && subFloor(p.gx, SUB.zE + 0.9) === SUB.PY) {
+      const h = STATE.hopIt || (STATE.hopIt = { layer: "subway", kind: "hop", r: 1, label: "CLIMB ONTO THE PLATFORM", to: {} });
+      h.x = p.gx; h.z = SUB.zE - 0.25; h.to.x = p.gx; h.to.z = SUB.zE + 0.9; return h;
+    }
     return null;
   }
   function startClimb(p, it) {
@@ -2966,7 +3664,7 @@ import * as THREE from "./three.module.min.js";
     const z = zoneAtG(layer, gx, gz); STATE.zone = null; setZone(z);
     const f = floorAt(layer, gx, gz); p.fy = f === null ? 0 : f; p.z = Math.max(0, ((gy === undefined ? p.fy : gy) - p.fy) / ZH); p.gy = p.fy + p.z * ZH;
     const l = toLocal(z, gx, gz); p.x = l.x; p.y = l.y;
-    REGION.cur = z.reg; CAM.snap = true; STATE.near = null; if (STATE.banner && STATE.banner.t > 60) STATE.banner = null;
+    REGION.cur = z.reg; CAM.snap = true; STATE.near = null; if (layer !== "subway") STATE.train = null; if (STATE.banner && STATE.banner.t > 60) STATE.banner = null;
   }
   function updateClimb(p) {
     const c = p.climb, it = c.it, t = ++c.t;
@@ -3000,6 +3698,21 @@ import * as THREE from "./three.module.min.js";
       else if (t === 15) { placeOn(p, it.to.layer, it.to.x, it.to.z); p.facing = 1; CAM.fade = 1; }
       else if (t <= 30) CAM.fade = 1 - (t - 15) / 15;
       else { CAM.fade = 0; p.climb = null; p.walkT = 0; }
+      return;
+    }
+    if (it.kind === "stairs") { // subway stairs: into the kiosk / stairwell, down (or up) the steps with a fade, out at the other end
+      const d = it.down;
+      if (t <= 12) { p.gx = ease(c.x0, it.ex, t / 12); p.gz = ease(c.z0, it.ez, t / 12); p.walkT++; if (it.dx) p.facing = it.dx; }
+      else if (t <= 40) { const k = (t - 12) / 28; p.gx = it.ex + it.dx * 2.6 * k; p.gz = it.ez + it.dz * 2.6 * k; p.gy = c.y0 + (d ? -2.1 : 1.4) * k; p.walkT++; CAM.fade = Math.max(0, (k - 0.45) / 0.55); if (t % 9 === 0) SFX.land(); }
+      else if (t === 41) { placeOn(p, it.to.layer, it.to.x, it.to.z); p.facing = it.to.face || 1; CAM.fade = 1; p.walkT = 0; }
+      else if (t <= 58) CAM.fade = 1 - (t - 41) / 17;
+      else { CAM.fade = 0; p.climb = null; }
+      return;
+    }
+    if (it.kind === "hop") { // haul up from the track bed onto the platform
+      if (t <= 8) { p.gx = ease(c.x0, it.x, t / 8); p.gz = ease(c.z0, it.z, t / 8); }
+      else if (t <= 26) { const k = (t - 8) / 18; p.gz = ease(it.z, it.to.z, k); p.gy = SUB.TY + (SUB.PY - SUB.TY) * k + Math.sin(k * Math.PI) * 0.45; if (t === 9) SFX.jump(); }
+      else { placeOn(p, "subway", it.to.x, it.to.z); p.climb = null; CAM.snap = false; SFX.land(); }
       return;
     }
     if (it.kind === "elev") { // walk in, doors shut, ride (rumble + floor count on the HUD), ding, doors open on the other floor
@@ -3044,6 +3757,7 @@ import * as THREE from "./three.module.min.js";
     if (STATE.win) { if (++STATE.win.t > 150) { STATE.scene = "win"; STATE.winT = 0; } }
     if (STATE.over) { if (++STATE.over.t > 100) { STATE.scene = "over"; STATE.overT = 0; } return; }
     STATE.playT++;
+    if (p.layer === "subway") updateTrain(p);
     if (p.climb) { updateClimb(p); STATE.fx = STATE.fx.filter((f) => ++f.t < f.life); return; }
     const raw = { a: anyPressed("j") || BTN_A.hit, b: anyPressed("k") || BTN_B.hit, p: anyPressed("l") || BTN_P.hit, e: anyPressed("e") };
     const lag = STATE.stop > 0 || p.downT > 0 || p.hurtT > 0 || (p.z > 0 && p.attackT > 0);
@@ -3105,12 +3819,13 @@ import * as THREE from "./three.module.min.js";
     p.z += p.vz;
     if (p.z > 0) p.vz -= p.atk === "power" && p.spec && p.spec.hover && p.vz < 0.5 ? 0.06 : 0.25;
     else { if (p.atk === "power" && p.spec && !p.spLand && p.vz < 0) specialLand(p); if (p.dropIn) { p.dropIn = false; STATE.shake = Math.max(STATE.shake, 10); fx("spark", p.x, p.y - 4, 10); buzz(40); } if (p.vz < -0.5) SFX.land(); p.z = 0; p.vz = 0; if (p.atk === "jump") { p.attackT = 0; p.atk = null; } }
+    if (p.fling > 0) { p.fling--; p.y += 2.0; } // bowled off the track by the train, toward the platform side
     resolvePlayer(p, ox, oy);
     p.gy = p.fy + p.z * ZH;
     updateRoofFall(p);
     updateLocks(p);
     assignTokens(p);
-    for (const e of STATE.enemies) { const eox = e.x, eoy = e.y, st0 = e.state; updateEnemy(e, p); if (st0 === "walk" && e.state === "walk") applyMove(e, eox, eoy); }
+    for (const e of STATE.enemies) { const eox = e.x, eoy = e.y, st0 = e.state; if (leashStep(e, p)) continue; updateEnemy(e, p); if (st0 === "walk" && e.state === "walk") applyMove(e, eox, eoy); }
     updateProps(p); updateItems(p);
     STATE.enemies = STATE.enemies.filter((e) => { if (e.gone && e.hp <= 0) STATE.kills++; return !e.gone; });
     STATE.stars = STATE.stars.filter((s) => {
@@ -3188,8 +3903,9 @@ import * as THREE from "./three.module.min.js";
   function updateLights(t) {
     const reg = REGION.cur, cx = camera.position.x, cz = camera.position.z;
     const tx = STATE.player && STATE.scene === "stage" ? STATE.player.gx : CAM.look.x, tz = STATE.player && STATE.scene === "stage" ? STATE.player.gz : CAM.look.z;
-    const pool = WORLD.lights.filter((L) => (reg === "sewer" || reg === "inside" ? L.reg === reg : L.reg !== "sewer" && L.reg !== "inside"));
-    for (const L of pool) L.dd = Math.hypot(L.x - tx, L.z - tz) * 0.7 + Math.hypot(L.x - cx, L.z - cz) * 0.3 - (L.fire ? 8 : 0);
+    const under = reg === "sewer" || reg === "inside" || reg === "subway";
+    const pool = WORLD.lights.filter((L) => (under ? L.reg === reg : L.reg !== "sewer" && L.reg !== "inside" && L.reg !== "subway"));
+    for (const L of pool) L.dd = Math.hypot(L.x - tx, L.z - tz) * 0.7 + Math.hypot(L.x - cx, L.z - cz) * 0.3 - (L.fire ? 8 : 0) - (L.train && L.i > 0 ? 14 : 0);
     pool.sort((a, b) => a.dd - b.dd);
     LIGHTS.active = pool.slice(0, LIGHTS.pts.length);
     LIGHTS.pts.forEach((P, i) => {
@@ -3197,12 +3913,12 @@ import * as THREE from "./three.module.min.js";
       L.fl = L.flick === 2 ? 0.75 + 0.35 * Math.sin(t * 13 + L.x) * Math.sin(t * 7.3 + L.z) + Math.random() * 0.12 : L.flick === 1 ? 0.8 + 0.25 * Math.sin(t * 20) * Math.sin(t * 3.1) : 1;
       P.position.set(L.x, L.y, L.z); P.color.setHex(L.c); P.intensity = L.i * L.fl; P.distance = L.d; P.decay = 1.4;
     });
-    moon.intensity = reg === "sewer" || reg === "inside" ? 0 : STATE.player && STATE.player.layer === "roof" ? 1.3 : 0.7;
+    moon.intensity = under ? 0 : STATE.player && STATE.player.layer === "roof" ? 1.3 : 0.7;
     const H = HEMI[reg] || HEMI.street; hemi.color.setHex(H[0]); hemi.groundColor.setHex(H[1]); hemi.intensity = H[2];
-    const F = FOG[reg === "sewer" || reg === "inside" ? reg : "street"]; scene.fog.color.setHex(F[0]); scene.fog.density = F[1];
+    const F = FOG[under ? reg : "street"]; scene.fog.color.setHex(F[0]); scene.fog.density = F[1];
     renderer.setClearColor(F[0], 1);
-    CAM.amb = reg === "sewer" ? [0.55, 0.72, 0.55] : reg === "inside" ? [0.68, 0.72, 0.64] : STATE.player && STATE.player.layer === "roof" ? [0.62, 0.64, 0.82] : [0.6, 0.6, 0.74];
-    const out = reg !== "sewer" && reg !== "inside"; WORLD.groups.street.visible = out; WORLD.groups.roof.visible = out; WORLD.groups.sewer.visible = reg === "sewer"; WORLD.groups.inside.visible = reg === "inside";
+    CAM.amb = reg === "sewer" ? [0.55, 0.72, 0.55] : reg === "subway" ? [0.66, 0.7, 0.68] : reg === "inside" ? [0.68, 0.72, 0.64] : STATE.player && STATE.player.layer === "roof" ? [0.62, 0.64, 0.82] : [0.6, 0.6, 0.74];
+    const out = !under; WORLD.groups.subway.visible = reg === "subway"; WORLD.groups.street.visible = out; WORLD.groups.roof.visible = out; WORLD.groups.sewer.visible = reg === "sewer"; WORLD.groups.inside.visible = reg === "inside";
     for (const h of WORLD.hydrants) h.rotation.y = CAM.yaw;
   }
   function render3D(dt, t) {
@@ -3211,6 +3927,7 @@ import * as THREE from "./three.module.min.js";
     updateCamera(dt);
     updateLights(t);
     stepDecor(dt, t, REGION.cur);
+    updateArrows(t);
     if (STATE.scene === "stage" || STATE.scene === "card" || STATE.scene === "win" || STATE.scene === "over") { fxStep(); drawEntities(scene); }
     else { for (const b of BILLS.pool) b.hide(); }
     const ps = renderer.domElement.height / (2 * Math.tan(camera.fov * Math.PI / 360));
@@ -3365,15 +4082,24 @@ import * as THREE from "./three.module.min.js";
   // ---------- bot (?bot): plays the level for automated checks, via the same input paths ----------
   const BOTR = { i: 0, stuck: 0, lx: 0, lz: 0, t: 0, log: [] };
   const ROUTE = [ // goals: go (layer, x, z) / use (the nearest interact) / wait for a lock
-    ["go", "street", 14, 0], ["go", "street", 33.9, 2.0], ["use"], ["go", "sewer", 60, 1.2], ["go", "sewer", 80, 1.2], ["go", "sewer", 92, 2.4], ["go", "sewer", 92, 7.5], ["go", "sewer", 92, 2.0], ["go", "sewer", 40, 1.6], ["go", "sewer", 34, 2.35], ["use"],
+    ["go", "street", 14, 0], ["go", "street", 33.9, 2.0], ["use"], ["go", "sewer", 60, 1.2], ["go", "sewer", 80, 1.2], ["go", "sewer", 92, -1.5], ["go", "sewer", 92, -7.5], ["go", "sewer", 92, -1.2], ["go", "sewer", 40, 1.6], ["go", "sewer", 34, 2.35], ["use"],
     ["go", "street", 45, 0], ["go", "street", 67, -2], ["go", "street", 90, -2], ["go", "street", 101, -4], ["go", "street", 140, 0], ["go", "street", 158, 0], ["go", "street", 161, -3],
     ["go", "street", 130, -2], ["go", "street", 97.6, -9.4], ["use"], ["go", "roof", 100, -22], ["go", "roof", 103, -22], ["jump", "roof", 112, -22], ["go", "roof", 121, -23], ["go", "roof", 131, -23], ["go", "roof", 136, -32], ["go", "roof", 145.5, -38.4], ["go", "roof", 137.4, -33], ["go", "roof", 137.4, -27.4], ["go", "roof", 141.2, -27.6], ["use"], ["go", "inside", 140, -15], ["go", "inside", 140, -12.1], ["use"], ["go", "street", 146, -9], ["go", "street", 152.5, -8], ["go", "street", 151.4, -24.6], ["use"], ["go", "roof", 148.4, -25], ["use"],
     ["go", "street", 160, -40], ["go", "street", 160, -60], ["go", "street", 160, -90], ["go", "street", 160, -110], ["go", "street", 160, -140], ["go", "street", 150, -165], ["go", "street", 150, -172],
   ];
   const ROUTE_S = [ // ?route=sewer: in at the block-1 manhole, through both tunnels, out of the far manhole on block 2
-    ["go", "street", 14, 0], ["go", "street", 33.9, 2.0], ["use"], ["go", "sewer", 80, 1.2], ["go", "sewer", 92, 2.4], ["go", "sewer", 92, 7.5], ["go", "sewer", 92, 2.0],
+    ["go", "street", 14, 0], ["go", "street", 33.9, 2.0], ["use"], ["go", "sewer", 80, 1.2], ["go", "sewer", 92, -1.5], ["go", "sewer", 92, -7.5], ["go", "sewer", 92, -1.2],
     ["go", "sewer", 158, 0], ["go", "sewer", 162, -2], ["go", "sewer", 162, -60], ["go", "sewer", 162, -94.9], ["use"], ["go", "street", 160, -90], ["end"]];
   if (/[?&]route=sewer\b/.test(Q)) ROUTE.splice(0, ROUTE.length, ...ROUTE_S);
+  const ROUTE_X = [ // ?route=subway: block-1 fight, down the TORTUGA ST kiosk, platform fight, onto the tracks and back up, tunnel fight,
+    // up the CANAL WORKS stairs onto block 2, then on to Ramrod and the win
+    ["go", "street", 14, 0], ["go", "street", 30, -4], ["go", "street", 47.2, -7.4], ["go", "street", 45.7, -9.4], ["use"],
+    ["go", "subway", 13, 46.3], ["go", "subway", 17, 46.3], ["go", "subway", 30, 47.6], ["go", "subway", 50, 47.6], ["go", "subway", 58, 43.2],
+    ["hop", "subway", 60.5, 47.8], ["go", "subway", 68, 47.8], ["go", "subway", 76, 48.5], ["go", "subway", 116, 48.5], ["go", "subway", 130, 48.5], ["go", "subway", 146, 48.5],
+    ["go", "subway", 156, 48.0], ["go", "subway", 200, 46.4], ["go", "subway", 205, 46.4], ["go", "subway", 207.6, 47.7], ["use"],
+    ["go", "street", 158, -118], ["go", "street", 160, -140], ["go", "street", 150, -165], ["go", "street", 150, -172],
+  ];
+  if (/[?&]route=subway\b/.test(Q)) ROUTE.splice(0, ROUTE.length, ...ROUTE_X);
   function botStep() {
     BOTIN.on = true; BOTIN.dx = BOTIN.dy = 0;
     const p = STATE.player; if (!p || STATE.scene !== "stage" || p.climb) return;
@@ -3385,8 +4111,9 @@ import * as THREE from "./three.module.min.js";
       const wx = dx / l, wz = dz / l; const st = worldToStick(wx, wz); let sx = st.dx, sy = st.dy;
       const m = Math.hypot(sx, sy) || 1; BOTIN.dx = sx / m * (slow ? 0.6 : 1); BOTIN.dy = sy / m * (slow ? 0.6 : 1); return false;
     };
-    if (STATE.locked || STATE.enemies.length) { // fight: line up on the nearest foe's row, close in, swing; special when swarmed
-      const foes = STATE.enemies.filter((e) => canHitState(e) || e.state === "enter" || e.state === "walk");
+    const awake = STATE.enemies.filter((e) => !e.post || (!e.idle && !e.home));
+    if (awake.length) { // fight what woke up: line up on the nearest foe's row, close in, swing; special when swarmed
+      const foes = awake.filter((e) => canHitState(e) || e.state === "enter" || e.state === "walk");
       if (p.grabbedBy && BOTR.t % 2 === 0) press("j");
       if (!foes.length) { if (STATE.locked) { const c = toGlobal(STATE.zone, STATE.camX + W / 2, (FLOOR_TOP + FLOOR_BOT) / 2); goWorld(c.gx, c.gz, true); } return; }
       foes.sort((a, b) => Math.abs(a.x - p.x) + Math.abs(a.y - p.y) * 2 - Math.abs(b.x - p.x) - Math.abs(b.y - p.y) * 2);
@@ -3408,7 +4135,8 @@ import * as THREE from "./three.module.min.js";
     if (G[1] !== p.layer) { BOTR.stuck++; if (BOTR.stuck > 300) { BOTR.log.push("skip@" + BOTR.i + " layer"); BOTR.i++; BOTR.stuck = 0; } return; }
     const done = goWorld(G[2], G[3]);
     if (G[0] === "jump" && p.gx > 105.0 && p.gx < 106.2 && p.z === 0) press("k");
-    if (done) { BOTR.i++; BOTR.stuck = 0; return; }
+    if (G[0] === "hop" && p.z === 0 && Math.hypot(G[2] - p.gx, G[3] - p.gz) < 3.6 && (floorAt(p.layer, G[2], G[3]) || 0) > p.fy + 0.3) press("k");
+    if (done) { if (G[0] === "hop") BOTR.log.push("hop@" + BOTR.i + ":" + p.fy.toFixed(2)); BOTR.i++; BOTR.stuck = 0; return; }
     if (BOTR.t % 30 === 0) { const mv = Math.hypot(p.gx - BOTR.lx, p.gz - BOTR.lz); BOTR.lx = p.gx; BOTR.lz = p.gz; if (mv < 0.3) { if (++BOTR.stuck > 8) { BOTR.log.push("stuck@" + BOTR.i + " " + p.gx.toFixed(1) + "," + p.gz.toFixed(1)); BOTR.i++; BOTR.stuck = 0; } } else BOTR.stuck = 0; }
   }
   window.__ss = { STATE, BOTR, WORLD, get cam() { return camera; }, get info() { return renderer && renderer.info.render; }, use() { const p = STATE.player, it = nearInteract(p); if (it && !p.climb) startClimb(p, it); return !!it; }, FPS, zoneById, placeOn, toLocal };
@@ -3454,7 +4182,7 @@ import * as THREE from "./three.module.min.js";
   const bootArt = ["atlas_lenny.webp", "atlas_rafe.webp", "atlas_miko.webp", "atlas_donny.webp", "levels/enemies_street.webp", "atlas_ramrod.webp", "atlas_zap.webp", "atlas_scorcher.webp", "shared_sprites.webp", "sp_lenny.webp", "sp_rafe.webp", "sp_miko.webp", "sp_donny.webp", "drill.webp", RAY_SRC];
   bootArt.forEach(spriteTex);
   const SHOTQ = (Q.match(/[?&]shot=([a-z0-9]+)/) || [])[1];
-  const SHOTS = { street: ["street", 30, 1], fire: ["street", 58, -1], sewer: ["sewer", 70, 0.5], lair: ["sewer", 92, 6], roof: ["roof", 100, -24], lot: ["street", 152, -166], lobby: ["inside", 140, -14.5], elev: ["inside", 141.2, -22.3], sewend: ["sewer", 162, -94.7], bulk: ["roof", 141.2, -25], door: ["street", 138, -8.5], corner: ["street", 150, 0], block2: ["street", 160, -60] };
+  const SHOTS = { subway: ["subway", 30, 47.6], platform: ["subway", 40, 48.5], tracks: ["subway", 56, 43.2], tunnel: ["subway", 104, 48.5], station2: ["subway", 180, 48], kiosk: ["street", 49, -6.5], kioskv: ["street", 43.2, -6.6], kiosk2: ["street", 158, -113], street: ["street", 30, 1], fire: ["street", 58, -1], sewer: ["sewer", 70, 0.5], lair: ["sewer", 92, -6], lairdoor: ["sewer", 92, 0.8], sew120: ["sewer", 117, 0.8], sew40: ["sewer", 41, 1], shaft: ["sewer", 129, 1.2], sewb74: ["sewer", 162, -70], sewerb: ["sewer", 162, -30], sewcorner: ["sewer", 150, 1], roof: ["roof", 100, -24], lot: ["street", 152, -166], lobby: ["inside", 140, -14.5], elev: ["inside", 141.2, -22.3], sewend: ["sewer", 162, -94.7], bulk: ["roof", 141.2, -25], door: ["street", 138, -8.5], corner: ["street", 150, 0], block2: ["street", 160, -60] };
   function goShot() {
     STATE.scene = "title"; startGame(+((Q.match(/[?&]bro=(\d)/) || [])[1] || 0)); STATE.scene = "stage"; STATE.banner = null;
     const S = SHOTS[SHOTQ]; if (S) placeOn(STATE.player, S[0], S[1], S[2]);
