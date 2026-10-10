@@ -14,11 +14,11 @@
     for (let y = WH - 86; y > 200; y -= 44, k++) {
       lastY = y;
       // main platform overlapping previous main
-      let w = 70 + Math.floor(r() * 50);
-      let x;
-      if (k % 2 === 0) x = clamp(prev.x + prev.w - 34 - Math.floor(r() * 10), 8, 262 - w);
-      else x = clamp(prev.x - w + 34 + Math.floor(r() * 10), 8, 262 - w);
-      if (x + w < prev.x + 26) x = prev.x + 26 - w; if (x > prev.x + prev.w - 26) x = prev.x + prev.w - 26;
+      // main platforms sweep left/right across the street in a zig-zag, always overlapping the one below
+      const w = 80 + Math.floor(r() * 40);
+      let x = Math.round(135 + Math.sin(k * 0.6) * 88 - w / 2);
+      if (x + w < prev.x + 30) x = prev.x + 30 - w;
+      if (x > prev.x + prev.w - 30) x = prev.x + prev.w - 30;
       x = clamp(x, 8, 262 - w);
       const kinds = ['roof', 'awning', 'roof', 'stall'];
       const p = { x, y, w, kind: kinds[k % 4], main: true, row: k };
@@ -382,6 +382,7 @@
         boss: bs && !bs.dead ? bs.hp : 0, bossMax: bs ? bs.max : 1, bossName: bs ? bs.name : '' });
       if (st.bannerT > 0) GT.banner(g, st.banner, 190, '#ffd848');
       if (st.t < 2.5) { GT.banner(g, 'STAGE 4', 160, '#fff'); GT.text(g, 'KASBAH ROOFTOPS', 135, 190, '#ffd848', 1, 1, '#000'); }
+      if (st.t < 5) R(g, 0, 207, 270, 39, 'rgba(0,0,0,0.55)');
       if (st.t < 5) ['CLIMB TO THE TOP!  HOLD DOWN: TAKE COVER', 'UP+FIRE: SHOOT UP   SPCL: DYNAMITE', 'SHOOT LANTERNS AND CRATES'].forEach((h, i) => GT.text(g, h, 135, 212 + i * 11, '#fff', 1, 1, '#000'));
     }
 

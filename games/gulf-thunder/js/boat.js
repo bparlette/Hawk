@@ -271,7 +271,7 @@
       }
       st.pick = st.pick.filter(k => !k.dead);
       // decor
-      if (islands.length && Math.random() < dt * 0.35) {
+      if (islands.length && !st.afterBoss && Math.random() < dt * 0.35) {
         const im = islands[rndi(0, islands.length - 1)];
         st.decor.push({ im, x: Math.random() < 0.5 ? rnd(-30, 25) : rnd(245, 300), y: -60 });
       }
@@ -335,8 +335,9 @@
         meter: canCloak ? p.cloakM / 100 : clamp(1 - p.boostCd / 1.4, 0, 1), meterLabel: canCloak ? 'CLOAK' : 'BOOST', meterCol: canCloak ? '#b080ff' : '#5ac8ff',
         boss: st.boss && !st.boss.dead ? st.boss.hp : 0, bossMax: st.boss ? st.boss.max : 1, bossName: st.boss ? st.boss.name : ''
       });
-      if (st.bannerT > 0) GT.banner(g, st.banner, 200, '#ffd848');
+      if (st.bannerT > 0) GT.banner(g, st.banner, st.phase === 'dock' ? 300 : 200, '#ffd848');
       if (st.t < 2.5) { GT.banner(g, cfg.title, 170, '#fff'); GT.text(g, cfg.sub, 135, 200, '#ffd848', 1, 1, '#000'); }
+      if (st.t < 4.5 && cfg.hint) R(g, 0, 218, 270, 15, 'rgba(0,0,0,0.55)');
       if (st.t < 4.5 && cfg.hint) GT.text(g, cfg.hint, 135, 222, '#fff', 1, 1, '#000');
     }
     function drawBanks(g, v) {
@@ -456,7 +457,7 @@
     const cfg = {
       name: 'stage1', title: 'STAGE 1', sub: 'GULF RUN', hint: 'FIRE: CANNON  SPCL: MISSILES  JUMP: BOOST', music: 'boat', scroll: 55,
       water: ['#1a78b8', '#2a90cc', '#4cb0e0', '#a8e4f8'], foam: '#e8fbff', islands: true, seed: 9,
-      dockX: 135, dockY: 88,
+      dockX: 135, dockY: 200,
       script(st, t, dt) {
         const ev = st.ev || (st.ev = {});
         const once = (k, f) => { if (!ev[k]) { ev[k] = 1; f(); } };
@@ -480,18 +481,18 @@
         if (st.afterBoss) {
           st.ab = (st.ab || 0) + dt;
           if (st.ab > 2 && dockY < -500) dockY = -300;
-          if (dockY > -500) { dockY += (st.phase === 'dock' ? 0 : st.scroll) * dt; if (dockY > 40 && st.phase !== 'dock') st.startDock(); }
+          if (dockY > -500) { dockY += (st.phase === 'dock' ? 0 : st.scroll) * dt; if (dockY > 150 && st.phase !== 'dock') st.startDock(); }
         }
       },
       drawUnder(g, st, v) {
         if (dockY < -500) return;
         // sandy shore + resort silhouette at the top, pier coming down
-        const top = Math.round(dockY - 260);
+        const top = Math.round(dockY - 150);
         R(g, v.x0, v.y0, v.x1 - v.x0, top - v.y0 + 60, '#f0dca0');
         for (let x = v.x0; x < v.x1; x += 4) R(g, x, top + 56 + (x % 8 ? 0 : 2), 4, 4, '#4cc8d8');
         R(g, v.x0, top + 52, v.x1 - v.x0, 4, '#e8f8ff');
         // resort roofs (top view)
-        for (const [x, w] of [[10, 70], [190, 70]]) { R(g, x, top - 40, w, 50, '#c83a2a'); R(g, x, top - 40, w, 4, '#e85a40'); R(g, x + w / 2 - 1, top - 40, 2, 50, '#902018'); }
+        for (const [x, w] of [[10, 70], [190, 70]]) { R(g, x, top - 40, w, 50, '#f2869c'); R(g, x, top - 40, w, 3, '#fbf6f0'); R(g, x, top + 7, w, 3, '#fbf6f0'); R(g, x, top - 40, 3, 50, '#fbf6f0'); R(g, x + w - 3, top - 40, 3, 50, '#fbf6f0'); for (const cx of [x + 14, x + w - 14]) { GT.circ(g, cx, top - 22, 8, '#fbf6f0'); GT.circ(g, cx, top - 22, 5, '#ffb4c4'); } } // pink resort wings seen from above
         R(g, 95, top - 20, 80, 36, '#c8a060'); for (let i = 0; i < 80; i += 5) R(g, 95 + i, top - 20, 2, 36, '#a07838'); // thatched grill roof
         // pier
         R(g, 112, top + 50, 46, dockY - top - 30, '#8a5a30');

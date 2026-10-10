@@ -101,7 +101,8 @@
     for (const [x, w, h] of [[-20, 90, 10], [180, 120, 14]]) {
       for (let i = 0; i < w; i++) { const hh = Math.round(h * Math.sin(Math.PI * i / w)); g.fillRect(x + i, y - hh, 1, hh); }
     }
-    for (const [x, h] of [[20, 28], [34, 22], [215, 30], [232, 24], [248, 20]]) palmSil(g, x, y - 6, h);
+    for (const [x, h] of [[20, 28], [34, 22], [254, 22]]) palmSil(g, x, y - 6, h);
+    if (GT.pinkPalaceSmall) GT.pinkPalaceSmall(g, 192, y - 8);
   }
   function palmSil(g, x, y, h) {
     g.fillStyle = '#2a1430';

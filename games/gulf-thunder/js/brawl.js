@@ -467,6 +467,7 @@
       if (st.goT > 0 && Math.floor(st.t * 3) % 2 === 0) { GT.textO(g, 'GO', 236, 210, '#ffd848', 2, 1); GT.textO(g, '>', 256, 210, '#ffd848', 2, 1); }
       if (st.bannerT > 0) GT.banner(g, st.banner, 190, '#ffd848');
       if (st.t < 2.5) { GT.banner(g, cfg.title, 160, '#fff'); GT.text(g, cfg.sub, 135, 190, '#ffd848', 1, 1, '#000'); }
+      if (st.t < 5 && cfg.hint) R(g, 0, 207, 270, cfg.hint.length * 11 + 6, 'rgba(0,0,0,0.55)');
       if (st.t < 5 && cfg.hint) cfg.hint.forEach((h, i) => GT.text(g, h, 135, 212 + i * 11, '#fff', 1, 1, '#000'));
     }
 
@@ -546,40 +547,73 @@
     GT.circ(g, tx, ty + 2, 2, '#6a4a20');
   }
   GT.palm = palm;
-  function resort(g, x0, base) {
-    // main 3-storey Victorian hotel: white clapboard, red roofs, verandas
-    const w = 420;
-    clap(g, x0, base - 150, w, 150, '#f6f2e8', '#dcd4c4');
-    for (let f = 0; f < 3; f++) {
-      const fy = base - 150 + f * 50;
-      for (let x = x0 + 14; x < x0 + w - 14; x += 26) {
-        R(g, x, fy + 12, 12, 22, '#ffffff'); R(g, x + 2, fy + 14, 8, 18, '#38587a'); R(g, x + 2, fy + 14, 8, 3, '#5a7aa0'); R(g, x + 5, fy + 14, 1, 18, '#ffffff');
-        R(g, x - 3, fy + 12, 3, 22, '#2e7a5a'); R(g, x + 12, fy + 12, 3, 22, '#2e7a5a');
-      }
-      // balcony / veranda rail
-      R(g, x0 - 6, fy + 44, w + 12, 3, '#ffffff'); R(g, x0 - 6, fy + 47, w + 12, 2, '#c8c0b0');
-      for (let x = x0 - 4; x < x0 + w + 6; x += 5) R(g, x, fy + 38, 2, 6, '#ffffff');
-      R(g, x0 - 6, fy + 36, w + 12, 2, '#ffffff');
-    }
-    // ground porch columns + porch roof
-    for (let x = x0 - 4; x < x0 + w + 6; x += 34) R(g, x, base - 50, 4, 50, '#ffffff');
-    R(g, x0 - 8, base - 54, w + 16, 6, '#c83a2a'); R(g, x0 - 8, base - 48, w + 16, 2, '#902018');
-    // main roof
-    R(g, x0 - 6, base - 168, w + 12, 20, '#c83a2a');
-    for (let yy = base - 166; yy < base - 148; yy += 4) R(g, x0 - 6, yy, w + 12, 1, '#a02a1e');
-    R(g, x0 - 8, base - 150, w + 16, 3, '#f6f2e8');
-    // gables
-    for (const gx of [x0 + 70, x0 + 210, x0 + 350]) { roofGable(g, gx, base - 166, 46, 40, '#d4402e', '#a02a1e'); clap(g, gx - 22, base - 186, 44, 22, '#f6f2e8', '#dcd4c4'); R(g, gx - 6, base - 182, 12, 14, '#38587a'); GT.circ(g, gx, base - 185, 5, '#ffffff'); GT.circ(g, gx, base - 185, 3, '#38587a'); }
-    // turret
-    const tx = x0 + w - 6;
-    clap(g, tx - 26, base - 200, 52, 200, '#f6f2e8', '#dcd4c4'); R(g, tx - 26, base - 200, 3, 200, '#d8d0c0');
-    for (let f = 0; f < 4; f++) { R(g, tx - 7, base - 190 + f * 48, 14, 24, '#ffffff'); R(g, tx - 5, base - 188 + f * 48, 10, 20, '#38587a'); }
-    for (let i = 0; i < 56; i++) { const ww = Math.round(30 * (i + 1) / 56); R(g, tx - ww, base - 256 + i, ww * 2, 1, i % 4 === 0 ? '#a02a1e' : '#c83a2a'); }
-    R(g, tx - 1, base - 266, 2, 12, '#3a3a3a'); R(g, tx - 4, base - 262, 8, 1, '#3a3a3a');
-    // sign
-    R(g, x0 + 150, base - 104, 120, 16, '#2e5a8a'); R(g, x0 + 150, base - 104, 120, 2, '#ffd848'); R(g, x0 + 150, base - 90, 120, 2, '#ffd848');
-    GT.text(g, 'SUNSET KEY RESORT', x0 + 210, base - 99, '#ffffff', 1, 1);
+  // Pink Mediterranean-revival beach hotel ("pink palace"): flamingo stucco, white trim, bell towers, arched windows
+  const PK = '#f2869c', PKD = '#d0627e', PKL = '#ffb4c4', WT = '#fbf6f0', WTS = '#dcd2d0', GL = '#3a5a80', GLL = '#6a8ab0';
+  function archWin(g, x, y, w, h, frame, glass) { // x,y = top-left of the arch box
+    const r = Math.floor(w / 2);
+    GT.circ(g, x + r, y + r, r, frame); R(g, x, y + r, w, h - r, frame);
+    GT.circ(g, x + r, y + r, r - 2, glass); R(g, x + 2, y + r, w - 4, h - r - 2, glass);
+    R(g, x + 2, y + r, 2, h - r - 2, GLL); R(g, x - 1, y + h - 2, w + 2, 2, WTS);
   }
+  function stucco(g, x, y, w, h, seed) {
+    R(g, x, y, w, h, PK); const r = GT.srand(seed);
+    for (let i = 0; i < w * h / 40; i++) R(g, x + r() * w, y + r() * h, 2, 1, r() < 0.5 ? PKD : PKL);
+  }
+  function cornice(g, x, y, w) { R(g, x - 2, y, w + 4, 4, WT); R(g, x - 2, y + 4, w + 4, 1, WTS); for (let xx = x; xx < x + w; xx += 6) R(g, xx, y + 5, 3, 2, WT); }
+  function balustrade(g, x, y, w) { R(g, x, y - 8, w, 2, WT); for (let xx = x + 1; xx < x + w - 1; xx += 4) R(g, xx, y - 6, 2, 6, WT); R(g, x, y, w, 2, WTS); }
+  function bellTower(g, cx, top, bot, w, seed) {
+    stucco(g, cx - w / 2, top, w, bot - top, seed);
+    R(g, cx - w / 2, top, 2, bot - top, PKD);
+    for (let y = top + 34; y < bot - 20; y += 30) archWin(g, cx - 6, y, 12, 20, WT, GL);
+    // open belfry with arches + bell
+    cornice(g, cx - w / 2, top - 4, w);
+    stucco(g, cx - w / 2 + 3, top - 30, w - 6, 26, seed + 1);
+    archWin(g, cx - 9, top - 27, 18, 22, WT, '#2a1a28'); R(g, cx - 3, top - 18, 6, 6, '#d8b040'); R(g, cx - 1, top - 20, 2, 2, '#d8b040');
+    cornice(g, cx - w / 2 + 3, top - 34, w - 6);
+    balustrade(g, cx - w / 2 + 2, top - 34, w - 4);
+    // cupola dome with lantern + finial
+    GT.circ(g, cx, top - 40, Math.floor(w / 2) - 5, WT); R(g, cx - w / 2 + 5, top - 40, w - 10, 6, WT);
+    GT.circ(g, cx, top - 42, Math.floor(w / 2) - 8, PKL); R(g, cx - 4, top - 42 - (w / 2 - 8), 3, 4, '#ffffff');
+    R(g, cx - 3, top - 40 - w / 2 - 6, 6, 8, WT); GT.circ(g, cx, top - 40 - w / 2 - 8, 3, PK); R(g, cx, top - 40 - w / 2 - 16, 1, 6, '#c8a040'); R(g, cx - 2, top - 40 - w / 2 - 13, 5, 1, '#c8a040');
+  }
+  function resort(g, x0, base) {
+    const w = 420;
+    // main block, 3 floors over an arcaded loggia
+    stucco(g, x0, base - 156, w, 156, 11);
+    for (let f = 0; f < 2; f++) {
+      const fy = base - 150 + f * 48;
+      for (let x = x0 + 12; x < x0 + w - 14; x += 24) archWin(g, x, fy + 10, 12, 26, WT, GL);
+      cornice(g, x0, fy + 44, w);
+    }
+    // ground-floor loggia of big arches with white columns
+    R(g, x0, base - 52, w, 52, PKD);
+    for (let x = x0 + 4; x < x0 + w - 24; x += 30) { archWin(g, x, base - 46, 24, 46, WT, '#5a2a3a'); R(g, x + 4, base - 30, 16, 30, '#7a3a4a'); }
+    for (let x = x0; x <= x0 + w; x += 30) R(g, x, base - 50, 4, 50, WT);
+    // roofline: white parapet + balustrade (no red roofs)
+    cornice(g, x0, base - 160, w); balustrade(g, x0, base - 160, w);
+    // stepped center pavilion with the tallest tower
+    stucco(g, x0 + 160, base - 190, 100, 34, 21); cornice(g, x0 + 160, base - 194, 100); balustrade(g, x0 + 160, base - 194, 100);
+    archWin(g, x0 + 176, base - 186, 14, 28, WT, GL); archWin(g, x0 + 230, base - 186, 14, 28, WT, GL);
+    bellTower(g, x0 + 210, base - 250, base - 160, 44, 31);
+    // twin bell towers
+    bellTower(g, x0 + 70, base - 214, base - 156, 36, 41);
+    bellTower(g, x0 + 350, base - 214, base - 156, 36, 51);
+    // rounded corner pavilion at the beach end
+    stucco(g, x0 + w - 12, base - 176, 46, 176, 61); R(g, x0 + w + 30, base - 176, 4, 176, PKD);
+    for (let f = 0; f < 3; f++) archWin(g, x0 + w + 4, base - 166 + f * 48, 14, 28, WT, GL);
+    cornice(g, x0 + w - 12, base - 180, 46); balustrade(g, x0 + w - 12, base - 180, 46);
+    GT.circ(g, x0 + w + 11, base - 190, 14, WT); GT.circ(g, x0 + w + 11, base - 192, 11, PKL); R(g, x0 + w + 10, base - 212, 2, 10, '#c8a040');
+    // sign + awnings
+    R(g, x0 + 150, base - 70, 120, 15, WT); R(g, x0 + 152, base - 68, 116, 11, PK);
+    GT.text(g, 'SUNSET KEY RESORT', x0 + 210, base - 66, '#ffffff', 1, 1);
+    // palms in front of the loggia
+    for (const px of [x0 + 20, x0 + 130, x0 + 290, x0 + 400]) palm(g, px, base, 70 + (px % 20), 6);
+  }
+  GT.pinkPalaceSmall = function (g, x, y) { // tiny far-away version (title / ending horizon)
+    R(g, x, y - 16, 56, 16, '#e87a94'); R(g, x, y - 17, 56, 1, '#fbe0e6');
+    for (let xx = x + 3; xx < x + 54; xx += 5) R(g, xx, y - 12, 2, 4, (xx % 3) ? '#ffe890' : '#7a3050');
+    for (const [tx, h] of [[x + 8, 26], [x + 26, 32], [x + 46, 26]]) { R(g, tx - 3, y - h, 7, h - 16, '#e87a94'); R(g, tx - 4, y - h - 3, 9, 3, '#fbe0e6'); R(g, tx - 2, y - h - 5, 5, 2, '#fbe0e6'); R(g, tx, y - h - 8, 1, 3, '#e8c060'); }
+  };
   function grill(g, x0, base) {
     // thatched beach bar & grill
     const w = 230;
@@ -624,16 +658,17 @@
     resort(g, 40, base);
     // cabanas, lifeguard tower and umbrellas between the hotel and the grill
     for (const cx of [600, 700, 800]) {
-      R(g, cx, base - 70, 70, 70, '#f6f2e8'); for (let yy = base - 68; yy < base; yy += 3) R(g, cx, yy, 70, 1, '#dcd4c4');
-      R(g, cx + 24, base - 46, 22, 46, '#38587a'); R(g, cx + 6, base - 56, 12, 14, '#38587a'); R(g, cx + 52, base - 56, 12, 14, '#38587a');
-      roofGable(g, cx + 35, base - 66, 44, 34, '#c83a2a', '#a02a1e'); R(g, cx - 9, base - 68, 88, 3, '#902018');
+      stucco(g, cx, base - 70, 70, 70, cx);
+      archWin(g, cx + 24, base - 46, 22, 46, WT, '#5a2a3a'); archWin(g, cx + 6, base - 60, 12, 20, WT, GL); archWin(g, cx + 52, base - 60, 12, 20, WT, GL);
+      cornice(g, cx, base - 74, 70); balustrade(g, cx, base - 74, 70); GT.circ(g, cx + 35, base - 84, 9, WT); GT.circ(g, cx + 35, base - 86, 7, PKL);
     }
-    // lifeguard tower
+    g.translate(30, 0); // lifeguard tower (shifted clear of the hotel's corner pavilion)
     for (const lx of [500, 548]) R(g, lx, base - 90, 4, 90, '#e8e0d0');
     for (let yy = base - 80; yy < base; yy += 18) R(g, 500, yy, 52, 2, '#c8c0b0');
     R(g, 492, base - 120, 68, 30, '#e8402e'); R(g, 492, base - 120, 68, 3, '#ff7050'); R(g, 498, base - 112, 56, 14, '#f6f2e8');
     GT.text(g, 'LIFEGUARD', 526, base - 108, '#c02020', 1, 1);
-    for (let i = 0; i < 14; i++) R(g, 526 - (8 + i * 3), base - 134 + i, 16 + i * 6, 1, i % 2 ? '#f6f2e8' : '#c83a2a');
+    for (let i = 0; i < 14; i++) R(g, 526 - (8 + i * 3), base - 134 + i, 16 + i * 6, 1, i % 2 ? '#f6f2e8' : '#e8402e');
+    g.translate(-30, 0);
     grill(g, 940, base);
     // dock section: water fills, then pier
     R(g, 1300, base - 40, W - 1300 + BG_PAD, 420, '#2a90cc');
