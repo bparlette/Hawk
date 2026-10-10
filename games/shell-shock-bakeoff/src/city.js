@@ -129,6 +129,7 @@
   function buildWorld(scene) {
     const G = WORLD.groups;
     for (const k of ["street", "roof", "sewer", "inside", "subway"]) { G[k] = new THREE.Group(); scene.add(G[k]); }
+    if (SKY) skyInit();
     PART.street = new Particles(420, false, G.street); PART.glow = new Particles(200, true, G.street);
     PART.fx = new Particles(300, false, G.street); PART.fxg = new Particles(300, true, G.street);
     const M = {
@@ -190,6 +191,12 @@
           else B.wall(fm[f], ax, az, bx, bz, 0, h, uo, 0, uo + len[f] / (h * asp), 1, opts.col || [1, 1, 1]);
         } else B.wall(sideM, ax, az, bx, bz, 0, h, 0, 0, len[f] / (h * T.B[1]), 1, [0.48, 0.46, 0.54]);
       }
+      if (SKY) { // D: the painted storefront floors stay, the building keeps going up (shared merged meshes, see skyline.js)
+        const tints = [[1, 1, 1], [0.84, 0.86, 1.0], [1.06, 0.94, 0.82], [0.9, 0.76, 0.74], [0.95, 0.9, 0.95]];
+        const Ht = skyUpper(x0, z0, x1, z1, h, opts.up || 0, faces, tints[(srnd() * tints.length) | 0]);
+        B.build(grp); G.street.add(grp);
+        const b = { x0, z0, x1, z1, h: Ht, grp, mats, fade: 1 }; WORLD.blds.push(b); return b;
+      }
       B.floor(roofM, x0, z0, x1, z1, h, 5, [0.72, 0.72, 0.78]);
       // parapet: a thin cornice rim (reads well from the raised camera)
       const ph = 0.7, t = 0.32, y0 = h, y1 = h + ph;
@@ -209,15 +216,16 @@
     ];
     const box = (sx, sz, a0, a1, b0, b1) => { const xs = [sx * a0, sx * a1].sort((p, q) => p - q), zs = [sz * b0, sz * b1].sort((p, q) => p - q); return [xs[0], zs[0], xs[1], zs[1]]; };
     const ewF = (sz) => (sz < 0 ? "S" : "N"), nsF = (sx) => (sx < 0 ? "E" : "W");
+    const UP = SKY ? [[24, 15, 18, 36], [27, 12, 21, 42], [18, 21, 12, 33], [21, 18, 15, 39]] : [[0, 0, 0, 0], [0, 0, 0, 0], [0, 0, 0, 0], [0, 0, 0, 0]]; // D: storeys added on top (metres)
     CB.forEach(([sx, sz, cf, ch, ef, eh, nf, nh], i) => {
-      let r = box(sx, sz, S, 27, S, 27); bld(r[0], r[1], r[2], r[3], ch, cf, { uo: { S: 0.1 * i, N: 0.3 + 0.1 * i, E: 0.2, W: 0.45 } });
-      r = box(sx, sz, 27, 70, S, 30); bld(r[0], r[1], r[2], r[3], eh, { [ewF(sz)]: ef }, { uo: { S: 0.55 - 0.1 * i, N: 0.15 * i } });
-      r = box(sx, sz, S, 27, 27, 70); bld(r[0], r[1], r[2], r[3], nh, { [nsF(sx)]: nf }, { uo: { E: 0.35 * i, W: 0.6 - 0.1 * i } });
-      r = box(sx, sz, 27, 70, 30, 70); bld(r[0], r[1], r[2], r[3], Math.max(eh, nh) + 2, {});
+      let r = box(sx, sz, S, 27, S, 27); bld(r[0], r[1], r[2], r[3], ch, cf, { uo: { S: 0.1 * i, N: 0.3 + 0.1 * i, E: 0.2, W: 0.45 }, up: UP[i][0] });
+      r = box(sx, sz, 27, 70, S, 30); bld(r[0], r[1], r[2], r[3], eh, { [ewF(sz)]: ef }, { uo: { S: 0.55 - 0.1 * i, N: 0.15 * i }, up: UP[i][1] });
+      r = box(sx, sz, S, 27, 27, 70); bld(r[0], r[1], r[2], r[3], nh, { [nsF(sx)]: nf }, { uo: { E: 0.35 * i, W: 0.6 - 0.1 * i }, up: UP[i][2] });
+      r = box(sx, sz, 27, 70, 30, 70); bld(r[0], r[1], r[2], r[3], Math.max(eh, nh) + 2, {}, { up: UP[i][3] });
     });
     // street-end buildings close the four arms (two painted murals, two tenements)
-    bld(L, -S, 70, S, 14, { W: "P" }); bld(-70, -S, -L, S, 13, { E: "G" });
-    bld(-S, -70, S, -L, 15, { S: "A" }, { uo: { S: 0.4 } }); bld(-S, L, S, 70, 14, { N: "B" }, { uo: { N: 0.2 } });
+    bld(L, -S, 70, S, 14, { W: "P" }, { up: SKY ? 6 : 0 }); bld(-70, -S, -L, S, 13, { E: "G" }, { up: SKY ? 9 : 0 });
+    bld(-S, -70, S, -L, 15, { S: "A" }, { uo: { S: 0.4 }, up: SKY ? 9 : 0 }); bld(-S, L, S, 70, 14, { N: "B" }, { uo: { N: 0.2 }, up: SKY ? 6 : 0 });
     // ---- awnings over shop doors (striped canvas, both sides) ----
     const awnT = (c1, c2) => canvasTex(128, 64, (g, w, h) => { for (let i = 0; i < 8; i++) { g.fillStyle = i % 2 ? c1 : c2; g.fillRect(i * 16, 0, 16, h); } g.fillStyle = "rgba(0,0,0,0.25)"; g.fillRect(0, h - 10, w, 10); for (let i = 0; i < 8; i++) { g.fillStyle = i % 2 ? c1 : c2; g.beginPath(); g.arc(i * 16 + 8, h - 10, 8, 0, Math.PI); g.fill(); } });
     const AW = new Builder(), awM = [lam(awnT("#c8302a", "#f0e6d0"), { side: THREE.DoubleSide }), lam(awnT("#1e6a3a", "#e8e0c8"), { side: THREE.DoubleSide }), lam(awnT("#2a3a9a", "#e8e0c8"), { side: THREE.DoubleSide })];
@@ -245,6 +253,7 @@
       const w = vert ? 0.9 : 3.4, h = vert ? 3.6 : 1.06;
       const m = new THREE.Mesh(new THREE.PlaneGeometry(w, h), new THREE.MeshBasicMaterial({ map: neonTex(t, c1, c2, vert), side: THREE.DoubleSide, transparent: true }));
       m.position.set(x, y, z); m.rotation.y = ry; G.street.add(m);
+      if (SKY) { m.material.side = THREE.FrontSide; const bk = m.clone(); bk.rotation.y = ry + Math.PI; G.street.add(bk); } // D: two-sided signs read right way round from both sides
       const onZ = Math.abs(z) >= S - 0.6; WORLD.lights.push({ reg: "street", x: onZ ? x : x - Math.sign(x) * 1.6, y: 3.2, z: onZ ? z - Math.sign(z) * 1.6 : z, c: new THREE.Color(c1).getHex(), i: 14, d: 10 });
     }
     // ---- graffiti tags low on the walls (original) ----
@@ -262,10 +271,13 @@
       { src: "tex/taxi_side.webp", len: 5.0, w: 1.9, at: [[24, -5.7, 0], [-6.0 + 0.3, 27, -Math.PI / 2], [-30, 5.7, Math.PI]] },
       { src: "tex/van_side.webp", len: 5.6, w: 2.1, at: [[5.7, -30, Math.PI / 2]] },
     ]);
-    // ---- sky: skyline panorama on a cylinder ----
+    // ---- sky: skyline panorama on a cylinder (D: a night-sky dome, the panorama faded into it, and a backdrop of distant towers) ----
+    if (SKY) { SKYW.B.build(G.street); skyBackdrop(); skySky(G.street); }
+    else {
     const skyT = tex("tex/skyline.jpg"); skyT.wrapS = THREE.RepeatWrapping; skyT.repeat.set(3, 1);
     const sky = new THREE.Mesh(new THREE.CylinderGeometry(300, 300, 220, 32, 1, true), new THREE.MeshBasicMaterial({ map: skyT, side: THREE.BackSide, fog: false, depthWrite: false }));
     sky.position.set(0, 70, 0); sky.renderOrder = -10; G.street.add(sky);
+    }
     // ---- manholes with steam ----
     const coverT = canvasTex(128, 128, (g) => {
       g.fillStyle = "#1a1a1e"; g.beginPath(); g.arc(64, 64, 63, 0, 7); g.fill();
@@ -351,7 +363,7 @@
     }, true);
     const barrel = [], cones = [], legs = [], acs = [];
     const top = (x, z) => { for (const b of WORLD.blds) if (x > b.x0 && x < b.x1 && z > b.z0 && z < b.z1) return b; return null; };
-    for (const [x, z] of [[20, -20], [-20, -36], [36, 20], [-21, 19], [32, -36]]) {
+    for (const [x, z] of SKY ? [[33, -15], [-33, 15], [15, 33], [-15, -33], [52, -14.5], [-52, 14.5], [14.5, 52], [-14.5, -52], [20, -20], [-21, 19], [40, -40], [-40, 40], [56, 56], [-56, -56], [60, 6], [-60, -6], [6, -60], [-6, 60]] : [[20, -20], [-20, -36], [36, 20], [-21, 19], [32, -36]]) {
       const b = top(x, z); if (!b) continue; const y = b.h - 0.7;
       const br = new THREE.CylinderGeometry(1.7, 1.8, 3.4, 16, 1, true); br.translate(x, y + 3.6 + 1.7, z); barrel.push(br);
       const c = new THREE.ConeGeometry(1.95, 1.3, 16); c.translate(x, y + 3.6 + 3.4 + 0.65, z); cones.push(c);
@@ -369,6 +381,7 @@
       G.street.add(new THREE.Mesh(mergeGeos(legs), new THREE.MeshLambertMaterial({ color: 0x1e2026 })));
     }
     if (acs.length) G.street.add(new THREE.Mesh(mergeGeos(acs), acM));
+    if (SKY) skyRoofs(top);
   }
   // ---- vehicles: extruded side silhouettes with the painted side art (from Shell Shock 3D) ----
   function buildCars(group, defs) {
@@ -420,6 +433,7 @@
   function stepDecor(dt) {
     for (const f of WORLD.anim) f();
     for (const s of WORLD.steam) for (let q = 0; q < 2; q++) if (Math.random() < 0.35) PART.street.emit(s.x + rnd(-0.3, 0.3), 0.1, s.z + rnd(-0.3, 0.3), rnd(-0.15, 0.25), rnd(0.8, 1.4), rnd(-0.1, 0.1), rnd(2.0, 3.2), rnd(0.25, 0.45), 0.45, 0.8, 0.82, 0.9, 0.13);
+    if (SKY) skySteam(dt);
     PART.street.step(dt); PART.glow.step(dt); PART.fx.step(dt); PART.fxg.step(dt);
     for (const b of WORLD.blds) {
       const want = b.want === undefined ? 1 : b.want; b.fade += (want - b.fade) * Math.min(1, dt * 8);

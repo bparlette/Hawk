@@ -6,7 +6,8 @@
 import * as THREE from "./three.module.min.js";
 (() => {
   "use strict";
-  const MODE = "__MODE__", MODE_NAME = { free: "A: FREE CITY", paper: "B: PAPER CITY", gta: "C: GTA CITY" }[MODE];
+  const MODE = "__MODE__", MODE_NAME = { free: "A: FREE CITY", paper: "B: PAPER CITY", gta: "C: GTA CITY", skyline: "D: SKYLINE CITY" }[MODE];
+  const SKY = MODE === "skyline", PAPERISH = MODE === "paper" || SKY; // D = B (paper cutouts, swinging camera) + a low, up-tilted camera and tall buildings
   const W = 384, H = 224;
   const RES = 2; // HUD canvas backing store = 2x the 384x224 world, so the pixel font and painted portraits stay crisp
   const Q = location.search;

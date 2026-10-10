@@ -145,7 +145,7 @@
         const v = view8(e, P); fc = v.face;
         if (!v.side) { s = v.s; if (v.walking) { const wt = (e.walkT || 0) * 0.33; bob = Math.abs(Math.sin(wt)) * 0.07; roll = Math.sin(wt) * 0.035; } }
       }
-      if (actor && MODE === "paper") { // paper flip: a facing change squashes the cutout through zero width, then it opens the other way
+      if (actor && PAPERISH) { // paper flip: a facing change squashes the cutout through zero width, then it opens the other way
         if (e._sf === undefined) e._sf = fc;
         if (fc !== e._sf && !(e._flT > 0)) { e._from = e._sf; e._sf = fc; e._flT = 1; }
         if (e._flT > 0) { e._flT = Math.max(0, e._flT - ACT.dt / 0.18); sx = Math.max(0.04, Math.abs(1 - 2 * e._flT)); if (e._flT > 0.5) fc = e._from; else fc = e._sf; }

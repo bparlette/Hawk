@@ -453,8 +453,8 @@
       const dx = e.clientX - P.x, dy = e.clientY - P.y; P.x = e.clientX; P.y = e.clientY;
       const sw = Math.max(200, scr.clientWidth);
       if (MODE === "gta" && (e.buttons || P.touch)) { LOOK.dx += dx * 4.2 / sw; LOOK.dy += dy * 2.4 / sw; LOOK.t = 0; }
-      if (MODE === "paper" && LOOK.ptr.size >= 2) { LOOK.nudge -= dx * 1.6 / sw / LOOK.ptr.size; LOOK.nudgeT = 0; }
-      if (MODE === "paper" && LOOK.ptr.size === 1 && !P.touch && e.buttons) { LOOK.nudge -= dx * 1.6 / sw; LOOK.nudgeT = 0; }
+      if (PAPERISH && LOOK.ptr.size >= 2) { LOOK.nudge -= dx * 1.6 / sw / LOOK.ptr.size; LOOK.nudgeT = 0; }
+      if (PAPERISH && LOOK.ptr.size === 1 && !P.touch && e.buttons) { LOOK.nudge -= dx * 1.6 / sw; LOOK.nudgeT = 0; }
     });
     const up = (e) => LOOK.ptr.delete(e.pointerId);
     addEventListener("pointerup", up); addEventListener("pointercancel", up);
@@ -496,7 +496,9 @@
     STATE.camX = clamp(p.x - W / 2, -W, LEVEL_W);
   }
   const _t = new THREE.Vector3(), _want = new THREE.Vector3(), _look = new THREE.Vector3();
-  const CAMV = { free: { pitch: 40, dist: 19, fov: 34 }, paper: { dist: 6.6, h: 1.55, fov: 50 }, gta: { dist: 4.4, pitch: 14, fov: 60, sh: 0.6 } };
+  // D (skyline): explore = hip-high, pitched up, wide; fight = a little higher, tilted slightly down, closer, narrower
+  const CAMV = { free: { pitch: 40, dist: 19, fov: 34 }, paper: { dist: 6.6, h: 1.55, fov: 50 },
+    skyline: { dist: 6.2, h: 0.85, pitch: 13, fov: 72, shift: 0.1, yoff: 55, fdist: 5.6, fh: 1.9, fpitch: -5, ffov: 60, fshift: 0, fyoff: 15 }, gta: { dist: 4.4, pitch: 14, fov: 60, sh: 0.6 } };
   function fadeBetween(cx, cy, cz, tx, ty, tz, a) { // free city: fade any building in the line of sight (and the one the camera is inside)
     for (const b of WORLD.blds) b.want = 1;
     for (const b of WORLD.blds) {
@@ -513,6 +515,16 @@
     }
     return best;
   }
+  // D: is a fight on? any awake foe near the hero, a boss intro, or a hold so the view doesn't bob between blows
+  function skyFight(snap, dt) {
+    const p = STATE.player;
+    const on = STATE.intro > 0 || STATE.bossT > 0 || !!p.grabbedBy || STATE.enemies.some((e) => (!e.post || (!e.idle && !e.home)) && e.state !== "dying" && mDist(e.x, e.y, p.x, p.y) < 12);
+    if (on) CAM.fhold = 1.4; else CAM.fhold = Math.max(0, (CAM.fhold || 0) - dt);
+    const want = CAM.fhold > 0 ? 1 : 0;
+    if (snap || CAM.fk === undefined) CAM.fk = want;
+    CAM.fk += (want - CAM.fk) * (1 - Math.exp(-dt * (want ? 2.6 : 1.1))); // tilt down quickly, drift back up slowly
+    return CAM.fk;
+  }
   function updateCamera(dt) {
     const p = STATE.player, z = STATE.zone;
     if (!p || !z || STATE.scene === "title" || STATE.scene === "boot" || STATE.scene === "select") { for (const b of WORLD.blds) b.want = 1; return titleCamera(dt); }
@@ -523,7 +535,7 @@
     const T = CAM.tgt; let fov = 50;
     // look input (keys / pad / buttons)
     const pl = padLook(); if (pl && MODE === "gta") { LOOK.dx += pl.x * dt * 2.6; LOOK.dy += pl.y * dt * 1.6; LOOK.t = 0; }
-    const kn = (anyHeld("q") ? -1 : 0) + (anyHeld("e") ? 1 : 0) + LOOK.btn + (pl && MODE === "paper" ? pl.x : 0);
+    const kn = (anyHeld("q") ? -1 : 0) + (anyHeld("e") ? 1 : 0) + LOOK.btn + (pl && PAPERISH ? pl.x : 0);
     if (MODE === "free") {
       const C = CAMV.free;
       const fy = CAM.fyaw || 0; if (snap) CAM.yawS = fy; CAM.yawS += (fy - CAM.yawS) * (1 - Math.exp(-dt * 5));
@@ -532,22 +544,43 @@
       _look.set(T.x + f[0] * 4, T.y + 0.9, T.z + f[1] * 4); _want.x += f[0] * 4; _want.z += f[1] * 4;
       CAM.pos.copy(_want); CAM.look.copy(_look); fov = C.fov;
       fadeBetween(CAM.pos.x, CAM.pos.y, CAM.pos.z, p.gx, p.gy + 0.4, p.gz, 0.16);
-    } else if (MODE === "paper") {
-      const C = CAMV.paper;
+    } else if (PAPERISH) {
+      const C = CAMV[MODE];
       if (snap) { CAM.yawS = 0; CAM.pyaw = 0; }
       const cf = [Math.sin(CAM.pyaw), -Math.cos(CAM.pyaw)];
       const fd = frontageDir(T.x, T.z, cf[0], cf[1]); if (fd) CAM.pyaw = Math.atan2(fd[0], -fd[1]);
       if (kn) { LOOK.nudge += kn * dt * 1.5; LOOK.nudgeT = 0; }
       LOOK.nudge = clamp(LOOK.nudge, -1.3, 1.3); if ((LOOK.nudgeT += dt) > 1.6) LOOK.nudge *= Math.exp(-dt * 0.9);
-      const want = CAM.pyaw + LOOK.nudge;
+      let want = CAM.pyaw + LOOK.nudge;
+      if (SKY) { // D: look down the block at a 3/4 angle (the facade recedes, the far roofline and sky open up); swing toward the facade in a fight
+        const fk = skyFight(snap, dt), off = (C.yoff + (C.fyoff - C.yoff) * fk * fk * (3 - 2 * fk)) * DEG;
+        if (snap || CAM.side === undefined || Math.abs(wrapA(CAM.pyaw - (CAM.sideRef || 0))) > 0.6) { // new facade: keep the side that turns the camera least
+          const a = wrapA(CAM.pyaw + off - (CAM.yawS || 0)), b = wrapA(CAM.pyaw - off - (CAM.yawS || 0));
+          CAM.side = snap || CAM.side === undefined ? 1 : Math.abs(a) <= Math.abs(b) ? 1 : -1; CAM.sideRef = CAM.pyaw;
+        }
+        want = CAM.pyaw + CAM.side * off + LOOK.nudge;
+      }
       if (snap) CAM.yawS = want; CAM.yawS += wrapA(want - CAM.yawS) * (1 - Math.exp(-dt * (kn ? 6 : 1.7))); CAM.yawS = wrapA(CAM.yawS);
       const f = [Math.sin(CAM.yawS), -Math.cos(CAM.yawS)];
+      if (SKY) { // D: a low camera at the hero's hip, tilted up at the towers; a fight eases it down and in, then it drifts back up
+        const fk = CAM.fk, ease = fk * fk * (3 - 2 * fk), mix = (a, b) => a + (b - a) * ease;
+        const dist = mix(C.dist, C.fdist), hgt = mix(C.h, C.fh), pc = mix(C.pitch, C.fpitch) * DEG; fov = mix(C.fov, C.ffov);
+        const pv = { x: T.x, y: T.y + hgt, z: T.z };
+        _want.set(T.x - f[0] * dist, T.y + hgt, T.z - f[1] * dist);
+        const hit = segHit(pv.x, pv.y, pv.z, _want.x, _want.y, _want.z, 0.35);
+        if (hit < 1) { const k = Math.max(0.3, hit - 0.06); _want.set(pv.x + (_want.x - pv.x) * k, pv.y, pv.z + (_want.z - pv.z) * k); }
+        CAM.pos.lerp(_want, snap ? 1 : 1 - Math.exp(-dt * 7));
+        // aim: straight down the yaw (the hero stays centred left/right), pitched; the lens shift drops the hero into the lower part of the frame
+        _look.set(CAM.pos.x + f[0] * 10 * Math.cos(pc), CAM.pos.y + 10 * Math.sin(pc), CAM.pos.z + f[1] * 10 * Math.cos(pc)); CAM.look.copy(_look);
+        CAM.shift = mix(C.shift, C.fshift);
+      } else {
       const pv = { x: T.x, y: T.y + 1.05, z: T.z };
       _want.set(T.x - f[0] * C.dist, T.y + C.h + 1.05, T.z - f[1] * C.dist);
       const hit = segHit(pv.x, pv.y, pv.z, _want.x, _want.y, _want.z, 0.35); // never through a wall: slide in along the sight line
       if (hit < 1) { const k = Math.max(0.2, hit - 0.06); _want.set(pv.x + (_want.x - pv.x) * k, pv.y + (_want.y - pv.y) * k, pv.z + (_want.z - pv.z) * k); }
       CAM.pos.lerp(_want, snap ? 1 : 1 - Math.exp(-dt * 7));
       _look.set(T.x + f[0] * 0.8, T.y + 1.0, T.z + f[1] * 0.8); CAM.look.copy(_look); fov = C.fov;
+      }
       for (const b of WORLD.blds) b.want = 1;
     } else { // gta
       const C = CAMV.gta;
@@ -585,6 +618,7 @@
     if (STATE.shake > 0) { const s = Math.min(0.25, STATE.shake * 0.012); camera.position.x += rnd(-s, s); camera.position.y += rnd(-s, s); }
     camera.lookAt(CAM.look);
     if (Math.abs(camera.fov - CAM.fov) > 0.05) { camera.fov = CAM.fov; camera.updateProjectionMatrix(); }
+    if (SKY) { const sh = Math.round((CAM.shift || 0) * 1000) / 1000; if (sh !== CAM.shiftOn) { CAM.shiftOn = sh; if (sh) camera.setViewOffset(1000, 1000, 0, -sh * 1000, 1000, 1000); else camera.clearViewOffset(); } }
     camBasis(z);
   }
   function camBasis(z) {
@@ -597,8 +631,8 @@
   let titleT = 0;
   function titleCamera(dt) { // slow orbit over the crossing
     titleT += dt; const a = titleT * 0.12;
-    camera.position.set(Math.sin(a) * 22, 9 + Math.sin(titleT * 0.3) * 1.2, Math.cos(a) * 22); camera.lookAt(0, 3.5, 0);
-    if (camera.fov !== 55) { camera.fov = 55; camera.updateProjectionMatrix(); }
+    if (SKY) { camera.position.set(Math.sin(a) * 9, 1.6, Math.cos(a) * 9); camera.lookAt(-Math.sin(a) * 10, 9, -Math.cos(a) * 10); } else { camera.position.set(Math.sin(a) * 22, 9 + Math.sin(titleT * 0.3) * 1.2, Math.cos(a) * 22); camera.lookAt(0, 3.5, 0); }
+    if (camera.fov !== (SKY ? 72 : 55)) { camera.fov = SKY ? 72 : 55; camera.updateProjectionMatrix(); }
     camBasis(zoneById("x"));
     REGION.cur = "street";
   }
@@ -618,7 +652,7 @@
     });
     moon.intensity = under ? 0 : STATE.player && STATE.player.layer === "roof" ? 1.3 : 0.7;
     const H = HEMI[reg] || HEMI.street; hemi.color.setHex(H[0]); hemi.groundColor.setHex(H[1]); hemi.intensity = H[2];
-    const F = FOG[under ? reg : "street"]; scene.fog.color.setHex(F[0]); scene.fog.density = F[1];
+    const F = SKY && !under ? [0x1c1630, 0.0052] : FOG[under ? reg : "street"]; scene.fog.color.setHex(F[0]); scene.fog.density = F[1];
     renderer.setClearColor(F[0], 1);
     CAM.amb = reg === "sewer" ? [0.55, 0.72, 0.55] : reg === "subway" ? [0.66, 0.7, 0.68] : reg === "inside" ? [0.68, 0.72, 0.64] : STATE.player && STATE.player.layer === "roof" ? [0.62, 0.64, 0.82] : [0.6, 0.6, 0.74];
     const out = !under; WORLD.groups.subway.visible = reg === "subway"; WORLD.groups.street.visible = out; WORLD.groups.roof.visible = out; WORLD.groups.sewer.visible = reg === "sewer"; WORLD.groups.inside.visible = reg === "inside";

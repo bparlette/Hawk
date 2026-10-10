@@ -32,14 +32,15 @@ for a, b in PATCH:
     if a not in reused: sys.exit('patch miss: ' + a[:60])
     reused = reused.replace(a, b)
 
-# ---- bake-off: three sites (free / paper / gta) from one source, MODE baked into each game.js ----
+# ---- bake-off: four sites (free / paper / gta / skyline) from one source, MODE baked into each game.js ----
 import os, shutil
 BASE = '/workspace/work/ss3d-bakeoff'
-parts = [open(f'{BASE}/src/{n}.js').read() for n in ['head', 'city', 'actors', 'game', 'hud']]
+parts = [open(f'{BASE}/src/{n}.js').read() for n in ['head', 'city', 'skyline', 'actors', 'game', 'hud']]
 js0 = parts[0] + '\n' + reused + '\n' + '\n'.join(parts[1:]) + '\n  function stageMove(p) { move3D(p); }\n  function drawTurtle() {}\n  function tintSheet() { return null; }\n  const silCtx = null, imgOk = artOk;\n})();\n'
 fs = '\n'.join(src[6025:6081])
 assert fs.strip().startswith('// ---------- Full-screen toggle'), fs[:80]
-SITES = {'free': ('A', 'FREE CITY', 'shellshock-free-city'), 'paper': ('B', 'PAPER CITY', 'shellshock-paper-city'), 'gta': ('C', 'GTA CITY', 'shellshock-gta-city')}
+EXTRA = [('E GTA 32', 'GTA City 32-bit', 'shellshock-gta32-city'), ('F FREE 16', 'Free City 16-bit', 'shellshock-free16-city')]
+SITES = {'free': ('A', 'FREE CITY', 'shellshock-free-city'), 'paper': ('B', 'PAPER CITY', 'shellshock-paper-city'), 'gta': ('C', 'GTA CITY', 'shellshock-gta-city'), 'skyline': ('D', 'SKYLINE CITY', 'shellshock-skyline-city')}
 ASSETS = ['three.module.min.js', 'atlas_lenny.webp', 'atlas_rafe.webp', 'atlas_miko.webp', 'atlas_donny.webp', 'atlas_ninja.webp', 'shared_sprites.webp',
           'sp_lenny.webp', 'sp_rafe.webp', 'sp_miko.webp', 'sp_donny.webp', 'hud_portraits.webp', 'cabinet_special.webp', 'stick.webp', 'title_logo.webp', 'title_bg.jpg',
           'icon180.png', 'icon192.png', 'icon512.png', 'v8_lenny.webp', 'v8_rafe.webp', 'v8_miko.webp', 'v8_donny.webp', 'v8_thug.webp', 'levels/enemies_street.webp',
@@ -49,7 +50,7 @@ CSS = """  #screen canvas#gl { z-index: 0; image-rendering: auto; }
   #screen canvas#game { z-index: 1; background: transparent; }
   #screen canvas#bloom { display: none !important; }
   html, body { max-width: 100vw; overflow-x: hidden; }
-  #proto { position: fixed; z-index: 60; left: calc(env(safe-area-inset-left, 0px) + 4px); top: calc(env(safe-area-inset-top, 0px) + 4px); display: flex; flex-direction: column; gap: 3px; align-items: stretch; width: 88px; box-sizing: border-box;
+  #proto { position: fixed; z-index: 60; left: calc(env(safe-area-inset-left, 0px) + 4px); top: calc(env(safe-area-inset-top, 0px) + 4px); display: flex; flex-direction: column; gap: 3px; align-items: stretch; width: 104px; box-sizing: border-box;
     padding: 4px; border-radius: 8px; background: rgba(8,8,14,.78); border: 1px solid rgba(255,210,60,.55); font: 700 10px/1 system-ui, -apple-system, sans-serif; color: #ffd23c; white-space: nowrap; letter-spacing: .5px; }
   #proto b { padding: 1px 2px 2px; text-align: center; font-size: 9px; }
   #proto a { color: #c8ccd6; text-decoration: none; padding: 3px 4px; border-radius: 6px; text-align: center; border: 1px solid rgba(255,255,255,.22); touch-action: manipulation; }
@@ -70,6 +71,7 @@ for mode, (letter, name, sub) in SITES.items():
     top = top.replace('<canvas id="game" width="384" height="224"></canvas>', '<canvas id="gl" width="384" height="224"></canvas><canvas id="game" width="384" height="224"></canvas>' + btns)
     top = top.replace('<a id="trailerbtn" href="https://shellshock16bit-trailer.surge.sh/" aria-label="Watch the trailer">&#9654; WATCH TRAILER</a>\n', '')
     links = ''.join(f'<a href="https://{v[2]}.surge.sh/"{" class=on" if k == mode else ""}>{v[0]} {v[1].split()[0]}</a>' for k, v in SITES.items())
+    links += ''.join(f'<a href="https://{u}.surge.sh/" title="{t}">{l}</a>' for l, t, u in EXTRA)  # E / F live in their own folders (e_gta32/, f_free16/), linked only
     top = top.replace('<div id="cab">', f'<div id="proto"><b>{letter}: {name}</b>{links}</div>\n<div id="cab">')
     top = top.replace('</style>', CSS, 1)
     assert '<canvas id="gl"' in top and 'id="proto"' in top
@@ -77,4 +79,5 @@ for mode, (letter, name, sub) in SITES.items():
     html = top + '\n' + hidden + '<script type="module" src="game.js"></script>\n<script>\n' + fs + '\n</script>\n</body>\n</html>\n'
     open(out + '/index.html', 'w').write(html)
     open(out + '/manifest.webmanifest', 'w').write('{"name":"Shell Shock ' + name.title() + '","short_name":"SS ' + name.title() + '","start_url":"./","scope":"./","display":"fullscreen","orientation":"any","background_color":"#000000","theme_color":"#000000","icons":[{"src":"icon192.png","sizes":"192x192","type":"image/png"},{"src":"icon512.png","sizes":"512x512","type":"image/png"}]}')
+    open(out + '/CNAME', 'w').write(sub + '.surge.sh')
     print(mode, len(js), len(html))

@@ -16,7 +16,7 @@
     ptext(MODE_NAME + " - CAMERA BAKE-OFF", W / 2, 124, 1, "#ffd27a");
     if (Math.floor(t / 24) % 2 === 0) ptext("PRESS START", W / 2, 150, 2, "#fff");
     ptext("ENTER / TAP / ATTACK", W / 2, 172, 1, "#c8ccd6");
-    ptext(MODE === "free" ? "ARROWS MOVE  J ATTACK  K JUMP  L SPECIAL  R TURN VIEW" : MODE === "paper" ? "ARROWS MOVE  J ATTACK  K JUMP  L SPECIAL  Q/E SWING CAMERA" : "ARROWS MOVE  J ATTACK  K JUMP  L SPECIAL  DRAG / Q/E LOOK", W / 2, 204, 1, "#9aa0b8");
+    ptext(MODE === "free" ? "ARROWS MOVE  J ATTACK  K JUMP  L SPECIAL  R TURN VIEW" : PAPERISH ? "ARROWS MOVE  J ATTACK  K JUMP  L SPECIAL  Q/E SWING CAMERA" : "ARROWS MOVE  J ATTACK  K JUMP  L SPECIAL  DRAG / Q/E LOOK", W / 2, 204, 1, "#9aa0b8");
   }
   function updateTitle3D() {
     if (anyPressed("enter", " ", "j", "k") || tapPoint || BTN_A.hit || BTN_B.hit || BOT) { tapPoint = null; SFX.confirm(); STATE.scene = "select"; selPick = 0; selWipe = 0; if (BOT) botPickT = 20; }
@@ -36,7 +36,7 @@
     ptext("THE CROSSING, 3 A.M.", W / 2, 104, 2, "#fff");
     ptext("FIVE FOOT SOLDIERS HOLD THE INTERSECTION.", W / 2, 130, 1, "#ffd27a");
     ptext("WALK ALL FOUR CORNERS. CLEAN THEM UP.", W / 2, 142, 1, "#ffd27a");
-    ptext(MODE === "free" ? "RAISED 3/4 VIEW - IT NEVER TURNS (R: 90 DEG)" : MODE === "paper" ? "THE CAMERA SWINGS AS YOU ROUND THE CORNERS" : "DRAG TO LOOK - IT RECENTERS BEHIND YOU", W / 2, 162, 1, "#7fd85a");
+    ptext(MODE === "free" ? "RAISED 3/4 VIEW - IT NEVER TURNS (R: 90 DEG)" : SKY ? "LOOK UP - THE CITY TOWERS OVER YOU" : MODE === "paper" ? "THE CAMERA SWINGS AS YOU ROUND THE CORNERS" : "DRAG TO LOOK - IT RECENTERS BEHIND YOU", W / 2, 162, 1, "#7fd85a");
     const wf = 1 - (150 - STATE.cardT) / 20; if (wf > 0) { ctx.globalAlpha = Math.ceil(wf * 8) / 8; rect(0, 0, W, H, "#fff"); }
     ctx.globalAlpha = 1;
   }
