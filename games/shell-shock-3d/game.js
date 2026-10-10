@@ -2243,11 +2243,11 @@ import * as THREE from "./three.module.min.js";
       Z({ id: "lot", layer: "street", reg: "street", rects: [[128.6, -187.4, 171.4, -150]], O: [171.4, -150], u: [0, -1], v: [1, 0], depth: 42.8,
         cam: { a: 22, dist: 8, h: 3.6, fov: 56 }, box: [128.8, -187.6, 171.6, -100, 99], locks: [{ at: 18.7, boss: "ramrod" }] }),
       Z({ id: "sewerB", layer: "sewer", reg: "sewer", rects: [[159.3, -95.4, 164.7, -2.6]], O: [164.7, 2.6], u: [0, -1], v: [1, 0], depth: 5.4,
-        cam: { a: 58, dist: 6.4, h: 1.5, fov: 60 }, box: [159.25, -95.75, 164.75, 2.75, WORLD.SC - 0.3], locks: [{ at: 55, waves: [["sword", "purple", "dasher"]] }] }),
+        cam: { a: 42, dist: 5.2, h: 1.4, fov: 64 }, box: [159.25, -95.75, 164.75, 2.75, WORLD.SC - 0.3], locks: [{ at: 55, waves: [["sword", "purple", "dasher"]] }] }),
       Z({ id: "lair", layer: "sewer", reg: "sewer", rects: [[85.4, 3.4, 98.6, 10.6], [89.3, 2.4, 94.7, 3.6]], O: [98.6, 2.6], u: [-1, 0], v: [0, -1], depth: 8,
         cam: { a: 10, dist: 5, h: 2.8, fov: 70 }, box: [85.6, 3.5, 98.4, 10.7, WORLD.SY + 4.6], lair: true }),
       Z({ id: "sewerA", layer: "sewer", reg: "sewer", rects: [[20.4, -2.75, 164.7, 2.6]], O: [20.4, 2.6], u: [1, 0], v: [0, 1], depth: 5.35,
-        cam: { a: 58, dist: 6.4, h: 1.5, fov: 60 }, box: [20.25, -2.75, 164.75, 2.75, WORLD.SC - 0.3], locks: [{ at: 50, waves: [["purple", "blue", "star"]] }] }),
+        cam: { a: 42, dist: 5.2, h: 1.4, fov: 64 }, box: [20.25, -2.75, 164.75, 2.75, WORLD.SC - 0.3], locks: [{ at: 50, waves: [["purple", "blue", "star"]] }] }),
       Z({ id: "lobby", layer: "inside", reg: "inside", rects: [[131.6, -23.3, 146.4, -11.6]], O: [131.6, -11.6], u: [1, 0], v: [0, 1], depth: 11.7,
         cam: { a: 6, dist: 6, h: 2.0, fov: 72 }, box: [131.7, -23.2, 146.3, -11.45, 3.85] }),
       Z({ id: "roofs", layer: "roof", reg: "street", rects: [[82.2, -34.4, 106.6, -11.6], [106.6, -34.4, 108.6, -11.6], [108.6, -34.4, 126, -11.6], [126, -34.4, 128.4, -11.6], [128.4, -39.4, 149.6, -11.6]],
@@ -2915,11 +2915,24 @@ import * as THREE from "./three.module.min.js";
     if (f < p.fy) { p.z += (p.fy - f) / ZH; } else if (f > p.fy) { p.z = Math.max(0, p.z - (f - p.fy) / ZH); }
     p.fy = f;
   }
+  // tunnels: the camera looks down the tunnel, so a camera-relative stick sent the profile sprites sliding toward / away from the
+  // camera. In corridor zones the stick follows the zone instead: left/right = along the tunnel, up/down = across it (like the street).
+  const corridor = (z) => z && z.reg === "sewer" && !z.lair;
+  function stickToWorld(dx, dy) {
+    const z = STATE.zone;
+    if (corridor(z)) return { x: z.u[0] * dx + z.v[0] * dy, z: z.u[1] * dx + z.v[1] * dy };
+    return { x: CAM.right.x * dx - CAM.fwd.x * dy, z: CAM.right.z * dx - CAM.fwd.z * dy };
+  }
+  function worldToStick(wx, wz) {
+    const z = STATE.zone;
+    if (corridor(z)) return { dx: wx * z.u[0] + wz * z.u[1], dy: wx * z.v[0] + wz * z.v[1] };
+    return { dx: wx * CAM.right.x + wz * CAM.right.z, dy: -(wx * CAM.fwd.x + wz * CAM.fwd.z) };
+  }
   function move3D(p) {
     const v = inputVec(), z = STATE.zone;
     if (!v) { p.walkT = 0; return; }
     const sp = (p.attackT > 0 && p.z === 0 ? 0.028 : p.carry ? 0.05 : STATE.locked ? 0.064 : 0.082) * v.mag;
-    const mx = (CAM.right.x * v.dx - CAM.fwd.x * v.dy) * sp, mz = (CAM.right.z * v.dx - CAM.fwd.z * v.dy) * sp;
+    const w = stickToWorld(v.dx, v.dy), mx = w.x * sp, mz = w.z * sp;
     const du = mx * z.u[0] + mz * z.u[1], dv = mx * z.v[0] + mz * z.v[1];
     p.x += du / PX; p.y += dv / DY; p.walkT++;
     if (Math.abs(du) > sp * 0.2) p.facing = du > 0 ? 1 : -1;
@@ -3369,7 +3382,7 @@ import * as THREE from "./three.module.min.js";
     const press = (k) => { pressed.add(k); };
     const goWorld = (gx, gz, slow, eps) => { // world direction -> camera-relative stick
       const dx = gx - p.gx, dz = gz - p.gz, l = Math.hypot(dx, dz); if (l < (eps || 0.25)) return true;
-      const wx = dx / l, wz = dz / l; let sx = wx * CAM.right.x + wz * CAM.right.z, sy = -(wx * CAM.fwd.x + wz * CAM.fwd.z);
+      const wx = dx / l, wz = dz / l; const st = worldToStick(wx, wz); let sx = st.dx, sy = st.dy;
       const m = Math.hypot(sx, sy) || 1; BOTIN.dx = sx / m * (slow ? 0.6 : 1); BOTIN.dy = sy / m * (slow ? 0.6 : 1); return false;
     };
     if (STATE.locked || STATE.enemies.length) { // fight: line up on the nearest foe's row, close in, swing; special when swarmed
