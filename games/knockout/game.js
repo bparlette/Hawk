@@ -1115,6 +1115,17 @@ function layout() {
 }
 addEventListener('resize', layout);
 buildArena(); layout();
+/*PFILL*/ // portrait fill: the arena's upper decks above the ring (bgC + the live crowd, no ropes), tier on tier, darker as they go up
+const pfTier = mk(W + 16, 58), pfTg = pfTier.getContext('2d');
+window.pfKoTop = function (c, x, y0, w, h) {
+  pfTg.clearRect(0, 0, W + 16, 58); pfTg.drawImage(bgC, 0, 40, W + 16, 58, 0, 0, W + 16, 58);
+  pfTg.save(); pfTg.translate(0, -40); drawCrowd(pfTg, S.time, S.excite || 0); pfTg.restore();
+  let i = 0;
+  for (let yy = y0 + h - 58; yy > y0 - 58; yy -= 58, i++) {
+    c.drawImage(pfTier, 8, 0, W, 58, x, Math.round(yy), w, 58);
+    c.fillStyle = 'rgba(7,6,15,' + Math.min(0.85, 0.18 + i * 0.16) + ')'; c.fillRect(x, Math.round(yy), w, 58);
+  }
+};
 let acc = 0, last = performance.now();
 window.__frameErrors = { n: 0, last: '' };
 function frame(now) {
@@ -1127,3 +1138,4 @@ function frame(now) {
 }
 requestAnimationFrame(frame);
 })();
+

@@ -20,6 +20,14 @@ canvas{display:block;image-rendering:pixelated;image-rendering:crisp-edges;backg
 .b.light{background:#503000;border-color:#f8b800;color:#f8d878}.b.use{background:#500018;border-color:#e40058}
 .s{font:bold 11px monospace;color:#bcbcbc;background:#1c1c1c;border:2px solid #383838;border-radius:6px;height:30px;width:72px;touch-action:none;padding:0}
 .on{filter:brightness(1.8)}
+/*PFILL*/ @media (orientation:portrait){
+ body{background:
+  radial-gradient(ellipse 75% 55% at 50% 50%,rgba(0,0,0,0) 40%,rgba(0,0,0,.88) 100%),
+  linear-gradient(180deg,#0a0608 0,#0a0608 5%,#2a1a12 5.4%,#0a0608 6.2%,rgba(0,0,0,0) 6.6%,rgba(0,0,0,0) 76%,#2a1a12 76.3%,#120b08 77%,#1a0f0a 77%,#1a0f0a 100%),
+  repeating-linear-gradient(180deg,rgba(0,0,0,0) 0 3px,rgba(0,0,0,.18) 3px 4px),
+  repeating-linear-gradient(90deg,#26151e 0 18px,#331d29 18px 20px,#26151e 20px 38px,#180d13 38px 40px),#140b10}
+ canvas#c{box-shadow:0 0 0 3px #4a3418,0 0 0 5px #120a06,0 0 0 6px #6a4c22,0 0 34px 10px #000}
+}
 </style></head>
 <body>
 <canvas id="c" width="256" height="240"></canvas>

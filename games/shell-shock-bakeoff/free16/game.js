@@ -8,7 +8,7 @@ import * as THREE from "./three.module.min.js";
   "use strict";
   const MODE = "free", MODE_NAME = { free: "F: FREE CITY 16-BIT", paper: "B: PAPER CITY", gta: "C: GTA CITY", skyline: "D: SKYLINE CITY" }[MODE];
   const SKY = MODE === "skyline", PAPERISH = MODE === "paper" || SKY; // D = B (paper cutouts, swinging camera) + a low, up-tilted camera and tall buildings
-  const W = 384, H = 224;
+  const W = 384; let H = 224;
   const RES = 2; // HUD canvas backing store = 2x the 384x224 world, so the pixel font and painted portraits stay crisp
   const Q = location.search;
   const BOT = /[?&]bot\b/.test(Q), TURBO = Math.max(1, Math.min(12, +((Q.match(/[?&]turbo=(\d+)/) || [])[1] || 1)));
@@ -16,6 +16,22 @@ import * as THREE from "./three.module.min.js";
   const canvas = document.getElementById("game"); // HUD / menus (2D, transparent) over the WebGL canvas
   const glCanvas = document.getElementById("gl");
   canvas.width = W * RES; canvas.height = H * RES;
+
+  /*PFILL*/ const H0 = 224; // portrait fill: H grows with a tall container (see resize), 224 otherwise
+  function pfOn() { return H > H0; }
+  function pfCam() { // portrait: widen the vertical FOV so the hero + nearby action stay framed on a tall screen
+    if (typeof camera === "undefined" || !camera || camera.__pf) return; camera.__pf = 1;
+    const up = camera.updateProjectionMatrix;
+    camera.updateProjectionMatrix = function () {
+      const f = this.fov, a = this.aspect, A = W / H0;
+      if (this.isPerspectiveCamera && a < A * 0.98) { const k = Math.pow(A / a, 0.7); this.fov = Math.min(118, 2 * Math.atan(Math.tan(f * Math.PI / 360) * k) * 360 / Math.PI); this.__efov = this.fov; up.call(this); this.fov = f; }
+      else { this.__efov = f; up.call(this); }
+    };
+  }
+  function pfBands(oy) { // menus / cards stay 384x224 in the middle of a tall screen: shade the bands around them
+    ctx.save(); ctx.globalAlpha = 1; ctx.fillStyle = STATE.scene === "title" ? "rgba(6,4,12,0.5)" : "rgba(4,3,10,0.9)";
+    ctx.fillRect(0, 0, W, oy); ctx.fillRect(0, oy + H0, W, H - oy - H0); ctx.restore();
+  }
   (function () { // FREEZE FIX from the 16-bit game: negative radii never throw
     const C = window.CanvasRenderingContext2D && CanvasRenderingContext2D.prototype; if (!C || C.__radiusSafe) return; C.__radiusSafe = true;
     const fix = (v) => (v < 0 ? 0 : v), arc = C.arc, ell = C.ellipse;
@@ -373,7 +389,7 @@ import * as THREE from "./three.module.min.js";
       cabEl.style.left = (sa.l + (vw - PW * S) / 2 - PX * S) + "px";
       cabEl.style.top = (sa.t + vh - PH * S - PY * S) + "px";
       const availH = vh - PH * S;
-      let gw = vw, gh = vw * 224 / 384;
+      let gw = vw, gh = portrait ? availH : vw * 224 / 384;
       if (gh > availH) { gh = availH; gw = gh * 384 / 224; }
       scrEl.style.cssText = "position:fixed;z-index:20;left:" + (sa.l + (vw - gw) / 2) + "px;top:" + (sa.t + Math.max(0, (availH - gh) / 2)) + "px;width:" + gw + "px;height:" + gh + "px;border-radius:0";
     } else {
@@ -385,6 +401,7 @@ import * as THREE from "./three.module.min.js";
     }
     const scr = document.getElementById("screen");
     const sw = scr.clientWidth, sh = scr.clientHeight;
+    { const nh = (innerHeight > innerWidth && sw > 0 && sh > 0) ? Math.max(H0, Math.min(Math.round(W * 2.4), Math.round(W * sh / sw))) : H0; if (nh !== H) { H = nh; canvas.height = H * RES; } }
     let cw = sw, ch = cw * H / W;
     if (ch > sh) { ch = sh; cw = ch * W / H; }
     canvas.style.width = cw + "px";
@@ -440,7 +457,7 @@ import * as THREE from "./three.module.min.js";
 
   function toInternal(e) {
     const r = canvas.getBoundingClientRect();
-    return { x: (e.clientX - r.left) / r.width * W, y: (e.clientY - r.top) / r.height * H };
+    return { x: (e.clientX - r.left) / r.width * W, y: (e.clientY - r.top) / r.height * H - (pfOn() && STATE.scene !== "stage" ? Math.round((H - H0) / 2) : 0) };
   }
   function toCab(e) {
     const r = cab.getBoundingClientRect();
@@ -2825,7 +2842,7 @@ import * as THREE from "./three.module.min.js";
     renderer.setPixelRatio(1); renderer.setSize(PIX.w, PIX.h, false);
     glCanvas.style.width = (PIX.w * PIX.up / dpr) + "px"; glCanvas.style.height = (PIX.h * PIX.up / dpr) + "px";
     glCanvas.style.left = canvas.style.left; glCanvas.style.top = canvas.style.top;
-    camera.aspect = PIX.w / PIX.h; camera.updateProjectionMatrix();
+    pfCam(); camera.aspect = PIX.w / PIX.h; camera.updateProjectionMatrix();
   }
   addEventListener("resize", () => setTimeout(fit3D, 0));
   addEventListener("keydown", (e) => { if (MODE === "free" && e.key.toLowerCase() === "r" && !e.repeat) CAM.fyaw = (CAM.fyaw || 0) + Math.PI / 2; });
@@ -3476,7 +3493,7 @@ import * as THREE from "./three.module.min.js";
     ACT.dt = dt;
     if (STATE.scene === "stage" || STATE.scene === "card" || STATE.scene === "win" || STATE.scene === "over") { fxStep(); drawEntities(scene); }
     else { for (const b of BILLS.pool) b.hide(); }
-    const ps = renderer.domElement.height / (2 * Math.tan(camera.fov * Math.PI / 360));
+    const ps = renderer.domElement.height / (2 * Math.tan((camera.__efov || camera.fov) * Math.PI / 360));
     for (const k in PART) PART[k].mat.uniforms.scale.value = ps;
     renderer.render(scene, camera);
   }
@@ -3585,11 +3602,11 @@ import * as THREE from "./three.module.min.js";
     } else if (!bossOn) { HUDS.bossMax = 0; HUDS.boss = 0; HUDS.lastName = ""; }
     if (STATE.bossT > 0 && Math.floor(STATE.t / 10) % 2) ptext(rr && rr.cfg ? "WARNING: " + rr.name + "!" : rr ? "WARNING: RAMROD!" : "WARNING: ZAP-ROLLERS!", W / 2, 64, 2, "#ff4a3a");
     if (STATE.intro > 0 && !rr && Math.floor(STATE.t / 10) % 2) ptext("SOMETHING'S DRILLING UP!", W / 2, 64, 2, "#ff4a3a");
-    if (STATE.clearT > 0) { rect(0, 84, W, 40, "rgba(0,0,0,0.6)"); ptext("AREA CLEAR", W / 2, 98, 3, "#ffe060"); }
+    if (STATE.clearT > 0) { rect(0, H / 2 - 28, W, 40, "rgba(0,0,0,0.6)"); ptext("AREA CLEAR", W / 2, H / 2 - 14, 3, "#ffe060"); }
     if (STATE.banner && !STATE.clearT) {
       const B = STATE.banner, a = B.t < 12 ? B.t / 12 : B.t > 170 ? (200 - B.t) / 30 : 1;
-      ctx.globalAlpha = Math.max(0, a) * 0.7; rect(0, 150, W, 34, "#000"); ctx.globalAlpha = Math.max(0, a);
-      ptext(B.a, W / 2, 154, 2, B.c); ptext(B.b, W / 2, 172, 1, "#fff"); ctx.globalAlpha = 1;
+      ctx.globalAlpha = Math.max(0, a) * 0.7; rect(0, H - 74, W, 34, "#000"); ctx.globalAlpha = Math.max(0, a);
+      ptext(B.a, W / 2, H - 70, 2, B.c); ptext(B.b, W / 2, H - 52, 1, "#fff"); ctx.globalAlpha = 1;
     }
     if (STATE.lock && STATE.locked && !STATE.lock.boss && Math.floor(STATE.t / 30) % 2 === 0 && STATE.enemies.length) ptext("WAVE " + (STATE.waveI + 1) + "/" + STATE.lock.waves.length, W / 2, HUDS.slide > 0 ? 34 : 20, 1, "#c8ccd6");
     if (CAM.fade > 0) { ctx.globalAlpha = Math.min(1, CAM.fade); rect(0, 0, W, H, "#000"); ctx.globalAlpha = 1; }
@@ -3700,7 +3717,7 @@ import * as THREE from "./three.module.min.js";
     try { render3D(dt, ts / 1000); } catch (err) { ERR.n++; ERR.last = String(err && err.stack || err); if (ERR.n < 5) console.error("render", err); }
     try {
       ctx.setTransform(RES, 0, 0, RES, 0, 0); ctx.imageSmoothingEnabled = false; ctx.clearRect(0, 0, W, H);
-      const S = SCN[STATE.scene]; if (S) S[1]();
+      const S = SCN[STATE.scene]; if (S) { if (pfOn() && STATE.scene !== "stage") { const oy = Math.round((H - H0) / 2), Hs = H; pfBands(oy); ctx.translate(0, oy); H = H0; try { S[1](); } finally { H = Hs; ctx.setTransform(RES, 0, 0, RES, 0, 0); } } else S[1](); }
       drawSpeaker();
     } catch (err) { ERR.n++; ERR.last = String(err && err.stack || err); if (ERR.n < 5) console.error("draw", err); for (let i = 0; i < 16; i++) ctx.restore(); ctx.globalAlpha = 1; }
     try { audioFrame(); updateCabFx(); } catch (err) { }
