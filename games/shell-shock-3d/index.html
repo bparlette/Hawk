@@ -83,6 +83,12 @@
   #screen canvas#game { z-index: 1; background: transparent; }
   #screen canvas#bloom { display: none !important; }
   html, body { max-width: 100vw; }
+  .ss-tb { position: absolute; z-index: 4; right: 1.6%; width: 15.5%; height: 12.5%; display: none; align-items: center; justify-content: center; border-radius: 999px; font: 900 clamp(7px, 1.45vw, 12px)/1 "Arial Black", Arial, sans-serif; letter-spacing: 0; color: #111; background: radial-gradient(circle at 50% 35%, #ffffff, #ffe060 45%, #d89a10); box-shadow: 0 0 0 2px #000, 0 3px 0 2px #6a4a00; opacity: .82; touch-action: none; user-select: none; -webkit-user-select: none; }
+  .ss-tb-c { bottom: 5%; }
+  .ss-tb-k { bottom: 21%; background: radial-gradient(circle at 50% 35%, #ffffff, #7fff9a 45%, #1aa04a); box-shadow: 0 0 0 2px #000, 0 3px 0 2px #0a5020; }
+  .ss-tb.hot { opacity: 1; animation: sstb .25s steps(2) infinite; }
+  .ss-tb.on { transform: translateY(2px); filter: brightness(.8); }
+  @keyframes sstb { 50% { box-shadow: 0 0 0 2px #000, 0 0 14px 6px #fff8a0; } }
 </style>
 </head>
 <body>

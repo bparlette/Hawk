@@ -404,7 +404,7 @@ import * as THREE from "./three.module.min.js";
     const k = e.key.toLowerCase();
     unlockAudio();
     if (k === "m" && !keys.has(k)) STATE.muted = !STATE.muted;
-    if (k === "c" && !keys.has(k)) document.getElementById("screen").classList.toggle("crt");
+    if (k === "v" && !keys.has(k)) document.getElementById("screen").classList.toggle("crt");
     if (!keys.has(k)) pressed.add(k);
     keys.add(k);
     if (k.startsWith("arrow") || k === " ") e.preventDefault();
@@ -1233,10 +1233,8 @@ import * as THREE from "./three.module.min.js";
   const SHF = {"barrel":[0,7,79,129],"barrel_side":[83,40,117,96],"crate":[204,34,104,102],"trash":[312,0,92,136],"cone":[408,54,48,82],"pizza":[460,12,136,124],"slice":[600,52,75,84],"tire":[679,79,52,57],"rock":[735,105,40,31],"brick":[779,104,44,32],"snowball":[827,97,36,39],"sludge":[867,109,40,27],"star":[911,106,36,30]};
   const SP_IM = { lenny: mkArt("sp_lenny.webp"), rafe: mkArt("sp_rafe.webp"), miko: mkArt("sp_miko.webp"), donny: mkArt("sp_donny.webp") };
   const SPF = {"lenny":{"spin1":[0,0,297,132],"spin2":[301,2,279,130],"land":[584,25,193,107]},"miko":{"copter1":[0,7,145,157],"copter2":[149,0,146,164],"land":[299,24,156,140]},"donny":{"vault":[0,0,138,178],"flip":[142,92,216,86],"slam":[362,37,261,141]},"rafe":{"dive1":[0,21,217,95],"dive2":[221,39,248,77],"land":[473,0,124,116]}}; // painted special-move poses, same scale as the brother's atlas (TURTLE_K)
-  const PORT_IM = mkArt("hud_portraits.webp"), PORT_T = 72, PORT_I = {"lenny":0,"rafe":1,"miko":2,"donny":3,"ramrod":4,"zap":5,"scorcher":6,"brickjaw":7,"gulch":8,"jetwash":9,"grimwale":10,"coldfront":11,"rustmaul":12,"razorback":13,"karai":14,"armaggon":15,"leatherhead":16,"viral":17,"traag":18,"granitor":19,"krang":20,"shredder":21,"super":22};
-  const BOSS_PORT = { RAMROD: "ramrod", "ZAP-ROLLER": "zap", SCORCHER: "scorcher", BRICKJAW: "brickjaw", "GULCH GATOR": "gulch", JETWASH: "jetwash", GRIMWALE: "grimwale", "COLD FRONT": "coldfront",
-    RUSTMAUL: "rustmaul", RAZORBACK: "razorback", KARAI: "karai", ARMAGGON: "armaggon", LEATHERHEAD: "leatherhead", VIRAL: "viral", "GENERAL TRAAG": "traag", TRAAG: "traag", "LT. GRANITOR": "granitor", GRANITOR: "granitor",
-    KRANG: "krang", SHREDDER: "shredder", "THE SHREDDER": "shredder", "SUPER SHREDDER": "super" };
+  const PORT_IM = mkArt("hud_portraits.webp"), PORT_T = 72, PORT_I = {"lenny":0,"rafe":1,"miko":2,"donny":3,"ramrod":4,"zap":5,"scorcher":6};
+  const BOSS_PORT = { RAMROD: "ramrod", "ZAP-ROLLER": "zap", SCORCHER: "scorcher", };
   const TITLE_BG = mkArt("title_bg.jpg"), TITLE_LOGO = mkArt("title_logo.webp");
   const shSpr = (name) => { const im = artOk(SH_IM); return im && SHF[name] ? im : null; };
   function drawPortrait(key, x, y, s) { // one painted bust, drawn into an s x s box
@@ -2283,7 +2281,7 @@ import * as THREE from "./three.module.min.js";
       return 0;
     }
     if (layer === "sewer") {
-      for (const z of WORLD.zones) if (z.layer === "sewer") for (const r of z.rects) if (gx >= r[0] && gx <= r[2] && gz >= r[1] && gz <= r[3]) { if (gz < -2.95 && gx > 85 && gx < 99) return WORLD.SY; if (gx > 90.4 && gx < 93.6 && gz < -0.85) return WORLD.SY; return (gz < -0.9 && gx < 159) || (gx >= 159 && gx < 160 && gz < -3.2) ? WORLD.SY - 0.22 : WORLD.SY; }
+      for (const z of WORLD.zones) if (z.layer === "sewer") for (const r of z.rects) if (gx >= r[0] && gx <= r[2] && gz >= r[1] && gz <= r[3]) { if (gz < -2.95 && gx > 85 && gx < 99) return WORLD.SY; if (gx > 90.4 && gx < 93.6 && gz < -0.85) return WORLD.SY; const f = (gz < -0.9 && gx < 159) || (gx >= 159 && gx < 160 && gz < -3.2) ? WORLD.SY - 0.22 : WORLD.SY; return Math.max(f, coveY(gx, gz).y, WORLD.SY + funH(gx, gz)); }
       return null;
     }
     if (layer === "subway") return subFloor(gx, gz);
@@ -2296,6 +2294,58 @@ import * as THREE from "./three.module.min.js";
     for (const r of WORLD.roofs) { const w = r.walk; if (gx >= w[0] && gx <= w[2] && gz >= w[1] && gz <= w[3]) return r.y; }
     if (gz > -34.6 && gz < -11.4 && ((gx > 106.5 && gx < 108.7) || (gx > 125.9 && gx < 128.1))) return -40; // an alley gap: nothing underfoot
     return null;
+  }
+
+  // ---------- curved sewer walls (new): every tunnel wall meets the floor in a quarter-pipe cove, so a skateboard can ride
+  // partway up it. Runs: ax "x" = along x with the wall at z = w (tunnel A), "z" = along z with the wall at x = w (tunnel B);
+  // s = which side the wall is on (+1 = larger coordinate), R = cove radius, b = base height above the walkway (channel side -0.22).
+  // Gaps leave the ladder, the junction recesses and the lair archway as plain walls.
+  const COVES = [
+    { ax: "x", w: 3, s: 1, R: 1.5, b: 0, seg: [[20.4, 32.8], [35.2, 165]] },
+    { ax: "x", w: -3, s: -1, R: 1.0, b: -0.22, seg: [[20.4, 60], [65, 88.6], [99.2, 140], [145, 158.8]] },
+    { ax: "z", w: 165, s: 1, R: 1.5, b: 0, seg: [[-96, 3]] },
+    { ax: "z", w: 159, s: -1, R: 1.0, b: -0.22, seg: [[-96, -49], [-44, -3.2]] },
+  ];
+  const COVE_CAP = 0.93; // rideable up to ~68 degrees (d / R), the rest of the curve is wall
+  const _cy = { y: -1e9, lim: false, d: 0, R: 1 };
+  function coveY(gx, gz) { // highest cove surface at a point (y = -1e9 when none); lim = past the rideable part
+    _cy.y = -1e9; _cy.lim = false;
+    const inA = gz > -3 && gz < 3 && gx > 20 && gx < 165, inB = gx > 159 && gx < 165 && gz > -96 && gz < 3;
+    for (const C of COVES) {
+      const along = C.ax === "x" ? gx : gz, across = C.ax === "x" ? gz : gx;
+      if (C.ax === "x" ? !inA : !inB) continue;
+      let ok = false; for (const g of C.seg) if (along >= g[0] && along <= g[1]) { ok = true; break; }
+      if (!ok) continue;
+      const d = C.s * (across - (C.w - C.s * C.R)); if (d <= 0) continue;
+      const dd = Math.min(d, C.R), y = WORLD.SY + C.b + C.R - Math.sqrt(Math.max(0, C.R * C.R - dd * dd));
+      if (d > C.R * COVE_CAP) _cy.lim = true;
+      if (y > _cy.y) { _cy.y = y; _cy.d = d; _cy.R = C.R; }
+    }
+    return _cy;
+  }
+  // two plywood kickers in tunnel A (curved launch ramps, steep lip, open back) to launch off; one faces each way
+  const FUNBOX = [{ a: 41.5, dir: 1, z0: -0.55, z1: 0.95 }, { a: 57.5, dir: -1, z0: -0.55, z1: 0.95 }], FB_L = 1.5, FB_H = 0.62, FB_P = 1.7;
+  function funH(gx, gz) {
+    for (const F of FUNBOX) {
+      if (gz < F.z0 || gz > F.z1) continue;
+      const u = (gx - F.a) * F.dir; if (u < 0 || u > FB_L) continue;
+      return FB_H * Math.pow(u / FB_L, FB_P);
+    }
+    return 0;
+  }
+  // the skate surface: like floorAt, but past the zone rects up the coves, with a ramped channel lip; null = wall
+  function skateSurf(gx, gz) {
+    const SY = WORLD.SY;
+    const inA = gx >= 20.6 && gx <= 164.9 && gz >= -2.98 && gz <= 2.98, inB = gx >= 159.05 && gx <= 164.9 && gz >= -95.7 && gz < -2.6;
+    if (!inA && !inB) return null;
+    let y = SY;
+    if (gx < 159 && gz < -0.9) y = gz > -1.15 ? SY - 0.22 * (-0.9 - gz) / 0.25 : SY - 0.22;
+    else if (gz < -3.2 && gx < 160) y = gx > 159.75 ? SY - 0.22 * (160 - gx) / 0.25 : SY - 0.22;
+    const c = coveY(gx, gz);
+    if (c.lim) return { y: c.y, lim: true };
+    if (c.y > y) y = c.y;
+    else if (gz > 2.9 || (gz < -2.9 && !(gx > 89.3 && gx < 94.7)) || gx > 164.75 || (inB && gx < 159.1)) return null; // plain wall (gaps)
+    return { y: y + funH(gx, gz), lim: false };
   }
 
   // =====================================================================================================
@@ -2432,14 +2482,15 @@ import * as THREE from "./three.module.min.js";
     const tagAt = [[24, 1], [38.5, 0], [51, 0.4], [83.5, 0.2], [101, 0.6], [129, 0.3], [149, 0.5], [-8, 0.4], [-20, 0.1], [-35, 0.5], [-70, 0.3], [-86, 0.5]];
     tagAt.forEach(([s, y], i) => {
       const m = decal(tagTex(TAGS[i % TAGS.length], i)); const w = 3.4, h = 1.25;
-      if (s > 0) S.wall(m, s, -2.98, s + w, -2.98, SY + 0.5 + y, SY + 0.5 + y + h, 0, 0, 1, 1);
-      else S.wall(m, 159.02, s, 159.02, s - w, SY + 0.5 + y, SY + 0.5 + y + h, 0, 0, 1, 1);
+      const ty = SY + 0.85 + y * 0.8; // above the curved cove
+      if (s > 0) S.wall(m, s, -2.98, s + w, -2.98, ty, ty + h, 0, 0, 1, 1);
+      else S.wall(m, 159.02, s, 159.02, s - w, ty, ty + h, 0, 0, 1, 1);
     });
     // ---- side grates (glowing green behind) ----
     const gm = lam(grateTex());
     for (const s of [44, 57, 108, 134, -12, -40, -76]) {
-      if (s > 0) S.wall(gm, s, -2.97, s + 1.4, -2.97, SY - 0.2, SY + 0.85, 0, 0, 1, 1); else S.wall(gm, 159.03, s, 159.03, s - 1.4, SY - 0.2, SY + 0.85, 0, 0, 1, 1);
-      WORLD.lights.push({ reg: "sewer", x: s > 0 ? s + 0.7 : 159.6, y: SY + 0.4, z: s > 0 ? -2.4 : s - 0.7, c: 0x40ff60, i: 5, d: 4 });
+      if (s > 0) S.wall(gm, s, -2.97, s + 1.4, -2.97, SY + 0.8, SY + 1.85, 0, 0, 1, 1); else S.wall(gm, 159.03, s, 159.03, s - 1.4, SY + 0.8, SY + 1.85, 0, 0, 1, 1);
+      WORLD.lights.push({ reg: "sewer", x: s > 0 ? s + 0.7 : 159.6, y: SY + 1.3, z: s > 0 ? -2.4 : s - 0.7, c: 0x40ff60, i: 5, d: 4 });
     }
     // ---- outflow pipes pouring water into the channel ----
     const pipeM = new THREE.MeshLambertMaterial({ color: 0x5a4a3a }), fallT = canvasTex(64, 256, (g, w, h) => { for (let i = 0; i < 40; i++) { g.fillStyle = `rgba(${150 + Math.random() * 60 | 0},255,${170 + Math.random() * 60 | 0},${0.25 + Math.random() * 0.5})`; g.fillRect(8 + Math.random() * 44, Math.random() * h, 3 + Math.random() * 6, 20 + Math.random() * 60); } }, true);
@@ -2472,25 +2523,98 @@ import * as THREE from "./three.module.min.js";
     S.floor(M.sfloor, 160, -96, 165, -3, SY, 4);
     // ---- junk: crate stacks, a mattress, a shopping cart in the channel ----
     const crateM = new THREE.MeshLambertMaterial({ map: canvasTex(64, 64, (g) => { g.fillStyle = "#7a5530"; g.fillRect(0, 0, 64, 64); g.fillStyle = "#5a3c20"; g.fillRect(0, 0, 64, 6); g.fillRect(0, 58, 64, 6); g.fillRect(0, 0, 6, 64); g.fillRect(58, 0, 6, 64); g.save(); g.translate(32, 32); g.rotate(0.78); g.fillRect(-44, -3, 88, 6); g.restore(); }) });
-    for (const [x, z, s, r] of [[55.4, 2.4, 0.9, 0.2], [56.4, 2.45, 0.7, -0.1], [55.8, 2.4, 0.6, 0.5, 1], [148, 2.3, 0.9, 0.1], [163.9, -88, 0.9, 0.3], [164, -86.8, 0.7, 0]]) {
+    for (const [x, z, s, r] of [[61.4, -5.9, 0.9, 0.2], [62.4, -6.1, 0.7, -0.1], [61.8, -5.9, 0.6, 0.5, 1], [143.6, -6.2, 0.9, 0.1], [155.8, -47.6, 0.9, 0.3], [156, -45.6, 0.7, 0]]) {
       const m = new THREE.Mesh(new THREE.BoxGeometry(s, s, s), crateM); m.position.set(x, SY + s / 2 + (r === 0.5 ? 0.9 : 0), z); m.rotation.y = r; G.sewer.add(m);
     }
     const matT = canvasTex(128, 96, (g, w, h) => { for (let x = 0; x < w; x += 12) { g.fillStyle = x % 24 ? "#d8d0c0" : "#7a9ac8"; g.fillRect(x, 0, 12, h); } g.fillStyle = "rgba(120,90,30,0.55)"; for (let i = 0; i < 6; i++) { g.beginPath(); g.ellipse(Math.random() * w, Math.random() * h, 10 + Math.random() * 20, 6 + Math.random() * 12, 0, 0, 7); g.fill(); } });
     const mat = new THREE.Mesh(new THREE.BoxGeometry(1.9, 0.22, 1.3), new THREE.MeshLambertMaterial({ map: matT }));
-    mat.position.set(52.5, SY + 0.95, -2.55); mat.rotation.x = -1.25; G.sewer.add(mat);
-    const mat2 = mat.clone(); mat2.position.set(159.55, SY + 0.95, -33); mat2.rotation.set(0, Math.PI / 2, 0); mat2.rotateX(-1.25); G.sewer.add(mat2);
+    mat.position.set(142.5, SY + 0.7, -6.6); mat.rotation.x = -1.25; G.sewer.add(mat); // propped in the junction recess
     const wireT = canvasTex(64, 64, (g) => { g.strokeStyle = "#c8ccd4"; g.lineWidth = 3; for (let i = 0; i <= 64; i += 10) { g.beginPath(); g.moveTo(i, 0); g.lineTo(i, 64); g.stroke(); g.beginPath(); g.moveTo(0, i); g.lineTo(64, i); g.stroke(); } }, true);
     const wireM = new THREE.MeshLambertMaterial({ map: wireT, transparent: true, alphaTest: 0.3, side: THREE.DoubleSide });
     const cart = new THREE.Group(); const basket = new THREE.Mesh(new THREE.BoxGeometry(0.9, 0.55, 0.6), wireM); basket.position.y = 0.55; cart.add(basket);
     const handle = new THREE.Mesh(new THREE.BoxGeometry(0.04, 0.04, 0.6), cageM); handle.position.set(-0.5, 0.9, 0); cart.add(handle);
     for (const [dx, dz] of [[-0.35, -0.25], [0.35, -0.25], [-0.35, 0.25], [0.35, 0.25]]) { const w = new THREE.Mesh(new THREE.CylinderGeometry(0.07, 0.07, 0.05, 8), cageM); w.rotation.x = Math.PI / 2; w.position.set(dx, 0.1, dz); cart.add(w); }
     cart.position.set(84.5, SY - 0.2, -2.0); cart.rotation.set(0.3, 0.4, 0.25); G.sewer.add(cart);
-    const cart2 = cart.clone(); cart2.position.set(159.5, SY - 0.2, -68); cart2.rotation.set(0.2, 1.9, -0.3); G.sewer.add(cart2);
+    const cart2 = cart.clone(); cart2.position.set(157, SY - 0.2, -46.6); cart2.rotation.set(0.2, 1.9, -0.3); G.sewer.add(cart2);
     // ---- rats: little billboards that scurry along the wall foot, turn, and scurry back ----
     const rM = new THREE.SpriteMaterial({ map: ratTex(), transparent: true, alphaTest: 0.2 });
-    for (const [a, b, z] of [[22, 46, 2.7], [60, 84, 2.75], [100, 126, 2.7], [138, 156, 2.75]]) { const s = new THREE.Sprite(rM.clone()); s.scale.set(0.5, 0.25, 1); G.sewer.add(s); WORLD.sewerFx.rats.push({ s, a, b, z, x: a + Math.random() * (b - a), v: 2.4 + Math.random(), axis: "x" }); }
-    for (const [a, b] of [[-10, -40], [-56, -90]]) { const s = new THREE.Sprite(rM.clone()); s.scale.set(0.5, 0.25, 1); G.sewer.add(s); WORLD.sewerFx.rats.push({ s, a: b, b: a, z: 164.7, x: (a + b) / 2, v: 2.6, axis: "z" }); }
+    for (const [a, b, z] of [[22, 40, 1.4], [60, 84, 1.42], [100, 126, 1.4], [138, 156, 1.42]]) { const s = new THREE.Sprite(rM.clone()); s.scale.set(0.5, 0.25, 1); G.sewer.add(s); WORLD.sewerFx.rats.push({ s, a, b, z, x: a + Math.random() * (b - a), v: 2.4 + Math.random(), axis: "x" }); }
+    for (const [a, b] of [[-10, -40], [-56, -90]]) { const s = new THREE.Sprite(rM.clone()); s.scale.set(0.5, 0.25, 1); G.sewer.add(s); WORLD.sewerFx.rats.push({ s, a: b, b: a, z: 163.4, x: (a + b) / 2, v: 2.6, axis: "z" }); }
+    buildCoves(S, G, SY);
     S.build(G.sewer);
+  }
+  // ---- curved walls (quarter-pipe coves) + the two fun-boxes + the skateboard waiting by the block-1 ladder ----
+  function coveTex() {
+    return canvasTex(256, 256, (g, w, h) => {
+      g.fillStyle = "#6c7468"; g.fillRect(0, 0, w, h);
+      for (let i = 0; i < 900; i++) { const v = 90 + Math.random() * 50 | 0; g.fillStyle = `rgba(${v},${v + 6},${v - 6},0.35)`; g.fillRect(Math.random() * w, Math.random() * h, 2 + Math.random() * 4, 2 + Math.random() * 4); }
+      g.strokeStyle = "rgba(20,24,18,0.55)"; g.lineWidth = 3; for (let x = 0; x <= w; x += 128) { g.beginPath(); g.moveTo(x, 0); g.lineTo(x, h); g.stroke(); } // pour joints
+      const gr = g.createLinearGradient(0, 0, 0, h); gr.addColorStop(0, "rgba(10,40,12,0.55)"); gr.addColorStop(0.35, "rgba(10,40,12,0)"); g.fillStyle = gr; g.fillRect(0, 0, w, h); // damp slime line at the bottom
+      g.fillStyle = "rgba(200,190,150,0.5)"; g.fillRect(0, h - 10, w, 6); // worn coping line at the top
+      g.fillStyle = "rgba(30,20,10,0.35)"; for (let i = 0; i < 14; i++) g.fillRect(Math.random() * w, Math.random() * h * 0.7, 30 + Math.random() * 50, 2); // board scuffs
+    }, true);
+  }
+  function plyTex() {
+    return canvasTex(256, 128, (g, w, h) => {
+      g.fillStyle = "#c89a5a"; g.fillRect(0, 0, w, h);
+      for (let i = 0; i < 60; i++) { g.strokeStyle = `rgba(120,80,40,${0.15 + Math.random() * 0.2})`; g.beginPath(); const y = Math.random() * h; g.moveTo(0, y); g.bezierCurveTo(w / 3, y + rnd(-6, 6), w * 2 / 3, y + rnd(-6, 6), w, y + rnd(-4, 4)); g.stroke(); }
+      g.fillStyle = "#1a1a1a"; g.fillRect(0, 0, w, 6); g.fillRect(0, h - 6, w, 6);
+      g.font = "bold italic 40px Impact, Arial Black, Arial"; g.textAlign = "center"; g.lineWidth = 6; g.strokeStyle = "#111"; g.strokeText("DRAIN BOWL", w / 2, h / 2 + 14); g.fillStyle = "#ff5a2a"; g.fillText("DRAIN BOWL", w / 2, h / 2 + 14);
+    }, true);
+  }
+  function buildCoves(S, G, SY) {
+    const cm = lam(coveTex()), N = 10;
+    for (const C of COVES) for (const [a0, a1] of C.seg) {
+      const P = (th) => { const ac = C.w - C.s * C.R + C.s * C.R * Math.sin(th), y = SY + C.b + C.R - C.R * Math.cos(th); return [ac, y]; };
+      const V = (al, ac, y) => (C.ax === "x" ? [al, y, ac] : [ac, y, al]);
+      for (let i = 0; i < N; i++) {
+        const t0 = (i / N) * Math.PI / 2, t1 = ((i + 1) / N) * Math.PI / 2, [c0, y0] = P(t0), [c1, y1] = P(t1);
+        let a = V(a0, c0, y0), b = V(a1, c0, y0), c = V(a1, c1, y1), d = V(a0, c1, y1);
+        // face the tunnel (normal toward the cove's centre)
+        const ux = b[0] - a[0], uy = b[1] - a[1], uz = b[2] - a[2], vx = d[0] - a[0], vy = d[1] - a[1], vz = d[2] - a[2];
+        const nx = uy * vz - uz * vy, ny = uz * vx - ux * vz, nz = ux * vy - uy * vx;
+        const cen = V((a0 + a1) / 2, C.w - C.s * C.R, SY + C.b + C.R), mid = V((a0 + a1) / 2, (c0 + c1) / 2, (y0 + y1) / 2);
+        const flip = nx * (cen[0] - mid[0]) + ny * (cen[1] - mid[1]) + nz * (cen[2] - mid[2]) < 0; if (flip) { const t = b; b = d; d = t; }
+        const sh = 0.55 + 0.45 * (i / N), col = [sh, sh, sh];
+        const u0 = a0 / 4, u1 = a1 / 4, v0 = i / N, v1 = (i + 1) / N;
+        S.quad(cm, a, b, c, d, !flip ? [[u0, v0], [u1, v0], [u1, v1], [u0, v1]] : [[u0, v0], [u0, v1], [u1, v1], [u1, v0]], col);
+      }
+      // end caps where the cove stops at a gap (both faces)
+      for (const al of [a0, a1]) {
+        const corner = V(al, C.w, SY + C.b);
+        for (let i = 0; i < N; i++) {
+          const [c0, y0] = P((i / N) * Math.PI / 2), [c1, y1] = P(((i + 1) / N) * Math.PI / 2), p0 = V(al, c0, y0), p1 = V(al, c1, y1);
+          S.quad(cm, corner, p0, p1, p1, [[0, 0], [0.2, 0], [0.2, 0.2], [0.2, 0.2]], [0.4, 0.42, 0.4]);
+          S.quad(cm, corner, p1, p0, p0, [[0, 0], [0.2, 0], [0.2, 0.2], [0.2, 0.2]], [0.4, 0.42, 0.4]);
+        }
+      }
+    }
+    // fun-boxes: plywood ramps with steel coping
+    const pm = lam(plyTex()), side = lam(null, { color: 0x5a3e22 }), steel = new THREE.MeshLambertMaterial({ color: 0xc8ccd4, emissive: 0x222428 });
+    for (const F of FUNBOX) {
+      const N = 8, P = (i) => { const u = FB_L * i / N; return [F.a + F.dir * u, SY + 0.01 + FB_H * Math.pow(u / FB_L, FB_P)]; };
+      for (let i = 0; i < N; i++) {
+        const [xa, ya] = P(i), [xb, yb] = P(i + 1), ua = i / N, ub = (i + 1) / N;
+        if (F.dir > 0) S.quad(pm, [xa, ya, F.z1], [xb, yb, F.z1], [xb, yb, F.z0], [xa, ya, F.z0], [[ua, 0], [ub, 0], [ub, 1], [ua, 1]]);
+        else S.quad(pm, [xb, yb, F.z1], [xa, ya, F.z1], [xa, ya, F.z0], [xb, yb, F.z0], [[ub, 0], [ua, 0], [ua, 1], [ub, 1]]);
+        for (const z of [F.z1, F.z0]) { // side panels (both faces): the strip under this segment
+          const A = [xa, SY, z], B = [xb, SY, z], C2 = [xb, yb, z], D = [xa, ya, z];
+          S.quad(side, A, B, C2, D, [[0, 0], [1, 0], [1, 1], [0, 1]]); S.quad(side, B, A, D, C2, [[0, 0], [1, 0], [1, 1], [0, 1]]);
+        }
+      }
+      const xl = F.a + F.dir * FB_L, yl = SY + FB_H; // open back: the lip's vertical face
+      S.quad(side, [xl, SY, F.z0], [xl, SY, F.z1], [xl, yl, F.z1], [xl, yl, F.z0], [[0, 0], [1, 0], [1, 1], [0, 1]]); S.quad(side, [xl, SY, F.z1], [xl, SY, F.z0], [xl, yl, F.z0], [xl, yl, F.z1], [[0, 0], [1, 0], [1, 1], [0, 1]]);
+      const m = new THREE.Mesh(new THREE.CylinderGeometry(0.035, 0.035, F.z1 - F.z0, 8), steel); m.rotation.x = Math.PI / 2; m.position.set(xl, yl + 0.02, (F.z0 + F.z1) / 2); G.sewer.add(m);
+    }
+    // a skater's tag + a lamp over the bowl stretch
+    const tm = new THREE.MeshLambertMaterial({ map: tagTex("SKATE OR DROWN", 3), transparent: true, alphaTest: 0.08, depthWrite: false, polygonOffset: true, polygonOffsetFactor: -2 });
+    S.wall(tm, 43, -2.97, 49, -2.97, SY + 1.6, SY + 2.9, 0, 0, 1, 1);
+    WORLD.lights.push({ reg: "sewer", x: 46.5, y: SY + 2.6, z: 0.4, c: 0xffd8a0, i: 16, d: 9 });
+    // the board itself, waiting by the block-1 ladder (picked up with USE)
+    const b = makeBoard(); b.position.set(BOARD_SPOT.x, SY + 0.07, BOARD_SPOT.z); b.rotation.y = 0.5; G.sewer.add(b); WORLD.boardProp = b;
+    const ring = new THREE.Mesh(new THREE.RingGeometry(0.45, 0.6, 24), new THREE.MeshBasicMaterial({ color: 0xffd23a, transparent: true, opacity: 0.55, depthWrite: false, blending: THREE.AdditiveBlending }));
+    ring.rotation.x = -Math.PI / 2; ring.position.set(BOARD_SPOT.x, SY + 0.03, BOARD_SPOT.z); G.sewer.add(ring); WORLD.boardRing = ring;
+    WORLD.anim.push((t) => { if (WORLD.boardRing.visible) { const k = 1 + Math.sin(t * 5) * 0.12; WORLD.boardRing.scale.set(k, k, k); } });
   }
   function stepSewerFx(dt, t) {
     const F = WORLD.sewerFx; if (!F) return;
@@ -3118,6 +3242,7 @@ import * as THREE from "./three.module.min.js";
     WORLD.inter = [
       { layer: "street", x: 34, z: 2.0, r: 1.3, kind: "drop", label: "DROP INTO THE SEWER", to: { layer: "sewer", x: 34, z: 1.6 } },
       { layer: "sewer", x: 34, z: 2.4, r: 1.3, kind: "up", label: "CLIMB UP", to: { layer: "street", x: 34, z: 2.0 } },
+      { layer: "sewer", x: BOARD_SPOT.x, z: BOARD_SPOT.z, r: 1.4, kind: "board", label: "GRAB THE SKATEBOARD" },
       { layer: "street", x: 162, z: -94.2, r: 1.3, kind: "drop", label: "DROP INTO THE SEWER", to: { layer: "sewer", x: 162, z: -94.6 } },
       { layer: "sewer", x: 162, z: -95, r: 1.3, kind: "up", label: "CLIMB UP", to: { layer: "street", x: 162, z: -94.2 } },
       { layer: "street", x: 97.6, z: -10.2, r: 1.5, kind: "climb", label: "CLIMB THE FIRE ESCAPE", lx: 97.6, lz: -10.25, top: 15.0, to: { layer: "roof", x: 97.6, z: -12.6 } },
@@ -3215,7 +3340,7 @@ import * as THREE from "./three.module.min.js";
   const ARROWS = [];
   function arrowPoints() {
     if (ARROWS.length) return ARROWS;
-    const pts = WORLD.inter.map((it) => ({ layer: it.layer, x: it.x, z: it.z })).concat([{ layer: "sewer", x: 92, z: -2.3, lair: true }]);
+    const pts = WORLD.inter.map((it) => ({ layer: it.layer, x: it.x, z: it.z, it })).concat([{ layer: "sewer", x: 92, z: -2.3, lair: true }]);
     for (const P of pts) {
       const f = floorAt(P.layer, P.x, P.z); P.y = (f === null || f < -30 ? (P.layer === "sewer" ? WORLD.SY : 0) : f) + 2.75;
       const s = new THREE.Sprite(new THREE.SpriteMaterial({ map: ARROW_T, transparent: true, depthWrite: false, fog: false }));
@@ -3227,7 +3352,7 @@ import * as THREE from "./three.module.min.js";
     const p = STATE.player, on = STATE.scene === "stage" && p && !p.climb && !(STATE.intro > 0) && !STATE.win && !STATE.over && !STATE.elev && CAM.fade < 0.3;
     const cyc = (STATE.playT % 1200) < 180;
     for (const P of arrowPoints()) {
-      let v = on && P.layer === p.layer && !(P.lair && STATE.lairFound);
+      let v = on && P.layer === p.layer && !(P.lair && STATE.lairFound) && !(P.it && P.it.taken);
       if (v) { const d = Math.hypot(p.gx - P.x, p.gz - P.z); v = d < 6 || (cyc && d < 40); }
       P.s.visible = v;
       if (v) { P.s.position.set(P.x, P.y + Math.abs(Math.sin(t * 4.2 + P.ph)) * 0.28, P.z); const k = 1 + Math.sin(t * 8.4 + P.ph) * 0.04; P.s.scale.set(0.95 * k, 1.2 * k, 1); }
@@ -3321,7 +3446,7 @@ import * as THREE from "./three.module.min.js";
   // global position of a local entity in zone z
   function entPos(z, e, out) {
     const g = toGlobal(z, e.x, e.y); out.gx = g.gx; out.gz = g.gz;
-    const f = z.layer === "subway" ? subEntFloor(e, g) : z.layer === "street" ? floorAt("street", g.gx, g.gz) : z.layer === "sewer" ? WORLD.SY : z.layer === "inside" ? 0 : (floorAt("roof", g.gx, g.gz) || 0);
+    const f = z.layer === "subway" ? subEntFloor(e, g) : z.layer === "street" ? floorAt("street", g.gx, g.gz) : z.layer === "sewer" ? (floorAt("sewer", g.gx, g.gz) ?? WORLD.SY) : z.layer === "inside" ? 0 : (floorAt("roof", g.gx, g.gz) || 0);
     out.fy = f === null || f < -30 ? (z.layer === "roof" ? 12 : 0) : f;
     out.gy = out.fy + (e.z || 0) * ZH;
     return out;
@@ -3345,11 +3470,15 @@ import * as THREE from "./three.module.min.js";
     // player
     if (p && !p.hidden) {
       const blink = p.inv > 0 && p.deadT === 0 && Math.floor(STATE.t / 3) % 2 === 0;
-      put(p, actorSprite(p), 0, blink ? 0.45 : 1, 0.95, { gx: p.gx, gy: p.gy, gz: p.gz, fy: p.fy });
+      const sk = p.sk && p.sk.on, nm = p.bro.name.toLowerCase();
+      const spr = sk && p.sk.bailT > 0 ? { src: "atlas_" + nm + ".webp", fr: ATLAS[nm][p.sk.bailT > 25 ? "hurt" : "down"], k: TURTLE_K } : actorSprite(p);
+      const b = put(p, spr, 0, blink ? 0.45 : 1, sk && (p.sk.air || p.sk.n[1] < 0.95) ? 0 : 0.95, { gx: p.gx, gy: p.gy + (sk && !(p.sk.bailT > 25) ? 0.1 : 0), gz: p.gz, fy: p.fy });
+      if (sk && !(p.sk.bailT > 0)) { heroLean(b); b.lean = true; } else b.lean = false;
     }
     for (const e of STATE.enemies) {
       if (e.state === "fly" && e.t > 30) continue;
-      const s = actorSprite(e); const fl = e.flash > 0 && e.flash % 2 ? 0.75 : 0;
+      let s; if (e.tele > 0 && e.type !== "ramrod" && e.type !== "zap") { const st = e.state, wt = e.walkT; e.state = "walk"; e.walkT = 0; s = actorSprite(e); e.state = st; e.walkT = wt; } else s = actorSprite(e);
+      const fl = e.flash > 0 && e.flash % 2 ? 0.75 : e.warnT > 0 && Math.floor(STATE.t / 3) % 2 ? 0.28 : 0;
       const tele = e.type === "ramrod" && e.state === "tele" && Math.floor(e.t / 3) % 2;
       const b = put(e, s, tele ? 0.45 : fl, e.state === "dying" && e.t > 20 ? Math.max(0, 1 - (e.t - 20) / 40) * (e.t % 4 < 2 ? 1 : 0.5) : 1, e.type === "ramrod" ? 1.4 : 0.95);
       if (tele) b.mat.uniforms.tint.value.setRGB(1.4, 0.5, 0.4);
@@ -3378,7 +3507,7 @@ import * as THREE from "./three.module.min.js";
     }
     for (let i = BILLS.i; i < BILLS.pool.length; i++) BILLS.pool[i].hide();
     // rolling barrels spin; everything else stands upright
-    for (let i = 0; i < BILLS.i; i++) { const m = BILLS.pool[i].mesh; if (m.rotation.z && !STATE.stars.length) m.rotation.z = 0; }
+    for (let i = 0; i < BILLS.i; i++) { const m = BILLS.pool[i].mesh; if (BILLS.pool[i].lean) { BILLS.pool[i].lean = false; continue; } if (m.rotation.z && !STATE.stars.length) m.rotation.z = 0; }
   }
   const RAY_SRC = (() => { const c = document.createElement("canvas"); c.width = 64; c.height = 16; const g = c.getContext("2d"); const gr = g.createLinearGradient(0, 0, 64, 0); gr.addColorStop(0, "rgba(255,60,30,0)"); gr.addColorStop(0.3, "#ff5a3a"); gr.addColorStop(1, "#fff2c0"); g.fillStyle = gr; g.beginPath(); g.ellipse(32, 8, 31, 6, 0, 0, 7); g.fill(); return c.toDataURL(); })();
   // ---- STATE.fx (the reused combat code's hit sparks / dust / smoke / booms) -> 3D particles; score pops -> HUD text ----
@@ -3495,6 +3624,7 @@ import * as THREE from "./three.module.min.js";
       clear: false, phase: "waves", bossT: 0, kills: 0, playT: 0, tagT: 0, deaths: 0, lives: 3, secrets: 0, ramrodOn: false, bossDown: false, intro: 0, pod: null, win: null, over: null,
       banner: null, lobbySeen: false, subwaySeen: false, trainWarned: false, train: null, elev: null, lairFound: false, roofSeen: false, sewerSeen: false, pBark: null, barkCd: 0, specT: 0, cardT: 150, camX: 0, wave: 0, near: null });
     resetWorldBits(); resetLevel();
+    STATE.hasBoard = false; STATE.slowT = 0; ffReset(); for (const it of WORLD.inter) if (it.kind === "board") it.taken = false; if (WORLD.boardProp) { WORLD.boardProp.visible = true; WORLD.boardRing.visible = true; }
     setZone(zoneById("block1"));
     const p = STATE.player; p.fy = floorAt("street", p.gx, p.gz); p.gy = p.fy;
     CAM.snap = true;
@@ -3647,7 +3777,7 @@ import * as THREE from "./three.module.min.js";
   // ---------- layers: manholes, ladders, fire escapes ----------
   function nearInteract(p) {
     if (STATE.locked || p.z > 0 || p.attackT > 0 || p.deadT > 0 || p.carry) return null;
-    for (const it of WORLD.inter) if (it.layer === p.layer && Math.hypot(p.gx - it.x, p.gz - it.z) < it.r) return it;
+    for (const it of WORLD.inter) if (!it.taken && it.layer === p.layer && Math.hypot(p.gx - it.x, p.gz - it.z) < it.r) return it;
     // on the live track right under a platform edge: climb up (jumping works too)
     if (p.layer === "subway" && p.fy < SUB.TY + 0.05 && p.gz > SUB.zE - 1.2 && p.gz < SUB.zE && subFloor(p.gx, SUB.zE + 0.9) === SUB.PY) {
       const h = STATE.hopIt || (STATE.hopIt = { layer: "subway", kind: "hop", r: 1, label: "CLIMB ONTO THE PLATFORM", to: {} });
@@ -3660,6 +3790,7 @@ import * as THREE from "./three.module.min.js";
     SFX.confirm();
   }
   function placeOn(p, layer, gx, gz, gy) {
+    if (p.sk && p.sk.on && layer !== "sewer") p.sk.on = false;
     p.layer = layer; p.gx = gx; p.gz = gz;
     const z = zoneAtG(layer, gx, gz); STATE.zone = null; setZone(z);
     const f = floorAt(layer, gx, gz); p.fy = f === null ? 0 : f; p.z = Math.max(0, ((gy === undefined ? p.fy : gy) - p.fy) / ZH); p.gy = p.fy + p.z * ZH;
@@ -3756,6 +3887,12 @@ import * as THREE from "./three.module.min.js";
     if (STATE.pBark && ++STATE.pBark.t > 80) STATE.pBark = null;
     if (STATE.win) { if (++STATE.win.t > 150) { STATE.scene = "win"; STATE.winT = 0; } }
     if (STATE.over) { if (++STATE.over.t > 100) { STATE.scene = "over"; STATE.overT = 0; } return; }
+    const tc = TB.hit.c, tk = TB.hit.k; TB.hit.c = TB.hit.k = false;
+    if (anyPressed("c") || tc) IBUF.c = 8;
+    if (anyPressed("b") || tk) IBUF.k = 6;
+    if (STATE.hint && ++STATE.hint.t > 270) { STATE.hint = null; skHintShow(); }
+    for (const q of STATE.pops || []) q.t++; if (STATE.pops && STATE.pops.length && STATE.pops[0].t > 80) STATE.pops.shift();
+    if (STATE.slowT > 0) { STATE.slowT--; if (STATE.slowT % 3 !== 0) return; } // takedown / counter slow motion
     STATE.playT++;
     if (p.layer === "subway") updateTrain(p);
     if (p.climb) { updateClimb(p); STATE.fx = STATE.fx.filter((f) => ++f.t < f.life); return; }
@@ -3766,12 +3903,16 @@ import * as THREE from "./three.module.min.js";
     STATE.fx = STATE.fx.filter((f) => ++f.t < f.life);
     if (STATE.fx.length > 240) STATE.fx.splice(0, STATE.fx.length - 240);
     STATE.near = nearInteract(p);
-    if (STATE.near && (raw.p || raw.e) && !p.grabbedBy && p.hurtT === 0 && p.downT === 0) { startClimb(p, STATE.near); IBUF.p = 0; return; }
+    if (STATE.near && (raw.p || raw.e) && !p.grabbedBy && p.hurtT === 0 && p.downT === 0) { if (STATE.near.kind === "board") { pickupBoard(p); IBUF.p = 0; return; } if (p.sk && p.sk.on) skateOff(p); startClimb(p, STATE.near); IBUF.p = 0; return; }
+    const cP = IBUF.c > 0, kP = IBUF.k > 0;
+    if (p.sk && p.sk.on && (p.hurtT > 0 || p.downT > 0 || p.grabbedBy || p.deadT > 0 || p.layer !== "sewer" || !skAllowedZone(STATE.zone))) { skateOff(p, "hit"); }
+    const skating = !!(p.sk && p.sk.on);
     const aP = raw.a || IBUF.a > 0, bP = raw.b || IBUF.b > 0;
     const aH = anyHeld("j") || BTN_A.down, bH = anyHeld("k") || BTN_B.down;
     const powerP = raw.p || IBUF.p > 0 || (aP && bH) || (bP && aH);
     for (const k in IBUF) if (IBUF[k] > 0) IBUF[k]--;
     if (p.inv > 0) p.inv--;
+    ffTick(p);
     const ox = p.x, oy = p.y;
     if (p.deadT > 0) {
       if (--p.deadT === 0) {
@@ -3790,32 +3931,39 @@ import * as THREE from "./three.module.min.js";
       if (p.grabbedBy && p.mash >= (zap ? 8 : 6)) releaseGrab(true);
     } else if (p.downT > 0) { p.downT--; p.walkT = 0; p.x += p.kvx; p.kvx *= 0.9; }
     else if (p.hurtT > 0) p.hurtT--;
+    else if (skating) { skateInput(p, aP, bP, kP); IBUF.k = 0; }
+    else if (p.ffL) { ffLungeStep(p); IBUF.c = 0; }
+    else if (cP && ffCounter(p)) { IBUF.c = 0; IBUF.a = 0; }
+    else if (kP && STATE.hasBoard && skAllowedZone(STATE.zone) && p.attackT === 0 && skateOn(p)) { IBUF.k = 0; }
     else if (featureInput(p, aP, bP, powerP)) { /* grab / carry / lift (reused) */ }
     else {
+      if (cP) IBUF.c = 0;
       const combo = p.attackT > 0 && p.atk && p.atk[0] === "c", rec = combo && (swingPhase(p) || {}).ph === "rec";
       if (aP && combo && p.attackT <= 10) { p.buf = 10; IBUF.a = 0; }
-      if (powerP && p.atk !== "power" && p.hp > 1) { IBUF.a = IBUF.b = IBUF.p = 0; startSpecial(p); }
+      if (powerP && p.atk !== "power" && FF.meter >= 8 && ffTakedown(p)) { IBUF.a = IBUF.b = IBUF.p = 0; }
+      else if (powerP && p.atk !== "power" && p.hp > 1) { IBUF.a = IBUF.b = IBUF.p = 0; startSpecial(p); }
       else if (bP && p.z === 0 && (p.attackT === 0 || rec)) { IBUF.b = 0; p.attackT = 0; p.atk = null; p.buf = 0; p.vz = 4.2; SFX.jump(); }
       else if ((aP || p.buf > 0) && p.attackT === 0) {
         p.buf = 0; IBUF.a = 0;
-        autoFace(p);
-        if (p.z > 0) startAtk(p, "jump", 22);
-        else {
-          p.combo = p.comboT > 0 ? (p.combo % 3) + 1 : 1;
-          const sw = SWINGS[p.bro.name.toLowerCase()]["c" + p.combo];
-          startAtk(p, "c" + p.combo, sw.w + sw.s + sw.r); p.stab2 = false; COMBO_COUNT["c" + p.combo]++;
-        }
+        if (p.z > 0) { autoFace(p); startAtk(p, "jump", 22); }
+        else ffAttack(p); // freeflow: leap to the target, then the reused c1 -> c2 -> c3 chain
       }
-      move3D(p);
+      if (!p.ffL) move3D(p);
     }
     if (p.attackT > 0) {
       p.attackT--;
       const sp = p.atk && p.atk[0] === "c" ? swingPhase(p) : null;
       if (sp && sp.ph === "strike" && sp.sw.lunge) { const s0 = easeOut(Math.max(0, sp.u - 1 / sp.sw.s)), s1 = easeOut(sp.u); p.x += p.facing * sp.sw.lunge * (s1 - s0); }
       if (p.atk === "power" && p.spec) specialTick(p);
+      let hb = 0; if (p.hitSet) for (const o of p.hitSet) if (isFoe(o)) hb++;
       checkPlayerHits(p);
-      if (p.attackT === 0) { if (p.atk && p.atk[0] === "c") p.comboT = 18; p.atk = null; p.spec = null; }
+      let ha = 0; if (p.hitSet) for (const o of p.hitSet) if (isFoe(o)) ha++;
+      if (ha > hb) { p.ffHits = (p.ffHits || 0) + ha - hb; ffAddHits(ha - hb, p); }
+      if (p.attackT === 0) { if (p.atk && p.atk[0] === "c") { p.comboT = 18; if (p.ffSwing && !p.ffHits && FF.combo > 0) ffBreak("whiff"); } p.ffSwing = false; p.atk = null; p.spec = null; }
     } else { if (p.comboT > 0) p.comboT--; if (p.buf > 0) p.buf--; }
+    if (skating && p.sk.on) { skateMove(p); }
+    else if (p.ffL) { resolvePlayer(p, ox, oy); p.gy = p.fy + p.z * ZH; }
+    else {
     p.z += p.vz;
     if (p.z > 0) p.vz -= p.atk === "power" && p.spec && p.spec.hover && p.vz < 0.5 ? 0.06 : 0.25;
     else { if (p.atk === "power" && p.spec && !p.spLand && p.vz < 0) specialLand(p); if (p.dropIn) { p.dropIn = false; STATE.shake = Math.max(STATE.shake, 10); fx("spark", p.x, p.y - 4, 10); buzz(40); } if (p.vz < -0.5) SFX.land(); p.z = 0; p.vz = 0; if (p.atk === "jump") { p.attackT = 0; p.atk = null; } }
@@ -3823,9 +3971,10 @@ import * as THREE from "./three.module.min.js";
     resolvePlayer(p, ox, oy);
     p.gy = p.fy + p.z * ZH;
     updateRoofFall(p);
+    }
     updateLocks(p);
     assignTokens(p);
-    for (const e of STATE.enemies) { const eox = e.x, eoy = e.y, st0 = e.state; if (leashStep(e, p)) continue; updateEnemy(e, p); if (st0 === "walk" && e.state === "walk") applyMove(e, eox, eoy); }
+    for (const e of STATE.enemies) { const eox = e.x, eoy = e.y, st0 = e.state; if (leashStep(e, p)) continue; if (ffFrozen(e, p)) continue; updateEnemy(e, p); ffAfterEnemy(e, p, st0); if (st0 === "walk" && e.state === "walk") applyMove(e, eox, eoy); }
     updateProps(p); updateItems(p);
     STATE.enemies = STATE.enemies.filter((e) => { if (e.gone && e.hp <= 0) STATE.kills++; return !e.gone; });
     STATE.stars = STATE.stars.filter((s) => {
@@ -3840,7 +3989,7 @@ import * as THREE from "./three.module.min.js";
       const sh = projDef(s).hit; if (p.deadT === 0 && Math.abs(s.x - p.x) < sh[0] && Math.abs(s.y - p.y) < sh[1] && p.z < sh[2] && p.inv === 0) { hurtPlayer(shotDmg(s)); return false; }
       return s.x > STATE.camX - 40 && s.x < STATE.camX + W + 40;
     });
-    if (p.gx !== undefined) { const g = toGlobal(STATE.zone, p.x, p.y); p.gx = g.gx; p.gz = g.gz; }
+    if (p.gx !== undefined && !(p.sk && p.sk.on)) { const g = toGlobal(STATE.zone, p.x, p.y); p.gx = g.gx; p.gz = g.gz; }
   }
   // 3D aim help: in a full 3D street the stick rarely lines up a row exactly, so a swing turns to the nearest foe in front-ish
   function autoFace(p) {
@@ -3859,9 +4008,13 @@ import * as THREE from "./three.module.min.js";
   function updateCamera(dt) {
     const p = STATE.player, z = STATE.zone;
     if (!p || !z || STATE.scene === "title" || STATE.scene === "boot") return titleCamera(dt);
-    const C = z.cam, a = C.a * Math.PI / 180;
+    const sk = !!(p.sk && p.sk.on) && z.reg === "sewer";
+    CAM.pk = lerp(CAM.pk || 0, STATE.slowT > 0 && !(p.ffL && p.ffL.kind === "ctr") ? 1 : 0, STATE.slowT > 0 ? 0.12 : 0.06);
+    CAM.sk = lerp(CAM.sk || 0, sk ? 1 : 0, 0.05);
+    const C0 = z.cam, C = { a: C0.a + 8 * CAM.sk, dist: C0.dist * (1 - 0.05 * CAM.sk) * (1 - 0.42 * CAM.pk), h: C0.h * (1 - 0.45 * CAM.sk) * (1 - 0.35 * CAM.pk), fov: C0.fov + 5 * CAM.sk - 9 * CAM.pk }, a = C.a * Math.PI / 180;
     _d.set(-z.v[0] * Math.cos(a) + z.u[0] * Math.sin(a), 0, -z.v[1] * Math.cos(a) + z.u[1] * Math.sin(a)).normalize();
-    _t.set(p.gx, p.gy + 1.0, p.gz);
+    CAM.skY = sk ? lerp(CAM.skY === undefined ? p.gy : CAM.skY, p.gy, 0.08) : p.gy;
+    _t.set(p.gx, (sk ? WORLD.SY + (CAM.skY - WORLD.SY) * 0.55 : p.gy) + 1.0, p.gz);
     if (p.climb) _t.y = p.gy + 0.9;
     if (STATE.locked) { const c = toGlobal(z, STATE.camX + W / 2, p.y); _t.x = lerp(_t.x, c.gx, 0.45); _t.z = lerp(_t.z, c.gz, 0.45); }
     _want.copy(_t).addScaledVector(_d, -C.dist); _want.y = _t.y + C.h;
@@ -3873,7 +4026,7 @@ import * as THREE from "./three.module.min.js";
     _want.y = Math.min(_want.y, B[4]);
     if (z.reg === "sewer") _want.y = Math.min(_want.y, WORLD.SC - 0.3);
     _look.copy(_t).addScaledVector(_d, 2.6); _look.y = _t.y + (z.reg === "sewer" ? -0.1 : 0.55);
-    const k = CAM.snap ? 1 : 1 - Math.exp(-dt * 4.5);
+    const k = CAM.snap ? 1 : 1 - Math.exp(-dt * (4.5 + 4 * (CAM.sk || 0)));
     CAM.pos.lerp(_want, k); CAM.look.lerp(_look, CAM.snap ? 1 : 1 - Math.exp(-dt * 6));
     if (z.reg === "sewer") CAM.pos.y = Math.min(CAM.pos.y, WORLD.SC - 0.3);
     CAM.fov = lerp(CAM.fov, C.fov, CAM.snap ? 1 : 0.05); CAM.snap = false;
@@ -3928,11 +4081,452 @@ import * as THREE from "./three.module.min.js";
     updateLights(t);
     stepDecor(dt, t, REGION.cur);
     updateArrows(t);
-    if (STATE.scene === "stage" || STATE.scene === "card" || STATE.scene === "win" || STATE.scene === "over") { fxStep(); drawEntities(scene); }
+    if (STATE.scene === "stage" || STATE.scene === "card" || STATE.scene === "win" || STATE.scene === "over") { fxStep(); drawEntities(scene); drawBoard3D(); }
+    else if (SKB) SKB.visible = false;
     else { for (const b of BILLS.pool) b.hide(); }
     const ps = renderer.domElement.height / (2 * Math.tan(camera.fov * Math.PI / 360));
     for (const k in PART) PART[k].mat.uniforms.scale.value = ps;
     renderer.render(scene, camera);
+  }
+
+  // =====================================================================================================
+  // ---------- SKATEBOARD (new): a board waits by the block-1 ladder in the sewer. In tunnels A and B the hero can ride it:
+  // momentum (push / carve / friction), the curved coves work like a half-pipe (ride partway up, gravity pulls you back),
+  // two fun-boxes give air, tricks in the air (ATTACK = kickflip, JUMP = 360), land too tilted or mid-trick and you bail.
+  // Physics runs in world metres on skateSurf() (world.js); the 2D combat frame (p.x / p.y / p.z) is derived from it, so
+  // slashes from the board and enemy hits keep using the reused 16-bit combat code.
+  // =====================================================================================================
+  const BOARD_SPOT = { x: 37.6, z: 0.9 };
+  const SKC = { G: 9.8, ACC: 5.2, VMAX_PUSH: 7.2, VMAX: 11, TURN: 2.9, FRIC: 0.16, OLLIE: 3.7, FLIP_T: 0.36, SPIN_T: 0.5 };
+  function makeBoard() {
+    const g = new THREE.Group();
+    const grip = canvasTex(128, 32, (c, w, h) => { c.fillStyle = "#1a1a1e"; c.fillRect(0, 0, w, h); for (let i = 0; i < 500; i++) { c.fillStyle = `rgba(255,255,255,${Math.random() * 0.12})`; c.fillRect(Math.random() * w, Math.random() * h, 1, 1); } c.fillStyle = "#3a3a42"; c.fillRect(10, 4, 6, h - 8); c.fillRect(w - 16, 4, 6, h - 8); });
+    const art = canvasTex(128, 32, (c, w, h) => { const gr = c.createLinearGradient(0, 0, w, 0); gr.addColorStop(0, "#ff5a2a"); gr.addColorStop(0.5, "#ffd23a"); gr.addColorStop(1, "#3fe07a"); c.fillStyle = gr; c.fillRect(0, 0, w, h); c.font = "bold italic 20px Impact, Arial Black, Arial"; c.textAlign = "center"; c.fillStyle = "#111"; c.fillText("SEWERSIDE", w / 2, 23); });
+    const wood = new THREE.MeshLambertMaterial({ color: 0xb07a40 });
+    const deck = new THREE.Mesh(new THREE.BoxGeometry(0.82, 0.035, 0.22), [wood, wood, new THREE.MeshLambertMaterial({ map: grip }), new THREE.MeshLambertMaterial({ map: art }), wood, wood]);
+    deck.position.y = 0.075; g.add(deck);
+    for (const s of [-1, 1]) { const tip = new THREE.Mesh(new THREE.BoxGeometry(0.12, 0.03, 0.2), wood); tip.position.set(s * 0.45, 0.095, 0); tip.rotation.z = s * 0.35; g.add(tip); }
+    const truckM = new THREE.MeshLambertMaterial({ color: 0x9aa0a8 }), wheelM = new THREE.MeshLambertMaterial({ color: 0xf2e8c8, emissive: 0x2a2620 });
+    for (const x of [-0.27, 0.27]) {
+      const t = new THREE.Mesh(new THREE.BoxGeometry(0.05, 0.03, 0.2), truckM); t.position.set(x, 0.045, 0); g.add(t);
+      for (const z of [-0.09, 0.09]) { const w = new THREE.Mesh(new THREE.CylinderGeometry(0.035, 0.035, 0.035, 10), wheelM); w.rotation.x = Math.PI / 2; w.position.set(x, 0.035, z); g.add(w); }
+    }
+    return g;
+  }
+  let SKB = null; // the ridden board mesh (lazy)
+  const skAllowedZone = (z) => z && (z.id === "sewerA" || z.id === "sewerB");
+  function skHint(id, a, b) { STATE.hintsSeen = STATE.hintsSeen || {}; if (STATE.hintsSeen[id]) return; STATE.hintsSeen[id] = true; (STATE.hintQ || (STATE.hintQ = [])).push({ a, b, id }); skHintShow(); }
+  const btnName = (k) => (STATE.showTouch ? { a: "ATTACK", b: "JUMP", p: "SPECIAL", c: "COUNTER", k: "BOARD" } : { a: "J", b: "K", p: "L", c: "C", k: "B" })[k];
+  function pickupBoard(p) {
+    const it = STATE.near; if (it) it.taken = true;
+    STATE.hasBoard = true; if (WORLD.boardProp) WORLD.boardProp.visible = false; if (WORLD.boardRing) WORLD.boardRing.visible = false;
+    SFX.pickup(); playerBark(true, "RADICAL WHEELS!");
+    skateOn(p);
+    skHint("board", "SKATEBOARD!  " + btnName("k") + ": HOP ON / OFF", "STICK: PUSH + CARVE - CARVE INTO THE CURVED WALLS - " + btnName("b") + ": OLLIE");
+  }
+  function skateOn(p) {
+    if (!STATE.hasBoard || !skAllowedZone(STATE.zone) || p.layer !== "sewer" || p.climb || p.grabbedBy || p.deadT > 0 || p.downT > 0 || p.hurtT > 0 || p.z > 0) return false;
+    const s = skateSurf(p.gx, p.gz); if (!s || s.lim) return false;
+    const dir = p.facing * (CAM.uDot >= 0 ? 1 : -1), u = STATE.zone.u;
+    p.sk = { on: true, x: p.gx, y: s.y, z: p.gz, vx: u[0] * dir * 0.8, vy: 0, vz: u[1] * dir * 0.8, air: false, n: [0, 1, 0], up: [0, 1, 0], hx: u[0] * dir, hz: u[1] * dir,
+      flip: 0, flipOn: false, spin: 0, spinOn: false, tricks: [], airT: 0, bailT: 0, pushT: 0, total: (p.sk && p.sk.total) || 0, last: null, wish: null, maxH: 0 };
+    p.attackT = 0; p.atk = null; p.walkT = 0; SFX.land();
+    return true;
+  }
+  function skateOff(p, why) {
+    const S = p.sk; if (!S || !S.on) return;
+    S.on = false; p.walkT = 0;
+    if (p.layer === "sewer" && STATE.zone && !STATE.zone.lair) { // step off onto walkable floor inside the zone
+      const z = STATE.zone, R = z.rects[0]; let gx = clamp(S.x, R[0] + 0.05, R[2] - 0.05), gz = clamp(S.z, R[1] + 0.05, R[3] - 0.05);
+      if (floorAt("sewer", gx, gz) === null) { gx = p.gx; gz = p.gz; }
+      p.gx = gx; p.gz = gz; const l = toLocal(z, gx, gz); p.x = l.x; p.y = l.y;
+      const f = floorAt("sewer", gx, gz); p.fy = f === null ? WORLD.SY : f; p.z = Math.max(0, (S.y - p.fy) / ZH); p.vz = 0; p.gy = p.fy + p.z * ZH;
+    }
+    if (why === "hit") { fx("dust", p.x, p.y, 14); }
+  }
+  // input while on the board (replaces the on-foot branch): ollie / tricks / slash, and the stick wish for skateMove
+  function skateInput(p, aP, bP, kP) {
+    const S = p.sk;
+    if (kP && !S.air && S.bailT === 0) { skateOff(p); SFX.land(); return; }
+    const v = inputVec(); S.wish = null;
+    if (v) { const w = stickToWorld(v.dx, v.dy); S.wish = { x: w.x, z: w.z, mag: v.mag }; }
+    if (S.bailT > 0) { IBUF.a = IBUF.b = 0; return; }
+    if (bP) {
+      IBUF.b = 0;
+      if (!S.air) { S.vx += S.n[0] * SKC.OLLIE; S.vy += S.n[1] * SKC.OLLIE; S.vz += S.n[2] * SKC.OLLIE; S.air = true; S.airT = 0; S.up = S.n.slice(); S.y += 0.02; SFX.jump(); dust(p.x, p.y);
+        skHint("air", "IN THE AIR: " + btnName("a") + " = KICKFLIP   " + btnName("b") + " = 360 SPIN", "LAND FLAT AND FINISH THE TRICK - OR BAIL!"); }
+      else if (!S.spinOn) { S.spinOn = true; S.spin = 0; SFX.swing(); }
+    }
+    if (aP) {
+      IBUF.a = 0;
+      if (S.air) { if (!S.flipOn) { S.flipOn = true; S.flip = 0; SFX.swing(); } }
+      else if (p.attackT === 0) { autoFace(p); swingCombo(p); } // slash on the move
+    }
+  }
+  function skNormal(x, z, out) { // surface normal; at a kink (ramp lip, fun-box edge) use the continuous side, never a slope across the drop
+    const e = 0.04, m = skateSurf(x, z), yc = m ? m.y : 0;
+    const sl = (A, B) => {
+      const df = A && !A.lim ? A.y - yc : null, db = B && !B.lim ? yc - B.y : null;
+      if (df === null && db === null) return 0; if (df === null) return db / e; if (db === null) return df / e;
+      return Math.abs(df - db) > 0.05 ? (Math.abs(df) < Math.abs(db) ? df : db) / e : (df + db) / (2 * e);
+    };
+    const hx = sl(skateSurf(x + e, z), skateSurf(x - e, z)), hz = sl(skateSurf(x, z + e), skateSurf(x, z - e));
+    const l = Math.hypot(hx, 1, hz); out[0] = -hx / l; out[1] = 1 / l; out[2] = -hz / l; return out;
+  }
+  const _n2 = [0, 1, 0];
+  function skLand(p, S, s) {
+    skNormal(S.x, S.z, _n2);
+    const ang = Math.acos(clamp(S.up[0] * _n2[0] + S.up[1] * _n2[1] + S.up[2] * _n2[2], -1, 1));
+    const flipLeft = S.flipOn ? Math.PI * 2 - S.flip : 0, spinLeft = S.spinOn ? Math.PI * 2 - S.spin : 0;
+    S.y = s.y; S.air = false;
+    const vn = S.vx * _n2[0] + S.vy * _n2[1] + S.vz * _n2[2]; if (vn < 0) { S.vx -= _n2[0] * vn; S.vy -= _n2[1] * vn; S.vz -= _n2[2] * vn; }
+    S.n = _n2.slice();
+    const bad = ang > 0.7 || flipLeft > 0.7 || spinLeft > 0.7;
+    if (bad) { // bail: stumble off, board skids, no damage
+      S.bailT = 50; S.vx *= 0.25; S.vy *= 0.25; S.vz *= 0.25; S.flipOn = S.spinOn = false; S.flip = S.spin = 0; S.tricks = [];
+      SFX.hurt(); STATE.shake = Math.max(STATE.shake, 6); fx("dust", p.x, p.y, 16); STATE.skStat.bails++;
+      popText("BAIL!", p.gx, p.gy + 1.9, p.gz, "#ff5a3a");
+      skHint("bail", "BAILED!", "LAND WITH THE BOARD FLAT TO THE GROUND AND THE TRICK DONE");
+    } else {
+      if (S.flipOn || S.spinOn) { if (flipLeft < 0.7 && S.flipOn) S.tricks.push("KICKFLIP"); if (spinLeft < 0.7 && S.spinOn) S.tricks.push("360"); }
+      S.flipOn = S.spinOn = false; S.flip = S.spin = 0;
+      if (S.tricks.length) {
+        const pts = S.tricks.reduce((a, t) => a + (t === "KICKFLIP" ? 300 : 500), 0) * S.tricks.length + (S.airT > 0.6 ? 100 : 0);
+        const name = S.tricks.join(" + ");
+        STATE.score += pts; S.total += pts; S.last = { name, pts, t: 150 }; STATE.skStat.tricks++;
+        popText(name + " +" + pts, p.gx, p.gy + 2.0, p.gz, "#7fff6a"); SFX.pickup();
+      }
+      S.tricks = []; SFX.land(); dust(p.x, p.y);
+    }
+  }
+  function skBlock(S, ox, oy, oz) { // hit a wall / the cove lip / a fun-box side: slide along whatever axis is free
+    const sx = skateSurf(S.x, oz), sz = skateSurf(ox, S.z);
+    const okX = sx && !sx.lim && sx.y <= oy + 0.25, okZ = sz && !sz.lim && sz.y <= oy + 0.25;
+    if (okX && Math.abs(S.vx) >= Math.abs(S.vz) * 0.2) { S.z = oz; S.vz = -S.vz * 0.15; S.vy = Math.min(S.vy, 0); return sx; }
+    if (okZ) { S.x = ox; S.vx = -S.vx * 0.15; S.vy = Math.min(S.vy, 0); return sz; }
+    S.x = ox; S.z = oz; S.vx *= -0.2; S.vz *= -0.2; S.vy = Math.min(S.vy, 0); return skateSurf(ox, oz);
+  }
+  function skateMove(p) {
+    const S = p.sk, dt = 1 / 60, N = 3, h = dt / N;
+    STATE.skStat = STATE.skStat || { maxWall: 0, air: 0, tricks: 0, bails: 0 };
+    // drive: push / carve / brake (on the ground only)
+    const vh = Math.hypot(S.vx, S.vz);
+    p.walkT = 0;
+    if (S.bailT > 0) { S.bailT--; S.vx *= 0.9; S.vz *= 0.9; }
+    else if (!S.air && S.wish) {
+      const W = S.wish;
+      if (vh < 0.5) { S.vx += W.x * SKC.ACC * W.mag * dt; S.vz += W.z * SKC.ACC * W.mag * dt; S.pushT++; }
+      else {
+        const hx = S.vx / vh, hz = S.vz / vh, dot = hx * W.x + hz * W.z, cr = hx * W.z - hz * W.x;
+        if (dot < -0.6) { const k = Math.max(0, 1 - 2.6 * dt); S.vx *= k; S.vz *= k; S.pushT = 0; }
+        else {
+          const tr = clamp(Math.atan2(cr, dot), -SKC.TURN * W.mag * dt, SKC.TURN * W.mag * dt), c = Math.cos(tr), s = Math.sin(tr);
+          const nx = S.vx * c - S.vz * s, nz = S.vx * s + S.vz * c; S.vx = nx; S.vz = nz;
+          if (dot > 0.35 && vh < SKC.VMAX_PUSH && S.n[1] > 0.9) { S.vx += hx * SKC.ACC * W.mag * dt; S.vz += hz * SKC.ACC * W.mag * dt; S.pushT++; } else S.pushT = 0;
+        }
+      }
+    } else S.pushT = 0;
+    if (S.pushT > 0) p.walkT = S.pushT;
+    if (!S.air) { const k = Math.max(0, 1 - SKC.FRIC * dt - (S.wish ? 0 : 0.12 * dt)); S.vx *= k; S.vz *= k; S.vy *= k; }
+    const sp = Math.hypot(S.vx, S.vy, S.vz); if (sp > SKC.VMAX) { const k = SKC.VMAX / sp; S.vx *= k; S.vy *= k; S.vz *= k; }
+    for (let i = 0; i < N; i++) {
+      const ox = S.x, oy = S.y, oz = S.z;
+      if (S.air) {
+        S.vy -= SKC.G * h; S.x += S.vx * h; S.y += S.vy * h; S.z += S.vz * h; S.airT += h;
+        let s = skateSurf(S.x, S.z);
+        if (!s || s.lim || s.y > oy + 0.25) s = skBlock(S, ox, oy, oz);
+        if (s && S.y <= s.y) skLand(p, S, s);
+        continue;
+      }
+      const n = S.n, gn = -SKC.G * n[1]; // gravity along the slope
+      S.vx += (0 - n[0] * gn) * h; S.vy += (-SKC.G - n[1] * gn) * h; S.vz += (0 - n[2] * gn) * h;
+      const spd = Math.hypot(S.vx, S.vy, S.vz);
+      S.x += S.vx * h; S.z += S.vz * h; const yb = S.y + S.vy * h;
+      let s = skateSurf(S.x, S.z);
+      if (!s || s.lim || s.y > oy + 0.25) { const wasLim = s && s.lim; s = skBlock(S, ox, oy, oz); if (wasLim) { S.vy = Math.min(S.vy, 0); } if (!s) { S.x = ox; S.z = oz; s = skateSurf(ox, oz) || { y: oy }; } }
+      if (yb > s.y + 0.002 && S.vy > 0.5) { S.air = true; S.y = yb; S.airT = 0; S.up = S.n.slice(); continue; } // the ground fell away (fun-box lip): air
+      S.y = s.y; skNormal(S.x, S.z, S.n);
+      const vn = S.vx * S.n[0] + S.vy * S.n[1] + S.vz * S.n[2]; S.vx -= S.n[0] * vn; S.vy -= S.n[1] * vn; S.vz -= S.n[2] * vn;
+      const sp2 = Math.hypot(S.vx, S.vy, S.vz); if (sp2 > 1e-4) { const k = spd / sp2; S.vx *= k; S.vy *= k; S.vz *= k; }
+    }
+    // tricks spin up in the air; the rider straightens out
+    if (S.air) {
+      if (S.flipOn) S.flip = Math.min(Math.PI * 2, S.flip + dt * Math.PI * 2 / SKC.FLIP_T);
+      if (S.spinOn) S.spin = Math.min(Math.PI * 2, S.spin + dt * Math.PI * 2 / SKC.SPIN_T);
+      const k = Math.min(1, dt * 2.2); S.up[0] -= S.up[0] * k; S.up[1] += (1 - S.up[1]) * k; S.up[2] -= S.up[2] * k; const l = Math.hypot(S.up[0], S.up[1], S.up[2]); S.up[0] /= l; S.up[1] /= l; S.up[2] /= l;
+      if (S.flipOn && S.flip >= Math.PI * 2) { S.tricks.push("KICKFLIP"); S.flipOn = false; S.flip = 0; }
+      if (S.spinOn && S.spin >= Math.PI * 2) { S.tricks.push("360"); S.spinOn = false; S.spin = 0; }
+      STATE.skStat.air = Math.max(STATE.skStat.air, S.airT);
+    }
+    const vh2 = Math.hypot(S.vx, S.vz); if (vh2 > 0.3) { S.hx = S.vx / vh2; S.hz = S.vz / vh2; }
+    // back into the 2D combat frame + the 3D player position
+    const s0 = skateSurf(S.x, S.z), fy = s0 ? s0.y : S.y;
+    const wall = s0 ? s0.y - (floorAt("sewer", clamp(S.x, 20.5, 164.6), clamp(S.z, -2.7, 2.55)) ?? s0.y) : 0;
+    if (!S.air && S.n[1] < 0.97) STATE.skStat.maxWall = Math.max(STATE.skStat.maxWall, s0 ? s0.y - WORLD.SY : 0);
+    p.gx = S.x; p.gz = S.z; p.fy = Math.min(fy, S.y); p.gy = S.y; p.z = S.air ? Math.max(0, (S.y - fy) / ZH) : 0; p.vz = 0;
+    let nz = zoneAtG("sewer", S.x, S.z);
+    if (!nz) for (const z of WORLD.zones) if (z.layer === "sewer" && !z.lair) for (const r of z.rects) if (S.x >= r[0] - 0.5 && S.x <= r[2] + 0.5 && S.z >= r[1] - 0.5 && S.z <= r[3] + 0.5) { nz = z; break; }
+    if (nz && nz !== STATE.zone) setZone(nz);
+    const l = toLocal(STATE.zone, S.x, S.z); p.x = l.x; p.y = l.y;
+    const du = S.vx * STATE.zone.u[0] + S.vz * STATE.zone.u[1]; if (Math.abs(du) > 0.4 && p.attackT === 0) p.facing = du > 0 ? 1 : -1;
+    if (STATE.zone.lair) { skateOff(p); banner("BOARD OFF", "NO SKATING IN THE LIVING ROOM", "#ffd08a"); }
+    if (S.on && !S.air && S.n[1] < 0.8) skHint("wall", "RIDING THE WALL!", "CARVE IN WITH SPEED - GRAVITY BRINGS YOU BACK DOWN");
+    return wall;
+  }
+  // ---- the board under the hero + the hero's lean ----
+  const _q1 = new THREE.Quaternion(), _q2 = new THREE.Quaternion(), _m4 = new THREE.Matrix4(), _vA = new THREE.Vector3(), _vB = new THREE.Vector3(), _vC = new THREE.Vector3();
+  function drawBoard3D() {
+    const p = STATE.player, S = p && p.sk;
+    if (!SKB) { SKB = makeBoard(); SKB.visible = false; scene.add(SKB); }
+    const on = !!(S && S.on && p.layer === "sewer" && STATE.scene !== "title");
+    SKB.visible = on; if (!on) return;
+    const up = S.air ? S.up : S.n;
+    _vB.set(up[0], up[1], up[2]); _vA.set(S.hx, 0, S.hz); _vA.addScaledVector(_vB, -_vA.dot(_vB)).normalize(); _vC.crossVectors(_vA, _vB);
+    _m4.makeBasis(_vA, _vB, _vC); SKB.quaternion.setFromRotationMatrix(_m4);
+    if (S.spin) { _q1.setFromAxisAngle(_vB.set(0, 1, 0), S.spin); SKB.quaternion.multiply(_q1); }
+    if (S.flip) { _q2.setFromAxisAngle(_vA.set(1, 0, 0), S.flip); SKB.quaternion.multiply(_q2); }
+    if (S.bailT > 0) { SKB.position.set(S.x + S.hx * (1 - S.bailT / 50) * 1.2, S.y, S.z + S.hz * (1 - S.bailT / 50) * 1.2); _q1.setFromAxisAngle(_vA.set(1, 0, 0), S.bailT * 0.25); SKB.quaternion.multiply(_q1); }
+    else SKB.position.set(S.x, S.y - (S.air ? 0 : 0.02), S.z);
+  }
+  function heroLean(b) { // tilt the hero's billboard with the board (screen-space roll from the board's up vector) and fake the 360
+    const p = STATE.player, S = p && p.sk; if (!S || !S.on) return;
+    const up = S.air ? S.up : S.n, m = camera.matrixWorld.elements;
+    const r = up[0] * m[0] + up[1] * m[1] + up[2] * m[2], u = up[0] * m[4] + up[1] * m[5] + up[2] * m[6];
+    b.mesh.rotation.z = clamp(-Math.atan2(r, u), -0.85, 0.85);
+    if (S.spin) { const c = Math.cos(S.spin); b.mesh.scale.x *= Math.max(0.12, Math.abs(c)); if (c < 0) b.mat.uniforms.flip.value = 1 - b.mat.uniforms.flip.value; }
+  }
+
+  // =====================================================================================================
+  // ---------- FREEFLOW COMBAT (new, on foot everywhere): ATTACK auto-targets the thug the stick points at (or the nearest)
+  // within ~7.5 m and the hero leaps to it, so one button chains hits across a crowd. A thug about to swing shows a bright
+  // "!" ~0.5 s before the hit; COUNTER (C / touch COUNTER) in that window stuns it and keeps the chain. The combo breaks
+  // when you get hit, whiff, or stall; at 8 hits a TAKEDOWN is ready on SPECIAL: a one-hit KO with slow-mo + camera push-in.
+  // Thugs take turns (attack tokens from the 16-bit AI) and at most one winds up at a time; the rest circle.
+  // =====================================================================================================
+  const FFR = 7.5; // metres
+  const FF = { combo: 0, meter: 0, sinceHit: 0, best: 0, hp: 0, brokeT: 0, brokeN: 0 };
+  const FFSTAT = { leaps: 0, chainBest: 0, counters: 0, takedowns: 0, warns: 0, breaks: 0 };
+  function ffReset() { FF.combo = 0; FF.meter = 0; FF.sinceHit = 0; FF.hp = STATE.player ? STATE.player.hp : 0; STATE.pops = []; STATE.hint = null; STATE.hintQ = []; }
+  function popText(text, gx, gy, gz, col, big) { (STATE.pops || (STATE.pops = [])).push({ text, gx, gy, gz, col: col || "#ffe060", t: 0, big: !!big }); if (STATE.pops.length > 12) STATE.pops.shift(); }
+  function swingCombo(p) { // the reused 3-hit chain (c1 -> c2 -> c3)
+    p.combo = p.comboT > 0 ? (p.combo % 3) + 1 : 1;
+    const sw = SWINGS[p.bro.name.toLowerCase()]["c" + p.combo];
+    startAtk(p, "c" + p.combo, sw.w + sw.s + sw.r); p.stab2 = false; COMBO_COUNT["c" + p.combo]++; p.ffSwing = true; p.ffHits = 0;
+  }
+  const isFoe = (o) => o && o.type !== undefined && o.state !== undefined && o.kind === undefined;
+  function ffWish() { const v = inputVec(); if (!v) return null; return stickToWorld(v.dx, v.dy); }
+  // the thug the stick points at (cone ~65 deg, nearer + better aligned wins), else the nearest; bosses only when nothing else
+  function ffPick(p, range, needWarn, noWish) {
+    const z = STATE.zone, me = toGlobal(z, p.x, p.y), w = noWish ? null : ffWish();
+    let best = null, bs = 1e9;
+    for (const e of STATE.enemies) {
+      if (!canHitState(e) || e.gone || e.state === "enter") continue;
+      if (needWarn && !(e.warnT > 0)) continue;
+      const g = toGlobal(z, e.x, e.y), dx = g.gx - me.gx, dz = g.gz - me.gz, d = Math.hypot(dx, dz);
+      if (d > range) continue;
+      let sc = d;
+      if (w) { const c = (dx * w.x + dz * w.z) / (d || 1); if (c < 0.42 && d > 1.2) continue; sc = d * (1.6 - c); }
+      if (edef(e).boss) sc += 4;
+      if (e.idle) sc += 2;
+      if (sc < bs) { bs = sc; best = e; }
+    }
+    if (!best && w && !needWarn) return ffPick(p, range, false, true);
+    return best;
+  }
+  // ATTACK pressed on foot: leap to the target when it is out of reach, else swing right away
+  function ffAttack(p) {
+    const e = p.z === 0 ? ffPick(p, FFR) : null;
+    if (e) {
+      const dm = mDist(p.x, p.y, e.x, e.y);
+      if (dm > 1.15 || Math.abs(e.y - p.y) > 8) { ffLunge(p, e, dm, "hit"); return; }
+      p.facing = e.x >= p.x ? 1 : -1; if (Math.abs(e.y - p.y) > 2) p.y += Math.sign(e.y - p.y) * Math.min(4, Math.abs(e.y - p.y));
+    } else autoFace(p);
+    swingCombo(p);
+  }
+  function ffLunge(p, e, dm, kind) {
+    p.ffL = { e, t: 0, n: kind === "td" ? 16 : kind === "ctr" ? 5 : clamp(Math.round(4 + dm * 1.6), 6, 15), kind, hop: dm > 2.4 ? Math.min(46, 10 + dm * 5) : 0, x0: p.x, y0: p.y };
+    p.attackT = 0; p.atk = null; p.buf = 0; p.inv = Math.max(p.inv, 8); p.walkT = 0;
+    if (kind === "hit") FFSTAT.leaps++;
+    SFX.jump();
+  }
+  // one frame of the leap (returns true while leaping)
+  function ffLungeStep(p) {
+    const L = p.ffL; if (!L) return false;
+    const e = L.e;
+    if (p.hurtT > 0 || p.downT > 0 || p.grabbedBy || p.deadT > 0) { p.ffL = null; p.z = 0; return false; }
+    L.t++;
+    const side = e.x >= L.x0 ? 1 : -1, reach = Math.max(14, p.bro.reach * 0.75);
+    const tx = e.x - side * reach, ty = e.y, k = Math.min(1, 1 / Math.max(1, L.n - L.t + 1));
+    p.x += (tx - p.x) * k; p.y += (ty - p.y) * k; p.facing = side;
+    p.z = L.hop ? Math.sin(Math.min(1, L.t / L.n) * Math.PI) * L.hop : 0; p.vz = 0; p.walkT++;
+    if (L.t % 3 === 0) STATE.fx.push({ kind: "dust", x: p.x, y: p.y, t: 0, life: 10 });
+    if (L.t < L.n) return true;
+    p.ffL = null; p.z = 0; p.vz = 0; p.walkT = 0;
+    if (L.kind === "td") ffTakedownHit(p, e);
+    else if (L.kind === "ctr") { const sw = SWINGS[p.bro.name.toLowerCase()].c2; startAtk(p, "c2", sw.w + sw.s + sw.r); p.hitSet.add(e); p.ffSwing = false; }
+    else if (canHitState(e)) swingCombo(p);
+    return true;
+  }
+  function ffAddHits(n, p) {
+    if (n <= 0) return;
+    FF.combo += n; FF.meter += n; FF.sinceHit = 0; FF.best = Math.max(FF.best, FF.combo); FFSTAT.chainBest = Math.max(FFSTAT.chainBest, FF.combo);
+    if (FF.meter >= 8 && FF.meter - n < 8) { SFX.confirm(); skHint("takedown", "TAKEDOWN READY!", btnName("p") + ": ONE-HIT KO ON THE THUG YOU POINT AT"); }
+  }
+  function ffBreak(why) {
+    if (FF.combo >= 2) { FF.brokeT = 70; FF.brokeN = FF.combo; FFSTAT.breaks++; }
+    FF.combo = 0; FF.meter = 0; FF.sinceHit = 0;
+  }
+  // COUNTER: every thug showing the warning inside the range gets stunned (bosses stagger); the hero snaps to the nearest
+  function ffCounter(p) {
+    if (p.ctrCd > 0 || p.z > 0 || p.grabbedBy || p.downT > 0 || p.hurtT > 0) return false;
+    const me = toGlobal(STATE.zone, p.x, p.y), list = [];
+    for (const e of STATE.enemies) { if (!(e.warnT > 0) || !canHitState(e)) continue; const g = toGlobal(STATE.zone, e.x, e.y), d = Math.hypot(g.gx - me.gx, g.gz - me.gz); if (d <= FFR) list.push([d, e]); }
+    if (!list.length) { p.ctrCd = 18; return false; }
+    list.sort((a, b) => a[0] - b[0]);
+    for (const [, e] of list.slice(0, 3)) {
+      const dir = e.x >= p.x ? 1 : -1; e.tele = 0; e.warnT = 0; e.token = false;
+      if (e.type === "ramrod") { hitEnemy(e, 1, false, dir, 4, false); if (e.state !== "dying") { e.state = "stagger"; e.t = 0; e.vx = dir * 1.2; } }
+      else if (e.type === "zap") { hitEnemy(e, 1, true, dir, 4, false); e.len = 0; }
+      else { hitEnemy(e, 1, true, dir, 4, false); }
+      fx("ring", e.x, e.y, 16); STATE.fx.push({ kind: "wspark", x: e.x, y: e.y - 20, t: 0, life: 9, c: "#fff", dir });
+      const g = entPos(STATE.zone, e, {}); popText("COUNTER!", g.gx, g.gy + 2.2, g.gz, "#7fe8ff", true);
+    }
+    SFX.clink(); SFX.finisher(); STATE.slowT = Math.max(STATE.slowT || 0, 12); STATE.shake = Math.max(STATE.shake, 5);
+    ffAddHits(list.length > 3 ? 3 : list.length, p); FFSTAT.counters++;
+    const e0 = list[0][1]; p.inv = Math.max(p.inv, 26); p.ctrCd = 10;
+    if (list[0][0] > 1.3) ffLunge(p, e0, list[0][0], "ctr");
+    else { p.facing = e0.x >= p.x ? 1 : -1; const sw = SWINGS[p.bro.name.toLowerCase()].c2; startAtk(p, "c2", sw.w + sw.s + sw.r); for (const [, e] of list) p.hitSet.add(e); p.ffSwing = false; }
+    return true;
+  }
+  // TAKEDOWN (8+ chain): leap in slow motion, camera pushes in, one-hit KO (bosses take a big chunk instead)
+  function ffTakedown(p) {
+    if (FF.meter < 8 || p.z > 0) return false;
+    const e = ffPick(p, FFR); if (!e) return false;
+    FF.meter = 0; STATE.slowT = 66; CAM.pushK = 1; p.inv = Math.max(p.inv, 100);
+    ffLunge(p, e, mDist(p.x, p.y, e.x, e.y), "td"); SFX.charge();
+    const g = entPos(STATE.zone, e, {}); popText("TAKEDOWN!", g.gx, g.gy + 2.6, g.gz, "#ff8c1a", true);
+    return true;
+  }
+  function ffTakedownHit(p, e) {
+    p.facing = e.x >= p.x ? 1 : -1;
+    const sw = SWINGS[p.bro.name.toLowerCase()].c3; startAtk(p, "c3", sw.w + sw.s + sw.r); p.hitSet.add(e); p.ffSwing = false;
+    if (canHitState(e) || e.state === "down") {
+      const boss = !!edef(e).boss; e.tele = 0; e.warnT = 0;
+      hitEnemy(e, boss ? Math.max(4, Math.round((e.maxHp || 20) * 0.2)) : e.hp + 9, true, p.facing, 4, true);
+      fx("boom", e.x, e.y - 20, 30); STATE.fx.push({ kind: "ring", x: e.x, y: e.y, t: 0, life: 18 });
+      STATE.score += 500; ffAddHits(1, p); FFSTAT.takedowns++;
+    }
+    STATE.shake = Math.max(STATE.shake, 12); SFX.boom(); buzz(40);
+  }
+  // per-frame bookkeeping: combo timeout, getting hit breaks it
+  function ffTick(p) {
+    if (FF.brokeT > 0) FF.brokeT--;
+    if (p.ctrCd > 0) p.ctrCd--;
+    if (FF.combo > 0 && ++FF.sinceHit > 170) ffBreak("stall");
+    if (p.hp < FF.hp || p.grabbedBy) { if (FF.combo > 0) ffBreak("hit"); }
+    FF.hp = p.hp;
+    if (STATE.enemies.some((e) => !e.idle && !e.home && mDist(p.x, p.y, e.x, e.y) < 9 && !edef(e).boss) && !(p.sk && p.sk.on))
+      skHint("ff", "FREEFLOW COMBAT", btnName("a") + " LEAPS TO THE THUG YOU POINT AT - CHAIN HITS ACROSS THE CROWD");
+  }
+  // ---- thug wind-ups: hold the attack pose ~0.3 s longer so the warning reads; only one wind-up at a time ----
+  function ffFrozen(e, p) {
+    if (e.warnT > 0) e.warnT--;
+    if (e.tele > 0) {
+      if (e.state !== e.teleSt) { e.tele = 0; e.warnT = 0; return false; }
+      e.tele--; if (e.flash > 0) e.flash--; if (e.inv > 0) e.inv--; if (e.sayT > 0) e.sayT--; e.walkT = 0;
+      if (e.type !== "ramrod" && e.type !== "zap") e.facing = p.x >= e.x ? 1 : -1;
+      return true;
+    }
+    if (e.warnT > 0 && e.state !== e.teleSt) e.warnT = 0;
+    return false;
+  }
+  function ffAfterEnemy(e, p, st0) {
+    if (st0 === e.state) return;
+    const D = edef(e);
+    let tele = 0, warn = 0;
+    if (!D.boss && e.state === "attack" && st0 === "walk" && D.trigger !== "ranged") {
+      if (STATE.enemies.some((o) => o !== e && o.warnT > 10)) { e.state = "walk"; e.t = 0; e.cool = 16 + (Math.random() * 20 | 0); return; } // wait your turn
+      const st = D.attack === "haymaker" ? D.haymaker.t : D.attack === "dash" ? D.dash.crouch : D.strike ? D.strike.t : 12;
+      tele = Math.max(0, 30 - st); warn = tele + st;
+    } else if (e.type === "ramrod" && e.state === "kwind") { tele = 20; warn = 30; }
+    else if (e.type === "ramrod" && e.state === "tele") { tele = 0; warn = 30; }
+    else if (e.type === "zap" && e.state === "whip") { tele = 10; warn = 32; }
+    else if (e.type === "zap" && e.state === "ram") { tele = 16; warn = 30; }
+    if (!warn) return;
+    e.tele = tele; e.teleSt = e.state; e.warnT = warn; FFSTAT.warns++;
+    if (p.deadT === 0 && mDist(p.x, p.y, e.x, e.y) < FFR + 2) skHint("counter", "COUNTER!  WATCH FOR THE  !", "PRESS " + btnName("c") + " WHEN A THUG FLASHES ! TO STUN IT AND KEEP THE CHAIN");
+  }
+  // ---- hints (first time each mechanic shows up), queued so they never overlap ----
+  function skHintShow() { if (!STATE.hint && STATE.hintQ && STATE.hintQ.length) STATE.hint = Object.assign({ t: 0 }, STATE.hintQ.shift()); }
+  // ---- touch buttons for COUNTER and BOARD (the cabinet photo only has three) ----
+  const TB = { hit: { c: false, k: false }, el: {} };
+  function touchButtons() {
+    const scr = document.getElementById("screen"); if (!scr) return;
+    if (!TB.made) {
+      TB.made = true;
+      for (const [k, label] of [["c", "COUNTER"], ["k", "BOARD"]]) {
+        const b = document.createElement("div"); b.className = "ss-tb ss-tb-" + k; b.textContent = label; b.setAttribute("role", "button"); b.setAttribute("aria-label", label);
+        const down = (ev) => { ev.preventDefault(); ev.stopPropagation(); TB.hit[k] = true; b.classList.add("on"); STATE.showTouch = true; };
+        const up = (ev) => { ev.stopPropagation(); b.classList.remove("on"); };
+        b.addEventListener("pointerdown", down); b.addEventListener("pointerup", up); b.addEventListener("pointercancel", up); b.addEventListener("pointerleave", up);
+        scr.appendChild(b); TB.el[k] = b;
+      }
+    }
+    const p = STATE.player, st = STATE.scene === "stage" && p && !p.climb && STATE.showTouch;
+    const fight = st && STATE.enemies.some((e) => !e.idle && !e.home && canHitState(e) && mDist(p.x, p.y, e.x, e.y) < 12);
+    const warn = st && STATE.enemies.some((e) => e.warnT > 0);
+    const brd = st && STATE.hasBoard && p.layer === "sewer" && skAllowedZone(STATE.zone);
+    const set = (k, on, hot) => { const b = TB.el[k]; if (!b) return; const v = on ? "flex" : "none"; if (b.style.display !== v) b.style.display = v; b.classList.toggle("hot", !!hot); };
+    set("c", fight || warn, warn); set("k", brd, false);
+  }
+  // ---- HUD: warning icons, score pops, combo counter + takedown meter, skate score, first-time hints ----
+  function wrapText(t, n) { const out = []; let line = ""; for (const w of t.split(" ")) { if ((line + " " + w).trim().length > n) { out.push(line.trim()); line = w; } else line += " " + w; } if (line.trim()) out.push(line.trim()); return out; }
+  function drawFFHUD() {
+    const p = STATE.player; if (!p) return;
+    // "!" over every thug winding up a hit (bright lines burst + pulsing glyph)
+    for (const e of STATE.enemies) {
+      if (!(e.warnT > 0)) continue;
+      const s = localScreen(e, e.type === "ramrod" ? (e.mid ? 2.75 : 3.0) : e.type === "zap" ? 1.9 : 2.25); if (!s.ok) continue;
+      const k = 1 + 0.18 * Math.sin(STATE.t * 0.9), urgent = e.warnT < 12;
+      ctx.save(); ctx.translate(s.x, s.y);
+      ctx.strokeStyle = urgent ? "#ff4a3a" : "#fff27a"; ctx.lineWidth = 1.5;
+      for (let i = 0; i < 8; i++) { const a = i * Math.PI / 4 + STATE.t * 0.05, r0 = 9 * k, r1 = 14 * k; ctx.beginPath(); ctx.moveTo(Math.cos(a) * r0, Math.sin(a) * r0); ctx.lineTo(Math.cos(a) * r1, Math.sin(a) * r1); ctx.stroke(); }
+      ctx.fillStyle = "#000"; ctx.beginPath(); ctx.arc(0, 0, 7.5 * k, 0, 7); ctx.fill();
+      ctx.fillStyle = urgent ? "#ff4a3a" : "#ffe14a"; ctx.beginPath(); ctx.arc(0, 0, 6.2 * k, 0, 7); ctx.fill();
+      ctx.restore(); ptext("!", s.x + 0.5, s.y, 1, "#000");
+    }
+    // floating score / move pops
+    for (const q of STATE.pops || []) {
+      const s = project(q.gx, q.gy, q.gz); if (!s.ok) continue;
+      ctx.globalAlpha = q.t < 50 ? 1 : Math.max(0, 1 - (q.t - 50) / 30);
+      ptext(q.text, s.x, s.y - Math.min(q.t, 40) * 0.4, q.big ? 2 : 1, q.col); ctx.globalAlpha = 1;
+    }
+    // combo counter (right side, under the boss bar)
+    const ry = HUDS.slide > 0 ? 40 : 14;
+    if (FF.combo >= 2) {
+      const hot = FF.combo >= 8, c = hot ? (Math.floor(STATE.t / 6) % 2 ? "#ff8c1a" : "#ffe060") : "#ffe060";
+      ptext(FF.combo + "x", W - 8, ry + 6, 3, c, "right"); ptext("COMBO", W - 8, ry + 22, 1, "#fff", "right");
+      for (let i = 0; i < 8; i++) rect(W - 8 - (8 - i) * 7, ry + 28, 6, 4, i < Math.min(8, FF.meter) ? (FF.meter >= 8 ? "#ff8c1a" : "#ffe060") : "#3a2a10");
+      if (FF.meter >= 8 && Math.floor(STATE.t / 10) % 2) ptext("TAKEDOWN: " + btnName("p"), W - 8, ry + 38, 1, "#ff8c1a", "right");
+    } else if (FF.brokeT > 0) { ctx.globalAlpha = FF.brokeT / 70; ptext(FF.brokeN + "x COMBO", W - 8, ry + 6, 2, "#9aa0b8", "right"); ptext("BROKEN", W - 8, ry + 20, 1, "#ff6a5a", "right"); ctx.globalAlpha = 1; }
+    // skate box (left, under the P1 box)
+    const S = p.sk;
+    if (S && (S.on || (S.last && S.last.t > 0))) {
+      rect(4, 32, 104, S.last && S.last.t > 0 ? 23 : 13, "rgba(0,0,0,0.6)"); rect(4, 32, 104, 1, "#3fe07a");
+      ptext("SKATE " + String(S.total).padStart(5, "0"), 8, 38, 1, "#7fff9a", "left");
+      if (S.on && S.air && (S.tricks.length || S.flipOn || S.spinOn)) ptext((S.tricks.join("+") || "...") + (S.flipOn ? " FLIP" : "") + (S.spinOn ? " SPIN" : ""), 8, 49, 1, "#ffe060", "left");
+      else if (S.last && S.last.t > 0) { S.last.t--; ptext(S.last.name.slice(0, 16) + " " + S.last.pts, 8, 49, 1, "#ffe060", "left"); }
+    }
+    // first-time hint
+    const Hh = STATE.hint;
+    if (Hh) {
+      const a = Hh.t < 10 ? Hh.t / 10 : Hh.t > 250 ? (270 - Hh.t) / 20 : 1, lines = wrapText(Hh.b, 46), cx = STATE.showTouch ? W / 2 - 26 : W / 2, bw = 290, h = 18 + lines.length * 9, y0 = H - 8 - h;
+      ctx.globalAlpha = Math.max(0, a) * 0.78; rect(cx - bw / 2, y0, bw, h, "#000"); ctx.globalAlpha = Math.max(0, a);
+      rect(cx - bw / 2, y0, bw, 1, "#ffd23a"); rect(cx - bw / 2, y0 + h - 1, bw, 1, "#ffd23a");
+      ptext(Hh.a, cx, y0 + 7, 1, "#ffd23a"); lines.forEach((l, i) => ptext(l, cx, y0 + 17 + i * 9, 1, "#fff"));
+      ctx.globalAlpha = 1;
+    }
+    touchButtons();
   }
 
   // ---------- HUD + menus (2D canvas over the 3D view): the 16-bit HUD, select screen, cards, results ----------
@@ -3953,7 +4547,8 @@ import * as THREE from "./three.module.min.js";
     ptext("LEVEL 1: BIG APPLE, 3 A.M.", W / 2, 124, 1, "#ffd27a");
     if (Math.floor(t / 24) % 2 === 0) ptext("PRESS START", W / 2, 150, 2, "#fff");
     ptext("ENTER / TAP / ATTACK", W / 2, 172, 1, "#c8ccd6");
-    ptext("ARROWS MOVE  J ATTACK  K JUMP  L SPECIAL  E/L USE", W / 2, 204, 1, "#9aa0b8");
+    ptext("ARROWS MOVE  J ATTACK  K JUMP  L SPECIAL  E/L USE", W / 2, 196, 1, "#9aa0b8");
+    ptext("C COUNTER  B SKATEBOARD (SEWERS)  V CRT", W / 2, 208, 1, "#9aa0b8");
   }
   function updateTitle3D() {
     if (anyPressed("enter", " ", "j", "k") || tapPoint || BTN_A.hit || BTN_B.hit || BOT) { tapPoint = null; SFX.confirm(); STATE.scene = "select"; selPick = 0; selWipe = 0; if (BOT) botPickT = 20; }
@@ -3971,7 +4566,7 @@ import * as THREE from "./three.module.min.js";
     ptext("SCENE 1", W / 2, 70, 3, "#ffe060");
     rect(W / 2 - 90, 92, 180, 2, "#e8401a");
     ptext("BIG APPLE, 3 A.M.", W / 2, 104, 2, "#fff");
-    ptext("THE FOOT GANG TORCHED A BUILDING ON 3RD AVENUE.", W / 2, 130, 1, "#ffd27a");
+    ptext("THE SLAG GANG TORCHED A BUILDING ON 3RD AVENUE.", W / 2, 130, 1, "#ffd27a");
     ptext("CLEAR THE BLOCK. STOP RAMROD.", W / 2, 142, 1, "#ffd27a");
     ptext("MANHOLES AND FIRE ESCAPES HIDE SECRETS...", W / 2, 162, 1, "#7fd85a");
     const wf = 1 - (150 - STATE.cardT) / 20; if (wf > 0) { ctx.globalAlpha = Math.ceil(wf * 8) / 8; rect(0, 0, W, H, "#fff"); }
@@ -3992,9 +4587,10 @@ import * as THREE from "./three.module.min.js";
       ctx.globalAlpha = 1;
     }
     if (STATE.near && !p.climb) {
-      const s = project(STATE.near.x, (p.layer === "sewer" ? WORLD.SY : p.fy) + 2.3, STATE.near.z);
+      const s = project(STATE.near.x, (p.layer === "sewer" ? WORLD.SY : p.fy) + (STATE.near.kind === "board" ? 1.5 : 2.3), STATE.near.z);
       if (s.ok) { const lab = (STATE.showTouch ? "SPECIAL > " : "E > ") + STATE.near.label, w = lab.length * 6 + 14; ctx.globalAlpha = 0.85; rect(s.x - w / 2, s.y - 10, w, 13, "#000"); ctx.globalAlpha = 1; rect(s.x - w / 2, s.y + 3, w, 1, "#ffd23a"); ptext(lab, s.x, s.y - 7, 1, Math.floor(STATE.t / 15) % 2 ? "#ffd23a" : "#fff"); }
     }
+    drawFFHUD();
     // ---- the 16-bit HUD (ported): P1 box with portrait, name, score, 10 health pips, lives ----
     rect(4, 3, 150, 26, "#fff"); rect(5, 4, 148, 24, "#10101c");
     rect(7, 6, 20, 20, "#2a2a40"); rect(8, 7, 18, 18, "#000");
@@ -4070,7 +4666,7 @@ import * as THREE from "./three.module.min.js";
     } else {
       ptext("GAME OVER", W / 2, 60, 4, "#e8302a"); rect(W / 2 - 90, 92, 180, 2, "#e8401a");
       ptext("SCORE " + String(Math.min(999999, STATE.score)).padStart(6, "0"), W / 2, 112, 2, "#fff");
-      ptext("THE FOOT GANG RULES THE BLOCK... FOR NOW.", W / 2, 140, 1, "#ffd27a");
+      ptext("THE SLAG GANG RULES THE BLOCK... FOR NOW.", W / 2, 140, 1, "#ffd27a");
       if (STATE.overT > 40 && Math.floor(STATE.t / 20) % 2) ptext("TRY AGAIN: ATTACK, ENTER OR TAP", W / 2, 172, 1, "#ffd27a");
     }
     ctx.globalAlpha = 1;
@@ -4139,7 +4735,7 @@ import * as THREE from "./three.module.min.js";
     if (done) { if (G[0] === "hop") BOTR.log.push("hop@" + BOTR.i + ":" + p.fy.toFixed(2)); BOTR.i++; BOTR.stuck = 0; return; }
     if (BOTR.t % 30 === 0) { const mv = Math.hypot(p.gx - BOTR.lx, p.gz - BOTR.lz); BOTR.lx = p.gx; BOTR.lz = p.gz; if (mv < 0.3) { if (++BOTR.stuck > 8) { BOTR.log.push("stuck@" + BOTR.i + " " + p.gx.toFixed(1) + "," + p.gz.toFixed(1)); BOTR.i++; BOTR.stuck = 0; } } else BOTR.stuck = 0; }
   }
-  window.__ss = { STATE, BOTR, WORLD, get cam() { return camera; }, get info() { return renderer && renderer.info.render; }, use() { const p = STATE.player, it = nearInteract(p); if (it && !p.climb) startClimb(p, it); return !!it; }, FPS, zoneById, placeOn, toLocal };
+  window.__ss = { STATE, BOTR, WORLD, FF, FFSTAT, BOTIN, skateOn: () => skateOn(STATE.player), pickupBoard: () => pickupBoard(STATE.player), skateSurf, coveY, get cam() { return camera; }, get info() { return renderer && renderer.info.render; }, use() { const p = STATE.player, it = nearInteract(p); if (it && !p.climb) startClimb(p, it); return !!it; }, FPS, zoneById, placeOn, toLocal, toGlobal, get near() { return STATE.near; } };
   // ---------- main loop: fixed 60 Hz simulation, render every animation frame ----------
   const SCN = {
     title: [updateTitle3D, drawTitle3D], select: [updateSelect3D, drawSelect], card: [updateCard3D, drawCard3D],
