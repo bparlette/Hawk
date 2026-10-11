@@ -106,7 +106,7 @@ export function buildCatfish(K, member = 'grunt_a', opts = {}) {   // opts: { lo
   P(J.torso, 'dorsal', cfFin(K, 0.05, 0.2, 0.18, 0.03), C.fin, 0, 0.58, -0.16 * sz, { rot: [0.3, 0, 0] });
 
   // ---- head: wide flat catfish head (pale belly painted underneath), wide frowning mouth, small eyes, four barbels ----
-  const head = J.head = grp(J.neck, 0, 0, 0.05); head.userData.mat = mat;
+  const head = J.head = grp(J.neck, 0, big ? 0.08 : 0, 0.05); head.userData.mat = mat;   // bruiser's wide head sits higher: in the dizzy tilt it dipped onto the sweater rim
   const hm = P(head, 'head', G.sph(0.25 * hw, 0.175, 0.24).toNonIndexed(), C.skin, 0, 0.15, 0.02, S());
   paint(hm, (x, y, z) => (y < -0.06 && z > -0.05 ? C.belly : L.hat === 'headband' && y > 0.07 && y < 0.12 ? C.teal : null));
   P(head, 'mouth', G.box(0.3 * hw, 0.03, 0.03), INK, 0, 0.1, 0.245, { rot: [0.15, 0, 0], outline: false });
@@ -168,7 +168,7 @@ export function buildCatfish(K, member = 'grunt_a', opts = {}) {   // opts: { lo
 function cfLod(K, J, C, L, member, sx, sz, hw, P, paint, straps) {
   const { G, grp } = K, d = J.d, big = sx > 1;
   paint(P(J.torso, 'sweater', G.sph(0.28 * sx, 0.33, 0.23 * sz).toNonIndexed(), C.slate, 0, 0.3, 0), straps);
-  const head = J.head = grp(J.neck, 0, 0, 0.05); head.userData.mat = J.mat;
+  const head = J.head = grp(J.neck, 0, big ? 0.08 : 0, 0.05); head.userData.mat = J.mat;
   const hatPaint = { newsboy: (y) => (y > 0.07 ? C.slate : null), beanie: (y) => (y > 0.13 ? C.teal : y > 0.06 ? C.slate : null), headband: (y) => (y > 0.07 && y < 0.12 ? C.teal : null) }[L.hat] || (() => null);
   paint(P(head, 'head', G.sph(0.25 * hw, 0.175, 0.24).toNonIndexed(), C.skin, 0, 0.15, 0.02), (x, y, z) => (y < -0.06 && z > -0.05 ? C.belly : hatPaint(y)));
   P(head, 'barbels', G.box(0.62 * hw, 0.045, 0.045), C.fin, 0, 0.05, 0.25, { rot: [0, 0, 0] });

@@ -172,6 +172,20 @@
   }
  },
  {
+  "out": "previews/pier_gulls_grunt_a_dizzy_60fps.png",
+  "q": "show=pier_gulls.grunt_a&strip=dizzy&ui=0&merge=1",
+  "errors": [],
+  "report": {
+   "show": "pier_gulls.grunt_a",
+   "lod": 0,
+   "rigs": {},
+   "frame": {
+    "calls": 67,
+    "triangles": 285386
+   }
+  }
+ },
+ {
   "out": "previews/_tmp_grunt_a_hd.png",
   "q": "show=pier_gulls.grunt_a&t=0.5&turn=1&cam=front&ui=0",
   "errors": [],
@@ -392,6 +406,20 @@
    "frame": {
     "calls": 56,
     "triangles": 290930
+   }
+  }
+ },
+ {
+  "out": "previews/pier_gulls_grunt_b_dizzy_60fps.png",
+  "q": "show=pier_gulls.grunt_b&strip=dizzy&ui=0&merge=1",
+  "errors": [],
+  "report": {
+   "show": "pier_gulls.grunt_b",
+   "lod": 0,
+   "rigs": {},
+   "frame": {
+    "calls": 67,
+    "triangles": 295154
    }
   }
  },
@@ -620,6 +648,20 @@
   }
  },
  {
+  "out": "previews/pier_gulls_armed_dizzy_60fps.png",
+  "q": "show=pier_gulls.armed&strip=dizzy&ui=0&merge=1",
+  "errors": [],
+  "report": {
+   "show": "pier_gulls.armed",
+   "lod": 0,
+   "rigs": {},
+   "frame": {
+    "calls": 67,
+    "triangles": 301754
+   }
+  }
+ },
+ {
   "out": "previews/_tmp_armed_hd.png",
   "q": "show=pier_gulls.armed&t=0.5&turn=1&cam=front&ui=0",
   "errors": [],
@@ -840,6 +882,20 @@
    "frame": {
     "calls": 56,
     "triangles": 290534
+   }
+  }
+ },
+ {
+  "out": "previews/pier_gulls_bruiser_dizzy_60fps.png",
+  "q": "show=pier_gulls.bruiser&strip=dizzy&ui=0&merge=1",
+  "errors": [],
+  "report": {
+   "show": "pier_gulls.bruiser",
+   "lod": 0,
+   "rigs": {},
+   "frame": {
+    "calls": 67,
+    "triangles": 294758
    }
   }
  },
@@ -1587,10 +1643,18 @@
        "part": "head/head",
        "buried": 0.383,
        "strayPx": {
-        "front": 0,
-        "three": 0,
-        "side": 0,
-        "back": 0
+        "idle/front": 0,
+        "idle/three": 0,
+        "idle/side": 0,
+        "idle/back": 0,
+        "dizzyL/front": 0,
+        "dizzyL/three": 0,
+        "dizzyL/side": 0,
+        "dizzyL/back": 0,
+        "dizzyR/front": 0,
+        "dizzyR/three": 0,
+        "dizzyR/side": 0,
+        "dizzyR/back": 0
        },
        "maxStrayPx": 0
       },
@@ -1598,10 +1662,18 @@
        "part": "head/bill",
        "buried": 0.322,
        "strayPx": {
-        "front": 0,
-        "three": 0,
-        "side": 0,
-        "back": 0
+        "idle/front": 0,
+        "idle/three": 0,
+        "idle/side": 0,
+        "idle/back": 0,
+        "dizzyL/front": 0,
+        "dizzyL/three": 0,
+        "dizzyL/side": 0,
+        "dizzyL/back": 0,
+        "dizzyR/front": 0,
+        "dizzyR/three": 0,
+        "dizzyR/side": 0,
+        "dizzyR/back": 0
        },
        "maxStrayPx": 0
       },
@@ -1609,10 +1681,18 @@
        "part": "head/jaw",
        "buried": 0.357,
        "strayPx": {
-        "front": 0,
-        "three": 0,
-        "side": 0,
-        "back": 0
+        "idle/front": 0,
+        "idle/three": 0,
+        "idle/side": 0,
+        "idle/back": 0,
+        "dizzyL/front": 0,
+        "dizzyL/three": 0,
+        "dizzyL/side": 0,
+        "dizzyL/back": 0,
+        "dizzyR/front": 0,
+        "dizzyR/three": 0,
+        "dizzyR/side": 0,
+        "dizzyR/back": 0
        },
        "maxStrayPx": 0
       },
@@ -1620,21 +1700,37 @@
        "part": "head/hat",
        "buried": 0.417,
        "strayPx": {
-        "front": 4,
-        "three": 2,
-        "side": 2,
-        "back": 3
+        "idle/front": 4,
+        "idle/three": 2,
+        "idle/side": 2,
+        "idle/back": 3,
+        "dizzyL/front": 0,
+        "dizzyL/three": 0,
+        "dizzyL/side": 5,
+        "dizzyL/back": 1,
+        "dizzyR/front": 0,
+        "dizzyR/three": 0,
+        "dizzyR/side": 0,
+        "dizzyR/back": 3
        },
-       "maxStrayPx": 4
+       "maxStrayPx": 5
       },
       {
        "part": "head/brim",
        "buried": 0.398,
        "strayPx": {
-        "front": 0,
-        "three": 0,
-        "side": 0,
-        "back": 0
+        "idle/front": 0,
+        "idle/three": 0,
+        "idle/side": 0,
+        "idle/back": 0,
+        "dizzyL/front": 0,
+        "dizzyL/three": 0,
+        "dizzyL/side": 0,
+        "dizzyL/back": 0,
+        "dizzyR/front": 0,
+        "dizzyR/three": 0,
+        "dizzyR/side": 0,
+        "dizzyR/back": 0
        },
        "maxStrayPx": 0
       },
@@ -1642,10 +1738,18 @@
        "part": "haL/wingtip",
        "buried": 0.204,
        "strayPx": {
-        "front": 0,
-        "three": 0,
-        "side": 0,
-        "back": 0
+        "idle/front": 0,
+        "idle/three": 0,
+        "idle/side": 0,
+        "idle/back": 0,
+        "dizzyL/front": 0,
+        "dizzyL/three": 0,
+        "dizzyL/side": 0,
+        "dizzyL/back": 0,
+        "dizzyR/front": 0,
+        "dizzyR/three": 0,
+        "dizzyR/side": 0,
+        "dizzyR/back": 0
        },
        "maxStrayPx": 0
       },
@@ -1653,10 +1757,18 @@
        "part": "elL/fore",
        "buried": 0.306,
        "strayPx": {
-        "front": 0,
-        "three": 0,
-        "side": 1,
-        "back": 0
+        "idle/front": 0,
+        "idle/three": 0,
+        "idle/side": 1,
+        "idle/back": 0,
+        "dizzyL/front": 0,
+        "dizzyL/three": 0,
+        "dizzyL/side": 0,
+        "dizzyL/back": 0,
+        "dizzyR/front": 0,
+        "dizzyR/three": 0,
+        "dizzyR/side": 0,
+        "dizzyR/back": 0
        },
        "maxStrayPx": 1
       },
@@ -1664,10 +1776,18 @@
        "part": "shL/shoulder",
        "buried": 0.237,
        "strayPx": {
-        "front": 0,
-        "three": 0,
-        "side": 0,
-        "back": 0
+        "idle/front": 0,
+        "idle/three": 0,
+        "idle/side": 0,
+        "idle/back": 0,
+        "dizzyL/front": 0,
+        "dizzyL/three": 0,
+        "dizzyL/side": 0,
+        "dizzyL/back": 0,
+        "dizzyR/front": 0,
+        "dizzyR/three": 0,
+        "dizzyR/side": 0,
+        "dizzyR/back": 0
        },
        "maxStrayPx": 0
       },
@@ -1675,21 +1795,37 @@
        "part": "shL/upper",
        "buried": 0.44,
        "strayPx": {
-        "front": 0,
-        "three": 0,
-        "side": 1,
-        "back": 1
+        "idle/front": 0,
+        "idle/three": 0,
+        "idle/side": 1,
+        "idle/back": 1,
+        "dizzyL/front": 2,
+        "dizzyL/three": 1,
+        "dizzyL/side": 0,
+        "dizzyL/back": 0,
+        "dizzyR/front": 2,
+        "dizzyR/three": 0,
+        "dizzyR/side": 0,
+        "dizzyR/back": 0
        },
-       "maxStrayPx": 1
+       "maxStrayPx": 2
       },
       {
        "part": "haR/wingtip",
        "buried": 0.204,
        "strayPx": {
-        "front": 0,
-        "three": 0,
-        "side": 0,
-        "back": 0
+        "idle/front": 0,
+        "idle/three": 0,
+        "idle/side": 0,
+        "idle/back": 0,
+        "dizzyL/front": 0,
+        "dizzyL/three": 0,
+        "dizzyL/side": 0,
+        "dizzyL/back": 0,
+        "dizzyR/front": 0,
+        "dizzyR/three": 0,
+        "dizzyR/side": 0,
+        "dizzyR/back": 0
        },
        "maxStrayPx": 0
       },
@@ -1697,10 +1833,18 @@
        "part": "elR/fore",
        "buried": 0.326,
        "strayPx": {
-        "front": 0,
-        "three": 0,
-        "side": 0,
-        "back": 0
+        "idle/front": 0,
+        "idle/three": 0,
+        "idle/side": 0,
+        "idle/back": 0,
+        "dizzyL/front": 0,
+        "dizzyL/three": 0,
+        "dizzyL/side": 0,
+        "dizzyL/back": 0,
+        "dizzyR/front": 0,
+        "dizzyR/three": 0,
+        "dizzyR/side": 0,
+        "dizzyR/back": 0
        },
        "maxStrayPx": 0
       },
@@ -1708,10 +1852,18 @@
        "part": "shR/shoulder",
        "buried": 0.244,
        "strayPx": {
-        "front": 0,
-        "three": 0,
-        "side": 0,
-        "back": 0
+        "idle/front": 0,
+        "idle/three": 0,
+        "idle/side": 0,
+        "idle/back": 0,
+        "dizzyL/front": 0,
+        "dizzyL/three": 0,
+        "dizzyL/side": 0,
+        "dizzyL/back": 0,
+        "dizzyR/front": 0,
+        "dizzyR/three": 0,
+        "dizzyR/side": 0,
+        "dizzyR/back": 0
        },
        "maxStrayPx": 0
       },
@@ -1719,10 +1871,18 @@
        "part": "shR/upper",
        "buried": 0.445,
        "strayPx": {
-        "front": 0,
-        "three": 1,
-        "side": 0,
-        "back": 1
+        "idle/front": 0,
+        "idle/three": 1,
+        "idle/side": 0,
+        "idle/back": 1,
+        "dizzyL/front": 1,
+        "dizzyL/three": 0,
+        "dizzyL/side": 0,
+        "dizzyL/back": 0,
+        "dizzyR/front": 1,
+        "dizzyR/three": 0,
+        "dizzyR/side": 0,
+        "dizzyR/back": 0
        },
        "maxStrayPx": 1
       },
@@ -1730,10 +1890,18 @@
        "part": "torso/jacket",
        "buried": 0.207,
        "strayPx": {
-        "front": 0,
-        "three": 0,
-        "side": 0,
-        "back": 0
+        "idle/front": 0,
+        "idle/three": 0,
+        "idle/side": 0,
+        "idle/back": 0,
+        "dizzyL/front": 0,
+        "dizzyL/three": 0,
+        "dizzyL/side": 0,
+        "dizzyL/back": 0,
+        "dizzyR/front": 0,
+        "dizzyR/three": 0,
+        "dizzyR/side": 0,
+        "dizzyR/back": 0
        },
        "maxStrayPx": 0
       },
@@ -1741,10 +1909,18 @@
        "part": "torso/collar",
        "buried": 0.278,
        "strayPx": {
-        "front": 0,
-        "three": 0,
-        "side": 0,
-        "back": 0
+        "idle/front": 0,
+        "idle/three": 0,
+        "idle/side": 0,
+        "idle/back": 0,
+        "dizzyL/front": 0,
+        "dizzyL/three": 0,
+        "dizzyL/side": 0,
+        "dizzyL/back": 0,
+        "dizzyR/front": 0,
+        "dizzyR/three": 0,
+        "dizzyR/side": 0,
+        "dizzyR/back": 0
        },
        "maxStrayPx": 0
       },
@@ -1752,10 +1928,18 @@
        "part": "ftL/foot",
        "buried": 0.057,
        "strayPx": {
-        "front": 0,
-        "three": 0,
-        "side": 0,
-        "back": 0
+        "idle/front": 0,
+        "idle/three": 0,
+        "idle/side": 0,
+        "idle/back": 0,
+        "dizzyL/front": 0,
+        "dizzyL/three": 0,
+        "dizzyL/side": 0,
+        "dizzyL/back": 0,
+        "dizzyR/front": 0,
+        "dizzyR/three": 0,
+        "dizzyR/side": 0,
+        "dizzyR/back": 0
        },
        "maxStrayPx": 0
       },
@@ -1763,10 +1947,18 @@
        "part": "knL/shin",
        "buried": 0.147,
        "strayPx": {
-        "front": 0,
-        "three": 0,
-        "side": 0,
-        "back": 0
+        "idle/front": 0,
+        "idle/three": 0,
+        "idle/side": 0,
+        "idle/back": 0,
+        "dizzyL/front": 0,
+        "dizzyL/three": 0,
+        "dizzyL/side": 0,
+        "dizzyL/back": 0,
+        "dizzyR/front": 0,
+        "dizzyR/three": 0,
+        "dizzyR/side": 0,
+        "dizzyR/back": 0
        },
        "maxStrayPx": 0
       },
@@ -1774,10 +1966,18 @@
        "part": "lgL/thigh",
        "buried": 0.275,
        "strayPx": {
-        "front": 0,
-        "three": 0,
-        "side": 0,
-        "back": 0
+        "idle/front": 0,
+        "idle/three": 0,
+        "idle/side": 0,
+        "idle/back": 0,
+        "dizzyL/front": 0,
+        "dizzyL/three": 0,
+        "dizzyL/side": 0,
+        "dizzyL/back": 0,
+        "dizzyR/front": 0,
+        "dizzyR/three": 0,
+        "dizzyR/side": 0,
+        "dizzyR/back": 0
        },
        "maxStrayPx": 0
       },
@@ -1785,10 +1985,18 @@
        "part": "ftR/foot",
        "buried": 0.056,
        "strayPx": {
-        "front": 0,
-        "three": 0,
-        "side": 0,
-        "back": 0
+        "idle/front": 0,
+        "idle/three": 0,
+        "idle/side": 0,
+        "idle/back": 0,
+        "dizzyL/front": 0,
+        "dizzyL/three": 0,
+        "dizzyL/side": 0,
+        "dizzyL/back": 0,
+        "dizzyR/front": 0,
+        "dizzyR/three": 0,
+        "dizzyR/side": 0,
+        "dizzyR/back": 0
        },
        "maxStrayPx": 0
       },
@@ -1796,10 +2004,18 @@
        "part": "knR/shin",
        "buried": 0.146,
        "strayPx": {
-        "front": 0,
-        "three": 0,
-        "side": 0,
-        "back": 0
+        "idle/front": 0,
+        "idle/three": 0,
+        "idle/side": 0,
+        "idle/back": 0,
+        "dizzyL/front": 0,
+        "dizzyL/three": 0,
+        "dizzyL/side": 0,
+        "dizzyL/back": 0,
+        "dizzyR/front": 0,
+        "dizzyR/three": 0,
+        "dizzyR/side": 0,
+        "dizzyR/back": 0
        },
        "maxStrayPx": 0
       },
@@ -1807,10 +2023,18 @@
        "part": "lgR/thigh",
        "buried": 0.267,
        "strayPx": {
-        "front": 0,
-        "three": 0,
-        "side": 0,
-        "back": 0
+        "idle/front": 0,
+        "idle/three": 0,
+        "idle/side": 0,
+        "idle/back": 0,
+        "dizzyL/front": 0,
+        "dizzyL/three": 0,
+        "dizzyL/side": 0,
+        "dizzyL/back": 0,
+        "dizzyR/front": 0,
+        "dizzyR/three": 0,
+        "dizzyR/side": 0,
+        "dizzyR/back": 0
        },
        "maxStrayPx": 0
       },
@@ -1818,10 +2042,18 @@
        "part": "hips/shorts",
        "buried": 0.408,
        "strayPx": {
-        "front": 0,
-        "three": 0,
-        "side": 0,
-        "back": 0
+        "idle/front": 0,
+        "idle/three": 0,
+        "idle/side": 0,
+        "idle/back": 0,
+        "dizzyL/front": 0,
+        "dizzyL/three": 0,
+        "dizzyL/side": 0,
+        "dizzyL/back": 0,
+        "dizzyR/front": 0,
+        "dizzyR/three": 0,
+        "dizzyR/side": 0,
+        "dizzyR/back": 0
        },
        "maxStrayPx": 0
       },
@@ -1829,10 +2061,18 @@
        "part": "tail/tail",
        "buried": 0.193,
        "strayPx": {
-        "front": 0,
-        "three": 0,
-        "side": 0,
-        "back": 0
+        "idle/front": 0,
+        "idle/three": 0,
+        "idle/side": 0,
+        "idle/back": 0,
+        "dizzyL/front": 0,
+        "dizzyL/three": 0,
+        "dizzyL/side": 0,
+        "dizzyL/back": 0,
+        "dizzyR/front": 0,
+        "dizzyR/three": 0,
+        "dizzyR/side": 0,
+        "dizzyR/back": 0
        },
        "maxStrayPx": 0
       }
@@ -1854,33 +2094,37 @@
      "sequences": {
       "knockdown": {
        "worst": {
-        "y": -0.012,
+        "y": -0.011,
         "part": "ftR/foot",
         "phase": "idle",
-        "t": 2.8
+        "t": 2.867
        },
-       "frames": 188,
+       "frames": 191,
        "pass": true,
        "downEnd": {
         "tail": 0.014,
         "head": 0.217
        },
-       "cullReach": 2.204
+       "cullReach": 2.204,
+       "stars": null,
+       "dizzyGap": null
       },
       "knockdown+anim": {
        "worst": {
-        "y": -0.012,
+        "y": -0.011,
         "part": "ftR/foot",
         "phase": "idle",
-        "t": 2.8
+        "t": 2.867
        },
-       "frames": 188,
+       "frames": 191,
        "pass": true,
        "downEnd": {
         "tail": 0.014,
         "head": 0.217
        },
-       "cullReach": 2.204
+       "cullReach": 2.204,
+       "stars": null,
+       "dizzyGap": null
       },
       "attack": {
        "worst": {
@@ -1892,7 +2136,9 @@
        "frames": 153,
        "pass": true,
        "downEnd": null,
-       "cullReach": 1.067
+       "cullReach": 1.067,
+       "stars": null,
+       "dizzyGap": null
       },
       "attack+anim": {
        "worst": {
@@ -1904,7 +2150,9 @@
        "frames": 153,
        "pass": true,
        "downEnd": null,
-       "cullReach": 1.067
+       "cullReach": 1.067,
+       "stars": null,
+       "dizzyGap": null
       },
       "run": {
        "worst": {
@@ -1916,7 +2164,9 @@
        "frames": 120,
        "pass": true,
        "downEnd": null,
-       "cullReach": 1.067
+       "cullReach": 1.067,
+       "stars": null,
+       "dizzyGap": null
       },
       "run+anim": {
        "worst": {
@@ -1928,7 +2178,55 @@
        "frames": 120,
        "pass": true,
        "downEnd": null,
-       "cullReach": 1.067
+       "cullReach": 1.067,
+       "stars": null,
+       "dizzyGap": null
+      },
+      "dizzy": {
+       "worst": {
+        "y": -0.004,
+        "part": "ftR/foot",
+        "phase": "idle",
+        "t": 4.5
+       },
+       "frames": 290,
+       "pass": true,
+       "downEnd": null,
+       "cullReach": 1.066,
+       "stars": {
+        "clearance": 0.434,
+        "part": "head/hat",
+        "t": 0.017,
+        "starsY": 2.35
+       },
+       "dizzyGap": {
+        "L": 0,
+        "R": 0,
+        "t": 0.167
+       }
+      },
+      "dizzy+anim": {
+       "worst": {
+        "y": -0.004,
+        "part": "ftR/foot",
+        "phase": "idle",
+        "t": 4.5
+       },
+       "frames": 290,
+       "pass": true,
+       "downEnd": null,
+       "cullReach": 1.066,
+       "stars": {
+        "clearance": 0.434,
+        "part": "head/hat",
+        "t": 0.017,
+        "starsY": 2.35
+       },
+       "dizzyGap": {
+        "L": 0,
+        "R": 0,
+        "t": 0.167
+       }
       }
      },
      "lodSequences": {
@@ -1939,12 +2237,14 @@
         "phase": "idle",
         "t": 2.833
        },
-       "frames": 188,
+       "frames": 191,
        "pass": true,
        "downEnd": {
         "head": 0.229
        },
-       "cullReach": 2.192
+       "cullReach": 2.192,
+       "stars": null,
+       "dizzyGap": null
       },
       "attack": {
        "worst": {
@@ -1956,7 +2256,9 @@
        "frames": 153,
        "pass": true,
        "downEnd": null,
-       "cullReach": 1.056
+       "cullReach": 1.056,
+       "stars": null,
+       "dizzyGap": null
       },
       "run": {
        "worst": {
@@ -1968,7 +2270,28 @@
        "frames": 120,
        "pass": true,
        "downEnd": null,
-       "cullReach": 1.056
+       "cullReach": 1.056,
+       "stars": null,
+       "dizzyGap": null
+      },
+      "dizzy": {
+       "worst": {
+        "y": -0.003,
+        "part": "knR/shin",
+        "phase": "idle",
+        "t": 4.55
+       },
+       "frames": 290,
+       "pass": true,
+       "downEnd": null,
+       "cullReach": 1.055,
+       "stars": {
+        "clearance": 0.45,
+        "part": "head/hat",
+        "t": 1.2,
+        "starsY": 2.35
+       },
+       "dizzyGap": null
       }
      },
      "sweeps": {
@@ -2015,7 +2338,32 @@
       "renderRigPx": 9350
      },
      "cullReachMax": 2.204,
-     "cullRadius": 1.9,
+     "cullRadius": 2.6,
+     "stars": {
+      "hd": {
+       "clearance": 0.434,
+       "part": "head/hat",
+       "t": 0.017,
+       "starsY": 2.35
+      },
+      "hdAnim": {
+       "clearance": 0.434,
+       "part": "head/hat",
+       "t": 0.017,
+       "starsY": 2.35
+      },
+      "lod": {
+       "clearance": 0.45,
+       "part": "head/hat",
+       "t": 1.2,
+       "starsY": 2.35
+      }
+     },
+     "shoulderGapDizzy": {
+      "L": 0,
+      "R": 0,
+      "t": 0.167
+     },
      "silhouetteIoU": {
       "front": 0.902,
       "three": 0.869,
@@ -2030,6 +2378,8 @@
       "marginLODGround": true,
       "ground": true,
       "shoulders": true,
+      "stars": true,
+      "cullSphere": true,
       "strayHulls": true,
       "shadows": true,
       "flash": true,
@@ -2075,10 +2425,18 @@
        "part": "head/head",
        "buried": 0.463,
        "strayPx": {
-        "front": 0,
-        "three": 0,
-        "side": 0,
-        "back": 0
+        "idle/front": 0,
+        "idle/three": 0,
+        "idle/side": 0,
+        "idle/back": 0,
+        "dizzyL/front": 0,
+        "dizzyL/three": 0,
+        "dizzyL/side": 0,
+        "dizzyL/back": 0,
+        "dizzyR/front": 0,
+        "dizzyR/three": 0,
+        "dizzyR/side": 0,
+        "dizzyR/back": 0
        },
        "maxStrayPx": 0
       },
@@ -2086,10 +2444,18 @@
        "part": "head/bill",
        "buried": 0.322,
        "strayPx": {
-        "front": 0,
-        "three": 0,
-        "side": 0,
-        "back": 0
+        "idle/front": 0,
+        "idle/three": 0,
+        "idle/side": 0,
+        "idle/back": 0,
+        "dizzyL/front": 0,
+        "dizzyL/three": 0,
+        "dizzyL/side": 0,
+        "dizzyL/back": 0,
+        "dizzyR/front": 0,
+        "dizzyR/three": 0,
+        "dizzyR/side": 0,
+        "dizzyR/back": 0
        },
        "maxStrayPx": 0
       },
@@ -2097,10 +2463,18 @@
        "part": "head/jaw",
        "buried": 0.357,
        "strayPx": {
-        "front": 0,
-        "three": 0,
-        "side": 0,
-        "back": 0
+        "idle/front": 0,
+        "idle/three": 0,
+        "idle/side": 0,
+        "idle/back": 0,
+        "dizzyL/front": 0,
+        "dizzyL/three": 0,
+        "dizzyL/side": 0,
+        "dizzyL/back": 0,
+        "dizzyR/front": 0,
+        "dizzyR/three": 0,
+        "dizzyR/side": 0,
+        "dizzyR/back": 0
        },
        "maxStrayPx": 0
       },
@@ -2108,10 +2482,18 @@
        "part": "head/cap",
        "buried": 0.284,
        "strayPx": {
-        "front": 0,
-        "three": 0,
-        "side": 0,
-        "back": 0
+        "idle/front": 0,
+        "idle/three": 0,
+        "idle/side": 0,
+        "idle/back": 0,
+        "dizzyL/front": 0,
+        "dizzyL/three": 0,
+        "dizzyL/side": 0,
+        "dizzyL/back": 0,
+        "dizzyR/front": 0,
+        "dizzyR/three": 0,
+        "dizzyR/side": 0,
+        "dizzyR/back": 0
        },
        "maxStrayPx": 0
       },
@@ -2119,10 +2501,18 @@
        "part": "head/peak",
        "buried": 0.208,
        "strayPx": {
-        "front": 0,
-        "three": 0,
-        "side": 0,
-        "back": 0
+        "idle/front": 0,
+        "idle/three": 0,
+        "idle/side": 0,
+        "idle/back": 0,
+        "dizzyL/front": 0,
+        "dizzyL/three": 0,
+        "dizzyL/side": 0,
+        "dizzyL/back": 0,
+        "dizzyR/front": 0,
+        "dizzyR/three": 0,
+        "dizzyR/side": 0,
+        "dizzyR/back": 0
        },
        "maxStrayPx": 0
       },
@@ -2130,10 +2520,18 @@
        "part": "haL/wingtip",
        "buried": 0.204,
        "strayPx": {
-        "front": 0,
-        "three": 0,
-        "side": 0,
-        "back": 0
+        "idle/front": 0,
+        "idle/three": 0,
+        "idle/side": 0,
+        "idle/back": 0,
+        "dizzyL/front": 0,
+        "dizzyL/three": 0,
+        "dizzyL/side": 0,
+        "dizzyL/back": 0,
+        "dizzyR/front": 0,
+        "dizzyR/three": 0,
+        "dizzyR/side": 0,
+        "dizzyR/back": 0
        },
        "maxStrayPx": 0
       },
@@ -2141,10 +2539,18 @@
        "part": "elL/fore",
        "buried": 0.306,
        "strayPx": {
-        "front": 0,
-        "three": 0,
-        "side": 1,
-        "back": 0
+        "idle/front": 0,
+        "idle/three": 0,
+        "idle/side": 1,
+        "idle/back": 0,
+        "dizzyL/front": 0,
+        "dizzyL/three": 0,
+        "dizzyL/side": 0,
+        "dizzyL/back": 0,
+        "dizzyR/front": 0,
+        "dizzyR/three": 0,
+        "dizzyR/side": 0,
+        "dizzyR/back": 0
        },
        "maxStrayPx": 1
       },
@@ -2152,10 +2558,18 @@
        "part": "shL/shoulder",
        "buried": 0.237,
        "strayPx": {
-        "front": 0,
-        "three": 0,
-        "side": 0,
-        "back": 0
+        "idle/front": 0,
+        "idle/three": 0,
+        "idle/side": 0,
+        "idle/back": 0,
+        "dizzyL/front": 0,
+        "dizzyL/three": 0,
+        "dizzyL/side": 0,
+        "dizzyL/back": 0,
+        "dizzyR/front": 0,
+        "dizzyR/three": 0,
+        "dizzyR/side": 0,
+        "dizzyR/back": 0
        },
        "maxStrayPx": 0
       },
@@ -2163,10 +2577,18 @@
        "part": "shL/upper",
        "buried": 0.44,
        "strayPx": {
-        "front": 0,
-        "three": 0,
-        "side": 1,
-        "back": 1
+        "idle/front": 0,
+        "idle/three": 0,
+        "idle/side": 1,
+        "idle/back": 1,
+        "dizzyL/front": 1,
+        "dizzyL/three": 0,
+        "dizzyL/side": 0,
+        "dizzyL/back": 0,
+        "dizzyR/front": 0,
+        "dizzyR/three": 0,
+        "dizzyR/side": 0,
+        "dizzyR/back": 0
        },
        "maxStrayPx": 1
       },
@@ -2174,10 +2596,18 @@
        "part": "haR/wingtip",
        "buried": 0.204,
        "strayPx": {
-        "front": 0,
-        "three": 0,
-        "side": 0,
-        "back": 0
+        "idle/front": 0,
+        "idle/three": 0,
+        "idle/side": 0,
+        "idle/back": 0,
+        "dizzyL/front": 0,
+        "dizzyL/three": 0,
+        "dizzyL/side": 0,
+        "dizzyL/back": 0,
+        "dizzyR/front": 0,
+        "dizzyR/three": 0,
+        "dizzyR/side": 0,
+        "dizzyR/back": 0
        },
        "maxStrayPx": 0
       },
@@ -2185,10 +2615,18 @@
        "part": "elR/fore",
        "buried": 0.326,
        "strayPx": {
-        "front": 0,
-        "three": 0,
-        "side": 0,
-        "back": 0
+        "idle/front": 0,
+        "idle/three": 0,
+        "idle/side": 0,
+        "idle/back": 0,
+        "dizzyL/front": 0,
+        "dizzyL/three": 0,
+        "dizzyL/side": 0,
+        "dizzyL/back": 0,
+        "dizzyR/front": 0,
+        "dizzyR/three": 0,
+        "dizzyR/side": 0,
+        "dizzyR/back": 0
        },
        "maxStrayPx": 0
       },
@@ -2196,10 +2634,18 @@
        "part": "shR/shoulder",
        "buried": 0.244,
        "strayPx": {
-        "front": 0,
-        "three": 0,
-        "side": 0,
-        "back": 0
+        "idle/front": 0,
+        "idle/three": 0,
+        "idle/side": 0,
+        "idle/back": 0,
+        "dizzyL/front": 0,
+        "dizzyL/three": 0,
+        "dizzyL/side": 0,
+        "dizzyL/back": 0,
+        "dizzyR/front": 0,
+        "dizzyR/three": 0,
+        "dizzyR/side": 0,
+        "dizzyR/back": 0
        },
        "maxStrayPx": 0
       },
@@ -2207,10 +2653,18 @@
        "part": "shR/upper",
        "buried": 0.445,
        "strayPx": {
-        "front": 1,
-        "three": 0,
-        "side": 0,
-        "back": 2
+        "idle/front": 1,
+        "idle/three": 0,
+        "idle/side": 0,
+        "idle/back": 2,
+        "dizzyL/front": 1,
+        "dizzyL/three": 0,
+        "dizzyL/side": 0,
+        "dizzyL/back": 0,
+        "dizzyR/front": 1,
+        "dizzyR/three": 0,
+        "dizzyR/side": 0,
+        "dizzyR/back": 0
        },
        "maxStrayPx": 2
       },
@@ -2218,10 +2672,18 @@
        "part": "torso/jacket",
        "buried": 0.207,
        "strayPx": {
-        "front": 0,
-        "three": 0,
-        "side": 0,
-        "back": 0
+        "idle/front": 0,
+        "idle/three": 0,
+        "idle/side": 0,
+        "idle/back": 0,
+        "dizzyL/front": 0,
+        "dizzyL/three": 0,
+        "dizzyL/side": 0,
+        "dizzyL/back": 0,
+        "dizzyR/front": 0,
+        "dizzyR/three": 0,
+        "dizzyR/side": 0,
+        "dizzyR/back": 0
        },
        "maxStrayPx": 0
       },
@@ -2229,10 +2691,18 @@
        "part": "torso/collar",
        "buried": 0.278,
        "strayPx": {
-        "front": 0,
-        "three": 0,
-        "side": 0,
-        "back": 0
+        "idle/front": 0,
+        "idle/three": 0,
+        "idle/side": 0,
+        "idle/back": 0,
+        "dizzyL/front": 0,
+        "dizzyL/three": 0,
+        "dizzyL/side": 0,
+        "dizzyL/back": 0,
+        "dizzyR/front": 0,
+        "dizzyR/three": 0,
+        "dizzyR/side": 0,
+        "dizzyR/back": 0
        },
        "maxStrayPx": 0
       },
@@ -2240,10 +2710,18 @@
        "part": "ftL/foot",
        "buried": 0.057,
        "strayPx": {
-        "front": 0,
-        "three": 0,
-        "side": 0,
-        "back": 0
+        "idle/front": 0,
+        "idle/three": 0,
+        "idle/side": 0,
+        "idle/back": 0,
+        "dizzyL/front": 0,
+        "dizzyL/three": 0,
+        "dizzyL/side": 0,
+        "dizzyL/back": 0,
+        "dizzyR/front": 0,
+        "dizzyR/three": 0,
+        "dizzyR/side": 0,
+        "dizzyR/back": 0
        },
        "maxStrayPx": 0
       },
@@ -2251,10 +2729,18 @@
        "part": "knL/shin",
        "buried": 0.147,
        "strayPx": {
-        "front": 0,
-        "three": 0,
-        "side": 0,
-        "back": 0
+        "idle/front": 0,
+        "idle/three": 0,
+        "idle/side": 0,
+        "idle/back": 0,
+        "dizzyL/front": 0,
+        "dizzyL/three": 0,
+        "dizzyL/side": 0,
+        "dizzyL/back": 0,
+        "dizzyR/front": 0,
+        "dizzyR/three": 0,
+        "dizzyR/side": 0,
+        "dizzyR/back": 0
        },
        "maxStrayPx": 0
       },
@@ -2262,10 +2748,18 @@
        "part": "lgL/thigh",
        "buried": 0.275,
        "strayPx": {
-        "front": 0,
-        "three": 0,
-        "side": 0,
-        "back": 0
+        "idle/front": 0,
+        "idle/three": 0,
+        "idle/side": 0,
+        "idle/back": 0,
+        "dizzyL/front": 0,
+        "dizzyL/three": 0,
+        "dizzyL/side": 0,
+        "dizzyL/back": 0,
+        "dizzyR/front": 0,
+        "dizzyR/three": 0,
+        "dizzyR/side": 0,
+        "dizzyR/back": 0
        },
        "maxStrayPx": 0
       },
@@ -2273,10 +2767,18 @@
        "part": "ftR/foot",
        "buried": 0.056,
        "strayPx": {
-        "front": 0,
-        "three": 0,
-        "side": 0,
-        "back": 0
+        "idle/front": 0,
+        "idle/three": 0,
+        "idle/side": 0,
+        "idle/back": 0,
+        "dizzyL/front": 0,
+        "dizzyL/three": 0,
+        "dizzyL/side": 0,
+        "dizzyL/back": 0,
+        "dizzyR/front": 0,
+        "dizzyR/three": 0,
+        "dizzyR/side": 0,
+        "dizzyR/back": 0
        },
        "maxStrayPx": 0
       },
@@ -2284,10 +2786,18 @@
        "part": "knR/shin",
        "buried": 0.146,
        "strayPx": {
-        "front": 0,
-        "three": 0,
-        "side": 0,
-        "back": 0
+        "idle/front": 0,
+        "idle/three": 0,
+        "idle/side": 0,
+        "idle/back": 0,
+        "dizzyL/front": 0,
+        "dizzyL/three": 0,
+        "dizzyL/side": 0,
+        "dizzyL/back": 0,
+        "dizzyR/front": 0,
+        "dizzyR/three": 0,
+        "dizzyR/side": 0,
+        "dizzyR/back": 0
        },
        "maxStrayPx": 0
       },
@@ -2295,10 +2805,18 @@
        "part": "lgR/thigh",
        "buried": 0.267,
        "strayPx": {
-        "front": 0,
-        "three": 0,
-        "side": 0,
-        "back": 0
+        "idle/front": 0,
+        "idle/three": 0,
+        "idle/side": 0,
+        "idle/back": 0,
+        "dizzyL/front": 0,
+        "dizzyL/three": 0,
+        "dizzyL/side": 0,
+        "dizzyL/back": 0,
+        "dizzyR/front": 0,
+        "dizzyR/three": 0,
+        "dizzyR/side": 0,
+        "dizzyR/back": 0
        },
        "maxStrayPx": 0
       },
@@ -2306,10 +2824,18 @@
        "part": "hips/shorts",
        "buried": 0.408,
        "strayPx": {
-        "front": 0,
-        "three": 0,
-        "side": 0,
-        "back": 0
+        "idle/front": 0,
+        "idle/three": 0,
+        "idle/side": 0,
+        "idle/back": 0,
+        "dizzyL/front": 0,
+        "dizzyL/three": 0,
+        "dizzyL/side": 0,
+        "dizzyL/back": 0,
+        "dizzyR/front": 0,
+        "dizzyR/three": 0,
+        "dizzyR/side": 0,
+        "dizzyR/back": 0
        },
        "maxStrayPx": 0
       },
@@ -2317,10 +2843,18 @@
        "part": "tail/tail",
        "buried": 0.193,
        "strayPx": {
-        "front": 0,
-        "three": 0,
-        "side": 0,
-        "back": 0
+        "idle/front": 0,
+        "idle/three": 0,
+        "idle/side": 0,
+        "idle/back": 0,
+        "dizzyL/front": 0,
+        "dizzyL/three": 0,
+        "dizzyL/side": 0,
+        "dizzyL/back": 0,
+        "dizzyR/front": 0,
+        "dizzyR/three": 0,
+        "dizzyR/side": 0,
+        "dizzyR/back": 0
        },
        "maxStrayPx": 0
       }
@@ -2342,33 +2876,37 @@
      "sequences": {
       "knockdown": {
        "worst": {
-        "y": -0.012,
+        "y": -0.011,
         "part": "ftR/foot",
         "phase": "idle",
-        "t": 2.8
+        "t": 2.867
        },
-       "frames": 188,
+       "frames": 191,
        "pass": true,
        "downEnd": {
         "tail": 0.014,
         "head": 0.182
        },
-       "cullReach": 2.204
+       "cullReach": 2.204,
+       "stars": null,
+       "dizzyGap": null
       },
       "knockdown+anim": {
        "worst": {
-        "y": -0.012,
+        "y": -0.011,
         "part": "ftR/foot",
         "phase": "idle",
-        "t": 2.8
+        "t": 2.867
        },
-       "frames": 188,
+       "frames": 191,
        "pass": true,
        "downEnd": {
         "tail": 0.014,
         "head": 0.182
        },
-       "cullReach": 2.204
+       "cullReach": 2.204,
+       "stars": null,
+       "dizzyGap": null
       },
       "attack": {
        "worst": {
@@ -2380,7 +2918,9 @@
        "frames": 153,
        "pass": true,
        "downEnd": null,
-       "cullReach": 1.028
+       "cullReach": 1.028,
+       "stars": null,
+       "dizzyGap": null
       },
       "attack+anim": {
        "worst": {
@@ -2392,7 +2932,9 @@
        "frames": 153,
        "pass": true,
        "downEnd": null,
-       "cullReach": 1.028
+       "cullReach": 1.028,
+       "stars": null,
+       "dizzyGap": null
       },
       "run": {
        "worst": {
@@ -2404,7 +2946,9 @@
        "frames": 120,
        "pass": true,
        "downEnd": null,
-       "cullReach": 1.028
+       "cullReach": 1.028,
+       "stars": null,
+       "dizzyGap": null
       },
       "run+anim": {
        "worst": {
@@ -2416,7 +2960,55 @@
        "frames": 120,
        "pass": true,
        "downEnd": null,
-       "cullReach": 1.028
+       "cullReach": 1.028,
+       "stars": null,
+       "dizzyGap": null
+      },
+      "dizzy": {
+       "worst": {
+        "y": -0.004,
+        "part": "ftR/foot",
+        "phase": "idle",
+        "t": 4.5
+       },
+       "frames": 290,
+       "pass": true,
+       "downEnd": null,
+       "cullReach": 1.027,
+       "stars": {
+        "clearance": 0.46,
+        "part": "head/cap",
+        "t": 0.017,
+        "starsY": 2.35
+       },
+       "dizzyGap": {
+        "L": 0,
+        "R": 0,
+        "t": 0.167
+       }
+      },
+      "dizzy+anim": {
+       "worst": {
+        "y": -0.004,
+        "part": "ftR/foot",
+        "phase": "idle",
+        "t": 4.5
+       },
+       "frames": 290,
+       "pass": true,
+       "downEnd": null,
+       "cullReach": 1.027,
+       "stars": {
+        "clearance": 0.46,
+        "part": "head/cap",
+        "t": 0.017,
+        "starsY": 2.35
+       },
+       "dizzyGap": {
+        "L": 0,
+        "R": 0,
+        "t": 0.167
+       }
       }
      },
      "lodSequences": {
@@ -2427,13 +3019,15 @@
         "phase": "idle",
         "t": 2.833
        },
-       "frames": 188,
+       "frames": 191,
        "pass": true,
        "downEnd": {
         "tail": 0.014,
         "head": 0.237
        },
-       "cullReach": 2.192
+       "cullReach": 2.192,
+       "stars": null,
+       "dizzyGap": null
       },
       "attack": {
        "worst": {
@@ -2445,7 +3039,9 @@
        "frames": 153,
        "pass": true,
        "downEnd": null,
-       "cullReach": 0.999
+       "cullReach": 0.999,
+       "stars": null,
+       "dizzyGap": null
       },
       "run": {
        "worst": {
@@ -2457,7 +3053,28 @@
        "frames": 120,
        "pass": true,
        "downEnd": null,
-       "cullReach": 1
+       "cullReach": 1,
+       "stars": null,
+       "dizzyGap": null
+      },
+      "dizzy": {
+       "worst": {
+        "y": -0.003,
+        "part": "knR/shin",
+        "phase": "idle",
+        "t": 4.55
+       },
+       "frames": 290,
+       "pass": true,
+       "downEnd": null,
+       "cullReach": 0.999,
+       "stars": {
+        "clearance": 0.486,
+        "part": "head/head",
+        "t": 0.017,
+        "starsY": 2.35
+       },
+       "dizzyGap": null
       }
      },
      "sweeps": {
@@ -2504,7 +3121,32 @@
       "renderRigPx": 9092
      },
      "cullReachMax": 2.204,
-     "cullRadius": 1.9,
+     "cullRadius": 2.6,
+     "stars": {
+      "hd": {
+       "clearance": 0.46,
+       "part": "head/cap",
+       "t": 0.017,
+       "starsY": 2.35
+      },
+      "hdAnim": {
+       "clearance": 0.46,
+       "part": "head/cap",
+       "t": 0.017,
+       "starsY": 2.35
+      },
+      "lod": {
+       "clearance": 0.486,
+       "part": "head/head",
+       "t": 0.017,
+       "starsY": 2.35
+      }
+     },
+     "shoulderGapDizzy": {
+      "L": 0,
+      "R": 0,
+      "t": 0.167
+     },
      "silhouetteIoU": {
       "front": 0.889,
       "three": 0.865,
@@ -2519,6 +3161,8 @@
       "marginLODGround": true,
       "ground": true,
       "shoulders": true,
+      "stars": true,
+      "cullSphere": true,
       "strayHulls": true,
       "shadows": true,
       "flash": true,
@@ -2564,10 +3208,18 @@
        "part": "head/head",
        "buried": 0.202,
        "strayPx": {
-        "front": 0,
-        "three": 0,
-        "side": 0,
-        "back": 0
+        "idle/front": 0,
+        "idle/three": 0,
+        "idle/side": 0,
+        "idle/back": 0,
+        "dizzyL/front": 0,
+        "dizzyL/three": 0,
+        "dizzyL/side": 0,
+        "dizzyL/back": 0,
+        "dizzyR/front": 0,
+        "dizzyR/three": 0,
+        "dizzyR/side": 0,
+        "dizzyR/back": 0
        },
        "maxStrayPx": 0
       },
@@ -2575,10 +3227,18 @@
        "part": "head/bill",
        "buried": 0.322,
        "strayPx": {
-        "front": 0,
-        "three": 0,
-        "side": 0,
-        "back": 0
+        "idle/front": 0,
+        "idle/three": 0,
+        "idle/side": 0,
+        "idle/back": 0,
+        "dizzyL/front": 0,
+        "dizzyL/three": 0,
+        "dizzyL/side": 0,
+        "dizzyL/back": 0,
+        "dizzyR/front": 0,
+        "dizzyR/three": 0,
+        "dizzyR/side": 0,
+        "dizzyR/back": 0
        },
        "maxStrayPx": 0
       },
@@ -2586,10 +3246,18 @@
        "part": "head/jaw",
        "buried": 0.357,
        "strayPx": {
-        "front": 0,
-        "three": 0,
-        "side": 0,
-        "back": 0
+        "idle/front": 0,
+        "idle/three": 0,
+        "idle/side": 0,
+        "idle/back": 0,
+        "dizzyL/front": 0,
+        "dizzyL/three": 0,
+        "dizzyL/side": 0,
+        "dizzyL/back": 0,
+        "dizzyR/front": 0,
+        "dizzyR/three": 0,
+        "dizzyR/side": 0,
+        "dizzyR/back": 0
        },
        "maxStrayPx": 0
       },
@@ -2597,10 +3265,18 @@
        "part": "head/sweatband",
        "buried": 0.23,
        "strayPx": {
-        "front": 0,
-        "three": 0,
-        "side": 0,
-        "back": 0
+        "idle/front": 0,
+        "idle/three": 0,
+        "idle/side": 0,
+        "idle/back": 0,
+        "dizzyL/front": 0,
+        "dizzyL/three": 0,
+        "dizzyL/side": 0,
+        "dizzyL/back": 0,
+        "dizzyR/front": 0,
+        "dizzyR/three": 0,
+        "dizzyR/side": 0,
+        "dizzyR/back": 0
        },
        "maxStrayPx": 0
       },
@@ -2608,10 +3284,18 @@
        "part": "haL/wingtip",
        "buried": 0.204,
        "strayPx": {
-        "front": 0,
-        "three": 0,
-        "side": 0,
-        "back": 0
+        "idle/front": 0,
+        "idle/three": 0,
+        "idle/side": 0,
+        "idle/back": 0,
+        "dizzyL/front": 0,
+        "dizzyL/three": 0,
+        "dizzyL/side": 0,
+        "dizzyL/back": 0,
+        "dizzyR/front": 0,
+        "dizzyR/three": 0,
+        "dizzyR/side": 0,
+        "dizzyR/back": 0
        },
        "maxStrayPx": 0
       },
@@ -2619,10 +3303,18 @@
        "part": "elL/fore",
        "buried": 0.306,
        "strayPx": {
-        "front": 0,
-        "three": 0,
-        "side": 1,
-        "back": 0
+        "idle/front": 0,
+        "idle/three": 0,
+        "idle/side": 1,
+        "idle/back": 0,
+        "dizzyL/front": 0,
+        "dizzyL/three": 0,
+        "dizzyL/side": 0,
+        "dizzyL/back": 0,
+        "dizzyR/front": 0,
+        "dizzyR/three": 0,
+        "dizzyR/side": 0,
+        "dizzyR/back": 0
        },
        "maxStrayPx": 1
       },
@@ -2630,10 +3322,18 @@
        "part": "shL/shoulder",
        "buried": 0.237,
        "strayPx": {
-        "front": 0,
-        "three": 0,
-        "side": 0,
-        "back": 0
+        "idle/front": 0,
+        "idle/three": 0,
+        "idle/side": 0,
+        "idle/back": 0,
+        "dizzyL/front": 0,
+        "dizzyL/three": 0,
+        "dizzyL/side": 0,
+        "dizzyL/back": 0,
+        "dizzyR/front": 0,
+        "dizzyR/three": 0,
+        "dizzyR/side": 0,
+        "dizzyR/back": 0
        },
        "maxStrayPx": 0
       },
@@ -2641,10 +3341,18 @@
        "part": "shL/upper",
        "buried": 0.44,
        "strayPx": {
-        "front": 0,
-        "three": 0,
-        "side": 0,
-        "back": 2
+        "idle/front": 0,
+        "idle/three": 0,
+        "idle/side": 0,
+        "idle/back": 2,
+        "dizzyL/front": 2,
+        "dizzyL/three": 1,
+        "dizzyL/side": 0,
+        "dizzyL/back": 0,
+        "dizzyR/front": 0,
+        "dizzyR/three": 0,
+        "dizzyR/side": 0,
+        "dizzyR/back": 0
        },
        "maxStrayPx": 2
       },
@@ -2652,10 +3360,18 @@
        "part": "haR/wingtip",
        "buried": 0.304,
        "strayPx": {
-        "front": 0,
-        "three": 0,
-        "side": 0,
-        "back": 0
+        "idle/front": 0,
+        "idle/three": 0,
+        "idle/side": 0,
+        "idle/back": 0,
+        "dizzyL/front": 0,
+        "dizzyL/three": 0,
+        "dizzyL/side": 0,
+        "dizzyL/back": 0,
+        "dizzyR/front": 0,
+        "dizzyR/three": 0,
+        "dizzyR/side": 0,
+        "dizzyR/back": 0
        },
        "maxStrayPx": 0
       },
@@ -2663,10 +3379,18 @@
        "part": "swR/fishtail",
        "buried": 0.297,
        "strayPx": {
-        "front": 0,
-        "three": 0,
-        "side": 0,
-        "back": 0
+        "idle/front": 0,
+        "idle/three": 0,
+        "idle/side": 0,
+        "idle/back": 0,
+        "dizzyL/front": 0,
+        "dizzyL/three": 0,
+        "dizzyL/side": 0,
+        "dizzyL/back": 0,
+        "dizzyR/front": 0,
+        "dizzyR/three": 0,
+        "dizzyR/side": 0,
+        "dizzyR/back": 0
        },
        "maxStrayPx": 0
       },
@@ -2674,10 +3398,18 @@
        "part": "swR/fish",
        "buried": 0.019,
        "strayPx": {
-        "front": 0,
-        "three": 0,
-        "side": 0,
-        "back": 0
+        "idle/front": 0,
+        "idle/three": 0,
+        "idle/side": 0,
+        "idle/back": 0,
+        "dizzyL/front": 0,
+        "dizzyL/three": 0,
+        "dizzyL/side": 0,
+        "dizzyL/back": 0,
+        "dizzyR/front": 0,
+        "dizzyR/three": 0,
+        "dizzyR/side": 0,
+        "dizzyR/back": 0
        },
        "maxStrayPx": 0
       },
@@ -2685,10 +3417,18 @@
        "part": "elR/fore",
        "buried": 0.276,
        "strayPx": {
-        "front": 0,
-        "three": 0,
-        "side": 0,
-        "back": 0
+        "idle/front": 0,
+        "idle/three": 0,
+        "idle/side": 0,
+        "idle/back": 0,
+        "dizzyL/front": 0,
+        "dizzyL/three": 0,
+        "dizzyL/side": 0,
+        "dizzyL/back": 0,
+        "dizzyR/front": 0,
+        "dizzyR/three": 0,
+        "dizzyR/side": 0,
+        "dizzyR/back": 0
        },
        "maxStrayPx": 0
       },
@@ -2696,10 +3436,18 @@
        "part": "shR/shoulder",
        "buried": 0.243,
        "strayPx": {
-        "front": 0,
-        "three": 0,
-        "side": 0,
-        "back": 0
+        "idle/front": 0,
+        "idle/three": 0,
+        "idle/side": 0,
+        "idle/back": 0,
+        "dizzyL/front": 0,
+        "dizzyL/three": 0,
+        "dizzyL/side": 0,
+        "dizzyL/back": 0,
+        "dizzyR/front": 0,
+        "dizzyR/three": 0,
+        "dizzyR/side": 0,
+        "dizzyR/back": 0
        },
        "maxStrayPx": 0
       },
@@ -2707,10 +3455,18 @@
        "part": "shR/upper",
        "buried": 0.464,
        "strayPx": {
-        "front": 2,
-        "three": 0,
-        "side": 0,
-        "back": 2
+        "idle/front": 2,
+        "idle/three": 0,
+        "idle/side": 0,
+        "idle/back": 2,
+        "dizzyL/front": 1,
+        "dizzyL/three": 0,
+        "dizzyL/side": 0,
+        "dizzyL/back": 0,
+        "dizzyR/front": 1,
+        "dizzyR/three": 0,
+        "dizzyR/side": 0,
+        "dizzyR/back": 0
        },
        "maxStrayPx": 2
       },
@@ -2718,10 +3474,18 @@
        "part": "torso/jacket",
        "buried": 0.215,
        "strayPx": {
-        "front": 0,
-        "three": 0,
-        "side": 0,
-        "back": 0
+        "idle/front": 0,
+        "idle/three": 0,
+        "idle/side": 0,
+        "idle/back": 0,
+        "dizzyL/front": 0,
+        "dizzyL/three": 0,
+        "dizzyL/side": 0,
+        "dizzyL/back": 0,
+        "dizzyR/front": 0,
+        "dizzyR/three": 0,
+        "dizzyR/side": 0,
+        "dizzyR/back": 0
        },
        "maxStrayPx": 0
       },
@@ -2729,10 +3493,18 @@
        "part": "torso/collar",
        "buried": 0.278,
        "strayPx": {
-        "front": 0,
-        "three": 0,
-        "side": 0,
-        "back": 0
+        "idle/front": 0,
+        "idle/three": 0,
+        "idle/side": 0,
+        "idle/back": 0,
+        "dizzyL/front": 0,
+        "dizzyL/three": 0,
+        "dizzyL/side": 0,
+        "dizzyL/back": 0,
+        "dizzyR/front": 0,
+        "dizzyR/three": 0,
+        "dizzyR/side": 0,
+        "dizzyR/back": 0
        },
        "maxStrayPx": 0
       },
@@ -2740,10 +3512,18 @@
        "part": "ftL/foot",
        "buried": 0.057,
        "strayPx": {
-        "front": 0,
-        "three": 0,
-        "side": 0,
-        "back": 0
+        "idle/front": 0,
+        "idle/three": 0,
+        "idle/side": 0,
+        "idle/back": 0,
+        "dizzyL/front": 0,
+        "dizzyL/three": 0,
+        "dizzyL/side": 0,
+        "dizzyL/back": 0,
+        "dizzyR/front": 0,
+        "dizzyR/three": 0,
+        "dizzyR/side": 0,
+        "dizzyR/back": 0
        },
        "maxStrayPx": 0
       },
@@ -2751,10 +3531,18 @@
        "part": "knL/shin",
        "buried": 0.147,
        "strayPx": {
-        "front": 0,
-        "three": 0,
-        "side": 0,
-        "back": 0
+        "idle/front": 0,
+        "idle/three": 0,
+        "idle/side": 0,
+        "idle/back": 0,
+        "dizzyL/front": 0,
+        "dizzyL/three": 0,
+        "dizzyL/side": 0,
+        "dizzyL/back": 0,
+        "dizzyR/front": 0,
+        "dizzyR/three": 0,
+        "dizzyR/side": 0,
+        "dizzyR/back": 0
        },
        "maxStrayPx": 0
       },
@@ -2762,10 +3550,18 @@
        "part": "lgL/thigh",
        "buried": 0.275,
        "strayPx": {
-        "front": 0,
-        "three": 0,
-        "side": 0,
-        "back": 0
+        "idle/front": 0,
+        "idle/three": 0,
+        "idle/side": 0,
+        "idle/back": 0,
+        "dizzyL/front": 0,
+        "dizzyL/three": 0,
+        "dizzyL/side": 0,
+        "dizzyL/back": 0,
+        "dizzyR/front": 0,
+        "dizzyR/three": 0,
+        "dizzyR/side": 0,
+        "dizzyR/back": 0
        },
        "maxStrayPx": 0
       },
@@ -2773,10 +3569,18 @@
        "part": "ftR/foot",
        "buried": 0.056,
        "strayPx": {
-        "front": 0,
-        "three": 0,
-        "side": 0,
-        "back": 0
+        "idle/front": 0,
+        "idle/three": 0,
+        "idle/side": 0,
+        "idle/back": 0,
+        "dizzyL/front": 0,
+        "dizzyL/three": 0,
+        "dizzyL/side": 0,
+        "dizzyL/back": 0,
+        "dizzyR/front": 0,
+        "dizzyR/three": 0,
+        "dizzyR/side": 0,
+        "dizzyR/back": 0
        },
        "maxStrayPx": 0
       },
@@ -2784,10 +3588,18 @@
        "part": "knR/shin",
        "buried": 0.146,
        "strayPx": {
-        "front": 0,
-        "three": 0,
-        "side": 0,
-        "back": 0
+        "idle/front": 0,
+        "idle/three": 0,
+        "idle/side": 0,
+        "idle/back": 0,
+        "dizzyL/front": 0,
+        "dizzyL/three": 0,
+        "dizzyL/side": 0,
+        "dizzyL/back": 0,
+        "dizzyR/front": 0,
+        "dizzyR/three": 0,
+        "dizzyR/side": 0,
+        "dizzyR/back": 0
        },
        "maxStrayPx": 0
       },
@@ -2795,10 +3607,18 @@
        "part": "lgR/thigh",
        "buried": 0.267,
        "strayPx": {
-        "front": 0,
-        "three": 0,
-        "side": 0,
-        "back": 0
+        "idle/front": 0,
+        "idle/three": 0,
+        "idle/side": 0,
+        "idle/back": 0,
+        "dizzyL/front": 0,
+        "dizzyL/three": 0,
+        "dizzyL/side": 0,
+        "dizzyL/back": 0,
+        "dizzyR/front": 0,
+        "dizzyR/three": 0,
+        "dizzyR/side": 0,
+        "dizzyR/back": 0
        },
        "maxStrayPx": 0
       },
@@ -2806,21 +3626,37 @@
        "part": "hips/shorts",
        "buried": 0.408,
        "strayPx": {
-        "front": 0,
-        "three": 0,
-        "side": 0,
-        "back": 0
+        "idle/front": 0,
+        "idle/three": 0,
+        "idle/side": 0,
+        "idle/back": 0,
+        "dizzyL/front": 0,
+        "dizzyL/three": 0,
+        "dizzyL/side": 0,
+        "dizzyL/back": 0,
+        "dizzyR/front": 0,
+        "dizzyR/three": 0,
+        "dizzyR/side": 2,
+        "dizzyR/back": 0
        },
-       "maxStrayPx": 0
+       "maxStrayPx": 2
       },
       {
        "part": "tail/tail",
        "buried": 0.193,
        "strayPx": {
-        "front": 0,
-        "three": 0,
-        "side": 0,
-        "back": 0
+        "idle/front": 0,
+        "idle/three": 0,
+        "idle/side": 0,
+        "idle/back": 0,
+        "dizzyL/front": 0,
+        "dizzyL/three": 0,
+        "dizzyL/side": 0,
+        "dizzyL/back": 0,
+        "dizzyR/front": 0,
+        "dizzyR/three": 0,
+        "dizzyR/side": 0,
+        "dizzyR/back": 0
        },
        "maxStrayPx": 0
       }
@@ -2842,33 +3678,37 @@
      "sequences": {
       "knockdown": {
        "worst": {
-        "y": -0.012,
+        "y": -0.011,
         "part": "ftR/foot",
         "phase": "idle",
-        "t": 2.8
+        "t": 2.867
        },
-       "frames": 188,
+       "frames": 191,
        "pass": true,
        "downEnd": {
         "tail": 0.014,
         "head": 0.237
        },
-       "cullReach": 2.478
+       "cullReach": 2.478,
+       "stars": null,
+       "dizzyGap": null
       },
       "knockdown+anim": {
        "worst": {
-        "y": -0.012,
+        "y": -0.011,
         "part": "ftR/foot",
         "phase": "idle",
-        "t": 2.8
+        "t": 2.867
        },
-       "frames": 188,
+       "frames": 191,
        "pass": true,
        "downEnd": {
         "tail": 0.014,
         "head": 0.237
        },
-       "cullReach": 2.478
+       "cullReach": 2.478,
+       "stars": null,
+       "dizzyGap": null
       },
       "attack": {
        "worst": {
@@ -2880,7 +3720,9 @@
        "frames": 153,
        "pass": true,
        "downEnd": null,
-       "cullReach": 1.24
+       "cullReach": 1.24,
+       "stars": null,
+       "dizzyGap": null
       },
       "attack+anim": {
        "worst": {
@@ -2892,7 +3734,9 @@
        "frames": 153,
        "pass": true,
        "downEnd": null,
-       "cullReach": 1.24
+       "cullReach": 1.24,
+       "stars": null,
+       "dizzyGap": null
       },
       "run": {
        "worst": {
@@ -2904,7 +3748,9 @@
        "frames": 120,
        "pass": true,
        "downEnd": null,
-       "cullReach": 1.015
+       "cullReach": 1.015,
+       "stars": null,
+       "dizzyGap": null
       },
       "run+anim": {
        "worst": {
@@ -2916,7 +3762,55 @@
        "frames": 120,
        "pass": true,
        "downEnd": null,
-       "cullReach": 1.015
+       "cullReach": 1.015,
+       "stars": null,
+       "dizzyGap": null
+      },
+      "dizzy": {
+       "worst": {
+        "y": -0.004,
+        "part": "ftR/foot",
+        "phase": "idle",
+        "t": 4.5
+       },
+       "frames": 290,
+       "pass": true,
+       "downEnd": null,
+       "cullReach": 1.008,
+       "stars": {
+        "clearance": 0.486,
+        "part": "head/head",
+        "t": 0.017,
+        "starsY": 2.35
+       },
+       "dizzyGap": {
+        "L": 0,
+        "R": 0,
+        "t": 0.167
+       }
+      },
+      "dizzy+anim": {
+       "worst": {
+        "y": -0.004,
+        "part": "ftR/foot",
+        "phase": "idle",
+        "t": 4.5
+       },
+       "frames": 290,
+       "pass": true,
+       "downEnd": null,
+       "cullReach": 1.008,
+       "stars": {
+        "clearance": 0.486,
+        "part": "head/head",
+        "t": 0.017,
+        "starsY": 2.35
+       },
+       "dizzyGap": {
+        "L": 0,
+        "R": 0,
+        "t": 0.167
+       }
       }
      },
      "lodSequences": {
@@ -2927,12 +3821,14 @@
         "phase": "idle",
         "t": 2.833
        },
-       "frames": 188,
+       "frames": 191,
        "pass": true,
        "downEnd": {
         "head": 0.237
        },
-       "cullReach": 2.531
+       "cullReach": 2.531,
+       "stars": null,
+       "dizzyGap": null
       },
       "attack": {
        "worst": {
@@ -2944,7 +3840,9 @@
        "frames": 153,
        "pass": true,
        "downEnd": null,
-       "cullReach": 1.283
+       "cullReach": 1.283,
+       "stars": null,
+       "dizzyGap": null
       },
       "run": {
        "worst": {
@@ -2956,7 +3854,28 @@
        "frames": 120,
        "pass": true,
        "downEnd": null,
-       "cullReach": 1.066
+       "cullReach": 1.066,
+       "stars": null,
+       "dizzyGap": null
+      },
+      "dizzy": {
+       "worst": {
+        "y": -0.003,
+        "part": "knR/shin",
+        "phase": "idle",
+        "t": 4.55
+       },
+       "frames": 290,
+       "pass": true,
+       "downEnd": null,
+       "cullReach": 1.051,
+       "stars": {
+        "clearance": 0.486,
+        "part": "head/head",
+        "t": 0.017,
+        "starsY": 2.35
+       },
+       "dizzyGap": null
       }
      },
      "sweeps": {
@@ -3003,7 +3922,32 @@
       "renderRigPx": 9787
      },
      "cullReachMax": 2.478,
-     "cullRadius": 1.9,
+     "cullRadius": 2.6,
+     "stars": {
+      "hd": {
+       "clearance": 0.486,
+       "part": "head/head",
+       "t": 0.017,
+       "starsY": 2.35
+      },
+      "hdAnim": {
+       "clearance": 0.486,
+       "part": "head/head",
+       "t": 0.017,
+       "starsY": 2.35
+      },
+      "lod": {
+       "clearance": 0.486,
+       "part": "head/head",
+       "t": 0.017,
+       "starsY": 2.35
+      }
+     },
+     "shoulderGapDizzy": {
+      "L": 0,
+      "R": 0,
+      "t": 0.167
+     },
      "silhouetteIoU": {
       "front": 0.901,
       "three": 0.87,
@@ -3018,6 +3962,8 @@
       "marginLODGround": true,
       "ground": true,
       "shoulders": true,
+      "stars": true,
+      "cullSphere": true,
       "strayHulls": true,
       "shadows": true,
       "flash": true,
@@ -3063,10 +4009,18 @@
        "part": "head/head",
        "buried": 0.411,
        "strayPx": {
-        "front": 0,
-        "three": 0,
-        "side": 0,
-        "back": 0
+        "idle/front": 0,
+        "idle/three": 0,
+        "idle/side": 0,
+        "idle/back": 0,
+        "dizzyL/front": 0,
+        "dizzyL/three": 0,
+        "dizzyL/side": 0,
+        "dizzyL/back": 0,
+        "dizzyR/front": 0,
+        "dizzyR/three": 0,
+        "dizzyR/side": 0,
+        "dizzyR/back": 0
        },
        "maxStrayPx": 0
       },
@@ -3074,10 +4028,18 @@
        "part": "head/bill",
        "buried": 0.33,
        "strayPx": {
-        "front": 0,
-        "three": 0,
-        "side": 0,
-        "back": 0
+        "idle/front": 0,
+        "idle/three": 0,
+        "idle/side": 0,
+        "idle/back": 0,
+        "dizzyL/front": 0,
+        "dizzyL/three": 0,
+        "dizzyL/side": 0,
+        "dizzyL/back": 0,
+        "dizzyR/front": 0,
+        "dizzyR/three": 0,
+        "dizzyR/side": 0,
+        "dizzyR/back": 0
        },
        "maxStrayPx": 0
       },
@@ -3085,10 +4047,18 @@
        "part": "head/jaw",
        "buried": 0.365,
        "strayPx": {
-        "front": 0,
-        "three": 0,
-        "side": 0,
-        "back": 0
+        "idle/front": 0,
+        "idle/three": 0,
+        "idle/side": 0,
+        "idle/back": 0,
+        "dizzyL/front": 0,
+        "dizzyL/three": 0,
+        "dizzyL/side": 0,
+        "dizzyL/back": 0,
+        "dizzyR/front": 0,
+        "dizzyR/three": 0,
+        "dizzyR/side": 0,
+        "dizzyR/back": 0
        },
        "maxStrayPx": 0
       },
@@ -3096,10 +4066,18 @@
        "part": "head/beanie",
        "buried": 0.239,
        "strayPx": {
-        "front": 0,
-        "three": 0,
-        "side": 0,
-        "back": 0
+        "idle/front": 0,
+        "idle/three": 0,
+        "idle/side": 0,
+        "idle/back": 0,
+        "dizzyL/front": 0,
+        "dizzyL/three": 0,
+        "dizzyL/side": 0,
+        "dizzyL/back": 0,
+        "dizzyR/front": 0,
+        "dizzyR/three": 0,
+        "dizzyR/side": 0,
+        "dizzyR/back": 0
        },
        "maxStrayPx": 0
       },
@@ -3107,21 +4085,37 @@
        "part": "haL/wingtip",
        "buried": 0.29,
        "strayPx": {
-        "front": 0,
-        "three": 0,
-        "side": 0,
-        "back": 0
+        "idle/front": 0,
+        "idle/three": 0,
+        "idle/side": 0,
+        "idle/back": 0,
+        "dizzyL/front": 1,
+        "dizzyL/three": 0,
+        "dizzyL/side": 0,
+        "dizzyL/back": 0,
+        "dizzyR/front": 0,
+        "dizzyR/three": 0,
+        "dizzyR/side": 0,
+        "dizzyR/back": 0
        },
-       "maxStrayPx": 0
+       "maxStrayPx": 1
       },
       {
        "part": "elL/fore",
        "buried": 0.36,
        "strayPx": {
-        "front": 0,
-        "three": 0,
-        "side": 0,
-        "back": 0
+        "idle/front": 0,
+        "idle/three": 0,
+        "idle/side": 0,
+        "idle/back": 0,
+        "dizzyL/front": 0,
+        "dizzyL/three": 0,
+        "dizzyL/side": 0,
+        "dizzyL/back": 0,
+        "dizzyR/front": 0,
+        "dizzyR/three": 0,
+        "dizzyR/side": 0,
+        "dizzyR/back": 0
        },
        "maxStrayPx": 0
       },
@@ -3129,10 +4123,18 @@
        "part": "shL/shoulder",
        "buried": 0.466,
        "strayPx": {
-        "front": 0,
-        "three": 0,
-        "side": 0,
-        "back": 0
+        "idle/front": 0,
+        "idle/three": 0,
+        "idle/side": 0,
+        "idle/back": 0,
+        "dizzyL/front": 0,
+        "dizzyL/three": 0,
+        "dizzyL/side": 0,
+        "dizzyL/back": 0,
+        "dizzyR/front": 0,
+        "dizzyR/three": 0,
+        "dizzyR/side": 0,
+        "dizzyR/back": 0
        },
        "maxStrayPx": 0
       },
@@ -3140,21 +4142,37 @@
        "part": "shL/upper",
        "buried": 0.487,
        "strayPx": {
-        "front": 0,
-        "three": 0,
-        "side": 3,
-        "back": 7
+        "idle/front": 0,
+        "idle/three": 0,
+        "idle/side": 3,
+        "idle/back": 7,
+        "dizzyL/front": 0,
+        "dizzyL/three": 5,
+        "dizzyL/side": 12,
+        "dizzyL/back": 0,
+        "dizzyR/front": 0,
+        "dizzyR/three": 7,
+        "dizzyR/side": 5,
+        "dizzyR/back": 0
        },
-       "maxStrayPx": 7
+       "maxStrayPx": 12
       },
       {
        "part": "haR/wingtip",
        "buried": 0.29,
        "strayPx": {
-        "front": 0,
-        "three": 0,
-        "side": 0,
-        "back": 0
+        "idle/front": 0,
+        "idle/three": 0,
+        "idle/side": 0,
+        "idle/back": 0,
+        "dizzyL/front": 0,
+        "dizzyL/three": 0,
+        "dizzyL/side": 0,
+        "dizzyL/back": 0,
+        "dizzyR/front": 0,
+        "dizzyR/three": 0,
+        "dizzyR/side": 0,
+        "dizzyR/back": 0
        },
        "maxStrayPx": 0
       },
@@ -3162,10 +4180,18 @@
        "part": "elR/fore",
        "buried": 0.385,
        "strayPx": {
-        "front": 0,
-        "three": 0,
-        "side": 0,
-        "back": 0
+        "idle/front": 0,
+        "idle/three": 0,
+        "idle/side": 0,
+        "idle/back": 0,
+        "dizzyL/front": 0,
+        "dizzyL/three": 0,
+        "dizzyL/side": 0,
+        "dizzyL/back": 0,
+        "dizzyR/front": 0,
+        "dizzyR/three": 0,
+        "dizzyR/side": 0,
+        "dizzyR/back": 0
        },
        "maxStrayPx": 0
       },
@@ -3173,10 +4199,18 @@
        "part": "shR/shoulder",
        "buried": 0.463,
        "strayPx": {
-        "front": 0,
-        "three": 0,
-        "side": 0,
-        "back": 0
+        "idle/front": 0,
+        "idle/three": 0,
+        "idle/side": 0,
+        "idle/back": 0,
+        "dizzyL/front": 0,
+        "dizzyL/three": 0,
+        "dizzyL/side": 0,
+        "dizzyL/back": 0,
+        "dizzyR/front": 0,
+        "dizzyR/three": 0,
+        "dizzyR/side": 0,
+        "dizzyR/back": 0
        },
        "maxStrayPx": 0
       },
@@ -3184,21 +4218,37 @@
        "part": "shR/upper",
        "buried": 0.527,
        "strayPx": {
-        "front": 0,
-        "three": 0,
-        "side": 0,
-        "back": 0
+        "idle/front": 0,
+        "idle/three": 0,
+        "idle/side": 0,
+        "idle/back": 0,
+        "dizzyL/front": 1,
+        "dizzyL/three": 0,
+        "dizzyL/side": 0,
+        "dizzyL/back": 0,
+        "dizzyR/front": 0,
+        "dizzyR/three": 0,
+        "dizzyR/side": 0,
+        "dizzyR/back": 0
        },
-       "maxStrayPx": 0
+       "maxStrayPx": 1
       },
       {
        "part": "torso/jacket",
        "buried": 0.256,
        "strayPx": {
-        "front": 0,
-        "three": 0,
-        "side": 0,
-        "back": 0
+        "idle/front": 0,
+        "idle/three": 0,
+        "idle/side": 0,
+        "idle/back": 0,
+        "dizzyL/front": 0,
+        "dizzyL/three": 0,
+        "dizzyL/side": 0,
+        "dizzyL/back": 0,
+        "dizzyR/front": 0,
+        "dizzyR/three": 0,
+        "dizzyR/side": 0,
+        "dizzyR/back": 0
        },
        "maxStrayPx": 0
       },
@@ -3206,10 +4256,18 @@
        "part": "torso/chain",
        "buried": 0.333,
        "strayPx": {
-        "front": 0,
-        "three": 0,
-        "side": 2,
-        "back": 0
+        "idle/front": 0,
+        "idle/three": 0,
+        "idle/side": 2,
+        "idle/back": 0,
+        "dizzyL/front": 0,
+        "dizzyL/three": 0,
+        "dizzyL/side": 0,
+        "dizzyL/back": 0,
+        "dizzyR/front": 0,
+        "dizzyR/three": 0,
+        "dizzyR/side": 0,
+        "dizzyR/back": 0
        },
        "maxStrayPx": 2
       },
@@ -3217,10 +4275,18 @@
        "part": "ftL/foot",
        "buried": 0.087,
        "strayPx": {
-        "front": 0,
-        "three": 0,
-        "side": 0,
-        "back": 0
+        "idle/front": 0,
+        "idle/three": 0,
+        "idle/side": 0,
+        "idle/back": 0,
+        "dizzyL/front": 0,
+        "dizzyL/three": 0,
+        "dizzyL/side": 0,
+        "dizzyL/back": 0,
+        "dizzyR/front": 0,
+        "dizzyR/three": 0,
+        "dizzyR/side": 0,
+        "dizzyR/back": 0
        },
        "maxStrayPx": 0
       },
@@ -3228,10 +4294,18 @@
        "part": "knL/shin",
        "buried": 0.192,
        "strayPx": {
-        "front": 0,
-        "three": 0,
-        "side": 0,
-        "back": 0
+        "idle/front": 0,
+        "idle/three": 0,
+        "idle/side": 0,
+        "idle/back": 0,
+        "dizzyL/front": 0,
+        "dizzyL/three": 0,
+        "dizzyL/side": 0,
+        "dizzyL/back": 0,
+        "dizzyR/front": 0,
+        "dizzyR/three": 0,
+        "dizzyR/side": 0,
+        "dizzyR/back": 0
        },
        "maxStrayPx": 0
       },
@@ -3239,10 +4313,18 @@
        "part": "lgL/thigh",
        "buried": 0.34,
        "strayPx": {
-        "front": 0,
-        "three": 0,
-        "side": 0,
-        "back": 0
+        "idle/front": 0,
+        "idle/three": 0,
+        "idle/side": 0,
+        "idle/back": 0,
+        "dizzyL/front": 0,
+        "dizzyL/three": 0,
+        "dizzyL/side": 0,
+        "dizzyL/back": 0,
+        "dizzyR/front": 0,
+        "dizzyR/three": 0,
+        "dizzyR/side": 0,
+        "dizzyR/back": 0
        },
        "maxStrayPx": 0
       },
@@ -3250,10 +4332,18 @@
        "part": "ftR/foot",
        "buried": 0.086,
        "strayPx": {
-        "front": 0,
-        "three": 0,
-        "side": 0,
-        "back": 0
+        "idle/front": 0,
+        "idle/three": 0,
+        "idle/side": 0,
+        "idle/back": 0,
+        "dizzyL/front": 0,
+        "dizzyL/three": 0,
+        "dizzyL/side": 0,
+        "dizzyL/back": 0,
+        "dizzyR/front": 0,
+        "dizzyR/three": 0,
+        "dizzyR/side": 0,
+        "dizzyR/back": 0
        },
        "maxStrayPx": 0
       },
@@ -3261,10 +4351,18 @@
        "part": "knR/shin",
        "buried": 0.193,
        "strayPx": {
-        "front": 0,
-        "three": 0,
-        "side": 0,
-        "back": 0
+        "idle/front": 0,
+        "idle/three": 0,
+        "idle/side": 0,
+        "idle/back": 0,
+        "dizzyL/front": 0,
+        "dizzyL/three": 0,
+        "dizzyL/side": 0,
+        "dizzyL/back": 0,
+        "dizzyR/front": 0,
+        "dizzyR/three": 0,
+        "dizzyR/side": 0,
+        "dizzyR/back": 0
        },
        "maxStrayPx": 0
       },
@@ -3272,10 +4370,18 @@
        "part": "lgR/thigh",
        "buried": 0.337,
        "strayPx": {
-        "front": 0,
-        "three": 0,
-        "side": 0,
-        "back": 0
+        "idle/front": 0,
+        "idle/three": 0,
+        "idle/side": 0,
+        "idle/back": 0,
+        "dizzyL/front": 0,
+        "dizzyL/three": 0,
+        "dizzyL/side": 0,
+        "dizzyL/back": 0,
+        "dizzyR/front": 0,
+        "dizzyR/three": 0,
+        "dizzyR/side": 0,
+        "dizzyR/back": 0
        },
        "maxStrayPx": 0
       },
@@ -3283,10 +4389,18 @@
        "part": "hips/shorts",
        "buried": 0.393,
        "strayPx": {
-        "front": 0,
-        "three": 0,
-        "side": 0,
-        "back": 0
+        "idle/front": 0,
+        "idle/three": 0,
+        "idle/side": 0,
+        "idle/back": 0,
+        "dizzyL/front": 0,
+        "dizzyL/three": 0,
+        "dizzyL/side": 0,
+        "dizzyL/back": 0,
+        "dizzyR/front": 0,
+        "dizzyR/three": 0,
+        "dizzyR/side": 0,
+        "dizzyR/back": 0
        },
        "maxStrayPx": 0
       },
@@ -3294,10 +4408,18 @@
        "part": "tail/tail",
        "buried": 0.36,
        "strayPx": {
-        "front": 0,
-        "three": 0,
-        "side": 0,
-        "back": 0
+        "idle/front": 0,
+        "idle/three": 0,
+        "idle/side": 0,
+        "idle/back": 0,
+        "dizzyL/front": 0,
+        "dizzyL/three": 0,
+        "dizzyL/side": 0,
+        "dizzyL/back": 0,
+        "dizzyR/front": 0,
+        "dizzyR/three": 0,
+        "dizzyR/side": 0,
+        "dizzyR/back": 0
        },
        "maxStrayPx": 0
       }
@@ -3319,33 +4441,37 @@
      "sequences": {
       "knockdown": {
        "worst": {
-        "y": -0.015,
+        "y": -0.014,
         "part": "knR/shin",
         "phase": "idle",
-        "t": 2.8
+        "t": 2.85
        },
-       "frames": 188,
+       "frames": 191,
        "pass": true,
        "downEnd": {
         "tail": 0.017,
         "head": 0.284
        },
-       "cullReach": 2.218
+       "cullReach": 2.218,
+       "stars": null,
+       "dizzyGap": null
       },
       "knockdown+anim": {
        "worst": {
-        "y": -0.015,
+        "y": -0.014,
         "part": "knR/shin",
         "phase": "idle",
-        "t": 2.8
+        "t": 2.85
        },
-       "frames": 188,
+       "frames": 191,
        "pass": true,
        "downEnd": {
         "tail": 0.017,
         "head": 0.284
        },
-       "cullReach": 2.218
+       "cullReach": 2.218,
+       "stars": null,
+       "dizzyGap": null
       },
       "attack": {
        "worst": {
@@ -3357,7 +4483,9 @@
        "frames": 165,
        "pass": true,
        "downEnd": null,
-       "cullReach": 1.136
+       "cullReach": 1.136,
+       "stars": null,
+       "dizzyGap": null
       },
       "attack+anim": {
        "worst": {
@@ -3369,7 +4497,9 @@
        "frames": 165,
        "pass": true,
        "downEnd": null,
-       "cullReach": 1.136
+       "cullReach": 1.136,
+       "stars": null,
+       "dizzyGap": null
       },
       "run": {
        "worst": {
@@ -3381,7 +4511,9 @@
        "frames": 120,
        "pass": true,
        "downEnd": null,
-       "cullReach": 1.137
+       "cullReach": 1.137,
+       "stars": null,
+       "dizzyGap": null
       },
       "run+anim": {
        "worst": {
@@ -3393,24 +4525,74 @@
        "frames": 120,
        "pass": true,
        "downEnd": null,
-       "cullReach": 1.137
+       "cullReach": 1.137,
+       "stars": null,
+       "dizzyGap": null
+      },
+      "dizzy": {
+       "worst": {
+        "y": -0.005,
+        "part": "ftR/foot",
+        "phase": "idle",
+        "t": 4.5
+       },
+       "frames": 290,
+       "pass": true,
+       "downEnd": null,
+       "cullReach": 1.136,
+       "stars": {
+        "clearance": 0.388,
+        "part": "head/beanie",
+        "t": 0.017,
+        "starsY": 2.79
+       },
+       "dizzyGap": {
+        "L": 0,
+        "R": 0,
+        "t": 0.167
+       }
+      },
+      "dizzy+anim": {
+       "worst": {
+        "y": -0.005,
+        "part": "ftR/foot",
+        "phase": "idle",
+        "t": 4.5
+       },
+       "frames": 290,
+       "pass": true,
+       "downEnd": null,
+       "cullReach": 1.136,
+       "stars": {
+        "clearance": 0.388,
+        "part": "head/beanie",
+        "t": 0.017,
+        "starsY": 2.79
+       },
+       "dizzyGap": {
+        "L": 0,
+        "R": 0,
+        "t": 0.167
+       }
       }
      },
      "lodSequences": {
       "knockdown": {
        "worst": {
-        "y": -0.019,
+        "y": -0.018,
         "part": "knR/shin",
         "phase": "idle",
-        "t": 2.8
+        "t": 2.85
        },
-       "frames": 188,
+       "frames": 191,
        "pass": true,
        "downEnd": {
         "tail": 0.017,
         "head": 0.284
        },
-       "cullReach": 2.212
+       "cullReach": 2.212,
+       "stars": null,
+       "dizzyGap": null
       },
       "attack": {
        "worst": {
@@ -3422,7 +4604,9 @@
        "frames": 165,
        "pass": true,
        "downEnd": null,
-       "cullReach": 0.999
+       "cullReach": 0.999,
+       "stars": null,
+       "dizzyGap": null
       },
       "run": {
        "worst": {
@@ -3434,7 +4618,28 @@
        "frames": 120,
        "pass": true,
        "downEnd": null,
-       "cullReach": 1
+       "cullReach": 1,
+       "stars": null,
+       "dizzyGap": null
+      },
+      "dizzy": {
+       "worst": {
+        "y": -0.007,
+        "part": "knR/shin",
+        "phase": "idle",
+        "t": 4.55
+       },
+       "frames": 290,
+       "pass": true,
+       "downEnd": null,
+       "cullReach": 0.999,
+       "stars": {
+        "clearance": 0.553,
+        "part": "head/head",
+        "t": 0.017,
+        "starsY": 2.79
+       },
+       "dizzyGap": null
       }
      },
      "sweeps": {
@@ -3481,7 +4686,32 @@
       "renderRigPx": 15250
      },
      "cullReachMax": 2.218,
-     "cullRadius": 1.9,
+     "cullRadius": 2.6,
+     "stars": {
+      "hd": {
+       "clearance": 0.388,
+       "part": "head/beanie",
+       "t": 0.017,
+       "starsY": 2.79
+      },
+      "hdAnim": {
+       "clearance": 0.388,
+       "part": "head/beanie",
+       "t": 0.017,
+       "starsY": 2.79
+      },
+      "lod": {
+       "clearance": 0.553,
+       "part": "head/head",
+       "t": 0.017,
+       "starsY": 2.79
+      }
+     },
+     "shoulderGapDizzy": {
+      "L": 0,
+      "R": 0,
+      "t": 0.167
+     },
      "silhouetteIoU": {
       "front": 0.863,
       "three": 0.835,
@@ -3496,6 +4726,8 @@
       "marginLODGround": true,
       "ground": true,
       "shoulders": true,
+      "stars": true,
+      "cullSphere": true,
       "strayHulls": true,
       "shadows": true,
       "flash": true,
