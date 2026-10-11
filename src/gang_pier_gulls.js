@@ -146,7 +146,7 @@ export function buildPierGull(K, member = 'grunt_a', opts = {}) {   // opts: { l
   for (const k of ['L', 'R']) {
     const sd = k === 'L' ? 1 : -1, sleeve = L.vest ? C.wing : C.blue;
     P(J['sh' + k], 'shoulder', G.sph(big ? 0.12 : 0.112, big ? 0.115 : 0.108, big ? 0.12 : 0.112), sleeve, 0, -0.01, 0, L.vest ? F() : {});
-    P(J['sh' + k], 'upper', G.cap(ua, d.upper - (big ? 0.03 : 0.06)), sleeve, 0, -d.upper / 2, 0, L.vest ? F() : {});
+    P(J['sh' + k], 'upper', G.cap(ua, d.upper - (big ? 0.08 : 0.06)), sleeve, 0, -d.upper / 2 - (big ? 0.02 : 0), 0, L.vest ? F() : {});   // v1.1.2: bruiser capsule end 6 cm inside the shoulder ball (dizzy stray ink 12 px)
     P(J['el' + k], 'fore', G.cap(fa, d.fore - (big ? 0.12 : 0.06)), C.wing, 0, -d.fore / 2 - (big ? 0.055 : 0), 0, F());
     P(J['ha' + k], 'wingtip', G.sph(big ? 0.085 : 0.07, big ? 0.14 : 0.125, big ? 0.1 : 0.09), C.tip, 0, -0.06, 0.01);
     P(J['ha' + k], 'mirror', G.box(0.012, 0.07, 0.05), C.white, sd * (big ? 0.088 : 0.073), -0.08, 0.0, { outline: false });

@@ -4102,7 +4102,7 @@
       },
       {
        "part": "elL/fore",
-       "buried": 0.36,
+       "buried": 0.359,
        "strayPx": {
         "idle/front": 0,
         "idle/three": 0,
@@ -4140,22 +4140,22 @@
       },
       {
        "part": "shL/upper",
-       "buried": 0.487,
+       "buried": 0.437,
        "strayPx": {
         "idle/front": 0,
         "idle/three": 0,
-        "idle/side": 3,
-        "idle/back": 7,
-        "dizzyL/front": 0,
-        "dizzyL/three": 5,
-        "dizzyL/side": 12,
-        "dizzyL/back": 0,
+        "idle/side": 0,
+        "idle/back": 0,
+        "dizzyL/front": 1,
+        "dizzyL/three": 1,
+        "dizzyL/side": 0,
+        "dizzyL/back": 1,
         "dizzyR/front": 0,
-        "dizzyR/three": 7,
-        "dizzyR/side": 5,
+        "dizzyR/three": 0,
+        "dizzyR/side": 0,
         "dizzyR/back": 0
        },
-       "maxStrayPx": 12
+       "maxStrayPx": 1
       },
       {
        "part": "haR/wingtip",
@@ -4178,7 +4178,7 @@
       },
       {
        "part": "elR/fore",
-       "buried": 0.385,
+       "buried": 0.383,
        "strayPx": {
         "idle/front": 0,
         "idle/three": 0,
@@ -4216,7 +4216,7 @@
       },
       {
        "part": "shR/upper",
-       "buried": 0.527,
+       "buried": 0.479,
        "strayPx": {
         "idle/front": 0,
         "idle/three": 0,
@@ -4226,7 +4226,7 @@
         "dizzyL/three": 0,
         "dizzyL/side": 0,
         "dizzyL/back": 0,
-        "dizzyR/front": 0,
+        "dizzyR/front": 1,
         "dizzyR/three": 0,
         "dizzyR/side": 0,
         "dizzyR/back": 0
@@ -4662,9 +4662,9 @@
       "shadowCalls": 2,
       "flashShared": true,
       "flashPx": {
-       "rigPx": 12909,
+       "rigPx": 12893,
        "unflashedPx": 0,
-       "unflashedPxWithFlashOff": 2877
+       "unflashedPxWithFlashOff": 2872
       },
       "flashCovers": true,
       "mappedSubMaterials": 1,
@@ -4681,9 +4681,9 @@
        "tailVerts": 24,
        "moved_m": 0.026
       },
-      "renderDiffPx": 594,
-      "renderDiffInteriorPx": 34,
-      "renderRigPx": 15250
+      "renderDiffPx": 633,
+      "renderDiffInteriorPx": 35,
+      "renderRigPx": 15235
      },
      "cullReachMax": 2.218,
      "cullRadius": 2.6,
@@ -4715,7 +4715,7 @@
      "silhouetteIoU": {
       "front": 0.863,
       "three": 0.835,
-      "side": 0.858
+      "side": 0.857
      },
      "pass": {
       "budgetHD": true,
