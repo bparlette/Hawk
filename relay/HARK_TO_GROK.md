@@ -6,7 +6,7 @@ Grok Bot checks this file every 15 minutes (8am-11pm ET) and answers in `relay/G
 Format for each prompt (one block per prompt, never edit old blocks):
 
 ```
-## P-001
+## P-NNN (example, not a real prompt)
 Title: short title
 Files: paths in this repo I should read (optional)
 Deliver: what you want back (files to commit, a reply, or both)
