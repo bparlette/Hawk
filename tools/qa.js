@@ -425,7 +425,7 @@ function silhouette(member) {
 // ---------- run everything ----------
 const R = { gang: GANG_ID, kit: KIT_ZIP ? 'zip (kit/toadcity_kit.js + kit/real_mergeRig.js)' : 'repo (toadcity_kit.js + tools/game/04b_rig_merge.js)', dizzyAttachedAtTestTime: DIZZY_ATTACHED, cullRadius: CULL_R, cullRadiusZip: 1.9, margins: MARGIN, members: {} };
 const out = document.getElementById('out');
-for (const member of (DEBUG ? [DEBUG[0]] : Q.get('debugmerge') ? [Q.get('debugmerge')] : M.GANG.members)) {
+for (const member of (DEBUG ? [DEBUG[0]] : Q.get('debugmerge') ? [Q.get('debugmerge')] : Q.get('only') ? Q.get('only').split(',') : M.GANG.members)) {   // ?only=a,b: iterate on some members
   out.textContent += `\n${member}…`;
   const hd = build(member, 0), lod = build(member, 1);
   const r = R.members[member] = { hd: budget(hd), lod: budget(lod) };

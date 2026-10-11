@@ -392,7 +392,7 @@
    "seq": {
     "name": "knockdown",
     "minY": {
-     "key_hwy_otters.grunt_a": 0.016625233043471077
+     "key_hwy_otters.grunt_a": 0.01599380343063389
     }
    }
   }
@@ -942,7 +942,7 @@
    "seq": {
     "name": "knockdown",
     "minY": {
-     "key_hwy_otters.grunt_b": 0.01677261407715183
+     "key_hwy_otters.grunt_b": 0.01893180183481688
     }
    }
   }
@@ -1492,7 +1492,7 @@
    "seq": {
     "name": "knockdown",
     "minY": {
-     "key_hwy_otters.armed": 0.01486617862359138
+     "key_hwy_otters.armed": 0.01732932435847051
     }
    }
   }
@@ -1658,9 +1658,9 @@
    "lod": 0,
    "rigs": {
     "key_hwy_otters.bruiser": {
-     "parts": 32,
-     "tris": 9400,
-     "hullTris": 8524,
+     "parts": 33,
+     "tris": 9592,
+     "hullTris": 8716,
      "mats": 3,
      "height": 2.5166872440815853,
      "minY": 0.0048275592997995,
@@ -1670,8 +1670,8 @@
     }
    },
    "frame": {
-    "calls": 76,
-    "triangles": 25262
+    "calls": 79,
+    "triangles": 25838
    },
    "seq": {
     "name": null,
@@ -1689,8 +1689,8 @@
    "rigs": {
     "key_hwy_otters.bruiser": {
      "parts": 2,
-     "tris": 9400,
-     "hullTris": 8524,
+     "tris": 9592,
+     "hullTris": 8716,
      "mats": 3,
      "height": 2.4918341090937686,
      "minY": 0.02401423273444461,
@@ -1701,7 +1701,7 @@
    },
    "frame": {
     "calls": 6,
-    "triangles": 27326
+    "triangles": 27902
    },
    "seq": {
     "name": null,
@@ -1718,9 +1718,9 @@
    "lod": 0,
    "rigs": {
     "key_hwy_otters.bruiser": {
-     "parts": 32,
-     "tris": 9400,
-     "hullTris": 8524,
+     "parts": 33,
+     "tris": 9592,
+     "hullTris": 8716,
      "mats": 3,
      "height": 2.5166872440815853,
      "minY": 0.0048275592997995,
@@ -1730,8 +1730,8 @@
     }
    },
    "frame": {
-    "calls": 301,
-    "triangles": 101042
+    "calls": 313,
+    "triangles": 103346
    },
    "seq": {
     "name": null,
@@ -1749,8 +1749,8 @@
    "rigs": {
     "key_hwy_otters.bruiser": {
      "parts": 2,
-     "tris": 9400,
-     "hullTris": 8524,
+     "tris": 9592,
+     "hullTris": 8716,
      "mats": 3,
      "height": 2.4918341090937686,
      "minY": 0.02401423273444461,
@@ -1761,7 +1761,7 @@
    },
    "frame": {
     "calls": 21,
-    "triangles": 109298
+    "triangles": 111602
    },
    "seq": {
     "name": null,
@@ -1778,9 +1778,9 @@
    "lod": 0,
    "rigs": {
     "key_hwy_otters.bruiser": {
-     "parts": 32,
-     "tris": 9400,
-     "hullTris": 8524,
+     "parts": 33,
+     "tris": 9592,
+     "hullTris": 8716,
      "mats": 3,
      "height": 2.5166872440815853,
      "minY": 0.0048275592997995,
@@ -1790,8 +1790,8 @@
     }
    },
    "frame": {
-    "calls": 76,
-    "triangles": 25262
+    "calls": 79,
+    "triangles": 25838
    },
    "seq": {
     "name": null,
@@ -1809,8 +1809,8 @@
    "rigs": {
     "key_hwy_otters.bruiser": {
      "parts": 2,
-     "tris": 9400,
-     "hullTris": 8524,
+     "tris": 9592,
+     "hullTris": 8716,
      "mats": 3,
      "height": 2.4918341090937686,
      "minY": 0.02401423273444461,
@@ -1821,7 +1821,7 @@
    },
    "frame": {
     "calls": 6,
-    "triangles": 27326
+    "triangles": 27902
    },
    "seq": {
     "name": null,
@@ -1838,9 +1838,9 @@
    "lod": 0,
    "rigs": {
     "key_hwy_otters.bruiser": {
-     "parts": 32,
-     "tris": 9400,
-     "hullTris": 8524,
+     "parts": 33,
+     "tris": 9592,
+     "hullTris": 8716,
      "mats": 3,
      "height": 2.5166872440815853,
      "minY": 0.0048275592997995,
@@ -1850,8 +1850,8 @@
     }
    },
    "frame": {
-    "calls": 301,
-    "triangles": 101042
+    "calls": 313,
+    "triangles": 103346
    },
    "seq": {
     "name": null,
@@ -1869,8 +1869,8 @@
    "rigs": {
     "key_hwy_otters.bruiser": {
      "parts": 2,
-     "tris": 9400,
-     "hullTris": 8524,
+     "tris": 9592,
+     "hullTris": 8716,
      "mats": 3,
      "height": 2.4918341090937686,
      "minY": 0.02401423273444461,
@@ -1881,7 +1881,7 @@
    },
    "frame": {
     "calls": 21,
-    "triangles": 109298
+    "triangles": 111602
    },
    "seq": {
     "name": null,
@@ -1898,9 +1898,9 @@
    "lod": 0,
    "rigs": {
     "key_hwy_otters.bruiser/idle": {
-     "parts": 32,
-     "tris": 9400,
-     "hullTris": 8524,
+     "parts": 33,
+     "tris": 9592,
+     "hullTris": 8716,
      "mats": 3,
      "height": 2.5166872440815853,
      "minY": 0.0048275592997995,
@@ -1909,9 +1909,9 @@
      "swR": false
     },
     "key_hwy_otters.bruiser/run": {
-     "parts": 32,
-     "tris": 9400,
-     "hullTris": 8524,
+     "parts": 33,
+     "tris": 9592,
+     "hullTris": 8716,
      "mats": 3,
      "height": 2.5166872440815853,
      "minY": 0.0048275592997995,
@@ -1920,9 +1920,9 @@
      "swR": false
     },
     "key_hwy_otters.bruiser/windup": {
-     "parts": 32,
-     "tris": 9400,
-     "hullTris": 8524,
+     "parts": 33,
+     "tris": 9592,
+     "hullTris": 8716,
      "mats": 3,
      "height": 2.5166872440815853,
      "minY": 0.0048275592997995,
@@ -1931,9 +1931,9 @@
      "swR": false
     },
     "key_hwy_otters.bruiser/attack": {
-     "parts": 32,
-     "tris": 9400,
-     "hullTris": 8524,
+     "parts": 33,
+     "tris": 9592,
+     "hullTris": 8716,
      "mats": 3,
      "height": 2.5166872440815853,
      "minY": 0.0048275592997995,
@@ -1942,9 +1942,9 @@
      "swR": false
     },
     "key_hwy_otters.bruiser/hurt": {
-     "parts": 32,
-     "tris": 9400,
-     "hullTris": 8524,
+     "parts": 33,
+     "tris": 9592,
+     "hullTris": 8716,
      "mats": 3,
      "height": 2.5166872440815853,
      "minY": 0.0048275592997995,
@@ -1953,9 +1953,9 @@
      "swR": false
     },
     "key_hwy_otters.bruiser/down": {
-     "parts": 32,
-     "tris": 9400,
-     "hullTris": 8524,
+     "parts": 33,
+     "tris": 9592,
+     "hullTris": 8716,
      "mats": 3,
      "height": 2.5166872440815853,
      "minY": 0.0048275592997995,
@@ -1964,9 +1964,9 @@
      "swR": false
     },
     "key_hwy_otters.bruiser/getup": {
-     "parts": 32,
-     "tris": 9400,
-     "hullTris": 8524,
+     "parts": 33,
+     "tris": 9592,
+     "hullTris": 8716,
      "mats": 3,
      "height": 2.5166872440815853,
      "minY": 0.0048275592997995,
@@ -1976,8 +1976,8 @@
     }
    },
    "frame": {
-    "calls": 526,
-    "triangles": 176822
+    "calls": 547,
+    "triangles": 180854
    },
    "seq": {
     "name": null,
@@ -1995,8 +1995,8 @@
    "rigs": {
     "key_hwy_otters.bruiser": {
      "parts": 2,
-     "tris": 9400,
-     "hullTris": 8524,
+     "tris": 9592,
+     "hullTris": 8716,
      "mats": 3,
      "height": 2.4918341090937686,
      "minY": 0.02401423273444461,
@@ -2007,7 +2007,7 @@
    },
    "frame": {
     "calls": 21,
-    "triangles": 109298
+    "triangles": 111602
    },
    "seq": {
     "name": null,
@@ -2024,9 +2024,9 @@
    "lod": 0,
    "rigs": {
     "key_hwy_otters.bruiser": {
-     "parts": 32,
-     "tris": 9400,
-     "hullTris": 8524,
+     "parts": 33,
+     "tris": 9592,
+     "hullTris": 8716,
      "mats": 3,
      "height": 2.5166872440815853,
      "minY": 0.0048275592997995,
@@ -2036,13 +2036,13 @@
     }
    },
    "frame": {
-    "calls": 76,
-    "triangles": 25262
+    "calls": 79,
+    "triangles": 25838
    },
    "seq": {
     "name": "knockdown",
     "minY": {
-     "key_hwy_otters.bruiser": 0.004910982153527421
+     "key_hwy_otters.bruiser": 0.008021784821558964
     }
    }
   }
@@ -2057,8 +2057,8 @@
    "rigs": {
     "key_hwy_otters.bruiser": {
      "parts": 2,
-     "tris": 9400,
-     "hullTris": 8524,
+     "tris": 9592,
+     "hullTris": 8716,
      "mats": 3,
      "height": 2.4918341090937686,
      "minY": 0.02401423273444461,
@@ -2069,7 +2069,7 @@
    },
    "frame": {
     "calls": 6,
-    "triangles": 27326
+    "triangles": 27902
    },
    "seq": {
     "name": "knockdown",
@@ -2089,7 +2089,7 @@
    "rigs": {},
    "frame": {
     "calls": 56,
-    "triangles": 300566
+    "triangles": 306902
    }
   }
  },
@@ -2103,7 +2103,7 @@
    "rigs": {},
    "frame": {
     "calls": 56,
-    "triangles": 300566
+    "triangles": 306902
    }
   }
  },
@@ -2117,7 +2117,7 @@
    "rigs": {},
    "frame": {
     "calls": 67,
-    "triangles": 304790
+    "triangles": 311126
    }
   }
  },
@@ -2130,9 +2130,9 @@
    "lod": 0,
    "rigs": {
     "key_hwy_otters.bruiser": {
-     "parts": 32,
-     "tris": 9400,
-     "hullTris": 8524,
+     "parts": 33,
+     "tris": 9592,
+     "hullTris": 8716,
      "mats": 3,
      "height": 2.5166872440815853,
      "minY": 0.0048275592997995,
@@ -2142,8 +2142,8 @@
     }
    },
    "frame": {
-    "calls": 301,
-    "triangles": 101042
+    "calls": 313,
+    "triangles": 103346
    }
   }
  },
@@ -2182,9 +2182,9 @@
    "lod": 0,
    "rigs": {
     "key_hwy_otters.bruiser": {
-     "parts": 32,
-     "tris": 9400,
-     "hullTris": 8524,
+     "parts": 33,
+     "tris": 9592,
+     "hullTris": 8716,
      "mats": 3,
      "height": 2.5166872440815853,
      "minY": 0.0048275592997995,
@@ -2194,8 +2194,8 @@
     }
    },
    "frame": {
-    "calls": 55,
-    "triangles": 19522
+    "calls": 58,
+    "triangles": 20098
    }
   }
  },
@@ -2241,9 +2241,9 @@
      "swR": true
     },
     "key_hwy_otters.bruiser": {
-     "parts": 32,
-     "tris": 9400,
-     "hullTris": 8524,
+     "parts": 33,
+     "tris": 9592,
+     "hullTris": 8716,
      "mats": 3,
      "height": 2.5166872440815853,
      "minY": 0.0048275592997995,
@@ -2253,8 +2253,8 @@
     }
    },
    "frame": {
-    "calls": 295,
-    "triangles": 100130
+    "calls": 298,
+    "triangles": 100706
    },
    "seq": {
     "name": null,
@@ -2305,8 +2305,8 @@
     },
     "key_hwy_otters.bruiser": {
      "parts": 2,
-     "tris": 9400,
-     "hullTris": 8524,
+     "tris": 9592,
+     "hullTris": 8716,
      "mats": 3,
      "height": 2.4918341090937686,
      "minY": 0.02401423273444461,
@@ -2317,7 +2317,7 @@
    },
    "frame": {
     "calls": 21,
-    "triangles": 109574
+    "triangles": 110150
    },
    "seq": {
     "name": null,
@@ -2367,9 +2367,9 @@
      "swR": true
     },
     "key_hwy_otters.bruiser": {
-     "parts": 32,
-     "tris": 9400,
-     "hullTris": 8524,
+     "parts": 33,
+     "tris": 9592,
+     "hullTris": 8716,
      "mats": 3,
      "height": 2.5166872440815853,
      "minY": 0.0048275592997995,
@@ -2379,8 +2379,8 @@
     }
    },
    "frame": {
-    "calls": 295,
-    "triangles": 100130
+    "calls": 298,
+    "triangles": 100706
    },
    "seq": {
     "name": null,
@@ -2430,9 +2430,9 @@
      "swR": true
     },
     "key_hwy_otters.bruiser": {
-     "parts": 32,
-     "tris": 9400,
-     "hullTris": 8524,
+     "parts": 33,
+     "tris": 9592,
+     "hullTris": 8716,
      "mats": 3,
      "height": 2.5166872440815853,
      "minY": 0.0048275592997995,
@@ -2442,8 +2442,8 @@
     }
    },
    "frame": {
-    "calls": 295,
-    "triangles": 100130
+    "calls": 298,
+    "triangles": 100706
    },
    "seq": {
     "name": null,
@@ -2494,8 +2494,8 @@
     },
     "key_hwy_otters.bruiser": {
      "parts": 2,
-     "tris": 9400,
-     "hullTris": 8524,
+     "tris": 9592,
+     "hullTris": 8716,
      "mats": 3,
      "height": 2.4918341090937686,
      "minY": 0.02401423273444461,
@@ -2506,7 +2506,7 @@
    },
    "frame": {
     "calls": 21,
-    "triangles": 109574
+    "triangles": 110150
    },
    "seq": {
     "name": null,
@@ -2556,9 +2556,9 @@
      "swR": true
     },
     "key_hwy_otters.bruiser": {
-     "parts": 32,
-     "tris": 9400,
-     "hullTris": 8524,
+     "parts": 33,
+     "tris": 9592,
+     "hullTris": 8716,
      "mats": 3,
      "height": 2.5166872440815853,
      "minY": 0.0048275592997995,
@@ -2568,8 +2568,8 @@
     }
    },
    "frame": {
-    "calls": 295,
-    "triangles": 100130
+    "calls": 298,
+    "triangles": 100706
    },
    "seq": {
     "name": null,
@@ -2682,9 +2682,9 @@
      "swR": true
     },
     "key_hwy_otters.bruiser": {
-     "parts": 32,
-     "tris": 9400,
-     "hullTris": 8524,
+     "parts": 33,
+     "tris": 9592,
+     "hullTris": 8716,
      "mats": 3,
      "height": 2.5166872440815853,
      "minY": 0.0048275592997995,
@@ -2694,16 +2694,16 @@
     }
    },
    "frame": {
-    "calls": 295,
-    "triangles": 100130
+    "calls": 298,
+    "triangles": 100706
    },
    "seq": {
     "name": "knockdown",
     "minY": {
-     "key_hwy_otters.grunt_a": 0.03172863879798507,
-     "key_hwy_otters.grunt_b": 0.03172863879798507,
-     "key_hwy_otters.armed": 0.03172863879798507,
-     "key_hwy_otters.bruiser": 0.022662277057320213
+     "key_hwy_otters.grunt_a": 0.03212660503804951,
+     "key_hwy_otters.grunt_b": 0.03212660503804951,
+     "key_hwy_otters.armed": 0.03212660503804951,
+     "key_hwy_otters.bruiser": 0.02312016721588228
     }
    }
   }
@@ -2768,10 +2768,10 @@
    "seq": {
     "name": "knockdown",
     "minY": {
-     "key_hwy_otters.grunt_a": -0.00018996013969996284,
-     "key_hwy_otters.grunt_b": -0.00018996013969996284,
-     "key_hwy_otters.armed": -0.00018996013969996284,
-     "key_hwy_otters.bruiser": -0.0016975622091785492
+     "key_hwy_otters.grunt_a": 0.001044916703946186,
+     "key_hwy_otters.grunt_b": 0.001044916703946186,
+     "key_hwy_otters.armed": 0.001044916703946186,
+     "key_hwy_otters.bruiser": -0.00019804168625353613
     }
    }
   }
@@ -2818,9 +2818,9 @@
      "swR": true
     },
     "key_hwy_otters.bruiser": {
-     "parts": 32,
-     "tris": 9400,
-     "hullTris": 8524,
+     "parts": 33,
+     "tris": 9592,
+     "hullTris": 8716,
      "mats": 3,
      "height": 2.5166872440815853,
      "minY": 0.0048275592997995,
@@ -2830,8 +2830,8 @@
     }
    },
    "frame": {
-    "calls": 299,
-    "triangles": 101666
+    "calls": 302,
+    "triangles": 102242
    }
   }
  },
@@ -5218,14 +5218,14 @@
     },
     "bruiser": {
      "hd": {
-      "parts": 32,
-      "tris": 9400,
-      "hullTris": 8524,
-      "hulls": 23,
+      "parts": 33,
+      "tris": 9592,
+      "hullTris": 8716,
+      "hulls": 24,
       "mats": 3,
-      "casters": 20,
-      "drawCalls": 55,
-      "shadowCalls": 20,
+      "casters": 21,
+      "drawCalls": 57,
+      "shadowCalls": 21,
       "height": 2.492,
       "feetMinY": 0.024,
       "flashBad": 0,
@@ -5478,7 +5478,7 @@
       },
       {
        "part": "shR/upper",
-       "buried": 0.449,
+       "buried": 0.491,
        "strayPx": {
         "idle/front": 0,
         "idle/three": 0,
@@ -5497,7 +5497,7 @@
       },
       {
        "part": "torso/jacket",
-       "buried": 0.224,
+       "buried": 0.349,
        "strayPx": {
         "idle/front": 0,
         "idle/three": 0,
@@ -5513,6 +5513,25 @@
         "dizzyR/back": 0
        },
        "maxStrayPx": 0
+      },
+      {
+       "part": "torso/sash",
+       "buried": 0.292,
+       "strayPx": {
+        "idle/front": 0,
+        "idle/three": 0,
+        "idle/side": 0,
+        "idle/back": 0,
+        "dizzyL/front": 0,
+        "dizzyL/three": 0,
+        "dizzyL/side": 0,
+        "dizzyL/back": 1,
+        "dizzyR/front": 0,
+        "dizzyR/three": 2,
+        "dizzyR/side": 0,
+        "dizzyR/back": 3
+       },
+       "maxStrayPx": 3
       },
       {
        "part": "ftL/foot",
@@ -5630,7 +5649,7 @@
       },
       {
        "part": "hips/joggers",
-       "buried": 0.434,
+       "buried": 0.456,
        "strayPx": {
         "idle/front": 0,
         "idle/three": 0,
@@ -5677,7 +5696,7 @@
       "tail": 0.045,
       "head": 0.322
      },
-     "downEndSnappedMinY": 0.045,
+     "downEndSnappedMinY": 0.005,
      "downEndSnappedAnim": {
       "ears": 0.461,
       "tail": 0.045,
@@ -5699,10 +5718,10 @@
       "t": 0
      },
      "determinism": {
-      "hashSeed7": "6acc9a13",
+      "hashSeed7": "7beeb0bf",
       "same": true,
       "sameLod": true,
-      "hashSeed8": "d77c5abf",
+      "hashSeed8": "3ecad89f",
       "seedChangesRig": true
      },
      "sequences": {
@@ -5920,8 +5939,8 @@
       "pass": true
      },
      "merge": {
-      "meshesBefore": 32,
-      "hullsBefore": 23,
+      "meshesBefore": 33,
+      "hullsBefore": 24,
       "mergedMeshes": 3,
       "mergedSolid": 2,
       "mergedOutline": 1,
@@ -5931,9 +5950,9 @@
       "shadowCalls": 2,
       "flashShared": true,
       "flashPx": {
-       "rigPx": 12826,
+       "rigPx": 12945,
        "unflashedPx": 0,
-       "unflashedPxWithFlashOff": 631
+       "unflashedPxWithFlashOff": 905
       },
       "flashCovers": true,
       "mappedSubMaterials": 1,
@@ -5952,7 +5971,7 @@
       },
       "renderDiffPx": 0,
       "renderDiffInteriorPx": 0,
-      "renderRigPx": 15213
+      "renderRigPx": 15428
      },
      "cullReachMax": 2.171,
      "cullRadius": 2.6,
@@ -5982,9 +6001,9 @@
       "t": 0.167
      },
      "silhouetteIoU": {
-      "front": 0.927,
-      "three": 0.916,
-      "side": 0.935
+      "front": 0.913,
+      "three": 0.897,
+      "side": 0.902
      },
      "pass": {
       "budgetHD": true,

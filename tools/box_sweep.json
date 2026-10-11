@@ -30,9 +30,9 @@
   "part": "shin"
  },
  "bruiser": {
-  "y": -0.0132,
-  "pose": "getup(0.4)",
-  "part": "shin"
+  "y": -0.0188,
+  "pose": "down",
+  "part": "sash"
  },
  "bruiser/lod1": {
   "y": -0.0199,

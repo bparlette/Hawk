@@ -1,6 +1,8 @@
-# Toad City Baltimore: Task C, gang 5: Key Highway Otters (v1)
+# Toad City Baltimore: Task C, gang 5: Key Highway Otters (v1.0.1)
 
 Built to the round-2 brief (O4) on the round-2 ZIP's kit. Branch: `claude/o4-key-hwy-otters`.
+
+**v1.0.1:** the bruiser's sash is now its own thin torus part on the vest instead of painted sphere faces, so it reads as a clean band. The bruiser goes from 32 to 33 parts and from 9,400 to 9,592 tris; the QA below is a full re-run.
 
 Every number below comes from a script run:
 - `tools/qa.html` (run headless by `tools/shoot.mjs`) on `kit/toadcity_kit.js` and `kit/real_mergeRig.js`
@@ -126,6 +128,10 @@ The bruiser swaps the jacket for a brown vest with a green drum-major sash. Gree
 
 **Fixes the QA drove during the build:**
 - **Ears under hats:** on `grunt_a` and the bruiser, the ears sat inside the hat brim, at 88.5 % and 55.7 % buried. They now sit lower and wider, so every part is under 55 %.
+- **Bruiser sash (v1.0.1):** v1 painted the sash on the vest's sphere faces, which read as a stepped band.
+  - It is now a separate torus part (`sash`) ringed round the vest, tilted 0.45 rad, with its tube 3.6 cm thick.
+  - The first try, higher and steeper on the chest, crossed the shoulder ball (59.6 % buried, 15 px stray ink on the vest). Moving it lower and flatter fixed both; the numbers below are for this version.
+  - The LOD keeps the band as painted faces on the jacket, matching its position.
 - **Bruiser shako:** a straight drum's rim drew 9 px of stray ink across the brow. The shako now flares upward from a narrow base that sits inside the head, at 3 px.
 - **Harness ground margin:** the harness tests each part's bounding box (`Box3.setFromObject`), which is more conservative than vertices.
   - It put the tail at −2.6 to −3.0 cm in `down` and the bruiser's LOD shin and foot at −3.1 cm in `getup(0.3)`.
@@ -164,19 +170,19 @@ The measurements are the same as in the earlier gangs' READMEs. The new checks a
 
 | Check | grunt_a | grunt_b | armed | bruiser | Threshold |
 |---|---|---|---|---|---|
-| HD parts / tris / materials | 32 / 9,400 / 3 | 31 / 9,140 / 3 | 32 / 9,752 / 3 | 32 / 9,400 / 3 | ≤ 36 / ≤ 10,800 / ≤ 3 |
+| HD parts / tris / materials | 32 / 9,400 / 3 | 31 / 9,140 / 3 | 32 / 9,752 / 3 | 33 / 9,592 / 3 | ≤ 36 / ≤ 10,800 / ≤ 3 |
 | LOD 1 parts / tris | 12 / 1,648 | 11 / 1,592 | 12 / 1,704 | 12 / 1,648 | ≤ 12 / ≤ 2,700 |
-| Hulls / shadow casters (HD) | 23 / 19 | 22 / 18 | 23 / 19 | 23 / 20 | report |
+| Hulls / shadow casters (HD) | 23 / 19 | 22 / 18 | 23 / 19 | 24 / 21 | report |
 | Height (idle, t = 0) / feet min y | 1.895 m / 0.020 m | 1.819 m / 0.020 m | 1.819 m / 0.020 m | 2.492 m / 0.024 m | 1.8–2.2 m (×1.2 bruiser: 2.16–2.64) / ≥ −0.03 |
-| Lowest non-hull point: real down(1,true) / knock-down seq.minY | 3.5 cm / 1.7 cm | 3.5 cm / 1.7 cm | 3.5 cm / 1.5 cm | 4.5 cm / 0.5 cm | ≥ −3.0 cm |
+| Lowest non-hull point: real down(1,true) / knock-down seq.minY | 3.5 cm / 1.6 cm | 3.5 cm / 1.9 cm | 3.5 cm / 1.7 cm | 0.5 cm / 0.8 cm | ≥ −3.0 cm |
 | Tail / ear lowest point in down(1,true), without / with animateGang | tail 3.5 cm / 3.5 cm; ears 38.4 cm / 38.4 cm | tail 3.5 cm / 3.5 cm; ears 41.1 cm / 41.1 cm | tail 3.5 cm / 3.5 cm; ears 41.1 cm / 41.1 cm | tail 4.5 cm / 4.5 cm; ears 46.1 cm / 46.1 cm | ≥ −3.0 cm |
-| LOD 1 lowest point in knock-down (QA 60 fps / real_viewer seq.minY) | −0.9 cm / 0.0 cm | −0.9 cm / 0.0 cm | −0.9 cm / 0.0 cm | −1.3 cm / −0.2 cm | ≥ −2.0 cm |
+| LOD 1 lowest point in knock-down (QA 60 fps / real_viewer seq.minY) | −0.9 cm / 0.1 cm | −0.9 cm / 0.1 cm | −0.9 cm / 0.1 cm | −1.3 cm / 0.0 cm | ≥ −2.0 cm |
 | Shoulder gap down(1,true) / windup(0.6) | 0.0 cm / 0.0 cm | 0.0 cm / 0.0 cm | 0.0 cm / 0.0 cm | 0.0 cm / 0.0 cm | ≤ 1 cm |
 | Real mergeRig: draw calls after / flash covers all / animateGang moves bones | 3 / yes / yes | 3 / yes / yes | 3 / yes / yes | 3 / yes / yes | ≤ 3 / yes / yes |
 | Max horizontal reach beyond META.radius in idle (weapon excepted) | 19.4 cm | 19.4 cm | 20.2 cm | 21.0 cm | ≤ 35 cm |
 | outline:false parts without shadow:false | 0 | 0 | 0 | 0 | 0 |
 | Console errors (viewer, day + night) | 0 | 0 | 0 | 0 | 0 |
-| Determinism: same seed → same hash | yes (aa9a0293) | yes (18e9c843) | yes (09195e37) | yes (6acc9a13) | yes |
+| Determinism: same seed → same hash | yes (aa9a0293) | yes (18e9c843) | yes (09195e37) | yes (7beeb0bf) | yes |
 
 Viewer console errors and warnings over all 83 evidence jobs: 0 (real_viewer day 0, night 0). QA: ALL PASS on the zip (kit/toadcity_kit.js + kit/real_mergeRig.js) kit, dizzy attached at test time: yes.
 
@@ -186,10 +192,10 @@ Lowest non-hull vertex over the looping knock-down, feet and weapon excepted, ca
 
 | rig | unmerged, single rig | merged job, single rig | HD lineup | LOD 1 lineup |
 |---|---|---|---|---|
-| grunt_a | 1.7 cm | none (the viewer skips skinned meshes) | 3.2 cm | 0.0 cm |
-| grunt_b | 1.7 cm | none (the viewer skips skinned meshes) | 3.2 cm | 0.0 cm |
-| armed | 1.5 cm | none (the viewer skips skinned meshes) | 3.2 cm | 0.0 cm |
-| bruiser | 0.5 cm | none (the viewer skips skinned meshes) | 2.3 cm | −0.2 cm |
+| grunt_a | 1.6 cm | none (the viewer skips skinned meshes) | 3.2 cm | 0.1 cm |
+| grunt_b | 1.9 cm | none (the viewer skips skinned meshes) | 3.2 cm | 0.1 cm |
+| armed | 1.7 cm | none (the viewer skips skinned meshes) | 3.2 cm | 0.1 cm |
+| bruiser | 0.8 cm | none (the viewer skips skinned meshes) | 2.3 cm | 0.0 cm |
 
 ### Hark's harness (`tools/results_gang.json`)
 
@@ -201,7 +207,7 @@ Lowest non-hull vertex over the looping knock-down, feet and weapon excepted, ca
 | grunt_b/lod1 | 11 / 1,592 | 11 / 11 | yes / 2 / 11 / yes | −1.5 cm (getup) | 0 / 0 | yes / no |
 | armed | 32 / 9,752 | 23 / 19 | yes / 3 / 17 / yes | −14.8 cm (down) | 2 / 0 | yes / yes |
 | armed/lod1 | 12 / 1,704 | 12 / 12 | yes / 2 / 12 / yes | −13.4 cm (down) | 2 / 0 | yes / no |
-| bruiser | 32 / 9,400 | 23 / 20 | yes / 3 / 16 / yes | −1.3 cm (getup) | 0 / 0 | yes / yes |
+| bruiser | 33 / 9,592 | 24 / 21 | yes / 3 / 16 / yes | −1.9 cm (down) | 0 / 0 | yes / yes |
 | bruiser/lod1 | 12 / 1,648 | 12 / 12 | yes / 2 / 11 / yes | −2.0 cm (getup) | 0 / 0 | yes / no |
 
 The harness's lowest point is the bounding box of every non-hull part (`Box3.setFromObject`, feet and weapon included), so it reads lower than the vertices. It flags a part under −3 cm in `under`. The only entries are the armed member's weapon (`swR`) in `down`, which the brief exempts: armed ['swR:-0.15'], armed/lod1 ['swR:-0.13']. Other poses: none. The QA tables and the real viewer's `seq.minY` use vertices and exempt the feet and the weapon, as the brief does. LOD rigs take no seed, so seed 8 builds the same LOD.
@@ -216,7 +222,7 @@ The harness's lowest point is the bounding box of every non-hull part (`Box3.set
 | grunt_b/lod1 | −1.5 cm (shin, getup(0.3)) |
 | armed | −0.5 cm (tail, down) |
 | armed/lod1 | −1.5 cm (shin, getup(0.3)) |
-| bruiser | −1.3 cm (shin, getup(0.4)) |
+| bruiser | −1.9 cm (sash, down) |
 | bruiser/lod1 | −2.0 cm (shin, getup(0.3)) |
 
 ### QA tables
@@ -231,7 +237,7 @@ QA run: 83 jobs, 0 console errors/warnings. All acceptance checks: PASS.
 | grunt_b | 1 | 11 | 1,592 | 1,592 | 11 | 2 | 11 | 22 | 1.820 m | 0.019 m |
 | armed | HD | 32 | 9,752 | 8,876 | 23 | 3 | 19 | 55 | 1.819 m | 0.020 m |
 | armed | 1 | 12 | 1,704 | 1,704 | 12 | 2 | 12 | 24 | 1.820 m | 0.019 m |
-| bruiser | HD | 32 | 9,400 | 8,524 | 23 | 3 | 20 | 55 | 2.492 m | 0.024 m |
+| bruiser | HD | 33 | 9,592 | 8,716 | 24 | 3 | 21 | 57 | 2.492 m | 0.024 m |
 | bruiser | 1 | 12 | 1,648 | 1,648 | 12 | 2 | 12 | 24 | 2.388 m | 0.021 m |
 
 
@@ -260,7 +266,7 @@ QA run: 83 jobs, 0 console errors/warnings. All acceptance checks: PASS.
 | grunt_a | 0.0 cm / 0.0 cm | 0.0 cm / 0.0 cm | 0.0 cm / 0.0 cm | 3.5 cm | 3.5 cm | 38.4 cm | 3.5 cm / 38.4 cm | 24.8 cm | 3.5 cm |
 | grunt_b | 0.0 cm / 0.0 cm | 0.0 cm / 0.0 cm | 0.0 cm / 0.0 cm | 3.5 cm | 3.5 cm | 41.1 cm | 3.5 cm / 41.1 cm | 26.8 cm | 3.5 cm |
 | armed | 0.0 cm / 0.0 cm | 0.0 cm / 0.0 cm | 0.0 cm / 0.0 cm | 3.5 cm | 3.5 cm | 41.1 cm | 3.5 cm / 41.1 cm | 26.8 cm | 3.5 cm |
-| bruiser | 0.0 cm / 0.0 cm | 0.0 cm / 0.0 cm | 0.0 cm / 0.0 cm | 4.5 cm | 4.5 cm | 46.1 cm | 4.5 cm / 46.1 cm | 32.2 cm | 4.5 cm |
+| bruiser | 0.0 cm / 0.0 cm | 0.0 cm / 0.0 cm | 0.0 cm / 0.0 cm | 4.5 cm | 4.5 cm | 46.1 cm | 4.5 cm / 46.1 cm | 32.2 cm | 0.5 cm |
 
 **Outlines, shadows, LOD silhouette** (buried = share of a part's surface inside other outlined parts; stray ink rendered at 6 m, 256², 4 views, in idle and both dizzy sway extremes):
 
@@ -269,7 +275,7 @@ QA run: 83 jobs, 0 console errors/warnings. All acceptance checks: PASS.
 | grunt_a | 48.2 % (head/brim) | 4 (shR/upper, idle/front) | 0 / 0 | 0.925 / 0.919 / 0.929 |
 | grunt_b | 44.9 % (hips/joggers) | 5 (torso/towel, dizzyR/side) | 0 / 0 | 0.920 / 0.925 / 0.925 |
 | armed | 44.9 % (hips/joggers) | 1 (head/head, idle/front) | 0 / 0 | 0.926 / 0.918 / 0.920 |
-| bruiser | 47.2 % (shL/shoulder) | 3 (head/shako, idle/front) | 0 / 0 | 0.927 / 0.916 / 0.935 |
+| bruiser | 49.1 % (shR/upper) | 3 (head/shako, idle/front) | 0 / 0 | 0.913 / 0.897 / 0.902 |
 
 **The game's real `mergeRig()`** (`kit/real_mergeRig.js`, the ZIP's copy, run on the HD rig):
 
@@ -278,7 +284,7 @@ QA run: 83 jobs, 0 console errors/warnings. All acceptance checks: PASS.
 | grunt_a | 32 + 23 | 3 (2 + 1) | 16 | 3 + 2 | 0.000 mm | 0 of 7377 | 1.9 cm (88 verts) | 1 / 47 (of 9052) | 2.15 m (outside 1.9) |
 | grunt_b | 31 + 22 | 3 (2 + 1) | 16 | 3 + 2 | 0.000 mm | 0 of 7136 | 1.9 cm (88 verts) | 0 / 33 (of 8757) | 2.15 m (outside 1.9) |
 | armed | 32 + 23 | 3 (2 + 1) | 17 | 3 + 2 | 0.000 mm | 0 of 7717 | 1.9 cm (88 verts) | 0 / 23 (of 9426) | 2.44 m (outside 1.9) |
-| bruiser | 32 + 23 | 3 (2 + 1) | 16 | 3 + 2 | 0.000 mm | 0 of 12826 | 2.3 cm (88 verts) | 0 / 0 (of 15213) | 2.17 m (outside 1.9) |
+| bruiser | 33 + 24 | 3 (2 + 1) | 16 | 3 + 2 | 0.000 mm | 0 of 12945 | 2.3 cm (88 verts) | 0 / 0 (of 15428) | 2.17 m (outside 1.9) |
 
 **Idle reach and determinism** (reach = farthest non-hull vertex from the root's vertical axis over idle t = 0 .. 2 s at 15 fps, weapon excepted, minus META.radius; hash = every part's world vertices, colours and joint transforms after `idle(0)`):
 
@@ -287,7 +293,7 @@ QA run: 83 jobs, 0 console errors/warnings. All acceptance checks: PASS.
 | grunt_a | 0.42 m | 0.614 m (haL/paw, t = 0.00 s) | 0.194 m | `aa9a0293` | yes | `60445ac3` (yes) |
 | grunt_b | 0.42 m | 0.614 m (haL/paw, t = 0.00 s) | 0.194 m | `18e9c843` | yes | `c739e8f3` (yes) |
 | armed | 0.42 m | 0.622 m (haR/paw, t = 0.00 s) | 0.202 m | `09195e37` | yes | `9cb86f97` (yes) |
-| bruiser | 0.55 m | 0.760 m (haL/paw, t = 0.00 s) | 0.210 m | `6acc9a13` | yes | `d77c5abf` (yes) |
+| bruiser | 0.55 m | 0.760 m (haL/paw, t = 0.00 s) | 0.210 m | `7beeb0bf` | yes | `3ecad89f` (yes) |
 
 Per-member pass flags (caps, margins, ground, shoulders, stray hulls, shadows, flash, hulls, merge, height, feet): grunt_a: PASS, grunt_b: PASS, armed: PASS, bruiser: PASS
 
@@ -302,15 +308,15 @@ Farthest vertex from the centre over all sequences: grunt_a 2.15 m, grunt_b 2.15
 ## Known issues (with sizes)
 
 - **Platform:** tested only in headless Chromium with SwiftShader, with 0 console errors or warnings across all 83 jobs. It has not been run on iOS Safari or an iPhone.
-- **Margins:** HD is 31–32 parts and 9,140–9,752 tris. LOD is 11–12 parts and 1,592–1,704 tris.
+- **Margins:** HD is 31–33 parts and 9,140–9,752 tris. LOD is 11–12 parts and 1,592–1,704 tris.
 - **Lowest vertex (any QA sequence, feet and weapon exempt only in `down`):** HD −1.0 cm, LOD −1.3 cm. The floor is −3 cm, and the LOD target is −2 cm.
-- **Buried parts:** the most buried part is head/brim on grunt_a at 48.2 % (limit 55 %).
+- **Buried parts:** the most buried part is shR/upper on bruiser at 49.1 % (limit 55 %).
 - **Stray ink:** the worst is 5 px (torso/towel on grunt_b) against the 12 px limit; the QA ran at 8 px. This covers idle and both dizzy extremes. The 6 m distance and the pixel thresholds are mine, not the game's.
 - **Idle reach:** the farthest is 21.0 cm beyond META.radius (haL/paw on bruiser), against the 35 cm limit.
 - **Dizzy stars:** the closest approach is 27.9 cm below the sprite (head/plume on bruiser).
-- **LOD silhouette:** IoU against HD is 0.916–0.935.
-- **Merged vs parts render:** 0–1 interior pixels differ out of 8,757–15,213 rig pixels. Another 0–47 pixels differ only along outline edges.
-- **Bruiser sash:** it is painted by whole faces of the torso sphere, so up close the diagonal reads as a stepped band (see `previews/key_hwy_otters_bruiser_closeup_day.png`).
+- **LOD silhouette:** IoU against HD is 0.897–0.929.
+- **Merged vs parts render:** 0–1 interior pixels differ out of 8,757–15,428 rig pixels. Another 0–47 pixels differ only along outline edges.
+- **Bruiser sash look:** the sash is a tilted ring around the vest rather than a chest-to-hip diagonal, so it reads as a wide sash-belt. Its tube is stretched to the vest's ellipse, so it is wider than it is thick.
 - **Real viewer, merged `seq.minY`:** `kit/real_viewer.html` skips skinned meshes in `seq.minY`, so its merged jobs report no value. The QA's merged-vs-parts vertex check (max Δ in the mergeRig table) covers merged geometry instead.
 - **Not modelled:** the attack's forward lunge, by agreement (the game handles root motion).
 

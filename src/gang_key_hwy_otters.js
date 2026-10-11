@@ -107,7 +107,7 @@ export function buildKeyHwyOtter(K, member = 'grunt_a', opts = {}) {   // opts: 
   // shoulder (+x, top) to hip (-x, bottom), front and back
   const top = L.vest ? C.vest : C.green;
   const jacket = (x, y, z) => {
-    if (L.vest) return Math.abs(x / sx * 0.75 - y * 0.66) < 0.06 ? C.green : null;
+    if (L.vest) return Math.abs(y + 0.1 + (x / sx) * Math.tan(0.45)) < 0.05 ? C.green : null;   // LOD: the HD sash torus (centre 0.2 in the torso, tilt 0.45) as painted faces
     return y > 0.29 ? C.stripe : y < -0.29 ? C.stripe : null;
   };
   // the otter's pale throat, chin and cheeks (head sphere space, radius ~0.17), plus a painted headband for grunt_b
@@ -120,7 +120,12 @@ export function buildKeyHwyOtter(K, member = 'grunt_a', opts = {}) {   // opts: 
 
   // ---- hips + torso: joggers, green track jacket (brown vest + green sash on the bruiser), towel for grunt_b ----
   P(J.hips, 'joggers', G.sph(0.21 * sx, 0.15, 0.17 * sz), C.pants, 0, 0.02, 0);
-  paint(P(J.torso, 'jacket', G.sph(0.25 * sx, 0.36, 0.21 * sz).toNonIndexed(), top, 0, 0.3, 0), jacket);
+  paint(P(J.torso, 'jacket', G.sph(0.25 * sx, 0.36, 0.21 * sz).toNonIndexed(), top, 0, 0.3, 0), L.vest ? () => null : jacket);
+  if (L.vest) {   // the drum-major sash: its own thin torus ringed round the vest on a diagonal (shoulder +x, hip -x), not painted faces
+    const th = 0.45, a = 0.25 * sx, b = 0.36, c = 0.21 * sz;   // torso ellipsoid semi-axes; th = tilt of the ring plane about z
+    const ru = 1 / Math.sqrt((Math.cos(th) / a) ** 2 + (Math.sin(th) / b) ** 2) + 0.006, rz = c + 0.006;
+    P(J.torso, 'sash', G.tor(1, 0.036 / ((ru + rz) / 2)).rotateX(Math.PI / 2).scale(ru, 1, rz).rotateZ(-th).toNonIndexed(), C.green, 0, 0.2, 0);
+  }
   if (L.towel) P(J.torso, 'towel', G.tor(0.17, 0.045), C.hat, 0, 0.58, 0.01, { rot: [Math.PI / 2 + 0.2, 0, 0] });
 
   // ---- head: sleek brown head, pale throat, broad flat cream muzzle, dark nose, whiskers, small round ears ----

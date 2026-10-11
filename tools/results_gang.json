@@ -156,15 +156,15 @@
     ]
    },
    "bruiser": {
-    "parts": 32,
-    "tris": 9400,
-    "hulls": 23,
-    "hullTris": 8524,
+    "parts": 33,
+    "tris": 9592,
+    "hulls": 24,
+    "hullTris": 8716,
     "mats": 3,
     "badHull": 0,
     "flashBad": 0,
-    "shadowCasters": 20,
-    "drawCallsUnmerged": 55,
+    "shadowCasters": 21,
+    "drawCallsUnmerged": 57,
     "height": 2.517,
     "minY": 0.038,
     "maxY": 2.554,
@@ -362,15 +362,15 @@
     ]
    },
    "bruiser": {
-    "parts": 32,
-    "tris": 9400,
-    "hulls": 23,
-    "hullTris": 8524,
+    "parts": 33,
+    "tris": 9592,
+    "hulls": 24,
+    "hullTris": 8716,
     "mats": 3,
     "badHull": 0,
     "flashBad": 0,
-    "shadowCasters": 20,
-    "drawCallsUnmerged": 55,
+    "shadowCasters": 21,
+    "drawCallsUnmerged": 57,
     "height": 2.517,
     "minY": 0.038,
     "maxY": 2.554,
@@ -810,13 +810,13 @@
      "gaps": {}
     },
     "down": {
-     "minY": -0.003,
+     "minY": -0.019,
      "maxY": 0.9,
      "under": [],
      "gaps": {}
     },
     "down+anim": {
-     "minY": -0.003,
+     "minY": -0.019,
      "maxY": 0.9,
      "under": [],
      "gaps": {}
@@ -1220,13 +1220,13 @@
      "gaps": {}
     },
     "down": {
-     "minY": -0.003,
+     "minY": -0.019,
      "maxY": 0.9,
      "under": [],
      "gaps": {}
     },
     "down+anim": {
-     "minY": -0.003,
+     "minY": -0.019,
      "maxY": 0.9,
      "under": [],
      "gaps": {}
@@ -1715,24 +1715,24 @@
     },
     {
      "skinned": true,
-     "verts": 5177,
-     "tris": 6524,
+     "verts": 5753,
+     "tris": 6716,
      "hasUv": true,
      "map": false
     },
     {
      "ol": true,
      "skinned": true,
-     "verts": 11181,
-     "tris": 8524,
+     "verts": 11757,
+     "tris": 8716,
      "hasUv": false,
      "map": false
     }
    ],
    "bones": 16,
    "tailIsBone": true,
-   "partsBefore": 32,
-   "trisBefore": 9400
+   "partsBefore": 33,
+   "trisBefore": 9592
   },
   "bruiser/lod1": {
    "ok": true,
@@ -1880,7 +1880,7 @@
     "hugeSeedOk": true
    }
   },
-  "mathRandomCallsDuringBuilds": 51984,
+  "mathRandomCallsDuringBuilds": 52432,
   "redrawnForWrapperK": false,
   "furCanvas": {
    "identicalAcrossKitInstances": true,
