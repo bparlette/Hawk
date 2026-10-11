@@ -12,9 +12,14 @@
 //    still moving its bones, merged vs unmerged geometry, and the merged mesh's fixed culling sphere vs the rig in every frame
 //  • LOD silhouette: IoU of HD vs LOD 1 masks from front, 3/4 and side
 import * as THREE from 'three';
-import { K } from '../toadcity_kit.js';
-import { loadMergeRig } from './game_merge.js';
-const mergeRig = await loadMergeRig(K);   // the game's real mergeRig (tools/game/04b_rig_merge.js)
+import { attachDizzy } from './game/thug_dizzy.js';
+// ?kit=zip: the real kit from the round-2 ZIP (kit/toadcity_kit.js, byte-identical) and its kit/real_mergeRig.js;
+// otherwise the repo's rebuilt kit (gangs 1-4) with tools/game/04b_rig_merge.js. Both mergeRig files are the same code.
+const _q = new URLSearchParams(location.search);   // ?kit=zip|repo; gang 5 (built on the round-2 ZIP's kit) defaults to zip
+const KIT_ZIP = (_q.get('kit') || (_q.get('gang') === 'key_hwy_otters' ? 'zip' : 'repo')) === 'zip';
+const { K } = KIT_ZIP ? await import('../kit/toadcity_kit.js') : await import('../toadcity_kit.js');
+const mergeRig = KIT_ZIP ? (await import('../kit/real_mergeRig.js')).mergeRig : await (await import('./game_merge.js')).loadMergeRig(K);
+const DIZZY_ATTACHED = attachDizzy(K);   // the ZIP kit predates the game's dizzy pose: attached at test time, file untouched
 
 const Q = new URLSearchParams(location.search);
 const GANG_ID = Q.get('gang') || 'pier_gulls';
@@ -24,7 +29,7 @@ const ANIM = M.animateGang;
 const P = K.THUG_POSES, DT = 1 / 60, FLOOR = -0.03;
 // caps (TASK_C + gang-2 rules) and the safety margins required from gang 2 v1.1 on
 const CAP = { hdParts: 37, hdTris: 12000, lodParts: 14, lodTris: 3000, mats: 3, buried: 0.6 };
-const MARGIN = { hdParts: 35, hdTris: 11000, lodParts: 12, lodTris: 2000, buried: 0.55, lodFloor: -0.02 };
+const MARGIN = { hdParts: 35, hdTris: Number(Q.get('hdTris') || 11000), lodParts: 12, lodTris: 2000, buried: 0.55, lodFloor: -0.02, ink: Q.has('inkMargin') ? Number(Q.get('inkMargin')) : null, reach: 0.35 };
 
 const isHull = (o) => o.isMesh && o.material && o.material.isShaderMaterial && o.material.side === THREE.BackSide;
 const partsOf = (J) => { const a = []; J.root.traverse((o) => { if (o.isMesh && !isHull(o)) a.push(o); }); return a; };
@@ -59,12 +64,12 @@ const downExempt = (J) => (m) => under(m, J.ftL) || under(m, J.ftR) || (J.swR &&
 
 // ---------- 60 fps sequences with the game's timings (supplied after gang 2 v1) ----------
 // idle/chase rate 14; windup 0.5 s (big 0.7 s) rate 12; attack pose over 0.3 s at rate 26, back to chase at 0.55 s;
-// hurt pose over 0.32 s at rate 24, next state at 0.34 s; knock-down hop (vy 4.2, g 22) with the down pose at rate 14 for
+// hurt pose over 0.32 s at rate 24, next state at 0.34 s; knock-down hop (vy 4.2, g 22) with down(st, grounded) at rate 13 for
 // 1.25 s, thug getup over 0.5 s at rate 14 (06_game.js; 0.45 s is the hero's). Dizzy: the game's THUG_POSES.dizzy(t) at
 // rate 10 for 0 to 3 s, entered from hurt and leaving to chase. f(t, u, landed, tl): t = sequence time, u = phase fraction, tl = time in phase.
 // Not modelled: the attack's forward lunge (first 0.12 s; root translation only, no pose change) and dizzy (rate 10; no dizzy
 // pose existed in THUG_POSES before gang 4; it does now).
-const T = { rate: 14, windup: 0.5, windupBig: 0.7, windupRate: 12, atkPose: 0.3, atkRate: 26, atkDur: 0.55, hurtPose: 0.32, hurtRate: 24, hurtDur: 0.34, downRate: 14, downDur: 1.25, getup: 0.5, getupRate: 14, dizzyRate: 10, dizzyDur: 3.0 };
+const T = { rate: 14, windup: 0.5, windupBig: 0.7, windupRate: 12, atkPose: 0.3, atkRate: 26, atkDur: 0.55, hurtPose: 0.32, hurtRate: 24, hurtDur: 0.34, downRate: 13, downDur: 1.25, getup: 0.5, getupRate: 14, dizzyRate: 10, dizzyDur: 3.0 };
 const cl = (v) => Math.min(1, Math.max(0, v));
 function seqs(J) {
   const wu = J.meta && J.meta.big ? T.windupBig : T.windup;
@@ -72,7 +77,7 @@ function seqs(J) {
     knockdown: [
       { n: 'idle', dur: 0.5, rate: T.rate, st: 'idle', f: (t) => P.idle(t, J) },
       { n: 'hurt', dur: T.hurtDur, rate: T.hurtRate, st: 'hurt', f: (t, u, g, tl) => P.hurt(cl(tl / T.hurtPose), J) },
-      { n: 'down', dur: T.downDur, rate: T.downRate, st: 'down', hop: true, f: (t, u, g) => P.down(u, g) },
+      { n: 'down', dur: T.downDur, rate: T.downRate, st: 'down', hop: true, f: (t, u, g, tl) => P.down(tl, g) },   // 06_game.js: down(st, grounded), st in seconds
       { n: 'getup', dur: T.getup, rate: T.getupRate, st: 'idle', f: (t, u) => P.getup(u, J) },
       { n: 'idle', dur: 0.6, rate: T.rate, st: 'idle', f: (t) => P.idle(t, J) },
     ],
@@ -139,6 +144,8 @@ function maxY(J) {
 }
 function clearances(J) {
   const out = {};
+  // ears: J.earL/earR when the rig exposes them, else every non-hull mesh named ear* (the otters' ears are parts of the head)
+  if (!J.earL && !J.earR) { let y = Infinity; const v = new THREE.Vector3(); J.root.traverse((m) => { if (m.isMesh && !isHull(m) && /^ear/i.test(m.name || '')) { const p = m.geometry.attributes.position; for (let i = 0; i < p.count; i++) { v.fromBufferAttribute(p, i).applyMatrix4(m.matrixWorld); y = Math.min(y, v.y); } } }); if (y < Infinity) out.ears = r3(y); }
   for (const k of ['tail', 'earL', 'earR', 'head']) if (J[k]) { let y = Infinity; const v = new THREE.Vector3(); J[k].traverse((m) => { if (m.isMesh && !isHull(m)) { const p = m.geometry.attributes.position; for (let i = 0; i < p.count; i++) { v.fromBufferAttribute(p, i).applyMatrix4(m.matrixWorld); y = Math.min(y, v.y); } } }); out[k] = r3(y); }
   return out;
 }
@@ -321,6 +328,29 @@ function flashPixels(px) {   // rig pixels (not background, not ink) and how man
   for (let i = 0; i < px.length; i += 4) { const r = px[i], g = px[i + 1], b = px[i + 2]; if (r < 12 && g < 12 && b > 243) continue; if (0.299 * r + 0.587 * g + 0.114 * b < 60) continue; rig++; if (Math.min(r, g, b) < 200) dark++; }
   return { rig, unflashed: dark };
 }
+// horizontal reach in idle (t = 0, META.scale applied): farthest non-hull vertex from the root's vertical axis, weapon
+// excepted, minus META.radius. Brief: <= 0.35 m.
+function idleReach(member) {
+  // idle(t) over t = 0 .. 2 s at 15 fps (the whole sway), farthest non-hull vertex from the root's vertical axis, weapon excepted
+  const J = build(member, 0); const v = new THREE.Vector3(); let best = { d: 0, part: '', t: 0 };
+  for (let f = 0; f <= 30; f++) {
+    const t = f / 15; snap(J, P.idle(t, J));
+    for (const m of partsOf(J)) { if (J.swR && under(m, J.swR)) continue; const p = m.geometry.attributes.position; for (let i = 0; i < p.count; i++) { v.fromBufferAttribute(p, i).applyMatrix4(m.matrixWorld); const d = Math.hypot(v.x, v.z); if (d > best.d) best = { d, part: label(J, m), t }; } }
+  }
+  const rad = M.META[member].radius; return { reach_m: r3(best.d), radius_m: rad, beyond_m: r3(best.d - rad), part: best.part, t: r3(best.t) };
+}
+// determinism: build twice with the same seed and hash every part's geometry (positions, colours) and local transform;
+// a different seed is hashed too (it may legitimately differ)
+function rigHash(J) {
+  let h = 2166136261 >>> 0; const mix = (f) => { const b = new Uint32Array(new Float32Array([f]).buffer)[0]; h ^= b; h = Math.imul(h, 16777619) >>> 0; };
+  J.root.updateMatrixWorld(true);
+  J.root.traverse((o) => { if (!o.isMesh) return; for (const e of o.matrixWorld.elements) mix(e); for (const k of ['position', 'color']) { const a = o.geometry.attributes[k]; if (a) for (let i = 0; i < a.array.length; i++) mix(a.array[i]); } });
+  return h.toString(16).padStart(8, '0');
+}
+function determinism(member) {
+  const a = rigHash(build(member, 0)), b = rigHash(build(member, 0)), c = rigHash(BUILD(K, member, { lod: 0, seed: 8 })), la = rigHash(build(member, 1)), lb = rigHash(build(member, 1));
+  return { hashSeed7: a, same: a === b, sameLod: la === lb, hashSeed8: c, seedChangesRig: a !== c };
+}
 function mergeCheck(member) {
   const A = build(member, 0), B = build(member, 0); snap(A, P.idle(0, A)); snap(B, P.idle(0, B));
   const before = partsOf(B).length; let hullsBefore = 0; B.root.traverse((o) => { if (isHull(o)) hullsBefore++; });
@@ -393,7 +423,7 @@ function silhouette(member) {
 }
 
 // ---------- run everything ----------
-const R = { gang: GANG_ID, members: {} };
+const R = { gang: GANG_ID, kit: KIT_ZIP ? 'zip (kit/toadcity_kit.js + kit/real_mergeRig.js)' : 'repo (toadcity_kit.js + tools/game/04b_rig_merge.js)', dizzyAttachedAtTestTime: DIZZY_ATTACHED, cullRadius: CULL_R, cullRadiusZip: 1.9, margins: MARGIN, members: {} };
 const out = document.getElementById('out');
 for (const member of (DEBUG ? [DEBUG[0]] : Q.get('debugmerge') ? [Q.get('debugmerge')] : M.GANG.members)) {
   out.textContent += `\n${member}…`;
@@ -403,7 +433,11 @@ for (const member of (DEBUG ? [DEBUG[0]] : Q.get('debugmerge') ? [Q.get('debugme
   r.hullOverlap = strayHulls(build(member, 0));
   r.strayHulls = r.hullOverlap.filter((x) => x.buried > CAP.buried || x.maxStrayPx > STRAY_MAX);
   { const J = build(member, 0); snap(J, P.down(1, true)); r.shoulderGapDown = shoulderGaps(J); r.downEndSnapped = clearances(J); r.downEndSnappedMinY = r3(minY(J, downExempt(J)).y); }
+  if (ANIM) { const J = build(member, 0); snap(J, P.down(1, true)); ANIM(J, 0.7, 'down'); J.root.updateMatrixWorld(true); r.downEndSnappedAnim = clearances(J); }
   { const J = build(member, 0); snap(J, P.windup(1, J)); r.shoulderGapWindup = shoulderGaps(J); }
+  { const J = build(member, 0); snap(J, P.windup(0.6, J)); r.shoulderGapWindup06 = shoulderGaps(J); }
+  r.idleReach = idleReach(member);
+  r.determinism = determinism(member);
   r.sequences = {};
   for (const name of ['knockdown', 'attack', 'run', 'dizzy']) for (const anim of [false, true]) {
     if (anim && !ANIM) continue; r.sequences[name + (anim ? '+anim' : '')] = runSeq(member, name, anim);
@@ -422,7 +456,9 @@ for (const member of (DEBUG ? [DEBUG[0]] : Q.get('debugmerge') ? [Q.get('debugme
     budgetHD: r.hd.parts <= CAP.hdParts && r.hd.tris <= CAP.hdTris && r.hd.mats <= CAP.mats, budgetLOD: r.lod.parts <= CAP.lodParts && r.lod.tris <= CAP.lodTris && r.lod.mats <= CAP.mats,
     marginHD: r.hd.parts <= MARGIN.hdParts && r.hd.tris <= MARGIN.hdTris, marginLOD: r.lod.parts <= MARGIN.lodParts && r.lod.tris <= MARGIN.lodTris,
     marginBuried: r.hullOverlap.every((x) => x.buried < MARGIN.buried), marginLODGround: Object.values(r.lodSequences).every((x) => x.worst.y >= MARGIN.lodFloor),
-    ground: seqPass && r.sweeps.pass, shoulders: Math.max(r.shoulderGapDown.L, r.shoulderGapDown.R, r.shoulderGapWindup.L, r.shoulderGapWindup.R, r.shoulderGapDizzy.L, r.shoulderGapDizzy.R) <= 0.01,
+    ground: seqPass && r.sweeps.pass, shoulders: Math.max(r.shoulderGapDown.L, r.shoulderGapDown.R, r.shoulderGapWindup.L, r.shoulderGapWindup.R, r.shoulderGapWindup06.L, r.shoulderGapWindup06.R, r.shoulderGapDizzy.L, r.shoulderGapDizzy.R) <= 0.01,
+    reach: r.idleReach.beyond_m <= MARGIN.reach, determinism: r.determinism.same && r.determinism.sameLod,
+    ...(MARGIN.ink !== null ? { marginInk: r.hullOverlap.every((x) => x.maxStrayPx <= MARGIN.ink) } : {}),
     stars: [r.stars.hd, r.stars.hdAnim, r.stars.lod].every((x) => !x || x.clearance > 0), cullSphere: r.cullReachMax <= CULL_R,
     strayHulls: r.strayHulls.length === 0, shadows: !r.hd.shadowRule.length && !r.lod.shadowRule.length,
     flash: !r.hd.flashBad && !r.lod.flashBad && r.merge.flashShared && r.merge.flashCovers, hulls: r.hd.hullMatsOK && r.lod.hullMatsOK,

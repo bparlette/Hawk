@@ -1,6 +1,6 @@
 // tools/shoot.mjs — headless self-test + preview renderer for viewer.html.
 // Usage: node tools/shoot.mjs <out.png> "<viewer query>" [width height dpr]
-//    or: node tools/shoot.mjs --batch <jobs.json>   (jobs: [{ out, q, w, h, dpr, page, timeout }]; page defaults to viewer.html,
+//    or: node tools/shoot.mjs --batch <jobs.json>   (jobs: [{ out, q, w, h, dpr, page, timeout, wait }]; page defaults to viewer.html,
 //        use page: 'tools/qa.html' for the QA suite). REPORT=<file> writes every job's errors + report JSON.
 // Needs playwright-core (or playwright) and three@0.160.0 resolvable from NODE_PATH; three is routed locally so no network.
 import http from 'node:http';
@@ -32,7 +32,7 @@ for (const j of jobs) {
   await page.route('https://unpkg.com/three@0.160.0/**', (r) => r.fulfill({ path: path.join(THREE_ROOT, new URL(r.request().url()).pathname.replace('/three@0.160.0/', '')), contentType: 'text/javascript' }));
   await page.goto(`http://127.0.0.1:${port}/${j.page || 'viewer.html'}?${j.q}`);
   try { await page.waitForFunction(() => window.__ready === true, null, { timeout: j.timeout || 60000 }); } catch (e) { errs.push('timeout waiting for __ready'); }
-  await page.waitForTimeout(150);
+  await page.waitForTimeout(j.wait || 150);   // j.wait (ms): let a looping &seq= run before reading the report
   const report = await page.evaluate(() => window.__qa || window.__report || null);
   if (j.out) { fs.mkdirSync(path.dirname(path.resolve(j.out)), { recursive: true }); await page.screenshot({ path: j.out }); }
   results.push({ out: j.out, q: j.q, errors: errs, report });
