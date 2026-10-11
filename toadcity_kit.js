@@ -186,16 +186,17 @@ function runLegs(p, ph, amp = 1) {
 }
 // hero sword grip: sword group rotation relative to the hand (blade points along the fist's forward)
 const SWF = [Math.PI / 2, 0, 0];
-// [reconstructed] HERO_POSES: only what the thug poses need (down), plus idle/run so the table is not empty.
+// HERO_POSES: the appendix omits this table. `down` below is the REAL one from the game's src/04_actors.js (supplied after
+// gang 1's review); idle and run are [reconstructed] stand-ins so the table is not empty.
 const HERO_POSES = {
   idle(t) { const p = blank(); legsStance(p, 0.1, 0.15); p.y += Math.sin(t * 2) * 0.01; p.shL = [0.1, 0, 0.15]; p.shR = [0.1, 0, -0.15]; return p; },
   run(t, sp) { const p = blank(), ph = t * (6 + sp); runLegs(p, ph, clamp(sp / 4.5, 0.4, 1)); p.torso = [0.15, 0, 0]; p.shL = [0.7 * Math.sin(ph), 0, 0.1]; p.shR = [-0.7 * Math.sin(ph), 0, -0.1]; return p; },
-  // knocked down: fall onto the back (tilt -X), limbs splayed. u = 0..1 through the fall; ground = lying still
   down(u, ground) {
-    const p = blank(), a = ground ? 1 : ease(clamp(u, 0, 1));
-    p.tilt = [-1.5 * a, 0, 0]; p.torso = [-0.15 * a, 0, 0]; p.neck = [0.35 * a, 0, 0];
-    p.shL = [-0.4 * a, 0, 1.1 * a]; p.shR = [-0.4 * a, 0, -1.1 * a]; p.elL = p.elR = [-0.5 * a, 0, 0];
-    p.lgL = [-0.5 * a, 0, 0.25 * a]; p.lgR = [-0.2 * a, 0, -0.25 * a]; p.knL = [0.8 * a, 0, 0]; p.knR = [0.3 * a, 0, 0];
+    const p = blank(); p.tilt = [-Math.PI / 2 + 0.08, 0, 0]; p.ty = ground ? 0.3 : 0.6;
+    p.lgL = [-0.6, 0, 0.3]; p.knL = [0.9, 0, 0]; p.lgR = [-0.2, 0, -0.2]; p.knR = [0.4, 0, 0];
+    p.shL = [-2.6, 0, 0.6]; p.shR = [-2.4, 0, -0.9]; p.elL = p.elR = [-0.4, 0, 0]; p.neck = [0.4, 0, 0];
+    p.swL = [Math.PI / 2, 0, 0]; p.swR = [Math.PI / 2, 0, 0];
+    if (!ground) { p.tilt = [-Math.PI / 2 * clamp(u * 2.2, 0, 1), 0, 0]; }
     return p;
   },
 };
