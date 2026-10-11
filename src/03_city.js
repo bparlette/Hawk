@@ -448,11 +448,16 @@ signOn(9, -27, 29, -11, 's', 6, 11, LSIGN.aqua);
 LMCAP(null);
 landmark('aquarium', 'NATIONAL AQUARIUM', 19, -17, 19, { name: 'Big Jimmy', x: 19, z: -5, water: true });
 LMCAP('powerplant');
-// Power Plant: a brick power station with four smokestacks, on pier 4
-mass(47, -27, 65, -9, 15, { tr: T.fac[0][0], top: '#4a3a30' });
-for (const x of [50, 54, 58, 62]) { const g = new THREE.CylinderGeometry(1.05, 1.3, 22, 12); place(g, x, CURB + 15 + 11, -18); solid(g, '#1f1d1c'); const r = new THREE.CylinderGeometry(1.18, 1.18, 0.7, 12); place(r, x, CURB + 36.6, -18); solid(r, '#3a3532'); } // refs: four black stacks in a row
-sbox(46.7, CURB + 10.6, -27.3, 65.3, CURB + 11.4, -8.7, '#e4d8bc'); mass(65, -24, 68, -12, 9, { tr: T.fac[0][1], top: '#4a3a30' }); // cream stone band, the arched east wing
-signOn(47, -27, 65, -9, 's', 6.2, 12, LSIGN.power);
+// Power Plant complex on pier 4 (far LOD): three joined buildings - Phillips (west), the Power Plant hall + tower + four black stacks (centre), Hard Rock Cafe (east);
+// footprints / heights match the HD model's PP table in 03b (exterior_2 read at x 0.0188 m/px, y 0.038 m/px)
+mass(44.8, -27, 52.13, -9.5, 11.6, { tr: T.fac[0][0], top: '#4a3a30' });
+mass(52.13, -27, 59.0, -8.8, 15.4, { tr: T.fac[0][1], top: '#2e3036' });
+mass(59.0, -25.5, 67.55, -9.3, 12.3, { tr: T.fac[0][1], top: '#4a3a30' });
+sbox(53.3, CURB + 15.4, -12.6, 58.2, CURB + 17.9, -8.9, '#a9502f', false); sbox(54.5, CURB + 17.9, -12, 57, CURB + 19.6, -9.1, '#a9502f', false);
+for (const [i, z] of [-13.2, -16.6, -20, -23.4].entries()) { const g = new THREE.CylinderGeometry(1.0, 1.08, 9, 10); place(g, 57.6 + i * 0.35, CURB + 22, z); solid(g, '#1f1d1c'); } // the four black stacks, a north-south row
+sbox(55.2, CURB + 20.3, -10.3, 56.3, CURB + 23.5, -10.1, '#e4566a', false); sbox(55.6, CURB + 23.5, -10.3, 55.9, CURB + 29.4, -10.1, '#e2b23a', false); // the guitar
+sbox(44.6, CURB + 8.9, -27.2, 67.7, CURB + 9.4, -8.6, '#e4d8bc');
+signOn(52.13, -27, 59.0, -8.8, 's', 12.0, 5, LSIGN.power);
 LMCAP(null);
 landmark('powerplant', 'POWER PLANT', 56, -17, 19, { name: 'Voltage Vic', x: 56, z: -5.5 });
 // Four Seasons (Harbor East): a podium and a glass hotel tower

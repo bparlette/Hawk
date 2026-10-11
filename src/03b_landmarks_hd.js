@@ -235,89 +235,166 @@ lmHD('wtc', -12, -22.5, 14, (H, signs, SG) => {
       H.box(x - 0.25, Y0 + 2.2, z - 0.25, x + 0.25, Y0 + 4.4, z + 0.25, cl, { ol: false }); } }
 });
 
-// ======================= POWER PLANT (refs/power-plant): red-brick power station, cream stone bands + cornice, tall round-arched windows,
-// corner towers, a stepped central gable tower carrying the FOUR BLACK smokestacks, the lower arched east wing with a gabled end ==============
+// ======================= POWER PLANT COMPLEX, PIER 4 (refs/power-plant, Brad 2026-10-11 09:03): THREE joined buildings, not one.
+// West: the PHILLIPS SEAFOOD building (flat roof, tall gridded windows, bracket frieze, attic, the red "Phillips" roof sign);
+// centre: the POWER PLANT hall (taller, recessed balconied bay, BARNES & NOBLE / BOOKSELLERS, a stepped tower with the POWER PLANT plaque + 1900 / 2000,
+// a slate pitched roof carrying the FOUR BLACK STACKS in a north-south row, the giant HARD ROCK guitar on the tower);
+// east: the HARD ROCK CAFE building (lower eaves, stepped parapet + pediment, big round-arched windows, HRC roundels, the Hard Rock Cafe logo,
+// SAVE THE PLANET marquee, red-roofed entrance pavilion). Widths / heights are read off exterior_2 (x 0.0188 m/px, y 0.038 m/px, the city's 3x map compression)
+const PPX = (px) => 44.8 + (px - 50) * 0.0188, PPY = (py) => CURB + (770 - py) * 0.038;
+const PP = { phX0: PPX(50), phX1: PPX(440), pcX1: PPX(805), hrX1: PPX(1260), zN: -27, hrZN: -25.5, phZS: -9.5, pcZS: -8.8, hrZS: -9.3,
+  phTop: PPY(470), pcTop: PPY(365), twX0: PPX(500), twX1: PPX(760), twTop: PPY(300), gbX0: PPX(568), gbX1: PPX(700), gbTop: PPY(255),
+  hrEave: PPY(480), hrPar: PPY(445), hrStep: PPY(410), hrPeak: PPY(362), stX: 58.1, stZ: [-13.2, -16.6, -20, -23.4], stTop: CURB + 26.5, ridge: PPY(365) + 2.6 };
+const ppFaces = (x0, z0, x1, z1, H) => ({ s: H.frame(x0, z1, x1, z1), e: H.frame(x1, z1, x1, z0), n: H.frame(x1, z0, x0, z0), w: H.frame(x0, z0, x0, z1) });
+const hrLogo = (g, w, h, o = {}) => { const R = Math.min(w, h) / 2 - 2; g.save(); g.translate(w / 2, h / 2);
+  g.fillStyle = '#c99a32'; g.beginPath(); g.arc(0, 0, R, 0, TAU); g.fill(); g.fillStyle = '#f2dc9a'; g.beginPath(); g.arc(0, 0, R * 0.88, 0, TAU); g.fill();
+  g.lineWidth = R * 0.05; g.strokeStyle = '#8a5a18'; g.beginPath(); g.arc(0, 0, R * 0.8, 0, TAU); g.stroke();
+  sText(g, 'Hard Rock', 0, -R * 0.12, R * 1.62, R * 0.62, SCRIPT, '#b81e1a', { slant: 0.12, stroke: '#3a0a06', sw: R * 0.06 });
+  g.fillStyle = '#c8241c'; g.beginPath(); g.moveTo(-R * 0.5, R * 0.28); g.lineTo(R * 0.5, R * 0.28); g.lineTo(R * 0.42, R * 0.62); g.lineTo(-R * 0.42, R * 0.62); g.closePath(); g.fill();
+  sText(g, 'CAFE', 0, R * 0.46, R * 0.74, R * 0.3, SANS, '#fff2c8'); g.restore(); };
 lmHD('powerplant', 56, -17, 19, (H, signs, SG) => {
-  const BR = '#a2482f', BR2 = '#8a3a26', CR = '#e6d9bc', Y0 = CURB, TOP = CURB + 15, GLS = '#262c34';
-  H.box(47, Y0, -27, 65, TOP, -9, BR);
-  H.box(46.8, Y0, -27.2, 65.2, Y0 + 1.1, -8.8, '#6a5a50'); // stone water table
-  const faces = [[47, -9, 65, -9], [65, -9, 65, -27], [65, -27, 47, -27], [47, -27, 47, -9]]; // S (harbour), E, N, W - outward on the right
-  for (const [xa, za, xb, zb] of faces) {
-    const F = H.frame(xa, za, xb, zb);
-    // ground-floor arcade of tall round-headed openings, upper storeys of paired windows, a row of small arched attic windows
-    H.windows(F, 2.2, F.L - 2.2, Y0 + 1.1, Y0 + 6.6, { bw: 2.3, fh: 5.5, ww: 1.5, wh: 3.4, arch: true, head: CR, pane: GLS, lit: 0.75, wy: 0.2 });
-    H.windows(F, 2.2, F.L - 2.2, Y0 + 6.6, Y0 + 10.6, { bw: 1.15, fh: 4.0, ww: 0.62, wh: 2.6, sill: CR, head: CR, pane: GLS, lit: 0.5, mull: '#d8ccb0' });
-    H.windows(F, 2.2, F.L - 2.2, Y0 + 11.4, TOP - 1.2, { bw: 1.15, fh: 2.4, ww: 0.55, wh: 1.0, arch: true, pane: GLS, lit: 0.4, wy: 0.35 });
-    H.pilasters(F, 2.2, F.L - 2.2, Y0 + 1.1, TOP - 0.8, 2.3, 0.3, 0.2, BR2, { ol: false });
-    H.band(F, -0.2, F.L + 0.2, Y0 + 6.4, Y0 + 6.7, 0.18, CR, { ol: false }); H.band(F, -0.3, F.L + 0.3, Y0 + 10.5, Y0 + 11.4, 0.3, CR); // the cream stone band
-    H.band(F, -0.4, F.L + 0.4, TOP - 0.7, TOP - 0.2, 0.42, CR); H.band(F, -0.25, F.L + 0.25, TOP - 0.2, TOP + 0.7, 0.12, BR2); // cornice + parapet
-    for (let u = 1.2; u < F.L; u += 1.15) H.fbox(F, u - 0.18, u + 0.18, TOP - 1.0, TOP - 0.7, 0, 0.3, CR, { ol: false }); // corbel dentils
+  const BR = '#a9502f', BR2 = '#8e3f25', BR3 = '#b45a38', CR = '#e2d3b2', Y0 = CURB, GLS = '#262c34', GRN = '#2f6a4a', SL = '#2e3036', P = PP;
+  const pane = '#33404c', mull = '#e8e4da';
+  // ---------- WEST: PHILLIPS building ----------
+  { const x0 = P.phX0, x1 = P.phX1, z0 = P.zN, z1 = P.phZS, top = P.phTop, f = ppFaces(x0, z0, x1, z1, H);
+    H.box(x0, Y0, z0, x1, top, z1, BR); H.box(x0 - 0.15, Y0, z0 - 0.15, x1 + 0.1, Y0 + 0.8, z1 + 0.15, '#6a5a50');
+    H.box(x0, top - 0.02, z0, x1, top + 0.08, z1, '#4a4440', { ol: false });
+    for (const k of ['s', 'w', 'n']) { const F = f[k];
+      H.windows(F, 0.4, F.L - 0.4, Y0 + 0.9, PPY(675), { bw: 1.22, fh: PPY(675) - Y0 - 0.9, ww: 0.7, wh: 1.7, pane: GLS, lit: 0.7, head: CR, wy: 0.3 }); // ground floor
+      H.windows(F, 0.4, F.L - 0.4, PPY(682), PPY(552), { bw: 1.22, fh: PPY(552) - PPY(682), ww: 0.9, wh: PPY(560) - PPY(675), pane, lit: 0.45, mull, sill: CR, wy: 0.3 }); // the tall gridded windows
+      { const nb = Math.max(1, Math.round((F.L - 0.8) / 1.22)), bwr = (F.L - 0.8) / nb, y0 = PPY(682) + (PPY(552) - PPY(682) - (PPY(560) - PPY(675))) * 0.3, y1 = y0 + PPY(560) - PPY(675);
+        for (let b = 0; b < nb; b++) { const uc = 0.4 + (b + 0.5) * bwr; for (const du of [-0.225, 0.225]) H.fbox(F, uc + du - 0.025, uc + du + 0.025, y0, y1, 0, 0.04, mull, { ol: false }); for (let y = y0 + 0.5; y < y1 - 0.1; y += 0.5) H.fbox(F, uc - 0.45, uc + 0.45, y, y + 0.05, 0, 0.04, mull, { ol: false }); } }
+      H.pilasters(F, 0.4, F.L - 0.4, Y0 + 0.8, PPY(535), 1.22, 0.22, 0.14, BR2, { ol: false });
+      H.band(F, -0.1, F.L + 0.1, PPY(682), PPY(676), 0.16, CR, { ol: false });
+      for (let u = 0.4; u <= F.L - 0.3; u += 0.61) H.fbox(F, u - 0.09, u + 0.09, PPY(552), PPY(538), 0, 0.22, CR, { ol: false }); // frieze brackets
+      H.band(F, -0.2, F.L + 0.2, PPY(538), PPY(518), 0.32, CR); // cornice
+      H.windows(F, 0.4, F.L - 0.4, PPY(515), PPY(478), { bw: 1.22, fh: PPY(478) - PPY(515), ww: 0.5, wh: 0.7, pane: GLS, lit: 0.4, wy: 0.4 }); // attic
+      H.band(F, -0.05, F.L + 0.05, top - 0.35, top + 0.25, 0.1, BR2); }
+    for (const x of [x0 + 0.3, x1 - 0.5]) H.box(x - 0.3, top, z1 - 0.9, x + 0.5, PPY(455), z1, BR2); // end chimney piers on the harbour face
+    H.box(x0 + 0.6, top, -21, x0 + 3.2, top + 1.6, -15, '#5a5a5e'); // rooftop plant room (refs: grey box behind the parapet)
+    // the PHILLIPS roof sign: bold red script with a white edge on a red-painted frame standing on the roof (exterior_2)
+    const sx = PPX(243), sz = z1 - 1.4; H.box(sx - 2.2, top, sz - 0.1, sx + 2.2, top + 0.25, sz + 0.1, '#8a1c18', { ol: false });
+    for (const dx of [-1.8, -0.6, 0.6, 1.8]) H.box(sx + dx - 0.06, top, sz - 0.3, sx + dx + 0.06, top + 1.9, sz - 0.18, '#5a1410', { ol: false });
+    SG.at(sx, top + 0.2, sz, 0, 4.4, 2.0, (g, w, h) => sText(g, 'Phillips', w / 2, h * 0.55, w * 0.97, h * 0.94, SCRIPT, '#e3221a', { weight: 'bold', slant: 0.1, stroke: '#fde8dc', sw: h * 0.06, glow: '#ff2a1a' }));
+    // ground: Phillips Seafood entrance under a green half-dome canopy + red awnings along the promenade
+    const F = f.s, cu = PPX(203) - x0; H.fbox(F, cu - 1.1, cu + 1.1, Y0 + 2.4, Y0 + 2.55, 0, 1.6, GRN, { ol: false });
+    { const g = new THREE.CylinderGeometry(1.1, 1.1, 1.6, 10, 1, false, -Math.PI / 2, Math.PI); g.rotateX(-Math.PI / 2); g.rotateY(Math.PI); g.scale(1, 0.75, 1); g.translate(cu, Y0 + 2.55, 0.8); H.fgeo(F, g, GRN); }
+    SG.add(F, cu, Y0 + 1.75, 2.1, 0.62, 1.62, (g, w, h) => { g.fillStyle = '#1c2630'; g.fillRect(0, 0, w, h); sText(g, 'Phillips', w / 2, h * 0.38, w * 0.8, h * 0.62, SCRIPT, '#e8261c', { slant: 0.1, stroke: '#fff', sw: h * 0.04 }); sText(g, 'SEAFOOD', w / 2, h * 0.82, w * 0.4, h * 0.22, SANS, '#fff', { track: 2 }); });
+    H.fbox(F, 0.1, cu - 1.3, Y0 + 2.5, Y0 + 2.65, 0, 1.4, '#c0302a', { ol: false }); H.fbox(F, cu + 1.3, F.L - 0.2, Y0 + 2.5, Y0 + 2.65, 0, 1.0, '#c0302a', { ol: false });
+    // the rope cargo net hung on the east end of the harbour face (exterior_2)
+    for (let i = 0; i < 6; i++) H.fbox(F, F.L - 1.2 + i * 0.18, F.L - 1.16 + i * 0.18, PPY(670), PPY(545), 0, 0.08, '#6a5a44', { ol: false });
   }
-  // corner towers: proud of the walls, a little taller, cream caps with small pyramids
-  lmColl({ x0: 51.5, x1: 60.5, z0: -15.5, z1: -8.5 });
-  for (const [x, z] of [[47, -27], [65, -27], [47, -9], [65, -9]]) {
-    lmColl({ x0: x - 1.3, x1: x + 1.3, z0: z - 1.3, z1: z + 1.3 });
-    H.box(x - 1.3, Y0, z - 1.3, x + 1.3, TOP + 2.2, z + 1.3, BR2); H.box(x - 1.5, TOP + 2.2, z - 1.5, x + 1.5, TOP + 2.7, z + 1.5, CR);
-    const g = new THREE.CylinderGeometry(0.01, 1.45, 1.6, 4); g.rotateY(Math.PI / 4); g.translate(x, TOP + 3.5, z); H.geo(g, '#3f5a50');
-    for (const [xa, za, xb, zb] of [[x - 1.3, z + 1.3, x + 1.3, z + 1.3], [x + 1.3, z - 1.3, x - 1.3, z - 1.3], [x + 1.3, z + 1.3, x + 1.3, z - 1.3], [x - 1.3, z - 1.3, x - 1.3, z + 1.3]]) {
-      const F = H.frame(xa, za, xb, zb); H.windows(F, 0.6, 2.0, Y0 + 2, TOP + 1.6, { bw: 1.4, fh: 3.3, ww: 0.5, wh: 1.8, arch: true, pane: GLS, lit: 0.4 }); }
+  // ---------- CENTRE: the POWER PLANT hall ----------
+  { const x0 = P.phX1, x1 = P.pcX1, z0 = P.zN, z1 = P.pcZS, top = P.pcTop, f = ppFaces(x0, z0, x1, z1, H);
+    H.box(x0, Y0, z0, x1, top, z1 - 0.7, BR); H.box(x0 + 0.2, Y0, z1 - 0.8, x1 - 0.2, top, z1, BR); // the front projects a little
+    // slate pitched roof with the white clerestory band, running north-south behind the tower (exterior_1)
+    { const g = new THREE.BufferGeometry(), xm = (x0 + x1) / 2, yb = top + 0.9, yr = P.ridge, za = z0 + 0.3, zb = -12.4;
+      const v = [[x0 + 0.2, yb, za], [x1 - 0.2, yb, za], [xm, yr, za], [x0 + 0.2, yb, zb], [x1 - 0.2, yb, zb], [xm, yr, zb]], Pp = [], t = (a, b, c) => Pp.push(...v[a], ...v[b], ...v[c]);
+      t(0, 2, 1); t(3, 4, 5); t(0, 3, 5); t(0, 5, 2); t(1, 2, 5); t(1, 5, 4); g.setAttribute('position', new THREE.Float32BufferAttribute(Pp, 3)); g.computeVertexNormals(); H.geo(g, SL);
+      H.box(x0 + 0.2, top, za, x1 - 0.2, yb, zb, '#e8e6de'); for (let z = za + 0.6; z < zb - 0.3; z += 0.9) H.box(x0 + 0.15, top + 0.2, z, x1 - 0.15, yb - 0.15, z + 0.4, '#3a3f48', { ol: false, emi: LMR() < 0.5 ? '#ffd690' : null }); }
+    for (const k of ['w', 'e', 'n']) { const F = f[k]; if (k === 'w' || k === 'e') { /* side walls mostly hidden by the wings: upper storeys only */ }
+      const y0w = k === 'n' ? Y0 + 1 : Math.max(P.phTop, P.hrPar) + 0.4;
+      H.windows(F, 0.4, F.L - 0.4, y0w, top - 1.2, { bw: 1.3, fh: 2.2, ww: 0.6, wh: 1.4, arch: true, pane: GLS, lit: 0.45, head: CR });
+      H.band(F, -0.2, F.L + 0.2, top - 1.1, top - 0.8, 0.3, CR); }
+    const F = H.frame(x0 + 0.2, z1, x1 - 0.2, z1), L = F.L, u = (px) => PPX(px) - x0 - 0.2;
+    // brick piers framing the recessed balconied centre bay (exterior_2: two tall piers, the bay between with railed balconies)
+    for (const [a, b] of [[430, 446], [480, 498], [718, 735], [788, 805]]) H.fbox(F, u(a), u(b), Y0 + 0.9, PPY(398), 0, 0.35, BR3);
+    H.fbox(F, u(498), u(718), Y0 + 3.1, PPY(470), -1.0, -0.95, '#3e4a56', { ol: false });
+    for (let y = Y0 + 3.1; y < PPY(472); y += 2.05) { H.fbox(F, u(498), u(718), y, y + 0.22, -0.9, 0.05, '#7a3522', { ol: false }); // floor slab
+      for (const ry of [0.62, 1.0]) H.fbox(F, u(498), u(718), y + ry, y + ry + 0.06, 0.02, 0.06, '#2a2a28', { ol: false }); // balcony rails
+      for (let k = 0; k <= 12; k++) { const uu = u(498) + (u(718) - u(498)) * k / 12; H.fbox(F, uu - 0.02, uu + 0.02, y + 0.22, y + 1.0, 0.02, 0.05, '#2a2a28', { ol: false }); }
+      for (let k = 0; k < 6; k++) { const uu = u(498) + (u(718) - u(498)) * (k + 0.5) / 6; H.fbox(F, uu - 0.3, uu + 0.3, y + 0.3, y + 1.8, -0.94, -0.92, '#5a6a78', { ol: false, emi: LMR() < 0.6 ? '#ffd690' : null }); } }
+    for (const [a, b] of [[446, 480], [735, 788]]) { // the side bays: small windows with green awnings
+      H.windows(F, u(a), u(b), Y0 + 3.1, PPY(470), { bw: u(b) - u(a), fh: 2.05, ww: 0.42, wh: 1.2, pane: GLS, lit: 0.45, sill: CR, awn: 1, awnC: GRN }); }
+    H.band(F, -0.1, L + 0.1, PPY(470), PPY(462), 0.25, CR, { ol: false }); H.band(F, -0.2, L + 0.2, PPY(398), PPY(390), 0.45, CR); // cornice under the arched row
+    H.windows(F, u(498), u(720), PPY(390), PPY(366), { bw: 0.52, fh: PPY(366) - PPY(390), ww: 0.3, wh: 0.55, arch: true, pane: GLS, lit: 0.55 });
+    // BARNES&NOBLE / BOOKSELLERS: white serif capitals standing off the bay (exterior_2)
+    SG.add(F, u(600), PPY(468), 4.4, 1.7, 0.5, (g, w, h) => { sText(g, 'BARNES&NOBLE', w / 2, h * 0.34, w * 0.98, h * 0.6, SERIF, '#fbfaf4', { weight: 'bold', stroke: '#2a2420', sw: h * 0.035 });
+      sText(g, 'BOOKSELLERS', w / 2, h * 0.82, w * 0.6, h * 0.26, SERIF, '#fbfaf4', { weight: '600', stroke: '#2a2420', sw: h * 0.02, track: 3 }); });
+    // ground: the green Barnes & Noble store canopy with its sign + glazed store front
+    H.fbox(F, u(446), u(788), Y0 + 0.9, Y0 + 2.9, -0.2, -0.15, '#2a3a36', { ol: false, emi: '#ffe4a8' });
+    H.fbox(F, u(515), u(690), Y0 + 2.4, Y0 + 2.6, 0, 1.4, GRN); H.fbox(F, u(515), u(690), Y0 + 2.6, Y0 + 3.15, 1.25, 1.4, GRN, { ol: false });
+    SG.add(F, u(602), Y0 + 2.62, 3.1, 0.5, 1.43, (g, w, h) => { g.fillStyle = '#1f4a36'; g.fillRect(0, 0, w, h); sText(g, 'BARNES&NOBLE', w / 2, h * 0.36, w * 0.9, h * 0.48, SERIF, '#fff'); sText(g, 'BOOKSELLERS', w / 2, h * 0.8, w * 0.5, h * 0.22, SERIF, '#fff', { track: 2 }); });
+    // the tower above the hall: POWER PLANT plaque, a balcony, arched windows; 1900 / 2000 corner plaques on the shoulders
+    const tz0 = -12.6, tz1 = z1 - 0.1;
+    H.box(P.twX0, top, tz0, P.twX1, P.twTop, tz1, BR); H.box(P.twX0 - 0.15, P.twTop - 0.3, tz0 - 0.15, P.twX1 + 0.15, P.twTop + 0.05, tz1 + 0.15, CR);
+    for (const [xa, xb] of [[x0 + 0.2, x0 + 1.2], [x1 - 1.2, x1 - 0.2]]) { H.box(xa, top, tz1 - 1, xb, PPY(320), tz1, BR3); H.box(xa - 0.08, PPY(322), tz1 - 1.08, xb + 0.08, PPY(316), tz1 + 0.08, CR); }
+    H.band(F, -0.25, L + 0.25, top - 0.25, top + 0.15, 0.4, CR);
+    const T = H.frame(P.twX0, tz1, P.twX1, tz1), tu = (px) => PPX(px) - P.twX0;
+    H.windows(T, tu(510), tu(745), top + 0.15, PPY(345), { bw: 0.6, fh: PPY(345) - top - 0.15, ww: 0.34, wh: 0.7, arch: true, pane: GLS, lit: 0.6, wy: 0.35 });
+    H.fbox(T, tu(555), tu(660), top + 0.0, top + 0.1, 0, 0.5, '#3a3a38', { ol: false }); for (const ry of [0.25, 0.45]) H.fbox(T, tu(555), tu(660), top + ry, top + ry + 0.05, 0.45, 0.5, '#2a2a28', { ol: false }); // balcony
+    SG.add(T, tu(612), PPY(347), 3.5, 1.0, 0.6, (g, w, h) => { g.fillStyle = '#2e2216'; g.fillRect(0, 0, w, h); g.strokeStyle = '#c8a050'; g.lineWidth = h * 0.07; g.strokeRect(h * 0.07, h * 0.07, w - h * 0.14, h - h * 0.14);
+      sText(g, 'POWER PLANT', w / 2, h * 0.55, w * 0.88, h * 0.62, SERIF, '#e8c060', { stroke: '#6a4a18', sw: h * 0.035 }); });
+    for (const [px, t] of [[472, '1900'], [763, '2000']]) SG.add(F, u(px), top + 0.35, 1.05, 0.7, 0.3, (g, w, h) => { g.fillStyle = '#2e2216'; g.fillRect(0, 0, w, h); g.strokeStyle = '#c8a050'; g.lineWidth = h * 0.08; g.strokeRect(2, 2, w - 4, h - 4); sText(g, t, w / 2, h * 0.54, w * 0.8, h * 0.56, SERIF, '#e8c060'); });
+    { const T2 = H.frame(P.twX0, tz1, P.twX1, tz1); H.fbox(T2, tu(700), tu(740), PPY(368), PPY(338), 0, 0.02, GLS, { ol: false }); }
+    // the stepped gable on top of the tower + the block the guitar stands on
+    { const xa = P.gbX0, xb = P.gbX1, xm = (xa + xb) / 2, ya = P.twTop, yb = PPY(282), za = tz0 + 0.6, zb = tz1 - 0.2;
+      H.box(xa, ya, za, xb, yb, zb, BR); const g = new THREE.BufferGeometry(), v = [[xa, yb, zb], [xb, yb, zb], [xm, P.gbTop, zb], [xa, yb, za], [xb, yb, za], [xm, P.gbTop, za]], Pp = [], t = (a, b, c) => Pp.push(...v[a], ...v[b], ...v[c]);
+      t(0, 1, 2); t(3, 5, 4); t(0, 2, 5); t(0, 5, 3); t(1, 4, 5); t(1, 5, 2); g.setAttribute('position', new THREE.Float32BufferAttribute(Pp, 3)); g.computeVertexNormals(); H.geo(g, '#5a5650');
+      const G = H.frame(xa, zb, xb, zb); H.windows(G, 0.25, G.L - 0.25, ya + 0.15, yb - 0.1, { bw: 0.62, fh: yb - ya - 0.25, ww: 0.32, wh: 0.6, pane: GLS, lit: 0.6, sill: CR });
+      H.box(xa - 0.12, yb, zb - 0.1, xb + 0.12, yb + 0.12, zb + 0.12, CR, { ol: false });
+      H.box(xm - 0.6, P.gbTop - 0.6, za + 0.6, xm + 0.6, P.gbTop + 0.6, zb - 0.6, BR2); }
+    // the FOUR BLACK STACKS, a north-south row on the roof ridge (exterior_1), each on a short base, banded, with a flared cap
+    for (let si = 0; si < 4; si++) { const z = P.stZ[si], sx = P.stX - 0.5 + si * 0.35, b0 = P.ridge - 0.6, h = P.stTop - b0; // the row runs a touch north-east (exterior_1 / exterior_2 stagger)
+      H.box(sx - 1.2, top + 0.9, z - 1.2, sx + 1.2, P.ridge + 0.2, z + 1.2, '#3a3532');
+      H.cyl(sx, b0, z, 1.0, 1.08, h - 0.5, 16, '#1d1c1d'); H.cyl(sx, P.stTop - 0.6, z, 1.08, 1.02, 0.6, 16, '#2c2a2a'); H.box(sx - 0.12, P.stTop, z - 0.12, sx + 0.12, P.stTop + 0.22, z + 0.12, '#8a1a14', { ol: false, emi: '#ff2a1a' }); // aircraft warning light
+      for (const k of [0.25, 0.55, 0.82]) H.cyl(sx, b0 + h * k, z, 1.08 - 0.06 * k, 1.08 - 0.06 * k, 0.18, 16, '#353233', { ol: false }); }
+    lmColl({ x0: x0 + 0.2, x1: x1 - 0.2, z0: z1 - 0.8, z1 });
+    // north (Pratt St) end: the real carved lettering of the original power company
+    { const N = H.frame(x1, z0, x0, z0); SG.add(N, N.L / 2, top - 2.2, N.L * 0.9, 0.42, 0.06, (g, w, h) => sText(g, 'UNITED RAILWAYS & ELECTRIC COMPANY', w / 2, h / 2, w * 0.98, h * 0.8, SERIF, '#7a3a24', { weight: '600', stroke: '#c48a6a', sw: h * 0.03 })); }
   }
-  // stack base behind the roof (x 50..63) and the projecting central bay on the harbour face, rising above the cornice in a stepped gable (refs)
-  H.box(50, TOP, -21, 63, TOP + 3, -16, BR2); H.box(49.85, TOP + 2.6, -21.15, 63.15, TOP + 3.1, -15.85, CR);
-  H.box(51.5, Y0, -15.5, 60.5, TOP + 4.5, -8.5, BR);
-  for (const [x0, x1, y0] of [[52.6, 59.4, TOP + 4.5], [53.8, 58.2, TOP + 6.3], [55, 57, TOP + 8.1]]) { H.box(x0, y0, -12.4, x1, y0 + 1.8, -8.5, BR); H.box(x0 - 0.2, y0 + 1.8, -12.6, x1 + 0.2, y0 + 2.15, -8.3, CR); }
-  H.box(51.3, TOP + 4.1, -15.7, 60.7, TOP + 4.6, -8.3, CR);
-  { const F = H.frame(51.5, -8.5, 60.5, -8.5);
-    H.windows(F, 0.6, F.L - 0.6, Y0 + 11.6, TOP + 3.6, { bw: 1.5, fh: 2.8, ww: 0.8, wh: 1.9, arch: true, head: CR, pane: GLS, lit: 0.55 });
-    H.windows(F, 0.6, F.L - 0.6, Y0 + 1.1, Y0 + 10.4, { bw: 3, fh: 9.3, ww: 2.0, wh: 7.6, pane: GLS, lit: 0.7, mull: '#d8ccb0', head: CR, wy: 0.3 }); // tall glazed bay
-    H.pilasters(F, 0, F.L, Y0 + 1.1, TOP + 4.1, 3, 0.4, 0.22, BR2);
-    H.band(F, -0.2, F.L + 0.2, Y0 + 10.5, Y0 + 11.4, 0.34, CR);
-    const G = H.frame(53.8, -8.5, 58.2, -8.5); H.windows(G, 0.4, G.L - 0.4, TOP + 6.5, TOP + 8, { bw: 1.4, fh: 1.5, ww: 0.6, wh: 0.9, arch: true, pane: GLS, lit: 0.6 });
-    // POWER PLANT: gold serif capitals on a dark plaque high on the bay, 1900 / 2000 date plaques either side (exterior_2 ref)
-    SG.add(F, 4.5, TOP + 2.0, 7.4, 1.25, 0.3, (g, w, h) => { g.fillStyle = '#3a2a1c'; g.fillRect(0, 0, w, h); g.strokeStyle = '#c8a050'; g.lineWidth = h * 0.06; g.strokeRect(h * 0.06, h * 0.06, w - h * 0.12, h - h * 0.12);
-      sText(g, 'POWER PLANT', w / 2, h * 0.54, w * 0.9, h * 0.66, SERIF, '#e8c060', { stroke: '#6a4a18', sw: h * 0.04 }); });
-    for (const [u, t] of [[0.2, '1900'], [8.8, '2000']]) SG.add(F, u, TOP + 2.2, 1.3, 0.8, 0.3, (g, w, h) => { g.fillStyle = '#3a2a1c'; g.fillRect(0, 0, w, h); sText(g, t, w / 2, h / 2, w * 0.86, h * 0.6, SERIF, '#e8c060'); });
-    // BARNES&NOBLE / BOOKSELLERS: white condensed serif letters standing off the bay
-    SG.add(F, 4.5, Y0 + 12.4, 8.6, 1.5, 0.45, (g, w, h) => { sText(g, 'BARNES&NOBLE', w / 2, h * 0.36, w * 0.98, h * 0.62, SERIF, '#fbfaf4', { stroke: '#2a2420', sw: h * 0.04 });
-      sText(g, 'BOOKSELLERS', w / 2, h * 0.82, w * 0.5, h * 0.26, SERIF, '#fbfaf4', { weight: '600', stroke: '#2a2420', sw: h * 0.02 }); }); }
-  for (const [xa, za, xb, zb] of [[60.5, -8.5, 60.5, -15.5], [51.5, -15.5, 51.5, -8.5]]) { const F = H.frame(xa, za, xb, zb); H.windows(F, 0.5, F.L - 0.5, TOP + 0.4, TOP + 4, { bw: 1.6, fh: 3.6, ww: 0.6, wh: 1.8, arch: true, pane: GLS, lit: 0.5 }); }
-  // the four black stacks in a row (refs: tall, dark, slightly tapered, banded)
-  for (const x of [52, 55, 58, 61]) {
-    H.cyl(x, TOP + 3, -18, 1.0, 1.2, 37 - 3 - 15 + 0.4, 16, '#1d1b1a');
-    H.cyl(x, Y0 + 36.2, -18, 1.12, 1.12, 0.7, 16, '#3a3532');
-    for (const k of [0.3, 0.62]) H.cyl(x, TOP + 3 + 18.9 * k, -18, 1.16 - 0.1 * k, 1.16 - 0.1 * k, 0.35, 16, '#33302d', { ol: false });
+  // the giant HARD ROCK CAFE guitar on the tower (exterior_2: gold neck + headstock, coral-red body, the round logo across the body); double-sided cut-out
+  SG.at((P.gbX0 + P.gbX1) / 2, P.gbTop + 0.55, -10.2, 0, 3.5, PPY(28) - P.gbTop - 0.55, (g, w, h) => {
+    const k = w / 46, ky = h / 125; g.save(); g.scale(k, ky);
+    g.fillStyle = '#e2b23a'; g.fillRect(19.5, 8, 7, 66); for (let y = 12; y < 72; y += 4.6) { g.fillStyle = '#9a7420'; g.fillRect(19.5, y, 7, 0.7); }
+    g.fillStyle = '#f4ecd0'; g.fillRect(22.6, 8, 0.8, 66);
+    g.fillStyle = '#e8b83a'; g.beginPath(); g.moveTo(17.5, 0); g.lineTo(29.5, 0); g.lineTo(28.5, 10); g.lineTo(18.5, 10); g.closePath(); g.fill(); g.strokeStyle = '#8a5a10'; g.lineWidth = 0.8; g.stroke();
+    sText(g, 'HR', 23.5, 4.6, 9, 6, SERIF, '#c8241c');
+    g.fillStyle = '#d8d0c0'; for (let i = 0; i < 3; i++) { g.fillRect(14.5, 1.2 + i * 3, 3, 1.4); g.fillRect(29.5, 1.2 + i * 3, 3, 1.4); }
+    g.beginPath(); g.moveTo(23, 70); g.bezierCurveTo(8, 63, 3, 80, 7, 90); g.bezierCurveTo(10, 98, 1, 106, 6, 115); g.bezierCurveTo(12, 126, 34, 126, 40, 115);
+    g.bezierCurveTo(45, 106, 36, 98, 39, 90); g.bezierCurveTo(43, 80, 38, 63, 29, 68); g.closePath(); g.fillStyle = '#e4566a'; g.fill(); g.lineWidth = 1.4; g.strokeStyle = '#6a1424'; g.stroke();
+    g.fillStyle = '#f4f0e6'; g.fillRect(14, 112, 18, 2.6); g.restore();
+    g.save(); g.translate(w * 0.12, 80 * ky); hrLogo(g, w * 0.76, w * 0.76); g.restore(); });
+  // ---------- EAST: the HARD ROCK CAFE building ----------
+  { const x0 = P.pcX1, x1 = P.hrX1, z0 = P.hrZN, z1 = P.hrZS, f = ppFaces(x0, z0, x1, z1, H), u = (px) => PPX(px) - x0;
+    H.box(x0, Y0, z0, x1, P.hrEave, z1, BR); H.box(x0, Y0, z0, x1 + 0.12, Y0 + 0.8, z1 + 0.12, '#6a5a50');
+    H.box(PPX(870), P.hrEave, z1 - 3, x1, P.hrPar, z1, BR); H.box(PPX(870), P.hrEave, z0, x1, P.hrPar - 0.6, z1 - 3, BR2); // parapet wall + the roof behind
+    H.box(PPX(950), P.hrPar, z1 - 1.2, PPX(1120), P.hrStep, z1, BR); H.box(PPX(950) - 0.1, P.hrStep - 0.05, z1 - 1.3, PPX(1120) + 0.1, P.hrStep + 0.12, z1 + 0.1, CR);
+    H.box(PPX(870) - 0.1, P.hrPar - 0.05, z1 - 3.1, x1 + 0.1, P.hrPar + 0.12, z1 + 0.1, CR); H.box(x0, P.hrEave - 0.05, z1 - 3.1, PPX(870), P.hrEave + 0.12, z1 + 0.1, CR);
+    { const xa = PPX(955), xb = PPX(1060), xm = (xa + xb) / 2, g = new THREE.BufferGeometry(), za = z1 - 1.0, zb = z1, ya = P.hrStep, v = [[xa, ya, zb], [xb, ya, zb], [xm, P.hrPeak, zb], [xa, ya, za], [xb, ya, za], [xm, P.hrPeak, za]], Pp = [], t = (a, b, c) => Pp.push(...v[a], ...v[b], ...v[c]);
+      t(0, 1, 2); t(3, 5, 4); t(0, 2, 5); t(0, 5, 3); t(1, 4, 5); t(1, 5, 2); g.setAttribute('position', new THREE.Float32BufferAttribute(Pp, 3)); g.computeVertexNormals(); H.geo(g, BR3);
+      H.box(xm - 0.12, P.hrPeak - 0.2, za, xm + 0.12, P.hrPeak + 0.3, zb + 0.05, CR, { ol: false }); }
+    const F = f.s;
+    H.band(F, -0.1, F.L + 0.15, PPY(545), PPY(535), 0.2, CR, { ol: false }); H.band(F, -0.1, F.L + 0.15, PPY(690), PPY(684), 0.18, CR, { ol: false });
+    for (const [a, b] of [[835, 878], [918, 955], [1085, 1127], [1175, 1222]]) { // the tall round-arched lower windows (white grids)
+      const uc = (u(a) + u(b)) / 2, ww = u(b) - u(a), y0 = PPY(670), y1 = PPY(590);
+      H.fbox(F, u(a), u(b), y0, y1, -0.05, 0.02, pane, { ol: false, emi: LMR() < 0.7 ? '#ffd28a' : null }); H.farch(F, uc, y1, ww / 2, -0.05, 0.02, pane, { ol: false }, 8);
+      for (let k = 1; k < 3; k++) H.fbox(F, u(a) + ww * k / 3 - 0.03, u(a) + ww * k / 3 + 0.03, y0, y1 + ww * 0.4, 0, 0.04, mull, { ol: false });
+      for (let y = y0 + 0.45; y < y1 + ww * 0.4; y += 0.45) H.fbox(F, u(a), u(b), y, y + 0.05, 0, 0.04, mull, { ol: false });
+      H.farch(F, uc, y1, ww / 2 + 0.12, 0, 0.06, CR, { ol: false }, 8); H.fbox(F, u(a) - 0.1, u(b) + 0.1, y0 - 0.12, y0, 0, 0.14, CR, { ol: false }); }
+    { const a = 982, b = 1055, y0 = PPY(675), y1 = PPY(578); H.fbox(F, u(a), u(b), y0, y1, -0.05, 0.02, '#2a2a30', { ol: false, emi: '#ffcf7a' }); // the big gridded entrance window
+      for (let k = 1; k < 5; k++) H.fbox(F, u(a) + (u(b) - u(a)) * k / 5 - 0.03, u(a) + (u(b) - u(a)) * k / 5 + 0.03, y0, y1, 0, 0.04, '#5a3a2a', { ol: false });
+      for (let y = y0 + 0.35; y < y1; y += 0.35) H.fbox(F, u(a), u(b), y, y + 0.05, 0, 0.04, '#5a3a2a', { ol: false }); }
+    for (const [a, b, big] of [[915, 948, 0], [975, 1048, 1], [1075, 1113, 0]]) { const uc = (u(a) + u(b)) / 2, ww = u(b) - u(a), y0 = PPY(505), y1 = PPY(465) + (big ? 0.2 : 0); // upper arched windows in the gable
+      H.fbox(F, u(a), u(b), y0, y1, -0.05, 0.02, pane, { ol: false, emi: LMR() < 0.6 ? '#ffd28a' : null }); H.farch(F, uc, y1, ww / 2, -0.05, 0.02, pane, { ol: false }, 8);
+      H.farch(F, uc, y1, ww / 2 + 0.14, 0, 0.06, CR, { ol: false }, 8); for (let k = 1; k < (big ? 4 : 2) + 1; k++) H.fbox(F, u(a) + ww * k / ((big ? 4 : 2) + 1) - 0.03, u(a) + ww * k / ((big ? 4 : 2) + 1) + 0.03, y0, y1 + ww * 0.45, 0, 0.04, mull, { ol: false }); }
+    H.pilasters(F, u(820), u(1250), Y0 + 0.8, P.hrEave - 0.3, 1.45, 0.26, 0.12, BR2, { ol: false });
+    // HRC roundels, the Hard Rock Cafe logo + the SAVE THE PLANET marquee (exterior_2)
+    const hrc = (g, w, h) => { const R = w / 2 - 1; g.fillStyle = '#c9a050'; g.beginPath(); g.arc(w / 2, h / 2, R, 0, TAU); g.fill(); g.fillStyle = '#efe0b4'; g.beginPath(); g.arc(w / 2, h / 2, R * 0.82, 0, TAU); g.fill();
+      g.strokeStyle = '#a07a30'; g.lineWidth = R * 0.08; g.beginPath(); g.arc(w / 2, h / 2, R * 0.82, 0, TAU); g.stroke(); sText(g, 'HRC', w / 2, h * 0.53, R * 1.3, R * 0.8, SERIF, '#a07a30', { weight: '600' }); };
+    SG.add(F, u(878), PPY(505), 1.0, 1.0, 0.12, hrc); SG.add(F, u(1148), PPY(478), 1.0, 1.0, 0.12, hrc);
+    SG.add(F, u(1012), PPY(552), 2.3, 2.3, 0.16, (g, w, h) => hrLogo(g, w, h));
+    SG.add(F, u(1015), PPY(580), 2.4, 0.6, 0.18, (g, w, h) => { g.fillStyle = '#fbf6ee'; g.beginPath(); g.moveTo(0, h); g.lineTo(0, h * 0.25); g.quadraticCurveTo(w / 2, -h * 0.25, w, h * 0.25); g.lineTo(w, h); g.fill();
+      g.strokeStyle = '#c8241c'; g.lineWidth = h * 0.06; g.stroke(); sText(g, 'SAVE THE PLANET', w / 2, h * 0.6, w * 0.9, h * 0.5, SANS, '#d0241c', { weight: '900' }); });
+    // red-roofed entrance pavilion + red awnings + green window awnings
+    { const xa = PPX(940), xb = PPX(1062), zb = z1 + 1.6, ya = Y0 + 2.6; for (const x of [xa + 0.1, xb - 0.1]) H.box(x - 0.08, Y0, zb - 0.1, x + 0.08, ya, zb + 0.06, '#3a2a22', { ol: false });
+      const g = new THREE.CylinderGeometry(0.01, 1.0, 0.9, 4); g.rotateY(Math.PI / 4); g.scale((xb - xa) * 0.72, 1, 1.25); g.translate((xa + xb) / 2, ya + 0.45, z1 + 0.85); H.geo(g, '#b8302a');
+      H.box(xa, ya - 0.2, z1, xb, ya, zb, '#8a2a24', { ol: false }); lmColl({ x0: xa, x1: xb, z0: z1, z1: zb }); }
+    H.fbox(F, u(812), u(935), Y0 + 2.2, Y0 + 2.35, 0, 1.6, '#c0302a', { ol: false }); H.fbox(F, u(1068), u(1255), Y0 + 2.2, Y0 + 2.35, 0, 1.6, '#c0302a', { ol: false });
+    for (const [a, b] of [[840, 875], [918, 955], [1085, 1125], [1180, 1225]]) H.fbox(F, u(a), u(b), PPY(700), PPY(686), 0.02, 0.45, GRN, { ol: false });
+    // side + back: arched windows, eaves cornice
+    for (const k of ['e', 'n']) { const G = f[k]; H.windows(G, 0.5, G.L - 0.5, Y0 + 1, P.hrEave - 1, { bw: 1.6, fh: (P.hrEave - Y0 - 2) / 2, ww: 0.8, wh: 2.6, arch: true, head: CR, pane: GLS, lit: 0.55, mull });
+      H.band(G, -0.1, G.L + 0.1, P.hrEave - 0.4, P.hrEave, 0.3, CR); }
+    for (const x of [x0 + 2, x1 - 1.5]) H.cyl(x, P.hrPar - 0.6, -18, 0.35, 0.35, 1.2, 8, '#8a8a84', { ol: false });
   }
-  // east wing (65..68.6 x -24..-12): lower brick hall with tall arched windows and a gabled end with a big round window
-  H.box(65, Y0, -24, 68.6, Y0 + 9, -12, BR);
-  { const F = H.frame(68.6, -12, 68.6, -24); H.windows(F, 0.8, F.L - 0.8, Y0 + 1, Y0 + 8, { bw: 2.4, fh: 7, ww: 1.4, wh: 4.4, arch: true, head: CR, pane: GLS, lit: 0.6, mull: '#d8ccb0', wy: 0.25 });
-    H.band(F, -0.2, F.L + 0.2, Y0 + 8.4, Y0 + 9.0, 0.3, CR); }
-  for (const z of [-12, -24]) { const s = z === -12 ? 1 : -1, F = s > 0 ? H.frame(65, -12, 68.6, -12) : H.frame(68.6, -24, 65, -24);
-    H.windows(F, 0.3, F.L - 0.3, Y0 + 1, Y0 + 8, { bw: 3.6, fh: 7, ww: 1.6, wh: 4.2, arch: true, head: CR, pane: GLS, lit: 0.6, wy: 0.25 }); }
-  { const g = new THREE.BufferGeometry(); // gabled roof of the east wing
-    const p = [65, 9, -24, 68.6, 9, -24, 66.8, 11.4, -24, 65, 9, -12, 66.8, 11.4, -12, 68.6, 9, -12]; const P = []; const tri = (a, b, c) => P.push(...p.slice(a * 3, a * 3 + 3), ...p.slice(b * 3, b * 3 + 3), ...p.slice(c * 3, c * 3 + 3));
-    tri(0, 2, 1); tri(3, 5, 4); tri(0, 3, 4); tri(0, 4, 2); tri(1, 2, 4); tri(1, 4, 5);
-    g.setAttribute('position', new THREE.Float32BufferAttribute(P.map((v, i) => (i % 3 === 1 ? v + Y0 : v)), 3)); g.computeVertexNormals(); H.geo(g, BR2); }
-  // waterside awnings + generic sign on the harbour face
-  { const F = H.frame(47, -9, 65, -9); for (const u of [2.6, 15.4]) H.fbox(F, u - 1.6, u + 1.6, Y0 + 3.4, Y0 + 3.6, 0, 1.4, '#a8302a', { ol: false }); // red awnings
-    // Phillips: big red script with a white outline on the west block (exterior_2 ref), + the Phillips Seafood canopy sign at the door
-    SG.add(F, 2.95, Y0 + 11.7, 3.1, 1.25, 1.45, (g, w, h) => sText(g, 'Phillips', w / 2, h * 0.55, w * 0.96, h * 0.9, SCRIPT, '#e0261c', { weight: 'bold', slant: 0.12, stroke: '#fff4ea', sw: h * 0.1, glow: '#ff3020' }));
-    SG.add(F, 2.6, Y0 + 3.62, 3.2, 0.6, 1.42, (g, w, h) => { g.fillStyle = '#1f2a3a'; g.fillRect(0, 0, w, h); sText(g, 'Phillips', w * 0.36, h * 0.5, w * 0.5, h * 0.8, SCRIPT, '#e8302a', { slant: 0.1, stroke: '#fff', sw: h * 0.06 }); sText(g, 'SEAFOOD', w * 0.78, h * 0.52, w * 0.36, h * 0.38, SANS, '#fff'); });
-    SG.add(F, 15.4, Y0 + 3.62, 3.2, 0.6, 1.42, (g, w, h) => { g.fillStyle = '#a8302a'; g.fillRect(0, 0, w, h); sText(g, 'HARD ROCK CAFE', w / 2, h * 0.52, w * 0.9, h * 0.5, SANS, '#ffd23a'); }); }
-  // Hard Rock Cafe: round yellow/red logo medallion on the east wing's harbour end + small HRC roundels (exterior_2 ref)
-  const hrLogo = (g, w, h) => { const R = Math.min(w, h) / 2 - 2; g.translate(w / 2, h / 2);
-    g.fillStyle = '#f5c51e'; g.beginPath(); g.arc(0, 0, R, 0, TAU); g.fill(); g.lineWidth = R * 0.08; g.strokeStyle = '#7a1a10'; g.stroke();
-    g.fillStyle = '#d82a1c'; g.beginPath(); g.arc(0, 0, R * 0.8, 0, TAU); g.fill();
-    sText(g, 'Hard Rock', 0, -R * 0.12, R * 1.5, R * 0.5, SCRIPT, '#ffe8a0', { slant: 0.1, stroke: '#5a0e08', sw: R * 0.05 }); sText(g, 'CAFE', 0, R * 0.42, R * 1.0, R * 0.32, SANS, '#ffe8a0'); };
-  { const F = H.frame(65, -12, 68.6, -12); SG.add(F, 1.8, Y0 + 9.4, 2.4, 2.4, 0.15, hrLogo); }
-  for (const u of [3.4, 14.6]) SG.add(H.frame(47, -9, 65, -9), u, Y0 + 8.1, 1.1, 1.1, 0.2, (g, w, h) => { const R = w / 2 - 1; g.fillStyle = '#e6d9bc'; g.beginPath(); g.arc(w / 2, h / 2, R, 0, TAU); g.fill(); g.strokeStyle = '#7a3a26'; g.lineWidth = R * 0.12; g.stroke(); sText(g, 'HRC', w / 2, h / 2, R * 1.4, R * 0.7, SERIF, '#7a3a26'); });
-  // the giant Hard Rock guitar standing on the roof in front of the stacks (a flat cut-out, drawn both sides) with the round logo across its body
-  SG.at(56, TOP + 10.1, -10.6, 0, 4.6, 12.5, (g, w, h) => {
-    const k = w / 46; g.save(); g.scale(k, k); // design space 46 x 125
-    g.fillStyle = '#e8e2d0'; g.fillRect(20.5, 6, 5, 70); for (let y = 12; y < 74; y += 5) { g.fillStyle = '#9a927e'; g.fillRect(20.5, y, 5, 0.6); } // neck + frets
-    g.fillStyle = '#d8304a'; g.beginPath(); g.moveTo(19, 0); g.lineTo(28, 0); g.lineTo(29, 9); g.lineTo(18, 9); g.closePath(); g.fill(); // headstock
-    g.fillStyle = '#c8c0b0'; for (let i = 0; i < 3; i++) { g.fillRect(15.5, 1.5 + i * 2.6, 3, 1.4); g.fillRect(28.5, 1.5 + i * 2.6, 3, 1.4); }
-    g.beginPath(); g.moveTo(23, 72); g.bezierCurveTo(5, 66, 2, 82, 6, 92); g.bezierCurveTo(10, 100, 0, 108, 6, 116); g.bezierCurveTo(12, 126, 34, 126, 40, 116);
-    g.bezierCurveTo(46, 108, 36, 100, 40, 92); g.bezierCurveTo(44, 80, 40, 64, 30, 70); g.closePath(); g.fillStyle = '#e8365a'; g.fill(); g.lineWidth = 1.4; g.strokeStyle = '#5a0e1a'; g.stroke();
-    g.fillStyle = '#f4f0e6'; g.fillRect(14, 108, 18, 3); g.restore();
-    g.save(); g.translate(0, 84 * k - w * 0.36); hrLogo(g, w, w * 0.72 * 1.0); g.restore(); });
 });
