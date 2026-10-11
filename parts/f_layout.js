@@ -47,8 +47,8 @@ for (const b of PLOTS) for (let x = Math.floor(b.x0 / 4); x * 4 < b.x1; x++) for
 function onPlot(x, z) { const a = PG.get(pgk(x, z)); if (a) for (const b of a) if (inR(b, x, z)) return b; return null; }
 function isRoad(x, z) { return !inR(BASIN, x, z) && !isProm(x, z) && !onPlot(x, z); }
 // Federal Hill: a real walkable mound (the ground height follows it)
-const HILL = { x: -3, z: 59, rx: 27, rz: 12.5, h: 11 };
-function hillH(x, z) { const d = Math.hypot((x - HILL.x) / HILL.rx, (z - HILL.z) / HILL.rz); if (d >= 1) return 0; const t = clamp((1 - d) / 0.55, 0, 1); return HILL.h * t * t * (3 - 2 * t); }
+const HILL = { x: -3, z: 59, rx: 28, rz: 13, h: 9 };
+function hillH(x, z) { const d = Math.hypot((x - HILL.x) / HILL.rx, (z - HILL.z) / HILL.rz); if (d >= 1) return 0; const t = clamp((1 - d) / 0.8, 0, 1); return HILL.h * t * t * (3 - 2 * t); }
 function groundY(x, z) { if (isWater(x, z)) return CURB; if (isRoad(x, z)) return 0; return CURB + hillH(x, z); }
 
 // ---------------- ground: streets, promenade, plots, piers, water, seawalls ----------------

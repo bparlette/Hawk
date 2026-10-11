@@ -149,14 +149,46 @@
   #clock { right: calc(env(safe-area-inset-right, 0px) + 10px); top: calc(env(safe-area-inset-top, 0px) + 96px); font-size: 8px; color: #fff; text-shadow: 1px 1px 0 #000; }
   @media (max-width: 480px) { #hpname { font-size: 10px; } #hpbar { width: 104px; } #title .t { font-size: 22px; } #banner { font-size: 18px; } #combo .n { font-size: 26px; } }
   /* ---- Toad City: control deck under the game view on phones in portrait, minimap, landmark name popup ---- */
-  :root { --deck: 0px; }
-  @media (orientation: portrait) { body.touch { --deck: 212px; } }
-  body.touch #gl { height: calc(100dvh - var(--deck)); }
-  #deck { display: none; position: fixed; left: 0; right: 0; bottom: 0; height: var(--deck); z-index: 9; touch-action: none;
-    background: linear-gradient(#1b1622, #0d0a12); border-top: 3px solid #000; box-shadow: inset 0 3px 0 rgba(255,255,255,.08); }
-  #deck::before { content: "TOAD CITY"; position: absolute; left: 50%; top: 10px; transform: translateX(-50%); font: 8px/1 'PX', monospace; color: rgba(255,224,138,.35); letter-spacing: 2px; }
-  @media (orientation: portrait) { body.touch #deck { display: block; } }
-  #lbB { bottom: var(--deck); }
+  /* ---- arcade control panel (the Shell Shock cabinet panel, like Brad's other games): docked under the game on touch screens ----
+     stick + buttons ~18% larger than the demos shell, hit areas to match; ACT is the big glowing context button (on the SPECIAL spot) */
+  :root { --panel: 0px; }
+  body.touch #gl { height: calc(100dvh - var(--panel)); }
+  #touch { display: none !important; }
+  #apanel { display: none; position: fixed; left: 0; right: 0; bottom: 0; z-index: 20; height: var(--panel); overflow: hidden; touch-action: none;
+    background: linear-gradient(#2c3240, #151820 30%, #0a0b10); border-top: 2px solid #000; }
+  body.touch #apanel { display: block; }
+  #adeck { --S: 1px; position: absolute; left: 50%; top: calc(22 * var(--S)); transform: translateX(-50%); width: calc(470 * var(--S)); height: calc(135 * var(--S)); background: url(panel.webp) 0 0 / 100% 100% no-repeat; }
+  #adeck::before, #adeck::after { content: ""; position: absolute; top: 0; bottom: 0; width: calc(40 * var(--S)); pointer-events: none; }
+  #adeck::before { left: 0; background: linear-gradient(90deg, rgba(10,11,16,.9), transparent); } #adeck::after { right: 0; background: linear-gradient(-90deg, rgba(10,11,16,.9), transparent); }
+  #astick { position: absolute; left: calc(35.8 * var(--S)); top: calc(-20.8 * var(--S)); width: calc(68.4 * var(--S)); height: calc(96.8 * var(--S)); transform-origin: 50% 95.1%; transition: transform 50ms ease-out; pointer-events: none; z-index: 3; }
+  .acap { position: absolute; z-index: 2; border-radius: 50%; pointer-events: none; transform: translate(-50%, -50%); width: calc(59 * var(--S)); height: calc(37.8 * var(--S)); transition: box-shadow 50ms linear, background 50ms linear; }
+  .acap.wht { width: calc(44.8 * var(--S)); height: calc(28.3 * var(--S)); }
+  .acap.on { background: rgba(0,0,0,.30); box-shadow: 0 0 0 calc(1.5 * var(--S)) var(--c, #fff), 0 0 calc(10 * var(--S)) calc(3 * var(--S)) var(--c, #fff), inset 0 calc(3 * var(--S)) calc(6 * var(--S)) rgba(0,0,0,.6); }
+  #acap-a { left: calc(266 * var(--S)); top: calc(73 * var(--S)); --c: rgba(255,70,55,.75); }
+  #acap-b { left: calc(343 * var(--S)); top: calc(69 * var(--S)); --c: rgba(255,215,40,.75); }
+  #acap-l { left: calc(163 * var(--S)); top: calc(33 * var(--S)); --c: rgba(255,255,255,.8); }
+  #acap-r { left: calc(243 * var(--S)); top: calc(33 * var(--S)); --c: rgba(255,255,255,.8); }
+  .albl { position: absolute; z-index: 4; transform: translate(-50%, -50%); pointer-events: none; white-space: nowrap; text-align: center;
+    padding: calc(1.5 * var(--S)) calc(5 * var(--S)); border-radius: calc(4 * var(--S)); background: #4c5568; border: calc(1 * var(--S)) solid #2a303c;
+    color: #fff; font: 900 calc(10.5 * var(--S))/1 Impact, "Arial Narrow", "Helvetica Neue", system-ui, sans-serif !important; letter-spacing: calc(.6 * var(--S)); text-shadow: 0 calc(1 * var(--S)) 0 #000; }
+  .albl.sm { font-size: calc(8.5 * var(--S)) !important; background: rgba(20,22,30,.82); border-color: transparent; padding: calc(1 * var(--S)) calc(4 * var(--S)); }
+  #albl-a { left: calc(269 * var(--S)); top: calc(103 * var(--S)); min-width: calc(66 * var(--S)); }
+  #albl-b { left: calc(346 * var(--S)); top: calc(97 * var(--S)); min-width: calc(54 * var(--S)); }
+  #albl-l { left: calc(163 * var(--S)); top: calc(10 * var(--S)); } #albl-r { left: calc(243 * var(--S)); top: calc(10 * var(--S)); }
+  /* ACT: the biggest button, its own colour + glow, and a context label/icon that changes (POWER / SEWER / CLIMB / RIDE / BOARD / DRIVE ...) */
+  #aact { position: absolute; z-index: 3; left: calc(419 * var(--S)); top: calc(70 * var(--S)); width: calc(74 * var(--S)); height: calc(74 * var(--S)); transform: translate(-50%, -50%); border-radius: 50%; pointer-events: none;
+    background: radial-gradient(circle at 50% 32%, #f4fff8 0, #6dffc0 22%, #13b87a 58%, #07623f 100%);
+    box-shadow: 0 0 0 calc(3 * var(--S)) #04130c, 0 calc(4 * var(--S)) 0 calc(3 * var(--S)) #03301f, 0 0 calc(16 * var(--S)) calc(4 * var(--S)) rgba(70,255,170,.55); transition: transform 50ms, filter 80ms; }
+  #aact::before { content: ""; position: absolute; inset: calc(-7 * var(--S)); border-radius: 50%; background: conic-gradient(rgba(255,255,255,.0) calc(var(--cd, 1) * 360deg), rgba(4,10,8,.72) 0); z-index: -1; }
+  #aact.hot { animation: aglow .5s ease-in-out infinite alternate; }
+  #aact.cool { filter: saturate(.25) brightness(.7); }
+  #aact.on { transform: translate(-50%, calc(-50% + 3 * var(--S))); filter: brightness(.82); }
+  #aact svg { position: absolute; left: 50%; top: 46%; width: 44%; height: 44%; transform: translate(-50%, -50%); fill: none; stroke: #04261a; stroke-width: 2.6; stroke-linecap: round; stroke-linejoin: round; }
+  @keyframes aglow { from { box-shadow: 0 0 0 calc(3 * var(--S)) #04130c, 0 calc(4 * var(--S)) 0 calc(3 * var(--S)) #03301f, 0 0 calc(12 * var(--S)) calc(3 * var(--S)) rgba(70,255,170,.5); }
+    to { box-shadow: 0 0 0 calc(3 * var(--S)) #04130c, 0 calc(4 * var(--S)) 0 calc(3 * var(--S)) #03301f, 0 0 calc(26 * var(--S)) calc(9 * var(--S)) rgba(120,255,200,.95); } }
+  #albl-c { left: calc(419 * var(--S)); top: calc(118 * var(--S)); min-width: calc(62 * var(--S)); background: #0d6a46; border-color: #04130c; color: #eafff4; }
+  #aring { position: absolute; z-index: 4; pointer-events: none; border-radius: 50%; border: 2px solid rgba(255,210,60,.55); background: radial-gradient(circle, rgba(255,210,60,.10), transparent 70%); transform: translate(-50%, -50%); opacity: 0; transition: opacity .12s; }
+  #aring.on { opacity: 1; }
   #mmap { position: fixed; z-index: 11; left: calc(env(safe-area-inset-left, 0px) + 6px); top: calc(env(safe-area-inset-top, 0px) + 34px); width: 150px; height: 92px; border: 2px solid #000; box-shadow: 2px 2px 0 #000; pointer-events: none; opacity: .92; image-rendering: auto; }
   body.cine #mmap { opacity: 0; transition: opacity .3s; }
   #lmk { left: 50%; top: 21%; transform: translate(-50%, -50%) scale(.9); font-size: 15px; color: #ffe08a; text-shadow: 3px 3px 0 #000, -1px -1px 0 #000; opacity: 0; transition: opacity .35s, transform .35s; white-space: nowrap; letter-spacing: 1px; }
@@ -184,7 +216,7 @@
 <div id="clock" class="ui"></div><button id="qbtn" type="button" title="H: toggle 32-bit / HD">32-BIT</button>
 <div id="combo" class="ui"><div class="n" id="comboN">0</div><div class="w">HITS!</div></div>
 <div id="banner" class="ui">BACK ON YOUR FEET!</div>
-<div id="lmk" class="ui"></div><canvas id="mmap"></canvas><div id="deck"></div>
+<div id="lmk" class="ui"></div><canvas id="mmap"></canvas>
 <div id="hint" class="ui"><b>WASD</b> move · <b>J</b> cane · <b>K</b> jump · <b>E</b> action / finisher (hold: revive) · <b>H</b> 32-bit/HD · <b>Q/R</b> or drag: camera</div>
 <div id="lbT" class="lb"></div><div id="lbB" class="lb"></div><div id="cut"></div>
 <div id="title" class="ui"><div class="s">PHASE 1 · CITY BLOCKOUT</div><div class="t">TOAD CITY<br>BALTIMORE</div><div class="k">press any key or tap to skip</div></div>
@@ -203,6 +235,14 @@
   <div class="tb" id="cL">◀</div>
   <div class="tb" id="cR">▶</div>
 </div>
+<footer id="apanel" aria-label="Arcade controls"><div id="adeck">
+  <img id="astick" src="stick.webp" alt="" draggable="false" />
+  <div class="acap" id="acap-a"></div><div class="acap" id="acap-b"></div><div class="acap wht" id="acap-l"></div><div class="acap wht" id="acap-r"></div>
+  <div id="aact"><svg viewBox="0 0 24 24" id="aico"></svg></div>
+  <div class="albl" id="albl-a">SWING</div><div class="albl" id="albl-b">JUMP</div><div class="albl" id="albl-c">ACT</div>
+  <div class="albl sm" id="albl-l">&#9664; CAM</div><div class="albl sm" id="albl-r">CAM &#9654;</div>
+  <div id="aring"></div>
+</div></footer>
 <script type="module" src="game.js"></script>
 </body>
 </html>

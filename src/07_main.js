@@ -1,6 +1,7 @@
 
 // ---------------- autopilot for tests (?bot=1): walk up the street and back, fight every thug met, orbit the camera mid-fight ----------------
 const CORNER_PTS = [['HARBORPLACE', -40, -33], ['CONSTELLATION', -31, -33], ['WTC', -12, -33], ['AQUARIUM', 19, -33], ['POWERPLANT', 56, -33], ['PRATT', 70, -38.5], ['FOURSEASONS', 82, -41.5]]; // east along the promenade past 6 landmarks
+function near0() { let n = 0; for (const e of enemies) if (e.alive && e.state !== 'dying' && e.state !== 'idle' && e.state !== 'return' && Math.hypot(e.pos.x - hero.pos.x, e.pos.z - hero.pos.z) < 4) n++; return n; }
 const BOTR = { i: 0, log: [], corners: [], t: 0, orbitT: 0, atkT: 0, done: false, fightT: 0, fights: 0, yaws: [] };
 function botThink(dt) {
   BOTR.t += dt; const b = (IN.bot = IN.bot || { mx: 0, my: 0, look: 0 });
@@ -11,6 +12,7 @@ function botThink(dt) {
     b.actHold = false; const f = camFwd(CAM.yaw), r = [-f[1], f[0]], dx = partner.pos.x - hero.pos.x, dz = partner.pos.z - hero.pos.z; b.mx = (dx * r[0] + dz * r[1]) / d; b.my = (dx * f[0] + dz * f[1]) / d; BOTR.revRuns = (BOTR.revRuns || 0) + 1; return; }
   b.actHold = false;
   // QTE: a dizzy thug in reach -> press the action button (after a human-ish reaction delay) instead of swinging
+  if (near0() >= 2 && POWER.cd <= 0 && hero.state === 'move' && !qteInRange()) { b.act = true; BOTR.power = (BOTR.power || 0) + 1; }
   if (QTE && qteInRange()) { b.mx = b.my = 0; BOTR.qteT = (BOTR.qteT || 0) + dt; if (BOTR.qteT > 0.2) { b.act = true; BOTR.qteT = 0; BOTR.qtePressed = (BOTR.qtePressed || 0) + 1; } return; } else BOTR.qteT = 0;
   const near = enemies.filter((e) => e.alive && e.state !== 'dying' && e.state !== 'return' && e.state !== 'idle' && Math.hypot(e.pos.x - hero.pos.x, e.pos.z - hero.pos.z) < 9);
   let tx, tz, stopAt = 0.8;
@@ -128,9 +130,10 @@ const MAP = (function () {
   return { c, g, bg, X, Z };
 })();
 function cityHud(rdt) {
-  CITY.nearT -= rdt; if (CITY.nearT <= 0) { CITY.nearT = 0.4; NIGHTFX.near(hero.pos.x, hero.pos.z);
+  CITY.nearT -= rdt; if (CITY.nearT <= 0) { CITY.nearT = 0.25; NIGHTFX.near(hero.pos.x, hero.pos.z); rigLod();
     let best = null, bd = 1e9; for (const L of LANDMARKS) { const d = Math.hypot(L.x - hero.pos.x, L.z - hero.pos.z); if (d < L.r && d < bd) { bd = d; best = L; } }
     if (best !== CITY.lmk) { CITY.lmk = best; if (best) { $('lmk').textContent = best.name; $('lmk').classList.add('on'); CITY.lmkT = 3.2; if (!CITY.visited.has(best.id)) { CITY.visited.add(best.id); CITY.log.push(best.id + '@' + S.time.toFixed(1)); } } } }
+  if (APANEL) { const c = actContext(); APANEL.setAct(c, c && c.kind === 'power' ? 1 - POWER.cd / POWER.CD : 1); }
   if (CITY.lmkT > 0) { CITY.lmkT -= rdt; if (CITY.lmkT <= 0) $('lmk').classList.remove('on'); }
   if (MAP) { CITY.mapT -= rdt; if (CITY.mapT <= 0) { CITY.mapT = 0.1; const { g, bg, X, Z } = MAP; g.drawImage(bg, 0, 0);
     g.fillStyle = '#ff3d6e'; for (const e of enemies) if (e.alive && e.state !== 'dying' && Math.hypot(e.pos.x - hero.pos.x, e.pos.z - hero.pos.z) < 60) g.fillRect(X(e.pos.x) - 2, Z(e.pos.z) - 2, 4, 4);
@@ -158,11 +161,12 @@ function frame(now) {
       let dt = rdt; if (S.hitstop > 0) { S.hitstop -= rdt; dt = rdt * 0.06; }
       S.time += dt;
       countAttackers();
+      POWER.cd = Math.max(0, POWER.cd - dt);
       updateHero(dt);
       updatePartner(dt);
       for (const e of enemies) { // thugs far from the heroes sleep (hidden, not simulated) to keep draw calls + CPU down on phones
         const d2 = (e.pos.x - hero.pos.x) ** 2 + (e.pos.z - hero.pos.z) ** 2;
-        if (d2 > 75 * 75 && (e.state === 'idle' || e.state === 'return')) { e.root.visible = false; e.hpS.visible = false; continue; }
+        if (d2 > 48 * 48 && (e.state === 'idle' || e.state === 'return')) { e.root.visible = false; e.hpS.visible = false; continue; }
         if (!e.root.visible && e.state !== 'dead') e.root.visible = true;
         updateEnemy(e, dt); }
       separate();
@@ -191,4 +195,4 @@ function frame(now) {
   } catch (err) { __celErr.n++; __celErr.last = String(err && err.stack || err); if (__celErr.n < 4) console.error(err); }
 }
 requestAnimationFrame(frame);
-window.__cel = { S, hero, partner, PART, BOOST_P, hurtTurtle, reviveTurtle, partnerSlot, get KEYS() { return KEYS; }, enemies, CAM, BOTR, FPS, IN, renderer, CINE, ACTIONS, DOOR, PIZZA, LADDER, ROOF, get QTE() { return QTE; }, get lockT() { return lockT; }, press: (k) => PRESS.add(k), tryAction, get frames() { return frames; }, atlasRows: _ay + _arow, THREE, camera, scene, CYC, LOW, NIGHTFX, draw, QUAL, setHD, LANDMARKS, CITY, isWater, groundY, WB, COLL, BLD, PIERS, POSTS, CARS, WATER };
+window.__cel = { S, hero, partner, PART, BOOST_P, hurtTurtle, reviveTurtle, partnerSlot, get KEYS() { return KEYS; }, enemies, CAM, BOTR, FPS, IN, renderer, CINE, ACTIONS, DOOR, PIZZA, LADDER, ROOF, get QTE() { return QTE; }, get lockT() { return lockT; }, press: (k) => PRESS.add(k), tryAction, get frames() { return frames; }, atlasRows: _ay + _arow, THREE, camera, scene, CYC, LOW, NIGHTFX, draw, QUAL, setHD, LANDMARKS, CITY, POWER, actContext, APANEL, MANHOLES, CLIMBS, VEHICLES, RIDE, isWater, groundY, WB, COLL, BLD, PIERS, POSTS, CARS, WATER };

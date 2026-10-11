@@ -54,6 +54,14 @@ function drawHp(e) {
   c.fillStyle = '#ff3d6e'; c.fillRect(4, 4, 120 * Math.max(0, e.hp) / e.maxHp, 12); c.fillStyle = 'rgba(255,255,255,.45)'; c.fillRect(4, 4, 120 * Math.max(0, e.hp) / e.maxHp, 4); e.hpT.needsUpdate = true;
 }
 const ALL = [hero, partner, ...enemies];
+// distance LOD for the thugs (phones: every rig part is a draw call, x2 with its ink hull, x3 with its shadow):
+// beyond 24 m a thug drops its ink outlines and stops casting shadows
+for (const f of ALL) { f.J.ol = []; f.J.sh = []; f.root.traverse((o) => { if (o.isMesh && o.material && o.material.isShaderMaterial && o.material.side === THREE.BackSide) f.J.ol.push(o); else if (o.isMesh && o.castShadow) f.J.sh.push(o); }); f.lodNear = true; }
+function rigLod() {
+  for (const e of enemies) { const near = (e.pos.x - hero.pos.x) ** 2 + (e.pos.z - hero.pos.z) ** 2 < 24 * 24;
+    if (near === e.lodNear && e.lodHd === QUAL.hd) continue; e.lodNear = near; e.lodHd = QUAL.hd;
+    for (const o of e.J.ol) o.visible = near && QUAL.hd; for (const o of e.J.sh) o.castShadow = near; }
+}
 
 // ---------------- world collision ----------------
 function collide(f) {
@@ -104,9 +112,8 @@ if (TOUCH) document.body.classList.add('touch');
 canvas.addEventListener('pointerdown', (e) => {
   audioInit(); if (AC && AC.state === 'suspended') AC.resume().catch(() => {});
   canvas.setPointerCapture?.(e.pointerId); if (e.pointerType === 'touch') DEV = 'touch'; if (CINE.intro && CINE.intro.t > 0.4) CINE.intro.skip = true;
-  if (e.pointerType === 'touch' && e.clientX < VW() * 0.45 && e.clientY > VH() * 0.3 && TOUCHS.stick === null) {
-    TOUCHS.stick = e.pointerId; TOUCHS.sx = e.clientX; TOUCHS.sy = e.clientY; TOUCHS.x = TOUCHS.y = 0; const st = $('stick'); st.style.left = e.clientX + 'px'; st.style.top = e.clientY + 'px'; st.classList.add('act'); return;
-  }
+  // (no floating virtual pad: on touch screens the stick + buttons live on the arcade panel below the game; a drag on the game orbits the camera)
+
   TOUCHS.drag.set(e.pointerId, { x: e.clientX, y: e.clientY });
 });
 const ptrMove = (e) => {
@@ -121,12 +128,7 @@ const endPtr = (e) => {
   TOUCHS.drag.delete(e.pointerId);
 };
 canvas.addEventListener('pointerup', endPtr); canvas.addEventListener('pointercancel', endPtr);
-// phones in portrait: the stick lives on the control deck under the game view (touch anywhere on its left side)
-{ const deck = $('deck'); if (deck) {
-  deck.addEventListener('pointerdown', (e) => { audioInit(); if (AC && AC.state === 'suspended') AC.resume().catch(() => {}); DEV = 'touch'; if (CINE.intro && CINE.intro.t > 0.4) CINE.intro.skip = true;
-    if (TOUCHS.stick !== null || e.clientX > innerWidth * 0.55) return; deck.setPointerCapture?.(e.pointerId);
-    TOUCHS.stick = e.pointerId; TOUCHS.sx = e.clientX; TOUCHS.sy = e.clientY; TOUCHS.x = TOUCHS.y = 0; const st = $('stick'); st.style.left = e.clientX + 'px'; st.style.top = e.clientY + 'px'; st.classList.add('act'); });
-  deck.addEventListener('pointermove', ptrMove); deck.addEventListener('pointerup', endPtr); deck.addEventListener('pointercancel', endPtr); } }
+
 canvas.addEventListener('contextmenu', (e) => e.preventDefault());
 for (const [id, k] of [['bA', 'a'], ['bB', 'b'], ['bC', 'c'], ['cL', 'l'], ['cR', 'r']]) {
   const el = $(id);
@@ -255,7 +257,7 @@ function hitEnemy(e, dmg, heavy, fromYaw, by = hero) {
 }
 function hurtHero(dmg, fromX, fromZ, heavy) { hurtTurtle(hero, dmg, fromX, fromZ, heavy); }
 // either turtle takes a hit; at 0 HP it goes down for good ('ko') until the other one revives it
-const NOHURT = new Set(['down', 'getup', 'ko', 'tp', 'hop', 'pclimb', 'boost', 'tag', 'intro']);
+const NOHURT = new Set(['down', 'getup', 'ko', 'tp', 'hop', 'pclimb', 'boost', 'tag', 'intro', 'power']);
 function hurtTurtle(f, dmg, fromX, fromZ, heavy) {
   if (f.inv > 0 || NOHURT.has(f.state) || CINE_ST.has(f.state) || CINE.intro || f.hp <= 0) return;
   if (f.isPartner && f.state === 'revive') return; // covering the revive
@@ -316,6 +318,7 @@ function updateHero(dt) {
     case 'atk': {
       const A = ATK[h.atkN], u = h.st / A.dur; h.speed = 0;
       if (pressed('e', 'f') && qteInRange()) { startFinisher(qteTarget()); pose = HERO_POSES.idle(0); break; }
+      if (pressed('e', 'f') && POWER.cd <= 0 && inFight()) { startPower(); pose = HERO_POSES.idle(0); break; } // ACT cancels a cane combo into the POWER move
       // lunge: close the gap to the soft-locked target, else step forward
       const T = h.atkT; let lx = Math.sin(h.yaw), lz = Math.cos(h.yaw), lsp = u < 0.45 ? 2.2 : 0;
       if (T && T.alive) { const dx = T.pos.x - h.pos.x, dz = T.pos.z - h.pos.z, d = Math.hypot(dx, dz); h.yaw += angTo(h.yaw, Math.atan2(dx, dz)) * (1 - Math.exp(-dt * 20)); lsp = u < 0.45 ? clamp((d - 1.3) * 6, 0, 9) : 0; }
@@ -344,6 +347,14 @@ function updateHero(dt) {
         if (h.state === 'airatk') { spawnSlash(_v.set(h.pos.x, h.pos.y + 0.4, h.pos.z), h.yaw, 'spin', 0); resolveSwing({ range: 2.6, cone: Math.PI, dmg: 3, heavy: true }, true); S.shake = Math.max(S.shake, 0.6); }
         h.vy = 0; h.set('move'); h.J.tilt.rotation.x = 0;
       }
+      break;
+    }
+    case 'power': { // the ACT POWER move (06b): hop + flip, cane slam into the ground at 45%, recover
+      h.vel.set(0, 0); const u = h.st / 0.9; h.speed = 0;
+      if (u < 0.45) h.y = Math.sin(u / 0.45 * Math.PI) * 1.5 * (u < 0.3 ? 1 : 0.4 + 0.6 * (0.45 - u) / 0.15); else h.y = 0;
+      if (!h.pw.hit && u >= 0.45) { h.pw.hit = true; h.y = 0; powerImpact(); }
+      pose = HERO_POSES.airatk(clamp(u * 0.95, 0, 1)); snapTilt = true; rate = 30;
+      if (u >= 1) { h.y = 0; h.set('move'); h.J.tilt.rotation.x = 0; }
       break;
     }
     case 'revive': { // hold ACT next to the downed partner

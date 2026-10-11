@@ -472,8 +472,8 @@ for (const b of PLOTS) for (let x = Math.floor(b.x0 / 4); x * 4 < b.x1; x++) for
 function onPlot(x, z) { const a = PG.get(pgk(x, z)); if (a) for (const b of a) if (inR(b, x, z)) return b; return null; }
 function isRoad(x, z) { return !inR(BASIN, x, z) && !isProm(x, z) && !onPlot(x, z); }
 // Federal Hill: a real walkable mound (the ground height follows it)
-const HILL = { x: -3, z: 59, rx: 27, rz: 12.5, h: 11 };
-function hillH(x, z) { const d = Math.hypot((x - HILL.x) / HILL.rx, (z - HILL.z) / HILL.rz); if (d >= 1) return 0; const t = clamp((1 - d) / 0.55, 0, 1); return HILL.h * t * t * (3 - 2 * t); }
+const HILL = { x: -3, z: 59, rx: 28, rz: 13, h: 9 };
+function hillH(x, z) { const d = Math.hypot((x - HILL.x) / HILL.rx, (z - HILL.z) / HILL.rz); if (d >= 1) return 0; const t = clamp((1 - d) / 0.8, 0, 1); return HILL.h * t * t * (3 - 2 * t); }
 function groundY(x, z) { if (isWater(x, z)) return CURB; if (isRoad(x, z)) return 0; return CURB + hillH(x, z); }
 
 // ---------------- ground: streets, promenade, plots, piers, water, seawalls ----------------
@@ -761,7 +761,7 @@ landmark('harborplace', 'HARBORPLACE', -52, -24, 16, { name: 'Dragon Boat Duches
   }
   BLD.push({ x0, x1, z0, z1, h: CURB + 1.75 });
 })();
-landmark('constellation', 'USS CONSTELLATION', -31, -18, 12, { name: 'Captain Cobblestone', x: -31, z: -18, y: CURB + 1.75 });
+landmark('constellation', 'USS CONSTELLATION', -31, -18, 17, { name: 'Captain Cobblestone', x: -31, z: -18, y: CURB + 1.75 });
 // World Trade Center: a tall pentagonal tower on its own pier
 (function wtc() {
   const cx = -12, cz = -22.5, r = 6.6, h = 62;
@@ -771,30 +771,30 @@ landmark('constellation', 'USS CONSTELLATION', -31, -18, 12, { name: 'Captain Co
   COLL.push({ x: cx, z: cz, r: r - 0.4 }); BLD.push({ x0: cx - r, x1: cx + r, z0: cz - r, z1: cz + r, h: CURB + h });
   signOn(cx - 4.5, cz - r, cx + 4.5, cz + r * 0.8, 's', 4.2, 8, LSIGN.trade);
 })();
-landmark('wtc', 'WORLD TRADE CENTER', -12, -22, 13, { name: 'The Penthouse Pigeon', x: -12, z: -22.5, y: CURB + 63 });
+landmark('wtc', 'WORLD TRADE CENTER', -12, -22, 14, { name: 'The Penthouse Pigeon', x: -12, z: -22.5, y: CURB + 63 });
 // National Aquarium: a concrete hall with glass pyramids, on pier 3
 mass(9, -27, 29, -11, 13, { col: '#7f93a0', top: '#5a6670' });
 mass(12, -11, 26, -7, 5.5, { tr: T.glass, fh: 5.5, top: '#3a4a5a' });
 for (const [x, z, s] of [[14.5, -20, 7], [23, -17, 9.5], [19, -24, 5]]) { const g = new THREE.CylinderGeometry(0.01, s * 0.72, s * 0.75, 4, 1); g.rotateY(Math.PI / 4); place(g, x, CURB + 13 + s * 0.37, z); solid(g, '#6fc6dc'); }
 signOn(9, -27, 29, -11, 's', 6, 11, LSIGN.aqua);
-landmark('aquarium', 'NATIONAL AQUARIUM', 19, -17, 15, { name: 'Big Jimmy', x: 19, z: -5, water: true });
+landmark('aquarium', 'NATIONAL AQUARIUM', 19, -17, 19, { name: 'Big Jimmy', x: 19, z: -5, water: true });
 // Power Plant: a brick power station with four smokestacks, on pier 4
 mass(47, -27, 65, -9, 15, { tr: T.fac[0][0], top: '#4a3a30' });
 for (const x of [50, 54, 58, 62]) { const g = new THREE.CylinderGeometry(1.0, 1.35, 20, 10); place(g, x, CURB + 15 + 10, -18); solid(g, '#8a4a3a'); const r = new THREE.CylinderGeometry(1.1, 1.1, 0.6, 10); place(r, x, CURB + 34.6, -18); solid(r, '#2a2622'); }
 signOn(47, -27, 65, -9, 's', 6.2, 12, LSIGN.power);
-landmark('powerplant', 'POWER PLANT', 56, -17, 15, { name: 'Voltage Vic', x: 56, z: -5.5 });
+landmark('powerplant', 'POWER PLANT', 56, -17, 19, { name: 'Voltage Vic', x: 56, z: -5.5 });
 // Four Seasons (Harbor East): a podium and a glass hotel tower
 mass(71, -69, 93, -47, 9, { tr: T.store[1], fh: 9, bay: 4, top: '#4a4640' });
 mass(75, -66, 89, -52, 52, { tr: T.glass, y0: CURB + 9, fh: 3.6, top: '#2a3644', coll: false });
 signOn(71, -69, 93, -47, 's', 9.6, 12, LSIGN.hotel);
-landmark('fourseasons', 'FOUR SEASONS', 82, -58, 16, { name: 'Chef Crabcake', x: 82, z: -42 });
+landmark('fourseasons', 'FOUR SEASONS', 82, -58, 20, { name: 'Chef Crabcake', x: 82, z: -42 });
 // Pendry: the long recreation-pier building with a clock tower and a rooftop pool deck
 mass(112, -29, 140, -21.5, 9, { tr: T.fac[5][1], top: '#6a6056' });
 mass(124, -28, 128, -23, 10, { col: '#c4b090', y0: CURB + 9, coll: false });
 { const g = new THREE.CylinderGeometry(0.01, 2.9, 3, 4); g.rotateY(Math.PI / 4); place(g, 126, CURB + 19 + 1.5, -25.5); solid(g, '#4f6a5a'); }
 CB.box(130, CURB + 9, -27.5, 138, CURB + 9.05, -23, '#4ac8e0', T.white); // rooftop pool
 signOn(112, -29, 140, -21.5, 's', 4.6, 10, LSIGN.pier);
-landmark('pendry', 'PENDRY', 126, -25, 15, { name: 'The Pool Shark', x: 126, z: -19.5 });
+landmark('pendry', 'PENDRY', 126, -25, 17, { name: 'The Pool Shark', x: 126, z: -19.5 });
 // Fells Point: low brick rowhouses (generic blocks) round a market hall on cobbles
 mass(141, -64, 159, -52, 6, { tr: T.fac[2][0], top: '#5a4a3a' });
 { const g = new THREE.CylinderGeometry(0.01, 1, 1, 4, 1); g.rotateY(Math.PI / 4); g.scale(14, 2.2, 9.5); place(g, 150, CURB + 6 + 1.1, -58); solid(g, '#5a3a2a'); }
@@ -1449,6 +1449,14 @@ function drawHp(e) {
   c.fillStyle = '#ff3d6e'; c.fillRect(4, 4, 120 * Math.max(0, e.hp) / e.maxHp, 12); c.fillStyle = 'rgba(255,255,255,.45)'; c.fillRect(4, 4, 120 * Math.max(0, e.hp) / e.maxHp, 4); e.hpT.needsUpdate = true;
 }
 const ALL = [hero, partner, ...enemies];
+// distance LOD for the thugs (phones: every rig part is a draw call, x2 with its ink hull, x3 with its shadow):
+// beyond 24 m a thug drops its ink outlines and stops casting shadows
+for (const f of ALL) { f.J.ol = []; f.J.sh = []; f.root.traverse((o) => { if (o.isMesh && o.material && o.material.isShaderMaterial && o.material.side === THREE.BackSide) f.J.ol.push(o); else if (o.isMesh && o.castShadow) f.J.sh.push(o); }); f.lodNear = true; }
+function rigLod() {
+  for (const e of enemies) { const near = (e.pos.x - hero.pos.x) ** 2 + (e.pos.z - hero.pos.z) ** 2 < 24 * 24;
+    if (near === e.lodNear && e.lodHd === QUAL.hd) continue; e.lodNear = near; e.lodHd = QUAL.hd;
+    for (const o of e.J.ol) o.visible = near && QUAL.hd; for (const o of e.J.sh) o.castShadow = near; }
+}
 
 // ---------------- world collision ----------------
 function collide(f) {
@@ -1499,9 +1507,8 @@ if (TOUCH) document.body.classList.add('touch');
 canvas.addEventListener('pointerdown', (e) => {
   audioInit(); if (AC && AC.state === 'suspended') AC.resume().catch(() => {});
   canvas.setPointerCapture?.(e.pointerId); if (e.pointerType === 'touch') DEV = 'touch'; if (CINE.intro && CINE.intro.t > 0.4) CINE.intro.skip = true;
-  if (e.pointerType === 'touch' && e.clientX < VW() * 0.45 && e.clientY > VH() * 0.3 && TOUCHS.stick === null) {
-    TOUCHS.stick = e.pointerId; TOUCHS.sx = e.clientX; TOUCHS.sy = e.clientY; TOUCHS.x = TOUCHS.y = 0; const st = $('stick'); st.style.left = e.clientX + 'px'; st.style.top = e.clientY + 'px'; st.classList.add('act'); return;
-  }
+  // (no floating virtual pad: on touch screens the stick + buttons live on the arcade panel below the game; a drag on the game orbits the camera)
+
   TOUCHS.drag.set(e.pointerId, { x: e.clientX, y: e.clientY });
 });
 const ptrMove = (e) => {
@@ -1516,12 +1523,7 @@ const endPtr = (e) => {
   TOUCHS.drag.delete(e.pointerId);
 };
 canvas.addEventListener('pointerup', endPtr); canvas.addEventListener('pointercancel', endPtr);
-// phones in portrait: the stick lives on the control deck under the game view (touch anywhere on its left side)
-{ const deck = $('deck'); if (deck) {
-  deck.addEventListener('pointerdown', (e) => { audioInit(); if (AC && AC.state === 'suspended') AC.resume().catch(() => {}); DEV = 'touch'; if (CINE.intro && CINE.intro.t > 0.4) CINE.intro.skip = true;
-    if (TOUCHS.stick !== null || e.clientX > innerWidth * 0.55) return; deck.setPointerCapture?.(e.pointerId);
-    TOUCHS.stick = e.pointerId; TOUCHS.sx = e.clientX; TOUCHS.sy = e.clientY; TOUCHS.x = TOUCHS.y = 0; const st = $('stick'); st.style.left = e.clientX + 'px'; st.style.top = e.clientY + 'px'; st.classList.add('act'); });
-  deck.addEventListener('pointermove', ptrMove); deck.addEventListener('pointerup', endPtr); deck.addEventListener('pointercancel', endPtr); } }
+
 canvas.addEventListener('contextmenu', (e) => e.preventDefault());
 for (const [id, k] of [['bA', 'a'], ['bB', 'b'], ['bC', 'c'], ['cL', 'l'], ['cR', 'r']]) {
   const el = $(id);
@@ -1650,7 +1652,7 @@ function hitEnemy(e, dmg, heavy, fromYaw, by = hero) {
 }
 function hurtHero(dmg, fromX, fromZ, heavy) { hurtTurtle(hero, dmg, fromX, fromZ, heavy); }
 // either turtle takes a hit; at 0 HP it goes down for good ('ko') until the other one revives it
-const NOHURT = new Set(['down', 'getup', 'ko', 'tp', 'hop', 'pclimb', 'boost', 'tag', 'intro']);
+const NOHURT = new Set(['down', 'getup', 'ko', 'tp', 'hop', 'pclimb', 'boost', 'tag', 'intro', 'power']);
 function hurtTurtle(f, dmg, fromX, fromZ, heavy) {
   if (f.inv > 0 || NOHURT.has(f.state) || CINE_ST.has(f.state) || CINE.intro || f.hp <= 0) return;
   if (f.isPartner && f.state === 'revive') return; // covering the revive
@@ -1711,6 +1713,7 @@ function updateHero(dt) {
     case 'atk': {
       const A = ATK[h.atkN], u = h.st / A.dur; h.speed = 0;
       if (pressed('e', 'f') && qteInRange()) { startFinisher(qteTarget()); pose = HERO_POSES.idle(0); break; }
+      if (pressed('e', 'f') && POWER.cd <= 0 && inFight()) { startPower(); pose = HERO_POSES.idle(0); break; } // ACT cancels a cane combo into the POWER move
       // lunge: close the gap to the soft-locked target, else step forward
       const T = h.atkT; let lx = Math.sin(h.yaw), lz = Math.cos(h.yaw), lsp = u < 0.45 ? 2.2 : 0;
       if (T && T.alive) { const dx = T.pos.x - h.pos.x, dz = T.pos.z - h.pos.z, d = Math.hypot(dx, dz); h.yaw += angTo(h.yaw, Math.atan2(dx, dz)) * (1 - Math.exp(-dt * 20)); lsp = u < 0.45 ? clamp((d - 1.3) * 6, 0, 9) : 0; }
@@ -1739,6 +1742,14 @@ function updateHero(dt) {
         if (h.state === 'airatk') { spawnSlash(_v.set(h.pos.x, h.pos.y + 0.4, h.pos.z), h.yaw, 'spin', 0); resolveSwing({ range: 2.6, cone: Math.PI, dmg: 3, heavy: true }, true); S.shake = Math.max(S.shake, 0.6); }
         h.vy = 0; h.set('move'); h.J.tilt.rotation.x = 0;
       }
+      break;
+    }
+    case 'power': { // the ACT POWER move (06b): hop + flip, cane slam into the ground at 45%, recover
+      h.vel.set(0, 0); const u = h.st / 0.9; h.speed = 0;
+      if (u < 0.45) h.y = Math.sin(u / 0.45 * Math.PI) * 1.5 * (u < 0.3 ? 1 : 0.4 + 0.6 * (0.45 - u) / 0.15); else h.y = 0;
+      if (!h.pw.hit && u >= 0.45) { h.pw.hit = true; h.y = 0; powerImpact(); }
+      pose = HERO_POSES.airatk(clamp(u * 0.95, 0, 1)); snapTilt = true; rate = 30;
+      if (u >= 1) { h.y = 0; h.set('move'); h.J.tilt.rotation.x = 0; }
       break;
     }
     case 'revive': { // hold ACT next to the downed partner
@@ -1960,11 +1971,45 @@ function qteTarget() { // nearest dizzy thug within reach
   return best;
 }
 function qteInRange() { return !!qteTarget(); }
-function tryAction() {
-  if (CINE.intro) return false;
-  const qt = qteTarget(); if (qt) { startFinisher(qt); return true; }
-  const A = actionInRange(); if (A) { A.go(A); return true; }
-  return false;
+// ---- ACT: ONE context-sensitive button (Brad 2026-10-10). Priority:
+//   timed QTE finisher > (1) manhole: SEWER > (2) ladder / climbable wall: CLIMB or LEAP > (3) skateboard / car / boat: RIDE / DRIVE / BOARD (ACT again: off/out)
+//   > the street actions (door KICK OPEN, car VAULT) > (4) in a fight: POWER move (cooldown).
+// Phase 1 ships the POWER move + this context system. The hook lists below are empty until their phases fill them:
+const MANHOLES = []; // phase 4: { x, z, r, go(m) } -> drop into the sewer
+const CLIMBS = [];   // phase 4: { x, z, r, label: 'CLIMB' | 'LEAP', go(c) } -> ladders, fire escapes, climbable walls, rooftop leaps
+const VEHICLES = []; // phase 2+: { kind: 'boat' | 'car' | 'skate', label: 'BOARD' | 'DRIVE' | 'RIDE', x, z, r, enter(v), exit(v) }
+const RIDE = { v: null }; // the vehicle Harold is in / on right now
+const POWER = { cd: 0, CD: 7, uses: 0, joins: 0, hits: 0 };
+function nearestIn(list, r0 = 1.6) { const h = hero; let best = null, bd = 1e9; for (const o of list) { const d = Math.hypot(o.x - h.pos.x, o.z - h.pos.z); if (d < (o.r || r0) && d < bd) { bd = d; best = o; } } return best; }
+function inFight() { for (const e of enemies) { if (!e.alive || e.state === 'dying' || e.state === 'idle' || e.state === 'return' || e.state === 'dead') continue; if (Math.hypot(e.pos.x - hero.pos.x, e.pos.z - hero.pos.z) < 7.5) return true; } return false; }
+function actContext() {
+  const h = hero; if (CINE.intro || PART.over) return null;
+  const qt = qteTarget(); if (qt) return { kind: 'fin', label: 'FINISH', go: () => startFinisher(qt) };
+  if (RIDE.v) { const v = RIDE.v; return { kind: v.kind, label: 'GET OFF', go: () => { RIDE.v = null; v.exit(v); } }; }
+  if (h.state !== 'move' || h.y > 0.05) return null;
+  let m = nearestIn(MANHOLES, 1.4); if (m) return { kind: 'sewer', label: 'SEWER', go: () => m.go(m) };
+  m = nearestIn(CLIMBS); if (m) return { kind: 'climb', label: m.label || 'CLIMB', go: () => m.go(m) };
+  m = nearestIn(VEHICLES, 2.2); if (m) return { kind: m.kind, label: m.label, go: () => { RIDE.v = m; m.enter(m); } };
+  const A = actionInRange(); if (A) return { kind: A.kind, label: A.label, go: () => A.go(A) };
+  if (inFight()) return { kind: 'power', label: 'POWER', ready: POWER.cd <= 0, go: () => startPower() };
+  return null;
+}
+function tryAction() { const c = actContext(); if (!c || c.ready === false) return false; c.go(); return true; }
+// ---- the POWER move: Harold's big cane slam. Hops, flips and drives the cane into the pavement: a shockwave knocks back / downs every thug
+// within ~5 m, a long hit-pause + heavy shake, and Mavis (if she is close and free) spins her handbag into the crowd at the same moment.
+const POWER_W = canvasTex(512, 192, (c) => { comicText(c, 'CANE QUAKE!', 256, 100, 80, '#7dffc0', null, { sx: 1 }); });
+function startPower() { const h = hero; if (POWER.cd > 0) return; h.set('power'); h.pw = { hit: false }; h.vel.set(0, 0); POWER.cd = POWER.CD; POWER.uses++; sfx('jump');
+  const t = pickTarget(Math.sin(h.yaw), Math.cos(h.yaw), 6); if (t) h.yaw = Math.atan2(t.pos.x - h.pos.x, t.pos.z - h.pos.z); }
+function powerImpact() {
+  const h = hero; S.hitstop = 0.24; S.shake = Math.max(S.shake, 1.5); sfx('heavy'); sfx('ko'); cut();
+  spawnSlash(_v.set(h.pos.x, h.pos.y + 0.25, h.pos.z), h.yaw, 'spin', 0); spawnSlash(_v.set(h.pos.x, h.pos.y + 0.6, h.pos.z), h.yaw + 1.5, 'spin', 0);
+  for (let k = 0; k < 12; k++) { const a = k / 12 * TAU; spawnSprite(FXT.puff, _v.set(h.pos.x + Math.sin(a) * 1.6, h.pos.y + 0.2, h.pos.z + Math.cos(a) * 1.6), rnd(0.9, 1.3), 0.55, { kind: 'grow', depth: true, vel: new THREE.Vector3(Math.sin(a) * 6, 1.2, Math.cos(a) * 6) }); }
+  spawnSprite(POWER_W, _v.set(h.pos.x, h.pos.y + 2.6, h.pos.z), 1.4, 0.95, { kind: 'word', aspect: 512 / 192, rot: -0.08 });
+  for (const e of enemies) { if (!e.alive || e.state === 'dying' || e.fin) continue; const dx = e.pos.x - h.pos.x, dz = e.pos.z - h.pos.z, d = Math.hypot(dx, dz);
+    if (d < 5.2 && Math.abs(e.y - h.y) < 2) { if (hitEnemy(e, d < 3 ? 4 : 2, true, Math.atan2(dx, dz))) POWER.hits++; } }
+  const P = partner; // Mavis joins in: her spinning handbag finisher, aimed at the nearest thug
+  if (P.state === 'move' && P.hp > 0 && Math.hypot(P.pos.x - h.pos.x, P.pos.z - h.pos.z) < 8) { let T = null, bd = 6; for (const e of enemies) { if (!e.alive || e.state === 'dying' || e.fin) continue; const d = Math.hypot(e.pos.x - P.pos.x, e.pos.z - P.pos.z); if (d < bd) { bd = d; T = e; } }
+    if (T) { POWER.joins++; P.set('atk'); P.atkN = 3; P.atkT = T; P.hitDone = false; P.hit2 = false; PART.combo = 0; PART.comboLen = 1; P.yaw = Math.atan2(T.pos.x - P.pos.x, T.pos.z - P.pos.z); spawnSprite(TAG_W, _v.set(P.pos.x, P.pos.y + 2.3, P.pos.z), 1.0, 0.8, { kind: 'word', aspect: 512 / 192, rot: 0.1 }); } }
 }
 function qteOpen(e) { QTE = { e, t0: S.time }; CINE.stats.qteOpened++; }
 
@@ -2129,6 +2174,10 @@ function introCamera(rdt) {
 // ---- per rendered frame: letterbox, cut flash, prompts, door, pizza, QTE bookkeeping ----
 const PRM = { el: $('prompt'), key: $('pkey'), lab: $('plab'), ico: $('pico'), ring: $('pring'), cur: null };
 const ICONS = {
+  power: '<path d="M13 2L4 14h7l-1 8 9-12h-7z"/>',
+  sewer: '<circle cx="12" cy="12" r="8"/><path d="M6 10h12M6 14h12M10 4v16M14 4v16"/>',
+  boat: '<path d="M3 15h18l-3 5H6zM12 3v10M12 4l6 7h-6"/>', car: '<path d="M4 16v-4l2-5h12l2 5v4zM4 16v2M20 16v2M7 13h1M16 13h1"/>', skate: '<path d="M3 13h18M6 13l1 4M17 13l-1 4M5 17a1 1 0 1 0 2 0M15 17a1 1 0 1 0 2 0"/>',
+  act: '<circle cx="12" cy="12" r="3"/>', none: '<circle cx="12" cy="12" r="3"/>',
   climb: '<path d="M7 2v20M17 2v20M7 6h10M7 11h10M7 16h10"/>',
   drop: '<path d="M12 3v14M6 11l6 6 6-6M4 21h16"/>',
   door: '<path d="M5 21V3h11v18M16 5l4 2v14M12 12h1"/>',
@@ -2165,6 +2214,7 @@ function cineUpdate(rdt) {
     const e = qe, near = Math.hypot(e.pos.x - h.pos.x, e.pos.z - h.pos.z) < 4.6; P = { kind: 'fin', label: near ? 'FINISH!' : 'GET CLOSE', x: e.pos.x, y: e.pos.y + 2.75 * e.scale, z: e.pos.z, qte: clamp(1 - e.st / DIZZY_T, 0, 1), near };
   } else if (!CINE.fin && (P = revivePrompt())) { /* REVIVE: over whichever turtle is down */ }
   else if (!CINE.fin) { const A = actionInRange(); if (A) P = { kind: A.kind, label: A.label, x: A.x, y: (h.roof ? ROOF.y : 0) + A.y, z: A.z, near: true }; }
+  if (!P && !CINE.fin && DEV !== 'touch' && h.state === 'move' && POWER.cd <= 0 && inFight()) P = { kind: 'power', label: 'POWER', x: h.pos.x, y: h.pos.y + 2.5, z: h.pos.z, near: true }; // (touch: the panel's ACT button shows it)
   const el = PRM.el;
   if (P) {
     _v.set(P.x, P.y, P.z).project(camera);
@@ -2435,8 +2485,75 @@ function resetTurtles() {
   CAM.yaw = HERO_START.camYaw; snapCam(); cut(); banner('TRY AGAIN!', 1.4);
 }
 
+// ---------------- arcade control panel (touch screens): the Shell Shock cabinet panel from Brad's demos shell, docked under the game.
+// Ball-top stick (analog, relative: the touch-down point is the centre, the thumb past the radius drags it along) + round arcade buttons:
+// SWING (red), JUMP (yellow), the two white buttons orbit the camera, and ACT, the big glowing context button on the SPECIAL spot.
+// Stick and buttons are ~18% larger than the demos shell (hit areas to match). ----------------
+const APANEL = (function () {
+  const panel = $('apanel'), deck = $('adeck'); if (!panel || !deck) return null;
+  const PW = 470, PH = 135, K = 1.18, TOP = 22;
+  const BTN = { a: { x: 266, y: 73, el: $('acap-a') }, b: { x: 343, y: 69, el: $('acap-b') }, c: { x: 419, y: 70, el: $('aact'), big: true }, l: { x: 163, y: 33, el: $('acap-l'), small: true }, r: { x: 243, y: 33, el: $('acap-r'), small: true } };
+  let S = 1;
+  function layout() {
+    if (!document.body.classList.contains('touch')) { document.documentElement.style.setProperty('--panel', '0px'); return; }
+    S = Math.min(innerWidth / PW, (innerHeight * 0.3) / (PH + TOP), 2.0);
+    deck.style.setProperty('--S', S + 'px');
+    document.documentElement.style.setProperty('--panel', Math.round((PH + TOP) * S) + 'px');
+  }
+  layout(); addEventListener('resize', layout); addEventListener('orientationchange', () => setTimeout(() => { layout(); dispatchEvent(new Event('resize')); }, 250));
+  const toDeck = (e) => { const r = deck.getBoundingClientRect(); return { x: (e.clientX - r.left) / S, y: (e.clientY - r.top) / S }; };
+  function btnAt(p, sliding) {
+    let best = null, bd = 1e9;
+    for (const n of ['l', 'r']) { const b = BTN[n], d = Math.hypot(p.x - b.x, (p.y - b.y) * 1.3); if (d < 30 * K && d < bd) { bd = d; best = n; } }
+    if (best) return best;
+    if (p.x < 205 && !sliding) return null; // left side = joystick
+    for (const n of ['a', 'b', 'c']) { const b = BTN[n], d = Math.hypot(p.x - b.x, (p.y - b.y) * 1.2) - (b.big ? 8 : 0); if (d < bd) { bd = d; best = n; } }
+    return best;
+  }
+  const JR = 44 * K; // CSS px radius
+  const JOY = { id: null, cx: 0, cy: 0 };
+  function joyMove(x, y) {
+    let dx = x - JOY.cx, dy = y - JOY.cy, d = Math.hypot(dx, dy);
+    if (d > JR) { const over = (d - JR) / d; JOY.cx += dx * over; JOY.cy += dy * over; dx *= 1 - over; dy *= 1 - over; d = JR; }
+    const k = d > JR * 0.18 ? 1 : 0; TOUCHS.x = (dx / JR) * k; TOUCHS.y = (dy / JR) * k;
+    $('astick').style.transform = `rotate(${(TOUCHS.x * 22).toFixed(1)}deg) translateY(${(TOUCHS.y * 2).toFixed(1)}%) scaleY(${(1 - 0.12 * TOUCHS.y).toFixed(3)})`;
+    const ring = $('aring'), r = deck.getBoundingClientRect(); ring.style.left = (JOY.cx - r.left) + 'px'; ring.style.top = (JOY.cy - r.top) + 'px'; ring.style.width = ring.style.height = JR * 2 + 'px';
+  }
+  const PTR = new Map();
+  const anyOn = (n) => { for (const v of PTR.values()) if (v === n) return true; return false; };
+  function down(n) { BTN[n].el.classList.add('on'); TOUCHS.btn[n] = true; DEV = 'touch'; if (n === 'a') PRESS.add('j'); if (n === 'b') PRESS.add('k'); if (n === 'c') PRESS.add('e'); try { navigator.vibrate && navigator.vibrate(n === 'c' ? 14 : 8); } catch (_) {} }
+  function up(n) { BTN[n].el.classList.remove('on'); TOUCHS.btn[n] = false; }
+  function setBtn(id, n) { const prev = PTR.get(id); if (prev === n) return; PTR.set(id, n); if (prev && !anyOn(prev)) up(prev); if (n) down(n); }
+  panel.addEventListener('pointerdown', (e) => {
+    e.preventDefault(); audioInit(); if (AC && AC.state === 'suspended') AC.resume().catch(() => {}); if (CINE.intro && CINE.intro.t > 0.4) CINE.intro.skip = true;
+    try { panel.setPointerCapture(e.pointerId); } catch (_) {}
+    const b = btnAt(toDeck(e), false); if (b) { setBtn(e.pointerId, b); return; }
+    if (JOY.id === null) { JOY.id = e.pointerId; JOY.cx = e.clientX; JOY.cy = e.clientY; TOUCHS.stick = 'panel'; $('aring').classList.add('on'); joyMove(e.clientX, e.clientY); DEV = 'touch'; }
+  });
+  panel.addEventListener('pointermove', (e) => {
+    if (e.pointerId === JOY.id) { e.preventDefault(); joyMove(e.clientX, e.clientY); return; }
+    if (PTR.has(e.pointerId)) { const b = btnAt(toDeck(e), true); if (b) setBtn(e.pointerId, b); }
+  });
+  const release = (e) => {
+    if (e.pointerId === JOY.id) { JOY.id = null; TOUCHS.stick = null; TOUCHS.x = TOUCHS.y = 0; $('astick').style.transform = ''; $('aring').classList.remove('on'); }
+    if (PTR.has(e.pointerId)) { const prev = PTR.get(e.pointerId); PTR.delete(e.pointerId); if (prev && !anyOn(prev)) up(prev); }
+  };
+  panel.addEventListener('pointerup', release); panel.addEventListener('pointercancel', release);
+  // ACT label / icon / glow / cooldown ring (called from the HUD tick)
+  let cur = '';
+  function setAct(ctx, cdFrac) {
+    const lab = ctx ? ctx.label : 'ACT', kind = ctx ? ctx.kind : 'none', key = lab + kind + (ctx && ctx.ready === false ? 'c' : '');
+    const el = BTN.c.el; el.style.setProperty('--cd', cdFrac.toFixed(3));
+    if (key === cur) return; cur = key;
+    $('albl-c').textContent = lab; $('aico').innerHTML = ICONS[kind] || ICONS.act;
+    el.classList.toggle('hot', !!ctx && ctx.ready !== false); el.classList.toggle('cool', !!ctx && ctx.ready === false);
+  }
+  return { layout, setAct, BTN, get S() { return S; } };
+})();
+
 // ---------------- autopilot for tests (?bot=1): walk up the street and back, fight every thug met, orbit the camera mid-fight ----------------
 const CORNER_PTS = [['HARBORPLACE', -40, -33], ['CONSTELLATION', -31, -33], ['WTC', -12, -33], ['AQUARIUM', 19, -33], ['POWERPLANT', 56, -33], ['PRATT', 70, -38.5], ['FOURSEASONS', 82, -41.5]]; // east along the promenade past 6 landmarks
+function near0() { let n = 0; for (const e of enemies) if (e.alive && e.state !== 'dying' && e.state !== 'idle' && e.state !== 'return' && Math.hypot(e.pos.x - hero.pos.x, e.pos.z - hero.pos.z) < 4) n++; return n; }
 const BOTR = { i: 0, log: [], corners: [], t: 0, orbitT: 0, atkT: 0, done: false, fightT: 0, fights: 0, yaws: [] };
 function botThink(dt) {
   BOTR.t += dt; const b = (IN.bot = IN.bot || { mx: 0, my: 0, look: 0 });
@@ -2447,6 +2564,7 @@ function botThink(dt) {
     b.actHold = false; const f = camFwd(CAM.yaw), r = [-f[1], f[0]], dx = partner.pos.x - hero.pos.x, dz = partner.pos.z - hero.pos.z; b.mx = (dx * r[0] + dz * r[1]) / d; b.my = (dx * f[0] + dz * f[1]) / d; BOTR.revRuns = (BOTR.revRuns || 0) + 1; return; }
   b.actHold = false;
   // QTE: a dizzy thug in reach -> press the action button (after a human-ish reaction delay) instead of swinging
+  if (near0() >= 2 && POWER.cd <= 0 && hero.state === 'move' && !qteInRange()) { b.act = true; BOTR.power = (BOTR.power || 0) + 1; }
   if (QTE && qteInRange()) { b.mx = b.my = 0; BOTR.qteT = (BOTR.qteT || 0) + dt; if (BOTR.qteT > 0.2) { b.act = true; BOTR.qteT = 0; BOTR.qtePressed = (BOTR.qtePressed || 0) + 1; } return; } else BOTR.qteT = 0;
   const near = enemies.filter((e) => e.alive && e.state !== 'dying' && e.state !== 'return' && e.state !== 'idle' && Math.hypot(e.pos.x - hero.pos.x, e.pos.z - hero.pos.z) < 9);
   let tx, tz, stopAt = 0.8;
@@ -2564,9 +2682,10 @@ const MAP = (function () {
   return { c, g, bg, X, Z };
 })();
 function cityHud(rdt) {
-  CITY.nearT -= rdt; if (CITY.nearT <= 0) { CITY.nearT = 0.4; NIGHTFX.near(hero.pos.x, hero.pos.z);
+  CITY.nearT -= rdt; if (CITY.nearT <= 0) { CITY.nearT = 0.25; NIGHTFX.near(hero.pos.x, hero.pos.z); rigLod();
     let best = null, bd = 1e9; for (const L of LANDMARKS) { const d = Math.hypot(L.x - hero.pos.x, L.z - hero.pos.z); if (d < L.r && d < bd) { bd = d; best = L; } }
     if (best !== CITY.lmk) { CITY.lmk = best; if (best) { $('lmk').textContent = best.name; $('lmk').classList.add('on'); CITY.lmkT = 3.2; if (!CITY.visited.has(best.id)) { CITY.visited.add(best.id); CITY.log.push(best.id + '@' + S.time.toFixed(1)); } } } }
+  if (APANEL) { const c = actContext(); APANEL.setAct(c, c && c.kind === 'power' ? 1 - POWER.cd / POWER.CD : 1); }
   if (CITY.lmkT > 0) { CITY.lmkT -= rdt; if (CITY.lmkT <= 0) $('lmk').classList.remove('on'); }
   if (MAP) { CITY.mapT -= rdt; if (CITY.mapT <= 0) { CITY.mapT = 0.1; const { g, bg, X, Z } = MAP; g.drawImage(bg, 0, 0);
     g.fillStyle = '#ff3d6e'; for (const e of enemies) if (e.alive && e.state !== 'dying' && Math.hypot(e.pos.x - hero.pos.x, e.pos.z - hero.pos.z) < 60) g.fillRect(X(e.pos.x) - 2, Z(e.pos.z) - 2, 4, 4);
@@ -2594,11 +2713,12 @@ function frame(now) {
       let dt = rdt; if (S.hitstop > 0) { S.hitstop -= rdt; dt = rdt * 0.06; }
       S.time += dt;
       countAttackers();
+      POWER.cd = Math.max(0, POWER.cd - dt);
       updateHero(dt);
       updatePartner(dt);
       for (const e of enemies) { // thugs far from the heroes sleep (hidden, not simulated) to keep draw calls + CPU down on phones
         const d2 = (e.pos.x - hero.pos.x) ** 2 + (e.pos.z - hero.pos.z) ** 2;
-        if (d2 > 75 * 75 && (e.state === 'idle' || e.state === 'return')) { e.root.visible = false; e.hpS.visible = false; continue; }
+        if (d2 > 48 * 48 && (e.state === 'idle' || e.state === 'return')) { e.root.visible = false; e.hpS.visible = false; continue; }
         if (!e.root.visible && e.state !== 'dead') e.root.visible = true;
         updateEnemy(e, dt); }
       separate();
@@ -2627,4 +2747,4 @@ function frame(now) {
   } catch (err) { __celErr.n++; __celErr.last = String(err && err.stack || err); if (__celErr.n < 4) console.error(err); }
 }
 requestAnimationFrame(frame);
-window.__cel = { S, hero, partner, PART, BOOST_P, hurtTurtle, reviveTurtle, partnerSlot, get KEYS() { return KEYS; }, enemies, CAM, BOTR, FPS, IN, renderer, CINE, ACTIONS, DOOR, PIZZA, LADDER, ROOF, get QTE() { return QTE; }, get lockT() { return lockT; }, press: (k) => PRESS.add(k), tryAction, get frames() { return frames; }, atlasRows: _ay + _arow, THREE, camera, scene, CYC, LOW, NIGHTFX, draw, QUAL, setHD, LANDMARKS, CITY, isWater, groundY, WB, COLL, BLD, PIERS, POSTS, CARS, WATER };
+window.__cel = { S, hero, partner, PART, BOOST_P, hurtTurtle, reviveTurtle, partnerSlot, get KEYS() { return KEYS; }, enemies, CAM, BOTR, FPS, IN, renderer, CINE, ACTIONS, DOOR, PIZZA, LADDER, ROOF, get QTE() { return QTE; }, get lockT() { return lockT; }, press: (k) => PRESS.add(k), tryAction, get frames() { return frames; }, atlasRows: _ay + _arow, THREE, camera, scene, CYC, LOW, NIGHTFX, draw, QUAL, setHD, LANDMARKS, CITY, POWER, actContext, APANEL, MANHOLES, CLIMBS, VEHICLES, RIDE, isWater, groundY, WB, COLL, BLD, PIERS, POSTS, CARS, WATER };

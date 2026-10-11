@@ -50,7 +50,7 @@ landmark('harborplace', 'HARBORPLACE', -52, -24, 16, { name: 'Dragon Boat Duches
   }
   BLD.push({ x0, x1, z0, z1, h: CURB + 1.75 });
 })();
-landmark('constellation', 'USS CONSTELLATION', -31, -18, 12, { name: 'Captain Cobblestone', x: -31, z: -18, y: CURB + 1.75 });
+landmark('constellation', 'USS CONSTELLATION', -31, -18, 17, { name: 'Captain Cobblestone', x: -31, z: -18, y: CURB + 1.75 });
 // World Trade Center: a tall pentagonal tower on its own pier
 (function wtc() {
   const cx = -12, cz = -22.5, r = 6.6, h = 62;
@@ -60,30 +60,30 @@ landmark('constellation', 'USS CONSTELLATION', -31, -18, 12, { name: 'Captain Co
   COLL.push({ x: cx, z: cz, r: r - 0.4 }); BLD.push({ x0: cx - r, x1: cx + r, z0: cz - r, z1: cz + r, h: CURB + h });
   signOn(cx - 4.5, cz - r, cx + 4.5, cz + r * 0.8, 's', 4.2, 8, LSIGN.trade);
 })();
-landmark('wtc', 'WORLD TRADE CENTER', -12, -22, 13, { name: 'The Penthouse Pigeon', x: -12, z: -22.5, y: CURB + 63 });
+landmark('wtc', 'WORLD TRADE CENTER', -12, -22, 14, { name: 'The Penthouse Pigeon', x: -12, z: -22.5, y: CURB + 63 });
 // National Aquarium: a concrete hall with glass pyramids, on pier 3
 mass(9, -27, 29, -11, 13, { col: '#7f93a0', top: '#5a6670' });
 mass(12, -11, 26, -7, 5.5, { tr: T.glass, fh: 5.5, top: '#3a4a5a' });
 for (const [x, z, s] of [[14.5, -20, 7], [23, -17, 9.5], [19, -24, 5]]) { const g = new THREE.CylinderGeometry(0.01, s * 0.72, s * 0.75, 4, 1); g.rotateY(Math.PI / 4); place(g, x, CURB + 13 + s * 0.37, z); solid(g, '#6fc6dc'); }
 signOn(9, -27, 29, -11, 's', 6, 11, LSIGN.aqua);
-landmark('aquarium', 'NATIONAL AQUARIUM', 19, -17, 15, { name: 'Big Jimmy', x: 19, z: -5, water: true });
+landmark('aquarium', 'NATIONAL AQUARIUM', 19, -17, 19, { name: 'Big Jimmy', x: 19, z: -5, water: true });
 // Power Plant: a brick power station with four smokestacks, on pier 4
 mass(47, -27, 65, -9, 15, { tr: T.fac[0][0], top: '#4a3a30' });
 for (const x of [50, 54, 58, 62]) { const g = new THREE.CylinderGeometry(1.0, 1.35, 20, 10); place(g, x, CURB + 15 + 10, -18); solid(g, '#8a4a3a'); const r = new THREE.CylinderGeometry(1.1, 1.1, 0.6, 10); place(r, x, CURB + 34.6, -18); solid(r, '#2a2622'); }
 signOn(47, -27, 65, -9, 's', 6.2, 12, LSIGN.power);
-landmark('powerplant', 'POWER PLANT', 56, -17, 15, { name: 'Voltage Vic', x: 56, z: -5.5 });
+landmark('powerplant', 'POWER PLANT', 56, -17, 19, { name: 'Voltage Vic', x: 56, z: -5.5 });
 // Four Seasons (Harbor East): a podium and a glass hotel tower
 mass(71, -69, 93, -47, 9, { tr: T.store[1], fh: 9, bay: 4, top: '#4a4640' });
 mass(75, -66, 89, -52, 52, { tr: T.glass, y0: CURB + 9, fh: 3.6, top: '#2a3644', coll: false });
 signOn(71, -69, 93, -47, 's', 9.6, 12, LSIGN.hotel);
-landmark('fourseasons', 'FOUR SEASONS', 82, -58, 16, { name: 'Chef Crabcake', x: 82, z: -42 });
+landmark('fourseasons', 'FOUR SEASONS', 82, -58, 20, { name: 'Chef Crabcake', x: 82, z: -42 });
 // Pendry: the long recreation-pier building with a clock tower and a rooftop pool deck
 mass(112, -29, 140, -21.5, 9, { tr: T.fac[5][1], top: '#6a6056' });
 mass(124, -28, 128, -23, 10, { col: '#c4b090', y0: CURB + 9, coll: false });
 { const g = new THREE.CylinderGeometry(0.01, 2.9, 3, 4); g.rotateY(Math.PI / 4); place(g, 126, CURB + 19 + 1.5, -25.5); solid(g, '#4f6a5a'); }
 CB.box(130, CURB + 9, -27.5, 138, CURB + 9.05, -23, '#4ac8e0', T.white); // rooftop pool
 signOn(112, -29, 140, -21.5, 's', 4.6, 10, LSIGN.pier);
-landmark('pendry', 'PENDRY', 126, -25, 15, { name: 'The Pool Shark', x: 126, z: -19.5 });
+landmark('pendry', 'PENDRY', 126, -25, 17, { name: 'The Pool Shark', x: 126, z: -19.5 });
 // Fells Point: low brick rowhouses (generic blocks) round a market hall on cobbles
 mass(141, -64, 159, -52, 6, { tr: T.fac[2][0], top: '#5a4a3a' });
 { const g = new THREE.CylinderGeometry(0.01, 1, 1, 4, 1); g.rotateY(Math.PI / 4); g.scale(14, 2.2, 9.5); place(g, 150, CURB + 6 + 1.1, -58); solid(g, '#5a3a2a'); }

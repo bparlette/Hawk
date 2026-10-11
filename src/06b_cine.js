@@ -75,11 +75,45 @@ function qteTarget() { // nearest dizzy thug within reach
   return best;
 }
 function qteInRange() { return !!qteTarget(); }
-function tryAction() {
-  if (CINE.intro) return false;
-  const qt = qteTarget(); if (qt) { startFinisher(qt); return true; }
-  const A = actionInRange(); if (A) { A.go(A); return true; }
-  return false;
+// ---- ACT: ONE context-sensitive button (Brad 2026-10-10). Priority:
+//   timed QTE finisher > (1) manhole: SEWER > (2) ladder / climbable wall: CLIMB or LEAP > (3) skateboard / car / boat: RIDE / DRIVE / BOARD (ACT again: off/out)
+//   > the street actions (door KICK OPEN, car VAULT) > (4) in a fight: POWER move (cooldown).
+// Phase 1 ships the POWER move + this context system. The hook lists below are empty until their phases fill them:
+const MANHOLES = []; // phase 4: { x, z, r, go(m) } -> drop into the sewer
+const CLIMBS = [];   // phase 4: { x, z, r, label: 'CLIMB' | 'LEAP', go(c) } -> ladders, fire escapes, climbable walls, rooftop leaps
+const VEHICLES = []; // phase 2+: { kind: 'boat' | 'car' | 'skate', label: 'BOARD' | 'DRIVE' | 'RIDE', x, z, r, enter(v), exit(v) }
+const RIDE = { v: null }; // the vehicle Harold is in / on right now
+const POWER = { cd: 0, CD: 7, uses: 0, joins: 0, hits: 0 };
+function nearestIn(list, r0 = 1.6) { const h = hero; let best = null, bd = 1e9; for (const o of list) { const d = Math.hypot(o.x - h.pos.x, o.z - h.pos.z); if (d < (o.r || r0) && d < bd) { bd = d; best = o; } } return best; }
+function inFight() { for (const e of enemies) { if (!e.alive || e.state === 'dying' || e.state === 'idle' || e.state === 'return' || e.state === 'dead') continue; if (Math.hypot(e.pos.x - hero.pos.x, e.pos.z - hero.pos.z) < 7.5) return true; } return false; }
+function actContext() {
+  const h = hero; if (CINE.intro || PART.over) return null;
+  const qt = qteTarget(); if (qt) return { kind: 'fin', label: 'FINISH', go: () => startFinisher(qt) };
+  if (RIDE.v) { const v = RIDE.v; return { kind: v.kind, label: 'GET OFF', go: () => { RIDE.v = null; v.exit(v); } }; }
+  if (h.state !== 'move' || h.y > 0.05) return null;
+  let m = nearestIn(MANHOLES, 1.4); if (m) return { kind: 'sewer', label: 'SEWER', go: () => m.go(m) };
+  m = nearestIn(CLIMBS); if (m) return { kind: 'climb', label: m.label || 'CLIMB', go: () => m.go(m) };
+  m = nearestIn(VEHICLES, 2.2); if (m) return { kind: m.kind, label: m.label, go: () => { RIDE.v = m; m.enter(m); } };
+  const A = actionInRange(); if (A) return { kind: A.kind, label: A.label, go: () => A.go(A) };
+  if (inFight()) return { kind: 'power', label: 'POWER', ready: POWER.cd <= 0, go: () => startPower() };
+  return null;
+}
+function tryAction() { const c = actContext(); if (!c || c.ready === false) return false; c.go(); return true; }
+// ---- the POWER move: Harold's big cane slam. Hops, flips and drives the cane into the pavement: a shockwave knocks back / downs every thug
+// within ~5 m, a long hit-pause + heavy shake, and Mavis (if she is close and free) spins her handbag into the crowd at the same moment.
+const POWER_W = canvasTex(512, 192, (c) => { comicText(c, 'CANE QUAKE!', 256, 100, 80, '#7dffc0', null, { sx: 1 }); });
+function startPower() { const h = hero; if (POWER.cd > 0) return; h.set('power'); h.pw = { hit: false }; h.vel.set(0, 0); POWER.cd = POWER.CD; POWER.uses++; sfx('jump');
+  const t = pickTarget(Math.sin(h.yaw), Math.cos(h.yaw), 6); if (t) h.yaw = Math.atan2(t.pos.x - h.pos.x, t.pos.z - h.pos.z); }
+function powerImpact() {
+  const h = hero; S.hitstop = 0.24; S.shake = Math.max(S.shake, 1.5); sfx('heavy'); sfx('ko'); cut();
+  spawnSlash(_v.set(h.pos.x, h.pos.y + 0.25, h.pos.z), h.yaw, 'spin', 0); spawnSlash(_v.set(h.pos.x, h.pos.y + 0.6, h.pos.z), h.yaw + 1.5, 'spin', 0);
+  for (let k = 0; k < 12; k++) { const a = k / 12 * TAU; spawnSprite(FXT.puff, _v.set(h.pos.x + Math.sin(a) * 1.6, h.pos.y + 0.2, h.pos.z + Math.cos(a) * 1.6), rnd(0.9, 1.3), 0.55, { kind: 'grow', depth: true, vel: new THREE.Vector3(Math.sin(a) * 6, 1.2, Math.cos(a) * 6) }); }
+  spawnSprite(POWER_W, _v.set(h.pos.x, h.pos.y + 2.6, h.pos.z), 1.4, 0.95, { kind: 'word', aspect: 512 / 192, rot: -0.08 });
+  for (const e of enemies) { if (!e.alive || e.state === 'dying' || e.fin) continue; const dx = e.pos.x - h.pos.x, dz = e.pos.z - h.pos.z, d = Math.hypot(dx, dz);
+    if (d < 5.2 && Math.abs(e.y - h.y) < 2) { if (hitEnemy(e, d < 3 ? 4 : 2, true, Math.atan2(dx, dz))) POWER.hits++; } }
+  const P = partner; // Mavis joins in: her spinning handbag finisher, aimed at the nearest thug
+  if (P.state === 'move' && P.hp > 0 && Math.hypot(P.pos.x - h.pos.x, P.pos.z - h.pos.z) < 8) { let T = null, bd = 6; for (const e of enemies) { if (!e.alive || e.state === 'dying' || e.fin) continue; const d = Math.hypot(e.pos.x - P.pos.x, e.pos.z - P.pos.z); if (d < bd) { bd = d; T = e; } }
+    if (T) { POWER.joins++; P.set('atk'); P.atkN = 3; P.atkT = T; P.hitDone = false; P.hit2 = false; PART.combo = 0; PART.comboLen = 1; P.yaw = Math.atan2(T.pos.x - P.pos.x, T.pos.z - P.pos.z); spawnSprite(TAG_W, _v.set(P.pos.x, P.pos.y + 2.3, P.pos.z), 1.0, 0.8, { kind: 'word', aspect: 512 / 192, rot: 0.1 }); } }
 }
 function qteOpen(e) { QTE = { e, t0: S.time }; CINE.stats.qteOpened++; }
 
@@ -244,6 +278,10 @@ function introCamera(rdt) {
 // ---- per rendered frame: letterbox, cut flash, prompts, door, pizza, QTE bookkeeping ----
 const PRM = { el: $('prompt'), key: $('pkey'), lab: $('plab'), ico: $('pico'), ring: $('pring'), cur: null };
 const ICONS = {
+  power: '<path d="M13 2L4 14h7l-1 8 9-12h-7z"/>',
+  sewer: '<circle cx="12" cy="12" r="8"/><path d="M6 10h12M6 14h12M10 4v16M14 4v16"/>',
+  boat: '<path d="M3 15h18l-3 5H6zM12 3v10M12 4l6 7h-6"/>', car: '<path d="M4 16v-4l2-5h12l2 5v4zM4 16v2M20 16v2M7 13h1M16 13h1"/>', skate: '<path d="M3 13h18M6 13l1 4M17 13l-1 4M5 17a1 1 0 1 0 2 0M15 17a1 1 0 1 0 2 0"/>',
+  act: '<circle cx="12" cy="12" r="3"/>', none: '<circle cx="12" cy="12" r="3"/>',
   climb: '<path d="M7 2v20M17 2v20M7 6h10M7 11h10M7 16h10"/>',
   drop: '<path d="M12 3v14M6 11l6 6 6-6M4 21h16"/>',
   door: '<path d="M5 21V3h11v18M16 5l4 2v14M12 12h1"/>',
@@ -280,6 +318,7 @@ function cineUpdate(rdt) {
     const e = qe, near = Math.hypot(e.pos.x - h.pos.x, e.pos.z - h.pos.z) < 4.6; P = { kind: 'fin', label: near ? 'FINISH!' : 'GET CLOSE', x: e.pos.x, y: e.pos.y + 2.75 * e.scale, z: e.pos.z, qte: clamp(1 - e.st / DIZZY_T, 0, 1), near };
   } else if (!CINE.fin && (P = revivePrompt())) { /* REVIVE: over whichever turtle is down */ }
   else if (!CINE.fin) { const A = actionInRange(); if (A) P = { kind: A.kind, label: A.label, x: A.x, y: (h.roof ? ROOF.y : 0) + A.y, z: A.z, near: true }; }
+  if (!P && !CINE.fin && DEV !== 'touch' && h.state === 'move' && POWER.cd <= 0 && inFight()) P = { kind: 'power', label: 'POWER', x: h.pos.x, y: h.pos.y + 2.5, z: h.pos.z, near: true }; // (touch: the panel's ACT button shows it)
   const el = PRM.el;
   if (P) {
     _v.set(P.x, P.y, P.z).project(camera);
