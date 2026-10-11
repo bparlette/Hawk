@@ -329,7 +329,7 @@ const GRAF = [['TOAD', '#9dbb4a', '#2a4a7a'], ['32', '#d8b04a', '#7a2a2a'], ['HO
   ['RUSH', '#c87a4a', '#14101f'], ['WILD', '#a48ac8', '#7a2a3a'], ['GG!', '#d8d0c0', '#2a6a6a'], ['YO', '#d8b04a', '#4a3a7a']];
 T.graf = []; // (Toad City: no graffiti in phase 1; frees atlas space)
 
-// ---------------- Toad City: harbour ground + landmark signs (ORIGINAL generic lettering, no real logos) ----------------
+// ---------------- Toad City: harbour ground + landmark signs (real names, Brad's real-signage rule 2026-10-11; HD canvas signs in 03b) ----------------
 T.grass = tile(128, 128, (c, w, h) => { c.fillStyle = '#5d8a3e'; c.fillRect(0, 0, w, h); c.fillStyle = '#4f7a34'; for (let i = 0; i < 140; i++) c.fillRect(srnd() * w, srnd() * h, 3, 2); c.fillStyle = '#76a24c'; for (let i = 0; i < 80; i++) c.fillRect(srnd() * w, srnd() * h, 2, 2); });
 T.plank = tile(128, 128, (c, w, h) => { c.fillStyle = '#8a6a48'; c.fillRect(0, 0, w, h); for (let y = 0; y < h; y += 16) { c.fillStyle = 'rgba(20,16,31,.35)'; c.fillRect(0, y, w, 2); c.fillStyle = 'rgba(255,255,255,.08)'; c.fillRect(0, y + 2, w, 3); } c.fillStyle = 'rgba(20,16,31,.25)'; for (let y = 0; y < h; y += 16) c.fillRect(((y * 7) % w), y, 2, 16); });
 T.pave = tile(128, 128, (c, w, h) => { c.fillStyle = '#a8705a'; c.fillRect(0, 0, w, h); c.fillStyle = 'rgba(20,16,31,.28)'; for (let y = 0; y < h; y += 16) { c.fillRect(0, y, w, 2); for (let x = (y / 16) % 2 ? 0 : 16; x < w; x += 32) c.fillRect(x, y, 2, 16); } c.fillStyle = 'rgba(255,255,255,.07)'; for (let i = 0; i < 40; i++) c.fillRect(srnd() * w, srnd() * h, 3, 2); });
@@ -337,9 +337,9 @@ T.cobble = tile(128, 128, (c, w, h) => { c.fillStyle = '#5a5650'; c.fillRect(0, 
 T.glass = tile(256, 256, (c, w, h) => { const g = c.createLinearGradient(0, 0, w, h); g.addColorStop(0, '#7fa8c4'); g.addColorStop(1, '#2f4f6a'); c.fillStyle = g; c.fillRect(0, 0, w, h);
   c.fillStyle = 'rgba(255,255,255,.25)'; c.beginPath(); c.moveTo(30, h); c.lineTo(120, 0); c.lineTo(150, 0); c.lineTo(60, h); c.fill(); c.fillStyle = '#1a2230'; c.fillRect(0, 0, w, 10); c.fillRect(0, 0, 8, h); c.fillRect(w / 2 - 3, 0, 6, h); },
   2, (c, w, h) => { c.fillStyle = 'rgba(255,226,170,.55)'; c.fillRect(10, 14, w / 2 - 16, h - 18); c.fillRect(w / 2 + 6, 14, w / 2 - 12, h - 18); });
-const LSIGN = { market: ['HARBOR MARKET', '#1f3a4a', '#ffe08a'], trade: ['TRADE CENTER', '#1a2230', '#cfe8ff'], aqua: ['AQUARIUM', '#0f3a5a', '#7fe8ff'], power: ['POWER PLANT', '#3a1a14', '#ffb060'],
-  hotel: ['GRAND HOTEL', '#2a2420', '#f0d8a0'], pier: ['HOTEL PIER', '#24324a', '#ffe0a0'], ball: ['BALLPARK', '#2a3a20', '#ffd27a'], stad: ['STADIUM', '#2a1f3a', '#d8c0ff'], sci: ['SCIENCE', '#1f2a3a', '#9fe0c8'],
-  ath: ['ATHLETIC CO.', '#1a1a1a', '#f0f0f0'], fells: ['MARKET HALL', '#4a2a1a', '#ffd8b0'], sugar: ['SUGAR', '#14080a', '#ff3a3a'] };
+const LSIGN = { market: ['HARBORPLACE', '#1f3a4a', '#ffe08a'], trade: ['WORLD TRADE CENTER', '#1a2230', '#cfe8ff'], aqua: ['NATIONAL AQUARIUM', '#0f3a5a', '#7fe8ff'], power: ['POWER PLANT', '#3a1a14', '#ffb060'],
+  hotel: ['FOUR SEASONS', '#2a2420', '#f0d8a0'], pier: ['PENDRY', '#24324a', '#ffe0a0'], ball: ['ORIOLE PARK AT CAMDEN YARDS', '#2a3a20', '#ffd27a'], stad: ['M&T BANK STADIUM', '#2a1f3a', '#d8c0ff'], sci: ['MARYLAND SCIENCE CENTER', '#1f2a3a', '#9fe0c8'],
+  ath: ['UNDER ARMOUR', '#1a1a1a', '#f0f0f0'], fells: ['BROADWAY MARKET', '#4a2a1a', '#ffd8b0'], sugar: ['SUGAR', '#14080a', '#ff3a3a'] };
 for (const k in LSIGN) { const [t, bg, fg] = LSIGN[k]; LSIGN[k] = tile(512, 128, (c, w, h) => { c.fillStyle = INK; c.fillRect(2, 2, w - 4, h - 4); c.fillStyle = bg; c.fillRect(12, 12, w - 24, h - 24);
     c.save(); c.font = `900 ${t.length > 8 ? 64 : 84}px ${FONT}`; c.textAlign = 'center'; c.textBaseline = 'middle'; c.fillStyle = INK; c.fillText(t, w / 2 + 5, h / 2 + 9, w - 50); c.fillStyle = fg; c.fillText(t, w / 2, h / 2 + 4, w - 50); c.restore(); },
   2, (c, w, h) => { c.save(); c.font = `900 ${t.length > 8 ? 64 : 84}px ${FONT}`; c.textAlign = 'center'; c.textBaseline = 'middle'; c.fillStyle = fg; c.fillText(t, w / 2, h / 2 + 4, w - 50); c.restore(); }); }
@@ -400,7 +400,7 @@ class OB { // outlines are not used in the 32-bit look: kept as a no-op so the s
 const CHUNK = 64;
 class CMB {
   constructor() { this.ch = new Map(); }
-  at(x, z) { const k = Math.floor(x / CHUNK) + ',' + Math.floor(z / CHUNK); let m = this.ch.get(k); if (!m) this.ch.set(k, (m = new MB())); return m; }
+  at(x, z) { if (this.cap) return this.cap; const k = Math.floor(x / CHUNK) + ',' + Math.floor(z / CHUNK); let m = this.ch.get(k); if (!m) this.ch.set(k, (m = new MB())); return m; }
   quad(a, b, c, d, uv, col, tr) { this.at(a[0], a[2]).quad(a, b, c, d, uv, col, tr); }
   wall(xa, za, xb, zb, y0, y1, tr, col, uv) { this.at((xa + xb) / 2, (za + zb) / 2).wall(xa, za, xb, zb, y0, y1, tr, col, uv); }
   floor(x0, z0, x1, z1, y, tr, col, tileM = 4) { this.at((x0 + x1) / 2, (z0 + z1) / 2).floor(x0, z0, x1, z1, y, tr, col, tileM); }
@@ -417,6 +417,8 @@ class CMB {
   }
 }
 const CB = new CMB(), DB = new CMB(), OL = new OB(), GB = new CMB(); // city, decals, outlines (no-op), ground (no shadow cast)
+// LMCAP(id): route the city + decal builders into a per-landmark capture (that landmark's far LOD; 03b_landmarks_hd.js adds the HD near model); LMCAP(null) ends it
+const LM_CAPS = {}; function LMCAP(id) { if (!id) { CB.cap = DB.cap = null; return; } LM_CAPS[id] = { cb: (CB.cap = new MB()), db: (DB.cap = new MB()) }; }
 const BLD = []; // camera collision boxes {x0,x1,z0,z1,h}
 const COLL = []; // character colliders: circles {x,z,r} and boxes {x0,x1,z0,z1}
 const _m4 = new THREE.Matrix4(), _q = new THREE.Quaternion(), _e = new THREE.Euler(), _v = new THREE.Vector3(), _s = new THREE.Vector3();
@@ -740,13 +742,16 @@ function stand(x0, z0, x1, z1, h, away, col) {
 const LANDMARKS = [];
 function landmark(id, name, x, z, r, boss) { LANDMARKS.push({ id, name, x, z, r, boss }); }
 
+LMCAP('harborplace');
 // Harborplace: two glassy market pavilions with green hip roofs, on plazas at the harbour's north-west corner
 for (const [x0, z0, x1, z1] of [[-58, -29, -46, -22], [-59, -18, -52, 2]]) {
   mass(x0, z0, x1, z1, 5.4, { tr: T.store[4], fh: 5.4, bay: 3.2, top: '#3f7a5a' });
   const g = new THREE.CylinderGeometry(0.01, 1, 1, 4, 1); g.rotateY(Math.PI / 4); g.scale((x1 - x0) * 0.75, 2.4, (z1 - z0) * 0.75); place(g, (x0 + x1) / 2, CURB + 5.4 + 1.2, (z0 + z1) / 2); solid(g, '#4f9a6e');
 }
 signOn(-58, -29, -46, -22, 'n', 3.0, 8, LSIGN.market); signOn(-59, -18, -52, 2, 'e', 3.0, 8, LSIGN.market);
+LMCAP(null);
 landmark('harborplace', 'HARBORPLACE', -52, -24, 16, { name: 'Dragon Boat Duchess', x: -44, z: -12, water: true });
+LMCAP('constellation');
 // USS Constellation: a three-masted sloop-of-war moored beside its pier
 (function ship() {
   const x0 = -33.6, x1 = -28.4, z0 = -27, z1 = -9.5, cx = (x0 + x1) / 2;
@@ -763,7 +768,9 @@ landmark('harborplace', 'HARBORPLACE', -52, -24, 16, { name: 'Dragon Boat Duches
   }
   BLD.push({ x0, x1, z0, z1, h: CURB + 1.75 });
 })();
+LMCAP(null);
 landmark('constellation', 'USS CONSTELLATION', -31, -18, 17, { name: 'Captain Cobblestone', x: -31, z: -18, y: CURB + 1.75 });
+LMCAP('wtc');
 // World Trade Center: a tall pentagonal tower on its own pier
 (function wtc() {
   const cx = -12, cz = -22.5, r = 6.6, h = 62;
@@ -778,19 +785,24 @@ landmark('constellation', 'USS CONSTELLATION', -31, -18, 17, { name: 'Captain Co
   COLL.push({ x: cx, z: cz, r: r - 0.4 }); BLD.push({ x0: cx - r, x1: cx + r, z0: cz - r, z1: cz + r, h: CURB + h });
   signOn(cx - 4.5, cz - r, cx + 4.5, cz + r * 0.8, 's', 4.2, 8, LSIGN.trade);
 })();
+LMCAP(null);
 landmark('wtc', 'WORLD TRADE CENTER', -12, -22, 14, { name: 'The Penthouse Pigeon', x: -12, z: -22.5, y: CURB + 63 });
+LMCAP('aquarium');
 // National Aquarium: a concrete hall with glass pyramids, on pier 3
 mass(9, -27, 29, -11, 13, { col: '#7f93a0', top: '#5a6670' });
 mass(12, -11, 26, -7, 5.5, { tr: T.glass, fh: 5.5, top: '#3a4a5a' });
 sbox(8.85, CURB + 8.5, -27.15, 29.15, CURB + 10.3, -10.85, '#26406a', false); sbox(8.9, CURB + 10.3, -27.1, 29.1, CURB + 11, -10.9, '#a8322a', false); // refs: navy + red bands on raw concrete
 for (const [x, z, s] of [[14.5, -20, 7], [23, -17, 9.5], [19, -24, 5]]) { const g = new THREE.CylinderGeometry(0.01, s * 0.72, s * 1.05, 4, 1); g.rotateY(Math.PI / 4); place(g, x, CURB + 13 + s * 0.52, z); solid(g, '#6fc6dc'); }
 signOn(9, -27, 29, -11, 's', 6, 11, LSIGN.aqua);
+LMCAP(null);
 landmark('aquarium', 'NATIONAL AQUARIUM', 19, -17, 19, { name: 'Big Jimmy', x: 19, z: -5, water: true });
+LMCAP('powerplant');
 // Power Plant: a brick power station with four smokestacks, on pier 4
 mass(47, -27, 65, -9, 15, { tr: T.fac[0][0], top: '#4a3a30' });
 for (const x of [50, 54, 58, 62]) { const g = new THREE.CylinderGeometry(1.05, 1.3, 22, 12); place(g, x, CURB + 15 + 11, -18); solid(g, '#1f1d1c'); const r = new THREE.CylinderGeometry(1.18, 1.18, 0.7, 12); place(r, x, CURB + 36.6, -18); solid(r, '#3a3532'); } // refs: four black stacks in a row
 sbox(46.7, CURB + 10.6, -27.3, 65.3, CURB + 11.4, -8.7, '#e4d8bc'); mass(65, -24, 68, -12, 9, { tr: T.fac[0][1], top: '#4a3a30' }); // cream stone band, the arched east wing
 signOn(47, -27, 65, -9, 's', 6.2, 12, LSIGN.power);
+LMCAP(null);
 landmark('powerplant', 'POWER PLANT', 56, -17, 19, { name: 'Voltage Vic', x: 56, z: -5.5 });
 // Four Seasons (Harbor East): a podium and a glass hotel tower
 mass(71, -69, 93, -47, 9, { tr: T.store[1], fh: 9, bay: 4, top: '#4a4640' });
@@ -848,17 +860,20 @@ mass(-61, 51, -47, 65, 7, { tr: T.fac[2][1], y0: CURB + 7, coll: false, top: '#5
 signOn(-64, 48, -44, 68, 'n', 4.2, 10, LSIGN.sci);
 landmark('science', 'SCIENCE CENTER', -54, 58, 16, { name: 'Dr. Shellacious', x: -54, z: 41 });
 landmark('fedhill', 'FEDERAL HILL', -3, 59, 24, { name: 'The Hon Queen', x: HILL.x, z: HILL.z, y: CURB + HILL.h });
+const DOM_H = 23; // refinery roof height (the sign stands on it; HD model in 03b uses the same)
+LMCAP('domino');
 // Domino Sugar: a tall refinery with a giant rooftop neon sign facing the harbour (original lettering)
-mass(72, 48, 92, 66, 30, { tr: T.fac[1][0], top: '#4a4640' });
+mass(72, 48, 92, 66, DOM_H, { tr: T.fac[1][0], top: '#4a4640' });
 { const g = new THREE.CylinderGeometry(3.4, 3.4, 22, 12); place(g, 76, CURB + 11, 69); solid(g, '#c8c4b8'); COLL.push({ x: 76, z: 69, r: 3.6 }); }
 // the rooftop sign's open steel lattice (the sign faces itself are drawn in i_nightfx): verticals, three chords, X-bracing, back struts
-{ const C = '#3a3532', y0 = CURB + 30, zf = 50.05;
+{ const C = '#3a3532', y0 = CURB + DOM_H, zf = 50.05;
   for (let k = 0; k <= 8; k++) obox(73 + k * 2.25, zf, 0.26, 0.26, 13.2, 0, C, y0);
   for (const y of [1.6, 7.1, 12.6]) obox(82, zf, 18.6, 0.26, 0.26, 0, C, y0 + y);
   for (let k = 0; k < 8; k++) for (const [ya, yb] of [[1.6, 7.1], [7.1, 12.6]]) for (const s of [1, -1]) {
     const xa = 73 + k * 2.25, xb = xa + 2.25, L = Math.hypot(2.25, yb - ya), g = new THREE.BoxGeometry(L, 0.1, 0.1); g.rotateZ(s * Math.atan2(yb - ya, 2.25)); place(g, (xa + xb) / 2, y0 + (ya + yb) / 2, zf + 0.05); solid(g, C, false); }
   for (const x of [73, 79.75, 84.25, 91]) { const g = new THREE.BoxGeometry(0.2, 0.2, 6.2); g.rotateX(-0.95); place(g, x, y0 + 2.6, zf + 2.2); solid(g, C, false); } }
-landmark('domino', 'DOMINO SUGARS', 82, 57, 16, { name: 'Sugar Rush', x: 82, z: 57, y: CURB + 30 });
+LMCAP(null);
+landmark('domino', 'DOMINO SUGARS', 82, 57, 16, { name: 'Sugar Rush', x: 82, z: 57, y: CURB + DOM_H });
 // Under Armour (Tide Point): brick halls with a clock tower
 mass(106, 48, 126, 56, 11, { tr: T.fac[0][0], top: '#4a3a30' }); mass(106, 60, 126, 68, 11, { tr: T.fac[0][1], top: '#4a3a30' });
 mass(113.5, 56.5, 118.5, 59.5, 22, { col: '#9a5a44', top: '#4a3a30' });
@@ -1003,7 +1018,7 @@ const NIGHTFX = { pools: [], halos: [], lights: [], neon: null, near: null };
     word('Sugars', 520, 555, 'bold 172px Georgia, "Times New Roman", "DejaVu Serif", serif', 0.02, 600);
     return lowTex(c, 256);
   }
-  const SW = 17, SH = 10.6, SX = 82, SY = CURB + 30 + 7.1, SZ = 49.7;
+  const SW = 17, SH = 10.6, SX = 82, SY = CURB + DOM_H + 7.1, SZ = 49.7;
   const dayMat = basicSnap({ map: dominoTex(false), transparent: true, depthWrite: false, side: THREE.DoubleSide, alphaTest: 0.02 });
   const mat = basicSnap({ map: dominoTex(true), transparent: true, depthWrite: false, side: THREE.DoubleSide, opacity: 0 });
   const signD = new THREE.Mesh(new THREE.PlaneGeometry(SW, SH), dayMat); signD.position.set(SX, SY, SZ); signD.rotation.y = Math.PI; signD.renderOrder = 4; scene.add(signD);
@@ -1014,9 +1029,332 @@ const NIGHTFX = { pools: [], halos: [], lights: [], neon: null, near: null };
   const stex = lowTex(sc, 64);
   const smat = basicSnap({ map: stex, transparent: true, depthWrite: false, blending: THREE.AdditiveBlending, fog: true, opacity: 0 });
   const streak = new THREE.Mesh(new THREE.PlaneGeometry(11, 52), smat); streak.rotation.x = -Math.PI / 2; streak.position.set(SX, WY + 0.04, 29.6 - 26); streak.renderOrder = 3; scene.add(streak);
-  const nl = new THREE.PointLight('#ff3a2a', 0, 36, 1.2); nl.position.set(SX, CURB + 37, 43); scene.add(nl);
+  const nl = new THREE.PointLight('#ff3a2a', 0, 36, 1.2); nl.position.set(SX, CURB + DOM_H + 7, 43); scene.add(nl);
   NIGHTFX.neon = { mat, dayMat, light: nl, streak, tint: (on, fl) => { mat.opacity = Math.min(1, on * 1.15) * fl; dayMat.opacity = 1 - sstep(0.15, 0.85, on); smat.opacity = on * fl; streak.visible = on > 0.02; } };
 })();
+
+// ---------------- HD landmarks (phase 3): procedural, ref-matched landmark models in the cel/ink style, with LOD ----------------
+// Each HD landmark = one merged vertex-coloured toon mesh (one shared material, night window glow from an `emi` attribute) + one merged
+// ink-outline hull (major forms only; windows and fine trim skip the hull so the lines stay clean). Near the camera the HD model shows;
+// farther out the Phase-1 massing (captured per landmark by LMCAP in the city builder) shows instead. The swap is done per frame in
+// scene.onBeforeRender from the camera position. Collision boxes stay the massing's.
+const LM_MAT = (() => {
+  const m = toonMat(); const pc = m.onBeforeCompile;
+  m.onBeforeCompile = (sh) => {
+    pc(sh);
+    sh.vertexShader = sh.vertexShader.replace('#include <common>', '#include <common>\nattribute vec3 emi; varying vec3 vEmi;').replace('#include <fog_vertex>', '#include <fog_vertex>\nvEmi = emi;');
+    sh.fragmentShader = sh.fragmentShader.replace('#include <common>', '#include <common>\nvarying vec3 vEmi; uniform float uNight;')
+      .replace('#include <opaque_fragment>', 'outgoingLight += vEmi * uNight;\n#include <opaque_fragment>');
+  };
+  m.customProgramCacheKey = () => 'psxLM'; return m;
+})();
+const LMR = (() => { let s = 1234567; return (seed) => { if (seed !== undefined) s = seed; s = (s * 16807) % 2147483647; return s / 2147483647; }; })();
+class HB { // HD builder: non-indexed triangles with position / normal / colour / emissive; `ol` parts also go to the outline hull
+  constructor() { this.P = []; this.N = []; this.C = []; this.E = []; this.oP = []; this.oN = []; }
+  add(g, col, o = {}) {
+    if (g.index) g = g.toNonIndexed(); if (!g.attributes.normal) g.computeVertexNormals();
+    const p = g.attributes.position, n = g.attributes.normal, c = new THREE.Color(col), e = o.emi ? new THREE.Color(o.emi) : null, ol = o.ol !== false;
+    for (let i = 0; i < p.count; i++) {
+      this.P.push(p.getX(i), p.getY(i), p.getZ(i)); this.N.push(n.getX(i), n.getY(i), n.getZ(i)); this.C.push(c.r, c.g, c.b);
+      if (e) this.E.push(e.r, e.g, e.b); else this.E.push(0, 0, 0);
+      if (ol) { this.oP.push(p.getX(i), p.getY(i), p.getZ(i)); this.oN.push(n.getX(i), n.getY(i), n.getZ(i)); }
+    }
+    return this;
+  }
+  box(x0, y0, z0, x1, y1, z1, col, o) { const g = new THREE.BoxGeometry(x1 - x0, y1 - y0, z1 - z0); g.translate((x0 + x1) / 2, (y0 + y1) / 2, (z0 + z1) / 2); return this.add(g, col, o); }
+  cyl(x, y0, z, rt, rb, h, seg, col, o = {}) { const g = new THREE.CylinderGeometry(rt, rb, h, seg, 1, !!o.open); if (o.ry) g.rotateY(o.ry); g.translate(x, y0 + h / 2, z); return this.add(g, col, o); }
+  geo(g, col, o) { return this.add(g, col, o); }
+  // a wall frame: from (xa,za) to (xb,zb) with the outward normal on the right-hand side seen from outside (the faceOf convention)
+  frame(xa, za, xb, zb) { const L = Math.hypot(xb - xa, zb - za), ux = (xb - xa) / L, uz = (zb - za) / L; return { xa, za, ux, uz, nx: -uz, nz: ux, L, ang: Math.atan2(-uz, ux) }; }
+  // a box in wall space: u along the wall, y up, d outward from the wall plane
+  fbox(F, u0, u1, y0, y1, d0, d1, col, o) {
+    const g = new THREE.BoxGeometry(Math.max(0.01, u1 - u0), Math.max(0.01, y1 - y0), Math.max(0.01, d1 - d0)); g.translate((u0 + u1) / 2, (y0 + y1) / 2, (d0 + d1) / 2);
+    return this.fgeo(F, g, col, o);
+  }
+  fgeo(F, g, col, o) { g.rotateY(F.ang); g.translate(F.xa, 0, F.za); return this.add(g, col, o); }
+  // an arch head (half disc) in wall space centred at u, springing at y, radius r, from d0 to d1
+  farch(F, u, y, r, d0, d1, col, o, seg = 8) {
+    const g = new THREE.CylinderGeometry(r, r, d1 - d0, seg, 1, false, -Math.PI / 2, Math.PI); g.rotateX(-Math.PI / 2); g.translate(u, y, (d0 + d1) / 2);
+    return this.fgeo(F, g, col, o);
+  }
+  // a window grid on a wall: bays of width bw from u0..u1, floors of height fh from y0..y1; each window = sill + dark pane (lit at night by chance)
+  windows(F, u0, u1, y0, y1, o) {
+    const bw = o.bw || 1.6, fh = o.fh || 3, ww = o.ww || bw * 0.55, wh = o.wh || fh * 0.55, nb = Math.max(1, Math.round((u1 - u0) / bw)), nf = Math.max(1, Math.round((y1 - y0) / fh));
+    const bwr = (u1 - u0) / nb, fhr = (y1 - y0) / nf, lit = o.lit === undefined ? 0.5 : o.lit;
+    for (let f = 0; f < nf; f++) for (let b = 0; b < nb; b++) {
+      if (o.skip && o.skip(b, f, nb, nf)) continue;
+      const uc = u0 + (b + 0.5) * bwr, yb = y0 + f * fhr + (fhr - wh) * (o.wy === undefined ? 0.45 : o.wy);
+      const on = LMR() < lit, warm = LMR() < 0.8;
+      const pc = o.pane ? (typeof o.pane === 'function' ? o.pane(b, f) : o.pane) : '#2b333d';
+      this.fbox(F, uc - ww / 2, uc + ww / 2, yb, yb + wh, -0.05, o.pd || 0.02, pc, { ol: false, emi: on ? (warm ? '#ffcf7a' : '#bfd8ff') : null });
+      if (o.arch) this.farch(F, uc, yb + wh, ww / 2, -0.05, o.pd || 0.02, pc, { ol: false, emi: on ? (warm ? '#ffcf7a' : '#bfd8ff') : null }, 6);
+      if (o.sill) this.fbox(F, uc - ww / 2 - 0.08, uc + ww / 2 + 0.08, yb - 0.12, yb, 0, 0.14, o.sill, { ol: false });
+      if (o.head) this.fbox(F, uc - ww / 2 - 0.06, uc + ww / 2 + 0.06, yb + wh + (o.arch ? ww / 2 : 0), yb + wh + (o.arch ? ww / 2 : 0) + 0.14, 0, 0.1, o.head, { ol: false });
+      if (o.mull) this.fbox(F, uc - 0.035, uc + 0.035, yb, yb + wh, 0, 0.05, o.mull, { ol: false });
+      if (o.awn && LMR() < o.awn) this.fbox(F, uc - ww / 2, uc + ww / 2, yb + wh * 0.62, yb + wh, 0.02, 0.07, o.awnC || '#4f74a8', { ol: false });
+    }
+  }
+  // vertical pilasters (proud brick piers) every `every` m along a wall
+  pilasters(F, u0, u1, y0, y1, every, w, d, col, o = {}) { const n = Math.max(1, Math.round((u1 - u0) / every)); for (let i = 0; i <= n; i++) { const u = u0 + (u1 - u0) * i / n; this.fbox(F, u - w / 2, u + w / 2, y0, y1, 0, d, col, o); } }
+  band(F, u0, u1, y0, y1, d, col, o) { return this.fbox(F, u0, u1, y0, y1, 0, d, col, o); }
+  build() {
+    const g = new THREE.BufferGeometry();
+    g.setAttribute('position', new THREE.Float32BufferAttribute(this.P, 3)); g.setAttribute('normal', new THREE.Float32BufferAttribute(this.N, 3));
+    g.setAttribute('color', new THREE.Float32BufferAttribute(this.C, 3)); g.setAttribute('emi', new THREE.Float32BufferAttribute(this.E, 3)); g.computeBoundingSphere();
+    const grp = new THREE.Group(), mesh = new THREE.Mesh(g, LM_MAT); mesh.castShadow = true; mesh.receiveShadow = true; grp.add(mesh);
+    if (this.oP.length) {
+      const h = new THREE.BufferGeometry(); h.setAttribute('position', new THREE.Float32BufferAttribute(this.oP, 3)); h.setAttribute('normal', new THREE.Float32BufferAttribute(this.oN, 3));
+      addOdir(h); h.deleteAttribute('normal'); h.computeBoundingSphere();
+      const hull = new THREE.Mesh(h, OUT_CITY); hull.visible = QUAL.hd; QUAL.outlines.push(hull); grp.add(hull); grp.userData.hull = hull;
+    }
+    grp.userData.tris = this.P.length / 9; return grp;
+  }
+}
+// generic signs for the HD models reuse the city's decal atlas (one small decal mesh per landmark)
+function hdSign(F, u, y, w, tr, hh = w / 4, d = 0.12) { const mb = new MB(), x0 = F.xa + F.ux * (u - w / 2) + F.nx * d, z0 = F.za + F.uz * (u - w / 2) + F.nz * d, x1 = F.xa + F.ux * (u + w / 2) + F.nx * d, z1 = F.za + F.uz * (u + w / 2) + F.nz * d; mb.wall(x0, z0, x1, z1, y, y + hh, tr, '#fff', [0.002, 0.002, 0.998, 0.998]); return mb; }
+
+// extra colliders for HD parts that stand proud of the massing (the city's collider grid is already built, so add to it directly)
+function lmColl(c) { COLL.push(c); const x0 = (c.r ? c.x - c.r : c.x0) - 1.5, x1 = (c.r ? c.x + c.r : c.x1) + 1.5, z0 = (c.r ? c.z - c.r : c.z0) - 1.5, z1 = (c.r ? c.z + c.r : c.z1) + 1.5;
+  for (let i = Math.floor(x0 / 16); i <= Math.floor(x1 / 16); i++) for (let j = Math.floor(z0 / 16); j <= Math.floor(z1 / 16); j++) { const k = i + ',' + j; (COLLG.get(k) || COLLG.set(k, []).get(k)).push(c); } }
+
+// ---------------- real signage (Brad's real-signage rule, 2026-10-11): every sign is drawn on canvas in code from the refs (no logo files).
+// One canvas atlas per landmark (shelf-packed) -> one double-sided unlit mesh, so a landmark's signs cost one draw call; unlit = they read as lit at night.
+class SA {
+  constructor() { this.items = []; }
+  // on a wall frame: centred at u, bottom at y, w x h metres, d out from the wall
+  add(F, u, y, w, h, d, draw) { const x = F.xa + F.ux * u + F.nx * d, z = F.za + F.uz * u + F.nz * d; return this.at(x, y, z, F.ang, w, h, draw); }
+  at(x, y, z, ry, w, h, draw) { this.items.push({ x, y, z, ry, w, h, draw }); return this; }
+  build() {
+    const W = 1024, pm = (it) => Math.min(W / it.w, 300 / it.h, 160); let cx = 0, cy = 0, rowH = 0;
+    for (const it of this.items) { const k = pm(it); it.pw = Math.ceil(it.w * k); it.ph = Math.ceil(it.h * k); if (cx + it.pw > W) { cx = 0; cy += rowH + 4; rowH = 0; } it.px = cx; it.py = cy; cx += it.pw + 4; rowH = Math.max(rowH, it.ph); }
+    const Hc = Math.min(2048, 1 << Math.ceil(Math.log2(Math.max(64, cy + rowH)))), c = document.createElement('canvas'); c.width = W; c.height = Hc; const g = c.getContext('2d');
+    for (const it of this.items) { g.save(); g.beginPath(); g.rect(it.px, it.py, it.pw, it.ph); g.clip(); g.translate(it.px, it.py); it.draw(g, it.pw, it.ph); g.restore(); }
+    const P = [], U = [];
+    for (const it of this.items) {
+      const cs = Math.cos(it.ry), sn = Math.sin(it.ry), hw = it.w / 2, pt = (a, b) => [it.x + a * cs, it.y + b, it.z - a * sn];
+      const u0 = it.px / W, u1 = (it.px + it.pw) / W, v1 = 1 - it.py / Hc, v0 = 1 - (it.py + it.ph) / Hc;
+      const A = pt(-hw, 0), B = pt(hw, 0), C = pt(hw, it.h), D = pt(-hw, it.h);
+      P.push(...A, ...B, ...C, ...A, ...C, ...D); U.push(u0, v0, u1, v0, u1, v1, u0, v0, u1, v1, u0, v1);
+    }
+    const geo = new THREE.BufferGeometry(); geo.setAttribute('position', new THREE.Float32BufferAttribute(P, 3)); geo.setAttribute('uv', new THREE.Float32BufferAttribute(U, 2)); geo.computeBoundingSphere();
+    const m = new THREE.Mesh(geo, new THREE.MeshBasicMaterial({ map: lowTex(c, 512), transparent: true, alphaTest: 0.3, side: THREE.DoubleSide, depthWrite: true }));
+    m.renderOrder = 2; return m;
+  }
+}
+const SCRIPT = '"Brush Script MT", "Segoe Script", "Snell Roundhand", "Apple Chancery", "URW Chancery L", "Z003", cursive';
+const SERIF = 'Georgia, "Times New Roman", "DejaVu Serif", serif', SANS = '"Helvetica Neue", Helvetica, Arial, "DejaVu Sans", sans-serif';
+// text that fills a box: centred, shrunk to fit width, optional outline + glow
+function sText(g, txt, x, y, maxW, px, font, fill, o = {}) {
+  g.save(); g.font = `${o.weight || 'bold'} ${px}px ${font}`; g.textAlign = o.align || 'center'; g.textBaseline = 'middle';
+  if (o.slant) g.transform(1, 0, -o.slant, 1, o.slant * y, 0);
+  const w = g.measureText(txt).width; if (w > maxW) { const k = maxW / w; g.translate(x, y); g.scale(k, 1); g.translate(-x, -y); }
+  if (o.track) g.letterSpacing = o.track + 'px';
+  if (o.glow) { g.shadowColor = o.glow; g.shadowBlur = px * 0.25; }
+  if (o.stroke) { g.lineJoin = 'round'; g.lineWidth = o.sw || px * 0.12; g.strokeStyle = o.stroke; g.strokeText(txt, x, y); }
+  g.fillStyle = fill; g.fillText(txt, x, y); g.restore();
+}
+
+const LMHD = { list: [], near: 125, force: Q.get('lmhd') }; // ?lmhd=near|far pins the LOD (previews / A-B checks)
+function lmHD(id, cx, cz, r, build) {
+  const cap = LM_CAPS[id]; const far = new THREE.Group();
+  if (cap) { if (cap.cb.P.length) { const m = cap.cb.build(CITY_MAT); m.castShadow = true; m.receiveShadow = true; far.add(m); } if (cap.db.P.length) far.add(cap.db.build(DECAL_MAT)); }
+  LMR(id.split('').reduce((a, c) => a * 31 + c.charCodeAt(0), 7) % 2147483646 + 1);
+  const hb = new HB(), signs = [], sa = new SA(); build(hb, signs, sa); const near = hb.build();
+  for (const s of signs) near.add(s.build(DECAL_MAT)); if (sa.items.length) near.add(sa.build());
+  scene.add(far, near); near.visible = false;
+  const L = { id, cx, cz, r, far, near, tris: near.userData.tris, isNear: false }; LMHD.list.push(L); return L;
+}
+scene.onBeforeRender = (r, s, cam) => {
+  for (const L of LMHD.list) {
+    const d = Math.hypot(cam.position.x - L.cx, cam.position.z - L.cz) - L.r;
+    const n = LMHD.force === 'near' ? true : LMHD.force === 'far' ? false : (L.isNear ? d < LMHD.near + 8 : d < LMHD.near);
+    if (n !== L.isNear) { L.isNear = n; L.near.visible = n; L.far.visible = !n; }
+  }
+};
+
+// ======================= DOMINO SUGARS (refs/domino-sugar): brick refinery blocks with rows of windows and cream string courses,
+// a taller rear block, two cream smokestacks, white silos, a cream warehouse base on the water side, the rooftop sign lattice ==============
+lmHD('domino', 82, 57, 16, (H) => {
+  const BR = '#7c4330', BR2 = '#6a3626', BR3 = '#8a4d36', CR = '#e2d3b4', CR2 = '#cdbb98', Y0 = CURB, TOP = CURB + DOM_H;
+  const win = { bw: 1.55, fh: 3.1, ww: 0.86, wh: 1.7, sill: CR, lit: 0.45, awn: 0.35, awnC: '#5a80b8', pane: '#2a2f38' };
+  // main block 72..92 x 48..60, rear block 72..92 x 60..66 (a bit lower, then the tall tower section on the west end)
+  H.box(72, Y0, 48, 92, TOP, 60, BR);
+  H.box(72, Y0, 60, 92, TOP - 3, 66, BR2);
+  H.box(72, Y0, 57, 79, TOP + 5, 66, BR3); // the tall tower block behind the sign (the refinery's taller rear section with the big stack)
+  // the cream warehouse base along the water side and the west end (ground floor, loading doors)
+  H.box(70.6, Y0, 47.2, 93.4, Y0 + 4.6, 66.4, CR2);
+  for (const [xa, za, xb, zb] of [[93.4, 47.2, 70.6, 47.2], [93.4, 66.4, 93.4, 47.2], [70.6, 66.4, 93.4, 66.4], [70.6, 47.2, 70.6, 66.4]]) { // N E S W, outward on the right
+    const F = H.frame(xa, za, xb, zb);
+    for (let u = 1.5; u < F.L - 1.5; u += 3.2) { H.fbox(F, u - 0.9, u + 0.9, 0.16, 3.0, -0.05, 0.03, LMR() < 0.25 ? '#a83a2a' : '#4a4640', { ol: false }); H.fbox(F, u - 1.1, u + 1.1, 3.0, 3.25, 0, 0.12, '#8a7a60', { ol: false }); }
+    H.band(F, 0, F.L, Y0 + 4.4, Y0 + 4.9, 0.25, CR);
+  }
+  // facades: north (harbour, under the sign), east, south, west - window grid, brick pilasters every 2 bays, cream string courses
+  const faces = [[72, 48, 92, 48, TOP], [92, 48, 92, 60, TOP], [92, 60, 92, 66, TOP - 3], [92, 66, 79, 66, TOP - 3], [79, 66, 72, 66, TOP + 5], [72, 66, 72, 57, TOP + 5], [72, 57, 72, 48, TOP]];
+  // faces are listed from outside with the outward normal on the right: build each as wall frame (xb,zb)->(xa,za) reversed when needed
+  for (const [xa, za, xb, zb, top] of faces) {
+    const F = H.frame(xb, zb, xa, za); // reverse so the normal points out (the footprint is walked clockwise in x-east / z-south)
+    H.windows(F, 0.4, F.L - 0.4, Y0 + 5.2, top - 1.6, win);
+    H.pilasters(F, 0, F.L, Y0 + 4.9, top - 0.6, 3.1, 0.34, 0.16, BR2, { ol: false });
+    for (const y of [Y0 + 11.4, Y0 + 17.6]) H.band(F, 0, F.L, y, y + 0.22, 0.12, CR, { ol: false });
+    H.band(F, -0.2, F.L + 0.2, top - 0.9, top - 0.55, 0.22, CR); // cornice
+    H.band(F, -0.1, F.L + 0.1, top - 0.55, top + 0.6, 0.06, BR2); // parapet
+  }
+  // tall west tower: its own north + east faces above the main roof, darker brick, rooftop penthouse
+  for (const F2 of [H.frame(79, 57, 72, 57), H.frame(79, 66, 79, 57)]) { // the tower's north + east faces above the lower roofs
+    H.windows(F2, 0.4, F2.L - 0.4, TOP - 2.6, TOP + 3.6, { bw: 1.55, fh: 3.1, ww: 0.86, wh: 1.7, sill: CR, lit: 0.4 }); H.band(F2, -0.2, F2.L + 0.2, TOP + 4.1, TOP + 4.45, 0.22, CR); }
+  H.box(73.5, TOP + 5, 59, 77.5, TOP + 8, 63, BR2); H.box(73.3, TOP + 8, 58.8, 77.7, TOP + 8.4, 63.2, CR);
+  // two tall cream smokestacks behind (left one taller, as in the refinery refs) + dark caps
+  for (const [x, z, h, rb] of [[74.5, 63.5, 44, 1.25], [86, 64.2, 35, 1.05]]) {
+    H.cyl(x, TOP - 3, z, rb * 0.82, rb, h - (TOP - 3 - Y0), 14, '#ece4d2');
+    H.cyl(x, Y0 + h - 1.2, z, rb * 0.9, rb * 0.9, 1.2, 14, '#3a3532');
+    for (const k of [0.35, 0.6]) H.cyl(x, TOP - 3 + (h - TOP + 3) * k, z, rb * 0.96, rb * 0.96, 0.4, 14, '#d4c8b0', { ol: false });
+  }
+  // white concrete silos (four, a head house on top) at the south-west corner
+  for (const [x, z] of [[74.5, 67.6], [77.5, 67.6], [74.5, 70.4], [77.5, 70.4]]) { H.cyl(x, Y0, z, 1.45, 1.45, 22, 16, '#e8e6e0'); H.cyl(x, Y0 + 22, z, 1.45, 1.2, 0.6, 16, '#cfcbc2', { ol: false }); }
+  H.box(73.6, Y0 + 22, 66.8, 78.4, Y0 + 25, 71.2, '#d8d4ca');
+  for (let y = Y0 + 2; y < Y0 + 21; y += 2.6) H.box(76.0 - 0.12, y, 66.1, 76.0 + 0.12, y + 0.08, 66.2, '#9a968c', { ol: false });
+  // rooftop clutter: a water tank on legs, vents, a small boiler house
+  H.cyl(89, TOP + 2.2, 63, 1.2, 1.2, 2.2, 12, '#6a5a48'); H.cyl(89, TOP + 4.4, 63, 0.05, 1.3, 0.8, 12, '#4a3e32');
+  for (const [lx, lz] of [[88.2, 62.2], [89.8, 62.2], [88.2, 63.8], [89.8, 63.8]]) H.box(lx - 0.08, TOP - 3, lz - 0.08, lx + 0.08, TOP + 2.2, lz + 0.08, '#3a3532', { ol: false });
+  H.box(84, TOP - 3, 61, 88, TOP - 0.5, 65, BR3); for (const x of [81, 83.5]) H.cyl(x, TOP, 58, 0.35, 0.35, 1.4, 8, '#8a8a84', { ol: false });
+  // flag on the tower
+  H.box(75.4, TOP + 8.4, 61, 75.5, TOP + 15, 61.1, '#d8d8d0', { ol: false });
+  for (let i = 0; i < 7; i++) H.box(75.5, TOP + 13.2 + i * 0.26, 61.04, 77.9, TOP + 13.46 + i * 0.26, 61.06, i % 2 ? '#f2f0ea' : '#b8323a', { ol: false });
+  H.box(75.5, TOP + 14.0, 61.03, 76.6, TOP + 15.0, 61.07, '#2a3a7a', { ol: false });
+  // the sign's open steel lattice (the sign faces are the canvas planes in the night-FX block): verticals, three chords, X-bracing, back struts
+  { const C = '#3a3532', y0 = TOP, zf = 50.05;
+    for (let k = 0; k <= 8; k++) H.box(73 + k * 2.25 - 0.13, y0, zf - 0.13, 73 + k * 2.25 + 0.13, y0 + 13.2, zf + 0.13, C);
+    for (const y of [1.6, 7.1, 12.6]) H.box(72.7, y0 + y - 0.13, zf - 0.13, 91.3, y0 + y + 0.13, zf + 0.13, C);
+    for (let k = 0; k < 8; k++) for (const [ya, yb] of [[1.6, 7.1], [7.1, 12.6]]) for (const s of [1, -1]) {
+      const xa = 73 + k * 2.25, xb = xa + 2.25, L = Math.hypot(2.25, yb - ya), g = new THREE.BoxGeometry(L, 0.1, 0.1); g.rotateZ(s * Math.atan2(yb - ya, 2.25)); g.translate((xa + xb) / 2, y0 + (ya + yb) / 2, zf + 0.12); H.geo(g, C, { ol: false }); }
+    for (const x of [73, 79.75, 84.25, 91]) { const g = new THREE.BoxGeometry(0.2, 0.2, 6.2); g.rotateX(-0.95); g.translate(x, y0 + 2.6, zf + 2.2); H.geo(g, C, { ol: false }); }
+    H.box(72.6, y0 - 0.1, zf - 0.6, 91.4, y0 + 0.2, zf + 3.4, '#4a4440', { ol: false }); } // catwalk
+});
+
+// ======================= WORLD TRADE CENTER (refs/world-trade-center): regular pentagon, tan precast; solid corner piers, horizontal ribbon windows
+// between tan spandrels on every floor, a narrow pier mid-face, a solid tan crown band, recessed glass lobby on a granite base ==============
+lmHD('wtc', -12, -22.5, 14, (H, signs, SG) => {
+  const cx = -12, cz = -22.5, r = 6.6, h = 62, rot = 0.3, TAN = '#cfba92', TAN2 = '#b8a27c', GL = '#3b5f66', Y0 = CURB;
+  const V = []; for (let i = 0; i < 5; i++) { const a = i / 5 * TAU + rot; V.push([cx + Math.sin(a) * r, cz + Math.cos(a) * r]); }
+  const pent = (rad, y0, hh, col, o) => H.cyl(cx, y0, cz, rad, rad, hh, 5, col, Object.assign({ ry: rot }, o));
+  pent(r + 0.5, Y0, 0.6, '#8a8278'); // granite plinth
+  pent(r - 0.7, Y0 + 0.6, 4.4, '#28323c'); // recessed glass lobby
+  pent(r - 0.32, Y0 + 5, h - 9, GL, { ol: false }); // the glass core behind the ribbons
+  const FL = 2.15, n = Math.floor((h - 10) / FL);
+  for (let f = 0; f <= n; f++) pent(r, Y0 + 5 + f * FL, 0.95, f % 4 === 0 ? TAN2 : TAN, { ol: f === 0 }); // tan spandrel per floor
+  pent(r, Y0 + h - 4.4, 4.4, TAN); // solid crown band (mechanical floors)
+  pent(r - 0.6, Y0 + h, 1.6, TAN2); pent(r - 0.35, Y0 + h + 1.6, 0.35, '#e0d2b4');
+  for (let i = 0; i < 5; i++) {
+    const [ax, az] = V[i], [bx, bz] = V[(i + 1) % 5], mx = (ax + bx) / 2, mz = (az + bz) / 2;
+    let F = H.frame(ax, az, bx, bz); if ((mx - cx) * F.nx + (mz - cz) * F.nz < 0) F = H.frame(bx, bz, ax, az); // outward normal
+    // corner piers (solid tan, full height) and a narrow mid-face pier
+    H.fbox(F, -0.2, 1.2, Y0 + 0.6, Y0 + h, -0.4, 0.18, TAN); H.fbox(F, F.L - 1.2, F.L + 0.2, Y0 + 0.6, Y0 + h, -0.4, 0.18, TAN);
+    H.fbox(F, F.L / 2 - 0.22, F.L / 2 + 0.22, Y0 + 5, Y0 + h - 4.4, -0.3, 0.06, TAN2, { ol: false });
+    // lobby columns
+    for (let u = 1.8; u < F.L - 1.4; u += 1.5) H.fbox(F, u - 0.14, u + 0.14, Y0 + 0.6, Y0 + 5, -0.3, 0.3, '#9a9288', { ol: false });
+    // ribbon glass: random lit segments at night + a few sky-reflection panes by day
+    for (let f = 0; f < n; f++) { const y = Y0 + 5 + f * FL + 0.95; let u = 1.3;
+      while (u < F.L - 1.3) { const w = 0.7 + LMR() * 1.6, u1 = Math.min(F.L - 1.3, u + w), on = LMR() < 0.42, sky = LMR() < 0.18;
+        if (on || sky) H.fbox(F, u, u1, y + 0.02, y + FL - 0.97, -0.25, -0.2, sky ? '#7fa8bf' : GL, { ol: false, emi: on ? (LMR() < 0.75 ? '#ffd690' : '#c8dcff') : null }); u = u1 + 0.05; } }
+  }
+  // roof: mechanical box + antenna masts
+  H.box(cx - 2, Y0 + h + 1.9, cz - 2, cx + 2, Y0 + h + 4.2, cz + 2, '#9a8e78'); H.cyl(cx + 1.2, Y0 + h + 4.2, cz, 0.08, 0.1, 6, 6, '#c8c8c0', { ol: false }); H.cyl(cx - 1.4, Y0 + h + 4.2, cz + 0.8, 0.06, 0.08, 3.5, 6, '#c8c8c0', { ol: false });
+  // granite entrance wall with the (generic) name sign, facing the promenade
+  { const F = H.frame(cx - 5, cz + r + 1.2, cx + 5, cz + r + 1.2); H.fbox(F, 0, 10, Y0, Y0 + 2.2, -0.6, 0, '#958b80'); // granite base wall (tower_3 ref)
+    for (let u = 0.9; u < 10; u += 0.9) H.fbox(F, u - 0.012, u + 0.012, Y0, Y0 + 2.2, 0, 0.01, '#c8c0b4', { ol: false });
+    SG.add(F, 5, Y0 + 1.15, 9.2, 0.62, 0.02, (g, w, h) => sText(g, 'THE WORLD TRADE CENTER \u00b7 BALTIMORE', w / 2, h / 2, w * 0.98, h * 0.82, SERIF, '#d6b25a', { weight: '500', stroke: '#6a5420', sw: h * 0.05 })); }
+  // the flags of the world hanging in the glass lobby (tower_3 ref)
+  for (let i = 0; i < 5; i++) { const [ax, az] = V[i], [bx, bz] = V[(i + 1) % 5];
+    for (let t = 0.2; t < 0.85; t += 0.13) { const x = lerp(ax, bx, t) * 0.82 + cx * 0.18, z = lerp(az, bz, t) * 0.82 + cz * 0.18, cl = ['#c8202a', '#1f3f9a', '#f2f2ee', '#1f8a3a', '#f0c020'][(i * 7 + Math.round(t * 20)) % 5];
+      H.box(x - 0.25, Y0 + 2.2, z - 0.25, x + 0.25, Y0 + 4.4, z + 0.25, cl, { ol: false }); } }
+});
+
+// ======================= POWER PLANT (refs/power-plant): red-brick power station, cream stone bands + cornice, tall round-arched windows,
+// corner towers, a stepped central gable tower carrying the FOUR BLACK smokestacks, the lower arched east wing with a gabled end ==============
+lmHD('powerplant', 56, -17, 19, (H, signs, SG) => {
+  const BR = '#a2482f', BR2 = '#8a3a26', CR = '#e6d9bc', Y0 = CURB, TOP = CURB + 15, GLS = '#262c34';
+  H.box(47, Y0, -27, 65, TOP, -9, BR);
+  H.box(46.8, Y0, -27.2, 65.2, Y0 + 1.1, -8.8, '#6a5a50'); // stone water table
+  const faces = [[47, -9, 65, -9], [65, -9, 65, -27], [65, -27, 47, -27], [47, -27, 47, -9]]; // S (harbour), E, N, W - outward on the right
+  for (const [xa, za, xb, zb] of faces) {
+    const F = H.frame(xa, za, xb, zb);
+    // ground-floor arcade of tall round-headed openings, upper storeys of paired windows, a row of small arched attic windows
+    H.windows(F, 2.2, F.L - 2.2, Y0 + 1.1, Y0 + 6.6, { bw: 2.3, fh: 5.5, ww: 1.5, wh: 3.4, arch: true, head: CR, pane: GLS, lit: 0.75, wy: 0.2 });
+    H.windows(F, 2.2, F.L - 2.2, Y0 + 6.6, Y0 + 10.6, { bw: 1.15, fh: 4.0, ww: 0.62, wh: 2.6, sill: CR, head: CR, pane: GLS, lit: 0.5, mull: '#d8ccb0' });
+    H.windows(F, 2.2, F.L - 2.2, Y0 + 11.4, TOP - 1.2, { bw: 1.15, fh: 2.4, ww: 0.55, wh: 1.0, arch: true, pane: GLS, lit: 0.4, wy: 0.35 });
+    H.pilasters(F, 2.2, F.L - 2.2, Y0 + 1.1, TOP - 0.8, 2.3, 0.3, 0.2, BR2, { ol: false });
+    H.band(F, -0.2, F.L + 0.2, Y0 + 6.4, Y0 + 6.7, 0.18, CR, { ol: false }); H.band(F, -0.3, F.L + 0.3, Y0 + 10.5, Y0 + 11.4, 0.3, CR); // the cream stone band
+    H.band(F, -0.4, F.L + 0.4, TOP - 0.7, TOP - 0.2, 0.42, CR); H.band(F, -0.25, F.L + 0.25, TOP - 0.2, TOP + 0.7, 0.12, BR2); // cornice + parapet
+    for (let u = 1.2; u < F.L; u += 1.15) H.fbox(F, u - 0.18, u + 0.18, TOP - 1.0, TOP - 0.7, 0, 0.3, CR, { ol: false }); // corbel dentils
+  }
+  // corner towers: proud of the walls, a little taller, cream caps with small pyramids
+  lmColl({ x0: 51.5, x1: 60.5, z0: -15.5, z1: -8.5 });
+  for (const [x, z] of [[47, -27], [65, -27], [47, -9], [65, -9]]) {
+    lmColl({ x0: x - 1.3, x1: x + 1.3, z0: z - 1.3, z1: z + 1.3 });
+    H.box(x - 1.3, Y0, z - 1.3, x + 1.3, TOP + 2.2, z + 1.3, BR2); H.box(x - 1.5, TOP + 2.2, z - 1.5, x + 1.5, TOP + 2.7, z + 1.5, CR);
+    const g = new THREE.CylinderGeometry(0.01, 1.45, 1.6, 4); g.rotateY(Math.PI / 4); g.translate(x, TOP + 3.5, z); H.geo(g, '#3f5a50');
+    for (const [xa, za, xb, zb] of [[x - 1.3, z + 1.3, x + 1.3, z + 1.3], [x + 1.3, z - 1.3, x - 1.3, z - 1.3], [x + 1.3, z + 1.3, x + 1.3, z - 1.3], [x - 1.3, z - 1.3, x - 1.3, z + 1.3]]) {
+      const F = H.frame(xa, za, xb, zb); H.windows(F, 0.6, 2.0, Y0 + 2, TOP + 1.6, { bw: 1.4, fh: 3.3, ww: 0.5, wh: 1.8, arch: true, pane: GLS, lit: 0.4 }); }
+  }
+  // stack base behind the roof (x 50..63) and the projecting central bay on the harbour face, rising above the cornice in a stepped gable (refs)
+  H.box(50, TOP, -21, 63, TOP + 3, -16, BR2); H.box(49.85, TOP + 2.6, -21.15, 63.15, TOP + 3.1, -15.85, CR);
+  H.box(51.5, Y0, -15.5, 60.5, TOP + 4.5, -8.5, BR);
+  for (const [x0, x1, y0] of [[52.6, 59.4, TOP + 4.5], [53.8, 58.2, TOP + 6.3], [55, 57, TOP + 8.1]]) { H.box(x0, y0, -12.4, x1, y0 + 1.8, -8.5, BR); H.box(x0 - 0.2, y0 + 1.8, -12.6, x1 + 0.2, y0 + 2.15, -8.3, CR); }
+  H.box(51.3, TOP + 4.1, -15.7, 60.7, TOP + 4.6, -8.3, CR);
+  { const F = H.frame(51.5, -8.5, 60.5, -8.5);
+    H.windows(F, 0.6, F.L - 0.6, Y0 + 11.6, TOP + 3.6, { bw: 1.5, fh: 2.8, ww: 0.8, wh: 1.9, arch: true, head: CR, pane: GLS, lit: 0.55 });
+    H.windows(F, 0.6, F.L - 0.6, Y0 + 1.1, Y0 + 10.4, { bw: 3, fh: 9.3, ww: 2.0, wh: 7.6, pane: GLS, lit: 0.7, mull: '#d8ccb0', head: CR, wy: 0.3 }); // tall glazed bay
+    H.pilasters(F, 0, F.L, Y0 + 1.1, TOP + 4.1, 3, 0.4, 0.22, BR2);
+    H.band(F, -0.2, F.L + 0.2, Y0 + 10.5, Y0 + 11.4, 0.34, CR);
+    const G = H.frame(53.8, -8.5, 58.2, -8.5); H.windows(G, 0.4, G.L - 0.4, TOP + 6.5, TOP + 8, { bw: 1.4, fh: 1.5, ww: 0.6, wh: 0.9, arch: true, pane: GLS, lit: 0.6 });
+    // POWER PLANT: gold serif capitals on a dark plaque high on the bay, 1900 / 2000 date plaques either side (exterior_2 ref)
+    SG.add(F, 4.5, TOP + 2.0, 7.4, 1.25, 0.3, (g, w, h) => { g.fillStyle = '#3a2a1c'; g.fillRect(0, 0, w, h); g.strokeStyle = '#c8a050'; g.lineWidth = h * 0.06; g.strokeRect(h * 0.06, h * 0.06, w - h * 0.12, h - h * 0.12);
+      sText(g, 'POWER PLANT', w / 2, h * 0.54, w * 0.9, h * 0.66, SERIF, '#e8c060', { stroke: '#6a4a18', sw: h * 0.04 }); });
+    for (const [u, t] of [[0.2, '1900'], [8.8, '2000']]) SG.add(F, u, TOP + 2.2, 1.3, 0.8, 0.3, (g, w, h) => { g.fillStyle = '#3a2a1c'; g.fillRect(0, 0, w, h); sText(g, t, w / 2, h / 2, w * 0.86, h * 0.6, SERIF, '#e8c060'); });
+    // BARNES&NOBLE / BOOKSELLERS: white condensed serif letters standing off the bay
+    SG.add(F, 4.5, Y0 + 12.4, 8.6, 1.5, 0.45, (g, w, h) => { sText(g, 'BARNES&NOBLE', w / 2, h * 0.36, w * 0.98, h * 0.62, SERIF, '#fbfaf4', { stroke: '#2a2420', sw: h * 0.04 });
+      sText(g, 'BOOKSELLERS', w / 2, h * 0.82, w * 0.5, h * 0.26, SERIF, '#fbfaf4', { weight: '600', stroke: '#2a2420', sw: h * 0.02 }); }); }
+  for (const [xa, za, xb, zb] of [[60.5, -8.5, 60.5, -15.5], [51.5, -15.5, 51.5, -8.5]]) { const F = H.frame(xa, za, xb, zb); H.windows(F, 0.5, F.L - 0.5, TOP + 0.4, TOP + 4, { bw: 1.6, fh: 3.6, ww: 0.6, wh: 1.8, arch: true, pane: GLS, lit: 0.5 }); }
+  // the four black stacks in a row (refs: tall, dark, slightly tapered, banded)
+  for (const x of [52, 55, 58, 61]) {
+    H.cyl(x, TOP + 3, -18, 1.0, 1.2, 37 - 3 - 15 + 0.4, 16, '#1d1b1a');
+    H.cyl(x, Y0 + 36.2, -18, 1.12, 1.12, 0.7, 16, '#3a3532');
+    for (const k of [0.3, 0.62]) H.cyl(x, TOP + 3 + 18.9 * k, -18, 1.16 - 0.1 * k, 1.16 - 0.1 * k, 0.35, 16, '#33302d', { ol: false });
+  }
+  // east wing (65..68.6 x -24..-12): lower brick hall with tall arched windows and a gabled end with a big round window
+  H.box(65, Y0, -24, 68.6, Y0 + 9, -12, BR);
+  { const F = H.frame(68.6, -12, 68.6, -24); H.windows(F, 0.8, F.L - 0.8, Y0 + 1, Y0 + 8, { bw: 2.4, fh: 7, ww: 1.4, wh: 4.4, arch: true, head: CR, pane: GLS, lit: 0.6, mull: '#d8ccb0', wy: 0.25 });
+    H.band(F, -0.2, F.L + 0.2, Y0 + 8.4, Y0 + 9.0, 0.3, CR); }
+  for (const z of [-12, -24]) { const s = z === -12 ? 1 : -1, F = s > 0 ? H.frame(65, -12, 68.6, -12) : H.frame(68.6, -24, 65, -24);
+    H.windows(F, 0.3, F.L - 0.3, Y0 + 1, Y0 + 8, { bw: 3.6, fh: 7, ww: 1.6, wh: 4.2, arch: true, head: CR, pane: GLS, lit: 0.6, wy: 0.25 }); }
+  { const g = new THREE.BufferGeometry(); // gabled roof of the east wing
+    const p = [65, 9, -24, 68.6, 9, -24, 66.8, 11.4, -24, 65, 9, -12, 66.8, 11.4, -12, 68.6, 9, -12]; const P = []; const tri = (a, b, c) => P.push(...p.slice(a * 3, a * 3 + 3), ...p.slice(b * 3, b * 3 + 3), ...p.slice(c * 3, c * 3 + 3));
+    tri(0, 2, 1); tri(3, 5, 4); tri(0, 3, 4); tri(0, 4, 2); tri(1, 2, 4); tri(1, 4, 5);
+    g.setAttribute('position', new THREE.Float32BufferAttribute(P.map((v, i) => (i % 3 === 1 ? v + Y0 : v)), 3)); g.computeVertexNormals(); H.geo(g, BR2); }
+  // waterside awnings + generic sign on the harbour face
+  { const F = H.frame(47, -9, 65, -9); for (const u of [2.6, 15.4]) H.fbox(F, u - 1.6, u + 1.6, Y0 + 3.4, Y0 + 3.6, 0, 1.4, '#a8302a', { ol: false }); // red awnings
+    // Phillips: big red script with a white outline on the west block (exterior_2 ref), + the Phillips Seafood canopy sign at the door
+    SG.add(F, 2.95, Y0 + 11.7, 3.1, 1.25, 1.45, (g, w, h) => sText(g, 'Phillips', w / 2, h * 0.55, w * 0.96, h * 0.9, SCRIPT, '#e0261c', { weight: 'bold', slant: 0.12, stroke: '#fff4ea', sw: h * 0.1, glow: '#ff3020' }));
+    SG.add(F, 2.6, Y0 + 3.62, 3.2, 0.6, 1.42, (g, w, h) => { g.fillStyle = '#1f2a3a'; g.fillRect(0, 0, w, h); sText(g, 'Phillips', w * 0.36, h * 0.5, w * 0.5, h * 0.8, SCRIPT, '#e8302a', { slant: 0.1, stroke: '#fff', sw: h * 0.06 }); sText(g, 'SEAFOOD', w * 0.78, h * 0.52, w * 0.36, h * 0.38, SANS, '#fff'); });
+    SG.add(F, 15.4, Y0 + 3.62, 3.2, 0.6, 1.42, (g, w, h) => { g.fillStyle = '#a8302a'; g.fillRect(0, 0, w, h); sText(g, 'HARD ROCK CAFE', w / 2, h * 0.52, w * 0.9, h * 0.5, SANS, '#ffd23a'); }); }
+  // Hard Rock Cafe: round yellow/red logo medallion on the east wing's harbour end + small HRC roundels (exterior_2 ref)
+  const hrLogo = (g, w, h) => { const R = Math.min(w, h) / 2 - 2; g.translate(w / 2, h / 2);
+    g.fillStyle = '#f5c51e'; g.beginPath(); g.arc(0, 0, R, 0, TAU); g.fill(); g.lineWidth = R * 0.08; g.strokeStyle = '#7a1a10'; g.stroke();
+    g.fillStyle = '#d82a1c'; g.beginPath(); g.arc(0, 0, R * 0.8, 0, TAU); g.fill();
+    sText(g, 'Hard Rock', 0, -R * 0.12, R * 1.5, R * 0.5, SCRIPT, '#ffe8a0', { slant: 0.1, stroke: '#5a0e08', sw: R * 0.05 }); sText(g, 'CAFE', 0, R * 0.42, R * 1.0, R * 0.32, SANS, '#ffe8a0'); };
+  { const F = H.frame(65, -12, 68.6, -12); SG.add(F, 1.8, Y0 + 9.4, 2.4, 2.4, 0.15, hrLogo); }
+  for (const u of [3.4, 14.6]) SG.add(H.frame(47, -9, 65, -9), u, Y0 + 8.1, 1.1, 1.1, 0.2, (g, w, h) => { const R = w / 2 - 1; g.fillStyle = '#e6d9bc'; g.beginPath(); g.arc(w / 2, h / 2, R, 0, TAU); g.fill(); g.strokeStyle = '#7a3a26'; g.lineWidth = R * 0.12; g.stroke(); sText(g, 'HRC', w / 2, h / 2, R * 1.4, R * 0.7, SERIF, '#7a3a26'); });
+  // the giant Hard Rock guitar standing on the roof in front of the stacks (a flat cut-out, drawn both sides) with the round logo across its body
+  SG.at(56, TOP + 10.1, -10.6, 0, 4.6, 12.5, (g, w, h) => {
+    const k = w / 46; g.save(); g.scale(k, k); // design space 46 x 125
+    g.fillStyle = '#e8e2d0'; g.fillRect(20.5, 6, 5, 70); for (let y = 12; y < 74; y += 5) { g.fillStyle = '#9a927e'; g.fillRect(20.5, y, 5, 0.6); } // neck + frets
+    g.fillStyle = '#d8304a'; g.beginPath(); g.moveTo(19, 0); g.lineTo(28, 0); g.lineTo(29, 9); g.lineTo(18, 9); g.closePath(); g.fill(); // headstock
+    g.fillStyle = '#c8c0b0'; for (let i = 0; i < 3; i++) { g.fillRect(15.5, 1.5 + i * 2.6, 3, 1.4); g.fillRect(28.5, 1.5 + i * 2.6, 3, 1.4); }
+    g.beginPath(); g.moveTo(23, 72); g.bezierCurveTo(5, 66, 2, 82, 6, 92); g.bezierCurveTo(10, 100, 0, 108, 6, 116); g.bezierCurveTo(12, 126, 34, 126, 40, 116);
+    g.bezierCurveTo(46, 108, 36, 100, 40, 92); g.bezierCurveTo(44, 80, 40, 64, 30, 70); g.closePath(); g.fillStyle = '#e8365a'; g.fill(); g.lineWidth = 1.4; g.strokeStyle = '#5a0e1a'; g.stroke();
+    g.fillStyle = '#f4f0e6'; g.fillRect(14, 108, 18, 3); g.restore();
+    g.save(); g.translate(0, 84 * k - w * 0.36); hrLogo(g, w, w * 0.72 * 1.0); g.restore(); });
+});
 
 // ---------------- characters: procedural stylised rigs (groups of toon parts with outline hulls) ----------------
 const G = { // low-poly on purpose (32-bit era budgets)
@@ -1325,6 +1663,97 @@ function applyPose(J, p, r, dt, snapTilt) {
   }
   J.hips.position.y = damp(J.hips.position.y, J.d.hip + p.y, r, dt);
   J.tilt.position.y = damp(J.tilt.position.y, p.ty, r, dt);
+}
+
+// ---------------- rig merge (performance): every character part becomes one vertex range of a rigidly-skinned mesh ----------------
+// A rig was ~40-90 little meshes, each with its own ink-outline hull (2 draw calls + a shadow call per part). After the rig is built,
+// mergeRig() bakes each part into its joint's space, tags its vertices with that joint (skinIndex, weight 1) and merges everything
+// per material into one SkinnedMesh whose "bones" are the rig's existing joint groups (poses keep animating the groups as before).
+// The hulls merge the same way into one skinned outline mesh. Result: ~2-4 draw calls per character, same look.
+const OUT_SKIN = new Map(); // skinned twin of each outline material (same uniforms)
+function skinnedOutline(src) {
+  let m = OUT_SKIN.get(src); if (m) return m;
+  m = new THREE.ShaderMaterial({
+    uniforms: src.uniforms, // shared: width, colour and fog follow the original
+    vertexShader: `#include <common>
+      #include <skinning_pars_vertex>
+      attribute vec3 odir; uniform float uW; varying float vD;
+      void main() { vec3 p = position; vec3 od = odir;
+        #ifdef USE_SKINNING
+          mat4 bm = getBoneMatrix(skinIndex.x);
+          p = (bindMatrixInverse * (bm * (bindMatrix * vec4(position, 1.0)))).xyz;
+          od = mat3(bindMatrixInverse) * (mat3(bm) * (mat3(bindMatrix) * odir));
+        #endif
+        vec4 wp = modelMatrix * vec4(p, 1.0); vec3 wd = mat3(modelMatrix) * od;
+        float d = distance(wp.xyz, cameraPosition); wp.xyz += wd * uW * clamp(d, 2.5, 36.0);
+        vD = d; gl_Position = projectionMatrix * viewMatrix * wp; }`,
+    fragmentShader: src.fragmentShader,
+    side: THREE.BackSide,
+  });
+  OUT_SKIN.set(src, m); return m;
+}
+const _I4 = new THREE.Matrix4(), _N3 = new THREE.Matrix3(), _O3 = new THREE.Matrix3(), _v3 = new THREE.Vector3();
+function mergeRig(J) {
+  const root = J.root, bones = [], bIdx = new Map(), byMat = new Map(), byOl = new Map(), kill = [];
+  root.updateMatrixWorld(true);
+  root.traverse((o) => {
+    if (!o.isMesh || (o.parent && o.parent.isMesh)) return; // part meshes only (hulls are children of parts)
+    const b = o.parent; if (!bIdx.has(b)) { bIdx.set(b, bones.length); bones.push(b); }
+    const hull = o.children.find((c) => c.isMesh && c.material && c.material.isShaderMaterial);
+    const e = { g: o.geometry, M: o.matrix.clone(), bi: bIdx.get(b) };
+    if (!byMat.has(o.material)) byMat.set(o.material, []); byMat.get(o.material).push(e);
+    if (hull) { if (!byOl.has(hull.material)) byOl.set(hull.material, []); byOl.get(hull.material).push(e); }
+    kill.push(o, ...(hull ? [hull] : []));
+  });
+  if (!bones.length) return J;
+  for (const o of kill) { if (o.parent) o.parent.remove(o); const k = QUAL.outlines.indexOf(o); if (k >= 0) QUAL.outlines.splice(k, 1); }
+  const skel = new THREE.Skeleton(bones, bones.map(() => new THREE.Matrix4()));
+  const build = (list, ol) => {
+    let nv = 0, ni = 0; for (const e of list) { nv += e.g.attributes.position.count; ni += e.g.index ? e.g.index.count : e.g.attributes.position.count; }
+    const P = new Float32Array(nv * 3), N = ol ? null : new Float32Array(nv * 3), UV = ol ? null : new Float32Array(nv * 2), C = ol ? null : new Float32Array(nv * 3),
+      OD = ol ? new Float32Array(nv * 3) : null, SI = new Uint16Array(nv * 4), SW = new Float32Array(nv * 4), IX = nv > 65535 ? new Uint32Array(ni) : new Uint16Array(ni);
+    let v0 = 0, i0 = 0;
+    for (const e of list) {
+      const g = e.g, A = g.attributes, n = A.position.count; _N3.getNormalMatrix(e.M); _O3.setFromMatrix4(e.M);
+      for (let i = 0; i < n; i++) {
+        const k = v0 + i;
+        _v3.fromBufferAttribute(A.position, i).applyMatrix4(e.M); P[k * 3] = _v3.x; P[k * 3 + 1] = _v3.y; P[k * 3 + 2] = _v3.z;
+        if (ol) { _v3.fromBufferAttribute(A.odir, i).applyMatrix3(_O3); OD[k * 3] = _v3.x; OD[k * 3 + 1] = _v3.y; OD[k * 3 + 2] = _v3.z; }
+        else {
+          _v3.fromBufferAttribute(A.normal, i).applyMatrix3(_N3).normalize(); N[k * 3] = _v3.x; N[k * 3 + 1] = _v3.y; N[k * 3 + 2] = _v3.z;
+          if (A.uv) { UV[k * 2] = A.uv.getX(i); UV[k * 2 + 1] = A.uv.getY(i); }
+          if (A.color) { C[k * 3] = A.color.getX(i); C[k * 3 + 1] = A.color.getY(i); C[k * 3 + 2] = A.color.getZ(i); } else C[k * 3] = C[k * 3 + 1] = C[k * 3 + 2] = 1;
+        }
+        SI[k * 4] = e.bi; SW[k * 4] = 1;
+      }
+      if (g.index) for (let j = 0; j < g.index.count; j++) IX[i0 + j] = g.index.getX(j) + v0; else for (let j = 0; j < n; j++) IX[i0 + j] = j + v0;
+      v0 += n; i0 += g.index ? g.index.count : n;
+    }
+    const G2 = new THREE.BufferGeometry();
+    G2.setAttribute('position', new THREE.BufferAttribute(P, 3));
+    if (ol) G2.setAttribute('odir', new THREE.BufferAttribute(OD, 3));
+    else { G2.setAttribute('normal', new THREE.BufferAttribute(N, 3)); G2.setAttribute('uv', new THREE.BufferAttribute(UV, 2)); G2.setAttribute('color', new THREE.BufferAttribute(C, 3)); }
+    G2.setAttribute('skinIndex', new THREE.Uint16BufferAttribute(SI, 4)); G2.setAttribute('skinWeight', new THREE.BufferAttribute(SW, 4));
+    G2.setIndex(new THREE.BufferAttribute(IX, 1));
+    return G2;
+  };
+  const add = (geo, mat, ol) => {
+    const m = new THREE.SkinnedMesh(geo, mat); m.bind(skel, _I4);
+    m.boundingSphere = new THREE.Sphere(new THREE.Vector3(0, 0.95, 0), 1.9); // rig-space bounds (culling without per-frame CPU skinning)
+    m.castShadow = !ol; m.receiveShadow = false;
+    if (ol) { m.visible = QUAL.hd; QUAL.outlines.push(m); }
+    root.add(m); return m;
+  };
+  J.merged = [];
+  for (const [mat, list] of byMat) J.merged.push(add(build(list, false), mat, false));
+  for (const [om, list] of byOl) J.merged.push(add(build(list, true), skinnedOutline(om), true));
+  const seen = new Set(); for (const o of kill) if (!seen.has(o.geometry)) { seen.add(o.geometry); o.geometry.dispose(); }
+  return J;
+}
+if (!Q.has('nomerge')) {
+  const _bh = buildHero, _bt = buildThug;
+  buildHero = (o) => mergeRig(_bh(o));
+  buildThug = (l) => mergeRig(_bt(l));
 }
 
 // ---------------- comic FX: hit stars, onomatopoeia, dust puffs, slash crescents, lock ring ----------------
@@ -2825,44 +3254,93 @@ function frame(now) {
 }
 requestAnimationFrame(frame);
 window.__cel = { S, hero, partner, PART, BOOST_P, hurtTurtle, reviveTurtle, partnerSlot, get KEYS() { return KEYS; }, enemies, CAM, BOTR, FPS, IN, renderer, CINE, ACTIONS, DOOR, PIZZA, LADDER, ROOF, get QTE() { return QTE; }, get lockT() { return lockT; }, press: (k) => PRESS.add(k), tryAction, get frames() { return frames; }, atlasRows: _ay + _arow, THREE, camera, scene, CYC, LOW, NIGHTFX, draw, QUAL, setHD, LANDMARKS, CITY, POWER, WATERK, startDrown, actContext, APANEL, MANHOLES, CLIMBS, VEHICLES, RIDE, isWater, groundY, WB, COLL, BLD, PIERS, POSTS, CARS, WATER };
-
-// ---------------- B-MORE 410 RADIO: music like a radio station, full credit up top like a station ID (Brad, DESIGN.md "Night radio" / "Day radio").
-// Plays through the official YouTube IFrame Player API (no audio is downloaded or shipped). The player always stays visible (>= 200x200 CSS px)
-// inside a boombox frame; it collapses to that size in a corner and never covers the arcade panel. Starts on the first tap / keypress.
-// Day playlist at day, night playlist (rotating) at night, switched at dusk / dawn of the game's cycle with a volume crossfade.
-// Off/on: M, a short tap of R (holding R still turns the camera), the 📻 HUD button or the box's power button. onError skips to the next track.
-// ?radio=0 disables it, ?radiotest=1 swaps the YouTube player for a stub (headless logic checks). Test hook: window.__radio ----------------
+// ---------------- B-MORE 410 RADIO: music like a radio station, full credit up top like a station ID (Brad, DESIGN.md "Night radio" / "Day radio" / "Radio stations").
+// Plays through the official YouTube IFrame Player API (no audio is downloaded or shipped). Creative Commons Baltimore club tracks (Ducky Dynamo, DJ AyyMello)
+// play from the artists' official YouTube uploads; if YouTube refuses one (embed error / no signal) that same track plays through Bandcamp's official
+// embedded player instead ("bandcamp" source: no JS API, so the box says TAP ▶ TO PLAY and a timer set to the track length moves on). Audio is never edited.
+// Stations (GTA-style dial, any time): AUTO (default: DAY by day, NIGHT by night, switched at dusk / dawn with a crossfade), B-MORE 410 DAY, B-MORE 410 NIGHT,
+// DUCKY DYNAMO FM (all the CC tracks), LOR BITEWHO ([FREE] beats), B-MORE CLUB + B-MORE RAP (Brad's 30 Baltimore classics), OFF. The choice is kept in localStorage. Every switch shows the station-ID card with the full credit.
+// Controls (all in the slim top bar): ⏮ / station / ⏭ / CR (credits list); tap the station = next station, long-press = off/on;
+// keys N = next track, B = previous track, T = next station, M or a short tap of R = off/on (holding R still turns the camera).
+// No visible video (Brad 2026-10-11 09:06): the YouTube iframe is 2x2 px, opacity .01, pointer-events:none, behind everything; controls=0, fs=0, disablekb=1,
+// allow="autoplay" only. Starts on the first tap / keypress with the title track. The station-ID card drops from the bar on every switch.
+// ?radio=0 disables it, ?radiotest=1 swaps the YouTube player for a stub (headless logic checks), ?radiobc=1 forces the Bandcamp player for the CC tracks.
+// Test hook: window.__radio ----------------
 const RADIO = (function () {
   if (Q.get('radio') === '0') return null;
-  const TRACKS = {
-    day: [{ id: 'BJlNLNNzNZo', title: "I Can't", tag: 'Baltimore Type Beat', artist: '', prod: 'Lor Bitewho' }],
-    night: [{ id: 'nEUiAHAm60o', title: 'playa shh', tag: '', artist: 'NASG CHAZ', prod: 'DC 1-30' },
-      { id: 'Tu_WQLMzdu8', title: 'Hood Raised', tag: 'Baltimore Club Beat', artist: '', prod: 'Lor Bitewho' }],
+  const BYND = ['CC BY-ND 4.0', 'https://creativecommons.org/licenses/by-nd/4.0/'], BYNCND = ['CC BY-NC-ND 4.0', 'https://creativecommons.org/licenses/by-nc-nd/4.0/'];
+  const cc = (id, title, tag, artist, lic, src, bc, len) => ({ id, title, tag, artist, prod: '', lic: lic[0], licUrl: lic[1], src, yt: 'https://youtu.be/' + id, bc, len });
+  const lb = (id, title) => ({ id, title, tag: '', artist: '', prod: 'Lor Bitewho (@OneBiteBeats)', yt: 'https://youtu.be/' + id });
+  const yt = (id, title, artist) => ({ id, title, tag: '', artist, prod: '', yt: 'https://youtu.be/' + id });
+  const T = {
+    syc: cc('g9-ZkYiEUdo', 'Select Your Character', 'Baltimore Club', 'Ducky Dynamo', BYND, 'https://duckydynamo.bandcamp.com/track/select-your-character-baltimore-club', 429017724, 159),
+    bullet: cc('l3mVHdpItYg', 'Baltimore Bullet', 'Baltimore Club', 'Ducky Dynamo', BYND, 'https://duckydynamo.bandcamp.com/track/baltimore-bullet-baltimore-club-2', 2173550732, 155),
+    crash: cc('FtE6FiaJB5I', 'Completely Valid Crash Out', 'Baltimore Club', 'Ducky Dynamo', BYND, 'https://duckydynamo.bandcamp.com/track/completely-valid-crash-out-baltimore-club', 813921011, 163),
+    cock: cc('0T4x4sAf0eE', 'Cockback', 'Baltimore Club', 'Ducky Dynamo', BYND, 'https://duckydynamo.bandcamp.com/track/cockback-baltimore-club', 511392191, 153),
+    para: cc('atMQ7h_1J9g', '3AM in The Paradox', 'Baltimore Club Music', 'DJ AyyMello feat. Ducky Dynamo', BYNCND, 'https://ayymello.bandcamp.com/track/3am-in-the-paradox-feat-ducky-dynamo-baltimore-club-music', 2891386594, 208),
+    // Lor Bitewho (@OneBiteBeats) [FREE] Baltimore type beats, official uploads on his channel; credit: "TITLE" · prod. Lor Bitewho (@OneBiteBeats)
+    icant: lb('BJlNLNNzNZo', "I Can't"), hood: lb('Tu_WQLMzdu8', 'Hood Raised'), back: lb('bOkdSXQuYPM', 'Back Street'), war: lb('nyxnsGp4ilI', 'WAR READY'),
+    took: lb('ckZEi0DIeyk', 'TOOK CONTROL'), run: lb('ggNVhuKhYuQ', 'On The Run'), every: lb('IjuK4VVuTHI', 'Everything I Wanted'), anthem: lb('mUCm7MZGRKY', 'Block Anthem'),
+    playa: { id: 'nEUiAHAm60o', title: 'playa shh', tag: '', artist: 'NASG CHAZ', prod: 'DC 1-30', yt: 'https://youtu.be/nEUiAHAm60o' },
+    // Brad's Baltimore classics (2026-10-11 09:16, radio/baltimore_classics_brad.md): exactly his 30, his titles / artists, credited "TITLE" · ARTIST, ranked
+    c1: yt('quUSjngSmN0', 'Dance My Pain Away', 'Rod Lee'), c2: yt('qEnptXwZSfo', 'How U Wanna Carry It', 'Miss Tony'), c3: yt('1zRb_WNEeaw', 'Doo Doo Brown', '2 Hyped Brothers & A Dog'),
+    c4: yt('rvZWAEDI6bY', 'Whores in This House', 'Frank Ski'), c5: yt('1kbwFhD597Q', "I'm the Ish", 'DJ Class'), c6: yt('gXVaIiexbRk', 'Bank Roll', 'Tim Trees'),
+    c7: yt('u2hse3dRJZ8', 'Bring in the Katz', 'KW Griff ft. Pork Chop'), c8: yt('gVCCuHMRpco', 'Oh (B-More Anthem)', 'Bossman'), c9: yt('l_xzOk0w3qU', 'Watch Out for the Big Girl', 'DJ Booman & Jimmy Jones'),
+    c10: yt('BbXklS6t4AM', 'Bird Flu', 'Lor Scoota'), c11: yt('RT0GKX-Pfkg', 'Bank Rolls (Remix)', 'Tate Kobang'), c12: yt('9WyLkGp9eM0', 'Bitchuary', 'Shordie Shordie'),
+    c13: yt('fHAigWTZioI', 'Shake It to the Ground', 'Blaqstarr & Rye Rye'), c14: yt('BWpbV-DrI_0', 'Slide To The Left', 'K-Swift'), c15: yt('GI7wtAZaXXs', 'Posted', 'Young Moose'),
+    c16: yt('mze0GuD2k6c', 'Money Man', 'Peso Da Mafia'), c17: yt('Av5jyGX2yE8', 'Hands Up Thumbs Down', 'Blaqstarr'), c18: yt('SrYcZfalGjI', "Samir's Theme", 'Debonair Samir'),
+    c19: yt('kUlr1WLU6ys', 'Girlfriend', 'DJ Technics'), c20: yt('f32eCeneIbY', 'One Wish', 'Shordie Shordie'), c21: yt('7Z3ExxAPSF8', 'Shining', 'YBS Skola'),
+    c22: yt('_Dru5adhPjU', 'Dumb Dumb', 'Young Moose'), c23: yt('KKIunI_nlKg', 'BBB', 'Bandhunta Izzy ft. BB Sleepy'), c24: yt('jovjP6StSWU', 'Might Not Miss', 'YG Teck'),
+    c25: yt('Svmcd4uvkiY', 'Whole Lotta Money', 'YBS Skola'), c26: yt('8pWftkom4_I', 'War', 'YGG Tay'), c27: yt('RknlZpl-VpM', 'War', 'King Los ft. Marsha Ambrosius'),
+    c28: yt('V16BdeeA4YY', 'North North', 'Tate Kobang'), c29: yt('uwl1zto209M', 'Bmore Is The Livest Town', 'Mighty Mark'), c30: yt('XIs3B_CL0l8', 'Bad Sista', 'Mighty Mark ft. TT the Artist'),
   };
-  // the radio icon is an inline SVG (an emoji may be missing on some devices); the plain-text credit (test hook) keeps the 📻
+  const TITLE = T.syc; // the title / tune-in track
+  const TRACKS = { day: [T.syc, T.icant, T.bullet, T.back, T.anthem], night: [T.playa, T.hood, T.crash, T.cock, T.para, T.war, T.run],
+    ducky: [T.syc, T.bullet, T.crash, T.cock, T.para], lor: [T.icant, T.hood, T.back, T.war, T.took, T.run, T.every, T.anthem],
+    club: [T.c1, T.c2, T.c3, T.c4, T.c5, T.c7, T.c9, T.c13, T.c14, T.c17, T.c18, T.c19, T.c29, T.c30],
+    rap: [T.c6, T.c8, T.c10, T.c11, T.c12, T.c15, T.c16, T.c20, T.c21, T.c22, T.c23, T.c24, T.c25, T.c26, T.c27, T.c28] };
+  const STATIONS = ['auto', 'day', 'night', 'ducky', 'lor', 'club', 'rap', 'off'];
+  const SNAME = { auto: 'AUTO', day: 'B-MORE 410 DAY', night: 'B-MORE 410 NIGHT', ducky: 'DUCKY DYNAMO FM', lor: 'LOR BITEWHO', club: 'B-MORE CLUB', rap: 'B-MORE RAP', off: 'OFF' };
+  const SSHORT = { auto: 'AUTO', day: 'DAY', night: 'NIGHT', ducky: 'DUCKY FM', lor: 'LOR BITEWHO', club: 'B-MORE CLUB', rap: 'B-MORE RAP', off: 'OFF' };
   const ICON = '<svg class="ric" viewBox="0 0 24 18" aria-label="radio"><path d="M6 4 L17 0.8" stroke="currentColor" stroke-width="1.6" fill="none"/><rect x="1" y="4" width="22" height="13" rx="2.5" fill="currentColor"/><circle cx="7" cy="11" r="3.6" fill="#120a22"/><circle cx="7" cy="11" r="1.3" fill="currentColor"/><rect x="13" y="7" width="7.5" height="3" rx="1" fill="#120a22"/><circle cx="15" cy="13.6" r="1.2" fill="#120a22"/><circle cx="18.6" cy="13.6" r="1.2" fill="#120a22"/></svg>';
-  const STATION = 'B-MORE 410 RADIO', VOL = 70, FADE = 1.6, BIG_S = 5;
-  const TEST = Q.has('radiotest');
-  const R = { on: true, started: false, ready: false, playing: false, list: null, idx: { day: -1, night: -1 }, cur: null, vol: 0, goal: 0, after: null,
-    bad: new Set(), log: [], offAir: false, player: null, bigT: 0, ids: 0, test: TEST };
+  // ⏮ / ⏭ as inline SVG (the emoji / symbol glyphs are missing on some devices)
+  const PREV = '<svg class="rsv" viewBox="0 0 20 14" aria-hidden="true"><rect x="1" y="1" width="2.6" height="12" fill="currentColor"/><path d="M11 1 L3.6 7 L11 13Z M19 1 L11.6 7 L19 13Z" fill="currentColor"/></svg>';
+  const NEXT = '<svg class="rsv" viewBox="0 0 20 14" aria-hidden="true"><path d="M1 1 L8.4 7 L1 13Z M9 1 L16.4 7 L9 13Z" fill="currentColor"/><rect x="16.4" y="1" width="2.6" height="12" fill="currentColor"/></svg>';
+  const STATION = 'B-MORE 410 RADIO', VOL = 70, FADE = 1.6, BIG_S = 5, LONG_MS = 550, LS = 'tcb_radio_station';
+  const TEST = Q.has('radiotest'), FORCE_BC = Q.get('radiobc') === '1';
+  let saved = null; try { saved = localStorage.getItem(LS); } catch (e) {}
+  const st0 = STATIONS.includes(saved) ? saved : 'auto';
+  const R = { station: st0, lastSt: st0 === 'off' ? 'auto' : st0, on: st0 !== 'off', started: false, ready: false, playing: false, list: null, idx: { day: -1, night: -1, ducky: -1, lor: -1, club: -1, rap: -1 }, cur: null,
+    vol: 0, goal: 0, after: null, bad: new Set(), ytFail: new Set(), log: [], offAir: false, player: null, bigT: 0, ids: 0, test: TEST, bc: null, bcLeft: 0, bcTapped: false, noSignal: false };
 
-  // ---- DOM + CSS (self-contained) ----
+  // ---- DOM + CSS (self-contained). No visible video: the YouTube iframe sits in a 2x2 px, opacity .01, pointer-events:none box behind
+  // everything (audio only); the only radio UI is the top bar (credit ticker + ⏮ / station / ⏭ / CR) and the station-ID card that drops from it ----
   const css = document.createElement('style');
   css.textContent = `
-  #rid { position: fixed; z-index: 59; left: 0; right: 0; top: 0; height: calc(env(safe-area-inset-top, 0px) + 20px); padding-top: env(safe-area-inset-top, 0px); box-sizing: border-box; pointer-events: none;
-    background: linear-gradient(#1b1030, #120a22); border-bottom: 2px solid #000; box-shadow: 0 2px 0 rgba(255,61,110,.55); overflow: hidden; }
-  #ridt { position: absolute; left: 0; right: 0; bottom: 0; height: 18px; display: flex; align-items: center; white-space: nowrap; overflow: hidden;
-    font: 800 11px/18px system-ui, -apple-system, "Segoe UI", sans-serif; letter-spacing: .3px; color: #fff; }
+  #rid { position: fixed; z-index: 59; left: 0; right: 0; top: 0; height: calc(env(safe-area-inset-top, 0px) + 28px); padding: env(safe-area-inset-top, 0px) env(safe-area-inset-right, 0px) 0 env(safe-area-inset-left, 0px);
+    box-sizing: border-box; display: flex; align-items: center; gap: 4px; pointer-events: none;
+    background: linear-gradient(#1b1030, #120a22); border-bottom: 2px solid #000; box-shadow: 0 2px 0 rgba(255,61,110,.55); }
+  #ridt { flex: 1; min-width: 0; height: 26px; display: flex; align-items: center; white-space: nowrap; overflow: hidden;
+    font: 800 11px/26px system-ui, -apple-system, "Segoe UI", sans-serif; letter-spacing: .3px; color: #fff; }
   #ridt span { display: inline-block; padding-left: 8px; }
-  #ridt b { color: #ffd23c; font-weight: 900; } #ridt i { color: #ff9ad0; font-style: normal; }
+  #ridt b { color: #ffd23c; font-weight: 900; } #ridt i { color: #ff9ad0; font-style: normal; } #ridt u { color: #8fe8ff; text-decoration: none; } #ridt em { color: #7dffb0; font-style: normal; font-weight: 900; }
   #ridt.scroll span { animation: ridm var(--dur, 18s) linear 1.5s infinite; }
   @keyframes ridm { 0%, 6% { transform: translateX(0); } 100% { transform: translateX(-50%); } }
   .ric { width: 1.35em; height: 1em; vertical-align: -0.12em; color: #ffd23c; display: inline-block; }
-  #rbtn .ric { color: #14101f; } #rbtn.off .ric { color: #ddd; } #rbar .ric { color: #ffd23c; }
-  body.radio #proto { top: calc(env(safe-area-inset-top, 0px) + 26px); } body.radio #hpbox { top: calc(env(safe-area-inset-top, 0px) + 28px); }
-  body.radio #mmap { top: calc(env(safe-area-inset-top, 0px) + 54px); } body.radio #clock { top: calc(env(safe-area-inset-top, 0px) + 116px); }
-  body.radio #qbtn { top: calc(env(safe-area-inset-top, 0px) + 132px); }
-  #ridc { position: fixed; z-index: 61; left: 50%; top: calc(env(safe-area-inset-top, 0px) + 24px); width: min(560px, calc(100vw - 16px)); box-sizing: border-box; pointer-events: none;
+  .rsv { width: 1.25em; height: .9em; vertical-align: -0.08em; display: inline-block; }
+  #rctl { flex: none; display: flex; gap: 3px; padding-right: 4px; pointer-events: auto; }
+  #rctl button { all: unset; cursor: pointer; box-sizing: border-box; height: 22px; min-width: 28px; padding: 0 5px; border-radius: 5px; border: 1px solid #000; box-shadow: inset 0 0 0 1px #5a4a80;
+    background: #2a1650; color: #ffd23c; text-align: center; font: 900 12px/20px system-ui, sans-serif; white-space: nowrap; touch-action: manipulation; -webkit-user-select: none; user-select: none; -webkit-touch-callout: none; }
+  #rctl #rst { background: #ff9ad0; color: #14101f; font: 7px/20px 'PX', monospace; max-width: 34vw; overflow: hidden; text-overflow: ellipsis; }
+  #rctl #rst .ric { color: #14101f; } #rid.off #rctl #rst:not(.hold) { background: #777; color: #eee; } #rid.off .rsk { opacity: .4; }
+  #rctl #rst.hold { background: #ff3d6e; color: #fff; }
+  #rctl #rcrb { font-size: 9px; color: #8fe8ff; }
+  #rctl button:active { background: #ff3d6e; color: #fff; }
+  body.touch #rid { height: calc(env(safe-area-inset-top, 0px) + 30px); } body.touch #rctl button { height: 26px; min-width: 32px; line-height: 24px; }
+  body.radio #proto { top: calc(env(safe-area-inset-top, 0px) + 36px); } body.radio #hpbox { top: calc(env(safe-area-inset-top, 0px) + 38px); }
+  body.radio #mmap { top: calc(env(safe-area-inset-top, 0px) + 64px); } body.radio #clock { top: calc(env(safe-area-inset-top, 0px) + 126px); }
+  body.radio #qbtn { top: calc(env(safe-area-inset-top, 0px) + 142px); }
+  #ridc { position: fixed; z-index: 61; left: 50%; top: calc(env(safe-area-inset-top, 0px) + 34px); width: min(560px, calc(100vw - 16px)); box-sizing: border-box; pointer-events: none;
     transform: translate(-50%, -150%); opacity: 0; transition: transform .45s cubic-bezier(.2,1.4,.4,1), opacity .3s; padding: 9px 12px 10px; text-align: center;
     background: linear-gradient(#2a1650, #160c2c); border: 3px solid #000; box-shadow: 4px 4px 0 #000, inset 0 0 0 2px #ff3d6e; color: #fff; }
   #ridc.on { transform: translate(-50%, 0); opacity: 1; }
@@ -2870,44 +3348,52 @@ const RADIO = (function () {
   #ridc .sh { font: 800 10px/1.6 system-ui, sans-serif; letter-spacing: 3px; color: #8fe8ff; }
   #ridc .np { font: 900 16px/1.25 system-ui, -apple-system, sans-serif; margin-top: 3px; text-shadow: 2px 2px 0 #000; }
   #ridc .cr { font: 800 13px/1.35 system-ui, sans-serif; color: #ffb3dc; margin-top: 2px; text-shadow: 1px 1px 0 #000; }
-  #rbox { position: fixed; z-index: 15; right: calc(env(safe-area-inset-right, 0px) + 8px); bottom: calc(var(--panel, 0px) + env(safe-area-inset-bottom, 0px) * 0 + 8px);
-    box-sizing: border-box; padding: 0 4px 4px; border: 3px solid #000; border-radius: 12px; box-shadow: 3px 3px 0 #000;
-    background: linear-gradient(#3a3d46, #22242b); display: flex; flex-direction: column; align-items: center; pointer-events: auto; touch-action: manipulation; }
-  body.touch #rbox { bottom: calc(var(--panel, 0px) + 6px); right: 6px; }
-  #rbox.hide { display: none; }
-  #rbar { display: flex; align-items: center; gap: 4px; width: 100%; height: 22px; font: 8px/1 'PX', monospace; color: #ffd23c; }
-  #rbar .rlb { flex: 1; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; text-shadow: 1px 1px 0 #000; }
-  #rbar button { all: unset; cursor: pointer; width: 20px; height: 16px; border-radius: 4px; background: #111; color: #fff; border: 1px solid #555; text-align: center; font: 10px/16px system-ui, sans-serif; }
-  #rbar button:active { background: #ff3d6e; }
-  #rmid { display: flex; align-items: center; gap: 6px; }
-  .rspk { width: 64px; height: 64px; border-radius: 50%; border: 3px solid #000; background: radial-gradient(circle, #555 0 14%, #111 16% 30%, #2b2b2b 32% 100%);
-    box-shadow: inset 0 0 0 4px #4a4d57; }
-  #rbox.mini .rspk { display: none; }
-  #rspks { display: flex; flex-direction: column; gap: 10px; } #rbox.mini #rspks { display: none; }
-  #rplay { width: 200px; height: 200px; min-width: 200px; min-height: 200px; background: #000; border: 2px solid #000; border-radius: 4px; overflow: hidden; position: relative; }
-  #rplay iframe, #rplay > div { width: 100% !important; height: 100% !important; display: block; }
-  #rstub { display: flex !important; align-items: center; justify-content: center; text-align: center; font: 800 12px/1.4 system-ui, sans-serif; color: #ccc; background: repeating-linear-gradient(45deg,#181818 0 8px,#202020 8px 16px); }
-  #rtip { width: 200px; font: 700 10px/1.3 system-ui, sans-serif; color: #fff; text-align: center; margin-top: 3px; }
-  #rtip:empty { display: none; }
-  #rbtn { position: fixed; z-index: 60; pointer-events: auto; cursor: pointer; right: calc(env(safe-area-inset-right, 0px) + 10px); top: calc(env(safe-area-inset-top, 0px) + 152px);
-    font: 8px/1 'PX', monospace; color: #000; background: #ff9ad0; border: 2px solid #000; box-shadow: 2px 2px 0 #000; padding: 5px 6px; touch-action: manipulation; }
-  #rbtn.off { background: #777; color: #ddd; }
-  @media (max-width: 480px) { #ridc .np { font-size: 14px; } #ridc .cr { font-size: 12px; } }
-  @media (max-height: 420px) { #rplay { width: 200px; height: 200px; } #rbar { height: 18px; } }`;
+  #ridc .lc { font: 700 11px/1.35 system-ui, sans-serif; color: #c9f3ff; margin-top: 2px; word-break: break-all; }
+  #ridc .lc:empty { display: none; }
+  #rplay { position: fixed; left: 0; bottom: 0; width: 2px; height: 2px; overflow: hidden; opacity: .01; pointer-events: none; z-index: -1; }
+  #rplay iframe, #rplay > div { width: 2px !important; height: 2px !important; border: 0; pointer-events: none; }
+  #rbcw { display: none; position: fixed; z-index: 58; right: 6px; bottom: calc(var(--panel, 0px) + 8px); /* only for a Bandcamp fallback item: above the arcade panel, clear of the top HUD */ width: min(360px, calc(100vw - 12px)); box-sizing: border-box; padding: 4px;
+    background: #120a22; border: 2px solid #000; box-shadow: 3px 3px 0 #000; pointer-events: auto; }
+  #rbcw.on { display: block; }
+  #rbcw b { display: block; font: 9px/1.5 'PX', monospace; color: #ffd23c; text-align: center; animation: rblink 1s steps(2) infinite; }
+  #rbcw.tapped b { animation: none; color: #8fe8ff; }
+  @keyframes rblink { 50% { opacity: .35; } }
+  #rbcw iframe, #rbcw .rbcstub { width: 100%; height: 42px; border: 0; display: block; }
+  #rbcw .rbcstub { display: flex; align-items: center; justify-content: center; font: 800 11px/1.3 system-ui, sans-serif; color: #ccc; background: repeating-linear-gradient(45deg,#181818 0 8px,#202020 8px 16px); }
+  #rcred { position: fixed; z-index: 72; left: 50%; top: 50%; transform: translate(-50%, -50%); width: min(460px, calc(100vw - 20px)); max-height: min(560px, calc(100vh - 60px)); overflow: auto;
+    box-sizing: border-box; padding: 10px 12px 12px; background: #160c2c; color: #fff; border: 3px solid #000; box-shadow: 4px 4px 0 #000, inset 0 0 0 2px #ff3d6e; font: 600 12px/1.4 system-ui, sans-serif; }
+  #rcred.hide { display: none; }
+  #rcred h3 { margin: 0 0 6px; font: 11px/1.4 'PX', monospace; color: #ffd23c; display: flex; justify-content: space-between; align-items: center; }
+  #rcred h3 button { all: unset; cursor: pointer; padding: 3px 8px; background: #ff3d6e; color: #fff; border: 2px solid #000; font: 900 12px/1 system-ui, sans-serif; }
+  #rcred li { margin: 0 0 7px; } #rcred ul { margin: 0; padding-left: 16px; } #rcred a { color: #8fe8ff; word-break: break-all; } #rcred .t { font-weight: 900; } #rcred .m { color: #ffb3dc; }
+  #rcred p { margin: 6px 0 0; color: #bbb; font-size: 11px; }
+  @media (max-width: 480px) { #ridc .np { font-size: 14px; } #ridc .cr { font-size: 12px; } #ridt { font-size: 10px; } }`;
   document.head.appendChild(css);
   const el = (tag, id, html) => { const e = document.createElement(tag); if (id) e.id = id; if (html) e.innerHTML = html; document.body.appendChild(e); return e; };
-  const bar = el('div', 'rid', '<div id="ridt"><span></span></div>');
-  const card = el('div', 'ridc', '<div class="st"></div><div class="sh"></div><div class="np"></div><div class="cr"></div>');
-  const box = el('div', 'rbox', '<div id="rbar"><span class="rlb">410</span><button id="rnext" type="button" title="next track">&raquo;</button><button id="rmin" type="button" title="collapse / expand">▾</button><button id="rpow" type="button" title="radio off (M)">&times;</button></div>'
-    + '<div id="rmid"><div id="rspks"><div class="rspk"></div><div class="rspk"></div></div><div id="rplay"><div id="rplayer"></div></div></div><div id="rtip"></div>');
-  const hudBtn = el('button', 'rbtn'); hudBtn.type = 'button'; hudBtn.title = 'Radio on/off (M, or tap R)';
+  const bar = el('div', 'rid', '<div id="ridt"><span></span></div><div id="rctl"><button class="rsk" id="rprev" type="button" title="previous track (B)" aria-label="previous track">' + PREV + '</button>'
+    + '<button id="rst" type="button" title="tap: next station (T) · hold: radio off/on (M)"></button><button class="rsk" id="rnext" type="button" title="next track (N)" aria-label="next track">' + NEXT + '</button>'
+    + '<button id="rcrb" type="button" title="radio credits" aria-label="radio credits">CR</button></div>');
+  const card = el('div', 'ridc', '<div class="st"></div><div class="sh"></div><div class="np"></div><div class="cr"></div><div class="lc"></div>');
+  const rplay = el('div', 'rplay'); rplay.setAttribute('aria-hidden', 'true');
+  const bcw = el('div', 'rbcw', '<b>TAP ▶ TO PLAY</b>');
+  const cred = el('div', 'rcred'); cred.classList.add('hide');
   document.body.classList.add('radio');
-  if (document.body.classList.contains('touch') || innerWidth < 700) box.classList.add('mini'); // phones start collapsed to the 200x200 minimum
-  // the expanded boombox has a speaker on the left only (keeps it compact); collapsed = just the player + the frame
   const tickerS = bar.querySelector('#ridt'), tickerSpan = tickerS.querySelector('span');
   const esc = (s) => String(s).replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
-  const credit = (t) => `"${t.title}"${t.tag ? ` (${t.tag})` : ''}${t.artist ? ` · ${t.artist}` : ''} · prod. ${t.prod}`;
-  const idText = (t) => `📻 ${STATION} · NOW PLAYING: ${credit(t)}`;
+  const who = (t) => (t.artist ? t.artist : '') + (t.prod ? (t.artist ? ' · ' : '') + 'prod. ' + t.prod : '');
+  const credit = (t) => `"${t.title}"${t.tag ? ` (${t.tag})` : ''} · ${who(t)}${t.lic ? ` · ${t.lic}` : ''}`;
+  const isBC = (t) => !!(t && t.bc && (FORCE_BC || R.ytFail.has(t.id) || R.noSignal));
+  const stName = () => (R.station === 'auto' ? (R.list === 'night' ? SNAME.night : SNAME.day) + ' (AUTO)' : SNAME[R.station]);
+  const idText = (t) => `📻 ${STATION} · ${stName()} · NOW PLAYING: ${credit(t)}`;
+  const srcLine = (t) => (t.lic ? `${t.lic} · ${(isBC(t) ? t.src : t.yt).replace('https://', '')}` : `YouTube · ${t.yt.replace('https://', '')}`);
+
+  // ---- credits list (title, artist, licence + link, source) ----
+  cred.innerHTML = `<h3><span>RADIO CREDITS</span><button type="button" id="rcrx">CLOSE</button></h3><ul>${[...new Set(Object.values(TRACKS).flat())].map((t) =>
+    `<li><span class="t">"${esc(t.title)}"${t.tag ? ` (${esc(t.tag)})` : ''}</span> · <span class="m">${esc(who(t))}</span><br>${t.lic
+      ? `Licence: <a href="${t.licUrl}" target="_blank" rel="noopener">${t.lic}</a> · Source: <a href="${t.src}" target="_blank" rel="noopener">${esc(t.src.replace('https://', ''))}</a> · YouTube: <a href="${t.yt}" target="_blank" rel="noopener">${t.yt.replace('https://', '')}</a>`
+      : `YouTube upload, played through the YouTube embed (not shipped with the game): <a href="${t.yt}" target="_blank" rel="noopener">${t.yt.replace('https://', '')}</a>`}</li>`).join('')}</ul>
+    <p>Creative Commons tracks are played unedited from the artists' own YouTube / Bandcamp pages. No audio is shipped with the game. Stations: AUTO, B-MORE 410 DAY, B-MORE 410 NIGHT, DUCKY DYNAMO FM, LOR BITEWHO, B-MORE CLUB, B-MORE RAP.</p>`;
+  const showCred = (on) => { cred.classList.toggle('hide', !on); R.credOpen = on; };
 
   let lastHtml = '';
   function setTicker(html, plain) {
@@ -2916,127 +3402,179 @@ const RADIO = (function () {
       tickerSpan.innerHTML = html + '<span style="display:inline-block;width:60px"></span>' + html; tickerS.style.setProperty('--dur', Math.max(12, plain.length * 0.26) + 's'); tickerS.classList.add('scroll'); } });
   }
   function render() {
-    const t = R.cur; hudBtn.innerHTML = ICON + (R.on ? ' RADIO' : ' OFF'); hudBtn.classList.toggle('off', !R.on);
-    box.classList.toggle('hide', !R.on); $('rmin').textContent = box.classList.contains('mini') ? '▴' : '▾';
+    const t = R.cur; const lab = R.station === 'auto' ? 'AUTO·' + (R.list === 'night' ? 'NIGHT' : 'DAY') : SSHORT[R.station];
+    $('rst').innerHTML = ICON + ' ' + (R.on ? lab : 'OFF'); bar.classList.toggle('off', !R.on);
     if (!t) return;
+    if (R.offAir) { setTicker(`${ICON} <b>${STATION}</b> · <i>OFF AIR</i> · no track can be played right now`, 'off air'); return; }
+    const cr = `"${esc(t.title)}"${t.tag ? ` (${esc(t.tag)})` : ''} · ${esc(who(t))}${t.lic ? ` · <u>${t.lic}</u>` : ''}`;
     let tip = '';
-    if (R.offAir) { setTicker(`${ICON} <b>${STATION}</b> · <i>OFF AIR</i> · no track can be embedded right now`, 'off air'); return; }
-    if (!R.on) setTicker(`${ICON} <b>${STATION}</b> · <i>RADIO OFF</i> · press M / tap R or the RADIO button to tune in · up next: ${esc(credit(t))}`, idText(t) + ' radio off press');
-    else {
-      setTicker(`${ICON} <b>${STATION}</b> · <i>NOW PLAYING:</i> ${esc(credit(t))}`, idText(t));
-      if (!R.started) tip = 'Tap or press any key to tune in';
-      else if (!R.playing && R.ready && !TEST && performance.now() - R.startT > 2500) tip = 'Tap the player to start the music';
-    }
-    box.querySelector('.rlb').innerHTML = `${ICON} 410 · ${R.list === 'night' ? 'NIGHT' : 'DAY'}`;
-    $('rtip').textContent = tip;
+    if (R.on && !R.started) tip = 'TAP TO TUNE IN · ';
+    else if (R.on && isBC(t) && !R.bcTapped) tip = 'TAP ▶ ON THE BANDCAMP PLAYER · ';
+    if (!R.on) setTicker(`${ICON} <b>${STATION}</b> · <i>RADIO OFF</i> · tap the station button, press T / M or tap R to tune in`, 'radio off press to tune in');
+    else setTicker(`${tip ? `<em>${tip}</em>` : ''}${ICON} <b>${STATION}</b> · <b>${esc(stName())}</b> · <i>NOW PLAYING:</i> ${cr}${isBC(t) ? ' · via Bandcamp' : ''}`, tip + idText(t));
   }
   function stationId(reason) { // the big card slides in, then it shrinks back to the slim ticker
-    const t = R.cur; if (!t) return; R.ids++;
+    const t = R.cur; R.ids++;
     card.querySelector('.st').innerHTML = `${ICON} ${STATION}`;
-    card.querySelector('.sh').textContent = (R.list === 'night' ? 'NIGHT SHIFT' : 'DAY SHIFT') + (reason === 'dusk' ? ' · DUSK' : reason === 'dawn' ? ' · DAWN' : '');
-    card.querySelector('.np').textContent = `NOW PLAYING: "${t.title}"${t.tag ? ` (${t.tag})` : ''}`;
-    card.querySelector('.cr').textContent = `${t.artist ? t.artist + ' · ' : ''}prod. ${t.prod}`;
+    if (!R.on || !t) {
+      card.querySelector('.sh').textContent = 'STATION DIAL'; card.querySelector('.np').textContent = 'RADIO OFF';
+      card.querySelector('.cr').textContent = 'tap the station button or press T / M to tune back in'; card.querySelector('.lc').textContent = '';
+    } else {
+      card.querySelector('.sh').textContent = stName() + (reason === 'dusk' ? ' · DUSK' : reason === 'dawn' ? ' · DAWN' : '');
+      card.querySelector('.np').textContent = `NOW PLAYING: "${t.title}"${t.tag ? ` (${t.tag})` : ''}`;
+      card.querySelector('.cr').textContent = who(t);
+      card.querySelector('.lc').textContent = srcLine(t);
+    }
     card.classList.remove('on'); void card.offsetWidth; card.classList.add('on'); R.bigT = BIG_S;
-    R.log.push({ at: +(S.time || 0).toFixed(2), reason, list: R.list, id: t.id, text: idText(t) });
+    R.log.push({ at: +(S.time || 0).toFixed(2), reason, st: R.station, list: R.on ? R.list : 'off', id: t ? t.id : '', src: t && R.on ? (isBC(t) ? 'bc' : 'yt') : '', text: R.on && t ? idText(t) : 'RADIO OFF' });
     render();
   }
 
   // ---- playlist logic ----
   const nightNow = () => 0.5 - 0.5 * Math.cos((CYC.pin !== null ? CYC.pin : CYC.tod) * TAU) > 0.5; // dusk = tod .25, dawn = tod .75 on the game's loop
-  function nextIn(list) { // next playable track in a playlist (night rotates); null if every one failed
-    const L = TRACKS[list]; for (let k = 1; k <= L.length; k++) { const i = (R.idx[list] + k) % L.length; if (!R.bad.has(L[i].id)) { R.idx[list] = i; return L[i]; } } return null;
+  const listFor = (st) => (TRACKS[st] ? st : nightNow() ? 'night' : 'day');
+  const playable = (t) => !R.bad.has(t.id) && (t.bc || !(R.ytFail.has(t.id) || R.noSignal));
+  function step(list, dir) { // next / previous playable track in a playlist; null if none can play
+    const L = TRACKS[list]; for (let k = 1; k <= L.length; k++) { const i = (((R.idx[list] + dir * k) % L.length) + L.length) % L.length; if (playable(L[i])) { R.idx[list] = i; return L[i]; } } return null;
   }
-  function tune(list, reason) {
-    let t = nextIn(list);
-    if (!t) { const o = list === 'day' ? 'night' : 'day'; t = nextIn(o); if (t) list = o; } // that whole playlist can't be embedded: borrow the other one
-    if (!t) { R.offAir = true; R.cur = R.cur || TRACKS.day[0]; R.playing = false; duck(false); try { R.player && R.player.stopVideo(); } catch (e) {} render(); return; }
-    R.list = list; R.cur = t;
-    if (R.player && R.ready) { try { if (R.started && R.on) R.player.loadVideoById(t.id); else R.player.cueVideoById(t.id); } catch (e) {} }
+  // ---- Bandcamp embed (official player; no JS API) ----
+  function clearBC() { R.bc = null; R.bcLeft = 0; R.bcTapped = false; bcw.classList.remove('on', 'tapped'); const f = bcw.querySelector('iframe, .rbcstub'); if (f) f.remove(); }
+  function showBC(t) {
+    clearBC(); R.bc = t; R.bcLeft = t.len + 4;
+    if (!R.on || !R.started) return; bcw.classList.add('on'); // the frame is added once the radio is on and tuned in
+    let f;
+    if (TEST) { f = document.createElement('div'); f.className = 'rbcstub'; f.textContent = 'Bandcamp player (test stub) ' + t.bc; }
+    else { f = document.createElement('iframe'); f.title = `${t.title} by ${t.artist} (Bandcamp)`; f.setAttribute('seamless', ''); f.allow = 'autoplay';
+      f.src = `https://bandcamp.com/EmbeddedPlayer/size=small/bgcol=333333/linkcol=ffd23c/transparent=true/track=${t.bc}/`; }
+    bcw.appendChild(f);
+  }
+  addEventListener('blur', () => { setTimeout(() => { const f = bcw.querySelector('iframe'); if (f && document.activeElement === f && R.bc && !R.bcTapped) { R.bcTapped = true; R.bcLeft = R.bc.len + 2; bcw.classList.add('tapped'); bcw.querySelector('b').textContent = 'ON AIR · ' + R.bc.title; duck(true); render(); } }, 0); });
+  function stopYT() { try { if (R.player && R.ready) R.player.pauseVideo(); } catch (e) {} R.playing = false; }
+  function play(t, reason) { // put a track on the air (YouTube, or the Bandcamp embed for a CC track YouTube refused)
+    R.cur = t; clearBC(); bcw.querySelector('b').textContent = 'TAP ▶ TO PLAY';
+    if (isBC(t)) { stopYT(); duck(false); showBC(t); }
+    else if (R.player && R.ready) {
+      try { if (R.started && R.on) { R.vol = 0; R.player.setVolume(0); R.goal = VOL; R.player.loadVideoById(t.id); } else R.player.cueVideoById(t.id); } catch (e) {}
+    }
     stationId(reason);
   }
-  function fadeThen(fn) { R.goal = 0; R.after = fn; } // crossfade: volume down, swap, back up
-  function switchList(list, reason) {
-    if (R.list === list) return;
-    if (R.started && R.on && R.vol > 1) fadeThen(() => { tune(list, reason); R.goal = VOL; });
-    else tune(list, reason);
+  function offAir() { R.offAir = true; R.cur = R.cur || TITLE; R.playing = false; duck(false); clearBC(); stopYT(); render(); }
+  function tune(list, dir, reason) { // move along a playlist; if that whole list can't play, borrow another one
+    let t = step(list, dir);
+    if (!t) for (const o of Object.keys(TRACKS)) { if (o !== list && (t = step(o, 1))) { list = o; break; } }
+    if (!t) return offAir();
+    R.list = list; play(t, reason);
   }
-  function advance(reason) { tune(R.list || (nightNow() ? 'night' : 'day'), reason); }
+  function fadeThen(fn, fast) { R.goal = 0; R.after = fn; R.fast = !!fast; } // crossfade: volume down, swap, back up (a player's own switch uses a quick dip)
+  function swap(fn, fast) { if (R.started && R.on && R.vol > 1 && !isBC(R.cur) && !R.after) fadeThen(fn, fast); else { R.after = null; fn(); } }
+  function advance(reason) { tune(R.list || listFor(R.station), 1, reason); }
+  function skip(dir) { // N / B / ⏭ / ⏮
+    if (!R.started) start();
+    if (!R.on) { setStation(R.lastSt); return; }
+    swap(() => tune(R.list, dir, dir > 0 ? 'next' : 'prev'), true);
+  }
+  function setStation(st, why) { // the dial: auto / day / night / ducky / off
+    if (!STATIONS.includes(st)) return;
+    const wasOn = R.on; R.station = st; try { localStorage.setItem(LS, st); } catch (e) {}
+    if (st === 'off') { R.on = false; R.after = null; R.goal = 0; stopYT(); duck(false); if (R.bc) clearBC(); R.wasBC = isBC(R.cur); stationId('off'); return; }
+    R.lastSt = st; R.on = true; R.offAir = false;
+    const list = listFor(st);
+    if (!R.started) { if (R.list !== list) tune(list, 1, why || 'station'); else stationId(why || 'station'); return; }
+    if (!wasOn && R.list === list && R.cur) { resume(); stationId(why || 'on'); return; } // back on: pick up where it was
+    if (R.list === list) { stationId(why || 'station'); return; } // same playlist (e.g. AUTO -> DAY by day): just the station ID
+    swap(() => tune(list, 1, why || 'station'), true);
+  }
+  function resume() {
+    const t = R.cur; if (!t) return;
+    if (isBC(t)) { showBC(t); return; }
+    try { if (R.player && R.ready) { R.vol = 0; R.player.setVolume(0); R.goal = VOL; R.player.playVideo(); } } catch (e) {}
+  }
+  const cycle = () => { if (!R.started) start(); setStation(STATIONS[(STATIONS.indexOf(R.station) + 1) % STATIONS.length]); };
+  const toggle = () => { if (!R.started) start(); setStation(R.on ? 'off' : R.lastSt || 'auto'); };
   function duck(on) { try { if (SFXBUS) SFXBUS.gain.setTargetAtTime(on ? 0.62 : 1, AC.currentTime, 0.3); } catch (e) {} }
 
   // ---- YouTube IFrame Player API (or the test stub) ----
-  function onReady() { R.ready = true; try { R.player.setVolume(0); } catch (e) {} if (R.cur) { try { if (R.started && R.on) R.player.loadVideoById(R.cur.id); else R.player.cueVideoById(R.cur.id); } catch (e) {} } render(); }
+  function onReady() { R.ready = true; try { R.player.setVolume(0); } catch (e) {} const t = R.cur; if (t && !isBC(t)) { try { if (R.started && R.on) { R.player.loadVideoById(t.id); R.goal = VOL; } else R.player.cueVideoById(t.id); } catch (e) {} } render(); }
   function onState(e) {
     const s = e.data; // -1 unstarted, 0 ended, 1 playing, 2 paused, 3 buffering, 5 cued
-    if (s === 1) { R.playing = true; if (!R.on) { try { R.player.pauseVideo(); } catch (er) {} } else { duck(true); if (R.goal === 0 && !R.after) R.goal = VOL; } }
-    else if (s === 0) { R.playing = false; advance('next'); }
-    else if (s === 2 || s === -1 || s === 5) { if (s === 2) { R.playing = false; duck(false); } }
+    if (s === 1) { R.playing = true; if (!R.on || isBC(R.cur)) { try { R.player.pauseVideo(); } catch (er) {} } else { duck(true); if (R.goal === 0 && !R.after) R.goal = VOL; } }
+    else if (s === 0) { R.playing = false; if (R.on && !isBC(R.cur)) advance('next'); }
+    else if (s === 2) { R.playing = false; if (!isBC(R.cur)) duck(false); }
     render();
   }
-  function onError(e) { // 2 bad id, 5 html5, 100 gone, 101/150 embedding not allowed: skip to the next track
-    if (R.cur) R.bad.add(R.cur.id); R.log.push({ at: +(S.time || 0).toFixed(2), reason: 'error ' + (e && e.data), id: R.cur && R.cur.id }); R.playing = false; advance('skip');
+  function onError(e) { // 2 bad id, 5 html5, 100 gone, 101/150 embedding not allowed: a CC track falls back to Bandcamp, anything else is skipped
+    const t = R.cur; if (!t || isBC(t)) return; R.log.push({ at: +(S.time || 0).toFixed(2), reason: 'error ' + (e && e.data), id: t.id }); R.playing = false;
+    if (t.bc) { R.ytFail.add(t.id); play(t, 'bandcamp'); } else { R.bad.add(t.id); advance('skip'); }
   }
   function makeStub() { // ?radiotest=1: same calls, no network; the box shows a placeholder of the same size
-    $('rplayer').id = 'rstub'; $('rstub').textContent = 'YouTube player (test stub)';
+    const sd = document.createElement('div'); sd.id = 'rstub'; rplay.appendChild(sd);
     const P = { v: 0, vid: null, state: -1, calls: [], setVolume(v) { this.v = v; }, getVolume() { return this.v; },
       loadVideoById(id) { this.vid = id; this.calls.push('load ' + id); setTimeout(() => onState({ data: 1 }), 30); }, cueVideoById(id) { this.vid = id; this.calls.push('cue ' + id); },
       playVideo() { this.calls.push('play'); setTimeout(() => onState({ data: 1 }), 30); }, pauseVideo() { this.calls.push('pause'); setTimeout(() => onState({ data: 2 }), 10); }, stopVideo() { this.calls.push('stop'); } };
     R.player = P; setTimeout(onReady, 50);
   }
-  function noSignal() { // YouTube unreachable (offline, blocked network): say so inside our own box; the credit stays up top
-    if (R.ready) return; const d = $('rplayer'); if (d && !d.querySelector('iframe') && d.tagName !== 'IFRAME') { d.id = 'rstub'; d.innerHTML = 'NO SIGNAL<br><small>YouTube player could not load</small>'; } R.noSignal = true; render();
+  function noSignal() { // YouTube unreachable (offline, blocked network): the CC tracks still play through Bandcamp; the rest wait
+    if (R.ready) return; R.noSignal = true;
+    if (R.cur && !R.cur.bc) advance('skip'); else if (R.cur) play(R.cur, 'bandcamp'); render();
   }
-  function makeYT() {
-    const mk = () => {
-      R.player = new YT.Player('rplayer', { width: 200, height: 200, playerVars: { playsinline: 1, controls: 1, rel: 0, fs: 0, enablejsapi: 1, origin: location.origin },
-        events: { onReady, onStateChange: onState, onError } });
-    };
+  function makeYT() { // our own audio-only iframe (allow="autoplay" only, no controls / fullscreen / keyboard), then the IFrame API binds to it
+    const f = document.createElement('iframe'); f.id = 'rplayer'; f.title = 'B-MORE 410 RADIO audio'; f.setAttribute('allow', 'autoplay'); f.setAttribute('tabindex', '-1'); f.setAttribute('aria-hidden', 'true');
+    f.width = 2; f.height = 2; f.frameBorder = '0';
+    f.src = 'https://www.youtube.com/embed/' + TITLE.id + '?enablejsapi=1&playsinline=1&controls=0&fs=0&disablekb=1&rel=0&iv_load_policy=3&modestbranding=1&origin=' + encodeURIComponent(location.origin);
+    rplay.appendChild(f);
+    const mk = () => { R.player = new YT.Player('rplayer', { events: { onReady, onStateChange: onState, onError } }); };
     if (window.YT && YT.Player) mk(); else { const prev = window.onYouTubeIframeAPIReady; window.onYouTubeIframeAPIReady = () => { prev && prev(); mk(); };
       const s = document.createElement('script'); s.src = 'https://www.youtube.com/iframe_api'; s.async = true; s.onerror = noSignal; setTimeout(() => { if (!R.ready) noSignal(); }, 15000); document.head.appendChild(s); }
   }
   if (TEST) makeStub(); else makeYT();
 
-  // ---- start on the first gesture; on/off ----
+  // ---- start on the first gesture ----
   function start() {
     if (R.started) return; R.started = true; R.startT = performance.now();
-    if (R.on && R.player && R.ready && R.cur) { try { R.player.loadVideoById(R.cur.id); R.player.setVolume(0); } catch (e) {} R.goal = VOL; }
+    if (R.on && R.cur) { if (isBC(R.cur)) showBC(R.cur); else if (R.player && R.ready) { try { R.player.setVolume(0); R.vol = 0; R.player.loadVideoById(R.cur.id); } catch (e) {} R.goal = VOL; } }
     if (R.on) stationId('tune-in'); else render();
   }
-  function setOn(on) {
-    R.on = on; render();
-    if (!R.player || !R.ready) return;
-    try { if (on) { if (R.started) { R.vol = 0; R.player.setVolume(0); R.goal = VOL; R.player.playVideo(); } stationId('on'); } else { R.player.pauseVideo(); R.playing = false; duck(false); } } catch (e) {}
-  }
-  const toggle = () => { if (!R.started) start(); setOn(!R.on); };
   const gesture = () => { audioInit(); start(); };
   addEventListener('pointerdown', gesture, { capture: true }); addEventListener('touchstart', gesture, { capture: true, passive: true });
   let rDown = -1, rFrame = 0, rFirst = false; const fr = () => (window.__cel ? __cel.frames : 0);
   addEventListener('keydown', (e) => {
+    if (e.target && /INPUT|TEXTAREA/.test(e.target.tagName)) return;
     const k = e.key.toLowerCase(); if (e.repeat) return; rFirst = !R.started; gesture();
-    if (k === 'm') toggle(); if (k === 'r') { rDown = e.timeStamp; rFrame = fr(); }
+    if (k === 'm') toggle(); else if (k === 'n') skip(1); else if (k === 'b') skip(-1); else if (k === 't') cycle(); else if (k === 'escape' && R.credOpen) showCred(false);
+    if (k === 'r') { rDown = e.timeStamp; rFrame = fr(); }
   }, { capture: true });
-  addEventListener('keyup', (e) => { if (e.key.toLowerCase() === 'r' && rDown >= 0) { const tap = e.timeStamp - rDown < 250 || fr() - rFrame <= 2; rDown = -1; /* a tap toggles (a hold keeps turning the camera); the frame count covers slow devices */ if (tap && !rFirst) toggle(); rFirst = false; } });
-  hudBtn.addEventListener('click', (e) => { e.stopPropagation(); toggle(); });
-  $('rpow').addEventListener('click', (e) => { e.stopPropagation(); toggle(); });
-  $('rnext').addEventListener('click', (e) => { e.stopPropagation(); if (R.on) fadeThen(() => { advance('next'); R.goal = VOL; }); });
-  $('rmin').addEventListener('click', (e) => { e.stopPropagation(); box.classList.toggle('mini'); render(); });
-  for (const ev of ['pointerdown', 'touchstart']) box.addEventListener(ev, (e) => e.stopPropagation(), { passive: true }); // taps on the radio never drive the camera
+  addEventListener('keyup', (e) => { if (e.key.toLowerCase() === 'r' && rDown >= 0) { const dur = e.timeStamp - rDown, tap = dur < 300 || (dur < 450 && fr() - rFrame <= 2); R.rTap = [Math.round(dur), fr() - rFrame, tap, rFirst]; rDown = -1; /* a tap toggles (a hold keeps turning the camera); the frame count covers slow devices */ if (tap && !rFirst) toggle(); rFirst = false; } });
+  const on = (id, fn) => $(id).addEventListener('click', (e) => { e.stopPropagation(); fn(e); });
+  // HUD station button: tap = next station, long-press = off / on
+  let lpT = 0, lpFired = false; const stb = $('rst');
+  stb.addEventListener('pointerdown', (e) => { lpFired = false; clearTimeout(lpT); stb.classList.add('hold'); lpT = setTimeout(() => { lpFired = true; stb.classList.remove('hold'); toggle(); try { navigator.vibrate && navigator.vibrate(20); } catch (_) {} }, LONG_MS); });
+  let lpAt = 0; stb.addEventListener('pointerdown', () => { lpAt = performance.now(); });
+  const lpEnd = (e) => { clearTimeout(lpT); stb.classList.remove('hold'); if (e && e.type === 'pointerup' && !lpFired && lpAt && performance.now() - lpAt >= LONG_MS) { lpFired = true; toggle(); } lpAt = 0; }; // a slow main thread can delay the timer: pointerup decides too
+  for (const ev of ['pointerup', 'pointercancel', 'pointerleave']) stb.addEventListener(ev, lpEnd);
+  stb.addEventListener('contextmenu', (e) => e.preventDefault());
+  on('rst', () => { if (lpFired) { lpFired = false; return; } cycle(); });
+  on('rprev', () => skip(-1)); on('rnext', () => skip(1)); on('rcrb', () => showCred(!R.credOpen)); on('rcrx', () => showCred(false));
+  for (const n of [bar, bcw, cred]) for (const ev of ['pointerdown', 'touchstart']) n.addEventListener(ev, (e) => e.stopPropagation(), { passive: true }); // taps on the radio never drive the camera
+  cred.addEventListener('click', (e) => e.stopPropagation());
 
-  // ---- tick: day/night switch, volume fades, card timer ----
-  tune(nightNow() ? 'night' : 'day', 'start');
+  // ---- tick: AUTO day/night switch, volume fades, Bandcamp timer, card timer ----
+  { const list = listFor(R.station); R.list = list; R.idx[list] = TRACKS[list].indexOf(TITLE); R.cur = TITLE; if (isBC(TITLE)) showBC(TITLE); stationId('start'); } // the title track tunes in first
   let last = performance.now();
   setInterval(() => {
     const now = performance.now(), dt = Math.min(0.5, (now - last) / 1000); last = now;
-    const want = nightNow() ? 'night' : 'day';
-    if (!R.offAir && R.list !== want && !R.after) switchList(want, want === 'night' ? 'dusk' : 'dawn');
+    if (R.station === 'auto' && R.on && !R.offAir && !R.after) { const want = nightNow() ? 'night' : 'day'; if (R.list !== want) swap(() => tune(want, 1, want === 'night' ? 'dusk' : 'dawn')); }
     if (R.bigT > 0) { R.bigT -= dt; if (R.bigT <= 0) card.classList.remove('on'); }
-    const step = VOL / FADE * dt;
-    if (R.vol !== R.goal) { R.vol = R.vol < R.goal ? Math.min(R.goal, R.vol + step) : Math.max(R.goal, R.vol - step); try { R.player && R.ready && R.player.setVolume(Math.round(R.vol)); } catch (e) {} }
+    if (R.bc && R.on && R.started && R.bcLeft > 0) { R.bcLeft -= dt; if (R.bcLeft <= 0) advance('next'); }
+    const stp = VOL / (R.fast && R.goal === 0 ? 0.35 : FADE) * dt;
+    if (R.vol !== R.goal) { R.vol = R.vol < R.goal ? Math.min(R.goal, R.vol + stp) : Math.max(R.goal, R.vol - stp); try { R.player && R.ready && R.player.setVolume(Math.round(R.vol)); } catch (e) {} }
     if (R.after && R.vol <= 0.01) { const f = R.after; R.after = null; f(); }
     if (R.started && R.on && !R.playing) render();
   }, 100);
   render();
 
-  window.__radio = { R, TRACKS, toggle, setOn, start, advance, idText, get text() { return R.tickerText; }, get card() { return card.classList.contains('on') ? card.textContent : ''; },
-    simEnd: () => onState({ data: 0 }), simError: (c = 150) => onError({ data: c }), get vol() { return R.vol; }, get sfx() { return SFXBUS ? SFXBUS.gain.value : null; } };
+  window.__radio = { R, T, TRACKS, STATIONS, toggle, setStation, cycle, skip, start, advance, idText, isBC, get station() { return R.station; }, get text() { return R.tickerText; },
+    get card() { return card.classList.contains('on') ? card.textContent : ''; }, get stored() { try { return localStorage.getItem(LS); } catch (e) { return null; } },
+    simEnd: () => onState({ data: 0 }), simError: (c = 150) => onError({ data: c }), simBCEnd: () => { if (R.bc) R.bcLeft = 0.01; }, showCred,
+    get vol() { return R.vol; }, get sfx() { return SFXBUS ? SFXBUS.gain.value : null; } };
   return R;
 })();
