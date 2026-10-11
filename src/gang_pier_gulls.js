@@ -78,6 +78,20 @@ function pgPart(K, parent, name, geom, col, x, y, z, o = {}) {
   const m = K.part(parent, geom, col, x, y, z, o); m.name = name; return m;
 }
 
+// recolour faces of a NON-INDEXED part after K.part baked its single colour: colour(x, y, z) gets the midpoint of each
+// face's bounding box in the part's own geometry space and returns a palette colour or null (keep). The two triangles of a
+// sphere/capsule quad share that box, so bands follow the rings cleanly (no sawtooth). Paints bands and tips without extra parts.
+function pgPaint(K, m, colour) {
+  const p = m.geometry.attributes.position, c = m.geometry.attributes.color, col = new K.THREE.Color();
+  const mid = (f, i) => (Math.min(f(i), f(i + 1), f(i + 2)) + Math.max(f(i), f(i + 1), f(i + 2))) / 2;
+  const gx = (i) => p.getX(i), gy = (i) => p.getY(i), gz = (i) => p.getZ(i);
+  for (let i = 0; i + 2 < p.count; i += 3) {
+    const v = colour(mid(gx, i), mid(gy, i), mid(gz, i));
+    if (!v) continue; col.set(v); for (let k = 0; k < 3; k++) c.setXYZ(i + k, col.r, col.g, col.b);
+  }
+  c.needsUpdate = true; return m;
+}
+
 export function buildPierGull(K, member = 'grunt_a', opts = {}) {   // opts: { lod: 0 | 1, seed, colors }
   const { G, grp, skeleton, toonMat, INK } = K;
   if (!PG_LOOK[member]) member = 'grunt_a';
@@ -98,8 +112,8 @@ export function buildPierGull(K, member = 'grunt_a', opts = {}) {   // opts: { l
 
   // ---- hips + torso: blue top with the white gang band, popped collar ----
   P(J.hips, 'shorts', G.sph(0.21 * sx, 0.15, 0.17 * sz), C.shorts, 0, 0.02, 0);
-  P(J.torso, 'jacket', G.sph(0.27 * sx, 0.33, 0.22 * sz), C.blue, 0, 0.3, 0);
-  P(J.torso, 'band', G.cyl(0.273 * sx, 0.259 * sx, 0.09, 7, true).scale(1, 1, 0.815 * sz / sx), C.band, 0, 0.21, 0);   // open tube: no caps buried in the jacket
+  // the white gang band is painted onto the jacket (same rings as LOD 1): no separate shell, so no hull ticks along its edge
+  pgPaint(K, P(J.torso, 'jacket', G.sph(0.27 * sx, 0.33, 0.22 * sz).toNonIndexed(), C.blue, 0, 0.3, 0), (x, y) => (y > -0.135 && y < -0.045 ? C.band : null));
   if (L.vest) P(J.torso, 'chain', G.tor(0.16, 0.022), C.gold, 0, 0.6, 0.03, { rot: [Math.PI / 2 + 0.35, 0, 0] });
   else P(J.torso, 'collar', G.tor(0.15, 0.05), C.blue, 0, 0.6, -0.01, { rot: [Math.PI / 2 + 0.2, 0, 0] });
 
@@ -108,10 +122,10 @@ export function buildPierGull(K, member = 'grunt_a', opts = {}) {   // opts: { l
   P(head, 'head', G.sph(0.2, 0.2, 0.2), C.body, 0, 0.2, 0, F());
   P(head, 'bill', pgTaper(G.sph(0.07, 0.05, 0.19), 0.19, 0.55, 0.045), C.beak, 0, 0.16, 0.27, { rot: [0.12, 0, 0] });
   P(head, 'jaw', pgTaper(G.sph(0.052, 0.03, 0.14), 0.14, 0.55), C.beak, 0, 0.105, 0.24, { rot: [0.22, 0, 0] });
-  P(head, 'gonys', G.sph(0.02, 0.024, 0.02), C.spot, 0, 0.083, 0.335, { outline: false });
+  P(head, 'gonys', G.box(0.03, 0.032, 0.025), C.spot, 0, 0.083, 0.335, { outline: false });
   for (const sd of [1, -1]) {
     P(head, 'eye', G.sph(0.052, 0.052, 0.035), C.eye, sd * 0.1, 0.25, 0.15, { rot: [0, sd * 0.5, 0], outline: false });
-    P(head, 'pupil', G.sph(0.019, 0.025, 0.016), INK, sd * 0.093, 0.247, 0.185, { outline: false });
+    P(head, 'pupil', G.box(0.03, 0.038, 0.02), INK, sd * 0.093, 0.247, 0.185, { outline: false });
     P(head, 'brow', G.box(big ? 0.115 : 0.12, big ? 0.04 : 0.03, 0.035), INK, sd * 0.095, big ? 0.285 : 0.295, big ? 0.15 : 0.158, { rot: [0, sd * 0.45, sd * 0.38], outline: false });
   }
   if (L.hat === 'bucket') {          // blue bucket hat
@@ -123,19 +137,19 @@ export function buildPierGull(K, member = 'grunt_a', opts = {}) {   // opts: { l
   } else if (L.hat === 'sweatband') {
     P(head, 'sweatband', G.tor(0.19, 0.032), C.blue, 0, 0.3, 0, { rot: [Math.PI / 2 - 0.12, 0, 0] });
   } else if (L.hat === 'beanie') {
-    P(head, 'beanie', G.sph(0.225, 0.17, 0.225), C.blue, 0, 0.335, -0.025, { rot: [-0.2, 0, 0] });
-    P(head, 'cuff', G.cyl(0.236, 0.24, 0.08, 7, true), C.band, 0, 0.3, -0.025, { rot: [-0.2, 0, 0] });
+    const bn = P(head, 'beanie', G.sph(0.225, 0.17, 0.225).toNonIndexed(), C.blue, 0, 0.365, -0.025, { rot: [-0.2, 0, 0] });
+    pgPaint(K, bn, (x, y) => (y > -0.075 && y < 0.005 ? C.band : null));   // white cuff painted on (no separate shell to bury the beanie)
   }
 
   // ---- wings as arms: jacket shoulder + sleeve (or bare mantle on the vest), feathered forearm, dark wingtip fist with a white mirror ----
-  const ua = big ? 0.105 : 0.085, fa = big ? 0.09 : 0.075;
+  const ua = big ? 0.105 : 0.085, fa = big ? 0.088 : 0.075;
   for (const k of ['L', 'R']) {
     const sd = k === 'L' ? 1 : -1, sleeve = L.vest ? C.wing : C.blue;
-    P(J['sh' + k], 'shoulder', G.sph(big ? 0.128 : 0.112, big ? 0.12 : 0.108, big ? 0.128 : 0.112), sleeve, 0, -0.01, 0, L.vest ? F() : {});
-    P(J['sh' + k], 'upper', G.cap(ua, d.upper - (big ? 0.06 : 0.06)), sleeve, 0, -d.upper / 2, 0, L.vest ? F() : {});
-    P(J['el' + k], 'fore', G.cap(fa, d.fore - (big ? 0.1 : 0.06)), C.wing, 0, -d.fore / 2 - (big ? 0.03 : 0), 0, F());
+    P(J['sh' + k], 'shoulder', G.sph(big ? 0.12 : 0.112, big ? 0.115 : 0.108, big ? 0.12 : 0.112), sleeve, 0, -0.01, 0, L.vest ? F() : {});
+    P(J['sh' + k], 'upper', G.cap(ua, d.upper - (big ? 0.03 : 0.06)), sleeve, 0, -d.upper / 2, 0, L.vest ? F() : {});
+    P(J['el' + k], 'fore', G.cap(fa, d.fore - (big ? 0.12 : 0.06)), C.wing, 0, -d.fore / 2 - (big ? 0.055 : 0), 0, F());
     P(J['ha' + k], 'wingtip', G.sph(big ? 0.085 : 0.07, big ? 0.14 : 0.125, big ? 0.1 : 0.09), C.tip, 0, -0.06, 0.01);
-    P(J['ha' + k], 'mirror', G.sph(0.03, 0.04, 0.012), C.white, sd * (big ? 0.088 : 0.073), -0.08, 0.0, { rot: [0, Math.PI / 2, 0], outline: false });
+    P(J['ha' + k], 'mirror', G.box(0.012, 0.07, 0.05), C.white, sd * (big ? 0.088 : 0.073), -0.08, 0.0, { outline: false });
   }
   // ---- legs: shorts, thin pink legs, webbed feet ----
   for (const k of ['L', 'R']) {
@@ -152,41 +166,46 @@ export function buildPierGull(K, member = 'grunt_a', opts = {}) {   // opts: { l
   if (member === 'armed') {
     const W = J.swR = grp(J.haR, 0, -0.04, 0); W.userData.mat = mat;
     P(W, 'fishtail', G.box(0.2, 0.12, 0.045), C.fish, 0, 0.06, 0, { rot: [0, 0, 0] });
-    P(W, 'fish', pgTaper(G.sph(0.1, 0.07, 0.34), 0.34, 0.25).rotateX(Math.PI / 2), C.fish, 0, 0.42, 0);
-    P(W, 'stripe', G.box(0.205, 0.5, 0.012), C.fishDk, 0, 0.42, 0, { outline: false });
-    P(W, 'fisheye', G.sph(0.025, 0.025, 0.025), C.fishBelly, 0.065, 0.66, 0.02, { outline: false });
+    const fish = P(W, 'fish', pgTaper(G.sph(0.1, 0.07, 0.34), 0.34, 0.25).rotateX(Math.PI / 2).toNonIndexed(), C.fish, 0, 0.42, 0);
+    pgPaint(K, fish, (x, y) => (Math.abs(x) < 0.02 && y > -0.26 && y < 0.24 ? C.fishDk : null));   // the rockfish's lateral stripe
+    P(W, 'fisheye', G.box(0.03, 0.03, 0.02), C.fishBelly, 0.035, 0.68, 0.045, { outline: false });
   }
   J.kind = 'thug'; J.meta = META[member];
   return J;                                      // the rig: J.root, J.mat, the 18 joints, J.head, J.d (+ J.tail, J.swR)
 }
 
-// far LOD (opts.lod === 1): ≤ 14 parts, no map. Each LOD part uses its HD counterpart's colour and the same width/depth
-// scales; the blue jacket and white band (the gang accent) stay on every member, the armed one included. Dropped: the hips
-// sphere (hidden by jacket and thighs), wingtip fists, feet (the shin runs down to the HD sole level), face details, collar.
-// Note: the game has no LOD swap today (beyond 24 m it only hides hulls and shadows); this is the TASK_C far variant.
+// far LOD (opts.lod === 1): 12 parts, no map. Each LOD part uses its HD counterpart's colours and width/depth scales.
+// Painted into existing parts instead of extra meshes (pgPaint): the white chest band on the jacket, the hats on the head
+// (except grunt_a's bucket hat, kept as a part for its silhouette), and the dark wingtips on the forearm ends, so the far
+// gull keeps the HD hands' colour. The 12th part is the member's hook: bucket hat (grunt_a), fish (armed) or tail (grunt_b,
+// bruiser). Dropped: hips sphere, feet (the shin reaches the HD sole level), face details, collar/chain, and the tail on
+// grunt_a / armed. The game has no LOD swap today (beyond 24 m it only hides hulls and shadows); this is TASK_C's far variant.
 function pgLod(K, J, C, L, member, sx, sz, P) {
-  const { G, grp } = K, d = J.d, big = sx > 1;
-  P(J.torso, 'jacket', G.sph(0.27 * sx, 0.33, 0.22 * sz), C.blue, 0, 0.3, 0);
-  P(J.torso, 'band', G.cyl(0.273 * sx, 0.259 * sx, 0.09, 7, true).scale(1, 1, 0.815 * sz / sx), C.band, 0, 0.21, 0);
+  const { G, grp } = K, d = J.d, big = sx > 1, paint = (m, f) => pgPaint(K, m, f);
+  paint(P(J.torso, 'jacket', G.sph(0.27 * sx, 0.33, 0.22 * sz).toNonIndexed(), C.blue, 0, 0.3, 0), (x, y) => (y > -0.135 && y < -0.045 ? C.band : null));
   const head = J.head = grp(J.neck, 0, -0.02, 0.03); head.userData.mat = J.mat;
-  P(head, 'head', G.sph(0.2, 0.2, 0.2), C.body, 0, 0.2, 0);
+  const hd = P(head, 'head', G.sph(0.2, 0.2, 0.2).toNonIndexed(), C.body, 0, 0.2, 0);
+  if (L.hat === 'backcap') paint(hd, (x, y) => (y > 0.02 ? C.blue : null));
+  else if (L.hat === 'beanie') paint(hd, (x, y) => (y > 0.17 ? C.blue : y > 0.09 ? C.band : null));
+  else if (L.hat === 'sweatband') paint(hd, (x, y) => (y > 0.07 && y < 0.13 ? C.blue : null));
   P(head, 'bill', G.cyl(0.02, 0.06, 0.32, 7), C.beak, 0, 0.14, 0.3, { rot: [Math.PI / 2 + 0.12, 0, 0] });
-  if (L.hat === 'bucket') P(head, 'hat', G.cyl(0.2, 0.25, 0.13), C.blue, 0, 0.35, -0.02, { rot: [-0.12, 0, 0] });
-  else if (L.hat === 'backcap') P(head, 'cap', G.sph(0.228, 0.11, 0.228), C.blue, 0, 0.315, -0.01, { rot: [-0.1, 0, 0] });
-  else if (L.hat === 'beanie') P(head, 'beanie', G.sph(0.225, 0.17, 0.225), C.blue, 0, 0.335, -0.025, { rot: [-0.2, 0, 0] });
-  const ua = big ? 0.11 : 0.085, fa = big ? 0.095 : 0.075;
+  const ua = big ? 0.11 : 0.085, fa = big ? 0.095 : 0.075, tipTop = big ? 0.08 : 0.065;   // HD wingtip reaches this far above the hand joint
   for (const k of ['L', 'R']) {
     P(J['sh' + k], 'upper', G.cyl(ua + 0.02, ua, d.upper + 0.06), L.vest ? C.wing : C.blue, 0, -d.upper / 2 + 0.02, 0);
-    P(J['el' + k], 'fore', G.cyl(fa, fa * 0.9, d.fore + 0.16), C.wing, 0, -d.fore / 2 - 0.06, 0);
+    const fy = -d.fore / 2 - 0.07;
+    paint(P(J['el' + k], 'fore', G.cap(fa, d.fore + 0.06).toNonIndexed(), C.wing, 0, fy, 0), (x, y) => (y + fy < -d.fore + tipTop ? C.tip : null));
     P(J['lg' + k], 'thigh', G.cyl(big ? 0.13 : 0.11, big ? 0.11 : 0.092, d.thigh), C.shorts, 0, -d.thigh / 2 + 0.03, 0);
-    P(J['kn' + k], 'shin', G.cyl(big ? 0.055 : 0.046, big ? 0.07 : 0.06, d.shin + 0.035), C.leg, 0, -d.shin / 2 - 0.0055, 0);   // sole level = HD foot's
+    P(J['kn' + k], 'shin', G.box(big ? 0.12 : 0.1, d.shin + 0.035, big ? 0.12 : 0.1), C.leg, 0, -d.shin / 2 + 0.0045, 0);   // box (12 tris); sole 1 cm above HD's
   }
   if (member === 'armed') {
     const W = J.swR = grp(J.haR, 0, -0.04, 0); W.userData.mat = J.mat;
     P(W, 'fish', G.cyl(0.1, 0.04, 0.72), C.fish, 0, 0.38, 0);
+  } else if (L.hat === 'bucket') {
+    P(head, 'hat', G.cyl(0.2, 0.25, 0.13), C.blue, 0, 0.35, -0.02, { rot: [-0.12, 0, 0] });
+  } else {
+    const T = J.tail = grp(J.hips, 0, 0.08, -0.12); T.userData.mat = J.mat; J.tailBase = 0.62; T.rotation.x = J.tailBase;
+    P(T, 'tail', G.box(0.22 * sx, 0.045, 0.18), C.body, 0, 0, -0.08);
   }
-  const T = J.tail = grp(J.hips, 0, 0.08, -0.12); T.userData.mat = J.mat; J.tailBase = 0.62; T.rotation.x = J.tailBase;
-  P(T, 'tail', G.box(0.22 * sx, 0.045, 0.18), C.body, 0, 0, -0.08);
   J.kind = 'thug'; J.meta = META[member];
   return J;
 }

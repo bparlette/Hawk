@@ -1,0 +1,2016 @@
+[
+ {
+  "out": "",
+  "q": "gang=pier_gulls",
+  "errors": [],
+  "report": {
+   "gang": "pier_gulls",
+   "members": {
+    "grunt_a": {
+     "hd": {
+      "parts": 33,
+      "tris": 10760,
+      "hullTris": 7964,
+      "hulls": 24,
+      "mats": 3,
+      "casters": 24,
+      "drawCalls": 57,
+      "shadowCalls": 24,
+      "height": 1.901,
+      "feetMinY": 0.017,
+      "flashBad": 0,
+      "hullMatsOK": true,
+      "shadowRule": []
+     },
+     "lod": {
+      "parts": 14,
+      "tris": 1392,
+      "hullTris": 1392,
+      "hulls": 14,
+      "mats": 2,
+      "casters": 14,
+      "drawCalls": 28,
+      "shadowCalls": 14,
+      "height": 1.891,
+      "feetMinY": 0.008,
+      "flashBad": 0,
+      "hullMatsOK": true,
+      "shadowRule": []
+     },
+     "hullOverlap": [
+      {
+       "part": "head/head",
+       "buried": 0.383,
+       "strayPx": {
+        "front": 0,
+        "three": 0,
+        "side": 0,
+        "back": 0
+       },
+       "maxStrayPx": 0
+      },
+      {
+       "part": "head/bill",
+       "buried": 0.322,
+       "strayPx": {
+        "front": 0,
+        "three": 0,
+        "side": 0,
+        "back": 0
+       },
+       "maxStrayPx": 0
+      },
+      {
+       "part": "head/jaw",
+       "buried": 0.357,
+       "strayPx": {
+        "front": 0,
+        "three": 0,
+        "side": 0,
+        "back": 0
+       },
+       "maxStrayPx": 0
+      },
+      {
+       "part": "head/hat",
+       "buried": 0.417,
+       "strayPx": {
+        "front": 4,
+        "three": 2,
+        "side": 2,
+        "back": 3
+       },
+       "maxStrayPx": 4
+      },
+      {
+       "part": "head/brim",
+       "buried": 0.398,
+       "strayPx": {
+        "front": 0,
+        "three": 0,
+        "side": 0,
+        "back": 0
+       },
+       "maxStrayPx": 0
+      },
+      {
+       "part": "haL/wingtip",
+       "buried": 0.204,
+       "strayPx": {
+        "front": 0,
+        "three": 0,
+        "side": 0,
+        "back": 0
+       },
+       "maxStrayPx": 0
+      },
+      {
+       "part": "elL/fore",
+       "buried": 0.306,
+       "strayPx": {
+        "front": 0,
+        "three": 0,
+        "side": 1,
+        "back": 0
+       },
+       "maxStrayPx": 1
+      },
+      {
+       "part": "shL/shoulder",
+       "buried": 0.237,
+       "strayPx": {
+        "front": 0,
+        "three": 0,
+        "side": 0,
+        "back": 0
+       },
+       "maxStrayPx": 0
+      },
+      {
+       "part": "shL/upper",
+       "buried": 0.44,
+       "strayPx": {
+        "front": 0,
+        "three": 0,
+        "side": 1,
+        "back": 1
+       },
+       "maxStrayPx": 1
+      },
+      {
+       "part": "haR/wingtip",
+       "buried": 0.204,
+       "strayPx": {
+        "front": 0,
+        "three": 0,
+        "side": 0,
+        "back": 0
+       },
+       "maxStrayPx": 0
+      },
+      {
+       "part": "elR/fore",
+       "buried": 0.326,
+       "strayPx": {
+        "front": 0,
+        "three": 0,
+        "side": 0,
+        "back": 0
+       },
+       "maxStrayPx": 0
+      },
+      {
+       "part": "shR/shoulder",
+       "buried": 0.244,
+       "strayPx": {
+        "front": 0,
+        "three": 0,
+        "side": 0,
+        "back": 0
+       },
+       "maxStrayPx": 0
+      },
+      {
+       "part": "shR/upper",
+       "buried": 0.445,
+       "strayPx": {
+        "front": 0,
+        "three": 1,
+        "side": 0,
+        "back": 1
+       },
+       "maxStrayPx": 1
+      },
+      {
+       "part": "torso/jacket",
+       "buried": 0.428,
+       "strayPx": {
+        "front": 0,
+        "three": 0,
+        "side": 0,
+        "back": 0
+       },
+       "maxStrayPx": 0
+      },
+      {
+       "part": "torso/band",
+       "buried": 0,
+       "strayPx": {
+        "front": 0,
+        "three": 0,
+        "side": 0,
+        "back": 0
+       },
+       "maxStrayPx": 0
+      },
+      {
+       "part": "torso/collar",
+       "buried": 0.278,
+       "strayPx": {
+        "front": 0,
+        "three": 0,
+        "side": 0,
+        "back": 0
+       },
+       "maxStrayPx": 0
+      },
+      {
+       "part": "ftL/foot",
+       "buried": 0.057,
+       "strayPx": {
+        "front": 0,
+        "three": 0,
+        "side": 0,
+        "back": 0
+       },
+       "maxStrayPx": 0
+      },
+      {
+       "part": "knL/shin",
+       "buried": 0.147,
+       "strayPx": {
+        "front": 0,
+        "three": 0,
+        "side": 0,
+        "back": 0
+       },
+       "maxStrayPx": 0
+      },
+      {
+       "part": "lgL/thigh",
+       "buried": 0.275,
+       "strayPx": {
+        "front": 0,
+        "three": 0,
+        "side": 0,
+        "back": 0
+       },
+       "maxStrayPx": 0
+      },
+      {
+       "part": "ftR/foot",
+       "buried": 0.056,
+       "strayPx": {
+        "front": 0,
+        "three": 0,
+        "side": 0,
+        "back": 0
+       },
+       "maxStrayPx": 0
+      },
+      {
+       "part": "knR/shin",
+       "buried": 0.146,
+       "strayPx": {
+        "front": 0,
+        "three": 0,
+        "side": 0,
+        "back": 0
+       },
+       "maxStrayPx": 0
+      },
+      {
+       "part": "lgR/thigh",
+       "buried": 0.267,
+       "strayPx": {
+        "front": 0,
+        "three": 0,
+        "side": 0,
+        "back": 0
+       },
+       "maxStrayPx": 0
+      },
+      {
+       "part": "hips/shorts",
+       "buried": 0.408,
+       "strayPx": {
+        "front": 0,
+        "three": 0,
+        "side": 0,
+        "back": 0
+       },
+       "maxStrayPx": 0
+      },
+      {
+       "part": "tail/tail",
+       "buried": 0.193,
+       "strayPx": {
+        "front": 0,
+        "three": 0,
+        "side": 0,
+        "back": 0
+       },
+       "maxStrayPx": 0
+      }
+     ],
+     "strayHulls": [],
+     "shoulderGapDown": {
+      "L": 0,
+      "R": 0
+     },
+     "downEndSnapped": {
+      "tail": 0.014,
+      "head": 0.217
+     },
+     "downEndSnappedMinY": 0.014,
+     "shoulderGapWindup": {
+      "L": 0,
+      "R": 0
+     },
+     "sequences": {
+      "knockdown": {
+       "worst": {
+        "y": -0.012,
+        "part": "ftR/foot",
+        "phase": "idle",
+        "t": 2.8
+       },
+       "frames": 188,
+       "pass": true,
+       "downEnd": {
+        "tail": 0.014,
+        "head": 0.217
+       },
+       "cullReach": 2.204
+      },
+      "knockdown+anim": {
+       "worst": {
+        "y": -0.012,
+        "part": "ftR/foot",
+        "phase": "idle",
+        "t": 2.8
+       },
+       "frames": 188,
+       "pass": true,
+       "downEnd": {
+        "tail": 0.014,
+        "head": 0.217
+       },
+       "cullReach": 2.204
+      },
+      "attack": {
+       "worst": {
+        "y": 0.002,
+        "part": "ftR/foot",
+        "phase": "idle",
+        "t": 2.55
+       },
+       "frames": 153,
+       "pass": true,
+       "downEnd": null,
+       "cullReach": 1.067
+      },
+      "attack+anim": {
+       "worst": {
+        "y": 0.002,
+        "part": "ftR/foot",
+        "phase": "idle",
+        "t": 2.55
+       },
+       "frames": 153,
+       "pass": true,
+       "downEnd": null,
+       "cullReach": 1.067
+      },
+      "run": {
+       "worst": {
+        "y": 0.011,
+        "part": "ftR/foot",
+        "phase": "idle",
+        "t": 1.6
+       },
+       "frames": 120,
+       "pass": true,
+       "downEnd": null,
+       "cullReach": 1.067
+      },
+      "run+anim": {
+       "worst": {
+        "y": 0.011,
+        "part": "ftR/foot",
+        "phase": "idle",
+        "t": 1.6
+       },
+       "frames": 120,
+       "pass": true,
+       "downEnd": null,
+       "cullReach": 1.067
+      }
+     },
+     "lodSequences": {
+      "knockdown": {
+       "worst": {
+        "y": -0.021,
+        "part": "knR/shin",
+        "phase": "idle",
+        "t": 2.8
+       },
+       "frames": 188,
+       "pass": true,
+       "downEnd": {
+        "tail": 0.014,
+        "head": 0.229
+       },
+       "cullReach": 2.181
+      },
+      "attack": {
+       "worst": {
+        "y": -0.007,
+        "part": "knR/shin",
+        "phase": "idle",
+        "t": 2.55
+       },
+       "frames": 153,
+       "pass": true,
+       "downEnd": null,
+       "cullReach": 1.056
+      },
+      "run": {
+       "worst": {
+        "y": 0.008,
+        "part": "knR/shin",
+        "phase": "idle",
+        "t": 0.017
+       },
+       "frames": 120,
+       "pass": true,
+       "downEnd": null,
+       "cullReach": 1.056
+      }
+     },
+     "sweeps": {
+      "worst": {
+       "y": -0.013,
+       "part": "ftR/foot",
+       "pose": "idle"
+      },
+      "pass": true
+     },
+     "merge": {
+      "meshesBefore": 33,
+      "hullsBefore": 24,
+      "mergedMeshes": 3,
+      "mergedSolid": 2,
+      "mergedOutline": 1,
+      "leftovers": [],
+      "bones": 16,
+      "drawCalls": 3,
+      "shadowCalls": 2,
+      "flashShared": true,
+      "flashPx": {
+       "rigPx": 7592,
+       "unflashedPx": 0,
+       "unflashedPxWithFlashOff": 1437
+      },
+      "flashCovers": false,
+      "mappedSubMaterials": 1,
+      "extras": [
+       {
+        "k": "tail",
+        "plain": true,
+        "parent": "hips"
+       }
+      ],
+      "maxVertexDy_m": 0,
+      "animMoves": {
+       "tailBone": 15,
+       "tailVerts": 24,
+       "moved_m": 0.02
+      },
+      "renderDiffPx": 327,
+      "renderRigPx": 9354
+     },
+     "silhouetteIoU": {
+      "front": 0.908,
+      "three": 0.899,
+      "side": 0.893
+     },
+     "pass": {
+      "budgetHD": true,
+      "budgetLOD": true,
+      "marginHD": true,
+      "marginLOD": false,
+      "marginBuried": true,
+      "marginLODGround": false,
+      "ground": true,
+      "shoulders": true,
+      "strayHulls": true,
+      "shadows": true,
+      "flash": false,
+      "hulls": true,
+      "merge": true,
+      "cullSphere": false,
+      "height": true,
+      "feet": true
+     }
+    },
+    "grunt_b": {
+     "hd": {
+      "parts": 33,
+      "tris": 11056,
+      "hullTris": 8260,
+      "hulls": 24,
+      "mats": 3,
+      "casters": 24,
+      "drawCalls": 57,
+      "shadowCalls": 24,
+      "height": 1.884,
+      "feetMinY": 0.017,
+      "flashBad": 0,
+      "hullMatsOK": true,
+      "shadowRule": []
+     },
+     "lod": {
+      "parts": 14,
+      "tris": 1732,
+      "hullTris": 1732,
+      "hulls": 14,
+      "mats": 2,
+      "casters": 14,
+      "drawCalls": 28,
+      "shadowCalls": 14,
+      "height": 1.893,
+      "feetMinY": 0.008,
+      "flashBad": 0,
+      "hullMatsOK": true,
+      "shadowRule": []
+     },
+     "hullOverlap": [
+      {
+       "part": "head/head",
+       "buried": 0.463,
+       "strayPx": {
+        "front": 0,
+        "three": 0,
+        "side": 0,
+        "back": 0
+       },
+       "maxStrayPx": 0
+      },
+      {
+       "part": "head/bill",
+       "buried": 0.322,
+       "strayPx": {
+        "front": 0,
+        "three": 0,
+        "side": 0,
+        "back": 0
+       },
+       "maxStrayPx": 0
+      },
+      {
+       "part": "head/jaw",
+       "buried": 0.357,
+       "strayPx": {
+        "front": 0,
+        "three": 0,
+        "side": 0,
+        "back": 0
+       },
+       "maxStrayPx": 0
+      },
+      {
+       "part": "head/cap",
+       "buried": 0.284,
+       "strayPx": {
+        "front": 0,
+        "three": 0,
+        "side": 0,
+        "back": 0
+       },
+       "maxStrayPx": 0
+      },
+      {
+       "part": "head/peak",
+       "buried": 0.208,
+       "strayPx": {
+        "front": 0,
+        "three": 0,
+        "side": 0,
+        "back": 0
+       },
+       "maxStrayPx": 0
+      },
+      {
+       "part": "haL/wingtip",
+       "buried": 0.204,
+       "strayPx": {
+        "front": 0,
+        "three": 0,
+        "side": 0,
+        "back": 0
+       },
+       "maxStrayPx": 0
+      },
+      {
+       "part": "elL/fore",
+       "buried": 0.306,
+       "strayPx": {
+        "front": 0,
+        "three": 0,
+        "side": 1,
+        "back": 0
+       },
+       "maxStrayPx": 1
+      },
+      {
+       "part": "shL/shoulder",
+       "buried": 0.237,
+       "strayPx": {
+        "front": 0,
+        "three": 0,
+        "side": 0,
+        "back": 0
+       },
+       "maxStrayPx": 0
+      },
+      {
+       "part": "shL/upper",
+       "buried": 0.44,
+       "strayPx": {
+        "front": 0,
+        "three": 0,
+        "side": 1,
+        "back": 1
+       },
+       "maxStrayPx": 1
+      },
+      {
+       "part": "haR/wingtip",
+       "buried": 0.204,
+       "strayPx": {
+        "front": 0,
+        "three": 0,
+        "side": 0,
+        "back": 0
+       },
+       "maxStrayPx": 0
+      },
+      {
+       "part": "elR/fore",
+       "buried": 0.326,
+       "strayPx": {
+        "front": 0,
+        "three": 0,
+        "side": 0,
+        "back": 0
+       },
+       "maxStrayPx": 0
+      },
+      {
+       "part": "shR/shoulder",
+       "buried": 0.244,
+       "strayPx": {
+        "front": 0,
+        "three": 0,
+        "side": 0,
+        "back": 0
+       },
+       "maxStrayPx": 0
+      },
+      {
+       "part": "shR/upper",
+       "buried": 0.445,
+       "strayPx": {
+        "front": 1,
+        "three": 0,
+        "side": 0,
+        "back": 2
+       },
+       "maxStrayPx": 2
+      },
+      {
+       "part": "torso/jacket",
+       "buried": 0.428,
+       "strayPx": {
+        "front": 0,
+        "three": 0,
+        "side": 0,
+        "back": 0
+       },
+       "maxStrayPx": 0
+      },
+      {
+       "part": "torso/band",
+       "buried": 0,
+       "strayPx": {
+        "front": 0,
+        "three": 0,
+        "side": 0,
+        "back": 0
+       },
+       "maxStrayPx": 0
+      },
+      {
+       "part": "torso/collar",
+       "buried": 0.278,
+       "strayPx": {
+        "front": 0,
+        "three": 0,
+        "side": 0,
+        "back": 0
+       },
+       "maxStrayPx": 0
+      },
+      {
+       "part": "ftL/foot",
+       "buried": 0.057,
+       "strayPx": {
+        "front": 0,
+        "three": 0,
+        "side": 0,
+        "back": 0
+       },
+       "maxStrayPx": 0
+      },
+      {
+       "part": "knL/shin",
+       "buried": 0.147,
+       "strayPx": {
+        "front": 0,
+        "three": 0,
+        "side": 0,
+        "back": 0
+       },
+       "maxStrayPx": 0
+      },
+      {
+       "part": "lgL/thigh",
+       "buried": 0.275,
+       "strayPx": {
+        "front": 0,
+        "three": 0,
+        "side": 0,
+        "back": 0
+       },
+       "maxStrayPx": 0
+      },
+      {
+       "part": "ftR/foot",
+       "buried": 0.056,
+       "strayPx": {
+        "front": 0,
+        "three": 0,
+        "side": 0,
+        "back": 0
+       },
+       "maxStrayPx": 0
+      },
+      {
+       "part": "knR/shin",
+       "buried": 0.146,
+       "strayPx": {
+        "front": 0,
+        "three": 0,
+        "side": 0,
+        "back": 0
+       },
+       "maxStrayPx": 0
+      },
+      {
+       "part": "lgR/thigh",
+       "buried": 0.267,
+       "strayPx": {
+        "front": 0,
+        "three": 0,
+        "side": 0,
+        "back": 0
+       },
+       "maxStrayPx": 0
+      },
+      {
+       "part": "hips/shorts",
+       "buried": 0.408,
+       "strayPx": {
+        "front": 0,
+        "three": 0,
+        "side": 0,
+        "back": 0
+       },
+       "maxStrayPx": 0
+      },
+      {
+       "part": "tail/tail",
+       "buried": 0.193,
+       "strayPx": {
+        "front": 0,
+        "three": 0,
+        "side": 0,
+        "back": 0
+       },
+       "maxStrayPx": 0
+      }
+     ],
+     "strayHulls": [],
+     "shoulderGapDown": {
+      "L": 0,
+      "R": 0
+     },
+     "downEndSnapped": {
+      "tail": 0.014,
+      "head": 0.182
+     },
+     "downEndSnappedMinY": 0.014,
+     "shoulderGapWindup": {
+      "L": 0,
+      "R": 0
+     },
+     "sequences": {
+      "knockdown": {
+       "worst": {
+        "y": -0.012,
+        "part": "ftR/foot",
+        "phase": "idle",
+        "t": 2.8
+       },
+       "frames": 188,
+       "pass": true,
+       "downEnd": {
+        "tail": 0.014,
+        "head": 0.182
+       },
+       "cullReach": 2.204
+      },
+      "knockdown+anim": {
+       "worst": {
+        "y": -0.012,
+        "part": "ftR/foot",
+        "phase": "idle",
+        "t": 2.8
+       },
+       "frames": 188,
+       "pass": true,
+       "downEnd": {
+        "tail": 0.014,
+        "head": 0.182
+       },
+       "cullReach": 2.204
+      },
+      "attack": {
+       "worst": {
+        "y": 0.002,
+        "part": "ftR/foot",
+        "phase": "idle",
+        "t": 2.55
+       },
+       "frames": 153,
+       "pass": true,
+       "downEnd": null,
+       "cullReach": 1.028
+      },
+      "attack+anim": {
+       "worst": {
+        "y": 0.002,
+        "part": "ftR/foot",
+        "phase": "idle",
+        "t": 2.55
+       },
+       "frames": 153,
+       "pass": true,
+       "downEnd": null,
+       "cullReach": 1.028
+      },
+      "run": {
+       "worst": {
+        "y": 0.011,
+        "part": "ftR/foot",
+        "phase": "idle",
+        "t": 1.6
+       },
+       "frames": 120,
+       "pass": true,
+       "downEnd": null,
+       "cullReach": 1.028
+      },
+      "run+anim": {
+       "worst": {
+        "y": 0.011,
+        "part": "ftR/foot",
+        "phase": "idle",
+        "t": 1.6
+       },
+       "frames": 120,
+       "pass": true,
+       "downEnd": null,
+       "cullReach": 1.028
+      }
+     },
+     "lodSequences": {
+      "knockdown": {
+       "worst": {
+        "y": -0.021,
+        "part": "knR/shin",
+        "phase": "idle",
+        "t": 2.8
+       },
+       "frames": 188,
+       "pass": true,
+       "downEnd": {
+        "tail": 0.014,
+        "head": 0.237
+       },
+       "cullReach": 2.181
+      },
+      "attack": {
+       "worst": {
+        "y": -0.007,
+        "part": "knR/shin",
+        "phase": "idle",
+        "t": 2.55
+       },
+       "frames": 153,
+       "pass": true,
+       "downEnd": null,
+       "cullReach": 1.028
+      },
+      "run": {
+       "worst": {
+        "y": 0.008,
+        "part": "knR/shin",
+        "phase": "idle",
+        "t": 0.017
+       },
+       "frames": 120,
+       "pass": true,
+       "downEnd": null,
+       "cullReach": 1.028
+      }
+     },
+     "sweeps": {
+      "worst": {
+       "y": -0.013,
+       "part": "ftR/foot",
+       "pose": "idle"
+      },
+      "pass": true
+     },
+     "merge": {
+      "meshesBefore": 33,
+      "hullsBefore": 24,
+      "mergedMeshes": 3,
+      "mergedSolid": 2,
+      "mergedOutline": 1,
+      "leftovers": [],
+      "bones": 16,
+      "drawCalls": 3,
+      "shadowCalls": 2,
+      "flashShared": true,
+      "flashPx": {
+       "rigPx": 7495,
+       "unflashedPx": 0,
+       "unflashedPxWithFlashOff": 721
+      },
+      "flashCovers": false,
+      "mappedSubMaterials": 1,
+      "extras": [
+       {
+        "k": "tail",
+        "plain": true,
+        "parent": "hips"
+       }
+      ],
+      "maxVertexDy_m": 0,
+      "animMoves": {
+       "tailBone": 15,
+       "tailVerts": 24,
+       "moved_m": 0.02
+      },
+      "renderDiffPx": 314,
+      "renderRigPx": 9102
+     },
+     "silhouetteIoU": {
+      "front": 0.92,
+      "three": 0.912,
+      "side": 0.909
+     },
+     "pass": {
+      "budgetHD": true,
+      "budgetLOD": true,
+      "marginHD": false,
+      "marginLOD": false,
+      "marginBuried": true,
+      "marginLODGround": false,
+      "ground": true,
+      "shoulders": true,
+      "strayHulls": true,
+      "shadows": true,
+      "flash": false,
+      "hulls": true,
+      "merge": true,
+      "cullSphere": false,
+      "height": true,
+      "feet": true
+     }
+    },
+    "armed": {
+     "hd": {
+      "parts": 36,
+      "tris": 11656,
+      "hullTris": 8452,
+      "hulls": 25,
+      "mats": 3,
+      "casters": 25,
+      "drawCalls": 61,
+      "shadowCalls": 25,
+      "height": 1.858,
+      "feetMinY": 0.017,
+      "flashBad": 0,
+      "hullMatsOK": true,
+      "shadowRule": []
+     },
+     "lod": {
+      "parts": 14,
+      "tris": 1392,
+      "hullTris": 1392,
+      "hulls": 14,
+      "mats": 2,
+      "casters": 14,
+      "drawCalls": 28,
+      "shadowCalls": 14,
+      "height": 1.867,
+      "feetMinY": 0.008,
+      "flashBad": 0,
+      "hullMatsOK": true,
+      "shadowRule": []
+     },
+     "hullOverlap": [
+      {
+       "part": "head/head",
+       "buried": 0.202,
+       "strayPx": {
+        "front": 0,
+        "three": 0,
+        "side": 0,
+        "back": 0
+       },
+       "maxStrayPx": 0
+      },
+      {
+       "part": "head/bill",
+       "buried": 0.322,
+       "strayPx": {
+        "front": 0,
+        "three": 0,
+        "side": 0,
+        "back": 0
+       },
+       "maxStrayPx": 0
+      },
+      {
+       "part": "head/jaw",
+       "buried": 0.357,
+       "strayPx": {
+        "front": 0,
+        "three": 0,
+        "side": 0,
+        "back": 0
+       },
+       "maxStrayPx": 0
+      },
+      {
+       "part": "head/sweatband",
+       "buried": 0.23,
+       "strayPx": {
+        "front": 0,
+        "three": 0,
+        "side": 0,
+        "back": 0
+       },
+       "maxStrayPx": 0
+      },
+      {
+       "part": "haL/wingtip",
+       "buried": 0.204,
+       "strayPx": {
+        "front": 0,
+        "three": 0,
+        "side": 0,
+        "back": 0
+       },
+       "maxStrayPx": 0
+      },
+      {
+       "part": "elL/fore",
+       "buried": 0.306,
+       "strayPx": {
+        "front": 0,
+        "three": 0,
+        "side": 1,
+        "back": 0
+       },
+       "maxStrayPx": 1
+      },
+      {
+       "part": "shL/shoulder",
+       "buried": 0.237,
+       "strayPx": {
+        "front": 0,
+        "three": 0,
+        "side": 0,
+        "back": 0
+       },
+       "maxStrayPx": 0
+      },
+      {
+       "part": "shL/upper",
+       "buried": 0.44,
+       "strayPx": {
+        "front": 0,
+        "three": 0,
+        "side": 0,
+        "back": 2
+       },
+       "maxStrayPx": 2
+      },
+      {
+       "part": "haR/wingtip",
+       "buried": 0.304,
+       "strayPx": {
+        "front": 0,
+        "three": 0,
+        "side": 0,
+        "back": 0
+       },
+       "maxStrayPx": 0
+      },
+      {
+       "part": "swR/fishtail",
+       "buried": 0.297,
+       "strayPx": {
+        "front": 0,
+        "three": 0,
+        "side": 0,
+        "back": 0
+       },
+       "maxStrayPx": 0
+      },
+      {
+       "part": "swR/fish",
+       "buried": 0.019,
+       "strayPx": {
+        "front": 0,
+        "three": 0,
+        "side": 0,
+        "back": 0
+       },
+       "maxStrayPx": 0
+      },
+      {
+       "part": "elR/fore",
+       "buried": 0.276,
+       "strayPx": {
+        "front": 0,
+        "three": 0,
+        "side": 0,
+        "back": 0
+       },
+       "maxStrayPx": 0
+      },
+      {
+       "part": "shR/shoulder",
+       "buried": 0.243,
+       "strayPx": {
+        "front": 0,
+        "three": 0,
+        "side": 0,
+        "back": 0
+       },
+       "maxStrayPx": 0
+      },
+      {
+       "part": "shR/upper",
+       "buried": 0.469,
+       "strayPx": {
+        "front": 0,
+        "three": 0,
+        "side": 0,
+        "back": 2
+       },
+       "maxStrayPx": 2
+      },
+      {
+       "part": "torso/jacket",
+       "buried": 0.436,
+       "strayPx": {
+        "front": 0,
+        "three": 0,
+        "side": 0,
+        "back": 0
+       },
+       "maxStrayPx": 0
+      },
+      {
+       "part": "torso/band",
+       "buried": 0,
+       "strayPx": {
+        "front": 0,
+        "three": 0,
+        "side": 0,
+        "back": 0
+       },
+       "maxStrayPx": 0
+      },
+      {
+       "part": "torso/collar",
+       "buried": 0.278,
+       "strayPx": {
+        "front": 0,
+        "three": 0,
+        "side": 0,
+        "back": 0
+       },
+       "maxStrayPx": 0
+      },
+      {
+       "part": "ftL/foot",
+       "buried": 0.057,
+       "strayPx": {
+        "front": 0,
+        "three": 0,
+        "side": 0,
+        "back": 0
+       },
+       "maxStrayPx": 0
+      },
+      {
+       "part": "knL/shin",
+       "buried": 0.147,
+       "strayPx": {
+        "front": 0,
+        "three": 0,
+        "side": 0,
+        "back": 0
+       },
+       "maxStrayPx": 0
+      },
+      {
+       "part": "lgL/thigh",
+       "buried": 0.275,
+       "strayPx": {
+        "front": 0,
+        "three": 0,
+        "side": 0,
+        "back": 0
+       },
+       "maxStrayPx": 0
+      },
+      {
+       "part": "ftR/foot",
+       "buried": 0.056,
+       "strayPx": {
+        "front": 0,
+        "three": 0,
+        "side": 0,
+        "back": 0
+       },
+       "maxStrayPx": 0
+      },
+      {
+       "part": "knR/shin",
+       "buried": 0.146,
+       "strayPx": {
+        "front": 0,
+        "three": 0,
+        "side": 0,
+        "back": 0
+       },
+       "maxStrayPx": 0
+      },
+      {
+       "part": "lgR/thigh",
+       "buried": 0.267,
+       "strayPx": {
+        "front": 0,
+        "three": 0,
+        "side": 0,
+        "back": 0
+       },
+       "maxStrayPx": 0
+      },
+      {
+       "part": "hips/shorts",
+       "buried": 0.408,
+       "strayPx": {
+        "front": 0,
+        "three": 0,
+        "side": 0,
+        "back": 0
+       },
+       "maxStrayPx": 0
+      },
+      {
+       "part": "tail/tail",
+       "buried": 0.193,
+       "strayPx": {
+        "front": 0,
+        "three": 0,
+        "side": 0,
+        "back": 0
+       },
+       "maxStrayPx": 0
+      }
+     ],
+     "strayHulls": [],
+     "shoulderGapDown": {
+      "L": 0,
+      "R": 0
+     },
+     "downEndSnapped": {
+      "tail": 0.014,
+      "head": 0.237
+     },
+     "downEndSnappedMinY": 0.014,
+     "shoulderGapWindup": {
+      "L": 0,
+      "R": 0
+     },
+     "sequences": {
+      "knockdown": {
+       "worst": {
+        "y": -0.012,
+        "part": "ftR/foot",
+        "phase": "idle",
+        "t": 2.8
+       },
+       "frames": 188,
+       "pass": true,
+       "downEnd": {
+        "tail": 0.014,
+        "head": 0.237
+       },
+       "cullReach": 2.478
+      },
+      "knockdown+anim": {
+       "worst": {
+        "y": -0.012,
+        "part": "ftR/foot",
+        "phase": "idle",
+        "t": 2.8
+       },
+       "frames": 188,
+       "pass": true,
+       "downEnd": {
+        "tail": 0.014,
+        "head": 0.237
+       },
+       "cullReach": 2.478
+      },
+      "attack": {
+       "worst": {
+        "y": 0.002,
+        "part": "ftR/foot",
+        "phase": "idle",
+        "t": 2.55
+       },
+       "frames": 153,
+       "pass": true,
+       "downEnd": null,
+       "cullReach": 1.24
+      },
+      "attack+anim": {
+       "worst": {
+        "y": 0.002,
+        "part": "ftR/foot",
+        "phase": "idle",
+        "t": 2.55
+       },
+       "frames": 153,
+       "pass": true,
+       "downEnd": null,
+       "cullReach": 1.24
+      },
+      "run": {
+       "worst": {
+        "y": 0.011,
+        "part": "ftR/foot",
+        "phase": "idle",
+        "t": 1.6
+       },
+       "frames": 120,
+       "pass": true,
+       "downEnd": null,
+       "cullReach": 1.015
+      },
+      "run+anim": {
+       "worst": {
+        "y": 0.011,
+        "part": "ftR/foot",
+        "phase": "idle",
+        "t": 1.6
+       },
+       "frames": 120,
+       "pass": true,
+       "downEnd": null,
+       "cullReach": 1.015
+      }
+     },
+     "lodSequences": {
+      "knockdown": {
+       "worst": {
+        "y": -0.021,
+        "part": "knR/shin",
+        "phase": "idle",
+        "t": 2.8
+       },
+       "frames": 188,
+       "pass": true,
+       "downEnd": {
+        "tail": 0.014,
+        "head": 0.237
+       },
+       "cullReach": 2.531
+      },
+      "attack": {
+       "worst": {
+        "y": -0.007,
+        "part": "knR/shin",
+        "phase": "idle",
+        "t": 2.55
+       },
+       "frames": 153,
+       "pass": true,
+       "downEnd": null,
+       "cullReach": 1.283
+      },
+      "run": {
+       "worst": {
+        "y": 0.008,
+        "part": "knR/shin",
+        "phase": "idle",
+        "t": 0.017
+       },
+       "frames": 120,
+       "pass": true,
+       "downEnd": null,
+       "cullReach": 1.066
+      }
+     },
+     "sweeps": {
+      "worst": {
+       "y": -0.013,
+       "part": "ftR/foot",
+       "pose": "idle"
+      },
+      "pass": true
+     },
+     "merge": {
+      "meshesBefore": 36,
+      "hullsBefore": 25,
+      "mergedMeshes": 3,
+      "mergedSolid": 2,
+      "mergedOutline": 1,
+      "leftovers": [],
+      "bones": 17,
+      "drawCalls": 3,
+      "shadowCalls": 2,
+      "flashShared": true,
+      "flashPx": {
+       "rigPx": 8163,
+       "unflashedPx": 0,
+       "unflashedPxWithFlashOff": 1701
+      },
+      "flashCovers": false,
+      "mappedSubMaterials": 1,
+      "extras": [
+       {
+        "k": "tail",
+        "plain": true,
+        "parent": "hips"
+       }
+      ],
+      "maxVertexDy_m": 0,
+      "animMoves": {
+       "tailBone": 16,
+       "tailVerts": 24,
+       "moved_m": 0.02
+      },
+      "renderDiffPx": 340,
+      "renderRigPx": 9815
+     },
+     "silhouetteIoU": {
+      "front": 0.905,
+      "three": 0.896,
+      "side": 0.892
+     },
+     "pass": {
+      "budgetHD": true,
+      "budgetLOD": true,
+      "marginHD": false,
+      "marginLOD": false,
+      "marginBuried": true,
+      "marginLODGround": false,
+      "ground": true,
+      "shoulders": true,
+      "strayHulls": true,
+      "shadows": true,
+      "flash": false,
+      "hulls": true,
+      "merge": true,
+      "cullSphere": false,
+      "height": true,
+      "feet": true
+     }
+    },
+    "bruiser": {
+     "hd": {
+      "parts": 33,
+      "tris": 11072,
+      "hullTris": 8276,
+      "hulls": 24,
+      "mats": 3,
+      "casters": 24,
+      "drawCalls": 57,
+      "shadowCalls": 24,
+      "height": 2.359,
+      "feetMinY": 0.019,
+      "flashBad": 0,
+      "hullMatsOK": true,
+      "shadowRule": []
+     },
+     "lod": {
+      "parts": 14,
+      "tris": 1732,
+      "hullTris": 1732,
+      "hulls": 14,
+      "mats": 2,
+      "casters": 14,
+      "drawCalls": 28,
+      "shadowCalls": 14,
+      "height": 2.371,
+      "feetMinY": 0.007,
+      "flashBad": 0,
+      "hullMatsOK": true,
+      "shadowRule": []
+     },
+     "hullOverlap": [
+      {
+       "part": "head/head",
+       "buried": 0.525,
+       "strayPx": {
+        "front": 0,
+        "three": 0,
+        "side": 0,
+        "back": 0
+       },
+       "maxStrayPx": 0
+      },
+      {
+       "part": "head/bill",
+       "buried": 0.33,
+       "strayPx": {
+        "front": 0,
+        "three": 0,
+        "side": 0,
+        "back": 0
+       },
+       "maxStrayPx": 0
+      },
+      {
+       "part": "head/jaw",
+       "buried": 0.365,
+       "strayPx": {
+        "front": 1,
+        "three": 0,
+        "side": 0,
+        "back": 0
+       },
+       "maxStrayPx": 1
+      },
+      {
+       "part": "head/beanie",
+       "buried": 0.598,
+       "strayPx": {
+        "front": 0,
+        "three": 0,
+        "side": 0,
+        "back": 0
+       },
+       "maxStrayPx": 0
+      },
+      {
+       "part": "head/cuff",
+       "buried": 0,
+       "strayPx": {
+        "front": 0,
+        "three": 0,
+        "side": 0,
+        "back": 0
+       },
+       "maxStrayPx": 0
+      },
+      {
+       "part": "haL/wingtip",
+       "buried": 0.281,
+       "strayPx": {
+        "front": 0,
+        "three": 0,
+        "side": 0,
+        "back": 0
+       },
+       "maxStrayPx": 0
+      },
+      {
+       "part": "elL/fore",
+       "buried": 0.365,
+       "strayPx": {
+        "front": 0,
+        "three": 0,
+        "side": 0,
+        "back": 0
+       },
+       "maxStrayPx": 0
+      },
+      {
+       "part": "shL/shoulder",
+       "buried": 0.432,
+       "strayPx": {
+        "front": 0,
+        "three": 0,
+        "side": 0,
+        "back": 0
+       },
+       "maxStrayPx": 0
+      },
+      {
+       "part": "shL/upper",
+       "buried": 0.531,
+       "strayPx": {
+        "front": 0,
+        "three": 0,
+        "side": 0,
+        "back": 5
+       },
+       "maxStrayPx": 5
+      },
+      {
+       "part": "haR/wingtip",
+       "buried": 0.281,
+       "strayPx": {
+        "front": 0,
+        "three": 0,
+        "side": 0,
+        "back": 0
+       },
+       "maxStrayPx": 0
+      },
+      {
+       "part": "elR/fore",
+       "buried": 0.392,
+       "strayPx": {
+        "front": 0,
+        "three": 0,
+        "side": 0,
+        "back": 0
+       },
+       "maxStrayPx": 0
+      },
+      {
+       "part": "shR/shoulder",
+       "buried": 0.431,
+       "strayPx": {
+        "front": 0,
+        "three": 0,
+        "side": 0,
+        "back": 0
+       },
+       "maxStrayPx": 0
+      },
+      {
+       "part": "shR/upper",
+       "buried": 0.564,
+       "strayPx": {
+        "front": 0,
+        "three": 1,
+        "side": 0,
+        "back": 5
+       },
+       "maxStrayPx": 5
+      },
+      {
+       "part": "torso/jacket",
+       "buried": 0.476,
+       "strayPx": {
+        "front": 0,
+        "three": 0,
+        "side": 6,
+        "back": 0
+       },
+       "maxStrayPx": 6
+      },
+      {
+       "part": "torso/band",
+       "buried": 0.01,
+       "strayPx": {
+        "front": 0,
+        "three": 0,
+        "side": 0,
+        "back": 0
+       },
+       "maxStrayPx": 0
+      },
+      {
+       "part": "torso/chain",
+       "buried": 0.333,
+       "strayPx": {
+        "front": 0,
+        "three": 0,
+        "side": 1,
+        "back": 0
+       },
+       "maxStrayPx": 1
+      },
+      {
+       "part": "ftL/foot",
+       "buried": 0.087,
+       "strayPx": {
+        "front": 0,
+        "three": 0,
+        "side": 0,
+        "back": 0
+       },
+       "maxStrayPx": 0
+      },
+      {
+       "part": "knL/shin",
+       "buried": 0.192,
+       "strayPx": {
+        "front": 0,
+        "three": 0,
+        "side": 0,
+        "back": 0
+       },
+       "maxStrayPx": 0
+      },
+      {
+       "part": "lgL/thigh",
+       "buried": 0.34,
+       "strayPx": {
+        "front": 0,
+        "three": 0,
+        "side": 0,
+        "back": 0
+       },
+       "maxStrayPx": 0
+      },
+      {
+       "part": "ftR/foot",
+       "buried": 0.086,
+       "strayPx": {
+        "front": 0,
+        "three": 0,
+        "side": 0,
+        "back": 0
+       },
+       "maxStrayPx": 0
+      },
+      {
+       "part": "knR/shin",
+       "buried": 0.193,
+       "strayPx": {
+        "front": 0,
+        "three": 0,
+        "side": 0,
+        "back": 0
+       },
+       "maxStrayPx": 0
+      },
+      {
+       "part": "lgR/thigh",
+       "buried": 0.337,
+       "strayPx": {
+        "front": 0,
+        "three": 0,
+        "side": 0,
+        "back": 0
+       },
+       "maxStrayPx": 0
+      },
+      {
+       "part": "hips/shorts",
+       "buried": 0.393,
+       "strayPx": {
+        "front": 0,
+        "three": 0,
+        "side": 0,
+        "back": 0
+       },
+       "maxStrayPx": 0
+      },
+      {
+       "part": "tail/tail",
+       "buried": 0.36,
+       "strayPx": {
+        "front": 0,
+        "three": 0,
+        "side": 0,
+        "back": 0
+       },
+       "maxStrayPx": 0
+      }
+     ],
+     "strayHulls": [],
+     "shoulderGapDown": {
+      "L": 0,
+      "R": 0
+     },
+     "downEndSnapped": {
+      "tail": 0.017,
+      "head": 0.26
+     },
+     "downEndSnappedMinY": 0.017,
+     "shoulderGapWindup": {
+      "L": 0,
+      "R": 0
+     },
+     "sequences": {
+      "knockdown": {
+       "worst": {
+        "y": -0.015,
+        "part": "knR/shin",
+        "phase": "idle",
+        "t": 2.8
+       },
+       "frames": 188,
+       "pass": true,
+       "downEnd": {
+        "tail": 0.017,
+        "head": 0.26
+       },
+       "cullReach": 2.218
+      },
+      "knockdown+anim": {
+       "worst": {
+        "y": -0.015,
+        "part": "knR/shin",
+        "phase": "idle",
+        "t": 2.8
+       },
+       "frames": 188,
+       "pass": true,
+       "downEnd": {
+        "tail": 0.017,
+        "head": 0.26
+       },
+       "cullReach": 2.218
+      },
+      "attack": {
+       "worst": {
+        "y": -0.014,
+        "part": "knR/shin",
+        "phase": "idle",
+        "t": 2.75
+       },
+       "frames": 165,
+       "pass": true,
+       "downEnd": null,
+       "cullReach": 1.106
+      },
+      "attack+anim": {
+       "worst": {
+        "y": -0.014,
+        "part": "knR/shin",
+        "phase": "idle",
+        "t": 2.75
+       },
+       "frames": 165,
+       "pass": true,
+       "downEnd": null,
+       "cullReach": 1.106
+      },
+      "run": {
+       "worst": {
+        "y": 0.007,
+        "part": "ftR/foot",
+        "phase": "idle",
+        "t": 1.583
+       },
+       "frames": 120,
+       "pass": true,
+       "downEnd": null,
+       "cullReach": 1.107
+      },
+      "run+anim": {
+       "worst": {
+        "y": 0.007,
+        "part": "ftR/foot",
+        "phase": "idle",
+        "t": 1.583
+       },
+       "frames": 120,
+       "pass": true,
+       "downEnd": null,
+       "cullReach": 1.107
+      }
+     },
+     "lodSequences": {
+      "knockdown": {
+       "worst": {
+        "y": -0.027,
+        "part": "knR/shin",
+        "phase": "idle",
+        "t": 2.833
+       },
+       "frames": 188,
+       "pass": true,
+       "downEnd": {
+        "tail": 0.017,
+        "head": 0.284
+       },
+       "cullReach": 2.188
+      },
+      "attack": {
+       "worst": {
+        "y": -0.026,
+        "part": "knR/shin",
+        "phase": "idle",
+        "t": 2.75
+       },
+       "frames": 165,
+       "pass": true,
+       "downEnd": null,
+       "cullReach": 1.106
+      },
+      "run": {
+       "worst": {
+        "y": 0.008,
+        "part": "knR/shin",
+        "phase": "idle",
+        "t": 0.017
+       },
+       "frames": 120,
+       "pass": true,
+       "downEnd": null,
+       "cullReach": 1.107
+      }
+     },
+     "sweeps": {
+      "worst": {
+       "y": -0.016,
+       "part": "knR/shin",
+       "pose": "idle"
+      },
+      "pass": true
+     },
+     "merge": {
+      "meshesBefore": 33,
+      "hullsBefore": 24,
+      "mergedMeshes": 3,
+      "mergedSolid": 2,
+      "mergedOutline": 1,
+      "leftovers": [],
+      "bones": 16,
+      "drawCalls": 3,
+      "shadowCalls": 2,
+      "flashShared": true,
+      "flashPx": {
+       "rigPx": 12782,
+       "unflashedPx": 0,
+       "unflashedPxWithFlashOff": 2907
+      },
+      "flashCovers": false,
+      "mappedSubMaterials": 1,
+      "extras": [
+       {
+        "k": "tail",
+        "plain": true,
+        "parent": "hips"
+       }
+      ],
+      "maxVertexDy_m": 0,
+      "animMoves": {
+       "tailBone": 15,
+       "tailVerts": 24,
+       "moved_m": 0.026
+      },
+      "renderDiffPx": 610,
+      "renderRigPx": 15121
+     },
+     "silhouetteIoU": {
+      "front": 0.934,
+      "three": 0.924,
+      "side": 0.932
+     },
+     "pass": {
+      "budgetHD": true,
+      "budgetLOD": true,
+      "marginHD": false,
+      "marginLOD": false,
+      "marginBuried": false,
+      "marginLODGround": false,
+      "ground": true,
+      "shoulders": true,
+      "strayHulls": true,
+      "shadows": true,
+      "flash": false,
+      "hulls": true,
+      "merge": true,
+      "cullSphere": false,
+      "height": true,
+      "feet": true
+     }
+    }
+   },
+   "allPass": false
+  }
+ }
+]

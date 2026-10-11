@@ -1,5 +1,6 @@
 # tools/qa_table.py — turn a shoot.mjs REPORT file (viewer frame jobs + the tools/qa.html job) into the README's measured
-# tables. Usage: python3 tools/qa_table.py <report.json>    Every number printed here comes from the run; nothing is typed in.
+# tables. Usage: python3 tools/qa_table.py <report.json> [<before_report.json>]   With a second report it also prints a
+# before -> after table. Every number printed here comes from the runs; nothing is typed in.
 import json, sys
 R = json.load(open(sys.argv[1]))
 qa = next(x['report'] for x in R if x['report'] and 'members' in x['report'])
@@ -30,13 +31,31 @@ print("|---|---|---|---|---|---|---|")
 for m, v in qa['members'].items():
     gd, gw, de, ke = v['shoulderGapDown'], v['shoulderGapWindup'], v['downEndSnapped'], v['sequences']['knockdown']['downEnd']
     print(f"| {m} | {cm(gd['L'])} / {cm(gd['R'])} | {cm(gw['L'])} / {cm(gw['R'])} | {cm(de.get('tail', float('nan')))} | {cm(ke.get('tail', float('nan')))} | {cm(de['head'])} | {cm(v['downEndSnappedMinY'])} |")
-print("\n**Outlines, shadows, merge, LOD silhouette**:\n")
-print("| member | worst buried share (part) | worst stray ink px @6 m (part, view) | shadow-rule violations HD / LOD | mergeRig: meshes before → after, hulls after | flash shared + covers after merge | mapped sub-materials | animateGang moves merged tail | LOD IoU front / 3/4 / side |")
-print("|---|---|---|---|---|---|---|---|---|")
+print("\n**Outlines, shadows, LOD silhouette** (buried = share of a part's surface inside other outlined parts; stray ink rendered at 6 m, 256², 4 views):\n")
+print("| member | worst buried share (part) | worst stray ink px (part, view) | shadow-rule violations HD / LOD | LOD IoU front / 3/4 / side |")
+print("|---|---|---|---|---|")
 for m, v in qa['members'].items():
     hb = max(v['hullOverlap'], key=lambda x: x['buried']); hs = max(v['hullOverlap'], key=lambda x: x['maxStrayPx'])
     sv = max(hs['strayPx'], key=lambda k: hs['strayPx'][k]) if hs['strayPx'] else ''
-    mg = v['merge']; iou = v['silhouetteIoU']
-    am = f"yes, {cm(mg['animMoves']['moved_m'])}" if mg['animMoves'] else 'n/a'
-    print(f"| {m} | {hb['buried'] * 100:.1f} % ({hb['part']}) | {hs['maxStrayPx']} ({hs['part']}, {sv}) | {len(v['hd']['shadowRule'])} / {len(v['lod']['shadowRule'])} | {mg['meshesBefore']} → {mg['meshesAfter']}, {mg['hullsAfter']} | {'yes' if mg['flashShared'] and mg['flashCovers'] else 'NO'} | {mg['mappedSubMaterials']} | {am} | {iou['front']:.3f} / {iou['three']:.3f} / {iou['side']:.3f} |")
-print("\nPer-member pass flags:", ', '.join(f"{m}: {'PASS' if all(v['pass'].values()) else 'FAIL ' + ','.join(k for k, x in v['pass'].items() if not x)}" for m, v in qa['members'].items()))
+    iou = v['silhouetteIoU']
+    print(f"| {m} | {hb['buried'] * 100:.1f} % ({hb['part']}) | {hs['maxStrayPx']} ({hs['part']}, {sv}) | {len(v['hd']['shadowRule'])} / {len(v['lod']['shadowRule'])} | {iou['front']:.3f} / {iou['three']:.3f} / {iou['side']:.3f} |")
+print("\n**The game's real `mergeRig()`** (`tools/game/04b_rig_merge.js`, run on the HD rig):\n")
+print("| member | meshes + hulls before | merged meshes (solid + outline) | bones | draw calls + shadow calls | max vertex Δ merged vs parts (7 poses) | flash: unflashed px of rig px (flash 0.85) | animateGang moves merged tail | render diff px: interior / edge (of rig px) | farthest vertex from culling sphere centre (r = 1.9) |")
+print("|---|---|---|---|---|---|---|---|---|---|")
+for m, v in qa['members'].items():
+    g = v['merge']; am = f"{g['animMoves']['moved_m'] * 100:.1f} cm ({g['animMoves']['tailVerts']} verts)" if g.get('animMoves') else 'n/a'
+    edge = g['renderDiffPx'] - g['renderDiffInteriorPx']
+    print(f"| {m} | {g['meshesBefore']} + {g['hullsBefore']} | {g['mergedMeshes']} ({g['mergedSolid']} + {g['mergedOutline']}) | {g['bones']} | {g['drawCalls']} + {g['shadowCalls']} | {g['maxVertexDy_m'] * 1000:.3f} mm | {g['flashPx']['unflashedPx']} of {g['flashPx']['rigPx']} | {am} | {g['renderDiffInteriorPx']} / {edge} (of {g['renderRigPx']}) | {v['cullReachMax']:.2f} m |")
+if len(sys.argv) > 2:
+    B = json.load(open(sys.argv[2])); qb = next(x['report'] for x in B if x['report'] and 'members' in x['report'])
+    def row(v):
+        lw = min(x['worst']['y'] for x in v['lodSequences'].values()); hw = min(x['worst']['y'] for x in v['sequences'].values())
+        return (v['hd']['parts'], v['hd']['tris'], v['lod']['parts'], v['lod']['tris'], max(x['buried'] for x in v['hullOverlap']), max(x['maxStrayPx'] for x in v['hullOverlap']), hw, lw, min(v['silhouetteIoU'].values()))
+    print(f"\n**Before → after** (`{sys.argv[2]}` → this run; both measured by this QA, real timings and real mergeRig):\n")
+    print("| member | HD parts | HD tris | LOD parts | LOD tris | worst buried | worst stray px | HD ground worst | LOD ground worst | LOD IoU min |")
+    print("|---|---|---|---|---|---|---|---|---|---|")
+    for m in qa['members']:
+        a, b = row(qb['members'][m]), row(qa['members'][m])
+        f = [f"{a[0]} → {b[0]}", f"{a[1]:,} → {b[1]:,}", f"{a[2]} → {b[2]}", f"{a[3]:,} → {b[3]:,}", f"{a[4] * 100:.1f} % → {b[4] * 100:.1f} %", f"{a[5]} → {b[5]}", f"{cm(a[6])} → {cm(b[6])}", f"{cm(a[7])} → {cm(b[7])}", f"{a[8]:.3f} → {b[8]:.3f}"]
+        print(f"| {m} | " + " | ".join(f) + " |")
+print("\nPer-member pass flags (caps, margins, ground, shoulders, stray hulls, shadows, flash, hulls, merge, height, feet):", ', '.join(f"{m}: {'PASS' if all(v['pass'].values()) else 'FAIL ' + ','.join(k for k, x in v['pass'].items() if not x)}" for m, v in qa['members'].items()))

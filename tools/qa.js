@@ -8,11 +8,13 @@
 //  • shoulder gap: distance from the upper-arm/shoulder parts to the torso parts in down(1, true) and windup (≤ 1 cm)
 //  • stray hulls: outlined parts sunk mostly (> 60 % of vertices) inside another outlined part
 //  • shadow flags: outline:false parts and parts under 4 cm in two dimensions must not cast shadows
-//  • mergeRig emulation: per-group merge by material, then hit-flash coverage and animateGang still moving its groups
+//  • mergeRig: the game's real function (tools/game/04b_rig_merge.js); then hit-flash (uniforms + rendered pixels), animateGang
+//    still moving its bones, merged vs unmerged geometry, and the merged mesh's fixed culling sphere vs the rig in every frame
 //  • LOD silhouette: IoU of HD vs LOD 1 masks from front, 3/4 and side
 import * as THREE from 'three';
-import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js';
 import { K } from '../toadcity_kit.js';
+import { loadMergeRig } from './game_merge.js';
+const mergeRig = await loadMergeRig(K);   // the game's real mergeRig (tools/game/04b_rig_merge.js)
 
 const Q = new URLSearchParams(location.search);
 const GANG_ID = Q.get('gang') || 'pier_gulls';
@@ -20,6 +22,9 @@ const M = await import(`../src/gang_${GANG_ID}.js`);
 const BUILD = M[Object.keys(M).find((k) => k.startsWith('build') && typeof M[k] === 'function')];
 const ANIM = M.animateGang;
 const P = K.THUG_POSES, DT = 1 / 60, FLOOR = -0.03;
+// caps (TASK_C + gang-2 rules) and the safety margins required from gang 2 v1.1 on
+const CAP = { hdParts: 37, hdTris: 12000, lodParts: 14, lodTris: 3000, mats: 3, buried: 0.6 };
+const MARGIN = { hdParts: 35, hdTris: 11000, lodParts: 12, lodTris: 2000, buried: 0.55, lodFloor: -0.02 };
 
 const isHull = (o) => o.isMesh && o.material && o.material.isShaderMaterial && o.material.side === THREE.BackSide;
 const partsOf = (J) => { const a = []; J.root.traverse((o) => { if (o.isMesh && !isHull(o)) a.push(o); }); return a; };
@@ -52,33 +57,48 @@ function minY(J, exempt) {
 }
 const downExempt = (J) => (m) => under(m, J.ftL) || under(m, J.ftR) || (J.swR && under(m, J.swR)) || (J.swL && under(m, J.swL));
 
-// ---------- 60 fps sequences (the game's timings: knock-down hop vy 4.2, g 22, rate 13 for 1.25 s; getup rate 14 for 0.5 s) ----------
+// ---------- 60 fps sequences with the game's timings (supplied after gang 2 v1) ----------
+// idle/chase rate 14; windup 0.5 s (big 0.7 s) rate 12; attack pose over 0.3 s at rate 26, back to chase at 0.55 s;
+// hurt pose over 0.32 s at rate 24, next state at 0.34 s; knock-down hop (vy 4.2, g 22) with the down pose at rate 14 for
+// 1.25 s, getup over 0.45 s at rate 14. f(t, u, landed, tl): t = sequence time, u = phase fraction, tl = time in phase.
+// Not modelled: the attack's forward lunge (first 0.12 s; root translation only, no pose change) and dizzy (rate 10; no dizzy
+// pose exists in THUG_POSES).
+const T = { rate: 14, windup: 0.5, windupBig: 0.7, windupRate: 12, atkPose: 0.3, atkRate: 26, atkDur: 0.55, hurtPose: 0.32, hurtRate: 24, hurtDur: 0.34, downRate: 14, downDur: 1.25, getup: 0.45, getupRate: 14 };
+const cl = (v) => Math.min(1, Math.max(0, v));
 function seqs(J) {
+  const wu = J.meta && J.meta.big ? T.windupBig : T.windup;
   return {
     knockdown: [
-      { n: 'idle', dur: 0.5, rate: 14, st: 'idle', f: (t) => P.idle(t, J) },
-      { n: 'hurt', dur: 0.3, rate: 14, st: 'hurt', f: (t, u) => P.hurt(u, J) },
-      { n: 'down', dur: 1.25, rate: 13, st: 'down', hop: true, f: (t, u, g) => P.down(u, g) },
-      { n: 'getup', dur: 0.5, rate: 14, st: 'idle', f: (t, u) => P.getup(u, J) },
-      { n: 'idle', dur: 0.6, rate: 14, st: 'idle', f: (t) => P.idle(t, J) },
+      { n: 'idle', dur: 0.5, rate: T.rate, st: 'idle', f: (t) => P.idle(t, J) },
+      { n: 'hurt', dur: T.hurtDur, rate: T.hurtRate, st: 'hurt', f: (t, u, g, tl) => P.hurt(cl(tl / T.hurtPose), J) },
+      { n: 'down', dur: T.downDur, rate: T.downRate, st: 'down', hop: true, f: (t, u, g) => P.down(u, g) },
+      { n: 'getup', dur: T.getup, rate: T.getupRate, st: 'idle', f: (t, u) => P.getup(u, J) },
+      { n: 'idle', dur: 0.6, rate: T.rate, st: 'idle', f: (t) => P.idle(t, J) },
     ],
     attack: [
-      { n: 'idle', dur: 0.4, rate: 14, st: 'idle', f: (t) => P.idle(t, J) },
-      { n: 'windup', dur: 0.4, rate: 14, st: 'attack', f: (t, u) => P.windup(u, J) },
-      { n: 'attack', dur: 0.5, rate: 14, st: 'attack', f: (t, u) => P.attack(u, J) },
-      { n: 'idle', dur: 0.5, rate: 14, st: 'idle', f: (t) => P.idle(t, J) },
+      { n: 'idle', dur: 0.4, rate: T.rate, st: 'idle', f: (t) => P.idle(t, J) },
+      { n: 'windup', dur: wu, rate: T.windupRate, st: 'attack', f: (t, u) => P.windup(u, J) },
+      { n: 'attack', dur: T.atkDur, rate: T.atkRate, st: 'attack', f: (t, u, g, tl) => P.attack(cl(tl / T.atkPose), J) },
+      { n: 'chase', dur: 0.6, rate: T.rate, st: 'run', f: (t) => P.run(t, 4.5, J) },
+      { n: 'idle', dur: 0.5, rate: T.rate, st: 'idle', f: (t) => P.idle(t, J) },
     ],
     run: [
-      { n: 'idle', dur: 0.3, rate: 14, st: 'idle', f: (t) => P.idle(t, J) },
-      { n: 'run', dur: 1.2, rate: 14, st: 'run', f: (t) => P.run(t, 4.5, J) },
-      { n: 'idle', dur: 0.5, rate: 14, st: 'idle', f: (t) => P.idle(t, J) },
+      { n: 'idle', dur: 0.3, rate: T.rate, st: 'idle', f: (t) => P.idle(t, J) },
+      { n: 'chase', dur: 1.2, rate: T.rate, st: 'run', f: (t) => P.run(t, 4.5, J) },
+      { n: 'idle', dur: 0.5, rate: T.rate, st: 'idle', f: (t) => P.idle(t, J) },
     ],
   };
+}
+const CULL_C = new THREE.Vector3(0, 0.95, 0), CULL_R = 1.9;   // mergeRig's fixed rig-space bounding sphere
+function cullReach(J) {   // furthest non-hull vertex from the culling-sphere centre, in rig (root-local) space
+  const inv = new THREE.Matrix4().copy(J.root.matrixWorld).invert(), v = new THREE.Vector3(); let r = 0;
+  for (const m of partsOf(J)) { const p = m.geometry.attributes.position, M = new THREE.Matrix4().multiplyMatrices(inv, m.matrixWorld); for (let i = 0; i < p.count; i++) r = Math.max(r, v.fromBufferAttribute(p, i).applyMatrix4(M).distanceTo(CULL_C)); }
+  return r;
 }
 function runSeq(member, name, withAnim, lod = 0) {
   const J = build(member, lod), S = seqs(J)[name];
   snap(J, P.idle(0, J));
-  let t = 0, worst = { y: Infinity }, frames = 0, downEnd = null;
+  let t = 0, worst = { y: Infinity }, frames = 0, downEnd = null, reach = 0;
   for (const ph of S) {
     let vy = 0, landed = false;
     if (ph.hop) { vy = 4.2; J.root.position.y = 0; }
@@ -87,15 +107,16 @@ function runSeq(member, name, withAnim, lod = 0) {
       t += DT; frames++;
       const u = i / n;
       if (ph.hop && !landed) { vy -= 22 * DT; J.root.position.y += vy * DT; if (J.root.position.y <= 0 && vy < 0) { J.root.position.y = 0; landed = true; } }
-      K.applyPose(J, ph.f(t, u, landed), ph.rate, DT, false);
+      K.applyPose(J, ph.f(t, u, landed, i * DT), ph.rate, DT, false);
       if (withAnim && ANIM) ANIM(J, t, ph.st);
       J.root.updateMatrixWorld(true);
+      if (frames % 3 === 0) reach = Math.max(reach, cullReach(J));
       const m = minY(J, ph.n === 'down' ? downExempt(J) : null);
       if (m.y < worst.y) worst = { y: r3(m.y), part: m.part, phase: ph.n, t: r3(t) };
       if (ph.n === 'down' && i === n) downEnd = clearances(J);
     }
   }
-  return { worst, frames, pass: worst.y >= FLOOR, downEnd };
+  return { worst, frames, pass: worst.y >= FLOOR, downEnd, cullReach: r3(reach) };
 }
 function clearances(J) {
   const out = {};
@@ -250,45 +271,79 @@ function budget(J) {
   return { parts: ps.length, tris, hullTris, hulls, mats: mats.size, casters, drawCalls: ps.length + hulls, shadowCalls: casters, height: r3(box.max.y - box.min.y), feetMinY: r3(feet.y), flashBad, hullMatsOK };
 }
 
-// ---------- mergeRig emulation: per group, merge direct child meshes by (material, outlined); hulls merged alongside ----------
-function mergeRigEmu(J) {
-  const groups = []; J.root.traverse((o) => { if (o.isGroup || (o.isObject3D && !o.isMesh)) groups.push(o); });
-  for (const g of groups) {
-    const meshes = g.children.filter((c) => c.isMesh && !isHull(c)); if (!meshes.length) continue;
-    const buckets = new Map();
-    for (const m of meshes) { const k = m.material.uuid + (m.geometry.attributes.odir ? '|o' : '|n'); if (!buckets.has(k)) buckets.set(k, []); buckets.get(k).push(m); }
-    for (const list of buckets.values()) {
-      const geoms = list.map((m) => {
-        m.updateMatrix(); const gg = m.geometry.clone(); gg.applyMatrix4(m.matrix);
-        if (gg.attributes.odir) { const n3 = new THREE.Matrix3().setFromMatrix4(m.matrix); const o = gg.attributes.odir, v = new THREE.Vector3(); for (let i = 0; i < o.count; i++) { v.fromBufferAttribute(o, i).applyMatrix3(n3); o.setXYZ(i, v.x, v.y, v.z); } }
-        return gg;
-      });
-      const merged = mergeGeometries(geoms, false); if (!merged) throw new Error('mergeGeometries failed in ' + (J.__named.get(g) || g.type));
-      const mm = new THREE.Mesh(merged, list[0].material); mm.castShadow = list.some((m) => m.castShadow); mm.name = 'merged';
-      if (merged.attributes.odir) mm.add(new THREE.Mesh(merged, K.OUT_CHAR));
-      for (const m of list) g.remove(m); g.add(mm);
-    }
+// ---------- the game's mergeRig (real code) on the built rig ----------
+function skinnedVerts(J, fn) {   // world position of every vertex of the merged solid meshes (CPU skinning, same maths as the shader)
+  const v = new THREE.Vector3(); J.root.updateMatrixWorld(true);
+  for (const m of J.merged) {
+    if (m.material.isShaderMaterial) continue; m.skeleton.update();
+    const p = m.geometry.attributes.position, si = m.geometry.attributes.skinIndex;
+    for (let i = 0; i < p.count; i++) { v.fromBufferAttribute(p, i); m.applyBoneTransform(i, v); v.applyMatrix4(m.matrixWorld); fn(v, si.getX(i), m); }
   }
-  J.root.updateMatrixWorld(true);
+}
+function unmergedRange(J) { let lo = Infinity, hi = -Infinity; const v = new THREE.Vector3(); for (const m of partsOf(J)) { const p = m.geometry.attributes.position; for (let i = 0; i < p.count; i++) { v.fromBufferAttribute(p, i).applyMatrix4(m.matrixWorld); lo = Math.min(lo, v.y); hi = Math.max(hi, v.y); } } return [lo, hi]; }
+function sceneFor(J, flash) {
+  const sc = new THREE.Scene(); sc.background = new THREE.Color(0x0000ff);
+  sc.add(new THREE.HemisphereLight('#dfe6ff', '#8a7f74', 1.45)); const sun = new THREE.DirectionalLight('#fff3dc', 2.1); sun.position.set(-0.5, 1.7, 0.42); sc.add(sun);
+  sc.add(J.root); J.mat.userData.flash.value = flash; return sc;
+}
+function renderRig(J, flash) {
+  const sc = sceneFor(J, flash), box = new THREE.Box3().setFromObject(J.root, true), c = box.getCenter(new THREE.Vector3());
+  const cam = new THREE.PerspectiveCamera(30, 1, 0.1, 50); cam.position.set(c.x + 1.2, c.y + 0.4, 5); cam.lookAt(c); cam.updateMatrixWorld();
+  const px = shot(sc, cam); sc.remove(J.root); J.mat.userData.flash.value = 0; return px;
+}
+function flashPixels(px) {   // rig pixels (not background, not ink) and how many of them are NOT flashed white
+  let rig = 0, dark = 0;
+  for (let i = 0; i < px.length; i += 4) { const r = px[i], g = px[i + 1], b = px[i + 2]; if (r < 12 && g < 12 && b > 243) continue; if (0.299 * r + 0.587 * g + 0.114 * b < 60) continue; rig++; if (Math.min(r, g, b) < 200) dark++; }
+  return { rig, unflashed: dark };
 }
 function mergeCheck(member) {
-  const J = build(member, 0); snap(J, P.idle(0, J));
-  const before = partsOf(J).length;
-  mergeRigEmu(J);
-  const ps = partsOf(J);
-  const flashShared = ps.every((m) => m.material.userData.flash === J.mat.userData.flash && m.material.userData.flashC === J.mat.userData.flashC);
-  J.mat.userData.flash.value = 0.85; const flashCovers = ps.every((m) => m.material.userData.flash.value === 0.85); J.mat.userData.flash.value = 0;
-  const mapped = new Set(ps.filter((m) => m.material.map).map((m) => m.material)).size;
-  // extras must be plain groups directly under a skeleton joint
-  const extras = [...J.__named.entries()].filter(([o, k]) => !K.JOINTS.includes(k) && k !== 'head').map(([o, k]) => ({ k, plain: o.type === 'Group', parent: J.__named.get(o.parent) || 'none' }));
-  // animateGang still moves the merged geometry of every group it animates
-  let animMoves = null;
-  if (ANIM && J.tail) {
-    const probe = J.tail.children.find((c) => c.isMesh); const v = new THREE.Vector3();
-    const at = (t, st) => { ANIM(J, t, st); J.root.updateMatrixWorld(true); return v.fromBufferAttribute(probe.geometry.attributes.position, 0).applyMatrix4(probe.matrixWorld).clone(); };
-    animMoves = { tailMergedMeshPresent: !!probe, moved_m: r3(at(0.1, 'run').distanceTo(at(0.25, 'run'))) };
+  const A = build(member, 0), B = build(member, 0); snap(A, P.idle(0, A)); snap(B, P.idle(0, B));
+  const before = partsOf(B).length; let hullsBefore = 0; B.root.traverse((o) => { if (isHull(o)) hullsBefore++; });
+  mergeRig(B); B.root.updateMatrixWorld(true);
+  const solid = B.merged.filter((m) => !m.material.isShaderMaterial), outl = B.merged.filter((m) => m.material.isShaderMaterial);
+  const leftovers = []; B.root.traverse((o) => { if (o.isMesh && !o.isSkinnedMesh) leftovers.push(label(B, o)); });
+  const flashShared = solid.every((m) => m.material.userData.flash === B.mat.userData.flash && m.material.userData.flashC === B.mat.userData.flashC);
+  const mapped = solid.filter((m) => m.material.map).length;
+  const extras = [...B.__named.entries()].filter(([o, k]) => !K.JOINTS.includes(k) && k !== 'head').map(([o, k]) => ({ k, plain: o.type === 'Group', parent: B.__named.get(o.parent) || 'none' }));
+  // merged geometry follows the bones exactly like the unmerged parts (several poses, with animateGang applied to both)
+  let maxDy = 0;
+  for (const [pose, st] of [[(J) => P.idle(0.3, J), 'idle'], [(J) => P.windup(1, J), 'attack'], [(J) => P.attack(1, J), 'attack'], [(J) => P.hurt(0.5, J), 'hurt'], [() => P.down(1, true), 'down'], [(J) => P.getup(0.3, J), 'idle'], [(J) => P.run(0.37, 4.5, J), 'run']]) {
+    for (const J of [A, B]) { snap(J, pose(J)); if (ANIM) ANIM(J, 0.4, st); J.root.updateMatrixWorld(true); }
+    const [lo, hi] = unmergedRange(A); let mlo = Infinity, mhi = -Infinity; skinnedVerts(B, (v) => { mlo = Math.min(mlo, v.y); mhi = Math.max(mhi, v.y); });
+    maxDy = Math.max(maxDy, Math.abs(lo - mlo), Math.abs(hi - mhi));
   }
-  return { meshesBefore: before, meshesAfter: ps.length, hullsAfter: (() => { let n = 0; J.root.traverse((o) => { if (isHull(o)) n++; }); return n; })(), flashShared, flashCovers, mappedSubMaterials: mapped, extras, animMoves };
+  // animateGang still moves the merged vertices bound to each animated bone
+  let animMoves = null;
+  if (ANIM && B.tail) {
+    snap(B, P.idle(0, B)); const bi = solid[0].skeleton.bones.indexOf(B.tail);
+    const sample = (t, st) => { ANIM(B, t, st); const pts = []; skinnedVerts(B, (v, s) => { if (s === bi) pts.push(v.clone()); }); return pts; };
+    const p0 = sample(0.1, 'run'), p1 = sample(0.25, 'run'); let mv = 0; for (let i = 0; i < p0.length; i++) mv = Math.max(mv, p0[i].distanceTo(p1[i]));
+    animMoves = { tailBone: bi, tailVerts: p0.length, moved_m: r3(mv) };
+  }
+  // hit-flash on the merged rig, rendered: every rig pixel that is not ink must turn white (fur sub-material included)
+  snap(A, P.idle(0, A)); snap(B, P.idle(0, B));
+  const off = flashPixels(renderRig(B, 0)), on = flashPixels(renderRig(B, 0.85));
+  // merged vs unmerged look: same pose, same lights; pixels differing by more than 24 in any channel
+  const pa = renderRig(A, 0), pb = renderRig(B, 0); let diff = 0, rigPx = 0;
+  if (Q.get('debugmerge') === member) { const show = (px, f) => debugPaint(px, f || (() => false), new Uint8Array(SR * SR)); show(pa); show(pb); show(pa, (i) => Math.max(Math.abs(pa[i * 4] - pb[i * 4]), Math.abs(pa[i * 4 + 1] - pb[i * 4 + 1]), Math.abs(pa[i * 4 + 2] - pb[i * 4 + 2])) > 24); }
+  // edge pixels = within 1 px of ink (luma < 40) in either render; differences there are outline rasterisation, not surfaces
+  const inkAt = (px, i) => 0.299 * px[i * 4] + 0.587 * px[i * 4 + 1] + 0.114 * px[i * 4 + 2] < 40;
+  let diffInterior = 0;
+  for (let i = 0; i < pa.length; i += 4) {
+    const bg = pa[i] < 12 && pa[i + 1] < 12 && pa[i + 2] > 243; if (!bg) rigPx++;
+    if (Math.max(Math.abs(pa[i] - pb[i]), Math.abs(pa[i + 1] - pb[i + 1]), Math.abs(pa[i + 2] - pb[i + 2])) <= 24) continue;
+    diff++; const k = i / 4, x = k % SR, y = (k - x) / SR; let edge = false;
+    for (let dy = -1; dy <= 1 && !edge; dy++) for (let dx = -1; dx <= 1 && !edge; dx++) { const xx = x + dx, yy = y + dy; if (xx >= 0 && yy >= 0 && xx < SR && yy < SR && (inkAt(pa, yy * SR + xx) || inkAt(pb, yy * SR + xx))) edge = true; }
+    if (!edge) diffInterior++;
+  }
+  return {
+    meshesBefore: before, hullsBefore, mergedMeshes: B.merged.length, mergedSolid: solid.length, mergedOutline: outl.length, leftovers,
+    bones: solid[0] ? solid[0].skeleton.bones.length : 0, drawCalls: B.merged.length, shadowCalls: solid.length,
+    flashShared, flashPx: { rigPx: on.rig, unflashedPx: on.unflashed, unflashedPxWithFlashOff: off.unflashed },
+    flashCovers: flashShared && on.unflashed === 0,
+    mappedSubMaterials: mapped, extras, maxVertexDy_m: Math.round(maxDy * 1e6) / 1e6, animMoves,
+    renderDiffPx: diff, renderDiffInteriorPx: diffInterior, renderRigPx: rigPx,
+  };
 }
 
 // ---------- LOD silhouette IoU ----------
@@ -315,13 +370,13 @@ function silhouette(member) {
 // ---------- run everything ----------
 const R = { gang: GANG_ID, members: {} };
 const out = document.getElementById('out');
-for (const member of (DEBUG ? [DEBUG[0]] : M.GANG.members)) {
+for (const member of (DEBUG ? [DEBUG[0]] : Q.get('debugmerge') ? [Q.get('debugmerge')] : M.GANG.members)) {
   out.textContent += `\n${member}…`;
   const hd = build(member, 0), lod = build(member, 1);
   const r = R.members[member] = { hd: budget(hd), lod: budget(lod) };
   r.hd.shadowRule = shadowRules(hd); r.lod.shadowRule = shadowRules(lod);
   r.hullOverlap = strayHulls(build(member, 0));
-  r.strayHulls = r.hullOverlap.filter((x) => x.buried > 0.6 || x.maxStrayPx > STRAY_MAX);
+  r.strayHulls = r.hullOverlap.filter((x) => x.buried > CAP.buried || x.maxStrayPx > STRAY_MAX);
   { const J = build(member, 0); snap(J, P.down(1, true)); r.shoulderGapDown = shoulderGaps(J); r.downEndSnapped = clearances(J); r.downEndSnappedMinY = r3(minY(J, downExempt(J)).y); }
   { const J = build(member, 0); snap(J, P.windup(1, J)); r.shoulderGapWindup = shoulderGaps(J); }
   r.sequences = {};
@@ -332,14 +387,18 @@ for (const member of (DEBUG ? [DEBUG[0]] : M.GANG.members)) {
   for (const name of ['knockdown', 'attack', 'run']) r.lodSequences[name] = runSeq(member, name, true, 1);
   r.sweeps = sweeps(member);
   r.merge = mergeCheck(member);
+  // informational (game-side): furthest vertex from mergeRig's fixed culling sphere centre over all 60 fps runs
+  r.cullReachMax = Math.max(...Object.values(r.sequences).map((x) => x.cullReach)); r.cullRadius = CULL_R;
   r.silhouetteIoU = silhouette(member);
   const seqPass = Object.values(r.sequences).every((x) => x.pass) && Object.values(r.lodSequences).every((x) => x.pass);
   r.pass = {
-    budgetHD: r.hd.parts <= 37 && r.hd.tris <= 12000 && r.hd.mats <= 3, budgetLOD: r.lod.parts <= 14 && r.lod.tris <= 3000 && r.lod.mats <= 3,
+    budgetHD: r.hd.parts <= CAP.hdParts && r.hd.tris <= CAP.hdTris && r.hd.mats <= CAP.mats, budgetLOD: r.lod.parts <= CAP.lodParts && r.lod.tris <= CAP.lodTris && r.lod.mats <= CAP.mats,
+    marginHD: r.hd.parts <= MARGIN.hdParts && r.hd.tris <= MARGIN.hdTris, marginLOD: r.lod.parts <= MARGIN.lodParts && r.lod.tris <= MARGIN.lodTris,
+    marginBuried: r.hullOverlap.every((x) => x.buried < MARGIN.buried), marginLODGround: Object.values(r.lodSequences).every((x) => x.worst.y >= MARGIN.lodFloor),
     ground: seqPass && r.sweeps.pass, shoulders: Math.max(r.shoulderGapDown.L, r.shoulderGapDown.R, r.shoulderGapWindup.L, r.shoulderGapWindup.R) <= 0.01,
     strayHulls: r.strayHulls.length === 0, shadows: !r.hd.shadowRule.length && !r.lod.shadowRule.length,
     flash: !r.hd.flashBad && !r.lod.flashBad && r.merge.flashShared && r.merge.flashCovers, hulls: r.hd.hullMatsOK && r.lod.hullMatsOK,
-    merge: r.merge.mappedSubMaterials <= 1 && r.merge.extras.every((e) => e.plain && K.JOINTS.includes(e.parent) || e.k === 'swR' || e.k === 'swL') && (!r.merge.animMoves || r.merge.animMoves.moved_m > 0.005),
+    merge: r.merge.mappedSubMaterials <= 1 && !r.merge.leftovers.length && r.merge.maxVertexDy_m < 1e-4 && r.merge.extras.every((e) => e.plain && K.JOINTS.includes(e.parent) || e.k === 'swR' || e.k === 'swL') && (!r.merge.animMoves || r.merge.animMoves.moved_m > 0.005),
     height: r.hd.height >= 1.8 * (M.META[member].scale || 1) && r.hd.height <= 2.2 * (M.META[member].scale || 1), feet: Math.abs(r.hd.feetMinY) <= 0.03,
   };
   out.textContent += ' ' + (Object.values(r.pass).every(Boolean) ? 'PASS' : 'FAIL ' + Object.entries(r.pass).filter(([, v]) => !v).map(([k]) => k).join(','));

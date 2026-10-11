@@ -8,9 +8,9 @@
    "lod": 0,
    "rigs": {
     "pier_gulls.grunt_a": {
-     "parts": 33,
-     "tris": 10760,
-     "hullTris": 7964,
+     "parts": 32,
+     "tris": 8812,
+     "hullTris": 7936,
      "mats": 3,
      "height": 1.906116558363995,
      "minY": 0.012791840114854403,
@@ -20,8 +20,8 @@
     }
    },
    "frame": {
-    "calls": 325,
-    "triangles": 106754
+    "calls": 313,
+    "triangles": 98738
    }
   }
  },
@@ -34,9 +34,9 @@
    "lod": 0,
    "rigs": {
     "pier_gulls.grunt_a": {
-     "parts": 33,
-     "tris": 10760,
-     "hullTris": 7964,
+     "parts": 32,
+     "tris": 8812,
+     "hullTris": 7936,
      "mats": 3,
      "height": 1.906116558363995,
      "minY": 0.012791840114854403,
@@ -46,8 +46,8 @@
     }
    },
    "frame": {
-    "calls": 325,
-    "triangles": 106754
+    "calls": 313,
+    "triangles": 98738
    }
   }
  },
@@ -60,9 +60,9 @@
    "lod": 0,
    "rigs": {
     "pier_gulls.grunt_a/idle": {
-     "parts": 33,
-     "tris": 10760,
-     "hullTris": 7964,
+     "parts": 32,
+     "tris": 8812,
+     "hullTris": 7936,
      "mats": 3,
      "height": 1.906116558363995,
      "minY": 0.012791840114854403,
@@ -71,9 +71,9 @@
      "swR": false
     },
     "pier_gulls.grunt_a/run": {
-     "parts": 33,
-     "tris": 10760,
-     "hullTris": 7964,
+     "parts": 32,
+     "tris": 8812,
+     "hullTris": 7936,
      "mats": 3,
      "height": 1.906116558363995,
      "minY": 0.012791840114854403,
@@ -82,9 +82,9 @@
      "swR": false
     },
     "pier_gulls.grunt_a/windup": {
-     "parts": 33,
-     "tris": 10760,
-     "hullTris": 7964,
+     "parts": 32,
+     "tris": 8812,
+     "hullTris": 7936,
      "mats": 3,
      "height": 1.906116558363995,
      "minY": 0.012791840114854403,
@@ -93,9 +93,9 @@
      "swR": false
     },
     "pier_gulls.grunt_a/attack": {
-     "parts": 33,
-     "tris": 10760,
-     "hullTris": 7964,
+     "parts": 32,
+     "tris": 8812,
+     "hullTris": 7936,
      "mats": 3,
      "height": 1.906116558363995,
      "minY": 0.012791840114854403,
@@ -104,9 +104,9 @@
      "swR": false
     },
     "pier_gulls.grunt_a/hurt": {
-     "parts": 33,
-     "tris": 10760,
-     "hullTris": 7964,
+     "parts": 32,
+     "tris": 8812,
+     "hullTris": 7936,
      "mats": 3,
      "height": 1.906116558363995,
      "minY": 0.012791840114854403,
@@ -115,9 +115,9 @@
      "swR": false
     },
     "pier_gulls.grunt_a/down": {
-     "parts": 33,
-     "tris": 10760,
-     "hullTris": 7964,
+     "parts": 32,
+     "tris": 8812,
+     "hullTris": 7936,
      "mats": 3,
      "height": 1.906116558363995,
      "minY": 0.012791840114854403,
@@ -126,9 +126,9 @@
      "swR": false
     },
     "pier_gulls.grunt_a/getup": {
-     "parts": 33,
-     "tris": 10760,
-     "hullTris": 7964,
+     "parts": 32,
+     "tris": 8812,
+     "hullTris": 7936,
      "mats": 3,
      "height": 1.906116558363995,
      "minY": 0.012791840114854403,
@@ -138,22 +138,36 @@
     }
    },
    "frame": {
-    "calls": 567,
-    "triangles": 186422
+    "calls": 546,
+    "triangles": 172778
    }
   }
  },
  {
   "out": "previews/pier_gulls_grunt_a_knockdown_60fps.png",
-  "q": "show=pier_gulls.grunt_a&strip=knockdown&ui=0",
+  "q": "show=pier_gulls.grunt_a&strip=knockdown&ui=0&merge=1",
   "errors": [],
   "report": {
    "show": "pier_gulls.grunt_a",
    "lod": 0,
    "rigs": {},
    "frame": {
-    "calls": 857,
-    "triangles": 281470
+    "calls": 56,
+    "triangles": 281162
+   }
+  }
+ },
+ {
+  "out": "previews/pier_gulls_grunt_a_attack_60fps.png",
+  "q": "show=pier_gulls.grunt_a&strip=attack&ui=0&merge=1",
+  "errors": [],
+  "report": {
+   "show": "pier_gulls.grunt_a",
+   "lod": 0,
+   "rigs": {},
+   "frame": {
+    "calls": 56,
+    "triangles": 281162
    }
   }
  },
@@ -166,9 +180,9 @@
    "lod": 0,
    "rigs": {
     "pier_gulls.grunt_a": {
-     "parts": 33,
-     "tris": 10760,
-     "hullTris": 7964,
+     "parts": 32,
+     "tris": 8812,
+     "hullTris": 7936,
      "mats": 3,
      "height": 1.906116558363995,
      "minY": 0.012791840114854403,
@@ -178,8 +192,8 @@
     }
    },
    "frame": {
-    "calls": 325,
-    "triangles": 106754
+    "calls": 313,
+    "triangles": 98738
    }
   }
  },
@@ -192,20 +206,20 @@
    "lod": 1,
    "rigs": {
     "pier_gulls.grunt_a": {
-     "parts": 14,
-     "tris": 1392,
-     "hullTris": 1392,
+     "parts": 12,
+     "tris": 1968,
+     "hullTris": 1968,
      "mats": 2,
-     "height": 1.898143131882505,
-     "minY": 0.0030286461365830464,
+     "height": 1.885832766542484,
+     "minY": 0.015339011476603964,
      "flashBad": 0,
      "hullsOK": true,
      "swR": false
     }
    },
    "frame": {
-    "calls": 169,
-    "triangles": 16706
+    "calls": 145,
+    "triangles": 23618
    }
   }
  },
@@ -218,9 +232,9 @@
    "lod": 0,
    "rigs": {
     "pier_gulls.grunt_b": {
-     "parts": 33,
-     "tris": 11056,
-     "hullTris": 8260,
+     "parts": 32,
+     "tris": 9108,
+     "hullTris": 8232,
      "mats": 3,
      "height": 1.8922158172203376,
      "minY": 0.012791840114854403,
@@ -230,8 +244,8 @@
     }
    },
    "frame": {
-    "calls": 325,
-    "triangles": 110306
+    "calls": 313,
+    "triangles": 102290
    }
   }
  },
@@ -244,9 +258,9 @@
    "lod": 0,
    "rigs": {
     "pier_gulls.grunt_b": {
-     "parts": 33,
-     "tris": 11056,
-     "hullTris": 8260,
+     "parts": 32,
+     "tris": 9108,
+     "hullTris": 8232,
      "mats": 3,
      "height": 1.8922158172203376,
      "minY": 0.012791840114854403,
@@ -256,8 +270,8 @@
     }
    },
    "frame": {
-    "calls": 325,
-    "triangles": 110306
+    "calls": 313,
+    "triangles": 102290
    }
   }
  },
@@ -270,9 +284,9 @@
    "lod": 0,
    "rigs": {
     "pier_gulls.grunt_b/idle": {
-     "parts": 33,
-     "tris": 11056,
-     "hullTris": 8260,
+     "parts": 32,
+     "tris": 9108,
+     "hullTris": 8232,
      "mats": 3,
      "height": 1.8922158172203376,
      "minY": 0.012791840114854403,
@@ -281,9 +295,9 @@
      "swR": false
     },
     "pier_gulls.grunt_b/run": {
-     "parts": 33,
-     "tris": 11056,
-     "hullTris": 8260,
+     "parts": 32,
+     "tris": 9108,
+     "hullTris": 8232,
      "mats": 3,
      "height": 1.8922158172203376,
      "minY": 0.012791840114854403,
@@ -292,9 +306,9 @@
      "swR": false
     },
     "pier_gulls.grunt_b/windup": {
-     "parts": 33,
-     "tris": 11056,
-     "hullTris": 8260,
+     "parts": 32,
+     "tris": 9108,
+     "hullTris": 8232,
      "mats": 3,
      "height": 1.8922158172203376,
      "minY": 0.012791840114854403,
@@ -303,9 +317,9 @@
      "swR": false
     },
     "pier_gulls.grunt_b/attack": {
-     "parts": 33,
-     "tris": 11056,
-     "hullTris": 8260,
+     "parts": 32,
+     "tris": 9108,
+     "hullTris": 8232,
      "mats": 3,
      "height": 1.8922158172203376,
      "minY": 0.012791840114854403,
@@ -314,9 +328,9 @@
      "swR": false
     },
     "pier_gulls.grunt_b/hurt": {
-     "parts": 33,
-     "tris": 11056,
-     "hullTris": 8260,
+     "parts": 32,
+     "tris": 9108,
+     "hullTris": 8232,
      "mats": 3,
      "height": 1.8922158172203376,
      "minY": 0.012791840114854403,
@@ -325,9 +339,9 @@
      "swR": false
     },
     "pier_gulls.grunt_b/down": {
-     "parts": 33,
-     "tris": 11056,
-     "hullTris": 8260,
+     "parts": 32,
+     "tris": 9108,
+     "hullTris": 8232,
      "mats": 3,
      "height": 1.8922158172203376,
      "minY": 0.012791840114854403,
@@ -336,9 +350,9 @@
      "swR": false
     },
     "pier_gulls.grunt_b/getup": {
-     "parts": 33,
-     "tris": 11056,
-     "hullTris": 8260,
+     "parts": 32,
+     "tris": 9108,
+     "hullTris": 8232,
      "mats": 3,
      "height": 1.8922158172203376,
      "minY": 0.012791840114854403,
@@ -348,22 +362,36 @@
     }
    },
    "frame": {
-    "calls": 567,
-    "triangles": 192638
+    "calls": 546,
+    "triangles": 178994
    }
   }
  },
  {
   "out": "previews/pier_gulls_grunt_b_knockdown_60fps.png",
-  "q": "show=pier_gulls.grunt_b&strip=knockdown&ui=0",
+  "q": "show=pier_gulls.grunt_b&strip=knockdown&ui=0&merge=1",
   "errors": [],
   "report": {
    "show": "pier_gulls.grunt_b",
    "lod": 0,
    "rigs": {},
    "frame": {
-    "calls": 855,
-    "triangles": 290534
+    "calls": 56,
+    "triangles": 290930
+   }
+  }
+ },
+ {
+  "out": "previews/pier_gulls_grunt_b_attack_60fps.png",
+  "q": "show=pier_gulls.grunt_b&strip=attack&ui=0&merge=1",
+  "errors": [],
+  "report": {
+   "show": "pier_gulls.grunt_b",
+   "lod": 0,
+   "rigs": {},
+   "frame": {
+    "calls": 56,
+    "triangles": 290930
    }
   }
  },
@@ -376,9 +404,9 @@
    "lod": 0,
    "rigs": {
     "pier_gulls.grunt_b": {
-     "parts": 33,
-     "tris": 11056,
-     "hullTris": 8260,
+     "parts": 32,
+     "tris": 9108,
+     "hullTris": 8232,
      "mats": 3,
      "height": 1.8922158172203376,
      "minY": 0.012791840114854403,
@@ -388,8 +416,8 @@
     }
    },
    "frame": {
-    "calls": 325,
-    "triangles": 110306
+    "calls": 313,
+    "triangles": 102290
    }
   }
  },
@@ -402,20 +430,20 @@
    "lod": 1,
    "rigs": {
     "pier_gulls.grunt_b": {
-     "parts": 14,
-     "tris": 1732,
-     "hullTris": 1732,
+     "parts": 12,
+     "tris": 1924,
+     "hullTris": 1924,
      "mats": 2,
-     "height": 1.901979011198609,
-     "minY": 0.0030286461365830464,
+     "height": 1.8748693449957443,
+     "minY": 0.015339011476603964,
      "flashBad": 0,
      "hullsOK": true,
      "swR": false
     }
    },
    "frame": {
-    "calls": 169,
-    "triangles": 20786
+    "calls": 145,
+    "triangles": 23090
    }
   }
  },
@@ -428,9 +456,9 @@
    "lod": 0,
    "rigs": {
     "pier_gulls.armed": {
-     "parts": 36,
-     "tris": 11656,
-     "hullTris": 8452,
+     "parts": 34,
+     "tris": 9312,
+     "hullTris": 8424,
      "mats": 3,
      "height": 1.8774165163574938,
      "minY": 0.012791840114854403,
@@ -440,8 +468,8 @@
     }
    },
    "frame": {
-    "calls": 345,
-    "triangles": 114242
+    "calls": 329,
+    "triangles": 104642
    }
   }
  },
@@ -454,9 +482,9 @@
    "lod": 0,
    "rigs": {
     "pier_gulls.armed": {
-     "parts": 36,
-     "tris": 11656,
-     "hullTris": 8452,
+     "parts": 34,
+     "tris": 9312,
+     "hullTris": 8424,
      "mats": 3,
      "height": 1.8774165163574938,
      "minY": 0.012791840114854403,
@@ -466,8 +494,8 @@
     }
    },
    "frame": {
-    "calls": 345,
-    "triangles": 114242
+    "calls": 329,
+    "triangles": 104642
    }
   }
  },
@@ -480,9 +508,9 @@
    "lod": 0,
    "rigs": {
     "pier_gulls.armed/idle": {
-     "parts": 36,
-     "tris": 11656,
-     "hullTris": 8452,
+     "parts": 34,
+     "tris": 9312,
+     "hullTris": 8424,
      "mats": 3,
      "height": 1.8774165163574938,
      "minY": 0.012791840114854403,
@@ -491,9 +519,9 @@
      "swR": true
     },
     "pier_gulls.armed/run": {
-     "parts": 36,
-     "tris": 11656,
-     "hullTris": 8452,
+     "parts": 34,
+     "tris": 9312,
+     "hullTris": 8424,
      "mats": 3,
      "height": 1.8774165163574938,
      "minY": 0.012791840114854403,
@@ -502,9 +530,9 @@
      "swR": true
     },
     "pier_gulls.armed/windup": {
-     "parts": 36,
-     "tris": 11656,
-     "hullTris": 8452,
+     "parts": 34,
+     "tris": 9312,
+     "hullTris": 8424,
      "mats": 3,
      "height": 1.8774165163574938,
      "minY": 0.012791840114854403,
@@ -513,9 +541,9 @@
      "swR": true
     },
     "pier_gulls.armed/attack": {
-     "parts": 36,
-     "tris": 11656,
-     "hullTris": 8452,
+     "parts": 34,
+     "tris": 9312,
+     "hullTris": 8424,
      "mats": 3,
      "height": 1.8774165163574938,
      "minY": 0.012791840114854403,
@@ -524,9 +552,9 @@
      "swR": true
     },
     "pier_gulls.armed/hurt": {
-     "parts": 36,
-     "tris": 11656,
-     "hullTris": 8452,
+     "parts": 34,
+     "tris": 9312,
+     "hullTris": 8424,
      "mats": 3,
      "height": 1.8774165163574938,
      "minY": 0.012791840114854403,
@@ -535,9 +563,9 @@
      "swR": true
     },
     "pier_gulls.armed/down": {
-     "parts": 36,
-     "tris": 11656,
-     "hullTris": 8452,
+     "parts": 34,
+     "tris": 9312,
+     "hullTris": 8424,
      "mats": 3,
      "height": 1.8774165163574938,
      "minY": 0.012791840114854403,
@@ -546,9 +574,9 @@
      "swR": true
     },
     "pier_gulls.armed/getup": {
-     "parts": 36,
-     "tris": 11656,
-     "hullTris": 8452,
+     "parts": 34,
+     "tris": 9312,
+     "hullTris": 8424,
      "mats": 3,
      "height": 1.8774165163574938,
      "minY": 0.012791840114854403,
@@ -558,22 +586,36 @@
     }
    },
    "frame": {
-    "calls": 602,
-    "triangles": 199526
+    "calls": 574,
+    "triangles": 183110
    }
   }
  },
  {
   "out": "previews/pier_gulls_armed_knockdown_60fps.png",
-  "q": "show=pier_gulls.armed&strip=knockdown&ui=0",
+  "q": "show=pier_gulls.armed&strip=knockdown&ui=0&merge=1",
   "errors": [],
   "report": {
    "show": "pier_gulls.armed",
    "lod": 0,
    "rigs": {},
    "frame": {
-    "calls": 914,
-    "triangles": 302582
+    "calls": 56,
+    "triangles": 297530
+   }
+  }
+ },
+ {
+  "out": "previews/pier_gulls_armed_attack_60fps.png",
+  "q": "show=pier_gulls.armed&strip=attack&ui=0&merge=1",
+  "errors": [],
+  "report": {
+   "show": "pier_gulls.armed",
+   "lod": 0,
+   "rigs": {},
+   "frame": {
+    "calls": 56,
+    "triangles": 297530
    }
   }
  },
@@ -586,9 +628,9 @@
    "lod": 0,
    "rigs": {
     "pier_gulls.armed": {
-     "parts": 36,
-     "tris": 11656,
-     "hullTris": 8452,
+     "parts": 34,
+     "tris": 9312,
+     "hullTris": 8424,
      "mats": 3,
      "height": 1.8774165163574938,
      "minY": 0.012791840114854403,
@@ -598,8 +640,8 @@
     }
    },
    "frame": {
-    "calls": 345,
-    "triangles": 114242
+    "calls": 329,
+    "triangles": 104642
    }
   }
  },
@@ -612,20 +654,20 @@
    "lod": 1,
    "rigs": {
     "pier_gulls.armed": {
-     "parts": 14,
-     "tris": 1392,
-     "hullTris": 1392,
+     "parts": 12,
+     "tris": 1968,
+     "hullTris": 1968,
      "mats": 2,
-     "height": 1.887179710335765,
-     "minY": 0.0030286461365830464,
+     "height": 1.8748693449957443,
+     "minY": 0.015339011476603964,
      "flashBad": 0,
      "hullsOK": true,
      "swR": true
     }
    },
    "frame": {
-    "calls": 169,
-    "triangles": 16706
+    "calls": 145,
+    "triangles": 23618
    }
   }
  },
@@ -638,11 +680,11 @@
    "lod": 0,
    "rigs": {
     "pier_gulls.bruiser": {
-     "parts": 33,
-     "tris": 11072,
-     "hullTris": 8276,
+     "parts": 31,
+     "tris": 9096,
+     "hullTris": 8220,
      "mats": 3,
-     "height": 2.4057071166997694,
+     "height": 2.4415919781266635,
      "minY": 0.002665879840967722,
      "flashBad": 0,
      "hullsOK": true,
@@ -650,8 +692,8 @@
     }
    },
    "frame": {
-    "calls": 325,
-    "triangles": 110498
+    "calls": 301,
+    "triangles": 102146
    }
   }
  },
@@ -664,11 +706,11 @@
    "lod": 0,
    "rigs": {
     "pier_gulls.bruiser": {
-     "parts": 33,
-     "tris": 11072,
-     "hullTris": 8276,
+     "parts": 31,
+     "tris": 9096,
+     "hullTris": 8220,
      "mats": 3,
-     "height": 2.4057071166997694,
+     "height": 2.4415919781266635,
      "minY": 0.002665879840967722,
      "flashBad": 0,
      "hullsOK": true,
@@ -676,8 +718,8 @@
     }
    },
    "frame": {
-    "calls": 325,
-    "triangles": 110498
+    "calls": 301,
+    "triangles": 102146
    }
   }
  },
@@ -690,77 +732,77 @@
    "lod": 0,
    "rigs": {
     "pier_gulls.bruiser/idle": {
-     "parts": 33,
-     "tris": 11072,
-     "hullTris": 8276,
+     "parts": 31,
+     "tris": 9096,
+     "hullTris": 8220,
      "mats": 3,
-     "height": 2.4057071166997694,
+     "height": 2.4415919781266635,
      "minY": 0.002665879840967722,
      "flashBad": 0,
      "hullsOK": true,
      "swR": false
     },
     "pier_gulls.bruiser/run": {
-     "parts": 33,
-     "tris": 11072,
-     "hullTris": 8276,
+     "parts": 31,
+     "tris": 9096,
+     "hullTris": 8220,
      "mats": 3,
-     "height": 2.4057071166997694,
+     "height": 2.4415919781266635,
      "minY": 0.002665879840967722,
      "flashBad": 0,
      "hullsOK": true,
      "swR": false
     },
     "pier_gulls.bruiser/windup": {
-     "parts": 33,
-     "tris": 11072,
-     "hullTris": 8276,
+     "parts": 31,
+     "tris": 9096,
+     "hullTris": 8220,
      "mats": 3,
-     "height": 2.4057071166997694,
+     "height": 2.4415919781266635,
      "minY": 0.002665879840967722,
      "flashBad": 0,
      "hullsOK": true,
      "swR": false
     },
     "pier_gulls.bruiser/attack": {
-     "parts": 33,
-     "tris": 11072,
-     "hullTris": 8276,
+     "parts": 31,
+     "tris": 9096,
+     "hullTris": 8220,
      "mats": 3,
-     "height": 2.4057071166997694,
+     "height": 2.4415919781266635,
      "minY": 0.002665879840967722,
      "flashBad": 0,
      "hullsOK": true,
      "swR": false
     },
     "pier_gulls.bruiser/hurt": {
-     "parts": 33,
-     "tris": 11072,
-     "hullTris": 8276,
+     "parts": 31,
+     "tris": 9096,
+     "hullTris": 8220,
      "mats": 3,
-     "height": 2.4057071166997694,
+     "height": 2.4415919781266635,
      "minY": 0.002665879840967722,
      "flashBad": 0,
      "hullsOK": true,
      "swR": false
     },
     "pier_gulls.bruiser/down": {
-     "parts": 33,
-     "tris": 11072,
-     "hullTris": 8276,
+     "parts": 31,
+     "tris": 9096,
+     "hullTris": 8220,
      "mats": 3,
-     "height": 2.4057071166997694,
+     "height": 2.4415919781266635,
      "minY": 0.002665879840967722,
      "flashBad": 0,
      "hullsOK": true,
      "swR": false
     },
     "pier_gulls.bruiser/getup": {
-     "parts": 33,
-     "tris": 11072,
-     "hullTris": 8276,
+     "parts": 31,
+     "tris": 9096,
+     "hullTris": 8220,
      "mats": 3,
-     "height": 2.4057071166997694,
+     "height": 2.4415919781266635,
      "minY": 0.002665879840967722,
      "flashBad": 0,
      "hullsOK": true,
@@ -768,22 +810,36 @@
     }
    },
    "frame": {
-    "calls": 567,
-    "triangles": 192974
+    "calls": 525,
+    "triangles": 178742
    }
   }
  },
  {
   "out": "previews/pier_gulls_bruiser_knockdown_60fps.png",
-  "q": "show=pier_gulls.bruiser&strip=knockdown&ui=0",
+  "q": "show=pier_gulls.bruiser&strip=knockdown&ui=0&merge=1",
   "errors": [],
   "report": {
    "show": "pier_gulls.bruiser",
    "lod": 0,
    "rigs": {},
    "frame": {
-    "calls": 861,
-    "triangles": 292670
+    "calls": 56,
+    "triangles": 290534
+   }
+  }
+ },
+ {
+  "out": "previews/pier_gulls_bruiser_attack_60fps.png",
+  "q": "show=pier_gulls.bruiser&strip=attack&ui=0&merge=1",
+  "errors": [],
+  "report": {
+   "show": "pier_gulls.bruiser",
+   "lod": 0,
+   "rigs": {},
+   "frame": {
+    "calls": 56,
+    "triangles": 290534
    }
   }
  },
@@ -796,11 +852,11 @@
    "lod": 0,
    "rigs": {
     "pier_gulls.bruiser": {
-     "parts": 33,
-     "tris": 11072,
-     "hullTris": 8276,
+     "parts": 31,
+     "tris": 9096,
+     "hullTris": 8220,
      "mats": 3,
-     "height": 2.4057071166997694,
+     "height": 2.4415919781266635,
      "minY": 0.002665879840967722,
      "flashBad": 0,
      "hullsOK": true,
@@ -808,8 +864,8 @@
     }
    },
    "frame": {
-    "calls": 325,
-    "triangles": 110498
+    "calls": 301,
+    "triangles": 102146
    }
   }
  },
@@ -822,34 +878,20 @@
    "lod": 1,
    "rigs": {
     "pier_gulls.bruiser": {
-     "parts": 14,
-     "tris": 1732,
-     "hullTris": 1732,
+     "parts": 12,
+     "tris": 1924,
+     "hullTris": 1924,
      "mats": 2,
-     "height": 2.407909272471898,
-     "minY": 0.00046372406883887773,
+     "height": 2.2530497798649556,
+     "minY": 0.015200247901862363,
      "flashBad": 0,
      "hullsOK": true,
      "swR": false
     }
    },
    "frame": {
-    "calls": 169,
-    "triangles": 20786
-   }
-  }
- },
- {
-  "out": "previews/pier_gulls_armed_attack_60fps.png",
-  "q": "show=pier_gulls.armed&strip=attack&ui=0",
-  "errors": [],
-  "report": {
-   "show": "pier_gulls.armed",
-   "lod": 0,
-   "rigs": {},
-   "frame": {
-    "calls": 840,
-    "triangles": 278006
+    "calls": 145,
+    "triangles": 23090
    }
   }
  },
@@ -862,9 +904,9 @@
    "lod": 0,
    "rigs": {
     "pier_gulls.grunt_a": {
-     "parts": 33,
-     "tris": 10760,
-     "hullTris": 7964,
+     "parts": 32,
+     "tris": 8812,
+     "hullTris": 7936,
      "mats": 3,
      "height": 1.906116558363995,
      "minY": 0.012791840114854403,
@@ -873,9 +915,9 @@
      "swR": false
     },
     "pier_gulls.grunt_b": {
-     "parts": 33,
-     "tris": 11056,
-     "hullTris": 8260,
+     "parts": 32,
+     "tris": 9108,
+     "hullTris": 8232,
      "mats": 3,
      "height": 1.8922158172203376,
      "minY": 0.012791840114854403,
@@ -884,9 +926,9 @@
      "swR": false
     },
     "pier_gulls.armed": {
-     "parts": 36,
-     "tris": 11656,
-     "hullTris": 8452,
+     "parts": 34,
+     "tris": 9312,
+     "hullTris": 8424,
      "mats": 3,
      "height": 1.8774165163574938,
      "minY": 0.012791840114854403,
@@ -895,11 +937,11 @@
      "swR": true
     },
     "pier_gulls.bruiser": {
-     "parts": 33,
-     "tris": 11072,
-     "hullTris": 8276,
+     "parts": 31,
+     "tris": 9096,
+     "hullTris": 8220,
      "mats": 3,
-     "height": 2.4057071166997694,
+     "height": 2.4415919781266635,
      "minY": 0.002665879840967722,
      "flashBad": 0,
      "hullsOK": true,
@@ -907,8 +949,8 @@
     }
    },
    "frame": {
-    "calls": 330,
-    "triangles": 110450
+    "calls": 314,
+    "triangles": 101954
    }
   }
  },
@@ -921,9 +963,9 @@
    "lod": 0,
    "rigs": {
     "pier_gulls.grunt_a": {
-     "parts": 33,
-     "tris": 10760,
-     "hullTris": 7964,
+     "parts": 32,
+     "tris": 8812,
+     "hullTris": 7936,
      "mats": 3,
      "height": 1.906116558363995,
      "minY": 0.012791840114854403,
@@ -932,9 +974,9 @@
      "swR": false
     },
     "pier_gulls.grunt_b": {
-     "parts": 33,
-     "tris": 11056,
-     "hullTris": 8260,
+     "parts": 32,
+     "tris": 9108,
+     "hullTris": 8232,
      "mats": 3,
      "height": 1.8922158172203376,
      "minY": 0.012791840114854403,
@@ -943,9 +985,9 @@
      "swR": false
     },
     "pier_gulls.armed": {
-     "parts": 36,
-     "tris": 11656,
-     "hullTris": 8452,
+     "parts": 34,
+     "tris": 9312,
+     "hullTris": 8424,
      "mats": 3,
      "height": 1.8774165163574938,
      "minY": 0.012791840114854403,
@@ -954,11 +996,11 @@
      "swR": true
     },
     "pier_gulls.bruiser": {
-     "parts": 33,
-     "tris": 11072,
-     "hullTris": 8276,
+     "parts": 31,
+     "tris": 9096,
+     "hullTris": 8220,
      "mats": 3,
-     "height": 2.4057071166997694,
+     "height": 2.4415919781266635,
      "minY": 0.002665879840967722,
      "flashBad": 0,
      "hullsOK": true,
@@ -966,8 +1008,67 @@
     }
    },
    "frame": {
-    "calls": 330,
-    "triangles": 110450
+    "calls": 314,
+    "triangles": 101954
+   }
+  }
+ },
+ {
+  "out": "previews/pier_gulls_lineup_merged_day.png",
+  "q": "show=pier_gulls&t=0.5&cam=three&merge=1&ui=0",
+  "errors": [],
+  "report": {
+   "show": "pier_gulls",
+   "lod": 0,
+   "rigs": {
+    "pier_gulls.grunt_a": {
+     "parts": 2,
+     "tris": 8812,
+     "hullTris": 7936,
+     "mats": 3,
+     "height": 1.9013815511289138,
+     "minY": 0.01652711527057353,
+     "flashBad": 0,
+     "hullsOK": false,
+     "swR": false
+    },
+    "pier_gulls.grunt_b": {
+     "parts": 2,
+     "tris": 9108,
+     "hullTris": 8232,
+     "mats": 3,
+     "height": 1.8839901175778864,
+     "minY": 0.01652711527057353,
+     "flashBad": 0,
+     "hullsOK": false,
+     "swR": false
+    },
+    "pier_gulls.armed": {
+     "parts": 2,
+     "tris": 9312,
+     "hullTris": 8424,
+     "mats": 3,
+     "height": 1.8579411220283197,
+     "minY": 0.01652711527057353,
+     "flashBad": 0,
+     "hullsOK": false,
+     "swR": true
+    },
+    "pier_gulls.bruiser": {
+     "parts": 2,
+     "tris": 9096,
+     "hullTris": 8220,
+     "mats": 3,
+     "height": 2.3946339774693794,
+     "minY": 0.0191300078381651,
+     "flashBad": 0,
+     "hullsOK": false,
+     "swR": false
+    }
+   },
+   "frame": {
+    "calls": 21,
+    "triangles": 105470
    }
   }
  },
@@ -980,53 +1081,53 @@
    "lod": 1,
    "rigs": {
     "pier_gulls.grunt_a": {
-     "parts": 14,
-     "tris": 1392,
-     "hullTris": 1392,
+     "parts": 12,
+     "tris": 1968,
+     "hullTris": 1968,
      "mats": 2,
-     "height": 1.898143131882505,
-     "minY": 0.0030286461365830464,
+     "height": 1.885832766542484,
+     "minY": 0.015339011476603964,
      "flashBad": 0,
      "hullsOK": true,
      "swR": false
     },
     "pier_gulls.grunt_b": {
-     "parts": 14,
-     "tris": 1732,
-     "hullTris": 1732,
+     "parts": 12,
+     "tris": 1924,
+     "hullTris": 1924,
      "mats": 2,
-     "height": 1.901979011198609,
-     "minY": 0.0030286461365830464,
+     "height": 1.8748693449957443,
+     "minY": 0.015339011476603964,
      "flashBad": 0,
      "hullsOK": true,
      "swR": false
     },
     "pier_gulls.armed": {
-     "parts": 14,
-     "tris": 1392,
-     "hullTris": 1392,
+     "parts": 12,
+     "tris": 1968,
+     "hullTris": 1968,
      "mats": 2,
-     "height": 1.887179710335765,
-     "minY": 0.0030286461365830464,
+     "height": 1.8748693449957443,
+     "minY": 0.015339011476603964,
      "flashBad": 0,
      "hullsOK": true,
      "swR": true
     },
     "pier_gulls.bruiser": {
-     "parts": 14,
-     "tris": 1732,
-     "hullTris": 1732,
+     "parts": 12,
+     "tris": 1924,
+     "hullTris": 1924,
      "mats": 2,
-     "height": 2.407909272471898,
-     "minY": 0.00046372406883887773,
+     "height": 2.2530497798649556,
+     "minY": 0.015200247901862363,
      "flashBad": 0,
      "hullsOK": true,
      "swR": false
     }
    },
    "frame": {
-    "calls": 169,
-    "triangles": 18746
+    "calls": 145,
+    "triangles": 23354
    }
   }
  },
@@ -1039,9 +1140,9 @@
    "lod": 0,
    "rigs": {
     "pier_gulls.grunt_a": {
-     "parts": 33,
-     "tris": 10760,
-     "hullTris": 7964,
+     "parts": 32,
+     "tris": 8812,
+     "hullTris": 7936,
      "mats": 3,
      "height": 1.906116558363995,
      "minY": 0.012791840114854403,
@@ -1050,9 +1151,9 @@
      "swR": false
     },
     "pier_gulls.grunt_b": {
-     "parts": 33,
-     "tris": 11056,
-     "hullTris": 8260,
+     "parts": 32,
+     "tris": 9108,
+     "hullTris": 8232,
      "mats": 3,
      "height": 1.8922158172203376,
      "minY": 0.012791840114854403,
@@ -1061,9 +1162,9 @@
      "swR": false
     },
     "pier_gulls.armed": {
-     "parts": 36,
-     "tris": 11656,
-     "hullTris": 8452,
+     "parts": 34,
+     "tris": 9312,
+     "hullTris": 8424,
      "mats": 3,
      "height": 1.8774165163574938,
      "minY": 0.012791840114854403,
@@ -1072,11 +1173,11 @@
      "swR": true
     },
     "pier_gulls.bruiser": {
-     "parts": 33,
-     "tris": 11072,
-     "hullTris": 8276,
+     "parts": 31,
+     "tris": 9096,
+     "hullTris": 8220,
      "mats": 3,
-     "height": 2.4057071166997694,
+     "height": 2.4415919781266635,
      "minY": 0.002665879840967722,
      "flashBad": 0,
      "hullsOK": true,
@@ -1084,8 +1185,67 @@
     }
    },
    "frame": {
-    "calls": 330,
-    "triangles": 110450
+    "calls": 314,
+    "triangles": 101954
+   }
+  }
+ },
+ {
+  "out": "previews/pier_gulls_hitflash_merged.png",
+  "q": "show=pier_gulls&t=0.5&cam=front&flash=0.85&merge=1&ui=0",
+  "errors": [],
+  "report": {
+   "show": "pier_gulls",
+   "lod": 0,
+   "rigs": {
+    "pier_gulls.grunt_a": {
+     "parts": 2,
+     "tris": 8812,
+     "hullTris": 7936,
+     "mats": 3,
+     "height": 1.9013815511289138,
+     "minY": 0.01652711527057353,
+     "flashBad": 0,
+     "hullsOK": false,
+     "swR": false
+    },
+    "pier_gulls.grunt_b": {
+     "parts": 2,
+     "tris": 9108,
+     "hullTris": 8232,
+     "mats": 3,
+     "height": 1.8839901175778864,
+     "minY": 0.01652711527057353,
+     "flashBad": 0,
+     "hullsOK": false,
+     "swR": false
+    },
+    "pier_gulls.armed": {
+     "parts": 2,
+     "tris": 9312,
+     "hullTris": 8424,
+     "mats": 3,
+     "height": 1.8579411220283197,
+     "minY": 0.01652711527057353,
+     "flashBad": 0,
+     "hullsOK": false,
+     "swR": true
+    },
+    "pier_gulls.bruiser": {
+     "parts": 2,
+     "tris": 9096,
+     "hullTris": 8220,
+     "mats": 3,
+     "height": 2.3946339774693794,
+     "minY": 0.0191300078381651,
+     "flashBad": 0,
+     "hullsOK": false,
+     "swR": false
+    }
+   },
+   "frame": {
+    "calls": 21,
+    "triangles": 105470
    }
   }
  },
@@ -1098,9 +1258,9 @@
    "lod": 0,
    "rigs": {
     "pier_gulls.grunt_a": {
-     "parts": 33,
-     "tris": 10760,
-     "hullTris": 7964,
+     "parts": 32,
+     "tris": 8812,
+     "hullTris": 7936,
      "mats": 3,
      "height": 1.906116558363995,
      "minY": 0.012791840114854403,
@@ -1109,9 +1269,9 @@
      "swR": false
     },
     "pier_gulls.grunt_b": {
-     "parts": 33,
-     "tris": 11056,
-     "hullTris": 8260,
+     "parts": 32,
+     "tris": 9108,
+     "hullTris": 8232,
      "mats": 3,
      "height": 1.8922158172203376,
      "minY": 0.012791840114854403,
@@ -1120,9 +1280,9 @@
      "swR": false
     },
     "pier_gulls.armed": {
-     "parts": 36,
-     "tris": 11656,
-     "hullTris": 8452,
+     "parts": 34,
+     "tris": 9312,
+     "hullTris": 8424,
      "mats": 3,
      "height": 1.8774165163574938,
      "minY": 0.012791840114854403,
@@ -1131,11 +1291,11 @@
      "swR": true
     },
     "pier_gulls.bruiser": {
-     "parts": 33,
-     "tris": 11072,
-     "hullTris": 8276,
+     "parts": 31,
+     "tris": 9096,
+     "hullTris": 8220,
      "mats": 3,
-     "height": 2.4057071166997694,
+     "height": 2.4415919781266635,
      "minY": 0.002665879840967722,
      "flashBad": 0,
      "hullsOK": true,
@@ -1143,8 +1303,8 @@
     }
    },
    "frame": {
-    "calls": 330,
-    "triangles": 110450
+    "calls": 314,
+    "triangles": 101954
    }
   }
  },
@@ -1157,9 +1317,9 @@
    "lod": 0,
    "rigs": {
     "pier_gulls.grunt_a": {
-     "parts": 33,
-     "tris": 10760,
-     "hullTris": 7964,
+     "parts": 32,
+     "tris": 8812,
+     "hullTris": 7936,
      "mats": 3,
      "height": 1.906116558363995,
      "minY": 0.012791840114854403,
@@ -1168,9 +1328,9 @@
      "swR": false
     },
     "pier_gulls.grunt_b": {
-     "parts": 33,
-     "tris": 11056,
-     "hullTris": 8260,
+     "parts": 32,
+     "tris": 9108,
+     "hullTris": 8232,
      "mats": 3,
      "height": 1.8922158172203376,
      "minY": 0.012791840114854403,
@@ -1179,9 +1339,9 @@
      "swR": false
     },
     "pier_gulls.armed": {
-     "parts": 36,
-     "tris": 11656,
-     "hullTris": 8452,
+     "parts": 34,
+     "tris": 9312,
+     "hullTris": 8424,
      "mats": 3,
      "height": 1.8774165163574938,
      "minY": 0.012791840114854403,
@@ -1190,11 +1350,11 @@
      "swR": true
     },
     "pier_gulls.bruiser": {
-     "parts": 33,
-     "tris": 11072,
-     "hullTris": 8276,
+     "parts": 31,
+     "tris": 9096,
+     "hullTris": 8220,
      "mats": 3,
-     "height": 2.4057071166997694,
+     "height": 2.4415919781266635,
      "minY": 0.002665879840967722,
      "flashBad": 0,
      "hullsOK": true,
@@ -1202,8 +1362,8 @@
     }
    },
    "frame": {
-    "calls": 330,
-    "triangles": 110450
+    "calls": 314,
+    "triangles": 101954
    }
   }
  },
@@ -1216,9 +1376,9 @@
    "lod": 0,
    "rigs": {
     "pier_gulls.grunt_a": {
-     "parts": 33,
-     "tris": 10760,
-     "hullTris": 7964,
+     "parts": 32,
+     "tris": 8812,
+     "hullTris": 7936,
      "mats": 3,
      "height": 1.906116558363995,
      "minY": 0.012791840114854403,
@@ -1227,9 +1387,9 @@
      "swR": false
     },
     "pier_gulls.grunt_b": {
-     "parts": 33,
-     "tris": 11056,
-     "hullTris": 8260,
+     "parts": 32,
+     "tris": 9108,
+     "hullTris": 8232,
      "mats": 3,
      "height": 1.8922158172203376,
      "minY": 0.012791840114854403,
@@ -1238,9 +1398,9 @@
      "swR": false
     },
     "pier_gulls.armed": {
-     "parts": 36,
-     "tris": 11656,
-     "hullTris": 8452,
+     "parts": 34,
+     "tris": 9312,
+     "hullTris": 8424,
      "mats": 3,
      "height": 1.8774165163574938,
      "minY": 0.012791840114854403,
@@ -1249,11 +1409,11 @@
      "swR": true
     },
     "pier_gulls.bruiser": {
-     "parts": 33,
-     "tris": 11072,
-     "hullTris": 8276,
+     "parts": 31,
+     "tris": 9096,
+     "hullTris": 8220,
      "mats": 3,
-     "height": 2.4057071166997694,
+     "height": 2.4415919781266635,
      "minY": 0.002665879840967722,
      "flashBad": 0,
      "hullsOK": true,
@@ -1261,8 +1421,8 @@
     }
    },
    "frame": {
-    "calls": 330,
-    "triangles": 110450
+    "calls": 314,
+    "triangles": 101954
    }
   }
  },
@@ -1275,53 +1435,112 @@
    "lod": 1,
    "rigs": {
     "pier_gulls.grunt_a": {
-     "parts": 14,
-     "tris": 1392,
-     "hullTris": 1392,
+     "parts": 12,
+     "tris": 1968,
+     "hullTris": 1968,
      "mats": 2,
-     "height": 1.898143131882505,
-     "minY": 0.0030286461365830464,
+     "height": 1.885832766542484,
+     "minY": 0.015339011476603964,
      "flashBad": 0,
      "hullsOK": true,
      "swR": false
     },
     "pier_gulls.grunt_b": {
-     "parts": 14,
-     "tris": 1732,
-     "hullTris": 1732,
+     "parts": 12,
+     "tris": 1924,
+     "hullTris": 1924,
      "mats": 2,
-     "height": 1.901979011198609,
-     "minY": 0.0030286461365830464,
+     "height": 1.8748693449957443,
+     "minY": 0.015339011476603964,
      "flashBad": 0,
      "hullsOK": true,
      "swR": false
     },
     "pier_gulls.armed": {
-     "parts": 14,
-     "tris": 1392,
-     "hullTris": 1392,
+     "parts": 12,
+     "tris": 1968,
+     "hullTris": 1968,
      "mats": 2,
-     "height": 1.887179710335765,
-     "minY": 0.0030286461365830464,
+     "height": 1.8748693449957443,
+     "minY": 0.015339011476603964,
      "flashBad": 0,
      "hullsOK": true,
      "swR": true
     },
     "pier_gulls.bruiser": {
-     "parts": 14,
-     "tris": 1732,
-     "hullTris": 1732,
+     "parts": 12,
+     "tris": 1924,
+     "hullTris": 1924,
      "mats": 2,
-     "height": 2.407909272471898,
-     "minY": 0.00046372406883887773,
+     "height": 2.2530497798649556,
+     "minY": 0.015200247901862363,
      "flashBad": 0,
      "hullsOK": true,
      "swR": false
     }
    },
    "frame": {
-    "calls": 169,
-    "triangles": 18746
+    "calls": 145,
+    "triangles": 23354
+   }
+  }
+ },
+ {
+  "out": "",
+  "q": "show=pier_gulls&lod=0&t=0.5&merge=1",
+  "errors": [],
+  "report": {
+   "show": "pier_gulls",
+   "lod": 0,
+   "rigs": {
+    "pier_gulls.grunt_a": {
+     "parts": 2,
+     "tris": 8812,
+     "hullTris": 7936,
+     "mats": 3,
+     "height": 1.9013815511289138,
+     "minY": 0.01652711527057353,
+     "flashBad": 0,
+     "hullsOK": false,
+     "swR": false
+    },
+    "pier_gulls.grunt_b": {
+     "parts": 2,
+     "tris": 9108,
+     "hullTris": 8232,
+     "mats": 3,
+     "height": 1.8839901175778864,
+     "minY": 0.01652711527057353,
+     "flashBad": 0,
+     "hullsOK": false,
+     "swR": false
+    },
+    "pier_gulls.armed": {
+     "parts": 2,
+     "tris": 9312,
+     "hullTris": 8424,
+     "mats": 3,
+     "height": 1.8579411220283197,
+     "minY": 0.01652711527057353,
+     "flashBad": 0,
+     "hullsOK": false,
+     "swR": true
+    },
+    "pier_gulls.bruiser": {
+     "parts": 2,
+     "tris": 9096,
+     "hullTris": 8220,
+     "mats": 3,
+     "height": 2.3946339774693794,
+     "minY": 0.0191300078381651,
+     "flashBad": 0,
+     "hullsOK": false,
+     "swR": false
+    }
+   },
+   "frame": {
+    "calls": 21,
+    "triangles": 105470
    }
   }
  },
@@ -1334,14 +1553,14 @@
    "members": {
     "grunt_a": {
      "hd": {
-      "parts": 33,
-      "tris": 10760,
-      "hullTris": 7964,
-      "hulls": 24,
+      "parts": 32,
+      "tris": 8812,
+      "hullTris": 7936,
+      "hulls": 23,
       "mats": 3,
-      "casters": 24,
-      "drawCalls": 57,
-      "shadowCalls": 24,
+      "casters": 23,
+      "drawCalls": 55,
+      "shadowCalls": 23,
       "height": 1.901,
       "feetMinY": 0.017,
       "flashBad": 0,
@@ -1349,16 +1568,16 @@
       "shadowRule": []
      },
      "lod": {
-      "parts": 14,
-      "tris": 1392,
-      "hullTris": 1392,
-      "hulls": 14,
+      "parts": 12,
+      "tris": 1968,
+      "hullTris": 1968,
+      "hulls": 12,
       "mats": 2,
-      "casters": 14,
-      "drawCalls": 28,
-      "shadowCalls": 14,
-      "height": 1.891,
-      "feetMinY": 0.008,
+      "casters": 12,
+      "drawCalls": 24,
+      "shadowCalls": 12,
+      "height": 1.884,
+      "feetMinY": 0.015,
       "flashBad": 0,
       "hullMatsOK": true,
       "shadowRule": []
@@ -1509,18 +1728,7 @@
       },
       {
        "part": "torso/jacket",
-       "buried": 0.428,
-       "strayPx": {
-        "front": 0,
-        "three": 0,
-        "side": 0,
-        "back": 0
-       },
-       "maxStrayPx": 0
-      },
-      {
-       "part": "torso/band",
-       "buried": 0,
+       "buried": 0.207,
        "strayPx": {
         "front": 0,
         "three": 0,
@@ -1649,50 +1857,54 @@
         "y": -0.012,
         "part": "ftR/foot",
         "phase": "idle",
-        "t": 2.817
+        "t": 2.8
        },
-       "frames": 189,
+       "frames": 188,
        "pass": true,
        "downEnd": {
         "tail": 0.014,
         "head": 0.217
-       }
+       },
+       "cullReach": 2.204
       },
       "knockdown+anim": {
        "worst": {
         "y": -0.012,
         "part": "ftR/foot",
         "phase": "idle",
-        "t": 2.817
+        "t": 2.8
        },
-       "frames": 189,
+       "frames": 188,
        "pass": true,
        "downEnd": {
         "tail": 0.014,
         "head": 0.217
-       }
+       },
+       "cullReach": 2.204
       },
       "attack": {
        "worst": {
-        "y": -0.006,
+        "y": 0.002,
         "part": "ftR/foot",
         "phase": "idle",
-        "t": 1.4
+        "t": 2.55
        },
-       "frames": 108,
+       "frames": 153,
        "pass": true,
-       "downEnd": null
+       "downEnd": null,
+       "cullReach": 1.067
       },
       "attack+anim": {
        "worst": {
-        "y": -0.006,
+        "y": 0.002,
         "part": "ftR/foot",
         "phase": "idle",
-        "t": 1.4
+        "t": 2.55
        },
-       "frames": 108,
+       "frames": 153,
        "pass": true,
-       "downEnd": null
+       "downEnd": null,
+       "cullReach": 1.067
       },
       "run": {
        "worst": {
@@ -1703,7 +1915,8 @@
        },
        "frames": 120,
        "pass": true,
-       "downEnd": null
+       "downEnd": null,
+       "cullReach": 1.067
       },
       "run+anim": {
        "worst": {
@@ -1714,45 +1927,48 @@
        },
        "frames": 120,
        "pass": true,
-       "downEnd": null
+       "downEnd": null,
+       "cullReach": 1.067
       }
      },
      "lodSequences": {
       "knockdown": {
        "worst": {
-        "y": -0.021,
+        "y": -0.013,
         "part": "knR/shin",
         "phase": "idle",
-        "t": 2.817
+        "t": 2.833
        },
-       "frames": 189,
+       "frames": 188,
        "pass": true,
        "downEnd": {
-        "tail": 0.014,
         "head": 0.229
-       }
+       },
+       "cullReach": 2.192
       },
       "attack": {
        "worst": {
-        "y": -0.008,
+        "y": 0.001,
         "part": "knR/shin",
         "phase": "idle",
-        "t": 1.433
+        "t": 2.55
        },
-       "frames": 108,
+       "frames": 153,
        "pass": true,
-       "downEnd": null
+       "downEnd": null,
+       "cullReach": 1.056
       },
       "run": {
        "worst": {
-        "y": 0.008,
+        "y": 0.016,
         "part": "knR/shin",
         "phase": "idle",
         "t": 0.017
        },
        "frames": 120,
        "pass": true,
-       "downEnd": null
+       "downEnd": null,
+       "cullReach": 1.056
       }
      },
      "sweeps": {
@@ -1764,10 +1980,21 @@
       "pass": true
      },
      "merge": {
-      "meshesBefore": 33,
-      "meshesAfter": 20,
-      "hullsAfter": 17,
+      "meshesBefore": 32,
+      "hullsBefore": 23,
+      "mergedMeshes": 3,
+      "mergedSolid": 2,
+      "mergedOutline": 1,
+      "leftovers": [],
+      "bones": 16,
+      "drawCalls": 3,
+      "shadowCalls": 2,
       "flashShared": true,
+      "flashPx": {
+       "rigPx": 7591,
+       "unflashedPx": 0,
+       "unflashedPxWithFlashOff": 1354
+      },
       "flashCovers": true,
       "mappedSubMaterials": 1,
       "extras": [
@@ -1777,19 +2004,30 @@
         "parent": "hips"
        }
       ],
+      "maxVertexDy_m": 0,
       "animMoves": {
-       "tailMergedMeshPresent": true,
-       "moved_m": 0.01
-      }
+       "tailBone": 15,
+       "tailVerts": 24,
+       "moved_m": 0.02
+      },
+      "renderDiffPx": 343,
+      "renderDiffInteriorPx": 11,
+      "renderRigPx": 9350
      },
+     "cullReachMax": 2.204,
+     "cullRadius": 1.9,
      "silhouetteIoU": {
-      "front": 0.908,
-      "three": 0.899,
-      "side": 0.893
+      "front": 0.902,
+      "three": 0.869,
+      "side": 0.882
      },
      "pass": {
       "budgetHD": true,
       "budgetLOD": true,
+      "marginHD": true,
+      "marginLOD": true,
+      "marginBuried": true,
+      "marginLODGround": true,
       "ground": true,
       "shoulders": true,
       "strayHulls": true,
@@ -1803,14 +2041,14 @@
     },
     "grunt_b": {
      "hd": {
-      "parts": 33,
-      "tris": 11056,
-      "hullTris": 8260,
-      "hulls": 24,
+      "parts": 32,
+      "tris": 9108,
+      "hullTris": 8232,
+      "hulls": 23,
       "mats": 3,
-      "casters": 24,
-      "drawCalls": 57,
-      "shadowCalls": 24,
+      "casters": 23,
+      "drawCalls": 55,
+      "shadowCalls": 23,
       "height": 1.884,
       "feetMinY": 0.017,
       "flashBad": 0,
@@ -1818,16 +2056,16 @@
       "shadowRule": []
      },
      "lod": {
-      "parts": 14,
-      "tris": 1732,
-      "hullTris": 1732,
-      "hulls": 14,
+      "parts": 12,
+      "tris": 1924,
+      "hullTris": 1924,
+      "hulls": 12,
       "mats": 2,
-      "casters": 14,
-      "drawCalls": 28,
-      "shadowCalls": 14,
-      "height": 1.893,
-      "feetMinY": 0.008,
+      "casters": 12,
+      "drawCalls": 24,
+      "shadowCalls": 12,
+      "height": 1.859,
+      "feetMinY": 0.015,
       "flashBad": 0,
       "hullMatsOK": true,
       "shadowRule": []
@@ -1978,18 +2216,7 @@
       },
       {
        "part": "torso/jacket",
-       "buried": 0.428,
-       "strayPx": {
-        "front": 0,
-        "three": 0,
-        "side": 0,
-        "back": 0
-       },
-       "maxStrayPx": 0
-      },
-      {
-       "part": "torso/band",
-       "buried": 0,
+       "buried": 0.207,
        "strayPx": {
         "front": 0,
         "three": 0,
@@ -2118,50 +2345,54 @@
         "y": -0.012,
         "part": "ftR/foot",
         "phase": "idle",
-        "t": 2.817
+        "t": 2.8
        },
-       "frames": 189,
+       "frames": 188,
        "pass": true,
        "downEnd": {
         "tail": 0.014,
         "head": 0.182
-       }
+       },
+       "cullReach": 2.204
       },
       "knockdown+anim": {
        "worst": {
         "y": -0.012,
         "part": "ftR/foot",
         "phase": "idle",
-        "t": 2.817
+        "t": 2.8
        },
-       "frames": 189,
+       "frames": 188,
        "pass": true,
        "downEnd": {
         "tail": 0.014,
         "head": 0.182
-       }
+       },
+       "cullReach": 2.204
       },
       "attack": {
        "worst": {
-        "y": -0.006,
+        "y": 0.002,
         "part": "ftR/foot",
         "phase": "idle",
-        "t": 1.4
+        "t": 2.55
        },
-       "frames": 108,
+       "frames": 153,
        "pass": true,
-       "downEnd": null
+       "downEnd": null,
+       "cullReach": 1.028
       },
       "attack+anim": {
        "worst": {
-        "y": -0.006,
+        "y": 0.002,
         "part": "ftR/foot",
         "phase": "idle",
-        "t": 1.4
+        "t": 2.55
        },
-       "frames": 108,
+       "frames": 153,
        "pass": true,
-       "downEnd": null
+       "downEnd": null,
+       "cullReach": 1.028
       },
       "run": {
        "worst": {
@@ -2172,7 +2403,8 @@
        },
        "frames": 120,
        "pass": true,
-       "downEnd": null
+       "downEnd": null,
+       "cullReach": 1.028
       },
       "run+anim": {
        "worst": {
@@ -2183,45 +2415,49 @@
        },
        "frames": 120,
        "pass": true,
-       "downEnd": null
+       "downEnd": null,
+       "cullReach": 1.028
       }
      },
      "lodSequences": {
       "knockdown": {
        "worst": {
-        "y": -0.021,
+        "y": -0.013,
         "part": "knR/shin",
         "phase": "idle",
-        "t": 2.817
+        "t": 2.833
        },
-       "frames": 189,
+       "frames": 188,
        "pass": true,
        "downEnd": {
         "tail": 0.014,
         "head": 0.237
-       }
+       },
+       "cullReach": 2.192
       },
       "attack": {
        "worst": {
-        "y": -0.008,
+        "y": 0.001,
         "part": "knR/shin",
         "phase": "idle",
-        "t": 1.433
+        "t": 2.55
        },
-       "frames": 108,
+       "frames": 153,
        "pass": true,
-       "downEnd": null
+       "downEnd": null,
+       "cullReach": 0.999
       },
       "run": {
        "worst": {
-        "y": 0.008,
+        "y": 0.016,
         "part": "knR/shin",
         "phase": "idle",
         "t": 0.017
        },
        "frames": 120,
        "pass": true,
-       "downEnd": null
+       "downEnd": null,
+       "cullReach": 1
       }
      },
      "sweeps": {
@@ -2233,10 +2469,21 @@
       "pass": true
      },
      "merge": {
-      "meshesBefore": 33,
-      "meshesAfter": 20,
-      "hullsAfter": 17,
+      "meshesBefore": 32,
+      "hullsBefore": 23,
+      "mergedMeshes": 3,
+      "mergedSolid": 2,
+      "mergedOutline": 1,
+      "leftovers": [],
+      "bones": 16,
+      "drawCalls": 3,
+      "shadowCalls": 2,
       "flashShared": true,
+      "flashPx": {
+       "rigPx": 7488,
+       "unflashedPx": 0,
+       "unflashedPxWithFlashOff": 635
+      },
       "flashCovers": true,
       "mappedSubMaterials": 1,
       "extras": [
@@ -2246,19 +2493,30 @@
         "parent": "hips"
        }
       ],
+      "maxVertexDy_m": 0,
       "animMoves": {
-       "tailMergedMeshPresent": true,
-       "moved_m": 0.01
-      }
+       "tailBone": 15,
+       "tailVerts": 24,
+       "moved_m": 0.02
+      },
+      "renderDiffPx": 319,
+      "renderDiffInteriorPx": 3,
+      "renderRigPx": 9092
      },
+     "cullReachMax": 2.204,
+     "cullRadius": 1.9,
      "silhouetteIoU": {
-      "front": 0.92,
-      "three": 0.912,
-      "side": 0.909
+      "front": 0.889,
+      "three": 0.865,
+      "side": 0.879
      },
      "pass": {
       "budgetHD": true,
       "budgetLOD": true,
+      "marginHD": true,
+      "marginLOD": true,
+      "marginBuried": true,
+      "marginLODGround": true,
       "ground": true,
       "shoulders": true,
       "strayHulls": true,
@@ -2272,14 +2530,14 @@
     },
     "armed": {
      "hd": {
-      "parts": 36,
-      "tris": 11656,
-      "hullTris": 8452,
-      "hulls": 25,
+      "parts": 34,
+      "tris": 9312,
+      "hullTris": 8424,
+      "hulls": 24,
       "mats": 3,
-      "casters": 25,
-      "drawCalls": 61,
-      "shadowCalls": 25,
+      "casters": 24,
+      "drawCalls": 58,
+      "shadowCalls": 24,
       "height": 1.858,
       "feetMinY": 0.017,
       "flashBad": 0,
@@ -2287,16 +2545,16 @@
       "shadowRule": []
      },
      "lod": {
-      "parts": 14,
-      "tris": 1392,
-      "hullTris": 1392,
-      "hulls": 14,
+      "parts": 12,
+      "tris": 1968,
+      "hullTris": 1968,
+      "hulls": 12,
       "mats": 2,
-      "casters": 14,
-      "drawCalls": 28,
-      "shadowCalls": 14,
-      "height": 1.867,
-      "feetMinY": 0.008,
+      "casters": 12,
+      "drawCalls": 24,
+      "shadowCalls": 12,
+      "height": 1.859,
+      "feetMinY": 0.015,
       "flashBad": 0,
       "hullMatsOK": true,
       "shadowRule": []
@@ -2447,9 +2705,9 @@
       },
       {
        "part": "shR/upper",
-       "buried": 0.469,
+       "buried": 0.464,
        "strayPx": {
-        "front": 0,
+        "front": 2,
         "three": 0,
         "side": 0,
         "back": 2
@@ -2458,18 +2716,7 @@
       },
       {
        "part": "torso/jacket",
-       "buried": 0.436,
-       "strayPx": {
-        "front": 0,
-        "three": 0,
-        "side": 0,
-        "back": 0
-       },
-       "maxStrayPx": 0
-      },
-      {
-       "part": "torso/band",
-       "buried": 0,
+       "buried": 0.215,
        "strayPx": {
         "front": 0,
         "three": 0,
@@ -2598,50 +2845,54 @@
         "y": -0.012,
         "part": "ftR/foot",
         "phase": "idle",
-        "t": 2.817
+        "t": 2.8
        },
-       "frames": 189,
+       "frames": 188,
        "pass": true,
        "downEnd": {
         "tail": 0.014,
         "head": 0.237
-       }
+       },
+       "cullReach": 2.478
       },
       "knockdown+anim": {
        "worst": {
         "y": -0.012,
         "part": "ftR/foot",
         "phase": "idle",
-        "t": 2.817
+        "t": 2.8
        },
-       "frames": 189,
+       "frames": 188,
        "pass": true,
        "downEnd": {
         "tail": 0.014,
         "head": 0.237
-       }
+       },
+       "cullReach": 2.478
       },
       "attack": {
        "worst": {
-        "y": -0.006,
+        "y": 0.002,
         "part": "ftR/foot",
         "phase": "idle",
-        "t": 1.4
+        "t": 2.55
        },
-       "frames": 108,
+       "frames": 153,
        "pass": true,
-       "downEnd": null
+       "downEnd": null,
+       "cullReach": 1.24
       },
       "attack+anim": {
        "worst": {
-        "y": -0.006,
+        "y": 0.002,
         "part": "ftR/foot",
         "phase": "idle",
-        "t": 1.4
+        "t": 2.55
        },
-       "frames": 108,
+       "frames": 153,
        "pass": true,
-       "downEnd": null
+       "downEnd": null,
+       "cullReach": 1.24
       },
       "run": {
        "worst": {
@@ -2652,7 +2903,8 @@
        },
        "frames": 120,
        "pass": true,
-       "downEnd": null
+       "downEnd": null,
+       "cullReach": 1.015
       },
       "run+anim": {
        "worst": {
@@ -2663,45 +2915,48 @@
        },
        "frames": 120,
        "pass": true,
-       "downEnd": null
+       "downEnd": null,
+       "cullReach": 1.015
       }
      },
      "lodSequences": {
       "knockdown": {
        "worst": {
-        "y": -0.021,
+        "y": -0.013,
         "part": "knR/shin",
         "phase": "idle",
-        "t": 2.817
+        "t": 2.833
        },
-       "frames": 189,
+       "frames": 188,
        "pass": true,
        "downEnd": {
-        "tail": 0.014,
         "head": 0.237
-       }
+       },
+       "cullReach": 2.531
       },
       "attack": {
        "worst": {
-        "y": -0.008,
+        "y": 0.001,
         "part": "knR/shin",
         "phase": "idle",
-        "t": 1.433
+        "t": 2.55
        },
-       "frames": 108,
+       "frames": 153,
        "pass": true,
-       "downEnd": null
+       "downEnd": null,
+       "cullReach": 1.283
       },
       "run": {
        "worst": {
-        "y": 0.008,
+        "y": 0.016,
         "part": "knR/shin",
         "phase": "idle",
         "t": 0.017
        },
        "frames": 120,
        "pass": true,
-       "downEnd": null
+       "downEnd": null,
+       "cullReach": 1.066
       }
      },
      "sweeps": {
@@ -2713,10 +2968,21 @@
       "pass": true
      },
      "merge": {
-      "meshesBefore": 36,
-      "meshesAfter": 22,
-      "hullsAfter": 18,
+      "meshesBefore": 34,
+      "hullsBefore": 24,
+      "mergedMeshes": 3,
+      "mergedSolid": 2,
+      "mergedOutline": 1,
+      "leftovers": [],
+      "bones": 17,
+      "drawCalls": 3,
+      "shadowCalls": 2,
       "flashShared": true,
+      "flashPx": {
+       "rigPx": 7974,
+       "unflashedPx": 0,
+       "unflashedPxWithFlashOff": 1605
+      },
       "flashCovers": true,
       "mappedSubMaterials": 1,
       "extras": [
@@ -2726,19 +2992,30 @@
         "parent": "hips"
        }
       ],
+      "maxVertexDy_m": 0,
       "animMoves": {
-       "tailMergedMeshPresent": true,
-       "moved_m": 0.01
-      }
+       "tailBone": 16,
+       "tailVerts": 24,
+       "moved_m": 0.02
+      },
+      "renderDiffPx": 360,
+      "renderDiffInteriorPx": 9,
+      "renderRigPx": 9787
      },
+     "cullReachMax": 2.478,
+     "cullRadius": 1.9,
      "silhouetteIoU": {
-      "front": 0.905,
-      "three": 0.896,
-      "side": 0.892
+      "front": 0.901,
+      "three": 0.87,
+      "side": 0.879
      },
      "pass": {
       "budgetHD": true,
       "budgetLOD": true,
+      "marginHD": true,
+      "marginLOD": true,
+      "marginBuried": true,
+      "marginLODGround": true,
       "ground": true,
       "shoulders": true,
       "strayHulls": true,
@@ -2752,31 +3029,31 @@
     },
     "bruiser": {
      "hd": {
-      "parts": 33,
-      "tris": 11072,
-      "hullTris": 8276,
-      "hulls": 24,
+      "parts": 31,
+      "tris": 9096,
+      "hullTris": 8220,
+      "hulls": 22,
       "mats": 3,
-      "casters": 24,
-      "drawCalls": 57,
-      "shadowCalls": 24,
-      "height": 2.359,
+      "casters": 22,
+      "drawCalls": 53,
+      "shadowCalls": 22,
+      "height": 2.395,
       "feetMinY": 0.019,
       "flashBad": 0,
       "hullMatsOK": true,
       "shadowRule": []
      },
      "lod": {
-      "parts": 14,
-      "tris": 1732,
-      "hullTris": 1732,
-      "hulls": 14,
+      "parts": 12,
+      "tris": 1924,
+      "hullTris": 1924,
+      "hulls": 12,
       "mats": 2,
-      "casters": 14,
-      "drawCalls": 28,
-      "shadowCalls": 14,
-      "height": 2.371,
-      "feetMinY": 0.007,
+      "casters": 12,
+      "drawCalls": 24,
+      "shadowCalls": 12,
+      "height": 2.234,
+      "feetMinY": 0.015,
       "flashBad": 0,
       "hullMatsOK": true,
       "shadowRule": []
@@ -2784,7 +3061,7 @@
      "hullOverlap": [
       {
        "part": "head/head",
-       "buried": 0.525,
+       "buried": 0.411,
        "strayPx": {
         "front": 0,
         "three": 0,
@@ -2808,17 +3085,6 @@
        "part": "head/jaw",
        "buried": 0.365,
        "strayPx": {
-        "front": 1,
-        "three": 0,
-        "side": 0,
-        "back": 0
-       },
-       "maxStrayPx": 1
-      },
-      {
-       "part": "head/beanie",
-       "buried": 0.598,
-       "strayPx": {
         "front": 0,
         "three": 0,
         "side": 0,
@@ -2827,8 +3093,8 @@
        "maxStrayPx": 0
       },
       {
-       "part": "head/cuff",
-       "buried": 0,
+       "part": "head/beanie",
+       "buried": 0.239,
        "strayPx": {
         "front": 0,
         "three": 0,
@@ -2839,7 +3105,7 @@
       },
       {
        "part": "haL/wingtip",
-       "buried": 0.281,
+       "buried": 0.29,
        "strayPx": {
         "front": 0,
         "three": 0,
@@ -2850,7 +3116,7 @@
       },
       {
        "part": "elL/fore",
-       "buried": 0.365,
+       "buried": 0.36,
        "strayPx": {
         "front": 0,
         "three": 0,
@@ -2861,7 +3127,7 @@
       },
       {
        "part": "shL/shoulder",
-       "buried": 0.432,
+       "buried": 0.466,
        "strayPx": {
         "front": 0,
         "three": 0,
@@ -2872,18 +3138,18 @@
       },
       {
        "part": "shL/upper",
-       "buried": 0.531,
+       "buried": 0.487,
        "strayPx": {
         "front": 0,
         "three": 0,
-        "side": 0,
-        "back": 5
+        "side": 3,
+        "back": 7
        },
-       "maxStrayPx": 5
+       "maxStrayPx": 7
       },
       {
        "part": "haR/wingtip",
-       "buried": 0.281,
+       "buried": 0.29,
        "strayPx": {
         "front": 0,
         "three": 0,
@@ -2894,7 +3160,7 @@
       },
       {
        "part": "elR/fore",
-       "buried": 0.392,
+       "buried": 0.385,
        "strayPx": {
         "front": 0,
         "three": 0,
@@ -2905,7 +3171,7 @@
       },
       {
        "part": "shR/shoulder",
-       "buried": 0.431,
+       "buried": 0.463,
        "strayPx": {
         "front": 0,
         "three": 0,
@@ -2916,29 +3182,18 @@
       },
       {
        "part": "shR/upper",
-       "buried": 0.564,
-       "strayPx": {
-        "front": 0,
-        "three": 1,
-        "side": 0,
-        "back": 5
-       },
-       "maxStrayPx": 5
-      },
-      {
-       "part": "torso/jacket",
-       "buried": 0.476,
+       "buried": 0.527,
        "strayPx": {
         "front": 0,
         "three": 0,
-        "side": 6,
+        "side": 0,
         "back": 0
        },
-       "maxStrayPx": 6
+       "maxStrayPx": 0
       },
       {
-       "part": "torso/band",
-       "buried": 0.01,
+       "part": "torso/jacket",
+       "buried": 0.256,
        "strayPx": {
         "front": 0,
         "three": 0,
@@ -2953,10 +3208,10 @@
        "strayPx": {
         "front": 0,
         "three": 0,
-        "side": 1,
+        "side": 2,
         "back": 0
        },
-       "maxStrayPx": 1
+       "maxStrayPx": 2
       },
       {
        "part": "ftL/foot",
@@ -3054,7 +3309,7 @@
      },
      "downEndSnapped": {
       "tail": 0.017,
-      "head": 0.26
+      "head": 0.284
      },
      "downEndSnappedMinY": 0.017,
      "shoulderGapWindup": {
@@ -3069,12 +3324,13 @@
         "phase": "idle",
         "t": 2.8
        },
-       "frames": 189,
+       "frames": 188,
        "pass": true,
        "downEnd": {
         "tail": 0.017,
-        "head": 0.26
-       }
+        "head": 0.284
+       },
+       "cullReach": 2.218
       },
       "knockdown+anim": {
        "worst": {
@@ -3083,34 +3339,37 @@
         "phase": "idle",
         "t": 2.8
        },
-       "frames": 189,
+       "frames": 188,
        "pass": true,
        "downEnd": {
         "tail": 0.017,
-        "head": 0.26
-       }
+        "head": 0.284
+       },
+       "cullReach": 2.218
       },
       "attack": {
        "worst": {
-        "y": -0.009,
-        "part": "ftR/foot",
+        "y": -0.014,
+        "part": "knR/shin",
         "phase": "idle",
-        "t": 1.383
+        "t": 2.75
        },
-       "frames": 108,
+       "frames": 165,
        "pass": true,
-       "downEnd": null
+       "downEnd": null,
+       "cullReach": 1.136
       },
       "attack+anim": {
        "worst": {
-        "y": -0.009,
-        "part": "ftR/foot",
+        "y": -0.014,
+        "part": "knR/shin",
         "phase": "idle",
-        "t": 1.383
+        "t": 2.75
        },
-       "frames": 108,
+       "frames": 165,
        "pass": true,
-       "downEnd": null
+       "downEnd": null,
+       "cullReach": 1.136
       },
       "run": {
        "worst": {
@@ -3121,7 +3380,8 @@
        },
        "frames": 120,
        "pass": true,
-       "downEnd": null
+       "downEnd": null,
+       "cullReach": 1.137
       },
       "run+anim": {
        "worst": {
@@ -3132,45 +3392,49 @@
        },
        "frames": 120,
        "pass": true,
-       "downEnd": null
+       "downEnd": null,
+       "cullReach": 1.137
       }
      },
      "lodSequences": {
       "knockdown": {
        "worst": {
-        "y": -0.027,
+        "y": -0.019,
         "part": "knR/shin",
         "phase": "idle",
         "t": 2.8
        },
-       "frames": 189,
+       "frames": 188,
        "pass": true,
        "downEnd": {
         "tail": 0.017,
         "head": 0.284
-       }
+       },
+       "cullReach": 2.212
       },
       "attack": {
        "worst": {
-        "y": -0.012,
+        "y": -0.018,
         "part": "knR/shin",
         "phase": "idle",
-        "t": 1.45
+        "t": 2.75
        },
-       "frames": 108,
+       "frames": 165,
        "pass": true,
-       "downEnd": null
+       "downEnd": null,
+       "cullReach": 0.999
       },
       "run": {
        "worst": {
-        "y": 0.008,
+        "y": 0.016,
         "part": "knR/shin",
         "phase": "idle",
         "t": 0.017
        },
        "frames": 120,
        "pass": true,
-       "downEnd": null
+       "downEnd": null,
+       "cullReach": 1
       }
      },
      "sweeps": {
@@ -3182,10 +3446,21 @@
       "pass": true
      },
      "merge": {
-      "meshesBefore": 33,
-      "meshesAfter": 20,
-      "hullsAfter": 17,
+      "meshesBefore": 31,
+      "hullsBefore": 22,
+      "mergedMeshes": 3,
+      "mergedSolid": 2,
+      "mergedOutline": 1,
+      "leftovers": [],
+      "bones": 16,
+      "drawCalls": 3,
+      "shadowCalls": 2,
       "flashShared": true,
+      "flashPx": {
+       "rigPx": 12909,
+       "unflashedPx": 0,
+       "unflashedPxWithFlashOff": 2877
+      },
       "flashCovers": true,
       "mappedSubMaterials": 1,
       "extras": [
@@ -3195,19 +3470,30 @@
         "parent": "hips"
        }
       ],
+      "maxVertexDy_m": 0,
       "animMoves": {
-       "tailMergedMeshPresent": true,
-       "moved_m": 0.014
-      }
+       "tailBone": 15,
+       "tailVerts": 24,
+       "moved_m": 0.026
+      },
+      "renderDiffPx": 594,
+      "renderDiffInteriorPx": 34,
+      "renderRigPx": 15250
      },
+     "cullReachMax": 2.218,
+     "cullRadius": 1.9,
      "silhouetteIoU": {
-      "front": 0.934,
-      "three": 0.924,
-      "side": 0.932
+      "front": 0.863,
+      "three": 0.835,
+      "side": 0.858
      },
      "pass": {
       "budgetHD": true,
       "budgetLOD": true,
+      "marginHD": true,
+      "marginLOD": true,
+      "marginBuried": true,
+      "marginLODGround": true,
       "ground": true,
       "shoulders": true,
       "strayHulls": true,

@@ -10,7 +10,8 @@ This delivery contains none of the following:
 
 The gulls' rockfish is a generic fish, not a mascot.
 
-- **three.js r160** (MIT, https://github.com/mrdoob/three.js/blob/r160/LICENSE): `viewer.html` and `tools/qa.html` load it, along with its `examples/jsm/utils/BufferGeometryUtils.js` addon (QA only), from unpkg. It is not copied into this delivery.
+- **three.js r160** (MIT, https://github.com/mrdoob/three.js/blob/r160/LICENSE): `viewer.html` and `tools/qa.html` load it from unpkg. It is not copied into this delivery.
 - **`toadcity_kit.js` and `example_gull_thug.js`:** Toad City Baltimore's own kit, rebuilt from the brief's appendix. `THUG_POSES.down` and `HERO_POSES.down` are the game's own code, as supplied.
+- **`tools/game/04b_rig_merge.js`:** the game's own `mergeRig()`, as supplied, kept byte-identical and used only by the QA and the viewer's `&merge=1`. Not part of the delivered gang modules.
 - **`tools/shoot.mjs`:** uses playwright-core (Apache-2.0) as a dev tool. Not part of the game.
 - **`tools/tile.py`:** uses Pillow (MIT-CMU / HPND) as a dev tool. Not part of the game.
