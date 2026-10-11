@@ -120,7 +120,7 @@ function poseFor(r, t) {
     default: return P.idle(t, J);
   }
 }
-const STATE = { idle: 'idle', run: 'run', windup: 'attack', attack: 'attack', hurt: 'hurt', down: 'down', getup: 'down' };
+const STATE = { idle: 'idle', run: 'run', windup: 'attack', attack: 'attack', hurt: 'hurt', down: 'down', getup: 'idle' };   // getup -> idle: animateGang lifts the tail with the tilt (README)
 
 // ---- camera ----
 const CAMS = ['three', 'front', 'side', 'back', 'phone'];
