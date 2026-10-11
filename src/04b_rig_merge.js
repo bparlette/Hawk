@@ -73,7 +73,7 @@ function mergeRig(J) {
   };
   const add = (geo, mat, ol) => {
     const m = new THREE.SkinnedMesh(geo, mat); m.bind(skel, _I4);
-    m.boundingSphere = new THREE.Sphere(new THREE.Vector3(0, 0.95, 0), 1.9); // rig-space bounds (culling without per-frame CPU skinning)
+    m.boundingSphere = new THREE.Sphere(new THREE.Vector3(0, 0.95, 0), 2.6); // 2.6 covers a ~2 m rig lying flat in 'down' (reaches ~2.48 m from centre) // rig-space bounds (culling without per-frame CPU skinning)
     m.castShadow = !ol; m.receiveShadow = false;
     if (ol) { m.visible = QUAL.hd; QUAL.outlines.push(m); }
     root.add(m); return m;
