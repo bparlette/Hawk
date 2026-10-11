@@ -18,20 +18,28 @@ for m, v in qa['members'].items():
 print()
 for q, f in frames.items():
     print(f"- Whole frame, all four members + ground, `{q}`: **{f['calls']} draw calls, {f['triangles']:,} triangles** (incl. shadow pass).")
-print("\n**Ground clearance** (lowest non-hull vertex, worst frame; floor is −3.0 cm; feet and weapon exempt only in `down`):\n")
-print("| member | knock-down 60 fps | + animateGang | attack 60 fps | + animateGang | run 60 fps | + animateGang | pose sweeps | LOD 1 (knock-down / attack / run) |")
-print("|---|---|---|---|---|---|---|---|---|")
+print("\n**Ground clearance** (lowest non-hull vertex, worst frame; floor is −3.0 cm; feet and weapon exempt only in `down`; A = with animateGang):\n")
+SEQS = [k for k in ('knockdown', 'attack', 'run', 'dizzy') if k in next(iter(qa['members'].values()))['sequences']]
+print("| member | " + " | ".join(f"{k} 60 fps | {k} A" for k in SEQS) + " | pose sweeps | LOD 1 (" + " / ".join(SEQS) + ") |")
+print("|---|" + "---|" * (2 * len(SEQS) + 2))
 for m, v in qa['members'].items():
-    s = v['sequences']; w = lambda k: f"{cm(s[k]['worst']['y'])} ({s[k]['worst']['part']}, {s[k]['worst']['phase']})" if k in s else 'n/a'
+    s_ = v['sequences']; w = lambda k: f"{cm(s_[k]['worst']['y'])} ({s_[k]['worst']['part']}, {s_[k]['worst']['phase']})" if k in s_ else 'n/a'
     l = v['lodSequences']
-    print(f"| {m} | {w('knockdown')} | {w('knockdown+anim')} | {w('attack')} | {w('attack+anim')} | {w('run')} | {w('run+anim')} | {cm(v['sweeps']['worst']['y'])} ({v['sweeps']['worst']['part']}, {v['sweeps']['worst']['pose']}) | {cm(l['knockdown']['worst']['y'])} / {cm(l['attack']['worst']['y'])} / {cm(l['run']['worst']['y'])} |")
+    print(f"| {m} | " + " | ".join(f"{w(k)} | {w(k + '+anim')}" for k in SEQS) + f" | {cm(v['sweeps']['worst']['y'])} ({v['sweeps']['worst']['part']}, {v['sweeps']['worst']['pose']}) | " + " / ".join(cm(l[k]['worst']['y']) for k in SEQS) + " |")
+if 'stars' in next(iter(qa['members'].values())):
+    print("\n**Dizzy** (hurt → `THUG_POSES.dizzy` 3 s at rate 10 → chase; stars sprite at 2.2 × scale + 0.15 m above the root):\n")
+    print("| member | stars height | clearance below stars HD (highest part) | with animateGang | LOD 1 | worst shoulder gap in dizzy L / R |")
+    print("|---|---|---|---|---|---|")
+    for m, v in qa['members'].items():
+        st = v['stars']; g = v['shoulderGapDizzy']
+        print(f"| {m} | {st['hd']['starsY']:.2f} m | {cm(st['hd']['clearance'])} ({st['hd']['part']}) | {cm(st['hdAnim']['clearance']) if st.get('hdAnim') else 'n/a'} | {cm(st['lod']['clearance'])} ({st['lod']['part']}) | {cm(g['L'])} / {cm(g['R'])} |")
 print("\n**Down pose and shoulders** (`down(1, true)` snapped; knock-down end = last frame of the 60 fps `down` phase):\n")
 print("| member | shoulder gap down L / R | shoulder gap windup L / R | tail min y, down(1,true) | tail min y, knock-down end | head min y, down(1,true) | min y excl. feet+weapon, down(1,true) |")
 print("|---|---|---|---|---|---|---|")
 for m, v in qa['members'].items():
     gd, gw, de, ke = v['shoulderGapDown'], v['shoulderGapWindup'], v['downEndSnapped'], v['sequences']['knockdown']['downEnd']
     print(f"| {m} | {cm(gd['L'])} / {cm(gd['R'])} | {cm(gw['L'])} / {cm(gw['R'])} | {cm(de.get('tail', float('nan')))} | {cm(ke.get('tail', float('nan')))} | {cm(de['head'])} | {cm(v['downEndSnappedMinY'])} |")
-print("\n**Outlines, shadows, LOD silhouette** (buried = share of a part's surface inside other outlined parts; stray ink rendered at 6 m, 256², 4 views):\n")
+print("\n**Outlines, shadows, LOD silhouette** (buried = share of a part's surface inside other outlined parts; stray ink rendered at 6 m, 256², 4 views, in idle and both dizzy sway extremes):\n")
 print("| member | worst buried share (part) | worst stray ink px (part, view) | shadow-rule violations HD / LOD | LOD IoU front / 3/4 / side |")
 print("|---|---|---|---|---|")
 for m, v in qa['members'].items():
@@ -40,7 +48,7 @@ for m, v in qa['members'].items():
     iou = v['silhouetteIoU']
     print(f"| {m} | {hb['buried'] * 100:.1f} % ({hb['part']}) | {hs['maxStrayPx']} ({hs['part']}, {sv}) | {len(v['hd']['shadowRule'])} / {len(v['lod']['shadowRule'])} | {iou['front']:.3f} / {iou['three']:.3f} / {iou['side']:.3f} |")
 print("\n**The game's real `mergeRig()`** (`tools/game/04b_rig_merge.js`, run on the HD rig):\n")
-print("| member | meshes + hulls before | merged meshes (solid + outline) | bones | draw calls + shadow calls | max vertex Δ merged vs parts (7 poses) | flash: unflashed px of rig px (flash 0.85) | animateGang moves merged tail | render diff px: interior / edge (of rig px) | farthest vertex from culling sphere centre (r = 1.9) |")
+print("| member | meshes + hulls before | merged meshes (solid + outline) | bones | draw calls + shadow calls | max vertex Δ merged vs parts (7 poses) | flash: unflashed px of rig px (flash 0.85) | animateGang moves merged tail | render diff px: interior / edge (of rig px) | farthest vertex from culling sphere centre, all sequences (r = 2.6) |")
 print("|---|---|---|---|---|---|---|---|---|---|")
 for m, v in qa['members'].items():
     g = v['merge']; am = f"{g['animMoves']['moved_m'] * 100:.1f} cm ({g['animMoves']['tailVerts']} verts)" if g.get('animMoves') else 'n/a'

@@ -60,10 +60,11 @@ const downExempt = (J) => (m) => under(m, J.ftL) || under(m, J.ftR) || (J.swR &&
 // ---------- 60 fps sequences with the game's timings (supplied after gang 2 v1) ----------
 // idle/chase rate 14; windup 0.5 s (big 0.7 s) rate 12; attack pose over 0.3 s at rate 26, back to chase at 0.55 s;
 // hurt pose over 0.32 s at rate 24, next state at 0.34 s; knock-down hop (vy 4.2, g 22) with the down pose at rate 14 for
-// 1.25 s, getup over 0.45 s at rate 14. f(t, u, landed, tl): t = sequence time, u = phase fraction, tl = time in phase.
+// 1.25 s, thug getup over 0.5 s at rate 14 (06_game.js; 0.45 s is the hero's). Dizzy: the game's THUG_POSES.dizzy(t) at
+// rate 10 for 0 to 3 s, entered from hurt and leaving to chase. f(t, u, landed, tl): t = sequence time, u = phase fraction, tl = time in phase.
 // Not modelled: the attack's forward lunge (first 0.12 s; root translation only, no pose change) and dizzy (rate 10; no dizzy
-// pose exists in THUG_POSES).
-const T = { rate: 14, windup: 0.5, windupBig: 0.7, windupRate: 12, atkPose: 0.3, atkRate: 26, atkDur: 0.55, hurtPose: 0.32, hurtRate: 24, hurtDur: 0.34, downRate: 14, downDur: 1.25, getup: 0.45, getupRate: 14 };
+// pose existed in THUG_POSES before gang 4; it does now).
+const T = { rate: 14, windup: 0.5, windupBig: 0.7, windupRate: 12, atkPose: 0.3, atkRate: 26, atkDur: 0.55, hurtPose: 0.32, hurtRate: 24, hurtDur: 0.34, downRate: 14, downDur: 1.25, getup: 0.5, getupRate: 14, dizzyRate: 10, dizzyDur: 3.0 };
 const cl = (v) => Math.min(1, Math.max(0, v));
 function seqs(J) {
   const wu = J.meta && J.meta.big ? T.windupBig : T.windup;
@@ -87,9 +88,17 @@ function seqs(J) {
       { n: 'chase', dur: 1.2, rate: T.rate, st: 'run', f: (t) => P.run(t, 4.5, J) },
       { n: 'idle', dur: 0.5, rate: T.rate, st: 'idle', f: (t) => P.idle(t, J) },
     ],
+    dizzy: [
+      { n: 'idle', dur: 0.4, rate: T.rate, st: 'idle', f: (t) => P.idle(t, J) },
+      { n: 'hurt', dur: T.hurtDur, rate: T.hurtRate, st: 'hurt', f: (t, u, g, tl) => P.hurt(cl(tl / T.hurtPose), J) },
+      { n: 'dizzy', dur: T.dizzyDur, rate: T.dizzyRate, st: 'hurt', f: (t, u, g, tl) => P.dizzy(tl, J) },
+      { n: 'chase', dur: 0.6, rate: T.rate, st: 'run', f: (t) => P.run(t, 4.5, J) },
+      { n: 'idle', dur: 0.5, rate: T.rate, st: 'idle', f: (t) => P.idle(t, J) },
+    ],
   };
 }
-const CULL_C = new THREE.Vector3(0, 0.95, 0), CULL_R = 1.9;   // mergeRig's fixed rig-space bounding sphere
+const CULL_C = new THREE.Vector3(0, 0.95, 0), CULL_R = 2.6;   // mergeRig's rig-space bounding sphere (radius raised 1.9 -> 2.6 in-house)
+const starsY = (J) => 2.2 * (J.meta && J.meta.scale || 1) + 0.15;   // the dizzy stars sprite, metres above the root
 function cullReach(J) {   // furthest non-hull vertex from the culling-sphere centre, in rig (root-local) space
   const inv = new THREE.Matrix4().copy(J.root.matrixWorld).invert(), v = new THREE.Vector3(); let r = 0;
   for (const m of partsOf(J)) { const p = m.geometry.attributes.position, M = new THREE.Matrix4().multiplyMatrices(inv, m.matrixWorld); for (let i = 0; i < p.count; i++) r = Math.max(r, v.fromBufferAttribute(p, i).applyMatrix4(M).distanceTo(CULL_C)); }
@@ -98,7 +107,7 @@ function cullReach(J) {   // furthest non-hull vertex from the culling-sphere ce
 function runSeq(member, name, withAnim, lod = 0) {
   const J = build(member, lod), S = seqs(J)[name];
   snap(J, P.idle(0, J));
-  let t = 0, worst = { y: Infinity }, frames = 0, downEnd = null, reach = 0;
+  let t = 0, worst = { y: Infinity }, frames = 0, downEnd = null, reach = 0, stars = null, dizzyGap = null;
   for (const ph of S) {
     let vy = 0, landed = false;
     if (ph.hop) { vy = 4.2; J.root.position.y = 0; }
@@ -114,9 +123,19 @@ function runSeq(member, name, withAnim, lod = 0) {
       const m = minY(J, ph.n === 'down' ? downExempt(J) : null);
       if (m.y < worst.y) worst = { y: r3(m.y), part: m.part, phase: ph.n, t: r3(t) };
       if (ph.n === 'down' && i === n) downEnd = clearances(J);
+      if (ph.n === 'dizzy') {   // stars sprite clearance every frame; shoulder gaps every 10th frame
+        const top = maxY(J), c = starsY(J) - top.y;
+        if (!stars || c < stars.clearance) stars = { clearance: r3(c), part: top.part, t: r3(i * DT), starsY: r3(starsY(J)) };
+        if (!lod && i % 10 === 0) { const g = shoulderGaps(J); if (!dizzyGap || Math.max(g.L, g.R) > Math.max(dizzyGap.L, dizzyGap.R)) dizzyGap = { ...g, t: r3(i * DT) }; }
+      }
     }
   }
-  return { worst, frames, pass: worst.y >= FLOOR, downEnd, cullReach: r3(reach) };
+  return { worst, frames, pass: worst.y >= FLOOR, downEnd, cullReach: r3(reach), stars, dizzyGap };
+}
+function maxY(J) {
+  let best = { y: -Infinity, part: '' }; const v = new THREE.Vector3();
+  for (const m of partsOf(J)) { if (!m.visible) continue; const p = m.geometry.attributes.position; for (let i = 0; i < p.count; i++) { v.fromBufferAttribute(p, i).applyMatrix4(m.matrixWorld); if (v.y > best.y) best = { y: v.y, part: label(J, m) }; } }
+  return best;
 }
 function clearances(J) {
   const out = {};
@@ -130,12 +149,12 @@ function sweeps(member) {
   for (let i = 0; i <= 10; i++) {
     const u = i / 10;
     tests.push(['idle', () => P.idle(u * 1.6, J)], ['run', () => P.run(u * 0.8, 4.5, J)], ['windup', () => P.windup(u, J)], ['attack', () => P.attack(u, J)],
-      ['hurt', () => P.hurt(u, J)], ['down', () => P.down(u, true)], ['down_air', () => P.down(u, false)], ['getup', () => P.getup(u, J)]);
+      ['hurt', () => P.hurt(u, J)], ['down', () => P.down(u, true)], ['down_air', () => P.down(u, false)], ['getup', () => P.getup(u, J)], ['dizzy', () => P.dizzy(u * 1.2, J)]);
   }
   for (const [n, f] of tests) {
     snap(J, f());
     for (const withAnim of [false, true]) {
-      if (withAnim && ANIM) { ANIM(J, 0.7, { run: 'run', windup: 'attack', attack: 'attack', hurt: 'hurt', down: 'down', down_air: 'down', getup: 'idle' }[n] || 'idle'); J.root.updateMatrixWorld(true); }
+      if (withAnim && ANIM) { ANIM(J, 0.7, { run: 'run', windup: 'attack', attack: 'attack', hurt: 'hurt', down: 'down', down_air: 'down', getup: 'idle', dizzy: 'hurt' }[n] || 'idle'); J.root.updateMatrixWorld(true); }
       const m = minY(J, n.startsWith('down') ? downExempt(J) : null);
       if (m.y < worst.y) worst = { y: r3(m.y), part: m.part, pose: n + (withAnim ? '+anim' : '') };
     }
@@ -215,8 +234,8 @@ function dilate(m, r) {
   for (let y = 0; y < SR; y++) for (let x = 0; x < SR; x++) { let v = 0; for (let k = -r; k <= r && !v; k++) { const yy = y + k; if (yy >= 0 && yy < SR && a[yy * SR + x]) v = 1; } b[y * SR + x] = v; }
   return b;
 }
-function strayInk(J) {
-  snap(J, P.idle(0, J));
+function strayInk(J, pose) {
+  snap(J, pose ? pose(J) : P.idle(0, J));
   const sc = new THREE.Scene(); sc.background = new THREE.Color(0xffffff); sc.add(J.root);
   const ps = partsOf(J), orig = new Map(ps.map((m) => [m, m.material])), ol = ps.filter((m) => m.children.some(isHull));
   for (const m of ps) m.material = WHITE;
@@ -245,8 +264,14 @@ function strayInk(J) {
 }
 function strayHulls(J) {
   snap(J, P.idle(0, J));
-  const bur = buried(J), ink = strayInk(J), report = [];
-  for (const k of Object.keys(bur)) { const v = ink[k] || {}; report.push({ part: k, buried: bur[k], strayPx: v, maxStrayPx: Math.max(0, ...Object.values(v)) }); }
+  const bur = buried(J), report = [];
+  // stray ink in idle and at the dizzy sway's two extremes (w = +1 at t = π/11 s, w = -1 at t = 3π/11 s)
+  const inks = { idle: strayInk(J), dizzyL: strayInk(J, (Jx) => P.dizzy(Math.PI / 11, Jx)), dizzyR: strayInk(J, (Jx) => P.dizzy(3 * Math.PI / 11, Jx)) };
+  snap(J, P.idle(0, J));
+  for (const k of Object.keys(bur)) {
+    const v = {}; for (const [pn, ink] of Object.entries(inks)) for (const [view, px] of Object.entries(ink[k] || {})) v[pn + '/' + view] = px;
+    report.push({ part: k, buried: bur[k], strayPx: v, maxStrayPx: Math.max(0, ...Object.values(v)) });
+  }
   return report;
 }
 function shadowRules(J) {
@@ -380,22 +405,25 @@ for (const member of (DEBUG ? [DEBUG[0]] : Q.get('debugmerge') ? [Q.get('debugme
   { const J = build(member, 0); snap(J, P.down(1, true)); r.shoulderGapDown = shoulderGaps(J); r.downEndSnapped = clearances(J); r.downEndSnappedMinY = r3(minY(J, downExempt(J)).y); }
   { const J = build(member, 0); snap(J, P.windup(1, J)); r.shoulderGapWindup = shoulderGaps(J); }
   r.sequences = {};
-  for (const name of ['knockdown', 'attack', 'run']) for (const anim of [false, true]) {
+  for (const name of ['knockdown', 'attack', 'run', 'dizzy']) for (const anim of [false, true]) {
     if (anim && !ANIM) continue; r.sequences[name + (anim ? '+anim' : '')] = runSeq(member, name, anim);
   }
   r.lodSequences = {};
-  for (const name of ['knockdown', 'attack', 'run']) r.lodSequences[name] = runSeq(member, name, true, 1);
+  for (const name of ['knockdown', 'attack', 'run', 'dizzy']) r.lodSequences[name] = runSeq(member, name, true, 1);
   r.sweeps = sweeps(member);
   r.merge = mergeCheck(member);
   // informational (game-side): furthest vertex from mergeRig's fixed culling sphere centre over all 60 fps runs
   r.cullReachMax = Math.max(...Object.values(r.sequences).map((x) => x.cullReach)); r.cullRadius = CULL_R;
+  r.stars = { hd: r.sequences.dizzy.stars, hdAnim: r.sequences['dizzy+anim'] ? r.sequences['dizzy+anim'].stars : null, lod: r.lodSequences.dizzy.stars };
+  r.shoulderGapDizzy = r.sequences.dizzy.dizzyGap;
   r.silhouetteIoU = silhouette(member);
   const seqPass = Object.values(r.sequences).every((x) => x.pass) && Object.values(r.lodSequences).every((x) => x.pass);
   r.pass = {
     budgetHD: r.hd.parts <= CAP.hdParts && r.hd.tris <= CAP.hdTris && r.hd.mats <= CAP.mats, budgetLOD: r.lod.parts <= CAP.lodParts && r.lod.tris <= CAP.lodTris && r.lod.mats <= CAP.mats,
     marginHD: r.hd.parts <= MARGIN.hdParts && r.hd.tris <= MARGIN.hdTris, marginLOD: r.lod.parts <= MARGIN.lodParts && r.lod.tris <= MARGIN.lodTris,
     marginBuried: r.hullOverlap.every((x) => x.buried < MARGIN.buried), marginLODGround: Object.values(r.lodSequences).every((x) => x.worst.y >= MARGIN.lodFloor),
-    ground: seqPass && r.sweeps.pass, shoulders: Math.max(r.shoulderGapDown.L, r.shoulderGapDown.R, r.shoulderGapWindup.L, r.shoulderGapWindup.R) <= 0.01,
+    ground: seqPass && r.sweeps.pass, shoulders: Math.max(r.shoulderGapDown.L, r.shoulderGapDown.R, r.shoulderGapWindup.L, r.shoulderGapWindup.R, r.shoulderGapDizzy.L, r.shoulderGapDizzy.R) <= 0.01,
+    stars: [r.stars.hd, r.stars.hdAnim, r.stars.lod].every((x) => !x || x.clearance > 0), cullSphere: r.cullReachMax <= CULL_R,
     strayHulls: r.strayHulls.length === 0, shadows: !r.hd.shadowRule.length && !r.lod.shadowRule.length,
     flash: !r.hd.flashBad && !r.lod.flashBad && r.merge.flashShared && r.merge.flashCovers, hulls: r.hd.hullMatsOK && r.lod.hullMatsOK,
     merge: r.merge.mappedSubMaterials <= 1 && !r.merge.leftovers.length && r.merge.maxVertexDy_m < 1e-4 && r.merge.extras.every((e) => e.plain && K.JOINTS.includes(e.parent) || e.k === 'swR' || e.k === 'swL') && (!r.merge.animMoves || r.merge.animMoves.moved_m > 0.005),

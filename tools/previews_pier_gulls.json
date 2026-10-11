@@ -30,6 +30,12 @@
   "h": 520
  },
  {
+  "out": "previews/pier_gulls_grunt_a_dizzy_60fps.png",
+  "q": "show=pier_gulls.grunt_a&strip=dizzy&ui=0&merge=1",
+  "w": 1800,
+  "h": 560
+ },
+ {
   "out": "previews/_tmp_grunt_a_hd.png",
   "q": "show=pier_gulls.grunt_a&t=0.5&turn=1&cam=front&ui=0",
   "w": 1280,
@@ -70,6 +76,12 @@
   "q": "show=pier_gulls.grunt_b&strip=attack&ui=0&merge=1",
   "w": 1800,
   "h": 520
+ },
+ {
+  "out": "previews/pier_gulls_grunt_b_dizzy_60fps.png",
+  "q": "show=pier_gulls.grunt_b&strip=dizzy&ui=0&merge=1",
+  "w": 1800,
+  "h": 560
  },
  {
   "out": "previews/_tmp_grunt_b_hd.png",
@@ -114,6 +126,12 @@
   "h": 520
  },
  {
+  "out": "previews/pier_gulls_armed_dizzy_60fps.png",
+  "q": "show=pier_gulls.armed&strip=dizzy&ui=0&merge=1",
+  "w": 1800,
+  "h": 560
+ },
+ {
   "out": "previews/_tmp_armed_hd.png",
   "q": "show=pier_gulls.armed&t=0.5&turn=1&cam=front&ui=0",
   "w": 1280,
@@ -154,6 +172,12 @@
   "q": "show=pier_gulls.bruiser&strip=attack&ui=0&merge=1",
   "w": 1800,
   "h": 520
+ },
+ {
+  "out": "previews/pier_gulls_bruiser_dizzy_60fps.png",
+  "q": "show=pier_gulls.bruiser&strip=dizzy&ui=0&merge=1",
+  "w": 1800,
+  "h": 560
  },
  {
   "out": "previews/_tmp_bruiser_hd.png",

@@ -1,0 +1,4689 @@
+[
+ {
+  "out": "previews/masked_bandits_grunt_a_day.png",
+  "q": "show=masked_bandits.grunt_a&t=0.5&turn=1&cam=front&ui=0",
+  "errors": [],
+  "report": {
+   "show": "masked_bandits.grunt_a",
+   "lod": 0,
+   "rigs": {
+    "masked_bandits.grunt_a": {
+     "parts": 30,
+     "tris": 10080,
+     "hullTris": 9228,
+     "mats": 3,
+     "height": 1.944250397341095,
+     "minY": 0.01640135455222965,
+     "flashBad": 0,
+     "hullsOK": true,
+     "swR": false
+    }
+   },
+   "frame": {
+    "calls": 289,
+    "triangles": 107810
+   }
+  }
+ },
+ {
+  "out": "previews/masked_bandits_grunt_a_night.png",
+  "q": "show=masked_bandits.grunt_a&t=0.5&turn=1&cam=front&ui=0&night=1",
+  "errors": [],
+  "report": {
+   "show": "masked_bandits.grunt_a",
+   "lod": 0,
+   "rigs": {
+    "masked_bandits.grunt_a": {
+     "parts": 30,
+     "tris": 10080,
+     "hullTris": 9228,
+     "mats": 3,
+     "height": 1.944250397341095,
+     "minY": 0.01640135455222965,
+     "flashBad": 0,
+     "hullsOK": true,
+     "swR": false
+    }
+   },
+   "frame": {
+    "calls": 289,
+    "triangles": 107810
+   }
+  }
+ },
+ {
+  "out": "previews/masked_bandits_grunt_a_poses.png",
+  "q": "show=masked_bandits.grunt_a&t=0.5&pose=all&ui=0",
+  "errors": [],
+  "report": {
+   "show": "masked_bandits.grunt_a",
+   "lod": 0,
+   "rigs": {
+    "masked_bandits.grunt_a/idle": {
+     "parts": 30,
+     "tris": 10080,
+     "hullTris": 9228,
+     "mats": 3,
+     "height": 1.944250397341095,
+     "minY": 0.01640135455222965,
+     "flashBad": 0,
+     "hullsOK": true,
+     "swR": false
+    },
+    "masked_bandits.grunt_a/run": {
+     "parts": 30,
+     "tris": 10080,
+     "hullTris": 9228,
+     "mats": 3,
+     "height": 1.944250397341095,
+     "minY": 0.01640135455222965,
+     "flashBad": 0,
+     "hullsOK": true,
+     "swR": false
+    },
+    "masked_bandits.grunt_a/windup": {
+     "parts": 30,
+     "tris": 10080,
+     "hullTris": 9228,
+     "mats": 3,
+     "height": 1.944250397341095,
+     "minY": 0.01640135455222965,
+     "flashBad": 0,
+     "hullsOK": true,
+     "swR": false
+    },
+    "masked_bandits.grunt_a/attack": {
+     "parts": 30,
+     "tris": 10080,
+     "hullTris": 9228,
+     "mats": 3,
+     "height": 1.944250397341095,
+     "minY": 0.01640135455222965,
+     "flashBad": 0,
+     "hullsOK": true,
+     "swR": false
+    },
+    "masked_bandits.grunt_a/hurt": {
+     "parts": 30,
+     "tris": 10080,
+     "hullTris": 9228,
+     "mats": 3,
+     "height": 1.944250397341095,
+     "minY": 0.01640135455222965,
+     "flashBad": 0,
+     "hullsOK": true,
+     "swR": false
+    },
+    "masked_bandits.grunt_a/down": {
+     "parts": 30,
+     "tris": 10080,
+     "hullTris": 9228,
+     "mats": 3,
+     "height": 1.944250397341095,
+     "minY": 0.01640135455222965,
+     "flashBad": 0,
+     "hullsOK": true,
+     "swR": false
+    },
+    "masked_bandits.grunt_a/getup": {
+     "parts": 30,
+     "tris": 10080,
+     "hullTris": 9228,
+     "mats": 3,
+     "height": 1.944250397341095,
+     "minY": 0.01640135455222965,
+     "flashBad": 0,
+     "hullsOK": true,
+     "swR": false
+    }
+   },
+   "frame": {
+    "calls": 505,
+    "triangles": 188666
+   }
+  }
+ },
+ {
+  "out": "previews/masked_bandits_grunt_a_knockdown_60fps.png",
+  "q": "show=masked_bandits.grunt_a&strip=knockdown&ui=0&merge=1",
+  "errors": [],
+  "report": {
+   "show": "masked_bandits.grunt_a",
+   "lod": 0,
+   "rigs": {},
+   "frame": {
+    "calls": 56,
+    "triangles": 323270
+   }
+  }
+ },
+ {
+  "out": "previews/masked_bandits_grunt_a_attack_60fps.png",
+  "q": "show=masked_bandits.grunt_a&strip=attack&ui=0&merge=1",
+  "errors": [],
+  "report": {
+   "show": "masked_bandits.grunt_a",
+   "lod": 0,
+   "rigs": {},
+   "frame": {
+    "calls": 56,
+    "triangles": 323270
+   }
+  }
+ },
+ {
+  "out": "previews/masked_bandits_grunt_a_dizzy_60fps.png",
+  "q": "show=masked_bandits.grunt_a&strip=dizzy&ui=0&merge=1",
+  "errors": [],
+  "report": {
+   "show": "masked_bandits.grunt_a",
+   "lod": 0,
+   "rigs": {},
+   "frame": {
+    "calls": 67,
+    "triangles": 327494
+   }
+  }
+ },
+ {
+  "out": "previews/_tmp_grunt_a_hd.png",
+  "q": "show=masked_bandits.grunt_a&t=0.5&turn=1&cam=front&ui=0",
+  "errors": [],
+  "report": {
+   "show": "masked_bandits.grunt_a",
+   "lod": 0,
+   "rigs": {
+    "masked_bandits.grunt_a": {
+     "parts": 30,
+     "tris": 10080,
+     "hullTris": 9228,
+     "mats": 3,
+     "height": 1.944250397341095,
+     "minY": 0.01640135455222965,
+     "flashBad": 0,
+     "hullsOK": true,
+     "swR": false
+    }
+   },
+   "frame": {
+    "calls": 289,
+    "triangles": 107810
+   }
+  }
+ },
+ {
+  "out": "previews/_tmp_grunt_a_lod.png",
+  "q": "show=masked_bandits.grunt_a&t=0.5&turn=1&cam=front&ui=0&lod=1",
+  "errors": [],
+  "report": {
+   "show": "masked_bandits.grunt_a",
+   "lod": 1,
+   "rigs": {
+    "masked_bandits.grunt_a": {
+     "parts": 11,
+     "tris": 1712,
+     "hullTris": 1712,
+     "mats": 2,
+     "height": 1.9395001112868058,
+     "minY": 0.003159182372451219,
+     "flashBad": 0,
+     "hullsOK": true,
+     "swR": false
+    }
+   },
+   "frame": {
+    "calls": 133,
+    "triangles": 20546
+   }
+  }
+ },
+ {
+  "out": "previews/masked_bandits_grunt_b_day.png",
+  "q": "show=masked_bandits.grunt_b&t=0.5&turn=1&cam=front&ui=0",
+  "errors": [],
+  "report": {
+   "show": "masked_bandits.grunt_b",
+   "lod": 0,
+   "rigs": {
+    "masked_bandits.grunt_b": {
+     "parts": 32,
+     "tris": 9988,
+     "hullTris": 9136,
+     "mats": 3,
+     "height": 1.8993943205574773,
+     "minY": 0.01640135455222965,
+     "flashBad": 0,
+     "hullsOK": true,
+     "swR": false
+    }
+   },
+   "frame": {
+    "calls": 305,
+    "triangles": 106258
+   }
+  }
+ },
+ {
+  "out": "previews/masked_bandits_grunt_b_night.png",
+  "q": "show=masked_bandits.grunt_b&t=0.5&turn=1&cam=front&ui=0&night=1",
+  "errors": [],
+  "report": {
+   "show": "masked_bandits.grunt_b",
+   "lod": 0,
+   "rigs": {
+    "masked_bandits.grunt_b": {
+     "parts": 32,
+     "tris": 9988,
+     "hullTris": 9136,
+     "mats": 3,
+     "height": 1.8993943205574773,
+     "minY": 0.01640135455222965,
+     "flashBad": 0,
+     "hullsOK": true,
+     "swR": false
+    }
+   },
+   "frame": {
+    "calls": 305,
+    "triangles": 106258
+   }
+  }
+ },
+ {
+  "out": "previews/masked_bandits_grunt_b_poses.png",
+  "q": "show=masked_bandits.grunt_b&t=0.5&pose=all&ui=0",
+  "errors": [],
+  "report": {
+   "show": "masked_bandits.grunt_b",
+   "lod": 0,
+   "rigs": {
+    "masked_bandits.grunt_b/idle": {
+     "parts": 32,
+     "tris": 9988,
+     "hullTris": 9136,
+     "mats": 3,
+     "height": 1.8993943205574773,
+     "minY": 0.01640135455222965,
+     "flashBad": 0,
+     "hullsOK": true,
+     "swR": false
+    },
+    "masked_bandits.grunt_b/run": {
+     "parts": 32,
+     "tris": 9988,
+     "hullTris": 9136,
+     "mats": 3,
+     "height": 1.8993943205574773,
+     "minY": 0.01640135455222965,
+     "flashBad": 0,
+     "hullsOK": true,
+     "swR": false
+    },
+    "masked_bandits.grunt_b/windup": {
+     "parts": 32,
+     "tris": 9988,
+     "hullTris": 9136,
+     "mats": 3,
+     "height": 1.8993943205574773,
+     "minY": 0.01640135455222965,
+     "flashBad": 0,
+     "hullsOK": true,
+     "swR": false
+    },
+    "masked_bandits.grunt_b/attack": {
+     "parts": 32,
+     "tris": 9988,
+     "hullTris": 9136,
+     "mats": 3,
+     "height": 1.8993943205574773,
+     "minY": 0.01640135455222965,
+     "flashBad": 0,
+     "hullsOK": true,
+     "swR": false
+    },
+    "masked_bandits.grunt_b/hurt": {
+     "parts": 32,
+     "tris": 9988,
+     "hullTris": 9136,
+     "mats": 3,
+     "height": 1.8993943205574773,
+     "minY": 0.01640135455222965,
+     "flashBad": 0,
+     "hullsOK": true,
+     "swR": false
+    },
+    "masked_bandits.grunt_b/down": {
+     "parts": 32,
+     "tris": 9988,
+     "hullTris": 9136,
+     "mats": 3,
+     "height": 1.8993943205574773,
+     "minY": 0.01640135455222965,
+     "flashBad": 0,
+     "hullsOK": true,
+     "swR": false
+    },
+    "masked_bandits.grunt_b/getup": {
+     "parts": 32,
+     "tris": 9988,
+     "hullTris": 9136,
+     "mats": 3,
+     "height": 1.8993943205574773,
+     "minY": 0.01640135455222965,
+     "flashBad": 0,
+     "hullsOK": true,
+     "swR": false
+    }
+   },
+   "frame": {
+    "calls": 533,
+    "triangles": 185950
+   }
+  }
+ },
+ {
+  "out": "previews/masked_bandits_grunt_b_knockdown_60fps.png",
+  "q": "show=masked_bandits.grunt_b&strip=knockdown&ui=0&merge=1",
+  "errors": [],
+  "report": {
+   "show": "masked_bandits.grunt_b",
+   "lod": 0,
+   "rigs": {},
+   "frame": {
+    "calls": 56,
+    "triangles": 320234
+   }
+  }
+ },
+ {
+  "out": "previews/masked_bandits_grunt_b_attack_60fps.png",
+  "q": "show=masked_bandits.grunt_b&strip=attack&ui=0&merge=1",
+  "errors": [],
+  "report": {
+   "show": "masked_bandits.grunt_b",
+   "lod": 0,
+   "rigs": {},
+   "frame": {
+    "calls": 56,
+    "triangles": 320234
+   }
+  }
+ },
+ {
+  "out": "previews/masked_bandits_grunt_b_dizzy_60fps.png",
+  "q": "show=masked_bandits.grunt_b&strip=dizzy&ui=0&merge=1",
+  "errors": [],
+  "report": {
+   "show": "masked_bandits.grunt_b",
+   "lod": 0,
+   "rigs": {},
+   "frame": {
+    "calls": 67,
+    "triangles": 324458
+   }
+  }
+ },
+ {
+  "out": "previews/_tmp_grunt_b_hd.png",
+  "q": "show=masked_bandits.grunt_b&t=0.5&turn=1&cam=front&ui=0",
+  "errors": [],
+  "report": {
+   "show": "masked_bandits.grunt_b",
+   "lod": 0,
+   "rigs": {
+    "masked_bandits.grunt_b": {
+     "parts": 32,
+     "tris": 9988,
+     "hullTris": 9136,
+     "mats": 3,
+     "height": 1.8993943205574773,
+     "minY": 0.01640135455222965,
+     "flashBad": 0,
+     "hullsOK": true,
+     "swR": false
+    }
+   },
+   "frame": {
+    "calls": 305,
+    "triangles": 106258
+   }
+  }
+ },
+ {
+  "out": "previews/_tmp_grunt_b_lod.png",
+  "q": "show=masked_bandits.grunt_b&t=0.5&turn=1&cam=front&ui=0&lod=1",
+  "errors": [],
+  "report": {
+   "show": "masked_bandits.grunt_b",
+   "lod": 1,
+   "rigs": {
+    "masked_bandits.grunt_b": {
+     "parts": 11,
+     "tris": 1712,
+     "hullTris": 1712,
+     "mats": 2,
+     "height": 1.8946440327207676,
+     "minY": 0.003159182372451219,
+     "flashBad": 0,
+     "hullsOK": true,
+     "swR": false
+    }
+   },
+   "frame": {
+    "calls": 133,
+    "triangles": 20546
+   }
+  }
+ },
+ {
+  "out": "previews/masked_bandits_armed_day.png",
+  "q": "show=masked_bandits.armed&t=0.5&turn=1&cam=front&ui=0",
+  "errors": [],
+  "report": {
+   "show": "masked_bandits.armed",
+   "lod": 0,
+   "rigs": {
+    "masked_bandits.armed": {
+     "parts": 31,
+     "tris": 9752,
+     "hullTris": 8900,
+     "mats": 3,
+     "height": 1.8993943205574773,
+     "minY": 0.01640135455222965,
+     "flashBad": 0,
+     "hullsOK": true,
+     "swR": true
+    }
+   },
+   "frame": {
+    "calls": 301,
+    "triangles": 103874
+   }
+  }
+ },
+ {
+  "out": "previews/masked_bandits_armed_night.png",
+  "q": "show=masked_bandits.armed&t=0.5&turn=1&cam=front&ui=0&night=1",
+  "errors": [],
+  "report": {
+   "show": "masked_bandits.armed",
+   "lod": 0,
+   "rigs": {
+    "masked_bandits.armed": {
+     "parts": 31,
+     "tris": 9752,
+     "hullTris": 8900,
+     "mats": 3,
+     "height": 1.8993943205574773,
+     "minY": 0.01640135455222965,
+     "flashBad": 0,
+     "hullsOK": true,
+     "swR": true
+    }
+   },
+   "frame": {
+    "calls": 301,
+    "triangles": 103874
+   }
+  }
+ },
+ {
+  "out": "previews/masked_bandits_armed_poses.png",
+  "q": "show=masked_bandits.armed&t=0.5&pose=all&ui=0",
+  "errors": [],
+  "report": {
+   "show": "masked_bandits.armed",
+   "lod": 0,
+   "rigs": {
+    "masked_bandits.armed/idle": {
+     "parts": 31,
+     "tris": 9752,
+     "hullTris": 8900,
+     "mats": 3,
+     "height": 1.8993943205574773,
+     "minY": 0.01640135455222965,
+     "flashBad": 0,
+     "hullsOK": true,
+     "swR": true
+    },
+    "masked_bandits.armed/run": {
+     "parts": 31,
+     "tris": 9752,
+     "hullTris": 8900,
+     "mats": 3,
+     "height": 1.8993943205574773,
+     "minY": 0.01640135455222965,
+     "flashBad": 0,
+     "hullsOK": true,
+     "swR": true
+    },
+    "masked_bandits.armed/windup": {
+     "parts": 31,
+     "tris": 9752,
+     "hullTris": 8900,
+     "mats": 3,
+     "height": 1.8993943205574773,
+     "minY": 0.01640135455222965,
+     "flashBad": 0,
+     "hullsOK": true,
+     "swR": true
+    },
+    "masked_bandits.armed/attack": {
+     "parts": 31,
+     "tris": 9752,
+     "hullTris": 8900,
+     "mats": 3,
+     "height": 1.8993943205574773,
+     "minY": 0.01640135455222965,
+     "flashBad": 0,
+     "hullsOK": true,
+     "swR": true
+    },
+    "masked_bandits.armed/hurt": {
+     "parts": 31,
+     "tris": 9752,
+     "hullTris": 8900,
+     "mats": 3,
+     "height": 1.8993943205574773,
+     "minY": 0.01640135455222965,
+     "flashBad": 0,
+     "hullsOK": true,
+     "swR": true
+    },
+    "masked_bandits.armed/down": {
+     "parts": 31,
+     "tris": 9752,
+     "hullTris": 8900,
+     "mats": 3,
+     "height": 1.8993943205574773,
+     "minY": 0.01640135455222965,
+     "flashBad": 0,
+     "hullsOK": true,
+     "swR": true
+    },
+    "masked_bandits.armed/getup": {
+     "parts": 31,
+     "tris": 9752,
+     "hullTris": 8900,
+     "mats": 3,
+     "height": 1.8993943205574773,
+     "minY": 0.01640135455222965,
+     "flashBad": 0,
+     "hullsOK": true,
+     "swR": true
+    }
+   },
+   "frame": {
+    "calls": 526,
+    "triangles": 181778
+   }
+  }
+ },
+ {
+  "out": "previews/masked_bandits_armed_knockdown_60fps.png",
+  "q": "show=masked_bandits.armed&strip=knockdown&ui=0&merge=1",
+  "errors": [],
+  "report": {
+   "show": "masked_bandits.armed",
+   "lod": 0,
+   "rigs": {},
+   "frame": {
+    "calls": 56,
+    "triangles": 312446
+   }
+  }
+ },
+ {
+  "out": "previews/masked_bandits_armed_attack_60fps.png",
+  "q": "show=masked_bandits.armed&strip=attack&ui=0&merge=1",
+  "errors": [],
+  "report": {
+   "show": "masked_bandits.armed",
+   "lod": 0,
+   "rigs": {},
+   "frame": {
+    "calls": 56,
+    "triangles": 312446
+   }
+  }
+ },
+ {
+  "out": "previews/masked_bandits_armed_dizzy_60fps.png",
+  "q": "show=masked_bandits.armed&strip=dizzy&ui=0&merge=1",
+  "errors": [],
+  "report": {
+   "show": "masked_bandits.armed",
+   "lod": 0,
+   "rigs": {},
+   "frame": {
+    "calls": 67,
+    "triangles": 316670
+   }
+  }
+ },
+ {
+  "out": "previews/_tmp_armed_hd.png",
+  "q": "show=masked_bandits.armed&t=0.5&turn=1&cam=front&ui=0",
+  "errors": [],
+  "report": {
+   "show": "masked_bandits.armed",
+   "lod": 0,
+   "rigs": {
+    "masked_bandits.armed": {
+     "parts": 31,
+     "tris": 9752,
+     "hullTris": 8900,
+     "mats": 3,
+     "height": 1.8993943205574773,
+     "minY": 0.01640135455222965,
+     "flashBad": 0,
+     "hullsOK": true,
+     "swR": true
+    }
+   },
+   "frame": {
+    "calls": 301,
+    "triangles": 103874
+   }
+  }
+ },
+ {
+  "out": "previews/_tmp_armed_lod.png",
+  "q": "show=masked_bandits.armed&t=0.5&turn=1&cam=front&ui=0&lod=1",
+  "errors": [],
+  "report": {
+   "show": "masked_bandits.armed",
+   "lod": 1,
+   "rigs": {
+    "masked_bandits.armed": {
+     "parts": 12,
+     "tris": 1780,
+     "hullTris": 1780,
+     "mats": 2,
+     "height": 1.8946440327207676,
+     "minY": 0.003159182372451219,
+     "flashBad": 0,
+     "hullsOK": true,
+     "swR": true
+    }
+   },
+   "frame": {
+    "calls": 145,
+    "triangles": 21362
+   }
+  }
+ },
+ {
+  "out": "previews/masked_bandits_bruiser_day.png",
+  "q": "show=masked_bandits.bruiser&t=0.5&turn=1&cam=front&ui=0",
+  "errors": [],
+  "report": {
+   "show": "masked_bandits.bruiser",
+   "lod": 0,
+   "rigs": {
+    "masked_bandits.bruiser": {
+     "parts": 29,
+     "tris": 9684,
+     "hullTris": 8832,
+     "mats": 3,
+     "height": 2.2941272508318487,
+     "minY": 0.0048275592997995,
+     "flashBad": 0,
+     "hullsOK": true,
+     "swR": false
+    }
+   },
+   "frame": {
+    "calls": 285,
+    "triangles": 106226
+   }
+  }
+ },
+ {
+  "out": "previews/masked_bandits_bruiser_night.png",
+  "q": "show=masked_bandits.bruiser&t=0.5&turn=1&cam=front&ui=0&night=1",
+  "errors": [],
+  "report": {
+   "show": "masked_bandits.bruiser",
+   "lod": 0,
+   "rigs": {
+    "masked_bandits.bruiser": {
+     "parts": 29,
+     "tris": 9684,
+     "hullTris": 8832,
+     "mats": 3,
+     "height": 2.2941272508318487,
+     "minY": 0.0048275592997995,
+     "flashBad": 0,
+     "hullsOK": true,
+     "swR": false
+    }
+   },
+   "frame": {
+    "calls": 285,
+    "triangles": 106226
+   }
+  }
+ },
+ {
+  "out": "previews/masked_bandits_bruiser_poses.png",
+  "q": "show=masked_bandits.bruiser&t=0.5&pose=all&ui=0",
+  "errors": [],
+  "report": {
+   "show": "masked_bandits.bruiser",
+   "lod": 0,
+   "rigs": {
+    "masked_bandits.bruiser/idle": {
+     "parts": 29,
+     "tris": 9684,
+     "hullTris": 8832,
+     "mats": 3,
+     "height": 2.2941272508318487,
+     "minY": 0.0048275592997995,
+     "flashBad": 0,
+     "hullsOK": true,
+     "swR": false
+    },
+    "masked_bandits.bruiser/run": {
+     "parts": 29,
+     "tris": 9684,
+     "hullTris": 8832,
+     "mats": 3,
+     "height": 2.2941272508318487,
+     "minY": 0.0048275592997995,
+     "flashBad": 0,
+     "hullsOK": true,
+     "swR": false
+    },
+    "masked_bandits.bruiser/windup": {
+     "parts": 29,
+     "tris": 9684,
+     "hullTris": 8832,
+     "mats": 3,
+     "height": 2.2941272508318487,
+     "minY": 0.0048275592997995,
+     "flashBad": 0,
+     "hullsOK": true,
+     "swR": false
+    },
+    "masked_bandits.bruiser/attack": {
+     "parts": 29,
+     "tris": 9684,
+     "hullTris": 8832,
+     "mats": 3,
+     "height": 2.2941272508318487,
+     "minY": 0.0048275592997995,
+     "flashBad": 0,
+     "hullsOK": true,
+     "swR": false
+    },
+    "masked_bandits.bruiser/hurt": {
+     "parts": 29,
+     "tris": 9684,
+     "hullTris": 8832,
+     "mats": 3,
+     "height": 2.2941272508318487,
+     "minY": 0.0048275592997995,
+     "flashBad": 0,
+     "hullsOK": true,
+     "swR": false
+    },
+    "masked_bandits.bruiser/down": {
+     "parts": 29,
+     "tris": 9684,
+     "hullTris": 8832,
+     "mats": 3,
+     "height": 2.2941272508318487,
+     "minY": 0.0048275592997995,
+     "flashBad": 0,
+     "hullsOK": true,
+     "swR": false
+    },
+    "masked_bandits.bruiser/getup": {
+     "parts": 29,
+     "tris": 9684,
+     "hullTris": 8832,
+     "mats": 3,
+     "height": 2.2941272508318487,
+     "minY": 0.0048275592997995,
+     "flashBad": 0,
+     "hullsOK": true,
+     "swR": false
+    }
+   },
+   "frame": {
+    "calls": 496,
+    "triangles": 185102
+   }
+  }
+ },
+ {
+  "out": "previews/masked_bandits_bruiser_knockdown_60fps.png",
+  "q": "show=masked_bandits.bruiser&strip=knockdown&ui=0&merge=1",
+  "errors": [],
+  "report": {
+   "show": "masked_bandits.bruiser",
+   "lod": 0,
+   "rigs": {},
+   "frame": {
+    "calls": 56,
+    "triangles": 310202
+   }
+  }
+ },
+ {
+  "out": "previews/masked_bandits_bruiser_attack_60fps.png",
+  "q": "show=masked_bandits.bruiser&strip=attack&ui=0&merge=1",
+  "errors": [],
+  "report": {
+   "show": "masked_bandits.bruiser",
+   "lod": 0,
+   "rigs": {},
+   "frame": {
+    "calls": 56,
+    "triangles": 310202
+   }
+  }
+ },
+ {
+  "out": "previews/masked_bandits_bruiser_dizzy_60fps.png",
+  "q": "show=masked_bandits.bruiser&strip=dizzy&ui=0&merge=1",
+  "errors": [],
+  "report": {
+   "show": "masked_bandits.bruiser",
+   "lod": 0,
+   "rigs": {},
+   "frame": {
+    "calls": 67,
+    "triangles": 314426
+   }
+  }
+ },
+ {
+  "out": "previews/_tmp_bruiser_hd.png",
+  "q": "show=masked_bandits.bruiser&t=0.5&turn=1&cam=front&ui=0",
+  "errors": [],
+  "report": {
+   "show": "masked_bandits.bruiser",
+   "lod": 0,
+   "rigs": {
+    "masked_bandits.bruiser": {
+     "parts": 29,
+     "tris": 9684,
+     "hullTris": 8832,
+     "mats": 3,
+     "height": 2.2941272508318487,
+     "minY": 0.0048275592997995,
+     "flashBad": 0,
+     "hullsOK": true,
+     "swR": false
+    }
+   },
+   "frame": {
+    "calls": 285,
+    "triangles": 106226
+   }
+  }
+ },
+ {
+  "out": "previews/_tmp_bruiser_lod.png",
+  "q": "show=masked_bandits.bruiser&t=0.5&turn=1&cam=front&ui=0&lod=1",
+  "errors": [],
+  "report": {
+   "show": "masked_bandits.bruiser",
+   "lod": 1,
+   "rigs": {
+    "masked_bandits.bruiser": {
+     "parts": 11,
+     "tris": 1712,
+     "hullTris": 1712,
+     "mats": 2,
+     "height": 2.275005347060077,
+     "minY": 0.0023585110517853614,
+     "flashBad": 0,
+     "hullsOK": true,
+     "swR": false
+    }
+   },
+   "frame": {
+    "calls": 133,
+    "triangles": 20546
+   }
+  }
+ },
+ {
+  "out": "previews/masked_bandits_lineup_day.png",
+  "q": "show=masked_bandits&t=0.5&cam=three",
+  "errors": [],
+  "report": {
+   "show": "masked_bandits",
+   "lod": 0,
+   "rigs": {
+    "masked_bandits.grunt_a": {
+     "parts": 30,
+     "tris": 10080,
+     "hullTris": 9228,
+     "mats": 3,
+     "height": 1.944250397341095,
+     "minY": 0.01640135455222965,
+     "flashBad": 0,
+     "hullsOK": true,
+     "swR": false
+    },
+    "masked_bandits.grunt_b": {
+     "parts": 32,
+     "tris": 9988,
+     "hullTris": 9136,
+     "mats": 3,
+     "height": 1.8993943205574773,
+     "minY": 0.01640135455222965,
+     "flashBad": 0,
+     "hullsOK": true,
+     "swR": false
+    },
+    "masked_bandits.armed": {
+     "parts": 31,
+     "tris": 9752,
+     "hullTris": 8900,
+     "mats": 3,
+     "height": 1.8993943205574773,
+     "minY": 0.01640135455222965,
+     "flashBad": 0,
+     "hullsOK": true,
+     "swR": true
+    },
+    "masked_bandits.bruiser": {
+     "parts": 29,
+     "tris": 9684,
+     "hullTris": 8832,
+     "mats": 3,
+     "height": 2.2941272508318487,
+     "minY": 0.0048275592997995,
+     "flashBad": 0,
+     "hullsOK": true,
+     "swR": false
+    }
+   },
+   "frame": {
+    "calls": 295,
+    "triangles": 106042
+   }
+  }
+ },
+ {
+  "out": "previews/masked_bandits_lineup_night.png",
+  "q": "show=masked_bandits&t=0.5&cam=three&night=1&ui=0",
+  "errors": [],
+  "report": {
+   "show": "masked_bandits",
+   "lod": 0,
+   "rigs": {
+    "masked_bandits.grunt_a": {
+     "parts": 30,
+     "tris": 10080,
+     "hullTris": 9228,
+     "mats": 3,
+     "height": 1.944250397341095,
+     "minY": 0.01640135455222965,
+     "flashBad": 0,
+     "hullsOK": true,
+     "swR": false
+    },
+    "masked_bandits.grunt_b": {
+     "parts": 32,
+     "tris": 9988,
+     "hullTris": 9136,
+     "mats": 3,
+     "height": 1.8993943205574773,
+     "minY": 0.01640135455222965,
+     "flashBad": 0,
+     "hullsOK": true,
+     "swR": false
+    },
+    "masked_bandits.armed": {
+     "parts": 31,
+     "tris": 9752,
+     "hullTris": 8900,
+     "mats": 3,
+     "height": 1.8993943205574773,
+     "minY": 0.01640135455222965,
+     "flashBad": 0,
+     "hullsOK": true,
+     "swR": true
+    },
+    "masked_bandits.bruiser": {
+     "parts": 29,
+     "tris": 9684,
+     "hullTris": 8832,
+     "mats": 3,
+     "height": 2.2941272508318487,
+     "minY": 0.0048275592997995,
+     "flashBad": 0,
+     "hullsOK": true,
+     "swR": false
+    }
+   },
+   "frame": {
+    "calls": 295,
+    "triangles": 106042
+   }
+  }
+ },
+ {
+  "out": "previews/masked_bandits_lineup_merged_day.png",
+  "q": "show=masked_bandits&t=0.5&cam=three&merge=1&ui=0",
+  "errors": [],
+  "report": {
+   "show": "masked_bandits",
+   "lod": 0,
+   "rigs": {
+    "masked_bandits.grunt_a": {
+     "parts": 2,
+     "tris": 10080,
+     "hullTris": 9228,
+     "mats": 3,
+     "height": 1.918834029940161,
+     "minY": 0.020254675318554467,
+     "flashBad": 0,
+     "hullsOK": false,
+     "swR": false
+    },
+    "masked_bandits.grunt_b": {
+     "parts": 2,
+     "tris": 9988,
+     "hullTris": 9136,
+     "mats": 3,
+     "height": 1.87397793652062,
+     "minY": 0.020254675318554467,
+     "flashBad": 0,
+     "hullsOK": false,
+     "swR": false
+    },
+    "masked_bandits.armed": {
+     "parts": 2,
+     "tris": 9752,
+     "hullTris": 8900,
+     "mats": 3,
+     "height": 1.87397793652062,
+     "minY": 0.020254675318554467,
+     "flashBad": 0,
+     "hullsOK": false,
+     "swR": true
+    },
+    "masked_bandits.bruiser": {
+     "parts": 2,
+     "tris": 9684,
+     "hullTris": 8832,
+     "mats": 3,
+     "height": 2.2487735238247435,
+     "minY": 0.024305610382265218,
+     "flashBad": 0,
+     "hullsOK": false,
+     "swR": false
+    }
+   },
+   "frame": {
+    "calls": 21,
+    "triangles": 115106
+   }
+  }
+ },
+ {
+  "out": "previews/masked_bandits_lod1_day.png",
+  "q": "show=masked_bandits&t=0.5&cam=three&lod=1",
+  "errors": [],
+  "report": {
+   "show": "masked_bandits",
+   "lod": 1,
+   "rigs": {
+    "masked_bandits.grunt_a": {
+     "parts": 11,
+     "tris": 1712,
+     "hullTris": 1712,
+     "mats": 2,
+     "height": 1.9395001112868058,
+     "minY": 0.003159182372451219,
+     "flashBad": 0,
+     "hullsOK": true,
+     "swR": false
+    },
+    "masked_bandits.grunt_b": {
+     "parts": 11,
+     "tris": 1712,
+     "hullTris": 1712,
+     "mats": 2,
+     "height": 1.8946440327207676,
+     "minY": 0.003159182372451219,
+     "flashBad": 0,
+     "hullsOK": true,
+     "swR": false
+    },
+    "masked_bandits.armed": {
+     "parts": 12,
+     "tris": 1780,
+     "hullTris": 1780,
+     "mats": 2,
+     "height": 1.8946440327207676,
+     "minY": 0.003159182372451219,
+     "flashBad": 0,
+     "hullsOK": true,
+     "swR": true
+    },
+    "masked_bandits.bruiser": {
+     "parts": 11,
+     "tris": 1712,
+     "hullTris": 1712,
+     "mats": 2,
+     "height": 2.275005347060077,
+     "minY": 0.0023585110517853614,
+     "flashBad": 0,
+     "hullsOK": true,
+     "swR": false
+    }
+   },
+   "frame": {
+    "calls": 136,
+    "triangles": 20750
+   }
+  }
+ },
+ {
+  "out": "previews/masked_bandits_hitflash.png",
+  "q": "show=masked_bandits&t=0.5&cam=front&flash=0.85",
+  "errors": [],
+  "report": {
+   "show": "masked_bandits",
+   "lod": 0,
+   "rigs": {
+    "masked_bandits.grunt_a": {
+     "parts": 30,
+     "tris": 10080,
+     "hullTris": 9228,
+     "mats": 3,
+     "height": 1.944250397341095,
+     "minY": 0.01640135455222965,
+     "flashBad": 0,
+     "hullsOK": true,
+     "swR": false
+    },
+    "masked_bandits.grunt_b": {
+     "parts": 32,
+     "tris": 9988,
+     "hullTris": 9136,
+     "mats": 3,
+     "height": 1.8993943205574773,
+     "minY": 0.01640135455222965,
+     "flashBad": 0,
+     "hullsOK": true,
+     "swR": false
+    },
+    "masked_bandits.armed": {
+     "parts": 31,
+     "tris": 9752,
+     "hullTris": 8900,
+     "mats": 3,
+     "height": 1.8993943205574773,
+     "minY": 0.01640135455222965,
+     "flashBad": 0,
+     "hullsOK": true,
+     "swR": true
+    },
+    "masked_bandits.bruiser": {
+     "parts": 29,
+     "tris": 9684,
+     "hullTris": 8832,
+     "mats": 3,
+     "height": 2.2941272508318487,
+     "minY": 0.0048275592997995,
+     "flashBad": 0,
+     "hullsOK": true,
+     "swR": false
+    }
+   },
+   "frame": {
+    "calls": 295,
+    "triangles": 106042
+   }
+  }
+ },
+ {
+  "out": "previews/masked_bandits_hitflash_merged.png",
+  "q": "show=masked_bandits&t=0.5&cam=front&flash=0.85&merge=1&ui=0",
+  "errors": [],
+  "report": {
+   "show": "masked_bandits",
+   "lod": 0,
+   "rigs": {
+    "masked_bandits.grunt_a": {
+     "parts": 2,
+     "tris": 10080,
+     "hullTris": 9228,
+     "mats": 3,
+     "height": 1.918834029940161,
+     "minY": 0.020254675318554467,
+     "flashBad": 0,
+     "hullsOK": false,
+     "swR": false
+    },
+    "masked_bandits.grunt_b": {
+     "parts": 2,
+     "tris": 9988,
+     "hullTris": 9136,
+     "mats": 3,
+     "height": 1.87397793652062,
+     "minY": 0.020254675318554467,
+     "flashBad": 0,
+     "hullsOK": false,
+     "swR": false
+    },
+    "masked_bandits.armed": {
+     "parts": 2,
+     "tris": 9752,
+     "hullTris": 8900,
+     "mats": 3,
+     "height": 1.87397793652062,
+     "minY": 0.020254675318554467,
+     "flashBad": 0,
+     "hullsOK": false,
+     "swR": true
+    },
+    "masked_bandits.bruiser": {
+     "parts": 2,
+     "tris": 9684,
+     "hullTris": 8832,
+     "mats": 3,
+     "height": 2.2487735238247435,
+     "minY": 0.024305610382265218,
+     "flashBad": 0,
+     "hullsOK": false,
+     "swR": false
+    }
+   },
+   "frame": {
+    "calls": 21,
+    "triangles": 115106
+   }
+  }
+ },
+ {
+  "out": "previews/masked_bandits_phone_390x844.png",
+  "q": "show=masked_bandits&t=0.5&cam=phone&dist=8&ui=0",
+  "errors": [],
+  "report": {
+   "show": "masked_bandits",
+   "lod": 0,
+   "rigs": {
+    "masked_bandits.grunt_a": {
+     "parts": 30,
+     "tris": 10080,
+     "hullTris": 9228,
+     "mats": 3,
+     "height": 1.944250397341095,
+     "minY": 0.01640135455222965,
+     "flashBad": 0,
+     "hullsOK": true,
+     "swR": false
+    },
+    "masked_bandits.grunt_b": {
+     "parts": 32,
+     "tris": 9988,
+     "hullTris": 9136,
+     "mats": 3,
+     "height": 1.8993943205574773,
+     "minY": 0.01640135455222965,
+     "flashBad": 0,
+     "hullsOK": true,
+     "swR": false
+    },
+    "masked_bandits.armed": {
+     "parts": 31,
+     "tris": 9752,
+     "hullTris": 8900,
+     "mats": 3,
+     "height": 1.8993943205574773,
+     "minY": 0.01640135455222965,
+     "flashBad": 0,
+     "hullsOK": true,
+     "swR": true
+    },
+    "masked_bandits.bruiser": {
+     "parts": 29,
+     "tris": 9684,
+     "hullTris": 8832,
+     "mats": 3,
+     "height": 2.2941272508318487,
+     "minY": 0.0048275592997995,
+     "flashBad": 0,
+     "hullsOK": true,
+     "swR": false
+    }
+   },
+   "frame": {
+    "calls": 295,
+    "triangles": 106042
+   }
+  }
+ },
+ {
+  "out": "previews/masked_bandits_phone_390x844_night.png",
+  "q": "show=masked_bandits&t=0.5&cam=phone&dist=8&ui=0&night=1",
+  "errors": [],
+  "report": {
+   "show": "masked_bandits",
+   "lod": 0,
+   "rigs": {
+    "masked_bandits.grunt_a": {
+     "parts": 30,
+     "tris": 10080,
+     "hullTris": 9228,
+     "mats": 3,
+     "height": 1.944250397341095,
+     "minY": 0.01640135455222965,
+     "flashBad": 0,
+     "hullsOK": true,
+     "swR": false
+    },
+    "masked_bandits.grunt_b": {
+     "parts": 32,
+     "tris": 9988,
+     "hullTris": 9136,
+     "mats": 3,
+     "height": 1.8993943205574773,
+     "minY": 0.01640135455222965,
+     "flashBad": 0,
+     "hullsOK": true,
+     "swR": false
+    },
+    "masked_bandits.armed": {
+     "parts": 31,
+     "tris": 9752,
+     "hullTris": 8900,
+     "mats": 3,
+     "height": 1.8993943205574773,
+     "minY": 0.01640135455222965,
+     "flashBad": 0,
+     "hullsOK": true,
+     "swR": true
+    },
+    "masked_bandits.bruiser": {
+     "parts": 29,
+     "tris": 9684,
+     "hullTris": 8832,
+     "mats": 3,
+     "height": 2.2941272508318487,
+     "minY": 0.0048275592997995,
+     "flashBad": 0,
+     "hullsOK": true,
+     "swR": false
+    }
+   },
+   "frame": {
+    "calls": 295,
+    "triangles": 106042
+   }
+  }
+ },
+ {
+  "out": "",
+  "q": "show=masked_bandits&lod=0&t=0.5",
+  "errors": [],
+  "report": {
+   "show": "masked_bandits",
+   "lod": 0,
+   "rigs": {
+    "masked_bandits.grunt_a": {
+     "parts": 30,
+     "tris": 10080,
+     "hullTris": 9228,
+     "mats": 3,
+     "height": 1.944250397341095,
+     "minY": 0.01640135455222965,
+     "flashBad": 0,
+     "hullsOK": true,
+     "swR": false
+    },
+    "masked_bandits.grunt_b": {
+     "parts": 32,
+     "tris": 9988,
+     "hullTris": 9136,
+     "mats": 3,
+     "height": 1.8993943205574773,
+     "minY": 0.01640135455222965,
+     "flashBad": 0,
+     "hullsOK": true,
+     "swR": false
+    },
+    "masked_bandits.armed": {
+     "parts": 31,
+     "tris": 9752,
+     "hullTris": 8900,
+     "mats": 3,
+     "height": 1.8993943205574773,
+     "minY": 0.01640135455222965,
+     "flashBad": 0,
+     "hullsOK": true,
+     "swR": true
+    },
+    "masked_bandits.bruiser": {
+     "parts": 29,
+     "tris": 9684,
+     "hullTris": 8832,
+     "mats": 3,
+     "height": 2.2941272508318487,
+     "minY": 0.0048275592997995,
+     "flashBad": 0,
+     "hullsOK": true,
+     "swR": false
+    }
+   },
+   "frame": {
+    "calls": 295,
+    "triangles": 106042
+   }
+  }
+ },
+ {
+  "out": "",
+  "q": "show=masked_bandits&lod=1&t=0.5",
+  "errors": [],
+  "report": {
+   "show": "masked_bandits",
+   "lod": 1,
+   "rigs": {
+    "masked_bandits.grunt_a": {
+     "parts": 11,
+     "tris": 1712,
+     "hullTris": 1712,
+     "mats": 2,
+     "height": 1.9395001112868058,
+     "minY": 0.003159182372451219,
+     "flashBad": 0,
+     "hullsOK": true,
+     "swR": false
+    },
+    "masked_bandits.grunt_b": {
+     "parts": 11,
+     "tris": 1712,
+     "hullTris": 1712,
+     "mats": 2,
+     "height": 1.8946440327207676,
+     "minY": 0.003159182372451219,
+     "flashBad": 0,
+     "hullsOK": true,
+     "swR": false
+    },
+    "masked_bandits.armed": {
+     "parts": 12,
+     "tris": 1780,
+     "hullTris": 1780,
+     "mats": 2,
+     "height": 1.8946440327207676,
+     "minY": 0.003159182372451219,
+     "flashBad": 0,
+     "hullsOK": true,
+     "swR": true
+    },
+    "masked_bandits.bruiser": {
+     "parts": 11,
+     "tris": 1712,
+     "hullTris": 1712,
+     "mats": 2,
+     "height": 2.275005347060077,
+     "minY": 0.0023585110517853614,
+     "flashBad": 0,
+     "hullsOK": true,
+     "swR": false
+    }
+   },
+   "frame": {
+    "calls": 136,
+    "triangles": 20750
+   }
+  }
+ },
+ {
+  "out": "",
+  "q": "show=masked_bandits&lod=0&t=0.5&merge=1",
+  "errors": [],
+  "report": {
+   "show": "masked_bandits",
+   "lod": 0,
+   "rigs": {
+    "masked_bandits.grunt_a": {
+     "parts": 2,
+     "tris": 10080,
+     "hullTris": 9228,
+     "mats": 3,
+     "height": 1.918834029940161,
+     "minY": 0.020254675318554467,
+     "flashBad": 0,
+     "hullsOK": false,
+     "swR": false
+    },
+    "masked_bandits.grunt_b": {
+     "parts": 2,
+     "tris": 9988,
+     "hullTris": 9136,
+     "mats": 3,
+     "height": 1.87397793652062,
+     "minY": 0.020254675318554467,
+     "flashBad": 0,
+     "hullsOK": false,
+     "swR": false
+    },
+    "masked_bandits.armed": {
+     "parts": 2,
+     "tris": 9752,
+     "hullTris": 8900,
+     "mats": 3,
+     "height": 1.87397793652062,
+     "minY": 0.020254675318554467,
+     "flashBad": 0,
+     "hullsOK": false,
+     "swR": true
+    },
+    "masked_bandits.bruiser": {
+     "parts": 2,
+     "tris": 9684,
+     "hullTris": 8832,
+     "mats": 3,
+     "height": 2.2487735238247435,
+     "minY": 0.024305610382265218,
+     "flashBad": 0,
+     "hullsOK": false,
+     "swR": false
+    }
+   },
+   "frame": {
+    "calls": 21,
+    "triangles": 115106
+   }
+  }
+ },
+ {
+  "out": "",
+  "q": "gang=masked_bandits",
+  "errors": [],
+  "report": {
+   "gang": "masked_bandits",
+   "members": {
+    "grunt_a": {
+     "hd": {
+      "parts": 30,
+      "tris": 10080,
+      "hullTris": 9228,
+      "hulls": 23,
+      "mats": 3,
+      "casters": 19,
+      "drawCalls": 53,
+      "shadowCalls": 19,
+      "height": 1.919,
+      "feetMinY": 0.02,
+      "flashBad": 0,
+      "hullMatsOK": true,
+      "shadowRule": []
+     },
+     "lod": {
+      "parts": 11,
+      "tris": 1712,
+      "hullTris": 1712,
+      "hulls": 11,
+      "mats": 2,
+      "casters": 11,
+      "drawCalls": 22,
+      "shadowCalls": 11,
+      "height": 1.918,
+      "feetMinY": 0.014,
+      "flashBad": 0,
+      "hullMatsOK": true,
+      "shadowRule": []
+     },
+     "hullOverlap": [
+      {
+       "part": "head/head",
+       "buried": 0.415,
+       "strayPx": {
+        "idle/front": 0,
+        "idle/three": 0,
+        "idle/side": 0,
+        "idle/back": 0,
+        "dizzyL/front": 0,
+        "dizzyL/three": 0,
+        "dizzyL/side": 0,
+        "dizzyL/back": 0,
+        "dizzyR/front": 0,
+        "dizzyR/three": 0,
+        "dizzyR/side": 0,
+        "dizzyR/back": 0
+       },
+       "maxStrayPx": 0
+      },
+      {
+       "part": "head/snout",
+       "buried": 0.512,
+       "strayPx": {
+        "idle/front": 0,
+        "idle/three": 0,
+        "idle/side": 0,
+        "idle/back": 0,
+        "dizzyL/front": 2,
+        "dizzyL/three": 0,
+        "dizzyL/side": 0,
+        "dizzyL/back": 0,
+        "dizzyR/front": 0,
+        "dizzyR/three": 0,
+        "dizzyR/side": 0,
+        "dizzyR/back": 0
+       },
+       "maxStrayPx": 2
+      },
+      {
+       "part": "head/ear",
+       "buried": 0.524,
+       "strayPx": {
+        "idle/front": 0,
+        "idle/three": 0,
+        "idle/side": 0,
+        "idle/back": 0,
+        "dizzyL/front": 0,
+        "dizzyL/three": 0,
+        "dizzyL/side": 0,
+        "dizzyL/back": 0,
+        "dizzyR/front": 0,
+        "dizzyR/three": 0,
+        "dizzyR/side": 0,
+        "dizzyR/back": 0
+       },
+       "maxStrayPx": 0
+      },
+      {
+       "part": "head/beanie",
+       "buried": 0.286,
+       "strayPx": {
+        "idle/front": 0,
+        "idle/three": 0,
+        "idle/side": 0,
+        "idle/back": 0,
+        "dizzyL/front": 0,
+        "dizzyL/three": 0,
+        "dizzyL/side": 0,
+        "dizzyL/back": 0,
+        "dizzyR/front": 0,
+        "dizzyR/three": 0,
+        "dizzyR/side": 0,
+        "dizzyR/back": 0
+       },
+       "maxStrayPx": 0
+      },
+      {
+       "part": "haL/paw",
+       "buried": 0.209,
+       "strayPx": {
+        "idle/front": 0,
+        "idle/three": 0,
+        "idle/side": 0,
+        "idle/back": 0,
+        "dizzyL/front": 0,
+        "dizzyL/three": 0,
+        "dizzyL/side": 0,
+        "dizzyL/back": 0,
+        "dizzyR/front": 0,
+        "dizzyR/three": 0,
+        "dizzyR/side": 0,
+        "dizzyR/back": 0
+       },
+       "maxStrayPx": 0
+      },
+      {
+       "part": "elL/fore",
+       "buried": 0.281,
+       "strayPx": {
+        "idle/front": 0,
+        "idle/three": 0,
+        "idle/side": 0,
+        "idle/back": 0,
+        "dizzyL/front": 0,
+        "dizzyL/three": 0,
+        "dizzyL/side": 0,
+        "dizzyL/back": 0,
+        "dizzyR/front": 0,
+        "dizzyR/three": 0,
+        "dizzyR/side": 0,
+        "dizzyR/back": 0
+       },
+       "maxStrayPx": 0
+      },
+      {
+       "part": "shL/shoulder",
+       "buried": 0.237,
+       "strayPx": {
+        "idle/front": 0,
+        "idle/three": 0,
+        "idle/side": 0,
+        "idle/back": 0,
+        "dizzyL/front": 0,
+        "dizzyL/three": 0,
+        "dizzyL/side": 0,
+        "dizzyL/back": 0,
+        "dizzyR/front": 0,
+        "dizzyR/three": 0,
+        "dizzyR/side": 0,
+        "dizzyR/back": 0
+       },
+       "maxStrayPx": 0
+      },
+      {
+       "part": "shL/upper",
+       "buried": 0.44,
+       "strayPx": {
+        "idle/front": 0,
+        "idle/three": 0,
+        "idle/side": 0,
+        "idle/back": 1,
+        "dizzyL/front": 2,
+        "dizzyL/three": 0,
+        "dizzyL/side": 0,
+        "dizzyL/back": 0,
+        "dizzyR/front": 1,
+        "dizzyR/three": 0,
+        "dizzyR/side": 0,
+        "dizzyR/back": 0
+       },
+       "maxStrayPx": 2
+      },
+      {
+       "part": "haR/paw",
+       "buried": 0.209,
+       "strayPx": {
+        "idle/front": 0,
+        "idle/three": 0,
+        "idle/side": 0,
+        "idle/back": 0,
+        "dizzyL/front": 0,
+        "dizzyL/three": 0,
+        "dizzyL/side": 0,
+        "dizzyL/back": 0,
+        "dizzyR/front": 0,
+        "dizzyR/three": 0,
+        "dizzyR/side": 0,
+        "dizzyR/back": 0
+       },
+       "maxStrayPx": 0
+      },
+      {
+       "part": "elR/fore",
+       "buried": 0.301,
+       "strayPx": {
+        "idle/front": 0,
+        "idle/three": 0,
+        "idle/side": 0,
+        "idle/back": 0,
+        "dizzyL/front": 0,
+        "dizzyL/three": 0,
+        "dizzyL/side": 0,
+        "dizzyL/back": 0,
+        "dizzyR/front": 0,
+        "dizzyR/three": 0,
+        "dizzyR/side": 0,
+        "dizzyR/back": 0
+       },
+       "maxStrayPx": 0
+      },
+      {
+       "part": "shR/shoulder",
+       "buried": 0.244,
+       "strayPx": {
+        "idle/front": 0,
+        "idle/three": 0,
+        "idle/side": 0,
+        "idle/back": 0,
+        "dizzyL/front": 0,
+        "dizzyL/three": 0,
+        "dizzyL/side": 0,
+        "dizzyL/back": 0,
+        "dizzyR/front": 0,
+        "dizzyR/three": 0,
+        "dizzyR/side": 0,
+        "dizzyR/back": 0
+       },
+       "maxStrayPx": 0
+      },
+      {
+       "part": "shR/upper",
+       "buried": 0.445,
+       "strayPx": {
+        "idle/front": 1,
+        "idle/three": 0,
+        "idle/side": 0,
+        "idle/back": 1,
+        "dizzyL/front": 1,
+        "dizzyL/three": 0,
+        "dizzyL/side": 0,
+        "dizzyL/back": 0,
+        "dizzyR/front": 1,
+        "dizzyR/three": 0,
+        "dizzyR/side": 0,
+        "dizzyR/back": 0
+       },
+       "maxStrayPx": 1
+      },
+      {
+       "part": "torso/hoodie",
+       "buried": 0.195,
+       "strayPx": {
+        "idle/front": 0,
+        "idle/three": 0,
+        "idle/side": 0,
+        "idle/back": 0,
+        "dizzyL/front": 0,
+        "dizzyL/three": 0,
+        "dizzyL/side": 0,
+        "dizzyL/back": 0,
+        "dizzyR/front": 0,
+        "dizzyR/three": 0,
+        "dizzyR/side": 0,
+        "dizzyR/back": 0
+       },
+       "maxStrayPx": 0
+      },
+      {
+       "part": "torso/hood",
+       "buried": 0.252,
+       "strayPx": {
+        "idle/front": 0,
+        "idle/three": 0,
+        "idle/side": 0,
+        "idle/back": 2,
+        "dizzyL/front": 0,
+        "dizzyL/three": 0,
+        "dizzyL/side": 0,
+        "dizzyL/back": 0,
+        "dizzyR/front": 0,
+        "dizzyR/three": 0,
+        "dizzyR/side": 0,
+        "dizzyR/back": 0
+       },
+       "maxStrayPx": 2
+      },
+      {
+       "part": "ftL/sneaker",
+       "buried": 0.125,
+       "strayPx": {
+        "idle/front": 0,
+        "idle/three": 0,
+        "idle/side": 0,
+        "idle/back": 0,
+        "dizzyL/front": 0,
+        "dizzyL/three": 0,
+        "dizzyL/side": 0,
+        "dizzyL/back": 0,
+        "dizzyR/front": 0,
+        "dizzyR/three": 0,
+        "dizzyR/side": 0,
+        "dizzyR/back": 0
+       },
+       "maxStrayPx": 0
+      },
+      {
+       "part": "knL/shin",
+       "buried": 0.219,
+       "strayPx": {
+        "idle/front": 0,
+        "idle/three": 0,
+        "idle/side": 0,
+        "idle/back": 0,
+        "dizzyL/front": 0,
+        "dizzyL/three": 0,
+        "dizzyL/side": 0,
+        "dizzyL/back": 0,
+        "dizzyR/front": 0,
+        "dizzyR/three": 0,
+        "dizzyR/side": 0,
+        "dizzyR/back": 0
+       },
+       "maxStrayPx": 0
+      },
+      {
+       "part": "lgL/thigh",
+       "buried": 0.275,
+       "strayPx": {
+        "idle/front": 0,
+        "idle/three": 0,
+        "idle/side": 0,
+        "idle/back": 0,
+        "dizzyL/front": 0,
+        "dizzyL/three": 0,
+        "dizzyL/side": 0,
+        "dizzyL/back": 0,
+        "dizzyR/front": 0,
+        "dizzyR/three": 0,
+        "dizzyR/side": 0,
+        "dizzyR/back": 0
+       },
+       "maxStrayPx": 0
+      },
+      {
+       "part": "ftR/sneaker",
+       "buried": 0.136,
+       "strayPx": {
+        "idle/front": 0,
+        "idle/three": 0,
+        "idle/side": 0,
+        "idle/back": 0,
+        "dizzyL/front": 0,
+        "dizzyL/three": 0,
+        "dizzyL/side": 0,
+        "dizzyL/back": 0,
+        "dizzyR/front": 0,
+        "dizzyR/three": 0,
+        "dizzyR/side": 0,
+        "dizzyR/back": 0
+       },
+       "maxStrayPx": 0
+      },
+      {
+       "part": "knR/shin",
+       "buried": 0.218,
+       "strayPx": {
+        "idle/front": 0,
+        "idle/three": 0,
+        "idle/side": 0,
+        "idle/back": 0,
+        "dizzyL/front": 0,
+        "dizzyL/three": 0,
+        "dizzyL/side": 0,
+        "dizzyL/back": 0,
+        "dizzyR/front": 0,
+        "dizzyR/three": 0,
+        "dizzyR/side": 0,
+        "dizzyR/back": 0
+       },
+       "maxStrayPx": 0
+      },
+      {
+       "part": "lgR/thigh",
+       "buried": 0.277,
+       "strayPx": {
+        "idle/front": 0,
+        "idle/three": 0,
+        "idle/side": 0,
+        "idle/back": 0,
+        "dizzyL/front": 0,
+        "dizzyL/three": 0,
+        "dizzyL/side": 0,
+        "dizzyL/back": 0,
+        "dizzyR/front": 0,
+        "dizzyR/three": 0,
+        "dizzyR/side": 0,
+        "dizzyR/back": 0
+       },
+       "maxStrayPx": 0
+      },
+      {
+       "part": "hips/jeans",
+       "buried": 0.441,
+       "strayPx": {
+        "idle/front": 0,
+        "idle/three": 0,
+        "idle/side": 0,
+        "idle/back": 0,
+        "dizzyL/front": 0,
+        "dizzyL/three": 0,
+        "dizzyL/side": 0,
+        "dizzyL/back": 0,
+        "dizzyR/front": 0,
+        "dizzyR/three": 0,
+        "dizzyR/side": 0,
+        "dizzyR/back": 0
+       },
+       "maxStrayPx": 0
+      },
+      {
+       "part": "tail/tail",
+       "buried": 0.169,
+       "strayPx": {
+        "idle/front": 0,
+        "idle/three": 0,
+        "idle/side": 0,
+        "idle/back": 0,
+        "dizzyL/front": 0,
+        "dizzyL/three": 0,
+        "dizzyL/side": 0,
+        "dizzyL/back": 0,
+        "dizzyR/front": 0,
+        "dizzyR/three": 0,
+        "dizzyR/side": 0,
+        "dizzyR/back": 0
+       },
+       "maxStrayPx": 0
+      }
+     ],
+     "strayHulls": [],
+     "shoulderGapDown": {
+      "L": 0,
+      "R": 0
+     },
+     "downEndSnapped": {
+      "tail": 0.025,
+      "head": 0.257
+     },
+     "downEndSnappedMinY": 0.025,
+     "shoulderGapWindup": {
+      "L": 0,
+      "R": 0
+     },
+     "sequences": {
+      "knockdown": {
+       "worst": {
+        "y": -0.008,
+        "part": "ftR/sneaker",
+        "phase": "idle",
+        "t": 2.833
+       },
+       "frames": 191,
+       "pass": true,
+       "downEnd": {
+        "tail": 0.025,
+        "head": 0.257
+       },
+       "cullReach": 2.154,
+       "stars": null,
+       "dizzyGap": null
+      },
+      "knockdown+anim": {
+       "worst": {
+        "y": -0.008,
+        "part": "ftR/sneaker",
+        "phase": "idle",
+        "t": 2.833
+       },
+       "frames": 191,
+       "pass": true,
+       "downEnd": {
+        "tail": 0.025,
+        "head": 0.257
+       },
+       "cullReach": 2.154,
+       "stars": null,
+       "dizzyGap": null
+      },
+      "attack": {
+       "worst": {
+        "y": 0.006,
+        "part": "ftR/sneaker",
+        "phase": "idle",
+        "t": 2.55
+       },
+       "frames": 153,
+       "pass": true,
+       "downEnd": null,
+       "cullReach": 1.075,
+       "stars": null,
+       "dizzyGap": null
+      },
+      "attack+anim": {
+       "worst": {
+        "y": 0.006,
+        "part": "ftR/sneaker",
+        "phase": "idle",
+        "t": 2.55
+       },
+       "frames": 153,
+       "pass": true,
+       "downEnd": null,
+       "cullReach": 1.075,
+       "stars": null,
+       "dizzyGap": null
+      },
+      "run": {
+       "worst": {
+        "y": 0.021,
+        "part": "ftR/sneaker",
+        "phase": "idle",
+        "t": 0.017
+       },
+       "frames": 120,
+       "pass": true,
+       "downEnd": null,
+       "cullReach": 1.075,
+       "stars": null,
+       "dizzyGap": null
+      },
+      "run+anim": {
+       "worst": {
+        "y": 0.021,
+        "part": "ftR/sneaker",
+        "phase": "idle",
+        "t": 0.017
+       },
+       "frames": 120,
+       "pass": true,
+       "downEnd": null,
+       "cullReach": 1.075,
+       "stars": null,
+       "dizzyGap": null
+      },
+      "dizzy": {
+       "worst": {
+        "y": 0.001,
+        "part": "ftR/sneaker",
+        "phase": "idle",
+        "t": 4.517
+       },
+       "frames": 290,
+       "pass": true,
+       "downEnd": null,
+       "cullReach": 1.074,
+       "stars": {
+        "clearance": 0.421,
+        "part": "head/ear",
+        "t": 0.017,
+        "starsY": 2.35
+       },
+       "dizzyGap": {
+        "L": 0,
+        "R": 0,
+        "t": 0.167
+       }
+      },
+      "dizzy+anim": {
+       "worst": {
+        "y": 0.001,
+        "part": "ftR/sneaker",
+        "phase": "idle",
+        "t": 4.517
+       },
+       "frames": 290,
+       "pass": true,
+       "downEnd": null,
+       "cullReach": 1.074,
+       "stars": {
+        "clearance": 0.421,
+        "part": "head/ear",
+        "t": 0.017,
+        "starsY": 2.35
+       },
+       "dizzyGap": {
+        "L": 0,
+        "R": 0,
+        "t": 0.167
+       }
+      }
+     },
+     "lodSequences": {
+      "knockdown": {
+       "worst": {
+        "y": -0.014,
+        "part": "knR/shin",
+        "phase": "idle",
+        "t": 2.867
+       },
+       "frames": 191,
+       "pass": true,
+       "downEnd": {
+        "tail": 0.02,
+        "head": 0.257
+       },
+       "cullReach": 2.186,
+       "stars": null,
+       "dizzyGap": null
+      },
+      "attack": {
+       "worst": {
+        "y": -0.001,
+        "part": "knR/shin",
+        "phase": "idle",
+        "t": 2.55
+       },
+       "frames": 153,
+       "pass": true,
+       "downEnd": null,
+       "cullReach": 1.065,
+       "stars": null,
+       "dizzyGap": null
+      },
+      "run": {
+       "worst": {
+        "y": 0.014,
+        "part": "knR/shin",
+        "phase": "idle",
+        "t": 0.017
+       },
+       "frames": 120,
+       "pass": true,
+       "downEnd": null,
+       "cullReach": 1.065,
+       "stars": null,
+       "dizzyGap": null
+      },
+      "dizzy": {
+       "worst": {
+        "y": -0.005,
+        "part": "knR/shin",
+        "phase": "idle",
+        "t": 4.55
+       },
+       "frames": 290,
+       "pass": true,
+       "downEnd": null,
+       "cullReach": 1.064,
+       "stars": {
+        "clearance": 0.429,
+        "part": "head/head",
+        "t": 0.017,
+        "starsY": 2.35
+       },
+       "dizzyGap": null
+      }
+     },
+     "sweeps": {
+      "worst": {
+       "y": -0.009,
+       "part": "ftR/sneaker",
+       "pose": "idle"
+      },
+      "pass": true
+     },
+     "merge": {
+      "meshesBefore": 30,
+      "hullsBefore": 23,
+      "mergedMeshes": 3,
+      "mergedSolid": 2,
+      "mergedOutline": 1,
+      "leftovers": [],
+      "bones": 16,
+      "drawCalls": 3,
+      "shadowCalls": 2,
+      "flashShared": true,
+      "flashPx": {
+       "rigPx": 7683,
+       "unflashedPx": 0,
+       "unflashedPxWithFlashOff": 873
+      },
+      "flashCovers": true,
+      "mappedSubMaterials": 1,
+      "extras": [
+       {
+        "k": "tail",
+        "plain": true,
+        "parent": "hips"
+       }
+      ],
+      "maxVertexDy_m": 0,
+      "animMoves": {
+       "tailBone": 15,
+       "tailVerts": 1224,
+       "moved_m": 0.019
+      },
+      "renderDiffPx": 97,
+      "renderDiffInteriorPx": 0,
+      "renderRigPx": 9319
+     },
+     "cullReachMax": 2.154,
+     "cullRadius": 2.6,
+     "stars": {
+      "hd": {
+       "clearance": 0.421,
+       "part": "head/ear",
+       "t": 0.017,
+       "starsY": 2.35
+      },
+      "hdAnim": {
+       "clearance": 0.421,
+       "part": "head/ear",
+       "t": 0.017,
+       "starsY": 2.35
+      },
+      "lod": {
+       "clearance": 0.429,
+       "part": "head/head",
+       "t": 0.017,
+       "starsY": 2.35
+      }
+     },
+     "shoulderGapDizzy": {
+      "L": 0,
+      "R": 0,
+      "t": 0.167
+     },
+     "silhouetteIoU": {
+      "front": 0.899,
+      "three": 0.914,
+      "side": 0.88
+     },
+     "pass": {
+      "budgetHD": true,
+      "budgetLOD": true,
+      "marginHD": true,
+      "marginLOD": true,
+      "marginBuried": true,
+      "marginLODGround": true,
+      "ground": true,
+      "shoulders": true,
+      "stars": true,
+      "cullSphere": true,
+      "strayHulls": true,
+      "shadows": true,
+      "flash": true,
+      "hulls": true,
+      "merge": true,
+      "height": true,
+      "feet": true
+     }
+    },
+    "grunt_b": {
+     "hd": {
+      "parts": 32,
+      "tris": 9988,
+      "hullTris": 9136,
+      "hulls": 25,
+      "mats": 3,
+      "casters": 19,
+      "drawCalls": 57,
+      "shadowCalls": 19,
+      "height": 1.874,
+      "feetMinY": 0.02,
+      "flashBad": 0,
+      "hullMatsOK": true,
+      "shadowRule": []
+     },
+     "lod": {
+      "parts": 11,
+      "tris": 1712,
+      "hullTris": 1712,
+      "hulls": 11,
+      "mats": 2,
+      "casters": 11,
+      "drawCalls": 22,
+      "shadowCalls": 11,
+      "height": 1.873,
+      "feetMinY": 0.014,
+      "flashBad": 0,
+      "hullMatsOK": true,
+      "shadowRule": []
+     },
+     "hullOverlap": [
+      {
+       "part": "head/head",
+       "buried": 0.125,
+       "strayPx": {
+        "idle/front": 0,
+        "idle/three": 0,
+        "idle/side": 0,
+        "idle/back": 0,
+        "dizzyL/front": 0,
+        "dizzyL/three": 0,
+        "dizzyL/side": 0,
+        "dizzyL/back": 0,
+        "dizzyR/front": 0,
+        "dizzyR/three": 0,
+        "dizzyR/side": 0,
+        "dizzyR/back": 0
+       },
+       "maxStrayPx": 0
+      },
+      {
+       "part": "head/snout",
+       "buried": 0.512,
+       "strayPx": {
+        "idle/front": 0,
+        "idle/three": 0,
+        "idle/side": 0,
+        "idle/back": 0,
+        "dizzyL/front": 3,
+        "dizzyL/three": 0,
+        "dizzyL/side": 0,
+        "dizzyL/back": 0,
+        "dizzyR/front": 0,
+        "dizzyR/three": 0,
+        "dizzyR/side": 0,
+        "dizzyR/back": 0
+       },
+       "maxStrayPx": 3
+      },
+      {
+       "part": "head/ear",
+       "buried": 0.324,
+       "strayPx": {
+        "idle/front": 0,
+        "idle/three": 0,
+        "idle/side": 0,
+        "idle/back": 0,
+        "dizzyL/front": 0,
+        "dizzyL/three": 0,
+        "dizzyL/side": 0,
+        "dizzyL/back": 0,
+        "dizzyR/front": 0,
+        "dizzyR/three": 0,
+        "dizzyR/side": 0,
+        "dizzyR/back": 0
+       },
+       "maxStrayPx": 0
+      },
+      {
+       "part": "head/band",
+       "buried": 0.485,
+       "strayPx": {
+        "idle/front": 2,
+        "idle/three": 0,
+        "idle/side": 7,
+        "idle/back": 2,
+        "dizzyL/front": 0,
+        "dizzyL/three": 0,
+        "dizzyL/side": 0,
+        "dizzyL/back": 1,
+        "dizzyR/front": 0,
+        "dizzyR/three": 0,
+        "dizzyR/side": 5,
+        "dizzyR/back": 0
+       },
+       "maxStrayPx": 7
+      },
+      {
+       "part": "head/cup",
+       "buried": 0.13,
+       "strayPx": {
+        "idle/front": 0,
+        "idle/three": 0,
+        "idle/side": 0,
+        "idle/back": 0,
+        "dizzyL/front": 0,
+        "dizzyL/three": 4,
+        "dizzyL/side": 0,
+        "dizzyL/back": 0,
+        "dizzyR/front": 0,
+        "dizzyR/three": 0,
+        "dizzyR/side": 0,
+        "dizzyR/back": 0
+       },
+       "maxStrayPx": 4
+      },
+      {
+       "part": "haL/paw",
+       "buried": 0.209,
+       "strayPx": {
+        "idle/front": 0,
+        "idle/three": 0,
+        "idle/side": 0,
+        "idle/back": 0,
+        "dizzyL/front": 0,
+        "dizzyL/three": 0,
+        "dizzyL/side": 0,
+        "dizzyL/back": 0,
+        "dizzyR/front": 0,
+        "dizzyR/three": 0,
+        "dizzyR/side": 0,
+        "dizzyR/back": 0
+       },
+       "maxStrayPx": 0
+      },
+      {
+       "part": "elL/fore",
+       "buried": 0.281,
+       "strayPx": {
+        "idle/front": 0,
+        "idle/three": 0,
+        "idle/side": 1,
+        "idle/back": 0,
+        "dizzyL/front": 0,
+        "dizzyL/three": 0,
+        "dizzyL/side": 0,
+        "dizzyL/back": 0,
+        "dizzyR/front": 0,
+        "dizzyR/three": 0,
+        "dizzyR/side": 0,
+        "dizzyR/back": 0
+       },
+       "maxStrayPx": 1
+      },
+      {
+       "part": "shL/shoulder",
+       "buried": 0.237,
+       "strayPx": {
+        "idle/front": 0,
+        "idle/three": 0,
+        "idle/side": 0,
+        "idle/back": 0,
+        "dizzyL/front": 0,
+        "dizzyL/three": 0,
+        "dizzyL/side": 0,
+        "dizzyL/back": 0,
+        "dizzyR/front": 0,
+        "dizzyR/three": 0,
+        "dizzyR/side": 0,
+        "dizzyR/back": 0
+       },
+       "maxStrayPx": 0
+      },
+      {
+       "part": "shL/upper",
+       "buried": 0.44,
+       "strayPx": {
+        "idle/front": 0,
+        "idle/three": 0,
+        "idle/side": 0,
+        "idle/back": 1,
+        "dizzyL/front": 1,
+        "dizzyL/three": 0,
+        "dizzyL/side": 0,
+        "dizzyL/back": 0,
+        "dizzyR/front": 0,
+        "dizzyR/three": 0,
+        "dizzyR/side": 0,
+        "dizzyR/back": 0
+       },
+       "maxStrayPx": 1
+      },
+      {
+       "part": "haR/paw",
+       "buried": 0.209,
+       "strayPx": {
+        "idle/front": 0,
+        "idle/three": 0,
+        "idle/side": 0,
+        "idle/back": 0,
+        "dizzyL/front": 0,
+        "dizzyL/three": 0,
+        "dizzyL/side": 0,
+        "dizzyL/back": 0,
+        "dizzyR/front": 0,
+        "dizzyR/three": 0,
+        "dizzyR/side": 0,
+        "dizzyR/back": 0
+       },
+       "maxStrayPx": 0
+      },
+      {
+       "part": "elR/fore",
+       "buried": 0.301,
+       "strayPx": {
+        "idle/front": 0,
+        "idle/three": 0,
+        "idle/side": 0,
+        "idle/back": 0,
+        "dizzyL/front": 0,
+        "dizzyL/three": 0,
+        "dizzyL/side": 0,
+        "dizzyL/back": 0,
+        "dizzyR/front": 0,
+        "dizzyR/three": 0,
+        "dizzyR/side": 0,
+        "dizzyR/back": 0
+       },
+       "maxStrayPx": 0
+      },
+      {
+       "part": "shR/shoulder",
+       "buried": 0.244,
+       "strayPx": {
+        "idle/front": 0,
+        "idle/three": 0,
+        "idle/side": 0,
+        "idle/back": 0,
+        "dizzyL/front": 0,
+        "dizzyL/three": 0,
+        "dizzyL/side": 0,
+        "dizzyL/back": 0,
+        "dizzyR/front": 0,
+        "dizzyR/three": 0,
+        "dizzyR/side": 0,
+        "dizzyR/back": 0
+       },
+       "maxStrayPx": 0
+      },
+      {
+       "part": "shR/upper",
+       "buried": 0.445,
+       "strayPx": {
+        "idle/front": 0,
+        "idle/three": 0,
+        "idle/side": 0,
+        "idle/back": 2,
+        "dizzyL/front": 2,
+        "dizzyL/three": 0,
+        "dizzyL/side": 0,
+        "dizzyL/back": 0,
+        "dizzyR/front": 2,
+        "dizzyR/three": 0,
+        "dizzyR/side": 0,
+        "dizzyR/back": 0
+       },
+       "maxStrayPx": 2
+      },
+      {
+       "part": "torso/hoodie",
+       "buried": 0.195,
+       "strayPx": {
+        "idle/front": 0,
+        "idle/three": 0,
+        "idle/side": 1,
+        "idle/back": 0,
+        "dizzyL/front": 0,
+        "dizzyL/three": 0,
+        "dizzyL/side": 0,
+        "dizzyL/back": 0,
+        "dizzyR/front": 0,
+        "dizzyR/three": 0,
+        "dizzyR/side": 0,
+        "dizzyR/back": 0
+       },
+       "maxStrayPx": 1
+      },
+      {
+       "part": "torso/hood",
+       "buried": 0.252,
+       "strayPx": {
+        "idle/front": 0,
+        "idle/three": 0,
+        "idle/side": 0,
+        "idle/back": 3,
+        "dizzyL/front": 0,
+        "dizzyL/three": 0,
+        "dizzyL/side": 0,
+        "dizzyL/back": 0,
+        "dizzyR/front": 0,
+        "dizzyR/three": 0,
+        "dizzyR/side": 0,
+        "dizzyR/back": 0
+       },
+       "maxStrayPx": 3
+      },
+      {
+       "part": "ftL/sneaker",
+       "buried": 0.125,
+       "strayPx": {
+        "idle/front": 0,
+        "idle/three": 0,
+        "idle/side": 0,
+        "idle/back": 0,
+        "dizzyL/front": 0,
+        "dizzyL/three": 0,
+        "dizzyL/side": 0,
+        "dizzyL/back": 0,
+        "dizzyR/front": 0,
+        "dizzyR/three": 0,
+        "dizzyR/side": 0,
+        "dizzyR/back": 0
+       },
+       "maxStrayPx": 0
+      },
+      {
+       "part": "knL/shin",
+       "buried": 0.219,
+       "strayPx": {
+        "idle/front": 0,
+        "idle/three": 0,
+        "idle/side": 0,
+        "idle/back": 0,
+        "dizzyL/front": 0,
+        "dizzyL/three": 0,
+        "dizzyL/side": 0,
+        "dizzyL/back": 0,
+        "dizzyR/front": 0,
+        "dizzyR/three": 0,
+        "dizzyR/side": 0,
+        "dizzyR/back": 0
+       },
+       "maxStrayPx": 0
+      },
+      {
+       "part": "lgL/thigh",
+       "buried": 0.275,
+       "strayPx": {
+        "idle/front": 0,
+        "idle/three": 0,
+        "idle/side": 0,
+        "idle/back": 0,
+        "dizzyL/front": 0,
+        "dizzyL/three": 0,
+        "dizzyL/side": 0,
+        "dizzyL/back": 0,
+        "dizzyR/front": 0,
+        "dizzyR/three": 0,
+        "dizzyR/side": 0,
+        "dizzyR/back": 0
+       },
+       "maxStrayPx": 0
+      },
+      {
+       "part": "ftR/sneaker",
+       "buried": 0.136,
+       "strayPx": {
+        "idle/front": 0,
+        "idle/three": 0,
+        "idle/side": 0,
+        "idle/back": 0,
+        "dizzyL/front": 0,
+        "dizzyL/three": 0,
+        "dizzyL/side": 0,
+        "dizzyL/back": 0,
+        "dizzyR/front": 0,
+        "dizzyR/three": 0,
+        "dizzyR/side": 0,
+        "dizzyR/back": 0
+       },
+       "maxStrayPx": 0
+      },
+      {
+       "part": "knR/shin",
+       "buried": 0.218,
+       "strayPx": {
+        "idle/front": 0,
+        "idle/three": 0,
+        "idle/side": 0,
+        "idle/back": 0,
+        "dizzyL/front": 0,
+        "dizzyL/three": 0,
+        "dizzyL/side": 0,
+        "dizzyL/back": 0,
+        "dizzyR/front": 0,
+        "dizzyR/three": 0,
+        "dizzyR/side": 0,
+        "dizzyR/back": 0
+       },
+       "maxStrayPx": 0
+      },
+      {
+       "part": "lgR/thigh",
+       "buried": 0.277,
+       "strayPx": {
+        "idle/front": 0,
+        "idle/three": 0,
+        "idle/side": 0,
+        "idle/back": 0,
+        "dizzyL/front": 0,
+        "dizzyL/three": 0,
+        "dizzyL/side": 0,
+        "dizzyL/back": 0,
+        "dizzyR/front": 0,
+        "dizzyR/three": 0,
+        "dizzyR/side": 0,
+        "dizzyR/back": 0
+       },
+       "maxStrayPx": 0
+      },
+      {
+       "part": "hips/jeans",
+       "buried": 0.441,
+       "strayPx": {
+        "idle/front": 0,
+        "idle/three": 0,
+        "idle/side": 0,
+        "idle/back": 0,
+        "dizzyL/front": 0,
+        "dizzyL/three": 0,
+        "dizzyL/side": 0,
+        "dizzyL/back": 0,
+        "dizzyR/front": 0,
+        "dizzyR/three": 0,
+        "dizzyR/side": 0,
+        "dizzyR/back": 0
+       },
+       "maxStrayPx": 0
+      },
+      {
+       "part": "tail/tail",
+       "buried": 0.169,
+       "strayPx": {
+        "idle/front": 0,
+        "idle/three": 0,
+        "idle/side": 0,
+        "idle/back": 0,
+        "dizzyL/front": 0,
+        "dizzyL/three": 0,
+        "dizzyL/side": 0,
+        "dizzyL/back": 0,
+        "dizzyR/front": 0,
+        "dizzyR/three": 0,
+        "dizzyR/side": 0,
+        "dizzyR/back": 0
+       },
+       "maxStrayPx": 0
+      }
+     ],
+     "strayHulls": [],
+     "shoulderGapDown": {
+      "L": 0,
+      "R": 0
+     },
+     "downEndSnapped": {
+      "tail": 0.025,
+      "head": 0.257
+     },
+     "downEndSnappedMinY": 0.025,
+     "shoulderGapWindup": {
+      "L": 0,
+      "R": 0
+     },
+     "sequences": {
+      "knockdown": {
+       "worst": {
+        "y": -0.008,
+        "part": "ftR/sneaker",
+        "phase": "idle",
+        "t": 2.833
+       },
+       "frames": 191,
+       "pass": true,
+       "downEnd": {
+        "tail": 0.025,
+        "head": 0.257
+       },
+       "cullReach": 2.154,
+       "stars": null,
+       "dizzyGap": null
+      },
+      "knockdown+anim": {
+       "worst": {
+        "y": -0.008,
+        "part": "ftR/sneaker",
+        "phase": "idle",
+        "t": 2.833
+       },
+       "frames": 191,
+       "pass": true,
+       "downEnd": {
+        "tail": 0.025,
+        "head": 0.257
+       },
+       "cullReach": 2.154,
+       "stars": null,
+       "dizzyGap": null
+      },
+      "attack": {
+       "worst": {
+        "y": 0.006,
+        "part": "ftR/sneaker",
+        "phase": "idle",
+        "t": 2.55
+       },
+       "frames": 153,
+       "pass": true,
+       "downEnd": null,
+       "cullReach": 1.027,
+       "stars": null,
+       "dizzyGap": null
+      },
+      "attack+anim": {
+       "worst": {
+        "y": 0.006,
+        "part": "ftR/sneaker",
+        "phase": "idle",
+        "t": 2.55
+       },
+       "frames": 153,
+       "pass": true,
+       "downEnd": null,
+       "cullReach": 1.027,
+       "stars": null,
+       "dizzyGap": null
+      },
+      "run": {
+       "worst": {
+        "y": 0.021,
+        "part": "ftR/sneaker",
+        "phase": "idle",
+        "t": 0.017
+       },
+       "frames": 120,
+       "pass": true,
+       "downEnd": null,
+       "cullReach": 1.028,
+       "stars": null,
+       "dizzyGap": null
+      },
+      "run+anim": {
+       "worst": {
+        "y": 0.021,
+        "part": "ftR/sneaker",
+        "phase": "idle",
+        "t": 0.017
+       },
+       "frames": 120,
+       "pass": true,
+       "downEnd": null,
+       "cullReach": 1.028,
+       "stars": null,
+       "dizzyGap": null
+      },
+      "dizzy": {
+       "worst": {
+        "y": 0.001,
+        "part": "ftR/sneaker",
+        "phase": "idle",
+        "t": 4.517
+       },
+       "frames": 290,
+       "pass": true,
+       "downEnd": null,
+       "cullReach": 1.027,
+       "stars": {
+        "clearance": 0.466,
+        "part": "head/ear",
+        "t": 0.017,
+        "starsY": 2.35
+       },
+       "dizzyGap": {
+        "L": 0,
+        "R": 0,
+        "t": 0.167
+       }
+      },
+      "dizzy+anim": {
+       "worst": {
+        "y": 0.001,
+        "part": "ftR/sneaker",
+        "phase": "idle",
+        "t": 4.517
+       },
+       "frames": 290,
+       "pass": true,
+       "downEnd": null,
+       "cullReach": 1.027,
+       "stars": {
+        "clearance": 0.466,
+        "part": "head/ear",
+        "t": 0.017,
+        "starsY": 2.35
+       },
+       "dizzyGap": {
+        "L": 0,
+        "R": 0,
+        "t": 0.167
+       }
+      }
+     },
+     "lodSequences": {
+      "knockdown": {
+       "worst": {
+        "y": -0.014,
+        "part": "knR/shin",
+        "phase": "idle",
+        "t": 2.867
+       },
+       "frames": 191,
+       "pass": true,
+       "downEnd": {
+        "tail": 0.02,
+        "head": 0.257
+       },
+       "cullReach": 2.186,
+       "stars": null,
+       "dizzyGap": null
+      },
+      "attack": {
+       "worst": {
+        "y": -0.001,
+        "part": "knR/shin",
+        "phase": "idle",
+        "t": 2.55
+       },
+       "frames": 153,
+       "pass": true,
+       "downEnd": null,
+       "cullReach": 1.018,
+       "stars": null,
+       "dizzyGap": null
+      },
+      "run": {
+       "worst": {
+        "y": 0.014,
+        "part": "knR/shin",
+        "phase": "idle",
+        "t": 0.017
+       },
+       "frames": 120,
+       "pass": true,
+       "downEnd": null,
+       "cullReach": 1.018,
+       "stars": null,
+       "dizzyGap": null
+      },
+      "dizzy": {
+       "worst": {
+        "y": -0.005,
+        "part": "knR/shin",
+        "phase": "idle",
+        "t": 4.55
+       },
+       "frames": 290,
+       "pass": true,
+       "downEnd": null,
+       "cullReach": 1.017,
+       "stars": {
+        "clearance": 0.474,
+        "part": "head/head",
+        "t": 0.017,
+        "starsY": 2.35
+       },
+       "dizzyGap": null
+      }
+     },
+     "sweeps": {
+      "worst": {
+       "y": -0.009,
+       "part": "ftR/sneaker",
+       "pose": "idle"
+      },
+      "pass": true
+     },
+     "merge": {
+      "meshesBefore": 32,
+      "hullsBefore": 25,
+      "mergedMeshes": 3,
+      "mergedSolid": 2,
+      "mergedOutline": 1,
+      "leftovers": [],
+      "bones": 16,
+      "drawCalls": 3,
+      "shadowCalls": 2,
+      "flashShared": true,
+      "flashPx": {
+       "rigPx": 7576,
+       "unflashedPx": 0,
+       "unflashedPxWithFlashOff": 667
+      },
+      "flashCovers": true,
+      "mappedSubMaterials": 1,
+      "extras": [
+       {
+        "k": "tail",
+        "plain": true,
+        "parent": "hips"
+       }
+      ],
+      "maxVertexDy_m": 0,
+      "animMoves": {
+       "tailBone": 15,
+       "tailVerts": 1224,
+       "moved_m": 0.019
+      },
+      "renderDiffPx": 99,
+      "renderDiffInteriorPx": 1,
+      "renderRigPx": 9252
+     },
+     "cullReachMax": 2.154,
+     "cullRadius": 2.6,
+     "stars": {
+      "hd": {
+       "clearance": 0.466,
+       "part": "head/ear",
+       "t": 0.017,
+       "starsY": 2.35
+      },
+      "hdAnim": {
+       "clearance": 0.466,
+       "part": "head/ear",
+       "t": 0.017,
+       "starsY": 2.35
+      },
+      "lod": {
+       "clearance": 0.474,
+       "part": "head/head",
+       "t": 0.017,
+       "starsY": 2.35
+      }
+     },
+     "shoulderGapDizzy": {
+      "L": 0,
+      "R": 0,
+      "t": 0.167
+     },
+     "silhouetteIoU": {
+      "front": 0.898,
+      "three": 0.924,
+      "side": 0.915
+     },
+     "pass": {
+      "budgetHD": true,
+      "budgetLOD": true,
+      "marginHD": true,
+      "marginLOD": true,
+      "marginBuried": true,
+      "marginLODGround": true,
+      "ground": true,
+      "shoulders": true,
+      "stars": true,
+      "cullSphere": true,
+      "strayHulls": true,
+      "shadows": true,
+      "flash": true,
+      "hulls": true,
+      "merge": true,
+      "height": true,
+      "feet": true
+     }
+    },
+    "armed": {
+     "hd": {
+      "parts": 31,
+      "tris": 9752,
+      "hullTris": 8900,
+      "hulls": 24,
+      "mats": 3,
+      "casters": 20,
+      "drawCalls": 55,
+      "shadowCalls": 20,
+      "height": 1.874,
+      "feetMinY": 0.02,
+      "flashBad": 0,
+      "hullMatsOK": true,
+      "shadowRule": []
+     },
+     "lod": {
+      "parts": 12,
+      "tris": 1780,
+      "hullTris": 1780,
+      "hulls": 12,
+      "mats": 2,
+      "casters": 12,
+      "drawCalls": 24,
+      "shadowCalls": 12,
+      "height": 1.873,
+      "feetMinY": 0.014,
+      "flashBad": 0,
+      "hullMatsOK": true,
+      "shadowRule": []
+     },
+     "hullOverlap": [
+      {
+       "part": "head/head",
+       "buried": 0.101,
+       "strayPx": {
+        "idle/front": 0,
+        "idle/three": 0,
+        "idle/side": 0,
+        "idle/back": 0,
+        "dizzyL/front": 0,
+        "dizzyL/three": 0,
+        "dizzyL/side": 0,
+        "dizzyL/back": 0,
+        "dizzyR/front": 0,
+        "dizzyR/three": 0,
+        "dizzyR/side": 0,
+        "dizzyR/back": 0
+       },
+       "maxStrayPx": 0
+      },
+      {
+       "part": "head/snout",
+       "buried": 0.512,
+       "strayPx": {
+        "idle/front": 0,
+        "idle/three": 0,
+        "idle/side": 0,
+        "idle/back": 0,
+        "dizzyL/front": 3,
+        "dizzyL/three": 0,
+        "dizzyL/side": 0,
+        "dizzyL/back": 0,
+        "dizzyR/front": 0,
+        "dizzyR/three": 0,
+        "dizzyR/side": 0,
+        "dizzyR/back": 0
+       },
+       "maxStrayPx": 3
+      },
+      {
+       "part": "head/ear",
+       "buried": 0.247,
+       "strayPx": {
+        "idle/front": 0,
+        "idle/three": 0,
+        "idle/side": 0,
+        "idle/back": 0,
+        "dizzyL/front": 0,
+        "dizzyL/three": 0,
+        "dizzyL/side": 0,
+        "dizzyL/back": 0,
+        "dizzyR/front": 0,
+        "dizzyR/three": 0,
+        "dizzyR/side": 0,
+        "dizzyR/back": 0
+       },
+       "maxStrayPx": 0
+      },
+      {
+       "part": "haL/paw",
+       "buried": 0.209,
+       "strayPx": {
+        "idle/front": 0,
+        "idle/three": 0,
+        "idle/side": 0,
+        "idle/back": 0,
+        "dizzyL/front": 0,
+        "dizzyL/three": 0,
+        "dizzyL/side": 0,
+        "dizzyL/back": 0,
+        "dizzyR/front": 0,
+        "dizzyR/three": 0,
+        "dizzyR/side": 0,
+        "dizzyR/back": 0
+       },
+       "maxStrayPx": 0
+      },
+      {
+       "part": "elL/fore",
+       "buried": 0.281,
+       "strayPx": {
+        "idle/front": 0,
+        "idle/three": 0,
+        "idle/side": 1,
+        "idle/back": 0,
+        "dizzyL/front": 0,
+        "dizzyL/three": 0,
+        "dizzyL/side": 0,
+        "dizzyL/back": 0,
+        "dizzyR/front": 0,
+        "dizzyR/three": 0,
+        "dizzyR/side": 0,
+        "dizzyR/back": 0
+       },
+       "maxStrayPx": 1
+      },
+      {
+       "part": "shL/shoulder",
+       "buried": 0.237,
+       "strayPx": {
+        "idle/front": 0,
+        "idle/three": 0,
+        "idle/side": 0,
+        "idle/back": 0,
+        "dizzyL/front": 0,
+        "dizzyL/three": 0,
+        "dizzyL/side": 0,
+        "dizzyL/back": 0,
+        "dizzyR/front": 0,
+        "dizzyR/three": 0,
+        "dizzyR/side": 0,
+        "dizzyR/back": 0
+       },
+       "maxStrayPx": 0
+      },
+      {
+       "part": "shL/upper",
+       "buried": 0.44,
+       "strayPx": {
+        "idle/front": 0,
+        "idle/three": 0,
+        "idle/side": 0,
+        "idle/back": 1,
+        "dizzyL/front": 1,
+        "dizzyL/three": 0,
+        "dizzyL/side": 0,
+        "dizzyL/back": 0,
+        "dizzyR/front": 0,
+        "dizzyR/three": 0,
+        "dizzyR/side": 0,
+        "dizzyR/back": 0
+       },
+       "maxStrayPx": 1
+      },
+      {
+       "part": "haR/paw",
+       "buried": 0.278,
+       "strayPx": {
+        "idle/front": 0,
+        "idle/three": 0,
+        "idle/side": 0,
+        "idle/back": 0,
+        "dizzyL/front": 0,
+        "dizzyL/three": 0,
+        "dizzyL/side": 0,
+        "dizzyL/back": 0,
+        "dizzyR/front": 0,
+        "dizzyR/three": 0,
+        "dizzyR/side": 0,
+        "dizzyR/back": 0
+       },
+       "maxStrayPx": 0
+      },
+      {
+       "part": "swR/cone",
+       "buried": 0.222,
+       "strayPx": {
+        "idle/front": 0,
+        "idle/three": 0,
+        "idle/side": 0,
+        "idle/back": 0,
+        "dizzyL/front": 0,
+        "dizzyL/three": 1,
+        "dizzyL/side": 1,
+        "dizzyL/back": 0,
+        "dizzyR/front": 0,
+        "dizzyR/three": 1,
+        "dizzyR/side": 0,
+        "dizzyR/back": 0
+       },
+       "maxStrayPx": 1
+      },
+      {
+       "part": "swR/conebase",
+       "buried": 0.327,
+       "strayPx": {
+        "idle/front": 0,
+        "idle/three": 0,
+        "idle/side": 0,
+        "idle/back": 0,
+        "dizzyL/front": 0,
+        "dizzyL/three": 0,
+        "dizzyL/side": 0,
+        "dizzyL/back": 0,
+        "dizzyR/front": 0,
+        "dizzyR/three": 0,
+        "dizzyR/side": 0,
+        "dizzyR/back": 0
+       },
+       "maxStrayPx": 0
+      },
+      {
+       "part": "elR/fore",
+       "buried": 0.271,
+       "strayPx": {
+        "idle/front": 0,
+        "idle/three": 0,
+        "idle/side": 0,
+        "idle/back": 0,
+        "dizzyL/front": 0,
+        "dizzyL/three": 0,
+        "dizzyL/side": 0,
+        "dizzyL/back": 0,
+        "dizzyR/front": 0,
+        "dizzyR/three": 0,
+        "dizzyR/side": 0,
+        "dizzyR/back": 0
+       },
+       "maxStrayPx": 0
+      },
+      {
+       "part": "shR/shoulder",
+       "buried": 0.243,
+       "strayPx": {
+        "idle/front": 0,
+        "idle/three": 0,
+        "idle/side": 0,
+        "idle/back": 0,
+        "dizzyL/front": 0,
+        "dizzyL/three": 0,
+        "dizzyL/side": 0,
+        "dizzyL/back": 0,
+        "dizzyR/front": 0,
+        "dizzyR/three": 0,
+        "dizzyR/side": 0,
+        "dizzyR/back": 0
+       },
+       "maxStrayPx": 0
+      },
+      {
+       "part": "shR/upper",
+       "buried": 0.464,
+       "strayPx": {
+        "idle/front": 0,
+        "idle/three": 0,
+        "idle/side": 0,
+        "idle/back": 0,
+        "dizzyL/front": 2,
+        "dizzyL/three": 0,
+        "dizzyL/side": 0,
+        "dizzyL/back": 0,
+        "dizzyR/front": 2,
+        "dizzyR/three": 0,
+        "dizzyR/side": 0,
+        "dizzyR/back": 0
+       },
+       "maxStrayPx": 2
+      },
+      {
+       "part": "torso/hoodie",
+       "buried": 0.203,
+       "strayPx": {
+        "idle/front": 0,
+        "idle/three": 0,
+        "idle/side": 1,
+        "idle/back": 0,
+        "dizzyL/front": 0,
+        "dizzyL/three": 0,
+        "dizzyL/side": 0,
+        "dizzyL/back": 0,
+        "dizzyR/front": 0,
+        "dizzyR/three": 0,
+        "dizzyR/side": 0,
+        "dizzyR/back": 0
+       },
+       "maxStrayPx": 1
+      },
+      {
+       "part": "torso/hood",
+       "buried": 0.252,
+       "strayPx": {
+        "idle/front": 0,
+        "idle/three": 0,
+        "idle/side": 0,
+        "idle/back": 3,
+        "dizzyL/front": 0,
+        "dizzyL/three": 0,
+        "dizzyL/side": 0,
+        "dizzyL/back": 0,
+        "dizzyR/front": 0,
+        "dizzyR/three": 0,
+        "dizzyR/side": 0,
+        "dizzyR/back": 0
+       },
+       "maxStrayPx": 3
+      },
+      {
+       "part": "ftL/sneaker",
+       "buried": 0.125,
+       "strayPx": {
+        "idle/front": 0,
+        "idle/three": 0,
+        "idle/side": 0,
+        "idle/back": 0,
+        "dizzyL/front": 0,
+        "dizzyL/three": 0,
+        "dizzyL/side": 0,
+        "dizzyL/back": 0,
+        "dizzyR/front": 0,
+        "dizzyR/three": 0,
+        "dizzyR/side": 0,
+        "dizzyR/back": 0
+       },
+       "maxStrayPx": 0
+      },
+      {
+       "part": "knL/shin",
+       "buried": 0.219,
+       "strayPx": {
+        "idle/front": 0,
+        "idle/three": 0,
+        "idle/side": 0,
+        "idle/back": 0,
+        "dizzyL/front": 0,
+        "dizzyL/three": 0,
+        "dizzyL/side": 0,
+        "dizzyL/back": 0,
+        "dizzyR/front": 0,
+        "dizzyR/three": 0,
+        "dizzyR/side": 0,
+        "dizzyR/back": 0
+       },
+       "maxStrayPx": 0
+      },
+      {
+       "part": "lgL/thigh",
+       "buried": 0.275,
+       "strayPx": {
+        "idle/front": 0,
+        "idle/three": 0,
+        "idle/side": 0,
+        "idle/back": 0,
+        "dizzyL/front": 0,
+        "dizzyL/three": 0,
+        "dizzyL/side": 0,
+        "dizzyL/back": 0,
+        "dizzyR/front": 0,
+        "dizzyR/three": 0,
+        "dizzyR/side": 0,
+        "dizzyR/back": 0
+       },
+       "maxStrayPx": 0
+      },
+      {
+       "part": "ftR/sneaker",
+       "buried": 0.136,
+       "strayPx": {
+        "idle/front": 0,
+        "idle/three": 0,
+        "idle/side": 0,
+        "idle/back": 0,
+        "dizzyL/front": 0,
+        "dizzyL/three": 0,
+        "dizzyL/side": 0,
+        "dizzyL/back": 0,
+        "dizzyR/front": 0,
+        "dizzyR/three": 0,
+        "dizzyR/side": 0,
+        "dizzyR/back": 0
+       },
+       "maxStrayPx": 0
+      },
+      {
+       "part": "knR/shin",
+       "buried": 0.218,
+       "strayPx": {
+        "idle/front": 0,
+        "idle/three": 0,
+        "idle/side": 0,
+        "idle/back": 0,
+        "dizzyL/front": 0,
+        "dizzyL/three": 0,
+        "dizzyL/side": 0,
+        "dizzyL/back": 0,
+        "dizzyR/front": 0,
+        "dizzyR/three": 0,
+        "dizzyR/side": 0,
+        "dizzyR/back": 0
+       },
+       "maxStrayPx": 0
+      },
+      {
+       "part": "lgR/thigh",
+       "buried": 0.277,
+       "strayPx": {
+        "idle/front": 0,
+        "idle/three": 0,
+        "idle/side": 0,
+        "idle/back": 0,
+        "dizzyL/front": 0,
+        "dizzyL/three": 0,
+        "dizzyL/side": 0,
+        "dizzyL/back": 0,
+        "dizzyR/front": 0,
+        "dizzyR/three": 0,
+        "dizzyR/side": 0,
+        "dizzyR/back": 0
+       },
+       "maxStrayPx": 0
+      },
+      {
+       "part": "hips/jeans",
+       "buried": 0.441,
+       "strayPx": {
+        "idle/front": 0,
+        "idle/three": 0,
+        "idle/side": 0,
+        "idle/back": 0,
+        "dizzyL/front": 0,
+        "dizzyL/three": 0,
+        "dizzyL/side": 0,
+        "dizzyL/back": 0,
+        "dizzyR/front": 0,
+        "dizzyR/three": 0,
+        "dizzyR/side": 4,
+        "dizzyR/back": 0
+       },
+       "maxStrayPx": 4
+      },
+      {
+       "part": "tail/tail",
+       "buried": 0.169,
+       "strayPx": {
+        "idle/front": 0,
+        "idle/three": 0,
+        "idle/side": 0,
+        "idle/back": 0,
+        "dizzyL/front": 0,
+        "dizzyL/three": 0,
+        "dizzyL/side": 0,
+        "dizzyL/back": 0,
+        "dizzyR/front": 0,
+        "dizzyR/three": 0,
+        "dizzyR/side": 0,
+        "dizzyR/back": 0
+       },
+       "maxStrayPx": 0
+      }
+     ],
+     "strayHulls": [],
+     "shoulderGapDown": {
+      "L": 0,
+      "R": 0
+     },
+     "downEndSnapped": {
+      "tail": 0.025,
+      "head": 0.257
+     },
+     "downEndSnappedMinY": 0.025,
+     "shoulderGapWindup": {
+      "L": 0,
+      "R": 0
+     },
+     "sequences": {
+      "knockdown": {
+       "worst": {
+        "y": -0.008,
+        "part": "ftR/sneaker",
+        "phase": "idle",
+        "t": 2.833
+       },
+       "frames": 191,
+       "pass": true,
+       "downEnd": {
+        "tail": 0.025,
+        "head": 0.257
+       },
+       "cullReach": 2.465,
+       "stars": null,
+       "dizzyGap": null
+      },
+      "knockdown+anim": {
+       "worst": {
+        "y": -0.008,
+        "part": "ftR/sneaker",
+        "phase": "idle",
+        "t": 2.833
+       },
+       "frames": 191,
+       "pass": true,
+       "downEnd": {
+        "tail": 0.025,
+        "head": 0.257
+       },
+       "cullReach": 2.465,
+       "stars": null,
+       "dizzyGap": null
+      },
+      "attack": {
+       "worst": {
+        "y": 0.006,
+        "part": "ftR/sneaker",
+        "phase": "idle",
+        "t": 2.55
+       },
+       "frames": 153,
+       "pass": true,
+       "downEnd": null,
+       "cullReach": 1.252,
+       "stars": null,
+       "dizzyGap": null
+      },
+      "attack+anim": {
+       "worst": {
+        "y": 0.006,
+        "part": "ftR/sneaker",
+        "phase": "idle",
+        "t": 2.55
+       },
+       "frames": 153,
+       "pass": true,
+       "downEnd": null,
+       "cullReach": 1.252,
+       "stars": null,
+       "dizzyGap": null
+      },
+      "run": {
+       "worst": {
+        "y": 0.021,
+        "part": "ftR/sneaker",
+        "phase": "idle",
+        "t": 0.017
+       },
+       "frames": 120,
+       "pass": true,
+       "downEnd": null,
+       "cullReach": 1.046,
+       "stars": null,
+       "dizzyGap": null
+      },
+      "run+anim": {
+       "worst": {
+        "y": 0.021,
+        "part": "ftR/sneaker",
+        "phase": "idle",
+        "t": 0.017
+       },
+       "frames": 120,
+       "pass": true,
+       "downEnd": null,
+       "cullReach": 1.046,
+       "stars": null,
+       "dizzyGap": null
+      },
+      "dizzy": {
+       "worst": {
+        "y": 0.001,
+        "part": "ftR/sneaker",
+        "phase": "idle",
+        "t": 4.517
+       },
+       "frames": 290,
+       "pass": true,
+       "downEnd": null,
+       "cullReach": 1.027,
+       "stars": {
+        "clearance": 0.466,
+        "part": "head/ear",
+        "t": 0.017,
+        "starsY": 2.35
+       },
+       "dizzyGap": {
+        "L": 0,
+        "R": 0,
+        "t": 0.167
+       }
+      },
+      "dizzy+anim": {
+       "worst": {
+        "y": 0.001,
+        "part": "ftR/sneaker",
+        "phase": "idle",
+        "t": 4.517
+       },
+       "frames": 290,
+       "pass": true,
+       "downEnd": null,
+       "cullReach": 1.027,
+       "stars": {
+        "clearance": 0.466,
+        "part": "head/ear",
+        "t": 0.017,
+        "starsY": 2.35
+       },
+       "dizzyGap": {
+        "L": 0,
+        "R": 0,
+        "t": 0.167
+       }
+      }
+     },
+     "lodSequences": {
+      "knockdown": {
+       "worst": {
+        "y": -0.014,
+        "part": "knR/shin",
+        "phase": "idle",
+        "t": 2.867
+       },
+       "frames": 191,
+       "pass": true,
+       "downEnd": {
+        "tail": 0.02,
+        "head": 0.257
+       },
+       "cullReach": 2.465,
+       "stars": null,
+       "dizzyGap": null
+      },
+      "attack": {
+       "worst": {
+        "y": -0.001,
+        "part": "knR/shin",
+        "phase": "idle",
+        "t": 2.55
+       },
+       "frames": 153,
+       "pass": true,
+       "downEnd": null,
+       "cullReach": 1.252,
+       "stars": null,
+       "dizzyGap": null
+      },
+      "run": {
+       "worst": {
+        "y": 0.014,
+        "part": "knR/shin",
+        "phase": "idle",
+        "t": 0.017
+       },
+       "frames": 120,
+       "pass": true,
+       "downEnd": null,
+       "cullReach": 1.046,
+       "stars": null,
+       "dizzyGap": null
+      },
+      "dizzy": {
+       "worst": {
+        "y": -0.005,
+        "part": "knR/shin",
+        "phase": "idle",
+        "t": 4.55
+       },
+       "frames": 290,
+       "pass": true,
+       "downEnd": null,
+       "cullReach": 1.017,
+       "stars": {
+        "clearance": 0.474,
+        "part": "head/head",
+        "t": 0.017,
+        "starsY": 2.35
+       },
+       "dizzyGap": null
+      }
+     },
+     "sweeps": {
+      "worst": {
+       "y": -0.009,
+       "part": "ftR/sneaker",
+       "pose": "idle"
+      },
+      "pass": true
+     },
+     "merge": {
+      "meshesBefore": 31,
+      "hullsBefore": 24,
+      "mergedMeshes": 3,
+      "mergedSolid": 2,
+      "mergedOutline": 1,
+      "leftovers": [],
+      "bones": 17,
+      "drawCalls": 3,
+      "shadowCalls": 2,
+      "flashShared": true,
+      "flashPx": {
+       "rigPx": 7942,
+       "unflashedPx": 0,
+       "unflashedPxWithFlashOff": 1472
+      },
+      "flashCovers": true,
+      "mappedSubMaterials": 1,
+      "extras": [
+       {
+        "k": "tail",
+        "plain": true,
+        "parent": "hips"
+       }
+      ],
+      "maxVertexDy_m": 0,
+      "animMoves": {
+       "tailBone": 16,
+       "tailVerts": 1224,
+       "moved_m": 0.019
+      },
+      "renderDiffPx": 111,
+      "renderDiffInteriorPx": 4,
+      "renderRigPx": 9698
+     },
+     "cullReachMax": 2.465,
+     "cullRadius": 2.6,
+     "stars": {
+      "hd": {
+       "clearance": 0.466,
+       "part": "head/ear",
+       "t": 0.017,
+       "starsY": 2.35
+      },
+      "hdAnim": {
+       "clearance": 0.466,
+       "part": "head/ear",
+       "t": 0.017,
+       "starsY": 2.35
+      },
+      "lod": {
+       "clearance": 0.474,
+       "part": "head/head",
+       "t": 0.017,
+       "starsY": 2.35
+      }
+     },
+     "shoulderGapDizzy": {
+      "L": 0,
+      "R": 0,
+      "t": 0.167
+     },
+     "silhouetteIoU": {
+      "front": 0.918,
+      "three": 0.941,
+      "side": 0.928
+     },
+     "pass": {
+      "budgetHD": true,
+      "budgetLOD": true,
+      "marginHD": true,
+      "marginLOD": true,
+      "marginBuried": true,
+      "marginLODGround": true,
+      "ground": true,
+      "shoulders": true,
+      "stars": true,
+      "cullSphere": true,
+      "strayHulls": true,
+      "shadows": true,
+      "flash": true,
+      "hulls": true,
+      "merge": true,
+      "height": true,
+      "feet": true
+     }
+    },
+    "bruiser": {
+     "hd": {
+      "parts": 29,
+      "tris": 9684,
+      "hullTris": 8832,
+      "hulls": 22,
+      "mats": 3,
+      "casters": 20,
+      "drawCalls": 51,
+      "shadowCalls": 20,
+      "height": 2.249,
+      "feetMinY": 0.024,
+      "flashBad": 0,
+      "hullMatsOK": true,
+      "shadowRule": []
+     },
+     "lod": {
+      "parts": 11,
+      "tris": 1712,
+      "hullTris": 1712,
+      "hulls": 11,
+      "mats": 2,
+      "casters": 11,
+      "drawCalls": 22,
+      "shadowCalls": 11,
+      "height": 2.249,
+      "feetMinY": 0.015,
+      "flashBad": 0,
+      "hullMatsOK": true,
+      "shadowRule": []
+     },
+     "hullOverlap": [
+      {
+       "part": "head/head",
+       "buried": 0.121,
+       "strayPx": {
+        "idle/front": 0,
+        "idle/three": 0,
+        "idle/side": 0,
+        "idle/back": 0,
+        "dizzyL/front": 0,
+        "dizzyL/three": 0,
+        "dizzyL/side": 0,
+        "dizzyL/back": 0,
+        "dizzyR/front": 0,
+        "dizzyR/three": 0,
+        "dizzyR/side": 0,
+        "dizzyR/back": 0
+       },
+       "maxStrayPx": 0
+      },
+      {
+       "part": "head/snout",
+       "buried": 0.507,
+       "strayPx": {
+        "idle/front": 0,
+        "idle/three": 0,
+        "idle/side": 0,
+        "idle/back": 0,
+        "dizzyL/front": 6,
+        "dizzyL/three": 0,
+        "dizzyL/side": 0,
+        "dizzyL/back": 0,
+        "dizzyR/front": 5,
+        "dizzyR/three": 0,
+        "dizzyR/side": 0,
+        "dizzyR/back": 0
+       },
+       "maxStrayPx": 6
+      },
+      {
+       "part": "head/ear",
+       "buried": 0.247,
+       "strayPx": {
+        "idle/front": 0,
+        "idle/three": 0,
+        "idle/side": 0,
+        "idle/back": 0,
+        "dizzyL/front": 0,
+        "dizzyL/three": 0,
+        "dizzyL/side": 0,
+        "dizzyL/back": 0,
+        "dizzyR/front": 0,
+        "dizzyR/three": 0,
+        "dizzyR/side": 0,
+        "dizzyR/back": 0
+       },
+       "maxStrayPx": 0
+      },
+      {
+       "part": "haL/paw",
+       "buried": 0.283,
+       "strayPx": {
+        "idle/front": 0,
+        "idle/three": 0,
+        "idle/side": 0,
+        "idle/back": 0,
+        "dizzyL/front": 0,
+        "dizzyL/three": 0,
+        "dizzyL/side": 0,
+        "dizzyL/back": 0,
+        "dizzyR/front": 0,
+        "dizzyR/three": 0,
+        "dizzyR/side": 0,
+        "dizzyR/back": 0
+       },
+       "maxStrayPx": 0
+      },
+      {
+       "part": "elL/fore",
+       "buried": 0.366,
+       "strayPx": {
+        "idle/front": 0,
+        "idle/three": 0,
+        "idle/side": 0,
+        "idle/back": 0,
+        "dizzyL/front": 0,
+        "dizzyL/three": 0,
+        "dizzyL/side": 0,
+        "dizzyL/back": 0,
+        "dizzyR/front": 0,
+        "dizzyR/three": 0,
+        "dizzyR/side": 0,
+        "dizzyR/back": 0
+       },
+       "maxStrayPx": 0
+      },
+      {
+       "part": "shL/shoulder",
+       "buried": 0.466,
+       "strayPx": {
+        "idle/front": 0,
+        "idle/three": 0,
+        "idle/side": 0,
+        "idle/back": 0,
+        "dizzyL/front": 0,
+        "dizzyL/three": 0,
+        "dizzyL/side": 0,
+        "dizzyL/back": 0,
+        "dizzyR/front": 0,
+        "dizzyR/three": 0,
+        "dizzyR/side": 0,
+        "dizzyR/back": 0
+       },
+       "maxStrayPx": 0
+      },
+      {
+       "part": "shL/upper",
+       "buried": 0.437,
+       "strayPx": {
+        "idle/front": 0,
+        "idle/three": 0,
+        "idle/side": 0,
+        "idle/back": 0,
+        "dizzyL/front": 1,
+        "dizzyL/three": 0,
+        "dizzyL/side": 0,
+        "dizzyL/back": 0,
+        "dizzyR/front": 1,
+        "dizzyR/three": 0,
+        "dizzyR/side": 0,
+        "dizzyR/back": 0
+       },
+       "maxStrayPx": 1
+      },
+      {
+       "part": "haR/paw",
+       "buried": 0.283,
+       "strayPx": {
+        "idle/front": 0,
+        "idle/three": 0,
+        "idle/side": 0,
+        "idle/back": 0,
+        "dizzyL/front": 0,
+        "dizzyL/three": 0,
+        "dizzyL/side": 0,
+        "dizzyL/back": 0,
+        "dizzyR/front": 1,
+        "dizzyR/three": 0,
+        "dizzyR/side": 0,
+        "dizzyR/back": 0
+       },
+       "maxStrayPx": 1
+      },
+      {
+       "part": "elR/fore",
+       "buried": 0.39,
+       "strayPx": {
+        "idle/front": 0,
+        "idle/three": 0,
+        "idle/side": 0,
+        "idle/back": 0,
+        "dizzyL/front": 0,
+        "dizzyL/three": 0,
+        "dizzyL/side": 0,
+        "dizzyL/back": 0,
+        "dizzyR/front": 0,
+        "dizzyR/three": 0,
+        "dizzyR/side": 0,
+        "dizzyR/back": 0
+       },
+       "maxStrayPx": 0
+      },
+      {
+       "part": "shR/shoulder",
+       "buried": 0.463,
+       "strayPx": {
+        "idle/front": 0,
+        "idle/three": 0,
+        "idle/side": 0,
+        "idle/back": 0,
+        "dizzyL/front": 0,
+        "dizzyL/three": 0,
+        "dizzyL/side": 0,
+        "dizzyL/back": 0,
+        "dizzyR/front": 0,
+        "dizzyR/three": 0,
+        "dizzyR/side": 0,
+        "dizzyR/back": 0
+       },
+       "maxStrayPx": 0
+      },
+      {
+       "part": "shR/upper",
+       "buried": 0.479,
+       "strayPx": {
+        "idle/front": 0,
+        "idle/three": 0,
+        "idle/side": 0,
+        "idle/back": 0,
+        "dizzyL/front": 1,
+        "dizzyL/three": 0,
+        "dizzyL/side": 0,
+        "dizzyL/back": 1,
+        "dizzyR/front": 2,
+        "dizzyR/three": 0,
+        "dizzyR/side": 0,
+        "dizzyR/back": 0
+       },
+       "maxStrayPx": 2
+      },
+      {
+       "part": "torso/hoodie",
+       "buried": 0.27,
+       "strayPx": {
+        "idle/front": 0,
+        "idle/three": 0,
+        "idle/side": 0,
+        "idle/back": 0,
+        "dizzyL/front": 0,
+        "dizzyL/three": 0,
+        "dizzyL/side": 0,
+        "dizzyL/back": 0,
+        "dizzyR/front": 0,
+        "dizzyR/three": 0,
+        "dizzyR/side": 0,
+        "dizzyR/back": 0
+       },
+       "maxStrayPx": 0
+      },
+      {
+       "part": "torso/hood",
+       "buried": 0.269,
+       "strayPx": {
+        "idle/front": 0,
+        "idle/three": 0,
+        "idle/side": 0,
+        "idle/back": 8,
+        "dizzyL/front": 0,
+        "dizzyL/three": 0,
+        "dizzyL/side": 0,
+        "dizzyL/back": 0,
+        "dizzyR/front": 0,
+        "dizzyR/three": 0,
+        "dizzyR/side": 0,
+        "dizzyR/back": 0
+       },
+       "maxStrayPx": 8
+      },
+      {
+       "part": "ftL/sneaker",
+       "buried": 0.171,
+       "strayPx": {
+        "idle/front": 0,
+        "idle/three": 0,
+        "idle/side": 0,
+        "idle/back": 0,
+        "dizzyL/front": 0,
+        "dizzyL/three": 0,
+        "dizzyL/side": 0,
+        "dizzyL/back": 0,
+        "dizzyR/front": 0,
+        "dizzyR/three": 0,
+        "dizzyR/side": 0,
+        "dizzyR/back": 0
+       },
+       "maxStrayPx": 0
+      },
+      {
+       "part": "knL/shin",
+       "buried": 0.272,
+       "strayPx": {
+        "idle/front": 0,
+        "idle/three": 0,
+        "idle/side": 0,
+        "idle/back": 0,
+        "dizzyL/front": 0,
+        "dizzyL/three": 0,
+        "dizzyL/side": 0,
+        "dizzyL/back": 0,
+        "dizzyR/front": 0,
+        "dizzyR/three": 0,
+        "dizzyR/side": 0,
+        "dizzyR/back": 0
+       },
+       "maxStrayPx": 0
+      },
+      {
+       "part": "lgL/thigh",
+       "buried": 0.369,
+       "strayPx": {
+        "idle/front": 0,
+        "idle/three": 0,
+        "idle/side": 0,
+        "idle/back": 0,
+        "dizzyL/front": 0,
+        "dizzyL/three": 0,
+        "dizzyL/side": 0,
+        "dizzyL/back": 0,
+        "dizzyR/front": 0,
+        "dizzyR/three": 0,
+        "dizzyR/side": 0,
+        "dizzyR/back": 0
+       },
+       "maxStrayPx": 0
+      },
+      {
+       "part": "ftR/sneaker",
+       "buried": 0.173,
+       "strayPx": {
+        "idle/front": 0,
+        "idle/three": 0,
+        "idle/side": 0,
+        "idle/back": 0,
+        "dizzyL/front": 0,
+        "dizzyL/three": 0,
+        "dizzyL/side": 0,
+        "dizzyL/back": 0,
+        "dizzyR/front": 0,
+        "dizzyR/three": 0,
+        "dizzyR/side": 0,
+        "dizzyR/back": 0
+       },
+       "maxStrayPx": 0
+      },
+      {
+       "part": "knR/shin",
+       "buried": 0.272,
+       "strayPx": {
+        "idle/front": 0,
+        "idle/three": 0,
+        "idle/side": 0,
+        "idle/back": 0,
+        "dizzyL/front": 0,
+        "dizzyL/three": 0,
+        "dizzyL/side": 0,
+        "dizzyL/back": 0,
+        "dizzyR/front": 0,
+        "dizzyR/three": 0,
+        "dizzyR/side": 0,
+        "dizzyR/back": 0
+       },
+       "maxStrayPx": 0
+      },
+      {
+       "part": "lgR/thigh",
+       "buried": 0.368,
+       "strayPx": {
+        "idle/front": 0,
+        "idle/three": 0,
+        "idle/side": 0,
+        "idle/back": 0,
+        "dizzyL/front": 0,
+        "dizzyL/three": 0,
+        "dizzyL/side": 0,
+        "dizzyL/back": 0,
+        "dizzyR/front": 0,
+        "dizzyR/three": 0,
+        "dizzyR/side": 0,
+        "dizzyR/back": 0
+       },
+       "maxStrayPx": 0
+      },
+      {
+       "part": "hips/jeans",
+       "buried": 0.415,
+       "strayPx": {
+        "idle/front": 0,
+        "idle/three": 0,
+        "idle/side": 0,
+        "idle/back": 0,
+        "dizzyL/front": 0,
+        "dizzyL/three": 0,
+        "dizzyL/side": 0,
+        "dizzyL/back": 0,
+        "dizzyR/front": 0,
+        "dizzyR/three": 0,
+        "dizzyR/side": 0,
+        "dizzyR/back": 0
+       },
+       "maxStrayPx": 0
+      },
+      {
+       "part": "tail/tail",
+       "buried": 0.184,
+       "strayPx": {
+        "idle/front": 0,
+        "idle/three": 0,
+        "idle/side": 0,
+        "idle/back": 0,
+        "dizzyL/front": 0,
+        "dizzyL/three": 0,
+        "dizzyL/side": 0,
+        "dizzyL/back": 0,
+        "dizzyR/front": 0,
+        "dizzyR/three": 0,
+        "dizzyR/side": 0,
+        "dizzyR/back": 0
+       },
+       "maxStrayPx": 0
+      }
+     ],
+     "strayHulls": [],
+     "shoulderGapDown": {
+      "L": 0,
+      "R": 0
+     },
+     "downEndSnapped": {
+      "tail": 0.028,
+      "head": 0.309
+     },
+     "downEndSnappedMinY": 0.028,
+     "shoulderGapWindup": {
+      "L": 0,
+      "R": 0
+     },
+     "sequences": {
+      "knockdown": {
+       "worst": {
+        "y": -0.009,
+        "part": "ftR/sneaker",
+        "phase": "idle",
+        "t": 2.85
+       },
+       "frames": 191,
+       "pass": true,
+       "downEnd": {
+        "tail": 0.028,
+        "head": 0.309
+       },
+       "cullReach": 2.174,
+       "stars": null,
+       "dizzyGap": null
+      },
+      "knockdown+anim": {
+       "worst": {
+        "y": -0.009,
+        "part": "ftR/sneaker",
+        "phase": "idle",
+        "t": 2.85
+       },
+       "frames": 191,
+       "pass": true,
+       "downEnd": {
+        "tail": 0.028,
+        "head": 0.309
+       },
+       "cullReach": 2.174,
+       "stars": null,
+       "dizzyGap": null
+      },
+      "attack": {
+       "worst": {
+        "y": -0.009,
+        "part": "ftR/sneaker",
+        "phase": "idle",
+        "t": 2.75
+       },
+       "frames": 165,
+       "pass": true,
+       "downEnd": null,
+       "cullReach": 1.027,
+       "stars": null,
+       "dizzyGap": null
+      },
+      "attack+anim": {
+       "worst": {
+        "y": -0.009,
+        "part": "ftR/sneaker",
+        "phase": "idle",
+        "t": 2.75
+       },
+       "frames": 165,
+       "pass": true,
+       "downEnd": null,
+       "cullReach": 1.027,
+       "stars": null,
+       "dizzyGap": null
+      },
+      "run": {
+       "worst": {
+        "y": 0.025,
+        "part": "ftR/sneaker",
+        "phase": "idle",
+        "t": 0.017
+       },
+       "frames": 120,
+       "pass": true,
+       "downEnd": null,
+       "cullReach": 1.028,
+       "stars": null,
+       "dizzyGap": null
+      },
+      "run+anim": {
+       "worst": {
+        "y": 0.025,
+        "part": "ftR/sneaker",
+        "phase": "idle",
+        "t": 0.017
+       },
+       "frames": 120,
+       "pass": true,
+       "downEnd": null,
+       "cullReach": 1.028,
+       "stars": null,
+       "dizzyGap": null
+      },
+      "dizzy": {
+       "worst": {
+        "y": 0.001,
+        "part": "ftR/sneaker",
+        "phase": "idle",
+        "t": 4.533
+       },
+       "frames": 290,
+       "pass": true,
+       "downEnd": null,
+       "cullReach": 1.027,
+       "stars": {
+        "clearance": 0.529,
+        "part": "head/ear",
+        "t": 0.017,
+        "starsY": 2.79
+       },
+       "dizzyGap": {
+        "L": 0,
+        "R": 0,
+        "t": 0.167
+       }
+      },
+      "dizzy+anim": {
+       "worst": {
+        "y": 0.001,
+        "part": "ftR/sneaker",
+        "phase": "idle",
+        "t": 4.533
+       },
+       "frames": 290,
+       "pass": true,
+       "downEnd": null,
+       "cullReach": 1.027,
+       "stars": {
+        "clearance": 0.529,
+        "part": "head/ear",
+        "t": 0.017,
+        "starsY": 2.79
+       },
+       "dizzyGap": {
+        "L": 0,
+        "R": 0,
+        "t": 0.167
+       }
+      }
+     },
+     "lodSequences": {
+      "knockdown": {
+       "worst": {
+        "y": -0.019,
+        "part": "knR/shin",
+        "phase": "idle",
+        "t": 2.817
+       },
+       "frames": 191,
+       "pass": true,
+       "downEnd": {
+        "tail": 0.024,
+        "head": 0.309
+       },
+       "cullReach": 2.216,
+       "stars": null,
+       "dizzyGap": null
+      },
+      "attack": {
+       "worst": {
+        "y": -0.019,
+        "part": "knR/shin",
+        "phase": "idle",
+        "t": 2.75
+       },
+       "frames": 165,
+       "pass": true,
+       "downEnd": null,
+       "cullReach": 1.018,
+       "stars": null,
+       "dizzyGap": null
+      },
+      "run": {
+       "worst": {
+        "y": 0.015,
+        "part": "knR/shin",
+        "phase": "idle",
+        "t": 0.017
+       },
+       "frames": 120,
+       "pass": true,
+       "downEnd": null,
+       "cullReach": 1.018,
+       "stars": null,
+       "dizzyGap": null
+      },
+      "dizzy": {
+       "worst": {
+        "y": -0.007,
+        "part": "knR/shin",
+        "phase": "idle",
+        "t": 4.55
+       },
+       "frames": 290,
+       "pass": true,
+       "downEnd": null,
+       "cullReach": 1.017,
+       "stars": {
+        "clearance": 0.539,
+        "part": "head/head",
+        "t": 0.017,
+        "starsY": 2.79
+       },
+       "dizzyGap": null
+      }
+     },
+     "sweeps": {
+      "worst": {
+       "y": -0.011,
+       "part": "ftR/sneaker",
+       "pose": "idle"
+      },
+      "pass": true
+     },
+     "merge": {
+      "meshesBefore": 29,
+      "hullsBefore": 22,
+      "mergedMeshes": 3,
+      "mergedSolid": 2,
+      "mergedOutline": 1,
+      "leftovers": [],
+      "bones": 16,
+      "drawCalls": 3,
+      "shadowCalls": 2,
+      "flashShared": true,
+      "flashPx": {
+       "rigPx": 12349,
+       "unflashedPx": 0,
+       "unflashedPxWithFlashOff": 1047
+      },
+      "flashCovers": true,
+      "mappedSubMaterials": 1,
+      "extras": [
+       {
+        "k": "tail",
+        "plain": true,
+        "parent": "hips"
+       }
+      ],
+      "maxVertexDy_m": 0,
+      "animMoves": {
+       "tailBone": 15,
+       "tailVerts": 1224,
+       "moved_m": 0.023
+      },
+      "renderDiffPx": 2,
+      "renderDiffInteriorPx": 0,
+      "renderRigPx": 14605
+     },
+     "cullReachMax": 2.174,
+     "cullRadius": 2.6,
+     "stars": {
+      "hd": {
+       "clearance": 0.529,
+       "part": "head/ear",
+       "t": 0.017,
+       "starsY": 2.79
+      },
+      "hdAnim": {
+       "clearance": 0.529,
+       "part": "head/ear",
+       "t": 0.017,
+       "starsY": 2.79
+      },
+      "lod": {
+       "clearance": 0.539,
+       "part": "head/head",
+       "t": 0.017,
+       "starsY": 2.79
+      }
+     },
+     "shoulderGapDizzy": {
+      "L": 0,
+      "R": 0,
+      "t": 0.167
+     },
+     "silhouetteIoU": {
+      "front": 0.921,
+      "three": 0.926,
+      "side": 0.911
+     },
+     "pass": {
+      "budgetHD": true,
+      "budgetLOD": true,
+      "marginHD": true,
+      "marginLOD": true,
+      "marginBuried": true,
+      "marginLODGround": true,
+      "ground": true,
+      "shoulders": true,
+      "stars": true,
+      "cullSphere": true,
+      "strayHulls": true,
+      "shadows": true,
+      "flash": true,
+      "hulls": true,
+      "merge": true,
+      "height": true,
+      "feet": true
+     }
+    }
+   },
+   "allPass": true
+  }
+ }
+]
