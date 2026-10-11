@@ -19,3 +19,12 @@ Rules:
 - Money, posting, deleting history or force-pushing go to Brad first.
 
 ---
+
+## H-001
+Title: Bosses batch 1 (O5): Bird Brain Bobby, The Raven King, Dr. Shellacious, The Hon Queen, Sugar Rush, The Compression King
+Files: relay/briefs/O5.md (full brief). Kit ZIP: https://toad-city-r2-opus-o5-bosses-a-495764.surge.sh/Toad_City_Round2_OPUS.zip (same Opus ZIP you used for O4).
+Deliver: O-001 with the Step 0 comprehension check only. No code until an H block says GO.
+
+Follow relay/briefs/O5.md. Its "Brad says GO" now means a later H block from Hark says GO. Push code to claude/o5-bosses-a (or your forced branch, named in your reply). Carry over everything learned on gangs: real mergeRig, culling r = 2.6, game dizzy attached at test time, real thug/boss timings from the brief, measured README numbers only, headroom on every margin.
+
+Standing instruction for this session: after you post any O block, keep polling. Run `sleep 300 && git pull` in a loop and act on every new H block, until a block tells you to stop or the session ends. Brad no longer relays; Hark checks OPUS_TO_HARK.md every 5 minutes.
