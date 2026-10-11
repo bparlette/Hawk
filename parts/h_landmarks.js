@@ -31,9 +31,10 @@ function landmark(id, name, x, z, r, boss) { LANDMARKS.push({ id, name, x, z, r,
 
 LMCAP('harborplace');
 // Harborplace: two glassy market pavilions with green hip roofs, on plazas at the harbour's north-west corner
+// (far LOD of the HD pavilions in 03c: eave slab top 6.85 m, copper-green hip roofs ~2.7 m)
 for (const [x0, z0, x1, z1] of [[-58, -29, -46, -22], [-59, -18, -52, 2]]) {
-  mass(x0, z0, x1, z1, 5.4, { tr: T.store[4], fh: 5.4, bay: 3.2, top: '#3f7a5a' });
-  const g = new THREE.CylinderGeometry(0.01, 1, 1, 4, 1); g.rotateY(Math.PI / 4); g.scale((x1 - x0) * 0.75, 2.4, (z1 - z0) * 0.75); place(g, (x0 + x1) / 2, CURB + 5.4 + 1.2, (z0 + z1) / 2); solid(g, '#4f9a6e');
+  mass(x0, z0, x1, z1, 6.85, { tr: T.store[4], fh: 3.4, bay: 2.5, top: '#93bfa2', trimCol: '#ddd5c4' });
+  const g = new THREE.CylinderGeometry(0.01, 1, 1, 4, 1); g.rotateY(Math.PI / 4); g.scale((x1 - x0) * 0.75, 2.7, (z1 - z0) * 0.75); place(g, (x0 + x1) / 2, CURB + 6.85 + 1.35, (z0 + z1) / 2); solid(g, '#93bfa2');
 }
 signOn(-58, -29, -46, -22, 'n', 3.0, 8, LSIGN.market); signOn(-59, -18, -52, 2, 'e', 3.0, 8, LSIGN.market);
 LMCAP(null);
@@ -46,9 +47,9 @@ LMCAP('constellation');
   CB.box(x0 - 0.02, CURB + 0.4, z0 - 0.02, x1 + 0.02, CURB + 0.9, z1 + 0.02, '#e8e0c8', T.white, { top: false });
   CB.box(x0 + 0.25, CURB + 1.6, z0 + 0.3, x1 - 0.25, CURB + 1.75, z1 - 0.3, '#8a6a48', T.white);
   for (let z = z0 + 1.2; z < z1 - 0.8; z += 1.6) for (const x of [x0 - 0.04, x1 - 0.01]) CB.box(x, CURB + 0.5, z, x + 0.05, CURB + 0.8, z + 0.5, '#111', T.white); // gunports in the white band
-  CB.box(x0 + 0.01, WY - 0.2, z0 + 0.01, x1 - 0.01, WY + 0.25, z1 - 0.01, '#3f6a52', T.white, { top: false }); // copper bottom at the waterline
+  CB.box(x0 + 0.01, WY - 0.2, z0 + 0.01, x1 - 0.01, WY + 0.25, z1 - 0.01, '#5ec4a4', T.white, { top: false }); // copper bottom at the waterline
   const bow = new THREE.CylinderGeometry(0.01, (x1 - x0) / 2, 4, 3, 1); bow.rotateX(-Math.PI / 2); bow.rotateZ(Math.PI); place(bow, cx, CURB + 0.6, z0 - 1.9); solid(bow, '#22201e');
-  const spr = new THREE.CylinderGeometry(0.08, 0.14, 7, 5); spr.rotateX(-1.2); place(spr, cx, CURB + 2.4, z0 - 4.6); solid(spr, '#3a2a1a');
+  const spr = new THREE.CylinderGeometry(0.08, 0.14, 7.4, 5); spr.rotateX(-1.25); place(spr, cx, CURB + 3.4, z0 - 4.6); solid(spr, '#3a2a1a');
   for (const [z, h] of [[-23.5, 20], [-18, 23], [-12.5, 17]]) {
     const m = new THREE.CylinderGeometry(0.16, 0.26, h, 6); place(m, cx, CURB + 1.7 + h / 2, z); solid(m, '#3a2a1a');
     for (const k of [0.45, 0.7, 0.9]) { const y = new THREE.CylinderGeometry(0.08, 0.08, 8 * (1.1 - k), 5); y.rotateZ(Math.PI / 2); place(y, cx, CURB + 1.7 + h * k, z); solid(y, '#3a2a1a'); }
@@ -75,12 +76,17 @@ LMCAP('wtc');
 LMCAP(null);
 landmark('wtc', 'WORLD TRADE CENTER', -12, -22, 14, { name: 'The Penthouse Pigeon', x: -12, z: -22.5, y: CURB + 63 });
 LMCAP('aquarium');
-// National Aquarium: a concrete hall with glass pyramids, on pier 3
-mass(9, -27, 29, -11, 13, { col: '#7f93a0', top: '#5a6670' });
-mass(12, -11, 26, -7, 5.5, { tr: T.glass, fh: 5.5, top: '#3a4a5a' });
-sbox(8.85, CURB + 8.5, -27.15, 29.15, CURB + 10.3, -10.85, '#26406a', false); sbox(8.9, CURB + 10.3, -27.1, 29.1, CURB + 11, -10.9, '#a8322a', false); // refs: navy + red bands on raw concrete
-for (const [x, z, s] of [[14.5, -20, 7], [23, -17, 9.5], [19, -24, 5]]) { const g = new THREE.CylinderGeometry(0.01, s * 0.72, s * 1.05, 4, 1); g.rotateY(Math.PI / 4); place(g, x, CURB + 13 + s * 0.52, z); solid(g, '#6fc6dc'); }
-signOn(9, -27, 29, -11, 's', 6, 11, LSIGN.aqua);
+// National Aquarium on pier 3 (far LOD of the HD model in 03c, same AQ footprints): concrete block + navy box + glass pyramid, red Australia wing,
+// south block, the concrete drum, the Pratt St glass entrance
+mass(11, -26, 23, -13, 15, { col: '#b2ab9e', top: '#8e8a82', trimCol: '#9a9387' });
+sbox(12, CURB + 15, -25, 22, CURB + 17.6, -14, '#26376c', false);
+{ const g = new THREE.CylinderGeometry(0.01, 1, 1, 4, 1); g.rotateY(Math.PI / 4); g.scale(10 / Math.SQRT2, 7.2, 11 / Math.SQRT2); place(g, 17, CURB + 17.6 + 3.6, -19.5); solid(g, '#86bccb'); }
+mass(7.5, -26, 11, -17, 8, { col: '#b5332b', top: '#3d6fa6', trimCol: '#8a2420' });
+sbox(7.6, CURB + 8, -25.9, 11, CURB + 11.5, -17.1, '#3d6fa6', false);
+mass(11, -13, 18, -7.5, 5.5, { tr: T.glass, fh: 5.5, top: '#8e8a82' });
+{ const g = new THREE.CylinderGeometry(4.6, 4.6, 11, 16); place(g, 22, CURB + 5.5, -11); solid(g, '#b2ab9e'); COLL.push({ x: 22, z: -11, r: 4.6 }); BLD.push({ x0: 17.4, x1: 26.6, z0: -15.6, z1: -6.4, h: CURB + 11 }); }
+mass(13, -28.2, 21, -26, 4.5, { tr: T.glass, fh: 4.5, top: '#d8d6d0' });
+signOn(11, -26, 23, -13, 'n', CURB + 6.7, 8.4, LSIGN.aqua);
 LMCAP(null);
 landmark('aquarium', 'NATIONAL AQUARIUM', 19, -17, 19, { name: 'Big Jimmy', x: 19, z: -5, water: true });
 LMCAP('powerplant');
@@ -144,12 +150,22 @@ landmark('orioles', 'ORIOLE PARK', -100, 0, 34, { name: 'Bird Brain Bobby', x: -
   signOn(-88, 56, -80, 70, 'e', 14, 10, LSIGN.stad); signOn(-88, 82, -80, 96, 'e', 14, 10, LSIGN.stad);
 })();
 landmark('ravens', 'M&T BANK STADIUM', -106, 76, 32, { name: 'The Raven King', x: -106, z: 76 });
-// Maryland Science Center: stepped brick tiers, an IMAX drum and a dome
-mass(-64, 48, -44, 68, 7, { tr: T.fac[2][0], top: '#5a4a3a' });
-mass(-61, 51, -47, 65, 7, { tr: T.fac[2][1], y0: CURB + 7, coll: false, top: '#5a4a3a' });
-{ const g = new THREE.CylinderGeometry(4.5, 4.5, 6, 14); place(g, -50, CURB + 7 + 3, 58); solid(g, '#c8c0b0');
-  const d = new THREE.SphereGeometry(4.3, 14, 7, 0, TAU, 0, Math.PI / 2); place(d, -58, CURB + 14, 58); solid(d, '#d8d8e0'); }
-signOn(-64, 48, -44, 68, 'n', 4.2, 10, LSIGN.sci);
+LMCAP('science');
+// Maryland Science Center (far LOD of the HD model in 03c, same MSC footprints): brick block + towers + observatory dome (east), glass box, brick sign panel,
+// glass stair tower, the curved glass drum, the west glass box, the silver wing behind
+mass(-51, 52, -42.5, 69, 12, { tr: T.fac[2][0], top: '#5a4a3a' });
+mass(-56, 57, -51, 69, 12, { tr: T.fac[2][1], top: '#5a4a3a' });
+mass(-50.5, 47, -43, 52, 10, { tr: T.glass, fh: 1.7, bay: 1.4, top: '#d4d8dc' });
+mass(-53.2, 48, -50.5, 57, 13.2, { col: '#7a3b2b', top: '#5a4a3a' });
+mass(-54.5, 47.8, -53.2, 49.4, 15.2, { tr: T.glass, fh: 1.9, top: '#f2f2ee' });
+mass(-66, 47.6, -62, 57, 8.6, { tr: T.glass, fh: 2, bay: 1.3, top: '#ecece8' });
+mass(-66, 57, -56, 69, 11, { col: '#b4bac0', top: '#c4c8cc' });
+for (const [x, z, w, h] of [[-50.8, 52.2, 2.6, 16.2], [-45.2, 52.6, 2.4, 15.4], [-50.6, 62.5, 2.4, 15.8], [-44.6, 64.8, 2.6, 16.6]]) sbox(x, CURB + 12, z, x + w, CURB + h, z + w, '#86442f', false);
+{ const g = new THREE.CylinderGeometry(5.6, 5.6, 9.6, 18); place(g, -57.6, CURB + 4.8, 55); solid(g, '#3f6f9a'); COLL.push({ x: -57.6, z: 55, r: 5.6 }); BLD.push({ x0: -63.2, x1: -52, z0: 49.4, z1: 60.6, h: CURB + 12.6 });
+  const u = new THREE.CylinderGeometry(4.5, 4.5, 3, 16); place(u, -57.6, CURB + 11.1, 55); solid(u, '#5d7f9c');
+  const d = new THREE.SphereGeometry(2.05, 12, 6, 0, TAU, 0, Math.PI / 2); place(d, -46.8, CURB + 13.2, 60.5); solid(d, '#f2f2f0'); }
+signOn(-53.2, 48, -50.5, 57, 'n', CURB + 9.4, 2.6, LSIGN.sci, 1.1);
+LMCAP(null);
 landmark('science', 'SCIENCE CENTER', -54, 58, 16, { name: 'Dr. Shellacious', x: -54, z: 41 });
 landmark('fedhill', 'FEDERAL HILL', -3, 59, 24, { name: 'The Hon Queen', x: HILL.x, z: HILL.z, y: CURB + HILL.h });
 const DOM_H = 23; // refinery roof height (the sign stands on it; HD model in 03b uses the same)
