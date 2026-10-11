@@ -20,6 +20,13 @@ A fork of J (Cinema City), cut down to ONE street and re-dressed as a 32-bit (PS
 - MAVIS (AI partner, computer-controlled as RIDGE was): wide grey afro, floral dress, pearls, gold bangle, burgundy shoes. Weapon: her handbag.
 - Both: warty olive-green skin, pale throat, wide mouth, bulging gold eyes with horizontal pupils. Low-poly rigs (src/04_actors.js buildHero).
 
+## Quality: HD (default) / 32-bit
+HD (default): full-res, cel bands + J-style ink outlines (characters, props, city), smooth heads, warty skin texture, curly grey afro, filtered full-size textures.
+32-bit: ?retro=1 (or ?hd=0), key H, or the 32-BIT/HD HUD button toggles at runtime. Character polygon detail is fixed at page load (low-poly when opened with ?retro=1).
+
+## HAROLD model viewer: site/viewer.html (src/01_core.js + src/04_actors.js + src/v_viewer.js -> site/viewer.js)
+Turntable plinth, slow auto-spin, drag to rotate, pinch/wheel zoom, big 32-BIT/HD toggle (rebuilds the model at that detail), DAY/NIGHT, IDLE/WALK/CANE SWING, SPIN. Keys H, N, 1-3. ?retro=1 ?night=1 ?rot=R ?anim=walk|swing.
+
 ## 32-bit look (src/01_core.js)
 - The scene renders into a low-res target with 240 lines on the short side (427x240 at 16:9; 240x519 on a 390x844 phone) and is upscaled with
   nearest-neighbour (canvas at low res + CSS image-rendering: pixelated). ?res=N changes the line count.
