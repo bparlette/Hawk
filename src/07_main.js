@@ -105,7 +105,7 @@ function updateCycle(dt) {
   SKY.moonS.position.copy(DIRK[2]).multiplyScalar(70); SKY.moonS.material.opacity = sstep(0.5, 0.8, n);
   col3(PALK.cloud, n, _cc); for (const c of SKY.clouds) c.material.color.copy(_cc);
   // night: windows light up, street lamps switch on (orange glow pools + halos + point lights), the BINGO neon buzzes on
-  NIGHT.value = sstep(0.32, 0.62, n);
+  NIGHT.value = sstep(0.32, 0.62, n); abNight(NIGHT.value);
   const on = CYC.lamps = sstep(0.38, 0.56, n);
   NIGHTFX.pools.forEach((q, k) => { q.material.opacity = on * 0.8; q.visible = on > 0.01; });
   NIGHTFX.halos.forEach((h) => { h.material.opacity = on; h.visible = on > 0.01; });
@@ -195,4 +195,4 @@ function frame(now) {
   } catch (err) { __celErr.n++; __celErr.last = String(err && err.stack || err); if (__celErr.n < 4) console.error(err); }
 }
 requestAnimationFrame(frame);
-window.__cel = { S, hero, partner, PART, BOOST_P, hurtTurtle, reviveTurtle, partnerSlot, get KEYS() { return KEYS; }, enemies, CAM, BOTR, FPS, IN, renderer, CINE, ACTIONS, DOOR, PIZZA, LADDER, ROOF, get QTE() { return QTE; }, get lockT() { return lockT; }, press: (k) => PRESS.add(k), tryAction, get frames() { return frames; }, atlasRows: _ay + _arow, THREE, camera, scene, CYC, LOW, NIGHTFX, draw, QUAL, setHD, LANDMARKS, CITY, POWER, WATERK, startDrown, actContext, APANEL, MANHOLES, CLIMBS, VEHICLES, RIDE, isWater, groundY, WB, COLL, BLD, PIERS, POSTS, CARS, WATER };
+window.__cel = { S, hero, partner, PART, BOOST_P, hurtTurtle, reviveTurtle, partnerSlot, get KEYS() { return KEYS; }, enemies, CAM, BOTR, FPS, IN, renderer, CINE, ACTIONS, DOOR, PIZZA, LADDER, ROOF, get QTE() { return QTE; }, get lockT() { return lockT; }, press: (k) => PRESS.add(k), tryAction, get frames() { return frames; }, atlasRows: _ay + _arow, THREE, camera, scene, CYC, LOW, NIGHTFX, draw, QUAL, setHD, LANDMARKS, CITY, POWER, WATERK, startDrown, actContext, APANEL, MANHOLES, CLIMBS, VEHICLES, RIDE, isWater, groundY, WB, COLL, BLD, PIERS, POSTS, CARS, WATER, AB, ABHOOKS, K_AB, AB_A, AB_B, ABV: { buildCarSedan, buildCarHatch, buildCarWagon, buildCarMinivan, buildCarPickup, buildCarCab, buildBoxTruck, buildParkedCar, buildArabberCart, buildCrabShack, buildRowBlock, buildRowhouse, buildCornerBar, buildCornerShop, buildLampAcorn, buildTrashCan, buildBenchPark, buildManhole, abCityOut, abMakeOut } };

@@ -114,6 +114,7 @@ const DOOR_AT = { x: -44.95, z: -58 }; // the kickable STAFF door (06b) sits on 
 function bld(x0, z0, x1, z1, fl, pal, o) { const h = building(x0, z0, x1, z1, fl, pal, o); COLL.push({ x0, x1, z0, z1 }); return h; }
 SEED = 1234;
 for (const b of GEN) {
+  const abTake = abTakes(b); if (abTake) AB_BLOCKS.push(b); // Task A rowhouse blocks replace the generic fill here (02c_taskab.js); the random draws below still run so the kept blocks are unchanged
   const ix0 = b.x0 + 3, ix1 = b.x1 - 3, iz0 = b.z0 + 3, iz1 = b.z1 - 3;
   const fells = b.x0 >= 138 && b.z1 < 0, hEast = b.x0 >= 36 && b.z1 < 0 && !fells, south = b.z0 > 0, nearWater = Math.abs(b.z0) < 50 && Math.abs(b.z1) < 75;
   const door = b.x0 === -66 && b.z0 === -70;
@@ -128,7 +129,7 @@ for (const b of GEN) {
     const o = { shops: door ? ['n', 's', 'w'] : shops, sign: Math.floor(srnd() * 8), v: srnd() < 0.5 ? 1 : 0 };
     if (!fells && srnd() < 0.25) o.tower = [0.5, 0.5];
     if (!fells && fl >= 3 && srnd() < 0.18) o.fire = shops[0];
-    bld(x0, z0, x1, z1, fl, pal, o);
+    if (!abTake) bld(x0, z0, x1, z1, fl, pal, o);
   }
 }
 // skyline wall just beyond the walkable edge (cheap, no detail): keeps the fog from showing an empty world

@@ -192,6 +192,7 @@ const DOOR_AT = { x: -44.95, z: -58 }; // the kickable STAFF door (06b) sits on 
 function bld(x0, z0, x1, z1, fl, pal, o) { const h = building(x0, z0, x1, z1, fl, pal, o); COLL.push({ x0, x1, z0, z1 }); return h; }
 SEED = 1234;
 for (const b of GEN) {
+  const abTake = abTakes(b); if (abTake) AB_BLOCKS.push(b); // Task A rowhouse blocks replace the generic fill here (02c_taskab.js); the random draws below still run so the kept blocks are unchanged
   const ix0 = b.x0 + 3, ix1 = b.x1 - 3, iz0 = b.z0 + 3, iz1 = b.z1 - 3;
   const fells = b.x0 >= 138 && b.z1 < 0, hEast = b.x0 >= 36 && b.z1 < 0 && !fells, south = b.z0 > 0, nearWater = Math.abs(b.z0) < 50 && Math.abs(b.z1) < 75;
   const door = b.x0 === -66 && b.z0 === -70;
@@ -206,7 +207,7 @@ for (const b of GEN) {
     const o = { shops: door ? ['n', 's', 'w'] : shops, sign: Math.floor(srnd() * 8), v: srnd() < 0.5 ? 1 : 0 };
     if (!fells && srnd() < 0.25) o.tower = [0.5, 0.5];
     if (!fells && fl >= 3 && srnd() < 0.18) o.fire = shops[0];
-    bld(x0, z0, x1, z1, fl, pal, o);
+    if (!abTake) bld(x0, z0, x1, z1, fl, pal, o);
   }
 }
 // skyline wall just beyond the walkable edge (cheap, no detail): keeps the fog from showing an empty world
@@ -571,7 +572,7 @@ landmark('fort', 'FORT MCHENRY', 176, 78, 26, { name: 'Admiral Redclaw', x: 176,
 // a few parked cars (vaultable in 06b) along the avenues
 const CARS = [[-74.2, -16, false, '#a83a4a', '#d8d0c0'], [-74.2, 20, false, '#3a5a8a', '#2a3a5a'], [-22, -44.2, true, '#d8a830', '#d8a830'], [42, -44.2, true, '#5a7a4a', '#d8d0c0'],
   [52, 44.2, true, '#a83a4a', '#d8d0c0'], [-30, 44.2, true, '#3a5a8a', '#2a3a5a'], [34.2, -60, false, '#d8a830', '#d8a830'], [170.2, -60, false, '#7a3a7a', '#d8d0c0']];
-for (const [x, z, ax, b, r] of CARS) car(x, z, ax ? Math.PI / 2 : 0, b, r);
+// (built as real parked cars by abBuildCity in 02c_taskab.js, which also appends the side-street cars to CARS)
 
 // ---------------- promenade furniture: lamps (water side) + trees (land side) ----------------
 const LAMPS = [];
@@ -592,11 +593,15 @@ for (let x = -110; x < 212; x += 34) { lampAt(x - 0.6, -46.6, Math.PI); lampAt(x
 for (const z of [-30, 0, 30]) lampAt(-76.6, z, -Math.PI / 2);
 const LADDER = { x: 999, z: 999, top: 0, roofY: 0 }; // kept for shared code paths (no climbable fire escape yet)
 
+// ---------------- Task A/B: rowhouse blocks, street props, parked cars (02c_taskab.js), spread over frames while loading ----------------
+if (AB.CURB !== CURB || AB.GF !== GF || AB.FH !== FH) throw new Error('taskAB K constants out of sync');
+await abBuildCity();
 // ---------------- build the chunked meshes ----------------
 const cityMesh = CB.build(CITY_MAT, { cast: true }); scene.add(cityMesh);
 const groundMesh = GB.build(CITY_MAT); scene.add(groundMesh);
 const decalMesh = DB.build(DECAL_MAT); scene.add(decalMesh);
 const cityOutline = OL.build(OUT_CITY); scene.add(cityOutline);
+abBuildLayers();
 // collider lookup: 16 m cells, every collider listed in each cell it touches (+1.5 m margin)
 const COLLG = new Map(); const cgk = (x, z) => Math.floor(x / 16) + ',' + Math.floor(z / 16);
 for (const c of COLL) {

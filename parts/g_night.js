@@ -18,11 +18,15 @@ for (let x = -110; x < 212; x += 34) { lampAt(x - 0.6, -46.6, Math.PI); lampAt(x
 for (const z of [-30, 0, 30]) lampAt(-76.6, z, -Math.PI / 2);
 const LADDER = { x: 999, z: 999, top: 0, roofY: 0 }; // kept for shared code paths (no climbable fire escape yet)
 
+// ---------------- Task A/B: rowhouse blocks, street props, parked cars (02c_taskab.js), spread over frames while loading ----------------
+if (AB.CURB !== CURB || AB.GF !== GF || AB.FH !== FH) throw new Error('taskAB K constants out of sync');
+await abBuildCity();
 // ---------------- build the chunked meshes ----------------
 const cityMesh = CB.build(CITY_MAT, { cast: true }); scene.add(cityMesh);
 const groundMesh = GB.build(CITY_MAT); scene.add(groundMesh);
 const decalMesh = DB.build(DECAL_MAT); scene.add(decalMesh);
 const cityOutline = OL.build(OUT_CITY); scene.add(cityOutline);
+abBuildLayers();
 // collider lookup: 16 m cells, every collider listed in each cell it touches (+1.5 m margin)
 const COLLG = new Map(); const cgk = (x, z) => Math.floor(x / 16) + ',' + Math.floor(z / 16);
 for (const c of COLL) {
