@@ -1,0 +1,649 @@
+{
+ "lamp_acorn": {
+  "meshes": 2,
+  "hulls": 1,
+  "parts": 2,
+  "drawCalls": 3,
+  "shadowCalls": 1,
+  "tris": 310,
+  "trisNoHull": 268,
+  "materials": 3,
+  "geoms": 3,
+  "coll": 1,
+  "bld": 0,
+  "lamps": 1,
+  "hooks": {},
+  "meta": {
+   "id": "lamp_acorn",
+   "kind": "prop",
+   "footprint": [
+    0.5,
+    0.5
+   ],
+   "height": 4.9
+  },
+  "bbox": [
+   -0.27,
+   0.16,
+   -0.27,
+   0.27,
+   5.3,
+   0.27
+  ]
+ },
+ "lamp_cobra": {
+  "meshes": 2,
+  "hulls": 1,
+  "parts": 2,
+  "drawCalls": 3,
+  "shadowCalls": 1,
+  "tris": 200,
+  "trisNoHull": 152,
+  "materials": 3,
+  "geoms": 3,
+  "coll": 1,
+  "bld": 0,
+  "lamps": 1,
+  "hooks": {},
+  "meta": {
+   "id": "lamp_cobra",
+   "kind": "prop",
+   "footprint": [
+    0.4,
+    0.4
+   ],
+   "height": 7.4
+  },
+  "bbox": [
+   -0.48,
+   0.16,
+   -0.24,
+   0.48,
+   7.45,
+   1.97
+  ]
+ },
+ "bench_park": {
+  "meshes": 1,
+  "hulls": 1,
+  "parts": 1,
+  "drawCalls": 2,
+  "shadowCalls": 1,
+  "tris": 150,
+  "trisNoHull": 110,
+  "materials": 2,
+  "geoms": 2,
+  "coll": 1,
+  "bld": 0,
+  "lamps": 0,
+  "hooks": {
+   "seat": 1
+  },
+  "meta": {
+   "id": "bench_park",
+   "kind": "prop",
+   "footprint": [
+    1.8,
+    0.6
+   ],
+   "height": 0.9
+  },
+  "bbox": [
+   -0.9,
+   0.16,
+   -0.31,
+   0.9,
+   1.06,
+   0.23
+  ]
+ },
+ "bench_bus": {
+  "meshes": 2,
+  "hulls": 1,
+  "parts": 2,
+  "drawCalls": 3,
+  "shadowCalls": 2,
+  "tris": 126,
+  "trisNoHull": 76,
+  "materials": 3,
+  "geoms": 3,
+  "coll": 1,
+  "bld": 0,
+  "lamps": 0,
+  "hooks": {
+   "seat": 1
+  },
+  "meta": {
+   "id": "bench_bus",
+   "kind": "prop",
+   "footprint": [
+    1.9,
+    0.6
+   ],
+   "height": 2.2
+  },
+  "bbox": [
+   -0.86,
+   0.16,
+   -0.25,
+   1.36,
+   2.36,
+   0.25
+  ]
+ },
+ "trash_can": {
+  "meshes": 1,
+  "hulls": 1,
+  "parts": 1,
+  "drawCalls": 2,
+  "shadowCalls": 1,
+  "tris": 88,
+  "trisNoHull": 72,
+  "materials": 2,
+  "geoms": 2,
+  "coll": 1,
+  "bld": 0,
+  "lamps": 0,
+  "hooks": {},
+  "meta": {
+   "id": "trash_can",
+   "kind": "prop",
+   "footprint": [
+    0.7,
+    0.7
+   ],
+   "height": 0.95
+  },
+  "bbox": [
+   -0.32,
+   0.16,
+   -0.32,
+   0.32,
+   1.09,
+   0.32
+  ]
+ },
+ "crab_shack": {
+  "meshes": 3,
+  "hulls": 1,
+  "parts": 3,
+  "drawCalls": 4,
+  "shadowCalls": 2,
+  "tris": 1208,
+  "trisNoHull": 920,
+  "materials": 4,
+  "geoms": 4,
+  "coll": 1,
+  "bld": 1,
+  "lamps": 1,
+  "hooks": {},
+  "meta": {
+   "id": "crab_shack",
+   "kind": "prop",
+   "footprint": [
+    4,
+    3
+   ],
+   "height": 4.1
+  },
+  "bbox": [
+   -2.99,
+   0.16,
+   -1.69,
+   2.74,
+   4.86,
+   2.13
+  ]
+ },
+ "manhole": {
+  "meshes": 2,
+  "hulls": 0,
+  "parts": 2,
+  "drawCalls": 2,
+  "shadowCalls": 2,
+  "tris": 50,
+  "trisNoHull": 50,
+  "materials": 2,
+  "geoms": 2,
+  "coll": 0,
+  "bld": 0,
+  "lamps": 0,
+  "hooks": {
+   "manhole": 1
+  },
+  "meta": {
+   "id": "manhole",
+   "kind": "prop",
+   "footprint": [
+    0.9,
+    0.9
+   ],
+   "height": 0.01
+  },
+  "bbox": [
+   -0.46,
+   0,
+   -0.46,
+   0.46,
+   0.02,
+   0.46
+  ]
+ },
+ "ladder_wall": {
+  "meshes": 1,
+  "hulls": 1,
+  "parts": 1,
+  "drawCalls": 2,
+  "shadowCalls": 1,
+  "tris": 206,
+  "trisNoHull": 190,
+  "materials": 2,
+  "geoms": 2,
+  "coll": 0,
+  "bld": 0,
+  "lamps": 0,
+  "hooks": {
+   "climb": 1
+  },
+  "meta": {
+   "id": "ladder_wall",
+   "kind": "prop",
+   "footprint": [
+    0.6,
+    0.3
+   ],
+   "height": 6
+  },
+  "bbox": [
+   -0.25,
+   0.16,
+   0.01,
+   0.25,
+   6.16,
+   0.17
+  ]
+ },
+ "ladder_drop": {
+  "meshes": 1,
+  "hulls": 1,
+  "parts": 1,
+  "drawCalls": 2,
+  "shadowCalls": 1,
+  "tris": 124,
+  "trisNoHull": 98,
+  "materials": 2,
+  "geoms": 2,
+  "coll": 0,
+  "bld": 0,
+  "lamps": 0,
+  "hooks": {
+   "climb": 1
+  },
+  "meta": {
+   "id": "ladder_drop",
+   "kind": "prop",
+   "footprint": [
+    0.6,
+    0.3
+   ],
+   "height": 3.9
+  },
+  "bbox": [
+   -0.32,
+   1.64,
+   -0.15,
+   0.32,
+   4.05,
+   0.36
+  ]
+ },
+ "parked_car_sedan": {
+  "meshes": 3,
+  "hulls": 1,
+  "parts": 3,
+  "drawCalls": 4,
+  "shadowCalls": 2,
+  "tris": 618,
+  "trisNoHull": 522,
+  "materials": 4,
+  "geoms": 4,
+  "coll": 1,
+  "bld": 0,
+  "lamps": 0,
+  "hooks": {},
+  "meta": {
+   "id": "parked_car_sedan",
+   "kind": "prop",
+   "footprint": [
+    1.8,
+    4.5
+   ],
+   "height": 1.46
+  },
+  "bbox": [
+   -1.05,
+   0.02,
+   -2.33,
+   1.05,
+   1.46,
+   2.35
+  ]
+ },
+ "parked_car_hatchback": {
+  "meshes": 3,
+  "hulls": 1,
+  "parts": 3,
+  "drawCalls": 4,
+  "shadowCalls": 2,
+  "tris": 610,
+  "trisNoHull": 518,
+  "materials": 4,
+  "geoms": 4,
+  "coll": 1,
+  "bld": 0,
+  "lamps": 0,
+  "hooks": {},
+  "meta": {
+   "id": "parked_car_hatchback",
+   "kind": "prop",
+   "footprint": [
+    1.75,
+    3.95
+   ],
+   "height": 1.5
+  },
+  "bbox": [
+   -1.02,
+   0.02,
+   -2.05,
+   1.02,
+   1.5,
+   2.07
+  ]
+ },
+ "parked_car_pickup": {
+  "meshes": 2,
+  "hulls": 1,
+  "parts": 2,
+  "drawCalls": 3,
+  "shadowCalls": 1,
+  "tris": 634,
+  "trisNoHull": 504,
+  "materials": 3,
+  "geoms": 3,
+  "coll": 1,
+  "bld": 0,
+  "lamps": 0,
+  "hooks": {},
+  "meta": {
+   "id": "parked_car_pickup",
+   "kind": "prop",
+   "footprint": [
+    2,
+    5.4
+   ],
+   "height": 1.7
+  },
+  "bbox": [
+   -1.01,
+   0.02,
+   -2.78,
+   1.01,
+   1.68,
+   2.72
+  ]
+ },
+ "water_taxi": {
+  "meshes": 4,
+  "hulls": 1,
+  "parts": 4,
+  "drawCalls": 5,
+  "shadowCalls": 3,
+  "tris": 1118,
+  "trisNoHull": 1012,
+  "materials": 5,
+  "geoms": 5,
+  "seats": 4,
+  "collider": {
+   "w": 3,
+   "l": 9.1,
+   "h": 2.75
+  },
+  "waterline": 0.35,
+  "kind": "boat",
+  "bbox": [
+   -1.55,
+   0,
+   -4.55,
+   1.55,
+   4.07,
+   4.55
+  ]
+ },
+ "paddle_boat": {
+  "meshes": 4,
+  "hulls": 1,
+  "parts": 4,
+  "drawCalls": 5,
+  "shadowCalls": 3,
+  "tris": 1212,
+  "trisNoHull": 880,
+  "materials": 4,
+  "geoms": 5,
+  "seats": 2,
+  "collider": {
+   "w": 1.99,
+   "l": 4.2,
+   "h": 2.48
+  },
+  "waterline": 0.28,
+  "kind": "boat",
+  "bbox": [
+   -0.99,
+   0,
+   -2.1,
+   0.99,
+   2.48,
+   2.1
+  ]
+ },
+ "dragon_boat": {
+  "meshes": 4,
+  "hulls": 1,
+  "parts": 4,
+  "drawCalls": 5,
+  "shadowCalls": 3,
+  "tris": 1975,
+  "trisNoHull": 1703,
+  "materials": 5,
+  "geoms": 5,
+  "seats": 4,
+  "collider": {
+   "w": 1.28,
+   "l": 14.45,
+   "h": 2.34
+  },
+  "waterline": 0.22,
+  "kind": "boat",
+  "bbox": [
+   -0.64,
+   -0.7,
+   -7.22,
+   0.64,
+   2.34,
+   7.22
+  ]
+ },
+ "car_sedan": {
+  "meshes": 7,
+  "hulls": 1,
+  "parts": 7,
+  "drawCalls": 8,
+  "shadowCalls": 6,
+  "tris": 922,
+  "trisNoHull": 826,
+  "materials": 5,
+  "geoms": 8,
+  "seats": 2,
+  "collider": {
+   "w": 1.9000000000000001,
+   "l": 4.67,
+   "h": 1.5
+  },
+  "waterline": 0,
+  "kind": "car",
+  "bbox": [
+   -1.05,
+   0,
+   -2.34,
+   1.05,
+   1.46,
+   2.34
+  ]
+ },
+ "car_hatch": {
+  "meshes": 7,
+  "hulls": 1,
+  "parts": 7,
+  "drawCalls": 8,
+  "shadowCalls": 6,
+  "tris": 914,
+  "trisNoHull": 822,
+  "materials": 5,
+  "geoms": 8,
+  "seats": 2,
+  "collider": {
+   "w": 1.85,
+   "l": 4.11,
+   "h": 1.5
+  },
+  "waterline": 0,
+  "kind": "car",
+  "bbox": [
+   -1.02,
+   0,
+   -2.06,
+   1.02,
+   1.5,
+   2.06
+  ]
+ },
+ "box_truck": {
+  "meshes": 7,
+  "hulls": 1,
+  "parts": 7,
+  "drawCalls": 8,
+  "shadowCalls": 6,
+  "tris": 840,
+  "trisNoHull": 774,
+  "materials": 5,
+  "geoms": 8,
+  "seats": 2,
+  "collider": {
+   "w": 2.6,
+   "l": 6.97,
+   "h": 3.07
+  },
+  "waterline": 0,
+  "kind": "car",
+  "bbox": [
+   -1.3,
+   0,
+   -3.49,
+   1.3,
+   3.07,
+   3.49
+  ]
+ },
+ "arabber_cart": {
+  "meshes": 10,
+  "hulls": 1,
+  "parts": 10,
+  "drawCalls": 11,
+  "shadowCalls": 9,
+  "tris": 2869,
+  "trisNoHull": 2615,
+  "materials": 5,
+  "geoms": 11,
+  "seats": 2,
+  "collider": {
+   "w": 1.8,
+   "l": 6.27,
+   "h": 3.52
+  },
+  "waterline": 0,
+  "kind": "cart",
+  "bbox": [
+   -0.9,
+   -0.03,
+   -3.14,
+   0.9,
+   3.52,
+   3.14
+  ]
+ },
+ "skateboard": {
+  "meshes": 3,
+  "hulls": 1,
+  "parts": 3,
+  "drawCalls": 4,
+  "shadowCalls": 3,
+  "tris": 376,
+  "trisNoHull": 328,
+  "materials": 3,
+  "geoms": 4,
+  "seats": 1,
+  "collider": {
+   "w": 0.34,
+   "l": 0.92,
+   "h": 0.16
+  },
+  "waterline": 0,
+  "kind": "board",
+  "bbox": [
+   -0.17,
+   0.01,
+   -0.46,
+   0.17,
+   0.16,
+   0.46
+  ]
+ },
+ "trash_can_recycling": {
+  "meshes": 2,
+  "hulls": 1,
+  "parts": 2,
+  "drawCalls": 3,
+  "shadowCalls": 2,
+  "tris": 188,
+  "trisNoHull": 156,
+  "materials": 3,
+  "geoms": 3,
+  "coll": 1,
+  "bld": 0,
+  "lamps": 0,
+  "hooks": {},
+  "meta": {
+   "id": "trash_can",
+   "kind": "prop",
+   "footprint": [
+    0.7,
+    0.7
+   ],
+   "height": 0.95
+  },
+  "bbox": [
+   -0.32,
+   0.16,
+   -0.32,
+   1,
+   1.09,
+   0.32
+  ]
+ },
+ "atlasInfo": {
+  "tiles": 13,
+  "usedHeight": 400,
+  "areaPct": 23.8
+ }
+}
