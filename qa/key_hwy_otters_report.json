@@ -1,0 +1,6016 @@
+[
+ {
+  "out": "previews/key_hwy_otters_grunt_a_phone_day.png",
+  "q": "mods=../src/gang_key_hwy_otters.js&show=key_hwy_otters.grunt_a&cam=phone&dist=4.5&t=0.5&ui=0",
+  "errors": [],
+  "report": {
+   "show": "key_hwy_otters.grunt_a",
+   "lod": 0,
+   "rigs": {
+    "key_hwy_otters.grunt_a": {
+     "parts": 32,
+     "tris": 9400,
+     "hullTris": 8524,
+     "mats": 3,
+     "height": 1.8988061952840254,
+     "minY": 0.015917896887048158,
+     "flashBad": 0,
+     "hullsOK": true,
+     "swR": false
+    }
+   },
+   "frame": {
+    "calls": 75,
+    "triangles": 24866
+   },
+   "seq": {
+    "name": null,
+    "minY": {}
+   }
+  }
+ },
+ {
+  "out": "previews/key_hwy_otters_grunt_a_phone_day_merged.png",
+  "q": "mods=../src/gang_key_hwy_otters.js&show=key_hwy_otters.grunt_a&cam=phone&dist=4.5&t=0.5&ui=0&merge=1",
+  "errors": [],
+  "report": {
+   "show": "key_hwy_otters.grunt_a",
+   "lod": 0,
+   "rigs": {
+    "key_hwy_otters.grunt_a": {
+     "parts": 2,
+     "tris": 9400,
+     "hullTris": 8524,
+     "mats": 3,
+     "height": 1.8947122209035514,
+     "minY": 0.020011860612037292,
+     "flashBad": 0,
+     "hullsOK": false,
+     "swR": false
+    }
+   },
+   "frame": {
+    "calls": 6,
+    "triangles": 27326
+   },
+   "seq": {
+    "name": null,
+    "minY": {}
+   }
+  }
+ },
+ {
+  "out": "previews/key_hwy_otters_grunt_a_day.png",
+  "q": "mods=../src/gang_key_hwy_otters.js&show=key_hwy_otters.grunt_a&t=0.5&turn=1&cam=front&ui=0",
+  "errors": [],
+  "report": {
+   "show": "key_hwy_otters.grunt_a",
+   "lod": 0,
+   "rigs": {
+    "key_hwy_otters.grunt_a": {
+     "parts": 32,
+     "tris": 9400,
+     "hullTris": 8524,
+     "mats": 3,
+     "height": 1.8988061952840254,
+     "minY": 0.015917896887048158,
+     "flashBad": 0,
+     "hullsOK": true,
+     "swR": false
+    }
+   },
+   "frame": {
+    "calls": 297,
+    "triangles": 99458
+   },
+   "seq": {
+    "name": null,
+    "minY": {}
+   }
+  }
+ },
+ {
+  "out": "previews/key_hwy_otters_grunt_a_day_merged.png",
+  "q": "mods=../src/gang_key_hwy_otters.js&show=key_hwy_otters.grunt_a&t=0.5&turn=1&cam=front&ui=0&merge=1",
+  "errors": [],
+  "report": {
+   "show": "key_hwy_otters.grunt_a",
+   "lod": 0,
+   "rigs": {
+    "key_hwy_otters.grunt_a": {
+     "parts": 2,
+     "tris": 9400,
+     "hullTris": 8524,
+     "mats": 3,
+     "height": 1.8947122209035514,
+     "minY": 0.020011860612037292,
+     "flashBad": 0,
+     "hullsOK": false,
+     "swR": false
+    }
+   },
+   "frame": {
+    "calls": 21,
+    "triangles": 109298
+   },
+   "seq": {
+    "name": null,
+    "minY": {}
+   }
+  }
+ },
+ {
+  "out": "previews/key_hwy_otters_grunt_a_phone_night.png",
+  "q": "mods=../src/gang_key_hwy_otters.js&show=key_hwy_otters.grunt_a&cam=phone&dist=4.5&t=0.5&ui=0&night=1",
+  "errors": [],
+  "report": {
+   "show": "key_hwy_otters.grunt_a",
+   "lod": 0,
+   "rigs": {
+    "key_hwy_otters.grunt_a": {
+     "parts": 32,
+     "tris": 9400,
+     "hullTris": 8524,
+     "mats": 3,
+     "height": 1.8988061952840254,
+     "minY": 0.015917896887048158,
+     "flashBad": 0,
+     "hullsOK": true,
+     "swR": false
+    }
+   },
+   "frame": {
+    "calls": 75,
+    "triangles": 24866
+   },
+   "seq": {
+    "name": null,
+    "minY": {}
+   }
+  }
+ },
+ {
+  "out": "previews/key_hwy_otters_grunt_a_phone_night_merged.png",
+  "q": "mods=../src/gang_key_hwy_otters.js&show=key_hwy_otters.grunt_a&cam=phone&dist=4.5&t=0.5&ui=0&merge=1&night=1",
+  "errors": [],
+  "report": {
+   "show": "key_hwy_otters.grunt_a",
+   "lod": 0,
+   "rigs": {
+    "key_hwy_otters.grunt_a": {
+     "parts": 2,
+     "tris": 9400,
+     "hullTris": 8524,
+     "mats": 3,
+     "height": 1.8947122209035514,
+     "minY": 0.020011860612037292,
+     "flashBad": 0,
+     "hullsOK": false,
+     "swR": false
+    }
+   },
+   "frame": {
+    "calls": 6,
+    "triangles": 27326
+   },
+   "seq": {
+    "name": null,
+    "minY": {}
+   }
+  }
+ },
+ {
+  "out": "previews/key_hwy_otters_grunt_a_night.png",
+  "q": "mods=../src/gang_key_hwy_otters.js&show=key_hwy_otters.grunt_a&t=0.5&turn=1&cam=front&ui=0&night=1",
+  "errors": [],
+  "report": {
+   "show": "key_hwy_otters.grunt_a",
+   "lod": 0,
+   "rigs": {
+    "key_hwy_otters.grunt_a": {
+     "parts": 32,
+     "tris": 9400,
+     "hullTris": 8524,
+     "mats": 3,
+     "height": 1.8988061952840254,
+     "minY": 0.015917896887048158,
+     "flashBad": 0,
+     "hullsOK": true,
+     "swR": false
+    }
+   },
+   "frame": {
+    "calls": 297,
+    "triangles": 99458
+   },
+   "seq": {
+    "name": null,
+    "minY": {}
+   }
+  }
+ },
+ {
+  "out": "previews/key_hwy_otters_grunt_a_night_merged.png",
+  "q": "mods=../src/gang_key_hwy_otters.js&show=key_hwy_otters.grunt_a&t=0.5&turn=1&cam=front&ui=0&merge=1&night=1",
+  "errors": [],
+  "report": {
+   "show": "key_hwy_otters.grunt_a",
+   "lod": 0,
+   "rigs": {
+    "key_hwy_otters.grunt_a": {
+     "parts": 2,
+     "tris": 9400,
+     "hullTris": 8524,
+     "mats": 3,
+     "height": 1.8947122209035514,
+     "minY": 0.020011860612037292,
+     "flashBad": 0,
+     "hullsOK": false,
+     "swR": false
+    }
+   },
+   "frame": {
+    "calls": 21,
+    "triangles": 109298
+   },
+   "seq": {
+    "name": null,
+    "minY": {}
+   }
+  }
+ },
+ {
+  "out": "previews/key_hwy_otters_grunt_a_poses.png",
+  "q": "mods=../src/gang_key_hwy_otters.js&show=key_hwy_otters.grunt_a&t=0.5&pose=all&ui=0&zoom=0.85",
+  "errors": [],
+  "report": {
+   "show": "key_hwy_otters.grunt_a",
+   "lod": 0,
+   "rigs": {
+    "key_hwy_otters.grunt_a/idle": {
+     "parts": 32,
+     "tris": 9400,
+     "hullTris": 8524,
+     "mats": 3,
+     "height": 1.8988061952840254,
+     "minY": 0.015917896887048158,
+     "flashBad": 0,
+     "hullsOK": true,
+     "swR": false
+    },
+    "key_hwy_otters.grunt_a/run": {
+     "parts": 32,
+     "tris": 9400,
+     "hullTris": 8524,
+     "mats": 3,
+     "height": 1.8988061952840254,
+     "minY": 0.015917896887048158,
+     "flashBad": 0,
+     "hullsOK": true,
+     "swR": false
+    },
+    "key_hwy_otters.grunt_a/windup": {
+     "parts": 32,
+     "tris": 9400,
+     "hullTris": 8524,
+     "mats": 3,
+     "height": 1.8988061952840254,
+     "minY": 0.015917896887048158,
+     "flashBad": 0,
+     "hullsOK": true,
+     "swR": false
+    },
+    "key_hwy_otters.grunt_a/attack": {
+     "parts": 32,
+     "tris": 9400,
+     "hullTris": 8524,
+     "mats": 3,
+     "height": 1.8988061952840254,
+     "minY": 0.015917896887048158,
+     "flashBad": 0,
+     "hullsOK": true,
+     "swR": false
+    },
+    "key_hwy_otters.grunt_a/hurt": {
+     "parts": 32,
+     "tris": 9400,
+     "hullTris": 8524,
+     "mats": 3,
+     "height": 1.8988061952840254,
+     "minY": 0.015917896887048158,
+     "flashBad": 0,
+     "hullsOK": true,
+     "swR": false
+    },
+    "key_hwy_otters.grunt_a/down": {
+     "parts": 32,
+     "tris": 9400,
+     "hullTris": 8524,
+     "mats": 3,
+     "height": 1.8988061952840254,
+     "minY": 0.015917896887048158,
+     "flashBad": 0,
+     "hullsOK": true,
+     "swR": false
+    },
+    "key_hwy_otters.grunt_a/getup": {
+     "parts": 32,
+     "tris": 9400,
+     "hullTris": 8524,
+     "mats": 3,
+     "height": 1.8988061952840254,
+     "minY": 0.015917896887048158,
+     "flashBad": 0,
+     "hullsOK": true,
+     "swR": false
+    }
+   },
+   "frame": {
+    "calls": 519,
+    "triangles": 174050
+   },
+   "seq": {
+    "name": null,
+    "minY": {}
+   }
+  }
+ },
+ {
+  "out": "previews/key_hwy_otters_grunt_a_flash_merged.png",
+  "q": "mods=../src/gang_key_hwy_otters.js&show=key_hwy_otters.grunt_a&t=0.5&turn=1&cam=front&ui=0&merge=1&flash=0.85",
+  "errors": [],
+  "report": {
+   "show": "key_hwy_otters.grunt_a",
+   "lod": 0,
+   "rigs": {
+    "key_hwy_otters.grunt_a": {
+     "parts": 2,
+     "tris": 9400,
+     "hullTris": 8524,
+     "mats": 3,
+     "height": 1.8947122209035514,
+     "minY": 0.020011860612037292,
+     "flashBad": 0,
+     "hullsOK": false,
+     "swR": false
+    }
+   },
+   "frame": {
+    "calls": 21,
+    "triangles": 109298
+   },
+   "seq": {
+    "name": null,
+    "minY": {}
+   }
+  }
+ },
+ {
+  "out": "previews/key_hwy_otters_grunt_a_seq_knockdown.png",
+  "q": "mods=../src/gang_key_hwy_otters.js&show=key_hwy_otters.grunt_a&seq=knockdown&cam=side&zoom=0.6",
+  "errors": [],
+  "report": {
+   "show": "key_hwy_otters.grunt_a",
+   "lod": 0,
+   "rigs": {
+    "key_hwy_otters.grunt_a": {
+     "parts": 32,
+     "tris": 9400,
+     "hullTris": 8524,
+     "mats": 3,
+     "height": 1.8988061952840254,
+     "minY": 0.015917896887048158,
+     "flashBad": 0,
+     "hullsOK": true,
+     "swR": false
+    }
+   },
+   "frame": {
+    "calls": 75,
+    "triangles": 24866
+   },
+   "seq": {
+    "name": "knockdown",
+    "minY": {
+     "key_hwy_otters.grunt_a": 0.016625233043471077
+    }
+   }
+  }
+ },
+ {
+  "out": "previews/key_hwy_otters_grunt_a_seq_knockdown_merged.png",
+  "q": "mods=../src/gang_key_hwy_otters.js&show=key_hwy_otters.grunt_a&seq=knockdown&cam=side&zoom=0.6&merge=1",
+  "errors": [],
+  "report": {
+   "show": "key_hwy_otters.grunt_a",
+   "lod": 0,
+   "rigs": {
+    "key_hwy_otters.grunt_a": {
+     "parts": 2,
+     "tris": 9400,
+     "hullTris": 8524,
+     "mats": 3,
+     "height": 1.8947122209035514,
+     "minY": 0.020011860612037292,
+     "flashBad": 0,
+     "hullsOK": false,
+     "swR": false
+    }
+   },
+   "frame": {
+    "calls": 6,
+    "triangles": 27326
+   },
+   "seq": {
+    "name": "knockdown",
+    "minY": {
+     "key_hwy_otters.grunt_a": 1000000000
+    }
+   }
+  }
+ },
+ {
+  "out": "previews/key_hwy_otters_grunt_a_knockdown_60fps.png",
+  "q": "kit=zip&gangs=key_hwy_otters&show=key_hwy_otters.grunt_a&strip=knockdown&ui=0&merge=1",
+  "errors": [],
+  "report": {
+   "show": "key_hwy_otters.grunt_a",
+   "lod": 0,
+   "rigs": {},
+   "frame": {
+    "calls": 56,
+    "triangles": 300566
+   }
+  }
+ },
+ {
+  "out": "previews/key_hwy_otters_grunt_a_attack_60fps.png",
+  "q": "kit=zip&gangs=key_hwy_otters&show=key_hwy_otters.grunt_a&strip=attack&ui=0&merge=1",
+  "errors": [],
+  "report": {
+   "show": "key_hwy_otters.grunt_a",
+   "lod": 0,
+   "rigs": {},
+   "frame": {
+    "calls": 56,
+    "triangles": 300566
+   }
+  }
+ },
+ {
+  "out": "previews/key_hwy_otters_grunt_a_dizzy_60fps.png",
+  "q": "kit=zip&gangs=key_hwy_otters&show=key_hwy_otters.grunt_a&strip=dizzy&ui=0&merge=1",
+  "errors": [],
+  "report": {
+   "show": "key_hwy_otters.grunt_a",
+   "lod": 0,
+   "rigs": {},
+   "frame": {
+    "calls": 67,
+    "triangles": 304790
+   }
+  }
+ },
+ {
+  "out": "previews/_tmp_grunt_a_hd.png",
+  "q": "kit=zip&gangs=key_hwy_otters&show=key_hwy_otters.grunt_a&t=0.5&turn=1&cam=front&ui=0",
+  "errors": [],
+  "report": {
+   "show": "key_hwy_otters.grunt_a",
+   "lod": 0,
+   "rigs": {
+    "key_hwy_otters.grunt_a": {
+     "parts": 32,
+     "tris": 9400,
+     "hullTris": 8524,
+     "mats": 3,
+     "height": 1.8988061952840254,
+     "minY": 0.015917896887048158,
+     "flashBad": 0,
+     "hullsOK": true,
+     "swR": false
+    }
+   },
+   "frame": {
+    "calls": 297,
+    "triangles": 99458
+   }
+  }
+ },
+ {
+  "out": "previews/_tmp_grunt_a_lod.png",
+  "q": "kit=zip&gangs=key_hwy_otters&show=key_hwy_otters.grunt_a&t=0.5&turn=1&cam=front&ui=0&lod=1",
+  "errors": [],
+  "report": {
+   "show": "key_hwy_otters.grunt_a",
+   "lod": 1,
+   "rigs": {
+    "key_hwy_otters.grunt_a": {
+     "parts": 12,
+     "tris": 1648,
+     "hullTris": 1648,
+     "mats": 2,
+     "height": 1.8746206203530251,
+     "minY": 0.01003950892433303,
+     "flashBad": 0,
+     "hullsOK": true,
+     "swR": false
+    }
+   },
+   "frame": {
+    "calls": 145,
+    "triangles": 19778
+   }
+  }
+ },
+ {
+  "out": "previews/key_hwy_otters_grunt_a_closeup_day.png",
+  "q": "kit=zip&gangs=key_hwy_otters&show=key_hwy_otters.grunt_a&t=0.5&cam=front&zoom=2.4&look=1.3&ui=0",
+  "errors": [],
+  "report": {
+   "show": "key_hwy_otters.grunt_a",
+   "lod": 0,
+   "rigs": {
+    "key_hwy_otters.grunt_a": {
+     "parts": 32,
+     "tris": 9400,
+     "hullTris": 8524,
+     "mats": 3,
+     "height": 1.8988061952840254,
+     "minY": 0.015917896887048158,
+     "flashBad": 0,
+     "hullsOK": true,
+     "swR": false
+    }
+   },
+   "frame": {
+    "calls": 67,
+    "triangles": 21650
+   }
+  }
+ },
+ {
+  "out": "previews/key_hwy_otters_grunt_b_phone_day.png",
+  "q": "mods=../src/gang_key_hwy_otters.js&show=key_hwy_otters.grunt_b&cam=phone&dist=4.5&t=0.5&ui=0",
+  "errors": [],
+  "report": {
+   "show": "key_hwy_otters.grunt_b",
+   "lod": 0,
+   "rigs": {
+    "key_hwy_otters.grunt_b": {
+     "parts": 31,
+     "tris": 9140,
+     "hullTris": 8264,
+     "mats": 3,
+     "height": 1.8362422327018908,
+     "minY": 0.015917896887048158,
+     "flashBad": 0,
+     "hullsOK": true,
+     "swR": false
+    }
+   },
+   "frame": {
+    "calls": 72,
+    "triangles": 24086
+   },
+   "seq": {
+    "name": null,
+    "minY": {}
+   }
+  }
+ },
+ {
+  "out": "previews/key_hwy_otters_grunt_b_phone_day_merged.png",
+  "q": "mods=../src/gang_key_hwy_otters.js&show=key_hwy_otters.grunt_b&cam=phone&dist=4.5&t=0.5&ui=0&merge=1",
+  "errors": [],
+  "report": {
+   "show": "key_hwy_otters.grunt_b",
+   "lod": 0,
+   "rigs": {
+    "key_hwy_otters.grunt_b": {
+     "parts": 2,
+     "tris": 9140,
+     "hullTris": 8264,
+     "mats": 3,
+     "height": 1.818769161708611,
+     "minY": 0.020011860612037292,
+     "flashBad": 0,
+     "hullsOK": false,
+     "swR": false
+    }
+   },
+   "frame": {
+    "calls": 6,
+    "triangles": 26546
+   },
+   "seq": {
+    "name": null,
+    "minY": {}
+   }
+  }
+ },
+ {
+  "out": "previews/key_hwy_otters_grunt_b_day.png",
+  "q": "mods=../src/gang_key_hwy_otters.js&show=key_hwy_otters.grunt_b&t=0.5&turn=1&cam=front&ui=0",
+  "errors": [],
+  "report": {
+   "show": "key_hwy_otters.grunt_b",
+   "lod": 0,
+   "rigs": {
+    "key_hwy_otters.grunt_b": {
+     "parts": 31,
+     "tris": 9140,
+     "hullTris": 8264,
+     "mats": 3,
+     "height": 1.8362422327018908,
+     "minY": 0.015917896887048158,
+     "flashBad": 0,
+     "hullsOK": true,
+     "swR": false
+    }
+   },
+   "frame": {
+    "calls": 285,
+    "triangles": 96338
+   },
+   "seq": {
+    "name": null,
+    "minY": {}
+   }
+  }
+ },
+ {
+  "out": "previews/key_hwy_otters_grunt_b_day_merged.png",
+  "q": "mods=../src/gang_key_hwy_otters.js&show=key_hwy_otters.grunt_b&t=0.5&turn=1&cam=front&ui=0&merge=1",
+  "errors": [],
+  "report": {
+   "show": "key_hwy_otters.grunt_b",
+   "lod": 0,
+   "rigs": {
+    "key_hwy_otters.grunt_b": {
+     "parts": 2,
+     "tris": 9140,
+     "hullTris": 8264,
+     "mats": 3,
+     "height": 1.818769161708611,
+     "minY": 0.020011860612037292,
+     "flashBad": 0,
+     "hullsOK": false,
+     "swR": false
+    }
+   },
+   "frame": {
+    "calls": 21,
+    "triangles": 106178
+   },
+   "seq": {
+    "name": null,
+    "minY": {}
+   }
+  }
+ },
+ {
+  "out": "previews/key_hwy_otters_grunt_b_phone_night.png",
+  "q": "mods=../src/gang_key_hwy_otters.js&show=key_hwy_otters.grunt_b&cam=phone&dist=4.5&t=0.5&ui=0&night=1",
+  "errors": [],
+  "report": {
+   "show": "key_hwy_otters.grunt_b",
+   "lod": 0,
+   "rigs": {
+    "key_hwy_otters.grunt_b": {
+     "parts": 31,
+     "tris": 9140,
+     "hullTris": 8264,
+     "mats": 3,
+     "height": 1.8362422327018908,
+     "minY": 0.015917896887048158,
+     "flashBad": 0,
+     "hullsOK": true,
+     "swR": false
+    }
+   },
+   "frame": {
+    "calls": 72,
+    "triangles": 24086
+   },
+   "seq": {
+    "name": null,
+    "minY": {}
+   }
+  }
+ },
+ {
+  "out": "previews/key_hwy_otters_grunt_b_phone_night_merged.png",
+  "q": "mods=../src/gang_key_hwy_otters.js&show=key_hwy_otters.grunt_b&cam=phone&dist=4.5&t=0.5&ui=0&merge=1&night=1",
+  "errors": [],
+  "report": {
+   "show": "key_hwy_otters.grunt_b",
+   "lod": 0,
+   "rigs": {
+    "key_hwy_otters.grunt_b": {
+     "parts": 2,
+     "tris": 9140,
+     "hullTris": 8264,
+     "mats": 3,
+     "height": 1.818769161708611,
+     "minY": 0.020011860612037292,
+     "flashBad": 0,
+     "hullsOK": false,
+     "swR": false
+    }
+   },
+   "frame": {
+    "calls": 6,
+    "triangles": 26546
+   },
+   "seq": {
+    "name": null,
+    "minY": {}
+   }
+  }
+ },
+ {
+  "out": "previews/key_hwy_otters_grunt_b_night.png",
+  "q": "mods=../src/gang_key_hwy_otters.js&show=key_hwy_otters.grunt_b&t=0.5&turn=1&cam=front&ui=0&night=1",
+  "errors": [],
+  "report": {
+   "show": "key_hwy_otters.grunt_b",
+   "lod": 0,
+   "rigs": {
+    "key_hwy_otters.grunt_b": {
+     "parts": 31,
+     "tris": 9140,
+     "hullTris": 8264,
+     "mats": 3,
+     "height": 1.8362422327018908,
+     "minY": 0.015917896887048158,
+     "flashBad": 0,
+     "hullsOK": true,
+     "swR": false
+    }
+   },
+   "frame": {
+    "calls": 285,
+    "triangles": 96338
+   },
+   "seq": {
+    "name": null,
+    "minY": {}
+   }
+  }
+ },
+ {
+  "out": "previews/key_hwy_otters_grunt_b_night_merged.png",
+  "q": "mods=../src/gang_key_hwy_otters.js&show=key_hwy_otters.grunt_b&t=0.5&turn=1&cam=front&ui=0&merge=1&night=1",
+  "errors": [],
+  "report": {
+   "show": "key_hwy_otters.grunt_b",
+   "lod": 0,
+   "rigs": {
+    "key_hwy_otters.grunt_b": {
+     "parts": 2,
+     "tris": 9140,
+     "hullTris": 8264,
+     "mats": 3,
+     "height": 1.818769161708611,
+     "minY": 0.020011860612037292,
+     "flashBad": 0,
+     "hullsOK": false,
+     "swR": false
+    }
+   },
+   "frame": {
+    "calls": 21,
+    "triangles": 106178
+   },
+   "seq": {
+    "name": null,
+    "minY": {}
+   }
+  }
+ },
+ {
+  "out": "previews/key_hwy_otters_grunt_b_poses.png",
+  "q": "mods=../src/gang_key_hwy_otters.js&show=key_hwy_otters.grunt_b&t=0.5&pose=all&ui=0&zoom=0.85",
+  "errors": [],
+  "report": {
+   "show": "key_hwy_otters.grunt_b",
+   "lod": 0,
+   "rigs": {
+    "key_hwy_otters.grunt_b/idle": {
+     "parts": 31,
+     "tris": 9140,
+     "hullTris": 8264,
+     "mats": 3,
+     "height": 1.8362422327018908,
+     "minY": 0.015917896887048158,
+     "flashBad": 0,
+     "hullsOK": true,
+     "swR": false
+    },
+    "key_hwy_otters.grunt_b/run": {
+     "parts": 31,
+     "tris": 9140,
+     "hullTris": 8264,
+     "mats": 3,
+     "height": 1.8362422327018908,
+     "minY": 0.015917896887048158,
+     "flashBad": 0,
+     "hullsOK": true,
+     "swR": false
+    },
+    "key_hwy_otters.grunt_b/windup": {
+     "parts": 31,
+     "tris": 9140,
+     "hullTris": 8264,
+     "mats": 3,
+     "height": 1.8362422327018908,
+     "minY": 0.015917896887048158,
+     "flashBad": 0,
+     "hullsOK": true,
+     "swR": false
+    },
+    "key_hwy_otters.grunt_b/attack": {
+     "parts": 31,
+     "tris": 9140,
+     "hullTris": 8264,
+     "mats": 3,
+     "height": 1.8362422327018908,
+     "minY": 0.015917896887048158,
+     "flashBad": 0,
+     "hullsOK": true,
+     "swR": false
+    },
+    "key_hwy_otters.grunt_b/hurt": {
+     "parts": 31,
+     "tris": 9140,
+     "hullTris": 8264,
+     "mats": 3,
+     "height": 1.8362422327018908,
+     "minY": 0.015917896887048158,
+     "flashBad": 0,
+     "hullsOK": true,
+     "swR": false
+    },
+    "key_hwy_otters.grunt_b/down": {
+     "parts": 31,
+     "tris": 9140,
+     "hullTris": 8264,
+     "mats": 3,
+     "height": 1.8362422327018908,
+     "minY": 0.015917896887048158,
+     "flashBad": 0,
+     "hullsOK": true,
+     "swR": false
+    },
+    "key_hwy_otters.grunt_b/getup": {
+     "parts": 31,
+     "tris": 9140,
+     "hullTris": 8264,
+     "mats": 3,
+     "height": 1.8362422327018908,
+     "minY": 0.015917896887048158,
+     "flashBad": 0,
+     "hullsOK": true,
+     "swR": false
+    }
+   },
+   "frame": {
+    "calls": 498,
+    "triangles": 168590
+   },
+   "seq": {
+    "name": null,
+    "minY": {}
+   }
+  }
+ },
+ {
+  "out": "previews/key_hwy_otters_grunt_b_flash_merged.png",
+  "q": "mods=../src/gang_key_hwy_otters.js&show=key_hwy_otters.grunt_b&t=0.5&turn=1&cam=front&ui=0&merge=1&flash=0.85",
+  "errors": [],
+  "report": {
+   "show": "key_hwy_otters.grunt_b",
+   "lod": 0,
+   "rigs": {
+    "key_hwy_otters.grunt_b": {
+     "parts": 2,
+     "tris": 9140,
+     "hullTris": 8264,
+     "mats": 3,
+     "height": 1.818769161708611,
+     "minY": 0.020011860612037292,
+     "flashBad": 0,
+     "hullsOK": false,
+     "swR": false
+    }
+   },
+   "frame": {
+    "calls": 21,
+    "triangles": 106178
+   },
+   "seq": {
+    "name": null,
+    "minY": {}
+   }
+  }
+ },
+ {
+  "out": "previews/key_hwy_otters_grunt_b_seq_knockdown.png",
+  "q": "mods=../src/gang_key_hwy_otters.js&show=key_hwy_otters.grunt_b&seq=knockdown&cam=side&zoom=0.6",
+  "errors": [],
+  "report": {
+   "show": "key_hwy_otters.grunt_b",
+   "lod": 0,
+   "rigs": {
+    "key_hwy_otters.grunt_b": {
+     "parts": 31,
+     "tris": 9140,
+     "hullTris": 8264,
+     "mats": 3,
+     "height": 1.8362422327018908,
+     "minY": 0.015917896887048158,
+     "flashBad": 0,
+     "hullsOK": true,
+     "swR": false
+    }
+   },
+   "frame": {
+    "calls": 72,
+    "triangles": 24086
+   },
+   "seq": {
+    "name": "knockdown",
+    "minY": {
+     "key_hwy_otters.grunt_b": 0.01677261407715183
+    }
+   }
+  }
+ },
+ {
+  "out": "previews/key_hwy_otters_grunt_b_seq_knockdown_merged.png",
+  "q": "mods=../src/gang_key_hwy_otters.js&show=key_hwy_otters.grunt_b&seq=knockdown&cam=side&zoom=0.6&merge=1",
+  "errors": [],
+  "report": {
+   "show": "key_hwy_otters.grunt_b",
+   "lod": 0,
+   "rigs": {
+    "key_hwy_otters.grunt_b": {
+     "parts": 2,
+     "tris": 9140,
+     "hullTris": 8264,
+     "mats": 3,
+     "height": 1.818769161708611,
+     "minY": 0.020011860612037292,
+     "flashBad": 0,
+     "hullsOK": false,
+     "swR": false
+    }
+   },
+   "frame": {
+    "calls": 6,
+    "triangles": 26546
+   },
+   "seq": {
+    "name": "knockdown",
+    "minY": {
+     "key_hwy_otters.grunt_b": 1000000000
+    }
+   }
+  }
+ },
+ {
+  "out": "previews/key_hwy_otters_grunt_b_knockdown_60fps.png",
+  "q": "kit=zip&gangs=key_hwy_otters&show=key_hwy_otters.grunt_b&strip=knockdown&ui=0&merge=1",
+  "errors": [],
+  "report": {
+   "show": "key_hwy_otters.grunt_b",
+   "lod": 0,
+   "rigs": {},
+   "frame": {
+    "calls": 56,
+    "triangles": 291986
+   }
+  }
+ },
+ {
+  "out": "previews/key_hwy_otters_grunt_b_attack_60fps.png",
+  "q": "kit=zip&gangs=key_hwy_otters&show=key_hwy_otters.grunt_b&strip=attack&ui=0&merge=1",
+  "errors": [],
+  "report": {
+   "show": "key_hwy_otters.grunt_b",
+   "lod": 0,
+   "rigs": {},
+   "frame": {
+    "calls": 56,
+    "triangles": 291986
+   }
+  }
+ },
+ {
+  "out": "previews/key_hwy_otters_grunt_b_dizzy_60fps.png",
+  "q": "kit=zip&gangs=key_hwy_otters&show=key_hwy_otters.grunt_b&strip=dizzy&ui=0&merge=1",
+  "errors": [],
+  "report": {
+   "show": "key_hwy_otters.grunt_b",
+   "lod": 0,
+   "rigs": {},
+   "frame": {
+    "calls": 67,
+    "triangles": 296210
+   }
+  }
+ },
+ {
+  "out": "previews/_tmp_grunt_b_hd.png",
+  "q": "kit=zip&gangs=key_hwy_otters&show=key_hwy_otters.grunt_b&t=0.5&turn=1&cam=front&ui=0",
+  "errors": [],
+  "report": {
+   "show": "key_hwy_otters.grunt_b",
+   "lod": 0,
+   "rigs": {
+    "key_hwy_otters.grunt_b": {
+     "parts": 31,
+     "tris": 9140,
+     "hullTris": 8264,
+     "mats": 3,
+     "height": 1.8362422327018908,
+     "minY": 0.015917896887048158,
+     "flashBad": 0,
+     "hullsOK": true,
+     "swR": false
+    }
+   },
+   "frame": {
+    "calls": 285,
+    "triangles": 96338
+   }
+  }
+ },
+ {
+  "out": "previews/_tmp_grunt_b_lod.png",
+  "q": "kit=zip&gangs=key_hwy_otters&show=key_hwy_otters.grunt_b&t=0.5&turn=1&cam=front&ui=0&lod=1",
+  "errors": [],
+  "report": {
+   "show": "key_hwy_otters.grunt_b",
+   "lod": 1,
+   "rigs": {
+    "key_hwy_otters.grunt_b": {
+     "parts": 11,
+     "tris": 1592,
+     "hullTris": 1592,
+     "mats": 2,
+     "height": 1.842120620664606,
+     "minY": 0.01003950892433303,
+     "flashBad": 0,
+     "hullsOK": true,
+     "swR": false
+    }
+   },
+   "frame": {
+    "calls": 133,
+    "triangles": 19106
+   }
+  }
+ },
+ {
+  "out": "previews/key_hwy_otters_grunt_b_closeup_day.png",
+  "q": "kit=zip&gangs=key_hwy_otters&show=key_hwy_otters.grunt_b&t=0.5&cam=front&zoom=2.4&look=1.3&ui=0",
+  "errors": [],
+  "report": {
+   "show": "key_hwy_otters.grunt_b",
+   "lod": 0,
+   "rigs": {
+    "key_hwy_otters.grunt_b": {
+     "parts": 31,
+     "tris": 9140,
+     "hullTris": 8264,
+     "mats": 3,
+     "height": 1.8362422327018908,
+     "minY": 0.015917896887048158,
+     "flashBad": 0,
+     "hullsOK": true,
+     "swR": false
+    }
+   },
+   "frame": {
+    "calls": 64,
+    "triangles": 20870
+   }
+  }
+ },
+ {
+  "out": "previews/key_hwy_otters_armed_phone_day.png",
+  "q": "mods=../src/gang_key_hwy_otters.js&show=key_hwy_otters.armed&cam=phone&dist=4.5&t=0.5&ui=0",
+  "errors": [],
+  "report": {
+   "show": "key_hwy_otters.armed",
+   "lod": 0,
+   "rigs": {
+    "key_hwy_otters.armed": {
+     "parts": 32,
+     "tris": 9752,
+     "hullTris": 8876,
+     "mats": 3,
+     "height": 1.8362422327018908,
+     "minY": 0.015917896887048158,
+     "flashBad": 0,
+     "hullsOK": true,
+     "swR": true
+    }
+   },
+   "frame": {
+    "calls": 75,
+    "triangles": 25922
+   },
+   "seq": {
+    "name": null,
+    "minY": {}
+   }
+  }
+ },
+ {
+  "out": "previews/key_hwy_otters_armed_phone_day_merged.png",
+  "q": "mods=../src/gang_key_hwy_otters.js&show=key_hwy_otters.armed&cam=phone&dist=4.5&t=0.5&ui=0&merge=1",
+  "errors": [],
+  "report": {
+   "show": "key_hwy_otters.armed",
+   "lod": 0,
+   "rigs": {
+    "key_hwy_otters.armed": {
+     "parts": 2,
+     "tris": 9752,
+     "hullTris": 8876,
+     "mats": 3,
+     "height": 1.818769161708611,
+     "minY": 0.020011860612037292,
+     "flashBad": 0,
+     "hullsOK": false,
+     "swR": true
+    }
+   },
+   "frame": {
+    "calls": 6,
+    "triangles": 28382
+   },
+   "seq": {
+    "name": null,
+    "minY": {}
+   }
+  }
+ },
+ {
+  "out": "previews/key_hwy_otters_armed_day.png",
+  "q": "mods=../src/gang_key_hwy_otters.js&show=key_hwy_otters.armed&t=0.5&turn=1&cam=front&ui=0",
+  "errors": [],
+  "report": {
+   "show": "key_hwy_otters.armed",
+   "lod": 0,
+   "rigs": {
+    "key_hwy_otters.armed": {
+     "parts": 32,
+     "tris": 9752,
+     "hullTris": 8876,
+     "mats": 3,
+     "height": 1.8362422327018908,
+     "minY": 0.015917896887048158,
+     "flashBad": 0,
+     "hullsOK": true,
+     "swR": true
+    }
+   },
+   "frame": {
+    "calls": 297,
+    "triangles": 103682
+   },
+   "seq": {
+    "name": null,
+    "minY": {}
+   }
+  }
+ },
+ {
+  "out": "previews/key_hwy_otters_armed_day_merged.png",
+  "q": "mods=../src/gang_key_hwy_otters.js&show=key_hwy_otters.armed&t=0.5&turn=1&cam=front&ui=0&merge=1",
+  "errors": [],
+  "report": {
+   "show": "key_hwy_otters.armed",
+   "lod": 0,
+   "rigs": {
+    "key_hwy_otters.armed": {
+     "parts": 2,
+     "tris": 9752,
+     "hullTris": 8876,
+     "mats": 3,
+     "height": 1.818769161708611,
+     "minY": 0.020011860612037292,
+     "flashBad": 0,
+     "hullsOK": false,
+     "swR": true
+    }
+   },
+   "frame": {
+    "calls": 21,
+    "triangles": 113522
+   },
+   "seq": {
+    "name": null,
+    "minY": {}
+   }
+  }
+ },
+ {
+  "out": "previews/key_hwy_otters_armed_phone_night.png",
+  "q": "mods=../src/gang_key_hwy_otters.js&show=key_hwy_otters.armed&cam=phone&dist=4.5&t=0.5&ui=0&night=1",
+  "errors": [],
+  "report": {
+   "show": "key_hwy_otters.armed",
+   "lod": 0,
+   "rigs": {
+    "key_hwy_otters.armed": {
+     "parts": 32,
+     "tris": 9752,
+     "hullTris": 8876,
+     "mats": 3,
+     "height": 1.8362422327018908,
+     "minY": 0.015917896887048158,
+     "flashBad": 0,
+     "hullsOK": true,
+     "swR": true
+    }
+   },
+   "frame": {
+    "calls": 75,
+    "triangles": 25922
+   },
+   "seq": {
+    "name": null,
+    "minY": {}
+   }
+  }
+ },
+ {
+  "out": "previews/key_hwy_otters_armed_phone_night_merged.png",
+  "q": "mods=../src/gang_key_hwy_otters.js&show=key_hwy_otters.armed&cam=phone&dist=4.5&t=0.5&ui=0&merge=1&night=1",
+  "errors": [],
+  "report": {
+   "show": "key_hwy_otters.armed",
+   "lod": 0,
+   "rigs": {
+    "key_hwy_otters.armed": {
+     "parts": 2,
+     "tris": 9752,
+     "hullTris": 8876,
+     "mats": 3,
+     "height": 1.818769161708611,
+     "minY": 0.020011860612037292,
+     "flashBad": 0,
+     "hullsOK": false,
+     "swR": true
+    }
+   },
+   "frame": {
+    "calls": 6,
+    "triangles": 28382
+   },
+   "seq": {
+    "name": null,
+    "minY": {}
+   }
+  }
+ },
+ {
+  "out": "previews/key_hwy_otters_armed_night.png",
+  "q": "mods=../src/gang_key_hwy_otters.js&show=key_hwy_otters.armed&t=0.5&turn=1&cam=front&ui=0&night=1",
+  "errors": [],
+  "report": {
+   "show": "key_hwy_otters.armed",
+   "lod": 0,
+   "rigs": {
+    "key_hwy_otters.armed": {
+     "parts": 32,
+     "tris": 9752,
+     "hullTris": 8876,
+     "mats": 3,
+     "height": 1.8362422327018908,
+     "minY": 0.015917896887048158,
+     "flashBad": 0,
+     "hullsOK": true,
+     "swR": true
+    }
+   },
+   "frame": {
+    "calls": 297,
+    "triangles": 103682
+   },
+   "seq": {
+    "name": null,
+    "minY": {}
+   }
+  }
+ },
+ {
+  "out": "previews/key_hwy_otters_armed_night_merged.png",
+  "q": "mods=../src/gang_key_hwy_otters.js&show=key_hwy_otters.armed&t=0.5&turn=1&cam=front&ui=0&merge=1&night=1",
+  "errors": [],
+  "report": {
+   "show": "key_hwy_otters.armed",
+   "lod": 0,
+   "rigs": {
+    "key_hwy_otters.armed": {
+     "parts": 2,
+     "tris": 9752,
+     "hullTris": 8876,
+     "mats": 3,
+     "height": 1.818769161708611,
+     "minY": 0.020011860612037292,
+     "flashBad": 0,
+     "hullsOK": false,
+     "swR": true
+    }
+   },
+   "frame": {
+    "calls": 21,
+    "triangles": 113522
+   },
+   "seq": {
+    "name": null,
+    "minY": {}
+   }
+  }
+ },
+ {
+  "out": "previews/key_hwy_otters_armed_poses.png",
+  "q": "mods=../src/gang_key_hwy_otters.js&show=key_hwy_otters.armed&t=0.5&pose=all&ui=0&zoom=0.85",
+  "errors": [],
+  "report": {
+   "show": "key_hwy_otters.armed",
+   "lod": 0,
+   "rigs": {
+    "key_hwy_otters.armed/idle": {
+     "parts": 32,
+     "tris": 9752,
+     "hullTris": 8876,
+     "mats": 3,
+     "height": 1.8362422327018908,
+     "minY": 0.015917896887048158,
+     "flashBad": 0,
+     "hullsOK": true,
+     "swR": true
+    },
+    "key_hwy_otters.armed/run": {
+     "parts": 32,
+     "tris": 9752,
+     "hullTris": 8876,
+     "mats": 3,
+     "height": 1.8362422327018908,
+     "minY": 0.015917896887048158,
+     "flashBad": 0,
+     "hullsOK": true,
+     "swR": true
+    },
+    "key_hwy_otters.armed/windup": {
+     "parts": 32,
+     "tris": 9752,
+     "hullTris": 8876,
+     "mats": 3,
+     "height": 1.8362422327018908,
+     "minY": 0.015917896887048158,
+     "flashBad": 0,
+     "hullsOK": true,
+     "swR": true
+    },
+    "key_hwy_otters.armed/attack": {
+     "parts": 32,
+     "tris": 9752,
+     "hullTris": 8876,
+     "mats": 3,
+     "height": 1.8362422327018908,
+     "minY": 0.015917896887048158,
+     "flashBad": 0,
+     "hullsOK": true,
+     "swR": true
+    },
+    "key_hwy_otters.armed/hurt": {
+     "parts": 32,
+     "tris": 9752,
+     "hullTris": 8876,
+     "mats": 3,
+     "height": 1.8362422327018908,
+     "minY": 0.015917896887048158,
+     "flashBad": 0,
+     "hullsOK": true,
+     "swR": true
+    },
+    "key_hwy_otters.armed/down": {
+     "parts": 32,
+     "tris": 9752,
+     "hullTris": 8876,
+     "mats": 3,
+     "height": 1.8362422327018908,
+     "minY": 0.015917896887048158,
+     "flashBad": 0,
+     "hullsOK": true,
+     "swR": true
+    },
+    "key_hwy_otters.armed/getup": {
+     "parts": 32,
+     "tris": 9752,
+     "hullTris": 8876,
+     "mats": 3,
+     "height": 1.8362422327018908,
+     "minY": 0.015917896887048158,
+     "flashBad": 0,
+     "hullsOK": true,
+     "swR": true
+    }
+   },
+   "frame": {
+    "calls": 519,
+    "triangles": 181442
+   },
+   "seq": {
+    "name": null,
+    "minY": {}
+   }
+  }
+ },
+ {
+  "out": "previews/key_hwy_otters_armed_flash_merged.png",
+  "q": "mods=../src/gang_key_hwy_otters.js&show=key_hwy_otters.armed&t=0.5&turn=1&cam=front&ui=0&merge=1&flash=0.85",
+  "errors": [],
+  "report": {
+   "show": "key_hwy_otters.armed",
+   "lod": 0,
+   "rigs": {
+    "key_hwy_otters.armed": {
+     "parts": 2,
+     "tris": 9752,
+     "hullTris": 8876,
+     "mats": 3,
+     "height": 1.818769161708611,
+     "minY": 0.020011860612037292,
+     "flashBad": 0,
+     "hullsOK": false,
+     "swR": true
+    }
+   },
+   "frame": {
+    "calls": 21,
+    "triangles": 113522
+   },
+   "seq": {
+    "name": null,
+    "minY": {}
+   }
+  }
+ },
+ {
+  "out": "previews/key_hwy_otters_armed_seq_knockdown.png",
+  "q": "mods=../src/gang_key_hwy_otters.js&show=key_hwy_otters.armed&seq=knockdown&cam=side&zoom=0.6",
+  "errors": [],
+  "report": {
+   "show": "key_hwy_otters.armed",
+   "lod": 0,
+   "rigs": {
+    "key_hwy_otters.armed": {
+     "parts": 32,
+     "tris": 9752,
+     "hullTris": 8876,
+     "mats": 3,
+     "height": 1.8362422327018908,
+     "minY": 0.015917896887048158,
+     "flashBad": 0,
+     "hullsOK": true,
+     "swR": true
+    }
+   },
+   "frame": {
+    "calls": 75,
+    "triangles": 25922
+   },
+   "seq": {
+    "name": "knockdown",
+    "minY": {
+     "key_hwy_otters.armed": 0.01486617862359138
+    }
+   }
+  }
+ },
+ {
+  "out": "previews/key_hwy_otters_armed_seq_knockdown_merged.png",
+  "q": "mods=../src/gang_key_hwy_otters.js&show=key_hwy_otters.armed&seq=knockdown&cam=side&zoom=0.6&merge=1",
+  "errors": [],
+  "report": {
+   "show": "key_hwy_otters.armed",
+   "lod": 0,
+   "rigs": {
+    "key_hwy_otters.armed": {
+     "parts": 2,
+     "tris": 9752,
+     "hullTris": 8876,
+     "mats": 3,
+     "height": 1.818769161708611,
+     "minY": 0.020011860612037292,
+     "flashBad": 0,
+     "hullsOK": false,
+     "swR": true
+    }
+   },
+   "frame": {
+    "calls": 6,
+    "triangles": 28382
+   },
+   "seq": {
+    "name": "knockdown",
+    "minY": {
+     "key_hwy_otters.armed": 1000000000
+    }
+   }
+  }
+ },
+ {
+  "out": "previews/key_hwy_otters_armed_knockdown_60fps.png",
+  "q": "kit=zip&gangs=key_hwy_otters&show=key_hwy_otters.armed&strip=knockdown&ui=0&merge=1",
+  "errors": [],
+  "report": {
+   "show": "key_hwy_otters.armed",
+   "lod": 0,
+   "rigs": {},
+   "frame": {
+    "calls": 56,
+    "triangles": 312182
+   }
+  }
+ },
+ {
+  "out": "previews/key_hwy_otters_armed_attack_60fps.png",
+  "q": "kit=zip&gangs=key_hwy_otters&show=key_hwy_otters.armed&strip=attack&ui=0&merge=1",
+  "errors": [],
+  "report": {
+   "show": "key_hwy_otters.armed",
+   "lod": 0,
+   "rigs": {},
+   "frame": {
+    "calls": 56,
+    "triangles": 312182
+   }
+  }
+ },
+ {
+  "out": "previews/key_hwy_otters_armed_dizzy_60fps.png",
+  "q": "kit=zip&gangs=key_hwy_otters&show=key_hwy_otters.armed&strip=dizzy&ui=0&merge=1",
+  "errors": [],
+  "report": {
+   "show": "key_hwy_otters.armed",
+   "lod": 0,
+   "rigs": {},
+   "frame": {
+    "calls": 67,
+    "triangles": 316406
+   }
+  }
+ },
+ {
+  "out": "previews/_tmp_armed_hd.png",
+  "q": "kit=zip&gangs=key_hwy_otters&show=key_hwy_otters.armed&t=0.5&turn=1&cam=front&ui=0",
+  "errors": [],
+  "report": {
+   "show": "key_hwy_otters.armed",
+   "lod": 0,
+   "rigs": {
+    "key_hwy_otters.armed": {
+     "parts": 32,
+     "tris": 9752,
+     "hullTris": 8876,
+     "mats": 3,
+     "height": 1.8362422327018908,
+     "minY": 0.015917896887048158,
+     "flashBad": 0,
+     "hullsOK": true,
+     "swR": true
+    }
+   },
+   "frame": {
+    "calls": 297,
+    "triangles": 103682
+   }
+  }
+ },
+ {
+  "out": "previews/_tmp_armed_lod.png",
+  "q": "kit=zip&gangs=key_hwy_otters&show=key_hwy_otters.armed&t=0.5&turn=1&cam=front&ui=0&lod=1",
+  "errors": [],
+  "report": {
+   "show": "key_hwy_otters.armed",
+   "lod": 1,
+   "rigs": {
+    "key_hwy_otters.armed": {
+     "parts": 12,
+     "tris": 1704,
+     "hullTris": 1704,
+     "mats": 2,
+     "height": 1.842120620664606,
+     "minY": 0.01003950892433303,
+     "flashBad": 0,
+     "hullsOK": true,
+     "swR": true
+    }
+   },
+   "frame": {
+    "calls": 145,
+    "triangles": 20450
+   }
+  }
+ },
+ {
+  "out": "previews/key_hwy_otters_armed_closeup_day.png",
+  "q": "kit=zip&gangs=key_hwy_otters&show=key_hwy_otters.armed&t=0.5&cam=front&zoom=2.4&look=1.3&ui=0",
+  "errors": [],
+  "report": {
+   "show": "key_hwy_otters.armed",
+   "lod": 0,
+   "rigs": {
+    "key_hwy_otters.armed": {
+     "parts": 32,
+     "tris": 9752,
+     "hullTris": 8876,
+     "mats": 3,
+     "height": 1.8362422327018908,
+     "minY": 0.015917896887048158,
+     "flashBad": 0,
+     "hullsOK": true,
+     "swR": true
+    }
+   },
+   "frame": {
+    "calls": 67,
+    "triangles": 22706
+   }
+  }
+ },
+ {
+  "out": "previews/key_hwy_otters_bruiser_phone_day.png",
+  "q": "mods=../src/gang_key_hwy_otters.js&show=key_hwy_otters.bruiser&cam=phone&dist=4.5&t=0.5&ui=0",
+  "errors": [],
+  "report": {
+   "show": "key_hwy_otters.bruiser",
+   "lod": 0,
+   "rigs": {
+    "key_hwy_otters.bruiser": {
+     "parts": 32,
+     "tris": 9400,
+     "hullTris": 8524,
+     "mats": 3,
+     "height": 2.5166872440815853,
+     "minY": 0.0048275592997995,
+     "flashBad": 0,
+     "hullsOK": true,
+     "swR": false
+    }
+   },
+   "frame": {
+    "calls": 76,
+    "triangles": 25262
+   },
+   "seq": {
+    "name": null,
+    "minY": {}
+   }
+  }
+ },
+ {
+  "out": "previews/key_hwy_otters_bruiser_phone_day_merged.png",
+  "q": "mods=../src/gang_key_hwy_otters.js&show=key_hwy_otters.bruiser&cam=phone&dist=4.5&t=0.5&ui=0&merge=1",
+  "errors": [],
+  "report": {
+   "show": "key_hwy_otters.bruiser",
+   "lod": 0,
+   "rigs": {
+    "key_hwy_otters.bruiser": {
+     "parts": 2,
+     "tris": 9400,
+     "hullTris": 8524,
+     "mats": 3,
+     "height": 2.4918341090937686,
+     "minY": 0.02401423273444461,
+     "flashBad": 0,
+     "hullsOK": false,
+     "swR": false
+    }
+   },
+   "frame": {
+    "calls": 6,
+    "triangles": 27326
+   },
+   "seq": {
+    "name": null,
+    "minY": {}
+   }
+  }
+ },
+ {
+  "out": "previews/key_hwy_otters_bruiser_day.png",
+  "q": "mods=../src/gang_key_hwy_otters.js&show=key_hwy_otters.bruiser&t=0.5&turn=1&cam=front&ui=0",
+  "errors": [],
+  "report": {
+   "show": "key_hwy_otters.bruiser",
+   "lod": 0,
+   "rigs": {
+    "key_hwy_otters.bruiser": {
+     "parts": 32,
+     "tris": 9400,
+     "hullTris": 8524,
+     "mats": 3,
+     "height": 2.5166872440815853,
+     "minY": 0.0048275592997995,
+     "flashBad": 0,
+     "hullsOK": true,
+     "swR": false
+    }
+   },
+   "frame": {
+    "calls": 301,
+    "triangles": 101042
+   },
+   "seq": {
+    "name": null,
+    "minY": {}
+   }
+  }
+ },
+ {
+  "out": "previews/key_hwy_otters_bruiser_day_merged.png",
+  "q": "mods=../src/gang_key_hwy_otters.js&show=key_hwy_otters.bruiser&t=0.5&turn=1&cam=front&ui=0&merge=1",
+  "errors": [],
+  "report": {
+   "show": "key_hwy_otters.bruiser",
+   "lod": 0,
+   "rigs": {
+    "key_hwy_otters.bruiser": {
+     "parts": 2,
+     "tris": 9400,
+     "hullTris": 8524,
+     "mats": 3,
+     "height": 2.4918341090937686,
+     "minY": 0.02401423273444461,
+     "flashBad": 0,
+     "hullsOK": false,
+     "swR": false
+    }
+   },
+   "frame": {
+    "calls": 21,
+    "triangles": 109298
+   },
+   "seq": {
+    "name": null,
+    "minY": {}
+   }
+  }
+ },
+ {
+  "out": "previews/key_hwy_otters_bruiser_phone_night.png",
+  "q": "mods=../src/gang_key_hwy_otters.js&show=key_hwy_otters.bruiser&cam=phone&dist=4.5&t=0.5&ui=0&night=1",
+  "errors": [],
+  "report": {
+   "show": "key_hwy_otters.bruiser",
+   "lod": 0,
+   "rigs": {
+    "key_hwy_otters.bruiser": {
+     "parts": 32,
+     "tris": 9400,
+     "hullTris": 8524,
+     "mats": 3,
+     "height": 2.5166872440815853,
+     "minY": 0.0048275592997995,
+     "flashBad": 0,
+     "hullsOK": true,
+     "swR": false
+    }
+   },
+   "frame": {
+    "calls": 76,
+    "triangles": 25262
+   },
+   "seq": {
+    "name": null,
+    "minY": {}
+   }
+  }
+ },
+ {
+  "out": "previews/key_hwy_otters_bruiser_phone_night_merged.png",
+  "q": "mods=../src/gang_key_hwy_otters.js&show=key_hwy_otters.bruiser&cam=phone&dist=4.5&t=0.5&ui=0&merge=1&night=1",
+  "errors": [],
+  "report": {
+   "show": "key_hwy_otters.bruiser",
+   "lod": 0,
+   "rigs": {
+    "key_hwy_otters.bruiser": {
+     "parts": 2,
+     "tris": 9400,
+     "hullTris": 8524,
+     "mats": 3,
+     "height": 2.4918341090937686,
+     "minY": 0.02401423273444461,
+     "flashBad": 0,
+     "hullsOK": false,
+     "swR": false
+    }
+   },
+   "frame": {
+    "calls": 6,
+    "triangles": 27326
+   },
+   "seq": {
+    "name": null,
+    "minY": {}
+   }
+  }
+ },
+ {
+  "out": "previews/key_hwy_otters_bruiser_night.png",
+  "q": "mods=../src/gang_key_hwy_otters.js&show=key_hwy_otters.bruiser&t=0.5&turn=1&cam=front&ui=0&night=1",
+  "errors": [],
+  "report": {
+   "show": "key_hwy_otters.bruiser",
+   "lod": 0,
+   "rigs": {
+    "key_hwy_otters.bruiser": {
+     "parts": 32,
+     "tris": 9400,
+     "hullTris": 8524,
+     "mats": 3,
+     "height": 2.5166872440815853,
+     "minY": 0.0048275592997995,
+     "flashBad": 0,
+     "hullsOK": true,
+     "swR": false
+    }
+   },
+   "frame": {
+    "calls": 301,
+    "triangles": 101042
+   },
+   "seq": {
+    "name": null,
+    "minY": {}
+   }
+  }
+ },
+ {
+  "out": "previews/key_hwy_otters_bruiser_night_merged.png",
+  "q": "mods=../src/gang_key_hwy_otters.js&show=key_hwy_otters.bruiser&t=0.5&turn=1&cam=front&ui=0&merge=1&night=1",
+  "errors": [],
+  "report": {
+   "show": "key_hwy_otters.bruiser",
+   "lod": 0,
+   "rigs": {
+    "key_hwy_otters.bruiser": {
+     "parts": 2,
+     "tris": 9400,
+     "hullTris": 8524,
+     "mats": 3,
+     "height": 2.4918341090937686,
+     "minY": 0.02401423273444461,
+     "flashBad": 0,
+     "hullsOK": false,
+     "swR": false
+    }
+   },
+   "frame": {
+    "calls": 21,
+    "triangles": 109298
+   },
+   "seq": {
+    "name": null,
+    "minY": {}
+   }
+  }
+ },
+ {
+  "out": "previews/key_hwy_otters_bruiser_poses.png",
+  "q": "mods=../src/gang_key_hwy_otters.js&show=key_hwy_otters.bruiser&t=0.5&pose=all&ui=0&zoom=0.85",
+  "errors": [],
+  "report": {
+   "show": "key_hwy_otters.bruiser",
+   "lod": 0,
+   "rigs": {
+    "key_hwy_otters.bruiser/idle": {
+     "parts": 32,
+     "tris": 9400,
+     "hullTris": 8524,
+     "mats": 3,
+     "height": 2.5166872440815853,
+     "minY": 0.0048275592997995,
+     "flashBad": 0,
+     "hullsOK": true,
+     "swR": false
+    },
+    "key_hwy_otters.bruiser/run": {
+     "parts": 32,
+     "tris": 9400,
+     "hullTris": 8524,
+     "mats": 3,
+     "height": 2.5166872440815853,
+     "minY": 0.0048275592997995,
+     "flashBad": 0,
+     "hullsOK": true,
+     "swR": false
+    },
+    "key_hwy_otters.bruiser/windup": {
+     "parts": 32,
+     "tris": 9400,
+     "hullTris": 8524,
+     "mats": 3,
+     "height": 2.5166872440815853,
+     "minY": 0.0048275592997995,
+     "flashBad": 0,
+     "hullsOK": true,
+     "swR": false
+    },
+    "key_hwy_otters.bruiser/attack": {
+     "parts": 32,
+     "tris": 9400,
+     "hullTris": 8524,
+     "mats": 3,
+     "height": 2.5166872440815853,
+     "minY": 0.0048275592997995,
+     "flashBad": 0,
+     "hullsOK": true,
+     "swR": false
+    },
+    "key_hwy_otters.bruiser/hurt": {
+     "parts": 32,
+     "tris": 9400,
+     "hullTris": 8524,
+     "mats": 3,
+     "height": 2.5166872440815853,
+     "minY": 0.0048275592997995,
+     "flashBad": 0,
+     "hullsOK": true,
+     "swR": false
+    },
+    "key_hwy_otters.bruiser/down": {
+     "parts": 32,
+     "tris": 9400,
+     "hullTris": 8524,
+     "mats": 3,
+     "height": 2.5166872440815853,
+     "minY": 0.0048275592997995,
+     "flashBad": 0,
+     "hullsOK": true,
+     "swR": false
+    },
+    "key_hwy_otters.bruiser/getup": {
+     "parts": 32,
+     "tris": 9400,
+     "hullTris": 8524,
+     "mats": 3,
+     "height": 2.5166872440815853,
+     "minY": 0.0048275592997995,
+     "flashBad": 0,
+     "hullsOK": true,
+     "swR": false
+    }
+   },
+   "frame": {
+    "calls": 526,
+    "triangles": 176822
+   },
+   "seq": {
+    "name": null,
+    "minY": {}
+   }
+  }
+ },
+ {
+  "out": "previews/key_hwy_otters_bruiser_flash_merged.png",
+  "q": "mods=../src/gang_key_hwy_otters.js&show=key_hwy_otters.bruiser&t=0.5&turn=1&cam=front&ui=0&merge=1&flash=0.85",
+  "errors": [],
+  "report": {
+   "show": "key_hwy_otters.bruiser",
+   "lod": 0,
+   "rigs": {
+    "key_hwy_otters.bruiser": {
+     "parts": 2,
+     "tris": 9400,
+     "hullTris": 8524,
+     "mats": 3,
+     "height": 2.4918341090937686,
+     "minY": 0.02401423273444461,
+     "flashBad": 0,
+     "hullsOK": false,
+     "swR": false
+    }
+   },
+   "frame": {
+    "calls": 21,
+    "triangles": 109298
+   },
+   "seq": {
+    "name": null,
+    "minY": {}
+   }
+  }
+ },
+ {
+  "out": "previews/key_hwy_otters_bruiser_seq_knockdown.png",
+  "q": "mods=../src/gang_key_hwy_otters.js&show=key_hwy_otters.bruiser&seq=knockdown&cam=side&zoom=0.6",
+  "errors": [],
+  "report": {
+   "show": "key_hwy_otters.bruiser",
+   "lod": 0,
+   "rigs": {
+    "key_hwy_otters.bruiser": {
+     "parts": 32,
+     "tris": 9400,
+     "hullTris": 8524,
+     "mats": 3,
+     "height": 2.5166872440815853,
+     "minY": 0.0048275592997995,
+     "flashBad": 0,
+     "hullsOK": true,
+     "swR": false
+    }
+   },
+   "frame": {
+    "calls": 76,
+    "triangles": 25262
+   },
+   "seq": {
+    "name": "knockdown",
+    "minY": {
+     "key_hwy_otters.bruiser": 0.004910982153527421
+    }
+   }
+  }
+ },
+ {
+  "out": "previews/key_hwy_otters_bruiser_seq_knockdown_merged.png",
+  "q": "mods=../src/gang_key_hwy_otters.js&show=key_hwy_otters.bruiser&seq=knockdown&cam=side&zoom=0.6&merge=1",
+  "errors": [],
+  "report": {
+   "show": "key_hwy_otters.bruiser",
+   "lod": 0,
+   "rigs": {
+    "key_hwy_otters.bruiser": {
+     "parts": 2,
+     "tris": 9400,
+     "hullTris": 8524,
+     "mats": 3,
+     "height": 2.4918341090937686,
+     "minY": 0.02401423273444461,
+     "flashBad": 0,
+     "hullsOK": false,
+     "swR": false
+    }
+   },
+   "frame": {
+    "calls": 6,
+    "triangles": 27326
+   },
+   "seq": {
+    "name": "knockdown",
+    "minY": {
+     "key_hwy_otters.bruiser": 1000000000
+    }
+   }
+  }
+ },
+ {
+  "out": "previews/key_hwy_otters_bruiser_knockdown_60fps.png",
+  "q": "kit=zip&gangs=key_hwy_otters&show=key_hwy_otters.bruiser&strip=knockdown&ui=0&merge=1",
+  "errors": [],
+  "report": {
+   "show": "key_hwy_otters.bruiser",
+   "lod": 0,
+   "rigs": {},
+   "frame": {
+    "calls": 56,
+    "triangles": 300566
+   }
+  }
+ },
+ {
+  "out": "previews/key_hwy_otters_bruiser_attack_60fps.png",
+  "q": "kit=zip&gangs=key_hwy_otters&show=key_hwy_otters.bruiser&strip=attack&ui=0&merge=1",
+  "errors": [],
+  "report": {
+   "show": "key_hwy_otters.bruiser",
+   "lod": 0,
+   "rigs": {},
+   "frame": {
+    "calls": 56,
+    "triangles": 300566
+   }
+  }
+ },
+ {
+  "out": "previews/key_hwy_otters_bruiser_dizzy_60fps.png",
+  "q": "kit=zip&gangs=key_hwy_otters&show=key_hwy_otters.bruiser&strip=dizzy&ui=0&merge=1",
+  "errors": [],
+  "report": {
+   "show": "key_hwy_otters.bruiser",
+   "lod": 0,
+   "rigs": {},
+   "frame": {
+    "calls": 67,
+    "triangles": 304790
+   }
+  }
+ },
+ {
+  "out": "previews/_tmp_bruiser_hd.png",
+  "q": "kit=zip&gangs=key_hwy_otters&show=key_hwy_otters.bruiser&t=0.5&turn=1&cam=front&ui=0",
+  "errors": [],
+  "report": {
+   "show": "key_hwy_otters.bruiser",
+   "lod": 0,
+   "rigs": {
+    "key_hwy_otters.bruiser": {
+     "parts": 32,
+     "tris": 9400,
+     "hullTris": 8524,
+     "mats": 3,
+     "height": 2.5166872440815853,
+     "minY": 0.0048275592997995,
+     "flashBad": 0,
+     "hullsOK": true,
+     "swR": false
+    }
+   },
+   "frame": {
+    "calls": 301,
+    "triangles": 101042
+   }
+  }
+ },
+ {
+  "out": "previews/_tmp_bruiser_lod.png",
+  "q": "kit=zip&gangs=key_hwy_otters&show=key_hwy_otters.bruiser&t=0.5&turn=1&cam=front&ui=0&lod=1",
+  "errors": [],
+  "report": {
+   "show": "key_hwy_otters.bruiser",
+   "lod": 1,
+   "rigs": {
+    "key_hwy_otters.bruiser": {
+     "parts": 12,
+     "tris": 1648,
+     "hullTris": 1648,
+     "mats": 2,
+     "height": 2.398759520980911,
+     "minY": 0.01061490291404349,
+     "flashBad": 0,
+     "hullsOK": true,
+     "swR": false
+    }
+   },
+   "frame": {
+    "calls": 145,
+    "triangles": 19778
+   }
+  }
+ },
+ {
+  "out": "previews/key_hwy_otters_bruiser_closeup_day.png",
+  "q": "kit=zip&gangs=key_hwy_otters&show=key_hwy_otters.bruiser&t=0.5&cam=front&zoom=2.4&look=1.3&ui=0",
+  "errors": [],
+  "report": {
+   "show": "key_hwy_otters.bruiser",
+   "lod": 0,
+   "rigs": {
+    "key_hwy_otters.bruiser": {
+     "parts": 32,
+     "tris": 9400,
+     "hullTris": 8524,
+     "mats": 3,
+     "height": 2.5166872440815853,
+     "minY": 0.0048275592997995,
+     "flashBad": 0,
+     "hullsOK": true,
+     "swR": false
+    }
+   },
+   "frame": {
+    "calls": 55,
+    "triangles": 19522
+   }
+  }
+ },
+ {
+  "out": "previews/key_hwy_otters_lineup_phone_day.png",
+  "q": "mods=../src/gang_key_hwy_otters.js&show=key_hwy_otters&cam=phone&t=0.5&ui=0",
+  "errors": [],
+  "report": {
+   "show": "key_hwy_otters",
+   "lod": 0,
+   "rigs": {
+    "key_hwy_otters.grunt_a": {
+     "parts": 32,
+     "tris": 9400,
+     "hullTris": 8524,
+     "mats": 3,
+     "height": 1.8988061952840254,
+     "minY": 0.015917896887048158,
+     "flashBad": 0,
+     "hullsOK": true,
+     "swR": false
+    },
+    "key_hwy_otters.grunt_b": {
+     "parts": 31,
+     "tris": 9140,
+     "hullTris": 8264,
+     "mats": 3,
+     "height": 1.8362422327018908,
+     "minY": 0.015917896887048158,
+     "flashBad": 0,
+     "hullsOK": true,
+     "swR": false
+    },
+    "key_hwy_otters.armed": {
+     "parts": 32,
+     "tris": 9752,
+     "hullTris": 8876,
+     "mats": 3,
+     "height": 1.8362422327018908,
+     "minY": 0.015917896887048158,
+     "flashBad": 0,
+     "hullsOK": true,
+     "swR": true
+    },
+    "key_hwy_otters.bruiser": {
+     "parts": 32,
+     "tris": 9400,
+     "hullTris": 8524,
+     "mats": 3,
+     "height": 2.5166872440815853,
+     "minY": 0.0048275592997995,
+     "flashBad": 0,
+     "hullsOK": true,
+     "swR": false
+    }
+   },
+   "frame": {
+    "calls": 295,
+    "triangles": 100130
+   },
+   "seq": {
+    "name": null,
+    "minY": {}
+   }
+  }
+ },
+ {
+  "out": "previews/key_hwy_otters_lineup_phone_day_merged.png",
+  "q": "mods=../src/gang_key_hwy_otters.js&show=key_hwy_otters&cam=phone&t=0.5&ui=0&merge=1",
+  "errors": [],
+  "report": {
+   "show": "key_hwy_otters",
+   "lod": 0,
+   "rigs": {
+    "key_hwy_otters.grunt_a": {
+     "parts": 2,
+     "tris": 9400,
+     "hullTris": 8524,
+     "mats": 3,
+     "height": 1.8947122209035514,
+     "minY": 0.020011860612037292,
+     "flashBad": 0,
+     "hullsOK": false,
+     "swR": false
+    },
+    "key_hwy_otters.grunt_b": {
+     "parts": 2,
+     "tris": 9140,
+     "hullTris": 8264,
+     "mats": 3,
+     "height": 1.818769161708611,
+     "minY": 0.020011860612037292,
+     "flashBad": 0,
+     "hullsOK": false,
+     "swR": false
+    },
+    "key_hwy_otters.armed": {
+     "parts": 2,
+     "tris": 9752,
+     "hullTris": 8876,
+     "mats": 3,
+     "height": 1.818769161708611,
+     "minY": 0.020011860612037292,
+     "flashBad": 0,
+     "hullsOK": false,
+     "swR": true
+    },
+    "key_hwy_otters.bruiser": {
+     "parts": 2,
+     "tris": 9400,
+     "hullTris": 8524,
+     "mats": 3,
+     "height": 2.4918341090937686,
+     "minY": 0.02401423273444461,
+     "flashBad": 0,
+     "hullsOK": false,
+     "swR": false
+    }
+   },
+   "frame": {
+    "calls": 21,
+    "triangles": 109574
+   },
+   "seq": {
+    "name": null,
+    "minY": {}
+   }
+  }
+ },
+ {
+  "out": "previews/key_hwy_otters_lineup_day.png",
+  "q": "mods=../src/gang_key_hwy_otters.js&show=key_hwy_otters&t=0.5&cam=front&ui=0",
+  "errors": [],
+  "report": {
+   "show": "key_hwy_otters",
+   "lod": 0,
+   "rigs": {
+    "key_hwy_otters.grunt_a": {
+     "parts": 32,
+     "tris": 9400,
+     "hullTris": 8524,
+     "mats": 3,
+     "height": 1.8988061952840254,
+     "minY": 0.015917896887048158,
+     "flashBad": 0,
+     "hullsOK": true,
+     "swR": false
+    },
+    "key_hwy_otters.grunt_b": {
+     "parts": 31,
+     "tris": 9140,
+     "hullTris": 8264,
+     "mats": 3,
+     "height": 1.8362422327018908,
+     "minY": 0.015917896887048158,
+     "flashBad": 0,
+     "hullsOK": true,
+     "swR": false
+    },
+    "key_hwy_otters.armed": {
+     "parts": 32,
+     "tris": 9752,
+     "hullTris": 8876,
+     "mats": 3,
+     "height": 1.8362422327018908,
+     "minY": 0.015917896887048158,
+     "flashBad": 0,
+     "hullsOK": true,
+     "swR": true
+    },
+    "key_hwy_otters.bruiser": {
+     "parts": 32,
+     "tris": 9400,
+     "hullTris": 8524,
+     "mats": 3,
+     "height": 2.5166872440815853,
+     "minY": 0.0048275592997995,
+     "flashBad": 0,
+     "hullsOK": true,
+     "swR": false
+    }
+   },
+   "frame": {
+    "calls": 295,
+    "triangles": 100130
+   },
+   "seq": {
+    "name": null,
+    "minY": {}
+   }
+  }
+ },
+ {
+  "out": "previews/key_hwy_otters_lineup_phone_night.png",
+  "q": "mods=../src/gang_key_hwy_otters.js&show=key_hwy_otters&cam=phone&t=0.5&ui=0&night=1",
+  "errors": [],
+  "report": {
+   "show": "key_hwy_otters",
+   "lod": 0,
+   "rigs": {
+    "key_hwy_otters.grunt_a": {
+     "parts": 32,
+     "tris": 9400,
+     "hullTris": 8524,
+     "mats": 3,
+     "height": 1.8988061952840254,
+     "minY": 0.015917896887048158,
+     "flashBad": 0,
+     "hullsOK": true,
+     "swR": false
+    },
+    "key_hwy_otters.grunt_b": {
+     "parts": 31,
+     "tris": 9140,
+     "hullTris": 8264,
+     "mats": 3,
+     "height": 1.8362422327018908,
+     "minY": 0.015917896887048158,
+     "flashBad": 0,
+     "hullsOK": true,
+     "swR": false
+    },
+    "key_hwy_otters.armed": {
+     "parts": 32,
+     "tris": 9752,
+     "hullTris": 8876,
+     "mats": 3,
+     "height": 1.8362422327018908,
+     "minY": 0.015917896887048158,
+     "flashBad": 0,
+     "hullsOK": true,
+     "swR": true
+    },
+    "key_hwy_otters.bruiser": {
+     "parts": 32,
+     "tris": 9400,
+     "hullTris": 8524,
+     "mats": 3,
+     "height": 2.5166872440815853,
+     "minY": 0.0048275592997995,
+     "flashBad": 0,
+     "hullsOK": true,
+     "swR": false
+    }
+   },
+   "frame": {
+    "calls": 295,
+    "triangles": 100130
+   },
+   "seq": {
+    "name": null,
+    "minY": {}
+   }
+  }
+ },
+ {
+  "out": "previews/key_hwy_otters_lineup_phone_night_merged.png",
+  "q": "mods=../src/gang_key_hwy_otters.js&show=key_hwy_otters&cam=phone&t=0.5&ui=0&merge=1&night=1",
+  "errors": [],
+  "report": {
+   "show": "key_hwy_otters",
+   "lod": 0,
+   "rigs": {
+    "key_hwy_otters.grunt_a": {
+     "parts": 2,
+     "tris": 9400,
+     "hullTris": 8524,
+     "mats": 3,
+     "height": 1.8947122209035514,
+     "minY": 0.020011860612037292,
+     "flashBad": 0,
+     "hullsOK": false,
+     "swR": false
+    },
+    "key_hwy_otters.grunt_b": {
+     "parts": 2,
+     "tris": 9140,
+     "hullTris": 8264,
+     "mats": 3,
+     "height": 1.818769161708611,
+     "minY": 0.020011860612037292,
+     "flashBad": 0,
+     "hullsOK": false,
+     "swR": false
+    },
+    "key_hwy_otters.armed": {
+     "parts": 2,
+     "tris": 9752,
+     "hullTris": 8876,
+     "mats": 3,
+     "height": 1.818769161708611,
+     "minY": 0.020011860612037292,
+     "flashBad": 0,
+     "hullsOK": false,
+     "swR": true
+    },
+    "key_hwy_otters.bruiser": {
+     "parts": 2,
+     "tris": 9400,
+     "hullTris": 8524,
+     "mats": 3,
+     "height": 2.4918341090937686,
+     "minY": 0.02401423273444461,
+     "flashBad": 0,
+     "hullsOK": false,
+     "swR": false
+    }
+   },
+   "frame": {
+    "calls": 21,
+    "triangles": 109574
+   },
+   "seq": {
+    "name": null,
+    "minY": {}
+   }
+  }
+ },
+ {
+  "out": "previews/key_hwy_otters_lineup_night.png",
+  "q": "mods=../src/gang_key_hwy_otters.js&show=key_hwy_otters&t=0.5&cam=front&ui=0&night=1",
+  "errors": [],
+  "report": {
+   "show": "key_hwy_otters",
+   "lod": 0,
+   "rigs": {
+    "key_hwy_otters.grunt_a": {
+     "parts": 32,
+     "tris": 9400,
+     "hullTris": 8524,
+     "mats": 3,
+     "height": 1.8988061952840254,
+     "minY": 0.015917896887048158,
+     "flashBad": 0,
+     "hullsOK": true,
+     "swR": false
+    },
+    "key_hwy_otters.grunt_b": {
+     "parts": 31,
+     "tris": 9140,
+     "hullTris": 8264,
+     "mats": 3,
+     "height": 1.8362422327018908,
+     "minY": 0.015917896887048158,
+     "flashBad": 0,
+     "hullsOK": true,
+     "swR": false
+    },
+    "key_hwy_otters.armed": {
+     "parts": 32,
+     "tris": 9752,
+     "hullTris": 8876,
+     "mats": 3,
+     "height": 1.8362422327018908,
+     "minY": 0.015917896887048158,
+     "flashBad": 0,
+     "hullsOK": true,
+     "swR": true
+    },
+    "key_hwy_otters.bruiser": {
+     "parts": 32,
+     "tris": 9400,
+     "hullTris": 8524,
+     "mats": 3,
+     "height": 2.5166872440815853,
+     "minY": 0.0048275592997995,
+     "flashBad": 0,
+     "hullsOK": true,
+     "swR": false
+    }
+   },
+   "frame": {
+    "calls": 295,
+    "triangles": 100130
+   },
+   "seq": {
+    "name": null,
+    "minY": {}
+   }
+  }
+ },
+ {
+  "out": "previews/key_hwy_otters_lineup_lod.png",
+  "q": "mods=../src/gang_key_hwy_otters.js&show=key_hwy_otters&t=0.5&cam=front&ui=0&lod=1",
+  "errors": [],
+  "report": {
+   "show": "key_hwy_otters",
+   "lod": 1,
+   "rigs": {
+    "key_hwy_otters.grunt_a": {
+     "parts": 12,
+     "tris": 1648,
+     "hullTris": 1648,
+     "mats": 2,
+     "height": 1.8746206203530251,
+     "minY": 0.01003950892433303,
+     "flashBad": 0,
+     "hullsOK": true,
+     "swR": false
+    },
+    "key_hwy_otters.grunt_b": {
+     "parts": 11,
+     "tris": 1592,
+     "hullTris": 1592,
+     "mats": 2,
+     "height": 1.842120620664606,
+     "minY": 0.01003950892433303,
+     "flashBad": 0,
+     "hullsOK": true,
+     "swR": false
+    },
+    "key_hwy_otters.armed": {
+     "parts": 12,
+     "tris": 1704,
+     "hullTris": 1704,
+     "mats": 2,
+     "height": 1.842120620664606,
+     "minY": 0.01003950892433303,
+     "flashBad": 0,
+     "hullsOK": true,
+     "swR": true
+    },
+    "key_hwy_otters.bruiser": {
+     "parts": 12,
+     "tris": 1648,
+     "hullTris": 1648,
+     "mats": 2,
+     "height": 2.398759520980911,
+     "minY": 0.01061490291404349,
+     "flashBad": 0,
+     "hullsOK": true,
+     "swR": false
+    }
+   },
+   "frame": {
+    "calls": 142,
+    "triangles": 19778
+   },
+   "seq": {
+    "name": null,
+    "minY": {}
+   }
+  }
+ },
+ {
+  "out": "previews/key_hwy_otters_lineup_seq_knockdown.png",
+  "q": "mods=../src/gang_key_hwy_otters.js&show=key_hwy_otters&seq=knockdown&cam=three",
+  "errors": [],
+  "report": {
+   "show": "key_hwy_otters",
+   "lod": 0,
+   "rigs": {
+    "key_hwy_otters.grunt_a": {
+     "parts": 32,
+     "tris": 9400,
+     "hullTris": 8524,
+     "mats": 3,
+     "height": 1.8988061952840254,
+     "minY": 0.015917896887048158,
+     "flashBad": 0,
+     "hullsOK": true,
+     "swR": false
+    },
+    "key_hwy_otters.grunt_b": {
+     "parts": 31,
+     "tris": 9140,
+     "hullTris": 8264,
+     "mats": 3,
+     "height": 1.8362422327018908,
+     "minY": 0.015917896887048158,
+     "flashBad": 0,
+     "hullsOK": true,
+     "swR": false
+    },
+    "key_hwy_otters.armed": {
+     "parts": 32,
+     "tris": 9752,
+     "hullTris": 8876,
+     "mats": 3,
+     "height": 1.8362422327018908,
+     "minY": 0.015917896887048158,
+     "flashBad": 0,
+     "hullsOK": true,
+     "swR": true
+    },
+    "key_hwy_otters.bruiser": {
+     "parts": 32,
+     "tris": 9400,
+     "hullTris": 8524,
+     "mats": 3,
+     "height": 2.5166872440815853,
+     "minY": 0.0048275592997995,
+     "flashBad": 0,
+     "hullsOK": true,
+     "swR": false
+    }
+   },
+   "frame": {
+    "calls": 295,
+    "triangles": 100130
+   },
+   "seq": {
+    "name": "knockdown",
+    "minY": {
+     "key_hwy_otters.grunt_a": 0.03172863879798507,
+     "key_hwy_otters.grunt_b": 0.03172863879798507,
+     "key_hwy_otters.armed": 0.03172863879798507,
+     "key_hwy_otters.bruiser": 0.022662277057320213
+    }
+   }
+  }
+ },
+ {
+  "out": "previews/key_hwy_otters_lineup_seq_knockdown_lod.png",
+  "q": "mods=../src/gang_key_hwy_otters.js&show=key_hwy_otters&seq=knockdown&cam=three&lod=1",
+  "errors": [],
+  "report": {
+   "show": "key_hwy_otters",
+   "lod": 1,
+   "rigs": {
+    "key_hwy_otters.grunt_a": {
+     "parts": 12,
+     "tris": 1648,
+     "hullTris": 1648,
+     "mats": 2,
+     "height": 1.8746206203530251,
+     "minY": 0.01003950892433303,
+     "flashBad": 0,
+     "hullsOK": true,
+     "swR": false
+    },
+    "key_hwy_otters.grunt_b": {
+     "parts": 11,
+     "tris": 1592,
+     "hullTris": 1592,
+     "mats": 2,
+     "height": 1.842120620664606,
+     "minY": 0.01003950892433303,
+     "flashBad": 0,
+     "hullsOK": true,
+     "swR": false
+    },
+    "key_hwy_otters.armed": {
+     "parts": 12,
+     "tris": 1704,
+     "hullTris": 1704,
+     "mats": 2,
+     "height": 1.842120620664606,
+     "minY": 0.01003950892433303,
+     "flashBad": 0,
+     "hullsOK": true,
+     "swR": true
+    },
+    "key_hwy_otters.bruiser": {
+     "parts": 12,
+     "tris": 1648,
+     "hullTris": 1648,
+     "mats": 2,
+     "height": 2.398759520980911,
+     "minY": 0.01061490291404349,
+     "flashBad": 0,
+     "hullsOK": true,
+     "swR": false
+    }
+   },
+   "frame": {
+    "calls": 142,
+    "triangles": 19778
+   },
+   "seq": {
+    "name": "knockdown",
+    "minY": {
+     "key_hwy_otters.grunt_a": -0.00018996013969996284,
+     "key_hwy_otters.grunt_b": -0.00018996013969996284,
+     "key_hwy_otters.armed": -0.00018996013969996284,
+     "key_hwy_otters.bruiser": -0.0016975622091785492
+    }
+   }
+  }
+ },
+ {
+  "out": "previews/key_hwy_otters_lineup_stars.png",
+  "q": "kit=zip&gangs=key_hwy_otters&show=key_hwy_otters&pose=idle&t=0.5&cam=front&ui=0&stars=1",
+  "errors": [],
+  "report": {
+   "show": "key_hwy_otters",
+   "lod": 0,
+   "rigs": {
+    "key_hwy_otters.grunt_a": {
+     "parts": 32,
+     "tris": 9400,
+     "hullTris": 8524,
+     "mats": 3,
+     "height": 1.8988061952840254,
+     "minY": 0.015917896887048158,
+     "flashBad": 0,
+     "hullsOK": true,
+     "swR": false
+    },
+    "key_hwy_otters.grunt_b": {
+     "parts": 31,
+     "tris": 9140,
+     "hullTris": 8264,
+     "mats": 3,
+     "height": 1.8362422327018908,
+     "minY": 0.015917896887048158,
+     "flashBad": 0,
+     "hullsOK": true,
+     "swR": false
+    },
+    "key_hwy_otters.armed": {
+     "parts": 32,
+     "tris": 9752,
+     "hullTris": 8876,
+     "mats": 3,
+     "height": 1.8362422327018908,
+     "minY": 0.015917896887048158,
+     "flashBad": 0,
+     "hullsOK": true,
+     "swR": true
+    },
+    "key_hwy_otters.bruiser": {
+     "parts": 32,
+     "tris": 9400,
+     "hullTris": 8524,
+     "mats": 3,
+     "height": 2.5166872440815853,
+     "minY": 0.0048275592997995,
+     "flashBad": 0,
+     "hullsOK": true,
+     "swR": false
+    }
+   },
+   "frame": {
+    "calls": 299,
+    "triangles": 101666
+   }
+  }
+ },
+ {
+  "out": "",
+  "q": "gang=key_hwy_otters&kit=zip&inkMargin=8&hdTris=10800",
+  "errors": [],
+  "report": {
+   "gang": "key_hwy_otters",
+   "kit": "zip (kit/toadcity_kit.js + kit/real_mergeRig.js)",
+   "dizzyAttachedAtTestTime": true,
+   "cullRadius": 2.6,
+   "cullRadiusZip": 1.9,
+   "margins": {
+    "hdParts": 35,
+    "hdTris": 10800,
+    "lodParts": 12,
+    "lodTris": 2000,
+    "buried": 0.55,
+    "lodFloor": -0.02,
+    "ink": 8,
+    "reach": 0.35
+   },
+   "members": {
+    "grunt_a": {
+     "hd": {
+      "parts": 32,
+      "tris": 9400,
+      "hullTris": 8524,
+      "hulls": 23,
+      "mats": 3,
+      "casters": 19,
+      "drawCalls": 55,
+      "shadowCalls": 19,
+      "height": 1.895,
+      "feetMinY": 0.02,
+      "flashBad": 0,
+      "hullMatsOK": true,
+      "shadowRule": []
+     },
+     "lod": {
+      "parts": 12,
+      "tris": 1648,
+      "hullTris": 1648,
+      "hulls": 12,
+      "mats": 2,
+      "casters": 12,
+      "drawCalls": 24,
+      "shadowCalls": 12,
+      "height": 1.866,
+      "feetMinY": 0.019,
+      "flashBad": 0,
+      "hullMatsOK": true,
+      "shadowRule": []
+     },
+     "hullOverlap": [
+      {
+       "part": "head/head",
+       "buried": 0.462,
+       "strayPx": {
+        "idle/front": 0,
+        "idle/three": 0,
+        "idle/side": 0,
+        "idle/back": 0,
+        "dizzyL/front": 0,
+        "dizzyL/three": 0,
+        "dizzyL/side": 0,
+        "dizzyL/back": 0,
+        "dizzyR/front": 0,
+        "dizzyR/three": 0,
+        "dizzyR/side": 0,
+        "dizzyR/back": 0
+       },
+       "maxStrayPx": 0
+      },
+      {
+       "part": "head/muzzle",
+       "buried": 0.39,
+       "strayPx": {
+        "idle/front": 0,
+        "idle/three": 0,
+        "idle/side": 0,
+        "idle/back": 0,
+        "dizzyL/front": 0,
+        "dizzyL/three": 0,
+        "dizzyL/side": 0,
+        "dizzyL/back": 0,
+        "dizzyR/front": 0,
+        "dizzyR/three": 0,
+        "dizzyR/side": 0,
+        "dizzyR/back": 0
+       },
+       "maxStrayPx": 0
+      },
+      {
+       "part": "head/ear",
+       "buried": 0.368,
+       "strayPx": {
+        "idle/front": 0,
+        "idle/three": 0,
+        "idle/side": 0,
+        "idle/back": 0,
+        "dizzyL/front": 0,
+        "dizzyL/three": 0,
+        "dizzyL/side": 0,
+        "dizzyL/back": 0,
+        "dizzyR/front": 0,
+        "dizzyR/three": 0,
+        "dizzyR/side": 0,
+        "dizzyR/back": 0
+       },
+       "maxStrayPx": 0
+      },
+      {
+       "part": "head/hat",
+       "buried": 0.365,
+       "strayPx": {
+        "idle/front": 0,
+        "idle/three": 0,
+        "idle/side": 0,
+        "idle/back": 0,
+        "dizzyL/front": 0,
+        "dizzyL/three": 0,
+        "dizzyL/side": 0,
+        "dizzyL/back": 0,
+        "dizzyR/front": 0,
+        "dizzyR/three": 0,
+        "dizzyR/side": 0,
+        "dizzyR/back": 0
+       },
+       "maxStrayPx": 0
+      },
+      {
+       "part": "head/brim",
+       "buried": 0.482,
+       "strayPx": {
+        "idle/front": 0,
+        "idle/three": 0,
+        "idle/side": 0,
+        "idle/back": 0,
+        "dizzyL/front": 0,
+        "dizzyL/three": 0,
+        "dizzyL/side": 0,
+        "dizzyL/back": 0,
+        "dizzyR/front": 0,
+        "dizzyR/three": 0,
+        "dizzyR/side": 0,
+        "dizzyR/back": 0
+       },
+       "maxStrayPx": 0
+      },
+      {
+       "part": "haL/paw",
+       "buried": 0.209,
+       "strayPx": {
+        "idle/front": 0,
+        "idle/three": 0,
+        "idle/side": 0,
+        "idle/back": 0,
+        "dizzyL/front": 0,
+        "dizzyL/three": 0,
+        "dizzyL/side": 0,
+        "dizzyL/back": 0,
+        "dizzyR/front": 0,
+        "dizzyR/three": 0,
+        "dizzyR/side": 0,
+        "dizzyR/back": 0
+       },
+       "maxStrayPx": 0
+      },
+      {
+       "part": "elL/fore",
+       "buried": 0.281,
+       "strayPx": {
+        "idle/front": 0,
+        "idle/three": 0,
+        "idle/side": 1,
+        "idle/back": 0,
+        "dizzyL/front": 0,
+        "dizzyL/three": 0,
+        "dizzyL/side": 0,
+        "dizzyL/back": 0,
+        "dizzyR/front": 0,
+        "dizzyR/three": 0,
+        "dizzyR/side": 0,
+        "dizzyR/back": 0
+       },
+       "maxStrayPx": 1
+      },
+      {
+       "part": "shL/shoulder",
+       "buried": 0.235,
+       "strayPx": {
+        "idle/front": 0,
+        "idle/three": 0,
+        "idle/side": 0,
+        "idle/back": 0,
+        "dizzyL/front": 0,
+        "dizzyL/three": 0,
+        "dizzyL/side": 0,
+        "dizzyL/back": 0,
+        "dizzyR/front": 0,
+        "dizzyR/three": 0,
+        "dizzyR/side": 0,
+        "dizzyR/back": 0
+       },
+       "maxStrayPx": 0
+      },
+      {
+       "part": "shL/upper",
+       "buried": 0.44,
+       "strayPx": {
+        "idle/front": 0,
+        "idle/three": 0,
+        "idle/side": 1,
+        "idle/back": 2,
+        "dizzyL/front": 0,
+        "dizzyL/three": 0,
+        "dizzyL/side": 0,
+        "dizzyL/back": 0,
+        "dizzyR/front": 1,
+        "dizzyR/three": 0,
+        "dizzyR/side": 0,
+        "dizzyR/back": 0
+       },
+       "maxStrayPx": 2
+      },
+      {
+       "part": "haR/paw",
+       "buried": 0.209,
+       "strayPx": {
+        "idle/front": 0,
+        "idle/three": 0,
+        "idle/side": 0,
+        "idle/back": 0,
+        "dizzyL/front": 0,
+        "dizzyL/three": 0,
+        "dizzyL/side": 0,
+        "dizzyL/back": 0,
+        "dizzyR/front": 0,
+        "dizzyR/three": 0,
+        "dizzyR/side": 0,
+        "dizzyR/back": 0
+       },
+       "maxStrayPx": 0
+      },
+      {
+       "part": "elR/fore",
+       "buried": 0.301,
+       "strayPx": {
+        "idle/front": 0,
+        "idle/three": 0,
+        "idle/side": 0,
+        "idle/back": 0,
+        "dizzyL/front": 0,
+        "dizzyL/three": 0,
+        "dizzyL/side": 0,
+        "dizzyL/back": 0,
+        "dizzyR/front": 0,
+        "dizzyR/three": 0,
+        "dizzyR/side": 0,
+        "dizzyR/back": 0
+       },
+       "maxStrayPx": 0
+      },
+      {
+       "part": "shR/shoulder",
+       "buried": 0.231,
+       "strayPx": {
+        "idle/front": 0,
+        "idle/three": 0,
+        "idle/side": 0,
+        "idle/back": 0,
+        "dizzyL/front": 0,
+        "dizzyL/three": 0,
+        "dizzyL/side": 0,
+        "dizzyL/back": 0,
+        "dizzyR/front": 0,
+        "dizzyR/three": 0,
+        "dizzyR/side": 0,
+        "dizzyR/back": 0
+       },
+       "maxStrayPx": 0
+      },
+      {
+       "part": "shR/upper",
+       "buried": 0.445,
+       "strayPx": {
+        "idle/front": 4,
+        "idle/three": 0,
+        "idle/side": 0,
+        "idle/back": 3,
+        "dizzyL/front": 1,
+        "dizzyL/three": 0,
+        "dizzyL/side": 0,
+        "dizzyL/back": 0,
+        "dizzyR/front": 1,
+        "dizzyR/three": 0,
+        "dizzyR/side": 0,
+        "dizzyR/back": 0
+       },
+       "maxStrayPx": 4
+      },
+      {
+       "part": "torso/jacket",
+       "buried": 0.153,
+       "strayPx": {
+        "idle/front": 0,
+        "idle/three": 0,
+        "idle/side": 0,
+        "idle/back": 0,
+        "dizzyL/front": 0,
+        "dizzyL/three": 0,
+        "dizzyL/side": 0,
+        "dizzyL/back": 0,
+        "dizzyR/front": 0,
+        "dizzyR/three": 0,
+        "dizzyR/side": 0,
+        "dizzyR/back": 0
+       },
+       "maxStrayPx": 0
+      },
+      {
+       "part": "ftL/foot",
+       "buried": 0.119,
+       "strayPx": {
+        "idle/front": 0,
+        "idle/three": 0,
+        "idle/side": 0,
+        "idle/back": 0,
+        "dizzyL/front": 0,
+        "dizzyL/three": 0,
+        "dizzyL/side": 0,
+        "dizzyL/back": 0,
+        "dizzyR/front": 0,
+        "dizzyR/three": 0,
+        "dizzyR/side": 0,
+        "dizzyR/back": 0
+       },
+       "maxStrayPx": 0
+      },
+      {
+       "part": "knL/shin",
+       "buried": 0.183,
+       "strayPx": {
+        "idle/front": 0,
+        "idle/three": 0,
+        "idle/side": 0,
+        "idle/back": 0,
+        "dizzyL/front": 0,
+        "dizzyL/three": 0,
+        "dizzyL/side": 0,
+        "dizzyL/back": 0,
+        "dizzyR/front": 0,
+        "dizzyR/three": 0,
+        "dizzyR/side": 0,
+        "dizzyR/back": 0
+       },
+       "maxStrayPx": 0
+      },
+      {
+       "part": "lgL/thigh",
+       "buried": 0.275,
+       "strayPx": {
+        "idle/front": 0,
+        "idle/three": 0,
+        "idle/side": 0,
+        "idle/back": 0,
+        "dizzyL/front": 0,
+        "dizzyL/three": 0,
+        "dizzyL/side": 0,
+        "dizzyL/back": 0,
+        "dizzyR/front": 0,
+        "dizzyR/three": 0,
+        "dizzyR/side": 0,
+        "dizzyR/back": 0
+       },
+       "maxStrayPx": 0
+      },
+      {
+       "part": "ftR/foot",
+       "buried": 0.118,
+       "strayPx": {
+        "idle/front": 0,
+        "idle/three": 0,
+        "idle/side": 0,
+        "idle/back": 0,
+        "dizzyL/front": 0,
+        "dizzyL/three": 0,
+        "dizzyL/side": 0,
+        "dizzyL/back": 0,
+        "dizzyR/front": 0,
+        "dizzyR/three": 0,
+        "dizzyR/side": 0,
+        "dizzyR/back": 0
+       },
+       "maxStrayPx": 0
+      },
+      {
+       "part": "knR/shin",
+       "buried": 0.179,
+       "strayPx": {
+        "idle/front": 0,
+        "idle/three": 0,
+        "idle/side": 0,
+        "idle/back": 0,
+        "dizzyL/front": 0,
+        "dizzyL/three": 0,
+        "dizzyL/side": 0,
+        "dizzyL/back": 0,
+        "dizzyR/front": 0,
+        "dizzyR/three": 0,
+        "dizzyR/side": 0,
+        "dizzyR/back": 0
+       },
+       "maxStrayPx": 0
+      },
+      {
+       "part": "lgR/thigh",
+       "buried": 0.277,
+       "strayPx": {
+        "idle/front": 0,
+        "idle/three": 0,
+        "idle/side": 0,
+        "idle/back": 0,
+        "dizzyL/front": 0,
+        "dizzyL/three": 0,
+        "dizzyL/side": 0,
+        "dizzyL/back": 0,
+        "dizzyR/front": 0,
+        "dizzyR/three": 0,
+        "dizzyR/side": 0,
+        "dizzyR/back": 0
+       },
+       "maxStrayPx": 0
+      },
+      {
+       "part": "hips/joggers",
+       "buried": 0.449,
+       "strayPx": {
+        "idle/front": 0,
+        "idle/three": 0,
+        "idle/side": 0,
+        "idle/back": 0,
+        "dizzyL/front": 0,
+        "dizzyL/three": 0,
+        "dizzyL/side": 0,
+        "dizzyL/back": 0,
+        "dizzyR/front": 0,
+        "dizzyR/three": 0,
+        "dizzyR/side": 0,
+        "dizzyR/back": 0
+       },
+       "maxStrayPx": 0
+      },
+      {
+       "part": "tail/tail",
+       "buried": 0.248,
+       "strayPx": {
+        "idle/front": 0,
+        "idle/three": 0,
+        "idle/side": 0,
+        "idle/back": 0,
+        "dizzyL/front": 0,
+        "dizzyL/three": 0,
+        "dizzyL/side": 0,
+        "dizzyL/back": 0,
+        "dizzyR/front": 0,
+        "dizzyR/three": 0,
+        "dizzyR/side": 0,
+        "dizzyR/back": 0
+       },
+       "maxStrayPx": 0
+      }
+     ],
+     "strayHulls": [],
+     "shoulderGapDown": {
+      "L": 0,
+      "R": 0
+     },
+     "downEndSnapped": {
+      "ears": 0.384,
+      "tail": 0.035,
+      "head": 0.248
+     },
+     "downEndSnappedMinY": 0.035,
+     "downEndSnappedAnim": {
+      "ears": 0.384,
+      "tail": 0.035,
+      "head": 0.248
+     },
+     "shoulderGapWindup": {
+      "L": 0,
+      "R": 0
+     },
+     "shoulderGapWindup06": {
+      "L": 0,
+      "R": 0
+     },
+     "idleReach": {
+      "reach_m": 0.614,
+      "radius_m": 0.42,
+      "beyond_m": 0.194,
+      "part": "haL/paw",
+      "t": 0
+     },
+     "determinism": {
+      "hashSeed7": "aa9a0293",
+      "same": true,
+      "sameLod": true,
+      "hashSeed8": "60445ac3",
+      "seedChangesRig": true
+     },
+     "sequences": {
+      "knockdown": {
+       "worst": {
+        "y": -0.008,
+        "part": "ftR/foot",
+        "phase": "idle",
+        "t": 2.817
+       },
+       "frames": 191,
+       "pass": true,
+       "downEnd": {
+        "ears": 0.384,
+        "tail": 0.035,
+        "head": 0.248
+       },
+       "cullReach": 2.151,
+       "stars": null,
+       "dizzyGap": null
+      },
+      "knockdown+anim": {
+       "worst": {
+        "y": -0.008,
+        "part": "ftR/foot",
+        "phase": "idle",
+        "t": 2.817
+       },
+       "frames": 191,
+       "pass": true,
+       "downEnd": {
+        "ears": 0.384,
+        "tail": 0.035,
+        "head": 0.248
+       },
+       "cullReach": 2.151,
+       "stars": null,
+       "dizzyGap": null
+      },
+      "attack": {
+       "worst": {
+        "y": 0.005,
+        "part": "ftR/foot",
+        "phase": "idle",
+        "t": 2.55
+       },
+       "frames": 153,
+       "pass": true,
+       "downEnd": null,
+       "cullReach": 1.04,
+       "stars": null,
+       "dizzyGap": null
+      },
+      "attack+anim": {
+       "worst": {
+        "y": 0.005,
+        "part": "ftR/foot",
+        "phase": "idle",
+        "t": 2.55
+       },
+       "frames": 153,
+       "pass": true,
+       "downEnd": null,
+       "cullReach": 1.04,
+       "stars": null,
+       "dizzyGap": null
+      },
+      "run": {
+       "worst": {
+        "y": 0.019,
+        "part": "ftR/foot",
+        "phase": "idle",
+        "t": 1.6
+       },
+       "frames": 120,
+       "pass": true,
+       "downEnd": null,
+       "cullReach": 1.041,
+       "stars": null,
+       "dizzyGap": null
+      },
+      "run+anim": {
+       "worst": {
+        "y": 0.019,
+        "part": "ftR/foot",
+        "phase": "idle",
+        "t": 1.6
+       },
+       "frames": 120,
+       "pass": true,
+       "downEnd": null,
+       "cullReach": 1.041,
+       "stars": null,
+       "dizzyGap": null
+      },
+      "dizzy": {
+       "worst": {
+        "y": 0,
+        "part": "ftR/foot",
+        "phase": "idle",
+        "t": 4.517
+       },
+       "frames": 290,
+       "pass": true,
+       "downEnd": null,
+       "cullReach": 1.04,
+       "stars": {
+        "clearance": 0.446,
+        "part": "head/hat",
+        "t": 0.017,
+        "starsY": 2.35
+       },
+       "dizzyGap": {
+        "L": 0,
+        "R": 0,
+        "t": 0.167
+       }
+      },
+      "dizzy+anim": {
+       "worst": {
+        "y": 0,
+        "part": "ftR/foot",
+        "phase": "idle",
+        "t": 4.517
+       },
+       "frames": 290,
+       "pass": true,
+       "downEnd": null,
+       "cullReach": 1.04,
+       "stars": {
+        "clearance": 0.446,
+        "part": "head/hat",
+        "t": 0.017,
+        "starsY": 2.35
+       },
+       "dizzyGap": {
+        "L": 0,
+        "R": 0,
+        "t": 0.167
+       }
+      }
+     },
+     "lodSequences": {
+      "knockdown": {
+       "worst": {
+        "y": -0.009,
+        "part": "knR/shin",
+        "phase": "idle",
+        "t": 2.85
+       },
+       "frames": 191,
+       "pass": true,
+       "downEnd": {
+        "tail": 0.036,
+        "head": 0.235
+       },
+       "cullReach": 2.183,
+       "stars": null,
+       "dizzyGap": null
+      },
+      "attack": {
+       "worst": {
+        "y": 0.004,
+        "part": "knR/shin",
+        "phase": "idle",
+        "t": 2.55
+       },
+       "frames": 153,
+       "pass": true,
+       "downEnd": null,
+       "cullReach": 1.042,
+       "stars": null,
+       "dizzyGap": null
+      },
+      "run": {
+       "worst": {
+        "y": 0.019,
+        "part": "knR/shin",
+        "phase": "idle",
+        "t": 0.017
+       },
+       "frames": 120,
+       "pass": true,
+       "downEnd": null,
+       "cullReach": 1.043,
+       "stars": null,
+       "dizzyGap": null
+      },
+      "dizzy": {
+       "worst": {
+        "y": 0,
+        "part": "knR/shin",
+        "phase": "idle",
+        "t": 4.533
+       },
+       "frames": 290,
+       "pass": true,
+       "downEnd": null,
+       "cullReach": 1.041,
+       "stars": {
+        "clearance": 0.461,
+        "part": "head/hat",
+        "t": 0.083,
+        "starsY": 2.35
+       },
+       "dizzyGap": null
+      }
+     },
+     "sweeps": {
+      "worst": {
+       "y": -0.009,
+       "part": "ftR/foot",
+       "pose": "idle+anim"
+      },
+      "pass": true
+     },
+     "merge": {
+      "meshesBefore": 32,
+      "hullsBefore": 23,
+      "mergedMeshes": 3,
+      "mergedSolid": 2,
+      "mergedOutline": 1,
+      "leftovers": [],
+      "bones": 16,
+      "drawCalls": 3,
+      "shadowCalls": 2,
+      "flashShared": true,
+      "flashPx": {
+       "rigPx": 7377,
+       "unflashedPx": 0,
+       "unflashedPxWithFlashOff": 1578
+      },
+      "flashCovers": true,
+      "mappedSubMaterials": 1,
+      "extras": [
+       {
+        "k": "tail",
+        "plain": true,
+        "parent": "hips"
+       }
+      ],
+      "maxVertexDy_m": 0,
+      "animMoves": {
+       "tailBone": 15,
+       "tailVerts": 88,
+       "moved_m": 0.019
+      },
+      "renderDiffPx": 48,
+      "renderDiffInteriorPx": 1,
+      "renderRigPx": 9052
+     },
+     "cullReachMax": 2.151,
+     "cullRadius": 2.6,
+     "stars": {
+      "hd": {
+       "clearance": 0.446,
+       "part": "head/hat",
+       "t": 0.017,
+       "starsY": 2.35
+      },
+      "hdAnim": {
+       "clearance": 0.446,
+       "part": "head/hat",
+       "t": 0.017,
+       "starsY": 2.35
+      },
+      "lod": {
+       "clearance": 0.461,
+       "part": "head/hat",
+       "t": 0.083,
+       "starsY": 2.35
+      }
+     },
+     "shoulderGapDizzy": {
+      "L": 0,
+      "R": 0,
+      "t": 0.167
+     },
+     "silhouetteIoU": {
+      "front": 0.925,
+      "three": 0.919,
+      "side": 0.929
+     },
+     "pass": {
+      "budgetHD": true,
+      "budgetLOD": true,
+      "marginHD": true,
+      "marginLOD": true,
+      "marginBuried": true,
+      "marginLODGround": true,
+      "ground": true,
+      "shoulders": true,
+      "reach": true,
+      "determinism": true,
+      "marginInk": true,
+      "stars": true,
+      "cullSphere": true,
+      "strayHulls": true,
+      "shadows": true,
+      "flash": true,
+      "hulls": true,
+      "merge": true,
+      "height": true,
+      "feet": true
+     }
+    },
+    "grunt_b": {
+     "hd": {
+      "parts": 31,
+      "tris": 9140,
+      "hullTris": 8264,
+      "hulls": 22,
+      "mats": 3,
+      "casters": 18,
+      "drawCalls": 53,
+      "shadowCalls": 18,
+      "height": 1.819,
+      "feetMinY": 0.02,
+      "flashBad": 0,
+      "hullMatsOK": true,
+      "shadowRule": []
+     },
+     "lod": {
+      "parts": 11,
+      "tris": 1592,
+      "hullTris": 1592,
+      "hulls": 11,
+      "mats": 2,
+      "casters": 11,
+      "drawCalls": 22,
+      "shadowCalls": 11,
+      "height": 1.82,
+      "feetMinY": 0.019,
+      "flashBad": 0,
+      "hullMatsOK": true,
+      "shadowRule": []
+     },
+     "hullOverlap": [
+      {
+       "part": "head/head",
+       "buried": 0.12,
+       "strayPx": {
+        "idle/front": 1,
+        "idle/three": 0,
+        "idle/side": 0,
+        "idle/back": 0,
+        "dizzyL/front": 0,
+        "dizzyL/three": 0,
+        "dizzyL/side": 0,
+        "dizzyL/back": 0,
+        "dizzyR/front": 0,
+        "dizzyR/three": 0,
+        "dizzyR/side": 0,
+        "dizzyR/back": 0
+       },
+       "maxStrayPx": 1
+      },
+      {
+       "part": "head/muzzle",
+       "buried": 0.39,
+       "strayPx": {
+        "idle/front": 0,
+        "idle/three": 0,
+        "idle/side": 0,
+        "idle/back": 0,
+        "dizzyL/front": 0,
+        "dizzyL/three": 0,
+        "dizzyL/side": 0,
+        "dizzyL/back": 0,
+        "dizzyR/front": 0,
+        "dizzyR/three": 0,
+        "dizzyR/side": 0,
+        "dizzyR/back": 0
+       },
+       "maxStrayPx": 0
+      },
+      {
+       "part": "head/ear",
+       "buried": 0.281,
+       "strayPx": {
+        "idle/front": 0,
+        "idle/three": 0,
+        "idle/side": 0,
+        "idle/back": 0,
+        "dizzyL/front": 0,
+        "dizzyL/three": 0,
+        "dizzyL/side": 0,
+        "dizzyL/back": 0,
+        "dizzyR/front": 0,
+        "dizzyR/three": 0,
+        "dizzyR/side": 0,
+        "dizzyR/back": 0
+       },
+       "maxStrayPx": 0
+      },
+      {
+       "part": "haL/paw",
+       "buried": 0.209,
+       "strayPx": {
+        "idle/front": 0,
+        "idle/three": 0,
+        "idle/side": 0,
+        "idle/back": 0,
+        "dizzyL/front": 0,
+        "dizzyL/three": 0,
+        "dizzyL/side": 0,
+        "dizzyL/back": 0,
+        "dizzyR/front": 0,
+        "dizzyR/three": 0,
+        "dizzyR/side": 0,
+        "dizzyR/back": 0
+       },
+       "maxStrayPx": 0
+      },
+      {
+       "part": "elL/fore",
+       "buried": 0.281,
+       "strayPx": {
+        "idle/front": 0,
+        "idle/three": 0,
+        "idle/side": 0,
+        "idle/back": 0,
+        "dizzyL/front": 0,
+        "dizzyL/three": 0,
+        "dizzyL/side": 0,
+        "dizzyL/back": 0,
+        "dizzyR/front": 0,
+        "dizzyR/three": 0,
+        "dizzyR/side": 0,
+        "dizzyR/back": 0
+       },
+       "maxStrayPx": 0
+      },
+      {
+       "part": "shL/shoulder",
+       "buried": 0.235,
+       "strayPx": {
+        "idle/front": 0,
+        "idle/three": 0,
+        "idle/side": 0,
+        "idle/back": 0,
+        "dizzyL/front": 0,
+        "dizzyL/three": 0,
+        "dizzyL/side": 0,
+        "dizzyL/back": 0,
+        "dizzyR/front": 0,
+        "dizzyR/three": 0,
+        "dizzyR/side": 0,
+        "dizzyR/back": 0
+       },
+       "maxStrayPx": 0
+      },
+      {
+       "part": "shL/upper",
+       "buried": 0.44,
+       "strayPx": {
+        "idle/front": 0,
+        "idle/three": 0,
+        "idle/side": 0,
+        "idle/back": 1,
+        "dizzyL/front": 0,
+        "dizzyL/three": 0,
+        "dizzyL/side": 1,
+        "dizzyL/back": 0,
+        "dizzyR/front": 1,
+        "dizzyR/three": 0,
+        "dizzyR/side": 0,
+        "dizzyR/back": 0
+       },
+       "maxStrayPx": 1
+      },
+      {
+       "part": "haR/paw",
+       "buried": 0.209,
+       "strayPx": {
+        "idle/front": 0,
+        "idle/three": 0,
+        "idle/side": 0,
+        "idle/back": 0,
+        "dizzyL/front": 0,
+        "dizzyL/three": 0,
+        "dizzyL/side": 0,
+        "dizzyL/back": 0,
+        "dizzyR/front": 0,
+        "dizzyR/three": 0,
+        "dizzyR/side": 0,
+        "dizzyR/back": 0
+       },
+       "maxStrayPx": 0
+      },
+      {
+       "part": "elR/fore",
+       "buried": 0.301,
+       "strayPx": {
+        "idle/front": 0,
+        "idle/three": 0,
+        "idle/side": 0,
+        "idle/back": 0,
+        "dizzyL/front": 0,
+        "dizzyL/three": 0,
+        "dizzyL/side": 0,
+        "dizzyL/back": 0,
+        "dizzyR/front": 0,
+        "dizzyR/three": 0,
+        "dizzyR/side": 0,
+        "dizzyR/back": 0
+       },
+       "maxStrayPx": 0
+      },
+      {
+       "part": "shR/shoulder",
+       "buried": 0.231,
+       "strayPx": {
+        "idle/front": 0,
+        "idle/three": 0,
+        "idle/side": 0,
+        "idle/back": 0,
+        "dizzyL/front": 0,
+        "dizzyL/three": 0,
+        "dizzyL/side": 0,
+        "dizzyL/back": 0,
+        "dizzyR/front": 0,
+        "dizzyR/three": 0,
+        "dizzyR/side": 0,
+        "dizzyR/back": 0
+       },
+       "maxStrayPx": 0
+      },
+      {
+       "part": "shR/upper",
+       "buried": 0.445,
+       "strayPx": {
+        "idle/front": 4,
+        "idle/three": 0,
+        "idle/side": 0,
+        "idle/back": 3,
+        "dizzyL/front": 1,
+        "dizzyL/three": 0,
+        "dizzyL/side": 0,
+        "dizzyL/back": 1,
+        "dizzyR/front": 1,
+        "dizzyR/three": 0,
+        "dizzyR/side": 0,
+        "dizzyR/back": 0
+       },
+       "maxStrayPx": 4
+      },
+      {
+       "part": "torso/jacket",
+       "buried": 0.21,
+       "strayPx": {
+        "idle/front": 0,
+        "idle/three": 0,
+        "idle/side": 1,
+        "idle/back": 0,
+        "dizzyL/front": 0,
+        "dizzyL/three": 0,
+        "dizzyL/side": 0,
+        "dizzyL/back": 0,
+        "dizzyR/front": 0,
+        "dizzyR/three": 0,
+        "dizzyR/side": 0,
+        "dizzyR/back": 0
+       },
+       "maxStrayPx": 1
+      },
+      {
+       "part": "torso/towel",
+       "buried": 0.222,
+       "strayPx": {
+        "idle/front": 0,
+        "idle/three": 0,
+        "idle/side": 0,
+        "idle/back": 0,
+        "dizzyL/front": 0,
+        "dizzyL/three": 1,
+        "dizzyL/side": 0,
+        "dizzyL/back": 0,
+        "dizzyR/front": 0,
+        "dizzyR/three": 0,
+        "dizzyR/side": 5,
+        "dizzyR/back": 0
+       },
+       "maxStrayPx": 5
+      },
+      {
+       "part": "ftL/foot",
+       "buried": 0.119,
+       "strayPx": {
+        "idle/front": 0,
+        "idle/three": 0,
+        "idle/side": 0,
+        "idle/back": 0,
+        "dizzyL/front": 0,
+        "dizzyL/three": 0,
+        "dizzyL/side": 0,
+        "dizzyL/back": 0,
+        "dizzyR/front": 0,
+        "dizzyR/three": 0,
+        "dizzyR/side": 0,
+        "dizzyR/back": 0
+       },
+       "maxStrayPx": 0
+      },
+      {
+       "part": "knL/shin",
+       "buried": 0.183,
+       "strayPx": {
+        "idle/front": 0,
+        "idle/three": 0,
+        "idle/side": 0,
+        "idle/back": 0,
+        "dizzyL/front": 0,
+        "dizzyL/three": 0,
+        "dizzyL/side": 0,
+        "dizzyL/back": 0,
+        "dizzyR/front": 0,
+        "dizzyR/three": 0,
+        "dizzyR/side": 0,
+        "dizzyR/back": 0
+       },
+       "maxStrayPx": 0
+      },
+      {
+       "part": "lgL/thigh",
+       "buried": 0.275,
+       "strayPx": {
+        "idle/front": 0,
+        "idle/three": 0,
+        "idle/side": 0,
+        "idle/back": 0,
+        "dizzyL/front": 0,
+        "dizzyL/three": 0,
+        "dizzyL/side": 0,
+        "dizzyL/back": 0,
+        "dizzyR/front": 0,
+        "dizzyR/three": 0,
+        "dizzyR/side": 0,
+        "dizzyR/back": 0
+       },
+       "maxStrayPx": 0
+      },
+      {
+       "part": "ftR/foot",
+       "buried": 0.118,
+       "strayPx": {
+        "idle/front": 0,
+        "idle/three": 0,
+        "idle/side": 0,
+        "idle/back": 0,
+        "dizzyL/front": 0,
+        "dizzyL/three": 0,
+        "dizzyL/side": 0,
+        "dizzyL/back": 0,
+        "dizzyR/front": 0,
+        "dizzyR/three": 0,
+        "dizzyR/side": 0,
+        "dizzyR/back": 0
+       },
+       "maxStrayPx": 0
+      },
+      {
+       "part": "knR/shin",
+       "buried": 0.179,
+       "strayPx": {
+        "idle/front": 0,
+        "idle/three": 0,
+        "idle/side": 0,
+        "idle/back": 0,
+        "dizzyL/front": 0,
+        "dizzyL/three": 0,
+        "dizzyL/side": 0,
+        "dizzyL/back": 0,
+        "dizzyR/front": 0,
+        "dizzyR/three": 0,
+        "dizzyR/side": 0,
+        "dizzyR/back": 0
+       },
+       "maxStrayPx": 0
+      },
+      {
+       "part": "lgR/thigh",
+       "buried": 0.277,
+       "strayPx": {
+        "idle/front": 0,
+        "idle/three": 0,
+        "idle/side": 0,
+        "idle/back": 0,
+        "dizzyL/front": 0,
+        "dizzyL/three": 0,
+        "dizzyL/side": 0,
+        "dizzyL/back": 0,
+        "dizzyR/front": 0,
+        "dizzyR/three": 0,
+        "dizzyR/side": 0,
+        "dizzyR/back": 0
+       },
+       "maxStrayPx": 0
+      },
+      {
+       "part": "hips/joggers",
+       "buried": 0.449,
+       "strayPx": {
+        "idle/front": 0,
+        "idle/three": 0,
+        "idle/side": 0,
+        "idle/back": 0,
+        "dizzyL/front": 0,
+        "dizzyL/three": 0,
+        "dizzyL/side": 0,
+        "dizzyL/back": 0,
+        "dizzyR/front": 0,
+        "dizzyR/three": 0,
+        "dizzyR/side": 0,
+        "dizzyR/back": 0
+       },
+       "maxStrayPx": 0
+      },
+      {
+       "part": "tail/tail",
+       "buried": 0.248,
+       "strayPx": {
+        "idle/front": 0,
+        "idle/three": 0,
+        "idle/side": 0,
+        "idle/back": 0,
+        "dizzyL/front": 0,
+        "dizzyL/three": 0,
+        "dizzyL/side": 0,
+        "dizzyL/back": 0,
+        "dizzyR/front": 0,
+        "dizzyR/three": 0,
+        "dizzyR/side": 0,
+        "dizzyR/back": 0
+       },
+       "maxStrayPx": 0
+      }
+     ],
+     "strayHulls": [],
+     "shoulderGapDown": {
+      "L": 0,
+      "R": 0
+     },
+     "downEndSnapped": {
+      "ears": 0.411,
+      "tail": 0.035,
+      "head": 0.268
+     },
+     "downEndSnappedMinY": 0.035,
+     "downEndSnappedAnim": {
+      "ears": 0.411,
+      "tail": 0.035,
+      "head": 0.268
+     },
+     "shoulderGapWindup": {
+      "L": 0,
+      "R": 0
+     },
+     "shoulderGapWindup06": {
+      "L": 0,
+      "R": 0
+     },
+     "idleReach": {
+      "reach_m": 0.614,
+      "radius_m": 0.42,
+      "beyond_m": 0.194,
+      "part": "haL/paw",
+      "t": 0
+     },
+     "determinism": {
+      "hashSeed7": "18e9c843",
+      "same": true,
+      "sameLod": true,
+      "hashSeed8": "c739e8f3",
+      "seedChangesRig": true
+     },
+     "sequences": {
+      "knockdown": {
+       "worst": {
+        "y": -0.008,
+        "part": "ftR/foot",
+        "phase": "idle",
+        "t": 2.817
+       },
+       "frames": 191,
+       "pass": true,
+       "downEnd": {
+        "ears": 0.412,
+        "tail": 0.035,
+        "head": 0.268
+       },
+       "cullReach": 2.151,
+       "stars": null,
+       "dizzyGap": null
+      },
+      "knockdown+anim": {
+       "worst": {
+        "y": -0.008,
+        "part": "ftR/foot",
+        "phase": "idle",
+        "t": 2.817
+       },
+       "frames": 191,
+       "pass": true,
+       "downEnd": {
+        "ears": 0.412,
+        "tail": 0.035,
+        "head": 0.268
+       },
+       "cullReach": 2.151,
+       "stars": null,
+       "dizzyGap": null
+      },
+      "attack": {
+       "worst": {
+        "y": 0.005,
+        "part": "ftR/foot",
+        "phase": "idle",
+        "t": 2.55
+       },
+       "frames": 153,
+       "pass": true,
+       "downEnd": null,
+       "cullReach": 0.98,
+       "stars": null,
+       "dizzyGap": null
+      },
+      "attack+anim": {
+       "worst": {
+        "y": 0.005,
+        "part": "ftR/foot",
+        "phase": "idle",
+        "t": 2.55
+       },
+       "frames": 153,
+       "pass": true,
+       "downEnd": null,
+       "cullReach": 0.98,
+       "stars": null,
+       "dizzyGap": null
+      },
+      "run": {
+       "worst": {
+        "y": 0.019,
+        "part": "ftR/foot",
+        "phase": "idle",
+        "t": 1.6
+       },
+       "frames": 120,
+       "pass": true,
+       "downEnd": null,
+       "cullReach": 0.965,
+       "stars": null,
+       "dizzyGap": null
+      },
+      "run+anim": {
+       "worst": {
+        "y": 0.019,
+        "part": "ftR/foot",
+        "phase": "idle",
+        "t": 1.6
+       },
+       "frames": 120,
+       "pass": true,
+       "downEnd": null,
+       "cullReach": 0.965,
+       "stars": null,
+       "dizzyGap": null
+      },
+      "dizzy": {
+       "worst": {
+        "y": 0,
+        "part": "ftR/foot",
+        "phase": "idle",
+        "t": 4.517
+       },
+       "frames": 290,
+       "pass": true,
+       "downEnd": null,
+       "cullReach": 0.986,
+       "stars": {
+        "clearance": 0.521,
+        "part": "head/head",
+        "t": 0.017,
+        "starsY": 2.35
+       },
+       "dizzyGap": {
+        "L": 0,
+        "R": 0,
+        "t": 0.167
+       }
+      },
+      "dizzy+anim": {
+       "worst": {
+        "y": 0,
+        "part": "ftR/foot",
+        "phase": "idle",
+        "t": 4.517
+       },
+       "frames": 290,
+       "pass": true,
+       "downEnd": null,
+       "cullReach": 0.986,
+       "stars": {
+        "clearance": 0.521,
+        "part": "head/head",
+        "t": 0.017,
+        "starsY": 2.35
+       },
+       "dizzyGap": {
+        "L": 0,
+        "R": 0,
+        "t": 0.167
+       }
+      }
+     },
+     "lodSequences": {
+      "knockdown": {
+       "worst": {
+        "y": -0.009,
+        "part": "knR/shin",
+        "phase": "idle",
+        "t": 2.85
+       },
+       "frames": 191,
+       "pass": true,
+       "downEnd": {
+        "tail": 0.036,
+        "head": 0.268
+       },
+       "cullReach": 2.183,
+       "stars": null,
+       "dizzyGap": null
+      },
+      "attack": {
+       "worst": {
+        "y": 0.004,
+        "part": "knR/shin",
+        "phase": "idle",
+        "t": 2.55
+       },
+       "frames": 153,
+       "pass": true,
+       "downEnd": null,
+       "cullReach": 0.977,
+       "stars": null,
+       "dizzyGap": null
+      },
+      "run": {
+       "worst": {
+        "y": 0.019,
+        "part": "knR/shin",
+        "phase": "idle",
+        "t": 0.017
+       },
+       "frames": 120,
+       "pass": true,
+       "downEnd": null,
+       "cullReach": 0.965,
+       "stars": null,
+       "dizzyGap": null
+      },
+      "dizzy": {
+       "worst": {
+        "y": 0,
+        "part": "knR/shin",
+        "phase": "idle",
+        "t": 4.533
+       },
+       "frames": 290,
+       "pass": true,
+       "downEnd": null,
+       "cullReach": 0.98,
+       "stars": {
+        "clearance": 0.521,
+        "part": "head/head",
+        "t": 0.017,
+        "starsY": 2.35
+       },
+       "dizzyGap": null
+      }
+     },
+     "sweeps": {
+      "worst": {
+       "y": -0.009,
+       "part": "ftR/foot",
+       "pose": "idle+anim"
+      },
+      "pass": true
+     },
+     "merge": {
+      "meshesBefore": 31,
+      "hullsBefore": 22,
+      "mergedMeshes": 3,
+      "mergedSolid": 2,
+      "mergedOutline": 1,
+      "leftovers": [],
+      "bones": 16,
+      "drawCalls": 3,
+      "shadowCalls": 2,
+      "flashShared": true,
+      "flashPx": {
+       "rigPx": 7136,
+       "unflashedPx": 0,
+       "unflashedPxWithFlashOff": 1120
+      },
+      "flashCovers": true,
+      "mappedSubMaterials": 1,
+      "extras": [
+       {
+        "k": "tail",
+        "plain": true,
+        "parent": "hips"
+       }
+      ],
+      "maxVertexDy_m": 0,
+      "animMoves": {
+       "tailBone": 15,
+       "tailVerts": 88,
+       "moved_m": 0.019
+      },
+      "renderDiffPx": 33,
+      "renderDiffInteriorPx": 0,
+      "renderRigPx": 8757
+     },
+     "cullReachMax": 2.151,
+     "cullRadius": 2.6,
+     "stars": {
+      "hd": {
+       "clearance": 0.521,
+       "part": "head/head",
+       "t": 0.017,
+       "starsY": 2.35
+      },
+      "hdAnim": {
+       "clearance": 0.521,
+       "part": "head/head",
+       "t": 0.017,
+       "starsY": 2.35
+      },
+      "lod": {
+       "clearance": 0.521,
+       "part": "head/head",
+       "t": 0.017,
+       "starsY": 2.35
+      }
+     },
+     "shoulderGapDizzy": {
+      "L": 0,
+      "R": 0,
+      "t": 0.167
+     },
+     "silhouetteIoU": {
+      "front": 0.92,
+      "three": 0.925,
+      "side": 0.925
+     },
+     "pass": {
+      "budgetHD": true,
+      "budgetLOD": true,
+      "marginHD": true,
+      "marginLOD": true,
+      "marginBuried": true,
+      "marginLODGround": true,
+      "ground": true,
+      "shoulders": true,
+      "reach": true,
+      "determinism": true,
+      "marginInk": true,
+      "stars": true,
+      "cullSphere": true,
+      "strayHulls": true,
+      "shadows": true,
+      "flash": true,
+      "hulls": true,
+      "merge": true,
+      "height": true,
+      "feet": true
+     }
+    },
+    "armed": {
+     "hd": {
+      "parts": 32,
+      "tris": 9752,
+      "hullTris": 8876,
+      "hulls": 23,
+      "mats": 3,
+      "casters": 19,
+      "drawCalls": 55,
+      "shadowCalls": 19,
+      "height": 1.819,
+      "feetMinY": 0.02,
+      "flashBad": 0,
+      "hullMatsOK": true,
+      "shadowRule": []
+     },
+     "lod": {
+      "parts": 12,
+      "tris": 1704,
+      "hullTris": 1704,
+      "hulls": 12,
+      "mats": 2,
+      "casters": 12,
+      "drawCalls": 24,
+      "shadowCalls": 12,
+      "height": 1.82,
+      "feetMinY": 0.019,
+      "flashBad": 0,
+      "hullMatsOK": true,
+      "shadowRule": []
+     },
+     "hullOverlap": [
+      {
+       "part": "head/head",
+       "buried": 0.12,
+       "strayPx": {
+        "idle/front": 1,
+        "idle/three": 0,
+        "idle/side": 0,
+        "idle/back": 0,
+        "dizzyL/front": 0,
+        "dizzyL/three": 0,
+        "dizzyL/side": 0,
+        "dizzyL/back": 0,
+        "dizzyR/front": 0,
+        "dizzyR/three": 0,
+        "dizzyR/side": 0,
+        "dizzyR/back": 0
+       },
+       "maxStrayPx": 1
+      },
+      {
+       "part": "head/muzzle",
+       "buried": 0.39,
+       "strayPx": {
+        "idle/front": 0,
+        "idle/three": 0,
+        "idle/side": 0,
+        "idle/back": 1,
+        "dizzyL/front": 0,
+        "dizzyL/three": 0,
+        "dizzyL/side": 0,
+        "dizzyL/back": 0,
+        "dizzyR/front": 0,
+        "dizzyR/three": 0,
+        "dizzyR/side": 0,
+        "dizzyR/back": 0
+       },
+       "maxStrayPx": 1
+      },
+      {
+       "part": "head/ear",
+       "buried": 0.281,
+       "strayPx": {
+        "idle/front": 0,
+        "idle/three": 0,
+        "idle/side": 0,
+        "idle/back": 0,
+        "dizzyL/front": 0,
+        "dizzyL/three": 0,
+        "dizzyL/side": 0,
+        "dizzyL/back": 0,
+        "dizzyR/front": 0,
+        "dizzyR/three": 0,
+        "dizzyR/side": 0,
+        "dizzyR/back": 0
+       },
+       "maxStrayPx": 0
+      },
+      {
+       "part": "haL/paw",
+       "buried": 0.209,
+       "strayPx": {
+        "idle/front": 0,
+        "idle/three": 0,
+        "idle/side": 0,
+        "idle/back": 0,
+        "dizzyL/front": 0,
+        "dizzyL/three": 0,
+        "dizzyL/side": 0,
+        "dizzyL/back": 0,
+        "dizzyR/front": 0,
+        "dizzyR/three": 0,
+        "dizzyR/side": 0,
+        "dizzyR/back": 0
+       },
+       "maxStrayPx": 0
+      },
+      {
+       "part": "elL/fore",
+       "buried": 0.281,
+       "strayPx": {
+        "idle/front": 0,
+        "idle/three": 0,
+        "idle/side": 0,
+        "idle/back": 0,
+        "dizzyL/front": 0,
+        "dizzyL/three": 0,
+        "dizzyL/side": 0,
+        "dizzyL/back": 0,
+        "dizzyR/front": 0,
+        "dizzyR/three": 0,
+        "dizzyR/side": 0,
+        "dizzyR/back": 0
+       },
+       "maxStrayPx": 0
+      },
+      {
+       "part": "shL/shoulder",
+       "buried": 0.235,
+       "strayPx": {
+        "idle/front": 0,
+        "idle/three": 0,
+        "idle/side": 0,
+        "idle/back": 0,
+        "dizzyL/front": 0,
+        "dizzyL/three": 0,
+        "dizzyL/side": 0,
+        "dizzyL/back": 0,
+        "dizzyR/front": 0,
+        "dizzyR/three": 0,
+        "dizzyR/side": 0,
+        "dizzyR/back": 0
+       },
+       "maxStrayPx": 0
+      },
+      {
+       "part": "shL/upper",
+       "buried": 0.44,
+       "strayPx": {
+        "idle/front": 0,
+        "idle/three": 0,
+        "idle/side": 0,
+        "idle/back": 1,
+        "dizzyL/front": 0,
+        "dizzyL/three": 0,
+        "dizzyL/side": 0,
+        "dizzyL/back": 0,
+        "dizzyR/front": 1,
+        "dizzyR/three": 0,
+        "dizzyR/side": 0,
+        "dizzyR/back": 0
+       },
+       "maxStrayPx": 1
+      },
+      {
+       "part": "haR/paw",
+       "buried": 0.224,
+       "strayPx": {
+        "idle/front": 0,
+        "idle/three": 0,
+        "idle/side": 0,
+        "idle/back": 0,
+        "dizzyL/front": 0,
+        "dizzyL/three": 0,
+        "dizzyL/side": 0,
+        "dizzyL/back": 0,
+        "dizzyR/front": 0,
+        "dizzyR/three": 0,
+        "dizzyR/side": 0,
+        "dizzyR/back": 0
+       },
+       "maxStrayPx": 0
+      },
+      {
+       "part": "swR/rope",
+       "buried": 0.357,
+       "strayPx": {
+        "idle/front": 0,
+        "idle/three": 0,
+        "idle/side": 0,
+        "idle/back": 0,
+        "dizzyL/front": 0,
+        "dizzyL/three": 0,
+        "dizzyL/side": 0,
+        "dizzyL/back": 1,
+        "dizzyR/front": 0,
+        "dizzyR/three": 0,
+        "dizzyR/side": 0,
+        "dizzyR/back": 0
+       },
+       "maxStrayPx": 1
+      },
+      {
+       "part": "swR/sack",
+       "buried": 0,
+       "strayPx": {
+        "idle/front": 0,
+        "idle/three": 0,
+        "idle/side": 0,
+        "idle/back": 0,
+        "dizzyL/front": 0,
+        "dizzyL/three": 0,
+        "dizzyL/side": 0,
+        "dizzyL/back": 0,
+        "dizzyR/front": 0,
+        "dizzyR/three": 0,
+        "dizzyR/side": 0,
+        "dizzyR/back": 0
+       },
+       "maxStrayPx": 0
+      },
+      {
+       "part": "elR/fore",
+       "buried": 0.252,
+       "strayPx": {
+        "idle/front": 0,
+        "idle/three": 0,
+        "idle/side": 0,
+        "idle/back": 0,
+        "dizzyL/front": 0,
+        "dizzyL/three": 0,
+        "dizzyL/side": 0,
+        "dizzyL/back": 0,
+        "dizzyR/front": 0,
+        "dizzyR/three": 0,
+        "dizzyR/side": 0,
+        "dizzyR/back": 0
+       },
+       "maxStrayPx": 0
+      },
+      {
+       "part": "shR/shoulder",
+       "buried": 0.236,
+       "strayPx": {
+        "idle/front": 0,
+        "idle/three": 0,
+        "idle/side": 0,
+        "idle/back": 0,
+        "dizzyL/front": 0,
+        "dizzyL/three": 0,
+        "dizzyL/side": 0,
+        "dizzyL/back": 0,
+        "dizzyR/front": 0,
+        "dizzyR/three": 0,
+        "dizzyR/side": 0,
+        "dizzyR/back": 0
+       },
+       "maxStrayPx": 0
+      },
+      {
+       "part": "shR/upper",
+       "buried": 0.435,
+       "strayPx": {
+        "idle/front": 0,
+        "idle/three": 0,
+        "idle/side": 0,
+        "idle/back": 0,
+        "dizzyL/front": 1,
+        "dizzyL/three": 0,
+        "dizzyL/side": 0,
+        "dizzyL/back": 1,
+        "dizzyR/front": 1,
+        "dizzyR/three": 0,
+        "dizzyR/side": 0,
+        "dizzyR/back": 0
+       },
+       "maxStrayPx": 1
+      },
+      {
+       "part": "torso/jacket",
+       "buried": 0.156,
+       "strayPx": {
+        "idle/front": 0,
+        "idle/three": 0,
+        "idle/side": 0,
+        "idle/back": 0,
+        "dizzyL/front": 0,
+        "dizzyL/three": 0,
+        "dizzyL/side": 0,
+        "dizzyL/back": 0,
+        "dizzyR/front": 0,
+        "dizzyR/three": 0,
+        "dizzyR/side": 0,
+        "dizzyR/back": 0
+       },
+       "maxStrayPx": 0
+      },
+      {
+       "part": "ftL/foot",
+       "buried": 0.119,
+       "strayPx": {
+        "idle/front": 0,
+        "idle/three": 0,
+        "idle/side": 0,
+        "idle/back": 0,
+        "dizzyL/front": 0,
+        "dizzyL/three": 0,
+        "dizzyL/side": 0,
+        "dizzyL/back": 0,
+        "dizzyR/front": 0,
+        "dizzyR/three": 0,
+        "dizzyR/side": 0,
+        "dizzyR/back": 0
+       },
+       "maxStrayPx": 0
+      },
+      {
+       "part": "knL/shin",
+       "buried": 0.183,
+       "strayPx": {
+        "idle/front": 0,
+        "idle/three": 0,
+        "idle/side": 0,
+        "idle/back": 0,
+        "dizzyL/front": 0,
+        "dizzyL/three": 0,
+        "dizzyL/side": 0,
+        "dizzyL/back": 0,
+        "dizzyR/front": 0,
+        "dizzyR/three": 0,
+        "dizzyR/side": 0,
+        "dizzyR/back": 0
+       },
+       "maxStrayPx": 0
+      },
+      {
+       "part": "lgL/thigh",
+       "buried": 0.275,
+       "strayPx": {
+        "idle/front": 0,
+        "idle/three": 0,
+        "idle/side": 0,
+        "idle/back": 0,
+        "dizzyL/front": 0,
+        "dizzyL/three": 0,
+        "dizzyL/side": 0,
+        "dizzyL/back": 0,
+        "dizzyR/front": 0,
+        "dizzyR/three": 0,
+        "dizzyR/side": 0,
+        "dizzyR/back": 0
+       },
+       "maxStrayPx": 0
+      },
+      {
+       "part": "ftR/foot",
+       "buried": 0.118,
+       "strayPx": {
+        "idle/front": 0,
+        "idle/three": 0,
+        "idle/side": 0,
+        "idle/back": 0,
+        "dizzyL/front": 0,
+        "dizzyL/three": 0,
+        "dizzyL/side": 0,
+        "dizzyL/back": 0,
+        "dizzyR/front": 0,
+        "dizzyR/three": 0,
+        "dizzyR/side": 0,
+        "dizzyR/back": 0
+       },
+       "maxStrayPx": 0
+      },
+      {
+       "part": "knR/shin",
+       "buried": 0.179,
+       "strayPx": {
+        "idle/front": 0,
+        "idle/three": 0,
+        "idle/side": 0,
+        "idle/back": 0,
+        "dizzyL/front": 0,
+        "dizzyL/three": 0,
+        "dizzyL/side": 0,
+        "dizzyL/back": 0,
+        "dizzyR/front": 0,
+        "dizzyR/three": 0,
+        "dizzyR/side": 0,
+        "dizzyR/back": 0
+       },
+       "maxStrayPx": 0
+      },
+      {
+       "part": "lgR/thigh",
+       "buried": 0.277,
+       "strayPx": {
+        "idle/front": 0,
+        "idle/three": 0,
+        "idle/side": 0,
+        "idle/back": 0,
+        "dizzyL/front": 0,
+        "dizzyL/three": 0,
+        "dizzyL/side": 0,
+        "dizzyL/back": 0,
+        "dizzyR/front": 0,
+        "dizzyR/three": 0,
+        "dizzyR/side": 0,
+        "dizzyR/back": 0
+       },
+       "maxStrayPx": 0
+      },
+      {
+       "part": "hips/joggers",
+       "buried": 0.449,
+       "strayPx": {
+        "idle/front": 0,
+        "idle/three": 0,
+        "idle/side": 0,
+        "idle/back": 0,
+        "dizzyL/front": 0,
+        "dizzyL/three": 0,
+        "dizzyL/side": 0,
+        "dizzyL/back": 0,
+        "dizzyR/front": 0,
+        "dizzyR/three": 0,
+        "dizzyR/side": 0,
+        "dizzyR/back": 0
+       },
+       "maxStrayPx": 0
+      },
+      {
+       "part": "tail/tail",
+       "buried": 0.248,
+       "strayPx": {
+        "idle/front": 0,
+        "idle/three": 0,
+        "idle/side": 0,
+        "idle/back": 0,
+        "dizzyL/front": 0,
+        "dizzyL/three": 0,
+        "dizzyL/side": 0,
+        "dizzyL/back": 0,
+        "dizzyR/front": 0,
+        "dizzyR/three": 0,
+        "dizzyR/side": 0,
+        "dizzyR/back": 0
+       },
+       "maxStrayPx": 0
+      }
+     ],
+     "strayHulls": [],
+     "shoulderGapDown": {
+      "L": 0,
+      "R": 0
+     },
+     "downEndSnapped": {
+      "ears": 0.411,
+      "tail": 0.035,
+      "head": 0.268
+     },
+     "downEndSnappedMinY": 0.035,
+     "downEndSnappedAnim": {
+      "ears": 0.411,
+      "tail": 0.035,
+      "head": 0.268
+     },
+     "shoulderGapWindup": {
+      "L": 0,
+      "R": 0
+     },
+     "shoulderGapWindup06": {
+      "L": 0,
+      "R": 0
+     },
+     "idleReach": {
+      "reach_m": 0.622,
+      "radius_m": 0.42,
+      "beyond_m": 0.202,
+      "part": "haR/paw",
+      "t": 0
+     },
+     "determinism": {
+      "hashSeed7": "09195e37",
+      "same": true,
+      "sameLod": true,
+      "hashSeed8": "9cb86f97",
+      "seedChangesRig": true
+     },
+     "sequences": {
+      "knockdown": {
+       "worst": {
+        "y": -0.008,
+        "part": "ftR/foot",
+        "phase": "idle",
+        "t": 2.817
+       },
+       "frames": 191,
+       "pass": true,
+       "downEnd": {
+        "ears": 0.412,
+        "tail": 0.035,
+        "head": 0.268
+       },
+       "cullReach": 2.437,
+       "stars": null,
+       "dizzyGap": null
+      },
+      "knockdown+anim": {
+       "worst": {
+        "y": -0.008,
+        "part": "ftR/foot",
+        "phase": "idle",
+        "t": 2.817
+       },
+       "frames": 191,
+       "pass": true,
+       "downEnd": {
+        "ears": 0.412,
+        "tail": 0.035,
+        "head": 0.268
+       },
+       "cullReach": 2.437,
+       "stars": null,
+       "dizzyGap": null
+      },
+      "attack": {
+       "worst": {
+        "y": 0.005,
+        "part": "ftR/foot",
+        "phase": "idle",
+        "t": 2.55
+       },
+       "frames": 153,
+       "pass": true,
+       "downEnd": null,
+       "cullReach": 1.184,
+       "stars": null,
+       "dizzyGap": null
+      },
+      "attack+anim": {
+       "worst": {
+        "y": 0.005,
+        "part": "ftR/foot",
+        "phase": "idle",
+        "t": 2.55
+       },
+       "frames": 153,
+       "pass": true,
+       "downEnd": null,
+       "cullReach": 1.184,
+       "stars": null,
+       "dizzyGap": null
+      },
+      "run": {
+       "worst": {
+        "y": 0.019,
+        "part": "ftR/foot",
+        "phase": "idle",
+        "t": 1.6
+       },
+       "frames": 120,
+       "pass": true,
+       "downEnd": null,
+       "cullReach": 0.978,
+       "stars": null,
+       "dizzyGap": null
+      },
+      "run+anim": {
+       "worst": {
+        "y": 0.019,
+        "part": "ftR/foot",
+        "phase": "idle",
+        "t": 1.6
+       },
+       "frames": 120,
+       "pass": true,
+       "downEnd": null,
+       "cullReach": 0.978,
+       "stars": null,
+       "dizzyGap": null
+      },
+      "dizzy": {
+       "worst": {
+        "y": 0,
+        "part": "ftR/foot",
+        "phase": "idle",
+        "t": 4.517
+       },
+       "frames": 290,
+       "pass": true,
+       "downEnd": null,
+       "cullReach": 0.986,
+       "stars": {
+        "clearance": 0.521,
+        "part": "head/head",
+        "t": 0.017,
+        "starsY": 2.35
+       },
+       "dizzyGap": {
+        "L": 0,
+        "R": 0,
+        "t": 0.167
+       }
+      },
+      "dizzy+anim": {
+       "worst": {
+        "y": 0,
+        "part": "ftR/foot",
+        "phase": "idle",
+        "t": 4.517
+       },
+       "frames": 290,
+       "pass": true,
+       "downEnd": null,
+       "cullReach": 0.986,
+       "stars": {
+        "clearance": 0.521,
+        "part": "head/head",
+        "t": 0.017,
+        "starsY": 2.35
+       },
+       "dizzyGap": {
+        "L": 0,
+        "R": 0,
+        "t": 0.167
+       }
+      }
+     },
+     "lodSequences": {
+      "knockdown": {
+       "worst": {
+        "y": -0.009,
+        "part": "knR/shin",
+        "phase": "idle",
+        "t": 2.85
+       },
+       "frames": 191,
+       "pass": true,
+       "downEnd": {
+        "tail": 0.036,
+        "head": 0.268
+       },
+       "cullReach": 2.488,
+       "stars": null,
+       "dizzyGap": null
+      },
+      "attack": {
+       "worst": {
+        "y": 0.004,
+        "part": "knR/shin",
+        "phase": "idle",
+        "t": 2.55
+       },
+       "frames": 153,
+       "pass": true,
+       "downEnd": null,
+       "cullReach": 1.23,
+       "stars": null,
+       "dizzyGap": null
+      },
+      "run": {
+       "worst": {
+        "y": 0.019,
+        "part": "knR/shin",
+        "phase": "idle",
+        "t": 0.017
+       },
+       "frames": 120,
+       "pass": true,
+       "downEnd": null,
+       "cullReach": 1.028,
+       "stars": null,
+       "dizzyGap": null
+      },
+      "dizzy": {
+       "worst": {
+        "y": 0,
+        "part": "knR/shin",
+        "phase": "idle",
+        "t": 4.533
+       },
+       "frames": 290,
+       "pass": true,
+       "downEnd": null,
+       "cullReach": 1.002,
+       "stars": {
+        "clearance": 0.521,
+        "part": "head/head",
+        "t": 0.017,
+        "starsY": 2.35
+       },
+       "dizzyGap": null
+      }
+     },
+     "sweeps": {
+      "worst": {
+       "y": -0.009,
+       "part": "ftR/foot",
+       "pose": "idle+anim"
+      },
+      "pass": true
+     },
+     "merge": {
+      "meshesBefore": 32,
+      "hullsBefore": 23,
+      "mergedMeshes": 3,
+      "mergedSolid": 2,
+      "mergedOutline": 1,
+      "leftovers": [],
+      "bones": 17,
+      "drawCalls": 3,
+      "shadowCalls": 2,
+      "flashShared": true,
+      "flashPx": {
+       "rigPx": 7717,
+       "unflashedPx": 0,
+       "unflashedPxWithFlashOff": 1828
+      },
+      "flashCovers": true,
+      "mappedSubMaterials": 1,
+      "extras": [
+       {
+        "k": "tail",
+        "plain": true,
+        "parent": "hips"
+       }
+      ],
+      "maxVertexDy_m": 0,
+      "animMoves": {
+       "tailBone": 16,
+       "tailVerts": 88,
+       "moved_m": 0.019
+      },
+      "renderDiffPx": 23,
+      "renderDiffInteriorPx": 0,
+      "renderRigPx": 9426
+     },
+     "cullReachMax": 2.437,
+     "cullRadius": 2.6,
+     "stars": {
+      "hd": {
+       "clearance": 0.521,
+       "part": "head/head",
+       "t": 0.017,
+       "starsY": 2.35
+      },
+      "hdAnim": {
+       "clearance": 0.521,
+       "part": "head/head",
+       "t": 0.017,
+       "starsY": 2.35
+      },
+      "lod": {
+       "clearance": 0.521,
+       "part": "head/head",
+       "t": 0.017,
+       "starsY": 2.35
+      }
+     },
+     "shoulderGapDizzy": {
+      "L": 0,
+      "R": 0,
+      "t": 0.167
+     },
+     "silhouetteIoU": {
+      "front": 0.926,
+      "three": 0.918,
+      "side": 0.92
+     },
+     "pass": {
+      "budgetHD": true,
+      "budgetLOD": true,
+      "marginHD": true,
+      "marginLOD": true,
+      "marginBuried": true,
+      "marginLODGround": true,
+      "ground": true,
+      "shoulders": true,
+      "reach": true,
+      "determinism": true,
+      "marginInk": true,
+      "stars": true,
+      "cullSphere": true,
+      "strayHulls": true,
+      "shadows": true,
+      "flash": true,
+      "hulls": true,
+      "merge": true,
+      "height": true,
+      "feet": true
+     }
+    },
+    "bruiser": {
+     "hd": {
+      "parts": 32,
+      "tris": 9400,
+      "hullTris": 8524,
+      "hulls": 23,
+      "mats": 3,
+      "casters": 20,
+      "drawCalls": 55,
+      "shadowCalls": 20,
+      "height": 2.492,
+      "feetMinY": 0.024,
+      "flashBad": 0,
+      "hullMatsOK": true,
+      "shadowRule": []
+     },
+     "lod": {
+      "parts": 12,
+      "tris": 1648,
+      "hullTris": 1648,
+      "hulls": 12,
+      "mats": 2,
+      "casters": 12,
+      "drawCalls": 24,
+      "shadowCalls": 12,
+      "height": 2.388,
+      "feetMinY": 0.021,
+      "flashBad": 0,
+      "hullMatsOK": true,
+      "shadowRule": []
+     },
+     "hullOverlap": [
+      {
+       "part": "head/head",
+       "buried": 0.353,
+       "strayPx": {
+        "idle/front": 0,
+        "idle/three": 0,
+        "idle/side": 0,
+        "idle/back": 0,
+        "dizzyL/front": 0,
+        "dizzyL/three": 0,
+        "dizzyL/side": 0,
+        "dizzyL/back": 0,
+        "dizzyR/front": 0,
+        "dizzyR/three": 0,
+        "dizzyR/side": 0,
+        "dizzyR/back": 0
+       },
+       "maxStrayPx": 0
+      },
+      {
+       "part": "head/muzzle",
+       "buried": 0.399,
+       "strayPx": {
+        "idle/front": 0,
+        "idle/three": 0,
+        "idle/side": 0,
+        "idle/back": 0,
+        "dizzyL/front": 0,
+        "dizzyL/three": 0,
+        "dizzyL/side": 0,
+        "dizzyL/back": 0,
+        "dizzyR/front": 0,
+        "dizzyR/three": 0,
+        "dizzyR/side": 0,
+        "dizzyR/back": 0
+       },
+       "maxStrayPx": 0
+      },
+      {
+       "part": "head/ear",
+       "buried": 0.292,
+       "strayPx": {
+        "idle/front": 0,
+        "idle/three": 0,
+        "idle/side": 0,
+        "idle/back": 0,
+        "dizzyL/front": 0,
+        "dizzyL/three": 0,
+        "dizzyL/side": 0,
+        "dizzyL/back": 0,
+        "dizzyR/front": 0,
+        "dizzyR/three": 0,
+        "dizzyR/side": 0,
+        "dizzyR/back": 0
+       },
+       "maxStrayPx": 0
+      },
+      {
+       "part": "head/shako",
+       "buried": 0.183,
+       "strayPx": {
+        "idle/front": 3,
+        "idle/three": 0,
+        "idle/side": 0,
+        "idle/back": 0,
+        "dizzyL/front": 0,
+        "dizzyL/three": 0,
+        "dizzyL/side": 0,
+        "dizzyL/back": 0,
+        "dizzyR/front": 0,
+        "dizzyR/three": 0,
+        "dizzyR/side": 0,
+        "dizzyR/back": 0
+       },
+       "maxStrayPx": 3
+      },
+      {
+       "part": "head/plume",
+       "buried": 0.379,
+       "strayPx": {
+        "idle/front": 0,
+        "idle/three": 1,
+        "idle/side": 0,
+        "idle/back": 0,
+        "dizzyL/front": 0,
+        "dizzyL/three": 0,
+        "dizzyL/side": 0,
+        "dizzyL/back": 0,
+        "dizzyR/front": 0,
+        "dizzyR/three": 0,
+        "dizzyR/side": 0,
+        "dizzyR/back": 0
+       },
+       "maxStrayPx": 1
+      },
+      {
+       "part": "haL/paw",
+       "buried": 0.283,
+       "strayPx": {
+        "idle/front": 0,
+        "idle/three": 0,
+        "idle/side": 0,
+        "idle/back": 0,
+        "dizzyL/front": 0,
+        "dizzyL/three": 0,
+        "dizzyL/side": 0,
+        "dizzyL/back": 0,
+        "dizzyR/front": 0,
+        "dizzyR/three": 0,
+        "dizzyR/side": 0,
+        "dizzyR/back": 0
+       },
+       "maxStrayPx": 0
+      },
+      {
+       "part": "elL/fore",
+       "buried": 0.366,
+       "strayPx": {
+        "idle/front": 0,
+        "idle/three": 0,
+        "idle/side": 0,
+        "idle/back": 0,
+        "dizzyL/front": 0,
+        "dizzyL/three": 0,
+        "dizzyL/side": 0,
+        "dizzyL/back": 0,
+        "dizzyR/front": 0,
+        "dizzyR/three": 0,
+        "dizzyR/side": 0,
+        "dizzyR/back": 0
+       },
+       "maxStrayPx": 0
+      },
+      {
+       "part": "shL/shoulder",
+       "buried": 0.472,
+       "strayPx": {
+        "idle/front": 0,
+        "idle/three": 0,
+        "idle/side": 0,
+        "idle/back": 0,
+        "dizzyL/front": 0,
+        "dizzyL/three": 0,
+        "dizzyL/side": 0,
+        "dizzyL/back": 0,
+        "dizzyR/front": 0,
+        "dizzyR/three": 0,
+        "dizzyR/side": 0,
+        "dizzyR/back": 0
+       },
+       "maxStrayPx": 0
+      },
+      {
+       "part": "shL/upper",
+       "buried": 0.414,
+       "strayPx": {
+        "idle/front": 0,
+        "idle/three": 0,
+        "idle/side": 0,
+        "idle/back": 0,
+        "dizzyL/front": 1,
+        "dizzyL/three": 1,
+        "dizzyL/side": 0,
+        "dizzyL/back": 0,
+        "dizzyR/front": 0,
+        "dizzyR/three": 0,
+        "dizzyR/side": 1,
+        "dizzyR/back": 0
+       },
+       "maxStrayPx": 1
+      },
+      {
+       "part": "haR/paw",
+       "buried": 0.283,
+       "strayPx": {
+        "idle/front": 0,
+        "idle/three": 0,
+        "idle/side": 0,
+        "idle/back": 0,
+        "dizzyL/front": 0,
+        "dizzyL/three": 0,
+        "dizzyL/side": 0,
+        "dizzyL/back": 0,
+        "dizzyR/front": 0,
+        "dizzyR/three": 0,
+        "dizzyR/side": 0,
+        "dizzyR/back": 0
+       },
+       "maxStrayPx": 0
+      },
+      {
+       "part": "elR/fore",
+       "buried": 0.39,
+       "strayPx": {
+        "idle/front": 0,
+        "idle/three": 0,
+        "idle/side": 0,
+        "idle/back": 0,
+        "dizzyL/front": 0,
+        "dizzyL/three": 0,
+        "dizzyL/side": 0,
+        "dizzyL/back": 0,
+        "dizzyR/front": 0,
+        "dizzyR/three": 0,
+        "dizzyR/side": 0,
+        "dizzyR/back": 0
+       },
+       "maxStrayPx": 0
+      },
+      {
+       "part": "shR/shoulder",
+       "buried": 0.471,
+       "strayPx": {
+        "idle/front": 0,
+        "idle/three": 0,
+        "idle/side": 0,
+        "idle/back": 0,
+        "dizzyL/front": 0,
+        "dizzyL/three": 0,
+        "dizzyL/side": 0,
+        "dizzyL/back": 0,
+        "dizzyR/front": 0,
+        "dizzyR/three": 0,
+        "dizzyR/side": 0,
+        "dizzyR/back": 0
+       },
+       "maxStrayPx": 0
+      },
+      {
+       "part": "shR/upper",
+       "buried": 0.449,
+       "strayPx": {
+        "idle/front": 0,
+        "idle/three": 0,
+        "idle/side": 0,
+        "idle/back": 1,
+        "dizzyL/front": 0,
+        "dizzyL/three": 0,
+        "dizzyL/side": 0,
+        "dizzyL/back": 0,
+        "dizzyR/front": 0,
+        "dizzyR/three": 0,
+        "dizzyR/side": 0,
+        "dizzyR/back": 0
+       },
+       "maxStrayPx": 1
+      },
+      {
+       "part": "torso/jacket",
+       "buried": 0.224,
+       "strayPx": {
+        "idle/front": 0,
+        "idle/three": 0,
+        "idle/side": 0,
+        "idle/back": 0,
+        "dizzyL/front": 0,
+        "dizzyL/three": 0,
+        "dizzyL/side": 0,
+        "dizzyL/back": 0,
+        "dizzyR/front": 0,
+        "dizzyR/three": 0,
+        "dizzyR/side": 0,
+        "dizzyR/back": 0
+       },
+       "maxStrayPx": 0
+      },
+      {
+       "part": "ftL/foot",
+       "buried": 0.156,
+       "strayPx": {
+        "idle/front": 0,
+        "idle/three": 0,
+        "idle/side": 0,
+        "idle/back": 0,
+        "dizzyL/front": 0,
+        "dizzyL/three": 0,
+        "dizzyL/side": 0,
+        "dizzyL/back": 0,
+        "dizzyR/front": 0,
+        "dizzyR/three": 0,
+        "dizzyR/side": 0,
+        "dizzyR/back": 0
+       },
+       "maxStrayPx": 0
+      },
+      {
+       "part": "knL/shin",
+       "buried": 0.236,
+       "strayPx": {
+        "idle/front": 0,
+        "idle/three": 0,
+        "idle/side": 0,
+        "idle/back": 0,
+        "dizzyL/front": 0,
+        "dizzyL/three": 0,
+        "dizzyL/side": 0,
+        "dizzyL/back": 0,
+        "dizzyR/front": 0,
+        "dizzyR/three": 0,
+        "dizzyR/side": 0,
+        "dizzyR/back": 0
+       },
+       "maxStrayPx": 0
+      },
+      {
+       "part": "lgL/thigh",
+       "buried": 0.369,
+       "strayPx": {
+        "idle/front": 0,
+        "idle/three": 0,
+        "idle/side": 0,
+        "idle/back": 0,
+        "dizzyL/front": 0,
+        "dizzyL/three": 0,
+        "dizzyL/side": 0,
+        "dizzyL/back": 0,
+        "dizzyR/front": 0,
+        "dizzyR/three": 0,
+        "dizzyR/side": 0,
+        "dizzyR/back": 0
+       },
+       "maxStrayPx": 0
+      },
+      {
+       "part": "ftR/foot",
+       "buried": 0.155,
+       "strayPx": {
+        "idle/front": 0,
+        "idle/three": 0,
+        "idle/side": 0,
+        "idle/back": 0,
+        "dizzyL/front": 0,
+        "dizzyL/three": 0,
+        "dizzyL/side": 0,
+        "dizzyL/back": 0,
+        "dizzyR/front": 0,
+        "dizzyR/three": 0,
+        "dizzyR/side": 0,
+        "dizzyR/back": 0
+       },
+       "maxStrayPx": 0
+      },
+      {
+       "part": "knR/shin",
+       "buried": 0.237,
+       "strayPx": {
+        "idle/front": 0,
+        "idle/three": 0,
+        "idle/side": 0,
+        "idle/back": 0,
+        "dizzyL/front": 0,
+        "dizzyL/three": 0,
+        "dizzyL/side": 0,
+        "dizzyL/back": 0,
+        "dizzyR/front": 0,
+        "dizzyR/three": 0,
+        "dizzyR/side": 0,
+        "dizzyR/back": 0
+       },
+       "maxStrayPx": 0
+      },
+      {
+       "part": "lgR/thigh",
+       "buried": 0.368,
+       "strayPx": {
+        "idle/front": 0,
+        "idle/three": 0,
+        "idle/side": 0,
+        "idle/back": 0,
+        "dizzyL/front": 0,
+        "dizzyL/three": 0,
+        "dizzyL/side": 0,
+        "dizzyL/back": 0,
+        "dizzyR/front": 0,
+        "dizzyR/three": 0,
+        "dizzyR/side": 0,
+        "dizzyR/back": 0
+       },
+       "maxStrayPx": 0
+      },
+      {
+       "part": "hips/joggers",
+       "buried": 0.434,
+       "strayPx": {
+        "idle/front": 0,
+        "idle/three": 0,
+        "idle/side": 0,
+        "idle/back": 0,
+        "dizzyL/front": 0,
+        "dizzyL/three": 0,
+        "dizzyL/side": 0,
+        "dizzyL/back": 0,
+        "dizzyR/front": 0,
+        "dizzyR/three": 0,
+        "dizzyR/side": 0,
+        "dizzyR/back": 0
+       },
+       "maxStrayPx": 0
+      },
+      {
+       "part": "tail/tail",
+       "buried": 0.28,
+       "strayPx": {
+        "idle/front": 0,
+        "idle/three": 0,
+        "idle/side": 0,
+        "idle/back": 0,
+        "dizzyL/front": 0,
+        "dizzyL/three": 0,
+        "dizzyL/side": 0,
+        "dizzyL/back": 0,
+        "dizzyR/front": 0,
+        "dizzyR/three": 0,
+        "dizzyR/side": 0,
+        "dizzyR/back": 0
+       },
+       "maxStrayPx": 0
+      }
+     ],
+     "strayHulls": [],
+     "shoulderGapDown": {
+      "L": 0,
+      "R": 0
+     },
+     "downEndSnapped": {
+      "ears": 0.461,
+      "tail": 0.045,
+      "head": 0.322
+     },
+     "downEndSnappedMinY": 0.045,
+     "downEndSnappedAnim": {
+      "ears": 0.461,
+      "tail": 0.045,
+      "head": 0.322
+     },
+     "shoulderGapWindup": {
+      "L": 0,
+      "R": 0
+     },
+     "shoulderGapWindup06": {
+      "L": 0,
+      "R": 0
+     },
+     "idleReach": {
+      "reach_m": 0.76,
+      "radius_m": 0.55,
+      "beyond_m": 0.21,
+      "part": "haL/paw",
+      "t": 0
+     },
+     "determinism": {
+      "hashSeed7": "6acc9a13",
+      "same": true,
+      "sameLod": true,
+      "hashSeed8": "d77c5abf",
+      "seedChangesRig": true
+     },
+     "sequences": {
+      "knockdown": {
+       "worst": {
+        "y": -0.009,
+        "part": "ftR/foot",
+        "phase": "idle",
+        "t": 2.867
+       },
+       "frames": 191,
+       "pass": true,
+       "downEnd": {
+        "ears": 0.461,
+        "tail": 0.045,
+        "head": 0.322
+       },
+       "cullReach": 2.171,
+       "stars": null,
+       "dizzyGap": null
+      },
+      "knockdown+anim": {
+       "worst": {
+        "y": -0.009,
+        "part": "ftR/foot",
+        "phase": "idle",
+        "t": 2.867
+       },
+       "frames": 191,
+       "pass": true,
+       "downEnd": {
+        "ears": 0.461,
+        "tail": 0.045,
+        "head": 0.322
+       },
+       "cullReach": 2.171,
+       "stars": null,
+       "dizzyGap": null
+      },
+      "attack": {
+       "worst": {
+        "y": -0.01,
+        "part": "ftR/foot",
+        "phase": "idle",
+        "t": 2.75
+       },
+       "frames": 165,
+       "pass": true,
+       "downEnd": null,
+       "cullReach": 1.234,
+       "stars": null,
+       "dizzyGap": null
+      },
+      "attack+anim": {
+       "worst": {
+        "y": -0.01,
+        "part": "ftR/foot",
+        "phase": "idle",
+        "t": 2.75
+       },
+       "frames": 165,
+       "pass": true,
+       "downEnd": null,
+       "cullReach": 1.234,
+       "stars": null,
+       "dizzyGap": null
+      },
+      "run": {
+       "worst": {
+        "y": 0.02,
+        "part": "ftR/foot",
+        "phase": "idle",
+        "t": 1.6
+       },
+       "frames": 120,
+       "pass": true,
+       "downEnd": null,
+       "cullReach": 1.235,
+       "stars": null,
+       "dizzyGap": null
+      },
+      "run+anim": {
+       "worst": {
+        "y": 0.02,
+        "part": "ftR/foot",
+        "phase": "idle",
+        "t": 1.6
+       },
+       "frames": 120,
+       "pass": true,
+       "downEnd": null,
+       "cullReach": 1.235,
+       "stars": null,
+       "dizzyGap": null
+      },
+      "dizzy": {
+       "worst": {
+        "y": 0,
+        "part": "ftR/foot",
+        "phase": "idle",
+        "t": 4.517
+       },
+       "frames": 290,
+       "pass": true,
+       "downEnd": null,
+       "cullReach": 1.234,
+       "stars": {
+        "clearance": 0.279,
+        "part": "head/plume",
+        "t": 0.017,
+        "starsY": 2.79
+       },
+       "dizzyGap": {
+        "L": 0,
+        "R": 0,
+        "t": 0.167
+       }
+      },
+      "dizzy+anim": {
+       "worst": {
+        "y": 0,
+        "part": "ftR/foot",
+        "phase": "idle",
+        "t": 4.517
+       },
+       "frames": 290,
+       "pass": true,
+       "downEnd": null,
+       "cullReach": 1.234,
+       "stars": {
+        "clearance": 0.279,
+        "part": "head/plume",
+        "t": 0.017,
+        "starsY": 2.79
+       },
+       "dizzyGap": {
+        "L": 0,
+        "R": 0,
+        "t": 0.167
+       }
+      }
+     },
+     "lodSequences": {
+      "knockdown": {
+       "worst": {
+        "y": -0.013,
+        "part": "knR/shin",
+        "phase": "idle",
+        "t": 2.817
+       },
+       "frames": 191,
+       "pass": true,
+       "downEnd": {
+        "tail": 0.045,
+        "head": 0.322
+       },
+       "cullReach": 2.213,
+       "stars": null,
+       "dizzyGap": null
+      },
+      "attack": {
+       "worst": {
+        "y": -0.013,
+        "part": "knR/shin",
+        "phase": "idle",
+        "t": 2.75
+       },
+       "frames": 165,
+       "pass": true,
+       "downEnd": null,
+       "cullReach": 1.154,
+       "stars": null,
+       "dizzyGap": null
+      },
+      "run": {
+       "worst": {
+        "y": 0.021,
+        "part": "knR/shin",
+        "phase": "idle",
+        "t": 0.017
+       },
+       "frames": 120,
+       "pass": true,
+       "downEnd": null,
+       "cullReach": 1.155,
+       "stars": null,
+       "dizzyGap": null
+      },
+      "dizzy": {
+       "worst": {
+        "y": -0.001,
+        "part": "knR/shin",
+        "phase": "idle",
+        "t": 4.55
+       },
+       "frames": 290,
+       "pass": true,
+       "downEnd": null,
+       "cullReach": 1.153,
+       "stars": {
+        "clearance": 0.384,
+        "part": "head/shako",
+        "t": 0.067,
+        "starsY": 2.79
+       },
+       "dizzyGap": null
+      }
+     },
+     "sweeps": {
+      "worst": {
+       "y": -0.011,
+       "part": "ftR/foot",
+       "pose": "idle+anim"
+      },
+      "pass": true
+     },
+     "merge": {
+      "meshesBefore": 32,
+      "hullsBefore": 23,
+      "mergedMeshes": 3,
+      "mergedSolid": 2,
+      "mergedOutline": 1,
+      "leftovers": [],
+      "bones": 16,
+      "drawCalls": 3,
+      "shadowCalls": 2,
+      "flashShared": true,
+      "flashPx": {
+       "rigPx": 12826,
+       "unflashedPx": 0,
+       "unflashedPxWithFlashOff": 631
+      },
+      "flashCovers": true,
+      "mappedSubMaterials": 1,
+      "extras": [
+       {
+        "k": "tail",
+        "plain": true,
+        "parent": "hips"
+       }
+      ],
+      "maxVertexDy_m": 0,
+      "animMoves": {
+       "tailBone": 15,
+       "tailVerts": 88,
+       "moved_m": 0.023
+      },
+      "renderDiffPx": 0,
+      "renderDiffInteriorPx": 0,
+      "renderRigPx": 15213
+     },
+     "cullReachMax": 2.171,
+     "cullRadius": 2.6,
+     "stars": {
+      "hd": {
+       "clearance": 0.279,
+       "part": "head/plume",
+       "t": 0.017,
+       "starsY": 2.79
+      },
+      "hdAnim": {
+       "clearance": 0.279,
+       "part": "head/plume",
+       "t": 0.017,
+       "starsY": 2.79
+      },
+      "lod": {
+       "clearance": 0.384,
+       "part": "head/shako",
+       "t": 0.067,
+       "starsY": 2.79
+      }
+     },
+     "shoulderGapDizzy": {
+      "L": 0,
+      "R": 0,
+      "t": 0.167
+     },
+     "silhouetteIoU": {
+      "front": 0.927,
+      "three": 0.916,
+      "side": 0.935
+     },
+     "pass": {
+      "budgetHD": true,
+      "budgetLOD": true,
+      "marginHD": true,
+      "marginLOD": true,
+      "marginBuried": true,
+      "marginLODGround": true,
+      "ground": true,
+      "shoulders": true,
+      "reach": true,
+      "determinism": true,
+      "marginInk": true,
+      "stars": true,
+      "cullSphere": true,
+      "strayHulls": true,
+      "shadows": true,
+      "flash": true,
+      "hulls": true,
+      "merge": true,
+      "height": true,
+      "feet": true
+     }
+    }
+   },
+   "allPass": true
+  }
+ }
+]

@@ -1,0 +1,59 @@
+<!doctype html>
+<!-- viewer.html — standalone three.js r160 test bench for Toad City assets. Open via any static server (python3 -m http.server).
+     URL options: ?show=lineup|heroes|thugs|example|props  &night=1  &pose=idle|run|windup|attack|hurt  &rot=0.5  &spin=0  &w=390&h=844 (phone frame)
+     Keys: N day/night, P next pose, O outlines on/off, S spin. The corner readout shows draw calls / triangles / meshes for the budget check.
+     window.__ready becomes true after 30 frames (for headless screenshots). -->
+<html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Toad City asset viewer</title>
+<style>html,body{margin:0;height:100%;background:#111;overflow:hidden;font:12px/1.3 system-ui,sans-serif}canvas{display:block;width:100%;height:100%}
+#hud{position:fixed;left:8px;top:8px;color:#fff;background:rgba(20,16,31,.75);padding:6px 8px;border-radius:6px;white-space:pre}</style>
+<script type="importmap">{ "imports": { "three": "https://unpkg.com/three@0.160.0/build/three.module.js" } }</script>
+</head><body><canvas id="gl"></canvas><div id="hud"></div>
+<script type="module">
+import * as THREE from 'three';
+import { K } from './toadcity_kit.js';
+import { buildGullLookout } from './example_gull_thug.js';
+import { buildBench } from './example_bench.js';
+const Q = new URLSearchParams(location.search), canvas = document.getElementById('gl');
+const renderer = new THREE.WebGLRenderer({ canvas, antialias: true });
+renderer.setPixelRatio(Math.min(devicePixelRatio || 1, 2)); renderer.outputColorSpace = THREE.SRGBColorSpace;
+renderer.shadowMap.enabled = true; renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+const scene = new THREE.Scene(), camera = new THREE.PerspectiveCamera(40, 1, 0.1, 400);
+const hemi = new THREE.HemisphereLight(), sun = new THREE.DirectionalLight(); sun.castShadow = true; sun.shadow.mapSize.set(2048, 2048);
+Object.assign(sun.shadow.camera, { left: -12, right: 12, top: 12, bottom: -12, near: 1, far: 80 }); sun.shadow.bias = -0.0015; sun.shadow.normalBias = 0.06;
+const fill = new THREE.PointLight('#c8d0ff', 0, 12, 1.2), lamp = new THREE.PointLight('#ffa050', 0, 15, 1.3);
+scene.add(hemi, sun, sun.target, fill, lamp);
+const ground = new THREE.Mesh(new THREE.PlaneGeometry(80, 80), K.toonMat()); K.bakeColor(ground.geometry, '#8a8496'); ground.rotation.x = -Math.PI / 2; ground.receiveShadow = true; scene.add(ground);
+// ---- what to show ----
+const show = Q.get('show') || 'lineup', rigs = [], stage = new THREE.Group(); scene.add(stage);
+function addRig(J, x, z = 0, s = 1) { J.root.position.set(x, 0, z); J.root.scale.setScalar(s); J.root.traverse((o) => { if (o.isMesh && o.material.isMeshLambertMaterial) { o.castShadow = o.receiveShadow = true; } }); stage.add(J.root); rigs.push(J); }
+if (show === 'lineup' || show === 'heroes') { addRig(K.buildHero(), show === 'heroes' ? -0.6 : -6); addRig(K.buildHero({ wife: true }), show === 'heroes' ? 0.6 : -4.6); }
+if (show === 'lineup' || show === 'thugs') K.THUG_LOOKS.forEach((l, i) => addRig(K.buildThug(l), (show === 'thugs' ? -4.8 : -2.6) + i * 1.9, 0, l.big ? 1.2 : 1));
+if (show === 'lineup' || show === 'example') addRig(buildGullLookout(K), show === 'example' ? -0.8 : 7.4);
+if (show === 'props' || show === 'example') { const out = K.makeOut(); buildBench(K, out, show === 'example' ? 1.2 : 0, 0.3, 0); stage.add(out.build()); }
+// ---- light + camera ----
+let night = Q.get('night') === '1', poseI = 0, spin = Q.get('spin') !== '0', rot = +(Q.get('rot') || 0.35);
+const POSES = ['idle', 'run', 'windup', 'attack', 'hurt']; if (Q.get('pose')) poseI = Math.max(0, POSES.indexOf(Q.get('pose')));
+function setLight() { K.applyLight(scene, hemi, sun, night ? 'night' : 'day', fill); lamp.intensity = night ? 16 : 0; lamp.position.set(-2, 4.8, 2.5); }
+setLight();
+const frame = { heroes: [0, 0.85, 4.4, 0.85], thugs: [0, 1.0, 9.5, 1.0], example: [0, 0.9, 4.8, 0.8], props: [0, 0.6, 3.4, 0.4], lineup: [0, 1.4, 17, 0.9] }[show] || [0, 1.4, 17, 0.9];
+function resize() { const w = innerWidth, h = innerHeight; renderer.setSize(w, h, false); camera.aspect = w / h; camera.fov = w < h ? 58 : 40; camera.updateProjectionMatrix(); }
+addEventListener('resize', resize); resize();
+addEventListener('keydown', (e) => { const k = e.key.toLowerCase(); if (k === 'n') { night = !night; setLight(); } if (k === 'p') poseI = (poseI + 1) % POSES.length; if (k === 's') spin = !spin;
+  if (k === 'o') for (const h of K.QUAL.outlines) h.visible = !h.visible; });
+let last = performance.now(), t = 0, frames = 0; const hud = document.getElementById('hud');
+function loop(now) {
+  requestAnimationFrame(loop); const dt = Math.min(0.05, (now - last) / 1000); last = now; t += dt; frames++;
+  if (spin) rot += dt * 0.4; stage.rotation.y = show === 'lineup' || show === 'thugs' ? 0 : rot;
+  for (const J of rigs) { const name = POSES[poseI], P = J.kind === 'hero' ? K.HERO_POSES : K.THUG_POSES;
+    const p = name === 'run' ? P.run(t, 4, J) : name === 'idle' ? P.idle(t, J) : (P[name] || P.idle)((t % 1.2) / 1.2, J); K.applyPose(J, p, 18, dt, false);
+    if (show === 'lineup' || show === 'thugs') J.root.rotation.y = rot; }
+  const [lx, ly, d, cy] = frame; camera.position.set(lx, ly + d * 0.18, d); camera.lookAt(lx, cy, 0); fill.position.copy(camera.position);
+  renderer.info.autoReset = false; renderer.info.reset(); renderer.render(scene, camera);
+  if (frames % 10 === 1) { let meshes = 0; scene.traverse((o) => { if (o.isMesh && o.visible) meshes++; });
+    hud.textContent = `${show} · ${night ? 'NIGHT' : 'DAY'} · pose ${POSES[poseI]}\ndraw calls ${renderer.info.render.calls} (incl. shadow pass) · tris ${renderer.info.render.triangles}\nvisible meshes ${meshes}`; }
+  if (frames === 30) window.__ready = true;
+}
+requestAnimationFrame(loop);
+window.__k = { K, renderer, scene, rigs };
+</script></body></html>
