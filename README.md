@@ -3,7 +3,7 @@
 | gang | module | delivery README | zip | status |
 |---|---|---|---|---|
 | 1 · Harbor Rats | `src/gang_harbor_rats.js` | [README_harbor_rats.md](README_harbor_rats.md) | `dist/toadcity_taskC_harbor_rats_v1.zip` | v1, left as-is (fixed on the in-house side) |
-| 2 · Pier Gulls | `src/gang_pier_gulls.js` | [README_pier_gulls.md](README_pier_gulls.md) | `dist/toadcity_taskC_pier_gulls_v1.1.1.zip` | v1.1 accepted; v1.1.1 = same module, QA re-run with dizzy, thug getup 0.5 s and culling radius 2.6; all checks pass |
+| 2 · Pier Gulls | `src/gang_pier_gulls.js` | [README_pier_gulls.md](README_pier_gulls.md) | `dist/toadcity_taskC_pier_gulls_v1.1.2.zip` | v1.1.1 accepted; v1.1.2 widens the bruiser's dizzy stray-ink margin (12 → 0 px on the left upper arm); all checks pass |
 | 3 · Cobblestone Catfish | `src/gang_cobble_catfish.js` | [README_cobble_catfish.md](README_cobble_catfish.md) | `dist/toadcity_taskC_cobble_catfish_v1.1.zip` | v1 accepted; v1.1 raises the bruiser's head 8 cm (dizzy stray-ink fix); all checks pass |
 | 4 · Masked Bandits | `src/gang_masked_bandits.js` | [README_masked_bandits.md](README_masked_bandits.md) | `dist/toadcity_taskC_masked_bandits_v1.zip` | v1: built under the same rules and QA; all checks pass, margins included |
 

@@ -1,4 +1,4 @@
-# Toad City Baltimore: Task C, gang 2 of 5: Pier Gulls (v1.1.1)
+# Toad City Baltimore: Task C, gang 2 of 5: Pier Gulls (v1.1.2)
 
 This gang is built to TASK_C plus the gang-2+ rules:
 - the real down pose
@@ -22,6 +22,20 @@ This gang is built to TASK_C plus the gang-2+ rules:
 |---|---|---|---|---|
 | `pier_gulls` | Pier Gulls | herring gulls | Piers: National Aquarium, Power Plant, Four Seasons | white + blue `#2f5bd3` |
 
+## v1.1.2: bruiser stray-ink headroom
+
+v1.1.1 left the bruiser's left upper arm at exactly 12 px of stray ink in the dizzy-left side view, which is the 12 px limit. The brief asked for 8 px or less.
+- **Cause:** the capsule's top end sat about 2 cm inside the shoulder ball, so its 2.5 cm hull poked out through the top of the ball in the sway.
+- **Fix:** the bruiser's upper-arm capsule is 5 cm shorter and 2 cm lower, so its end sits 6 cm inside the ball. Only the bruiser's two upper-arm parts changed (`d.upper - 0.08` long, centred `-d.upper / 2 - 0.02`); the other members are untouched.
+- **Result:** every check passes on a full QA re-run. Measured, v1.1.1 → v1.1.2:
+
+| member | left upper arm, dizzy-left side (px) | left upper arm, worst view (px) | worst part, any view (px) | left upper arm buried | HD parts/tris | shoulder gap down/windup/dizzy |
+|---|---|---|---|---|---|---|
+| grunt_a | 0 → 0 | 2 → 2 | 5 (head/hat) → 5 (head/hat) | 44.0 % → 44.0 % | 32/8,812 → 32/8,812 | 0.0/0.0/0.0 → 0.0/0.0/0.0 cm |
+| grunt_b | 0 → 0 | 1 → 1 | 2 (shR/upper) → 2 (shR/upper) | 44.0 % → 44.0 % | 32/9,108 → 32/9,108 | 0.0/0.0/0.0 → 0.0/0.0/0.0 cm |
+| armed | 0 → 0 | 2 → 2 | 2 (shL/upper) → 2 (shL/upper) | 44.0 % → 44.0 % | 34/9,312 → 34/9,312 | 0.0/0.0/0.0 → 0.0/0.0/0.0 cm |
+| bruiser | 12 → 0 | 12 → 1 | 12 (shL/upper) → 2 (torso/chain) | 48.7 % → 43.7 % | 31/9,096 → 31/9,096 | 0.0/0.0/0.0 → 0.0/0.0/0.0 cm |
+
 ## v1.1.1: QA re-run after gang 3 (no change to `src/gang_pier_gulls.js`)
 
 v1.1 was accepted. v1.1.1 re-checks it against three corrections from the in-house team; the module is byte-identical to v1.1.
@@ -40,7 +54,7 @@ v1.1 was accepted. v1.1.1 re-checks it against three corrections from the in-hou
 | bruiser | -1.5 cm → -1.4 cm | 1.7 cm / 28.4 cm → 1.7 cm / 28.4 cm | -1.9 cm → -1.8 cm |
 
 - **Culling sphere:** the in-house team confirmed and fixed it (radius 2.6, centre unchanged). QA now uses 2.6 and makes it a pass flag. The worst Pier Gulls reach is 2.48 m (armed, in `down`).
-- **Result:** every check passes, including all the new ones (tables below). The tightest new margin is the bruiser's left upper arm: **12 px** of stray ink in the dizzy-left side view. The limit fails only *above* 12 px, so it passes, but with no headroom. Say if you want it widened before gang 5.
+- **Result:** every check passed, including all the new ones. The tightest new margin was the bruiser's left upper arm at **12 px** of stray ink in the dizzy-left side view. That's at the limit, and v1.1.2 widens it.
 
 ## What changed in v1.1
 
@@ -72,6 +86,7 @@ previews/pier_gulls_*.png       36 images: for each member, day and night turnar
                                 (day, night, merged), LOD lineup, hit-flash (parts and merged) and phone day/night
 qa/pier_gulls_report.json       the raw v1.1.1 QA and measurement run behind every number in this README
 qa/pier_gulls_v1.1_report.json  the accepted v1.1 run (getup 0.45 s, no dizzy), for the getup comparison
+qa/pier_gulls_v1.1.1_report.json  the v1.1.1 run (module as v1.1), the "before" column of the v1.1.2 table
 qa/pier_gulls_v1.0_rerun_with_v1.1_qa.json   v1.0's geometry measured by the v1.1 QA (the "before" column)
 tools/qa.html, tools/qa.js      the acceptance suite
 tools/game_merge.js             loads the game's mergeRig unchanged (injects THREE and K.QUAL)
@@ -206,7 +221,7 @@ QA run: 44 jobs, 0 console errors/warnings. All acceptance checks: PASS.
 | grunt_a | 44.5 % (shR/upper) | 5 (head/hat, dizzyL/side) | 0 / 0 | 0.902 / 0.869 / 0.882 |
 | grunt_b | 46.3 % (head/head) | 2 (shR/upper, idle/back) | 0 / 0 | 0.889 / 0.865 / 0.879 |
 | armed | 46.4 % (shR/upper) | 2 (shL/upper, idle/back) | 0 / 0 | 0.901 / 0.870 / 0.879 |
-| bruiser | 52.7 % (shR/upper) | 12 (shL/upper, dizzyL/side) | 0 / 0 | 0.863 / 0.835 / 0.858 |
+| bruiser | 47.9 % (shR/upper) | 2 (torso/chain, idle/side) | 0 / 0 | 0.863 / 0.835 / 0.857 |
 
 **The game's real `mergeRig()`** (`tools/game/04b_rig_merge.js`, run on the HD rig):
 
@@ -215,7 +230,7 @@ QA run: 44 jobs, 0 console errors/warnings. All acceptance checks: PASS.
 | grunt_a | 32 + 23 | 3 (2 + 1) | 16 | 3 + 2 | 0.000 mm | 0 of 7591 | 2.0 cm (24 verts) | 11 / 332 (of 9350) | 2.20 m |
 | grunt_b | 32 + 23 | 3 (2 + 1) | 16 | 3 + 2 | 0.000 mm | 0 of 7488 | 2.0 cm (24 verts) | 3 / 316 (of 9092) | 2.20 m |
 | armed | 34 + 24 | 3 (2 + 1) | 17 | 3 + 2 | 0.000 mm | 0 of 7974 | 2.0 cm (24 verts) | 9 / 351 (of 9787) | 2.48 m |
-| bruiser | 31 + 22 | 3 (2 + 1) | 16 | 3 + 2 | 0.000 mm | 0 of 12909 | 2.6 cm (24 verts) | 34 / 560 (of 15250) | 2.22 m |
+| bruiser | 31 + 22 | 3 (2 + 1) | 16 | 3 + 2 | 0.000 mm | 0 of 12893 | 2.6 cm (24 verts) | 35 / 598 (of 15235) | 2.22 m |
 
 **Before → after** (`qa/pier_gulls_v1.0_rerun_with_v1.1_qa.json` → this run; both measured by this QA, real timings and real mergeRig):
 
@@ -224,7 +239,7 @@ QA run: 44 jobs, 0 console errors/warnings. All acceptance checks: PASS.
 | grunt_a | 33 → 32 | 10,760 → 8,812 | 14 → 12 | 1,392 → 1,968 | 44.5 % → 44.5 % | 4 → 5 | -1.2 cm → -1.1 cm | -2.1 cm → -1.3 cm | 0.893 → 0.869 |
 | grunt_b | 33 → 32 | 11,056 → 9,108 | 14 → 12 | 1,732 → 1,924 | 46.3 % → 46.3 % | 2 → 2 | -1.2 cm → -1.1 cm | -2.1 cm → -1.3 cm | 0.909 → 0.865 |
 | armed | 36 → 34 | 11,656 → 9,312 | 14 → 12 | 1,392 → 1,968 | 46.9 % → 46.4 % | 2 → 2 | -1.2 cm → -1.1 cm | -2.1 cm → -1.3 cm | 0.892 → 0.870 |
-| bruiser | 33 → 31 | 11,072 → 9,096 | 14 → 12 | 1,732 → 1,924 | 59.8 % → 52.7 % | 6 → 12 | -1.5 cm → -1.4 cm | -2.7 cm → -1.8 cm | 0.924 → 0.835 |
+| bruiser | 33 → 31 | 11,072 → 9,096 | 14 → 12 | 1,732 → 1,924 | 59.8 % → 47.9 % | 6 → 2 | -1.5 cm → -1.4 cm | -2.7 cm → -1.8 cm | 0.924 → 0.835 |
 
 Per-member pass flags (caps, margins, ground, shoulders, stray hulls, shadows, flash, hulls, merge, height, feet): grunt_a: PASS, grunt_b: PASS, armed: PASS, bruiser: PASS
 
@@ -248,7 +263,6 @@ Per-member pass flags (caps, margins, ground, shoulders, stray hulls, shadows, f
 - **Platform:** tested only in headless Chromium with SwiftShader, with 0 console errors or warnings across all jobs. It has not been run on iOS Safari or an iPhone.
 - **Idle-bob foot dip:** the idle bob takes HD feet to −1.1 cm (bruiser −1.4 cm) and LOD 1 to −1.3 cm (bruiser −1.8 cm). The floor is −3 cm, and the LOD margin target is −2 cm.
 - **LOD silhouette:** the painted hats make the LOD head smaller than the HD hat shapes, so silhouette IoU against HD is now 0.835–0.902 (v1.0: 0.892–0.934). The bruiser is lowest (0.835, 3/4 view), because its raised HD beanie is painted flat onto the LOD head.
-- **Merged vs parts render:** 3–34 interior pixels differ out of 9,000–15,000 rig pixels. Another 316–560 pixels differ only along outline edges, where the skinned outline rasterises about 1 px differently.
+- **Merged vs parts render:** 3–35 interior pixels differ out of 9,092–15,235 rig pixels. Another 316–598 pixels differ only along outline edges, where the skinned outline rasterises about 1 px differently.
 - **Stray ink:** the worst is 7 px against the 12 px limit. The 5 px, 12 px and 6 m thresholds are mine, not the game's.
 - **Box pupils and mirrors:** these are boxes now, as in the brief's example. Close up, the pupils read square.
-- **Stray ink at the limit:** the bruiser's left upper arm shows 12 px in the dizzy-left side view, exactly at the 12 px limit (fails only above 12).
