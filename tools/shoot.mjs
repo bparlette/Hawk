@@ -1,6 +1,7 @@
 // tools/shoot.mjs — headless self-test + preview renderer for viewer.html.
 // Usage: node tools/shoot.mjs <out.png> "<viewer query>" [width height dpr]
-//    or: node tools/shoot.mjs --batch <jobs.json>   (jobs: [{ out, q, w, h, dpr }])
+//    or: node tools/shoot.mjs --batch <jobs.json>   (jobs: [{ out, q, w, h, dpr, page, timeout }]; page defaults to viewer.html,
+//        use page: 'tools/qa.html' for the QA suite). REPORT=<file> writes every job's errors + report JSON.
 // Needs playwright-core (or playwright) and three@0.160.0 resolvable from NODE_PATH; three is routed locally so no network.
 import http from 'node:http';
 import fs from 'node:fs';
@@ -8,7 +9,7 @@ import path from 'node:path';
 import { createRequire } from 'node:module';
 const require = createRequire(import.meta.url);
 const { chromium } = require('playwright-core');
-const THREE_FILE = process.env.THREE_FILE || path.join(path.dirname(require.resolve('three')), 'three.module.js');
+const THREE_ROOT = process.env.THREE_ROOT || path.resolve(path.dirname(require.resolve('three')), '..');   // node_modules/three (r160)
 const ROOT = path.resolve(path.dirname(new URL(import.meta.url).pathname), '..');
 const TYPES = { '.html': 'text/html', '.js': 'text/javascript', '.mjs': 'text/javascript', '.png': 'image/png', '.json': 'application/json' };
 const server = http.createServer((req, res) => {
@@ -28,11 +29,11 @@ for (const j of jobs) {
   const errs = [];
   page.on('console', (m) => { if (m.type() === 'error' || m.type() === 'warning') errs.push(m.type() + ': ' + m.text()); });
   page.on('pageerror', (e) => errs.push('pageerror: ' + e.message));
-  await page.route('https://unpkg.com/three@0.160.0/build/three.module.js', (r) => r.fulfill({ path: THREE_FILE, contentType: 'text/javascript' }));
-  await page.goto(`http://127.0.0.1:${port}/viewer.html?${j.q}`);
-  try { await page.waitForFunction(() => window.__ready === true, null, { timeout: 60000 }); } catch (e) { errs.push('timeout waiting for __ready'); }
+  await page.route('https://unpkg.com/three@0.160.0/**', (r) => r.fulfill({ path: path.join(THREE_ROOT, new URL(r.request().url()).pathname.replace('/three@0.160.0/', '')), contentType: 'text/javascript' }));
+  await page.goto(`http://127.0.0.1:${port}/${j.page || 'viewer.html'}?${j.q}`);
+  try { await page.waitForFunction(() => window.__ready === true, null, { timeout: j.timeout || 60000 }); } catch (e) { errs.push('timeout waiting for __ready'); }
   await page.waitForTimeout(150);
-  const report = await page.evaluate(() => window.__report || null);
+  const report = await page.evaluate(() => window.__qa || window.__report || null);
   if (j.out) { fs.mkdirSync(path.dirname(path.resolve(j.out)), { recursive: true }); await page.screenshot({ path: j.out }); }
   results.push({ out: j.out, q: j.q, errors: errs, report });
   if (errs.length) errors++;

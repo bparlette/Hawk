@@ -23,19 +23,21 @@
 //      &night=1  &pose=idle|run|windup|attack|hurt|down|getup|all  &lod=1  &cam=three|front|side|back|phone
 //      &t=<seconds, freezes time>  &flash=0.85  &anim=0 (skip animateGang)  &ui=0 (hide readout)  &dist=<m, phone view>
 //      &zoom=<x, closer>  &look=<target height m>  &turn=1 (front / 3/4 / side / back of one member)
+//      &strip=knockdown|attack|run (one member simulated at 60 fps with the game's timings, frozen at sample times)
 // Keys: N night, P next pose, L LOD, F hit-flash, A animateGang on/off, C camera preset.
 import * as THREE from 'three';
 import { K } from './toadcity_kit.js';
 import * as GULL from './example_gull_thug.js';
 import * as HARBOR_RATS from './src/gang_harbor_rats.js';
+import * as PIER_GULLS from './src/gang_pier_gulls.js';
 
-const MODULES = [GULL, HARBOR_RATS];         // add new delivery modules here
+const MODULES = [GULL, HARBOR_RATS, PIER_GULLS];         // add new delivery modules here
 const POSES = ['idle', 'run', 'windup', 'attack', 'hurt', 'down', 'getup'];
 const Q = new URLSearchParams(location.search);
 const S = {
   show: Q.get('show') || 'harbor_rats', night: Q.get('night') === '1', pose: Q.get('pose') || 'idle', lod: Q.get('lod') === '1' ? 1 : 0,
   cam: Q.get('cam') || 'three', fixedT: Q.has('t') ? parseFloat(Q.get('t')) : null, flash: parseFloat(Q.get('flash') || '0'),
-  anim: Q.get('anim') !== '0', dist: parseFloat(Q.get('dist') || '8'), zoom: parseFloat(Q.get('zoom') || '1'), turn: Q.get('turn') === '1', look: Q.has('look') ? parseFloat(Q.get('look')) : null,
+  anim: Q.get('anim') !== '0', dist: parseFloat(Q.get('dist') || '8'), zoom: parseFloat(Q.get('zoom') || '1'), turn: Q.get('turn') === '1', strip: Q.get('strip'), look: Q.has('look') ? parseFloat(Q.get('look')) : null,
 };
 if (Q.get('ui') === '0') document.body.classList.add('hide-ui');
 
@@ -91,7 +93,10 @@ function addRig(id, x, z, pose) {
 function rebuild() {
   clearRigs();
   const g = REG[S.show]?.group;
-  if (S.pose === 'all') {
+  if (S.strip) {
+    const id = g ? g[0] : S.show, seq = SEQ[S.strip];
+    seq.samples.forEach((ts, i) => { const r = addRig(id, (i - (seq.samples.length - 1) / 2) * 1.5, 0, 'strip'); simulate(r, S.strip, ts); r.el.textContent = ts.toFixed(2) + 's ' + r.phase; });
+  } else if (S.pose === 'all') {
     const id = g ? g[0] : S.show;
     POSES.forEach((p, i) => { const r = addRig(id, (i - 3) * 1.7, 0, p); r.el.textContent = p; });
   } else if (S.turn) {
@@ -120,7 +125,34 @@ function poseFor(r, t) {
     default: return P.idle(t, J);
   }
 }
-const STATE = { idle: 'idle', run: 'run', windup: 'attack', attack: 'attack', hurt: 'hurt', down: 'down', getup: 'down' };
+const STATE = { idle: 'idle', run: 'run', windup: 'attack', attack: 'attack', hurt: 'hurt', down: 'down', getup: 'idle' };
+// the game's sequences at 60 fps: knock-down is a hop (vy 4.2, gravity 22) damped at rate 13 for 1.25 s, then getup at rate 14 for 0.5 s
+const P_ = K.THUG_POSES;
+const SEQ = {
+  knockdown: { samples: [0.5, 0.65, 0.8, 0.95, 1.1, 1.3, 1.6, 2.05, 2.3, 2.55, 3.15], phases: [
+    ['idle', 0.5, 14, 'idle', (t, u, g, J) => P_.idle(t, J)], ['hurt', 0.3, 14, 'hurt', (t, u, g, J) => P_.hurt(u, J)],
+    ['down', 1.25, 13, 'down', (t, u, g) => P_.down(u, g), true], ['getup', 0.5, 14, 'idle', (t, u, g, J) => P_.getup(u, J)], ['idle', 0.6, 14, 'idle', (t, u, g, J) => P_.idle(t, J)]] },
+  attack: { samples: [0.4, 0.55, 0.7, 0.8, 0.9, 1.0, 1.15, 1.3, 1.5, 1.8], phases: [
+    ['idle', 0.4, 14, 'idle', (t, u, g, J) => P_.idle(t, J)], ['windup', 0.4, 14, 'attack', (t, u, g, J) => P_.windup(u, J)],
+    ['attack', 0.5, 14, 'attack', (t, u, g, J) => P_.attack(u, J)], ['idle', 0.5, 14, 'idle', (t, u, g, J) => P_.idle(t, J)]] },
+  run: { samples: [0.3, 0.45, 0.6, 0.75, 0.9, 1.05, 1.2, 1.5, 1.8, 2.0], phases: [
+    ['idle', 0.3, 14, 'idle', (t, u, g, J) => P_.idle(t, J)], ['run', 1.2, 14, 'run', (t, u, g, J) => P_.run(t, 4.5, J)], ['idle', 0.5, 14, 'idle', (t, u, g, J) => P_.idle(t, J)]] },
+};
+function simulate(r, name, tEnd) {
+  const J = r.J, dt = 1 / 60; let t = 0;
+  K.applyPose(J, P_.idle(0, J), 1e4, 1, true);
+  for (const [n, dur, rate, st, f, hop] of SEQ[name].phases) {
+    const N = Math.round(dur / dt); let vy = hop ? 4.2 : 0, landed = !hop;
+    for (let i = 1; i <= N; i++) {
+      if (t + dt > tEnd + 1e-6) { r.phase = n; return; }
+      t += dt;
+      if (hop && !landed) { vy -= 22 * dt; J.root.position.y += vy * dt; if (J.root.position.y <= 0 && vy < 0) { J.root.position.y = 0; landed = true; } }
+      K.applyPose(J, f(t, i / N, landed, J), rate, dt, false);
+      if (S.anim && r.entry.animate) r.entry.animate(J, t, st);
+      r.phase = n;
+    }
+  }
+}
 
 // ---- camera ----
 const CAMS = ['three', 'front', 'side', 'back', 'phone'];
@@ -132,7 +164,7 @@ function frameCamera() {
   const dist = S.cam === 'phone' ? S.dist : (Math.max(2.5 / (2 * Math.tan(vfov / 2)), w / (2 * Math.tan(hfov / 2))) + 0.8) / S.zoom;
   const dirs = { three: [0.62, 0.78], front: [0, 1], side: [1, 0], back: [0, -1], phone: [0, 1] };
   let [dx, dz] = dirs[S.cam] || dirs.three;
-  if (S.pose === 'all' && S.cam === 'three') { dx = 0.3; dz = 0.954; }   // long pose rows: shallow three-quarter so nothing leaves frame
+  if ((S.pose === 'all' || S.strip) && S.cam === 'three') { dx = 0.3; dz = 0.954; }   // long pose rows: shallow three-quarter so nothing leaves frame
   const y = S.cam === 'phone' ? 3.0 : 1.35;   // phone: the game's chase camera sits above and behind the hero
   const ly = S.look !== null ? S.look : S.cam === 'phone' ? 0.6 : 1.05;
   camera.position.set(dx * dist, (S.look !== null ? ly : y) + (S.cam === 'phone' ? 0 : 0.35), dz * dist);
@@ -162,6 +194,7 @@ function measure() {
   // measure each rig in the idle pose at t=0 (snap), then restore
   REPORT = { show: S.show, lod: S.lod, rigs: {} };
   for (const r of rigs) {
+    if (r.pose === 'strip') continue;
     const save = r.pose; r.pose = 'idle'; K.applyPose(r.J, poseFor(r, 0), 1e4, 1, true); r.J.root.updateMatrixWorld(true);
     REPORT.rigs[r.id + (S.pose === 'all' ? '/' + save : '')] = measureRig(r.J); r.pose = save;
   }
@@ -173,6 +206,7 @@ const ro = document.getElementById('ro');
 function frame() {
   const t = S.fixedT !== null ? S.fixedT : clock.getElapsedTime(), dt = S.fixedT !== null ? 1 : Math.min(t - last, 0.05); last = t;
   for (const r of rigs) {
+    if (r.pose === 'strip') { r.J.mat.userData.flash.value = S.flash; continue; }
     K.applyPose(r.J, poseFor(r, t), S.fixedT !== null ? 1e4 : 14, dt, true);
     if (S.anim && r.entry.animate) r.entry.animate(r.J, t, STATE[r.pose]);
     r.J.mat.userData.flash.value = S.flash;

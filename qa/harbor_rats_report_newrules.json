@@ -1,0 +1,2023 @@
+[
+ {
+  "out": "",
+  "q": "gang=harbor_rats",
+  "errors": [],
+  "report": {
+   "gang": "harbor_rats",
+   "members": {
+    "grunt_a": {
+     "hd": {
+      "parts": 40,
+      "tris": 11220,
+      "hullTris": 9408,
+      "hulls": 28,
+      "mats": 3,
+      "casters": 27,
+      "drawCalls": 68,
+      "shadowCalls": 27,
+      "height": 1.938,
+      "feetMinY": 0.002,
+      "flashBad": 0,
+      "hullMatsOK": true,
+      "shadowRule": [
+       "head/BoxGeometry: outline:false but casts shadow",
+       "head/BoxGeometry: < 4 cm in two dims but has shadow",
+       "head/BoxGeometry: outline:false but casts shadow",
+       "head/BoxGeometry: < 4 cm in two dims but has shadow"
+      ]
+     },
+     "lod": {
+      "parts": 14,
+      "tris": 1760,
+      "hullTris": 1760,
+      "hulls": 14,
+      "mats": 2,
+      "casters": 12,
+      "drawCalls": 28,
+      "shadowCalls": 12,
+      "height": 1.924,
+      "feetMinY": -0.023,
+      "flashBad": 0,
+      "hullMatsOK": true,
+      "shadowRule": []
+     },
+     "hullOverlap": [
+      {
+       "part": "head/SphereGeometry",
+       "buried": 0.576,
+       "strayPx": {
+        "front": 1,
+        "three": 0,
+        "side": 0,
+        "back": 0
+       },
+       "maxStrayPx": 1
+      },
+      {
+       "part": "earL/CylinderGeometry",
+       "buried": 0.45,
+       "strayPx": {
+        "front": 0,
+        "three": 0,
+        "side": 0,
+        "back": 0
+       },
+       "maxStrayPx": 0
+      },
+      {
+       "part": "earR/CylinderGeometry",
+       "buried": 0.45,
+       "strayPx": {
+        "front": 0,
+        "three": 0,
+        "side": 0,
+        "back": 0
+       },
+       "maxStrayPx": 0
+      },
+      {
+       "part": "head/CylinderGeometry",
+       "buried": 0.559,
+       "strayPx": {
+        "front": 0,
+        "three": 0,
+        "side": 0,
+        "back": 0
+       },
+       "maxStrayPx": 0
+      },
+      {
+       "part": "haL/SphereGeometry",
+       "buried": 0.192,
+       "strayPx": {
+        "front": 0,
+        "three": 0,
+        "side": 0,
+        "back": 0
+       },
+       "maxStrayPx": 0
+      },
+      {
+       "part": "elL/CapsuleGeometry",
+       "buried": 0.288,
+       "strayPx": {
+        "front": 0,
+        "three": 0,
+        "side": 0,
+        "back": 1
+       },
+       "maxStrayPx": 1
+      },
+      {
+       "part": "shL/CapsuleGeometry",
+       "buried": 0.106,
+       "strayPx": {
+        "front": 0,
+        "three": 0,
+        "side": 0,
+        "back": 0
+       },
+       "maxStrayPx": 0
+      },
+      {
+       "part": "haR/SphereGeometry",
+       "buried": 0.192,
+       "strayPx": {
+        "front": 0,
+        "three": 0,
+        "side": 0,
+        "back": 0
+       },
+       "maxStrayPx": 0
+      },
+      {
+       "part": "elR/CapsuleGeometry",
+       "buried": 0.305,
+       "strayPx": {
+        "front": 0,
+        "three": 0,
+        "side": 0,
+        "back": 0
+       },
+       "maxStrayPx": 0
+      },
+      {
+       "part": "shR/CapsuleGeometry",
+       "buried": 0.109,
+       "strayPx": {
+        "front": 3,
+        "three": 0,
+        "side": 0,
+        "back": 0
+       },
+       "maxStrayPx": 3
+      },
+      {
+       "part": "torso/SphereGeometry",
+       "buried": 0.594,
+       "strayPx": {
+        "front": 0,
+        "three": 0,
+        "side": 0,
+        "back": 0
+       },
+       "maxStrayPx": 0
+      },
+      {
+       "part": "torso/TorusGeometry",
+       "buried": 0.243,
+       "strayPx": {
+        "front": 0,
+        "three": 0,
+        "side": 0,
+        "back": 0
+       },
+       "maxStrayPx": 0
+      },
+      {
+       "part": "torso/BoxGeometry",
+       "buried": 0.441,
+       "strayPx": {
+        "front": 0,
+        "three": 0,
+        "side": 0,
+        "back": 0
+       },
+       "maxStrayPx": 0
+      },
+      {
+       "part": "ftL/SphereGeometry",
+       "buried": 0.119,
+       "strayPx": {
+        "front": 0,
+        "three": 0,
+        "side": 0,
+        "back": 0
+       },
+       "maxStrayPx": 0
+      },
+      {
+       "part": "knL/CapsuleGeometry",
+       "buried": 0.208,
+       "strayPx": {
+        "front": 0,
+        "three": 0,
+        "side": 0,
+        "back": 0
+       },
+       "maxStrayPx": 0
+      },
+      {
+       "part": "lgL/CapsuleGeometry",
+       "buried": 0.264,
+       "strayPx": {
+        "front": 0,
+        "three": 0,
+        "side": 0,
+        "back": 0
+       },
+       "maxStrayPx": 0
+      },
+      {
+       "part": "ftR/SphereGeometry",
+       "buried": 0.125,
+       "strayPx": {
+        "front": 0,
+        "three": 0,
+        "side": 0,
+        "back": 0
+       },
+       "maxStrayPx": 0
+      },
+      {
+       "part": "knR/CapsuleGeometry",
+       "buried": 0.208,
+       "strayPx": {
+        "front": 0,
+        "three": 0,
+        "side": 0,
+        "back": 0
+       },
+       "maxStrayPx": 0
+      },
+      {
+       "part": "lgR/CapsuleGeometry",
+       "buried": 0.263,
+       "strayPx": {
+        "front": 0,
+        "three": 0,
+        "side": 0,
+        "back": 0
+       },
+       "maxStrayPx": 0
+      },
+      {
+       "part": "hips/SphereGeometry",
+       "buried": 0.378,
+       "strayPx": {
+        "front": 0,
+        "three": 0,
+        "side": 0,
+        "back": 0
+       },
+       "maxStrayPx": 0
+      },
+      {
+       "part": "tail2/CapsuleGeometry",
+       "buried": 0.03,
+       "strayPx": {
+        "front": 0,
+        "three": 0,
+        "side": 0,
+        "back": 0
+       },
+       "maxStrayPx": 0
+      },
+      {
+       "part": "tail1/CapsuleGeometry",
+       "buried": 0.062,
+       "strayPx": {
+        "front": 0,
+        "three": 0,
+        "side": 0,
+        "back": 0
+       },
+       "maxStrayPx": 0
+      },
+      {
+       "part": "tail/CapsuleGeometry",
+       "buried": 0.098,
+       "strayPx": {
+        "front": 0,
+        "three": 0,
+        "side": 0,
+        "back": 0
+       },
+       "maxStrayPx": 0
+      }
+     ],
+     "strayHulls": [],
+     "shoulderGapDown": {
+      "L": 0.029,
+      "R": 0.031
+     },
+     "downEndSnapped": {
+      "tail": -0.66,
+      "earL": 0.417,
+      "earR": 0.417,
+      "head": 0.242
+     },
+     "downEndSnappedMinY": -0.66,
+     "shoulderGapWindup": {
+      "L": 0.007,
+      "R": 0.002
+     },
+     "sequences": {
+      "knockdown": {
+       "worst": {
+        "y": -0.66,
+        "part": "tail2/CapsuleGeometry",
+        "phase": "down",
+        "t": 1.8
+       },
+       "frames": 189,
+       "pass": false,
+       "downEnd": {
+        "tail": -0.66,
+        "earL": 0.417,
+        "earR": 0.417,
+        "head": 0.242
+       }
+      },
+      "knockdown+anim": {
+       "worst": {
+        "y": -0.515,
+        "part": "tail2/CapsuleGeometry",
+        "phase": "down",
+        "t": 2.05
+       },
+       "frames": 189,
+       "pass": false,
+       "downEnd": {
+        "tail": -0.515,
+        "earL": 0.417,
+        "earR": 0.417,
+        "head": 0.242
+       }
+      },
+      "attack": {
+       "worst": {
+        "y": -0.02,
+        "part": "ftR/SphereGeometry",
+        "phase": "idle",
+        "t": 1.383
+       },
+       "frames": 108,
+       "pass": true,
+       "downEnd": null
+      },
+      "attack+anim": {
+       "worst": {
+        "y": -0.02,
+        "part": "ftR/SphereGeometry",
+        "phase": "idle",
+        "t": 1.383
+       },
+       "frames": 108,
+       "pass": true,
+       "downEnd": null
+      },
+      "run": {
+       "worst": {
+        "y": -0.002,
+        "part": "ftR/SphereGeometry",
+        "phase": "idle",
+        "t": 1.6
+       },
+       "frames": 120,
+       "pass": true,
+       "downEnd": null
+      },
+      "run+anim": {
+       "worst": {
+        "y": -0.002,
+        "part": "ftR/SphereGeometry",
+        "phase": "idle",
+        "t": 1.6
+       },
+       "frames": 120,
+       "pass": true,
+       "downEnd": null
+      }
+     },
+     "lodSequences": {
+      "knockdown": {
+       "worst": {
+        "y": -0.051,
+        "part": "knR/CylinderGeometry",
+        "phase": "idle",
+        "t": 2.833
+       },
+       "frames": 189,
+       "pass": false,
+       "downEnd": {
+        "head": 0.249
+       }
+      },
+      "attack": {
+       "worst": {
+        "y": -0.04,
+        "part": "knR/CylinderGeometry",
+        "phase": "idle",
+        "t": 1.433
+       },
+       "frames": 108,
+       "pass": false,
+       "downEnd": null
+      },
+      "run": {
+       "worst": {
+        "y": -0.022,
+        "part": "knR/CylinderGeometry",
+        "phase": "idle",
+        "t": 0.017
+       },
+       "frames": 120,
+       "pass": true,
+       "downEnd": null
+      }
+     },
+     "sweeps": {
+      "worst": {
+       "y": -0.519,
+       "part": "tail2/CapsuleGeometry",
+       "pose": "down"
+      },
+      "pass": false
+     },
+     "merge": {
+      "meshesBefore": 40,
+      "meshesAfter": 25,
+      "hullsAfter": 22,
+      "flashShared": true,
+      "flashCovers": true,
+      "mappedSubMaterials": 1,
+      "extras": [
+       {
+        "k": "earL",
+        "plain": true,
+        "parent": "head"
+       },
+       {
+        "k": "earR",
+        "plain": true,
+        "parent": "head"
+       },
+       {
+        "k": "tail",
+        "plain": true,
+        "parent": "hips"
+       },
+       {
+        "k": "tail1",
+        "plain": true,
+        "parent": "tail"
+       },
+       {
+        "k": "tail2",
+        "plain": true,
+        "parent": "tail1"
+       }
+      ],
+      "animMoves": {
+       "tailMergedMeshPresent": true,
+       "moved_m": 0
+      }
+     },
+     "silhouetteIoU": {
+      "front": 0.896,
+      "three": 0.845,
+      "side": 0.802
+     },
+     "pass": {
+      "budgetHD": false,
+      "budgetLOD": true,
+      "ground": false,
+      "shoulders": false,
+      "strayHulls": true,
+      "shadows": false,
+      "flash": true,
+      "hulls": true,
+      "merge": false,
+      "height": true,
+      "feet": true
+     }
+    },
+    "grunt_b": {
+     "hd": {
+      "parts": 40,
+      "tris": 11572,
+      "hullTris": 9816,
+      "hulls": 29,
+      "mats": 3,
+      "casters": 28,
+      "drawCalls": 69,
+      "shadowCalls": 28,
+      "height": 1.938,
+      "feetMinY": 0.002,
+      "flashBad": 0,
+      "hullMatsOK": true,
+      "shadowRule": [
+       "head/BoxGeometry: outline:false but casts shadow",
+       "head/BoxGeometry: < 4 cm in two dims but has shadow",
+       "head/BoxGeometry: outline:false but casts shadow",
+       "head/BoxGeometry: < 4 cm in two dims but has shadow"
+      ]
+     },
+     "lod": {
+      "parts": 14,
+      "tris": 1760,
+      "hullTris": 1760,
+      "hulls": 14,
+      "mats": 2,
+      "casters": 12,
+      "drawCalls": 28,
+      "shadowCalls": 12,
+      "height": 1.924,
+      "feetMinY": -0.023,
+      "flashBad": 0,
+      "hullMatsOK": true,
+      "shadowRule": []
+     },
+     "hullOverlap": [
+      {
+       "part": "head/SphereGeometry",
+       "buried": 0.315,
+       "strayPx": {
+        "front": 0,
+        "three": 0,
+        "side": 0,
+        "back": 0
+       },
+       "maxStrayPx": 0
+      },
+      {
+       "part": "earL/CylinderGeometry",
+       "buried": 0.375,
+       "strayPx": {
+        "front": 0,
+        "three": 0,
+        "side": 0,
+        "back": 0
+       },
+       "maxStrayPx": 0
+      },
+      {
+       "part": "earR/CylinderGeometry",
+       "buried": 0.379,
+       "strayPx": {
+        "front": 0,
+        "three": 0,
+        "side": 0,
+        "back": 0
+       },
+       "maxStrayPx": 0
+      },
+      {
+       "part": "head/CylinderGeometry",
+       "buried": 0.684,
+       "strayPx": {
+        "front": 0,
+        "three": 0,
+        "side": 0,
+        "back": 0
+       },
+       "maxStrayPx": 0
+      },
+      {
+       "part": "haL/SphereGeometry",
+       "buried": 0.192,
+       "strayPx": {
+        "front": 0,
+        "three": 0,
+        "side": 0,
+        "back": 0
+       },
+       "maxStrayPx": 0
+      },
+      {
+       "part": "elL/CapsuleGeometry",
+       "buried": 0.288,
+       "strayPx": {
+        "front": 0,
+        "three": 0,
+        "side": 0,
+        "back": 1
+       },
+       "maxStrayPx": 1
+      },
+      {
+       "part": "shL/CapsuleGeometry",
+       "buried": 0.106,
+       "strayPx": {
+        "front": 0,
+        "three": 0,
+        "side": 0,
+        "back": 0
+       },
+       "maxStrayPx": 0
+      },
+      {
+       "part": "haR/SphereGeometry",
+       "buried": 0.192,
+       "strayPx": {
+        "front": 0,
+        "three": 0,
+        "side": 0,
+        "back": 0
+       },
+       "maxStrayPx": 0
+      },
+      {
+       "part": "elR/CapsuleGeometry",
+       "buried": 0.305,
+       "strayPx": {
+        "front": 0,
+        "three": 0,
+        "side": 0,
+        "back": 0
+       },
+       "maxStrayPx": 0
+      },
+      {
+       "part": "shR/CapsuleGeometry",
+       "buried": 0.109,
+       "strayPx": {
+        "front": 3,
+        "three": 0,
+        "side": 0,
+        "back": 0
+       },
+       "maxStrayPx": 3
+      },
+      {
+       "part": "torso/SphereGeometry",
+       "buried": 0.594,
+       "strayPx": {
+        "front": 0,
+        "three": 0,
+        "side": 0,
+        "back": 0
+       },
+       "maxStrayPx": 0
+      },
+      {
+       "part": "torso/TorusGeometry",
+       "buried": 0.303,
+       "strayPx": {
+        "front": 0,
+        "three": 0,
+        "side": 0,
+        "back": 0
+       },
+       "maxStrayPx": 0
+      },
+      {
+       "part": "torso/BoxGeometry",
+       "buried": 0.441,
+       "strayPx": {
+        "front": 0,
+        "three": 0,
+        "side": 0,
+        "back": 0
+       },
+       "maxStrayPx": 0
+      },
+      {
+       "part": "torso/CapsuleGeometry",
+       "buried": 0.332,
+       "strayPx": {
+        "front": 0,
+        "three": 0,
+        "side": 0,
+        "back": 0
+       },
+       "maxStrayPx": 0
+      },
+      {
+       "part": "ftL/SphereGeometry",
+       "buried": 0.119,
+       "strayPx": {
+        "front": 0,
+        "three": 0,
+        "side": 0,
+        "back": 0
+       },
+       "maxStrayPx": 0
+      },
+      {
+       "part": "knL/CapsuleGeometry",
+       "buried": 0.208,
+       "strayPx": {
+        "front": 0,
+        "three": 0,
+        "side": 0,
+        "back": 0
+       },
+       "maxStrayPx": 0
+      },
+      {
+       "part": "lgL/CapsuleGeometry",
+       "buried": 0.264,
+       "strayPx": {
+        "front": 0,
+        "three": 0,
+        "side": 0,
+        "back": 0
+       },
+       "maxStrayPx": 0
+      },
+      {
+       "part": "ftR/SphereGeometry",
+       "buried": 0.125,
+       "strayPx": {
+        "front": 0,
+        "three": 0,
+        "side": 0,
+        "back": 0
+       },
+       "maxStrayPx": 0
+      },
+      {
+       "part": "knR/CapsuleGeometry",
+       "buried": 0.208,
+       "strayPx": {
+        "front": 0,
+        "three": 0,
+        "side": 0,
+        "back": 0
+       },
+       "maxStrayPx": 0
+      },
+      {
+       "part": "lgR/CapsuleGeometry",
+       "buried": 0.263,
+       "strayPx": {
+        "front": 0,
+        "three": 0,
+        "side": 0,
+        "back": 0
+       },
+       "maxStrayPx": 0
+      },
+      {
+       "part": "hips/SphereGeometry",
+       "buried": 0.378,
+       "strayPx": {
+        "front": 0,
+        "three": 0,
+        "side": 0,
+        "back": 0
+       },
+       "maxStrayPx": 0
+      },
+      {
+       "part": "tail2/CapsuleGeometry",
+       "buried": 0.03,
+       "strayPx": {
+        "front": 0,
+        "three": 0,
+        "side": 0,
+        "back": 0
+       },
+       "maxStrayPx": 0
+      },
+      {
+       "part": "tail1/CapsuleGeometry",
+       "buried": 0.062,
+       "strayPx": {
+        "front": 0,
+        "three": 0,
+        "side": 0,
+        "back": 0
+       },
+       "maxStrayPx": 0
+      },
+      {
+       "part": "tail/CapsuleGeometry",
+       "buried": 0.098,
+       "strayPx": {
+        "front": 0,
+        "three": 0,
+        "side": 0,
+        "back": 0
+       },
+       "maxStrayPx": 0
+      }
+     ],
+     "strayHulls": [
+      {
+       "part": "head/CylinderGeometry",
+       "buried": 0.684,
+       "strayPx": {
+        "front": 0,
+        "three": 0,
+        "side": 0,
+        "back": 0
+       },
+       "maxStrayPx": 0
+      }
+     ],
+     "shoulderGapDown": {
+      "L": 0.029,
+      "R": 0.031
+     },
+     "downEndSnapped": {
+      "tail": -0.66,
+      "earL": 0.417,
+      "earR": 0.423,
+      "head": 0.26
+     },
+     "downEndSnappedMinY": -0.66,
+     "shoulderGapWindup": {
+      "L": 0.007,
+      "R": 0.002
+     },
+     "sequences": {
+      "knockdown": {
+       "worst": {
+        "y": -0.66,
+        "part": "tail2/CapsuleGeometry",
+        "phase": "down",
+        "t": 1.8
+       },
+       "frames": 189,
+       "pass": false,
+       "downEnd": {
+        "tail": -0.66,
+        "earL": 0.417,
+        "earR": 0.423,
+        "head": 0.26
+       }
+      },
+      "knockdown+anim": {
+       "worst": {
+        "y": -0.515,
+        "part": "tail2/CapsuleGeometry",
+        "phase": "down",
+        "t": 2.05
+       },
+       "frames": 189,
+       "pass": false,
+       "downEnd": {
+        "tail": -0.515,
+        "earL": 0.417,
+        "earR": 0.423,
+        "head": 0.26
+       }
+      },
+      "attack": {
+       "worst": {
+        "y": -0.02,
+        "part": "ftR/SphereGeometry",
+        "phase": "idle",
+        "t": 1.383
+       },
+       "frames": 108,
+       "pass": true,
+       "downEnd": null
+      },
+      "attack+anim": {
+       "worst": {
+        "y": -0.02,
+        "part": "ftR/SphereGeometry",
+        "phase": "idle",
+        "t": 1.383
+       },
+       "frames": 108,
+       "pass": true,
+       "downEnd": null
+      },
+      "run": {
+       "worst": {
+        "y": -0.002,
+        "part": "ftR/SphereGeometry",
+        "phase": "idle",
+        "t": 1.6
+       },
+       "frames": 120,
+       "pass": true,
+       "downEnd": null
+      },
+      "run+anim": {
+       "worst": {
+        "y": -0.002,
+        "part": "ftR/SphereGeometry",
+        "phase": "idle",
+        "t": 1.6
+       },
+       "frames": 120,
+       "pass": true,
+       "downEnd": null
+      }
+     },
+     "lodSequences": {
+      "knockdown": {
+       "worst": {
+        "y": -0.051,
+        "part": "knR/CylinderGeometry",
+        "phase": "idle",
+        "t": 2.833
+       },
+       "frames": 189,
+       "pass": false,
+       "downEnd": {
+        "head": 0.249
+       }
+      },
+      "attack": {
+       "worst": {
+        "y": -0.04,
+        "part": "knR/CylinderGeometry",
+        "phase": "idle",
+        "t": 1.433
+       },
+       "frames": 108,
+       "pass": false,
+       "downEnd": null
+      },
+      "run": {
+       "worst": {
+        "y": -0.022,
+        "part": "knR/CylinderGeometry",
+        "phase": "idle",
+        "t": 0.017
+       },
+       "frames": 120,
+       "pass": true,
+       "downEnd": null
+      }
+     },
+     "sweeps": {
+      "worst": {
+       "y": -0.519,
+       "part": "tail2/CapsuleGeometry",
+       "pose": "down"
+      },
+      "pass": false
+     },
+     "merge": {
+      "meshesBefore": 40,
+      "meshesAfter": 25,
+      "hullsAfter": 22,
+      "flashShared": true,
+      "flashCovers": true,
+      "mappedSubMaterials": 1,
+      "extras": [
+       {
+        "k": "earL",
+        "plain": true,
+        "parent": "head"
+       },
+       {
+        "k": "earR",
+        "plain": true,
+        "parent": "head"
+       },
+       {
+        "k": "tail",
+        "plain": true,
+        "parent": "hips"
+       },
+       {
+        "k": "tail1",
+        "plain": true,
+        "parent": "tail"
+       },
+       {
+        "k": "tail2",
+        "plain": true,
+        "parent": "tail1"
+       }
+      ],
+      "animMoves": {
+       "tailMergedMeshPresent": true,
+       "moved_m": 0
+      }
+     },
+     "silhouetteIoU": {
+      "front": 0.899,
+      "three": 0.842,
+      "side": 0.792
+     },
+     "pass": {
+      "budgetHD": false,
+      "budgetLOD": true,
+      "ground": false,
+      "shoulders": false,
+      "strayHulls": false,
+      "shadows": false,
+      "flash": true,
+      "hulls": true,
+      "merge": false,
+      "height": true,
+      "feet": true
+     }
+    },
+    "armed": {
+     "hd": {
+      "parts": 40,
+      "tris": 10588,
+      "hullTris": 9024,
+      "hulls": 28,
+      "mats": 3,
+      "casters": 28,
+      "drawCalls": 68,
+      "shadowCalls": 28,
+      "height": 1.938,
+      "feetMinY": 0.002,
+      "flashBad": 0,
+      "hullMatsOK": true,
+      "shadowRule": [
+       "head/BoxGeometry: outline:false but casts shadow",
+       "head/BoxGeometry: < 4 cm in two dims but has shadow",
+       "head/BoxGeometry: outline:false but casts shadow",
+       "head/BoxGeometry: < 4 cm in two dims but has shadow",
+       "head/TorusGeometry: outline:false but casts shadow"
+      ]
+     },
+     "lod": {
+      "parts": 14,
+      "tris": 1760,
+      "hullTris": 1760,
+      "hulls": 14,
+      "mats": 2,
+      "casters": 12,
+      "drawCalls": 28,
+      "shadowCalls": 12,
+      "height": 1.953,
+      "feetMinY": -0.023,
+      "flashBad": 0,
+      "hullMatsOK": true,
+      "shadowRule": []
+     },
+     "hullOverlap": [
+      {
+       "part": "head/SphereGeometry",
+       "buried": 0.116,
+       "strayPx": {
+        "front": 0,
+        "three": 0,
+        "side": 0,
+        "back": 0
+       },
+       "maxStrayPx": 0
+      },
+      {
+       "part": "earL/CylinderGeometry",
+       "buried": 0.177,
+       "strayPx": {
+        "front": 0,
+        "three": 0,
+        "side": 0,
+        "back": 0
+       },
+       "maxStrayPx": 0
+      },
+      {
+       "part": "earR/CylinderGeometry",
+       "buried": 0.178,
+       "strayPx": {
+        "front": 0,
+        "three": 0,
+        "side": 0,
+        "back": 0
+       },
+       "maxStrayPx": 0
+      },
+      {
+       "part": "haL/SphereGeometry",
+       "buried": 0.192,
+       "strayPx": {
+        "front": 0,
+        "three": 0,
+        "side": 0,
+        "back": 0
+       },
+       "maxStrayPx": 0
+      },
+      {
+       "part": "elL/CapsuleGeometry",
+       "buried": 0.288,
+       "strayPx": {
+        "front": 0,
+        "three": 0,
+        "side": 0,
+        "back": 1
+       },
+       "maxStrayPx": 1
+      },
+      {
+       "part": "shL/CapsuleGeometry",
+       "buried": 0.106,
+       "strayPx": {
+        "front": 0,
+        "three": 0,
+        "side": 0,
+        "back": 0
+       },
+       "maxStrayPx": 0
+      },
+      {
+       "part": "haR/SphereGeometry",
+       "buried": 0.251,
+       "strayPx": {
+        "front": 0,
+        "three": 0,
+        "side": 0,
+        "back": 0
+       },
+       "maxStrayPx": 0
+      },
+      {
+       "part": "swR/CylinderGeometry",
+       "buried": 0.162,
+       "strayPx": {
+        "front": 0,
+        "three": 3,
+        "side": 0,
+        "back": 0
+       },
+       "maxStrayPx": 3
+      },
+      {
+       "part": "swR/BoxGeometry",
+       "buried": 0.014,
+       "strayPx": {
+        "front": 0,
+        "three": 0,
+        "side": 0,
+        "back": 0
+       },
+       "maxStrayPx": 0
+      },
+      {
+       "part": "elR/CapsuleGeometry",
+       "buried": 0.261,
+       "strayPx": {
+        "front": 0,
+        "three": 0,
+        "side": 0,
+        "back": 0
+       },
+       "maxStrayPx": 0
+      },
+      {
+       "part": "shR/CapsuleGeometry",
+       "buried": 0.089,
+       "strayPx": {
+        "front": 0,
+        "three": 0,
+        "side": 0,
+        "back": 0
+       },
+       "maxStrayPx": 0
+      },
+      {
+       "part": "torso/SphereGeometry",
+       "buried": 0.594,
+       "strayPx": {
+        "front": 0,
+        "three": 0,
+        "side": 0,
+        "back": 0
+       },
+       "maxStrayPx": 0
+      },
+      {
+       "part": "torso/TorusGeometry",
+       "buried": 0.243,
+       "strayPx": {
+        "front": 0,
+        "three": 0,
+        "side": 0,
+        "back": 0
+       },
+       "maxStrayPx": 0
+      },
+      {
+       "part": "torso/BoxGeometry",
+       "buried": 0.441,
+       "strayPx": {
+        "front": 0,
+        "three": 0,
+        "side": 0,
+        "back": 0
+       },
+       "maxStrayPx": 0
+      },
+      {
+       "part": "ftL/SphereGeometry",
+       "buried": 0.119,
+       "strayPx": {
+        "front": 0,
+        "three": 0,
+        "side": 0,
+        "back": 0
+       },
+       "maxStrayPx": 0
+      },
+      {
+       "part": "knL/CapsuleGeometry",
+       "buried": 0.208,
+       "strayPx": {
+        "front": 0,
+        "three": 0,
+        "side": 0,
+        "back": 0
+       },
+       "maxStrayPx": 0
+      },
+      {
+       "part": "lgL/CapsuleGeometry",
+       "buried": 0.264,
+       "strayPx": {
+        "front": 0,
+        "three": 0,
+        "side": 0,
+        "back": 0
+       },
+       "maxStrayPx": 0
+      },
+      {
+       "part": "ftR/SphereGeometry",
+       "buried": 0.125,
+       "strayPx": {
+        "front": 0,
+        "three": 0,
+        "side": 0,
+        "back": 0
+       },
+       "maxStrayPx": 0
+      },
+      {
+       "part": "knR/CapsuleGeometry",
+       "buried": 0.208,
+       "strayPx": {
+        "front": 0,
+        "three": 0,
+        "side": 0,
+        "back": 0
+       },
+       "maxStrayPx": 0
+      },
+      {
+       "part": "lgR/CapsuleGeometry",
+       "buried": 0.263,
+       "strayPx": {
+        "front": 0,
+        "three": 0,
+        "side": 0,
+        "back": 0
+       },
+       "maxStrayPx": 0
+      },
+      {
+       "part": "hips/SphereGeometry",
+       "buried": 0.378,
+       "strayPx": {
+        "front": 0,
+        "three": 0,
+        "side": 0,
+        "back": 0
+       },
+       "maxStrayPx": 0
+      },
+      {
+       "part": "tail2/CapsuleGeometry",
+       "buried": 0.03,
+       "strayPx": {
+        "front": 0,
+        "three": 0,
+        "side": 0,
+        "back": 0
+       },
+       "maxStrayPx": 0
+      },
+      {
+       "part": "tail1/CapsuleGeometry",
+       "buried": 0.062,
+       "strayPx": {
+        "front": 0,
+        "three": 0,
+        "side": 0,
+        "back": 0
+       },
+       "maxStrayPx": 0
+      },
+      {
+       "part": "tail/CapsuleGeometry",
+       "buried": 0.098,
+       "strayPx": {
+        "front": 0,
+        "three": 0,
+        "side": 0,
+        "back": 0
+       },
+       "maxStrayPx": 0
+      }
+     ],
+     "strayHulls": [],
+     "shoulderGapDown": {
+      "L": 0.029,
+      "R": 0.031
+     },
+     "downEndSnapped": {
+      "tail": -0.66,
+      "earL": 0.417,
+      "earR": 0.417,
+      "head": 0.26
+     },
+     "downEndSnappedMinY": -0.66,
+     "shoulderGapWindup": {
+      "L": 0.007,
+      "R": 0.028
+     },
+     "sequences": {
+      "knockdown": {
+       "worst": {
+        "y": -0.66,
+        "part": "tail2/CapsuleGeometry",
+        "phase": "down",
+        "t": 1.8
+       },
+       "frames": 189,
+       "pass": false,
+       "downEnd": {
+        "tail": -0.66,
+        "earL": 0.417,
+        "earR": 0.417,
+        "head": 0.26
+       }
+      },
+      "knockdown+anim": {
+       "worst": {
+        "y": -0.515,
+        "part": "tail2/CapsuleGeometry",
+        "phase": "down",
+        "t": 2.05
+       },
+       "frames": 189,
+       "pass": false,
+       "downEnd": {
+        "tail": -0.515,
+        "earL": 0.417,
+        "earR": 0.417,
+        "head": 0.26
+       }
+      },
+      "attack": {
+       "worst": {
+        "y": -0.02,
+        "part": "ftR/SphereGeometry",
+        "phase": "idle",
+        "t": 1.383
+       },
+       "frames": 108,
+       "pass": true,
+       "downEnd": null
+      },
+      "attack+anim": {
+       "worst": {
+        "y": -0.02,
+        "part": "ftR/SphereGeometry",
+        "phase": "idle",
+        "t": 1.383
+       },
+       "frames": 108,
+       "pass": true,
+       "downEnd": null
+      },
+      "run": {
+       "worst": {
+        "y": -0.002,
+        "part": "ftR/SphereGeometry",
+        "phase": "idle",
+        "t": 1.6
+       },
+       "frames": 120,
+       "pass": true,
+       "downEnd": null
+      },
+      "run+anim": {
+       "worst": {
+        "y": -0.002,
+        "part": "ftR/SphereGeometry",
+        "phase": "idle",
+        "t": 1.6
+       },
+       "frames": 120,
+       "pass": true,
+       "downEnd": null
+      }
+     },
+     "lodSequences": {
+      "knockdown": {
+       "worst": {
+        "y": -0.051,
+        "part": "knR/CylinderGeometry",
+        "phase": "idle",
+        "t": 2.833
+       },
+       "frames": 189,
+       "pass": false,
+       "downEnd": {
+        "head": 0.249
+       }
+      },
+      "attack": {
+       "worst": {
+        "y": -0.04,
+        "part": "knR/CylinderGeometry",
+        "phase": "idle",
+        "t": 1.433
+       },
+       "frames": 108,
+       "pass": false,
+       "downEnd": null
+      },
+      "run": {
+       "worst": {
+        "y": -0.022,
+        "part": "knR/CylinderGeometry",
+        "phase": "idle",
+        "t": 0.017
+       },
+       "frames": 120,
+       "pass": true,
+       "downEnd": null
+      }
+     },
+     "sweeps": {
+      "worst": {
+       "y": -0.519,
+       "part": "tail2/CapsuleGeometry",
+       "pose": "down"
+      },
+      "pass": false
+     },
+     "merge": {
+      "meshesBefore": 40,
+      "meshesAfter": 27,
+      "hullsAfter": 23,
+      "flashShared": true,
+      "flashCovers": true,
+      "mappedSubMaterials": 1,
+      "extras": [
+       {
+        "k": "earL",
+        "plain": true,
+        "parent": "head"
+       },
+       {
+        "k": "earR",
+        "plain": true,
+        "parent": "head"
+       },
+       {
+        "k": "tail",
+        "plain": true,
+        "parent": "hips"
+       },
+       {
+        "k": "tail1",
+        "plain": true,
+        "parent": "tail"
+       },
+       {
+        "k": "tail2",
+        "plain": true,
+        "parent": "tail1"
+       }
+      ],
+      "animMoves": {
+       "tailMergedMeshPresent": true,
+       "moved_m": 0
+      }
+     },
+     "silhouetteIoU": {
+      "front": 0.898,
+      "three": 0.822,
+      "side": 0.818
+     },
+     "pass": {
+      "budgetHD": false,
+      "budgetLOD": true,
+      "ground": false,
+      "shoulders": false,
+      "strayHulls": true,
+      "shadows": false,
+      "flash": true,
+      "hulls": true,
+      "merge": false,
+      "height": true,
+      "feet": true
+     }
+    },
+    "bruiser": {
+     "hd": {
+      "parts": 40,
+      "tris": 10544,
+      "hullTris": 10144,
+      "hulls": 29,
+      "mats": 3,
+      "casters": 30,
+      "drawCalls": 69,
+      "shadowCalls": 30,
+      "height": 2.325,
+      "feetMinY": 0.003,
+      "flashBad": 0,
+      "hullMatsOK": true,
+      "shadowRule": [
+       "head/BoxGeometry: outline:false but casts shadow",
+       "head/BoxGeometry: < 4 cm in two dims but has shadow",
+       "head/BoxGeometry: outline:false but casts shadow",
+       "head/BoxGeometry: < 4 cm in two dims but has shadow"
+      ]
+     },
+     "lod": {
+      "parts": 14,
+      "tris": 1760,
+      "hullTris": 1760,
+      "hulls": 14,
+      "mats": 2,
+      "casters": 12,
+      "drawCalls": 28,
+      "shadowCalls": 12,
+      "height": 2.308,
+      "feetMinY": -0.027,
+      "flashBad": 0,
+      "hullMatsOK": true,
+      "shadowRule": []
+     },
+     "hullOverlap": [
+      {
+       "part": "head/SphereGeometry",
+       "buried": 0.371,
+       "strayPx": {
+        "front": 0,
+        "three": 0,
+        "side": 0,
+        "back": 0
+       },
+       "maxStrayPx": 0
+      },
+      {
+       "part": "earL/CylinderGeometry",
+       "buried": 0.39,
+       "strayPx": {
+        "front": 0,
+        "three": 0,
+        "side": 0,
+        "back": 0
+       },
+       "maxStrayPx": 0
+      },
+      {
+       "part": "earR/CylinderGeometry",
+       "buried": 0.391,
+       "strayPx": {
+        "front": 0,
+        "three": 0,
+        "side": 0,
+        "back": 0
+       },
+       "maxStrayPx": 0
+      },
+      {
+       "part": "haL/SphereGeometry",
+       "buried": 0.29,
+       "strayPx": {
+        "front": 0,
+        "three": 0,
+        "side": 0,
+        "back": 0
+       },
+       "maxStrayPx": 0
+      },
+      {
+       "part": "elL/CapsuleGeometry",
+       "buried": 0.416,
+       "strayPx": {
+        "front": 0,
+        "three": 1,
+        "side": 0,
+        "back": 0
+       },
+       "maxStrayPx": 1
+      },
+      {
+       "part": "shL/SphereGeometry",
+       "buried": 0.416,
+       "strayPx": {
+        "front": 0,
+        "three": 0,
+        "side": 0,
+        "back": 0
+       },
+       "maxStrayPx": 0
+      },
+      {
+       "part": "shL/CapsuleGeometry",
+       "buried": 0.594,
+       "strayPx": {
+        "front": 0,
+        "three": 0,
+        "side": 1,
+        "back": 6
+       },
+       "maxStrayPx": 6
+      },
+      {
+       "part": "haR/SphereGeometry",
+       "buried": 0.29,
+       "strayPx": {
+        "front": 0,
+        "three": 0,
+        "side": 0,
+        "back": 0
+       },
+       "maxStrayPx": 0
+      },
+      {
+       "part": "elR/CapsuleGeometry",
+       "buried": 0.436,
+       "strayPx": {
+        "front": 0,
+        "three": 0,
+        "side": 0,
+        "back": 2
+       },
+       "maxStrayPx": 2
+      },
+      {
+       "part": "shR/SphereGeometry",
+       "buried": 0.404,
+       "strayPx": {
+        "front": 0,
+        "three": 0,
+        "side": 0,
+        "back": 0
+       },
+       "maxStrayPx": 0
+      },
+      {
+       "part": "shR/CapsuleGeometry",
+       "buried": 0.618,
+       "strayPx": {
+        "front": 0,
+        "three": 0,
+        "side": 0,
+        "back": 5
+       },
+       "maxStrayPx": 5
+      },
+      {
+       "part": "torso/SphereGeometry",
+       "buried": 0.59,
+       "strayPx": {
+        "front": 0,
+        "three": 0,
+        "side": 0,
+        "back": 0
+       },
+       "maxStrayPx": 0
+      },
+      {
+       "part": "torso/TorusGeometry",
+       "buried": 0.289,
+       "strayPx": {
+        "front": 0,
+        "three": 0,
+        "side": 0,
+        "back": 0
+       },
+       "maxStrayPx": 0
+      },
+      {
+       "part": "torso/BoxGeometry",
+       "buried": 0.536,
+       "strayPx": {
+        "front": 2,
+        "three": 11,
+        "side": 0,
+        "back": 0
+       },
+       "maxStrayPx": 11
+      },
+      {
+       "part": "ftL/SphereGeometry",
+       "buried": 0.171,
+       "strayPx": {
+        "front": 0,
+        "three": 0,
+        "side": 0,
+        "back": 0
+       },
+       "maxStrayPx": 0
+      },
+      {
+       "part": "knL/CapsuleGeometry",
+       "buried": 0.264,
+       "strayPx": {
+        "front": 0,
+        "three": 0,
+        "side": 0,
+        "back": 0
+       },
+       "maxStrayPx": 0
+      },
+      {
+       "part": "lgL/CapsuleGeometry",
+       "buried": 0.333,
+       "strayPx": {
+        "front": 0,
+        "three": 0,
+        "side": 0,
+        "back": 0
+       },
+       "maxStrayPx": 0
+      },
+      {
+       "part": "ftR/SphereGeometry",
+       "buried": 0.177,
+       "strayPx": {
+        "front": 0,
+        "three": 0,
+        "side": 0,
+        "back": 0
+       },
+       "maxStrayPx": 0
+      },
+      {
+       "part": "knR/CapsuleGeometry",
+       "buried": 0.265,
+       "strayPx": {
+        "front": 0,
+        "three": 0,
+        "side": 0,
+        "back": 0
+       },
+       "maxStrayPx": 0
+      },
+      {
+       "part": "lgR/CapsuleGeometry",
+       "buried": 0.334,
+       "strayPx": {
+        "front": 0,
+        "three": 0,
+        "side": 0,
+        "back": 0
+       },
+       "maxStrayPx": 0
+      },
+      {
+       "part": "hips/SphereGeometry",
+       "buried": 0.379,
+       "strayPx": {
+        "front": 0,
+        "three": 0,
+        "side": 0,
+        "back": 0
+       },
+       "maxStrayPx": 0
+      },
+      {
+       "part": "tail2/CapsuleGeometry",
+       "buried": 0.031,
+       "strayPx": {
+        "front": 0,
+        "three": 0,
+        "side": 0,
+        "back": 0
+       },
+       "maxStrayPx": 0
+      },
+      {
+       "part": "tail1/CapsuleGeometry",
+       "buried": 0.063,
+       "strayPx": {
+        "front": 0,
+        "three": 0,
+        "side": 0,
+        "back": 0
+       },
+       "maxStrayPx": 0
+      },
+      {
+       "part": "tail/CapsuleGeometry",
+       "buried": 0.177,
+       "strayPx": {
+        "front": 0,
+        "three": 0,
+        "side": 0,
+        "back": 0
+       },
+       "maxStrayPx": 0
+      }
+     ],
+     "strayHulls": [
+      {
+       "part": "shR/CapsuleGeometry",
+       "buried": 0.618,
+       "strayPx": {
+        "front": 0,
+        "three": 0,
+        "side": 0,
+        "back": 5
+       },
+       "maxStrayPx": 5
+      }
+     ],
+     "shoulderGapDown": {
+      "L": 0,
+      "R": 0
+     },
+     "downEndSnapped": {
+      "tail": -0.792,
+      "earL": 0.5,
+      "earR": 0.5,
+      "head": 0.312
+     },
+     "downEndSnappedMinY": -0.792,
+     "shoulderGapWindup": {
+      "L": 0,
+      "R": 0
+     },
+     "sequences": {
+      "knockdown": {
+       "worst": {
+        "y": -0.792,
+        "part": "tail2/CapsuleGeometry",
+        "phase": "down",
+        "t": 1.833
+       },
+       "frames": 189,
+       "pass": false,
+       "downEnd": {
+        "tail": -0.792,
+        "earL": 0.5,
+        "earR": 0.5,
+        "head": 0.312
+       }
+      },
+      "knockdown+anim": {
+       "worst": {
+        "y": -0.617,
+        "part": "tail2/CapsuleGeometry",
+        "phase": "down",
+        "t": 2.05
+       },
+       "frames": 189,
+       "pass": false,
+       "downEnd": {
+        "tail": -0.617,
+        "earL": 0.5,
+        "earR": 0.5,
+        "head": 0.312
+       }
+      },
+      "attack": {
+       "worst": {
+        "y": -0.023,
+        "part": "ftR/SphereGeometry",
+        "phase": "idle",
+        "t": 1.4
+       },
+       "frames": 108,
+       "pass": true,
+       "downEnd": null
+      },
+      "attack+anim": {
+       "worst": {
+        "y": -0.023,
+        "part": "ftR/SphereGeometry",
+        "phase": "idle",
+        "t": 1.4
+       },
+       "frames": 108,
+       "pass": true,
+       "downEnd": null
+      },
+      "run": {
+       "worst": {
+        "y": -0.002,
+        "part": "ftR/SphereGeometry",
+        "phase": "idle",
+        "t": 1.6
+       },
+       "frames": 120,
+       "pass": true,
+       "downEnd": null
+      },
+      "run+anim": {
+       "worst": {
+        "y": -0.002,
+        "part": "ftR/SphereGeometry",
+        "phase": "idle",
+        "t": 1.6
+       },
+       "frames": 120,
+       "pass": true,
+       "downEnd": null
+      }
+     },
+     "lodSequences": {
+      "knockdown": {
+       "worst": {
+        "y": -0.061,
+        "part": "knR/CylinderGeometry",
+        "phase": "idle",
+        "t": 2.85
+       },
+       "frames": 189,
+       "pass": false,
+       "downEnd": {
+        "head": 0.299
+       }
+      },
+      "attack": {
+       "worst": {
+        "y": -0.048,
+        "part": "knR/CylinderGeometry",
+        "phase": "idle",
+        "t": 1.433
+       },
+       "frames": 108,
+       "pass": false,
+       "downEnd": null
+      },
+      "run": {
+       "worst": {
+        "y": -0.027,
+        "part": "knR/CylinderGeometry",
+        "phase": "idle",
+        "t": 0.017
+       },
+       "frames": 120,
+       "pass": true,
+       "downEnd": null
+      }
+     },
+     "sweeps": {
+      "worst": {
+       "y": -0.623,
+       "part": "tail2/CapsuleGeometry",
+       "pose": "down"
+      },
+      "pass": false
+     },
+     "merge": {
+      "meshesBefore": 40,
+      "meshesAfter": 25,
+      "hullsAfter": 22,
+      "flashShared": true,
+      "flashCovers": true,
+      "mappedSubMaterials": 1,
+      "extras": [
+       {
+        "k": "earL",
+        "plain": true,
+        "parent": "head"
+       },
+       {
+        "k": "earR",
+        "plain": true,
+        "parent": "head"
+       },
+       {
+        "k": "tail",
+        "plain": true,
+        "parent": "hips"
+       },
+       {
+        "k": "tail1",
+        "plain": true,
+        "parent": "tail"
+       },
+       {
+        "k": "tail2",
+        "plain": true,
+        "parent": "tail1"
+       }
+      ],
+      "animMoves": {
+       "tailMergedMeshPresent": true,
+       "moved_m": 0
+      }
+     },
+     "silhouetteIoU": {
+      "front": 0.882,
+      "three": 0.82,
+      "side": 0.771
+     },
+     "pass": {
+      "budgetHD": false,
+      "budgetLOD": true,
+      "ground": false,
+      "shoulders": true,
+      "strayHulls": false,
+      "shadows": false,
+      "flash": true,
+      "hulls": true,
+      "merge": false,
+      "height": true,
+      "feet": true
+     }
+    }
+   },
+   "allPass": false
+  }
+ }
+]

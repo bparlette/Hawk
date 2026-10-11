@@ -1,0 +1,210 @@
+[
+ {
+  "out": "previews/pier_gulls_grunt_a_day.png",
+  "q": "show=pier_gulls.grunt_a&t=0.5&turn=1&cam=front&ui=0",
+  "w": 1280,
+  "h": 720
+ },
+ {
+  "out": "previews/pier_gulls_grunt_a_night.png",
+  "q": "show=pier_gulls.grunt_a&t=0.5&turn=1&cam=front&ui=0&night=1",
+  "w": 1280,
+  "h": 720
+ },
+ {
+  "out": "previews/pier_gulls_grunt_a_poses.png",
+  "q": "show=pier_gulls.grunt_a&t=0.5&pose=all&ui=0",
+  "w": 1600,
+  "h": 600
+ },
+ {
+  "out": "previews/pier_gulls_grunt_a_knockdown_60fps.png",
+  "q": "show=pier_gulls.grunt_a&strip=knockdown&ui=0",
+  "w": 1800,
+  "h": 520
+ },
+ {
+  "out": "previews/_tmp_grunt_a_hd.png",
+  "q": "show=pier_gulls.grunt_a&t=0.5&turn=1&cam=front&ui=0",
+  "w": 1280,
+  "h": 360
+ },
+ {
+  "out": "previews/_tmp_grunt_a_lod.png",
+  "q": "show=pier_gulls.grunt_a&t=0.5&turn=1&cam=front&ui=0&lod=1",
+  "w": 1280,
+  "h": 360
+ },
+ {
+  "out": "previews/pier_gulls_grunt_b_day.png",
+  "q": "show=pier_gulls.grunt_b&t=0.5&turn=1&cam=front&ui=0",
+  "w": 1280,
+  "h": 720
+ },
+ {
+  "out": "previews/pier_gulls_grunt_b_night.png",
+  "q": "show=pier_gulls.grunt_b&t=0.5&turn=1&cam=front&ui=0&night=1",
+  "w": 1280,
+  "h": 720
+ },
+ {
+  "out": "previews/pier_gulls_grunt_b_poses.png",
+  "q": "show=pier_gulls.grunt_b&t=0.5&pose=all&ui=0",
+  "w": 1600,
+  "h": 600
+ },
+ {
+  "out": "previews/pier_gulls_grunt_b_knockdown_60fps.png",
+  "q": "show=pier_gulls.grunt_b&strip=knockdown&ui=0",
+  "w": 1800,
+  "h": 520
+ },
+ {
+  "out": "previews/_tmp_grunt_b_hd.png",
+  "q": "show=pier_gulls.grunt_b&t=0.5&turn=1&cam=front&ui=0",
+  "w": 1280,
+  "h": 360
+ },
+ {
+  "out": "previews/_tmp_grunt_b_lod.png",
+  "q": "show=pier_gulls.grunt_b&t=0.5&turn=1&cam=front&ui=0&lod=1",
+  "w": 1280,
+  "h": 360
+ },
+ {
+  "out": "previews/pier_gulls_armed_day.png",
+  "q": "show=pier_gulls.armed&t=0.5&turn=1&cam=front&ui=0",
+  "w": 1280,
+  "h": 720
+ },
+ {
+  "out": "previews/pier_gulls_armed_night.png",
+  "q": "show=pier_gulls.armed&t=0.5&turn=1&cam=front&ui=0&night=1",
+  "w": 1280,
+  "h": 720
+ },
+ {
+  "out": "previews/pier_gulls_armed_poses.png",
+  "q": "show=pier_gulls.armed&t=0.5&pose=all&ui=0",
+  "w": 1600,
+  "h": 600
+ },
+ {
+  "out": "previews/pier_gulls_armed_knockdown_60fps.png",
+  "q": "show=pier_gulls.armed&strip=knockdown&ui=0",
+  "w": 1800,
+  "h": 520
+ },
+ {
+  "out": "previews/_tmp_armed_hd.png",
+  "q": "show=pier_gulls.armed&t=0.5&turn=1&cam=front&ui=0",
+  "w": 1280,
+  "h": 360
+ },
+ {
+  "out": "previews/_tmp_armed_lod.png",
+  "q": "show=pier_gulls.armed&t=0.5&turn=1&cam=front&ui=0&lod=1",
+  "w": 1280,
+  "h": 360
+ },
+ {
+  "out": "previews/pier_gulls_bruiser_day.png",
+  "q": "show=pier_gulls.bruiser&t=0.5&turn=1&cam=front&ui=0",
+  "w": 1280,
+  "h": 720
+ },
+ {
+  "out": "previews/pier_gulls_bruiser_night.png",
+  "q": "show=pier_gulls.bruiser&t=0.5&turn=1&cam=front&ui=0&night=1",
+  "w": 1280,
+  "h": 720
+ },
+ {
+  "out": "previews/pier_gulls_bruiser_poses.png",
+  "q": "show=pier_gulls.bruiser&t=0.5&pose=all&ui=0",
+  "w": 1600,
+  "h": 600
+ },
+ {
+  "out": "previews/pier_gulls_bruiser_knockdown_60fps.png",
+  "q": "show=pier_gulls.bruiser&strip=knockdown&ui=0",
+  "w": 1800,
+  "h": 520
+ },
+ {
+  "out": "previews/_tmp_bruiser_hd.png",
+  "q": "show=pier_gulls.bruiser&t=0.5&turn=1&cam=front&ui=0",
+  "w": 1280,
+  "h": 360
+ },
+ {
+  "out": "previews/_tmp_bruiser_lod.png",
+  "q": "show=pier_gulls.bruiser&t=0.5&turn=1&cam=front&ui=0&lod=1",
+  "w": 1280,
+  "h": 360
+ },
+ {
+  "out": "previews/pier_gulls_armed_attack_60fps.png",
+  "q": "show=pier_gulls.armed&strip=attack&ui=0",
+  "w": 1800,
+  "h": 520
+ },
+ {
+  "out": "previews/pier_gulls_lineup_day.png",
+  "q": "show=pier_gulls&t=0.5&cam=three",
+  "w": 1280,
+  "h": 720
+ },
+ {
+  "out": "previews/pier_gulls_lineup_night.png",
+  "q": "show=pier_gulls&t=0.5&cam=three&night=1&ui=0",
+  "w": 1280,
+  "h": 720
+ },
+ {
+  "out": "previews/pier_gulls_lod1_day.png",
+  "q": "show=pier_gulls&t=0.5&cam=three&lod=1",
+  "w": 1280,
+  "h": 720
+ },
+ {
+  "out": "previews/pier_gulls_hitflash.png",
+  "q": "show=pier_gulls&t=0.5&cam=front&flash=0.85",
+  "w": 1280,
+  "h": 720
+ },
+ {
+  "out": "previews/pier_gulls_phone_390x844.png",
+  "q": "show=pier_gulls&t=0.5&cam=phone&dist=8&ui=0",
+  "w": 390,
+  "h": 844,
+  "dpr": 2
+ },
+ {
+  "out": "previews/pier_gulls_phone_390x844_night.png",
+  "q": "show=pier_gulls&t=0.5&cam=phone&dist=8&ui=0&night=1",
+  "w": 390,
+  "h": 844,
+  "dpr": 2
+ },
+ {
+  "out": "",
+  "q": "show=pier_gulls&lod=0&t=0.5",
+  "w": 1280,
+  "h": 720
+ },
+ {
+  "out": "",
+  "q": "show=pier_gulls&lod=1&t=0.5",
+  "w": 1280,
+  "h": 720
+ },
+ {
+  "out": "",
+  "page": "tools/qa.html",
+  "q": "gang=pier_gulls",
+  "w": 400,
+  "h": 300,
+  "timeout": 600000
+ }
+]
