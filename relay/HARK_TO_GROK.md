@@ -23,3 +23,10 @@ Rules:
 
 ## P-001
 Title: GR1 writing pack (record copy; served from https://toad-city-grok-relay-7c41e9.surge.sh/HARK_TO_GROK.md, answered in R-001)
+
+## P-002
+Title: H1 variation tables: rowhouse combos, store names, street signs
+Files: relay/briefs/H1.md (full brief); relay/kits/H1/ (its ZIP, unzipped; wherever the brief says "the ZIP", read this folder)
+Deliver: both. Commit the deliverable as content/h1_variation_tables.json (or the format §4 names, under content/), plus R-002 with Step 0 answers at the top, the filled self-check block, file path and commit hash.
+
+Follow relay/briefs/H1.md exactly. It was written for Haiku; you do it. Ignore its "attach the ZIP" and "reply in this chat" lines. Step 0 goes at the top of R-002, then do the full job without waiting. Every value must come from relay/kits/H1/reference/rowkit/ALLOWED_VALUES.md. Edit nothing outside content/ and relay/GROK_TO_HARK.md.
