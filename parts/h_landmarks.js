@@ -29,13 +29,16 @@ function stand(x0, z0, x1, z1, h, away, col) {
 const LANDMARKS = [];
 function landmark(id, name, x, z, r, boss) { LANDMARKS.push({ id, name, x, z, r, boss }); }
 
+LMCAP('harborplace');
 // Harborplace: two glassy market pavilions with green hip roofs, on plazas at the harbour's north-west corner
 for (const [x0, z0, x1, z1] of [[-58, -29, -46, -22], [-59, -18, -52, 2]]) {
   mass(x0, z0, x1, z1, 5.4, { tr: T.store[4], fh: 5.4, bay: 3.2, top: '#3f7a5a' });
   const g = new THREE.CylinderGeometry(0.01, 1, 1, 4, 1); g.rotateY(Math.PI / 4); g.scale((x1 - x0) * 0.75, 2.4, (z1 - z0) * 0.75); place(g, (x0 + x1) / 2, CURB + 5.4 + 1.2, (z0 + z1) / 2); solid(g, '#4f9a6e');
 }
 signOn(-58, -29, -46, -22, 'n', 3.0, 8, LSIGN.market); signOn(-59, -18, -52, 2, 'e', 3.0, 8, LSIGN.market);
+LMCAP(null);
 landmark('harborplace', 'HARBORPLACE', -52, -24, 16, { name: 'Dragon Boat Duchess', x: -44, z: -12, water: true });
+LMCAP('constellation');
 // USS Constellation: a three-masted sloop-of-war moored beside its pier
 (function ship() {
   const x0 = -33.6, x1 = -28.4, z0 = -27, z1 = -9.5, cx = (x0 + x1) / 2;
@@ -52,7 +55,9 @@ landmark('harborplace', 'HARBORPLACE', -52, -24, 16, { name: 'Dragon Boat Duches
   }
   BLD.push({ x0, x1, z0, z1, h: CURB + 1.75 });
 })();
+LMCAP(null);
 landmark('constellation', 'USS CONSTELLATION', -31, -18, 17, { name: 'Captain Cobblestone', x: -31, z: -18, y: CURB + 1.75 });
+LMCAP('wtc');
 // World Trade Center: a tall pentagonal tower on its own pier
 (function wtc() {
   const cx = -12, cz = -22.5, r = 6.6, h = 62;
@@ -67,19 +72,24 @@ landmark('constellation', 'USS CONSTELLATION', -31, -18, 17, { name: 'Captain Co
   COLL.push({ x: cx, z: cz, r: r - 0.4 }); BLD.push({ x0: cx - r, x1: cx + r, z0: cz - r, z1: cz + r, h: CURB + h });
   signOn(cx - 4.5, cz - r, cx + 4.5, cz + r * 0.8, 's', 4.2, 8, LSIGN.trade);
 })();
+LMCAP(null);
 landmark('wtc', 'WORLD TRADE CENTER', -12, -22, 14, { name: 'The Penthouse Pigeon', x: -12, z: -22.5, y: CURB + 63 });
+LMCAP('aquarium');
 // National Aquarium: a concrete hall with glass pyramids, on pier 3
 mass(9, -27, 29, -11, 13, { col: '#7f93a0', top: '#5a6670' });
 mass(12, -11, 26, -7, 5.5, { tr: T.glass, fh: 5.5, top: '#3a4a5a' });
 sbox(8.85, CURB + 8.5, -27.15, 29.15, CURB + 10.3, -10.85, '#26406a', false); sbox(8.9, CURB + 10.3, -27.1, 29.1, CURB + 11, -10.9, '#a8322a', false); // refs: navy + red bands on raw concrete
 for (const [x, z, s] of [[14.5, -20, 7], [23, -17, 9.5], [19, -24, 5]]) { const g = new THREE.CylinderGeometry(0.01, s * 0.72, s * 1.05, 4, 1); g.rotateY(Math.PI / 4); place(g, x, CURB + 13 + s * 0.52, z); solid(g, '#6fc6dc'); }
 signOn(9, -27, 29, -11, 's', 6, 11, LSIGN.aqua);
+LMCAP(null);
 landmark('aquarium', 'NATIONAL AQUARIUM', 19, -17, 19, { name: 'Big Jimmy', x: 19, z: -5, water: true });
+LMCAP('powerplant');
 // Power Plant: a brick power station with four smokestacks, on pier 4
 mass(47, -27, 65, -9, 15, { tr: T.fac[0][0], top: '#4a3a30' });
 for (const x of [50, 54, 58, 62]) { const g = new THREE.CylinderGeometry(1.05, 1.3, 22, 12); place(g, x, CURB + 15 + 11, -18); solid(g, '#1f1d1c'); const r = new THREE.CylinderGeometry(1.18, 1.18, 0.7, 12); place(r, x, CURB + 36.6, -18); solid(r, '#3a3532'); } // refs: four black stacks in a row
 sbox(46.7, CURB + 10.6, -27.3, 65.3, CURB + 11.4, -8.7, '#e4d8bc'); mass(65, -24, 68, -12, 9, { tr: T.fac[0][1], top: '#4a3a30' }); // cream stone band, the arched east wing
 signOn(47, -27, 65, -9, 's', 6.2, 12, LSIGN.power);
+LMCAP(null);
 landmark('powerplant', 'POWER PLANT', 56, -17, 19, { name: 'Voltage Vic', x: 56, z: -5.5 });
 // Four Seasons (Harbor East): a podium and a glass hotel tower
 mass(71, -69, 93, -47, 9, { tr: T.store[1], fh: 9, bay: 4, top: '#4a4640' });
@@ -137,17 +147,20 @@ mass(-61, 51, -47, 65, 7, { tr: T.fac[2][1], y0: CURB + 7, coll: false, top: '#5
 signOn(-64, 48, -44, 68, 'n', 4.2, 10, LSIGN.sci);
 landmark('science', 'SCIENCE CENTER', -54, 58, 16, { name: 'Dr. Shellacious', x: -54, z: 41 });
 landmark('fedhill', 'FEDERAL HILL', -3, 59, 24, { name: 'The Hon Queen', x: HILL.x, z: HILL.z, y: CURB + HILL.h });
+const DOM_H = 23; // refinery roof height (the sign stands on it; HD model in 03b uses the same)
+LMCAP('domino');
 // Domino Sugar: a tall refinery with a giant rooftop neon sign facing the harbour (original lettering)
-mass(72, 48, 92, 66, 30, { tr: T.fac[1][0], top: '#4a4640' });
+mass(72, 48, 92, 66, DOM_H, { tr: T.fac[1][0], top: '#4a4640' });
 { const g = new THREE.CylinderGeometry(3.4, 3.4, 22, 12); place(g, 76, CURB + 11, 69); solid(g, '#c8c4b8'); COLL.push({ x: 76, z: 69, r: 3.6 }); }
 // the rooftop sign's open steel lattice (the sign faces itself are drawn in i_nightfx): verticals, three chords, X-bracing, back struts
-{ const C = '#3a3532', y0 = CURB + 30, zf = 50.05;
+{ const C = '#3a3532', y0 = CURB + DOM_H, zf = 50.05;
   for (let k = 0; k <= 8; k++) obox(73 + k * 2.25, zf, 0.26, 0.26, 13.2, 0, C, y0);
   for (const y of [1.6, 7.1, 12.6]) obox(82, zf, 18.6, 0.26, 0.26, 0, C, y0 + y);
   for (let k = 0; k < 8; k++) for (const [ya, yb] of [[1.6, 7.1], [7.1, 12.6]]) for (const s of [1, -1]) {
     const xa = 73 + k * 2.25, xb = xa + 2.25, L = Math.hypot(2.25, yb - ya), g = new THREE.BoxGeometry(L, 0.1, 0.1); g.rotateZ(s * Math.atan2(yb - ya, 2.25)); place(g, (xa + xb) / 2, y0 + (ya + yb) / 2, zf + 0.05); solid(g, C, false); }
   for (const x of [73, 79.75, 84.25, 91]) { const g = new THREE.BoxGeometry(0.2, 0.2, 6.2); g.rotateX(-0.95); place(g, x, y0 + 2.6, zf + 2.2); solid(g, C, false); } }
-landmark('domino', 'DOMINO SUGARS', 82, 57, 16, { name: 'Sugar Rush', x: 82, z: 57, y: CURB + 30 });
+LMCAP(null);
+landmark('domino', 'DOMINO SUGARS', 82, 57, 16, { name: 'Sugar Rush', x: 82, z: 57, y: CURB + DOM_H });
 // Under Armour (Tide Point): brick halls with a clock tower
 mass(106, 48, 126, 56, 11, { tr: T.fac[0][0], top: '#4a3a30' }); mass(106, 60, 126, 68, 11, { tr: T.fac[0][1], top: '#4a3a30' });
 mass(113.5, 56.5, 118.5, 59.5, 22, { col: '#9a5a44', top: '#4a3a30' });
