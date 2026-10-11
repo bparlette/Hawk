@@ -168,7 +168,7 @@ def readme_b():
     rows = []
     for k, (tl, ml) in vl.items():
         m = B[k]; c = m['collider']
-        rows.append([f'`{k}`', m['kind'], m['tris'], m['trisNoHull'], f'<= {tl}', m['meshes'], f'<= {ml}', m['hulls'], m['drawCalls'], m['materials'], m['seats'], f"{c['w']} x {c['l']} x {c['h']}", m['waterline'], 'pass' if m['tris'] <= tl and m['meshes'] <= ml else 'OVER'])
+        rows.append([f'`{k}`', m['kind'], m['tris'], m['trisNoHull'], f'<= {tl}', m['meshes'], f'<= {ml}', m['hulls'], m['drawCalls'], m['materials'], m['seats'], f"{round(c['w'], 2)} x {round(c['l'], 2)} x {round(c['h'], 2)}", m['waterline'], 'pass' if m['tris'] <= tl and m['meshes'] <= ml else 'OVER'])
     t2 = table(rows, ['vehicle', 'kind', 'tris (incl. hulls)', 'tris (no hulls)', 'budget', 'meshes', 'budget', 'ink hulls', 'draw calls', 'materials', 'seats', 'collider w x l x h', 'waterline', 'result'])
     atlas = B['atlasInfo']
     return f"""# Toad City Baltimore — {TASKS['B']['title']} (v{VERSION})
@@ -236,7 +236,7 @@ Hooks: benches `out.hook('seat', {{x, y, z, ang}})`, manhole `out.hook('manhole'
 
 | check | result |
 |---|---|
-| every prop and vehicle exists with the exact signature and return shape | all 13 static entries and 8 vehicles load and build with zero console errors |
+| every prop and vehicle exists with the exact signature and return shape | all 12 static props (plus the recycling variant) and the 8 vehicles load and build with zero console errors |
 | `?show=props` / `?show=vehicles` | pavement row with all 12 static props; vehicles with animate running |
 | budgets | tables above, all pass |
 | hooks | manhole -> `'manhole'`, ladders -> `'climb'`, benches -> `'seat'`, lamps -> `out.lamp` (counts in the first table) |

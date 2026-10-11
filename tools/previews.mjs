@@ -12,10 +12,10 @@ const A = {
 };
 const B = {
   lamp_acorn: 'yaw=28&pitch=8', lamp_cobra: 'yaw=-35&pitch=8', bench_park: 'yaw=30&pitch=14', bench_bus: 'yaw=-32&pitch=14', trash_can: 'yaw=25&pitch=16',
-  trash_can_recycling: ['trash_can', 'yaw=25&pitch=16&recycling=1'], crab_shack: 'yaw=-28&pitch=14', manhole: 'yaw=30&pitch=58&zoom=0.55', ladder_wall: 'yaw=30&pitch=10', ladder_drop: 'yaw=30&pitch=10',
+  trash_can_recycling: ['trash_can', 'yaw=25&pitch=16&recycling=1'], crab_shack: 'yaw=-28&pitch=14', manhole: 'yaw=30&pitch=50', ladder_wall: 'yaw=30&pitch=10', ladder_drop: 'yaw=30&pitch=10',
   parked_car_sedan: 'yaw=-35&pitch=14&seed=1', parked_car_hatchback: 'yaw=38&pitch=14&seed=2', parked_car_pickup: 'yaw=-38&pitch=14&seed=3',
   water_taxi: 'yaw=-42&pitch=18', paddle_boat: 'yaw=40&pitch=22', dragon_boat: 'yaw=-52&pitch=26', car_sedan: 'yaw=-38&pitch=14&seed=4', car_hatch: 'yaw=38&pitch=14&seed=6',
-  box_truck: 'yaw=-40&pitch=14&seed=2', arabber_cart: 'yaw=-45&pitch=18', skateboard: 'yaw=-35&pitch=16&zoom=0.45',
+  box_truck: 'yaw=-40&pitch=14&seed=2', arabber_cart: 'yaw=-45&pitch=18', skateboard: 'yaw=-35&pitch=16',
   props: 'pos=0,4.4,27&look=0,1.8,0&fov=50', vehicles: 'yaw=-62&pitch=30', vehicles_water: ['vehicles', 'group=water&yaw=-58&pitch=34&zoom=0.62'], vehicles_land: ['vehicles', 'group=land&yaw=-60&pitch=26&zoom=0.62'],
 };
 // phone (iPhone portrait 390x844 @2x): gameplay distance
