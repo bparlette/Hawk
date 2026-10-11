@@ -1,0 +1,136 @@
+[
+ {
+  "out": "previews/harbor_rats_grunt_a_day.png",
+  "q": "show=harbor_rats.grunt_a&t=0.5&turn=1&cam=front&ui=0",
+  "w": 1280,
+  "h": 720
+ },
+ {
+  "out": "previews/harbor_rats_grunt_a_night.png",
+  "q": "show=harbor_rats.grunt_a&t=0.5&turn=1&cam=front&ui=0&night=1",
+  "w": 1280,
+  "h": 720
+ },
+ {
+  "out": "previews/harbor_rats_grunt_a_poses.png",
+  "q": "show=harbor_rats.grunt_a&t=0.5&pose=all&ui=0",
+  "w": 1600,
+  "h": 600
+ },
+ {
+  "out": "previews/harbor_rats_grunt_b_day.png",
+  "q": "show=harbor_rats.grunt_b&t=0.5&turn=1&cam=front&ui=0",
+  "w": 1280,
+  "h": 720
+ },
+ {
+  "out": "previews/harbor_rats_grunt_b_night.png",
+  "q": "show=harbor_rats.grunt_b&t=0.5&turn=1&cam=front&ui=0&night=1",
+  "w": 1280,
+  "h": 720
+ },
+ {
+  "out": "previews/harbor_rats_grunt_b_poses.png",
+  "q": "show=harbor_rats.grunt_b&t=0.5&pose=all&ui=0",
+  "w": 1600,
+  "h": 600
+ },
+ {
+  "out": "previews/harbor_rats_armed_day.png",
+  "q": "show=harbor_rats.armed&t=0.5&turn=1&cam=front&ui=0",
+  "w": 1280,
+  "h": 720
+ },
+ {
+  "out": "previews/harbor_rats_armed_night.png",
+  "q": "show=harbor_rats.armed&t=0.5&turn=1&cam=front&ui=0&night=1",
+  "w": 1280,
+  "h": 720
+ },
+ {
+  "out": "previews/harbor_rats_armed_poses.png",
+  "q": "show=harbor_rats.armed&t=0.5&pose=all&ui=0",
+  "w": 1600,
+  "h": 600
+ },
+ {
+  "out": "previews/harbor_rats_bruiser_day.png",
+  "q": "show=harbor_rats.bruiser&t=0.5&turn=1&cam=front&ui=0",
+  "w": 1280,
+  "h": 720
+ },
+ {
+  "out": "previews/harbor_rats_bruiser_night.png",
+  "q": "show=harbor_rats.bruiser&t=0.5&turn=1&cam=front&ui=0&night=1",
+  "w": 1280,
+  "h": 720
+ },
+ {
+  "out": "previews/harbor_rats_bruiser_poses.png",
+  "q": "show=harbor_rats.bruiser&t=0.5&pose=all&ui=0",
+  "w": 1600,
+  "h": 600
+ },
+ {
+  "out": "previews/harbor_rats_lineup_day.png",
+  "q": "show=harbor_rats&t=0.5&cam=three",
+  "w": 1280,
+  "h": 720
+ },
+ {
+  "out": "previews/harbor_rats_lineup_night.png",
+  "q": "show=harbor_rats&t=0.5&cam=three&night=1&ui=0",
+  "w": 1280,
+  "h": 720
+ },
+ {
+  "out": "previews/harbor_rats_lod1_day.png",
+  "q": "show=harbor_rats&t=0.5&cam=three&lod=1",
+  "w": 1280,
+  "h": 720
+ },
+ {
+  "out": "previews/harbor_rats_hitflash.png",
+  "q": "show=harbor_rats&t=0.5&cam=front&flash=0.85",
+  "w": 1280,
+  "h": 720
+ },
+ {
+  "out": "previews/harbor_rats_phone_390x844.png",
+  "q": "show=harbor_rats&t=0.5&cam=phone&dist=8&ui=0",
+  "w": 390,
+  "h": 844,
+  "dpr": 2
+ },
+ {
+  "out": "previews/harbor_rats_phone_390x844_night.png",
+  "q": "show=harbor_rats&t=0.5&cam=phone&dist=8&ui=0&night=1",
+  "w": 390,
+  "h": 844,
+  "dpr": 2
+ },
+ {
+  "out": "",
+  "q": "show=harbor_rats&lod=0",
+  "w": 640,
+  "h": 360
+ },
+ {
+  "out": "",
+  "q": "show=harbor_rats&lod=1",
+  "w": 640,
+  "h": 360
+ },
+ {
+  "out": "",
+  "q": "show=gull_lookout",
+  "w": 640,
+  "h": 360
+ },
+ {
+  "out": "",
+  "q": "show=thug",
+  "w": 640,
+  "h": 360
+ }
+]
