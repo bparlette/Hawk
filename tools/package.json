@@ -1,0 +1,7 @@
+{
+  "name": "toadcity-tools",
+  "private": true,
+  "type": "module",
+  "description": "Dev-only harness: serves viewer.html offline (three r160 from node_modules) and takes previews/measurements in headless Chromium.",
+  "devDependencies": { "playwright-core": "^1.48.0", "three": "0.160.0" }
+}
