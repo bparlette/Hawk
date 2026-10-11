@@ -1606,6 +1606,20 @@
   "errors": [],
   "report": {
    "gang": "cobble_catfish",
+   "kit": "repo (toadcity_kit.js + tools/game/04b_rig_merge.js)",
+   "dizzyAttachedAtTestTime": false,
+   "cullRadius": 2.6,
+   "cullRadiusZip": 1.9,
+   "margins": {
+    "hdParts": 35,
+    "hdTris": 11000,
+    "lodParts": 12,
+    "lodTris": 2000,
+    "buried": 0.55,
+    "lodFloor": -0.02,
+    "ink": null,
+    "reach": 0.35
+   },
    "members": {
     "grunt_a": {
      "hd": {
@@ -2087,9 +2101,31 @@
       "head": 0.234
      },
      "downEndSnappedMinY": 0.039,
+     "downEndSnappedAnim": {
+      "tail": 0.039,
+      "head": 0.234
+     },
      "shoulderGapWindup": {
       "L": 0,
       "R": 0
+     },
+     "shoulderGapWindup06": {
+      "L": 0,
+      "R": 0
+     },
+     "idleReach": {
+      "reach_m": 0.631,
+      "radius_m": 0.42,
+      "beyond_m": 0.211,
+      "part": "haL/mitt",
+      "t": 0
+     },
+     "determinism": {
+      "hashSeed7": "1ebae121",
+      "same": true,
+      "sameLod": true,
+      "hashSeed8": "5c53ce0d",
+      "seedChangesRig": true
      },
      "sequences": {
       "knockdown": {
@@ -2379,6 +2415,8 @@
       "marginLODGround": true,
       "ground": true,
       "shoulders": true,
+      "reach": true,
+      "determinism": true,
       "stars": true,
       "cullSphere": true,
       "strayHulls": true,
@@ -2851,9 +2889,31 @@
       "head": 0.234
      },
      "downEndSnappedMinY": 0.039,
+     "downEndSnappedAnim": {
+      "tail": 0.039,
+      "head": 0.234
+     },
      "shoulderGapWindup": {
       "L": 0,
       "R": 0
+     },
+     "shoulderGapWindup06": {
+      "L": 0,
+      "R": 0
+     },
+     "idleReach": {
+      "reach_m": 0.631,
+      "radius_m": 0.42,
+      "beyond_m": 0.211,
+      "part": "haL/mitt",
+      "t": 0
+     },
+     "determinism": {
+      "hashSeed7": "d70fd655",
+      "same": true,
+      "sameLod": true,
+      "hashSeed8": "a3430261",
+      "seedChangesRig": true
      },
      "sequences": {
       "knockdown": {
@@ -3143,6 +3203,8 @@
       "marginLODGround": true,
       "ground": true,
       "shoulders": true,
+      "reach": true,
+      "determinism": true,
       "stars": true,
       "cullSphere": true,
       "strayHulls": true,
@@ -3634,9 +3696,31 @@
       "head": 0.234
      },
      "downEndSnappedMinY": 0.039,
+     "downEndSnappedAnim": {
+      "tail": 0.039,
+      "head": 0.234
+     },
      "shoulderGapWindup": {
       "L": 0,
       "R": 0
+     },
+     "shoulderGapWindup06": {
+      "L": 0,
+      "R": 0
+     },
+     "idleReach": {
+      "reach_m": 0.644,
+      "radius_m": 0.42,
+      "beyond_m": 0.224,
+      "part": "haR/mitt",
+      "t": 0
+     },
+     "determinism": {
+      "hashSeed7": "2f199c89",
+      "same": true,
+      "sameLod": true,
+      "hashSeed8": "6b4f7a15",
+      "seedChangesRig": true
      },
      "sequences": {
       "knockdown": {
@@ -3925,6 +4009,8 @@
       "marginLODGround": true,
       "ground": true,
       "shoulders": true,
+      "reach": true,
+      "determinism": true,
       "stars": true,
       "cullSphere": true,
       "strayHulls": true,
@@ -4416,9 +4502,31 @@
       "head": 0.325
      },
      "downEndSnappedMinY": 0.013,
+     "downEndSnappedAnim": {
+      "tail": 0.016,
+      "head": 0.325
+     },
      "shoulderGapWindup": {
       "L": 0,
       "R": 0
+     },
+     "shoulderGapWindup06": {
+      "L": 0,
+      "R": 0
+     },
+     "idleReach": {
+      "reach_m": 0.778,
+      "radius_m": 0.55,
+      "beyond_m": 0.228,
+      "part": "haL/mitt",
+      "t": 0
+     },
+     "determinism": {
+      "hashSeed7": "d99c0b64",
+      "same": true,
+      "sameLod": true,
+      "hashSeed8": "543b8f60",
+      "seedChangesRig": true
      },
      "sequences": {
       "knockdown": {
@@ -4707,6 +4815,8 @@
       "marginLODGround": true,
       "ground": true,
       "shoulders": true,
+      "reach": true,
+      "determinism": true,
       "stars": true,
       "cullSphere": true,
       "strayHulls": true,

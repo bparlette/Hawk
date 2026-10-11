@@ -1606,6 +1606,20 @@
   "errors": [],
   "report": {
    "gang": "pier_gulls",
+   "kit": "repo (toadcity_kit.js + tools/game/04b_rig_merge.js)",
+   "dizzyAttachedAtTestTime": false,
+   "cullRadius": 2.6,
+   "cullRadiusZip": 1.9,
+   "margins": {
+    "hdParts": 35,
+    "hdTris": 11000,
+    "lodParts": 12,
+    "lodTris": 2000,
+    "buried": 0.55,
+    "lodFloor": -0.02,
+    "ink": null,
+    "reach": 0.35
+   },
    "members": {
     "grunt_a": {
      "hd": {
@@ -2087,9 +2101,31 @@
       "head": 0.217
      },
      "downEndSnappedMinY": 0.014,
+     "downEndSnappedAnim": {
+      "tail": 0.014,
+      "head": 0.217
+     },
      "shoulderGapWindup": {
       "L": 0,
       "R": 0
+     },
+     "shoulderGapWindup06": {
+      "L": 0,
+      "R": 0
+     },
+     "idleReach": {
+      "reach_m": 0.641,
+      "radius_m": 0.42,
+      "beyond_m": 0.221,
+      "part": "haL/wingtip",
+      "t": 0
+     },
+     "determinism": {
+      "hashSeed7": "3cd23ca4",
+      "same": true,
+      "sameLod": true,
+      "hashSeed8": "acc8d230",
+      "seedChangesRig": true
      },
      "sequences": {
       "knockdown": {
@@ -2378,6 +2414,8 @@
       "marginLODGround": true,
       "ground": true,
       "shoulders": true,
+      "reach": true,
+      "determinism": true,
       "stars": true,
       "cullSphere": true,
       "strayHulls": true,
@@ -2869,9 +2907,31 @@
       "head": 0.182
      },
      "downEndSnappedMinY": 0.014,
+     "downEndSnappedAnim": {
+      "tail": 0.014,
+      "head": 0.182
+     },
      "shoulderGapWindup": {
       "L": 0,
       "R": 0
+     },
+     "shoulderGapWindup06": {
+      "L": 0,
+      "R": 0
+     },
+     "idleReach": {
+      "reach_m": 0.641,
+      "radius_m": 0.42,
+      "beyond_m": 0.221,
+      "part": "haL/wingtip",
+      "t": 0
+     },
+     "determinism": {
+      "hashSeed7": "0e74fe14",
+      "same": true,
+      "sameLod": true,
+      "hashSeed8": "3e73cca0",
+      "seedChangesRig": true
      },
      "sequences": {
       "knockdown": {
@@ -3161,6 +3221,8 @@
       "marginLODGround": true,
       "ground": true,
       "shoulders": true,
+      "reach": true,
+      "determinism": true,
       "stars": true,
       "cullSphere": true,
       "strayHulls": true,
@@ -3671,9 +3733,31 @@
       "head": 0.237
      },
      "downEndSnappedMinY": 0.014,
+     "downEndSnappedAnim": {
+      "tail": 0.014,
+      "head": 0.237
+     },
      "shoulderGapWindup": {
       "L": 0,
       "R": 0
+     },
+     "shoulderGapWindup06": {
+      "L": 0,
+      "R": 0
+     },
+     "idleReach": {
+      "reach_m": 0.661,
+      "radius_m": 0.42,
+      "beyond_m": 0.241,
+      "part": "haR/wingtip",
+      "t": 0
+     },
+     "determinism": {
+      "hashSeed7": "f4cbdb3c",
+      "same": true,
+      "sameLod": true,
+      "hashSeed8": "28e12588",
+      "seedChangesRig": true
      },
      "sequences": {
       "knockdown": {
@@ -3962,6 +4046,8 @@
       "marginLODGround": true,
       "ground": true,
       "shoulders": true,
+      "reach": true,
+      "determinism": true,
       "stars": true,
       "cullSphere": true,
       "strayHulls": true,
@@ -4434,9 +4520,31 @@
       "head": 0.284
      },
      "downEndSnappedMinY": 0.017,
+     "downEndSnappedAnim": {
+      "tail": 0.017,
+      "head": 0.284
+     },
      "shoulderGapWindup": {
       "L": 0,
       "R": 0
+     },
+     "shoulderGapWindup06": {
+      "L": 0,
+      "R": 0
+     },
+     "idleReach": {
+      "reach_m": 0.784,
+      "radius_m": 0.55,
+      "beyond_m": 0.234,
+      "part": "haL/wingtip",
+      "t": 0
+     },
+     "determinism": {
+      "hashSeed7": "10d1221d",
+      "same": true,
+      "sameLod": true,
+      "hashSeed8": "46523fc0",
+      "seedChangesRig": true
      },
      "sequences": {
       "knockdown": {
@@ -4726,6 +4834,8 @@
       "marginLODGround": true,
       "ground": true,
       "shoulders": true,
+      "reach": true,
+      "determinism": true,
       "stars": true,
       "cullSphere": true,
       "strayHulls": true,
