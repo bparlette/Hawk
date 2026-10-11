@@ -1,0 +1,3501 @@
+[
+ {
+  "out": "previews/cobble_catfish_grunt_a_day.png",
+  "q": "show=cobble_catfish.grunt_a&t=0.5&turn=1&cam=front&ui=0",
+  "errors": [],
+  "report": {
+   "show": "cobble_catfish.grunt_a",
+   "lod": 0,
+   "rigs": {
+    "cobble_catfish.grunt_a": {
+     "parts": 32,
+     "tris": 10128,
+     "hullTris": 9276,
+     "mats": 3,
+     "height": 1.916541732134763,
+     "minY": 0.01652091620276655,
+     "flashBad": 0,
+     "hullsOK": true,
+     "swR": false
+    }
+   },
+   "frame": {
+    "calls": 313,
+    "triangles": 108290
+   }
+  }
+ },
+ {
+  "out": "previews/cobble_catfish_grunt_a_night.png",
+  "q": "show=cobble_catfish.grunt_a&t=0.5&turn=1&cam=front&ui=0&night=1",
+  "errors": [],
+  "report": {
+   "show": "cobble_catfish.grunt_a",
+   "lod": 0,
+   "rigs": {
+    "cobble_catfish.grunt_a": {
+     "parts": 32,
+     "tris": 10128,
+     "hullTris": 9276,
+     "mats": 3,
+     "height": 1.916541732134763,
+     "minY": 0.01652091620276655,
+     "flashBad": 0,
+     "hullsOK": true,
+     "swR": false
+    }
+   },
+   "frame": {
+    "calls": 313,
+    "triangles": 108290
+   }
+  }
+ },
+ {
+  "out": "previews/cobble_catfish_grunt_a_poses.png",
+  "q": "show=cobble_catfish.grunt_a&t=0.5&pose=all&ui=0",
+  "errors": [],
+  "report": {
+   "show": "cobble_catfish.grunt_a",
+   "lod": 0,
+   "rigs": {
+    "cobble_catfish.grunt_a/idle": {
+     "parts": 32,
+     "tris": 10128,
+     "hullTris": 9276,
+     "mats": 3,
+     "height": 1.916541732134763,
+     "minY": 0.01652091620276655,
+     "flashBad": 0,
+     "hullsOK": true,
+     "swR": false
+    },
+    "cobble_catfish.grunt_a/run": {
+     "parts": 32,
+     "tris": 10128,
+     "hullTris": 9276,
+     "mats": 3,
+     "height": 1.916541732134763,
+     "minY": 0.01652091620276655,
+     "flashBad": 0,
+     "hullsOK": true,
+     "swR": false
+    },
+    "cobble_catfish.grunt_a/windup": {
+     "parts": 32,
+     "tris": 10128,
+     "hullTris": 9276,
+     "mats": 3,
+     "height": 1.916541732134763,
+     "minY": 0.01652091620276655,
+     "flashBad": 0,
+     "hullsOK": true,
+     "swR": false
+    },
+    "cobble_catfish.grunt_a/attack": {
+     "parts": 32,
+     "tris": 10128,
+     "hullTris": 9276,
+     "mats": 3,
+     "height": 1.916541732134763,
+     "minY": 0.01652091620276655,
+     "flashBad": 0,
+     "hullsOK": true,
+     "swR": false
+    },
+    "cobble_catfish.grunt_a/hurt": {
+     "parts": 32,
+     "tris": 10128,
+     "hullTris": 9276,
+     "mats": 3,
+     "height": 1.916541732134763,
+     "minY": 0.01652091620276655,
+     "flashBad": 0,
+     "hullsOK": true,
+     "swR": false
+    },
+    "cobble_catfish.grunt_a/down": {
+     "parts": 32,
+     "tris": 10128,
+     "hullTris": 9276,
+     "mats": 3,
+     "height": 1.916541732134763,
+     "minY": 0.01652091620276655,
+     "flashBad": 0,
+     "hullsOK": true,
+     "swR": false
+    },
+    "cobble_catfish.grunt_a/getup": {
+     "parts": 32,
+     "tris": 10128,
+     "hullTris": 9276,
+     "mats": 3,
+     "height": 1.916541732134763,
+     "minY": 0.01652091620276655,
+     "flashBad": 0,
+     "hullsOK": true,
+     "swR": false
+    }
+   },
+   "frame": {
+    "calls": 547,
+    "triangles": 189506
+   }
+  }
+ },
+ {
+  "out": "previews/cobble_catfish_grunt_a_knockdown_60fps.png",
+  "q": "show=cobble_catfish.grunt_a&strip=knockdown&ui=0&merge=1",
+  "errors": [],
+  "report": {
+   "show": "cobble_catfish.grunt_a",
+   "lod": 0,
+   "rigs": {},
+   "frame": {
+    "calls": 56,
+    "triangles": 324854
+   }
+  }
+ },
+ {
+  "out": "previews/cobble_catfish_grunt_a_attack_60fps.png",
+  "q": "show=cobble_catfish.grunt_a&strip=attack&ui=0&merge=1",
+  "errors": [],
+  "report": {
+   "show": "cobble_catfish.grunt_a",
+   "lod": 0,
+   "rigs": {},
+   "frame": {
+    "calls": 56,
+    "triangles": 324854
+   }
+  }
+ },
+ {
+  "out": "previews/_tmp_grunt_a_hd.png",
+  "q": "show=cobble_catfish.grunt_a&t=0.5&turn=1&cam=front&ui=0",
+  "errors": [],
+  "report": {
+   "show": "cobble_catfish.grunt_a",
+   "lod": 0,
+   "rigs": {
+    "cobble_catfish.grunt_a": {
+     "parts": 32,
+     "tris": 10128,
+     "hullTris": 9276,
+     "mats": 3,
+     "height": 1.916541732134763,
+     "minY": 0.01652091620276655,
+     "flashBad": 0,
+     "hullsOK": true,
+     "swR": false
+    }
+   },
+   "frame": {
+    "calls": 313,
+    "triangles": 108290
+   }
+  }
+ },
+ {
+  "out": "previews/_tmp_grunt_a_lod.png",
+  "q": "show=cobble_catfish.grunt_a&t=0.5&turn=1&cam=front&ui=0&lod=1",
+  "errors": [],
+  "report": {
+   "show": "cobble_catfish.grunt_a",
+   "lod": 1,
+   "rigs": {
+    "cobble_catfish.grunt_a": {
+     "parts": 12,
+     "tris": 1880,
+     "hullTris": 1880,
+     "mats": 2,
+     "height": 1.8338499120707143,
+     "minY": 0.02142181517154082,
+     "flashBad": 0,
+     "hullsOK": true,
+     "swR": false
+    }
+   },
+   "frame": {
+    "calls": 145,
+    "triangles": 22562
+   }
+  }
+ },
+ {
+  "out": "previews/cobble_catfish_grunt_b_day.png",
+  "q": "show=cobble_catfish.grunt_b&t=0.5&turn=1&cam=front&ui=0",
+  "errors": [],
+  "report": {
+   "show": "cobble_catfish.grunt_b",
+   "lod": 0,
+   "rigs": {
+    "cobble_catfish.grunt_b": {
+     "parts": 31,
+     "tris": 10116,
+     "hullTris": 9264,
+     "mats": 3,
+     "height": 1.9635039837197685,
+     "minY": 0.01652091620276655,
+     "flashBad": 0,
+     "hullsOK": true,
+     "swR": false
+    }
+   },
+   "frame": {
+    "calls": 301,
+    "triangles": 108146
+   }
+  }
+ },
+ {
+  "out": "previews/cobble_catfish_grunt_b_night.png",
+  "q": "show=cobble_catfish.grunt_b&t=0.5&turn=1&cam=front&ui=0&night=1",
+  "errors": [],
+  "report": {
+   "show": "cobble_catfish.grunt_b",
+   "lod": 0,
+   "rigs": {
+    "cobble_catfish.grunt_b": {
+     "parts": 31,
+     "tris": 10116,
+     "hullTris": 9264,
+     "mats": 3,
+     "height": 1.9635039837197685,
+     "minY": 0.01652091620276655,
+     "flashBad": 0,
+     "hullsOK": true,
+     "swR": false
+    }
+   },
+   "frame": {
+    "calls": 301,
+    "triangles": 108146
+   }
+  }
+ },
+ {
+  "out": "previews/cobble_catfish_grunt_b_poses.png",
+  "q": "show=cobble_catfish.grunt_b&t=0.5&pose=all&ui=0",
+  "errors": [],
+  "report": {
+   "show": "cobble_catfish.grunt_b",
+   "lod": 0,
+   "rigs": {
+    "cobble_catfish.grunt_b/idle": {
+     "parts": 31,
+     "tris": 10116,
+     "hullTris": 9264,
+     "mats": 3,
+     "height": 1.9635039837197685,
+     "minY": 0.01652091620276655,
+     "flashBad": 0,
+     "hullsOK": true,
+     "swR": false
+    },
+    "cobble_catfish.grunt_b/run": {
+     "parts": 31,
+     "tris": 10116,
+     "hullTris": 9264,
+     "mats": 3,
+     "height": 1.9635039837197685,
+     "minY": 0.01652091620276655,
+     "flashBad": 0,
+     "hullsOK": true,
+     "swR": false
+    },
+    "cobble_catfish.grunt_b/windup": {
+     "parts": 31,
+     "tris": 10116,
+     "hullTris": 9264,
+     "mats": 3,
+     "height": 1.9635039837197685,
+     "minY": 0.01652091620276655,
+     "flashBad": 0,
+     "hullsOK": true,
+     "swR": false
+    },
+    "cobble_catfish.grunt_b/attack": {
+     "parts": 31,
+     "tris": 10116,
+     "hullTris": 9264,
+     "mats": 3,
+     "height": 1.9635039837197685,
+     "minY": 0.01652091620276655,
+     "flashBad": 0,
+     "hullsOK": true,
+     "swR": false
+    },
+    "cobble_catfish.grunt_b/hurt": {
+     "parts": 31,
+     "tris": 10116,
+     "hullTris": 9264,
+     "mats": 3,
+     "height": 1.9635039837197685,
+     "minY": 0.01652091620276655,
+     "flashBad": 0,
+     "hullsOK": true,
+     "swR": false
+    },
+    "cobble_catfish.grunt_b/down": {
+     "parts": 31,
+     "tris": 10116,
+     "hullTris": 9264,
+     "mats": 3,
+     "height": 1.9635039837197685,
+     "minY": 0.01652091620276655,
+     "flashBad": 0,
+     "hullsOK": true,
+     "swR": false
+    },
+    "cobble_catfish.grunt_b/getup": {
+     "parts": 31,
+     "tris": 10116,
+     "hullTris": 9264,
+     "mats": 3,
+     "height": 1.9635039837197685,
+     "minY": 0.01652091620276655,
+     "flashBad": 0,
+     "hullsOK": true,
+     "swR": false
+    }
+   },
+   "frame": {
+    "calls": 526,
+    "triangles": 189254
+   }
+  }
+ },
+ {
+  "out": "previews/cobble_catfish_grunt_b_knockdown_60fps.png",
+  "q": "show=cobble_catfish.grunt_b&strip=knockdown&ui=0&merge=1",
+  "errors": [],
+  "report": {
+   "show": "cobble_catfish.grunt_b",
+   "lod": 0,
+   "rigs": {},
+   "frame": {
+    "calls": 56,
+    "triangles": 324458
+   }
+  }
+ },
+ {
+  "out": "previews/cobble_catfish_grunt_b_attack_60fps.png",
+  "q": "show=cobble_catfish.grunt_b&strip=attack&ui=0&merge=1",
+  "errors": [],
+  "report": {
+   "show": "cobble_catfish.grunt_b",
+   "lod": 0,
+   "rigs": {},
+   "frame": {
+    "calls": 56,
+    "triangles": 324458
+   }
+  }
+ },
+ {
+  "out": "previews/_tmp_grunt_b_hd.png",
+  "q": "show=cobble_catfish.grunt_b&t=0.5&turn=1&cam=front&ui=0",
+  "errors": [],
+  "report": {
+   "show": "cobble_catfish.grunt_b",
+   "lod": 0,
+   "rigs": {
+    "cobble_catfish.grunt_b": {
+     "parts": 31,
+     "tris": 10116,
+     "hullTris": 9264,
+     "mats": 3,
+     "height": 1.9635039837197685,
+     "minY": 0.01652091620276655,
+     "flashBad": 0,
+     "hullsOK": true,
+     "swR": false
+    }
+   },
+   "frame": {
+    "calls": 301,
+    "triangles": 108146
+   }
+  }
+ },
+ {
+  "out": "previews/_tmp_grunt_b_lod.png",
+  "q": "show=cobble_catfish.grunt_b&t=0.5&turn=1&cam=front&ui=0&lod=1",
+  "errors": [],
+  "report": {
+   "show": "cobble_catfish.grunt_b",
+   "lod": 1,
+   "rigs": {
+    "cobble_catfish.grunt_b": {
+     "parts": 12,
+     "tris": 1880,
+     "hullTris": 1880,
+     "mats": 2,
+     "height": 1.8338499120707143,
+     "minY": 0.02142181517154082,
+     "flashBad": 0,
+     "hullsOK": true,
+     "swR": false
+    }
+   },
+   "frame": {
+    "calls": 145,
+    "triangles": 22562
+   }
+  }
+ },
+ {
+  "out": "previews/cobble_catfish_armed_day.png",
+  "q": "show=cobble_catfish.armed&t=0.5&turn=1&cam=front&ui=0",
+  "errors": [],
+  "report": {
+   "show": "cobble_catfish.armed",
+   "lod": 0,
+   "rigs": {
+    "cobble_catfish.armed": {
+     "parts": 32,
+     "tris": 10524,
+     "hullTris": 9672,
+     "mats": 3,
+     "height": 1.8387508110394886,
+     "minY": 0.01652091620276655,
+     "flashBad": 0,
+     "hullsOK": true,
+     "swR": true
+    }
+   },
+   "frame": {
+    "calls": 313,
+    "triangles": 113042
+   }
+  }
+ },
+ {
+  "out": "previews/cobble_catfish_armed_night.png",
+  "q": "show=cobble_catfish.armed&t=0.5&turn=1&cam=front&ui=0&night=1",
+  "errors": [],
+  "report": {
+   "show": "cobble_catfish.armed",
+   "lod": 0,
+   "rigs": {
+    "cobble_catfish.armed": {
+     "parts": 32,
+     "tris": 10524,
+     "hullTris": 9672,
+     "mats": 3,
+     "height": 1.8387508110394886,
+     "minY": 0.01652091620276655,
+     "flashBad": 0,
+     "hullsOK": true,
+     "swR": true
+    }
+   },
+   "frame": {
+    "calls": 313,
+    "triangles": 113042
+   }
+  }
+ },
+ {
+  "out": "previews/cobble_catfish_armed_poses.png",
+  "q": "show=cobble_catfish.armed&t=0.5&pose=all&ui=0",
+  "errors": [],
+  "report": {
+   "show": "cobble_catfish.armed",
+   "lod": 0,
+   "rigs": {
+    "cobble_catfish.armed/idle": {
+     "parts": 32,
+     "tris": 10524,
+     "hullTris": 9672,
+     "mats": 3,
+     "height": 1.8387508110394886,
+     "minY": 0.01652091620276655,
+     "flashBad": 0,
+     "hullsOK": true,
+     "swR": true
+    },
+    "cobble_catfish.armed/run": {
+     "parts": 32,
+     "tris": 10524,
+     "hullTris": 9672,
+     "mats": 3,
+     "height": 1.8387508110394886,
+     "minY": 0.01652091620276655,
+     "flashBad": 0,
+     "hullsOK": true,
+     "swR": true
+    },
+    "cobble_catfish.armed/windup": {
+     "parts": 32,
+     "tris": 10524,
+     "hullTris": 9672,
+     "mats": 3,
+     "height": 1.8387508110394886,
+     "minY": 0.01652091620276655,
+     "flashBad": 0,
+     "hullsOK": true,
+     "swR": true
+    },
+    "cobble_catfish.armed/attack": {
+     "parts": 32,
+     "tris": 10524,
+     "hullTris": 9672,
+     "mats": 3,
+     "height": 1.8387508110394886,
+     "minY": 0.01652091620276655,
+     "flashBad": 0,
+     "hullsOK": true,
+     "swR": true
+    },
+    "cobble_catfish.armed/hurt": {
+     "parts": 32,
+     "tris": 10524,
+     "hullTris": 9672,
+     "mats": 3,
+     "height": 1.8387508110394886,
+     "minY": 0.01652091620276655,
+     "flashBad": 0,
+     "hullsOK": true,
+     "swR": true
+    },
+    "cobble_catfish.armed/down": {
+     "parts": 32,
+     "tris": 10524,
+     "hullTris": 9672,
+     "mats": 3,
+     "height": 1.8387508110394886,
+     "minY": 0.01652091620276655,
+     "flashBad": 0,
+     "hullsOK": true,
+     "swR": true
+    },
+    "cobble_catfish.armed/getup": {
+     "parts": 32,
+     "tris": 10524,
+     "hullTris": 9672,
+     "mats": 3,
+     "height": 1.8387508110394886,
+     "minY": 0.01652091620276655,
+     "flashBad": 0,
+     "hullsOK": true,
+     "swR": true
+    }
+   },
+   "frame": {
+    "calls": 547,
+    "triangles": 197822
+   }
+  }
+ },
+ {
+  "out": "previews/cobble_catfish_armed_knockdown_60fps.png",
+  "q": "show=cobble_catfish.armed&strip=knockdown&ui=0&merge=1",
+  "errors": [],
+  "report": {
+   "show": "cobble_catfish.armed",
+   "lod": 0,
+   "rigs": {},
+   "frame": {
+    "calls": 56,
+    "triangles": 337922
+   }
+  }
+ },
+ {
+  "out": "previews/cobble_catfish_armed_attack_60fps.png",
+  "q": "show=cobble_catfish.armed&strip=attack&ui=0&merge=1",
+  "errors": [],
+  "report": {
+   "show": "cobble_catfish.armed",
+   "lod": 0,
+   "rigs": {},
+   "frame": {
+    "calls": 56,
+    "triangles": 337922
+   }
+  }
+ },
+ {
+  "out": "previews/_tmp_armed_hd.png",
+  "q": "show=cobble_catfish.armed&t=0.5&turn=1&cam=front&ui=0",
+  "errors": [],
+  "report": {
+   "show": "cobble_catfish.armed",
+   "lod": 0,
+   "rigs": {
+    "cobble_catfish.armed": {
+     "parts": 32,
+     "tris": 10524,
+     "hullTris": 9672,
+     "mats": 3,
+     "height": 1.8387508110394886,
+     "minY": 0.01652091620276655,
+     "flashBad": 0,
+     "hullsOK": true,
+     "swR": true
+    }
+   },
+   "frame": {
+    "calls": 313,
+    "triangles": 113042
+   }
+  }
+ },
+ {
+  "out": "previews/_tmp_armed_lod.png",
+  "q": "show=cobble_catfish.armed&t=0.5&turn=1&cam=front&ui=0&lod=1",
+  "errors": [],
+  "report": {
+   "show": "cobble_catfish.armed",
+   "lod": 1,
+   "rigs": {
+    "cobble_catfish.armed": {
+     "parts": 12,
+     "tris": 1924,
+     "hullTris": 1924,
+     "mats": 2,
+     "height": 1.8338499120707143,
+     "minY": 0.02142181517154082,
+     "flashBad": 0,
+     "hullsOK": true,
+     "swR": true
+    }
+   },
+   "frame": {
+    "calls": 145,
+    "triangles": 23090
+   }
+  }
+ },
+ {
+  "out": "previews/cobble_catfish_bruiser_day.png",
+  "q": "show=cobble_catfish.bruiser&t=0.5&turn=1&cam=front&ui=0",
+  "errors": [],
+  "report": {
+   "show": "cobble_catfish.bruiser",
+   "lod": 0,
+   "rigs": {
+    "cobble_catfish.bruiser": {
+     "parts": 32,
+     "tris": 9788,
+     "hullTris": 8936,
+     "mats": 3,
+     "height": 2.273799806089675,
+     "minY": 0.010718232175465414,
+     "flashBad": 0,
+     "hullsOK": true,
+     "swR": false
+    }
+   },
+   "frame": {
+    "calls": 321,
+    "triangles": 107378
+   }
+  }
+ },
+ {
+  "out": "previews/cobble_catfish_bruiser_night.png",
+  "q": "show=cobble_catfish.bruiser&t=0.5&turn=1&cam=front&ui=0&night=1",
+  "errors": [],
+  "report": {
+   "show": "cobble_catfish.bruiser",
+   "lod": 0,
+   "rigs": {
+    "cobble_catfish.bruiser": {
+     "parts": 32,
+     "tris": 9788,
+     "hullTris": 8936,
+     "mats": 3,
+     "height": 2.273799806089675,
+     "minY": 0.010718232175465414,
+     "flashBad": 0,
+     "hullsOK": true,
+     "swR": false
+    }
+   },
+   "frame": {
+    "calls": 321,
+    "triangles": 107378
+   }
+  }
+ },
+ {
+  "out": "previews/cobble_catfish_bruiser_poses.png",
+  "q": "show=cobble_catfish.bruiser&t=0.5&pose=all&ui=0",
+  "errors": [],
+  "report": {
+   "show": "cobble_catfish.bruiser",
+   "lod": 0,
+   "rigs": {
+    "cobble_catfish.bruiser/idle": {
+     "parts": 32,
+     "tris": 9788,
+     "hullTris": 8936,
+     "mats": 3,
+     "height": 2.273799806089675,
+     "minY": 0.010718232175465414,
+     "flashBad": 0,
+     "hullsOK": true,
+     "swR": false
+    },
+    "cobble_catfish.bruiser/run": {
+     "parts": 32,
+     "tris": 9788,
+     "hullTris": 8936,
+     "mats": 3,
+     "height": 2.273799806089675,
+     "minY": 0.010718232175465414,
+     "flashBad": 0,
+     "hullsOK": true,
+     "swR": false
+    },
+    "cobble_catfish.bruiser/windup": {
+     "parts": 32,
+     "tris": 9788,
+     "hullTris": 8936,
+     "mats": 3,
+     "height": 2.273799806089675,
+     "minY": 0.010718232175465414,
+     "flashBad": 0,
+     "hullsOK": true,
+     "swR": false
+    },
+    "cobble_catfish.bruiser/attack": {
+     "parts": 32,
+     "tris": 9788,
+     "hullTris": 8936,
+     "mats": 3,
+     "height": 2.273799806089675,
+     "minY": 0.010718232175465414,
+     "flashBad": 0,
+     "hullsOK": true,
+     "swR": false
+    },
+    "cobble_catfish.bruiser/hurt": {
+     "parts": 32,
+     "tris": 9788,
+     "hullTris": 8936,
+     "mats": 3,
+     "height": 2.273799806089675,
+     "minY": 0.010718232175465414,
+     "flashBad": 0,
+     "hullsOK": true,
+     "swR": false
+    },
+    "cobble_catfish.bruiser/down": {
+     "parts": 32,
+     "tris": 9788,
+     "hullTris": 8936,
+     "mats": 3,
+     "height": 2.273799806089675,
+     "minY": 0.010718232175465414,
+     "flashBad": 0,
+     "hullsOK": true,
+     "swR": false
+    },
+    "cobble_catfish.bruiser/getup": {
+     "parts": 32,
+     "tris": 9788,
+     "hullTris": 8936,
+     "mats": 3,
+     "height": 2.273799806089675,
+     "minY": 0.010718232175465414,
+     "flashBad": 0,
+     "hullsOK": true,
+     "swR": false
+    }
+   },
+   "frame": {
+    "calls": 559,
+    "triangles": 187118
+   }
+  }
+ },
+ {
+  "out": "previews/cobble_catfish_bruiser_knockdown_60fps.png",
+  "q": "show=cobble_catfish.bruiser&strip=knockdown&ui=0&merge=1",
+  "errors": [],
+  "report": {
+   "show": "cobble_catfish.bruiser",
+   "lod": 0,
+   "rigs": {},
+   "frame": {
+    "calls": 56,
+    "triangles": 313634
+   }
+  }
+ },
+ {
+  "out": "previews/cobble_catfish_bruiser_attack_60fps.png",
+  "q": "show=cobble_catfish.bruiser&strip=attack&ui=0&merge=1",
+  "errors": [],
+  "report": {
+   "show": "cobble_catfish.bruiser",
+   "lod": 0,
+   "rigs": {},
+   "frame": {
+    "calls": 56,
+    "triangles": 313634
+   }
+  }
+ },
+ {
+  "out": "previews/_tmp_bruiser_hd.png",
+  "q": "show=cobble_catfish.bruiser&t=0.5&turn=1&cam=front&ui=0",
+  "errors": [],
+  "report": {
+   "show": "cobble_catfish.bruiser",
+   "lod": 0,
+   "rigs": {
+    "cobble_catfish.bruiser": {
+     "parts": 32,
+     "tris": 9788,
+     "hullTris": 8936,
+     "mats": 3,
+     "height": 2.273799806089675,
+     "minY": 0.010718232175465414,
+     "flashBad": 0,
+     "hullsOK": true,
+     "swR": false
+    }
+   },
+   "frame": {
+    "calls": 321,
+    "triangles": 107378
+   }
+  }
+ },
+ {
+  "out": "previews/_tmp_bruiser_lod.png",
+  "q": "show=cobble_catfish.bruiser&t=0.5&turn=1&cam=front&ui=0&lod=1",
+  "errors": [],
+  "report": {
+   "show": "cobble_catfish.bruiser",
+   "lod": 1,
+   "rigs": {
+    "cobble_catfish.bruiser": {
+     "parts": 12,
+     "tris": 1924,
+     "hullTris": 1924,
+     "mats": 2,
+     "height": 2.2620184259293534,
+     "minY": 0.022499612335786567,
+     "flashBad": 0,
+     "hullsOK": true,
+     "swR": false
+    }
+   },
+   "frame": {
+    "calls": 145,
+    "triangles": 23090
+   }
+  }
+ },
+ {
+  "out": "previews/cobble_catfish_lineup_day.png",
+  "q": "show=cobble_catfish&t=0.5&cam=three",
+  "errors": [],
+  "report": {
+   "show": "cobble_catfish",
+   "lod": 0,
+   "rigs": {
+    "cobble_catfish.grunt_a": {
+     "parts": 32,
+     "tris": 10128,
+     "hullTris": 9276,
+     "mats": 3,
+     "height": 1.916541732134763,
+     "minY": 0.01652091620276655,
+     "flashBad": 0,
+     "hullsOK": true,
+     "swR": false
+    },
+    "cobble_catfish.grunt_b": {
+     "parts": 31,
+     "tris": 10116,
+     "hullTris": 9264,
+     "mats": 3,
+     "height": 1.9635039837197685,
+     "minY": 0.01652091620276655,
+     "flashBad": 0,
+     "hullsOK": true,
+     "swR": false
+    },
+    "cobble_catfish.armed": {
+     "parts": 32,
+     "tris": 10524,
+     "hullTris": 9672,
+     "mats": 3,
+     "height": 1.8387508110394886,
+     "minY": 0.01652091620276655,
+     "flashBad": 0,
+     "hullsOK": true,
+     "swR": true
+    },
+    "cobble_catfish.bruiser": {
+     "parts": 32,
+     "tris": 9788,
+     "hullTris": 8936,
+     "mats": 3,
+     "height": 2.273799806089675,
+     "minY": 0.010718232175465414,
+     "flashBad": 0,
+     "hullsOK": true,
+     "swR": false
+    }
+   },
+   "frame": {
+    "calls": 312,
+    "triangles": 109214
+   }
+  }
+ },
+ {
+  "out": "previews/cobble_catfish_lineup_night.png",
+  "q": "show=cobble_catfish&t=0.5&cam=three&night=1&ui=0",
+  "errors": [],
+  "report": {
+   "show": "cobble_catfish",
+   "lod": 0,
+   "rigs": {
+    "cobble_catfish.grunt_a": {
+     "parts": 32,
+     "tris": 10128,
+     "hullTris": 9276,
+     "mats": 3,
+     "height": 1.916541732134763,
+     "minY": 0.01652091620276655,
+     "flashBad": 0,
+     "hullsOK": true,
+     "swR": false
+    },
+    "cobble_catfish.grunt_b": {
+     "parts": 31,
+     "tris": 10116,
+     "hullTris": 9264,
+     "mats": 3,
+     "height": 1.9635039837197685,
+     "minY": 0.01652091620276655,
+     "flashBad": 0,
+     "hullsOK": true,
+     "swR": false
+    },
+    "cobble_catfish.armed": {
+     "parts": 32,
+     "tris": 10524,
+     "hullTris": 9672,
+     "mats": 3,
+     "height": 1.8387508110394886,
+     "minY": 0.01652091620276655,
+     "flashBad": 0,
+     "hullsOK": true,
+     "swR": true
+    },
+    "cobble_catfish.bruiser": {
+     "parts": 32,
+     "tris": 9788,
+     "hullTris": 8936,
+     "mats": 3,
+     "height": 2.273799806089675,
+     "minY": 0.010718232175465414,
+     "flashBad": 0,
+     "hullsOK": true,
+     "swR": false
+    }
+   },
+   "frame": {
+    "calls": 312,
+    "triangles": 109214
+   }
+  }
+ },
+ {
+  "out": "previews/cobble_catfish_lineup_merged_day.png",
+  "q": "show=cobble_catfish&t=0.5&cam=three&merge=1&ui=0",
+  "errors": [],
+  "report": {
+   "show": "cobble_catfish",
+   "lod": 0,
+   "rigs": {
+    "cobble_catfish.grunt_a": {
+     "parts": 2,
+     "tris": 10128,
+     "hullTris": 9276,
+     "mats": 3,
+     "height": 1.8835223493028654,
+     "minY": 0.020254673456458584,
+     "flashBad": 0,
+     "hullsOK": false,
+     "swR": false
+    },
+    "cobble_catfish.grunt_b": {
+     "parts": 2,
+     "tris": 10116,
+     "hullTris": 9264,
+     "mats": 3,
+     "height": 1.9432389770345433,
+     "minY": 0.020254673456458584,
+     "flashBad": 0,
+     "hullsOK": false,
+     "swR": false
+    },
+    "cobble_catfish.armed": {
+     "parts": 2,
+     "tris": 10524,
+     "hullTris": 9672,
+     "mats": 3,
+     "height": 1.8161288985745971,
+     "minY": 0.020254673456458584,
+     "flashBad": 0,
+     "hullsOK": false,
+     "swR": true
+    },
+    "cobble_catfish.bruiser": {
+     "parts": 2,
+     "tris": 9788,
+     "hullTris": 8936,
+     "mats": 3,
+     "height": 2.260212441790579,
+     "minY": 0.024305608147750155,
+     "flashBad": 0,
+     "hullsOK": false,
+     "swR": false
+    }
+   },
+   "frame": {
+    "calls": 21,
+    "triangles": 118262
+   }
+  }
+ },
+ {
+  "out": "previews/cobble_catfish_lod1_day.png",
+  "q": "show=cobble_catfish&t=0.5&cam=three&lod=1",
+  "errors": [],
+  "report": {
+   "show": "cobble_catfish",
+   "lod": 1,
+   "rigs": {
+    "cobble_catfish.grunt_a": {
+     "parts": 12,
+     "tris": 1880,
+     "hullTris": 1880,
+     "mats": 2,
+     "height": 1.8338499120707143,
+     "minY": 0.02142181517154082,
+     "flashBad": 0,
+     "hullsOK": true,
+     "swR": false
+    },
+    "cobble_catfish.grunt_b": {
+     "parts": 12,
+     "tris": 1880,
+     "hullTris": 1880,
+     "mats": 2,
+     "height": 1.8338499120707143,
+     "minY": 0.02142181517154082,
+     "flashBad": 0,
+     "hullsOK": true,
+     "swR": false
+    },
+    "cobble_catfish.armed": {
+     "parts": 12,
+     "tris": 1924,
+     "hullTris": 1924,
+     "mats": 2,
+     "height": 1.8338499120707143,
+     "minY": 0.02142181517154082,
+     "flashBad": 0,
+     "hullsOK": true,
+     "swR": true
+    },
+    "cobble_catfish.bruiser": {
+     "parts": 12,
+     "tris": 1924,
+     "hullTris": 1924,
+     "mats": 2,
+     "height": 2.2620184259293534,
+     "minY": 0.022499612335786567,
+     "flashBad": 0,
+     "hullsOK": true,
+     "swR": false
+    }
+   },
+   "frame": {
+    "calls": 145,
+    "triangles": 22826
+   }
+  }
+ },
+ {
+  "out": "previews/cobble_catfish_hitflash.png",
+  "q": "show=cobble_catfish&t=0.5&cam=front&flash=0.85",
+  "errors": [],
+  "report": {
+   "show": "cobble_catfish",
+   "lod": 0,
+   "rigs": {
+    "cobble_catfish.grunt_a": {
+     "parts": 32,
+     "tris": 10128,
+     "hullTris": 9276,
+     "mats": 3,
+     "height": 1.916541732134763,
+     "minY": 0.01652091620276655,
+     "flashBad": 0,
+     "hullsOK": true,
+     "swR": false
+    },
+    "cobble_catfish.grunt_b": {
+     "parts": 31,
+     "tris": 10116,
+     "hullTris": 9264,
+     "mats": 3,
+     "height": 1.9635039837197685,
+     "minY": 0.01652091620276655,
+     "flashBad": 0,
+     "hullsOK": true,
+     "swR": false
+    },
+    "cobble_catfish.armed": {
+     "parts": 32,
+     "tris": 10524,
+     "hullTris": 9672,
+     "mats": 3,
+     "height": 1.8387508110394886,
+     "minY": 0.01652091620276655,
+     "flashBad": 0,
+     "hullsOK": true,
+     "swR": true
+    },
+    "cobble_catfish.bruiser": {
+     "parts": 32,
+     "tris": 9788,
+     "hullTris": 8936,
+     "mats": 3,
+     "height": 2.273799806089675,
+     "minY": 0.010718232175465414,
+     "flashBad": 0,
+     "hullsOK": true,
+     "swR": false
+    }
+   },
+   "frame": {
+    "calls": 312,
+    "triangles": 109214
+   }
+  }
+ },
+ {
+  "out": "previews/cobble_catfish_hitflash_merged.png",
+  "q": "show=cobble_catfish&t=0.5&cam=front&flash=0.85&merge=1&ui=0",
+  "errors": [],
+  "report": {
+   "show": "cobble_catfish",
+   "lod": 0,
+   "rigs": {
+    "cobble_catfish.grunt_a": {
+     "parts": 2,
+     "tris": 10128,
+     "hullTris": 9276,
+     "mats": 3,
+     "height": 1.8835223493028654,
+     "minY": 0.020254673456458584,
+     "flashBad": 0,
+     "hullsOK": false,
+     "swR": false
+    },
+    "cobble_catfish.grunt_b": {
+     "parts": 2,
+     "tris": 10116,
+     "hullTris": 9264,
+     "mats": 3,
+     "height": 1.9432389770345433,
+     "minY": 0.020254673456458584,
+     "flashBad": 0,
+     "hullsOK": false,
+     "swR": false
+    },
+    "cobble_catfish.armed": {
+     "parts": 2,
+     "tris": 10524,
+     "hullTris": 9672,
+     "mats": 3,
+     "height": 1.8161288985745971,
+     "minY": 0.020254673456458584,
+     "flashBad": 0,
+     "hullsOK": false,
+     "swR": true
+    },
+    "cobble_catfish.bruiser": {
+     "parts": 2,
+     "tris": 9788,
+     "hullTris": 8936,
+     "mats": 3,
+     "height": 2.260212441790579,
+     "minY": 0.024305608147750155,
+     "flashBad": 0,
+     "hullsOK": false,
+     "swR": false
+    }
+   },
+   "frame": {
+    "calls": 21,
+    "triangles": 118262
+   }
+  }
+ },
+ {
+  "out": "previews/cobble_catfish_phone_390x844.png",
+  "q": "show=cobble_catfish&t=0.5&cam=phone&dist=8&ui=0",
+  "errors": [],
+  "report": {
+   "show": "cobble_catfish",
+   "lod": 0,
+   "rigs": {
+    "cobble_catfish.grunt_a": {
+     "parts": 32,
+     "tris": 10128,
+     "hullTris": 9276,
+     "mats": 3,
+     "height": 1.916541732134763,
+     "minY": 0.01652091620276655,
+     "flashBad": 0,
+     "hullsOK": true,
+     "swR": false
+    },
+    "cobble_catfish.grunt_b": {
+     "parts": 31,
+     "tris": 10116,
+     "hullTris": 9264,
+     "mats": 3,
+     "height": 1.9635039837197685,
+     "minY": 0.01652091620276655,
+     "flashBad": 0,
+     "hullsOK": true,
+     "swR": false
+    },
+    "cobble_catfish.armed": {
+     "parts": 32,
+     "tris": 10524,
+     "hullTris": 9672,
+     "mats": 3,
+     "height": 1.8387508110394886,
+     "minY": 0.01652091620276655,
+     "flashBad": 0,
+     "hullsOK": true,
+     "swR": true
+    },
+    "cobble_catfish.bruiser": {
+     "parts": 32,
+     "tris": 9788,
+     "hullTris": 8936,
+     "mats": 3,
+     "height": 2.273799806089675,
+     "minY": 0.010718232175465414,
+     "flashBad": 0,
+     "hullsOK": true,
+     "swR": false
+    }
+   },
+   "frame": {
+    "calls": 312,
+    "triangles": 109214
+   }
+  }
+ },
+ {
+  "out": "previews/cobble_catfish_phone_390x844_night.png",
+  "q": "show=cobble_catfish&t=0.5&cam=phone&dist=8&ui=0&night=1",
+  "errors": [],
+  "report": {
+   "show": "cobble_catfish",
+   "lod": 0,
+   "rigs": {
+    "cobble_catfish.grunt_a": {
+     "parts": 32,
+     "tris": 10128,
+     "hullTris": 9276,
+     "mats": 3,
+     "height": 1.916541732134763,
+     "minY": 0.01652091620276655,
+     "flashBad": 0,
+     "hullsOK": true,
+     "swR": false
+    },
+    "cobble_catfish.grunt_b": {
+     "parts": 31,
+     "tris": 10116,
+     "hullTris": 9264,
+     "mats": 3,
+     "height": 1.9635039837197685,
+     "minY": 0.01652091620276655,
+     "flashBad": 0,
+     "hullsOK": true,
+     "swR": false
+    },
+    "cobble_catfish.armed": {
+     "parts": 32,
+     "tris": 10524,
+     "hullTris": 9672,
+     "mats": 3,
+     "height": 1.8387508110394886,
+     "minY": 0.01652091620276655,
+     "flashBad": 0,
+     "hullsOK": true,
+     "swR": true
+    },
+    "cobble_catfish.bruiser": {
+     "parts": 32,
+     "tris": 9788,
+     "hullTris": 8936,
+     "mats": 3,
+     "height": 2.273799806089675,
+     "minY": 0.010718232175465414,
+     "flashBad": 0,
+     "hullsOK": true,
+     "swR": false
+    }
+   },
+   "frame": {
+    "calls": 312,
+    "triangles": 109214
+   }
+  }
+ },
+ {
+  "out": "",
+  "q": "show=cobble_catfish&lod=0&t=0.5",
+  "errors": [],
+  "report": {
+   "show": "cobble_catfish",
+   "lod": 0,
+   "rigs": {
+    "cobble_catfish.grunt_a": {
+     "parts": 32,
+     "tris": 10128,
+     "hullTris": 9276,
+     "mats": 3,
+     "height": 1.916541732134763,
+     "minY": 0.01652091620276655,
+     "flashBad": 0,
+     "hullsOK": true,
+     "swR": false
+    },
+    "cobble_catfish.grunt_b": {
+     "parts": 31,
+     "tris": 10116,
+     "hullTris": 9264,
+     "mats": 3,
+     "height": 1.9635039837197685,
+     "minY": 0.01652091620276655,
+     "flashBad": 0,
+     "hullsOK": true,
+     "swR": false
+    },
+    "cobble_catfish.armed": {
+     "parts": 32,
+     "tris": 10524,
+     "hullTris": 9672,
+     "mats": 3,
+     "height": 1.8387508110394886,
+     "minY": 0.01652091620276655,
+     "flashBad": 0,
+     "hullsOK": true,
+     "swR": true
+    },
+    "cobble_catfish.bruiser": {
+     "parts": 32,
+     "tris": 9788,
+     "hullTris": 8936,
+     "mats": 3,
+     "height": 2.273799806089675,
+     "minY": 0.010718232175465414,
+     "flashBad": 0,
+     "hullsOK": true,
+     "swR": false
+    }
+   },
+   "frame": {
+    "calls": 312,
+    "triangles": 109214
+   }
+  }
+ },
+ {
+  "out": "",
+  "q": "show=cobble_catfish&lod=1&t=0.5",
+  "errors": [],
+  "report": {
+   "show": "cobble_catfish",
+   "lod": 1,
+   "rigs": {
+    "cobble_catfish.grunt_a": {
+     "parts": 12,
+     "tris": 1880,
+     "hullTris": 1880,
+     "mats": 2,
+     "height": 1.8338499120707143,
+     "minY": 0.02142181517154082,
+     "flashBad": 0,
+     "hullsOK": true,
+     "swR": false
+    },
+    "cobble_catfish.grunt_b": {
+     "parts": 12,
+     "tris": 1880,
+     "hullTris": 1880,
+     "mats": 2,
+     "height": 1.8338499120707143,
+     "minY": 0.02142181517154082,
+     "flashBad": 0,
+     "hullsOK": true,
+     "swR": false
+    },
+    "cobble_catfish.armed": {
+     "parts": 12,
+     "tris": 1924,
+     "hullTris": 1924,
+     "mats": 2,
+     "height": 1.8338499120707143,
+     "minY": 0.02142181517154082,
+     "flashBad": 0,
+     "hullsOK": true,
+     "swR": true
+    },
+    "cobble_catfish.bruiser": {
+     "parts": 12,
+     "tris": 1924,
+     "hullTris": 1924,
+     "mats": 2,
+     "height": 2.2620184259293534,
+     "minY": 0.022499612335786567,
+     "flashBad": 0,
+     "hullsOK": true,
+     "swR": false
+    }
+   },
+   "frame": {
+    "calls": 145,
+    "triangles": 22826
+   }
+  }
+ },
+ {
+  "out": "",
+  "q": "show=cobble_catfish&lod=0&t=0.5&merge=1",
+  "errors": [],
+  "report": {
+   "show": "cobble_catfish",
+   "lod": 0,
+   "rigs": {
+    "cobble_catfish.grunt_a": {
+     "parts": 2,
+     "tris": 10128,
+     "hullTris": 9276,
+     "mats": 3,
+     "height": 1.8835223493028654,
+     "minY": 0.020254673456458584,
+     "flashBad": 0,
+     "hullsOK": false,
+     "swR": false
+    },
+    "cobble_catfish.grunt_b": {
+     "parts": 2,
+     "tris": 10116,
+     "hullTris": 9264,
+     "mats": 3,
+     "height": 1.9432389770345433,
+     "minY": 0.020254673456458584,
+     "flashBad": 0,
+     "hullsOK": false,
+     "swR": false
+    },
+    "cobble_catfish.armed": {
+     "parts": 2,
+     "tris": 10524,
+     "hullTris": 9672,
+     "mats": 3,
+     "height": 1.8161288985745971,
+     "minY": 0.020254673456458584,
+     "flashBad": 0,
+     "hullsOK": false,
+     "swR": true
+    },
+    "cobble_catfish.bruiser": {
+     "parts": 2,
+     "tris": 9788,
+     "hullTris": 8936,
+     "mats": 3,
+     "height": 2.260212441790579,
+     "minY": 0.024305608147750155,
+     "flashBad": 0,
+     "hullsOK": false,
+     "swR": false
+    }
+   },
+   "frame": {
+    "calls": 21,
+    "triangles": 118262
+   }
+  }
+ },
+ {
+  "out": "",
+  "q": "gang=cobble_catfish",
+  "errors": [],
+  "report": {
+   "gang": "cobble_catfish",
+   "members": {
+    "grunt_a": {
+     "hd": {
+      "parts": 32,
+      "tris": 10128,
+      "hullTris": 9276,
+      "hulls": 25,
+      "mats": 3,
+      "casters": 21,
+      "drawCalls": 57,
+      "shadowCalls": 21,
+      "height": 1.884,
+      "feetMinY": 0.02,
+      "flashBad": 0,
+      "hullMatsOK": true,
+      "shadowRule": []
+     },
+     "lod": {
+      "parts": 12,
+      "tris": 1880,
+      "hullTris": 1880,
+      "hulls": 12,
+      "mats": 2,
+      "casters": 12,
+      "drawCalls": 24,
+      "shadowCalls": 12,
+      "height": 1.815,
+      "feetMinY": 0.021,
+      "flashBad": 0,
+      "hullMatsOK": true,
+      "shadowRule": []
+     },
+     "hullOverlap": [
+      {
+       "part": "head/head",
+       "buried": 0.247,
+       "strayPx": {
+        "front": 0,
+        "three": 0,
+        "side": 0,
+        "back": 0
+       },
+       "maxStrayPx": 0
+      },
+      {
+       "part": "head/barbel",
+       "buried": 0,
+       "strayPx": {
+        "front": 0,
+        "three": 0,
+        "side": 0,
+        "back": 0
+       },
+       "maxStrayPx": 0
+      },
+      {
+       "part": "head/chinbarbel",
+       "buried": 0.133,
+       "strayPx": {
+        "front": 0,
+        "three": 0,
+        "side": 0,
+        "back": 0
+       },
+       "maxStrayPx": 0
+      },
+      {
+       "part": "head/cap",
+       "buried": 0.309,
+       "strayPx": {
+        "front": 0,
+        "three": 0,
+        "side": 0,
+        "back": 0
+       },
+       "maxStrayPx": 0
+      },
+      {
+       "part": "head/peak",
+       "buried": 0.255,
+       "strayPx": {
+        "front": 0,
+        "three": 0,
+        "side": 0,
+        "back": 0
+       },
+       "maxStrayPx": 0
+      },
+      {
+       "part": "haL/mitt",
+       "buried": 0.204,
+       "strayPx": {
+        "front": 0,
+        "three": 0,
+        "side": 0,
+        "back": 0
+       },
+       "maxStrayPx": 0
+      },
+      {
+       "part": "elL/fore",
+       "buried": 0.299,
+       "strayPx": {
+        "front": 0,
+        "three": 0,
+        "side": 1,
+        "back": 0
+       },
+       "maxStrayPx": 1
+      },
+      {
+       "part": "shL/shoulder",
+       "buried": 0.245,
+       "strayPx": {
+        "front": 0,
+        "three": 0,
+        "side": 0,
+        "back": 0
+       },
+       "maxStrayPx": 0
+      },
+      {
+       "part": "shL/upper",
+       "buried": 0.44,
+       "strayPx": {
+        "front": 0,
+        "three": 0,
+        "side": 0,
+        "back": 1
+       },
+       "maxStrayPx": 1
+      },
+      {
+       "part": "haR/mitt",
+       "buried": 0.204,
+       "strayPx": {
+        "front": 0,
+        "three": 0,
+        "side": 0,
+        "back": 0
+       },
+       "maxStrayPx": 0
+      },
+      {
+       "part": "elR/fore",
+       "buried": 0.319,
+       "strayPx": {
+        "front": 0,
+        "three": 0,
+        "side": 0,
+        "back": 0
+       },
+       "maxStrayPx": 0
+      },
+      {
+       "part": "shR/shoulder",
+       "buried": 0.252,
+       "strayPx": {
+        "front": 0,
+        "three": 0,
+        "side": 0,
+        "back": 0
+       },
+       "maxStrayPx": 0
+      },
+      {
+       "part": "shR/upper",
+       "buried": 0.445,
+       "strayPx": {
+        "front": 1,
+        "three": 0,
+        "side": 0,
+        "back": 2
+       },
+       "maxStrayPx": 2
+      },
+      {
+       "part": "torso/sweater",
+       "buried": 0.153,
+       "strayPx": {
+        "front": 0,
+        "three": 0,
+        "side": 2,
+        "back": 0
+       },
+       "maxStrayPx": 2
+      },
+      {
+       "part": "torso/dorsal",
+       "buried": 0.256,
+       "strayPx": {
+        "front": 0,
+        "three": 0,
+        "side": 0,
+        "back": 0
+       },
+       "maxStrayPx": 0
+      },
+      {
+       "part": "ftL/boot",
+       "buried": 0.128,
+       "strayPx": {
+        "front": 0,
+        "three": 0,
+        "side": 0,
+        "back": 0
+       },
+       "maxStrayPx": 0
+      },
+      {
+       "part": "knL/bootleg",
+       "buried": 0.183,
+       "strayPx": {
+        "front": 0,
+        "three": 0,
+        "side": 0,
+        "back": 0
+       },
+       "maxStrayPx": 0
+      },
+      {
+       "part": "lgL/thigh",
+       "buried": 0.277,
+       "strayPx": {
+        "front": 0,
+        "three": 0,
+        "side": 0,
+        "back": 0
+       },
+       "maxStrayPx": 0
+      },
+      {
+       "part": "ftR/boot",
+       "buried": 0.139,
+       "strayPx": {
+        "front": 0,
+        "three": 0,
+        "side": 0,
+        "back": 0
+       },
+       "maxStrayPx": 0
+      },
+      {
+       "part": "knR/bootleg",
+       "buried": 0.182,
+       "strayPx": {
+        "front": 0,
+        "three": 0,
+        "side": 0,
+        "back": 0
+       },
+       "maxStrayPx": 0
+      },
+      {
+       "part": "lgR/thigh",
+       "buried": 0.282,
+       "strayPx": {
+        "front": 0,
+        "three": 0,
+        "side": 0,
+        "back": 0
+       },
+       "maxStrayPx": 0
+      },
+      {
+       "part": "hips/trousers",
+       "buried": 0.402,
+       "strayPx": {
+        "front": 0,
+        "three": 0,
+        "side": 0,
+        "back": 0
+       },
+       "maxStrayPx": 0
+      },
+      {
+       "part": "tail/tailfin",
+       "buried": 0.299,
+       "strayPx": {
+        "front": 0,
+        "three": 0,
+        "side": 0,
+        "back": 0
+       },
+       "maxStrayPx": 0
+      }
+     ],
+     "strayHulls": [],
+     "shoulderGapDown": {
+      "L": 0,
+      "R": 0
+     },
+     "downEndSnapped": {
+      "tail": 0.039,
+      "head": 0.234
+     },
+     "downEndSnappedMinY": 0.039,
+     "shoulderGapWindup": {
+      "L": 0,
+      "R": 0
+     },
+     "sequences": {
+      "knockdown": {
+       "worst": {
+        "y": -0.008,
+        "part": "ftR/boot",
+        "phase": "idle",
+        "t": 2.833
+       },
+       "frames": 188,
+       "pass": true,
+       "downEnd": {
+        "tail": 0.039,
+        "head": 0.234
+       },
+       "cullReach": 2.164
+      },
+      "knockdown+anim": {
+       "worst": {
+        "y": -0.008,
+        "part": "ftR/boot",
+        "phase": "idle",
+        "t": 2.833
+       },
+       "frames": 188,
+       "pass": true,
+       "downEnd": {
+        "tail": 0.039,
+        "head": 0.234
+       },
+       "cullReach": 2.164
+      },
+      "attack": {
+       "worst": {
+        "y": 0.006,
+        "part": "ftR/boot",
+        "phase": "idle",
+        "t": 2.55
+       },
+       "frames": 153,
+       "pass": true,
+       "downEnd": null,
+       "cullReach": 1.026
+      },
+      "attack+anim": {
+       "worst": {
+        "y": 0.006,
+        "part": "ftR/boot",
+        "phase": "idle",
+        "t": 2.55
+       },
+       "frames": 153,
+       "pass": true,
+       "downEnd": null,
+       "cullReach": 1.026
+      },
+      "run": {
+       "worst": {
+        "y": 0.021,
+        "part": "ftR/boot",
+        "phase": "idle",
+        "t": 0.017
+       },
+       "frames": 120,
+       "pass": true,
+       "downEnd": null,
+       "cullReach": 1.026
+      },
+      "run+anim": {
+       "worst": {
+        "y": 0.021,
+        "part": "ftR/boot",
+        "phase": "idle",
+        "t": 0.017
+       },
+       "frames": 120,
+       "pass": true,
+       "downEnd": null,
+       "cullReach": 1.026
+      }
+     },
+     "lodSequences": {
+      "knockdown": {
+       "worst": {
+        "y": -0.007,
+        "part": "knR/boot",
+        "phase": "idle",
+        "t": 2.817
+       },
+       "frames": 188,
+       "pass": true,
+       "downEnd": {
+        "tail": 0.031,
+        "head": 0.234
+       },
+       "cullReach": 2.176
+      },
+      "attack": {
+       "worst": {
+        "y": 0.007,
+        "part": "knR/boot",
+        "phase": "idle",
+        "t": 2.55
+       },
+       "frames": 153,
+       "pass": true,
+       "downEnd": null,
+       "cullReach": 0.974
+      },
+      "run": {
+       "worst": {
+        "y": 0.022,
+        "part": "knR/boot",
+        "phase": "idle",
+        "t": 0.017
+       },
+       "frames": 120,
+       "pass": true,
+       "downEnd": null,
+       "cullReach": 0.967
+      }
+     },
+     "sweeps": {
+      "worst": {
+       "y": -0.009,
+       "part": "ftR/boot",
+       "pose": "idle"
+      },
+      "pass": true
+     },
+     "merge": {
+      "meshesBefore": 32,
+      "hullsBefore": 25,
+      "mergedMeshes": 3,
+      "mergedSolid": 2,
+      "mergedOutline": 1,
+      "leftovers": [],
+      "bones": 16,
+      "drawCalls": 3,
+      "shadowCalls": 2,
+      "flashShared": true,
+      "flashPx": {
+       "rigPx": 7879,
+       "unflashedPx": 0,
+       "unflashedPxWithFlashOff": 693
+      },
+      "flashCovers": true,
+      "mappedSubMaterials": 1,
+      "extras": [
+       {
+        "k": "tail",
+        "plain": true,
+        "parent": "hips"
+       }
+      ],
+      "maxVertexDy_m": 0,
+      "animMoves": {
+       "tailBone": 15,
+       "tailVerts": 247,
+       "moved_m": 0.01
+      },
+      "renderDiffPx": 26,
+      "renderDiffInteriorPx": 0,
+      "renderRigPx": 9711
+     },
+     "cullReachMax": 2.164,
+     "cullRadius": 1.9,
+     "silhouetteIoU": {
+      "front": 0.875,
+      "three": 0.858,
+      "side": 0.865
+     },
+     "pass": {
+      "budgetHD": true,
+      "budgetLOD": true,
+      "marginHD": true,
+      "marginLOD": true,
+      "marginBuried": true,
+      "marginLODGround": true,
+      "ground": true,
+      "shoulders": true,
+      "strayHulls": true,
+      "shadows": true,
+      "flash": true,
+      "hulls": true,
+      "merge": true,
+      "height": true,
+      "feet": true
+     }
+    },
+    "grunt_b": {
+     "hd": {
+      "parts": 31,
+      "tris": 10116,
+      "hullTris": 9264,
+      "hulls": 24,
+      "mats": 3,
+      "casters": 20,
+      "drawCalls": 55,
+      "shadowCalls": 20,
+      "height": 1.943,
+      "feetMinY": 0.02,
+      "flashBad": 0,
+      "hullMatsOK": true,
+      "shadowRule": []
+     },
+     "lod": {
+      "parts": 12,
+      "tris": 1880,
+      "hullTris": 1880,
+      "hulls": 12,
+      "mats": 2,
+      "casters": 12,
+      "drawCalls": 24,
+      "shadowCalls": 12,
+      "height": 1.815,
+      "feetMinY": 0.021,
+      "flashBad": 0,
+      "hullMatsOK": true,
+      "shadowRule": []
+     },
+     "hullOverlap": [
+      {
+       "part": "head/head",
+       "buried": 0.304,
+       "strayPx": {
+        "front": 0,
+        "three": 0,
+        "side": 0,
+        "back": 0
+       },
+       "maxStrayPx": 0
+      },
+      {
+       "part": "head/barbel",
+       "buried": 0,
+       "strayPx": {
+        "front": 0,
+        "three": 0,
+        "side": 0,
+        "back": 0
+       },
+       "maxStrayPx": 0
+      },
+      {
+       "part": "head/chinbarbel",
+       "buried": 0.133,
+       "strayPx": {
+        "front": 0,
+        "three": 0,
+        "side": 0,
+        "back": 0
+       },
+       "maxStrayPx": 0
+      },
+      {
+       "part": "head/beanie",
+       "buried": 0.293,
+       "strayPx": {
+        "front": 0,
+        "three": 0,
+        "side": 0,
+        "back": 0
+       },
+       "maxStrayPx": 0
+      },
+      {
+       "part": "haL/mitt",
+       "buried": 0.204,
+       "strayPx": {
+        "front": 0,
+        "three": 0,
+        "side": 0,
+        "back": 0
+       },
+       "maxStrayPx": 0
+      },
+      {
+       "part": "elL/fore",
+       "buried": 0.299,
+       "strayPx": {
+        "front": 0,
+        "three": 0,
+        "side": 1,
+        "back": 0
+       },
+       "maxStrayPx": 1
+      },
+      {
+       "part": "shL/shoulder",
+       "buried": 0.245,
+       "strayPx": {
+        "front": 0,
+        "three": 0,
+        "side": 0,
+        "back": 0
+       },
+       "maxStrayPx": 0
+      },
+      {
+       "part": "shL/upper",
+       "buried": 0.44,
+       "strayPx": {
+        "front": 0,
+        "three": 0,
+        "side": 0,
+        "back": 2
+       },
+       "maxStrayPx": 2
+      },
+      {
+       "part": "haR/mitt",
+       "buried": 0.204,
+       "strayPx": {
+        "front": 0,
+        "three": 0,
+        "side": 0,
+        "back": 0
+       },
+       "maxStrayPx": 0
+      },
+      {
+       "part": "elR/fore",
+       "buried": 0.319,
+       "strayPx": {
+        "front": 0,
+        "three": 0,
+        "side": 0,
+        "back": 0
+       },
+       "maxStrayPx": 0
+      },
+      {
+       "part": "shR/shoulder",
+       "buried": 0.252,
+       "strayPx": {
+        "front": 0,
+        "three": 0,
+        "side": 0,
+        "back": 0
+       },
+       "maxStrayPx": 0
+      },
+      {
+       "part": "shR/upper",
+       "buried": 0.445,
+       "strayPx": {
+        "front": 1,
+        "three": 0,
+        "side": 0,
+        "back": 3
+       },
+       "maxStrayPx": 3
+      },
+      {
+       "part": "torso/sweater",
+       "buried": 0.153,
+       "strayPx": {
+        "front": 0,
+        "three": 0,
+        "side": 0,
+        "back": 0
+       },
+       "maxStrayPx": 0
+      },
+      {
+       "part": "torso/dorsal",
+       "buried": 0.256,
+       "strayPx": {
+        "front": 0,
+        "three": 0,
+        "side": 0,
+        "back": 0
+       },
+       "maxStrayPx": 0
+      },
+      {
+       "part": "ftL/boot",
+       "buried": 0.128,
+       "strayPx": {
+        "front": 0,
+        "three": 0,
+        "side": 0,
+        "back": 0
+       },
+       "maxStrayPx": 0
+      },
+      {
+       "part": "knL/bootleg",
+       "buried": 0.183,
+       "strayPx": {
+        "front": 0,
+        "three": 0,
+        "side": 0,
+        "back": 0
+       },
+       "maxStrayPx": 0
+      },
+      {
+       "part": "lgL/thigh",
+       "buried": 0.277,
+       "strayPx": {
+        "front": 0,
+        "three": 0,
+        "side": 0,
+        "back": 0
+       },
+       "maxStrayPx": 0
+      },
+      {
+       "part": "ftR/boot",
+       "buried": 0.139,
+       "strayPx": {
+        "front": 0,
+        "three": 0,
+        "side": 0,
+        "back": 0
+       },
+       "maxStrayPx": 0
+      },
+      {
+       "part": "knR/bootleg",
+       "buried": 0.182,
+       "strayPx": {
+        "front": 0,
+        "three": 0,
+        "side": 0,
+        "back": 0
+       },
+       "maxStrayPx": 0
+      },
+      {
+       "part": "lgR/thigh",
+       "buried": 0.282,
+       "strayPx": {
+        "front": 0,
+        "three": 0,
+        "side": 0,
+        "back": 0
+       },
+       "maxStrayPx": 0
+      },
+      {
+       "part": "hips/trousers",
+       "buried": 0.402,
+       "strayPx": {
+        "front": 0,
+        "three": 0,
+        "side": 0,
+        "back": 0
+       },
+       "maxStrayPx": 0
+      },
+      {
+       "part": "tail/tailfin",
+       "buried": 0.299,
+       "strayPx": {
+        "front": 0,
+        "three": 0,
+        "side": 0,
+        "back": 0
+       },
+       "maxStrayPx": 0
+      }
+     ],
+     "strayHulls": [],
+     "shoulderGapDown": {
+      "L": 0,
+      "R": 0
+     },
+     "downEndSnapped": {
+      "tail": 0.039,
+      "head": 0.234
+     },
+     "downEndSnappedMinY": 0.039,
+     "shoulderGapWindup": {
+      "L": 0,
+      "R": 0
+     },
+     "sequences": {
+      "knockdown": {
+       "worst": {
+        "y": -0.008,
+        "part": "ftR/boot",
+        "phase": "idle",
+        "t": 2.833
+       },
+       "frames": 188,
+       "pass": true,
+       "downEnd": {
+        "tail": 0.039,
+        "head": 0.234
+       },
+       "cullReach": 2.164
+      },
+      "knockdown+anim": {
+       "worst": {
+        "y": -0.008,
+        "part": "ftR/boot",
+        "phase": "idle",
+        "t": 2.833
+       },
+       "frames": 188,
+       "pass": true,
+       "downEnd": {
+        "tail": 0.039,
+        "head": 0.234
+       },
+       "cullReach": 2.164
+      },
+      "attack": {
+       "worst": {
+        "y": 0.006,
+        "part": "ftR/boot",
+        "phase": "idle",
+        "t": 2.55
+       },
+       "frames": 153,
+       "pass": true,
+       "downEnd": null,
+       "cullReach": 1.094
+      },
+      "attack+anim": {
+       "worst": {
+        "y": 0.006,
+        "part": "ftR/boot",
+        "phase": "idle",
+        "t": 2.55
+       },
+       "frames": 153,
+       "pass": true,
+       "downEnd": null,
+       "cullReach": 1.094
+      },
+      "run": {
+       "worst": {
+        "y": 0.021,
+        "part": "ftR/boot",
+        "phase": "idle",
+        "t": 0.017
+       },
+       "frames": 120,
+       "pass": true,
+       "downEnd": null,
+       "cullReach": 1.094
+      },
+      "run+anim": {
+       "worst": {
+        "y": 0.021,
+        "part": "ftR/boot",
+        "phase": "idle",
+        "t": 0.017
+       },
+       "frames": 120,
+       "pass": true,
+       "downEnd": null,
+       "cullReach": 1.094
+      }
+     },
+     "lodSequences": {
+      "knockdown": {
+       "worst": {
+        "y": -0.007,
+        "part": "knR/boot",
+        "phase": "idle",
+        "t": 2.817
+       },
+       "frames": 188,
+       "pass": true,
+       "downEnd": {
+        "tail": 0.031,
+        "head": 0.234
+       },
+       "cullReach": 2.176
+      },
+      "attack": {
+       "worst": {
+        "y": 0.007,
+        "part": "knR/boot",
+        "phase": "idle",
+        "t": 2.55
+       },
+       "frames": 153,
+       "pass": true,
+       "downEnd": null,
+       "cullReach": 0.974
+      },
+      "run": {
+       "worst": {
+        "y": 0.022,
+        "part": "knR/boot",
+        "phase": "idle",
+        "t": 0.017
+       },
+       "frames": 120,
+       "pass": true,
+       "downEnd": null,
+       "cullReach": 0.967
+      }
+     },
+     "sweeps": {
+      "worst": {
+       "y": -0.009,
+       "part": "ftR/boot",
+       "pose": "idle"
+      },
+      "pass": true
+     },
+     "merge": {
+      "meshesBefore": 31,
+      "hullsBefore": 24,
+      "mergedMeshes": 3,
+      "mergedSolid": 2,
+      "mergedOutline": 1,
+      "leftovers": [],
+      "bones": 16,
+      "drawCalls": 3,
+      "shadowCalls": 2,
+      "flashShared": true,
+      "flashPx": {
+       "rigPx": 8178,
+       "unflashedPx": 0,
+       "unflashedPxWithFlashOff": 1048
+      },
+      "flashCovers": true,
+      "mappedSubMaterials": 1,
+      "extras": [
+       {
+        "k": "tail",
+        "plain": true,
+        "parent": "hips"
+       }
+      ],
+      "maxVertexDy_m": 0,
+      "animMoves": {
+       "tailBone": 15,
+       "tailVerts": 247,
+       "moved_m": 0.01
+      },
+      "renderDiffPx": 31,
+      "renderDiffInteriorPx": 0,
+      "renderRigPx": 9965
+     },
+     "cullReachMax": 2.164,
+     "cullRadius": 1.9,
+     "silhouetteIoU": {
+      "front": 0.861,
+      "three": 0.838,
+      "side": 0.84
+     },
+     "pass": {
+      "budgetHD": true,
+      "budgetLOD": true,
+      "marginHD": true,
+      "marginLOD": true,
+      "marginBuried": true,
+      "marginLODGround": true,
+      "ground": true,
+      "shoulders": true,
+      "strayHulls": true,
+      "shadows": true,
+      "flash": true,
+      "hulls": true,
+      "merge": true,
+      "height": true,
+      "feet": true
+     }
+    },
+    "armed": {
+     "hd": {
+      "parts": 32,
+      "tris": 10524,
+      "hullTris": 9672,
+      "hulls": 25,
+      "mats": 3,
+      "casters": 21,
+      "drawCalls": 57,
+      "shadowCalls": 21,
+      "height": 1.816,
+      "feetMinY": 0.02,
+      "flashBad": 0,
+      "hullMatsOK": true,
+      "shadowRule": []
+     },
+     "lod": {
+      "parts": 12,
+      "tris": 1924,
+      "hullTris": 1924,
+      "hulls": 12,
+      "mats": 2,
+      "casters": 12,
+      "drawCalls": 24,
+      "shadowCalls": 12,
+      "height": 1.815,
+      "feetMinY": 0.021,
+      "flashBad": 0,
+      "hullMatsOK": true,
+      "shadowRule": []
+     },
+     "hullOverlap": [
+      {
+       "part": "head/head",
+       "buried": 0.033,
+       "strayPx": {
+        "front": 0,
+        "three": 0,
+        "side": 0,
+        "back": 0
+       },
+       "maxStrayPx": 0
+      },
+      {
+       "part": "head/barbel",
+       "buried": 0,
+       "strayPx": {
+        "front": 0,
+        "three": 0,
+        "side": 0,
+        "back": 0
+       },
+       "maxStrayPx": 0
+      },
+      {
+       "part": "head/chinbarbel",
+       "buried": 0.133,
+       "strayPx": {
+        "front": 0,
+        "three": 0,
+        "side": 0,
+        "back": 0
+       },
+       "maxStrayPx": 0
+      },
+      {
+       "part": "haL/mitt",
+       "buried": 0.204,
+       "strayPx": {
+        "front": 0,
+        "three": 0,
+        "side": 0,
+        "back": 0
+       },
+       "maxStrayPx": 0
+      },
+      {
+       "part": "elL/fore",
+       "buried": 0.299,
+       "strayPx": {
+        "front": 0,
+        "three": 0,
+        "side": 1,
+        "back": 0
+       },
+       "maxStrayPx": 1
+      },
+      {
+       "part": "shL/shoulder",
+       "buried": 0.245,
+       "strayPx": {
+        "front": 0,
+        "three": 0,
+        "side": 0,
+        "back": 0
+       },
+       "maxStrayPx": 0
+      },
+      {
+       "part": "shL/upper",
+       "buried": 0.44,
+       "strayPx": {
+        "front": 0,
+        "three": 0,
+        "side": 0,
+        "back": 2
+       },
+       "maxStrayPx": 2
+      },
+      {
+       "part": "haR/mitt",
+       "buried": 0.219,
+       "strayPx": {
+        "front": 0,
+        "three": 0,
+        "side": 0,
+        "back": 0
+       },
+       "maxStrayPx": 0
+      },
+      {
+       "part": "swR/rope",
+       "buried": 0.238,
+       "strayPx": {
+        "front": 0,
+        "three": 0,
+        "side": 0,
+        "back": 0
+       },
+       "maxStrayPx": 0
+      },
+      {
+       "part": "swR/cobble",
+       "buried": 0,
+       "strayPx": {
+        "front": 0,
+        "three": 0,
+        "side": 0,
+        "back": 0
+       },
+       "maxStrayPx": 0
+      },
+      {
+       "part": "elR/fore",
+       "buried": 0.27,
+       "strayPx": {
+        "front": 0,
+        "three": 0,
+        "side": 0,
+        "back": 0
+       },
+       "maxStrayPx": 0
+      },
+      {
+       "part": "shR/shoulder",
+       "buried": 0.246,
+       "strayPx": {
+        "front": 0,
+        "three": 0,
+        "side": 0,
+        "back": 0
+       },
+       "maxStrayPx": 0
+      },
+      {
+       "part": "shR/upper",
+       "buried": 0.462,
+       "strayPx": {
+        "front": 0,
+        "three": 0,
+        "side": 0,
+        "back": 2
+       },
+       "maxStrayPx": 2
+      },
+      {
+       "part": "torso/sweater",
+       "buried": 0.161,
+       "strayPx": {
+        "front": 0,
+        "three": 0,
+        "side": 0,
+        "back": 0
+       },
+       "maxStrayPx": 0
+      },
+      {
+       "part": "torso/dorsal",
+       "buried": 0.256,
+       "strayPx": {
+        "front": 0,
+        "three": 0,
+        "side": 0,
+        "back": 0
+       },
+       "maxStrayPx": 0
+      },
+      {
+       "part": "ftL/boot",
+       "buried": 0.128,
+       "strayPx": {
+        "front": 0,
+        "three": 0,
+        "side": 0,
+        "back": 0
+       },
+       "maxStrayPx": 0
+      },
+      {
+       "part": "knL/bootleg",
+       "buried": 0.183,
+       "strayPx": {
+        "front": 0,
+        "three": 0,
+        "side": 0,
+        "back": 0
+       },
+       "maxStrayPx": 0
+      },
+      {
+       "part": "lgL/thigh",
+       "buried": 0.277,
+       "strayPx": {
+        "front": 0,
+        "three": 0,
+        "side": 0,
+        "back": 0
+       },
+       "maxStrayPx": 0
+      },
+      {
+       "part": "ftR/boot",
+       "buried": 0.139,
+       "strayPx": {
+        "front": 0,
+        "three": 0,
+        "side": 0,
+        "back": 0
+       },
+       "maxStrayPx": 0
+      },
+      {
+       "part": "knR/bootleg",
+       "buried": 0.182,
+       "strayPx": {
+        "front": 0,
+        "three": 0,
+        "side": 0,
+        "back": 0
+       },
+       "maxStrayPx": 0
+      },
+      {
+       "part": "lgR/thigh",
+       "buried": 0.282,
+       "strayPx": {
+        "front": 0,
+        "three": 0,
+        "side": 0,
+        "back": 0
+       },
+       "maxStrayPx": 0
+      },
+      {
+       "part": "hips/trousers",
+       "buried": 0.402,
+       "strayPx": {
+        "front": 0,
+        "three": 0,
+        "side": 0,
+        "back": 0
+       },
+       "maxStrayPx": 0
+      },
+      {
+       "part": "tail/tailfin",
+       "buried": 0.299,
+       "strayPx": {
+        "front": 0,
+        "three": 0,
+        "side": 0,
+        "back": 0
+       },
+       "maxStrayPx": 0
+      }
+     ],
+     "strayHulls": [],
+     "shoulderGapDown": {
+      "L": 0,
+      "R": 0
+     },
+     "downEndSnapped": {
+      "tail": 0.039,
+      "head": 0.234
+     },
+     "downEndSnappedMinY": 0.039,
+     "shoulderGapWindup": {
+      "L": 0,
+      "R": 0
+     },
+     "sequences": {
+      "knockdown": {
+       "worst": {
+        "y": -0.008,
+        "part": "ftR/boot",
+        "phase": "idle",
+        "t": 2.833
+       },
+       "frames": 188,
+       "pass": true,
+       "downEnd": {
+        "tail": 0.039,
+        "head": 0.234
+       },
+       "cullReach": 2.378
+      },
+      "knockdown+anim": {
+       "worst": {
+        "y": -0.008,
+        "part": "ftR/boot",
+        "phase": "idle",
+        "t": 2.833
+       },
+       "frames": 188,
+       "pass": true,
+       "downEnd": {
+        "tail": 0.039,
+        "head": 0.234
+       },
+       "cullReach": 2.378
+      },
+      "attack": {
+       "worst": {
+        "y": 0.006,
+        "part": "ftR/boot",
+        "phase": "idle",
+        "t": 2.55
+       },
+       "frames": 153,
+       "pass": true,
+       "downEnd": null,
+       "cullReach": 1.191
+      },
+      "attack+anim": {
+       "worst": {
+        "y": 0.006,
+        "part": "ftR/boot",
+        "phase": "idle",
+        "t": 2.55
+       },
+       "frames": 153,
+       "pass": true,
+       "downEnd": null,
+       "cullReach": 1.191
+      },
+      "run": {
+       "worst": {
+        "y": 0.021,
+        "part": "ftR/boot",
+        "phase": "idle",
+        "t": 0.017
+       },
+       "frames": 120,
+       "pass": true,
+       "downEnd": null,
+       "cullReach": 0.967
+      },
+      "run+anim": {
+       "worst": {
+        "y": 0.021,
+        "part": "ftR/boot",
+        "phase": "idle",
+        "t": 0.017
+       },
+       "frames": 120,
+       "pass": true,
+       "downEnd": null,
+       "cullReach": 0.967
+      }
+     },
+     "lodSequences": {
+      "knockdown": {
+       "worst": {
+        "y": -0.007,
+        "part": "knR/boot",
+        "phase": "idle",
+        "t": 2.817
+       },
+       "frames": 188,
+       "pass": true,
+       "downEnd": {
+        "head": 0.234
+       },
+       "cullReach": 2.412
+      },
+      "attack": {
+       "worst": {
+        "y": 0.007,
+        "part": "knR/boot",
+        "phase": "idle",
+        "t": 2.55
+       },
+       "frames": 153,
+       "pass": true,
+       "downEnd": null,
+       "cullReach": 1.21
+      },
+      "run": {
+       "worst": {
+        "y": 0.022,
+        "part": "knR/boot",
+        "phase": "idle",
+        "t": 0.017
+       },
+       "frames": 120,
+       "pass": true,
+       "downEnd": null,
+       "cullReach": 0.967
+      }
+     },
+     "sweeps": {
+      "worst": {
+       "y": -0.009,
+       "part": "ftR/boot",
+       "pose": "idle"
+      },
+      "pass": true
+     },
+     "merge": {
+      "meshesBefore": 32,
+      "hullsBefore": 25,
+      "mergedMeshes": 3,
+      "mergedSolid": 2,
+      "mergedOutline": 1,
+      "leftovers": [],
+      "bones": 17,
+      "drawCalls": 3,
+      "shadowCalls": 2,
+      "flashShared": true,
+      "flashPx": {
+       "rigPx": 7903,
+       "unflashedPx": 0,
+       "unflashedPxWithFlashOff": 855
+      },
+      "flashCovers": true,
+      "mappedSubMaterials": 1,
+      "extras": [
+       {
+        "k": "tail",
+        "plain": true,
+        "parent": "hips"
+       }
+      ],
+      "maxVertexDy_m": 0,
+      "animMoves": {
+       "tailBone": 16,
+       "tailVerts": 247,
+       "moved_m": 0.01
+      },
+      "renderDiffPx": 34,
+      "renderDiffInteriorPx": 1,
+      "renderRigPx": 9752
+     },
+     "cullReachMax": 2.378,
+     "cullRadius": 1.9,
+     "silhouetteIoU": {
+      "front": 0.909,
+      "three": 0.876,
+      "side": 0.878
+     },
+     "pass": {
+      "budgetHD": true,
+      "budgetLOD": true,
+      "marginHD": true,
+      "marginLOD": true,
+      "marginBuried": true,
+      "marginLODGround": true,
+      "ground": true,
+      "shoulders": true,
+      "strayHulls": true,
+      "shadows": true,
+      "flash": true,
+      "hulls": true,
+      "merge": true,
+      "height": true,
+      "feet": true
+     }
+    },
+    "bruiser": {
+     "hd": {
+      "parts": 32,
+      "tris": 9788,
+      "hullTris": 8936,
+      "hulls": 25,
+      "mats": 3,
+      "casters": 23,
+      "drawCalls": 57,
+      "shadowCalls": 23,
+      "height": 2.26,
+      "feetMinY": 0.024,
+      "flashBad": 0,
+      "hullMatsOK": true,
+      "shadowRule": []
+     },
+     "lod": {
+      "parts": 12,
+      "tris": 1924,
+      "hullTris": 1924,
+      "hulls": 12,
+      "mats": 2,
+      "casters": 12,
+      "drawCalls": 24,
+      "shadowCalls": 12,
+      "height": 2.262,
+      "feetMinY": 0.022,
+      "flashBad": 0,
+      "hullMatsOK": true,
+      "shadowRule": []
+     },
+     "hullOverlap": [
+      {
+       "part": "head/head",
+       "buried": 0.211,
+       "strayPx": {
+        "front": 0,
+        "three": 0,
+        "side": 0,
+        "back": 0
+       },
+       "maxStrayPx": 0
+      },
+      {
+       "part": "head/barbel",
+       "buried": 0,
+       "strayPx": {
+        "front": 0,
+        "three": 0,
+        "side": 0,
+        "back": 0
+       },
+       "maxStrayPx": 0
+      },
+      {
+       "part": "head/chinbarbel",
+       "buried": 0.139,
+       "strayPx": {
+        "front": 0,
+        "three": 0,
+        "side": 1,
+        "back": 0
+       },
+       "maxStrayPx": 1
+      },
+      {
+       "part": "head/cap",
+       "buried": 0.253,
+       "strayPx": {
+        "front": 0,
+        "three": 0,
+        "side": 0,
+        "back": 0
+       },
+       "maxStrayPx": 0
+      },
+      {
+       "part": "head/peak",
+       "buried": 0.072,
+       "strayPx": {
+        "front": 0,
+        "three": 0,
+        "side": 0,
+        "back": 0
+       },
+       "maxStrayPx": 0
+      },
+      {
+       "part": "haL/mitt",
+       "buried": 0.304,
+       "strayPx": {
+        "front": 0,
+        "three": 0,
+        "side": 0,
+        "back": 0
+       },
+       "maxStrayPx": 0
+      },
+      {
+       "part": "elL/fore",
+       "buried": 0.376,
+       "strayPx": {
+        "front": 0,
+        "three": 0,
+        "side": 0,
+        "back": 0
+       },
+       "maxStrayPx": 0
+      },
+      {
+       "part": "shL/shoulder",
+       "buried": 0.443,
+       "strayPx": {
+        "front": 0,
+        "three": 0,
+        "side": 0,
+        "back": 0
+       },
+       "maxStrayPx": 0
+      },
+      {
+       "part": "shL/upper",
+       "buried": 0.495,
+       "strayPx": {
+        "front": 0,
+        "three": 0,
+        "side": 0,
+        "back": 7
+       },
+       "maxStrayPx": 7
+      },
+      {
+       "part": "haR/mitt",
+       "buried": 0.277,
+       "strayPx": {
+        "front": 0,
+        "three": 0,
+        "side": 0,
+        "back": 0
+       },
+       "maxStrayPx": 0
+      },
+      {
+       "part": "elR/fore",
+       "buried": 0.4,
+       "strayPx": {
+        "front": 0,
+        "three": 0,
+        "side": 0,
+        "back": 0
+       },
+       "maxStrayPx": 0
+      },
+      {
+       "part": "shR/shoulder",
+       "buried": 0.436,
+       "strayPx": {
+        "front": 0,
+        "three": 0,
+        "side": 0,
+        "back": 0
+       },
+       "maxStrayPx": 0
+      },
+      {
+       "part": "shR/upper",
+       "buried": 0.528,
+       "strayPx": {
+        "front": 0,
+        "three": 0,
+        "side": 0,
+        "back": 0
+       },
+       "maxStrayPx": 0
+      },
+      {
+       "part": "torso/sweater",
+       "buried": 0.229,
+       "strayPx": {
+        "front": 0,
+        "three": 0,
+        "side": 1,
+        "back": 0
+       },
+       "maxStrayPx": 1
+      },
+      {
+       "part": "torso/dorsal",
+       "buried": 0.247,
+       "strayPx": {
+        "front": 0,
+        "three": 0,
+        "side": 0,
+        "back": 0
+       },
+       "maxStrayPx": 0
+      },
+      {
+       "part": "ftL/boot",
+       "buried": 0.16,
+       "strayPx": {
+        "front": 0,
+        "three": 0,
+        "side": 0,
+        "back": 0
+       },
+       "maxStrayPx": 0
+      },
+      {
+       "part": "knL/bootleg",
+       "buried": 0.237,
+       "strayPx": {
+        "front": 0,
+        "three": 0,
+        "side": 0,
+        "back": 0
+       },
+       "maxStrayPx": 0
+      },
+      {
+       "part": "lgL/thigh",
+       "buried": 0.369,
+       "strayPx": {
+        "front": 0,
+        "three": 0,
+        "side": 0,
+        "back": 0
+       },
+       "maxStrayPx": 0
+      },
+      {
+       "part": "ftR/boot",
+       "buried": 0.159,
+       "strayPx": {
+        "front": 0,
+        "three": 0,
+        "side": 0,
+        "back": 0
+       },
+       "maxStrayPx": 0
+      },
+      {
+       "part": "knR/bootleg",
+       "buried": 0.237,
+       "strayPx": {
+        "front": 0,
+        "three": 0,
+        "side": 0,
+        "back": 0
+       },
+       "maxStrayPx": 0
+      },
+      {
+       "part": "lgR/thigh",
+       "buried": 0.365,
+       "strayPx": {
+        "front": 0,
+        "three": 0,
+        "side": 0,
+        "back": 0
+       },
+       "maxStrayPx": 0
+      },
+      {
+       "part": "hips/trousers",
+       "buried": 0.398,
+       "strayPx": {
+        "front": 0,
+        "three": 0,
+        "side": 0,
+        "back": 0
+       },
+       "maxStrayPx": 0
+      },
+      {
+       "part": "tail/tailfin",
+       "buried": 0.343,
+       "strayPx": {
+        "front": 0,
+        "three": 0,
+        "side": 0,
+        "back": 0
+       },
+       "maxStrayPx": 0
+      }
+     ],
+     "strayHulls": [],
+     "shoulderGapDown": {
+      "L": 0,
+      "R": 0
+     },
+     "downEndSnapped": {
+      "tail": 0.016,
+      "head": 0.281
+     },
+     "downEndSnappedMinY": 0.013,
+     "shoulderGapWindup": {
+      "L": 0,
+      "R": 0
+     },
+     "sequences": {
+      "knockdown": {
+       "worst": {
+        "y": -0.01,
+        "part": "ftR/boot",
+        "phase": "idle",
+        "t": 2.8
+       },
+       "frames": 188,
+       "pass": true,
+       "downEnd": {
+        "tail": 0.016,
+        "head": 0.281
+       },
+       "cullReach": 2.181
+      },
+      "knockdown+anim": {
+       "worst": {
+        "y": -0.01,
+        "part": "ftR/boot",
+        "phase": "idle",
+        "t": 2.8
+       },
+       "frames": 188,
+       "pass": true,
+       "downEnd": {
+        "tail": 0.016,
+        "head": 0.281
+       },
+       "cullReach": 2.181
+      },
+      "attack": {
+       "worst": {
+        "y": -0.009,
+        "part": "ftR/boot",
+        "phase": "idle",
+        "t": 2.75
+       },
+       "frames": 165,
+       "pass": true,
+       "downEnd": null,
+       "cullReach": 1.076
+      },
+      "attack+anim": {
+       "worst": {
+        "y": -0.009,
+        "part": "ftR/boot",
+        "phase": "idle",
+        "t": 2.75
+       },
+       "frames": 165,
+       "pass": true,
+       "downEnd": null,
+       "cullReach": 1.076
+      },
+      "run": {
+       "worst": {
+        "y": 0.025,
+        "part": "ftR/boot",
+        "phase": "idle",
+        "t": 0.017
+       },
+       "frames": 120,
+       "pass": true,
+       "downEnd": null,
+       "cullReach": 1.076
+      },
+      "run+anim": {
+       "worst": {
+        "y": 0.025,
+        "part": "ftR/boot",
+        "phase": "idle",
+        "t": 0.017
+       },
+       "frames": 120,
+       "pass": true,
+       "downEnd": null,
+       "cullReach": 1.076
+      }
+     },
+     "lodSequences": {
+      "knockdown": {
+       "worst": {
+        "y": -0.012,
+        "part": "knR/boot",
+        "phase": "idle",
+        "t": 2.817
+       },
+       "frames": 188,
+       "pass": true,
+       "downEnd": {
+        "head": 0.281
+       },
+       "cullReach": 2.191
+      },
+      "attack": {
+       "worst": {
+        "y": -0.011,
+        "part": "knR/boot",
+        "phase": "idle",
+        "t": 2.75
+       },
+       "frames": 165,
+       "pass": true,
+       "downEnd": null,
+       "cullReach": 1.076
+      },
+      "run": {
+       "worst": {
+        "y": 0.023,
+        "part": "knR/boot",
+        "phase": "idle",
+        "t": 0.017
+       },
+       "frames": 120,
+       "pass": true,
+       "downEnd": null,
+       "cullReach": 1.076
+      }
+     },
+     "sweeps": {
+      "worst": {
+       "y": -0.011,
+       "part": "ftR/boot",
+       "pose": "idle"
+      },
+      "pass": true
+     },
+     "merge": {
+      "meshesBefore": 32,
+      "hullsBefore": 25,
+      "mergedMeshes": 3,
+      "mergedSolid": 2,
+      "mergedOutline": 1,
+      "leftovers": [],
+      "bones": 16,
+      "drawCalls": 3,
+      "shadowCalls": 2,
+      "flashShared": true,
+      "flashPx": {
+       "rigPx": 13531,
+       "unflashedPx": 0,
+       "unflashedPxWithFlashOff": 1293
+      },
+      "flashCovers": true,
+      "mappedSubMaterials": 1,
+      "extras": [
+       {
+        "k": "tail",
+        "plain": true,
+        "parent": "hips"
+       }
+      ],
+      "maxVertexDy_m": 0,
+      "animMoves": {
+       "tailBone": 15,
+       "tailVerts": 247,
+       "moved_m": 0.013
+      },
+      "renderDiffPx": 37,
+      "renderDiffInteriorPx": 0,
+      "renderRigPx": 16235
+     },
+     "cullReachMax": 2.181,
+     "cullRadius": 1.9,
+     "silhouetteIoU": {
+      "front": 0.924,
+      "three": 0.905,
+      "side": 0.899
+     },
+     "pass": {
+      "budgetHD": true,
+      "budgetLOD": true,
+      "marginHD": true,
+      "marginLOD": true,
+      "marginBuried": true,
+      "marginLODGround": true,
+      "ground": true,
+      "shoulders": true,
+      "strayHulls": true,
+      "shadows": true,
+      "flash": true,
+      "hulls": true,
+      "merge": true,
+      "height": true,
+      "feet": true
+     }
+    }
+   },
+   "allPass": true
+  }
+ }
+]

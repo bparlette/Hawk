@@ -31,9 +31,10 @@ import { K } from './toadcity_kit.js';
 import * as GULL from './example_gull_thug.js';
 import * as HARBOR_RATS from './src/gang_harbor_rats.js';
 import * as PIER_GULLS from './src/gang_pier_gulls.js';
+import * as COBBLE_CATFISH from './src/gang_cobble_catfish.js';
 import { loadMergeRig } from './tools/game_merge.js';
 
-const MODULES = [GULL, HARBOR_RATS, PIER_GULLS];         // add new delivery modules here
+const MODULES = [GULL, HARBOR_RATS, PIER_GULLS, COBBLE_CATFISH];         // add new delivery modules here
 const POSES = ['idle', 'run', 'windup', 'attack', 'hurt', 'down', 'getup'];
 const Q = new URLSearchParams(location.search);
 const S = {
