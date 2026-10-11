@@ -102,6 +102,31 @@ function tryAction() { const c = actContext(); if (!c || c.ready === false) retu
 // ---- the POWER move: Harold's big cane slam. Hops, flips and drives the cane into the pavement: a shockwave knocks back / downs every thug
 // within ~5 m, a long hit-pause + heavy shake, and Mavis (if she is close and free) spins her handbag into the crowd at the same moment.
 const POWER_W = canvasTex(512, 192, (c) => { comicText(c, 'CANE QUAKE!', 256, 100, 80, '#7dffc0', null, { sx: 1 }); });
+// ---- WATER KILLS: a thug knocked / thrown off the promenade into the harbour splashes, sinks and counts as a KO (combo + score);
+// Harold and Mavis never drown: knocked in, they splash and climb straight back out at the dock edge they went in from.
+const SPLASH_T = canvasTex(128, 128, (c, w, h) => { c.fillStyle = '#e8f8ff'; c.strokeStyle = '#2a6a8a'; c.lineWidth = 5;
+  for (const [x, y, r] of [[64, 74, 30], [34, 54, 16], [96, 50, 18], [64, 30, 14], [22, 92, 11], [108, 92, 12]]) { c.beginPath(); c.arc(x, y, r, 0, TAU); c.fill(); c.stroke(); } });
+const SPLASH_W = canvasTex(512, 192, (c) => { comicText(c, 'SPLASH!', 256, 100, 96, '#6fd8ff', null, { sx: 1 }); });
+const WATERK = { drowned: 0, heroSplash: 0 };
+function splashFx(x, z, big = 1) {
+  for (let k = 0; k < 10 * big; k++) { const a = rnd(0, TAU), s = rnd(1, 4); spawnSprite(SPLASH_T, _v.set(x + Math.sin(a) * 0.4, WY + 0.3, z + Math.cos(a) * 0.4), rnd(0.6, 1.2) * big, rnd(0.45, 0.8), { kind: 'grow', depth: true, vel: new THREE.Vector3(Math.sin(a) * s, rnd(4, 7), Math.cos(a) * s) }); }
+  spawnSprite(SPLASH_W, _v.set(x, CURB + 2.6, z), 1.25, 0.9, { kind: 'word', aspect: 512 / 192, rot: rnd(-0.15, 0.15) });
+  sfx('heavy'); S.shake = Math.max(S.shake, 0.45);
+}
+function startDrown(e) {
+  if (e.state === 'drown') return; e.set('drown'); e.kb.set(0, 0); e.vy = 0; e.y = 0; e.fin = false; e.dz.visible = false; e.hpS.visible = false; if (e.bang) e.bang.life = 0.0001;
+  if (QTE && QTE.e === e) QTE = null; splashFx(e.pos.x, e.pos.z, e.big ? 1.4 : 1);
+  S.combo++; S.comboT = 1.6; S.maxCombo = Math.max(S.maxCombo, S.combo); S.hits++;
+}
+function drownKO(e) {
+  e.set('dead'); e.root.visible = false; e.hpS.visible = false; e.dead = true; e.hp = 0; S.kills++; sfx('ko'); WATERK.drowned++;
+  if (e.lastBy === partner) PART.kos++; else PART.heroKos++; e.respawn = 14; e.landed = false; e.J.tilt.rotation.set(0, 0, 0); $('kon').textContent = S.kills;
+}
+function heroSplash(f) {
+  const d = f.dry || { x: HERO_START.x, z: HERO_START.z }; splashFx(f.pos.x, f.pos.z); WATERK.heroSplash++;
+  f.pos.x = d.x; f.pos.z = d.z; f.pos.y = groundY(d.x, d.z); f.y = 0; f.vy = 0; f.kb.set(0, 0); f.vel.set(0, 0); f.inv = 1.5;
+  if (f.hp <= 0) f.set('ko'); else f.set('getup');
+}
 function startPower() { const h = hero; if (POWER.cd > 0) return; h.set('power'); h.pw = { hit: false }; h.vel.set(0, 0); POWER.cd = POWER.CD; POWER.uses++; sfx('jump');
   const t = pickTarget(Math.sin(h.yaw), Math.cos(h.yaw), 6); if (t) h.yaw = Math.atan2(t.pos.x - h.pos.x, t.pos.z - h.pos.z); }
 function powerImpact() {
@@ -110,7 +135,7 @@ function powerImpact() {
   for (let k = 0; k < 12; k++) { const a = k / 12 * TAU; spawnSprite(FXT.puff, _v.set(h.pos.x + Math.sin(a) * 1.6, h.pos.y + 0.2, h.pos.z + Math.cos(a) * 1.6), rnd(0.9, 1.3), 0.55, { kind: 'grow', depth: true, vel: new THREE.Vector3(Math.sin(a) * 6, 1.2, Math.cos(a) * 6) }); }
   spawnSprite(POWER_W, _v.set(h.pos.x, h.pos.y + 2.6, h.pos.z), 1.4, 0.95, { kind: 'word', aspect: 512 / 192, rot: -0.08 });
   for (const e of enemies) { if (!e.alive || e.state === 'dying' || e.fin) continue; const dx = e.pos.x - h.pos.x, dz = e.pos.z - h.pos.z, d = Math.hypot(dx, dz);
-    if (d < 5.2 && Math.abs(e.y - h.y) < 2) { if (hitEnemy(e, d < 3 ? 4 : 2, true, Math.atan2(dx, dz))) POWER.hits++; } }
+    if (d < 5.2 && Math.abs(e.y - h.y) < 2) { const a = Math.atan2(dx, dz); if (hitEnemy(e, d < 3 ? 4 : 2, true, a)) { POWER.hits++; if (e.state === 'down') { e.kb.set(Math.sin(a) * 13, Math.cos(a) * 13); e.vy = 6.5; } } } } // big launch: thugs near the edge fly into the harbour
   const P = partner; // Mavis joins in: her spinning handbag finisher, aimed at the nearest thug
   if (P.state === 'move' && P.hp > 0 && Math.hypot(P.pos.x - h.pos.x, P.pos.z - h.pos.z) < 8) { let T = null, bd = 6; for (const e of enemies) { if (!e.alive || e.state === 'dying' || e.fin) continue; const d = Math.hypot(e.pos.x - P.pos.x, e.pos.z - P.pos.z); if (d < bd) { bd = d; T = e; } }
     if (T) { POWER.joins++; P.set('atk'); P.atkN = 3; P.atkT = T; P.hitDone = false; P.hit2 = false; PART.combo = 0; PART.comboLen = 1; P.yaw = Math.atan2(T.pos.x - P.pos.x, T.pos.z - P.pos.z); spawnSprite(TAG_W, _v.set(P.pos.x, P.pos.y + 2.3, P.pos.z), 1.0, 0.8, { kind: 'word', aspect: 512 / 192, rot: 0.1 }); } }
@@ -214,7 +239,7 @@ function cineHero(h, dt) {
   if (F.hit === 0 && t >= 0.4) { F.hit = 1; e.flash = 1; sfx('hit'); spawnSprite(FXT.star, at(e.pos.y + 1.2), 1.3, 0.22, { rot: rnd(0, TAU) }); spawnSlash(_v.set(h.pos.x, h.pos.y + 0.95, h.pos.z), h.yaw + 0.25, 'side', 0.18, 1); word(FXT.words[1], F.ex, e.pos.y + 2.2, F.ez); S.shake = 0.4; }
   if (F.hit === 1 && t >= 0.8) { F.hit = 2; e.flash = 1; sfx('hit'); spawnSprite(FXT.star, at(e.pos.y + 1.3), 1.3, 0.22, { rot: rnd(0, TAU) }); spawnSlash(_v.set(h.pos.x, h.pos.y + 0.95, h.pos.z), h.yaw - 0.25, 'side', -0.18, -1); S.shake = 0.4; }
   if (F.hit === 2 && t >= 1.62) {
-    F.hit = 3; e.fin = false; e.hp = 0; e.dead = true; e.lastBy = hero; e.set('down'); e.kb.set(-F.ux * 9, -F.uz * 9); e.vy = 7.5; e.y = 0.01; e.yaw = Math.atan2(F.ux, F.uz);
+    F.hit = 3; e.fin = false; e.hp = 0; e.dead = true; e.lastBy = hero; e.set('down'); e.kb.set(-F.ux * 12, -F.uz * 12); e.vy = 7.5; e.y = 0.01; e.yaw = Math.atan2(F.ux, F.uz);
     e.flash = 1; S.hits += 3; S.combo += 3; S.comboT = 1.5; S.maxCombo = Math.max(S.maxCombo, S.combo); S.shake = 1.1; sfx('heavy');
     spawnSlash(_v.set(F.ex, e.pos.y + 0.6, F.ez), h.yaw, 'spin', 0); word(FXT.words[3], F.ex, e.pos.y + 2.4, F.ez, 1.3); spawnSprite(FXT.star, at(e.pos.y + 1.0), 1.8, 0.3);
     CINE.stats.finishers++;

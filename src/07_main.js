@@ -114,7 +114,7 @@ function updateCycle(dt) {
   const fl = on > 0.5 && Math.sin(CYC.t * 23) > 0.93 ? 0.55 : 1; // the odd neon flicker
   const mins = Math.floor(((12 + CYC.tod * 24) % 24) * 60 / 10) * 10; if (mins !== CYC.mins) { CYC.mins = mins; const h = Math.floor(mins / 60), m = mins % 60;
     $('clock').textContent = `${((h + 11) % 12) + 1}:${String(m).padStart(2, '0')} ${h < 12 ? 'AM' : 'PM'}`; }
-  const nb = lerp(0.3, 1.0, on) * (on > 0.01 ? fl : 1); NIGHTFX.neon.mat.color.setRGB(nb, nb, nb); NIGHTFX.neon.light.intensity = on * 11 * fl;
+  NIGHTFX.neon.tint(on, on > 0.01 ? fl : 1); NIGHTFX.neon.light.intensity = on * 14 * fl;
 }
 // ---------------- city HUD: landmark name popup + minimap (the harbour, landmark dots, the heroes, thugs nearby) ----------------
 const CITY = { lmk: null, lmkT: 0, nearT: 0, mapT: 0, visited: new Set(), log: [] };
@@ -195,4 +195,4 @@ function frame(now) {
   } catch (err) { __celErr.n++; __celErr.last = String(err && err.stack || err); if (__celErr.n < 4) console.error(err); }
 }
 requestAnimationFrame(frame);
-window.__cel = { S, hero, partner, PART, BOOST_P, hurtTurtle, reviveTurtle, partnerSlot, get KEYS() { return KEYS; }, enemies, CAM, BOTR, FPS, IN, renderer, CINE, ACTIONS, DOOR, PIZZA, LADDER, ROOF, get QTE() { return QTE; }, get lockT() { return lockT; }, press: (k) => PRESS.add(k), tryAction, get frames() { return frames; }, atlasRows: _ay + _arow, THREE, camera, scene, CYC, LOW, NIGHTFX, draw, QUAL, setHD, LANDMARKS, CITY, POWER, actContext, APANEL, MANHOLES, CLIMBS, VEHICLES, RIDE, isWater, groundY, WB, COLL, BLD, PIERS, POSTS, CARS, WATER };
+window.__cel = { S, hero, partner, PART, BOOST_P, hurtTurtle, reviveTurtle, partnerSlot, get KEYS() { return KEYS; }, enemies, CAM, BOTR, FPS, IN, renderer, CINE, ACTIONS, DOOR, PIZZA, LADDER, ROOF, get QTE() { return QTE; }, get lockT() { return lockT; }, press: (k) => PRESS.add(k), tryAction, get frames() { return frames; }, atlasRows: _ay + _arow, THREE, camera, scene, CYC, LOW, NIGHTFX, draw, QUAL, setHD, LANDMARKS, CITY, POWER, WATERK, startDrown, actContext, APANEL, MANHOLES, CLIMBS, VEHICLES, RIDE, isWater, groundY, WB, COLL, BLD, PIERS, POSTS, CARS, WATER };

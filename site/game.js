@@ -753,6 +753,8 @@ landmark('harborplace', 'HARBORPLACE', -52, -24, 16, { name: 'Dragon Boat Duches
   CB.box(x0, WY - 0.4, z0, x1, CURB + 1.6, z1, '#22201e', T.white);
   CB.box(x0 - 0.02, CURB + 0.4, z0 - 0.02, x1 + 0.02, CURB + 0.9, z1 + 0.02, '#e8e0c8', T.white, { top: false });
   CB.box(x0 + 0.25, CURB + 1.6, z0 + 0.3, x1 - 0.25, CURB + 1.75, z1 - 0.3, '#8a6a48', T.white);
+  for (let z = z0 + 1.2; z < z1 - 0.8; z += 1.6) for (const x of [x0 - 0.04, x1 - 0.01]) CB.box(x, CURB + 0.5, z, x + 0.05, CURB + 0.8, z + 0.5, '#111', T.white); // gunports in the white band
+  CB.box(x0 + 0.01, WY - 0.2, z0 + 0.01, x1 - 0.01, WY + 0.25, z1 - 0.01, '#3f6a52', T.white, { top: false }); // copper bottom at the waterline
   const bow = new THREE.CylinderGeometry(0.01, (x1 - x0) / 2, 4, 3, 1); bow.rotateX(-Math.PI / 2); bow.rotateZ(Math.PI); place(bow, cx, CURB + 0.6, z0 - 1.9); solid(bow, '#22201e');
   const spr = new THREE.CylinderGeometry(0.08, 0.14, 7, 5); spr.rotateX(-1.2); place(spr, cx, CURB + 2.4, z0 - 4.6); solid(spr, '#3a2a1a');
   for (const [z, h] of [[-23.5, 20], [-18, 23], [-12.5, 17]]) {
@@ -765,9 +767,14 @@ landmark('constellation', 'USS CONSTELLATION', -31, -18, 17, { name: 'Captain Co
 // World Trade Center: a tall pentagonal tower on its own pier
 (function wtc() {
   const cx = -12, cz = -22.5, r = 6.6, h = 62;
-  const g = new THREE.CylinderGeometry(r, r, h, 5, 1); place(g, cx, CURB + h / 2, cz, 0.3); solid(g, '#5d6f80');
-  for (let y = 5; y < h; y += 3.4) { const b = new THREE.CylinderGeometry(r + 0.06, r + 0.06, 0.7, 5, 1, true); place(b, cx, CURB + y, cz, 0.3); CB.geom(b, '#2a3644'); }
-  const cap = new THREE.CylinderGeometry(r + 0.3, r + 0.3, 1.2, 5); place(cap, cx, CURB + h + 0.6, cz, 0.3); solid(cap, '#c9c2b0');
+  // refs: regular pentagon, alternating full-height bands of tan precast and dark window strips, slightly recessed top floor
+  const g = new THREE.CylinderGeometry(r, r, h, 5, 1); place(g, cx, CURB + h / 2, cz, 0.3); solid(g, '#bba98a');
+  const V = []; for (let i = 0; i < 5; i++) { const a = i / 5 * TAU + 0.3; V.push([cx + Math.sin(a) * r, cz + Math.cos(a) * r]); }
+  for (let i = 0; i < 5; i++) { const [ax, az] = V[i], [bx, bz] = V[(i + 1) % 5], L = Math.hypot(bx - ax, bz - az), ang = Math.atan2(-(bz - az), bx - ax), nx = (az - bz) / L, nz = (bx - ax) / L;
+    const mx = (ax + bx) / 2, mz = (az + bz) / 2, o = (mx - cx) * nx + (mz - cz) * nz > 0 ? 1 : -1;
+    for (const t of [0.2, 0.4, 0.6, 0.8]) obox(lerp(ax, bx, t) + nx * o * 0.06, lerp(az, bz, t) + nz * o * 0.06, 0.9, 0.12, h - 4, ang, '#232a33', CURB + 2.5); }
+  const top = new THREE.CylinderGeometry(r - 0.5, r - 0.5, 3, 5); place(top, cx, CURB + h + 1.5, cz, 0.3); solid(top, '#2f3a46');
+  const cap = new THREE.CylinderGeometry(r - 0.2, r - 0.2, 0.6, 5); place(cap, cx, CURB + h + 3.3, cz, 0.3); solid(cap, '#c9c2b0');
   COLL.push({ x: cx, z: cz, r: r - 0.4 }); BLD.push({ x0: cx - r, x1: cx + r, z0: cz - r, z1: cz + r, h: CURB + h });
   signOn(cx - 4.5, cz - r, cx + 4.5, cz + r * 0.8, 's', 4.2, 8, LSIGN.trade);
 })();
@@ -775,12 +782,14 @@ landmark('wtc', 'WORLD TRADE CENTER', -12, -22, 14, { name: 'The Penthouse Pigeo
 // National Aquarium: a concrete hall with glass pyramids, on pier 3
 mass(9, -27, 29, -11, 13, { col: '#7f93a0', top: '#5a6670' });
 mass(12, -11, 26, -7, 5.5, { tr: T.glass, fh: 5.5, top: '#3a4a5a' });
-for (const [x, z, s] of [[14.5, -20, 7], [23, -17, 9.5], [19, -24, 5]]) { const g = new THREE.CylinderGeometry(0.01, s * 0.72, s * 0.75, 4, 1); g.rotateY(Math.PI / 4); place(g, x, CURB + 13 + s * 0.37, z); solid(g, '#6fc6dc'); }
+sbox(8.85, CURB + 8.5, -27.15, 29.15, CURB + 10.3, -10.85, '#26406a', false); sbox(8.9, CURB + 10.3, -27.1, 29.1, CURB + 11, -10.9, '#a8322a', false); // refs: navy + red bands on raw concrete
+for (const [x, z, s] of [[14.5, -20, 7], [23, -17, 9.5], [19, -24, 5]]) { const g = new THREE.CylinderGeometry(0.01, s * 0.72, s * 1.05, 4, 1); g.rotateY(Math.PI / 4); place(g, x, CURB + 13 + s * 0.52, z); solid(g, '#6fc6dc'); }
 signOn(9, -27, 29, -11, 's', 6, 11, LSIGN.aqua);
 landmark('aquarium', 'NATIONAL AQUARIUM', 19, -17, 19, { name: 'Big Jimmy', x: 19, z: -5, water: true });
 // Power Plant: a brick power station with four smokestacks, on pier 4
 mass(47, -27, 65, -9, 15, { tr: T.fac[0][0], top: '#4a3a30' });
-for (const x of [50, 54, 58, 62]) { const g = new THREE.CylinderGeometry(1.0, 1.35, 20, 10); place(g, x, CURB + 15 + 10, -18); solid(g, '#8a4a3a'); const r = new THREE.CylinderGeometry(1.1, 1.1, 0.6, 10); place(r, x, CURB + 34.6, -18); solid(r, '#2a2622'); }
+for (const x of [50, 54, 58, 62]) { const g = new THREE.CylinderGeometry(1.05, 1.3, 22, 12); place(g, x, CURB + 15 + 11, -18); solid(g, '#1f1d1c'); const r = new THREE.CylinderGeometry(1.18, 1.18, 0.7, 12); place(r, x, CURB + 36.6, -18); solid(r, '#3a3532'); } // refs: four black stacks in a row
+sbox(46.7, CURB + 10.6, -27.3, 65.3, CURB + 11.4, -8.7, '#e4d8bc'); mass(65, -24, 68, -12, 9, { tr: T.fac[0][1], top: '#4a3a30' }); // cream stone band, the arched east wing
 signOn(47, -27, 65, -9, 's', 6.2, 12, LSIGN.power);
 landmark('powerplant', 'POWER PLANT', 56, -17, 19, { name: 'Voltage Vic', x: 56, z: -5.5 });
 // Four Seasons (Harbor East): a podium and a glass hotel tower
@@ -842,7 +851,14 @@ landmark('fedhill', 'FEDERAL HILL', -3, 59, 24, { name: 'The Hon Queen', x: HILL
 // Domino Sugar: a tall refinery with a giant rooftop neon sign facing the harbour (original lettering)
 mass(72, 48, 92, 66, 30, { tr: T.fac[1][0], top: '#4a4640' });
 { const g = new THREE.CylinderGeometry(3.4, 3.4, 22, 12); place(g, 76, CURB + 11, 69); solid(g, '#c8c4b8'); COLL.push({ x: 76, z: 69, r: 3.6 }); }
-landmark('domino', 'DOMINO SUGAR', 82, 57, 16, { name: 'Sugar Rush', x: 82, z: 57, y: CURB + 30 });
+// the rooftop sign's open steel lattice (the sign faces itself are drawn in i_nightfx): verticals, three chords, X-bracing, back struts
+{ const C = '#3a3532', y0 = CURB + 30, zf = 50.05;
+  for (let k = 0; k <= 8; k++) obox(73 + k * 2.25, zf, 0.26, 0.26, 13.2, 0, C, y0);
+  for (const y of [1.6, 7.1, 12.6]) obox(82, zf, 18.6, 0.26, 0.26, 0, C, y0 + y);
+  for (let k = 0; k < 8; k++) for (const [ya, yb] of [[1.6, 7.1], [7.1, 12.6]]) for (const s of [1, -1]) {
+    const xa = 73 + k * 2.25, xb = xa + 2.25, L = Math.hypot(2.25, yb - ya), g = new THREE.BoxGeometry(L, 0.1, 0.1); g.rotateZ(s * Math.atan2(yb - ya, 2.25)); place(g, (xa + xb) / 2, y0 + (ya + yb) / 2, zf + 0.05); solid(g, C, false); }
+  for (const x of [73, 79.75, 84.25, 91]) { const g = new THREE.BoxGeometry(0.2, 0.2, 6.2); g.rotateX(-0.95); place(g, x, y0 + 2.6, zf + 2.2); solid(g, C, false); } }
+landmark('domino', 'DOMINO SUGARS', 82, 57, 16, { name: 'Sugar Rush', x: 82, z: 57, y: CURB + 30 });
 // Under Armour (Tide Point): brick halls with a clock tower
 mass(106, 48, 126, 56, 11, { tr: T.fac[0][0], top: '#4a3a30' }); mass(106, 60, 126, 68, 11, { tr: T.fac[0][1], top: '#4a3a30' });
 mass(113.5, 56.5, 118.5, 59.5, 22, { col: '#9a5a44', top: '#4a3a30' });
@@ -963,17 +979,43 @@ const NIGHTFX = { pools: [], halos: [], lights: [], neon: null, near: null };
     const s = LAMPS.map((L) => [(L.x - x) ** 2 + (L.z - z) ** 2, L]).sort((a, b) => a[0] - b[0]);
     NIGHTFX.lights.forEach((pl, i) => { const L = s[i][1]; pl.position.set(L.x, L.y - 0.6, L.z); });
   };
-  // Domino Sugar: a giant rooftop neon sign facing the harbour (original lettering)
-  const nc = document.createElement('canvas'); nc.width = 512; nc.height = 128; const g = nc.getContext('2d');
-  g.fillStyle = '#140a0c'; g.fillRect(0, 0, 512, 128); g.strokeStyle = '#ff3a3a'; g.lineWidth = 6; g.strokeRect(8, 8, 496, 112);
-  g.font = 'italic 900 92px ' + FONT; g.textAlign = 'center'; g.textBaseline = 'middle'; g.shadowColor = '#ff2020'; g.shadowBlur = 14; g.fillStyle = '#ff5a4a'; g.fillText('SUGAR', 256, 68, 470);
-  const nt = lowTex(nc, 256);
-  const mat = basicSnap({ map: nt, color: new THREE.Color(0.35, 0.35, 0.35), side: THREE.DoubleSide });
-  const sign = new THREE.Mesh(new THREE.PlaneGeometry(17, 4.25), mat); sign.position.set(82, CURB + 30 + 3.6, 49.6); sign.rotation.y = Math.PI; scene.add(sign);
-  const sc = new THREE.Mesh(new THREE.BoxGeometry(18, 0.25, 0.25), toonMat({ vertexColors: false, color: '#2a2622' })); sc.position.set(82, CURB + 31.2, 49.75); scene.add(sc);
-  for (const x of [75, 82, 89]) { const p = new THREE.Mesh(new THREE.BoxGeometry(0.25, 6, 0.25), sc.material); p.position.set(x, CURB + 33, 49.9); scene.add(p); }
-  const nl = new THREE.PointLight('#ff3a3a', 0, 30, 1.2); nl.position.set(82, CURB + 33, 44); scene.add(nl);
-  NIGHTFX.neon = { mat, light: nl };
+  // Domino Sugars: the real two-line script sign ("Domino" over "Sugars", rounded box border) on its open steel lattice, facing the harbour
+  // (Brad 2026-10-10, overriding the original-name rule for this sign only; matched to refs/domino-sugar sign_1 day, sign_2 + sign_night_web night).
+  // Drawn on canvas (script/italic fonts + strokes), no photo or logo file. Day: gold letters on the open frame. Night: red-orange neon with a glowing
+  // box outline, a red point light and a red reflection streak across the water. Two planes cross-fade (day / night).
+  function dominoTex(night) {
+    const c = document.createElement('canvas'); c.width = 1024; c.height = 640; const g = c.getContext('2d'); g.clearRect(0, 0, 1024, 640);
+    const RED = '#ff3a1c', CORE = '#ffc2a6', GOLD = '#f0b440', GOLD2 = '#b87a22', INKG = '#4a2e0c';
+    const glow = (b) => { g.shadowColor = night ? '#ff2a10' : 'rgba(0,0,0,0)'; g.shadowBlur = night ? b : 0; };
+    // rounded box border (double line like the tubes)
+    g.lineJoin = 'round'; rrect(g, 34, 34, 956, 572, 64);
+    if (night) { glow(34); g.strokeStyle = RED; g.lineWidth = 20; g.stroke(); glow(0); g.strokeStyle = CORE; g.lineWidth = 5; g.stroke(); }
+    else { g.strokeStyle = INKG; g.lineWidth = 24; g.stroke(); g.strokeStyle = GOLD; g.lineWidth = 15; g.stroke(); }
+    const word = (txt, x, y, font, slant, fillW) => { g.save(); g.translate(x, y); g.transform(1, 0, -slant, 1, 0, 0); g.font = font; g.textAlign = 'center'; g.textBaseline = 'alphabetic';
+      if (night) { glow(30); g.fillStyle = RED; g.fillText(txt, 0, 0, fillW); g.lineWidth = 9; g.strokeStyle = RED; g.strokeText(txt, 0, 0, fillW); glow(0); g.lineWidth = 3.5; g.strokeStyle = CORE; g.strokeText(txt, 0, 0, fillW); }
+      else { const gr = g.createLinearGradient(0, -200, 0, 20); gr.addColorStop(0, '#ffd877'); gr.addColorStop(0.55, GOLD); gr.addColorStop(1, GOLD2); g.lineWidth = 12; g.strokeStyle = INKG; g.strokeText(txt, 0, 0, fillW); g.fillStyle = gr; g.fillText(txt, 0, 0, fillW); }
+      g.restore(); };
+    word('Domino', 512, 330, 'italic 900 318px "Brush Script MT", "Snell Roundhand", "Apple Chancery", Georgia, "Times New Roman", "DejaVu Serif", serif', 0.16, 900);
+    // the swash under "Domino" (a hand-drawn tail sweeping back from the o)
+    g.save(); g.beginPath(); g.moveTo(170, 372); g.bezierCurveTo(360, 410, 650, 404, 880, 346); g.lineCap = 'round';
+    if (night) { glow(26); g.strokeStyle = RED; g.lineWidth = 15; g.stroke(); glow(0); g.strokeStyle = CORE; g.lineWidth = 4; g.stroke(); } else { g.strokeStyle = INKG; g.lineWidth = 20; g.stroke(); g.strokeStyle = GOLD; g.lineWidth = 11; g.stroke(); }
+    g.restore();
+    word('Sugars', 520, 555, 'bold 172px Georgia, "Times New Roman", "DejaVu Serif", serif', 0.02, 600);
+    return lowTex(c, 256);
+  }
+  const SW = 17, SH = 10.6, SX = 82, SY = CURB + 30 + 7.1, SZ = 49.7;
+  const dayMat = basicSnap({ map: dominoTex(false), transparent: true, depthWrite: false, side: THREE.DoubleSide, alphaTest: 0.02 });
+  const mat = basicSnap({ map: dominoTex(true), transparent: true, depthWrite: false, side: THREE.DoubleSide, opacity: 0 });
+  const signD = new THREE.Mesh(new THREE.PlaneGeometry(SW, SH), dayMat); signD.position.set(SX, SY, SZ); signD.rotation.y = Math.PI; signD.renderOrder = 4; scene.add(signD);
+  const signN = new THREE.Mesh(new THREE.PlaneGeometry(SW, SH), mat); signN.position.set(SX, SY, SZ - 0.04); signN.rotation.y = Math.PI; signN.renderOrder = 5; scene.add(signN);
+  // red reflection streak across the water toward the north shore (rippled bands)
+  const sc = document.createElement('canvas'); sc.width = 64; sc.height = 512; const sg = sc.getContext('2d'); sg.clearRect(0, 0, 64, 512);
+  for (let y = 0; y < 512; y += 6) { const a = Math.min(1, (1 - y / 512) ** 1.1 * (0.7 + 0.5 * srnd())), w = 64 * (0.5 + 0.5 * srnd()) * (1 - y / 900); sg.fillStyle = `rgba(255,${50 + (srnd() * 40) | 0},20,${a.toFixed(3)})`; sg.fillRect(32 - w / 2, y, w, 3 + srnd() * 3); }
+  const stex = lowTex(sc, 64);
+  const smat = basicSnap({ map: stex, transparent: true, depthWrite: false, blending: THREE.AdditiveBlending, fog: true, opacity: 0 });
+  const streak = new THREE.Mesh(new THREE.PlaneGeometry(11, 52), smat); streak.rotation.x = -Math.PI / 2; streak.position.set(SX, WY + 0.04, 29.6 - 26); streak.renderOrder = 3; scene.add(streak);
+  const nl = new THREE.PointLight('#ff3a2a', 0, 36, 1.2); nl.position.set(SX, CURB + 37, 43); scene.add(nl);
+  NIGHTFX.neon = { mat, dayMat, light: nl, streak, tint: (on, fl) => { mat.opacity = Math.min(1, on * 1.15) * fl; dayMat.opacity = 1 - sstep(0.15, 0.85, on); smat.opacity = on * fl; streak.visible = on > 0.02; } };
 })();
 
 // ---------------- characters: procedural stylised rigs (groups of toon parts with outline hulls) ----------------
@@ -1459,8 +1501,9 @@ function rigLod() {
 }
 
 // ---------------- world collision ----------------
+const DROWN_ST = new Set(['down', 'hurt', 'dizzy']); // knocked / thrown thugs that cross the seawall go in the harbour
 function collide(f) {
-  const p = f.pos;
+  const p = f.pos; if (f.state === 'drown') return;
   if (f.roof) { // rooftop shortcut: walk inside the parapet, around the AC unit
     p.x = clamp(p.x, ROOF.x0, ROOF.x1); p.z = clamp(p.z, ROOF.z0, ROOF.z1);
     const a = ROOF.ac, m = f.r * 0.8; if (p.x > a.x0 - m && p.x < a.x1 + m && p.z > a.z0 - m && p.z < a.z1 + m) {
@@ -1475,6 +1518,8 @@ function collide(f) {
       if (k === 0) p.x = c.x0 - m; else if (k === 1) p.x = c.x1 + m; else if (k === 2) p.z = c.z0 - m; else p.z = c.z1 + m; } }
   }
   // the harbour: never step into the water (slide along the seawall, else back to the last dry spot)
+  if (isWater(p.x, p.z) && f.post && DROWN_ST.has(f.state)) { if (f.y < 0.45) startDrown(f); return; } // thugs: in the drink (airborne ones fly on)
+  if (isWater(p.x, p.z) && !f.post && (f.state === 'down' || f.state === 'hurt')) { heroSplash(f); return; } // Harold / Mavis: splash, back on the dock
   if (isWater(p.x, p.z)) { const s = f.dry || { x: HERO_START.x, z: HERO_START.z };
     if (!isWater(p.x, s.z)) p.z = s.z; else if (!isWater(s.x, p.z)) p.x = s.x; else { p.x = s.x; p.z = s.z; } f.wet = (f.wet || 0) + 1; }
   if (!isWater(p.x, p.z)) { f.dry = f.dry || { x: 0, z: 0 }; f.dry.x = p.x; f.dry.z = p.z; }
@@ -1620,14 +1665,14 @@ const WORDS_L = [0, 1, 4, 6], WORDS_H = [1, 3, 5];
 function pickTarget(dirx, dirz, maxD = 7) {
   let best = null, bs = 1e9;
   for (const e of enemies) {
-    if (!e.alive || e.state === 'dying') continue; const dx = e.pos.x - hero.pos.x, dz = e.pos.z - hero.pos.z, d = Math.hypot(dx, dz); if (d > maxD) continue;
+    if (!e.alive || e.state === 'dying' || e.state === 'drown') continue; const dx = e.pos.x - hero.pos.x, dz = e.pos.z - hero.pos.z, d = Math.hypot(dx, dz); if (d > maxD) continue;
     const ang = Math.acos(clamp((dx * dirx + dz * dirz) / (d || 1), -1, 1));
     const s = d + ang * 2.2 + (e.state === 'down' ? 4 : 0); if (s < bs) { bs = s; best = e; }
   }
   return best;
 }
 function hitEnemy(e, dmg, heavy, fromYaw, by = hero) {
-  if (!e.alive || e.state === 'dying' || (e.state === 'down' && !heavy)) return false;
+  if (!e.alive || e.state === 'dying' || e.state === 'drown' || (e.state === 'down' && !heavy)) return false;
   e.hp -= dmg; e.lastBy = by; e.flash = 1; e.J.mat.userData.flashC.value.set('#fff'); e.hpShow = 2.5; drawHp(e); S.hits++;
   S.combo++; S.comboT = 1.3; S.maxCombo = Math.max(S.maxCombo, S.combo);
   const kx = Math.sin(fromYaw), kz = Math.cos(fromYaw);
@@ -1824,6 +1869,13 @@ function updateEnemy(e, dt) {
       if (e.st > 0.55) { e.hitDone = false; e.set('chase'); e.cool = rnd(1.1, 2.0) + (e.big ? 0.6 : 0); ATTACKERS = Math.max(0, ATTACKERS - 1); }
       break;
     }
+    case 'drown': { // in the harbour: flail, sink, KO (06b startDrown)
+      v = [0, 0]; const u = clamp(e.st / 1.2, 0, 1); e.pos.y = lerp(CURB, WY - 2.8, u * u); e.y = 0; pose = THUG_POSES.hurt(0.6 + Math.sin(e.st * 18) * 0.3, J); rate = 20;
+      e.J.tilt.rotation.z = Math.sin(e.st * 9) * 0.4 * (1 - u);
+      if (e.st > 0.35 && Math.random() < dt * 10) spawnSprite(SPLASH_T, _v.set(e.pos.x + rnd(-0.5, 0.5), WY + 0.2, e.pos.z + rnd(-0.5, 0.5)), rnd(0.35, 0.6), 0.5, { kind: 'grow', depth: true, vel: new THREE.Vector3(0, 1.2, 0) });
+      if (e.st > 1.2) drownKO(e);
+      e.sync(dt); e.hpS.visible = false; e.dz.visible = false; return;
+    }
     case 'dizzy': { // staggering, stars over the head; recovers if the QTE window passes
       v = [e.kb.x, e.kb.y]; e.kb.multiplyScalar(Math.exp(-dt * 6)); pose = THUG_POSES.dizzy(e.st, J); rate = 10;
       if (e.st > DIZZY_T) { e.set('chase'); e.cool = 0.6; }
@@ -1998,6 +2050,31 @@ function tryAction() { const c = actContext(); if (!c || c.ready === false) retu
 // ---- the POWER move: Harold's big cane slam. Hops, flips and drives the cane into the pavement: a shockwave knocks back / downs every thug
 // within ~5 m, a long hit-pause + heavy shake, and Mavis (if she is close and free) spins her handbag into the crowd at the same moment.
 const POWER_W = canvasTex(512, 192, (c) => { comicText(c, 'CANE QUAKE!', 256, 100, 80, '#7dffc0', null, { sx: 1 }); });
+// ---- WATER KILLS: a thug knocked / thrown off the promenade into the harbour splashes, sinks and counts as a KO (combo + score);
+// Harold and Mavis never drown: knocked in, they splash and climb straight back out at the dock edge they went in from.
+const SPLASH_T = canvasTex(128, 128, (c, w, h) => { c.fillStyle = '#e8f8ff'; c.strokeStyle = '#2a6a8a'; c.lineWidth = 5;
+  for (const [x, y, r] of [[64, 74, 30], [34, 54, 16], [96, 50, 18], [64, 30, 14], [22, 92, 11], [108, 92, 12]]) { c.beginPath(); c.arc(x, y, r, 0, TAU); c.fill(); c.stroke(); } });
+const SPLASH_W = canvasTex(512, 192, (c) => { comicText(c, 'SPLASH!', 256, 100, 96, '#6fd8ff', null, { sx: 1 }); });
+const WATERK = { drowned: 0, heroSplash: 0 };
+function splashFx(x, z, big = 1) {
+  for (let k = 0; k < 10 * big; k++) { const a = rnd(0, TAU), s = rnd(1, 4); spawnSprite(SPLASH_T, _v.set(x + Math.sin(a) * 0.4, WY + 0.3, z + Math.cos(a) * 0.4), rnd(0.6, 1.2) * big, rnd(0.45, 0.8), { kind: 'grow', depth: true, vel: new THREE.Vector3(Math.sin(a) * s, rnd(4, 7), Math.cos(a) * s) }); }
+  spawnSprite(SPLASH_W, _v.set(x, CURB + 2.6, z), 1.25, 0.9, { kind: 'word', aspect: 512 / 192, rot: rnd(-0.15, 0.15) });
+  sfx('heavy'); S.shake = Math.max(S.shake, 0.45);
+}
+function startDrown(e) {
+  if (e.state === 'drown') return; e.set('drown'); e.kb.set(0, 0); e.vy = 0; e.y = 0; e.fin = false; e.dz.visible = false; e.hpS.visible = false; if (e.bang) e.bang.life = 0.0001;
+  if (QTE && QTE.e === e) QTE = null; splashFx(e.pos.x, e.pos.z, e.big ? 1.4 : 1);
+  S.combo++; S.comboT = 1.6; S.maxCombo = Math.max(S.maxCombo, S.combo); S.hits++;
+}
+function drownKO(e) {
+  e.set('dead'); e.root.visible = false; e.hpS.visible = false; e.dead = true; e.hp = 0; S.kills++; sfx('ko'); WATERK.drowned++;
+  if (e.lastBy === partner) PART.kos++; else PART.heroKos++; e.respawn = 14; e.landed = false; e.J.tilt.rotation.set(0, 0, 0); $('kon').textContent = S.kills;
+}
+function heroSplash(f) {
+  const d = f.dry || { x: HERO_START.x, z: HERO_START.z }; splashFx(f.pos.x, f.pos.z); WATERK.heroSplash++;
+  f.pos.x = d.x; f.pos.z = d.z; f.pos.y = groundY(d.x, d.z); f.y = 0; f.vy = 0; f.kb.set(0, 0); f.vel.set(0, 0); f.inv = 1.5;
+  if (f.hp <= 0) f.set('ko'); else f.set('getup');
+}
 function startPower() { const h = hero; if (POWER.cd > 0) return; h.set('power'); h.pw = { hit: false }; h.vel.set(0, 0); POWER.cd = POWER.CD; POWER.uses++; sfx('jump');
   const t = pickTarget(Math.sin(h.yaw), Math.cos(h.yaw), 6); if (t) h.yaw = Math.atan2(t.pos.x - h.pos.x, t.pos.z - h.pos.z); }
 function powerImpact() {
@@ -2006,7 +2083,7 @@ function powerImpact() {
   for (let k = 0; k < 12; k++) { const a = k / 12 * TAU; spawnSprite(FXT.puff, _v.set(h.pos.x + Math.sin(a) * 1.6, h.pos.y + 0.2, h.pos.z + Math.cos(a) * 1.6), rnd(0.9, 1.3), 0.55, { kind: 'grow', depth: true, vel: new THREE.Vector3(Math.sin(a) * 6, 1.2, Math.cos(a) * 6) }); }
   spawnSprite(POWER_W, _v.set(h.pos.x, h.pos.y + 2.6, h.pos.z), 1.4, 0.95, { kind: 'word', aspect: 512 / 192, rot: -0.08 });
   for (const e of enemies) { if (!e.alive || e.state === 'dying' || e.fin) continue; const dx = e.pos.x - h.pos.x, dz = e.pos.z - h.pos.z, d = Math.hypot(dx, dz);
-    if (d < 5.2 && Math.abs(e.y - h.y) < 2) { if (hitEnemy(e, d < 3 ? 4 : 2, true, Math.atan2(dx, dz))) POWER.hits++; } }
+    if (d < 5.2 && Math.abs(e.y - h.y) < 2) { const a = Math.atan2(dx, dz); if (hitEnemy(e, d < 3 ? 4 : 2, true, a)) { POWER.hits++; if (e.state === 'down') { e.kb.set(Math.sin(a) * 13, Math.cos(a) * 13); e.vy = 6.5; } } } } // big launch: thugs near the edge fly into the harbour
   const P = partner; // Mavis joins in: her spinning handbag finisher, aimed at the nearest thug
   if (P.state === 'move' && P.hp > 0 && Math.hypot(P.pos.x - h.pos.x, P.pos.z - h.pos.z) < 8) { let T = null, bd = 6; for (const e of enemies) { if (!e.alive || e.state === 'dying' || e.fin) continue; const d = Math.hypot(e.pos.x - P.pos.x, e.pos.z - P.pos.z); if (d < bd) { bd = d; T = e; } }
     if (T) { POWER.joins++; P.set('atk'); P.atkN = 3; P.atkT = T; P.hitDone = false; P.hit2 = false; PART.combo = 0; PART.comboLen = 1; P.yaw = Math.atan2(T.pos.x - P.pos.x, T.pos.z - P.pos.z); spawnSprite(TAG_W, _v.set(P.pos.x, P.pos.y + 2.3, P.pos.z), 1.0, 0.8, { kind: 'word', aspect: 512 / 192, rot: 0.1 }); } }
@@ -2110,7 +2187,7 @@ function cineHero(h, dt) {
   if (F.hit === 0 && t >= 0.4) { F.hit = 1; e.flash = 1; sfx('hit'); spawnSprite(FXT.star, at(e.pos.y + 1.2), 1.3, 0.22, { rot: rnd(0, TAU) }); spawnSlash(_v.set(h.pos.x, h.pos.y + 0.95, h.pos.z), h.yaw + 0.25, 'side', 0.18, 1); word(FXT.words[1], F.ex, e.pos.y + 2.2, F.ez); S.shake = 0.4; }
   if (F.hit === 1 && t >= 0.8) { F.hit = 2; e.flash = 1; sfx('hit'); spawnSprite(FXT.star, at(e.pos.y + 1.3), 1.3, 0.22, { rot: rnd(0, TAU) }); spawnSlash(_v.set(h.pos.x, h.pos.y + 0.95, h.pos.z), h.yaw - 0.25, 'side', -0.18, -1); S.shake = 0.4; }
   if (F.hit === 2 && t >= 1.62) {
-    F.hit = 3; e.fin = false; e.hp = 0; e.dead = true; e.lastBy = hero; e.set('down'); e.kb.set(-F.ux * 9, -F.uz * 9); e.vy = 7.5; e.y = 0.01; e.yaw = Math.atan2(F.ux, F.uz);
+    F.hit = 3; e.fin = false; e.hp = 0; e.dead = true; e.lastBy = hero; e.set('down'); e.kb.set(-F.ux * 12, -F.uz * 12); e.vy = 7.5; e.y = 0.01; e.yaw = Math.atan2(F.ux, F.uz);
     e.flash = 1; S.hits += 3; S.combo += 3; S.comboT = 1.5; S.maxCombo = Math.max(S.maxCombo, S.combo); S.shake = 1.1; sfx('heavy');
     spawnSlash(_v.set(F.ex, e.pos.y + 0.6, F.ez), h.yaw, 'spin', 0); word(FXT.words[3], F.ex, e.pos.y + 2.4, F.ez, 1.3); spawnSprite(FXT.star, at(e.pos.y + 1.0), 1.8, 0.3);
     CINE.stats.finishers++;
@@ -2666,7 +2743,7 @@ function updateCycle(dt) {
   const fl = on > 0.5 && Math.sin(CYC.t * 23) > 0.93 ? 0.55 : 1; // the odd neon flicker
   const mins = Math.floor(((12 + CYC.tod * 24) % 24) * 60 / 10) * 10; if (mins !== CYC.mins) { CYC.mins = mins; const h = Math.floor(mins / 60), m = mins % 60;
     $('clock').textContent = `${((h + 11) % 12) + 1}:${String(m).padStart(2, '0')} ${h < 12 ? 'AM' : 'PM'}`; }
-  const nb = lerp(0.3, 1.0, on) * (on > 0.01 ? fl : 1); NIGHTFX.neon.mat.color.setRGB(nb, nb, nb); NIGHTFX.neon.light.intensity = on * 11 * fl;
+  NIGHTFX.neon.tint(on, on > 0.01 ? fl : 1); NIGHTFX.neon.light.intensity = on * 14 * fl;
 }
 // ---------------- city HUD: landmark name popup + minimap (the harbour, landmark dots, the heroes, thugs nearby) ----------------
 const CITY = { lmk: null, lmkT: 0, nearT: 0, mapT: 0, visited: new Set(), log: [] };
@@ -2747,4 +2824,4 @@ function frame(now) {
   } catch (err) { __celErr.n++; __celErr.last = String(err && err.stack || err); if (__celErr.n < 4) console.error(err); }
 }
 requestAnimationFrame(frame);
-window.__cel = { S, hero, partner, PART, BOOST_P, hurtTurtle, reviveTurtle, partnerSlot, get KEYS() { return KEYS; }, enemies, CAM, BOTR, FPS, IN, renderer, CINE, ACTIONS, DOOR, PIZZA, LADDER, ROOF, get QTE() { return QTE; }, get lockT() { return lockT; }, press: (k) => PRESS.add(k), tryAction, get frames() { return frames; }, atlasRows: _ay + _arow, THREE, camera, scene, CYC, LOW, NIGHTFX, draw, QUAL, setHD, LANDMARKS, CITY, POWER, actContext, APANEL, MANHOLES, CLIMBS, VEHICLES, RIDE, isWater, groundY, WB, COLL, BLD, PIERS, POSTS, CARS, WATER };
+window.__cel = { S, hero, partner, PART, BOOST_P, hurtTurtle, reviveTurtle, partnerSlot, get KEYS() { return KEYS; }, enemies, CAM, BOTR, FPS, IN, renderer, CINE, ACTIONS, DOOR, PIZZA, LADDER, ROOF, get QTE() { return QTE; }, get lockT() { return lockT; }, press: (k) => PRESS.add(k), tryAction, get frames() { return frames; }, atlasRows: _ay + _arow, THREE, camera, scene, CYC, LOW, NIGHTFX, draw, QUAL, setHD, LANDMARKS, CITY, POWER, WATERK, startDrown, actContext, APANEL, MANHOLES, CLIMBS, VEHICLES, RIDE, isWater, groundY, WB, COLL, BLD, PIERS, POSTS, CARS, WATER };

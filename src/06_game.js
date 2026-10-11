@@ -64,8 +64,9 @@ function rigLod() {
 }
 
 // ---------------- world collision ----------------
+const DROWN_ST = new Set(['down', 'hurt', 'dizzy']); // knocked / thrown thugs that cross the seawall go in the harbour
 function collide(f) {
-  const p = f.pos;
+  const p = f.pos; if (f.state === 'drown') return;
   if (f.roof) { // rooftop shortcut: walk inside the parapet, around the AC unit
     p.x = clamp(p.x, ROOF.x0, ROOF.x1); p.z = clamp(p.z, ROOF.z0, ROOF.z1);
     const a = ROOF.ac, m = f.r * 0.8; if (p.x > a.x0 - m && p.x < a.x1 + m && p.z > a.z0 - m && p.z < a.z1 + m) {
@@ -80,6 +81,8 @@ function collide(f) {
       if (k === 0) p.x = c.x0 - m; else if (k === 1) p.x = c.x1 + m; else if (k === 2) p.z = c.z0 - m; else p.z = c.z1 + m; } }
   }
   // the harbour: never step into the water (slide along the seawall, else back to the last dry spot)
+  if (isWater(p.x, p.z) && f.post && DROWN_ST.has(f.state)) { if (f.y < 0.45) startDrown(f); return; } // thugs: in the drink (airborne ones fly on)
+  if (isWater(p.x, p.z) && !f.post && (f.state === 'down' || f.state === 'hurt')) { heroSplash(f); return; } // Harold / Mavis: splash, back on the dock
   if (isWater(p.x, p.z)) { const s = f.dry || { x: HERO_START.x, z: HERO_START.z };
     if (!isWater(p.x, s.z)) p.z = s.z; else if (!isWater(s.x, p.z)) p.x = s.x; else { p.x = s.x; p.z = s.z; } f.wet = (f.wet || 0) + 1; }
   if (!isWater(p.x, p.z)) { f.dry = f.dry || { x: 0, z: 0 }; f.dry.x = p.x; f.dry.z = p.z; }
@@ -225,14 +228,14 @@ const WORDS_L = [0, 1, 4, 6], WORDS_H = [1, 3, 5];
 function pickTarget(dirx, dirz, maxD = 7) {
   let best = null, bs = 1e9;
   for (const e of enemies) {
-    if (!e.alive || e.state === 'dying') continue; const dx = e.pos.x - hero.pos.x, dz = e.pos.z - hero.pos.z, d = Math.hypot(dx, dz); if (d > maxD) continue;
+    if (!e.alive || e.state === 'dying' || e.state === 'drown') continue; const dx = e.pos.x - hero.pos.x, dz = e.pos.z - hero.pos.z, d = Math.hypot(dx, dz); if (d > maxD) continue;
     const ang = Math.acos(clamp((dx * dirx + dz * dirz) / (d || 1), -1, 1));
     const s = d + ang * 2.2 + (e.state === 'down' ? 4 : 0); if (s < bs) { bs = s; best = e; }
   }
   return best;
 }
 function hitEnemy(e, dmg, heavy, fromYaw, by = hero) {
-  if (!e.alive || e.state === 'dying' || (e.state === 'down' && !heavy)) return false;
+  if (!e.alive || e.state === 'dying' || e.state === 'drown' || (e.state === 'down' && !heavy)) return false;
   e.hp -= dmg; e.lastBy = by; e.flash = 1; e.J.mat.userData.flashC.value.set('#fff'); e.hpShow = 2.5; drawHp(e); S.hits++;
   S.combo++; S.comboT = 1.3; S.maxCombo = Math.max(S.maxCombo, S.combo);
   const kx = Math.sin(fromYaw), kz = Math.cos(fromYaw);
@@ -428,6 +431,13 @@ function updateEnemy(e, dt) {
         if (dP < reach && ang < 1.0 && tg.y < 0.9 && T0) hurtTurtle(tg, e.big ? 16 : e.armed ? 11 : 8, e.pos.x, e.pos.z, e.big); }
       if (e.st > 0.55) { e.hitDone = false; e.set('chase'); e.cool = rnd(1.1, 2.0) + (e.big ? 0.6 : 0); ATTACKERS = Math.max(0, ATTACKERS - 1); }
       break;
+    }
+    case 'drown': { // in the harbour: flail, sink, KO (06b startDrown)
+      v = [0, 0]; const u = clamp(e.st / 1.2, 0, 1); e.pos.y = lerp(CURB, WY - 2.8, u * u); e.y = 0; pose = THUG_POSES.hurt(0.6 + Math.sin(e.st * 18) * 0.3, J); rate = 20;
+      e.J.tilt.rotation.z = Math.sin(e.st * 9) * 0.4 * (1 - u);
+      if (e.st > 0.35 && Math.random() < dt * 10) spawnSprite(SPLASH_T, _v.set(e.pos.x + rnd(-0.5, 0.5), WY + 0.2, e.pos.z + rnd(-0.5, 0.5)), rnd(0.35, 0.6), 0.5, { kind: 'grow', depth: true, vel: new THREE.Vector3(0, 1.2, 0) });
+      if (e.st > 1.2) drownKO(e);
+      e.sync(dt); e.hpS.visible = false; e.dz.visible = false; return;
     }
     case 'dizzy': { // staggering, stars over the head; recovers if the QTE window passes
       v = [e.kb.x, e.kb.y]; e.kb.multiplyScalar(Math.exp(-dt * 6)); pose = THUG_POSES.dizzy(e.st, J); rate = 10;

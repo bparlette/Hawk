@@ -25,7 +25,7 @@ const pw = require('/workspace/work/trailer_v2/node_modules/playwright-core');
   ok('building_pratt', await walk(-20, -44, 0, 1500));
   ok('building_aquarium', await walk(19, -6, 0, 1500));
   // 3. Federal Hill is walkable: walk up from Key Hwy
-  ok('fedhill', await walk(-3, 45, Math.PI, 2600));
+  ok('fedhill', await walk(12, 45, Math.PI, 7000));
   await p.screenshot({ path: pre + 'fedhill.png' });
   // 4. cycle values (default 600 s loop) + clock
   ok('cycle', await p.evaluate(async () => { const C = __cel.CYC, len = C.len; C.pin = null; const out = [];
@@ -37,7 +37,7 @@ const pw = require('/workspace/work/trailer_v2/node_modules/playwright-core');
       R.info.autoReset = false; R.info.reset(); await new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(r))); out.push({ at: [x, z], calls: R.info.render.calls, tris: R.info.render.triangles }); R.info.autoReset = true; R.info.reset(); }
     return out; }));
   // 6. ACT = POWER move in a fight (touch: tap the panel's ACT button; desktop: E), and the arcade stick (touch: drag on the panel's left side)
-  await p.evaluate(() => { const C = __cel, e = C.enemies[2]; C.CYC.pin = 0.1; C.hero.inv = 1e9; C.hero.hp = 100; C.hero.pos.set(e.pos.x - 1.6, 0.16, e.pos.z); C.hero.set('move'); C.POWER.cd = 0; });
+  await p.evaluate(() => { const C = __cel, e = C.enemies[2]; C.CYC.pin = 0.1; C.hero.inv = 1e9; C.hero.hp = 100; C.hero.pos.set(e.pos.x - 1.6, 0.16, e.pos.z); C.hero.set('move'); C.POWER.cd = 0; C.partner.hp = 100; C.partner.set('move'); C.partner.pos.set(e.pos.x - 3, 0.16, e.pos.z - 2); });
   await p.waitForTimeout(1500);
   const ctx0 = await p.evaluate(() => { const c = __cel.actContext(); return c ? c.kind + ':' + c.label : null; });
   let taps = 0; for (; taps < 3; taps++) { if (await p.evaluate(() => __cel.POWER.uses > 0)) break;
@@ -47,6 +47,15 @@ const pw = require('/workspace/work/trailer_v2/node_modules/playwright-core');
   await p.waitForTimeout(2500);
   await p.screenshot({ path: pre + 'power.png' });
   ok('power', { taps, ctxBefore: ctx0, label: await p.evaluate(() => document.getElementById('albl-c').textContent), stats: await p.evaluate(() => ({ uses: __cel.POWER.uses, hits: __cel.POWER.hits, joins: __cel.POWER.joins, cd: +__cel.POWER.cd.toFixed(1) })) });
+  // 7. WATER KILLS: a thug at the promenade edge, POWER move from the land side -> it flies in, splashes, sinks, counts as a KO; Harold knocked in -> back on the dock
+  const k0 = await p.evaluate(() => { const C = __cel, e = C.enemies[4]; e.hp = e.maxHp; e.dizzied = true; e.set('chase'); e.pos.set(-27, 0.16, -30.6); e.root.visible = true; C.hero.pos.set(-27, 0.16, -32.5); C.partner.hp = 100; C.partner.pos.set(-30, 0.16, -34); C.partner.set('move'); C.hero.set('move'); C.hero.yaw = 0; C.POWER.cd = 0; return C.S.kills; });
+  await p.waitForTimeout(300); await p.evaluate(() => __cel.press('e'));
+  await p.waitForFunction(() => __cel.WATERK.drowned > 0, null, { timeout: 25000 }).catch(() => {}); await p.waitForTimeout(600);
+  await p.screenshot({ path: pre + 'splash.png' });
+  const wk = await p.evaluate(() => ({ drowned: __cel.WATERK.drowned, e4: __cel.enemies[4].state, kills: __cel.S.kills, power: __cel.POWER.uses }));
+  await p.evaluate(() => { const H = __cel.hero; H.inv = 0; H.pos.set(-27, 0.16, -30.6); H.dry = { x: -27, z: -31 }; H.set('down'); H.kb.set(0, 6); H.vy = 3; H.y = 0.01; });
+  await p.waitForFunction(() => __cel.WATERK.heroSplash > 0, null, { timeout: 20000 }).catch(() => {}); await p.waitForTimeout(1500);
+  ok('waterkills', Object.assign(wk, { killsBefore: k0, heroSplash: await p.evaluate(() => __cel.WATERK.heroSplash), heroAfter: await p.evaluate(() => { const H = __cel.hero; return [+H.pos.x.toFixed(1), +H.pos.z.toFixed(1), H.state, __cel.isWater(H.pos.x, H.pos.z)]; }) }));
   if (mob) {
     const r = await p.evaluate(() => { const b = document.getElementById('adeck').getBoundingClientRect(), a = document.getElementById('aact').getBoundingClientRect(), s = document.getElementById('astick').getBoundingClientRect(), j = document.getElementById('acap-a').getBoundingClientRect(), g = document.getElementById('gl').getBoundingClientRect();
       return { deck: [Math.round(b.width), Math.round(b.height)], act: Math.round(a.width), swing: Math.round(j.width), stick: [Math.round(s.width), Math.round(s.height)], game: [Math.round(g.width), Math.round(g.height)], panelH: getComputedStyle(document.documentElement).getPropertyValue('--panel') }; });
@@ -72,7 +81,7 @@ const pw = require('/workspace/work/trailer_v2/node_modules/playwright-core');
     await p.waitForTimeout(1000);
   }
   await p.screenshot({ path: pre + 'botend.png' });
-  ok('bot', await p.evaluate(() => { const C = __cel; return { done: C.BOTR.done, simSec: +C.S.time.toFixed(1), route: C.BOTR.log, landmarksVisited: C.CITY.log, kills: C.S.kills, hits: C.S.hits, qtePressed: C.BOTR.qtePressed || 0, finishers: C.CINE.stats.finishers, power: C.POWER.uses, powerHits: C.POWER.hits, powerJoins: C.POWER.joins, tags: C.CINE.stats.tags, heroHp: C.hero.hp, heroDowns: C.S.playerDowns, partnerTp: C.PART.teleports, partnerKos: C.PART.kos, hero: [+C.hero.pos.x.toFixed(1), +C.hero.pos.z.toFixed(1)], err: __celErr }; }));
+  ok('bot', await p.evaluate(() => { const C = __cel; return { done: C.BOTR.done, simSec: +C.S.time.toFixed(1), route: C.BOTR.log, landmarksVisited: C.CITY.log, kills: C.S.kills, hits: C.S.hits, qtePressed: C.BOTR.qtePressed || 0, finishers: C.CINE.stats.finishers, drowned: C.WATERK.drowned, power: C.POWER.uses, powerHits: C.POWER.hits, powerJoins: C.POWER.joins, tags: C.CINE.stats.tags, heroHp: C.hero.hp, heroDowns: C.S.playerDowns, partnerTp: C.PART.teleports, partnerKos: C.PART.kos, hero: [+C.hero.pos.x.toFixed(1), +C.hero.pos.z.toFixed(1)], err: __celErr }; }));
   ok('info', await p.evaluate(() => ({ sw: document.documentElement.scrollWidth, iw: innerWidth, fps: __cel.FPS.v })));
   console.log('ERRORS', errs.length, errs.slice(0, 10).join('\n'));
   await b.close();

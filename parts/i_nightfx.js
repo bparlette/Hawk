@@ -29,15 +29,41 @@ const NIGHTFX = { pools: [], halos: [], lights: [], neon: null, near: null };
     const s = LAMPS.map((L) => [(L.x - x) ** 2 + (L.z - z) ** 2, L]).sort((a, b) => a[0] - b[0]);
     NIGHTFX.lights.forEach((pl, i) => { const L = s[i][1]; pl.position.set(L.x, L.y - 0.6, L.z); });
   };
-  // Domino Sugar: a giant rooftop neon sign facing the harbour (original lettering)
-  const nc = document.createElement('canvas'); nc.width = 512; nc.height = 128; const g = nc.getContext('2d');
-  g.fillStyle = '#140a0c'; g.fillRect(0, 0, 512, 128); g.strokeStyle = '#ff3a3a'; g.lineWidth = 6; g.strokeRect(8, 8, 496, 112);
-  g.font = 'italic 900 92px ' + FONT; g.textAlign = 'center'; g.textBaseline = 'middle'; g.shadowColor = '#ff2020'; g.shadowBlur = 14; g.fillStyle = '#ff5a4a'; g.fillText('SUGAR', 256, 68, 470);
-  const nt = lowTex(nc, 256);
-  const mat = basicSnap({ map: nt, color: new THREE.Color(0.35, 0.35, 0.35), side: THREE.DoubleSide });
-  const sign = new THREE.Mesh(new THREE.PlaneGeometry(17, 4.25), mat); sign.position.set(82, CURB + 30 + 3.6, 49.6); sign.rotation.y = Math.PI; scene.add(sign);
-  const sc = new THREE.Mesh(new THREE.BoxGeometry(18, 0.25, 0.25), toonMat({ vertexColors: false, color: '#2a2622' })); sc.position.set(82, CURB + 31.2, 49.75); scene.add(sc);
-  for (const x of [75, 82, 89]) { const p = new THREE.Mesh(new THREE.BoxGeometry(0.25, 6, 0.25), sc.material); p.position.set(x, CURB + 33, 49.9); scene.add(p); }
-  const nl = new THREE.PointLight('#ff3a3a', 0, 30, 1.2); nl.position.set(82, CURB + 33, 44); scene.add(nl);
-  NIGHTFX.neon = { mat, light: nl };
+  // Domino Sugars: the real two-line script sign ("Domino" over "Sugars", rounded box border) on its open steel lattice, facing the harbour
+  // (Brad 2026-10-10, overriding the original-name rule for this sign only; matched to refs/domino-sugar sign_1 day, sign_2 + sign_night_web night).
+  // Drawn on canvas (script/italic fonts + strokes), no photo or logo file. Day: gold letters on the open frame. Night: red-orange neon with a glowing
+  // box outline, a red point light and a red reflection streak across the water. Two planes cross-fade (day / night).
+  function dominoTex(night) {
+    const c = document.createElement('canvas'); c.width = 1024; c.height = 640; const g = c.getContext('2d'); g.clearRect(0, 0, 1024, 640);
+    const RED = '#ff3a1c', CORE = '#ffc2a6', GOLD = '#f0b440', GOLD2 = '#b87a22', INKG = '#4a2e0c';
+    const glow = (b) => { g.shadowColor = night ? '#ff2a10' : 'rgba(0,0,0,0)'; g.shadowBlur = night ? b : 0; };
+    // rounded box border (double line like the tubes)
+    g.lineJoin = 'round'; rrect(g, 34, 34, 956, 572, 64);
+    if (night) { glow(34); g.strokeStyle = RED; g.lineWidth = 20; g.stroke(); glow(0); g.strokeStyle = CORE; g.lineWidth = 5; g.stroke(); }
+    else { g.strokeStyle = INKG; g.lineWidth = 24; g.stroke(); g.strokeStyle = GOLD; g.lineWidth = 15; g.stroke(); }
+    const word = (txt, x, y, font, slant, fillW) => { g.save(); g.translate(x, y); g.transform(1, 0, -slant, 1, 0, 0); g.font = font; g.textAlign = 'center'; g.textBaseline = 'alphabetic';
+      if (night) { glow(30); g.fillStyle = RED; g.fillText(txt, 0, 0, fillW); g.lineWidth = 9; g.strokeStyle = RED; g.strokeText(txt, 0, 0, fillW); glow(0); g.lineWidth = 3.5; g.strokeStyle = CORE; g.strokeText(txt, 0, 0, fillW); }
+      else { const gr = g.createLinearGradient(0, -200, 0, 20); gr.addColorStop(0, '#ffd877'); gr.addColorStop(0.55, GOLD); gr.addColorStop(1, GOLD2); g.lineWidth = 12; g.strokeStyle = INKG; g.strokeText(txt, 0, 0, fillW); g.fillStyle = gr; g.fillText(txt, 0, 0, fillW); }
+      g.restore(); };
+    word('Domino', 512, 330, 'italic 900 318px "Brush Script MT", "Snell Roundhand", "Apple Chancery", Georgia, "Times New Roman", "DejaVu Serif", serif', 0.16, 900);
+    // the swash under "Domino" (a hand-drawn tail sweeping back from the o)
+    g.save(); g.beginPath(); g.moveTo(170, 372); g.bezierCurveTo(360, 410, 650, 404, 880, 346); g.lineCap = 'round';
+    if (night) { glow(26); g.strokeStyle = RED; g.lineWidth = 15; g.stroke(); glow(0); g.strokeStyle = CORE; g.lineWidth = 4; g.stroke(); } else { g.strokeStyle = INKG; g.lineWidth = 20; g.stroke(); g.strokeStyle = GOLD; g.lineWidth = 11; g.stroke(); }
+    g.restore();
+    word('Sugars', 520, 555, 'bold 172px Georgia, "Times New Roman", "DejaVu Serif", serif', 0.02, 600);
+    return lowTex(c, 256);
+  }
+  const SW = 17, SH = 10.6, SX = 82, SY = CURB + 30 + 7.1, SZ = 49.7;
+  const dayMat = basicSnap({ map: dominoTex(false), transparent: true, depthWrite: false, side: THREE.DoubleSide, alphaTest: 0.02 });
+  const mat = basicSnap({ map: dominoTex(true), transparent: true, depthWrite: false, side: THREE.DoubleSide, opacity: 0 });
+  const signD = new THREE.Mesh(new THREE.PlaneGeometry(SW, SH), dayMat); signD.position.set(SX, SY, SZ); signD.rotation.y = Math.PI; signD.renderOrder = 4; scene.add(signD);
+  const signN = new THREE.Mesh(new THREE.PlaneGeometry(SW, SH), mat); signN.position.set(SX, SY, SZ - 0.04); signN.rotation.y = Math.PI; signN.renderOrder = 5; scene.add(signN);
+  // red reflection streak across the water toward the north shore (rippled bands)
+  const sc = document.createElement('canvas'); sc.width = 64; sc.height = 512; const sg = sc.getContext('2d'); sg.clearRect(0, 0, 64, 512);
+  for (let y = 0; y < 512; y += 6) { const a = Math.min(1, (1 - y / 512) ** 1.1 * (0.7 + 0.5 * srnd())), w = 64 * (0.5 + 0.5 * srnd()) * (1 - y / 900); sg.fillStyle = `rgba(255,${50 + (srnd() * 40) | 0},20,${a.toFixed(3)})`; sg.fillRect(32 - w / 2, y, w, 3 + srnd() * 3); }
+  const stex = lowTex(sc, 64);
+  const smat = basicSnap({ map: stex, transparent: true, depthWrite: false, blending: THREE.AdditiveBlending, fog: true, opacity: 0 });
+  const streak = new THREE.Mesh(new THREE.PlaneGeometry(11, 52), smat); streak.rotation.x = -Math.PI / 2; streak.position.set(SX, WY + 0.04, 29.6 - 26); streak.renderOrder = 3; scene.add(streak);
+  const nl = new THREE.PointLight('#ff3a2a', 0, 36, 1.2); nl.position.set(SX, CURB + 37, 43); scene.add(nl);
+  NIGHTFX.neon = { mat, dayMat, light: nl, streak, tint: (on, fl) => { mat.opacity = Math.min(1, on * 1.15) * fl; dayMat.opacity = 1 - sstep(0.15, 0.85, on); smat.opacity = on * fl; streak.visible = on > 0.02; } };
 })();
