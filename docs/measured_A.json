@@ -1,0 +1,268 @@
+{
+ "rowhouse": {
+  "meshes": 3,
+  "hulls": 1,
+  "parts": 3,
+  "drawCalls": 4,
+  "shadowCalls": 2,
+  "tris": 1516,
+  "trisNoHull": 1434,
+  "materials": 4,
+  "geoms": 4,
+  "coll": 2,
+  "bld": 1,
+  "lamps": 0,
+  "hooks": {},
+  "meta": {
+   "width": 4.876710712386626,
+   "depth": 13.196603424473015,
+   "height": 12.149999999999999
+  },
+  "bbox": [
+   -2.47,
+   0.16,
+   -13.2,
+   2.47,
+   13.41,
+   1.63
+  ]
+ },
+ "rowhouse_brick": {
+  "meshes": 3,
+  "hulls": 1,
+  "parts": 3,
+  "drawCalls": 4,
+  "shadowCalls": 2,
+  "tris": 1516,
+  "trisNoHull": 1434,
+  "materials": 4,
+  "geoms": 4,
+  "coll": 2,
+  "bld": 1,
+  "lamps": 0,
+  "hooks": {},
+  "meta": {
+   "width": 4.876710712386626,
+   "depth": 13.196603424473015,
+   "height": 12.149999999999999
+  },
+  "bbox": [
+   -2.47,
+   0.16,
+   -13.2,
+   2.47,
+   13.41,
+   1.63
+  ]
+ },
+ "rowhouse_permastone": {
+  "meshes": 3,
+  "hulls": 1,
+  "parts": 3,
+  "drawCalls": 4,
+  "shadowCalls": 2,
+  "tris": 1516,
+  "trisNoHull": 1434,
+  "materials": 4,
+  "geoms": 4,
+  "coll": 2,
+  "bld": 1,
+  "lamps": 0,
+  "hooks": {},
+  "meta": {
+   "width": 4.876710712386626,
+   "depth": 13.196603424473015,
+   "height": 12.149999999999999
+  },
+  "bbox": [
+   -2.47,
+   0.16,
+   -13.2,
+   2.47,
+   13.41,
+   1.63
+  ]
+ },
+ "rowhouse_4": {
+  "meshes": 3,
+  "hulls": 1,
+  "parts": 3,
+  "drawCalls": 4,
+  "shadowCalls": 2,
+  "tris": 1684,
+  "trisNoHull": 1602,
+  "materials": 4,
+  "geoms": 4,
+  "coll": 2,
+  "bld": 1,
+  "lamps": 0,
+  "hooks": {},
+  "meta": {
+   "width": 4.876710712386626,
+   "depth": 13.196603424473015,
+   "height": 15.549999999999999
+  },
+  "bbox": [
+   -2.47,
+   0.16,
+   -13.2,
+   2.47,
+   16.81,
+   1.63
+  ]
+ },
+ "corner_bar": {
+  "meshes": 3,
+  "hulls": 1,
+  "parts": 3,
+  "drawCalls": 4,
+  "shadowCalls": 2,
+  "tris": 2102,
+  "trisNoHull": 1952,
+  "materials": 4,
+  "geoms": 4,
+  "coll": 3,
+  "bld": 2,
+  "lamps": 0,
+  "hooks": {},
+  "meta": {
+   "width": 7.495754280591269,
+   "depth": 7.5,
+   "height": 12.149999999999999,
+   "corner": 1
+  },
+  "bbox": [
+   -3.78,
+   0.16,
+   -7.5,
+   4.47,
+   12.37,
+   1.1
+  ]
+ },
+ "corner_shop": {
+  "meshes": 3,
+  "hulls": 1,
+  "parts": 3,
+  "drawCalls": 4,
+  "shadowCalls": 2,
+  "tris": 1988,
+  "trisNoHull": 1830,
+  "materials": 4,
+  "geoms": 4,
+  "coll": 3,
+  "bld": 2,
+  "lamps": 0,
+  "hooks": {},
+  "meta": {
+   "width": 7.495754280591269,
+   "depth": 7.5,
+   "height": 12.149999999999999,
+   "corner": 1
+  },
+  "bbox": [
+   -3.78,
+   0.16,
+   -7.5,
+   4.47,
+   12.37,
+   1.12
+  ]
+ },
+ "block": {
+  "meshes": 3,
+  "hulls": 1,
+  "parts": 3,
+  "drawCalls": 4,
+  "shadowCalls": 2,
+  "tris": 14038,
+  "trisNoHull": 12804,
+  "materials": 4,
+  "geoms": 4,
+  "coll": 28,
+  "bld": 14,
+  "lamps": 0,
+  "hooks": {
+   "climb": 1
+  },
+  "bbox": [
+   -1.77,
+   0.16,
+   -1.82,
+   25.82,
+   16.81,
+   25.67
+  ]
+ },
+ "determinism": {
+  "block_same": [
+   {
+    "hash": 665200483,
+    "verts": 18051,
+    "windows": 102,
+    "lit": 46,
+    "coll": 28,
+    "hooks": {
+     "climb": 1
+    },
+    "lamps": 0
+   },
+   {
+    "hash": 665200483,
+    "verts": 18051,
+    "windows": 102,
+    "lit": 46,
+    "coll": 28,
+    "hooks": {
+     "climb": 1
+    },
+    "lamps": 0
+   }
+  ],
+  "block_other": {
+   "hash": 409655314,
+   "verts": 18430,
+   "windows": 95,
+   "lit": 40,
+   "coll": 27,
+   "hooks": {
+    "climb": 1
+   },
+   "lamps": 0
+  },
+  "house_same": [
+   {
+    "hash": 927520811,
+    "verts": 2123,
+    "windows": 0,
+    "lit": 0,
+    "coll": 2,
+    "hooks": {},
+    "lamps": 0
+   },
+   {
+    "hash": 927520811,
+    "verts": 2123,
+    "windows": 0,
+    "lit": 0,
+    "coll": 2,
+    "hooks": {},
+    "lamps": 0
+   }
+  ],
+  "house_other": {
+   "hash": 956216426,
+   "verts": 1996,
+   "windows": 0,
+   "lit": 0,
+   "coll": 2,
+   "hooks": {},
+   "lamps": 0
+  }
+ },
+ "atlasInfo": {
+  "tiles": 60,
+  "usedHeight": 880,
+  "areaPct": 70
+ }
+}
