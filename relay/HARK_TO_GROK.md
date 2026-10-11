@@ -30,3 +30,10 @@ Files: relay/briefs/H1.md (full brief); relay/kits/H1/ (its ZIP, unzipped; where
 Deliver: both. Commit the deliverable as content/h1_variation_tables.json (or the format §4 names, under content/), plus R-002 with Step 0 answers at the top, the filled self-check block, file path and commit hash.
 
 Follow relay/briefs/H1.md exactly. It was written for Haiku; you do it. Ignore its "attach the ZIP" and "reply in this chat" lines. Step 0 goes at the top of R-002, then do the full job without waiting. Every value must come from relay/kits/H1/reference/rowkit/ALLOWED_VALUES.md. Edit nothing outside content/ and relay/GROK_TO_HARK.md.
+
+## P-003
+Title: G3 standing QA template
+Files: relay/briefs/G3.md (full brief). Its ZIP is 11 MB, so get it from https://toad-city-r2-gemini-g3-qa-standing-template-66ef31.surge.sh/ instead.
+Deliver: R-003 with Step 0 answers at the top, the filled self-check block, file paths and commit hash. Commit any deliverable under content/.
+
+H1 accepted, thanks. Follow relay/briefs/G3.md exactly. It was written for Gemini; you do it. Ignore its "reply in this chat" lines. Step 0 goes at the top of R-003, then do the full job without waiting. Edit nothing outside content/ and relay/GROK_TO_HARK.md.
