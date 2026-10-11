@@ -1,14 +1,20 @@
-# Toad City Baltimore: Task C, gang 2 of 5: Pier Gulls
+# Toad City Baltimore: Task C, gang 2 of 5: Pier Gulls (v1.1)
 
-This gang is built to TASK_C plus the gang-2+ rules from gang 1's review:
+This gang is built to TASK_C plus the gang-2+ rules:
 - the real down pose
 - nothing through the ground
 - shadow rules
 - the texture-cache key
 - the gang accent on the LOD
-- 37-part headroom
+- headroom
 - measured-only numbers
 - integration facts
+
+**v1.1** closes the open gaps from v1 using the game's own code:
+- the real `mergeRig()`
+- the real state timings
+- wider safety margins
+- dark wingtip hands on the far LOD
 
 `tools/qa.html` and `tools/shoot.mjs` produce every number below, and `tools/qa_table.py` pastes them in unedited. The raw run is `qa/pier_gulls_report.json`.
 
@@ -16,20 +22,37 @@ This gang is built to TASK_C plus the gang-2+ rules from gang 1's review:
 |---|---|---|---|---|
 | `pier_gulls` | Pier Gulls | herring gulls | Piers: National Aquarium, Power Plant, Four Seasons | white + blue `#2f5bd3` |
 
+## What changed in v1.1
+
+| change | v1.0 | v1.1 |
+|---|---|---|
+| QA merge check | an emulated per-group merge | the game's **real** `mergeRig()` (`tools/game/04b_rig_merge.js`, byte-identical, loaded through `tools/game_merge.js`) |
+| QA and filmstrip timings | my assumptions | **the game's**: idle/chase rate 14; windup 0.5 s (bruiser 0.7 s) at rate 12; attack pose over 0.3 s at rate 26, chase from 0.55 s; hurt pose over 0.32 s at rate 24, next state at 0.34 s; down pose rate 14; getup 0.45 s at rate 14 |
+| pupils, gonys spot, wingtip mirrors, fish eye | spheres (396 tris each) | boxes (12 tris each), like the brief's gull example |
+| white chest band (HD and LOD) | an open-tube part | painted onto the jacket's rings (`pgPaint`): one fewer part, and no hull ticks along its edge |
+| fish stripe | a separate plate | painted onto the fish |
+| bruiser beanie cuff | a separate open tube (beanie 59.8 % buried) | painted onto the beanie, and the beanie sits 3 cm higher |
+| bruiser arms | shoulder ball 0.128 m; upper arm capsule 0.105 × 0.23 m; forearm 0.09 × 0.17 m | shoulder ball 0.12 m; upper arm 0.105 × 0.26 m; forearm 0.088 × 0.15 m, centred 2.5 cm lower (upper arm now 52.7 % buried) |
+| LOD 1 | 14 parts, grey forearm ends | **12 parts**, **dark wingtip colour on the hands** (painted forearm ends), hats painted on (except grunt_a's bucket hat), soles 1 cm higher, box shins |
+| QA margins (new pass flags) | n/a | HD ≤ 35 parts and ≤ 11,000 tris; LOD ≤ 12 parts and ≤ 2,000 tris; every part < 55 % buried; LOD ≥ −2 cm in every sequence |
+
 ## What's in this zip
 
 ```
 src/gang_pier_gulls.js          the delivery: GANG, META, buildPierGull(K, member, opts), animateGang(J, t, state) (optional)
-src/gang_harbor_rats.js         gang 1, unchanged v1; present because viewer.html registers it
-toadcity_kit.js                 the kit, rebuilt from the brief's appendix; HERO_POSES.down and THUG_POSES.down are now the REAL ones
+src/gang_harbor_rats.js         gang 1, unchanged (left as-is at your request); present because viewer.html registers it
+toadcity_kit.js                 the kit, rebuilt from the brief's appendix, with the REAL HERO_POSES.down and THUG_POSES.down
 example_gull_thug.js            the brief's interface example (viewer comparison)
-viewer.html                     test bench (see "How to view")
-previews/pier_gulls_*.png       27 images: for each member, day and night turnarounds, a 7-pose sheet, a 60 fps knock-down
-                                filmstrip and an HD-vs-LOD turnaround; plus the armed attack filmstrip, lineup day/night,
-                                LOD lineup, hit-flash and phone day/night
-qa/pier_gulls_report.json       the raw QA and measurement run behind every number in this README
-tools/qa.html, tools/qa.js      the acceptance suite (ground, shoulders, stray hulls, shadows, mergeRig, budgets, LOD IoU)
-tools/shoot.mjs                 headless runner (Chromium + SwiftShader): renders previews, runs QA, fails on any console error or warning
+viewer.html                     test bench (see "How to view"); &merge=1 runs the game's mergeRig
+previews/pier_gulls_*.png       32 images: for each member, day and night turnarounds, a 7-pose sheet, 60 fps knock-down
+                                and attack filmstrips (real timings, real mergeRig) and an HD-vs-LOD turnaround; plus lineups
+                                (day, night, merged), LOD lineup, hit-flash (parts and merged) and phone day/night
+qa/pier_gulls_report.json       the raw v1.1 QA and measurement run behind every number in this README
+qa/pier_gulls_v1.0_rerun_with_v1.1_qa.json   v1.0's geometry measured by the v1.1 QA (the "before" column)
+tools/qa.html, tools/qa.js      the acceptance suite
+tools/game_merge.js             loads the game's mergeRig unchanged (injects THREE and K.QUAL)
+tools/game/04b_rig_merge.js     the game's own file, as supplied (not part of the delivery)
+tools/shoot.mjs                 headless runner (Chromium + SwiftShader); fails on any console error or warning
 tools/qa_table.py               turns a shoot.mjs report into the tables below
 tools/tile.py                   tiles PNGs for the HD-vs-LOD previews (needs Pillow)
 tools/previews_pier_gulls.json  the exact jobs for this delivery (previews, frame measurements and QA)
@@ -41,18 +64,16 @@ README.md, LICENSES.md
 
 ```sh
 python3 -m http.server 8000
-# viewer:  http://localhost:8000/viewer.html?show=pier_gulls          (lineup)
-#          ...?show=pier_gulls.armed&strip=knockdown                   (60 fps hurt > down > getup > idle filmstrip)
-# QA:      http://localhost:8000/tools/qa.html?gang=pier_gulls         (results in window.__qa; about 10 s)
-#          ...?gang=pier_gulls&debug=bruiser,torso/jacket,side         (paints that part's stray ink red)
+# viewer:  http://localhost:8000/viewer.html?show=pier_gulls                  (lineup; add &merge=1 for the merged rigs)
+#          ...?show=pier_gulls.bruiser&strip=knockdown&merge=1                (60 fps hurt > down > getup > idle)
+#          ...?show=pier_gulls.armed&strip=attack&merge=1                     (60 fps windup > attack > chase > idle)
+# QA:      http://localhost:8000/tools/qa.html?gang=pier_gulls                (results in window.__qa)
+#          ...?gang=pier_gulls&debug=bruiser,torso/jacket,side                (paints that part's stray ink red)
+#          ...?gang=pier_gulls&debugmerge=grunt_a                             (parts vs merged render, and their diff)
 # headless (npm i playwright-core three@0.160.0, on NODE_PATH):
 REPORT=qa/pier_gulls_report.json node tools/shoot.mjs --batch tools/previews_pier_gulls.json
-python3 tools/qa_table.py qa/pier_gulls_report.json
+python3 tools/qa_table.py qa/pier_gulls_report.json qa/pier_gulls_v1.0_rerun_with_v1.1_qa.json
 ```
-
-**Viewer parameters:** `show`, `night=1`, `lod=1`, `pose=idle|run|windup|attack|hurt|down|getup|all`, `turn=1`, `strip=knockdown|attack|run`, `cam=three|front|side|back|phone`, `dist`, `zoom`, `look`, `t`, `flash=0.85`, `anim=0`, `ui=0`.
-
-**Viewer keys:** N night, P pose, L LOD, F flash, A anim, C camera.
 
 ## The gang
 
@@ -60,7 +81,7 @@ Every member is an anthropomorphic herring gull. Each one has:
 - a **blue (`#2f5bd3`) top with a white chest band**, which is the gang read at 8 m
 - a hooked yellow bill with the red gonys spot
 - pale glaring eyes under an ink brow
-- wing-arms ending in dark wingtip fists with a white "mirror" spot
+- wing-arms ending in dark wingtip fists with a white "mirror" mark
 - pink legs and webbed feet
 - a short white tail
 - shorts
@@ -69,65 +90,70 @@ Every member is an anthropomorphic herring gull. Each one has:
 |---|---|---|
 | `grunt_a` | blue bucket hat | khaki shorts, grey mantle |
 | `grunt_b` | blue cap worn backwards | first-winter juvenile: brown mottled plumage, dark bill, dark eye; denim shorts |
-| `armed` | blue sweatband; **frozen rockfish** swung by the tail | weapon in `J.swR = K.grp(J.haR, 0, -0.04, 0)` along +Y: tail fin, tapered body, lateral stripe, eye |
-| `bruiser` | blue beanie with white cuff, gold chain, sleeveless vest | great black-backed gull (dark mantle), ×1.28 width / ×1.2 depth; `big: true`, so the game scales it ×1.2 |
+| `armed` | blue sweatband; **frozen rockfish** swung by the tail | weapon in `J.swR = K.grp(J.haR, 0, -0.04, 0)` along +Y |
+| `bruiser` | blue beanie with white cuff, gold chain, sleeveless vest | great black-backed gull (dark mantle), ×1.28 width / ×1.2 depth; `big: true` (game ×1.2, windup 0.7 s) |
 
 ## Rig, materials, integration
 
-- **Skeleton:** `K.skeleton()` with `PG_D`, which has the same keys as `K.THUG_D` (hip 0.9). All 18 joints are unchanged, so `K.THUG_POSES` drives the rig as-is.
-- **Extras:** there is one extra, `J.tail`, a plain `THREE.Group` directly under `J.hips`. The weapon lives in the standard `J.swR` joint.
-  - The tail tips **up** at rest (pitch 0.62–0.68 rad), so it clears the ground in the real `down` **without** `animateGang` (table below).
-- **`animateGang` is optional.** It only flicks `J.tail`: yaw ±0.16–0.3 rad, never below the rest pitch, and frozen in `'down'`.
-  - If you call it, the expected state mapping is: down/dying → `'down'`, getup → `'idle'`, chase → `'run'`, windup → `'attack'`, dizzy → `'hurt'`.
-- **Materials:** one `K.toonMat()` per rig, plus **one** canvas-mapped `K.toonMat({ map })` feather sub-material.
-  - The sub-material covers the head, forearms, tail and the bruiser's shoulders, and shares `userData.flash` and `flashC`.
-  - All hulls are `K.OUT_CHAR`, added by `K.part()`. LOD 1 uses no map.
-- **Texture cache:** keyed on `K.QUAL || K.THREE || K`. A missing `document` or 2D context returns `null` and is never cached; the rig then falls back to the plain toon material.
+- **Skeleton:** `K.skeleton()` with `PG_D`, which has the same keys as `K.THUG_D` (hip 0.9). All 18 joints are unchanged.
+- **Extras:** there is one extra, `J.tail`, a plain `THREE.Group` directly under `J.hips`. The weapon is in the standard `J.swR`.
+  - The tail tips **up** at rest, so it clears the ground in the real `down` **without** `animateGang`.
+- **`animateGang` is optional.** It only flicks `J.tail`.
+  - Expected state mapping if you call it: down/dying → `'down'`, getup → `'idle'`, chase → `'run'`, windup → `'attack'`, dizzy → `'hurt'`.
+- **Materials:** one `K.toonMat()` per rig, plus **one** canvas-mapped `K.toonMat({ map })` feather sub-material that shares `userData.flash` and `flashC`.
+  - All hulls are `K.OUT_CHAR`.
+  - LOD 1 uses no map.
+- **Texture cache:** keyed on `K.QUAL || K.THREE || K`. A missing `document` or 2D context returns `null` and is never cached.
+- **Painted details (`pgPaint`):** these parts are built non-indexed (`toNonIndexed()`), and faces are recoloured after `K.part()`.
+  - Each face is tested at the midpoint of its bounding box, so both triangles of a sphere quad agree and bands follow the rings cleanly.
+  - `mergeRig` copies vertex colours, so the paint survives the merge (see the `merged` previews).
 - **Shadow and outline rules are enforced in code** by `pgPart`:
   - `outline:false` implies `shadow:false`.
-  - Any part under 4 cm in two dimensions gets neither an outline nor a shadow. QA confirms 0 violations (table below).
-  - Decorative rings that wrap a body (the chest band and the beanie cuff) are **open tubes**, so no end caps are buried inside the part they wrap.
-- **mergeRig():** the rig uses plain groups only, every extra is parented directly under a skeleton joint, and there is one mapped sub-material.
-  - QA emulates a per-group merge: direct child meshes are merged by material and by outlined-or-not, with hulls merged alongside. It then checks the hit-flash and `animateGang` on the merged rig (table).
-  - The real `mergeRig()` was not available to me.
-- **Standalone ES module:** no imports and no reliance on concatenation. Helper names are `pg`-prefixed anyway.
-- **No LOD swap in the game today.** `opts.lod === 1` builds TASK_C's far variant; beyond 24 m the game only hides hulls and shadows.
+  - Any part under 4 cm in two dimensions gets neither an outline nor a shadow.
+- **mergeRig():** verified with the game's own function (table below). The rig merges into 3 skinned meshes (toon, feather, outline) with 16–17 bones.
+  - The merged vertices match the parts to 0.000 mm in 7 poses.
+  - With hit-flash on, 0 rig pixels stay unflashed (feather sub-material included).
+  - `animateGang` still moves the 24 tail vertices on the merged rig.
+- **Standalone ES module:** no imports and no reliance on concatenation.
+- **No LOD swap in the game today.** `opts.lod === 1` builds TASK_C's far variant.
 
 ## Measured numbers
 
 How things are measured (`tools/qa.js`):
 - **Parts** are non-hull meshes. **Tris** exclude hulls.
 - **Height and feet** are measured in idle at t = 0, with `META.scale` applied.
-- **Sequences** run at 60 fps.
-  - The knock-down uses the game's own timings: a hop (vy 4.2, gravity 22), then `down` at damping rate 13 for 1.25 s, then `getup` at rate 14 for 0.5 s.
-  - The other phases (idle 0.5 s, hurt 0.3 s, windup 0.4 s, attack 0.5 s, run 1.2 s at speed 4.5) use rate 14 and `snapTilt = false`. Those durations and rates are my assumptions.
+- **Sequences** run at 60 fps with the game's timings (see "What changed").
+  - knock-down = idle 0.5 s → hurt 0.34 s → hop + down 1.25 s → getup 0.45 s → idle 0.6 s
+  - attack = idle 0.4 s → windup → attack 0.55 s → chase 0.6 s → idle 0.5 s
+  - run = idle 0.3 s → chase 1.2 s → idle 0.5 s
 - **Shoulder gap** is the signed distance from the parts on `shL`/`shR` to the parts on `torso`; 0 means touching or overlapping.
 - **Stray ink** is render-based. It counts a part's ink that lies on top of other parts and more than 5 px from that part's own visible pixels, at 6 m, 256², from four views. A part fails above 12 px.
 
-QA run: 34 jobs, 0 console errors/warnings. All acceptance checks: PASS.
+QA run: 40 jobs, 0 console errors/warnings. All acceptance checks: PASS.
 
 | member | LOD | parts | tris | hull tris | hulls | materials | shadow casters | draw calls (meshes + hulls) | height | feet min y (idle) |
 |---|---|---|---|---|---|---|---|---|---|---|
-| grunt_a | HD | 33 | 10,760 | 7,964 | 24 | 3 | 24 | 57 | 1.901 m | 0.017 m |
-| grunt_a | 1 | 14 | 1,392 | 1,392 | 14 | 2 | 14 | 28 | 1.891 m | 0.008 m |
-| grunt_b | HD | 33 | 11,056 | 8,260 | 24 | 3 | 24 | 57 | 1.884 m | 0.017 m |
-| grunt_b | 1 | 14 | 1,732 | 1,732 | 14 | 2 | 14 | 28 | 1.893 m | 0.008 m |
-| armed | HD | 36 | 11,656 | 8,452 | 25 | 3 | 25 | 61 | 1.858 m | 0.017 m |
-| armed | 1 | 14 | 1,392 | 1,392 | 14 | 2 | 14 | 28 | 1.867 m | 0.008 m |
-| bruiser | HD | 33 | 11,072 | 8,276 | 24 | 3 | 24 | 57 | 2.359 m | 0.019 m |
-| bruiser | 1 | 14 | 1,732 | 1,732 | 14 | 2 | 14 | 28 | 2.371 m | 0.007 m |
+| grunt_a | HD | 32 | 8,812 | 7,936 | 23 | 3 | 23 | 55 | 1.901 m | 0.017 m |
+| grunt_a | 1 | 12 | 1,968 | 1,968 | 12 | 2 | 12 | 24 | 1.884 m | 0.015 m |
+| grunt_b | HD | 32 | 9,108 | 8,232 | 23 | 3 | 23 | 55 | 1.884 m | 0.017 m |
+| grunt_b | 1 | 12 | 1,924 | 1,924 | 12 | 2 | 12 | 24 | 1.859 m | 0.015 m |
+| armed | HD | 34 | 9,312 | 8,424 | 24 | 3 | 24 | 58 | 1.858 m | 0.017 m |
+| armed | 1 | 12 | 1,968 | 1,968 | 12 | 2 | 12 | 24 | 1.859 m | 0.015 m |
+| bruiser | HD | 31 | 9,096 | 8,220 | 22 | 3 | 22 | 53 | 2.395 m | 0.019 m |
+| bruiser | 1 | 12 | 1,924 | 1,924 | 12 | 2 | 12 | 24 | 2.234 m | 0.015 m |
 
-- Whole frame, all four members + ground, `show=pier_gulls&lod=0&t=0.5`: **330 draw calls, 110,450 triangles** (incl. shadow pass).
-- Whole frame, all four members + ground, `show=pier_gulls&lod=1&t=0.5`: **169 draw calls, 18,746 triangles** (incl. shadow pass).
+- Whole frame, all four members + ground, `show=pier_gulls&lod=0&t=0.5`: **314 draw calls, 101,954 triangles** (incl. shadow pass).
+- Whole frame, all four members + ground, `show=pier_gulls&lod=1&t=0.5`: **145 draw calls, 23,354 triangles** (incl. shadow pass).
+- Whole frame, all four members + ground, `show=pier_gulls&lod=0&t=0.5&merge=1`: **21 draw calls, 105,470 triangles** (incl. shadow pass).
 
 **Ground clearance** (lowest non-hull vertex, worst frame; floor is −3.0 cm; feet and weapon exempt only in `down`):
 
 | member | knock-down 60 fps | + animateGang | attack 60 fps | + animateGang | run 60 fps | + animateGang | pose sweeps | LOD 1 (knock-down / attack / run) |
 |---|---|---|---|---|---|---|---|---|
-| grunt_a | -1.2 cm (ftR/foot, idle) | -1.2 cm (ftR/foot, idle) | -0.6 cm (ftR/foot, idle) | -0.6 cm (ftR/foot, idle) | 1.1 cm (ftR/foot, idle) | 1.1 cm (ftR/foot, idle) | -1.3 cm (ftR/foot, idle) | -2.1 cm / -0.8 cm / 0.8 cm |
-| grunt_b | -1.2 cm (ftR/foot, idle) | -1.2 cm (ftR/foot, idle) | -0.6 cm (ftR/foot, idle) | -0.6 cm (ftR/foot, idle) | 1.1 cm (ftR/foot, idle) | 1.1 cm (ftR/foot, idle) | -1.3 cm (ftR/foot, idle) | -2.1 cm / -0.8 cm / 0.8 cm |
-| armed | -1.2 cm (ftR/foot, idle) | -1.2 cm (ftR/foot, idle) | -0.6 cm (ftR/foot, idle) | -0.6 cm (ftR/foot, idle) | 1.1 cm (ftR/foot, idle) | 1.1 cm (ftR/foot, idle) | -1.3 cm (ftR/foot, idle) | -2.1 cm / -0.8 cm / 0.8 cm |
-| bruiser | -1.5 cm (knR/shin, idle) | -1.5 cm (knR/shin, idle) | -0.9 cm (ftR/foot, idle) | -0.9 cm (ftR/foot, idle) | 0.7 cm (ftR/foot, idle) | 0.7 cm (ftR/foot, idle) | -1.6 cm (knR/shin, idle) | -2.7 cm / -1.2 cm / 0.8 cm |
+| grunt_a | -1.2 cm (ftR/foot, idle) | -1.2 cm (ftR/foot, idle) | 0.2 cm (ftR/foot, idle) | 0.2 cm (ftR/foot, idle) | 1.1 cm (ftR/foot, idle) | 1.1 cm (ftR/foot, idle) | -1.3 cm (ftR/foot, idle) | -1.3 cm / 0.1 cm / 1.6 cm |
+| grunt_b | -1.2 cm (ftR/foot, idle) | -1.2 cm (ftR/foot, idle) | 0.2 cm (ftR/foot, idle) | 0.2 cm (ftR/foot, idle) | 1.1 cm (ftR/foot, idle) | 1.1 cm (ftR/foot, idle) | -1.3 cm (ftR/foot, idle) | -1.3 cm / 0.1 cm / 1.6 cm |
+| armed | -1.2 cm (ftR/foot, idle) | -1.2 cm (ftR/foot, idle) | 0.2 cm (ftR/foot, idle) | 0.2 cm (ftR/foot, idle) | 1.1 cm (ftR/foot, idle) | 1.1 cm (ftR/foot, idle) | -1.3 cm (ftR/foot, idle) | -1.3 cm / 0.1 cm / 1.6 cm |
+| bruiser | -1.5 cm (knR/shin, idle) | -1.5 cm (knR/shin, idle) | -1.4 cm (knR/shin, idle) | -1.4 cm (knR/shin, idle) | 0.7 cm (ftR/foot, idle) | 0.7 cm (ftR/foot, idle) | -1.6 cm (knR/shin, idle) | -1.9 cm / -1.8 cm / 1.6 cm |
 
 **Down pose and shoulders** (`down(1, true)` snapped; knock-down end = last frame of the 60 fps `down` phase):
 
@@ -136,40 +162,61 @@ QA run: 34 jobs, 0 console errors/warnings. All acceptance checks: PASS.
 | grunt_a | 0.0 cm / 0.0 cm | 0.0 cm / 0.0 cm | 1.4 cm | 1.4 cm | 21.7 cm | 1.4 cm |
 | grunt_b | 0.0 cm / 0.0 cm | 0.0 cm / 0.0 cm | 1.4 cm | 1.4 cm | 18.2 cm | 1.4 cm |
 | armed | 0.0 cm / 0.0 cm | 0.0 cm / 0.0 cm | 1.4 cm | 1.4 cm | 23.7 cm | 1.4 cm |
-| bruiser | 0.0 cm / 0.0 cm | 0.0 cm / 0.0 cm | 1.7 cm | 1.7 cm | 26.0 cm | 1.7 cm |
+| bruiser | 0.0 cm / 0.0 cm | 0.0 cm / 0.0 cm | 1.7 cm | 1.7 cm | 28.4 cm | 1.7 cm |
 
-**Outlines, shadows, merge, LOD silhouette**:
+**Outlines, shadows, LOD silhouette** (buried = share of a part's surface inside other outlined parts; stray ink rendered at 6 m, 256², 4 views):
 
-| member | worst buried share (part) | worst stray ink px @6 m (part, view) | shadow-rule violations HD / LOD | mergeRig: meshes before → after, hulls after | flash shared + covers after merge | mapped sub-materials | animateGang moves merged tail | LOD IoU front / 3/4 / side |
-|---|---|---|---|---|---|---|---|---|
-| grunt_a | 44.5 % (shR/upper) | 4 (head/hat, front) | 0 / 0 | 33 → 20, 17 | yes | 1 | yes, 1.0 cm | 0.908 / 0.899 / 0.893 |
-| grunt_b | 46.3 % (head/head) | 2 (shR/upper, back) | 0 / 0 | 33 → 20, 17 | yes | 1 | yes, 1.0 cm | 0.920 / 0.912 / 0.909 |
-| armed | 46.9 % (shR/upper) | 2 (shL/upper, back) | 0 / 0 | 36 → 22, 18 | yes | 1 | yes, 1.0 cm | 0.905 / 0.896 / 0.892 |
-| bruiser | 59.8 % (head/beanie) | 6 (torso/jacket, side) | 0 / 0 | 33 → 20, 17 | yes | 1 | yes, 1.4 cm | 0.934 / 0.924 / 0.932 |
+| member | worst buried share (part) | worst stray ink px (part, view) | shadow-rule violations HD / LOD | LOD IoU front / 3/4 / side |
+|---|---|---|---|---|
+| grunt_a | 44.5 % (shR/upper) | 4 (head/hat, front) | 0 / 0 | 0.902 / 0.869 / 0.882 |
+| grunt_b | 46.3 % (head/head) | 2 (shR/upper, back) | 0 / 0 | 0.889 / 0.865 / 0.879 |
+| armed | 46.4 % (shR/upper) | 2 (shL/upper, back) | 0 / 0 | 0.901 / 0.870 / 0.879 |
+| bruiser | 52.7 % (shR/upper) | 7 (shL/upper, back) | 0 / 0 | 0.863 / 0.835 / 0.858 |
 
-Per-member pass flags: grunt_a: PASS, grunt_b: PASS, armed: PASS, bruiser: PASS
+**The game's real `mergeRig()`** (`tools/game/04b_rig_merge.js`, run on the HD rig):
+
+| member | meshes + hulls before | merged meshes (solid + outline) | bones | draw calls + shadow calls | max vertex Δ merged vs parts (7 poses) | flash: unflashed px of rig px (flash 0.85) | animateGang moves merged tail | render diff px: interior / edge (of rig px) | farthest vertex from culling sphere centre (r = 1.9) |
+|---|---|---|---|---|---|---|---|---|---|
+| grunt_a | 32 + 23 | 3 (2 + 1) | 16 | 3 + 2 | 0.000 mm | 0 of 7591 | 2.0 cm (24 verts) | 11 / 332 (of 9350) | 2.20 m |
+| grunt_b | 32 + 23 | 3 (2 + 1) | 16 | 3 + 2 | 0.000 mm | 0 of 7488 | 2.0 cm (24 verts) | 3 / 316 (of 9092) | 2.20 m |
+| armed | 34 + 24 | 3 (2 + 1) | 17 | 3 + 2 | 0.000 mm | 0 of 7974 | 2.0 cm (24 verts) | 9 / 351 (of 9787) | 2.48 m |
+| bruiser | 31 + 22 | 3 (2 + 1) | 16 | 3 + 2 | 0.000 mm | 0 of 12909 | 2.6 cm (24 verts) | 34 / 560 (of 15250) | 2.22 m |
+
+**Before → after** (`qa/pier_gulls_v1.0_rerun_with_v1.1_qa.json` → this run; both measured by this QA, real timings and real mergeRig):
+
+| member | HD parts | HD tris | LOD parts | LOD tris | worst buried | worst stray px | HD ground worst | LOD ground worst | LOD IoU min |
+|---|---|---|---|---|---|---|---|---|---|
+| grunt_a | 33 → 32 | 10,760 → 8,812 | 14 → 12 | 1,392 → 1,968 | 44.5 % → 44.5 % | 4 → 4 | -1.2 cm → -1.2 cm | -2.1 cm → -1.3 cm | 0.893 → 0.869 |
+| grunt_b | 33 → 32 | 11,056 → 9,108 | 14 → 12 | 1,732 → 1,924 | 46.3 % → 46.3 % | 2 → 2 | -1.2 cm → -1.2 cm | -2.1 cm → -1.3 cm | 0.909 → 0.865 |
+| armed | 36 → 34 | 11,656 → 9,312 | 14 → 12 | 1,392 → 1,968 | 46.9 % → 46.4 % | 2 → 2 | -1.2 cm → -1.2 cm | -2.1 cm → -1.3 cm | 0.892 → 0.870 |
+| bruiser | 33 → 31 | 11,072 → 9,096 | 14 → 12 | 1,732 → 1,924 | 59.8 % → 52.7 % | 6 → 7 | -1.5 cm → -1.5 cm | -2.7 cm → -1.9 cm | 0.924 → 0.835 |
+
+Per-member pass flags (caps, margins, ground, shoulders, stray hulls, shadows, flash, hulls, merge, height, feet): grunt_a: PASS, grunt_b: PASS, armed: PASS, bruiser: PASS
+
+## Game-side finding: mergeRig's culling sphere is too small for a 2 m thug lying down
+
+`mergeRig()` gives every merged mesh a fixed rig-space bounding sphere, centre (0, 0.95, 0) and radius 1.9.
+- **What fails:** in the real `down` pose a gull lies flat along −Z from its feet. Its farthest vertex ends up **2.20 m** from that centre (armed 2.48 m with the fish; bruiser 2.22 m in rig space before the ×1.2 scale).
+- **When it shows:** when the sphere leaves the camera frustum but the head is still on screen (a downed thug at the screen edge), the whole merged rig is culled while visible.
+- **Cause and fix:** this comes from the rig's height, not from these parts, so any ~2 m thug hits it. A radius of about 2.6, or a centre near (0, 0.6, −0.5), would cover it. This is your code, so I've left it unchanged.
+
+## Not modelled
+
+- **The attack's forward lunge** (first 0.12 s). It is a root translation that does not change the pose, so it does not affect any check here.
+- **Dizzy (rate 10).** `THUG_POSES` has no dizzy pose. Tell me which pose dizzy plays and I'll add it to the sequences.
 
 ## Kit note
 
 `toadcity_starter_kit.zip` was never supplied, so `toadcity_kit.js` is still the rebuild from the brief's appendix.
-- **Real since gang 1:** `HERO_POSES.down` and `THUG_POSES.down` are now the code from `src/04_actors.js` that you sent.
-- **Verbatim from the appendix:** everything this module uses from `K`: `G`, `part`, `grp`, `skeleton`, `toonMat`, `INK`, `lowTex`, `QUAL`, `THREE`, `THUG_POSES` and `applyPose`.
+- **Real game code:** `HERO_POSES.down` and `THUG_POSES.down`.
+- **Verbatim from the appendix:** everything this module uses from `K`.
 - **Still stand-ins:** `HERO_POSES.idle/run`, `buildThug`, the light presets and the prop collector.
 
 ## Known issues (with sizes)
 
 - **Platform:** tested only in headless Chromium with SwiftShader, with 0 console errors or warnings across all jobs. It has not been run on iOS Safari or an iPhone.
-- **Idle-bob foot dip:** the game's idle bob (±3 cm) takes the right foot to −1.2 cm and the bruiser's right shin to −1.5 cm, inside the −3 cm floor. LOD 1 reaches −2.1 cm, and −2.7 cm on the bruiser.
-  - At bob-neutral, the HD feet sit +1.7 cm above y = 0 (bruiser +1.9 cm), and LOD 1 sits +0.7 to +0.8 cm.
-- **Close margins:**
-  - The bruiser's beanie is 59.8 % buried against a 60 % limit, with 0 px of stray ink.
-  - The armed gull is at 36 of 37 parts and 11,656 HD tris against a 12,000 limit.
-- **Stray ink:** the worst is 6 px (bruiser jacket, side view) against the 12 px limit. The 5 px, 12 px and 6 m thresholds are mine, not the game's.
-- **LOD colours:** LOD 1 has no wingtip fists, so HD's dark hands become grey forearm ends. LOD silhouettes score IoU 0.892–0.934 against HD.
-- **mergeRig:** emulated, not the game's function (see above). On the emulation, each member's 33–36 meshes merge to 20–22 meshes plus 17–18 hulls.
-- **Sequence assumptions:** only the knock-down timings came from the game. The hurt, attack and run durations and rate 14 are assumed (see "How things are measured").
-- **Gang 1 (Harbor Rats) is not retrofitted.** Run through the same QA (`qa/harbor_rats_report_newrules.json` in the repo), it reproduces the review:
-  - the tail goes 66.0–79.2 cm below ground in `down`
-  - shoulder gaps are 2.9–3.1 cm in `down` (armed windup 2.8 cm)
-  - 40/40 parts
-  - shadow-rule violations
+- **Idle-bob foot dip:** the idle bob takes HD feet to −1.2 cm (bruiser shin −1.5 cm) and LOD 1 to −1.3 cm (bruiser −1.9 cm). The floor is −3 cm, and the LOD margin target is −2 cm.
+- **LOD silhouette:** the painted hats make the LOD head smaller than the HD hat shapes, so silhouette IoU against HD is now 0.835–0.902 (v1.0: 0.892–0.934). The bruiser is lowest (0.835, 3/4 view), because its raised HD beanie is painted flat onto the LOD head.
+- **Merged vs parts render:** 3–34 interior pixels differ out of 9,000–15,000 rig pixels. Another 316–560 pixels differ only along outline edges, where the skinned outline rasterises about 1 px differently.
+- **Stray ink:** the worst is 7 px against the 12 px limit. The 5 px, 12 px and 6 m thresholds are mine, not the game's.
+- **Box pupils and mirrors:** these are boxes now, as in the brief's example. Close up, the pupils read square.
