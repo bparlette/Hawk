@@ -54,5 +54,10 @@ if (id === 'pit_beef_pete') {
   run('jPoseStates', () => { const J = M.buildPitBeefPete(KG, { seed: 7 }); const names = ['eat', 'full', 'hiccup', 'cheat_slide', 'atk1', 'atk2', 'atk3', 'idle'];
     for (const n of names) for (const u of [0, 0.5, 1]) J.pose(n, u); J.pose('full', 1); const puffed = +J.full.toFixed(2); J.setFull(0); mergeRig(J); return { posed: names.length * 3, puffedAtFull1: puffed, mergedCalls: J.merged.length }; });
 }
+if (id === 'kingpin_carl') {
+  run('jPoseStates', () => { const J = M.buildKingpinCarl(KG, { seed: 7 }); const names = ['bowl', 'heckle', 'celebrate', 'sulk', 'atk1', 'atk2', 'atk3', 'idle'];
+    let hidden = false; for (const n of names) for (const u of [0, 0.6, 1]) { J.pose(n, u); if (n === 'bowl' && u === 0.6) hidden = !J.ball.visible; } J.pose('idle', 0); mergeRig(J);
+    return { posed: names.length * 3, ballHiddenAfterRelease: hidden, ballBackAtIdle: J.ball.visible, mergedCalls: J.merged.length }; });
+}
 const file = `tools/results_boss_${id}.json`, R = JSON.parse(fs.readFileSync(file, 'utf8')); R.hooks = out; fs.writeFileSync(file, JSON.stringify(R, null, 1));
 console.log(JSON.stringify(out));

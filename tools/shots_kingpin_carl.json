@@ -1,0 +1,441 @@
+[
+ {
+  "out": "previews/kingpin_carl_day.png",
+  "q": "show=kingpin_carl&cam=three&t=1.1&ui=0",
+  "errors": [],
+  "report": {
+   "show": "kingpin_carl",
+   "rigs": {
+    "kingpin_carl": {
+     "parts": 41,
+     "tris": 12224,
+     "hullTris": 11928,
+     "mats": 1,
+     "height": 2.594,
+     "minY": -0.096
+    }
+   },
+   "frame": {
+    "calls": 102,
+    "triangles": 32314
+   }
+  }
+ },
+ {
+  "out": "previews/kingpin_carl_night.png",
+  "q": "show=kingpin_carl&cam=three&t=1.1&night=1&ui=0",
+  "errors": [],
+  "report": {
+   "show": "kingpin_carl",
+   "rigs": {
+    "kingpin_carl": {
+     "parts": 41,
+     "tris": 12224,
+     "hullTris": 11928,
+     "mats": 1,
+     "height": 2.594,
+     "minY": -0.096
+    }
+   },
+   "frame": {
+    "calls": 102,
+    "triangles": 32314
+   }
+  }
+ },
+ {
+  "out": "previews/kingpin_carl_phone_390x844.png",
+  "q": "show=kingpin_carl&cam=phone&t=1.1&ui=0",
+  "errors": [],
+  "report": {
+   "show": "kingpin_carl",
+   "rigs": {
+    "kingpin_carl": {
+     "parts": 41,
+     "tris": 12224,
+     "hullTris": 11928,
+     "mats": 1,
+     "height": 2.594,
+     "minY": -0.096
+    }
+   },
+   "frame": {
+    "calls": 253,
+    "triangles": 69130
+   }
+  }
+ },
+ {
+  "out": "previews/kingpin_carl_phone_390x844_night.png",
+  "q": "show=kingpin_carl&cam=phone&t=1.1&night=1&ui=0",
+  "errors": [],
+  "report": {
+   "show": "kingpin_carl",
+   "rigs": {
+    "kingpin_carl": {
+     "parts": 41,
+     "tris": 12224,
+     "hullTris": 11928,
+     "mats": 1,
+     "height": 2.594,
+     "minY": -0.096
+    }
+   },
+   "frame": {
+    "calls": 253,
+    "triangles": 69130
+   }
+  }
+ },
+ {
+  "out": "previews/kingpin_carl_phone_390x844_merged.png",
+  "q": "show=kingpin_carl&cam=phone&t=1.1&merge=1&ui=0",
+  "errors": [],
+  "report": {
+   "show": "kingpin_carl",
+   "rigs": {
+    "kingpin_carl": {
+     "parts": 1,
+     "tris": 12224,
+     "hullTris": 11928,
+     "mats": 1,
+     "height": 2.564,
+     "minY": -0.089
+    }
+   },
+   "frame": {
+    "calls": 155,
+    "triangles": 73194
+   }
+  }
+ },
+ {
+  "out": "previews/kingpin_carl_phone_390x844_night_merged.png",
+  "q": "show=kingpin_carl&cam=phone&t=1.1&night=1&merge=1&ui=0",
+  "errors": [],
+  "report": {
+   "show": "kingpin_carl",
+   "rigs": {
+    "kingpin_carl": {
+     "parts": 1,
+     "tris": 12224,
+     "hullTris": 11928,
+     "mats": 1,
+     "height": 2.564,
+     "minY": -0.089
+    }
+   },
+   "frame": {
+    "calls": 155,
+    "triangles": 73194
+   }
+  }
+ },
+ {
+  "out": "previews/kingpin_carl_merged_day.png",
+  "q": "show=kingpin_carl&cam=three&t=1.1&merge=1&ui=0",
+  "errors": [],
+  "report": {
+   "show": "kingpin_carl",
+   "rigs": {
+    "kingpin_carl": {
+     "parts": 1,
+     "tris": 12224,
+     "hullTris": 11928,
+     "mats": 1,
+     "height": 2.564,
+     "minY": -0.089
+    }
+   },
+   "frame": {
+    "calls": 4,
+    "triangles": 36378
+   }
+  }
+ },
+ {
+  "out": "previews/kingpin_carl_merged_night.png",
+  "q": "show=kingpin_carl&cam=three&t=1.1&night=1&merge=1&ui=0",
+  "errors": [],
+  "report": {
+   "show": "kingpin_carl",
+   "rigs": {
+    "kingpin_carl": {
+     "parts": 1,
+     "tris": 12224,
+     "hullTris": 11928,
+     "mats": 1,
+     "height": 2.564,
+     "minY": -0.089
+    }
+   },
+   "frame": {
+    "calls": 4,
+    "triangles": 36378
+   }
+  }
+ },
+ {
+  "out": "previews/kingpin_carl_merged_flash.png",
+  "q": "show=kingpin_carl&cam=three&t=1.1&merge=1&flash=0.85&ui=0",
+  "errors": [],
+  "report": {
+   "show": "kingpin_carl",
+   "rigs": {
+    "kingpin_carl": {
+     "parts": 1,
+     "tris": 12224,
+     "hullTris": 11928,
+     "mats": 1,
+     "height": 2.564,
+     "minY": -0.089
+    }
+   },
+   "frame": {
+    "calls": 4,
+    "triangles": 36378
+   }
+  }
+ },
+ {
+  "out": "previews/kingpin_carl_flash_unmerged.png",
+  "q": "show=kingpin_carl&cam=three&t=1.1&flash=0.85&ui=0",
+  "errors": [],
+  "report": {
+   "show": "kingpin_carl",
+   "rigs": {
+    "kingpin_carl": {
+     "parts": 41,
+     "tris": 12224,
+     "hullTris": 11928,
+     "mats": 1,
+     "height": 2.594,
+     "minY": -0.096
+    }
+   },
+   "frame": {
+    "calls": 102,
+    "triangles": 32314
+   }
+  }
+ },
+ {
+  "out": "previews/kingpin_carl_turn.png",
+  "q": "show=kingpin_carl&turn=1&t=1.1&ui=0",
+  "errors": [],
+  "report": {
+   "show": "kingpin_carl",
+   "rigs": {
+    "kingpin_carl": {
+     "parts": 41,
+     "tris": 12224,
+     "hullTris": 11928,
+     "mats": 1,
+     "height": 2.594,
+     "minY": -0.096
+    }
+   },
+   "frame": {
+    "calls": 405,
+    "triangles": 129250
+   }
+  }
+ },
+ {
+  "out": "previews/kingpin_carl_poses.png",
+  "q": "show=kingpin_carl&pose=all&t=1.1&ui=0",
+  "errors": [],
+  "report": {
+   "show": "kingpin_carl",
+   "rigs": {
+    "kingpin_carl": {
+     "parts": 41,
+     "tris": 12224,
+     "hullTris": 11928,
+     "mats": 1,
+     "height": 2.594,
+     "minY": -0.096
+    }
+   },
+   "frame": {
+    "calls": 706,
+    "triangles": 225394
+   }
+  }
+ },
+ {
+  "out": "previews/kingpin_carl_poses_night_merged.png",
+  "q": "show=kingpin_carl&pose=all&t=1.1&night=1&merge=1&ui=0",
+  "errors": [],
+  "report": {
+   "show": "kingpin_carl",
+   "rigs": {
+    "kingpin_carl": {
+     "parts": 1,
+     "tris": 12224,
+     "hullTris": 11928,
+     "mats": 1,
+     "height": 2.564,
+     "minY": -0.089
+    }
+   },
+   "frame": {
+    "calls": 22,
+    "triangles": 254634
+   }
+  }
+ },
+ {
+  "out": "previews/kingpin_carl_angry.png",
+  "q": "show=kingpin_carl&pose=all&t=1.1&angry=1&ui=0",
+  "errors": [],
+  "report": {
+   "show": "kingpin_carl",
+   "rigs": {
+    "kingpin_carl": {
+     "parts": 41,
+     "tris": 12224,
+     "hullTris": 11928,
+     "mats": 1,
+     "height": 2.594,
+     "minY": -0.096
+    }
+   },
+   "frame": {
+    "calls": 706,
+    "triangles": 225394
+   }
+  }
+ },
+ {
+  "out": "previews/kingpin_carl_atk1_strip.png",
+  "q": "show=kingpin_carl&strip=atk1&n=8&ui=0",
+  "errors": [],
+  "report": {
+   "show": "kingpin_carl",
+   "rigs": {},
+   "frame": {
+    "calls": 801,
+    "triangles": 255330
+   }
+  }
+ },
+ {
+  "out": "previews/kingpin_carl_atk2_strip.png",
+  "q": "show=kingpin_carl&strip=atk2&n=8&ui=0",
+  "errors": [],
+  "report": {
+   "show": "kingpin_carl",
+   "rigs": {},
+   "frame": {
+    "calls": 809,
+    "triangles": 258498
+   }
+  }
+ },
+ {
+  "out": "previews/kingpin_carl_atk3_strip.png",
+  "q": "show=kingpin_carl&strip=atk3&n=8&ui=0",
+  "errors": [],
+  "report": {
+   "show": "kingpin_carl",
+   "rigs": {},
+   "frame": {
+    "calls": 809,
+    "triangles": 258498
+   }
+  }
+ },
+ {
+  "out": "previews/kingpin_carl_knockdown_strip.png",
+  "q": "show=kingpin_carl&strip=knockdown&n=9&ui=0",
+  "errors": [],
+  "report": {
+   "show": "kingpin_carl",
+   "rigs": {},
+   "frame": {
+    "calls": 910,
+    "triangles": 290810
+   }
+  }
+ },
+ {
+  "out": "previews/kingpin_carl_knockdown_strip_merged.png",
+  "q": "show=kingpin_carl&strip=knockdown&n=9&merge=1&ui=0",
+  "errors": [],
+  "report": {
+   "show": "kingpin_carl",
+   "rigs": {},
+   "frame": {
+    "calls": 28,
+    "triangles": 327386
+   }
+  }
+ },
+ {
+  "out": "previews/kingpin_carl_sheet.png",
+  "q": "show=kingpin_carl&sheet=1&t=1.1",
+  "errors": [],
+  "report": {
+   "show": "kingpin_carl",
+   "rigs": {
+    "kingpin_carl": {
+     "parts": 41,
+     "tris": 12224,
+     "hullTris": 11928,
+     "mats": 1,
+     "height": 2.594,
+     "minY": -0.096
+    }
+   },
+   "frame": {
+    "calls": 712,
+    "triangles": 225672
+   }
+  }
+ },
+ {
+  "out": "previews/kingpin_carl_states.png",
+  "q": "show=kingpin_carl&pose=states&t=1.1&ui=0",
+  "errors": [],
+  "report": {
+   "show": "kingpin_carl",
+   "rigs": {
+    "kingpin_carl": {
+     "parts": 41,
+     "tris": 12224,
+     "hullTris": 11928,
+     "mats": 1,
+     "height": 2.594,
+     "minY": -0.096
+    }
+   },
+   "frame": {
+    "calls": 405,
+    "triangles": 129250
+   }
+  }
+ },
+ {
+  "out": "previews/kingpin_carl_states_night_merged.png",
+  "q": "show=kingpin_carl&pose=states&t=1.1&night=1&merge=1&ui=0",
+  "errors": [],
+  "report": {
+   "show": "kingpin_carl",
+   "rigs": {
+    "kingpin_carl": {
+     "parts": 1,
+     "tris": 12224,
+     "hullTris": 11928,
+     "mats": 1,
+     "height": 2.564,
+     "minY": -0.089
+    }
+   },
+   "frame": {
+    "calls": 13,
+    "triangles": 145506
+   }
+  }
+ }
+]

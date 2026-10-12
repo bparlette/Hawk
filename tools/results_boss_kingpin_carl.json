@@ -1,0 +1,407 @@
+{
+ "id": "kingpin_carl",
+ "meta": {
+  "id": "kingpin_carl",
+  "name": "Kingpin Carl",
+  "district": "basement_lanes",
+  "hp": 130,
+  "scale": 1.25,
+  "radius": 0.85,
+  "height": 2.55,
+  "gang": "masked_bandits"
+ },
+ "budgets": {
+  "zipKit": {
+   "parts": 41,
+   "tris": 12224,
+   "hulls": 35,
+   "hullTris": 11928,
+   "mats": 1,
+   "matKinds": [
+    "toon"
+   ],
+   "badHull": 0,
+   "flashBad": 0,
+   "shadowCasters": 25,
+   "shadowBad": [],
+   "drawCallsUnmerged": 76
+  },
+  "zipKit/lod1": {
+   "parts": 40,
+   "tris": 12032,
+   "hulls": 35,
+   "hullTris": 11928,
+   "mats": 1,
+   "matKinds": [
+    "toon"
+   ],
+   "badHull": 0,
+   "flashBad": 0,
+   "shadowCasters": 25,
+   "shadowBad": [],
+   "drawCallsUnmerged": 75
+  },
+  "realGame": {
+   "parts": 41,
+   "tris": 12224,
+   "hulls": 35,
+   "hullTris": 11928,
+   "mats": 1,
+   "matKinds": [
+    "toon"
+   ],
+   "badHull": 0,
+   "flashBad": 0,
+   "shadowCasters": 25,
+   "shadowBad": [],
+   "drawCallsUnmerged": 76
+  },
+  "realGame/lod1": {
+   "parts": 40,
+   "tris": 12032,
+   "hulls": 35,
+   "hullTris": 11928,
+   "mats": 1,
+   "matKinds": [
+    "toon"
+   ],
+   "badHull": 0,
+   "flashBad": 0,
+   "shadowCasters": 25,
+   "shadowBad": [],
+   "drawCallsUnmerged": 75
+  },
+  "limits": {
+   "parts": 63,
+   "tris": 19800
+  },
+  "pass": true
+ },
+ "idle0": {
+  "minY": -0.096,
+  "maxY": 2.498,
+  "height": 2.594,
+  "heightNoWeapon": 2.594,
+  "meta": 2.55,
+  "heightErrPct": 1.7,
+  "zMin": -0.491,
+  "zMax": 0.857,
+  "xMin": -0.719,
+  "xMax": 0.878
+ },
+ "reach": {
+  "idleMaxHoriz": 0.943,
+  "atT": 0.65,
+  "part": "haR",
+  "radius": 0.85,
+  "beyondRadius": 0.093,
+  "pass": true
+ },
+ "poses": {
+  "idle": {
+   "minY": 0.042,
+   "lowest": "knR",
+   "cullR": 1.068,
+   "gaps": {}
+  },
+  "idle_t1.1": {
+   "minY": 0.054,
+   "lowest": "knR",
+   "cullR": 1.059,
+   "gaps": {}
+  },
+  "run_0.3": {
+   "minY": 0.062,
+   "lowest": "knL",
+   "cullR": 1.058,
+   "gaps": {}
+  },
+  "run_0.6": {
+   "minY": 0.094,
+   "lowest": "knR",
+   "cullR": 1.069,
+   "gaps": {}
+  },
+  "hurt_0": {
+   "minY": 0.035,
+   "lowest": "knR",
+   "cullR": 1.069,
+   "gaps": {}
+  },
+  "hurt_0.5": {
+   "minY": 0.035,
+   "lowest": "knR",
+   "cullR": 1.069,
+   "gaps": {}
+  },
+  "down_air_0.3": {
+   "minY": 0.783,
+   "lowest": "knR",
+   "cullR": 1.901,
+   "gaps": {}
+  },
+  "down_1_ground": {
+   "minY": 0.172,
+   "lowest": "hips",
+   "cullR": 2.052,
+   "gaps": {}
+  },
+  "atk1_0.2": {
+   "minY": 0.031,
+   "lowest": "knL",
+   "cullR": 1.101,
+   "gaps": {}
+  },
+  "atk1_0.5": {
+   "minY": 0.086,
+   "lowest": "knR",
+   "cullR": 1.162,
+   "gaps": {}
+  },
+  "atk1_0.8": {
+   "minY": 0.086,
+   "lowest": "knR",
+   "cullR": 1.162,
+   "gaps": {}
+  },
+  "atk2_0.2": {
+   "minY": 0.087,
+   "lowest": "knL",
+   "cullR": 1.067,
+   "gaps": {}
+  },
+  "atk2_0.5": {
+   "minY": 0.239,
+   "lowest": "knL",
+   "cullR": 1.055,
+   "gaps": {}
+  },
+  "atk2_0.8": {
+   "minY": 0.239,
+   "lowest": "knL",
+   "cullR": 1.055,
+   "gaps": {}
+  },
+  "atk3_0.2": {
+   "minY": 0.053,
+   "lowest": "knL",
+   "cullR": 1.094,
+   "gaps": {}
+  },
+  "atk3_0.5": {
+   "minY": 0.053,
+   "lowest": "knL",
+   "cullR": 1.298,
+   "gaps": {}
+  },
+  "atk3_0.8": {
+   "minY": 0.026,
+   "lowest": "knR",
+   "cullR": 1.093,
+   "gaps": {}
+  }
+ },
+ "seq": {
+  "knockdown": {
+   "minY": 0.027,
+   "at": 2.35,
+   "lowest": "idle:knR",
+   "cullR": 2.052,
+   "cullAt": 1.983,
+   "cullWhat": "down:ball"
+  },
+  "hurt": {
+   "minY": 0.035,
+   "at": 0.733,
+   "lowest": "hurt:knR",
+   "cullR": 1.069,
+   "cullAt": 0.733,
+   "cullWhat": "hurt:ftR"
+  },
+  "run": {
+   "minY": 0.017,
+   "at": 2,
+   "lowest": "idle:knR",
+   "cullR": 1.106,
+   "cullAt": 1.333,
+   "cullWhat": "run:head"
+  },
+  "atk1": {
+   "minY": 0.017,
+   "at": 2.033,
+   "lowest": "idle:knR",
+   "cullR": 1.162,
+   "cullAt": 1.417,
+   "cullWhat": "atk1:ftR"
+  },
+  "atk2": {
+   "minY": 0.017,
+   "at": 2,
+   "lowest": "idle:knR",
+   "cullR": 1.087,
+   "cullAt": 2,
+   "cullWhat": "idle:ftR"
+  },
+  "atk3": {
+   "minY": 0.017,
+   "at": 2.033,
+   "lowest": "idle:knR",
+   "cullR": 1.297,
+   "cullAt": 1.017,
+   "cullWhat": "atk3:ball"
+  },
+  "chain": {
+   "minY": 0.02,
+   "at": 7.433,
+   "lowest": "idle:knR",
+   "cullR": 2.052,
+   "cullAt": 7.017,
+   "cullWhat": "down:ball"
+  },
+  "worstMinY": 0.017,
+  "worstCullR": 2.052,
+  "passFloor": true,
+  "passCull26": true,
+  "cull19Info": false
+ },
+ "attacks": {
+  "count": 3,
+  "poses": [
+   "atk1",
+   "atk2",
+   "atk3"
+  ],
+  "contractOk": true,
+  "each": [
+   {
+    "id": "duckpin_bowl",
+    "pose": "atk1",
+    "strike": "haR",
+    "active": [
+     0.46,
+     0.62
+    ],
+    "peakU": 0.5,
+    "peakSpeed": 15.825,
+    "peakInActive": true
+   },
+   {
+    "id": "shoulder_barge",
+    "pose": "atk2",
+    "strike": "shL",
+    "active": [
+     0.4,
+     0.62
+    ],
+    "peakU": 0.483,
+    "peakSpeed": 5.461,
+    "peakInActive": true
+   },
+   {
+    "id": "gutter_stomp",
+    "pose": "atk3",
+    "strike": "ftR",
+    "active": [
+     0.54,
+     0.66
+    ],
+    "peakU": 0.583,
+    "peakSpeed": 9.119,
+    "peakInActive": true
+   }
+  ],
+  "allPeaksInActive": true
+ },
+ "merge": {
+  "ok": true,
+  "drawCalls": 2,
+  "toonCalls": 1,
+  "outlineCalls": 1,
+  "shadowCalls": 1,
+  "bones": 17,
+  "flashShared": true,
+  "partsBefore": 41,
+  "trisBefore": 12224
+ },
+ "determinism": {
+  "hash": "2568f980d9a96e99",
+  "sameSeedEqual": true,
+  "seed8Differs": false,
+  "noSeedOk": true,
+  "negSeedOk": true,
+  "hugeSeedOk": true,
+  "threeUuidRandomCalls": 3864,
+  "independentOfMathRandom": true,
+  "mathRandomInSource": false,
+  "canvas": {
+   "firstBuildOps": 0,
+   "secondBuildOps": 0,
+   "wrapperKOps": 0,
+   "cachedOnSameK": true,
+   "cachedForWrapperK": true,
+   "noDocumentBuildOk": true,
+   "drawsAfterDocumentReturns": true
+  }
+ },
+ "misc": {
+  "kitKeys": 48
+ },
+ "extra": {
+  "bowl": {
+   "minY": 0.031,
+   "lowest": "played bowl t 0.23:knL",
+   "cullR": 1.162
+  },
+  "heckle": {
+   "minY": 0.034,
+   "lowest": "played idle t 1.50:knR",
+   "cullR": 1.125
+  },
+  "celebrate": {
+   "minY": 0.034,
+   "lowest": "played idle t 1.50:knR",
+   "cullR": 1.409
+  },
+  "sulk": {
+   "minY": 0.034,
+   "lowest": "played idle t 1.50:knR",
+   "cullR": 1.074
+  }
+ },
+ "extraPass": true,
+ "buildMs": {
+  "median": 7.4,
+  "min": 5.74,
+  "max": 10.72,
+  "n": 20,
+  "env": "node v22.22.0"
+ },
+ "summary": {
+  "pass": true,
+  "parts": 41,
+  "tris": 12224,
+  "mats": 1,
+  "matKinds": [
+   "toon"
+  ],
+  "mergedCalls": 2,
+  "height": 2.594,
+  "heightErrPct": 1.7,
+  "worstMinY": 0.017,
+  "worstCullR": 2.052,
+  "buildMs": 7.4,
+  "extra": 4,
+  "idleBeyondRadius": 0.093,
+  "reachPart": "haR",
+  "strikes": "atk1@0.5 atk2@0.483 atk3@0.583"
+ },
+ "hooks": {
+  "jPoseStates": {
+   "ok": true,
+   "posed": 24,
+   "ballHiddenAfterRelease": true,
+   "ballBackAtIdle": true,
+   "mergedCalls": 2
+  }
+ }
+}
