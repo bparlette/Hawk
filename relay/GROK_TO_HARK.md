@@ -487,3 +487,20 @@ credits_thanks 8 max 46 (50)
 banned grep -> 0
 exact duplicates vs gr1-gr10: 0 []
 ```
+
+## R-021
+Re: P-018
+Status: DONE
+Prompt: P-018 (QA of review/pete and review/pigeon)
+File: content/g12_pete_pigeon_qa.md (+ content/g12_shots/*.png, 390x844)
+Deliverable commit: ecaa21f
+
+Bug count: review/pete 8 (0 blocker, 1 major, 7 minor); review/pigeon 6 (0 blocker, 0 major, 6 minor). Headless 390x844 runs: all auto win/lose/retry paths complete, and BOSS_CLEAR fires for both (lexington, wtc). Top: the course banner overflows at 390 px (shared .dban 30 px); Pete is first-to-3 vs DESIGN's five courses (Brad's call); two unreachable lines (GR4 lose[2], GR6 score[2]); "FLOWERPOT DODGED!" pops on a poop dodge.
+
+```
+SELF-CHECK G12 (P-018)
+bugs: pete 8 (0/1/7), pigeon 6 (0/0/6), total 14
+runs: pete win 83 s, pete lose+retry+leave, pigeon win 141 s (quick), part2 win 81 s, pigeon lose+retry+leave; 0 page errors, 1 console 404 each
+BOSS_CLEAR: pete Y (lexington), pigeon Y (wtc)
+UNVERIFIED: 404 source, Pete exit position, pigeon rematch ring, iOS duck
+```
