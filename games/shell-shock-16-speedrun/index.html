@@ -1,0 +1,117 @@
+<!doctype html>
+<html lang="en"><head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes"><meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="theme-color" content="#000">
+<title>Shell Shock 16 — Speed Run</title>
+<style>
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent;-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}
+html,body{margin:0;height:100%;background:#000;overflow:hidden;touch-action:none;font-family:ui-monospace,Menlo,monospace;color:#fff}
+#stage{position:fixed;inset:0;display:flex;align-items:center;justify-content:center}
+canvas{image-rendering:pixelated;image-rendering:crisp-edges;background:#000;max-width:100vw;max-height:100vh}
+#ov{position:fixed;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;background:rgba(0,0,0,.72);z-index:20;text-align:center;gap:14px}
+#ov h1{margin:0;color:#ffd84a;font-size:28px;letter-spacing:3px;text-shadow:3px 3px 0 #a3201a}
+#ov .tap{font-size:20px;padding:14px 26px;border:3px solid #ffd84a;border-radius:10px;color:#ffd84a;animation:bl 1s steps(2) infinite}
+#ov .small{font-size:12px;opacity:.75;max-width:420px;line-height:1.6;padding:0 16px}
+@keyframes bl{50%{opacity:.35}}
+.pad{position:fixed;z-index:10;display:none}
+body.touch .pad{display:block}
+#dpad{left:calc(14px + env(safe-area-inset-left));bottom:calc(18px + env(safe-area-inset-bottom));width:150px;height:150px;border-radius:50%;background:rgba(255,255,255,.10);border:2px solid rgba(255,255,255,.25)}
+#dpad i{position:absolute;width:44px;height:44px;border-radius:8px;background:rgba(255,255,255,.18)}
+#dpad .u{left:53px;top:6px}#dpad .d{left:53px;bottom:6px}#dpad .l{left:6px;top:53px}#dpad .r{right:6px;top:53px}
+#dpad i.on{background:rgba(255,216,74,.65)}
+#btns{right:calc(12px + env(safe-area-inset-right));bottom:calc(14px + env(safe-area-inset-bottom));width:210px;height:170px}
+.b{position:absolute;width:70px;height:70px;border-radius:50%;display:flex;flex-direction:column;align-items:center;justify-content:center;font-weight:700;font-size:20px;border:2px solid rgba(255,255,255,.35);color:#fff}
+.b small{font-size:9px;font-weight:400;opacity:.85;margin-top:1px}
+.b.on{filter:brightness(1.6);transform:scale(.94)}
+#bA{left:0;bottom:8px;background:rgba(90,150,255,.45)}
+#bB{left:70px;bottom:46px;background:rgba(230,60,60,.55);width:78px;height:78px}
+#bC{right:0;bottom:92px;background:rgba(60,200,110,.5)}
+#bS{right:calc(12px + env(safe-area-inset-right));top:calc(10px + env(safe-area-inset-top));width:auto;height:auto;padding:6px 16px;border-radius:14px;background:rgba(255,255,255,.15);border:2px solid rgba(255,255,255,.3);font-size:12px;font-weight:700;position:fixed;z-index:10}
+#bS.on{background:rgba(255,216,74,.6)}
+#hint{position:fixed;left:8px;top:6px;font-size:11px;opacity:.45;z-index:5}
+body.touch #hint{display:none}
+</style></head><body>
+<div id="stage"><canvas id="cv" width="320" height="224"></canvas></div>
+<div id="hint">Arrows/WASD move · J or Z attack · K or X jump · L or C special · Enter start · gamepads work</div>
+<div id="ov"><h1>SHELL SHOCK 16</h1><div style="color:#5ae0ff;font-size:18px;letter-spacing:4px;font-weight:700">SPEED RUN</div><div class="tap" id="go">TAP TO PLAY</div>
+<div class="small"><a href="shellshock16-speedrun.bin" download style="color:#5ae0ff" onclick="event.stopPropagation()" ontouchend="event.stopPropagation()">Download ROM (.bin, 1 MB)</a><br><br>The real Sega Genesis ROM, running in the browser.<br>All 15 scenes: 1 wave + boss each, non-stop, timed.<br>Attack (B) · Jump (C) · Special (A) · START pauses<br>Turn your phone sideways for the big screen.</div></div>
+<div class="pad" id="dpad"><i class="u"></i><i class="d"></i><i class="l"></i><i class="r"></i></div>
+<div class="pad" id="btns">
+  <div class="b" id="bA" data-k="a">A<small>SPECIAL</small></div>
+  <div class="b" id="bB" data-k="b">B<small>ATTACK</small></div>
+  <div class="b" id="bC" data-k="c">C<small>JUMP</small></div>
+</div>
+<div class="pad b" id="bS" data-k="start">START</div>
+<script src="gx.js"></script>
+<script>
+(function(){
+const BIT={b:0,a:1,start:3,up:4,down:5,left:6,right:7,c:8};
+const cv=document.getElementById('cv'),ctx=cv.getContext('2d'),img=ctx.createImageData(320,224);
+let M=null,ready=false,running=false,touchMask=0,keyMask=0,last=0,acc=0,prevRaw=0;const hold=new Array(16).fill(0);
+function latch(m){const nw=m&~prevRaw;prevRaw=m;for(let i=0;i<16;i++)if(nw&(1<<i))hold[i]=5;}
+function mask(){let m=keyMask|touchMask|padMask();latch(m);for(let i=0;i<16;i++)if(hold[i]>0){m|=1<<i;hold[i]--;}return m;}
+if(('ontouchstart' in window)||navigator.maxTouchPoints>0) document.body.classList.add('touch');
+function fit(){const s=Math.min(innerWidth/320,innerHeight/224);cv.style.width=Math.floor(320*s)+'px';cv.style.height=Math.floor(224*s)+'px';}
+addEventListener('resize',fit);fit();
+// ---- audio ----
+let ac=null,ring=new Float32Array(32768),rw=0,rr=0,srcRate=44100,step=1,frac=0;
+function avail(){return (rw-rr+ring.length)%ring.length;}
+function startAudio(){
+  try{ac=new (window.AudioContext||window.webkitAudioContext)();}catch(e){return;}
+  const sp=ac.createScriptProcessor(2048,0,2); step=srcRate/ac.sampleRate;
+  sp.onaudioprocess=e=>{const L=e.outputBuffer.getChannelData(0),R=e.outputBuffer.getChannelData(1);
+    for(let i=0;i<L.length;i++){ if(avail()<4){L[i]=R[i]=0;continue;}
+      L[i]=ring[rr];R[i]=ring[(rr+1)%ring.length]; frac+=step; while(frac>=1){frac-=1; if(avail()>=4) rr=(rr+2)%ring.length;} } };
+  sp.connect(ac.destination); if(ac.resume) ac.resume();
+}
+function pushAudio(){const n=M._gx_alen(); if(!ac) return; const p=M._gx_audio()>>1, H=M.HEAP16;
+  if(avail()>16384) return; // too far ahead: drop
+  for(let i=0;i<n;i++){ring[rw]=H[p+i*2]/32768;ring[(rw+1)%ring.length]=H[p+i*2+1]/32768;rw=(rw+2)%ring.length;}}
+// ---- input ----
+const KEYS={ArrowUp:'up',KeyW:'up',ArrowDown:'down',KeyS:'down',ArrowLeft:'left',KeyA:'left',ArrowRight:'right',KeyD:'right',
+  KeyJ:'b',KeyZ:'b',KeyK:'c',KeyX:'c',Space:'c',KeyL:'a',KeyC:'a',Enter:'start',Escape:'start'};
+addEventListener('keydown',e=>{const k=KEYS[e.code];if(k){keyMask|=1<<BIT[k];latch(keyMask|touchMask);e.preventDefault();}});
+addEventListener('keyup',e=>{const k=KEYS[e.code];if(k){keyMask&=~(1<<BIT[k]);e.preventDefault();}});
+function padMask(){let m=0;const gs=navigator.getGamepads?navigator.getGamepads():[];
+  for(const g of gs){if(!g)continue;const B=i=>g.buttons[i]&&g.buttons[i].pressed;
+    if(B(0))m|=1<<BIT.b; if(B(1))m|=1<<BIT.c; if(B(2)||B(3))m|=1<<BIT.a; if(B(9)||B(8))m|=1<<BIT.start;
+    if(B(12)||g.axes[1]<-.5)m|=1<<BIT.up; if(B(13)||g.axes[1]>.5)m|=1<<BIT.down; if(B(14)||g.axes[0]<-.5)m|=1<<BIT.left; if(B(15)||g.axes[0]>.5)m|=1<<BIT.right;}
+  return m;}
+// touch: dpad by angle, buttons by element under each touch (slide between buttons works)
+const dp=document.getElementById('dpad'),dpi={up:dp.querySelector('.u'),down:dp.querySelector('.d'),left:dp.querySelector('.l'),right:dp.querySelector('.r')};
+const btnEls=[...document.querySelectorAll('[data-k]')];
+function touches(e){let m=0;const r=dp.getBoundingClientRect(),cx=r.left+r.width/2,cy=r.top+r.height/2;
+  for(const t of e.touches){
+    const dx=t.clientX-cx,dy=t.clientY-cy;
+    if(Math.hypot(dx,dy)<r.width*0.85 && t.clientX<innerWidth/2){ if(Math.hypot(dx,dy)>12){const a=Math.atan2(dy,dx)*180/Math.PI;
+        if(a>-67.5&&a<67.5)m|=1<<BIT.right; if(a>112.5||a<-112.5)m|=1<<BIT.left; if(a>22.5&&a<157.5)m|=1<<BIT.down; if(a<-22.5&&a>-157.5)m|=1<<BIT.up;} continue;}
+    const el=document.elementFromPoint(t.clientX,t.clientY); const b=el&&el.closest&&el.closest('[data-k]'); if(b) m|=1<<BIT[b.dataset.k];
+  }
+  touchMask=m; latch(keyMask|touchMask);
+  for(const k in dpi) dpi[k].classList.toggle('on',!!(m&(1<<BIT[k])));
+  for(const b of btnEls) b.classList.toggle('on',!!(m&(1<<BIT[b.dataset.k])));
+  if(e.cancelable) e.preventDefault();}
+for(const ev of ['touchstart','touchmove','touchend','touchcancel']) document.addEventListener(ev,e=>{if(running)touches(e)},{passive:false});
+document.addEventListener('gesturestart',e=>e.preventDefault());
+// ---- emulator ----
+const romP=fetch('shellshock16-speedrun.bin').then(r=>r.arrayBuffer());
+GX().then(async m=>{M=m;const rom=new Uint8Array(await romP);M.FS.writeFile('/rom.bin',rom);
+  const p=M._malloc(16);M.HEAPU8.set(new TextEncoder().encode('/rom.bin\0'),p); srcRate=M._gx_init(p)||44100; ready=true;});
+function frame(t){requestAnimationFrame(frame); if(!running||!ready) {last=t;return;}
+  acc+=Math.min(100,t-last); last=t; let n=0;
+  while(acc>=16.639&&n<4){ M._gx_pad(mask()); M._gx_frame(); pushAudio(); acc-=16.639; n++; }
+  if(n){const w=M._gx_w(),h=M._gx_h(); if(cv.width!==w||cv.height!==h){cv.width=w;cv.height=h;} const src=new Uint8ClampedArray(M.HEAPU8.buffer,M._gx_fb(),w*h*4);
+    const id=(w===320&&h===224)?img:ctx.createImageData(w,h); id.data.set(src); ctx.putImageData(id,0,0);} }
+requestAnimationFrame(frame);
+function go(e){ if(e){e.preventDefault();} if(running) return; startAudio(); running=true; document.getElementById('ov').style.display='none';
+  if(document.body.classList.contains('touch')&&document.documentElement.requestFullscreen){document.documentElement.requestFullscreen().catch(()=>{});} }
+document.getElementById('ov').addEventListener('click',go); document.getElementById('ov').addEventListener('touchend',go,{passive:false});
+addEventListener('keydown',e=>{if(!running&&(e.code==='Enter'||e.code==='Space'))go();});
+document.addEventListener('visibilitychange',()=>{ if(ac){ if(document.hidden) ac.suspend&&ac.suspend(); else ac.resume&&ac.resume(); } acc=0; });
+window.__gx=()=>({ready,running});
+})();
+</script>
+</body></html>
