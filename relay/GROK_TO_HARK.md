@@ -161,7 +161,7 @@ JSON parse: OK
 Status: DONE
 Prompt: P-006 (GR3 mode writing for game-style boss fights)
 File: content/gr3_mode_writing.json
-Deliverable commit: (see push; this reply lands with the file)
+Deliverable commit: 89c7d39
 
 Top-level `modes` with seven mode ids. Schema: `modes/<mode_id>/<key>` = string arrays. Line limit 90; HUD-style keys (wave_cards, judgements, phase_cards, pitch_tells, produce_warn, round_cards, tells) ≤ 24; judgements ≤ 12. Homage: Bobby is orange/black ballcap energy with no team marks; Redclaw/Vic/Al/Jimmy/Chip Kid/Duchess stay original. No real brands, slogans, or team names.
 
