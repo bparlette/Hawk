@@ -1,0 +1,211 @@
+{
+  "_round": "GR5",
+  "loading_tips": [
+    "Mavis swings her handbag harder when Harold is in trouble. Get in trouble.",
+    "Dizzy thugs see stars. Tap ACT to finish them before the stars wear off.",
+    "Hold ACT near a downed partner to revive. Mavis does not take IOUs.",
+    "The minimap is a button. Tap it for the full harbor map.",
+    "Cane quake knocks down everything within five meters. Including pride.",
+    "Thugs sleep when you're far away. Sneak up like a toad in slippers.",
+    "Night lasts five minutes. So does Harold's patience.",
+    "Water taxis stop at the piers. Ride in style, pay in croaks.",
+    "Boss rings glow on the street. Step in and press ACT when you're ready.",
+    "Lost a boss fight? RETRY starts you from the phase you reached.",
+    "Drag the screen to look around. Harold's neck isn't what it used to be.",
+    "The radio is on M. Tap the dial to change stations.",
+    "Crime drops to zero when a district's boss goes down.",
+    "Seawalls stop you from falling in. Harold has fallen in before. Long story.",
+    "Swing, swing, ACT: cancel a cane combo into a cane quake.",
+    "Rowhouse stoops make great lookout posts. And great places to sit.",
+    "Every landmark has a story. Walk close to read it.",
+    "Federal Hill is the high ground. Use it. Harold's knees will forgive you.",
+    "Phone tip: the big green button is ACT. It does whatever makes sense.",
+    "When in doubt, follow the smell of crab cakes."
+  ],
+  "tutorial_tips": [
+    "Use the stick or WASD to move Harold around the harbor.",
+    "Tap SWING or press J to swing your cane.",
+    "Press JUMP or K to hop over curbs and trouble.",
+    "ACT is your do-everything button: talk, ride, finish, fight.",
+    "Walk to a pier stop and press ACT to board a boat.",
+    "Press ACT again on a boat or vehicle to get off.",
+    "Tap the radio or press M to change the station.",
+    "Tap the minimap or press Tab to open the full map.",
+    "Stars over a thug mean dizzy. Press ACT to finish them.",
+    "Glowing rings mark boss fights. Step in, press ACT.",
+    "Mavis follows you. If she's down, hold ACT near her.",
+    "Drag the screen or use Q and R to turn the camera."
+  ],
+  "achievements": [
+    {
+      "name": "STAR-SPANGLED",
+      "desc": "Hold Fort McHenry through all four waves."
+    },
+    {
+      "name": "HIGH VOLTAGE",
+      "desc": "Beat Voltage Vic's rhythm battle at the Power Plant."
+    },
+    {
+      "name": "OUTTA HERE",
+      "desc": "Hit 10 homers before 10 outs against Bird Brain Bobby."
+    },
+    {
+      "name": "PRODUCE PURSUIT",
+      "desc": "Ram Arabber Al three times before the clock runs out."
+    },
+    {
+      "name": "DEEP BREATH",
+      "desc": "Beat Big Jimmy in the Aquarium without running out of air."
+    },
+    {
+      "name": "CHIPPED",
+      "desc": "Send the Chip Kid running home from Harborplace."
+    },
+    {
+      "name": "SUNK THE DUCHESS",
+      "desc": "Ram the Dragon Boat Duchess into the piers three times."
+    },
+    {
+      "name": "COMPETITIVE EATER",
+      "desc": "Out-eat Pit Beef Pete over all five courses."
+    },
+    {
+      "name": "PIN PAL",
+      "desc": "Beat Kingpin Carl in ten frames of duckpin."
+    },
+    {
+      "name": "SPLASH CHECK",
+      "desc": "Beat Riptide Rodney's Otters first to five at Rash Field."
+    },
+    {
+      "name": "QUOTH THE TOAD",
+      "desc": "Leave roses at Poe's grave without a single crow alert."
+    },
+    {
+      "name": "LAST CALL",
+      "desc": "Defeat the One-Eyed Brewmaster in all three parts."
+    },
+    {
+      "name": "TOP CATCH",
+      "desc": "Reel in a rare catch from the piers."
+    },
+    {
+      "name": "CHOMPY'S PAL",
+      "desc": "Feed Chompy 25 pieces of harbor junk."
+    },
+    {
+      "name": "CHECKERED FLAG",
+      "desc": "Win the Harbor Grand Prix on Pratt Street."
+    },
+    {
+      "name": "GHOSTBUSTED",
+      "desc": "Flash the Fells Point Phantoms back into the fog."
+    },
+    {
+      "name": "HARBOR TOURIST",
+      "desc": "Visit all 16 landmarks around the Inner Harbor."
+    },
+    {
+      "name": "MONUMENTAL",
+      "desc": "Reach the Washington Monument in Mount Vernon."
+    },
+    {
+      "name": "KING OF THE HILL",
+      "desc": "Climb to the top of Federal Hill."
+    },
+    {
+      "name": "ALL ABOARD",
+      "desc": "Ride a water taxi from one side of the harbor to the other."
+    },
+    {
+      "name": "PADDLE POWER",
+      "desc": "Take a paddle boat out at Harborplace."
+    },
+    {
+      "name": "NIGHT OWL",
+      "desc": "Survive a full night cycle on the streets."
+    },
+    {
+      "name": "CLEAN STREETS",
+      "desc": "Bring every district's crime meter to zero."
+    },
+    {
+      "name": "BIRD'S EYE",
+      "desc": "Put on the drone goggles and fly over the harbor."
+    }
+  ],
+  "crime_meter": [
+    {
+      "district": "HARBOR BASIN",
+      "clear_message": "The Inner Harbor is clear. Paddle boats are back out!"
+    },
+    {
+      "district": "COBBLE POINT",
+      "clear_message": "Cobble Point is safe. The pubs can sing again, hon."
+    },
+    {
+      "district": "STOOP ROW",
+      "clear_message": "Stoop Row is clear. Pull up a lawn chair and relax."
+    },
+    {
+      "district": "MARKET WARD",
+      "clear_message": "Market Ward is quiet. The coddies taste better already."
+    },
+    {
+      "district": "MONUMENT HILL",
+      "clear_message": "Monument Hill is clear. Even the column looks prouder."
+    },
+    {
+      "district": "KEY HIGHWAY YARDS",
+      "clear_message": "The Yards are clean. The otters went home to dry off."
+    }
+  ],
+  "shop_signs": [
+    "HAROLD'S BAIT & TACKLE",
+    "STEAMED & SEASONED CRAB CO.",
+    "MAVIS'S HAT EMPORIUM",
+    "PIT BEEF PALACE",
+    "CODDIE CORNER",
+    "LAKE TROUT TAKEOUT",
+    "THE PAINTED SCREEN",
+    "STOOP & SCRUB SUPPLY",
+    "DUCKPIN DEN LANES",
+    "HARBOR HARDWARE",
+    "SNOWBALL SHACK",
+    "BAY LEAF DINER",
+    "ARABBER ROW PRODUCE",
+    "PIER SIX PIZZA",
+    "MARBLE STEP BAKERY",
+    "TUGBOAT TATTOO"
+  ],
+  "drone_captions": [
+    "Fort McHenry's defense in 1814 inspired the poem that became the national anthem.",
+    "The USS Constellation, launched in 1854, is the US Navy's last all-sail warship.",
+    "The National Aquarium opened on the Inner Harbor's Pier 3 in 1981.",
+    "Harborplace opened in 1980 and helped turn the Inner Harbor into a tourist waterfront.",
+    "Lexington Market, founded in 1782, is one of the oldest public markets in America.",
+    "Fells Point was laid out in the 1760s and still has many of its cobblestone streets.",
+    "Baltimore's Washington Monument, begun in 1815, was the first big one to Washington.",
+    "Federal Hill is named for a 1788 party celebrating Maryland ratifying the Constitution.",
+    "Baltimore's World Trade Center is the world's tallest regular pentagonal building.",
+    "Edgar Allan Poe is buried at Westminster Burying Ground in downtown Baltimore.",
+    "The Power Plant on Pier 4 once made electricity for the city's streetcars.",
+    "The big neon sugar sign at Locust Point has lit up the harbor since 1951."
+  ],
+  "credits": [
+    "TOAD CITY BALTIMORE",
+    "Starring Harold the Toad and Mavis, his better half",
+    "Directed by a toad with a cane and a dream",
+    "Boss wrangling by the Harbor Rats Local 410",
+    "City planning by a very patient pigeon",
+    "Crab cake consultant: Pit Beef Pete (disputed)",
+    "Duckpin scoring by Kingpin Carl's lucky towel",
+    "Music arranged for fife, drum and car alarm",
+    "Stunt doubles: three rubber ducks and a shopping cart",
+    "Harbor cleanup by Chompy, who ate the outtakes",
+    "Night shift lighting by the Fells Point Phantoms",
+    "Catering by every stall at the market, twice",
+    "Special thanks to everyone who ever sat on a stoop",
+    "No toads were harmed. Mavis made sure of it, hon."
+  ]
+}
