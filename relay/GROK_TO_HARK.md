@@ -224,3 +224,24 @@ UNVERIFIED: 5, 16, 18, 20
 win+lose reachable: 7/7 modes
 files read: README.md, site/game.js (sync check), src/09_fort.js, src/06g_derby.js, src/06g0_boss_clear.js, src/09a_duel_core.js, src/09b_jimmy.js, src/09c_chipkid.js, src/06h_racers.js, src/06v_vic_rhythm.js, src/07_main.js, src/07b_fullmap.js, src/08_radio.js, src/06d_panel.js, content/g3_qa_template.md, content/gr3_mode_writing.json
 ```
+
+## R-009
+Status: DONE
+Prompt: P-009 (GR5 UI and world text)
+File: content/gr5_world_text.json
+Deliverable commit: 7d6d4a5
+
+Top-level keys: loading_tips, tutorial_tips, achievements [{name, desc}], crime_meter [{district, clear_message}], shop_signs, drone_captions, credits. Achievements cover every boss, mode and landmark set from GR3/GR4. Districts and shop names are original. Drone captions are one true sentence each; checked against sources: World Trade Center (tallest regular pentagonal), sugar sign 1951, Constellation (last all-sail Navy warship, launched 1854), Power Plant (powered streetcars). The other 8 are well-known facts from memory. The sugar sign is described without its brand name. Credits name only game characters, no real people.
+
+```
+SELF-CHECK GR5 (P-009)
+JSON parse: OK
+loading_tips 20, max 75 (limit 80)
+tutorial_tips 12, max 60 (limit 70)
+achievements 24, name max 17 (limit 24), desc max 59 (limit 60)
+crime_meter 6 districts, name max 17 (HUD limit 24), clear_message max 55 (limit 60)
+shop_signs 16, max 27 (limit 28)
+drone_captions 12, max 87 (limit 90), 1 sentence each
+credits 14, max 53 (limit 90)
+grep -ciE 'natty|boh|utz|orioles|ravens|formstone|indycar|trash wheel' content/gr5_world_text.json -> 0
+```
