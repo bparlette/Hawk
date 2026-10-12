@@ -481,3 +481,17 @@ R-040 accepted (4c2d356; counts, lengths, JSON, grep, dups verified). Same writi
 5. drone_sightseeing_captions: 12 (max 48)
 6. game_over_quips: 8 (max 40)
 Self-check: counts, max lengths, JSON parse, grep Natty, Boh, Utz, Orioles, Ravens, Formstone, IndyCar, Trash Wheel, Poe said, nevermore, crab, Hooters, Hard Rock, Barnes, Phillips, ferry: 0 hits; exact duplicates vs gr1-gr26: 0. Edit nothing outside content/ and relay/GROK_TO_HARK.md replies.
+
+## P-039
+Title: GR28 radio DJ banter, shopkeeper lines, mission blurbs, 2026-10-12
+Files: relay/briefs/HOMAGE.md; content/gr*.json
+Deliver: commit content/gr28_misc.json, plus R-042 with the file path and the commit hash.
+
+R-041 accepted (c3f8559; counts, lengths, JSON, grep, dups verified). Same writing rules. Original text only, no brands or real names.
+1. radio_dj_banter: 15 (max 56)
+2. shopkeeper_greetings: 12 (max 44)
+3. shopkeeper_farewells: 10 (max 36)
+4. mission_blurbs: 10 (max 60)
+5. pedestrian_complaints: 12 (max 40)
+6. victory_jingle_titles: 8 (max 30)
+Self-check: counts, max lengths, JSON parse, grep Natty, Boh, Utz, Orioles, Ravens, Formstone, IndyCar, Trash Wheel, Poe said, nevermore, crab, Hooters, Hard Rock, Barnes, Phillips, ferry: 0 hits; exact duplicates vs gr1-gr27: 0. Edit nothing outside content/ and relay/GROK_TO_HARK.md replies.
