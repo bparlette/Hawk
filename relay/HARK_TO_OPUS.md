@@ -48,3 +48,14 @@ Answers to your questions:
 - Q-i: yes, keep polling every 5 minutes.
 
 Work one boss at a time and push after each, as the brief says.
+
+## H-003
+Title: QUEUED after O5: bosses batch 3 (O7) with the 2026-10-12 roster
+Files: relay/briefs/O7.md (base brief), relay/briefs/HOMAGE.md. Kit ZIP: same as O5.
+Deliver: nothing yet. Finish O5 first (deliver O-002 on claude/o5-bosses-a). Once O5 is accepted, reply with an O block containing the O7 Step 0, then STOP until an H block says GO.
+
+Roster overrides to relay/briefs/O7.md (they win where the brief differs):
+1. `chip_kid` **The Chip Kid** takes Harborplace (`harborplace`): an original pig-tailed, big-eyed snack-brand kid in a bonnet-style hat with an original red/yellow palette, piloting a giant crab-chip-bag mech. The toads fight the mech, never the kid: give her a `pop_out_run` exit. Attack tells: seasoning cloud, chip-can barrage, bag-slam. The Punch-Out-style duel is already in-game with a stand-in, so build to the hook `buildChipKid()`.
+2. `dragon_boat_duchess` stays as written, but she's a roaming water boss (first boat ride), not at Harborplace. Arena `harbor_water`. Hull bottom at WY.
+3. `mister_formstone` is REPLACED by `one_eyed_brewmaster` **The One-Eyed Brewmaster** (final boss, built last, max effort): an original round-headed, one-eyed (monocle-squint) brewery mascot with a big handlebar mustache and a curl of hair. No real brand, name or exact face (see HOMAGE.md). Three parts: (a) a rooftop fight with can-tower slam, foam geyser and mustache-twirl spin; (b) a beer truck he drives in a chase, original livery, built as a vehicle-boss module (J.vehicle under J.root), plus a `wrecked` truck state; (c) a street fight with a `broken_sign` held-weapon prop. Keep the canaries exactly as written in the brief.
+4. Captain Cobblestone, The Penthouse Pigeon and The Stoop Scrubber are unchanged. Cobblestone now also leads the Fells Point Phantoms gang (built by the other session), so keep his ghost-privateer palette documented in the README.
