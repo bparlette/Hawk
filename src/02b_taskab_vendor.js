@@ -816,6 +816,17 @@ const PT = {
 return PT;
 })();
 
+// The prop atlas belongs to the game, not to a cache keyed on the kit object K (Grok QA: five WeakMaps keyed on K made a new atlas for every
+// K a caller built). Order: opts.atlas, then the game's own packed atlas K.propAtlas, then K.makeAtlas(PROP_TILES), which the game caches
+// on the tile set itself (02c AB_ATLASES). soft = return null instead of throwing (cars just skip their liveries).
+function tbPropAtlas(K, opts, who, soft = false) {
+  if (opts && opts.atlas) return opts.atlas;
+  if (K.propAtlas) return K.propAtlas;
+  if (typeof PROP_TILES === 'object' && K.makeAtlas) return K.makeAtlas(PROP_TILES);
+  if (soft) return null;
+  throw new Error(who + ': pass opts.atlas or K.propAtlas (= K.makeAtlas(PROP_TILES))');
+}
+
 // ---- vendor/taskAB/props_street.js ----
 // props_street.js — Task B: merged static street props (everything writes through `out`, so props add NO draw calls).
 //   lamp_acorn · lamp_cobra · bench_park · bench_bus · trash_can (+ recycling variant) · manhole · ladder_wall · ladder_drop
@@ -835,12 +846,11 @@ const META_PROPS_STREET = {
 };
 
 // ---- local helpers (one namespace object so concatenated modules cannot collide) ----
-// the prop atlas is cached per kit in a module-level WeakMap (fix m6: nothing is written onto K any more), PROP_TILES guarded (fix m5)
-const PS_ATLAS = new WeakMap();
+// the prop atlas comes from tbPropAtlas (props_tiles.js): opts.atlas, then the game-owned K.propAtlas; no cache keyed on K (Grok QA), PROP_TILES guarded (fix m5)
 const PS = {
   tone: (h, f) => '#' + [1, 3, 5].map((i) => Math.max(0, Math.min(255, Math.round(parseInt(h.slice(i, i + 2), 16) * f))).toString(16).padStart(2, '0')).join(''),
   CURB: 0.16, GREEN: '#2f4a3a', IRON: '#2c322e', WOOD: '#9a6a44',
-  atlas(K, opts) { return opts.atlas || PS_ATLAS.get(K) || (typeof PROP_TILES === 'object' ? (PS_ATLAS.set(K, K.makeAtlas(PROP_TILES)), PS_ATLAS.get(K)) : (() => { throw new Error('props_street: pass opts.atlas = K.makeAtlas(PROP_TILES) (PROP_TILES is not in scope)'); })()); },
+  atlas(K, opts) { return tbPropAtlas(K, opts, 'props_street'); },
   box(THREE, w, h, d, skip = '') { // BoxGeometry minus hidden faces (px nx py ny pz nz)
     const g = new THREE.BoxGeometry(w, h, d), SK = { px: 0, nx: 1, py: 2, ny: 3, pz: 4, nz: 5 };
     if (skip) { const drop = new Set(skip.split(' ').filter(Boolean).map((k) => SK[k])), src = g.index.array, keep = []; for (let f = 0; f < 6; f++) if (!drop.has(f)) for (let i = 0; i < 6; i++) keep.push(src[f * 6 + i]); g.setIndex(keep); }
@@ -979,10 +989,9 @@ function buildLadderDrop(K, out, x, z, ang = 0, opts = {}) {
 // All geometry goes through `out` (no draw calls of its own); one lamp point is registered for the sign light. No imports; no Math.random.
 const META_CRAB_SHACK = { id: 'crab_shack', kind: 'prop', footprint: [4, 3], height: 4.1 };
 
-const CS_ATLAS = new WeakMap(); // fix m6
 const CS = {
   CURB: 0.16, WOOD: '#9a6a44', GREY: '#6f6a62', IRON: '#2c322e', CREAM: '#eae6dc',
-  atlas(K, opts) { return opts.atlas || CS_ATLAS.get(K) || (typeof PROP_TILES === 'object' ? (CS_ATLAS.set(K, K.makeAtlas(PROP_TILES)), CS_ATLAS.get(K)) : (() => { throw new Error('crab_shack: pass opts.atlas = K.makeAtlas(PROP_TILES) (PROP_TILES is not in scope)'); })()); },
+  atlas(K, opts) { return tbPropAtlas(K, opts, 'crab_shack'); },
   box(THREE, w, h, d, skip = '') { const g = new THREE.BoxGeometry(w, h, d), SK = { px: 0, nx: 1, py: 2, ny: 3, pz: 4, nz: 5 }; if (skip) { const drop = new Set(skip.split(' ').filter(Boolean).map((k) => SK[k])), src = g.index.array, keep = []; for (let f = 0; f < 6; f++) if (!drop.has(f)) for (let i = 0; i < 6; i++) keep.push(src[f * 6 + i]); g.setIndex(keep); } return g; },
   FONT: {
     A: [[[0, 0], [1, 4], [2, 0]], [[0.5, 1.6], [1.5, 1.6]]], B: [[[0, 0], [0, 4], [1.4, 4], [1.9, 3.5], [1.9, 2.5], [1.4, 2], [0, 2]], [[1.4, 2], [2, 1.5], [2, 0.5], [1.5, 0], [0, 0]]],
@@ -1071,7 +1080,6 @@ const META_VEH_CARS = {
     parked_car_minivan: { id: 'parked_car_minivan', kind: 'prop', footprint: [1.86, 4.6], height: 1.8 }, parked_car_cab: { id: 'parked_car_cab', kind: 'prop', footprint: [1.84, 4.9], height: 1.7 },
   },
 };
-const VC_ATLAS = new WeakMap();
 const VC = {
   // period paints: maroon, navy, champagne, forest, gunmetal, white, black, red, powder blue, brown, gold, plum, teal, silver
   PAINT: ['#8a2a2e', '#2e4a72', '#cbbf9e', '#3d5c3a', '#62686e', '#e6e2d8', '#25252b', '#b0342a', '#6f8fb0', '#7a5434', '#b89a5e', '#56406a', '#2f6a6a', '#a9adb2'],
@@ -1081,7 +1089,7 @@ const VC = {
   hex: (h) => [1, 3, 5].map((i) => parseInt(h.slice(i, i + 2), 16)),
   tone: (h, f) => '#' + VC.hex(h).map((v) => Math.max(0, Math.min(255, Math.round(v * f))).toString(16).padStart(2, '0')).join(''),
   mix: (a, b, t) => { const A = VC.hex(a), B = VC.hex(b); return '#' + A.map((v, i) => Math.round(v + (B[i] - v) * t).toString(16).padStart(2, '0')).join(''); },
-  atlas(K, opts) { return opts.atlas || VC_ATLAS.get(K) || (typeof PROP_TILES === 'object' ? (VC_ATLAS.set(K, K.makeAtlas(PROP_TILES)), VC_ATLAS.get(K)) : null); }, // null: liveries skipped
+  atlas(K, opts) { return tbPropAtlas(K, opts, 'veh_cars', true); }, // null: liveries skipped
   // ---- the silhouettes. st = lower-body loft stations [z, half-width factor, top y]; g = greenhouse (A0 windshield foot, A1 windshield top,
   //      C1 rear-glass top, C0 rear-glass foot, yr roof, rw roof half-width, B pillar z list, we = z where the last side window ends (null: follows the rear line))
   SPEC: {
@@ -1389,11 +1397,10 @@ const META_VEH_BOATS = {
   pieces: { water_taxi: { id: 'water_taxi', kind: 'boat', length: 9.2, beam: 2.9 }, paddle_boat: { id: 'paddle_boat', kind: 'boat', length: 3.4, beam: 1.7 }, dragon_boat: { id: 'dragon_boat', kind: 'boat', length: 13.6, beam: 1.2 } },
 };
 
-const VB_ATLAS = new WeakMap(); // fix m6
 const VB = {
   IRON: '#2c322e', GLASS: '#6a8a9a', DARK: '#1a1626', CREAM: '#eae6dc', NAVY: '#2a3f6a', GOLD: '#e8b830', RED: '#b8302a', WOOD: '#9a6a44',
   tone: (h, f) => '#' + [1, 3, 5].map((i) => Math.max(0, Math.min(255, Math.round(parseInt(h.slice(i, i + 2), 16) * f))).toString(16).padStart(2, '0')).join(''),
-  atlas(K, opts) { return opts.atlas || VB_ATLAS.get(K) || (typeof PROP_TILES === 'object' ? (VB_ATLAS.set(K, K.makeAtlas(PROP_TILES)), VB_ATLAS.get(K)) : (() => { throw new Error('veh_boats: pass opts.atlas = K.makeAtlas(PROP_TILES) (PROP_TILES is not in scope)'); })()); },
+  atlas(K, opts) { return tbPropAtlas(K, opts, 'veh_boats'); },
   box(THREE, w, h, d, skip = '') { const g = new THREE.BoxGeometry(w, h, d), SK = { px: 0, nx: 1, py: 2, ny: 3, pz: 4, nz: 5 }; if (skip) { const drop = new Set(skip.split(' ').filter(Boolean).map((k) => SK[k])), src = g.index.array, keep = []; for (let f = 0; f < 6; f++) if (!drop.has(f)) for (let i = 0; i < 6; i++) keep.push(src[f * 6 + i]); g.setIndex(keep); } return g; },
   // lofted hull shell. st = [{ z, hw, y0, y1, c, w }] stern -> bow. Returns flat-shaded pieces: { low, high, inner, rim, stern } (BufferGeometry each)
   shell(THREE, st, th = 0.07) {
@@ -1549,11 +1556,10 @@ const META_VEH_CARTS = {
   pieces: { arabber_cart: { id: 'arabber_cart', kind: 'cart', length: 5.9, width: 1.9 }, skateboard: { id: 'skateboard', kind: 'board', length: 0.9, width: 0.24 } },
 };
 
-const VT_ATLAS = new WeakMap(); // fix m6
 const VT = {
   RED: '#b8302a', YEL: '#e8b830', GREEN: '#2f5a3a', WOOD: '#9a6a44', IRON: '#2c322e', CREAM: '#eae6dc',
   tone: (h, f) => '#' + [1, 3, 5].map((i) => Math.max(0, Math.min(255, Math.round(parseInt(h.slice(i, i + 2), 16) * f))).toString(16).padStart(2, '0')).join(''),
-  atlas(K, opts) { return opts.atlas || VT_ATLAS.get(K) || (typeof PROP_TILES === 'object' ? (VT_ATLAS.set(K, K.makeAtlas(PROP_TILES)), VT_ATLAS.get(K)) : (() => { throw new Error('veh_carts: pass opts.atlas = K.makeAtlas(PROP_TILES) (PROP_TILES is not in scope)'); })()); },
+  atlas(K, opts) { return tbPropAtlas(K, opts, 'veh_carts'); },
   box(THREE, w, h, d, skip = '') { const g = new THREE.BoxGeometry(w, h, d), SK = { px: 0, nx: 1, py: 2, ny: 3, pz: 4, nz: 5 }; if (skip) { const drop = new Set(skip.split(' ').filter(Boolean).map((k) => SK[k])), src = g.index.array, keep = []; for (let f = 0; f < 6; f++) if (!drop.has(f)) for (let i = 0; i < 6; i++) keep.push(src[f * 6 + i]); g.setIndex(keep); } return g; },
   tube(THREE, p0, p1, r0, r1, seg = 6) { const d = new THREE.Vector3(p1[0] - p0[0], p1[1] - p0[1], p1[2] - p0[2]), len = d.length(), g = new THREE.CylinderGeometry(r1, r0, len, seg, 1, false); g.applyQuaternion(new THREE.Quaternion().setFromUnitVectors(new THREE.Vector3(0, 1, 0), d.normalize())); return g.translate((p0[0] + p1[0]) / 2, (p0[1] + p1[1]) / 2, (p0[2] + p1[2]) / 2); },
   merge(THREE, list) { const P = [], N = [], Cc = []; for (const [g0, col] of list) { const g = g0.index ? g0.toNonIndexed() : g0, c = new THREE.Color(col), p = g.attributes.position, n = g.attributes.normal; for (let i = 0; i < p.count; i++) { P.push(p.getX(i), p.getY(i), p.getZ(i)); N.push(n.getX(i), n.getY(i), n.getZ(i)); Cc.push(c.r, c.g, c.b); } } const m = new THREE.BufferGeometry(); m.setAttribute('position', new THREE.BufferAttribute(new Float32Array(P), 3)); m.setAttribute('normal', new THREE.BufferAttribute(new Float32Array(N), 3)); m.setAttribute('color', new THREE.BufferAttribute(new Float32Array(Cc), 3)); return m; },

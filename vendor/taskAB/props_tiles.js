@@ -79,3 +79,14 @@ const PT = {
 };
 return PT;
 })();
+
+// The prop atlas belongs to the game, not to a cache keyed on the kit object K (Grok QA: five WeakMaps keyed on K made a new atlas for every
+// K a caller built). Order: opts.atlas, then the game's own packed atlas K.propAtlas, then K.makeAtlas(PROP_TILES), which the game caches
+// on the tile set itself (02c AB_ATLASES). soft = return null instead of throwing (cars just skip their liveries).
+export function tbPropAtlas(K, opts, who, soft = false) {
+  if (opts && opts.atlas) return opts.atlas;
+  if (K.propAtlas) return K.propAtlas;
+  if (typeof PROP_TILES === 'object' && K.makeAtlas) return K.makeAtlas(PROP_TILES);
+  if (soft) return null;
+  throw new Error(who + ': pass opts.atlas or K.propAtlas (= K.makeAtlas(PROP_TILES))');
+}

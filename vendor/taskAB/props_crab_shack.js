@@ -5,10 +5,9 @@
 // All geometry goes through `out` (no draw calls of its own); one lamp point is registered for the sign light. No imports; no Math.random.
 export const META_CRAB_SHACK = { id: 'crab_shack', kind: 'prop', footprint: [4, 3], height: 4.1 };
 
-const CS_ATLAS = new WeakMap(); // fix m6
 const CS = {
   CURB: 0.16, WOOD: '#9a6a44', GREY: '#6f6a62', IRON: '#2c322e', CREAM: '#eae6dc',
-  atlas(K, opts) { return opts.atlas || CS_ATLAS.get(K) || (typeof PROP_TILES === 'object' ? (CS_ATLAS.set(K, K.makeAtlas(PROP_TILES)), CS_ATLAS.get(K)) : (() => { throw new Error('crab_shack: pass opts.atlas = K.makeAtlas(PROP_TILES) (PROP_TILES is not in scope)'); })()); },
+  atlas(K, opts) { return tbPropAtlas(K, opts, 'crab_shack'); },
   box(THREE, w, h, d, skip = '') { const g = new THREE.BoxGeometry(w, h, d), SK = { px: 0, nx: 1, py: 2, ny: 3, pz: 4, nz: 5 }; if (skip) { const drop = new Set(skip.split(' ').filter(Boolean).map((k) => SK[k])), src = g.index.array, keep = []; for (let f = 0; f < 6; f++) if (!drop.has(f)) for (let i = 0; i < 6; i++) keep.push(src[f * 6 + i]); g.setIndex(keep); } return g; },
   FONT: {
     A: [[[0, 0], [1, 4], [2, 0]], [[0.5, 1.6], [1.5, 1.6]]], B: [[[0, 0], [0, 4], [1.4, 4], [1.9, 3.5], [1.9, 2.5], [1.4, 2], [0, 2]], [[1.4, 2], [2, 1.5], [2, 0.5], [1.5, 0], [0, 0]]],

@@ -12,11 +12,10 @@ export const META_VEH_BOATS = {
   pieces: { water_taxi: { id: 'water_taxi', kind: 'boat', length: 9.2, beam: 2.9 }, paddle_boat: { id: 'paddle_boat', kind: 'boat', length: 3.4, beam: 1.7 }, dragon_boat: { id: 'dragon_boat', kind: 'boat', length: 13.6, beam: 1.2 } },
 };
 
-const VB_ATLAS = new WeakMap(); // fix m6
 const VB = {
   IRON: '#2c322e', GLASS: '#6a8a9a', DARK: '#1a1626', CREAM: '#eae6dc', NAVY: '#2a3f6a', GOLD: '#e8b830', RED: '#b8302a', WOOD: '#9a6a44',
   tone: (h, f) => '#' + [1, 3, 5].map((i) => Math.max(0, Math.min(255, Math.round(parseInt(h.slice(i, i + 2), 16) * f))).toString(16).padStart(2, '0')).join(''),
-  atlas(K, opts) { return opts.atlas || VB_ATLAS.get(K) || (typeof PROP_TILES === 'object' ? (VB_ATLAS.set(K, K.makeAtlas(PROP_TILES)), VB_ATLAS.get(K)) : (() => { throw new Error('veh_boats: pass opts.atlas = K.makeAtlas(PROP_TILES) (PROP_TILES is not in scope)'); })()); },
+  atlas(K, opts) { return tbPropAtlas(K, opts, 'veh_boats'); },
   box(THREE, w, h, d, skip = '') { const g = new THREE.BoxGeometry(w, h, d), SK = { px: 0, nx: 1, py: 2, ny: 3, pz: 4, nz: 5 }; if (skip) { const drop = new Set(skip.split(' ').filter(Boolean).map((k) => SK[k])), src = g.index.array, keep = []; for (let f = 0; f < 6; f++) if (!drop.has(f)) for (let i = 0; i < 6; i++) keep.push(src[f * 6 + i]); g.setIndex(keep); } return g; },
   // lofted hull shell. st = [{ z, hw, y0, y1, c, w }] stern -> bow. Returns flat-shaded pieces: { low, high, inner, rim, stern } (BufferGeometry each)
   shell(THREE, st, th = 0.07) {

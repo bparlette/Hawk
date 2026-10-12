@@ -23,7 +23,6 @@ export const META_VEH_CARS = {
     parked_car_minivan: { id: 'parked_car_minivan', kind: 'prop', footprint: [1.86, 4.6], height: 1.8 }, parked_car_cab: { id: 'parked_car_cab', kind: 'prop', footprint: [1.84, 4.9], height: 1.7 },
   },
 };
-const VC_ATLAS = new WeakMap();
 const VC = {
   // period paints: maroon, navy, champagne, forest, gunmetal, white, black, red, powder blue, brown, gold, plum, teal, silver
   PAINT: ['#8a2a2e', '#2e4a72', '#cbbf9e', '#3d5c3a', '#62686e', '#e6e2d8', '#25252b', '#b0342a', '#6f8fb0', '#7a5434', '#b89a5e', '#56406a', '#2f6a6a', '#a9adb2'],
@@ -33,7 +32,7 @@ const VC = {
   hex: (h) => [1, 3, 5].map((i) => parseInt(h.slice(i, i + 2), 16)),
   tone: (h, f) => '#' + VC.hex(h).map((v) => Math.max(0, Math.min(255, Math.round(v * f))).toString(16).padStart(2, '0')).join(''),
   mix: (a, b, t) => { const A = VC.hex(a), B = VC.hex(b); return '#' + A.map((v, i) => Math.round(v + (B[i] - v) * t).toString(16).padStart(2, '0')).join(''); },
-  atlas(K, opts) { return opts.atlas || VC_ATLAS.get(K) || (typeof PROP_TILES === 'object' ? (VC_ATLAS.set(K, K.makeAtlas(PROP_TILES)), VC_ATLAS.get(K)) : null); }, // null: liveries skipped
+  atlas(K, opts) { return tbPropAtlas(K, opts, 'veh_cars', true); }, // null: liveries skipped
   // ---- the silhouettes. st = lower-body loft stations [z, half-width factor, top y]; g = greenhouse (A0 windshield foot, A1 windshield top,
   //      C1 rear-glass top, C0 rear-glass foot, yr roof, rw roof half-width, B pillar z list, we = z where the last side window ends (null: follows the rear line))
   SPEC: {

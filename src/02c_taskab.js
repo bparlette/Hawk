@@ -68,7 +68,7 @@ const K_AB = {
   toonMat: (o, t) => toonMat(o, t), basicMat: (o) => new THREE.MeshBasicMaterial(o), OUT_CITY, addOdir, bakeColor, lowTex,
   place: (g, x, y, z, ry, rx, rz) => place(g, x, y, z, ry, rx, rz), makeOut: abMakeOut, makeAtlas: abMakeAtlas, mergeGeoms: abMerge, GLOW_MAT: AB_GLOW_MAT, glassMat: AB_GLASS_MAT,
 };
-const [AB_A, AB_B] = abPackAtlases([KIT_TILES, PROP_TILES]); abRefreshAtlas();
+const [AB_A, AB_B] = abPackAtlases([KIT_TILES, PROP_TILES]); abRefreshAtlas(); K_AB.propAtlas = AB_B; // the game owns the prop atlas (no vendor cache keyed on K)
 const AB_BUILDERS = { buildRowhouse, buildCornerBar, buildCornerShop };
 
 // ---- the city collector (chunked like the city meshes) ----

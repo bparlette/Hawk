@@ -16,12 +16,11 @@ export const META_PROPS_STREET = {
 };
 
 // ---- local helpers (one namespace object so concatenated modules cannot collide) ----
-// the prop atlas is cached per kit in a module-level WeakMap (fix m6: nothing is written onto K any more), PROP_TILES guarded (fix m5)
-const PS_ATLAS = new WeakMap();
+// the prop atlas comes from tbPropAtlas (props_tiles.js): opts.atlas, then the game-owned K.propAtlas; no cache keyed on K (Grok QA), PROP_TILES guarded (fix m5)
 const PS = {
   tone: (h, f) => '#' + [1, 3, 5].map((i) => Math.max(0, Math.min(255, Math.round(parseInt(h.slice(i, i + 2), 16) * f))).toString(16).padStart(2, '0')).join(''),
   CURB: 0.16, GREEN: '#2f4a3a', IRON: '#2c322e', WOOD: '#9a6a44',
-  atlas(K, opts) { return opts.atlas || PS_ATLAS.get(K) || (typeof PROP_TILES === 'object' ? (PS_ATLAS.set(K, K.makeAtlas(PROP_TILES)), PS_ATLAS.get(K)) : (() => { throw new Error('props_street: pass opts.atlas = K.makeAtlas(PROP_TILES) (PROP_TILES is not in scope)'); })()); },
+  atlas(K, opts) { return tbPropAtlas(K, opts, 'props_street'); },
   box(THREE, w, h, d, skip = '') { // BoxGeometry minus hidden faces (px nx py ny pz nz)
     const g = new THREE.BoxGeometry(w, h, d), SK = { px: 0, nx: 1, py: 2, ny: 3, pz: 4, nz: 5 };
     if (skip) { const drop = new Set(skip.split(' ').filter(Boolean).map((k) => SK[k])), src = g.index.array, keep = []; for (let f = 0; f < 6; f++) if (!drop.has(f)) for (let i = 0; i < 6; i++) keep.push(src[f * 6 + i]); g.setIndex(keep); }
