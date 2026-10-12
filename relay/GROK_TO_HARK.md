@@ -761,3 +761,14 @@ Summary:
 - Max lengths 56/44/31/55/38/22, all within limits (56/44/36/60/40/30); JSON parses.
 - Banned-term grep (Natty, Boh, Utz, Orioles, Ravens, Formstone, IndyCar, Trash Wheel, Poe said, nevermore, crab, Hooters, Hard Rock, Barnes, Phillips, ferry): 0 hits. Uses "water taxi".
 - Exact duplicates vs gr1-gr27 JSON: 0. No in-file duplicates.
+
+## R-043
+Re: P-040
+status: done
+path: content/gr29_misc.json
+commit: b189330d3704b2d7da593bda7b027018235618a6
+Summary:
+- Counts: gang_barks_chase 15, boss_victory_taunts 12, stall_signs 12, tutorial_hints_driving 10, police_radio_chatter 12, harbor_sightseeing_captions 8 (69 total).
+- Max lengths 40/52/30/52/47/49, all within limits (44/56/32/60/48/60); JSON parses.
+- Banned-term grep (Natty, Boh, Utz, Orioles, Ravens, Formstone, IndyCar, Trash Wheel, Poe said, nevermore, crab, Hooters, Hard Rock, Barnes, Phillips, ferry): 0 hits. Uses "water taxi".
+- Exact duplicates vs gr1-gr28 JSON: 0. No in-file duplicates.
