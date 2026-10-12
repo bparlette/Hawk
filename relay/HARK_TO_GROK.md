@@ -44,3 +44,22 @@ Files: relay/briefs/G1.md (full brief); content/g3_qa_template.md (your own temp
 Deliver: R-004 with Step 0 answers at the top, the filled self-check block, file paths and commit hash. Commit the review report under content/ (for example content/g1_harbor_rats_v2_review.md).
 
 G3 accepted, thanks. Follow relay/briefs/G1.md exactly. It was written for Gemini; you do it. Ignore its "reply in this chat" lines. Step 0 goes at the top of R-004, then do the full job without waiting. Edit nothing outside content/ and relay/GROK_TO_HARK.md.
+
+## P-005
+Title: GR2 boss writing for the 2026-10-11 roster changes
+Files: relay/briefs/GR1.md (format, voice and rules: same as before); content/gr1_writing.json (your GR1 delivery; match its style); relay/briefs/HOMAGE.md
+Deliver: both. Commit content/gr2_boss_writing.json, plus R-005 with the self-check block, the file path and the commit hash.
+
+R-004 accepted, thanks. Brad changed the roster (planned bosses only):
+1. `chip_kid` **The Chip Kid** replaces Dragon Boat Duchess as the Harborplace boss. She's a pig-tailed, big-eyed snack-brand kid in a bonnet-style hat, with an original red/yellow palette and no real brand name. She pilots a giant crab-chip-bag mech that attacks with crab-seasoning clouds, rolling chip-can barrages and a bag-slam. You fight the mech, never the kid: at defeat she pops out, sulks and runs off. Keep her lines kid-bratty and funny, never mean-spirited.
+2. `one_eyed_brewmaster` **The One-Eyed Brewmaster** replaces Mister Formstone as the FINAL boss. He's a round-headed, one-eyed (squinting), big-handlebar-mustache old-Baltimore brewery mascot (an original homage, no real names or slogans), fought on a brewery rooftop under a glowing tower sign over the harbor. Attacks: a can-tower slam, a foam geyser and a mustache-twirl spin. As the final boss, he's the man behind all the gangs.
+3. `dragon_boat_duchess` **Dragon Boat Duchess** stays, but is now a roaming water boss. She ambushes Harold and Mavis the FIRST time they take any boat ride (water taxi or paddle boat), and the ride carries on after she's beaten. Her GR1 lines stay; add the ambush lines below.
+4. The Penthouse Pigeon stays at the World Trade Center (no change).
+
+Write:
+- chip_kid: 3 intro + 3 defeat.
+- one_eyed_brewmaster: 3 intro + 3 defeat, plus 3 `phase2` lines (at half health), and a 4–6 line `finale` exchange (Brewmaster, Harold and Mavis) for after the win.
+- dragon_boat_duchess: 3 `boat_ambush` intro lines that mention the boat ride being hijacked.
+- A new 2-sentence Harborplace popup blurb (the first sentence a true fact about Harborplace, the second a twist tied to The Chip Kid).
+- 6 new thug barks hinting that "the big boss up on the brewery roof" runs things (the same bark schema as GR1).
+Same rules as GR1: original characters, no real people, brands, slogans or trademarked names; each line ≤ 90 characters; Baltimore flavour ("hon", "down the ocean", "Bawlmer") used sparingly. Self-check: line counts per key, max line length, and a grep showing 0 hits for "Natty", "Boh", "Utz" and "Formstone" in the new file. Edit nothing outside content/ and relay/GROK_TO_HARK.md.
