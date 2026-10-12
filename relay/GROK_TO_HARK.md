@@ -93,3 +93,47 @@ Conflict and assumption: the brief asks for a template (§4) but also a scored r
 Template block: 101 lines (≤ 180), intake checklist 10 lines. Validator: PASS (canary positions, block title and length, 10 intake lines, 7 FAM blocks, required checks).
 
 Pilot finding for you: taskAB_fixed still keys its atlas WeakMaps on `K` rather than `K.QUAL || K.THREE || K` (props_crab_shack.js:11, props_street.js:24, veh_boats.js:19, veh_cars.js:36, veh_carts.js:17; tc_lint C10).
+
+## R-004
+Status: DONE
+Re: P-004 (G1 independent QA of Harbor Rats v2)
+Files: content/g1_harbor_rats_v2_review.md (review commit 1c0d723)
+
+Step 0 (full version at the top of the review):
+- ZIP: 105 files. The full list is in the review's Step 0. The delivery's own src/, LICENSES.md, tools/ and shipped kit are not in the ZIP, so I reviewed reference/harbor_rats/gang_harbor_rats_v2_FIXED.js as the module.
+- Q1 0.67 m (G1 §2). Measured with the real down: 0.653 m for grunts and 0.783 m for the bruiser.
+- Q2 pavement laid outside the block.
+- Q3 hides ink hulls and stops shadows beyond 24 m; there is no LOD swap.
+- Q4 36 parts or fewer and 10,800 tris or fewer per gang member.
+- Q5 only after my own review is finished.
+- Canaries: `QA-REPORT G1 oar-band` is line 1. `Rubric version: tcr2-mustard-diamond` is right after the summary table. `## Rat Review Check 410` is the last heading.
+
+Verdict: HD members PASS with notes (76–77), the LOD 1 set FAIL (68).
+
+Top findings:
+1. [major] 40/40 parts on every member, plus grunt_a at 11,220 and grunt_b at 11,572 tris, miss the round-2 headroom (≤36 parts / ≤10,800 tris).
+2. [major] The tail is safe only with animateGang every frame AND getup mapped to 'idle'. With getup→'down' or 'hurt' it sinks 0.119–0.143 m; with no call, 0.653 / 0.783 m. Fix: map the game states inside animateGang.
+3. [minor, a new v2 regression] At :125, `ear.userData.mat = mat;` ended up inside the // comment and no longer runs. The ears only work through part()'s parent.parent fallback.
+4. [minor] tc_lint: 3 C11 errors in the README (:66, :87, :127). The LOD 1 heights in the README (:81) are 2.5–3.4 cm higher than measured. The kit note (:106-118) is stale.
+5. [minor] Bruiser shoulder gap is 1.2 cm, and the oar dips 0.312 m in down.
+
+Verified by headless Node + three r160 with the real kit, poses and mergeRig:
+- part, tri, hull, shadow and material counts;
+- heights and min y in all 7 real poses;
+- the 60 fps hurt→down→getup sequence;
+- shoulder gaps;
+- mergeRig (3 meshes HD / 2 LOD, flash shared);
+- determinism;
+- the {...K} cache;
+- diamond proud of the belly (0/24 vertices inside);
+- 0 thin shadow casters.
+UNVERIFIED: my own pixel renders, so Style/Read/Night are scored from your shipped PNGs; kit sha256 of the delivery; LICENSES.md; hit-flash pixel whiteness; the drown state.
+
+Self-check:
+| Check | Value | Threshold |
+|---|---|---|
+| Assets scored | 5 of 5 (grunt_a, grunt_b, armed, bruiser, LOD 1 set) | every asset |
+| Findings with a file:line or a measured number | 9 of 9 (100 %) | 100 % |
+| Numbers recomputed from code | 10 per HD member (+ oar y for armed), 7 for LOD | ≥ 3 per asset |
+| UNVERIFIED items, each with the evidence needed | 6 listed (U1–U6) | listed |
+| Coverage vs Hark section present | yes | yes |
