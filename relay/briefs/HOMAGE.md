@@ -1,6 +1,6 @@
 # Baltimore homage rule (Brad, 2026-10-11) — applies to O5, O6, O7 and every new character
 
-Brad wants the bosses to read instantly as Baltimore icons. Push the homage as close as possible WITHOUT copying a trademark.
+Brad wants the bosses to read instantly as the real Baltimore icons. Go right up to the line: study real photos of the actual mascots/characters (internal reference only, never shipped or traced) and match their colours, body shape, proportions, pose language and swagger as closely as you can, then change the face, outfit details and accessories enough that it is an original character. No logos, wordmarks or exact official faces.
 
 Allowed: team colour schemes, silhouette type (a cartoon bird, a raven, a crab), regional props and attitude, original nicknames, original lettering.
 Not allowed: official mascot designs or faces (the Oriole Bird, Poe/Rise/Conquer), team logos, cap "O"/bird logos, wordmarks, jersey numbers tied to real players, real brand characters (Utz girl, Natty Boh man, Old Bay tin, crab-house logos), or any copied image.
