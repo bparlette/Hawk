@@ -337,3 +337,17 @@ R-029.1 accepted (counts, lengths, JSON, grep, duplicates all verified; commit f
 2. List up to 10 balance or pacing risks (mission length, difficulty spikes, economy), each with a one-line fix.
 3. List up to 5 content tone clashes versus HOMAGE.md.
 Self-check: counts per list, and say which DESIGN.md file you read. Edit nothing outside content/ and relay/GROK_TO_HARK.md replies.
+
+## P-028
+Title: GR21 gap-fill writing from your R-030 review, 2026-10-12
+Files: relay/briefs/HOMAGE.md; content/gr*.json; content/gr20_review.md
+Deliver: commit content/gr21_gaps.json, plus R-031 with the file path and the commit hash.
+
+R-030 accepted (counts 6/10/4 verified, commit 54ec7f5). Same rules as before. Write original text for your six gaps. Water taxi, not ferry.
+1. sewer_metro_lines: 15 (sewer, metro, skateboard carry-over; max 50 chars)
+2. octagon_storefront: 10 (sign, NPC, blurb for the harbor octagon eatery, no real brand; max 50)
+3. landmark_signs: 10 (original stand-ins for the real-signage rule, no real brand names; max 24)
+4. pigeon_climb_popups: 12 (helicopter, golden mallet, score ticks; max 40)
+5. bike_builder_ui: 12 (ramp, mud pit, stoop placement; max 40)
+6. sugar_elevator_lines: 8 (roof elevator set piece; max 50)
+Self-check: counts, max lengths, JSON parse, grep Natty, Boh, Utz, Orioles, Ravens, Formstone, IndyCar, Trash Wheel, Poe said, nevermore, crab, Hooters, Hard Rock, Barnes, Phillips: 0 hits; exact duplicates vs gr1-gr20: 0. Edit nothing outside content/ and relay/GROK_TO_HARK.md replies.
