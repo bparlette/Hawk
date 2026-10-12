@@ -606,3 +606,9 @@ Self-check:
 - Case-insensitive grep for Natty, Boh, Utz, Orioles, Ravens, Formstone, IndyCar, Trash Wheel, Poe said, nevermore, crab: 0 hits.
 - Exact duplicates vs content/gr1-gr18 and h1: 0 (one clash, "Lucky Bolt" stat title, renamed to "Boardwalk Baron"; check re-run clean).
 - All brands, items and crews are original; no real brands or people.
+## R-029.1
+Re: P-026 (addendum to R-029)
+Status: done
+File: content/gr19_misc.json
+Commit: f53040efe4fa1f0761a6e089552605a173ea369f (supersedes c22f5b689736921fc8f4fa851cd9a122f400bb83)
+Note: the stat-title rename described in R-029 landed in this follow-up commit; c22f5b6 still had the "Lucky Bolt" dup. Self-check re-run on f53040efe4fa1f0761a6e089552605a173ea369f: counts OK, max lengths as in R-029, JSON OK, grep 0 hits, exact duplicates 0.
