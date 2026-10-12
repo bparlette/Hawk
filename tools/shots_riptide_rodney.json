@@ -1,0 +1,595 @@
+[
+ {
+  "out": "previews/riptide_rodney_day.png",
+  "q": "show=riptide_rodney&cam=three&t=1.1&ui=0",
+  "errors": [],
+  "report": {
+   "show": "riptide_rodney",
+   "rigs": {
+    "riptide_rodney": {
+     "parts": 42,
+     "tris": 10532,
+     "hullTris": 9212,
+     "mats": 1,
+     "height": 2.345,
+     "minY": 0.015
+    }
+   },
+   "frame": {
+    "calls": 89,
+    "triangles": 26330
+   }
+  }
+ },
+ {
+  "out": "previews/riptide_rodney_night.png",
+  "q": "show=riptide_rodney&cam=three&t=1.1&night=1&ui=0",
+  "errors": [],
+  "report": {
+   "show": "riptide_rodney",
+   "rigs": {
+    "riptide_rodney": {
+     "parts": 42,
+     "tris": 10532,
+     "hullTris": 9212,
+     "mats": 1,
+     "height": 2.345,
+     "minY": 0.015
+    }
+   },
+   "frame": {
+    "calls": 89,
+    "triangles": 26330
+   }
+  }
+ },
+ {
+  "out": "previews/riptide_rodney_phone_390x844.png",
+  "q": "show=riptide_rodney&cam=phone&t=1.1&ui=0",
+  "errors": [],
+  "report": {
+   "show": "riptide_rodney",
+   "rigs": {
+    "riptide_rodney": {
+     "parts": 42,
+     "tris": 10532,
+     "hullTris": 9212,
+     "mats": 1,
+     "height": 2.345,
+     "minY": 0.015
+    }
+   },
+   "frame": {
+    "calls": 240,
+    "triangles": 63146
+   }
+  }
+ },
+ {
+  "out": "previews/riptide_rodney_phone_390x844_night.png",
+  "q": "show=riptide_rodney&cam=phone&t=1.1&night=1&ui=0",
+  "errors": [],
+  "report": {
+   "show": "riptide_rodney",
+   "rigs": {
+    "riptide_rodney": {
+     "parts": 42,
+     "tris": 10532,
+     "hullTris": 9212,
+     "mats": 1,
+     "height": 2.345,
+     "minY": 0.015
+    }
+   },
+   "frame": {
+    "calls": 240,
+    "triangles": 63146
+   }
+  }
+ },
+ {
+  "out": "previews/riptide_rodney_phone_390x844_merged.png",
+  "q": "show=riptide_rodney&cam=phone&t=1.1&merge=1&ui=0",
+  "errors": [],
+  "report": {
+   "show": "riptide_rodney",
+   "rigs": {
+    "riptide_rodney": {
+     "parts": 1,
+     "tris": 10532,
+     "hullTris": 9212,
+     "mats": 1,
+     "height": 2.29,
+     "minY": 0.024
+    }
+   },
+   "frame": {
+    "calls": 155,
+    "triangles": 67094
+   }
+  }
+ },
+ {
+  "out": "previews/riptide_rodney_phone_390x844_night_merged.png",
+  "q": "show=riptide_rodney&cam=phone&t=1.1&night=1&merge=1&ui=0",
+  "errors": [],
+  "report": {
+   "show": "riptide_rodney",
+   "rigs": {
+    "riptide_rodney": {
+     "parts": 1,
+     "tris": 10532,
+     "hullTris": 9212,
+     "mats": 1,
+     "height": 2.29,
+     "minY": 0.024
+    }
+   },
+   "frame": {
+    "calls": 155,
+    "triangles": 67094
+   }
+  }
+ },
+ {
+  "out": "previews/riptide_rodney_merged_day.png",
+  "q": "show=riptide_rodney&cam=three&t=1.1&merge=1&ui=0",
+  "errors": [],
+  "report": {
+   "show": "riptide_rodney",
+   "rigs": {
+    "riptide_rodney": {
+     "parts": 1,
+     "tris": 10532,
+     "hullTris": 9212,
+     "mats": 1,
+     "height": 2.29,
+     "minY": 0.024
+    }
+   },
+   "frame": {
+    "calls": 4,
+    "triangles": 30278
+   }
+  }
+ },
+ {
+  "out": "previews/riptide_rodney_merged_night.png",
+  "q": "show=riptide_rodney&cam=three&t=1.1&night=1&merge=1&ui=0",
+  "errors": [],
+  "report": {
+   "show": "riptide_rodney",
+   "rigs": {
+    "riptide_rodney": {
+     "parts": 1,
+     "tris": 10532,
+     "hullTris": 9212,
+     "mats": 1,
+     "height": 2.29,
+     "minY": 0.024
+    }
+   },
+   "frame": {
+    "calls": 4,
+    "triangles": 30278
+   }
+  }
+ },
+ {
+  "out": "previews/riptide_rodney_merged_flash.png",
+  "q": "show=riptide_rodney&cam=three&t=1.1&merge=1&flash=0.85&ui=0",
+  "errors": [],
+  "report": {
+   "show": "riptide_rodney",
+   "rigs": {
+    "riptide_rodney": {
+     "parts": 1,
+     "tris": 10532,
+     "hullTris": 9212,
+     "mats": 1,
+     "height": 2.29,
+     "minY": 0.024
+    }
+   },
+   "frame": {
+    "calls": 4,
+    "triangles": 30278
+   }
+  }
+ },
+ {
+  "out": "previews/riptide_rodney_flash_unmerged.png",
+  "q": "show=riptide_rodney&cam=three&t=1.1&flash=0.85&ui=0",
+  "errors": [],
+  "report": {
+   "show": "riptide_rodney",
+   "rigs": {
+    "riptide_rodney": {
+     "parts": 42,
+     "tris": 10532,
+     "hullTris": 9212,
+     "mats": 1,
+     "height": 2.345,
+     "minY": 0.015
+    }
+   },
+   "frame": {
+    "calls": 89,
+    "triangles": 26330
+   }
+  }
+ },
+ {
+  "out": "previews/riptide_rodney_turn.png",
+  "q": "show=riptide_rodney&turn=1&t=1.1&ui=0",
+  "errors": [],
+  "report": {
+   "show": "riptide_rodney",
+   "rigs": {
+    "riptide_rodney": {
+     "parts": 42,
+     "tris": 10532,
+     "hullTris": 9212,
+     "mats": 1,
+     "height": 2.345,
+     "minY": 0.015
+    }
+   },
+   "frame": {
+    "calls": 353,
+    "triangles": 105314
+   }
+  }
+ },
+ {
+  "out": "previews/riptide_rodney_poses.png",
+  "q": "show=riptide_rodney&pose=all&t=1.1&ui=0",
+  "errors": [],
+  "report": {
+   "show": "riptide_rodney",
+   "rigs": {
+    "riptide_rodney": {
+     "parts": 42,
+     "tris": 10532,
+     "hullTris": 9212,
+     "mats": 1,
+     "height": 2.345,
+     "minY": 0.015
+    }
+   },
+   "frame": {
+    "calls": 615,
+    "triangles": 183506
+   }
+  }
+ },
+ {
+  "out": "previews/riptide_rodney_poses_night_merged.png",
+  "q": "show=riptide_rodney&pose=all&t=1.1&night=1&merge=1&ui=0",
+  "errors": [],
+  "report": {
+   "show": "riptide_rodney",
+   "rigs": {
+    "riptide_rodney": {
+     "parts": 1,
+     "tris": 10532,
+     "hullTris": 9212,
+     "mats": 1,
+     "height": 2.29,
+     "minY": 0.024
+    }
+   },
+   "frame": {
+    "calls": 22,
+    "triangles": 211934
+   }
+  }
+ },
+ {
+  "out": "previews/riptide_rodney_angry.png",
+  "q": "show=riptide_rodney&pose=all&t=1.1&angry=1&ui=0",
+  "errors": [],
+  "report": {
+   "show": "riptide_rodney",
+   "rigs": {
+    "riptide_rodney": {
+     "parts": 42,
+     "tris": 10532,
+     "hullTris": 9212,
+     "mats": 1,
+     "height": 2.345,
+     "minY": 0.015
+    }
+   },
+   "frame": {
+    "calls": 615,
+    "triangles": 183506
+   }
+  }
+ },
+ {
+  "out": "previews/riptide_rodney_atk1_strip.png",
+  "q": "show=riptide_rodney&strip=atk1&n=8&ui=0",
+  "errors": [],
+  "report": {
+   "show": "riptide_rodney",
+   "rigs": {},
+   "frame": {
+    "calls": 697,
+    "triangles": 207458
+   }
+  }
+ },
+ {
+  "out": "previews/riptide_rodney_atk2_strip.png",
+  "q": "show=riptide_rodney&strip=atk2&n=8&ui=0",
+  "errors": [],
+  "report": {
+   "show": "riptide_rodney",
+   "rigs": {},
+   "frame": {
+    "calls": 705,
+    "triangles": 210626
+   }
+  }
+ },
+ {
+  "out": "previews/riptide_rodney_atk3_strip.png",
+  "q": "show=riptide_rodney&strip=atk3&n=8&ui=0",
+  "errors": [],
+  "report": {
+   "show": "riptide_rodney",
+   "rigs": {},
+   "frame": {
+    "calls": 705,
+    "triangles": 210626
+   }
+  }
+ },
+ {
+  "out": "previews/riptide_rodney_knockdown_strip.png",
+  "q": "show=riptide_rodney&strip=knockdown&n=9&ui=0",
+  "errors": [],
+  "report": {
+   "show": "riptide_rodney",
+   "rigs": {},
+   "frame": {
+    "calls": 793,
+    "triangles": 236954
+   }
+  }
+ },
+ {
+  "out": "previews/riptide_rodney_knockdown_strip_merged.png",
+  "q": "show=riptide_rodney&strip=knockdown&n=9&merge=1&ui=0",
+  "errors": [],
+  "report": {
+   "show": "riptide_rodney",
+   "rigs": {},
+   "frame": {
+    "calls": 28,
+    "triangles": 272486
+   }
+  }
+ },
+ {
+  "out": "previews/riptide_rodney_sheet.png",
+  "q": "show=riptide_rodney&sheet=1&t=1.1",
+  "errors": [],
+  "report": {
+   "show": "riptide_rodney",
+   "rigs": {
+    "riptide_rodney": {
+     "parts": 42,
+     "tris": 10532,
+     "hullTris": 9212,
+     "mats": 1,
+     "height": 2.345,
+     "minY": 0.015
+    }
+   },
+   "frame": {
+    "calls": 621,
+    "triangles": 183784
+   }
+  }
+ },
+ {
+  "out": "previews/riptide_rodney_states.png",
+  "q": "show=riptide_rodney&pose=states&t=1.1&ui=0",
+  "errors": [],
+  "report": {
+   "show": "riptide_rodney",
+   "rigs": {
+    "riptide_rodney": {
+     "parts": 42,
+     "tris": 10532,
+     "hullTris": 9212,
+     "mats": 1,
+     "height": 2.345,
+     "minY": 0.015
+    }
+   },
+   "frame": {
+    "calls": 439,
+    "triangles": 130850
+   }
+  }
+ },
+ {
+  "out": "previews/riptide_rodney_states_night_merged.png",
+  "q": "show=riptide_rodney&pose=states&t=1.1&night=1&merge=1&ui=0",
+  "errors": [],
+  "report": {
+   "show": "riptide_rodney",
+   "rigs": {
+    "riptide_rodney": {
+     "parts": 1,
+     "tris": 10532,
+     "hullTris": 9212,
+     "mats": 1,
+     "height": 2.29,
+     "minY": 0.024
+    }
+   },
+   "frame": {
+    "calls": 16,
+    "triangles": 151382
+   }
+  }
+ },
+ {
+  "out": "previews/riptide_rodney_otter_wingman_day.png",
+  "q": "show=riptide_rodney&cam=three&t=1.1&opts=%7B%22variant%22%3A%22otter_wingman%22%7D&ui=0",
+  "errors": [],
+  "report": {
+   "show": "riptide_rodney",
+   "rigs": {
+    "riptide_rodney": {
+     "parts": 35,
+     "tris": 9372,
+     "hullTris": 8472,
+     "mats": 1,
+     "height": 1.827,
+     "minY": 0.012
+    }
+   },
+   "frame": {
+    "calls": 78,
+    "triangles": 24430
+   }
+  }
+ },
+ {
+  "out": "previews/riptide_rodney_otter_wingman_night.png",
+  "q": "show=riptide_rodney&cam=three&t=1.1&night=1&opts=%7B%22variant%22%3A%22otter_wingman%22%7D&ui=0",
+  "errors": [],
+  "report": {
+   "show": "riptide_rodney",
+   "rigs": {
+    "riptide_rodney": {
+     "parts": 35,
+     "tris": 9372,
+     "hullTris": 8472,
+     "mats": 1,
+     "height": 1.827,
+     "minY": 0.012
+    }
+   },
+   "frame": {
+    "calls": 78,
+    "triangles": 24430
+   }
+  }
+ },
+ {
+  "out": "previews/riptide_rodney_otter_wingman_phone_390x844.png",
+  "q": "show=riptide_rodney&cam=phone&t=1.1&opts=%7B%22variant%22%3A%22otter_wingman%22%7D&ui=0",
+  "errors": [],
+  "report": {
+   "show": "riptide_rodney",
+   "rigs": {
+    "riptide_rodney": {
+     "parts": 35,
+     "tris": 9372,
+     "hullTris": 8472,
+     "mats": 1,
+     "height": 1.827,
+     "minY": 0.012
+    }
+   },
+   "frame": {
+    "calls": 229,
+    "triangles": 61246
+   }
+  }
+ },
+ {
+  "out": "previews/riptide_rodney_otter_wingman_poses.png",
+  "q": "show=riptide_rodney&pose=all&t=1.1&opts=%7B%22variant%22%3A%22otter_wingman%22%7D&ui=0",
+  "errors": [],
+  "report": {
+   "show": "riptide_rodney",
+   "rigs": {
+    "riptide_rodney": {
+     "parts": 35,
+     "tris": 9372,
+     "hullTris": 8472,
+     "mats": 1,
+     "height": 1.827,
+     "minY": 0.012
+    }
+   },
+   "frame": {
+    "calls": 540,
+    "triangles": 170998
+   }
+  }
+ },
+ {
+  "out": "previews/riptide_rodney_otter_wingman_poses_merged.png",
+  "q": "show=riptide_rodney&pose=all&t=1.1&merge=1&opts=%7B%22variant%22%3A%22otter_wingman%22%7D&ui=0",
+  "errors": [],
+  "report": {
+   "show": "riptide_rodney",
+   "rigs": {
+    "riptide_rodney": {
+     "parts": 1,
+     "tris": 9372,
+     "hullTris": 8472,
+     "mats": 1,
+     "height": 1.8,
+     "minY": 0.02
+    }
+   },
+   "frame": {
+    "calls": 22,
+    "triangles": 190514
+   }
+  }
+ },
+ {
+  "out": "previews/riptide_rodney_otter_wingman_sheet.png",
+  "q": "show=riptide_rodney&sheet=1&t=1.1&opts=%7B%22variant%22%3A%22otter_wingman%22%7D",
+  "errors": [],
+  "report": {
+   "show": "riptide_rodney",
+   "rigs": {
+    "riptide_rodney": {
+     "parts": 35,
+     "tris": 9372,
+     "hullTris": 8472,
+     "mats": 1,
+     "height": 1.827,
+     "minY": 0.012
+    }
+   },
+   "frame": {
+    "calls": 546,
+    "triangles": 171276
+   }
+  }
+ },
+ {
+  "out": "previews/riptide_rodney_otter_wingman_states.png",
+  "q": "show=riptide_rodney&pose=states&t=1.1&opts=%7B%22variant%22%3A%22otter_wingman%22%7D&ui=0",
+  "errors": [],
+  "report": {
+   "show": "riptide_rodney",
+   "rigs": {
+    "riptide_rodney": {
+     "parts": 35,
+     "tris": 9372,
+     "hullTris": 8472,
+     "mats": 1,
+     "height": 1.827,
+     "minY": 0.012
+    }
+   },
+   "frame": {
+    "calls": 386,
+    "triangles": 122142
+   }
+  }
+ }
+]

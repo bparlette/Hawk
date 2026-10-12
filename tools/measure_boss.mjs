@@ -17,7 +17,8 @@ const { mergeRig } = await import('../kit/real_mergeRig.js');
 const { K: KG } = await import('../harness/realK.mjs');
 const { seqList, seqAt, seqDur, SEQ_NAMES } = await import('./boss_seq.js');
 const M = await import(pathToFileURL(path.resolve(process.env.BOSS)).href);
-const META = M.META, ATTACKS = M.ATTACKS, P = M.POSES;
+const VOPTS0 = process.env.OPTS ? JSON.parse(process.env.OPTS) : {};
+const META = VOPTS0.variant && M.VARIANTS && M.VARIANTS[VOPTS0.variant] ? Object.assign({}, M.META, M.VARIANTS[VOPTS0.variant], { id: M.META.id }) : M.META, ATTACKS = M.ATTACKS, P = M.POSES;
 const BUILD = M[Object.keys(M).find((k) => k.startsWith('build') && typeof M[k] === 'function' && k.toLowerCase() === ('build' + META.id.replace(/_/g, '')).toLowerCase())]
   || M[Object.keys(M).find((k) => k.startsWith('build') && typeof M[k] === 'function')];
 const animate = M.animateBoss || (() => {});

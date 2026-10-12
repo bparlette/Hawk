@@ -59,5 +59,12 @@ if (id === 'kingpin_carl') {
     let hidden = false; for (const n of names) for (const u of [0, 0.6, 1]) { J.pose(n, u); if (n === 'bowl' && u === 0.6) hidden = !J.ball.visible; } J.pose('idle', 0); mergeRig(J);
     return { posed: names.length * 3, ballHiddenAfterRelease: hidden, ballBackAtIdle: J.ball.visible, mergedCalls: J.merged.length }; });
 }
+if (id === 'riptide_rodney') {
+  run('jPoseStates', () => { const J = M.buildRiptideRodney(KG, { seed: 7 }); const names = ['cradle', 'pass', 'shoot', 'check', 'stunned', 'atk1', 'atk2', 'atk3', 'idle'];
+    for (const n of names) for (const u of [0, 0.6, 1]) J.pose(n, u); J.pose('shoot', 0.7); const hid = !J.ball.visible; J.pose('idle', 0); mergeRig(J);
+    return { posed: names.length * 3, ballHiddenAfterShot: hid, mergedCalls: J.merged.length }; });
+  run('wingmanVariant', () => { const J = M.buildRiptideRodney(KG, { variant: 'otter_wingman', seed: 7 }); const s0 = stats(J.root); J.pose('check', 0.5); J.pose('cradle', 0.3); mergeRig(J);
+    return { meta: J.meta.id, scale: J.meta.scale, hasStick: !!J.swR, ...s0, mergedCalls: J.merged.length }; });
+}
 const file = `tools/results_boss_${id}.json`, R = JSON.parse(fs.readFileSync(file, 'utf8')); R.hooks = out; fs.writeFileSync(file, JSON.stringify(R, null, 1));
 console.log(JSON.stringify(out));
