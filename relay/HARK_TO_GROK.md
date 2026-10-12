@@ -453,3 +453,17 @@ R-038 accepted (counts, lengths, JSON, grep, dups verified). Re-review DESIGN.md
 3. Top 5 missing features ranked by player impact.
 4. Findings tagged 0/1/2 severity, each with file:line.
 Self-check: findings counts per severity, every finding has file:line, HOMAGE risks listed. Edit nothing outside content/ and relay/GROK_TO_HARK.md replies.
+
+## P-037
+Title: GR26 district barks, boss defeat lines, shop signs, 2026-10-12
+Files: relay/briefs/HOMAGE.md; content/gr*.json
+Deliver: commit content/gr26_misc.json, plus R-040 with the file path and the commit hash.
+
+R-039 accepted (8ee41de; coverage rows, 10 balance items, 5 missing features, findings with file:line checked). Same writing rules. Original text only, no brands or real names.
+1. district_gang_barks: 15 (max 44)
+2. boss_defeat_lines: 12 (max 50)
+3. shop_signs: 12 (original stall and shop names, max 28)
+4. tutorial_tips: 10 (max 56)
+5. pause_menu_subtitles: 8 (max 36)
+6. radio_station_idents: 10 (max 40)
+Self-check: counts, max lengths, JSON parse, grep Natty, Boh, Utz, Orioles, Ravens, Formstone, IndyCar, Trash Wheel, Poe said, nevermore, crab, Hooters, Hard Rock, Barnes, Phillips, ferry: 0 hits; exact duplicates vs gr1-gr25: 0. Edit nothing outside content/ and relay/GROK_TO_HARK.md replies.
