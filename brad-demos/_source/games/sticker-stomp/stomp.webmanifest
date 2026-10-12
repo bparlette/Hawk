@@ -1,0 +1,26 @@
+{
+  "name": "Sticker Stomp",
+  "short_name": "Sticker Stomp",
+  "description": "Pick a die-cut sticker and smash a dusk city as a giant monster.",
+  "start_url": "./",
+  "scope": "./",
+  "display": "fullscreen",
+  "display_override": ["fullscreen", "standalone"],
+  "orientation": "any",
+  "background_color": "#1b1420",
+  "theme_color": "#1b1420",
+  "icons": [
+    {
+      "src": "./stickers/char00.png",
+      "sizes": "400x777",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "./favicon-stomp.svg",
+      "sizes": "64x64",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    }
+  ]
+}

@@ -1,0 +1,100 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover"
+    />
+    <style>
+      html, body, #app, canvas, #ring, #nes-pad { touch-action: none; overscroll-behavior: none; -webkit-user-select: none; user-select: none; }
+    </style>
+    <script src="./shared/nes-pad-controls.js" defer></script>
+    <meta name="theme-color" content="#f6f1df" />
+    <title>Punch-Out · Notebook Arcade</title>
+    <meta
+      name="description"
+      content="Notebook Arcade Punch-Out!! — Glass Joe tells, then the Bald Bull charge."
+    />
+    <link rel="icon" type="image/svg+xml" href="./favicon.svg" />
+    <link rel="image_src" href="./og.jpg" />
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content="Punch-Out · Notebook Arcade" />
+    <meta
+      property="og:description"
+      content="NES Punch-Out!! on lined paper. Telegraph, dodge, punch the open window."
+    />
+    <meta property="og:image" content="https://notebook-arcade.surge.sh/punch-out/og.jpg" />
+    <meta property="og:image:secure_url" content="https://notebook-arcade.surge.sh/punch-out/og.jpg" />
+    <meta property="og:image:width" content="1376" />
+    <meta property="og:image:height" content="768" />
+    <meta property="og:url" content="https://notebook-arcade.surge.sh/punch-out/" />
+    <script>
+      (function () {
+        var p = location.pathname;
+        if (p && !p.endsWith("/") && !/\.[a-z0-9]+$/i.test(p)) {
+          location.replace(p + "/" + location.search + location.hash);
+        }
+      })();
+    </script>
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="Punch-Out · Notebook Arcade" />
+    <meta name="twitter:description" content="Glass Joe first. Learn the tells." />
+    <meta name="twitter:image" content="https://notebook-arcade.surge.sh/punch-out/og.jpg" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Gaegu:wght@400;700&display=swap" rel="stylesheet" />
+    <script type="module" crossorigin src="./assets/index-8tICkCFU.js"></script>
+    <link rel="stylesheet" crossorigin href="./assets/index-CyqHAkge.css">
+    <link rel="stylesheet" href="./shared/nes-pad.css" />
+  </head>
+  <body>
+    <div id="app" class="page">
+      <header class="strip" id="hud" hidden>
+        <a class="arcade" href="https://notebook-arcade.surge.sh/">← ARCADE</a>
+        <span>MAC <i class="pip" id="mac-hp"></i></span>
+        <span>♥<b id="hearts">20</b></span>
+        <span id="stars">☆☆☆</span>
+        <span id="clock">0:00</span>
+        <span id="round-tag">R1</span>
+        <span>PTS <b id="score">0</b></span>
+        <span><b id="opp-name">JOE</b> <i class="pip" id="opp-hp"></i></span>
+        <button type="button" id="mute-btn" class="ink-btn" aria-pressed="false">SOUND</button>
+      </header>
+      <p class="tell" id="tell" hidden></p>
+
+      <main class="playfield">
+        <canvas id="ring" width="720" height="520"></canvas>
+        <div id="overlay" class="overlay"></div>
+      </main>
+
+      <section class="pad-wrap">
+        <div class="nes-pad" id="nes-pad">
+          <img
+            class="pad-art"
+            src="./shared/nes-pad.png"
+            width="560"
+            height="172"
+            alt=""
+            draggable="false"
+          />
+          <div class="pad-relabels" aria-hidden="true">
+            <span class="pad-relabel relabel-b">LEFT</span>
+            <span class="pad-relabel relabel-a">RIGHT</span>
+          </div>
+          <div class="nes-hits">
+            <button type="button" data-act="up" data-btn="up" class="hit d-up" aria-label="Up"></button>
+            <button type="button" data-act="down" data-btn="down" class="hit d-down" aria-label="Down / block"></button>
+            <button type="button" data-act="left" data-btn="left" class="hit d-left" aria-label="Left dodge"></button>
+            <button type="button" data-act="right" data-btn="right" class="hit d-right" aria-label="Right dodge"></button>
+            <button type="button" data-act="select" data-btn="select" class="hit hit-select" aria-label="Select"></button>
+            <button type="button" data-act="start" data-btn="star" class="hit hit-start" aria-label="Start / star"></button>
+            <button type="button" data-act="b" data-btn="b" class="hit hit-b" aria-label="B left punch"></button>
+            <button type="button" data-act="a" data-btn="a" class="hit hit-a" aria-label="A right punch"></button>
+          </div>
+        </div>
+        <p class="keys">Z/B/N left · X/M right · hold ↑ face · punch alone body · ←→ dodge · ↓ block</p>
+      </section>
+    </div>
+  </body>
+</html>

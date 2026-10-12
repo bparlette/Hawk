@@ -1,0 +1,98 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/svg+xml" href="./favicon.svg" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover"
+    />
+    <style>
+      html, body, #app, canvas, #game, #nes-pad { touch-action: none; overscroll-behavior: none; -webkit-user-select: none; user-select: none; }
+    </style>
+    <script src="./shared/nes-pad-controls.js" defer></script>
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <title>Excitebike</title>
+    <meta name="notebook-game" content="excitebike" />
+    <meta
+      name="description"
+      content="Track 1 on lined notebook paper. Hold A for gas, tap B for turbo, lean the bike over the dirt jumps."
+    />
+    <meta property="og:title" content="Excitebike" />
+    <meta
+      property="og:description"
+      content="Track 1 on lined notebook paper. Hold A for gas, tap B for turbo, lean the bike over the dirt jumps."
+    />
+    <meta property="og:url" content="https://notebook-arcade.surge.sh/excitebike/" />
+    <meta property="og:type" content="website" />
+    <meta property="og:image" content="https://notebook-arcade.surge.sh/excitebike/og.jpg" />
+    <meta property="og:image:secure_url" content="https://notebook-arcade.surge.sh/excitebike/og.jpg" />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:image:type" content="image/jpeg" />
+    <meta
+      property="og:image:alt"
+      content="Stick-ink dirt bike jumping on lined notebook paper, Excitebike Track 1."
+    />
+    <meta property="og:site_name" content="Notebook Arcade" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="Excitebike" />
+    <meta
+      name="twitter:description"
+      content="Track 1 on lined notebook paper. Hold A for gas, tap B for turbo, lean the bike over the dirt jumps."
+    />
+    <meta name="twitter:image" content="https://notebook-arcade.surge.sh/excitebike/og.jpg" />
+    <link rel="stylesheet" href="./fonts.css" />
+    <link rel="preload" href="./fonts/patrick-hand.ttf" as="font" type="font/ttf" crossorigin />
+    <script>
+      (function () {
+        var p = location.pathname;
+        if (p && !p.endsWith("/") && !/\.[a-z0-9]+$/i.test(p)) {
+          location.replace(p + "/" + location.search + location.hash);
+        }
+      })();
+    </script>
+    <script src="./js/game.js" defer></script>
+    <link rel="stylesheet" href="./assets/index-ExB1kPad.css" />
+    <link rel="stylesheet" href="./shared/nes-pad.css" />
+  </head>
+  <body>
+    <div id="app">
+      <div id="frame">
+        <div id="playfield">
+          <canvas id="game" width="1280" height="720" aria-label="Excitebike notebook arcade"></canvas>
+          <button id="mute" type="button" aria-label="Mute sound">♪</button>
+        </div>
+        <div id="touch" class="touch nes-wrap show">
+          <div id="nes-pad" aria-label="Sketched NES controller">
+            <img
+              class="pad-art"
+              src="./shared/nes-pad.png"
+              width="560"
+              height="172"
+              alt=""
+              draggable="false"
+            />
+            <div class="pad-relabels" aria-hidden="true">
+              <span class="pad-relabel relabel-b">TURBO</span>
+              <span class="pad-relabel relabel-a">GAS</span>
+            </div>
+            <div class="nes-hits">
+              <button type="button" data-act="up" class="hit d-up" aria-label="Up — wheelie"></button>
+              <button type="button" data-act="down" class="hit d-down" aria-label="Down — lean forward"></button>
+              <button type="button" data-act="left" class="hit d-left" aria-label="Left"></button>
+              <button type="button" data-act="right" class="hit d-right" aria-label="Right"></button>
+              <button type="button" data-act="select" class="hit hit-select" aria-label="Select — mute"></button>
+              <button type="button" data-act="start" class="hit hit-start" aria-label="Start"></button>
+              <button type="button" data-act="turbo" class="hit hit-b nes-face" aria-label="B turbo"></button>
+              <button type="button" data-act="gas" class="hit hit-a nes-face" aria-label="A gas"></button>
+            </div>
+          </div>
+        </div>
+        <p class="hint">
+          Track 1 — hold A gas · tap B turbo · ↑ wheelie · ↓ nose down · START race · SELECT mute
+        </p>
+      </div>
+    </div>
+  </body>
+</html>

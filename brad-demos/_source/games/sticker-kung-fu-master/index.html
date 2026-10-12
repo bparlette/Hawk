@@ -1,0 +1,97 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/svg+xml" href="./favicon.svg" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover"
+    />
+    <style>
+      html, body, #app, canvas, #game, #nes-pad { touch-action: none; overscroll-behavior: none; -webkit-user-select: none; user-select: none; }
+    </style>
+    <script src="./shared/nes-pad-controls.js" defer></script>
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <title>KUNG FU MASTER — notebook arcade</title>
+    <link rel="canonical" href="https://notebook-arcade.surge.sh/kung-fu-master/" />
+    <meta
+      name="description"
+      content="Floor 1 of the Devil's Temple. Walk left, shake off Grippers, duck knives, and beat the Stick Fighter."
+    />
+    <meta property="og:title" content="KUNG FU MASTER — notebook arcade" />
+    <meta
+      property="og:description"
+      content="Floor 1 of the Devil's Temple. Walk left, shake off Grippers, duck knives, and beat the Stick Fighter."
+    />
+    <meta property="og:url" content="https://notebook-arcade.surge.sh/kung-fu-master/" />
+    <meta property="og:type" content="website" />
+    <meta property="og:image" content="https://notebook-arcade.surge.sh/kung-fu-master/og.jpg" />
+    <meta property="og:image:secure_url" content="https://notebook-arcade.surge.sh/kung-fu-master/og.jpg" />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:image:type" content="image/jpeg" />
+    <meta
+      property="og:image:alt"
+      content="Stick-figure Floor 1 of Kung-Fu Master on lined notebook paper."
+    />
+    <meta property="og:site_name" content="KUNG FU MASTER — notebook arcade" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="KUNG FU MASTER — notebook arcade" />
+    <meta
+      name="twitter:description"
+      content="Floor 1 of the Devil's Temple. Walk left, shake off Grippers, duck knives, and beat the Stick Fighter."
+    />
+    <meta name="twitter:image" content="https://notebook-arcade.surge.sh/kung-fu-master/og.jpg" />
+    <meta
+      name="twitter:image:alt"
+      content="Stick-figure Floor 1 of Kung-Fu Master on lined notebook paper."
+    />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Caveat:wght@500;700&family=Patrick+Hand&family=Permanent+Marker&display=swap"
+      rel="stylesheet"
+    />
+    <script type="module" crossorigin src="./assets/index-BgbpQsuP.js"></script>
+    <link rel="stylesheet" crossorigin href="./assets/index-DLtD5rIT.css">
+    <link rel="stylesheet" href="./shared/nes-pad.css" />
+  </head>
+  <body>
+    <div id="app">
+      <div id="frame">
+        <div id="playfield">
+          <canvas id="game" width="1280" height="720" aria-label="Kung Fu Master notebook arcade"></canvas>
+        </div>
+        <div id="touch" class="touch nes-wrap show">
+          <div id="nes-pad" aria-label="Sketched NES controller">
+            <img
+              class="pad-art"
+              src="./shared/nes-pad.png"
+              width="560"
+              height="172"
+              alt=""
+              draggable="false"
+            />
+            <div class="pad-relabels" aria-hidden="true">
+              <span class="pad-relabel relabel-b">PUNCH</span>
+              <span class="pad-relabel relabel-a">KICK</span>
+            </div>
+            <div class="nes-hits">
+              <button type="button" data-act="up" class="hit d-up" aria-label="Up"></button>
+              <button type="button" data-act="down" class="hit d-down" aria-label="Down / crouch"></button>
+              <button type="button" data-act="left" class="hit d-left" aria-label="Left"></button>
+              <button type="button" data-act="right" class="hit d-right" aria-label="Right"></button>
+              <button type="button" data-act="select" class="hit hit-select" aria-label="Select — mute"></button>
+              <button type="button" data-act="start" class="hit hit-start" aria-label="Start"></button>
+              <button type="button" data-act="punch" class="hit hit-b nes-face" aria-label="B punch"></button>
+              <button type="button" data-act="kick" class="hit hit-a nes-face" aria-label="A kick"></button>
+            </div>
+          </div>
+        </div>
+        <p class="hint">
+          Floor 1 only — walk left. B punch · A kick · ↑ jump · ↓ crouch · START pause · SELECT mute
+        </p>
+      </div>
+    </div>
+  </body>
+</html>
