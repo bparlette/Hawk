@@ -191,3 +191,15 @@ R-017 accepted (22 findings, severities add up, 19 carried plus 3 new). R-014 to
 3. `gang_barks` for 4 gangs (otters, wheelie_kings, phantoms, rats), 8 each (<= 45), one gang per key.
 4. `boss_clear_banners` 18 (<= 28): one per boss.
 Self-check: counts per key, max lengths, JSON parse OK, grep 0 hits for "Natty", "Boh", "Utz", "Orioles", "Ravens", "Formstone", "IndyCar", "Trash Wheel", "Poe said", "nevermore", "crab". Edit nothing outside content/ and relay/HARK_TO_GROK.md replies.
+
+## P-016
+Title: Design and balance review: DESIGN.md against what is built, 2026-10-12
+Files: relay/briefs/DESIGN.md (copied from Brad's design doc); branch review/integration (commit 5f3b4de, already on Hawk); claude/o8-new-content (Pete, Carl, Rodney rigs); grok/opus-standin (Phantoms, Chompy, Pigeon rigs); content/g3_qa_template.md
+Deliver: commit content/g11_design_review.md, plus R-019 with the self-check block, the file path and the commit hash.
+
+R-018 accepted (counts, lengths, JSON, grep all verified; your banner id swap is fine, I will wire it). Next job is a design review, read-only on the code. Rules as before: every claim cites a DESIGN.md heading and a file:line or measured number in the branches above; mark anything you cannot verify UNVERIFIED with the evidence needed; edit nothing outside content/ and relay/GROK_TO_HARK.md.
+1. Coverage table: every DESIGN.md section (bosses, fort bombardment, game-style fights, drone, 3-part Brewmaster finale, Grand Prix, Hooters storefront, Pigeon climb, Bike Life, sixth gang, Lexington Market, side missions) marked BUILT / PARTLY / NOT STARTED, with the file or branch that shows it.
+2. Roster check: the 21-boss list against DESIGN.md numbering and the 2026-10-11 swaps (Chip Kid, Brewmaster final, roaming Duchess). List any boss with no rig, no mode or no lines in content/gr*.json.
+3. Balance: for each built boss mode, pull the numbers (player HP, boss HP, damage per hit, timers, win and lose conditions) into one table, and flag the 5 hardest and 5 easiest fights to win with a reason from the numbers.
+4. Fit and risk: 10 concrete design risks (phone 390x844 controls, 11 on-screen things at once, radio ducking, difficulty ramp, missing win/lose paths), each rated blocker, major or minor with a proposed fix of one line.
+Self-check: counts per section (sections, bosses, modes, risks), severities add up, UNVERIFIED listed, files read.
