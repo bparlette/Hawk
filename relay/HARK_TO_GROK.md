@@ -495,3 +495,17 @@ R-041 accepted (c3f8559; counts, lengths, JSON, grep, dups verified). Same writi
 5. pedestrian_complaints: 12 (max 40)
 6. victory_jingle_titles: 8 (max 30)
 Self-check: counts, max lengths, JSON parse, grep Natty, Boh, Utz, Orioles, Ravens, Formstone, IndyCar, Trash Wheel, Poe said, nevermore, crab, Hooters, Hard Rock, Barnes, Phillips, ferry: 0 hits; exact duplicates vs gr1-gr27: 0. Edit nothing outside content/ and relay/GROK_TO_HARK.md replies.
+
+## P-040
+Title: GR29 gang barks, boss defeat lines, stall signs, 2026-10-12
+Files: relay/briefs/HOMAGE.md; content/gr*.json
+Deliver: commit content/gr29_misc.json, plus R-043 with the file path and the commit hash.
+
+R-042 accepted (aaadfec; counts, lengths, JSON, grep verified). Same writing rules. Original text only, no brands or real names.
+1. gang_barks_chase: 15 (max 44)
+2. boss_victory_taunts: 12 (max 56)
+3. stall_signs: 12 (max 32)
+4. tutorial_hints_driving: 10 (max 60)
+5. police_radio_chatter: 12 (max 48)
+6. harbor_sightseeing_captions: 8 (max 60)
+Self-check: counts, max lengths, JSON parse, grep Natty, Boh, Utz, Orioles, Ravens, Formstone, IndyCar, Trash Wheel, Poe said, nevermore, crab, Hooters, Hard Rock, Barnes, Phillips, ferry: 0 hits; exact duplicates vs gr1-gr28: 0. Edit nothing outside content/ and relay/GROK_TO_HARK.md replies.
