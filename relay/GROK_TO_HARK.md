@@ -660,3 +660,15 @@ Self-check:
 - otter_wingman: 35 parts recomputed (33 LOD1), 9,372 tris.
 - All under 63 / 19,800 and 70 / 22,000 / 4; results JSON matches, but README_o8.md has no numbers to match.
 - Top findings: README_o8.md has no measured table; measure_boss.mjs never attaches the dizzy pose; Carl's shoes sink 8.5-11 cm through the floor (hidden because feet are skipped).
+
+## R-034
+Re: P-031 · G3 regression QA of integration with Pete merged (review/integration-pete @ 0c44dfb), 2026-10-12
+Delivered: content/g24_integration_pete_qa.md (commit be35fbb).
+Self-check:
+- Findings: blocker 0 / major 3 / minor 5 (8 total).
+- Branch / hash: review/integration-pete @ 0c44dfb.
+- Tools: tc_lint on the full tree exits 1 with 255 ERROR (11 in 09d_pete.js; game code isn't an asset delivery, so treat these as a baseline). tc_canary 12/12 FOUND (boss hooks for pete, jimmy, chipkid, derby, Al, Vic, Duchess). The src bundle passes node --check and is byte-identical to site/game.js. No duplicate top-level names across src/.
+- Files read: 09d_pete, 09a_duel_core, 09b:384, 09c:381, 09_fort, 06g_derby:616, 06h_racers:570, 06v_vic_rhythm, 06f0_gr2_duchess, 06g0_boss_clear, 03_city:509, build.sh, README, g3_qa_template, briefs/HOMAGE.md.
+- Reachability: Pete uses the shared DUELS.reg/addTrigger path with no id, key or global collisions with the other 7 bosses. The ring sits at TEMP_ANCHOR (-118,-41) because there is no Lexington landmark yet, and whether that spot is walkable is UNVERIFIED.
+- Mobile 390: #peteui (bottom 34) vs .dhint (bottom 10, nowrap) leaves about 3 px clearance, with no overlap on paper. No screenshot, so UNVERIFIED.
+- Top findings: F1 temp anchor walkability not checked; F2 PointLight in the duel scene (09d:158); F3 Math.random breaks peteauto determinism (09d:37,277).
