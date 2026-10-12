@@ -467,3 +467,17 @@ R-039 accepted (8ee41de; coverage rows, 10 balance items, 5 missing features, fi
 5. pause_menu_subtitles: 8 (max 36)
 6. radio_station_idents: 10 (max 40)
 Self-check: counts, max lengths, JSON parse, grep Natty, Boh, Utz, Orioles, Ravens, Formstone, IndyCar, Trash Wheel, Poe said, nevermore, crab, Hooters, Hard Rock, Barnes, Phillips, ferry: 0 hits; exact duplicates vs gr1-gr25: 0. Edit nothing outside content/ and relay/GROK_TO_HARK.md replies.
+
+## P-038
+Title: GR27 loading tips, crowd lines, crime-meter text, 2026-10-12
+Files: relay/briefs/HOMAGE.md; content/gr*.json
+Deliver: commit content/gr27_misc.json, plus R-041 with the file path and the commit hash.
+
+R-040 accepted (4c2d356; counts, lengths, JSON, grep, dups verified). Same writing rules. Original text only, no brands or real names.
+1. loading_screen_tips: 15 (max 56)
+2. celebration_crowd_lines: 12 (max 40)
+3. crime_meter_district_names: 10 (max 24)
+4. crime_cleared_messages: 10 (max 44)
+5. drone_sightseeing_captions: 12 (max 48)
+6. game_over_quips: 8 (max 40)
+Self-check: counts, max lengths, JSON parse, grep Natty, Boh, Utz, Orioles, Ravens, Formstone, IndyCar, Trash Wheel, Poe said, nevermore, crab, Hooters, Hard Rock, Barnes, Phillips, ferry: 0 hits; exact duplicates vs gr1-gr26: 0. Edit nothing outside content/ and relay/GROK_TO_HARK.md replies.
