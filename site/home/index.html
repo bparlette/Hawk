@@ -247,6 +247,10 @@
         .x-btn, .x-swap img { transition: none; }
       }
     </style>
+    <script>
+      window.onYouTubeIframeAPIReady = function () { window.xYTReady = true; };
+    </script>
+    <script src="https://www.youtube.com/iframe_api" async onerror="window.xYTFailed = true; window.xRadioFail && window.xRadioFail()"></script>
   </head>
   <body>
     <div class="page" id="top">
@@ -764,8 +768,12 @@
         $("x-crlist").innerHTML = listHTML;
 
         var R = { A: null, B: null, act: null, idle: null, readyA: false, readyB: false, failed: false, started: false, on: false,
-          vol: 70, order: [], pos: 0, cur: null, start: 0, adj: false, t: 0, last: 0, pre: null, fade: null, bad: {}, want: false };
+          vol: 70, order: [], pos: 0, cur: null, start: 0, adj: false, t: 0, last: 0, pre: null, fade: null, bad: {}, want: false,
+          warming: false, warm: false };
         var V = function () { return R.vol; };
+        // A track's clip start: its peak_start_s; only tracks without one fall back to fbStart(duration) once it is known.
+        function hasPeak(t) { return typeof t.peak_start_s === "number" && isFinite(t.peak_start_s); }
+        function startOf(t) { return hasPeak(t) ? Math.max(0, t.peak_start_s) : 0; }
 
         function shuffle() {
           var a = TR.map(function (_, i) { return i; });
@@ -822,7 +830,7 @@
 
         function loadOnActive(t) {
           if (!t) { fail(); return; }
-          R.cur = t; R.start = t.peak_start_s; R.adj = false; R.t = 0;
+          R.cur = t; R.start = startOf(t); R.adj = hasPeak(t); R.t = 0;
           var p = R.act;
           call(p, "setVolume", V()); call(p, "unMute");
           if (IOS) { call(p, "cueVideoById", { videoId: t.youtube_id, startSeconds: R.start }); call(p, "playVideo"); }
@@ -837,7 +845,7 @@
         function preload() {
           if (!DUAL || !R.readyB || R.pre || R.fade || !R.on || !R.cur) return;
           var t = nextTrack(); if (!t) return;
-          R.pre = { t: t, start: t.peak_start_s, ready: false, adj: false };
+          R.pre = { t: t, start: startOf(t), ready: false, adj: hasPeak(t) };
           call(R.idle, "mute"); call(R.idle, "setVolume", 0);
           call(R.idle, "loadVideoById", { videoId: t.youtube_id, startSeconds: R.pre.start });
         }
@@ -890,16 +898,39 @@
         setInterval(tick, 100);
 
         // Transport
+        // Prewarm: as soon as A is ready, load the first clip muted so it is buffered before the tap.
+        function prewarm() {
+          if (R.cur || R.on || R.failed) return;
+          var t = nextTrack(); if (!t) { fail(); return; }
+          R.cur = t; R.start = startOf(t); R.adj = hasPeak(t); R.t = 0; R.warming = true;
+          var p = R.act;
+          call(p, "mute"); call(p, "setVolume", 0);
+          call(p, "loadVideoById", { videoId: t.youtube_id, startSeconds: R.start });
+        }
+        function resume() {
+          var p = R.act;
+          call(p, "setVolume", V()); call(p, "unMute"); call(p, "playVideo");
+          announce(R.cur);
+        }
+        // Only used when the tap came before player A was ready (API still loading).
         function begin() {
           if (!R.readyA || !R.want) return;
           R.want = false;
           if (!R.cur) loadOnActive(nextTrack());
-          else { call(R.act, "setVolume", V()); call(R.act, "unMute"); call(R.act, "playVideo"); }
+          else resume();
         }
+        // Runs synchronously inside the tap handler, so iOS and Chrome count it as the user gesture.
         function play() {
           if (R.failed) return;
-          R.started = true; R.on = true; R.want = true; render();
-          begin();
+          R.started = true; R.on = true; render();
+          if (R.A && R.readyA) {
+            R.want = false;
+            if (!R.cur) loadOnActive(nextTrack());
+            else resume();
+          } else {
+            R.want = true;
+            if (R.A) { call(R.A, "setVolume", V()); call(R.A, "unMute"); call(R.A, "playVideo"); }
+          }
         }
         function pause() {
           if (R.fade) endFade();
@@ -941,18 +972,23 @@
           if (R.started || R.failed) return off();
           var t = e.target;
           if (t.closest && (t.closest("#x-radio") || t.closest("#x-credits") || t.closest('a[href^="' + GAME + '"]'))) return;
+          // A touch pointerdown is not a user activation; that tap starts the radio on its touchend instead.
+          if (e.type === "pointerdown" && e.pointerType === "touch") return;
+          if (e.type === "keydown" && /^(Escape|Shift|Control|Alt|Meta)$/.test(e.key)) return;
           off(); play();
         }
-        function off() { document.removeEventListener("pointerup", firstTap, true); }
-        document.addEventListener("pointerup", firstTap, true);
+        var TAP_EVENTS = ["pointerdown", "touchend", "keydown"];
+        function off() { TAP_EVENTS.forEach(function (n) { document.removeEventListener(n, firstTap, true); }); }
+        TAP_EVENTS.forEach(function (n) { document.addEventListener(n, firstTap, true); });
 
         // YouTube IFrame API
         var VARS = { controls: 0, disablekb: 1, fs: 0, playsinline: 1, rel: 0 };
         function onReady(e) {
           var p = e.target;
           if (p === R.B) { R.readyB = true; call(p, "mute"); call(p, "setVolume", 0); preload(); return; }
-          R.readyA = true; call(p, "setVolume", V());
-          begin();
+          R.readyA = true;
+          if (R.want) { call(p, "setVolume", V()); begin(); }
+          else prewarm();
         }
         function onState(e) {
           var p = e.target, s = e.data;
@@ -961,9 +997,15 @@
             var P = R.pre; if (!P || s !== 1) return;
             if (P.ready) { call(p, "pauseVideo"); return; }
             var vd = vidOf(p); if (vd && vd !== P.t.youtube_id) return;
-            var d = pdur(p);
-            if (d > 0) { P.start = fbStart(d); P.adj = true; call(p, "seekTo", P.start, true); }
+            if (!P.adj) { var d = pdur(p); if (d > 0) { P.start = fbStart(d); P.adj = true; call(p, "seekTo", P.start, true); } }
             call(p, "pauseVideo"); P.ready = true;
+            return;
+          }
+          if (p === R.act && R.warming && s === 1) {
+            R.warming = false; R.warm = true;
+            if (!R.adj) { var d2 = pdur(p); if (d2 > 0) { R.start = fbStart(d2); R.adj = true; if (R.on) call(p, "seekTo", R.start, true); } }
+            if (!R.on) { call(p, "pauseVideo"); call(p, "seekTo", R.start, true); }
+            else { call(p, "setVolume", V()); call(p, "unMute"); }
             return;
           }
           if (s === 0 && R.on) advance(XF_SKIP);
@@ -982,18 +1024,23 @@
         function make(id) {
           return new YT.Player(id, { width: 2, height: 2, playerVars: VARS, events: { onReady: onReady, onStateChange: onState, onError: onError } });
         }
-        window.onYouTubeIframeAPIReady = function () {
-          if (R.failed) return;
+        var made = false;
+        function initPlayers() {
+          if (made || R.failed) return;
+          made = true;
           try {
             R.A = R.act = make("x-yt-a");
             if (DUAL) R.B = R.idle = make("x-yt-b");
           } catch (e) { fail(); }
-        };
+        }
         window.xRadioFail = fail;
+        if (window.xYTFailed) fail();
+        // The API script loads async from <head>; if it is already ready, create the players now, otherwise when it is.
+        if (window.xYTReady || (window.YT && window.YT.Player)) initPlayers();
+        else window.onYouTubeIframeAPIReady = initPlayers;
         setTimeout(function () { if (!(window.YT && window.YT.Player)) fail(); }, 12000);
         render();
       })();
     </script>
-    <script src="https://www.youtube.com/iframe_api" async onerror="window.xRadioFail && window.xRadioFail()"></script>
   </body>
 </html>
