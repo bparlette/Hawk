@@ -22,6 +22,8 @@ const BUILD = M[Object.keys(M).find((k) => k.startsWith('build') && typeof M[k] 
   || M[Object.keys(M).find((k) => k.startsWith('build') && typeof M[k] === 'function')];
 const animate = M.animateBoss || (() => {});
 const THREE = KR.THREE, SC = META.scale;
+const STD = ['idle', 'run', 'hurt', 'down', 'atk1', 'atk2', 'atk3'];
+const EXTRA = Object.keys(P).filter((k) => !STD.includes(k));
 const out = { id: META.id, meta: META, budgets: {}, idle0: {}, reach: {}, poses: {}, seq: {}, attacks: {}, merge: {}, determinism: {}, misc: {} };
 const r3 = (x) => +x.toFixed(3);
 
@@ -73,7 +75,10 @@ function bbox(J, noWeapon) {
   walk(J.root, false); return b;
 }
 function snap(K, J, p, t, state, u) { K.applyPose(J, p, 1e4, 1, true); animate(J, t, state, u); J.root.updateMatrixWorld(true); }
-const fresh = (K, o = {}) => { const J = BUILD(K, Object.assign({ seed: 7 }, o)); J.root.scale.setScalar(SC); return J; };
+const VOPTS = process.env.OPTS ? JSON.parse(process.env.OPTS) : {};   // e.g. OPTS='{"table":true}' or '{"variant":"otter_wingman"}'
+const LIM = { parts: +(process.env.PARTS_MAX || 63), tris: +(process.env.TRIS_MAX || 19800) };
+const SC2 = VOPTS.variant && M.VARIANTS && M.VARIANTS[VOPTS.variant] ? M.VARIANTS[VOPTS.variant].scale : SC;
+const fresh = (K, o = {}) => { const J = BUILD(K, Object.assign({ seed: 7 }, VOPTS, o)); J.root.scale.setScalar(SC2); return J; };
 
 // ---- limb gaps (same method as Hark's measure_gang: surface samples, nearest pair, flag > 2.5 cm) ----
 function worldVerts(meshes) {
@@ -117,7 +122,7 @@ for (const [kn, K] of [['zipKit', KR], ['realGame', KG]]) {
   }
 }
 const B0 = out.budgets.zipKit;
-out.budgets.pass = B0.parts <= 63 && B0.tris <= 19800 && B0.mats <= 4 && !B0.badHull && !B0.flashBad && !B0.shadowBad.length;
+out.budgets.limits = LIM; out.budgets.pass = B0.parts <= LIM.parts && B0.tris <= LIM.tris && B0.mats <= 4 && !B0.badHull && !B0.flashBad && !B0.shadowBad.length;
 
 // ================= idle height + reach =================
 {
@@ -130,7 +135,7 @@ out.budgets.pass = B0.parts <= 63 && B0.tris <= 19800 && B0.mats <= 4 && !B0.bad
   const names = new Map(Object.entries(J).filter(([k, v]) => v && v.isObject3D).map(([k, v]) => [v, k]));
   const nm = (o) => { let q = o; while (q && !names.has(q)) q = q.parent; return q ? names.get(q) : '?'; };
   for (let t = 0; t <= 3.0001; t += 0.05) {
-    snap(KR, J, P.idle(t, J), t, 'idle', 0); const skip = new Set([J.swR, J.swL].filter(Boolean));
+    snap(KR, J, P.idle(t, J), t, 'idle', 0); const skip = new Set([J.swR, J.swL, J.table, J.booth].filter(Boolean));   // weapon and props (table, booth) excepted
     const walk = (o, sk) => { sk = sk || skip.has(o); if (o.isMesh && !isHull(o) && o.visible && !sk) { const a = o.geometry.attributes.position; for (let i = 0; i < a.count; i++) { _v.fromBufferAttribute(a, i).applyMatrix4(o.matrixWorld); const h = Math.hypot(_v.x, _v.z); if (h > reach) { reach = h; at = t; rname = nm(o); } } } for (const c of o.children) walk(c, sk); };
     walk(J.root, false);
   }
@@ -168,6 +173,18 @@ out.budgets.pass = B0.parts <= 63 && B0.tris <= 19800 && B0.mats <= 4 && !B0.bad
   out.seq.worstMinY = r3(worstY); out.seq.worstCullR = r3(worstCull);
   out.seq.passFloor = worstY >= -0.03; out.seq.passCull26 = worstCull <= 2.6; out.seq.cull19Info = worstCull <= 1.9;
 }
+
+// ================= extra named states (J.pose names): static sweep + played from idle at rate 30 over 1 s =================
+out.extra = {};
+for (const name of EXTRA) {
+  let mY = 1e9, mWhat = '', cR = 0;
+  for (let i = 0; i <= 10; i++) { const u = i / 10, J = fresh(KR); snap(KR, J, P[name](u, J), 1, name, u); const sc = scan(J); if (sc.minY < mY) { mY = sc.minY; mWhat = 'static u ' + u + ':' + sc.minName; } cR = Math.max(cR, sc.cull); }
+  const J = fresh(KR); snap(KR, J, P.idle(0, J), 0, 'idle', 0);
+  for (let f = 0; f <= 90; f++) { const t = f / 60, u = Math.min(t / 1.0, 1), st = f <= 60 ? name : 'idle', p = f <= 60 ? P[name](u, J) : P.idle(t, J);
+    KR.applyPose(J, p, f <= 60 ? 30 : 14, 1 / 60, false); animate(J, t, st, u); const sc = scan(J); if (sc.minY < mY) { mY = sc.minY; mWhat = 'played ' + st + ' t ' + t.toFixed(2) + ':' + sc.minName; } cR = Math.max(cR, sc.cull); }
+  out.extra[name] = { minY: r3(mY), lowest: mWhat, cullR: r3(cR) };
+}
+out.extraPass = Object.values(out.extra).every((e) => e.minY >= -0.03 && e.cullR <= 2.6);
 
 // ================= ATTACKS contract + strike frame =================
 {
@@ -233,12 +250,15 @@ out.budgets.pass = B0.parts <= 63 && B0.tris <= 19800 && B0.mats <= 4 && !B0.bad
   out.determinism.canvas = { firstBuildOps: n1, secondBuildOps: n2, wrapperKOps: n3, cachedOnSameK: n2 === 0, cachedForWrapperK: n3 === 0, noDocumentBuildOk: noDocOk, drawsAfterDocumentReturns: n4 > 0 || n1 === 0 };
   out.misc.kitKeys = Object.keys(KR).length;
 }
+// ================= build time (median of 20 builds on the zip kit, after 3 warm-ups) =================
+{ for (let i = 0; i < 3; i++) BUILD(KR, Object.assign({ seed: 7 }, VOPTS)); const ts = []; for (let i = 0; i < 20; i++) { const t0 = performance.now(); BUILD(KR, Object.assign({ seed: i }, VOPTS)); ts.push(performance.now() - t0); }
+  ts.sort((a, b) => a - b); out.buildMs = { median: +ts[10].toFixed(2), min: +ts[0].toFixed(2), max: +ts[19].toFixed(2), n: 20, env: 'node ' + process.version }; }
 // ================= summary =================
 const pass = out.budgets.pass && Math.abs(out.idle0.heightErrPct) <= 10 && out.reach.pass && out.seq.passFloor && out.seq.passCull26 && out.attacks.contractOk
-  && out.attacks.allPeaksInActive && out.merge.ok && out.merge.flashShared && out.determinism.sameSeedEqual && out.determinism.independentOfMathRandom && !out.determinism.mathRandomInSource;
+  && out.attacks.allPeaksInActive && out.merge.ok && out.merge.flashShared && (out.extraPass ?? true) && out.determinism.sameSeedEqual && out.determinism.independentOfMathRandom && !out.determinism.mathRandomInSource;
 out.summary = { pass, parts: B0.parts, tris: B0.tris, mats: B0.mats, matKinds: B0.matKinds, mergedCalls: out.merge.drawCalls, height: out.idle0.height, heightErrPct: out.idle0.heightErrPct,
-  worstMinY: out.seq.worstMinY, worstCullR: out.seq.worstCullR, idleBeyondRadius: out.reach.beyondRadius, reachPart: out.reach.part, strikes: out.attacks.each.map((e) => e.pose + '@' + e.peakU + (e.peakInActive ? '' : '!')).join(' ') };
-const file = path.resolve(process.env.OUT || `tools/results_boss_${META.id}.json`);
+  worstMinY: Math.min(out.seq.worstMinY, ...Object.values(out.extra).map((e) => e.minY)), worstCullR: Math.max(out.seq.worstCullR, ...Object.values(out.extra).map((e) => e.cullR)), buildMs: out.buildMs.median, extra: Object.keys(out.extra).length, idleBeyondRadius: out.reach.beyondRadius, reachPart: out.reach.part, strikes: out.attacks.each.map((e) => e.pose + '@' + e.peakU + (e.peakInActive ? '' : '!')).join(' ') };
+const file = path.resolve(process.env.OUT || `tools/results_boss_${META.id}${VOPTS.variant ? '_' + VOPTS.variant : VOPTS.table ? '_table' : ''}.json`);
 fs.writeFileSync(file, JSON.stringify(out, null, 1));
 console.log(JSON.stringify(out.summary));
 if (!out.budgets.pass) console.log('budget detail', JSON.stringify(B0));

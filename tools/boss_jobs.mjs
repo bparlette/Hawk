@@ -14,4 +14,12 @@ const J = [
   [o('knockdown_strip'), 'strip=knockdown&n=9', 1800, 520], [o('knockdown_strip_merged'), 'strip=knockdown&n=9&merge=1', 1800, 520],
   [o('sheet'), 'sheet=1&t=1.1', 2048, 1024],
 ];
+// --states adds the extra named states (J.pose names); --variant=<tag>:<json opts> adds day / night / phone / poses / sheet for that build
+for (const a of process.argv.slice(3)) {
+  if (a === '--states') J.push([o('states'), 'pose=states&t=1.1', 1800, 600], [o('states_night_merged'), 'pose=states&t=1.1&night=1&merge=1', 1800, 600]);
+  const m = a.match(/^--variant=([a-z_]+):(.*)$/);
+  if (m) { const q = '&opts=' + encodeURIComponent(m[2]); for (const [n, qq, w, h] of [['day', 'cam=three&t=1.1', 1280, 720], ['night', 'cam=three&t=1.1&night=1', 1280, 720], ['phone_390x844', 'cam=phone&t=1.1', 390, 844],
+    ['poses', 'pose=all&t=1.1', 1800, 600], ['poses_merged', 'pose=all&t=1.1&merge=1', 1800, 600], ['sheet', 'sheet=1&t=1.1', 2048, 1024]].concat(process.argv.includes('--states') ? [['states', 'pose=states&t=1.1', 1800, 600]] : []))
+    J.push([o(m[1] + '_' + n), qq + q, w, h]); }
+}
 console.log(JSON.stringify(J.map(([out, q, w, h]) => ({ out, page: P, q: 'show=' + id + '&' + q + (q.includes('sheet') ? '' : '&ui=0'), w, h }))));

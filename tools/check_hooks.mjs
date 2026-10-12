@@ -49,5 +49,10 @@ if (id === 'arabber_al') {
   run('carChaseWithDeps', () => { const h = M.buildArabberAl({ THREE, toonMat: KG.toonMat, outlineMat: KG.outlineMat, addOdir: KG.addOdir, QUAL: KG.QUAL }); h.update(1 / 60, { t: 0.5, state: 'run', throwK: 0 }); return stats(h.root); });
   run('noThreeThrows', () => { const save = globalThis.THREE; delete globalThis.THREE; let msg = ''; try { M.buildArabberAl(); } catch (e) { msg = e.message; } globalThis.THREE = save; return { message: msg }; });
 }
+if (id === 'pit_beef_pete') {
+  run('separateTable', () => { const T = M.buildPitBeefTable(KG, {}); return { scale: T.root.scale.x, ...stats(T.root) }; });
+  run('jPoseStates', () => { const J = M.buildPitBeefPete(KG, { seed: 7 }); const names = ['eat', 'full', 'hiccup', 'cheat_slide', 'atk1', 'atk2', 'atk3', 'idle'];
+    for (const n of names) for (const u of [0, 0.5, 1]) J.pose(n, u); J.pose('full', 1); const puffed = +J.full.toFixed(2); J.setFull(0); mergeRig(J); return { posed: names.length * 3, puffedAtFull1: puffed, mergedCalls: J.merged.length }; });
+}
 const file = `tools/results_boss_${id}.json`, R = JSON.parse(fs.readFileSync(file, 'utf8')); R.hooks = out; fs.writeFileSync(file, JSON.stringify(R, null, 1));
 console.log(JSON.stringify(out));
