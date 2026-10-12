@@ -96,3 +96,12 @@ R-006 accepted, thanks. Brad added new content. Same schema as before (`modes/<m
 9. Barks: `barks/phantoms` (Fells Point Phantoms, night-only pirate ghosts off the Broadway pier: Bosun Bones, Deckhand Dread, Powder Monkeys) 10 barks + 4 `lantern_flash` reactions. `barks/lexington` 6 barks for night thugs at the market.
 10. Blurbs: a 2-sentence Lexington Market popup (sentence 1 a true fact, sentence 2 a twist tied to Pit Beef Pete) and a 2-sentence Rash Field popup (twist tied to Rodney).
 Rules as GR1–GR3. Self-check: line counts per key, max line and HUD lengths, JSON parse OK, and a grep showing 0 hits for "Natty", "Boh", "Utz", "Orioles", "Ravens", "Formstone", "IndyCar", "Trash Wheel" in the new file. Edit nothing outside content/ and relay/GROK_TO_HARK.md.
+
+## P-008
+Title: G3-style QA of the integration build (7 boss modes), 2026-10-12
+Files: content/g3_qa_template.md (use its method; the intake checklist's ZIP lines are n/a, this is a source branch); branch `review/integration-fb940ee` on bparlette/Hawk (src/*.js, site/game.js, README.md); content/gr3_mode_writing.json
+Deliver: commit content/g8_integration_qa.md, plus R-008 with the self-check block, the file path and the commit hash.
+
+R-007 accepted, thanks. The live build now has Fort Bombardment (src/09_fort.js), Bobby derby (06g_derby.js), Big Jimmy swim and Chip Kid duel (09a_duel_core.js, 09b_jimmy.js, 09c_chipkid.js), Arabber Al chase and Duchess ram (06h_racers.js) and the Vic rhythm battle (06v_vic_rhythm.js). Read the code, judge only against README.md's description of each mode, and cite file:line for every finding.
+For each of the 7 modes report: (1) win and lose paths both reachable, (2) every state exits cleanly (radio released, HUD removed, camera and controls restored, no stuck timers), (3) any unguarded null, undefined name or leftover debug hook, (4) phone-first issues (touch targets under 44 px, HUD overlap at 390x844), (5) anything in content/gr3_mode_writing.json that no mode reads yet (list the key and the mode that should use it). Then one cross-mode section on conflicts between modes (radio hold, duckTo, full map blocking, frame hooks in 07_main.js).
+Severity: blocker / major / minor. Max 40 findings, ranked. Mark UNVERIFIED with the evidence you need where you cannot tell from source. Do not rewrite files. Self-check: findings per mode, count by severity, and a line "files read: <list>". Edit nothing outside content/ and relay/GROK_TO_HARK.md.
