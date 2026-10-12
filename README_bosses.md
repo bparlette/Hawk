@@ -9,6 +9,7 @@ real poses and the real `kit/real_mergeRig.js`. Work in progress: bosses are add
 | Big Jimmy | `src/boss_big_jimmy.js` | built, measured, previews |
 | Voltage Vic | `src/boss_voltage_vic.js` | built, measured, previews |
 | Arabber Al | `src/boss_arabber_al.js` | built, measured, previews |
+| Chef Crabcake | `src/boss_chef_crabcake.js` | built, measured, previews |
 
 ## Tools
 - `viewer_bosses.html` — the boss viewer (from `kit/real_viewer.html`): `?show=<id>&pose=idle|run|hurt|down|atk1|atk2|atk3|all`, `&turn=1`, `&sheet=1`,
@@ -57,3 +58,14 @@ rams forward: `move: 8`), **strawberry shower** (twists back to the crates and f
 (pony gallop and wheel spin in `animateBoss`); `down` knocks him flat on his back into his own produce. `META.radius` (2.0 m) covers the
 whole rig, pony to tailboard. Car-chase hook: `buildArabberAl()` (THREE from `window.K` / `window.THREE`) or `buildArabberAl(deps)`
 returns `{ root, update(dt, { t, state, throwK }), J }`; `throwK` drives the lob.
+
+### Chef Crabcake (`chef_crabcake`, Four Seasons kitchen)
+A classic Maryland blue crab in chef's whites (HOMAGE: blue crab, steamed red when angry, a mallet and an original seasoning tin).
+Silhouette: the wide bright-blue carapace is his face, with the lateral spines and stalk eyes, under a tall toque; a round
+double-breasted chef coat with two button rows, a red neckerchief and a cream apron; blue crab forearms and claws gripping a wooden
+crab mallet each; and one little walking leg out of his left side holding his seasoning tin. The tin is original: forest green with a
+cream band and red/green lettering "CHEF'S CRAB DUST", drawn on a 256×128 canvas (the one mapped material, cached per kit, never on a
+failed draw). Nothing in it echoes a real seasoning brand's colours or layout. Angry: blue goes through a cooking brown to steamed red.
+Attacks: **seasoning blind** (twists the tin leg back, then lunges and fans a blinding cloud with the left mallet), **mallet drumroll**
+(both mallets high, then alternating overhead smashes, right then left), **sidestep sweep** (a crabwise sidestep, then a flat
+190° backhand sweep).

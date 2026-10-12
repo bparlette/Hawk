@@ -1,0 +1,397 @@
+[
+ {
+  "out": "previews/chef_crabcake_day.png",
+  "q": "show=chef_crabcake&cam=three&t=1.1&ui=0",
+  "errors": [],
+  "report": {
+   "show": "chef_crabcake",
+   "rigs": {
+    "chef_crabcake": {
+     "parts": 41,
+     "tris": 11416,
+     "hullTris": 11380,
+     "mats": 3,
+     "height": 2.966,
+     "minY": -0.099
+    }
+   },
+   "frame": {
+    "calls": 112,
+    "triangles": 32066
+   }
+  }
+ },
+ {
+  "out": "previews/chef_crabcake_night.png",
+  "q": "show=chef_crabcake&cam=three&t=1.1&night=1&ui=0",
+  "errors": [],
+  "report": {
+   "show": "chef_crabcake",
+   "rigs": {
+    "chef_crabcake": {
+     "parts": 41,
+     "tris": 11416,
+     "hullTris": 11380,
+     "mats": 3,
+     "height": 2.966,
+     "minY": -0.099
+    }
+   },
+   "frame": {
+    "calls": 112,
+    "triangles": 32066
+   }
+  }
+ },
+ {
+  "out": "previews/chef_crabcake_phone_390x844.png",
+  "q": "show=chef_crabcake&cam=phone&t=1.1&ui=0",
+  "errors": [],
+  "report": {
+   "show": "chef_crabcake",
+   "rigs": {
+    "chef_crabcake": {
+     "parts": 41,
+     "tris": 11416,
+     "hullTris": 11380,
+     "mats": 3,
+     "height": 2.966,
+     "minY": -0.099
+    }
+   },
+   "frame": {
+    "calls": 263,
+    "triangles": 68882
+   }
+  }
+ },
+ {
+  "out": "previews/chef_crabcake_phone_390x844_night.png",
+  "q": "show=chef_crabcake&cam=phone&t=1.1&night=1&ui=0",
+  "errors": [],
+  "report": {
+   "show": "chef_crabcake",
+   "rigs": {
+    "chef_crabcake": {
+     "parts": 41,
+     "tris": 11416,
+     "hullTris": 11380,
+     "mats": 3,
+     "height": 2.966,
+     "minY": -0.099
+    }
+   },
+   "frame": {
+    "calls": 263,
+    "triangles": 68882
+   }
+  }
+ },
+ {
+  "out": "previews/chef_crabcake_phone_390x844_merged.png",
+  "q": "show=chef_crabcake&cam=phone&t=1.1&merge=1&ui=0",
+  "errors": [],
+  "report": {
+   "show": "chef_crabcake",
+   "rigs": {
+    "chef_crabcake": {
+     "parts": 3,
+     "tris": 11416,
+     "hullTris": 11380,
+     "mats": 3,
+     "height": 2.947,
+     "minY": -0.093
+    }
+   },
+   "frame": {
+    "calls": 159,
+    "triangles": 71030
+   }
+  }
+ },
+ {
+  "out": "previews/chef_crabcake_phone_390x844_night_merged.png",
+  "q": "show=chef_crabcake&cam=phone&t=1.1&night=1&merge=1&ui=0",
+  "errors": [],
+  "report": {
+   "show": "chef_crabcake",
+   "rigs": {
+    "chef_crabcake": {
+     "parts": 3,
+     "tris": 11416,
+     "hullTris": 11380,
+     "mats": 3,
+     "height": 2.947,
+     "minY": -0.093
+    }
+   },
+   "frame": {
+    "calls": 159,
+    "triangles": 71030
+   }
+  }
+ },
+ {
+  "out": "previews/chef_crabcake_merged_day.png",
+  "q": "show=chef_crabcake&cam=three&t=1.1&merge=1&ui=0",
+  "errors": [],
+  "report": {
+   "show": "chef_crabcake",
+   "rigs": {
+    "chef_crabcake": {
+     "parts": 3,
+     "tris": 11416,
+     "hullTris": 11380,
+     "mats": 3,
+     "height": 2.947,
+     "minY": -0.093
+    }
+   },
+   "frame": {
+    "calls": 8,
+    "triangles": 34214
+   }
+  }
+ },
+ {
+  "out": "previews/chef_crabcake_merged_night.png",
+  "q": "show=chef_crabcake&cam=three&t=1.1&night=1&merge=1&ui=0",
+  "errors": [],
+  "report": {
+   "show": "chef_crabcake",
+   "rigs": {
+    "chef_crabcake": {
+     "parts": 3,
+     "tris": 11416,
+     "hullTris": 11380,
+     "mats": 3,
+     "height": 2.947,
+     "minY": -0.093
+    }
+   },
+   "frame": {
+    "calls": 8,
+    "triangles": 34214
+   }
+  }
+ },
+ {
+  "out": "previews/chef_crabcake_merged_flash.png",
+  "q": "show=chef_crabcake&cam=three&t=1.1&merge=1&flash=0.85&ui=0",
+  "errors": [],
+  "report": {
+   "show": "chef_crabcake",
+   "rigs": {
+    "chef_crabcake": {
+     "parts": 3,
+     "tris": 11416,
+     "hullTris": 11380,
+     "mats": 3,
+     "height": 2.947,
+     "minY": -0.093
+    }
+   },
+   "frame": {
+    "calls": 8,
+    "triangles": 34214
+   }
+  }
+ },
+ {
+  "out": "previews/chef_crabcake_flash_unmerged.png",
+  "q": "show=chef_crabcake&cam=three&t=1.1&flash=0.85&ui=0",
+  "errors": [],
+  "report": {
+   "show": "chef_crabcake",
+   "rigs": {
+    "chef_crabcake": {
+     "parts": 41,
+     "tris": 11416,
+     "hullTris": 11380,
+     "mats": 3,
+     "height": 2.966,
+     "minY": -0.099
+    }
+   },
+   "frame": {
+    "calls": 112,
+    "triangles": 32066
+   }
+  }
+ },
+ {
+  "out": "previews/chef_crabcake_turn.png",
+  "q": "show=chef_crabcake&turn=1&t=1.1&ui=0",
+  "errors": [],
+  "report": {
+   "show": "chef_crabcake",
+   "rigs": {
+    "chef_crabcake": {
+     "parts": 41,
+     "tris": 11416,
+     "hullTris": 11380,
+     "mats": 3,
+     "height": 2.966,
+     "minY": -0.099
+    }
+   },
+   "frame": {
+    "calls": 445,
+    "triangles": 128258
+   }
+  }
+ },
+ {
+  "out": "previews/chef_crabcake_poses.png",
+  "q": "show=chef_crabcake&pose=all&t=1.1&ui=0",
+  "errors": [],
+  "report": {
+   "show": "chef_crabcake",
+   "rigs": {
+    "chef_crabcake": {
+     "parts": 41,
+     "tris": 11416,
+     "hullTris": 11380,
+     "mats": 3,
+     "height": 2.966,
+     "minY": -0.099
+    }
+   },
+   "frame": {
+    "calls": 778,
+    "triangles": 224450
+   }
+  }
+ },
+ {
+  "out": "previews/chef_crabcake_poses_night_merged.png",
+  "q": "show=chef_crabcake&pose=all&t=1.1&night=1&merge=1&ui=0",
+  "errors": [],
+  "report": {
+   "show": "chef_crabcake",
+   "rigs": {
+    "chef_crabcake": {
+     "parts": 3,
+     "tris": 11416,
+     "hullTris": 11380,
+     "mats": 3,
+     "height": 2.947,
+     "minY": -0.093
+    }
+   },
+   "frame": {
+    "calls": 50,
+    "triangles": 239486
+   }
+  }
+ },
+ {
+  "out": "previews/chef_crabcake_angry.png",
+  "q": "show=chef_crabcake&pose=all&t=1.1&angry=1&ui=0",
+  "errors": [],
+  "report": {
+   "show": "chef_crabcake",
+   "rigs": {
+    "chef_crabcake": {
+     "parts": 41,
+     "tris": 11416,
+     "hullTris": 11380,
+     "mats": 3,
+     "height": 2.966,
+     "minY": -0.099
+    }
+   },
+   "frame": {
+    "calls": 778,
+    "triangles": 224450
+   }
+  }
+ },
+ {
+  "out": "previews/chef_crabcake_atk1_strip.png",
+  "q": "show=chef_crabcake&strip=atk1&n=8&ui=0",
+  "errors": [],
+  "report": {
+   "show": "chef_crabcake",
+   "rigs": {},
+   "frame": {
+    "calls": 889,
+    "triangles": 256514
+   }
+  }
+ },
+ {
+  "out": "previews/chef_crabcake_atk2_strip.png",
+  "q": "show=chef_crabcake&strip=atk2&n=8&ui=0",
+  "errors": [],
+  "report": {
+   "show": "chef_crabcake",
+   "rigs": {},
+   "frame": {
+    "calls": 889,
+    "triangles": 256514
+   }
+  }
+ },
+ {
+  "out": "previews/chef_crabcake_atk3_strip.png",
+  "q": "show=chef_crabcake&strip=atk3&n=8&ui=0",
+  "errors": [],
+  "report": {
+   "show": "chef_crabcake",
+   "rigs": {},
+   "frame": {
+    "calls": 889,
+    "triangles": 256514
+   }
+  }
+ },
+ {
+  "out": "previews/chef_crabcake_knockdown_strip.png",
+  "q": "show=chef_crabcake&strip=knockdown&n=9&ui=0",
+  "errors": [],
+  "report": {
+   "show": "chef_crabcake",
+   "rigs": {},
+   "frame": {
+    "calls": 1000,
+    "triangles": 288578
+   }
+  }
+ },
+ {
+  "out": "previews/chef_crabcake_knockdown_strip_merged.png",
+  "q": "show=chef_crabcake&strip=knockdown&n=9&merge=1&ui=0",
+  "errors": [],
+  "report": {
+   "show": "chef_crabcake",
+   "rigs": {},
+   "frame": {
+    "calls": 64,
+    "triangles": 307910
+   }
+  }
+ },
+ {
+  "out": "previews/chef_crabcake_sheet.png",
+  "q": "show=chef_crabcake&sheet=1&t=1.1",
+  "errors": [],
+  "report": {
+   "show": "chef_crabcake",
+   "rigs": {
+    "chef_crabcake": {
+     "parts": 41,
+     "tris": 11416,
+     "hullTris": 11380,
+     "mats": 3,
+     "height": 2.966,
+     "minY": -0.099
+    }
+   },
+   "frame": {
+    "calls": 784,
+    "triangles": 224728
+   }
+  }
+ }
+]
