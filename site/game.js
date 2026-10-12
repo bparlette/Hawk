@@ -8545,7 +8545,7 @@ const buildPenthousePigeonStandIn = function ({ THREE, toonMat }) {
     for (const [x, z] of [[-60, 70], [70, 60], [10, 110]]) land.add(G.box(30, 6, 60), '#6a7a5a', x, 2.4, z); // the far shores
     sc.add(land.mesh(new THREE.MeshLambertMaterial({ vertexColors: true }), null, 0));
     // promenade rail + lamps along the pier edge (one mesh)
-    const rail = K(); for (let i = 0; i < 40; i++) { const a = i / 40 * TAU, x = Math.sin(a) * (GR - 0.3), z = Math.cos(a) * (GR - 0.3); if (z < LANDZ + 1) continue; rail.add(G.cyl(0.05, 0.05, 1.0, 5), '#2a2a30', x, 0.5, z); if (i % 5 === 0) rail.add(G.cyl(0.07, 0.09, 4, 6), '#22262c', x * 0.97, 2, z * 0.97).add(G.sph(0.25, 8, 6), '#fff4c8', x * 0.97, 4.1, z * 0.97); }
+    const rail = K(); for (let i = 0; i < 40; i++) { const a = i / 40 * TAU, x = Math.sin(a) * (GR - 0.3), z = Math.cos(a) * (GR - 0.3); if (z < LANDZ + 1) continue; rail.add(G.cyl(0.05, 0.05, 1.0, 5), '#2a2a30', x, 0.5, z); if (i % 5 === 0 && z < 6) rail.add(G.cyl(0.07, 0.09, 4, 6), '#22262c', x * 0.97, 2, z * 0.97).add(G.sph(0.25, 8, 6), '#fff4c8', x * 0.97, 4.1, z * 0.97); }
     rail.add(G.tor(GR - 0.3, 0.04, TAU, 4, 64), '#2a2a30', 0, 1.0, 0, Math.PI / 2, 0, 0); P.rail = rail.mesh(toonMat(), sc, 0);
     // ---- the climb tower (the city WTC's look) in one group: static mesh + instanced windows + 5 crack decals
     const TG = (P.towerG = new THREE.Group()); sc.add(TG);
@@ -9134,12 +9134,10 @@ const buildPenthousePigeonStandIn = function ({ THREE, toonMat }) {
     } else if (st.part === 1) { // collapse + tally: pull back, watch it come down
       const cx = Math.sin(P.camA), cz = Math.cos(P.camA); tgtP.set(cx * 46, 15, cz * 46); tgtL.set(0, st.ph === 'tally' ? 6 : 14, 0);
     } else {
-      const pig = st.pig, dx = pig.pos.x - st.x, dz = pig.pos.z - st.z, l = Math.hypot(dx, dz) || 1; let fx = dx / l, fz = dz / l;
-      if (st.ph === 'intro2') { fx = 0; fz = 1; }
-      P.c2 = P.c2 || new THREE.Vector2(fx, fz); P.c2.x = damp(P.c2.x, fx, 2.5, dt); P.c2.y = damp(P.c2.y, fz, 2.5, dt); P.c2.normalize();
-      const back = port ? 10 : 8, up = port ? 7 : 5; tgtP.set(st.x - P.c2.x * back, up, st.z - P.c2.y * back); tgtL.set((st.x + pig.pos.x) / 2, 1.3 + Math.min(3, pig.pos.y * 0.4), (st.z + pig.pos.z) / 2);
-      if (st.ph === 'won') { tgtP.set(st.x - P.c2.x * 6, 3.5, st.z - P.c2.y * 6); tgtL.set(pig.pos.x, 0.5, pig.pos.z); }
-      { const r = Math.hypot(tgtP.x, tgtP.z), rm = RUB + 4.5; if (r < rm) { const k = rm / Math.max(0.1, r); tgtP.x *= k; tgtP.z *= k; tgtP.y = Math.max(tgtP.y, 7.5); } } // never behind the rubble heap
+      // beat-em-up framing from the harbor side, looking in at the rubble: the heap is always behind the action, the harbor (the finish) toward the camera
+      const pig = st.pig, mx = clamp((st.x * 0.6 + pig.pos.x * 0.4), -8, 8), mz = clamp(st.z * 0.6 + pig.pos.z * 0.4, 8, 18);
+      tgtP.set(mx * 0.75, port ? 9 : 6.8, mz + (port ? 11.5 : 9.5)); tgtL.set(mx, 1.0 + Math.min(2.5, pig.pos.y * 0.3), mz - (port ? 3.2 : 1.0));
+      if (st.ph === 'won') { tgtP.set(pig.pos.x * 0.8, 4, pig.pos.z + 7); tgtL.set(pig.pos.x, 0.3, pig.pos.z); }
     }
     P.camP.lerp(tgtP, 1 - Math.exp(-(st.part === 1 && st.ph === 'climb' ? 6 : 3) * dt)); P.camL.lerp(tgtL, 1 - Math.exp(-6 * dt));
     P.shake = Math.max(0, P.shake - dt * 1.5); cam.position.copy(P.camP); if (P.shake > 0) cam.position.add(V3.set(rnd(-1, 1), rnd(-1, 1), rnd(-1, 1)).multiplyScalar(P.shake * 0.5)); cam.lookAt(P.camL);
