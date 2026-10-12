@@ -435,3 +435,22 @@ gang_barks.rats 8, max 29 (limit 45)
 boss_clear_banners 18, unique bosses 18, max 25 (limit 28)
 grep -ciE 'natty|boh|utz|orioles|ravens|formstone|indycar|trash wheel|poe said|nevermore|crab' content/gr10_bosses.json -> 0
 ```
+
+## R-019
+Re: P-016
+Status: DONE
+Prompt: P-016 (design and balance review, DESIGN.md vs built)
+File: content/g11_design_review.md
+Deliverable commit: 584fe96
+
+Read-only on code (temp worktrees of review/integration@5f3b4de, claude/o8-new-content@05d3361, grok/opus-standin@0da1fad, removed after). Top findings: no ending yet (Brewmaster rig + 3-part mode and crime-meter win state both missing, rated blocker); 7/21 bosses playable, 9/21 have no rig; Vic and Jimmy are the hardest fights by the numbers and nothing gates them; Carl (41 parts/12,224 tris) and Rodney (42 parts) exceed 40/12,000 in the zipKit measure (UNVERIFIED which count is gated). G8 #2 and #5 carried as majors.
+
+```
+SELF-CHECK G11 (P-016)
+sections: 27 coverage rows (BUILT 6, PARTLY 12, NOT STARTED 9 = 27)
+bosses: 21 (rig 12, mode 7, lines 21; no rig 9, no mode 14, thin lines 3)
+modes: 7 in balance table; hardest 5, easiest 5 (overlap 3: Derby, Chip Kid, Fort)
+risks: 10 = blocker 2 + major 6 + minor 2
+UNVERIFIED: Vic YouTube song choice (D:27); real-signage shots; per-mode win rates; iOS duck; climb crowding; merged vs zipKit rig budget
+files read: DESIGN.md; integration src/*.js + PROGRESS.md; o8 boss_*.js + results_boss_*.json; standin results (pigeon, phantoms, chompy); content/g3, g8, g10, gr1-gr10
+```
