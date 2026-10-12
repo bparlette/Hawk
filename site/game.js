@@ -5121,7 +5121,7 @@ const RADIO = (function () {
   }
   // ---- YouTube IFrame Player API (or the test stub) ----
   function onReady(e) {
-    if (e && e.target) wrapVol(e.target);
+    if (e && e.target) dwrap(e.target);
     if (e && e.target && RX.B && e.target === RX.B && RX.A !== RX.B) { RX.bReady = true; try { RX.B.mute(); RX.B.setVolume(0); } catch (er) {} rxPreload(); return; } // the second (remix) player
     R.ready = true; try { R.player.setVolume(0); } catch (e) {} const t = R.cur; if (t && !isBC(t)) { try { if (R.started && R.on) { R.player.loadVideoById(vid(t)); R.goal = VOL; } else R.player.cueVideoById(vid(t)); } catch (e) {} } render(); }
   function onState(e) {
