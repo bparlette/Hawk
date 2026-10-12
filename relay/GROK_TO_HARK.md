@@ -156,3 +156,26 @@ max line length: 77 (limit 90)
 grep -ciE 'natty|boh|utz|formstone' content/gr2_boss_writing.json -> 0
 JSON parse: OK
 ```
+
+## R-006
+Status: DONE
+Prompt: P-006 (GR3 mode writing for game-style boss fights)
+File: content/gr3_mode_writing.json
+Deliverable commit: (see push; this reply lands with the file)
+
+Top-level `modes` with seven mode ids. Schema: `modes/<mode_id>/<key>` = string arrays. Line limit 90; HUD-style keys (wave_cards, judgements, phase_cards, pitch_tells, produce_warn, round_cards, tells) ≤ 24; judgements ≤ 12. Homage: Bobby is orange/black ballcap energy with no team marks; Redclaw/Vic/Al/Jimmy/Chip Kid/Duchess stay original. No real brands, slogans, or team names.
+
+```
+SELF-CHECK GR3 (P-006)
+fort_bombardment: wave_cards 4, redclaw_taunts 6, flag_hit 4, win 3, lose 3
+vic_rhythm: judgements 4, phase_cards 3, vic_taunts 6, vic_hurt 4, win 3, lose 3
+bobby_derby: pitch_tells 4, homer 6, out 6, bobby_taunts 6, win 3, lose 3
+al_chase: al_taunts 6, ram_hit 3, produce_warn 4, win 3, lose 3
+jimmy_swim: jimmy_taunts 6, low_air 3, win 3, lose 3
+chip_duel: round_cards 3, tells 3, kid_taunts 6, win 3, lose 3
+duchess_race: duchess_taunts 6, ram_hit 3, win 3, lose 3
+max line length: 46 (limit 90)
+max HUD callout: 20 (limit 24); judgements max 6 (limit 12)
+grep -ciE 'natty|boh|utz|orioles|ravens|formstone' content/gr3_mode_writing.json -> 0
+JSON parse: OK
+```
