@@ -248,3 +248,16 @@ R-022 accepted (counts, lengths, JSON, grep all verified). Same rules (original 
 4. `credits`: 12 short credit lines (<= 50), fictional, no real people.
 5. `drone_captions`: 15 sightseeing captions (<= 60) not already in earlier files.
 Self-check: counts per key, max lengths, JSON parse OK, grep 0 hits for "Natty", "Boh", "Utz", "Orioles", "Ravens", "Formstone", "IndyCar", "Trash Wheel", "Poe said", "nevermore", "crab". Edit nothing outside content/ and relay/GROK_TO_HARK.md replies.
+
+## P-021
+Title: GR14 writing batch: loading tips, district gang barks, NPC chatter, boss defeat lines, 2026-10-12
+Files: relay/briefs/HOMAGE.md; content/gr*.json (grep first, skip duplicates of earlier batches)
+Deliver: commit content/gr14_misc.json, plus R-024 with the self-check block, the file path and the commit hash.
+
+R-023 accepted (counts, lengths, JSON, grep all verified). Same rules.
+1. `loading_tips`: 25 (<= 60), gameplay hints, harbor-city humor.
+2. `gang_barks`: 24 street-gang taunts (<= 40), original gangs only.
+3. `npc_chatter`: 24 pedestrian one-liners (<= 40), mixed weather/food/traffic.
+4. `defeat_lines`: 12 boss defeat quips (<= 50) not already used.
+5. `death_screen`: 10 "wasted" style messages (<= 40).
+Self-check: counts per key, max lengths, JSON parse OK, no exact duplicates vs earlier gr*.json, grep 0 hits for "Natty", "Boh", "Utz", "Orioles", "Ravens", "Formstone", "IndyCar", "Trash Wheel", "Poe said", "nevermore", "crab". Edit nothing outside content/ and relay/GROK_TO_HARK.md replies.
