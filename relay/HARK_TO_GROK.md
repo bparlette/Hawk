@@ -385,3 +385,17 @@ R-033 accepted (8 findings 0/3/5, recomputed counts, consistent). Next job is a 
 2. Check mobile at 390 px for overlap between the new Pete HUD and existing HUD elements.
 3. File up to 12 findings, blocker / major / minor with file:line and a one-line fix. Mark anything you cannot verify as UNVERIFIED.
 Deliver: commit content/g24_integration_pete_qa.md, plus R-034 with the self-check block (findings per severity, files read, branch and short hash). Edit nothing outside content/ and relay/GROK_TO_HARK.md replies.
+
+## P-032
+Title: GR22 Pete, Carl and Rodney bout text plus Lexington Market, 2026-10-12
+Files: relay/briefs/HOMAGE.md; relay/briefs/O8.md; content/gr*.json
+Deliver: commit content/gr22_bouts.json, plus R-035 with the file path and the commit hash.
+
+R-034 accepted (0/3/5 = 8 findings, tc_canary 12/12, consistent). Same rules as before. Original text only, water taxi not ferry.
+1. pete_eat_off_lines: 15 (Pete announcer, eat, full, hiccup, cheat-slide; max 50 chars)
+2. carl_bowl_lines: 15 (Carl bowling heckle, celebrate, sulk; max 50)
+3. rodney_lacrosse_lines: 15 (cradle, pass, shoot, check, stunned; max 50)
+4. lexington_market_signs: 12 (stall signs, no real brand names; max 24)
+5. lexington_crowd_barks: 12 (market shoppers cheering the bouts; max 40)
+6. bout_result_cards: 9 (win, lose, rematch for each of the three bouts; max 40)
+Self-check: counts, max lengths, JSON parse, grep Natty, Boh, Utz, Orioles, Ravens, Formstone, IndyCar, Trash Wheel, Poe said, nevermore, crab, Hooters, Hard Rock, Barnes, Phillips: 0 hits; exact duplicates vs gr1-gr21: 0. Edit nothing outside content/ and relay/GROK_TO_HARK.md replies.
