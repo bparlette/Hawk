@@ -115,6 +115,8 @@ const RADIO = (function () {
   #ridc .cr { font: 800 13px/1.35 system-ui, sans-serif; color: #ffb3dc; margin-top: 2px; text-shadow: 1px 1px 0 #000; }
   #ridc .lc { font: 700 11px/1.35 system-ui, sans-serif; color: #c9f3ff; margin-top: 2px; word-break: break-all; }
   #ridc .lc:empty { display: none; }
+  #ridc .bp { font: italic 800 12px/1.35 system-ui, -apple-system, sans-serif; color: #7dffb0; margin-top: 5px; padding-top: 4px; border-top: 1px dashed rgba(255,154,208,.45); text-shadow: 1px 1px 0 #000; }
+  #ridc .bp:empty { display: none; }
   #rplay { position: fixed; left: 0; bottom: 0; width: 2px; height: 2px; overflow: hidden; opacity: .01; pointer-events: none; z-index: -1; }
   #rplay iframe, #rplay > div { width: 2px !important; height: 2px !important; border: 0; pointer-events: none; }
   #rbcw { display: none; position: fixed; z-index: 58; right: 6px; bottom: calc(var(--panel, 0px) + 8px); /* only for a Bandcamp fallback item: above the arcade panel, clear of the top HUD */ width: min(360px, calc(100vw - 12px)); box-sizing: border-box; padding: 4px;
@@ -138,7 +140,7 @@ const RADIO = (function () {
   const bar = el('div', 'rid', '<div id="ridt"><span></span></div><div id="rctl"><button class="rsk" id="rprev" type="button" title="previous track (B)" aria-label="previous track">' + PREV + '</button>'
     + '<button id="rst" type="button" title="tap: next station (T) · hold: radio off/on (M)"></button><button class="rsk" id="rnext" type="button" title="next track (N)" aria-label="next track">' + NEXT + '</button>'
     + '<button id="rcrb" type="button" title="radio credits" aria-label="radio credits">CR</button></div>');
-  const card = el('div', 'ridc', '<div class="st"></div><div class="sh"></div><div class="np"></div><div class="cr"></div><div class="lc"></div>');
+  const card = el('div', 'ridc', '<div class="st"></div><div class="sh"></div><div class="np"></div><div class="cr"></div><div class="lc"></div><div class="bp"></div>');
   const rplay = el('div', 'rplay'); rplay.setAttribute('aria-hidden', 'true');
   const bcw = el('div', 'rbcw', '<b>TAP ▶ TO PLAY</b>');
   const cred = el('div', 'rcred'); cred.classList.add('hide');
@@ -190,6 +192,7 @@ const RADIO = (function () {
       card.querySelector('.cr').textContent = who(t);
       card.querySelector('.lc').textContent = srcLine(t);
     }
+    const bump = R.on && t ? R.bumpNext : null; R.bumpNext = null; card.querySelector('.bp').textContent = bump ? bump.text : ''; if (bump) R.bumps.push({ at: +(S.time || 0).toFixed(2), st: R.station, id: bump.id });
     card.classList.remove('on'); void card.offsetWidth; card.classList.add('on'); R.bigT = BIG_S;
     R.log.push({ at: +(S.time || 0).toFixed(2), reason, st: R.station, list: R.on ? R.list : 'off', id: t ? t.id : '', src: t && R.on ? (isBC(t) ? 'bc' : 'yt') : '', text: R.on && t ? idText(t) : 'RADIO OFF' });
     render();
@@ -244,12 +247,16 @@ const RADIO = (function () {
     if (R.list === 'remix') rxCancel();
     swap(() => tune(R.list, dir, dir > 0 ? 'next' : 'prev'), true);
   }
+  const BUMPS = {}; for (const b of (typeof GR1 !== 'undefined' && GR1.radio && GR1.radio.bumpers) || []) if (STATIONS.includes(b.station) && !/canary/.test(b.id)) (BUMPS[b.station] = BUMPS[b.station] || []).push(b);
+  R.bumps = []; R.bumpI = {};
+  const bumperFor = (st) => { const L = BUMPS[st]; if (!L) return null; R.bumpI[st] = ((R.bumpI[st] ?? -1) + 1) % L.length; return L[R.bumpI[st]]; }; // cycles through a station's bumpers
   function setStation(st, why) { // the dial: auto / day / night / ducky / off
     if (!STATIONS.includes(st)) return;
     const wasOn = R.on; R.station = st; try { localStorage.setItem(LS, st); } catch (e) {}
     if (RX.fade || (R.list === 'remix' && st !== 'remix')) rxCancel();
     if (st === 'off') { R.on = false; R.after = null; R.goal = 0; stopYT(); duck(false); if (R.bc) clearBC(); R.wasBC = isBC(R.cur); stationId('off'); return; }
     R.lastSt = st; R.on = true; R.offAir = false;
+    R.bumpNext = bumperFor(st); // GR1 station bumper: rides on the station-ID card this tune-in shows
     const list = listFor(st);
     if (!R.started) { if (R.list !== list) tune(list, 1, why || 'station'); else stationId(why || 'station'); return; }
     if (!wasOn && R.list === list && R.cur) { resume(); stationId(why || 'on'); return; } // back on: pick up where it was
@@ -394,7 +401,7 @@ const RADIO = (function () {
     // Browsers only let a page start audible media from a gesture: the first tap starts the active player (above) and, in REMIX's two-player mode, rxPreload()
     // below starts the second one (muted load + play) inside the same gesture, so its later unmute + play for the crossfade is allowed
     if (R.list === 'remix' && R.on) { RX.t = 0; rlog({ reason: 'clip', st: R.station, list: 'remix', id: R.cur.id, title: R.cur.title, start: RX.start, peak: REMIX_PEAK[R.cur.id] != null ? 'heatmap' : 'fallback', mode: RX.dual ? 'crossfade' : 'cut', why: 'tune-in' }); rxPreload(); }
-    if (R.on) stationId('tune-in'); else render();
+    if (R.on) { R.bumpNext = bumperFor(R.station); stationId('tune-in'); } else render();
   }
   const gesture = () => { audioInit(); start(); };
   addEventListener('pointerdown', gesture, { capture: true }); addEventListener('touchstart', gesture, { capture: true, passive: true });
@@ -440,6 +447,6 @@ const RADIO = (function () {
   window.__radio = { R, T, TRACKS, STATIONS, toggle, setStation, cycle, skip, start, advance, idText, isBC, get station() { return R.station; }, get text() { return R.tickerText; },
     get card() { return card.classList.contains('on') ? card.textContent : ''; }, get stored() { try { return localStorage.getItem(LS); } catch (e) { return null; } },
     simEnd: () => onState({ data: 0 }), simError: (c = 150) => onError({ data: c }), simBCEnd: () => { if (R.bc) R.bcLeft = 0.01; }, showCred,
-    RX, REMIX_PEAK, POOL, CLIP, get vol() { return R.vol; }, get sfx() { return SFXBUS ? SFXBUS.gain.value : null; } };
+    RX, REMIX_PEAK, POOL, CLIP, BUMPS, get vol() { return R.vol; }, get sfx() { return SFXBUS ? SFXBUS.gain.value : null; } };
   return R;
 })();

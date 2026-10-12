@@ -132,9 +132,9 @@ const MAP = (function () {
 function cityHud(rdt) {
   CITY.nearT -= rdt; if (CITY.nearT <= 0) { CITY.nearT = 0.25; NIGHTFX.near(hero.pos.x, hero.pos.z); rigLod();
     let best = null, bd = 1e9; for (const L of LANDMARKS) { const d = Math.hypot(L.x - hero.pos.x, L.z - hero.pos.z); if (d < L.r && d < bd) { bd = d; best = L; } }
-    if (best !== CITY.lmk) { CITY.lmk = best; if (best) { $('lmk').textContent = best.name; $('lmk').classList.add('on'); CITY.lmkT = 3.2; if (!CITY.visited.has(best.id)) { CITY.visited.add(best.id); CITY.log.push(best.id + '@' + S.time.toFixed(1)); } } } }
+    if (best !== CITY.lmk) { CITY.lmk = best; if (best) { $('lmk').textContent = best.name; $('lmk').classList.add('on'); CITY.lmkT = BARK.lmBlurb(best) || 3.2; if (!CITY.visited.has(best.id)) { CITY.visited.add(best.id); CITY.log.push(best.id + '@' + S.time.toFixed(1)); } } } }
   if (APANEL) { const c = actContext(); APANEL.setAct(c, c && c.kind === 'power' ? 1 - POWER.cd / POWER.CD : 1); }
-  if (CITY.lmkT > 0) { CITY.lmkT -= rdt; if (CITY.lmkT <= 0) $('lmk').classList.remove('on'); }
+  if (CITY.lmkT > 0) { CITY.lmkT -= rdt; if (CITY.lmkT <= 0) { $('lmk').classList.remove('on'); BARK.lmBlurb(null); } }
   if (MAP) { CITY.mapT -= rdt; if (CITY.mapT <= 0) { CITY.mapT = 0.1; const { g, bg, X, Z } = MAP; g.drawImage(bg, 0, 0);
     g.fillStyle = '#ff3d6e'; for (const e of enemies) if (e.alive && e.state !== 'dying' && Math.hypot(e.pos.x - hero.pos.x, e.pos.z - hero.pos.z) < 60) g.fillRect(X(e.pos.x) - 2, Z(e.pos.z) - 2, 4, 4);
     g.fillStyle = '#ff9ad0'; g.beginPath(); g.arc(X(partner.pos.x), Z(partner.pos.z), 3, 0, TAU); g.fill();
@@ -190,6 +190,7 @@ function frame(now) {
     cineUpdate(rdt);
     updateCycle(SIM ? rdt * SIM : rdt);
     cityHud(rdt);
+    BARK.tick(rdt);
     PRESS.clear();
     draw();
   } catch (err) { __celErr.n++; __celErr.last = String(err && err.stack || err); if (__celErr.n < 4) console.error(err); }
