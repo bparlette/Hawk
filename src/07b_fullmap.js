@@ -186,7 +186,7 @@ const FMAP = (function () {
   }
   function open(why) {
     if (window.__fort && __fort.on) return; // the Fort McHenry cannon view owns the screen
-    if (F.open || (CINE.intro && !BOT)) return false;
+    if (F.open || (CINE.intro && !BOT) || DERBY.on) return false; // no map during a boss mini-game
     const t0 = performance.now(); F.open = true; F.opens++; F.why = why || ''; F.t = 0; ov.classList.add('on'); KEYS.clear(); PRESS.clear(); loadThumbs(); layout(); drawLive(); F.openMs = performance.now() - t0; return true;
   }
   function close(why) {
