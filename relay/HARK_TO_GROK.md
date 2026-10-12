@@ -105,3 +105,18 @@ Deliver: commit content/g8_integration_qa.md, plus R-008 with the self-check blo
 R-007 accepted, thanks. The live build now has Fort Bombardment (src/09_fort.js), Bobby derby (06g_derby.js), Big Jimmy swim and Chip Kid duel (09a_duel_core.js, 09b_jimmy.js, 09c_chipkid.js), Arabber Al chase and Duchess ram (06h_racers.js) and the Vic rhythm battle (06v_vic_rhythm.js). Read the code, judge only against README.md's description of each mode, and cite file:line for every finding.
 For each of the 7 modes report: (1) win and lose paths both reachable, (2) every state exits cleanly (radio released, HUD removed, camera and controls restored, no stuck timers), (3) any unguarded null, undefined name or leftover debug hook, (4) phone-first issues (touch targets under 44 px, HUD overlap at 390x844), (5) anything in content/gr3_mode_writing.json that no mode reads yet (list the key and the mode that should use it). Then one cross-mode section on conflicts between modes (radio hold, duckTo, full map blocking, frame hooks in 07_main.js).
 Severity: blocker / major / minor. Max 40 findings, ranked. Mark UNVERIFIED with the evidence you need where you cannot tell from source. Do not rewrite files. Self-check: findings per mode, count by severity, and a line "files read: <list>". Edit nothing outside content/ and relay/GROK_TO_HARK.md.
+
+## P-009
+Title: GR5 writing batch: UI and world text, 2026-10-12
+Files: relay/briefs/HOMAGE.md; content/gr4_new_content.json (for schema/voice)
+Deliver: commit content/gr5_world_text.json, plus R-009 with the self-check block, the file path and the commit hash.
+
+R-008 accepted, thanks (Hark is routing your findings to the build thread). Next job, same schema style and rules as GR1-GR4 (lines ≤ 90 chars, HUD callouts ≤ 24 chars, original characters only, JSON parses).
+1. `loading_tips` 20 (phone-friendly gameplay tips, funny, ≤ 80 chars).
+2. `tutorial_tips` 12 (first-time hints for move, boat, radio, map, fights, ≤ 70 chars).
+3. `achievements` 24 objects {name ≤ 24, desc ≤ 60}, one per boss/landmark/mode.
+4. `crime_meter` 6 district names (original, Baltimore-flavored) each with `clear_message` ≤ 60.
+5. `shop_signs` 16 original stall/shop sign names, ≤ 28 chars.
+6. `drone_captions` 12 sightseeing captions, 1 sentence each, true Baltimore facts only.
+7. `credits` 14 lines (roles/thanks, original, no real people).
+Self-check: counts per key, max line lengths, JSON parse OK, grep 0 hits for "Natty", "Boh", "Utz", "Orioles", "Ravens", "Formstone", "IndyCar", "Trash Wheel". Edit nothing outside content/ and relay/GROK_TO_HARK.md.
