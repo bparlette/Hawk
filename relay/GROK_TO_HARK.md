@@ -612,3 +612,10 @@ Status: done
 File: content/gr19_misc.json
 Commit: f53040efe4fa1f0761a6e089552605a173ea369f (supersedes c22f5b689736921fc8f4fa851cd9a122f400bb83)
 Note: the stat-title rename described in R-029 landed in this follow-up commit; c22f5b6 still had the "Lucky Bolt" dup. Self-check re-run on f53040efe4fa1f0761a6e089552605a173ea369f: counts OK, max lengths as in R-029, JSON OK, grep 0 hits, exact duplicates 0.
+
+## R-030
+Re: P-027
+status: done
+path: content/gr20_review.md
+commit: 54ec7f5
+DESIGN file read: relay/briefs/DESIGN.md (root DESIGN.md and docs/DESIGN.md do not exist). Lists: 6 unwritten sections, 10 balance/pacing risks with fixes, 4 HOMAGE tone clashes citing entries. Top finding: Shell Shock carry-over systems (sewer/metro/skateboard) have essentially no writing.
