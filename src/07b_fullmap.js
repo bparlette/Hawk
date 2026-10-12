@@ -27,9 +27,11 @@ const FMAP = (function () {
   const LMB = { harborplace: [-61, -31, -43, 4, 1], constellation: [-37, -37, -25, -8, 1], wtc: [-21, -31, -3, -13, 1], aquarium: [5, -31, 33, -3, 1], powerplant: [43, -31, 69, -3, 1],
     fourseasons: [69, -71, 95, -45], pendry: [109, -31, 143, -17], fells: [137, -71, 163, -45], monument: [-33, -105, -7, -79], orioles: [-137, -37, -75, 37],
     ravens: [-137, 45, -75, 107], science: [-67, 45, -41, 71, 1], fedhill: [-33, 45, 27, 73], domino: [69, 45, 95, 71, 1], underarmour: [103, 45, 129, 71], fort: [137, 45, 214, 107] };
+  Object.assign(LMB, { lexington: [-101, -71, -75, -45], rashfield: [-43, 18, -20, 31] }); // lexington: new landmarks (no baked mini-model yet: drawn as a footprint + label)
   const NICE = { harborplace: 'HARBORPLACE', constellation: 'CONSTELLATION', wtc: 'WORLD TRADE', aquarium: 'AQUARIUM', powerplant: 'POWER PLANT', fourseasons: 'FOUR SEASONS',
     pendry: 'PENDRY', fells: 'FELLS POINT', monument: 'MONUMENT', orioles: 'ORIOLE PARK', ravens: 'M&T STADIUM', science: 'SCIENCE CENTER', fedhill: 'FED HILL',
     domino: 'DOMINO', underarmour: 'UNDER ARMOUR', fort: 'FORT McHENRY' };
+  Object.assign(NICE, { lexington: 'LEXINGTON MKT', rashfield: 'RASH FIELD' }); // lexington:
   const STREETS = [['PRATT ST', -112, -41, 0], ['KEY HWY', 40, 41, 0], ['LIGHT ST', -71, -90, 1], ['LOMBARD ST', 40, -75, 0]];
   const BOATS = [[-46, 17, 0], [-10, -7, 1], [-6, 14, 0], [38, 9, 1], [76, -12, 0], [98, 20, 1], [150, 6, 0], [186, -16, 1], [203, 21, 0], [128, -6, 1]];
   const M = 6, X0 = WB.x0 - M, X1 = WB.x1 + M, Z0 = WB.z0 - M, Z1 = WB.z1 + M; // map extent (world)
@@ -130,7 +132,7 @@ const FMAP = (function () {
     c.restore();
     // landmark mini-models: sized from their footprint (HD 7 bigger), capped by the screen, shrunk in pairs until they stop overlapping much, drawn back to front
     const S = Math.min(W, H), items = [];
-    for (const L of LANDMARKS) { const b = LMB[L.id], t = FM_THUMBS[L.id]; if (!b || !t) continue; const hd = !!b[4];
+    for (const L of LANDMARKS) { const b = LMB[L.id], t = FM_THUMBS[L.id] || (b && [0, 0, (b[2] - b[0]) * 4, (b[3] - b[1]) * 4, (b[2] - b[0]) * 2, (b[3] - b[1]) * 2, 4]); if (!b || !t) continue; const hd = !!b[4]; // lexington: footprint fallback for landmarks without a baked mini-model
       let sc = (k * (hd ? 1.6 : 1.3)) / t[6]; sc = Math.min(sc, (S * (hd ? 0.30 : 0.22)) / t[3], (S * (hd ? 0.36 : 0.30)) / t[2]); sc = Math.max(sc, (hd ? 34 : 26) * D / Math.max(t[2], t[3]));
       const [gx, gy] = P((b[0] + b[2]) / 2, (b[1] + b[3]) / 2); items.push({ L, b, t, hd, sc, gx, gy, min: sc * 0.55 }); }
     const box = (o) => [o.gx - o.t[4] * o.sc, o.gy - o.t[5] * o.sc, o.gx + (o.t[2] - o.t[4]) * o.sc, o.gy + (o.t[3] - o.t[5]) * o.sc];
