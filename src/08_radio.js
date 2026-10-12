@@ -169,6 +169,7 @@ const RADIO = (function () {
       tickerSpan.innerHTML = html + '<span style="display:inline-block;width:60px"></span>' + html; tickerS.style.setProperty('--dur', Math.max(12, plain.length * 0.26) + 's'); tickerS.classList.add('scroll'); } });
   }
   function render() {
+    if (R.lend) { $('rst').innerHTML = ICON + ' VIC'; bar.classList.remove('off'); setTicker(R.lend.html || '', R.lend.plain || ''); return; } // a boss fight has the player (lend)
     const t = R.cur; const lab = R.station === 'auto' ? 'AUTO·' + (R.list === 'night' ? 'NIGHT' : 'DAY') : SSHORT[R.station];
     $('rst').innerHTML = ICON + ' ' + (R.on ? lab : 'OFF'); bar.classList.toggle('off', !R.on);
     if (!t) return;
@@ -241,6 +242,7 @@ const RADIO = (function () {
   function swap(fn, fast) { if (R.started && R.on && R.vol > 1 && !isBC(R.cur) && !R.after) fadeThen(fn, fast); else { R.after = null; fn(); } }
   function advance(reason) { if (R.list === 'remix' && R.station === 'remix') return rxAdvance(reason); tune(R.list || listFor(R.station), 1, reason); }
   function skip(dir) { // N / B / ⏭ / ⏮
+    if (R.lend) return;
     if (!R.started) start();
     if (!R.on) { setStation(R.lastSt); return; }
     if (R.list === 'remix' && dir > 0 && RX.dual && RX.pre && RX.pre.ready && !RX.fade && R.playing) { rxCross(XF_FAST, 'next'); return; } // ⏭ on REMIX: a quick crossfade into the preloaded clip
@@ -269,8 +271,8 @@ const RADIO = (function () {
     try { if (R.player && R.ready) { R.vol = 0; R.player.setVolume(0); R.goal = VOL; R.player.playVideo(); } } catch (e) {}
     if (R.list === 'remix') { rxClip(t, true); rxPreload(); }
   }
-  const cycle = () => { if (!R.started) start(); setStation(STATIONS[(STATIONS.indexOf(R.station) + 1) % STATIONS.length]); };
-  const toggle = () => { if (!R.started) start(); setStation(R.on ? 'off' : R.lastSt || 'remix'); };
+  const cycle = () => { if (R.lend) return; if (!R.started) start(); setStation(STATIONS[(STATIONS.indexOf(R.station) + 1) % STATIONS.length]); };
+  const toggle = () => { if (R.lend) return; if (!R.started) start(); setStation(R.on ? 'off' : R.lastSt || 'remix'); };
   // hold(true): a set piece with its own music (Fort McHenry) takes the air: the radio pauses (iOS ignores setVolume, so a pause is the only
   // dependable "duck"); hold(false) puts it back where it was. The dial still works while held but nothing plays until release.
   function hold(on) {
@@ -278,7 +280,7 @@ const RADIO = (function () {
     if (on) { R.heldWas = { on: R.on, started: R.started, bc: R.bc ? R.cur : null }; rxCancel(); R.after = null; R.goal = 0;
       try { if (R.player && R.ready) R.player.pauseVideo(); } catch (e) {} try { if (RX.idle && RX.idle !== R.player) { RX.idle.pauseVideo(); RX.idle.mute(); } } catch (e) {}
       R.playing = false; if (R.bc) clearBC(); duck(false); rlog({ reason: 'hold' }); }
-    else { rlog({ reason: 'release' }); if (R.on && R.started && !R.offAir && R.cur) resume(); render(); }
+    else { rlog({ reason: 'release' }); if (!R.lend && R.on && R.started && !R.offAir && R.cur) resume(); render(); }
   }
   R.hold = hold;
   // ---- boss mini-games duck the radio: every player's setVolume is scaled by DUCK.k (re-wrapped if the IFrame API swaps the method) ----
@@ -350,7 +352,7 @@ const RADIO = (function () {
     if (reason === 'skip') { R.after = null; go(); } else swap(go, true);
   }
   function rxTick(dt) {
-    if (R.held) return;
+    if (R.held || R.lend) return;
     if (R.station !== 'remix' || R.list !== 'remix' || !R.started || !R.on || R.offAir || !R.cur) return;
     if (RX.fade) { rxFadeTick(dt); return; }
     if (!R.playing || R.after) return;
@@ -367,6 +369,7 @@ const RADIO = (function () {
     if (e && e.target && RX.B && e.target === RX.B && RX.A !== RX.B) { RX.bReady = true; try { RX.B.mute(); RX.B.setVolume(0); } catch (er) {} rxPreload(); return; } // the second (remix) player
     R.ready = true; try { R.player.setVolume(0); } catch (e) {} const t = R.cur; if (t && !isBC(t)) { try { if (R.started && R.on) { R.player.loadVideoById(vid(t)); R.goal = VOL; } else R.player.cueVideoById(vid(t)); } catch (e) {} } render(); }
   function onState(e) {
+    if (R.lend) { try { R.lend.onState && R.lend.onState(e); } catch (er) {} return; } // lent to a boss fight: its events, not the radio's
     if (e && e.target && R.player && e.target !== R.player) { if (RX.fade && e.target === RX.fade.to) return; rxIdleState(e.data); return; } // events from the idle remix player
     if (RX.fade && e && e.data !== 1) return; // the outgoing clip is being faded out / paused by the crossfade
     const s = e.data; // -1 unstarted, 0 ended, 1 playing, 2 paused, 3 buffering, 5 cued
@@ -377,6 +380,7 @@ const RADIO = (function () {
     render();
   }
   function onError(e) { // 2 bad id, 5 html5, 100 gone, 101/150 embedding not allowed: a CC track falls back to Bandcamp, anything else is skipped
+    if (R.lend) { try { R.lend.onError && R.lend.onError(e); } catch (er) {} return; }
     if (e && e.target && R.player && e.target !== R.player) { if (RX.fade && e.target === RX.fade.to) { const P = RX.fade.P; rxCancel(); R.bad.add(P.t.id); rxPreload(); } else rxIdleError(e.data); return; }
     const t = R.cur; if (!t || isBC(t)) return; R.log.push({ at: +(S.time || 0).toFixed(2), reason: 'error ' + (e && e.data), id: t.id }); R.playing = false;
     if (t.bc) { R.ytFail.add(t.id); play(t, 'bandcamp'); } else { R.bad.add(t.id); advance('skip'); }
@@ -454,6 +458,7 @@ const RADIO = (function () {
   setInterval(() => {
     const now = performance.now(), dt = Math.min(0.5, (now - last) / 1000); last = now;
     rxTick(dt);
+    if (R.lend) { if (R.bigT > 0) { R.bigT -= dt; if (R.bigT <= 0) card.classList.remove('on'); } return; } // lent: no AUTO switch, no volume fades, no Bandcamp timer
     if (R.station === 'auto' && R.on && !R.offAir && !R.after && !R.held) { const want = nightNow() ? 'night' : 'day'; if (R.list !== want) swap(() => tune(want, 1, want === 'night' ? 'dusk' : 'dawn')); }
     if (R.bigT > 0) { R.bigT -= dt; if (R.bigT <= 0) card.classList.remove('on'); }
     if (R.bc && R.on && R.started && R.bcLeft > 0 && !R.held) { R.bcLeft -= dt; if (R.bcLeft <= 0) advance('next'); }
@@ -465,9 +470,28 @@ const RADIO = (function () {
   }, 100);
   render();
 
+  // ---- lend / unlend: a boss fight borrows the YouTube player (Voltage Vic spins radio records). The radio pauses (iOS ignores setVolume,
+  // so pausing is the only dependable duck), its player events go to the fight, the dial is locked and the ticker shows the fight's credit.
+  // unlend() puts the station back: REMIX tunes the next clip, other stations restart the current track; a radio that was off stays off.
+  function lend(o) {
+    if (R.lend || !o) return null;
+    rxCancel(); R.after = null; R.goal = 0; R.vol = 0;
+    try { if (R.player && R.ready) R.player.pauseVideo(); } catch (e) {} try { if (RX.idle && RX.idle !== R.player) { RX.idle.pauseVideo(); RX.idle.mute(); } } catch (e) {}
+    if (R.bc) clearBC(); R.playing = false; duck(false); card.classList.remove('on'); R.bigT = 0;
+    R.lend = { name: o.name || '', onState: o.onState, onError: o.onError, html: '', plain: '', wasOn: R.on, wasStarted: R.started };
+    rlog({ reason: 'lend', to: R.lend.name });
+    const ok = !!(R.player && R.ready && !R.noSignal && !TEST);
+    return { player: ok ? R.player : null, ytOk: ok, test: TEST, credit: (html, plain) => { if (!R.lend) return; R.lend.html = html; R.lend.plain = plain || ''; lastHtml = ''; render(); } };
+  }
+  function unlend() {
+    if (!R.lend) return; const was = R.lend; R.lend = null; lastHtml = '';
+    try { if (R.player && R.ready) { R.player.setPlaybackRate(1); R.player.pauseVideo(); R.player.setVolume(0); } } catch (e) {} R.vol = 0; R.playing = false;
+    rlog({ reason: 'unlend', from: was.name });
+    if (R.held) render(); else if (R.on && R.started && !R.offAir && R.cur) { if (R.list === 'remix') tune('remix', 1, 'remix'); else play(R.cur, 'back'); } else render();
+  }
   window.__radio = { R, T, TRACKS, STATIONS, hold, get held() { return !!R.held; }, toggle, setStation, cycle, skip, start, advance, idText, isBC, get station() { return R.station; }, get text() { return R.tickerText; },
     get card() { return card.classList.contains('on') ? card.textContent : ''; }, get stored() { try { return localStorage.getItem(LS); } catch (e) { return null; } },
     simEnd: () => onState({ data: 0 }), simError: (c = 150) => onError({ data: c }), simBCEnd: () => { if (R.bc) R.bcLeft = 0.01; }, showCred,
-    RX, REMIX_PEAK, POOL, CLIP, BUMPS, get vol() { return R.vol; }, duckTo, get duck() { return DUCK.k; }, fightDuck, get fduck() { return DUCK.k; }, get sfx() { return SFXBUS ? SFXBUS.gain.value : null; } };
+    RX, REMIX_PEAK, POOL, CLIP, BUMPS, get vol() { return R.vol; }, duckTo, get duck() { return DUCK.k; }, fightDuck, get fduck() { return DUCK.k; }, lend, unlend, get lent() { return !!R.lend; }, get sfx() { return SFXBUS ? SFXBUS.gain.value : null; } };
   return R;
 })();

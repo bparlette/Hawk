@@ -59,6 +59,18 @@ Mavis joins with her spinning handbag when she is close and free. ACT also cance
 - Test hooks: `?fort=1` starts it at load, `?fortwave=N` starts at wave N, `?fortauto=1` / `__fort.F.auto = true` = auto-aim autopilot, `__fort.F.pause`.
   T/fort/ftest.js (untracked) runs city -> ramp -> ACT -> taps -> all waves -> win -> return.
 
+## Voltage Vic, Power Plant: rhythm battle — src/06v_vic_rhythm.js
+ACT "FIGHT VIC" at the Power Plant boss anchor (56, -5.5) or `?vic=1`. Vic spins three B-MORE 410 radio records through the radio's own hidden
+YouTube player (`__radio.lend()` / `unlend()`: radio paused, dial locked, ticker credits the record): phase 1 "Dance My Pain Away" (Rod Lee),
+2 "How U Wanna Carry It" (Miss Tony), 3 "Doo Doo Brown" (2 Hyped Brothers & A Dog), DJ scratch between. Beatmaps from `VIC_SONGS` (bpm, beat0,
+section start `at`, bars; one entry per track) + `VIC_SET` (record per phase). No YouTube (offline / blocked / headless / ad stuck 9 s) =
+procedural Web Audio club beat at 130 BPM. Judged on media time from event timestamps (AudioContext via getOutputTimestamp, or
+player.getCurrentTime() through a small PLL), never frame time. Lanes: D F J K / arrows / pad X A Y B (4) or 3 tap zones on phones.
+Win = `BOSS_CLEAR.clear('powerplant')` (or the identical stand-in: localStorage tcb_boss_clear + 'tcb:bossclear' event); lose = RETRY.
+Test params: `?vic=perfect|miss`, `?vicbars=N`, `?vicyt=stub|stubac|0`, `?vicsync=1` (tap-along beat0 calibration, saved per track), `?viclat=ms`.
+Opus's rig: if `buildVoltageVic()` exists it replaces the stand-in eel (`update(dt, {beat, hurt, drop, state})` is called if present).
+Test: T/vic/vtest.js (gitignored T/).
+
 ## Tools
 ./mk.sh (parts -> src/03_city.js -> site/game.js), serve.py, shot.js, view.js (frozen free-camera asset renders), ccheck.js (water/buildings/hill/cycle/
 draw calls/POWER/panel/bot run past 6 landmarks), dc.js (draw calls), deploy.sh + verify.sh (surge + md5 check).
