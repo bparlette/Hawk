@@ -1,0 +1,175 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Toad City boss viewer (batch 2)</title>
+<style>
+  html, body { margin: 0; height: 100%; background: #14101f; overflow: hidden; font: 12px/1.35 ui-monospace, Menlo, Consolas, monospace; }
+  canvas { display: block; }
+  #ro { position: fixed; left: 8px; top: 8px; padding: 6px 8px; background: rgba(20, 16, 31, 0.78); color: #f2f2f2; border-radius: 4px; white-space: pre; pointer-events: none; max-width: calc(100vw - 32px); overflow: hidden; }
+  #ro b { color: #ffd23c; font-weight: 600; }
+  .lbl { position: fixed; transform: translate(-50%, 0); color: #14101f; background: rgba(242, 242, 242, 0.88); padding: 1px 6px; border-radius: 3px; font-weight: 600; white-space: nowrap; pointer-events: none; }
+  .lbl.hit { background: #ff3a1c; color: #fff; }
+  .lbl.big { font: 600 20px/1.3 system-ui, sans-serif; padding: 2px 10px; }
+  #title { position: fixed; left: 50%; top: 14px; transform: translate(-50%, 0); font: 700 30px/1.2 system-ui, sans-serif; color: #14101f; display: none; }
+  body.hide-ui #ro { display: none; }
+</style>
+<script type="importmap">{ "imports": { "three": "https://unpkg.com/three@0.160.0/build/three.module.js" } }</script>
+</head>
+<body>
+<div id="ro">loading…</div><div id="title"></div>
+<script type="module">
+// Boss viewer for Task D batch 2, built from kit/real_viewer.html: the REAL kit (kit/toadcity_kit.js, unchanged), the REAL mergeRig
+// (kit/real_mergeRig.js) and the boss state timings in tools/boss_seq.js (shared with tools/measure_boss.mjs).
+// URL: ?show=<boss id>   (loads ./src/boss_<id>.js; &bosses=a,b loads several)
+//   &pose=idle|run|hurt|down|atk1|atk2|atk3|all   &u=<0..1 freezes the pose parameter>   &t=<s freezes time>
+//   &turn=1 (front / 3/4 / side / back)   &sheet=1 (model sheet: turnaround + atk1..3 on grey, day, labelled)
+//   &strip=atk1|atk2|atk3|knockdown|hurt|run (60 fps simulation with the real damping, frozen at &n= sample times; red labels = active window)
+//   &seq=<same names>|chain (play the sequence live)   &cam=three|front|side|back|phone (phone: Harold 6 m in front, chase camera)
+//   &night=1  &merge=1 (real mergeRig)  &flash=0.85  &angry=<0..1>  &ui=0  &zoom=  &look=  &dist=
+import * as THREE from 'three';
+import { K } from './kit/toadcity_kit.js';
+import { mergeRig } from './kit/real_mergeRig.js';
+import { seqList, seqAt, seqDur } from './tools/boss_seq.js';
+const Q = new URLSearchParams(location.search);
+const SHOW = Q.get('show') || 'admiral_redclaw';
+const IDS = (Q.get('bosses') || SHOW).split(',').filter(Boolean);
+const REG = {};
+for (const id of IDS) {
+  const M = await import(`./src/boss_${id}.js`);
+  const bn = Object.keys(M).find((k) => k.startsWith('build') && typeof M[k] === 'function' && k.toLowerCase() === ('build' + id.replace(/_/g, '')).toLowerCase())
+    || Object.keys(M).find((k) => k.startsWith('build') && typeof M[k] === 'function');
+  REG[id] = { M, build: (o) => M[bn](K, o), meta: M.META, P: M.POSES, A: M.ATTACKS, animate: M.animateBoss || (() => {}) };
+}
+const S = {
+  night: Q.get('night') === '1', pose: Q.get('pose') || 'idle', cam: Q.get('cam') || 'three', fixedT: Q.has('t') ? parseFloat(Q.get('t')) : null,
+  u: Q.has('u') ? parseFloat(Q.get('u')) : null, flash: parseFloat(Q.get('flash') || '0'), merge: Q.get('merge') === '1', turn: Q.get('turn') === '1',
+  sheet: Q.get('sheet') === '1', strip: Q.get('strip'), seq: Q.get('seq'), n: parseInt(Q.get('n') || '8'), angry: parseFloat(Q.get('angry') || '0'),
+  dist: parseFloat(Q.get('dist') || '6'), zoom: parseFloat(Q.get('zoom') || '1'), look: Q.has('look') ? parseFloat(Q.get('look')) : null,
+};
+if (Q.get('ui') === '0' || S.sheet) document.body.classList.add('hide-ui');
+
+const renderer = new THREE.WebGLRenderer({ antialias: true, preserveDrawingBuffer: true });
+renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2)); renderer.setSize(innerWidth, innerHeight);
+renderer.shadowMap.enabled = true; renderer.shadowMap.type = THREE.PCFSoftShadowMap; renderer.info.autoReset = false;
+document.body.appendChild(renderer.domElement);
+const scene = new THREE.Scene(); scene.fog = new THREE.Fog('#b4c0c6', 40, 120);
+K.OUT_U.fogN.value = 40; K.OUT_U.fogF.value = 120;
+const camera = new THREE.PerspectiveCamera(35, innerWidth / innerHeight, 0.1, 300);
+const hemi = new THREE.HemisphereLight('#ffffff', '#888888', 1); scene.add(hemi);
+const sun = new THREE.DirectionalLight('#ffffff', 1); sun.castShadow = true;
+sun.shadow.mapSize.set(2048, 2048); Object.assign(sun.shadow.camera, { left: -14, right: 14, top: 14, bottom: -14, near: 1, far: 90 });
+sun.shadow.bias = -0.0004; sun.shadow.normalBias = 0.02; scene.add(sun, sun.target);
+const lamp = new THREE.PointLight('#ffa050', 16, 15, 2); lamp.position.set(-2.6, 3.6, 2.4); scene.add(lamp);
+const fill = new THREE.PointLight('#c8d0ff', 3.2, 0, 0.6); camera.add(fill); scene.add(camera);
+const ground = new THREE.Mesh(new THREE.PlaneGeometry(240, 240), new THREE.MeshLambertMaterial({ color: '#958ea0' }));
+ground.rotation.x = -Math.PI / 2; ground.receiveShadow = true; scene.add(ground);
+function setNight(on) {
+  S.night = on; K.applyLight(scene, hemi, sun, on ? 'night' : 'day', fill);
+  ground.material.color.set(on ? '#3a3850' : '#958ea0'); lamp.intensity = on ? 16 : 0; fill.intensity = on ? 3.2 : 0;
+  if (S.sheet) { scene.background = new THREE.Color('#9a9aa0'); ground.material.color.set('#8c8c92'); scene.fog = null; }
+}
+
+let rigs = [];
+function addRig(id, x, z, pose, ry = 0) {
+  const e = REG[id]; const J = e.build({ seed: 7 }); if (S.merge) mergeRig(J);
+  J.root.position.set(x, 0, z); J.root.rotation.y = ry; J.root.scale.setScalar(e.meta.scale || 1); scene.add(J.root);
+  if (S.angry && J.setAngry) J.setAngry(S.angry);
+  const el = document.createElement('div'); el.className = 'lbl' + (S.sheet ? ' big' : ''); el.textContent = pose; document.body.appendChild(el);
+  const r = { J, id, e, pose, el, fixedU: null, x, z }; rigs.push(r); return r;
+}
+const W = (id) => (REG[id].meta.radius || 0.9) * (REG[id].meta.scale || 1);
+function simulate(r, name, tStop) {   // deterministic 60 fps run of a sequence up to tStop
+  const { J, e } = r, list = seqList(name, e.A); K.applyPose(J, e.P.idle(0, J), 1e4, 1, true);
+  let q = null; for (let f = 0; f <= Math.round(tStop * 60); f++) { const t = f / 60; q = seqAt(e.P, J, list, t); K.applyPose(J, q.p, q.rate, 1 / 60, false); J.root.position.y = q.y; e.animate(J, t, q.state, q.u); }
+  r.frozen = true; return q;
+}
+let harold = null;
+function rebuild() {
+  const id = SHOW, e = REG[id], sp = Math.max(2.2, W(id) * 2.4);
+  if (S.sheet) {
+    const views = [['front', 'idle', 0], ['3/4', 'idle', 0.75], ['side', 'idle', Math.PI / 2], ['back', 'idle', Math.PI]].concat(e.A.map((a) => [a.id.replace(/_/g, ' ') + ' (' + a.pose + ')', a.pose, 0.5]));
+    views.forEach(([n, pose, ry], i) => { const r = addRig(id, (i - 3) * sp, 0, pose, ry); r.el.textContent = n; if (pose.startsWith('atk')) { const a = e.A.find((x) => x.pose === pose); r.fixedU = (a.active[0] + a.active[1]) / 2; } });
+    const tt = document.getElementById('title'); tt.style.display = 'block'; tt.textContent = e.meta.name + '  ·  ' + e.meta.id + '  ·  ' + e.meta.district;
+  } else if (S.strip) {
+    const list = seqList(S.strip, e.A), T = seqDur(list), n = S.n, a = e.A.find((x) => x.pose === S.strip);
+    for (let i = 0; i < n; i++) {
+      let ts, lab, hit = false;
+      if (a) { const u = (i + 0.5) / n; ts = list[0][1] + u * a.dur; lab = 'u ' + u.toFixed(2); hit = u >= a.active[0] && u <= a.active[1]; }
+      else { ts = (i / (n - 1)) * (T - 0.05); }
+      const r = addRig(id, (i - (n - 1) / 2) * sp * 0.75, 0, S.strip); const q = simulate(r, S.strip, ts);
+      r.el.textContent = (lab || (q.state + ' ' + ts.toFixed(2) + 's')); if (hit) r.el.classList.add('hit');
+    }
+  } else if (S.pose === 'all') {
+    ['idle', 'run', 'hurt', 'down', 'atk1', 'atk2', 'atk3'].forEach((p, i) => { const r = addRig(id, (i - 3) * sp, 0, p); r.el.textContent = p; });
+  } else if (S.turn) {
+    [['front', 0], ['3/4', 0.75], ['side', Math.PI / 2], ['back', Math.PI]].forEach(([n, ry], i) => { const r = addRig(id, (i - 1.5) * sp, 0, S.pose, ry); r.el.textContent = n; });
+  } else {
+    const r = addRig(id, 0, 0, S.pose); r.el.textContent = e.meta.name; if (S.cam === 'phone' && Q.get('ui') === '0') r.el.style.display = 'none';
+    if (S.cam === 'phone') { harold = K.buildHero(); harold.root.position.set(0.6, 0, S.dist); harold.root.rotation.y = Math.PI; scene.add(harold.root); }
+  }
+  frameCamera(); measure();
+}
+function poseFor(r, t) {
+  const { J, e } = r, P = e.P, u = r.fixedU ?? S.u, uu = u ?? (t * 0.6) % 1;
+  switch (r.pose) {
+    case 'run': return [P.run(t, 5, J), 'run', 0];
+    case 'hurt': return [P.hurt(u ?? 0.15, J), 'hurt', u ?? 0.15];
+    case 'down': return [P.down(u ?? 1, u === null ? true : u >= 0.35, J), 'down', u ?? 1];
+    case 'atk1': case 'atk2': case 'atk3': { const a = e.A.find((x) => x.pose === r.pose); const v = u ?? (S.fixedT !== null ? (a.active[0] + a.active[1]) / 2 : uu); return [P[r.pose](v, J), r.pose, v]; }
+    default: return [P.idle(t, J), 'idle', 0];
+  }
+}
+function frameCamera() {
+  const xs = rigs.map((r) => r.x), w = rigs.length > 1 ? Math.max(...xs) - Math.min(...xs) + 2.6 : 2.6;
+  const H = Math.max(...rigs.map((r) => r.e.meta.height || 2.5));
+  const aspect = innerWidth / innerHeight; camera.fov = S.cam === 'phone' ? 60 : 30; camera.aspect = aspect;
+  const vfov = THREE.MathUtils.degToRad(camera.fov), hfov = 2 * Math.atan(Math.tan(vfov / 2) * aspect);
+  let dist = (Math.max((H + 0.8) / (2 * Math.tan(vfov / 2)), w / (2 * Math.tan(hfov / 2))) + 1.0) / S.zoom;
+  const dirs = { three: [0.62, 0.78], front: [0, 1], side: [1, 0], back: [0, -1], phone: [0, 1] };
+  let [dx, dz] = dirs[S.cam] || dirs.three; if ((S.pose === 'all' || S.strip || S.sheet) && S.cam === 'three') { dx = 0; dz = 1; }
+  if (S.sheet || S.turn) { dx = 0.0; dz = 1; }
+  const ly = S.look !== null ? S.look : H * 0.48;
+  if (S.cam === 'phone') { camera.position.set(0.35, 3.0, S.dist + 4.2); camera.lookAt(0, S.look ?? 1.1, 0); }
+  else { camera.position.set(dx * dist, ly + 0.45, dz * dist); camera.lookAt(0, ly, 0); }
+  camera.updateProjectionMatrix();
+}
+const triCount = (g) => (g.index ? g.index.count : g.attributes.position.count) / 3;
+function measureRig(J) {
+  let parts = 0, tris = 0, hullTris = 0; const mats = new Set();
+  J.root.updateMatrixWorld(true);
+  J.root.traverse((o) => { if (!o.isMesh || !o.visible) return; mats.add(o.material); if (o.material.side === THREE.BackSide && o.material.isShaderMaterial) { hullTris += triCount(o.geometry); return; } parts++; tris += triCount(o.geometry); });
+  const box = new THREE.Box3(); J.root.traverse((o) => { if (o.isMesh && o.visible && !(o.material.side === THREE.BackSide)) box.expandByObject(o); });
+  return { parts, tris, hullTris, mats: [...mats].filter((m) => !(m.side === THREE.BackSide && m.isShaderMaterial)).length, height: +(box.max.y - box.min.y).toFixed(3), minY: +box.min.y.toFixed(3) };
+}
+let REPORT = {};
+function measure() { REPORT = { show: SHOW, rigs: {} }; const r = rigs[0]; if (r && !r.frozen) { K.applyPose(r.J, r.e.P.idle(0, r.J), 1e4, 1, true); REPORT.rigs[r.id] = measureRig(r.J); } }
+const clock = new THREE.Clock(); let frames = 0, last = 0; const ro = document.getElementById('ro');
+function frame() {
+  const t = S.fixedT !== null ? S.fixedT : clock.getElapsedTime(), dt = S.fixedT !== null ? 1 : Math.min(t - last, 0.05); last = t;
+  for (const r of rigs) {
+    if (r.frozen) { r.J.mat.userData.flash.value = S.flash; continue; }
+    if (S.seq) { const list = seqList(S.seq, r.e.A), q = seqAt(r.e.P, r.J, list, t); K.applyPose(r.J, q.p, q.rate, Math.min(dt, 1 / 30), false); r.J.root.position.y = q.y; r.e.animate(r.J, t, q.state, q.u); }
+    else { const [p, st, u] = poseFor(r, t); K.applyPose(r.J, p, (S.fixedT !== null || r.fixedU !== null) ? 1e4 : 14, S.fixedT !== null ? 1 : dt, true); r.e.animate(r.J, t, st, u); }
+    r.J.mat.userData.flash.value = S.flash;
+  }
+  if (harold) K.applyPose(harold, K.HERO_POSES.idle(t), 1e4, 1, true);
+  renderer.info.reset(); renderer.render(scene, camera);
+  const v = new THREE.Vector3();
+  for (const r of rigs) { v.set(r.J.root.position.x, -0.05, r.J.root.position.z).project(camera); r.el.style.left = ((v.x + 1) / 2 * innerWidth) + 'px'; r.el.style.top = ((1 - v.y) / 2 * innerHeight + 4) + 'px'; }
+  if (frames % 10 === 0) {
+    const lines = [`<b>${SHOW}</b>  pose ${S.strip ? 'strip ' + S.strip : S.seq ? 'seq ' + S.seq : S.pose}  ${S.night ? 'NIGHT' : 'DAY'}  cam ${S.cam}${S.merge ? '  merged' : ''}`,
+      `frame: ${renderer.info.render.calls} draw calls · ${(renderer.info.render.triangles / 1000).toFixed(1)}k tris (incl. shadow pass)`];
+    for (const [id, m] of Object.entries(REPORT.rigs || {})) lines.push(`${id} ${m.parts} parts · ${(m.tris / 1000).toFixed(2)}k tris (+${(m.hullTris / 1000).toFixed(2)}k hull) · ${m.mats} mats · h ${m.height} m`);
+    ro.innerHTML = lines.join('\n');
+  }
+  frames++;
+  if (frames === 3) { REPORT.frame = { calls: renderer.info.render.calls, triangles: renderer.info.render.triangles }; window.__report = REPORT; window.__ready = true; }
+  requestAnimationFrame(frame);
+}
+addEventListener('keydown', (e) => { if (e.key.toLowerCase() === 'n') setNight(!S.night); });
+setNight(S.night); rebuild(); frame();
+</script>
+</body>
+</html>
