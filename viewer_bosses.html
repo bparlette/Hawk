@@ -40,7 +40,8 @@ for (const id of IDS) {
   const M = await import(`./src/boss_${id}.js`);
   const bn = Object.keys(M).find((k) => k.startsWith('build') && typeof M[k] === 'function' && k.toLowerCase() === ('build' + id.replace(/_/g, '')).toLowerCase())
     || Object.keys(M).find((k) => k.startsWith('build') && typeof M[k] === 'function');
-  REG[id] = { M, build: (o) => M[bn](K, o), meta: M.META, P: M.POSES, A: M.ATTACKS, animate: M.animateBoss || (() => {}) };
+  const VO = Q.has('opts') ? JSON.parse(Q.get('opts')) : {};
+  REG[id] = { M, build: (o) => M[bn](K, Object.assign({}, VO, o)), meta: Object.assign({}, M.META, VO.variant && M.VARIANTS ? M.VARIANTS[VO.variant] : {}), P: M.POSES, A: M.ATTACKS, animate: M.animateBoss || (() => {}) };
 }
 const S = {
   night: Q.get('night') === '1', pose: Q.get('pose') || 'idle', cam: Q.get('cam') || 'three', fixedT: Q.has('t') ? parseFloat(Q.get('t')) : null,
@@ -108,6 +109,9 @@ function rebuild() {
       const r = addRig(id, (i - (n - 1) / 2) * sp * 0.75, 0, S.strip); const q = simulate(r, S.strip, ts);
       r.el.textContent = (lab || (q.state + ' ' + ts.toFixed(2) + 's')); if (hit) r.el.classList.add('hit');
     }
+  } else if (S.pose === 'states') {   // every extra named state (J.pose names) at u = 0.5
+    const ex = Object.keys(e.P).filter((k) => !['idle', 'run', 'hurt', 'down', 'atk1', 'atk2', 'atk3'].includes(k));
+    ex.forEach((p, i) => { const r = addRig(id, (i - (ex.length - 1) / 2) * sp, 0, p); r.el.textContent = p; r.fixedU = S.u ?? 0.5; });
   } else if (S.pose === 'all') {
     ['idle', 'run', 'hurt', 'down', 'atk1', 'atk2', 'atk3'].forEach((p, i) => { const r = addRig(id, (i - 3) * sp, 0, p); r.el.textContent = p; });
   } else if (S.turn) {
@@ -125,7 +129,7 @@ function poseFor(r, t) {
     case 'hurt': return [P.hurt(u ?? 0.15, J), 'hurt', u ?? 0.15];
     case 'down': return [P.down(u ?? 1, u === null ? true : u >= 0.35, J), 'down', u ?? 1];
     case 'atk1': case 'atk2': case 'atk3': { const a = e.A.find((x) => x.pose === r.pose); const v = u ?? (S.fixedT !== null ? (a.active[0] + a.active[1]) / 2 : uu); return [P[r.pose](v, J), r.pose, v]; }
-    default: return [P.idle(t, J), 'idle', 0];
+    default: if (P[r.pose] && r.pose !== 'idle') { const v = u ?? uu; return [P[r.pose](v, J), r.pose, v]; } return [P.idle(t, J), 'idle', 0];
   }
 }
 let ortho = null;
@@ -137,7 +141,7 @@ function frameCamera() {
   const vfov = THREE.MathUtils.degToRad(camera.fov), hfov = 2 * Math.atan(Math.tan(vfov / 2) * aspect);
   let dist = (Math.max((H + 0.8) / (2 * Math.tan(vfov / 2)), w / (2 * Math.tan(hfov / 2))) + 1.0) / S.zoom;
   const dirs = { three: [0.62, 0.78], front: [0, 1], side: [1, 0], back: [0, -1], phone: [0, 1] };
-  let [dx, dz] = dirs[S.cam] || dirs.three; if ((S.pose === 'all' || S.strip || S.sheet) && S.cam === 'three') { dx = 0; dz = 1; }
+  let [dx, dz] = dirs[S.cam] || dirs.three; if ((S.pose === 'all' || S.pose === 'states' || S.strip || S.sheet) && S.cam === 'three') { dx = 0; dz = 1; }
   if (S.sheet || S.turn) { dx = 0.0; dz = 1; }
   const ly = S.look !== null ? S.look : H * 0.48;
   if (S.cam === 'phone') { camera.position.set(0.35, 3.0, S.dist + 4.2); camera.lookAt(0, S.look ?? 1.1, 0); }
