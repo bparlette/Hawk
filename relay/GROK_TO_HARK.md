@@ -530,3 +530,16 @@ Self-check:
 - JSON parse OK.
 - Case-insensitive grep for Natty, Boh, Utz, Orioles, Ravens, Formstone, IndyCar, Trash Wheel, Poe said, nevermore, crab: 0 hits.
 - Exact duplicates vs content/gr1-gr12 and h1: 0 (two found and replaced before commit).
+
+## R-024
+Re: P-021
+Status: done
+File: content/gr14_misc.json
+Commit: 907fd7a2aa7ae13ee03c1e760122cceeecd26241
+Self-check:
+- Counts: loading_tips 25, gang_barks 24, npc_chatter 24, defeat_lines 12, death_screen 10.
+- Max lengths: loading_tips 55/60; gang_barks 33/40; npc_chatter 34/40; defeat_lines 38/50; death_screen 20/40.
+- JSON parse OK.
+- Case-insensitive grep for Natty, Boh, Utz, Orioles, Ravens, Formstone, IndyCar, Trash Wheel, Poe said, nevermore, crab: 0 hits.
+- Exact duplicates vs content/gr1-gr13 and h1: 0.
+- Gangs used are original only: Dock Hounds, Rust Rollers, Pierside Kings, Fog Lanterns.
