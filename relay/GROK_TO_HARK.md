@@ -68,3 +68,28 @@ SELF-CHECK H1 thames-lantern
 | Colours outside 0x30–0xe8 per channel | 0 | 0 |
 | Sign text lines over 16 chars | 0 | 0 |
 ```
+
+## R-003
+Status: DONE
+Prompt: P-003 (G3 standing QA template)
+Files: content/g3_qa_template.md
+Commit: 5a0bd61 (deliverable)
+
+### Step 0
+1. ZIP files (Toad_City_Round2_GEMINI.zip, pulled from the G3 surge page, 104 files). README_ZIP.md is the index. qa/QA_GEMINI_PRO_review_prompt.md gives the rubric and output format that end the template. kit/toadcity_kit.js is the byte-identical hash target for I2. kit/real_poses_04_actors.js and kit/real_mergeRig.js back the real `down` and mergeRig checks (G1, G2). kit/example_bench.js, kit/example_gull_thug.js, kit/viewer.html, kit/real_viewer.html and package.json are the harness, used for context only. briefs/TASK_A/B/C*.md and TASK_C_review_lessons.md feed the family checklists. reviews/harbor_rats_review.md and sonnet_taskAB_review.md were read last, for Coverage vs Hark. reference/harbor_rats/* (v1, v2 FIXED, diff, README) and reference/taskAB_v1/*, taskAB_fixed/* (10 js each plus the diff) are the pilot-run targets. previews/harbor_rats/before_after/* (40 png), v2_delivery/* (18 png) and previews/taskAB/* (2 png) are not used, since the pilot is code-only. prompts/G1, G2, G3 are the session prompts.
+2. Hard rules: (1) reviewer only, targeted numbered fixes with numbers; (2) judge against the delivery's own brief plus these lessons; (3) every claim has file:line, a measured number or an image, otherwise UNVERIFIED plus the evidence needed; (4) recompute from code, never trust README numbers; (5) characters original, real Baltimore names only in the environment, redrawn in code; (6) use the §3 real game facts; (7) rubric: PASS needs 3 gates, ≥ 75, no 0 category; (8) blocker = gate or crash, major = checklist miss, minor = polish; (9) read Hark's review last, then add Coverage vs Hark; (10) markdown only, in §5 order; (11) Step 0 at the top, then the full job without waiting. §2 lessons: a stand-in `down` hid the 0.67 m tail through the floor; single previews at (0,0) yaw 0 hid lights floating 7 m away; pavement outside the block hid 1.83 m stoop overhangs; README-and-preview-only reviews would have passed both.
+3. Q1: 10 lines. Q2: `TOAD CITY QA TEMPLATE v2`. Q3: ≤ 180 lines. Q4: it asks Brad to paste the session's expected strings (he keeps them privately) and reports found / missing for each without echoing them first. Q5: the (10,5)-yaw test.
+4. Canaries: "Report: the last heading, exactly: `## Template Check 410`"; "Report: the first line, exactly: `QA-REPORT G3 intake-ten`"; "Report: the line right after the summary table, exactly: `Rubric version: tcr2-family-blocks`". All three are included exactly.
+Conflict and assumption: the brief asks for a template (§4) but also a scored review report (§5, canary 3). I delivered the template as the code block and put a code-only pilot run of it on the round-1 reference copies around it, so that the summary table, findings, Top 3 and Coverage vs Hark exist. Visual categories are marked UNVERIFIED because nothing was rendered.
+
+### Self-check (content/g3_qa_template.md, Template Check 410)
+| Check | Value | Threshold |
+|---|---|---|
+| Template families covered | 7 | 7 families |
+| Findings with a file:line or a measured number | 8/8 (100 %) | 100 % |
+| Numbers recomputed from code | 3 per asset (2 assets) | ≥ 3 per asset |
+| UNVERIFIED items, each with the evidence needed | 2 listed | listed |
+| Coverage vs Hark section present | yes | yes |
+Template block: 101 lines (≤ 180), intake checklist 10 lines. Validator: PASS (canary positions, block title and length, 10 intake lines, 7 FAM blocks, required checks).
+
+Pilot finding for you: taskAB_fixed still keys its atlas WeakMaps on `K` rather than `K.QUAL || K.THREE || K` (props_crab_shack.js:11, props_street.js:24, veh_boats.js:19, veh_cars.js:36, veh_carts.js:17; tc_lint C10).
