@@ -1,0 +1,81 @@
+{
+  "loading_screen_tips": [
+    "Rooftops connect more blocks than you'd think, hon.",
+    "Arabber carts restock snacks every few minutes.",
+    "The water taxi skips traffic. Bring exact change.",
+    "Pigeons scatter before trouble shows up. Watch them.",
+    "A clean stoop means a friendly neighbor nearby.",
+    "Lost? Follow the smell of steamed spice to the docks.",
+    "Duck into a corner store to shake a tail fast.",
+    "Fog rolls off the harbor at dusk. Lights on, bub.",
+    "Parking chairs are sacred. Do not move them.",
+    "Night markets pay double for rare finds.",
+    "Rowhouse alleys hide shortcuts and lost coins.",
+    "Your drone sees farther from the top of a church.",
+    "Talk to every hon on a stoop. Somebody knows.",
+    "Brick sidewalks are slick after rain. Slow down.",
+    "The harbor wind can carry a kite clear to the pier."
+  ],
+  "celebration_crowd_lines": [
+    "That's our champ right there!",
+    "Whole block's buying you a soda!",
+    "Somebody ring the church bell!",
+    "Hon, you did it! You really did it!",
+    "Parade on the pier tonight!",
+    "Never seen a comeback like that!",
+    "Get this kid a medal and a pretzel!",
+    "Rowhouse royalty, coming through!",
+    "Tell your grandma! Tell everybody!",
+    "Horns up, harbor! We won!",
+    "I'm crying and I don't care, bub!",
+    "Best day this street ever had!"
+  ],
+  "crime_meter_district_names": [
+    "Brick Row",
+    "Tugboat Flats",
+    "Steeple Hill",
+    "Old Cannery Yard",
+    "Pigeon Square",
+    "Marble Stoop Lane",
+    "Harborlight Docks",
+    "Arabber's Bend",
+    "Gaslamp Corner",
+    "Mill Creek Hollow"
+  ],
+  "crime_cleared_messages": [
+    "Block cleared. The stoops are sitting again.",
+    "Streets quiet. Somebody put the kettle on.",
+    "District safe. Pigeons came back to roost.",
+    "No more trouble here, hon. Nice work.",
+    "Crime meter zeroed. Neighbors are waving.",
+    "Corner's calm. Kids are playing stickball.",
+    "Docks cleared. The tugboats tooted for you.",
+    "All clear. The corner store reopened.",
+    "Gang's gone. Porch lights are back on.",
+    "Quiet night ahead. You earned the nap."
+  ],
+  "drone_sightseeing_captions": [
+    "Rowhouse rooftops, lined up like piano keys.",
+    "The harbor glows orange right before dusk.",
+    "A water taxi carves a white line across the bay.",
+    "Church steeples poking through the morning fog.",
+    "Painted screens on a quiet east-side block.",
+    "Tugboats napping side by side at the pier.",
+    "Old mill chimneys, still standing tall.",
+    "A marble stoop parade, scrubbed and shining.",
+    "The fish market wakes up before the sun.",
+    "Gaslamps flicker on along the cobblestones.",
+    "Kites dancing over the hill by the park.",
+    "From up here the whole town looks like a map."
+  ],
+  "game_over_quips": [
+    "Well, that went sideways, hon.",
+    "Even the pigeons felt that one.",
+    "Dust off. The stoop's still yours.",
+    "Rough day on the block, bub.",
+    "The harbor's patient. Try again.",
+    "Somebody call your mother.",
+    "Down, but never out of the city.",
+    "Nap it off and come back swinging."
+  ]
+}
