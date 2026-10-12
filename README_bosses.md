@@ -7,6 +7,7 @@ real poses and the real `kit/real_mergeRig.js`. Work in progress: bosses are add
 |---|---|---|
 | Admiral Redclaw | `src/boss_admiral_redclaw.js` | built, measured, previews |
 | Big Jimmy | `src/boss_big_jimmy.js` | built, measured, previews |
+| Voltage Vic | `src/boss_voltage_vic.js` | built, measured, previews |
 
 ## Tools
 - `viewer_bosses.html` — the boss viewer (from `kit/real_viewer.html`): `?show=<id>&pose=idle|run|hurt|down|atk1|atk2|atk3|all`, `&turn=1`, `&sheet=1`,
@@ -34,3 +35,13 @@ male's narrow T-shaped apron. He hovers a hand's width off the tank floor (under
 crush** (both claws swing wide open, then clamp together at full reach), **sideways rush** (swings half side-on and charges crabwise,
 the leading claw sweeping across), **belly slam** (rears up on the back legs showing the soft belly, claws high, then drops his whole
 body flat: a bubble ring). Knock-down: the crab flip, rolled over the tail onto his back with the legs folded up and pedalling.
+
+### Voltage Vic (`voltage_vic`, Power Plant)
+An electric-eel DJ. Silhouette: a long olive-green eel head on a long neck, pale yellow underjaw and a wide grin, a fin crest and a
+dorsal fin, magenta headphones and a cyan LED visor; a purple track suit with electric-yellow stripes, an original lightning-bolt
+pendant on a gold chain, white high-tops with neon soles. Sparks crackle round both hands: glow parts (`K.basicMat`, transparent) whose
+opacity follows `K.NIGHT.value` and flares on every attack's active beats. Attacks sit on whole beats at 130 BPM: **bass drop**
+(2 beats: fists high on beat 1, both slam down on beat 2: a shock ring), **zap scratch** (2 beats: the left hand scratches while the right
+cocks back, then fires straight at the target on beat 2: a lightning bolt), **club spin** (3 beats: a crouch on beat 1, a full
+electrified spin over beats 2–3, the hips carry the turn so no tilt wrap is involved). Rhythm-mode hook: `buildVoltageVic({ THREE,
+stage: true })` adds a DJ booth (58 parts with it) and `J.pose(name, u)` snaps idle / atk1–3 at any tempo.
