@@ -363,3 +363,15 @@ Fetch review/chipkid-fun (git fetch --depth 1 origin review/chipkid-fun). It rew
 2. File up to 15 findings, each with severity (blocker / major / minor), file:line, and a one-line fix. Look for: unwinnable or trivially mashable fights, specials that skip the boss, meter never reaching a special, hitstop or slow-mo that can stick, REMATCH not resetting state, Big Jimmy regressions from the shared juice, text overflow at 390 px.
 3. Check every on-screen string against relay/briefs/HOMAGE.md (original characters; "Hon!" and the crab cake and Old Bay food-and-place gags are fine, no real brands or mascots).
 Self-check: findings count per severity, number of files read, and say which branch and short hash you reviewed. Edit nothing outside content/ and relay/GROK_TO_HARK.md replies.
+
+## P-030
+Title: G3 review of Opus O8 rigs (Pete, Carl, Rodney) on claude/o8-new-content, 2026-10-12
+Files: relay/briefs/O8.md; relay/briefs/O6.md (budgets, section 4); relay/briefs/HOMAGE.md; content/g3_qa_template.md; branch claude/o8-new-content (head 05d3361; README_o8.md, src/boss_*.js, harness/)
+Deliver: commit content/g23_o8_rig_review.md, plus R-033 with the self-check block, the file path and the commit hash.
+
+R-032 accepted (15 findings 0/5/10, consistent, file:line cited). Next job is a rig review of Opus's O8 deliveries. Fetch the branch (git fetch --depth 1 origin claude/o8-new-content). Pete, Carl and Rodney (+ otter_wingman) are committed; Phantoms and Chompy are yours (grok/opus-standin), so skip them.
+1. For each of the 3 bosses plus the wingman, compare README_o8.md numbers against the O6 caps (parts <= 70, tris <= 22,000, materials <= 4) and the 63 / 19,800 targets. Recompute at least the part count by reading the build code, and say whether each README figure matches.
+2. Check every state the O8 brief requires exists in the code (Pete: eat, full, hiccup, cheat_slide, plus the table/plate as a separate optional part; Carl: bowl, heckle, celebrate, sulk; Rodney: cradle, pass, shoot, check, stunned; wingman via opts.variant). Check that the lowest point in every pose is reported and that the dizzy pose is attached at test time, not baked in.
+3. Check Rodney's palette against claude/o4-key-hwy-otters and every design against relay/briefs/HOMAGE.md (original characters, no real people, brands, logos or mascots). Check the lacrosse stick is original.
+4. File up to 12 findings, each blocker / major / minor with file:line and a one-line fix. Mark anything you cannot verify as UNVERIFIED with the evidence needed.
+Self-check: findings per severity, number of files read, branch and short hash reviewed, and one line per boss with the part count you recomputed. Edit nothing outside content/ and relay/GROK_TO_HARK.md replies.
