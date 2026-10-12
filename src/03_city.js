@@ -127,7 +127,10 @@ function isRoad(x, z) { return !inR(BASIN, x, z) && !isProm(x, z) && !onPlot(x, 
 // Federal Hill: a real walkable mound (the ground height follows it)
 const HILL = { x: -3, z: 59, rx: 28, rz: 13, h: 9 };
 function hillH(x, z) { const d = Math.hypot((x - HILL.x) / HILL.rx, (z - HILL.z) / HILL.rz); if (d >= 1) return 0; const t = clamp((1 - d) / 0.8, 0, 1); return HILL.h * t * t * (3 - 2 * t); }
-function groundY(x, z) { if (isWater(x, z)) return CURB; if (isRoad(x, z)) return 0; return CURB + hillH(x, z); }
+// raised walkable ground (Fort McHenry's north-bastion gun platform + its ramp): { x0, x1, z0, z1, h, rampZ? } rampZ = the z where a ramp side reaches 0
+const RAMPS = [{ x0: 173.6, x1: 178.4, z0: 63.6, z1: 67.6, h: 3.3 }, { x0: 174.4, x1: 177.6, z0: 67.6, z1: 72.4, h: 3.3, ramp: [67.6, 72.4] }];
+function rampH(x, z) { let h = 0; for (const r of RAMPS) { if (x < r.x0 || x > r.x1 || z < r.z0 || z > r.z1) continue; const v = r.ramp ? r.h * clamp(1 - (z - r.ramp[0]) / (r.ramp[1] - r.ramp[0]), 0, 1) : r.h; if (v > h) h = v; } return h; }
+function groundY(x, z) { if (isWater(x, z)) return CURB; if (isRoad(x, z)) return 0; return CURB + hillH(x, z) + rampH(x, z); }
 
 // ---------------- ground: streets, promenade, plots, piers, water, seawalls ----------------
 (function ground() {
@@ -563,6 +566,13 @@ landmark('underarmour', 'UNDER ARMOUR', 116, 52, 16, { name: 'The Compression Ki
     BLD.push({ x0: Math.min(ax, bx) - 1, x1: Math.max(ax, bx) + 1, z0: Math.min(az, bz) - 1, z1: Math.max(az, bz) + 1, h: CURB + 4.2 });
   }
   sbox(cx - 6, CURB, cz - 3, cx + 3, CURB + 3.2, cz + 1, '#b8a888'); COLL.push({ x0: cx - 6, x1: cx + 3, z0: cz - 3, z1: cz + 1 });
+  // the north bastion gun platform (walkable: RAMPS in f_layout) with a ramp up from the parade ground, and the cannon the set piece starts from
+  sbox(173.6, CURB, 63.6, 178.4, CURB + 3.3, 67.6, '#b8a888');
+  for (let k = 0; k < 6; k++) { const z0 = 67.6 + k * 0.8; sbox(174.4, CURB, z0, 177.6, CURB + 3.3 * (1 - k / 6), z0 + 0.8, k % 2 ? '#a89878' : '#b0a080', k === 0); }
+  { const g = new THREE.CylinderGeometry(0.2, 0.3, 2.6, 8); g.rotateX(Math.PI / 2 - 0.12); place(g, 176, CURB + 4.05, 64.5); solid(g, '#26262a');
+    sbox(175.45, CURB + 3.3, 64.6, 176.55, CURB + 3.85, 66.0, '#5a3a22');
+    for (const sx of [175.3, 176.7]) { const w = new THREE.CylinderGeometry(0.34, 0.34, 0.14, 10); w.rotateZ(Math.PI / 2); place(w, sx, CURB + 3.64, 65.6); solid(w, '#3a2a1a', false); }
+    for (let k = 0; k < 4; k++) { const b = new THREE.SphereGeometry(0.17, 6, 4); place(b, 177.4 + (k % 2) * 0.32, CURB + 3.47 + (k > 1 ? 0.27 : 0), 66.4 + (k === 3 ? 0.16 : 0)); solid(b, '#1a1a1e', false); } }
   pole(cx + 5, cz + 4, 24, 0.2);
   const fl = new THREE.BoxGeometry(7, 4.2, 0.08); place(fl, cx + 8.6, CURB + 21.6, cz + 4); CB.geom(fl, '#b03a3a', T.stripes);
   const ca = new THREE.BoxGeometry(2.6, 2.2, 0.1); place(ca, cx + 6.4, CURB + 22.6, cz + 4.01); CB.geom(ca, '#2a3a7a');
