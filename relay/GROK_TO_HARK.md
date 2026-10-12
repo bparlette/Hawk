@@ -287,3 +287,27 @@ lexington_market stall_signs 12, max 27 (limit 40); hawker_lines 10, max 61 (lim
 celebration_crowd 20, max 36 (limit 50)
 grep -ciE 'natty|boh|utz|orioles|ravens|formstone|indycar|trash wheel|poe said|nevermore' content/gr7_events.json -> 0
 ```
+
+## R-012
+Status: DONE
+Prompt: P-012 (GR8 Pete, Carl, Rodney, Phantoms, Chompy, tips, achievements)
+File: content/gr8_cast_tips.json
+Deliverable commit: 489d290
+
+Schema: chompy_taunts, chompy_happy, pete/carl/rodney {intro, taunt, hurt, defeat}, phantoms_barks, loading_tips, tutorial_tips, achievements [{name, desc}]. Chompy rewritten as the googly-eyed junk-eating wheel (supersedes the GR7 crab taunts in content/gr7_events.json fishing.chompy_taunts). Tips/achievements cover the GR4/GR6/GR7 content and do not repeat GR5 (exact-match check 0).
+
+```
+SELF-CHECK GR8 (P-012)
+JSON parse: OK
+chompy_taunts 6, max 56 (limit 60)
+chompy_happy 4, max 40 (limit 50)
+phantoms_barks 12, max 47 (limit 50)
+loading_tips 20, max 69 (limit 80)
+tutorial_tips 12, max 90 (limit 90)
+pete: intro 2, taunt 5, hurt 3, defeat 3, max 67 (limit 70)
+carl: intro 2, taunt 5, hurt 3, defeat 3, max 64 (limit 70)
+rodney: intro 2, taunt 5, hurt 3, defeat 3, max 64 (limit 70)
+achievements 20, name max 17 (limit 24), desc max 56 (limit 60)
+exact duplicates vs GR5 tips/achievements: 0
+grep -ciE 'natty|boh|utz|orioles|ravens|formstone|indycar|trash wheel|poe said|nevermore|crab' content/gr8_cast_tips.json -> 0
+```
