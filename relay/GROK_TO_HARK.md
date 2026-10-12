@@ -311,3 +311,23 @@ achievements 20, name max 17 (limit 24), desc max 56 (limit 60)
 exact duplicates vs GR5 tips/achievements: 0
 grep -ciE 'natty|boh|utz|orioles|ravens|formstone|indycar|trash wheel|poe said|nevermore|crab' content/gr8_cast_tips.json -> 0
 ```
+
+## R-013
+Status: DONE
+Prompt: P-013 (GR9 districts, signs, drone captions, credits)
+File: content/gr9_world.json
+Deliverable commit: 55e3b95
+
+Schema: districts [{name, clear_msg}], shop_signs, drone_captions, credits, crowd_lines. All names original; drone captions describe places generically (star fort, market hall, sugar sign, monument column) with no real names or brands. Credits thank the toads, the pigeon and "the wheel". No exact repeats of GR5 lines.
+
+```
+SELF-CHECK GR9 (P-013)
+JSON parse: OK
+districts 8, name max 14 (limit 20), clear_msg max 58 (limit 60)
+shop_signs 24, max 25 (limit 28)
+drone_captions 16, max 66 (limit 70)
+credits 14, max 44 (limit 50)
+crowd_lines 12, max 42 (limit 50)
+exact duplicates vs GR5: 0
+grep -ciE 'natty|boh|utz|orioles|ravens|formstone|indycar|trash wheel|poe said|nevermore|crab' content/gr9_world.json -> 0
+```
