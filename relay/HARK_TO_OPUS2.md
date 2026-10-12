@@ -19,3 +19,23 @@ Standing instruction: after you post any Q block, keep polling. Run `sleep 300 &
 Title: QUEUED after O6: new content batch (O8): Pit Beef Pete, Kingpin Carl, Riptide Rodney, Fells Point Phantoms gang, Chompy
 Files: relay/briefs/O8.md, relay/briefs/O6.md, relay/briefs/HOMAGE.md
 Deliver: nothing yet. O6 comes first: post Q-001 (the O6 Step 0) if you haven't, then build O6 after GO. After O6 is delivered and accepted, reply with a Q block containing the O8 Step 0, then STOP until a J block says GO. Push O8 code to claude/o8-new-content only.
+
+## J-003
+Title: O6 bosses batch 2: GO
+Files: relay/briefs/O6.md, relay/briefs/HOMAGE.md, relay/HARK_TO_OPUS.md H-002 (shared answers)
+Deliver: code on claude/o6-bosses-b, pushed after each boss, then Q-002 with the filled self-check and the branch + commit.
+
+Step 0 accepted: all eight answers and all three canaries are right. Thanks for finding the right repo. GO.
+
+The H-002 defaults apply to you too: the timings as stated assumptions, root scale = META.scale, culling 2.6 pass/fail with 1.9 as info, tools/measure_boss.mjs + tools/results_boss_<id>.json, no dizzy, the section 3 district ids, HOMAGE.md first.
+
+Answers to Q-a..Q-g:
+- Q-a: branch from claude/o4-key-hwy-otters. Write your own tools/measure_boss.mjs now. If Opus 1 pushes one on claude/o5-bosses-a before you finish, match its JSON field names so both batches report the same way. Never touch claude/o5-bosses-a.
+- Q-b: normal boss states, as you proposed. Note: the Al chase is already live in the game with a stand-in rider. Its hook is `buildArabberAl()`, returning an Object3D or `{ root, update?(dt, st) }` with st = { t, state, throwK }. Feet at y = 0, facing +z, about 1.8 m tall, seated on the cart. So export a `buildArabberAl` wrapper around your boss build that does this: the cart and pony come with Al, `run` = cart driving, and `atk` = the produce throw (throwK 0..1 drives the throwing arm). No extra states.
+- Q-c: yes, as proposed. The game already ships a swim fight with a stand-in. Also export `buildBigJimmy({ THREE, toonMat, outlineMat, addOdir, QUAL })` returning `{ root, body?, soft?, mouth?, claws?: [{ arm, top, bot, tip }] x2, legs?: [left, right], flash?: [materials] }`. `soft` is the belly part he exposes when he rears up. Optional pieces can be left out.
+- Q-d: no beat clock reaches the rig. The live Vic fight is a rhythm game that times his drops from its own chart, and its songs run 124–130 BPM. So keep ATTACKS on whole beats at 130 BPM as you proposed, as the defaults for the brawl version. Also export `buildVoltageVic({ THREE, stage: true })` and expose `J.pose(name, u)` so the rhythm mode can drive atk1-3 at any tempo. The DJ booth prop is welcome inside the budget.
+- Q-e: yes, `J.setAngry(0..1)` plus the windup tint, exactly as you proposed. Redclaw goes deeper red.
+- Q-f: yes to all three silhouettes. Redclaw also appears on his flagship deck in the Fort McHenry cannon set piece. That hook is `window.boss_admiral_redclaw.buildAdmiralRedclaw` (or a global `buildAdmiralRedclaw`), called with `{ THREE, toonMat, outlineMat, scale: 1 }`. The game rescales him to 2.6 m, so make sure his bicorne reads from far away.
+- Q-g: yes, a 10-minute poll is fine.
+
+Work one boss at a time and push after each. Suggested order: redclaw, big_jimmy, voltage_vic, arabber_al (these four already have live modes waiting on hooks), then chef_crabcake, pool_shark.
