@@ -1,0 +1,125 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<script src="../../demo-embed.js"></script>
+<style id="demo-embed-css">html.demo-embed #pad,html.demo-embed #help,html.demo-embed #bar{display:none!important}
+</style>
+
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
+<meta name="theme-color" content="#07060c">
+<title>KNOCKOUT! Round One</title>
+<style>
+html,body{margin:0;padding:0;height:100%;background:#07060c;color:#e8e8f0;font-family:ui-monospace,Menlo,Consolas,monospace;overflow:hidden;touch-action:none;-webkit-user-select:none;user-select:none;-webkit-tap-highlight-color:transparent}
+#app{display:flex;flex-direction:column;align-items:center;justify-content:flex-start;height:100%;width:100%;box-sizing:border-box}
+#bar{display:flex;align-items:center;justify-content:space-between;width:100%;max-width:1100px;box-sizing:border-box;padding:4px 10px;height:32px;flex:none}
+#bar b{font-size:13px;letter-spacing:2px;color:#ffd84a;text-shadow:2px 2px 0 #7a1010}
+#bar .r{display:flex;gap:6px}
+#bar button{font:inherit;font-size:12px;background:#1d1a30;color:#e8e8f0;border:2px solid #3c3866;border-radius:4px;padding:2px 8px;cursor:pointer}
+#stage{flex:1 1 auto;display:flex;align-items:center;justify-content:center;width:100%;min-height:0;position:relative}
+#screen{display:block;image-rendering:pixelated;image-rendering:crisp-edges;background:#000;box-shadow:0 0 0 3px #1d1a30,0 0 40px #000}
+#replay{display:none;position:absolute;left:50%;transform:translateX(-50%);bottom:8%;font:inherit;font-size:16px;letter-spacing:2px;font-weight:bold;background:#ffd84a;color:#2a0c10;border:3px solid #fff;border-radius:6px;padding:8px 18px;cursor:pointer;box-shadow:0 4px 0 #7a1010}
+#pad{display:none;width:100%;max-width:520px;box-sizing:border-box;padding:6px 12px 14px;justify-content:space-between;align-items:center;flex:none}
+body.touch #pad{display:flex}
+.dpad{position:relative;width:150px;height:150px;flex:none}
+.dpad button,.btns button{position:absolute;font:inherit;font-weight:bold;color:#fff;background:#24203c;border:2px solid #4a4580;border-radius:10px;touch-action:none;padding:0}
+.dpad button{width:50px;height:50px;font-size:20px}
+.dpad .u{left:50px;top:0}.dpad .l{left:0;top:50px}.dpad .r{left:100px;top:50px}.dpad .d{left:50px;top:100px}
+.btns{position:relative;width:160px;height:150px;flex:none}
+.btns button{width:66px;height:66px;border-radius:50%;font-size:15px}
+.btns .pl{left:0;top:62px;background:#1f6a2e;border-color:#5ee86a}
+.btns .pr{left:84px;top:40px;background:#1f6a2e;border-color:#5ee86a}
+.btns .st{left:8px;top:0;width:54px;height:54px;background:#6a4a0a;border-color:#ffd84a;font-size:20px}
+.btns .gd{left:92px;top:112px;width:56px;height:36px;border-radius:8px;font-size:11px}
+button.on{filter:brightness(1.7)}
+#help{display:none;font-size:11px;color:#8a86b0;text-align:center;padding:6px 8px 10px;flex:none;line-height:1.6}
+body:not(.touch) #help{display:block}
+#help kbd{color:#ffd84a;background:#1d1a30;border-radius:3px;padding:0 4px}
+@media (orientation:portrait){#stage{align-items:flex-end}} /*PFILL: canvas sits on the ring apron, the crowd fills above*/
+</style>
+</head>
+<body>
+<div id="app">
+  <div id="bar"><b>KNOCKOUT!</b><div class="r"><button id="mute" aria-label="Toggle sound">SOUND: ON</button><button id="pause" aria-label="Pause">PAUSE</button></div></div>
+  <div id="stage"><canvas id="screen" width="256" height="224"></canvas><button id="replay">REPLAY</button></div>
+  <div id="help"><kbd>&larr;</kbd><kbd>&rarr;</kbd> dodge &nbsp; <kbd>&darr;</kbd> duck (tap twice + hold = block) &nbsp; <kbd>C</kbd> guard &nbsp; <kbd>Z</kbd>/<kbd>X</kbd> or <kbd>J</kbd>/<kbd>K</kbd> left/right jab (hold <kbd>&uarr;</kbd> for head) &nbsp; <kbd>Enter</kbd>/<kbd>Space</kbd> star punch &nbsp; <kbd>M</kbd> mute &nbsp; <kbd>P</kbd> pause</div>
+  <div id="pad">
+    <div class="dpad">
+      <button class="u" data-a="up" aria-label="Up (head shots)">&#9650;</button>
+      <button class="l" data-a="left" aria-label="Dodge left">&#9664;</button>
+      <button class="r" data-a="right" aria-label="Dodge right">&#9654;</button>
+      <button class="d" data-a="down" aria-label="Duck">&#9660;</button>
+    </div>
+    <div class="btns">
+      <button class="st" data-a="star" aria-label="Star punch">&#9733;</button>
+      <button class="pl" data-a="punchL" aria-label="Left punch">L</button>
+      <button class="pr" data-a="punchR" aria-label="Right punch">R</button>
+      <button class="gd" data-a="guard" aria-label="Guard">GUARD</button>
+    </div>
+  </div>
+</div>
+<script src="game.js"></script>
+<script>/*PFILLBG*/(function (C) {
+  var RAF = window.requestAnimationFrame.bind(window); // captured early: some games stub window.requestAnimationFrame later
+  // Portrait fill: paints the empty bands around a fixed-aspect game canvas with an extension of the game itself
+  // (its top rows carried up, its bottom rows carried down, blurred and faded into the dark), or a custom painter.
+  // Only in a portrait viewport; landscape/desktop never shows it. Cheap: a small canvas redrawn every few frames.
+  function boot() {
+    var src = document.querySelector(C.src), box = document.querySelector(C.box);
+    if (!src || !box) return;
+    var bg = document.createElement("canvas"); bg.id = "pfbg"; bg.setAttribute("aria-hidden", "true");
+    bg.style.cssText = "position:absolute;left:0;top:0;width:100%;height:100%;pointer-events:none;display:none;" +
+      (C.blur ? "filter:blur(" + C.blur + "px) saturate(1.15);image-rendering:auto;" : "image-rendering:pixelated;");
+    if (getComputedStyle(box).position === "static") box.style.position = "relative";
+    box.insertBefore(bg, box.firstChild);
+    if (getComputedStyle(src).position === "static") src.style.position = "relative";
+    var g = bg.getContext("2d"), n = 0, on = false;
+    function strip(rows, x, y, w, h, mode, up) {
+      var a = rows[0], b = rows[1], sh = b - a, sc = src.width / C.lw;
+      if (h <= 0) return;
+      if (mode === "mirror") { // a soft reflection of the frame's own edge, flipped away from the game
+        var LH = src.height / sc, take = Math.min(h, LH * 0.5);
+        g.save();
+        if (up) { g.translate(0, y + h); g.scale(1, -1); g.drawImage(src, 0, 0, src.width, take * sc, x, 0, w, h); }
+        else { g.translate(0, y); g.scale(1, -1); g.drawImage(src, 0, (LH - take) * sc, src.width, take * sc, x, -h, w, h); }
+        g.restore(); return;
+      }
+      if (mode === "tile") {
+        if (up) for (var yy = y + h - sh; yy > y - sh; yy -= sh) g.drawImage(src, 0, a * sc, src.width, sh * sc, x, yy, w, sh);
+        else for (var y2 = y; y2 < y + h; y2 += sh) g.drawImage(src, 0, a * sc, src.width, sh * sc, x, y2, w, sh);
+      } else g.drawImage(src, 0, a * sc, src.width, sh * sc, x, y, w, h);
+    }
+    function fade(y0, y1, outerAtTop) {
+      if (y1 - y0 < 1) return;
+      var gr = g.createLinearGradient(0, y0, 0, y1), c0 = "rgba(" + (C.rgb || "0,0,0") + "," + (C.fade == null ? 0.85 : C.fade) + ")", c1 = "rgba(" + (C.rgb || "0,0,0") + "," + (C.near || 0.25) + ")";
+      gr.addColorStop(0, outerAtTop ? c0 : c1); gr.addColorStop(1, outerAtTop ? c1 : c0);
+      g.fillStyle = gr; g.fillRect(0, y0, bg.width, y1 - y0);
+    }
+    function tick() {
+      RAF(tick);
+      if ((n++ % (C.every || 3)) !== 0) return;
+      var portrait = innerHeight > innerWidth * 1.05;
+      var br = box.getBoundingClientRect(), sr = src.getBoundingClientRect();
+      var gapT = sr.top - br.top, gapB = br.bottom - sr.bottom;
+      if (!portrait || sr.width < 8 || (gapT < 6 && gapB < 6)) { if (on) { bg.style.display = "none"; on = false; } return; }
+      if (!on) { bg.style.display = ""; on = true; }
+      var k = C.lw / sr.width, w = Math.max(8, Math.round(br.width * k)), h = Math.max(8, Math.round(br.height * k));
+      if (bg.width !== w || bg.height !== h) { bg.width = w; bg.height = h; }
+      var gx = (sr.left - br.left) * k, gy = (sr.top - br.top) * k, gw = sr.width * k, gh = sr.height * k;
+      g.imageSmoothingEnabled = !!C.blur;
+      g.fillStyle = C.bg || "#000"; g.fillRect(0, 0, w, h);
+      try {
+        if (C.topFn && window[C.topFn]) window[C.topFn](g, gx, 0, gw, gy, w);
+        else if (C.top) strip(C.top.rows, gx, 0, gw, gy, C.top.mode, true);
+        if (C.bot) strip(C.bot.rows, gx, gy + gh, gw, h - gy - gh, C.bot.mode, false);
+      } catch (e) { /* source not ready yet */ }
+      fade(0, gy, true); fade(gy + gh, h, false);
+      if (C.line) { g.fillStyle = C.line; g.fillRect(gx, gy - 1, gw, 1); g.fillRect(gx, gy + gh, gw, 1); }
+    }
+    RAF(tick);
+  }
+  if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", boot); else boot();
+})({"src": "#screen", "box": "#stage", "lw": 256, "topFn": "pfKoTop", "bg": "#07060f", "rgb": "7,6,15", "fade": 0.7, "near": 0.0, "every": 4});
+</script>
+</body>
+</html>

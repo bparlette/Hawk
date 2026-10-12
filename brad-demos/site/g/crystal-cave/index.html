@@ -1,0 +1,50 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<script src="../../demo-embed.js"></script>
+<style id="demo-embed-css">html.demo-embed #touch,html.demo-embed #help{display:none!important}
+</style>
+
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
+<title>Crystal Cave 2.5D</title>
+<meta name="description" content="A tiny 2.5D side-scroller vertical slice: flat 2D tile physics inside a lit, bloom-glowing 3D crystal cave.">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{width:100%;height:100%;overflow:hidden;background:#030816;color:#eaf6ff;font-family:ui-rounded,"SF Pro Rounded",system-ui,-apple-system,"Segoe UI",sans-serif;touch-action:none;-webkit-user-select:none;user-select:none;-webkit-tap-highlight-color:transparent}
+#c{position:fixed;inset:0;width:100vw;height:100vh;height:100dvh;display:block}
+#hud{position:fixed;top:max(10px,env(safe-area-inset-top));left:12px;right:12px;display:flex;gap:10px;align-items:center;pointer-events:none;font-weight:800;font-size:15px;text-shadow:0 2px 0 #0a1230,0 0 10px rgba(80,200,255,.5)}
+#hud .pill{background:rgba(6,14,40,.55);border:1px solid rgba(120,220,255,.35);border-radius:999px;padding:5px 12px;display:flex;align-items:center;gap:7px;backdrop-filter:blur(4px)}
+.coin{width:14px;height:14px;border-radius:50%;background:radial-gradient(circle at 35% 35%,#fff3b0,#ffc93a 55%,#c47d12);box-shadow:0 0 8px #ffb020}
+.h{display:inline-block;width:14px;height:13px;margin-right:2px;background:#ff4f8b;clip-path:path("M7 13 L1 6.5 A3.2 3.2 0 0 1 7 2.2 A3.2 3.2 0 0 1 13 6.5 Z");filter:drop-shadow(0 0 4px #ff4f8b)}
+.h.e{background:#3a3f66;filter:none}
+#hud .pill{white-space:nowrap}
+@media (max-width:480px){#title{display:none}#hud{font-size:14px;gap:7px}}
+#title{margin-left:auto;font-size:12px;letter-spacing:.14em;opacity:.75;text-transform:uppercase}
+#help{position:fixed;bottom:12px;left:50%;transform:translateX(-50%);font-size:12px;opacity:.7;pointer-events:none;white-space:nowrap}
+#touch{display:none;position:fixed;left:0;right:0;bottom:max(14px,env(safe-area-inset-bottom));padding:0 14px;justify-content:space-between;pointer-events:none}
+#touch .grp{display:flex;gap:12px;pointer-events:auto}
+#touch button{width:68px;height:68px;border-radius:50%;border:2px solid rgba(140,230,255,.55);background:rgba(10,30,70,.45);color:#dff6ff;font:800 22px system-ui;backdrop-filter:blur(4px);touch-action:none;box-shadow:0 0 16px rgba(60,200,255,.25) inset}
+#touch button.big{width:80px;height:80px;border-color:rgba(255,120,230,.7);box-shadow:0 0 18px rgba(255,80,220,.35) inset}
+#touch button.on{background:rgba(80,200,255,.35);transform:scale(.94)}
+@media (pointer:coarse),(max-width:820px){#touch{display:flex}#help{display:none}}
+#win{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;pointer-events:none;opacity:0;transition:opacity .5s}
+#win.show{opacity:1;pointer-events:auto}
+#win .card{background:rgba(8,18,52,.78);border:1px solid rgba(140,230,255,.5);border-radius:18px;padding:22px 26px;text-align:center;max-width:min(90vw,380px);box-shadow:0 0 40px rgba(80,180,255,.35);backdrop-filter:blur(6px)}
+#win h1{font-size:26px;margin-bottom:6px;background:linear-gradient(90deg,#7ff0ff,#ff8ae8);-webkit-background-clip:text;background-clip:text;color:transparent}
+#win .stats{font-size:14px;opacity:.85;margin-bottom:14px}
+#win button{font:800 15px system-ui;padding:10px 22px;border-radius:999px;border:0;background:linear-gradient(90deg,#38e8ff,#ff5ad8);color:#06112c;cursor:pointer}
+#load{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;background:#030816;font-weight:800;letter-spacing:.1em;transition:opacity .4s}
+#load.gone{opacity:0;pointer-events:none}
+</style>
+</head>
+<body>
+<canvas id="c"></canvas>
+<div id="hud"><span class="pill"><span id="hearts"></span></span><span class="pill"><i class="coin"></i><span id="coins">0</span></span><span class="pill"><svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="#9fe8ff" stroke-width="2"><circle cx="8" cy="9" r="6"/><path d="M8 6v3l2 1M6 1h4"/></svg><span id="time">0.0</span></span><span id="title">Crystal Cave</span></div>
+<div id="help">← → / A D move · Space / Z / ↑ jump (hold = higher) · Shift / X run</div>
+<div id="touch"><div class="grp"><button data-k="left" aria-label="Left">◀</button><button data-k="right" aria-label="Right">▶</button></div><div class="grp"><button data-k="run" aria-label="Run">B</button><button class="big" data-k="jump" aria-label="Jump">A</button></div></div>
+<div id="win"><div class="card"><h1>Cave cleared!</h1><div class="stats"></div><button id="again">Play again</button></div></div>
+<div id="load">LOADING…</div>
+<script type="module" src="./game.js"></script>
+</body>
+</html>
