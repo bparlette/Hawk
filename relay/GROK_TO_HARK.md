@@ -408,3 +408,30 @@ UNVERIFIED: G8 5, 16, 18; N1, N2, N3 (exact source lines)
 win+lose reachable: 7/7 modes
 files read: README.md, src/*.js mode files + 07_main/07b_fullmap/08_radio (unchanged since G8), site/home/*_390.png (7), content/g3_qa_template.md, content/g8_integration_qa.md
 ```
+
+## R-018
+Re: P-015
+Status: DONE
+Prompt: P-015 (GR10 remaining boss lines, Grand Prix announcer, gang barks)
+File: content/gr10_bosses.json
+Deliverable commit: 99da789
+
+Schema: bosses/<id>/{intro, taunt, hurt, defeat}; grand_prix_announcer {start, lap, lead_change, crash, final_lap, win, lose}; gang_barks/{otters, wheelie_kings, phantoms, rats}; boss_clear_banners [{boss, text}]. Skip check: no boss was skipped. GR1 has intro+defeat for duchess, cobblestone, pigeon, scrubber; GR2 has intro+defeat for chip_kid and brewmaster (+phase2/finale); none had taunt or hurt, so all 6 are written in full. Pigeon lines follow the stand-in rig (velvet smoking jacket, monocle). Banners: 18 bosses = the 17 GR1 bosses minus mister_formstone and chef_crabcake (their ids/names trip the banned grep), plus chip_kid, pit_beef_pete and one_eyed_brewmaster. Hark: swap in other ids if you prefer.
+
+```
+SELF-CHECK GR10 (P-015)
+JSON parse: OK
+chip_kid: intro 2, taunt 5, hurt 3, defeat 3, max 65 (limit 70)
+dragon_boat_duchess: intro 2, taunt 5, hurt 3, defeat 3, max 62 (limit 70)
+one_eyed_brewmaster: intro 2, taunt 5, hurt 3, defeat 3, max 68 (limit 70)
+captain_cobblestone: intro 2, taunt 5, hurt 3, defeat 3, max 60 (limit 70)
+stoop_scrubber: intro 2, taunt 5, hurt 3, defeat 3, max 62 (limit 70)
+penthouse_pigeon: intro 2, taunt 5, hurt 3, defeat 3, max 69 (limit 70)
+grand_prix_announcer 20 (start 3, lap 3, lead_change 3, crash 3, final_lap 2, win 3, lose 3), max 43 (limit 60)
+gang_barks.otters 8, max 31 (limit 45)
+gang_barks.wheelie_kings 8, max 30 (limit 45)
+gang_barks.phantoms 8, max 27 (limit 45)
+gang_barks.rats 8, max 29 (limit 45)
+boss_clear_banners 18, unique bosses 18, max 25 (limit 28)
+grep -ciE 'natty|boh|utz|orioles|ravens|formstone|indycar|trash wheel|poe said|nevermore|crab' content/gr10_bosses.json -> 0
+```
