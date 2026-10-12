@@ -4,7 +4,8 @@
   "Bake-off",
   "Other games",
   "Retro Arcade",
-  "Originals"
+  "Originals",
+  "Sticker Series"
  ],
  "games": [
   {
@@ -929,6 +930,286 @@
    "orientation": "any",
    "path": "g/toad-street-32/index.html",
    "thumb": "thumbs/toad-street-32.webp?v=1791683427"
+  },
+  {
+   "id": "sticker-sticker-stomp",
+   "title": "Sticker Stomp",
+   "category": "Sticker Series",
+   "keys": {
+    "up": "ArrowUp",
+    "down": "ArrowDown",
+    "left": "ArrowLeft",
+    "right": "ArrowRight",
+    "attack": "KeyJ",
+    "jump": "Space",
+    "start": "Enter"
+   },
+   "autostart": [],
+   "orientation": "any",
+   "path": "https://notebook-arcade.surge.sh/sticker-stomp/"
+  },
+  {
+   "id": "sticker-paintball-office",
+   "title": "Paintball Office",
+   "category": "Sticker Series",
+   "keys": {
+    "up": "ArrowUp",
+    "down": "ArrowDown",
+    "left": "ArrowLeft",
+    "right": "ArrowRight",
+    "attack": "KeyJ",
+    "jump": "Space",
+    "start": "Enter"
+   },
+   "autostart": [],
+   "orientation": "any",
+   "path": "https://notebook-arcade.surge.sh/paintball-office/"
+  },
+  {
+   "id": "sticker-sticker-swing",
+   "title": "Sticker Swing",
+   "category": "Sticker Series",
+   "keys": {
+    "up": "ArrowUp",
+    "down": "ArrowDown",
+    "left": "ArrowLeft",
+    "right": "ArrowRight",
+    "attack": "KeyJ",
+    "jump": "Space",
+    "start": "Enter"
+   },
+   "autostart": [],
+   "orientation": "any",
+   "path": "https://notebook-arcade.surge.sh/sticker-swing/",
+   "thumb": "https://notebook-arcade.surge.sh/sticker-swing/og.jpg"
+  },
+  {
+   "id": "sticker-sticker-kart",
+   "title": "Sticker Kart",
+   "category": "Sticker Series",
+   "keys": {
+    "up": "ArrowUp",
+    "down": "ArrowDown",
+    "left": "ArrowLeft",
+    "right": "ArrowRight",
+    "attack": "KeyJ",
+    "jump": "Space",
+    "start": "Enter"
+   },
+   "autostart": [],
+   "orientation": "any",
+   "path": "https://notebook-arcade.surge.sh/sticker-kart/",
+   "thumb": "https://notebook-arcade.surge.sh/sticker-kart/og.jpg"
+  },
+  {
+   "id": "sticker-headbrawl",
+   "title": "Headbrawl",
+   "category": "Sticker Series",
+   "keys": {
+    "up": "ArrowUp",
+    "down": "ArrowDown",
+    "left": "ArrowLeft",
+    "right": "ArrowRight",
+    "attack": "KeyJ",
+    "jump": "Space",
+    "start": "Enter"
+   },
+   "autostart": [],
+   "orientation": "any",
+   "path": "https://notebook-arcade.surge.sh/headbrawl/",
+   "thumb": "https://notebook-arcade.surge.sh/headbrawl/og.jpg"
+  },
+  {
+   "id": "sticker-rampage",
+   "title": "Rampage",
+   "category": "Sticker Series",
+   "keys": {
+    "up": "ArrowUp",
+    "down": "ArrowDown",
+    "left": "ArrowLeft",
+    "right": "ArrowRight",
+    "attack": "KeyJ",
+    "jump": "Space",
+    "start": "Enter"
+   },
+   "autostart": [],
+   "orientation": "any",
+   "path": "https://notebook-arcade.surge.sh/rampage/",
+   "thumb": "https://notebook-arcade.surge.sh/rampage/og.jpg"
+  },
+  {
+   "id": "sticker-excitebike",
+   "title": "Excitebike — Track 1",
+   "category": "Sticker Series",
+   "keys": {
+    "up": "ArrowUp",
+    "down": "ArrowDown",
+    "left": "ArrowLeft",
+    "right": "ArrowRight",
+    "attack": "KeyJ",
+    "jump": "Space",
+    "start": "Enter"
+   },
+   "autostart": [],
+   "orientation": "any",
+   "path": "https://notebook-arcade.surge.sh/excitebike/",
+   "thumb": "https://notebook-arcade.surge.sh/excitebike/og.jpg"
+  },
+  {
+   "id": "sticker-punch-out",
+   "title": "Punch-Out — Minor Circuit",
+   "category": "Sticker Series",
+   "keys": {
+    "up": "ArrowUp",
+    "down": "ArrowDown",
+    "left": "ArrowLeft",
+    "right": "ArrowRight",
+    "attack": "KeyJ",
+    "jump": "Space",
+    "start": "Enter"
+   },
+   "autostart": [],
+   "orientation": "any",
+   "path": "https://notebook-arcade.surge.sh/punch-out/",
+   "thumb": "https://notebook-arcade.surge.sh/punch-out/og.jpg"
+  },
+  {
+   "id": "sticker-kung-fu-master",
+   "title": "Kung Fu Master — Level 1",
+   "category": "Sticker Series",
+   "keys": {
+    "up": "ArrowUp",
+    "down": "ArrowDown",
+    "left": "ArrowLeft",
+    "right": "ArrowRight",
+    "attack": "KeyJ",
+    "jump": "Space",
+    "start": "Enter"
+   },
+   "autostart": [],
+   "orientation": "any",
+   "path": "https://notebook-arcade.surge.sh/kung-fu-master/",
+   "thumb": "https://notebook-arcade.surge.sh/kung-fu-master/og.jpg"
+  },
+  {
+   "id": "sticker-bad-dudes",
+   "title": "Bad Dudes — Stage 2",
+   "category": "Sticker Series",
+   "keys": {
+    "up": "ArrowUp",
+    "down": "ArrowDown",
+    "left": "ArrowLeft",
+    "right": "ArrowRight",
+    "attack": "KeyJ",
+    "jump": "Space",
+    "start": "Enter"
+   },
+   "autostart": [],
+   "orientation": "any",
+   "path": "https://notebook-arcade.surge.sh/bad-dudes/",
+   "thumb": "https://notebook-arcade.surge.sh/bad-dudes/og.jpg"
+  },
+  {
+   "id": "sticker-sticker-scrap",
+   "title": "Sticker Scrap",
+   "category": "Sticker Series",
+   "keys": {
+    "up": "ArrowUp",
+    "down": "ArrowDown",
+    "left": "ArrowLeft",
+    "right": "ArrowRight",
+    "attack": "KeyJ",
+    "jump": "Space",
+    "start": "Enter"
+   },
+   "autostart": [],
+   "orientation": "any",
+   "path": "https://notebook-arcade.surge.sh/sticker-scrap/",
+   "thumb": "https://notebook-arcade.surge.sh/sticker-scrap/og.jpg"
+  },
+  {
+   "id": "sticker-whac-a-tank",
+   "title": "Whac-A-Tank Superbad",
+   "category": "Sticker Series",
+   "keys": {
+    "up": "ArrowUp",
+    "down": "ArrowDown",
+    "left": "ArrowLeft",
+    "right": "ArrowRight",
+    "attack": "KeyJ",
+    "jump": "Space",
+    "start": "Enter"
+   },
+   "autostart": [],
+   "orientation": "any",
+   "path": "https://notebook-arcade.surge.sh/whac-a-tank/",
+   "thumb": "https://notebook-arcade.surge.sh/og.jpg"
+  },
+  {
+   "id": "sticker-space-in-veiners",
+   "title": "Space In-veiners Superbad",
+   "category": "Sticker Series",
+   "keys": {
+    "up": "ArrowUp",
+    "down": "ArrowDown",
+    "left": "ArrowLeft",
+    "right": "ArrowRight",
+    "attack": "KeyJ",
+    "jump": "Space",
+    "start": "Enter"
+   },
+   "autostart": [],
+   "orientation": "any",
+   "path": "https://notebook-arcade.surge.sh/space-in-veiners/",
+   "thumb": "https://notebook-arcade.surge.sh/og.jpg"
+  },
+  {
+   "id": "sticker-robocock",
+   "title": "RoboCock-Superbad",
+   "category": "Sticker Series",
+   "keys": {
+    "up": "ArrowUp",
+    "down": "ArrowDown",
+    "left": "ArrowLeft",
+    "right": "ArrowRight",
+    "attack": "KeyJ",
+    "jump": "Space",
+    "start": "Enter"
+   },
+   "autostart": [],
+   "orientation": "any",
+   "path": "https://notebook-arcade.surge.sh/robocock/",
+   "thumb": "https://notebook-arcade.surge.sh/og.jpg"
+  },
+  {
+   "id": "moth-runner",
+   "title": "Moth Runner",
+   "category": "Originals",
+   "keys": {
+    "jump": "Space",
+    "start": "Space"
+   },
+   "autostart": [],
+   "orientation": "any",
+   "path": "g/moth-runner/index.html"
+  },
+  {
+   "id": "beach-catch",
+   "title": "Beach Catch",
+   "category": "Other games",
+   "keys": {
+    "up": "ArrowUp",
+    "down": "ArrowDown",
+    "left": "ArrowLeft",
+    "right": "ArrowRight",
+    "attack": "KeyJ",
+    "jump": "Space",
+    "start": "Enter"
+   },
+   "autostart": [],
+   "orientation": "any",
+   "path": "https://bparlette.github.io/Aistudio/",
+   "thumb": "https://bparlette.github.io/Aistudio/og-preview.jpg"
   }
  ]
 }
