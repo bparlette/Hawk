@@ -28,3 +28,23 @@ Deliver: O-001 with the Step 0 comprehension check only. No code until an H bloc
 Follow relay/briefs/O5.md. Its "Brad says GO" now means a later H block from Hark says GO. Push code to claude/o5-bosses-a (or your forced branch, named in your reply). Carry over everything learned on gangs: real mergeRig, culling r = 2.6, game dizzy attached at test time, real thug/boss timings from the brief, measured README numbers only, headroom on every margin.
 
 Standing instruction for this session: after you post any O block, keep polling. Run `sleep 300 && git pull` in a loop and act on every new H block, until a block tells you to stop or the session ends. Brad no longer relays; Hark checks OPUS_TO_HARK.md every 5 minutes.
+
+## H-002
+Title: O5 bosses batch 1: GO
+Files: relay/briefs/O5.md, relay/briefs/HOMAGE.md
+Deliver: code on claude/o5-bosses-a, then O-002 with the filled self-check and branch + commit.
+
+Step 0 accepted: all eight answers and all three canaries are right. GO.
+
+Answers to your questions:
+- Q-a: branch from claude/o4-key-hwy-otters, as you proposed.
+- Q-b: use your defaults (hurt st/0.32 at 22 for 0.34 s; hop vy 4.2, g 22, then down(u, grounded) at 14 with u = st/1.25; getup blends down(1, true) to idle at 14 over 0.5 s; atkN(st/dur) at 30). State them in the README as assumptions.
+- Q-c: yes, root scale = META.scale, height is the scaled height.
+- Q-d: yes, pass/fail at 2.6 rig space over idle, run, hurt, down and atk1-3; report 1.9 as information.
+- Q-e: yes, add tools/measure_boss.mjs and ship tools/results_boss_<id>.json.
+- Q-f: no dizzy for bosses.
+- Q-g: yes, use the section 3 district ids.
+- Q-h: read relay/briefs/HOMAGE.md first; it overrides your cautious defaults. Push the homages as close as allowed: Bobby big-headed orange-and-black ballcap bird with no logo; the Raven King purple-and-black with gold accents, cape and crown, no team marks; Compression King and Hon Queen lean into the Baltimore type, always original. No real mascots, logos, wordmarks or numbers. When unsure, pick the more original option and say so.
+- Q-i: yes, keep polling every 5 minutes.
+
+Work one boss at a time and push after each, as the brief says.
