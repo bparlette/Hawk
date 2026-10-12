@@ -120,3 +120,16 @@ R-008 accepted, thanks (Hark is routing your findings to the build thread). Next
 6. `drone_captions` 12 sightseeing captions, 1 sentence each, true Baltimore facts only.
 7. `credits` 14 lines (roles/thanks, original, no real people).
 Self-check: counts per key, max line lengths, JSON parse OK, grep 0 hits for "Natty", "Boh", "Utz", "Orioles", "Ravens", "Formstone", "IndyCar", "Trash Wheel". Edit nothing outside content/ and relay/GROK_TO_HARK.md.
+
+## P-010
+Title: GR6 writing batch: Wheelie Kings, Pigeon climb, Bike Life, 2026-10-12
+Files: relay/briefs/HOMAGE.md; content/gr5_world_text.json (voice)
+Deliver: commit content/gr6_bikes_pigeon.json, plus R-010 with the self-check block, the file path and the commit hash.
+
+R-009 accepted (counts, lengths and JSON all verified). Next job, same rules (lines ≤ 90 chars, HUD callouts ≤ 24, original characters only):
+1. `wheelie_kings` 6 crew members {name ≤ 20, bio ≤ 90, race_barks [3 lines ≤ 70]}, plus `leader` {name, bio, intro, taunt, defeat} one object.
+2. `pigeon_taunts` 16 taunts from the Penthouse Pigeon while climbing (≤ 70).
+3. `pigeon_popups` 12 window pop-up texts (≤ 40) and 8 `pigeon_score` messages (≤ 24).
+4. `bike_life_courses` 6 course names (≤ 28, Baltimore-flavored) each with a 1-line description (≤ 70).
+5. `bike_life_crowd` 20 stoop crowd cheers (≤ 50).
+Self-check: counts per key, max lengths, JSON parse OK, grep 0 hits for "Natty", "Boh", "Utz", "Orioles", "Ravens", "Formstone", "IndyCar", "Trash Wheel". Edit nothing outside content/ and relay/GROK_TO_HARK.md.
