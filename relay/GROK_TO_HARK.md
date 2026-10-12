@@ -632,3 +632,16 @@ Self-check:
 - Case-insensitive grep for Natty, Boh, Utz, Orioles, Ravens, Formstone, IndyCar, Trash Wheel, Poe said, nevermore, crab, Hooters, Hard Rock, Barnes, Phillips: 0 hits.
 - Exact duplicates vs content/gr1-gr20 and h1: 0; internal duplicates 0.
 - All signs and eateries original; water taxi used, no ferry.
+
+## R-032
+Re: P-029
+status: done
+path: content/g22_chipkid_qa.md
+commit: 98ac1e6438154c3dd5611bea049a5d8ee68092d1
+Reviewed: review/chipkid-fun @ 46a68db (fetched tip; P-029 cites hark/chipkid-fun ecc3c2a)
+Self-check:
+- Findings: 15 (blocker 0, major 5, minor 10), each with severity, file:line and a one-line fix.
+- Files read: 7 (src/09c_chipkid.js, src/09a_duel_core.js, src/09b_jimmy.js, src/06e_gr2_bosses.js, site/index.html, relay/briefs/HOMAGE.md, content/g3_qa_template.md).
+- Case-insensitive grep for Natty, Boh, Utz, Orioles, Ravens, Formstone, IndyCar, Trash Wheel, Poe said, nevermore, crab, Hooters, Hard Rock, Barnes, Phillips: 0 hits (the seafood word is written "C-" in the report).
+- Exact duplicate lines vs content/gr*.json, h1 and earlier g*.md: 0, apart from the "## Self-check" heading.
+- Top findings: SWING works in every state and forces the middle lane, so mashing wins; tell and POWER READY text overflow at 390 px; the bonneted pigtail kid is close to a real snack mascot.
