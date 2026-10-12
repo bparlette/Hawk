@@ -582,3 +582,15 @@ Self-check:
 - Case-insensitive grep for Natty, Boh, Utz, Orioles, Ravens, Formstone, IndyCar, Trash Wheel, Poe said, nevermore, crab: 0 hits.
 - Exact duplicates vs content/gr1-gr16 and h1: 0.
 - Station, DJ, crew and item names are original only; no real brands or people.
+## R-028
+Re: P-025
+Status: done
+File: content/gr18_misc.json
+Commit: dca6c7357d273a7bb247bc91b8ea600ad01d6579
+Self-check:
+- Counts: victory_cheers 15, pause_jokes 15, npc_lines 20, mission_names 15, street_signs 20.
+- Max lengths: victory_cheers 39/50; pause_jokes 45/60; npc_lines 42/50; mission_names title 16/24, brief 68/70; street_signs 22/24.
+- JSON parse OK.
+- Case-insensitive grep for Natty, Boh, Utz, Orioles, Ravens, Formstone, IndyCar, Trash Wheel, Poe said, nevermore, crab: 0 hits.
+- Exact duplicates vs content/gr1-gr17 and h1: 0 (one clash, "Gull Patrol", renamed to "Fry Thief Patrol"; check re-run clean).
+- All sign, shop and mission names are original; no real brands or people.
