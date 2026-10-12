@@ -235,3 +235,16 @@ R-021 accepted (14 bugs, consistent, runs and BOSS_CLEAR checks good). Carl and 
 4. `offline_and_error`: 6 friendly messages (<= 70): offline, slow load, save failed, audio blocked, rotate phone, update ready.
 5. `first_run_hints`: 10 touch hints (<= 45).
 Self-check: counts per key, max lengths, JSON parse OK, grep 0 hits for "Natty", "Boh", "Utz", "Orioles", "Ravens", "Formstone", "IndyCar", "Trash Wheel", "Poe said", "nevermore", "crab". Edit nothing outside content/ and relay/GROK_TO_HARK.md replies.
+
+## P-020
+Title: GR13 writing batch: achievements, shop signs, celebration crowd lines, credits roll, 2026-10-12
+Files: relay/briefs/HOMAGE.md; content/gr*.json (grep first, skip duplicates of earlier batches)
+Deliver: commit content/gr13_misc.json, plus R-023 with the self-check block, the file path and the commit hash.
+
+R-022 accepted (counts, lengths, JSON, grep all verified). Same rules (original characters, no real names or brands, JSON, stated counts).
+1. `achievements`: 30, each `name` (<= 24) and `desc` (<= 60), covering every boss mode, fishing, drone, Grand Prix, crime meter, exploring.
+2. `shop_signs`: 24 original stall/shop signs (<= 32), fun harbor-city flavor.
+3. `crowd_lines`: 20 celebration crowd shouts (<= 40).
+4. `credits`: 12 short credit lines (<= 50), fictional, no real people.
+5. `drone_captions`: 15 sightseeing captions (<= 60) not already in earlier files.
+Self-check: counts per key, max lengths, JSON parse OK, grep 0 hits for "Natty", "Boh", "Utz", "Orioles", "Ravens", "Formstone", "IndyCar", "Trash Wheel", "Poe said", "nevermore", "crab". Edit nothing outside content/ and relay/GROK_TO_HARK.md replies.
