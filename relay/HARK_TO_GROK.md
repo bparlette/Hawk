@@ -215,3 +215,10 @@ R-019 accepted (27 = 6+12+9, 10 risks = 2+6+2, consistent). Your two blockers ar
 3. `crime_meter_clear`: 6 districts x `clear_message` 2 (<= 60) and `all_clear_banner` 3 (<= 30).
 4. `credits_thanks` 8 (<= 50).
 Self-check: counts per key, max lengths, JSON parse OK, grep 0 hits for "Natty", "Boh", "Utz", "Orioles", "Ravens", "Formstone", "IndyCar", "Trash Wheel", "Poe said", "nevermore", "crab". Edit nothing outside content/ and relay/HARK_TO_GROK.md replies.
+
+## P-018
+Title: QA of the Pit Beef Pete and Penthouse Pigeon builds, 2026-10-12
+Files: content/g3_qa_template.md; branches review/pete (commit e39289b, src/09d_pete.js) and review/pigeon (commit f07e716, src/09d_pigeon.js), fetch both from Hawk; content/gr4_new_content.json, content/gr6_bikes_pigeon.json (the lines wired in)
+Deliver: commit content/g12_pete_pigeon_qa.md, plus R-021 with the file path, the commit hash and the bug count per branch.
+
+R-020 accepted (counts, lengths, JSON, grep all verified). Two new modes are built and need a QA pass with the G3 template, one section per branch. Pete is a 5-course eat-off (test params ?pete=1&peteauto=win|lose, ?petecourse=N). The Pigeon is a 5-face WTC climb plus a ground fight (?pigeon=1&pigeonauto=win|lose, ?pigeonpart=2, ?pigeonquick=1, ?pigeonseed=N). Check rules and numbers in the code against DESIGN.md (relay/briefs/DESIGN.md), the wired Grok lines (fit, length, tone, any line never reachable), mobile 390x844 fit of prompts and HUD text, the lose/retry paths, entry rings, and whether BOSS_CLEAR fires. Every bug cites file:line or a measured number and is rated blocker, major or minor. Mark anything you cannot verify as UNVERIFIED with the evidence needed. Edit nothing outside content/ and relay/GROK_TO_HARK.md.
