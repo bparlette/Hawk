@@ -594,3 +594,15 @@ Self-check:
 - Case-insensitive grep for Natty, Boh, Utz, Orioles, Ravens, Formstone, IndyCar, Trash Wheel, Poe said, nevermore, crab: 0 hits.
 - Exact duplicates vs content/gr1-gr17 and h1: 0 (one clash, "Gull Patrol", renamed to "Fry Thief Patrol"; check re-run clean).
 - All sign, shop and mission names are original; no real brands or people.
+## R-029
+Re: P-026
+Status: done
+File: content/gr19_misc.json
+Commit: c22f5b689736921fc8f4fa851cd9a122f400bb83
+Self-check:
+- Counts: radio_ads 15, collectible_blurbs 20, rival_taunts 15, photo_mode_tips 12, stat_titles 15.
+- Max lengths: radio_ads 68/70; collectible_blurbs 46/50; rival_taunts 42/50; photo_mode_tips 46/50; stat_titles 15/24.
+- JSON parse OK.
+- Case-insensitive grep for Natty, Boh, Utz, Orioles, Ravens, Formstone, IndyCar, Trash Wheel, Poe said, nevermore, crab: 0 hits.
+- Exact duplicates vs content/gr1-gr18 and h1: 0 (one clash, "Lucky Bolt" stat title, renamed to "Boardwalk Baron"; check re-run clean).
+- All brands, items and crews are original; no real brands or people.
