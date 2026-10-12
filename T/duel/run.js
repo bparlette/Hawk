@@ -10,7 +10,7 @@ const pw = require('/workspace/work/trailer_v2/node_modules/playwright-core');
   p.on('pageerror', (e) => errs.push('pageerror: ' + e.message + ' ' + (e.stack || '').slice(0, 300)));
   p.on('requestfailed', (r) => { if (!/youtube|ytimg|google/.test(r.url())) errs.push('reqfail: ' + r.url()); });
   const t0 = Date.now();
-  await p.goto(`http://127.0.0.1:${port}/?nointro=1&radiotest=1&duel=${kind}&duelbot=${mode}&sim=${sim}`);
+  await p.goto(`http://127.0.0.1:${port}/?nointro=1&radiotest=1&duel=${kind}&duelbot=${mode}&sim=${sim}${process.env.XQ || ""}`);
   await p.waitForFunction(() => window.__duels && __duels.cur, null, { timeout: 90000 });
   let shot = false, dc = null; const limit = mode === 'lose' ? 240 : 600;
   for (let i = 0; i < limit * 4; i++) {

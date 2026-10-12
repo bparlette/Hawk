@@ -7489,10 +7489,10 @@ const DUELS = (function () {
   }
   // loss / win card: RETRY | LEAVE, or CONTINUE after a win
   let overMode = null;
-  D.over = (mode, title, text) => { overMode = mode; H.oh.innerHTML = title; H.op.innerHTML = text || ''; H.ob1.textContent = mode === 'win' ? 'CONTINUE' : 'RETRY'; H.ob2.style.display = mode === 'win' ? 'none' : ''; H.over.classList.add('on'); D.overT = 0; };
+  D.over = (mode, title, text, opts) => { overMode = mode; H.oh.innerHTML = title; H.op.innerHTML = text || ''; H.ob1.textContent = mode === 'win' ? 'CONTINUE' : 'RETRY'; D.overAgain = !!(opts && opts.again && mode === 'win'); H.ob2.textContent = D.overAgain ? 'REMATCH' : 'LEAVE'; H.ob2.style.display = mode === 'win' && !D.overAgain ? 'none' : ''; H.over.classList.add('on'); D.overT = 0; }; // chipkid-fun: opts.again = a REMATCH button on the win card (calls K.again)
   const overClose = () => { H.over.classList.remove('on'); const m = overMode; overMode = null; return m; };
   D.overOn = () => !!overMode;
-  function overPick(retry) { if (!overMode || D.overT < 0.6) return; const m = overClose(); if (m === 'win') D.exit('win'); else if (retry) { D.log.push('retry'); D.retries++; D.cur.retry(); } else D.exit('leave'); }
+  function overPick(retry) { if (!overMode || D.overT < 0.6) return; const again = D.overAgain; D.overAgain = false; const m = overClose(); if (m === 'win' && !retry && again && D.cur.again) { D.log.push('again'); D.cur.again(); } else if (m === 'win') D.exit('win'); else if (retry) { D.log.push('retry'); D.retries++; D.cur.retry(); } else D.exit('leave'); }
   H.ob1.addEventListener('pointerdown', (e) => { e.preventDefault(); e.stopPropagation(); audioInit(); overPick(true); });
   H.ob2.addEventListener('pointerdown', (e) => { e.preventDefault(); e.stopPropagation(); overPick(false); });
   D.overPick = overPick;
@@ -7545,6 +7545,103 @@ const DUELS = (function () {
   function dot(c = '#fff', soft = true) { return canvasTex(64, 64, (g) => { const r = g.createRadialGradient(32, 32, 2, 32, 32, 30); r.addColorStop(0, c); r.addColorStop(soft ? 0.5 : 0.8, c); r.addColorStop(1, 'rgba(255,255,255,0)'); g.fillStyle = r; g.fillRect(0, 0, 64, 64); }, 64); }
   D.kit = kit; D.GEO = GEO; D.inkHull = inkHull; D.sceneLights = sceneLights; D.dot = dot;
 
+
+  // ---------------- chipkid-fun: shared hit juice for every duel (all opt-in: a duel that never calls these renders and plays exactly as before) ----------------
+  // D.hitstop(s) freeze the sim · D.slowmo(scale, s) · D.shake(a) · D.zoom(k, s) · D.flash(css colour, a) · D.pop(text, worldPos, cls 'big'|'crit'|'heal'|'word')
+  // D.combo(n) hit counter · D.power(v 0..1, ready, label) meter under the player bar · D.ready(html|null) big pulsing prompt · D.hitSfx(kind)
+  // D.impact({ stop, shake, flash, flashA, zoom, zoomT, slow, slowT, sfx, pop, pos, cls }) all-in-one · D.trail(scene, col) cane / weapon motion ribbon (1 draw call)
+  // D.debris(scene, max) tumbling chips / shreds (1 draw call) · D.sprites(scene, tex, max, additive) camera-facing sparks / puffs / rings (1 draw call)
+  const J = { hs: 0, slow: 1, slowT: 0, sh: 0, zk: 1, zT: 0, zT0: 0, fl: 0 };
+  { const c2 = document.createElement('style'); c2.textContent = `
+  #duel .dflash { position: absolute; inset: 0; opacity: 0; background: #fff; }
+  #duel .dpop { position: absolute; left: 0; top: 0; font-size: 18px; color: #fff; text-shadow: 2px 2px 0 #14101f, -2px -2px 0 #14101f, 2px -2px 0 #14101f, -2px 2px 0 #14101f; white-space: nowrap; opacity: 0; will-change: transform; }
+  #duel .dpop.crit { color: #ffd23c; font-size: 22px; } #duel .dpop.big { color: #ff5a3c; font-size: 30px; } #duel .dpop.heal { color: #9dff6b; } #duel .dpop.word { color: #fff36a; font-size: 26px; letter-spacing: 1px; }
+  #duel .dcombo { position: absolute; right: 12px; top: 38%; text-align: right; color: #ffd23c; font-size: 30px; line-height: 1; text-shadow: 3px 3px 0 #14101f, -2px -2px 0 #14101f; opacity: 0; transition: opacity .25s; }
+  #duel .dcombo small { display: block; font-size: 11px; color: #fff; letter-spacing: 2px; margin-top: 3px; }
+  #duel .dcombo.on { opacity: 1; transition: none; }
+  #duel .dpow { position: absolute; left: 10px; top: calc(env(safe-area-inset-top, 0px) + 98px); width: min(220px, 46vw); display: none; }
+  body.duel-pw #duel .dpow { display: block; }
+  #duel .dpow .n { font-size: 9px; color: #9ff8ff; letter-spacing: 1px; margin-bottom: 3px; text-shadow: 2px 2px 0 #14101f; }
+  #duel .dpow .t { height: 11px; background: #14101f; border: 2px solid #14101f; border-radius: 7px; position: relative; overflow: hidden; box-shadow: 2px 2px 0 #14101f; }
+  #duel .dpow .t i { position: absolute; left: 0; top: 0; bottom: 0; width: 0; background: linear-gradient(90deg, #39b6ff, #b06bff); transition: width .12s; }
+  #duel .dpow.rdy .t i { background: linear-gradient(90deg, #ffd23c, #ff7a2a, #ffd23c); background-size: 200% 100%; animation: dpw .5s linear infinite; }
+  #duel .dpow.rdy .t { box-shadow: 0 0 12px 3px #ffd23c, 2px 2px 0 #14101f; } #duel .dpow.rdy .n { color: #ffd23c; }
+  @keyframes dpw { from { background-position: 0 0; } to { background-position: 200% 0; } }
+  #duel .dready { position: absolute; left: 50%; bottom: 5%; transform: translateX(-50%); font-size: 16px; color: #14101f; background: #ffd23c; border: 3px solid #14101f; border-radius: 12px; padding: 8px 14px; box-shadow: 0 0 18px 4px rgba(255,210,60,.8), 3px 3px 0 #14101f; white-space: nowrap; display: none; animation: drdy .45s ease-in-out infinite alternate; }
+  #duel .dready.on { display: block; }
+  @keyframes drdy { from { transform: translateX(-50%) scale(.94); } to { transform: translateX(-50%) scale(1.06); } }
+  body.duel-pw #aact.hot { animation: dpbtn .35s ease-in-out infinite alternate; }
+  @keyframes dpbtn { from { filter: brightness(1.1) drop-shadow(0 0 4px #ffd23c); transform: translate(-50%, -50%) scale(1); } to { filter: brightness(1.45) drop-shadow(0 0 16px #ffd23c); transform: translate(-50%, -50%) scale(1.12); } }
+  @media (max-width: 480px) { #duel .dready { font-size: 13px; } #duel .dcombo { font-size: 24px; } }`; document.head.appendChild(c2); }
+  const jx = document.createElement('div'); jx.innerHTML = '<div class="dflash"></div><div class="dcombo"></div><div class="dpow"><div class="n">POWER</div><div class="t"><i></i></div></div><div class="dready"></div>';
+  while (jx.firstChild) hud.insertBefore(jx.firstChild, H.over);
+  const JH = { fl: q('.dflash'), co: q('.dcombo'), pw: q('.dpow'), pwi: q('.dpow i'), pwn: q('.dpow .n'), rd: q('.dready'), pops: [] };
+  for (let i = 0; i < 12; i++) { const e = document.createElement('div'); e.className = 'dpop'; hud.insertBefore(e, H.over); JH.pops.push({ e, t: 9, life: 0.9, p: new THREE.Vector3(), dx: 0 }); }
+  let popI = 0, coT = 0;
+  D.hitstop = (s) => { J.hs = Math.max(J.hs, s); };
+  D.slowmo = (k, s) => { J.slow = k; J.slowT = Math.max(J.slowT, s); };
+  D.shake = (a) => { J.sh = Math.max(J.sh, a); };
+  D.zoom = (k, s) => { J.zk = k; J.zT = J.zT0 = s; };
+  D.flash = (col = '#fff', a = 0.7) => { JH.fl.style.background = col; J.fl = Math.max(J.fl, a); };
+  D.pop = (text, pos, cls = '') => { const o = JH.pops[popI++ % JH.pops.length]; o.e.className = 'dpop ' + cls; o.e.textContent = text; o.p.copy(pos); o.t = 0; o.life = cls === 'word' || cls === 'big' ? 1.1 : 0.85; o.dx = (Math.random() - 0.5) * 40; };
+  D.combo = (n) => { if (n < 2) { JH.co.classList.remove('on'); return; } JH.co.innerHTML = n + '<small>HIT COMBO!</small>'; JH.co.classList.add('on'); JH.co.style.transform = 'scale(1.35) rotate(-4deg)'; coT = 1.4; };
+  D.power = (v, ready, label) => { document.body.classList.add('duel-pw'); JH.pwi.style.width = (clamp(v, 0, 1) * 100).toFixed(1) + '%'; JH.pw.classList.toggle('rdy', !!ready); const n = label || (ready ? 'POWER READY!' : 'POWER'); if (JH.pwn.__h !== n) { JH.pwn.textContent = n; JH.pwn.__h = n; } };
+  D.ready = (html) => { if (!html) { JH.rd.classList.remove('on'); return; } if (JH.rd.__h !== html) { JH.rd.innerHTML = html; JH.rd.__h = html; } JH.rd.classList.add('on'); };
+  D.impact = (o = {}) => { if (o.stop) D.hitstop(o.stop); if (o.shake) D.shake(o.shake); if (o.flash) D.flash(o.flash, o.flashA ?? 0.6); if (o.zoom) D.zoom(o.zoom, o.zoomT ?? 0.35); if (o.slow) D.slowmo(o.slow, o.slowT ?? 0.4); if (o.sfx) D.hitSfx(o.sfx); if (o.pop && o.pos) D.pop(o.pop, o.pos, o.cls || ''); try { if (o.stop >= 0.08 && navigator.vibrate) navigator.vibrate(30); } catch (e) {} };
+  // chunky hit sounds (WebAudio, through the shared SFX bus): light | heavy | mega | boom | whoosh | power | crunch
+  D.hitSfx = (kind = 'light') => { if (!AC || AC.state !== 'running') return; const t = AC.currentTime; try {
+    const out = AC.createGain(); out.connect(SFXBUS || AC.destination);
+    const thump = (f0, f1, dur, vol) => { const o = AC.createOscillator(), g = AC.createGain(); o.type = 'sine'; o.frequency.setValueAtTime(f0, t); o.frequency.exponentialRampToValueAtTime(f1, t + dur); g.gain.setValueAtTime(vol, t); g.gain.exponentialRampToValueAtTime(0.0001, t + dur); o.connect(g); g.connect(out); o.start(t); o.stop(t + dur + 0.02); };
+    const noise = (type, f, q, dur, vol, f2) => { const s = AC.createBufferSource(), fl = AC.createBiquadFilter(), g = AC.createGain(); s.buffer = NOISE; fl.type = type; fl.frequency.setValueAtTime(f, t); if (f2) fl.frequency.exponentialRampToValueAtTime(f2, t + dur); fl.Q.value = q; g.gain.setValueAtTime(vol, t); g.gain.exponentialRampToValueAtTime(0.0001, t + dur); s.connect(fl); fl.connect(g); g.connect(out); s.start(t); s.stop(t + dur + 0.02); };
+    const crack = (f, dur, vol) => { const o = AC.createOscillator(), g = AC.createGain(); o.type = 'square'; o.frequency.setValueAtTime(f, t); o.frequency.exponentialRampToValueAtTime(f * 0.3, t + dur); g.gain.setValueAtTime(vol, t); g.gain.exponentialRampToValueAtTime(0.0001, t + dur); o.connect(g); g.connect(out); o.start(t); o.stop(t + dur + 0.02); };
+    if (kind === 'light') { thump(170, 55, 0.14, 0.32); noise('bandpass', 2200, 1.2, 0.07, 0.22); crack(420, 0.05, 0.06); }
+    else if (kind === 'heavy') { thump(140, 38, 0.24, 0.45); noise('lowpass', 3000, 0.7, 0.16, 0.3); crack(300, 0.09, 0.09); noise('highpass', 5000, 0.8, 0.12, 0.12); }
+    else if (kind === 'mega') { thump(110, 28, 0.5, 0.55); noise('lowpass', 1800, 0.7, 0.45, 0.4, 300); crack(240, 0.16, 0.12); noise('highpass', 4200, 0.8, 0.3, 0.16); }
+    else if (kind === 'boom') { thump(90, 22, 0.9, 0.6); noise('lowpass', 1200, 0.6, 0.9, 0.5, 120); }
+    else if (kind === 'crunch') { for (let k = 0; k < 3; k++) { const s = AC.createBufferSource(), fl = AC.createBiquadFilter(), g = AC.createGain(), tt = t + k * 0.035; s.buffer = NOISE; fl.type = 'bandpass'; fl.frequency.value = 2600 + k * 900; fl.Q.value = 3; g.gain.setValueAtTime(0.16, tt); g.gain.exponentialRampToValueAtTime(0.0001, tt + 0.05); s.connect(fl); fl.connect(g); g.connect(out); s.start(tt); s.stop(tt + 0.06); } }
+    else if (kind === 'whoosh') noise('bandpass', 500, 1.5, 0.22, 0.2, 2600);
+    else if (kind === 'power') { const o = AC.createOscillator(), g = AC.createGain(); o.type = 'sawtooth'; o.frequency.setValueAtTime(180, t); o.frequency.exponentialRampToValueAtTime(900, t + 0.5); g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(0.12, t + 0.1); g.gain.exponentialRampToValueAtTime(0.0001, t + 0.6); o.connect(g); g.connect(out); o.start(t); o.stop(t + 0.62); }
+  } catch (e) {} };
+  // motion ribbon: push(base, tip) each frame while swinging; fades over `life` s
+  D.trail = (sc, col = '#fff', n = 16, life = 0.16) => { const P = new Float32Array(n * 2 * 3), Cc = new Float32Array(n * 2 * 3), idx = []; for (let i = 0; i < n - 1; i++) { const a = i * 2; idx.push(a, a + 1, a + 2, a + 1, a + 3, a + 2); }
+    const g = new THREE.BufferGeometry(); g.setAttribute('position', new THREE.BufferAttribute(P, 3)); g.setAttribute('color', new THREE.BufferAttribute(Cc, 3)); g.setIndex(idx);
+    const m = new THREE.Mesh(g, new THREE.MeshBasicMaterial({ vertexColors: true, transparent: true, depthWrite: false, blending: THREE.AdditiveBlending, side: THREE.DoubleSide, fog: false })); m.frustumCulled = false; m.visible = false; m.renderOrder = 3; sc.add(m);
+    const S = [], c = new THREE.Color(col); const T = { mesh: m, col: c, push(a, b) { S.unshift({ a: a.clone(), b: b.clone(), t: 0 }); if (S.length > n) S.pop(); }, clear() { S.length = 0; m.visible = false; },
+      update(dt) { for (const s of S) s.t += dt; while (S.length && S[S.length - 1].t > life) S.pop(); m.visible = S.length > 1; if (!m.visible) return;
+        for (let i = 0; i < n; i++) { const s = S[Math.min(i, S.length - 1)], k = i < S.length ? Math.max(0, 1 - s.t / life) * (1 - i / n) : 0; P.set([s.a.x, s.a.y, s.a.z], i * 6); P.set([s.b.x, s.b.y, s.b.z], i * 6 + 3); Cc.set([c.r * k * 0.25, c.g * k * 0.25, c.b * k * 0.25], i * 6); Cc.set([c.r * k, c.g * k, c.b * k], i * 6 + 3); }
+        g.attributes.position.needsUpdate = true; g.attributes.color.needsUpdate = true; g.computeBoundingSphere(); } }; return T; };
+  // tumbling debris (chips, foil shreds): burst(pos, n, { cols, spd, up, size, life, floor })
+  D.debris = (sc, max = 160) => { const g = new THREE.CircleGeometry(0.5, 7); const m = new THREE.InstancedMesh(g, new THREE.MeshBasicMaterial({ side: THREE.DoubleSide, fog: false }), max); m.count = 0; m.frustumCulled = false; sc.add(m);
+    const L = [], M4 = new THREE.Matrix4(), Qq = new THREE.Quaternion(), E = new THREE.Euler(), Sv = new THREE.Vector3(), cc = new THREE.Color(); m.setColorAt(0, cc.set('#fff'));
+    const B = { mesh: m, list: L, burst(p, n, o = {}) { const cols = o.cols || ['#f2c25a', '#e8a83a', '#ffd98a'], spd = o.spd ?? 4, up = o.up ?? 3; for (let k = 0; k < n && L.length < max; k++) { const a = Math.random() * TAU;
+        L.push({ p: p.clone(), v: new THREE.Vector3(Math.cos(a) * spd * Math.random() + (o.vx || 0), up * (0.5 + Math.random()) , Math.sin(a) * spd * Math.random() + (o.vz || 0)), r: new THREE.Vector3(Math.random() * 6, Math.random() * 6, 0), w: new THREE.Vector3(rnd(-14, 14), rnd(-14, 14), rnd(-6, 6)), s: (o.size || 0.16) * rnd(0.6, 1.3), sy: o.sy ?? rnd(0.7, 1), t: 0, life: (o.life || 1.4) * rnd(0.7, 1.2), col: cols[Math.floor(Math.random() * cols.length)], floor: o.floor ?? 0.22 }); } },
+      clear() { L.length = 0; m.count = 0; },
+      update(dt) { for (let i = L.length - 1; i >= 0; i--) { const d = L[i]; d.t += dt; d.v.y -= 9.5 * dt; d.p.addScaledVector(d.v, dt); if (d.p.y < d.floor) { d.p.y = d.floor; d.v.y *= -0.35; d.v.x *= 0.6; d.v.z *= 0.6; d.w.multiplyScalar(0.6); } d.r.addScaledVector(d.w, dt); if (d.t > d.life) L.splice(i, 1); }
+        L.forEach((d, i) => { const k = d.s * Math.min(1, (d.life - d.t) * 4); M4.compose(d.p, Qq.setFromEuler(E.set(d.r.x, d.r.y, d.r.z)), Sv.set(k, k * d.sy, k)); m.setMatrixAt(i, M4); m.setColorAt(i, cc.set(d.col)); });
+        m.count = L.length; m.visible = L.length > 0; m.instanceMatrix.needsUpdate = true; if (m.instanceColor) m.instanceColor.needsUpdate = true; } }; return B; };
+  // camera-facing sprites: burst(pos, n, { spd, up, size, grow, life, grav, drag })
+  D.sprites = (sc, tex, max = 64, add = true) => { const m = new THREE.InstancedMesh(new THREE.PlaneGeometry(1, 1), new THREE.MeshBasicMaterial({ map: tex, transparent: true, depthWrite: false, blending: add ? THREE.AdditiveBlending : THREE.NormalBlending, fog: false }), max); m.count = 0; m.frustumCulled = false; m.renderOrder = 4; sc.add(m);
+    const L = [], M4 = new THREE.Matrix4(), Sv = new THREE.Vector3();
+    const B = { mesh: m, list: L, burst(p, n, o = {}) { for (let k = 0; k < n && L.length < max; k++) { const v = o.v ? o.v.clone() : new THREE.Vector3(rnd(-1, 1), rnd(-0.3, 1), rnd(-1, 0.3)).normalize().multiplyScalar((o.spd ?? 4) * rnd(0.4, 1)); if (o.up) v.y += o.up;
+        L.push({ p: p.clone(), v, s: (o.size || 0.3) * rnd(0.7, 1.3), grow: o.grow || 0, t: 0, life: (o.life || 0.45) * rnd(0.8, 1.2), grav: o.grav ?? 6, drag: o.drag ?? 1.5 }); } },
+      clear() { L.length = 0; m.count = 0; },
+      update(dt, cam) { for (let i = L.length - 1; i >= 0; i--) { const d = L[i]; d.t += dt; d.v.y -= d.grav * dt; d.v.multiplyScalar(Math.max(0, 1 - d.drag * dt)); d.p.addScaledVector(d.v, dt); if (d.t > d.life) L.splice(i, 1); }
+        L.forEach((d, i) => { const u = d.t / d.life, k = d.s * (1 + d.grow * u) * (d.grow ? 1 : 1 - u * 0.7); M4.compose(d.p, cam.quaternion, Sv.set(k, k, k)); m.setMatrixAt(i, M4); }); m.count = L.length; m.visible = L.length > 0; m.instanceMatrix.needsUpdate = true; } }; return B; };
+  const _jv = new THREE.Vector3();
+  J.tick = (dt) => { if (coT > 0 && (coT -= dt) <= 0) JH.co.classList.remove('on'); };
+  J.draw = (K, rdt) => { const cam = K.cam, w = hud.clientWidth || VW(), h = hud.clientHeight || VH();
+    if (coT > 0) JH.co.style.transform = 'scale(' + (1 + Math.max(0, coT - 1.25) * 2.4).toFixed(2) + ') rotate(-4deg)';
+    if (J.fl > 0) { JH.fl.style.opacity = J.fl.toFixed(2); J.fl = Math.max(0, J.fl - rdt * 3.2); if (J.fl === 0) JH.fl.style.opacity = '0'; }
+    for (const o of JH.pops) { if (o.t >= o.life) continue; o.t += rdt; const u = o.t / o.life; _jv.copy(o.p); _jv.y += u * 1.1; _jv.project(cam);
+      if (o.t >= o.life || _jv.z > 1) { o.e.style.opacity = '0'; o.t = 9; continue; } const sc = u < 0.12 ? 0.6 + u / 0.12 * 0.9 : 1.5 - Math.min(0.5, (u - 0.12) * 2);
+      o.e.style.opacity = String(u > 0.7 ? (1 - u) / 0.3 : 1); o.e.style.transform = `translate(${((_jv.x * 0.5 + 0.5) * w + o.dx * u).toFixed(1)}px, ${((-_jv.y * 0.5 + 0.5) * h).toFixed(1)}px) translate(-50%, -50%) scale(${sc.toFixed(2)})`; }
+    const sh = J.sh, zoom = J.zT > 0; let fov0 = 0;
+    if (sh > 0.001) { _jv.copy(cam.position); cam.position.x += (Math.random() - 0.5) * sh * 0.6; cam.position.y += (Math.random() - 0.5) * sh * 0.6; cam.position.z += (Math.random() - 0.5) * sh * 0.3; J.sh = Math.max(0, sh - rdt * Math.max(1.2, sh * 4)); }
+    if (zoom) { J.zT -= rdt; fov0 = cam.fov; const u = 1 - Math.max(0, J.zT) / J.zT0, k = 1 + (J.zk - 1) * Math.sin(Math.min(1, u * 1.4) * Math.PI * 0.5) * (u > 0.75 ? (1 - u) / 0.25 : 1); cam.fov = fov0 / k; cam.updateProjectionMatrix(); }
+    draw(K.scene, cam);
+    if (sh > 0.001) cam.position.copy(_jv); if (zoom) { cam.fov = fov0; cam.updateProjectionMatrix(); } };
+  D.juiceReset = () => { J.hs = 0; J.slowT = 0; J.slow = 1; J.sh = 0; J.zT = 0; J.fl = 0; JH.fl.style.opacity = '0'; JH.co.classList.remove('on'); coT = 0; JH.rd.classList.remove('on'); for (const o of JH.pops) { o.t = 9; o.e.style.opacity = '0'; } };
+  D.J = J;
   // ---------------- boss cleared: the hook the crime meter / win state read ----------------
   D.bossCleared = function (lmId, how = 'duel') {
     const L = LANDMARKS.find((l) => l.id === lmId); if (!L || !L.boss) return;
@@ -7571,12 +7668,14 @@ const DUELS = (function () {
     $('aico') && ($('aico').style.visibility = 'hidden');
     try { window.__radio && __radio.fightDuck(true); } catch (e) {}
     KEYS.clear(); PRESS.clear(); IN.mx = IN.my = 0;
+    D.juiceReset(); document.body.classList.remove('duel-pw'); // chipkid-fun
     MODE.duel = D; K.lbl = false; D.log.push('start:' + id); K.start(opts); resizeCam(); return true;
   };
   D.exit = function (why) {
     const K = D.cur; if (!K) return; D.log.push('exit:' + K.id + ':' + why); D.result = why;
     if (K.exit) K.exit(why);
     MODE.duel = null; D.cur = null; D.bot = null;
+    D.juiceReset(); D.hold = false; document.body.classList.remove('duel-pw'); // chipkid-fun
     document.body.classList.remove('duel', 'duel-' + K.id); H.over.classList.remove('on'); overMode = null; H.say.classList.remove('on'); H.ban.classList.remove('on'); H.tell.classList.remove('on'); D.blind(0);
     labels(null); $('aico') && ($('aico').style.visibility = ''); if (APANEL) APANEL.setAct({ label: 'ACT', kind: 'reset' }, 1);
     try { window.__radio && __radio.fightDuck(false); } catch (e) {}
@@ -7590,16 +7689,19 @@ const DUELS = (function () {
   D.frame = function (rdt) {
     const K = D.cur; if (!K) return; D.frames++;
     const steps = SIM ? SIM : 1;
+    if (D.hold) { K.render(0); draw(K.scene, K.cam); PRESS.clear(); return; } // chipkid-fun: test freeze (screenshots)
     for (let k = 0; k < steps; k++) {
-      const dt = SIM ? 1 / 60 : rdt; D.t += dt;
+      let dt = SIM ? 1 / 60 : rdt;
+      if (J.hs > 0) { J.hs -= dt; J.tick(dt); hudTick(dt); if (K.buffer && !overMode) { if (D.bot && K.botThink) K.botThink(D.bot, 0); K.buffer(input()); } if (k < steps - 1) PRESS.clear(); continue; } // chipkid-fun: hitstop freezes the duel sim (render keeps going)
+      if (J.slowT > 0) { J.slowT -= dt; dt *= J.slow; } J.tick(dt); D.t += dt;
       if (D.bot && !overMode && K.botThink) K.botThink(D.bot, dt);
       if (D.bot && overMode) { D.bot.overT = (D.bot.overT || 0) + dt; if (D.bot.overT > 1.2) { D.bot.overT = 0; if (overMode === 'win') D.bot.ok = true; else if (D.bot.mode === 'lose' && !D.bot.retried) { D.bot.retried = true; D.bot.ok = true; } else if (D.bot.mode === 'win') D.bot.ok = true; else D.bot.back = true; } }
       const I = (D.I = input()); if (k < steps - 1) PRESS.clear();
       if (overMode) { D.overT += dt; if (I.ok || I.a) overPick(true); else if (I.back || I.b) overPick(false); if (!D.cur) return; }
       if (!K.lbl) { K.lbl = true; labels(K.labels); } // (re-applied on the first duel frame: the city HUD may have relabelled ACT in the frame the duel started)
-    K.step(dt, I); if (!D.cur) return; hudTick(dt);
+    K.step(dt, I); if (!D.cur) return; hudTick(dt); if (D.hold) break; // chipkid-fun: (test freeze)
     }
-    K.render(rdt); draw(K.scene, K.cam);
+    K.render(rdt); J.draw(K, rdt); // chipkid-fun: J.draw = draw() with the shared shake / zoom / pop layer (no-ops unless a duel asks)
     PRESS.clear();
   };
 
@@ -7883,7 +7985,7 @@ const DUELS = (function () {
     J.blastM.count = J.blasts.length; J.blastM.visible = J.blasts.length > 0; const m = new THREE.Matrix4(); J.blasts.forEach((b, i) => { m.makeScale(b.r, b.r, b.r).setPosition(b.p); J.blastM.setMatrixAt(i, m); }); J.blastM.instanceMatrix.needsUpdate = true;
   }
   function damageBoss(st) {
-    st.bhp -= HIT; st.stats.softHits++; J.R.softM && (J.R.softM.userData.flash.value = 1); sfx('heavy'); DUELS.tell('BELLY HIT!', 0.6); burst(st.bp, 12, 3);
+    st.bhp -= HIT; st.stats.softHits++; J.R.softM && (J.R.softM.userData.flash.value = 1); sfx('heavy'); DUELS.tell('BELLY HIT!', 0.6); burst(st.bp, 12, 3); DUELS.impact({ stop: 0.07, shake: 0.3, sfx: 'heavy', pop: String(HIT), pos: st.bp.clone().setY(st.bp.y + 1.2), cls: 'crit' }); // chipkid-fun: shared core hit juice
     const floor = HPB - (st.phase + 1) * 100; st.rearHits = (st.rearHits || 0) + 1;
     if (st.rearHits >= 2 && st.bhp > floor) { setB(st, 'idle', rnd(...PH[st.phase].idle)); DUELS.tell('HE SLAMS DOWN! TWO HITS A REAR', 0.9); } // two belly hits per rear
     if (st.bhp <= floor) { st.bhp = floor;
@@ -8008,33 +8110,44 @@ const DUELS = (function () {
   const L = LANDMARKS.find((l) => l.id === 'aquarium'); const door = LMHOOK.aquarium && LMHOOK.aquarium.door;
   if (L && door) { if (LMHOOK.aquarium) LMHOOK.aquarium.duel = 'jimmy'; DUELS.addTrigger('jimmy', L, door.x, door.z - 1.6, door.x, door.z - 3.4, '#5fe0ff'); }
 })();
-
-// ======================= THE CHIP KID, HARBORPLACE: a Punch-Out-style mech duel (DESIGN.md "More game-style fights" + "Homage bosses").
+// ======================= THE CHIP KID, HARBORPLACE: a cane-brawl mech duel (DESIGN.md "More game-style fights" + "Homage bosses"; reworked for FUN, Brad 2026-10-12:
+// "way too hard ... the stick punch is not animated or fun enough ... the power button doesn't do anything special ... it should be easily beaten, with special moves
+// and lots of animated action scenes worthy of replay").
 // A behind-the-player view: Harold in a makeshift ring on the Harborplace plaza, Mavis cheering from the corner, facing The Chip Kid's giant
-// crab-chip-bag mech (an original red / yellow snack look: "LIL' CRUNCH CRAB CHIPS", no real brand). The kid (pigtails, big eyes,
-// bonnet-style hat) sits in the cockpit dome on top. Read the tells and dodge:
-//   SEASONING CLOUD: the shoulder shakers swing forward and glow orange, the bag puffs up  -> DUCK (a hit blinds you for a moment)
-//   CHIP-CAN BARRAGE: the belly hatch drops open and cans roll down the lanes; each lane flashes before its can arrives -> step out of that lane
-//   BAG-SLAM: the mech crouches, leaps and its shadow grows under you -> DODGE left or right (ducking gets you squashed)
-//   CLAW JAB (filler): one claw pulls back and flashes -> dodge to the other side or duck
-// After every attack the mech is OPEN (it sags, sparks fly): PUNCH. A clean dodge of a cloud or a slam earns a STAR: UPPERCUT spends one (big hit).
-// Punching a guarding mech is BLOCKED and may draw a quick counter-jab. 3 rounds (100 HP each); Harold heals a little between rounds.
-// At the end the mech collapses, the kid pops out, sulks and runs off. The kid is never a target: all hits go to the mech.
-// Controls: phone: stick left / right / down (or the white buttons) dodge, SWING = PUNCH, JUMP = DUCK, ACT = UPPERCUT. Desktop: A / D (arrows) dodge,
-// S duck, J punch, E uppercut. Gamepad: left stick or LB / RB dodge, A duck, X punch, Y uppercut.
+// crab-chip-bag mech (an original red / yellow snack look: "LIL' CRUNCH CRAB CHIPS", no real brand). The kid (pigtails, big eyes, bonnet-style hat) sits in the cockpit dome.
+// CANE: SWING chains a 3-hit cane combo (forehand, backhand, overhead SMASH finisher). Every hit lands: wind-up + swing arc with a motion trail, hitstop, camera shake,
+//   sparks + flying chip crumbs + foil shreds, the mech flinches back with a white flash, floating damage numbers, chunky hit sounds, a combo counter. After an attack the
+//   mech is OPEN (it sags): hits there are CRITS (x1.5, gold numbers).
+// POWER (ACT): hits and dodges fill the meter fast; when it is full the bar glows, the ACT button pulses and a POWER READY prompt shows. Specials rotate:
+//   OLD BAY CYCLONE (a spinning seasoning-tornado cane flurry), CRAB-MALLET POUND (leap + giant mallet + shockwave, the mech bounces), "HON!" HOMER (a charged home-run
+//   swing that sends the mech flying off into the sky and crashing back down). Each has slow-mo, zoom, big flashes and big damage; Harold can't be hurt during one.
+// The mech's attacks are slow and loudly telegraphed (it flashes, a "!" pops over the dome, the danger shows on the ground):
+//   SEASONING CLOUD (shakers tip + glow orange, orange ring on the middle lane) -> DUCK or DODGE   ·   CHIP-CAN BARRAGE (hatch opens, lanes flash) -> step out of the lane
+//   BAG-SLAM (crouch + leap, red shadow on the middle lane) -> DODGE   ·   CLAW JAB (claw pulls back + flashes, lanes flash) -> dodge away or duck
+// Forgiving: half the old damage, long i-frames after a hit, Mavis tosses crab cakes when Harold is low, one "second wind" per fight, full health between rounds.
+// 3 short rounds; the final blow plays a slow-mo KO: the mech blows apart into a chip cloud, the kid tumbles out, sulks and runs off; then a grade (stars) + REMATCH.
+// Controls: phone: stick left / right (or the white buttons) dodge, stick down / JUMP = DUCK, SWING = cane, ACT = POWER. Desktop: A / D (arrows) dodge, S duck, J swing,
+// E power. Gamepad: left stick or LB / RB dodge, A duck, X swing, Y power.
+// Tests: ?duel=chipkid&duelbot=win|mash|lose (mash = only mashes SWING), &ckhp=N start HP N with no crab cakes / second wind (test-only, for the lose path), &ckround=N.
 // Rig hook: window.buildChipKid({ THREE, toonMat, outlineMat, addOdir, QUAL }) may return { root, bag?, armL?, armR?, shakers?, hatch?, dome?, kid?, flash? }.
 (function () {
   const C = { scene: null, cam: null, title: 'THE CHIP KID', pips: 3,
-    hint: '<b>A / D</b> dodge · <b>S</b> duck · <b>J</b> punch · <b>E</b> uppercut (stars)',
-    labels: { a: 'PUNCH', b: 'DUCK', c: 'UPPER', l: '&#9664; DODGE', r: 'DODGE &#9654;' } };
+    hint: '<b>J</b> swing (3-hit combo) · <b>E</b> POWER special · <b>A / D</b> dodge · <b>S</b> duck',
+    labels: { a: 'SWING', b: 'DUCK', c: 'POWER', l: '&#9664; DODGE', r: 'DODGE &#9654;' } };
   const MZ = 4.4, LANE = 1.35; // the mech stands at z = MZ facing -z; Harold at z = 0 facing +z. Screen right is world -x here.
-  const RND = [ // per round: tell lengths, how many cans, can spacing, how often each attack comes up
-    { cloud: 1.05, cans: 3, gap: 0.62, slam: 1.15, jab: 0.62, guard: [1.1, 1.8], open: 1.0, mix: ['cloud', 'cans', 'jab', 'slam', 'jab'] },
-    { cloud: 0.9, cans: 4, gap: 0.5, slam: 1.0, jab: 0.52, guard: [0.8, 1.4], open: 0.85, mix: ['cans', 'jab', 'cloud', 'slam', 'jab', 'cans'] },
-    { cloud: 0.78, cans: 6, gap: 0.42, slam: 0.9, jab: 0.45, guard: [0.6, 1.1], open: 0.75, mix: ['slam', 'cans', 'jab', 'cloud', 'jab', 'slam', 'cans'] },
+  const RHP = [200, 220, 240]; // mech HP per round
+  const RND = [ // per round: tell lengths (slow + loud), how many cans, can spacing / speed, guard time, open time, attack order
+    { cloud: 1.6, cans: 2, gap: 0.95, cspd: 3.4, slam: 1.7, jab: 1.2, guard: [1.7, 2.4], open: 1.8, mix: ['jab', 'cloud', 'cans', 'slam'] },
+    { cloud: 1.45, cans: 3, gap: 0.85, cspd: 3.6, slam: 1.55, jab: 1.1, guard: [1.4, 2.1], open: 1.7, mix: ['cans', 'jab', 'cloud', 'slam', 'jab'] },
+    { cloud: 1.3, cans: 3, gap: 0.8, cspd: 3.9, slam: 1.45, jab: 1.0, guard: [1.2, 1.9], open: 1.6, mix: ['slam', 'cans', 'jab', 'cloud', 'jab', 'cans'] },
   ];
-  const V = new THREE.Vector3(), V2 = new THREE.Vector3();
+  const DMG_TO_HAROLD = { cloud: 5, can: 4, slam: 10, jab: 5 };
+  const SWINGS = [ // the 3-hit cane combo: duration, hit moment (s), damage, meter
+    { dur: 0.3, hit: 0.12, dmg: 6, pw: 8, name: 'fore' }, { dur: 0.3, hit: 0.12, dmg: 7, pw: 8, name: 'back' }, { dur: 0.48, hit: 0.22, dmg: 14, pw: 16, name: 'smash' }];
+  const SPECIALS = [{ id: 'cyclone', name: 'OLD BAY CYCLONE!', ban: 'OLD BAY<br>CYCLONE!', dur: 2.2 }, { id: 'mallet', name: 'CRAB-MALLET POUND!', ban: 'CRAB-MALLET<br>POUND!', dur: 2.3 }, { id: 'homer', name: '"HON!" HOMER!', ban: '"HON!"<br>HOMER!', dur: 3.3 }];
+  const V = new THREE.Vector3(), V2 = new THREE.Vector3(), V3 = new THREE.Vector3();
   const sx = (lat) => -lat * LANE; // screen lane (-1 left, 0 centre, 1 right) -> world x
+  const TOUCH = () => document.body.classList.contains('touch');
 
   // ---------------- textures ----------------
   function labelTex() { return canvasTex(512, 512, (g, w, h) => {
@@ -8155,7 +8268,16 @@ const DUELS = (function () {
     return Kd;
   }
 
+  // little canvas textures for the hit fx
+  function starTex() { return canvasTex(64, 64, (g) => { g.translate(32, 32); const r = g.createRadialGradient(0, 0, 1, 0, 0, 30); r.addColorStop(0, '#fff'); r.addColorStop(0.35, '#fff6a0'); r.addColorStop(1, 'rgba(255,200,60,0)');
+    g.fillStyle = r; g.beginPath(); for (let i = 0; i < 8; i++) { const a = i * Math.PI / 4, rr = i % 2 ? 9 : 31; g.lineTo(Math.cos(a) * rr, Math.sin(a) * rr); } g.closePath(); g.fill(); }, 64); }
+  function ringTex() { return canvasTex(128, 128, (g) => { const r = g.createRadialGradient(64, 64, 20, 64, 64, 62); r.addColorStop(0, 'rgba(255,255,255,0)'); r.addColorStop(0.6, 'rgba(255,255,255,.95)'); r.addColorStop(0.75, 'rgba(255,240,170,.7)'); r.addColorStop(1, 'rgba(255,255,255,0)'); g.fillStyle = r; g.fillRect(0, 0, 128, 128); }, 128); }
+  function warnTex() { return canvasTex(128, 128, (g) => { g.strokeStyle = '#fff'; g.lineWidth = 10; g.beginPath(); g.arc(64, 64, 54, 0, TAU); g.stroke(); g.lineWidth = 5; g.setLineDash([12, 10]); g.beginPath(); g.arc(64, 64, 38, 0, TAU); g.stroke(); g.setLineDash([]); g.fillStyle = 'rgba(255,255,255,.28)'; g.beginPath(); g.arc(64, 64, 52, 0, TAU); g.fill(); }, 128); }
+  function bangTex() { return canvasTex(128, 128, (g) => { g.fillStyle = '#ffd23c'; g.strokeStyle = '#14101f'; g.lineWidth = 8; g.beginPath(); g.moveTo(64, 6); g.lineTo(122, 116); g.lineTo(6, 116); g.closePath(); g.fill(); g.stroke();
+    g.fillStyle = '#d8262a'; g.font = '900 78px ' + FONT; g.textAlign = 'center'; g.textBaseline = 'middle'; g.fillText('!', 64, 80); }, 128); }
+
   // ---------------- build ----------------
+  { const cs = document.createElement('style'); cs.textContent = 'body.duel-chipkid #duel .dsay { top: calc(env(safe-area-inset-top, 0px) + 136px); } body.duel-chipkid.ck-ko #duel .dpow { display: none; }'; document.head.appendChild(cs); }
   C.build = function () {
     const sc = (C.scene = new THREE.Scene()); sc.fog = new THREE.Fog('#5a4060', 26, 70);
     C.cam = new THREE.PerspectiveCamera(56, VW() / VH(), 0.1, 200);
@@ -8169,222 +8291,383 @@ const DUELS = (function () {
     rig.arms = rig.arms || []; rig.flash = rig.flash || []; rig.nozzles = rig.nozzles || [rig.shakers, rig.shakers]; if (!rig.kid) { rig.kid = buildKid(); rig.domeG.add(rig.kid.root); }
     C.R = rig; rig.root.position.set(0, 0.2, MZ); rig.root.rotation.y = Math.PI; sc.add(rig.root);
     C.base = { hipY: rig.hip.position.y, bagY: rig.bag.position.y };
-    // chip cans (instanced), lane flash strips, the slam shadow, seasoning puffs (instanced quads)
+    // chip cans (instanced), lane flash strips, the slam shadow, the ground warning ring, seasoning puffs (instanced quads)
     const can = DUELS.kit(); can.add(DUELS.GEO.cyl(0.3, 0.3, 0.9, 12), '#d8262a', 0, 0, 0).add(DUELS.GEO.cyl(0.31, 0.31, 0.25, 12), '#ffd23c', 0, 0, 0).add(DUELS.GEO.cyl(0.29, 0.29, 0.05, 12), '#c8c8d0', 0, 0.46, 0).add(DUELS.GEO.cyl(0.29, 0.29, 0.05, 12), '#c8c8d0', 0, -0.46, 0);
     const cg = can.geo(); cg.rotateZ(Math.PI / 2);
     C.canM = new THREE.InstancedMesh(cg, toonMat(), 8); C.canM.count = 0; C.canM.frustumCulled = false; sc.add(C.canM); C.cans = [];
     C.lanes = [-1, 0, 1].map((l) => { const m = new THREE.Mesh(new THREE.PlaneGeometry(1.1, 4.4), new THREE.MeshBasicMaterial({ color: '#ff3d6e', transparent: true, opacity: 0, depthWrite: false, blending: THREE.AdditiveBlending, fog: false })); m.rotation.x = -Math.PI / 2; m.position.set(sx(l), 0.22, MZ / 2); sc.add(m); return m; });
     C.shadow = new THREE.Mesh(new THREE.CircleGeometry(1.6, 24), new THREE.MeshBasicMaterial({ color: '#000', transparent: true, opacity: 0, depthWrite: false })); C.shadow.rotation.x = -Math.PI / 2; C.shadow.position.set(0, 0.22, 0.4); sc.add(C.shadow);
+    C.warn = new THREE.Mesh(new THREE.PlaneGeometry(2.2, 2.2), new THREE.MeshBasicMaterial({ map: warnTex(), color: '#ff3030', transparent: true, opacity: 0, depthWrite: false, blending: THREE.AdditiveBlending, fog: false })); C.warn.rotation.x = -Math.PI / 2; C.warn.position.set(0, 0.24, 0.1); C.warn.renderOrder = 2; sc.add(C.warn);
+    C.bang = new THREE.Sprite(new THREE.SpriteMaterial({ map: bangTex(), transparent: true, depthWrite: false, depthTest: false, fog: false })); C.bang.scale.setScalar(0.7); C.bang.visible = false; C.bang.renderOrder = 5; sc.add(C.bang);
     const puffT = DUELS.dot('#ff9a3a'); C.puffM = new THREE.InstancedMesh(new THREE.PlaneGeometry(1, 1), new THREE.MeshBasicMaterial({ map: puffT, transparent: true, depthWrite: false, fog: false }), 48); C.puffM.count = 0; C.puffM.frustumCulled = false; sc.add(C.puffM); C.puffs = [];
-    C.spark = new THREE.InstancedMesh(new THREE.PlaneGeometry(0.25, 0.25), new THREE.MeshBasicMaterial({ map: DUELS.dot('#fff6a0', false), transparent: true, depthWrite: false, blending: THREE.AdditiveBlending, fog: false }), 32); C.spark.count = 0; C.spark.frustumCulled = false; sc.add(C.spark); C.sparks = [];
+    // shared juice systems from the duel core: sparks, impact rings, chip crumbs + foil shreds, seasoning swirls / KO cloud, the cane trail
+    C.spk = DUELS.sprites(sc, starTex(), 110, true); C.rng = DUELS.sprites(sc, ringTex(), 14, true); C.deb = DUELS.debris(sc, 220);
+    C.cloud = DUELS.sprites(sc, DUELS.dot('#f0a050'), 70, false); C.trail = DUELS.trail(sc, '#fff1a8', 16, 0.15);
+    // the shockwave (mallet pound) + the giant crab mallet + Mavis's crab cake
+    C.shock = new THREE.Mesh(new THREE.RingGeometry(0.75, 1, 40), new THREE.MeshBasicMaterial({ color: '#ffcf6a', transparent: true, opacity: 0, depthWrite: false, blending: THREE.AdditiveBlending, side: THREE.DoubleSide, fog: false })); C.shock.rotation.x = -Math.PI / 2; C.shock.position.y = 0.26; C.shock.visible = false; sc.add(C.shock);
+    { const K = DUELS.kit(), G = DUELS.GEO; K.add(G.cyl(0.05, 0.06, 1.3, 8), '#8a5a2a', 0, 0.55, 0).add(G.cyl(0.36, 0.36, 0.95, 14), '#e8b040', 0, 1.3, 0, 0, 0, Math.PI / 2).add(G.cyl(0.38, 0.38, 0.12, 14), '#d8262a', 0.42, 1.3, 0, 0, 0, Math.PI / 2).add(G.cyl(0.38, 0.38, 0.12, 14), '#d8262a', -0.42, 1.3, 0, 0, 0, Math.PI / 2)
+      .add(G.sph(0.16, 8, 6), '#e8501e', 0, 1.3, 0.34, 0, 0, 0, 1.4, 0.8, 0.5);
+      C.mallet = K.mesh(toonMat(), null, 0.004); C.mallet.visible = false; C.malletG = new THREE.Group(); C.malletG.scale.setScalar(1.45); C.malletG.add(C.mallet); C.H.swR.add(C.malletG); }
+    { const K = DUELS.kit(), G = DUELS.GEO; K.add(G.cyl(0.2, 0.22, 0.12, 12), '#c8822e', 0, 0, 0).add(G.sph(0.19, 10, 6), '#d89a44', 0, 0.04, 0, 0, 0, 0, 1, 0.45, 1); C.cake = K.mesh(toonMat(), null, 0.003); C.cake.visible = false; sc.add(C.cake); }
   };
 
   // ---------------- state ----------------
+  const mercy = () => !Q.get('ckhp');
+  function newStats() { return { swings: 0, hits: 0, crits: 0, smashes: 0, specials: 0, dodges: 0, hitsTaken: 0, dmgTaken: 0, maxCombo: 0, cakes: 0, secondWind: 0, hitsBy: { cloud: 0, can: 0, slam: 0, jab: 0 }, attacks: { cloud: 0, cans: 0, slam: 0, jab: 0 }, rounds: 0, knockdowns: 0, t0: DUELS.t || 0 }; }
   function reset(round, hp = 100) {
-    const st = C.st = { t: 0, round, mhp: 100, hp, stars: 0, lane: 0, duck: false, laneT: 0, lockT: 0, punchT: -1, punchSide: 1, punchCd: 0, upT: -1, hurtT: 0, inv: 0, blindT: 0,
-      ms: 'intro', mt: 0, mdur: round === 0 ? 2.8 : 1.6, mixI: Math.floor(Math.random() * 3), jabSide: 1, cansLeft: 0, canT: 0, dodged: false, hitThis: false, over: false, won: false, outT: 0,
-      stats: C.st && C.st.stats || { punches: 0, landed: 0, blocked: 0, uppers: 0, counters: 0, dodges: 0, hits: { cloud: 0, can: 0, slam: 0, jab: 0 }, attacks: { cloud: 0, cans: 0, slam: 0, jab: 0 }, rounds: 0, knockdowns: 0 } };
-    C.cans.length = 0; C.canM.count = 0; C.puffs.length = 0; C.puffM.count = 0; DUELS.blind(0);
+    const keep = C.st && C.st.stats;
+    const st = C.st = { t: 0, round, mhp: RHP[round], hp, meter: C.st ? C.st.meter || 0 : 0, lane: 0, duck: false, laneT: 0, lockT: 0, inv: 0, hurtT: 0, blindT: 0, hz: 0,
+      sw: null, combo: 0, chainT: 0, bufA: 0, bufC: 0, chits: 0, chitT: 0, sp: null, spI: C.st ? C.st.spI || 0 : 0, fly: null, bounce: null, cake: null, cakes: 2, cakeCd: 0, wind: C.st ? !!C.st.wind : false,
+      ms: 'intro', mt: 0, mdur: round === 0 ? 2.4 : 1.4, mixI: 0, jabSide: 1, cansLeft: 0, canT: 0, dodged: false, hitThis: false, over: false, won: false, outT: 0, downPending: false,
+      stats: keep || newStats() };
+    if (Q.get('ckhp')) st.hp = Math.max(1, +Q.get('ckhp') || 1);
+    C.cans.length = 0; C.canM.count = 0; C.puffs.length = 0; C.puffM.count = 0; DUELS.blind(0); C.spk.clear(); C.deb.clear(); C.cloud.clear(); C.rng.clear(); C.trail.clear(); C.knock = 0; C.fl = 0; C.mallet.visible = false; C.cake.visible = false; C.shock.visible = false;
     const R = C.R; R.root.visible = true; R.root.position.set(0, 0.2, MZ); R.root.rotation.set(0, Math.PI, 0); R.hip.position.y = C.base.hipY; R.bag.position.y = C.base.bagY; R.bag.rotation.set(0, 0, 0); R.bag.scale.set(1, 1, 1);
-    R.domeG.visible = true; if (R.dome) { R.dome.position.set(0, 0.15, 0); R.dome.rotation.set(0, 0, 0); } const kid = R.kid; kid.root.visible = true; if (kid.root.parent !== R.domeG) { R.domeG.add(kid.root); } kid.root.position.set(0, 0.12, 0); kid.root.rotation.set(0, 0, 0); kid.root.scale.setScalar(0.62);
-    DUELS.bars(hp / 100, 1); return st;
+    R.domeG.visible = true; if (R.dome) { R.dome.visible = true; R.dome.position.set(0, 0.15, 0); R.dome.rotation.set(0, 0, 0); } const kid = R.kid; kid.root.visible = true; if (kid.root.parent !== R.domeG) { R.domeG.add(kid.root); } kid.root.position.set(0, 0.12, 0); kid.root.rotation.set(0, 0, 0); kid.root.scale.setScalar(0.62);
+    for (const a of kid.arms) a.rotation.set(0, 0, 0); for (const l of kid.legs) l.rotation.set(0, 0, 0); kid.head.rotation.set(0, 0, 0);
+    DUELS.bars(st.hp / 100, 1); return st;
   }
-  function subHud(st) { DUELS.sub('<span class="stars">' + '\u2605'.repeat(st.stars) + '<span style="opacity:.3">' + '\u2605'.repeat(3 - st.stars) + '</span></span>', 'ROUND ' + (st.round + 1) + '/3'); }
+  function subHud(st) { DUELS.sub('', 'ROUND ' + (st.round + 1) + '/3'); }
+  function powHud(st) { const rdy = st.meter >= 100; DUELS.power(st.meter / 100, rdy, rdy ? 'POWER READY!' : 'POWER'); }
   const lines = () => { const L = LANDMARKS.find((l) => l.id === 'harborplace'); return L && L.boss && L.boss.lines; };
+  const pick = (a) => a[Math.floor(Math.random() * a.length)];
   C.start = function () {
-    C.st = null; const st = reset(0); DUELS.log.push('chipkid:' + C.rigKind); subHud(st);
-    DUELS.banner('THE CHIP KID<small>HARBORPLACE · ROUND 1</small>', 2.4);
-    const l = lines(); if (l) DUELS.say('THE CHIP KID', l.intro[Math.floor(Math.random() * l.intro.length)], 3.4);
+    document.body.classList.remove('ck-ko'); C.st = null; const r0 = clamp((+Q.get('ckround') || 1) - 1, 0, 2) | 0; const st = reset(r0); DUELS.log.push('chipkid:' + C.rigKind); subHud(st); powHud(st);
+    DUELS.banner('THE CHIP KID<small>HARBORPLACE · ROUND ' + (r0 + 1) + '</small>', 2.2);
+    const l = lines(); if (l) DUELS.say('THE CHIP KID', pick(l.intro), 3.2);
     C.camP = new THREE.Vector3(0, 5, -7); C.camL = new THREE.Vector3(0, 3, MZ);
   };
-  C.retry = function () { const r = C.st.round; reset(r); C.st.ms = 'guard'; C.st.mdur = 1.4; subHud(C.st); DUELS.banner('ROUND ' + (r + 1) + '<small>AGAIN! FULL HEALTH</small>', 1.6); };
-  C.exit = function () { DUELS.blind(0); };
+  C.again = function () { C.st = null; C.start(); DUELS.log.push('chipkid:rematch'); };
+  C.retry = function () { const r = C.st.round; reset(r); C.st.ms = 'guard'; C.st.mdur = 1.6; C.st.meter = 100; subHud(C.st); powHud(C.st); DUELS.banner('ROUND ' + (r + 1) + '<small>AGAIN! FULL HEALTH + FULL POWER</small>', 1.8); };
+  C.exit = function () { DUELS.blind(0); document.body.classList.remove('ck-ko'); };
+  C.buffer = function (I) { const st = C.st; if (!st) return; if (I.a) st.bufA = 0.32; if (I.c) st.bufC = 0.32; };
 
   function bell(n = 1) { if (!AC || AC.state !== 'running') return; try { for (let k = 0; k < n; k++) { const t = AC.currentTime + k * 0.22, o = AC.createOscillator(), g = AC.createGain(); o.type = 'triangle'; o.frequency.setValueAtTime(1320, t); g.gain.setValueAtTime(0.16, t); g.gain.exponentialRampToValueAtTime(0.0001, t + 0.5); o.connect(g); g.connect(SFXBUS || AC.destination); o.start(t); o.stop(t + 0.55); } } catch (e) {} }
   function puff(p, v, life = 1.2, s = 1) { if (C.puffs.length < 48) C.puffs.push({ p: p.clone(), v: v.clone(), t: 0, life, s }); }
-  function spark(p, n = 6) { for (let k = 0; k < n && C.sparks.length < 32; k++) C.sparks.push({ p: p.clone(), v: new THREE.Vector3(rnd(-3, 3), rnd(1, 4), rnd(-3, 1)), t: 0, life: rnd(0.3, 0.6) }); }
+  const CHIP = ['#f2c25a', '#e8a83a', '#ffd98a', '#d98a2a'], FOIL = ['#d8262a', '#ffd23c', '#c8c8d0', '#b81e22'];
+  function hitFx(p, big = 0) { // sparks + an impact ring + chip crumbs + foil shreds
+    C.spk.burst(p, 8 + big * 10, { spd: 5 + big * 3, size: 0.32 + big * 0.12, life: 0.35, grav: 4 });
+    C.rng.burst(p, 1, { v: V3.set(0, 0, 0), size: 0.9 + big * 0.9, grow: 2.2, life: 0.18 + big * 0.06, grav: 0, drag: 0 });
+    C.deb.burst(p, 10 + big * 14, { cols: CHIP, spd: 3 + big * 2.5, up: 3.2, size: 0.17, life: 1.5, vz: -1.5 });
+    C.deb.burst(p, 3 + big * 6, { cols: FOIL, spd: 2.6 + big * 2, up: 2.6, size: 0.2, sy: 0.45, life: 1.7, vz: -1.2 });
+  }
+  function mechFacePoint(st, out, side = 0) { return out.set(sx(st.lane) * 0.3 + side * 0.45 + rnd(-0.15, 0.15), 2.5 + rnd(-0.3, 0.5), MZ - 1.05 + C.knock + (st.fly ? 0 : 0)); }
+  function moment(name) { const w = window.__ckShot; if (w && (w === name || name.startsWith(w + ':'))) { window.__ckShot = null; window.__ckShotAt = name; DUELS.hold = true; } } // test screenshots
   function setM(st, s, dur) { st.ms = s; st.mt = 0; st.mdur = dur; st.hitThis = false; st.dodged = false; }
   function hurtHarold(st, dmg, kind) {
-    if (st.inv > 0 || st.over) return false; st.hp -= dmg; st.inv = 0.5; st.hurtT = 0.4; st.stats.hits[kind]++; DUELS.hurt(); sfx('hurt'); C.hflash = 1; st.lane = 0; st.duck = false; st.lockT = 0.35;
-    if (st.hp <= 0) { st.hp = 0; st.over = true; sfx('ko'); DUELS.log.push('chipkid:lose:' + kind);
-      setTimeout(() => { if (DUELS.cur === C) DUELS.over('lose', 'T.K.O.!', 'The Chip Kid\'s mech flattened Harold. Retry round ' + (st.round + 1) + ' with full health.'); }, SIM ? 300 : 1400); }
+    if (st.inv > 0 || st.over || st.sp) return false; st.hp -= dmg; st.inv = 1.3; st.hurtT = 0.45; st.stats.hitsBy[kind]++; st.stats.hitsTaken++; st.stats.dmgTaken += dmg; DUELS.hurt(); sfx('hurt'); C.hflash = 1; st.lane = 0; st.duck = false; st.lockT = 0.3; st.sw = null; st.combo = 0;
+    st.meter = Math.min(100, st.meter + 6); powHud(st); DUELS.shake(0.25); V.set(C.H.root.position.x, 2.2, 0.2); DUELS.pop('-' + dmg, V, ''); DUELS.log.push('hurt:' + kind);
+    if (st.hp <= 0) {
+      if (mercy() && !st.wind) { st.wind = true; st.hp = 50; st.stats.secondWind++; st.inv = 2.2; DUELS.banner('SECOND WIND!<small>MAVIS: GET UP, HAROLD!</small>', 1.8); DUELS.say('MAVIS', 'Get UP, Harold! You promised me crab cakes!', 2.4); DUELS.flash('#9dff6b', 0.45); V.set(C.H.root.position.x, 2.4, 0.2); DUELS.pop('+50', V, 'heal'); st.meter = 100; powHud(st); return true; }
+      st.hp = 0; st.over = true; sfx('ko'); DUELS.log.push('chipkid:lose:' + kind);
+      setTimeout(() => { if (DUELS.cur === C) DUELS.over('lose', 'T.K.O.!', 'The Chip Kid\'s mech flattened Harold. Retry round ' + (st.round + 1) + ' with full health and a full POWER meter.'); }, SIM ? 300 : 1400); }
     return true;
   }
-  function dodgeOk(st, why) { if (st.dodged) return; st.dodged = true; st.stats.dodges++; if (why && st.stars < 3) { st.stars++; subHud(st); DUELS.tell('NICE DODGE! \u2605', 0.7); } }
+  function dodgeOk(st) { if (st.dodged) return; st.dodged = true; st.stats.dodges++; st.meter = Math.min(100, st.meter + 14); powHud(st); DUELS.tell('NICE DODGE! +POWER', 0.7); }
 
-  // ---------------- the mech's brain ----------------
+  // ---------------- damage to the mech (every hit funnels through here) ----------------
+  function dmgMech(st, base, o = {}) {
+    if (st.mhp <= 0 || st.ms === 'down' || st.ms === 'ko') return 0;
+    const crit = !o.special && (st.ms === 'open' || st.ms === 'stun'), dmg = Math.round(base * (crit ? 1.5 : 1));
+    st.mhp = Math.max(0, st.mhp - dmg); st.stats.hits++; if (crit) st.stats.crits++;
+    st.chits++; st.chitT = 1.6; st.stats.maxCombo = Math.max(st.stats.maxCombo, st.chits); DUELS.combo(st.chits);
+    if (!o.special) { st.meter = Math.min(100, st.meter + (o.pw || 8)); powHud(st); }
+    const p = o.pos || mechFacePoint(st, V2, o.side || 0); const big = o.big || 0;
+    hitFx(p, big); C.knock = Math.min(1.4, C.knock + (o.kb ?? (0.16 + big * 0.3))); C.fl = Math.min(1.5, C.fl + 0.6 + big * 0.5);
+    for (const m of C.R.flash) if (m && m.userData.flashC) { m.userData.flashC.value.set('#ffffff'); m.userData.flash.value = 1; }
+    DUELS.pop(String(dmg), V3.copy(p).add(V.set(rnd(-0.3, 0.3), 0.3, -0.3)), big >= 2 ? 'big' : crit || big ? 'crit' : '');
+    if (o.word) DUELS.pop(o.word, V3.copy(p).add(V.set(0, 1.0, -0.4)), 'word');
+    DUELS.impact({ stop: o.stop ?? (big ? 0.085 : 0.065), shake: o.shake ?? (0.16 + big * 0.24), sfx: o.sfx || (big ? 'heavy' : 'light') });
+    if (big) DUELS.hitSfx('crunch');
+    if (st.mhp <= 0) { if (st.sp) st.downPending = true; else knockdown(st); }
+    return dmg;
+  }
+  function knockdown(st) {
+    st.downPending = false; st.stats.knockdowns++; C.cans.length = 0; st.sw = null; C.trail.clear(); const l = lines();
+    if (st.round >= 2) { // the final blow: slow-mo KO cinematic
+      setM(st, 'ko', 99); st.over = true; st.won = true; st.outT = 0; bell(3); DUELS.impact({ stop: 0.12, slow: 0.25, slowT: 1.4, zoom: 1.45, zoomT: 1.6, flash: '#fff', flashA: 0.9, shake: 0.6, sfx: 'mega' });
+      DUELS.banner('K.O.!!<small>THE FINAL BLOW</small>', 2.6); document.body.classList.add('ck-ko'); DUELS.log.push('chipkid:ko'); DUELS.combo(0); DUELS.ready(null);
+    } else {
+      setM(st, 'down', 2.8); bell(2); DUELS.impact({ stop: 0.1, slow: 0.35, slowT: 0.7, zoom: 1.25, zoomT: 0.9, flash: '#fff', flashA: 0.6, shake: 0.5, sfx: 'mega' });
+      DUELS.banner('DOWN!<small>ROUND ' + (st.round + 1) + ' TO HAROLD</small>', 2.2); C.R.bag.getWorldPosition(V); V.y += 1; C.deb.burst(V, 40, { cols: CHIP, spd: 5, up: 4, size: 0.18, life: 1.8, vz: -2 }); C.deb.burst(V, 14, { cols: FOIL, spd: 4, up: 3, size: 0.22, sy: 0.45, life: 1.8 });
+      DUELS.say('MAVIS', ['That\u2019s my Harold!', 'Give that mech another one, dear!', 'Look at you go, hon!'][st.round % 3], 2.2);
+      if (l && l.taunt && Math.random() < 0.5) setTimeout(() => { if (DUELS.cur === C && C.st === st) DUELS.say('THE CHIP KID', pick(l.taunt), 2.4); }, SIM ? 100 : 1800);
+    }
+  }
+
+  // ---------------- the mech's brain (slow, loud telegraphs) ----------------
   function mechThink(st, dt) {
     const P = RND[st.round]; st.mt += dt; const u = st.mt / st.mdur;
+    if (st.sp && st.ms !== 'down' && st.ms !== 'ko') { if (st.ms !== 'stun') setM(st, 'stun', 99); return; }
     switch (st.ms) {
-      case 'intro': if (st.mt > st.mdur) setM(st, 'guard', 0.8); break;
-      case 'guard': if (st.mt > st.mdur) { const a = P.mix[st.mixI++ % P.mix.length]; st.stats.attacks[a]++;
-          if (a === 'cloud') { setM(st, 'cloudTell', P.cloud); DUELS.tell('SEASONING CLOUD! DUCK!', P.cloud); }
-          else if (a === 'cans') { setM(st, 'cansTell', 0.8); st.cansLeft = P.cans; st.canT = 0; DUELS.tell('CHIP-CAN BARRAGE! WATCH THE LANES!', 1.0); }
+      case 'intro': if (st.mt > st.mdur) setM(st, 'guard', 0.6); break;
+      case 'guard': if (st.mt > st.mdur) { const a = P.mix[st.mixI++ % P.mix.length]; st.stats.attacks[a]++; DUELS.hitSfx('power');
+          if (a === 'cloud') { setM(st, 'cloudTell', P.cloud); DUELS.tell('SEASONING CLOUD! DUCK OR DODGE!', P.cloud); }
+          else if (a === 'cans') { setM(st, 'cansTell', 1.0); st.cansLeft = P.cans; st.canT = 0; DUELS.tell('CHIP-CAN BARRAGE! STEP OUT OF THE RED LANE!', 1.4); }
           else if (a === 'slam') { setM(st, 'slamTell', P.slam); DUELS.tell('BAG-SLAM! DODGE LEFT OR RIGHT!', P.slam); }
-          else { st.jabSide = Math.random() < 0.5 ? -1 : 1; setM(st, 'jabTell', P.jab); } }
+          else { st.jabSide = Math.random() < 0.5 ? -1 : 1; setM(st, 'jabTell', P.jab); DUELS.tell('CLAW JAB! DODGE ' + (st.jabSide < 0 ? 'RIGHT \u25b6' : '\u25c0 LEFT') + ' OR DUCK!', P.jab); } }
         break;
       case 'cloudTell': if (st.mt > st.mdur) { setM(st, 'cloud', 0.7); sfx('swing'); } break;
-      case 'cloud': { // two jets of seasoning at face height
-        C.R.nozzles.forEach((n) => { n.getWorldPosition(V); for (let k = 0; k < 2; k++) puff(V, V2.set(rnd(-0.6, 0.6) - V.x * 0.6, rnd(-0.5, 0.1), -6.5 + rnd(-1, 1)), 0.9, rnd(0.8, 1.4)); });
-        if (u > 0.3 && u < 0.85 && !st.hitThis) { if (!st.duck) { if (hurtHarold(st, 10, 'cloud')) { st.hitThis = true; st.blindT = 2.2; } } }
-        if (st.mt > st.mdur) { if (!st.hitThis) dodgeOk(st, true); setM(st, 'open', P.open + 0.2); } break; }
+      case 'cloud': { // two jets of seasoning at face height down the middle lane
+        C.R.nozzles.forEach((n) => { n.getWorldPosition(V); for (let k = 0; k < 2; k++) puff(V, V2.set(rnd(-0.4, 0.4) - V.x * 0.8, rnd(-0.5, 0.1), -6.5 + rnd(-1, 1)), 0.9, rnd(0.8, 1.4)); });
+        if (u > 0.3 && u < 0.85 && !st.hitThis && st.lane === 0 && !st.duck) { if (hurtHarold(st, DMG_TO_HAROLD.cloud, 'cloud')) { st.hitThis = true; st.blindT = 0.9; } }
+        if (st.mt > st.mdur) { if (!st.hitThis) dodgeOk(st); setM(st, 'open', P.open); DUELS.tell('IT\u2019S OPEN! SWING!', 0.9); } break; }
       case 'cansTell': if (st.mt > st.mdur) setM(st, 'cans', 99); break;
       case 'cans': st.canT -= dt;
-        if (st.cansLeft > 0 && st.canT <= 0) { st.cansLeft--; st.canT = P.gap; const lane = Math.random() < 0.45 ? st.lane : [-1, 0, 1][Math.floor(Math.random() * 3)]; C.cans.push({ lane, z: MZ - 0.6, t: 0, warned: 0, hit: false, spd: 4.6 + st.round * 0.6 }); sfx('hit'); }
-        if (st.cansLeft <= 0 && C.cans.length === 0) { if (!st.hitThis) dodgeOk(st, false); setM(st, 'open', P.open); }
+        if (st.cansLeft > 0 && st.canT <= 0) { st.cansLeft--; st.canT = P.gap; const lane = Math.random() < 0.45 ? st.lane : [-1, 0, 1][Math.floor(Math.random() * 3)]; C.cans.push({ lane, z: MZ - 0.6, t: 0, hit: false, spd: P.cspd }); sfx('hit'); }
+        if (st.cansLeft <= 0 && C.cans.length === 0) { if (!st.hitThis) dodgeOk(st); setM(st, 'open', P.open); DUELS.tell('IT\u2019S OPEN! SWING!', 0.9); }
         break;
-      case 'slamTell': if (st.mt > st.mdur) { setM(st, 'slam', 0.3); } break;
-      case 'slam': if (!st.hitThis && st.mt > 0.18) { st.hitThis = true; sfx('heavy'); spark(V.set(0, 0.3, 0.6), 12); if (st.lane === 0) { hurtHarold(st, 22, 'slam'); st.slamHit = true; } else { st.slamHit = false; dodgeOk(st, true); } }
-        if (st.mt > st.mdur) setM(st, 'open', P.open + 0.9); break;
+      case 'slamTell': if (st.mt > st.mdur) setM(st, 'slam', 0.3); break;
+      case 'slam': if (!st.hitThis && st.mt > 0.18) { st.hitThis = true; DUELS.hitSfx('boom'); DUELS.shake(0.55); C.deb.burst(V.set(sx(st.lane) * 0.2, 0.3, 0.8), 18, { cols: ['#8a6a5a', '#a07a64', '#6a4a3a'], spd: 4, up: 2.5, size: 0.14, life: 1 });
+          if (st.lane === 0) hurtHarold(st, DMG_TO_HAROLD.slam, 'slam'); else dodgeOk(st); }
+        if (st.mt > st.mdur) { setM(st, 'open', P.open + 0.6); DUELS.tell('IT\u2019S STUCK! SWING AWAY!', 1.0); } break;
       case 'jabTell': if (st.mt > st.mdur) { setM(st, 'jab', 0.28); sfx('swing'); } break;
-      case 'jab': if (!st.hitThis && st.mt > 0.14) { st.hitThis = true; const safe = st.duck || st.lane === -st.jabSide; if (!safe) hurtHarold(st, 9, 'jab'); else dodgeOk(st, false); sfx('hit'); }
-        if (st.mt > st.mdur) setM(st, 'open', P.open * 0.7); break;
+      case 'jab': if (!st.hitThis && st.mt > 0.14) { st.hitThis = true; const safe = st.duck || st.lane === -st.jabSide; if (!safe) hurtHarold(st, DMG_TO_HAROLD.jab, 'jab'); else dodgeOk(st); sfx('hit'); }
+        if (st.mt > st.mdur) setM(st, 'open', P.open * 0.8); break;
       case 'open': if (st.mt > st.mdur) setM(st, 'guard', rnd(...P.guard)); break;
-      case 'counterTell': if (st.mt > st.mdur) { setM(st, 'jab', 0.28); sfx('swing'); } break;
-      case 'down': if (st.mt > st.mdur) { st.round++; st.stats.rounds++; st.mhp = 100; st.hp = Math.min(100, st.hp + 35); setM(st, 'guard', 1.2); subHud(st); bell(1); DUELS.banner('ROUND ' + (st.round + 1) + '<small>' + (st.round === 2 ? 'FINAL ROUND!' : 'FIGHT!') + '</small>', 1.6); } break;
+      case 'stun': setM(st, 'open', 1.3); break; // (a special just ended)
+      case 'down': if (st.mt > st.mdur) { st.round++; st.stats.rounds++; st.mhp = RHP[st.round]; const heal = 100 - st.hp; st.hp = 100; st.cakes = 2; setM(st, 'guard', 1.6); subHud(st); bell(1);
+          if (heal > 0) { V.set(C.H.root.position.x, 2.4, 0.2); DUELS.pop('+' + Math.round(heal), V, 'heal'); }
+          DUELS.banner('ROUND ' + (st.round + 1) + '<small>' + (st.round === 2 ? 'FINAL ROUND! FULL HEALTH' : 'FIGHT! FULL HEALTH') + '</small>', 1.6); } break;
       case 'ko': break;
     }
   }
   function stepCans(st, dt) {
     for (let i = C.cans.length - 1; i >= 0; i--) { const c = C.cans[i]; c.t += dt; c.z -= c.spd * dt;
-      if (!c.hit && c.z < 0.5 && c.z > -0.4) { c.hit = true; if (st.lane === c.lane) hurtHarold(st, 8, 'can'); }
+      if (!c.hit && c.z < 0.5 && c.z > -0.4) { c.hit = true; if (st.lane === c.lane) hurtHarold(st, DMG_TO_HAROLD.can, 'can'); }
       if (c.z < -3) C.cans.splice(i, 1); }
     const m = new THREE.Matrix4(), q = new THREE.Quaternion(); C.cans.forEach((c, i) => { q.setFromAxisAngle(V.set(1, 0, 0), -c.t * 14); m.compose(V2.set(sx(c.lane), 0.52, c.z), q, V.set(1, 1, 1)); C.canM.setMatrixAt(i, m); });
     C.canM.count = C.cans.length; C.canM.visible = C.cans.length > 0; C.canM.instanceMatrix.needsUpdate = true;
-    // lane warnings: a lane glows while a can is on its way down it
-    const warn = [0, 0, 0]; for (const c of C.cans) if (c.z > 0.4) warn[c.lane + 1] = Math.max(warn[c.lane + 1], 0.4 + 0.3 * Math.sin(st.t * 30));
-    if (st.ms === 'jabTell') warn[st.jabSide + 1] = Math.max(warn[st.jabSide + 1], 0.3 + 0.2 * Math.sin(st.t * 30)), warn[1] = Math.max(warn[1], 0.25);
+    // lane warnings: a lane glows while a can is on its way down it, or while a claw jab is aimed at it
+    const warn = [0, 0, 0]; for (const c of C.cans) if (c.z > 0.4) warn[c.lane + 1] = Math.max(warn[c.lane + 1], 0.45 + 0.3 * Math.sin(st.t * 30));
+    if (st.ms === 'jabTell') { const k = 0.3 + 0.25 * Math.sin(st.t * 24); warn[st.jabSide + 1] = Math.max(warn[st.jabSide + 1], k); warn[1] = Math.max(warn[1], k); }
     C.lanes.forEach((l, i) => { l.material.opacity = damp(l.material.opacity, warn[i], 20, dt); l.visible = l.material.opacity > 0.01; });
   }
 
-  // ---------------- Harold ----------------
+  // ---------------- Harold: cane combo, dodges, POWER specials ----------------
   C.step = function (dt, I) {
     const st = C.st; if (!st) return; st.t += dt;
-    st.inv -= dt; st.hurtT -= dt; st.punchCd -= dt; st.lockT -= dt;
-    if (st.blindT > 0) { st.blindT -= dt; DUELS.blind(clamp(st.blindT / 1.2, 0, 1) * 0.92); } else DUELS.blind(0);
+    st.inv -= dt; st.hurtT -= dt; st.lockT -= dt; st.chainT -= dt; st.bufA -= dt; st.bufC -= dt; st.cakeCd -= dt;
+    if (I.a) st.bufA = 0.32; if (I.c) st.bufC = 0.32;
+    if (st.chitT > 0 && (st.chitT -= dt) <= 0) { st.chits = 0; DUELS.combo(0); }
+    if (st.blindT > 0) { st.blindT -= dt; DUELS.blind(clamp(st.blindT / 0.9, 0, 1) * 0.6); } else DUELS.blind(0);
+    const fighting = !st.over && st.ms !== 'down' && st.ms !== 'ko' && st.ms !== 'intro';
     if (!st.over) {
-      // dodge / duck: held stick or buttons; a dodge lasts at most ~1.1 s, then Harold steps back to the middle (no camping in a lane)
+      // dodge / duck: held stick or buttons; a dodge lasts at most ~1.1 s, then Harold steps back to the middle
       let want = 0; if (I.mx < -0.5 || I.lh) want = -1; else if (I.mx > 0.5 || I.rh) want = 1; const duck = I.my < -0.5 || I.bh;
-      if (st.lockT > 0 || st.punchT >= 0) want = st.punchT >= 0 ? 0 : st.lane;
-      if (want !== 0 && st.lane === want) { st.laneT += dt; if (st.laneT > 1.1) { st.lane = 0; st.lockT = 0.35; st.laneT = 0; } }
-      else if (st.lockT <= 0) { st.lane = want; st.laneT = 0; }
-      st.duck = st.lockT <= 0 && st.punchT < 0 && st.lane === 0 && duck;
-      // punches: in the mech's openings they land; on its guard they are blocked (and may draw a quick counter-jab)
-      const can = st.lane === 0 && !st.duck && st.punchCd <= 0 && st.hurtT <= 0;
-      const upper = I.c && st.stars > 0 && can, jab = I.a && can;
-      if (upper || jab) { st.punchT = 0; st.punchUp = upper; st.punchSide = -st.punchSide; st.punchCd = upper ? 0.55 : 0.24; st.punchHit = false; if (upper) { st.stars--; st.stats.uppers++; subHud(st); } else st.stats.punches++; sfx('swing'); }
-      else if (I.c && st.stars === 0 && st.punchCd <= 0) { DUELS.tell('NO STARS YET: DODGE A CLOUD OR A SLAM', 0.8); st.punchCd = 0.4; }
-      if (st.punchT >= 0) { st.punchT += dt; if (st.punchT > 0.09 && !st.punchHit) { st.punchHit = true; landPunch(st); } if (st.punchT > (st.punchUp ? 0.45 : 0.22)) st.punchT = -1; }
+      const busy = st.sw || st.sp; if (st.lockT > 0 || busy) want = busy ? 0 : st.lane;
+      if (want !== 0 && st.lane === want) { st.laneT += dt; if (st.laneT > 1.1) { st.lane = 0; st.lockT = 0.3; st.laneT = 0; } }
+      else if (st.lockT <= 0 || busy) { st.lane = want; st.laneT = 0; }
+      st.duck = st.lockT <= 0 && !busy && st.lane === 0 && duck;
+      // POWER special
+      if (st.bufC > 0 && fighting && !st.sp && st.hurtT <= 0) { st.bufC = 0;
+        if (st.meter >= 100) startSpecial(st); else if (!st.nopowT || st.t > st.nopowT) { DUELS.tell('POWER CHARGING: HIT THE MECH TO FILL IT', 0.9); st.nopowT = st.t + 1; } }
+      // cane swings (a buffered press chains the next hit of the combo)
+      if (st.bufA > 0 && fighting && !st.sw && !st.sp && st.hurtT <= 0) { st.bufA = 0;
+        const i = st.chainT > 0 ? (st.combo + 1) % 3 : 0; st.combo = i; st.sw = { i, t: 0, hit: false }; st.stats.swings++; st.lane = 0; st.duck = false; DUELS.hitSfx(i === 2 ? 'whoosh' : 'whoosh'); }
+      if (st.sw) { const W = SWINGS[st.sw.i]; st.sw.t += dt;
+        if (!st.sw.hit && st.sw.t >= W.hit) { st.sw.hit = true; const fin = st.sw.i === 2; if (fin) st.stats.smashes++;
+          dmgMech(st, W.dmg, { pw: W.pw, big: fin ? 1 : 0, side: st.sw.i === 0 ? -1 : st.sw.i === 1 ? 1 : 0, word: fin ? pick(['SMASH!', 'WHACK!', 'CRUNCH!', 'BONK!']) : null, sfx: fin ? 'heavy' : 'light' }); }
+        if (st.sw && st.sw.hit && st.sw.i === 2 && st.sw.t > W.hit + 0.07) moment('hit');
+        if (st.sw && st.sw.t >= W.dur) { st.chainT = st.sw.i === 2 ? 0 : 0.45; if (st.sw.i === 2) st.combo = 2; st.sw = null; } }
+      // Mavis tosses a crab cake when Harold is low (twice a round)
+      if (mercy() && fighting && !st.cake && st.cakes > 0 && st.hp < 55 && st.cakeCd <= 0) { st.cakes--; st.cakeCd = 5; st.cake = { t: 0 }; C.cake.visible = true; DUELS.say('MAVIS', pick(['Catch, hon! Crab cake!', 'Eat something, Harold!', 'Here, dear, fresh from Lexington!']), 1.8); sfx('jump'); }
     }
+    if (st.cake) { const k = (st.cake.t += dt) / 0.8; C.M.root.getWorldPosition(V); V.y += 1.6; V2.set(C.H.root.position.x, 1.5, st.hz); C.cake.position.lerpVectors(V, V2, Math.min(1, k)); C.cake.position.y += Math.sin(Math.min(1, k) * Math.PI) * 2; C.cake.rotation.x += dt * 12;
+      if (k >= 1) { st.cake = null; C.cake.visible = false; const heal = Math.min(25, 100 - st.hp); st.hp += heal; st.stats.cakes++; DUELS.pop('+' + Math.round(heal) + ' CRAB CAKE', V2.setY(2.4), 'heal'); DUELS.flash('#9dff6b', 0.3); sfx('ko'); } }
+    if (st.sp) stepSpecial(st, dt);
     mechThink(st, dt); stepCans(st, dt); stepFx(dt);
-    DUELS.bars(st.hp / 100, (st.mhp / 100 + (2 - st.round)) / 3);
+    DUELS.bars(st.hp / 100, (st.mhp / RHP[st.round] + (2 - st.round)) / 3);
+    const rdy = st.meter >= 100 && fighting && !st.sp; DUELS.hot(rdy); DUELS.ready(rdy ? '\u26a1 ' + (TOUCH() ? 'TAP' : 'PRESS') + ' <b>' + (TOUCH() ? 'POWER' : 'E') + '</b>: ' + SPECIALS[st.spI % 3].name : null);
     if (st.ms === 'ko') outro(st, dt);
   };
-  function landPunch(st) {
-    const R = C.R; V.set(sx(0) + st.punchSide * 0.3, st.punchUp ? 3.4 : 2.6, MZ - 1.1);
-    if (st.ms === 'open') {
-      const dmg = st.punchUp ? 16 : 4; st.mhp -= dmg; st.stats.landed++; sfx(st.punchUp ? 'heavy' : 'hit'); spark(V, st.punchUp ? 14 : 6); for (const m of R.flash) if (m.userData.flashC) { m.userData.flashC.value.set('#ffffff'); m.userData.flash.value = 0.8; }
-      if (st.mt < 0.35 && !st.punchUp) st.stats.counters++;
-      if (st.mhp <= 0) { st.mhp = 0; st.stats.knockdowns++; C.cans.length = 0;
-        if (st.round >= 2) { setM(st, 'ko', 99); st.over = true; st.won = true; st.outT = 0; bell(3); DUELS.banner('K.O.!<small>THE MECH IS DOWN</small>', 2.4); }
-        else { setM(st, 'down', 2.6); bell(2); DUELS.banner('DOWN!<small>ROUND ' + (st.round + 1) + ' TO HAROLD</small>', 2.2); if (Math.random() < 0.6) DUELS.say('MAVIS', ['That\u2019s my Harold!', 'Give her mech another one, dear!', 'Mind your back, hon!'][st.round % 3], 2.2); } }
-    } else if (['guard', 'intro'].includes(st.ms)) { st.stats.blocked++; sfx('hit'); DUELS.tell('BLOCKED! WAIT FOR THE OPENING', 0.7); if (Math.random() < 0.3 && st.ms === 'guard') { st.jabSide = Math.random() < 0.5 ? -1 : 1; setM(st, 'counterTell', 0.34); } }
+
+  // ---------------- POWER specials ----------------
+  function startSpecial(st) {
+    const S0 = SPECIALS[st.spI++ % 3]; st.sp = { id: S0.id, t: 0, dur: S0.dur, n: 0, done: false, ang: 0 }; st.meter = 0; powHud(st); st.stats.specials++; st.sw = null; st.lane = 0; st.duck = false; C.cans.length = 0; st.cansLeft = 0;
+    DUELS.banner(S0.ban + '<small>POWER SPECIAL</small>', 1.5); DUELS.hitSfx('power'); DUELS.flash('#ffd23c', 0.5); DUELS.log.push('special:' + S0.id); DUELS.ready(null);
+    setM(st, 'stun', 99);
   }
-  // ---------------- the ending: the mech collapses, the kid pops out of the dome, sulks, and runs off ----------------
+  function stepSpecial(st, dt) {
+    const sp = st.sp, t = (sp.t += dt), hx = C.H.root.position.x;
+    if (sp.id === 'cyclone') { // spin up, slide in, 6 quick hits inside an orange seasoning tornado, a big last whack
+      sp.ang += dt * (t < 0.3 ? 10 : 24); st.hz = t < 1.75 ? Math.min(1.9, t * 4) : Math.max(0, 1.9 - (t - 1.75) * 5);
+      if (t > 0.1 && t < 1.7) for (let k = 0; k < 2; k++) { const a = sp.ang + k * Math.PI + rnd(-0.3, 0.3), r = rnd(0.7, 1.3); C.cloud.burst(V.set(hx + Math.cos(a) * r, rnd(0.3, 2.4), st.hz + Math.sin(a) * r), 1, { v: V2.set(-Math.sin(a) * 4, rnd(1, 2.5), Math.cos(a) * 4), size: rnd(0.5, 0.9), grow: 1.2, life: 0.6, grav: 0, drag: 2 }); }
+      if (t > 0.35 && sp.n < 6 && t > 0.35 + sp.n * 0.17) { sp.n++; dmgMech(st, 6, { special: true, big: 0, stop: 0.035, shake: 0.2, kb: 0.1, side: sp.n % 2 ? -1 : 1 }); DUELS.hitSfx('whoosh'); }
+      if (t > 1.5 && sp.n === 6) { sp.n++; dmgMech(st, 14, { special: true, big: 2, stop: 0.09, shake: 0.6, word: 'OLD BAY!' }); DUELS.impact({ slow: 0.3, slowT: 0.45, zoom: 1.3, zoomT: 0.6, flash: '#ff9a3a', flashA: 0.55 }); }
+    } else if (sp.id === 'mallet') { // crouch, leap with the giant crab mallet, slow-mo at the top, POUND: a shockwave rolls across the ring and bounces the mech
+      C.mallet.visible = t > 0.12 && t < 2.1; C.mallet.scale.setScalar(clamp((t - 0.12) / 0.15, 0.01, 1) * (t > 1.9 ? Math.max(0.01, (2.1 - t) / 0.2) : 1));
+      st.hz = t < 0.35 ? 0 : t < 0.95 ? (t - 0.35) / 0.6 * 1.3 : Math.max(0, 1.3 - Math.max(0, t - 1.7) * 3);
+      if (t > 0.6 && !sp.apex) { sp.apex = true; DUELS.impact({ slow: 0.3, slowT: 0.4, zoom: 0.85, zoomT: 0.7 }); DUELS.hitSfx('whoosh'); }
+      if (t > 0.95 && !sp.pound) { sp.pound = true; C.shock.visible = true; sp.shT = 0; DUELS.impact({ stop: 0.1, shake: 1.0, flash: '#fff', flashA: 0.75, sfx: 'boom', zoom: 1.2, zoomT: 0.5 }); DUELS.hitSfx('mega');
+        C.deb.burst(V.set(hx, 0.3, 1.6), 30, { cols: ['#8a6a5a', '#a07a64', '#6a4a3a', '#ffd23c'], spd: 6, up: 4, size: 0.16, life: 1.3 }); C.spk.burst(V.set(hx, 0.5, 1.6), 16, { spd: 7, size: 0.4, life: 0.4 }); DUELS.pop('POUND!', V.set(hx, 1.6, 1.6), 'word'); }
+      if (sp.pound) { sp.shT += dt; const r = 0.5 + sp.shT * 9; C.shock.scale.setScalar(r); C.shock.position.set(hx, 0.26, 1.6); C.shock.material.opacity = Math.max(0, 1 - sp.shT / 0.6); if (sp.shT > 0.6) C.shock.visible = false;
+        if (!sp.hit && sp.shT > 0.28) { sp.hit = true; st.bounce = { t: 0 }; dmgMech(st, 50, { special: true, big: 2, stop: 0.08, shake: 0.7, kb: 0.5 }); } }
+    } else if (sp.id === 'homer') { // charge ("HON!"), step in, the home-run swing: the mech flies off into the sky, spins, and crashes back down
+      st.hz = t < 0.95 ? 0 : t < 1.15 ? (t - 0.95) / 0.2 * 1.6 : Math.max(0, 1.6 - Math.max(0, t - 2.4) * 2.5);
+      if (t < 0.95) { C.H.swR.getWorldPosition(V); V.y += 0.4; C.spk.burst(V.clone().add(V2.set(rnd(-1.4, 1.4), rnd(-0.6, 1.4), rnd(-1, 1))), 1, { v: V2.multiplyScalar(-2.5), size: 0.3, life: 0.35, grav: 0, drag: 0 }); }
+      if (t > 0.45 && !sp.hon) { sp.hon = true; DUELS.pop('HON!', V.set(hx, 2.9, 0.4), 'word'); DUELS.hitSfx('power'); DUELS.flash('#ffd23c', 0.35); DUELS.zoom(1.15, 0.6); }
+      if (t > 1.12 && !sp.hit) { sp.hit = true; st.fly = { t: 0 }; dmgMech(st, 60, { special: true, big: 2, stop: 0.13, shake: 1.0, kb: 0, word: 'HOME RUN!' }); DUELS.impact({ slow: 0.22, slowT: 0.7, zoom: 1.4, zoomT: 0.9, flash: '#fff', flashA: 0.9, sfx: 'mega' }); bell(2); }
+    }
+    if ((sp.id === 'cyclone' && t > 1.58) || (sp.id === 'mallet' && sp.shT > 0.32) || (sp.id === 'homer' && st.fly && st.fly.t > 0.25)) moment('special:' + sp.id);
+    if (t >= sp.dur) { st.sp = null; C.mallet.visible = false; C.shock.visible = false; st.hz = 0; if (st.downPending) knockdown(st); else if (st.ms === 'stun') setM(st, 'open', 1.3); }
+  }
+
+  // ---------------- the ending: slow-mo, the mech shakes, blows apart into a chip cloud, the kid tumbles out, sulks, and runs off; then the grade ----------------
   function outro(st, dt) {
     st.outT += dt; const t = st.outT, R = C.R, kid = R.kid;
-    if (t < 1.4) { const k = ease(clamp(t / 1.4, 0, 1)); R.bag.rotation.x = -0.9 * k; R.bag.scale.set(1 + 0.1 * k, 1 - 0.35 * k, 1); R.hip.position.y = C.base.hipY - 0.9 * k; if (Math.random() < dt * 20) { R.bag.getWorldPosition(V); V.y += rnd(0, 2); spark(V, 3); } }
-    if (t > 1.4 && !st.popped) { st.popped = true; sfx('jump'); // the kid pops out: re-parent to the scene at her world spot
-      kid.root.getWorldPosition(V); C.scene.attach(kid.root); kid.root.scale.setScalar(1); st.kid0 = kid.root.position.clone(); if (R.dome) R.dome.visible = false; }
-    if (st.popped) { const k = t - 1.4; const land = V2.set(-2.4, 0.2, 2.2);
-      if (k < 0.9) { const u = k / 0.9; kid.root.position.lerpVectors(st.kid0, land, u); kid.root.position.y = lerp(st.kid0.y, 0.2, u) + Math.sin(u * Math.PI) * 2.2; kid.root.rotation.y = Math.PI + u * TAU; }
-      else if (k < 4.2) { kid.root.position.copy(land); kid.root.rotation.y = Math.PI + 0.8; // sulk: arms crossed, a stomp or two, head down
+    if (t < 0.9) { R.root.position.x = rnd(-0.08, 0.08) * (t / 0.9); R.bag.scale.set(1 + 0.18 * t, 1 + 0.12 * t, 1 + 0.18 * t); for (const m of R.flash) if (m && m.userData.flashC) { m.userData.flashC.value.set(Math.sin(t * 40) > 0 ? '#ff3030' : '#ffffff'); m.userData.flash.value = 0.4 + 0.5 * t; }
+      if (Math.random() < dt * 30) { R.bag.getWorldPosition(V); V.x += rnd(-1.4, 1.4); V.y += rnd(-1, 1.6); C.spk.burst(V, 3, { spd: 4, size: 0.35 }); } }
+    if (t >= 0.9 && !st.boom) { st.boom = true; R.bag.getWorldPosition(V); kid.root.getWorldPosition(V2); C.scene.attach(kid.root); kid.root.scale.setScalar(1); st.kid0 = kid.root.position.clone(); R.root.visible = false;
+      DUELS.impact({ stop: 0.06, shake: 1.3, flash: '#fff', flashA: 1, sfx: 'boom', zoom: 0.8, zoomT: 1.2 }); DUELS.hitSfx('mega');
+      C.deb.burst(V, 150, { cols: CHIP, spd: 9, up: 6, size: 0.22, life: 2.6 }); C.deb.burst(V, 50, { cols: FOIL, spd: 8, up: 5, size: 0.3, sy: 0.45, life: 2.8 });
+      C.cloud.burst(V, 40, { spd: 5, size: 1.2, grow: 2.2, life: 1.4, grav: -0.6, drag: 2.2 }); C.spk.burst(V, 50, { spd: 10, size: 0.5, life: 0.6 }); C.rng.burst(V, 3, { v: V3.set(0, 0, 0), size: 2.5, grow: 4, life: 0.4, grav: 0, drag: 0 });
+      DUELS.pop('KABOOM!', V.clone().add(V3.set(0, -1.2, -1.5)), 'big'); DUELS.say('MAVIS', 'Harold! You popped the whole bag!', 2.4); }
+    if (st.boom && t > 1.45) moment('ko');
+    if (st.boom) { const k = t - 0.9; const land = V2.set(-2.4, 0.2, 2.2);
+      if (k < 1.1) { const u = k / 1.1; kid.root.position.lerpVectors(st.kid0, land, u); kid.root.position.y = lerp(st.kid0.y, 0.2, u) + Math.sin(u * Math.PI) * 3.2; kid.root.rotation.set(u * TAU * 1.5, Math.PI + u * TAU, 0); }
+      else if (k < 3.7) { kid.root.position.copy(land); kid.root.rotation.set(0, Math.PI + 0.8, 0); // sulk: arms crossed, a stomp or two, head down
         kid.arms[0].rotation.set(-1.2, 0, -1.2); kid.arms[1].rotation.set(-1.2, 0, 1.2); kid.head.rotation.x = 0.25 + Math.sin(k * 3) * 0.05; kid.head.rotation.y = Math.sin(k * 1.3) * 0.4;
         const stomp = Math.max(0, Math.sin(k * 9)) * (k < 2.6 ? 1 : 0); kid.legs[0].rotation.x = -stomp * 0.6; kid.root.position.y = 0.2 + stomp * 0.04;
-        if (!st.sulkSaid) { st.sulkSaid = true; const l = lines(); if (l) DUELS.say('THE CHIP KID', l.defeat[Math.floor(Math.random() * l.defeat.length)], 3.2); } }
-      else if (k < 6.4) { const u = (k - 4.2) / 2.2; kid.root.rotation.y = -Math.PI / 2; // runs off to screen right (-x), out under the ropes
+        if (!st.sulkSaid) { st.sulkSaid = true; const l = lines(); if (l) DUELS.say('THE CHIP KID', pick(l.defeat), 3.0); } }
+      else if (k < 5.6) { const u = (k - 3.7) / 1.9; kid.root.rotation.set(0, -Math.PI / 2, 0); // runs off to screen right (-x), out under the ropes
         kid.root.position.set(lerp(-2.4, -10, u), 0.2 + Math.abs(Math.sin(k * 14)) * 0.1, 2.2 + u * 2); kid.arms[0].rotation.set(Math.sin(k * 14) * 0.9, 0, 0); kid.arms[1].rotation.set(-Math.sin(k * 14) * 0.9, 0, 0); kid.legs[0].rotation.x = Math.sin(k * 14) * 0.8; kid.legs[1].rotation.x = -Math.sin(k * 14) * 0.8; kid.head.rotation.set(0, 0, 0); }
-      else if (!st.winDone) { st.winDone = true; kid.root.visible = false; DUELS.bossCleared('harborplace', 'chipkid-duel');
-        setTimeout(() => { if (DUELS.cur === C) DUELS.over('win', 'THE CHIP KID<br>RAN HOME', 'Her mech is scrap and Harborplace is clear. Crime at Harborplace: 0.'); }, SIM ? 300 : 1200); } }
+      else if (!st.winDone) { st.winDone = true; kid.root.visible = false; if (!DUELS.cleared.harborplace) DUELS.bossCleared('harborplace', 'chipkid-duel');
+        const S1 = st.stats, secs = Math.round((DUELS.t || 0) - S1.t0), stars = S1.hitsTaken <= 3 ? 3 : S1.hitsTaken <= 8 ? 2 : 1, grade = ['', 'B', 'A', 'S'][stars];
+        st.grade = { stars, grade, secs }; DUELS.log.push('chipkid:win:' + grade);
+        const txt = '<span style="color:#ffd23c;font-size:22px;letter-spacing:4px">' + '\u2605'.repeat(stars) + '<span style="opacity:.25">' + '\u2605'.repeat(3 - stars) + '</span></span><br>GRADE ' + grade +
+          '<br>MAX COMBO ' + S1.maxCombo + ' · SPECIALS ' + S1.specials + ' · HITS TAKEN ' + S1.hitsTaken + '<br>Harborplace is clear. Crime at Harborplace: 0.';
+        setTimeout(() => { if (DUELS.cur === C) DUELS.over('win', 'THE CHIP KID<br>RAN HOME!', txt, { again: true }); }, SIM ? 300 : 900); } }
   }
   function stepFx(dt) {
     const m = new THREE.Matrix4(), q = C.cam.quaternion;
     for (let i = C.puffs.length - 1; i >= 0; i--) { const p = C.puffs[i]; p.t += dt; p.v.multiplyScalar(1 - dt * 1.2); p.p.addScaledVector(p.v, dt); if (p.t > p.life) C.puffs.splice(i, 1); }
     C.puffs.forEach((p, i) => { const s = p.s * (0.6 + p.t * 2.2); m.compose(p.p, q, V.set(s, s, s)); C.puffM.setMatrixAt(i, m); }); C.puffM.count = C.puffs.length; C.puffM.visible = C.puffs.length > 0; C.puffM.instanceMatrix.needsUpdate = true;
-    for (let i = C.sparks.length - 1; i >= 0; i--) { const p = C.sparks[i]; p.t += dt; p.v.y -= 9 * dt; p.p.addScaledVector(p.v, dt); if (p.t > p.life) C.sparks.splice(i, 1); }
-    C.sparks.forEach((p, i) => { m.compose(p.p, q, V.set(1, 1, 1)); C.spark.setMatrixAt(i, m); }); C.spark.count = C.sparks.length; C.spark.visible = C.sparks.length > 0; C.spark.instanceMatrix.needsUpdate = true;
+    C.spk.update(dt, C.cam); C.rng.update(dt, C.cam); C.deb.update(dt); C.cloud.update(dt, C.cam);
+    C.knock = Math.max(0, C.knock - dt * 2.2); C.fl = Math.max(0, C.fl - dt * 5);
   }
 
   // ---------------- poses + render ----------------
+  function canePose(i, u) { // 0 forehand (right -> left), 1 backhand (left -> right), 2 overhead SMASH; u 0..1 over the swing; the hit lands near u = hit / dur
+    const p = blank(); legsStance(p, 0.22, 0.6); const W = SWINGS[i], hu = W.hit / W.dur, wind = hu * 0.55;
+    const a = u < wind ? 0 : ease(clamp((u - wind) / (hu - wind + 0.12), 0, 1)), back = u < wind ? ease(u / wind) : 1; // back: into the wind-up, a: through the arc
+    p.shL = [-0.6, 0, 0.5]; p.elL = [-1.2, 0, 0]; p.lgL = [-0.6, 0, 0.16]; p.knL = [0.7, 0, 0]; p.lgR = [0.3, 0, -0.16]; p.knR = [0.3, 0, 0];
+    if (i === 0) { p.torso = [0.25, lerp(-0.2, lerp(-0.95, 1.0, a), back), 0]; p.hips = [0, lerp(-0.45, 0.45, a), 0]; p.shR = [lerp(-1.0, -1.45, a), 0, lerp(lerp(-0.4, -1.35, back), 0.65, a)]; p.elR = [lerp(-0.9, -0.1, a), 0, 0]; p.swR = [Math.PI / 2, 0, lerp(-0.7, 0.4, a)]; }
+    else if (i === 1) { p.torso = [0.25, lerp(0.6, lerp(1.0, -1.0, a), back), 0]; p.hips = [0, lerp(0.45, -0.45, a), 0]; p.shR = [lerp(-1.1, -1.45, a), 0, lerp(lerp(0.2, 0.75, back), -1.35, a)]; p.elR = [lerp(-1.3, -0.1, a), 0, 0]; p.swR = [Math.PI / 2, 0, lerp(0.5, -0.5, a)]; }
+    else { p.torso = [lerp(lerp(0.1, -0.35, back), 0.65, a), 0.1, 0]; p.neck = [lerp(-0.3, 0.2, a), 0, 0]; p.shR = [lerp(lerp(-1.4, -3.0, back), -0.55, a), 0, -0.2]; p.elR = [lerp(-0.8, 0, a), 0, 0]; p.swR = [Math.PI / 2 - 0.2, 0, 0];
+      p.shL = [lerp(-2.6, -0.7, a), 0, 0.3]; p.y = Math.sin(clamp(u / hu, 0, 1) * Math.PI) * 0.22; }
+    return p;
+  }
   function haroldPose(st, t) {
     let p;
-    if (st.over && !st.won) { p = HERO_POSES.down(1, true); return p; }
-    if (st.hurtT > 0) { p = HERO_POSES.hurt(1 - st.hurtT / 0.4); return p; }
+    if (st.over && !st.won) return HERO_POSES.down(1, true);
+    if (st.won && st.ms === 'ko' && st.outT > 1.0) { p = HERO_POSES.idle(t); p.shR = [-3.0, 0, -0.3]; p.elR = [-0.2, 0, 0]; p.swR = [Math.PI / 2 - 0.2, 0, 0]; p.y = Math.abs(Math.sin(t * 6)) * 0.18; p.shL = [-2.7, 0, 0.5]; return p; } // victory: cane raised high
+    if (st.sp) { const sp = st.sp, u = sp.t;
+      if (sp.id === 'cyclone') { p = HERO_POSES.atk3(0.5); p.tilt = [0, -sp.ang, 0]; p.y = 0.15 + Math.sin(u * 20) * 0.05; p.shR = [-1.45, 0, -1.5]; p.elR = [0, 0, 0]; p.swR = [Math.PI / 2, 0, 0.2]; return p; }
+      if (sp.id === 'mallet') { p = HERO_POSES.idle(t);
+        if (u < 0.35) { legsStance(p, 0.26, 1.3); p.y -= 0.35; p.torso = [0.6, 0, 0]; p.shR = p.shL = [-0.9, 0, 0]; }
+        else if (u < 0.95) { const k = (u - 0.35) / 0.6; p.lgL = [-1.0, 0, 0.15]; p.knL = [1.6, 0, 0]; p.lgR = [-0.6, 0, -0.15]; p.knR = [1.2, 0, 0]; p.shR = [-3.0, 0, -0.2]; p.shL = [-3.0, 0, 0.2]; p.elR = p.elL = [-0.4, 0, 0]; p.torso = [-0.3 * k, 0, 0]; p.swR = [Math.PI / 2 - 0.3, 0, 0]; p.y = Math.sin(k * Math.PI) * 2.0 + 0.3 * k; }
+        else { legsStance(p, 0.3, 1.1); p.y -= 0.3; p.torso = [0.75, 0, 0]; p.shR = [-0.55, 0, -0.15]; p.shL = [-0.6, 0, 0.15]; p.elR = p.elL = [0, 0, 0]; p.swR = [Math.PI / 2 - 0.1, 0, 0]; }
+        return p; }
+      if (sp.id === 'homer') { p = blank(); legsStance(p, 0.3, 0.8);
+        if (u < 1.0) { p.torso = [0.2, 1.2, 0]; p.hips = [0, 0.6, 0]; p.shR = [-1.3, 0, 0.9]; p.elR = [-1.6, 0, 0]; p.shL = [-1.3, 0, 0.8]; p.elL = [-1.5, 0, 0]; p.swR = [Math.PI / 2 + 0.5, 0, 0.9]; p.y = -0.15 + Math.sin(u * 30) * 0.02; p.lgR = [0.4, 0, -0.2]; }
+        else { const k = ease(clamp((u - 1.0) / 0.14, 0, 1)); p.torso = [0.2, lerp(1.2, -1.3, k), 0]; p.hips = [0, lerp(0.6, -0.7, k), 0]; p.shR = [lerp(-1.3, -1.6, k), 0, lerp(0.9, -1.2, k)]; p.elR = [lerp(-1.6, 0, k), 0, 0]; p.shL = [-1.3, 0, lerp(0.8, -0.4, k)]; p.elL = [lerp(-1.5, -0.2, k), 0, 0]; p.swR = [Math.PI / 2, 0, lerp(0.9, -0.6, k)]; p.lgL = [-0.7, 0, 0.2]; p.knL = [0.6, 0, 0]; }
+        return p; } }
+    if (st.hurtT > 0) return HERO_POSES.hurt(1 - st.hurtT / 0.45);
+    if (st.sw) return canePose(st.sw.i, clamp(st.sw.t / SWINGS[st.sw.i].dur, 0, 1));
     p = HERO_POSES.idle(t); legsStance(p, 0.2, 0.45);
-    // boxing guard: both fists up (the cane tucked under the arm)
-    p.shL = [-1.5, 0, 0.55]; p.elL = [-1.6, 0, 0]; p.shR = [-1.5, 0, -0.55]; p.elR = [-1.6, 0, 0]; p.swR = [Math.PI / 2 + 1.2, 0, 0]; p.torso = [0.12, 0, 0]; p.y = Math.sin(t * 6) * 0.03;
-    if (st.punchT >= 0) { const u = clamp(st.punchT / (st.punchUp ? 0.45 : 0.22), 0, 1), k = Math.sin(u * Math.PI), s = st.punchSide;
-      const arm = s > 0 ? 'R' : 'L'; p['sh' + arm] = st.punchUp ? [-1.6 - k * 1.3, 0, s > 0 ? -0.3 : 0.3] : [-1.5 - k * 0.1, 0, (s > 0 ? -0.55 : 0.55) * (1 - k)]; p['el' + arm] = [-1.6 * (1 - k), 0, 0]; p.torso = [0.12, -s * 0.5 * k, 0]; if (st.punchUp) p.y += k * 0.25; }
+    // ready stance: cane held up across the body like a bat
+    p.shR = [-1.1, 0, -0.5]; p.elR = [-1.3, 0, 0]; p.shL = [-1.0, 0, 0.5]; p.elL = [-1.4, 0, 0]; p.swR = [Math.PI / 2 + 0.7, 0, 0.5]; p.torso = [0.15, 0.25, 0]; p.y = Math.sin(t * 6) * 0.03;
     if (st.duck) { legsStance(p, 0.26, 1.25); p.y -= 0.32; p.torso = [0.55, 0, 0]; }
     if (st.lane) { p.tilt = [0, 0, st.lane * 0.22]; p.torso = [0.2, 0, st.lane * 0.25]; }
     return p;
   }
-  function mavisPose(st, t) { const p = HERO_POSES.idle(t), cheer = st.won || st.ms === 'down' || st.ms === 'open' ? 1 : 0.4, w = Math.sin(t * (6 + cheer * 6));
-    p.shL = [-2.6 - w * 0.3 * cheer, 0, 0.5]; p.elL = [-0.3, 0, 0]; p.shR = [-1.6 - cheer * 0.9 + w * 0.25, 0, -0.4]; p.elR = [-0.5, 0, 0]; p.y = Math.abs(Math.sin(t * 5)) * 0.08 * cheer; return p; }
+  function mavisPose(st, t) { const p = HERO_POSES.idle(t), cheer = st.won || st.ms === 'down' || st.ms === 'open' || st.sp || st.chits > 2 ? 1 : 0.4, w = Math.sin(t * (6 + cheer * 6));
+    p.shL = [-2.6 - w * 0.3 * cheer, 0, 0.5]; p.elL = [-0.3, 0, 0]; p.shR = [-1.6 - cheer * 0.9 + w * 0.25, 0, -0.4]; p.elR = [-0.5, 0, 0]; p.y = Math.abs(Math.sin(t * 5)) * 0.08 * cheer;
+    if (st.cake && st.cake.t < 0.25) { p.shR = [-2.8, 0, -0.3]; p.elR = [-0.1, 0, 0]; } return p; }
+  const TELLS = ['cloudTell', 'cansTell', 'slamTell', 'jabTell'];
   function poseMech(st, dt) {
-    const R = C.R, t = st.t, u = st.mt / Math.max(0.01, st.mdur), b = C.base; if (st.ms === 'ko') return;
+    const R = C.R, t = st.t, u = st.mt / Math.max(0.01, st.mdur), b = C.base; if (st.ms === 'ko') { C.bang.visible = false; C.warn.visible = false; C.shadow.visible = false; return; }
     let hipY = b.hipY + Math.sin(t * 3) * 0.05, bagY = b.bagY, bagRX = 0, bagRZ = Math.sin(t * 1.7) * 0.03, shk = 0, hatch = 0, rootY = 0.2, sq = 1;
     const armsT = [[-0.2, 0.1], [-0.2, -0.1]]; // [rx, ry] guard: claws up in front
-    let glow = { m: null, c: '#ff3d6e', v: 0 };
+    let glow = { m: null, c: '#ff3d6e', v: 0 }, warnV = 0, warnC = '#ff3030';
     switch (st.ms) {
-      case 'cloudTell': shk = -1.25 * ease(clamp(u * 1.6, 0, 1)); sq = 1 + 0.08 * Math.sin(st.mt * 16); glow = { m: R.sM, c: '#ff9a3a', v: 0.25 + 0.3 * (Math.sin(st.mt * 24) * 0.5 + 0.5) }; break;
-      case 'cloud': shk = -1.25; sq = 0.95; break;
-      case 'cansTell': hatch = ease(clamp(u * 2, 0, 1)); bagRX = 0.08; break;
+      case 'cloudTell': shk = -1.25 * ease(clamp(u * 1.6, 0, 1)); sq = 1 + 0.08 * Math.sin(st.mt * 16); glow = { m: R.sM, c: '#ff9a3a', v: 0.3 + 0.4 * (Math.sin(st.mt * 20) * 0.5 + 0.5) }; warnV = 0.5 + 0.35 * Math.sin(st.mt * 18); warnC = '#ff9a2a'; break;
+      case 'cloud': shk = -1.25; sq = 0.95; warnV = 0.6; warnC = '#ff9a2a'; break;
+      case 'cansTell': hatch = ease(clamp(u * 2, 0, 1)); bagRX = 0.08; glow = { m: R.mM, c: '#ff3d6e', v: 0.25 + 0.25 * (Math.sin(st.mt * 20) * 0.5 + 0.5) }; break;
       case 'cans': hatch = 1; bagRX = 0.08; break;
-      case 'slamTell': { const k = clamp(u, 0, 1); if (k < 0.45) { hipY -= 0.5 * ease(k / 0.45); } else { rootY = 0.2 + 3.2 * ease((k - 0.45) / 0.55); hipY = b.hipY; } bagRX = -0.15 * k; glow = { m: R.mM, c: '#ff3d6e', v: 0.2 * k }; break; }
-      case 'slam': rootY = 3.4 * (1 - ease(clamp(st.mt / 0.18, 0, 1))) + 0.2; sq = st.mt > 0.18 ? 0.82 : 1; break;
-      case 'jabTell': case 'counterTell': { const i = st.jabSide < 0 ? 0 : 1; armsT[i] = [0.4, (i ? -1 : 1) * 0.7]; glow = { m: R.aM && R.aM[i], c: '#ff3030', v: 0.3 + 0.3 * (Math.sin(st.mt * 30) * 0.5 + 0.5) }; break; }
+      case 'slamTell': { const k = clamp(u, 0, 1); if (k < 0.45) { hipY -= 0.5 * ease(k / 0.45); } else { rootY = 0.2 + 3.2 * ease((k - 0.45) / 0.55); hipY = b.hipY; } bagRX = -0.15 * k; glow = { m: R.mM, c: '#ff3d6e', v: 0.25 + 0.3 * (Math.sin(st.mt * 22) * 0.5 + 0.5) }; warnV = 0.4 + 0.5 * k; break; }
+      case 'slam': rootY = 3.4 * (1 - ease(clamp(st.mt / 0.18, 0, 1))) + 0.2; sq = st.mt > 0.18 ? 0.82 : 1; warnV = st.mt < 0.2 ? 0.9 : 0; break;
+      case 'jabTell': { const i = st.jabSide < 0 ? 0 : 1; armsT[i] = [0.4, (i ? -1 : 1) * 0.7]; glow = { m: R.aM && R.aM[i], c: '#ff3030', v: 0.35 + 0.35 * (Math.sin(st.mt * 26) * 0.5 + 0.5) }; break; }
       case 'jab': { const i = st.jabSide < 0 ? 0 : 1; armsT[i] = [-0.15, (i ? 1 : -1) * 0.25]; break; }
-      case 'open': hipY -= 0.25; bagRX = 0.2 + Math.sin(st.mt * 10) * 0.03; armsT[0] = [0.9, 0.3]; armsT[1] = [0.9, -0.3]; if (Math.random() < dt * 8) { R.bag.getWorldPosition(V); V.y += rnd(0.5, 1.6); V.x += rnd(-1.2, 1.2); spark(V, 2); } break;
-      case 'down': hipY -= 0.9 * ease(clamp(st.mt / 0.5, 0, 1)); bagRX = 0.55; armsT[0] = [1.2, 0.4]; armsT[1] = [1.2, -0.4]; if (Math.random() < dt * 10) { R.bag.getWorldPosition(V); V.y += rnd(0.5, 1.6); spark(V, 2); } break;
+      case 'open': case 'stun': hipY -= 0.3; bagRX = 0.22 + Math.sin(st.t * 10) * 0.04; armsT[0] = [0.9, 0.3]; armsT[1] = [0.9, -0.3]; if (Math.random() < dt * 8) { R.bag.getWorldPosition(V); V.y += rnd(0.5, 1.6); V.x += rnd(-1.2, 1.2); C.spk.burst(V, 2, { spd: 2, size: 0.2 }); } break;
+      case 'down': hipY -= 0.9 * ease(clamp(st.mt / 0.5, 0, 1)); bagRX = 0.55; armsT[0] = [1.2, 0.4]; armsT[1] = [1.2, -0.4]; if (Math.random() < dt * 10) { R.bag.getWorldPosition(V); V.y += rnd(0.5, 1.6); C.spk.burst(V, 2, { spd: 2, size: 0.25 }); } break;
     }
-    R.root.position.y = damp(R.root.position.y, rootY, st.ms === 'slam' ? 60 : 14, dt); R.hip.position.y = damp(R.hip.position.y, hipY, 12, dt); R.bag.position.y = bagY;
-    R.bag.rotation.x = damp(R.bag.rotation.x, bagRX, 10, dt); R.bag.rotation.z = bagRZ; R.bag.scale.y = damp(R.bag.scale.y, sq, 18, dt); R.bag.scale.x = damp(R.bag.scale.x, 2 - sq, 18, dt);
+    // special reactions: the homer sends it flying and it crashes back down; the mallet bounces it
+    let flyZ = 0, flyRX = 0;
+    if (st.fly) { const f = st.fly; f.t += dt; const k = f.t;
+      if (k < 1.1) { flyZ = k * 13; rootY = 0.2 + Math.sin(Math.min(1, k / 1.1) * Math.PI * 0.5) * 11; flyRX = -k * 9; }
+      else if (k < 1.7) { flyZ = 0; rootY = 0.2 + 16 * Math.pow(1 - (k - 1.1) / 0.6, 2); flyRX = -(k - 1.1) * 6; }
+      else { if (!f.crash) { f.crash = true; DUELS.impact({ shake: 1.1, sfx: 'boom', flash: '#fff', flashA: 0.4 }); DUELS.pop('CRASH!', V.set(0, 1.4, MZ - 1), 'word'); C.deb.burst(V.set(0, 0.4, MZ - 0.5), 40, { cols: ['#8a6a5a', '#a07a64', '#ffd23c', '#d8262a'], spd: 6, up: 4, size: 0.18, life: 1.4 }); C.cloud.burst(V.set(0, 0.6, MZ), 14, { spd: 4, size: 1, grow: 1.6, life: 0.9, grav: -0.5 }); }
+        sq = 0.75; if (k > 2.1) st.fly = null; }
+      R.root.position.y = rootY; R.root.position.z = MZ + flyZ; R.root.rotation.x = flyRX; }
+    else { R.root.rotation.x = damp(R.root.rotation.x, 0, 10, dt); }
+    if (st.bounce) { const k = (st.bounce.t += dt); rootY = 0.2 + Math.max(0, Math.sin(Math.min(1, k / 0.75) * Math.PI)) * 2.4; if (k > 0.75 && !st.bounce.land) { st.bounce.land = true; DUELS.shake(0.6); DUELS.hitSfx('heavy'); } if (k > 0.95) st.bounce = null; R.root.position.y = rootY; }
+    if (!st.fly) { R.root.position.y = st.bounce ? rootY : damp(R.root.position.y, rootY, st.ms === 'slam' ? 60 : 14, dt); R.root.position.z = MZ + C.knock; }
+    R.hip.position.y = damp(R.hip.position.y, hipY, 12, dt); R.bag.position.y = bagY;
+    R.bag.rotation.x = damp(R.bag.rotation.x, bagRX, 10, dt) - C.fl * 0.04; R.bag.rotation.z = bagRZ + Math.sin(st.t * 40) * C.fl * 0.05;
+    R.bag.scale.y = damp(R.bag.scale.y, sq - C.fl * 0.06, 18, dt); R.bag.scale.x = damp(R.bag.scale.x, 2 - sq + C.fl * 0.08, 18, dt);
     R.shakers.rotation.x = damp(R.shakers.rotation.x, shk, 12, dt); R.hatch.rotation.x = damp(R.hatch.rotation.x, hatch * 1.4, 12, dt);
-    R.arms.forEach((a, i) => { a.sh.rotation.x = damp(a.sh.rotation.x, armsT[i][0], 14, dt); a.sh.rotation.y = damp(a.sh.rotation.y, armsT[i][1], 14, dt); });
-    for (const m of R.flash) if (m && m.userData.flash) m.userData.flash.value = Math.max(0, m.userData.flash.value - dt * 4);
+    R.arms.forEach((a, i) => { a.sh.rotation.x = damp(a.sh.rotation.x, armsT[i][0] + C.fl * 0.5, 14, dt); a.sh.rotation.y = damp(a.sh.rotation.y, armsT[i][1], 14, dt); });
+    for (const m of R.flash) if (m && m.userData.flash) m.userData.flash.value = Math.max(0, m.userData.flash.value - dt * 5);
     if (glow.m && glow.m.userData.flash) { glow.m.userData.flashC.value.set(glow.c); glow.m.userData.flash.value = Math.max(glow.m.userData.flash.value, glow.v); }
     C.shadow.material.opacity = st.ms === 'slamTell' ? 0.55 * clamp((u - 0.4) / 0.6, 0, 1) : st.ms === 'slam' ? 0.6 : 0; C.shadow.scale.setScalar(0.6 + C.shadow.material.opacity * 1.2); C.shadow.visible = C.shadow.material.opacity > 0.01;
-    // the kid in the cockpit: bouncing, pointing, fists shaking on her guard
-    const kid = R.kid; kid.head.rotation.y = Math.sin(t * 1.8) * 0.3; kid.arms[0].rotation.set(-1.4 + Math.sin(t * 8) * 0.4, 0, -0.3); kid.arms[1].rotation.set(st.ms === 'open' || st.ms === 'down' ? -0.2 : -2.4, 0, 0.3); kid.root.position.y = 0.12 + Math.abs(Math.sin(t * 4)) * 0.05;
+    // ground warning ring on the middle lane + the "!" over the dome while it winds up
+    C.warn.material.color.set(warnC); C.warn.material.opacity = damp(C.warn.material.opacity, Math.max(0, warnV), 22, dt); C.warn.visible = C.warn.material.opacity > 0.02; C.warn.rotation.z += dt * 2; C.warn.scale.setScalar(1 + 0.08 * Math.sin(st.t * 14));
+    const tell = TELLS.includes(st.ms); C.bang.visible = tell; if (tell) { R.domeG.getWorldPosition(V); C.bang.position.set(V.x + 1.5, V.y + 1.0 + Math.abs(Math.sin(st.t * 8)) * 0.2, V.z); C.bang.scale.setScalar(0.75 + 0.18 * Math.abs(Math.sin(st.t * 12))); }
+    // the kid in the cockpit: bouncing, pointing, fists shaking; wincing when hit
+    const kid = R.kid; kid.head.rotation.y = Math.sin(t * 1.8) * 0.3 + C.fl * Math.sin(t * 50) * 0.3; kid.arms[0].rotation.set(-1.4 + Math.sin(t * 8) * 0.4, 0, -0.3); kid.arms[1].rotation.set(st.ms === 'open' || st.ms === 'down' || C.fl > 0.3 ? -0.2 : -2.4, 0, 0.3); kid.root.position.y = 0.12 + Math.abs(Math.sin(t * 4)) * 0.05;
   }
   C.render = function (rdt) {
     const st = C.st, dt = Math.min(0.05, rdt * (SIM || 1)), t = st.t;
-    const H = C.H; const hx = sx(st.lane) * 0.95; H.root.position.set(damp(H.root.position.x, hx, 18, dt), 0.2, 0); H.root.rotation.y = 0; applyPose(H, haroldPose(st, t), 18, dt, false);
-    if (C.hflash > 0) { C.hflash = Math.max(0, C.hflash - dt * 5); H.mat.userData.flash.value = C.hflash * 0.8; }
+    const H = C.H; const hx = sx(st.lane) * 0.95; H.root.position.set(damp(H.root.position.x, hx, 18, dt), 0.2, damp(H.root.position.z, st.sw ? (st.sw.i === 2 ? 1.5 : 1.1) : st.hz, st.sw || st.sp ? 22 : 10, dt)); H.root.rotation.y = 0;
+    applyPose(H, haroldPose(st, t), st.sw || st.sp ? 42 : 18, dt, !!(st.sp && st.sp.id === 'cyclone'));
+    if (!(st.sp && st.sp.id === 'cyclone') && Math.abs(H.tilt.rotation.y) > 0.01) H.tilt.rotation.y = wrapA(H.tilt.rotation.y) * Math.max(0, 1 - dt * 12);
+    if (C.hflash > 0) { C.hflash = Math.max(0, C.hflash - dt * 5); H.mat.userData.flash.value = C.hflash * 0.8; } else if (st.inv > 0 && !st.sp) H.mat.userData.flash.value = Math.sin(st.t * 30) > 0 ? 0.35 : 0; else H.mat.userData.flash.value = 0;
+    if (st.sp && st.sp.id === 'homer' && st.sp.t < 1.0) { H.mat.userData.flashC.value.set('#ffd23c'); H.mat.userData.flash.value = 0.25 + 0.2 * Math.sin(st.t * 30); } else H.mat.userData.flashC.value.set('#ffffff');
+    // the cane trail: base + tip of the cane each frame while it swings
+    H.root.updateMatrixWorld(true); const swinging = (st.sw && st.sw.t > SWINGS[st.sw.i].hit * 0.4) || (st.sp && (st.sp.id === 'cyclone' && st.sp.t > 0.1 && st.sp.t < 1.75 || st.sp.id === 'homer' && st.sp.t > 0.98 && st.sp.t < 1.45 || st.sp.id === 'mallet' && st.sp.t > 0.85 && st.sp.t < 1.1));
+    if (swinging) { const L = C.mallet.visible ? 2.3 : 0.68; H.swR.localToWorld(V.set(0, 0.15, 0)); H.swR.localToWorld(V2.set(0, L, 0)); C.trail.col.set(st.sp ? (st.sp.id === 'cyclone' ? '#ffb050' : '#fff2a0') : st.sw && st.sw.i === 2 ? '#ffe070' : '#ffffff'); C.trail.push(V, V2); }
+    C.trail.update(dt);
     const M = C.M; M.root.position.set(3.35, 0.2, 6.3); M.root.rotation.y = -2.3; applyPose(M, mavisPose(st, t), 12, dt, false);
     poseMech(st, dt);
-    DUELS.hot(st.stars > 0 && st.ms === 'open');
     // camera: low behind Harold's right shoulder, the mech filling the top of the frame; portrait pulls back and up
     const port = VH() > VW(); C.cam.fov = port ? 70 : 52; C.cam.updateProjectionMatrix();
-    V.set(-0.55 + H.root.position.x * 0.35, port ? 2.75 : 2.45, port ? -4.6 : -3.6); V2.set(H.root.position.x * 0.2, port ? 2.9 : 3.3, MZ);
-    if (st.ms === 'intro' && st.round === 0) { const k = ease(clamp(st.mt / st.mdur, 0, 1)); V.lerpVectors(V.clone().set(4.5, 5.5, 9), V, k); V2.lerpVectors(V2.clone().set(0, 3.2, MZ), V2, k); }
-    if (st.ms === 'ko') { V.set(-1.5, 3.2, -4.6); V2.set(-0.6, 1.6, 2.6); }
+    V.set(-0.55 + H.root.position.x * 0.35, port ? 2.75 : 2.45, (port ? -4.6 : -3.6) + H.root.position.z * 0.35); V2.set(H.root.position.x * 0.2, port ? 2.9 : 3.3, MZ);
+    if (st.ms === 'intro' && st.round === 0) { const k = ease(clamp(st.mt / st.mdur, 0, 1)); V.lerpVectors(V3.set(4.5, 5.5, 9), V.clone(), k); V2.lerpVectors(V3.set(0, 3.2, MZ), V2.clone(), k); }
+    if (st.sp) { const sp = st.sp;
+      if (sp.id === 'cyclone') { const a = 0.5 * Math.sin(sp.t * 1.5); V.set(Math.sin(a) * 4.2, 2.2, sp.t * 0.6 - 3.4); V2.set(0, 2.0, 2.4); }
+      else if (sp.id === 'mallet' && sp.t > 0.35 && sp.t < 1.2) { V.set(2.6, port ? 5 : 4.2, -3.6); V2.set(0, 2.2, 2.4); }
+      else if (sp.id === 'homer') { if (sp.t < 1.0) { V.set(-2.4, 1.6, 1.0); V2.set(0, 1.4, 0.2); } else if (st.fly && st.fly.t < 1.2) { V.set(1.6, 2.2, -2.5); C.R.root.getWorldPosition(V2); V2.y += 2; } } }
+    if (st.ms === 'ko') { if (st.outT < 0.9) { V.set(-1.4, 2.2, 0.6); V2.set(0, 3.2, MZ); } else if (st.outT < 2.4) { V.set(-0.5, 3.4, -5); V2.set(-0.8, 2.6, 3); } else { V.set(-1.5, 3.2, -4.6); V2.set(-0.6, 1.6, 2.6); } }
     if (st.ms === 'slam' && st.mt < 0.35) { V.x += rnd(-0.12, 0.12); V.y += rnd(-0.12, 0.12); }
-    C.camP.lerp(V, 1 - Math.exp(-7 * dt)); C.camL.lerp(V2, 1 - Math.exp(-7 * dt)); C.cam.position.copy(C.camP); C.cam.lookAt(C.camL);
+    const cr = st.sp || st.ms === 'ko' ? 5 : 7; C.camP.lerp(V, 1 - Math.exp(-cr * dt)); C.camL.lerp(V2, 1 - Math.exp(-cr * dt)); C.cam.position.copy(C.camP); C.cam.lookAt(C.camL);
     OUT_U.fogC.value.copy(C.scene.fog.color); OUT_U.fogN.value = 26; OUT_U.fogF.value = 70;
   };
   C.onResize = () => {};
 
-  // ---------------- test bot ----------------
+  // ---------------- test bots: win (dodges + specials), mash (only mashes SWING, like a first-time player), lose (stands still) ----------------
   C.botThink = function (B, dt) {
     const st = C.st; if (!st || st.over) return; B.mx = 0; B.my = 0; B.bh = false; B.lh = B.rh = false; if (B.mode === 'lose') return;
-    B.cd = (B.cd || 0) - dt; const left = st.mdur - st.mt;
-    if (st.ms === 'cloud' || (st.ms === 'cloudTell' && left < 0.15)) B.bh = true;
-    if (st.ms === 'slamTell' && left < 0.3 || st.ms === 'slam') B.mx = -1;
-    if ((st.ms === 'jabTell' || st.ms === 'counterTell') && left < 0.2 || st.ms === 'jab') B.mx = -st.jabSide;
+    B.cd = (B.cd || 0) - dt;
+    if (B.mode === 'mash') { if (B.cd <= 0) { B.a = true; B.cd = 0.12; } return; }
+    const left = st.mdur - st.mt;
+    if (st.ms === 'cloud' || (st.ms === 'cloudTell' && left < 0.3)) B.bh = true;
+    if (st.ms === 'slamTell' && left < 0.4 || st.ms === 'slam') B.mx = -1;
+    if (st.ms === 'jabTell' && left < 0.3 || st.ms === 'jab') B.mx = -st.jabSide;
     if (st.ms === 'cans' || st.ms === 'cansTell') { const bad = new Set(C.cans.filter((c) => c.z > 0.3 && c.z < 3.0).map((c) => c.lane)); if (!bad.size) B.lane = 0; else if (bad.has(B.lane || 0)) B.lane = [0, -1, 1].find((l) => !bad.has(l)) ?? 0; if (B.lane) B.mx = B.lane; }
-    if (st.ms === 'open' && B.cd <= 0) { if (st.stars > 0 && st.mt < st.mdur - 0.5) B.c = true; else B.a = true; B.cd = 0.26; }
+    const safe = B.mx === 0 && !B.bh && !['slamTell', 'jabTell', 'cloudTell', 'cans', 'cansTell'].includes(st.ms) || (st.ms.endsWith('Tell') && left > 0.9);
+    if (B.cd <= 0 && safe) { if (st.meter >= 100) B.c = true; else B.a = true; B.cd = 0.14; }
   };
   DUELS.reg('chipkid', C);
   // entrance: the ring in the middle of the Harborplace (Light St) plaza
