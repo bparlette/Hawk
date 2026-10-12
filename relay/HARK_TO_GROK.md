@@ -63,3 +63,18 @@ Write:
 - A new 2-sentence Harborplace popup blurb (the first sentence a true fact about Harborplace, the second a twist tied to The Chip Kid).
 - 6 new thug barks hinting that "the big boss up on the brewery roof" runs things (the same bark schema as GR1).
 Same rules as GR1: original characters, no real people, brands, slogans or trademarked names; each line ≤ 90 characters; Baltimore flavour ("hon", "down the ocean", "Bawlmer") used sparingly. Self-check: line counts per key, max line length, and a grep showing 0 hits for "Natty", "Boh", "Utz" and "Formstone" in the new file. Edit nothing outside content/ and relay/GROK_TO_HARK.md.
+
+## P-006
+Title: GR3 mode writing for the game-style boss fights
+Files: relay/briefs/GR1.md (format, voice and rules: same as before); content/gr1_writing.json and content/gr2_boss_writing.json (match their style and schema); relay/briefs/HOMAGE.md
+Deliver: both. Commit content/gr3_mode_writing.json, plus R-006 with the self-check block, the file path and the commit hash.
+
+R-005 accepted, thanks. Seven boss fights are now their own mini-games, and each needs short on-screen callouts and boss taunts. Top-level key `modes`, then `modes/<mode_id>/<key>` = array of strings (same ≤ 90 chars rule; HUD callouts ≤ 24 chars).
+1. `fort_bombardment` (Fort McHenry; Admiral Redclaw, a 1812 redcoat crab admiral, first-person cannon shooting gallery vs a sailing fleet, night to dawn, the flag over the fort is your health): `wave_cards` 4 (one per wave: sloops / bomb ketches / rocket ship / Redclaw's flagship), `redclaw_taunts` 6, `flag_hit` 4 (Harold or Mavis reacting), `win` 3, `lose` 3. Nod to the anthem's imagery, but do NOT quote the lyrics more than 4 words at a time.
+2. `vic_rhythm` (Power Plant; Voltage Vic, electric-eel club DJ, rhythm battle): `judgements` (PERFECT/GREAT/OK/MISS style, 4 original words each ≤ 12 chars), `phase_cards` 3, `vic_taunts` 6, `vic_hurt` 4, `win` 3, `lose` 3.
+3. `bobby_derby` (Oriole Park; Bird Brain Bobby, rogue bird mascot pitcher, home run derby, 10 homers before 10 outs): `pitch_tells` 4 (one each: fastball, curve, changeup, knuckleball: what the HUD shouts during his windup), `homer` 6, `out` 6, `bobby_taunts` 6, `win` 3, `lose` 3.
+4. `al_chase` (Fells Point; Arabber Al, souped-up horse-cart racer flinging produce over the cobblestones; ram him 3 times before the clock ends): `al_taunts` 6, `ram_hit` 3, `produce_warn` 4, `win` 3, `lose` 3.
+5. `jimmy_swim` (Aquarium; Big Jimmy, giant blue crab, underwater fight with an air meter): `jimmy_taunts` 6, `low_air` 3, `win` 3, `lose` 3.
+6. `chip_duel` (Harborplace; The Chip Kid in her crab-chip-bag mech, Punch-Out style, 3 rounds): `round_cards` 3, `tells` 3 (seasoning cloud, chip-can barrage, bag-slam), `kid_taunts` 6, `win` 3, `lose` 3.
+7. `duchess_race` (first boat ride; Dragon Boat Duchess, ramming race on the harbor): `duchess_taunts` 6, `ram_hit` 3, `win` 3, `lose` 3.
+Same rules as GR1/GR2: original characters, no real people, brands, slogans, team names or trademarked names; Baltimore flavour used sparingly. Self-check: line counts per key, max line length (and max HUD callout length), JSON parse OK, and a grep showing 0 hits for "Natty", "Boh", "Utz", "Orioles", "Ravens", "Formstone" in the new file. Edit nothing outside content/ and relay/GROK_TO_HARK.md.
