@@ -1,0 +1,397 @@
+[
+ {
+  "out": "previews/pool_shark_day.png",
+  "q": "show=pool_shark&cam=three&t=1.1&ui=0",
+  "errors": [],
+  "report": {
+   "show": "pool_shark",
+   "rigs": {
+    "pool_shark": {
+     "parts": 40,
+     "tris": 8934,
+     "hullTris": 8786,
+     "mats": 2,
+     "height": 2.639,
+     "minY": -0.097
+    }
+   },
+   "frame": {
+    "calls": 97,
+    "triangles": 26044
+   }
+  }
+ },
+ {
+  "out": "previews/pool_shark_night.png",
+  "q": "show=pool_shark&cam=three&t=1.1&night=1&ui=0",
+  "errors": [],
+  "report": {
+   "show": "pool_shark",
+   "rigs": {
+    "pool_shark": {
+     "parts": 40,
+     "tris": 8934,
+     "hullTris": 8786,
+     "mats": 2,
+     "height": 2.639,
+     "minY": -0.097
+    }
+   },
+   "frame": {
+    "calls": 97,
+    "triangles": 26044
+   }
+  }
+ },
+ {
+  "out": "previews/pool_shark_phone_390x844.png",
+  "q": "show=pool_shark&cam=phone&t=1.1&ui=0",
+  "errors": [],
+  "report": {
+   "show": "pool_shark",
+   "rigs": {
+    "pool_shark": {
+     "parts": 40,
+     "tris": 8934,
+     "hullTris": 8786,
+     "mats": 2,
+     "height": 2.639,
+     "minY": -0.097
+    }
+   },
+   "frame": {
+    "calls": 248,
+    "triangles": 62860
+   }
+  }
+ },
+ {
+  "out": "previews/pool_shark_phone_390x844_night.png",
+  "q": "show=pool_shark&cam=phone&t=1.1&night=1&ui=0",
+  "errors": [],
+  "report": {
+   "show": "pool_shark",
+   "rigs": {
+    "pool_shark": {
+     "parts": 40,
+     "tris": 8934,
+     "hullTris": 8786,
+     "mats": 2,
+     "height": 2.639,
+     "minY": -0.097
+    }
+   },
+   "frame": {
+    "calls": 248,
+    "triangles": 62860
+   }
+  }
+ },
+ {
+  "out": "previews/pool_shark_phone_390x844_merged.png",
+  "q": "show=pool_shark&cam=phone&t=1.1&merge=1&ui=0",
+  "errors": [],
+  "report": {
+   "show": "pool_shark",
+   "rigs": {
+    "pool_shark": {
+     "parts": 2,
+     "tris": 8934,
+     "hullTris": 8786,
+     "mats": 2,
+     "height": 2.635,
+     "minY": -0.097
+    }
+   },
+   "frame": {
+    "calls": 157,
+    "triangles": 63472
+   }
+  }
+ },
+ {
+  "out": "previews/pool_shark_phone_390x844_night_merged.png",
+  "q": "show=pool_shark&cam=phone&t=1.1&night=1&merge=1&ui=0",
+  "errors": [],
+  "report": {
+   "show": "pool_shark",
+   "rigs": {
+    "pool_shark": {
+     "parts": 2,
+     "tris": 8934,
+     "hullTris": 8786,
+     "mats": 2,
+     "height": 2.635,
+     "minY": -0.097
+    }
+   },
+   "frame": {
+    "calls": 157,
+    "triangles": 63472
+   }
+  }
+ },
+ {
+  "out": "previews/pool_shark_merged_day.png",
+  "q": "show=pool_shark&cam=three&t=1.1&merge=1&ui=0",
+  "errors": [],
+  "report": {
+   "show": "pool_shark",
+   "rigs": {
+    "pool_shark": {
+     "parts": 2,
+     "tris": 8934,
+     "hullTris": 8786,
+     "mats": 2,
+     "height": 2.635,
+     "minY": -0.097
+    }
+   },
+   "frame": {
+    "calls": 6,
+    "triangles": 26656
+   }
+  }
+ },
+ {
+  "out": "previews/pool_shark_merged_night.png",
+  "q": "show=pool_shark&cam=three&t=1.1&night=1&merge=1&ui=0",
+  "errors": [],
+  "report": {
+   "show": "pool_shark",
+   "rigs": {
+    "pool_shark": {
+     "parts": 2,
+     "tris": 8934,
+     "hullTris": 8786,
+     "mats": 2,
+     "height": 2.635,
+     "minY": -0.097
+    }
+   },
+   "frame": {
+    "calls": 6,
+    "triangles": 26656
+   }
+  }
+ },
+ {
+  "out": "previews/pool_shark_merged_flash.png",
+  "q": "show=pool_shark&cam=three&t=1.1&merge=1&flash=0.85&ui=0",
+  "errors": [],
+  "report": {
+   "show": "pool_shark",
+   "rigs": {
+    "pool_shark": {
+     "parts": 2,
+     "tris": 8934,
+     "hullTris": 8786,
+     "mats": 2,
+     "height": 2.635,
+     "minY": -0.097
+    }
+   },
+   "frame": {
+    "calls": 6,
+    "triangles": 26656
+   }
+  }
+ },
+ {
+  "out": "previews/pool_shark_flash_unmerged.png",
+  "q": "show=pool_shark&cam=three&t=1.1&flash=0.85&ui=0",
+  "errors": [],
+  "report": {
+   "show": "pool_shark",
+   "rigs": {
+    "pool_shark": {
+     "parts": 40,
+     "tris": 8934,
+     "hullTris": 8786,
+     "mats": 2,
+     "height": 2.639,
+     "minY": -0.097
+    }
+   },
+   "frame": {
+    "calls": 97,
+    "triangles": 26044
+   }
+  }
+ },
+ {
+  "out": "previews/pool_shark_turn.png",
+  "q": "show=pool_shark&turn=1&t=1.1&ui=0",
+  "errors": [],
+  "report": {
+   "show": "pool_shark",
+   "rigs": {
+    "pool_shark": {
+     "parts": 40,
+     "tris": 8934,
+     "hullTris": 8786,
+     "mats": 2,
+     "height": 2.639,
+     "minY": -0.097
+    }
+   },
+   "frame": {
+    "calls": 384,
+    "triangles": 104106
+   }
+  }
+ },
+ {
+  "out": "previews/pool_shark_poses.png",
+  "q": "show=pool_shark&pose=all&t=1.1&ui=0",
+  "errors": [],
+  "report": {
+   "show": "pool_shark",
+   "rigs": {
+    "pool_shark": {
+     "parts": 40,
+     "tris": 8934,
+     "hullTris": 8786,
+     "mats": 2,
+     "height": 2.639,
+     "minY": -0.097
+    }
+   },
+   "frame": {
+    "calls": 669,
+    "triangles": 181428
+   }
+  }
+ },
+ {
+  "out": "previews/pool_shark_poses_night_merged.png",
+  "q": "show=pool_shark&pose=all&t=1.1&night=1&merge=1&ui=0",
+  "errors": [],
+  "report": {
+   "show": "pool_shark",
+   "rigs": {
+    "pool_shark": {
+     "parts": 2,
+     "tris": 8934,
+     "hullTris": 8786,
+     "mats": 2,
+     "height": 2.635,
+     "minY": -0.097
+    }
+   },
+   "frame": {
+    "calls": 36,
+    "triangles": 186580
+   }
+  }
+ },
+ {
+  "out": "previews/pool_shark_angry.png",
+  "q": "show=pool_shark&pose=all&t=1.1&angry=1&ui=0",
+  "errors": [],
+  "report": {
+   "show": "pool_shark",
+   "rigs": {
+    "pool_shark": {
+     "parts": 40,
+     "tris": 8934,
+     "hullTris": 8786,
+     "mats": 2,
+     "height": 2.639,
+     "minY": -0.097
+    }
+   },
+   "frame": {
+    "calls": 669,
+    "triangles": 181428
+   }
+  }
+ },
+ {
+  "out": "previews/pool_shark_atk1_strip.png",
+  "q": "show=pool_shark&strip=atk1&n=8&ui=0",
+  "errors": [],
+  "report": {
+   "show": "pool_shark",
+   "rigs": {},
+   "frame": {
+    "calls": 769,
+    "triangles": 208338
+   }
+  }
+ },
+ {
+  "out": "previews/pool_shark_atk2_strip.png",
+  "q": "show=pool_shark&strip=atk2&n=8&ui=0",
+  "errors": [],
+  "report": {
+   "show": "pool_shark",
+   "rigs": {},
+   "frame": {
+    "calls": 769,
+    "triangles": 208338
+   }
+  }
+ },
+ {
+  "out": "previews/pool_shark_atk3_strip.png",
+  "q": "show=pool_shark&strip=atk3&n=8&ui=0",
+  "errors": [],
+  "report": {
+   "show": "pool_shark",
+   "rigs": {},
+   "frame": {
+    "calls": 769,
+    "triangles": 208338
+   }
+  }
+ },
+ {
+  "out": "previews/pool_shark_knockdown_strip.png",
+  "q": "show=pool_shark&strip=knockdown&n=9&ui=0",
+  "errors": [],
+  "report": {
+   "show": "pool_shark",
+   "rigs": {},
+   "frame": {
+    "calls": 864,
+    "triangles": 234316
+   }
+  }
+ },
+ {
+  "out": "previews/pool_shark_knockdown_strip_merged.png",
+  "q": "show=pool_shark&strip=knockdown&n=9&merge=1&ui=0",
+  "errors": [],
+  "report": {
+   "show": "pool_shark",
+   "rigs": {},
+   "frame": {
+    "calls": 46,
+    "triangles": 239888
+   }
+  }
+ },
+ {
+  "out": "previews/pool_shark_sheet.png",
+  "q": "show=pool_shark&sheet=1&t=1.1",
+  "errors": [],
+  "report": {
+   "show": "pool_shark",
+   "rigs": {
+    "pool_shark": {
+     "parts": 40,
+     "tris": 8934,
+     "hullTris": 8786,
+     "mats": 2,
+     "height": 2.639,
+     "minY": -0.097
+    }
+   },
+   "frame": {
+    "calls": 679,
+    "triangles": 182574
+   }
+  }
+ }
+]
