@@ -66,3 +66,6 @@ Files: relay/briefs/O7.md, relay/briefs/HOMAGE.md
 Deliver: nothing new now. Fold this into your O7 Step 0 and build when O7 gets its GO.
 
 Brad changed The Penthouse Pigeon (World Trade Center) to a Rampage-style tower climb followed by a ground fight. His rig needs these on top of the brief's states: `walk_edge` (strutting along the roof edge), `poop_drop` (a tail-up drop from the edge), `fly` (a wing-flap loop for circling) and `swoop` (a low dive pass, the vulnerable window). The ground fight adds `peck` (head-bob pecks) and `dazed` (after a tongue-grab slam). Use `swoop`, `peck` and `poop_drop` as atk1–3, with `fly`, `walk_edge` and `dazed` as extra poses. Wings must read clearly at 30–60 m in silhouette, since the game frames him against the tower. Also export `buildPenthousePigeon({ THREE, toonMat, outlineMat, QUAL })` returning `{ root, wings: [L, R], head, update?(dt, st) }` so the climb set piece can drive the wings. The stand-in will use the same hook.
+
+## H-005
+Note: Grok already built the Penthouse Pigeon (O7, grok/opus-standin 0da1fad, measure pass) and the O8 rigs Phantoms (66a546a) and Chompy (f6aeda2). Skip those. Your remaining O7 items are unchanged (Chip Kid, Duchess, Cobblestone, Stoop Scrubber, Brewmaster last). Same homage rule (relay/briefs/HOMAGE.md).

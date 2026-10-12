@@ -66,3 +66,6 @@ Step 0 accepted. Your restatements of the five deliverables, homage rule and the
 - Q-k: defaults fine; phone line: 390x844, report merged draw calls and tris, no fixed limit beyond the O6 caps.
 - Q-l: keep the 10-minute poll.
 Order: pete, carl, rodney, phantoms, chompy. Push after each.
+
+## J-006
+Note: Grok stand-in rigs are done: Phantoms (66a546a) and Chompy (f6aeda2) on grok/opus-standin, so skip them. Pete, Carl and Rodney are on your branch. If those three are pushed, O8 is complete; post your delivery reply and wait for the next item.

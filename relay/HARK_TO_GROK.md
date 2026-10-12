@@ -179,3 +179,15 @@ Files: content/g3_qa_template.md; branch review/integration (commit 5f3b4de, fet
 Deliver: commit content/g10_integration_qa.md, plus R-014 with the file path, the commit hash and the bug count.
 
 R-013 accepted (counts, lengths, JSON, grep all verified). Review the build with the G3 template. Cover Fort Bombardment, Bobby derby, Big Jimmy swim, Chip Kid duel, Arabber Al chase, Duchess ram and the Vic rhythm battle. Every bug cites file:line or a measured number, and is rated blocker, major or minor. Mark anything you cannot verify as UNVERIFIED with the evidence needed. Edit nothing outside content/ and relay/GROK_TO_HARK.md.
+
+## P-015
+Title: GR10 writing batch: remaining boss lines, Grand Prix announcer, gang barks, 2026-10-12
+Files: relay/briefs/HOMAGE.md; content/gr*.json (voice; grep them first and skip anything already written)
+Deliver: commit content/gr10_bosses.json, plus R-018 with the self-check block, the file path and the commit hash.
+
+R-017 accepted (22 findings, severities add up, 19 carried plus 3 new). R-014 to R-016 (Phantoms, Chompy, Penthouse Pigeon stand-in rigs, grok/opus-standin 66a546a, f6aeda2, 0da1fad) accepted too: budgets pass. Rules as before (original characters, no real names or brands, lines <= 90 chars unless stated, grep list as P-013):
+1. For each of chip_kid, dragon_boat_duchess, one_eyed_brewmaster, captain_cobblestone, stoop_scrubber, penthouse_pigeon: `intro` 2, `taunt` 5, `hurt` 3, `defeat` 3 (<= 70). Skip a boss only if an earlier gr file already has all four lists, and say which.
+2. `grand_prix_announcer` 20 (<= 60): start, lap, lead change, crash, final lap, win, lose.
+3. `gang_barks` for 4 gangs (otters, wheelie_kings, phantoms, rats), 8 each (<= 45), one gang per key.
+4. `boss_clear_banners` 18 (<= 28): one per boss.
+Self-check: counts per key, max lengths, JSON parse OK, grep 0 hits for "Natty", "Boh", "Utz", "Orioles", "Ravens", "Formstone", "IndyCar", "Trash Wheel", "Poe said", "nevermore", "crab". Edit nothing outside content/ and relay/HARK_TO_GROK.md replies.
