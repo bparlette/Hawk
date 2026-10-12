@@ -1,0 +1,141 @@
+{
+  "_round": "GR11 (P-017) finale, ending, crime-meter win, thanks",
+  "brewmaster_finale": {
+    "part1_rooftop": {
+      "intro": [
+        "Welcome to my rooftop, toads. Last stop before closing time.",
+        "My sign lights the whole harbor. Tonight, you two are the toast."
+      ],
+      "taunt": [
+        "Stack 'em high, watch 'em fall. Like your little crusade.",
+        "Foam's up! Hope you two brought towels.",
+        "Spin cycle, sugarplums! Mind the mustache.",
+        "One eye's all I need to see you're beat."
+      ],
+      "hurt": [
+        "Ow! That's a vintage mustache!",
+        "My monocle! Do you know what squinting costs?",
+        "Lucky shot, hoptoad. Pour another."
+      ],
+      "phase_end": [
+        "Half-empty? Never! Fill her up in the truck!",
+        "Last call's on wheels, toads. Catch me if you can!"
+      ]
+    },
+    "part2_truck": {
+      "intro": [
+        "Keys in, foam out! The whole harbor's my bar tab!",
+        "Ten tons of kegs and no brakes. Try and keep up."
+      ],
+      "taunt": [
+        "Kegs away! Bowling night, harbor style!",
+        "Slick road ahead. Foam's my favorite pothole.",
+        "You drive like a Sunday ride-out, hon.",
+        "Three bumps won't stop a full delivery!"
+      ],
+      "hurt": [
+        "My paint job! That was fresh off the line!",
+        "Hey! The deliveries are FRAGILE!",
+        "Quit ramming my bumper, you warty menace!"
+      ],
+      "phase_end": [
+        "The truck's busted, but this brewmaster ain't!",
+        "Crawling out mad now. Somebody hand me a sign."
+      ]
+    },
+    "part3_street": {
+      "intro": [
+        "No roof, no truck, no rules. Just me and a busted sign.",
+        "You wrecked my tower and my ride. Now I wreck you."
+      ],
+      "taunt": [
+        "Broken sign, sharp edges. Dirty fighting is my brew.",
+        "I've got one eye and twice your nerve.",
+        "Hold still, I'll put you on a coaster.",
+        "This city ran on my tap. It'll run again!"
+      ],
+      "hurt": [
+        "Ugh, my handlebars are sagging!",
+        "That cane's harder than it looks, gramps!",
+        "Okay, okay, the curl's coming loose!"
+      ],
+      "phase_end": [
+        "Last round of the night. Make it count.",
+        "My knees are foam. Not done yet!"
+      ]
+    },
+    "defeat": [
+      "Fine! The tap is closed. Tell the harbor I'm cut off.",
+      "Splash! Ugh, the harbor's colder than my kegs.",
+      "You two... drink water. Stay out of trouble. Hic.",
+      "The one-eyed era is over. The stoops are yours, toads."
+    ]
+  },
+  "ending_cutscene": [
+    "The last splash fades. The harbor goes quiet for the first time in years.",
+    "Harold leans on his cane. Mavis checks her purse. Still there.",
+    "A gray light creeps over the water. Night is finally giving up.",
+    "Up and down the rowhouse block, a window light clicks on.",
+    "Then another. Neighbors step out onto the marble stoops in slippers.",
+    "Somebody bangs a pot. Then everybody bangs a pot.",
+    "The water taxis blow their horns from every pier at once.",
+    "One by one, the landmarks light up along the shore.",
+    "The sun climbs over the skyline and paints every toad gold.",
+    "Mavis grabs Harold's arm. \"Don't get mushy, hon. Get dancing.\"",
+    "The crime meter reads zero. The city reads home.",
+    "Harold and Mavis watch the sunrise. Tomorrow, the stoops need scrubbing."
+  ],
+  "crime_meter_clear": {
+    "inner_harbor": {
+      "clear_message": [
+        "Inner Harbor is clear. Promenade's open all night now.",
+        "No thugs on the water. The paddle boats are back."
+      ]
+    },
+    "fells_point": {
+      "clear_message": [
+        "Fells Point is quiet. Even the ghosts went to bed.",
+        "Cobbles swept, pubs safe. Fells Point thanks you, hon."
+      ]
+    },
+    "federal_hill": {
+      "clear_message": [
+        "Federal Hill is clear. Best view in town, crime-free.",
+        "Nobody's getting tossed off this hill anymore."
+      ]
+    },
+    "south_shore": {
+      "clear_message": [
+        "South Shore is safe. The Otters are just playing ball.",
+        "Key Highway's clear. Ride out, the road is yours."
+      ]
+    },
+    "downtown_west": {
+      "clear_message": [
+        "Downtown West is clear. The market stalls stay open late.",
+        "No more cellar crooks. The basement lanes are bowling only."
+      ]
+    },
+    "mount_vernon": {
+      "clear_message": [
+        "Mount Vernon is clear. The monument shines tonight.",
+        "Marble steps, no mobs. Pull up a stoop and sit."
+      ]
+    },
+    "all_clear_banner": [
+      "CITY CLEAN!",
+      "CRIME METER: ZERO",
+      "THE STOOPS ARE SAFE"
+    ]
+  },
+  "credits_thanks": [
+    "Thanks for walking the harbor with us.",
+    "To every neighbor who ever scrubbed a stoop.",
+    "Thanks to the toads who never gave up.",
+    "For the night radio DJs keeping the city up.",
+    "To Mavis's purse: undefeated, unbothered.",
+    "Thanks for playing. Go call your grandparents.",
+    "For every block that bangs a pot at dawn.",
+    "See you on the promenade, hon."
+  ]
+}
