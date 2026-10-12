@@ -1,0 +1,175 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover" />
+<meta name="apple-mobile-web-app-capable" content="yes" />
+<meta name="mobile-web-app-capable" content="yes" />
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+<meta name="apple-mobile-web-app-title" content="SS Free City 16" />
+<meta name="theme-color" content="#000000" />
+<link rel="manifest" href="manifest.webmanifest" />
+<link rel="apple-touch-icon" href="icon180.png" />
+
+<title>SHELL SHOCK 3D - F: FREE CITY 16-BIT</title>
+<style>
+  html, body { margin: 0; height: 100%; background: #07070a; overflow: hidden; overscroll-behavior: none; touch-action: none; user-select: none; -webkit-user-select: none; -webkit-touch-callout: none; -webkit-tap-highlight-color: transparent; }
+  body { position: relative; }
+  #cab {
+    --S: 1px;
+    position: absolute; z-index: 1; left: 0; top: 0;
+    width: calc(704 * var(--S)); height: calc(1520 * var(--S));
+    background: url(cabinet_special.webp) 0 0 / 100% 100% no-repeat;
+    touch-action: none; user-select: none; -webkit-user-select: none; -webkit-touch-callout: none;
+  }
+  .x-stick { position: absolute; left: 26.99%; top: 57.50%; width: 8.24%; height: 5.39%; transform-origin: 50% 95.1%; transition: transform 70ms ease-out; pointer-events: none; z-index: 3; }
+  .x-cap, .x-ring { position: absolute; pointer-events: none; border-radius: 50%; }
+  .x-cap {
+    z-index: 2; opacity: 0;
+    background: url(cabinet_special.webp) no-repeat;
+    background-size: calc(704 * var(--S)) calc(1520 * var(--S));
+    background-position: calc(var(--x) * -1 * var(--S)) calc(var(--y) * -1 * var(--S));
+    transition: transform 50ms linear, filter 50ms linear;
+  }
+  .x-cap.on { opacity: 1; transform: translateY(calc(3 * var(--S))); filter: brightness(.72); box-shadow: inset 0 calc(2 * var(--S)) calc(5 * var(--S)) rgba(0,0,0,.65), inset 0 0 calc(3 * var(--S)) rgba(0,0,0,.4); }
+  .x-ring { z-index: 1; opacity: 0; background: radial-gradient(circle, #0b0b0e 55%, #050507 72%, rgba(0,0,0,.6) 100%); }
+  .x-ring.on { opacity: 1; }
+  #screen { position: absolute; left: 23.72%; top: 34.41%; width: 53.41%; height: 17.83%; overflow: hidden; background: #000; }
+  #screen canvas { position: absolute; left: 0; top: 0; display: block; image-rendering: pixelated; image-rendering: crisp-edges; touch-action: none; background: #000; }
+  #screen { --row: 1px; }
+  #screen canvas#game { z-index: 0; }
+  #screen canvas#bloom { z-index: 1; pointer-events: none; image-rendering: auto; background: transparent; filter: blur(2px); opacity: .35; mix-blend-mode: screen; display: none; }
+  #screen.crt canvas#bloom { display: block; }
+  #screen::after {
+    content: ""; position: absolute; inset: 0; pointer-events: none; z-index: 2;
+    background: radial-gradient(120% 90% at 30% 18%, rgba(255,255,255,.08), transparent 55%);
+    box-shadow: inset 0 0 4px 1px rgba(0,0,0,.9);
+  }
+  #screen.crt::after {
+    background:
+      radial-gradient(120% 90% at 30% 18%, rgba(255,255,255,.10), rgba(255,255,255,.03) 35%, transparent 60%),
+      radial-gradient(ellipse at center, transparent 55%, rgba(0,0,0,.25) 100%),
+      repeating-linear-gradient(to bottom, transparent 0 var(--row), rgba(0,0,0,.09) var(--row) calc(var(--row) * 2)),
+      repeating-linear-gradient(to right, rgba(255,40,40,.05) 0 1px, rgba(40,255,80,.05) 1px 2px, rgba(60,90,255,.05) 2px 3px);
+    box-shadow: inset 0 0 28px 8px rgba(0,0,0,.35), inset 0 0 10px 2px rgba(0,0,0,.3), inset 0 0 4px 1px rgba(0,0,0,.6);
+    border-radius: 6% / 9%;
+  }
+  .x-fx { position: absolute; pointer-events: none; transform: translate(-50%, -50%); border-radius: 50%; aspect-ratio: 1; opacity: 0; transition: opacity 60ms linear; }
+  .x-btn { width: 9%; }
+  .x-btn.on { opacity: 1; box-shadow: 0 0 0 1px var(--c), 0 0 7px 2px var(--c), inset 0 0 5px 1px var(--c); }
+
+  #fsbtn { position: fixed; z-index: 50; top: calc(env(safe-area-inset-top, 0px) + 10px); right: calc(env(safe-area-inset-right, 0px) + 10px);
+    width: 44px; height: 44px; border-radius: 12px; border: 1px solid rgba(255,255,255,.28); background: rgba(10,10,14,.55);
+    -webkit-backdrop-filter: blur(6px); backdrop-filter: blur(6px); display: flex; align-items: center; justify-content: center;
+    padding: 0; cursor: pointer; touch-action: manipulation; opacity: .8; }
+  #fsbtn:active { transform: scale(.92); }
+  #fsbtn svg { width: 22px; height: 22px; fill: none; stroke: #fff; stroke-width: 2.4; stroke-linecap: round; stroke-linejoin: round; }
+  #fsbtn .ic-out { display: none; }
+  html.fill #fsbtn .ic-in { display: none; }
+  html.fill #fsbtn .ic-out { display: block; }
+  #fsbtn { display: none !important; } /* user 2026-10-08: no expand button */
+  #trailerbtn { position: fixed; z-index: 50; left: 50%; transform: translateX(-50%);
+    bottom: calc(env(safe-area-inset-bottom, 0px) + 14px);
+    display: none; align-items: center; gap: 8px; padding: 10px 18px; border-radius: 999px;
+    border: 2px solid #ffd23c; background: rgba(10,10,14,.72); color: #ffd23c; text-decoration: none;
+    font: 800 14px/1 system-ui, -apple-system, sans-serif; letter-spacing: 2px;
+    -webkit-backdrop-filter: blur(6px); backdrop-filter: blur(6px); touch-action: manipulation; }
+  #trailerbtn:active { transform: translateX(-50%) scale(.94); }
+  html.on-title #trailerbtn { display: inline-flex; }
+  html.fill, html.fill body { height: 100dvh; }
+  html.fill body { background: #000; }
+  html.fill #screen::after { border-radius: 0; }
+  #screen canvas#gl { z-index: 0; image-rendering: pixelated; image-rendering: crisp-edges; }
+  #screen canvas#game { z-index: 1; background: transparent; }
+  #screen canvas#bloom { display: none !important; }
+  html, body { max-width: 100vw; overflow-x: hidden; }
+  #proto { position: fixed; z-index: 60; left: calc(env(safe-area-inset-left, 0px) + 4px); top: calc(env(safe-area-inset-top, 0px) + 4px); display: flex; flex-direction: column; gap: 3px; align-items: stretch; width: 126px; box-sizing: border-box;
+    padding: 4px; border-radius: 8px; background: rgba(8,8,14,.8); border: 1px solid rgba(255,210,60,.55); font: 700 10px/1 system-ui, -apple-system, sans-serif; color: #ffd23c; white-space: nowrap; letter-spacing: .5px; }
+  #proto b { padding: 1px 2px 2px; text-align: center; font-size: 9px; }
+  #proto a { color: #c8ccd6; text-decoration: none; padding: 3px 4px; border-radius: 6px; text-align: center; border: 1px solid rgba(255,255,255,.22); touch-action: manipulation; }
+  #proto a.on { color: #000; background: #ffd23c; border-color: #ffd23c; }
+</style>
+</head>
+<body>
+<button id="fsbtn" aria-label="Full screen" type="button"><svg class="ic-in" viewBox="0 0 24 24"><path d="M4 9V4h5M15 4h5v5M20 15v5h-5M9 20H4v-5"/></svg><svg class="ic-out" viewBox="0 0 24 24"><path d="M9 4v5H4M20 9h-5V4M15 20v-5h5M4 15h5v5"/></svg></button>
+<div id="proto"><b>F &middot; Free City 16-bit</b><a href="https://shellshock-free-city.surge.sh/" title="Free City">A FREE</a><a href="https://shellshock-paper-city.surge.sh/" title="Paper City">B PAPER</a><a href="https://shellshock-gta-city.surge.sh/" title="GTA City">C GTA</a><a href="https://shellshock-skyline-city.surge.sh/" title="Skyline City">D SKYLINE</a><a href="https://shellshock-gta32-city.surge.sh/" title="GTA City 32-bit">E GTA 32</a><a href="https://shellshock-free16-city.surge.sh/" title="Free City 16-bit" class=on>F FREE 16</a></div>
+<div id="cab">
+  <div id="screen" class="crt"><canvas id="gl" width="384" height="224"></canvas><canvas id="game" width="384" height="224"></canvas><canvas id="bloom" width="384" height="224"></canvas></div>
+  <div class="x-fx x-btn" id="fx-a" style="left:59.2%;top:62.8%;--c:rgba(255,60,50,.48)"></div>
+  <div class="x-fx x-btn" id="fx-b" style="left:70%;top:62.5%;--c:rgba(255,215,40,.48)"></div>
+  <div class="x-fx x-btn" id="fx-p" style="left:81.1%;top:62.8%;--c:rgba(60,140,255,.48)"></div>
+  <div class="x-ring" id="ring-a" style="left:55.966%;top:61.974%;width:6.676%;height:1.842%"></div>
+  <div class="x-ring" id="ring-b" style="left:66.619%;top:61.579%;width:6.818%;height:1.842%"></div>
+  <div class="x-ring" id="ring-p" style="left:77.841%;top:61.842%;width:6.676%;height:1.842%"></div>
+  <div class="x-cap" id="cap-a" style="left:55.966%;top:61.974%;width:6.676%;height:1.842%;--x:394;--y:942"></div>
+  <div class="x-cap" id="cap-b" style="left:66.619%;top:61.579%;width:6.818%;height:1.842%;--x:469;--y:936"></div>
+  <div class="x-cap" id="cap-p" style="left:77.841%;top:61.842%;width:6.676%;height:1.842%;--x:548;--y:940"></div>
+  <img class="x-stick" id="stick" src="stick.webp" alt="" draggable="false" />
+</div>
+<div hidden aria-hidden="true">
+  <img id="atlas-lenny" src="atlas_lenny.webp" alt="" />
+  <img id="atlas-rafe" src="atlas_rafe.webp" alt="" />
+  <img id="atlas-miko" src="atlas_miko.webp" alt="" />
+  <img id="atlas-donny" src="atlas_donny.webp" alt="" />
+</div>
+<script type="module" src="game.js"></script>
+<script>
+  // ---------- Full-screen toggle (top right) ----------
+  (function () {
+    const btn = document.getElementById("fsbtn"), root = document.documentElement;
+    const fsEl = () => document.fullscreenElement || document.webkitFullscreenElement;
+    const refit = () => { dispatchEvent(new Event("resize")); setTimeout(() => dispatchEvent(new Event("resize")), 300); };
+    function setFill(on) {
+      root.classList.toggle("fill", on);
+      btn.setAttribute("aria-label", on ? "Exit full screen" : "Full screen");
+      if (on) scrollTo(0, 1);
+      refit();
+    }
+    function toggle() {
+      const on = !root.classList.contains("fill");
+      try {
+        if (on) {
+          const r = root.requestFullscreen || root.webkitRequestFullscreen;
+          if (r) { const p = r.call(root, { navigationUI: "hide" }); if (p && p.catch) p.catch(() => {}); }
+          if (screen.orientation && screen.orientation.lock) screen.orientation.lock("any").catch(() => {});
+        } else if (fsEl()) {
+          const x = document.exitFullscreen || document.webkitExitFullscreen;
+          if (x) { const p = x.call(document); if (p && p.catch) p.catch(() => {}); }
+        }
+      } catch (e) {}
+      setFill(on);
+    }
+    btn.addEventListener("pointerdown", (e) => e.stopPropagation());
+    btn.addEventListener("pointerup", (e) => { e.preventDefault(); e.stopPropagation(); toggle(); });
+    btn.addEventListener("keydown", (e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); toggle(); } });
+    ["fullscreenchange", "webkitfullscreenchange"].forEach((t) => document.addEventListener(t, () => { if (!fsEl() && root.classList.contains("fill") && root.dataset.fsReal) setFill(false); root.dataset.fsReal = fsEl() ? "1" : ""; if (fsEl()) onOrient(); refit(); }));
+    if (navigator.standalone || matchMedia("(display-mode: standalone), (display-mode: fullscreen)").matches) setFill(true);
+    // Turning the phone sideways locks the game into full screen; turning it back upright restores the cabinet
+    // (unless the player turned full screen on themselves with the button).
+    const land = matchMedia("(orientation: landscape) and (pointer: coarse)");
+    let auto = false;
+    function onOrient() {
+      const on = root.classList.contains("fill");
+      if (land.matches && !on) { auto = true; setFill(true); }
+      else if (!land.matches && on && auto) { auto = false; setFill(false); }
+    }
+    btn.addEventListener("pointerup", () => { auto = false; }, true);
+    if (land.addEventListener) land.addEventListener("change", onOrient); else land.addListener(onOrient);
+    // Android/Chrome: in landscape without real full screen, the next tap goes truly full screen and locks landscape.
+    // Listens in the capture phase, never cancels or stops the event, so gameplay input is untouched. No-op on iPhone.
+    function tapFull(e) {
+      try {
+        if (!land.matches || fsEl() || (e.target && e.target.closest && e.target.closest("#fsbtn"))) return;
+        const r = root.requestFullscreen || root.webkitRequestFullscreen; if (!r) return;
+        const done = () => { try { if (screen.orientation && screen.orientation.lock) screen.orientation.lock("landscape").catch(() => {}); } catch (_) {} };
+        const pr = r.call(root, { navigationUI: "hide" });
+        if (pr && pr.then) pr.then(done, () => {}); else done();
+      } catch (_) {}
+    }
+    ["pointerup", "touchend"].forEach((t) => document.addEventListener(t, tapFull, { capture: true, passive: true }));
+    addEventListener("orientationchange", () => setTimeout(onOrient, 50));
+    onOrient();
+  })();
+</script>
+</body>
+</html>
