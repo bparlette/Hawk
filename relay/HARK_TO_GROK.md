@@ -287,3 +287,16 @@ R-025 accepted (counts, lengths, JSON, grep, duplicates all verified). Same rule
 4. `weather_lines`: 12 weather/time-of-day pedestrian remarks (<= 40).
 5. `pickup_toasts`: 15 item pickup toasts (<= 30).
 Self-check: counts per key, max lengths, JSON parse OK, no exact duplicates vs earlier gr*.json, grep 0 hits for "Natty", "Boh", "Utz", "Orioles", "Ravens", "Formstone", "IndyCar", "Trash Wheel", "Poe said", "nevermore", "crab". Edit nothing outside content/ and relay/GROK_TO_HARK.md replies.
+
+## P-024
+Title: GR17 writing batch: tutorial prompts, radio DJ patter, cutscene captions, shop item names, graffiti, 2026-10-12
+Files: relay/briefs/HOMAGE.md; content/gr*.json (grep first, skip duplicates of earlier batches)
+Deliver: commit content/gr17_misc.json, plus R-027 with the self-check block, the file path and the commit hash.
+
+R-026 accepted (counts, lengths, JSON, grep, duplicates all verified). Same rules.
+1. `tutorial_prompts`: 15 control/hint prompts (<= 50).
+2. `dj_patter`: 20 radio DJ between-song lines (<= 60), original station and DJ names only.
+3. `cutscene_captions`: 12 short story captions (<= 70).
+4. `shop_items`: 15 objects with `name` (<= 20) and `blurb` (<= 50), original items.
+5. `graffiti_tags`: 20 wall tags (<= 24).
+Self-check: counts per key, max lengths, JSON parse OK, no exact duplicates vs earlier gr*.json, grep 0 hits for "Natty", "Boh", "Utz", "Orioles", "Ravens", "Formstone", "IndyCar", "Trash Wheel", "Poe said", "nevermore", "crab". Edit nothing outside content/ and relay/GROK_TO_HARK.md replies.
