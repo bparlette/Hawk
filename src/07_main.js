@@ -148,6 +148,7 @@ function frame(now) {
   try {
     let rdt = Math.min(0.05, (now - last) / 1000); last = now; frames++;
     FPS.n++; FPS.t += rdt; if (FPS.t > 1) { FPS.v = Math.round(FPS.n / FPS.t); FPS.n = 0; FPS.t = 0; }
+    if (DERBY.on) { DERBY.frame(rdt); return; } // Bird Brain Bobby's home run derby: its own scene + camera, the city sim is paused
     if (FMAP.F.open) { FMAP.frame(rdt); return; } // full-screen map open: the game is paused (no sim, no 3D draw; the canvas keeps its last frame)
     if (window.__cel && __cel.pause) { draw(); return; }
     if (BOT) botThink(rdt);
@@ -192,9 +193,12 @@ function frame(now) {
     updateCycle(SIM ? rdt * SIM : rdt);
     cityHud(rdt);
     BARK.tick(rdt);
+    if (DERBY.marker) DERBY.marker.tick(S.time);
     PRESS.clear();
     draw();
   } catch (err) { __celErr.n++; __celErr.last = String(err && err.stack || err); if (__celErr.n < 4) console.error(err); }
 }
+if (Q.has('derby')) { const m = Q.get('derby'); setTimeout(() => DERBY.start(m === 'perfect' || m === 'miss' ? m : undefined), 300); } // ?derby=1 jumps straight in (?derby=perfect / miss: scripted test runs)
+window.__derby = DERBY;
 requestAnimationFrame(frame);
 window.__cel = { S, hero, partner, PART, BOOST_P, hurtTurtle, reviveTurtle, partnerSlot, get KEYS() { return KEYS; }, enemies, CAM, BOTR, FPS, IN, renderer, CINE, ACTIONS, DOOR, PIZZA, LADDER, ROOF, get QTE() { return QTE; }, get lockT() { return lockT; }, press: (k) => PRESS.add(k), tryAction, get frames() { return frames; }, atlasRows: _ay + _arow, THREE, camera, scene, CYC, LOW, NIGHTFX, draw, QUAL, setHD, LANDMARKS, CITY, POWER, WATERK, startDrown, actContext, APANEL, MANHOLES, CLIMBS, VEHICLES, RIDE, isWater, groundY, WB, COLL, BLD, PIERS, POSTS, CARS, WATER };

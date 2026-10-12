@@ -119,7 +119,7 @@ const FMAP = (function () {
     g.fillStyle = '#fff'; g.font = `900 ${Math.round(9 * dpr)}px system-ui, sans-serif`; g.textAlign = 'center'; g.lineWidth = 3 * dpr; g.strokeStyle = '#000'; g.strokeText('HAROLD', hx, hy - 20 * dpr); g.fillText('HAROLD', hx, hy - 20 * dpr);
   }
   function open(why) {
-    if (F.open || (CINE.intro && !BOT)) return false;
+    if (F.open || (CINE.intro && !BOT) || DERBY.on) return false; // no map during a boss mini-game
     F.open = true; F.opens++; F.why = why || ''; F.t = 0; ov.classList.add('on'); KEYS.clear(); PRESS.clear(); layout(); drawLive(); return true;
   }
   function close(why) {
