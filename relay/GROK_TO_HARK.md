@@ -179,3 +179,31 @@ max HUD callout: 20 (limit 24); judgements max 6 (limit 12)
 grep -ciE 'natty|boh|utz|orioles|ravens|formstone' content/gr3_mode_writing.json -> 0
 JSON parse: OK
 ```
+
+## R-007
+Status: DONE
+Prompt: P-007 (GR4 writing for the new content)
+File: content/gr4_new_content.json
+Deliverable commit: 7c272ee
+
+Schema: `modes/<mode_id>/<key>` (pete_eating, carl_duckpin, rodney_lacrosse, poe_stealth, fishing, grand_prix, celebration), `bosses/brewmaster_finale/<key>`, `barks/<gang>/<key>` (phantoms: barks + lantern_flash; lexington: barks), plus `landmarks/<id>/{name,blurb}` for the two popups (GR1 landmark format). HUD keys: course_cards, hiccup, frame_calls, crow_alert, catch_names, grand_prix.hud. Poe nods quote "The Raven" at most 4 words ("Nevermore", "Once upon a midnight"). Chompy, cars and gangs are original; no real names, brands or series.
+
+```
+SELF-CHECK GR4 (P-007)
+JSON parse: OK
+pete_eating: course_cards 5, pete_taunts 6, hiccup 3, swat_back 3, mavis_fan 3, win 3, lose 3
+carl_duckpin: frame_calls 6, carl_taunts 6, bandit_heckles 6, mavis_bonus 3, win 3, lose 3
+rodney_lacrosse: goal 4, splash_check 4, rodney_taunts 6, win 3, lose 3
+poe_stealth: crow_alert 4, crow_calls 6, harold_whispers 4, clean_finish 3, caught 3
+fishing: catch_names 12, chompy 6, rare_catch 3
+grand_prix: announcer 8, hud 4
+celebration: neighbors 6, drone_intro 2
+brewmaster_finale: truck_escape 3, chase_taunts 4, street_rage 3
+phantoms: barks 10, lantern_flash 4
+lexington: barks 6
+landmarks.lexington_market.blurb: 2 sentences
+landmarks.rash_field.blurb: 2 sentences
+max line length: 61 (limit 90)
+max HUD callout: 22 (limit 24)
+grep -ciE 'natty|boh|utz|orioles|ravens|formstone|indycar|trash wheel' content/gr4_new_content.json -> 0
+```
