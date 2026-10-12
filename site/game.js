@@ -2114,8 +2114,8 @@ class ABChunks { // P, N and colour (3 or 4 components) per cell of `cell` metre
 //   stoops, steps) and everything else (decals, trim, lintels, small parts; receive only). The ink hulls (HD) are 64 m near cells; car glass is one city-wide mesh shown only while some car cell is near.
 // FAR CARS: one InstancedMesh of 3-box stand-ins (body in the car's paint, dark cabin, tyres), refilled with only the far, in-frustum, in-fog cars.
 // Glow (night only) stays ONE city-wide mesh.
-Object.assign(AB, { DBG: Q.get('abdbg') || '', CELL: 32, NEAR: 20, HYST: 6, MASS_MIN: 2.0, MASS_D2: 0.4, MASS_TRI: 12, DECAL_MIN: 0.5, CAST_Y: 2.6 });
-const AB_GLW = new ABChunks(false), AB_GLS = new ABChunks(true), AB_OLK = new ABChunks(false, 64); // glow + car glass: one city-wide mesh each; hulls: 64 m cells (near only)
+Object.assign(AB, { DBG: Q.get('abdbg') || '', CELL: 32, NEAR: 20, HYST: 6, MASS_MIN: 2.0, MASS_D2: 0.4, MASS_TRI: 12, DECAL_MIN: 0.5, CAST_Y: 2.6, HULL_FAR: 2.0 });
+const AB_GLW = new ABChunks(false), AB_GLS = new ABChunks(true), AB_OLK = new ABChunks(false, 64), AB_OLM = new ABChunks(false); // glow, car glass, mass hulls: one city-wide mesh each; near-part hulls: 64 m near cells
 AB.stats.t = { mass: 0, massD: 0, tiled: 0, nearS: 0, nearD: 0 };
 const AB_CELLS = new Map(); // key -> { key, x0, z0, S: MB (near solids), D: MB (near decals), meshes: [], prox: [], near }
 function abCellAt(x, z) { const ix = Math.floor(x / AB.CELL), iz = Math.floor(z / AB.CELL), key = ix + ',' + iz; let c = AB_CELLS.get(key);
@@ -2134,7 +2134,7 @@ function abCityOut() {
       g.computeBoundingBox(); const b = g.boundingBox, ds = [b.max.x - b.min.x, b.max.y - b.min.y, b.max.z - b.min.z].sort((p, q) => q - p), s = ds[0];
       if (abTrack) { abTrack.box.union(b); const n = triN(g); if (n > abTrack.n && s >= 0.9) { abTrack.n = n; abTrack.col = col; } }
       const mass = !AB.ctx && s >= AB.MASS_MIN && ds[1] >= AB.MASS_D2 && triN(g) <= AB.MASS_TRI; // slabs + walls, not sticks (pipes, rails, thin trim)
-      if (ol && AB.HULL && s >= AB.HULL_MIN) AB_OLK.add(g, '#000');
+      if (ol && AB.HULL && s >= AB.HULL_MIN) { if (mass && ds[1] >= AB.HULL_FAR) AB_OLM.add(g, '#000'); else if (AB.ctx === 'car') AB_OLK.add(g, '#000'); } // ink hull (HD): building volumes (2nd dim >= 2 m) in one city-wide mesh; car bodies in 64 m near cells; thin kit parts read fine without
       const st = AB.stats.t; if (mass) { if (AB.DBG !== 'nomass') CB.geom(g, col); st.mass += triN(g); } else { const [cx, cz] = abCtr(g), c = abCellAt(cx, cz); (s >= 0.9 && (AB.ctx === 'car' || b.max.y < AB.CURB + AB.CAST_Y) ? c.S : c.D).geom(g, col); st.nearS += triN(g); }
       // near casters: car bodies and street-level parts >= 0.9 m (stoops, steps, areaways, bins); the rest (trim, lintels, sills, brackets, small parts)
       // only receive and ride the near decal mesh (same toon + atlas shading on the white tile) to save a draw call
@@ -2223,7 +2223,8 @@ function abBuildLayers() { // after the city chunks: near cells (solids, decals,
   const t0 = performance.now();
   const g = AB_GLW.build(AB_GLOW_MAT, { order: 2 }); scene.add(g);
   AB_GLASS_MAT.forceSinglePass = true; const s = AB_GLS.build(AB_GLASS_MAT, { order: 3 }); scene.add(s); // one pass (a double-sided transparent is otherwise drawn twice)
-  const h = AB_OLK.build(OUT_CITY, { odir: true }); for (const m of h.userData.meshes) { m.visible = false; m.userData.abHull = true; } scene.add(h); // not in QUAL.outlines: abLodTick shows them (near cells, HD only)
+  const h = AB_OLK.build(OUT_CITY, { odir: true }); for (const m of h.userData.meshes) { m.visible = false; m.userData.abHull = true; } scene.add(h);
+  const hm = AB_OLM.build(OUT_CITY, { odir: true }); for (const m of hm.userData.meshes) { m.visible = QUAL.hd; QUAL.outlines.push(m); } scene.add(hm); // near-part hulls are not in QUAL.outlines: abLodTick shows them (near cells, HD only)
   const grp = new THREE.Group(); scene.add(grp); let nearTris = 0;
   for (const c of AB_CELLS.values()) { // near solids >= 0.9 m cast (stoop steps, car bodies, lamp shafts), smaller ones only receive; only near cells in the 48 m sun box reach the shadow pass
     if (c.S.P.length) { const m = c.S.build(CITY_MAT); m.castShadow = m.receiveShadow = true; c.meshes.push(m); }
