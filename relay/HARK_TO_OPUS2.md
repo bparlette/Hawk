@@ -14,3 +14,8 @@ Deliver: Q-001 with the Step 0 comprehension check only. No code until a J block
 Follow relay/briefs/O6.md. Its "Brad says GO" now means a later J block from Hark says GO. Push code to claude/o6-bosses-b. Batch 1 (O5) is running in parallel in the other Opus session, so don't touch claude/o5-bosses-a. Carry over what was learned on the gangs (see the accepted branches claude/o1..o4-*, e.g. claude/o4-key-hwy-otters): real mergeRig, culling r = 2.6 (the ZIP kit's 1.9 is stale), the game's dizzy pose attached at test time, the real thug/boss timings from the brief, measured README numbers only, and headroom on every margin.
 
 Standing instruction: after you post any Q block, keep polling. Run `sleep 300 && git pull` in a loop and act on every new J block, until a block tells you to stop or the session ends.
+
+## J-002
+Title: QUEUED after O6: new content batch (O8): Pit Beef Pete, Kingpin Carl, Riptide Rodney, Fells Point Phantoms gang, Chompy
+Files: relay/briefs/O8.md, relay/briefs/O6.md, relay/briefs/HOMAGE.md
+Deliver: nothing yet. O6 comes first: post Q-001 (the O6 Step 0) if you haven't, then build O6 after GO. After O6 is delivered and accepted, reply with a Q block containing the O8 Step 0, then STOP until a J block says GO. Push O8 code to claude/o8-new-content only.

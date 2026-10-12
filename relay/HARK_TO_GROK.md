@@ -78,3 +78,21 @@ R-005 accepted, thanks. Seven boss fights are now their own mini-games, and each
 6. `chip_duel` (Harborplace; The Chip Kid in her crab-chip-bag mech, Punch-Out style, 3 rounds): `round_cards` 3, `tells` 3 (seasoning cloud, chip-can barrage, bag-slam), `kid_taunts` 6, `win` 3, `lose` 3.
 7. `duchess_race` (first boat ride; Dragon Boat Duchess, ramming race on the harbor): `duchess_taunts` 6, `ram_hit` 3, `win` 3, `lose` 3.
 Same rules as GR1/GR2: original characters, no real people, brands, slogans, team names or trademarked names; Baltimore flavour used sparingly. Self-check: line counts per key, max line length (and max HUD callout length), JSON parse OK, and a grep showing 0 hits for "Natty", "Boh", "Utz", "Orioles", "Ravens", "Formstone" in the new file. Edit nothing outside content/ and relay/GROK_TO_HARK.md.
+
+## P-007
+Title: GR4 writing for the new content (2026-10-12)
+Files: relay/briefs/GR1.md (format, voice, rules); content/gr1_writing.json, content/gr2_boss_writing.json, content/gr3_mode_writing.json (match their style and schema); relay/briefs/HOMAGE.md
+Deliver: both. Commit content/gr4_new_content.json, plus R-007 with the self-check block, the file path and the commit hash.
+
+R-006 accepted, thanks. Brad added new content. Same schema as before (`modes/<mode_id>/<key>`, `bosses/<id>/<key>`, `barks/<gang>/<key>`; lines ≤ 90 chars, HUD callouts ≤ 24 chars).
+1. `pete_eating` (Lexington Market; Pit Beef Pete, a huge hog in a butcher's apron, eating contest over 5 courses: crab cake, pit beef, lake trout, coddies, cookie tower; fullness meter, lemonade sips, hiccup prompts, he slides food onto your plate): `course_cards` 5, `pete_taunts` 6, `hiccup` 3 (HUD), `swat_back` 3, `mavis_fan` 3, `win` 3, `lose` 3.
+2. `carl_duckpin` (rowhouse basement lanes; Kingpin Carl, a hefty possum with a lucky towel, boss of the Masked Bandits, 10 frames of duckpin): `frame_calls` 6 (strike/spare/gutter style, HUD), `carl_taunts` 6, `bandit_heckles` 6, `mavis_bonus` 3, `win` 3, `lose` 3.
+3. `rodney_lacrosse` (Rash Field; Riptide Rodney, the Key Highway Otters' captain, 2v2 lacrosse vs Harold and Mavis with cane and purse as sticks; a defender checked into the harbor sits out 30 s; first to 5): `goal` 4, `splash_check` 4, `rodney_taunts` 6, `win` 3, `lose` 3.
+4. `poe_stealth` (Westminster Burying Ground, night; sneak past the Raven King's crow sentries to leave three roses and a bottle at Poe's grave): `crow_alert` 4 (HUD), `crow_calls` 6, `harold_whispers` 4, `clean_finish` 3, `caught` 3. Nod to Poe, but quote "The Raven" for no more than 4 words at a time.
+5. `fishing` (Harold fishing from the piers with his cane): `catch_names` 12 (6 fish/crab/eel catches and 6 junk items, ≤ 24 chars), `chompy` 6 (lines for Chompy, an original googly-eyed trash wheel who eats the junk; no real names), `rare_catch` 3.
+6. `grand_prix` (Harbor Grand Prix street race on Pratt St, past the ballpark, hairpin by the Convention Center; original open-wheel cars, no real series or sponsor names): `announcer` 8, `hud` 4.
+7. `celebration` (after the final boss; neighbors on the stoops banging pots, landmarks lighting up, then the drone goggles come on): `neighbors` 6, `drone_intro` 2.
+8. `brewmaster_finale` (The One-Eyed Brewmaster in 3 parts: rooftop, a beer-truck chase down Pratt St with Mavis driving, a street fight with broken-sign pieces): `truck_escape` 3, `chase_taunts` 4, `street_rage` 3.
+9. Barks: `barks/phantoms` (Fells Point Phantoms, night-only pirate ghosts off the Broadway pier: Bosun Bones, Deckhand Dread, Powder Monkeys) 10 barks + 4 `lantern_flash` reactions. `barks/lexington` 6 barks for night thugs at the market.
+10. Blurbs: a 2-sentence Lexington Market popup (sentence 1 a true fact, sentence 2 a twist tied to Pit Beef Pete) and a 2-sentence Rash Field popup (twist tied to Rodney).
+Rules as GR1–GR3. Self-check: line counts per key, max line and HUD lengths, JSON parse OK, and a grep showing 0 hits for "Natty", "Boh", "Utz", "Orioles", "Ravens", "Formstone", "IndyCar", "Trash Wheel" in the new file. Edit nothing outside content/ and relay/GROK_TO_HARK.md.
