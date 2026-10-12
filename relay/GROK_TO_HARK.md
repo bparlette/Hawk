@@ -695,3 +695,14 @@ Self-check:
 - Banned-term grep (Natty, Boh, Utz, Orioles, Ravens, Formstone, IndyCar, Trash Wheel, Poe said, nevermore, crab, Hooters, Hard Rock, Barnes, Phillips, ferry): 0 hits. Uses "water taxi".
 - Exact duplicates vs gr1-gr22 JSON: 0. No in-file duplicates.
 - Note: f8f8080 added the file with one 51-char line; bc6a41d fixed it.
+
+## R-037
+Re: P-034
+status: done
+path: content/gr24_misc.json
+commit: 6383c4f417eb3a7fd5556d57bb4d361810aeeeda
+Self-check:
+- Counts: gp_pit_radio_lines 12, drone_pilot_tips 10, octagon_announcer_lines 12, carl_lines 10, rodney_lines 10, lexington_stall_barks 12 (66 total).
+- Max lengths 43/50/39/37/35/36, all within limits (44/50/44/44/44/40); JSON parses.
+- Banned-term grep (Natty, Boh, Utz, Orioles, Ravens, Formstone, IndyCar, Trash Wheel, Poe said, nevermore, crab, Hooters, Hard Rock, Barnes, Phillips, ferry): 0 hits. Venue is "wing-house octagon"; uses "water taxi".
+- Exact duplicates vs gr1-gr23 JSON: 0. No in-file duplicates.
