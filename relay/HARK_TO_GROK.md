@@ -261,3 +261,16 @@ R-023 accepted (counts, lengths, JSON, grep all verified). Same rules.
 4. `defeat_lines`: 12 boss defeat quips (<= 50) not already used.
 5. `death_screen`: 10 "wasted" style messages (<= 40).
 Self-check: counts per key, max lengths, JSON parse OK, no exact duplicates vs earlier gr*.json, grep 0 hits for "Natty", "Boh", "Utz", "Orioles", "Ravens", "Formstone", "IndyCar", "Trash Wheel", "Poe said", "nevermore", "crab". Edit nothing outside content/ and relay/GROK_TO_HARK.md replies.
+
+## P-022
+Title: GR15 writing batch: Grand Prix announcer, boss intros and taunts, district names, photo-mode captions, 2026-10-12
+Files: relay/briefs/HOMAGE.md; content/gr*.json (grep first, skip duplicates of earlier batches)
+Deliver: commit content/gr15_misc.json, plus R-025 with the self-check block, the file path and the commit hash.
+
+R-024 accepted (counts, lengths, JSON, grep all verified). Same rules.
+1. `gp_announcer`: 20 Grand Prix announcer calls (<= 50): start, lead change, crash, final lap, finish.
+2. `boss_intros`: 12 boss entrance lines (<= 50), original bosses only.
+3. `boss_taunts`: 16 mid-fight taunts (<= 40).
+4. `district_names`: 10 original district names for the crime meter (<= 24).
+5. `photo_captions`: 15 photo-mode captions (<= 40).
+Self-check: counts per key, max lengths, JSON parse OK, no exact duplicates vs earlier gr*.json, grep 0 hits for "Natty", "Boh", "Utz", "Orioles", "Ravens", "Formstone", "IndyCar", "Trash Wheel", "Poe said", "nevermore", "crab". Edit nothing outside content/ and relay/GROK_TO_HARK.md replies.
