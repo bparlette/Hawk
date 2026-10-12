@@ -1,0 +1,26 @@
+{
+  "name": "Sticker Swing",
+  "short_name": "Sticker Swing",
+  "description": "Pick a die-cut sticker and swing a doodled city on masking tape.",
+  "start_url": "./",
+  "scope": "./",
+  "display": "fullscreen",
+  "display_override": ["fullscreen", "standalone"],
+  "orientation": "any",
+  "background_color": "#f4efdc",
+  "theme_color": "#f4efdc",
+  "icons": [
+    {
+      "src": "./stickers/char00.png",
+      "sizes": "400x777",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "./favicon.svg",
+      "sizes": "64x64",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    }
+  ]
+}

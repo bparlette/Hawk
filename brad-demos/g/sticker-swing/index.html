@@ -1,0 +1,116 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover"
+    />
+    <meta name="mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <meta name="apple-mobile-web-app-title" content="Sticker Swing" />
+    <meta name="theme-color" content="#f4efdc" />
+    <meta
+      name="description"
+      content="Sticker Swing — pick a die-cut sticker and swing a doodled city on masking-tape lines."
+    />
+    <meta property="og:title" content="Sticker Swing" />
+    <meta
+      property="og:description"
+      content="Brad’s sticker roster. Masking-tape pendulum. Collect every token."
+    />
+    <meta property="og:url" content="https://notebook-arcade.surge.sh/sticker-swing/" />
+    <meta property="og:image" content="https://notebook-arcade.surge.sh/sticker-swing/og.jpg" />
+    <meta property="og:image:secure_url" content="https://notebook-arcade.surge.sh/sticker-swing/og.jpg" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:image" content="https://notebook-arcade.surge.sh/sticker-swing/og.jpg" />
+    <title>Sticker Swing</title>
+    <link rel="icon" href="./favicon.svg" type="image/svg+xml" />
+    <link rel="apple-touch-icon" href="./stickers/char00.png" />
+    <link rel="manifest" href="./manifest.webmanifest" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Caveat:wght@600;700&family=Patrick+Hand&family=Permanent+Marker&display=swap"
+      rel="stylesheet"
+    />
+    <script>
+      (function () {
+        var p = location.pathname
+        if (p && !p.endsWith('/') && !/\.[a-z0-9]+$/i.test(p)) {
+          location.replace(p + '/' + location.search + location.hash)
+        }
+      })()
+    </script>
+    <script type="module" crossorigin src="./assets/index-DonPgylk.js"></script>
+    <link rel="stylesheet" crossorigin href="./assets/index-JdqoFYsO.css">
+  </head>
+  <body>
+    <div id="app">
+      <div id="stage">
+        <canvas id="view"></canvas>
+
+        <header id="hud" hidden>
+          <div class="scorebox tilt-left">
+            <span class="label">Stickers</span>
+            <span id="hud-stickers" class="digits">0/16</span>
+          </div>
+          <div class="scorebox">
+            <span class="label">Time</span>
+            <span id="hud-time" class="digits">0:00</span>
+          </div>
+          <div class="scorebox tilt-right">
+            <span class="label">Score</span>
+            <span id="hud-score" class="digits">0</span>
+          </div>
+          <button type="button" id="hud-restart" class="ink-btn">Restart</button>
+        </header>
+
+        <p id="hint" hidden></p>
+
+        <section id="start" class="sheet" aria-label="Pick your sticker">
+          <p class="eyebrow">Notebook Arcade</p>
+          <h1>Sticker Swing</h1>
+          <p class="lede">
+            Pick a die-cut sticker, stick tape to a ledge, ride the pendulum, keep your speed when you let go.
+          </p>
+          <p class="pick-label">Pick your sticker</p>
+          <p id="pick-name" class="hero-name">White Gi</p>
+          <div id="pick-grid" class="pick-grid" role="listbox" aria-label="Sticker roster"></div>
+          <button type="button" id="start-btn" class="stamp">Peel &amp; Swing</button>
+          <p class="fine">Thumbstick or tap to pick · A / Space to start · Shift / B zips</p>
+        </section>
+
+        <section id="done" class="sheet" hidden aria-label="Results">
+          <p class="eyebrow">Clean page</p>
+          <h1>All stickers</h1>
+          <p id="done-copy" class="lede">The doodle city is covered.</p>
+          <p id="done-stats" class="stats"></p>
+          <button type="button" id="again-btn" class="stamp">Stick again</button>
+        </section>
+      </div>
+
+      <div id="swipe-up" hidden>
+        <p>Swipe up for full screen</p>
+      </div>
+
+      <div id="nes-pad" class="nes-pad" hidden>
+        <div id="stick-zone" aria-label="Analog stick">
+          <div id="stick" hidden>
+            <div class="stick-base"></div>
+            <div id="stick-knob" class="stick-knob"></div>
+          </div>
+        </div>
+        <div class="ab">
+          <button type="button" class="pad-btn face-b" data-act="b" aria-label="Zip">
+            <span>B</span><small>zip</small>
+          </button>
+          <button type="button" class="pad-btn face-a" data-act="a" aria-label="Swing">
+            <span>A</span><small>swing</small>
+          </button>
+        </div>
+      </div>
+    </div>
+  </body>
+</html>
