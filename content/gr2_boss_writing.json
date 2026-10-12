@@ -1,0 +1,75 @@
+{
+  "_round": "GR2",
+  "gangs": {
+    "harbor_rats": {
+      "idle": ["Big boss up on the brewery roof says double shifts tonight."],
+      "taunt": ["You think we run this? Look up at the brewery roof, gramps."]
+    },
+    "pier_gulls": {
+      "idle": ["Every fry we swipe goes up to the brewery roof. Boss's cut."]
+    },
+    "cobble_catfish": {
+      "idle": ["Don't ask who's on the brewery roof. Just keep the tower sign lit."]
+    },
+    "masked_bandits": {
+      "idle": ["Heard the big boss on the brewery roof only got one good eye. Still sees all."]
+    },
+    "key_hwy_otters": {
+      "taunt": ["Beat us all you want. The guy on the brewery roof pulls the strings, hon."]
+    }
+  },
+  "bosses": {
+    "chip_kid": {
+      "intro": [
+        "Ew, old people! Mech, crunch 'em into crumbs!",
+        "This is MY pavilion! Mom said I could have it!",
+        "Taste the seasoning cloud, grandpa! Sneeze, sneeze!"
+      ],
+      "defeat": [
+        "My mech! You popped my bag! I'm telling!",
+        "This is SO unfair! You didn't even let me win!",
+        "Fine! I didn't want this dumb harbor anyway! Hmph!"
+      ]
+    },
+    "one_eyed_brewmaster": {
+      "intro": [
+        "Welcome to my roof, Harold. Every gang in town pours through me.",
+        "One eye's all I need to see you're finished, toad.",
+        "The sign's lit, the harbor's mine. Last call, old-timer."
+      ],
+      "phase2": [
+        "You knocked the foam off my head. Now I'm angry.",
+        "Stack the cans! Time for the tower slam!",
+        "Watch the mustache, toad. It spins faster than it looks."
+      ],
+      "defeat": [
+        "My tower... my sign... my whole operation, flat.",
+        "Tapped out... by a toad with a cane...",
+        "Fine. The harbor's yours. Mind the stairs going down."
+      ],
+      "finale": [
+        {"speaker": "brewmaster", "text": "Rats, gulls, bandits... all mine. And you beat every one."},
+        {"speaker": "harold", "text": "Forty years walking this harbor. You don't get to keep it."},
+        {"speaker": "mavis", "text": "And twirl that mustache at me again, I'll use the handbag."},
+        {"speaker": "brewmaster", "text": "Heh. Somebody switch off the sign. Closing time."},
+        {"speaker": "harold", "text": "Come on, Mavis. Let's go watch the boats, hon."}
+      ]
+    },
+    "dragon_boat_duchess": {
+      "boat_ambush": [
+        "This boat ride is hijacked! The Duchess steers now!",
+        "Lovely day for a paddle. Shame I'm commandeering it!",
+        "All aboard? Wrong! This ride's mine, peasants!"
+      ]
+    }
+  },
+  "landmarks": {
+    "harborplace": {
+      "name": "HARBORPLACE",
+      "blurb": [
+        "Harborplace opened in 1980 as two shopping pavilions on the Inner Harbor.",
+        "Now a bratty kid in a chip-bag mech calls dibs on the whole waterfront."
+      ]
+    }
+  }
+}
