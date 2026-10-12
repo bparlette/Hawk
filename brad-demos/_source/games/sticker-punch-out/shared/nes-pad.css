@@ -1,0 +1,144 @@
+/* Shared discrete NES pad hit zones — Bad Dudes layout. No sliding D-pad overlay. */
+html,
+body,
+#app,
+#game,
+#ring,
+canvas,
+#nes-pad,
+.nes-pad,
+.nes-hits,
+.hit,
+.hot,
+button,
+a {
+  touch-action: none;
+  overscroll-behavior: none;
+  -webkit-user-select: none;
+  user-select: none;
+  -webkit-touch-callout: none;
+  -webkit-tap-highlight-color: transparent;
+}
+
+#nes-pad,
+.nes-pad {
+  position: relative;
+  width: 100%;
+  touch-action: none;
+}
+
+.pad-art,
+#nes-pad > img,
+.nes-pad > img,
+#nes-pad > svg,
+.nes-pad > svg {
+  pointer-events: none;
+  width: 100%;
+  height: auto;
+  display: block;
+}
+
+.nes-hits {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+
+.hit {
+  color: transparent;
+  cursor: pointer;
+  touch-action: none;
+  pointer-events: auto;
+  background: transparent;
+  border: 0;
+  padding: 0;
+  position: absolute;
+}
+
+.d-up {
+  width: 8%;
+  height: 28%;
+  top: 10%;
+  left: 12.4%;
+}
+
+.d-down {
+  width: 8%;
+  height: 30%;
+  top: 52%;
+  left: 12.4%;
+}
+
+.d-left {
+  width: 10%;
+  height: 22%;
+  top: 38%;
+  left: 5%;
+}
+
+.d-right {
+  width: 10%;
+  height: 22%;
+  top: 38%;
+  left: 19%;
+}
+
+.hit-select {
+  width: 12%;
+  height: 16%;
+  top: 30%;
+  left: 42%;
+}
+
+.hit-start {
+  width: 12%;
+  height: 16%;
+  top: 50%;
+  left: 42.5%;
+}
+
+.hit-b {
+  width: 11%;
+  height: 38%;
+  top: 28%;
+  left: 66%;
+}
+
+.hit-a {
+  width: 11%;
+  height: 38%;
+  top: 22%;
+  left: 78%;
+}
+
+/* Kill leftover sliding D-pad overlays from older mounts. */
+.dpad {
+  display: none !important;
+  pointer-events: none !important;
+}
+
+.pad-relabel {
+  color: #1b1b1b;
+  pointer-events: none;
+  background: #f4efe0;
+  justify-content: center;
+  align-items: center;
+  margin: 0;
+  font: 700 11px/1 "Patrick Hand", cursive;
+  display: flex;
+  position: absolute;
+}
+
+.relabel-b {
+  width: 10.71%;
+  height: 12.79%;
+  top: 67.44%;
+  left: 65.36%;
+}
+
+.relabel-a {
+  width: 8.57%;
+  height: 12.79%;
+  top: 62.79%;
+  left: 78.57%;
+}
