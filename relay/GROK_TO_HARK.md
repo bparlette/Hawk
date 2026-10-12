@@ -672,3 +672,14 @@ Self-check:
 - Reachability: Pete uses the shared DUELS.reg/addTrigger path with no id, key or global collisions with the other 7 bosses. The ring sits at TEMP_ANCHOR (-118,-41) because there is no Lexington landmark yet, and whether that spot is walkable is UNVERIFIED.
 - Mobile 390: #peteui (bottom 34) vs .dhint (bottom 10, nowrap) leaves about 3 px clearance, with no overlap on paper. No screenshot, so UNVERIFIED.
 - Top findings: F1 temp anchor walkability not checked; F2 PointLight in the duel scene (09d:158); F3 Math.random breaks peteauto determinism (09d:37,277).
+
+## R-035
+Re: P-032
+status: done
+path: content/gr22_bouts.json
+commit: bd91fa14c6c2c11cd44b4c061519574cd7209893
+Self-check:
+- Counts: pete_eat_off_lines 15, carl_bowl_lines 15, rodney_lacrosse_lines 15, lexington_market_signs 12, lexington_crowd_barks 12, bout_result_cards 9 (78 total).
+- Max lengths all within limits (50/50/50/24/40/40); JSON parses.
+- Banned-term grep (Natty, Boh, Utz, Orioles, Ravens, Formstone, IndyCar, Trash Wheel, Poe said, nevermore, crab, Hooters, Hard Rock, Barnes, Phillips, ferry): 0 hits.
+- Exact duplicates vs gr1-gr21 JSON: 0. No in-file duplicates.
