@@ -150,6 +150,7 @@ function frame(now) {
     FPS.n++; FPS.t += rdt; if (FPS.t > 1) { FPS.v = Math.round(FPS.n / FPS.t); FPS.n = 0; FPS.t = 0; }
     if (FMAP.F.open) { FMAP.frame(rdt); return; } // full-screen map open: the game is paused (no sim, no 3D draw; the canvas keeps its last frame)
     if (window.__cel && __cel.pause) { draw(); return; }
+    if (RB.mode) { RB.frame(rdt); return; } // racer bosses (src/06h_racers.js): Al's chase / the Duchess's arena (own scenes) or a harbour boat ride
     if (BOT) botThink(rdt);
     readInput(); gateInput();
     if (POSE) { poseView(rdt); updateCycle(rdt); draw(); return; }
@@ -196,5 +197,6 @@ function frame(now) {
     draw();
   } catch (err) { __celErr.n++; __celErr.last = String(err && err.stack || err); if (__celErr.n < 4) console.error(err); }
 }
+if (Q.has('rb')) { const m = Q.get('rb'); setTimeout(() => { if (m === 'al') AL.start(); else if (m === 'duchess' || m === 'duchess-paddle') DUCH.start(m === 'duchess' ? 'taxi' : 'paddle'); else if (m === 'ride' || m === 'paddle') RIDES.start(m === 'paddle' ? 'paddle' : 'taxi', 0); }, 300); } // ?rb=al|duchess|duchess-paddle|ride|paddle: jump straight in (tests)
 requestAnimationFrame(frame);
 window.__cel = { S, hero, partner, PART, BOOST_P, hurtTurtle, reviveTurtle, partnerSlot, get KEYS() { return KEYS; }, enemies, CAM, BOTR, FPS, IN, renderer, CINE, ACTIONS, DOOR, PIZZA, LADDER, ROOF, get QTE() { return QTE; }, get lockT() { return lockT; }, press: (k) => PRESS.add(k), tryAction, get frames() { return frames; }, atlasRows: _ay + _arow, THREE, camera, scene, CYC, LOW, NIGHTFX, draw, QUAL, setHD, LANDMARKS, CITY, POWER, WATERK, startDrown, actContext, APANEL, MANHOLES, CLIMBS, VEHICLES, RIDE, isWater, groundY, WB, COLL, BLD, PIERS, POSTS, CARS, WATER };
