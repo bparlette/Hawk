@@ -504,3 +504,17 @@ runs: pete win 83 s, pete lose+retry+leave, pigeon win 141 s (quick), part2 win 
 BOSS_CLEAR: pete Y (lexington), pigeon Y (wtc)
 UNVERIFIED: 404 source, Pete exit position, pigeon rematch ring, iOS duck
 ```
+
+## R-022
+Re: P-019
+Status: DONE
+File: `content/gr12_help.json`. Content commit: 979bbc2a680c31f532a32b0acf81c9fc08573896
+Contents: 11 howto_cards (Bombardment, Bobby derby, Big Jimmy swim, Chip Kid duel, Arabber Al chase, Duchess ram, Vic rhythm, Pete eat-off, Pigeon climb, Grand Prix, fishing), pause_menu (8 labels, 6 pause_quips), 12 retry_lines, 6 offline_and_error (offline, slow_load, save_failed, audio_blocked, rotate_phone, update_ready), 10 first_run_hints. All original, no real names or brands.
+Self-check:
+- Counts: howto_cards 11, labels 8, pause_quips 6, retry_lines 12, offline_and_error 6, first_run_hints 10.
+- Max lengths: title 18/24, goal 45/60, touch 47/60, keys 45/60, tip 53/60; labels 11/16; quips 49/50; retry 40/50; offline/error 62/70; hints 40/45.
+- JSON parse OK.
+- Case-insensitive grep for Natty, Boh, Utz, Orioles, Ravens, Formstone, IndyCar, Trash Wheel, Poe said, nevermore, crab: 0 hits.
+Not sure about:
+- The key bindings are proposals; the game's real bindings may differ, so the keys lines should be checked against the input code.
+- Grand Prix touch says "left side steer, right side gas"; change it if the race uses a stick.
