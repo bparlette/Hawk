@@ -1,0 +1,46 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8">
+<script src="../../demo-embed.js"></script>
+<style id="demo-embed-css">html.demo-embed #touch{display:none!important}
+</style>
+
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
+<title>Lights Out at Hollow Manor</title>
+<meta name="description" content="An original 8-bit horror game. The power is out. Find the breaker.">
+<meta name="theme-color" content="#000000">
+<style>
+*{box-sizing:border-box}
+html,body{margin:0;padding:0;background:#000;color:#bcbcbc;height:100%;overflow:hidden;touch-action:none;-webkit-user-select:none;user-select:none;-webkit-tap-highlight-color:transparent}
+body{display:flex;flex-direction:column;align-items:center;justify-content:center;font-family:monospace}
+canvas{display:block;image-rendering:pixelated;image-rendering:crisp-edges;background:#000;max-width:100vw}
+#touch{display:none;width:100%;max-width:400px;padding:10px 14px 14px;justify-content:space-between;align-items:center;gap:10px}
+#pad{position:relative;width:148px;height:148px;flex:none;border-radius:50%;background:#1c1c1c;border:3px solid #383838;touch-action:none}
+#pad i{position:absolute;width:44px;height:44px;background:#383838;border:2px solid #7c7c7c}
+#pad i.u{left:49px;top:4px}#pad i.d{left:49px;bottom:4px}#pad i.l{left:4px;top:49px}#pad i.r{right:4px;top:49px}
+#pad i::after{content:"";position:absolute;left:14px;top:14px;border:8px solid transparent}
+#pad i.u::after{border-bottom-color:#bcbcbc;top:6px}#pad i.d::after{border-top-color:#bcbcbc;top:18px}#pad i.l::after{border-right-color:#bcbcbc;left:6px}#pad i.r::after{border-left-color:#bcbcbc;left:18px}
+#btns{display:grid;grid-template-columns:auto auto;gap:10px;justify-items:center;align-items:center}
+.b{font:bold 13px monospace;color:#f8f8f8;background:#383838;border:3px solid #7c7c7c;border-radius:50%;width:72px;height:72px;touch-action:none;padding:0}
+.b.light{background:#503000;border-color:#f8b800;color:#f8d878}.b.use{background:#500018;border-color:#e40058}
+.s{font:bold 11px monospace;color:#bcbcbc;background:#1c1c1c;border:2px solid #383838;border-radius:6px;height:30px;width:72px;touch-action:none;padding:0}
+.on{filter:brightness(1.8)}
+/*PFILL*/ @media (orientation:portrait){
+ body{background:
+  radial-gradient(ellipse 75% 55% at 50% 50%,rgba(0,0,0,0) 40%,rgba(0,0,0,.88) 100%),
+  linear-gradient(180deg,#0a0608 0,#0a0608 5%,#2a1a12 5.4%,#0a0608 6.2%,rgba(0,0,0,0) 6.6%,rgba(0,0,0,0) 76%,#2a1a12 76.3%,#120b08 77%,#1a0f0a 77%,#1a0f0a 100%),
+  repeating-linear-gradient(180deg,rgba(0,0,0,0) 0 3px,rgba(0,0,0,.18) 3px 4px),
+  repeating-linear-gradient(90deg,#26151e 0 18px,#331d29 18px 20px,#26151e 20px 38px,#180d13 38px 40px),#140b10}
+ canvas#c{box-shadow:0 0 0 3px #4a3418,0 0 0 5px #120a06,0 0 0 6px #6a4c22,0 0 34px 10px #000}
+}
+</style></head>
+<body>
+<canvas id="c" width="256" height="240"></canvas>
+<div id="touch">
+  <div id="pad"><i class="u"></i><i class="d"></i><i class="l"></i><i class="r"></i></div>
+  <div id="btns">
+    <button class="b light" data-act="light">LIGHT</button><button class="b use" data-act="use">USE</button>
+    <button class="s" data-act="map">MAP</button><button class="s" data-act="mute">SOUND</button>
+  </div>
+</div>
+<script src="game.js"></script>
+</body></html>

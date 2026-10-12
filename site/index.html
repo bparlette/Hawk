@@ -1,0 +1,49 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover" />
+<meta name="apple-mobile-web-app-capable" content="yes" />
+<meta name="mobile-web-app-capable" content="yes" />
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+<meta name="theme-color" content="#07080c" />
+<title>Brad's Demos</title>
+<link rel="stylesheet" href="shell.css" />
+</head>
+<body>
+<header id="top">
+  <button id="menuBtn" type="button" aria-label="All games"><svg viewBox="0 0 24 24"><path d="M4 4h6v6H4zM14 4h6v6h-6zM4 14h6v6H4zM14 14h6v6h-6z"/></svg><span>GAMES</span></button>
+  <div id="title">Pick a game</div>
+  <div id="extras"></div>
+  <button id="restartBtn" type="button" aria-label="Restart game" hidden><svg viewBox="0 0 24 24"><path d="M20 12a8 8 0 1 1-2.34-5.66M20 4v5h-5"/></svg></button>
+</header>
+<main id="stage">
+  <div id="loading" hidden><div class="spin"></div><span>LOADING</span></div>
+  <div id="toast" hidden></div>
+</main>
+<footer id="panel" aria-label="Arcade controls">
+  <div id="deck">
+    <img id="stick" src="assets/stick.webp" alt="" draggable="false" />
+    <div class="cap" id="cap-attack"></div>
+    <div class="cap" id="cap-jump"></div>
+    <div class="cap" id="cap-special"></div>
+    <div class="cap wht" id="cap-start"></div>
+    <div class="cap wht" id="cap-select"></div>
+    <div class="lbl" id="lbl-attack"></div>
+    <div class="lbl" id="lbl-jump"></div>
+    <div class="lbl" id="lbl-special"></div>
+    <div class="lbl sm" id="lbl-start"></div>
+    <div class="lbl sm" id="lbl-select"></div>
+    <div id="ring"></div>
+  </div>
+</footer>
+<section id="picker" aria-label="Choose a game">
+  <div id="pickHead">
+    <div id="pickTitle"><b>BRAD'S DEMOS</b><span>Every prototype, one tap away</span></div>
+    <button id="pickClose" type="button" aria-label="Back to game" hidden>✕</button>
+  </div>
+  <div id="pickBody"></div>
+</section>
+<script src="shell.js"></script>
+</body>
+</html>
