@@ -192,6 +192,23 @@
         if (g.thumb) im.src = g.thumb;
         var nm = document.createElement("span"); nm.className = "nm"; nm.textContent = g.title;
         b.appendChild(im); b.appendChild(nm);
+        var sh = document.createElement("span"); sh.className = "share"; sh.textContent = "⤴"; sh.title = "Copy share link";
+        sh.addEventListener("click", function (e) {
+          e.stopPropagation();
+          var url = location.origin + location.pathname + "#" + g.id;
+          function done(ok) {
+            sh.textContent = ok ? "✓" : "✕";
+            setTimeout(function () { sh.textContent = "⤴"; }, 1200);
+          }
+          if (navigator.clipboard && navigator.clipboard.writeText) {
+            navigator.clipboard.writeText(url).then(function () { done(true); }, function () { done(false); });
+          } else {
+            var ta = document.createElement("textarea"); ta.value = url; document.body.appendChild(ta);
+            ta.select(); try { done(document.execCommand("copy")); } catch (_) { done(false); }
+            document.body.removeChild(ta);
+          }
+        });
+        b.appendChild(sh);
         b.addEventListener("click", function () { start(g.id); });
         grid.appendChild(b);
       });
