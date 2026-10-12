@@ -1,0 +1,385 @@
+{
+ "id": "admiral_redclaw",
+ "meta": {
+  "id": "admiral_redclaw",
+  "name": "Admiral Redclaw",
+  "district": "fort",
+  "hp": 130,
+  "scale": 1.25,
+  "radius": 1,
+  "height": 3.1
+ },
+ "budgets": {
+  "zipKit": {
+   "parts": 58,
+   "tris": 14672,
+   "hulls": 50,
+   "hullTris": 14484,
+   "mats": 2,
+   "matKinds": [
+    "toon",
+    "toon"
+   ],
+   "badHull": 0,
+   "flashBad": 0,
+   "shadowCasters": 47,
+   "shadowBad": [],
+   "drawCallsUnmerged": 108
+  },
+  "zipKit/lod1": {
+   "parts": 48,
+   "tris": 11344,
+   "hulls": 42,
+   "hullTris": 11220,
+   "mats": 2,
+   "matKinds": [
+    "toon",
+    "toon"
+   ],
+   "badHull": 0,
+   "flashBad": 0,
+   "shadowCasters": 39,
+   "shadowBad": [],
+   "drawCallsUnmerged": 90
+  },
+  "realGame": {
+   "parts": 58,
+   "tris": 14672,
+   "hulls": 50,
+   "hullTris": 14484,
+   "mats": 2,
+   "matKinds": [
+    "toon",
+    "toon"
+   ],
+   "badHull": 0,
+   "flashBad": 0,
+   "shadowCasters": 47,
+   "shadowBad": [],
+   "drawCallsUnmerged": 108
+  },
+  "realGame/lod1": {
+   "parts": 48,
+   "tris": 11344,
+   "hulls": 42,
+   "hullTris": 11220,
+   "mats": 2,
+   "matKinds": [
+    "toon",
+    "toon"
+   ],
+   "badHull": 0,
+   "flashBad": 0,
+   "shadowCasters": 39,
+   "shadowBad": [],
+   "drawCallsUnmerged": 90
+  },
+  "pass": true
+ },
+ "idle0": {
+  "minY": -0.097,
+  "maxY": 3.038,
+  "height": 3.135,
+  "heightNoWeapon": 3.135,
+  "meta": 3.1,
+  "heightErrPct": 1.1,
+  "zMin": -0.576,
+  "zMax": 0.986,
+  "xMin": -1.028,
+  "xMax": 1.067
+ },
+ "reach": {
+  "idleMaxHoriz": 1.272,
+  "atT": 0,
+  "part": "haL",
+  "radius": 1,
+  "beyondRadius": 0.272,
+  "pass": true
+ },
+ "poses": {
+  "idle": {
+   "minY": 0.041,
+   "lowest": "knR",
+   "cullR": 1.476,
+   "gaps": {}
+  },
+  "idle_t1.1": {
+   "minY": 0.049,
+   "lowest": "knR",
+   "cullR": 1.483,
+   "gaps": {}
+  },
+  "run_0.3": {
+   "minY": 0.068,
+   "lowest": "knL",
+   "cullR": 1.487,
+   "gaps": {}
+  },
+  "run_0.6": {
+   "minY": 0.103,
+   "lowest": "knR",
+   "cullR": 1.497,
+   "gaps": {}
+  },
+  "hurt_0": {
+   "minY": 0.037,
+   "lowest": "knR",
+   "cullR": 1.511,
+   "gaps": {}
+  },
+  "hurt_0.5": {
+   "minY": 0.037,
+   "lowest": "knR",
+   "cullR": 1.513,
+   "gaps": {}
+  },
+  "down_air_0.3": {
+   "minY": 1.013,
+   "lowest": "knR",
+   "cullR": 2.378,
+   "gaps": {}
+  },
+  "down_1_ground": {
+   "minY": 0.211,
+   "lowest": "torso",
+   "cullR": 2.43,
+   "gaps": {}
+  },
+  "atk1_0.2": {
+   "minY": 0.147,
+   "lowest": "knL",
+   "cullR": 1.463,
+   "gaps": {}
+  },
+  "atk1_0.5": {
+   "minY": 0.147,
+   "lowest": "knL",
+   "cullR": 1.464,
+   "gaps": {}
+  },
+  "atk1_0.8": {
+   "minY": 0.147,
+   "lowest": "knL",
+   "cullR": 1.463,
+   "gaps": {}
+  },
+  "atk2_0.2": {
+   "minY": 0.13,
+   "lowest": "knL",
+   "cullR": 1.63,
+   "gaps": {}
+  },
+  "atk2_0.5": {
+   "minY": 0.13,
+   "lowest": "knL",
+   "cullR": 1.46,
+   "gaps": {}
+  },
+  "atk2_0.8": {
+   "minY": 0.13,
+   "lowest": "knL",
+   "cullR": 1.46,
+   "gaps": {}
+  },
+  "atk3_0.2": {
+   "minY": 0.016,
+   "lowest": "knR",
+   "cullR": 1.438,
+   "gaps": {}
+  },
+  "atk3_0.5": {
+   "minY": 0.526,
+   "lowest": "knR",
+   "cullR": 2.02,
+   "gaps": {}
+  },
+  "atk3_0.8": {
+   "minY": 0.115,
+   "lowest": "knR",
+   "cullR": 1.43,
+   "gaps": {}
+  }
+ },
+ "seq": {
+  "knockdown": {
+   "minY": 0.034,
+   "at": 2.317,
+   "lowest": "idle:knR",
+   "cullR": 2.43,
+   "cullAt": 1.983,
+   "cullWhat": "down:head"
+  },
+  "hurt": {
+   "minY": 0.035,
+   "at": 1.35,
+   "lowest": "idle:knR",
+   "cullR": 1.518,
+   "cullAt": 0.733,
+   "cullWhat": "hurt:haL"
+  },
+  "run": {
+   "minY": 0.011,
+   "at": 1.9,
+   "lowest": "idle:knR",
+   "cullR": 1.537,
+   "cullAt": 0.833,
+   "cullWhat": "run:head"
+  },
+  "atk1": {
+   "minY": 0.014,
+   "at": 2.017,
+   "lowest": "idle:knR",
+   "cullR": 1.495,
+   "cullAt": 0.4,
+   "cullWhat": "idle:head"
+  },
+  "atk2": {
+   "minY": 0.01,
+   "at": 1.883,
+   "lowest": "idle:knR",
+   "cullR": 1.69,
+   "cullAt": 0.683,
+   "cullWhat": "atk2:haL"
+  },
+  "atk3": {
+   "minY": 0.003,
+   "at": 0.783,
+   "lowest": "atk3:knR",
+   "cullR": 2.013,
+   "cullAt": 1.05,
+   "cullWhat": "atk3:haL"
+  },
+  "chain": {
+   "minY": 0.003,
+   "at": 4.717,
+   "lowest": "atk3:knR",
+   "cullR": 2.43,
+   "cullAt": 7.217,
+   "cullWhat": "down:head"
+  },
+  "worstMinY": 0.003,
+  "worstCullR": 2.43,
+  "passFloor": true,
+  "passCull26": true,
+  "cull19Info": false
+ },
+ "attacks": {
+  "count": 3,
+  "poses": [
+   "atk1",
+   "atk2",
+   "atk3"
+  ],
+  "contractOk": true,
+  "each": [
+   {
+    "id": "rocket_barrage",
+    "pose": "atk1",
+    "strike": "haR",
+    "active": [
+     0.42,
+     0.74
+    ],
+    "peakU": 0.452,
+    "peakSpeed": 7.62,
+    "peakInActive": true
+   },
+   {
+    "id": "claw_sweep",
+    "pose": "atk2",
+    "strike": "haL",
+    "active": [
+     0.36,
+     0.58
+    ],
+    "peakU": 0.463,
+    "peakSpeed": 26.856,
+    "peakInActive": true
+   },
+   {
+    "id": "broadside_slam",
+    "pose": "atk3",
+    "strike": "haR",
+    "active": [
+     0.55,
+     0.7
+    ],
+    "peakU": 0.603,
+    "peakSpeed": 24.707,
+    "peakInActive": true
+   }
+  ],
+  "allPeaksInActive": true
+ },
+ "merge": {
+  "ok": true,
+  "drawCalls": 3,
+  "toonCalls": 2,
+  "outlineCalls": 1,
+  "shadowCalls": 2,
+  "bones": 24,
+  "flashShared": true,
+  "partsBefore": 58,
+  "trisBefore": 14672
+ },
+ "determinism": {
+  "hash": "193a7328b6b4dba9",
+  "sameSeedEqual": true,
+  "seed8Differs": false,
+  "noSeedOk": true,
+  "negSeedOk": true,
+  "hugeSeedOk": true,
+  "threeUuidRandomCalls": 5460,
+  "independentOfMathRandom": true,
+  "mathRandomInSource": false,
+  "canvas": {
+   "firstBuildOps": 0,
+   "secondBuildOps": 0,
+   "wrapperKOps": 0,
+   "cachedOnSameK": true,
+   "cachedForWrapperK": true
+  }
+ },
+ "misc": {
+  "kitKeys": 48
+ },
+ "summary": {
+  "pass": true,
+  "parts": 58,
+  "tris": 14672,
+  "mats": 2,
+  "matKinds": [
+   "toon",
+   "toon"
+  ],
+  "mergedCalls": 3,
+  "height": 3.135,
+  "heightErrPct": 1.1,
+  "worstMinY": 0.003,
+  "worstCullR": 2.43,
+  "idleBeyondRadius": 0.272,
+  "reachPart": "haL",
+  "strikes": "atk1@0.452 atk2@0.463 atk3@0.603"
+ },
+ "hooks": {
+  "globals": {
+   "ok": true,
+   "windowNs": true,
+   "global": true
+  },
+  "setPiece": {
+   "ok": true,
+   "returns": "J (J.root is the Object3D)",
+   "scale": 1,
+   "parts": 58,
+   "hulls": 50,
+   "mats": 2,
+   "tris": 14672,
+   "minY": -0.025,
+   "maxY": 2.492,
+   "zMin": -0.446,
+   "zMax": 0.32,
+   "mergedCalls": 3
+  }
+ }
+}
