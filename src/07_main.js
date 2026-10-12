@@ -141,6 +141,8 @@ function cityHud(rdt) {
     const hx = X(hero.pos.x), hz = Z(hero.pos.z), a = hero.yaw; g.fillStyle = '#9dff6b'; g.strokeStyle = '#000'; g.lineWidth = 2; g.beginPath();
     g.moveTo(hx + Math.sin(a) * 9, hz + Math.cos(a) * 9); g.lineTo(hx + Math.sin(a + 2.5) * 6, hz + Math.cos(a + 2.5) * 6); g.lineTo(hx + Math.sin(a - 2.5) * 6, hz + Math.cos(a - 2.5) * 6); g.closePath(); g.fill(); g.stroke(); } }
 }
+// game modes that take over the screen (09a_duel_core.js: boss duels set MODE.duel); MODE.ticks run once per city frame
+const MODE = { duel: null, ticks: [] };
 const FPS = { v: 60, n: 0, t: 0 };
 let last = performance.now(), frames = 0;
 function frame(now) {
@@ -153,6 +155,7 @@ function frame(now) {
     if (FORT.on) { FORT.frame(rdt); return; } // Fort McHenry set piece: its own scene + loop (src/09_fort.js)
     FORT.world();
     if (window.__cel && __cel.pause) { draw(); return; }
+    if (MODE.duel) { MODE.duel.frame(rdt); return; } // a boss duel owns input, sim and the draw
     if (BOT) botThink(rdt);
     readInput(); gateInput();
     if (POSE) { poseView(rdt); updateCycle(rdt); draw(); return; }
@@ -196,6 +199,7 @@ function frame(now) {
     cityHud(rdt);
     BARK.tick(rdt);
     if (DERBY.marker) DERBY.marker.tick(S.time);
+    for (const f of MODE.ticks) f(rdt);
     PRESS.clear();
     draw();
   } catch (err) { __celErr.n++; __celErr.last = String(err && err.stack || err); if (__celErr.n < 4) console.error(err); }

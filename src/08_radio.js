@@ -286,6 +286,8 @@ const RADIO = (function () {
   function dwrap(P) { if (!P || typeof P.setVolume !== 'function' || P.setVolume.__dk) return; const sv = P.setVolume; const f = function (v) { return sv.call(this, Math.round(v * DUCK.k)); }; f.__dk = true; P.setVolume = f; }
   function duckTo(k) { DUCK.k = clamp(+k, 0, 1); for (const P of [RX.A, RX.B, R.player]) { if (!P) continue; dwrap(P); }
     try { if (R.player && R.ready && !RX.fade) R.player.setVolume(Math.round(R.vol)); } catch (e) {} R.log.push({ at: +(S.time || 0).toFixed(2), reason: 'duck ' + DUCK.k }); }
+  // boss duels (09a_duel_core.js): fightDuck(on) = duckTo(0.22) / duckTo(1), reusing the one setVolume wrapper above.
+  function fightDuck(on) { duckTo(on ? 0.22 : 1); }
   function duck(on) { try { if (SFXBUS) SFXBUS.gain.setTargetAtTime(on ? 0.62 : 1, AC.currentTime, 0.3); } catch (e) {} }
 
 
@@ -361,6 +363,7 @@ const RADIO = (function () {
   }
   // ---- YouTube IFrame Player API (or the test stub) ----
   function onReady(e) {
+    if (e && e.target) wrapVol(e.target);
     if (e && e.target && RX.B && e.target === RX.B && RX.A !== RX.B) { RX.bReady = true; try { RX.B.mute(); RX.B.setVolume(0); } catch (er) {} rxPreload(); return; } // the second (remix) player
     R.ready = true; try { R.player.setVolume(0); } catch (e) {} const t = R.cur; if (t && !isBC(t)) { try { if (R.started && R.on) { R.player.loadVideoById(vid(t)); R.goal = VOL; } else R.player.cueVideoById(vid(t)); } catch (e) {} } render(); }
   function onState(e) {
@@ -465,6 +468,6 @@ const RADIO = (function () {
   window.__radio = { R, T, TRACKS, STATIONS, hold, get held() { return !!R.held; }, toggle, setStation, cycle, skip, start, advance, idText, isBC, get station() { return R.station; }, get text() { return R.tickerText; },
     get card() { return card.classList.contains('on') ? card.textContent : ''; }, get stored() { try { return localStorage.getItem(LS); } catch (e) { return null; } },
     simEnd: () => onState({ data: 0 }), simError: (c = 150) => onError({ data: c }), simBCEnd: () => { if (R.bc) R.bcLeft = 0.01; }, showCred,
-    RX, REMIX_PEAK, POOL, CLIP, BUMPS, get vol() { return R.vol; }, duckTo, get duck() { return DUCK.k; }, get sfx() { return SFXBUS ? SFXBUS.gain.value : null; } };
+    RX, REMIX_PEAK, POOL, CLIP, BUMPS, get vol() { return R.vol; }, duckTo, get duck() { return DUCK.k; }, fightDuck, get fduck() { return DUCK.k; }, get sfx() { return SFXBUS ? SFXBUS.gain.value : null; } };
   return R;
 })();

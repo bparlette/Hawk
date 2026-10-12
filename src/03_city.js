@@ -405,7 +405,7 @@ for (const [x0, z0, x1, z1] of [[-58, -29, -46, -22], [-59, -18, -52, 2]]) {
 }
 signOn(-58, -29, -46, -22, 'n', 3.0, 8, LSIGN.market); signOn(-59, -18, -52, 2, 'e', 3.0, 8, LSIGN.market);
 LMCAP(null);
-landmark('harborplace', 'HARBORPLACE', -52, -24, 16, { name: 'Dragon Boat Duchess', x: -44, z: -12, water: true });
+landmark('harborplace', 'HARBORPLACE', -52, -24, 16, { name: 'The Chip Kid', x: -50, z: -31.2, duel: 'chipkid' }); // The Chip Kid (replaced Dragon Boat Duchess, now a roaming boat-ride boss): mech duel, 09_duels.js
 LMCAP('constellation');
 // USS Constellation: a three-masted sloop-of-war moored beside its pier
 (function ship() {
@@ -455,7 +455,7 @@ mass(11, -13, 18, -7.5, 5.5, { tr: T.glass, fh: 5.5, top: '#8e8a82' });
 mass(13, -28.2, 21, -26, 4.5, { tr: T.glass, fh: 4.5, top: '#d8d6d0' });
 signOn(11, -26, 23, -13, 'n', CURB + 6.7, 8.4, LSIGN.aqua);
 LMCAP(null);
-landmark('aquarium', 'NATIONAL AQUARIUM', 19, -17, 19, { name: 'Big Jimmy', x: 19, z: -5, water: true });
+landmark('aquarium', 'NATIONAL AQUARIUM', 19, -17, 19, { name: 'Big Jimmy', x: 19, z: -5, water: true, duel: 'jimmy' }); // underwater swim fight, 09_duels.js (entered at the aquarium door)
 LMCAP('powerplant');
 // Power Plant complex on pier 4 (far LOD): three joined buildings - Phillips (west), the Power Plant hall + tower + four black stacks (centre), Hard Rock Cafe (east);
 // footprints / heights match the HD model's PP table in 03b (exterior_2 read at x 0.0188 m/px, y 0.038 m/px)
