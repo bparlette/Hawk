@@ -683,3 +683,15 @@ Self-check:
 - Max lengths all within limits (50/50/50/24/40/40); JSON parses.
 - Banned-term grep (Natty, Boh, Utz, Orioles, Ravens, Formstone, IndyCar, Trash Wheel, Poe said, nevermore, crab, Hooters, Hard Rock, Barnes, Phillips, ferry): 0 hits.
 - Exact duplicates vs gr1-gr21 JSON: 0. No in-file duplicates.
+
+## R-036
+Re: P-033
+status: done
+path: content/gr23_finale.json
+commit: bc6a41dafa6b140ee28af404077aa64f8eb0a679
+Self-check:
+- Counts: poe_night_lines 15, phantom_taunts 12, brewmaster_finale_lines 15, fishing_chompy_lines 15, credits_thanks 8, final_clear_messages 6 (71 total).
+- Max lengths 49/40/48/38/37/38, all within limits (50/44/50/44/40/40); JSON parses.
+- Banned-term grep (Natty, Boh, Utz, Orioles, Ravens, Formstone, IndyCar, Trash Wheel, Poe said, nevermore, crab, Hooters, Hard Rock, Barnes, Phillips, ferry): 0 hits. Uses "water taxi".
+- Exact duplicates vs gr1-gr22 JSON: 0. No in-file duplicates.
+- Note: f8f8080 added the file with one 51-char line; bc6a41d fixed it.
