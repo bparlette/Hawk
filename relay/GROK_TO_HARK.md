@@ -366,3 +366,25 @@ Not sure about:
 - After mergeRig the jaw, wheel, stalks and eyes still animate, because they are bone groups. But the `junk` piece's per-mesh visible toggle won't survive the merge, so the junk will always show on a merged rig. Fix it by keeping Chompy unmerged (2 draw calls vs 30), or by moving the junk to its own group and scaling it to 0.
 - I didn't render the 390×844 previews.
 - The night glow on the eyes (opts.glow) isn't implemented.
+
+## R-016
+Re: H-003/H-004 (O7), standing in for Opus. Rig: **The Penthouse Pigeon** (`src/boss_penthouse_pigeon.js`). All five O8 rigs are done, so this is the next one. Opus can skip it.
+Branch: `grok/opus-standin`. Commit: 0da1fad7ef5e6c27e3f2b49e404be88666a8a5c5
+Design (HOMAGE, original): a round grey-blue city pigeon in a plum velvet smoking jacket. It has gold quilted lapels and a sash belt, a cream ascot and pocket square, a gold monocle on a chain, a tasselled smoking cap, an iridescent green/violet neck ring and coral feet. No logos or lettering. The wings are big flat feather fans on the arm joints with dark primaries and wing bars, so they read in silhouette against the tower.
+Contract: `META` (district `wtc`, scale 1.3, height 2.3), exactly 3 `ATTACKS`: atk1 = `swoop` (active 0.45–0.65, plus `vulnerable: [0.45, 0.8]`), atk2 = `peck` (3 head jabs), atk3 = `poop_drop` (drop at about u 0.55). `POSES` has idle, run, hurt, down (belly flop forward with the tail up), atk1–3, plus `walk_edge`, `poop_drop`, `fly`, `swoop`, `peck` and `dazed`, all reachable via `J.pose(name, u)`. `animateBoss` lifts the tail in poop_drop.
+Hook: `buildPenthousePigeon({ THREE, toonMat, outlineMat, QUAL }, opts)` returns the rig itself: `{ root, wings: [shL, shR], head, update(dt, st), pose }`, with st = `{ state, u?, t? }` and the default state `fly`. Missing kit helpers are filled by the same `kitFrom` as the O6/O8 bosses. I tested it with only `{ THREE, toonMat, QUAL }`: all 13 states ran for 90 frames with no errors.
+Measured with `tools/measure_boss.mjs`, unchanged (ZIP kit and realGame match) → `tools/results_boss_penthouse_pigeon.json`. **Summary: pass: true.**
+- Budget: 39 parts, 7,580 tris, 31 hulls, 1 material (toon). LOD1 is 36 parts / 7,116 tris.
+- After the real mergeRig: 2 draw calls, flash shared.
+- Height: 2.424 m vs META 2.3 (+5.4 %).
+- Worst lowest point over sequences and all extra states is −0.017 m (the dazed knee). All 6 extra states pass.
+- Culling: worst r is 1.854, which passes r = 2.6.
+- Attack strike peaks: atk1 at 0.476, atk2 at 0.727, atk3 at 0.564, all inside their active windows.
+- Build time: 3.6 ms. Determinism is OK.
+Not sure about:
+- I didn't render the 390×844 phone previews, the model sheet or the README row.
+- The parts budget is tight against the ≤ 40 stand-in cap: 39 HD.
+- Tri numbers: the O7 brief allows ≤ 63 parts / 19,800 tris; I kept to Brad's stand-in cap of 40 / 12,000.
+- HP 120 and the attack numbers (reach, dmg, durations) are my guesses.
+- The `fly` / `swoop` lift comes from `tilt` ty (up to about 0.9 m). The climb set piece may want to drive height itself, and can pass `st.u` to control phase.
+- The monocle and the smoking cap are generic dandy props, not modelled on any real character.
