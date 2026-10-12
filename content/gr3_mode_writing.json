@@ -1,0 +1,227 @@
+{
+  "_round": "GR3",
+  "modes": {
+    "fort_bombardment": {
+      "wave_cards": [
+        "WAVE 1: SLOOPS",
+        "WAVE 2: BOMB KETCHES",
+        "WAVE 3: ROCKET SHIP",
+        "WAVE 4: FLAGSHIP"
+      ],
+      "redclaw_taunts": [
+        "Fire the guns! That flag won't last till dawn!",
+        "Sloops first, toad. Soften those ramparts!",
+        "My fleet owns this harbor tonight!",
+        "Strike the banner! Leave them in the dark!",
+        "Rocket ship inbound. Duck, old soldier!",
+        "I am Admiral Redclaw. Your fort is toast!"
+      ],
+      "flag_hit": [
+        "Harold: Hold the line! The flag's still up!",
+        "Mavis: They clipped the starry banner, hon!",
+        "Harold: Dawn's coming. Keep that cloth flying!",
+        "Mavis: One more hit and we're singing goodbye!"
+      ],
+      "win": [
+        "The fleet broke. Flag still proud at dawn.",
+        "Redclaw's flagship limps off. Fort stands!",
+        "We held the ramparts. Breakfast is earned."
+      ],
+      "lose": [
+        "The banner fell. Harbor goes dark.",
+        "Redclaw's fleet sails in. Fort lost.",
+        "No dawn for us. Reload and try again."
+      ]
+    },
+    "vic_rhythm": {
+      "judgements": [
+        "SPARK!",
+        "ZAP!",
+        "HUM!",
+        "MISS!"
+      ],
+      "phase_cards": [
+        "PHASE 1: WARMUP DROP",
+        "PHASE 2: CLUB SURGE",
+        "PHASE 3: FINAL DROP"
+      ],
+      "vic_taunts": [
+        "Feel that bass in your bones, grandpa!",
+        "Voltage Vic don't miss a beat. You do!",
+        "Club night never ends at the Power Plant!",
+        "Eel juice in the wires. Dance or fry!",
+        "Your cane can't keep this tempo, toad!",
+        "Hit the pads or hit the exit, seniors!"
+      ],
+      "vic_hurt": [
+        "Ow! Who shorted my amp?",
+        "Hey! That was off-beat and rude!",
+        "My fins! Watch the sequins!",
+        "Static... static... ouch!"
+      ],
+      "win": [
+        "Lights out, Vic. We owned the drop.",
+        "Perfect night. Plant goes quiet.",
+        "Harold and Mavis, club champions."
+      ],
+      "lose": [
+        "Too many misses. Vic keeps the deck.",
+        "Rhythm wiped us. Try another set.",
+        "Bass dropped. We dropped with it."
+      ]
+    },
+    "bobby_derby": {
+      "pitch_tells": [
+        "FASTBALL!",
+        "CURVE!",
+        "CHANGEUP!",
+        "KNUCKLER!"
+      ],
+      "homer": [
+        "Gone! Over the warehouse roofs!",
+        "That one's swimming in the harbor!",
+        "Harold smashed it. Count it!",
+        "Mavis! What a rip!",
+        "Ten seats back. Still rising!",
+        "Bobby's beak just dropped. Homer!"
+      ],
+      "out": [
+        "Popped up. Easy catch.",
+        "Foul tip. That's an out.",
+        "Whiffed it. Keep your eye, hon.",
+        "Bobby got you. Shake it off.",
+        "Grounder to nowhere. Out.",
+        "Called strike. Tough luck."
+      ],
+      "bobby_taunts": [
+        "Ten dingers before ten outs. Clock's ticking!",
+        "I'm Bird Brain Bobby. Your pitcher and judge!",
+        "No logo on this cap, just heat!",
+        "Curve's coming. Don't blink, toad!",
+        "This yard's mine after dark!",
+        "Swing soft and I'll nest on your cane!"
+      ],
+      "win": [
+        "Ten out of the park. Bobby tips his cap.",
+        "Derby's ours. Lights stay on.",
+        "Harold and Mavis, home run royalty."
+      ],
+      "lose": [
+        "Ten outs. Bobby wins the night.",
+        "Short of ten. Back to the on-deck circle.",
+        "Bird brain 1, toads 0. Rematch?"
+      ]
+    },
+    "al_chase": {
+      "al_taunts": [
+        "Arabber Al don't stop for red lights, toad!",
+        "Produce flying! Dodge or wear the peach!",
+        "Three rams and I'm scrap. Good luck!",
+        "Cobblestones love my wheels. Hate yours!",
+        "Cart's souped up. Your cane ain't!",
+        "Fresh fruit, fresh bruises. Coming through!"
+      ],
+      "ram_hit": [
+        "Ram! Cart wobbles!",
+        "Solid hit! Al's rattled!",
+        "Third strike incoming!"
+      ],
+      "produce_warn": [
+        "MELONS AHEAD!",
+        "CORN BARRAGE!",
+        "TOMATO TOSS!",
+        "CABBAGE DROP!"
+      ],
+      "win": [
+        "Three rams. Al's cart tips over.",
+        "Fells Point is clear. Nice driving.",
+        "Produce everywhere. We still won."
+      ],
+      "lose": [
+        "Clock ran out. Al got away.",
+        "Too much fruit, not enough rams.",
+        "Cart's gone. Chase him again."
+      ]
+    },
+    "jimmy_swim": {
+      "jimmy_taunts": [
+        "Big Jimmy rules the tank. Bubble up!",
+        "Air's running low, land lubber!",
+        "Claw snap! Stay off my sand!",
+        "Blue shell, bad mood. Come closer!",
+        "This aquarium's my dinner plate!",
+        "Swim faster, grandpa. Tide's turning!"
+      ],
+      "low_air": [
+        "Air's thin! Find a pocket!",
+        "Mavis: Harold, breathe!",
+        "Gauge's red. Surface soon!"
+      ],
+      "win": [
+        "Jimmy taps out. Tank's ours.",
+        "Crab retreats. Air to spare.",
+        "Aquarium quiet. We made it."
+      ],
+      "lose": [
+        "Out of air. Blackout.",
+        "Jimmy wins the deep end.",
+        "Surface next time. Rematch."
+      ]
+    },
+    "chip_duel": {
+      "round_cards": [
+        "ROUND 1",
+        "ROUND 2",
+        "FINAL ROUND"
+      ],
+      "tells": [
+        "SEASONING!",
+        "CHIP CANS!",
+        "BAG SLAM!"
+      ],
+      "kid_taunts": [
+        "Punch Out time! Mech vs cane!",
+        "Don't touch my snack bag, grandpa!",
+        "Seasoning cloud! Achoo forever!",
+        "Chip cans incoming! Duck, oldies!",
+        "Bag slam! You're crumbs!",
+        "Mom said three rounds. I win all!"
+      ],
+      "win": [
+        "Mech pops. Kid sulks and runs.",
+        "Harborplace is ours again.",
+        "Three rounds. Brat's bagged."
+      ],
+      "lose": [
+        "Down for the count. Mech wins.",
+        "Too many bag slams. Rematch?",
+        "Kid keeps the pavilion. Ugh."
+      ]
+    },
+    "duchess_race": {
+      "duchess_taunts": [
+        "Race on the harbor! I set the pace!",
+        "Ram me if you can, slow paddlers!",
+        "Dragon Boat Duchess owns this lane!",
+        "Water taxi? More like my chase course!",
+        "Foam in your face! Keep up!",
+        "First boat ride, first lesson: lose!"
+      ],
+      "ram_hit": [
+        "Ram! Her bow shivers!",
+        "Nice bump! She's listing!",
+        "Another hit! She's cracking!"
+      ],
+      "win": [
+        "Duchess beaten. Ride continues.",
+        "Harbor lane clear. Enjoy the view.",
+        "She retreats. Paddle on, you two."
+      ],
+      "lose": [
+        "She outran us. Ambush stands.",
+        "Boat's ours, race isn't. Again?",
+        "Duchess waves goodbye. Rematch."
+      ]
+    }
+  }
+}
