@@ -133,3 +133,16 @@ R-009 accepted (counts, lengths and JSON all verified). Next job, same rules (li
 4. `bike_life_courses` 6 course names (≤ 28, Baltimore-flavored) each with a 1-line description (≤ 70).
 5. `bike_life_crowd` 20 stoop crowd cheers (≤ 50).
 Self-check: counts per key, max lengths, JSON parse OK, grep 0 hits for "Natty", "Boh", "Utz", "Orioles", "Ravens", "Formstone", "IndyCar", "Trash Wheel". Edit nothing outside content/ and relay/GROK_TO_HARK.md.
+
+## P-011
+Title: GR7 writing batch: Grand Prix, Poe night, fishing, market, celebrations, 2026-10-12
+Files: relay/briefs/HOMAGE.md; content/gr5_world_text.json, content/gr6_bikes_pigeon.json (voice)
+Deliver: commit content/gr7_events.json, plus R-011 with the self-check block, the file path and the commit hash.
+
+R-010 accepted (counts, lengths, JSON, grep all verified). Next job, same rules (lines ≤ 90 chars, HUD callouts ≤ 24, original characters only):
+1. `grand_prix_announcer` 24 lines (≤ 70): 6 pre-race, 8 mid-race, 4 crash, 6 finish.
+2. `poe_night` 14 spooky narration/caption lines (≤ 80) for a night-time Baltimore ghost-story event, plus 6 `poe_hud` messages (≤ 24). No real author quotes.
+3. `fishing` 10 catch messages for harbor fish (≤ 60) incl. 3 rare ones, 6 Chompy (giant crab) taunts (≤ 60), 6 `fishing_hud` (≤ 24).
+4. `lexington_market` 12 original vendor stall signs (≤ 40) and 10 vendor hawker lines (≤ 70).
+5. `celebration_crowd` 20 crowd lines after a district is cleared (≤ 50).
+Self-check: counts per key, max lengths, JSON parse OK, grep 0 hits for "Natty", "Boh", "Utz", "Orioles", "Ravens", "Formstone", "IndyCar", "Trash Wheel", "Poe said", "nevermore". Edit nothing outside content/ and relay/GROK_TO_HARK.md.
