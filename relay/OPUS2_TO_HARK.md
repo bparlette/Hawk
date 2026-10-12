@@ -200,3 +200,116 @@ Notes and known issues. All are in `README_bosses.md` with their measured sizes.
   `basicMat` returns.
 
 Next: J-002 (O8) waits until you accept O6. Then I post its Step 0 as a Q block, and stop until a J block says GO.
+
+## Q-003
+Title: O8 new content batch: Step 0 (answers J-004)
+Status: QUESTION (Step 0 done; no code written; waiting for a J block that says GO, and for answers to part 4)
+Branch: no code yet. Planned delivery branch `claude/o8-new-content` (see Q-a). This reply is on `claude/new-session-z5ikqq`.
+Commit: this relay commit only.
+Files read: `relay/briefs/O8.md`, `relay/briefs/HOMAGE.md`, `relay/briefs/O6.md`, `relay/briefs/O7.md` (for Captain Cobblestone),
+`src/gang_key_hwy_otters.js` on `claude/o4-key-hwy-otters` (the Otters' palette and the gang interface).
+Thanks for accepting O6.
+
+### 1. The five deliverables, in my own words
+1. **Pit Beef Pete** (`src/boss_pit_beef_pete.js`, arena `lexington`).
+   - A huge hog in a butcher's apron and paper cap, seated for an eating contest.
+   - His table and plate are a separate, optional piece.
+   - Extra states on top of the boss set: `eat`, `full` (puffed up), `hiccup`, and `cheat_slide` (shoves food across the table).
+2. **Kingpin Carl** (`src/boss_kingpin_carl.js`, arena `basement_lanes`).
+   - A hefty possum, boss of the Masked Bandits, with a lucky towel over one shoulder.
+   - States: `bowl` (windup and release of a small duckpin ball), `heckle`, `celebrate`, `sulk`.
+3. **Riptide Rodney** (`src/boss_riptide_rodney.js`, arena `rash_field`).
+   - The Key Highway Otters' captain, in the Otters' palette from `claude/o4-key-hwy-otters` (KO_C: green `#23c26b`, brown stripe,
+     otter fur, cream).
+   - Carries an original lacrosse-style stick.
+   - States: `cradle`, `pass`, `shoot`, `check`, `stunned`.
+   - A lighter `otter_wingman` built from the same module with `opts.variant`.
+4. **Fells Point Phantoms** (`src/gang_phantoms.js`, the same gang interface as O1–O4).
+   - Three night-only pirate ghosts:
+     - Bosun Bones, the bruiser;
+     - Deckhand Dread, the grunt;
+     - Powder Monkey, small, throws spectral bombs.
+   - They hover 0.15 m and walk on water.
+   - Palette matches their leader, Captain Cobblestone (O7).
+5. **Chompy** (`src/npc_chompy.js`).
+   - An original googly-eyed trash wheel moored at a pier.
+   - States: idle (wheel turning, eyes darting), `chomp` (eats junk), `happy`.
+   - Its own shape, colours and face, not the real Mr. Trash Wheel design.
+
+Plus `README_o8.md`: the O6-style per-model table, measured. Columns are parts, tris, draw calls after the real `mergeRig`, lowest point
+in every pose and blend, and build ms, plus a phone-budget line.
+
+Carried over from O6, unchanged:
+- the round-2 kit, byte-identical;
+- the real `mergeRig` and real poses;
+- culling pass at r = 2.6;
+- the game's dizzy pose attached at test time for the gang;
+- every README number measured, with its pose and time;
+- headroom under every cap.
+
+### 2. Branch
+All O8 code goes to **`claude/o8-new-content`** only. Relay replies go on `claude/new-session-z5ikqq`. I never touch
+`claude/o6-bosses-b` (accepted) or `claude/o5-bosses-a`.
+
+### 3. The homage rule, and the Phantoms solid/ghost toggle, in my own words
+**Homage rule.** Every character is original: no real people, likenesses, official mascots, team marks, brand characters, logos,
+wordmarks or real jersey numbers. Baltimore types and attitude are encouraged: a Lexington Market pit-beef butcher, a rowhouse
+duckpin hustler, a harbour lacrosse jock, a trash wheel. Real ones may be studied for colour and swagger, but the face, outfit details
+and accessories must be changed enough to be original. Chompy must not copy Mr. Trash Wheel: no big round eyes on that body, none of
+its colours or face. When unsure, I take the more original option and say so.
+
+**Phantoms toggle.** Each phantom normally renders translucent, a see-through ghost. That uses one shared material whose opacity is a
+uniform, so the whole rig fades as one surface and doesn't flicker or z-fight against its own parts. When the player flashes the ghost
+lantern, `J.setSolid(true)` (or `opts.solid` at build) makes the same rig fully opaque, so it can be hit like a normal thug.
+`setSolid(false)` returns it to ghost. The toggle is instant and cheap: no rebuild, the same draw calls. It must still look right after
+the real `mergeRig`.
+
+### 4. Questions before GO (my default in brackets)
+- **Q-a. Branch base.** Branch `claude/o8-new-content` from `claude/o6-bosses-b` so the boss tooling (`viewer_bosses.html`,
+  `tools/measure_boss.mjs`, `check_hooks.mjs`, `boss_seq.js`) carries over, plus the gang QA from the otters branch, which is already in
+  its history. [from `claude/o6-bosses-b` at `f507212`]
+- **Q-b. Canaries.** J-004 asks for "quiz answers + canaries", but `relay/briefs/O8.md` has no quiz questions and no canary strings. Are
+  there canaries for O8? [none: I'll put `// tcr2 o8 <id>` on line 2 of every file, and nothing else, unless you send strings]
+- **Q-c. Captain Cobblestone's palette.** O7 hasn't been built: there is no `claude/o7-bosses-c` on the remote, and the brief only says
+  "ghost privateer: translucent glow at night, cutlass and lantern". [a shared `PHANTOM_C` palette I define now:
+  - spectral sea-green glow `#7fe8d0`;
+  - faded navy coats `#2b3a5c`;
+  - bone white `#e8e4d6`;
+  - tarnished gold `#b8963e`;
+  - rotten-rope brown `#6a5a44`.
+  It lives in one constant so it can be re-matched when Cobblestone exists.]
+- **Q-d. Extra boss states vs the boss contract.** Do the three bosses still need the full O6 contract (META, exactly 3 ATTACKS, POSES
+  idle/run/hurt/down/atk1–3), with the named states added as extra POSES entries driven by `J.pose(name, u)` like Voltage Vic?
+  [yes. The extra states go in `POSES` and `J.pose`. Their attacks:
+  - Pete: `cheat_slide` = atk1, plus a belly bump and a hiccup blast.
+  - Carl: `bowl` = atk1, plus a towel snap and a belly-flop.
+  - Rodney: `shoot` = atk1, `check` = atk2, plus a stick sweep.]
+- **Q-e. Pete's table.** Is a separate export better, or a flag?
+  - `buildPitBeefTable(K, opts)` would return its own group, placed by the game.
+  - `opts.table` would build it into Pete's rig under `J.root`.
+  [both: `opts.table` attaches it, `buildPitBeefTable` exists for a separately placed table. Pete's budget is measured both with and
+  without it. He is seated in every pose; `down` is a slump back in his chair.]
+- **Q-f. Rodney's `otter_wingman`.** How much lighter? [scale 1.0 against the captain's 1.2; no captain's armband, stick or extra gear;
+  ≤ 40 parts / ≤ 12,000 tris, so it budgets like a gang member; same `ATTACKS` and `POSES`]
+- **Q-g. Phantoms roster and interface.** The gangs had four members (`grunt_a`, `grunt_b`, `armed`, `bruiser`); this gang lists
+  three. [`GANG.members = ['deckhand_dread', 'bosun_bones', 'powder_monkey']`. Bosun Bones is the bruiser (×1.2, like the gangs).
+  Powder Monkey is small and carries a bomb on `swR`, which plays the gang `attack` as the throw. They use THUG_POSES plus the dizzy
+  pose, with gang budgets: ≤ 36 parts / ≤ 10,800 tris each.]
+- **Q-h. "One shared material".** Is it one material per rig, or one shared by every phantom on screen? The second would mean
+  lantern-flashing one makes them all solid.
+  [one per rig. Each rig gets one toon material with a `uOpacity` uniform (`J.setSolid` per rig), and every part and the merged mesh
+  share it. Ghost mode: transparent, opacity 0.5, front faces only, depth write on (so only the nearest surface shows: no internal
+  layering, no z-fight), ink hulls hidden. Solid mode: opaque, hulls shown. Both are measured after the real `mergeRig`.]
+- **Q-i. Hover and water.** Is the 0.15 m hover built into the rig (feet 0.15 m above the root), with "walk on water" meaning the game
+  sets the root at the water surface (WY = −0.85 below the pier top)? [yes to both]
+- **Q-j. Chompy's interface.** There is no contract. [`export const META` and
+  `buildChompy(K, opts) → { root, J, setState('idle' | 'chomp' | 'happy'), update(dt) }`. The root is at pier-top level, the floats sit
+  at the water line (y = −0.85), facing +z. Budget ≤ 40 parts / ≤ 12,000 tris. A googly-eye glow at night is optional.]
+- **Q-k. Build ms and the phone-budget line.**
+  - Build ms: median of 20 builds in Node (zip kit) and in headless Chrome.
+  - Phone budget: the worst on-screen mix measured in one viewer frame at 390×844: the heaviest O8 boss + 6 Phantoms + Harold and
+    Mavis + Chompy. I report merged draw calls and tris against an iPhone line.
+  [defaults as above; tell me if you have a fixed phone limit to test against]
+- **Q-l. Polling.** I keep the 10-minute relay poll. [yes]
+
+Stopping here until a J block says GO.
