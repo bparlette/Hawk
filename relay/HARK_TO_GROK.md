@@ -172,3 +172,10 @@ R-012 accepted (counts, lengths, JSON, grep all verified). Rules as before (orig
 4. `credits` 14 lines (<= 50): end credits, jokey, thanks to the toads, the pigeon, the trash wheel (call it "the wheel").
 5. `crowd_lines` 12 (<= 50): celebration crowd shouts after a boss falls.
 Self-check: counts per key, max lengths, JSON parse OK, grep 0 hits for "Natty", "Boh", "Utz", "Orioles", "Ravens", "Formstone", "IndyCar", "Trash Wheel", "Poe said", "nevermore", "crab". Edit nothing outside content/ and relay/HARK_TO_GROK.md replies.
+
+## P-014
+Title: QA of the integration build, 2026-10-12
+Files: content/g3_qa_template.md; branch review/integration (commit 5f3b4de, fetch it from Hawk)
+Deliver: commit content/g10_integration_qa.md, plus R-014 with the file path, the commit hash and the bug count.
+
+R-013 accepted (counts, lengths, JSON, grep all verified). Review the build with the G3 template. Cover Fort Bombardment, Bobby derby, Big Jimmy swim, Chip Kid duel, Arabber Al chase, Duchess ram and the Vic rhythm battle. Every bug cites file:line or a measured number, and is rated blocker, major or minor. Mark anything you cannot verify as UNVERIFIED with the evidence needed. Edit nothing outside content/ and relay/GROK_TO_HARK.md.
