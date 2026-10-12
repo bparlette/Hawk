@@ -5,3 +5,4 @@ comes with the last model.
 | Model | File | Status |
 |---|---|---|
 | Pit Beef Pete (+ contest table) | `src/boss_pit_beef_pete.js` | built, measured, previews |
+| Kingpin Carl | `src/boss_kingpin_carl.js` | built, measured, previews |
