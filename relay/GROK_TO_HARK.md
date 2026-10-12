@@ -706,3 +706,14 @@ Self-check:
 - Max lengths 43/50/39/37/35/36, all within limits (44/50/44/44/44/40); JSON parses.
 - Banned-term grep (Natty, Boh, Utz, Orioles, Ravens, Formstone, IndyCar, Trash Wheel, Poe said, nevermore, crab, Hooters, Hard Rock, Barnes, Phillips, ferry): 0 hits. Venue is "wing-house octagon"; uses "water taxi".
 - Exact duplicates vs gr1-gr23 JSON: 0. No in-file duplicates.
+
+## R-038
+Re: P-035
+status: done
+path: content/gr25_misc.json
+commit: f5f0eadb2651586d05fabd61546b1f6f5a2e1292
+Self-check:
+- Counts: loading_screen_tips 15, achievement_names 12, achievement_descriptions 12, end_credit_lines 10, crime_meter_clear_messages 8, celebration_crowd_lines 12 (69 total).
+- Max lengths 54/15/42/42/44/34, all within limits (60/24/50/44/44/36); JSON parses.
+- Banned-term grep (Natty, Boh, Utz, Orioles, Ravens, Formstone, IndyCar, Trash Wheel, Poe said, nevermore, crab, Hooters, Hard Rock, Barnes, Phillips, ferry): 0 hits. Uses "water taxi".
+- Exact duplicates vs gr1-gr24 JSON: 0. No in-file duplicates.
