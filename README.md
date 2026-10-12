@@ -104,3 +104,14 @@ Game-style boss fights as their own modes (src/09a_duel_core.js core, 09b_jimmy.
 - Both: the radio ducks to 22% (`__radio.fightDuck`), the city HUD hides, the arcade panel relabels; a loss offers RETRY (from the phase / round reached) or LEAVE; a win calls `BOSS_CLEAR.clear(lmId)` (06g0_boss_clear.js: boss cleared, district crime 0) and returns to the street.
 - Rig hooks: `window.buildBigJimmy(ctx)` / `window.buildChipKid(ctx)` (contracts in the file headers); otherwise procedural stand-ins.
 - Tests: `?duel=jimmy|chipkid` starts one, `&duelbot=win|lose` plays it. `T/duel/bg.sh <name> <port> <kind> <win|lose> <w> <h> <shot.png|-> [sim] [shotAt]` (detached run of T/duel/run.js), `T/duel/entry.js` (city ring -> ACT -> duel -> LEAVE).
+
+## Racer bosses + harbour rides (hark/racer-bosses) — src/06h_racers.js
+- **Arabber Al, Fells Point: chase racer.** ACT "CHASE AL" at his parked produce cart (165.4, -55.4). Behind-the-car racer round a cobblestone loop with
+  two water-taxi crossings; Al flings watermelons / cabbages / tomato crates. Ram him 3 times before the 90 s clock. Steer stick / A-D / pad; BOOST SWING or ACT
+  (J / E / pad X, Y); HOP JUMP (K / pad A). Win = `BOSS_CLEAR.clear('fells')`.
+- **Water taxi / paddle boats.** ACT "WATER TAXI" at a taxi stop (`__rb.RIDES.STOPS`) or "PADDLE BOAT" at the Harborplace paddle boats (-51.4, -12): a harbour ride.
+- **Dragon Boat Duchess (roaming water boss): boat ramming race.** She ambushes the first boat ride: ram her into a pier or buoy 3 times; her paddle-sceptre
+  swing (raised + glowing) and splash waves (dragon head rears: HOP). Lose the hull = retry. Beaten = saved flag (localStorage tcb_duchess_beaten), the ride carries on.
+- Both fights: own scene + camera (city sim paused), radio `__radio.duckTo(0.2)`, the full map is blocked while a fight runs (boat rides still allow it).
+- Rig hooks: `buildArabberAl()` / `buildDragonBoatDuchess()` (Object3D or `{ root, update(dt, st) }`, feet y 0, facing +z, ~1.8 m).
+- Tests: `?rb=al|duchess|duchess-paddle|ride`, `?rbauto=win|lose`, `?rbtime=N`, `?rbfresh=1`; T/rb/run.js (`PORT=` env, default 8743), T/int3/entry.js (entry ACT labels + shots).
