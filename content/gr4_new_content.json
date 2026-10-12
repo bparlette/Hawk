@@ -1,0 +1,244 @@
+{
+  "_round": "GR4",
+  "modes": {
+    "pete_eating": {
+      "course_cards": ["COURSE 1: CRAB CAKE", "COURSE 2: PIT BEEF", "COURSE 3: LAKE TROUT", "COURSE 4: CODDIES", "COURSE 5: COOKIE TOWER"],
+      "pete_taunts": [
+        "Pull up a stool, toad. Pete don't lose at the counter.",
+        "Here, have some of mine. No, I insist. Heh.",
+        "Lake trout ain't trout, and you ain't hungry enough.",
+        "My apron's seen more beef than your whole block.",
+        "Chew faster, grandpa. The market closes at six!",
+        "Cookie tower's coming. Hope you saved room, hon."
+      ],
+      "hiccup": ["HIC! TAP NOW!", "HICCUP! SIP!", "HIC-HIC! STEADY!"],
+      "swat_back": [
+        "Harold: Keep your scraps on your own plate, Pete!",
+        "Harold: Nice try. That coddie's going back to you.",
+        "Harold: I've been swatting flies since Truman, pal."
+      ],
+      "mavis_fan": [
+        "Mavis: Breathe, Harold! Little bites, hon!",
+        "Mavis: Sip that lemonade and show him who's boss!",
+        "Mavis: You out-ate my brother at Easter. Go!"
+      ],
+      "win": [
+        "Pete's apron strings snap. Harold takes the crown!",
+        "Last cookie down. The whole market cheers.",
+        "Pete pushes back his stool. 'Okay. You're hungry.'"
+      ],
+      "lose": [
+        "Harold taps out. Pete licks the plate clean.",
+        "Too full to croak. Pete wins this round.",
+        "The fullness meter pops. Loosen the belt, retry."
+      ]
+    },
+    "carl_duckpin": {
+      "frame_calls": ["STRIKE!", "SPARE!", "GUTTER!", "SPLIT!", "TEN PINS DOWN!", "ONE PIN LEFT!"],
+      "carl_taunts": [
+        "Small ball, small pins, small chance for you, grandpa.",
+        "This towel's lucky. Your cane ain't.",
+        "Three balls a frame and you still can't clear it?",
+        "Welcome to my basement. Mind the low pipes, toad.",
+        "Kingpin Carl don't miss. Carl plays dead, not bad.",
+        "Ten frames, old timer. I only need nine."
+      ],
+      "bandit_heckles": [
+        "Gutter! Gutter! Gutter!",
+        "Somebody spray that toad's shoes, they stink.",
+        "Carl's rolling hot tonight, yo!",
+        "Boo! The masks see everything!",
+        "Hey frog, the pins are THAT way.",
+        "Bet you a sandwich he chokes on frame ten."
+      ],
+      "mavis_bonus": [
+        "Mavis: Bonus ball! I bowled league in '62, hon!",
+        "Mavis: Watch the wrist, Harold. Like this!",
+        "Mavis: Strike for Mavis! Carl, fetch your towel."
+      ],
+      "win": [
+        "Carl drops his lucky towel. The Bandits go quiet.",
+        "Frame ten, clean sweep. Basement belongs to Harold.",
+        "Carl plays dead. This time he means it."
+      ],
+      "lose": [
+        "Carl waves his towel. The Bandits howl.",
+        "Short by a pin. Carl keeps his crown.",
+        "Gutter on ten. Rack 'em and try again."
+      ]
+    },
+    "rodney_lacrosse": {
+      "goal": [
+        "Harold: Top shelf! The cane still works!",
+        "Mavis: Purse to net! Ha! Get it, hon!",
+        "Harold: That's a goal where I come from, Rodney.",
+        "Mavis: Count it! I saw it go in!"
+      ],
+      "splash_check": [
+        "Splash! Into the harbor. Sit out thirty, pal.",
+        "Mavis: Oops. Swim it off, sweetie.",
+        "Harold: Hope you packed a towel, Otter.",
+        "Rodney: Hey! That water's cold, toad!"
+      ],
+      "rodney_taunts": [
+        "Riptide Rodney, captain of Key Highway. Bow down.",
+        "A cane ain't a stick, grandpa. Go home.",
+        "Purse checks? Lady, this is a real sport.",
+        "First to five and I'm already thinking of six.",
+        "Otters were born to swim. You're gonna learn.",
+        "Rash Field is my field. Pay the toll."
+      ],
+      "win": [
+        "Five goals! Rodney slaps the turf in disbelief.",
+        "The Otters slink off to dry out. Field is ours.",
+        "Mavis spins her purse. Harold tips his cap."
+      ],
+      "lose": [
+        "Rodney scores five. The Otters do a victory flip.",
+        "Checked into the harbor once too often. Retry.",
+        "Rodney keeps the field. Rematch at sundown."
+      ]
+    },
+    "poe_stealth": {
+      "crow_alert": ["CROW SPOTTED YOU!", "SENTRY LOOKING!", "HIDE! WINGS UP!", "CAW! FREEZE!"],
+      "crow_calls": [
+        "Caw! Something croaks in the graveyard!",
+        "The Raven King sees all. Caw!",
+        "Who walks among the old stones tonight?",
+        "Nevermore, toad. Nevermore. Caw!",
+        "Roses? For the poet? Not on our watch.",
+        "Circle the wall. Check the catacombs!"
+      ],
+      "harold_whispers": [
+        "Harold: Easy. Crows hate a squeaky cane.",
+        "Harold: Three roses, one bottle. Then we scram.",
+        "Harold: Once upon a midnight... quiet, Harold.",
+        "Harold: Mavis would never believe this one."
+      ],
+      "clean_finish": [
+        "Three roses rest at the grave. Not one caw.",
+        "Bottle left, crows none the wiser. A ghost toad.",
+        "The poet's honored. The Raven King slept through it."
+      ],
+      "caught": [
+        "The flock dives! Back to the gate, Harold!",
+        "Caught under the lamplight. Try again.",
+        "The Raven King cackles. Roses dropped."
+      ]
+    },
+    "fishing": {
+      "catch_names": [
+        "STRIPED BASS", "BLUE CRAB", "WHITE PERCH", "AMERICAN EEL", "CATFISH", "SPOT",
+        "OLD BOOT", "SODA CAN", "TRAFFIC CONE", "BENT UMBRELLA", "RUBBER DUCK", "SHOPPING CART"
+      ],
+      "chompy": [
+        "Chompy: Nom! Junk goes in, clean harbor comes out!",
+        "Chompy: Is that a boot? My favorite flavor!",
+        "Chompy: Googly eyes on the prize, Harold!",
+        "Chompy: Keep 'em coming, I've got room!",
+        "Chompy: Burp. Pardon me. Water wheel manners.",
+        "Chompy: You fish, I chomp. Best team on the pier!"
+      ],
+      "rare_catch": [
+        "Rare catch! A golden crab with a tiny crown!",
+        "Whoa! A rockfish as long as Harold's cane!",
+        "Legendary! The old harbor eel nobody believes in!"
+      ]
+    },
+    "grand_prix": {
+      "announcer": [
+        "Engines roaring on Pratt Street! The Harbor Grand Prix is ON!",
+        "Harold launches clean off the line! Look at that frog go!",
+        "Down the straight past the ballpark, flat out!",
+        "Hairpin by the Convention Center! Brakes, brakes, brakes!",
+        "Side by side into the turn, and the toad holds!",
+        "Sparks off the wall! He kissed it and kept going!",
+        "Final lap! The whole harbor's on its feet!",
+        "Checkered flag! A grandpa toad takes the Grand Prix!"
+      ],
+      "hud": ["LAP 1/3", "HAIRPIN AHEAD", "FINAL LAP!", "CHECKERED FLAG!"]
+    },
+    "celebration": {
+      "neighbors": [
+        "Neighbor: Bang those pots! Harold did it!",
+        "Neighbor: Whole block's out on the stoops tonight, hon!",
+        "Neighbor: I knew that toad had it in him!",
+        "Neighbor: Look! The monument's lit up like Christmas!",
+        "Neighbor: Somebody fire up the crab pot!",
+        "Neighbor: Mavis, you married a hero!"
+      ],
+      "drone_intro": [
+        "Mavis: Put these goggles on, Harold. Trust me.",
+        "Harold: Whoa. I'm flying over the whole harbor!"
+      ]
+    }
+  },
+  "bosses": {
+    "brewmaster_finale": {
+      "truck_escape": [
+        "Mavis: Get in, Harold! I'm driving!",
+        "Harold: Mavis, that's a beer truck!",
+        "Mavis: It's got wheels. Hold onto your hat!"
+      ],
+      "chase_taunts": [
+        "Brewmaster: You can't outrun a full keg, toad!",
+        "Brewmaster: Pratt Street's mine, every block of it!",
+        "Brewmaster: One eye's all I need to see you crash!",
+        "Brewmaster: Mavis drives like my grandmother!"
+      ],
+      "street_rage": [
+        "Brewmaster: My sign! You broke my beautiful sign!",
+        "Brewmaster: I'll hit you with every letter of it!",
+        "Brewmaster: Enough! This ends on the street!"
+      ]
+    }
+  },
+  "barks": {
+    "phantoms": {
+      "barks": [
+        "Bosun Bones: Arr, the tide brings fresh souls tonight.",
+        "Deckhand Dread: Swab the pier! Swab it forever!",
+        "Powder Monkey: Hee hee! Who wants a boom?",
+        "Bosun Bones: Off the Broadway pier, ye living toad!",
+        "Deckhand Dread: Me bones rattle for treasure.",
+        "Powder Monkey: Powder's dry, fuse is lit!",
+        "Bosun Bones: Two hundred years and still no shore leave.",
+        "Deckhand Dread: Fog's rolling in. Our kind of night.",
+        "Powder Monkey: Bosun says scare him. Booo!",
+        "Bosun Bones: Fells Point belongs to the dead after dark."
+      ],
+      "lantern_flash": [
+        "Bosun Bones: Argh! Douse that light!",
+        "Deckhand Dread: Me eyes! Me hollow eyes!",
+        "Powder Monkey: Too bright! Too bright!",
+        "Bosun Bones: Back to the fog, lads!"
+      ]
+    },
+    "lexington": {
+      "barks": [
+        "Market's closed, grandpa. Night shift is ours.",
+        "Pete said nobody touches the stalls. Nobody.",
+        "Smells like pit beef and trouble.",
+        "Hey toad, you here for leftovers?",
+        "Lights off, hands out. Pay up.",
+        "Night market rules, pal. We make 'em."
+      ]
+    }
+  },
+  "landmarks": {
+    "lexington_market": {
+      "name": "LEXINGTON MARKET",
+      "blurb": [
+        "Founded in 1782, it's one of the oldest public markets in America.",
+        "Pit Beef Pete claims he's eaten at every stall since opening day."
+      ]
+    },
+    "rash_field": {
+      "name": "RASH FIELD",
+      "blurb": [
+        "A waterfront park on the Inner Harbor's south shore by the Science Center.",
+        "Riptide Rodney calls it home turf and charges toads a toll."
+      ]
+    }
+  }
+}
