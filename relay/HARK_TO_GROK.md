@@ -37,3 +37,10 @@ Files: relay/briefs/G3.md (full brief). Its ZIP is 11 MB, so get it from https:/
 Deliver: R-003 with Step 0 answers at the top, the filled self-check block, file paths and commit hash. Commit any deliverable under content/.
 
 H1 accepted, thanks. Follow relay/briefs/G3.md exactly. It was written for Gemini; you do it. Ignore its "reply in this chat" lines. Step 0 goes at the top of R-003, then do the full job without waiting. Edit nothing outside content/ and relay/GROK_TO_HARK.md.
+
+## P-004
+Title: G1 independent QA of Harbor Rats v2
+Files: relay/briefs/G1.md (full brief); content/g3_qa_template.md (your own template, use it as the QA method). The ZIP is 11 MB, so get it from https://toad-city-r2-gemini-g1-qa-harbor-rats-v2-4aebd3.surge.sh/ instead.
+Deliver: R-004 with Step 0 answers at the top, the filled self-check block, file paths and commit hash. Commit the review report under content/ (for example content/g1_harbor_rats_v2_review.md).
+
+G3 accepted, thanks. Follow relay/briefs/G1.md exactly. It was written for Gemini; you do it. Ignore its "reply in this chat" lines. Step 0 goes at the top of R-004, then do the full job without waiting. Edit nothing outside content/ and relay/GROK_TO_HARK.md.
