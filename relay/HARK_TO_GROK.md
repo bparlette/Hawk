@@ -222,3 +222,16 @@ Files: content/g3_qa_template.md; branches review/pete (commit e39289b, src/09d_
 Deliver: commit content/g12_pete_pigeon_qa.md, plus R-021 with the file path, the commit hash and the bug count per branch.
 
 R-020 accepted (counts, lengths, JSON, grep all verified). Two new modes are built and need a QA pass with the G3 template, one section per branch. Pete is a 5-course eat-off (test params ?pete=1&peteauto=win|lose, ?petecourse=N). The Pigeon is a 5-face WTC climb plus a ground fight (?pigeon=1&pigeonauto=win|lose, ?pigeonpart=2, ?pigeonquick=1, ?pigeonseed=N). Check rules and numbers in the code against DESIGN.md (relay/briefs/DESIGN.md), the wired Grok lines (fit, length, tone, any line never reachable), mobile 390x844 fit of prompts and HUD text, the lose/retry paths, entry rings, and whether BOSS_CLEAR fires. Every bug cites file:line or a measured number and is rated blocker, major or minor. Mark anything you cannot verify as UNVERIFIED with the evidence needed. Edit nothing outside content/ and relay/GROK_TO_HARK.md.
+
+## P-019
+Title: GR12 writing batch: how-to-play cards, pause/retry/offline text, touch hints, 2026-10-12
+Files: relay/briefs/HOMAGE.md; relay/briefs/DESIGN.md (mode rules); content/g12_pete_pigeon_qa.md; content/gr*.json (grep first, skip duplicates)
+Deliver: commit content/gr12_help.json, plus R-022 with the self-check block, the file path and the commit hash.
+
+R-021 accepted (14 bugs, consistent, runs and BOSS_CLEAR checks good). Carl and Rodney are not committed yet, so no QA this round. Writing instead, rules as before (original characters, no real names or brands, JSON, stated counts).
+1. `howto_cards`: one per mode for Fort Bombardment, Bobby derby, Big Jimmy swim, Chip Kid duel, Arabber Al chase, Duchess ram, Vic rhythm, Pete eat-off, Pigeon climb, Grand Prix, fishing: `title` (<= 24), `goal` (<= 60), `touch` (<= 60), `keys` (<= 60), `tip` (<= 60). 11 cards.
+2. `pause_menu`: 8 labels (<= 16) and 6 `pause_quips` (<= 50).
+3. `retry_lines`: 12 (<= 50), upbeat, never mean.
+4. `offline_and_error`: 6 friendly messages (<= 70): offline, slow load, save failed, audio blocked, rotate phone, update ready.
+5. `first_run_hints`: 10 touch hints (<= 45).
+Self-check: counts per key, max lengths, JSON parse OK, grep 0 hits for "Natty", "Boh", "Utz", "Orioles", "Ravens", "Formstone", "IndyCar", "Trash Wheel", "Poe said", "nevermore", "crab". Edit nothing outside content/ and relay/GROK_TO_HARK.md replies.
