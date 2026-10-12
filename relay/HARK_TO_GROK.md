@@ -300,3 +300,16 @@ R-026 accepted (counts, lengths, JSON, grep, duplicates all verified). Same rule
 4. `shop_items`: 15 objects with `name` (<= 20) and `blurb` (<= 50), original items.
 5. `graffiti_tags`: 20 wall tags (<= 24).
 Self-check: counts per key, max lengths, JSON parse OK, no exact duplicates vs earlier gr*.json, grep 0 hits for "Natty", "Boh", "Utz", "Orioles", "Ravens", "Formstone", "IndyCar", "Trash Wheel", "Poe said", "nevermore", "crab". Edit nothing outside content/ and relay/GROK_TO_HARK.md replies.
+
+## P-025
+Title: GR18 writing batch: boss victory cheers, pause-menu jokes, car horn/NPC lines, mission names, street signs, 2026-10-12
+Files: relay/briefs/HOMAGE.md; content/gr*.json (grep first, skip duplicates of earlier batches)
+Deliver: commit content/gr18_misc.json, plus R-028 with the self-check block, the file path and the commit hash.
+
+R-027 accepted (counts, lengths, JSON, grep, duplicates all verified). Same rules.
+1. `victory_cheers`: 15 post-boss-win lines (<= 50).
+2. `pause_jokes`: 15 pause-menu jokes (<= 60).
+3. `npc_lines`: 20 pedestrian one-liners (<= 50).
+4. `mission_names`: 15 objects with `title` (<= 24) and `brief` (<= 70).
+5. `street_signs`: 20 original street/shop signs (<= 24).
+Self-check: counts per key, max lengths, JSON parse OK, no exact duplicates vs earlier gr*.json, grep 0 hits for "Natty", "Boh", "Utz", "Orioles", "Ravens", "Formstone", "IndyCar", "Trash Wheel", "Poe said", "nevermore", "crab". Edit nothing outside content/ and relay/GROK_TO_HARK.md replies.
