@@ -1,0 +1,38 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover"
+    />
+    <meta name="theme-color" content="#f4ecd4" />
+    <title>Headbrawl</title>
+    <style>html,body,#game,canvas{touch-action:none;overscroll-behavior:none;-webkit-user-select:none;user-select:none}</style>
+    <script src="./shared/nes-pad-controls.js" defer></script>
+    <meta name="description" content="Phaser big-head arena brawler." />
+    <meta property="og:title" content="Headbrawl" />
+    <meta property="og:description" content="Phaser big-head arena brawler." />
+    <meta property="og:url" content="https://notebook-arcade.surge.sh/headbrawl/" />
+    <meta property="og:image" content="https://notebook-arcade.surge.sh/headbrawl/og.jpg" />
+    <meta property="og:image:secure_url" content="https://notebook-arcade.surge.sh/headbrawl/og.jpg" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:image" content="https://notebook-arcade.surge.sh/headbrawl/og.jpg" />
+    <script>
+      (function () {
+        var p = location.pathname
+        if (p && !p.endsWith('/') && !/\.[a-z0-9]+$/i.test(p)) {
+          location.replace(p + '/' + location.search + location.hash)
+        }
+      })()
+    </script>
+
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'><rect width='64' height='64' fill='%23f4ecd4'/><line x1='10' y1='0' x2='10' y2='64' stroke='%23d96a6a' stroke-width='3'/><circle cx='40' cy='28' r='10' fill='%23222'/><text x='32' y='58' font-size='18' text-anchor='middle' fill='%23222'>HB</text></svg>" />
+    <script type="module" crossorigin src="./assets/index-DGC90Ih9.js"></script>
+    <link rel="modulepreload" crossorigin href="./assets/phaser-Czz4FBZH.js">
+    <link rel="stylesheet" crossorigin href="./assets/index-BR5kLWmJ.css">
+  </head>
+  <body>
+    <div id="game"></div>
+  </body>
+</html>
