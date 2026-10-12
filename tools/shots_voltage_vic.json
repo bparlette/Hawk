@@ -1,0 +1,397 @@
+[
+ {
+  "out": "previews/voltage_vic_day.png",
+  "q": "show=voltage_vic&cam=three&t=1.1&ui=0",
+  "errors": [],
+  "report": {
+   "show": "voltage_vic",
+   "rigs": {
+    "voltage_vic": {
+     "parts": 50,
+     "tris": 9572,
+     "hullTris": 9272,
+     "mats": 2,
+     "height": 2.517,
+     "minY": -0.096
+    }
+   },
+   "frame": {
+    "calls": 105,
+    "triangles": 26778
+   }
+  }
+ },
+ {
+  "out": "previews/voltage_vic_night.png",
+  "q": "show=voltage_vic&cam=three&t=1.1&night=1&ui=0",
+  "errors": [],
+  "report": {
+   "show": "voltage_vic",
+   "rigs": {
+    "voltage_vic": {
+     "parts": 50,
+     "tris": 9572,
+     "hullTris": 9272,
+     "mats": 2,
+     "height": 2.517,
+     "minY": -0.096
+    }
+   },
+   "frame": {
+    "calls": 105,
+    "triangles": 26778
+   }
+  }
+ },
+ {
+  "out": "previews/voltage_vic_phone_390x844.png",
+  "q": "show=voltage_vic&cam=phone&t=1.1&ui=0",
+  "errors": [],
+  "report": {
+   "show": "voltage_vic",
+   "rigs": {
+    "voltage_vic": {
+     "parts": 50,
+     "tris": 9572,
+     "hullTris": 9272,
+     "mats": 2,
+     "height": 2.517,
+     "minY": -0.096
+    }
+   },
+   "frame": {
+    "calls": 256,
+    "triangles": 63594
+   }
+  }
+ },
+ {
+  "out": "previews/voltage_vic_phone_390x844_night.png",
+  "q": "show=voltage_vic&cam=phone&t=1.1&night=1&ui=0",
+  "errors": [],
+  "report": {
+   "show": "voltage_vic",
+   "rigs": {
+    "voltage_vic": {
+     "parts": 50,
+     "tris": 9572,
+     "hullTris": 9272,
+     "mats": 2,
+     "height": 2.517,
+     "minY": -0.096
+    }
+   },
+   "frame": {
+    "calls": 256,
+    "triangles": 63594
+   }
+  }
+ },
+ {
+  "out": "previews/voltage_vic_phone_390x844_merged.png",
+  "q": "show=voltage_vic&cam=phone&t=1.1&merge=1&ui=0",
+  "errors": [],
+  "report": {
+   "show": "voltage_vic",
+   "rigs": {
+    "voltage_vic": {
+     "parts": 2,
+     "tris": 9572,
+     "hullTris": 9272,
+     "mats": 2,
+     "height": 2.446,
+     "minY": -0.09
+    }
+   },
+   "frame": {
+    "calls": 157,
+    "triangles": 65234
+   }
+  }
+ },
+ {
+  "out": "previews/voltage_vic_phone_390x844_night_merged.png",
+  "q": "show=voltage_vic&cam=phone&t=1.1&night=1&merge=1&ui=0",
+  "errors": [],
+  "report": {
+   "show": "voltage_vic",
+   "rigs": {
+    "voltage_vic": {
+     "parts": 2,
+     "tris": 9572,
+     "hullTris": 9272,
+     "mats": 2,
+     "height": 2.446,
+     "minY": -0.09
+    }
+   },
+   "frame": {
+    "calls": 157,
+    "triangles": 65234
+   }
+  }
+ },
+ {
+  "out": "previews/voltage_vic_merged_day.png",
+  "q": "show=voltage_vic&cam=three&t=1.1&merge=1&ui=0",
+  "errors": [],
+  "report": {
+   "show": "voltage_vic",
+   "rigs": {
+    "voltage_vic": {
+     "parts": 2,
+     "tris": 9572,
+     "hullTris": 9272,
+     "mats": 2,
+     "height": 2.446,
+     "minY": -0.09
+    }
+   },
+   "frame": {
+    "calls": 6,
+    "triangles": 28418
+   }
+  }
+ },
+ {
+  "out": "previews/voltage_vic_merged_night.png",
+  "q": "show=voltage_vic&cam=three&t=1.1&night=1&merge=1&ui=0",
+  "errors": [],
+  "report": {
+   "show": "voltage_vic",
+   "rigs": {
+    "voltage_vic": {
+     "parts": 2,
+     "tris": 9572,
+     "hullTris": 9272,
+     "mats": 2,
+     "height": 2.446,
+     "minY": -0.09
+    }
+   },
+   "frame": {
+    "calls": 6,
+    "triangles": 28418
+   }
+  }
+ },
+ {
+  "out": "previews/voltage_vic_merged_flash.png",
+  "q": "show=voltage_vic&cam=three&t=1.1&merge=1&flash=0.85&ui=0",
+  "errors": [],
+  "report": {
+   "show": "voltage_vic",
+   "rigs": {
+    "voltage_vic": {
+     "parts": 2,
+     "tris": 9572,
+     "hullTris": 9272,
+     "mats": 2,
+     "height": 2.446,
+     "minY": -0.09
+    }
+   },
+   "frame": {
+    "calls": 6,
+    "triangles": 28418
+   }
+  }
+ },
+ {
+  "out": "previews/voltage_vic_flash_unmerged.png",
+  "q": "show=voltage_vic&cam=three&t=1.1&flash=0.85&ui=0",
+  "errors": [],
+  "report": {
+   "show": "voltage_vic",
+   "rigs": {
+    "voltage_vic": {
+     "parts": 50,
+     "tris": 9572,
+     "hullTris": 9272,
+     "mats": 2,
+     "height": 2.517,
+     "minY": -0.096
+    }
+   },
+   "frame": {
+    "calls": 105,
+    "triangles": 26778
+   }
+  }
+ },
+ {
+  "out": "previews/voltage_vic_turn.png",
+  "q": "show=voltage_vic&turn=1&t=1.1&ui=0",
+  "errors": [],
+  "report": {
+   "show": "voltage_vic",
+   "rigs": {
+    "voltage_vic": {
+     "parts": 50,
+     "tris": 9572,
+     "hullTris": 9272,
+     "mats": 2,
+     "height": 2.517,
+     "minY": -0.096
+    }
+   },
+   "frame": {
+    "calls": 417,
+    "triangles": 107106
+   }
+  }
+ },
+ {
+  "out": "previews/voltage_vic_poses.png",
+  "q": "show=voltage_vic&pose=all&t=1.1&ui=0",
+  "errors": [],
+  "report": {
+   "show": "voltage_vic",
+   "rigs": {
+    "voltage_vic": {
+     "parts": 50,
+     "tris": 9572,
+     "hullTris": 9272,
+     "mats": 2,
+     "height": 2.517,
+     "minY": -0.096
+    }
+   },
+   "frame": {
+    "calls": 729,
+    "triangles": 187434
+   }
+  }
+ },
+ {
+  "out": "previews/voltage_vic_poses_night_merged.png",
+  "q": "show=voltage_vic&pose=all&t=1.1&night=1&merge=1&ui=0",
+  "errors": [],
+  "report": {
+   "show": "voltage_vic",
+   "rigs": {
+    "voltage_vic": {
+     "parts": 2,
+     "tris": 9572,
+     "hullTris": 9272,
+     "mats": 2,
+     "height": 2.446,
+     "minY": -0.09
+    }
+   },
+   "frame": {
+    "calls": 36,
+    "triangles": 198914
+   }
+  }
+ },
+ {
+  "out": "previews/voltage_vic_angry.png",
+  "q": "show=voltage_vic&pose=all&t=1.1&angry=1&ui=0",
+  "errors": [],
+  "report": {
+   "show": "voltage_vic",
+   "rigs": {
+    "voltage_vic": {
+     "parts": 50,
+     "tris": 9572,
+     "hullTris": 9272,
+     "mats": 2,
+     "height": 2.517,
+     "minY": -0.096
+    }
+   },
+   "frame": {
+    "calls": 729,
+    "triangles": 187434
+   }
+  }
+ },
+ {
+  "out": "previews/voltage_vic_atk1_strip.png",
+  "q": "show=voltage_vic&strip=atk1&n=8&ui=0",
+  "errors": [],
+  "report": {
+   "show": "voltage_vic",
+   "rigs": {},
+   "frame": {
+    "calls": 833,
+    "triangles": 214210
+   }
+  }
+ },
+ {
+  "out": "previews/voltage_vic_atk2_strip.png",
+  "q": "show=voltage_vic&strip=atk2&n=8&ui=0",
+  "errors": [],
+  "report": {
+   "show": "voltage_vic",
+   "rigs": {},
+   "frame": {
+    "calls": 833,
+    "triangles": 214210
+   }
+  }
+ },
+ {
+  "out": "previews/voltage_vic_atk3_strip.png",
+  "q": "show=voltage_vic&strip=atk3&n=8&ui=0",
+  "errors": [],
+  "report": {
+   "show": "voltage_vic",
+   "rigs": {},
+   "frame": {
+    "calls": 833,
+    "triangles": 214210
+   }
+  }
+ },
+ {
+  "out": "previews/voltage_vic_knockdown_strip.png",
+  "q": "show=voltage_vic&strip=knockdown&n=9&ui=0",
+  "errors": [],
+  "report": {
+   "show": "voltage_vic",
+   "rigs": {},
+   "frame": {
+    "calls": 937,
+    "triangles": 240986
+   }
+  }
+ },
+ {
+  "out": "previews/voltage_vic_knockdown_strip_merged.png",
+  "q": "show=voltage_vic&strip=knockdown&n=9&merge=1&ui=0",
+  "errors": [],
+  "report": {
+   "show": "voltage_vic",
+   "rigs": {},
+   "frame": {
+    "calls": 46,
+    "triangles": 255746
+   }
+  }
+ },
+ {
+  "out": "previews/voltage_vic_sheet.png",
+  "q": "show=voltage_vic&sheet=1&t=1.1",
+  "errors": [],
+  "report": {
+   "show": "voltage_vic",
+   "rigs": {
+    "voltage_vic": {
+     "parts": 50,
+     "tris": 9572,
+     "hullTris": 9272,
+     "mats": 2,
+     "height": 2.517,
+     "minY": -0.096
+    }
+   },
+   "frame": {
+    "calls": 735,
+    "triangles": 187712
+   }
+  }
+ }
+]

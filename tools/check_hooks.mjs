@@ -28,5 +28,14 @@ if (id === 'big_jimmy') {
     return { keys, okShape, tipWorld: tip.toArray().map((v) => +v.toFixed(2)), ...s0 };
   });
 }
+if (id === 'voltage_vic') {
+  run('rhythmStage', () => {
+    const J = M.buildVoltageVic({ THREE, stage: true }); const s0 = stats(J.root);   // THREE only: the module supplies the kit's materials
+    const beats = []; for (const n of ['idle', 'atk1', 'atk2', 'atk3']) for (const u of [0, 0.5, 1]) { J.pose(n, u); J.root.updateMatrixWorld(true); beats.push(n + '@' + u); }
+    const m = new Set(); J.root.traverse((o) => o.isMesh && !isHull(o) && m.add(o.material.type));
+    return { hasPose: typeof J.pose === 'function', booth: !!J.booth, posed: beats.length, materialTypes: [...m], ...s0 };
+  });
+  run('brawlWithGameKit', () => { const J = M.buildVoltageVic(KG, { seed: 7 }); mergeRig(J); return { mergedCalls: J.merged.length, basicMatFallback: J.glowMat.type }; });
+}
 const file = `tools/results_boss_${id}.json`, R = JSON.parse(fs.readFileSync(file, 'utf8')); R.hooks = out; fs.writeFileSync(file, JSON.stringify(R, null, 1));
 console.log(JSON.stringify(out));
