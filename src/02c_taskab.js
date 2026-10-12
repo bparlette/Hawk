@@ -94,11 +94,11 @@ class ABChunks { // P, N and colour (3 or 4 components) per cell of `cell` metre
 //   >= AB.MASS_D2 m (walls, roofs, cornice slabs, parapets; not pipes, rails or thin trim), decals >= AB.DECAL_MIN m2 (windows, doors, shop fronts,
 //   signs), every tiled facade run as ONE quad (out.tiled; the shader picks a variant tile + mirror per 1.2 m cell, so no per-cell decals), and a thin post + head stand-in for each acorn lamp.
 // NEAR (32 m cells, shown only while the camera is within AB.NEAR m of the cell, +AB.HYST to leave): everything else - trim, dentils, brackets,
-//   sills, lintels, stoop steps and rails, house numbers, grilles, full parked cars, lamps, bins, benches, manholes. Two meshes per cell: solids >= 0.9 m (cast shadows) and decals + small
-//   solids (receive only). The ink hulls (HD) are 64 m near cells; car glass is one city-wide mesh shown only while some car cell is near.
+//   sills, lintels, stoop steps and rails, house numbers, grilles, full parked cars, lamps, bins, benches, manholes. Two meshes per cell: casters (car bodies, street-level parts >= 0.9 m:
+//   stoops, steps) and everything else (decals, trim, lintels, small parts; receive only). The ink hulls (HD) are 64 m near cells; car glass is one city-wide mesh shown only while some car cell is near.
 // FAR CARS: one InstancedMesh of 3-box stand-ins (body in the car's paint, dark cabin, tyres), refilled with only the far, in-frustum, in-fog cars.
 // Glow (night only) stays ONE city-wide mesh.
-Object.assign(AB, { DBG: Q.get('abdbg') || '', CELL: 32, NEAR: 20, HYST: 6, MASS_MIN: 2.0, MASS_D2: 0.4, MASS_TRI: 12, DECAL_MIN: 0.5 });
+Object.assign(AB, { DBG: Q.get('abdbg') || '', CELL: 32, NEAR: 20, HYST: 6, MASS_MIN: 2.0, MASS_D2: 0.4, MASS_TRI: 12, DECAL_MIN: 0.5, CAST_Y: 2.6 });
 const AB_GLW = new ABChunks(false), AB_GLS = new ABChunks(true), AB_OLK = new ABChunks(false, 64); // glow + car glass: one city-wide mesh each; hulls: 64 m cells (near only)
 AB.stats.t = { mass: 0, massD: 0, tiled: 0, nearS: 0, nearD: 0 };
 const AB_CELLS = new Map(); // key -> { key, x0, z0, S: MB (near solids), D: MB (near decals), meshes: [], prox: [], near }
@@ -119,7 +119,9 @@ function abCityOut() {
       if (abTrack) { abTrack.box.union(b); const n = triN(g); if (n > abTrack.n && s >= 0.9) { abTrack.n = n; abTrack.col = col; } }
       const mass = !AB.ctx && s >= AB.MASS_MIN && ds[1] >= AB.MASS_D2 && triN(g) <= AB.MASS_TRI; // slabs + walls, not sticks (pipes, rails, thin trim)
       if (ol && AB.HULL && s >= AB.HULL_MIN) AB_OLK.add(g, '#000');
-      const st = AB.stats.t; if (mass) { if (AB.DBG !== 'nomass') CB.geom(g, col); st.mass += triN(g); } else { const [cx, cz] = abCtr(g), c = abCellAt(cx, cz); (s >= 0.9 ? c.S : c.D).geom(g, col); st.nearS += triN(g); } // >= 0.9 m casts (as before: big -> CB, small -> GB); small parts ride the near decal mesh (same toon + atlas shading, white tile) to save a draw call
+      const st = AB.stats.t; if (mass) { if (AB.DBG !== 'nomass') CB.geom(g, col); st.mass += triN(g); } else { const [cx, cz] = abCtr(g), c = abCellAt(cx, cz); (s >= 0.9 && (AB.ctx === 'car' || b.max.y < AB.CURB + AB.CAST_Y) ? c.S : c.D).geom(g, col); st.nearS += triN(g); }
+      // near casters: car bodies and street-level parts >= 0.9 m (stoops, steps, areaways, bins); the rest (trim, lintels, sills, brackets, small parts)
+      // only receive and ride the near decal mesh (same toon + atlas shading on the white tile) to save a draw call
     },
     decal(g, atlas, name) { const r = atlas.rect(name); if (!r) throw new Error('no tile ' + name);
       g.computeBoundingBox(); const b = g.boundingBox, e = [b.max.x - b.min.x, b.max.y - b.min.y, b.max.z - b.min.z].sort((p, q) => q - p);
@@ -233,7 +235,7 @@ function abBuildLayers() { // after the city chunks: near cells (solids, decals,
   AB.stats.cells = AB_CELLS.size; AB.stats.nearTris = Math.round(nearTris); AB.stats.layersMs = Math.round(performance.now() - t0);
 }
 // per frame (scene.onBeforeRender, before the shadow pass): a cell is near while the camera is within AB.NEAR m (+AB.HYST to leave) of its square
-const AB_FR = new THREE.Frustum(), AB_M4 = new THREE.Matrix4(), AB_SPH = new THREE.Sphere();
+const AB_BOX = new THREE.Box3(), AB_V1 = new THREE.Vector3(), AB_V2 = new THREE.Vector3(), AB_FR = new THREE.Frustum(), AB_M4 = new THREE.Matrix4(), AB_SPH = new THREE.Sphere();
 function abFillInst(S, cam) { // refill the visible stand-in instances (only re-uploaded when the set changed)
   if (!S) return; const px = cam.position.x, pz = cam.position.z, fogF = (scene.fog ? scene.fog.far : 150) + 6, vis = [];
   S.list.forEach((P, i) => { if (P.cell.near || Math.hypot(P.c.x - px, P.c.z - pz) > fogF) return; AB_SPH.set(P.c, P.r); if (AB_FR.intersectsSphere(AB_SPH)) vis.push(i); });
@@ -250,6 +252,7 @@ function abLodTick(cam) {
   }
   for (const c of AB.hullCells) { const dx = Math.max(c.x0 - px, 0, px - c.x0 - 64), dz = Math.max(c.z0 - pz, 0, pz - c.z0 - 64), d = Math.hypot(dx, dz);
     const n = force === '1' ? true : force === '0' ? false : (c.near ? d < AB.NEAR + AB.HYST : d < AB.NEAR); c.near = n; c.m.visible = n && QUAL.hd; }
-  let anyCar = false; for (const c of AB_CELLS.values()) if (c.near && c.prox.length) { anyCar = true; break; } L.glass.visible = anyCar; // car glass only matters while some car is near (far cars are stand-ins)
-  AB_FR.setFromProjectionMatrix(AB_M4.multiplyMatrices(cam.projectionMatrix, cam.matrixWorldInverse)); abFillInst(L.cars, cam);
+  AB_FR.setFromProjectionMatrix(AB_M4.multiplyMatrices(cam.projectionMatrix, cam.matrixWorldInverse));
+  let anyCar = false; for (const c of AB_CELLS.values()) if (c.near && c.prox.length && AB_FR.intersectsBox(AB_BOX.set(AB_V1.set(c.x0, -1, c.z0), AB_V2.set(c.x0 + AB.CELL, 8, c.z0 + AB.CELL)))) { anyCar = true; break; }
+  L.glass.visible = anyCar; // car glass only matters while a near car cell is in view (far cars are stand-ins) abFillInst(L.cars, cam);
 }
