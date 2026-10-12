@@ -88,9 +88,16 @@ function simulate(r, name, tStop) {   // deterministic 60 fps run of a sequence 
 let harold = null;
 function rebuild() {
   const id = SHOW, e = REG[id], sp = Math.max(2.2, W(id) * 2.4);
-  if (S.sheet) {
-    const views = [['front', 'idle', 0], ['3/4', 'idle', 0.75], ['side', 'idle', Math.PI / 2], ['back', 'idle', Math.PI]].concat(e.A.map((a) => [a.id.replace(/_/g, ' ') + ' (' + a.pose + ')', a.pose, 0.5]));
-    views.forEach(([n, pose, ry], i) => { const r = addRig(id, (i - 3) * sp, 0, pose, ry); r.el.textContent = n; if (pose.startsWith('atk')) { const a = e.A.find((x) => x.pose === pose); r.fixedU = (a.active[0] + a.active[1]) / 2; } });
+  if (S.sheet) {   // two rows on an orthographic camera: turnaround on top, the three attacks below (each on its own grey disc)
+    const views = [['front', 'idle', 0], ['3/4', 'idle', 0.75], ['side', 'idle', Math.PI / 2], ['back', 'idle', Math.PI]].concat(e.A.map((a) => [a.id.replace(/_/g, ' ') + ' (' + a.pose + ')', a.pose, 0]));
+    const H = e.meta.height, sx = Math.max(1.9, W(id) * 2.25), rowY = -(H + 1.0);
+    views.forEach(([n, pose, ry], i) => {
+      const top = i < 4, x = top ? (i - 1.5) * sx : (i - 5) * sx * 1.25, y = top ? 0 : rowY;
+      const r = addRig(id, x, 0, pose, ry); r.J.root.position.y = y; r.y0 = y; r.el.textContent = n;
+      const disc = new THREE.Mesh(new THREE.CircleGeometry(W(id) * 1.1, 40), new THREE.MeshLambertMaterial({ color: '#8c8c92' })); disc.rotation.x = -Math.PI / 2; disc.position.set(x, y - 0.002, 0); disc.receiveShadow = true; scene.add(disc);
+      if (pose.startsWith('atk')) { const a = e.A.find((q) => q.pose === pose); r.fixedU = (a.active[0] + a.active[1]) / 2; }
+    });
+    ground.visible = false; S.sheetFit = { w: 4 * sx, h: H - rowY + 0.9, cy: (H + rowY) / 2 };
     const tt = document.getElementById('title'); tt.style.display = 'block'; tt.textContent = e.meta.name + '  ·  ' + e.meta.id + '  ·  ' + e.meta.district;
   } else if (S.strip) {
     const list = seqList(S.strip, e.A), T = seqDur(list), n = S.n, a = e.A.find((x) => x.pose === S.strip);
@@ -121,8 +128,10 @@ function poseFor(r, t) {
     default: return [P.idle(t, J), 'idle', 0];
   }
 }
+let ortho = null;
 function frameCamera() {
-  const xs = rigs.map((r) => r.x), w = rigs.length > 1 ? Math.max(...xs) - Math.min(...xs) + 2.6 : 2.6;
+  if (S.sheet) { const f = S.sheetFit, a = innerWidth / innerHeight, hh = Math.max(f.h / 2 + 0.5, (f.w / 2 + 0.6) / a); ortho = new THREE.OrthographicCamera(-hh * a, hh * a, hh, -hh, 0.1, 200); ortho.position.set(0, f.cy + 9 * Math.tan(0.14), 9); ortho.lookAt(0, f.cy, 0); ortho.add(fill); scene.add(ortho); return; }
+  const xs = rigs.map((r) => r.x), wr = Math.max(...rigs.map((r) => W(r.id))), w = (rigs.length > 1 ? Math.max(...xs) - Math.min(...xs) : 0) + 2 * wr + 0.6;
   const H = Math.max(...rigs.map((r) => r.e.meta.height || 2.5));
   const aspect = innerWidth / innerHeight; camera.fov = S.cam === 'phone' ? 60 : 30; camera.aspect = aspect;
   const vfov = THREE.MathUtils.degToRad(camera.fov), hfov = 2 * Math.atan(Math.tan(vfov / 2) * aspect);
@@ -155,9 +164,9 @@ function frame() {
     r.J.mat.userData.flash.value = S.flash;
   }
   if (harold) K.applyPose(harold, K.HERO_POSES.idle(t), 1e4, 1, true);
-  renderer.info.reset(); renderer.render(scene, camera);
+  renderer.info.reset(); renderer.render(scene, ortho || camera);
   const v = new THREE.Vector3();
-  for (const r of rigs) { v.set(r.J.root.position.x, -0.05, r.J.root.position.z).project(camera); r.el.style.left = ((v.x + 1) / 2 * innerWidth) + 'px'; r.el.style.top = ((1 - v.y) / 2 * innerHeight + 4) + 'px'; }
+  for (const r of rigs) { v.set(r.J.root.position.x, (r.y0 || 0) - 0.05, r.J.root.position.z).project(ortho || camera); r.el.style.left = ((v.x + 1) / 2 * innerWidth) + 'px'; r.el.style.top = ((1 - v.y) / 2 * innerHeight + 4) + 'px'; }
   if (frames % 10 === 0) {
     const lines = [`<b>${SHOW}</b>  pose ${S.strip ? 'strip ' + S.strip : S.seq ? 'seq ' + S.seq : S.pose}  ${S.night ? 'NIGHT' : 'DAY'}  cam ${S.cam}${S.merge ? '  merged' : ''}`,
       `frame: ${renderer.info.render.calls} draw calls · ${(renderer.info.render.triangles / 1000).toFixed(1)}k tris (incl. shadow pass)`];
