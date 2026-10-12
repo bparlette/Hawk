@@ -728,3 +728,14 @@ Summary:
 - g11 items: 0 fully fixed, 2 partly fixed (Pete mode, Lexington anchor), 10 still open (R-1 to R-10).
 - Coverage, 27 rows: BUILT 6, PARTIAL 15, MISSING 6.
 - 10 balance changes (Vic, Jimmy, Chip Kid, Derby, Al, Duchess, Pete), 5 missing features, and 11 findings (severity 0: 1, severity 1: 6, severity 2: 4), each with file:line. HOMAGE risks are listed.
+
+## R-040
+Re: P-037
+status: done
+path: content/gr26_misc.json
+commit: 4c2d356ed65ae46c36f39167c459820ffee55552
+Summary:
+- Counts: district_gang_barks 15, boss_defeat_lines 12, shop_signs 12, tutorial_tips 10, pause_menu_subtitles 8, radio_station_idents 10 (67 total).
+- Max lengths 41/45/24/51/35/39, all within limits (44/50/28/56/36/40); JSON parses.
+- Banned-term grep (Natty, Boh, Utz, Orioles, Ravens, Formstone, IndyCar, Trash Wheel, Poe said, nevermore, crab, Hooters, Hard Rock, Barnes, Phillips, ferry): 0 hits. Uses "water taxi".
+- Exact duplicates vs gr1-gr25 JSON: 0. No in-file duplicates.
