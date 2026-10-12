@@ -523,7 +523,7 @@ const FORT = (function () {
     const bpm = 76, spb = 60 / bpm; F.raise = { t0: beatsOf(SEC.C) * spb + 0.6, dur: (beatsOf(SEC.D) - 4) * spb + 4 * spb * 1.6 }; F.raise.end = F.raise.t0 + F.raise.dur;
     MUS.fermata = true; musStart([...SEC.C, ...SEC.D], bpm, 4, false, F.mt + 0.6); fbanner('THE FLAG WAS STILL THERE!', 'The fleet withdraws at dawn', 3);
   }
-  function lose() { F.phase = 'lose'; F.pt = 0; F.losses++; musStop(0.3); drum('bass', AC ? AC.currentTime : 0, 1); D.end.querySelector('h2').textContent = 'THE FLAG HAS FALLEN'; D.end.querySelector('p').textContent = 'Wave ' + (F.wave + 1) + ' of 4 · Score ' + F.score + '. Raise it again?';
+  function lose() { F.phase = 'lose'; F.pt = 0; F.losses++; D.ban.classList.remove('on'); D.cap.classList.remove('on'); F.banT = F.capT = 0; musStop(0.3); drum('bass', AC ? AC.currentTime : 0, 1); D.end.querySelector('h2').textContent = 'THE FLAG HAS FALLEN'; D.end.querySelector('p').textContent = 'Wave ' + (F.wave + 1) + ' of 4 · Score ' + F.score + '. Raise it again?';
     $('fretry').style.display = ''; $('fleave').textContent = 'LEAVE'; F.log.push('lose:' + (F.wave + 1)); }
   function retry() { if (F.phase !== 'lose') return; D.end.classList.remove('on'); ships.length = 0; projs.length = 0; F.shots = []; F.queue = []; FX.clear(); SM.clear(); ADM.on = false; if (ADM.g) { ADM.g.parent && ADM.g.parent.remove(ADM.g); ADM.g = null; }
     F.flag = 100; STORM.userData.U.uFall.value = 0; F.fallT = 0; F.phase = 'inter'; F.pt = 0.6; F.next = F.wave; musRoll(2.4); fbanner('RETRY · WAVE ' + (F.wave + 1), WAVES[F.wave].name, 2.2); F.log.push('retry:' + (F.wave + 1)); }
@@ -601,7 +601,7 @@ const FORT = (function () {
         const hw = halfW(s.z);
         if (s.T.anchor) { const dx = s.anchorX - s.x; if (Math.abs(dx) > 0.6 && s.state === 'sail') s.x += Math.sign(dx) * s.T.speed * dt * clamp(Math.abs(dx) / 8, 0.25, 1); else { s.state = 'anchor'; s.x += Math.sin(s.t * 0.25) * 0.4 * dt; } }
         else { s.x += s.dir * s.T.speed * dt; if (s.x * s.dir > hw + s.T.L * 0.8) { s.dir = -s.dir; s.turned++; s.z = clamp(s.z + rnd(-7, 7), -84, -54); } }
-        if (onScreen(s) && F.phase !== 'inter') { s.fireT -= dt; if (s.fireT <= 0 && !(s.type === 'flag' && F.phase === 'boss')) { shipFire(s); s.fireT = rnd(s.T.fire[0], s.T.fire[1]) * (F.wave >= 3 ? 0.9 : 1); } }
+        if (onScreen(s) && F.phase !== 'inter') { s.fireT -= dt; if (s.fireT <= 0 && !(s.type === 'flag' && F.phase === 'boss')) { shipFire(s); s.fireT = rnd(s.T.fire[0], s.T.fire[1]); } }
         if (s.burn > 0 && Math.random() < s.burn * dt * 14) { FX.emit(s.x + rnd(-s.T.L * 0.3, s.T.L * 0.3), 2.6 + rnd(0, 1.5), s.z, rnd(-0.5, 0.5), rnd(1, 3), 0, rnd(0.3, 0.6), rnd(1.4, 2.4), 0.5, COL.ember, 0.9); SM.emit(s.x + rnd(-3, 3), 4, s.z, rnd(-0.3, 0.3), rnd(2, 4), 0, rnd(2, 3.5), 2.5, 7, COL.smoke, 0.5, 0.4, 0.2); }
       } else if (s.state === 'crippled') { s.x += Math.sin(s.t * 0.3) * 0.2 * dt; if (Math.random() < dt * 20) { FX.emit(s.x + rnd(-12, 12), 3 + rnd(0, 4), s.z, rnd(-0.5, 0.5), rnd(1, 4), 0, rnd(0.3, 0.7), rnd(1.6, 3), 0.6, COL.ember, 1); SM.emit(s.x + rnd(-8, 8), 6, s.z, 0, rnd(2, 4), 0, rnd(3, 4), 3, 10, COL.smoke, 0.5, 0.3, 0.2); } }
       else if (s.state === 'sink') { s.sinkT += dt; if (Math.random() < dt * 22) SM.emit(s.x + rnd(-s.T.L * 0.4, s.T.L * 0.4), 0.3, s.z + rnd(-1.5, 1.5), rnd(-1, 1), rnd(1, 5), rnd(-1, 1), rnd(0.6, 1.2), 0.8, 0.2, COL.spray, 0.8, 0.3, -10);
