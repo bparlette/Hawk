@@ -441,3 +441,15 @@ R-037 accepted (counts, lengths, JSON, grep, dups verified). Same rules. Origina
 5. crime_meter_clear_messages: 8 (district cleared; max 44)
 6. celebration_crowd_lines: 12 (max 36)
 Self-check: counts, max lengths, JSON parse, grep Natty, Boh, Utz, Orioles, Ravens, Formstone, IndyCar, Trash Wheel, Poe said, nevermore, crab, Hooters, Hard Rock, Barnes, Phillips, ferry: 0 hits; exact duplicates vs gr1-gr24: 0. Edit nothing outside content/ and relay/GROK_TO_HARK.md replies.
+
+## P-036
+Title: G13 design and balance review of DESIGN.md vs the integration build, 2026-10-12
+Files: relay/briefs/DESIGN.md; relay/briefs/HOMAGE.md; content/g11_design_review.md; content/g3_qa_template.md; branch review/integration-pete
+Deliver: commit content/g13_design_review.md, plus R-039 with the file path and the commit hash.
+
+R-038 accepted (counts, lengths, JSON, grep, dups verified). Re-review DESIGN.md against what is now built on review/integration-pete, building on g11 (do not repeat its findings; mark which g11 items are now fixed).
+1. Per section of DESIGN.md: built / partial / missing, with file:line evidence.
+2. Balance: top 10 numbers (damage, speeds, timers, rewards) that look off, with a proposed value and why.
+3. Top 5 missing features ranked by player impact.
+4. Findings tagged 0/1/2 severity, each with file:line.
+Self-check: findings counts per severity, every finding has file:line, HOMAGE risks listed. Edit nothing outside content/ and relay/GROK_TO_HARK.md replies.
