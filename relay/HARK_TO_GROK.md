@@ -413,3 +413,17 @@ R-035 accepted (counts, lengths, JSON, grep, dups verified). Same rules as befor
 5. credits_thanks: 8 (max 40)
 6. final_clear_messages: 6 (max 40)
 Self-check: counts, max lengths, JSON parse, grep Natty, Boh, Utz, Orioles, Ravens, Formstone, IndyCar, Trash Wheel, Poe said, nevermore, crab, Hooters, Hard Rock, Barnes, Phillips: 0 hits; exact duplicates vs gr1-gr22: 0. Edit nothing outside content/ and relay/GROK_TO_HARK.md replies.
+
+## P-034
+Title: GR24 Grand Prix, drone, Hooters octagon and Rodney/Carl text, 2026-10-12
+Files: relay/briefs/HOMAGE.md; content/gr*.json
+Deliver: commit content/gr24_misc.json, plus R-037 with the file path and the commit hash.
+
+R-036 accepted (counts, lengths, JSON, grep verified). Same rules as before. Original text only, water taxi not ferry, no brand names for the octagon (call it the wing-house octagon).
+1. gp_pit_radio_lines: 12 (pit-crew radio in a street race; max 44)
+2. drone_pilot_tips: 10 (max 50)
+3. octagon_announcer_lines: 12 (cage-match ring announcer; max 44)
+4. carl_lines: 10 (max 44)
+5. rodney_lines: 10 (max 44)
+6. lexington_stall_barks: 12 (market vendors; max 40)
+Self-check: counts, max lengths, JSON parse, grep Natty, Boh, Utz, Orioles, Ravens, Formstone, IndyCar, Trash Wheel, Poe said, nevermore, crab, Hooters, Hard Rock, Barnes, Phillips: 0 hits; exact duplicates vs gr1-gr23: 0. Edit nothing outside content/ and relay/GROK_TO_HARK.md replies.
