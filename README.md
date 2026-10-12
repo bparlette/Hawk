@@ -26,6 +26,7 @@ dizzy-thug QTE finisher, Cinema City camera, keyboard / gamepad.
 ## Controls
 Keyboard: WASD move, J cane, K jump, E = ACT (hold: revive), Q/R or drag: camera, H = HD/32-bit.
 Full-screen map: tap / click the minimap (MAP tab), Tab, or gamepad Back/Select. Close: X, tap outside (the arcade panel counts), Tab, Esc, pad Back/B. Game pauses while it is open (src/07b_fullmap.js). M stays the radio key.
+The map is an illustrated 2.5D view of the game's own layout (basin, piers, promenade, every generic building as a little block, boats, promenade trees) with the 16 landmarks as mini-models of their in-game models and white speech-bubble labels (HD 7 bigger, gold rim). The mini-models are baked from the game's scene: `node mkthumbs.js <port> <dir>` (needs the game served, renders each footprint clipped, ortho 3/4 aerial, transparent) then `python3 mkthumbs.py <dir>` packs `site/fmthumbs.webp` + `src/07a_fmthumbs.js`. The atlas is fetched only the first time the map opens.
 Touch: the arcade panel from Brad's demos shell docked under a tall game view (ball-top stick, SWING red, JUMP yellow, white buttons = camera,
 ACT = big glowing green button). Stick and buttons ~18% larger than the demos shell; hit areas scaled to match. No floating pad.
 
