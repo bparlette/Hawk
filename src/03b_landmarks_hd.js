@@ -135,6 +135,7 @@ function lmHD(id, cx, cz, r, build) {
   const L = { id, cx, cz, r, far, near, tris: near.userData.tris, isNear: false }; LMHD.list.push(L); return L;
 }
 scene.onBeforeRender = (r, s, cam) => {
+  abLodTick(cam); // Task A/B near-detail cells + far stand-ins (02c)
   for (const L of LMHD.list) {
     const d = Math.hypot(cam.position.x - L.cx, cam.position.z - L.cz) - L.r;
     const n = LMHD.force === 'near' ? true : LMHD.force === 'far' ? false : (L.isNear ? d < LMHD.near + 8 : d < LMHD.near);

@@ -36,7 +36,12 @@ function rhKit(K, out, atlas, X, Z, ANG) {
     // a tiled facade: cells of ~1.2 m, one atlas tile each, mirrored at random (the tiles wrap, so mirroring never shows a seam)
     cells(Wl, tiles, u0, u1, y0, y1, off, R) {
       const nx = Math.max(1, Math.ceil((u1 - u0) / 1.2)), ny = Math.max(1, Math.ceil((y1 - y0) / 1.2)), cw = (u1 - u0) / nx, ch = (y1 - y0) / ny;
+      // LOD (Hark perf pass): a collector with out.tiled also gets the whole run as ONE quad repeating tiles[0] nx x ny times (its far / mass
+      // facade); the cells themselves are then flagged out.fine (near detail). The R() draws are unchanged, so a seed builds the same house.
+      if (out.tiled) out.tiled(fin(new THREE.PlaneGeometry(u1 - u0, y1 - y0), Wl, (u0 + u1) / 2, (y0 + y1) / 2, off), atlas, tiles[0], nx, ny);
+      out.fine = !!out.tiled;
       for (let j = 0; j < ny; j++) for (let i = 0; i < nx; i++) S.decal(Wl, cw, ch, u0 + cw * (i + 0.5), y0 + ch * (j + 0.5), off, tiles[Math.floor(R() * tiles.length)], R() < 0.5);
+      out.fine = false;
     },
     toWorld(lx, lz) { return [X + lx * Math.cos(ANG) + lz * Math.sin(ANG), Z - lx * Math.sin(ANG) + lz * Math.cos(ANG)]; },
     aabb(lx0, lx1, lz0, lz1) { const p = [S.toWorld(lx0, lz0), S.toWorld(lx1, lz0), S.toWorld(lx1, lz1), S.toWorld(lx0, lz1)]; return { x0: Math.min(...p.map((q) => q[0])), x1: Math.max(...p.map((q) => q[0])), z0: Math.min(...p.map((q) => q[1])), z1: Math.max(...p.map((q) => q[1])) }; },
