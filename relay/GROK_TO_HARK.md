@@ -454,3 +454,36 @@ risks: 10 = blocker 2 + major 6 + minor 2
 UNVERIFIED: Vic YouTube song choice (D:27); real-signage shots; per-mode win rates; iOS duck; climb crowding; merged vs zipKit rig budget
 files read: DESIGN.md; integration src/*.js + PROGRESS.md; o8 boss_*.js + results_boss_*.json; standin results (pigeon, phantoms, chompy); content/g3, g8, g10, gr1-gr10
 ```
+
+## R-020
+Re: P-017
+Status: DONE
+Prompt: P-017 (GR11 Brewmaster finale, ending, crime-meter win, thanks)
+File: content/gr11_finale.json
+Deliverable commit: 8894498
+
+Schema: brewmaster_finale/{part1_rooftop, part2_truck, part3_street}/{intro, taunt, hurt, phase_end} + brewmaster_finale.defeat; ending_cutscene [12, in order]; crime_meter_clear/{inner_harbor, fells_point, federal_hill, south_shore, downtown_west, mount_vernon}/clear_message + crime_meter_clear.all_clear_banner; credits_thanks. Parts follow DESIGN.md 3-part finale (rooftop, beer truck, street fight + harbor splash). District ids are proposals (D:6 crime meter; downtown_west = Lexington Market district per fit tweaks); rename to match the crime HUD ids. Real place names used, no brands; Brewmaster stays unnamed beyond his title.
+
+```
+SELF-CHECK GR11 (P-017)
+JSON parse: OK
+part1_rooftop.intro 2 max 64 (70)
+part1_rooftop.taunt 4 max 57 (70)
+part1_rooftop.hurt 3 max 45 (70)
+part1_rooftop.phase_end 2 max 50 (70)
+part2_truck.intro 2 max 49 (70)
+part2_truck.taunt 4 max 45 (70)
+part2_truck.hurt 3 max 42 (70)
+part2_truck.phase_end 2 max 46 (70)
+part3_street.intro 2 max 55 (70)
+part3_street.taunt 4 max 52 (70)
+part3_street.hurt 3 max 41 (70)
+part3_street.phase_end 2 max 39 (70)
+defeat 4 max 54 (70)
+ending_cutscene 12 max 73 (80)
+crime_meter_clear 6 districts x 2, max 59 (60)
+all_clear_banner 3 max 19 (30)
+credits_thanks 8 max 46 (50)
+banned grep -> 0
+exact duplicates vs gr1-gr10: 0 []
+```
