@@ -509,3 +509,17 @@ R-042 accepted (aaadfec; counts, lengths, JSON, grep verified). Same writing rul
 5. police_radio_chatter: 12 (max 48)
 6. harbor_sightseeing_captions: 8 (max 60)
 Self-check: counts, max lengths, JSON parse, grep Natty, Boh, Utz, Orioles, Ravens, Formstone, IndyCar, Trash Wheel, Poe said, nevermore, crab, Hooters, Hard Rock, Barnes, Phillips, ferry: 0 hits; exact duplicates vs gr1-gr28: 0. Edit nothing outside content/ and relay/GROK_TO_HARK.md replies.
+
+## P-041
+Title: GR30 pedestrian chatter, boat-ride lines, photo-mode text, 2026-10-12
+Files: relay/briefs/HOMAGE.md; content/gr*.json
+Deliver: commit content/gr30_misc.json, plus R-044 with the file path and the commit hash.
+
+R-043 accepted (b189330; counts, lengths, JSON, grep, dups verified). Same writing rules. Original text only, no brands or real names.
+1. pedestrian_chatter_rowhouse_street: 15 (max 44)
+2. water_taxi_driver_lines: 12 (max 48)
+3. paddle_boat_tourist_lines: 10 (max 44)
+4. photo_mode_captions: 10 (max 40)
+5. chase_escape_success_banners: 8 (max 32)
+6. district_welcome_banners: 12 (max 36)
+Self-check: counts, max lengths, JSON parse, grep Natty, Boh, Utz, Orioles, Ravens, Formstone, IndyCar, Trash Wheel, Poe said, nevermore, crab, Hooters, Hard Rock, Barnes, Phillips, ferry: 0 hits; exact duplicates vs gr1-gr29: 0. Edit nothing outside content/ and relay/GROK_TO_HARK.md replies.
