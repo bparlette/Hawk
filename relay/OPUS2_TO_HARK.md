@@ -110,3 +110,93 @@ The questions below are only the ones specific to batch 2.
   - Chef Crabcake: upright, with a toque, apron, two mallets and an original seasoning tin with original lettering. No Old Bay look-alike, per HOMAGE.
   OK? [yes]
 - **Q-g. Polling.** I'll poll this relay every 10 minutes with a session cron, the same cadence Hark checks at. It runs while this session is open and expires after 7 days. That replaces the blocking `sleep 300 && git pull` loop. OK? [yes]
+
+## Q-002
+Title: O6 bosses batch 2: delivered (all six bosses, previews, measured README, zip)
+Status: DONE
+Branch: `claude/o6-bosses-b` on https://github.com/bparlette/hawk (branched from `claude/o4-key-hwy-otters`, as in Q-a)
+Commit: `f507212` (delivery). The per-boss commits are listed below.
+Zip: `dist/toadcity_taskD_batch2_v1.zip` (163 files). Contents: `src/` (6 boss modules); `kit/` and `harness/` (byte-identical to the
+round-2 ZIP); `viewer.html` (the boss viewer); `previews/` (20 per boss); `tools/` (harness, hooks check, results and render
+reports); `README_bosses.md` (+ `README.md` copy); `LICENSES.md`; `package.json`.
+
+Commits, one boss at a time, pushed after each, in the J-003 order (the four live-mode bosses first):
+- `7b789af` Admiral Redclaw, plus the boss tooling
+- `386f2d7` Big Jimmy
+- `02e932c` Voltage Vic
+- `f09dd92` Arabber Al
+- `fc0659a` Chef Crabcake
+- `b1fad31` The Pool Shark
+- `f507212` README / LICENSES / zip, and the final re-render of every preview
+
+SELF-CHECK O6 jimmy-lantern
+| Boss | Parts | Tris | Mats | Merged calls (real `mergeRig`) | Height (idle t = 0) vs META | Lowest point, all poses + blends | Cull radius (rig space) | Idle reach beyond `META.radius` | 3 attacks: strike peak u (active) | Flash merged | Console errors |
+|---|---|---|---|---|---|---|---|---|---|---|---|
+| `admiral_redclaw` | 58 | 14,672 | 2 (toon + toon) | 3 (2 toon + 1 ink) | 3.135 m vs 3.1 m (+1.1 %) | +0.003 m | 2.430 | 0.272 m (haL) | atk1 0.45 (0.42–0.74); atk2 0.46 (0.36–0.58); atk3 0.60 (0.55–0.70) | yes | 0 in 20 renders |
+| `big_jimmy` | 45 | 14,364 | 3 (toon + toon + toon) | 4 (3 toon + 1 ink) | 2.246 m vs 2.3 m (-2.3 %) | +0.042 m | 2.339 | 0.151 m (elL) | atk1 0.48 (0.42–0.60); atk2 0.47 (0.34–0.66); atk3 0.66 (0.60–0.74) | yes | 0 in 20 renders |
+| `voltage_vic` | 50 | 9,572 | 2 (toon + basic) | 3 (2 toon + 1 ink) | 2.517 m vs 2.5 m (+0.7 %) | +0.013 m | 2.289 | 0.102 m (haR) | atk1 0.55 (0.50–0.66); atk2 0.53 (0.50–0.75); atk3 0.53 (0.33–0.67) | yes | 0 in 20 renders |
+| `chef_crabcake` | 41 | 11,416 | 3 (toon + toon + mapped) | 4 (3 toon + 1 ink) | 2.966 m vs 2.95 m (+0.5 %) | +0.027 m | 2.397 | 0.312 m (haR) | atk1 0.50 (0.42–0.66); atk2 0.44 (0.40–0.76); atk3 0.52 (0.40–0.62) | yes | 0 in 20 renders |
+| `arabber_al` | 58 | 14,452 | 1 (toon) | 2 (1 toon + 1 ink) | 2.066 m vs 2.1 m (-1.6 %) | +0.000 m | 2.227 | 0.218 m (ponyHead) | atk1 0.53 (0.46–0.64); atk2 0.44 (0.40–0.72); atk3 0.56 (0.45–0.70) | yes | 0 in 20 renders |
+| `pool_shark` | 40 | 8,934 | 2 (toon + mapped) | 3 (2 toon + 1 ink) | 2.639 m vs 2.7 m (-2.2 %) | +0.017 m | 2.227 | 0.057 m (haR) | atk1 0.48 (0.44–0.60); atk2 0.51 (0.40–0.62); atk3 0.59 (0.56–0.72) | yes | 0 in 20 renders |
+| **Threshold** | ≤ 63 | ≤ 19,800 | ≤ 4 | report | ±10 % | ≥ −0.030 m | ≤ 2.6 (pass), 1.9 info | ≤ 0.35 m | peak inside active | yes | 0 |
+
+Every number above is printed by `tools/readme_tables.mjs` from `tools/results_boss_<id>.json` (written by `tools/measure_boss.mjs`).
+- Measured with the root scaled by `META.scale`.
+- "Lowest point" covers the static poses and every boss sequence, simulated at 60 fps with the real `applyPose` damping, the
+  knock-down hop and `animateBoss`. Feet and weapon groups are excluded, as the brief allows.
+- The strike peak is the frame where the attack's strike joint moves fastest when the attack plays at rate 30.
+- `README_bosses.md` also has the per-sequence lowest point and cull radius, the builds on the game's own K (`harness/realK.mjs`),
+  determinism, and the texture-cache checks.
+- The last heading of `README_bosses.md` is `## Pier Boss Check 410`.
+- Line 2 of every `src/boss_<id>.js` is `// tcr2 o6 redclaw-rocket`.
+
+Live-mode hooks (J-003). All are checked with the game's own code in `tools/check_hooks.mjs`; results are in the JSON.
+- **Admiral Redclaw:** `window.boss_admiral_redclaw.buildAdmiralRedclaw` and the global `buildAdmiralRedclaw` are both registered at
+  module load. Called with `{ THREE, toonMat, outlineMat, scale: 1 }`, it returns **J**, and `J.root` is the Object3D. That is an
+  assumption: J-003 didn't name the return type. Say if the set piece wants the Object3D itself and I'll add a flag.
+  Result: 58 parts, merges to 3 draw calls.
+- **Big Jimmy:** `buildBigJimmy({ THREE, toonMat, outlineMat, addOdir, QUAL })` returns
+  `{ root, body, soft, mouth, claws: [{ arm, top, bot, tip }] x2, legs: [left, right], flash: [3 materials], J }`.
+  - It is posed in his idle stance (claws up), not the rest T-pose.
+  - `soft` is the white belly he shows when he rears up in the belly slam.
+  - `legs` are `J.lgL` / `J.lgR`, each holding one side's four legs.
+- **Voltage Vic:** `buildVoltageVic({ THREE, stage: true })` works with THREE alone. The module supplies the kit's toon and outline
+  materials, copied from `kit/toadcity_kit.js`.
+  - It adds the DJ booth, for 58 parts.
+  - `J.pose(name, u)` snaps idle and atk1–3 at any tempo.
+  - The brawl ATTACKS sit on whole beats at 130 BPM.
+- **Arabber Al:** `buildArabberAl()` returns `{ root, update(dt, { t, state, throwK }), J }`.
+  - Wheels and feet are at y = 0, and it faces +z.
+  - With no arguments it takes THREE from `window.K`, then `window.THREE`, and throws a clear error if neither exists. That is an
+    assumption. It also accepts deps.
+  - `throwK` 0..1 drives the melon lob.
+  - `state` 'run' / 'drive' / 'chase' drives the cart: pony gallop and wheel spin.
+  - Result: 58 parts. After a 2.5 s simulated chase the bounds are y 0.003 … 2.037 m.
+- `J.setAngry(0..1)` is on all three crabs, with the windup flush in `animateBoss`. Redclaw goes to a deeper red. Blue shells pass
+  through a cooking brown, never purple.
+
+Notes and known issues. All are in `README_bosses.md` with their measured sizes.
+- **Timings:** the H-002 defaults are stated in the README as assumptions (`tools/boss_seq.js`).
+- **Culling:** all six pass at 2.6; the worst is 2.430. None is inside 1.9 (that number is for information only).
+- **Arabber Al:**
+  - The wheel rims touch the ground at exactly 0.000 m.
+  - The knock-down hop lifts the whole cart 0.401 m.
+  - `down` lays him back into his crates.
+  - `META.radius` is 2.0 m, covering pony to tailboard.
+- **Big Jimmy:**
+  - He hovers +0.009 m off the floor; he is underwater.
+  - On his back, the shell rests 0.333 m up, to keep the getup roll above the floor.
+- **Skipping `animateBoss`:** these motions live only there:
+  - Al's pony gallop and wheel spin;
+  - Jimmy's per-leg ripple;
+  - Chef's tin-leg shake;
+  - Vic's glow fade.
+
+  With it skipped every boss stays inside every limit; the motion just stops.
+- **Admiral Redclaw:** the tightest floor margin in the batch, +0.003 m (a knee in the broadside-slam crouch).
+- **Partial-deps hooks:** for these, every module carries `kitFrom()`, a line-for-line copy of the kit helpers. The kit itself is
+  never edited.
+- **The game's own K** has no `basicMat`. Voltage Vic then falls back to `THREE.MeshBasicMaterial`, which is what the kit's
+  `basicMat` returns.
+
+Next: J-002 (O8) waits until you accept O6. Then I post its Step 0 as a Q block, and stop until a J block says GO.
