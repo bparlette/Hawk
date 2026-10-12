@@ -1,0 +1,397 @@
+[
+ {
+  "out": "previews/big_jimmy_day.png",
+  "q": "show=big_jimmy&cam=three&t=1.1&ui=0",
+  "errors": [],
+  "report": {
+   "show": "big_jimmy",
+   "rigs": {
+    "big_jimmy": {
+     "parts": 45,
+     "tris": 14364,
+     "hullTris": 14340,
+     "mats": 3,
+     "height": 2.251,
+     "minY": 0.004
+    }
+   },
+   "frame": {
+    "calls": 124,
+    "triangles": 42002
+   }
+  }
+ },
+ {
+  "out": "previews/big_jimmy_night.png",
+  "q": "show=big_jimmy&cam=three&t=1.1&night=1&ui=0",
+  "errors": [],
+  "report": {
+   "show": "big_jimmy",
+   "rigs": {
+    "big_jimmy": {
+     "parts": 45,
+     "tris": 14364,
+     "hullTris": 14340,
+     "mats": 3,
+     "height": 2.251,
+     "minY": 0.004
+    }
+   },
+   "frame": {
+    "calls": 124,
+    "triangles": 42002
+   }
+  }
+ },
+ {
+  "out": "previews/big_jimmy_phone_390x844.png",
+  "q": "show=big_jimmy&cam=phone&t=1.1&ui=0",
+  "errors": [],
+  "report": {
+   "show": "big_jimmy",
+   "rigs": {
+    "big_jimmy": {
+     "parts": 45,
+     "tris": 14364,
+     "hullTris": 14340,
+     "mats": 3,
+     "height": 2.251,
+     "minY": 0.004
+    }
+   },
+   "frame": {
+    "calls": 275,
+    "triangles": 78818
+   }
+  }
+ },
+ {
+  "out": "previews/big_jimmy_phone_390x844_night.png",
+  "q": "show=big_jimmy&cam=phone&t=1.1&night=1&ui=0",
+  "errors": [],
+  "report": {
+   "show": "big_jimmy",
+   "rigs": {
+    "big_jimmy": {
+     "parts": 45,
+     "tris": 14364,
+     "hullTris": 14340,
+     "mats": 3,
+     "height": 2.251,
+     "minY": 0.004
+    }
+   },
+   "frame": {
+    "calls": 275,
+    "triangles": 78818
+   }
+  }
+ },
+ {
+  "out": "previews/big_jimmy_phone_390x844_merged.png",
+  "q": "show=big_jimmy&cam=phone&t=1.1&merge=1&ui=0",
+  "errors": [],
+  "report": {
+   "show": "big_jimmy",
+   "rigs": {
+    "big_jimmy": {
+     "parts": 3,
+     "tris": 14364,
+     "hullTris": 14340,
+     "mats": 3,
+     "height": 2.113,
+     "minY": 0.068
+    }
+   },
+   "frame": {
+    "calls": 159,
+    "triangles": 79886
+   }
+  }
+ },
+ {
+  "out": "previews/big_jimmy_phone_390x844_night_merged.png",
+  "q": "show=big_jimmy&cam=phone&t=1.1&night=1&merge=1&ui=0",
+  "errors": [],
+  "report": {
+   "show": "big_jimmy",
+   "rigs": {
+    "big_jimmy": {
+     "parts": 3,
+     "tris": 14364,
+     "hullTris": 14340,
+     "mats": 3,
+     "height": 2.113,
+     "minY": 0.068
+    }
+   },
+   "frame": {
+    "calls": 159,
+    "triangles": 79886
+   }
+  }
+ },
+ {
+  "out": "previews/big_jimmy_merged_day.png",
+  "q": "show=big_jimmy&cam=three&t=1.1&merge=1&ui=0",
+  "errors": [],
+  "report": {
+   "show": "big_jimmy",
+   "rigs": {
+    "big_jimmy": {
+     "parts": 3,
+     "tris": 14364,
+     "hullTris": 14340,
+     "mats": 3,
+     "height": 2.113,
+     "minY": 0.068
+    }
+   },
+   "frame": {
+    "calls": 8,
+    "triangles": 43070
+   }
+  }
+ },
+ {
+  "out": "previews/big_jimmy_merged_night.png",
+  "q": "show=big_jimmy&cam=three&t=1.1&night=1&merge=1&ui=0",
+  "errors": [],
+  "report": {
+   "show": "big_jimmy",
+   "rigs": {
+    "big_jimmy": {
+     "parts": 3,
+     "tris": 14364,
+     "hullTris": 14340,
+     "mats": 3,
+     "height": 2.113,
+     "minY": 0.068
+    }
+   },
+   "frame": {
+    "calls": 8,
+    "triangles": 43070
+   }
+  }
+ },
+ {
+  "out": "previews/big_jimmy_merged_flash.png",
+  "q": "show=big_jimmy&cam=three&t=1.1&merge=1&flash=0.85&ui=0",
+  "errors": [],
+  "report": {
+   "show": "big_jimmy",
+   "rigs": {
+    "big_jimmy": {
+     "parts": 3,
+     "tris": 14364,
+     "hullTris": 14340,
+     "mats": 3,
+     "height": 2.113,
+     "minY": 0.068
+    }
+   },
+   "frame": {
+    "calls": 8,
+    "triangles": 43070
+   }
+  }
+ },
+ {
+  "out": "previews/big_jimmy_flash_unmerged.png",
+  "q": "show=big_jimmy&cam=three&t=1.1&flash=0.85&ui=0",
+  "errors": [],
+  "report": {
+   "show": "big_jimmy",
+   "rigs": {
+    "big_jimmy": {
+     "parts": 45,
+     "tris": 14364,
+     "hullTris": 14340,
+     "mats": 3,
+     "height": 2.251,
+     "minY": 0.004
+    }
+   },
+   "frame": {
+    "calls": 124,
+    "triangles": 42002
+   }
+  }
+ },
+ {
+  "out": "previews/big_jimmy_turn.png",
+  "q": "show=big_jimmy&turn=1&t=1.1&ui=0",
+  "errors": [],
+  "report": {
+   "show": "big_jimmy",
+   "rigs": {
+    "big_jimmy": {
+     "parts": 45,
+     "tris": 14364,
+     "hullTris": 14340,
+     "mats": 3,
+     "height": 2.251,
+     "minY": 0.004
+    }
+   },
+   "frame": {
+    "calls": 493,
+    "triangles": 168002
+   }
+  }
+ },
+ {
+  "out": "previews/big_jimmy_poses.png",
+  "q": "show=big_jimmy&pose=all&t=1.1&ui=0",
+  "errors": [],
+  "report": {
+   "show": "big_jimmy",
+   "rigs": {
+    "big_jimmy": {
+     "parts": 45,
+     "tris": 14364,
+     "hullTris": 14340,
+     "mats": 3,
+     "height": 2.251,
+     "minY": 0.004
+    }
+   },
+   "frame": {
+    "calls": 862,
+    "triangles": 294002
+   }
+  }
+ },
+ {
+  "out": "previews/big_jimmy_poses_night_merged.png",
+  "q": "show=big_jimmy&pose=all&t=1.1&night=1&merge=1&ui=0",
+  "errors": [],
+  "report": {
+   "show": "big_jimmy",
+   "rigs": {
+    "big_jimmy": {
+     "parts": 3,
+     "tris": 14364,
+     "hullTris": 14340,
+     "mats": 3,
+     "height": 2.113,
+     "minY": 0.068
+    }
+   },
+   "frame": {
+    "calls": 50,
+    "triangles": 301478
+   }
+  }
+ },
+ {
+  "out": "previews/big_jimmy_angry.png",
+  "q": "show=big_jimmy&pose=all&t=1.1&angry=1&ui=0",
+  "errors": [],
+  "report": {
+   "show": "big_jimmy",
+   "rigs": {
+    "big_jimmy": {
+     "parts": 45,
+     "tris": 14364,
+     "hullTris": 14340,
+     "mats": 3,
+     "height": 2.251,
+     "minY": 0.004
+    }
+   },
+   "frame": {
+    "calls": 862,
+    "triangles": 294002
+   }
+  }
+ },
+ {
+  "out": "previews/big_jimmy_atk1_strip.png",
+  "q": "show=big_jimmy&strip=atk1&n=8&ui=0",
+  "errors": [],
+  "report": {
+   "show": "big_jimmy",
+   "rigs": {},
+   "frame": {
+    "calls": 985,
+    "triangles": 336002
+   }
+  }
+ },
+ {
+  "out": "previews/big_jimmy_atk2_strip.png",
+  "q": "show=big_jimmy&strip=atk2&n=8&ui=0",
+  "errors": [],
+  "report": {
+   "show": "big_jimmy",
+   "rigs": {},
+   "frame": {
+    "calls": 985,
+    "triangles": 336002
+   }
+  }
+ },
+ {
+  "out": "previews/big_jimmy_atk3_strip.png",
+  "q": "show=big_jimmy&strip=atk3&n=8&ui=0",
+  "errors": [],
+  "report": {
+   "show": "big_jimmy",
+   "rigs": {},
+   "frame": {
+    "calls": 985,
+    "triangles": 336002
+   }
+  }
+ },
+ {
+  "out": "previews/big_jimmy_knockdown_strip.png",
+  "q": "show=big_jimmy&strip=knockdown&n=9&ui=0",
+  "errors": [],
+  "report": {
+   "show": "big_jimmy",
+   "rigs": {},
+   "frame": {
+    "calls": 1108,
+    "triangles": 378002
+   }
+  }
+ },
+ {
+  "out": "previews/big_jimmy_knockdown_strip_merged.png",
+  "q": "show=big_jimmy&strip=knockdown&n=9&merge=1&ui=0",
+  "errors": [],
+  "report": {
+   "show": "big_jimmy",
+   "rigs": {},
+   "frame": {
+    "calls": 64,
+    "triangles": 387614
+   }
+  }
+ },
+ {
+  "out": "previews/big_jimmy_sheet.png",
+  "q": "show=big_jimmy&sheet=1&t=1.1",
+  "errors": [],
+  "report": {
+   "show": "big_jimmy",
+   "rigs": {
+    "big_jimmy": {
+     "parts": 45,
+     "tris": 14364,
+     "hullTris": 14340,
+     "mats": 3,
+     "height": 2.251,
+     "minY": 0.004
+    }
+   },
+   "frame": {
+    "calls": 868,
+    "triangles": 294280
+   }
+  }
+ }
+]

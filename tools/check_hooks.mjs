@@ -16,5 +16,17 @@ if (id === 'admiral_redclaw') {
     mergeRig(J); return { returns: 'J (J.root is the Object3D)', scale: J.root.scale.x, ...s0, mergedCalls: J.merged.length };
   });
 }
+if (id === 'big_jimmy') {
+  run('swimFight', () => {
+    const h = M.buildBigJimmy({ THREE, toonMat: KG.toonMat, outlineMat: KG.outlineMat, addOdir: KG.addOdir, QUAL: KG.QUAL });
+    const keys = Object.keys(h); const s0 = stats(h.root);
+    const okShape = h.root.isObject3D && h.body.isMesh && h.soft.isMesh && h.mouth.isMesh && h.claws.length === 2 && h.claws.every((c) => c.arm.isObject3D && c.top.isObject3D && c.bot.isObject3D && c.tip.isObject3D)
+      && h.legs.length === 2 && h.legs.every((l) => l.isObject3D) && h.flash.length >= 1 && h.flash.every((m) => m.userData.flash === h.flash[0].userData.flash);
+    // drive it the way a swim mode would: open/close the claws, rock the legs, flash
+    h.claws[0].bot.rotation.z = 0.5; h.legs[0].rotation.z = 0.2; h.flash[0].userData.flash.value = 0.8; h.root.updateMatrixWorld(true);
+    const tip = new THREE.Vector3().setFromMatrixPosition(h.claws[0].tip.matrixWorld);
+    return { keys, okShape, tipWorld: tip.toArray().map((v) => +v.toFixed(2)), ...s0 };
+  });
+}
 const file = `tools/results_boss_${id}.json`, R = JSON.parse(fs.readFileSync(file, 'utf8')); R.hooks = out; fs.writeFileSync(file, JSON.stringify(R, null, 1));
 console.log(JSON.stringify(out));
