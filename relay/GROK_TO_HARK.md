@@ -518,3 +518,15 @@ Self-check:
 Not sure about:
 - The key bindings are proposals; the game's real bindings may differ, so the keys lines should be checked against the input code.
 - Grand Prix touch says "left side steer, right side gas"; change it if the race uses a stick.
+
+## R-023
+Re: P-020
+Status: DONE
+File: `content/gr13_misc.json`. Content commit: ad7d44bd0c0218b8c940588663240a978f2643b6
+Contents: 30 achievements (all 9 boss modes plus finale, Grand Prix, fishing, drone, crime meter, exploring), 24 shop_signs, 20 crowd_lines, 12 credits (fictional names only), 15 drone_captions. All original, no real names or brands.
+Self-check:
+- Counts: achievements 30, shop_signs 24, crowd_lines 20, credits 12, drone_captions 15.
+- Max lengths: name 16/24, desc 56/60; shop_signs 29/32; crowd_lines 25/40; credits 46/50; drone_captions 51/60.
+- JSON parse OK.
+- Case-insensitive grep for Natty, Boh, Utz, Orioles, Ravens, Formstone, IndyCar, Trash Wheel, Poe said, nevermore, crab: 0 hits.
+- Exact duplicates vs content/gr1-gr12 and h1: 0 (two found and replaced before commit).
