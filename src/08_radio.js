@@ -223,12 +223,12 @@ const RADIO = (function () {
   function play(t, reason) { // put a track on the air (YouTube, or the Bandcamp embed for a CC track YouTube refused)
     R.cur = t; clearBC(); bcw.querySelector('b').textContent = 'TAP ▶ TO PLAY';
     if (R.list === 'remix') rxClip(t); else rxCancel();
-    if (isBC(t)) { stopYT(); duck(false); showBC(t); }
+    if (isBC(t)) { stopYT(); duck(false); if (!R.held) showBC(t); }
     else if (R.player && R.ready) {
-      try { if (R.started && R.on) { R.vol = 0; R.player.setVolume(0); R.goal = VOL; R.player.loadVideoById(vid(t)); } else R.player.cueVideoById(vid(t)); } catch (e) {}
+      try { if (R.started && R.on && !R.held) { R.vol = 0; R.player.setVolume(0); R.goal = VOL; R.player.loadVideoById(vid(t)); } else R.player.cueVideoById(vid(t)); } catch (e) {}
     }
     if (R.list === 'remix' && /^(remix|next|prev|skip)$/.test(reason)) clipCredit(t, reason); else stationId(reason);
-    if (R.list === 'remix' && R.started && R.on) rxPreload();
+    if (R.list === 'remix' && R.started && R.on && !R.held) rxPreload();
   }
   function offAir() { R.offAir = true; R.cur = R.cur || TITLE; R.playing = false; duck(false); clearBC(); stopYT(); render(); }
   function tune(list, dir, reason) { // move along a playlist; if that whole list can't play, borrow another one
@@ -264,13 +264,23 @@ const RADIO = (function () {
     swap(() => tune(list, 1, why || 'station'), true);
   }
   function resume() {
-    const t = R.cur; if (!t) return;
+    const t = R.cur; if (!t || R.held) return;
     if (isBC(t)) { showBC(t); return; }
     try { if (R.player && R.ready) { R.vol = 0; R.player.setVolume(0); R.goal = VOL; R.player.playVideo(); } } catch (e) {}
     if (R.list === 'remix') { rxClip(t, true); rxPreload(); }
   }
   const cycle = () => { if (!R.started) start(); setStation(STATIONS[(STATIONS.indexOf(R.station) + 1) % STATIONS.length]); };
   const toggle = () => { if (!R.started) start(); setStation(R.on ? 'off' : R.lastSt || 'remix'); };
+  // hold(true): a set piece with its own music (Fort McHenry) takes the air: the radio pauses (iOS ignores setVolume, so a pause is the only
+  // dependable "duck"); hold(false) puts it back where it was. The dial still works while held but nothing plays until release.
+  function hold(on) {
+    on = !!on; if (R.held === on) return; R.held = on;
+    if (on) { R.heldWas = { on: R.on, started: R.started, bc: R.bc ? R.cur : null }; rxCancel(); R.after = null; R.goal = 0;
+      try { if (R.player && R.ready) R.player.pauseVideo(); } catch (e) {} try { if (RX.idle && RX.idle !== R.player) { RX.idle.pauseVideo(); RX.idle.mute(); } } catch (e) {}
+      R.playing = false; if (R.bc) clearBC(); duck(false); rlog({ reason: 'hold' }); }
+    else { rlog({ reason: 'release' }); if (R.on && R.started && !R.offAir && R.cur) resume(); render(); }
+  }
+  R.hold = hold;
   function duck(on) { try { if (SFXBUS) SFXBUS.gain.setTargetAtTime(on ? 0.62 : 1, AC.currentTime, 0.3); } catch (e) {} }
 
 
@@ -333,6 +343,7 @@ const RADIO = (function () {
     if (reason === 'skip') { R.after = null; go(); } else swap(go, true);
   }
   function rxTick(dt) {
+    if (R.held) return;
     if (R.station !== 'remix' || R.list !== 'remix' || !R.started || !R.on || R.offAir || !R.cur) return;
     if (RX.fade) { rxFadeTick(dt); return; }
     if (!R.playing || R.after) return;
@@ -351,6 +362,7 @@ const RADIO = (function () {
     if (e && e.target && R.player && e.target !== R.player) { if (RX.fade && e.target === RX.fade.to) return; rxIdleState(e.data); return; } // events from the idle remix player
     if (RX.fade && e && e.data !== 1) return; // the outgoing clip is being faded out / paused by the crossfade
     const s = e.data; // -1 unstarted, 0 ended, 1 playing, 2 paused, 3 buffering, 5 cued
+    if (s === 1 && R.held) { R.playing = false; try { R.player.pauseVideo(); } catch (er) {} return; }
     if (s === 1) { R.playing = true; if (!R.on || isBC(R.cur)) { try { R.player.pauseVideo(); } catch (er) {} } else { duck(true); if (R.goal === 0 && !R.after) R.goal = VOL; } }
     else if (s === 0) { R.playing = false; if (R.on && !isBC(R.cur)) advance('next'); }
     else if (s === 2) { R.playing = false; if (!isBC(R.cur)) duck(false); }
@@ -434,9 +446,9 @@ const RADIO = (function () {
   setInterval(() => {
     const now = performance.now(), dt = Math.min(0.5, (now - last) / 1000); last = now;
     rxTick(dt);
-    if (R.station === 'auto' && R.on && !R.offAir && !R.after) { const want = nightNow() ? 'night' : 'day'; if (R.list !== want) swap(() => tune(want, 1, want === 'night' ? 'dusk' : 'dawn')); }
+    if (R.station === 'auto' && R.on && !R.offAir && !R.after && !R.held) { const want = nightNow() ? 'night' : 'day'; if (R.list !== want) swap(() => tune(want, 1, want === 'night' ? 'dusk' : 'dawn')); }
     if (R.bigT > 0) { R.bigT -= dt; if (R.bigT <= 0) card.classList.remove('on'); }
-    if (R.bc && R.on && R.started && R.bcLeft > 0) { R.bcLeft -= dt; if (R.bcLeft <= 0) advance('next'); }
+    if (R.bc && R.on && R.started && R.bcLeft > 0 && !R.held) { R.bcLeft -= dt; if (R.bcLeft <= 0) advance('next'); }
     const stp = VOL / (R.fast && R.goal === 0 ? 0.35 : FADE) * dt;
     if (R.vol !== R.goal && !RX.fade) { R.vol = R.vol < R.goal ? Math.min(R.goal, R.vol + stp) : Math.max(R.goal, R.vol - stp); try { R.player && R.ready && R.player.setVolume(Math.round(R.vol)); } catch (e) {} }
     if (R.after && R.vol <= 0.01) { const f = R.after; R.after = null; f(); }
@@ -444,7 +456,7 @@ const RADIO = (function () {
   }, 100);
   render();
 
-  window.__radio = { R, T, TRACKS, STATIONS, toggle, setStation, cycle, skip, start, advance, idText, isBC, get station() { return R.station; }, get text() { return R.tickerText; },
+  window.__radio = { R, T, TRACKS, STATIONS, hold, get held() { return !!R.held; }, toggle, setStation, cycle, skip, start, advance, idText, isBC, get station() { return R.station; }, get text() { return R.tickerText; },
     get card() { return card.classList.contains('on') ? card.textContent : ''; }, get stored() { try { return localStorage.getItem(LS); } catch (e) { return null; } },
     simEnd: () => onState({ data: 0 }), simError: (c = 150) => onError({ data: c }), simBCEnd: () => { if (R.bc) R.bcLeft = 0.01; }, showCred,
     RX, REMIX_PEAK, POOL, CLIP, BUMPS, get vol() { return R.vol; }, get sfx() { return SFXBUS ? SFXBUS.gain.value : null; } };
