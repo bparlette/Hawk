@@ -22,7 +22,7 @@ const pw = require('/workspace/work/trailer_v2/node_modules/playwright-core');
     if (mode === 'lose' && s.log.includes('retry') && s.st && !s.st.over) { console.log('RETRY OK', JSON.stringify(s)); break; }
     if (!s.cur) { console.log('END', JSON.stringify(s)); break; }
   }
-  const fin = await p.evaluate(() => ({ log: __duels.log, cleared: __duels.cleared, bossClear: [...__duels.BC.cleared], crime: { harborplace: __duels.BC.crime.harborplace, aquarium: __duels.BC.crime.aquarium }, stats: (__duels.kinds.jimmy.st || {}).stats || null, cstats: (__duels.kinds.chipkid.st || {}).stats || null, err: __celErr, radio: window.__radio && __radio.fduck, hero: [__cel.hero.pos.x.toFixed(1), __cel.hero.pos.z.toFixed(1)], body: document.body.className }));
+  const fin = await p.evaluate(() => ({ log: __duels.log, cleared: __duels.cleared, bossClear: [...__duels.BC.cleared], crime: { harborplace: __duels.BC.crime.harborplace, aquarium: __duels.BC.crime.aquarium }, stats: (__duels.kinds.jimmy.st || {}).stats || null, cstats: (__duels.kinds.chipkid.st || {}).stats || null, cgrade: (__duels.kinds.chipkid.st || {}).grade || null, chp: __duels.kinds.chipkid.st ? Math.round(__duels.kinds.chipkid.st.hp) : null, err: __celErr, radio: window.__radio && __radio.fduck, hero: [__cel.hero.pos.x.toFixed(1), __cel.hero.pos.z.toFixed(1)], body: document.body.className }));
   console.log('FINAL', JSON.stringify(fin)); console.log('DC', JSON.stringify(dc)); console.log('wall', ((Date.now() - t0) / 1000).toFixed(0) + 's');
   console.log('ERRORS', errs.length, errs.slice(0, 12).join('\n'));
   await b.close();

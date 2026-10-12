@@ -2,17 +2,20 @@
 // "way too hard ... the stick punch is not animated or fun enough ... the power button doesn't do anything special ... it should be easily beaten, with special moves
 // and lots of animated action scenes worthy of replay").
 // A behind-the-player view: Harold in a makeshift ring on the Harborplace plaza, Mavis cheering from the corner, facing The Chip Kid's giant
-// crab-chip-bag mech (an original red / yellow snack look: "LIL' CRUNCH CRAB CHIPS", no real brand). The kid (pigtails, big eyes, bonnet-style hat) sits in the cockpit dome.
+// crab-chip-bag mech, the kid's own homemade "CRUNCH-O-TRON" (polish 2026-10-12: an original purple / teal / lime look with a crayon chip-monster doodle and hazard
+// stripes; no snack-brand palette, logo or mascot). The kid (a gap-toothed mech pilot: purple flight helmet with an antenna, goggles pushed up, messy indigo hair,
+// teal jumpsuit, sneakers) sits in the cockpit dome.
 // CANE: SWING chains a 3-hit cane combo (forehand, backhand, overhead SMASH finisher). Every hit lands: wind-up + swing arc with a motion trail, hitstop, camera shake,
 //   sparks + flying chip crumbs + foil shreds, the mech flinches back with a white flash, floating damage numbers, chunky hit sounds, a combo counter. After an attack the
 //   mech is OPEN (it sags): hits there are CRITS (x1.5, gold numbers).
 // POWER (ACT): hits and dodges fill the meter fast; when it is full the bar glows, the ACT button pulses and a POWER READY prompt shows. Specials rotate:
-//   OLD BAY CYCLONE (a spinning seasoning-tornado cane flurry), CRAB-MALLET POUND (leap + giant mallet + shockwave, the mech bounces), "HON!" HOMER (a charged home-run
+//   BAY DUST CYCLONE (a spinning seasoning-tornado cane flurry), CRAB-MALLET POUND (leap + giant mallet + shockwave, the mech bounces), "HON!" HOMER (a charged home-run
 //   swing that sends the mech flying off into the sky and crashing back down). Each has slow-mo, zoom, big flashes and big damage; Harold can't be hurt during one.
 // The mech's attacks are slow and loudly telegraphed (it flashes, a "!" pops over the dome, the danger shows on the ground):
 //   SEASONING CLOUD (shakers tip + glow orange, orange ring on the middle lane) -> DUCK or DODGE   ·   CHIP-CAN BARRAGE (hatch opens, lanes flash) -> step out of the lane
 //   BAG-SLAM (crouch + leap, red shadow on the middle lane) -> DODGE   ·   CLAW JAB (claw pulls back + flashes, lanes flash) -> dodge away or duck
-// Forgiving: half the old damage, long i-frames after a hit, Mavis tosses crab cakes when Harold is low, one "second wind" per fight, full health between rounds.
+// Still forgiving, but it hits back (polish 2026-10-12): attacks ~1.5x as often, can barrages most turns (two-can volleys from round 2), ~1.35x damage; long i-frames,
+// one crab cake per round from Mavis when Harold is low, one "second wind" per fight, +20 HP between rounds (was full health); hitting it while it guards makes it attack sooner. Star grade: hits taken, +1 star for style (3 specials or 5 dodges).
 // 3 short rounds; the final blow plays a slow-mo KO: the mech blows apart into a chip cloud, the kid tumbles out, sulks and runs off; then a grade (stars) + REMATCH.
 // Controls: phone: stick left / right (or the white buttons) dodge, stick down / JUMP = DUCK, SWING = cane, ACT = POWER. Desktop: A / D (arrows) dodge, S duck, J swing,
 // E power. Gamepad: left stick or LB / RB dodge, A duck, X swing, Y power.
@@ -23,33 +26,44 @@
     hint: '<b>J</b> swing (3-hit combo) · <b>E</b> POWER special · <b>A / D</b> dodge · <b>S</b> duck',
     labels: { a: 'SWING', b: 'DUCK', c: 'POWER', l: '&#9664; DODGE', r: 'DODGE &#9654;' } };
   const MZ = 4.4, LANE = 1.35; // the mech stands at z = MZ facing -z; Harold at z = 0 facing +z. Screen right is world -x here.
-  const RHP = [200, 220, 240]; // mech HP per round
+  const RHP = [220, 245, 270]; // mech HP per round (polish: +10-12%, so a round lasts long enough for the mech to hit back)
   const RND = [ // per round: tell lengths (slow + loud), how many cans, can spacing / speed, guard time, open time, attack order
-    { cloud: 1.6, cans: 2, gap: 0.95, cspd: 3.4, slam: 1.7, jab: 1.2, guard: [1.7, 2.4], open: 1.8, mix: ['jab', 'cloud', 'cans', 'slam'] },
-    { cloud: 1.45, cans: 3, gap: 0.85, cspd: 3.6, slam: 1.55, jab: 1.1, guard: [1.4, 2.1], open: 1.7, mix: ['cans', 'jab', 'cloud', 'slam', 'jab'] },
-    { cloud: 1.3, cans: 3, gap: 0.8, cspd: 3.9, slam: 1.45, jab: 1.0, guard: [1.2, 1.9], open: 1.6, mix: ['slam', 'cans', 'jab', 'cloud', 'jab', 'cans'] },
+  // polish 2026-10-12 (Brad: "the mech barely hits back and barely ever rolls barrels"): ~1.5x attack rate (shorter guard / open gaps), cans in about every other attack,
+  // longer barrages, and two-can volleys (one lane always left clear) from round 2 (vol = chance a can comes as a pair). Tells stay long enough to read (>= 0.95 s).
+    { cloud: 1.45, cans: 3, gap: 0.9, cspd: 3.5, slam: 1.55, jab: 1.1, guard: [0.7, 1.1], open: 1.15, vol: 0, mix: ['cans', 'jab', 'cloud', 'cans', 'slam'] },
+    { cloud: 1.3, cans: 4, gap: 0.8, cspd: 3.8, slam: 1.4, jab: 1.0, guard: [0.6, 1.0], open: 1.05, vol: 0.4, mix: ['cans', 'jab', 'cans', 'cloud', 'slam', 'cans', 'jab'] },
+    { cloud: 1.2, cans: 5, gap: 0.75, cspd: 4.0, slam: 1.3, jab: 0.95, guard: [0.5, 0.9], open: 1.0, vol: 0.6, mix: ['cans', 'slam', 'cans', 'jab', 'cloud', 'cans', 'jab'] },
   ];
-  const DMG_TO_HAROLD = { cloud: 5, can: 4, slam: 10, jab: 5 };
+  const DMG_TO_HAROLD = { cloud: 8, can: 6, slam: 15, jab: 8 }; // 1.5x the fun-pass values (5 / 4 / 10 / 5)
   const SWINGS = [ // the 3-hit cane combo: duration, hit moment (s), damage, meter
     { dur: 0.3, hit: 0.12, dmg: 6, pw: 8, name: 'fore' }, { dur: 0.3, hit: 0.12, dmg: 7, pw: 8, name: 'back' }, { dur: 0.48, hit: 0.22, dmg: 14, pw: 16, name: 'smash' }];
-  const SPECIALS = [{ id: 'cyclone', name: 'OLD BAY CYCLONE!', ban: 'OLD BAY<br>CYCLONE!', dur: 2.2 }, { id: 'mallet', name: 'CRAB-MALLET POUND!', ban: 'CRAB-MALLET<br>POUND!', dur: 2.3 }, { id: 'homer', name: '"HON!" HOMER!', ban: '"HON!"<br>HOMER!', dur: 3.3 }];
+  const SPECIALS = [{ id: 'cyclone', name: 'BAY DUST CYCLONE!', ban: 'BAY DUST<br>CYCLONE!', dur: 2.2 }, { id: 'mallet', name: 'CRAB-MALLET POUND!', ban: 'CRAB-MALLET<br>POUND!', dur: 2.3 }, { id: 'homer', name: '"HON!" HOMER!', ban: '"HON!"<br>HOMER!', dur: 3.3 }];
   const V = new THREE.Vector3(), V2 = new THREE.Vector3(), V3 = new THREE.Vector3();
   const sx = (lat) => -lat * LANE; // screen lane (-1 left, 0 centre, 1 right) -> world x
   const TOUCH = () => document.body.classList.contains('touch');
+  // the CRUNCH-O-TRON palette (polish: purple foil, teal, lime; deliberately NOT a red / yellow snack-brand look)
+  const PU = '#6b3fd0', PUD = '#45288f', TE = '#22b8aa', TED = '#16857b', LI = '#a6f03c', SI = '#c8c8d0', INK = '#1a1236';
+  // the kid's own grudge lines between rounds (GR2 has intro + defeat only; these fill the round-end taunt slot, finding #7)
+  const TAUNT = ['That round didn\u2019t count! I wasn\u2019t ready!', 'My mech has a turbo button, you know! Somewhere!', 'Ugh, grandpa! Stop being GOOD at this!'];
 
   // ---------------- textures ----------------
-  function labelTex() { return canvasTex(512, 512, (g, w, h) => {
-    g.fillStyle = '#d8262a'; g.fillRect(0, 0, w, h);
-    g.fillStyle = '#ffd23c'; g.fillRect(0, h * 0.06, w, h * 0.08); g.fillRect(0, h * 0.86, w, h * 0.08);
-    g.save(); g.translate(w / 2, h * 0.48); g.fillStyle = '#fff3c4'; g.strokeStyle = '#7a1010'; g.lineWidth = 12; g.beginPath(); g.ellipse(0, 0, w * 0.43, h * 0.3, 0, 0, TAU); g.fill(); g.stroke(); g.restore();
-    // an original cartoon crab
-    g.save(); g.translate(w / 2, h * 0.36); g.fillStyle = '#e8501e'; g.strokeStyle = '#5a1a0a'; g.lineWidth = 6; g.beginPath(); g.ellipse(0, 0, 70, 40, 0, 0, TAU); g.fill(); g.stroke();
-    for (const s of [-1, 1]) { g.beginPath(); g.arc(s * 95, -30, 26, 0, TAU); g.fill(); g.stroke(); g.fillStyle = '#fff'; g.beginPath(); g.arc(s * 20, -44, 11, 0, TAU); g.fill(); g.stroke(); g.fillStyle = '#14101f'; g.beginPath(); g.arc(s * 20, -44, 5, 0, TAU); g.fill(); g.fillStyle = '#e8501e'; }
+  function labelTex() { return canvasTex(512, 512, (g, w, h) => { // the kid's homemade mech panel: hazard stripes, a crayon chip-monster doodle, stencil lettering (no brand-style logo)
+    g.fillStyle = '#0f3a48'; g.fillRect(0, 0, w, h);
+    for (const y0 of [0, h * 0.88]) { g.save(); g.beginPath(); g.rect(0, y0, w, h * 0.12); g.clip(); for (let x = -h; x < w + h; x += 44) { g.fillStyle = (x / 44) % 2 ? TE : LI; g.beginPath(); g.moveTo(x, y0); g.lineTo(x + 22, y0); g.lineTo(x + 22 + h * 0.12, y0 + h * 0.12); g.lineTo(x + h * 0.12, y0 + h * 0.12); g.fill(); } g.restore(); }
+    // rivets
+    g.fillStyle = SI; for (const [x, y] of [[26, 80], [w - 26, 80], [26, h - 80], [w - 26, h - 80]]) { g.beginPath(); g.arc(x, y, 9, 0, TAU); g.fill(); }
+    // the chip monster, drawn like a kid's crayon doodle: a wobbly beige chip, angry brows, a toothy grin, stick arms flexing
+    g.save(); g.translate(w / 2, h * 0.4); g.rotate(-0.08); g.lineJoin = 'round'; g.lineCap = 'round';
+    g.fillStyle = '#f0cf8a'; g.strokeStyle = '#fff'; g.lineWidth = 10; g.beginPath();
+    for (let i = 0; i <= 24; i++) { const a = i / 24 * TAU, r = 118 + Math.sin(a * 5) * 10 + Math.cos(a * 3) * 6; g.lineTo(Math.cos(a) * r * 1.15, Math.sin(a) * r * 0.82); } g.closePath(); g.fill(); g.stroke();
+    g.fillStyle = '#d9a65a'; for (const [x, y, r] of [[-70, -40, 9], [60, 30, 7], [-20, 55, 6], [85, -35, 8], [-95, 30, 6]]) { g.beginPath(); g.arc(x, y, r, 0, TAU); g.fill(); }
+    g.strokeStyle = INK; g.lineWidth = 11; g.beginPath(); g.moveTo(-70, -48); g.lineTo(-18, -26); g.moveTo(70, -48); g.lineTo(18, -26); g.stroke(); // angry brows
+    g.fillStyle = '#fff'; for (const s of [-1, 1]) { g.beginPath(); g.arc(s * 40, -6, 21, 0, TAU); g.fill(); } g.fillStyle = INK; for (const s of [-1, 1]) { g.beginPath(); g.arc(s * 34, -2, 10, 0, TAU); g.fill(); }
+    g.fillStyle = INK; g.beginPath(); g.moveTo(-58, 30); g.quadraticCurveTo(0, 82, 58, 30); g.closePath(); g.fill(); g.fillStyle = '#fff'; for (let k = 0; k < 5; k++) { g.beginPath(); g.moveTo(-46 + k * 21, 33); g.lineTo(-36 + k * 21, 50); g.lineTo(-26 + k * 21, 33); g.fill(); }
+    g.strokeStyle = LI; g.lineWidth = 9; g.beginPath(); g.moveTo(-128, 10); g.lineTo(-175, -20); g.lineTo(-170, -70); g.moveTo(128, 10); g.lineTo(175, -20); g.lineTo(170, -70); g.stroke(); // flexing stick arms
     g.restore();
-    g.textAlign = 'center'; g.textBaseline = 'middle'; g.font = 'italic 900 70px ' + FONT; g.lineJoin = 'round'; g.strokeStyle = '#7a1010'; g.lineWidth = 14; g.fillStyle = '#d8262a';
-    g.strokeText("LIL' CRUNCH", w / 2, h * 0.56); g.fillText("LIL' CRUNCH", w / 2, h * 0.56);
-    g.font = '900 40px ' + FONT; g.fillStyle = '#7a1010'; g.fillText('CRAB CHIPS', w / 2, h * 0.7);
-    g.font = '900 22px ' + FONT; g.fillStyle = '#7a1010'; g.fillText('CHESAPEAKE CRAB SPICE \u00b7 NET WT 99 OZ', w / 2, h * 0.9);
+    g.textAlign = 'center'; g.textBaseline = 'middle'; g.font = '900 46px ' + FONT; g.fillStyle = LI; g.strokeStyle = INK; g.lineWidth = 8; g.strokeText('CRUNCH-O-TRON', w / 2, h * 0.73); g.fillText('CRUNCH-O-TRON', w / 2, h * 0.73);
+    g.font = '900 22px ' + FONT; g.fillStyle = TE; g.fillText('MK-II \u00b7 KID PILOT ONLY \u00b7 NO GROWNUPS', w / 2, h * 0.82);
   }, 256); }
   function brickTex() { return canvasTex(256, 256, (g, w, h) => { g.fillStyle = '#6a3a2e'; g.fillRect(0, 0, w, h); SEED = 21;
     for (let y = 0; y < 16; y++) for (let x = 0; x < 8; x++) { const o = (y % 2) * 16; g.fillStyle = ['#9a5040', '#8a4a3a', '#a8604a', '#7e4234'][Math.floor(srnd() * 4)]; g.fillRect(x * 32 + o + 1, y * 16 + 1, 30, 14); } }, 256); }
@@ -94,15 +108,15 @@
     const K = DUELS.kit, G = DUELS.GEO, R = { root: new THREE.Group(), flash: [] };
     const mM = toonMat(), aM = [toonMat(), toonMat()], sM = toonMat(); R.flash = [mM, aM[0], aM[1], sM]; R.mM = mM; R.aM = aM; R.sM = sM;
     R.hip = new THREE.Group(); R.hip.position.y = 1.5; R.root.add(R.hip);
-    // legs (crab legs: two a side), one mesh
-    const L = K(); for (const s of [-1, 1]) for (const z of [-0.35, 0.45]) { L.add(G.cyl(0.14, 0.18, 1.5, 7), '#e8501e', s * 1.15, -0.25, z, 0, 0, s * 0.9).add(G.sph(0.2, 8, 6), '#c43a12', s * 1.75, -0.7, z).add(G.cone(0.14, 1.1, 6), '#e8501e', s * 1.95, -1.15, z, 0, 0, -s * 0.35); }
-    L.add(G.cyl(0.7, 0.85, 0.5, 10), '#5a5a64', 0, 0.05, 0).add(G.cyl(0.5, 0.5, 0.2, 10), '#ffd23c', 0, 0.35, 0);
+    // legs (robot crab legs: two a side), one mesh
+    const L = K(); for (const s of [-1, 1]) for (const z of [-0.35, 0.45]) { L.add(G.cyl(0.14, 0.18, 1.5, 7), TED, s * 1.15, -0.25, z, 0, 0, s * 0.9).add(G.sph(0.2, 8, 6), SI, s * 1.75, -0.7, z).add(G.cone(0.14, 1.1, 6), TED, s * 1.95, -1.15, z, 0, 0, -s * 0.35); } // teal robot legs (the claws stay crab orange)
+    L.add(G.cyl(0.7, 0.85, 0.5, 10), '#5a5a64', 0, 0.05, 0).add(G.cyl(0.5, 0.5, 0.2, 10), LI, 0, 0.35, 0);
     R.legs = L.mesh(mM, R.hip);
     // the bag (pillow + crimped seams top and bottom) + the label on the front
     R.bag = new THREE.Group(); R.bag.position.y = 2.15; R.hip.add(R.bag);
-    const B = K(); B.add(pillow(3.3, 3.6, 1.8), '#d8262a', 0, 0, 0);
-    for (const y of [1.86, -1.86]) for (let k = 0; k < 11; k++) B.add(G.box(0.3, 0.32, 0.5), k % 2 ? '#ffd23c' : '#b81e22', -1.5 + k * 0.3, y, 0, 0, 0, 0.785);
-    B.add(G.box(3.25, 0.3, 0.92), '#ffd23c', 0, -1.25, 0.06).add(G.box(0.5, 0.5, 0.4), '#5a5a64', 0, 1.05, -0.75); // the yellow band + a back vent
+    const B = K(); B.add(pillow(3.3, 3.6, 1.8), PU, 0, 0, 0);
+    for (const y of [1.86, -1.86]) for (let k = 0; k < 11; k++) B.add(G.box(0.3, 0.32, 0.5), k % 2 ? TE : PUD, -1.5 + k * 0.3, y, 0, 0, 0, 0.785);
+    B.add(G.box(3.25, 0.3, 0.92), LI, 0, -1.25, 0.06).add(G.box(0.5, 0.5, 0.4), '#5a5a64', 0, 1.05, -0.75); // the lime band + a back vent
     // the belly hatch frame (the cans roll out of it)
     B.add(G.box(1.5, 0.12, 0.2), '#14101f', 0, -0.62, 0.86).add(G.box(1.5, 0.12, 0.2), '#14101f', 0, -1.5, 0.86);
     R.bagM = B.mesh(mM, R.bag);
@@ -110,14 +124,14 @@
     const lab = new THREE.Mesh(lg, toonMat({ map: labelTex(), vertexColors: false })); lab.material.userData.flash = mM.userData.flash; lab.material.userData.flashC = mM.userData.flashC;
     lab.material.customProgramCacheKey = () => 'ckLab'; lab.position.set(0, 0.42, 0); R.bag.add(lab);
     R.hatch = new THREE.Group(); R.hatch.position.set(0, -0.62, 0.9); R.bag.add(R.hatch);
-    { const H = K(); H.add(G.box(1.4, 0.86, 0.08), '#ffd23c', 0, -0.43, 0).add(G.box(1.0, 0.1, 0.1), '#d8262a', 0, -0.43, 0.05); H.mesh(mM, R.hatch, 0); }
+    { const H = K(); H.add(G.box(1.4, 0.86, 0.08), TE, 0, -0.43, 0).add(G.box(1.0, 0.1, 0.1), LI, 0, -0.43, 0.05); H.mesh(mM, R.hatch, 0); }
     // shoulder shakers (the seasoning cloud): two mesh-merged shakers on a yoke that tips forward
     R.shakers = new THREE.Group(); R.shakers.position.set(0, 1.6, -0.1); R.bag.add(R.shakers);
-    { const S = K(); for (const s of [-1, 1]) { S.add(G.cyl(0.32, 0.36, 1.0, 10), '#ffd23c', s * 1.45, 0.5, 0).add(G.cyl(0.34, 0.3, 0.26, 10), '#c8c8d0', s * 1.45, 1.1, 0).add(G.box(0.7, 0.18, 0.4), '#5a5a64', s * 1.2, 0.05, 0)
-        .add(G.box(0.62, 0.3, 0.05), '#d8262a', s * 1.45, 0.5, 0.33); }
+    { const S = K(); for (const s of [-1, 1]) { S.add(G.cyl(0.32, 0.36, 1.0, 10), TE, s * 1.45, 0.5, 0).add(G.cyl(0.34, 0.3, 0.26, 10), '#c8c8d0', s * 1.45, 1.1, 0).add(G.box(0.7, 0.18, 0.4), '#5a5a64', s * 1.2, 0.05, 0)
+        .add(G.box(0.62, 0.3, 0.05), PU, s * 1.45, 0.5, 0.33); }
       S.mesh(sM, R.shakers); }
     R.nozzles = [new THREE.Object3D(), new THREE.Object3D()]; R.nozzles[0].position.set(-1.45, 1.3, 0.1); R.nozzles[1].position.set(1.45, 1.3, 0.1); R.nozzles.forEach((o) => R.shakers.add(o));
-    // arms: shoulder pivot > piston > the crab claw (left = mech's left, i.e. screen right)
+    // arms: shoulder pivot > piston > the crab claw (s = -1 is the mech's left; the mech faces the camera (rotation.y = PI), so that arm sits on SCREEN LEFT, next to lane -1)
     R.arms = [];
     for (const s of [-1, 1]) { const sh = new THREE.Group(); sh.position.set(s * 1.8, 0.4, 0.1); R.bag.add(sh);
       const A = K(); A.add(G.sph(0.42, 10, 8), '#5a5a64', 0, 0, 0).add(G.cyl(0.18, 0.18, 1.3, 8), '#9a9aa4', s * 0.15, -0.2, 0.6, Math.PI / 2 - 0.35, 0, 0).add(G.cyl(0.24, 0.24, 0.5, 8), '#5a5a64', s * 0.12, -0.05, 0.25, Math.PI / 2 - 0.35, 0, 0)
@@ -126,32 +140,43 @@
       A.mesh(aM[s < 0 ? 0 : 1], sh); R.arms.push({ sh, s }); }
     // cockpit dome on top + the kid inside
     R.domeG = new THREE.Group(); R.domeG.position.set(0, 1.95, 0.1); R.bag.add(R.domeG);
-    { const D = K(); D.add(G.cyl(0.95, 1.05, 0.3, 14), '#5a5a64', 0, 0, 0).add(G.tor(0.98, 0.07, TAU, 6, 18), '#ffd23c', 0, 0.15, 0, Math.PI / 2, 0, 0); D.mesh(mM, R.domeG, 0.003); }
+    { const D = K(); D.add(G.cyl(0.95, 1.05, 0.3, 14), '#5a5a64', 0, 0, 0).add(G.tor(0.98, 0.07, TAU, 6, 18), LI, 0, 0.15, 0, Math.PI / 2, 0, 0); D.mesh(mM, R.domeG, 0.003); }
     R.dome = new THREE.Mesh(new THREE.SphereGeometry(0.98, 16, 10, 0, TAU, 0, Math.PI / 2), new THREE.MeshLambertMaterial({ color: '#bfe8ff', transparent: true, opacity: 0.32, emissive: '#204a60', depthWrite: false }));
     R.dome.position.y = 0.15; R.domeG.add(R.dome);
     R.kid = buildKid(); R.kid.root.position.set(0, 0.12, 0); R.kid.root.scale.setScalar(0.62); R.domeG.add(R.kid.root);
     return R;
   }
-  // the kid: an original pig-tailed snack-brand-style kid (~1.15 m tall unscaled): big eyes, bonnet-style hat (yellow, red trim), red dress, white collar
+  // the kid (~1.15 m tall unscaled; polish 2026-10-12, an original mech-pilot kid, nothing like a snack mascot): a purple flight helmet with a lime stripe + antenna,
+  // round teal goggles pushed up on it, messy indigo hair spiking out under it, big eyes, a gap-toothed grin, a teal jumpsuit with a lime zip + chest patch,
+  // purple gloves, chunky white-and-purple sneakers. Same part layout as before (body / legs[2] / arms[2] / head) so the poses + KO tumble keep working.
   function buildKid() {
-    const K = DUELS.kit, G = DUELS.GEO, M = toonMat(), Kd = { root: new THREE.Group(), mat: M };
+    const K = DUELS.kit, G = DUELS.GEO, M = toonMat(), Kd = { root: new THREE.Group(), mat: M }, SK = '#c98a5e', HAIR = '#2b2160';
     Kd.body = new THREE.Group(); Kd.root.add(Kd.body);
-    const B = K(); B.add(G.cyl(0.2, 0.36, 0.55, 12), '#d8262a', 0, 0.62, 0).add(G.cyl(0.21, 0.23, 0.08, 12), '#f4f0e6', 0, 0.9, 0).add(G.sph(0.17, 10, 8), '#d8262a', 0, 0.9, 0, 0, 0, 0, 1, 0.6, 1)
-      .add(G.box(0.36, 0.05, 0.02), '#ffd23c', 0, 0.48, 0.3);
+    const B = K(); B.add(G.cyl(0.22, 0.27, 0.56, 12), TE, 0, 0.62, 0).add(G.sph(0.22, 10, 8), TE, 0, 0.88, 0, 0, 0, 0, 1, 0.55, 1) // jumpsuit torso + shoulders
+      .add(G.cyl(0.28, 0.28, 0.07, 12), PUD, 0, 0.42, 0).add(G.box(0.08, 0.06, 0.03), SI, 0, 0.42, 0.28) // belt + buckle
+      .add(G.box(0.035, 0.42, 0.02), LI, 0, 0.66, 0.255).add(G.cyl(0.07, 0.07, 0.02, 10), LI, 0.11, 0.76, 0.24, Math.PI / 2, 0, 0) // zip + round chest patch
+      .add(G.cyl(0.13, 0.15, 0.06, 12), TED, 0, 0.95, 0); // collar
     B.mesh(M, Kd.body);
-    Kd.legs = []; for (const s of [-1, 1]) { const g = new THREE.Group(); g.position.set(s * 0.1, 0.36, 0); Kd.body.add(g); const L = K(); L.add(G.cyl(0.055, 0.05, 0.3, 6), '#f2c8a0', 0, -0.15, 0).add(G.box(0.12, 0.08, 0.2), '#7a1010', 0, -0.32, 0.04); L.mesh(M, g, 0); Kd.legs.push(g); }
-    Kd.arms = []; for (const s of [-1, 1]) { const g = new THREE.Group(); g.position.set(s * 0.22, 0.86, 0); Kd.body.add(g); const A = K(); A.add(G.cyl(0.05, 0.045, 0.34, 6), '#f2c8a0', 0, -0.17, 0).add(G.sph(0.07, 6, 5), '#d8262a', 0, 0, 0).add(G.sph(0.055, 6, 5), '#f2c8a0', 0, -0.35, 0); A.mesh(M, g, 0); Kd.arms.push(g); }
+    Kd.legs = []; for (const s of [-1, 1]) { const g = new THREE.Group(); g.position.set(s * 0.1, 0.38, 0); Kd.body.add(g); const L = K();
+      L.add(G.cyl(0.075, 0.065, 0.28, 7), TE, 0, -0.13, 0).add(G.box(0.15, 0.1, 0.24), '#f4f2ff', 0, -0.31, 0.04).add(G.box(0.16, 0.04, 0.25), PU, 0, -0.36, 0.04); L.mesh(M, g, 0); Kd.legs.push(g); }
+    Kd.arms = []; for (const s of [-1, 1]) { const g = new THREE.Group(); g.position.set(s * 0.24, 0.86, 0); Kd.body.add(g); const A = K();
+      A.add(G.cyl(0.06, 0.05, 0.32, 6), TE, 0, -0.16, 0).add(G.sph(0.075, 6, 5), TED, 0, 0, 0).add(G.sph(0.07, 7, 5), PU, 0, -0.35, 0); A.mesh(M, g, 0); Kd.arms.push(g); }
     Kd.head = new THREE.Group(); Kd.head.position.y = 1.0; Kd.body.add(Kd.head);
-    const H = K(); H.add(G.sph(0.27, 14, 10), '#f2c8a0', 0, 0.2, 0)
-      .add(G.sph(0.075, 10, 8), '#ffffff', -0.1, 0.24, 0.22, 0, 0, 0, 1, 1.25, 0.5).add(G.sph(0.075, 10, 8), '#ffffff', 0.1, 0.24, 0.22, 0, 0, 0, 1, 1.25, 0.5)
-      .add(G.sph(0.045, 8, 6), '#3a2a6a', -0.1, 0.23, 0.255).add(G.sph(0.045, 8, 6), '#3a2a6a', 0.1, 0.23, 0.255).add(G.sph(0.015, 5, 4), '#ffffff', -0.085, 0.25, 0.29).add(G.sph(0.015, 5, 4), '#ffffff', 0.115, 0.25, 0.29)
-      .add(G.sph(0.04, 6, 5), '#f08a8a', -0.16, 0.13, 0.2, 0, 0, 0, 1, 0.6, 0.5).add(G.sph(0.04, 6, 5), '#f08a8a', 0.16, 0.13, 0.2, 0, 0, 0, 1, 0.6, 0.5)
-      .add(G.box(0.09, 0.025, 0.02), '#8a2a2a', 0, 0.08, 0.26)
-      .add(G.sph(0.28, 14, 8), '#8a4a2a', 0, 0.3, -0.04, 0, 0, 0, 1.02, 0.9, 1);  // hair
-    for (const s of [-1, 1]) H.add(G.sph(0.12, 10, 8), '#8a4a2a', s * 0.36, 0.08, -0.04, 0, 0, s * 0.4, 0.8, 1.4, 0.8).add(G.sph(0.05, 6, 5), '#d8262a', s * 0.3, 0.2, -0.04); // pigtails + bows
-    // the bonnet-style hat: a deep yellow brim framing the face, red ribbon band + bow under the chin, a little frill
-    H.add(G.sph(0.33, 14, 9), '#ffd23c', 0, 0.3, -0.06, -0.25, 0, 0, 1, 0.95, 0.95).add(G.tor(0.31, 0.055, TAU, 6, 20), '#ffd23c', 0, 0.24, 0.1, 0.15, 0, 0).add(G.tor(0.335, 0.03, TAU, 5, 20), '#d8262a', 0, 0.24, 0.12, 0.15, 0, 0)
-      .add(G.sph(0.06, 6, 5), '#d8262a', 0.13, -0.04, 0.16).add(G.cone(0.05, 0.14, 5), '#d8262a', 0.16, -0.12, 0.15, 0, 0, 0.4);
+    const H = K(); H.add(G.sph(0.27, 14, 10), SK, 0, 0.2, 0)
+      .add(G.sph(0.08, 10, 8), '#ffffff', -0.1, 0.22, 0.22, 0, 0, 0, 1, 1.2, 0.5).add(G.sph(0.08, 10, 8), '#ffffff', 0.1, 0.22, 0.22, 0, 0, 0, 1, 1.2, 0.5)
+      .add(G.sph(0.045, 8, 6), '#1f6b3a', -0.1, 0.21, 0.26).add(G.sph(0.045, 8, 6), '#1f6b3a', 0.1, 0.21, 0.26).add(G.sph(0.015, 5, 4), '#ffffff', -0.085, 0.23, 0.295).add(G.sph(0.015, 5, 4), '#ffffff', 0.115, 0.23, 0.295)
+      .add(G.box(0.07, 0.025, 0.02), HAIR, -0.1, 0.32, 0.24, 0, 0, 0.35).add(G.box(0.07, 0.025, 0.02), HAIR, 0.1, 0.32, 0.24, 0, 0, -0.35) // scrunched, determined brows
+      .add(G.box(0.15, 0.05, 0.03), '#3a1420', 0, 0.08, 0.25).add(G.box(0.045, 0.03, 0.02), '#ffffff', -0.03, 0.095, 0.262).add(G.box(0.045, 0.03, 0.02), '#ffffff', 0.03, 0.095, 0.262); // gap-toothed grin
+    for (const s of [-1, 1]) H.add(G.sph(0.05, 6, 5), SK, s * 0.27, 0.19, 0, 0, 0, 0, 0.6, 1, 1); // ears
+    // messy hair spiking out under the helmet (sides + back), no pigtails
+    for (const [x, y, z, rx, rz] of [[-0.27, 0.3, 0.05, 0, 1.2], [0.27, 0.3, 0.05, 0, -1.2], [-0.25, 0.22, -0.12, -0.5, 1.4], [0.25, 0.22, -0.12, -0.5, -1.4], [0, 0.2, -0.29, -1.9, 0], [-0.14, 0.18, -0.25, -1.7, 0.6], [0.14, 0.18, -0.25, -1.7, -0.6], [-0.06, 0.36, 0.25, 1.3, 0.3], [0.07, 0.35, 0.25, 1.4, -0.4]])
+      H.add(G.cone(0.065, 0.2, 5), HAIR, x, y, z, rx, 0, rz);
+    // the flight helmet: purple shell, lime centre stripe, ear cups, an antenna with a lime ball; goggles pushed up on the front
+    H.add(G.sph(0.3, 14, 9, 0), PU, 0, 0.31, -0.02, 0, 0, 0, 1, 0.9, 1.02).add(G.box(0.07, 0.04, 0.6), LI, 0, 0.58, -0.02, 0.0, 0, 0, 1, 1, 1)
+      .add(G.cyl(0.1, 0.1, 0.07, 12), PUD, -0.29, 0.22, 0, 0, 0, Math.PI / 2).add(G.cyl(0.1, 0.1, 0.07, 12), PUD, 0.29, 0.22, 0, 0, 0, Math.PI / 2)
+      .add(G.cyl(0.012, 0.012, 0.26, 5), SI, 0.17, 0.66, -0.08, 0, 0, -0.35).add(G.sph(0.045, 7, 5), LI, 0.215, 0.78, -0.08);
+    for (const s of [-1, 1]) H.add(G.tor(0.075, 0.025, TAU, 6, 14), TE, s * 0.1, 0.46, 0.22, -0.55, 0, 0).add(G.sph(0.07, 10, 6), '#bff4ff', s * 0.1, 0.46, 0.215, -0.55, 0, 0, 1, 1, 0.35);
+    H.add(G.box(0.34, 0.035, 0.03), INK, 0, 0.47, 0.18, -0.55, 0, 0); // goggle strap over the brow
     H.mesh(M, Kd.head, 0.0036);
     return Kd;
   }
@@ -180,9 +205,9 @@
     C.R = rig; rig.root.position.set(0, 0.2, MZ); rig.root.rotation.y = Math.PI; sc.add(rig.root);
     C.base = { hipY: rig.hip.position.y, bagY: rig.bag.position.y };
     // chip cans (instanced), lane flash strips, the slam shadow, the ground warning ring, seasoning puffs (instanced quads)
-    const can = DUELS.kit(); can.add(DUELS.GEO.cyl(0.3, 0.3, 0.9, 12), '#d8262a', 0, 0, 0).add(DUELS.GEO.cyl(0.31, 0.31, 0.25, 12), '#ffd23c', 0, 0, 0).add(DUELS.GEO.cyl(0.29, 0.29, 0.05, 12), '#c8c8d0', 0, 0.46, 0).add(DUELS.GEO.cyl(0.29, 0.29, 0.05, 12), '#c8c8d0', 0, -0.46, 0);
+    const can = DUELS.kit(); can.add(DUELS.GEO.cyl(0.3, 0.3, 0.9, 12), TE, 0, 0, 0).add(DUELS.GEO.cyl(0.31, 0.31, 0.25, 12), PU, 0, 0, 0).add(DUELS.GEO.cyl(0.29, 0.29, 0.05, 12), '#c8c8d0', 0, 0.46, 0).add(DUELS.GEO.cyl(0.29, 0.29, 0.05, 12), '#c8c8d0', 0, -0.46, 0);
     const cg = can.geo(); cg.rotateZ(Math.PI / 2);
-    C.canM = new THREE.InstancedMesh(cg, toonMat(), 8); C.canM.count = 0; C.canM.frustumCulled = false; sc.add(C.canM); C.cans = [];
+    C.canM = new THREE.InstancedMesh(cg, toonMat(), 12); C.canM.count = 0; C.canM.frustumCulled = false; sc.add(C.canM); C.cans = [];
     C.lanes = [-1, 0, 1].map((l) => { const m = new THREE.Mesh(new THREE.PlaneGeometry(1.1, 4.4), new THREE.MeshBasicMaterial({ color: '#ff3d6e', transparent: true, opacity: 0, depthWrite: false, blending: THREE.AdditiveBlending, fog: false })); m.rotation.x = -Math.PI / 2; m.position.set(sx(l), 0.22, MZ / 2); sc.add(m); return m; });
     C.shadow = new THREE.Mesh(new THREE.CircleGeometry(1.6, 24), new THREE.MeshBasicMaterial({ color: '#000', transparent: true, opacity: 0, depthWrite: false })); C.shadow.rotation.x = -Math.PI / 2; C.shadow.position.set(0, 0.22, 0.4); sc.add(C.shadow);
     C.warn = new THREE.Mesh(new THREE.PlaneGeometry(2.2, 2.2), new THREE.MeshBasicMaterial({ map: warnTex(), color: '#ff3030', transparent: true, opacity: 0, depthWrite: false, blending: THREE.AdditiveBlending, fog: false })); C.warn.rotation.x = -Math.PI / 2; C.warn.position.set(0, 0.24, 0.1); C.warn.renderOrder = 2; sc.add(C.warn);
@@ -205,7 +230,7 @@
   function reset(round, hp = 100) {
     const keep = C.st && C.st.stats;
     const st = C.st = { t: 0, round, mhp: RHP[round], hp, meter: C.st ? C.st.meter || 0 : 0, lane: 0, duck: false, laneT: 0, lockT: 0, inv: 0, hurtT: 0, blindT: 0, hz: 0,
-      sw: null, combo: 0, chainT: 0, bufA: 0, bufC: 0, chits: 0, chitT: 0, sp: null, spI: C.st ? C.st.spI || 0 : 0, fly: null, bounce: null, cake: null, cakes: 2, cakeCd: 0, wind: C.st ? !!C.st.wind : false,
+      sw: null, combo: 0, chainT: 0, bufA: 0, bufC: 0, chits: 0, chitT: 0, sp: null, spI: C.st ? C.st.spI || 0 : 0, fly: null, bounce: null, cake: null, cakes: 1, cakeCd: 0, wind: C.st ? !!C.st.wind : false,
       ms: 'intro', mt: 0, mdur: round === 0 ? 2.4 : 1.4, mixI: 0, jabSide: 1, cansLeft: 0, canT: 0, dodged: false, hitThis: false, over: false, won: false, outT: 0, downPending: false,
       stats: keep || newStats() };
     if (Q.get('ckhp')) st.hp = Math.max(1, +Q.get('ckhp') || 1);
@@ -225,14 +250,14 @@
     const l = lines(); if (l) DUELS.say('THE CHIP KID', pick(l.intro), 3.2);
     C.camP = new THREE.Vector3(0, 5, -7); C.camL = new THREE.Vector3(0, 3, MZ);
   };
-  C.again = function () { C.st = null; C.start(); DUELS.log.push('chipkid:rematch'); };
-  C.retry = function () { const r = C.st.round; reset(r); C.st.ms = 'guard'; C.st.mdur = 1.6; C.st.meter = 100; subHud(C.st); powHud(C.st); DUELS.banner('ROUND ' + (r + 1) + '<small>AGAIN! FULL HEALTH + FULL POWER</small>', 1.8); };
+  C.again = function () { DUELS.juiceReset(); C.hflash = 0; C.st = null; C.start(); DUELS.log.push('chipkid:rematch'); };
+  C.retry = function () { const r = C.st.round; C.st.wind = false; C.st.stats.hitsTaken = 0; reset(r); C.st.ms = 'guard'; C.st.mdur = 1.6; C.st.meter = 100; subHud(C.st); powHud(C.st); DUELS.banner('ROUND ' + (r + 1) + '<small>AGAIN! FULL HEALTH + FULL POWER</small>', 1.8); };
   C.exit = function () { DUELS.blind(0); document.body.classList.remove('ck-ko'); };
   C.buffer = function (I) { const st = C.st; if (!st) return; if (I.a) st.bufA = 0.32; if (I.c) st.bufC = 0.32; };
 
   function bell(n = 1) { if (!AC || AC.state !== 'running') return; try { for (let k = 0; k < n; k++) { const t = AC.currentTime + k * 0.22, o = AC.createOscillator(), g = AC.createGain(); o.type = 'triangle'; o.frequency.setValueAtTime(1320, t); g.gain.setValueAtTime(0.16, t); g.gain.exponentialRampToValueAtTime(0.0001, t + 0.5); o.connect(g); g.connect(SFXBUS || AC.destination); o.start(t); o.stop(t + 0.55); } } catch (e) {} }
   function puff(p, v, life = 1.2, s = 1) { if (C.puffs.length < 48) C.puffs.push({ p: p.clone(), v: v.clone(), t: 0, life, s }); }
-  const CHIP = ['#f2c25a', '#e8a83a', '#ffd98a', '#d98a2a'], FOIL = ['#d8262a', '#ffd23c', '#c8c8d0', '#b81e22'];
+  const CHIP = ['#f2c25a', '#e8a83a', '#ffd98a', '#d98a2a'], FOIL = [PU, TE, SI, LI];
   function hitFx(p, big = 0) { // sparks + an impact ring + chip crumbs + foil shreds
     C.spk.burst(p, 8 + big * 10, { spd: 5 + big * 3, size: 0.32 + big * 0.12, life: 0.35, grav: 4 });
     C.rng.burst(p, 1, { v: V3.set(0, 0, 0), size: 0.9 + big * 0.9, grow: 2.2, life: 0.18 + big * 0.06, grav: 0, drag: 0 });
@@ -258,6 +283,7 @@
     if (st.mhp <= 0 || st.ms === 'down' || st.ms === 'ko') return 0;
     const crit = !o.special && (st.ms === 'open' || st.ms === 'stun'), dmg = Math.round(base * (crit ? 1.5 : 1));
     st.mhp = Math.max(0, st.mhp - dmg); st.stats.hits++; if (crit) st.stats.crits++;
+    if (st.ms === 'guard' && !o.special) st.mdur = Math.max(0.35, st.mdur - 0.3); // polish: hit it while it's guarding and it gets mad and swings back sooner (mashing gets answered)
     st.chits++; st.chitT = 1.6; st.stats.maxCombo = Math.max(st.stats.maxCombo, st.chits); DUELS.combo(st.chits);
     if (!o.special) { st.meter = Math.min(100, st.meter + (o.pw || 8)); powHud(st); }
     const p = o.pos || mechFacePoint(st, V2, o.side || 0); const big = o.big || 0;
@@ -279,7 +305,7 @@
       setM(st, 'down', 2.8); bell(2); DUELS.impact({ stop: 0.1, slow: 0.35, slowT: 0.7, zoom: 1.25, zoomT: 0.9, flash: '#fff', flashA: 0.6, shake: 0.5, sfx: 'mega' });
       DUELS.banner('DOWN!<small>ROUND ' + (st.round + 1) + ' TO HAROLD</small>', 2.2); C.R.bag.getWorldPosition(V); V.y += 1; C.deb.burst(V, 40, { cols: CHIP, spd: 5, up: 4, size: 0.18, life: 1.8, vz: -2 }); C.deb.burst(V, 14, { cols: FOIL, spd: 4, up: 3, size: 0.22, sy: 0.45, life: 1.8 });
       DUELS.say('MAVIS', ['That\u2019s my Harold!', 'Give that mech another one, dear!', 'Look at you go, hon!'][st.round % 3], 2.2);
-      if (l && l.taunt && Math.random() < 0.5) setTimeout(() => { if (DUELS.cur === C && C.st === st) DUELS.say('THE CHIP KID', pick(l.taunt), 2.4); }, SIM ? 100 : 1800);
+      if (Math.random() < 0.6) setTimeout(() => { if (DUELS.cur === C && C.st === st) DUELS.say('THE CHIP KID', pick((l && l.taunt) || TAUNT), 2.4); }, SIM ? 100 : 1800);
     }
   }
 
@@ -290,10 +316,10 @@
     switch (st.ms) {
       case 'intro': if (st.mt > st.mdur) setM(st, 'guard', 0.6); break;
       case 'guard': if (st.mt > st.mdur) { const a = P.mix[st.mixI++ % P.mix.length]; st.stats.attacks[a]++; DUELS.hitSfx('power');
-          if (a === 'cloud') { setM(st, 'cloudTell', P.cloud); DUELS.tell('SEASONING CLOUD! DUCK OR DODGE!', P.cloud); }
-          else if (a === 'cans') { setM(st, 'cansTell', 1.0); st.cansLeft = P.cans; st.canT = 0; DUELS.tell('CHIP-CAN BARRAGE! STEP OUT OF THE RED LANE!', 1.4); }
+          if (a === 'cloud') { setM(st, 'cloudTell', P.cloud); DUELS.tell('SPICE CLOUD! DUCK OR DODGE!', P.cloud); }
+          else if (a === 'cans') { setM(st, 'cansTell', 1.0); st.cansLeft = P.cans; st.canT = 0; DUELS.tell(P.vol ? 'CAN VOLLEY! FIND THE CLEAR LANE!' : 'CAN BARRAGE! LEAVE THE RED LANE!', 1.0); }
           else if (a === 'slam') { setM(st, 'slamTell', P.slam); DUELS.tell('BAG-SLAM! DODGE LEFT OR RIGHT!', P.slam); }
-          else { st.jabSide = Math.random() < 0.5 ? -1 : 1; setM(st, 'jabTell', P.jab); DUELS.tell('CLAW JAB! DODGE ' + (st.jabSide < 0 ? 'RIGHT \u25b6' : '\u25c0 LEFT') + ' OR DUCK!', P.jab); } }
+          else { st.jabSide = Math.random() < 0.5 ? -1 : 1; setM(st, 'jabTell', P.jab); DUELS.tell('CLAW JAB! DODGE ' + (st.jabSide < 0 ? '\u25b6' : '\u25c0') + ' OR DUCK!', P.jab); } }
         break;
       case 'cloudTell': if (st.mt > st.mdur) { setM(st, 'cloud', 0.7); sfx('swing'); } break;
       case 'cloud': { // two jets of seasoning at face height down the middle lane
@@ -302,8 +328,9 @@
         if (st.mt > st.mdur) { if (!st.hitThis) dodgeOk(st); setM(st, 'open', P.open); DUELS.tell('IT\u2019S OPEN! SWING!', 0.9); } break; }
       case 'cansTell': if (st.mt > st.mdur) setM(st, 'cans', 99); break;
       case 'cans': st.canT -= dt;
-        if (st.cansLeft > 0 && st.canT <= 0) { st.cansLeft--; st.canT = P.gap; const lane = Math.random() < 0.45 ? st.lane : [-1, 0, 1][Math.floor(Math.random() * 3)]; C.cans.push({ lane, z: MZ - 0.6, t: 0, hit: false, spd: P.cspd }); sfx('hit'); }
-        if (st.cansLeft <= 0 && C.cans.length === 0) { if (!st.hitThis) dodgeOk(st); setM(st, 'open', P.open); DUELS.tell('IT\u2019S OPEN! SWING!', 0.9); }
+        if (st.cansLeft > 0 && st.canT <= 0 && C.cans.length < 10) { st.cansLeft--; st.canT = P.gap; const lane = Math.random() < 0.6 ? st.lane : [-1, 0, 1][Math.floor(Math.random() * 3)]; C.cans.push({ lane, z: MZ - 0.6, t: 0, hit: false, spd: P.cspd });
+          if (P.vol && Math.random() < P.vol) { const free = [-1, 0, 1].filter((l) => l !== lane); C.cans.push({ lane: free[Math.floor(Math.random() * 2)], z: MZ - 0.6, t: 0, hit: false, spd: P.cspd }); } sfx('hit'); }
+        if (st.cansLeft <= 0 && (C.cans.length === 0 || st.canT < P.gap - 1.0)) { if (!st.hitThis) dodgeOk(st); setM(st, 'open', P.open); DUELS.tell('IT\u2019S OPEN! SWING!', 0.9); }
         break;
       case 'slamTell': if (st.mt > st.mdur) setM(st, 'slam', 0.3); break;
       case 'slam': if (!st.hitThis && st.mt > 0.18) { st.hitThis = true; DUELS.hitSfx('boom'); DUELS.shake(0.55); C.deb.burst(V.set(sx(st.lane) * 0.2, 0.3, 0.8), 18, { cols: ['#8a6a5a', '#a07a64', '#6a4a3a'], spd: 4, up: 2.5, size: 0.14, life: 1 });
@@ -314,9 +341,9 @@
         if (st.mt > st.mdur) setM(st, 'open', P.open * 0.8); break;
       case 'open': if (st.mt > st.mdur) setM(st, 'guard', rnd(...P.guard)); break;
       case 'stun': setM(st, 'open', 1.3); break; // (a special just ended)
-      case 'down': if (st.mt > st.mdur) { st.round++; st.stats.rounds++; st.mhp = RHP[st.round]; const heal = 100 - st.hp; st.hp = 100; st.cakes = 2; setM(st, 'guard', 1.6); subHud(st); bell(1);
+      case 'down': if (st.mt > st.mdur) { st.round++; st.stats.rounds++; st.mhp = RHP[st.round]; const heal = Math.min(20, 100 - st.hp); st.hp += heal; st.cakes = 1; setM(st, 'guard', 1.6); subHud(st); bell(1);
           if (heal > 0) { V.set(C.H.root.position.x, 2.4, 0.2); DUELS.pop('+' + Math.round(heal), V, 'heal'); }
-          DUELS.banner('ROUND ' + (st.round + 1) + '<small>' + (st.round === 2 ? 'FINAL ROUND! FULL HEALTH' : 'FIGHT! FULL HEALTH') + '</small>', 1.6); } break;
+          DUELS.banner('ROUND ' + (st.round + 1) + '<small>' + (st.round === 2 ? 'FINAL ROUND! +20 HP' : 'FIGHT! +20 HP') + '</small>', 1.6); } break;
       case 'ko': break;
     }
   }
@@ -343,16 +370,16 @@
     if (!st.over) {
       // dodge / duck: held stick or buttons; a dodge lasts at most ~1.1 s, then Harold steps back to the middle
       let want = 0; if (I.mx < -0.5 || I.lh) want = -1; else if (I.mx > 0.5 || I.rh) want = 1; const duck = I.my < -0.5 || I.bh;
-      const busy = st.sw || st.sp; if (st.lockT > 0 || busy) want = busy ? 0 : st.lane;
-      if (want !== 0 && st.lane === want) { st.laneT += dt; if (st.laneT > 1.1) { st.lane = 0; st.lockT = 0.3; st.laneT = 0; } }
+      const busy = st.sw || st.sp; if (st.lockT > 0 || st.sw) want = st.lane; else if (st.sp) want = 0; // a swing keeps Harold in his lane (finding #2)
+      if (want !== 0 && st.lane === want) { st.laneT += dt; if (st.laneT > (st.ms === 'cans' || st.ms === 'cansTell' ? 9 : 1.1)) { st.lane = 0; st.lockT = 0.3; st.laneT = 0; } }
       else if (st.lockT <= 0 || busy) { st.lane = want; st.laneT = 0; }
       st.duck = st.lockT <= 0 && !busy && st.lane === 0 && duck;
       // POWER special
       if (st.bufC > 0 && fighting && !st.sp && st.hurtT <= 0) { st.bufC = 0;
-        if (st.meter >= 100) startSpecial(st); else if (!st.nopowT || st.t > st.nopowT) { DUELS.tell('POWER CHARGING: HIT THE MECH TO FILL IT', 0.9); st.nopowT = st.t + 1; } }
+        if (st.meter >= 100) startSpecial(st); else if (!st.nopowT || st.t > st.nopowT) { DUELS.tell('POWER LOW: HIT THE MECH!', 0.9); st.nopowT = st.t + 1; } }
       // cane swings (a buffered press chains the next hit of the combo)
       if (st.bufA > 0 && fighting && !st.sw && !st.sp && st.hurtT <= 0) { st.bufA = 0;
-        const i = st.chainT > 0 ? (st.combo + 1) % 3 : 0; st.combo = i; st.sw = { i, t: 0, hit: false }; st.stats.swings++; st.lane = 0; st.duck = false; DUELS.hitSfx(i === 2 ? 'whoosh' : 'whoosh'); }
+        const i = st.chainT > 0 ? (st.combo + 1) % 3 : 0; st.combo = i; st.sw = { i, t: 0, hit: false }; st.stats.swings++; st.duck = false; DUELS.hitSfx(i === 2 ? 'whoosh' : 'whoosh'); }
       if (st.sw) { const W = SWINGS[st.sw.i]; st.sw.t += dt;
         if (!st.sw.hit && st.sw.t >= W.hit) { st.sw.hit = true; const fin = st.sw.i === 2; if (fin) st.stats.smashes++;
           dmgMech(st, W.dmg, { pw: W.pw, big: fin ? 1 : 0, side: st.sw.i === 0 ? -1 : st.sw.i === 1 ? 1 : 0, word: fin ? pick(['SMASH!', 'WHACK!', 'CRUNCH!', 'BONK!']) : null, sfx: fin ? 'heavy' : 'light' }); }
@@ -362,11 +389,11 @@
       if (mercy() && fighting && !st.cake && st.cakes > 0 && st.hp < 55 && st.cakeCd <= 0) { st.cakes--; st.cakeCd = 5; st.cake = { t: 0 }; C.cake.visible = true; DUELS.say('MAVIS', pick(['Catch, hon! Crab cake!', 'Eat something, Harold!', 'Here, dear, fresh from Lexington!']), 1.8); sfx('jump'); }
     }
     if (st.cake) { const k = (st.cake.t += dt) / 0.8; C.M.root.getWorldPosition(V); V.y += 1.6; V2.set(C.H.root.position.x, 1.5, st.hz); C.cake.position.lerpVectors(V, V2, Math.min(1, k)); C.cake.position.y += Math.sin(Math.min(1, k) * Math.PI) * 2; C.cake.rotation.x += dt * 12;
-      if (k >= 1) { st.cake = null; C.cake.visible = false; const heal = Math.min(25, 100 - st.hp); st.hp += heal; st.stats.cakes++; DUELS.pop('+' + Math.round(heal) + ' CRAB CAKE', V2.setY(2.4), 'heal'); DUELS.flash('#9dff6b', 0.3); sfx('ko'); } }
+      if (k >= 1 && st.over) { st.cake = null; C.cake.visible = false; } else if (k >= 1) { st.cake = null; C.cake.visible = false; const heal = Math.min(25, 100 - st.hp); st.hp += heal; st.stats.cakes++; DUELS.pop('+' + Math.round(heal) + ' CRAB CAKE', V2.setY(2.4), 'heal'); DUELS.flash('#9dff6b', 0.3); sfx('ko'); } }
     if (st.sp) stepSpecial(st, dt);
     mechThink(st, dt); stepCans(st, dt); stepFx(dt);
     DUELS.bars(st.hp / 100, (st.mhp / RHP[st.round] + (2 - st.round)) / 3);
-    const rdy = st.meter >= 100 && fighting && !st.sp; DUELS.hot(rdy); DUELS.ready(rdy ? '\u26a1 ' + (TOUCH() ? 'TAP' : 'PRESS') + ' <b>' + (TOUCH() ? 'POWER' : 'E') + '</b>: ' + SPECIALS[st.spI % 3].name : null);
+    const rdy = st.meter >= 100 && fighting && !st.sp; DUELS.hot(rdy); DUELS.ready(rdy ? '\u26a1 ' + (TOUCH() ? '' : 'PRESS <b>E</b>: ') + SPECIALS[st.spI % 3].name : null); // touch: the pulsing POWER button says how (fits 390 px)
     if (st.ms === 'ko') outro(st, dt);
   };
 
@@ -382,7 +409,7 @@
       sp.ang += dt * (t < 0.3 ? 10 : 24); st.hz = t < 1.75 ? Math.min(1.9, t * 4) : Math.max(0, 1.9 - (t - 1.75) * 5);
       if (t > 0.1 && t < 1.7) for (let k = 0; k < 2; k++) { const a = sp.ang + k * Math.PI + rnd(-0.3, 0.3), r = rnd(0.7, 1.3); C.cloud.burst(V.set(hx + Math.cos(a) * r, rnd(0.3, 2.4), st.hz + Math.sin(a) * r), 1, { v: V2.set(-Math.sin(a) * 4, rnd(1, 2.5), Math.cos(a) * 4), size: rnd(0.5, 0.9), grow: 1.2, life: 0.6, grav: 0, drag: 2 }); }
       if (t > 0.35 && sp.n < 6 && t > 0.35 + sp.n * 0.17) { sp.n++; dmgMech(st, 6, { special: true, big: 0, stop: 0.035, shake: 0.2, kb: 0.1, side: sp.n % 2 ? -1 : 1 }); DUELS.hitSfx('whoosh'); }
-      if (t > 1.5 && sp.n === 6) { sp.n++; dmgMech(st, 14, { special: true, big: 2, stop: 0.09, shake: 0.6, word: 'OLD BAY!' }); DUELS.impact({ slow: 0.3, slowT: 0.45, zoom: 1.3, zoomT: 0.6, flash: '#ff9a3a', flashA: 0.55 }); }
+      if (t > 1.5 && sp.n === 6) { sp.n++; dmgMech(st, 14, { special: true, big: 2, stop: 0.09, shake: 0.6, word: 'BAY DUST!' }); DUELS.impact({ slow: 0.3, slowT: 0.45, zoom: 1.3, zoomT: 0.6, flash: '#ff9a3a', flashA: 0.55 }); }
     } else if (sp.id === 'mallet') { // crouch, leap with the giant crab mallet, slow-mo at the top, POUND: a shockwave rolls across the ring and bounces the mech
       C.mallet.visible = t > 0.12 && t < 2.1; C.mallet.scale.setScalar(clamp((t - 0.12) / 0.15, 0.01, 1) * (t > 1.9 ? Math.max(0.01, (2.1 - t) / 0.2) : 1));
       st.hz = t < 0.35 ? 0 : t < 0.95 ? (t - 0.35) / 0.6 * 1.3 : Math.max(0, 1.3 - Math.max(0, t - 1.7) * 3);
@@ -421,10 +448,10 @@
       else if (k < 5.6) { const u = (k - 3.7) / 1.9; kid.root.rotation.set(0, -Math.PI / 2, 0); // runs off to screen right (-x), out under the ropes
         kid.root.position.set(lerp(-2.4, -10, u), 0.2 + Math.abs(Math.sin(k * 14)) * 0.1, 2.2 + u * 2); kid.arms[0].rotation.set(Math.sin(k * 14) * 0.9, 0, 0); kid.arms[1].rotation.set(-Math.sin(k * 14) * 0.9, 0, 0); kid.legs[0].rotation.x = Math.sin(k * 14) * 0.8; kid.legs[1].rotation.x = -Math.sin(k * 14) * 0.8; kid.head.rotation.set(0, 0, 0); }
       else if (!st.winDone) { st.winDone = true; kid.root.visible = false; if (!DUELS.cleared.harborplace) DUELS.bossCleared('harborplace', 'chipkid-duel');
-        const S1 = st.stats, secs = Math.round((DUELS.t || 0) - S1.t0), stars = S1.hitsTaken <= 3 ? 3 : S1.hitsTaken <= 8 ? 2 : 1, grade = ['', 'B', 'A', 'S'][stars];
-        st.grade = { stars, grade, secs }; DUELS.log.push('chipkid:win:' + grade);
+        const S1 = st.stats, secs = Math.round((DUELS.t || 0) - S1.t0), base = S1.hitsTaken <= 4 ? 3 : S1.hitsTaken <= 10 ? 2 : 1, style = S1.specials >= 3 || S1.dodges >= 5, stars = Math.min(3, base + (style ? 1 : 0)), grade = ['', 'B', 'A', 'S'][stars];
+        st.grade = { stars, grade, secs, style, hp: Math.round(st.hp), hitsTaken: S1.hitsTaken }; DUELS.log.push('chipkid:win:' + grade);
         const txt = '<span style="color:#ffd23c;font-size:22px;letter-spacing:4px">' + '\u2605'.repeat(stars) + '<span style="opacity:.25">' + '\u2605'.repeat(3 - stars) + '</span></span><br>GRADE ' + grade +
-          '<br>MAX COMBO ' + S1.maxCombo + ' · SPECIALS ' + S1.specials + ' · HITS TAKEN ' + S1.hitsTaken + '<br>Harborplace is clear. Crime at Harborplace: 0.';
+          '<br>MAX COMBO ' + S1.maxCombo + ' · SPECIALS ' + S1.specials + ' · DODGES ' + S1.dodges + ' · HITS TAKEN ' + S1.hitsTaken + (style && base < 3 ? '<br><span style="color:#a6f03c">STYLE BONUS +1\u2605 (specials / dodges)</span>' : '') + '<br>Harborplace is clear. Crime at Harborplace: 0.';
         setTimeout(() => { if (DUELS.cur === C) DUELS.over('win', 'THE CHIP KID<br>RAN HOME!', txt, { again: true }); }, SIM ? 300 : 900); } }
   }
   function stepFx(dt) {
@@ -496,7 +523,7 @@
     if (st.fly) { const f = st.fly; f.t += dt; const k = f.t;
       if (k < 1.1) { flyZ = k * 13; rootY = 0.2 + Math.sin(Math.min(1, k / 1.1) * Math.PI * 0.5) * 11; flyRX = -k * 9; }
       else if (k < 1.7) { flyZ = 0; rootY = 0.2 + 16 * Math.pow(1 - (k - 1.1) / 0.6, 2); flyRX = -(k - 1.1) * 6; }
-      else { if (!f.crash) { f.crash = true; DUELS.impact({ shake: 1.1, sfx: 'boom', flash: '#fff', flashA: 0.4 }); DUELS.pop('CRASH!', V.set(0, 1.4, MZ - 1), 'word'); C.deb.burst(V.set(0, 0.4, MZ - 0.5), 40, { cols: ['#8a6a5a', '#a07a64', '#ffd23c', '#d8262a'], spd: 6, up: 4, size: 0.18, life: 1.4 }); C.cloud.burst(V.set(0, 0.6, MZ), 14, { spd: 4, size: 1, grow: 1.6, life: 0.9, grav: -0.5 }); }
+      else { if (!f.crash) { f.crash = true; DUELS.impact({ shake: 1.1, sfx: 'boom', flash: '#fff', flashA: 0.4 }); DUELS.pop('CRASH!', V.set(0, 1.4, MZ - 1), 'word'); C.deb.burst(V.set(0, 0.4, MZ - 0.5), 40, { cols: ['#8a6a5a', '#a07a64', TE, PU], spd: 6, up: 4, size: 0.18, life: 1.4 }); C.cloud.burst(V.set(0, 0.6, MZ), 14, { spd: 4, size: 1, grow: 1.6, life: 0.9, grav: -0.5 }); }
         sq = 0.75; if (k > 2.1) st.fly = null; }
       R.root.position.y = rootY; R.root.position.z = MZ + flyZ; R.root.rotation.x = flyRX; }
     else { R.root.rotation.x = damp(R.root.rotation.x, 0, 10, dt); }
@@ -553,8 +580,8 @@
     if (st.ms === 'cloud' || (st.ms === 'cloudTell' && left < 0.3)) B.bh = true;
     if (st.ms === 'slamTell' && left < 0.4 || st.ms === 'slam') B.mx = -1;
     if (st.ms === 'jabTell' && left < 0.3 || st.ms === 'jab') B.mx = -st.jabSide;
-    if (st.ms === 'cans' || st.ms === 'cansTell') { const bad = new Set(C.cans.filter((c) => c.z > 0.3 && c.z < 3.0).map((c) => c.lane)); if (!bad.size) B.lane = 0; else if (bad.has(B.lane || 0)) B.lane = [0, -1, 1].find((l) => !bad.has(l)) ?? 0; if (B.lane) B.mx = B.lane; }
-    const safe = B.mx === 0 && !B.bh && !['slamTell', 'jabTell', 'cloudTell', 'cans', 'cansTell'].includes(st.ms) || (st.ms.endsWith('Tell') && left > 0.9);
+    if (st.ms === 'cans' || st.ms === 'cansTell' || C.cans.length) { const bad = new Set(C.cans.filter((c) => c.z > 0.3 && c.z < 3.0).map((c) => c.lane)); if (!bad.size) B.lane = 0; else if (bad.has(B.lane || 0)) B.lane = [0, -1, 1].find((l) => !bad.has(l)) ?? 0; if (B.lane) B.mx = B.lane; }
+    const safe = (B.mx === 0 || C.cans.length) && !B.bh && !['slamTell', 'jabTell', 'cloudTell', 'cans', 'cansTell'].includes(st.ms) || (st.ms.endsWith('Tell') && left > 0.9 && !C.cans.length); // (swings keep the lane now, so it can swing while sidestepping trailing cans)
     if (B.cd <= 0 && safe) { if (st.meter >= 100) B.c = true; else B.a = true; B.cd = 0.14; }
   };
   DUELS.reg('chipkid', C);

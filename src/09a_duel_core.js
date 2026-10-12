@@ -53,7 +53,9 @@ const DUELS = (function () {
   #duel .dover .bt { display: flex; gap: 12px; }
   #duel .dover button { font: inherit; font-size: 12px; padding: 12px 16px; border-radius: 10px; border: 3px solid #14101f; box-shadow: 3px 3px 0 #14101f; background: #ffd23c; color: #14101f; cursor: pointer; }
   #duel .dover button.l { background: #cfc8ef; }
-  @media (max-width: 480px) { #duel .dban { font-size: 22px; } #duel .dbar .n { font-size: 9px; } }`;
+  @media (max-width: 480px) { #duel .dban { font-size: 22px; } #duel .dbar .n { font-size: 9px; } #duel .dban small { font-size: 10px; }
+    #duel .dtell { font-size: 10px; white-space: normal; max-width: 92vw; width: max-content; text-align: center; line-height: 1.4; box-sizing: border-box; }
+    #duel .dover h2 { font-size: 18px; } #duel .dover p { font-size: 9px; } #duel .dover button { font-size: 11px; padding: 11px 12px; } }`; // polish: nothing clips at 390 px
   document.head.appendChild(css);
   const hud = document.createElement('div'); hud.id = 'duel';
   hud.innerHTML = `<div class="dblind"></div><div class="dhurt"></div>
@@ -165,7 +167,8 @@ const DUELS = (function () {
   @keyframes drdy { from { transform: translateX(-50%) scale(.94); } to { transform: translateX(-50%) scale(1.06); } }
   body.duel-pw #aact.hot { animation: dpbtn .35s ease-in-out infinite alternate; }
   @keyframes dpbtn { from { filter: brightness(1.1) drop-shadow(0 0 4px #ffd23c); transform: translate(-50%, -50%) scale(1); } to { filter: brightness(1.45) drop-shadow(0 0 16px #ffd23c); transform: translate(-50%, -50%) scale(1.12); } }
-  @media (max-width: 480px) { #duel .dready { font-size: 13px; } #duel .dcombo { font-size: 24px; } }`; document.head.appendChild(c2); }
+  @media (max-width: 480px) { #duel .dready { font-size: 13px; white-space: normal; max-width: 90vw; width: max-content; text-align: center; box-sizing: border-box; } #duel .dcombo { font-size: 24px; }
+    #duel .dpop { font-size: 14px; } #duel .dpop.crit { font-size: 17px; } #duel .dpop.big { font-size: 22px; } #duel .dpop.word { font-size: 19px; } }`; document.head.appendChild(c2); }
   const jx = document.createElement('div'); jx.innerHTML = '<div class="dflash"></div><div class="dcombo"></div><div class="dpow"><div class="n">POWER</div><div class="t"><i></i></div></div><div class="dready"></div>';
   while (jx.firstChild) hud.insertBefore(jx.firstChild, H.over);
   const JH = { fl: q('.dflash'), co: q('.dcombo'), pw: q('.dpow'), pwi: q('.dpow i'), pwn: q('.dpow .n'), rd: q('.dready'), pops: [] };
@@ -176,7 +179,7 @@ const DUELS = (function () {
   D.shake = (a) => { J.sh = Math.max(J.sh, a); };
   D.zoom = (k, s) => { J.zk = k; J.zT = J.zT0 = s; };
   D.flash = (col = '#fff', a = 0.7) => { JH.fl.style.background = col; J.fl = Math.max(J.fl, a); };
-  D.pop = (text, pos, cls = '') => { const o = JH.pops[popI++ % JH.pops.length]; o.e.className = 'dpop ' + cls; o.e.textContent = text; o.p.copy(pos); o.t = 0; o.life = cls === 'word' || cls === 'big' ? 1.1 : 0.85; o.dx = (Math.random() - 0.5) * 40; };
+  D.pop = (text, pos, cls = '') => { const o = JH.pops[popI++ % JH.pops.length]; o.e.className = 'dpop ' + cls; o.e.textContent = text; o.p.copy(pos); o.t = 0; o.life = cls === 'word' || cls === 'big' ? 1.1 : 0.85; o.dx = (Math.random() - 0.5) * 40; o.w = 0; };
   D.combo = (n) => { if (n < 2) { JH.co.classList.remove('on'); return; } JH.co.innerHTML = n + '<small>HIT COMBO!</small>'; JH.co.classList.add('on'); JH.co.style.transform = 'scale(1.35) rotate(-4deg)'; coT = 1.4; };
   D.power = (v, ready, label) => { document.body.classList.add('duel-pw'); JH.pwi.style.width = (clamp(v, 0, 1) * 100).toFixed(1) + '%'; JH.pw.classList.toggle('rdy', !!ready); const n = label || (ready ? 'POWER READY!' : 'POWER'); if (JH.pwn.__h !== n) { JH.pwn.textContent = n; JH.pwn.__h = n; } };
   D.ready = (html) => { if (!html) { JH.rd.classList.remove('on'); return; } if (JH.rd.__h !== html) { JH.rd.innerHTML = html; JH.rd.__h = html; } JH.rd.classList.add('on'); };
@@ -227,7 +230,8 @@ const DUELS = (function () {
     if (J.fl > 0) { JH.fl.style.opacity = J.fl.toFixed(2); J.fl = Math.max(0, J.fl - rdt * 3.2); if (J.fl === 0) JH.fl.style.opacity = '0'; }
     for (const o of JH.pops) { if (o.t >= o.life) continue; o.t += rdt; const u = o.t / o.life; _jv.copy(o.p); _jv.y += u * 1.1; _jv.project(cam);
       if (o.t >= o.life || _jv.z > 1) { o.e.style.opacity = '0'; o.t = 9; continue; } const sc = u < 0.12 ? 0.6 + u / 0.12 * 0.9 : 1.5 - Math.min(0.5, (u - 0.12) * 2);
-      o.e.style.opacity = String(u > 0.7 ? (1 - u) / 0.3 : 1); o.e.style.transform = `translate(${((_jv.x * 0.5 + 0.5) * w + o.dx * u).toFixed(1)}px, ${((-_jv.y * 0.5 + 0.5) * h).toFixed(1)}px) translate(-50%, -50%) scale(${sc.toFixed(2)})`; }
+      if (!o.w) o.w = o.e.offsetWidth || 1; const hw = o.w * sc / 2 + 4, px = clamp((_jv.x * 0.5 + 0.5) * w + o.dx * u, Math.min(w / 2, hw), Math.max(w / 2, w - hw)); // polish: keep the whole pop on screen
+      o.e.style.opacity = String(u > 0.7 ? (1 - u) / 0.3 : 1); o.e.style.transform = `translate(${px.toFixed(1)}px, ${((-_jv.y * 0.5 + 0.5) * h).toFixed(1)}px) translate(-50%, -50%) scale(${sc.toFixed(2)})`; }
     const sh = J.sh, zoom = J.zT > 0; let fov0 = 0;
     if (sh > 0.001) { _jv.copy(cam.position); cam.position.x += (Math.random() - 0.5) * sh * 0.6; cam.position.y += (Math.random() - 0.5) * sh * 0.6; cam.position.z += (Math.random() - 0.5) * sh * 0.3; J.sh = Math.max(0, sh - rdt * Math.max(1.2, sh * 4)); }
     if (zoom) { J.zT -= rdt; fov0 = cam.fov; const u = 1 - Math.max(0, J.zT) / J.zT0, k = 1 + (J.zk - 1) * Math.sin(Math.min(1, u * 1.4) * Math.PI * 0.5) * (u > 0.75 ? (1 - u) / 0.25 : 1); cam.fov = fov0 / k; cam.updateProjectionMatrix(); }
@@ -285,7 +289,7 @@ const DUELS = (function () {
     if (D.hold) { K.render(0); draw(K.scene, K.cam); PRESS.clear(); return; } // chipkid-fun: test freeze (screenshots)
     for (let k = 0; k < steps; k++) {
       let dt = SIM ? 1 / 60 : rdt;
-      if (J.hs > 0) { J.hs -= dt; J.tick(dt); hudTick(dt); if (K.buffer && !overMode) { if (D.bot && K.botThink) K.botThink(D.bot, 0); K.buffer(input()); } if (k < steps - 1) PRESS.clear(); continue; } // chipkid-fun: hitstop freezes the duel sim (render keeps going)
+      if (J.hs > 0) { J.hs -= dt; J.tick(dt); hudTick(dt); if (K.buffer && !overMode) { if (D.bot && K.botThink) K.botThink(D.bot, 0); K.buffer(input()); if (k < steps - 1) PRESS.clear(); } continue; } // (no K.buffer: presses wait in PRESS for the first frame after the stop) // chipkid-fun: hitstop freezes the duel sim (render keeps going)
       if (J.slowT > 0) { J.slowT -= dt; dt *= J.slow; } J.tick(dt); D.t += dt;
       if (D.bot && !overMode && K.botThink) K.botThink(D.bot, dt);
       if (D.bot && overMode) { D.bot.overT = (D.bot.overT || 0) + dt; if (D.bot.overT > 1.2) { D.bot.overT = 0; if (overMode === 'win') D.bot.ok = true; else if (D.bot.mode === 'lose' && !D.bot.retried) { D.bot.retried = true; D.bot.ok = true; } else if (D.bot.mode === 'win') D.bot.ok = true; else D.bot.back = true; } }
@@ -294,8 +298,8 @@ const DUELS = (function () {
       if (!K.lbl) { K.lbl = true; labels(K.labels); } // (re-applied on the first duel frame: the city HUD may have relabelled ACT in the frame the duel started)
     K.step(dt, I); if (!D.cur) return; hudTick(dt); if (D.hold) break; // chipkid-fun: (test freeze)
     }
-    K.render(rdt); J.draw(K, rdt); // chipkid-fun: J.draw = draw() with the shared shake / zoom / pop layer (no-ops unless a duel asks)
-    PRESS.clear();
+    const frozen = J.hs > 0; K.render(frozen ? 0 : rdt); J.draw(K, rdt); // chipkid-fun: J.draw = draw() with the shared shake / zoom / pop layer (no-ops unless a duel asks); polish: poses hold still during a hitstop
+    if (!(frozen && !K.buffer)) PRESS.clear();
   };
 
   // ---------------- city side: a glowing ring + soft beam at each duel entrance; ACT there = FIGHT ----------------
