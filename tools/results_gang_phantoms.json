@@ -1,0 +1,1525 @@
+{
+ "budgets": {
+  "starterKit": {
+   "deckhand_dread": {
+    "parts": 21,
+    "tris": 6780,
+    "hulls": 19,
+    "hullTris": 5988,
+    "mats": 2,
+    "badHull": 0,
+    "flashBad": 0,
+    "shadowCasters": 15,
+    "drawCallsUnmerged": 40,
+    "height": 1.88,
+    "minY": 0.196,
+    "maxY": 2.076,
+    "heightUnscaled": 1.88,
+    "groups": [
+     "head"
+    ],
+    "kind": "thug",
+    "meta": true,
+    "headZ": [
+     -0.17,
+     0.32
+    ]
+   },
+   "deckhand_dread/lod1": {
+    "parts": 16,
+    "tris": 5388,
+    "hulls": 16,
+    "hullTris": 5388,
+    "mats": 2,
+    "badHull": 0,
+    "flashBad": 0,
+    "shadowCasters": 14,
+    "drawCallsUnmerged": 32,
+    "height": 1.848,
+    "minY": 0.228,
+    "maxY": 2.076,
+    "heightUnscaled": 1.848,
+    "groups": [
+     "head"
+    ],
+    "kind": "thug",
+    "meta": true,
+    "headZ": [
+     -0.12,
+     0.32
+    ]
+   },
+   "bosun_bones": {
+    "parts": 23,
+    "tris": 6212,
+    "hulls": 21,
+    "hullTris": 5420,
+    "mats": 2,
+    "badHull": 0,
+    "flashBad": 0,
+    "shadowCasters": 19,
+    "drawCallsUnmerged": 44,
+    "height": 2.272,
+    "minY": 0.235,
+    "maxY": 2.507,
+    "heightUnscaled": 1.893,
+    "groups": [
+     "head"
+    ],
+    "kind": "thug",
+    "meta": true,
+    "headZ": [
+     -0.33,
+     0.58
+    ]
+   },
+   "bosun_bones/lod1": {
+    "parts": 16,
+    "tris": 5048,
+    "hulls": 16,
+    "hullTris": 5048,
+    "mats": 2,
+    "badHull": 0,
+    "flashBad": 0,
+    "shadowCasters": 14,
+    "drawCallsUnmerged": 32,
+    "height": 2.236,
+    "minY": 0.271,
+    "maxY": 2.507,
+    "heightUnscaled": 1.863,
+    "groups": [
+     "head"
+    ],
+    "kind": "thug",
+    "meta": true,
+    "headZ": [
+     -0.33,
+     0.58
+    ]
+   },
+   "powder_monkey": {
+    "parts": 21,
+    "tris": 6304,
+    "hulls": 18,
+    "hullTris": 5456,
+    "mats": 2,
+    "badHull": 0,
+    "flashBad": 0,
+    "shadowCasters": 16,
+    "drawCallsUnmerged": 39,
+    "height": 1.488,
+    "minY": 0.156,
+    "maxY": 1.645,
+    "heightUnscaled": 1.86,
+    "heightNoWeapon": 1.488,
+    "groups": [
+     "swR",
+     "head"
+    ],
+    "kind": "thug",
+    "meta": true,
+    "headZ": [
+     -0.09,
+     0.25
+    ]
+   },
+   "powder_monkey/lod1": {
+    "parts": 17,
+    "tris": 5444,
+    "hulls": 17,
+    "hullTris": 5444,
+    "mats": 2,
+    "badHull": 0,
+    "flashBad": 0,
+    "shadowCasters": 15,
+    "drawCallsUnmerged": 34,
+    "height": 1.462,
+    "minY": 0.183,
+    "maxY": 1.645,
+    "heightUnscaled": 1.827,
+    "heightNoWeapon": 1.462,
+    "groups": [
+     "swR",
+     "head"
+    ],
+    "kind": "thug",
+    "meta": true,
+    "headZ": [
+     -0.09,
+     0.25
+    ]
+   }
+  },
+  "realGame": {
+   "deckhand_dread": {
+    "parts": 21,
+    "tris": 6780,
+    "hulls": 19,
+    "hullTris": 5988,
+    "mats": 2,
+    "badHull": 0,
+    "flashBad": 0,
+    "shadowCasters": 15,
+    "drawCallsUnmerged": 40,
+    "height": 1.88,
+    "minY": 0.196,
+    "maxY": 2.076,
+    "heightUnscaled": 1.88,
+    "groups": [
+     "head"
+    ],
+    "kind": "thug",
+    "meta": true,
+    "headZ": [
+     -0.17,
+     0.32
+    ]
+   },
+   "deckhand_dread/lod1": {
+    "parts": 16,
+    "tris": 5388,
+    "hulls": 16,
+    "hullTris": 5388,
+    "mats": 2,
+    "badHull": 0,
+    "flashBad": 0,
+    "shadowCasters": 14,
+    "drawCallsUnmerged": 32,
+    "height": 1.848,
+    "minY": 0.228,
+    "maxY": 2.076,
+    "heightUnscaled": 1.848,
+    "groups": [
+     "head"
+    ],
+    "kind": "thug",
+    "meta": true,
+    "headZ": [
+     -0.12,
+     0.32
+    ]
+   },
+   "bosun_bones": {
+    "parts": 23,
+    "tris": 6212,
+    "hulls": 21,
+    "hullTris": 5420,
+    "mats": 2,
+    "badHull": 0,
+    "flashBad": 0,
+    "shadowCasters": 19,
+    "drawCallsUnmerged": 44,
+    "height": 2.272,
+    "minY": 0.235,
+    "maxY": 2.507,
+    "heightUnscaled": 1.893,
+    "groups": [
+     "head"
+    ],
+    "kind": "thug",
+    "meta": true,
+    "headZ": [
+     -0.33,
+     0.58
+    ]
+   },
+   "bosun_bones/lod1": {
+    "parts": 16,
+    "tris": 5048,
+    "hulls": 16,
+    "hullTris": 5048,
+    "mats": 2,
+    "badHull": 0,
+    "flashBad": 0,
+    "shadowCasters": 14,
+    "drawCallsUnmerged": 32,
+    "height": 2.236,
+    "minY": 0.271,
+    "maxY": 2.507,
+    "heightUnscaled": 1.863,
+    "groups": [
+     "head"
+    ],
+    "kind": "thug",
+    "meta": true,
+    "headZ": [
+     -0.33,
+     0.58
+    ]
+   },
+   "powder_monkey": {
+    "parts": 21,
+    "tris": 6304,
+    "hulls": 18,
+    "hullTris": 5456,
+    "mats": 2,
+    "badHull": 0,
+    "flashBad": 0,
+    "shadowCasters": 16,
+    "drawCallsUnmerged": 39,
+    "height": 1.488,
+    "minY": 0.156,
+    "maxY": 1.645,
+    "heightUnscaled": 1.86,
+    "heightNoWeapon": 1.488,
+    "groups": [
+     "swR",
+     "head"
+    ],
+    "kind": "thug",
+    "meta": true,
+    "headZ": [
+     -0.09,
+     0.25
+    ]
+   },
+   "powder_monkey/lod1": {
+    "parts": 17,
+    "tris": 5444,
+    "hulls": 17,
+    "hullTris": 5444,
+    "mats": 2,
+    "badHull": 0,
+    "flashBad": 0,
+    "shadowCasters": 15,
+    "drawCallsUnmerged": 34,
+    "height": 1.462,
+    "minY": 0.183,
+    "maxY": 1.645,
+    "heightUnscaled": 1.827,
+    "heightNoWeapon": 1.462,
+    "groups": [
+     "swR",
+     "head"
+    ],
+    "kind": "thug",
+    "meta": true,
+    "headZ": [
+     -0.09,
+     0.25
+    ]
+   },
+   "current_thug_0": {
+    "parts": 27,
+    "tris": 7584,
+    "hulls": 20,
+    "hullTris": 7016,
+    "mats": 2,
+    "badHull": 0,
+    "flashBad": 0,
+    "shadowCasters": 23,
+    "drawCallsUnmerged": 47
+   },
+   "current_thug_1": {
+    "parts": 30,
+    "tris": 8208,
+    "hulls": 23,
+    "hullTris": 7640,
+    "mats": 2,
+    "badHull": 0,
+    "flashBad": 0,
+    "shadowCasters": 25,
+    "drawCallsUnmerged": 53
+   },
+   "current_thug_2": {
+    "parts": 28,
+    "tris": 8544,
+    "hulls": 21,
+    "hullTris": 7976,
+    "mats": 2,
+    "badHull": 0,
+    "flashBad": 0,
+    "shadowCasters": 24,
+    "drawCallsUnmerged": 49
+   },
+   "current_thug_3": {
+    "parts": 33,
+    "tris": 7926,
+    "hulls": 26,
+    "hullTris": 7358,
+    "mats": 2,
+    "badHull": 0,
+    "flashBad": 0,
+    "shadowCasters": 28,
+    "drawCallsUnmerged": 59
+   },
+   "current_thug_4": {
+    "parts": 26,
+    "tris": 7916,
+    "hulls": 19,
+    "hullTris": 7304,
+    "mats": 2,
+    "badHull": 0,
+    "flashBad": 0,
+    "shadowCasters": 24,
+    "drawCallsUnmerged": 45
+   }
+  }
+ },
+ "poses": {
+  "starterKit": {
+   "deckhand_dread": {
+    "idle": {
+     "minY": 0.196,
+     "maxY": 2.076,
+     "under": [],
+     "gaps": {}
+    },
+    "run": {
+     "minY": 0.438,
+     "maxY": 2.125,
+     "under": [],
+     "gaps": {}
+    },
+    "windup": {
+     "minY": 0.168,
+     "maxY": 2.05,
+     "under": [],
+     "gaps": {}
+    },
+    "attack": {
+     "minY": 0.213,
+     "maxY": 2.057,
+     "under": [],
+     "gaps": {}
+    },
+    "hurt": {
+     "minY": 0.164,
+     "maxY": 1.987,
+     "under": [],
+     "gaps": {}
+    },
+    "down": {
+     "minY": 0.016,
+     "maxY": 0.693,
+     "under": [],
+     "gaps": {}
+    },
+    "down+anim": {
+     "minY": 0.016,
+     "maxY": 0.693,
+     "under": [],
+     "gaps": {}
+    },
+    "getup": {
+     "minY": 0.177,
+     "maxY": 1.943,
+     "under": [],
+     "gaps": {}
+    }
+   },
+   "deckhand_dread/lod1": {
+    "idle": {
+     "minY": 0.228,
+     "maxY": 2.076,
+     "under": [],
+     "gaps": {}
+    },
+    "run": {
+     "minY": 0.454,
+     "maxY": 2.125,
+     "under": [],
+     "gaps": {}
+    },
+    "windup": {
+     "minY": 0.201,
+     "maxY": 2.05,
+     "under": [],
+     "gaps": {}
+    },
+    "attack": {
+     "minY": 0.266,
+     "maxY": 2.057,
+     "under": [],
+     "gaps": {}
+    },
+    "hurt": {
+     "minY": 0.189,
+     "maxY": 1.987,
+     "under": [],
+     "gaps": {}
+    },
+    "down": {
+     "minY": 0.016,
+     "maxY": 0.693,
+     "under": [],
+     "gaps": {}
+    },
+    "down+anim": {
+     "minY": 0.016,
+     "maxY": 0.693,
+     "under": [],
+     "gaps": {}
+    },
+    "getup": {
+     "minY": 0.186,
+     "maxY": 1.943,
+     "under": [],
+     "gaps": {}
+    }
+   },
+   "bosun_bones": {
+    "idle": {
+     "minY": 0.235,
+     "maxY": 2.507,
+     "under": [],
+     "gaps": {}
+    },
+    "run": {
+     "minY": 0.525,
+     "maxY": 2.59,
+     "under": [],
+     "gaps": {}
+    },
+    "windup": {
+     "minY": 0.202,
+     "maxY": 2.472,
+     "under": [],
+     "gaps": {}
+    },
+    "attack": {
+     "minY": 0.256,
+     "maxY": 2.499,
+     "under": [],
+     "gaps": {}
+    },
+    "hurt": {
+     "minY": 0.197,
+     "maxY": 2.594,
+     "under": [],
+     "gaps": {}
+    },
+    "down": {
+     "minY": 0.003,
+     "maxY": 1.072,
+     "under": [],
+     "gaps": {}
+    },
+    "down+anim": {
+     "minY": 0.003,
+     "maxY": 1.072,
+     "under": [],
+     "gaps": {}
+    },
+    "getup": {
+     "minY": 0.212,
+     "maxY": 2.405,
+     "under": [],
+     "gaps": {}
+    }
+   },
+   "bosun_bones/lod1": {
+    "idle": {
+     "minY": 0.271,
+     "maxY": 2.507,
+     "under": [],
+     "gaps": {}
+    },
+    "run": {
+     "minY": 0.538,
+     "maxY": 2.59,
+     "under": [],
+     "gaps": {}
+    },
+    "windup": {
+     "minY": 0.238,
+     "maxY": 2.464,
+     "under": [],
+     "gaps": {}
+    },
+    "attack": {
+     "minY": 0.312,
+     "maxY": 2.499,
+     "under": [],
+     "gaps": {}
+    },
+    "hurt": {
+     "minY": 0.222,
+     "maxY": 2.594,
+     "under": [],
+     "gaps": {}
+    },
+    "down": {
+     "minY": 0.003,
+     "maxY": 1.072,
+     "under": [],
+     "gaps": {}
+    },
+    "down+anim": {
+     "minY": 0.003,
+     "maxY": 1.072,
+     "under": [],
+     "gaps": {}
+    },
+    "getup": {
+     "minY": 0.215,
+     "maxY": 2.405,
+     "under": [],
+     "gaps": {}
+    }
+   },
+   "powder_monkey": {
+    "idle": {
+     "minY": 0.156,
+     "maxY": 1.645,
+     "under": [],
+     "gaps": {}
+    },
+    "run": {
+     "minY": 0.35,
+     "maxY": 1.684,
+     "under": [],
+     "gaps": {}
+    },
+    "windup": {
+     "minY": 0.135,
+     "maxY": 1.799,
+     "under": [],
+     "gaps": {}
+    },
+    "attack": {
+     "minY": 0.17,
+     "maxY": 1.588,
+     "under": [],
+     "gaps": {}
+    },
+    "hurt": {
+     "minY": 0.132,
+     "maxY": 1.582,
+     "under": [],
+     "gaps": {}
+    },
+    "down": {
+     "minY": 0.013,
+     "maxY": 0.559,
+     "under": [],
+     "gaps": {}
+    },
+    "down+anim": {
+     "minY": 0.013,
+     "maxY": 0.559,
+     "under": [],
+     "gaps": {}
+    },
+    "getup": {
+     "minY": 0.142,
+     "maxY": 1.542,
+     "under": [],
+     "gaps": {}
+    }
+   },
+   "powder_monkey/lod1": {
+    "idle": {
+     "minY": 0.183,
+     "maxY": 1.645,
+     "under": [],
+     "gaps": {}
+    },
+    "run": {
+     "minY": 0.363,
+     "maxY": 1.684,
+     "under": [],
+     "gaps": {}
+    },
+    "windup": {
+     "minY": 0.161,
+     "maxY": 1.799,
+     "under": [],
+     "gaps": {}
+    },
+    "attack": {
+     "minY": 0.213,
+     "maxY": 1.588,
+     "under": [],
+     "gaps": {}
+    },
+    "hurt": {
+     "minY": 0.151,
+     "maxY": 1.582,
+     "under": [],
+     "gaps": {}
+    },
+    "down": {
+     "minY": 0.013,
+     "maxY": 0.559,
+     "under": [],
+     "gaps": {}
+    },
+    "down+anim": {
+     "minY": 0.013,
+     "maxY": 0.559,
+     "under": [],
+     "gaps": {}
+    },
+    "getup": {
+     "minY": 0.149,
+     "maxY": 1.542,
+     "under": [],
+     "gaps": {}
+    }
+   }
+  },
+  "realGame": {
+   "deckhand_dread": {
+    "idle": {
+     "minY": 0.196,
+     "maxY": 2.076,
+     "under": [],
+     "gaps": {}
+    },
+    "run": {
+     "minY": 0.438,
+     "maxY": 2.125,
+     "under": [],
+     "gaps": {}
+    },
+    "windup": {
+     "minY": 0.168,
+     "maxY": 2.05,
+     "under": [],
+     "gaps": {}
+    },
+    "attack": {
+     "minY": 0.213,
+     "maxY": 2.057,
+     "under": [],
+     "gaps": {}
+    },
+    "hurt": {
+     "minY": 0.164,
+     "maxY": 1.987,
+     "under": [],
+     "gaps": {}
+    },
+    "down": {
+     "minY": 0.016,
+     "maxY": 0.693,
+     "under": [],
+     "gaps": {}
+    },
+    "down+anim": {
+     "minY": 0.016,
+     "maxY": 0.693,
+     "under": [],
+     "gaps": {}
+    },
+    "getup": {
+     "minY": 0.177,
+     "maxY": 1.943,
+     "under": [],
+     "gaps": {}
+    }
+   },
+   "deckhand_dread/lod1": {
+    "idle": {
+     "minY": 0.228,
+     "maxY": 2.076,
+     "under": [],
+     "gaps": {}
+    },
+    "run": {
+     "minY": 0.454,
+     "maxY": 2.125,
+     "under": [],
+     "gaps": {}
+    },
+    "windup": {
+     "minY": 0.201,
+     "maxY": 2.05,
+     "under": [],
+     "gaps": {}
+    },
+    "attack": {
+     "minY": 0.266,
+     "maxY": 2.057,
+     "under": [],
+     "gaps": {}
+    },
+    "hurt": {
+     "minY": 0.189,
+     "maxY": 1.987,
+     "under": [],
+     "gaps": {}
+    },
+    "down": {
+     "minY": 0.016,
+     "maxY": 0.693,
+     "under": [],
+     "gaps": {}
+    },
+    "down+anim": {
+     "minY": 0.016,
+     "maxY": 0.693,
+     "under": [],
+     "gaps": {}
+    },
+    "getup": {
+     "minY": 0.186,
+     "maxY": 1.943,
+     "under": [],
+     "gaps": {}
+    }
+   },
+   "bosun_bones": {
+    "idle": {
+     "minY": 0.235,
+     "maxY": 2.507,
+     "under": [],
+     "gaps": {}
+    },
+    "run": {
+     "minY": 0.525,
+     "maxY": 2.59,
+     "under": [],
+     "gaps": {}
+    },
+    "windup": {
+     "minY": 0.202,
+     "maxY": 2.472,
+     "under": [],
+     "gaps": {}
+    },
+    "attack": {
+     "minY": 0.256,
+     "maxY": 2.499,
+     "under": [],
+     "gaps": {}
+    },
+    "hurt": {
+     "minY": 0.197,
+     "maxY": 2.594,
+     "under": [],
+     "gaps": {}
+    },
+    "down": {
+     "minY": 0.003,
+     "maxY": 1.072,
+     "under": [],
+     "gaps": {}
+    },
+    "down+anim": {
+     "minY": 0.003,
+     "maxY": 1.072,
+     "under": [],
+     "gaps": {}
+    },
+    "getup": {
+     "minY": 0.212,
+     "maxY": 2.405,
+     "under": [],
+     "gaps": {}
+    }
+   },
+   "bosun_bones/lod1": {
+    "idle": {
+     "minY": 0.271,
+     "maxY": 2.507,
+     "under": [],
+     "gaps": {}
+    },
+    "run": {
+     "minY": 0.538,
+     "maxY": 2.59,
+     "under": [],
+     "gaps": {}
+    },
+    "windup": {
+     "minY": 0.238,
+     "maxY": 2.464,
+     "under": [],
+     "gaps": {}
+    },
+    "attack": {
+     "minY": 0.312,
+     "maxY": 2.499,
+     "under": [],
+     "gaps": {}
+    },
+    "hurt": {
+     "minY": 0.222,
+     "maxY": 2.594,
+     "under": [],
+     "gaps": {}
+    },
+    "down": {
+     "minY": 0.003,
+     "maxY": 1.072,
+     "under": [],
+     "gaps": {}
+    },
+    "down+anim": {
+     "minY": 0.003,
+     "maxY": 1.072,
+     "under": [],
+     "gaps": {}
+    },
+    "getup": {
+     "minY": 0.215,
+     "maxY": 2.405,
+     "under": [],
+     "gaps": {}
+    }
+   },
+   "powder_monkey": {
+    "idle": {
+     "minY": 0.156,
+     "maxY": 1.645,
+     "under": [],
+     "gaps": {}
+    },
+    "run": {
+     "minY": 0.35,
+     "maxY": 1.684,
+     "under": [],
+     "gaps": {}
+    },
+    "windup": {
+     "minY": 0.135,
+     "maxY": 1.799,
+     "under": [],
+     "gaps": {}
+    },
+    "attack": {
+     "minY": 0.17,
+     "maxY": 1.588,
+     "under": [],
+     "gaps": {}
+    },
+    "hurt": {
+     "minY": 0.132,
+     "maxY": 1.582,
+     "under": [],
+     "gaps": {}
+    },
+    "down": {
+     "minY": 0.013,
+     "maxY": 0.559,
+     "under": [],
+     "gaps": {}
+    },
+    "down+anim": {
+     "minY": 0.013,
+     "maxY": 0.559,
+     "under": [],
+     "gaps": {}
+    },
+    "getup": {
+     "minY": 0.142,
+     "maxY": 1.542,
+     "under": [],
+     "gaps": {}
+    }
+   },
+   "powder_monkey/lod1": {
+    "idle": {
+     "minY": 0.183,
+     "maxY": 1.645,
+     "under": [],
+     "gaps": {}
+    },
+    "run": {
+     "minY": 0.363,
+     "maxY": 1.684,
+     "under": [],
+     "gaps": {}
+    },
+    "windup": {
+     "minY": 0.161,
+     "maxY": 1.799,
+     "under": [],
+     "gaps": {}
+    },
+    "attack": {
+     "minY": 0.213,
+     "maxY": 1.588,
+     "under": [],
+     "gaps": {}
+    },
+    "hurt": {
+     "minY": 0.151,
+     "maxY": 1.582,
+     "under": [],
+     "gaps": {}
+    },
+    "down": {
+     "minY": 0.013,
+     "maxY": 0.559,
+     "under": [],
+     "gaps": {}
+    },
+    "down+anim": {
+     "minY": 0.013,
+     "maxY": 0.559,
+     "under": [],
+     "gaps": {}
+    },
+    "getup": {
+     "minY": 0.149,
+     "maxY": 1.542,
+     "under": [],
+     "gaps": {}
+    }
+   }
+  },
+  "realThugBaseline": {
+   "look0:idle": {
+    "minY": -0.047,
+    "maxY": 2.078,
+    "under": [
+     "ftL:-0.04",
+     "ftL:-0.04",
+     "ftR:-0.05",
+     "ftR:-0.04"
+    ],
+    "gaps": {}
+   },
+   "look0:windup": {
+    "minY": -0.074,
+    "maxY": 2.044,
+    "under": [
+     "ftL:-0.04",
+     "ftL:-0.03",
+     "ftR:-0.07",
+     "ftR:-0.07"
+    ],
+    "gaps": {}
+   },
+   "look0:attack": {
+    "minY": -0.067,
+    "maxY": 2.055,
+    "under": [
+     "ftR:-0.07",
+     "ftR:-0.06"
+    ],
+    "gaps": {}
+   },
+   "look0:hurt": {
+    "minY": -0.08,
+    "maxY": 1.882,
+    "under": [
+     "ftL:-0.07",
+     "ftL:-0.06",
+     "ftR:-0.08",
+     "ftR:-0.07",
+     "knR:-0.03"
+    ],
+    "gaps": {}
+   },
+   "look0:getup": {
+    "minY": -0.07,
+    "maxY": 1.911,
+    "under": [
+     "ftL:-0.05",
+     "ftL:-0.04",
+     "ftR:-0.07",
+     "ftR:-0.06",
+     "knR:-0.03"
+    ],
+    "gaps": {}
+   },
+   "look1:idle": {
+    "minY": -0.047,
+    "maxY": 2.039,
+    "under": [
+     "ftL:-0.04",
+     "ftL:-0.04",
+     "ftR:-0.05",
+     "ftR:-0.04"
+    ],
+    "gaps": {}
+   },
+   "look1:windup": {
+    "minY": -0.074,
+    "maxY": 2.059,
+    "under": [
+     "ftL:-0.04",
+     "ftL:-0.03",
+     "ftR:-0.07",
+     "ftR:-0.07"
+    ],
+    "gaps": {}
+   },
+   "look1:attack": {
+    "minY": -0.067,
+    "maxY": 1.97,
+    "under": [
+     "ftR:-0.07",
+     "ftR:-0.06"
+    ],
+    "gaps": {}
+   },
+   "look1:hurt": {
+    "minY": -0.08,
+    "maxY": 1.898,
+    "under": [
+     "ftL:-0.07",
+     "ftL:-0.06",
+     "ftR:-0.08",
+     "ftR:-0.07",
+     "knR:-0.03"
+    ],
+    "gaps": {}
+   },
+   "look1:down": {
+    "minY": -0.223,
+    "maxY": 0.699,
+    "under": [
+     "swR:-0.19",
+     "swR:-0.22"
+    ],
+    "gaps": {}
+   },
+   "look1:getup": {
+    "minY": -0.07,
+    "maxY": 1.91,
+    "under": [
+     "ftL:-0.05",
+     "ftL:-0.04",
+     "ftR:-0.07",
+     "ftR:-0.06",
+     "knR:-0.03"
+    ],
+    "gaps": {}
+   },
+   "look3:idle": {
+    "minY": -0.047,
+    "maxY": 2.135,
+    "under": [
+     "ftL:-0.04",
+     "ftL:-0.04",
+     "ftR:-0.05",
+     "ftR:-0.04"
+    ],
+    "gaps": {}
+   },
+   "look3:windup": {
+    "minY": -0.074,
+    "maxY": 2.098,
+    "under": [
+     "ftL:-0.04",
+     "ftL:-0.03",
+     "ftR:-0.07",
+     "ftR:-0.07"
+    ],
+    "gaps": {}
+   },
+   "look3:attack": {
+    "minY": -0.067,
+    "maxY": 2.013,
+    "under": [
+     "ftR:-0.07",
+     "ftR:-0.06"
+    ],
+    "gaps": {}
+   },
+   "look3:hurt": {
+    "minY": -0.08,
+    "maxY": 1.874,
+    "under": [
+     "ftL:-0.07",
+     "ftL:-0.06",
+     "ftR:-0.08",
+     "ftR:-0.07",
+     "knR:-0.03"
+    ],
+    "gaps": {}
+   },
+   "look3:down": {
+    "minY": -0.238,
+    "maxY": 0.68,
+    "under": [
+     "swR:-0.24"
+    ],
+    "gaps": {}
+   },
+   "look3:getup": {
+    "minY": -0.07,
+    "maxY": 1.943,
+    "under": [
+     "ftL:-0.05",
+     "ftL:-0.04",
+     "ftR:-0.07",
+     "ftR:-0.06",
+     "knR:-0.03"
+    ],
+    "gaps": {}
+   },
+   "look4:idle": {
+    "minY": -0.056,
+    "maxY": 2.397,
+    "under": [
+     "ftL:-0.05",
+     "ftL:-0.04",
+     "ftR:-0.06",
+     "ftR:-0.05"
+    ],
+    "gaps": {}
+   },
+   "look4:windup": {
+    "minY": -0.089,
+    "maxY": 2.364,
+    "under": [
+     "ftL:-0.05",
+     "ftL:-0.04",
+     "ftR:-0.09",
+     "ftR:-0.08"
+    ],
+    "gaps": {}
+   },
+   "look4:attack": {
+    "minY": -0.081,
+    "maxY": 2.375,
+    "under": [
+     "ftR:-0.08",
+     "ftR:-0.07"
+    ],
+    "gaps": {}
+   },
+   "look4:hurt": {
+    "minY": -0.096,
+    "maxY": 2.249,
+    "under": [
+     "ftL:-0.08",
+     "ftL:-0.08",
+     "knL:-0.03",
+     "ftR:-0.10",
+     "ftR:-0.09",
+     "knR:-0.04"
+    ],
+    "gaps": {}
+   },
+   "look4:getup": {
+    "minY": -0.084,
+    "maxY": 2.236,
+    "under": [
+     "ftL:-0.06",
+     "ftL:-0.05",
+     "ftR:-0.08",
+     "ftR:-0.08",
+     "knR:-0.04"
+    ],
+    "gaps": {}
+   }
+  }
+ },
+ "merge": {
+  "deckhand_dread": {
+   "ok": true,
+   "drawCalls": 2,
+   "meshes": [
+    {
+     "skinned": true,
+     "verts": 8143,
+     "tris": 6780,
+     "hasUv": true,
+     "map": false
+    },
+    {
+     "ol": true,
+     "skinned": true,
+     "verts": 7649,
+     "tris": 5988,
+     "hasUv": false,
+     "map": false
+    }
+   ],
+   "bones": 15,
+   "tailIsBone": false,
+   "partsBefore": 21,
+   "trisBefore": 6780
+  },
+  "deckhand_dread/lod1": {
+   "ok": true,
+   "drawCalls": 2,
+   "meshes": [
+    {
+     "skinned": true,
+     "verts": 7259,
+     "tris": 5388,
+     "hasUv": true,
+     "map": false
+    },
+    {
+     "ol": true,
+     "skinned": true,
+     "verts": 7259,
+     "tris": 5388,
+     "hasUv": false,
+     "map": false
+    }
+   ],
+   "bones": 13,
+   "tailIsBone": false,
+   "partsBefore": 16,
+   "trisBefore": 5388
+  },
+  "bosun_bones": {
+   "ok": true,
+   "drawCalls": 2,
+   "meshes": [
+    {
+     "skinned": true,
+     "verts": 8001,
+     "tris": 6212,
+     "hasUv": true,
+     "map": false
+    },
+    {
+     "ol": true,
+     "skinned": true,
+     "verts": 7507,
+     "tris": 5420,
+     "hasUv": false,
+     "map": false
+    }
+   ],
+   "bones": 15,
+   "tailIsBone": false,
+   "partsBefore": 23,
+   "trisBefore": 6212
+  },
+  "bosun_bones/lod1": {
+   "ok": true,
+   "drawCalls": 2,
+   "meshes": [
+    {
+     "skinned": true,
+     "verts": 7100,
+     "tris": 5048,
+     "hasUv": true,
+     "map": false
+    },
+    {
+     "ol": true,
+     "skinned": true,
+     "verts": 7100,
+     "tris": 5048,
+     "hasUv": false,
+     "map": false
+    }
+   ],
+   "bones": 13,
+   "tailIsBone": false,
+   "partsBefore": 16,
+   "trisBefore": 5048
+  },
+  "powder_monkey": {
+   "ok": true,
+   "drawCalls": 2,
+   "meshes": [
+    {
+     "skinned": true,
+     "verts": 7953,
+     "tris": 6304,
+     "hasUv": true,
+     "map": false
+    },
+    {
+     "ol": true,
+     "skinned": true,
+     "verts": 7371,
+     "tris": 5456,
+     "hasUv": false,
+     "map": false
+    }
+   ],
+   "bones": 16,
+   "tailIsBone": false,
+   "partsBefore": 21,
+   "trisBefore": 6304
+  },
+  "powder_monkey/lod1": {
+   "ok": true,
+   "drawCalls": 2,
+   "meshes": [
+    {
+     "skinned": true,
+     "verts": 7347,
+     "tris": 5444,
+     "hasUv": true,
+     "map": false
+    },
+    {
+     "ol": true,
+     "skinned": true,
+     "verts": 7347,
+     "tris": 5444,
+     "hasUv": false,
+     "map": false
+    }
+   ],
+   "bones": 14,
+   "tailIsBone": false,
+   "partsBefore": 17,
+   "trisBefore": 5444
+  },
+  "current_thug_1": {
+   "drawCalls": 2
+  }
+ },
+ "determinism": {
+  "starterKit": {
+   "deckhand_dread": {
+    "sameSeedEqual": true,
+    "seed8Differs": true,
+    "noSeedOk": true,
+    "negSeedOk": true,
+    "hugeSeedOk": true
+   },
+   "deckhand_dread/lod1": {
+    "sameSeedEqual": true,
+    "seed8Differs": true,
+    "noSeedOk": true,
+    "negSeedOk": true,
+    "hugeSeedOk": true
+   },
+   "bosun_bones": {
+    "sameSeedEqual": true,
+    "seed8Differs": true,
+    "noSeedOk": true,
+    "negSeedOk": true,
+    "hugeSeedOk": true
+   },
+   "bosun_bones/lod1": {
+    "sameSeedEqual": true,
+    "seed8Differs": true,
+    "noSeedOk": true,
+    "negSeedOk": true,
+    "hugeSeedOk": true
+   },
+   "powder_monkey": {
+    "sameSeedEqual": true,
+    "seed8Differs": true,
+    "noSeedOk": true,
+    "negSeedOk": true,
+    "hugeSeedOk": true
+   },
+   "powder_monkey/lod1": {
+    "sameSeedEqual": true,
+    "seed8Differs": true,
+    "noSeedOk": true,
+    "negSeedOk": true,
+    "hugeSeedOk": true
+   }
+  },
+  "realGame": {
+   "deckhand_dread": {
+    "sameSeedEqual": true,
+    "seed8Differs": true,
+    "noSeedOk": true,
+    "negSeedOk": true,
+    "hugeSeedOk": true
+   },
+   "deckhand_dread/lod1": {
+    "sameSeedEqual": true,
+    "seed8Differs": true,
+    "noSeedOk": true,
+    "negSeedOk": true,
+    "hugeSeedOk": true
+   },
+   "bosun_bones": {
+    "sameSeedEqual": true,
+    "seed8Differs": true,
+    "noSeedOk": true,
+    "negSeedOk": true,
+    "hugeSeedOk": true
+   },
+   "bosun_bones/lod1": {
+    "sameSeedEqual": true,
+    "seed8Differs": true,
+    "noSeedOk": true,
+    "negSeedOk": true,
+    "hugeSeedOk": true
+   },
+   "powder_monkey": {
+    "sameSeedEqual": true,
+    "seed8Differs": true,
+    "noSeedOk": true,
+    "negSeedOk": true,
+    "hugeSeedOk": true
+   },
+   "powder_monkey/lod1": {
+    "sameSeedEqual": true,
+    "seed8Differs": true,
+    "noSeedOk": true,
+    "negSeedOk": true,
+    "hugeSeedOk": true
+   }
+  },
+  "mathRandomCallsDuringBuilds": 30240,
+  "redrawnForWrapperK": false,
+  "furCanvas": {
+   "identicalAcrossKitInstances": true,
+   "drawCalls": 1,
+   "redrawnOnSameK": false
+  },
+  "furShared": true,
+  "colorsOverrideParts": 0,
+  "unknownMemberFallsBackTo": "other",
+  "kitKeysUnchanged": 48,
+  "nullTexCachedAfterDocAppears": 2
+ },
+ "misc": {},
+ "idle0": {
+  "starterKit:deckhand_dread": {
+   "minY": 0.168,
+   "maxY": 2.049,
+   "h": 1.88
+  },
+  "starterKit:deckhand_dread/lod1": {
+   "minY": 0.201,
+   "maxY": 2.049,
+   "h": 1.848
+  },
+  "starterKit:bosun_bones": {
+   "minY": 0.202,
+   "maxY": 2.474,
+   "h": 2.272
+  },
+  "starterKit:bosun_bones/lod1": {
+   "minY": 0.238,
+   "maxY": 2.474,
+   "h": 2.236
+  },
+  "starterKit:powder_monkey": {
+   "minY": 0.135,
+   "maxY": 1.623,
+   "h": 1.488
+  },
+  "starterKit:powder_monkey/lod1": {
+   "minY": 0.161,
+   "maxY": 1.623,
+   "h": 1.462
+  },
+  "realGame:deckhand_dread": {
+   "minY": 0.168,
+   "maxY": 2.049,
+   "h": 1.88
+  },
+  "realGame:deckhand_dread/lod1": {
+   "minY": 0.201,
+   "maxY": 2.049,
+   "h": 1.848
+  },
+  "realGame:bosun_bones": {
+   "minY": 0.202,
+   "maxY": 2.474,
+   "h": 2.272
+  },
+  "realGame:bosun_bones/lod1": {
+   "minY": 0.238,
+   "maxY": 2.474,
+   "h": 2.236
+  },
+  "realGame:powder_monkey": {
+   "minY": 0.135,
+   "maxY": 1.623,
+   "h": 1.488
+  },
+  "realGame:powder_monkey/lod1": {
+   "minY": 0.161,
+   "maxY": 1.623,
+   "h": 1.462
+  }
+ }
+}
