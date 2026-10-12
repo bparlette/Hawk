@@ -1,0 +1,583 @@
+{
+  "gangs": {
+    "harbor_rats": {
+      "idle": [
+        "Nice night for a harbor stroll, huh?",
+        "Smells like crab shells and money.",
+        "Guard the pavilion. Guard it hard.",
+        "Who left fries on the bricks? Mine.",
+        "Tails up, boys. Keep it tight.",
+        "Quiet tonight. Too quiet, hon.",
+        "Mustard jacket, navy heart. Rat life.",
+        "I heard a cane tapping. You hear that?"
+      ],
+      "taunt": [
+        "Hey grandpa, you lost your lily pad?",
+        "Hop on home, old timer!",
+        "That cane ain't scaring nobody, yo.",
+        "North shore's ours. Beat it!",
+        "You move slower than harbor traffic.",
+        "Ribbit all you want, you're done.",
+        "Mavis, hon, your man is in trouble.",
+        "We got cheese and numbers. You got a stick."
+      ],
+      "hit": [
+        "Ow! Not the whiskers!",
+        "My tail! Watch the tail!",
+        "Hey, that cane is a weapon!",
+        "Oof, right in the snack pouch.",
+        "Ack! Who taught you that?",
+        "Easy, easy, I bruise quick!",
+        "That's assault with a walking aid!",
+        "Ow! I felt that in my ancestors!"
+      ],
+      "ko": [
+        "Tell my cheese I loved it...",
+        "Down the ocean... forever...",
+        "I'm just gonna lie here a while.",
+        "Beat by a senior citizen. Great.",
+        "Somebody call the sewer, I'm out.",
+        "Squeak... squeak... done.",
+        "Rats! Literally. Rats.",
+        "Okay. Okay. You win this block."
+      ]
+    },
+    "pier_gulls": {
+      "idle": [
+        "Mine. Mine. Also mine.",
+        "Got my eye on that soft pretzel.",
+        "Pier's breezy tonight. Perfect.",
+        "Who's got fries? Anybody? Fries?",
+        "Circle the pier, then circle again.",
+        "White and blue, flock on through.",
+        "Aquarium crowd drops the best snacks.",
+        "Keep your beaks sharp, flock."
+      ],
+      "taunt": [
+        "Squawk off, swamp boy!",
+        "Old toad, new tricks? Nah.",
+        "We fly. You hop. Do the math.",
+        "I'll steal your cane AND your lunch.",
+        "This pier is gull country, hon!",
+        "Flock up! Grandpa wants a fight!",
+        "You'd make a great snack, bud.",
+        "Watch the sky, slowpoke!"
+      ],
+      "hit": [
+        "SQUAWK! Rude!",
+        "My feathers! I just preened!",
+        "Ow! Right in the wingspan!",
+        "Hey! Unhand the beak!",
+        "Gah! That's a foul, ref!",
+        "Feathers everywhere, man!",
+        "Not the tail feathers, yo!",
+        "Ow, ow, ow, flap away!"
+      ],
+      "ko": [
+        "Grounded... permanently...",
+        "I see... a big... french fry...",
+        "Tell the flock... I flew good.",
+        "Squawk... wheeze... squawk.",
+        "Down for the count. Down for good.",
+        "I just wanted the pretzel...",
+        "Gull down! Gull down!",
+        "Wake me at high tide."
+      ]
+    },
+    "cobble_catfish": {
+      "idle": [
+        "Cobblestones keep my fins cool.",
+        "Slow water, slow talk, slow night.",
+        "Whiskers twitching. Somebody's near.",
+        "Fells Point fog is my blanket.",
+        "Teal and slate, we never wait.",
+        "Mmm. Mud. Like home.",
+        "Bottom feeder? I prefer \"curator.\"",
+        "Just vibing by the old pier, hon."
+      ],
+      "taunt": [
+        "You smell like pond scum, pal.",
+        "These stones are ours, old toad.",
+        "I'll whisker-slap you to Pigtown.",
+        "Come on down the cobbles, frog.",
+        "We're slippery. You're slow.",
+        "Bet you can't even swim, gramps.",
+        "Catfish don't bite. We wallop.",
+        "Hey Harold! Your cane's crooked!"
+      ],
+      "hit": [
+        "Blub! My barbels!",
+        "Ow! I'm slippery, not soft!",
+        "Whoa, right in the gills!",
+        "That stings worse than salt!",
+        "Hey, fins off the face!",
+        "Glug! Cheap shot, hon!",
+        "My scales! I just shined 'em!",
+        "Oof, you hit like a crab trap!"
+      ],
+      "ko": [
+        "Back to the mud I go...",
+        "Blub... blub... bye.",
+        "Floating belly up. Classic.",
+        "Tell the river I tried.",
+        "I'm just gonna sink now.",
+        "Cobblestones... so comfy...",
+        "Washed up. Like, literally.",
+        "Glub. I yield. Glub."
+      ]
+    },
+    "masked_bandits": {
+      "idle": [
+        "Mask on. Always mask on.",
+        "Trash cans by the stadium? Jackpot.",
+        "Orange and grey, we rule the west.",
+        "Shh. Footsteps on the concourse.",
+        "Nice night for a little light theft.",
+        "Got a hot dog. Found it. Mostly.",
+        "Lookout duty is so boring, B.",
+        "Anybody seen my other glove?"
+      ],
+      "taunt": [
+        "Nice handbag, Mavis. Mine now.",
+        "I'll lift your wallet AND your cane.",
+        "West side bandits, baby!",
+        "You can't stop what you can't see.",
+        "Little froggy wants to play?",
+        "We got the masks, you got the wrinkles.",
+        "Grab him! He's slow!",
+        "Ooh, a toad. Haven't robbed one yet."
+      ],
+      "hit": [
+        "Hey! Watch the mask!",
+        "Ow! My little hands!",
+        "That's a crime, old man!",
+        "Yeeowch! Right in the stripes!",
+        "Busted! Busted bad!",
+        "Ooh! Cane to the noggin!",
+        "Ow! I just stole this jacket!",
+        "Okay, that one was fair."
+      ],
+      "ko": [
+        "Caught... red-pawed...",
+        "Lights out. Mask still on.",
+        "I'll be in the dumpster. Resting.",
+        "Tell Ma I almost got away.",
+        "You got me. Don't tell the crew.",
+        "Down like a trash can lid.",
+        "Sleepy bandit time now.",
+        "This heist... is over."
+      ]
+    },
+    "key_hwy_otters": {
+      "idle": [
+        "Floatin' on my back. Living right.",
+        "South shore breeze hits different.",
+        "Anybody got a clam? I got a rock.",
+        "Fort's quiet. Fed Hill's quieter.",
+        "Green and brown, we hold this town.",
+        "Holding paws so we don't drift.",
+        "Just juggling pebbles, hon.",
+        "Smell that sugar? Love this shore."
+      ],
+      "taunt": [
+        "Splish splash, you're trash, gramps!",
+        "Otters roll deep. Toads roll home.",
+        "Key Highway's ours. Turn around!",
+        "Come swim with us. Oh wait.",
+        "We play rough. Real rough.",
+        "Your cane's my new back scratcher.",
+        "Little toad, big mistake.",
+        "Down the ocean? Down the drain!"
+      ],
+      "hit": [
+        "Hey! I'm adorable! Stop!",
+        "Ow! My fluffy face!",
+        "That's no way to treat a cutie!",
+        "Oof! Belly shot!",
+        "Yowch! Right in the whiskers!",
+        "Rude! Very rude!",
+        "Not the fur! It took hours!",
+        "Ow, my rock! You made me drop it!"
+      ],
+      "ko": [
+        "Floating off... to dreamland...",
+        "Tell the raft... I'm sorry.",
+        "I just wanted to be cute...",
+        "Otter down. Otter way down.",
+        "My rock... keep it safe...",
+        "Drifting... drifting... gone.",
+        "Belly up and out of luck.",
+        "Okay, nap time. Forever-ish."
+      ]
+    }
+  },
+  "bosses": {
+    "bird_brain_bobby": {
+      "intro": [
+        "Batter up, Harold! Heads up too!",
+        "Welcome to my hallway. It's a long way to first.",
+        "Nobody hits my heater, old timer!"
+      ],
+      "defeat": [
+        "Strike three... on me...",
+        "My arm! I'm going on the injured list!",
+        "Fine. You can have the brick hallway."
+      ]
+    },
+    "raven_king": {
+      "intro": [
+        "Nevermore will you cross my field!",
+        "Hut! Hut! Hike up those pants, toad!",
+        "Shoulder pads on. Mercy off."
+      ],
+      "defeat": [
+        "Nevermore... means me now...",
+        "I got sacked by a senior...",
+        "Flag on the play. Me. I'm the flag."
+      ]
+    },
+    "dr_shellacious": {
+      "intro": [
+        "Welcome to my lab! The screen is HUGE!",
+        "My experiments need a test toad!",
+        "Goggles down! Science is about to hurt!"
+      ],
+      "defeat": [
+        "My hypothesis... was wrong...",
+        "Back in my shell... for science...",
+        "Note to self: never fight a toad."
+      ]
+    },
+    "hon_queen": {
+      "intro": [
+        "Hey hon! Come up the hill, hon!",
+        "This beehive's got a sting, sweetie.",
+        "Hairspray! Extra hold! Down you go!"
+      ],
+      "defeat": [
+        "My hair... it's flat, hon...",
+        "Okay hon, you win. Go get a crab cake.",
+        "Not the capris! Not the capris!"
+      ]
+    },
+    "sugar_rush": {
+      "intro": [
+        "I'm sweet, but I hit like a truck!",
+        "Glitter and grit, toad! Taste it!",
+        "Neon on, sugar high, you're done!"
+      ],
+      "defeat": [
+        "I'm... dissolving...",
+        "Too sweet... to keep fighting...",
+        "Somebody sweep me up. I'm crumbs."
+      ]
+    },
+    "compression_king": {
+      "intro": [
+        "Feel the squeeze, old man!",
+        "No logo, no mercy!",
+        "My gear is tight. My grip is tighter."
+      ],
+      "defeat": [
+        "My seams... they're splitting...",
+        "Back to the mannequin rack...",
+        "Loosen up... I give..."
+      ]
+    },
+    "admiral_redclaw": {
+      "intro": [
+        "Fire the rockets! For the crown!",
+        "1812 called. I'm still mad about it.",
+        "This fort will fall, little toad!"
+      ],
+      "defeat": [
+        "Retreat! Retreat to the bay!",
+        "Defeated... again... at this fort!",
+        "My cannon arm... is cramping..."
+      ]
+    },
+    "big_jimmy": {
+      "intro": [
+        "Welcome to my tank, shrimp.",
+        "Big Jimmy don't do steamed, hon.",
+        "Claws out, toad. Down in the deep."
+      ],
+      "defeat": [
+        "Ack... I'm in hot water now...",
+        "Don't put me on newspaper...",
+        "Fine. The tank's yours. Ugh."
+      ]
+    },
+    "voltage_vic": {
+      "intro": [
+        "Drop the beat! Drop the toad!",
+        "Charm City club, high voltage!",
+        "Hands up! Gonna shock 'em all!"
+      ],
+      "defeat": [
+        "My bass... it's flatlined...",
+        "Power down... party over...",
+        "No more juice. No more jams."
+      ]
+    },
+    "chef_crabcake": {
+      "intro": [
+        "Order up! One toad, well done!",
+        "Taste my seasoning! In your eyes!",
+        "Two mallets, one Harold. Let's cook!"
+      ],
+      "defeat": [
+        "My kitchen... it's closed...",
+        "Too much seasoning... even for me...",
+        "Fine. You get the chef's special."
+      ]
+    },
+    "arabber_al": {
+      "intro": [
+        "Get outta my lane, toad!",
+        "Fresh produce, fast horse, no brakes!",
+        "Yo! Arabber coming through!"
+      ],
+      "defeat": [
+        "My cart! My beautiful cart!",
+        "Aw, watermelons everywhere...",
+        "You win. Have a peach, old timer."
+      ]
+    },
+    "pool_shark": {
+      "intro": [
+        "Wanna play? Winner takes the cabana.",
+        "Rack 'em up, grandpa!",
+        "Eight ball, side pocket: you."
+      ],
+      "defeat": [
+        "Scratched... on the last shot...",
+        "Belly flop... with no splash...",
+        "You hustled the hustler. Respect."
+      ]
+    },
+    "dragon_boat_duchess": {
+      "intro": [
+        "Kneel before the Duchess of the harbor!",
+        "My paddle-sceptre says you're done!",
+        "Row, row, row your toad... under!"
+      ],
+      "defeat": [
+        "My tiara! It's in the harbor!",
+        "Abandon boat... abandon dignity...",
+        "The royal paddle... is broken..."
+      ]
+    },
+    "captain_cobblestone": {
+      "intro": [
+        "Yarr! This ship be haunted, toad!",
+        "My lantern lights the way to your doom!",
+        "Ghosts don't feel canes, matey!"
+      ],
+      "defeat": [
+        "Back to the fog... I go...",
+        "Ye bested a ghost... impressive...",
+        "My lantern... it's flickering out..."
+      ]
+    },
+    "penthouse_pigeon": {
+      "intro": [
+        "Welcome to the top, peasant toad.",
+        "Drink? No? Then fight.",
+        "Up here, I rule the skyline."
+      ],
+      "defeat": [
+        "My smoking jacket! Ruined!",
+        "I'm... coming down in the world...",
+        "Pigeon down. On the penthouse deck."
+      ]
+    },
+    "stoop_scrubber": {
+      "intro": [
+        "Get off my clean steps, hon!",
+        "These marble steps shine. You won't!",
+        "Suds up! Slip and slide, toad!"
+      ],
+      "defeat": [
+        "My steps... all scuffed...",
+        "I'll scrub this loss away tomorrow.",
+        "Okay hon, you can sit on the stoop."
+      ]
+    },
+    "mister_formstone": {
+      "intro": [
+        "Welcome to my city, Harold.",
+        "Nothing cracks Formstone, old toad.",
+        "Every block in B-more answers to me."
+      ],
+      "defeat": [
+        "My plates... they're all cracking...",
+        "You see me now... the real me...",
+        "The city's yours... for now, toad."
+      ]
+    }
+  },
+  "radio": {
+    "bumpers": [
+      {
+        "id": "bump_01",
+        "station": "auto",
+        "text": "AUTO mode, hon. We follow the sun and the moon for you."
+      },
+      {
+        "id": "bump_02",
+        "station": "day",
+        "text": "B-MORE 410 DAY, sun's up over the harbor. Stay hydrated, hon."
+      },
+      {
+        "id": "bump_03",
+        "station": "night",
+        "text": "B-MORE 410 NIGHT, lights low, harbor glowing. Watch your back."
+      },
+      {
+        "id": "bump_04",
+        "station": "ducky",
+        "text": "DUCKY DYNAMO FM! Quack it loud, Charm City!"
+      },
+      {
+        "id": "bump_05",
+        "station": "lor",
+        "text": "LOR BITEWHO on your dial. Smooth bites, all night long."
+      },
+      {
+        "id": "bump_06",
+        "station": "club",
+        "text": "B-MORE CLUB, feet moving, harbor shaking. Don't stop now!"
+      },
+      {
+        "id": "bump_07",
+        "station": "rap",
+        "text": "B-MORE RAP, straight from the 410. Turn it up, yo."
+      },
+      {
+        "id": "bump_08",
+        "station": "night",
+        "text": "Late night in B-more, rats out and gulls up. Keep it tuned here."
+      },
+      {
+        "id": "bump_09",
+        "station": "day",
+        "text": "Traffic on Pratt? Grab a crab cake and ride it out with us."
+      }
+    ]
+  },
+  "landmarks": {
+    "harborplace": {
+      "name": "HARBORPLACE",
+      "blurb": [
+        "Waterfront shopping pavilions on the Inner Harbor, opened in 1980.",
+        "The Dragon Boat Duchess paddles here like she owns the place."
+      ]
+    },
+    "constellation": {
+      "name": "USS CONSTELLATION",
+      "blurb": [
+        "A Navy sail warship built in 1854, now a museum at the harbor.",
+        "Captain Cobblestone haunts the deck with a lantern at night."
+      ]
+    },
+    "wtc": {
+      "name": "WORLD TRADE CENTER",
+      "blurb": [
+        "A five-sided office tower on the harbor with a view up top.",
+        "The Penthouse Pigeon sips tea on the roof and looks down on all."
+      ]
+    },
+    "aquarium": {
+      "name": "NATIONAL AQUARIUM",
+      "blurb": [
+        "A big aquarium on the Inner Harbor piers, opened in 1981.",
+        "Big Jimmy runs the tanks and refuses to be steamed."
+      ]
+    },
+    "powerplant": {
+      "name": "POWER PLANT",
+      "blurb": [
+        "An old brick power plant on Pier 4, now shops and restaurants.",
+        "Voltage Vic still keeps the place charged with club beats."
+      ]
+    },
+    "fourseasons": {
+      "name": "FOUR SEASONS",
+      "blurb": [
+        "A tall hotel in Harbor East, right by the water.",
+        "Chef Crabcake runs the kitchen and seasons guests on sight."
+      ]
+    },
+    "pendry": {
+      "name": "PENDRY",
+      "blurb": [
+        "A hotel in the old Recreation Pier building at Fells Point.",
+        "The Pool Shark hustles poolside in a loud cabana shirt."
+      ]
+    },
+    "fells": {
+      "name": "FELLS POINT",
+      "blurb": [
+        "A historic waterfront neighborhood with cobblestone streets.",
+        "Arabber Al races his horse-cart over the bricks, no brakes."
+      ]
+    },
+    "monument": {
+      "name": "WASHINGTON MONUMENT",
+      "blurb": [
+        "A tall marble column in Mount Vernon, begun in 1815.",
+        "The Stoop Scrubber keeps every nearby marble step spotless."
+      ]
+    },
+    "orioles": {
+      "name": "ORIOLE PARK",
+      "blurb": [
+        "A downtown ballpark opened in 1992 beside a long brick warehouse.",
+        "Bird Brain Bobby throws fastballs down the warehouse hallway."
+      ]
+    },
+    "ravens": {
+      "name": "M&T BANK STADIUM",
+      "blurb": [
+        "A pro football stadium beside the ballpark, opened in 1998.",
+        "The Raven King blitzes anyone who steps onto his field."
+      ]
+    },
+    "science": {
+      "name": "SCIENCE CENTER",
+      "blurb": [
+        "A hands-on science museum on the harbor with an IMAX theater.",
+        "Mad turtle Shellacious runs wild experiments on the big screen."
+      ]
+    },
+    "fedhill": {
+      "name": "FEDERAL HILL",
+      "blurb": [
+        "A hilltop park with a great view over the Inner Harbor.",
+        "The Hon Queen guards the top and shoves you down the hill."
+      ]
+    },
+    "domino": {
+      "name": "DOMINO SUGARS",
+      "blurb": [
+        "A sugar refinery on the harbor with a giant neon roof sign.",
+        "Sugar Rush glitters under the sign, sweet but mean."
+      ]
+    },
+    "underarmour": {
+      "name": "UNDER ARMOUR",
+      "blurb": [
+        "A company campus at Tide Point on the south shore.",
+        "The Compression King lurks here in blank, unbranded gear."
+      ]
+    },
+    "fort": {
+      "name": "FORT MCHENRY",
+      "blurb": [
+        "A star-shaped fort whose 1814 defense inspired the anthem.",
+        "Admiral Redclaw still wants a rematch, rockets and all."
+      ]
+    }
+  }
+}
