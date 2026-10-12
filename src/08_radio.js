@@ -271,6 +271,10 @@ const RADIO = (function () {
   }
   const cycle = () => { if (!R.started) start(); setStation(STATIONS[(STATIONS.indexOf(R.station) + 1) % STATIONS.length]); };
   const toggle = () => { if (!R.started) start(); setStation(R.on ? 'off' : R.lastSt || 'remix'); };
+  // boss duels (09_duels.js): the radio ducks to ~22% while a fight runs. Every player's setVolume is wrapped once so all the fades / crossfades keep working, scaled.
+  R.fduck = 1;
+  function wrapVol(p) { if (!p || p.__dw || typeof p.setVolume !== 'function') return p; const sv = p.setVolume.bind(p); p.__v = 0; p.setVolume = (v) => { p.__v = v; return sv(Math.round(v * R.fduck)); }; p.__dw = true; return p; }
+  function fightDuck(on) { R.fduck = on ? 0.22 : 1; for (const p of [R.player, RX.A, RX.B]) if (p) { wrapVol(p); try { p.setVolume(p.__v); } catch (e) {} } }
   function duck(on) { try { if (SFXBUS) SFXBUS.gain.setTargetAtTime(on ? 0.62 : 1, AC.currentTime, 0.3); } catch (e) {} }
 
 
@@ -345,6 +349,7 @@ const RADIO = (function () {
   }
   // ---- YouTube IFrame Player API (or the test stub) ----
   function onReady(e) {
+    if (e && e.target) wrapVol(e.target);
     if (e && e.target && RX.B && e.target === RX.B && RX.A !== RX.B) { RX.bReady = true; try { RX.B.mute(); RX.B.setVolume(0); } catch (er) {} rxPreload(); return; } // the second (remix) player
     R.ready = true; try { R.player.setVolume(0); } catch (e) {} const t = R.cur; if (t && !isBC(t)) { try { if (R.started && R.on) { R.player.loadVideoById(vid(t)); R.goal = VOL; } else R.player.cueVideoById(vid(t)); } catch (e) {} } render(); }
   function onState(e) {
@@ -447,6 +452,6 @@ const RADIO = (function () {
   window.__radio = { R, T, TRACKS, STATIONS, toggle, setStation, cycle, skip, start, advance, idText, isBC, get station() { return R.station; }, get text() { return R.tickerText; },
     get card() { return card.classList.contains('on') ? card.textContent : ''; }, get stored() { try { return localStorage.getItem(LS); } catch (e) { return null; } },
     simEnd: () => onState({ data: 0 }), simError: (c = 150) => onError({ data: c }), simBCEnd: () => { if (R.bc) R.bcLeft = 0.01; }, showCred,
-    RX, REMIX_PEAK, POOL, CLIP, BUMPS, get vol() { return R.vol; }, get sfx() { return SFXBUS ? SFXBUS.gain.value : null; } };
+    RX, REMIX_PEAK, POOL, CLIP, BUMPS, get vol() { return R.vol; }, get sfx() { return SFXBUS ? SFXBUS.gain.value : null; }, fightDuck, get fduck() { return R.fduck; } };
   return R;
 })();

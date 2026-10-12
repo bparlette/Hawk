@@ -38,3 +38,11 @@ Mavis joins with her spinning handbag when she is close and free. ACT also cance
 ## Tools
 ./mk.sh (parts -> src/03_city.js -> site/game.js), serve.py, shot.js, view.js (frozen free-camera asset renders), ccheck.js (water/buildings/hill/cycle/
 draw calls/POWER/panel/bot run past 6 landmarks), dc.js (draw calls), deploy.sh + verify.sh (surge + md5 check).
+
+## Boss duels (hark/duel-bosses)
+Game-style boss fights as their own modes (src/09a_duel_core.js core, 09b_jimmy.js, 09c_chipkid.js). Walk onto the glowing ring at an entrance and press ACT (FIGHT):
+- **Big Jimmy, National Aquarium doors: underwater swim fight.** Stick / WASD swim (locked on to Jimmy), UP / DOWN (white buttons, SPACE / SHIFT, RT-RB / LT-LB or the right stick), STRIKE (SWING, ACT, J / E, X), DASH (JUMP, K, A). Dodge claw snaps (a claw rises and flashes red) and bubble blasts (he glows cyan and froths); when he rears up his belly glows gold: strike it (2 hits a rear, 5 a phase, 3 phases). AIR drains: hover in a bubble vent column to refill (phase 3: one vent sleeps at a time).
+- **The Chip Kid, Harborplace promenade: Punch-Out-style mech duel.** Dodge left / right (stick, white buttons, A / D, LB / RB), DUCK (stick down, JUMP, S, A), PUNCH (SWING, J, X), UPPERCUT (ACT, E, Y; spends a star). Tells: seasoning cloud (shakers tip + glow orange: duck), chip-can barrage (belly hatch opens, lanes flash: step out), bag-slam (crouch + leap, shadow grows: dodge), claw jab (claw pulls back + flashes red: dodge away or duck). Punch in the openings; clean cloud / slam dodges earn stars. 3 rounds; the mech collapses, the kid pops out, sulks and runs off.
+- Both: the radio ducks to 22% (`__radio.fightDuck`), the city HUD hides, the arcade panel relabels; a loss offers RETRY (from the phase / round reached) or LEAVE; a win calls `BOSS_CLEAR.clear(lmId)` (06g0_boss_clear.js: boss cleared, district crime 0) and returns to the street.
+- Rig hooks: `window.buildBigJimmy(ctx)` / `window.buildChipKid(ctx)` (contracts in the file headers); otherwise procedural stand-ins.
+- Tests: `?duel=jimmy|chipkid` starts one, `&duelbot=win|lose` plays it. `T/duel/bg.sh <name> <port> <kind> <win|lose> <w> <h> <shot.png|-> [sim] [shotAt]` (detached run of T/duel/run.js), `T/duel/entry.js` (city ring -> ACT -> duel -> LEAVE).
