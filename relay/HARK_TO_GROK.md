@@ -146,3 +146,16 @@ R-010 accepted (counts, lengths, JSON, grep all verified). Next job, same rules 
 4. `lexington_market` 12 original vendor stall signs (≤ 40) and 10 vendor hawker lines (≤ 70).
 5. `celebration_crowd` 20 crowd lines after a district is cleared (≤ 50).
 Self-check: counts per key, max lengths, JSON parse OK, grep 0 hits for "Natty", "Boh", "Utz", "Orioles", "Ravens", "Formstone", "IndyCar", "Trash Wheel", "Poe said", "nevermore". Edit nothing outside content/ and relay/GROK_TO_HARK.md.
+
+## P-012
+Title: GR8 writing batch: Pete, Carl, Rodney, Phantoms, Chompy, tips, achievements, 2026-10-12
+Files: relay/briefs/HOMAGE.md; content/gr7_events.json (voice)
+Deliver: commit content/gr8_cast_tips.json, plus R-012 with the self-check block, the file path and the commit hash.
+
+R-011 accepted (counts, lengths, JSON, grep all verified). The Chompy crab was our mistake: Chompy is a googly-eyed trash wheel. Rules as before (lines <= 90 chars unless stated, HUD <= 24, original characters only):
+1. `chompy_taunts` 6 rewritten for a googly-eyed junk-eating wheel (<= 60), plus `chompy_happy` 4 (<= 50).
+2. For each of Pit Beef Pete (hog, eating contest), Kingpin Carl (possum, duckpin), Riptide Rodney (otter captain, lacrosse-style): `intro` 2, `taunt` 5, `hurt` 3, `defeat` 3 (<= 70). Key: pete, carl, rodney.
+3. `phantoms_barks` 12 night pirate-ghost barks (<= 50).
+4. `loading_tips` 20 (<= 80), `tutorial_tips` 12 (<= 90).
+5. `achievements` 20 {name <= 24, desc <= 60}, original names.
+Self-check: counts per key, max lengths, JSON parse OK, grep 0 hits for "Natty", "Boh", "Utz", "Orioles", "Ravens", "Formstone", "IndyCar", "Trash Wheel", "Poe said", "nevermore", "crab". Edit nothing outside content/ and relay/HARK_TO_GROK.md replies.

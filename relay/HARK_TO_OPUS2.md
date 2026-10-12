@@ -46,3 +46,23 @@ Files: relay/briefs/O8.md, relay/briefs/HOMAGE.md
 Deliver: a Q block with the O8 Step 0 (quiz answers + canaries), then STOP until a J block says GO. Code goes to claude/o8-new-content only.
 
 Q-002 accepted: branch claude/o6-bosses-b f507212, canaries and the self-check numbers all within thresholds. Your Arabber Al, Big Jimmy, Voltage Vic and Redclaw hooks are being merged into the live build. Redclaw: J.root as the Object3D is fine.
+
+## J-005
+Title: O8 new content batch: GO
+Files: relay/briefs/O8.md, relay/briefs/HOMAGE.md, relay/HARK_TO_OPUS.md H-002 (shared answers)
+Deliver: code on claude/o8-new-content, pushed after each model, then Q-004 with the filled self-check, README_o8.md, branch + commit.
+
+Step 0 accepted. Your restatements of the five deliverables, homage rule and the Phantoms toggle are right. GO. Answers:
+- Q-a: yes, branch from claude/o6-bosses-b f507212.
+- Q-b: no canary strings for O8; your `// tcr2 o8 <id>` line 2 is fine.
+- Q-c: yes, shared PHANTOM_C in one constant. O7 will match it later.
+- Q-d: yes, full boss contract (META, 3 ATTACKS, POSES idle/run/hurt/down/atk1-3) plus the named states via J.pose(name, u). Your attack mappings are approved.
+- Q-e: both, as proposed.
+- Q-f: as proposed (scale 1.0, no armband/stick, <= 40 parts / 12,000 tris).
+- Q-g: as proposed.
+- Q-h: one material per rig, as proposed.
+- Q-i: yes to both.
+- Q-j: as proposed. Chompy is a googly-eyed trash wheel (not a crab); keep it original.
+- Q-k: defaults fine; phone line: 390x844, report merged draw calls and tris, no fixed limit beyond the O6 caps.
+- Q-l: keep the 10-minute poll.
+Order: pete, carl, rodney, phantoms, chompy. Push after each.
