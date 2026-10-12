@@ -1,0 +1,166 @@
+{
+  "meta": {
+    "id": "gr12_help",
+    "prompt": "P-019",
+    "date": "2026-10-12",
+    "counts": {
+      "howto_cards": 11,
+      "pause_menu_labels": 8,
+      "pause_quips": 6,
+      "retry_lines": 12,
+      "offline_and_error": 6,
+      "first_run_hints": 10
+    }
+  },
+  "howto_cards": [
+    {
+      "title": "The Bombardment",
+      "goal": "Sink the fleet and keep the fort flag flying.",
+      "touch": "Tap anywhere to aim and fire the cannon.",
+      "keys": "Mouse to aim, click or Space to fire.",
+      "tip": "Shoot incoming shots out of the sky to save the flag."
+    },
+    {
+      "title": "Bobby's Derby",
+      "goal": "Hit 10 homers before you make 10 outs.",
+      "touch": "Tap to swing the cane when the pitch arrives.",
+      "keys": "Space or A to swing; arrows aim on desktop.",
+      "tip": "Watch his windup. Each pitch has its own tell."
+    },
+    {
+      "title": "Big Jimmy's Tank",
+      "goal": "Dodge the claws and strike his soft belly.",
+      "touch": "Drag to swim, tap the glowing button to strike.",
+      "keys": "WASD to swim, J to strike, Shift to dash.",
+      "tip": "Bubble vents refill air. Never stray far from one."
+    },
+    {
+      "title": "Chip Kid Duel",
+      "goal": "Win 3 rounds against her snack-bag mech.",
+      "touch": "Swipe left or right to dodge, down to duck.",
+      "keys": "A/D dodge, S duck, J and K to punch.",
+      "tip": "Counter right after a slam, while the mech recovers."
+    },
+    {
+      "title": "Arabber Al Chase",
+      "goal": "Catch Al's cart and ram it 3 times in time.",
+      "touch": "Tilt the stick to steer, tap BOOST to surge.",
+      "keys": "WASD to steer, Shift to boost.",
+      "tip": "Thrown produce slows you. Weave, do not brake."
+    },
+    {
+      "title": "Duchess Ram Race",
+      "goal": "Ram her dragon boat into piers and buoys.",
+      "touch": "Drag to steer the boat, tap RAM to lunge.",
+      "keys": "WASD to steer, Space to ram.",
+      "tip": "Duck behind a buoy when she swings the paddle."
+    },
+    {
+      "title": "Voltage Vic Jam",
+      "goal": "Hit the notes on the beat to beat Vic.",
+      "touch": "Tap the 3 zones as notes reach the line.",
+      "keys": "D, F, J, K for the four note lanes.",
+      "tip": "Drops land on the beat. Listen and stay calm."
+    },
+    {
+      "title": "Pete's Eat-Off",
+      "goal": "Clear all your courses before Pete does.",
+      "touch": "Tap fast to eat, tap the cup to cool down.",
+      "keys": "Space to eat, L to sip, X to swat food back.",
+      "tip": "Hit hiccup prompts fast or you lose a bite."
+    },
+    {
+      "title": "Pigeon Tower Climb",
+      "goal": "Wreck all 5 tower faces, then floor the bird.",
+      "touch": "Drag to climb, tap a window to smash it.",
+      "keys": "WASD to climb, J to smash, K to grab.",
+      "tip": "A shadow on the wall warns where droppings land."
+    },
+    {
+      "title": "Harbor Grand Prix",
+      "goal": "Finish first around the harbor street loop.",
+      "touch": "Hold the left side to steer, right side to gas.",
+      "keys": "Arrows to steer, Space to brake, Shift turbo.",
+      "tip": "Brake before the hairpin, not inside it."
+    },
+    {
+      "title": "Harbor Fishing",
+      "goal": "Hook fish and junk, and feed Chompy the junk.",
+      "touch": "Tap to cast, hold to reel when the line jerks.",
+      "keys": "Space to cast, hold Space to reel in.",
+      "tip": "Night brings different catches. Try both."
+    }
+  ],
+  "pause_menu": {
+    "labels": [
+      "Resume",
+      "Restart",
+      "How to Play",
+      "Controls",
+      "Sound",
+      "Radio",
+      "Settings",
+      "Quit to Map"
+    ],
+    "pause_quips": [
+      "Harold is catching his breath. Take your time.",
+      "Mavis is fixing her hat. Back when you are ready.",
+      "The harbor will wait. It always does.",
+      "Snack break? Go on, we will hold your spot.",
+      "Even thugs need a breather between rounds.",
+      "Paused. The gulls are judging nobody."
+    ]
+  },
+  "retry_lines": [
+    "So close! One more go and you have it.",
+    "Shake it off, hon. Round two is yours.",
+    "Every pro lost the first one. Try again!",
+    "You learned his trick. Now use it.",
+    "Mavis believes in you. So do we.",
+    "That was a warm-up. Let's go for real.",
+    "Back on your feet, champ. Again!",
+    "Great try! The next one is the one.",
+    "You are getting closer every time.",
+    "Deep breath, big swing. Try it again.",
+    "Nice moves! Just a little more timing.",
+    "Harold has been through worse. Go again!"
+  ],
+  "offline_and_error": [
+    {
+      "id": "offline",
+      "text": "No signal right now. You can keep playing; we will sync later."
+    },
+    {
+      "id": "slow_load",
+      "text": "Still loading the harbor. Hang tight, it is almost ready."
+    },
+    {
+      "id": "save_failed",
+      "text": "Could not save just now. We will try again in a moment."
+    },
+    {
+      "id": "audio_blocked",
+      "text": "Tap anywhere to turn on the sound and the radio."
+    },
+    {
+      "id": "rotate_phone",
+      "text": "Turn your phone sideways for the best view of the city."
+    },
+    {
+      "id": "update_ready",
+      "text": "A fresh update is ready. Tap to reload and keep playing."
+    }
+  ],
+  "first_run_hints": [
+    "Drag the left side to move.",
+    "Tap the right side to punch.",
+    "The big glowing button changes by spot.",
+    "Hold the punch button for a heavy hit.",
+    "Swipe up to jump over gaps.",
+    "Tap the map pin to pick a place.",
+    "Tap the radio bar for the next station.",
+    "Pause any time with the top-left button.",
+    "Red flashes mean an attack is coming.",
+    "Turn sideways for a wider view."
+  ]
+}
