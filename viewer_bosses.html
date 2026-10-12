@@ -89,7 +89,7 @@ let harold = null;
 function rebuild() {
   const id = SHOW, e = REG[id], sp = Math.max(2.2, W(id) * 2.4);
   if (S.sheet) {   // two rows on an orthographic camera: turnaround on top, the three attacks below (each on its own grey disc)
-    const views = [['front', 'idle', 0], ['3/4', 'idle', 0.75], ['side', 'idle', Math.PI / 2], ['back', 'idle', Math.PI]].concat(e.A.map((a) => [a.id.replace(/_/g, ' ') + ' (' + a.pose + ')', a.pose, 0]));
+    const views = [['front', 'idle', 0], ['3/4', 'idle', 0.75], ['side', 'idle', Math.PI / 2], ['back', 'idle', Math.PI]].concat(e.A.map((a) => [a.id.replace(/_/g, ' ') + ' (' + a.pose + ')', a.pose, e.meta.vehicle ? 0.75 : 0]));   // vehicles: attacks at 3/4 so the rider reads
     const H = e.meta.height, sx = Math.max(1.9, W(id) * 2.25), rowY = -(H + 1.0);
     views.forEach(([n, pose, ry], i) => {
       const top = i < 4, x = top ? (i - 1.5) * sx : (i - 5) * sx * 1.25, y = top ? 0 : rowY;
