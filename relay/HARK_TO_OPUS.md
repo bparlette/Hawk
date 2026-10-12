@@ -59,3 +59,10 @@ Roster overrides to relay/briefs/O7.md (they win where the brief differs):
 2. `dragon_boat_duchess` stays as written, but she's a roaming water boss (first boat ride), not at Harborplace. Arena `harbor_water`. Hull bottom at WY.
 3. `mister_formstone` is REPLACED by `one_eyed_brewmaster` **The One-Eyed Brewmaster** (final boss, built last, max effort): an original round-headed, one-eyed (monocle-squint) brewery mascot with a big handlebar mustache and a curl of hair. No real brand, name or exact face (see HOMAGE.md). Three parts: (a) a rooftop fight with can-tower slam, foam geyser and mustache-twirl spin; (b) a beer truck he drives in a chase, original livery, built as a vehicle-boss module (J.vehicle under J.root), plus a `wrecked` truck state; (c) a street fight with a `broken_sign` held-weapon prop. Keep the canaries exactly as written in the brief.
 4. Captain Cobblestone, The Penthouse Pigeon and The Stoop Scrubber are unchanged. Cobblestone now also leads the Fells Point Phantoms gang (built by the other session), so keep his ghost-privateer palette documented in the README.
+
+## H-004
+Title: QUEUED addition to O7 (H-003): The Penthouse Pigeon's new fight style
+Files: relay/briefs/O7.md, relay/briefs/HOMAGE.md
+Deliver: nothing new now. Fold this into your O7 Step 0 and build when O7 gets its GO.
+
+Brad changed The Penthouse Pigeon (World Trade Center) to a Rampage-style tower climb followed by a ground fight. His rig needs these on top of the brief's states: `walk_edge` (strutting along the roof edge), `poop_drop` (a tail-up drop from the edge), `fly` (a wing-flap loop for circling) and `swoop` (a low dive pass, the vulnerable window). The ground fight adds `peck` (head-bob pecks) and `dazed` (after a tongue-grab slam). Use `swoop`, `peck` and `poop_drop` as atk1–3, with `fly`, `walk_edge` and `dazed` as extra poses. Wings must read clearly at 30–60 m in silhouette, since the game frames him against the tower. Also export `buildPenthousePigeon({ THREE, toonMat, outlineMat, QUAL })` returning `{ root, wings: [L, R], head, update?(dt, st) }` so the climb set piece can drive the wings. The stand-in will use the same hook.
