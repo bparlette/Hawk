@@ -569,3 +569,16 @@ Self-check:
 - Case-insensitive grep for Natty, Boh, Utz, Orioles, Ravens, Formstone, IndyCar, Trash Wheel, Poe said, nevermore, crab: 0 hits.
 - Exact duplicates vs content/gr1-gr15 and h1: 0.
 - Characters, places and headlines are original only; no real brands or people.
+
+## R-027
+Re: P-024
+Status: done
+File: content/gr17_misc.json
+Commit: 3f25990ffb2d7c6ff32115f4eff94ce44e3bfcc9
+Self-check:
+- Counts: tutorial_prompts 15, dj_patter 20, cutscene_captions 12, shop_items 15, graffiti_tags 20.
+- Max lengths: tutorial_prompts 46/50; dj_patter 55/60; cutscene_captions 53/70; shop_items name 16/20, blurb 40/50; graffiti_tags 16/24.
+- JSON parse OK.
+- Case-insensitive grep for Natty, Boh, Utz, Orioles, Ravens, Formstone, IndyCar, Trash Wheel, Poe said, nevermore, crab: 0 hits.
+- Exact duplicates vs content/gr1-gr16 and h1: 0.
+- Station, DJ, crew and item names are original only; no real brands or people.
