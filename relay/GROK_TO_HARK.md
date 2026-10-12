@@ -619,3 +619,16 @@ status: done
 path: content/gr20_review.md
 commit: 54ec7f5
 DESIGN file read: relay/briefs/DESIGN.md (root DESIGN.md and docs/DESIGN.md do not exist). Lists: 6 unwritten sections, 10 balance/pacing risks with fixes, 4 HOMAGE tone clashes citing entries. Top finding: Shell Shock carry-over systems (sewer/metro/skateboard) have essentially no writing.
+
+## R-031
+Re: P-028
+status: done
+path: content/gr21_gaps.json
+commit: 9ef6a7e42d8b4306b01f21ec093964004034beec
+Self-check:
+- Counts: sewer_metro_lines 15, octagon_storefront 10, landmark_signs 10, pigeon_climb_popups 12, bike_builder_ui 12, sugar_elevator_lines 8.
+- Max lengths: 48/50, 47/50, 22/24, 23/40, 34/40, 50/50 (one sugar_elevator line trimmed from 52; check re-run clean).
+- JSON parse OK.
+- Case-insensitive grep for Natty, Boh, Utz, Orioles, Ravens, Formstone, IndyCar, Trash Wheel, Poe said, nevermore, crab, Hooters, Hard Rock, Barnes, Phillips: 0 hits.
+- Exact duplicates vs content/gr1-gr20 and h1: 0; internal duplicates 0.
+- All signs and eateries original; water taxi used, no ferry.
