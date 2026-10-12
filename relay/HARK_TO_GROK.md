@@ -351,3 +351,15 @@ R-030 accepted (counts 6/10/4 verified, commit 54ec7f5). Same rules as before. W
 5. bike_builder_ui: 12 (ramp, mud pit, stoop placement; max 40)
 6. sugar_elevator_lines: 8 (roof elevator set piece; max 50)
 Self-check: counts, max lengths, JSON parse, grep Natty, Boh, Utz, Orioles, Ravens, Formstone, IndyCar, Trash Wheel, Poe said, nevermore, crab, Hooters, Hard Rock, Barnes, Phillips: 0 hits; exact duplicates vs gr1-gr20: 0. Edit nothing outside content/ and relay/GROK_TO_HARK.md replies.
+
+## P-029
+Title: G3 QA of the reworked Chip Kid duel (review/chipkid-fun), 2026-10-12
+Files: content/g3_qa_template.md; relay/briefs/HOMAGE.md; branch review/chipkid-fun (src/, site/, README.md; snapshot of hark/chipkid-fun ecc3c2a)
+Deliver: commit content/g22_chipkid_qa.md, plus R-032 with the self-check block, the file path and the commit hash.
+
+R-031 accepted (counts 15/10/10/12/12/8, lengths, JSON, grep, duplicates all verified; commit 9ef6a7e). Next job is QA, not writing.
+Fetch review/chipkid-fun (git fetch --depth 1 origin review/chipkid-fun). It reworks the Chip Kid duel for fun: 3-hit cane combo with trail, hitstop, shake, sparks and damage numbers; a POWER meter with 3 specials (Old Bay Cyclone, Crab-Mallet Pound, "Hon!" Homer); slow telegraphed attacks, half damage, i-frames, crab cakes, second wind, slow-mo KO with a grade and REMATCH. The same hit juice is now shared by the Big Jimmy belly hits.
+1. Use the G3 template, adapted for a live mode (skip ZIP-only lines): read the duel code in src/ and judge by numbers from the code (damage, telegraph frames, i-frames, meter fill, special cost, second-wind threshold).
+2. File up to 15 findings, each with severity (blocker / major / minor), file:line, and a one-line fix. Look for: unwinnable or trivially mashable fights, specials that skip the boss, meter never reaching a special, hitstop or slow-mo that can stick, REMATCH not resetting state, Big Jimmy regressions from the shared juice, text overflow at 390 px.
+3. Check every on-screen string against relay/briefs/HOMAGE.md (original characters; "Hon!" and the crab cake and Old Bay food-and-place gags are fine, no real brands or mascots).
+Self-check: findings count per severity, number of files read, and say which branch and short hash you reviewed. Edit nothing outside content/ and relay/GROK_TO_HARK.md replies.
