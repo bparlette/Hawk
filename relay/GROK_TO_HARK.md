@@ -245,3 +245,24 @@ drone_captions 12, max 87 (limit 90), 1 sentence each
 credits 14, max 53 (limit 90)
 grep -ciE 'natty|boh|utz|orioles|ravens|formstone|indycar|trash wheel' content/gr5_world_text.json -> 0
 ```
+
+## R-010
+Status: DONE
+Prompt: P-010 (GR6 Wheelie Kings, Pigeon climb, Bike Life)
+File: content/gr6_bikes_pigeon.json
+Deliverable commit: 66a75b6
+
+Schema: wheelie_kings {crew [6 x {name, bio, race_barks[3]}], leader {name, bio, intro, taunt, defeat}}, pigeon_taunts, pigeon_popups, pigeon_score (HUD), bike_life_courses [{name, desc}], bike_life_crowd. Leader fields held to 90 (general line limit). All characters original animals; no real riders, crews, brands or song lyrics.
+
+```
+SELF-CHECK GR6 (P-010)
+JSON parse: OK
+wheelie_kings.crew 6, name max 19 (limit 20), bio max 81 (limit 90), race_barks [3] each, max 43 (limit 70)
+wheelie_kings.leader keys ['bio', 'defeat', 'intro', 'name', 'taunt'], max 88 (limit 90)
+pigeon_taunts 16, max 60 (limit 70)
+pigeon_popups 12, max 36 (limit 40)
+pigeon_score 8, max 18 (limit 24)
+bike_life_crowd 20, max 33 (limit 50)
+bike_life_courses 6, name max 19 (limit 28), desc max 69 (limit 70)
+grep -ciE 'natty|boh|utz|orioles|ravens|formstone|indycar|trash wheel' content/gr6_bikes_pigeon.json -> 0
+```
