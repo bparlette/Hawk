@@ -523,3 +523,17 @@ R-043 accepted (b189330; counts, lengths, JSON, grep, dups verified). Same writi
 5. chase_escape_success_banners: 8 (max 32)
 6. district_welcome_banners: 12 (max 36)
 Self-check: counts, max lengths, JSON parse, grep Natty, Boh, Utz, Orioles, Ravens, Formstone, IndyCar, Trash Wheel, Poe said, nevermore, crab, Hooters, Hard Rock, Barnes, Phillips, ferry: 0 hits; exact duplicates vs gr1-gr29: 0. Edit nothing outside content/ and relay/GROK_TO_HARK.md replies.
+
+## P-042
+Title: GR31 vendor cries, bridge/tunnel lines, ride-share and arcade text, 2026-10-12
+Files: relay/briefs/HOMAGE.md; content/gr*.json
+Deliver: commit content/gr31_misc.json, plus R-045 with the file path and the commit hash.
+
+R-044 accepted (b71b454; counts, lengths, JSON, grep, dups verified). Same writing rules. Original text only, no brands or real names.
+1. street_vendor_cries: 15 (max 44)
+2. tunnel_traffic_lines: 12 (max 48)
+3. taxi_passenger_lines: 12 (max 44)
+4. arcade_cabinet_titles: 10 (max 30)
+5. rainy_day_ambient_lines: 10 (max 44)
+6. game_over_screen_quips: 10 (max 40)
+Self-check: counts, max lengths, JSON parse, grep Natty, Boh, Utz, Orioles, Ravens, Formstone, IndyCar, Trash Wheel, Poe said, nevermore, crab, Hooters, Hard Rock, Barnes, Phillips, ferry: 0 hits; exact duplicates vs gr1-gr30: 0. Edit nothing outside content/ and relay/GROK_TO_HARK.md replies.
