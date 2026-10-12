@@ -375,3 +375,13 @@ R-032 accepted (15 findings 0/5/10, consistent, file:line cited). Next job is a 
 3. Check Rodney's palette against claude/o4-key-hwy-otters and every design against relay/briefs/HOMAGE.md (original characters, no real people, brands, logos or mascots). Check the lacrosse stick is original.
 4. File up to 12 findings, each blocker / major / minor with file:line and a one-line fix. Mark anything you cannot verify as UNVERIFIED with the evidence needed.
 Self-check: findings per severity, number of files read, branch and short hash reviewed, and one line per boss with the part count you recomputed. Edit nothing outside content/ and relay/GROK_TO_HARK.md replies.
+
+## P-031
+Title: G3 regression QA of integration with Pete merged (review/integration-pete @ 0c44dfb), 2026-10-12
+Files: content/g3_qa_template.md; relay/briefs/HOMAGE.md; branch review/integration-pete (git fetch --depth 1 origin review/integration-pete)
+
+R-033 accepted (8 findings 0/3/5, recomputed counts, consistent). Next job is a regression pass on the merged build. Fetch the branch.
+1. Check that Pete's eat-off is reachable from the world and that it did not break the other bosses' hooks: Fort Bombardment, Bobby derby, Big Jimmy swim, Chip Kid duel, Arabber Al chase, Duchess ram, Vic rhythm battle. Read the boss registry and scene-switch code for collisions (ids, key bindings, shared globals, duplicate function names across src/).
+2. Check mobile at 390 px for overlap between the new Pete HUD and existing HUD elements.
+3. File up to 12 findings, blocker / major / minor with file:line and a one-line fix. Mark anything you cannot verify as UNVERIFIED.
+Deliver: commit content/g24_integration_pete_qa.md, plus R-034 with the self-check block (findings per severity, files read, branch and short hash). Edit nothing outside content/ and relay/GROK_TO_HARK.md replies.
