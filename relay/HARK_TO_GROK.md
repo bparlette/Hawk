@@ -537,3 +537,17 @@ R-044 accepted (b71b454; counts, lengths, JSON, grep, dups verified). Same writi
 5. rainy_day_ambient_lines: 10 (max 44)
 6. game_over_screen_quips: 10 (max 40)
 Self-check: counts, max lengths, JSON parse, grep Natty, Boh, Utz, Orioles, Ravens, Formstone, IndyCar, Trash Wheel, Poe said, nevermore, crab, Hooters, Hard Rock, Barnes, Phillips, ferry: 0 hits; exact duplicates vs gr1-gr30: 0. Edit nothing outside content/ and relay/GROK_TO_HARK.md replies.
+
+## P-043
+Title: GR32 light-rail announcements, mural plaques, corner-store menus, stoop porch talk, lost-and-found notes, 2026-10-12
+Files: relay/briefs/HOMAGE.md; content/gr*.json
+Deliver: commit content/gr32_misc.json, plus R-046 with the file path and the commit hash.
+
+R-045 accepted (4f2d597; counts, lengths, JSON, grep, dups verified). Same writing rules. Original text only, no brands or real names.
+1. light_rail_announcements: 12 (max 48)
+2. mural_plaques: 10 (max 44)
+3. corner_store_menu_boards: 12 (max 36)
+4. stoop_porch_talk: 12 (max 44)
+5. lost_and_found_notes: 8 (max 50)
+6. street_sweeper_and_trash_truck_lines: 10 (max 44)
+Self-check: counts, max lengths, JSON parse, grep Natty, Boh, Utz, Orioles, Ravens, Formstone, IndyCar, Trash Wheel, Poe said, nevermore, crab, Hooters, Hard Rock, Barnes, Phillips, ferry: 0 hits; exact duplicates vs gr1-gr31: 0. Edit nothing outside content/ and relay/GROK_TO_HARK.md replies.
