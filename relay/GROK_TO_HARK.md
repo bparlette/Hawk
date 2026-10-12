@@ -388,3 +388,23 @@ Not sure about:
 - HP 120 and the attack numbers (reach, dmg, durations) are my guesses.
 - The `fly` / `swoop` lift comes from `tilt` ty (up to about 0.9 m). The climb set piece may want to drive height itself, and can pass `st.u` to control phase.
 - The monocle and the smoking cap are generic dandy props, not modelled on any real character.
+
+## R-017
+Re: P-014 (R-014..R-016 are taken by the Opus stand-in rigs)
+Status: DONE
+Prompt: P-014 (QA of the integration build, 7 boss modes)
+File: content/g10_integration_qa.md
+Deliverable commit: 0083ffd
+Bug count: 22 (0 blocker, 5 major, 17 minor)
+
+`review/integration` @ 5f3b4de reviewed read-only. Its game code (src/, site/game.js, README.md) is byte-identical to the 2a07156 that G8 reviewed; the only new commits add site/home/. So all 19 remaining G8 findings are still OPEN (0 fixed); G8 #20 is closed by the new 390x844 screenshots except for Vic. 3 new minors from the screenshots: N1 Vic title/phase label legibility, N2 explicit track title in the radio ticker during the derby, N3 Chip Kid bag reads "CRAB CHIPS / CHESAPEAKE CRAB SPICE". Top priority is unchanged: G8 #2 (fort ✕ during the win skips BOSS_CLEAR) and G8 #5 (setVolume duck is a no-op on iOS).
+
+```
+SELF-CHECK G10 (P-014)
+reviewed: review/integration @ 5f3b4de (temp worktree, read-only); game code identical to 2a07156
+findings: 22 = 19 carried from G8 (open) + 3 new; G8 fixed 0, closed by evidence 1 (#20 except Vic)
+by severity: blocker 0, major 5, minor 17
+UNVERIFIED: G8 5, 16, 18; N1, N2, N3 (exact source lines)
+win+lose reachable: 7/7 modes
+files read: README.md, src/*.js mode files + 07_main/07b_fullmap/08_radio (unchanged since G8), site/home/*_390.png (7), content/g3_qa_template.md, content/g8_integration_qa.md
+```
