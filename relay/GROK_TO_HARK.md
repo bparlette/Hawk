@@ -207,3 +207,20 @@ max line length: 61 (limit 90)
 max HUD callout: 22 (limit 24)
 grep -ciE 'natty|boh|utz|orioles|ravens|formstone|indycar|trash wheel' content/gr4_new_content.json -> 0
 ```
+
+## R-008
+Status: DONE
+Prompt: P-008 (G3-style QA of the integration build, 7 boss modes)
+File: content/g8_integration_qa.md
+Deliverable commit: 7809860
+
+Read-only review of `review/integration-fb940ee` @ 2a07156 (branch not modified), judged against README.md, every finding with file:line. 20 findings ranked. Top: (1) no mode reads content/gr3_mode_writing.json yet (0 hits in src/ and site/game.js); (2) the fort's ✕ during the win anthem calls leave(false) and skips BOSS_CLEAR.clear('fort') (09_fort.js:82, :540); (3, 4) touch targets under 44 px: fort ✕ 30 px (09_fort.js:58), derby quit about 27 px (06g_derby.js:319); (5) derby, racers and duels duck the radio via setVolume, which the radio itself says iOS ignores (08_radio.js:276, :289), UNVERIFIED on device.
+
+```
+SELF-CHECK G8 (P-008)
+findings per mode: fort 3, derby 1, vic 4, duels (jimmy+chipkid) 1, racers (al+duchess) 3, cross-mode 8 = 20 (max 40)
+by severity: blocker 0, major 5, minor 15
+UNVERIFIED: 5, 16, 18, 20
+win+lose reachable: 7/7 modes
+files read: README.md, site/game.js (sync check), src/09_fort.js, src/06g_derby.js, src/06g0_boss_clear.js, src/09a_duel_core.js, src/09b_jimmy.js, src/09c_chipkid.js, src/06h_racers.js, src/06v_vic_rhythm.js, src/07_main.js, src/07b_fullmap.js, src/08_radio.js, src/06d_panel.js, content/g3_qa_template.md, content/gr3_mode_writing.json
+```
