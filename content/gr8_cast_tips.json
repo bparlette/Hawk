@@ -1,0 +1,158 @@
+{
+  "_round": "GR8",
+  "chompy_taunts": [
+    "Chompy: Googly eyes see ALL the junk you dropped, toad!",
+    "Chompy: Spin spin spin! I never get dizzy. You will.",
+    "Chompy: That cane looks crunchy. Toss it in!",
+    "Chompy: I ate a whole bicycle once. You're next.",
+    "Chompy: My eyes go boing. My wheel goes round. You lose.",
+    "Chompy: Litterbugs get the paddle, old timer!"
+  ],
+  "chompy_happy": [
+    "Chompy: Nom nom! A whole bag of bottles!",
+    "Chompy: My eyes are spinning with joy!",
+    "Chompy: Cleanest harbor in years. Burp!",
+    "Chompy: You're my favorite toad, Harold!"
+  ],
+  "pete": {
+    "intro": [
+      "Pete: Pull up a stool, toad. Pete's been hungry since breakfast.",
+      "Pete: Five courses. One winner. Spoiler: it's the hog in the apron."
+    ],
+    "taunt": [
+      "Pete: You chew like you're reading the menu. Swallow, grandpa!",
+      "Pete: I've got room for two more plates and your dessert.",
+      "Pete: Lemonade won't save you. Nothing will.",
+      "Pete: Hiccups already? I'm just getting warmed up.",
+      "Pete: Here, take my coddie. Ha! Now you've got two!"
+    ],
+    "hurt": [
+      "Pete: Oof. That pit beef's sitting heavy.",
+      "Pete: Wait... is my apron getting tighter?",
+      "Pete: Gimme a minute. Just a little minute."
+    ],
+    "defeat": [
+      "Pete: I'm... I'm full. First time since 1998.",
+      "Pete: You out-ate a hog, toad. Tell nobody.",
+      "Pete: Fine. The counter's yours. Save me a cookie."
+    ]
+  },
+  "carl": {
+    "intro": [
+      "Carl: Welcome to the basement lanes. Mind the pipes, they bite.",
+      "Carl: Ten frames, small pins, big shame. Let's bowl, toad."
+    ],
+    "taunt": [
+      "Carl: My towel's lucky. Your cane's just old.",
+      "Carl: Three balls a frame and you still leave a pin standing?",
+      "Carl: Possums play dead. Your score already is.",
+      "Carl: Bandits! Somebody get grandpa a lighter ball!",
+      "Carl: That roll wobbled more than your knees."
+    ],
+    "hurt": [
+      "Carl: A strike? Lucky. Pure lucky.",
+      "Carl: Hey! Who touched my towel?",
+      "Carl: Okay. Okay. I'm still ahead. Probably."
+    ],
+    "defeat": [
+      "Carl: I'm playing dead. For real this time.",
+      "Carl: Take the lanes, toad. Leave me the towel.",
+      "Carl: Ten frames of shame. The Bandits will never let me forget."
+    ]
+  },
+  "rodney": {
+    "intro": [
+      "Rodney: Rash Field's my turf. Key Highway Otters take the field!",
+      "Rodney: Two on two, first to five. Bring your cane and a towel."
+    ],
+    "taunt": [
+      "Rodney: That's a cane, not a stick. Wrong sport, grandpa.",
+      "Rodney: Purse checks? Lady, I've been hit harder by waves.",
+      "Rodney: Otters were born for this. You were born in 1940.",
+      "Rodney: Another one in the net? Ha! Wrong net.",
+      "Rodney: Hope you two can swim. Harbor's right there."
+    ],
+    "hurt": [
+      "Rodney: Hey! That check was legal? Fine.",
+      "Rodney: Splash! Ugh, my fur. My beautiful fur.",
+      "Rodney: Okay, the old folks can move."
+    ],
+    "defeat": [
+      "Rodney: Five goals? From a cane? I need a nap.",
+      "Rodney: Otters, back to the water. We'll train harder.",
+      "Rodney: Good game, grandpa. You and Mavis are legit."
+    ]
+  },
+  "phantoms_barks": [
+    "Yo ho, the fog brings fresh company!",
+    "Douse the lights, lads. Night is ours!",
+    "Me bones ache for the open sea.",
+    "Who walks the Broadway pier at this hour?",
+    "Swab the cobbles! Swab them forever!",
+    "A toad? We've haunted worse.",
+    "Arr, the tide's turning. So are we.",
+    "Powder's dry, cannon's cold, ghosts are hungry.",
+    "No shore leave for two hundred years!",
+    "Bosun says boo. So BOO!",
+    "Mind the plank, old timer. It's invisible.",
+    "Back to the mist before the sun finds us!"
+  ],
+  "loading_tips": [
+    "Pit Beef Pete slides food onto your plate. Swat it back fast.",
+    "Hiccups during the eating contest? Tap the prompt, then sip lemonade.",
+    "Duckpin balls are small. Aim for the pocket, not the moon.",
+    "Kingpin Carl's towel isn't really lucky. Probably.",
+    "Check an Otter into the harbor and he sits out for 30 seconds.",
+    "Mavis's purse makes a great lacrosse stick. Don't ask how.",
+    "Phantoms hate lantern light. Flash them and watch them scatter.",
+    "The Fells Point Phantoms only come out at night. Plan accordingly.",
+    "Chompy eats junk, not fish. Reel in the boots and feed the wheel.",
+    "Rare catches show up more at dawn. Harold is up early anyway.",
+    "In the Grand Prix, brake BEFORE the hairpin. Not during. Not after.",
+    "Crow sentries can't see you in deep shadow. Stay dark.",
+    "Lost in the market? Follow the smell of pit beef.",
+    "Bike Life tip: lean back to keep the front wheel up.",
+    "The Penthouse Pigeon drops flowerpots. Look up, then climb.",
+    "Neighbors in windows sometimes help. Sometimes they just yell.",
+    "Every cleared district throws a party. You're invited.",
+    "Drone goggles show the whole city. Try them after the finale.",
+    "Wheelie Kings respect speed. Bertie respects winning.",
+    "A good grandpa naps between boss fights. Harold disagrees."
+  ],
+  "tutorial_tips": [
+    "Eating contest: tap EAT in rhythm, and watch the fullness meter.",
+    "When Pete pushes food your way, tap SWAT before it lands on your plate.",
+    "Duckpin: drag to aim, release to roll. You get three balls per frame.",
+    "Lacrosse: SWING to pass or shoot, ACT to check a defender.",
+    "Stealth: move slowly in shadows. Running makes noise.",
+    "Fishing: tap CAST, wait for the bite, then hold REEL and ease off when the line glows red.",
+    "Feed junk catches to Chompy by tapping FEED on the pier.",
+    "Racing: hold GAS, tap BRAKE before corners, steer with the stick.",
+    "Bike Life: hold JUMP to lift the front wheel, tilt to balance.",
+    "Climbing: tap left and right to grab ledges. Dodge falling pots.",
+    "Night only: raise your lantern with ACT to scare phantoms away.",
+    "Open the drone view after the finale to fly over the cleared city."
+  ],
+  "achievements": [
+    {"name": "CLEAN PLATE CLUB", "desc": "Finish all five courses without a single hiccup miss."},
+    {"name": "SWAT TEAM", "desc": "Swat 10 of Pete's sneaky plate slides back at him."},
+    {"name": "LEMONADE STAND", "desc": "Win the eating contest using only three lemonade sips."},
+    {"name": "BASEMENT LEGEND", "desc": "Bowl a strike in Kingpin Carl's rowhouse lanes."},
+    {"name": "TOWEL THIEF", "desc": "Beat Carl without him ever wiping his lucky towel."},
+    {"name": "SPARE ME", "desc": "Pick up five spares in a single duckpin game."},
+    {"name": "HARBOR CHECK", "desc": "Check three Otters into the harbor in one game."},
+    {"name": "PURSE STRINGS", "desc": "Let Mavis score the winning goal against Rodney."},
+    {"name": "SHUTOUT", "desc": "Beat Riptide Rodney 5 to 0."},
+    {"name": "SILENT ROSES", "desc": "Place all three roses without a crow spotting you."},
+    {"name": "LANTERN BEARER", "desc": "Scare off 20 Fells Point Phantoms with your lantern."},
+    {"name": "WHEEL FEEDER", "desc": "Feed Chompy 50 pieces of harbor junk."},
+    {"name": "GOOGLY APPROVED", "desc": "Hear all four of Chompy's happy lines."},
+    {"name": "HAIRPIN HERO", "desc": "Take the Convention Center hairpin without braking late."},
+    {"name": "PIT LANE PRO", "desc": "Win the Grand Prix without touching a wall."},
+    {"name": "BACK WHEEL BARON", "desc": "Hold a wheelie for ten straight seconds."},
+    {"name": "CROWN THE TOAD", "desc": "Beat Big Wheel Bertie and the Wheelie Kings."},
+    {"name": "TOP FLOOR", "desc": "Reach the penthouse without being knocked off once."},
+    {"name": "BREWMASTER BUSTED", "desc": "Finish the Pratt Street truck chase on your first try."},
+    {"name": "BLOCK PARTY", "desc": "See a cleared district's celebration on the stoops."}
+  ]
+}
