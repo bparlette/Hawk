@@ -10,6 +10,7 @@ real poses and the real `kit/real_mergeRig.js`. Work in progress: bosses are add
 | Voltage Vic | `src/boss_voltage_vic.js` | built, measured, previews |
 | Arabber Al | `src/boss_arabber_al.js` | built, measured, previews |
 | Chef Crabcake | `src/boss_chef_crabcake.js` | built, measured, previews |
+| The Pool Shark | `src/boss_pool_shark.js` | built, measured, previews |
 
 ## Tools
 - `viewer_bosses.html` — the boss viewer (from `kit/real_viewer.html`): `?show=<id>&pose=idle|run|hurt|down|atk1|atk2|atk3|all`, `&turn=1`, `&sheet=1`,
@@ -69,3 +70,12 @@ failed draw). Nothing in it echoes a real seasoning brand's colours or layout. A
 Attacks: **seasoning blind** (twists the tin leg back, then lunges and fans a blinding cloud with the left mallet), **mallet drumroll**
 (both mallets high, then alternating overhead smashes, right then left), **sidestep sweep** (a crabwise sidestep, then a flat
 190° backhand sweep).
+
+### The Pool Shark (`pool_shark`, Pendry pier pool deck)
+A big grey-blue shark hustler. Silhouette: a heavy shark head with a long snout, white underjaw and a toothy grin, black shades and a
+straw porkpie with a navy band; an open teal cabana shirt with a palm-and-hibiscus print (drawn on a 128² canvas: the one mapped
+material) over a white belly, a gold chain, coral swim trunks, flip-flops; a dorsal fin up the back and a tail fin flat at the small
+of it; a long pool cue (thin, no shadow). Attacks: **break shot** (bends over a bridge hand with the cue level, draws back and jabs:
+`move: 1.5`), **cue sweep** (cocks the cue over the shoulder like a bat, then a flat 180° swing), **belly flop** (crouch, a leap with the
+arms spread, and a face-down flop with the head turned: the splash ring). In the knock-down and the flop the cue lies back along the
+arm, which keeps him inside the 2.6 culling sphere.
