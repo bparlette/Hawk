@@ -98,7 +98,7 @@ class ABChunks { // P, N and colour (3 or 4 components) per cell of `cell` metre
 // FAR STAND-INS (one InstancedMesh each = 1 draw call city-wide): a parked car is a 2-box body + cabin in its paint colour and a lamp is a
 //   post + head while their cell is not near; an instance is hidden (scale 0) once its cell turns near.
 // Glow (night only) stays ONE city-wide mesh.
-Object.assign(AB, { CELL: 32, NEAR: 20, HYST: 6, MASS_MIN: 2.0, MASS_TRI: 12, DECAL_MIN: 0.5, FINE_OFF: 0.006 });
+Object.assign(AB, { DBG: Q.get('abdbg') || '', CELL: 32, NEAR: 20, HYST: 6, MASS_MIN: 2.0, MASS_D2: 0.4, MASS_TRI: 12, DECAL_MIN: 0.5, FINE_OFF: 0.006 });
 const AB_GLW = new ABChunks(false), AB_GLS = new ABChunks(true), AB_OLK = new ABChunks(false, 64); // glow + car glass: one city-wide mesh each; hulls: 64 m cells (near only)
 AB.stats.t = { mass: 0, massD: 0, tiled: 0, nearS: 0, nearD: 0 };
 const AB_CELLS = new Map(); // key -> { key, x0, z0, S: MB (near solids), D: MB (near decals), meshes: [], prox: [], near }
@@ -111,22 +111,22 @@ function abCityOut() {
   const o = {
     fine: false, // set by the kit's cells() while it emits individual facade cells
     solid(g, col, ol = true) {
-      g.computeBoundingBox(); const b = g.boundingBox, s = Math.max(b.max.x - b.min.x, b.max.y - b.min.y, b.max.z - b.min.z);
+      g.computeBoundingBox(); const b = g.boundingBox, ds = [b.max.x - b.min.x, b.max.y - b.min.y, b.max.z - b.min.z].sort((p, q) => q - p), s = ds[0];
       if (abTrack) { abTrack.box.union(b); const n = triN(g); if (n > abTrack.n && s >= 0.9) { abTrack.n = n; abTrack.col = col; } }
-      const mass = !AB.ctx && s >= AB.MASS_MIN && triN(g) <= AB.MASS_TRI;
+      const mass = !AB.ctx && s >= AB.MASS_MIN && ds[1] >= AB.MASS_D2 && triN(g) <= AB.MASS_TRI; // slabs + walls, not sticks (pipes, rails, thin trim)
       if (ol && AB.HULL && s >= AB.HULL_MIN) AB_OLK.add(g, '#000');
-      const st = AB.stats.t; if (mass) { CB.geom(g, col); st.mass += triN(g); } else { const [cx, cz] = abCtr(g); abCellAt(cx, cz).S.geom(g, col); st.nearS += triN(g); }
+      const st = AB.stats.t; if (mass) { if (AB.DBG !== 'nomass') CB.geom(g, col); st.mass += triN(g); } else { const [cx, cz] = abCtr(g), c = abCellAt(cx, cz); (s >= 0.9 ? c.S : c.D).geom(g, col); st.nearS += triN(g); } // >= 0.9 m casts (as before: big -> CB, small -> GB); small parts ride the near decal mesh (same toon + atlas shading, white tile) to save a draw call
     },
     decal(g, atlas, name) { const r = atlas.rect(name); if (!r) throw new Error('no tile ' + name);
       g.computeBoundingBox(); const b = g.boundingBox, e = [b.max.x - b.min.x, b.max.y - b.min.y, b.max.z - b.min.z].sort((p, q) => q - p);
-      if (!o.fine && !AB.ctx && e[0] * e[1] >= AB.DECAL_MIN) { DB.geom(g, '#fff', r); AB.stats.t.massD += 2; return; }
+      if (!o.fine && !AB.ctx && e[0] * e[1] >= AB.DECAL_MIN) { if (AB.DBG !== 'nomass') DB.geom(g, '#fff', r); AB.stats.t.massD += 2; return; }
       if (o.fine) { const n = g.attributes.normal; g.translate(n.getX(0) * AB.FINE_OFF, n.getY(0) * AB.FINE_OFF, n.getZ(0) * AB.FINE_OFF); }
       const [cx, cz] = abCtr(g); abCellAt(cx, cz).D.geom(g, '#fff', r); AB.stats.t.nearD += triN(g);
     },
     tiled(g, atlas, name, nx, ny) { // a whole facade run as one quad repeating one tile (mass)
       const r = atlas.rect(name); if (!r) throw new Error('no tile ' + name); g = g.index ? g.toNonIndexed() : g;
       const p = g.attributes.position, n = g.attributes.normal, uv = g.attributes.uv, c = new THREE.Color('#fff'), m = DB.at((p.getX(0) + p.getX(5)) / 2, (p.getZ(0) + p.getZ(5)) / 2);
-      AB.stats.t.tiled += p.count / 3; for (let i = 0; i < p.count; i++) m.vert([p.getX(i), p.getY(i), p.getZ(i)], [n.getX(i), n.getY(i), n.getZ(i)], [uv.getX(i) * nx, uv.getY(i) * ny], c, r);
+      AB.stats.t.tiled += p.count / 3; if (AB.DBG === 'nomass') return; for (let i = 0; i < p.count; i++) m.vert([p.getX(i), p.getY(i), p.getZ(i)], [n.getX(i), n.getY(i), n.getZ(i)], [uv.getX(i) * nx, uv.getY(i) * ny], c, r);
     },
     glow(g, col) { AB_GLW.add(g, col); },
     glass(g) { AB_GLS.add(g, null); },
@@ -202,8 +202,8 @@ function abBuildLayers() { // after the city chunks: near cells (solids, decals,
   AB_GLASS_MAT.forceSinglePass = true; const s = AB_GLS.build(AB_GLASS_MAT, { order: 3 }); scene.add(s); // one pass (a double-sided transparent is otherwise drawn twice)
   const h = AB_OLK.build(OUT_CITY, { odir: true }); for (const m of h.userData.meshes) { m.visible = false; m.userData.abHull = true; } scene.add(h); // not in QUAL.outlines: abLodTick shows them (near cells, HD only)
   const grp = new THREE.Group(); scene.add(grp); let nearTris = 0;
-  for (const c of AB_CELLS.values()) { // near cells receive shadows but cast none (the far stand-ins cast the cars' and lamps' shadows, see below)
-    if (c.S.P.length) { const m = c.S.build(CITY_MAT); m.castShadow = false; m.receiveShadow = true; c.meshes.push(m); }
+  for (const c of AB_CELLS.values()) { // near solids >= 0.9 m cast (stoop steps, car bodies, lamp shafts), smaller ones only receive; only near cells in the 48 m sun box reach the shadow pass
+    if (c.S.P.length) { const m = c.S.build(CITY_MAT); m.castShadow = m.receiveShadow = true; c.meshes.push(m); }
     if (c.D.P.length) { const m = c.D.build(DECAL_MAT); m.receiveShadow = true; c.meshes.push(m); }
     c.S = c.D = null;
     for (const m of c.meshes) { grp.add(m); m.visible = false; nearTris += m.geometry.attributes.position.count / 3; }
@@ -215,15 +215,12 @@ function abBuildLayers() { // after the city chunks: near cells (solids, decals,
     if (skip) { const drop = skip.split(' ').map((k) => SK[k]), src = b.index.array, keep = []; for (let f = 0; f < 6; f++) if (!drop.includes(f)) for (let i = 0; i < 6; i++) keep.push(src[f * 6 + i]); b.setIndex(keep); }
     b.translate((x0 + x1) / 2, (y0 + y1) / 2, (z0 + z1) / 2); bakeColor(b, c); return b.toNonIndexed(); }));
   const carG = unit([[-0.5, 0.16, -0.5, 0.5, 0.56, 0.5, '#ffffff', 'ny'], [-0.42, 0.56, -0.26, 0.42, 1.0, 0.2, '#3a3f46', 'ny'], [-0.46, 0.0, -0.36, 0.46, 0.16, 0.36, '#151515', 'py ny']]);
-  // each stand-in list has two InstancedMeshes, refilled by abLodTick only when their contents change: the visible one holds the instances
-  // in far cells that are inside the view frustum and fog range, the shadow-only one (layer 1, which only the sun's shadow camera renders)
-  // the instances near the hero, so near cars and lamps keep their shadows while the detailed near meshes cast none
+  // the stand-in InstancedMesh is refilled by abLodTick only when its contents change: the instances in far cells inside the view frustum + fog
   const mkInst = (geo, list, setM) => { if (!list.length) return null; const mat = toonMat(), M = new THREE.Matrix4();
     const im = new THREE.InstancedMesh(geo, mat, list.length); im.receiveShadow = true; im.frustumCulled = false; im.count = 0; im.setColorAt(0, new THREE.Color()); scene.add(im);
     const sh = new THREE.InstancedMesh(geo, mat, list.length); sh.castShadow = true; sh.frustumCulled = false; sh.layers.set(1); sh.count = 0; scene.add(sh);
     for (const P of list) { setM(P, M); P.M = M.clone(); P.c = new THREE.Vector3(P.box.min.x + P.box.max.x, P.box.min.y + P.box.max.y, P.box.min.z + P.box.max.z).multiplyScalar(0.5); P.r = P.box.max.distanceTo(P.box.min) / 2; P.C = new THREE.Color(P.col); }
-    return { im, sh, list, vis: '', shv: '' }; };
-  sun.shadow.camera.layers.enable(1);
+    return { im, list, vis: '' }; };
   const q = new THREE.Quaternion(), up = new THREE.Vector3(0, 1, 0), v = new THREE.Vector3(), sc = new THREE.Vector3();
   const cars = mkInst(carG, AB_PROX.car, (P, M) => { const b = P.box, sx = b.max.x - b.min.x, sz = b.max.z - b.min.z, alongX = sx > sz;
     q.setFromAxisAngle(up, alongX ? Math.PI / 2 : 0); M.compose(v.set((b.min.x + b.max.x) / 2, b.min.y, (b.min.z + b.max.z) / 2), q, sc.set(alongX ? sz : sx, b.max.y - b.min.y, alongX ? sx : sz)); });
@@ -232,15 +229,11 @@ function abBuildLayers() { // after the city chunks: near cells (solids, decals,
 }
 // per frame (scene.onBeforeRender, before the shadow pass): a cell is near while the camera is within AB.NEAR m (+AB.HYST to leave) of its square
 const AB_FR = new THREE.Frustum(), AB_M4 = new THREE.Matrix4(), AB_SPH = new THREE.Sphere();
-function abFillInst(S, cam) { // refill the visible + shadow stand-in instances (only re-uploaded when the set changed)
-  if (!S) return; const px = cam.position.x, pz = cam.position.z, fogF = (scene.fog ? scene.fog.far : 150) + 6, hx = sun.target.position.x, hz = sun.target.position.z, R2 = (SHR + 8) ** 2;
-  const vis = [], shv = [];
-  S.list.forEach((P, i) => {
-    if ((P.c.x - hx) ** 2 + (P.c.z - hz) ** 2 < R2) shv.push(i);
-    if (P.cell.near || Math.hypot(P.c.x - px, P.c.z - pz) > fogF) return; AB_SPH.set(P.c, P.r); if (AB_FR.intersectsSphere(AB_SPH)) vis.push(i); });
-  const kv = vis.join(','), ks = shv.join(',');
-  if (kv !== S.vis) { S.vis = kv; vis.forEach((i, k) => { S.im.setMatrixAt(k, S.list[i].M); S.im.setColorAt(k, S.list[i].C); }); S.im.count = vis.length; S.im.instanceMatrix.needsUpdate = true; S.im.instanceColor.needsUpdate = true; }
-  if (ks !== S.shv) { S.shv = ks; shv.forEach((i, k) => S.sh.setMatrixAt(k, S.list[i].M)); S.sh.count = shv.length; S.sh.instanceMatrix.needsUpdate = true; }
+function abFillInst(S, cam) { // refill the visible stand-in instances (only re-uploaded when the set changed)
+  if (!S) return; const px = cam.position.x, pz = cam.position.z, fogF = (scene.fog ? scene.fog.far : 150) + 6, vis = [];
+  S.list.forEach((P, i) => { if (P.cell.near || Math.hypot(P.c.x - px, P.c.z - pz) > fogF) return; AB_SPH.set(P.c, P.r); if (AB_FR.intersectsSphere(AB_SPH)) vis.push(i); });
+  const kv = vis.join(','); if (kv === S.vis) return; S.vis = kv;
+  vis.forEach((i, k) => { S.im.setMatrixAt(k, S.list[i].M); S.im.setColorAt(k, S.list[i].C); }); S.im.count = vis.length; S.im.visible = vis.length > 0; S.im.instanceMatrix.needsUpdate = true; S.im.instanceColor.needsUpdate = true;
 }
 function abLodTick(cam) {
   if (!AB.layers) return; const L = AB.layers, px = cam.position.x, pz = cam.position.z, force = Q.get('abnear'); 
@@ -252,5 +245,6 @@ function abLodTick(cam) {
   }
   for (const c of AB.hullCells) { const dx = Math.max(c.x0 - px, 0, px - c.x0 - 64), dz = Math.max(c.z0 - pz, 0, pz - c.z0 - 64), d = Math.hypot(dx, dz);
     const n = force === '1' ? true : force === '0' ? false : (c.near ? d < AB.NEAR + AB.HYST : d < AB.NEAR); c.near = n; c.m.visible = n && QUAL.hd; }
+  let anyCar = false; for (const c of AB_CELLS.values()) if (c.near && c.prox.length) { anyCar = true; break; } L.glass.visible = anyCar; // car glass only matters while some car is near (far cars are stand-ins)
   AB_FR.setFromProjectionMatrix(AB_M4.multiplyMatrices(cam.projectionMatrix, cam.matrixWorldInverse)); abFillInst(L.cars, cam);
 }
