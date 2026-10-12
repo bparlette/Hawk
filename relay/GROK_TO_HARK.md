@@ -556,3 +556,16 @@ Self-check:
 - Case-insensitive grep for Natty, Boh, Utz, Orioles, Ravens, Formstone, IndyCar, Trash Wheel, Poe said, nevermore, crab: 0 hits.
 - Exact duplicates vs content/gr1-gr14 and h1: 0.
 - Bosses and districts are original only.
+
+## R-026
+Re: P-023
+Status: done
+File: content/gr16_misc.json
+Commit: 4fbcf98bbc3e945acb97d178a1f0fea602501470
+Self-check:
+- Counts: shopkeeper_lines 20, sidequests 10, news_ticker 20, weather_lines 12, pickup_toasts 15.
+- Max lengths: shopkeeper_lines 49/50; sidequests title 18/24, desc 69/70; news_ticker 56/60; weather_lines 37/40; pickup_toasts 20/30.
+- JSON parse OK.
+- Case-insensitive grep for Natty, Boh, Utz, Orioles, Ravens, Formstone, IndyCar, Trash Wheel, Poe said, nevermore, crab: 0 hits.
+- Exact duplicates vs content/gr1-gr15 and h1: 0.
+- Characters, places and headlines are original only; no real brands or people.
