@@ -1,0 +1,83 @@
+{
+  "street_vendor_cries": [
+    "Hot pretzels! Twisted fresh, salted heavy!",
+    "Lemon ice, hon! Coldest cup on the block!",
+    "Snowballs! Marshmallow on top, no extra!",
+    "Fresh peaches off the truck, two for one!",
+    "Sunglasses! Look cool, pay less, hon!",
+    "Roasted peanuts, still warm in the bag!",
+    "Batteries, chargers, cables, I got it all!",
+    "Umbrellas! Five bucks before it pours!",
+    "Hot dogs, half smokes, mustard's free!",
+    "Fresh flowers for your mother, sweetheart!",
+    "Cold water! Cold soda! Cold everything!",
+    "Funnel cake, powdered sugar on the house!",
+    "Watermelon slices, sweet as a Sunday!",
+    "Corn on the cob, butter dripping, step up!",
+    "Phone cases! Sturdy enough for a bus fall!"
+  ],
+  "tunnel_traffic_lines": [
+    "Tunnel lights flicker. Radio goes to static.",
+    "Brake lights stretch all the way to the toll.",
+    "Somebody honks. The whole tunnel answers back.",
+    "Lane closed ahead. Merge like you mean it.",
+    "No changing lanes in the tube, pal. Sit tight.",
+    "Exhaust fans roar overhead like a jet engine.",
+    "Toll plaza ahead. Hope you saved your change.",
+    "Daylight at the end. Floor it, gently.",
+    "Under the harbor now. Try not to think about it.",
+    "Stalled van, right lane. Of course it is.",
+    "Tunnel echo makes your engine sound tougher.",
+    "Out of the tube and straight into a jam."
+  ],
+  "taxi_passenger_lines": [
+    "Take the long way. I'm not in a hurry.",
+    "Was that light red? Asking for my nerves.",
+    "Just drop me by the corner store, hon.",
+    "Can you turn the radio up? That's my song.",
+    "I'm late! Drive like rent depends on it!",
+    "You missed the turn. And the next one.",
+    "Is it always this bumpy, or just you?",
+    "Five stars if we survive this, deal?",
+    "My cousin drives too. Way slower than you.",
+    "Pull over here. No, here. No, back there.",
+    "Keep the change. Buy some brake pads.",
+    "Smooth ride. Mostly. Okay, kind of."
+  ],
+  "arcade_cabinet_titles": [
+    "Harbor Hustle Turbo",
+    "Rowhouse Rumble II",
+    "Pigeon Patrol Deluxe",
+    "Snowball Strike Force",
+    "Pier Pressure",
+    "Tugboat Thunder",
+    "Alley Cat Ace",
+    "Neon Stoop Kings",
+    "Brick City Blaster",
+    "Water Taxi Wipeout"
+  ],
+  "rainy_day_ambient_lines": [
+    "Rain drums on the rowhouse awnings.",
+    "Gutters gurgle. The whole street smells wet.",
+    "Puddles swallow the neon signs whole.",
+    "Somebody's steps are a waterfall now.",
+    "Pigeons huddle under the bus shelter.",
+    "Wipers squeak. Traffic crawls. Thunder too.",
+    "A newspaper hat floats by in the gutter.",
+    "Harbor's gray as dishwater today.",
+    "Umbrellas bloom all down the avenue.",
+    "Storm drains sing a low, gargling tune."
+  ],
+  "game_over_screen_quips": [
+    "Well, that went south fast, hon.",
+    "The block will remember this. Fondly.",
+    "Dust off. Try again. Stoop's waiting.",
+    "Even the pigeons looked away.",
+    "Game over. Snowball's on us.",
+    "You had 'em. Then you didn't.",
+    "Insert one more try, champ.",
+    "That's a rough one. Shake it off.",
+    "The harbor saw that. Embarrassing.",
+    "Back to the corner. Rethink everything."
+  ]
+}
