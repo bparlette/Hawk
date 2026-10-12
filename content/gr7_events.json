@@ -1,0 +1,143 @@
+{
+  "_round": "GR7",
+  "grand_prix_announcer": {
+    "pre": [
+      "Welcome to the Harbor Grand Prix, live from Pratt Street!",
+      "Engines warming up, and the stoops are packed three deep!",
+      "On the grid: one grandpa toad and a field of very nervous drivers.",
+      "Hairpin by the Convention Center is gonna eat somebody's tires.",
+      "Mavis is in the pit lane with a thermos and a stern look.",
+      "Lights are coming on... and they're GONE!"
+    ],
+    "mid": [
+      "Down the straight past the ballpark, flat out!",
+      "Harold dives inside! Bold move for a toad with a cane!",
+      "Side by side through the harbor turn, nobody's lifting!",
+      "Sparks off the curb! That car's held together with hope!",
+      "Into the hairpin, brakes glowing like crab-pot coals!",
+      "A slipstream pass on Pratt! The crowd's on its feet!",
+      "Halfway done, and the lead has changed four times!",
+      "Water taxi horns blasting from the harbor! They love it!"
+    ],
+    "crash": [
+      "OH! Into the barriers! He's okay, the car is not!",
+      "Spin at the hairpin! Somebody tell him which way is forward!",
+      "Tire's gone! That wheel is headed for the harbor!",
+      "Big bump! A traffic cone just flew over the grandstand!"
+    ],
+    "finish": [
+      "Final lap! The whole harbor is holding its breath!",
+      "Out of the last corner, pedal to the floor!",
+      "CHECKERED FLAG! Harold the toad wins the Grand Prix!",
+      "Mavis is waving her purse! Somebody get that toad a trophy!",
+      "What a race! Pratt Street will be talking about this for years!",
+      "Close one! Second place, but the crowd still loves him!"
+    ]
+  },
+  "poe_night": [
+    "The fog rolls in off the harbor, and the old graveyard goes quiet.",
+    "Lamplight flickers over stones older than anyone in the city.",
+    "Somewhere behind the church wall, a black bird shuffles its feathers.",
+    "They say on cold nights a poet still walks these narrow paths.",
+    "Footsteps on the gravel. Harold stops. The footsteps stop too.",
+    "A raven's shadow crosses the moon and lands on a crooked cross.",
+    "Under the church, the old catacombs breathe out a chill.",
+    "Someone left a rose here last year. It hasn't wilted.",
+    "The wind spells out a name in the dry leaves. Then forgets it.",
+    "A heartbeat? No. Just Harold's cane tapping the stone. Right?",
+    "Every gravestone leans a little closer when you're not looking.",
+    "The bell tower creaks midnight, though the bell has been gone for years.",
+    "Three roses, one bottle, one toad. The old tradition holds.",
+    "Dawn comes gray over Westminster, and the shadows slip back underground."
+  ],
+  "poe_hud": [
+    "STAY IN THE SHADOWS",
+    "ROSE PLACED 1/3",
+    "ROSE PLACED 2/3",
+    "ROSE PLACED 3/3",
+    "BOTTLE LEFT",
+    "TRIBUTE COMPLETE"
+  ],
+  "fishing": {
+    "catch": [
+      "Striped bass! A fine harbor fish, about 18 inches.",
+      "White perch! Small but feisty. Into the bucket.",
+      "Blue crab on the line! Careful, he's grabbing back.",
+      "Catfish! Whiskers and all. He looks unimpressed.",
+      "Spot! Little fella, big appetite.",
+      "An eel! Slippery, wiggly, and very annoyed.",
+      "Croaker! He's croaking louder than Harold."
+    ],
+    "rare": [
+      "RARE! A golden blue crab with a tiny crown!",
+      "RARE! A sturgeon, older than the Constellation!",
+      "RARE! The legendary harbor eel nobody believes in!"
+    ],
+    "chompy_taunts": [
+      "Chompy: Those are MY crabs, toad. Hands off!",
+      "Chompy: Clack clack! Come closer, I dare you.",
+      "Chompy: I've snapped bigger canes than yours.",
+      "Chompy: This pier's mine. Fish somewhere else!",
+      "Chompy: You hook me? Ha! I'll hook YOU.",
+      "Chompy: Bring your seasoning, old timer. Not for me!"
+    ]
+  },
+  "fishing_hud": [
+    "CAST!",
+    "BITE! REEL IN!",
+    "LINE TENSION HIGH!",
+    "GOT ONE!",
+    "IT GOT AWAY!",
+    "RARE CATCH!"
+  ],
+  "lexington_market": {
+    "stall_signs": [
+      "AUNT DOT'S CODDIE COUNTER",
+      "BIG LOU'S PIT BEEF PIT",
+      "HARBOR CATCH SEAFOOD",
+      "SWEET SUSIE'S COOKIE TOWER",
+      "LAKE TROUT LANE",
+      "PICKLE BARREL PETE'S",
+      "THE CRAB CAKE CORNER",
+      "GRANDMA ROSE'S LEMON STICKS",
+      "FRESH SQUEEZED BY FREDDIE",
+      "STOOP-SIDE SANDWICH SHOP",
+      "MARKET MUFFIN MAN",
+      "THE OYSTER SHUCKERY"
+    ],
+    "hawker_lines": [
+      "Crab cakes! All lump, no filler, hon!",
+      "Pit beef sliced thin, piled high! Step right up!",
+      "Coddies! Two for a dollar, three if you smile!",
+      "Fresh lake trout, fried up hot! Don't ask what kind of trout!",
+      "Cookies the size of your hat, sweetie!",
+      "Lemon sticks! Peppermint in a lemon, trust me!",
+      "Oysters on the half shell, shucked while you wait!",
+      "Pickles! Sour, half sour, or so sour you'll whistle!",
+      "Hey Harold! Your usual? Extra horseradish?",
+      "Market's open, folks! Come hungry, leave happy!"
+    ]
+  },
+  "celebration_crowd": [
+    "The block is ours again!",
+    "Bang those pots, everybody!",
+    "Three cheers for Harold!",
+    "And Mavis! Don't forget Mavis!",
+    "I can sit on my stoop again, hon!",
+    "Somebody fire up the grill!",
+    "That toad's a hero!",
+    "Crime meter's at zero, baby!",
+    "Kids, you can play outside again!",
+    "Best day this street's had in years!",
+    "Harold! Harold! Harold!",
+    "Get that toad a crab cake!",
+    "I knew he could do it!",
+    "Neighborhood's back, y'all!",
+    "Turn up the radio!",
+    "Let's hear it for the old folks!",
+    "Mavis, you married a legend!",
+    "Bring out the lawn chairs!",
+    "That cane's legendary now!",
+    "Who's next? He's on a roll!"
+  ]
+}
