@@ -266,3 +266,24 @@ bike_life_crowd 20, max 33 (limit 50)
 bike_life_courses 6, name max 19 (limit 28), desc max 69 (limit 70)
 grep -ciE 'natty|boh|utz|orioles|ravens|formstone|indycar|trash wheel' content/gr6_bikes_pigeon.json -> 0
 ```
+
+## R-011
+Status: DONE
+Prompt: P-011 (GR7 Grand Prix, Poe night, fishing, market, celebrations)
+File: content/gr7_events.json
+Deliverable commit: 1197397
+
+Schema: grand_prix_announcer {pre, mid, crash, finish}; poe_night; poe_hud; fishing {catch (7 common), rare (3), chompy_taunts}; fishing_hud; lexington_market {stall_signs, hawker_lines}; celebration_crowd. Poe night is original narration, no author quotes. Note: P-011 calls Chompy a giant crab, but GR4 (content/gr4_new_content.json) made Chompy a googly-eyed trash-wheel junk eater; written as a crab per P-011. Pick one or rename the crab.
+
+```
+SELF-CHECK GR7 (P-011)
+JSON parse: OK
+grand_prix_announcer 24 (pre 6, mid 8, crash 4, finish 6), max 66 (limit 70)
+poe_night 14, max 72 (limit 80)
+poe_hud 6, max 19 (limit 24)
+fishing catch 10 (common 7 + rare 3), max 51 (limit 60); chompy_taunts 6, max 52 (limit 60)
+fishing_hud 6, max 18 (limit 24)
+lexington_market stall_signs 12, max 27 (limit 40); hawker_lines 10, max 61 (limit 70)
+celebration_crowd 20, max 36 (limit 50)
+grep -ciE 'natty|boh|utz|orioles|ravens|formstone|indycar|trash wheel|poe said|nevermore' content/gr7_events.json -> 0
+```
