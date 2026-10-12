@@ -331,3 +331,38 @@ crowd_lines 12, max 42 (limit 50)
 exact duplicates vs GR5: 0
 grep -ciE 'natty|boh|utz|orioles|ravens|formstone|indycar|trash wheel|poe said|nevermore|crab' content/gr9_world.json -> 0
 ```
+
+## R-014
+Re: J-005 (O8), standing in for Opus. Rig: **Fells Point Phantoms gang** (`src/gang_phantoms.js`). Pete, Carl and Rodney were already on `claude/o8-new-content` (3a7f3ac, fe107e7, 05d3361), so Phantoms was the first missing one. Opus can skip it.
+Branch: `grok/opus-standin` (branched from `claude/o8-new-content` 05d3361; Opus's branches untouched). Commit: 66a546a9d5f91ba4dc571e331434a530995af115
+Interface: the O1–O4 gang interface: `GANG`, `META`, `buildPhantom(K, member, { lod, seed, solid })`, `animateGang(J, t, state)`, plus the exported `PHANTOM_C` palette (glow #7fe8d0, coat #2b3a5c, bone #e8e4d6, gold #b8963e, rope #6a5a44), so O7 Cobblestone can import or match it. Members: `deckhand_dread` (grunt, ×1.0), `bosun_bones` (bruiser, ×1.2), `powder_monkey` (small ×0.8, spectral bomb on `swR`; the gang `attack` is the throw).
+Ghost/solid: one toon material per rig (Q-h). Ghost mode: transparent, opacity 0.5, depthWrite on, ink hulls hidden. `J.setSolid(true)` / `opts.solid`: opaque, hulls shown. It rescans the root on every call, so it also works after the real mergeRig (tested: ghost → solid → mergeRig → ghost).
+Hover (Q-i): `d.hip` = 0.9 + 0.15, so every THUG pose floats 0.15 m. Legs end in glowing wisps, with no feet.
+Measured with Hark's `harness/measure_gang.mjs`, unchanged (starter kit and realGame give the same numbers). Output is in `tools/results_gang_phantoms.json`:
+| member | parts | tris | hulls | lowest pose minY | merged draw calls |
+|---|---|---|---|---|---|
+| deckhand_dread | 21 | 6,780 | 19 | 0.016 (down) | 2 |
+| bosun_bones | 23 | 6,212 | 21 | 0.003 (down) | 2 |
+| powder_monkey | 21 | 6,304 | 18 | 0.013 (down) | 2 |
+| LOD1 | 16 / 16 / 17 | 5,388 / 5,048 / 5,444 | | | 2 |
+Everything is under the ≤ 36 parts / ≤ 10,800 tris gang budget. No under-ground parts, flashBad 0, badHull 0, determinism all true. Build time in Node is 8–37 ms (first build is cold).
+Not sure about:
+- I didn't render the 390×844 phone previews or the merged night shots. I have no headless Chrome run for this branch yet, so there are no PNGs, just the harness numbers.
+- `GANG.district = ['fells']` is a guess at the game's district id.
+- LOD1 has 16–17 parts. The otters kept theirs at ≤ 12.
+- The emissive glow is a fixed 0.18 × glow colour, not tied to K.NIGHT.
+- `down` lies on the ground (the hover doesn't apply to a fallen ghost).
+
+## R-015
+Re: J-005 (O8), standing in for Opus. Rig: **Chompy** (`src/npc_chompy.js`), the last O8 model. Opus can skip it.
+Branch: `grok/opus-standin`. Commit: f6aeda2e3e399f09e6b1fd53a072b60406e6a6e8
+Interface (Q-j): `META`, `buildChompy(K, opts)` → `{ root, J, META, setState('idle'|'chomp'|'happy'), update(dt) }`, plus `J.pose(name, u)` for any state at phase u. `chomp` and `happy` play once, then return to idle. The root is at pier-top level and the body floats from y = -0.85, facing +z.
+Design (HOMAGE, original on purpose): a squat rust-orange tug-barge on twin grey pontoons with a striped awning. It has a teal mill paddle wheel mounted sideways on the port bow, a hinged hopper mouth with a jaw and teeth, and googly eyes on two bendy periscope stalks. It has no roof eyes, no grey/blue shed, no conveyor face and no text.
+Measured headless on realK plus the real mergeRig (`tools/measure_chompy.mjs` → `tools/results_npc_chompy.json`):
+- 30 parts, 3,220 tris, 26 hulls, 1 material, 2 draw calls after mergeRig.
+- Median build is 4.3 ms over 20 builds.
+- All 3 states were run at 8 phases each with no errors. minY is about -1.11: the pontoons sit about 0.25 m under the water line, which is intended draft. maxY is 1.64 above the root.
+Not sure about:
+- After mergeRig the jaw, wheel, stalks and eyes still animate, because they are bone groups. But the `junk` piece's per-mesh visible toggle won't survive the merge, so the junk will always show on a merged rig. Fix it by keeping Chompy unmerged (2 draw calls vs 30), or by moving the junk to its own group and scaling it to 0.
+- I didn't render the 390×844 previews.
+- The night glow on the eyes (opts.glow) isn't implemented.
