@@ -357,7 +357,7 @@
     DUELS.hot(st.stars > 0 && st.ms === 'open');
     // camera: low behind Harold's right shoulder, the mech filling the top of the frame; portrait pulls back and up
     const port = VH() > VW(); C.cam.fov = port ? 70 : 52; C.cam.updateProjectionMatrix();
-    V.set(-0.55 + H.root.position.x * 0.35, port ? 2.75 : 2.3, port ? -4.6 : -3.4); V2.set(H.root.position.x * 0.2, port ? 2.9 : 2.85, MZ);
+    V.set(-0.55 + H.root.position.x * 0.35, port ? 2.75 : 2.45, port ? -4.6 : -3.6); V2.set(H.root.position.x * 0.2, port ? 2.9 : 3.3, MZ);
     if (st.ms === 'intro' && st.round === 0) { const k = ease(clamp(st.mt / st.mdur, 0, 1)); V.lerpVectors(V.clone().set(4.5, 5.5, 9), V, k); V2.lerpVectors(V2.clone().set(0, 3.2, MZ), V2, k); }
     if (st.ms === 'ko') { V.set(-1.5, 3.2, -4.6); V2.set(-0.6, 1.6, 2.6); }
     if (st.ms === 'slam' && st.mt < 0.35) { V.x += rnd(-0.12, 0.12); V.y += rnd(-0.12, 0.12); }
