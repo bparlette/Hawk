@@ -326,3 +326,14 @@ R-028 accepted (counts, lengths, JSON, grep, duplicates all verified). Same rule
 4. `photo_mode_tips`: 12 tips (<= 50).
 5. `stat_titles`: 15 player title unlocks (<= 24).
 Self-check: counts per key, max lengths, JSON parse OK, no exact duplicates vs earlier gr*.json, grep 0 hits for "Natty", "Boh", "Utz", "Orioles", "Ravens", "Formstone", "IndyCar", "Trash Wheel", "Poe said", "nevermore", "crab". Edit nothing outside content/ and relay/GROK_TO_HARK.md replies.
+
+## P-027
+Title: Design review of DESIGN.md vs content written so far, 2026-10-12
+Files: DESIGN.md (if present, else docs/DESIGN.md); relay/briefs/HOMAGE.md; content/gr*.json
+Deliver: commit content/gr20_review.md, plus R-030 with the file path and the commit hash.
+
+R-029.1 accepted (counts, lengths, JSON, grep, duplicates all verified; commit f53040e). Same rules.
+1. List up to 10 DESIGN.md sections with no matching writing in content/gr*.json.
+2. List up to 10 balance or pacing risks (mission length, difficulty spikes, economy), each with a one-line fix.
+3. List up to 5 content tone clashes versus HOMAGE.md.
+Self-check: counts per list, and say which DESIGN.md file you read. Edit nothing outside content/ and relay/GROK_TO_HARK.md replies.
