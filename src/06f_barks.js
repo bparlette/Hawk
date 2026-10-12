@@ -80,17 +80,19 @@ const BARK = (function () {
     const bp = L.boss.at || L.boss; show('boss', line, L.boss.id, bp.pos ? { e: bp } : { x: L.boss.x, y: (L.boss.y || CURB) + 2.4, z: L.boss.z }, L.boss.name.toUpperCase()); return line;
   }
 
-  let rect = null, rectT = 0;
+  let rect = null, rectT = 0, lbBot = 0;
   function place() {
     const c = B.cur; if (!c) return;
     let x, y, z; if (c.at.e) { const e = c.at.e; x = e.pos.x; z = e.pos.z; y = e.pos.y + (e.y || 0) + (c.kind === 'ko' || e.state === 'down' || e.state === 'dying' ? 1.1 : 2.25 * (e.scale || 1)); } else ({ x, y, z } = c.at);
     _p.set(x, y, z).project(camera);
-    if (!rect || rectT <= 0) { rect = renderer.domElement.getBoundingClientRect(); rectT = 0.5; }
+    if (!rect || rectT <= 0) { rect = renderer.domElement.getBoundingClientRect(); rectT = 0.5; lbBot = lb.classList.contains('on') ? lb.getBoundingClientRect().bottom : 0; }
     const behind = _p.z > 1; el.style.visibility = behind ? 'hidden' : 'visible'; if (behind) return;
     const w = el.offsetWidth || 150, h = el.offsetHeight || 40, m = 6;
     let sx = rect.left + (_p.x * 0.5 + 0.5) * rect.width, sy = rect.top + (-_p.y * 0.5 + 0.5) * rect.height - 8;
-    const top0 = rect.top + (document.body.classList.contains('radio') ? 40 : 6) + h; // keep clear of the radio bar
-    const cx = Math.min(Math.max(sx, rect.left + w / 2 + m), rect.right - w / 2 - m), cy = Math.min(Math.max(sy, top0), rect.bottom - m - 10);
+    const top0 = Math.max(rect.top + (document.body.classList.contains('radio') ? 40 : 6), lbBot ? lbBot + 14 : 0) + h; // keep clear of the radio bar + the landmark blurb card
+    const cx = Math.min(Math.max(sx, rect.left + w / 2 + m), rect.right - w / 2 - m); let cy = Math.min(Math.max(sy, top0), rect.bottom - m - 10);
+    if (PRM.cur) { const r = PRM.el.getBoundingClientRect(); // never cover the ACT / FINISH prompt (it usually floats over the same dizzy thug): hop above it, else below it
+      if (r.width && cx - w / 2 < r.right && cx + w / 2 > r.left && cy > r.top - 4 && cy - h < r.bottom + 4) cy = r.top - 8 >= top0 ? r.top - 8 : Math.min(r.bottom + h + 14, rect.bottom - m - 10); }
     el.style.left = cx.toFixed(1) + 'px'; el.style.top = cy.toFixed(1) + 'px';
     el.style.setProperty('--tx', Math.min(Math.max(50 + (sx - cx) / w * 100, 14), 86).toFixed(1) + '%'); // tail points at the speaker
   }
@@ -116,9 +118,9 @@ const BARK = (function () {
   // ---- landmark blurbs: shown under the name popup; returns how long the popup should stay up
   function lmBlurb(L) {
     const w = L && GR1.landmarks[L.id];
-    if (!w) { lb.classList.remove('on'); return 0; }
+    if (!w) { lb.classList.remove('on'); rectT = 0; lbBot = 0; return 0; }
     lb.innerHTML = w.blurb.map((s, i) => (i ? '<i>' : '<span>') + s.replace(/[&<>]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;' }[c])) + (i ? '</i>' : '</span>')).join('');
-    lb.classList.add('on'); B.lmk = L.id; B.lmkN = (B.lmkN || 0) + 1; return 6.5;
+    lb.classList.add('on'); rectT = 0; B.lmk = L.id; B.lmkN = (B.lmkN || 0) + 1; return 6.5;
   }
   const api = { B, tick, bark, show, hide, bossSay, bossIntro: (id) => bossSay(id, 'intro'), bossDefeat: (id) => bossSay(id, 'defeat'), lmBlurb, BOSSM, LMM, TURF,
     gangs: () => enemies.map((e) => e.gang), el, lb };

@@ -148,6 +148,7 @@ function frame(now) {
   try {
     let rdt = Math.min(0.05, (now - last) / 1000); last = now; frames++;
     FPS.n++; FPS.t += rdt; if (FPS.t > 1) { FPS.v = Math.round(FPS.n / FPS.t); FPS.n = 0; FPS.t = 0; }
+    if (FMAP.F.open) { FMAP.frame(rdt); return; } // full-screen map open: the game is paused (no sim, no 3D draw; the canvas keeps its last frame)
     if (window.__cel && __cel.pause) { draw(); return; }
     if (BOT) botThink(rdt);
     readInput(); gateInput();

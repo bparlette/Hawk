@@ -154,7 +154,7 @@ function readInput() {
     const b = (i) => !!(gp.buttons[i] && gp.buttons[i].pressed);
     if (b(4)) look -= 1; if (b(5)) look += 1;
     const prev = PAD_PREV[gp.index] || []; if (b(3)) IN.padAct = true;
-    if ((b(2) && !prev[2]) || (b(1) && !prev[1])) PRESS.add('j'); if (b(0) && !prev[0]) PRESS.add('k'); if (b(3) && !prev[3]) PRESS.add('e');
+    if ((b(2) && !prev[2]) || (b(1) && !prev[1])) PRESS.add('j'); if (b(0) && !prev[0]) PRESS.add('k'); if (b(3) && !prev[3]) PRESS.add('e'); if (b(8) && !prev[8]) FMAP.open('pad');
     if (gp.buttons.some((x) => x.pressed) || Math.abs(gp.axes[0] || 0) > 0.5) { DEV = 'pad'; if (CINE.intro && CINE.intro.t > 0.4) CINE.intro.skip = true; }
     PAD_PREV[gp.index] = gp.buttons.map((x) => x.pressed);
   }
