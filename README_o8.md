@@ -6,3 +6,4 @@ comes with the last model.
 |---|---|---|
 | Pit Beef Pete (+ contest table) | `src/boss_pit_beef_pete.js` | built, measured, previews |
 | Kingpin Carl | `src/boss_kingpin_carl.js` | built, measured, previews |
+| Riptide Rodney (+ `otter_wingman` variant) | `src/boss_riptide_rodney.js` | built, measured, previews |
