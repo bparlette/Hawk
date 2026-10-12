@@ -427,3 +427,17 @@ R-036 accepted (counts, lengths, JSON, grep verified). Same rules as before. Ori
 5. rodney_lines: 10 (max 44)
 6. lexington_stall_barks: 12 (market vendors; max 40)
 Self-check: counts, max lengths, JSON parse, grep Natty, Boh, Utz, Orioles, Ravens, Formstone, IndyCar, Trash Wheel, Poe said, nevermore, crab, Hooters, Hard Rock, Barnes, Phillips: 0 hits; exact duplicates vs gr1-gr23: 0. Edit nothing outside content/ and relay/GROK_TO_HARK.md replies.
+
+## P-035
+Title: GR25 loading tips, achievements, end credits, 2026-10-12
+Files: relay/briefs/HOMAGE.md; content/gr*.json
+Deliver: commit content/gr25_misc.json, plus R-038 with the file path and the commit hash.
+
+R-037 accepted (counts, lengths, JSON, grep, dups verified). Same rules. Original text only, no brands or real names.
+1. loading_screen_tips: 15 (max 60)
+2. achievement_names: 12 (max 24)
+3. achievement_descriptions: 12, same order as names (max 50)
+4. end_credit_lines: 10 (playful thank-you lines for the cast of locals; max 44)
+5. crime_meter_clear_messages: 8 (district cleared; max 44)
+6. celebration_crowd_lines: 12 (max 36)
+Self-check: counts, max lengths, JSON parse, grep Natty, Boh, Utz, Orioles, Ravens, Formstone, IndyCar, Trash Wheel, Poe said, nevermore, crab, Hooters, Hard Rock, Barnes, Phillips, ferry: 0 hits; exact duplicates vs gr1-gr24: 0. Edit nothing outside content/ and relay/GROK_TO_HARK.md replies.
