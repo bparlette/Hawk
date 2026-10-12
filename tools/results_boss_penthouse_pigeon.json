@@ -1,0 +1,407 @@
+{
+ "id": "penthouse_pigeon",
+ "meta": {
+  "id": "penthouse_pigeon",
+  "name": "The Penthouse Pigeon",
+  "district": "wtc",
+  "hp": 120,
+  "scale": 1.3,
+  "radius": 0.9,
+  "height": 2.3
+ },
+ "budgets": {
+  "zipKit": {
+   "parts": 39,
+   "tris": 7580,
+   "hulls": 31,
+   "hullTris": 6108,
+   "mats": 1,
+   "matKinds": [
+    "toon"
+   ],
+   "badHull": 0,
+   "flashBad": 0,
+   "shadowCasters": 27,
+   "shadowBad": [],
+   "drawCallsUnmerged": 70
+  },
+  "zipKit/lod1": {
+   "parts": 36,
+   "tris": 7116,
+   "hulls": 30,
+   "hullTris": 6096,
+   "mats": 1,
+   "matKinds": [
+    "toon"
+   ],
+   "badHull": 0,
+   "flashBad": 0,
+   "shadowCasters": 27,
+   "shadowBad": [],
+   "drawCallsUnmerged": 66
+  },
+  "realGame": {
+   "parts": 39,
+   "tris": 7580,
+   "hulls": 31,
+   "hullTris": 6108,
+   "mats": 1,
+   "matKinds": [
+    "toon"
+   ],
+   "badHull": 0,
+   "flashBad": 0,
+   "shadowCasters": 27,
+   "shadowBad": [],
+   "drawCallsUnmerged": 70
+  },
+  "realGame/lod1": {
+   "parts": 36,
+   "tris": 7116,
+   "hulls": 30,
+   "hullTris": 6096,
+   "mats": 1,
+   "matKinds": [
+    "toon"
+   ],
+   "badHull": 0,
+   "flashBad": 0,
+   "shadowCasters": 27,
+   "shadowBad": [],
+   "drawCallsUnmerged": 66
+  },
+  "limits": {
+   "parts": 63,
+   "tris": 19800
+  },
+  "pass": true
+ },
+ "idle0": {
+  "minY": -0.032,
+  "maxY": 2.392,
+  "height": 2.424,
+  "heightNoWeapon": 2.424,
+  "meta": 2.3,
+  "heightErrPct": 5.4,
+  "zMin": -0.803,
+  "zMax": 0.538,
+  "xMin": -0.703,
+  "xMax": 0.703
+ },
+ "reach": {
+  "idleMaxHoriz": 0.838,
+  "atT": 0,
+  "part": "tail",
+  "radius": 0.9,
+  "beyondRadius": -0.062,
+  "pass": true
+ },
+ "poses": {
+  "idle": {
+   "minY": 0.011,
+   "lowest": "knR",
+   "cullR": 1.036,
+   "gaps": {}
+  },
+  "idle_t1.1": {
+   "minY": 0.024,
+   "lowest": "knR",
+   "cullR": 1.027,
+   "gaps": {}
+  },
+  "run_0.3": {
+   "minY": 0.032,
+   "lowest": "knL",
+   "cullR": 1.018,
+   "gaps": {}
+  },
+  "run_0.6": {
+   "minY": 0.052,
+   "lowest": "knR",
+   "cullR": 1.007,
+   "gaps": {}
+  },
+  "hurt_0": {
+   "minY": 0.007,
+   "lowest": "knR",
+   "cullR": 1.445,
+   "gaps": {}
+  },
+  "hurt_0.5": {
+   "minY": 0.007,
+   "lowest": "knR",
+   "cullR": 1.264,
+   "gaps": {}
+  },
+  "down_air_0.3": {
+   "minY": 0.51,
+   "lowest": "hips",
+   "cullR": 1.486,
+   "gaps": {}
+  },
+  "down_1_ground": {
+   "minY": 0.236,
+   "lowest": "torso",
+   "cullR": 1.755,
+   "gaps": {}
+  },
+  "atk1_0.2": {
+   "minY": 1.287,
+   "lowest": "hips",
+   "cullR": 1.773,
+   "gaps": {}
+  },
+  "atk1_0.5": {
+   "minY": 0.936,
+   "lowest": "torso",
+   "cullR": 1.36,
+   "gaps": {}
+  },
+  "atk1_0.8": {
+   "minY": 0.936,
+   "lowest": "torso",
+   "cullR": 1.36,
+   "gaps": {}
+  },
+  "atk2_0.2": {
+   "minY": 0.007,
+   "lowest": "knR",
+   "cullR": 1.187,
+   "gaps": {}
+  },
+  "atk2_0.5": {
+   "minY": 0.007,
+   "lowest": "knR",
+   "cullR": 1.202,
+   "gaps": {}
+  },
+  "atk2_0.8": {
+   "minY": 0.007,
+   "lowest": "knR",
+   "cullR": 1.199,
+   "gaps": {}
+  },
+  "atk3_0.2": {
+   "minY": 0.027,
+   "lowest": "knL",
+   "cullR": 1.144,
+   "gaps": {}
+  },
+  "atk3_0.5": {
+   "minY": 0.106,
+   "lowest": "knL",
+   "cullR": 1.293,
+   "gaps": {}
+  },
+  "atk3_0.8": {
+   "minY": 0.135,
+   "lowest": "knL",
+   "cullR": 1.329,
+   "gaps": {}
+  }
+ },
+ "seq": {
+  "knockdown": {
+   "minY": -0.005,
+   "at": 2.417,
+   "lowest": "idle:knR",
+   "cullR": 1.755,
+   "cullAt": 1.983,
+   "cullWhat": "down:head"
+  },
+  "hurt": {
+   "minY": 0.007,
+   "at": 0.733,
+   "lowest": "hurt:knR",
+   "cullR": 1.337,
+   "cullAt": 0.5,
+   "cullWhat": "hurt:haL"
+  },
+  "run": {
+   "minY": -0.006,
+   "at": 2,
+   "lowest": "idle:knR",
+   "cullR": 1.048,
+   "cullAt": 2,
+   "cullWhat": "idle:ftR"
+  },
+  "atk1": {
+   "minY": -0.007,
+   "at": 2.317,
+   "lowest": "idle:knR",
+   "cullR": 1.806,
+   "cullAt": 0.967,
+   "cullWhat": "atk1:head"
+  },
+  "atk2": {
+   "minY": -0.008,
+   "at": 2.1,
+   "lowest": "idle:knR",
+   "cullR": 1.202,
+   "cullAt": 1.033,
+   "cullWhat": "atk2:haL"
+  },
+  "atk3": {
+   "minY": -0.008,
+   "at": 2.2,
+   "lowest": "idle:knR",
+   "cullR": 1.356,
+   "cullAt": 1.367,
+   "cullWhat": "atk3:haR"
+  },
+  "chain": {
+   "minY": -0.008,
+   "at": 7.95,
+   "lowest": "idle:knR",
+   "cullR": 1.806,
+   "cullAt": 1.667,
+   "cullWhat": "atk1:head"
+  },
+  "worstMinY": -0.008,
+  "worstCullR": 1.806,
+  "passFloor": true,
+  "passCull26": true,
+  "cull19Info": true
+ },
+ "attacks": {
+  "count": 3,
+  "poses": [
+   "atk1",
+   "atk2",
+   "atk3"
+  ],
+  "contractOk": true,
+  "each": [
+   {
+    "id": "rooftop_swoop",
+    "pose": "atk1",
+    "strike": "head",
+    "active": [
+     0.45,
+     0.65
+    ],
+    "peakU": 0.476,
+    "peakSpeed": 10.952,
+    "peakInActive": true
+   },
+   {
+    "id": "peck_flurry",
+    "pose": "atk2",
+    "strike": "head",
+    "active": [
+     0.3,
+     0.75
+    ],
+    "peakU": 0.727,
+    "peakSpeed": 14.346,
+    "peakInActive": true
+   },
+   {
+    "id": "poop_drop",
+    "pose": "atk3",
+    "strike": "hips",
+    "active": [
+     0.5,
+     0.62
+    ],
+    "peakU": 0.564,
+    "peakSpeed": 0.572,
+    "peakInActive": true
+   }
+  ],
+  "allPeaksInActive": true
+ },
+ "merge": {
+  "ok": true,
+  "drawCalls": 2,
+  "toonCalls": 1,
+  "outlineCalls": 1,
+  "shadowCalls": 1,
+  "bones": 17,
+  "flashShared": true,
+  "partsBefore": 39,
+  "trisBefore": 7580
+ },
+ "determinism": {
+  "hash": "afeb0d26b7d4abeb",
+  "sameSeedEqual": true,
+  "seed8Differs": true,
+  "noSeedOk": true,
+  "negSeedOk": true,
+  "hugeSeedOk": true,
+  "threeUuidRandomCalls": 3612,
+  "independentOfMathRandom": true,
+  "mathRandomInSource": false,
+  "canvas": {
+   "firstBuildOps": 0,
+   "secondBuildOps": 0,
+   "wrapperKOps": 0,
+   "cachedOnSameK": true,
+   "cachedForWrapperK": true,
+   "noDocumentBuildOk": true,
+   "drawsAfterDocumentReturns": true
+  }
+ },
+ "misc": {
+  "kitKeys": 48
+ },
+ "extra": {
+  "walk_edge": {
+   "minY": 0.011,
+   "lowest": "played idle t 1.50:knR",
+   "cullR": 1.14
+  },
+  "fly": {
+   "minY": 0.012,
+   "lowest": "played idle t 1.50:knR",
+   "cullR": 1.854
+  },
+  "swoop": {
+   "minY": 0.012,
+   "lowest": "played idle t 1.50:knR",
+   "cullR": 1.816
+  },
+  "peck": {
+   "minY": 0.007,
+   "lowest": "static u 0:knR",
+   "cullR": 1.202
+  },
+  "poop_drop": {
+   "minY": 0.009,
+   "lowest": "static u 0:knR",
+   "cullR": 1.356
+  },
+  "dazed": {
+   "minY": -0.017,
+   "lowest": "static u 0:knR",
+   "cullR": 1.363
+  }
+ },
+ "extraPass": true,
+ "buildMs": {
+  "median": 3.6,
+  "min": 2.98,
+  "max": 12.14,
+  "n": 20,
+  "env": "node v20.19.2"
+ },
+ "summary": {
+  "pass": true,
+  "parts": 39,
+  "tris": 7580,
+  "mats": 1,
+  "matKinds": [
+   "toon"
+  ],
+  "mergedCalls": 2,
+  "height": 2.424,
+  "heightErrPct": 5.4,
+  "worstMinY": -0.017,
+  "worstCullR": 1.854,
+  "buildMs": 3.6,
+  "extra": 6,
+  "idleBeyondRadius": -0.062,
+  "reachPart": "tail",
+  "strikes": "atk1@0.476 atk2@0.727 atk3@0.564"
+ }
+}
