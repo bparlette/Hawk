@@ -115,6 +115,11 @@ function toonMat(opts = {}, tiled = false) {
         .replace('#include <map_fragment>', `
         vec2 aUv = mix(vMapUv, vAff.xy / vAff.z, uAff); // affine-ish wobble
         vec2 tuv = vTr.xy + fract(aUv) * vTr.zw;
+        if (aUv.x > 900.0) { // tiled facade run (Task A/B kit, 02c out.tiled): u = 1000 n + offset + cell; each cell picks one of n same-size
+          // variant tiles packed side by side in the atlas and is mirrored at random, like the kit's individual 1.2 m cells
+          float nv = floor(aUv.x / 1000.0); vec2 cu = floor(aUv); vec2 fu = fract(aUv); float hv = hsh(vec3(cu, 3.7));
+          fu.x = mix(fu.x, 1.0 - fu.x, step(0.5, fract(hv * 13.7)));
+          tuv = vTr.xy + vec2(min(floor(hv * nv), nv - 1.0) * (vTr.z + 2.0 / 2048.0), 0.0) + fu * vTr.zw; }
         #ifdef USE_MAP
           diffuseColor *= texture2D(map, tuv);
         #endif`)

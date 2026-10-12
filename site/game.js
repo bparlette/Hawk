@@ -115,6 +115,11 @@ function toonMat(opts = {}, tiled = false) {
         .replace('#include <map_fragment>', `
         vec2 aUv = mix(vMapUv, vAff.xy / vAff.z, uAff); // affine-ish wobble
         vec2 tuv = vTr.xy + fract(aUv) * vTr.zw;
+        if (aUv.x > 900.0) { // tiled facade run (Task A/B kit, 02c out.tiled): u = 1000 n + offset + cell; each cell picks one of n same-size
+          // variant tiles packed side by side in the atlas and is mirrored at random, like the kit's individual 1.2 m cells
+          float nv = floor(aUv.x / 1000.0); vec2 cu = floor(aUv); vec2 fu = fract(aUv); float hv = hsh(vec3(cu, 3.7));
+          fu.x = mix(fu.x, 1.0 - fu.x, step(0.5, fract(hv * 13.7)));
+          tuv = vTr.xy + vec2(min(floor(hv * nv), nv - 1.0) * (vTr.z + 2.0 / 2048.0), 0.0) + fu * vTr.zw; }
         #ifdef USE_MAP
           diffuseColor *= texture2D(map, tuv);
         #endif`)
@@ -619,12 +624,10 @@ function rhKit(K, out, atlas, X, Z, ANG) {
     // a tiled facade: cells of ~1.2 m, one atlas tile each, mirrored at random (the tiles wrap, so mirroring never shows a seam)
     cells(Wl, tiles, u0, u1, y0, y1, off, R) {
       const nx = Math.max(1, Math.ceil((u1 - u0) / 1.2)), ny = Math.max(1, Math.ceil((y1 - y0) / 1.2)), cw = (u1 - u0) / nx, ch = (y1 - y0) / ny;
-      // LOD (Hark perf pass): a collector with out.tiled also gets the whole run as ONE quad repeating tiles[0] nx x ny times (its far / mass
-      // facade); the cells themselves are then flagged out.fine (near detail). The R() draws are unchanged, so a seed builds the same house.
-      if (out.tiled) out.tiled(fin(new THREE.PlaneGeometry(u1 - u0, y1 - y0), Wl, (u0 + u1) / 2, (y0 + y1) / 2, off), atlas, tiles[0], nx, ny);
-      out.fine = !!out.tiled;
-      for (let j = 0; j < ny; j++) for (let i = 0; i < nx; i++) S.decal(Wl, cw, ch, u0 + cw * (i + 0.5), y0 + ch * (j + 0.5), off, tiles[Math.floor(R() * tiles.length)], R() < 0.5);
-      out.fine = false;
+      // LOD (Hark perf pass): a collector with out.tiled takes the whole run as ONE quad (tile variants + random mirroring are picked per cell in
+      // the game's shader) instead of nx * ny cell decals. The R() draws still run, so a seed builds the same house either way.
+      if (out.tiled) out.tiled(fin(new THREE.PlaneGeometry(u1 - u0, y1 - y0), Wl, (u0 + u1) / 2, (y0 + y1) / 2, off), atlas, tiles, nx, ny);
+      for (let j = 0; j < ny; j++) for (let i = 0; i < nx; i++) { const t = tiles[Math.floor(R() * tiles.length)], fl = R() < 0.5; if (!out.tiled) S.decal(Wl, cw, ch, u0 + cw * (i + 0.5), y0 + ch * (j + 0.5), off, t, fl); }
     },
     toWorld(lx, lz) { return [X + lx * Math.cos(ANG) + lz * Math.sin(ANG), Z - lx * Math.sin(ANG) + lz * Math.cos(ANG)]; },
     aabb(lx0, lx1, lz0, lz1) { const p = [S.toWorld(lx0, lz0), S.toWorld(lx1, lz0), S.toWorld(lx1, lz1), S.toWorld(lx0, lz1)]; return { x0: Math.min(...p.map((q) => q[0])), x1: Math.max(...p.map((q) => q[0])), z0: Math.min(...p.map((q) => q[1])), z1: Math.max(...p.map((q) => q[1])) }; },
@@ -810,12 +813,10 @@ function cnKit(K, out, atlas, X, Z, ANG) {
     // a tiled facade: cells of ~1.2 m, one atlas tile each, mirrored at random (the tiles wrap, so mirroring never shows a seam)
     cells(Wl, tiles, u0, u1, y0, y1, off, R) {
       const nx = Math.max(1, Math.ceil((u1 - u0) / 1.2)), ny = Math.max(1, Math.ceil((y1 - y0) / 1.2)), cw = (u1 - u0) / nx, ch = (y1 - y0) / ny;
-      // LOD (Hark perf pass): a collector with out.tiled also gets the whole run as ONE quad repeating tiles[0] nx x ny times (its far / mass
-      // facade); the cells themselves are then flagged out.fine (near detail). The R() draws are unchanged, so a seed builds the same house.
-      if (out.tiled) out.tiled(fin(new THREE.PlaneGeometry(u1 - u0, y1 - y0), Wl, (u0 + u1) / 2, (y0 + y1) / 2, off), atlas, tiles[0], nx, ny);
-      out.fine = !!out.tiled;
-      for (let j = 0; j < ny; j++) for (let i = 0; i < nx; i++) S.decal(Wl, cw, ch, u0 + cw * (i + 0.5), y0 + ch * (j + 0.5), off, tiles[Math.floor(R() * tiles.length)], R() < 0.5);
-      out.fine = false;
+      // LOD (Hark perf pass): a collector with out.tiled takes the whole run as ONE quad (tile variants + random mirroring are picked per cell in
+      // the game's shader) instead of nx * ny cell decals. The R() draws still run, so a seed builds the same house either way.
+      if (out.tiled) out.tiled(fin(new THREE.PlaneGeometry(u1 - u0, y1 - y0), Wl, (u0 + u1) / 2, (y0 + y1) / 2, off), atlas, tiles, nx, ny);
+      for (let j = 0; j < ny; j++) for (let i = 0; i < nx; i++) { const t = tiles[Math.floor(R() * tiles.length)], fl = R() < 0.5; if (!out.tiled) S.decal(Wl, cw, ch, u0 + cw * (i + 0.5), y0 + ch * (j + 0.5), off, t, fl); }
     },
     toWorld(lx, lz) { return [X + lx * Math.cos(ANG) + lz * Math.sin(ANG), Z - lx * Math.sin(ANG) + lz * Math.cos(ANG)]; },
     aabb(lx0, lx1, lz0, lz1) { const p = [S.toWorld(lx0, lz0), S.toWorld(lx1, lz0), S.toWorld(lx1, lz1), S.toWorld(lx0, lz1)]; return { x0: Math.min(...p.map((q) => q[0])), x1: Math.max(...p.map((q) => q[0])), z0: Math.min(...p.map((q) => q[1])), z1: Math.max(...p.map((q) => q[1])) }; },
@@ -2105,26 +2106,30 @@ class ABChunks { // P, N and colour (3 or 4 components) per cell of `cell` metre
   }
 }
 // ---- LOD (perf pass): mass / near-detail split ----
-// MASS (always drawn, in the game's own city chunks, so no extra draw calls): kit boxes >= AB.MASS_MIN (walls, roofs, cornice runs, party walls),
-//   decals >= AB.DECAL_MIN m2 (windows, doors, shop fronts, signs) and every tiled facade run as ONE quad repeating its tile (out.tiled).
-// NEAR (32 m cells, drawn only while the camera is within AB.NEAR m of the cell): everything else - trim, dentils, brackets, sills, lintels, stoop
-//   steps and rails, the individual 1.2 m facade cells (6 mm proud of the tiled quad, so they win the depth test), house numbers, grilles,
-//   full parked cars + their glass, lamps, bins, benches, manholes, and the ink hulls (HD) of all of it.
-// FAR STAND-INS (one InstancedMesh each = 1 draw call city-wide): a parked car is a 2-box body + cabin in its paint colour and a lamp is a
-//   post + head while their cell is not near; an instance is hidden (scale 0) once its cell turns near.
+// MASS (always drawn, inside the game's own city chunks CB / DB, so no extra draw calls): kit boxes >= AB.MASS_MIN m whose 2nd dimension is
+//   >= AB.MASS_D2 m (walls, roofs, cornice slabs, parapets; not pipes, rails or thin trim), decals >= AB.DECAL_MIN m2 (windows, doors, shop fronts,
+//   signs), every tiled facade run as ONE quad (out.tiled; the shader picks a variant tile + mirror per 1.2 m cell, so no per-cell decals), and a thin post + head stand-in for each acorn lamp.
+// NEAR (32 m cells, shown only while the camera is within AB.NEAR m of the cell, +AB.HYST to leave): everything else - trim, dentils, brackets,
+//   sills, lintels, stoop steps and rails, house numbers, grilles, full parked cars, lamps, bins, benches, manholes. Two meshes per cell: solids >= 0.9 m (cast shadows) and decals + small
+//   solids (receive only). The ink hulls (HD) are 64 m near cells; car glass is one city-wide mesh shown only while some car cell is near.
+// FAR CARS: one InstancedMesh of 3-box stand-ins (body in the car's paint, dark cabin, tyres), refilled with only the far, in-frustum, in-fog cars.
 // Glow (night only) stays ONE city-wide mesh.
-Object.assign(AB, { DBG: Q.get('abdbg') || '', CELL: 32, NEAR: 20, HYST: 6, MASS_MIN: 2.0, MASS_D2: 0.4, MASS_TRI: 12, DECAL_MIN: 0.5, FINE_OFF: 0.006 });
+Object.assign(AB, { DBG: Q.get('abdbg') || '', CELL: 32, NEAR: 20, HYST: 6, MASS_MIN: 2.0, MASS_D2: 0.4, MASS_TRI: 12, DECAL_MIN: 0.5 });
 const AB_GLW = new ABChunks(false), AB_GLS = new ABChunks(true), AB_OLK = new ABChunks(false, 64); // glow + car glass: one city-wide mesh each; hulls: 64 m cells (near only)
 AB.stats.t = { mass: 0, massD: 0, tiled: 0, nearS: 0, nearD: 0 };
 const AB_CELLS = new Map(); // key -> { key, x0, z0, S: MB (near solids), D: MB (near decals), meshes: [], prox: [], near }
 function abCellAt(x, z) { const ix = Math.floor(x / AB.CELL), iz = Math.floor(z / AB.CELL), key = ix + ',' + iz; let c = AB_CELLS.get(key);
   if (!c) AB_CELLS.set(key, (c = { key, x0: ix * AB.CELL, z0: iz * AB.CELL, S: new MB(), D: new MB(), meshes: [], prox: [], near: false })); return c; }
+// how many of a facade's variant tiles sit side by side in the atlas (same size, same row, 1 px pad): the shader can pick among those
+const AB_VAR = new Map();
+function abVariants(atlas, tiles) { const k = tiles.join('|'); if (AB_VAR.has(k)) return AB_VAR.get(k); const r0 = atlas.rect(tiles[0]); let n = 1;
+  for (let i = 1; i < tiles.length; i++) { const r = atlas.rect(tiles[i]); if (!r || Math.abs(r[1] - r0[1]) > 1e-6 || Math.abs(r[2] - r0[2]) > 1e-6 || Math.abs(r[3] - r0[3]) > 1e-6 || Math.abs(r[0] - (r0[0] + i * (r0[2] + 2 / 2048))) > 1e-6) break; n++; }
+  if (n < tiles.length) AB.stats.varMiss = (AB.stats.varMiss || 0) + 1; AB_VAR.set(k, n); return n; }
 const abCtr = (g) => { g.computeBoundingBox(); const b = g.boundingBox; return [(b.min.x + b.max.x) / 2, (b.min.z + b.max.z) / 2]; };
 const AB_PROX = { car: [] }; let abTrack = null; // stand-in tracker while one car / lamp is being built
 function abCityOut() {
   const triN = (g) => (g.index ? g.index.count : g.attributes.position.count) / 3;
   const o = {
-    fine: false, // set by the kit's cells() while it emits individual facade cells
     solid(g, col, ol = true) {
       g.computeBoundingBox(); const b = g.boundingBox, ds = [b.max.x - b.min.x, b.max.y - b.min.y, b.max.z - b.min.z].sort((p, q) => q - p), s = ds[0];
       if (abTrack) { abTrack.box.union(b); const n = triN(g); if (n > abTrack.n && s >= 0.9) { abTrack.n = n; abTrack.col = col; } }
@@ -2134,14 +2139,15 @@ function abCityOut() {
     },
     decal(g, atlas, name) { const r = atlas.rect(name); if (!r) throw new Error('no tile ' + name);
       g.computeBoundingBox(); const b = g.boundingBox, e = [b.max.x - b.min.x, b.max.y - b.min.y, b.max.z - b.min.z].sort((p, q) => q - p);
-      if (!o.fine && !AB.ctx && e[0] * e[1] >= AB.DECAL_MIN) { if (AB.DBG !== 'nomass') DB.geom(g, '#fff', r); AB.stats.t.massD += 2; return; }
-      if (o.fine) { const n = g.attributes.normal; g.translate(n.getX(0) * AB.FINE_OFF, n.getY(0) * AB.FINE_OFF, n.getZ(0) * AB.FINE_OFF); }
+      if (!AB.ctx && e[0] * e[1] >= AB.DECAL_MIN) { if (AB.DBG !== 'nomass') DB.geom(g, '#fff', r); AB.stats.t.massD += 2; return; }
       const [cx, cz] = abCtr(g); abCellAt(cx, cz).D.geom(g, '#fff', r); AB.stats.t.nearD += triN(g);
     },
-    tiled(g, atlas, name, nx, ny) { // a whole facade run as one quad repeating one tile (mass)
-      const r = atlas.rect(name); if (!r) throw new Error('no tile ' + name); g = g.index ? g.toNonIndexed() : g;
-      const p = g.attributes.position, n = g.attributes.normal, uv = g.attributes.uv, c = new THREE.Color('#fff'), m = DB.at((p.getX(0) + p.getX(5)) / 2, (p.getZ(0) + p.getZ(5)) / 2);
-      AB.stats.t.tiled += p.count / 3; if (AB.DBG === 'nomass') return; for (let i = 0; i < p.count; i++) m.vert([p.getX(i), p.getY(i), p.getZ(i)], [n.getX(i), n.getY(i), n.getZ(i)], [uv.getX(i) * nx, uv.getY(i) * ny], c, r);
+    tiled(g, atlas, tiles, nx, ny) { // a whole facade run as one quad (mass); the shader picks a variant + mirror per cell (01_core, u > 900)
+      const r = atlas.rect(tiles[0]); if (!r) throw new Error('no tile ' + tiles[0]); const n = abVariants(atlas, tiles); g = g.index ? g.toNonIndexed() : g;
+      const p = g.attributes.position, nm = g.attributes.normal, uv = g.attributes.uv, c = new THREE.Color('#fff'), m = DB.at((p.getX(0) + p.getX(5)) / 2, (p.getZ(0) + p.getZ(5)) / 2);
+      const u0 = 1000 * n + 100 + Math.floor(Math.abs(p.getX(0) * 7.31 + p.getZ(0) * 3.17 + p.getY(0) * 1.9)) % 300, v0 = Math.floor(Math.abs(p.getX(0) * 1.3 + p.getZ(0) * 5.7)) % 50;
+      AB.stats.t.tiled += p.count / 3; if (AB.DBG === 'nomass') return;
+      for (let i = 0; i < p.count; i++) m.vert([p.getX(i), p.getY(i), p.getZ(i)], [nm.getX(i), nm.getY(i), nm.getZ(i)], [u0 + uv.getX(i) * nx, v0 + uv.getY(i) * ny], c, r);
     },
     glow(g, col) { AB_GLW.add(g, col); },
     glass(g) { AB_GLS.add(g, null); },
