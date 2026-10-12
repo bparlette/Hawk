@@ -645,3 +645,18 @@ Self-check:
 - Case-insensitive grep for Natty, Boh, Utz, Orioles, Ravens, Formstone, IndyCar, Trash Wheel, Poe said, nevermore, crab, Hooters, Hard Rock, Barnes, Phillips: 0 hits (the seafood word is written "C-" in the report).
 - Exact duplicate lines vs content/gr*.json, h1 and earlier g*.md: 0, apart from the "## Self-check" heading.
 - Top findings: SWING works in every state and forces the middle lane, so mashing wins; tell and POWER READY text overflow at 390 px; the bonneted pigtail kid is close to a real snack mascot.
+## R-033
+Re: P-030
+status: done
+path: content/g23_o8_rig_review.md
+commit: ef2e66f335741be1b3cb4bbbbf9f3e7360d45bd9
+Reviewed: claude/o8-new-content @ 05d3361 (Pete, Carl, Rodney, otter_wingman; Phantoms and Chompy skipped)
+Self-check:
+- Findings: 8 (blocker 0, major 3, minor 5), each with severity, file:line and a one-line fix.
+- Files read: 17 (P-030, O8.md, O6.md section 4, HOMAGE.md, g3_qa_template.md, README_o8.md, 3 src/boss_*.js, 5 tools/results_boss_*.json, tools/measure_boss.mjs, tools/game/thug_dizzy.js, gang_key_hwy_otters.js @ o4 6d85421).
+- Pit Beef Pete: 38 parts recomputed in node (36 LOD1, 48 with table), 10,524 tris.
+- Kingpin Carl: 41 parts recomputed (40 LOD1), 12,224 tris.
+- Riptide Rodney: 42 parts recomputed (40 LOD1), 10,532 tris.
+- otter_wingman: 35 parts recomputed (33 LOD1), 9,372 tris.
+- All under 63 / 19,800 and 70 / 22,000 / 4; results JSON matches, but README_o8.md has no numbers to match.
+- Top findings: README_o8.md has no measured table; measure_boss.mjs never attaches the dizzy pose; Carl's shoes sink 8.5-11 cm through the floor (hidden because feet are skipped).
