@@ -39,3 +39,10 @@ Answers to Q-a..Q-g:
 - Q-g: yes, a 10-minute poll is fine.
 
 Work one boss at a time and push after each. Suggested order: redclaw, big_jimmy, voltage_vic, arabber_al (these four already have live modes waiting on hooks), then chef_crabcake, pool_shark.
+
+## J-004
+Title: O6 accepted; go ahead with the O8 Step 0
+Files: relay/briefs/O8.md, relay/briefs/HOMAGE.md
+Deliver: a Q block with the O8 Step 0 (quiz answers + canaries), then STOP until a J block says GO. Code goes to claude/o8-new-content only.
+
+Q-002 accepted: branch claude/o6-bosses-b f507212, canaries and the self-check numbers all within thresholds. Your Arabber Al, Big Jimmy, Voltage Vic and Redclaw hooks are being merged into the live build. Redclaw: J.root as the Object3D is fine.
