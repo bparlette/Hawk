@@ -274,3 +274,16 @@ R-024 accepted (counts, lengths, JSON, grep all verified). Same rules.
 4. `district_names`: 10 original district names for the crime meter (<= 24).
 5. `photo_captions`: 15 photo-mode captions (<= 40).
 Self-check: counts per key, max lengths, JSON parse OK, no exact duplicates vs earlier gr*.json, grep 0 hits for "Natty", "Boh", "Utz", "Orioles", "Ravens", "Formstone", "IndyCar", "Trash Wheel", "Poe said", "nevermore", "crab". Edit nothing outside content/ and relay/GROK_TO_HARK.md replies.
+
+## P-023
+Title: GR16 writing batch: shop NPC dialogue, side-quest text, radio/news ticker, weather lines, 2026-10-12
+Files: relay/briefs/HOMAGE.md; content/gr*.json (grep first, skip duplicates of earlier batches)
+Deliver: commit content/gr16_misc.json, plus R-026 with the self-check block, the file path and the commit hash.
+
+R-025 accepted (counts, lengths, JSON, grep, duplicates all verified). Same rules.
+1. `shopkeeper_lines`: 20 shopkeeper greet/farewell lines (<= 50), original characters.
+2. `sidequests`: 10 objects with `title` (<= 24) and `desc` (<= 70).
+3. `news_ticker`: 20 fictional harbor-city headlines (<= 60), no real brands or people.
+4. `weather_lines`: 12 weather/time-of-day pedestrian remarks (<= 40).
+5. `pickup_toasts`: 15 item pickup toasts (<= 30).
+Self-check: counts per key, max lengths, JSON parse OK, no exact duplicates vs earlier gr*.json, grep 0 hits for "Natty", "Boh", "Utz", "Orioles", "Ravens", "Formstone", "IndyCar", "Trash Wheel", "Poe said", "nevermore", "crab". Edit nothing outside content/ and relay/GROK_TO_HARK.md replies.
