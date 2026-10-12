@@ -1,0 +1,9218 @@
+{
+ "2": {
+  "number": 2,
+  "name": "STREET RUMBLE",
+  "card": {
+   "title": "STREET RUMBLE",
+   "tagline": "THE GANG'S ALL HERE. AND THEY'RE ALL MAD.",
+   "color": "#e83aa0"
+  },
+  "enemySkins": {
+   "purple": {
+    "img": "levels/enemies_street.webp",
+    "frames": {
+     "idle": [
+      4,
+      0,
+      102,
+      165,
+      49
+     ],
+     "walk": [
+      110,
+      0,
+      90,
+      165,
+      44
+     ],
+     "walk2": [
+      204,
+      2,
+      83,
+      163,
+      38
+     ],
+     "attack": [
+      291,
+      23,
+      122,
+      142,
+      53
+     ],
+     "jump": [
+      417,
+      22,
+      137,
+      143,
+      60
+     ],
+     "hurt": [
+      558,
+      23,
+      79,
+      142,
+      39
+     ],
+     "down": [
+      641,
+      124,
+      183,
+      41,
+      91
+     ],
+     "dash": [
+      828,
+      78,
+      153,
+      87,
+      107
+     ],
+     "grab": [
+      985,
+      78,
+      154,
+      87,
+      90
+     ]
+    }
+   },
+   "blue": {
+    "img": "levels/enemies_street.webp",
+    "frames": {
+     "idle": [
+      4,
+      0,
+      102,
+      165,
+      49
+     ],
+     "walk": [
+      110,
+      0,
+      90,
+      165,
+      44
+     ],
+     "walk2": [
+      204,
+      2,
+      83,
+      163,
+      38
+     ],
+     "attack": [
+      291,
+      23,
+      122,
+      142,
+      53
+     ],
+     "jump": [
+      417,
+      22,
+      137,
+      143,
+      60
+     ],
+     "hurt": [
+      558,
+      23,
+      79,
+      142,
+      39
+     ],
+     "down": [
+      641,
+      124,
+      183,
+      41,
+      91
+     ],
+     "dash": [
+      828,
+      78,
+      153,
+      87,
+      107
+     ],
+     "grab": [
+      985,
+      78,
+      154,
+      87,
+      90
+     ]
+    }
+   },
+   "dasher": {
+    "img": "levels/enemies_street.webp",
+    "frames": {
+     "idle": [
+      4,
+      0,
+      102,
+      165,
+      49
+     ],
+     "walk": [
+      110,
+      0,
+      90,
+      165,
+      44
+     ],
+     "walk2": [
+      204,
+      2,
+      83,
+      163,
+      38
+     ],
+     "attack": [
+      291,
+      23,
+      122,
+      142,
+      53
+     ],
+     "jump": [
+      417,
+      22,
+      137,
+      143,
+      60
+     ],
+     "hurt": [
+      558,
+      23,
+      79,
+      142,
+      39
+     ],
+     "down": [
+      641,
+      124,
+      183,
+      41,
+      91
+     ],
+     "dash": [
+      828,
+      78,
+      153,
+      87,
+      107
+     ],
+     "grab": [
+      985,
+      78,
+      154,
+      87,
+      90
+     ]
+    }
+   },
+   "sword": {
+    "img": "levels/enemies_street.webp",
+    "frames": {
+     "idle": [
+      4,
+      173,
+      60,
+      165,
+      32
+     ],
+     "walk": [
+      68,
+      169,
+      80,
+      169,
+      38
+     ],
+     "walk2": [
+      152,
+      171,
+      87,
+      167,
+      43
+     ],
+     "attack": [
+      243,
+      182,
+      145,
+      156,
+      50
+     ],
+     "jump": [
+      392,
+      172,
+      74,
+      166,
+      48
+     ],
+     "hurt": [
+      470,
+      195,
+      101,
+      143,
+      66
+     ],
+     "down": [
+      575,
+      297,
+      178,
+      41,
+      89
+     ],
+     "throw": [
+      757,
+      185,
+      115,
+      153,
+      56
+     ]
+    }
+   },
+   "star": {
+    "img": "levels/enemies_street.webp",
+    "frames": {
+     "idle": [
+      4,
+      173,
+      60,
+      165,
+      32
+     ],
+     "walk": [
+      68,
+      169,
+      80,
+      169,
+      38
+     ],
+     "walk2": [
+      152,
+      171,
+      87,
+      167,
+      43
+     ],
+     "attack": [
+      243,
+      182,
+      145,
+      156,
+      50
+     ],
+     "jump": [
+      392,
+      172,
+      74,
+      166,
+      48
+     ],
+     "hurt": [
+      470,
+      195,
+      101,
+      143,
+      66
+     ],
+     "down": [
+      575,
+      297,
+      178,
+      41,
+      89
+     ],
+     "throw": [
+      757,
+      185,
+      115,
+      153,
+      56
+     ]
+    }
+   },
+   "heavy": {
+    "img": "levels/enemies_street.webp",
+    "frames": {
+     "idle": [
+      4,
+      348,
+      91,
+      163,
+      40
+     ],
+     "walk": [
+      99,
+      342,
+      82,
+      169,
+      38
+     ],
+     "walk2": [
+      185,
+      344,
+      93,
+      167,
+      48
+     ],
+     "attack": [
+      282,
+      348,
+      146,
+      163,
+      54
+     ],
+     "jump": [
+      432,
+      356,
+      103,
+      155,
+      44
+     ],
+     "hurt": [
+      539,
+      360,
+      104,
+      151,
+      62
+     ],
+     "down": [
+      647,
+      461,
+      183,
+      50,
+      91
+     ],
+     "shoot": [
+      834,
+      345,
+      146,
+      166,
+      33
+     ]
+    }
+   },
+   "gunner": {
+    "img": "levels/enemies_street.webp",
+    "frames": {
+     "idle": [
+      4,
+      348,
+      91,
+      163,
+      40
+     ],
+     "walk": [
+      99,
+      342,
+      82,
+      169,
+      38
+     ],
+     "walk2": [
+      185,
+      344,
+      93,
+      167,
+      48
+     ],
+     "attack": [
+      282,
+      348,
+      146,
+      163,
+      54
+     ],
+     "jump": [
+      432,
+      356,
+      103,
+      155,
+      44
+     ],
+     "hurt": [
+      539,
+      360,
+      104,
+      151,
+      62
+     ],
+     "down": [
+      647,
+      461,
+      183,
+      50,
+      91
+     ],
+     "shoot": [
+      834,
+      345,
+      146,
+      166,
+      33
+     ]
+    }
+   }
+  },
+  "hues": {
+   "purple": 300,
+   "blue": 190,
+   "star": 30,
+   "dasher": 120,
+   "heavy": 330,
+   "gunner": 260
+  },
+  "sections": [
+   {
+    "bg": "levels/level2_street.jpg",
+    "floor": [
+     168,
+     218
+    ],
+    "length": 2320,
+    "locks": [
+     0,
+     460,
+     920,
+     1400
+    ],
+    "waves": [
+     [
+      "purple",
+      "purple",
+      "blue"
+     ],
+     [
+      "star",
+      "heavy",
+      "purple",
+      "blue"
+     ],
+     [
+      "dasher",
+      "purple",
+      "sword",
+      "star",
+      "dasher"
+     ],
+     [
+      "heavy",
+      "dasher",
+      "gunner",
+      "blue",
+      "purple"
+     ]
+    ],
+    "grade": "rgba(20,10,60,0.12)",
+    "weather": "rain",
+    "hazards": [
+     {},
+     {}
+    ],
+    "props": [
+     {
+      "kind": "crate",
+      "x": 220,
+      "y": 206,
+      "drop": "slice"
+     },
+     {
+      "kind": "barrel",
+      "x": 520,
+      "y": 190
+     },
+     {
+      "kind": "trash",
+      "x": 800,
+      "y": 176
+     },
+     {
+      "kind": "cone",
+      "x": 880,
+      "y": 212
+     },
+     {
+      "kind": "barrel",
+      "x": 1290,
+      "y": 202
+     },
+     {
+      "kind": "crate",
+      "x": 1480,
+      "y": 210,
+      "drop": "pizza"
+     },
+     {
+      "kind": "trash",
+      "x": 1880,
+      "y": 180,
+      "drop": "slice"
+     },
+     {
+      "kind": "cone",
+      "x": 2010,
+      "y": 214
+     }
+    ],
+    "pickups": [
+     {
+      "kind": "slice",
+      "x": 1000,
+      "y": 214
+     }
+    ]
+   }
+  ],
+  "restructure": {
+   "split": 0,
+   "images": [
+    "levels/level2_twist.webp",
+    "levels/level2_rooftops.jpg",
+    "levels/level2_rooftop_boss.jpg"
+   ],
+   "tsec": {
+    "bg": "levels/level2_rooftops.jpg",
+    "weather": "rain",
+    "hazards": []
+   },
+   "twist": {
+    "kind": "searchlight",
+    "title": "FOOT CHOPPER OVERHEAD!",
+    "sub": "HIDE BEHIND THE ROOF HATCHES - DON'T GET LIT UP",
+    "len": 2100,
+    "img": "levels/level2_twist.webp",
+    "fr": {
+     "heli": [
+      0,
+      0,
+      400,
+      221
+     ],
+     "lamp": [
+      403,
+      0,
+      60,
+      78
+     ],
+     "escape": [
+      466,
+      0,
+      154,
+      240
+     ],
+     "hatch": [
+      623,
+      0,
+      100,
+      103
+     ]
+    },
+    "heli": true,
+    "lights": [
+     {
+      "y": 44,
+      "spd": 0.011
+     }
+    ],
+    "covers": [
+     {
+      "spr": "hatch",
+      "x": 96,
+      "w": 40,
+      "d": 22,
+      "k": 0.42
+     },
+     {
+      "spr": "hatch",
+      "x": 286,
+      "w": 40,
+      "d": 22,
+      "k": 0.42
+     }
+    ],
+    "alarm": [
+     "gunner",
+     "purple"
+    ],
+    "volley": true,
+    "drip": [
+     "purple"
+    ],
+    "gap": 330,
+    "cap": 2,
+    "color": "#ffe27a"
+   },
+   "z2bg": "levels/level2_rooftops.jpg",
+   "z2": {
+    "hazards": [],
+    "weather": "rain"
+   },
+   "arena": {
+    "bg": "levels/level2_rooftop_boss.jpg",
+    "floor": [
+     168,
+     218
+    ],
+    "length": 384,
+    "locks": [],
+    "waves": [],
+    "weather": "rain",
+    "hazards": [],
+    "grade": "rgba(20,10,60,0.10)"
+   }
+  },
+  "boss": {
+   "name": "BRICKJAW",
+   "base": "ramrod",
+   "hp": 36,
+   "scale": 1.05,
+   "speed": 1.1,
+   "moves": [
+    "charge",
+    "kick",
+    "throw",
+    "summon"
+   ],
+   "proj": "brick",
+   "throwN": 2,
+   "minions": [
+    "purple",
+    "heavy"
+   ],
+   "summonCd": 700,
+   "cool": 105,
+   "pitch": 95,
+   "entrance": {
+    "len": 170,
+    "zoom": 1.32,
+    "sub": "LANDLORD OF THE BLOCK"
+   },
+   "lines": {
+    "intro": "THIS IS MY BLOCK, SHELL-FOR-BRAINS!",
+    "hit": [
+     "HEY! WATCH THE JACKET!",
+     "YOU'RE GONNA PAY FOR THAT!",
+     "LUCKY SHOT, GREENIE!"
+    ],
+    "summon": "BOYS! GET 'EM!",
+    "ko": "MY... BEAUTIFUL... BLOCK..."
+   }
+  },
+  "images": [
+   "levels/level2_brickjaw.webp",
+   "levels/level2_props.webp"
+  ],
+  "outro": {}
+ },
+ "3": {
+  "number": 3,
+  "name": "SEWER SHOWDOWN",
+  "card": {
+   "title": "SEWER SHOWDOWN",
+   "tagline": "HOLD YOUR NOSE. HOLD YOUR GROUND.",
+   "color": "#3ae06a"
+  },
+  "enemySkins": {
+   "purple": {
+    "img": "levels/enemies_sewer.webp",
+    "frames": {
+     "idle": [
+      4,
+      0,
+      97,
+      165,
+      41
+     ],
+     "walk": [
+      105,
+      0,
+      101,
+      165,
+      53
+     ],
+     "walk2": [
+      210,
+      2,
+      109,
+      163,
+      55
+     ],
+     "attack": [
+      323,
+      44,
+      152,
+      121,
+      75
+     ],
+     "jump": [
+      479,
+      26,
+      104,
+      139,
+      49
+     ],
+     "hurt": [
+      587,
+      22,
+      97,
+      143,
+      61
+     ],
+     "down": [
+      688,
+      114,
+      192,
+      51,
+      96
+     ],
+     "dash": [
+      884,
+      94,
+      186,
+      71,
+      103
+     ]
+    }
+   },
+   "blue": {
+    "img": "levels/enemies_sewer.webp",
+    "frames": {
+     "idle": [
+      4,
+      0,
+      97,
+      165,
+      41
+     ],
+     "walk": [
+      105,
+      0,
+      101,
+      165,
+      53
+     ],
+     "walk2": [
+      210,
+      2,
+      109,
+      163,
+      55
+     ],
+     "attack": [
+      323,
+      44,
+      152,
+      121,
+      75
+     ],
+     "jump": [
+      479,
+      26,
+      104,
+      139,
+      49
+     ],
+     "hurt": [
+      587,
+      22,
+      97,
+      143,
+      61
+     ],
+     "down": [
+      688,
+      114,
+      192,
+      51,
+      96
+     ],
+     "dash": [
+      884,
+      94,
+      186,
+      71,
+      103
+     ]
+    }
+   },
+   "dasher": {
+    "img": "levels/enemies_sewer.webp",
+    "frames": {
+     "idle": [
+      4,
+      0,
+      97,
+      165,
+      41
+     ],
+     "walk": [
+      105,
+      0,
+      101,
+      165,
+      53
+     ],
+     "walk2": [
+      210,
+      2,
+      109,
+      163,
+      55
+     ],
+     "attack": [
+      323,
+      44,
+      152,
+      121,
+      75
+     ],
+     "jump": [
+      479,
+      26,
+      104,
+      139,
+      49
+     ],
+     "hurt": [
+      587,
+      22,
+      97,
+      143,
+      61
+     ],
+     "down": [
+      688,
+      114,
+      192,
+      51,
+      96
+     ],
+     "dash": [
+      884,
+      94,
+      186,
+      71,
+      103
+     ]
+    }
+   },
+   "sword": {
+    "img": "levels/enemies_sewer.webp",
+    "frames": {
+     "idle": [
+      4,
+      169,
+      103,
+      165,
+      49
+     ],
+     "walk": [
+      111,
+      169,
+      89,
+      165,
+      45
+     ],
+     "walk2": [
+      204,
+      172,
+      84,
+      162,
+      38
+     ],
+     "attack": [
+      292,
+      179,
+      135,
+      155,
+      58
+     ],
+     "jump": [
+      431,
+      191,
+      135,
+      143,
+      57
+     ],
+     "hurt": [
+      570,
+      192,
+      83,
+      142,
+      42
+     ],
+     "down": [
+      657,
+      292,
+      186,
+      42,
+      93
+     ],
+     "throw": [
+      847,
+      249,
+      150,
+      85,
+      101
+     ],
+     "grab": [
+      1001,
+      246,
+      157,
+      88,
+      88
+     ]
+    }
+   },
+   "star": {
+    "img": "levels/enemies_sewer.webp",
+    "frames": {
+     "idle": [
+      4,
+      169,
+      103,
+      165,
+      49
+     ],
+     "walk": [
+      111,
+      169,
+      89,
+      165,
+      45
+     ],
+     "walk2": [
+      204,
+      172,
+      84,
+      162,
+      38
+     ],
+     "attack": [
+      292,
+      179,
+      135,
+      155,
+      58
+     ],
+     "jump": [
+      431,
+      191,
+      135,
+      143,
+      57
+     ],
+     "hurt": [
+      570,
+      192,
+      83,
+      142,
+      42
+     ],
+     "down": [
+      657,
+      292,
+      186,
+      42,
+      93
+     ],
+     "throw": [
+      847,
+      249,
+      150,
+      85,
+      101
+     ],
+     "grab": [
+      1001,
+      246,
+      157,
+      88,
+      88
+     ]
+    }
+   },
+   "heavy": {
+    "img": "levels/enemies_sewer.webp",
+    "frames": {
+     "idle": [
+      4,
+      338,
+      104,
+      165,
+      46
+     ],
+     "walk": [
+      112,
+      338,
+      90,
+      165,
+      48
+     ],
+     "walk2": [
+      206,
+      342,
+      96,
+      161,
+      51
+     ],
+     "attack": [
+      306,
+      344,
+      144,
+      159,
+      52
+     ],
+     "hurt": [
+      454,
+      359,
+      84,
+      144,
+      42
+     ],
+     "shoot": [
+      542,
+      348,
+      209,
+      155,
+      50
+     ],
+     "down": [
+      755,
+      459,
+      189,
+      44,
+      94
+     ]
+    }
+   },
+   "gunner": {
+    "img": "levels/enemies_sewer.webp",
+    "frames": {
+     "idle": [
+      4,
+      338,
+      104,
+      165,
+      46
+     ],
+     "walk": [
+      112,
+      338,
+      90,
+      165,
+      48
+     ],
+     "walk2": [
+      206,
+      342,
+      96,
+      161,
+      51
+     ],
+     "attack": [
+      306,
+      344,
+      144,
+      159,
+      52
+     ],
+     "hurt": [
+      454,
+      359,
+      84,
+      144,
+      42
+     ],
+     "shoot": [
+      542,
+      348,
+      209,
+      155,
+      50
+     ],
+     "down": [
+      755,
+      459,
+      189,
+      44,
+      94
+     ]
+    }
+   }
+  },
+  "hues": {
+   "purple": 75,
+   "blue": 150,
+   "sword": 200,
+   "star": 45,
+   "dasher": 15,
+   "heavy": 95,
+   "gunner": 110
+  },
+  "hazards": [
+   {},
+   {}
+  ],
+  "sections": [
+   {
+    "bg": "levels/level3_sewer.jpg",
+    "floor": [
+     154,
+     218
+    ],
+    "length": 2240,
+    "locks": [
+     300,
+     900,
+     1560
+    ],
+    "waves": [
+     [
+      "dasher",
+      "purple",
+      "dasher",
+      "blue"
+     ],
+     [
+      "purple",
+      "star",
+      "heavy",
+      "dasher",
+      "blue"
+     ],
+     [
+      "sword",
+      "dasher",
+      "gunner",
+      "heavy",
+      "dasher",
+      "purple"
+     ]
+    ],
+    "grade": "rgba(10,40,20,0.10)",
+    "weather": "drips",
+    "pipes": [
+     {
+      "x": 235,
+      "y": 108
+     },
+     {
+      "x": 742,
+      "y": 124
+     }
+    ],
+    "pipeTile": 903,
+    "grates": [
+     [
+      470,
+      196
+     ],
+     [
+      760,
+      208
+     ],
+     [
+      1120,
+      190
+     ],
+     [
+      1330,
+      206
+     ],
+     [
+      1700,
+      194
+     ],
+     [
+      1960,
+      207
+     ]
+    ],
+    "hazards": [
+     {}
+    ]
+   },
+   {
+    "bg": "levels/level3_sewer_boss.jpg",
+    "floor": [
+     154,
+     218
+    ],
+    "length": 384,
+    "locks": [
+     0
+    ],
+    "waves": [
+     [
+      "dasher",
+      "dasher",
+      "purple"
+     ]
+    ],
+    "grade": "rgba(10,40,20,0.08)",
+    "weather": "drips",
+    "pipes": [
+     {
+      "x": 226,
+      "y": 112
+     }
+    ],
+    "pipeTile": 0,
+    "grates": [],
+    "hazards": [
+     {},
+     {}
+    ]
+   }
+  ],
+  "restructure": {
+   "split": 0,
+   "images": [
+    "levels/level3_twist.webp",
+    "levels/level3_pumpstation.jpg"
+   ],
+   "tsec": {
+    "length": 1500,
+    "hazards": []
+   },
+   "twist": {
+    "kind": "chase",
+    "goal": "reach",
+    "title": "THE SLUICE GATE BURST!",
+    "sub": "OUTRUN THE FLOOD - GET TO THE LADDER",
+    "img": "levels/level3_twist.webp",
+    "fr": {
+     "wave": [
+      0,
+      0,
+      768,
+      191
+     ],
+     "gateShut": [
+      771,
+      0,
+      220,
+      175
+     ],
+     "gush": [
+      0,
+      194,
+      260,
+      64
+     ],
+     "frame": [
+      263,
+      194,
+      220,
+      162
+     ],
+     "raft": [
+      486,
+      194,
+      100,
+      50
+     ],
+     "drum": [
+      589,
+      194,
+      40,
+      62
+     ],
+     "ladder": [
+      632,
+      194,
+      50,
+      160
+     ]
+    },
+    "speed": 1.25,
+    "start": "frame",
+    "end": "ladder",
+    "crest": "wave",
+    "color": "#2f7a3a",
+    "floaters": [
+     {
+      "spr": "raft",
+      "x": 420,
+      "y": 200
+     },
+     {
+      "spr": "drum",
+      "x": 760,
+      "y": 176
+     },
+     {
+      "spr": "raft",
+      "x": 1100,
+      "y": 190
+     }
+    ],
+    "drip": [
+     "dasher",
+     "purple"
+    ],
+    "gap": 210,
+    "cap": 2,
+    "from": "right"
+   },
+   "z2bg": "levels/level3_pumpstation.jpg",
+   "z2waves": [
+    [
+     "sword",
+     "dasher",
+     "gunner",
+     "purple"
+    ],
+    [
+     "heavy",
+     "dasher",
+     "star",
+     "sword",
+     "purple"
+    ]
+   ]
+  },
+  "boss": {
+   "name": "GULCH GATOR",
+   "base": "ramrod",
+   "height": 104,
+   "hp": 38,
+   "speed": 0.95,
+   "chargeSpeed": 1.1,
+   "cool": 100,
+   "pitch": 72,
+   "moves": [
+    "charge",
+    "kick",
+    "throw",
+    "slam",
+    "summon"
+   ],
+   "proj": "sludge",
+   "throwN": 3,
+   "minions": [
+    "dasher",
+    "dasher"
+   ],
+   "summonCd": 720,
+   "lines": {
+    "intro": "SURF'S UP, SHELLBACKS! THIS IS MY SWAMP!",
+    "hit": [
+     "HEY! WATCH THE SCALES!",
+     "THAT ALL YOU GOT, SHELL-SNACK?",
+     "GRRR... I'LL CHOMP YA!"
+    ],
+    "summon": "RATS! FRESH MEAT!",
+    "ko": "GLUB... I'M... GOIN' DOWN THE DRAIN..."
+   },
+   "entrance": {
+    "len": 175,
+    "zoom": 1.3,
+    "sub": "KING OF THE SEWER"
+   }
+  },
+  "images": [
+   "levels/level3_gator.webp",
+   "levels/level3_props.webp"
+  ],
+  "outro": {}
+ },
+ "4": {
+  "number": 4,
+  "name": "SUNSET SHRED",
+  "card": {
+   "title": "SUNSET SHRED",
+   "tagline": "SKATE FAST. DODGE TRAFFIC. DON'T LOOK DOWN.",
+   "color": "#ff8a2a"
+  },
+  "auto": true,
+  "enemySkins": {
+   "purple": {
+    "img": "levels/enemies_biker.webp",
+    "frames": {
+     "idle": [
+      4,
+      4,
+      83,
+      165,
+      36
+     ],
+     "walk": [
+      91,
+      2,
+      87,
+      167,
+      41
+     ],
+     "walk2": [
+      182,
+      0,
+      79,
+      169,
+      45
+     ],
+     "attack": [
+      265,
+      6,
+      118,
+      163,
+      46
+     ],
+     "jump": [
+      387,
+      8,
+      120,
+      161,
+      32
+     ],
+     "hurt": [
+      511,
+      13,
+      88,
+      156,
+      55
+     ],
+     "down": [
+      603,
+      128,
+      181,
+      41,
+      90
+     ],
+     "dash": [
+      788,
+      82,
+      175,
+      87,
+      100
+     ]
+    }
+   },
+   "blue": {
+    "img": "levels/enemies_biker.webp",
+    "frames": {
+     "idle": [
+      4,
+      4,
+      83,
+      165,
+      36
+     ],
+     "walk": [
+      91,
+      2,
+      87,
+      167,
+      41
+     ],
+     "walk2": [
+      182,
+      0,
+      79,
+      169,
+      45
+     ],
+     "attack": [
+      265,
+      6,
+      118,
+      163,
+      46
+     ],
+     "jump": [
+      387,
+      8,
+      120,
+      161,
+      32
+     ],
+     "hurt": [
+      511,
+      13,
+      88,
+      156,
+      55
+     ],
+     "down": [
+      603,
+      128,
+      181,
+      41,
+      90
+     ],
+     "dash": [
+      788,
+      82,
+      175,
+      87,
+      100
+     ]
+    }
+   },
+   "dasher": {
+    "img": "levels/enemies_biker.webp",
+    "frames": {
+     "idle": [
+      4,
+      4,
+      83,
+      165,
+      36
+     ],
+     "walk": [
+      91,
+      2,
+      87,
+      167,
+      41
+     ],
+     "walk2": [
+      182,
+      0,
+      79,
+      169,
+      45
+     ],
+     "attack": [
+      265,
+      6,
+      118,
+      163,
+      46
+     ],
+     "jump": [
+      387,
+      8,
+      120,
+      161,
+      32
+     ],
+     "hurt": [
+      511,
+      13,
+      88,
+      156,
+      55
+     ],
+     "down": [
+      603,
+      128,
+      181,
+      41,
+      90
+     ],
+     "dash": [
+      788,
+      82,
+      175,
+      87,
+      100
+     ]
+    }
+   },
+   "sword": {
+    "img": "levels/enemies_biker.webp",
+    "frames": {
+     "idle": [
+      4,
+      173,
+      65,
+      169,
+      27
+     ],
+     "walk": [
+      73,
+      173,
+      80,
+      169,
+      42
+     ],
+     "walk2": [
+      157,
+      175,
+      82,
+      167,
+      40
+     ],
+     "attack": [
+      243,
+      177,
+      172,
+      165,
+      46
+     ],
+     "grab": [
+      419,
+      177,
+      104,
+      165,
+      44
+     ],
+     "jump": [
+      527,
+      182,
+      72,
+      160,
+      31
+     ],
+     "hurt": [
+      603,
+      187,
+      90,
+      155,
+      52
+     ],
+     "down": [
+      697,
+      302,
+      190,
+      40,
+      95
+     ],
+     "throw": [
+      891,
+      178,
+      145,
+      164,
+      66
+     ]
+    }
+   },
+   "star": {
+    "img": "levels/enemies_biker.webp",
+    "frames": {
+     "idle": [
+      4,
+      173,
+      65,
+      169,
+      27
+     ],
+     "walk": [
+      73,
+      173,
+      80,
+      169,
+      42
+     ],
+     "walk2": [
+      157,
+      175,
+      82,
+      167,
+      40
+     ],
+     "attack": [
+      243,
+      177,
+      172,
+      165,
+      46
+     ],
+     "grab": [
+      419,
+      177,
+      104,
+      165,
+      44
+     ],
+     "jump": [
+      527,
+      182,
+      72,
+      160,
+      31
+     ],
+     "hurt": [
+      603,
+      187,
+      90,
+      155,
+      52
+     ],
+     "down": [
+      697,
+      302,
+      190,
+      40,
+      95
+     ],
+     "throw": [
+      891,
+      178,
+      145,
+      164,
+      66
+     ]
+    }
+   },
+   "heavy": {
+    "img": "levels/enemies_biker.webp",
+    "frames": {
+     "idle": [
+      4,
+      346,
+      88,
+      168,
+      38
+     ],
+     "walk": [
+      96,
+      346,
+      104,
+      168,
+      48
+     ],
+     "walk2": [
+      204,
+      346,
+      103,
+      168,
+      46
+     ],
+     "attack": [
+      311,
+      348,
+      136,
+      166,
+      53
+     ],
+     "jump": [
+      451,
+      355,
+      100,
+      159,
+      31
+     ],
+     "hurt": [
+      555,
+      355,
+      107,
+      159,
+      58
+     ],
+     "down": [
+      666,
+      463,
+      193,
+      51,
+      96
+     ],
+     "shoot": [
+      863,
+      347,
+      136,
+      167,
+      39
+     ]
+    }
+   },
+   "gunner": {
+    "img": "levels/enemies_biker.webp",
+    "frames": {
+     "idle": [
+      4,
+      346,
+      88,
+      168,
+      38
+     ],
+     "walk": [
+      96,
+      346,
+      104,
+      168,
+      48
+     ],
+     "walk2": [
+      204,
+      346,
+      103,
+      168,
+      46
+     ],
+     "attack": [
+      311,
+      348,
+      136,
+      166,
+      53
+     ],
+     "jump": [
+      451,
+      355,
+      100,
+      159,
+      31
+     ],
+     "hurt": [
+      555,
+      355,
+      107,
+      159,
+      58
+     ],
+     "down": [
+      666,
+      463,
+      193,
+      51,
+      96
+     ],
+     "shoot": [
+      863,
+      347,
+      136,
+      167,
+      39
+     ]
+    }
+   }
+  },
+  "hues": {
+   "purple": 20,
+   "blue": 330,
+   "star": 45,
+   "dasher": 0,
+   "heavy": 280,
+   "gunner": 200,
+   "sword": 300
+  },
+  "sections": [
+   {
+    "bg": "levels/level4_highway.jpg",
+    "floor": [
+     160,
+     216
+    ],
+    "length": 2300,
+    "auto": 2.4,
+    "locks": [
+     120,
+     1250
+    ],
+    "waves": [
+     [
+      "purple",
+      "blue",
+      "dasher"
+     ],
+     [
+      "blue",
+      "star",
+      "dasher",
+      "purple"
+     ]
+    ],
+    "grade": "rgba(60,20,10,0.08)",
+    "weather": "speed",
+    "trafficGap": 320,
+    "debrisGap": 180,
+    "hazards": [
+     {},
+     {},
+     {}
+    ],
+    "sky": "#e8784a",
+    "ground": "#3a3438"
+   },
+   {
+    "bg": "levels/level4_highway.jpg",
+    "floor": [
+     160,
+     216
+    ],
+    "length": 2500,
+    "auto": 2.8,
+    "locks": [
+     120,
+     1350
+    ],
+    "waves": [
+     [
+      "dasher",
+      "heavy",
+      "blue",
+      "star"
+     ],
+     [
+      "gunner",
+      "dasher",
+      "purple",
+      "blue",
+      "dasher"
+     ]
+    ],
+    "grade": "rgba(80,20,40,0.14)",
+    "weather": "speed",
+    "trafficGap": 270,
+    "debrisGap": 160,
+    "drones": true,
+    "hazards": [
+     {},
+     {},
+     {},
+     {}
+    ],
+    "sky": "#c8505a",
+    "ground": "#3a3438"
+   }
+  ],
+  "hazards": [
+   {}
+  ],
+  "restructure": {
+   "split": 0,
+   "z2sec": 1,
+   "images": [
+    "levels/level4_twist.webp",
+    "levels/level4_tunnel.jpg",
+    "levels/level4_tunnel_boss.jpg"
+   ],
+   "tsec": {
+    "auto": 2.4,
+    "hazards": [
+     {}
+    ],
+    "weather": "speed"
+   },
+   "twist": {
+    "kind": "turret",
+    "title": "MAN THE WATER CANNON!",
+    "sub": "UP / DOWN TO AIM - ATTACK TO FIRE",
+    "img": "levels/level4_twist.webp",
+    "fr": {
+     "truckGun": [
+      0,
+      0,
+      340,
+      132
+     ],
+     "truck": [
+      343,
+      0,
+      340,
+      116
+     ],
+     "turret": [
+      0,
+      135,
+      140,
+      47
+     ],
+     "spray": [
+      143,
+      135,
+      200,
+      70
+     ]
+    },
+    "goal": "kills",
+    "need": 10,
+    "every": 70,
+    "air": true,
+    "tspeed": 1.6,
+    "base": "truck",
+    "baseK": 0.42,
+    "baseDy": 14,
+    "gun": "turret",
+    "gunK": 0.36,
+    "spray": "spray",
+    "hudText": "DRONES",
+    "color": "#7fdcff"
+   },
+   "z2bg": "levels/level4_tunnel.jpg",
+   "z2": {
+    "grade": "rgba(40,30,10,0.18)"
+   },
+   "arena": {
+    "bg": "levels/level4_tunnel_boss.jpg",
+    "floor": [
+     160,
+     216
+    ],
+    "length": 260,
+    "auto": 2,
+    "locks": [],
+    "waves": [],
+    "weather": "speed",
+    "hazards": [
+     {}
+    ],
+    "trafficGap": 9999,
+    "debrisGap": 9999,
+    "sky": "#c8505a",
+    "ground": "#3a3438"
+   }
+  },
+  "boss": {
+   "name": "JETWASH",
+   "base": "ramrod",
+   "scale": 1.25,
+   "height": 100,
+   "hp": 38,
+   "pitch": 130,
+   "moves": [
+    "charge",
+    "throw",
+    "fire",
+    "summon"
+   ],
+   "cool": 100,
+   "lines": {
+    "intro": "THIS LANE'S A TOLL ROAD, SHELLS. AND I'M THE TOLL!",
+    "hit": [
+     "HEY! THAT'S A RENTAL JETPACK!",
+     "YOU SCRATCHED MY VISOR!",
+     "LUCKY BREAK, ROAD-KIDS!"
+    ],
+    "summon": "BREAKER BREAKER! SEND THE RIG!",
+    "ko": "RUNNING... ON... FUMES..."
+   },
+   "entrance": {
+    "len": 165,
+    "zoom": 1.28,
+    "sub": "KING OF THE FAST LANE"
+   }
+  },
+  "outro": {},
+  "images": [
+   "levels/level4_jetwash.webp",
+   "levels/level4_props.webp"
+  ]
+ },
+ "5": {
+  "number": 5,
+  "name": "DOCKSIDE DOUBLE-CROSS",
+  "card": {
+   "title": "DOCKSIDE DOUBLE-CROSS",
+   "tagline": "SOMEBODY'S SMUGGLING TROUBLE BY THE CRATE.",
+   "color": "#3ab8e0"
+  },
+  "images": [
+   "levels/level5_grimwale.webp",
+   "levels/level5_props.webp",
+   "levels/level5_holds.jpg"
+  ],
+  "enemySkins": {
+   "purple": {
+    "img": "levels/enemies_dock.webp",
+    "frames": {
+     "idle": [
+      4,
+      4,
+      87,
+      164,
+      39
+     ],
+     "walk": [
+      95,
+      0,
+      87,
+      168,
+      42
+     ],
+     "walk2": [
+      186,
+      0,
+      84,
+      168,
+      41
+     ],
+     "attack": [
+      274,
+      6,
+      140,
+      162,
+      65
+     ],
+     "grab": [
+      418,
+      4,
+      133,
+      164,
+      63
+     ],
+     "jump": [
+      555,
+      38,
+      126,
+      130,
+      45
+     ],
+     "hurt": [
+      685,
+      22,
+      98,
+      146,
+      61
+     ],
+     "down": [
+      787,
+      132,
+      176,
+      36,
+      88
+     ],
+     "dash": [
+      967,
+      62,
+      152,
+      106,
+      94
+     ]
+    }
+   },
+   "blue": {
+    "img": "levels/enemies_dock.webp",
+    "frames": {
+     "idle": [
+      4,
+      4,
+      87,
+      164,
+      39
+     ],
+     "walk": [
+      95,
+      0,
+      87,
+      168,
+      42
+     ],
+     "walk2": [
+      186,
+      0,
+      84,
+      168,
+      41
+     ],
+     "attack": [
+      274,
+      6,
+      140,
+      162,
+      65
+     ],
+     "grab": [
+      418,
+      4,
+      133,
+      164,
+      63
+     ],
+     "jump": [
+      555,
+      38,
+      126,
+      130,
+      45
+     ],
+     "hurt": [
+      685,
+      22,
+      98,
+      146,
+      61
+     ],
+     "down": [
+      787,
+      132,
+      176,
+      36,
+      88
+     ],
+     "dash": [
+      967,
+      62,
+      152,
+      106,
+      94
+     ]
+    }
+   },
+   "dasher": {
+    "img": "levels/enemies_dock.webp",
+    "frames": {
+     "idle": [
+      4,
+      4,
+      87,
+      164,
+      39
+     ],
+     "walk": [
+      95,
+      0,
+      87,
+      168,
+      42
+     ],
+     "walk2": [
+      186,
+      0,
+      84,
+      168,
+      41
+     ],
+     "attack": [
+      274,
+      6,
+      140,
+      162,
+      65
+     ],
+     "grab": [
+      418,
+      4,
+      133,
+      164,
+      63
+     ],
+     "jump": [
+      555,
+      38,
+      126,
+      130,
+      45
+     ],
+     "hurt": [
+      685,
+      22,
+      98,
+      146,
+      61
+     ],
+     "down": [
+      787,
+      132,
+      176,
+      36,
+      88
+     ],
+     "dash": [
+      967,
+      62,
+      152,
+      106,
+      94
+     ]
+    }
+   },
+   "sword": {
+    "img": "levels/enemies_dock.webp",
+    "frames": {
+     "idle": [
+      4,
+      175,
+      61,
+      165,
+      28
+     ],
+     "walk": [
+      69,
+      172,
+      85,
+      168,
+      36
+     ],
+     "walk2": [
+      158,
+      172,
+      94,
+      168,
+      51
+     ],
+     "attack": [
+      256,
+      177,
+      150,
+      163,
+      54
+     ],
+     "jump": [
+      410,
+      180,
+      92,
+      160,
+      45
+     ],
+     "hurt": [
+      506,
+      179,
+      92,
+      161,
+      56
+     ],
+     "down": [
+      602,
+      304,
+      180,
+      36,
+      90
+     ],
+     "throw": [
+      786,
+      178,
+      136,
+      162,
+      54
+     ]
+    }
+   },
+   "star": {
+    "img": "levels/enemies_dock.webp",
+    "frames": {
+     "idle": [
+      4,
+      175,
+      61,
+      165,
+      28
+     ],
+     "walk": [
+      69,
+      172,
+      85,
+      168,
+      36
+     ],
+     "walk2": [
+      158,
+      172,
+      94,
+      168,
+      51
+     ],
+     "attack": [
+      256,
+      177,
+      150,
+      163,
+      54
+     ],
+     "jump": [
+      410,
+      180,
+      92,
+      160,
+      45
+     ],
+     "hurt": [
+      506,
+      179,
+      92,
+      161,
+      56
+     ],
+     "down": [
+      602,
+      304,
+      180,
+      36,
+      90
+     ],
+     "throw": [
+      786,
+      178,
+      136,
+      162,
+      54
+     ]
+    }
+   },
+   "heavy": {
+    "img": "levels/enemies_dock.webp",
+    "frames": {
+     "idle": [
+      4,
+      350,
+      98,
+      162,
+      43
+     ],
+     "walk": [
+      106,
+      344,
+      84,
+      168,
+      45
+     ],
+     "walk2": [
+      194,
+      344,
+      85,
+      168,
+      43
+     ],
+     "attack": [
+      283,
+      350,
+      142,
+      162,
+      53
+     ],
+     "jump": [
+      429,
+      360,
+      117,
+      152,
+      57
+     ],
+     "hurt": [
+      550,
+      359,
+      96,
+      153,
+      51
+     ],
+     "down": [
+      650,
+      458,
+      188,
+      54,
+      94
+     ],
+     "shoot": [
+      842,
+      357,
+      144,
+      155,
+      42
+     ]
+    }
+   },
+   "gunner": {
+    "img": "levels/enemies_dock.webp",
+    "frames": {
+     "idle": [
+      4,
+      350,
+      98,
+      162,
+      43
+     ],
+     "walk": [
+      106,
+      344,
+      84,
+      168,
+      45
+     ],
+     "walk2": [
+      194,
+      344,
+      85,
+      168,
+      43
+     ],
+     "attack": [
+      283,
+      350,
+      142,
+      162,
+      53
+     ],
+     "jump": [
+      429,
+      360,
+      117,
+      152,
+      57
+     ],
+     "hurt": [
+      550,
+      359,
+      96,
+      153,
+      51
+     ],
+     "down": [
+      650,
+      458,
+      188,
+      54,
+      94
+     ],
+     "shoot": [
+      842,
+      357,
+      144,
+      155,
+      42
+     ]
+    }
+   }
+  },
+  "hues": {
+   "purple": 200,
+   "blue": 160,
+   "sword": 20,
+   "star": 60,
+   "dasher": 270,
+   "heavy": 30,
+   "gunner": 180
+  },
+  "sections": [
+   {
+    "bg": "levels/level5_docks.jpg",
+    "floor": [
+     166,
+     218
+    ],
+    "length": 1720,
+    "locks": [
+     0,
+     560,
+     1140
+    ],
+    "waves": [
+     [
+      "purple",
+      "purple",
+      "blue",
+      "star"
+     ],
+     [
+      "sword",
+      "heavy",
+      "purple",
+      "star",
+      "blue"
+     ],
+     [
+      "dasher",
+      "heavy",
+      "gunner",
+      "purple",
+      "sword"
+     ]
+    ],
+    "grade": "rgba(10,30,70,0.12)",
+    "hazards": [
+     {},
+     {},
+     {},
+     {}
+    ],
+    "sky": "#0c1424",
+    "ground": "#3a3028"
+   },
+   {
+    "bg": "levels/level5_docks_boss.jpg",
+    "floor": [
+     168,
+     218
+    ],
+    "length": 420,
+    "locks": [
+     0
+    ],
+    "waves": [
+     [
+      "purple",
+      "blue",
+      "dasher"
+     ]
+    ],
+    "grade": "rgba(10,30,60,0.10)",
+    "hazards": [
+     {},
+     {},
+     {}
+    ],
+    "sky": "#0c1424",
+    "ground": "#2a3236"
+   }
+  ],
+  "restructure": {
+   "split": 0,
+   "images": [
+    "levels/level5_twist.webp",
+    "levels/level5_harbour.jpg",
+    "levels/level5_shipdeck.jpg"
+   ],
+   "tsec": {
+    "bg": "levels/level5_harbour.jpg",
+    "auto": 3,
+    "floor": [
+     170,
+     214
+    ],
+    "hazards": []
+   },
+   "twist": {
+    "kind": "ride",
+    "title": "HARBOUR CHASE!",
+    "sub": "FOOT JET-SKIS INCOMING - HOLD THE DECK",
+    "len": 2400,
+    "img": "levels/level5_twist.webp",
+    "fr": {
+     "boat": [
+      0,
+      0,
+      600,
+      211
+     ],
+     "wake": [
+      0,
+      214,
+      600,
+      42
+     ],
+     "jetski": [
+      603,
+      214,
+      140,
+      54
+     ],
+     "bow": [
+      0,
+      271,
+      120,
+      60
+     ],
+     "buoy": [
+      123,
+      271,
+      58,
+      110
+     ],
+     "deck": [
+      0,
+      384,
+      720,
+      167
+     ]
+    },
+    "deck": "deck",
+    "deckK": 0.54,
+    "ski": "jetski",
+    "wake": "wake",
+    "bow": "bow",
+    "buoy": "buoy",
+    "drip": [
+     "dasher",
+     "purple",
+     "dasher",
+     "star"
+    ],
+    "gap": 170,
+    "cap": 3,
+    "color": "#7fdcff"
+   },
+   "z2bg": "levels/level5_shipdeck.jpg",
+   "z2waves": [
+    [
+     "dasher",
+     "heavy",
+     "gunner",
+     "purple"
+    ],
+    [
+     "sword",
+     "heavy",
+     "dasher",
+     "star",
+     "blue"
+    ]
+   ],
+   "z2": {
+    "hazards": [
+     {},
+     {}
+    ]
+   }
+  },
+  "boss": {
+   "name": "GRIMWALE",
+   "base": "ramrod",
+   "atlas": "ramrod",
+   "hp": 38,
+   "scale": 1.12,
+   "speed": 1,
+   "chargeSpeed": 1.1,
+   "cool": 100,
+   "pitch": 80,
+   "moves": [
+    "charge",
+    "kick",
+    "slam"
+   ],
+   "entrance": {
+    "len": 175,
+    "zoom": 1.3,
+    "sub": "SCOURGE OF THE HARBOUR"
+   },
+   "lines": {
+    "intro": "WELCOME ABOARD, SHELLFISH! NOW WALK THE PLANK!",
+    "hit": [
+     "MIND THE CHAIN, BARNACLE-BACK!",
+     "I'VE GUTTED BIGGER FISH!",
+     "ARR... THAT STINGS!"
+    ],
+    "summon": "ALL HANDS ON DECK!",
+    "ko": "ABANDON... SHIP..."
+   }
+  },
+  "outro": {}
+ },
+ "6": {
+  "number": 6,
+  "name": "FROSTBITE BOULEVARD",
+  "card": {
+   "title": "FROSTBITE BOULEVARD",
+   "tagline": "BUNDLE UP. THE GANG BROUGHT A COLD FRONT.",
+   "color": "#7fd0ff"
+  },
+  "images": [
+   "levels/level6_coldfront.webp",
+   "levels/level6_props.webp"
+  ],
+  "enemySkins": {
+   "purple": {
+    "img": "levels/enemies_snow.webp",
+    "frames": {
+     "idle": [
+      4,
+      0,
+      74,
+      168,
+      32
+     ],
+     "walk": [
+      82,
+      0,
+      84,
+      168,
+      46
+     ],
+     "walk2": [
+      170,
+      0,
+      88,
+      168,
+      51
+     ],
+     "attack": [
+      262,
+      7,
+      149,
+      161,
+      67
+     ],
+     "jump": [
+      415,
+      29,
+      136,
+      139,
+      55
+     ],
+     "hurt": [
+      555,
+      15,
+      96,
+      153,
+      52
+     ],
+     "down": [
+      655,
+      130,
+      177,
+      38,
+      88
+     ],
+     "dash": [
+      836,
+      63,
+      180,
+      105,
+      96
+     ]
+    }
+   },
+   "blue": {
+    "img": "levels/enemies_snow.webp",
+    "frames": {
+     "idle": [
+      4,
+      0,
+      74,
+      168,
+      32
+     ],
+     "walk": [
+      82,
+      0,
+      84,
+      168,
+      46
+     ],
+     "walk2": [
+      170,
+      0,
+      88,
+      168,
+      51
+     ],
+     "attack": [
+      262,
+      7,
+      149,
+      161,
+      67
+     ],
+     "jump": [
+      415,
+      29,
+      136,
+      139,
+      55
+     ],
+     "hurt": [
+      555,
+      15,
+      96,
+      153,
+      52
+     ],
+     "down": [
+      655,
+      130,
+      177,
+      38,
+      88
+     ],
+     "dash": [
+      836,
+      63,
+      180,
+      105,
+      96
+     ]
+    }
+   },
+   "dasher": {
+    "img": "levels/enemies_snow.webp",
+    "frames": {
+     "idle": [
+      4,
+      0,
+      74,
+      168,
+      32
+     ],
+     "walk": [
+      82,
+      0,
+      84,
+      168,
+      46
+     ],
+     "walk2": [
+      170,
+      0,
+      88,
+      168,
+      51
+     ],
+     "attack": [
+      262,
+      7,
+      149,
+      161,
+      67
+     ],
+     "jump": [
+      415,
+      29,
+      136,
+      139,
+      55
+     ],
+     "hurt": [
+      555,
+      15,
+      96,
+      153,
+      52
+     ],
+     "down": [
+      655,
+      130,
+      177,
+      38,
+      88
+     ],
+     "dash": [
+      836,
+      63,
+      180,
+      105,
+      96
+     ]
+    }
+   },
+   "sword": {
+    "img": "levels/enemies_snow.webp",
+    "frames": {
+     "idle": [
+      4,
+      172,
+      72,
+      170,
+      27
+     ],
+     "walk": [
+      80,
+      175,
+      86,
+      167,
+      39
+     ],
+     "walk2": [
+      170,
+      173,
+      87,
+      169,
+      42
+     ],
+     "attack": [
+      261,
+      177,
+      89,
+      165,
+      51
+     ],
+     "jump": [
+      354,
+      180,
+      79,
+      162,
+      30
+     ],
+     "hurt": [
+      437,
+      185,
+      87,
+      157,
+      54
+     ],
+     "down": [
+      528,
+      296,
+      183,
+      46,
+      91
+     ],
+     "throw": [
+      715,
+      181,
+      124,
+      161,
+      47
+     ]
+    }
+   },
+   "star": {
+    "img": "levels/enemies_snow.webp",
+    "frames": {
+     "idle": [
+      4,
+      172,
+      72,
+      170,
+      27
+     ],
+     "walk": [
+      80,
+      175,
+      86,
+      167,
+      39
+     ],
+     "walk2": [
+      170,
+      173,
+      87,
+      169,
+      42
+     ],
+     "attack": [
+      261,
+      177,
+      89,
+      165,
+      51
+     ],
+     "jump": [
+      354,
+      180,
+      79,
+      162,
+      30
+     ],
+     "hurt": [
+      437,
+      185,
+      87,
+      157,
+      54
+     ],
+     "down": [
+      528,
+      296,
+      183,
+      46,
+      91
+     ],
+     "throw": [
+      715,
+      181,
+      124,
+      161,
+      47
+     ]
+    }
+   },
+   "heavy": {
+    "img": "levels/enemies_snow.webp",
+    "frames": {
+     "idle": [
+      4,
+      346,
+      99,
+      169,
+      41
+     ],
+     "walk": [
+      107,
+      347,
+      94,
+      168,
+      49
+     ],
+     "walk2": [
+      205,
+      347,
+      93,
+      168,
+      43
+     ],
+     "attack": [
+      302,
+      347,
+      136,
+      168,
+      49
+     ],
+     "jump": [
+      442,
+      354,
+      84,
+      161,
+      32
+     ],
+     "hurt": [
+      530,
+      361,
+      99,
+      154,
+      48
+     ],
+     "down": [
+      633,
+      460,
+      180,
+      55,
+      90
+     ],
+     "shoot": [
+      817,
+      354,
+      146,
+      161,
+      41
+     ]
+    }
+   },
+   "gunner": {
+    "img": "levels/enemies_snow.webp",
+    "frames": {
+     "idle": [
+      4,
+      346,
+      99,
+      169,
+      41
+     ],
+     "walk": [
+      107,
+      347,
+      94,
+      168,
+      49
+     ],
+     "walk2": [
+      205,
+      347,
+      93,
+      168,
+      43
+     ],
+     "attack": [
+      302,
+      347,
+      136,
+      168,
+      49
+     ],
+     "jump": [
+      442,
+      354,
+      84,
+      161,
+      32
+     ],
+     "hurt": [
+      530,
+      361,
+      99,
+      154,
+      48
+     ],
+     "down": [
+      633,
+      460,
+      180,
+      55,
+      90
+     ],
+     "shoot": [
+      817,
+      354,
+      146,
+      161,
+      41
+     ]
+    }
+   }
+  },
+  "hues": {
+   "purple": 200,
+   "blue": 170,
+   "sword": 240,
+   "star": 185,
+   "dasher": 215,
+   "heavy": 190,
+   "gunner": 175
+  },
+  "sections": [
+   {
+    "bg": "levels/level6_snow.jpg",
+    "floor": [
+     160,
+     216
+    ],
+    "length": 2320,
+    "locks": [
+     0,
+     520,
+     1060,
+     1620
+    ],
+    "waves": [
+     [
+      "purple",
+      "purple",
+      "blue"
+     ],
+     [
+      "star",
+      "purple",
+      "dasher",
+      "blue"
+     ],
+     [
+      "heavy",
+      "sword",
+      "star",
+      "dasher"
+     ],
+     [
+      "heavy",
+      "gunner",
+      "dasher",
+      "purple",
+      "blue"
+     ]
+    ],
+    "grade": "rgba(40,70,130,0.10)",
+    "weather": "snow",
+    "hazards": [
+     {},
+     {},
+     {},
+     {}
+    ],
+    "sky": "#1a2238",
+    "ground": "#c8d2de"
+   },
+   {
+    "bg": "levels/level6_snow_boss.jpg",
+    "floor": [
+     164,
+     212
+    ],
+    "length": 384,
+    "locks": [],
+    "waves": [],
+    "grade": "rgba(30,60,120,0.08)",
+    "weather": "snow",
+    "hazards": [
+     {}
+    ],
+    "sky": "#141c34",
+    "ground": "#b8d4ea"
+   }
+  ],
+  "restructure": {
+   "split": 0,
+   "images": [
+    "levels/level6_twist.webp",
+    "levels/level6_park.jpg"
+   ],
+   "tsec": {
+    "bg": "levels/level6_park.jpg",
+    "length": 1100,
+    "hazards": [],
+    "weather": "snow"
+   },
+   "twist": {
+    "kind": "ice",
+    "goal": "reach",
+    "title": "THIN ICE!",
+    "sub": "DON'T STAND STILL - THE POND CRACKS",
+    "img": "levels/level6_twist.webp",
+    "fr": {
+     "ice0": [
+      0,
+      0,
+      180,
+      73
+     ],
+     "ice1": [
+      183,
+      0,
+      180,
+      75
+     ],
+     "ice2": [
+      366,
+      0,
+      180,
+      78
+     ],
+     "ice3": [
+      549,
+      0,
+      180,
+      84
+     ],
+     "slide": [
+      0,
+      87,
+      185,
+      200
+     ],
+     "drift": [
+      188,
+      87,
+      120,
+      73
+     ],
+     "sawhorse": [
+      311,
+      87,
+      60,
+      64
+     ]
+    },
+    "slide": "slide",
+    "post": "sawhorse",
+    "drip": [
+     "purple",
+     "star"
+    ],
+    "gap": 220,
+    "cap": 2,
+    "color": "#bfe8ff"
+   },
+   "z2bg": "levels/level6_park.jpg",
+   "z2waves": [
+    [
+     "heavy",
+     "sword",
+     "star",
+     "dasher"
+    ],
+    [
+     "heavy",
+     "gunner",
+     "dasher",
+     "purple",
+     "blue"
+    ]
+   ],
+   "z2": {
+    "hazards": [
+     {},
+     {},
+     {}
+    ]
+   }
+  },
+  "boss": {
+   "name": "COLD FRONT",
+   "base": "ramrod",
+   "scale": 1.35,
+   "height": 92,
+   "hp": 38,
+   "speed": 1.25,
+   "chargeSpeed": 1.45,
+   "cool": 100,
+   "pitch": 120,
+   "moves": [
+    "charge",
+    "kick",
+    "throw",
+    "slam",
+    "summon"
+   ],
+   "proj": "snowball",
+   "throwN": 3,
+   "minions": [
+    "dasher",
+    "star"
+   ],
+   "summonCd": 900,
+   "entrance": {
+    "len": 170,
+    "zoom": 1.3,
+    "sub": "100% CHANCE OF PAIN"
+   },
+   "lines": {
+    "intro": "FORECAST: 100% CHANCE OF SHELL-SICLES!",
+    "hit": [
+     "HEY! THAT'S MY GOOD PARKA!",
+     "YOU'RE SKATING ON THIN ICE!",
+     "BRR-UTAL!",
+     "CHILL OUT, GREENIE!"
+    ],
+    "summon": "BOYS! PUT 'EM ON ICE!",
+    "ko": "I'M... MELTING... OUTTA HERE..."
+   }
+  },
+  "outro": {}
+ },
+ "7": {
+  "number": 7,
+  "name": "SCRAPYARD SMASH",
+  "card": {
+   "title": "SCRAPYARD SMASH",
+   "tagline": "ONE GUY'S TRASH IS ANOTHER GUY'S WEAPON.",
+   "color": "#ff8c1a"
+  },
+  "enemySkins": {
+   "purple": {
+    "img": "levels/enemies_scrap.webp",
+    "frames": {
+     "idle": [
+      4,
+      1,
+      85,
+      167,
+      37
+     ],
+     "walk": [
+      93,
+      0,
+      84,
+      168,
+      45
+     ],
+     "walk2": [
+      181,
+      0,
+      83,
+      168,
+      41
+     ],
+     "attack": [
+      268,
+      2,
+      119,
+      166,
+      44
+     ],
+     "jump": [
+      391,
+      14,
+      122,
+      154,
+      55
+     ],
+     "hurt": [
+      517,
+      12,
+      109,
+      156,
+      60
+     ],
+     "down": [
+      630,
+      124,
+      182,
+      44,
+      91
+     ],
+     "dash": [
+      816,
+      53,
+      173,
+      115,
+      86
+     ]
+    }
+   },
+   "blue": {
+    "img": "levels/enemies_scrap.webp",
+    "frames": {
+     "idle": [
+      4,
+      1,
+      85,
+      167,
+      37
+     ],
+     "walk": [
+      93,
+      0,
+      84,
+      168,
+      45
+     ],
+     "walk2": [
+      181,
+      0,
+      83,
+      168,
+      41
+     ],
+     "attack": [
+      268,
+      2,
+      119,
+      166,
+      44
+     ],
+     "jump": [
+      391,
+      14,
+      122,
+      154,
+      55
+     ],
+     "hurt": [
+      517,
+      12,
+      109,
+      156,
+      60
+     ],
+     "down": [
+      630,
+      124,
+      182,
+      44,
+      91
+     ],
+     "dash": [
+      816,
+      53,
+      173,
+      115,
+      86
+     ]
+    }
+   },
+   "dasher": {
+    "img": "levels/enemies_scrap.webp",
+    "frames": {
+     "idle": [
+      4,
+      1,
+      85,
+      167,
+      37
+     ],
+     "walk": [
+      93,
+      0,
+      84,
+      168,
+      45
+     ],
+     "walk2": [
+      181,
+      0,
+      83,
+      168,
+      41
+     ],
+     "attack": [
+      268,
+      2,
+      119,
+      166,
+      44
+     ],
+     "jump": [
+      391,
+      14,
+      122,
+      154,
+      55
+     ],
+     "hurt": [
+      517,
+      12,
+      109,
+      156,
+      60
+     ],
+     "down": [
+      630,
+      124,
+      182,
+      44,
+      91
+     ],
+     "dash": [
+      816,
+      53,
+      173,
+      115,
+      86
+     ]
+    }
+   },
+   "sword": {
+    "img": "levels/enemies_scrap.webp",
+    "frames": {
+     "idle": [
+      4,
+      172,
+      70,
+      170,
+      38
+     ],
+     "walk": [
+      78,
+      175,
+      86,
+      167,
+      42
+     ],
+     "walk2": [
+      168,
+      173,
+      85,
+      169,
+      48
+     ],
+     "attack": [
+      257,
+      177,
+      90,
+      165,
+      49
+     ],
+     "jump": [
+      351,
+      180,
+      74,
+      162,
+      44
+     ],
+     "hurt": [
+      429,
+      189,
+      86,
+      153,
+      53
+     ],
+     "down": [
+      519,
+      304,
+      174,
+      38,
+      87
+     ],
+     "throw": [
+      697,
+      178,
+      164,
+      164,
+      68
+     ]
+    }
+   },
+   "star": {
+    "img": "levels/enemies_scrap.webp",
+    "frames": {
+     "idle": [
+      4,
+      172,
+      70,
+      170,
+      38
+     ],
+     "walk": [
+      78,
+      175,
+      86,
+      167,
+      42
+     ],
+     "walk2": [
+      168,
+      173,
+      85,
+      169,
+      48
+     ],
+     "attack": [
+      257,
+      177,
+      90,
+      165,
+      49
+     ],
+     "jump": [
+      351,
+      180,
+      74,
+      162,
+      44
+     ],
+     "hurt": [
+      429,
+      189,
+      86,
+      153,
+      53
+     ],
+     "down": [
+      519,
+      304,
+      174,
+      38,
+      87
+     ],
+     "throw": [
+      697,
+      178,
+      164,
+      164,
+      68
+     ]
+    }
+   },
+   "heavy": {
+    "img": "levels/enemies_scrap.webp",
+    "frames": {
+     "idle": [
+      4,
+      348,
+      90,
+      166,
+      42
+     ],
+     "walk": [
+      98,
+      346,
+      90,
+      168,
+      41
+     ],
+     "walk2": [
+      192,
+      346,
+      93,
+      168,
+      50
+     ],
+     "attack": [
+      289,
+      355,
+      146,
+      159,
+      57
+     ],
+     "jump": [
+      439,
+      359,
+      90,
+      155,
+      39
+     ],
+     "hurt": [
+      533,
+      354,
+      97,
+      160,
+      49
+     ],
+     "down": [
+      634,
+      472,
+      179,
+      42,
+      89
+     ],
+     "shoot": [
+      817,
+      355,
+      150,
+      159,
+      37
+     ]
+    }
+   },
+   "gunner": {
+    "img": "levels/enemies_scrap.webp",
+    "frames": {
+     "idle": [
+      4,
+      348,
+      90,
+      166,
+      42
+     ],
+     "walk": [
+      98,
+      346,
+      90,
+      168,
+      41
+     ],
+     "walk2": [
+      192,
+      346,
+      93,
+      168,
+      50
+     ],
+     "attack": [
+      289,
+      355,
+      146,
+      159,
+      57
+     ],
+     "jump": [
+      439,
+      359,
+      90,
+      155,
+      39
+     ],
+     "hurt": [
+      533,
+      354,
+      97,
+      160,
+      49
+     ],
+     "down": [
+      634,
+      472,
+      179,
+      42,
+      89
+     ],
+     "shoot": [
+      817,
+      355,
+      150,
+      159,
+      37
+     ]
+    }
+   }
+  },
+  "hues": {
+   "purple": 20,
+   "blue": 170,
+   "sword": 330,
+   "star": 45,
+   "dasher": 95,
+   "heavy": 15,
+   "gunner": 200
+  },
+  "sections": [
+   {
+    "bg": "levels/level7_junkyard.jpg",
+    "floor": [
+     160,
+     218
+    ],
+    "length": 2380,
+    "locks": [
+     0,
+     520,
+     1060,
+     1620
+    ],
+    "waves": [
+     [
+      "purple",
+      "purple",
+      "blue"
+     ],
+     [
+      "star",
+      "heavy",
+      "purple",
+      "dasher"
+     ],
+     [
+      "sword",
+      "gunner",
+      "purple",
+      "blue"
+     ],
+     [
+      "heavy",
+      "dasher",
+      "star",
+      "sword",
+      "purple"
+     ]
+    ],
+    "grade": "rgba(60,20,0,0.10)",
+    "weather": "embers",
+    "hazards": [
+     {},
+     {},
+     {},
+     {}
+    ],
+    "sky": "#3a1a0a",
+    "ground": "#2a2018"
+   },
+   {
+    "bg": "levels/level7_junkyard_boss.jpg",
+    "floor": [
+     160,
+     218
+    ],
+    "length": 384,
+    "locks": [],
+    "waves": [],
+    "grade": "rgba(60,20,0,0.08)",
+    "weather": "embers",
+    "hazards": [
+     {}
+    ],
+    "sky": "#3a1a0a",
+    "ground": "#2a2420"
+   }
+  ],
+  "restructure": {
+   "split": 0,
+   "images": [
+    "levels/level7_twist.webp",
+    "levels/level7_shaft.jpg",
+    "levels/level7_foundry.jpg"
+   ],
+   "tsec": {
+    "bg": "levels/level7_shaft.jpg",
+    "floor": [
+     176,
+     206
+    ],
+    "hazards": [],
+    "weather": null
+   },
+   "twist": {
+    "kind": "elevator",
+    "title": "GOING DOWN!",
+    "sub": "THE FREIGHT LIFT DROPS INTO THE SMELTER",
+    "len": 2400,
+    "img": "levels/level7_twist.webp",
+    "fr": {
+     "lift": [
+      0,
+      0,
+      600,
+      282
+     ],
+     "brake": [
+      603,
+      0,
+      80,
+      80
+     ],
+     "cube": [
+      0,
+      285,
+      100,
+      84
+     ],
+     "hook": [
+      103,
+      285,
+      25,
+      100
+     ],
+     "sparks": [
+      131,
+      285,
+      100,
+      139
+     ]
+    },
+    "shaft": "levels/level7_shaft.jpg",
+    "lift": "lift",
+    "liftY": 244,
+    "brake": "brake",
+    "junk": [
+     "cube",
+     "hook"
+    ],
+    "drip": [
+     "purple",
+     "star",
+     "dasher",
+     "heavy"
+    ],
+    "from": "drop",
+    "gap": 150,
+    "cap": 3,
+    "color": "#ffb04a"
+   },
+   "z2bg": "levels/level7_foundry.jpg",
+   "z2waves": [
+    [
+     "sword",
+     "gunner",
+     "purple",
+     "blue"
+    ],
+    [
+     "heavy",
+     "dasher",
+     "star",
+     "sword",
+     "purple"
+    ]
+   ],
+   "z2": {
+    "hazards": [
+     {},
+     {},
+     {}
+    ]
+   }
+  },
+  "boss": {
+   "name": "RUSTMAUL",
+   "base": "ramrod",
+   "atlas": "ramrod",
+   "hp": 38,
+   "scale": 1.18,
+   "height": 112,
+   "speed": 1,
+   "chargeSpeed": 1.1,
+   "moves": [
+    "charge",
+    "kick",
+    "throw",
+    "slam"
+   ],
+   "proj": "tire",
+   "throwN": 2,
+   "cool": 100,
+   "pitch": 72,
+   "minions": [
+    "purple",
+    "heavy"
+   ],
+   "summonCd": 900,
+   "lines": {
+    "intro": "NOTHING LEAVES MY YARD IN ONE PIECE!",
+    "hit": [
+     "YOU DENTED MY GOOD SIDE!",
+     "THAT'S PREMIUM SCRAP!",
+     "I'LL PRESS YOU INTO A CUBE!",
+     "RUST NEVER SLEEPS!"
+    ],
+    "summon": "CREW! FRESH METAL!",
+    "ko": "RECYCLE... ME... GENTLY..."
+   },
+   "entrance": {
+    "len": 180,
+    "zoom": 1.28,
+    "sub": "THE SCRAPYARD KING"
+   }
+  },
+  "images": [
+   "levels/level7_rustmaul.webp",
+   "levels/level7_props.webp"
+  ],
+  "outro": {}
+ },
+ "8": {
+  "number": 8,
+  "name": "FORTRESS OF RAZORBACK",
+  "card": {
+   "title": "FORTRESS OF RAZORBACK",
+   "tagline": "THE FINAL SHOWDOWN. BRING AMBER HOME.",
+   "color": "#c43aff"
+  },
+  "enemySkins": {
+   "purple": {
+    "img": "levels/enemies_guard.webp",
+    "frames": {
+     "idle": [
+      4,
+      1,
+      93,
+      167,
+      40
+     ],
+     "walk": [
+      101,
+      0,
+      89,
+      168,
+      40
+     ],
+     "walk2": [
+      194,
+      0,
+      92,
+      168,
+      45
+     ],
+     "attack": [
+      290,
+      8,
+      144,
+      160,
+      61
+     ],
+     "jump": [
+      438,
+      39,
+      144,
+      129,
+      55
+     ],
+     "hurt": [
+      586,
+      19,
+      91,
+      149,
+      57
+     ],
+     "down": [
+      681,
+      130,
+      181,
+      38,
+      90
+     ],
+     "dash": [
+      866,
+      59,
+      134,
+      109,
+      85
+     ]
+    }
+   },
+   "blue": {
+    "img": "levels/enemies_guard.webp",
+    "frames": {
+     "idle": [
+      4,
+      1,
+      93,
+      167,
+      40
+     ],
+     "walk": [
+      101,
+      0,
+      89,
+      168,
+      40
+     ],
+     "walk2": [
+      194,
+      0,
+      92,
+      168,
+      45
+     ],
+     "attack": [
+      290,
+      8,
+      144,
+      160,
+      61
+     ],
+     "jump": [
+      438,
+      39,
+      144,
+      129,
+      55
+     ],
+     "hurt": [
+      586,
+      19,
+      91,
+      149,
+      57
+     ],
+     "down": [
+      681,
+      130,
+      181,
+      38,
+      90
+     ],
+     "dash": [
+      866,
+      59,
+      134,
+      109,
+      85
+     ]
+    }
+   },
+   "dasher": {
+    "img": "levels/enemies_guard.webp",
+    "frames": {
+     "idle": [
+      4,
+      1,
+      93,
+      167,
+      40
+     ],
+     "walk": [
+      101,
+      0,
+      89,
+      168,
+      40
+     ],
+     "walk2": [
+      194,
+      0,
+      92,
+      168,
+      45
+     ],
+     "attack": [
+      290,
+      8,
+      144,
+      160,
+      61
+     ],
+     "jump": [
+      438,
+      39,
+      144,
+      129,
+      55
+     ],
+     "hurt": [
+      586,
+      19,
+      91,
+      149,
+      57
+     ],
+     "down": [
+      681,
+      130,
+      181,
+      38,
+      90
+     ],
+     "dash": [
+      866,
+      59,
+      134,
+      109,
+      85
+     ]
+    }
+   },
+   "sword": {
+    "img": "levels/enemies_guard.webp",
+    "frames": {
+     "idle": [
+      4,
+      172,
+      64,
+      171,
+      30
+     ],
+     "walk": [
+      72,
+      175,
+      76,
+      168,
+      29
+     ],
+     "walk2": [
+      152,
+      175,
+      75,
+      168,
+      36
+     ],
+     "attack": [
+      231,
+      179,
+      150,
+      164,
+      73
+     ],
+     "jump": [
+      385,
+      181,
+      100,
+      162,
+      42
+     ],
+     "hurt": [
+      489,
+      191,
+      102,
+      152,
+      50
+     ],
+     "down": [
+      595,
+      303,
+      184,
+      40,
+      92
+     ],
+     "throw": [
+      783,
+      185,
+      129,
+      158,
+      57
+     ]
+    }
+   },
+   "star": {
+    "img": "levels/enemies_guard.webp",
+    "frames": {
+     "idle": [
+      4,
+      172,
+      64,
+      171,
+      30
+     ],
+     "walk": [
+      72,
+      175,
+      76,
+      168,
+      29
+     ],
+     "walk2": [
+      152,
+      175,
+      75,
+      168,
+      36
+     ],
+     "attack": [
+      231,
+      179,
+      150,
+      164,
+      73
+     ],
+     "jump": [
+      385,
+      181,
+      100,
+      162,
+      42
+     ],
+     "hurt": [
+      489,
+      191,
+      102,
+      152,
+      50
+     ],
+     "down": [
+      595,
+      303,
+      184,
+      40,
+      92
+     ],
+     "throw": [
+      783,
+      185,
+      129,
+      158,
+      57
+     ]
+    }
+   },
+   "heavy": {
+    "img": "levels/enemies_guard.webp",
+    "frames": {
+     "idle": [
+      4,
+      347,
+      96,
+      168,
+      44
+     ],
+     "walk": [
+      104,
+      347,
+      103,
+      168,
+      51
+     ],
+     "walk2": [
+      211,
+      347,
+      102,
+      168,
+      53
+     ],
+     "attack": [
+      317,
+      347,
+      138,
+      168,
+      46
+     ],
+     "grab": [
+      459,
+      347,
+      138,
+      168,
+      54
+     ],
+     "jump": [
+      601,
+      349,
+      96,
+      166,
+      42
+     ],
+     "hurt": [
+      701,
+      355,
+      122,
+      160,
+      57
+     ],
+     "down": [
+      827,
+      466,
+      189,
+      49,
+      94
+     ],
+     "shoot": [
+      1020,
+      349,
+      130,
+      166,
+      38
+     ]
+    }
+   },
+   "gunner": {
+    "img": "levels/enemies_guard.webp",
+    "frames": {
+     "idle": [
+      4,
+      347,
+      96,
+      168,
+      44
+     ],
+     "walk": [
+      104,
+      347,
+      103,
+      168,
+      51
+     ],
+     "walk2": [
+      211,
+      347,
+      102,
+      168,
+      53
+     ],
+     "attack": [
+      317,
+      347,
+      138,
+      168,
+      46
+     ],
+     "grab": [
+      459,
+      347,
+      138,
+      168,
+      54
+     ],
+     "jump": [
+      601,
+      349,
+      96,
+      166,
+      42
+     ],
+     "hurt": [
+      701,
+      355,
+      122,
+      160,
+      57
+     ],
+     "down": [
+      827,
+      466,
+      189,
+      49,
+      94
+     ],
+     "shoot": [
+      1020,
+      349,
+      130,
+      166,
+      38
+     ]
+    }
+   }
+  },
+  "hues": {
+   "gunner": 190,
+   "heavy": 215,
+   "purple": 280,
+   "blue": 200,
+   "sword": 300,
+   "dasher": 320,
+   "star": 260
+  },
+  "images": [
+   "levels/level8_razorback.webp",
+   "levels/level8_props.webp"
+  ],
+  "sections": [
+   {
+    "bg": "levels/level8_fortress.jpg",
+    "floor": [
+     172,
+     205
+    ],
+    "length": 2600,
+    "locks": [
+     0,
+     620,
+     1300,
+     1950
+    ],
+    "waves": [
+     [
+      "purple",
+      "gunner",
+      "purple"
+     ],
+     [
+      "sword",
+      "gunner",
+      "dasher",
+      "purple"
+     ],
+     [
+      "heavy",
+      "gunner",
+      "blue",
+      "star"
+     ],
+     [
+      "heavy",
+      "gunner",
+      "dasher",
+      "sword",
+      "gunner"
+     ]
+    ],
+    "grade": null,
+    "weather": "embers",
+    "hazards": [
+     {},
+     {},
+     {},
+     {}
+    ],
+    "sky": "#140c1e",
+    "ground": "#2a2632"
+   },
+   {
+    "bg": "levels/level8_final_boss.jpg",
+    "floor": [
+     166,
+     214
+    ],
+    "length": 384,
+    "locks": [],
+    "waves": [],
+    "hazards": [
+     {}
+    ],
+    "sky": "#1a0c24",
+    "ground": "#3a2c44"
+   }
+  ],
+  "restructure": {
+   "split": 0,
+   "images": [
+    "levels/level8_sentry.webp",
+    "levels/level8_reactor.jpg"
+   ],
+   "tsec": {
+    "hazards": []
+   },
+   "twist": {
+    "kind": "searchlight",
+    "title": "LOCKDOWN SWEEP!",
+    "sub": "STAY OUT OF THE LIGHTS - HIDE BEHIND COVER",
+    "len": 2100,
+    "img": "levels/level8_sentry.webp",
+    "fr": {
+     "lamp": [
+      0,
+      0,
+      84,
+      116
+     ],
+     "lampRed": [
+      87,
+      0,
+      84,
+      118
+     ],
+     "klaxon": [
+      174,
+      0,
+      40,
+      55
+     ],
+     "cover": [
+      217,
+      0,
+      140,
+      79
+     ],
+     "alcove": [
+      360,
+      0,
+      120,
+      141
+     ]
+    },
+    "lights": [
+     {
+      "y": 30,
+      "spd": 0.012
+     },
+     {
+      "y": 30,
+      "spd": 0.017
+     }
+    ],
+    "covers": [
+     {
+      "spr": "cover",
+      "x": 92,
+      "w": 52,
+      "d": 16,
+      "k": 0.36
+     },
+     {
+      "spr": "cover",
+      "x": 300,
+      "w": 52,
+      "d": 16,
+      "k": 0.36
+     }
+    ],
+    "alarm": [
+     "purple",
+     "gunner"
+    ],
+    "drip": [
+     "purple"
+    ],
+    "gap": 320,
+    "cap": 2,
+    "color": "#ff7af0"
+   },
+   "z2bg": "levels/level8_reactor.jpg",
+   "z2": {
+    "hazards": [
+     {},
+     {},
+     {}
+    ]
+   }
+  },
+  "boss": {
+   "name": "RAZORBACK",
+   "base": "ramrod",
+   "atlas": "razor",
+   "scale": 1.42,
+   "height": 92,
+   "hp": 58,
+   "speed": 1.1,
+   "chargeSpeed": 1.15,
+   "cool": 92,
+   "pitch": 82,
+   "moves": [
+    "charge",
+    "kick",
+    "slam",
+    "fire"
+   ],
+   "shot": "ray",
+   "lines": {
+    "intro": "SO THE SHELLS CRAWLED IN AT LAST.",
+    "hit": [
+     "IMPOSSIBLE!",
+     "YOU DARE STRIKE ME?!",
+     "INSOLENT REPTILES!",
+     "IS THAT ALL, SHELLS?"
+    ],
+    "summon": "GUARDS! THROUGH THE WINDOWS!",
+    "ko": "NO... MY CORE... MY EMPIRE...!"
+   },
+   "entrance": {
+    "len": 175,
+    "zoom": 1.3,
+    "sub": "LORD OF THE FORTRESS"
+   }
+  },
+  "outro": {}
+ },
+ "9": {
+  "number": 9,
+  "name": "SHADOWS OF EDO",
+  "card": {
+   "title": "SHADOWS OF EDO",
+   "tagline": "THE RIFT THREW US BACK 400 YEARS. AND THE NINJAS WERE WAITING.",
+   "color": "#ff3a4a"
+  },
+  "enemySkins": {
+   "purple": {
+    "img": "levels/enemies_edo.webp",
+    "frames": {
+     "idle": [
+      4,
+      15,
+      111,
+      154,
+      53
+     ],
+     "walk": [
+      119,
+      0,
+      92,
+      169,
+      45
+     ],
+     "walk2": [
+      215,
+      2,
+      90,
+      167,
+      48
+     ],
+     "attack": [
+      309,
+      13,
+      147,
+      156,
+      54
+     ],
+     "jump": [
+      460,
+      41,
+      142,
+      128,
+      58
+     ],
+     "hurt": [
+      606,
+      16,
+      96,
+      153,
+      59
+     ],
+     "down": [
+      706,
+      121,
+      185,
+      48,
+      92
+     ],
+     "dash": [
+      895,
+      49,
+      145,
+      120,
+      79
+     ]
+    }
+   },
+   "blue": {
+    "img": "levels/enemies_edo.webp",
+    "frames": {
+     "idle": [
+      4,
+      15,
+      111,
+      154,
+      53
+     ],
+     "walk": [
+      119,
+      0,
+      92,
+      169,
+      45
+     ],
+     "walk2": [
+      215,
+      2,
+      90,
+      167,
+      48
+     ],
+     "attack": [
+      309,
+      13,
+      147,
+      156,
+      54
+     ],
+     "jump": [
+      460,
+      41,
+      142,
+      128,
+      58
+     ],
+     "hurt": [
+      606,
+      16,
+      96,
+      153,
+      59
+     ],
+     "down": [
+      706,
+      121,
+      185,
+      48,
+      92
+     ],
+     "dash": [
+      895,
+      49,
+      145,
+      120,
+      79
+     ]
+    }
+   },
+   "dasher": {
+    "img": "levels/enemies_edo.webp",
+    "frames": {
+     "idle": [
+      4,
+      15,
+      111,
+      154,
+      53
+     ],
+     "walk": [
+      119,
+      0,
+      92,
+      169,
+      45
+     ],
+     "walk2": [
+      215,
+      2,
+      90,
+      167,
+      48
+     ],
+     "attack": [
+      309,
+      13,
+      147,
+      156,
+      54
+     ],
+     "jump": [
+      460,
+      41,
+      142,
+      128,
+      58
+     ],
+     "hurt": [
+      606,
+      16,
+      96,
+      153,
+      59
+     ],
+     "down": [
+      706,
+      121,
+      185,
+      48,
+      92
+     ],
+     "dash": [
+      895,
+      49,
+      145,
+      120,
+      79
+     ]
+    }
+   },
+   "sword": {
+    "img": "levels/enemies_edo.webp",
+    "frames": {
+     "idle": [
+      4,
+      174,
+      125,
+      168,
+      36
+     ],
+     "walk": [
+      133,
+      173,
+      94,
+      169,
+      44
+     ],
+     "walk2": [
+      231,
+      175,
+      86,
+      167,
+      42
+     ],
+     "attack": [
+      321,
+      181,
+      166,
+      161,
+      52
+     ],
+     "jump": [
+      491,
+      189,
+      99,
+      153,
+      49
+     ],
+     "hurt": [
+      594,
+      187,
+      99,
+      155,
+      58
+     ],
+     "down": [
+      697,
+      303,
+      185,
+      39,
+      92
+     ],
+     "throw": [
+      886,
+      182,
+      135,
+      160,
+      52
+     ]
+    }
+   },
+   "star": {
+    "img": "levels/enemies_edo.webp",
+    "frames": {
+     "idle": [
+      4,
+      174,
+      125,
+      168,
+      36
+     ],
+     "walk": [
+      133,
+      173,
+      94,
+      169,
+      44
+     ],
+     "walk2": [
+      231,
+      175,
+      86,
+      167,
+      42
+     ],
+     "attack": [
+      321,
+      181,
+      166,
+      161,
+      52
+     ],
+     "jump": [
+      491,
+      189,
+      99,
+      153,
+      49
+     ],
+     "hurt": [
+      594,
+      187,
+      99,
+      155,
+      58
+     ],
+     "down": [
+      697,
+      303,
+      185,
+      39,
+      92
+     ],
+     "throw": [
+      886,
+      182,
+      135,
+      160,
+      52
+     ]
+    }
+   },
+   "heavy": {
+    "img": "levels/enemies_edo.webp",
+    "frames": {
+     "idle": [
+      4,
+      349,
+      139,
+      165,
+      46
+     ],
+     "walk": [
+      147,
+      346,
+      99,
+      168,
+      46
+     ],
+     "walk2": [
+      250,
+      346,
+      98,
+      168,
+      53
+     ],
+     "attack": [
+      352,
+      354,
+      149,
+      160,
+      59
+     ],
+     "jump": [
+      505,
+      364,
+      99,
+      150,
+      44
+     ],
+     "hurt": [
+      608,
+      368,
+      95,
+      146,
+      58
+     ],
+     "down": [
+      707,
+      473,
+      182,
+      41,
+      91
+     ],
+     "shoot": [
+      893,
+      359,
+      208,
+      155,
+      61
+     ]
+    }
+   },
+   "gunner": {
+    "img": "levels/enemies_edo.webp",
+    "frames": {
+     "idle": [
+      4,
+      349,
+      139,
+      165,
+      46
+     ],
+     "walk": [
+      147,
+      346,
+      99,
+      168,
+      46
+     ],
+     "walk2": [
+      250,
+      346,
+      98,
+      168,
+      53
+     ],
+     "attack": [
+      352,
+      354,
+      149,
+      160,
+      59
+     ],
+     "jump": [
+      505,
+      364,
+      99,
+      150,
+      44
+     ],
+     "hurt": [
+      608,
+      368,
+      95,
+      146,
+      58
+     ],
+     "down": [
+      707,
+      473,
+      182,
+      41,
+      91
+     ],
+     "shoot": [
+      893,
+      359,
+      208,
+      155,
+      61
+     ]
+    }
+   }
+  },
+  "hues": {
+   "purple": 330,
+   "blue": 210,
+   "sword": 345,
+   "star": 270,
+   "dasher": 0,
+   "heavy": 20
+  },
+  "images": [
+   "levels/level9_karai.webp",
+   "levels/level9_props.webp",
+   "levels/level9_sea.jpg"
+  ],
+  "sections": [
+   {
+    "bg": "levels/level9_edo.jpg",
+    "floor": [
+     172,
+     216
+    ],
+    "length": 2560,
+    "locks": [
+     0,
+     620,
+     1260,
+     1920
+    ],
+    "waves": [
+     [
+      "purple",
+      "purple",
+      "star"
+     ],
+     [
+      "blue",
+      "sword",
+      "purple",
+      "dasher"
+     ],
+     [
+      "star",
+      "sword",
+      "blue",
+      "dasher",
+      "purple"
+     ],
+     [
+      "sword",
+      "sword",
+      "blue",
+      "star",
+      "dasher"
+     ]
+    ],
+    "grade": "rgba(40,10,40,0.10)",
+    "hazards": [
+     {},
+     {},
+     {},
+     {},
+     {}
+    ],
+    "sky": "#3a1a2a",
+    "ground": "#6a5030"
+   },
+   {
+    "bg": "levels/level9_castle.jpg",
+    "floor": [
+     170,
+     216
+    ],
+    "length": 384,
+    "locks": [],
+    "waves": [],
+    "grade": null,
+    "hazards": [
+     {},
+     {}
+    ],
+    "sky": "#0a1030",
+    "ground": "#4a3a30"
+   }
+  ],
+  "restructure": {
+   "split": 0,
+   "images": [
+    "levels/level9_ronin.webp",
+    "levels/level9_bamboo.jpg"
+   ],
+   "tsec": {
+    "hazards": []
+   },
+   "twist": {
+    "kind": "miniboss",
+    "goal": "boss",
+    "title": "THE RONIN AT THE GATE",
+    "sub": "BREAK HIS GUARD WITH JUMP ATTACKS AND THROWS",
+    "summon": [
+     "star",
+     "star"
+    ],
+    "color": "#ff9ae8",
+    "boss": {
+     "name": "ONI RONIN",
+     "base": "ramrod",
+     "hp": 24,
+     "speed": 1.1,
+     "chargeSpeed": 1.7,
+     "cool": 76,
+     "pitch": 70,
+     "height": 88,
+     "moves": [
+      "kick",
+      "charge"
+     ],
+     "lines": {
+      "intro": "NONE SHALL PASS THIS GATE.",
+      "hit": [
+       "WEAK!",
+       "YOUR STANCE IS SLOPPY."
+      ],
+      "summon": "SHADOWS, TO ME!",
+      "ko": "THE GATE... IS YOURS..."
+     }
+    }
+   },
+   "z2bg": "levels/level9_bamboo.jpg",
+   "z2": {
+    "hazards": [
+     {},
+     {},
+     {},
+     {}
+    ]
+   }
+  },
+  "boss": {
+   "name": "KARAI",
+   "base": "ramrod",
+   "atlas": "ninja",
+   "height": 74,
+   "hp": 44,
+   "speed": 1.35,
+   "chargeSpeed": 1.6,
+   "cool": 78,
+   "pitch": 150,
+   "moves": [
+    "kick",
+    "throw",
+    "summon"
+   ],
+   "lines": {
+    "intro": "SO THE RIFT DELIVERS TURTLES TO MY DOOR.",
+    "hit": [
+     "SLOPPY.",
+     "YOU'LL HAVE TO BE FASTER!",
+     "A LUCKY CUT.",
+     "NOT BAD... FOR A TURTLE."
+    ],
+    "summon": "SHADOWS! STRIKE!",
+    "ko": "THIS... ISN'T OVER, TURTLES..."
+   },
+   "entrance": {
+    "len": 160,
+    "zoom": 1.22,
+    "sub": "MISTRESS OF THE FOOT",
+    "barTop": 6,
+    "bannerY": 196
+   }
+  },
+  "outro": {}
+ },
+ "10": {
+  "number": 10,
+  "name": "PIRATE SHIP",
+  "card": {
+   "title": "PIRATE SHIP",
+   "tagline": "THE RIFT DROPS YOU INTO 1687. REPEL BOARDERS!",
+   "color": "#ffb21a"
+  },
+  "enemySkins": {
+   "purple": {
+    "img": "levels/enemies_pirate.webp",
+    "frames": {
+     "idle": [
+      4,
+      1,
+      96,
+      167,
+      42
+     ],
+     "walk": [
+      104,
+      0,
+      82,
+      168,
+      38
+     ],
+     "walk2": [
+      190,
+      0,
+      88,
+      168,
+      44
+     ],
+     "attack": [
+      282,
+      12,
+      168,
+      156,
+      66
+     ],
+     "jump": [
+      454,
+      23,
+      145,
+      145,
+      68
+     ],
+     "hurt": [
+      603,
+      12,
+      88,
+      156,
+      57
+     ],
+     "down": [
+      695,
+      120,
+      187,
+      48,
+      93
+     ],
+     "dash": [
+      886,
+      74,
+      152,
+      94,
+      35
+     ]
+    }
+   },
+   "blue": {
+    "img": "levels/enemies_pirate.webp",
+    "frames": {
+     "idle": [
+      4,
+      1,
+      96,
+      167,
+      42
+     ],
+     "walk": [
+      104,
+      0,
+      82,
+      168,
+      38
+     ],
+     "walk2": [
+      190,
+      0,
+      88,
+      168,
+      44
+     ],
+     "attack": [
+      282,
+      12,
+      168,
+      156,
+      66
+     ],
+     "jump": [
+      454,
+      23,
+      145,
+      145,
+      68
+     ],
+     "hurt": [
+      603,
+      12,
+      88,
+      156,
+      57
+     ],
+     "down": [
+      695,
+      120,
+      187,
+      48,
+      93
+     ],
+     "dash": [
+      886,
+      74,
+      152,
+      94,
+      35
+     ]
+    }
+   },
+   "dasher": {
+    "img": "levels/enemies_pirate.webp",
+    "frames": {
+     "idle": [
+      4,
+      1,
+      96,
+      167,
+      42
+     ],
+     "walk": [
+      104,
+      0,
+      82,
+      168,
+      38
+     ],
+     "walk2": [
+      190,
+      0,
+      88,
+      168,
+      44
+     ],
+     "attack": [
+      282,
+      12,
+      168,
+      156,
+      66
+     ],
+     "jump": [
+      454,
+      23,
+      145,
+      145,
+      68
+     ],
+     "hurt": [
+      603,
+      12,
+      88,
+      156,
+      57
+     ],
+     "down": [
+      695,
+      120,
+      187,
+      48,
+      93
+     ],
+     "dash": [
+      886,
+      74,
+      152,
+      94,
+      35
+     ]
+    }
+   },
+   "sword": {
+    "img": "levels/enemies_pirate.webp",
+    "frames": {
+     "idle": [
+      4,
+      172,
+      72,
+      169,
+      34
+     ],
+     "walk": [
+      80,
+      173,
+      89,
+      168,
+      36
+     ],
+     "walk2": [
+      173,
+      173,
+      91,
+      168,
+      37
+     ],
+     "attack": [
+      268,
+      183,
+      146,
+      158,
+      48
+     ],
+     "jump": [
+      418,
+      189,
+      98,
+      152,
+      38
+     ],
+     "hurt": [
+      520,
+      184,
+      85,
+      157,
+      42
+     ],
+     "down": [
+      609,
+      298,
+      171,
+      43,
+      85
+     ],
+     "throw": [
+      784,
+      186,
+      118,
+      155,
+      44
+     ]
+    }
+   },
+   "star": {
+    "img": "levels/enemies_pirate.webp",
+    "frames": {
+     "idle": [
+      4,
+      172,
+      72,
+      169,
+      34
+     ],
+     "walk": [
+      80,
+      173,
+      89,
+      168,
+      36
+     ],
+     "walk2": [
+      173,
+      173,
+      91,
+      168,
+      37
+     ],
+     "attack": [
+      268,
+      183,
+      146,
+      158,
+      48
+     ],
+     "jump": [
+      418,
+      189,
+      98,
+      152,
+      38
+     ],
+     "hurt": [
+      520,
+      184,
+      85,
+      157,
+      42
+     ],
+     "down": [
+      609,
+      298,
+      171,
+      43,
+      85
+     ],
+     "throw": [
+      784,
+      186,
+      118,
+      155,
+      44
+     ]
+    }
+   },
+   "heavy": {
+    "img": "levels/enemies_pirate.webp",
+    "frames": {
+     "idle": [
+      4,
+      355,
+      102,
+      161,
+      48
+     ],
+     "walk": [
+      110,
+      348,
+      103,
+      168,
+      47
+     ],
+     "walk2": [
+      217,
+      348,
+      99,
+      168,
+      47
+     ],
+     "attack": [
+      320,
+      354,
+      146,
+      162,
+      57
+     ],
+     "jump": [
+      470,
+      359,
+      96,
+      157,
+      43
+     ],
+     "hurt": [
+      570,
+      362,
+      94,
+      154,
+      48
+     ],
+     "down": [
+      668,
+      465,
+      180,
+      51,
+      90
+     ],
+     "shoot": [
+      852,
+      345,
+      183,
+      171,
+      42
+     ]
+    }
+   },
+   "gunner": {
+    "img": "levels/enemies_pirate.webp",
+    "frames": {
+     "idle": [
+      4,
+      355,
+      102,
+      161,
+      48
+     ],
+     "walk": [
+      110,
+      348,
+      103,
+      168,
+      47
+     ],
+     "walk2": [
+      217,
+      348,
+      99,
+      168,
+      47
+     ],
+     "attack": [
+      320,
+      354,
+      146,
+      162,
+      57
+     ],
+     "jump": [
+      470,
+      359,
+      96,
+      157,
+      43
+     ],
+     "hurt": [
+      570,
+      362,
+      94,
+      154,
+      48
+     ],
+     "down": [
+      668,
+      465,
+      180,
+      51,
+      90
+     ],
+     "shoot": [
+      852,
+      345,
+      183,
+      171,
+      42
+     ]
+    }
+   }
+  },
+  "hues": {
+   "purple": 345,
+   "blue": 175,
+   "sword": 30,
+   "star": 300,
+   "gunner": 20,
+   "heavy": 0,
+   "dasher": 205
+  },
+  "images": [
+   "levels/level10_armaggon.webp",
+   "levels/level10_props.webp",
+   "levels/level10_rift.jpg"
+  ],
+  "sections": [
+   {
+    "bg": "levels/level10_galleon.jpg",
+    "floor": [
+     166,
+     218
+    ],
+    "length": 2600,
+    "locks": [
+     0,
+     640,
+     1300,
+     1980
+    ],
+    "waves": [
+     [
+      "purple",
+      "purple",
+      "star"
+     ],
+     [
+      "sword",
+      "blue",
+      "purple",
+      "gunner"
+     ],
+     [
+      "heavy",
+      "sword",
+      "dasher",
+      "star"
+     ],
+     [
+      "heavy",
+      "gunner",
+      "sword",
+      "blue",
+      "purple"
+     ]
+    ],
+    "hazards": [
+     {}
+    ],
+    "sky": "#3a2a4a",
+    "ground": "#5a3a22"
+   },
+   {
+    "bg": "levels/level10_galleon_boss.jpg",
+    "floor": [
+     160,
+     216
+    ],
+    "length": 384,
+    "locks": [],
+    "waves": [],
+    "weather": "rain",
+    "hazards": [
+     {}
+    ],
+    "sky": "#1a1030",
+    "ground": "#4a3020"
+   }
+  ],
+  "restructure": {
+   "split": 0,
+   "images": [
+    "levels/level10_collapse.webp",
+    "levels/level10_gundeck.jpg"
+   ],
+   "tsec": {
+    "hazards": []
+   },
+   "twist": {
+    "kind": "collapse",
+    "title": "BROADSIDE! THE MAST IS GOING!",
+    "sub": "THE DECK IS SPLITTING - KEEP OFF THE HOLES",
+    "len": 2100,
+    "img": "levels/level10_collapse.webp",
+    "fr": {
+     "mast": [
+      0,
+      0,
+      560,
+      346
+     ],
+     "hole": [
+      0,
+      349,
+      280,
+      83
+     ],
+     "plank1": [
+      283,
+      349,
+      40,
+      56
+     ],
+     "plank2": [
+      326,
+      349,
+      30,
+      37
+     ],
+     "plank3": [
+      359,
+      349,
+      34,
+      38
+     ],
+     "ladder": [
+      396,
+      349,
+      44,
+      190
+     ],
+     "keg": [
+      443,
+      349,
+      110,
+      93
+     ]
+    },
+    "mast": true,
+    "mastMsg": "TIMBER!",
+    "fallSpr": [
+     "plank1",
+     "plank2",
+     "plank3"
+    ],
+    "fallK": 0.5,
+    "drip": [
+     "purple",
+     "sword",
+     "star"
+    ],
+    "gap": 170,
+    "cap": 3,
+    "color": "#ffb04a",
+    "clearMsg": "THE DECK GIVES WAY!"
+   },
+   "z2bg": "levels/level10_gundeck.jpg",
+   "z2": {}
+  },
+  "boss": {
+   "name": "ARMAGGON",
+   "base": "ramrod",
+   "atlas": "ramrod",
+   "scale": 1.25,
+   "height": 96,
+   "hp": 46,
+   "speed": 1.05,
+   "chargeSpeed": 1.2,
+   "cool": 96,
+   "pitch": 70,
+   "moves": [
+    "charge",
+    "kick",
+    "fire"
+   ],
+   "shot": "ray",
+   "lines": {
+    "intro": "FRESH SHELLFISH! I'LL CRACK YOU OPEN!",
+    "hit": [
+     "GRRRAAH!",
+     "YOU'LL PAY FOR THAT, TURTLE!",
+     "I SMELL FEAR... AND SHELL!",
+     "THAT TICKLES!"
+    ],
+    "summon": "CREW! FEED 'EM TO THE FISHES!",
+    "ko": "MY TEETH... MY BEAUTIFUL TEETH...!"
+   },
+   "entrance": {
+    "len": 170,
+    "zoom": 1.3,
+    "sub": "TERROR OF THE SEVEN SEAS"
+   }
+  },
+  "outro": {}
+ },
+ "11": {
+  "number": 11,
+  "name": "WILD WEST TRAIN",
+  "card": {
+   "title": "WILD WEST TRAIN",
+   "tagline": "1880. THE OUTLAWS RIDE THE RAILS.",
+   "color": "#ff8c1a"
+  },
+  "enemySkins": {
+   "purple": {
+    "img": "levels/enemies_swamp.webp",
+    "frames": {
+     "idle": [
+      4,
+      17,
+      130,
+      151,
+      60
+     ],
+     "walk": [
+      138,
+      0,
+      105,
+      168,
+      44
+     ],
+     "walk2": [
+      247,
+      0,
+      111,
+      168,
+      50
+     ],
+     "attack": [
+      362,
+      23,
+      180,
+      145,
+      77
+     ],
+     "jump": [
+      546,
+      2,
+      149,
+      166,
+      70
+     ],
+     "hurt": [
+      699,
+      2,
+      94,
+      166,
+      49
+     ],
+     "down": [
+      797,
+      118,
+      191,
+      50,
+      95
+     ],
+     "dash": [
+      992,
+      89,
+      180,
+      79,
+      106
+     ]
+    }
+   },
+   "blue": {
+    "img": "levels/enemies_swamp.webp",
+    "frames": {
+     "idle": [
+      4,
+      17,
+      130,
+      151,
+      60
+     ],
+     "walk": [
+      138,
+      0,
+      105,
+      168,
+      44
+     ],
+     "walk2": [
+      247,
+      0,
+      111,
+      168,
+      50
+     ],
+     "attack": [
+      362,
+      23,
+      180,
+      145,
+      77
+     ],
+     "jump": [
+      546,
+      2,
+      149,
+      166,
+      70
+     ],
+     "hurt": [
+      699,
+      2,
+      94,
+      166,
+      49
+     ],
+     "down": [
+      797,
+      118,
+      191,
+      50,
+      95
+     ],
+     "dash": [
+      992,
+      89,
+      180,
+      79,
+      106
+     ]
+    }
+   },
+   "dasher": {
+    "img": "levels/enemies_swamp.webp",
+    "frames": {
+     "idle": [
+      4,
+      17,
+      130,
+      151,
+      60
+     ],
+     "walk": [
+      138,
+      0,
+      105,
+      168,
+      44
+     ],
+     "walk2": [
+      247,
+      0,
+      111,
+      168,
+      50
+     ],
+     "attack": [
+      362,
+      23,
+      180,
+      145,
+      77
+     ],
+     "jump": [
+      546,
+      2,
+      149,
+      166,
+      70
+     ],
+     "hurt": [
+      699,
+      2,
+      94,
+      166,
+      49
+     ],
+     "down": [
+      797,
+      118,
+      191,
+      50,
+      95
+     ],
+     "dash": [
+      992,
+      89,
+      180,
+      79,
+      106
+     ]
+    }
+   },
+   "sword": {
+    "img": "levels/enemies_swamp.webp",
+    "frames": {
+     "idle": [
+      4,
+      172,
+      88,
+      170,
+      36
+     ],
+     "walk": [
+      96,
+      173,
+      101,
+      169,
+      46
+     ],
+     "walk2": [
+      201,
+      175,
+      103,
+      167,
+      48
+     ],
+     "attack": [
+      308,
+      177,
+      96,
+      165,
+      51
+     ],
+     "jump": [
+      408,
+      184,
+      92,
+      158,
+      43
+     ],
+     "hurt": [
+      504,
+      180,
+      112,
+      162,
+      49
+     ],
+     "down": [
+      620,
+      290,
+      184,
+      52,
+      92
+     ],
+     "throw": [
+      808,
+      177,
+      144,
+      165,
+      61
+     ]
+    }
+   },
+   "star": {
+    "img": "levels/enemies_swamp.webp",
+    "frames": {
+     "idle": [
+      4,
+      172,
+      88,
+      170,
+      36
+     ],
+     "walk": [
+      96,
+      173,
+      101,
+      169,
+      46
+     ],
+     "walk2": [
+      201,
+      175,
+      103,
+      167,
+      48
+     ],
+     "attack": [
+      308,
+      177,
+      96,
+      165,
+      51
+     ],
+     "jump": [
+      408,
+      184,
+      92,
+      158,
+      43
+     ],
+     "hurt": [
+      504,
+      180,
+      112,
+      162,
+      49
+     ],
+     "down": [
+      620,
+      290,
+      184,
+      52,
+      92
+     ],
+     "throw": [
+      808,
+      177,
+      144,
+      165,
+      61
+     ]
+    }
+   },
+   "heavy": {
+    "img": "levels/enemies_swamp.webp",
+    "frames": {
+     "idle": [
+      4,
+      347,
+      116,
+      168,
+      50
+     ],
+     "walk": [
+      124,
+      346,
+      115,
+      169,
+      54
+     ],
+     "walk2": [
+      243,
+      348,
+      120,
+      167,
+      57
+     ],
+     "attack": [
+      367,
+      348,
+      140,
+      167,
+      55
+     ],
+     "jump": [
+      511,
+      350,
+      111,
+      165,
+      48
+     ],
+     "hurt": [
+      626,
+      350,
+      109,
+      165,
+      53
+     ],
+     "down": [
+      739,
+      458,
+      190,
+      57,
+      95
+     ],
+     "shoot": [
+      933,
+      347,
+      118,
+      168,
+      44
+     ]
+    }
+   },
+   "gunner": {
+    "img": "levels/enemies_swamp.webp",
+    "frames": {
+     "idle": [
+      4,
+      347,
+      116,
+      168,
+      50
+     ],
+     "walk": [
+      124,
+      346,
+      115,
+      169,
+      54
+     ],
+     "walk2": [
+      243,
+      348,
+      120,
+      167,
+      57
+     ],
+     "attack": [
+      367,
+      348,
+      140,
+      167,
+      55
+     ],
+     "jump": [
+      511,
+      350,
+      111,
+      165,
+      48
+     ],
+     "hurt": [
+      626,
+      350,
+      109,
+      165,
+      53
+     ],
+     "down": [
+      739,
+      458,
+      190,
+      57,
+      95
+     ],
+     "shoot": [
+      933,
+      347,
+      118,
+      168,
+      44
+     ]
+    }
+   }
+  },
+  "hues": {
+   "purple": 10,
+   "blue": 200,
+   "sword": 330,
+   "star": 40,
+   "dasher": 90,
+   "gunner": 20,
+   "heavy": 0
+  },
+  "images": [
+   "levels/level11_desert.jpg",
+   "levels/level11_gator.webp",
+   "levels/level11_props.webp"
+  ],
+  "sections": [
+   {
+    "bg": "levels/level11_train.jpg",
+    "floor": [
+     147,
+     186
+    ],
+    "length": 2600,
+    "locks": [
+     0,
+     640,
+     1300,
+     1980
+    ],
+    "waves": [
+     [
+      "purple",
+      "purple",
+      "blue"
+     ],
+     [
+      "star",
+      "purple",
+      "heavy",
+      "blue"
+     ],
+     [
+      "dasher",
+      "sword",
+      "purple",
+      "star",
+      "gunner"
+     ],
+     [
+      "heavy",
+      "gunner",
+      "dasher",
+      "purple",
+      "sword"
+     ]
+    ],
+    "weather": "speed",
+    "hazards": [
+     {},
+     {},
+     {},
+     {},
+     {}
+    ],
+    "sky": "#d8784a",
+    "ground": "#5a2e1e"
+   },
+   {
+    "bg": "levels/level11_boss.jpg",
+    "floor": [
+     152,
+     198
+    ],
+    "length": 384,
+    "locks": [],
+    "waves": [],
+    "arena": true,
+    "weather": "speed",
+    "hazards": [
+     {},
+     {},
+     {}
+    ],
+    "sky": "#c05a3a",
+    "ground": "#4a3424"
+   }
+  ],
+  "restructure": {
+   "split": 0,
+   "images": [
+    "levels/level11_handcar.webp",
+    "levels/level11_saloon.jpg",
+    "levels/level11_desert.jpg"
+   ],
+   "tsec": {
+    "bg": "levels/level11_desert.jpg",
+    "auto": 3,
+    "hazards": []
+   },
+   "twist": {
+    "kind": "ride",
+    "goal": "car",
+    "title": "HANDCAR PURSUIT!",
+    "sub": "HIT THE OUTLAW CAR'S SHIELD 3 TIMES - TWICE",
+    "img": "levels/level11_handcar.webp",
+    "fr": {
+     "handcarA": [
+      0,
+      0,
+      460,
+      133
+     ],
+     "track": [
+      0,
+      136,
+      460,
+      91
+     ],
+     "handcarB": [
+      0,
+      230,
+      460,
+      130
+     ],
+     "outlawCar": [
+      0,
+      363,
+      460,
+      172
+     ]
+    },
+    "car": "outlawCar",
+    "cartA": "handcarA",
+    "cartB": "handcarB",
+    "track": "track",
+    "drip": [
+     "purple",
+     "star",
+     "dasher"
+    ],
+    "color": "#ffb04a"
+   },
+   "z2bg": "levels/level11_saloon.jpg",
+   "z2": {
+    "hazards": [
+     {}
+    ],
+    "weather": null
+   }
+  },
+  "boss": {
+   "name": "LEATHERHEAD",
+   "base": "ramrod",
+   "atlas": "ramrod",
+   "scale": 1,
+   "height": 104,
+   "hp": 48,
+   "speed": 1,
+   "chargeSpeed": 1.1,
+   "cool": 78,
+   "pitch": 74,
+   "moves": [
+    "kick"
+   ],
+   "hittable": [
+    "attack"
+   ],
+   "lines": {
+    "intro": "WELL, LOOKY HERE! TURTLE SOUP, COMIN' UP!",
+    "hit": [
+     "OOH, DAT STING!",
+     "YOU GONNA PAY, SHELLBACK!",
+     "AH'M JUST GETTIN' WARMED UP!",
+     "QUIT TICKLIN' ME!"
+    ],
+    "summon": "BOYS! COME GET DESE TURTLES!",
+    "ko": "BEAT... BY A BUNCH O' BABY TURTLES..."
+   },
+   "entrance": {
+    "len": 170,
+    "zoom": 1.3,
+    "sub": "THE OUTLAW OF THE RAILS"
+   }
+  },
+  "outro": {}
+ },
+ "12": {
+  "number": 12,
+  "name": "FUTURE NYC 2105",
+  "card": {
+   "title": "FUTURE NYC 2105",
+   "tagline": "THE RIFT DROPPED US IN THE FAST LANE.",
+   "color": "#3ae0ff"
+  },
+  "enemySkins": {
+   "purple": {
+    "img": "levels/enemies_trooper.webp",
+    "frames": {
+     "idle": [
+      4,
+      2,
+      87,
+      167,
+      38
+     ],
+     "walk": [
+      95,
+      2,
+      88,
+      167,
+      38
+     ],
+     "walk2": [
+      187,
+      0,
+      90,
+      169,
+      46
+     ],
+     "attack": [
+      281,
+      5,
+      114,
+      164,
+      45
+     ],
+     "jump": [
+      399,
+      4,
+      84,
+      165,
+      46
+     ],
+     "hurt": [
+      487,
+      16,
+      90,
+      153,
+      46
+     ],
+     "down": [
+      581,
+      133,
+      170,
+      36,
+      85
+     ],
+     "dash": [
+      755,
+      68,
+      152,
+      101,
+      84
+     ]
+    }
+   },
+   "blue": {
+    "img": "levels/enemies_trooper.webp",
+    "frames": {
+     "idle": [
+      4,
+      2,
+      87,
+      167,
+      38
+     ],
+     "walk": [
+      95,
+      2,
+      88,
+      167,
+      38
+     ],
+     "walk2": [
+      187,
+      0,
+      90,
+      169,
+      46
+     ],
+     "attack": [
+      281,
+      5,
+      114,
+      164,
+      45
+     ],
+     "jump": [
+      399,
+      4,
+      84,
+      165,
+      46
+     ],
+     "hurt": [
+      487,
+      16,
+      90,
+      153,
+      46
+     ],
+     "down": [
+      581,
+      133,
+      170,
+      36,
+      85
+     ],
+     "dash": [
+      755,
+      68,
+      152,
+      101,
+      84
+     ]
+    }
+   },
+   "dasher": {
+    "img": "levels/enemies_trooper.webp",
+    "frames": {
+     "idle": [
+      4,
+      2,
+      87,
+      167,
+      38
+     ],
+     "walk": [
+      95,
+      2,
+      88,
+      167,
+      38
+     ],
+     "walk2": [
+      187,
+      0,
+      90,
+      169,
+      46
+     ],
+     "attack": [
+      281,
+      5,
+      114,
+      164,
+      45
+     ],
+     "jump": [
+      399,
+      4,
+      84,
+      165,
+      46
+     ],
+     "hurt": [
+      487,
+      16,
+      90,
+      153,
+      46
+     ],
+     "down": [
+      581,
+      133,
+      170,
+      36,
+      85
+     ],
+     "dash": [
+      755,
+      68,
+      152,
+      101,
+      84
+     ]
+    }
+   },
+   "sword": {
+    "img": "levels/enemies_trooper.webp",
+    "frames": {
+     "idle": [
+      4,
+      173,
+      81,
+      171,
+      34
+     ],
+     "walk": [
+      89,
+      175,
+      89,
+      169,
+      39
+     ],
+     "walk2": [
+      182,
+      177,
+      86,
+      167,
+      42
+     ],
+     "attack": [
+      272,
+      180,
+      154,
+      164,
+      51
+     ],
+     "jump": [
+      430,
+      182,
+      98,
+      162,
+      52
+     ],
+     "hurt": [
+      532,
+      191,
+      108,
+      153,
+      52
+     ],
+     "down": [
+      644,
+      307,
+      183,
+      37,
+      91
+     ],
+     "throw": [
+      831,
+      182,
+      151,
+      162,
+      77
+     ]
+    }
+   },
+   "star": {
+    "img": "levels/enemies_trooper.webp",
+    "frames": {
+     "idle": [
+      4,
+      173,
+      81,
+      171,
+      34
+     ],
+     "walk": [
+      89,
+      175,
+      89,
+      169,
+      39
+     ],
+     "walk2": [
+      182,
+      177,
+      86,
+      167,
+      42
+     ],
+     "attack": [
+      272,
+      180,
+      154,
+      164,
+      51
+     ],
+     "jump": [
+      430,
+      182,
+      98,
+      162,
+      52
+     ],
+     "hurt": [
+      532,
+      191,
+      108,
+      153,
+      52
+     ],
+     "down": [
+      644,
+      307,
+      183,
+      37,
+      91
+     ],
+     "throw": [
+      831,
+      182,
+      151,
+      162,
+      77
+     ]
+    }
+   },
+   "heavy": {
+    "img": "levels/enemies_trooper.webp",
+    "frames": {
+     "idle": [
+      4,
+      348,
+      103,
+      171,
+      46
+     ],
+     "walk": [
+      111,
+      350,
+      108,
+      169,
+      54
+     ],
+     "walk2": [
+      223,
+      352,
+      113,
+      167,
+      58
+     ],
+     "attack": [
+      340,
+      349,
+      143,
+      170,
+      51
+     ],
+     "jump": [
+      487,
+      360,
+      110,
+      159,
+      48
+     ],
+     "hurt": [
+      601,
+      362,
+      103,
+      157,
+      47
+     ],
+     "down": [
+      708,
+      471,
+      189,
+      48,
+      94
+     ],
+     "shoot": [
+      901,
+      354,
+      141,
+      165,
+      41
+     ]
+    }
+   },
+   "gunner": {
+    "img": "levels/enemies_trooper.webp",
+    "frames": {
+     "idle": [
+      4,
+      348,
+      103,
+      171,
+      46
+     ],
+     "walk": [
+      111,
+      350,
+      108,
+      169,
+      54
+     ],
+     "walk2": [
+      223,
+      352,
+      113,
+      167,
+      58
+     ],
+     "attack": [
+      340,
+      349,
+      143,
+      170,
+      51
+     ],
+     "jump": [
+      487,
+      360,
+      110,
+      159,
+      48
+     ],
+     "hurt": [
+      601,
+      362,
+      103,
+      157,
+      47
+     ],
+     "down": [
+      708,
+      471,
+      189,
+      48,
+      94
+     ],
+     "shoot": [
+      901,
+      354,
+      141,
+      165,
+      41
+     ]
+    }
+   }
+  },
+  "hues": {
+   "purple": 160,
+   "blue": 190,
+   "sword": 300,
+   "star": 280,
+   "gunner": 170,
+   "heavy": 290,
+   "dasher": 100
+  },
+  "images": [
+   "levels/level12_viral.webp",
+   "levels/level12_props.webp",
+   "levels/level12_xsky.jpg"
+  ],
+  "sections": [
+   {
+    "bg": "levels/level12_skyway.jpg",
+    "floor": [
+     170,
+     216
+    ],
+    "length": 2500,
+    "locks": [
+     0,
+     560,
+     1180,
+     1820
+    ],
+    "waves": [
+     [
+      "purple",
+      "blue",
+      "purple"
+     ],
+     [
+      "gunner",
+      "dasher",
+      "blue",
+      "star"
+     ],
+     [
+      "heavy",
+      "sword",
+      "gunner",
+      "dasher"
+     ],
+     [
+      "heavy",
+      "gunner",
+      "blue",
+      "dasher",
+      "star"
+     ]
+    ],
+    "grade": "rgba(30,10,70,0.10)",
+    "weather": "speed",
+    "hazards": [
+     {},
+     {},
+     {}
+    ],
+    "sky": "#140c2a",
+    "ground": "#22283a"
+   },
+   {
+    "bg": "levels/level12_datahub.jpg",
+    "floor": [
+     172,
+     216
+    ],
+    "length": 384,
+    "locks": [],
+    "waves": [],
+    "hazards": [
+     {}
+    ],
+    "sky": "#1a0c2a",
+    "ground": "#1e2a34"
+   }
+  ],
+  "restructure": {
+   "split": 0,
+   "images": [
+    "levels/level12_ally.webp",
+    "levels/level12_station.jpg"
+   ],
+   "tsec": {
+    "hazards": []
+   },
+   "twist": {
+    "kind": "defend",
+    "goal": "kind",
+    "title": "HACK THE GATE!",
+    "sub": "KEEP THEM OFF THE BOT WHILE IT WORKS",
+    "img": "levels/level12_ally.webp",
+    "fr": {
+     "bot": [
+      0,
+      0,
+      51,
+      80
+     ],
+     "botHack": [
+      54,
+      0,
+      86,
+      80
+     ],
+     "botHurt": [
+      143,
+      0,
+      47,
+      80
+     ],
+     "botCheer": [
+      193,
+      0,
+      77,
+      96
+     ],
+     "gateLock": [
+      273,
+      0,
+      65,
+      180
+     ],
+     "gateOpen": [
+      341,
+      0,
+      64,
+      180
+     ]
+    },
+    "gateSpr": "gateLock",
+    "gateOpen": "gateOpen",
+    "hack": "botHack",
+    "hurt": "botHurt",
+    "cheer": "botCheer",
+    "botX": 250,
+    "work": 2400,
+    "botHp": 10,
+    "drip": [
+     "gunner",
+     "dasher",
+     "purple",
+     "dasher"
+    ],
+    "gap": 140,
+    "cap": 4,
+    "color": "#5ae0ff"
+   },
+   "z2bg": "levels/level12_station.jpg",
+   "z2": {
+    "hazards": [
+     {},
+     {}
+    ]
+   }
+  },
+  "boss": {
+   "name": "VIRAL",
+   "base": "ramrod",
+   "atlas": "ninja",
+   "scale": 1,
+   "height": 74,
+   "hp": 46,
+   "speed": 1.15,
+   "chargeSpeed": 1.25,
+   "cool": 88,
+   "pitch": 160,
+   "moves": [
+    "charge",
+    "kick",
+    "fire"
+   ],
+   "shot": "ray",
+   "lines": {
+    "intro": "WELCOME TO 2105, TURTLES. THIS CITY RUNS ON ME.",
+    "hit": [
+     "CORRUPTED DATA!",
+     "YOU CAN'T PUNCH CODE!",
+     "SYSTEM... RECALIBRATING.",
+     "ANNOYING LITTLE GLITCHES."
+    ],
+    "summon": "WHICH ONE OF ME IS REAL?",
+    "ko": "ERROR... ERROR... THE RIFT... IS PULLING ME..."
+   },
+   "entrance": {
+    "len": 165,
+    "zoom": 1.3,
+    "sub": "THE GHOST IN THE MACHINE"
+   }
+  },
+  "outro": {}
+ },
+ "13": {
+  "number": 13,
+  "name": "DIMENSION X",
+  "card": {
+   "title": "DIMENSION X",
+   "tagline": "THE RIFT SPITS US OUT... ON AN ALIEN WORLD.",
+   "color": "#5affb0"
+  },
+  "enemySkins": {
+   "purple": {
+    "img": "levels/enemies_trooper.webp",
+    "frames": {
+     "idle": [
+      4,
+      2,
+      87,
+      167,
+      38
+     ],
+     "walk": [
+      95,
+      2,
+      88,
+      167,
+      38
+     ],
+     "walk2": [
+      187,
+      0,
+      90,
+      169,
+      46
+     ],
+     "attack": [
+      281,
+      5,
+      114,
+      164,
+      45
+     ],
+     "jump": [
+      399,
+      4,
+      84,
+      165,
+      46
+     ],
+     "hurt": [
+      487,
+      16,
+      90,
+      153,
+      46
+     ],
+     "down": [
+      581,
+      133,
+      170,
+      36,
+      85
+     ],
+     "dash": [
+      755,
+      68,
+      152,
+      101,
+      84
+     ]
+    }
+   },
+   "blue": {
+    "img": "levels/enemies_trooper.webp",
+    "frames": {
+     "idle": [
+      4,
+      2,
+      87,
+      167,
+      38
+     ],
+     "walk": [
+      95,
+      2,
+      88,
+      167,
+      38
+     ],
+     "walk2": [
+      187,
+      0,
+      90,
+      169,
+      46
+     ],
+     "attack": [
+      281,
+      5,
+      114,
+      164,
+      45
+     ],
+     "jump": [
+      399,
+      4,
+      84,
+      165,
+      46
+     ],
+     "hurt": [
+      487,
+      16,
+      90,
+      153,
+      46
+     ],
+     "down": [
+      581,
+      133,
+      170,
+      36,
+      85
+     ],
+     "dash": [
+      755,
+      68,
+      152,
+      101,
+      84
+     ]
+    }
+   },
+   "dasher": {
+    "img": "levels/enemies_trooper.webp",
+    "frames": {
+     "idle": [
+      4,
+      2,
+      87,
+      167,
+      38
+     ],
+     "walk": [
+      95,
+      2,
+      88,
+      167,
+      38
+     ],
+     "walk2": [
+      187,
+      0,
+      90,
+      169,
+      46
+     ],
+     "attack": [
+      281,
+      5,
+      114,
+      164,
+      45
+     ],
+     "jump": [
+      399,
+      4,
+      84,
+      165,
+      46
+     ],
+     "hurt": [
+      487,
+      16,
+      90,
+      153,
+      46
+     ],
+     "down": [
+      581,
+      133,
+      170,
+      36,
+      85
+     ],
+     "dash": [
+      755,
+      68,
+      152,
+      101,
+      84
+     ]
+    }
+   },
+   "sword": {
+    "img": "levels/enemies_trooper.webp",
+    "frames": {
+     "idle": [
+      4,
+      173,
+      81,
+      171,
+      34
+     ],
+     "walk": [
+      89,
+      175,
+      89,
+      169,
+      39
+     ],
+     "walk2": [
+      182,
+      177,
+      86,
+      167,
+      42
+     ],
+     "attack": [
+      272,
+      180,
+      154,
+      164,
+      51
+     ],
+     "jump": [
+      430,
+      182,
+      98,
+      162,
+      52
+     ],
+     "hurt": [
+      532,
+      191,
+      108,
+      153,
+      52
+     ],
+     "down": [
+      644,
+      307,
+      183,
+      37,
+      91
+     ],
+     "throw": [
+      831,
+      182,
+      151,
+      162,
+      77
+     ]
+    }
+   },
+   "star": {
+    "img": "levels/enemies_trooper.webp",
+    "frames": {
+     "idle": [
+      4,
+      173,
+      81,
+      171,
+      34
+     ],
+     "walk": [
+      89,
+      175,
+      89,
+      169,
+      39
+     ],
+     "walk2": [
+      182,
+      177,
+      86,
+      167,
+      42
+     ],
+     "attack": [
+      272,
+      180,
+      154,
+      164,
+      51
+     ],
+     "jump": [
+      430,
+      182,
+      98,
+      162,
+      52
+     ],
+     "hurt": [
+      532,
+      191,
+      108,
+      153,
+      52
+     ],
+     "down": [
+      644,
+      307,
+      183,
+      37,
+      91
+     ],
+     "throw": [
+      831,
+      182,
+      151,
+      162,
+      77
+     ]
+    }
+   },
+   "heavy": {
+    "img": "levels/enemies_trooper.webp",
+    "frames": {
+     "idle": [
+      4,
+      348,
+      103,
+      171,
+      46
+     ],
+     "walk": [
+      111,
+      350,
+      108,
+      169,
+      54
+     ],
+     "walk2": [
+      223,
+      352,
+      113,
+      167,
+      58
+     ],
+     "attack": [
+      340,
+      349,
+      143,
+      170,
+      51
+     ],
+     "jump": [
+      487,
+      360,
+      110,
+      159,
+      48
+     ],
+     "hurt": [
+      601,
+      362,
+      103,
+      157,
+      47
+     ],
+     "down": [
+      708,
+      471,
+      189,
+      48,
+      94
+     ],
+     "shoot": [
+      901,
+      354,
+      141,
+      165,
+      41
+     ]
+    }
+   },
+   "gunner": {
+    "img": "levels/enemies_trooper.webp",
+    "frames": {
+     "idle": [
+      4,
+      348,
+      103,
+      171,
+      46
+     ],
+     "walk": [
+      111,
+      350,
+      108,
+      169,
+      54
+     ],
+     "walk2": [
+      223,
+      352,
+      113,
+      167,
+      58
+     ],
+     "attack": [
+      340,
+      349,
+      143,
+      170,
+      51
+     ],
+     "jump": [
+      487,
+      360,
+      110,
+      159,
+      48
+     ],
+     "hurt": [
+      601,
+      362,
+      103,
+      157,
+      47
+     ],
+     "down": [
+      708,
+      471,
+      189,
+      48,
+      94
+     ],
+     "shoot": [
+      901,
+      354,
+      141,
+      165,
+      41
+     ]
+    }
+   }
+  },
+  "hues": {
+   "gunner": 22,
+   "heavy": 32,
+   "purple": 95,
+   "blue": 165,
+   "sword": 130,
+   "dasher": 295,
+   "star": 60
+  },
+  "images": [
+   "levels/level13_traag.webp",
+   "levels/level13_granitor.webp",
+   "levels/level13_earth.jpg",
+   "levels/level13_props.webp",
+   "levels/level13_chasm.jpg"
+  ],
+  "sections": [
+   {
+    "bg": "levels/level13_dimx.jpg",
+    "floor": [
+     150,
+     194
+    ],
+    "length": 2600,
+    "locks": [
+     0,
+     640,
+     1300,
+     1980
+    ],
+    "waves": [
+     [
+      "purple",
+      "gunner",
+      "blue"
+     ],
+     [
+      "heavy",
+      "dasher",
+      "gunner",
+      "purple"
+     ],
+     [
+      "sword",
+      "gunner",
+      "star",
+      "heavy"
+     ],
+     [
+      "heavy",
+      "gunner",
+      "dasher",
+      "blue",
+      "gunner"
+     ]
+    ],
+    "grade": null,
+    "weather": null,
+    "hazards": [
+     {},
+     {},
+     {},
+     {}
+    ],
+    "sky": "#3a2a6a",
+    "ground": "#5a4a7a"
+   },
+   {
+    "bg": "levels/level13_dimx_boss.jpg",
+    "floor": [
+     152,
+     214
+    ],
+    "length": 384,
+    "locks": [],
+    "waves": [],
+    "hazards": [
+     {}
+    ],
+    "sky": "#2a1a4a",
+    "ground": "#4a3a5a"
+   }
+  ],
+  "hazards": [
+   {}
+  ],
+  "restructure": {
+   "split": 0,
+   "images": [
+    "levels/level13_turret.webp",
+    "levels/level13_canyon.jpg"
+   ],
+   "tsec": {
+    "hazards": []
+   },
+   "twist": {
+    "kind": "turret",
+    "goal": "kills",
+    "title": "SEIZE THE CANNON!",
+    "sub": "SHOOT THE DROP-PODS BEFORE THEY LAND",
+    "img": "levels/level13_turret.webp",
+    "fr": {
+     "cannon": [
+      0,
+      0,
+      220,
+      181
+     ],
+     "cannonFire": [
+      223,
+      0,
+      250,
+      185
+     ],
+     "pod": [
+      0,
+      188,
+      110,
+      166
+     ],
+     "rubble": [
+      113,
+      188,
+      160,
+      84
+     ],
+     "shell": [
+      276,
+      188,
+      48,
+      31
+     ]
+    },
+    "need": 8,
+    "every": 95,
+    "arc": true,
+    "tspeed": 1.2,
+    "landSpawn": "heavy",
+    "gun": "cannon",
+    "gunFire": "cannonFire",
+    "gunK": 0.26,
+    "shell": "shell",
+    "target": "pod",
+    "targetK": 0.22,
+    "hudText": "PODS",
+    "color": "#b8ff7a"
+   },
+   "z2bg": "levels/level13_canyon.jpg"
+  },
+  "boss": {
+   "name": "GENERAL TRAAG",
+   "base": "ramrod",
+   "atlas": "ramrod",
+   "hp": 60,
+   "speed": 1,
+   "chargeSpeed": 1.1,
+   "cool": 96,
+   "pitch": 62,
+   "height": 100,
+   "moves": [
+    "charge",
+    "kick"
+   ],
+   "lines": {
+    "intro": "TURTLES! IN DIMENSION X? YOU'RE A LONG WAY FROM HOME!",
+    "hit": [
+     "THAT... TICKLED!",
+     "YOU DARE STRIKE A GENERAL?!",
+     "ROCK SOLDIERS NEVER FALL!",
+     "GRRR! INSOLENT SHELLS!"
+    ],
+    "summon": "ROCK SOLDIERS! FALL IN!",
+    "ko": "IMPOSSIBLE... FALL BACK!"
+   },
+   "entrance": {
+    "len": 180,
+    "zoom": 1.28,
+    "sub": "STONE WARLORD OF DIMENSION X"
+   }
+  },
+  "outro": {}
+ },
+ "14": {
+  "number": 14,
+  "name": "TECHNODROME PORTAL",
+  "card": {
+   "title": "TECHNODROME PORTAL",
+   "tagline": "THE WAR MACHINE IS PHASING INTO NEW YORK!",
+   "color": "#b04aff"
+  },
+  "enemySkins": {
+   "purple": {
+    "img": "levels/enemies_trooper.webp",
+    "frames": {
+     "idle": [
+      4,
+      2,
+      87,
+      167,
+      38
+     ],
+     "walk": [
+      95,
+      2,
+      88,
+      167,
+      38
+     ],
+     "walk2": [
+      187,
+      0,
+      90,
+      169,
+      46
+     ],
+     "attack": [
+      281,
+      5,
+      114,
+      164,
+      45
+     ],
+     "jump": [
+      399,
+      4,
+      84,
+      165,
+      46
+     ],
+     "hurt": [
+      487,
+      16,
+      90,
+      153,
+      46
+     ],
+     "down": [
+      581,
+      133,
+      170,
+      36,
+      85
+     ],
+     "dash": [
+      755,
+      68,
+      152,
+      101,
+      84
+     ]
+    }
+   },
+   "blue": {
+    "img": "levels/enemies_trooper.webp",
+    "frames": {
+     "idle": [
+      4,
+      2,
+      87,
+      167,
+      38
+     ],
+     "walk": [
+      95,
+      2,
+      88,
+      167,
+      38
+     ],
+     "walk2": [
+      187,
+      0,
+      90,
+      169,
+      46
+     ],
+     "attack": [
+      281,
+      5,
+      114,
+      164,
+      45
+     ],
+     "jump": [
+      399,
+      4,
+      84,
+      165,
+      46
+     ],
+     "hurt": [
+      487,
+      16,
+      90,
+      153,
+      46
+     ],
+     "down": [
+      581,
+      133,
+      170,
+      36,
+      85
+     ],
+     "dash": [
+      755,
+      68,
+      152,
+      101,
+      84
+     ]
+    }
+   },
+   "dasher": {
+    "img": "levels/enemies_trooper.webp",
+    "frames": {
+     "idle": [
+      4,
+      2,
+      87,
+      167,
+      38
+     ],
+     "walk": [
+      95,
+      2,
+      88,
+      167,
+      38
+     ],
+     "walk2": [
+      187,
+      0,
+      90,
+      169,
+      46
+     ],
+     "attack": [
+      281,
+      5,
+      114,
+      164,
+      45
+     ],
+     "jump": [
+      399,
+      4,
+      84,
+      165,
+      46
+     ],
+     "hurt": [
+      487,
+      16,
+      90,
+      153,
+      46
+     ],
+     "down": [
+      581,
+      133,
+      170,
+      36,
+      85
+     ],
+     "dash": [
+      755,
+      68,
+      152,
+      101,
+      84
+     ]
+    }
+   },
+   "sword": {
+    "img": "levels/enemies_trooper.webp",
+    "frames": {
+     "idle": [
+      4,
+      173,
+      81,
+      171,
+      34
+     ],
+     "walk": [
+      89,
+      175,
+      89,
+      169,
+      39
+     ],
+     "walk2": [
+      182,
+      177,
+      86,
+      167,
+      42
+     ],
+     "attack": [
+      272,
+      180,
+      154,
+      164,
+      51
+     ],
+     "jump": [
+      430,
+      182,
+      98,
+      162,
+      52
+     ],
+     "hurt": [
+      532,
+      191,
+      108,
+      153,
+      52
+     ],
+     "down": [
+      644,
+      307,
+      183,
+      37,
+      91
+     ],
+     "throw": [
+      831,
+      182,
+      151,
+      162,
+      77
+     ]
+    }
+   },
+   "star": {
+    "img": "levels/enemies_trooper.webp",
+    "frames": {
+     "idle": [
+      4,
+      173,
+      81,
+      171,
+      34
+     ],
+     "walk": [
+      89,
+      175,
+      89,
+      169,
+      39
+     ],
+     "walk2": [
+      182,
+      177,
+      86,
+      167,
+      42
+     ],
+     "attack": [
+      272,
+      180,
+      154,
+      164,
+      51
+     ],
+     "jump": [
+      430,
+      182,
+      98,
+      162,
+      52
+     ],
+     "hurt": [
+      532,
+      191,
+      108,
+      153,
+      52
+     ],
+     "down": [
+      644,
+      307,
+      183,
+      37,
+      91
+     ],
+     "throw": [
+      831,
+      182,
+      151,
+      162,
+      77
+     ]
+    }
+   },
+   "heavy": {
+    "img": "levels/enemies_trooper.webp",
+    "frames": {
+     "idle": [
+      4,
+      348,
+      103,
+      171,
+      46
+     ],
+     "walk": [
+      111,
+      350,
+      108,
+      169,
+      54
+     ],
+     "walk2": [
+      223,
+      352,
+      113,
+      167,
+      58
+     ],
+     "attack": [
+      340,
+      349,
+      143,
+      170,
+      51
+     ],
+     "jump": [
+      487,
+      360,
+      110,
+      159,
+      48
+     ],
+     "hurt": [
+      601,
+      362,
+      103,
+      157,
+      47
+     ],
+     "down": [
+      708,
+      471,
+      189,
+      48,
+      94
+     ],
+     "shoot": [
+      901,
+      354,
+      141,
+      165,
+      41
+     ]
+    }
+   },
+   "gunner": {
+    "img": "levels/enemies_trooper.webp",
+    "frames": {
+     "idle": [
+      4,
+      348,
+      103,
+      171,
+      46
+     ],
+     "walk": [
+      111,
+      350,
+      108,
+      169,
+      54
+     ],
+     "walk2": [
+      223,
+      352,
+      113,
+      167,
+      58
+     ],
+     "attack": [
+      340,
+      349,
+      143,
+      170,
+      51
+     ],
+     "jump": [
+      487,
+      360,
+      110,
+      159,
+      48
+     ],
+     "hurt": [
+      601,
+      362,
+      103,
+      157,
+      47
+     ],
+     "down": [
+      708,
+      471,
+      189,
+      48,
+      94
+     ],
+     "shoot": [
+      901,
+      354,
+      141,
+      165,
+      41
+     ]
+    }
+   }
+  },
+  "hues": {
+   "purple": 235,
+   "sword": 265,
+   "star": 320,
+   "blue": 185,
+   "heavy": 12,
+   "gunner": 192,
+   "dasher": 290
+  },
+  "images": [
+   "levels/level14_krang.webp",
+   "levels/level15_shredder.webp"
+  ],
+  "sections": [
+   {
+    "bg": "levels/level14_portal.jpg",
+    "floor": [
+     170,
+     214
+    ],
+    "length": 2800,
+    "locks": [
+     0,
+     680,
+     1380,
+     2080
+    ],
+    "waves": [
+     [
+      "purple",
+      "purple",
+      "star"
+     ],
+     [
+      "purple",
+      "heavy",
+      "gunner",
+      "sword"
+     ],
+     [
+      "heavy",
+      "gunner",
+      "blue",
+      "star"
+     ],
+     [
+      "heavy",
+      "heavy",
+      "gunner",
+      "dasher",
+      "sword"
+     ]
+    ],
+    "weather": "embers",
+    "hazards": [
+     {}
+    ],
+    "sky": "#1a0c2c",
+    "ground": "#3a3444"
+   },
+   {
+    "bg": "levels/level14_technodrome.jpg",
+    "floor": [
+     160,
+     216
+    ],
+    "length": 384,
+    "locks": [],
+    "waves": [],
+    "hazards": [
+     {}
+    ],
+    "weather": "embers",
+    "sky": "#1a0c2c",
+    "ground": "#3a3048"
+   }
+  ],
+  "restructure": {
+   "split": 0,
+   "images": [
+    "levels/level14_tendril.webp",
+    "levels/level14_elstreet.jpg"
+   ],
+   "tsec": {
+    "length": 1400,
+    "hazards": []
+   },
+   "twist": {
+    "kind": "run",
+    "goal": "reach",
+    "title": "TENDRIL ALLEY!",
+    "sub": "MAKE THE EL OVERPASS BEFORE THE PORTAL SURGE",
+    "img": "levels/level14_tendril.webp",
+    "fr": {
+     "mound": [
+      0,
+      0,
+      170,
+      59
+     ],
+     "crater": [
+      173,
+      0,
+      190,
+      57
+     ],
+     "chunk1": [
+      366,
+      0,
+      64,
+      39
+     ],
+     "drillHalf": [
+      0,
+      62,
+      190,
+      94
+     ],
+     "chunk2": [
+      193,
+      62,
+      52,
+      26
+     ],
+     "chunk3": [
+      248,
+      62,
+      56,
+      40
+     ],
+     "drillFull": [
+      0,
+      159,
+      347,
+      300
+     ]
+    },
+    "clock": 2700,
+    "reclock": 1200,
+    "surgeMsg": "PORTAL SURGE!",
+    "hudText": "PORTAL SURGE IN",
+    "drip": [
+     "purple"
+    ],
+    "gap": 260,
+    "cap": 2,
+    "color": "#d08aff"
+   },
+   "z2bg": "levels/level14_elstreet.jpg"
+  },
+  "boss": {
+   "name": "KRANG",
+   "base": "ramrod",
+   "atlas": "ramrod",
+   "height": 96,
+   "hp": 34,
+   "speed": 0.75,
+   "chargeSpeed": 1,
+   "cool": 84,
+   "pitch": 190,
+   "moves": [
+    "kick",
+    "slam",
+    "throw",
+    "fire",
+    "summon"
+   ],
+   "lines": {
+    "intro": "BEHOLD! THE TECHNODROME HAS ARRIVED!",
+    "hit": [
+     "OW! WATCH THE MERCHANDISE!",
+     "MY BEAUTIFUL BODY!",
+     "YOU INSOLENT REPTILES!",
+     "OOH, THAT SMARTS!"
+    ],
+    "summon": "MOUSERS! CHEW THEM UP!",
+    "ko": "NO! NOT MY BODY! SHREDDERRR!"
+   },
+   "entrance": {
+    "len": 200,
+    "zoom": 1.26,
+    "sub": "WARLORD OF DIMENSION X"
+   }
+  },
+  "outro": {}
+ },
+ "15": {
+  "number": 15,
+  "name": "SHREDDER'S TOWER",
+  "final": true,
+  "card": {
+   "title": "SHREDDER'S TOWER",
+   "tagline": "THE TRUE FINALE. END THIS, BROTHERS.",
+   "color": "#b03aff"
+  },
+  "enemySkins": {
+   "purple": {
+    "img": "levels/level15_elite.webp",
+    "frames": {
+     "idle": [
+      5,
+      9,
+      108,
+      160,
+      53
+     ],
+     "walk": [
+      117,
+      0,
+      101,
+      169,
+      58
+     ],
+     "walk2": [
+      222,
+      1,
+      103,
+      168,
+      47
+     ],
+     "attack": [
+      329,
+      6,
+      156,
+      163,
+      47
+     ],
+     "jump": [
+      489,
+      40,
+      120,
+      129,
+      44
+     ],
+     "hurt": [
+      613,
+      20,
+      97,
+      149,
+      37
+     ],
+     "down": [
+      714,
+      130,
+      145,
+      39,
+      72
+     ],
+     "throw": [
+      863,
+      7,
+      181,
+      162,
+      87
+     ],
+     "grab": [
+      1048,
+      13,
+      158,
+      156,
+      72
+     ],
+     "dash": [
+      1210,
+      55,
+      175,
+      114,
+      112
+     ]
+    }
+   },
+   "blue": {
+    "img": "levels/level15_elite.webp",
+    "frames": {
+     "idle": [
+      5,
+      9,
+      108,
+      160,
+      53
+     ],
+     "walk": [
+      117,
+      0,
+      101,
+      169,
+      58
+     ],
+     "walk2": [
+      222,
+      1,
+      103,
+      168,
+      47
+     ],
+     "attack": [
+      329,
+      6,
+      156,
+      163,
+      47
+     ],
+     "jump": [
+      489,
+      40,
+      120,
+      129,
+      44
+     ],
+     "hurt": [
+      613,
+      20,
+      97,
+      149,
+      37
+     ],
+     "down": [
+      714,
+      130,
+      145,
+      39,
+      72
+     ],
+     "throw": [
+      863,
+      7,
+      181,
+      162,
+      87
+     ],
+     "grab": [
+      1048,
+      13,
+      158,
+      156,
+      72
+     ],
+     "dash": [
+      1210,
+      55,
+      175,
+      114,
+      112
+     ]
+    }
+   },
+   "sword": {
+    "img": "levels/level15_elite.webp",
+    "frames": {
+     "idle": [
+      5,
+      9,
+      108,
+      160,
+      53
+     ],
+     "walk": [
+      117,
+      0,
+      101,
+      169,
+      58
+     ],
+     "walk2": [
+      222,
+      1,
+      103,
+      168,
+      47
+     ],
+     "attack": [
+      329,
+      6,
+      156,
+      163,
+      47
+     ],
+     "jump": [
+      489,
+      40,
+      120,
+      129,
+      44
+     ],
+     "hurt": [
+      613,
+      20,
+      97,
+      149,
+      37
+     ],
+     "down": [
+      714,
+      130,
+      145,
+      39,
+      72
+     ],
+     "throw": [
+      863,
+      7,
+      181,
+      162,
+      87
+     ],
+     "grab": [
+      1048,
+      13,
+      158,
+      156,
+      72
+     ],
+     "dash": [
+      1210,
+      55,
+      175,
+      114,
+      112
+     ]
+    }
+   },
+   "star": {
+    "img": "levels/level15_elite.webp",
+    "frames": {
+     "idle": [
+      5,
+      9,
+      108,
+      160,
+      53
+     ],
+     "walk": [
+      117,
+      0,
+      101,
+      169,
+      58
+     ],
+     "walk2": [
+      222,
+      1,
+      103,
+      168,
+      47
+     ],
+     "attack": [
+      329,
+      6,
+      156,
+      163,
+      47
+     ],
+     "jump": [
+      489,
+      40,
+      120,
+      129,
+      44
+     ],
+     "hurt": [
+      613,
+      20,
+      97,
+      149,
+      37
+     ],
+     "down": [
+      714,
+      130,
+      145,
+      39,
+      72
+     ],
+     "throw": [
+      863,
+      7,
+      181,
+      162,
+      87
+     ],
+     "grab": [
+      1048,
+      13,
+      158,
+      156,
+      72
+     ],
+     "dash": [
+      1210,
+      55,
+      175,
+      114,
+      112
+     ]
+    }
+   },
+   "dasher": {
+    "img": "levels/level15_elite.webp",
+    "frames": {
+     "idle": [
+      5,
+      9,
+      108,
+      160,
+      53
+     ],
+     "walk": [
+      117,
+      0,
+      101,
+      169,
+      58
+     ],
+     "walk2": [
+      222,
+      1,
+      103,
+      168,
+      47
+     ],
+     "attack": [
+      329,
+      6,
+      156,
+      163,
+      47
+     ],
+     "jump": [
+      489,
+      40,
+      120,
+      129,
+      44
+     ],
+     "hurt": [
+      613,
+      20,
+      97,
+      149,
+      37
+     ],
+     "down": [
+      714,
+      130,
+      145,
+      39,
+      72
+     ],
+     "throw": [
+      863,
+      7,
+      181,
+      162,
+      87
+     ],
+     "grab": [
+      1048,
+      13,
+      158,
+      156,
+      72
+     ],
+     "dash": [
+      1210,
+      55,
+      175,
+      114,
+      112
+     ]
+    }
+   },
+   "heavy": {
+    "img": "levels/enemies_foot.webp",
+    "frames": {
+     "idle": [
+      4,
+      1,
+      112,
+      167,
+      45
+     ],
+     "walk": [
+      120,
+      0,
+      97,
+      168,
+      47
+     ],
+     "walk2": [
+      221,
+      0,
+      92,
+      168,
+      49
+     ],
+     "attack": [
+      317,
+      4,
+      146,
+      164,
+      56
+     ],
+     "jump": [
+      467,
+      11,
+      107,
+      157,
+      48
+     ],
+     "hurt": [
+      578,
+      13,
+      91,
+      155,
+      47
+     ],
+     "down": [
+      673,
+      120,
+      191,
+      48,
+      95
+     ],
+     "shoot": [
+      868,
+      6,
+      141,
+      162,
+      46
+     ]
+    }
+   },
+   "gunner": {
+    "img": "levels/enemies_foot.webp",
+    "frames": {
+     "idle": [
+      4,
+      1,
+      112,
+      167,
+      45
+     ],
+     "walk": [
+      120,
+      0,
+      97,
+      168,
+      47
+     ],
+     "walk2": [
+      221,
+      0,
+      92,
+      168,
+      49
+     ],
+     "attack": [
+      317,
+      4,
+      146,
+      164,
+      56
+     ],
+     "jump": [
+      467,
+      11,
+      107,
+      157,
+      48
+     ],
+     "hurt": [
+      578,
+      13,
+      91,
+      155,
+      47
+     ],
+     "down": [
+      673,
+      120,
+      191,
+      48,
+      95
+     ],
+     "shoot": [
+      868,
+      6,
+      141,
+      162,
+      46
+     ]
+    }
+   }
+  },
+  "hues": {
+   "sword": 340,
+   "purple": 300,
+   "blue": 320,
+   "star": 350,
+   "dasher": 10,
+   "heavy": 300,
+   "gunner": 220
+  },
+  "images": [
+   "levels/level15_shredder.webp",
+   "levels/level15_super.webp",
+   "levels/level15_elite.webp",
+   "levels/level15_freefall.webp",
+   "levels/level15_dojo.jpg"
+  ],
+  "sections": [
+   {
+    "seg": "zone1",
+    "bg": "levels/level15_lab.jpg",
+    "floor": [
+     178,
+     220
+    ],
+    "length": 1300,
+    "locks": [
+     0,
+     620
+    ],
+    "waves": [
+     [
+      "purple",
+      "sword",
+      "gunner",
+      "purple"
+     ],
+     [
+      "heavy",
+      "sword",
+      "star",
+      "dasher"
+     ]
+    ],
+    "weather": "drips",
+    "hazards": [
+     {}
+    ],
+    "sky": "#0a1a14",
+    "ground": "#26302c"
+   },
+   {
+    "seg": "twist",
+    "bg": "levels/level15_elevator.jpg",
+    "floor": [
+     186,
+     221
+    ],
+    "length": 384,
+    "locks": [
+     0,
+     0,
+     0
+    ],
+    "waves": [
+     [
+      "purple",
+      "sword",
+      "purple"
+     ],
+     [
+      "blue",
+      "star",
+      "sword",
+      "dasher"
+     ],
+     [
+      "heavy",
+      "sword",
+      "blue",
+      "star"
+     ]
+    ],
+    "hazards": [
+     {}
+    ],
+    "sky": "#0c1020",
+    "ground": "#2a2c34",
+    "twist": {
+     "kind": "freefall",
+     "gate": false,
+     "at": 700,
+     "img": "levels/level15_freefall.webp",
+     "fr": {
+      "cable": [
+       0,
+       0,
+       50,
+       300
+      ],
+      "brake": [
+       53,
+       0,
+       190,
+       173
+      ],
+      "hatch": [
+       246,
+       0,
+       200,
+       66
+      ],
+      "weight": [
+       0,
+       303,
+       160,
+       158
+      ],
+      "elight": [
+       163,
+       303,
+       40,
+       40
+      ]
+     },
+     "cable": "cable",
+     "brake": "brake",
+     "weight": "weight",
+     "elight": "elight",
+     "snapMsg": "THE CABLE SNAPPED!",
+     "brakeMsg": "BRAKES HOLD!",
+     "dingMsg": "WINCHED BACK UP - KEEP CLIMBING!"
+    }
+   },
+   {
+    "seg": "zone2",
+    "bg": "levels/level15_dojo.jpg",
+    "floor": [
+     178,
+     220
+    ],
+    "length": 1300,
+    "locks": [
+     0,
+     620
+    ],
+    "waves": [
+     [
+      "blue",
+      "star",
+      "sword",
+      "dasher"
+     ],
+     [
+      "sword",
+      "sword",
+      "heavy",
+      "dasher",
+      "star"
+     ]
+    ],
+    "weather": "rain",
+    "hazards": [],
+    "sky": "#0c0a18",
+    "ground": "#2a2030"
+   },
+   {
+    "seg": "arena",
+    "bg": "levels/level15_penthouse.jpg",
+    "floor": [
+     158,
+     218
+    ],
+    "length": 384,
+    "locks": [],
+    "waves": [],
+    "weather": "rain",
+    "hazards": [
+     {}
+    ],
+    "sky": "#1a1030",
+    "ground": "#3a3448"
+   },
+   {
+    "seg": "arena2",
+    "bg": "levels/level15_lab.jpg",
+    "floor": [
+     178,
+     220
+    ],
+    "length": 384,
+    "locks": [],
+    "waves": [],
+    "weather": "drips",
+    "hazards": [
+     {},
+     {}
+    ],
+    "sky": "#0a1a14",
+    "ground": "#26302c"
+   }
+  ],
+  "boss": {
+   "name": "SUPER SHREDDER",
+   "base": "ramrod",
+   "atlas": "ramrod",
+   "hp": 70,
+   "speed": 0.9,
+   "chargeSpeed": 1.2,
+   "cool": 92,
+   "pitch": 64,
+   "height": 132,
+   "moves": [
+    "kick",
+    "charge"
+   ],
+   "lines": {
+    "intro": "THE OOZE HAS MADE ME... INVINCIBLE!",
+    "hit": [
+     "PATHETIC!",
+     "I FEEL NOTHING!",
+     "INSECTS!",
+     "RAAAARGH!"
+    ],
+    "ko": "IMPOSSIBLE... THE POWER... IT'S TEARING ME APART...!"
+   },
+   "entrance": {
+    "len": 200,
+    "zoom": 1.24,
+    "sub": "MUTATED BY THE OOZE"
+   }
+  },
+  "outro": {}
+ }
+}

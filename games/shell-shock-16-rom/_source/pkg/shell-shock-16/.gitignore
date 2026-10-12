@@ -1,0 +1,5 @@
+out/
+res/resources.h
+src/boot/sega.s
+*.o
+__pycache__/
