@@ -333,11 +333,13 @@
   "independentOfMathRandom": true,
   "mathRandomInSource": false,
   "canvas": {
-   "firstBuildOps": 0,
+   "firstBuildOps": 340,
    "secondBuildOps": 0,
    "wrapperKOps": 0,
    "cachedOnSameK": true,
-   "cachedForWrapperK": true
+   "cachedForWrapperK": true,
+   "noDocumentBuildOk": true,
+   "drawsAfterDocumentReturns": true
   }
  },
  "misc": {
@@ -360,5 +362,6 @@
   "idleBeyondRadius": 0.057,
   "reachPart": "haR",
   "strikes": "atk1@0.481 atk2@0.509 atk3@0.589"
- }
+ },
+ "hooks": {}
 }

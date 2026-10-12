@@ -338,7 +338,9 @@
    "secondBuildOps": 0,
    "wrapperKOps": 0,
    "cachedOnSameK": true,
-   "cachedForWrapperK": true
+   "cachedForWrapperK": true,
+   "noDocumentBuildOk": true,
+   "drawsAfterDocumentReturns": true
   }
  },
  "misc": {
@@ -376,9 +378,9 @@
    "hulls": 39,
    "mats": 2,
    "tris": 9972,
-   "minY": -0.086,
-   "maxY": 2.161,
-   "zMin": -0.375,
+   "minY": -0.08,
+   "maxY": 2.104,
+   "zMin": -0.325,
    "zMax": 0.9
   },
   "brawlWithGameKit": {

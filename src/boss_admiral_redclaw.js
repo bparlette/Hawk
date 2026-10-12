@@ -17,10 +17,9 @@ export const ATTACKS = [
 
 // ---------------- kit access ----------------
 // Normal path: the game / viewer passes the kit object K (everything comes through it, hard rule 2).
-// Hook path: the Fort McHenry set piece passes partial deps ({ THREE, toonMat, outlineMat, ... }). kitFrom() completes them with
-// helpers copied line for line from kit/toadcity_kit.js (G, part, grp, skeleton, addOdir, bakeColor, blank, legsStance, runLegs,
-// applyPose) so the same build runs there. Materials still come only from the supplied toonMat / outlineMat (basicMat falls back to
-// THREE.MeshBasicMaterial, which is exactly what the kit's basicMat returns).
+// Hook path: the game's live modes pass partial deps ({ THREE, toonMat, outlineMat, ... }, or only { THREE }). kitFrom() completes
+// them with helpers copied line for line from kit/toadcity_kit.js (G, part, grp, skeleton, addOdir, bakeColor, blank, legsStance,
+// runLegs, applyPose, and toonMat / outlineMat / basicMat when the caller passes none) so the same build runs there.
 function kitFrom(o) {
   if (o && o.part && o.skeleton && o.G && o.blank && o.applyPose && o.basicMat) return o;
   if (o && o.part && o.skeleton && o.G && o.blank && o.applyPose) return Object.assign({}, o, { basicMat: (x) => new o.THREE.MeshBasicMaterial(x) });
@@ -52,7 +51,37 @@ function kitFrom(o) {
     for (let i = 0; i < n; i++) { a[i * 3] = c.r; a[i * 3 + 1] = c.g; a[i * 3 + 2] = c.b; }
     g.setAttribute('color', new THREE.BufferAttribute(a, 3)); return g;
   });
-  const OUT_CHAR = o.OUT_CHAR || o.outlineMat(0.0042);
+  const toonMat = o.toonMat || ((opts = {}) => {   // kit/toadcity_kit.js toonMat, verbatim (only used when the caller passes none)
+    const m = new THREE.MeshLambertMaterial(Object.assign({ vertexColors: true }, opts));
+    m.userData.flash = { value: 0 }; m.userData.flashC = { value: new THREE.Color(1, 1, 1) };
+    m.onBeforeCompile = (sh) => {
+      sh.uniforms.uFlash = m.userData.flash; sh.uniforms.uFlashC = m.userData.flashC;
+      sh.fragmentShader = sh.fragmentShader
+        .replace('#include <common>', '#include <common>\nuniform float uFlash; uniform vec3 uFlashC;')
+        .replace('#include <opaque_fragment>', `
+          { float ld = max(dot(diffuseColor.rgb, vec3(0.299, 0.587, 0.114)), 1e-3), lo = dot(outgoingLight, vec3(0.299, 0.587, 0.114)), r = lo / ld;
+            float b = mix(0.46, 0.78, smoothstep(0.38, 0.44, r)); b = mix(b, 1.06, smoothstep(0.86, 0.92, r)); b = mix(b, r, step(1.35, r));
+            outgoingLight *= b / max(r, 1e-3);
+            outgoingLight = mix(outgoingLight, outgoingLight * vec3(0.88, 0.86, 1.1), (1.0 - smoothstep(0.38, 0.44, r)) * 0.5); }
+          outgoingLight = mix(outgoingLight, uFlashC, uFlash);
+          #include <opaque_fragment>`);
+    };
+    m.customProgramCacheKey = () => 'psx' + (opts.map ? 'M' : '');
+    return m;
+  });
+  const outlineMat = o.outlineMat || ((w) => new THREE.ShaderMaterial({   // kit outlineMat, verbatim, with its own fog uniforms
+    uniforms: { uW: { value: w }, uC: { value: new THREE.Color('#14101f') }, uFogC: { value: new THREE.Color('#000') }, uFogN: { value: 100 }, uFogF: { value: 200 } },
+    vertexShader: `attribute vec3 odir; uniform float uW; varying float vD;
+      void main() { vec4 wp = modelMatrix * vec4(position, 1.0); vec3 wd = mat3(modelMatrix) * odir;
+        float d = distance(wp.xyz, cameraPosition); wp.xyz += wd * uW * clamp(d, 2.5, 36.0);
+        vD = d; gl_Position = projectionMatrix * viewMatrix * wp; }`,
+    fragmentShader: `uniform vec3 uC; uniform vec3 uFogC; uniform float uFogN; uniform float uFogF; varying float vD;
+      void main() { gl_FragColor = vec4(mix(uC, uFogC, smoothstep(uFogN, uFogF, vD)), 1.0);
+        #include <colorspace_fragment>
+      }`,
+    side: THREE.BackSide,
+  }));
+  const OUT_CHAR = o.OUT_CHAR || outlineMat(0.0042);
   const G = o.G || {
     sph: (rx, ry, rz, ws = 8, hs = 6) => new THREE.SphereGeometry(1, QUAL.hd ? Math.max(ws * 2, 18) : Math.min(ws, 9), QUAL.hd ? Math.max(hs * 2, 12) : Math.min(hs, 7)).scale(rx, ry, rz),
     cap: (r, len, rs = 6) => new THREE.CapsuleGeometry(r, len, QUAL.hd ? 4 : 2, QUAL.hd ? 12 : Math.min(rs, 6)),
@@ -103,8 +132,8 @@ function kitFrom(o) {
     J.hips.position.y = damp(J.hips.position.y, J.d.hip + p.y, r, dt);
     J.tilt.position.y = damp(J.tilt.position.y, p.ty, r, dt);
   };
-  return { THREE, TAU, clamp, lerp, ease, damp, wrapA, QUAL, NIGHT: o.NIGHT || { value: 0 }, toonMat: o.toonMat, basicMat: o.basicMat || ((x) => new THREE.MeshBasicMaterial(x)),
-    outlineMat: o.outlineMat, OUT_CHAR, addOdir, bakeColor, G, part, grp, skeleton, JOINTS, blank, legsStance, runLegs, applyPose };
+  return { THREE, TAU, clamp, lerp, ease, damp, wrapA, QUAL, NIGHT: o.NIGHT || { value: 0 }, toonMat, basicMat: o.basicMat || ((x) => new THREE.MeshBasicMaterial(x)),
+    outlineMat, OUT_CHAR, addOdir, bakeColor, G, part, grp, skeleton, JOINTS, blank, legsStance, runLegs, applyPose };
 }
 
 // ---------------- the rig ----------------

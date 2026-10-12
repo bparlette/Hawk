@@ -222,9 +222,15 @@ out.budgets.pass = B0.parts <= 63 && B0.tris <= 19800 && B0.mats <= 4 && !B0.bad
   const src = fs.readFileSync(path.resolve(process.env.BOSS), 'utf8').split('\n').map((l) => l.replace(/\/\/.*$/, '')).join('\n');
   out.determinism = { hash: a, sameSeedEqual: a === b, seed8Differs: a !== c, noSeedOk: !!z, negSeedOk: !!neg, hugeSeedOk: !!big, threeUuidRandomCalls: calls,
     independentOfMathRandom: h1 === h2 && h1 === a, mathRandomInSource: /Math\.random\s*\(/.test(src) };
-  CANVAS_LOG.length = 0; BUILD(KR, {}); const n1 = CANVAS_LOG.length; CANVAS_LOG.length = 0; BUILD(KR, {}); const n2 = CANVAS_LOG.length;
-  CANVAS_LOG.length = 0; BUILD(Object.assign({}, KR), {}); const n3 = CANVAS_LOG.length;
-  out.determinism.canvas = { firstBuildOps: n1, secondBuildOps: n2, wrapperKOps: n3, cachedOnSameK: n2 === 0, cachedForWrapperK: n3 === 0 };
+  // a fresh kit instance (own QUAL) draws once; a second build on it, and a per-spawn {...K} wrapper of it, draw nothing (lesson A4)
+  const FK = Object.assign({}, KR, { QUAL: Object.assign({}, KR.QUAL, { texs: [], outlines: [] }) });
+  CANVAS_LOG.length = 0; BUILD(FK, {}); const n1 = CANVAS_LOG.length; CANVAS_LOG.length = 0; BUILD(FK, {}); const n2 = CANVAS_LOG.length;
+  CANVAS_LOG.length = 0; BUILD(Object.assign({}, FK), {}); const n3 = CANVAS_LOG.length;
+  // no document (worker / SSR): the build still works and the null texture is NOT cached, so a later build with a document draws it
+  const FK2 = Object.assign({}, KR, { QUAL: Object.assign({}, KR.QUAL, { texs: [], outlines: [] }) }); const sd = globalThis.document; delete globalThis.document;
+  let noDocOk = true; try { BUILD(FK2, {}); } catch (e) { noDocOk = String(e); } globalThis.document = sd;
+  CANVAS_LOG.length = 0; BUILD(FK2, {}); const n4 = CANVAS_LOG.length;
+  out.determinism.canvas = { firstBuildOps: n1, secondBuildOps: n2, wrapperKOps: n3, cachedOnSameK: n2 === 0, cachedForWrapperK: n3 === 0, noDocumentBuildOk: noDocOk, drawsAfterDocumentReturns: n4 > 0 || n1 === 0 };
   out.misc.kitKeys = Object.keys(KR).length;
 }
 // ================= summary =================

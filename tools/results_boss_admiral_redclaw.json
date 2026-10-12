@@ -337,7 +337,9 @@
    "secondBuildOps": 0,
    "wrapperKOps": 0,
    "cachedOnSameK": true,
-   "cachedForWrapperK": true
+   "cachedForWrapperK": true,
+   "noDocumentBuildOk": true,
+   "drawsAfterDocumentReturns": true
   }
  },
  "misc": {
@@ -377,7 +379,7 @@
    "tris": 14672,
    "minY": -0.025,
    "maxY": 2.492,
-   "zMin": -0.446,
+   "zMin": -0.422,
    "zMax": 0.32,
    "mergedCalls": 3
   }

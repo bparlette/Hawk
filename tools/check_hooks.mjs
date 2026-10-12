@@ -6,7 +6,7 @@ globalThis.document = fakeDocument;
 const { K: KG, mergeRig } = await import('../harness/realK.mjs');
 const id = process.argv[2], M = await import(`../src/boss_${id}.js`), THREE = KG.THREE, out = {};
 const isHull = (o) => o.material && o.material.isShaderMaterial && o.material.side === THREE.BackSide;
-const stats = (root) => { let parts = 0, hulls = 0, tris = 0; const mats = new Set(); root.traverse((o) => { if (!o.isMesh) return; if (isHull(o)) { hulls++; return; } parts++; mats.add(o.material); tris += (o.geometry.index ? o.geometry.index.count : o.geometry.attributes.position.count) / 3; }); const b = new THREE.Box3(); root.traverse((o) => { if (o.isMesh && !isHull(o)) b.expandByObject(o, true); }); return { parts, hulls, mats: mats.size, tris, minY: +b.min.y.toFixed(3), maxY: +b.max.y.toFixed(3), zMin: +b.min.z.toFixed(3), zMax: +b.max.z.toFixed(3) }; };
+const stats = (root) => { let parts = 0, hulls = 0, tris = 0; const mats = new Set(); root.traverse((o) => { if (!o.isMesh) return; if (isHull(o)) { hulls++; return; } parts++; mats.add(o.material); tris += (o.geometry.index ? o.geometry.index.count : o.geometry.attributes.position.count) / 3; }); root.updateMatrixWorld(true); const b = new THREE.Box3(); root.traverse((o) => { if (o.isMesh && !isHull(o)) { const a = o.geometry.attributes.position, v = new THREE.Vector3(); for (let i = 0; i < a.count; i++) b.expandByPoint(v.fromBufferAttribute(a, i).applyMatrix4(o.matrixWorld)); } }); return { parts, hulls, mats: mats.size, tris, minY: +b.min.y.toFixed(3), maxY: +b.max.y.toFixed(3), zMin: +b.min.z.toFixed(3), zMax: +b.max.z.toFixed(3) }; };
 const run = (name, f) => { try { out[name] = Object.assign({ ok: true }, f()); } catch (e) { out[name] = { ok: false, err: String(e.stack || e).split('\n').slice(0, 3).join(' | ') }; } };
 if (id === 'admiral_redclaw') {
   run('globals', () => ({ windowNs: typeof globalThis.boss_admiral_redclaw?.buildAdmiralRedclaw === 'function', global: typeof globalThis.buildAdmiralRedclaw === 'function' }));
@@ -46,7 +46,7 @@ if (id === 'arabber_al') {
     h.root.updateMatrixWorld(true); const s1 = stats(h.root);
     return { keys: Object.keys(h), isObject3D: h.root.isObject3D, facingPlusZ: s0.zMax > -s0.zMin, rest: s0, afterChase: { minY: s1.minY, maxY: s1.maxY } };
   });
-  run('carChaseWithDeps', () => { const h = M.buildArabberAl({ THREE, toonMat: KG.toonMat, outlineMat: KG.outlineMat, addOdir: KG.addOdir, QUAL: KG.QUAL }); h.update(1 / 60, { t: 0.5, state: 'run', throwK: 0 }); return { parts: stats(h.root).parts }; });
+  run('carChaseWithDeps', () => { const h = M.buildArabberAl({ THREE, toonMat: KG.toonMat, outlineMat: KG.outlineMat, addOdir: KG.addOdir, QUAL: KG.QUAL }); h.update(1 / 60, { t: 0.5, state: 'run', throwK: 0 }); return stats(h.root); });
   run('noThreeThrows', () => { const save = globalThis.THREE; delete globalThis.THREE; let msg = ''; try { M.buildArabberAl(); } catch (e) { msg = e.message; } globalThis.THREE = save; return { message: msg }; });
 }
 const file = `tools/results_boss_${id}.json`, R = JSON.parse(fs.readFileSync(file, 'utf8')); R.hooks = out; fs.writeFileSync(file, JSON.stringify(R, null, 1));

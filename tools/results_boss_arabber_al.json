@@ -334,7 +334,9 @@
    "secondBuildOps": 0,
    "wrapperKOps": 0,
    "cachedOnSameK": true,
-   "cachedForWrapperK": true
+   "cachedForWrapperK": true,
+   "noDocumentBuildOk": true,
+   "drawsAfterDocumentReturns": true
   }
  },
  "misc": {
@@ -372,10 +374,10 @@
     "hulls": 56,
     "mats": 1,
     "tris": 14452,
-    "minY": -0.565,
-    "maxY": 1.1,
-    "zMin": -1.17,
-    "zMax": 1.311
+    "minY": 0,
+    "maxY": 2.058,
+    "zMin": -1.37,
+    "zMax": 2.208
    },
    "afterChase": {
     "minY": 0.003,
@@ -384,7 +386,14 @@
   },
   "carChaseWithDeps": {
    "ok": true,
-   "parts": 58
+   "parts": 58,
+   "hulls": 56,
+   "mats": 1,
+   "tris": 14452,
+   "minY": 0.008,
+   "maxY": 2.059,
+   "zMin": -1.37,
+   "zMax": 2.192
   },
   "noThreeThrows": {
    "ok": true,
