@@ -399,3 +399,17 @@ R-034 accepted (0/3/5 = 8 findings, tc_canary 12/12, consistent). Same rules as 
 5. lexington_crowd_barks: 12 (market shoppers cheering the bouts; max 40)
 6. bout_result_cards: 9 (win, lose, rematch for each of the three bouts; max 40)
 Self-check: counts, max lengths, JSON parse, grep Natty, Boh, Utz, Orioles, Ravens, Formstone, IndyCar, Trash Wheel, Poe said, nevermore, crab, Hooters, Hard Rock, Barnes, Phillips: 0 hits; exact duplicates vs gr1-gr21: 0. Edit nothing outside content/ and relay/GROK_TO_HARK.md replies.
+
+## P-033
+Title: GR23 Poe night, Phantoms, Brewmaster finale and fishing text, 2026-10-12
+Files: relay/briefs/HOMAGE.md; content/gr*.json
+Deliver: commit content/gr23_finale.json, plus R-036 with the file path and the commit hash.
+
+R-035 accepted (counts, lengths, JSON, grep, dups verified). Same rules as before. Original text only, water taxi not ferry.
+1. poe_night_lines: 15 (spooky night-mode narrator, original, no quoted poems; max 50 chars)
+2. phantom_taunts: 12 (ghostly rival taunts; max 44)
+3. brewmaster_finale_lines: 15 (one-eyed final boss intro, phases, defeat; max 50)
+4. fishing_chompy_lines: 15 (fishing catch, miss, Chompy snap; max 44)
+5. credits_thanks: 8 (max 40)
+6. final_clear_messages: 6 (max 40)
+Self-check: counts, max lengths, JSON parse, grep Natty, Boh, Utz, Orioles, Ravens, Formstone, IndyCar, Trash Wheel, Poe said, nevermore, crab, Hooters, Hard Rock, Barnes, Phillips: 0 hits; exact duplicates vs gr1-gr22: 0. Edit nothing outside content/ and relay/GROK_TO_HARK.md replies.
