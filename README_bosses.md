@@ -8,6 +8,7 @@ real poses and the real `kit/real_mergeRig.js`. Work in progress: bosses are add
 | Admiral Redclaw | `src/boss_admiral_redclaw.js` | built, measured, previews |
 | Big Jimmy | `src/boss_big_jimmy.js` | built, measured, previews |
 | Voltage Vic | `src/boss_voltage_vic.js` | built, measured, previews |
+| Arabber Al | `src/boss_arabber_al.js` | built, measured, previews |
 
 ## Tools
 - `viewer_bosses.html` — the boss viewer (from `kit/real_viewer.html`): `?show=<id>&pose=idle|run|hurt|down|atk1|atk2|atk3|all`, `&turn=1`, `&sheet=1`,
@@ -45,3 +46,14 @@ opacity follows `K.NIGHT.value` and flares on every attack's active beats. Attac
 cocks back, then fires straight at the target on beat 2: a lightning bolt), **club spin** (3 beats: a crouch on beat 1, a full
 electrified spin over beats 2–3, the hips carry the turn so no tilt wrap is involved). Rhythm-mode hook: `buildVoltageVic({ THREE,
 stage: true })` adds a DJ booth (58 parts with it) and `J.pose(name, u)` snaps idle / atk1–3 at any tempo.
+
+### Arabber Al (`arabber_al`, Fells Point)
+A street-produce arabber and his souped-up horse-cart, in one module (`J.vehicle` under `J.root`, merged with him). Al: flat cap,
+dark shades, a handlebar mustache, rolled shirt sleeves and a green apron, seated on the bench. The wagon: red side boards, three
+crates heaped with strawberries, oranges and melons, red-rimmed wheels with gold discs and chrome hubs, chrome side pipes. The pony: a
+stocky dappled original pony with a dark mane and a red plume. Attacks: **melon lob** (half-stands, cocks a melon behind his head and
+lobs it overhand: ranged), **rein-snap ram** (stands in the footboard and cracks the reins two-handed while the pony rears; the cart
+rams forward: `move: 8`), **strawberry shower** (twists back to the crates and flings a 180° arc of fruit). `run` is the cart driving
+(pony gallop and wheel spin in `animateBoss`); `down` knocks him flat on his back into his own produce. `META.radius` (2.0 m) covers the
+whole rig, pony to tailboard. Car-chase hook: `buildArabberAl()` (THREE from `window.K` / `window.THREE`) or `buildArabberAl(deps)`
+returns `{ root, update(dt, { t, state, throwK }), J }`; `throwK` drives the lob.

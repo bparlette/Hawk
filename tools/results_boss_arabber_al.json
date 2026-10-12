@@ -1,0 +1,394 @@
+{
+ "id": "arabber_al",
+ "meta": {
+  "id": "arabber_al",
+  "name": "Arabber Al",
+  "district": "fells",
+  "hp": 120,
+  "scale": 1,
+  "radius": 2,
+  "height": 2.1,
+  "vehicle": "horse_cart"
+ },
+ "budgets": {
+  "zipKit": {
+   "parts": 58,
+   "tris": 14452,
+   "hulls": 56,
+   "hullTris": 14428,
+   "mats": 1,
+   "matKinds": [
+    "toon"
+   ],
+   "badHull": 0,
+   "flashBad": 0,
+   "shadowCasters": 52,
+   "shadowBad": [],
+   "drawCallsUnmerged": 114
+  },
+  "zipKit/lod1": {
+   "parts": 58,
+   "tris": 14452,
+   "hulls": 56,
+   "hullTris": 14428,
+   "mats": 1,
+   "matKinds": [
+    "toon"
+   ],
+   "badHull": 0,
+   "flashBad": 0,
+   "shadowCasters": 52,
+   "shadowBad": [],
+   "drawCallsUnmerged": 114
+  },
+  "realGame": {
+   "parts": 58,
+   "tris": 14452,
+   "hulls": 56,
+   "hullTris": 14428,
+   "mats": 1,
+   "matKinds": [
+    "toon"
+   ],
+   "badHull": 0,
+   "flashBad": 0,
+   "shadowCasters": 52,
+   "shadowBad": [],
+   "drawCallsUnmerged": 114
+  },
+  "realGame/lod1": {
+   "parts": 58,
+   "tris": 14452,
+   "hulls": 56,
+   "hullTris": 14428,
+   "mats": 1,
+   "matKinds": [
+    "toon"
+   ],
+   "badHull": 0,
+   "flashBad": 0,
+   "shadowCasters": 52,
+   "shadowBad": [],
+   "drawCallsUnmerged": 114
+  },
+  "pass": true
+ },
+ "idle0": {
+  "minY": 0,
+  "maxY": 2.066,
+  "height": 2.066,
+  "heightNoWeapon": 2.066,
+  "meta": 2.1,
+  "heightErrPct": -1.6,
+  "zMin": -1.37,
+  "zMax": 2.245,
+  "xMin": -0.82,
+  "xMax": 0.82
+ },
+ "reach": {
+  "idleMaxHoriz": 2.218,
+  "atT": 1.75,
+  "part": "ponyHead",
+  "radius": 2,
+  "beyondRadius": 0.218,
+  "pass": true
+ },
+ "poses": {
+  "idle": {
+   "minY": 0,
+   "lowest": "vehicle",
+   "cullR": 2.219,
+   "gaps": {}
+  },
+  "idle_t1.1": {
+   "minY": 0,
+   "lowest": "vehicle",
+   "cullR": 2.219,
+   "gaps": {}
+  },
+  "run_0.3": {
+   "minY": 0.002,
+   "lowest": "vehicle",
+   "cullR": 2.205,
+   "gaps": {}
+  },
+  "run_0.6": {
+   "minY": 0.002,
+   "lowest": "vehicle",
+   "cullR": 2.205,
+   "gaps": {}
+  },
+  "hurt_0": {
+   "minY": 0,
+   "lowest": "vehicle",
+   "cullR": 2.219,
+   "gaps": {}
+  },
+  "hurt_0.5": {
+   "minY": 0,
+   "lowest": "vehicle",
+   "cullR": 2.219,
+   "gaps": {}
+  },
+  "down_air_0.3": {
+   "minY": 0,
+   "lowest": "vehicle",
+   "cullR": 2.219,
+   "gaps": {}
+  },
+  "down_1_ground": {
+   "minY": 0,
+   "lowest": "vehicle",
+   "cullR": 2.219,
+   "gaps": {}
+  },
+  "atk1_0.2": {
+   "minY": 0,
+   "lowest": "vehicle",
+   "cullR": 2.219,
+   "gaps": {}
+  },
+  "atk1_0.5": {
+   "minY": 0,
+   "lowest": "vehicle",
+   "cullR": 2.219,
+   "gaps": {}
+  },
+  "atk1_0.8": {
+   "minY": 0,
+   "lowest": "vehicle",
+   "cullR": 2.219,
+   "gaps": {}
+  },
+  "atk2_0.2": {
+   "minY": 0.002,
+   "lowest": "vehicle",
+   "cullR": 1.932,
+   "gaps": {}
+  },
+  "atk2_0.5": {
+   "minY": 0.002,
+   "lowest": "vehicle",
+   "cullR": 1.932,
+   "gaps": {}
+  },
+  "atk2_0.8": {
+   "minY": 0.002,
+   "lowest": "vehicle",
+   "cullR": 2.205,
+   "gaps": {}
+  },
+  "atk3_0.2": {
+   "minY": 0,
+   "lowest": "vehicle",
+   "cullR": 2.219,
+   "gaps": {}
+  },
+  "atk3_0.5": {
+   "minY": 0,
+   "lowest": "vehicle",
+   "cullR": 2.219,
+   "gaps": {}
+  },
+  "atk3_0.8": {
+   "minY": 0,
+   "lowest": "vehicle",
+   "cullR": 2.219,
+   "gaps": {}
+  }
+ },
+ "seq": {
+  "knockdown": {
+   "minY": 0,
+   "at": 0,
+   "lowest": "idle:vehicle",
+   "cullR": 2.22,
+   "cullAt": 1.75,
+   "cullWhat": "down:ponyHead"
+  },
+  "hurt": {
+   "minY": 0,
+   "at": 0,
+   "lowest": "idle:vehicle",
+   "cullR": 2.22,
+   "cullAt": 1.35,
+   "cullWhat": "idle:ponyHead"
+  },
+  "run": {
+   "minY": 0,
+   "at": 0,
+   "lowest": "idle:vehicle",
+   "cullR": 2.227,
+   "cullAt": 1.283,
+   "cullWhat": "run:ponyHead"
+  },
+  "atk1": {
+   "minY": 0,
+   "at": 0,
+   "lowest": "idle:vehicle",
+   "cullR": 2.22,
+   "cullAt": 1.75,
+   "cullWhat": "idle:ponyHead"
+  },
+  "atk2": {
+   "minY": 0,
+   "at": 0,
+   "lowest": "idle:vehicle",
+   "cullR": 2.227,
+   "cullAt": 1.283,
+   "cullWhat": "atk2:ponyHead"
+  },
+  "atk3": {
+   "minY": 0,
+   "at": 0,
+   "lowest": "idle:vehicle",
+   "cullR": 2.22,
+   "cullAt": 1.75,
+   "cullWhat": "idle:ponyHead"
+  },
+  "chain": {
+   "minY": 0,
+   "at": 0,
+   "lowest": "idle:vehicle",
+   "cullR": 2.227,
+   "cullAt": 0.717,
+   "cullWhat": "run:ponyHead"
+  },
+  "worstMinY": 0,
+  "worstCullR": 2.227,
+  "passFloor": true,
+  "passCull26": true,
+  "cull19Info": false
+ },
+ "attacks": {
+  "count": 3,
+  "poses": [
+   "atk1",
+   "atk2",
+   "atk3"
+  ],
+  "contractOk": true,
+  "each": [
+   {
+    "id": "melon_lob",
+    "pose": "atk1",
+    "strike": "haR",
+    "active": [
+     0.46,
+     0.64
+    ],
+    "peakU": 0.526,
+    "peakSpeed": 16.977,
+    "peakInActive": true
+   },
+   {
+    "id": "rein_snap_ram",
+    "pose": "atk2",
+    "strike": "haL",
+    "active": [
+     0.4,
+     0.72
+    ],
+    "peakU": 0.439,
+    "peakSpeed": 20.719,
+    "peakInActive": true
+   },
+   {
+    "id": "strawberry_shower",
+    "pose": "atk3",
+    "strike": "haR",
+    "active": [
+     0.45,
+     0.7
+    ],
+    "peakU": 0.556,
+    "peakSpeed": 13.914,
+    "peakInActive": true
+   }
+  ],
+  "allPeaksInActive": true
+ },
+ "merge": {
+  "ok": true,
+  "drawCalls": 2,
+  "toonCalls": 1,
+  "outlineCalls": 1,
+  "shadowCalls": 1,
+  "bones": 26,
+  "flashShared": true,
+  "partsBefore": 58,
+  "trisBefore": 14452
+ },
+ "determinism": {
+  "hash": "3e10fc0e7071abe7",
+  "sameSeedEqual": true,
+  "seed8Differs": false,
+  "noSeedOk": true,
+  "negSeedOk": true,
+  "hugeSeedOk": true,
+  "threeUuidRandomCalls": 5656,
+  "independentOfMathRandom": true,
+  "mathRandomInSource": false,
+  "canvas": {
+   "firstBuildOps": 0,
+   "secondBuildOps": 0,
+   "wrapperKOps": 0,
+   "cachedOnSameK": true,
+   "cachedForWrapperK": true
+  }
+ },
+ "misc": {
+  "kitKeys": 48
+ },
+ "summary": {
+  "pass": true,
+  "parts": 58,
+  "tris": 14452,
+  "mats": 1,
+  "matKinds": [
+   "toon"
+  ],
+  "mergedCalls": 2,
+  "height": 2.066,
+  "heightErrPct": -1.6,
+  "worstMinY": 0,
+  "worstCullR": 2.227,
+  "idleBeyondRadius": 0.218,
+  "reachPart": "ponyHead",
+  "strikes": "atk1@0.526 atk2@0.439 atk3@0.556"
+ },
+ "hooks": {
+  "carChaseNoArgs": {
+   "ok": true,
+   "keys": [
+    "root",
+    "J",
+    "update"
+   ],
+   "isObject3D": true,
+   "facingPlusZ": true,
+   "rest": {
+    "parts": 58,
+    "hulls": 56,
+    "mats": 1,
+    "tris": 14452,
+    "minY": -0.565,
+    "maxY": 1.1,
+    "zMin": -1.17,
+    "zMax": 1.311
+   },
+   "afterChase": {
+    "minY": 0.003,
+    "maxY": 2.037
+   }
+  },
+  "carChaseWithDeps": {
+   "ok": true,
+   "parts": 58
+  },
+  "noThreeThrows": {
+   "ok": true,
+   "message": "buildArabberAl(): pass { THREE } (or the kit K), or expose window.THREE"
+  }
+ }
+}
