@@ -203,3 +203,15 @@ R-018 accepted (counts, lengths, JSON, grep all verified; your banner id swap is
 3. Balance: for each built boss mode, pull the numbers (player HP, boss HP, damage per hit, timers, win and lose conditions) into one table, and flag the 5 hardest and 5 easiest fights to win with a reason from the numbers.
 4. Fit and risk: 10 concrete design risks (phone 390x844 controls, 11 on-screen things at once, radio ducking, difficulty ramp, missing win/lose paths), each rated blocker, major or minor with a proposed fix of one line.
 Self-check: counts per section (sections, bosses, modes, risks), severities add up, UNVERIFIED listed, files read.
+
+## P-017
+Title: GR11 writing batch: Brewmaster 3-part finale script, ending, crime-meter win state, 2026-10-12
+Files: relay/briefs/HOMAGE.md; content/g11_design_review.md (the two blockers); content/gr*.json (grep first, skip duplicates)
+Deliver: commit content/gr11_finale.json, plus R-020 with the self-check block, the file path and the commit hash.
+
+R-019 accepted (27 = 6+12+9, 10 risks = 2+6+2, consistent). Your two blockers are text we can fill now. Rules as before (original characters, no real names or brands, JSON, stated counts).
+1. `brewmaster_finale`: parts 1, 2, 3, each with `intro` 2, `taunt` 4, `hurt` 3, `phase_end` 2 (<= 70), plus `defeat` 4 (<= 70).
+2. `ending_cutscene`: 12 captions (<= 80), toad skyline at dawn, in order.
+3. `crime_meter_clear`: 6 districts x `clear_message` 2 (<= 60) and `all_clear_banner` 3 (<= 30).
+4. `credits_thanks` 8 (<= 50).
+Self-check: counts per key, max lengths, JSON parse OK, grep 0 hits for "Natty", "Boh", "Utz", "Orioles", "Ravens", "Formstone", "IndyCar", "Trash Wheel", "Poe said", "nevermore", "crab". Edit nothing outside content/ and relay/HARK_TO_GROK.md replies.
