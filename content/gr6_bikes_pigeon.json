@@ -1,0 +1,98 @@
+{
+  "_round": "GR6",
+  "wheelie_kings": {
+    "crew": [
+      {"name": "Front-Wheel Frankie", "bio": "A wiry raccoon who hasn't touched his front tire to the street since spring.",
+       "race_barks": ["Front wheel's on vacation, grandpa!", "Watch me ride the sky down Pratt!", "You pedal, I float. Big difference."]},
+      {"name": "Kickstand Kev", "bio": "A stocky bulldog who claims he invented the curb hop. Nobody can prove otherwise.",
+       "race_barks": ["Curb hop! Curb hop! Can't stop me!", "Kickstand's for quitters, toad.", "I'll be at the finish eating a snowball."]},
+      {"name": "Spokes McGee", "bio": "A squirrel mechanic who builds bikes out of shopping carts and pure spite.",
+       "race_barks": ["Built this ride myself. Out of a cart!", "Hear that clicking? That's you losing.", "Spokes don't lie, old timer."]},
+      {"name": "Lil Tread", "bio": "The youngest Wheelie King, a rabbit on a bike two sizes too big for her.",
+       "race_barks": ["I'm small but my wheelie is huge!", "Bye bye, slowpoke! Hop hop!", "Mavis, your man is SLOW!"]},
+      {"name": "Chainlink Charlie", "bio": "A tall heron who pedals with his whole neck. Somehow it works.",
+       "race_barks": ["Long legs, long wheelies, long gone.", "See you at the harbor, if you make it.", "My neck's doing all the work. Still faster."]},
+      {"name": "Grease Monkey Gus", "bio": "A real monkey with real grease. Leaves black handprints on everything he passes.",
+       "race_barks": ["Slick tires, slicker moves!", "Oops, did I oil that corner? Heh.", "Grease up, speed up, grandpa!"]}
+    ],
+    "leader": {
+      "name": "Big Wheel Bertie",
+      "bio": "A broad badger on a giant front wheel who runs every block from Key Highway to the Hill.",
+      "intro": "Bertie: These streets roll on two wheels. Today, one. Ride with me if you can.",
+      "taunt": "Bertie: Back wheel only, toad. That's how kings ride!",
+      "defeat": "Bertie: Alright, alright. The old toad can roll. Respect, grandpa."
+    }
+  },
+  "pigeon_taunts": [
+    "Coo! Climbing up here with that cane? Bold move, gramps.",
+    "The penthouse is MINE. The view, the breadcrumbs, all of it.",
+    "Watch your step! That ledge is older than you.",
+    "I've got the high ground and the high crumbs.",
+    "Down below you're a toad. Up here you're a snack.",
+    "Flap flap! Oh wait, you can't. Ha!",
+    "Every window on this tower knows my name.",
+    "Penthouse rules: no frogs, no toads, no exceptions.",
+    "You call that climbing? I've seen moss move faster.",
+    "Coo-coo! Here comes a flowerpot. Duck!",
+    "My grandpappy roosted here. His grandpappy too.",
+    "The wind's picking up, toad. Hope you're glued on.",
+    "I can see the whole harbor. And you, sweating.",
+    "Halfway there? Cute. The top half is the hard half.",
+    "Leave now and I'll only drop a little on your hat.",
+    "Coo! You made it this far? Okay, now I'm nervous."
+  ],
+  "pigeon_popups": [
+    "Hey! I'm watching my stories!",
+    "Get off my window box, you toad!",
+    "Is that a toad? On the 20th floor?",
+    "Hon, call somebody. There's a toad!",
+    "Don't touch the tomatoes!",
+    "Shoo! Shoo! This is a nice building!",
+    "Want some lemonade? No? Okay then.",
+    "I'm calling the super!",
+    "Mind the laundry line, sweetie!",
+    "Climbing again, Harold? At your age?",
+    "You dropped your cane? Here, catch!",
+    "Go get that pigeon, hon!"
+  ],
+  "pigeon_score": [
+    "LEDGE GRAB!",
+    "WINDOW DODGE!",
+    "NO-SLIP CLIMB!",
+    "FLOWERPOT DODGED!",
+    "HALFWAY UP!",
+    "PENTHOUSE REACHED!",
+    "PIGEON PLUCKED!",
+    "SKYLINE CHAMPION!"
+  ],
+  "bike_life_courses": [
+    {"name": "PRATT STREET SPRINT", "desc": "Flat out past the harbor, dodging buses and water taxi crowds."},
+    {"name": "COBBLESTONE RATTLE", "desc": "Fells Point bricks shake every bolt loose. Hold that wheelie."},
+    {"name": "FEDERAL HILL CLIMB", "desc": "Straight up the hill, then a downhill bomb with the whole city below."},
+    {"name": "ROWHOUSE ALLEY RUN", "desc": "Tight alleys, trash cans and stoop sitters cheering from both sides."},
+    {"name": "KEY HIGHWAY CRUISE", "desc": "A long, smooth harbor road. Perfect for the longest wheelie."},
+    {"name": "MARKET DAY DASH", "desc": "Weave through produce carts and lunch lines. Don't hit the coddies."}
+  ],
+  "bike_life_crowd": [
+    "Get that front wheel UP!",
+    "Ride it out, Harold!",
+    "That's a whole wheelie, hon!",
+    "Look at grandpa go!",
+    "Higher! Higher!",
+    "Don't you dare drop it now!",
+    "Whole block's watching, baby!",
+    "Toad's got skills!",
+    "Ride for the stoop!",
+    "Mavis, your man's flying!",
+    "Ooh, that's clean!",
+    "Back wheel only, let's go!",
+    "Somebody film this!",
+    "Bertie's sweating now!",
+    "That's how we ride down here!",
+    "Lean back, lean back!",
+    "Tell 'em, Harold!",
+    "Keep it rolling, keep it rolling!",
+    "Best wheelie on the block!",
+    "Crown him! Crown the toad!"
+  ]
+}
