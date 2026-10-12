@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
+<meta name="theme-color" content="#0b0b18">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<title>GULF THUNDER</title>
+<style>
+html,body{margin:0;padding:0;width:100%;height:100%;overflow:hidden;background:#0b0b18;touch-action:none;-webkit-user-select:none;user-select:none;-webkit-touch-callout:none;overscroll-behavior:none}
+#wrap{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;overflow:hidden}
+#game{display:block;image-rendering:pixelated;image-rendering:crisp-edges;background:#000}
+#touch{position:fixed;inset:0;display:none;z-index:5}
+#touch.on{display:block}
+.tbtn{position:absolute;border-radius:50%;border:3px solid rgba(255,255,255,.55);background:rgba(20,20,40,.32);color:rgba(255,255,255,.85);font:bold 12px/1 monospace;display:flex;align-items:center;justify-content:center;text-align:center;letter-spacing:1px;box-sizing:border-box;pointer-events:auto}
+.tbtn.down{background:rgba(255,200,60,.45);border-color:#ffd84a}
+#bFire{width:84px;height:84px;font-size:15px;border-color:rgba(255,90,70,.8)}
+#bJump{width:62px;height:62px}
+#bSpec{width:62px;height:62px;border-color:rgba(90,200,255,.8)}
+#stickBase{position:absolute;width:110px;height:110px;margin:-55px 0 0 -55px;border-radius:50%;border:3px solid rgba(255,255,255,.35);background:rgba(20,20,40,.22);display:none;pointer-events:none;box-sizing:border-box}
+#stickKnob{position:absolute;width:48px;height:48px;margin:-24px 0 0 -24px;border-radius:50%;background:rgba(255,255,255,.45);border:2px solid rgba(255,255,255,.7);display:none;pointer-events:none;box-sizing:border-box}
+#stickHint{position:absolute;left:18px;width:110px;height:110px;border-radius:50%;border:2px dashed rgba(255,255,255,.18);pointer-events:none;box-sizing:border-box}
+</style>
+</head>
+<body>
+<div id="wrap"><canvas id="game" width="270" height="480"></canvas></div>
+<div id="touch">
+  <div id="stickHint"></div>
+  <div id="stickBase"></div><div id="stickKnob"></div>
+  <div class="tbtn" id="bFire">FIRE</div>
+  <div class="tbtn" id="bJump">JUMP<br>BOOST</div>
+  <div class="tbtn" id="bSpec">SPCL</div>
+</div>
+<script src="js/core.js"></script>
+<script src="js/art.js"></script>
+<script src="js/scenes.js"></script>
+<script src="js/boat.js"></script>
+<script src="js/brawl.js"></script>
+<script src="js/kasbah.js"></script>
+<script>GT.boot();</script>
+</body>
+</html>

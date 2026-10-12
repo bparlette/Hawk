@@ -1,0 +1,98 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,user-scalable=no">
+<meta name="theme-color" content="#1b1530">
+<title>Shell Shock · I · Cel City</title>
+<style>
+  html, body { margin: 0; height: 100%; overflow: hidden; background: #1b1530; max-width: 100vw; touch-action: none; -webkit-user-select: none; user-select: none; -webkit-touch-callout: none; }
+  body { font-family: Impact, "Avenir Next Condensed", "Arial Black", "Helvetica Neue", system-ui, sans-serif; color: #fff; }
+  #gl { position: fixed; left: 0; top: 0; width: 100vw; height: 100vh; height: 100dvh; display: block; outline: none; }
+  .ui { position: fixed; z-index: 10; pointer-events: none; }
+
+  /* prototype label + links */
+  #proto { position: fixed; z-index: 60; left: calc(env(safe-area-inset-left, 0px) + 6px); top: calc(env(safe-area-inset-top, 0px) + 6px); width: 118px; box-sizing: border-box;
+    font: 800 10px/1 system-ui, -apple-system, "Segoe UI", sans-serif; letter-spacing: .4px; }
+  #protoT { all: unset; box-sizing: border-box; display: flex; justify-content: space-between; align-items: center; width: 100%; cursor: pointer; padding: 6px 8px; border-radius: 8px; background: #ffd23c; color: #14101f;
+    border: 2px solid #14101f; box-shadow: 3px 3px 0 #14101f; font: 900 11px/1 system-ui, -apple-system, sans-serif; white-space: nowrap; }
+  #protoT span { font-size: 9px; transition: transform .15s; }
+  #proto.open #protoT span { transform: rotate(180deg); }
+  #protoL { display: none; flex-direction: column; gap: 3px; margin-top: 5px; padding: 4px; border-radius: 8px; background: rgba(20,16,31,.86); border: 2px solid #14101f; }
+  #proto.open #protoL { display: flex; }
+  #protoL a { color: #e9e4ff; text-decoration: none; padding: 4px 5px; border-radius: 5px; text-align: center; border: 1px solid rgba(255,255,255,.22); white-space: nowrap; touch-action: manipulation; }
+  #protoL a:hover { border-color: #ffd23c; }
+  #protoL a.on { color: #14101f; background: #ffd23c; border-color: #ffd23c; }
+
+  /* health */
+  #hpbox { right: calc(env(safe-area-inset-right, 0px) + 10px); top: calc(env(safe-area-inset-top, 0px) + 8px); display: flex; align-items: center; gap: 8px; }
+  #face { width: 46px; height: 46px; border-radius: 50%; background: #5ccf3a; border: 3px solid #14101f; box-shadow: 3px 3px 0 #14101f; position: relative; overflow: hidden; flex: none; }
+  #face::before { content: ""; position: absolute; left: -4px; right: -4px; top: 13px; height: 13px; background: #1f7bff; border-top: 2px solid #14101f; border-bottom: 2px solid #14101f; }
+  #face::after { content: ""; position: absolute; left: 10px; top: 16px; width: 9px; height: 6px; background: #fff; border-radius: 50%; box-shadow: 15px 0 0 #fff; }
+  #hpcol { display: flex; flex-direction: column; gap: 3px; align-items: flex-end; }
+  #hpname { font-size: 17px; letter-spacing: 1px; color: #ffd23c; -webkit-text-stroke: 1px #14101f; text-shadow: 2px 2px 0 #14101f; font-style: italic; line-height: 1; }
+  #hpbar { width: 150px; height: 14px; transform: skewX(-14deg); background: #14101f; border: 2px solid #14101f; box-shadow: 3px 3px 0 #14101f; position: relative; }
+  #hpfill, #hplag { position: absolute; left: 0; top: 0; bottom: 0; }
+  #hplag { background: #ff3d6e; width: 100%; transition: width .5s .15s; }
+  #hpfill { background: linear-gradient(#9dff6b, #3fd13a); width: 100%; transition: width .08s; }
+  #ko { font-size: 15px; color: #fff; -webkit-text-stroke: 1px #14101f; text-shadow: 2px 2px 0 #14101f; font-style: italic; line-height: 1; }
+  #ko b { color: #ff5fa2; }
+
+  #combo { right: 14px; top: 34%; text-align: right; font-style: italic; opacity: 0; transform: scale(.6) rotate(-6deg); transition: opacity .2s, transform .12s; }
+  #combo.on { opacity: 1; transform: scale(1) rotate(-6deg); }
+  #combo .n { font-size: 54px; line-height: .9; color: #ffd23c; -webkit-text-stroke: 2px #14101f; text-shadow: 4px 4px 0 #14101f; }
+  #combo .w { font-size: 20px; color: #fff; -webkit-text-stroke: 1px #14101f; text-shadow: 3px 3px 0 #14101f; }
+  #hint { left: 50%; bottom: calc(env(safe-area-inset-bottom, 0px) + 14px); transform: translateX(-50%); padding: 7px 14px; border-radius: 20px; background: rgba(20,16,31,.8); border: 2px solid #14101f;
+    font: 700 12px/1.3 system-ui, -apple-system, sans-serif; color: #fff; white-space: nowrap; transition: opacity 1s; max-width: calc(100vw - 30px); overflow: hidden; text-overflow: ellipsis; }
+  #hint b { color: #ffd23c; }
+  #banner { left: 50%; top: 40%; transform: translate(-50%, -50%) rotate(-5deg); font-size: 46px; font-style: italic; color: #ff5fa2; -webkit-text-stroke: 2px #14101f; text-shadow: 5px 5px 0 #14101f; opacity: 0; transition: opacity .25s; white-space: nowrap; }
+  #banner.on { opacity: 1; }
+
+  /* touch */
+  #touch { display: none; }
+  body.touch #touch { display: block; }
+  body.touch #hint { display: none; }
+  #stick { position: fixed; z-index: 20; width: 124px; height: 124px; margin: -62px 0 0 -62px; left: 90px; top: calc(100% - 110px); border-radius: 50%; background: rgba(20,16,31,.35); border: 3px solid rgba(255,255,255,.55); pointer-events: none; transition: opacity .2s; opacity: .55; }
+  #stick.act { opacity: 1; }
+  #knob { position: absolute; left: 50%; top: 50%; width: 54px; height: 54px; margin: -27px 0 0 -27px; border-radius: 50%; background: #ffd23c; border: 3px solid #14101f; box-shadow: 2px 2px 0 #14101f; }
+  .tb { position: fixed; z-index: 20; border-radius: 50%; border: 3px solid #14101f; box-shadow: 3px 3px 0 #14101f; font: 900 15px/1 Impact, "Arial Black", system-ui, sans-serif; color: #14101f; display: flex; align-items: center; justify-content: center; touch-action: none; letter-spacing: .5px; }
+  .tb.down { transform: translate(2px, 2px); box-shadow: 1px 1px 0 #14101f; filter: brightness(1.15); }
+  #bA { width: 82px; height: 82px; right: calc(env(safe-area-inset-right, 0px) + 22px); bottom: calc(env(safe-area-inset-bottom, 0px) + 34px); background: #ff5fa2; font-size: 17px; }
+  #bB { width: 60px; height: 60px; right: calc(env(safe-area-inset-right, 0px) + 118px); bottom: calc(env(safe-area-inset-bottom, 0px) + 22px); background: #2fd3ff; }
+  #cL, #cR { width: 40px; height: 40px; bottom: calc(env(safe-area-inset-bottom, 0px) + 128px); background: rgba(255,255,255,.85); font-size: 16px; }
+  #cR { right: calc(env(safe-area-inset-right, 0px) + 22px); }
+  #cL { right: calc(env(safe-area-inset-right, 0px) + 70px); }
+  @media (max-width: 480px) {
+    #hpbar { width: 112px; } #hpname { font-size: 14px; } #face { width: 38px; height: 38px; }
+    #face::before { top: 10px; height: 11px; } #face::after { left: 7px; top: 13px; width: 8px; height: 5px; box-shadow: 13px 0 0 #fff; }
+    #combo .n { font-size: 42px; } #banner { font-size: 34px; }
+  }
+</style>
+</head>
+<body>
+<canvas id="gl" tabindex="0"></canvas>
+<div id="hpbox" class="ui"><div id="hpcol"><div id="hpname">BLADE</div><div id="hpbar"><div id="hplag"></div><div id="hpfill"></div></div><div id="ko">KO <b id="kon">0</b></div></div><div id="face"></div></div>
+<div id="combo" class="ui"><div class="n" id="comboN">0</div><div class="w">HITS!</div></div>
+<div id="banner" class="ui">BACK ON YOUR FEET!</div>
+<div id="hint" class="ui"><b>WASD</b> move · <b>J</b> attack · <b>K</b> jump · <b>Q/E</b> or drag: camera</div>
+<nav id="proto"><button id="protoT" type="button">I · Cel City <span>▼</span></button><div id="protoL">
+  <a href="https://shellshock-free-city.surge.sh/">A · Free</a>
+  <a href="https://shellshock-paper-city.surge.sh/">B · Paper</a>
+  <a href="https://shellshock-gta-city.surge.sh/">C · GTA</a>
+  <a href="https://shellshock-skyline-city.surge.sh/">D · Skyline</a>
+  <a href="https://shellshock-gta32-city.surge.sh/">E · GTA 32</a>
+  <a href="https://shellshock-free16-city.surge.sh/">F · Free 16</a>
+  <a href="https://shellshock-hd2d-city.surge.sh/">G · HD-2D</a>
+  <a href="https://shellshock-iso-city.surge.sh/">H · Iso</a>
+  <a href="https://shellshock-cel-city.surge.sh/" class="on">I · Cel</a>
+</div></nav>
+<div id="touch">
+  <div id="stick"><div id="knob"></div></div>
+  <div class="tb" id="bA">SLASH</div>
+  <div class="tb" id="bB">JUMP</div>
+  <div class="tb" id="cL">◀</div>
+  <div class="tb" id="cR">▶</div>
+</div>
+<script type="module" src="game.js"></script>
+</body>
+</html>
