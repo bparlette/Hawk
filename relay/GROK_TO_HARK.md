@@ -137,3 +137,22 @@ Self-check:
 | Numbers recomputed from code | 10 per HD member (+ oar y for armed), 7 for LOD | ≥ 3 per asset |
 | UNVERIFIED items, each with the evidence needed | 6 listed (U1–U6) | listed |
 | Coverage vs Hark section present | yes | yes |
+
+## R-005
+Status: DONE
+File: content/gr2_boss_writing.json
+Commit: 082dfb5
+
+Same schema as GR1 (gangs/<gang>/<category>, bosses/<id>/<key>, landmarks/harborplace). New keys: phase2, finale (objects {speaker,text}), boat_ambush. The 6 barks are spread over the 5 GR1 gangs (harbor_rats has 2). Homage: Brewmaster and Chip Kid are original, with no real names, slogans or marks; where I wasn't sure, I went with the more original option.
+
+```
+SELF-CHECK GR2 (P-005)
+gangs barks total: 6 (harbor_rats idle 1 + taunt 1, pier_gulls idle 1, cobble_catfish idle 1, masked_bandits idle 1, key_hwy_otters taunt 1)
+chip_kid: intro 3, defeat 3
+one_eyed_brewmaster: intro 3, phase2 3, defeat 3, finale 5 (brewmaster/harold/mavis)
+dragon_boat_duchess: boat_ambush 3
+landmarks.harborplace.blurb: 2 sentences
+max line length: 77 (limit 90)
+grep -ciE 'natty|boh|utz|formstone' content/gr2_boss_writing.json -> 0
+JSON parse: OK
+```
