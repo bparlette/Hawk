@@ -93,6 +93,7 @@ const PIERS = [
   { id: 'p3', x0: 6, x1: 32, z0: -30, z1: -4, t: 'pave', w: 'wes' },       // Aquarium (pier 3)
   { id: 'p4', x0: 44, x1: 68, z0: -30, z1: -4, t: 'pave', w: 'wes' },      // Power Plant (pier 4)
   { id: 'rec', x0: 110, x1: 142, z0: -30, z1: -18, t: 'plank', w: 'wes' }, // Pendry (recreation pier)
+  { id: 'rash', x0: -42, x1: -21, z0: 19, z1: 30, t: 'pave', w: 'we' },     // lexington: Rash Field on the south shore (its north seawall is drawn in 03d_lexington.js)
 ];
 const inR = (r, x, z) => x >= r.x0 && x <= r.x1 && z >= r.z0 && z <= r.z1;
 function onPier(x, z) { for (const p of PIERS) if (inR(p, x, z)) return p; return null; }
@@ -109,6 +110,8 @@ const RES = [
   { x0: 70, x1: 94, z0: 46, z1: 70 },      // Domino Sugar
   { x0: 104, x1: 128, z0: 46, z1: 70 },    // Under Armour (Tide Point)
   { x0: 138, x1: 213, z0: 46, z1: 106 },   // Fort McHenry grounds
+  { x0: -134, x1: -110, z0: -70, z1: -46 }, // lexington: Westminster Burying Ground (downtown-west district)
+  { x0: -100, x1: -76, z0: -70, z1: -46 },  // lexington: Lexington Market
 ];
 const BLOCKS = [];
 { const cols = []; for (let k = 0; k < 10; k++) cols.push(-134 + k * 34);

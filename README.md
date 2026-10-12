@@ -115,3 +115,19 @@ Game-style boss fights as their own modes (src/09a_duel_core.js core, 09b_jimmy.
 - Both fights: own scene + camera (city sim paused), radio `__radio.duckTo(0.2)`, the full map is blocked while a fight runs (boat rides still allow it).
 - Rig hooks: `buildArabberAl()` / `buildDragonBoatDuchess()` (Object3D or `{ root, update(dt, st) }`, feet y 0, facing +z, ~1.8 m).
 - Tests: `?rb=al|duchess|duchess-paddle|ride`, `?rbauto=win|lose`, `?rbtime=N`, `?rbfresh=1`; T/rb/run.js (`PORT=` env, default 8743), T/int3/entry.js (entry ACT labels + shots).
+
+## Downtown-west district, Rash Field, Hooters (hark/lexington) — src/03d_lexington.js + src/09l_lexington.js
+- **Lexington Market** (HD, `lmHD('lexington')`): RES block x -100..-76, z -70..-46 (a block north of Oriole Park), facade on Pratt St. Gray standing-seam gable hall
+  + shed wings, LEXINGTON / M A R K E T, WORLD FAMOUS, SINCE 1782, red globe seal, brick piers + black storefront windows, black entry canopy
+  ("WORLD FAMOUS · LEXINGTON MARKET"), original stall boards, planters + trees. Night: warm uplight (emi bands + additive washes), lit windows.
+  `window.LEX_ANCHOR` = the doors under the canopy (x -90.6, z -47.6, yaw PI = facing the doors) + hall box + inside point. Landmark `lexington` (boss stub Pit Beef Pete at the anchor).
+- **Westminster Burying Ground**: RES block x -134..-110: brick-walled graveyard (east gate toward the market, south gate on the street), brick Gothic church
+  + tower + spire, seeded tombstones / obelisks / box tombs, Poe's memorial, catacomb hatch stub. `window.POE_ANCHOR` (grave, gates, church, catacombs, stones[]). Name popup only (not a crime district).
+- **Rash Field**: PIERS 'rash' x -42..-21, z 19..30 on the south shore between the Science Center and Federal Hill (clear of the water-taxi + paddle-boat paths).
+  Striped turf, lines, creases, two goals, benches, rail on the water side, park sign. `window.RASH_ANCHOR` (field box, goals, entry). Landmark `rashfield` (boss stub Riptide Rodney).
+- **Hooters** on the octagon at the harbour (south) end of the Light Street Pavilion (-55.5, 0.9): glass curtain wall, dark-bronze canopy with wood soffit + LED strips,
+  SUITE 1445, wood side panels, menu board with a drawn owl, bistro table, and the big HOOTERS channel letters (white halo, silver returns, ®) on the Light St face
+  AND the harbour face, orange halo glow at night. All lettering is canvas-drawn in code; refs/ images are never shipped. `window.HOOTERS_ANCHOR`.
+- Full map: LEXINGTON MKT + RASH FIELD labels (footprint fallback, no baked mini-model yet). Minimap dots come from LANDMARKS.
+- Test params: `?goto=<place>` (lexington, lexnear, westminster, poe, rash, hooters, hootersharbor) frames the place with a free camera
+  (sim paused); `&gotoplay=1` just drops Harold there. Night: add `&tod=0.5`. Shots: `T/lex/all.sh <port>`, draw calls: `T/lex/dc.sh` (T/ is gitignored).
