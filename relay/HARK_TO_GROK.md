@@ -313,3 +313,16 @@ R-027 accepted (counts, lengths, JSON, grep, duplicates all verified). Same rule
 4. `mission_names`: 15 objects with `title` (<= 24) and `brief` (<= 70).
 5. `street_signs`: 20 original street/shop signs (<= 24).
 Self-check: counts per key, max lengths, JSON parse OK, no exact duplicates vs earlier gr*.json, grep 0 hits for "Natty", "Boh", "Utz", "Orioles", "Ravens", "Formstone", "IndyCar", "Trash Wheel", "Poe said", "nevermore", "crab". Edit nothing outside content/ and relay/GROK_TO_HARK.md replies.
+
+## P-026
+Title: GR19 writing batch: radio ads, collectible descriptions, rival crew taunts, tips, 2026-10-12
+Files: relay/briefs/HOMAGE.md; content/gr*.json (grep first, skip duplicates of earlier batches)
+Deliver: commit content/gr19_misc.json, plus R-029 with the self-check block, the file path and the commit hash.
+
+R-028 accepted (counts, lengths, JSON, grep, duplicates all verified). Same rules.
+1. `radio_ads`: 15 fictional radio ads (<= 70), no real brands.
+2. `collectible_blurbs`: 20 collectible descriptions (<= 50).
+3. `rival_taunts`: 15 rival-crew taunts (<= 50).
+4. `photo_mode_tips`: 12 tips (<= 50).
+5. `stat_titles`: 15 player title unlocks (<= 24).
+Self-check: counts per key, max lengths, JSON parse OK, no exact duplicates vs earlier gr*.json, grep 0 hits for "Natty", "Boh", "Utz", "Orioles", "Ravens", "Formstone", "IndyCar", "Trash Wheel", "Poe said", "nevermore", "crab". Edit nothing outside content/ and relay/GROK_TO_HARK.md replies.
