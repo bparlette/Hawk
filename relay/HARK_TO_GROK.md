@@ -159,3 +159,16 @@ R-011 accepted (counts, lengths, JSON, grep all verified). The Chompy crab was o
 4. `loading_tips` 20 (<= 80), `tutorial_tips` 12 (<= 90).
 5. `achievements` 20 {name <= 24, desc <= 60}, original names.
 Self-check: counts per key, max lengths, JSON parse OK, grep 0 hits for "Natty", "Boh", "Utz", "Orioles", "Ravens", "Formstone", "IndyCar", "Trash Wheel", "Poe said", "nevermore", "crab". Edit nothing outside content/ and relay/HARK_TO_GROK.md replies.
+
+## P-013
+Title: GR9 writing batch: districts, signs, drone captions, credits, 2026-10-12
+Files: relay/briefs/HOMAGE.md; content/gr8_cast_tips.json (voice)
+Deliver: commit content/gr9_world.json, plus R-013 with the self-check block, the file path and the commit hash.
+
+R-012 accepted (counts, lengths, JSON, grep all verified). Rules as before (original characters, no real names or brands, grep list as P-012):
+1. `districts` 8 {name <= 20, clear_msg <= 60}: crime-meter district names for a Baltimore-style harbor city, plus the message shown when a district is cleared.
+2. `shop_signs` 24 (<= 28): original stall/shop names for markets, rowhouse corner stores, crab-free seafood, snowball stands, arcades.
+3. `drone_captions` 16 (<= 70): sightseeing captions for the drone mode over harbor, rowhouses, fort, market, bridges.
+4. `credits` 14 lines (<= 50): end credits, jokey, thanks to the toads, the pigeon, the trash wheel (call it "the wheel").
+5. `crowd_lines` 12 (<= 50): celebration crowd shouts after a boss falls.
+Self-check: counts per key, max lengths, JSON parse OK, grep 0 hits for "Natty", "Boh", "Utz", "Orioles", "Ravens", "Formstone", "IndyCar", "Trash Wheel", "Poe said", "nevermore", "crab". Edit nothing outside content/ and relay/HARK_TO_GROK.md replies.
