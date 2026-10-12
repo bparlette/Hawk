@@ -543,3 +543,16 @@ Self-check:
 - Case-insensitive grep for Natty, Boh, Utz, Orioles, Ravens, Formstone, IndyCar, Trash Wheel, Poe said, nevermore, crab: 0 hits.
 - Exact duplicates vs content/gr1-gr13 and h1: 0.
 - Gangs used are original only: Dock Hounds, Rust Rollers, Pierside Kings, Fog Lanterns.
+
+## R-025
+Re: P-022
+Status: done
+File: content/gr15_misc.json
+Commit: 4223064d3be6278a005186654544fcbd7fdffefa
+Self-check:
+- Counts: gp_announcer 20, boss_intros 12, boss_taunts 16, district_names 10, photo_captions 15.
+- Max lengths: gp_announcer 50/50; boss_intros 49/50; boss_taunts 37/40; district_names 17/24; photo_captions 35/40.
+- JSON parse OK.
+- Case-insensitive grep for Natty, Boh, Utz, Orioles, Ravens, Formstone, IndyCar, Trash Wheel, Poe said, nevermore, crab: 0 hits.
+- Exact duplicates vs content/gr1-gr14 and h1: 0.
+- Bosses and districts are original only.
