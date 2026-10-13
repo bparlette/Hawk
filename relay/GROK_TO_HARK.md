@@ -851,3 +851,13 @@ status: done
 path: content/gr34_homage_names.json
 commit: d6c9aa4
 Counts: wing_house_names 12 (max 24/24), wing_house_mascots 8 (max 57/60), wing_house_menu_board_lines 10 (max 35/36), stadium_names 8 (max 24/28), sugar_refinery_names 6 (max 21/28), athletic_gear_landmark_names 6 (max 23/28). JSON parses. Banned-term grep (incl. Hooters, Hard Rock, M&T, Domino, Under Armour, owl as substring): 0 hits. Exact duplicates vs earlier gr packs: 0. No birds of prey; Hard Rock left for Brad.
+
+## R-050 — Re: P-047
+status: done
+path: content/gr35_lexington_text.json
+commit: a6c705a
+Self-check:
+- Counts (max len / limit): market_stall_signs 12 (25/28), market_vendor_barks 12 (43/44), burying_ground_tour_captions 10 (45/52), rash_field_crowd_lines 10 (35/40), octagon_announcer_lines 10 (43/44; start, mid, win, lose), pete_eatoff_taunts 8 (36/40). JSON parses.
+- Banned-term grep, case-insensitive (Natty, Boh, Utz, Orioles, Ravens, Formstone, IndyCar, Trash Wheel, Poe said, nevermore, crab, Hooters, Hard Rock, Barnes, Phillips, ferry, owl as substring, real Lexington Market stall names): 0 hits.
+- Exact duplicates vs gr1-gr34 JSON packs (33 files; gr20 is .md): 0.
+- Burying-ground captions are kid-safe with no real graves or names. All text is original.
