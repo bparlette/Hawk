@@ -12012,7 +12012,7 @@ const DUELS = (function () {
     Object.assign(A, fxLayer(sc));
   }
   function buildRoof() {
-    const sc = new THREE.Scene(); sc.fog = new THREE.Fog('#1a1230', 26, 70); sc.background = sc.fog.color.clone(); // night sky behind the backdrop planes (side / replay cameras) const A = { sc };
+    const sc = new THREE.Scene(); sc.fog = new THREE.Fog('#1a1230', 26, 70); sc.background = sc.fog.color.clone(); const A = { sc };
     DUELS.sceneLights(sc, '#a8b4ff', '#2a1a30', 1.15, '#ffd8b0', 1.1, new THREE.Vector3(-0.4, 1, -0.5));
     const sl = new THREE.PointLight('#ffb060', 26, 18, 1.3); sl.position.set(0, 6, MZ + 3); sc.add(sl); A.light = sl;
     const rt = roofTex(); rt.wrapS = rt.wrapT = THREE.RepeatWrapping; rt.repeat.set(4, 4);
@@ -12032,7 +12032,7 @@ const DUELS = (function () {
     duelFx(sc, A); return A;
   }
   function buildYard() {
-    const sc = new THREE.Scene(); sc.fog = new THREE.Fog('#141030', 26, 80); sc.background = sc.fog.color.clone(); // night sky behind the backdrop planes (side / replay cameras) const A = { sc };
+    const sc = new THREE.Scene(); sc.fog = new THREE.Fog('#141030', 26, 80); sc.background = sc.fog.color.clone(); const A = { sc };
     DUELS.sceneLights(sc, '#9aa8ff', '#2a1a20', 1.1, '#ffcf9a', 1.0, new THREE.Vector3(0.5, 1, -0.4));
     const sl = new THREE.PointLight('#ff9a40', 30, 20, 1.3); sl.position.set(4, 6, MZ + 1); sc.add(sl); A.light = sl;
     const bt = brickTex(false); bt.wrapS = bt.wrapT = THREE.RepeatWrapping; bt.repeat.set(5, 6);
@@ -12054,7 +12054,7 @@ const DUELS = (function () {
     duelFx(sc, A); return A;
   }
   function buildChase() {
-    const sc = new THREE.Scene(); sc.fog = new THREE.Fog('#1a1430', 30, 95); sc.background = sc.fog.color.clone(); // night sky behind the backdrop planes (side / replay cameras) const A = { sc };
+    const sc = new THREE.Scene(); sc.fog = new THREE.Fog('#1a1430', 30, 95); sc.background = sc.fog.color.clone(); const A = { sc };
     DUELS.sceneLights(sc, '#a8b4ff', '#2a1a30', 1.2, '#ffd8b0', 1.0, new THREE.Vector3(0.3, 1, 0.5));
     A.roadT = roadTex(); A.roadT.wrapS = A.roadT.wrapT = THREE.RepeatWrapping; A.roadT.repeat.set(1, 12);
     const road = new THREE.Mesh(new THREE.PlaneGeometry(LANE2 * 3 + 0.6, 160), new THREE.MeshLambertMaterial({ map: A.roadT })); road.rotation.x = -Math.PI / 2; road.position.z = 60; sc.add(road);
