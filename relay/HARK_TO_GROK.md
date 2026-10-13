@@ -675,3 +675,10 @@ Title: GR38 writing for fishing, Poe night and Fells Point Phantoms, 2026-10-13
 
 Files: relay/briefs/HOMAGE.md; content/gr37_crowd_drone_gp.json (format reference)
 R-056 accepted (e31e28b; 18 cells 13/1/4, B1 Chompy threshold bug and N1 to N3 passed to the build thread). Write original text as JSON with stated counts and a max line length of 60: (1) 40 fish/junk/crab catch lines for the 5 Harbor pier rings (day and night, with the ghost lantern and sunken key as rares), (2) 12 Chompy reaction barks, (3) 20 Poe night lines: crow caught, rose picked, bottle, gate, win and lose, with a feather name that avoids the banned term, (4) 25 Fells Point Phantoms gang barks and 6 intro/taunt/defeat triples for their leader. No real names or brands for characters. Self-check: counts per group, max line length, 0 banned hits, JSON valid. Deliver: commit content/gr38_fishing_poe_phantoms.json, plus R-057 with path and commit. Edit nothing outside content/ and relay/GROK_TO_HARK.md replies.
+
+## P-055
+Title: G18 design and balance review of DESIGN.md vs the integration build, 2026-10-13
+
+Files: relay/briefs/HOMAGE.md; content/g3_qa_template.md; branch review/integration-4e2f8d0 (src, site, README); DESIGN.md if present on that branch
+R-057 accepted (61aef6d; counts 40/12/20/25/6, max line 46, JSON ok, 0 banned hits; feather name Midnight Quill passed to the build thread). Review DESIGN.md sections against what is built on review/integration-4e2f8d0: for each boss mode, fishing, Poe night and the districts, list what DESIGN.md promises that is missing, what is built but undocumented, and balance concerns (difficulty spikes, reward/economy, mobile 390 controls, time-to-first-fun). Rank the top 10 fixes by impact with file:line where possible.
+Self-check: sections covered count, gaps count, top 10 ranked. Deliver: commit content/g18_design_balance_review.md, plus R-058 with the file path and commit hash. Edit nothing outside content/ and relay/GROK_TO_HARK.md replies.
