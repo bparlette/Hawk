@@ -460,14 +460,14 @@ signOn(11, -26, 23, -13, 'n', CURB + 6.7, 8.4, LSIGN.aqua);
 LMCAP(null);
 landmark('aquarium', 'NATIONAL AQUARIUM', 19, -17, 19, { name: 'Big Jimmy', x: 19, z: -5, water: true, duel: 'jimmy' }); // underwater swim fight, 09_duels.js (entered at the aquarium door)
 LMCAP('powerplant');
-// Power Plant complex on pier 4 (far LOD): three joined buildings - Phillips (west), the Power Plant hall + tower + four black stacks (centre), Hard Rock Cafe (east);
+// Power Plant complex on pier 4 (far LOD): three joined buildings - Phillips (west), the Power Plant hall + tower + four black stacks (centre), the Amp House cafe (east, original homage signage);
 // footprints / heights match the HD model's PP table in 03b (exterior_2 read at x 0.0188 m/px, y 0.038 m/px)
 mass(44.8, -27, 52.13, -9.5, 11.6, { tr: T.fac[0][0], top: '#4a3a30' });
 mass(52.13, -27, 59.0, -8.8, 15.4, { tr: T.fac[0][1], top: '#2e3036' });
 mass(59.0, -25.5, 67.55, -9.3, 12.3, { tr: T.fac[0][1], top: '#4a3a30' });
 sbox(53.3, CURB + 15.4, -12.6, 58.2, CURB + 17.9, -8.9, '#a9502f', false); sbox(54.5, CURB + 17.9, -12, 57, CURB + 19.6, -9.1, '#a9502f', false);
 for (const [i, z] of [-13.2, -16.6, -20, -23.4].entries()) { const g = new THREE.CylinderGeometry(1.0, 1.08, 9, 10); place(g, 57.6 + i * 0.35, CURB + 22, z); solid(g, '#1f1d1c'); } // the four black stacks, a north-south row
-sbox(55.2, CURB + 20.3, -10.3, 56.3, CURB + 23.5, -10.1, '#e4566a', false); sbox(55.6, CURB + 23.5, -10.3, 55.9, CURB + 29.4, -10.1, '#e2b23a', false); // the guitar
+sbox(55.15, CURB + 20.3, -10.3, 56.35, CURB + 29.4, -10.1, '#1e2a4a', false); sbox(55.55, CURB + 21.0, -10.35, 55.95, CURB + 28.7, -10.05, '#ffd23c', false); // homage: the AMP HOUSE blade sign (was a real trademark guitar)
 sbox(44.6, CURB + 8.9, -27.2, 67.7, CURB + 9.4, -8.6, '#e4d8bc');
 signOn(52.13, -27, 59.0, -8.8, 's', 12.0, 5, LSIGN.power);
 LMCAP(null);
