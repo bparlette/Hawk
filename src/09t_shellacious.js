@@ -66,9 +66,9 @@
     g.globalAlpha = 0.65; blob(-10, '#ff2a4a'); blob(10, '#2affff'); g.globalAlpha = 1; blob(0, '#2a3a2a');
     g.fillStyle = '#fff'; g.beginPath(); g.arc(600, 220, 26, 0, TAU); g.arc(520, 220, 26, 0, TAU); g.fill(); g.fillStyle = '#14101f'; g.beginPath(); g.arc(606, 226, 11, 0, TAU); g.arc(526, 226, 11, 0, TAU); g.fill();
     g.fillStyle = '#14101f'; g.fillRect(520, 280, 90, 12);
-    g.textAlign = 'center'; g.textBaseline = 'middle'; g.font = '900 54px ' + FONT; // the title card sits at the top so the doctor never stands in front of it
-    g.fillStyle = '#ff2a4a'; g.fillText('ATTACK OF THE 50-FOOT TADPOLE', w / 2 - 4, 58); g.fillStyle = '#2affff'; g.fillText('ATTACK OF THE 50-FOOT TADPOLE', w / 2 + 4, 58);
-    g.fillStyle = '#fff2a0'; g.fillText('ATTACK OF THE 50-FOOT TADPOLE', w / 2, 58); g.font = '700 26px ' + FONT; g.fillStyle = '#fff'; g.fillText('IN SHELL-O-VISION 3D!', w / 2, 102); }, 512); }
+    g.textAlign = 'center'; g.textBaseline = 'middle'; g.font = '900 54px ' + FONT; // the title card along the bottom (the camera looks down over the doctor's head at it; the top edge sits under the HUD bars)
+    g.fillStyle = '#ff2a4a'; g.fillText('ATTACK OF THE 50-FOOT TADPOLE', w / 2 - 4, h - 74); g.fillStyle = '#2affff'; g.fillText('ATTACK OF THE 50-FOOT TADPOLE', w / 2 + 4, h - 74);
+    g.fillStyle = '#fff2a0'; g.fillText('ATTACK OF THE 50-FOOT TADPOLE', w / 2, h - 74); g.font = '700 26px ' + FONT; g.fillStyle = '#fff'; g.fillText('IN SHELL-O-VISION 3D!', w / 2, h - 30); }, 512); }
   function pauseTex() { return canvasTex(512, 224, (g, w, h) => { g.fillStyle = 'rgba(10,30,60,0.55)'; g.fillRect(0, 0, w, h); g.fillStyle = '#bff4ff'; g.fillRect(w / 2 - 70, 30, 44, 130); g.fillRect(w / 2 + 26, 30, 44, 130);
     g.textAlign = 'center'; g.font = '900 34px ' + FONT; g.fillText('FREEZE-FRAME', w / 2, 200); }, 256); }
   function filmTex() { return canvasTex(512, 96, (g, w, h) => { g.fillStyle = '#0a1420'; g.fillRect(0, 0, w, h); g.fillStyle = '#bff4ff';
