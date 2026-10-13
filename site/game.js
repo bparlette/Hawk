@@ -9294,6 +9294,7 @@ const DUELS = (function () {
   #duel .pspw.full { color: #ffd23c; } #duel .pspw.full .t i { background: linear-gradient(#fff6a0, #ffb020); animation: dlow .3s infinite alternate; }
   #duel .pspop { position: absolute; left: 0; top: 0; font-size: 15px; color: #fff; text-shadow: 2px 2px 0 #14101f, -1px -1px 0 #14101f; white-space: nowrap; pointer-events: none; opacity: 0; will-change: transform; }
   #duel .pspop.g { color: #ffd23c; font-size: 18px; } #duel .pspop.b { color: #7fe6ff; } #duel .pspop.r { color: #ff6a7a; }
+  body.duel-poolshark #duel .dtell { white-space: normal; max-width: 92vw; text-align: center; }
   @media (max-width: 480px) { #duel .pspw .t { width: 70px; } #duel .pspop { font-size: 12px; } #duel .pspop.g { font-size: 15px; } }`;
   document.head.appendChild(css);
   const POPS = []; for (let i = 0; i < 10; i++) { const e = document.createElement('div'); e.className = 'pspop'; DUELS.hudEl.appendChild(e); POPS.push({ e, t: 9, life: 1, p: new THREE.Vector3() }); }
@@ -9496,10 +9497,10 @@ const DUELS = (function () {
   function nextAttack(st) {
     const PH = PHASES[st.phase], a = PH.mix[st.mixI++ % PH.mix.length]; st.stats.attacks[a]++;
     if (a === 'cue') { const e = edgePt(st.hx, st.hz); st.ex = e; st.tx = e.x - e.nx * 0.35; st.tz = e.z - e.nz * 0.35; setM(st, 'cueSurf', 0.45);
-      DUELS.tell('CUE-BALL BREAK! GET OFF THE LINES!', PH.cue + 0.45); }
+      DUELS.tell('CUE BREAK! OFF THE LINES!', PH.cue + 0.45); }
     else if (a === 'cann') { setM(st, 'cannUp', PH.cann); st.ax = st.sx; st.az = st.sz; st.tx = clamp(st.hx, DX0 + 1, DX1 - 1); st.tz = clamp(st.hz, DZ0 + 1, DZ1 - 1); if (inPool(st.tx, st.tz, 0.6)) { const e = edgePt(st.tx, st.tz); st.tx = e.x + e.nx * 1.4; st.tz = e.z + e.nz * 1.4; }
-      sfx('jump'); splash(st.sx, WY, st.sz, 14); DUELS.tell('CANNONBALL! OFF THE SHADOW, THEN HOP THE WAVE!', PH.cann + 0.3); }
-    else { setM(st, 'finTell', PH.fin); DUELS.tell('FIN CIRCLE! STEP OUT WHEN IT CLOSES!', PH.fin); st.tx = st.hx; st.tz = st.hz; }
+      sfx('jump'); splash(st.sx, WY, st.sz, 14); DUELS.tell('CANNONBALL! MOVE, THEN HOP!', PH.cann + 0.3); }
+    else { setM(st, 'finTell', PH.fin); DUELS.tell('FIN CIRCLE! GET OUT OF THE RING!', PH.fin); st.tx = st.hx; st.tz = st.hz; }
   }
   function sharkThink(st, dt) {
     const PH = PHASES[st.phase]; st.mt += dt; const u = clamp(st.mt / st.mdur, 0, 1);
@@ -9513,7 +9514,7 @@ const DUELS = (function () {
           for (let i = 0; i < n; i++) { let a = base + (i - (n - 1) / 2) * (n > 3 ? 0.3 : 0.38); if (i === Math.floor(n / 2)) a = base; st.aims.push(a); } splash(st.sx, WY, st.sz, 10); } break;
       case 'cueTell': st.pose = 'edge'; if (st.mt > st.mdur) { setM(st, 'cueGo', 0.5); sfx('heavy'); st.shake = 0.15;
           st.aims.forEach((a, i) => P.balls.push({ x: st.ex.x + Math.sin(a) * 0.4, z: st.ex.z + Math.cos(a) * 0.4, dx: Math.sin(a), dz: Math.cos(a), spd: PH.bspd, t: -i * 0.05, hit: false, near: false, c: i })); } break;
-      case 'cueGo': st.pose = 'edge'; if (st.mt > st.mdur) { setM(st, 'open', PH.open); DUELS.tell('HE\'S CHALKING UP: HIT HIM!', 1.0); } break;
+      case 'cueGo': st.pose = 'edge'; if (st.mt > st.mdur) { setM(st, 'open', PH.open); DUELS.tell('HE\'S OPEN: HIT HIM!', 1.0); } break;
       // CANNONBALL: leap out, the shadow + ring on Harold's spot, land, a wave ring rolls out
       case 'cannUp': { st.pose = 'air'; const k = u; st.sx = lerp(st.ax, st.tx, k); st.sz = lerp(st.az, st.tz, k); st.sy = lerp(-1.95, 0, k) + 7 * 4 * k * (1 - k) * (k < 0.5 ? 1 : 1); st.syaw += dt * 9;
         if (st.mt > st.mdur) { setM(st, 'beached', PH.open); st.sy = 0; sfx('heavy'); st.shake = 0.6; st.hs = 0.05; splash(st.tx, 0.2, st.tz, 18);
@@ -9589,27 +9590,29 @@ const DUELS = (function () {
     const sd = Math.hypot(st.sx - st.hx, st.sz - st.hz);
     if (sd < 2.6 && st.ms !== 'ko' && st.ms !== 'down') {
       if (sharkHittable(st)) { any = true; hitShark(st, c.d + (st.ms === 'stun' ? 3 : 0), c.w, st.atkI === 2); sfx(st.atkI === 2 ? 'heavy' : 'hit'); st.hs = st.atkI === 2 ? 0.11 : 0.07; st.shake = Math.max(st.shake, st.atkI === 2 ? 0.35 : 0.15); }
-      else if (st.poolTellT <= 0) { st.poolTellT = 1.5; DUELS.tell(st.pose === 'sub' ? 'HE\'S UNDERWATER: WAIT FOR HIM TO SURFACE' : 'NOT NOW: DODGE FIRST!', 0.9); } }
+      else if (st.poolTellT <= 0) { st.poolTellT = 1.5; DUELS.tell(st.pose === 'sub' ? 'UNDERWATER: WAIT FOR HIM' : 'NOT NOW: DODGE FIRST!', 0.9); } }
     for (const g of P.goons) { if (!g.on || g.s === 'fly' || g.s === 'climb' || g.inv > 0) continue; const dx = g.x - st.hx, dz = g.z - st.hz, d = Math.hypot(dx, dz);
       if (d < 2.0 && (dx * fx + dz * fz) > -0.3) { any = true; g.inv = 0.15; g.hp--; sfx('hit'); st.hs = 0.06; V.set(g.x, 1.9, g.z); splash(g.x, 1.1, g.z, 5, 0);
         if (g.hp <= 0 || st.atkI === 2) launchGoon(st, g); else { g.s = 'hurt'; g.t = 0; pop(V, 'BONK!', '', 0.6); if (Math.random() < 0.3) DUELS.say('CATFISH GOON', pick(GR1.gangs.cobble_catfish.hit), 1.2); } } }
     return any;
   }
   function bankShot(st) {
-    st.power = 0; subHud(st); st.stats.specials++; st.bankT = 0; st.ts = 0.35; st.tsT = 1.5; st.atkI = 2; st.atkT = 0; st.atkHit = true;
-    const e = edgePt(st.hx, st.hz); st.bk = { a: new THREE.Vector3(st.hx + Math.sin(st.yaw) * 0.8, 0.55, st.hz + Math.cos(st.yaw) * 0.8), b: new THREE.Vector3(e.x, 0.55, e.z) };
+    st.power = 0; subHud(st); st.stats.specials++; st.bankT = 0; st.ts = 0.35; st.tsT = 1.8; st.atkT = -1; // team-up: Mavis racks the ball to Harold, he banks it
+    const e = edgePt(st.hx, st.hz); st.bk = { m: new THREE.Vector3(-8.2, 1.4, -3.3), a: new THREE.Vector3(st.hx + Math.sin(st.yaw) * 0.8, 0.55, st.hz + Math.cos(st.yaw) * 0.8), b: new THREE.Vector3(e.x, 0.55, e.z) }; DUELS.say('MAVIS', 'Racked and ready, hon!', 1.4);
     DUELS.banner('BANK SHOT!<small>OFF THE RAIL, INTO THE SHARK</small>', 1.6); sfx('heavy'); st.shake = 0.3; DUELS.log.push('poolshark:bank');
     for (const g of P.goons) if (g.on && g.s !== 'fly') launchGoon(st, g);
   }
   function stepBank(st, dt) {
-    if (st.bankT < 0) return; st.bankT += dt; const t = st.bankT, B = st.bk, b = P.bank; b.visible = true;
+    if (st.bankT < 0) return; st.bankT += dt; const t0 = st.bankT, B = st.bk, b = P.bank; b.visible = true;
+    if (t0 < 0.3) { b.position.lerpVectors(B.m, B.a, t0 / 0.3); b.position.y += Math.sin(t0 / 0.3 * Math.PI) * 2; if (t0 > 0.18 && st.atkT < 0) { st.atkI = 2; st.atkT = 0; st.atkHit = true; } return; }
+    const t = t0 - 0.3; if (!B.whack) { B.whack = true; sfx('heavy'); st.hs = 0.08; V.copy(B.a); V.y = 1.6; pop(V, 'WHACK!', 'g', 0.8); }
     if (t < 0.35) b.position.lerpVectors(B.a, B.b, t / 0.35);
     else { if (!B.hitE) { B.hitE = true; splash(B.b.x, 0.4, B.b.z, 8, 0); sfx('hit'); B.c = new THREE.Vector3(st.sx, st.pose === 'sub' ? WY + 0.4 : 1.2, st.sz); }
       const u = clamp((t - 0.35) / 0.3, 0, 1); b.position.lerpVectors(B.b, B.c, u); b.position.y += Math.sin(u * Math.PI) * 1.2;
       if (u >= 1 && !B.hitS) { B.hitS = true; b.visible = false; st.bankT = -1; st.shake = 0.6; st.hs = 0.12; P.balls.length = 0;
         if (st.pose === 'sub' || st.ms === 'finTell' || st.ms === 'swim' || st.ms === 'intro') { const e = edgePt(st.hx, st.hz); st.ex = e; st.sx = e.x - e.nx * 0.35; st.sz = e.z - e.nz * 0.35; st.sy = -1.0; st.syaw = Math.atan2(e.nx, e.nz); }
         if (st.ms === 'cannUp' || st.ms === 'lunge') { st.sx = st.tx; st.sz = st.tz; st.sy = 0; }
-        setM(st, 'stun', 2.8); st.pose = st.sy > -0.5 ? 'deck' : 'edge'; hitShark(st, 22, 'BANK SHOT!', true); if (st.ms === 'stun') DUELS.tell('HE\'S SEEING STARS: GET HIM!', 1.2); } }
+        setM(st, 'stun', 2.8); st.pose = st.sy > -0.5 ? 'deck' : 'edge'; hitShark(st, 22, 'BANK SHOT!', true); if (st.ms === 'stun') DUELS.tell('SEEING STARS: GET HIM!', 1.2); } }
   }
   P.step = function (rdt, I) {
     const st = P.st; if (!st) return;
@@ -9635,7 +9638,7 @@ const DUELS = (function () {
         if (best) { st.yaw = Math.atan2(best[0] - st.hx, best[1] - st.hz); if (bd > 1.5) { st.hx += Math.sin(st.yaw) * 0.45; st.hz += Math.cos(st.yaw) * 0.45; } } }
       if (st.atkT >= 0) { st.atkT += dt; const c = COMBO[st.atkI]; if (!st.atkHit && st.atkT > c.t * 0.38) { st.atkHit = true; landSwing(st); } if (st.atkT > c.t) { st.atkT = -1; st.chainT = 0.35; if (st.atkI >= 2) st.chainT = 0; } }
       // BANK SHOT
-      if (I.c) { if (st.power >= 1 && st.bankT < 0 && st.ms !== 'down' && st.ms !== 'intro') bankShot(st); else if (st.power < 1 && st.poolTellT <= 0) { st.poolTellT = 1; DUELS.tell('POWER NOT FULL: HIT HIM, DODGE, THROW GOONS', 0.9); } }
+      if (I.c) { if (st.power >= 1 && st.bankT < 0 && st.ms !== 'down' && st.ms !== 'intro') bankShot(st); else if (st.power < 1 && st.poolTellT <= 0) { st.poolTellT = 1; DUELS.tell('POWER NOT FULL YET', 0.9); } }
       // Mavis' crab cake: lands at Harold's feet, walk over it (or it reaches you)
       if (st.cake) { st.cake.t += dt; if (st.cake.t > 0.9) { st.hp = Math.min(100, st.hp + 30); V.set(st.hx, 2, st.hz); pop(V, '+30 CRAB CAKE', 'g', 1.0); st.cake = null; sfx('jump'); } }
     }
@@ -9675,7 +9678,7 @@ const DUELS = (function () {
   }
   function mavisPose(st, t) { const p = HERO_POSES.idle(t), cheer = st.won || sharkHittable(st) || st.cake ? 1 : 0.4, w = Math.sin(t * (6 + cheer * 6));
     p.shL = [-2.6 - w * 0.3 * cheer, 0, 0.5]; p.elL = [-0.3, 0, 0]; p.shR = [-1.6 - cheer * 0.9 + w * 0.25, 0, -0.4]; p.elR = [-0.5, 0, 0]; p.y = Math.abs(Math.sin(t * 5)) * 0.08 * cheer;
-    if (st.cake && st.cake.t < 0.4) { p.shR = [-2.8, 0, -0.3]; } return p; }
+    if ((st.cake && st.cake.t < 0.4) || (st.bankT >= 0 && st.bankT < 0.3)) { p.shR = [-2.8, 0, -0.3]; } return p; }
   function poseShark(st, dt) {
     const R = P.R, t = st.t, B = R.body; let bodyRX = 0, rootY = st.sy, armL = -0.2, armR = 0.9, cueRX = 1.3, finS = 1, glow = null;
     switch (st.pose) {
@@ -9736,7 +9739,7 @@ const DUELS = (function () {
     // camera: 3/4 view from the south end of the deck, following Harold, pulled up + back in portrait; BANK SHOT punches in; the KO frames the pool
     const port = VH() > VW(); P.cam.fov = port ? 62 : 50; P.cam.updateProjectionMatrix();
     const fx = st.hx * 0.6, fz = lerp(1.5, st.hz, 0.55);
-    V.set(fx, port ? 10.5 : 8.6, fz - (port ? 11.5 : 10.5)); V2.set(fx, 0, fz + (port ? 4.2 : 3.0));
+    V.set(fx, port ? 12.5 : 8.6, fz - (port ? 11 : 10.5)); V2.set(fx, 0, fz + (port ? 3.6 : 3.0));
     if (st.ms === 'intro' && st.phase === 0) { const k = ease(clamp(st.mt / st.mdur, 0, 1)); V.lerpVectors(V.clone().set(0, 7, 16), V, k); V2.lerpVectors(V2.clone().set(0, 0, 2), V2, k); }
     if (st.bankT >= 0) { V.lerp(V2.clone().set(st.hx, 3, st.hz - 4), 0.45); }
     if (st.ms === 'ko') { V.set(st.sx * 0.5, 7.5, st.sz - 9); V2.set(st.sx, 0, st.sz); }
