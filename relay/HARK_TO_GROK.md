@@ -743,3 +743,28 @@ Review the full build against DESIGN.md, reading src with file:line cites:
 3. Mobile first-run: first 5 minutes at 390x844, tutorial coverage of every control, any mode with no tip.
 4. Re-check G18 findings: closed, open, changed.
 Self-check: boss table row count (20 plus Brewmaster), gaps by severity, 5-line fix-first list. Deliver: commit content/g26_prelaunch_review.md, plus R-063 with path and commit hash. Edit nothing outside content/ and relay/GROK_TO_HARK.md replies.
+
+## P-061
+Title: G27 install Toad City Baltimore on Brad's Mac and check it launches from ES-DE (2026-10-13)
+
+Files: branch toadcity/desktop: install_mac.sh, uninstall_mac.sh, desktop/README.md (controls, Gatekeeper, RetroArch note), es-de/ (system, find rule, ROM stub, gamelist, media). Release: https://github.com/bparlette/Hawk/releases/tag/desktop-v2 (pre-release; the installer always takes the newest desktop-v* release).
+Deliver: R-064 in relay/GROK_TO_HARK.md with the checklist below filled in, plus content/g27_mac_install_report.md (commit hash in the reply). Screenshots, if you can take them, go in content/g27/.
+
+Brad asked for this one: unlike the usual repo-only jobs, this job runs ON BRAD'S MAC (the machine you operate for him). Only the commands below; no sudo, no purchases, no posts, nothing else installed, and no change to any other ES-DE system. If any step needs a password, an Apple ID, a System Settings approval or anything you can't do, stop and write it in R-064 instead of working around it.
+
+1. Quit ES-DE if it is running (it rewrites its files on exit). Note the macOS version and chip (`sw_vers; uname -m`).
+2. Install (idempotent; it backs up and merges ~/ES-DE/custom_systems/es_systems.xml + es_find_rules.xml rather than overwriting them):
+   `curl -fsSL https://raw.githubusercontent.com/bparlette/Hawk/toadcity/desktop/install_mac.sh | bash`
+   Paste the full output into the report. Then check:
+   - `file ~/Applications/"Toad City Baltimore.app"/Contents/MacOS/"Toad City Baltimore"` shows a universal binary (x86_64 + arm64)
+   - `xattr -l ~/Applications/"Toad City Baltimore.app" | grep -c quarantine` prints 0 (if not: `xattr -dr com.apple.quarantine ~/Applications/"Toad City Baltimore.app"` and say so)
+   - `grep -c toadcity ~/ES-DE/custom_systems/es_systems.xml` >= 1, `grep -c TOADCITY ~/ES-DE/custom_systems/es_find_rules.xml` >= 1, and every system that was in the file before is still there (compare with the .backup-* file if one was made)
+   - `ls ~/ROMs/toadcity ~/ES-DE/downloaded_media/toadcity/*` (stub + screenshots, marquees, videos, titlescreens, covers, fanart, miximages). If Brad moved his ROM or media folder in ES-DE settings, the installer uses that folder; report which paths it printed.
+3. Run the installer a second time: it must finish with "already up to date" for both custom files and create no new backup.
+4. Start ES-DE. Confirm: a "Toad City Baltimore" system appears; its game shows the screenshot/miximage, the marquee and the video preview; name, description, developer Brad Parlette, players 1-4 show in the details. If the system is missing: Main menu > Utilities > Rescan ROM directory, then quote the lines mentioning "toadcity" or "TOADCITY" from ~/ES-DE/logs/es_log.txt.
+5. Launch the game with the controller. Confirm: it opens fullscreen with no window bar or cursor, the title is "Toad City Baltimore", audio plays, and the controller moves Harold right away with no mouse click. Play ~1 minute (walk, swing, open the map with Select).
+6. Quit: hold Select+Start (Back+Start) for 1 second. A "HOLD TO QUIT" bar shows and the game closes back into ES-DE (not to the desktop, no crash dialog). Launch again and quit by holding Esc for 1 second. A quick Esc tap must NOT quit.
+7. Optional, if quick: in ES-DE pick the alternative emulator "Toad City Baltimore (open -W script)" for the game, launch, quit, confirm ES-DE comes back; then set it back to the default.
+8. Leave it installed. Do not run uninstall_mac.sh.
+
+Report format (R-064): one line per step PASS/FAIL/SKIP with the evidence (command output or what you saw), the macOS version + chip, the ES-DE version (Main menu > About, or the app's Get Info), the controller model, any Gatekeeper or permission prompt and what clicked it through, and a short list of bugs (step, expected, actual). Edit nothing outside content/ and relay/GROK_TO_HARK.md replies.
