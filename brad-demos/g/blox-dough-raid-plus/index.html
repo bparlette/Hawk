@@ -81,6 +81,19 @@ canvas#webgl.inv{filter:invert(1) grayscale(1) contrast(4)}
 #viewport.narrow #banner{font-size:30px}
 #viewport.narrow .boss-title{font-size:11px}
 #viewport.narrow #viral-caption span{font-size:15px}
+#viewport.tiny .hotbar{gap:4px}
+#viewport.tiny .skill-slot{width:48px;height:50px;border-width:2px;border-radius:8px}
+#viewport.tiny .skill-cost{display:none}
+#viewport.tiny .skill-key{font-size:9px}
+#viewport.tiny .boss-title{font-size:9px;letter-spacing:1px}
+#viewport.tiny .action-btn{padding:4px 6px;font-size:8px}
+#viewport.tiny #top-actions{top:52px;right:6px;gap:4px}
+#viewport.tiny #viral-caption{top:150px}
+#viewport.tiny #viral-caption span{font-size:12px;padding:4px 8px}
+#viewport.tiny #combo-num{font-size:30px}
+#viewport.tiny #bounty-tag{font-size:10px;padding:3px 6px}
+#viewport.tiny .bar-row{height:15px}
+#viewport.tiny .bar-txt{font-size:9px}
 /* dmg pops */
 #dmg-layer{position:absolute;inset:0;pointer-events:none;z-index:11;overflow:hidden}
 .dmg-pop{position:absolute;font-weight:900;font-style:italic;font-size:26px;color:#ffeb3b;text-shadow:2px 2px 0 #000,-2px -2px 0 #d63031;transform:translate(-50%,-50%);animation:floatUp .75s ease-out forwards;white-space:nowrap}
@@ -1149,7 +1162,7 @@ function moveVec(){
 function onResize(){
   const w=viewport.clientWidth, h=viewport.clientHeight;
   camera.aspect=w/h; camera.updateProjectionMatrix(); renderer.setSize(w,h,false);
-  fx2d.width=w; fx2d.height=h; viewport.classList.toggle('narrow',w<560);
+  fx2d.width=w; fx2d.height=h; viewport.classList.toggle('narrow',w<560); viewport.classList.toggle('tiny',w<350);
 }
 window.addEventListener('resize',onResize);
 

@@ -559,46 +559,6 @@
    "thumb": "thumbs/bakeoff-i-cel.webp?v=1791640173"
   },
   {
-   "id": "blox-dough-raid-plus",
-   "title": "★ Blox Fruits: Dough Raid — Turtles Edition",
-   "category": "Other games",
-   "keys": {
-    "up": "KeyW",
-    "down": "KeyS",
-    "left": "KeyA",
-    "right": "KeyD",
-    "attack": "KeyZ",
-    "jump": "Space",
-    "special": "KeyX",
-    "start": "Enter"
-   },
-   "labels": {
-    "attack": "Z JAB",
-    "jump": "SORU",
-    "special": "X RIVER",
-    "start": "FIGHT"
-   },
-   "extras": [
-    {
-     "label": "C ROLL",
-     "key": "KeyC"
-    },
-    {
-     "label": "V FISTS",
-     "key": "KeyV"
-    },
-    {
-     "label": "MUTE",
-     "key": "KeyM"
-    }
-   ],
-   "autostart": [],
-   "orientation": "any",
-   "note": "Featured remake of the Painted Anime Edition: real boss fight (telegraphed AOEs, phase 2, KO/victory), articulated rigs, energy costs, touch controls. Boots in the 9:16 auto-combo; Enter/any move key = manual fight.",
-   "path": "g/blox-dough-raid-plus/index.html",
-   "thumb": "thumbs/blox-dough-raid-plus.webp?v=1791933177"
-  },
-  {
    "id": "crystal-cave",
    "title": "Crystal Cave 2.5D",
    "category": "Other games",
@@ -1369,6 +1329,46 @@
    "note": "Earlier build v3 of Brad's Requiem fan game, pasted 2026-10-13, added as-is with no fixes. Mouse to look.",
    "path": "g/re-requiem-v3/index.html",
    "thumb": "thumbs/re-requiem-v3.webp?v=1791930920"
+  },
+  {
+   "id": "blox-dough-raid-plus",
+   "title": "★ Blox Fruits: Dough Raid — Turtles Edition",
+   "category": "Other games",
+   "keys": {
+    "up": "KeyW",
+    "down": "KeyS",
+    "left": "KeyA",
+    "right": "KeyD",
+    "attack": "KeyZ",
+    "jump": "Space",
+    "special": "KeyX",
+    "start": "Enter"
+   },
+   "labels": {
+    "attack": "Z JAB",
+    "jump": "SORU",
+    "special": "X RIVER",
+    "start": "FIGHT"
+   },
+   "extras": [
+    {
+     "label": "C ROLL",
+     "key": "KeyC"
+    },
+    {
+     "label": "V FISTS",
+     "key": "KeyV"
+    },
+    {
+     "label": "MUTE",
+     "key": "KeyM"
+    }
+   ],
+   "autostart": [],
+   "orientation": "any",
+   "note": "Featured remake of the Painted Anime Edition: real boss fight (telegraphed AOEs, phase 2, KO/victory), articulated rigs, energy costs, touch controls. Boots in the 9:16 auto-combo; Enter/any move key = manual fight.",
+   "path": "g/blox-dough-raid-plus/index.html",
+   "thumb": "thumbs/blox-dough-raid-plus.webp?v=1791933461"
   },
   {
    "id": "blox-dough-raid",
