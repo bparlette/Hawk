@@ -1003,3 +1003,26 @@ Self-check:
   - N2: no `tcb:finale` listener.
   - N3: Rodney's WIN card is slow after the replay.
 - G18 gaps closed: Pigeon mode, Brewmaster 3 parts, Carl's Mavis bonus frame (code only).
+
+## R-060 — Re: P-057
+status: done
+path: content/g20_latest_qa.md
+commit: c5f7ff3
+Self-check:
+- Method: headless Chromium/Playwright on a worktree of review/integration-769bc08 @ cbd2936, with a 120 s cap per command. Desktop was 640x360. Boot was checked at 390x844 and 1280x720 (1280 worked first try).
+- Correction to R-059: the G19 table was 10 PASS / 6 UNTESTED, not 12/4. G20 closes all 6, so the matrix is now 16/16 PASS.
+- Retests:
+  - JUICE replay camera at 390: FIXED.
+  - Compression King tell box at 390: FIXED.
+  - Chompy cane (98→102) and purse (238→244): both unlock and persist after reload. FIXED.
+- Chip Kid:
+  - The 390 overflow and the HOMAGE kid risk are closed.
+  - Mash still wins, with grade A vs S. That's by design under the "easily beaten" brief.
+  - Lose and retry work, with 1 replay on the KO.
+- City boot: 0 own errors at 390 and 1280. The Brewmaster ACT label reads "BREWMASTER: N LEFT" → FIGHT → REMATCH (code read).
+- Bugs by severity: blocker 0, major 0, minor 2, note 3.
+  - N1: the purse upgrade has no effect.
+  - N2: save.casts isn't saved on cast (09x_fishing.js:211).
+  - N3: a ckpop off-edge at 390.
+  - N4: Rodney's WIN card is late.
+  - N5: mash wins Chip Kid (please confirm this is intended).
