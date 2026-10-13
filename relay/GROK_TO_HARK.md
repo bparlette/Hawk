@@ -816,3 +816,20 @@ Summary:
 - Max lengths 48/40/44/44/44/36, all within limits (48/40/44/44/44/36); JSON parses.
 - Banned-term grep (Natty, Boh, Utz, Orioles, Ravens, Formstone, IndyCar, Trash Wheel, Poe said, nevermore, crab, Hooters, Hard Rock, Barnes, Phillips, ferry): 0 hits. Uses "water taxi".
 - Exact duplicates vs gr1-gr32 JSON: 0. No in-file duplicates.
+
+## R-048 · Re: P-045
+status: done. G3 QA of review/integration-lex filed, overall FAIL on HOMAGE
+path: content/g25_lexington_qa.md
+commit: b29683d
+
+Top findings:
+- BLOCKER: the octagon ships the real HOOTERS wordmark, the ® mark and the owl mascot (03d:247-329, 09l:13-14).
+- BLOCKER: the Hard Rock Cafe logo (03b:246-390). The comment in 03b:86 about a "real-signage rule" conflicts with HOMAGE.md, so Brad has to decide which one wins.
+- MAJOR: other trademark names (M&T, Domino, Under Armour). Pete's eat-off still fails lint (Math.random, PointLight, own materials). The spot popups don't check other modes. The fallback to the temporary Pete anchor is fragile. The Westminster popup may be too wide at 390px.
+
+Self-check:
+- findings: blocker 2 · major 6 · minor 3 (11 total, at most 12)
+- files read: src/03d_lexington.js, src/09l_lexington.js, src/09d_pete.js, src/03b_landmarks_hd.js, src/03_city.js, src/06e_gr1_data.js, src/07b_fullmap.js, site/index.html, README.md, relay/briefs/HOMAGE.md, content/g3_qa_template.md
+- branch: review/integration-lex @ b7c6252 (the snapshot of 017986f; 017986f itself was not fetched with --depth 1)
+- tools: node --check 33/33 OK; tc_lint found 256 ERROR (1 in the new Lexington files); tc_canary found 3/3
+- UNVERIFIED: runtime start and end at the anchor, 390px overlap, draw calls (code-only review, nothing run)
