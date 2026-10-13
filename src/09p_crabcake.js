@@ -78,9 +78,7 @@
     const top = new THREE.Mesh(new THREE.BoxGeometry(6.6, 0.12, 1.15), steel); top.position.set(0, 1.0, CZ); sc.add(top);
     const R = K();
     R.add(G.box(6.4, 0.9, 1.0), '#7c868e', 0, 0.47, CZ).add(G.box(6.5, 0.06, 1.05), '#5a626a', 0, 0.3, CZ); // the counter body + undershelf
-    for (const x of [-3.1, 3.1]) R.add(G.cyl(0.04, 0.04, 1.3, 6), '#b8c0c6', x, 1.65, CZ).add(G.box(0.1, 0.1, 0.1), '#333', x, 2.3, CZ);
-    R.add(G.box(6.4, 0.08, 0.5), '#b8c0c6', 0, 2.32, CZ); // heat-lamp shelf
-    for (let k = 0; k < 4; k++) R.add(G.cyl(0.12, 0.18, 0.2, 8), '#c43a12', -2.4 + k * 1.6, 2.2, CZ);
+    for (let k = 0; k < 5; k++) R.add(G.cyl(0.22, 0.2, 0.06, 12), '#f4f4f0', -2.9 + k * 0.32, 1.09, CZ - 0.2).add(G.sph(0.12, 8, 6), '#c8843a', -2.9 + k * 0.32, 1.15, CZ - 0.2, 0, 0, 0, 1, 0.55, 1); // plated crab cakes up on the pass
     // back line: ranges with burner glow, ovens, the big hood, hanging pots
     R.add(G.box(9, 0.95, 1.3), '#4a4e56', 0, 0.48, 8.2).add(G.box(9.1, 0.08, 1.35), '#2a2c30', 0, 0.99, 8.2);
     for (let k = 0; k < 6; k++) R.add(G.box(1.2, 0.6, 0.05), '#22242a', -3.75 + k * 1.5, 0.45, 7.53).add(G.box(0.7, 0.05, 0.05), '#b8c0c6', -3.75 + k * 1.5, 0.72, 7.5);
@@ -97,8 +95,8 @@
     C.door = new THREE.Group(); C.door.position.set(5.75, 0, 7.94); sc.add(C.door);
     { const D = K(); D.add(G.box(1.5, 2.3, 0.1), '#d4dadf', -0.75, 1.15, 0).add(G.box(0.12, 0.5, 0.12), '#555', -1.35, 1.2, -0.08).add(G.box(1.3, 0.08, 0.02), '#9aa4ac', -0.75, 0.3, -0.06); D.mesh(toonMat(), C.door, 0.003); }
     const wsign = new THREE.Mesh(new THREE.PlaneGeometry(1.3, 0.4), new THREE.MeshBasicMaterial({ map: signTex('WALK-IN', '#1a3a7a', '#ffffff'), fog: false })); wsign.position.set(-0.75, 2.0, -0.07); wsign.rotation.y = Math.PI; C.door.add(wsign);
-    const pass = new THREE.Mesh(new THREE.PlaneGeometry(1.6, 0.42), new THREE.MeshBasicMaterial({ map: signTex('THE PASS', '#14101f', '#ffd23c', 'HARBOR EAST · KITCHEN'), fog: false })); pass.position.set(0, 2.62, CZ - 0.02); pass.rotation.y = Math.PI; sc.add(pass);
-    const tk = new THREE.Mesh(new THREE.PlaneGeometry(2.4, 0.42), new THREE.MeshBasicMaterial({ map: ticketTex(), fog: false })); tk.position.set(-2.0, 2.05, CZ - 0.27); tk.rotation.y = Math.PI; sc.add(tk);
+    const pass = new THREE.Mesh(new THREE.PlaneGeometry(1.6, 0.42), new THREE.MeshBasicMaterial({ map: signTex('THE PASS', '#14101f', '#ffd23c', 'HARBOR EAST · KITCHEN'), fog: false })); pass.position.set(0, 0.62, CZ - 0.52); pass.rotation.y = Math.PI; sc.add(pass);
+    const tk = new THREE.Mesh(new THREE.PlaneGeometry(2.4, 0.42), new THREE.MeshBasicMaterial({ map: ticketTex(), fog: false })); tk.position.set(-4.5, 2.7, 10.45); tk.rotation.y = Math.PI; sc.add(tk);
     // the "86'D" sign that drops on the walk-in door at the KO
     C.sign86 = new THREE.Mesh(new THREE.PlaneGeometry(1.4, 0.7), new THREE.MeshBasicMaterial({ map: signTex("86'D", '#c4161c', '#ffffff', 'KITCHEN CLOSED'), side: THREE.DoubleSide, fog: false })); C.sign86.visible = false; C.sign86.rotation.y = Math.PI; sc.add(C.sign86);
     // burner flames on the back range: one Points cloud
@@ -181,7 +179,8 @@
     #duel .ccpow { display: inline-block; width: 92px; height: 9px; border: 2px solid #14101f; background: #2a1650; border-radius: 6px; overflow: hidden; vertical-align: middle; margin-left: 4px; }
     #duel .ccpow i { display: block; height: 100%; background: linear-gradient(#ffe08a, #ff8a1a); }
     #duel .ccpow.full i { background: linear-gradient(#fff, #ffd23c); animation: dlow .3s infinite alternate; }
-    @media (max-width: 480px) { #duel .ccpow { width: 70px; } }`;
+    body.duel-crabcake #duel .dtell { white-space: normal; max-width: 88vw; text-align: center; }
+    @media (max-width: 480px) { #duel .ccpow { width: 70px; } body.duel-crabcake #duel .dtell { font-size: 11px; } }`;
     document.head.appendChild(css);
     C.bang = document.createElement('div'); C.bang.className = 'ccbang'; C.bang.textContent = '!'; DUELS.hudEl.appendChild(C.bang);
   };
@@ -222,7 +221,7 @@
   C.hudPops = function (clear, dt = 0) { for (let i = POPS.length - 1; i >= 0; i--) { POPS[i].t += dt; if (clear || POPS[i].t > 0.85) { POPS[i].e.remove(); POPS.splice(i, 1); } } };
   function flashBoss(c = '#ffffff', v = 0.85) { for (const m of C.R.flash) if (m && m.userData.flashC) { m.userData.flashC.value.set(c); m.userData.flash.value = v; } }
   function setM(st, s, dur) { st.ms = s; st.mt = 0; st.mdur = dur; st.hitThis = false; st.dodged = false; }
-  function addPow(st, v) { const was = st.pow >= 1; st.pow = clamp(st.pow + v, 0, 1); if (!was && st.pow >= 1) { DUELS.tell('POWER FULL! ACT = CHEF\'S FLIP', 1.2); sting('ding'); } subHud(st); }
+  function addPow(st, v) { const was = st.pow >= 1; st.pow = clamp(st.pow + v, 0, 1); if (!was && st.pow >= 1) { DUELS.tell('POWER FULL: ACT = FLIP!', 1.2); sting('ding'); } subHud(st); }
   function hurtHarold(st, dmg, kind) {
     if (st.inv > 0 || st.over || st.flipT >= 0) return false;
     st.hp -= dmg; st.inv = 1.3; st.hurtT = 0.4; st.stats.hits[kind]++; st.stats.hitsTaken++; st.combo = 0; DUELS.hurt(); sfx('hurt'); C.hflash = 1; st.lane = 0; st.duck = false; st.lockT = 0.3; st.shake = 0.35; st.stop = 0.06;
@@ -235,7 +234,7 @@
     return true;
   }
   function clearFx() { C.lanes.forEach((l) => { l.material.opacity = 0; l.visible = false; }); C.ring.visible = false; C.edge.visible = false; }
-  function dodgeOk(st, what) { if (st.dodged) return; st.dodged = true; st.stats.dodges++; addPow(st, 0.22); pop(what || 'DODGE!', V.set(sx(st.lane) * 0.95, 2.4, 0.2), 'w'); }
+  function dodgeOk(st, what) { if (st.dodged) return; st.dodged = true; st.stats.dodges++; addPow(st, 0.15); pop(what || 'DODGE!', V.set(sx(st.lane) * 0.95, 2.4, 0.2), 'w'); }
 
   // ---------------- the chef's brain ----------------
   function chefThink(st, dt) {
@@ -243,8 +242,8 @@
     switch (st.ms) {
       case 'intro': if (st.mt > st.mdur) setM(st, 'guard', 0.8); break;
       case 'guard': if (st.mt > st.mdur) { const a = P.mix[st.mixI++ % P.mix.length]; st.stats.attacks[a]++;
-          if (a === 'tin') { setM(st, 'tinTell', P.tin); DUELS.tell('SEASONING BLIND! DODGE OUT OF THE RING!', P.tin); sting('tin'); }
-          else if (a === 'drum') { setM(st, 'drumTell', P.drum); DUELS.tell('TWIN-MALLET DRUMROLL! WATCH THE LANES!', P.drum); sting('drum');
+          if (a === 'tin') { setM(st, 'tinTell', P.tin); DUELS.tell('SPICE! DODGE THE RING!', P.tin); sting('tin'); }
+          else if (a === 'drum') { setM(st, 'drumTell', P.drum); DUELS.tell('DRUMROLL! WATCH LANES!', P.drum); sting('drum');
             const s = []; let prev = 9; for (let k = 0; k < 4; k++) { let l; do { l = [-1, 0, 1][Math.floor(Math.random() * 3)]; } while (l === prev); s.push(l); prev = l; } st.seq = s; st.seqI = 0; st.slamT = 0; }
           else { setM(st, 'panTell', P.pan); DUELS.tell('FLAMBÉ LINE! DUCK!', P.pan); sting('pan'); st.fireDir = Math.random() < 0.5 ? -1 : 1; }
           if (Math.random() < 0.25) DUELS.say('CHEF CRABCAKE', pick(MID), 2.0); }
@@ -252,7 +251,7 @@
       // SEASONING BLIND: the ring follows Harold's lane, locks for the last 0.4 s, then the cloud flies at the locked lane
       case 'tinTell': if (st.mdur - st.mt > 0.4) st.target = st.lane; if (st.mt > st.mdur) { setM(st, 'tin', 0.65); sfx('swing'); } break;
       case 'tin': { C.R.tin.getWorldPosition(V); if (st.mt < 0.35) for (let k = 0; k < 3; k++) puff(V, V2.set((sx(st.target) - V.x) * 1.6 + rnd(-0.5, 0.5), rnd(-2.2, -1.2), -(V.z - 0.2) * 1.6 + rnd(-0.5, 0.5)), 0.9, rnd(0.9, 1.5));
-        if (st.mt > 0.32 && !st.hitThis) { st.hitThis = true; if (st.lane === st.target && !st.duck) { if (hurtHarold(st, DMG.tin, 'tin')) { st.blindT = 2.6; DUELS.tell('BLINDED! KEEP DODGING!', 1.2); } } else dodgeOk(st, 'DODGED!'); }
+        if (st.mt > 0.32 && !st.hitThis) { st.hitThis = true; if (st.lane === st.target && !st.duck) { if (hurtHarold(st, DMG.tin, 'tin')) { st.blindT = 2.6; DUELS.tell('BLINDED! KEEP MOVING!', 1.2); } } else dodgeOk(st, 'DODGED!'); }
         if (st.mt > st.mdur) setM(st, 'open', P.open); break; }
       // TWIN-MALLET DRUMROLL: 4 slams, one lane each, gap P.gap; each lane warns for one gap before its slam
       case 'drumTell': if (st.mt > st.mdur) { setM(st, 'drum', 99); st.slamT = P.gap; st.seqI = 0; st.drumHit = false; } break;
@@ -297,7 +296,7 @@
       st.duck = st.lockT <= 0 && st.swingT < 0 && duck;
       const can = !st.duck && st.swingCd <= 0 && st.hurtT <= 0;
       if (I.c && st.pow >= 1 && ['open', 'guard', 'intro', 'tinTell', 'drumTell', 'panTell'].includes(st.ms)) startFlip(st);
-      else if (I.c && st.pow < 1 && st.swingCd <= 0) { DUELS.tell('POWER NOT FULL: HIT HIM + DODGE', 0.8); st.swingCd = 0.3; }
+      else if (I.c && st.pow < 1 && st.swingCd <= 0) { DUELS.tell('NEED POWER: HIT + DODGE', 0.8); st.swingCd = 0.3; }
       else if (I.a && can) { const k = st.comboT > 0 ? st.combo % 3 : 0; st.swingT = 0; st.swingK = k; st.swingCd = k === 2 ? 0.42 : 0.24; st.swingHit = false; st.stats.swings++; sfx('swing'); }
       if (st.swingT >= 0) { st.swingT += dt; if (st.swingT > 0.09 && !st.swingHit) { st.swingHit = true; landSwing(st); } if (st.swingT > (st.swingK === 2 ? 0.4 : 0.22)) st.swingT = -1; }
     }
@@ -312,9 +311,9 @@
     if (st.ms === 'open' || st.ms === 'flipped') {
       const crit = st.ms === 'open' && st.mt < 0.4, dmg = SWING[k] + (crit ? 2 : 0); st.mhp -= dmg; st.stats.landed++; st.combo++; st.comboT = 1.1; st.stats.maxCombo = Math.max(st.stats.maxCombo, st.combo);
       sfx(k === 2 ? 'heavy' : 'hit'); spark(V, k === 2 ? 14 : 6); flashBoss(k === 2 ? '#ffb030' : '#ffffff'); st.stop = k === 2 ? 0.085 : 0.065; st.shake = Math.max(st.shake, k === 2 ? 0.3 : 0.12);
-      pop((k === 2 ? pick(WORDS[2]) + ' ' : '') + dmg, V, k === 2 || crit ? 'big' : ''); addPow(st, k === 2 ? 0.12 : 0.07);
+      pop((k === 2 ? pick(WORDS[2]) + ' ' : '') + dmg, V, k === 2 || crit ? 'big' : ''); addPow(st, k === 2 ? 0.09 : 0.05);
       if (st.mhp <= 0) { st.mhp = 0; phaseDown(st); }
-    } else if (['guard', 'intro'].includes(st.ms)) { st.stats.blocked++; st.combo = 0; sfx('hit'); spark(V, 3); DUELS.tell('BLOCKED! WAIT FOR THE OPENING', 0.7); }
+    } else if (['guard', 'intro'].includes(st.ms)) { st.stats.blocked++; st.combo = 0; sfx('hit'); spark(V, 3); DUELS.tell('BLOCKED! WAIT FOR IT!', 0.7); }
     else { st.combo = 0; }
     subHud(st);
   }
