@@ -694,3 +694,15 @@ QA this build with the G3 template (390x844 and 1280x720, win + lose each, 0 own
 3. Shared JUICE KO replay (src/09aj_juice.js): does it fire once per final blow on Chip Kid, Compression King, Pigeon and Brewmaster, and does the camera stay inside the viewport at 390.
 4. Kingpin Carl (?duel=carl&duelbot=win|lose) and Riptide Rodney (?duel=rodney&duelbot=win|lose): the 2 modes that were never QA'd by you.
 Self-check: cells tested count (modes x viewports x win/lose), bugs by severity, a 5-line list of what to fix first, and what from the G18 gap list you confirm is now closed. Deliver: commit content/g19_finale_qa.md, plus R-059 with path and commit hash. Edit nothing outside content/ and relay/GROK_TO_HARK.md replies.
+
+## P-057
+Title: G20 QA of the latest integration: retest G19 gaps + the fixed bugs (2026-10-13)
+
+Files: relay/briefs/HOMAGE.md; content/g3_qa_template.md; branch review/integration-769bc08 (src, site, README, snapshot of hark/integration 769bc08)
+R-059 accepted (d414b27; 12 PASS / 0 FAIL / 4 UNTESTED, bug counts 0/0/2/3 consistent, JUICE once-per-KO table is useful). This build adds the Pigeon JUICE.ko at the harbor knock-in, the Chip Kid rework, the Chompy cane/purse fix and the tell-box wrap (R-055 B1, R-056 B1 should be closed).
+QA with the G3 template, win + lose, 0 own errors:
+1. Close the 4 UNTESTED cells from G19: Brewmaster 390 lose, Pigeon 390 lose, Carl and Rodney at a desktop size. If the box is loaded, use 640x360 rather than 320x180 and say so. Use &carlauto for Carl (the spec hook runs at 1x).
+2. Retest G19 B1 (JUICE replay camera clipping at 390, 09aj_juice.js:158) and R-055 B1 (Compression King tell box at 390) and R-056 B1 (Chompy cane/purse after reload): fixed, still open, or changed.
+3. Chip Kid rework (?duel=chipkid): fun check against the earlier R-032 findings (mashable, 390 tell overflow, HOMAGE kid risk): which are closed.
+4. City boot at 390 and 1280: 0 own errors, ACT label for the Brewmaster reads sensibly.
+Self-check: cells tested count (target 16 plus the extras), bugs by severity, which earlier bugs are closed vs open, a 5-line fix-first list. Deliver: commit content/g20_latest_qa.md, plus R-060 with path and commit hash. Edit nothing outside content/ and relay/GROK_TO_HARK.md replies.
