@@ -1,0 +1,162 @@
+name: toadcity-tests
+run-name: "toadcity tests ${{ inputs.ref }} ${{ inputs.tag }}"
+
+# Headless Toad City Baltimore regression on GitHub runners (replaces the sandbox chrome.flock queue).
+# Dispatch with ref=toadcity/ci (the harness branch) and inputs.ref = the Hawk branch holding the game repo.
+on:
+  workflow_dispatch:
+    inputs:
+      ref:
+        description: "Hawk branch holding the game repo (site/ at its root), e.g. toadcity/integration"
+        required: true
+        default: toadcity/integration
+      bosses:
+        description: "Comma list of boss params to run (blank = every known boss present in site/game.js)"
+        required: false
+        default: ""
+      modes:
+        description: "Comma list of modes (win,lose)"
+        required: false
+        default: "win,lose"
+      city:
+        description: "Run the city smoke jobs (390x844 + 1280x720)"
+        required: false
+        default: "true"
+      tag:
+        description: "Free-text label shown in the run name (e.g. the builder's name) so you can find your run"
+        required: false
+        default: ""
+      ci_ref:
+        description: "Hawk branch holding ci/toadcity runner scripts"
+        required: false
+        default: toadcity/ci
+
+concurrency:
+  group: toadcity-${{ inputs.ref }}-${{ inputs.tag }}
+  cancel-in-progress: false
+
+jobs:
+  plan:
+    runs-on: ubuntu-latest
+    outputs:
+      matrix: ${{ steps.m.outputs.matrix }}
+      sha: ${{ steps.m.outputs.sha }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.ref }}
+          path: game
+          sparse-checkout: site
+      - id: m
+        env:
+          BOSSES: ${{ inputs.bosses }}
+          MODES: ${{ inputs.modes }}
+          CITY: ${{ inputs.city }}
+        run: |
+          python3 - <<'PY'
+          import json, os, re
+          js = open('game/site/game.js', encoding='utf-8', errors='ignore').read()
+          known = ['crabcake','poolshark','scrubber','honqueen','shellacious','sugarrush','cobblestone','compking','ravenking','brewmaster']
+          want = [b.strip() for b in os.environ.get('BOSSES','').split(',') if b.strip()] or known
+          modes = [m.strip() for m in os.environ.get('MODES','win,lose').split(',') if m.strip()]
+          extra = {'cobblestone': '&cobblestonenight=1'}
+          inc, skipped = [], []
+          for b in want:
+              if (b + 'auto') not in js:
+                  skipped.append(b); continue
+              for m in modes:
+                  inc.append({'name': f'{b}-{m}-390', 'type': 'boss', 'boss': b, 'mode': m, 'w': 390, 'h': 844, 'extra': extra.get(b, '')})
+          if os.environ.get('CITY','true') == 'true':
+              for w, h in ((390, 844), (1280, 720)):
+                  inc.append({'name': f'city-{w}', 'type': 'city', 'boss': '', 'mode': '', 'w': w, 'h': h, 'extra': ''})
+          print('jobs:', [i['name'] for i in inc]); print('not in build (skipped):', skipped)
+          with open(os.environ['GITHUB_STEP_SUMMARY'], 'a') as f:
+              f.write(f"Planned {len(inc)} jobs. Not in this build: {', '.join(skipped) or 'none'}\n")
+          with open(os.environ['GITHUB_OUTPUT'], 'a') as f:
+              f.write('matrix=' + json.dumps({'include': inc}) + '\n')
+          PY
+          echo "sha=$(git -C game rev-parse HEAD)" >> "$GITHUB_OUTPUT"
+
+  test:
+    needs: plan
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    strategy:
+      fail-fast: false
+      matrix: ${{ fromJSON(needs.plan.outputs.matrix) }}
+    name: ${{ matrix.name }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ needs.plan.outputs.sha }}
+          path: game
+          sparse-checkout: site
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.ci_ref }}
+          path: harness
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - name: Cache Playwright browsers
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/ms-playwright
+          key: pw-chromium-1.48.2-${{ runner.os }}
+      - name: Install Playwright chromium
+        working-directory: harness/ci/toadcity
+        run: |
+          npm install --no-audit --no-fund --silent playwright@1.48.2
+          npx playwright install --with-deps chromium
+      - name: Serve site/
+        run: |
+          (cd game/site && nohup python3 -m http.server 8831 --bind 127.0.0.1 > /tmp/http.log 2>&1 &)
+          for i in $(seq 1 30); do curl -sf -o /dev/null http://127.0.0.1:8831/ && break; sleep 1; done
+      - name: Run ${{ matrix.name }}
+        working-directory: harness/ci/toadcity
+        run: |
+          mkdir -p out
+          if [ "${{ matrix.type }}" = "city" ]; then
+            node run_city.js 8831 ${{ matrix.w }} ${{ matrix.h }} out 2>&1 | tee out/${{ matrix.name }}.log
+          else
+            node run_boss.js 8831 ${{ matrix.boss }} ${{ matrix.mode }} ${{ matrix.w }} ${{ matrix.h }} out '${{ matrix.extra }}' 2>&1 | tee out/${{ matrix.name }}.log
+          fi
+          exit ${PIPESTATUS[0]}
+      - name: Upload logs + screenshots
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: results-${{ matrix.name }}
+          path: harness/ci/toadcity/out/
+          retention-days: 14
+
+  summary:
+    needs: [plan, test]
+    if: always()
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: results-*
+          path: all
+      - name: Summarize
+        run: |
+          python3 - <<'PY'
+          import json, glob, os
+          rows = []
+          for f in sorted(glob.glob('all/*/*.json')):
+              try: r = json.load(open(f))
+              except Exception: continue
+              rows.append(r)
+          ok = sum(1 for r in rows if r.get('pass'))
+          lines = [f"## Toad City results for `${{ inputs.ref }}` @ `${{ needs.plan.outputs.sha }}`: {ok}/{len(rows)} passed", '', '| job | result | wall s | own errors | detail |', '|---|---|---|---|---|']
+          for r in rows:
+              lines.append(f"| {r['name']} | {'PASS' if r.get('pass') else 'FAIL'} | {r.get('wall')} | {len(r.get('errors', []))} | {r.get('reason','').replace('|','/')[:160]} |")
+          open(os.environ['GITHUB_STEP_SUMMARY'], 'a').write('\n'.join(lines) + '\n')
+          json.dump([{k: r.get(k) for k in ('name','pass','wall','reason','errors')} for r in rows], open('summary.json', 'w'), indent=1)
+          print('\n'.join(lines))
+          PY
+      - uses: actions/upload-artifact@v4
+        with:
+          name: summary
+          path: summary.json
