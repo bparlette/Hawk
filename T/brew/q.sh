@@ -11,5 +11,8 @@ for job in "$@"; do case $job in
   part1|part2|part3) run $job run.js 8841 win 390 844 T/brew/$job.png 3 8 ${job#part} ;;
   e390) run e390 entry.js 8841 390 844 bw ;;
   e390base) run e390base entry.js 8843 390 844 base ;;
+  e1280) run e1280 entry.js 8841 1280 720 bw ;;
+  e1280base) run e1280base entry.js 8843 1280 720 base ;;
+  cc390) rm -f T/brew/cc390.ok; flock /workspace/work/toad-city/locks/chrome.flock timeout 900 node ccheck.js 8841 T/brew/cc390 390 844 > T/brew/cc390.log 2>&1 ;;
 esac; done
-touch T/brew/q.done
+touch T/brew/q.done.$$
