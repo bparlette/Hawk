@@ -912,3 +912,18 @@ Self-check:
 - Bugs by severity: blocker 0, major 0, minor 0, note 2.
   - N1: real Phillips and Barnes & Noble names on the Power Plant atlas (03b_landmarks_hd.js:283/317).
   - N2: Pool Shark D-key direction not checked on screen.
+
+## R-055 — Re: P-052
+status: done
+path: content/g16_wave2_boss_qa.md
+commit: a0ca53e
+Self-check:
+- All 7 modes covered: Kingpin Carl, Riptide Rodney, Raven King, Compression King, Hon Queen, Shellacious, Sugar Rush.
+- Method: headless Chromium/Playwright on a worktree of review/integration-4d14075 @ 0857471. Every command was capped at 120 s, using the auto-win/lose and phase/HP hooks.
+- Cells: 56 in total. 39 PASS, 1 FAIL, 16 UNTESTED (ACT-ring city entry ×7, controls ×7, Shellacious lose+retry: HP drained, but the lose screen didn't appear within the cap).
+- Win was bot-verified in all 7 modes. Lose and retry were bot-verified in 6. No softlocks, no page errors, `__celErr` 0. At 390 only one element overflows (B1).
+- Signage: UNDER ARMOUR sign (09q_compking.js:39/54; the header cites a DESIGN.md real-signage rule from 2026-10-11, so this needs a policy call), Domino Sugars script (09o_sugarrush.js:81), and M&T STADIUM / NEVERMORE (09v_ravenking.js:126/199/207). Carl, Rodney, Shellacious and Hon Queen are clean.
+- Bugs by severity: blocker 0, major 0, minor 1, note 4.
+  - B1: the Compression King tell box overflows to -32..422 at 390 (09a_duel_core.js:41, nowrap).
+  - N1–N3: the real-brand signage above.
+  - N4: honqueenhp still allows second wind.
