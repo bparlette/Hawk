@@ -1216,8 +1216,8 @@ function lmHD(id, cx, cz, r, build) {
 }
 scene.onBeforeRender = (r, s, cam) => {
   for (const L of LMHD.list) {
-    const d = Math.hypot(cam.position.x - L.cx, cam.position.z - L.cz) - L.r;
-    const n = LMHD.force === 'near' ? true : LMHD.force === 'far' ? false : (L.isNear ? d < LMHD.near + 8 : d < LMHD.near);
+    const d = Math.hypot(cam.position.x - L.cx, cam.position.z - L.cz) - L.r, nd = L.nearD || LMHD.near; // L.nearD: per-landmark swap distance (batch 3)
+    const n = LMHD.force === 'near' ? true : LMHD.force === 'far' ? false : (L.isNear ? d < nd + 8 : d < nd);
     if (n !== L.isNear) { L.isNear = n; L.near.visible = n; L.far.visible = !n; }
   }
 };
@@ -2496,6 +2496,79 @@ lmHD('underarmour', 116, 58, 18, (H, signs, SG) => {
   // US + Maryland flags on staffs at the north hall's north-west roof corner
   for (const [x, fd] of [[107.2, B3.usFlag], [108.6, B3.mdFlag]]) { H.cyl(x, Y0 + h + 0.25, 49.0, 0.04, 0.06, 5.2, 6, '#d8d8d0', { ol: false }); B3.flag(SG, x + 0.05, Y0 + h + 5.3, 49.0, Math.PI / 2, 1.6, 1.0, fd, 2, 0.08); }
 });
+// ---- draw-call budget (batch 3). Batch 3 swaps to HD closer in than batches 1-2 (nearD 70 m; the far LODs were dressed up in 03_city.js).
+// The draw calls are pooled instead of 3-4 per landmark: a per-vertex landmark index (lmv) + a uniform mask drops a landmark's vertices
+// out of the clip volume while it is in the other LOD state.
+//  - FAR: all five far LODs (massing + their decal signs, decals pushed 6 cm off their walls) = ONE city-atlas mesh, no shadow (past ~70 m
+//    it is outside the hero-following shadow camera).
+//  - NEAR, east four (fort, pendry, fells, under armour): ONE toon mesh (casts shadow) + ONE ink hull + ONE sign mesh (their canvas sign
+//    atlases stacked into one texture); the group is hidden when none of the four is near. Federal Hill keeps its own lmHD near group.
+// The per-frame masks ride on scene.onBeforeRender after 03b's LOD swap. Colliders are untouched (nothing here adds or moves one).
+(function b3pool() {
+  const LB = (id) => LMHD.list.find((L) => L.id === id), all = ['fort', 'fedhill', 'pendry', 'fells', 'underarmour'].map(LB).filter(Boolean);
+  const east = ['fort', 'pendry', 'fells', 'underarmour'].map(LB).filter(Boolean);
+  for (const L of all) L.nearD = 70;
+  const mask = (arr, name, show) => `for (int i = 0; i < ${arr.length}; i++) if (i == int(lmv + 0.5) && ${name}[i] ${show ? '<' : '>'} 0.5) gl_Position = vec4(0.0, 0.0, 2.0, 1.0);`;
+  const decl = (arr, name) => `attribute float lmv; uniform float ${name}[${arr.length}];`;
+  // merge non-indexed geometries [geo, li, xform?] over the named attributes, adding lmv
+  const merge = (parts, names) => { let n = 0; for (const [g] of parts) n += g.attributes.position.count;
+    const out = {}; for (const k of names) out[k] = new Float32Array(n * parts[0][0].attributes[k].itemSize); const lmv = new Float32Array(n); let o = 0;
+    for (const [g, li, fx] of parts) { const c = g.attributes.position.count; for (const k of names) { const a = g.attributes[k], arr = (fx && fx[k]) ? fx[k](a) : a.array; out[k].set(arr, o * a.itemSize); } lmv.fill(li, o, o + c); o += c; }
+    const g = new THREE.BufferGeometry(); for (const k of names) g.setAttribute(k, new THREE.BufferAttribute(out[k], parts[0][0].attributes[k].itemSize));
+    g.setAttribute('lmv', new THREE.BufferAttribute(lmv, 1)); g.computeBoundingSphere(); return g; };
+  // ---- FAR: one mesh
+  const farHide = { value: all.map(() => 0) };
+  const farMat = toonMat({ map: atlasTex, alphaTest: 0.5 }, true), fpc = farMat.onBeforeCompile;
+  farMat.onBeforeCompile = (sh) => { fpc(sh); sh.uniforms.uLmHide = farHide;
+    sh.vertexShader = sh.vertexShader.replace('#include <common>', '#include <common>\n' + decl(all, 'uLmHide')).replace('#include <fog_vertex>', '#include <fog_vertex>\n' + mask(all, 'uLmHide', false)); };
+  farMat.customProgramCacheKey = () => 'psxB3far';
+  const push = (a) => { const p = a.array.slice(); return p; };
+  const farParts = []; all.forEach((L, li) => { for (const m of [...L.far.children]) if (m.isMesh) {
+    const dec = m.material === DECAL_MAT, g = m.geometry;
+    farParts.push([g, li, dec ? { position: (a) => { const p = push(a), nn = g.attributes.normal.array; for (let i = 0; i < p.length; i++) p[i] += nn[i] * 0.06; return p; } } : null]); L.far.remove(m); } });
+  let farMesh = null;
+  if (farParts.length) { farMesh = new THREE.Mesh(merge(farParts, ['position', 'normal', 'uv', 'color', 'tr']), farMat); farMesh.castShadow = false; farMesh.receiveShadow = true; scene.add(farMesh); for (const [g] of farParts) g.dispose(); }
+  // ---- NEAR (east four): one mesh + one hull + one sign mesh
+  const nearOn = { value: east.map(() => 0) };
+  const lmMat = toonMat(), lpc = lmMat.onBeforeCompile;
+  lmMat.onBeforeCompile = (sh) => { lpc(sh); sh.uniforms.uLmNear = nearOn;
+    sh.vertexShader = sh.vertexShader.replace('#include <common>', '#include <common>\nattribute vec3 emi; varying vec3 vEmi; ' + decl(east, 'uLmNear'))
+      .replace('#include <fog_vertex>', '#include <fog_vertex>\nvEmi = emi;\n' + mask(east, 'uLmNear', true));
+    sh.fragmentShader = sh.fragmentShader.replace('#include <common>', '#include <common>\nvarying vec3 vEmi; uniform float uNight;')
+      .replace('#include <opaque_fragment>', 'outgoingLight += vEmi * uNight;\n#include <opaque_fragment>'); };
+  lmMat.customProgramCacheKey = () => 'psxLMb3';
+  const meshP = [], hullP = [], signs = [];
+  east.forEach((L, li) => { for (const m of [...L.near.children]) {
+    if (m.material === LM_MAT) meshP.push([m.geometry, li]);
+    else if (m.material === OUT_CITY) { hullP.push([m.geometry, li]); const k = QUAL.outlines.indexOf(m); if (k >= 0) QUAL.outlines.splice(k, 1); }
+    else if (m.material && m.material.map && m.material.map.userData.src) signs.push([m, li]);
+    else continue;
+    L.near.remove(m); } });
+  const grp = new THREE.Group(); grp.visible = false; scene.add(grp);
+  if (meshP.length) { const m = new THREE.Mesh(merge(meshP, ['position', 'normal', 'color', 'emi']), lmMat); m.castShadow = true; m.receiveShadow = true; grp.add(m); for (const [g] of meshP) g.dispose(); }
+  if (hullP.length) { const hm = outlineMat(0.0034); hm.uniforms.uLmNear = nearOn;
+    hm.vertexShader = hm.vertexShader.replace('attribute vec3 odir;', 'attribute vec3 odir; ' + decl(east, 'uLmNear')).replace(/gl_Position = projectionMatrix \* viewMatrix \* wp; \}/, 'gl_Position = projectionMatrix * viewMatrix * wp; ' + mask(east, 'uLmNear', true) + ' }');
+    const h = new THREE.Mesh(merge(hullP, ['position', 'odir']), hm); h.visible = QUAL.hd; QUAL.outlines.push(h); grp.add(h); for (const [g] of hullP) g.dispose(); }
+  if (signs.length) { // stack the sign atlases (full-res canvases, 1024 wide) into one canvas and remap v
+    const srcs = signs.map(([m]) => m.material.map.userData.src), X = [], Y = []; let cx = 0, cy = 0, W = 1024, Ht = 0; // columns of 1024 px, <= 4096 tall
+    for (const s of srcs) { if (cy + s.height > 4096 && cy > 0) { cx += 1024; cy = 0; } X.push(cx); Y.push(cy); cy += s.height; Ht = Math.max(Ht, cy); W = cx + 1024; }
+    const c = document.createElement('canvas'); c.width = W; c.height = Ht; const g2 = c.getContext('2d');
+    srcs.forEach((s, i) => g2.drawImage(s, X[i], Y[i]));
+    const kmax = Math.max(...srcs.map((s) => Math.min(1, 512 / Math.max(s.width, s.height))));
+    const parts = signs.map(([m, li], i) => [m.geometry, li, { uv: (a) => { const u = a.array.slice(), Hc = srcs[i].height, Wc = srcs[i].width;
+      for (let k = 0; k < u.length; k += 2) { u[k] = (X[i] + u[k] * Wc) / W; u[k + 1] = 1 - (Y[i] + (1 - u[k + 1]) * Hc) / Ht; } return u; } }]);
+    const sm = new THREE.MeshBasicMaterial({ map: lowTex(c, Math.round(kmax * Math.max(W, Ht))), transparent: true, alphaTest: 0.3, side: THREE.DoubleSide, depthWrite: true });
+    sm.onBeforeCompile = (sh) => { sh.uniforms.uLmNear = nearOn; sh.vertexShader = sh.vertexShader.replace('#include <common>', '#include <common>\n' + decl(east, 'uLmNear')).replace('#include <fog_vertex>', '#include <fog_vertex>\n' + mask(east, 'uLmNear', true)); };
+    sm.customProgramCacheKey = () => 'b3signs';
+    const s = new THREE.Mesh(merge(parts, ['position', 'uv']), sm); s.renderOrder = 2; grp.add(s);
+    for (const [m] of signs) { m.geometry.dispose(); const t = m.material.map, q = QUAL.texs.indexOf(t); if (q >= 0) QUAL.texs.splice(q, 1); t.dispose(); m.material.dispose(); } }
+  const prev = scene.onBeforeRender;
+  scene.onBeforeRender = function (...a) { prev.apply(this, a);
+    let anyFar = false, anyNear = false;
+    for (let i = 0; i < all.length; i++) { farHide.value[i] = all[i].isNear ? 1 : 0; if (!all[i].isNear) anyFar = true; }
+    for (let i = 0; i < east.length; i++) { nearOn.value[i] = east[i].isNear ? 1 : 0; if (east[i].isNear) anyNear = true; }
+    if (farMesh) farMesh.visible = anyFar; grp.visible = anyNear; };
+})();
 
 // ---------------- characters: procedural stylised rigs (groups of toon parts with outline hulls) ----------------
 const G = { // low-poly on purpose (32-bit era budgets)
