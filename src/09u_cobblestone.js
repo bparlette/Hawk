@@ -194,7 +194,7 @@
     rig.hatHome = { parent: rig.hat.parent, p: rig.hat.position.clone(), r: rig.hat.rotation.clone() };
     rig.hulls = []; rig.root.traverse((o) => { if (o.isMesh && o.material && o.material.isShaderMaterial) rig.hulls.push(o); });
     C.R = rig; rig.root.position.set(0, 0, MZ); rig.root.rotation.y = Math.PI; sc.add(rig.root);
-    const lg = new THREE.Mesh(new THREE.PlaneGeometry(1.4, 1.4), new THREE.MeshBasicMaterial({ map: DUELS.dot('#7dffc8'), transparent: true, opacity: 0.5, depthWrite: false, blending: THREE.AdditiveBlending, fog: false })); rig.lantern.add(lg); C.lanGlow = lg;
+    const lg = new THREE.Mesh(new THREE.PlaneGeometry(0.9, 0.9), new THREE.MeshBasicMaterial({ map: DUELS.dot('#7dffc8'), transparent: true, opacity: 0.4, depthWrite: false, blending: THREE.AdditiveBlending, fog: false })); rig.lantern.add(lg); C.lanGlow = lg;
     // lane floods (the lantern sweep), lane warning strips (the broadside), the rope's shadow arc + glowing rope, cannonballs, puffs (fog / ecto), sparks
     const ADD = (c, o = 0) => new THREE.MeshBasicMaterial({ color: c, transparent: true, opacity: o, depthWrite: false, blending: THREE.AdditiveBlending, fog: false, side: THREE.DoubleSide });
     C.floods = [-1, 0, 1].map((l) => { const m = new THREE.Mesh(new THREE.PlaneGeometry(1.3, 6.2), ADD('#5affb0')); m.rotation.x = -Math.PI / 2; m.position.set(sx(l), 0.03, 1.6); m.visible = false; sc.add(m); return m; });
@@ -439,7 +439,7 @@
     p.shL = [-2.6 - w * 0.3 * cheer, 0, 0.5]; p.elL = [-0.3, 0, 0]; p.shR = [-1.6 - cheer * 0.9 + w * 0.25, 0, -0.4]; p.elR = [-0.5, 0, 0]; p.y = Math.abs(Math.sin(t * 5)) * 0.08 * cheer;
     if (st.healT > 0 || (st.flareT >= 0 && st.flareT < 0.45)) { p.shR = [-2.8, 0, -0.2]; } return p; }
   function setGhost(R, solid, dt) {
-    const target = solid ? 1 : 0.45; for (const m of R.ghost) { const o = damp(m.opacity, target, 10, dt); m.opacity = o; const tr = o < 0.98; if (m.transparent !== tr) { m.transparent = tr; m.needsUpdate = true; } m.depthWrite = !tr || o > 0.7; }
+    const target = solid ? 1 : 0.58; for (const m of R.ghost) { const o = damp(m.opacity, target, 10, dt); m.opacity = o; const tr = o < 0.98; if (m.transparent !== tr) { m.transparent = tr; m.needsUpdate = true; } m.depthWrite = !tr || o > 0.7; }
     for (const h of R.hulls) h.visible = QUAL.hd && solid;
   }
   function poseCap(st, dt) {
@@ -469,17 +469,17 @@
       for (const m of R.flash) if (m && m.userData.flash) m.userData.flash.value = Math.max(0, m.userData.flash.value - dt * 4);
     }
     if (R.lanternLight) R.lanternLight.intensity = damp(R.lanternLight.intensity, lanI * 2 + 2, 10, dt);
-    if (C.lanGlow) { C.lanGlow.material.opacity = lanGlow * 0.8; const s = 1 + lanGlow * 0.8; C.lanGlow.scale.set(s, s, s); C.lanGlow.quaternion.copy(C.cam.quaternion); R.lantern.getWorldQuaternion(V3q).invert(); C.lanGlow.quaternion.premultiply(V3q); }
+    if (C.lanGlow) { C.lanGlow.material.opacity = lanGlow * 0.55; const s = 1 + lanGlow * 0.5; C.lanGlow.scale.set(s, s, s); C.lanGlow.quaternion.copy(C.cam.quaternion); R.lantern.getWorldQuaternion(V3q).invert(); C.lanGlow.quaternion.premultiply(V3q); }
   }
   const V3q = new THREE.Quaternion();
   function tells(st, dt) {
     const P = PH[st.phase], pulse = 0.55 + 0.3 * Math.sin(st.t * 26);
     // LANTERN SWEEP: faint pulsing floods on the lit lanes through the tell, full floods + light cones from the lantern during the sweep
-    const fl = [0, 0, 0]; if (st.ms === 'sweepTell') for (const l of st.lit) fl[l + 1] = (0.12 + 0.22 * clamp(st.mt / st.mdur, 0, 1)) * (0.7 + 0.3 * Math.sin(st.t * 20)); if (st.ms === 'sweep') for (const l of st.lit) fl[l + 1] = 0.55 + 0.1 * Math.sin(st.t * 30);
+    const fl = [0, 0, 0]; if (st.ms === 'sweepTell') for (const l of st.lit) fl[l + 1] = (0.08 + 0.16 * clamp(st.mt / st.mdur, 0, 1)) * (0.7 + 0.3 * Math.sin(st.t * 20)); if (st.ms === 'sweep') for (const l of st.lit) fl[l + 1] = 0.3 + 0.06 * Math.sin(st.t * 30);
     C.floods.forEach((f, i) => { f.material.opacity = damp(f.material.opacity, fl[i], 18, dt); f.visible = f.material.opacity > 0.01; });
     C.R.lantern.getWorldPosition(V);
     C.cones.forEach((c) => { const on = st.ms === 'sweep' && st.lit.includes(c.userData.l); c.visible = on; if (!on) return; V2.set(sx(c.userData.l), 0, 0.6); const d = V2.clone().sub(V), len = d.length();
-      c.scale.set(1.2, len, 1.2); c.position.copy(V).addScaledVector(d, 0.5); c.quaternion.setFromUnitVectors(V3.set(0, -1, 0), d.normalize()); c.material.opacity = 0.16 + 0.05 * Math.sin(st.t * 30); });
+      c.scale.set(1.2, len, 1.2); c.position.copy(V).addScaledVector(d, 0.5); c.quaternion.setFromUnitVectors(V3.set(0, -1, 0), d.normalize()); c.material.opacity = 0.08 + 0.03 * Math.sin(st.t * 30); });
     // ECTO-BROADSIDE: the next volley's lanes flash (from the end of the tell), the guns' touch-holes glow, the guns recoil
     const warn = [0, 0, 0];
     if (st.ms === 'broadTell') { for (const g of C.guns) { g.userData.glow.material.opacity = 0.35 + 0.35 * (Math.sin(st.t * 20) * 0.5 + 0.5); } if (st.mdur - st.mt < P.gap) for (const l of st.vol[0]) warn[l + 1] = pulse; }
