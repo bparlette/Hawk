@@ -809,14 +809,14 @@ signOn(11, -26, 23, -13, 'n', CURB + 6.7, 8.4, LSIGN.aqua);
 LMCAP(null);
 landmark('aquarium', 'NATIONAL AQUARIUM', 19, -17, 19, { name: 'Big Jimmy', x: 19, z: -5, water: true, duel: 'jimmy' }); // underwater swim fight, 09_duels.js (entered at the aquarium door)
 LMCAP('powerplant');
-// Power Plant complex on pier 4 (far LOD): three joined buildings - Phillips (west), the Power Plant hall + tower + four black stacks (centre), the Amp House cafe (east, original homage signage);
+// Power Plant complex on pier 4 (far LOD): three joined buildings - Phillips (west), the Power Plant hall + tower + four black stacks (centre), Hard Rock Cafe (east);
 // footprints / heights match the HD model's PP table in 03b (exterior_2 read at x 0.0188 m/px, y 0.038 m/px)
 mass(44.8, -27, 52.13, -9.5, 11.6, { tr: T.fac[0][0], top: '#4a3a30' });
 mass(52.13, -27, 59.0, -8.8, 15.4, { tr: T.fac[0][1], top: '#2e3036' });
 mass(59.0, -25.5, 67.55, -9.3, 12.3, { tr: T.fac[0][1], top: '#4a3a30' });
 sbox(53.3, CURB + 15.4, -12.6, 58.2, CURB + 17.9, -8.9, '#a9502f', false); sbox(54.5, CURB + 17.9, -12, 57, CURB + 19.6, -9.1, '#a9502f', false);
 for (const [i, z] of [-13.2, -16.6, -20, -23.4].entries()) { const g = new THREE.CylinderGeometry(1.0, 1.08, 9, 10); place(g, 57.6 + i * 0.35, CURB + 22, z); solid(g, '#1f1d1c'); } // the four black stacks, a north-south row
-sbox(55.15, CURB + 20.3, -10.3, 56.35, CURB + 29.4, -10.1, '#1e2a4a', false); sbox(55.55, CURB + 21.0, -10.35, 55.95, CURB + 28.7, -10.05, '#ffd23c', false); // homage: the AMP HOUSE blade sign (was a real trademark guitar)
+sbox(55.2, CURB + 20.3, -10.3, 56.3, CURB + 23.5, -10.1, '#e4566a', false); sbox(55.6, CURB + 23.5, -10.3, 55.9, CURB + 29.4, -10.1, '#e2b23a', false); // the guitar
 sbox(44.6, CURB + 8.9, -27.2, 67.7, CURB + 9.4, -8.6, '#e4d8bc');
 signOn(52.13, -27, 59.0, -8.8, 's', 12.0, 5, LSIGN.power);
 LMCAP(null);
@@ -1310,21 +1310,20 @@ lmHD('wtc', -12, -22.5, 14, (H, signs, SG) => {
 // ======================= POWER PLANT COMPLEX, PIER 4 (refs/power-plant, Brad 2026-10-11 09:03): THREE joined buildings, not one.
 // West: the PHILLIPS SEAFOOD building (flat roof, tall gridded windows, bracket frieze, attic, the red "Phillips" roof sign);
 // centre: the POWER PLANT hall (taller, recessed balconied bay, BARNES & NOBLE / BOOKSELLERS, a stepped tower with the POWER PLANT plaque + 1900 / 2000,
-// a slate pitched roof carrying the FOUR BLACK STACKS in a north-south row, the giant AMP HOUSE blade sign on the tower);
-// east: the cafe building (lower eaves, stepped parapet + pediment, big round-arched windows, red-roofed entrance pavilion). HOMAGE (Brad 2026-10-12):
-// the real trademark name, roundels, guitar and motto are replaced by an original procedural 'AMP HOUSE' cafe sign set (bolt badge, blade sign, TURN IT UP, HON marquee). Widths / heights are read off exterior_2 (x 0.0188 m/px, y 0.038 m/px, the city's 3x map compression)
+// a slate pitched roof carrying the FOUR BLACK STACKS in a north-south row, the giant HARD ROCK guitar on the tower);
+// east: the HARD ROCK CAFE building (lower eaves, stepped parapet + pediment, big round-arched windows, HRC roundels, the Hard Rock Cafe logo,
+// SAVE THE PLANET marquee, red-roofed entrance pavilion). Widths / heights are read off exterior_2 (x 0.0188 m/px, y 0.038 m/px, the city's 3x map compression)
 const PPX = (px) => 44.8 + (px - 50) * 0.0188, PPY = (py) => CURB + (770 - py) * 0.038;
 const PP = { phX0: PPX(50), phX1: PPX(440), pcX1: PPX(805), hrX1: PPX(1260), zN: -27, hrZN: -25.5, phZS: -9.5, pcZS: -8.8, hrZS: -9.3,
   phTop: PPY(470), pcTop: PPY(365), twX0: PPX(500), twX1: PPX(760), twTop: PPY(300), gbX0: PPX(568), gbX1: PPX(700), gbTop: PPY(255),
   hrEave: PPY(480), hrPar: PPY(445), hrStep: PPY(410), hrPeak: PPY(362), stX: 58.1, stZ: [-13.2, -16.6, -20, -23.4], stTop: CURB + 26.5, ridge: PPY(365) + 2.6 };
 const ppFaces = (x0, z0, x1, z1, H) => ({ s: H.frame(x0, z1, x1, z1), e: H.frame(x1, z1, x1, z0), n: H.frame(x1, z0, x0, z0), w: H.frame(x0, z0, x0, z1) });
-const ampBolt = (g, x, y, k, col, ink) => { g.save(); g.translate(x, y); g.scale(k, k); g.beginPath(); g.moveTo(0.18, -1); g.lineTo(-0.42, 0.12); g.lineTo(-0.02, 0.12); g.lineTo(-0.2, 1);
-  g.lineTo(0.44, -0.18); g.lineTo(0.04, -0.18); g.closePath(); g.fillStyle = col; g.fill(); if (ink) { g.lineWidth = 0.08; g.strokeStyle = ink; g.stroke(); } g.restore(); };
-// homage: original AMP HOUSE badge (rounded navy plate, gold rim, yellow bolt, block lettering) - no real trademark text or logo shape
-const hrLogo = (g, w, h, o = {}) => { const m = Math.min(w, h), r = m * 0.16; g.save(); const rr = (x, y, ww, hh, q) => { g.beginPath(); g.moveTo(x + q, y); g.arcTo(x + ww, y, x + ww, y + hh, q); g.arcTo(x + ww, y + hh, x, y + hh, q); g.arcTo(x, y + hh, x, y, q); g.arcTo(x, y, x + ww, y, q); g.closePath(); };
-  rr(w / 2 - m * 0.48, h / 2 - m * 0.48, m * 0.96, m * 0.96, r); g.fillStyle = '#d9a83a'; g.fill(); rr(w / 2 - m * 0.42, h / 2 - m * 0.42, m * 0.84, m * 0.84, r * 0.8); g.fillStyle = '#1e2a4a'; g.fill();
-  ampBolt(g, w / 2, h / 2 - m * 0.1, m * 0.22, '#ffd23c', '#7a4a10');
-  sText(g, 'AMP HOUSE', w / 2, h / 2 + m * 0.22, m * 0.76, m * 0.17, SANS, '#fff2c8', { weight: '900' }); sText(g, 'HARBOR CAFE', w / 2, h / 2 + m * 0.34, m * 0.6, m * 0.08, SANS, '#d9a83a', { weight: '700' }); g.restore(); };
+const hrLogo = (g, w, h, o = {}) => { const R = Math.min(w, h) / 2 - 2; g.save(); g.translate(w / 2, h / 2);
+  g.fillStyle = '#c99a32'; g.beginPath(); g.arc(0, 0, R, 0, TAU); g.fill(); g.fillStyle = '#f2dc9a'; g.beginPath(); g.arc(0, 0, R * 0.88, 0, TAU); g.fill();
+  g.lineWidth = R * 0.05; g.strokeStyle = '#8a5a18'; g.beginPath(); g.arc(0, 0, R * 0.8, 0, TAU); g.stroke();
+  sText(g, 'Hard Rock', 0, -R * 0.12, R * 1.62, R * 0.62, SCRIPT, '#b81e1a', { slant: 0.12, stroke: '#3a0a06', sw: R * 0.06 });
+  g.fillStyle = '#c8241c'; g.beginPath(); g.moveTo(-R * 0.5, R * 0.28); g.lineTo(R * 0.5, R * 0.28); g.lineTo(R * 0.42, R * 0.62); g.lineTo(-R * 0.42, R * 0.62); g.closePath(); g.fill();
+  sText(g, 'CAFE', 0, R * 0.46, R * 0.74, R * 0.3, SANS, '#fff2c8'); g.restore(); };
 lmHD('powerplant', 56, -17, 19, (H, signs, SG) => {
   const BR = '#a9502f', BR2 = '#8e3f25', BR3 = '#b45a38', CR = '#e2d3b2', Y0 = CURB, GLS = '#262c34', GRN = '#2f6a4a', SL = '#2e3036', P = PP;
   const pane = '#33404c', mull = '#e8e4da';
@@ -1400,7 +1399,7 @@ lmHD('powerplant', 56, -17, 19, (H, signs, SG) => {
       sText(g, 'POWER PLANT', w / 2, h * 0.55, w * 0.88, h * 0.62, SERIF, '#e8c060', { stroke: '#6a4a18', sw: h * 0.035 }); });
     for (const [px, t] of [[472, '1900'], [763, '2000']]) SG.add(F, u(px), top + 0.35, 1.05, 0.7, 0.3, (g, w, h) => { g.fillStyle = '#2e2216'; g.fillRect(0, 0, w, h); g.strokeStyle = '#c8a050'; g.lineWidth = h * 0.08; g.strokeRect(2, 2, w - 4, h - 4); sText(g, t, w / 2, h * 0.54, w * 0.8, h * 0.56, SERIF, '#e8c060'); });
     { const T2 = H.frame(P.twX0, tz1, P.twX1, tz1); H.fbox(T2, tu(700), tu(740), PPY(368), PPY(338), 0, 0.02, GLS, { ol: false }); }
-    // the stepped gable on top of the tower + the block the blade sign stands on
+    // the stepped gable on top of the tower + the block the guitar stands on
     { const xa = P.gbX0, xb = P.gbX1, xm = (xa + xb) / 2, ya = P.twTop, yb = PPY(282), za = tz0 + 0.6, zb = tz1 - 0.2;
       H.box(xa, ya, za, xb, yb, zb, BR); const g = new THREE.BufferGeometry(), v = [[xa, yb, zb], [xb, yb, zb], [xm, P.gbTop, zb], [xa, yb, za], [xb, yb, za], [xm, P.gbTop, za]], Pp = [], t = (a, b, c) => Pp.push(...v[a], ...v[b], ...v[c]);
       t(0, 1, 2); t(3, 5, 4); t(0, 2, 5); t(0, 5, 3); t(1, 4, 5); t(1, 5, 2); g.setAttribute('position', new THREE.Float32BufferAttribute(Pp, 3)); g.computeVertexNormals(); H.geo(g, '#5a5650');
@@ -1416,15 +1415,19 @@ lmHD('powerplant', 56, -17, 19, (H, signs, SG) => {
     // north (Pratt St) end: the real carved lettering of the original power company
     { const N = H.frame(x1, z0, x0, z0); SG.add(N, N.L / 2, top - 2.2, N.L * 0.9, 0.42, 0.06, (g, w, h) => sText(g, 'UNITED RAILWAYS & ELECTRIC COMPANY', w / 2, h / 2, w * 0.98, h * 0.8, SERIF, '#7a3a24', { weight: '600', stroke: '#c48a6a', sw: h * 0.03 })); }
   }
-  // homage: the giant AMP HOUSE blade sign on the tower (replaces the real trademark guitar); double-sided cut-out, same footprint
+  // the giant HARD ROCK CAFE guitar on the tower (exterior_2: gold neck + headstock, coral-red body, the round logo across the body); double-sided cut-out
   SG.at((P.gbX0 + P.gbX1) / 2, P.gbTop + 0.55, -10.2, 0, 3.5, PPY(28) - P.gbTop - 0.55, (g, w, h) => {
-    const q = w * 0.18; g.beginPath(); g.moveTo(q, 0); g.lineTo(w - q, 0); g.quadraticCurveTo(w, 0, w, q); g.lineTo(w, h - q); g.quadraticCurveTo(w, h, w - q, h); g.lineTo(q, h); g.quadraticCurveTo(0, h, 0, h - q); g.lineTo(0, q); g.quadraticCurveTo(0, 0, q, 0); g.closePath();
-    g.fillStyle = '#1e2a4a'; g.fill(); g.lineWidth = w * 0.07; g.strokeStyle = '#d9a83a'; g.stroke();
-    g.fillStyle = '#ffd23c'; for (let y = h * 0.06; y < h * 0.95; y += h * 0.035) { g.beginPath(); g.arc(w * 0.12, y, w * 0.028, 0, TAU); g.arc(w * 0.88, y, w * 0.028, 0, TAU); g.fill(); } // marquee bulbs
-    ['A', 'M', 'P'].forEach((c, i) => sText(g, c, w / 2, h * (0.12 + i * 0.13), w * 0.62, h * 0.11, SANS, '#ffd23c', { weight: '900', stroke: '#7a4a10', sw: w * 0.03 }));
-    ampBolt(g, w / 2, h * 0.58, w * 0.3, '#ff7a2a', '#5a2a08');
-    ['H', 'O', 'U', 'S', 'E'].forEach((c, i) => sText(g, c, w / 2, h * (0.72 + i * 0.05), w * 0.4, h * 0.045, SANS, '#fff2c8', { weight: '800' })); });
-  // ---------- EAST: the cafe building (homage AMP HOUSE signage) ----------
+    const k = w / 46, ky = h / 125; g.save(); g.scale(k, ky);
+    g.fillStyle = '#e2b23a'; g.fillRect(19.5, 8, 7, 66); for (let y = 12; y < 72; y += 4.6) { g.fillStyle = '#9a7420'; g.fillRect(19.5, y, 7, 0.7); }
+    g.fillStyle = '#f4ecd0'; g.fillRect(22.6, 8, 0.8, 66);
+    g.fillStyle = '#e8b83a'; g.beginPath(); g.moveTo(17.5, 0); g.lineTo(29.5, 0); g.lineTo(28.5, 10); g.lineTo(18.5, 10); g.closePath(); g.fill(); g.strokeStyle = '#8a5a10'; g.lineWidth = 0.8; g.stroke();
+    sText(g, 'HR', 23.5, 4.6, 9, 6, SERIF, '#c8241c');
+    g.fillStyle = '#d8d0c0'; for (let i = 0; i < 3; i++) { g.fillRect(14.5, 1.2 + i * 3, 3, 1.4); g.fillRect(29.5, 1.2 + i * 3, 3, 1.4); }
+    g.beginPath(); g.moveTo(23, 70); g.bezierCurveTo(8, 63, 3, 80, 7, 90); g.bezierCurveTo(10, 98, 1, 106, 6, 115); g.bezierCurveTo(12, 126, 34, 126, 40, 115);
+    g.bezierCurveTo(45, 106, 36, 98, 39, 90); g.bezierCurveTo(43, 80, 38, 63, 29, 68); g.closePath(); g.fillStyle = '#e4566a'; g.fill(); g.lineWidth = 1.4; g.strokeStyle = '#6a1424'; g.stroke();
+    g.fillStyle = '#f4f0e6'; g.fillRect(14, 112, 18, 2.6); g.restore();
+    g.save(); g.translate(w * 0.12, 80 * ky); hrLogo(g, w * 0.76, w * 0.76); g.restore(); });
+  // ---------- EAST: the HARD ROCK CAFE building ----------
   { const x0 = P.pcX1, x1 = P.hrX1, z0 = P.hrZN, z1 = P.hrZS, f = ppFaces(x0, z0, x1, z1, H), u = (px) => PPX(px) - x0;
     H.box(x0, Y0, z0, x1, P.hrEave, z1, BR); H.box(x0, Y0, z0, x1 + 0.12, Y0 + 0.8, z1 + 0.12, '#6a5a50');
     H.box(PPX(870), P.hrEave, z1 - 3, x1, P.hrPar, z1, BR); H.box(PPX(870), P.hrEave, z0, x1, P.hrPar - 0.6, z1 - 3, BR2); // parapet wall + the roof behind
@@ -1448,13 +1451,13 @@ lmHD('powerplant', 56, -17, 19, (H, signs, SG) => {
       H.fbox(F, u(a), u(b), y0, y1, -0.05, 0.02, pane, { ol: false, emi: LMR() < 0.6 ? '#ffd28a' : null }); H.farch(F, uc, y1, ww / 2, -0.05, 0.02, pane, { ol: false }, 8);
       H.farch(F, uc, y1, ww / 2 + 0.14, 0, 0.06, CR, { ol: false }, 8); for (let k = 1; k < (big ? 4 : 2) + 1; k++) H.fbox(F, u(a) + ww * k / ((big ? 4 : 2) + 1) - 0.03, u(a) + ww * k / ((big ? 4 : 2) + 1) + 0.03, y0, y1 + ww * 0.45, 0, 0.04, mull, { ol: false }); }
     H.pilasters(F, u(820), u(1250), Y0 + 0.8, P.hrEave - 0.3, 1.45, 0.26, 0.12, BR2, { ol: false });
-    // homage roundels (bolt + AH), the AMP HOUSE badge + the TURN IT UP, HON marquee (replace the real trademark roundels/logo/motto)
-    const hrc = (g, w, h) => { const R = w / 2 - 1; g.fillStyle = '#d9a83a'; g.beginPath(); g.arc(w / 2, h / 2, R, 0, TAU); g.fill(); g.fillStyle = '#1e2a4a'; g.beginPath(); g.arc(w / 2, h / 2, R * 0.82, 0, TAU); g.fill();
-      ampBolt(g, w / 2, h * 0.42, R * 0.38, '#ffd23c'); sText(g, 'AH', w / 2, h * 0.75, R * 0.8, R * 0.34, SANS, '#fff2c8', { weight: '900' }); };
+    // HRC roundels, the Hard Rock Cafe logo + the SAVE THE PLANET marquee (exterior_2)
+    const hrc = (g, w, h) => { const R = w / 2 - 1; g.fillStyle = '#c9a050'; g.beginPath(); g.arc(w / 2, h / 2, R, 0, TAU); g.fill(); g.fillStyle = '#efe0b4'; g.beginPath(); g.arc(w / 2, h / 2, R * 0.82, 0, TAU); g.fill();
+      g.strokeStyle = '#a07a30'; g.lineWidth = R * 0.08; g.beginPath(); g.arc(w / 2, h / 2, R * 0.82, 0, TAU); g.stroke(); sText(g, 'HRC', w / 2, h * 0.53, R * 1.3, R * 0.8, SERIF, '#a07a30', { weight: '600' }); };
     SG.add(F, u(878), PPY(505), 1.0, 1.0, 0.12, hrc); SG.add(F, u(1148), PPY(478), 1.0, 1.0, 0.12, hrc);
     SG.add(F, u(1012), PPY(552), 2.3, 2.3, 0.16, (g, w, h) => hrLogo(g, w, h));
     SG.add(F, u(1015), PPY(580), 2.4, 0.6, 0.18, (g, w, h) => { g.fillStyle = '#fbf6ee'; g.beginPath(); g.moveTo(0, h); g.lineTo(0, h * 0.25); g.quadraticCurveTo(w / 2, -h * 0.25, w, h * 0.25); g.lineTo(w, h); g.fill();
-      g.strokeStyle = '#d9a83a'; g.lineWidth = h * 0.06; g.stroke(); sText(g, 'TURN IT UP, HON', w / 2, h * 0.6, w * 0.9, h * 0.5, SANS, '#1e2a4a', { weight: '900' }); });
+      g.strokeStyle = '#c8241c'; g.lineWidth = h * 0.06; g.stroke(); sText(g, 'SAVE THE PLANET', w / 2, h * 0.6, w * 0.9, h * 0.5, SANS, '#d0241c', { weight: '900' }); });
     // red-roofed entrance pavilion + red awnings + green window awnings
     { const xa = PPX(940), xb = PPX(1062), zb = z1 + 1.6, ya = Y0 + 2.6; for (const x of [xa + 0.1, xb - 0.1]) H.box(x - 0.08, Y0, zb - 0.1, x + 0.08, ya, zb + 0.06, '#3a2a22', { ol: false });
       const g = new THREE.CylinderGeometry(0.01, 1.0, 0.9, 4); g.rotateY(Math.PI / 4); g.scale((xb - xa) * 0.72, 1, 1.25); g.translate((xa + xb) / 2, ya + 0.45, z1 + 0.85); H.geo(g, '#b8302a');
