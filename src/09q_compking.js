@@ -18,7 +18,7 @@
 // Lose -> RETRY (from the phase reached, full health) or LEAVE. Exit (DUELS.exit) restores the city, camera, radio duck and the arcade labels.
 // Controls: phone: stick moves, SWING / JUMP (dodge) / ACT (power), any button mashes in the squeeze. Desktop: WASD, J swing, K dodge, E power.
 // Gamepad: left stick, X swing, A dodge (via the duel core mapping), Y power.
-// Test params: ?compking=1 starts it; &compkingauto=win|lose|mash plays it by itself (also ?duel=compking&duelbot=...). ?compkingphase=2 starts at phase 2.
+// Test params: ?compking=1 starts it; &compkingauto=win|lose|mash plays it by itself (also ?duel=compking&duelbot=...). ?compkingphase=2 starts at phase 2, ?compkinghp=N starts Harold at N HP (no crab cake / second wind).
 // Entry in the city: the glowing FIGHT ring at the landmark's boss anchor (LANDMARKS[i].boss x/z, the real DESIGN anchor).
 //
 // RIG HOOK CONTRACT (for a real rig later):
@@ -225,6 +225,7 @@
   function subHud(st) { const p = Math.floor(st.power / 5) * 5; DUELS.sub('POWER<span class="ckp' + (st.power >= 100 ? ' rdy' : '') + '"><i style="width:' + p + '%"></i></span>', (st.combo > 1 ? '<span style="color:#1fd1c1">' + st.combo + ' HIT</span> \u00b7 ' : '') + 'PHASE ' + st.phase + '/2'); }
   C.start = function () {
     C.st = null; const ph = Q.get('compkingphase') === '2' ? 2 : 1; const st = reset(ph); DUELS.log.push('compking:' + C.rigKind); subHud(st);
+    if (Q.get('compkinghp')) { st.hp = clamp(+Q.get('compkinghp') || 100, 1, 100); st.sw = st.cake = true; } // (test: start low, no crab cake / second wind)
     DUELS.banner('THE COMPRESSION KING<small>' + STORE + ' \u00b7 GEAR OUTLET</small>', 2.4);
     const l = lines(); DUELS.say('THE COMPRESSION KING', l && l.intro ? pick(l.intro) : 'Feel the squeeze, old man!', 3.4);
     C.camP = new THREE.Vector3(0, 6, -12); C.camL = new THREE.Vector3(0, 2, 2);
