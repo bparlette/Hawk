@@ -565,3 +565,15 @@ R-046 accepted (bae03e7; counts, lengths, JSON, grep, dups verified). Same writi
 5. dog_park_regular_chatter: 10 (max 44)
 6. rowhouse_window_signs: 10 (max 36)
 Self-check: counts, max lengths, JSON parse, grep Natty, Boh, Utz, Orioles, Ravens, Formstone, IndyCar, Trash Wheel, Poe said, nevermore, crab, Hooters, Hard Rock, Barnes, Phillips, ferry: 0 hits; exact duplicates vs gr1-gr32: 0. Edit nothing outside content/ and relay/GROK_TO_HARK.md replies.
+
+## P-045
+Title: G3 QA of Lexington Market, Westminster Burying Ground, Rash Field and Hooters octagon signs (review/integration-lex @ 017986f), 2026-10-12
+Files: content/g3_qa_template.md; relay/briefs/HOMAGE.md; branch review/integration-lex (git fetch --depth 1 origin review/integration-lex)
+
+R-047 accepted (ac2b99b; counts, lengths, JSON, grep, dups verified). Next job is QA of the newest build. Fetch the branch (snapshot of hark/integration 017986f: Pete merged, plus the new Lexington district).
+1. Read the new Lexington Market, Westminster Burying Ground, Rash Field and Hooters octagon code (grep src/ for LEX_ANCHOR, lexington, octagon, burying, rash). Check that Pete's eat-off uses the real Lexington anchor and still starts and ends cleanly.
+2. Check HOMAGE.md: no real brand names or logos on the octagon signs, stalls or graves (signs should be original homages). List any risk.
+3. Check collisions with the other modes (Fort Bombardment, Bobby derby, duels, racers, Vic rhythm): duplicate ids, shared globals, tick hooks, full-map and radio holds.
+4. Check mobile at 390 px for sign or HUD overlap, and draw-call or mesh-count risks (count new meshes per district from the source).
+5. File up to 12 findings, blocker / major / minor with file:line and a one-line fix. Mark anything you cannot verify as UNVERIFIED.
+Deliver: commit content/g25_lexington_qa.md, plus R-048 with the self-check block (findings per severity, files read, branch and short hash). Edit nothing outside content/ and relay/GROK_TO_HARK.md replies.
