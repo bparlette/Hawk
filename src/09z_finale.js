@@ -10,7 +10,7 @@
 //      action is in reach and no fight is on) = DRONE, also key V and the DRONE chip under the HD button. Free-fly camera over the city: stick / WASD
 //      moves, drag / Q R / L R buttons / right stick turns, JUMP (K / Space) climbs, SWING (J / Shift / C) dives, ACT / V / Esc / ✕ lands (exits).
 //      The city sim is paused while flying (thugs hold still); the camera, radio and controls are restored on landing.
-//   4) CREDITS roll: Harold & Mavis, the 19 bosses by name (from the brewery gate's own list, 09w C.gate.others(), else LANDMARKS bosses), the final
+//   4) CREDITS roll: Harold & Mavis, every boss by name (the brewery gate's own list, 09w C.gate.others(), else LANDMARKS bosses, plus non-landmark bosses such as Dragon Boat Duchess, R-062), the final
 //      boss, and RADIO CREDITS built from 08_radio.js's track data (window.__radio.TRACKS: title, artist, prod, licence). Tap skips.
 //   5) Back in the free-roam city on the Harborplace promenade: banner CITY SAVED, every district's crime -> 0 (BOSS_CLEAR.crime) and a
 //      "CITY SAVED · CRIME 0%" meter chip (saved, shown on every later visit).
@@ -295,6 +295,14 @@
     let bosses = [];
     try { bosses = window.__brewmaster && __brewmaster.gate ? __brewmaster.gate.others() : []; } catch (e) {}
     if (!bosses.length) bosses = LANDMARKS.filter((l) => l.boss && l.id !== 'brewery');
+    // R-062: bosses that are not landmark bosses (no LANDMARKS entry, so the brewery gate never lists them) still get credited.
+    // Dragon Boat Duchess = the boat-ride ambush on the harbor (06h RIDES -> DUELS kind 'duchess', 09bd); credited right after Harborplace.
+    bosses = bosses.slice();
+    const EXTRA = [{ after: 'harborplace', name: 'HARBORPLACE WATERS', boss: { name: 'Dragon Boat Duchess' } }];
+    for (const x of EXTRA) {
+      if (bosses.some((l) => l.boss && String(l.boss.name).toLowerCase() === x.boss.name.toLowerCase())) continue;
+      const i = bosses.findIndex((l) => l.id === x.after); bosses.splice(i < 0 ? bosses.length : i + 1, 0, x);
+    }
     const fin = LANDMARKS.find((l) => l.id === 'brewery');
     let tracks = [];
     try { const T = window.__radio && __radio.TRACKS; if (T) tracks = [...new Set(Object.values(T).flat())].filter(Boolean); } catch (e) {}
