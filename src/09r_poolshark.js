@@ -35,6 +35,7 @@
     { cue: 1.3, balls: 4, bspd: 8.0, cann: 1.4, wave: 6.6, fin: 1.7, rest: [1.1, 1.6], open: 2.1, mix: ['fin', 'cue', 'cann', 'fin', 'cann', 'cue'] },
     { cue: 1.15, balls: 5, bspd: 8.8, cann: 1.25, wave: 7.2, fin: 1.55, rest: [1.0, 1.5], open: 2.0, mix: ['fin', 'cann', 'cue', 'fin', 'cue', 'cann'], goons: true },
   ];
+  const BHP = 125; // shark HP per phase
   const DMG = { ball: 9, land: 16, wave: 8, lunge: 15, goon: 6 };
   const COMBO = [{ d: 7, t: 0.3, w: 'SCRATCH!', pose: 'atk1' }, { d: 7, t: 0.3, w: 'CORNER POCKET!', pose: 'atk2' }, { d: 14, t: 0.46, w: '8-BALL!', pose: 'atk3' }];
   const V = new THREE.Vector3(), V2 = new THREE.Vector3(), M4 = new THREE.Matrix4(), Q4 = new THREE.Quaternion(), ONE = new THREE.Vector3(1, 1, 1);
@@ -220,7 +221,7 @@
 
   // ---------------- state ----------------
   function reset(phase, hp = 100) {
-    const old = P.st; const st = P.st = { t: 0, phase, hp, bhp: 100, power: old ? old.power : 0, ts: 1, tsT: 0, hs: 0, shake: 0,
+    const old = P.st; const st = P.st = { t: 0, phase, hp, bhp: BHP, power: old ? old.power : 0, ts: 1, tsT: 0, hs: 0, shake: 0,
       hx: 0, hz: -4, hy: 0, vy: 0, yaw: 0, atkI: -1, atkT: -1, atkHit: false, chain: 0, chainT: 0, hurtT: 0, inv: 0, bankT: -1, cakeUsed: false, cake: null,
       ms: 'intro', mt: 0, mdur: phase === 0 && !old ? 2.6 : 1.2, mixI: 0, sx: PCX, sz: PCZ, sy: -1.95, syaw: 0, pose: 'sub', finA: 0, tx: 0, tz: 0, ax: 0, az: 0, aims: [], wave: null, hitThis: false,
       gT: 2.5, over: false, won: false, outT: 0, saidT: 0, poolTellT: 0, secondWind: old ? old.secondWind : false,
@@ -294,7 +295,7 @@
         if (st.mt > st.mdur) { sfx('heavy'); st.shake = 0.45; splash(st.tx, 0.2, st.tz, 12); if (Math.hypot(st.hx - st.tx, st.hz - st.tz) < 1.6) hurtHarold(st, DMG.lunge, 'lunge'); else dodged(st, 'WHIFF!'); setM(st, 'beached', PH.open); st.sy = 0; } break; }
       case 'open': st.pose = 'edge'; if (st.mt > st.mdur) { setM(st, 'swim', rnd(...PH.rest)); splash(st.sx, WY, st.sz, 8); st.finA = Math.atan2((st.sz - PCZ) / 2.2, (st.sx - PCX) / 3.4); } break;
       case 'stun': st.pose = st.sy > -0.5 ? 'deck' : 'edge'; if (st.mt > st.mdur) { if (st.pose === 'deck') { setM(st, 'return', 0.8); const e = edgePt(st.sx, st.sz); st.ax = st.sx; st.az = st.sz; st.tx = e.x - e.nx * 1.2; st.tz = e.z - e.nz * 1.2; } else setM(st, 'swim', rnd(...PH.rest)); } break;
-      case 'down': st.pose = 'sub'; swimTo(2.4); if (st.mt > st.mdur) { st.phase++; st.bhp = 100; st.hp = Math.min(100, st.hp + 35); st.cakeUsed = false; st.mixI = 0; setM(st, 'swim', 1.4); subHud(st);
+      case 'down': st.pose = 'sub'; swimTo(2.4); if (st.mt > st.mdur) { st.phase++; st.bhp = BHP; st.hp = Math.min(100, st.hp + 35); st.cakeUsed = false; st.mixI = 0; setM(st, 'swim', 1.4); subHud(st);
           DUELS.banner('PHASE ' + (st.phase + 1) + '<small>' + (st.phase === 1 ? 'WATCH FOR THE FIN!' : 'HARBOR THROWS! TOSS THE CATFISH!') + '</small>', 2.0); if (st.phase === 2) st.gT = 1.2; } break;
       case 'ko': break;
     }
@@ -405,7 +406,7 @@
     }
     sharkThink(st, dt); stepBalls(st, dt); stepGoons(st, dt); stepBank(st, dt); stepFx(dt); popTick(rdt);
     st.shake = Math.max(0, st.shake - rdt * 1.6);
-    DUELS.bars(st.hp / 100, (st.bhp / 100 + (2 - st.phase)) / 3); DUELS.hot(st.power >= 1);
+    DUELS.bars(st.hp / 100, (st.bhp / BHP + (2 - st.phase)) / 3); DUELS.hot(st.power >= 1);
     if (st.ms === 'ko') outro(st, dt);
   };
   function dampAngle(a, b, k, dt) { let d = ((b - a + Math.PI) % TAU + TAU) % TAU - Math.PI; return a + d * (1 - Math.exp(-k * dt)); }
@@ -500,7 +501,7 @@
     // camera: 3/4 view from the south end of the deck, following Harold, pulled up + back in portrait; BANK SHOT punches in; the KO frames the pool
     const port = VH() > VW(); P.cam.fov = port ? 62 : 50; P.cam.updateProjectionMatrix();
     const fx = st.hx * 0.6, fz = lerp(1.5, st.hz, 0.55);
-    V.set(fx, port ? 14.5 : 10.5, fz - (port ? 10.5 : 10)); V2.set(fx, 0, fz + (port ? 2.4 : 1.8));
+    V.set(fx, port ? 10.5 : 8.6, fz - (port ? 11.5 : 10.5)); V2.set(fx, 0, fz + (port ? 4.2 : 3.0));
     if (st.ms === 'intro' && st.phase === 0) { const k = ease(clamp(st.mt / st.mdur, 0, 1)); V.lerpVectors(V.clone().set(0, 7, 16), V, k); V2.lerpVectors(V2.clone().set(0, 0, 2), V2, k); }
     if (st.bankT >= 0) { V.lerp(V2.clone().set(st.hx, 3, st.hz - 4), 0.45); }
     if (st.ms === 'ko') { V.set(st.sx * 0.5, 7.5, st.sz - 9); V2.set(st.sx, 0, st.sz); }
