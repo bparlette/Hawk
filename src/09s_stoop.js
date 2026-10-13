@@ -367,7 +367,7 @@
     const e = ease(u), z = lerp(k.z, FZ, e), x = lerp(k.x, FX, e * e); b.x = x; b.z = z; b.y = u < 0.82 ? stepY(z) + 0.05 : 0.05 + Math.sin(clamp((u - 0.82) / 0.18, 0, 1) * Math.PI) * 1.3;
     if (st.outT < 3 && Math.random() < 0.5) bubbles(b.x, b.y + 0.2, b.z, 2, 1.0, 1.0, 0.5);
     if (u >= 1 && !st.splashed) { st.splashed = true; splashSfx(); sfx('ko'); st.shk = 0.6; bubbles(FX, 0.6, FZ, 40, 3.6, 4.4, 1.2); }
-    if (st.outT > 3.4 && !st.said) { st.said = true; DUELS.say('THE STOOP SCRUBBER', 'Okay hon. ' + pick(GR.defeat), 3.2); }
+    if (st.outT > 3.4 && !st.said) { st.said = true; { const l = pick(GR.defeat); DUELS.say('THE STOOP SCRUBBER', /^okay hon/i.test(l) ? l : 'Okay hon. ' + l, 3.2); } }
     if (st.outT > 5.6 && !st.done) { st.done = true; DUELS.bossCleared('monument', 'scrubber');
       const n = st.stats.hitsTaken, g = n <= 3 ? '★★★ S' : n <= 7 ? '★★ A' : '★ B';
       setTimeout(() => { if (DUELS.cur === S) DUELS.over('win', GR.clear.replace('!', '') + '!<br><span style="font-size:15px;color:#ffd23c">' + g + '</span>',
@@ -461,7 +461,7 @@
     poseBoss(st, dt); poseAttackFx(st);
     // camera: behind + above Harold looking up the steps; portrait sits higher and further back so the whole step face and her shadows fit
     const port = VH() > VW(); S.cam.fov = port ? 62 : 50; S.cam.updateProjectionMatrix();
-    let cx = h.x * 0.4, cy = port ? 9.4 : 6.4, cz = h.z * 0.6 + (port ? 11.5 : 9.6), lx = h.x * 0.3 + st.b.x * 0.15, ly = port ? 1.6 : 1.4, lz = -2.2;
+    let cx = h.x * 0.4, cy = port ? 11.2 : 6.4, cz = h.z * 0.55 + (port ? 10.6 : 9.6), lx = h.x * 0.3 + st.b.x * 0.15, ly = port ? 0.4 : 1.4, lz = port ? 0.2 : -2.2;
     if (st.surf) { cx = h.x + 3; cy = 3.2; cz = h.z + 5; lx = h.x; ly = 1.2; lz = h.z - 2; }
     if (st.over && st.won) { cx = 3.5; cy = port ? 6.5 : 4.5; cz = 15; lx = st.b.x * 0.6; ly = 0.8; lz = st.b.z - 1.5; }
     V.set(cx, cy, cz); V2.set(lx, ly, lz);
