@@ -62,13 +62,13 @@
   function movieTex() { return canvasTex(1024, 448, (g, w, h) => {
     const gr = g.createLinearGradient(0, 0, 0, h); gr.addColorStop(0, '#0a2a5a'); gr.addColorStop(0.62, '#3a7ab8'); gr.addColorStop(0.63, '#1a4a3a'); gr.addColorStop(1, '#0a2a1a'); g.fillStyle = gr; g.fillRect(0, 0, w, h);
     for (let i = 0; i < 22; i++) { const bw = rnd(30, 60), bh = rnd(50, 150), x = i * 48; g.fillStyle = '#0c1a2a'; g.fillRect(x, h * 0.63 - bh, bw, bh); g.fillStyle = '#ffd86a'; for (let k = 0; k < 6; k++) g.fillRect(x + 6 + (k % 2) * 16, h * 0.63 - bh + 10 + Math.floor(k / 2) * 22, 6, 8); }
-    const blob = (dx, col) => { g.save(); g.translate(560 + dx, 170); g.fillStyle = col; g.beginPath(); g.ellipse(0, 0, 120, 92, 0, 0, TAU); g.fill(); g.beginPath(); g.moveTo(-100, 30); g.quadraticCurveTo(-260, 120, -330, 30); g.quadraticCurveTo(-250, 70, -110, -10); g.fill(); g.restore(); };
+    const blob = (dx, col) => { g.save(); g.translate(560 + dx, 250); g.fillStyle = col; g.beginPath(); g.ellipse(0, 0, 120, 92, 0, 0, TAU); g.fill(); g.beginPath(); g.moveTo(-100, 30); g.quadraticCurveTo(-260, 120, -330, 30); g.quadraticCurveTo(-250, 70, -110, -10); g.fill(); g.restore(); };
     g.globalAlpha = 0.65; blob(-10, '#ff2a4a'); blob(10, '#2affff'); g.globalAlpha = 1; blob(0, '#2a3a2a');
-    g.fillStyle = '#fff'; g.beginPath(); g.arc(600, 140, 26, 0, TAU); g.arc(520, 140, 26, 0, TAU); g.fill(); g.fillStyle = '#14101f'; g.beginPath(); g.arc(606, 146, 11, 0, TAU); g.arc(526, 146, 11, 0, TAU); g.fill();
-    g.fillStyle = '#14101f'; g.fillRect(520, 200, 90, 12);
-    g.textAlign = 'center'; g.textBaseline = 'middle'; g.font = '900 54px ' + FONT;
-    g.fillStyle = '#ff2a4a'; g.fillText('ATTACK OF THE 50-FOOT TADPOLE', w / 2 - 4, h - 70); g.fillStyle = '#2affff'; g.fillText('ATTACK OF THE 50-FOOT TADPOLE', w / 2 + 4, h - 70);
-    g.fillStyle = '#fff2a0'; g.fillText('ATTACK OF THE 50-FOOT TADPOLE', w / 2, h - 70); g.font = '700 26px ' + FONT; g.fillStyle = '#fff'; g.fillText('IN SHELL-O-VISION 3D!', w / 2, h - 28); }, 512); }
+    g.fillStyle = '#fff'; g.beginPath(); g.arc(600, 220, 26, 0, TAU); g.arc(520, 220, 26, 0, TAU); g.fill(); g.fillStyle = '#14101f'; g.beginPath(); g.arc(606, 226, 11, 0, TAU); g.arc(526, 226, 11, 0, TAU); g.fill();
+    g.fillStyle = '#14101f'; g.fillRect(520, 280, 90, 12);
+    g.textAlign = 'center'; g.textBaseline = 'middle'; g.font = '900 54px ' + FONT; // the title card sits at the top so the doctor never stands in front of it
+    g.fillStyle = '#ff2a4a'; g.fillText('ATTACK OF THE 50-FOOT TADPOLE', w / 2 - 4, 58); g.fillStyle = '#2affff'; g.fillText('ATTACK OF THE 50-FOOT TADPOLE', w / 2 + 4, 58);
+    g.fillStyle = '#fff2a0'; g.fillText('ATTACK OF THE 50-FOOT TADPOLE', w / 2, 58); g.font = '700 26px ' + FONT; g.fillStyle = '#fff'; g.fillText('IN SHELL-O-VISION 3D!', w / 2, 102); }, 512); }
   function pauseTex() { return canvasTex(512, 224, (g, w, h) => { g.fillStyle = 'rgba(10,30,60,0.55)'; g.fillRect(0, 0, w, h); g.fillStyle = '#bff4ff'; g.fillRect(w / 2 - 70, 30, 44, 130); g.fillRect(w / 2 + 26, 30, 44, 130);
     g.textAlign = 'center'; g.font = '900 34px ' + FONT; g.fillText('FREEZE-FRAME', w / 2, 200); }, 256); }
   function filmTex() { return canvasTex(512, 96, (g, w, h) => { g.fillStyle = '#0a1420'; g.fillRect(0, 0, w, h); g.fillStyle = '#bff4ff';
@@ -103,7 +103,7 @@
       const m = new THREE.Mesh(g, C.screenM); m.position.set(Rr * Math.sin(th), 5.5, SZ - Rr + Rr * Math.cos(th)); m.rotation.y = Math.PI + th; C.screen.add(m); }
     C.pause = new THREE.Mesh(new THREE.PlaneGeometry(9, 3.94), new THREE.MeshBasicMaterial({ map: pauseTex(), transparent: true, fog: false, depthWrite: false })); C.pause.position.set(0, 5.6, SZ - 0.4); C.pause.rotation.y = Math.PI; C.pause.visible = false; sc.add(C.pause);
     const crT = creditsTex(); crT.repeat.set(1, 0.42); crT.offset.y = 1; C.credT = crT;
-    C.credits = new THREE.Mesh(new THREE.PlaneGeometry(19.0, 8.4), new THREE.MeshBasicMaterial({ map: crT, fog: false })); C.credits.position.set(0, 5.5, SZ - 0.5); C.credits.rotation.y = Math.PI; C.credits.visible = false; sc.add(C.credits);
+    C.credits = new THREE.Mesh(new THREE.PlaneGeometry(10.5, 8.2), new THREE.MeshBasicMaterial({ map: crT, fog: false })); C.credits.position.set(0, 5.5, SZ - 2.6); // in front of the curve's centre panels C.credits.rotation.y = Math.PI; C.credits.visible = false; sc.add(C.credits);
     const R = K();
     R.add(G.box(20.6, 0.4, 0.3), '#14101f', 0, 1.15, SZ - 0.9).add(G.box(20.6, 0.4, 0.3), '#14101f', 0, 9.85, SZ - 0.9); // screen frame (top + bottom)
     // the low stage lip in front of the screen, the front rows of seats on both sides, a speaker stack each side, wall sconces
@@ -188,7 +188,7 @@
     C.ball = rig.ball || shellBall(); C.ball.visible = false; sc.add(C.ball);
     // lane warning strips (Harold's row), the ricochet path dots, beaker shadows + flying beakers, the freeze strips, puffs, sparks, the popcorn tub
     C.lanes = [-1, 0, 1].map((l) => { const m = new THREE.Mesh(new THREE.PlaneGeometry(1.2, 2.6), new THREE.MeshBasicMaterial({ color: '#ff2a2a', transparent: true, opacity: 0, depthWrite: false, blending: THREE.AdditiveBlending, fog: false })); m.rotation.x = -Math.PI / 2; m.position.set(sx(l), 0.03, 0); m.visible = false; sc.add(m); return m; });
-    C.dots = new THREE.InstancedMesh(new THREE.PlaneGeometry(0.34, 0.34), new THREE.MeshBasicMaterial({ map: DUELS.dot('#7dff9a', false), transparent: true, depthWrite: false, blending: THREE.AdditiveBlending, fog: false }), 64);
+    C.dots = new THREE.InstancedMesh(new THREE.PlaneGeometry(0.24, 0.24), new THREE.MeshBasicMaterial({ map: DUELS.dot('#d8ff4a', false), transparent: true, depthWrite: false, blending: THREE.AdditiveBlending, fog: false }), 96);
     C.dots.count = 0; C.dots.frustumCulled = false; C.dots.visible = false; sc.add(C.dots);
     const shT = canvasTex(128, 128, (g) => { const r = g.createRadialGradient(64, 64, 4, 64, 64, 60); r.addColorStop(0, 'rgba(0,0,0,.95)'); r.addColorStop(0.7, 'rgba(10,0,20,.75)'); r.addColorStop(1, 'rgba(0,0,0,0)'); g.fillStyle = r; g.fillRect(0, 0, 128, 128);
       g.strokeStyle = '#ff3d3d'; g.lineWidth = 6; g.beginPath(); g.arc(64, 64, 56, 0, TAU); g.stroke(); }, 128);
@@ -212,7 +212,7 @@
     #duel .shpow.full i { background: linear-gradient(#fff, #7dff9a); animation: dlow .3s infinite alternate; }
     #duel .sh3d { position: absolute; inset: 0; opacity: 0; background: linear-gradient(90deg, rgba(255,30,60,.42), rgba(255,30,60,0) 38%, rgba(30,255,255,0) 62%, rgba(30,255,255,.42)); }
     #duel .shfrost { position: absolute; inset: 0; opacity: 0; box-shadow: inset 0 0 80px 28px rgba(160,235,255,.9); background: rgba(160,235,255,.12); }
-    body.duel-shellacious #duel .dtell { white-space: normal; max-width: 88vw; text-align: center; }
+    body.duel-shellacious #duel .dtell { white-space: normal; max-width: 88vw; text-align: center; top: 25%; }
     @media (max-width: 480px) { #duel .shpow { width: 70px; } body.duel-shellacious #duel .dtell { font-size: 11px; } }`;
     document.head.appendChild(css);
     C.bang = document.createElement('div'); C.bang.className = 'shbang'; C.bang.textContent = '!'; DUELS.hudEl.appendChild(C.bang);
@@ -386,7 +386,7 @@
     const u = ease(clamp(t / 0.6, 0, 1)); R.body.rotation.x = -u * Math.PI / 2; R.body.position.y = u * 0.78 + Math.sin(t * 9) * 0.03; R.body.position.z = u * 1.3; R.root.rotation.y = Math.PI + t * lerp(9, 3, clamp(t / 6, 0, 1));
     R.arms.forEach((a, i) => { a.sh.rotation.x = -2.6 + Math.sin(t * 14 + i * 3) * 0.6; }); // flailing
     if (Math.random() < dt * 10) { V3.set(rnd(-0.6, 0.6), 1.4, MZ + rnd(-0.4, 0.4)); spark(V3, 1); }
-    if (t > 0.8) { C.credits.visible = true; C.credT.offset.y = lerp(1, -0.45, clamp((t - 0.8) / 5.5, 0, 1)); }
+    if (t > 0.8) { C.credits.visible = true; C.screenM.color.setRGB(0.08, 0.08, 0.1); C.credT.offset.y = lerp(1, -0.45, clamp((t - 0.8) / 5.5, 0, 1)); }
     if (t > 1.6 && !st.saidBye) { st.saidBye = true; const l = lines(); DUELS.say('DR. SHELLACIOUS', l && l.defeat ? pick(l.defeat) : 'My hypothesis... was wrong...', 3.0); }
     if (t > 3.4 && !st.winDone) { st.winDone = true; DUELS.bossCleared('science', 'shellacious-duel');
       const h = st.stats.hitsTaken, g = h <= 3 ? 'S' : h <= 8 ? 'A' : 'B', stars = g === 'S' ? 3 : g === 'A' ? 2 : 1; DUELS.log.push('shellacious:grade:' + g);
@@ -454,7 +454,7 @@
     const P = PH[st.phase], pulse = 0.62 + 0.3 * Math.sin(st.t * 28), warn = [0, 0, 0];
     // ricochet: the dots along the path during the tell (eaten by the shell during the run); the next crossing lane flashes red
     const sOn = (st.ms === 'shellTell' || st.ms === 'shell') && st.path;
-    if (sOn) { const p = st.path, n = 56; let c = 0; for (let i = 0; i < n; i++) { const s = (i + 0.5) / n * p.len; if (st.ms === 'shell' && s < p.s) continue; pathAt(p, s, V3); V3.y = 0.06; const k = st.ms === 'shellTell' ? clamp(st.mt / 0.5 - i / n, 0, 1) : 1; M4.compose(V3, QF, V2.set(k, k, k)); C.dots.setMatrixAt(c++, M4); }
+    if (sOn) { const p = st.path, n = 90; let c = 0; for (let i = 0; i < n; i++) { const s = (i + 0.5) / n * p.len; if (st.ms === 'shell' && s < p.s) continue; pathAt(p, s, V3); V3.y = 0.06; const k = st.ms === 'shellTell' ? clamp(st.mt / 0.5 - i / n, 0, 1) : 1; M4.compose(V3, QF, V2.set(k, k, k)); C.dots.setMatrixAt(c++, M4); }
       C.dots.count = c; C.dots.instanceMatrix.needsUpdate = true; C.dots.material.opacity = 0.6 + 0.35 * Math.sin(st.t * 18); if (st.crossI < st.cross.length) warn[st.cross[st.crossI] + 1] = pulse; }
     C.dots.visible = !!sOn && C.dots.count > 0;
     // beakers: shadows grow on the two unsafe lanes; the beakers arc from his hand to the shadows
@@ -465,7 +465,7 @@
     for (const l of [-1, 0, 1]) { if (l === st.safe) continue; const b = C.beakers[bi++]; b.visible = bOn; if (bOn) { const k = clamp(st.mt / 0.5, 0, 1); C.R.beaker.getWorldPosition(V3); b.position.set(lerp(V3.x, sx(l), k), lerp(V3.y, 0.3, k) + Math.sin(k * Math.PI) * 3.2, lerp(V3.z, 0, k)); b.rotation.set(k * 9, 0, k * 5); } }
     // the fake-3D red / cyan look during the lob (the screen tints, the overlay comes up)
     const a3 = st.ms === 'lobTell' ? clamp(st.mt / 0.4, 0, 1) : st.ms === 'lob' ? clamp(1 - st.mt / st.mdur, 0, 1) : 0; C.ana.style.opacity = a3.toFixed(2);
-    C.screenM.color.setRGB(1, 1 - a3 * 0.5, 1 - a3 * 0.2);
+    if (st.ms !== 'ko') C.screenM.color.setRGB(1, 1 - a3 * 0.5, 1 - a3 * 0.2);
     // freeze-frame: the screen pauses, the strip(s) charge in front of him and then run down the aisle
     const fT = st.ms === 'frzTell', fR = st.ms === 'frz'; C.pause.visible = fT || fR;
     C.strips.forEach((s, k) => { const on = (fT && k === 0) || (fR && k < P.fn && st.fz[k] > -3); s.visible = on; if (!on) return;
@@ -495,10 +495,10 @@
     if (st.shake > 0) st.shake = Math.max(0, st.shake - dt * 1.6);
     // camera: low behind Harold, the doctor + the big screen filling the frame; portrait pulls back and up
     const port = VH() > VW(); C.cam.fov = port ? 68 : 54; C.cam.updateProjectionMatrix();
-    V.set(0.5 + H.root.position.x * 0.35, port ? 3.0 : 2.7, port ? -4.6 : -3.7); V2.set(H.root.position.x * 0.2, port ? 2.4 : 2.5, MZ + 1);
+    V.set(H.root.position.x * 0.55, port ? 4.3 : 3.5, port ? -5.0 : -4.2); V2.set(H.root.position.x * 0.3, port ? 1.7 : 2.0, MZ + 0.5); // high enough to see the doctor over Harold + the floor tells
     if (st.ms === 'intro' && st.phase === 0 && st.t < 3) { const k = ease(clamp(st.mt / st.mdur, 0, 1)); V.lerpVectors(V3.set(3.5, 4.0, 1.5), V, k); V2.lerpVectors(V3.set(0, 3.5, SZ), V2, k); }
     if (st.twT >= 0) { V.set(-3.4, 2.4, 1.6); V2.set(0, 1.6, MZ - 0.2); }
-    if (st.ms === 'ko') { V.set(1.5, 3.0, -0.5); V2.set(0, 3.6, MZ + 2); }
+    if (st.ms === 'ko') { V.set(1.2, 3.4, port ? -3.4 : -2.0); V2.set(0, 3.4, MZ + 2); }
     if (st.shake > 0) { V.x += rnd(-1, 1) * st.shake * 0.35; V.y += rnd(-1, 1) * st.shake * 0.35; }
     C.camP.lerp(V, 1 - Math.exp(-7 * dt)); C.camL.lerp(V2, 1 - Math.exp(-7 * dt)); C.cam.position.copy(C.camP); C.cam.lookAt(C.camL);
     OUT_U.fogC.value.copy(C.scene.fog.color); OUT_U.fogN.value = 22; OUT_U.fogF.value = 48;
