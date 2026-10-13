@@ -1,0 +1,149 @@
+# Toad City Baltimore: macOS desktop build for ES-DE.
+# Copies the latest built site/ from toadcity/integration into desktop/site, packages an unsigned universal
+# (arm64 + x86_64) "Toad City Baltimore.app" with Electron, ad-hoc signs it, zips it, tests install_mac.sh /
+# uninstall_mac.sh against a throwaway HOME, and publishes the zips as an artifact and a pre-release desktop-v<run>.
+name: toadcity-desktop
+run-name: "toadcity-desktop ${{ github.ref_name }} (site ${{ inputs.site_ref || 'toadcity/integration' }})"
+on:
+  push:
+    branches: [toadcity/desktop]
+    paths: ['desktop/**', 'es-de/**', 'install_mac.sh', 'uninstall_mac.sh', '.github/workflows/toadcity-desktop.yml']
+  workflow_dispatch:
+    inputs:
+      site_ref: { description: 'Hawk branch to take site/ from', default: 'toadcity/integration' }
+      release: { description: 'Publish a pre-release', default: 'true' }
+permissions:
+  contents: write
+concurrency: { group: toadcity-desktop, cancel-in-progress: false }
+jobs:
+  mac:
+    runs-on: macos-latest
+    timeout-minutes: 40
+    env:
+      SITE_REF: ${{ inputs.site_ref || 'toadcity/integration' }}
+      APP: Toad City Baltimore
+      APP_ZIP: ToadCityBaltimore-mac-universal.zip
+      ESDE_ZIP: ToadCityBaltimore-esde.zip
+      TAG: desktop-v${{ github.run_number }}
+    steps:
+      - uses: actions/checkout@v4
+      - name: Copy the latest site/ in
+        run: |
+          git fetch --depth 1 origin "refs/heads/$SITE_REF"
+          SITE_SHA=$(git rev-parse FETCH_HEAD)
+          rm -rf desktop/site && mkdir -p "$RUNNER_TEMP/int"
+          git archive FETCH_HEAD site | tar -x -C "$RUNNER_TEMP/int"
+          mv "$RUNNER_TEMP/int/site" desktop/site
+          rm -f desktop/site/CNAME
+          test -s desktop/site/index.html && test -s desktop/site/game.js
+          echo "SITE_SHA=$SITE_SHA" >> "$GITHUB_ENV"
+          echo "site/ from $SITE_REF @ $SITE_SHA: $(du -sh desktop/site | cut -f1), game.js md5 $(md5 -q desktop/site/game.js)"
+      - uses: actions/setup-node@v4
+        with: { node-version: 22 }
+      - name: npm install
+        working-directory: desktop
+        run: npm install --no-audit --no-fund
+      - name: App icon (.icns)
+        working-directory: desktop/icons
+        run: |
+          mkdir -p icon.iconset
+          for s in 16 32 128 256 512; do
+            sips -z $s $s icon.png --out icon.iconset/icon_${s}x${s}.png >/dev/null
+            sips -z $((s*2)) $((s*2)) icon.png --out icon.iconset/icon_${s}x${s}@2x.png >/dev/null
+          done
+          iconutil -c icns icon.iconset -o icon.icns && ls -la icon.icns
+      - name: Package universal app
+        working-directory: desktop
+        env: { TOADCITY_VERSION: "1.0.${{ github.run_number }}" }
+        run: node package.mjs darwin universal dist
+      - name: Ad-hoc sign + verify bundle
+        run: |
+          A="desktop/dist/$APP-darwin-universal/$APP.app"
+          codesign --force --deep --sign - "$A"
+          codesign --verify --deep --verbose=2 "$A"
+          B="$A/Contents/MacOS/$APP"
+          lipo -info "$B" | tee lipo.txt
+          grep -q x86_64 lipo.txt && grep -q arm64 lipo.txt
+          test -s "$A/Contents/Resources/app/site/index.html" && test -s "$A/Contents/Resources/app/site/game.js"
+          test -s "$A/Contents/Resources/app/main.js" && test -s "$A/Contents/Resources/app/preload.js"
+          cmp desktop/site/game.js "$A/Contents/Resources/app/site/game.js"
+          plutil -p "$A/Contents/Info.plist" | grep -E 'CFBundle(Name|DisplayName|Identifier|ShortVersionString|Executable)'
+          ls "$A/Contents/Resources/app" "$A/Contents/Resources/app/site"
+      - name: Smoke run (windowed, 25 s)
+        continue-on-error: true
+        run: |
+          B="desktop/dist/$APP-darwin-universal/$APP.app/Contents/MacOS/$APP"
+          TOADCITY_TEST=1 TOADCITY_WINDOWED=1 TOADCITY_DATA="$RUNNER_TEMP/tcdata" "$B" > smoke.log 2>&1 &
+          P=$!; sleep 25; screencapture -x smoke.png || true; kill $P || true; sleep 2; kill -9 $P 2>/dev/null || true
+          grep -E '\[toadcity\]' smoke.log | head -40 || true
+          grep -q 'serving' smoke.log
+      - name: Zip
+        run: |
+          mkdir -p out
+          ditto -c -k --sequesterRsrc --keepParent "desktop/dist/$APP-darwin-universal/$APP.app" "out/$APP_ZIP"
+          mkdir -p "$RUNNER_TEMP/kit/toadcity-esde" && cp -R es-de/custom_systems es-de/roms es-de/gamelists es-de/downloaded_media install_mac.sh uninstall_mac.sh "$RUNNER_TEMP/kit/toadcity-esde/"
+          (cd "$RUNNER_TEMP/kit" && ditto -c -k --sequesterRsrc toadcity-esde "$GITHUB_WORKSPACE/out/$ESDE_ZIP")
+          ls -la out; shasum -a 256 out/*.zip | tee out/SHA256SUMS.txt
+      - name: Test install_mac.sh / uninstall_mac.sh (throwaway HOME)
+        run: |
+          H="$RUNNER_TEMP/fakehome"; rm -rf "$H"; mkdir -p "$H/ES-DE/custom_systems"
+          printf '<?xml version="1.0"?>\n<systemList>\n    <system>\n        <name>mysys</name>\n        <fullname>Mine</fullname>\n        <path>%%ROMPATH%%/mysys</path>\n        <extension>.sh</extension>\n        <command>%%EMULATOR_OS-SHELL%% %%ROM%%</command>\n        <platform>pc</platform>\n        <theme>ports</theme>\n    </system>\n</systemList>\n' > "$H/ES-DE/custom_systems/es_systems.xml"
+          printf '<?xml version="1.0"?>\n<ruleList>\n    <emulator name="MINE">\n        <rule type="staticpath">\n            <entry>/Applications/Mine.app/Contents/MacOS/Mine</entry>\n        </rule>\n    </emulator>\n</ruleList>\n' > "$H/ES-DE/custom_systems/es_find_rules.xml"
+          export HOME="$H" APP_ZIP="$PWD/out/$APP_ZIP" ESDE_ZIP="$PWD/out/$ESDE_ZIP"
+          bash install_mac.sh | tee inst1.log
+          bash install_mac.sh | tee inst2.log
+          CS="$H/ES-DE/custom_systems"
+          cat "$CS/es_systems.xml" "$CS/es_find_rules.xml"
+          grep -q '<name>mysys</name>' "$CS/es_systems.xml" && grep -q '<name>toadcity</name>' "$CS/es_systems.xml"
+          [ "$(grep -c '<name>toadcity</name>' "$CS/es_systems.xml")" = 1 ]
+          grep -q 'name="MINE"' "$CS/es_find_rules.xml" && [ "$(grep -c 'name="TOADCITY"' "$CS/es_find_rules.xml")" = 1 ]
+          xmllint --noout "$CS/es_systems.xml" "$CS/es_find_rules.xml" "$H/ES-DE/gamelists/toadcity/gamelist.xml"
+          [ "$(ls "$CS" | grep -c backup)" = 2 ] || { ls "$CS"; echo "second run should not make new backups"; exit 1; }
+          grep -q 'already up to date' inst2.log
+          test -x "$H/ROMs/toadcity/$APP.toadcity"
+          test -s "$H/ES-DE/downloaded_media/toadcity/videos/$APP.mp4" && test -s "$H/ES-DE/downloaded_media/toadcity/marquees/$APP.png"
+          B="$H/Applications/$APP.app/Contents/MacOS/$APP"; test -x "$B"; lipo -info "$B"
+          [ -z "$(xattr -l "$H/Applications/$APP.app" | grep quarantine)" ]
+          codesign --verify --deep "$H/Applications/$APP.app"
+          bash uninstall_mac.sh | tee uninst.log
+          [ ! -d "$H/Applications/$APP.app" ] && grep -q '<name>mysys</name>' "$CS/es_systems.xml" && ! grep -q toadcity "$CS/es_systems.xml"
+          grep -q 'name="MINE"' "$CS/es_find_rules.xml" && ! grep -q TOADCITY "$CS/es_find_rules.xml"
+          [ ! -d "$H/ES-DE/downloaded_media/toadcity" ] && [ ! -e "$H/ROMs/toadcity" ]
+          echo "INSTALLER_TEST_OK"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: toadcity-desktop-${{ github.run_number }}
+          path: |
+            out/*.zip
+            out/SHA256SUMS.txt
+          retention-days: 30
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: logs-${{ github.run_number }}
+          path: |
+            smoke.log
+            smoke.png
+            lipo.txt
+            inst1.log
+            inst2.log
+            uninst.log
+          if-no-files-found: ignore
+      - name: Pre-release ${{ env.TAG }}
+        if: ${{ inputs.release != 'false' }}
+        env: { GH_TOKEN: "${{ github.token }}" }
+        run: |
+          cat > notes.md <<NOTES
+          Toad City Baltimore for macOS (unsigned universal arm64 + x86_64 Electron app) + ES-DE kit.
+          Game: site/ from \`$SITE_REF\` @ \`$SITE_SHA\`. Wrapper: \`${GITHUB_SHA}\` on toadcity/desktop.
+
+          Install (also sets up ES-DE):
+          \`\`\`
+          curl -fsSL https://raw.githubusercontent.com/${GITHUB_REPOSITORY}/toadcity/desktop/install_mac.sh | bash
+          \`\`\`
+          The app is not Apple-signed. install_mac.sh removes the quarantine; by hand: \`xattr -dr com.apple.quarantine ~/Applications/"Toad City Baltimore.app"\`.
+          Quit back to ES-DE: hold Select+Start or Esc for 1 s (or Cmd+Q).
+          NOTES
+          gh release create "$TAG" out/*.zip out/SHA256SUMS.txt --prerelease --target "$GITHUB_SHA" \
+            --title "Toad City Baltimore desktop $TAG" --notes-file notes.md
+          echo "Release: https://github.com/${GITHUB_REPOSITORY}/releases/tag/$TAG" >> "$GITHUB_STEP_SUMMARY"
