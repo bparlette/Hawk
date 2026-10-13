@@ -25,11 +25,13 @@
 // Controls (the duel conventions): phone: stick left / right (or the white buttons) dodge, stick down or JUMP = DUCK, SWING = cane, ACT = FLARE.
 // Desktop: A / D dodge, S or K duck, J swing, E flare. Gamepad: left stick / LB / RB dodge, A duck, X swing, Y flare.
 // Entry: the glowing ring on the Constellation's pier, beside the ship (LANDMARKS 'constellation' boss anchor x -31 z -18 is on the hull over the water, so the
-// ring sits on pier p1 at (-36.4, -18), a step off the gangway: a real-landmark anchor, not temporary). NIGHT ONLY (DESIGN fit tweak): by day the ACT reads
-// "CAPTAIN: AFTER DARK" and gives a "come back after dark" banner. The ghost lantern from fishing is not built yet, so the fight is not gated on it
+// ring sits on pier p1 at (-36.4, -18), a step off the gangway: a real-landmark anchor, not temporary). ANY TIME OF DAY (cobble-storm, Brad 2026-10-13: was night
+// only): by day the fight opens with a ~3 s storm (dark clouds sweep over the harbor, the sun is blotted out, the deck drops to night-dark, fog, lightning, thunder,
+// rain, "A STORM ROLLS IN…", tap to skip), then plays exactly as the night fight. At night there is no storm. The fight has its own scene, so the city's real
+// time of day and cycle are never touched (the city cycle is paused while a duel owns the frame and carries on from the same moment after exit). The ghost lantern from fishing is not built yet, so the fight is not gated on it
 // (merge note: when fishing lands, gate act.go on the lantern flag if wanted; the in-fight lantern is Mavis's).
 // Tests: ?cobblestone=1 starts at load; &cobblestoneauto=win|lose|mash plays it by itself (also ?duel=cobblestone&duelbot=...); ?cobblestonephase=N starts at
-// phase N; ?cobblestonenight=1 forces the city entry to night rules.
+// phase N; ?cobblestonenight=1 starts as a night fight (no storm) even by day; ?tod=0.1 forces a daytime (storm) start.
 // Writing: GR1 bosses.captain_cobblestone intro / defeat lines (06e_gr1_data.js) + short placeholder lines below.
 //
 // RIG HOOK (Opus): if window.buildCaptainCobblestone exists it is called as buildCaptainCobblestone({ THREE, toonMat, outlineMat, addOdir, QUAL }) and may return
@@ -82,7 +84,7 @@
     const pl = plankTex(); pl.wrapS = pl.wrapT = THREE.RepeatWrapping; pl.repeat.set(3, 9);
     const deck = new THREE.Mesh(new THREE.PlaneGeometry(9.4, 32), new THREE.MeshLambertMaterial({ map: pl })); deck.rotation.x = -Math.PI / 2; deck.position.set(0, 0, 4); sc.add(deck);
     // the harbor around the ship: a dark water plane with a moon glint strip
-    const water = new THREE.Mesh(new THREE.PlaneGeometry(220, 220), new THREE.MeshBasicMaterial({ color: '#0a1424' })); water.rotation.x = -Math.PI / 2; water.position.y = -2.2; sc.add(water);
+    const water = new THREE.Mesh(new THREE.PlaneGeometry(220, 220), new THREE.MeshBasicMaterial({ color: '#0a1424' })); C.waterM = water.material; water.rotation.x = -Math.PI / 2; water.position.y = -2.2; sc.add(water);
     const glint = new THREE.Mesh(new THREE.PlaneGeometry(3, 80), new THREE.MeshBasicMaterial({ map: DUELS.dot('#9ab0e0'), transparent: true, opacity: 0.35, depthWrite: false, blending: THREE.AdditiveBlending, fog: false })); glint.rotation.x = -Math.PI / 2; glint.position.set(-14, -2.15, 40); sc.add(glint);
     const hm = new THREE.MeshLambertMaterial({ map: hullTex() });
     const R = K();
@@ -119,10 +121,10 @@
       const m = toonMat(); m.emissive = new THREE.Color('#000000'); Gk.mesh(m, g, 0.003); g.userData.m = m;
       const glow = new THREE.Mesh(new THREE.PlaneGeometry(0.9, 0.9), new THREE.MeshBasicMaterial({ map: DUELS.dot('#7dffc8'), transparent: true, opacity: 0, depthWrite: false, blending: THREE.AdditiveBlending, fog: false })); glow.position.set(0, 0.85, 0.2); g.add(glow); g.userData.glow = glow; return g; });
     // sky: the moon, harbor-skyline lights in the fog, low fog banks drifting over the rails
-    const moon = new THREE.Mesh(new THREE.PlaneGeometry(9, 9), new THREE.MeshBasicMaterial({ map: moonTex(), transparent: true, depthWrite: false, fog: false })); moon.position.set(-18, 24, 70); moon.rotation.y = Math.PI; sc.add(moon);
+    const moon = new THREE.Mesh(new THREE.PlaneGeometry(9, 9), new THREE.MeshBasicMaterial({ map: moonTex(), transparent: true, depthWrite: false, fog: false })); moon.position.set(-18, 24, 70); moon.rotation.y = Math.PI; sc.add(moon); C.moon = moon;
     { const n = 160, pos = new Float32Array(n * 3), col = new Float32Array(n * 3); for (let i = 0; i < n; i++) { const a = rnd(-1.2, 1.2), r = rnd(55, 75); pos.set([Math.sin(a) * r, rnd(-1.5, 9) * (Math.random() < 0.2 ? 2.2 : 1), Math.cos(a) * r], i * 3); const c = new THREE.Color(pick(['#ffd28a', '#fff0c8', '#9ad0ff', '#ff9a6a'])); col.set([c.r, c.g, c.b], i * 3); }
       const g = new THREE.BufferGeometry(); g.setAttribute('position', new THREE.BufferAttribute(pos, 3)); g.setAttribute('color', new THREE.BufferAttribute(col, 3));
-      sc.add(new THREE.Points(g, new THREE.PointsMaterial({ map: DUELS.dot('#ffffff'), size: 0.9, vertexColors: true, transparent: true, depthWrite: false, blending: THREE.AdditiveBlending, fog: false }))); }
+      C.stars = new THREE.Points(g, new THREE.PointsMaterial({ map: DUELS.dot('#ffffff'), size: 0.9, vertexColors: true, transparent: true, depthWrite: false, blending: THREE.AdditiveBlending, fog: false })); sc.add(C.stars); }
     { const n = 14, ft = fogTex(); C.fogM = new THREE.InstancedMesh(new THREE.PlaneGeometry(1, 1), new THREE.MeshBasicMaterial({ map: ft, transparent: true, depthWrite: false, fog: false }), n); C.fogM.frustumCulled = false; C.fogs = [];
       for (let i = 0; i < n; i++) C.fogs.push({ x: rnd(-9, 9), y: rnd(0.6, 1.6), z: rnd(4, 18), s: rnd(3, 5.5), v: rnd(0.2, 0.5) }); sc.add(C.fogM); } // fog banks stay aft of Harold: never between the camera and him
     C.sign = null;
@@ -180,9 +182,9 @@
   C.build = function () {
     const sc = (C.scene = new THREE.Scene()); sc.fog = new THREE.Fog('#0c1a2a', 16, 60); sc.background = new THREE.Color('#0a1422');
     C.cam = new THREE.PerspectiveCamera(56, VW() / VH(), 0.1, 160);
-    DUELS.sceneLights(sc, '#7a90d0', '#1a1a2a', 0.85, '#b8c8ff', 1.1, new THREE.Vector3(-0.4, 1, 0.8));
+    C.lights = DUELS.sceneLights(sc, '#7a90d0', '#1a1a2a', 0.85, '#b8c8ff', 1.1, new THREE.Vector3(-0.4, 1, 0.8));
     C.deckL = new THREE.PointLight('#ffb070', 10, 10, 1.6); C.deckL.position.set(-2.6, 3.0, 1.6); sc.add(C.deckL); // a ship's lamp over the capstan (warm, Harold's side)
-    buildArena(sc); buildPhantoms(sc);
+    buildArena(sc); buildPhantoms(sc); buildStorm(sc);
     C.H = buildHero(); sc.add(C.H.root); C.M = buildHero({ wife: true }); sc.add(C.M.root);
     let rig = null; try { if (typeof window.buildCaptainCobblestone === 'function') rig = window.buildCaptainCobblestone({ THREE, toonMat, outlineMat, addOdir, QUAL }); } catch (e) { console.error(e); rig = null; }
     C.rigKind = rig && rig.root ? 'hook' : 'standin'; if (!rig || !rig.root) rig = standIn();
@@ -249,12 +251,15 @@
     DUELS.sub('POWER<span class="cbpow' + (f ? ' full' : '') + '"><i style="width:' + Math.round(st.pow * 100) + '%"></i></span>' + (st.combo > 1 ? ' <span style="color:#9affd8">x' + st.combo + '</span>' : ''), 'PHASE ' + (st.phase + 1) + '/3'); }
   C.start = function (opts) {
     C.st = null; const ph = clamp(+(Q.get('cobblestonephase') || 1) - 1, 0, 2) | 0; const st = reset(ph); DUELS.log.push('cobblestone:' + C.rigKind); subHud(st);
-    DUELS.banner('CAPTAIN COBBLESTONE<small>USS CONSTELLATION · MIDNIGHT · PHASE ' + (ph + 1) + '</small>', 2.4);
-    const l = lines(); DUELS.say('CAPTAIN COBBLESTONE', l && l.intro ? pick(l.intro) : pick(TAUNT), 3.4);
-    C.camP = new THREE.Vector3(0, 5, -7); C.camL = new THREE.Vector3(0, 2.4, MZ);
+    stormReset(); C.stormed = isDay(); // cobble-storm: by day a storm rolls in first (the 'storm' state runs before the usual intro)
+    if (C.stormed) { setM(st, 'storm', STORM_LEN); C.flags = {}; C.skip = false; applyLight(0, 0); C.rain.visible = C.clouds.visible = C.sunS.visible = true; DUELS.log.push('cobblestone:storm');
+      DUELS.banner('A STORM ROLLS IN\u2026<small>THE SUN IS GONE · TAP TO SKIP</small>', STORM_LEN); noise(2.4, 0.05, 300); C.camP = new THREE.Vector3(0.6, 2.4, -5.6); C.camL = new THREE.Vector3(-3, 6.5, 30); }
+    else { introCall(ph); C.camP = new THREE.Vector3(0, 5, -7); C.camL = new THREE.Vector3(0, 2.4, MZ); }
   };
+  function introCall(ph) { DUELS.banner('CAPTAIN COBBLESTONE<small>USS CONSTELLATION · ' + (C.stormed ? 'STORM' : 'MIDNIGHT') + ' · PHASE ' + (ph + 1) + '</small>', 2.4);
+    const l = lines(); DUELS.say('CAPTAIN COBBLESTONE', l && l.intro ? pick(l.intro) : pick(TAUNT), 3.4); }
   C.retry = function () { const p = C.st.phase; C.st = null; reset(p); C.st.ms = 'guard'; C.st.mdur = 1.4; subHud(C.st); DUELS.banner('PHASE ' + (p + 1) + '<small>BACK ON DECK! FULL HEALTH</small>', 1.6); };
-  C.exit = function () { DUELS.blind(0); if (C.bang) C.bang.style.display = 'none'; if (C.ghostV) C.ghostV.style.opacity = '0'; if (C.solidTag) C.solidTag.style.display = 'none'; C.hudPops(true); };
+  C.exit = function () { stormReset(); DUELS.blind(0); if (C.bang) C.bang.style.display = 'none'; if (C.ghostV) C.ghostV.style.opacity = '0'; if (C.solidTag) C.solidTag.style.display = 'none'; C.hudPops(true); };
 
   // ---------------- small fx + sound ----------------
   function tone(f0, f1, dur, type = 'square', vol = 0.1, delay = 0) { if (!AC || AC.state !== 'running') return; try { const t = AC.currentTime + delay, o = AC.createOscillator(), g = AC.createGain(); o.type = type; o.frequency.setValueAtTime(f0, t); o.frequency.exponentialRampToValueAtTime(Math.max(30, f1), t + dur); g.gain.setValueAtTime(vol, t); g.gain.exponentialRampToValueAtTime(0.0001, t + dur); o.connect(g); g.connect(SFXBUS || AC.destination); o.start(t); o.stop(t + dur + 0.02); } catch (e) {} }
@@ -292,6 +297,7 @@
   function capThink(st, dt) {
     const P = PH[st.phase]; st.mt += dt;
     switch (st.ms) {
+      case 'storm': if (st.mt > st.mdur) stormEnd(st); break; // cobble-storm
       case 'intro': if (st.mt > st.mdur) setM(st, 'guard', 0.8); break;
       case 'guard': if (st.mt > st.mdur) { const a = P.mix[st.mixI++ % P.mix.length]; st.stats.attacks[a]++;
           if (a === 'sweep') { st.sweepN = 0; st.lit = pickLit(); setM(st, 'sweepTell', P.sweep); DUELS.tell('LANTERN SWEEP! FIND THE DARK LANE!', P.sweep); sting('sweep'); }
@@ -342,6 +348,7 @@
     if (st.stop > 0) { st.stop -= dt0; return; } // hitstop
     if (st.slowT > 0) { st.slowT -= dt0; if (st.slowT <= 0) st.slow = 1; }
     const dt = dt0 * st.slow; st.t += dt;
+    if (st.ms === 'storm') { stormStep(st, dt, I); capThink(st, dt); stepFx(dt); DUELS.bars(st.hp / 100, 1); return; } // cobble-storm: no fighting while the storm rolls in
     st.inv -= dt; st.hurtT -= dt; st.swingCd -= dt; st.lockT -= dt; st.comboT -= dt; if (st.comboT <= 0 && st.combo) { st.combo = 0; subHud(st); }
     if (!st.over && st.flareT < 0) {
       let want = 0; if (I.mx < -0.5 || I.lh) want = -1; else if (I.mx > 0.5 || I.rh) want = 1; const duck = I.my < -0.5 || I.bh;
@@ -403,7 +410,7 @@
     if (t > 2.0 && !st.saidBye) { st.saidBye = true; const l = lines(); DUELS.say('CAPTAIN COBBLESTONE', l && l.defeat ? pick(l.defeat) : 'Back to the fog... I go...', 3.0); }
     if (t > 3.8 && !st.winDone) { st.winDone = true; DUELS.bossCleared('constellation', 'cobblestone-duel');
       const h = st.stats.hitsTaken, g = h <= 3 ? 'S' : h <= 8 ? 'A' : 'B', stars = g === 'S' ? 3 : g === 'A' ? 2 : 1; DUELS.log.push('cobblestone:grade:' + g);
-      setTimeout(() => { if (DUELS.cur === C) DUELS.over('win', 'THE GHOST<br>IS LAID TO REST', '<span style="color:#9affd8;font-size:18px;letter-spacing:3px">' + '\u2605'.repeat(stars) + '<span style="opacity:.3">' + '\u2605'.repeat(3 - stars) + '</span></span><br>GRADE ' + g + ' · hits taken ' + h + ' · best combo x' + st.stats.maxCombo + '<br>The Constellation is clear and the Phantoms have fled. Crime at the Constellation: 0. Rematch any night at the ring.'); }, SIM ? 300 : 1100); }
+      setTimeout(() => { if (DUELS.cur === C) DUELS.over('win', 'THE GHOST<br>IS LAID TO REST', '<span style="color:#9affd8;font-size:18px;letter-spacing:3px">' + '\u2605'.repeat(stars) + '<span style="opacity:.3">' + '\u2605'.repeat(3 - stars) + '</span></span><br>GRADE ' + g + ' · hits taken ' + h + ' · best combo x' + st.stats.maxCombo + '<br>The Constellation is clear and the Phantoms have fled. Crime at the Constellation: 0. Rematch any time at the ring.'); }, SIM ? 300 : 1100); }
   }
   function stepFx(dt) {
     const m = new THREE.Matrix4(), q = C.cam.quaternion, st = C.st;
@@ -515,16 +522,82 @@
     // camera: low behind Harold, the captain + the guns + the mast filling the frame; portrait pulls back and up
     const port = VH() > VW(); C.cam.fov = port ? 68 : 52; C.cam.updateProjectionMatrix();
     V.set(0.5 + H.root.position.x * 0.35, port ? 2.9 : 2.5, port ? -4.6 : -3.7); V2.set(H.root.position.x * 0.2, port ? 2.2 : 2.4, MZ);
-    if (st.ms === 'intro' && st.phase === 0 && st.t < 3) { const k = ease(clamp(st.mt / st.mdur, 0, 1)); V.lerpVectors(V3.set(-3.8, 5.5, 12), V, k); V2.lerpVectors(V3.set(0, 2.2, MZ), V2, k); }
+    if (st.ms === 'storm') { V.set(0.6, 2.4 + (st.mt / STORM_LEN) * 0.5, -5.6); V2.set(-3 + (st.mt / STORM_LEN) * 3, 6.5 - (st.mt / STORM_LEN) * 3, 30); }
+    if (st.ms === 'intro' && st.phase === 0 && st.mdur > 2) { const k = ease(clamp(st.mt / st.mdur, 0, 1)); V.lerpVectors(V3.set(-3.8, 5.5, 12), V, k); V2.lerpVectors(V3.set(0, 2.2, MZ), V2, k); }
     if (st.ms === 'rope' || (st.ms === 'open' && st.landed)) { V.z -= 0.6; V.y += 0.2; V2.z = 2.6; }
     if (st.flareT >= 0) { V.set(-3.4, 2.4, -0.4); V2.set(0, 2.0, MZ - 1.0); }
     if (st.ms === 'ko') { V.set(-1.6, 2.6, 0.2); V2.set(0, 1.4, MZ); }
     if (st.shake > 0) { V.x += rnd(-1, 1) * st.shake * 0.35; V.y += rnd(-1, 1) * st.shake * 0.35; }
     C.camP.lerp(V, 1 - Math.exp(-7 * dt)); C.camL.lerp(V2, 1 - Math.exp(-7 * dt)); C.cam.position.copy(C.camP); C.cam.lookAt(C.camL);
-    OUT_U.fogC.value.copy(C.scene.fog.color); OUT_U.fogN.value = 16; OUT_U.fogF.value = 60;
+    stormRender(st, dt);
+    OUT_U.fogC.value.copy(C.scene.fog.color); OUT_U.fogN.value = C.scene.fog.near; OUT_U.fogF.value = C.scene.fog.far;
   };
   C.onResize = () => {};
 
+
+  // ---------------- cobble-storm: by day a sudden storm rolls in over the harbor (~3 s, tap to skip), then the fight is the night fight exactly ----------------
+  // Everything here lives in the fight's own scene: the city's sky, fog, lights and day/night cycle are never written. On exit the fight scene goes back to its
+  // night values (so a later night fight looks as it always did) and every storm prop is hidden (0 extra draw calls outside the storm).
+  const STORM_LEN = 3.0;
+  const isDay = () => !(NIGHT.value > 0.5) && !Q.has('cobblestonenight');
+  const SDAY = { bg: new THREE.Color('#8ec0e8'), fog: new THREE.Color('#b4c4cc'), fogN: 34, fogF: 150, hs: new THREE.Color('#e4ecff'), hg: new THREE.Color('#8a7f74'), hi: 1.45, dc: new THREE.Color('#fff3dc'), di: 2.1, water: new THREE.Color('#2a5a7c') };
+  const SNIGHT = {}, FLASHC = new THREE.Color('#dfe8ff'), RAIN_N = 240, CLOUD_N = 22;
+  function cloudTex() { return canvasTex(128, 64, (g, w, h) => { for (let i = 0; i < 9; i++) { const x = 18 + Math.random() * 92, y = 22 + Math.random() * 22, r = 14 + Math.random() * 16, gr = g.createRadialGradient(x, y, 2, x, y, r);
+    gr.addColorStop(0, 'rgba(255,255,255,.95)'); gr.addColorStop(0.6, 'rgba(255,255,255,.7)'); gr.addColorStop(1, 'rgba(255,255,255,0)'); g.fillStyle = gr; g.fillRect(0, 0, w, h); } }, 128); }
+  function buildStorm(sc) {
+    const L = C.lights; Object.assign(SNIGHT, { bg: sc.background.clone(), fog: sc.fog.color.clone(), fogN: sc.fog.near, fogF: sc.fog.far, hs: L.h.color.clone(), hg: L.h.groundColor.clone(), hi: L.h.intensity, dc: L.d.color.clone(), di: L.d.intensity, water: C.waterM.color.clone() });
+    C.sunS = new THREE.Mesh(new THREE.PlaneGeometry(14, 14), new THREE.MeshBasicMaterial({ map: DUELS.dot('#fff4c8'), transparent: true, depthWrite: false, fog: false })); C.sunS.position.set(-8, 21, 69.5); C.sunS.rotation.y = Math.PI; C.sunS.visible = false; sc.add(C.sunS);
+    C.clouds = new THREE.InstancedMesh(new THREE.PlaneGeometry(1, 1), new THREE.MeshBasicMaterial({ map: cloudTex(), color: '#3c434e', transparent: true, depthWrite: false, fog: false }), CLOUD_N); C.clouds.frustumCulled = false; C.clouds.visible = false; sc.add(C.clouds);
+    C.cl = []; for (let i = 0; i < CLOUD_N; i++) C.cl.push({ x: rnd(-46, 34), y: rnd(9, 30), z: rnd(48, 66) - i * 0.3, s: rnd(16, 30), d: rnd(0, 0.5), v: rnd(0.4, 1.2) });
+    C.rainP = new Float32Array(RAIN_N * 6); C.drops = []; for (let i = 0; i < RAIN_N; i++) C.drops.push({ x: rnd(-11, 11), y: rnd(0, 13), z: rnd(-6, 18) });
+    const rg = new THREE.BufferGeometry(); rg.setAttribute('position', new THREE.BufferAttribute(C.rainP, 3));
+    C.rain = new THREE.LineSegments(rg, new THREE.LineBasicMaterial({ color: '#c4d4ec', transparent: true, opacity: 0, depthWrite: false, fog: false })); C.rain.frustumCulled = false; C.rain.visible = false; sc.add(C.rain);
+    C.boltP = new Float32Array(12 * 3); const bg = new THREE.BufferGeometry(); bg.setAttribute('position', new THREE.BufferAttribute(C.boltP, 3));
+    C.bolt = new THREE.Line(bg, new THREE.LineBasicMaterial({ color: '#f4f8ff', fog: false })); C.bolt.frustumCulled = false; C.bolt.visible = false; sc.add(C.bolt);
+    C.flashV = document.createElement('div'); C.flashV.style.cssText = 'position:absolute;inset:0;background:#e8f0ff;opacity:0;pointer-events:none'; DUELS.hudEl.insertBefore(C.flashV, DUELS.hudEl.firstChild);
+    addEventListener('pointerdown', () => { if (C.st && C.st.ms === 'storm') C.skip = true; }, true); // a tap anywhere skips the storm
+    C.flash = 0; C.post = 0; C.boltT = 0;
+  }
+  // k: 0 = the sunny day sky .. 1 = the fight's own night (exact); f: lightning flash 0..1
+  function applyLight(k, f) {
+    const sc = C.scene, L = C.lights;
+    sc.background.copy(SDAY.bg).lerp(SNIGHT.bg, k).lerp(FLASHC, f * 0.55); sc.fog.color.copy(SDAY.fog).lerp(SNIGHT.fog, k).lerp(FLASHC, f * 0.4);
+    sc.fog.near = lerp(SDAY.fogN, SNIGHT.fogN, k); sc.fog.far = lerp(SDAY.fogF, SNIGHT.fogF, k);
+    L.h.color.copy(SDAY.hs).lerp(SNIGHT.hs, k); L.h.groundColor.copy(SDAY.hg).lerp(SNIGHT.hg, k); L.h.intensity = lerp(SDAY.hi, SNIGHT.hi, k) + f * 2.4;
+    L.d.color.copy(SDAY.dc).lerp(SNIGHT.dc, k); L.d.intensity = lerp(SDAY.di, SNIGHT.di, k) + f * 1.2; C.waterM.color.copy(SDAY.water).lerp(SNIGHT.water, k).lerp(FLASHC, f * 0.25);
+    C.sunS.material.opacity = 1 - clamp(k * 1.7, 0, 1); C.moon.material.opacity = clamp((k - 0.82) / 0.18, 0, 1); C.stars.material.opacity = clamp((k - 0.85) / 0.15, 0, 1);
+  }
+  function thunder(delay, big) { if (!AC || AC.state !== 'running') return; try { const t = AC.currentTime + delay, dur = 2.8, n = Math.floor(AC.sampleRate * dur), b = AC.createBuffer(1, n, AC.sampleRate), d = b.getChannelData(0);
+      let br = 0; for (let i = 0; i < n; i++) { br = br * 0.97 + (Math.random() * 2 - 1) * 0.3; d[i] = br * (0.6 + 0.4 * Math.sin(i / AC.sampleRate * 9 + Math.random() * 0.2)); } // brown-ish rumble
+      const s = AC.createBufferSource(), f = AC.createBiquadFilter(), g = AC.createGain(); s.buffer = b; f.type = 'lowpass'; f.frequency.setValueAtTime(1400, t); f.frequency.exponentialRampToValueAtTime(140, t + 1.6);
+      g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(0.55 * big, t + 0.03); g.gain.exponentialRampToValueAtTime(0.0001, t + dur); s.connect(f); f.connect(g); g.connect(SFXBUS || AC.destination); s.start(t); s.stop(t + dur + 0.05);
+      noise(0.18, 0.22 * big, 1800, delay); tone(70, 32, 1.2, 'sine', 0.2 * big, delay); } catch (e) {} }
+  function strike(big) { C.flash = big ? 1 : 0.75; C.boltT = 0.2; let x = rnd(-26, 10), y = 34, z = rnd(52, 64); for (let i = 0; i < 12; i++) { C.boltP.set([x, y, z], i * 3); x += rnd(-2.6, 2.6); y -= 3.3; z += rnd(-1, 1); }
+    C.bolt.geometry.attributes.position.needsUpdate = true; thunder(big ? 0.12 : 0.35, big ? 1 : 0.7); if (C.st) C.st.shake = Math.max(C.st.shake, big ? 0.3 : 0.15); }
+  function stormStep(st, dt, I) {
+    if (C.skip || I.a || I.b || I.c || I.ok) { C.skip = false; st.mt = st.mdur + 0.01; DUELS.log.push('cobblestone:storm:skip'); return; }
+    const t = st.mt + dt, F = C.flags;
+    if (t > 1.0 && !F.a) { F.a = true; strike(true); DUELS.tell('A STORM ROLLS IN\u2026', 1.6); }
+    if (t > 2.15 && !F.b) { F.b = true; strike(false); }
+  }
+  function stormEnd(st) { applyLight(1, 0); C.sunS.visible = false; C.post = 1.6; C.flash = 0; C.flashV.style.opacity = '0'; C.bolt.visible = false; DUELS.log.push('cobblestone:storm:end');
+    setM(st, 'intro', 2.6); introCall(st.phase); }
+  function stormReset() { if (!C.scene || !C.rain) return; C.post = 0; C.flash = 0; C.boltT = 0; C.skip = false; applyLight(1, 0); C.rain.visible = C.clouds.visible = C.sunS.visible = C.bolt.visible = false; C.flashV.style.opacity = '0'; }
+  function stormRender(st, dt) {
+    const on = st.ms === 'storm'; if (!on && C.post <= 0) return;
+    if (C.post > 0) { C.post -= dt; if (C.post <= 0) { C.post = 0; C.rain.visible = C.clouds.visible = false; return; } }
+    const u = on ? clamp(st.mt / STORM_LEN, 0, 1) : 1, k = on ? ease(clamp((st.mt - 0.25) / 2.1, 0, 1)) : 1, fade = on ? 1 : C.post / 1.6;
+    C.flash = Math.max(0, C.flash - dt * 4.5); C.boltT -= dt; C.bolt.visible = on && C.boltT > 0 && (C.boltT > 0.13 || C.boltT < 0.07);
+    if (on) applyLight(k, C.flash); C.flashV.style.opacity = (C.flash * 0.55).toFixed(3);
+    // clouds sweep in from the east side of the harbor, darkening as they pile up
+    const m = new THREE.Matrix4(), q = new THREE.Quaternion().setFromEuler(new THREE.Euler(0, Math.PI, 0));
+    C.cl.forEach((c, i) => { const w = ease(clamp((u - c.d * 0.5) / 0.55, 0, 1)); c.x += c.v * dt; m.compose(V.set(c.x + (1 - w) * 90, c.y + (1 - w) * 4, c.z), q, V3.set(c.s, c.s * 0.42, 1)); C.clouds.setMatrixAt(i, m); });
+    C.clouds.instanceMatrix.needsUpdate = true; C.clouds.material.opacity = 0.96 * fade; C.clouds.material.color.set('#4a525e').lerp(new THREE.Color('#161b24'), k).lerp(FLASHC, C.flash * 0.5);
+    // rain: slanted streaks around the deck, heavier as the storm builds, tapering off once the fight starts
+    const ra = (on ? clamp((st.mt - 0.6) / 1.2, 0, 1) : 1) * fade, P = C.rainP; C.rain.material.opacity = 0.55 * ra;
+    for (let i = 0; i < RAIN_N; i++) { const d = C.drops[i]; d.y -= dt * 24; d.x -= dt * 4; if (d.y < 0) { d.y += 13; d.x = rnd(-11, 11); } P[i * 6] = d.x; P[i * 6 + 1] = d.y; P[i * 6 + 2] = d.z; P[i * 6 + 3] = d.x + 0.12; P[i * 6 + 4] = d.y + 0.6; P[i * 6 + 5] = d.z; }
+    C.rain.geometry.attributes.position.needsUpdate = true;
+  }
   // ---------------- test bot: win = reads every tell; mash = SWING only, never dodges; lose = stands still ----------------
   C.botThink = function (B, dt) {
     const st = C.st; if (!st || st.over) return; B.mx = 0; B.my = 0; B.bh = false; B.lh = B.rh = false; if (B.mode === 'lose') return;
@@ -541,15 +614,15 @@
   };
   DUELS.reg('cobblestone', C);
 
-  // ---------------- the city side: the ring on the Constellation's pier beside the gangway, night only; REMATCH once cleared; ?cobblestone=1 ----------------
+  // ---------------- the city side: the ring on the Constellation's pier beside the gangway, any time of day (cobble-storm); REMATCH once cleared; ?cobblestone=1 ----------------
   const L = LANDMARKS.find((l) => l.id === 'constellation');
   const RX = -36.4, RZ = -18; // pier p1 (x -40..-35), alongside the ship (the boss anchor x -31 is on the hull over the water)
   if (L && L.boss) { DUELS.addTrigger('cobblestone', L, RX, RZ, RX - 1.6, RZ + 2.2, '#5affb0');
-    const act = ACTIONS[ACTIONS.length - 1]; C.act = act; const night = () => NIGHT.value > 0.5 || Q.has('cobblestonenight');
-    Object.defineProperty(act, 'label', { get: () => (night() ? (L.boss.cleared ? 'REMATCH CAPTAIN' : 'FIGHT CAPTAIN') : 'CAPTAIN: AFTER DARK'), configurable: true });
+    const act = ACTIONS[ACTIONS.length - 1]; C.act = act;
+    Object.defineProperty(act, 'label', { get: () => (L.boss.cleared ? 'REMATCH CAPTAIN' : 'FIGHT CAPTAIN'), configurable: true });
     act.ok = () => !DUELS.cur && !hero.roof && (!BOT || Q.has('duels'));
-    act.go = () => { if (!night()) { banner('THE CAPTAIN ONLY HAUNTS AFTER DARK. COME BACK AT NIGHT.', 2.4); return; } DUELS.start('cobblestone'); };
+    act.go = () => { DUELS.start('cobblestone'); };
     const bm = DUELS.BEAM.list[DUELS.BEAM.list.length - 1]; if (bm) bm.L = { boss: { get cleared() { return false; } } }; } // keep the ring lit for rematches
   let n = 0; MODE.ticks.push(() => { n++; if (n === 3 && Q.has('cobblestone') && !DUELS.cur) { if (CINE.intro) CINE.intro.skip = true; const m = Q.get('cobblestoneauto'); DUELS.start('cobblestone', ['win', 'lose', 'mash'].includes(m) ? { bot: m } : {}); } });
-  window.__cobblestone = C; C.PH = PH;
+  window.__cobblestone = C; C.PH = PH; C.isDay = isDay;
 })();
