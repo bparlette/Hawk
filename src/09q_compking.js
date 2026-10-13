@@ -239,7 +239,7 @@
   function pop(p, text, cls = '') { const P = C.pops.find((q) => q.t > 0.9) || C.pops[0]; P.t = 0; P.p.copy(p); P.e.className = 'ckpop' + (cls ? ' ' + cls : ''); P.e.textContent = text; }
   function burst(p, n, cols, spd = 3.5, life = 0.6, up = 2.5) { for (let k = 0; k < n && C.parts.length < 72; k++) C.parts.push({ p: p.clone(), v: new THREE.Vector3(rnd(-spd, spd), rnd(0.5, up + 1.5), rnd(-spd, spd)), t: 0, life: rnd(life * 0.6, life), c: CO.set(pick(cols)).clone(), r: rnd(0, TAU), s: rnd(0.7, 1.4) }); }
   function flashBoss(c = '#ffffff', v = 0.85) { for (const m of C.R.flash) if (m && m.userData.flashC) { m.userData.flashC.value.set(c); m.userData.flash.value = Math.max(m.userData.flash.value, v); } }
-  function hitstop(st, s) { JUICE.hitstop(s * 1000, st); } function shake(st, s) { JUICE.shake(s, 0, st); } // (shared kit 09aj_juice.js, bound to this fight's own st.hs / st.shake) function slowmo(st, k, s) { st.slowK = k; st.slow = s; }
+  function hitstop(st, s) { JUICE.hitstop(s * 1000, st); } function shake(st, s) { JUICE.shake(s, 0, st); } /* (shared kit 09aj_juice.js, bound to this fight's own st.hs / st.shake) */ function slowmo(st, k, s) { st.slowK = k; st.slow = s; }
 
   // ---------------- lights (Mannequin Freeze) ----------------
   function setLight(st, l) { st.light = l; st.lt = 0; const on = l !== 'off';

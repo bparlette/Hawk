@@ -152,8 +152,8 @@ const JUICE = (function () {
     apply(a, b, u);
     // dramatic camera: a low, close orbit round the blow, drifting with the action
     camOf(a, CP, FOC); camOf(b, V1, V0); FOC.lerp(V0, u); FOC.lerp(FOC0, 0.6);
-    const w = clamp((r.ft - r.t0) / Math.max(0.1, r.t1 - r.t0), 0, 1), e = ease(w), ang = r.side * (1.05 - 1.5 * e), dist = r.d0 * (0.78 - 0.18 * e);
-    V0.copy(r.dir).applyAxisAngle(UP, ang).multiplyScalar(dist); K.cam.position.set(FOC.x + V0.x, FOC.y + r.d0 * (0.04 + 0.14 * e), FOC.z + V0.z);
+    const w = clamp((r.ft - r.t0) / Math.max(0.1, r.t1 - r.t0), 0, 1), e = ease(w), ang = r.side * (0.6 - 0.85 * e), dist = r.d0 * (0.9 - 0.2 * e);
+    V0.copy(r.dir).applyAxisAngle(UP, ang).multiplyScalar(dist); K.cam.position.set(FOC.x + V0.x, Math.max(FOC.y * 0.55, CP.y * 0.25) + r.d0 * (0.03 + 0.1 * e), FOC.z + V0.z); // low and close: under the fight camera, looking up at the blow
     K.cam.lookAt(FOC.x, FOC.y + 0.25, FOC.z); K.cam.rotateZ(r.side * 0.07 * (1 - e));
     const fov = r.fov0 * (dk > -0.1 && dk < 0.35 ? 0.82 : 0.9); if (Math.abs(K.cam.fov - fov) > 0.01) { K.cam.fov += (fov - K.cam.fov) * Math.min(1, dt * 10); K.cam.updateProjectionMatrix(); }
     if (dk > -0.02 && dk < 0.06 && !r.flash) { r.flash = true; ovFl.classList.add('on'); setTimeout(() => ovFl && ovFl.classList.remove('on'), 70); }

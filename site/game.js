@@ -8112,8 +8112,8 @@ const JUICE = (function () {
     apply(a, b, u);
     // dramatic camera: a low, close orbit round the blow, drifting with the action
     camOf(a, CP, FOC); camOf(b, V1, V0); FOC.lerp(V0, u); FOC.lerp(FOC0, 0.6);
-    const w = clamp((r.ft - r.t0) / Math.max(0.1, r.t1 - r.t0), 0, 1), e = ease(w), ang = r.side * (1.05 - 1.5 * e), dist = r.d0 * (0.78 - 0.18 * e);
-    V0.copy(r.dir).applyAxisAngle(UP, ang).multiplyScalar(dist); K.cam.position.set(FOC.x + V0.x, FOC.y + r.d0 * (0.04 + 0.14 * e), FOC.z + V0.z);
+    const w = clamp((r.ft - r.t0) / Math.max(0.1, r.t1 - r.t0), 0, 1), e = ease(w), ang = r.side * (0.6 - 0.85 * e), dist = r.d0 * (0.9 - 0.2 * e);
+    V0.copy(r.dir).applyAxisAngle(UP, ang).multiplyScalar(dist); K.cam.position.set(FOC.x + V0.x, Math.max(FOC.y * 0.55, CP.y * 0.25) + r.d0 * (0.03 + 0.1 * e), FOC.z + V0.z); // low and close: under the fight camera, looking up at the blow
     K.cam.lookAt(FOC.x, FOC.y + 0.25, FOC.z); K.cam.rotateZ(r.side * 0.07 * (1 - e));
     const fov = r.fov0 * (dk > -0.1 && dk < 0.35 ? 0.82 : 0.9); if (Math.abs(K.cam.fov - fov) > 0.01) { K.cam.fov += (fov - K.cam.fov) * Math.min(1, dt * 10); K.cam.updateProjectionMatrix(); }
     if (dk > -0.02 && dk < 0.06 && !r.flash) { r.flash = true; ovFl.classList.add('on'); setTimeout(() => ovFl && ovFl.classList.remove('on'), 70); }
@@ -12242,7 +12242,7 @@ window.__carl = CARL;
   function pop(p, text, cls = '') { const P = C.pops.find((q) => q.t > 0.9) || C.pops[0]; P.t = 0; P.p.copy(p); P.e.className = 'ckpop' + (cls ? ' ' + cls : ''); P.e.textContent = text; }
   function burst(p, n, cols, spd = 3.5, life = 0.6, up = 2.5) { for (let k = 0; k < n && C.parts.length < 72; k++) C.parts.push({ p: p.clone(), v: new THREE.Vector3(rnd(-spd, spd), rnd(0.5, up + 1.5), rnd(-spd, spd)), t: 0, life: rnd(life * 0.6, life), c: CO.set(pick(cols)).clone(), r: rnd(0, TAU), s: rnd(0.7, 1.4) }); }
   function flashBoss(c = '#ffffff', v = 0.85) { for (const m of C.R.flash) if (m && m.userData.flashC) { m.userData.flashC.value.set(c); m.userData.flash.value = Math.max(m.userData.flash.value, v); } }
-  function hitstop(st, s) { JUICE.hitstop(s * 1000, st); } function shake(st, s) { JUICE.shake(s, 0, st); } // (shared kit 09aj_juice.js, bound to this fight's own st.hs / st.shake) function slowmo(st, k, s) { st.slowK = k; st.slow = s; }
+  function hitstop(st, s) { JUICE.hitstop(s * 1000, st); } function shake(st, s) { JUICE.shake(s, 0, st); } /* (shared kit 09aj_juice.js, bound to this fight's own st.hs / st.shake) */ function slowmo(st, k, s) { st.slowK = k; st.slow = s; }
 
   // ---------------- lights (Mannequin Freeze) ----------------
   function setLight(st, l) { st.light = l; st.lt = 0; const on = l !== 'off';
