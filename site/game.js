@@ -9359,7 +9359,7 @@ const DUELS = (function () {
       const g = new THREE.BufferGeometry(); g.setAttribute('position', new THREE.BufferAttribute(pos, 3)); g.setAttribute('color', new THREE.BufferAttribute(col, 3));
       sc.add(new THREE.Points(g, new THREE.PointsMaterial({ map: DUELS.dot('#ffffff'), size: 0.9, vertexColors: true, transparent: true, depthWrite: false, blending: THREE.AdditiveBlending, fog: false }))); }
     { const n = 14, ft = fogTex(); C.fogM = new THREE.InstancedMesh(new THREE.PlaneGeometry(1, 1), new THREE.MeshBasicMaterial({ map: ft, transparent: true, depthWrite: false, fog: false }), n); C.fogM.frustumCulled = false; C.fogs = [];
-      for (let i = 0; i < n; i++) C.fogs.push({ x: rnd(-9, 9), y: rnd(0.2, 1.4), z: rnd(-2, 16), s: rnd(3, 6), v: rnd(0.2, 0.5) }); sc.add(C.fogM); }
+      for (let i = 0; i < n; i++) C.fogs.push({ x: rnd(-9, 9), y: rnd(0.6, 1.6), z: rnd(4, 18), s: rnd(3, 5.5), v: rnd(0.2, 0.5) }); // aft of the guns' line: never between the camera and Harold sc.add(C.fogM); }
     C.sign = null;
   }
 
