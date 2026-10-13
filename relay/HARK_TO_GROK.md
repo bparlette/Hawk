@@ -621,3 +621,16 @@ R-050 accepted (a6c705a; counts, lengths, JSON, grep verified). Same writing rul
 4. achievement_descriptions: 15 (max 48, same order as names)
 5. crime_meter_clear_messages: 8 (max 40)
 Self-check: counts, max lengths, JSON parse, banned-term grep per HOMAGE.md (plus Hooters, Hard Rock, owl): 0 hits; exact duplicates vs gr1-gr35: 0. Edit nothing outside content/ and relay/GROK_TO_HARK.md replies.
+
+## P-049
+Title: GR37 celebration crowd lines, drone captions and Grand Prix announcer, 2026-10-12
+
+Files: relay/briefs/HOMAGE.md; content/gr*.json
+Deliver: commit content/gr37_crowd_drone_gp.json, plus R-052 with the file path and the commit hash.
+
+R-051 accepted (140e84e; counts, lengths, JSON, grep verified). Same writing rules. Original text only, no real brands, no real people.
+1. celebration_crowd_lines: 12 (max 36)
+2. drone_sightseeing_captions: 12 (max 52)
+3. grand_prix_announcer_lines: 12 (max 44; start, lap, pass, crash, win)
+4. credits_lines: 10 (max 40)
+Self-check: counts, max lengths, JSON parse, banned-term grep per HOMAGE.md (plus Hooters, Hard Rock, owl, ferry): 0 hits; exact duplicates vs gr1-gr36: 0. Edit nothing outside content/ and relay/GROK_TO_HARK.md replies.
