@@ -17,8 +17,8 @@
 // into the Raven King (big damage, dizzy). 3 phases (boss HP 66 / 33, Mavis patches Harold up a little at each phase change).
 // KO: flattened in the end zone, feathers rain as confetti, the scoreboard flips "NEVERMORE" to "EVERMORE". Win = DUELS.bossCleared('ravens')
 // -> BOSS_CLEAR.clear('ravens') (M&T district crime -> 0) + a star grade by hits taken. Lose = RETRY / LEAVE.
-// Entry: ACT "FIGHT RAVEN" ring by the stadium's boss anchor (LANDMARKS 'ravens' boss {x:-106, z:76}; the ring sits just off the bowl's north face
-// so it is reachable on foot: REAL landmark anchor). DESIGN gates this fight behind the Poe night's Nevermore Feather; Poe night is not built yet,
+// Entry: ACT "FIGHT RAVEN" ring at the stadium's boss anchor (LANDMARKS 'ravens' boss {x:-106, z:76}: midfield on the
+// city stadium's own grass, walk in through the east-stand gap: REAL landmark anchor). DESIGN gates this fight behind the Poe night's Nevermore Feather; Poe night is not built yet,
 // so the gate is a hook: if window.hasNevermoreFeather is a function and returns false, the ring shows "NEED THE FEATHER" and won't start.
 // Tests: ?ravenking=1 starts the fight at load, &ravenkingauto=win|lose|mash plays it by itself (also ?duel=ravenking&duelbot=...). ?ravenkingphase=N.
 // Writing: Grok's GR1 raven_king intro/defeat lines + the GR10 clear banner (hawk-relay content), embedded below; taunts are Hark placeholders.
@@ -475,7 +475,7 @@
     const port = VH() > VW(); S.cam.fov = port ? 62 : 50; S.cam.updateProjectionMatrix(); const b = st.b;
     let cx = h.x * 0.45, cy = port ? 9.0 : 6.6, cz = h.z * 0.55 + (port ? 11.6 : 10.0), lx = h.x * 0.3 + b.x * 0.2, ly = (port ? 1.0 : 1.6) + b.y * 0.35, lz = Math.min(-2.5, b.z * 0.4 - 1.2);
     if (st.hail) { const s = st.hail.t; if (s < 0.8) { cx = h.x + 3.2; cy = 2.8; cz = h.z + 4.2; lx = h.x; ly = 1.6; lz = h.z - 1; } else { const P = S.purse.position; cx = P.x + 2.5; cy = P.y + 1.6; cz = P.z + 5.5; lx = P.x; ly = P.y; lz = P.z - 2; } }
-    if (st.over && st.won) { cx = 3.5; cy = port ? 8 : 5.5; cz = -2; lx = 0; ly = st.outT > 2 ? 5 : 1; lz = st.outT > 2 ? -22 : -13; }
+    if (st.over && st.won) { cx = 3; cy = 6; cz = port ? 6 : 4; lx = 0; ly = st.outT > 2 ? 6.5 : 1; lz = st.outT > 2 ? -20 : -13; } // the KO: the flattened King in the end zone + the EVERMORE board above
     V.set(cx, cy, cz); V2.set(lx, ly, lz);
     if (st.bs === 'intro' && st.bt < st.bdur) { const k = ease(clamp(st.bt / st.bdur, 0, 1)); V.lerpVectors(V3.set(1.5, 3.2, -2.5), V, k); V2.lerpVectors(V3.set(0, 2.6, -8), V2, k); }
     S.camP.lerp(V, 1 - Math.exp(-5 * dt)); S.camL.lerp(V2, 1 - Math.exp(-6 * dt));
@@ -514,11 +514,11 @@
   const gated = () => typeof window.hasNevermoreFeather === 'function' && !window.hasNevermoreFeather();
   function setupTrigger() {
     const L = LANDMARKS.find((l) => l.id === 'ravens'); if (!L || !L.boss) return;
-    const x = L.boss.x + RING_DX, z = L.boss.z + RING_DZ; DUELS.addTrigger('ravenking', L, x, z, x, z - 2.4, '#b48cff');
+    const x = L.boss.x + RING_DX, z = L.boss.z + RING_DZ; DUELS.addTrigger('ravenking', L, x, z, x + 2.6, z, '#b48cff');
     const act = ACTIONS[ACTIONS.length - 1]; if (act && act.kind === 'boss') Object.defineProperty(act, 'label', { get: () => (gated() ? 'NEED THE FEATHER' : L.boss.cleared ? 'REMATCH' : 'FIGHT RAVEN'), configurable: true });
     if (act) { act.ok = () => !DUELS.cur && !hero.roof && (!BOT || Q.has('duels')); const go = act.go; act.go = () => { if (gated()) { DUELS.log.push('ravenking:gated'); return false; } return go(); }; }
   }
-  const RING_DX = 0, RING_DZ = -19; // the anchor is the bowl's centre; the ring sits on the plaza just off its north face
+  const RING_DX = 0, RING_DZ = 0; // the anchor is midfield inside the bowl (open grass, reached through the east-stand gap at z 70-82)
   let n = 0; MODE.ticks.push(() => { n++;
     if (n === 1) setupTrigger();
     if (n === 3 && Q.has('ravenking') && !DUELS.cur) { if (CINE.intro) CINE.intro.skip = true; const m = Q.get('ravenkingauto'); DUELS.start('ravenking', ['win', 'lose', 'mash'].includes(m) ? { bot: m } : {}); } });
