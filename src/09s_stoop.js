@@ -142,8 +142,8 @@
     // foam lanes (one plane per lane, laid down the steps + plaza, bent onto the step tops via a stair-shaped strip) and their telegraph stripes
     const ft = foamTex(); ft.wrapS = ft.wrapT = THREE.RepeatWrapping; ft.repeat.set(1, 4);
     const st = stripeTex(); st.wrapS = st.wrapT = THREE.RepeatWrapping; st.repeat.set(1, 6);
-    S.lanes = LANES.map((x) => { const g = stairStrip(LW - 0.2), foam = new THREE.Mesh(g, new THREE.MeshBasicMaterial({ map: ft, transparent: true, opacity: 0, depthWrite: false, fog: false }));
-      const tel = new THREE.Mesh(g, new THREE.MeshBasicMaterial({ map: st, color: '#1e9cff', transparent: true, opacity: 0, depthWrite: false, fog: false }));
+    S.lanes = LANES.map((x) => { const g = stairStrip(LW - 0.2), foam = new THREE.Mesh(g, new THREE.MeshBasicMaterial({ map: ft, transparent: true, opacity: 0, depthWrite: false, fog: false, side: THREE.DoubleSide }));
+      const tel = new THREE.Mesh(g, new THREE.MeshBasicMaterial({ map: st, color: '#1e9cff', transparent: true, opacity: 0, depthWrite: false, fog: false, side: THREE.DoubleSide }));
       foam.position.x = tel.position.x = x; foam.renderOrder = 3; tel.renderOrder = 4; foam.visible = tel.visible = false; sc.add(foam, tel); return { x, foam, tel }; });
     S.ft = ft; S.stt = st;
     // bucket shadows (2), the thrown buckets (2), glare lines (2), the sweep ring
@@ -175,7 +175,7 @@
       #scrubui .pop { position: absolute; left: 0; top: 0; font-size: 16px; color: #fff; text-shadow: 2px 2px 0 #14101f, -1px -1px 0 #14101f; white-space: nowrap; opacity: 0; transform: translate(-50%, -50%); }
       #scrubui .pop.c { color: #ffd23c; font-size: 20px; } #scrubui .pop.w { color: #7adfff; font-size: 18px; }
       #scrubui .bang { position: absolute; left: 0; top: 0; font-size: 28px; color: #ffd23c; text-shadow: 3px 3px 0 #14101f, -2px -2px 0 #14101f; opacity: 0; transform: translate(-50%, -100%); }
-      body.duel-scrubber #duel .dtell { top: 64%; }
+      body.duel-scrubber #duel .dtell { top: 64%; white-space: normal; max-width: 88vw; text-align: center; line-height: 1.4; }
       @media (max-width: 480px) { #scrubui .pw .t { width: 120px; } #scrubui .pop { font-size: 13px; } #scrubui .pop.c { font-size: 16px; } }`;
     document.head.appendChild(css);
     const ui = document.createElement('div'); ui.id = 'scrubui'; ui.innerHTML = '<div class="pw"><div class="n">POWER</div><div class="t"><i></i></div></div><div class="bang">!</div>' + '<div class="pop"></div>'.repeat(8);
@@ -243,9 +243,9 @@
       A.lanes = pickL; A.live = 2.4; S.lanes.forEach((L, i) => { L.tel.visible = A.lanes.includes(i); L.tel.material.opacity = 0; L.foam.visible = false; });
       tell('SUDS SLICK! FIND A DRY LANE', P.tell); }
     else if (kind === 'bucket') { A.targets = [{ x: h.x, z: h.z }]; if (st.phase >= 2) A.targets.push({ x: clamp(h.x + h.vx * 0.9 + (Math.random() < 0.5 ? -2 : 2), -XL, XL), z: clamp(h.z + h.vz * 0.6, Z0, Z1) });
-      A.tell = P.tell + 0.1; tell(A.targets.length > 1 ? 'BUCKET DUMP x2! GET OUT OF THE SHADOWS' : 'BUCKET DUMP! GET OUT OF THE SHADOW', A.tell); }
+      A.tell = P.tell + 0.1; tell(A.targets.length > 1 ? 'BUCKET DUMP x2! LEAVE THE SHADOWS' : 'BUCKET DUMP! LEAVE THE SHADOW', A.tell); }
     else { const dirs = [Math.atan2(h.x - b.x, h.z - b.z)]; if (st.phase >= 2) { dirs[0] -= 0.22; dirs.push(dirs[0] + 0.44); }
-      A.dirs = dirs; A.beam = 0.55; tell('MARBLE GLARE! STEP OFF THE LIT LINE', P.tell); }
+      A.dirs = dirs; A.beam = 0.55; tell('MARBLE GLARE! OFF THE LIT LINE', P.tell); }
     if (Math.random() < 0.4) say(pick(GR.taunt), 2.2);
   }
   const laneOf = (x) => clamp(Math.round((x + 5.2) / 2.6), 0, 4);
@@ -416,7 +416,7 @@
     R.root.position.set(b.x, b.y, b.z);
     const face = st.bs === 'ko' ? Math.PI * 0.1 + st.outT * 3 : Math.atan2(st.h.x - b.x, st.h.z - b.z) * 0.6; R.root.rotation.y = damp(R.root.rotation.y, face, 8, dt);
     const u = st.atk ? clamp(st.atk.t / st.atk.tell, 0, 1) : clamp(st.bt / Math.max(0.01, st.bdur), 0, 1);
-    for (const m of R.flash) if (m && m.userData && m.userData.flash) { m.userData.flash.value = Math.max(b.flash * 0.6, st.bs === 'sweepTell' ? (Math.sin(t * 24) * 0.5 + 0.5) * 0.3 : 0); if (m.userData.flashC) m.userData.flashC.value.set(st.bs === 'sweepTell' ? '#ff3d6e' : '#ffffff'); }
+    for (const m of R.flash) if (m && m.userData && m.userData.flash) { m.userData.flash.value = Math.max(b.flash * 0.32, st.bs === 'sweepTell' ? (Math.sin(t * 24) * 0.5 + 0.5) * 0.3 : 0); if (m.userData.flashC) m.userData.flashC.value.set(st.bs === 'sweepTell' ? '#ff3d6e' : '#ffffff'); }
     if (R.update) { try { R.update(dt, mode, { t, u, hp: Math.max(0, st.bhp) / BHP0 }); } catch (e) { console.error(e); R.update = null; } return; }
     let aLx = -0.2, aLz = 0.2, aRx = -0.3, aRz = -0.2, hX = 0, hY = 0, lean = 0, bob = Math.sin(t * 2.6) * 0.03, roll = 0;
     if (mode === 'suds') { const k = ease(u); aLx = lerp(-0.2, -2.0, k); aLz = lerp(0.2, -0.6, k); lean = 0.25 * k; }
@@ -460,8 +460,8 @@
     const M = S.M, mx = st.surf && st.surf.t < 0.6 ? lerp(-5.2, h.x - 1.2, 0.25) : st.won && st.outT > 3.5 ? -3.4 : -4.4; M.root.position.set(damp(M.root.position.x, mx, 4, dt), 0, damp(M.root.position.z, 6.4, 4, dt)); M.root.rotation.y = Math.atan2(h.x - M.root.position.x, h.z - M.root.position.z) * 0.6 + Math.PI * 0.85; applyPose(M, mavisPose(st, t), 12, dt, false);
     poseBoss(st, dt); poseAttackFx(st);
     // camera: behind + above Harold looking up the steps; portrait sits higher and further back so the whole step face and her shadows fit
-    const port = VH() > VW(); S.cam.fov = port ? 62 : 50; S.cam.updateProjectionMatrix();
-    let cx = h.x * 0.4, cy = port ? 11.2 : 6.4, cz = h.z * 0.55 + (port ? 10.6 : 9.6), lx = h.x * 0.3 + st.b.x * 0.15, ly = port ? 0.4 : 1.4, lz = port ? 0.2 : -2.2;
+    const port = VH() > VW(); S.cam.fov = port ? 60 : 50; S.cam.updateProjectionMatrix();
+    let cx = h.x * 0.4, cy = port ? 8.6 : 6.4, cz = h.z * 0.55 + (port ? 10.4 : 9.6), lx = h.x * 0.3 + st.b.x * 0.15, ly = port ? 0.9 : 1.4, lz = port ? -1.4 : -2.2;
     if (st.surf) { cx = h.x + 3; cy = 3.2; cz = h.z + 5; lx = h.x; ly = 1.2; lz = h.z - 2; }
     if (st.over && st.won) { cx = 3.5; cy = port ? 6.5 : 4.5; cz = 15; lx = st.b.x * 0.6; ly = 0.8; lz = st.b.z - 1.5; }
     V.set(cx, cy, cz); V2.set(lx, ly, lz);
