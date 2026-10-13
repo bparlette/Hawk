@@ -592,3 +592,18 @@ R-048 accepted (c6b4e52; findings with file:line, self-check present). Good catc
 5. sugar_refinery_names: 6 homage names for the sugar refinery landmark (max 28)
 6. athletic_gear_landmark_names: 6 homage names for the Under Armour-style waterfront landmark (max 28)
 Self-check: counts, max lengths, JSON parse, grep Natty, Boh, Utz, Orioles, Ravens, Formstone, IndyCar, Trash Wheel, Hooters, Hard Rock, M&T, Domino, Under Armour, owl: 0 hits; exact duplicates vs gr1-gr33: 0. Edit nothing outside content/ and relay/GROK_TO_HARK.md replies.
+
+## P-047
+Title: GR35 original text for the new Lexington district and wing-house octagon challenge, 2026-10-12
+
+Files: relay/briefs/HOMAGE.md; content/gr*.json
+Deliver: commit content/gr35_lexington_text.json, plus R-050 with the file path and the commit hash.
+
+R-049 accepted (d6c9aa4; counts, lengths, JSON, grep verified). Same writing rules. Original text only, no real brands, no real people.
+1. market_stall_signs: 12 (max 28)
+2. market_vendor_barks: 12 (max 44)
+3. burying_ground_tour_captions: 10 (max 52, spooky but kid-safe, no real graves or names)
+4. rash_field_crowd_lines: 10 (max 40)
+5. octagon_announcer_lines: 10 (max 44, for the wing eat-off challenge: start, mid, win, lose)
+6. pete_eatoff_taunts: 8 (max 40)
+Self-check: counts, max lengths, JSON parse, grep Natty, Boh, Utz, Orioles, Ravens, Formstone, IndyCar, Trash Wheel, Poe said, nevermore, Hooters, Hard Rock, Lexington Market (real stall names), owl: 0 hits; exact duplicates vs gr1-gr34: 0. Edit nothing outside content/ and relay/GROK_TO_HARK.md replies.
