@@ -507,7 +507,7 @@
   // ---------------- test bot: win = reads every tell, climbs into openings, hops the hive, SALON at full power; lose = stands still ----------------
   P.botThink = function (B, dt) {
     const st = P.st; if (!st || st.over) return; B.mx = 0; B.my = 0; if (B.mode === 'lose') return;
-    if (B.mode === 'mash') { B.cd = (B.cd || 0) - dt; if (st.tumbleT >= 0) return; const dx = st.qx - st.hx, dz = st.qz - 1.6 - st.hz, l = Math.hypot(dx, dz); if (l > 0.5) { B.mx = -dx / l; B.my = dz / l; } if (B.cd <= 0) { B.a = true; B.cd = 0.2; } if (st.power >= 1) B.c = true; return; } // SWING-mash only: walk at her, never dodge
+    if (B.mode === 'mash') { B.cd = (B.cd || 0) - dt; if (st.tumbleT >= 0) return; const dx = st.qx - st.hx, dz = st.qz - 1.6 - st.hz, l = Math.hypot(dx, dz); if (l > 0.5) { B.mx = -dx / l; B.my = dz / l; } if (B.cd <= 0) { B.a = true; B.cd = 0.2; } return; } // SWING-mash only (no special): walk at her, never dodge
     B.cd = (B.cd || 0) - dt; B.jcd = (B.jcd || 0) - dt; if (st.tumbleT >= 0) return;
     let flee = null, gx = null, gz = null; const left = st.mdur - st.mt;
     const away = (x, z, w = 1) => { const dx = st.hx - x, dz = st.hz - z, l = Math.hypot(dx, dz) || 1; flee = flee || [0, 0]; flee[0] += dx / l * w; flee[1] += dz / l * w; };
