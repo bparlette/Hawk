@@ -12,6 +12,7 @@
 // THREE.Object3D or { root } (optional .update(dt, st) with st = { t, state, throwK|swingK|rearK }); feet at y = 0, facing +z, ~1.8 m tall.
 // Entry: ACT "CHASE" at Al's parked cart (Fells Point boss anchor); BOARD at a water-taxi stop or the Harborplace paddle boats.
 // Tests: ?rb=al | duchess | duchess-paddle | ride (jump in), ?rbauto=win|lose (scripted pilot), ?rbtime=N (Al's clock), ?rbfresh=1 (ignore saves).
+// polish (hark/polish): the Duchess fight runs on the DUELS core via src/09bd_duchess.js (?duchess=1[&duchessauto=win|lose|mash], paddle: ?duchess=paddle).
 const RB = { mode: null, t: 0, calls: 0, maxCalls: 0, auto: Q.get('rbauto') || null, log: [], freeze: false };
 window.__rb = RB;
 const RB_LS = 'tcb_duchess_beaten';
@@ -685,36 +686,79 @@ const DUCH = (function () {
   const spray = rbSpray(sc, 120);
   const boatT = rbBuildTaxi(), boatP = rbBuildPaddle(); sc.add(boatT.root, boatP.root);
   const duch = rbBuildDuchessBoat(true); sc.add(duch.root); const rider = rbDuchessRider(duch);
-  const S = { on: false, phase: 'intro', t: 0, pt: 0, hits: 0, kind: 'taxi', shake: 0, hitstop: 0 };
+  // ---- polish (hark/polish): tells you can read ("!" over her + marks on the water >= 1.1 s), Harold's cane combo on a dizzy Duchess, a POWER meter,
+  // Mavis's crab cake + one second wind, a JUICE KO + star grade. The fight now runs on the DUELS core (09a) through src/09bd_duchess.js: DUELS HUD / RETRY card /
+  // shared JUICE kit / CI runner. Without DUELS (never in this build) it still runs in the old RB mode.
+  const TELL_SW = 1.1, TELL_WV = 1.15, BHP = 300, CANE = [6, 6, 12], CANE_W = ['WHACK!', 'THWACK!', 'ROYAL BONK!'];
+  const bangT = canvasTex(128, 128, (g) => { g.fillStyle = '#ffd23c'; g.strokeStyle = '#14101f'; g.lineWidth = 8; g.beginPath(); g.moveTo(64, 6); g.lineTo(122, 116); g.lineTo(6, 116); g.closePath(); g.fill(); g.stroke();
+    g.fillStyle = '#d8262a'; g.font = '900 78px ' + FONT; g.textAlign = 'center'; g.textBaseline = 'middle'; g.fillText('!', 64, 80); }, 128);
+  const BANG = new THREE.Sprite(new THREE.SpriteMaterial({ map: bangT, transparent: true, depthWrite: false, depthTest: false, fog: false })); BANG.scale.setScalar(2.2); BANG.visible = false; BANG.renderOrder = 6; sc.add(BANG);
+  // sceptre reach: a red ring (+ a faint disc) on the water around her, radius = her swing reach (8 m)
+  const RING = new THREE.Mesh(new THREE.RingGeometry(7.3, 8.1, 44).rotateX(-Math.PI / 2), new THREE.MeshBasicMaterial({ color: '#ff2a2a', transparent: true, opacity: 0, depthWrite: false, fog: false, side: THREE.DoubleSide })); // (normal blend: reads RED on the blue water)
+  const DISC = new THREE.Mesh(new THREE.CircleGeometry(7.3, 36).rotateX(-Math.PI / 2), new THREE.MeshBasicMaterial({ color: '#ff3030', transparent: true, opacity: 0, depthWrite: false, blending: THREE.AdditiveBlending, fog: false, side: THREE.DoubleSide }));
+  RING.renderOrder = DISC.renderOrder = 3; RING.visible = DISC.visible = false; sc.add(RING, DISC);
+  // splash-wave lanes: a chevron strip on the water along each wave's path (from her bow out to ~38 m)
+  const laneT = canvasTex(64, 256, (g, w, h) => { const gr = g.createLinearGradient(0, h, 0, 0); gr.addColorStop(0, 'rgba(255,70,50,0.95)'); gr.addColorStop(1, 'rgba(255,70,50,0)'); g.fillStyle = gr; g.fillRect(0, 0, w, h);
+    g.strokeStyle = 'rgba(255,240,200,0.9)'; g.lineWidth = 6; for (let y = h - 20; y > 10; y -= 40) { g.beginPath(); g.moveTo(10, y); g.lineTo(w / 2, y - 18); g.lineTo(w - 10, y); g.stroke(); } }, 64);
+  const LANES = []; for (let k = 0; k < 3; k++) { const g = new THREE.PlaneGeometry(9, 34); g.rotateX(-Math.PI / 2); g.translate(0, 0, 21.6); const m = new THREE.Mesh(g, new THREE.MeshBasicMaterial({ map: laneT, transparent: true, opacity: 0, depthWrite: false, fog: false, side: THREE.DoubleSide })); m.renderOrder = 3; m.visible = false; sc.add(m); LANES.push(m); }
+  const S = { on: false, phase: 'intro', t: 0, pt: 0, hits: 0, kind: 'taxi', shake: 0, hitstop: 0, duel: false, bot: null, bhp: BHP, pow: 0, combo: 0, comboT: 0, caneK: 0, caneCd: 0, caneT: 0, spT: -1, cakeUsed: false, cakeT: 0, windUsed: false, overShown: false, stats: null };
   const pl = { x: 0, z: 0, h: 0, vx: 0, vz: 0, y: 0, vy: 0, hull: 100, boost: 0, cd: 0, r: 1.6, inv: 0, swing: 0 };
   const du = { x: 0, z: 0, h: 0, vx: 0, vz: 0, st: 'stalk', stT: 0, r: 2.5, swingK: 0, rearK: 0, orbit: 1, wavesFired: 0, sink: 0, stun: 0 };
+  const CI = { mx: 0, my: 0, a: false, b: false, c: false }; // this step's input (DUELS input in duel mode, IN / PRESS in the old RB mode)
+  const _pv = new THREE.Vector3();
+  const pv = (x, y, z) => _pv.set(x, y, z);
+  const shout = (txt, t = 1.1, col) => { if (S.duel) DUELS.banner(txt, t); else RBH.shout(txt.replace(/<small>.*<\/small>/, ''), t, col); };
+  const speak = (who, line, t) => { if (S.duel) DUELS.say(who, line, t); else RBH.speak(who, line, t); };
+  const callout = (txt, t = 1.2) => { if (S.duel) DUELS.tell(txt, t); else RBH.setHint(txt); };
+  const stop = (s) => { if (S.duel) DUELS.hitstop(s); else S.hitstop = Math.max(S.hitstop, s); };
+  const popAt = (txt, x, y, z, cls) => { if (S.duel) DUELS.pop(txt, pv(x, y, z), cls); };
+  function newStats() { return { hitsTaken: 0, canes: 0, maxCombo: 0, powers: 0, dodges: 0, heals: 0, winds: 0, t0: 0 }; }
   function reset() {
     S.phase = 'intro'; S.t = 0; S.pt = 0; S.hits = 0; S.said = false; spray.clear(); for (const w of WAVES) { w.on = false; w.m.visible = false; }
     const pb = S.kind === 'paddle'; Object.assign(pl, { x: -30, z: 20, h: Math.PI * 0.8, vx: 0, vz: 0, y: 0, vy: 0, hull: 100, boost: 0, cd: 0, r: pb ? 1.2 : 1.6, inv: 0, swing: 0 });
-    Object.assign(du, { x: 10, z: -8, h: -Math.PI * 0.3, vx: 0, vz: 0, st: 'stalk', stT: 2.5, swingK: 0, rearK: 0, orbit: 1, wavesFired: 0, sink: 0, stun: 0 });
+    Object.assign(du, { x: 10, z: -8, h: -Math.PI * 0.3, vx: 0, vz: 0, st: 'stalk', stT: 2.5, swingK: 0, rearK: 0, orbit: 1, wavesFired: 0, sink: 0, stun: 0, swung: false });
+    Object.assign(S, { bhp: BHP, pow: S.pow * 0.5, combo: 0, comboT: 0, caneK: 0, caneCd: 0, caneT: 0, spT: -1, cakeUsed: false, cakeT: 0, overShown: false });
+    BANG.visible = RING.visible = DISC.visible = false; for (const l of LANES) l.visible = false;
     RBH.setPips(0); RB.duStats = { hits: 0, rams: 0, knocks: 0, wavesHit: 0, swingsHit: 0, waves: 0, swings: 0, misses: 0 };
   }
   const myBoat = () => (S.kind === 'paddle' ? boatP : boatT);
   function ambushLine() { RBH.place(); RBH.el.classList.add('on'); RBH.name.textContent = ''; RBH.setHint(''); RBH.speak('DRAGON BOAT DUCHESS', rbPick(rbLines('dragon_boat_duchess').boat_ambush), 2.6); }
-  function start(kind) {
-    S.kind = kind === 'paddle' ? 'paddle' : 'taxi'; reset(); S.on = true; RB.mode = 'duchess';
+  function lend() { const deck = S.kind === 'paddle' ? 0.3 : 0.8; rbLend(myBoat().root, S.kind === 'paddle' ? [-0.42, deck, -0.5] : [-0.5, deck, 0.15], myBoat().root, S.kind === 'paddle' ? [0.42, deck, -0.5] : [0.5, deck, 0.15]); }
+  function start(kind, opts = {}) {
+    S.kind = kind === 'paddle' ? 'paddle' : 'taxi';
+    // polish: the fight runs on the DUELS core when it is there (src/09bd_duchess.js registers the 'duchess' kind)
+    if (typeof DUELS !== 'undefined' && DUELS.kinds.duchess && !DUELS.cur) { RBH.hide(); if (DUELS.start('duchess', { kind: S.kind, bot: opts.bot || RB.auto || null })) return; }
+    S.duel = false; S.bot = null; S.stats = newStats(); S.pow = 0; S.windUsed = false; reset(); S.on = true; RB.mode = 'duchess';
     boatT.root.visible = S.kind === 'taxi'; boatP.root.visible = S.kind === 'paddle';
     rbEnterFight('DRAGON BOAT DUCHESS', TOUCH ? 'STICK steer · SWING ram-boost · JUMP hop waves' : DEV === 'pad' ? 'stick steer · X ram-boost · A hop' : 'A/D steer · W/S throttle · J ram-boost · K hop');
-    const deck = S.kind === 'paddle' ? 0.3 : 0.8; rbLend(myBoat().root, S.kind === 'paddle' ? [-0.42, deck, -0.5] : [-0.5, deck, 0.15], myBoat().root, S.kind === 'paddle' ? [0.42, deck, -0.5] : [0.5, deck, 0.15]);
-    rbLog('duchess start ' + S.kind); place(0);
+    lend(); rbLog('duchess start ' + S.kind); place(0);
+  }
+  function duelStart(K, opts = {}) { // called by DUELS.start through the 'duchess' kind
+    S.duel = true; S.bot = DUELS.bot ? DUELS.bot.mode : null; S.stats = newStats(); S.pow = 0; S.windUsed = false; reset(); S.on = true; RB.mode = null; // (MODE.duel owns the frame now)
+    if (opts.kind) S.kind = opts.kind === 'paddle' ? 'paddle' : 'taxi';
+    boatT.root.visible = S.kind === 'taxi'; boatP.root.visible = S.kind === 'paddle'; lend();
+    DUELS.banner('DRAGON BOAT DUCHESS<small>HARBOUR AMBUSH!</small>', 2.2); DUELS.sub('CRASHES 0/3', ''); DUELS.power(0, false, 'POWER'); DUELS.bars(1, 1);
+    rbLog('duchess start ' + S.kind + ' (duel)'); place(0); syncK(K);
   }
   function exit(won) {
-    S.on = false; rbLeaveFight(); rbLog('duchess exit ' + (won ? 'won' : 'quit'));
+    S.on = false; if (!S.duel) rbLeaveFight(); BANG.visible = RING.visible = DISC.visible = false; rbLog('duchess exit ' + (won ? 'won' : 'quit'));
     if (RIDES.R.on) RIDES.resume(); else { RB.mode = null; rbReturnRigs(); }
   }
+  function grade() { const h = S.stats.hitsTaken, g = h <= 3 ? 'S' : h <= 8 ? 'A' : 'B', stars = g === 'S' ? 3 : g === 'A' ? 2 : 1; return { g, stars, h }; }
   function win() {
-    S.phase = 'won'; S.pt = 0; du.st = 'sink'; du.sink = 0.001; RBH.speak('DRAGON BOAT DUCHESS', rbPick(rbLines('dragon_boat_duchess').defeat), 4.2); RBH.shout('DUCHESS SUNK!', 2.4, '#7dffc0'); sfx('ko');
+    S.phase = 'won'; S.pt = 0; du.st = 'sink'; du.sink = 0.001; S.bhp = 0; S.spT = -1; speak('DRAGON BOAT DUCHESS', rbPick(rbLines('dragon_boat_duchess').defeat), 4.2); sfx('ko');
+    if (S.duel) { // polish: one shared JUICE KO (final-blow replay), a big impact + slow-mo, then she sinks; the grade card follows
+      JUICE.ko(new THREE.Vector3(du.x, WY + 2, du.z)); DUELS.impact({ stop: 0.14, shake: 1.2, flash: '#ffffff', flashA: 0.7, zoom: 1.2, zoomT: 0.6, sfx: 'mega', pop: 'K.O.!', pos: pv(du.x, WY + 4.5, du.z), cls: 'big' });
+      DUELS.slowmo(0.35, 1.0); DUELS.banner('K.O.!<small>DUCHESS SUNK!</small>', 2.4); DUELS.combo(0); DUELS.ready(null); DUELS.hot(false);
+    } else RBH.shout('DUCHESS SUNK!', 2.4, '#7dffc0');
     RB.duchessBeaten = true; try { localStorage.setItem(RB_LS, '1'); } catch (e) {}
     const d = { lm: null, boss: 'Dragon Boat Duchess', id: 'dragon_boat_duchess', roaming: true, first: true, city: BOSS_CLEAR.cityCrime(), at: +S.t.toFixed(1), mode: 'ram' };
     BOSS_CLEAR.log.push(d); for (const f of BOSS_CLEAR.fns) { try { f(d); } catch (e) { console.error(e); } } try { dispatchEvent(new CustomEvent('tcb:bossclear', { detail: d })); } catch (e) {}
-    rbLog('duchess WIN');
+    const G = grade(); rbLog('duchess WIN grade ' + G.g); if (S.duel) DUELS.log.push('duchess:win:' + G.g);
   }
-  function lose() { S.phase = 'lost'; S.pt = 0; RBH.shout('SUNK!', 2, '#ff5f5f'); RBH.speak('DRAGON BOAT DUCHESS', 'Off with their boat! Ha!', 3); sfx('hurt'); rbLog('duchess LOSE'); }
+  function lose() { S.phase = 'lost'; S.pt = 0; shout('SUNK!', 2, '#ff5f5f'); speak('DRAGON BOAT DUCHESS', 'Off with their boat! Ha!', 3); sfx('hurt'); rbLog('duchess LOSE'); if (S.duel) { DUELS.log.push('duchess:lose'); DUELS.ready(null); DUELS.hot(false); } }
+  function addPow(v) { const was = S.pow >= 1; S.pow = clamp(S.pow + v, 0, 1); if (!was && S.pow >= 1) { callout('POWER FULL! ACT = DRAGON-SLAYER RAM', 1.4); if (S.duel) DUELS.hitSfx('power'); } }
+  function dodged(txt, v = 0.12) { S.stats.dodges++; addPow(v); popAt(txt, pl.x, WY + 3, pl.z, 'word'); }
   // ---- physics helpers ----
   function hitObstacles(o, r, bounce) { // circle vs piers / buoys; returns what it hit (or null); pushes o out + reflects its velocity
     let hit = null;
@@ -726,47 +770,87 @@ const DUCH = (function () {
   }
   function nearestObstacle(x, z) { let best = null, bd = 1e9; for (const p of PIERS) { const cx = clamp(x, p.x0, p.x1), cz = clamp(z, p.z0, p.z1), d = Math.hypot(x - cx, z - cz); if (d < bd) { bd = d; best = { x: cx, z: cz, d }; } }
     for (const b of BUOYS) { const d = Math.hypot(x - b.x, z - b.z) - b.r; if (d < bd) { bd = d; best = { x: b.x, z: b.z, d }; } } return best; }
-  function autoPilot() {
-    if (RB.auto !== 'win') { IN.mx = 0; IN.my = RB.auto === 'lose' ? -1 : 0; return; }
+  // the scripted pilot (?rbauto= / the DUELS bot): win = lines her up against a pier or buoy and rams, hops waves, canes her while she is dizzy, spends POWER;
+  // mash = a first-timer: holds the stick at her and mashes SWING (no hops, no POWER); lose = reverses away and takes the hits
+  function pilot(mode, o) {
+    o.mx = 0; o.my = 0; o.a = o.b = o.c = false;
+    if (mode === 'lose') { o.my = -1; return; }
+    const dDu = Math.hypot(pl.x - du.x, pl.z - du.z);
+    if (mode === 'mash') { const want = Math.atan2(du.x - pl.x, du.z - pl.z), d = angTo(pl.h, want); o.mx = clamp(-d * 2.2, -1, 1); o.my = 1; S.mashT = (S.mashT || 0) + 1; if (S.mashT % 7 === 0) o.a = true; return; }
+    if (S.pow >= 1 && S.spT < 0 && du.st !== 'sink') { o.c = true; return; }
+    if (du.st === 'stunned' && dDu < 8 && S.caneCd <= 0) { o.a = true; }
     // line up behind her, on the far side from the nearest obstacle, then charge through her toward it
     const ob = nearestObstacle(du.x, du.z); let tx = du.x, tz = du.z, charge = true;
     if (ob) { const ax = du.x - ob.x, az = du.z - ob.z, l = Math.hypot(ax, az) || 1; const bx = du.x + ax / l * 6, bz = du.z + az / l * 6;
-      const dPl = Math.hypot(pl.x - bx, pl.z - bz), dDu = Math.hypot(pl.x - du.x, pl.z - du.z);
+      const dPl = Math.hypot(pl.x - bx, pl.z - bz);
       const aligned = ((du.x - pl.x) * -ax + (du.z - pl.z) * -az) / (l * (dDu || 1)) > 0.8;
       if (!aligned && dPl > 2.5) { tx = bx; tz = bz; charge = false; } }
-    const want = Math.atan2(tx - pl.x, tz - pl.z), d = angTo(pl.h, want); IN.mx = clamp(-d * 2.2, -1, 1); IN.my = Math.abs(d) > 1.6 ? -0.2 : 1;
-    if (charge && Math.abs(d) < 0.3 && Math.hypot(du.x - pl.x, du.z - pl.z) < 12 && pl.cd <= 0) PRESS.add('j');
-    for (const w of WAVES) if (w.on && !w.hit) { const rx = pl.x - w.x, rz = pl.z - w.z, along = rx * w.dx + rz * w.dz; if (along > 0 && along < 5) PRESS.add('k'); }
+    const want = Math.atan2(tx - pl.x, tz - pl.z), d = angTo(pl.h, want); o.mx = clamp(-d * 2.2, -1, 1); o.my = Math.abs(d) > 1.6 ? -0.2 : 1;
+    if (charge && du.st !== 'stunned' && Math.abs(d) < 0.3 && dDu < 12 && pl.cd <= 0) o.a = true;
+    for (const w of WAVES) if (w.on && !w.hit) { const rx = pl.x - w.x, rz = pl.z - w.z, along = rx * w.dx + rz * w.dz; if (along > 0 && along < 5) o.b = true; }
+    if (du.st === 'swingTell' && dDu < 9.5) { o.mx = clamp(-angTo(pl.h, Math.atan2(pl.x - du.x, pl.z - du.z)) * 2.2, -1, 1); o.my = 1; o.a = false; } // steer out of the red ring
   }
+  function autoPilot() { pilot(RB.auto === 'win' ? 'win' : RB.auto, CI); IN.mx = CI.mx; IN.my = CI.my; }
   function simPlayer(dt) {
     const pb = S.kind === 'paddle', top = pb ? 11.5 : 13.5;
-    pl.cd -= dt; pl.boost -= dt; pl.inv -= dt;
-    if (rbBoost() && pl.cd <= 0) { pl.boost = 0.9; pl.cd = 2.4; sfx('swing'); RBH.shout('RAM!', 0.5, '#7de8ff'); }
-    if (rbHop() && pl.y <= 0.001) { pl.vy = 6.2; sfx('jump'); }
+    pl.cd -= dt; pl.boost -= dt; pl.inv -= dt; S.caneCd -= dt; S.caneT -= dt; S.comboT -= dt; if (S.comboT <= 0 && S.combo) { S.combo = 0; if (S.duel) DUELS.combo(0); }
+    const dDu = Math.hypot(du.x - pl.x, du.z - pl.z);
+    // POWER: DRAGON-SLAYER RAM (Mavis floors it; she freezes, Harold homes in, and the hit sends her into the nearest pier / buoy)
+    if (CI.c && S.pow >= 1 && S.spT < 0 && du.st !== 'sink') { S.spT = 0; S.pow = 0; S.stats.powers++; du.st = 'stunned'; du.stT = 2.2; pl.inv = 2.6;
+      shout('DRAGON-SLAYER RAM!<small>MAVIS FLOORS IT</small>', 1.6, '#ffd23c'); speak('MAVIS', 'Hold your hat, Harold!', 1.6);
+      if (S.duel) { DUELS.slowmo(0.55, 0.7); DUELS.hitSfx('power'); DUELS.flash('#ffd23c', 0.45); } }
+    else if (CI.c && S.pow < 1 && S.duel && S.caneCd <= 0) { callout('NEED POWER: CANE HER + DODGE', 0.9); S.caneCd = 0.3; }
+    // SWING: the cane when she is dizzy and alongside, else the ram boost
+    if (CI.a && S.spT < 0) {
+      if (du.st === 'stunned' && dDu < 8.5) { if (S.caneCd <= 0) cane(); }
+      else if (pl.cd <= 0) { pl.boost = 0.9; pl.cd = 2.4; sfx('swing'); if (S.duel) { DUELS.hitSfx('whoosh'); popAt('RAM!', pl.x, WY + 3, pl.z, 'word'); } else RBH.shout('RAM!', 0.5, '#7de8ff'); }
+    }
+    if (CI.b && pl.y <= 0.001) { pl.vy = 6.2; sfx('jump'); }
     pl.vy -= 20 * dt; pl.y = Math.max(0, pl.y + pl.vy * dt); if (pl.y === 0) { if (pl.vy < -4) spray.burst(pl.x, WY + 0.3, pl.z, '#e8f8ff', 8, 3, 4); pl.vy = 0; }
-    const sp = Math.hypot(pl.vx, pl.vz); pl.h -= IN.mx * dt * 2.0 * (0.45 + 0.55 * Math.min(1, sp / 6));
-    const thr = pl.boost > 0 ? 1.7 : clamp(0.62 + IN.my * 0.5, -0.4, 1.12), fx = Math.sin(pl.h), fz = Math.cos(pl.h), grip = pl.boost > 0 ? 4 : 2.1;
-    pl.vx = damp(pl.vx, fx * top * thr, grip, dt); pl.vz = damp(pl.vz, fz * top * thr, grip, dt);
+    const sp = Math.hypot(pl.vx, pl.vz);
+    if (S.spT >= 0) { // the special: auto-steer onto her at full tilt
+      S.spT += dt; pl.h += angTo(pl.h, Math.atan2(du.x - pl.x, du.z - pl.z)) * Math.min(1, dt * 8); pl.vx = damp(pl.vx, Math.sin(pl.h) * 24, 6, dt); pl.vz = damp(pl.vz, Math.cos(pl.h) * 24, 6, dt);
+      if (Math.random() < dt * 30) spray.burst(pl.x, WY + 0.4, pl.z, '#ffd23c', 3, 3, 3);
+      if (S.spT > 2.2) S.spT = -1;
+    } else {
+      pl.h -= CI.mx * dt * 2.0 * (0.45 + 0.55 * Math.min(1, sp / 6));
+      const thr = pl.boost > 0 ? 1.7 : clamp(0.62 + CI.my * 0.5, -0.4, 1.12), fx = Math.sin(pl.h), fz = Math.cos(pl.h), grip = pl.boost > 0 ? 4 : 2.1;
+      pl.vx = damp(pl.vx, fx * top * thr, grip, dt); pl.vz = damp(pl.vz, fz * top * thr, grip, dt);
+    }
     pl.x += pl.vx * dt; pl.z += pl.vz * dt;
     const h = hitObstacles(pl, pl.r, 0.4); if (h && h.vn > 5) { pl.hull -= Math.min(8, h.vn * 0.4); S.shake = 0.35; spray.burst(pl.x, WY + 0.6, pl.z, '#e8f8ff', 8, 3, 4); sfx('hit'); }
   }
-  function damage(n, nx, nz, why) { if (pl.inv > 0 || pl.y > 0.35) return false; pl.hull -= n; pl.inv = 0.8; pl.vx += nx * 11; pl.vz += nz * 11; S.shake = 0.6; S.hitstop = 0.08; spray.burst(pl.x, WY + 0.8, pl.z, '#e8f8ff', 22, 5, 7); sfx('hurt'); RBH.shout(why, 0.8, '#ff5f5f'); return true; }
+  // Harold leans out with the cane: a 3-hit combo (WHACK, THWACK, ROYAL BONK finisher) on a dizzy Duchess; chips her bar, fills POWER, keeps her dizzy a moment longer
+  function cane() {
+    const k = S.comboT > 0 ? (S.caneK + 1) % 3 : 0; S.caneK = k; S.caneCd = k === 2 ? 0.42 : 0.24; S.caneT = 0.32; pl.swing = 1; S.combo++; S.comboT = 1.3; S.stats.canes++; S.stats.maxCombo = Math.max(S.stats.maxCombo, S.combo);
+    const floor = BHP - 100 * (S.hits + 1) + 6, dmg = CANE[k]; S.bhp = Math.max(floor, S.bhp - dmg); du.stT = Math.min(du.stT + 0.18, 2.4); addPow(k === 2 ? 0.2 : 0.1);
+    spray.burst(du.x, WY + 2.2, du.z, '#ffd23c', k === 2 ? 22 : 10, 5, 6); S.shake = Math.max(S.shake, k === 2 ? 0.5 : 0.25); sfx(k === 2 ? 'heavy' : 'hit');
+    if (S.duel) { DUELS.impact({ stop: k === 2 ? 0.1 : 0.06, shake: k === 2 ? 0.55 : 0.25, sfx: k === 2 ? 'heavy' : 'light', pop: CANE_W[k] + ' ' + dmg, pos: pv(du.x, WY + 3.4, du.z), cls: k === 2 ? 'big' : 'crit' });
+      if (k === 2) DUELS.flash('#ffffff', 0.35); DUELS.combo(S.combo); }
+    else S.hitstop = Math.max(S.hitstop, k === 2 ? 0.1 : 0.06);
+  }
+  function damage(n, nx, nz, why) { if (pl.inv > 0 || pl.y > 0.35 || S.spT >= 0) return false; pl.hull -= n; pl.inv = 0.8; pl.vx += nx * 11; pl.vz += nz * 11; S.shake = 0.6; stop(0.08); S.combo = 0; S.stats.hitsTaken++;
+    spray.burst(pl.x, WY + 0.8, pl.z, '#e8f8ff', 22, 5, 7); sfx('hurt');
+    if (S.duel) { DUELS.hurt(); DUELS.combo(0); popAt('-' + n, pl.x, WY + 2.6, pl.z, ''); DUELS.tell(why, 0.8); } else RBH.shout(why, 0.8, '#ff5f5f');
+    if (pl.hull < 35 && pl.hull > 0 && !S.cakeUsed) { S.cakeUsed = true; S.cakeT = 0.9; } // Mavis's crab cake (once a try)
+    return true; }
   function simDuchess(dt) {
     du.stT -= dt; du.swingK = Math.max(0, du.swingK - dt * 2); const dx = pl.x - du.x, dz = pl.z - du.z, dist = Math.hypot(dx, dz), bear = Math.atan2(dx, dz);
     if (du.st === 'stalk') {
       const want = 13 - S.hits, tang = du.orbit, nx = dx / (dist || 1), nz = dz / (dist || 1);
       const vx = (-nz * tang) * 8.5 + nx * (dist - want) * 0.9, vz = (nx * tang) * 8.5 + nz * (dist - want) * 0.9;
       du.vx = damp(du.vx, vx, 1.6, dt); du.vz = damp(du.vz, vz, 1.6, dt); du.h += angTo(du.h, Math.atan2(du.vx, du.vz)) * (1 - Math.exp(-dt * 3));
-      if (du.stT <= 0) { if (dist < 9) { du.st = 'swingTell'; du.stT = 0.8; RB.duStats.swings++; } else { du.st = 'waveTell'; du.stT = 0.9; RB.duStats.waves++; } }
+      if (du.stT <= 0) { if (dist < 9) { du.st = 'swingTell'; du.stT = TELL_SW; RB.duStats.swings++; callout('! SCEPTRE SWING! STEER OUT OF THE RED RING!', TELL_SW); }
+        else { du.st = 'waveTell'; du.stT = TELL_WV; RB.duStats.waves++; callout('! SPLASH WAVE! JUMP TO HOP IT!', TELL_WV); } if (S.duel) DUELS.hitSfx('whoosh'); }
       if (Math.random() < dt * 0.15) du.orbit *= -1;
-    } else if (du.st === 'swingTell') { du.vx = damp(du.vx, dx / (dist || 1) * 5, 2, dt); du.vz = damp(du.vz, dz / (dist || 1) * 5, 2, dt); du.h += angTo(du.h, bear) * (1 - Math.exp(-dt * 5)); du.swingK = 0;
-      if (du.stT <= 0) { du.st = 'swing'; du.stT = 0.4; sfx('swing'); }
+    } else if (du.st === 'swingTell') { du.vx = damp(du.vx, dx / (dist || 1) * 4, 2, dt); du.vz = damp(du.vz, dz / (dist || 1) * 4, 2, dt); du.h += angTo(du.h, bear) * (1 - Math.exp(-dt * 5)); du.swingK = 0;
+      if (du.stT <= 0) { du.st = 'swing'; du.stT = 0.4; du.swung = false; sfx('swing'); }
     } else if (du.st === 'swing') { du.swingK = 1; if (!du.swung && dist < 8 && Math.abs(angTo(du.h, bear)) < 1.5) { du.swung = true; if (damage(14, dx / (dist || 1), dz / (dist || 1), 'SCEPTRE!')) RB.duStats.swingsHit++; }
-      if (du.stT <= 0) { du.st = 'stalk'; du.stT = rnd(1.6, 2.6) - S.hits * 0.3; du.swung = false; }
+      if (du.stT <= 0) { if (!du.swung && dist < 16 && S.phase === 'fight') dodged('DODGED!'); du.st = 'stalk'; du.stT = rnd(1.6, 2.6) - S.hits * 0.3; du.swung = false; }
     } else if (du.st === 'waveTell') { du.vx = damp(du.vx, 0, 2, dt); du.vz = damp(du.vz, 0, 2, dt); du.h += angTo(du.h, bear) * (1 - Math.exp(-dt * 4)); du.rearK = Math.min(1, du.rearK + dt * 2.5);
       if (du.stT <= 0) { const n = S.hits >= 1 ? 3 : 1; for (let k = 0; k < n; k++) fireWave(du.h + (k - (n - 1) / 2) * 0.55); du.st = 'stalk'; du.stT = rnd(2.0, 3.0) - S.hits * 0.3; }
     } else if (du.st === 'knocked') { du.vx = damp(du.vx, 0, 1.0, dt); du.vz = damp(du.vz, 0, 1.0, dt); du.h += dt * 3;
-      if (du.stT <= 0 || Math.hypot(du.vx, du.vz) < 2.5) { du.st = 'stalk'; du.stT = 1.2; RB.duStats.misses++; if (RB.duStats.misses % 2 === 1) RBH.setHint('KNOCK HER INTO A PIER OR A BUOY!'); }
+      if (du.stT <= 0 || Math.hypot(du.vx, du.vz) < 2.5) { du.st = 'stalk'; du.stT = 1.2; RB.duStats.misses++; if (RB.duStats.misses % 2 === 1) callout('KNOCK HER INTO A PIER OR A BUOY!', 1.6); }
     } else if (du.st === 'stunned') { du.vx = damp(du.vx, 0, 3, dt); du.vz = damp(du.vz, 0, 3, dt); du.h += dt * 5; if (du.stT <= 0) { du.st = 'stalk'; du.stT = 1.0; } }
     else if (du.st === 'sink') { du.vx = damp(du.vx, 0, 2, dt); du.vz = damp(du.vz, 0, 2, dt); du.sink += dt; }
     if (du.st !== 'waveTell') du.rearK = Math.max(0, du.rearK - dt * 2);
@@ -774,16 +858,25 @@ const DUCH = (function () {
     const knocked = du.st === 'knocked', vBefore = Math.hypot(du.vx, du.vz);
     const h = hitObstacles(du, du.r, knocked ? 0.5 : 0.2);
     if (h && knocked && vBefore > 3.5) { // CRASH: the hit that counts
-      S.hits++; RB.duStats.hits = S.hits; du.st = 'stunned'; du.stT = 1.6; RBH.setPips(S.hits); S.shake = 0.9; S.hitstop = 0.15; if (h.b) h.b.hitT = 1;
+      S.hits++; RB.duStats.hits = S.hits; du.st = 'stunned'; du.stT = 2.2; RBH.setPips(S.hits); S.shake = 0.9; if (h.b) h.b.hitT = 1; S.bhp = Math.min(S.bhp, BHP - 100 * S.hits); addPow(0.15);
       spray.burst(du.x, WY + 1, du.z, '#ffc83a', 18, 6, 7); spray.burst(du.x, WY + 0.6, du.z, '#e8f8ff', 26, 6, 8); sfx('heavy'); rbLog('duchess CRASH ' + h.kind + ' ' + S.hits);
-      if (S.hits >= 3) win(); else { RBH.shout(h.kind === 'buoy' ? 'BUOY BONK! ' + S.hits + '/3' : 'PIER SMASH! ' + S.hits + '/3', 1.2); if (S.hits === 2) RBH.speak('DRAGON BOAT DUCHESS', 'My hull! Do you know what dragon scales COST?', 2.6); }
+      if (S.hits >= 3) win(); else {
+        stop(0.15); if (S.duel) DUELS.impact({ shake: 0.8, sfx: 'mega', flash: '#ffffff', flashA: 0.3 });
+        shout((h.kind === 'buoy' ? 'BUOY BONK! ' : 'PIER SMASH! ') + S.hits + '/3', 1.2);
+        if (S.hits === 2) speak('DRAGON BOAT DUCHESS', 'My hull! Do you know what dragon scales COST?', 2.6); }
     }
     // the player rams her
     const rx = du.x - pl.x, rz = du.z - pl.z, rd = Math.hypot(rx, rz);
-    if (rd < du.r + pl.r) { const nx = rx / (rd || 1), nz = rz / (rd || 1), rel = (pl.vx - du.vx) * nx + (pl.vz - du.vz) * nz;
-      const push = du.r + pl.r - rd; pl.x -= nx * push * 0.6; pl.z -= nz * push * 0.6; du.x += nx * push * 0.4; du.z += nz * push * 0.4;
-      if (rel > 3 && du.st !== 'sink' && du.st !== 'stunned') { const k = 6 + rel * 1.25 + (pl.boost > 0 ? 6 : 0); du.vx = nx * k; du.vz = nz * k; du.st = 'knocked'; du.stT = 2.0; RB.duStats.knocks++;
-        pl.vx -= nx * rel * 0.7; pl.vz -= nz * rel * 0.7; pl.boost = 0; pl.swing = 1; S.shake = 0.45; spray.burst((pl.x + du.x) / 2, WY + 0.8, (pl.z + du.z) / 2, '#e8f8ff', 14, 5, 5); sfx('hit'); rbLog('duchess knock ' + k.toFixed(1)); }
+    if (rd < du.r + pl.r + (S.spT >= 0 ? 0.6 : 0)) { const nx = rx / (rd || 1), nz = rz / (rd || 1), rel = (pl.vx - du.vx) * nx + (pl.vz - du.vz) * nz;
+      const push = Math.max(0, du.r + pl.r - rd); pl.x -= nx * push * 0.6; pl.z -= nz * push * 0.6; du.x += nx * push * 0.4; du.z += nz * push * 0.4;
+      if (S.spT >= 0 && du.st !== 'sink') { // the DRAGON-SLAYER RAM lands: aimed at the nearest pier / buoy
+        const ob = nearestObstacle(du.x, du.z); let ax = nx, az = nz; if (ob) { const l = Math.hypot(ob.x - du.x, ob.z - du.z) || 1; ax = (ob.x - du.x) / l; az = (ob.z - du.z) / l; }
+        du.vx = ax * 30; du.vz = az * 30; du.st = 'knocked'; du.stT = 2.5; S.spT = -1; RB.duStats.knocks++; pl.vx *= 0.2; pl.vz *= 0.2; pl.swing = 1; S.shake = 0.8;
+        spray.burst(du.x, WY + 1.2, du.z, '#ffd23c', 30, 7, 8); sfx('heavy'); rbLog('duchess SLAYER ram');
+        if (S.duel) DUELS.impact({ stop: 0.12, shake: 0.9, flash: '#ffd23c', flashA: 0.5, sfx: 'mega', pop: 'SLAYER RAM!', pos: pv(du.x, WY + 4, du.z), cls: 'big' }); }
+      else if (rel > 3 && du.st !== 'sink' && du.st !== 'stunned') { const k = 6 + rel * 1.25 + (pl.boost > 0 ? 6 : 0); du.vx = nx * k; du.vz = nz * k; du.st = 'knocked'; du.stT = 2.0; RB.duStats.knocks++; addPow(0.08);
+        pl.vx -= nx * rel * 0.7; pl.vz -= nz * rel * 0.7; pl.boost = 0; pl.swing = 1; S.shake = 0.45; spray.burst((pl.x + du.x) / 2, WY + 0.8, (pl.z + du.z) / 2, '#e8f8ff', 14, 5, 5); sfx('hit'); rbLog('duchess knock ' + k.toFixed(1));
+        if (S.duel) DUELS.impact({ stop: 0.05, shake: 0.35, sfx: 'heavy', pop: 'RAMMED!', pos: pv(du.x, WY + 3.6, du.z), cls: 'word' }); }
       else if (rel > 0) { pl.vx -= nx * rel; pl.vz -= nz * rel; } }
   }
   function fireWave(ang) { const w = WAVES.find((q) => !q.on); if (!w) return; Object.assign(w, { on: true, x: du.x + Math.sin(du.h) * 4.6, z: du.z + Math.cos(du.h) * 4.6, dx: Math.sin(ang), dz: Math.cos(ang), t: 0, hit: false }); w.m.visible = true; sfx('heavy');
@@ -791,40 +884,62 @@ const DUCH = (function () {
   function simWaves(dt) {
     for (const w of WAVES) { if (!w.on) continue; w.t += dt; const sp = 15; w.x += w.dx * sp * dt; w.z += w.dz * sp * dt;
       const rx = pl.x - w.x, rz = pl.z - w.z, along = rx * w.dx + rz * w.dz, lat = Math.abs(rx * w.dz - rz * w.dx);
-      if (!w.hit && Math.abs(along + 9 * (1 - Math.cos(Math.min(lat / 9, 0.55)))) < 1.3 && lat < 5) { w.hit = true; if (damage(12, w.dx, w.dz, 'SPLASH WAVE!')) RB.duStats.wavesHit++; }
+      if (!w.hit && Math.abs(along + 9 * (1 - Math.cos(Math.min(lat / 9, 0.55)))) < 1.3 && lat < 5) { w.hit = true; if (pl.y > 0.35 && S.phase === 'fight') dodged('HOPPED!', 0.15); else if (damage(12, w.dx, w.dz, 'SPLASH WAVE!')) RB.duStats.wavesHit++; }
       if (w.t > 2.6) { w.on = false; w.m.visible = false; } }
   }
-  function step(dt) {
+  function readCI(I) { // this step's input: the DUELS snapshot (keys / panel / pad / bot) or, in the old RB mode, IN + PRESS
+    if (I) { CI.mx = I.mx + (I.rh ? 1 : 0) - (I.lh ? 1 : 0); CI.mx = clamp(CI.mx, -1, 1); CI.my = I.my; CI.a = !!I.a; CI.b = !!I.b; CI.c = !!I.c; return; }
+    CI.mx = IN.mx; CI.my = IN.my; CI.a = rbBoost(); CI.b = rbHop(); CI.c = false;
+  }
+  function step(dt, I) {
     S.t += dt; S.pt += dt; const P = S.phase;
-    if (P === 'intro') { if (S.pt > 0.3 && !S.said) { S.said = true; RBH.speak('DRAGON BOAT DUCHESS', rbPick(rbLines('dragon_boat_duchess').intro), 3.2); }
-      if (S.pt > 3.4 || (S.pt > 0.8 && (PRESS.has('j') || PRESS.has('k') || PRESS.has('e') || RB.auto))) { S.phase = 'fight'; S.pt = 0; RBH.shout('RAM HER!', 1.2); RBH.setHint('KNOCK HER INTO PIERS + BUOYS 3 TIMES · HOP THE SPLASH WAVES'); } }
-    else if (P === 'fight') { if (RB.auto) autoPilot(); simPlayer(dt); simDuchess(dt); simWaves(dt); if (pl.hull <= 0) { pl.hull = 0; lose(); } }
+    if (P === 'intro') { readCI(I); if (S.pt > 0.3 && !S.said) { S.said = true; speak('DRAGON BOAT DUCHESS', rbPick(rbLines('dragon_boat_duchess').intro), 3.2); }
+      if (S.pt > 3.4 || (S.pt > 0.8 && (CI.a || CI.b || CI.c || PRESS.has('k') || RB.auto || S.bot))) { S.phase = 'fight'; S.pt = 0; S.stats.t0 = S.t; shout('RAM HER!<small>INTO A PIER OR A BUOY · 3 CRASHES</small>', 1.4); if (!S.duel) RBH.setHint('KNOCK HER INTO PIERS + BUOYS 3 TIMES · HOP THE SPLASH WAVES'); } }
+    else if (P === 'fight') { if (I && S.bot) readCI(I); else if (I) readCI(I); else { readCI(null); if (RB.auto) autoPilot(); }
+      simPlayer(dt); simDuchess(dt); simWaves(dt);
+      if (S.cakeT > 0 && (S.cakeT -= dt) <= 0) { const heal = Math.min(30, 100 - pl.hull); pl.hull += heal; S.stats.heals++; speak('MAVIS', rbPick(['Crab cake, Harold! Eat it while you steer!', 'Here, hon! Fresh from the cooler!', 'Patch the hull later, eat this now!']), 2.2); popAt('+' + Math.round(heal) + ' CRAB CAKE', pl.x, WY + 3.2, pl.z, 'heal'); sfx('jump'); }
+      if (pl.hull <= 0) { if (S.duel && !S.windUsed) { S.windUsed = true; S.stats.winds++; pl.hull = 40; pl.inv = 2.2; DUELS.banner('SECOND WIND!<small>MAVIS BAILS OUT THE BOAT</small>', 1.8); DUELS.say('MAVIS', 'Bail, Harold, BAIL! We are not sinking today!', 2.4); DUELS.flash('#9dff6b', 0.45); }
+        else { pl.hull = 0; lose(); } } }
     else if (P === 'won') { simDuchess(dt); pl.vx = damp(pl.vx, 0, 1, dt); pl.vz = damp(pl.vz, 0, 1, dt); pl.x += pl.vx * dt; pl.z += pl.vz * dt;
-      if (S.pt > 4.5 || (S.pt > 1.5 && (PRESS.has('j') || PRESS.has('k') || PRESS.has('e')))) { exit(true); return; } }
-    else if (P === 'lost') { pl.vx = damp(pl.vx, 0, 2, dt); pl.vz = damp(pl.vz, 0, 2, dt); if (S.pt > 1.8) { S.phase = 'retry'; RBH.showRetry('THE DUCHESS SANK YOU<br><span style="font-size:11px;color:#fff">crashes ' + S.hits + ' / 3</span>'); } }
-    else if (P === 'retry') { const c = RB.auto ? (RB.autoQuit ? 'quit' : null) : rbRetryInput();
+      if (S.duel) { if (S.pt > 3.0 && !S.overShown) { S.overShown = true; const G = grade();
+          DUELS.over('win', 'DRAGON BOAT<br>DUCHESS SUNK!', '<span style="color:#ffd23c;font-size:18px;letter-spacing:3px">' + '\u2605'.repeat(G.stars) + '<span style="opacity:.3">' + '\u2605'.repeat(3 - G.stars) + '</span></span><br>GRADE ' + G.g + ' · hits taken ' + G.h + ' · best cane combo x' + S.stats.maxCombo + '<br>The harbour is safe. The boat ride carries on.'); } }
+      else if (S.pt > 4.5 || (S.pt > 1.5 && (PRESS.has('j') || PRESS.has('k') || PRESS.has('e')))) { exit(true); return; } }
+    else if (P === 'lost') { pl.vx = damp(pl.vx, 0, 2, dt); pl.vz = damp(pl.vz, 0, 2, dt);
+      if (S.pt > 1.8) { S.phase = 'retry';
+        if (S.duel) DUELS.over('lose', 'SUNK!', 'The Duchess sank your boat (crashes ' + S.hits + ' / 3). Retry with a fresh hull.');
+        else RBH.showRetry('THE DUCHESS SANK YOU<br><span style="font-size:11px;color:#fff">crashes ' + S.hits + ' / 3</span>'); } }
+    else if (P === 'retry' && !S.duel) { const c = RB.auto ? (RB.autoQuit ? 'quit' : null) : rbRetryInput();
       if (c === 'retry') { RBH.retry.classList.remove('on'); reset(); RB.duStats.retries = (RB.duStats.retries || 0) + 1; rbLog('duchess retry'); } else if (c === 'quit') { exit(false); return; } }
     for (const b of BUOYS) { b.hitT = Math.max(0, b.hitT - dt); }
     pl.swing = Math.max(0, pl.swing - dt * 1.6); spray.tick(dt, WY + 0.1);
   }
+  function duelRetry() { const st = S.stats; reset(); S.stats = st; S.phase = 'fight'; S.pt = 0; DUELS.banner('ROUND AGAIN!<small>FRESH HULL · SHE\'S BACK TO FULL</small>', 1.6); RB.duStats.retries = (RB.duStats.retries || 0) + 1; rbLog('duchess retry'); }
   const camP = new THREE.Vector3(30, 10, 40), camL = new THREE.Vector3(), _M = new THREE.Matrix4(), _V = new THREE.Vector3(), _Q = new THREE.Quaternion(), _E = new THREE.Euler(), _S1 = new THREE.Vector3(1, 1, 1), _S0 = new THREE.Vector3(0.001, 0.001, 0.001);
   function place(dt) {
     const B = myBoat().root; B.position.set(pl.x, WY - 0.05 + pl.y + Math.sin(S.t * 2) * 0.05 - (S.phase === 'lost' || S.phase === 'retry' ? Math.min(1.2, S.pt * 0.8) : 0), pl.z);
-    B.rotation.set(-pl.vy * 0.03 + Math.sin(S.t * 1.7) * 0.02, pl.h, -IN.mx * 0.06 + Math.sin(S.t * 1.3) * 0.03); if (myBoat().wheel) myBoat().wheel.rotation.x += dt * (3 + Math.hypot(pl.vx, pl.vz));
+    B.rotation.set(-pl.vy * 0.03 + Math.sin(S.t * 1.7) * 0.02, pl.h, -CI.mx * 0.06 + Math.sin(S.t * 1.3) * 0.03); if (myBoat().wheel) myBoat().wheel.rotation.x += dt * (3 + Math.hypot(pl.vx, pl.vz));
     const D = duch.root; D.position.set(du.x, WY - 0.05 - (du.sink > 0 ? Math.min(3, du.sink * 0.7) : 0) + Math.sin(S.t * 1.6) * 0.06, du.z);
     D.rotation.set(du.sink > 0 ? -Math.min(0.5, du.sink * 0.25) : 0, du.h, du.sink > 0 ? Math.min(1.1, du.sink * 0.5) : du.st === 'stunned' ? Math.sin(S.t * 14) * 0.08 : 0);
     for (const w of duch.wheels) w.rotation.x += dt * (2 + Math.hypot(du.vx, du.vz) * 0.8);
     duch.neck.rotation.x = -0.55 * du.rearK + Math.sin(S.t * 1.4) * 0.06; duch.head.rotation.x = 0.4 * du.rearK; duch.tail.rotation.y = Math.sin(S.t * 1.8) * 0.3;
-    if (duch.arm) { const tell = du.st === 'swingTell' ? Math.min(1, (0.8 - du.stT) / 0.5) : 0; duch.arm.rotation.x = -2.8 * tell - (du.swingK > 0 ? lerp(2.8, -0.6, 1 - du.swingK) : 0) * (du.st === 'swing' ? 1 : 0); duch.arm.rotation.z = du.st === 'swing' ? -1.4 * (1 - du.swingK) : 0.2;
+    if (duch.arm) { const tell = du.st === 'swingTell' ? Math.min(1, (TELL_SW - du.stT) / 0.6) : 0; duch.arm.rotation.x = -2.8 * tell - (du.swingK > 0 ? lerp(2.8, -0.6, 1 - du.swingK) : 0) * (du.st === 'swing' ? 1 : 0); duch.arm.rotation.z = du.st === 'swing' ? -1.4 * (1 - du.swingK) : 0.2;
       duch.sceptreGlow.scale.setScalar(1 + tell * 1.6 + Math.sin(S.t * 20) * 0.15 * tell); duch.duch.rotation.y = du.st === 'swing' ? -1.2 * (1 - du.swingK) : 0; }
     if (rider && rider.upd) rider.upd(dt, { t: S.t, state: du.st, swingK: du.swingK, rearK: du.rearK });
     for (const w of WAVES) if (w.on) { w.m.position.set(w.x, WY + 0.15, w.z); w.m.rotation.y = Math.atan2(w.dx, w.dz); w.m.scale.set(1, 1 + Math.sin(w.t * 9) * 0.25, 1); }
-    applyPose(hero.J, rbSeatPose(S.kind === 'paddle', S.t), 12, Math.max(dt, 1 / 60)); applyPose(partner.J, pl.swing > 0 ? rbSwingPose(1 - pl.swing) : rbSeatPose(false, S.t + 1), 12, Math.max(dt, 1 / 60));
+    // polish: tells. "!" over her (bobbing), the red reach ring for the sceptre, chevron lanes on the water for the splash waves
+    const swT = du.st === 'swingTell' || (du.st === 'swing' && du.stT > 0.15), wvT = du.st === 'waveTell', tellOn = (du.st === 'swingTell' || wvT) && S.phase === 'fight';
+    BANG.visible = tellOn; if (tellOn) { BANG.position.set(du.x, WY + 6.4 + Math.abs(Math.sin(S.t * 8)) * 0.4, du.z); BANG.scale.setScalar(2.2 + 0.35 * Math.abs(Math.sin(S.t * 12))); }
+    const pulse = 0.55 + 0.35 * Math.sin(S.t * 22);
+    RING.visible = DISC.visible = swT && S.phase === 'fight'; if (RING.visible) { const u = du.st === 'swing' ? 1 : clamp((TELL_SW - du.stT) / TELL_SW, 0, 1); RING.position.set(du.x, WY + 0.09, du.z); DISC.position.set(du.x, WY + 0.07, du.z); RING.material.opacity = (0.35 + 0.55 * u) * pulse + 0.1; DISC.material.opacity = 0.08 + 0.16 * u; RING.rotation.y += dt * 1.5; }
+    const nW = wvT && S.phase === 'fight' ? (S.hits >= 1 ? 3 : 1) : 0;
+    LANES.forEach((l, k) => { l.visible = k < nW; if (!l.visible) return; const a = du.h + (k - (nW - 1) / 2) * 0.55, u = clamp((TELL_WV - du.stT) / TELL_WV, 0, 1); l.position.set(du.x, WY + 0.08 + k * 0.004, du.z); l.rotation.y = a; l.material.opacity = (0.2 + 0.45 * u) * pulse + 0.05; });
+    applyPose(hero.J, S.caneT > 0 ? rbSwingPose(1 - S.caneT / 0.32) : rbSeatPose(S.kind === 'paddle', S.t), 14, Math.max(dt, 1 / 60)); applyPose(partner.J, pl.swing > 0 && S.caneT <= 0 ? rbSwingPose(1 - pl.swing) : rbSeatPose(false, S.t + 1), 12, Math.max(dt, 1 / 60));
     // camera: behind the boat, yawed partway toward the Duchess so she stays in frame
     const portrait = rbPortrait(), back = portrait ? 10.5 : 9.0, hgt = (S.kind === 'paddle' ? 1.7 : 1.95) + (portrait ? 0.25 : 0); // just under the canopy line, so the toads show
     let yaw = pl.h; const bear = Math.atan2(du.x - pl.x, du.z - pl.z), dd = Math.hypot(du.x - pl.x, du.z - pl.z); if (dd < 45) yaw += angTo(yaw, bear) * 0.45;
     let tx = pl.x - Math.sin(yaw) * back, tz = pl.z - Math.cos(yaw) * back, ty = hgt, lx = pl.x + Math.sin(yaw) * 8, lz = pl.z + Math.cos(yaw) * 8, ly = 0.7;
     if (S.phase === 'intro') { const a = du.h + 2.4 - S.pt * 0.3; tx = du.x + Math.sin(a) * 13; tz = du.z + Math.cos(a) * 13; ty = 4.5; lx = du.x; lz = du.z; ly = 2.2; }
+    if (S.phase === 'won') { const a = du.h + 1.2 + S.pt * 0.25; tx = du.x + Math.sin(a) * 15; tz = du.z + Math.cos(a) * 15; ty = 5; lx = du.x; lz = du.z; ly = 1.2; } // polish: hold on her as she sinks
     const k = dt === 0 ? 1 : 1 - Math.exp(-dt * 4);
     camP.x += (tx - camP.x) * k; camP.y += (ty - camP.y) * k; camP.z += (tz - camP.z) * k; camL.x += (lx - camL.x) * k; camL.y += (ly - camL.y) * k; camL.z += (lz - camL.z) * k;
     S.shake = Math.max(0, S.shake - dt * 1.8); const sh = S.shake * 0.35; cam.position.set(camP.x + rnd(-sh, sh), camP.y + rnd(-sh, sh), camP.z + rnd(-sh, sh)); cam.lookAt(camL);
@@ -832,15 +947,27 @@ const DUCH = (function () {
     for (const b of BUOYS) { const y = WY + 0.55 + Math.sin(S.t * 1.8 + b.i) * 0.12, tilt = b.hitT * 0.5 * Math.sin(S.t * 25);
       const near = Math.hypot(b.x - cam.position.x, b.z - cam.position.z) < 6.5, sc1 = near ? _S0 : _S1; /* a buoy right at the lens is hidden */ _M.compose(_V.set(b.x, y, b.z), _Q.setFromEuler(_E.set(tilt, 0, tilt)), sc1); BIM.setMatrixAt(b.i, _M); _M.compose(_V.set(b.x, y + 1.15, b.z), _Q.identity(), sc1); BLM.setMatrixAt(b.i, _M); }
     BIM.instanceMatrix.needsUpdate = BLM.instanceMatrix.needsUpdate = true;
+    if (S.duel) return; // (the DUELS HUD is fed from duelStep)
     RBH.setClock(''); RBH.setBar(pl.hull / 100, pl.hull > 40 ? '#7dffc0' : '#ff5f5f', 'HULL ' + Math.ceil(pl.hull) + '%   ' + (pl.cd <= 0 ? 'RAM READY' : ''));
     if (APANEL) APANEL.setAct({ kind: 'power', label: 'RAM', ready: pl.cd <= 0 }, pl.cd <= 0 ? 1 : 1 - pl.cd / 2.4);
   }
-  function frame(rdt) {
+  function frame(rdt) { // the old RB-mode loop (unused while the DUELS kind is registered)
     const steps = RB.freeze ? 0 : SIM ? SIM : 1;
     for (let k = 0; k < steps; k++) { if (k > 0) readInput(); let dt = SIM ? 1 / 60 : rdt; if (S.hitstop > 0) { S.hitstop -= dt; dt *= 0.1; } RB.t += dt; step(dt); if (!S.on) return; if (k < steps - 1) { place(dt); PRESS.clear(); } }
     place(steps ? (SIM ? 1 / 60 : rdt) : 0); RBH.tick(SIM ? rdt * SIM : rdt); PRESS.clear(); rbDraw(sc, cam);
   }
-  return { S, pl, du, start, exit, frame, ambushLine, PIERS, BUOYS, WAVES, sc, cam, duch, rider: () => rider, place, reset };
+  // ---- the DUELS side (src/09bd_duchess.js wires these into the 'duchess' kind) ----
+  function syncK(K) { const s = K.st; s.hp = pl.hull; s.bhp = S.bhp; s.phase = S.hits; s.over = S.phase === 'lost' || S.phase === 'retry' || S.phase === 'won'; s.won = S.phase === 'won'; }
+  function duelStep(dt, I, K) {
+    RB.t += dt; step(dt, I); if (!S.on) return;
+    DUELS.bars(pl.hull / 100, S.bhp / BHP); DUELS.sub('CRASHES ' + S.hits + '/3' + (S.combo > 1 ? ' <span style="color:#ffd23c">x' + S.combo + '</span>' : ''), S.kind === 'paddle' ? 'PADDLE BOAT' : 'WATER TAXI');
+    const rdy = S.pow >= 1 && S.phase === 'fight' && S.spT < 0; DUELS.power(S.pow, rdy, rdy ? 'POWER READY! ACT' : 'POWER'); DUELS.hot(rdy);
+    const near = du.st === 'stunned' && S.phase === 'fight' && S.spT < 0 && Math.hypot(du.x - pl.x, du.z - pl.z) < 8.5; DUELS.ready(near ? 'SWING = CANE HER!' : null);
+    syncK(K);
+  }
+  function duelRender(rdt, K) { place(rdt > 0 ? Math.min(0.05, rdt * (SIM || 1)) : 1e-4); OUT_U.fogC.value.copy(sc.fog.color); OUT_U.fogN.value = sc.fog.near; OUT_U.fogF.value = sc.fog.far; cam.aspect = VW() / VH(); cam.updateProjectionMatrix(); }
+  function duelBot(B, dt) { if (S.phase !== 'fight') { B.a = B.b = B.c = false; B.mx = B.my = 0; return; } const o = {}; pilot(B.mode === 'mash' ? 'mash' : B.mode === 'lose' ? 'lose' : 'win', o); B.mx = o.mx; B.my = o.my; if (o.a) B.a = true; if (o.b) B.b = true; if (o.c) B.c = true; }
+  return { S, pl, du, start, exit, frame, ambushLine, PIERS, BUOYS, WAVES, sc, cam, duch, rider: () => rider, place, reset, camL, duelStart, duelStep, duelRender, duelRetry, duelBot, BANG, RING, LANES };
 })();
 
 RB.frame = (rdt) => { if (RB.mode === 'al') AL.frame(rdt); else if (RB.mode === 'duchess') DUCH.frame(rdt); else if (RB.mode === 'ride') RIDES.frame(rdt); };
