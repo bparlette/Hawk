@@ -12262,8 +12262,8 @@ const DUELS = (function () {
       if (o) { o.on = true; o.lane = c.warnLane; o.z = truckZ - 3; o.v = o.z / 1.35; o.hit = false; o.g.visible = true; o.g.position.set(-o.lane * LANE2, c.warnKind === 'keg' ? 0.42 : 0.07, o.z); sfx('swing'); }
       c.dropT = rnd(1.0, 1.7); }
     for (const pool of [A.kegs, A.slicks]) for (const o of pool) { if (!o.on) continue; const z0 = o.z; o.z -= o.v * dt; o.g.position.z = o.z; if (pool === A.kegs) o.g.rotation.x -= dt * 9;
-      if (!o.hit && z0 > 0.6 && o.z <= 0.6) { o.hit = true; if (c.lane === o.lane && c.ramT < 0) { if (pool === A.kegs) { if (hurtHarold(st, DMG.keg, 'keg')) { c.gap = Math.min(1, c.gap + 0.22); sfx('heavy'); spark(V.set(c.carX, 1, 1.4), 10); } }
-          else { if (hurtHarold(st, DMG.slick, 'slick')) { c.gap = Math.min(1, c.gap + 0.15); c.spinT = 0.8; } } } else { st.stats.dodges++; addPow(st, 0.12); pop(pool === A.kegs ? 'SWERVE!' : 'CLEAN!', V.set(c.carX, 2.2, 1), 'w'); } }
+      if (!o.hit && z0 > 0.6 && o.z <= 0.6) { o.hit = true; if (c.lane === o.lane && c.ramT < 0) { if (pool === A.kegs) { if (hurtHarold(st, DMG.keg, 'keg')) { c.gap = Math.min(1, c.gap + 0.14); sfx('heavy'); spark(V.set(c.carX, 1, 1.4), 10); } }
+          else { if (hurtHarold(st, DMG.slick, 'slick')) { c.gap = Math.min(1, c.gap + 0.1); c.spinT = 0.8; } } } else { st.stats.dodges++; addPow(st, 0.12); pop(pool === A.kegs ? 'SWERVE!' : 'CLEAN!', V.set(c.carX, 2.2, 1), 'w'); } }
       if (o.z < -6) { o.on = false; o.g.visible = false; } }
     // ram: when the gap closes Mavis lines up with him and rams; SWING in the window = CANE CHECK
     if (c.ramT < 0 && c.gap <= 0) { c.ramT = 0; c.ramHit = false; c.cane = false; DUELS.tell('RAM HIM! SWING = CANE CHECK!', 1.0); DUELS.say('MAVIS', 'Hold on, hon!', 1.2); }
@@ -12562,7 +12562,7 @@ const DUELS = (function () {
     const act = ACTIONS[ACTIONS.length - 1];
     Object.defineProperty(act, 'label', { get: () => { const n = left(); return n ? 'BREWMASTER: ' + n + ' LEFT' : (L.boss.cleared ? 'REMATCH BREWMASTER' : 'FIGHT BREWMASTER'); }, configurable: true });
     act.ok = () => !DUELS.cur && !hero.roof && (!BOT || Q.has('duels'));
-    act.go = () => { const n = left(); if (n) { banner('THE BREWMASTER WAITS. CLEAR ' + n + ' MORE BOSS' + (n > 1 ? 'ES' : '') + ' FIRST.', 2.6); DUELS.log.push('brewmaster:gated:' + n); return; } DUELS.start('brewmaster'); };
+    act.go = () => { const n = left(); if (n) { banner('BEAT ' + n + ' MORE BOSS' + (n > 1 ? 'ES' : '') + '!', 2.6); DUELS.log.push('brewmaster:gated:' + n); return; } DUELS.start('brewmaster'); };
     const bm = DUELS.BEAM.list[DUELS.BEAM.list.length - 1];
     if (bm) { bm.L = { boss: { get cleared() { return false; } } }; C.ringB = bm; // always shown; dim + slow while locked, amber when open
       MODE.ticks.push(() => { const o = left() === 0; if (bm.__o !== o) { bm.__o = o; bm.ring.material.color.set(o ? '#ffb040' : '#5a5060'); bm.beam.material.color.set(o ? '#ffb040' : '#5a5060'); } }); } }
