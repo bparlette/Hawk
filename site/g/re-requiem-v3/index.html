@@ -1,0 +1,1594 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+<script src="../../demo-embed.js"></script>
+<style id="demo-embed-css">
+</style>
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>RESIDENT EVIL: REQUIEM — RE Engine Director's Cut (Three.js)</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600;800;900&family=JetBrains+Mono:wght@400;600;700;800&family=Inter:wght@400;600;700;900&display=swap" rel="stylesheet">
+  <style>
+    * { box-sizing: border-box; user-select: none; margin: 0; padding: 0; }
+    body {
+      background: #020204;
+      color: #e4e4e7;
+      font-family: 'Inter', sans-serif;
+      overflow: hidden;
+      width: 100vw;
+      height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .font-serif-re { font-family: 'Cinzel', serif; }
+    .font-mono-re { font-family: 'JetBrains Mono', monospace; }
+
+    #viewport-wrap {
+      position: relative;
+      width: 100vw;
+      height: 100vh;
+      overflow: hidden;
+      background: #000;
+      transition: width 0.35s cubic-bezier(0.16, 1, 0.3, 1), height 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+    #viewport-wrap.shorts-mode {
+      width: min(100vw, calc(100vh * (9 / 16)));
+      height: 100vh;
+      border-left: 2px solid rgba(185, 28, 28, 0.65);
+      border-right: 2px solid rgba(185, 28, 28, 0.65);
+      box-shadow: 0 0 110px rgba(220, 38, 38, 0.28);
+    }
+    canvas#webgl {
+      display: block;
+      width: 100%;
+      height: 100%;
+    }
+
+    /* Wardrobe Slats Overlay when hiding */
+    #wardrobe-slats {
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+      display: none;
+      z-index: 12;
+      background: repeating-linear-gradient(
+        0deg,
+        rgba(3, 2, 2, 0.97) 0px,
+        rgba(3, 2, 2, 0.97) 30px,
+        rgba(0, 0, 0, 0.05) 30px,
+        rgba(0, 0, 0, 0.05) 50px
+      );
+      box-shadow: inset 0 0 150px 55px #000;
+    }
+
+    /* Dynamic Crosshair & Hit Marker */
+    #reticle {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      width: 22px;
+      height: 22px;
+      border: 1.5px solid rgba(255, 255, 255, 0.55);
+      border-radius: 50%;
+      pointer-events: none;
+      z-index: 15;
+      transition: width 0.12s ease, height 0.12s ease, border-color 0.12s ease, opacity 0.15s ease;
+    }
+    #reticle.ads-active {
+      width: 8px;
+      height: 8px;
+      border-color: rgba(239, 68, 68, 0.95);
+      box-shadow: 0 0 10px rgba(239, 68, 68, 0.8);
+    }
+    #reticle::after {
+      content: '';
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      width: 3px;
+      height: 3px;
+      background: #fff;
+      border-radius: 50%;
+      transform: translate(-50%, -50%);
+    }
+
+    @keyframes pulseRedGlow {
+      0%, 100% { box-shadow: 0 0 0 0 rgba(220, 38, 38, 0.65); }
+      50% { box-shadow: 0 0 18px 4px rgba(220, 38, 38, 0.95); }
+    }
+    .viral-active-btn {
+      animation: pulseRedGlow 1.25s infinite;
+      background: #b91c1c !important;
+      border-color: #f87171 !important;
+    }
+  </style>
+</head>
+<body>
+  <div id="viewport-wrap">
+    <canvas id="webgl"></canvas>
+    <div id="wardrobe-slats"></div>
+    <div id="reticle"></div>
+
+    <!-- Center Hit / Crit Notification -->
+    <div id="crit-banner" class="pointer-events-none absolute top-[42%] left-1/2 -translate-x-1/2 z-20 font-mono-re text-xs font-extrabold tracking-widest text-red-400 opacity-0 transition-opacity duration-150 drop-shadow-[0_2px_6px_rgba(0,0,0,0.95)]">
+      ✦ PARASITE CRITICAL HIT (2.5x STUN) ✦
+    </div>
+
+    <!-- Contextual Interaction / Breath-Hold Prompt -->
+    <div id="prompt-box" class="pointer-events-none absolute top-[58%] left-1/2 -translate-x-1/2 z-20 hidden px-4 py-1.5 rounded bg-black/85 border border-amber-500/60 text-amber-200 font-mono-re text-xs tracking-wider uppercase shadow-2xl">
+      [E] INTERACT
+    </div>
+
+    <!-- Viral YouTube Short Dynamic Captions -->
+    <div id="shorts-caption" class="pointer-events-none absolute top-[15%] left-1/2 -translate-x-1/2 z-20 hidden w-[92%] text-center">
+      <div id="shorts-text" class="inline-block px-4 py-2 rounded-lg bg-black/85 border-2 border-red-500 text-yellow-300 font-black text-lg sm:text-xl uppercase tracking-wide shadow-[0_6px_25px_rgba(0,0,0,0.95)]">
+        POV: Resident Evil Requiem at 3AM 🔦
+      </div>
+    </div>
+
+    <!-- Top-Left: Spencer Wing Objective & Crest Tracker -->
+    <div class="absolute top-3.5 left-3.5 z-20 pointer-events-none flex flex-col gap-2 max-w-[290px] sm:max-w-xs">
+      <div class="bg-black/80 backdrop-blur-md border border-stone-800/90 px-3.5 py-2.5 rounded-lg shadow-2xl">
+        <div class="flex items-center justify-between gap-2 border-b border-stone-800 pb-1.5 mb-1.5">
+          <span class="font-serif-re text-[11px] tracking-widest text-red-500 font-bold">SPENCER WING // 1F</span>
+          <span id="stalker-state-pill" class="font-mono-re text-[10px] px-2 py-0.5 rounded bg-stone-900 text-stone-300 border border-stone-700">
+            PROWLING
+          </span>
+        </div>
+        <p id="obj-desc" class="text-[11px] text-stone-300 leading-snug">
+          Collect the <span class="text-amber-400 font-semibold">3 Family Crests</span> to unlock the <span class="text-red-400 font-semibold">North Iron Gate</span>.
+        </p>
+        <div class="grid grid-cols-3 gap-1.5 mt-2">
+          <div id="badge-0" class="px-2 py-1 rounded bg-stone-950 border border-stone-800 text-stone-500 text-[10px] font-mono-re text-center font-bold">
+            ☾ MOON
+          </div>
+          <div id="badge-1" class="px-2 py-1 rounded bg-stone-950 border border-stone-800 text-stone-500 text-[10px] font-mono-re text-center font-bold">
+            ☼ SUN
+          </div>
+          <div id="badge-2" class="px-2 py-1 rounded bg-stone-950 border border-stone-800 text-stone-500 text-[10px] font-mono-re text-center font-bold">
+            ❖ ECLIPSE
+          </div>
+        </div>
+      </div>
+
+      <!-- Event Toast -->
+      <div id="toast-banner" class="bg-red-950/90 border border-red-600/70 text-red-100 px-3 py-1.5 rounded-lg text-[11px] font-mono-re shadow-xl opacity-0 transition-opacity duration-200">
+        STALKER ALERTED TO SOUND
+      </div>
+    </div>
+
+    <div class="absolute top-3.5 right-3.5 z-25 flex flex-wrap gap-1.5 justify-end max-w-[65%]">
+      <button id="btn-viral" class="px-3 py-1.5 rounded-lg bg-red-900/90 hover:bg-red-700 border border-red-500/70 text-white text-[11px] font-mono-re font-bold transition shadow-lg">
+        🎬 VIRAL SHORT TAS (9:16)
+      </button>
+      <button id="btn-record" class="px-3 py-1.5 rounded-lg bg-stone-900/90 hover:bg-stone-800 border border-stone-700 text-stone-200 text-[11px] font-mono-re font-semibold transition shadow-lg">
+        🔴 REC .WEBM
+      </button>
+      <button id="btn-inventory" class="px-3 py-1.5 rounded-lg bg-stone-900/90 hover:bg-stone-800 border border-amber-500/50 text-amber-300 text-[11px] font-mono-re font-semibold transition shadow-lg">
+        💼 CASE [TAB]
+      </button>
+      <button id="btn-aspect" class="px-2.5 py-1.5 rounded-lg bg-stone-900/90 hover:bg-stone-800 border border-stone-700 text-stone-300 text-[11px] font-mono-re transition shadow-lg">
+        📱 9:16
+      </button>
+      <button id="btn-files" class="px-3 py-1.5 rounded-lg bg-emerald-950/90 hover:bg-emerald-800 border border-emerald-500/60 text-emerald-200 text-[11px] font-mono-re font-bold transition shadow-lg">
+        📦 SOURCE FILES (7)
+      </button>
+    </div>
+
+    <!-- Bottom-Left: RE Engine Diegetic ECG Monitor & Radar -->
+    <div id="hud-bottom-left" class="absolute bottom-3.5 left-3.5 z-20 pointer-events-none flex items-center gap-3 bg-black/85 backdrop-blur-md border border-stone-800 border-l-4 border-l-emerald-500 px-3.5 py-2.5 rounded-lg shadow-2xl">
+      <canvas id="radar-canvas" width="56" height="56" class="w-14 h-14 rounded-full bg-stone-950 border border-stone-700"></canvas>
+      <div>
+        <div class="flex items-center justify-between gap-2 mb-1">
+          <span class="text-[10px] font-mono-re text-stone-400 tracking-wider">GRACE // ECG</span>
+          <span id="ecg-label" class="text-xs font-mono-re font-extrabold text-emerald-400 tracking-widest">FINE</span>
+        </div>
+        <canvas id="ecg-canvas" width="124" height="36" class="w-[124px] h-[36px] bg-stone-950/90 rounded border border-stone-800"></canvas>
+      </div>
+    </div>
+
+    <!-- Bottom-Right: Kendo 9mm Custom & Laser ADS Indicator -->
+    <div class="absolute bottom-3.5 right-3.5 z-20 pointer-events-none flex flex-col items-end gap-1.5">
+      <div class="bg-black/85 backdrop-blur-md border border-stone-800 px-4 py-2.5 rounded-lg shadow-2xl flex items-center gap-3.5">
+        <div class="text-right">
+          <div class="text-[10px] font-mono-re text-stone-400 uppercase tracking-wider">KENDO 9MM + LASER</div>
+          <div class="flex items-baseline justify-end gap-1">
+            <span id="ammo-count" class="text-2xl font-mono-re font-extrabold text-white">12</span>
+            <span id="ammo-reserve" class="text-xs font-mono-re text-stone-400">/ 24</span>
+          </div>
+        </div>
+        <div class="h-8 w-[1px] bg-stone-800"></div>
+        <div class="flex flex-col gap-1 text-[10px] font-mono-re">
+          <span id="ads-badge" class="px-2 py-0.5 rounded bg-stone-900 text-stone-400 border border-stone-700 text-center">
+            LASER [RMB]
+          </span>
+          <span id="herb-badge" class="px-2 py-0.5 rounded bg-emerald-950/60 text-emerald-300 border border-emerald-700/50 text-center">
+            🌿 HERBS: 1
+          </span>
+        </div>
+      </div>
+      <div class="hidden sm:block text-[10px] font-mono-re text-stone-400 bg-black/70 px-2.5 py-1 rounded border border-stone-800">
+        WASD: Move | RMB/V: Laser Sight ADS | LMB: Shoot | E: Interact/Wardrobe | SPACE: Hold Breath | TAB: Attaché Case
+      </div>
+    </div>
+
+    <div id="inventory-modal" class="absolute inset-0 z-30 bg-black/85 backdrop-blur-md hidden items-center justify-center p-4">
+      <div class="max-w-lg w-full bg-stone-950 border border-stone-700 rounded-xl p-5 shadow-2xl">
+        <div class="flex items-center justify-between border-b border-stone-800 pb-3 mb-4">
+          <div>
+            <h3 class="font-serif-re text-base font-bold text-amber-400 tracking-wider">ATTACHÉ CASE // INVENTORY & CRAFTING</h3>
+            <p class="text-[11px] text-stone-400 font-mono-re">Combine Gunpowder or consume Green Herbs to survive the Spencer Wing.</p>
+          </div>
+          <button id="btn-close-inv" class="px-2.5 py-1 rounded bg-stone-800 hover:bg-stone-700 text-xs font-mono-re text-stone-200">✕ [TAB]</button>
+        </div>
+
+        <div class="grid grid-cols-2 sm:grid-cols-3 gap-3 mb-4">
+          <div class="p-3 rounded-lg bg-stone-900/90 border border-stone-700 flex flex-col justify-between">
+            <div class="text-xs font-mono-re font-bold text-white">🔫 Kendo 9mm Custom</div>
+            <p class="text-[11px] text-stone-400 my-1.5">Tactical laser sight. 2.5x Stun multiplier on Head & Chest Parasite.</p>
+            <span class="text-[10px] font-mono-re text-amber-400">EQUIPPED</span>
+          </div>
+
+          <div class="p-3 rounded-lg bg-stone-900/90 border border-emerald-800/70 flex flex-col justify-between">
+            <div class="text-xs font-mono-re font-bold text-emerald-400">🌿 Green Herb (<span id="inv-herbs">1</span>)</div>
+            <p class="text-[11px] text-stone-400 my-1.5">Restores +45% Condition and stabilizes ECG heartbeat.</p>
+            <button id="btn-use-herb" class="w-full py-1.5 rounded bg-emerald-700 hover:bg-emerald-600 text-white font-mono-re text-[11px] font-bold transition">
+              USE HERB (+45 HP)
+            </button>
+          </div>
+
+          <div class="p-3 rounded-lg bg-stone-900/90 border border-amber-800/70 flex flex-col justify-between">
+            <div class="text-xs font-mono-re font-bold text-amber-300">🥫 Gunpowder (<span id="inv-powder">1</span>)</div>
+            <p class="text-[11px] text-stone-400 my-1.5">Synthesize high-velocity +8 9mm Hollow-Point rounds.</p>
+            <button id="btn-craft-ammo" class="w-full py-1.5 rounded bg-amber-700 hover:bg-amber-600 text-white font-mono-re text-[11px] font-bold transition">
+              CRAFT (+8 AMMO)
+            </button>
+          </div>
+        </div>
+
+        <div class="flex items-center justify-between bg-stone-900/60 px-3.5 py-2.5 rounded-lg border border-stone-800 text-xs font-mono-re">
+          <span>GLSL Post-Processing Shader (Chromatic + Film Grain):</span>
+          <button id="btn-toggle-postfx" class="px-3 py-1 rounded bg-emerald-800 text-white font-bold">ENABLED</button>
+        </div>
+      </div>
+    </div>
+
+    <div id="title-overlay" class="absolute inset-0 z-30 bg-black/92 backdrop-blur-md flex items-center justify-center p-4">
+      <div class="max-w-xl w-full bg-stone-950 border border-stone-800 rounded-2xl p-6 sm:p-7 shadow-2xl text-center">
+        <div class="text-[11px] font-mono-re tracking-widest text-red-500 uppercase mb-1">RE ENGINE WEBGL SHADER PIPELINE // DIRECTOR'S CUT</div>
+        <h1 class="font-serif-re text-3xl sm:text-4xl font-black text-white tracking-wider">
+          RESIDENT EVIL: <span class="text-red-600">REQUIEM</span>
+        </h1>
+        <p class="text-xs text-stone-400 mt-2 leading-relaxed">
+          Featuring a real-time <strong class="text-stone-200">GLSL Post-Processing RenderTarget Shader</strong>, <strong class="text-stone-200">512x512 Procedural PBR Normal/Roughness Maps</strong>, <strong class="text-stone-200">RMB Laser-Sight ADS</strong>, <strong class="text-stone-200">Volumetric Lightning</strong>, and the <strong class="text-amber-300">9:16 Viral YouTube Short Auto-Director</strong>.
+        </p>
+
+        <div class="grid grid-cols-2 gap-2.5 text-left my-5 bg-stone-900/75 p-4 rounded-xl border border-stone-800 text-xs font-mono-re text-stone-300">
+          <div><b class="text-white">WASD + SHIFT/C</b> : Move / Sprint / Crouch</div>
+          <div><b class="text-red-400">RMB (or V)</b> : Aim Laser Sight (ADS)</div>
+          <div><b class="text-white">LMB + R</b> : Fire 9mm / Reload</div>
+          <div><b class="text-amber-300">E + SPACE</b> : Hide in Wardrobe + Hold Breath</div>
+          <div><b class="text-emerald-400">TAB</b> : Attaché Case (Herbs / Craft)</div>
+          <div><b class="text-yellow-300">🎬 TAS BUTTON</b> : Auto-Play Viral Short</div>
+        </div>
+
+        <div class="flex flex-wrap gap-3 justify-center">
+          <button id="btn-play" class="flex-1 py-3 px-5 rounded-xl bg-red-700 hover:bg-red-600 text-white font-serif-re font-bold tracking-wider text-xs sm:text-sm transition shadow-lg">
+            ENTER SPENCER WING (PLAY)
+          </button>
+          <button id="btn-watch-short" class="flex-1 py-3 px-5 rounded-xl bg-amber-600 hover:bg-amber-500 text-black font-serif-re font-black tracking-wider text-xs sm:text-sm transition shadow-lg">
+            🎬 RUN VIRAL YOUTUBE SHORT (9:16)
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- 7-File Modular Source Exporter Modal -->
+    <div id="export-modal" class="absolute inset-4 sm:inset-8 z-40 bg-stone-950 border border-stone-700 rounded-xl hidden flex-col overflow-hidden shadow-2xl">
+      <div class="flex items-center justify-between px-4 py-3 bg-stone-900 border-b border-stone-800">
+        <div>
+          <h2 class="font-serif-re text-sm sm:text-base font-bold text-white">📦 MODULAR PROJECT SOURCE EXPORTER (7 FILES)</h2>
+          <p class="text-[11px] text-stone-400 font-mono-re">Inspect or download individual engine modules or copy the full bundle.</p>
+        </div>
+        <div class="flex gap-2">
+          <button id="btn-dl-file" class="px-3 py-1.5 rounded bg-emerald-700 hover:bg-emerald-600 text-white text-xs font-mono-re font-bold">⬇ Download File</button>
+          <button id="btn-copy-file" class="px-3 py-1.5 rounded bg-stone-800 hover:bg-stone-700 text-stone-200 text-xs font-mono-re">📋 Copy</button>
+          <button id="btn-close-modal" class="px-3 py-1.5 rounded bg-red-900/80 hover:bg-red-800 text-white text-xs font-mono-re">✕ Close</button>
+        </div>
+      </div>
+      <div id="file-tabs" class="flex gap-1.5 px-4 py-2 bg-stone-900/60 border-b border-stone-800 overflow-x-auto font-mono-re text-xs"></div>
+      <pre id="code-view" class="flex-1 p-4 overflow-auto bg-[#07070a] text-stone-200 font-mono-re text-xs leading-relaxed"></pre>
+    </div>
+  </div>
+
+  <script>
+    // ============================================================================
+    // 1. CUSTOM GLSL POST-PROCESSING SHADER (CHROMATIC ABERRATION, FILM GRAIN, VIGNETTE, LIGHTNING)
+    // ============================================================================
+    const REPostFXShader = {
+      vertexShader: `
+        varying vec2 vUv;
+        void main() {
+          vUv = uv;
+          gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+        }
+      `,
+      fragmentShader: `
+        uniform sampler2D tDiffuse;
+        uniform float uTime;
+        uniform float uFear;
+        uniform float uBloodPulse;
+        uniform float uLightning;
+        uniform float uEnabled;
+        varying vec2 vUv;
+
+        float hash(vec2 p) {
+          return fract(sin(dot(p, vec2(12.9898, 78.233))) * 43758.5453);
+        }
+
+        void main() {
+          vec2 uv = vUv;
+          if (uEnabled < 0.5) {
+            gl_FragColor = texture2D(tDiffuse, uv);
+            return;
+          }
+          vec2 centered = uv - 0.5;
+          float dist = length(centered);
+
+          // Radial Chromatic Aberration scaled by Stalker fear & distance from center
+          float aber = (0.0018 + uFear * 0.009) * dist * 1.6;
+          float r = texture2D(tDiffuse, uv + centered * aber).r;
+          float g = texture2D(tDiffuse, uv).g;
+          float b = texture2D(tDiffuse, uv - centered * aber).b;
+          vec3 col = vec3(r, g, b);
+
+          // RE Engine Desaturated Cold Shadows & High-Contrast Filmic Curve
+          float luma = dot(col, vec3(0.299, 0.587, 0.114));
+          col = mix(vec3(luma) * vec3(0.92, 0.96, 1.05), col, 0.78);
+          col = pow(max(col, vec3(0.0)), vec3(1.08)) * 1.15;
+
+          // Lightning Flash Exposure Boost
+          col += vec3(0.55, 0.68, 0.95) * uLightning * 0.45;
+
+          // Procedural Film Grain & Subtle CRT Scanline
+          float grain = (hash(uv * (uTime * 60.0 + 1.0)) - 0.5) * 0.055;
+          float scan = sin(uv.y * 850.0) * 0.015;
+          col += grain - scan;
+
+          // Vignette + Crimson ECG Blood Pulse
+          float vig = smoothstep(0.82, 0.28, dist);
+          col *= mix(0.22, 1.0, vig);
+          col = mix(col, vec3(0.75, 0.02, 0.05), (1.0 - vig) * uBloodPulse * 0.85);
+
+          gl_FragColor = vec4(clamp(col, 0.0, 1.0), 1.0);
+        }
+      `
+    };
+
+    // ============================================================================
+    // 2. 512x512 PROCEDURAL PBR TEXTURE FORGE (DIFFUSE, NORMAL, ROUGHNESS)
+    // ============================================================================
+    function forgePBRSurface(type) {
+      const size = 512;
+      const dCan = document.createElement('canvas');
+      const nCan = document.createElement('canvas');
+      const rCan = document.createElement('canvas');
+      dCan.width = nCan.width = rCan.width = size;
+      dCan.height = nCan.height = rCan.height = size;
+
+      const dCtx = dCan.getContext('2d');
+      const nCtx = nCan.getContext('2d');
+      const rCtx = rCan.getContext('2d');
+
+      nCtx.fillStyle = 'rgb(128,128,255)';
+      nCtx.fillRect(0, 0, size, size);
+      rCtx.fillStyle = 'rgb(190,190,190)';
+      rCtx.fillRect(0, 0, size, size);
+
+      if (type === 'walls') {
+        // Upper Victorian Crimson/Charcoal Damask Wallpaper
+        dCtx.fillStyle = '#1d1316';
+        dCtx.fillRect(0, 0, size, 310);
+        for (let x = 0; x < size; x += 32) {
+          dCtx.fillStyle = (x / 32) % 2 === 0 ? 'rgba(56, 18, 24, 0.55)' : 'rgba(20, 12, 14, 0.45)';
+          dCtx.fillRect(x, 0, 16, 310);
+          nCtx.fillStyle = 'rgb(144,128,255)';
+          nCtx.fillRect(x, 0, 3, 310);
+        }
+        // Lower Dark Mahogany Wainscoting Panels
+        dCtx.fillStyle = '#180f0b';
+        dCtx.fillRect(0, 310, size, 202);
+        dCtx.fillStyle = '#5c4328';
+        dCtx.fillRect(0, 306, size, 8);
+        for (let x = 16; x < size; x += 128) {
+          dCtx.strokeStyle = '#090504';
+          dCtx.lineWidth = 6;
+          dCtx.strokeRect(x, 328, 96, 164);
+          nCtx.strokeStyle = 'rgb(100,100,255)';
+          nCtx.lineWidth = 6;
+          nCtx.strokeRect(x, 328, 96, 164);
+        }
+        // Damp grime & water leaks
+        for (let i = 0; i < 900; i++) {
+          const rx = Math.random() * size, ry = Math.random() * size;
+          dCtx.fillStyle = `rgba(6, 5, 5, ${Math.random() * 0.25})`;
+          dCtx.fillRect(rx, ry, 8, 12);
+        }
+      } else if (type === 'wetfloor') {
+        // Dark Oak Planks with Specular Wet Puddles
+        dCtx.fillStyle = '#1f140e';
+        dCtx.fillRect(0, 0, size, size);
+        for (let y = 0; y < size; y += 32) {
+          dCtx.strokeStyle = '#090503';
+          dCtx.lineWidth = 2;
+          dCtx.strokeRect(0, y, size, 32);
+          nCtx.fillStyle = 'rgb(128,104,255)';
+          nCtx.fillRect(0, y, size, 3);
+        }
+        // Specular Wet Puddle Patches (Darker diffuse + near-black roughness for mirror sheen)
+        for (let p = 0; p < 14; p++) {
+          const px = Math.random() * size, py = Math.random() * size, rad = 28 + Math.random() * 55;
+          const grad = rCtx.createRadialGradient(px, py, 4, px, py, rad);
+          grad.addColorStop(0, 'rgb(25,25,25)');
+          grad.addColorStop(1, 'rgb(200,200,200)');
+          rCtx.fillStyle = grad;
+          rCtx.beginPath();
+          rCtx.arc(px, py, rad, 0, Math.PI * 2);
+          rCtx.fill();
+        }
+      }
+
+      const wrap = tex => {
+        tex.wrapS = tex.wrapT = THREE.RepeatWrapping;
+        tex.repeat.set(4, 2);
+        return tex;
+      };
+      return {
+        map: wrap(new THREE.CanvasTexture(dCan)),
+        normalMap: wrap(new THREE.CanvasTexture(nCan)),
+        roughnessMap: wrap(new THREE.CanvasTexture(rCan))
+      };
+    }
+
+    // ============================================================================
+    // 3. SPATIAL HORROR WEBAUDIO SYNTHESIZER
+    // ============================================================================
+    class SpatialHorrorAudio {
+      constructor() { this.ctx = null; this.lastBeat = 0; }
+      init() {
+        if (this.ctx) return;
+        const AudioCtx = window.AudioContext || window.webkitAudioContext;
+        if (!AudioCtx) return;
+        this.ctx = new AudioCtx();
+
+        // Spencer Mansion Sub-Bass Room Drone
+        const osc1 = this.ctx.createOscillator();
+        const osc2 = this.ctx.createOscillator();
+        const filter = this.ctx.createBiquadFilter();
+        const gain = this.ctx.createGain();
+        osc1.type = 'sawtooth'; osc1.frequency.value = 42;
+        osc2.type = 'sine'; osc2.frequency.value = 21;
+        filter.type = 'lowpass'; filter.frequency.value = 92;
+        gain.gain.value = 0.045;
+        osc1.connect(filter); osc2.connect(filter);
+        filter.connect(gain); gain.connect(this.ctx.destination);
+        osc1.start(); osc2.start();
+      }
+      playHeartbeat(intensity = 0.4) {
+        if (!this.ctx) return;
+        const now = this.ctx.currentTime;
+        const osc = this.ctx.createOscillator();
+        const g = this.ctx.createGain();
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(60, now);
+        osc.frequency.exponentialRampToValueAtTime(26, now + 0.16);
+        g.gain.setValueAtTime(Math.min(0.45, 0.1 + intensity * 0.3), now);
+        g.gain.exponentialRampToValueAtTime(0.001, now + 0.18);
+        osc.connect(g); g.connect(this.ctx.destination);
+        osc.start(now); osc.stop(now + 0.19);
+      }
+      playGunshot() {
+        if (!this.ctx) return;
+        const now = this.ctx.currentTime;
+        const buf = this.ctx.createBuffer(1, this.ctx.sampleRate * 0.25, this.ctx.sampleRate);
+        const data = buf.getChannelData(0);
+        for (let i = 0; i < data.length; i++) {
+          data[i] = (Math.random() * 2 - 1) * Math.exp(-i / (this.ctx.sampleRate * 0.045));
+        }
+        const src = this.ctx.createBufferSource();
+        src.buffer = buf;
+        const g = this.ctx.createGain();
+        g.gain.value = 0.6;
+        src.connect(g); g.connect(this.ctx.destination);
+        src.start(now);
+      }
+      playThunder() {
+        if (!this.ctx) return;
+        const now = this.ctx.currentTime;
+        const buf = this.ctx.createBuffer(1, this.ctx.sampleRate * 1.4, this.ctx.sampleRate);
+        const data = buf.getChannelData(0);
+        for (let i = 0; i < data.length; i++) {
+          data[i] = (Math.random() * 2 - 1) * Math.exp(-i / (this.ctx.sampleRate * 0.45));
+        }
+        const src = this.ctx.createBufferSource();
+        src.buffer = buf;
+        const filter = this.ctx.createBiquadFilter();
+        filter.type = 'lowpass'; filter.frequency.value = 190;
+        const g = this.ctx.createGain();
+        g.gain.value = 0.45;
+        src.connect(filter); filter.connect(g); g.connect(this.ctx.destination);
+        src.start(now);
+      }
+      playStalkerShriek() {
+        if (!this.ctx) return;
+        const now = this.ctx.currentTime;
+        [240, 335, 490].forEach(freq => {
+          const o = this.ctx.createOscillator();
+          const g = this.ctx.createGain();
+          o.type = 'sawtooth';
+          o.frequency.setValueAtTime(freq, now);
+          o.frequency.exponentialRampToValueAtTime(freq * 0.45, now + 0.65);
+          g.gain.setValueAtTime(0.15, now);
+          g.gain.exponentialRampToValueAtTime(0.001, now + 0.68);
+          o.connect(g); g.connect(this.ctx.destination);
+          o.start(now); o.stop(now + 0.7);
+        });
+      }
+    }
+    const audio = new SpatialHorrorAudio();
+
+    // ============================================================================
+    // 4. THREE.JS SCENE, RENDERTARGET POST-FX PIPELINE, & LASER SIGHT PISTOL
+    // ============================================================================
+    const wrapEl = document.getElementById('viewport-wrap');
+    const canvas = document.getElementById('webgl');
+    const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, powerPreference: 'high-performance' });
+    renderer.setSize(wrapEl.clientWidth, wrapEl.clientHeight);
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+    renderer.shadowMap.enabled = true;
+    renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+
+    const dpr = renderer.getPixelRatio();
+    const renderTarget = new THREE.WebGLRenderTarget(wrapEl.clientWidth * dpr, wrapEl.clientHeight * dpr, {
+      minFilter: THREE.LinearFilter,
+      magFilter: THREE.LinearFilter,
+      format: THREE.RGBAFormat
+    });
+
+    const postScene = new THREE.Scene();
+    const postCam = new THREE.OrthographicCamera(-1, 1, 1, -1, 0, 1);
+    const postMat = new THREE.ShaderMaterial({
+      vertexShader: REPostFXShader.vertexShader,
+      fragmentShader: REPostFXShader.fragmentShader,
+      uniforms: {
+        tDiffuse: { value: renderTarget.texture },
+        uTime: { value: 0 },
+        uFear: { value: 0 },
+        uBloodPulse: { value: 0 },
+        uLightning: { value: 0 },
+        uEnabled: { value: 1.0 }
+      }
+    });
+    postScene.add(new THREE.Mesh(new THREE.PlaneGeometry(2, 2), postMat));
+
+    const scene = new THREE.Scene();
+    scene.background = new THREE.Color(0x030305);
+    scene.fog = new THREE.FogExp2(0x040407, 0.072);
+
+    const camera = new THREE.PerspectiveCamera(68, wrapEl.clientWidth / wrapEl.clientHeight, 0.1, 80);
+    const camHolder = new THREE.Group();
+    camHolder.position.set(0, 1.7, 10.5);
+    camHolder.add(camera);
+    scene.add(camHolder);
+
+    const ambientLight = new THREE.AmbientLight(0x181a26, 0.35);
+    scene.add(ambientLight);
+    const lightningLight = new THREE.DirectionalLight(0x99ccff, 0.0);
+    lightningLight.position.set(6, 12, 4);
+    scene.add(lightningLight);
+
+    // Volumetric Dual-Cone Flashlight
+    const flashGroup = new THREE.Group();
+    scene.add(flashGroup);
+    const spotCore = new THREE.SpotLight(0xfff4e0, 4.2, 28, Math.PI / 6.2, 0.45, 1.5);
+    spotCore.castShadow = true;
+    spotCore.shadow.mapSize.width = 1024;
+    spotCore.shadow.mapSize.height = 1024;
+    flashGroup.add(spotCore);
+    flashGroup.add(spotCore.target);
+    spotCore.target.position.set(0, 0, -10);
+
+    const spotSpill = new THREE.SpotLight(0x88aaff, 0.9, 16, Math.PI / 3.1, 0.85, 2.0);
+    flashGroup.add(spotSpill);
+    flashGroup.add(spotSpill.target);
+    spotSpill.target.position.set(0, 0, -10);
+
+    const coneGeo = new THREE.ConeGeometry(2.5, 8.8, 24, 1, true);
+    coneGeo.translate(0, -4.4, 0);
+    coneGeo.rotateX(-Math.PI / 2);
+    const lightCone = new THREE.Mesh(coneGeo, new THREE.MeshBasicMaterial({
+      color: 0xfff3d6, transparent: true, opacity: 0.042,
+      side: THREE.DoubleSide, depthWrite: false, blending: THREE.AdditiveBlending
+    }));
+    flashGroup.add(lightCone);
+
+    const gunGroup = new THREE.Group();
+    const gunSlide = new THREE.Mesh(
+      new THREE.BoxGeometry(0.075, 0.095, 0.38),
+      new THREE.MeshStandardMaterial({ color: 0x1e222a, metalness: 0.88, roughness: 0.22 })
+    );
+    const gunGrip = new THREE.Mesh(
+      new THREE.BoxGeometry(0.068, 0.18, 0.1),
+      new THREE.MeshStandardMaterial({ color: 0x2b1911, roughness: 0.78 })
+    );
+    gunGrip.position.set(0, -0.11, 0.12);
+    gunGrip.rotation.x = 0.24;
+    // Glowing green tritium iron sights
+    const sightMat = new THREE.MeshBasicMaterial({ color: 0x00ff66 });
+    const frontSight = new THREE.Mesh(new THREE.BoxGeometry(0.014, 0.018, 0.014), sightMat);
+    frontSight.position.set(0, 0.056, -0.17);
+    const muzzleLight = new THREE.PointLight(0xffaa33, 0, 9);
+    muzzleLight.position.set(0, 0.05, -0.32);
+    gunGroup.add(gunSlide, gunGrip, frontSight, muzzleLight);
+    gunGroup.position.set(0.23, -0.21, -0.42);
+    camera.add(gunGroup);
+
+    // 3D Red Laser Sight Beam & Impact Dot
+    const laserGeo = new THREE.BufferGeometry().setFromPoints([new THREE.Vector3(), new THREE.Vector3(0, 0, -10)]);
+    const laserLine = new THREE.Line(laserGeo, new THREE.LineBasicMaterial({ color: 0xff1122, transparent: true, opacity: 0.85 }));
+    laserLine.frustumCulled = false;
+    scene.add(laserLine);
+    const laserDot = new THREE.Mesh(
+      new THREE.SphereGeometry(0.032, 8, 8),
+      new THREE.MeshBasicMaterial({ color: 0xff2233 })
+    );
+    scene.add(laserDot);
+
+    // ============================================================================
+    // 5. SPENCER ESTATE WING ARCHITECTURE & INTERACTIVE ITEMS
+    // ============================================================================
+    const wallPBR = forgePBRSurface('walls');
+    const floorPBR = forgePBRSurface('wetfloor');
+
+    const wallMat = new THREE.MeshStandardMaterial({
+      map: wallPBR.map, normalMap: wallPBR.normalMap, roughnessMap: wallPBR.roughnessMap,
+      roughness: 0.75, metalness: 0.08
+    });
+    const floorMat = new THREE.MeshStandardMaterial({
+      map: floorPBR.map, normalMap: floorPBR.normalMap, roughnessMap: floorPBR.roughnessMap,
+      roughness: 0.48, metalness: 0.15
+    });
+
+    const floorMesh = new THREE.Mesh(new THREE.PlaneGeometry(36, 36), floorMat);
+    floorMesh.rotation.x = -Math.PI / 2;
+    floorMesh.receiveShadow = true;
+    scene.add(floorMesh);
+
+    const ceilMesh = new THREE.Mesh(
+      new THREE.PlaneGeometry(36, 36),
+      new THREE.MeshStandardMaterial({ color: 0x09080c, roughness: 0.92 })
+    );
+    ceilMesh.rotation.x = Math.PI / 2;
+    ceilMesh.position.y = 4.2;
+    scene.add(ceilMesh);
+
+    const colliders = [];
+    const wallMeshes = [];
+    function buildWall(x, z, w, d) {
+      const m = new THREE.Mesh(new THREE.BoxGeometry(w, 4.2, d), wallMat);
+      m.position.set(x, 2.1, z);
+      m.castShadow = true;
+      m.receiveShadow = true;
+      scene.add(m);
+      wallMeshes.push(m);
+      colliders.push({ x, z, hw: w / 2, hd: d / 2 });
+    }
+
+    buildWall(0, -15, 30, 1);
+    buildWall(0, 15, 30, 1);
+    buildWall(-15, 0, 1, 30);
+    buildWall(15, 0, 1, 30);
+    buildWall(-5.5, 4, 1.2, 11);
+    buildWall(5.5, 4, 1.2, 11);
+    buildWall(-6.5, -5.5, 8, 1.2);
+    buildWall(6.5, -5.5, 8, 1.2);
+
+    // Chandeliers & Flickering Wall Sconces
+    const sconces = [];
+    [[-4.6, 2.7, 5], [4.6, 2.7, 5], [-4.6, 2.7, -4.6], [4.6, 2.7, -4.6], [0, 3.6, 0]].forEach(([x, y, z]) => {
+      const l = new THREE.PointLight(0xff5522, 0.85, 11);
+      l.position.set(x, y, z);
+      scene.add(l);
+      sconces.push(l);
+    });
+
+    // North Escape Iron Gate
+    const gateGroup = new THREE.Group();
+    gateGroup.position.set(0, 0, -14.2);
+    for (let i = -4; i <= 4; i++) {
+      const bar = new THREE.Mesh(
+        new THREE.CylinderGeometry(0.05, 0.05, 4.0, 8),
+        new THREE.MeshStandardMaterial({ color: 0x222629, metalness: 0.9, roughness: 0.25 })
+      );
+      bar.position.set(i * 0.4, 2.0, 0);
+      gateGroup.add(bar);
+    }
+    const gateLight = new THREE.PointLight(0xe74c3c, 1.5, 9);
+    gateLight.position.set(0, 3.2, -13.5);
+    scene.add(gateGroup, gateLight);
+
+    // 3 Family Crests on Marble Pedestals
+    const crests = [];
+    [
+      { id: 0, name: 'MOON', x: 0, z: 3.5, color: 0x38bdf8 },
+      { id: 1, name: 'SUN', x: -10.5, z: 8.5, color: 0xfbbf24 },
+      { id: 2, name: 'ECLIPSE', x: 10.5, z: -9.5, color: 0xf87171 }
+    ].forEach(def => {
+      const ped = new THREE.Mesh(
+        new THREE.CylinderGeometry(0.45, 0.55, 1.1, 16),
+        new THREE.MeshStandardMaterial({ color: 0x3b3b44, roughness: 0.4 })
+      );
+      ped.position.set(def.x, 0.55, def.z);
+      ped.castShadow = true;
+      scene.add(ped);
+
+      const crest = new THREE.Mesh(
+        new THREE.OctahedronGeometry(0.28, 1),
+        new THREE.MeshStandardMaterial({
+          color: def.color, emissive: def.color, emissiveIntensity: 0.75,
+          metalness: 0.85, roughness: 0.15
+        })
+      );
+      crest.position.set(def.x, 1.45, def.z);
+      scene.add(crest);
+      crests.push({ ...def, mesh: crest, collected: false });
+    });
+
+    // Green Herbs & Gunpowder Pickups
+    const supplies = [];
+    [
+      { type: 'herb', label: 'GREEN HERB', x: -2.2, z: 7.5, color: 0x22c55e },
+      { type: 'powder', label: 'GUNPOWDER TIN', x: 2.4, z: -2.0, color: 0xf59e0b }
+    ].forEach(s => {
+      const m = new THREE.Mesh(
+        new THREE.CylinderGeometry(0.22, 0.22, 0.35, 12),
+        new THREE.MeshStandardMaterial({ color: s.color, emissive: s.color, emissiveIntensity: 0.35 })
+      );
+      m.position.set(s.x, 0.2, s.z);
+      scene.add(m);
+      supplies.push({ ...s, mesh: m, collected: false });
+    });
+
+    // Wooden Hideable Wardrobes
+    const wardrobes = [];
+    [[-3.9, 1.5, Math.PI / 2], [12.8, 0, -Math.PI / 2]].forEach(([x, z, rotY]) => {
+      const wGroup = new THREE.Group();
+      const box = new THREE.Mesh(
+        new THREE.BoxGeometry(1.5, 2.9, 1.1),
+        new THREE.MeshStandardMaterial({ color: 0x2a160d, roughness: 0.65 })
+      );
+      box.position.y = 1.45;
+      box.castShadow = true;
+      wGroup.add(box);
+      wGroup.position.set(x, 0, z);
+      wGroup.rotation.y = rotY;
+      scene.add(wGroup);
+      wardrobes.push({ x, z, rotY, group: wGroup });
+    });
+
+    // 600 Volumetric Dust Motes
+    const dustGeo = new THREE.BufferGeometry();
+    const dustPos = new Float32Array(600 * 3);
+    for (let i = 0; i < 600 * 3; i += 3) {
+      dustPos[i] = (Math.random() - 0.5) * 28;
+      dustPos[i + 1] = Math.random() * 4.0;
+      dustPos[i + 2] = (Math.random() - 0.5) * 28;
+    }
+    dustGeo.setAttribute('position', new THREE.BufferAttribute(dustPos, 3));
+    scene.add(new THREE.Points(dustGeo, new THREE.PointsMaterial({
+      color: 0xdcdde1, size: 0.045, transparent: true, opacity: 0.45
+    })));
+
+    // ============================================================================
+    // 6. MULTI-JOINTED STALKER BOSS WITH WEAK-POINT HITBOXES
+    // ============================================================================
+    const stalkerGroup = new THREE.Group();
+    const fleshMat = new THREE.MeshStandardMaterial({ color: 0x181215, roughness: 0.32, metalness: 0.25 });
+
+    const sTorso = new THREE.Mesh(new THREE.CylinderGeometry(0.46, 0.32, 1.65, 12), fleshMat);
+    sTorso.position.y = 1.9;
+    sTorso.castShadow = true;
+
+    // Glowing Crimson Chest Parasite Core (Weak Spot!)
+    const sParasite = new THREE.Mesh(
+      new THREE.SphereGeometry(0.22, 12, 12),
+      new THREE.MeshStandardMaterial({ color: 0xff1133, emissive: 0xff0022, emissiveIntensity: 1.4 })
+    );
+    sParasite.position.set(0, 2.05, 0.34);
+    sParasite.userData = { weakSpot: true };
+
+    // Twitching Head (Weak Spot!)
+    const sHead = new THREE.Mesh(new THREE.SphereGeometry(0.35, 14, 14), fleshMat);
+    sHead.position.y = 2.95;
+    sHead.userData = { weakSpot: true };
+
+    const eyeMat = new THREE.MeshBasicMaterial({ color: 0xff2200 });
+    const eyeL = new THREE.Mesh(new THREE.SphereGeometry(0.055, 8, 8), eyeMat);
+    const eyeR = eyeL.clone();
+    eyeL.position.set(-0.11, 2.98, 0.29);
+    eyeR.position.set(0.11, 2.98, 0.29);
+
+    const stalkerEyeLight = new THREE.PointLight(0xff1122, 1.4, 6);
+    stalkerEyeLight.position.set(0, 2.95, 0.55);
+
+    const sArmL = new THREE.Mesh(new THREE.CylinderGeometry(0.11, 0.08, 1.55, 8), fleshMat);
+    sArmL.position.set(-0.6, 1.85, 0.2);
+    const sArmR = sArmL.clone();
+    sArmR.position.set(0.6, 1.85, 0.2);
+
+    const sLegL = new THREE.Mesh(new THREE.CylinderGeometry(0.14, 0.1, 1.2, 8), fleshMat);
+    sLegL.position.set(-0.24, 0.6, 0);
+    const sLegR = sLegL.clone();
+    sLegR.position.set(0.24, 0.6, 0);
+
+    stalkerGroup.add(sTorso, sParasite, sHead, eyeL, eyeR, stalkerEyeLight, sArmL, sArmR, sLegL, sLegR);
+    stalkerGroup.position.set(0, 0, -9);
+    scene.add(stalkerGroup);
+
+    const stalker = { group: stalkerGroup, stunTimer: 0, speed: 4.15 };
+
+    // Blood Burst & Brass Shell Casing Pools
+    const hitParticles = [];
+    const shellCasings = [];
+
+    function spawnBloodBurst(pos, isCrit = false) {
+      const count = isCrit ? 28 : 14;
+      for (let i = 0; i < count; i++) {
+        const p = new THREE.Mesh(
+          new THREE.SphereGeometry(isCrit ? 0.055 : 0.04, 6, 6),
+          new THREE.MeshBasicMaterial({ color: i % 3 === 0 ? 0xffbb00 : 0xb91c1c })
+        );
+        p.position.copy(pos);
+        p.userData = {
+          vel: new THREE.Vector3((Math.random() - 0.5) * 6, Math.random() * 4.2, (Math.random() - 0.5) * 6),
+          life: 0.55
+        };
+        scene.add(p);
+        hitParticles.push(p);
+      }
+    }
+
+    function ejectBrassShell() {
+      const shell = new THREE.Mesh(
+        new THREE.CylinderGeometry(0.012, 0.012, 0.035, 6),
+        new THREE.MeshStandardMaterial({ color: 0xfbbf24, metalness: 0.9, roughness: 0.2 })
+      );
+      const worldPos = new THREE.Vector3();
+      gunGroup.getWorldPosition(worldPos);
+      shell.position.copy(worldPos);
+      shell.userData = {
+        vel: new THREE.Vector3((Math.random() + 0.5) * 2.2, 1.8 + Math.random(), (Math.random() - 0.5) * 1.5),
+        life: 1.5
+      };
+      scene.add(shell);
+      shellCasings.push(shell);
+    }
+
+    // ============================================================================
+    // 7. PLAYER STATE, RMB LASER ADS, & ATTACHÉ CASE CRAFTING
+    // ============================================================================
+    const state = {
+      playing: false,
+      viralMode: false,
+      viralTime: 0,
+      viralShot1: false,
+      viralShot2: false,
+      viralStingerDone: false,
+      hp: 100,
+      ammo: 12,
+      reserve: 24,
+      herbs: 1,
+      powder: 1,
+      ads: false,
+      hiding: false,
+      holdingBreath: false,
+      crouching: false,
+      yaw: 0,
+      pitch: 0,
+      recoil: 0,
+      lightningVal: 0,
+      nextLightning: 6.0
+    };
+
+    function showToast(msg) {
+      const el = document.getElementById('toast-banner');
+      el.textContent = msg;
+      el.style.opacity = '1';
+      clearTimeout(el._t);
+      el._t = setTimeout(() => el.style.opacity = '0', 2400);
+    }
+
+    function syncHUD() {
+      document.getElementById('ammo-count').textContent = state.ammo;
+      document.getElementById('ammo-reserve').textContent = '/ ' + state.reserve;
+      document.getElementById('herb-badge').textContent = `🌿 HERBS: ${state.herbs}`;
+      document.getElementById('inv-herbs').textContent = state.herbs;
+      document.getElementById('inv-powder').textContent = state.powder;
+
+      const adsBadge = document.getElementById('ads-badge');
+      adsBadge.textContent = state.ads ? 'LASER: ACTIVE' : 'LASER [RMB]';
+      adsBadge.className = state.ads
+        ? 'px-2 py-0.5 rounded bg-red-950 text-red-300 border border-red-500 text-center font-bold'
+        : 'px-2 py-0.5 rounded bg-stone-900 text-stone-400 border border-stone-700 text-center';
+      document.getElementById('reticle').classList.toggle('ads-active', state.ads);
+
+      const pill = document.getElementById('stalker-state-pill');
+      pill.textContent = stalker.stunTimer > 0 ? 'STUNNED' : (state.hiding ? 'SEARCHING' : 'HUNTING');
+    }
+
+    const keys = {};
+    window.addEventListener('contextmenu', e => e.preventDefault());
+
+    window.addEventListener('keydown', e => {
+      keys[e.code] = true;
+      if (e.code === 'Space' && state.hiding) state.holdingBreath = true;
+      if (e.code === 'KeyV' && state.playing) { state.ads = !state.ads; syncHUD(); }
+      if (e.code === 'Tab') {
+        e.preventDefault();
+        toggleInventoryModal();
+      }
+      if (e.code === 'KeyF') {
+        spotCore.visible = !spotCore.visible;
+        spotSpill.visible = spotCore.visible;
+        lightCone.visible = spotCore.visible;
+      }
+      if (e.code === 'KeyC') state.crouching = !state.crouching;
+      if (e.code === 'KeyR' && state.ammo < 12 && state.reserve > 0) {
+        const needed = Math.min(12 - state.ammo, state.reserve);
+        state.ammo += needed;
+        state.reserve -= needed;
+        showToast('RELOADED 9MM CUSTOM');
+        syncHUD();
+      }
+      if (e.code === 'KeyE') tryInteract();
+    });
+
+    window.addEventListener('keyup', e => {
+      keys[e.code] = false;
+      if (e.code === 'Space') state.holdingBreath = false;
+    });
+
+    window.addEventListener('mousemove', e => {
+      if (document.pointerLockElement !== canvas || state.viralMode) return;
+      const sens = state.ads ? 0.0014 : 0.0022;
+      state.yaw -= e.movementX * sens;
+      state.pitch = Math.max(-1.2, Math.min(1.2, state.pitch - e.movementY * sens));
+    });
+
+    window.addEventListener('mousedown', e => {
+      if (document.pointerLockElement !== canvas || state.viralMode) return;
+      if (e.button === 2) { state.ads = true; syncHUD(); }
+      if (e.button === 0) firePistol();
+    });
+
+    window.addEventListener('mouseup', e => {
+      if (e.button === 2 && !state.viralMode) { state.ads = false; syncHUD(); }
+    });
+
+    function firePistol() {
+      if (state.ammo <= 0 || state.hiding) return;
+      state.ammo--;
+      syncHUD();
+      audio.playGunshot();
+      ejectBrassShell();
+      state.recoil = 0.17;
+      muzzleLight.intensity = 5.0;
+      setTimeout(() => muzzleLight.intensity = 0, 55);
+
+      const ray = new THREE.Raycaster();
+      ray.setFromCamera(new THREE.Vector2(0, 0), camera);
+      const hits = ray.intersectObjects(stalkerGroup.children, true);
+      if (hits.length > 0 && hits[0].distance < 25) {
+        const isWeak = Boolean(hits[0].object.userData && hits[0].object.userData.weakSpot);
+        stalker.stunTimer = isWeak ? 6.0 : 3.2;
+        spawnBloodBurst(hits[0].point, isWeak);
+        if (isWeak) {
+          audio.playStalkerShriek();
+          const cb = document.getElementById('crit-banner');
+          cb.style.opacity = '1';
+          setTimeout(() => cb.style.opacity = '0', 1100);
+        }
+        syncHUD();
+      }
+    }
+
+    function tryInteract() {
+      if (state.hiding) {
+        state.hiding = false;
+        document.getElementById('wardrobe-slats').style.display = 'none';
+        camHolder.position.set(-2.3, 1.7, 1.5);
+        syncHUD();
+        return;
+      }
+      for (const c of crests) {
+        if (!c.collected && camHolder.position.distanceTo(c.mesh.position) < 2.6) {
+          c.collected = true;
+          c.mesh.visible = false;
+          const badge = document.getElementById('badge-' + c.id);
+          badge.className = 'px-2 py-1 rounded bg-amber-500/20 border border-amber-400 text-amber-300 text-[10px] font-mono-re text-center font-bold';
+          showToast(`COLLECTED ${c.name} CREST`);
+          return;
+        }
+      }
+      for (const s of supplies) {
+        if (!s.collected && camHolder.position.distanceTo(s.mesh.position) < 2.5) {
+          s.collected = true;
+          s.mesh.visible = false;
+          if (s.type === 'herb') state.herbs++;
+          else state.powder++;
+          showToast(`PICKED UP ${s.label}`);
+          syncHUD();
+          return;
+        }
+      }
+      for (const w of wardrobes) {
+        if (Math.hypot(camHolder.position.x - w.x, camHolder.position.z - w.z) < 2.5) {
+          state.hiding = true;
+          document.getElementById('wardrobe-slats').style.display = 'block';
+          camHolder.position.set(w.x, 1.5, w.z);
+          state.yaw = -Math.PI / 2;
+          state.pitch = 0;
+          showToast('HIDING IN WARDROBE — HOLD [SPACE] TO CALM HEARTBEAT');
+          syncHUD();
+          return;
+        }
+      }
+    }
+
+    // ============================================================================
+    // 8. VIRAL YOUTUBE SHORT CHOREOGRAPHED AUTO-DIRECTOR (15s TAS) & WEBM RECORDER
+    // ============================================================================
+    const captionBox = document.getElementById('shorts-caption');
+    const captionTxt = document.getElementById('shorts-text');
+
+    function startViralShortDirector() {
+      audio.init();
+      document.getElementById('title-overlay').style.display = 'none';
+      wrapEl.classList.add('shorts-mode');
+      onResize();
+      document.getElementById('btn-viral').classList.add('viral-active-btn');
+      captionBox.style.display = 'block';
+
+      state.playing = true;
+      state.viralMode = true;
+      state.viralTime = 0;
+      state.viralShot1 = false;
+      state.viralShot2 = false;
+      state.viralStingerDone = false;
+      state.hiding = false;
+      state.ads = true;
+      document.getElementById('wardrobe-slats').style.display = 'none';
+      crests.forEach(c => { c.collected = false; c.mesh.visible = true; });
+      camHolder.position.set(0, 1.7, 10.5);
+      state.yaw = 0;
+      state.pitch = 0;
+      stalker.stunTimer = 0;
+      stalkerGroup.position.set(0, 0, -8);
+      syncHUD();
+    }
+
+    function updateViralDirector(dt) {
+      state.viralTime += dt;
+      const t = state.viralTime;
+
+      if (t < 2.8) {
+        // Phase 1: Creep down wet corridor with laser sight active toward Moon Crest
+        state.ads = true;
+        captionTxt.textContent = 'POV: Resident Evil Requiem in Three.js 🔦';
+        camHolder.position.z = THREE.MathUtils.lerp(10.5, 4.3, t / 2.8);
+        state.yaw = Math.sin(t * 2.4) * 0.1;
+        state.pitch = -0.06;
+        stalkerGroup.position.set(0, 0, -6.5);
+      } else if (t < 4.1) {
+        // Phase 2: Grab Moon Crest + Volumetric Lightning Stalker Reveal!
+        state.ads = false;
+        if (!crests[0].collected) {
+          crests[0].collected = true;
+          crests[0].mesh.visible = false;
+          document.getElementById('badge-0').className =
+            'px-2 py-1 rounded bg-amber-500/20 border border-amber-400 text-amber-300 text-[10px] font-mono-re text-center font-bold';
+        }
+        if (!state.viralStingerDone) {
+          state.viralStingerDone = true;
+          state.lightningVal = 1.0;
+          audio.playThunder();
+          audio.playStalkerShriek();
+        }
+        captionTxt.textContent = 'LIGHTNING FLASH REVEALS THE STALKER?! ⚡😱';
+        stalkerGroup.position.z = THREE.MathUtils.lerp(-6.0, -1.1, (t - 2.8) / 1.3);
+        state.yaw = 0;
+        state.pitch = 0.12 + (Math.random() - 0.5) * 0.04;
+      } else if (t < 5.6) {
+        // Phase 3: Sprint & dive into the Wooden Wardrobe!
+        captionTxt.textContent = 'DIVE INTO THE WARDROBE!! 🚪💨';
+        const p = (t - 4.1) / 1.5;
+        camHolder.position.x = THREE.MathUtils.lerp(0, -3.5, p);
+        camHolder.position.z = THREE.MathUtils.lerp(4.3, 1.5, p);
+        state.yaw = THREE.MathUtils.lerp(0, Math.PI / 2, p);
+        stalkerGroup.position.set(0, 0, THREE.MathUtils.lerp(-1.1, 1.0, p));
+      } else if (t < 9.2) {
+        // Phase 4: Inside Wardrobe peeking through slats while holding breath!
+        state.hiding = true;
+        state.holdingBreath = true;
+        document.getElementById('wardrobe-slats').style.display = 'block';
+        captionTxt.textContent = '[HOLD SPACE] DON\'T BREATHE... 💀💓';
+        camHolder.position.set(-3.7, 1.5, 1.5);
+        const p = (t - 5.6) / 3.6;
+        stalkerGroup.position.set(-1.25, 0, THREE.MathUtils.lerp(-1.4, 3.6, p));
+        stalkerGroup.rotation.y = -Math.PI / 2;
+        state.yaw = -Math.PI / 2 + Math.sin(t * 3.5) * 0.04;
+        state.pitch = 0.05;
+      } else if (t < 11.6) {
+        // Phase 5: Burst out, snap into RMB Laser Sight ADS, Double Crit Stun!
+        state.hiding = false;
+        state.holdingBreath = false;
+        state.ads = true;
+        document.getElementById('wardrobe-slats').style.display = 'none';
+        captionTxt.textContent = 'LASER SIGHT PARASITE CRIT STUN! 🔥🔫';
+        camHolder.position.set(-1.8, 1.7, 1.5);
+        const dx = stalkerGroup.position.x - camHolder.position.x;
+        const dz = stalkerGroup.position.z - camHolder.position.z;
+        state.yaw = Math.atan2(-dx, -dz);
+        state.pitch = 0.08;
+        if (!state.viralShot1 && t > 9.6) {
+          state.viralShot1 = true;
+          firePistol();
+          stalker.stunTimer = 6.0;
+          spawnBloodBurst(new THREE.Vector3(stalkerGroup.position.x, 2.05, stalkerGroup.position.z), true);
+        }
+        if (!state.viralShot2 && t > 10.3) {
+          state.viralShot2 = true;
+          state.pitch = 0.18;
+          firePistol();
+          spawnBloodBurst(new THREE.Vector3(stalkerGroup.position.x, 2.95, stalkerGroup.position.z), true);
+        }
+      } else if (t < 14.5) {
+        // Phase 6: Sprint to the North Gate!
+        state.ads = false;
+        const p = (t - 11.6) / 2.9;
+        camHolder.position.x = THREE.MathUtils.lerp(-1.8, 0, p);
+        camHolder.position.z = THREE.MathUtils.lerp(1.5, -12.4, p);
+        state.yaw = 0;
+        state.pitch = 0;
+        gateLight.color.setHex(0x22c55e);
+        captionTxt.textContent = 'ESCAPED THE SPENCER WING! 🏆';
+      } else {
+        state.viralTime = 0;
+        state.viralShot1 = false;
+        state.viralShot2 = false;
+        state.viralStingerDone = false;
+        crests[0].collected = false;
+        crests[0].mesh.visible = true;
+        gateLight.color.setHex(0xe74c3c);
+      }
+      syncHUD();
+    }
+
+    // 60FPS WebM Video Recorder
+    let mediaRecorder = null;
+    let recordedChunks = [];
+    document.getElementById('btn-record').addEventListener('click', () => {
+      const btn = document.getElementById('btn-record');
+      if (mediaRecorder && mediaRecorder.state === 'recording') {
+        mediaRecorder.stop();
+        btn.textContent = '🔴 REC .WEBM';
+        return;
+      }
+      try {
+        const stream = canvas.captureStream(60);
+        recordedChunks = [];
+        mediaRecorder = new MediaRecorder(stream, { mimeType: 'video/webm' });
+        mediaRecorder.ondataavailable = e => { if (e.data.size > 0) recordedChunks.push(e.data); };
+        mediaRecorder.onstop = () => {
+          const blob = new Blob(recordedChunks, { type: 'video/webm' });
+          const a = document.createElement('a');
+          a.href = URL.createObjectURL(blob);
+          a.download = 'resident_evil_requiem_short.webm';
+          a.click();
+          showToast('DOWNLOADED .WEBM VIDEO RECORDING!');
+        };
+        mediaRecorder.start();
+        btn.textContent = '⏹ STOP & SAVE .WEBM';
+        showToast('RECORDING 60FPS WEBM VIDEO...');
+      } catch (err) {
+        showToast('WEBM RECORDER NOT SUPPORTED IN THIS BROWSER');
+      }
+    });
+
+    // ============================================================================
+    // 9. DIEGETIC ECG HEARTBEAT MONITOR & PROXIMITY RADAR
+    // ============================================================================
+    const ecgCanvas = document.getElementById('ecg-canvas');
+    const ecgCtx = ecgCanvas.getContext('2d');
+    const radarCanvas = document.getElementById('radar-canvas');
+    const radarCtx = radarCanvas.getContext('2d');
+    let ecgX = 0;
+
+    function drawECGAndRadar(dt, stalkerDist) {
+      ecgCtx.fillStyle = 'rgba(0, 0, 0, 0.16)';
+      ecgCtx.fillRect(0, 0, ecgCanvas.width, ecgCanvas.height);
+
+      const danger = stalkerDist < 7.0 && !state.holdingBreath;
+      const caution = stalkerDist < 13.0;
+      const color = danger ? '#ef4444' : (caution ? '#f59e0b' : '#10b981');
+      const label = document.getElementById('ecg-label');
+      label.textContent = state.holdingBreath ? 'HOLD' : (danger ? 'DANGER' : (caution ? 'CAUTION' : 'FINE'));
+      label.style.color = color;
+
+      const speed = state.holdingBreath ? 38 : (danger ? 140 : (caution ? 95 : 62));
+      const prevX = ecgX;
+      ecgX = (ecgX + speed * dt) % ecgCanvas.width;
+      if (ecgX < prevX) ecgCtx.clearRect(0, 0, 12, ecgCanvas.height);
+
+      let y = 18;
+      if (ecgX > 44 && ecgX < 52) y = 4;
+      else if (ecgX >= 52 && ecgX < 60) y = 32;
+      else if (ecgX >= 60 && ecgX < 68) y = 11;
+
+      ecgCtx.strokeStyle = color;
+      ecgCtx.lineWidth = 2;
+      ecgCtx.beginPath();
+      ecgCtx.moveTo(Math.max(0, ecgX - 4), 18);
+      ecgCtx.lineTo(ecgX, y);
+      ecgCtx.stroke();
+
+      // Radar
+      radarCtx.clearRect(0, 0, 56, 56);
+      radarCtx.strokeStyle = 'rgba(255,255,255,0.15)';
+      radarCtx.beginPath(); radarCtx.arc(28, 28, 22, 0, Math.PI * 2); radarCtx.stroke();
+      radarCtx.fillStyle = '#38bdf8';
+      radarCtx.beginPath(); radarCtx.arc(28, 28, 2.5, 0, Math.PI * 2); radarCtx.fill();
+
+      const dx = stalkerGroup.position.x - camHolder.position.x;
+      const dz = stalkerGroup.position.z - camHolder.position.z;
+      const rx = Math.cos(-state.yaw) * dx - Math.sin(-state.yaw) * dz;
+      const rz = Math.sin(-state.yaw) * dx + Math.cos(-state.yaw) * dz;
+      radarCtx.fillStyle = '#ef4444';
+      radarCtx.beginPath();
+      radarCtx.arc(28 + Math.max(-21, Math.min(21, rx * 1.4)), 28 + Math.max(-21, Math.min(21, rz * 1.4)), 3.2, 0, Math.PI * 2);
+      radarCtx.fill();
+    }
+
+    // ============================================================================
+    // 10. MAIN RENDER LOOP (POST-FX SHADER PASS + LASER SIGHT RAYCAST)
+    // ============================================================================
+    const aimRay = new THREE.Raycaster();
+    let lastTime = performance.now();
+
+    function animate(now) {
+      requestAnimationFrame(animate);
+      const dt = Math.min((now - lastTime) / 1000, 0.05);
+      lastTime = now;
+      const elapsed = now / 1000;
+
+      // Flickering sconces & pulsing chest parasite
+      sconces.forEach((l, i) => { l.intensity = 0.72 + Math.sin(elapsed * 12 + i * 3) * 0.16; });
+      sParasite.scale.setScalar(1.0 + Math.sin(elapsed * 8) * 0.14);
+
+      // Periodic Volumetric Lightning
+      state.nextLightning -= dt;
+      if (state.nextLightning <= 0 && !state.viralMode) {
+        state.nextLightning = 10 + Math.random() * 5;
+        state.lightningVal = 1.0;
+        audio.playThunder();
+      }
+      state.lightningVal = Math.max(0, state.lightningVal - 2.4 * dt);
+      lightningLight.intensity = state.lightningVal * 3.5;
+
+      // Rotate Crests & Supplies
+      crests.forEach(c => {
+        if (!c.collected) {
+          c.mesh.rotation.y += 1.8 * dt;
+          c.mesh.position.y = 1.45 + Math.sin(elapsed * 3 + c.id) * 0.08;
+        }
+      });
+      supplies.forEach(s => { if (!s.collected) s.mesh.rotation.y += 1.5 * dt; });
+
+      // Update Blood Particles & Brass Shells
+      for (let i = hitParticles.length - 1; i >= 0; i--) {
+        const p = hitParticles[i];
+        p.position.addScaledVector(p.userData.vel, dt);
+        p.userData.vel.y -= 9.8 * dt;
+        p.userData.life -= dt;
+        if (p.userData.life <= 0) { scene.remove(p); hitParticles.splice(i, 1); }
+      }
+      for (let i = shellCasings.length - 1; i >= 0; i--) {
+        const s = shellCasings[i];
+        s.position.addScaledVector(s.userData.vel, dt);
+        s.userData.vel.y -= 9.8 * dt;
+        if (s.position.y < 0.03) { s.position.y = 0.03; s.userData.vel.y *= -0.4; }
+        s.rotation.x += 12 * dt;
+        s.userData.life -= dt;
+        if (s.userData.life <= 0) { scene.remove(s); shellCasings.splice(i, 1); }
+      }
+
+      if (state.playing) {
+        if (state.viralMode) {
+          updateViralDirector(dt);
+        } else if (!state.hiding) {
+          const speed = state.ads ? 2.5 : (state.crouching ? 2.6 : ((keys['ShiftLeft'] || keys['ShiftRight']) ? 6.2 : 4.2));
+          const fwd = new THREE.Vector3(-Math.sin(state.yaw), 0, -Math.cos(state.yaw));
+          const right = new THREE.Vector3(Math.cos(state.yaw), 0, -Math.sin(state.yaw));
+          const move = new THREE.Vector3();
+          if (keys['KeyW']) move.add(fwd);
+          if (keys['KeyS']) move.sub(fwd);
+          if (keys['KeyD']) move.add(right);
+          if (keys['KeyA']) move.sub(right);
+
+          if (move.lengthSq() > 0) {
+            move.normalize();
+            camHolder.position.addScaledVector(move, speed * dt);
+            for (const c of colliders) {
+              const dx = camHolder.position.x - c.x, dz = camHolder.position.z - c.z;
+              const rx = c.hw + 0.45, rz = c.hd + 0.45;
+              if (Math.abs(dx) < rx && Math.abs(dz) < rz) {
+                if (rx - Math.abs(dx) < rz - Math.abs(dz)) camHolder.position.x = c.x + Math.sign(dx) * rx;
+                else camHolder.position.z = c.z + Math.sign(dz) * rz;
+              }
+            }
+          }
+          const targetY = state.crouching ? 1.05 : 1.7;
+          const bob = move.lengthSq() > 0 ? Math.sin(elapsed * 9) * 0.05 : 0;
+          camHolder.position.y = THREE.MathUtils.lerp(camHolder.position.y, targetY + bob, 0.18);
+
+          // Stalker AI Chase
+          if (stalker.stunTimer > 0) {
+            stalker.stunTimer -= dt;
+            sHead.rotation.z = Math.sin(elapsed * 28) * 0.38;
+          } else {
+            sHead.rotation.z = 0;
+            const toP = new THREE.Vector3().subVectors(camHolder.position, stalkerGroup.position);
+            toP.y = 0;
+            if (toP.length() > 1.15) {
+              toP.normalize();
+              stalkerGroup.position.addScaledVector(toP, stalker.speed * dt);
+              stalkerGroup.rotation.y = Math.atan2(toP.x, toP.z);
+            }
+          }
+        }
+
+        // Stalker Limb Kinematics
+        const wp = elapsed * (stalker.stunTimer > 0 ? 2 : 8.5);
+        sLegL.rotation.x = Math.sin(wp) * 0.58;
+        sLegR.rotation.x = -Math.sin(wp) * 0.58;
+        sArmL.rotation.x = -0.65 + Math.cos(wp) * 0.38;
+        sArmR.rotation.x = -0.65 - Math.cos(wp) * 0.38;
+
+        // Smooth RMB Laser Sight ADS FOV & Gun Viewmodel Lerp
+        const targetFov = state.ads ? 48 : 68;
+        camera.fov = THREE.MathUtils.lerp(camera.fov, targetFov, 0.2);
+        camera.updateProjectionMatrix();
+
+        state.recoil = Math.max(0, state.recoil - 0.85 * dt);
+        camera.rotation.order = 'YXZ';
+        camera.rotation.y = state.yaw;
+        camera.rotation.x = state.pitch + state.recoil;
+
+        const targetGunX = state.ads ? 0.0 : 0.23;
+        const targetGunY = state.ads ? -0.14 : -0.21;
+        gunGroup.position.x = THREE.MathUtils.lerp(gunGroup.position.x, targetGunX, 0.22);
+        gunGroup.position.y = THREE.MathUtils.lerp(gunGroup.position.y, targetGunY, 0.22);
+        gunGroup.position.z = -0.42 + state.recoil * 0.35;
+
+        // Live 3D Laser Sight Beam Update
+        laserLine.visible = state.ads && !state.hiding;
+        laserDot.visible = state.ads && !state.hiding;
+        if (laserLine.visible) {
+          const startWorld = new THREE.Vector3();
+          frontSight.getWorldPosition(startWorld);
+          aimRay.setFromCamera(new THREE.Vector2(0, 0), camera);
+          const allTargets = [...wallMeshes, ...stalkerGroup.children];
+          const hits = aimRay.intersectObjects(allTargets, true);
+          const endWorld = hits.length > 0
+            ? hits[0].point
+            : aimRay.ray.origin.clone().add(aimRay.ray.direction.clone().multiplyScalar(25));
+          laserGeo.setFromPoints([startWorld, endWorld]);
+          laserDot.position.copy(endWorld);
+        }
+
+        // Flashlight Inertia
+        flashGroup.position.copy(camHolder.position);
+        flashGroup.rotation.order = 'YXZ';
+        flashGroup.rotation.y = THREE.MathUtils.lerp(flashGroup.rotation.y, state.yaw, 0.22);
+        flashGroup.rotation.x = THREE.MathUtils.lerp(flashGroup.rotation.x, state.pitch, 0.22);
+
+        // Proximity Heartbeat & Post-FX Uniforms
+        const sDist = camHolder.position.distanceTo(stalkerGroup.position);
+        drawECGAndRadar(dt, sDist);
+        const fear = Math.max(0, Math.min(1.0, (11 - sDist) / 11));
+        postMat.uniforms.uTime.value = elapsed;
+        postMat.uniforms.uFear.value = fear;
+        postMat.uniforms.uBloodPulse.value = fear * (0.5 + 0.5 * Math.sin(elapsed * 9));
+        postMat.uniforms.uLightning.value = state.lightningVal;
+
+        if (!state.holdingBreath && elapsed - audio.lastBeat > (sDist < 7 ? 0.42 : 0.85)) {
+          audio.lastBeat = elapsed;
+          audio.playHeartbeat(fear);
+        }
+
+        // Context Prompts
+        const promptEl = document.getElementById('prompt-box');
+        let pTxt = '';
+        if (state.hiding) {
+          pTxt = state.holdingBreath ? 'HOLDING BREATH (ECG SILENT)' : '[HOLD SPACE] HOLD BREATH | [E] EXIT';
+        } else {
+          for (const c of crests) {
+            if (!c.collected && camHolder.position.distanceTo(c.mesh.position) < 2.6) pTxt = `[E] TAKE ${c.name} CREST`;
+          }
+          for (const s of supplies) {
+            if (!s.collected && camHolder.position.distanceTo(s.mesh.position) < 2.5) pTxt = `[E] TAKE ${s.label}`;
+          }
+          for (const w of wardrobes) {
+            if (Math.hypot(camHolder.position.x - w.x, camHolder.position.z - w.z) < 2.5) pTxt = '[E] HIDE IN WARDROBE';
+          }
+        }
+        if (pTxt && !state.viralMode) {
+          promptEl.style.display = 'block';
+          promptEl.textContent = pTxt;
+        } else {
+          promptEl.style.display = 'none';
+        }
+      }
+
+      // Render Scene to RenderTarget -> Render Fullscreen GLSL Post-FX Quad
+      renderer.setRenderTarget(renderTarget);
+      renderer.render(scene, camera);
+      renderer.setRenderTarget(null);
+      renderer.render(postScene, postCam);
+    }
+
+    // ============================================================================
+    // 11. ATTACHÉ CASE INVENTORY & 7-FILE MODULAR PROJECT EXPORTER
+    // ============================================================================
+    function onResize() {
+      const w = wrapEl.clientWidth, h = wrapEl.clientHeight;
+      camera.aspect = w / h;
+      camera.updateProjectionMatrix();
+      renderer.setSize(w, h);
+      const d = renderer.getPixelRatio();
+      renderTarget.setSize(w * d, h * d);
+    }
+    window.addEventListener('resize', onResize);
+
+    function toggleInventoryModal() {
+      const m = document.getElementById('inventory-modal');
+      const open = m.classList.contains('hidden');
+      if (open) {
+        if (document.pointerLockElement) document.exitPointerLock();
+        m.classList.remove('hidden');
+        m.classList.add('flex');
+      } else {
+        m.classList.add('hidden');
+        m.classList.remove('flex');
+        if (state.playing && !state.viralMode) canvas.requestPointerLock();
+      }
+    }
+
+    document.getElementById('btn-inventory').addEventListener('click', toggleInventoryModal);
+    document.getElementById('btn-close-inv').addEventListener('click', toggleInventoryModal);
+
+    document.getElementById('btn-use-herb').addEventListener('click', () => {
+      if (state.herbs <= 0) { showToast('NO GREEN HERBS REMAINING'); return; }
+      state.herbs--;
+      state.hp = Math.min(100, state.hp + 45);
+      showToast('USED GREEN HERB (+45% CONDITION)');
+      syncHUD();
+    });
+
+    document.getElementById('btn-craft-ammo').addEventListener('click', () => {
+      if (state.powder <= 0) { showToast('NO GUNPOWDER REMAINING'); return; }
+      state.powder--;
+      state.reserve += 8;
+      showToast('CRAFTED +8 9MM HOLLOW-POINT ROUNDS');
+      syncHUD();
+    });
+
+    document.getElementById('btn-toggle-postfx').addEventListener('click', e => {
+      const on = postMat.uniforms.uEnabled.value > 0.5;
+      postMat.uniforms.uEnabled.value = on ? 0.0 : 1.0;
+      e.target.textContent = on ? 'DISABLED' : 'ENABLED';
+    });
+
+    document.getElementById('btn-play').addEventListener('click', () => {
+      audio.init();
+      document.getElementById('title-overlay').style.display = 'none';
+      state.playing = true;
+      state.viralMode = false;
+      captionBox.style.display = 'none';
+      document.getElementById('btn-viral').classList.remove('viral-active-btn');
+      canvas.requestPointerLock();
+    });
+
+    document.getElementById('btn-watch-short').addEventListener('click', startViralShortDirector);
+    document.getElementById('btn-viral').addEventListener('click', startViralShortDirector);
+    document.getElementById('btn-aspect').addEventListener('click', () => {
+      wrapEl.classList.toggle('shorts-mode');
+      onResize();
+    });
+
+    const modularFiles = {
+      'index.html': () => document.documentElement.outerHTML,
+      'shaders/REEnginePostFX.glsl': () => REPostFXShader.fragmentShader.trim(),
+      'engine/PBRTextureForge.js': () => forgePBRSurface.toString(),
+      'engine/SpatialHorrorAudio.js': () => SpatialHorrorAudio.toString(),
+      'engine/StalkerKinematicAI.js': () => `${spawnBloodBurst.toString()}\n\n${ejectBrassShell.toString()}`,
+      'engine/AttacheInventory.js': () => toggleInventoryModal.toString(),
+      'engine/ViralShortDirector.js': () => `${startViralShortDirector.toString()}\n\n${updateViralDirector.toString()}`
+    };
+
+    let currentFileKey = 'shaders/REEnginePostFX.glsl';
+    const tabsEl = document.getElementById('file-tabs');
+    const codeViewEl = document.getElementById('code-view');
+
+    function renderExporterTabs() {
+      tabsEl.innerHTML = '';
+      Object.keys(modularFiles).forEach(fname => {
+        const b = document.createElement('button');
+        b.className = fname === currentFileKey
+          ? 'px-3 py-1.5 rounded bg-red-700 text-white font-bold whitespace-nowrap'
+          : 'px-3 py-1.5 rounded bg-stone-800 text-stone-400 hover:text-white whitespace-nowrap';
+        b.textContent = fname;
+        b.onclick = () => {
+          currentFileKey = fname;
+          renderExporterTabs();
+          codeViewEl.textContent = modularFiles[fname]();
+        };
+        tabsEl.appendChild(b);
+      });
+      codeViewEl.textContent = modularFiles[currentFileKey]();
+    }
+
+    document.getElementById('btn-files').addEventListener('click', () => {
+      if (document.pointerLockElement) document.exitPointerLock();
+      renderExporterTabs();
+      const m = document.getElementById('export-modal');
+      m.classList.remove('hidden');
+      m.classList.add('flex');
+    });
+
+    document.getElementById('btn-close-modal').addEventListener('click', () => {
+      const m = document.getElementById('export-modal');
+      m.classList.add('hidden');
+      m.classList.remove('flex');
+    });
+
+    document.getElementById('btn-dl-file').addEventListener('click', () => {
+      const blob = new Blob([modularFiles[currentFileKey]()], { type: 'text/plain;charset=utf-8' });
+      const a = document.createElement('a');
+      a.href = URL.createObjectURL(blob);
+      a.download = currentFileKey.split('/').pop();
+      a.click();
+    });
+
+    document.getElementById('btn-copy-file').addEventListener('click', () => {
+      const ta = document.createElement('textarea');
+      ta.value = modularFiles[currentFileKey]();
+      document.body.appendChild(ta);
+      ta.select();
+      document.execCommand('copy');
+      document.body.removeChild(ta);
+      showToast(`COPIED ${currentFileKey} TO CLIPBOARD`);
+    });
+
+    window.onload = () => {
+      syncHUD();
+      requestAnimationFrame(animate);
+    };
+  </script>
+</body>
+</html>

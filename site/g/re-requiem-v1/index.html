@@ -1,0 +1,1566 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+<script src="../../demo-embed.js"></script>
+<style id="demo-embed-css">
+</style>
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>RESIDENT EVIL REQUIEM // Spencer Estate Wing (Three.js)</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600;800&family=JetBrains+Mono:wght@400;600;700&family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --re-red: #b91c1c;
+      --re-green: #22c55e;
+      --re-amber: #f59e0b;
+    }
+    body {
+      margin: 0;
+      overflow: hidden;
+      background-color: #050506;
+      color: #e5e5e5;
+      font-family: 'Inter', sans-serif;
+      user-select: none;
+    }
+    .font-serif-re {
+      font-family: 'Cinzel', serif;
+    }
+    .font-mono-re {
+      font-family: 'JetBrains Mono', monospace;
+    }
+    canvas#gameCanvas {
+      display: block;
+      width: 100vw;
+      height: 100vh;
+    }
+    /* Film grain & CRT scanline overlay */
+    .horror-overlay {
+      pointer-events: none;
+      position: fixed;
+      inset: 0;
+      background:
+        radial-gradient(circle at center, transparent 45%, rgba(0, 0, 0, 0.85) 100%),
+        repeating-linear-gradient(0deg, rgba(0,0,0,0.14) 0px, rgba(0,0,0,0.14) 1px, transparent 1px, transparent 3px);
+      z-index: 15;
+      transition: box-shadow 0.25s ease;
+    }
+    .blood-vignette {
+      pointer-events: none;
+      position: fixed;
+      inset: 0;
+      box-shadow: inset 0 0 0px rgba(185, 28, 28, 0);
+      z-index: 16;
+      transition: box-shadow 0.3s ease;
+    }
+    /* Closet Slats Overlay when hiding */
+    .closet-slats {
+      pointer-events: none;
+      position: fixed;
+      inset: 0;
+      z-index: 18;
+      display: none;
+      background: repeating-linear-gradient(
+        0deg,
+        #070504 0px,
+        #070504 36px,
+        transparent 36px,
+        transparent 62px
+      );
+      box-shadow: inset 0 0 140px 60px #000000;
+    }
+    .closet-slats.active {
+      display: block;
+    }
+    @keyframes pulseGlow {
+      0%, 100% { opacity: 0.7; }
+      50% { opacity: 1; }
+    }
+    .pulse-slow {
+      animation: pulseGlow 2.4s infinite ease-in-out;
+    }
+  </style>
+</head>
+<body>
+
+  <div id="horrorOverlay" class="horror-overlay"></div>
+  <div id="bloodVignette" class="blood-vignette"></div>
+  <div id="closetSlats" class="closet-slats"></div>
+
+  <!-- Center Reticle & Contextual Interaction Prompt -->
+  <div id="reticleWrap" class="fixed inset-0 pointer-events-none z-20 flex flex-col items-center justify-center">
+    <div id="crosshair" class="w-4 h-4 relative flex items-center justify-center transition-transform duration-150">
+      <div class="w-1 h-1 bg-white/80 rounded-full"></div>
+      <div class="absolute w-3 h-[1px] bg-white/40"></div>
+      <div class="absolute h-3 w-[1px] bg-white/40"></div>
+    </div>
+    <div id="interactPrompt" class="mt-6 px-3.5 py-1.5 rounded bg-black/80 border border-stone-600/80 text-xs font-mono-re tracking-wider uppercase text-amber-200 hidden shadow-lg">
+      [E] Interact
+    </div>
+  </div>
+
+  <!-- Top Left: Objective & Crest Keys Tracker -->
+  <div class="fixed top-4 left-4 z-20 pointer-events-none flex flex-col gap-2 max-w-xs sm:max-w-sm">
+    <div class="bg-black/75 backdrop-blur-md border border-stone-800/90 px-4 py-3 rounded-lg shadow-2xl">
+      <div class="flex items-center justify-between gap-4 border-b border-stone-800 pb-1.5 mb-2">
+        <span class="font-serif-re text-xs tracking-widest text-red-500 font-bold">SPENCER WING // 1F</span>
+        <span id="stalkerStateBadge" class="font-mono-re text-[11px] px-2 py-0.5 rounded bg-stone-900 text-stone-300 border border-stone-700">
+          STALKER: PROWLING
+        </span>
+      </div>
+      <p id="objectiveText" class="text-xs text-stone-200 leading-relaxed">
+        Locate the <span class="text-amber-400 font-semibold">3 Family Crests</span> hidden in the wing to unlock the <span class="text-red-400 font-semibold">North Iron Gate</span>.
+      </p>
+      <div class="grid grid-cols-3 gap-2 mt-3">
+        <div id="crestSlot0" class="flex items-center gap-1.5 px-2 py-1.5 rounded bg-stone-950/90 border border-stone-800 text-stone-500 text-[11px] font-mono-re">
+          <span>☾</span> <span>MOON</span>
+        </div>
+        <div id="crestSlot1" class="flex items-center gap-1.5 px-2 py-1.5 rounded bg-stone-950/90 border border-stone-800 text-stone-500 text-[11px] font-mono-re">
+          <span>☼</span> <span>SUN</span>
+        </div>
+        <div id="crestSlot2" class="flex items-center gap-1.5 px-2 py-1.5 rounded bg-stone-950/90 border border-stone-800 text-stone-500 text-[11px] font-mono-re">
+          <span>❖</span> <span>SPENCER</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Event / Subtitle Toast -->
+    <div id="toastBox" class="bg-red-950/85 border border-red-700/70 text-red-100 px-3.5 py-2 rounded-lg text-xs font-mono-re shadow-xl transition-opacity duration-300 opacity-0">
+      STALKER ALERTED TO YOUR SOUND
+    </div>
+  </div>
+
+  <!-- Top Right: Controls & Multi-File Source Code Exporter Trigger -->
+  <div class="fixed top-4 right-4 z-30 flex items-center gap-2">
+    <button id="btnTouchToggle" class="px-3 py-2 rounded-lg bg-stone-900/85 hover:bg-stone-800 border border-stone-700 text-stone-200 text-xs font-mono-re transition shadow-lg">
+      📱 Touch UI
+    </button>
+    <button id="btnOpenExporter" class="px-3.5 py-2 rounded-lg bg-red-900/85 hover:bg-red-800 border border-red-500/60 text-white text-xs font-mono-re font-semibold flex items-center gap-2 transition shadow-lg">
+      <span>📦</span> <span>Source Files (5)</span>
+    </button>
+  </div>
+
+  <!-- Bottom Left: Authentic RE ECG Condition Monitor & Acoustic Threat Radar -->
+  <div class="fixed bottom-4 left-4 z-20 pointer-events-none flex items-end gap-3">
+    <div class="bg-black/80 backdrop-blur-md border border-stone-800 p-3 rounded-lg shadow-2xl flex items-center gap-3.5">
+      <!-- Mini Proximity / Motion Radar -->
+      <div class="relative w-16 h-16 rounded-full bg-stone-950 border border-stone-700 flex items-center justify-center overflow-hidden">
+        <canvas id="radarCanvas" width="64" height="64" class="w-16 h-16"></canvas>
+      </div>
+      <!-- ECG Monitor -->
+      <div class="flex flex-col">
+        <div class="flex items-center justify-between mb-1">
+          <span class="text-[10px] font-mono-re text-stone-400 uppercase tracking-wider">ECG // CONDITION</span>
+          <span id="ecgStatusText" class="text-xs font-mono-re font-bold text-emerald-400">FINE</span>
+        </div>
+        <canvas id="ecgCanvas" width="140" height="36" class="w-[140px] h-[36px] bg-stone-950/90 rounded border border-stone-800/80"></canvas>
+        <!-- Stamina & Noise Bars -->
+        <div class="mt-2 flex items-center gap-2 text-[10px] font-mono-re text-stone-400">
+          <span>STM</span>
+          <div class="w-24 h-1.5 bg-stone-900 rounded overflow-hidden">
+            <div id="staminaBar" class="h-full bg-sky-400 transition-all duration-75" style="width:100%"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Bottom Right: Tactical 9mm & Flashlight Status -->
+  <div class="fixed bottom-4 right-4 z-20 pointer-events-none flex flex-col items-end gap-2">
+    <div class="bg-black/80 backdrop-blur-md border border-stone-800 px-4 py-3 rounded-lg shadow-2xl flex items-center gap-4">
+      <div class="text-right">
+        <div class="text-[10px] font-mono-re text-stone-400 uppercase">TACTICAL 9MM (STUN)</div>
+        <div class="flex items-baseline justify-end gap-1 mt-0.5">
+          <span id="ammoClip" class="text-2xl font-mono-re font-bold text-white">7</span>
+          <span class="text-xs font-mono-re text-stone-500">/</span>
+          <span id="ammoReserve" class="text-sm font-mono-re text-stone-400">14</span>
+        </div>
+      </div>
+      <div class="h-9 w-[1px] bg-stone-800"></div>
+      <div class="flex flex-col items-center gap-1">
+        <span class="text-[10px] font-mono-re text-stone-400">LIGHT [F]</span>
+        <span id="flashlightBadge" class="px-2 py-0.5 rounded text-[10px] font-mono-re font-bold bg-amber-500/20 text-amber-300 border border-amber-500/40">
+          ON
+        </span>
+      </div>
+      <div class="flex flex-col items-center gap-1">
+        <span class="text-[10px] font-mono-re text-stone-400">STANCE [C]</span>
+        <span id="stanceBadge" class="px-2 py-0.5 rounded text-[10px] font-mono-re font-bold bg-stone-800 text-stone-300 border border-stone-700">
+          STAND
+        </span>
+      </div>
+    </div>
+    <div class="text-[11px] font-mono-re text-stone-400 bg-black/60 px-2.5 py-1 rounded border border-stone-800/70 hidden sm:block">
+      WASD: Move | SHIFT: Sprint | C: Crouch | F: Light | L-CLICK: Shoot | R: Reload | E: Interact/Hide
+    </div>
+  </div>
+
+  <!-- Mobile / Touch Controls Overlay -->
+  <div id="touchControls" class="fixed inset-x-0 bottom-24 z-25 pointer-events-none hidden px-6 flex justify-between items-center">
+    <div class="pointer-events-auto grid grid-cols-3 gap-1.5 w-36 h-36 bg-black/50 p-2 rounded-2xl border border-stone-700/70">
+      <div></div>
+      <button data-key="KeyW" class="touch-btn bg-stone-800/90 active:bg-red-800 rounded-lg text-white font-bold text-sm">▲</button>
+      <div></div>
+      <button data-key="KeyA" class="touch-btn bg-stone-800/90 active:bg-red-800 rounded-lg text-white font-bold text-sm">◀</button>
+      <button data-key="KeyS" class="touch-btn bg-stone-800/90 active:bg-red-800 rounded-lg text-white font-bold text-sm">▼</button>
+      <button data-key="KeyD" class="touch-btn bg-stone-800/90 active:bg-red-800 rounded-lg text-white font-bold text-sm">▶</button>
+    </div>
+    <div class="pointer-events-auto flex flex-col gap-2">
+      <div class="flex gap-2">
+        <button id="touchShoot" class="px-4 py-3 rounded-xl bg-red-800/90 border border-red-500 text-white font-mono-re text-xs font-bold">FIRE</button>
+        <button id="touchInteract" class="px-4 py-3 rounded-xl bg-amber-700/90 border border-amber-400 text-white font-mono-re text-xs font-bold">USE [E]</button>
+      </div>
+      <div class="flex gap-2">
+        <button id="touchLight" class="px-3 py-2 rounded-xl bg-stone-800/90 border border-stone-600 text-stone-200 font-mono-re text-xs">LIGHT</button>
+        <button id="touchCrouch" class="px-3 py-2 rounded-xl bg-stone-800/90 border border-stone-600 text-stone-200 font-mono-re text-xs">CROUCH</button>
+        <button id="touchReload" class="px-3 py-2 rounded-xl bg-stone-800/90 border border-stone-600 text-stone-200 font-mono-re text-xs">RELOAD</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Title / Pause / Game Over Screen -->
+  <div id="titleOverlay" class="fixed inset-0 z-30 bg-black/90 backdrop-blur-md flex items-center justify-center p-4">
+    <div class="max-w-xl w-full bg-stone-950 border border-stone-800 rounded-2xl p-6 sm:p-8 shadow-2xl relative overflow-hidden">
+      <div class="absolute -top-24 -right-24 w-56 h-56 bg-red-900/20 rounded-full blur-3xl pointer-events-none"></div>
+      <div class="text-xs font-mono-re tracking-widest text-red-500 uppercase mb-1">VIRAL SCENE REPLICATION // THREE.JS</div>
+      <h1 id="modalMainTitle" class="font-serif-re text-3xl sm:text-4xl font-extrabold text-white tracking-wide">
+        RESIDENT EVIL <span class="text-red-600">REQUIEM</span>
+      </h1>
+      <p id="modalSubTitle" class="text-xs sm:text-sm text-stone-400 mt-2 leading-relaxed">
+        You are <strong class="text-stone-200">Grace Ashcroft</strong>, trapped inside the East Wing of the Spencer Estate. An unkillable bio-organic Stalker prowls the corridors, hunting by sight and sound.
+      </p>
+
+      <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 my-5 text-xs bg-stone-900/70 p-4 rounded-xl border border-stone-800/90">
+        <div class="space-y-1.5">
+          <div class="font-mono-re text-amber-400 font-semibold">SURVIVAL MECHANICS</div>
+          <p class="text-stone-300">• Collect the <strong>Moon, Sun, & Spencer Crests</strong> to open the North Gate.</p>
+          <p class="text-stone-300">• Hide inside <strong>Wooden Wardrobes [E]</strong> to break line of sight.</p>
+          <p class="text-stone-300">• Headshots/body shots <strong>STUN</strong> the Stalker for 5s so you can flee.</p>
+        </div>
+        <div class="space-y-1.5">
+          <div class="font-mono-re text-red-400 font-semibold">ACOUSTIC STEALTH</div>
+          <p class="text-stone-300">• <strong>Sprinting [Shift]</strong> & gunfire alert the Stalker from afar.</p>
+          <p class="text-stone-300">• <strong>Crouching [C]</strong> and turning off your <strong>Flashlight [F]</strong> conceal you.</p>
+          <p class="text-stone-300">• Listen to your <strong>ECG Heartbeat</strong> to gauge its distance.</p>
+        </div>
+      </div>
+
+      <div class="flex flex-wrap items-center gap-3">
+        <button id="btnStartGame" class="flex-1 py-3 px-5 rounded-xl bg-red-700 hover:bg-red-600 text-white font-serif-re font-bold tracking-wider text-sm transition shadow-lg shadow-red-950/60">
+          ENTER SPENCER WING (CLICK TO LOCK MOUSE)
+        </button>
+        <button id="btnResetGame" class="py-3 px-4 rounded-xl bg-stone-800 hover:bg-stone-700 text-stone-200 font-mono-re text-xs transition hidden">
+          RESTART WING
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Multi-File Source Code Inspector & Downloader Modal -->
+  <div id="exporterModal" class="fixed inset-0 z-40 bg-black/85 backdrop-blur-md hidden items-center justify-center p-4">
+    <div class="max-w-4xl w-full bg-stone-950 border border-stone-700 rounded-2xl shadow-2xl flex flex-col max-h-[88vh] overflow-hidden">
+      <div class="flex items-center justify-between px-5 py-4 border-b border-stone-800 bg-stone-900/60">
+        <div>
+          <h2 class="font-serif-re text-lg font-bold text-white">MODULAR PROJECT SOURCE EXPORTER</h2>
+          <p class="text-xs text-stone-400">Inspect or download the 5 modular files (`index.html`, `style.css`, `StalkerAI.js`, `SpencerWingMap.js`, `AudioSynth.js`)</p>
+        </div>
+        <div class="flex items-center gap-2">
+          <button id="btnDownloadAll" class="px-3.5 py-1.5 rounded-lg bg-emerald-700 hover:bg-emerald-600 text-white text-xs font-mono-re font-semibold transition">
+            ⬇ Download Active File
+          </button>
+          <button id="btnCopyCode" class="px-3.5 py-1.5 rounded-lg bg-stone-800 hover:bg-stone-700 text-stone-200 text-xs font-mono-re transition">
+            📋 Copy Code
+          </button>
+          <button id="btnCloseExporter" class="px-3 py-1.5 rounded-lg bg-red-900/70 hover:bg-red-800 text-white text-xs font-mono-re">
+            ✕ Close
+          </button>
+        </div>
+      </div>
+
+      <!-- File Tabs -->
+      <div id="fileTabBar" class="flex items-center gap-1 px-4 pt-3 bg-stone-900 border-b border-stone-800 overflow-x-auto text-xs font-mono-re">
+      </div>
+
+      <!-- Code Viewer -->
+      <pre class="flex-1 p-5 overflow-auto text-xs font-mono-re text-stone-200 bg-[#09090c] leading-relaxed"><code id="exporterCodeView"></code></pre>
+    </div>
+  </div>
+
+  <!-- Main 3D WebGL Canvas -->
+  <canvas id="gameCanvas"></canvas>
+
+  <script>
+    /**
+     * MODULE 1: engine/AudioSynth.js
+     * Zero-dependency WebAudio procedural horror synthesizer (footsteps, heartbeat, gunshot, stalker screech, drone).
+     */
+    class HorrorAudioSynth {
+      constructor() {
+        this.ctx = null;
+        this.droneOsc = null;
+        this.droneGain = null;
+        this.initialized = false;
+      }
+
+      init() {
+        if (this.initialized) return;
+        const AudioCtx = window.AudioContext || window.webkitAudioContext;
+        if (!AudioCtx) return;
+        this.ctx = new AudioCtx();
+        this.initialized = true;
+
+        // Low atmospheric Spencer Mansion sub-drone
+        this.droneOsc = this.ctx.createOscillator();
+        const subOsc = this.ctx.createOscillator();
+        this.droneGain = this.ctx.createGain();
+
+        this.droneOsc.type = 'sawtooth';
+        this.droneOsc.frequency.value = 46;
+        subOsc.type = 'sine';
+        subOsc.frequency.value = 23;
+
+        const filter = this.ctx.createBiquadFilter();
+        filter.type = 'lowpass';
+        filter.frequency.value = 110;
+
+        this.droneGain.gain.value = 0.06;
+        this.droneOsc.connect(filter);
+        subOsc.connect(filter);
+        filter.connect(this.droneGain);
+        this.droneGain.connect(this.ctx.destination);
+
+        this.droneOsc.start();
+        subOsc.start();
+      }
+
+      resume() {
+        if (this.ctx && this.ctx.state === 'suspended') {
+          this.ctx.resume();
+        }
+      }
+
+      playFootstep(loud = false) {
+        if (!this.initialized) return;
+        const now = this.ctx.currentTime;
+        const bufferSize = this.ctx.sampleRate * 0.07;
+        const buffer = this.ctx.createBuffer(1, bufferSize, this.ctx.sampleRate);
+        const data = buffer.getChannelData(0);
+        for (let i = 0; i < bufferSize; i++) {
+          data[i] = (Math.random() * 2 - 1) * Math.exp(-i / (bufferSize * 0.35));
+        }
+
+        const noise = this.ctx.createBufferSource();
+        noise.buffer = buffer;
+
+        const filter = this.ctx.createBiquadFilter();
+        filter.type = 'bandpass';
+        filter.frequency.value = loud ? 320 : 180;
+
+        const gain = this.ctx.createGain();
+        gain.gain.setValueAtTime(loud ? 0.24 : 0.08, now);
+        gain.gain.exponentialRampToValueAtTime(0.001, now + 0.07);
+
+        noise.connect(filter);
+        filter.connect(gain);
+        gain.connect(this.ctx.destination);
+        noise.start(now);
+      }
+
+      playHeartbeat(intensity = 0.3) {
+        if (!this.initialized) return;
+        const now = this.ctx.currentTime;
+        const osc = this.ctx.createOscillator();
+        const gain = this.ctx.createGain();
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(58, now);
+        osc.frequency.exponentialRampToValueAtTime(28, now + 0.14);
+
+        gain.gain.setValueAtTime(Math.min(0.4, 0.08 + intensity * 0.28), now);
+        gain.gain.exponentialRampToValueAtTime(0.001, now + 0.16);
+
+        osc.connect(gain);
+        gain.connect(this.ctx.destination);
+        osc.start(now);
+        osc.stop(now + 0.17);
+      }
+
+      playGunshot() {
+        if (!this.initialized) return;
+        const now = this.ctx.currentTime;
+        const bufferSize = this.ctx.sampleRate * 0.28;
+        const buffer = this.ctx.createBuffer(1, bufferSize, this.ctx.sampleRate);
+        const data = buffer.getChannelData(0);
+        for (let i = 0; i < bufferSize; i++) {
+          data[i] = (Math.random() * 2 - 1) * Math.exp(-i / (bufferSize * 0.18));
+        }
+
+        const noise = this.ctx.createBufferSource();
+        noise.buffer = buffer;
+
+        const filter = this.ctx.createBiquadFilter();
+        filter.type = 'lowpass';
+        filter.frequency.setValueAtTime(1800, now);
+        filter.frequency.exponentialRampToValueAtTime(160, now + 0.25);
+
+        const gain = this.ctx.createGain();
+        gain.gain.setValueAtTime(0.55, now);
+        gain.gain.exponentialRampToValueAtTime(0.01, now + 0.27);
+
+        noise.connect(filter);
+        filter.connect(gain);
+        gain.connect(this.ctx.destination);
+        noise.start(now);
+      }
+
+      playStalkerScreech() {
+        if (!this.initialized) return;
+        const now = this.ctx.currentTime;
+        const osc1 = this.ctx.createOscillator();
+        const osc2 = this.ctx.createOscillator();
+        const gain = this.ctx.createGain();
+
+        osc1.type = 'sawtooth';
+        osc2.type = 'square';
+        osc1.frequency.setValueAtTime(520, now);
+        osc1.frequency.exponentialRampToValueAtTime(190, now + 0.65);
+        osc2.frequency.setValueAtTime(545, now);
+        osc2.frequency.exponentialRampToValueAtTime(140, now + 0.65);
+
+        gain.gain.setValueAtTime(0.28, now);
+        gain.gain.exponentialRampToValueAtTime(0.001, now + 0.68);
+
+        osc1.connect(gain);
+        osc2.connect(gain);
+        gain.connect(this.ctx.destination);
+        osc1.start(now);
+        osc2.start(now);
+        osc1.stop(now + 0.7);
+        osc2.stop(now + 0.7);
+      }
+
+      playChime() {
+        if (!this.initialized) return;
+        const now = this.ctx.currentTime;
+        [523.25, 659.25, 783.99].forEach((freq, idx) => {
+          const osc = this.ctx.createOscillator();
+          const gain = this.ctx.createGain();
+          osc.type = 'triangle';
+          osc.frequency.value = freq;
+          gain.gain.setValueAtTime(0.14, now + idx * 0.08);
+          gain.gain.exponentialRampToValueAtTime(0.001, now + idx * 0.08 + 0.45);
+          osc.connect(gain);
+          gain.connect(this.ctx.destination);
+          osc.start(now + idx * 0.08);
+          osc.stop(now + idx * 0.08 + 0.46);
+        });
+      }
+    }
+
+    /**
+     * MODULE 2: engine/SpencerWingMap.js
+     * Builds procedural canvas textures (checkered marble, dark wood wainscoting, blood decals)
+     * and constructs the interconnected Spencer Estate 1F Wing with hiding wardrobes, pedestals, and ammo pickups.
+     */
+    function createCheckeredMarbleTexture() {
+      const c = document.createElement('canvas');
+      c.width = 256;
+      c.height = 256;
+      const ctx = c.getContext('2d');
+      for (let y = 0; y < 4; y++) {
+        for (let x = 0; x < 4; x++) {
+          const isDark = (x + y) % 2 === 0;
+          ctx.fillStyle = isDark ? '#141418' : '#32302d';
+          ctx.fillRect(x * 64, y * 64, 64, 64);
+          ctx.strokeStyle = '#0a0a0c';
+          ctx.lineWidth = 2;
+          ctx.strokeRect(x * 64, y * 64, 64, 64);
+        }
+      }
+      // Subtle grime speckles
+      for (let i = 0; i < 400; i++) {
+        ctx.fillStyle = Math.random() > 0.5 ? 'rgba(0,0,0,0.22)' : 'rgba(255,255,255,0.04)';
+        ctx.fillRect(Math.random() * 256, Math.random() * 256, 3, 3);
+      }
+      const tex = new THREE.CanvasTexture(c);
+      tex.wrapS = THREE.RepeatWrapping;
+      tex.wrapT = THREE.RepeatWrapping;
+      tex.repeat.set(14, 14);
+      return tex;
+    }
+
+    function createGothicWallTexture() {
+      const c = document.createElement('canvas');
+      c.width = 256;
+      c.height = 256;
+      const ctx = c.getContext('2d');
+      // Upper plaster
+      ctx.fillStyle = '#241e1c';
+      ctx.fillRect(0, 0, 256, 150);
+      // Lower mahogany wainscoting
+      ctx.fillStyle = '#19110d';
+      ctx.fillRect(0, 150, 256, 106);
+      ctx.strokeStyle = '#0d0806';
+      ctx.lineWidth = 4;
+      for (let x = 8; x < 256; x += 64) {
+        ctx.strokeRect(x, 160, 48, 86);
+      }
+      // Trim molding
+      ctx.fillStyle = '#33231b';
+      ctx.fillRect(0, 146, 256, 6);
+      const tex = new THREE.CanvasTexture(c);
+      tex.wrapS = THREE.RepeatWrapping;
+      tex.wrapT = THREE.RepeatWrapping;
+      return tex;
+    }
+
+    // 13x13 Grid Map of the Spencer Estate Wing (Cell size = 4.0m)
+    // 1 = Gothic Wall, 0 = Corridor/Room, 2 = Hiding Wardrobe, 3 = Crest Pedestal, 4 = Ammo Cache, 9 = North Escape Gate
+    const WING_GRID = [
+      [1, 1, 1, 1, 1, 1, 9, 1, 1, 1, 1, 1, 1],
+      [1, 3, 0, 0, 1, 0, 0, 0, 1, 0, 0, 3, 1],
+      [1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1],
+      [1, 2, 1, 0, 0, 0, 0, 0, 0, 0, 1, 2, 1],
+      [1, 0, 1, 0, 1, 1, 0, 1, 1, 0, 1, 0, 1],
+      [1, 0, 0, 0, 1, 4, 0, 0, 1, 0, 0, 0, 1],
+      [1, 1, 0, 1, 1, 0, 1, 0, 1, 1, 0, 1, 1],
+      [1, 0, 0, 0, 0, 0, 3, 0, 0, 0, 0, 0, 1],
+      [1, 0, 1, 1, 0, 1, 1, 1, 0, 1, 1, 0, 1],
+      [1, 2, 1, 4, 0, 0, 0, 0, 0, 4, 1, 2, 1],
+      [1, 0, 1, 1, 0, 1, 0, 1, 0, 1, 1, 0, 1],
+      [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1],
+      [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1]
+    ];
+
+    const CELL_SIZE = 4.0;
+    const WALL_HEIGHT = 4.2;
+
+    /**
+     * MODULE 3: engine/StalkerAI.js
+     * Articulated bio-organic Stalker with crimson optic eyes, skeletal limbs, and acoustic/visual hunting states.
+     */
+    class StalkerAgent {
+      constructor(scene, startPos) {
+        this.scene = scene;
+        this.state = 'PATROL'; // PATROL | INVESTIGATE | HUNT | STUNNED
+        this.stunTimer = 0;
+        this.alertTimer = 0;
+        this.investigateTarget = new THREE.Vector3();
+        this.patrolIndex = 0;
+        this.screechCooldown = 0;
+
+        this.patrolWaypoints = [
+          new THREE.Vector3(-16, 0, -16),
+          new THREE.Vector3(16, 0, -16),
+          new THREE.Vector3(16, 0, 12),
+          new THREE.Vector3(-16, 0, 12),
+          new THREE.Vector3(0, 0, -4)
+        ];
+
+        this.group = new THREE.Group();
+        this.group.position.copy(startPos);
+        this.buildCreatureMesh();
+        scene.add(this.group);
+      }
+
+      buildCreatureMesh() {
+        const skinMat = new THREE.MeshStandardMaterial({
+          color: 0x161416,
+          roughness: 0.35,
+          metalness: 0.25
+        });
+        const eyeMat = new THREE.MeshBasicMaterial({ color: 0xff1122 });
+
+        // Elongated hunched torso
+        this.torso = new THREE.Mesh(new THREE.CylinderGeometry(0.32, 0.22, 1.45, 10), skinMat);
+        this.torso.position.y = 1.65;
+        this.torso.rotation.x = 0.28;
+        this.group.add(this.torso);
+
+        // Twitching skull head
+        this.head = new THREE.Group();
+        this.head.position.set(0, 2.48, 0.22);
+        const cranium = new THREE.Mesh(new THREE.SphereGeometry(0.28, 12, 10), skinMat);
+        cranium.scale.set(0.85, 1.15, 1.35);
+        const eyeL = new THREE.Mesh(new THREE.SphereGeometry(0.045, 8, 8), eyeMat);
+        eyeL.position.set(-0.11, 0.04, 0.32);
+        const eyeR = eyeL.clone();
+        eyeR.position.x = 0.11;
+
+        // Crimson optic point light
+        this.eyeLight = new THREE.PointLight(0xff1122, 1.2, 6);
+        this.eyeLight.position.set(0, 0.05, 0.45);
+        this.head.add(cranium, eyeL, eyeR, this.eyeLight);
+        this.group.add(this.head);
+
+        // Long predatory limbs
+        const limbGeo = new THREE.CylinderGeometry(0.08, 0.05, 1.35, 8);
+        this.legL = new THREE.Mesh(limbGeo, skinMat);
+        this.legL.position.set(-0.22, 0.7, 0);
+        this.legR = new THREE.Mesh(limbGeo, skinMat);
+        this.legR.position.set(0.22, 0.7, 0);
+
+        const armGeo = new THREE.CylinderGeometry(0.07, 0.04, 1.5, 8);
+        this.armL = new THREE.Mesh(armGeo, skinMat);
+        this.armL.position.set(-0.42, 1.55, 0.18);
+        this.armR = new THREE.Mesh(armGeo, skinMat);
+        this.armR.position.set(0.42, 1.55, 0.18);
+
+        this.group.add(this.legL, this.legR, this.armL, this.armR);
+      }
+
+      stun(seconds = 5.0) {
+        this.state = 'STUNNED';
+        this.stunTimer = seconds;
+        this.eyeLight.color.setHex(0xffaa00);
+      }
+
+      notifySound(worldPos, radius, playerPos) {
+        if (this.state === 'STUNNED') return false;
+        const dist = this.group.position.distanceTo(worldPos);
+        if (dist <= radius) {
+          this.investigateTarget.copy(worldPos);
+          if (this.state !== 'HUNT') {
+            this.state = 'INVESTIGATE';
+            this.alertTimer = 7.0;
+          }
+          return true;
+        }
+        return false;
+      }
+
+      update(dt, elapsed, player, canSeePlayer, wallColliders, audioSynth) {
+        if (this.screechCooldown > 0) this.screechCooldown -= dt;
+
+        if (this.state === 'STUNNED') {
+          this.stunTimer -= dt;
+          this.head.rotation.z = Math.sin(elapsed * 28) * 0.35;
+          this.torso.rotation.x = 0.65;
+          if (this.stunTimer <= 0) {
+            this.state = 'INVESTIGATE';
+            this.alertTimer = 5.0;
+            this.investigateTarget.copy(player.position);
+            this.eyeLight.color.setHex(0xff1122);
+            this.torso.rotation.x = 0.28;
+          }
+          return;
+        }
+
+        // Visual detection check (if player is not concealed inside a closet)
+        if (!player.inCloset && canSeePlayer) {
+          if (this.state !== 'HUNT' && this.screechCooldown <= 0) {
+            audioSynth.playStalkerScreech();
+            this.screechCooldown = 8.0;
+          }
+          this.state = 'HUNT';
+          this.alertTimer = 6.5;
+          this.investigateTarget.copy(player.position);
+        } else if (this.state === 'HUNT') {
+          this.alertTimer -= dt;
+          if (this.alertTimer <= 0) {
+            this.state = 'INVESTIGATE';
+            this.alertTimer = 5.0;
+          }
+        } else if (this.state === 'INVESTIGATE') {
+          this.alertTimer -= dt;
+          if (this.alertTimer <= 0) {
+            this.state = 'PATROL';
+          }
+        }
+
+        // Determine target and movement speed
+        let targetPos = this.patrolWaypoints[this.patrolIndex];
+        let moveSpeed = 3.1;
+
+        if (this.state === 'HUNT') {
+          targetPos = player.inCloset ? this.investigateTarget : player.position;
+          moveSpeed = 5.65;
+        } else if (this.state === 'INVESTIGATE') {
+          targetPos = this.investigateTarget;
+          moveSpeed = 4.2;
+        }
+
+        const dir = new THREE.Vector3().subVectors(targetPos, this.group.position);
+        dir.y = 0;
+        const dist = dir.length();
+
+        if (dist < 1.2) {
+          if (this.state === 'PATROL') {
+            this.patrolIndex = (this.patrolIndex + 1) % this.patrolWaypoints.length;
+          } else if (this.state === 'INVESTIGATE') {
+            this.state = 'PATROL';
+          }
+        } else {
+          dir.normalize();
+          // Try primary direction or slide along axes to avoid getting stuck on corners
+          const step = moveSpeed * dt;
+          const tryX = this.group.position.clone().add(new THREE.Vector3(dir.x * step, 0, 0));
+          if (!checkCircleWallCollision(tryX, 0.55, wallColliders)) {
+            this.group.position.x = tryX.x;
+          }
+          const tryZ = this.group.position.clone().add(new THREE.Vector3(0, 0, dir.z * step));
+          if (!checkCircleWallCollision(tryZ, 0.55, wallColliders)) {
+            this.group.position.z = tryZ.z;
+          }
+          this.group.rotation.y = Math.atan2(dir.x, dir.z);
+        }
+
+        // Procedural horror gait animation
+        const gaitFreq = this.state === 'HUNT' ? 13 : 7.5;
+        this.legL.rotation.x = Math.sin(elapsed * gaitFreq) * 0.65;
+        this.legR.rotation.x = -Math.sin(elapsed * gaitFreq) * 0.65;
+        this.armL.rotation.x = -0.5 + Math.cos(elapsed * gaitFreq) * 0.45;
+        this.armR.rotation.x = -0.5 - Math.cos(elapsed * gaitFreq) * 0.45;
+        this.head.rotation.z = Math.sin(elapsed * 6.5) * 0.14;
+      }
+    }
+
+    function checkCircleWallCollision(pos, radius, colliders) {
+      for (let i = 0; i < colliders.length; i++) {
+        const b = colliders[i];
+        const closestX = Math.max(b.minX, Math.min(pos.x, b.maxX));
+        const closestZ = Math.max(b.minZ, Math.min(pos.z, b.maxZ));
+        const dx = pos.x - closestX;
+        const dz = pos.z - closestZ;
+        if (dx * dx + dz * dz < radius * radius) return true;
+      }
+      return false;
+    }
+
+    const canvas = document.getElementById('gameCanvas');
+    const renderer = new THREE.WebGLRenderer({ canvas, antialias: true });
+    renderer.setSize(window.innerWidth, window.innerHeight);
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+    renderer.shadowMap.enabled = true;
+    renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+
+    const scene = new THREE.Scene();
+    scene.background = new THREE.Color(0x040406);
+    scene.fog = new THREE.FogExp2(0x040406, 0.085);
+
+    const camera = new THREE.PerspectiveCamera(68, window.innerWidth / window.innerHeight, 0.1, 65);
+    const audioSynth = new HorrorAudioSynth();
+
+    // Low ambient illumination + Grace's Flashlight
+    const ambientLight = new THREE.AmbientLight(0x1b1922, 0.38);
+    scene.add(ambientLight);
+
+    const flashlight = new THREE.SpotLight(0xfff4dd, 2.6, 26, Math.PI / 5.2, 0.48, 1.5);
+    flashlight.castShadow = true;
+    flashlight.position.set(0, 0, 0);
+    const flashTarget = new THREE.Object3D();
+    flashTarget.position.set(0, 0, -1);
+    camera.add(flashlight);
+    camera.add(flashTarget);
+    flashlight.target = flashTarget;
+    scene.add(camera);
+
+    // Build Spencer Wing Level Geometry
+    const floorTex = createCheckeredMarbleTexture();
+    const wallTex = createGothicWallTexture();
+
+    const mapWidth = WING_GRID[0].length * CELL_SIZE;
+    const mapDepth = WING_GRID.length * CELL_SIZE;
+
+    const floorMesh = new THREE.Mesh(
+      new THREE.PlaneGeometry(mapWidth, mapDepth),
+      new THREE.MeshStandardMaterial({ map: floorTex, roughness: 0.45, metalness: 0.1 })
+    );
+    floorMesh.rotation.x = -Math.PI / 2;
+    floorMesh.receiveShadow = true;
+    scene.add(floorMesh);
+
+    const ceilingMesh = new THREE.Mesh(
+      new THREE.PlaneGeometry(mapWidth, mapDepth),
+      new THREE.MeshStandardMaterial({ color: 0x0e0c0d, roughness: 0.9 })
+    );
+    ceilingMesh.rotation.x = Math.PI / 2;
+    ceilingMesh.position.y = WALL_HEIGHT;
+    scene.add(ceilingMesh);
+
+    const wallColliders = [];
+    const interactables = [];
+    const sconces = [];
+
+    const wallGeo = new THREE.BoxGeometry(CELL_SIZE, WALL_HEIGHT, CELL_SIZE);
+    const wallMat = new THREE.MeshStandardMaterial({ map: wallTex, roughness: 0.75 });
+
+    const crestNames = ['MOON CREST', 'SUN CREST', 'SPENCER CREST'];
+    const crestColors = [0x60a5fa, 0xfbbf24, 0xef4444];
+    let crestCounter = 0;
+
+    const halfW = (WING_GRID[0].length * CELL_SIZE) / 2 - CELL_SIZE / 2;
+    const halfD = (WING_GRID.length * CELL_SIZE) / 2 - CELL_SIZE / 2;
+
+    for (let r = 0; r < WING_GRID.length; r++) {
+      for (let c = 0; c < WING_GRID[r].length; c++) {
+        const cell = WING_GRID[r][c];
+        const wx = c * CELL_SIZE - halfW;
+        const wz = r * CELL_SIZE - halfD;
+
+        if (cell === 1) {
+          const wMesh = new THREE.Mesh(wallGeo, wallMat);
+          wMesh.position.set(wx, WALL_HEIGHT / 2, wz);
+          wMesh.castShadow = true;
+          wMesh.receiveShadow = true;
+          scene.add(wMesh);
+
+          wallColliders.push({
+            minX: wx - CELL_SIZE / 2,
+            maxX: wx + CELL_SIZE / 2,
+            minZ: wz - CELL_SIZE / 2,
+            maxZ: wz + CELL_SIZE / 2,
+            mesh: wMesh
+          });
+        } else if (cell === 2) {
+          // Wooden Hiding Wardrobe Closet
+          const closet = new THREE.Mesh(
+            new THREE.BoxGeometry(1.5, 2.7, 1.2),
+            new THREE.MeshStandardMaterial({ color: 0x2c1910, roughness: 0.7 })
+          );
+          closet.position.set(wx, 1.35, wz);
+          scene.add(closet);
+          interactables.push({
+            type: 'closet',
+            label: '[E] Hide Inside Wardrobe',
+            mesh: closet,
+            pos: new THREE.Vector3(wx, 1.5, wz)
+          });
+        } else if (cell === 3) {
+          // Mansion Crest Pedestal
+          const idx = crestCounter % 3;
+          crestCounter++;
+          const ped = new THREE.Mesh(
+            new THREE.CylinderGeometry(0.42, 0.52, 1.1, 12),
+            new THREE.MeshStandardMaterial({ color: 0x3a3532, roughness: 0.5 })
+          );
+          ped.position.set(wx, 0.55, wz);
+          scene.add(ped);
+
+          const crestMesh = new THREE.Mesh(
+            new THREE.OctahedronGeometry(0.32, 0),
+            new THREE.MeshStandardMaterial({
+              color: crestColors[idx],
+              emissive: crestColors[idx],
+              emissiveIntensity: 0.45,
+              metalness: 0.7,
+              roughness: 0.2
+            })
+          );
+          crestMesh.position.set(wx, 1.45, wz);
+          scene.add(crestMesh);
+
+          const glow = new THREE.PointLight(crestColors[idx], 0.85, 5.5);
+          glow.position.set(wx, 1.8, wz);
+          scene.add(glow);
+
+          interactables.push({
+            type: 'crest',
+            crestIndex: idx,
+            label: `[E] Take ${crestNames[idx]}`,
+            mesh: crestMesh,
+            light: glow,
+            collected: false,
+            pos: new THREE.Vector3(wx, 1.45, wz)
+          });
+        } else if (cell === 4) {
+          // 9mm Ammo Pickup Cache
+          const box = new THREE.Mesh(
+            new THREE.BoxGeometry(0.48, 0.26, 0.34),
+            new THREE.MeshStandardMaterial({ color: 0x1e3a2f, emissive: 0x092218 })
+          );
+          box.position.set(wx, 0.15, wz);
+          scene.add(box);
+          interactables.push({
+            type: 'ammo',
+            label: '[E] Pick Up 9mm Hollow-Point (+6)',
+            mesh: box,
+            collected: false,
+            pos: new THREE.Vector3(wx, 0.3, wz)
+          });
+        } else if (cell === 9) {
+          // Locked North Escape Iron Gate
+          const gate = new THREE.Mesh(
+            new THREE.BoxGeometry(CELL_SIZE, WALL_HEIGHT, 0.45),
+            new THREE.MeshStandardMaterial({ color: 0x27272a, metalness: 0.85, roughness: 0.3 })
+          );
+          gate.position.set(wx, WALL_HEIGHT / 2, wz);
+          scene.add(gate);
+
+          const exitLight = new THREE.PointLight(0xdc2626, 1.4, 9);
+          exitLight.position.set(wx, 3.1, wz + 1.2);
+          scene.add(exitLight);
+
+          wallColliders.push({
+            minX: wx - CELL_SIZE / 2,
+            maxX: wx + CELL_SIZE / 2,
+            minZ: wz - 0.35,
+            maxZ: wz + 0.35,
+            mesh: gate
+          });
+
+          interactables.push({
+            type: 'gate',
+            label: '[E] Unlock North Iron Gate (Requires 3 Crests)',
+            mesh: gate,
+            light: exitLight,
+            pos: new THREE.Vector3(wx, 1.6, wz + 1.0)
+          });
+        }
+
+        // Add flickering warm sconces along open corridors occasionally
+        if (cell === 0 && (r + c) % 5 === 0) {
+          const sconce = new THREE.PointLight(0xff7722, 0.55, 8.5);
+          sconce.position.set(wx, 2.8, wz);
+          scene.add(sconce);
+          sconces.push(sconce);
+        }
+      }
+    }
+
+    // Floating Dust Motes Particle System
+    const dustCount = 260;
+    const dustGeo = new THREE.BufferGeometry();
+    const dustPositions = new Float32Array(dustCount * 3);
+    for (let i = 0; i < dustCount; i++) {
+      dustPositions[i * 3] = (Math.random() - 0.5) * mapWidth * 0.85;
+      dustPositions[i * 3 + 1] = 0.3 + Math.random() * 3.5;
+      dustPositions[i * 3 + 2] = (Math.random() - 0.5) * mapDepth * 0.85;
+    }
+    dustGeo.setAttribute('position', new THREE.BufferAttribute(dustPositions, 3));
+    const dustParticles = new THREE.Points(
+      dustGeo,
+      new THREE.PointsMaterial({ color: 0x998877, size: 0.045, transparent: true, opacity: 0.45 })
+    );
+    scene.add(dustParticles);
+
+    const player = {
+      position: new THREE.Vector3(0, 1.68, 20),
+      yaw: 0,
+      pitch: 0,
+      hp: 100,
+      stamina: 100,
+      ammoClip: 7,
+      ammoReserve: 14,
+      crouching: false,
+      flashlightOn: true,
+      inCloset: false,
+      closetReturnPos: new THREE.Vector3(),
+      crests: [false, false, false],
+      stepDistance: 0,
+      damageCooldown: 0
+    };
+
+    const stalker = new StalkerAgent(scene, new THREE.Vector3(-16, 0, -16));
+
+    const keys = {};
+    let isPlaying = false;
+    let gameEnded = false;
+
+    const raycaster = new THREE.Raycaster();
+    const losRaycaster = new THREE.Raycaster();
+
+    function showToast(msg) {
+      const box = document.getElementById('toastBox');
+      box.textContent = msg;
+      box.style.opacity = '1';
+      clearTimeout(box._timer);
+      box._timer = setTimeout(() => {
+        box.style.opacity = '0';
+      }, 2600);
+    }
+
+    function updateHUD() {
+      document.getElementById('ammoClip').textContent = player.ammoClip;
+      document.getElementById('ammoReserve').textContent = player.ammoReserve;
+      document.getElementById('staminaBar').style.width = `${Math.max(0, player.stamina)}%`;
+
+      const fBadge = document.getElementById('flashlightBadge');
+      fBadge.textContent = player.flashlightOn ? 'ON' : 'OFF';
+      fBadge.className = player.flashlightOn
+        ? 'px-2 py-0.5 rounded text-[10px] font-mono-re font-bold bg-amber-500/20 text-amber-300 border border-amber-500/40'
+        : 'px-2 py-0.5 rounded text-[10px] font-mono-re font-bold bg-stone-900 text-stone-500 border border-stone-800';
+
+      const sBadge = document.getElementById('stanceBadge');
+      sBadge.textContent = player.inCloset ? 'HIDING' : (player.crouching ? 'CROUCH' : 'STAND');
+
+      const stateBadge = document.getElementById('stalkerStateBadge');
+      stateBadge.textContent = `STALKER: ${stalker.state}`;
+      if (stalker.state === 'HUNT') {
+        stateBadge.className = 'font-mono-re text-[11px] px-2 py-0.5 rounded bg-red-950 text-red-300 border border-red-600 pulse-slow';
+      } else if (stalker.state === 'STUNNED') {
+        stateBadge.className = 'font-mono-re text-[11px] px-2 py-0.5 rounded bg-amber-950 text-amber-300 border border-amber-600';
+      } else {
+        stateBadge.className = 'font-mono-re text-[11px] px-2 py-0.5 rounded bg-stone-900 text-stone-300 border border-stone-700';
+      }
+
+      const ecgText = document.getElementById('ecgStatusText');
+      if (player.hp > 65) {
+        ecgText.textContent = 'FINE';
+        ecgText.className = 'text-xs font-mono-re font-bold text-emerald-400';
+      } else if (player.hp > 30) {
+        ecgText.textContent = 'CAUTION';
+        ecgText.className = 'text-xs font-mono-re font-bold text-amber-400';
+      } else {
+        ecgText.textContent = 'DANGER';
+        ecgText.className = 'text-xs font-mono-re font-bold text-red-500';
+      }
+    }
+
+    function firePistol() {
+      if (!isPlaying || player.inCloset || gameEnded) return;
+      if (player.ammoClip <= 0) {
+        showToast('CLICK... OUT OF AMMO — PRESS [R] TO RELOAD');
+        return;
+      }
+      player.ammoClip--;
+      audioSynth.playGunshot();
+      updateHUD();
+
+      // Camera recoil kick
+      player.pitch = Math.min(1.3, player.pitch + 0.045);
+
+      // Muzzle flash
+      const cross = document.getElementById('crosshair');
+      cross.style.transform = 'scale(1.8)';
+      setTimeout(() => { cross.style.transform = 'scale(1)'; }, 120);
+
+      // Alert Stalker acoustically
+      stalker.notifySound(player.position, 32, player.position);
+
+      // Hitscan check against Stalker meshes
+      raycaster.setFromCamera(new THREE.Vector2(0, 0), camera);
+      const hits = raycaster.intersectObjects(stalker.group.children, true);
+      if (hits.length > 0 && hits[0].distance < 24) {
+        stalker.stun(5.0);
+        audioSynth.playStalkerScreech();
+        showToast('DIRECT HIT! STALKER STUNNED FOR 5 SECONDS!');
+        updateHUD();
+      }
+    }
+
+    function reloadPistol() {
+      if (player.ammoClip >= 7 || player.ammoReserve <= 0) return;
+      const needed = 7 - player.ammoClip;
+      const take = Math.min(needed, player.ammoReserve);
+      player.ammoClip += take;
+      player.ammoReserve -= take;
+      showToast('RELOADED 9MM TACTICAL');
+      updateHUD();
+    }
+
+    function tryInteract() {
+      if (!isPlaying || gameEnded) return;
+
+      // If already hiding in closet, exit closet
+      if (player.inCloset) {
+        player.inCloset = false;
+        player.position.copy(player.closetReturnPos);
+        document.getElementById('closetSlats').classList.remove('active');
+        showToast('STEPPED OUT OF WARDROBE');
+        updateHUD();
+        return;
+      }
+
+      let closest = null;
+      let minDist = 2.8;
+      for (const item of interactables) {
+        if (item.collected) continue;
+        const d = player.position.distanceTo(item.pos);
+        if (d < minDist) {
+          minDist = d;
+          closest = item;
+        }
+      }
+
+      if (!closest) return;
+
+      if (closest.type === 'closet') {
+        player.inCloset = true;
+        player.closetReturnPos.copy(player.position);
+        player.position.set(closest.pos.x, 1.5, closest.pos.z);
+        document.getElementById('closetSlats').classList.add('active');
+        showToast('HIDING IN WARDROBE — PRESS [E] TO EXIT');
+        updateHUD();
+      } else if (closest.type === 'crest') {
+        closest.collected = true;
+        closest.mesh.visible = false;
+        closest.light.intensity = 0;
+        player.crests[closest.crestIndex] = true;
+        audioSynth.playChime();
+
+        const slotEl = document.getElementById(`crestSlot${closest.crestIndex}`);
+        slotEl.className = 'flex items-center gap-1.5 px-2 py-1.5 rounded bg-amber-500/20 border border-amber-400 text-amber-200 text-[11px] font-mono-re font-bold';
+
+        const total = player.crests.filter(Boolean).length;
+        showToast(`ACQUIRED ${crestNames[closest.crestIndex]} (${total}/3)`);
+        if (total === 3) {
+          document.getElementById('objectiveText').innerHTML =
+            'All 3 Crests collected! Escape through the <span class="text-emerald-400 font-bold">North Iron Gate</span>!';
+        }
+      } else if (closest.type === 'ammo') {
+        closest.collected = true;
+        closest.mesh.visible = false;
+        player.ammoReserve += 6;
+        audioSynth.playChime();
+        showToast('FOUND 9MM HOLLOW-POINT AMMO (+6)');
+        updateHUD();
+      } else if (closest.type === 'gate') {
+        const total = player.crests.filter(Boolean).length;
+        if (total < 3) {
+          showToast(`LOCKED — REQUIRES ALL 3 FAMILY CRESTS (${total}/3 FOUND)`);
+        } else {
+          triggerEndScreen(true);
+        }
+      }
+    }
+
+    function triggerEndScreen(victory) {
+      gameEnded = true;
+      isPlaying = false;
+      if (document.pointerLockElement) document.exitPointerLock();
+
+      const overlay = document.getElementById('titleOverlay');
+      overlay.classList.remove('hidden');
+      document.getElementById('modalMainTitle').innerHTML = victory
+        ? 'ESCAPED THE <span class="text-emerald-500">SPENCER WING</span>'
+        : 'YOU ARE <span class="text-red-600">DEAD</span>';
+      document.getElementById('modalSubTitle').textContent = victory
+        ? 'Grace Ashcroft unlocked the North Iron Gate with the 3 Family Crests and escaped the Stalker.'
+        : 'The Stalker cornered you in the dark corridors of the Spencer Estate.';
+      document.getElementById('btnStartGame').classList.add('hidden');
+      document.getElementById('btnResetGame').classList.remove('hidden');
+    }
+
+    function resetGame() {
+      player.position.set(0, 1.68, 20);
+      player.yaw = 0;
+      player.pitch = 0;
+      player.hp = 100;
+      player.stamina = 100;
+      player.ammoClip = 7;
+      player.ammoReserve = 14;
+      player.inCloset = false;
+      player.crests = [false, false, false];
+      document.getElementById('closetSlats').classList.remove('active');
+      document.getElementById('bloodVignette').style.boxShadow = 'inset 0 0 0px rgba(185,28,28,0)';
+
+      for (let i = 0; i < 3; i++) {
+        document.getElementById(`crestSlot${i}`).className =
+          'flex items-center gap-1.5 px-2 py-1.5 rounded bg-stone-950/90 border border-stone-800 text-stone-500 text-[11px] font-mono-re';
+      }
+
+      interactables.forEach(item => {
+        if (item.type === 'crest' || item.type === 'ammo') {
+          item.collected = false;
+          item.mesh.visible = true;
+          if (item.light) item.light.intensity = 0.85;
+        }
+      });
+
+      stalker.group.position.set(-16, 0, -16);
+      stalker.state = 'PATROL';
+      gameEnded = false;
+      document.getElementById('btnStartGame').classList.remove('hidden');
+      document.getElementById('btnResetGame').classList.add('hidden');
+      updateHUD();
+      startGameSession();
+    }
+
+    window.addEventListener('keydown', e => {
+      keys[e.code] = true;
+      if (e.code === 'KeyF' && isPlaying) {
+        player.flashlightOn = !player.flashlightOn;
+        flashlight.intensity = player.flashlightOn ? 2.6 : 0;
+        updateHUD();
+      }
+      if (e.code === 'KeyC' && isPlaying && !player.inCloset) {
+        player.crouching = !player.crouching;
+        updateHUD();
+      }
+      if (e.code === 'KeyR' && isPlaying) {
+        reloadPistol();
+      }
+      if (e.code === 'KeyE' && isPlaying) {
+        tryInteract();
+      }
+    });
+
+    window.addEventListener('keyup', e => {
+      keys[e.code] = false;
+    });
+
+    window.addEventListener('mousemove', e => {
+      if (!isPlaying || document.pointerLockElement !== canvas) return;
+      const sensitivity = 0.0022;
+      player.yaw -= e.movementX * sensitivity;
+      player.pitch = Math.max(-1.35, Math.min(1.35, player.pitch - e.movementY * sensitivity));
+    });
+
+    window.addEventListener('mousedown', e => {
+      if (!isPlaying) return;
+      if (e.button === 0 && document.pointerLockElement === canvas) {
+        firePistol();
+      }
+    });
+
+    function startGameSession() {
+      audioSynth.init();
+      audioSynth.resume();
+      document.getElementById('titleOverlay').classList.add('hidden');
+      isPlaying = true;
+      if (canvas.requestPointerLock) {
+        canvas.requestPointerLock();
+      }
+    }
+
+    document.getElementById('btnStartGame').addEventListener('click', startGameSession);
+    document.getElementById('btnResetGame').addEventListener('click', resetGame);
+
+    document.addEventListener('pointerlockchange', () => {
+      if (document.pointerLockElement !== canvas && isPlaying && !gameEnded && document.getElementById('exporterModal').classList.contains('hidden')) {
+        isPlaying = false;
+        document.getElementById('titleOverlay').classList.remove('hidden');
+        document.getElementById('btnStartGame').textContent = 'RESUME SPENCER WING';
+      }
+    });
+
+    // Touch UI controls support
+    document.getElementById('btnTouchToggle').addEventListener('click', () => {
+      const tc = document.getElementById('touchControls');
+      tc.classList.toggle('hidden');
+    });
+    document.querySelectorAll('.touch-btn').forEach(btn => {
+      const code = btn.getAttribute('data-key');
+      btn.addEventListener('touchstart', e => { e.preventDefault(); keys[code] = true; });
+      btn.addEventListener('touchend', e => { e.preventDefault(); keys[code] = false; });
+      btn.addEventListener('mousedown', () => keys[code] = true);
+      btn.addEventListener('mouseup', () => keys[code] = false);
+    });
+    document.getElementById('touchShoot').addEventListener('click', firePistol);
+    document.getElementById('touchInteract').addEventListener('click', tryInteract);
+    document.getElementById('touchLight').addEventListener('click', () => {
+      player.flashlightOn = !player.flashlightOn;
+      flashlight.intensity = player.flashlightOn ? 2.6 : 0;
+      updateHUD();
+    });
+    document.getElementById('touchCrouch').addEventListener('click', () => {
+      player.crouching = !player.crouching;
+      updateHUD();
+    });
+    document.getElementById('touchReload').addEventListener('click', reloadPistol);
+
+    const ecgCanvas = document.getElementById('ecgCanvas');
+    const ecgCtx = ecgCanvas.getContext('2d');
+    const radarCanvas = document.getElementById('radarCanvas');
+    const radarCtx = radarCanvas.getContext('2d');
+    let ecgPhase = 0;
+    let heartbeatTimer = 0;
+
+    function renderECGAndRadar(dt, distToStalker) {
+      // ECG Waveform
+      const rate = stalker.state === 'HUNT' ? 4.8 : (distToStalker < 14 ? 3.2 : 1.8);
+      ecgPhase = (ecgPhase + dt * rate * 55) % 140;
+
+      ecgCtx.fillStyle = 'rgba(9, 9, 12, 0.22)';
+      ecgCtx.fillRect(0, 0, 140, 36);
+
+      const x = ecgPhase;
+      let y = 18;
+      if (x > 55 && x < 62) y = 5;
+      else if (x >= 62 && x < 68) y = 31;
+      else if (x >= 68 && x < 75) y = 12;
+
+      ecgCtx.fillStyle = player.hp > 65 ? '#34d399' : (player.hp > 30 ? '#fbbf24' : '#ef4444');
+      ecgCtx.fillRect(x, y, 2.5, 2.5);
+
+      // Motion / Threat Radar
+      radarCtx.clearRect(0, 0, 64, 64);
+      radarCtx.strokeStyle = 'rgba(255,255,255,0.12)';
+      radarCtx.beginPath();
+      radarCtx.arc(32, 32, 26, 0, Math.PI * 2);
+      radarCtx.stroke();
+      radarCtx.beginPath();
+      radarCtx.arc(32, 32, 13, 0, Math.PI * 2);
+      radarCtx.stroke();
+
+      // Player center dot
+      radarCtx.fillStyle = '#38bdf8';
+      radarCtx.beginPath();
+      radarCtx.arc(32, 32, 2.5, 0, Math.PI * 2);
+      radarCtx.fill();
+
+      // Uncollected Crests on radar
+      interactables.forEach(item => {
+        if (item.type === 'crest' && !item.collected) {
+          const dx = item.pos.x - player.position.x;
+          const dz = item.pos.z - player.position.z;
+          const rx = Math.cos(-player.yaw) * dx - Math.sin(-player.yaw) * dz;
+          const rz = Math.sin(-player.yaw) * dx + Math.cos(-player.yaw) * dz;
+          const px = 32 + Math.max(-25, Math.min(25, rx * 1.1));
+          const pz = 32 + Math.max(-25, Math.min(25, rz * 1.1));
+          radarCtx.fillStyle = '#fbbf24';
+          radarCtx.fillRect(px - 1.5, pz - 1.5, 3, 3);
+        }
+      });
+
+      // Stalker blip on radar
+      const sdx = stalker.group.position.x - player.position.x;
+      const sdz = stalker.group.position.z - player.position.z;
+      const srx = Math.cos(-player.yaw) * sdx - Math.sin(-player.yaw) * sdz;
+      const srz = Math.sin(-player.yaw) * sdx + Math.cos(-player.yaw) * sdz;
+      const spx = 32 + Math.max(-26, Math.min(26, srx * 1.25));
+      const spz = 32 + Math.max(-26, Math.min(26, srz * 1.25));
+      radarCtx.fillStyle = '#ef4444';
+      radarCtx.beginPath();
+      radarCtx.arc(spx, spz, 3.2, 0, Math.PI * 2);
+      radarCtx.fill();
+    }
+
+    function checkLineOfSightToPlayer() {
+      const origin = new THREE.Vector3(stalker.group.position.x, 1.7, stalker.group.position.z);
+      const target = new THREE.Vector3(player.position.x, 1.5, player.position.z);
+      const dist = origin.distanceTo(target);
+      const maxSight = player.flashlightOn ? 20 : (player.crouching ? 8.5 : 13);
+      if (dist > maxSight) return false;
+
+      // Check FOV cone of Stalker unless player shines flashlight right at it
+      const stalkerForward = new THREE.Vector3(
+        Math.sin(stalker.group.rotation.y),
+        0,
+        Math.cos(stalker.group.rotation.y)
+      );
+      const toPlayer = new THREE.Vector3().subVectors(target, origin).normalize();
+      if (stalkerForward.dot(toPlayer) < -0.25 && dist > 4.5) return false;
+
+      losRaycaster.set(origin, toPlayer);
+      const wallMeshes = wallColliders.map(w => w.mesh);
+      const hits = losRaycaster.intersectObjects(wallMeshes, false);
+      return !(hits.length > 0 && hits[0].distance < dist);
+    }
+
+    let lastTime = performance.now();
+    function animate(now) {
+      requestAnimationFrame(animate);
+      const dt = Math.min((now - lastTime) / 1000, 0.05);
+      lastTime = now;
+      const elapsed = now / 1000;
+
+      // Flicker wall sconces
+      for (let i = 0; i < sconces.length; i++) {
+        sconces[i].intensity = 0.48 + Math.sin(elapsed * 9 + i * 3.1) * 0.09;
+      }
+
+      // Rotate uncollected crests
+      interactables.forEach(item => {
+        if (item.type === 'crest' && !item.collected) {
+          item.mesh.rotation.y += 1.8 * dt;
+        }
+      });
+
+      if (isPlaying && !gameEnded) {
+        if (player.damageCooldown > 0) player.damageCooldown -= dt;
+
+        // Player Movement
+        if (!player.inCloset) {
+          const isSprinting = (keys['ShiftLeft'] || keys['ShiftRight']) && player.stamina > 5 && !player.crouching;
+          let moveSpeed = player.crouching ? 2.45 : (isSprinting ? 6.4 : 4.1);
+
+          const forward = new THREE.Vector3(-Math.sin(player.yaw), 0, -Math.cos(player.yaw));
+          const right = new THREE.Vector3(Math.cos(player.yaw), 0, -Math.sin(player.yaw));
+          const moveVec = new THREE.Vector3();
+
+          if (keys['KeyW'] || keys['ArrowUp']) moveVec.add(forward);
+          if (keys['KeyS'] || keys['ArrowDown']) moveVec.sub(forward);
+          if (keys['KeyD'] || keys['ArrowRight']) moveVec.add(right);
+          if (keys['KeyA'] || keys['ArrowLeft']) moveVec.sub(right);
+
+          if (moveVec.lengthSq() > 0) {
+            moveVec.normalize();
+            const step = moveSpeed * dt;
+
+            const nextX = player.position.clone().add(new THREE.Vector3(moveVec.x * step, 0, 0));
+            if (!checkCircleWallCollision(nextX, 0.45, wallColliders)) {
+              player.position.x = nextX.x;
+            }
+            const nextZ = player.position.clone().add(new THREE.Vector3(0, 0, moveVec.z * step));
+            if (!checkCircleWallCollision(nextZ, 0.45, wallColliders)) {
+              player.position.z = nextZ.z;
+            }
+
+            player.stepDistance += step;
+            const stride = isSprinting ? 1.85 : 2.3;
+            if (player.stepDistance >= stride) {
+              player.stepDistance = 0;
+              audioSynth.playFootstep(isSprinting);
+              if (isSprinting) {
+                if (stalker.notifySound(player.position, 19, player.position)) {
+                  showToast('THE STALKER HEARD YOUR FOOTSTEPS!');
+                }
+              }
+            }
+
+            if (isSprinting) {
+              player.stamina = Math.max(0, player.stamina - 24 * dt);
+            } else {
+              player.stamina = Math.min(100, player.stamina + 14 * dt);
+            }
+          } else {
+            player.stamina = Math.min(100, player.stamina + 20 * dt);
+          }
+        }
+
+        // Camera height & head-bob
+        const targetHeight = player.crouching ? 1.05 : 1.68;
+        player.position.y += (targetHeight - player.position.y) * 10 * dt;
+        const bobOffset = !player.inCloset && (keys['KeyW'] || keys['KeyS'] || keys['KeyA'] || keys['KeyD'])
+          ? Math.sin(elapsed * 10) * 0.04
+          : 0;
+
+        camera.position.set(player.position.x, player.position.y + bobOffset, player.position.z);
+        camera.rotation.order = 'YXZ';
+        camera.rotation.y = player.yaw;
+        camera.rotation.x = player.pitch;
+
+        // Check nearby interactables for prompt
+        const promptEl = document.getElementById('interactPrompt');
+        if (player.inCloset) {
+          promptEl.textContent = '[E] Step Out of Wardrobe';
+          promptEl.classList.remove('hidden');
+        } else {
+          let nearItem = null;
+          let minDist = 2.8;
+          for (const item of interactables) {
+            if (item.collected) continue;
+            const d = player.position.distanceTo(item.pos);
+            if (d < minDist) {
+              minDist = d;
+              nearItem = item;
+            }
+          }
+          if (nearItem) {
+            promptEl.textContent = nearItem.label;
+            promptEl.classList.remove('hidden');
+          } else {
+            promptEl.classList.add('hidden');
+          }
+        }
+
+        // Update Stalker AI
+        const canSee = checkLineOfSightToPlayer();
+        stalker.update(dt, elapsed, player, canSee, wallColliders, audioSynth);
+
+        // Proximity Heartbeat & Attack Check
+        const distToStalker = player.position.distanceTo(stalker.group.position);
+        heartbeatTimer -= dt;
+        const beatInterval = stalker.state === 'HUNT' ? 0.36 : Math.max(0.42, Math.min(1.2, distToStalker / 18));
+        if (heartbeatTimer <= 0 && distToStalker < 22) {
+          heartbeatTimer = beatInterval;
+          audioSynth.playHeartbeat(1 - distToStalker / 22);
+        }
+
+        if (!player.inCloset && stalker.state !== 'STUNNED' && distToStalker < 1.45 && player.damageCooldown <= 0) {
+          player.hp -= 38;
+          player.damageCooldown = 2.2;
+          audioSynth.playStalkerScreech();
+          showToast('SLASHED BY THE STALKER! SHOOT IT OR HIDE!');
+          document.getElementById('bloodVignette').style.boxShadow =
+            `inset 0 0 ${110 - player.hp}px rgba(185, 28, 28, 0.85)`;
+          if (player.hp <= 0) {
+            triggerEndScreen(false);
+          }
+        }
+
+        renderECGAndRadar(dt, distToStalker);
+        updateHUD();
+      }
+
+      renderer.render(scene, camera);
+    }
+
+    window.addEventListener('resize', () => {
+      camera.aspect = window.innerWidth / window.innerHeight;
+      camera.updateProjectionMatrix();
+      renderer.setSize(window.innerWidth, window.innerHeight);
+    });
+
+    const PROJECT_FILES = {
+      'index.html': () => document.documentElement.outerHTML,
+      'style.css': () => document.querySelector('style').innerHTML.trim(),
+      'engine/AudioSynth.js': () => HorrorAudioSynth.toString(),
+      'engine/SpencerWingMap.js': () =>
+        `${createCheckeredMarbleTexture.toString()}\n\n${createGothicWallTexture.toString()}\n\nconst WING_GRID = ${JSON.stringify(WING_GRID, null, 2)};`,
+      'engine/StalkerAI.js': () =>
+        `${StalkerAgent.toString()}\n\n${checkCircleWallCollision.toString()}`
+    };
+
+    let activeExportFile = 'engine/StalkerAI.js';
+
+    function renderExporterTabs() {
+      const tabBar = document.getElementById('fileTabBar');
+      tabBar.innerHTML = '';
+      Object.keys(PROJECT_FILES).forEach(filename => {
+        const btn = document.createElement('button');
+        const active = filename === activeExportFile;
+        btn.className = active
+          ? 'px-3.5 py-2 border-b-2 border-red-500 text-white bg-stone-800/80 font-semibold whitespace-nowrap'
+          : 'px-3.5 py-2 text-stone-400 hover:text-stone-200 whitespace-nowrap';
+        btn.textContent = filename;
+        btn.addEventListener('click', () => {
+          activeExportFile = filename;
+          renderExporterTabs();
+          document.getElementById('exporterCodeView').textContent = PROJECT_FILES[filename]();
+        });
+        tabBar.appendChild(btn);
+      });
+      document.getElementById('exporterCodeView').textContent = PROJECT_FILES[activeExportFile]();
+    }
+
+    document.getElementById('btnOpenExporter').addEventListener('click', () => {
+      if (document.pointerLockElement) document.exitPointerLock();
+      isPlaying = false;
+      renderExporterTabs();
+      const modal = document.getElementById('exporterModal');
+      modal.classList.remove('hidden');
+      modal.classList.add('flex');
+    });
+
+    document.getElementById('btnCloseExporter').addEventListener('click', () => {
+      const modal = document.getElementById('exporterModal');
+      modal.classList.add('hidden');
+      modal.classList.remove('flex');
+    });
+
+    document.getElementById('btnDownloadAll').addEventListener('click', () => {
+      const content = PROJECT_FILES[activeExportFile]();
+      const blob = new Blob([content], { type: 'text/plain;charset=utf-8' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = activeExportFile.replace('/', '_');
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+    });
+
+    document.getElementById('btnCopyCode').addEventListener('click', () => {
+      const textarea = document.createElement('textarea');
+      textarea.value = PROJECT_FILES[activeExportFile]();
+      document.body.appendChild(textarea);
+      textarea.select();
+      document.execCommand('copy');
+      document.body.removeChild(textarea);
+      const btn = document.getElementById('btnCopyCode');
+      btn.textContent = '✓ Copied!';
+      setTimeout(() => { btn.textContent = '📋 Copy Code'; }, 1500);
+    });
+
+    window.onload = function () {
+      updateHUD();
+      requestAnimationFrame(animate);
+    };
+  </script>
+</body>
+</html>
