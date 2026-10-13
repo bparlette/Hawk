@@ -488,14 +488,14 @@
     applyPose(H, haroldPose(st, t), 18, dt, false);
     if (C.hflash > 0) { C.hflash = Math.max(0, C.hflash - dt * 5); if (H.mat.userData.flashC) H.mat.userData.flashC.value.set(C.hflashC || '#ffffff'); H.mat.userData.flash.value = C.hflash * 0.8; }
     if (st.frozeT > 0 && H.mat.userData.flashC) { H.mat.userData.flashC.value.set('#9ff0ff'); H.mat.userData.flash.value = 0.55; }
-    const M = C.M; M.root.position.set(-4.0, 0, 0.9); M.root.rotation.y = 0.7; applyPose(M, mavisPose(st, t), 12, dt, false);
+    const M = C.M; M.root.position.set(-4.2, 0, 2.4); M.root.rotation.y = 0.6; applyPose(M, mavisPose(st, t), 12, dt, false);
     if (!(st.ms === 'frzTell' || st.ms === 'frz')) C.movieT.offset.x = (C.movieT.offset.x + dt * 0.006) % 1;
     poseDoc(st, dt); tells(st, dt);
     DUELS.hot(st.pow >= 1 && !st.over);
     if (st.shake > 0) st.shake = Math.max(0, st.shake - dt * 1.6);
     // camera: low behind Harold, the doctor + the big screen filling the frame; portrait pulls back and up
     const port = VH() > VW(); C.cam.fov = port ? 68 : 54; C.cam.updateProjectionMatrix();
-    V.set(H.root.position.x * 0.55, port ? 4.3 : 3.5, port ? -5.0 : -4.2); V2.set(H.root.position.x * 0.3, port ? 1.7 : 2.0, MZ + 0.5); // high enough to see the doctor over Harold + the floor tells
+    V.set(H.root.position.x * 0.55, port ? 4.3 : 4.1, port ? -5.0 : -5.6); V2.set(H.root.position.x * 0.3, port ? 1.7 : 1.5, MZ + 0.5); // high enough to see the doctor over Harold + the floor tells
     if (st.ms === 'intro' && st.phase === 0 && st.t < 3) { const k = ease(clamp(st.mt / st.mdur, 0, 1)); V.lerpVectors(V3.set(3.5, 4.0, 1.5), V, k); V2.lerpVectors(V3.set(0, 3.5, SZ), V2, k); }
     if (st.twT >= 0) { V.set(-3.4, 2.4, 1.6); V2.set(0, 1.6, MZ - 0.2); }
     if (st.ms === 'ko') { V.set(1.2, 3.4, port ? -3.4 : -2.0); V2.set(0, 3.4, MZ + 2); }
