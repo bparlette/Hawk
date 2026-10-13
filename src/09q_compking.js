@@ -4,7 +4,7 @@
 // The King: an athleisure mannequin brute (featureless egg head, charcoal compression gear with teal piping, a crown of stacked sweatbands), ~3 m tall.
 // A free-move lock-on brawl inside the store: Harold walks the shop floor (camera behind him, always facing the King), Mavis cheers by the register.
 //   MANNEQUIN FREEZE: the store lights cycle GREEN / YELLOW / RED (red-light/green-light). Move or swing on RED and a display mannequin lunges at you.
-//                     On GREEN the King is frozen in a pose: free crits.
+//                     On GREEN the King holds a showroom pose: walk up and hit him (normal damage); freeze before RED.
 //   BIG SQUEEZE:      a 1.2 s crouch with arms wide + a red lane to Harold, then a bear-hug lunge. DODGE sideways. Caught = MASH SWING to break free
 //                     (break free = the King staggers, open for crits; fail = a crushing squeeze).
 //   HANGER BOOMERANG: he winds back a chrome hanger; a dashed arc shows its path on the floor, out past Harold and back. Step off the arc or DODGE through it.
@@ -38,8 +38,8 @@
   const STORE = 'SWEATFORGE PIER', AR = 9.2, BHP = 300; // store name (original homage), arena half-size, boss HP (2 phases of 150)
   const V = new THREE.Vector3(), V2 = new THREE.Vector3(), V3 = new THREE.Vector3(), M4 = new THREE.Matrix4(), QQ = new THREE.Quaternion(), CO = new THREE.Color();
   const PH = [ // per phase
-    { mix: ['freeze', 'squeeze', 'hanger', 'squeeze', 'hanger', 'freeze', 'hanger', 'squeeze'], stalk: [1.4, 2.1], sqTell: 1.2, hgTell: 1.1, green: 1.9, red: 1.6, cycles: 3, mash: 9, hangers: 1, open: 1.5 },
-    { mix: ['hanger', 'squeeze', 'freeze', 'hanger', 'squeeze', 'hanger', 'freeze', 'squeeze'], stalk: [1.1, 1.7], sqTell: 1.2, hgTell: 1.0, green: 1.5, red: 1.9, cycles: 3, mash: 11, hangers: 2, open: 1.3 },
+    { mix: ['freeze', 'squeeze', 'hanger', 'squeeze', 'hanger', 'freeze', 'hanger', 'squeeze'], stalk: [1.0, 1.6], sqTell: 1.2, hgTell: 1.1, green: 1.9, red: 1.6, cycles: 3, mash: 9, hangers: 1, open: 1.5 },
+    { mix: ['hanger', 'squeeze', 'freeze', 'hanger', 'squeeze', 'hanger', 'freeze', 'squeeze'], stalk: [0.8, 1.3], sqTell: 1.2, hgTell: 1.0, green: 1.5, red: 1.9, cycles: 3, mash: 11, hangers: 2, open: 1.3 },
   ];
   const WORDS = ['MARKDOWN!', 'PRICE CHECK!', 'FINAL SALE!', '50% OFF!', 'NO REFUNDS!', 'RESTOCKED!'];
   const lmk = () => LANDMARKS.find((l) => l.boss && l.boss.name === 'The Compression King');
@@ -215,7 +215,7 @@
     const old = C.st, st = C.st = { t: 0, phase, hp: 100, bhp: phase === 2 ? BHP / 2 : BHP, hx: 0, hz: -5, bx: 0, bz: 4.5, byaw: Math.PI, hy: 0,
       atk: -1, atkN: 0, atkHit: false, queued: false, comboT: 0, combo: 0, dodgeT: -1, dodgeCd: 0, dx: 0, dz: 0, inv: 0, hurtT: 0, power: old ? old.power : 0, sp: -1,
       bs: 'intro', bt: 0, bdur: phase === 1 && !old ? 2.6 : 1.4, mixI: 0, light: 'off', lt: 0, cyc: 0, spotCd: 0, lockX: 0, lockZ: 1, lunge: 0, grabN: 0, grabT: 0,
-      sw: old ? old.sw : false, cake: old ? old.cake : false, cakeT: -1, over: false, won: false, ko: 0, hs: 0, shake: 0, slow: 0, slowK: 1, zoom: 0, said: {},
+      sw: false, cake: false, cakeT: -1, /* a retry gets its crab cake + second wind back */ over: false, won: false, ko: 0, hs: 0, shake: 0, slow: 0, slowK: 1, zoom: 0, said: {},
       stats: old && old.stats || { swings: 0, landed: 0, crits: 0, taken: 0, dodges: 0, specials: 0, breaks: 0, spotted: 0, attacks: { freeze: 0, squeeze: 0, hanger: 0 }, hitsBy: { mannequin: 0, squeeze: 0, hanger: 0 } } };
     for (const m of C.mq) { m.s = 'idle'; m.t = 0; m.root.position.copy(m.home); m.eye.visible = false; m.root.rotation.y = Math.atan2(-m.home.x, -m.home.z); }
     for (const h of C.hangers) { h.on = false; h.m.visible = false; } C.dash.count = 0; C.parts.length = 0; C.lane.visible = C.ring.visible = C.bang.visible = false; C.rack.visible = false;
@@ -280,7 +280,7 @@
         if (Math.random() < dt * 6) shake(st, 0.12);
         if (st.grabN >= need) { C.hm.classList.remove('on'); st.stats.breaks++; addPower(st, 22); setB(st, 'stagger', 2.2); pop(V.set(st.hx, 2.2, st.hz), 'BREAK FREE!', 'word'); sfx('heavy'); flashBoss('#ffffff', 0.7); shake(st, 0.4); hitstop(st, 0.1); knock(st, 1.8);
           DUELS.tell('HE\u2019S DIZZY! WAIL ON HIM!', 1.2); }
-        else if (st.bt > st.bdur) { C.hm.classList.remove('on'); st.inv = 0; hurt(st, 14, 'squeeze'); knock(st, 2.6); setB(st, 'open', 0.9); }
+        else if (st.bt > st.bdur) { C.hm.classList.remove('on'); st.inv = 0; hurt(st, 18, 'squeeze'); knock(st, 2.6); setB(st, 'open', 0.9); }
         break; }
       case 'stagger': if (st.bt > st.bdur) setB(st, 'stalk', rnd(...P.stalk)); break;
       // --- Hanger Boomerang
@@ -288,7 +288,7 @@
       case 'hanger': { let live = 0;
         for (const h of C.hangers) { if (!h.on) continue; h.u += dt / 1.7; if (h.u < 0) { live++; continue; } if (h.u >= 1) { h.on = false; h.m.visible = false; h.plan = false; continue; } live++;
           hangerAt(h, h.u, V); h.m.position.set(V.x, 1.05, V.z); h.m.rotation.y += dt * 22;
-          if (!h.hit && Math.hypot(V.x - st.hx, V.z - st.hz) < 0.85) { h.hit = true; if (st.inv <= 0 && st.dodgeT < 0) hurt(st, 7, 'hanger'); else perfectDodge(st, 'hanger'); } }
+          if (!h.hit && Math.hypot(V.x - st.hx, V.z - st.hz) < 0.85) { h.hit = true; if (st.inv <= 0 && st.dodgeT < 0) hurt(st, 9, 'hanger'); else perfectDodge(st, 'hanger'); } }
         if (!live) { C.dash.count = 0; setB(st, 'open', P.open); DUELS.tell('HE\u2019S OPEN!', 0.8); } break; }
       case 'open': if (st.bt > st.bdur) setB(st, 'stalk', rnd(...P.stalk)); break;
       case 'ko': break;
@@ -297,7 +297,7 @@
     for (const m of C.mq) { m.t += dt;
       if (m.s === 'tell') { m.eye.visible = Math.sin(m.t * 40) > -0.3; m.root.rotation.y = Math.atan2(st.hx - m.root.position.x, st.hz - m.root.position.z); if (m.t > 0.5) { m.s = 'lunge'; m.t = 0; m.from = m.root.position.clone(); m.to = V3.set(st.hx, 0, st.hz).clone(); sfx('swing'); } }
       else if (m.s === 'lunge') { const u = clamp(m.t / 0.3, 0, 1); m.root.position.lerpVectors(m.from, m.to, ease(u)); m.root.position.y = Math.sin(u * Math.PI) * 0.5;
-        if (u >= 1) { if (Math.hypot(st.hx - m.to.x, st.hz - m.to.z) < 1.3 && st.inv <= 0 && st.dodgeT < 0) hurt(st, 8, 'mannequin'); else perfectDodge(st, 'mannequin'); m.s = 'back'; m.t = 0; m.from = m.root.position.clone(); } }
+        if (u >= 1) { if (Math.hypot(st.hx - m.to.x, st.hz - m.to.z) < 1.3 && st.inv <= 0 && st.dodgeT < 0) hurt(st, 10, 'mannequin'); else perfectDodge(st, 'mannequin'); m.s = 'back'; m.t = 0; m.from = m.root.position.clone(); } }
       else if (m.s === 'back') { const u = clamp(m.t / 0.8, 0, 1); m.root.position.lerpVectors(m.from, m.home, ease(u)); m.eye.visible = false; if (u >= 1) { m.s = 'idle'; m.root.rotation.y = Math.atan2(-m.home.x, -m.home.z); } } }
   }
   function spot(st) { // moved on RED: the nearest idle mannequin's eyes light up, it lunges
@@ -307,8 +307,8 @@
   function planHangers(st, P) {
     const n = P.hangers; for (let i = 0; i < 2; i++) { const h = C.hangers[i]; h.plan = i < n; if (!h.plan) continue;
       const dx = st.hx - st.bx, dz = st.hz - st.bz, d = Math.max(1.5, Math.hypot(dx, dz)), ux = dx / d, uz = dz / d, nx = -uz, nz = ux, s = n === 1 ? (Math.random() < 0.5 ? 1 : -1) : (i ? -1 : 1);
-      h.a = new THREE.Vector2(st.bx + ux * 0.8, st.bz + uz * 0.8); h.b = new THREE.Vector2(clamp(st.hx + ux * 1.6, -AR, AR), clamp(st.hz + uz * 1.6, -AR, AR));
-      const mx = (h.a.x + h.b.x) / 2, mz = (h.a.y + h.b.y) / 2, w = n === 1 ? 2.0 : 2.6; h.c1 = new THREE.Vector2(mx + nx * s * w, mz + nz * s * w); h.c2 = new THREE.Vector2(mx - nx * s * w * 1.25, mz - nz * s * w * 1.25); h.delay = i * 0.25; }
+      h.a = new THREE.Vector2(st.bx + ux * 0.8, st.bz + uz * 0.8); h.b = new THREE.Vector2(clamp(st.hx + ux * 0.3, -AR, AR), clamp(st.hz + uz * 0.3, -AR, AR)); // the far point is where Harold stands
+      const mx = (h.a.x + h.b.x) / 2, mz = (h.a.y + h.b.y) / 2, w = n === 1 ? 2.2 : 2.8; h.c1 = new THREE.Vector2(mx + nx * s * w, mz + nz * s * w); h.c2 = new THREE.Vector2(mx - nx * s * w * 1.25, mz - nz * s * w * 1.25); h.delay = i * 0.25; }
     // the dashed arc on the floor
     let k = 0; for (const h of C.hangers) { if (!h.plan) continue; for (let j = 0; j < 28; j++) { const u = (j + 0.5) / 28; hangerAt(h, u, V); hangerAt(h, Math.min(1, u + 0.01), V2);
       QQ.setFromAxisAngle(V3.set(0, 1, 0), Math.atan2(V2.x - V.x, V2.z - V.z) + Math.PI / 2); M4.compose(V.setY(0.05), QQ, V3.set(1, 1, 1)); C.dash.setMatrixAt(k++, M4); } }
@@ -332,8 +332,10 @@
   }
   function damageBoss(st, dmg, crit, word) {
     if (st.bs === 'roar' || st.bs === 'ko' || st.bs === 'intro') return;
-    const d = Math.round(crit ? dmg * 1.6 : dmg); st.bhp -= d; st.stats.landed++; if (crit) st.stats.crits++;
-    st.combo++; st.comboT = 1.4; addPower(st, crit ? 9 : 6);
+    // he guards in his tight gear unless he's OPEN: stalking = 35%, wind-ups / lunges / throws = 60%, open / dizzy / posing on GREEN = 150% gold crits
+    const k = crit ? 1.5 : st.bs === 'stalk' ? 0.35 : 0.6, d = Math.max(1, Math.round(dmg * k)); st.bhp -= d; st.stats.landed++; if (crit) st.stats.crits++;
+    if (!crit && st.bs === 'stalk' && Math.random() < 0.35) pop(V2.set(st.bx, 3.2, st.bz), 'TOO TIGHT! WAIT FOR AN OPENING', '');
+    st.combo++; st.comboT = 1.4; addPower(st, crit ? 7 : 3);
     V.set(st.bx, 2.3 + rnd(-0.2, 0.4), st.bz); pop(V, String(d), crit ? 'crit' : ''); if (word) pop(V2.set(st.bx + rnd(-0.6, 0.6), 3.4, st.bz), word, 'word');
     burst(V.set(st.bx * 0.6 + st.hx * 0.4, 1.6, st.bz * 0.6 + st.hz * 0.4), crit ? 10 : 6, crit ? ['#ffd23c', '#fff6a0', '#1fd1c1'] : ['#ffffff', '#1fd1c1', '#2a2e36']);
     flashBoss('#ffffff', 0.85); sfx(crit || word ? 'heavy' : 'hit'); hitstop(st, word ? 0.1 : crit ? 0.085 : 0.065); shake(st, word ? 0.3 : 0.15); C.bflinch = 1;
@@ -343,7 +345,7 @@
     else if (st.bhp <= 0) { st.bhp = 0; ko(st); }
     subHud(st);
   }
-  const isOpen = (st) => ['open', 'stagger'].includes(st.bs) || (st.bs === 'freeze' && st.light === 'green');
+  const isOpen = (st) => ['open', 'stagger'].includes(st.bs); // (posing on GREEN takes normal hits; RED gets you spotted)
   function ko(st) { setB(st, 'ko', 99); st.over = true; st.won = true; st.ko = 0; setLight(st, 'off'); C.hm.classList.remove('on'); for (const h of C.hangers) { h.on = false; h.m.visible = false; } C.dash.count = 0;
     slowmo(st, 0.3, 1.4); shake(st, 0.6); flashBoss('#ffffff', 1); DUELS.banner('K.O.!<small>EVERYTHING MUST GO</small>', 2.4); tone(1320, 660, 0.6, 'triangle', 0.12); DUELS.log.push('compking:ko'); }
 
@@ -391,7 +393,7 @@
     // the cane's teal trail: a fan of sparks in front of Harold
     const yaw = Math.atan2(st.bx - st.hx, st.bz - st.hz); for (let k = 0; k < 4; k++) { const a = yaw + (n === 1 ? -1 : 1) * (k - 1.5) * 0.35; burst(V.set(st.hx + Math.sin(a) * 1.0, n === 2 ? 1.8 - k * 0.3 : 1.0, st.hz + Math.cos(a) * 1.0), 1, ['#1fd1c1', '#b8fff6'], 0.6, 0.35, 0.5); }
     if (!reach) return;
-    damageBoss(st, n === 2 ? 14 : 7, isOpen(st), n === 2 ? pick(WORDS) : null);
+    damageBoss(st, n === 2 ? 10 : 5, isOpen(st), n === 2 ? pick(WORDS) : null);
     if (n === 2) { burst(V.set(st.bx, 2.8, st.bz), 6, ['#ffd23c', '#ffffff', '#d8262a'], 2, 0.8, 3); } // price tags fly
   }
   // ---------------- POWER special: CLEARANCE SALE (team-up with Mavis) ----------------
@@ -403,7 +405,7 @@
     if (t < 0.6) { C.rack.position.lerpVectors(st.rack0, V.set(st.hx, 0, st.hz), ease(t / 0.6)); }
     else if (t < 2.0) { const u = (t - 0.6) / 1.4; C.rack.visible = false; const d = dist(st); if (d > 1.7) { st.hx += (st.bx - st.hx) / d * 5 * dt; st.hz += (st.bz - st.hz) / d * 5 * dt; }
       for (let k = 0; k < 3; k++) { const a = st.t * 14 + k * 2.1; burst(V.set(st.hx + Math.cos(a) * 1.1, 0.4 + u * 2.2 + k * 0.3, st.hz + Math.sin(a) * 1.1), 1, ['#1fd1c1', '#e8501e', '#ffd23c', '#3a5aa8', '#f4f6f8'], 1.2, 0.7, 1.5); }
-      const due = Math.floor(u * 4.5); while (st.spTicks < Math.min(4, due)) { st.spTicks++; if (dist(st) < 3.2) damageBoss(st, 9, false, st.spTicks === 4 ? 'EVERYTHING MUST GO!' : null); else pop(V.set(st.hx, 2, st.hz), 'WHIFF', ''); if (st.over) break; } }
+      const due = Math.floor(u * 4.5); while (st.spTicks < Math.min(4, due)) { st.spTicks++; if (dist(st) < 3.2) damageBoss(st, 8, true, st.spTicks === 4 ? 'EVERYTHING MUST GO!' : null); else pop(V.set(st.hx, 2, st.hz), 'WHIFF', ''); if (st.over) break; } }
     else { st.sp = -1; st.inv = 0.4; st.zoom = 0; C.rack.visible = false; }
     if (st.over) { st.sp = -1; st.zoom = 0; C.rack.visible = false; } }
 
