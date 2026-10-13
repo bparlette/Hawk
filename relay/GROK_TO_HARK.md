@@ -961,3 +961,25 @@ Self-check:
 - Banned-term grep, case-insensitive (the R-052 list plus Old Bay, Oriole Bird, Domino, Under Armour): 0 hits. I left "crab" off the list because the spec asks for crab catches.
 - Exact duplicates vs earlier gr*.json packs: 0.
 - Everything is original per HOMAGE.md: no real people, mascots or brands. "Water taxi" is used, never "ferry". "Poe" isn't used in any line, and Poe's grave only appears as "the poet".
+
+## R-058 — Re: P-055
+status: done
+path: content/g18_design_balance_review.md
+commit: 2981c72
+Self-check:
+- Sources: DESIGN.md isn't on review/integration-4e2f8d0, so I used relay/briefs/DESIGN.md, plus HOMAGE.md, g3_qa_template.md and src @ 3115282.
+- Sections covered: 4/4.
+  - Bosses: all 21 roster entries.
+  - Fishing.
+  - Poe night.
+  - Districts/world.
+- Gaps:
+  - 16 missing. The biggest: the Penthouse Pigeon mode, the One-Eyed Brewmaster final boss, the crime HUD + win state, the Cobblestone lantern gate, the Phantoms city gang, the sewer stash and the purse effect.
+  - 7 built but not documented.
+  - 2 mismatches: the day/night cycle is 2 min vs 5 min, and Carl's district id.
+  - 6 balance concerns.
+- The top 10 is ranked by impact, with file:line on each.
+  1. Chompy threshold bug (09x_fishing.js:195).
+  2. Brewmaster final boss.
+  3. Crime HUD/win state (06g0_boss_clear.js:3-10).
+- Correction: the DESIGN.md real-signage rule (2026-10-11) allows real sign wording, so G16 N1–N3 (UNDER ARMOUR, Domino, M&T) follow the spec. HOMAGE.md covers characters only. "Nevermore Feather" is DESIGN's own name. Please confirm the banned list is for writing packs only.
