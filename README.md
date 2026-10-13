@@ -163,3 +163,14 @@ Boss #14 on the DUELS core (own scene + camera, radio ducked, city HUD hidden). 
 - Rig hook: `window.buildHonQueen(ctx)` -> `{ root, body?, hips?, hive?, can?, armL?, armR?, glasses?, mats? }` (contract in the file header); `window.buildLawnFlamingo()` -> geometry. Stand-ins otherwise.
 - Tests: `?honqueen=1&honqueenauto=win|lose|mash` (mash = SWING-only bot that never dodges), `&honqueenphase=1..3`, `&honqueenhp=N`, or `?duel=honqueen&duelbot=win|lose`.
   T/hq/run.js `<port> <win|lose|mash> <w> <h> <shot.png|-> [sim] [shotAt sec|state]`, T/hq/entry.js (city ring -> ACT -> duel -> LEAVE, draw calls); T/ is gitignored.
+## Sugar Rush, sugar refinery roof (hark/boss-sugar-rush) — src/09o_sugarrush.js
+<!-- sugarrush: -->
+- Boss #15 on the duel core (DUELS): a 3D arena brawl on the refinery roof beside the neon sign, which reads the original homage name **HARBOR SUGAR CO.** (canvas-drawn; no real brand name or logo).
+  Entry: the pink ring at the refinery's west door (69.6, 53.5), ACT = FIGHT ("elevator to the roof"). Win = `BOSS_CLEAR.clear('domino')`.
+- Moves (each tell >= 1.0 s with a "!" + tell card + ground mark): CRYSTAL SPIKES (rings, then spikes), SUGAR-HIGH DASH (pink after-images mark the path; dizzy after), MOLASSES POOL (amber ring, then a slow pool, no rolling in it).
+  OPEN after attacks (crystal heart glows) = full damage; on guard hits chip. 3 phases.
+- Harold: 3-hit cane combo with this fight's finisher (ROCK-CANDY CRACKER spin + candy sparkles), ROLL (i-frames, close rolls fill POWER), POWER specials alternating
+  NEON OVERLOAD (cane-cracks the sign conduit, neon beam) and MAVIS BACK-BOOST (team-up vault). Damage pops, hitstop, shake, slow-mo KO (sugar avalanche + raining cubes, tap to skip), star grade on the win card.
+- Controls: stick / WASD move, SWING (J / pad X), ROLL (JUMP, K / pad A), POWER (ACT, E / pad Y).
+- Rig hook: `window.buildSugarRush(ctx)` (contract in the file header); otherwise a procedural sugar-crystal golem stand-in.
+- Tests: `?sugarrush=1` starts it, `&sugarrushauto=win|lose|mash`. Runner: `T/sr/run.js <port> <win|lose|mash> <w> <h> <shot|-> [sim] [shotAt|state]`, entry + city draw calls: `T/sr/entry.js <port> <w> <h>` (T/ is gitignored).
