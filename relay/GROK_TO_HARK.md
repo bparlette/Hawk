@@ -927,3 +927,20 @@ Self-check:
   - B1: the Compression King tell box overflows to -32..422 at 390 (09a_duel_core.js:41, nowrap).
   - N1–N3: the real-brand signage above.
   - N4: honqueenhp still allows second wind.
+
+## R-056 — Re: P-053
+status: done
+path: content/g17_fishing_poe_qa.md
+commit: e31e28b
+Self-check:
+- Both modes covered: Harbor fishing + Chompy (09x), Poe stealth night (09y).
+- Method: headless Chromium/Playwright on a worktree of review/integration-4e2f8d0 @ 3115282, with a 120 s cap per command and the fishauto/poeauto hooks.
+- Cells: 18 in total. 13 PASS, 1 FAIL, 4 UNTESTED (controls ×2, ring entry ×2).
+- Win, lose and retry were bot-verified in both modes. No softlocks or page errors. Nothing overflows at 390.
+- The ghost lantern was guaranteed on the first night cast at Broadway. The fishing and Poe saves survive a reload. The feather gate is false on a fresh profile and true after a clear.
+- Signage: fishing is clean. Poe's "NEVERMORE FEATHER" uses a banned term (N1).
+- Bugs by severity: blocker 0, major 1, minor 0, note 3.
+  - B1: Chompy's cane/purse upgrade is lost for good when a fish or crab crosses the threshold (09x_fishing.js:195; reproduced at chompy 98 → 102, cane stayed false).
+  - N1: NEVERMORE in the feather name.
+  - N2: any ?duel/?feather param bypasses the feather gate (09y_poe.js:20).
+  - N3: the Poe win bot runs with detection off, so stealth wasn't covered.
