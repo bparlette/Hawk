@@ -9282,7 +9282,7 @@ const DUELS = (function () {
   const sx = (lat) => -lat * LANE;
   const pick = (a) => a[Math.floor(Math.random() * a.length)];
   const TAUNT = ['Order up! One toad, well done!', 'Taste my seasoning! In your eyes!', 'Two mallets, one Harold. Let\'s cook!'];
-  const MID = ['Behind! Hot pan coming through!', 'Yes, chef? No, CHEF!', 'You call that a cane? I call it a whisk.', 'Mise en place, toad: everything in its place. You: on the floor.'];
+  const MID = ['Behind! Hot pan coming through!', 'Yes, chef? No, CHEF!', 'You call that a cane? I call it a whisk.', 'Mise en place, toad. Your place: the floor.'];
   const MAVIS = ['Get him, Harold! He oversalts!', 'Mind the hot pan, hon!', 'That\'s my husband, chef!', 'Here, hon, catch!'];
   const lines = () => { const L = LANDMARKS.find((l) => l.id === 'fourseasons'); const g = (window.GR1 || (typeof GR1 !== 'undefined' ? GR1 : null)); return (g && g.bosses && g.bosses.chef_crabcake) || (L && L.boss && L.boss.lines) || null; };
 
@@ -9395,7 +9395,8 @@ const DUELS = (function () {
     rig.flash = rig.flash || [];
     C.R = rig; rig.root.position.set(0, 0, MZ); rig.root.rotation.y = Math.PI; sc.add(rig.root);
     // lane warning strips on the floor (Harold's side), the seasoning target ring, the counter-edge glow, puffs (seasoning + fire), sparks, the skillet
-    C.lanes = [-1, 0, 1].map((l) => { const m = new THREE.Mesh(new THREE.PlaneGeometry(1.15, 3.6), new THREE.MeshBasicMaterial({ color: '#ff3d3d', transparent: true, opacity: 0, depthWrite: false, blending: THREE.AdditiveBlending, fog: false })); m.rotation.x = -Math.PI / 2; m.position.set(sx(l), 0.03, 0.6); m.visible = false; sc.add(m); return m; });
+    C.lanes = [-1, 0, 1].map((l) => { const m = new THREE.Mesh(new THREE.PlaneGeometry(1.2, 3.8), new THREE.MeshBasicMaterial({ color: '#ff2a2a', transparent: true, opacity: 0, depthWrite: false, blending: THREE.AdditiveBlending, fog: false })); m.rotation.x = -Math.PI / 2; m.position.set(sx(l), 0.03, 0.6); m.visible = false; sc.add(m); return m; });
+    C.cmarks = [-1, 0, 1].map((l) => { const m = new THREE.Mesh(new THREE.BoxGeometry(1.1, 0.05, 1.1), new THREE.MeshBasicMaterial({ color: '#ff2a2a', transparent: true, opacity: 0, depthWrite: false, blending: THREE.AdditiveBlending, fog: false })); m.position.set(sx(l), 1.08, CZ); m.visible = false; sc.add(m); return m; });
     const ringT = canvasTex(128, 128, (g) => { g.strokeStyle = '#fff'; g.lineWidth = 10; g.beginPath(); g.arc(64, 64, 50, 0, TAU); g.stroke(); g.beginPath(); g.moveTo(64, 4); g.lineTo(64, 34); g.moveTo(64, 94); g.lineTo(64, 124); g.moveTo(4, 64); g.lineTo(34, 64); g.moveTo(94, 64); g.lineTo(124, 64); g.stroke(); }, 128);
     C.ring = new THREE.Mesh(new THREE.PlaneGeometry(1.5, 1.5), new THREE.MeshBasicMaterial({ map: ringT, color: '#ff9a3a', transparent: true, opacity: 0, depthWrite: false, blending: THREE.AdditiveBlending, fog: false })); C.ring.rotation.x = -Math.PI / 2; C.ring.position.set(0, 0.05, 0); C.ring.visible = false; sc.add(C.ring);
     C.edge = new THREE.Mesh(new THREE.BoxGeometry(6.5, 0.1, 0.12), new THREE.MeshBasicMaterial({ color: '#ff7a1a', transparent: true, opacity: 0, depthWrite: false, blending: THREE.AdditiveBlending, fog: false })); C.edge.position.set(0, 1.1, CZ - 0.6); C.edge.visible = false; sc.add(C.edge);
@@ -9468,7 +9469,7 @@ const DUELS = (function () {
     } else if (st.hp < 35 && !st.healUsed) { st.healUsed = true; st.healT = 0.9; }
     return true;
   }
-  function clearFx() { C.lanes.forEach((l) => { l.material.opacity = 0; l.visible = false; }); C.ring.visible = false; C.edge.visible = false; }
+  function clearFx() { C.lanes.forEach((l) => { l.material.opacity = 0; l.visible = false; }); C.cmarks.forEach((l) => { l.material.opacity = 0; l.visible = false; }); C.ring.visible = false; C.edge.visible = false; }
   function dodgeOk(st, what) { if (st.dodged) return; st.dodged = true; st.stats.dodges++; addPow(st, 0.15); pop(what || 'DODGE!', V.set(sx(st.lane) * 0.95, 2.4, 0.2), 'w'); }
 
   // ---------------- the chef's brain ----------------
@@ -9633,11 +9634,11 @@ const DUELS = (function () {
   }
   function tells(st, dt) {
     // lanes: drumroll warnings (the next lane glows during the gap before its slam; the first one during the end of the tell)
-    const warn = [0, 0, 0], P = PH[st.phase], pulse = 0.45 + 0.3 * Math.sin(st.t * 28);
+    const warn = [0, 0, 0], P = PH[st.phase], pulse = 0.62 + 0.3 * Math.sin(st.t * 28);
     if (st.ms === 'drumTell' && st.mdur - st.mt < P.gap) warn[st.seq[0] + 1] = pulse;
     if (st.ms === 'drum' && st.seqI < st.seq.length) warn[st.seq[st.seqI] + 1] = pulse * (1.2 - clamp(st.slamT / P.gap, 0, 1) * 0.4);
     if (st.ms === 'drum' && st.slamFx > 0) warn[st.lastSlam + 1] = Math.max(warn[st.lastSlam + 1], 0.9);
-    C.lanes.forEach((l, i) => { l.material.opacity = damp(l.material.opacity, warn[i], 24, dt); l.visible = l.material.opacity > 0.01; });
+    C.lanes.forEach((l, i) => { l.material.opacity = damp(l.material.opacity, warn[i], 24, dt); l.visible = l.material.opacity > 0.01; const c = C.cmarks[i]; c.material.opacity = l.material.opacity; c.visible = l.visible; });
     // the seasoning ring: orange while it follows Harold, red once locked
     const tinOn = st.ms === 'tinTell' || (st.ms === 'tin' && st.mt < 0.35); C.ring.visible = tinOn;
     if (tinOn) { const locked = st.ms === 'tin' || st.mdur - st.mt <= 0.4; C.ring.position.x = damp(C.ring.position.x, sx(st.target) * 0.95, 14, dt); C.ring.material.color.set(locked ? '#ff2020' : '#ff9a3a'); C.ring.material.opacity = 0.55 + 0.35 * Math.sin(st.t * 24); C.ring.rotation.z += dt * 2; }
