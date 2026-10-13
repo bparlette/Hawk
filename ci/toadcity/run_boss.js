@@ -17,7 +17,7 @@ const { open, writeResult } = require('./common');
     let earlyShot = false, shot = false, last = null, prevT = null, stallS = 0;
     while (Date.now() - t0 < maxWall) {
       await p.waitForTimeout(1000);
-      const s = await p.evaluate(() => { const D = __duels, K = D.cur; return { cur: K && K.id, res: D.result, t: +(D.t || 0).toFixed(1), log: D.log.slice(-3), retries: D.retries, over: D.overOn ? D.overOn() : null, st: K && K.st ? { hp: Math.round(K.st.hp), b: Math.round(K.st.bhp ?? K.st.mhp ?? K.st.bossHp ?? 0), ph: K.st.phase ?? K.st.round, s: K.st.bs || K.st.ms, over: K.st.over, won: K.st.won } : null }; });
+      const s = await p.evaluate(() => { const D = __duels, K = D.cur; return { cur: K && K.id, res: D.result, t: +(D.t || 0).toFixed(1), log: D.log.slice(-3), retries: D.retries, over: D.overOn ? D.overOn() : null, st: K && !K.st && K.id === 'grandprix' && window.__gprix ? { hp: 0, b: 0, ph: 0, over: !!__gprix.over, won: !!__gprix.won } : K && K.st ? { hp: Math.round(K.st.hp), b: Math.round(K.st.bhp ?? K.st.mhp ?? K.st.bossHp ?? 0), ph: K.st.phase ?? K.st.round, s: K.st.bs || K.st.ms, over: K.st.over, won: K.st.won } : null }; });
       if (res.samples.length < 400 && (res.samples.length === 0 || Math.round(s.t) % 10 === 0)) res.samples.push(s);
       if (!earlyShot && s.t >= 1.2) { earlyShot = true; await p.screenshot({ path: `${outDir}/${name}_early.png` }).catch(() => {}); } // ~1 s into the fight (cobble-storm: mid-storm)
       if (!shot && s.t >= 10) { shot = true; await p.screenshot({ path: `${outDir}/${name}_mid.png` }).catch(() => {}); }

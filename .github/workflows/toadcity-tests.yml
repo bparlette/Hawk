@@ -56,13 +56,13 @@ jobs:
           python3 - <<'PY'
           import json, os, re
           js = open('game/site/game.js', encoding='utf-8', errors='ignore').read()
-          known = ['crabcake','poolshark','scrubber','honqueen','shellacious','sugarrush','cobblestone','compking','ravenking','brewmaster','pigeon','chipkid','jimmy','duchess','bikelife','bikelife1','bikelife2','bikelife3']  # jimmy + duchess: hark/polish (?jimmy=1&jimmyauto=, ?duchess=1&duchessauto=; skipped on builds without the markers)
+          known = ['crabcake','poolshark','scrubber','honqueen','shellacious','sugarrush','cobblestone','compking','ravenking','brewmaster','pigeon','chipkid','jimmy','duchess','bikelife','bikelife1','bikelife2','bikelife3','grandprix']  # grandprix: Harbor Grand Prix (?duel=grandprix&gpauto=win|lose). jimmy + duchess: hark/polish (?jimmy=1&jimmyauto=, ?duchess=1&duchessauto=; skipped on builds without the markers)
           want = [b.strip() for b in os.environ.get('BOSSES','').split(',') if b.strip()] or known
           modes = [m.strip() for m in os.environ.get('MODES','win,lose').split(',') if m.strip()]
           extra = {'cobblestone': '&cobblestonenight=1', 'pigeon': '&pigeonquick=1'}
           # bosses whose test entry is not ?<boss>=1&<boss>auto=<mode>: extra query per mode + the build marker to look for
-          modex = {'chipkid': {'win': '&duel=chipkid&duelbot=win', 'lose': '&duel=chipkid&duelbot=lose&ckhp=6'}}
-          marker = {'chipkid': 'ckhp'}
+          modex = {'chipkid': {'win': '&duel=chipkid&duelbot=win', 'lose': '&duel=chipkid&duelbot=lose&ckhp=6'}, 'grandprix': {'win': '&gpauto=win', 'lose': '&gpauto=lose'}}
+          marker = {'chipkid': 'ckhp', 'grandprix': 'gpauto'}
           if 'cobblestone:storm' in js: extra['cobblestone'] = '&tod=0.1&ciexpect=cobblestone:storm:end'  # cobble-storm builds: the Cobblestone fights start in DAYTIME and must play the storm intro
           inc, skipped = [], []
           for b in want:
