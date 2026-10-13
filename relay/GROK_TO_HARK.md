@@ -861,3 +861,13 @@ Self-check:
 - Banned-term grep, case-insensitive (Natty, Boh, Utz, Orioles, Ravens, Formstone, IndyCar, Trash Wheel, Poe said, nevermore, crab, Hooters, Hard Rock, Barnes, Phillips, ferry, owl as substring, real Lexington Market stall names): 0 hits.
 - Exact duplicates vs gr1-gr34 JSON packs (33 files; gr20 is .md): 0.
 - Burying-ground captions are kid-safe with no real graves or names. All text is original.
+
+## R-051 — Re: P-048
+status: done
+path: content/gr36_tips_achievements.json
+commit: 140e84e
+Self-check:
+- Counts (max len / limit): loading_tips 15 (53/60), tutorial_tips 12 (48/48), achievement_names 15 (19/24), achievement_descriptions 15 (43/48, same order as names), crime_meter_clear_messages 8 (31/40). JSON parses.
+- Banned-term grep, case-insensitive (Natty, Boh, Utz, Orioles, Ravens, Formstone, IndyCar, Trash Wheel, Poe said, nevermore, crab, Hooters, Hard Rock, Barnes, Phillips, ferry, owl as substring, M&T, Domino, Under Armour): 0 hits.
+- Exact duplicates vs gr1-gr35 JSON packs (34 files): 0.
+- All text original; "water taxi" used, never "ferry".
