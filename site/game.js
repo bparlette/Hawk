@@ -17735,7 +17735,7 @@ window.__carl = CARL;
   drBtn.addEventListener('pointerdown', (e) => { e.preventDefault(); e.stopPropagation(); audioInit(); droneToggle('chip'); });
   dhud.querySelector('.dx').addEventListener('pointerdown', (e) => { e.preventDefault(); e.stopPropagation(); droneExit('x'); });
   dhud.querySelector('.dauto').addEventListener('pointerdown', (e) => { e.preventDefault(); e.stopPropagation(); if (DR.on && !AP.on) apStart('chip'); });
-  canvas.addEventListener('pointerdown', () => { if (F.on && !F.leaving) tapSkip('tap'); else if (DR.on && AP.on && DR.t > 0.25) apStop('touch'); });
+  canvas.addEventListener('pointerdown', () => { if (F.on && !F.leaving) tapSkip('tap'); else if (DR.on && AP.on && performance.now() - DR.w0 > 250) apStop('touch'); });
   function layout() { const h = VH() + 'px'; root.style.height = h; dhud.style.height = h; }
   addEventListener('resize', () => { if (F.on || DR.on) { layout(); resizeCam(); } });
   function chips() {
@@ -18053,7 +18053,7 @@ window.__carl = CARL;
   }
   function droneEnter(how) {
     if (DR.on || F.on || !save.drone || MODE.duel || FORT.on || DERBY.on || VIC.on || RB.mode || FMAP.F.open) return false;
-    DR.on = true; DR.t = 0; DR.how = how; DR.yaw = CAM.yaw; DR.pitch = -0.32; DR.vel.set(0, 0, 0); DR.bank = 0;
+    DR.on = true; DR.t = 0; DR.w0 = performance.now(); DR.how = how; DR.yaw = CAM.yaw; DR.pitch = -0.32; DR.vel.set(0, 0, 0); DR.bank = 0;
     DR.pos.copy(camera.position); DR.pos.y = Math.max(DR.pos.y, hero.pos.y + 6);
     save.flights++; save.lastOn = true; persist(); F.log.push('drone:on:' + how);
     document.body.classList.add('drone'); layout(); MODE.duel = DRONE; labels({ a: 'DOWN', b: 'UP', c: 'LAND', l: '&#9664; TURN', r: 'TURN &#9654;' }); if (APANEL) APANEL.setAct({ kind: 'drone', label: 'LAND' }, 1);
@@ -18076,7 +18076,7 @@ window.__carl = CARL;
     if (k === 'v' && !F.on) { if (DR.on) droneExit('v'); else if (!CINE.intro) droneEnter('v'); }
     else if (k === 'escape' && DR.on) { e.preventDefault(); droneExit('esc'); }
     else if (k === 'p' && DR.on && !AP.on) apStart('key');
-    else if (DR.on && AP.on && DR.t > 0.25 && !LANDK.has(k)) apStop('key:' + k); });
+    else if (DR.on && AP.on && performance.now() - DR.w0 > 250 && !LANDK.has(k)) apStop('key:' + k); });
   // ACT = DRONE whenever nothing else wants ACT (no action in reach, no fight, not riding): an always-in-range entry that steps aside for every other action
   const DACT = { kind: 'drone', label: 'DRONE', r: 0.5, y: 2.2, get x() { return hero.pos.x; }, get z() { return hero.pos.z; },
     ok: () => { if (!save.drone || BOT || F.on || DR.on || hero.roof || inFight()) return false;
@@ -18094,7 +18094,7 @@ window.__carl = CARL;
     if (DR.auto) { const a = DR.auto; a.t += rdt; mx = 0.15; my = 1; up = a.t < 1.4 ? 1 : 0; look = 0.25; if (a.t >= a.dur) { const d = a.done; DR.auto = null; droneExit('auto'); d && d(); return; } }
     const exitP = PRESS.has('e') && DR.t > 0.3; PRESS.clear(); if (exitP) { droneExit('act'); return; }
     // autopilot: any input takes over at once
-    if (AP.on && DR.t > 0.25 && (Math.abs(mx) + Math.abs(my) + Math.abs(look) + Math.abs(IN.lookY) > 0.05 || up !== 0 || IN.dragX || IN.dragY || padAny))
+    if (AP.on && performance.now() - DR.w0 > 250 && (Math.abs(mx) + Math.abs(my) + Math.abs(look) + Math.abs(IN.lookY) > 0.05 || up !== 0 || IN.dragX || IN.dragY || padAny))
       apStop(IN.dragX || IN.dragY ? 'drag' : up !== 0 ? 'button' : padAny ? 'pad' : 'stick');
     let gy;
     if (AP.on) {
