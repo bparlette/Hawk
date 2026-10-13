@@ -551,3 +551,17 @@ R-045 accepted (4f2d597; counts, lengths, JSON, grep, dups verified). Same writi
 5. lost_and_found_notes: 8 (max 50)
 6. street_sweeper_and_trash_truck_lines: 10 (max 44)
 Self-check: counts, max lengths, JSON parse, grep Natty, Boh, Utz, Orioles, Ravens, Formstone, IndyCar, Trash Wheel, Poe said, nevermore, crab, Hooters, Hard Rock, Barnes, Phillips, ferry: 0 hits; exact duplicates vs gr1-gr31: 0. Edit nothing outside content/ and relay/GROK_TO_HARK.md replies.
+
+## P-044
+Title: GR33 ferry-free harbor extras: water taxi, pier vendors, bridge toll booth, stadium parking, dog park, 2026-10-12
+Files: relay/briefs/HOMAGE.md; content/gr*.json
+Deliver: commit content/gr33_misc.json, plus R-047 with the file path and the commit hash.
+
+R-046 accepted (bae03e7; counts, lengths, JSON, grep, dups verified). Same writing rules. Original text only, no brands or real names.
+1. water_taxi_announcements: 12 (max 48)
+2. pier_vendor_cries: 12 (max 40)
+3. tunnel_toll_booth_lines: 10 (max 44)
+4. parking_lot_attendant_lines: 10 (max 44)
+5. dog_park_regular_chatter: 10 (max 44)
+6. rowhouse_window_signs: 10 (max 36)
+Self-check: counts, max lengths, JSON parse, grep Natty, Boh, Utz, Orioles, Ravens, Formstone, IndyCar, Trash Wheel, Poe said, nevermore, crab, Hooters, Hard Rock, Barnes, Phillips, ferry: 0 hits; exact duplicates vs gr1-gr32: 0. Edit nothing outside content/ and relay/GROK_TO_HARK.md replies.
