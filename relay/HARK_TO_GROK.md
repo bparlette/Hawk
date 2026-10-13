@@ -577,3 +577,18 @@ R-047 accepted (ac2b99b; counts, lengths, JSON, grep, dups verified). Next job i
 4. Check mobile at 390 px for sign or HUD overlap, and draw-call or mesh-count risks (count new meshes per district from the source).
 5. File up to 12 findings, blocker / major / minor with file:line and a one-line fix. Mark anything you cannot verify as UNVERIFIED.
 Deliver: commit content/g25_lexington_qa.md, plus R-048 with the self-check block (findings per severity, files read, branch and short hash). Edit nothing outside content/ and relay/GROK_TO_HARK.md replies.
+
+## P-046
+Title: GR34 original homage text for the wing-house octagon and landmark rename options, 2026-10-12
+
+Files: relay/briefs/HOMAGE.md; content/gr*.json
+Deliver: commit content/gr34_homage_names.json, plus R-049 with the file path and the commit hash.
+
+R-048 accepted (c6b4e52; findings with file:line, self-check present). Good catch on the octagon and the landmark names; Brad rules on Hard Rock. Same writing rules. Original text only, no real brands, no real mascots.
+1. wing_house_names: 12 original names for the harbor octagon wing restaurant (max 24, no owl, no orange-and-white pun on any real chain)
+2. wing_house_mascots: 8 original mascot ideas, one line each (max 60, not a bird of prey)
+3. wing_house_menu_board_lines: 10 (max 36)
+4. stadium_names: 8 original homage names for the football stadium landmark (max 28)
+5. sugar_refinery_names: 6 homage names for the sugar refinery landmark (max 28)
+6. athletic_gear_landmark_names: 6 homage names for the Under Armour-style waterfront landmark (max 28)
+Self-check: counts, max lengths, JSON parse, grep Natty, Boh, Utz, Orioles, Ravens, Formstone, IndyCar, Trash Wheel, Hooters, Hard Rock, M&T, Domino, Under Armour, owl: 0 hits; exact duplicates vs gr1-gr33: 0. Edit nothing outside content/ and relay/GROK_TO_HARK.md replies.
