@@ -147,3 +147,19 @@ Game-style boss fights as their own modes (src/09a_duel_core.js core, 09b_jimmy.
 - Entry: the glowing ring at the Pendry boss anchor (LANDMARKS pendry .boss 126, -19.5) -> ACT "FIGHT". Lines: GR1 bosses.pool_shark intro/defeat, cobble_catfish barks.
 - Rig hooks: `window.buildPoolShark(ctx)` / `window.buildCatfishGoon(ctx)` (contracts in the file header); otherwise procedural stand-ins.
 - Tests: `?poolshark=1&poolsharkauto=win|lose` (or `?duel=poolshark&duelbot=win|lose`), `T/ps/run.js <port> <win|lose> <w> <h> <shot|-> [sim] [shotAt]`, `T/ps/entry.js` (city ring -> ACT -> LEAVE). `__poolshark`.
+
+## The Hon Queen, Federal Hill: slope brawl (hark/boss-hon-queen) — src/09n_honqueen.js
+Boss #14 on the DUELS core (own scene + camera, radio ducked, city HUD hidden). ACT "FIGHT" on the pink ring at the Federal Hill boss anchor on the hilltop (-3, 59), or `?honqueen=1`.
+- A view up the south slope of Federal Hill (grass, a brick path at the foot, the hilltop park with flagpole, cannon, benches, rowhouses behind; harbor skyline off to the sides).
+  Harold climbs (uphill slower). Everything she does knocks him DOWN the hill; past the bottom path he tumbles to the street (8 damage) and climbs back on.
+- Attacks, each with a "!" over her head and a >= 1.0 s tell: HAIRSPRAY CLOUD (can shake + rattle, a pink cone tracks Harold then locks red: step out),
+  BEEHIVE BOULDER (she lifts her hive, a lit chevron lane runs down the slope: step off or HOP), LAWN-FLAMINGO TOSS (landing rings, flamingos arc in),
+  HIP CHECK when Harold is close (hip wiggle + spreading red ring: back off). After each she is OPEN (fanning herself / in curlers): cane her. 3 phases x 110 HP.
+- Harold's moveset here: TEASE! > BACKCOMB! > EXTRA HOLD! (spin finisher with a hairspray puff trail), HOP. POWER (hits + dodges) -> ACT = SALON SHOWDOWN team-up:
+  slow-mo, Mavis charges up, afro vs beehive, Mavis pins her, Harold vaults in for SALON SMASH (26) and she stays pinned for free hits.
+- Help: 1.2 s i-frames, Mavis' crab cake once a phase when low, one SECOND WIND, +35 HP between phases. Combo counter pops, hit-stop, shake, damage numbers.
+- KO: slow-mo, the beehive deflates, she rolls down the hill onto a marble stoop: "Go get a crab cake, hon." Grade card (S <= 3 hits, A <= 8, else B).
+  Win = `DUELS.bossCleared('fedhill')` -> `BOSS_CLEAR.clear('fedhill')`. Lose = RETRY the phase at full health, or LEAVE.
+- Rig hook: `window.buildHonQueen(ctx)` -> `{ root, body?, hips?, hive?, can?, armL?, armR?, glasses?, mats? }` (contract in the file header); `window.buildLawnFlamingo()` -> geometry. Stand-ins otherwise.
+- Tests: `?honqueen=1&honqueenauto=win|lose|mash` (mash = SWING-only bot that never dodges), `&honqueenphase=1..3`, `&honqueenhp=N`, or `?duel=honqueen&duelbot=win|lose`.
+  T/hq/run.js `<port> <win|lose|mash> <w> <h> <shot.png|-> [sim] [shotAt sec|state]`, T/hq/entry.js (city ring -> ACT -> duel -> LEAVE, draw calls); T/ is gitignored.
