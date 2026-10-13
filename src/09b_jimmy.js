@@ -258,7 +258,7 @@
     J.blastM.count = J.blasts.length; J.blastM.visible = J.blasts.length > 0; const m = new THREE.Matrix4(); J.blasts.forEach((b, i) => { m.makeScale(b.r, b.r, b.r).setPosition(b.p); J.blastM.setMatrixAt(i, m); }); J.blastM.instanceMatrix.needsUpdate = true;
   }
   function damageBoss(st) {
-    st.bhp -= HIT; st.stats.softHits++; J.R.softM && (J.R.softM.userData.flash.value = 1); sfx('heavy'); DUELS.tell('BELLY HIT!', 0.6); burst(st.bp, 12, 3);
+    st.bhp -= HIT; st.stats.softHits++; J.R.softM && (J.R.softM.userData.flash.value = 1); sfx('heavy'); DUELS.tell('BELLY HIT!', 0.6); burst(st.bp, 12, 3); DUELS.impact({ stop: 0.07, shake: 0.3, sfx: 'heavy', pop: String(HIT), pos: st.bp.clone().setY(st.bp.y + 1.2), cls: 'crit' }); // chipkid-fun: shared core hit juice
     const floor = HPB - (st.phase + 1) * 100; st.rearHits = (st.rearHits || 0) + 1;
     if (st.rearHits >= 2 && st.bhp > floor) { setB(st, 'idle', rnd(...PH[st.phase].idle)); DUELS.tell('HE SLAMS DOWN! TWO HITS A REAR', 0.9); } // two belly hits per rear
     if (st.bhp <= floor) { st.bhp = floor;
