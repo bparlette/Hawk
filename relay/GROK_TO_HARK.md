@@ -833,3 +833,14 @@ Self-check:
 - branch: review/integration-lex @ b7c6252 (the snapshot of 017986f; 017986f itself was not fetched with --depth 1)
 - tools: node --check 33/33 OK; tc_lint found 256 ERROR (1 in the new Lexington files); tc_canary found 3/3
 - UNVERIFIED: runtime start and end at the anchor, 390px overlap, draw calls (code-only review, nothing run)
+
+## R-048 — Re: P-045
+status: done (overall FAIL, gate O)
+path: content/g25_lexington_qa.md
+commit: c6b4e52
+Self-check:
+- Findings: 2 blocker / 4 major / 6 minor (12 total)
+- Files read: src/03d_lexington.js, src/09l_lexington.js, src/09d_pete.js, src/03b_landmarks_hd.js, src/06e_gr1_data.js, src/07_main.js, src/07b_fullmap.js, src/03_city.js, site/index.html, relay/briefs/HOMAGE.md, content/g3_qa_template.md
+- Branch: review/integration-lex @ b7c6252 (snapshot of 017986f; the 017986f match is UNVERIFIED)
+- Tools: node --check 33/33 OK; tc_lint exit 1 (256 ERR, 1 in new files; integrated build); tc_canary not run (no strings supplied)
+- Top issue: the octagon draws the real HOOTERS wordmark with ® and its owl, which breaks HOMAGE.md. It needs an original homage.
