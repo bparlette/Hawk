@@ -2,7 +2,7 @@
 // City smoke (from game-int T/w2b/city.js): load the city, wait for frames, teleport to every boss entry ring present
 // in this build and check the ring shows (or, for entries without a BEAM ring such as carl's door, the ACT label). PASS = city renders, every present ring is here, 0 own console errors.
 const { open, writeResult } = require('./common');
-const IDS = (process.env.CITY_BOSSES || 'crabcake,poolshark,scrubber,honqueen,shellacious,sugarrush,cobblestone,compking,ravenking,brewmaster,carl,rodney').split(',');
+const IDS = (process.env.CITY_BOSSES || 'crabcake,poolshark,scrubber,honqueen,shellacious,sugarrush,cobblestone,compking,ravenking,brewmaster,carl,rodney,pigeon,chipkid').split(',');
 (async () => {
   const [port, w = '1280', h = '720', outDir = 'out'] = process.argv.slice(2);
   const name = `city_${w}x${h}`; const t0 = Date.now();
