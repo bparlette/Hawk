@@ -9777,7 +9777,7 @@ const DUELS = (function () {
 
   DUELS.reg('poolshark', P); window.__poolshark = P;
   // entrance: the ring at the Pendry boss anchor (LANDMARKS 'pendry' .boss = 126, -19.5, DESIGN.md roster: Pendry: The Pool Shark)
-  const L = LANDMARKS.find((l) => l.id === 'pendry'); if (L && L.boss) DUELS.addTrigger('poolshark', L, L.boss.x, L.boss.z, L.boss.x, L.boss.z - 2.2, '#39d8ff');
+  const L = LANDMARKS.find((l) => l.id === 'pendry'); if (L && L.boss) DUELS.addTrigger('poolshark', L, L.boss.x, L.boss.z, L.boss.x, L.boss.z - 3.2, '#39d8ff');
   // ?poolshark=1 starts it straight away; &poolsharkauto=win|lose plays it with the bot
   if (Q.has('poolshark')) { let n = 0; MODE.ticks.push(() => { if (n++ === 3 && !DUELS.cur) { if (CINE.intro) CINE.intro.skip = true; const m = Q.get('poolsharkauto'); DUELS.start('poolshark', m === 'win' || m === 'lose' ? { bot: m } : {}); } }); }
 })();
