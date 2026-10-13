@@ -115,3 +115,25 @@ Game-style boss fights as their own modes (src/09a_duel_core.js core, 09b_jimmy.
 - Both fights: own scene + camera (city sim paused), radio `__radio.duckTo(0.2)`, the full map is blocked while a fight runs (boat rides still allow it).
 - Rig hooks: `buildArabberAl()` / `buildDragonBoatDuchess()` (Object3D or `{ root, update(dt, st) }`, feet y 0, facing +z, ~1.8 m).
 - Tests: `?rb=al|duchess|duchess-paddle|ride`, `?rbauto=win|lose`, `?rbtime=N`, `?rbfresh=1`; T/rb/run.js (`PORT=` env, default 8743), T/int3/entry.js (entry ACT labels + shots).
+
+## Kingpin Carl, rowhouse basement lanes: duckpin bowling (hark/carl) — src/09k_carl.js
+Boss 19. ACT "BOWL CARL" at the cellar door (CARL_DOOR: x -86, z -79, the street face of the rowhouse block north of Lexington Market; at night, by day the
+label reads LANES OPEN AT NIGHT), or `?carl=1`. Runs as a DUELS kind (09a core: own scene + camera, radio fightDuck, city HUD hidden, RETRY / LEAVE card).
+- Real duckpin rules: 10 frames, up to 3 balls, small balls with no finger holes, 10 small pins, deadwood cleared after every ball; strike = 10 + next 2 balls,
+  spare (10 in two) = 10 + next ball, else the pins of 3 balls ("ten" on the third = 10); frame 10 strike = 2 more balls, spare = 1 more (fresh racks).
+  Harold bowls his frame, then Carl bowls his. Beat Carl's total to win (a tie goes to the house).
+- Controls: aim with the stick (A / D, arrows, white buttons, pad stick); then SWING or ACT (J / E / Space / Enter, pad X or Y, or tap the game) three times:
+  lock aim + start POWER, set power + start SPIN, set spin + bowl. JUMP (K, pad A) = SWAT. During Carl's / Mavis's roll a tap fast-forwards.
+- Masked Bandits beats: a heckler pops up by the left gutter and wobbles the aim until swatted (one per frame, ~60% of Harold's frames); frames 4 and 8 a
+  greased lane (sheen + arrows: the ball slides that way); on Carl's frames 2 / 5 / 8 a Bandit sneaks onto the deck and kicks a standing pin for Carl
+  (SWAT = CALL IT, the pin stands). Two swats earn Mavis's bonus ball: she bowls her purse once after Carl's frame; her pins add to Harold's total.
+- Pin physics: `duckSim(up, params, pos)`, a 2D top-view impulse sim (ball 1.6 kg, pins 0.72 kg, kickback walls, pit) at a fixed 1/240 s with no trig,
+  run to the end at release and played back at 60 Hz: every roll is decided by its inputs (deterministic for the auto params). Carl searches the same sim
+  (114 lines, 14 per step) and then misses by a seeded human error (CARL_SIG). Scoring: `duckScore(frames)`, `frameState(frame, tenth)`.
+- Win = `BOSS_CLEAR.clear('duckpin')`: Carl's lanes are their own LANDMARKS entry ('duckpin', "DUCKPIN DEN LANES", district: 'lexington') so beating him
+  clears his sub-district without touching Pete's 'lexington' boss flag. Lines: Grok GR4 modes.carl_duckpin (frame calls, Carl taunts, Bandit heckles,
+  Mavis bonus, win / lose), inlined as CARL_TXT.
+- Rig hooks: `buildKingpinCarl(ctx)` and `buildMaskedBandit(ctx, i)` (contracts in the file header); otherwise procedural stand-ins (a hefty possum in an
+  orange bowling shirt with his gold lucky towel; raccoons in the gang's orange jackets).
+- Tests: `?carl=1`, `&carlauto=win|lose` (bot, 5x speed), `&carlseed=N`, `&carlframes=N` (short game), `&carlday=1` (door works by day).
+  T/carl/run.js (`node T/carl/run.js <port> win|lose|play <w> <h> <shot.png|-> [sim] [phases] [extra query]`), T/carl/entry.js (door label, ACT, LEAVE, city draw calls).
