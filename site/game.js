@@ -9397,7 +9397,7 @@ const DUELS = (function () {
     R.glasses = new THREE.Group(); R.glasses.position.set(0, 2.86, 0.55); R.body.add(R.glasses);
     { const Gl = K(); for (const s of [-1, 1]) { Gl.add(G.tor(0.15, 0.03, TAU, 4, 14), '#d82a8a', s * 0.24, 0, 0, 0, 0, 0, 1.15, 0.85, 1).add(G.cone(0.07, 0.22, 4), '#d82a8a', s * 0.44, 0.1, 0, 0, 0, -s * 1.1);
         for (let k = 0; k < 3; k++) Gl.add(G.sph(0.022, 4, 3), '#ffffff', s * (0.32 + k * 0.05), 0.08 + k * 0.03, 0.03); } Gl.add(G.box(0.14, 0.03, 0.03), '#d82a8a', 0, 0.02, 0); Gl.mesh(M, R.glasses, 0); }
-    R.hive = new THREE.Group(); R.hive.position.set(0, 2.98, 0.0); R.body.add(R.hive); hiveParts(K(), G).mesh(M, R.hive, 0.0036);
+    R.hive = new THREE.Group(); R.hive.position.set(0, 2.98, 0.0); R.body.add(R.hive); { const hg = new THREE.Group(); hg.scale.set(1.12, 1.4, 1.12); R.hive.add(hg); hiveParts(K(), G).mesh(M, hg, 0.0036); }
     // arms: shoulder > upper arm (blouse puff sleeve) > mint forearm > hand. Right hand holds the hairspray can, left a pink purse on the wrist.
     for (const s of [-1, 1]) { const sh = new THREE.Group(); sh.position.set(s * 0.78, 1.95, 0.02); R.body.add(sh);
       const A = K(); A.add(G.sph(0.26, 10, 8), BL, 0, -0.04, 0).add(G.cyl(0.12, 0.1, 0.8, 8), SK, 0, -0.48, 0).add(G.sph(0.14, 8, 6), SK, 0, -0.9, 0).add(G.tor(0.08, 0.02, TAU, 4, 10), '#ffcc33', 0, -0.78, 0, Math.PI / 2, 0, 0);
@@ -9729,7 +9729,7 @@ const DUELS = (function () {
     // camera: low behind Harold down the slope, looking uphill at her; portrait pulls up + back; the KO follows her roll to the stoop
     const port = VH() > VW(); P.cam.fov = port ? 64 : 50; P.cam.updateProjectionMatrix();
     const fx = st.hx * 0.45 + st.qx * 0.2, fz = Math.min(st.hz, QZ - 3), lz = lerp(st.hz, st.qz, 0.55);
-    V.set(fx, gy(fz) + (port ? 6.2 : 4.6), fz - (port ? 9.5 : 8.0)); V2.set(lerp(st.hx, st.qx, 0.45), lerp(haroldY(st), HT, 0.55) + 1.4, lz);
+    V.set(fx, gy(fz) + (port ? 4.1 : 3.4), fz - (port ? 8.6 : 7.4)); V2.set(lerp(st.hx, st.qx, 0.45), lerp(haroldY(st), HT, 0.6) + (port ? 2.0 : 1.7), lz);
     if (st.ms === 'intro' && st.phase === 0) { const k = ease(clamp(st.mt / st.mdur, 0, 1)); V.lerpVectors(V3.set(st.qx + 3, HT + 3.2, st.qz - 5), V, k); V2.lerpVectors(V3.set(st.qx, HT + 2.4, st.qz), V2, k); }
     if (st.salT >= 0) { V.lerp(V3.set(st.qx - 3.5, HT + 3.2, st.qz - 5.5), 0.6); V2.set(st.qx, HT + 2, st.qz); }
     if (st.ms === 'ko') { const sy = gy(st.qz); V.set(st.qx - 4.5, sy + 4.5, st.qz + 6.5); V2.set(st.qx, sy + 1, st.qz); if (st.pose === 'stoop') { V.set(STOOP.x - 3.4, gy(STOOP.z) + 3, STOOP.z + 5.5); V2.set(STOOP.x, gy(STOOP.z) + 1.4, STOOP.z); } }
@@ -9742,6 +9742,7 @@ const DUELS = (function () {
   // ---------------- test bot: win = reads every tell, climbs into openings, hops the hive, SALON at full power; lose = stands still ----------------
   P.botThink = function (B, dt) {
     const st = P.st; if (!st || st.over) return; B.mx = 0; B.my = 0; if (B.mode === 'lose') return;
+    if (B.mode === 'mash') { B.cd = (B.cd || 0) - dt; if (st.tumbleT >= 0) return; const dx = st.qx - st.hx, dz = st.qz - 1.6 - st.hz, l = Math.hypot(dx, dz); if (l > 0.5) { B.mx = -dx / l; B.my = dz / l; } if (B.cd <= 0) { B.a = true; B.cd = 0.2; } if (st.power >= 1) B.c = true; return; } // SWING-mash only: walk at her, never dodge
     B.cd = (B.cd || 0) - dt; B.jcd = (B.jcd || 0) - dt; if (st.tumbleT >= 0) return;
     let flee = null, gx = null, gz = null; const left = st.mdur - st.mt;
     const away = (x, z, w = 1) => { const dx = st.hx - x, dz = st.hz - z, l = Math.hypot(dx, dz) || 1; flee = flee || [0, 0]; flee[0] += dx / l * w; flee[1] += dz / l * w; };
@@ -9764,5 +9765,5 @@ const DUELS = (function () {
   // entrance: the ring at the Federal Hill boss anchor on the hilltop (LANDMARKS 'fedhill' .boss = HILL top; DESIGN.md roster: Fed Hill: The Hon Queen)
   const L = LANDMARKS.find((l) => l.id === 'fedhill'); if (L && L.boss) DUELS.addTrigger('honqueen', L, L.boss.x, L.boss.z, L.boss.x + 2.4, L.boss.z - 2.4, '#ff5fa2');
   // ?honqueen=1 starts it straight away; &honqueenauto=win|lose plays it with the bot
-  if (Q.has('honqueen')) { let n = 0; MODE.ticks.push(() => { if (n++ === 3 && !DUELS.cur) { if (CINE.intro) CINE.intro.skip = true; const m = Q.get('honqueenauto'); DUELS.start('honqueen', m === 'win' || m === 'lose' ? { bot: m } : {}); } }); }
+  if (Q.has('honqueen')) { let n = 0; MODE.ticks.push(() => { if (n++ === 3 && !DUELS.cur) { if (CINE.intro) CINE.intro.skip = true; const m = Q.get('honqueenauto'); DUELS.start('honqueen', m === 'win' || m === 'lose' || m === 'mash' ? { bot: m } : {}); } }); }
 })();
