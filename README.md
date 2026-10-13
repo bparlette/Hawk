@@ -131,3 +131,19 @@ Game-style boss fights as their own modes (src/09a_duel_core.js core, 09b_jimmy.
 - Full map: LEXINGTON MKT + RASH FIELD labels (footprint fallback, no baked mini-model yet). Minimap dots come from LANDMARKS.
 - Test params: `?goto=<place>` (lexington, lexnear, westminster, poe, rash, hooters, hootersharbor) frames the place with a free camera
   (sim paused); `&gotoplay=1` just drops Harold there. Night: add `&tod=0.5`. Shots: `T/lex/all.sh <port>`, draw calls: `T/lex/dc.sh` (T/ is gitignored).
+
+## The Pool Shark, Pendry roof pool deck (hark/boss-pool-shark) — src/09r_poolshark.js
+<!-- poolshark: -->
+- A DUELS-core mode (own scene + camera; radio ducked; city HUD hidden). 3/4 view of the Pendry rooftop pool deck over the harbor: Harold walks the deck
+  (stick / WASD), CANE (J / SWING / pad X: SCRATCH! > CORNER POCKET! > 8-BALL! spin finisher, auto-faces the nearest target), HOP (K / JUMP / pad A),
+  BANK SHOT (E / ACT / pad Y, needs a full POWER meter: hits, dodges and harbor throws fill it).
+- The shark hides in the pool and only comes out to attack, every attack telegraphed >= 1.0 s: CUE BREAK (aim lines fan over the deck, then the balls),
+  CANNONBALL (landing shadow + ring on Harold, then a wave ring to HOP), FIN CIRCLE (phase 2+, a red ring closes round Harold, then the lunge). After each he
+  is OPEN (on the edge chalking up, or beached and flopping): hit him. 3 phases x 125 HP; phase 3 adds Cobblestone Catfish goons: a finisher throws a goon
+  into the harbor; one thrown past the shark banks off him. BANK SHOT = Mavis team-up (she racks a giant cue ball to Harold, he banks it off the pool edge
+  into the shark: big damage + stun, every goon goes over the rail). Help: 1.2 s i-frames, Mavis' crab cake once a phase when low, one SECOND WIND, +35 HP between phases.
+- KO: slow-mo belly flop with no splash ("...plip."), then he floats off on a pink pool float with his shades down. Win = `BOSS_CLEAR.clear('pendry')` + grade card
+  (stars by hits taken: <=3 S, <=8 A, else B). Loss = RETRY the phase / LEAVE.
+- Entry: the glowing ring at the Pendry boss anchor (LANDMARKS pendry .boss 126, -19.5) -> ACT "FIGHT". Lines: GR1 bosses.pool_shark intro/defeat, cobble_catfish barks.
+- Rig hooks: `window.buildPoolShark(ctx)` / `window.buildCatfishGoon(ctx)` (contracts in the file header); otherwise procedural stand-ins.
+- Tests: `?poolshark=1&poolsharkauto=win|lose` (or `?duel=poolshark&duelbot=win|lose`), `T/ps/run.js <port> <win|lose> <w> <h> <shot|-> [sim] [shotAt]`, `T/ps/entry.js` (city ring -> ACT -> LEAVE). `__poolshark`.

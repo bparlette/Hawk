@@ -9469,7 +9469,9 @@ const DUELS = (function () {
   function subHud(st) { const p = Math.round(st.power * 100), full = st.power >= 1;
     DUELS.sub('<span class="pspw' + (full ? ' full' : '') + '">' + (full ? 'BANK!' : 'POWER') + ' <span class="t"><i style="width:' + p + '%"></i></span></span>', 'PHASE ' + (st.phase + 1) + '/3'); }
   P.start = function () {
-    P.st = null; const st = reset(0); DUELS.log.push('poolshark:' + P.rigKind); subHud(st);
+    P.st = null; const st = reset(clamp(+(Q.get('poolsharkphase') || 1) - 1, 0, 2) | 0); DUELS.log.push('poolshark:' + P.rigKind); subHud(st);
+    if (Q.get('poolsharkhp')) st.hp = clamp(+Q.get('poolsharkhp'), 1, 100); // tests: start low
+    if (st.phase === 2) st.gT = 1.5;
     DUELS.banner('THE POOL SHARK<small>PENDRY ROOF DECK · PHASE 1</small>', 2.4);
     DUELS.say('THE POOL SHARK', pick(lines().intro), 3.4);
     P.camP = new THREE.Vector3(0, 14, -14); P.camL = new THREE.Vector3(0, 0, 2);
@@ -9598,7 +9600,7 @@ const DUELS = (function () {
   }
   function bankShot(st) {
     st.power = 0; subHud(st); st.stats.specials++; st.bankT = 0; st.ts = 0.35; st.tsT = 1.8; st.atkT = -1; // team-up: Mavis racks the ball to Harold, he banks it
-    const e = edgePt(st.hx, st.hz); st.bk = { m: new THREE.Vector3(-8.2, 1.4, -3.3), a: new THREE.Vector3(st.hx + Math.sin(st.yaw) * 0.8, 0.55, st.hz + Math.cos(st.yaw) * 0.8), b: new THREE.Vector3(e.x, 0.55, e.z) }; DUELS.say('MAVIS', 'Racked and ready, hon!', 1.4);
+    const e = edgePt(st.hx, st.hz); st.bk = { m: new THREE.Vector3(-6.9, 1.4, -0.4), a: new THREE.Vector3(st.hx + Math.sin(st.yaw) * 0.8, 0.55, st.hz + Math.cos(st.yaw) * 0.8), b: new THREE.Vector3(e.x, 0.55, e.z) }; DUELS.say('MAVIS', 'Racked and ready, hon!', 1.4);
     DUELS.banner('BANK SHOT!<small>OFF THE RAIL, INTO THE SHARK</small>', 1.6); sfx('heavy'); st.shake = 0.3; DUELS.log.push('poolshark:bank');
     for (const g of P.goons) if (g.on && g.s !== 'fly') launchGoon(st, g);
   }
@@ -9733,7 +9735,7 @@ const DUELS = (function () {
     const st = P.st, dt = Math.min(0.05, rdt * (SIM || 1)) * (st.hs > 0 ? 0.15 : st.ts), t = st.t;
     const H = P.H; H.root.position.set(st.hx, st.hy, st.hz); H.root.rotation.y = st.yaw; applyPose(H, haroldPose(st, t), 18, dt, false);
     if (P.hflash > 0) { P.hflash = Math.max(0, P.hflash - dt * 5); H.mat.userData.flash.value = P.hflash * 0.8; } else if (st.inv > 0) H.mat.userData.flash.value = Math.sin(st.t * 40) > 0 ? 0.25 : 0;
-    const M = P.M; M.root.position.set(-8.2, 0, -3.3); M.root.rotation.y = 0.6; applyPose(M, mavisPose(st, t), 12, dt, false);
+    const M = P.M; M.root.position.set(-6.9, 0, -0.4); M.root.rotation.y = 1.2; applyPose(M, mavisPose(st, t), 12, dt, false);
     poseShark(st, dt); poseTells(st, dt);
     if (P.water.material.map) { P.water.material.map.offset.x = t * 0.03; P.water.material.map.offset.y = Math.sin(t * 0.7) * 0.05; }
     // camera: 3/4 view from the south end of the deck, following Harold, pulled up + back in portrait; BANK SHOT punches in; the KO frames the pool
