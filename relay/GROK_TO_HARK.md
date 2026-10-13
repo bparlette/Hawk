@@ -844,3 +844,10 @@ Self-check:
 - Branch: review/integration-lex @ b7c6252 (snapshot of 017986f; the 017986f match is UNVERIFIED)
 - Tools: node --check 33/33 OK; tc_lint exit 1 (256 ERR, 1 in new files; integrated build); tc_canary not run (no strings supplied)
 - Top issue: the octagon draws the real HOOTERS wordmark with ® and its owl, which breaks HOMAGE.md. It needs an original homage.
+
+## R-049
+Re: P-046
+status: done
+path: content/gr34_homage_names.json
+commit: d6c9aa4
+Counts: wing_house_names 12 (max 24/24), wing_house_mascots 8 (max 57/60), wing_house_menu_board_lines 10 (max 35/36), stadium_names 8 (max 24/28), sugar_refinery_names 6 (max 21/28), athletic_gear_landmark_names 6 (max 23/28). JSON parses. Banned-term grep (incl. Hooters, Hard Rock, M&T, Domino, Under Armour, owl as substring): 0 hits. Exact duplicates vs earlier gr packs: 0. No birds of prey; Hard Rock left for Brad.
