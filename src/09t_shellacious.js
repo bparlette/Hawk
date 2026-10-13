@@ -29,7 +29,7 @@
 // RIG HOOK (Opus): if window.buildDrShellacious exists it is called as buildDrShellacious({ THREE, toonMat, outlineMat, addOdir, QUAL }) and may return
 //   { root, body?, head?, armL?, armR?, beaker?, ball?, flash?: [materials], update?(dt, state, info) }
 //   root: Object3D, feet at y 0 on the theater floor, facing +z (toward Harold / the camera), about 2.6 m tall with the hair.
-//   body: the part that tilts / flips (rotation.x tips him back; the PLOT TWIST + KO set rotation.x = -PI and spin root.rotation.y).
+//   body: the part that tilts / flips (rotation.x tips him back; the PLOT TWIST + KO lay him on his back: body rotation.x = -PI/2, position y 0.78 / z 1.3, and spin root.rotation.y).
 //   armL / armR: shoulder pivots (armL = his left = screen right). rotation.x < 0 raises the arm. beaker: a group in his right hand, swirled during the lob tell.
 //   ball: optional "tucked in shell" object (about 1.3 m wide, centred on its origin; placed at y 0.62) used for the SHELL RICOCHET; else a stand-in shell ball.
 //   update(dt, state, info): optional, called every frame; state one of intro | guard | shellTell | shell | lobTell | lob | frzTell | frz | open | flipped |
@@ -228,7 +228,7 @@
       over: false, won: false, outT: 0, stop: 0, slow: 1, slowT: 0, shake: 0, twT: -1, healUsed: false, wind: old ? old.wind : true,
       stats: old && old.stats || { swings: 0, landed: 0, blocked: 0, twists: 0, dodges: 0, hitsTaken: 0, hits: { shell: 0, beaker: 0, freeze: 0 }, attacks: { shell: 0, lob: 0, frz: 0 }, heals: 0, winds: 0, maxCombo: 0 } };
     C.puffs.length = 0; C.sparks.length = 0; clearFx();
-    const R = C.R; R.root.visible = true; R.root.position.set(0, 0, MZ); R.root.rotation.set(0, Math.PI, 0); R.body.rotation.set(0, 0, 0); R.body.position.y = 0;
+    const R = C.R; R.root.visible = true; R.root.position.set(0, 0, MZ); R.root.rotation.set(0, Math.PI, 0); R.body.rotation.set(0, 0, 0); R.body.position.set(0, 0, 0);
     C.ball.visible = false; C.tub.visible = false; C.credits.visible = false; C.pause.visible = false; C.screenM.color.set('#ffffff'); if (C.ana) C.ana.style.opacity = '0';
     return st;
   }
@@ -383,7 +383,7 @@
   function outro(st, dt) {
     st.outT += dt; const t = st.outT, R = C.R;
     R.root.visible = true; C.ball.visible = false;
-    const u = ease(clamp(t / 0.6, 0, 1)); R.body.rotation.x = -u * Math.PI; R.body.position.y = u * 1.35 + Math.sin(t * 9) * 0.03; R.root.rotation.y = Math.PI + t * lerp(9, 3, clamp(t / 6, 0, 1));
+    const u = ease(clamp(t / 0.6, 0, 1)); R.body.rotation.x = -u * Math.PI / 2; R.body.position.y = u * 0.78 + Math.sin(t * 9) * 0.03; R.body.position.z = u * 1.3; R.root.rotation.y = Math.PI + t * lerp(9, 3, clamp(t / 6, 0, 1));
     R.arms.forEach((a, i) => { a.sh.rotation.x = -2.6 + Math.sin(t * 14 + i * 3) * 0.6; }); // flailing
     if (Math.random() < dt * 10) { V3.set(rnd(-0.6, 0.6), 1.4, MZ + rnd(-0.4, 0.4)); spark(V3, 1); }
     if (t > 0.8) { C.credits.visible = true; C.credT.offset.y = lerp(1, -0.45, clamp((t - 0.8) / 5.5, 0, 1)); }
@@ -425,7 +425,7 @@
     R.root.visible = !tucked; C.ball.visible = tucked;
     if (tucked) { C.ball.rotation.y += dt * 18; C.ball.rotation.x = Math.sin(st.t * 30) * 0.15; const bm = C.ball.userData.m; if (bm && bm.userData.flash) { bm.userData.flashC.value.set('#7dff9a'); bm.userData.flash.value = 0.45; } }
     if (R.update) { try { R.update(dt, st.ms, { t, u, lane: st.ms === 'shell' || st.ms === 'shellTell' ? st.cross[st.crossI] : st.safe, phase: st.phase }); } catch (e) { console.error(e); R.update = null; } return; }
-    let bodyRX = 0, bodyRZ = Math.sin(t * 1.6) * 0.05, bodyY = Math.abs(Math.sin(t * 3)) * 0.03, rootRY = Math.PI; const arm = [[-0.3, 0], [-0.5, 0]];
+    let bodyRX = 0, bodyRZ = Math.sin(t * 1.6) * 0.05, bodyY = Math.abs(Math.sin(t * 3)) * 0.03, bodyZ = 0, rootRY = Math.PI; const arm = [[-0.3, 0], [-0.5, 0]];
     let glow = null;
     switch (st.ms) {
       case 'guard': case 'intro': arm[0] = [-0.4 + Math.sin(t * 4) * 0.2, 0]; arm[1] = [-1.2 + Math.sin(t * 4 + 1) * 0.25, 0]; break; // cackling, beaker raised
@@ -436,14 +436,14 @@
       case 'frzTell': arm[0] = [-2.4, 0.5]; arm[1] = [-2.4, -0.5]; bodyRX = -0.2; bodyY = 0.05 * Math.sin(st.mt * 30); break; // both hands up like a director: "FREEZE!"
       case 'frz': arm[0] = [-1.6, 0.9]; arm[1] = [-1.6, -0.9]; break;
       case 'open': bodyRX = 0.4 + Math.sin(st.mt * 9) * 0.05; arm[0] = [0.4, 0.3]; arm[1] = [0.4, -0.3]; bodyY = -0.08; rootRY = Math.PI + Math.sin(st.mt * 5) * 0.25; if (Math.random() < dt * 6) { V3.set(R.root.position.x + rnd(-0.5, 0.5), 2.7, MZ); spark(V3, 1); } break; // dizzy
-      case 'flipped': { const k = st.mt; if (k > 0.6 && k < 2.4) { const a = clamp((k - 0.6) / 0.3, 0, 1); bodyRX = -Math.PI * a; bodyY = 1.35 * a; rootRY = Math.PI + (k - 0.6) * 10; arm[0] = [-2.6 + Math.sin(k * 14) * 0.6, 0]; arm[1] = [-2.6 - Math.sin(k * 14) * 0.6, 0]; }
+      case 'flipped': { const k = st.mt; if (k > 0.6 && k < 2.4) { const a = clamp((k - 0.6) / 0.3, 0, 1); bodyRX = -Math.PI / 2 * a; bodyY = 0.78 * a; bodyZ = 1.3 * a; rootRY = Math.PI + (k - 0.6) * 10; arm[0] = [-2.6 + Math.sin(k * 14) * 0.6, 0]; arm[1] = [-2.6 - Math.sin(k * 14) * 0.6, 0]; }
         else if (k >= 2.4) rootRY = Math.PI; break; }
       case 'down': bodyRX = 0.65; bodyY = -0.3 * ease(clamp(st.mt / 0.5, 0, 1)); arm[0] = [0.9, 0.5]; arm[1] = [0.9, -0.5]; if (Math.random() < dt * 8) { V3.set(rnd(-0.5, 0.5), 2.6, MZ); spark(V3, 2); } break;
     }
     if (st.ms !== 'lobTell') R.beaker.rotation.z = damp(R.beaker.rotation.z, 0, 8, dt);
     const flip = st.ms === 'flipped' && st.mt > 0.6 && st.mt < 2.4;
     if (flip) R.root.rotation.y = rootRY; else { const cur = R.root.rotation.y, tgt = rootRY + Math.round((cur - rootRY) / TAU) * TAU; R.root.rotation.y = damp(cur, tgt, 10, dt); }
-    R.body.position.y = damp(R.body.position.y, bodyY, flip ? 30 : 12, dt); R.body.rotation.x = damp(R.body.rotation.x, bodyRX, flip ? 20 : 10, dt); R.body.rotation.z = bodyRZ;
+    R.body.position.y = damp(R.body.position.y, bodyY, flip ? 30 : 12, dt); R.body.position.z = damp(R.body.position.z, bodyZ, flip ? 30 : 12, dt); R.body.rotation.x = damp(R.body.rotation.x, bodyRX, flip ? 20 : 10, dt); R.body.rotation.z = bodyRZ;
     R.arms.forEach((a, i) => { a.sh.rotation.x = damp(a.sh.rotation.x, arm[i][0], 14, dt); a.sh.rotation.y = damp(a.sh.rotation.y, arm[i][1], 14, dt); });
     for (const m of R.flash) if (m && m.userData.flash) m.userData.flash.value = Math.max(0, m.userData.flash.value - dt * 4);
     const bm = C.ball.userData.m; if (!tucked && bm && bm.userData.flash) bm.userData.flash.value = 0;
