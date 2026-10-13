@@ -9319,6 +9319,10 @@ const DUELS = (function () {
     g.fillStyle = 'rgba(255,255,255,.07)'; for (let i = 0; i < 40; i++) g.fillRect(srnd() * w, srnd() * h, 6, 3); }, 256); }
   function ringTex() { return canvasTex(128, 128, (g) => { g.strokeStyle = '#fff'; g.lineWidth = 8; g.beginPath(); g.arc(64, 64, 54, 0, TAU); g.stroke();
     g.lineWidth = 3; g.setLineDash([9, 7]); g.beginPath(); g.arc(64, 64, 40, 0, TAU); g.stroke(); g.setLineDash([]); g.fillStyle = 'rgba(255,255,255,.18)'; g.beginPath(); g.arc(64, 64, 54, 0, TAU); g.fill(); }, 128); }
+  function poolTex() { return canvasTex(256, 256, (g, w, h) => { const r = g.createRadialGradient(w / 2, h / 2, 10, w / 2, h / 2, 126); r.addColorStop(0, '#7a3606'); r.addColorStop(0.6, '#a24c0a'); r.addColorStop(0.86, '#d0781a'); r.addColorStop(0.95, '#f0a040'); r.addColorStop(1, 'rgba(240,160,64,0)');
+    g.fillStyle = r; g.beginPath(); g.arc(w / 2, h / 2, 127, 0, TAU); g.fill(); SEED = 7; g.fillStyle = 'rgba(255,214,140,.55)';
+    for (let i = 0; i < 14; i++) { const a = srnd() * TAU, d = srnd() * 90; g.beginPath(); g.arc(w / 2 + Math.cos(a) * d, h / 2 + Math.sin(a) * d, 3 + srnd() * 7, 0, TAU); g.fill(); }
+    g.strokeStyle = 'rgba(255,230,170,.6)'; g.lineWidth = 5; g.beginPath(); g.arc(w / 2 - 20, h / 2 - 24, 60, 3.6, 4.6); g.stroke(); }, 256); }
   function bangTex() { return canvasTex(64, 128, (g, w, h) => { g.font = '900 104px ' + FONT; g.textAlign = 'center'; g.textBaseline = 'middle'; g.lineWidth = 12; g.strokeStyle = '#14101f'; g.strokeText('!', w / 2, h / 2 + 4); g.fillStyle = '#ffd23c'; g.fillText('!', w / 2, h / 2 + 4); }, 64); }
 
   // ---------------- arena: the refinery roof at night; tar roof + parapet, the sign lattice + neon sign, elevator house, harbour + skyline beyond ----------------
@@ -9426,7 +9430,7 @@ const DUELS = (function () {
     const gh = DUELS.kit(); gh.add(new THREE.IcosahedronGeometry(1, 0), '#ffffff', 0, 2.0, 0, 0, 0, 0, 1, 1.15, 0.78).add(new THREE.IcosahedronGeometry(0.48, 0), '#ffffff', 0, 3.4, 0).add(DUELS.GEO.box(1.1, 1.3, 0.6), '#ffffff', 0, 0.7, 0);
     C.ghostM = new THREE.InstancedMesh(gh.geo(), new THREE.MeshBasicMaterial({ color: '#ff5fb0', transparent: true, opacity: 0.32, depthWrite: false, blending: THREE.AdditiveBlending, fog: false }), 8); C.ghostM.count = 0; C.ghostM.frustumCulled = false; sc.add(C.ghostM);
     C.path = new THREE.Mesh(new THREE.PlaneGeometry(1, 1), new THREE.MeshBasicMaterial({ color: '#ff3d8e', transparent: true, opacity: 0, depthWrite: false, blending: THREE.AdditiveBlending, fog: false })); C.path.rotation.order = 'YXZ'; C.path.visible = false; sc.add(C.path);
-    C.pools = []; for (let i = 0; i < 3; i++) { const m = new THREE.Mesh(new THREE.CircleGeometry(1, 28), new THREE.MeshLambertMaterial({ color: '#c46a12', emissive: '#5a2a04', transparent: true, opacity: 0.88, depthWrite: false })); m.rotation.x = -Math.PI / 2; m.visible = false; m.renderOrder = 1; sc.add(m); C.pools.push({ m, t: 0, life: 0, r: 2.2, on: false }); }
+    const poolT = poolTex(); C.pools = []; for (let i = 0; i < 3; i++) { const m = new THREE.Mesh(new THREE.CircleGeometry(1, 28), new THREE.MeshLambertMaterial({ map: poolT, color: '#ffffff', emissive: '#3a1a02', transparent: true, opacity: 0.92, depthWrite: false })); m.rotation.x = -Math.PI / 2; m.visible = false; m.renderOrder = 1; sc.add(m); C.pools.push({ m, t: 0, life: 0, r: 2.2, on: false }); }
     C.blob = new THREE.Mesh(new THREE.SphereGeometry(0.45, 12, 8), new THREE.MeshLambertMaterial({ color: '#d9781a', emissive: '#6a3006' })); C.blob.visible = false; sc.add(C.blob);
     const cub = new THREE.BoxGeometry(0.26, 0.26, 0.26);
     C.cubeM = new THREE.InstancedMesh(cub, new THREE.MeshLambertMaterial({ color: '#fbf8f0', emissive: '#4a4440' }), 120); C.cubeM.count = 0; C.cubeM.frustumCulled = false; sc.add(C.cubeM); C.cubes = [];
@@ -9467,7 +9471,7 @@ const DUELS = (function () {
   function cubes(p, n, spd = 5, life = 1.6) { for (let k = 0; k < n && C.cubes.length < 120; k++) C.cubes.push({ p: p.clone().add(V3.set(rnd(-0.6, 0.6), rnd(-0.4, 0.8), rnd(-0.6, 0.6))), v: new THREE.Vector3(rnd(-spd, spd), rnd(spd * 0.4, spd * 1.3), rnd(-spd, spd)), r: new THREE.Vector3(rnd(0, 6), rnd(0, 6), rnd(0, 6)), t: 0, life: life + rnd(0, 0.6) }); }
   function setM(st, s, dur) { st.ms = s; st.mt = 0; st.mdur = dur; st.hitThis = false; }
   const dist2 = (ax, az, bx, bz) => Math.hypot(ax - bx, az - bz);
-  function addPower(st, n) { const was = st.power; st.power = Math.min(100, st.power + n); if (was < 100 && st.power >= 100) { DUELS.tell('POWER READY! PRESS ACT', 1.2); tone(660, 1320, 0.3, 'square', 0.08); } subHud(st); }
+  function addPower(st, n) { const was = st.power; st.power = Math.min(100, st.power + n); if (was < 100 && st.power >= 100) { DUELS.tell('POWER READY! ACT!', 1.2); tone(660, 1320, 0.3, 'square', 0.08); } subHud(st); }
   function flashBoss(c = '#ffffff', v = 0.85) { for (const m of C.R.flash) if (m.userData && m.userData.flashC) { m.userData.flashC.value.set(c); m.userData.flash.value = v; } }
   function inPool(st) { for (const p of C.pools) if (p.on && p.t > 0 && dist2(st.hx, st.hz, p.m.position.x, p.m.position.z) < p.r) return p; return null; }
 
@@ -9499,7 +9503,7 @@ const DUELS = (function () {
       case 'guard': { // stalk to ~3.4 m
         const d = dist2(st.bx, st.bz, st.hx, st.hz), sp = 1.6 + st.phase * 0.35; if (d > 3.4) { st.bx += (st.hx - st.bx) / d * sp * dt; st.bz += (st.hz - st.bz) / d * sp * dt; }
         if (st.mt > st.mdur) { const a = P.mix[st.mixI++ % P.mix.length]; st.stats.attacks[a]++; sting(); C.bangT = 1;
-          if (a === 'spikes') { st.atk = chooseRings(st, P.rings); setM(st, 'spikesTell', P.spikes); DUELS.tell('CRYSTAL SPIKES! LEAVE THE RINGS!', P.spikes); }
+          if (a === 'spikes') { st.atk = chooseRings(st, P.rings); setM(st, 'spikesTell', P.spikes); DUELS.tell('SPIKES! LEAVE THE RINGS!', P.spikes); }
           else if (a === 'dash') { st.dashesLeft = P.dashes; startDash(st, P.dash); }
           else { st.poolsLeft = P.pools; startPool(st, P.pool); } }
         break; }
@@ -9530,9 +9534,9 @@ const DUELS = (function () {
   function startDash(st, tell) { // path: from her through Harold's spot, on past him (clamped to the roof)
     const dx = st.hx - st.bx, dz = st.hz - st.bz, d = Math.max(0.5, Math.hypot(dx, dz)), ext = d + 3.2;
     let x1 = st.bx + dx / d * ext, z1 = st.bz + dz / d * ext; x1 = clamp(x1, -BX, BX); z1 = clamp(z1, BZ0, BZ1);
-    st.dash = { x0: st.bx, z0: st.bz, x1, z1, len: Math.max(1, dist2(st.bx, st.bz, x1, z1)) }; setM(st, 'dashTell', tell); DUELS.tell('SUGAR-HIGH DASH! STEP OFF THE LINE!', tell);
+    st.dash = { x0: st.bx, z0: st.bz, x1, z1, len: Math.max(1, dist2(st.bx, st.bz, x1, z1)) }; setM(st, 'dashTell', tell); DUELS.tell('DASH! STEP OFF THE LINE!', tell);
   }
-  function startPool(st, tell) { st.atk = [{ x: clamp(st.hx + st.vx * 0.3, -BX, BX), z: clamp(st.hz + st.vz * 0.3, BZ0, BZ1), r: 2.1 }]; setM(st, 'poolTell', tell); DUELS.tell('MOLASSES POOL! MOVE!', tell); }
+  function startPool(st, tell) { st.atk = [{ x: clamp(st.hx + st.vx * 0.3, -BX, BX), z: clamp(st.hz + st.vz * 0.3, BZ0, BZ1), r: 2.1 }]; setM(st, 'poolTell', tell); DUELS.tell('MOLASSES! MOVE!', tell); }
 
   // ---------------- Harold ----------------
   C.step = function (rdt, I) {
@@ -9552,11 +9556,11 @@ const DUELS = (function () {
         const busy = st.swing >= 0; const sp = (busy ? 1.2 : 5.0) * slowK; st.vx = damp(st.vx, wx * sp, 14, dt); st.vz = damp(st.vz, wz * sp, 14, dt); st.hx += st.vx * dt; st.hz += st.vz * dt;
         if (ml > 0.2 && !busy) st.hyaw = Math.atan2(wx, wz);
         // ROLL (JUMP): i-frames; not in molasses
-        if (I.b && st.rollCd <= 0) { if (pool) { DUELS.tell('STUCK IN MOLASSES! WALK OUT', 0.7); st.rollCd = 0.4; }
+        if (I.b && st.rollCd <= 0) { if (pool) { DUELS.tell('STUCK! WALK OUT', 0.7); st.rollCd = 0.4; }
           else { const l = Math.hypot(wx, wz); st.rdx = l > 0.2 ? wx / l : -Fx; st.rdz = l > 0.2 ? wz / l : -Fz; st.roll = 0; st.rollCd = 0.6; st.swing = -1; st.stats.rolls++; sfx('jump'); st.hyaw = Math.atan2(st.rdx, st.rdz); } }
         // SWING: 3-hit combo, finisher = ROCK-CANDY CRACKER
         if (I.a && st.roll < 0) { if (st.swing < 0 || st.swing > (st.combo === 2 ? 0.42 : 0.24)) { st.combo = st.swing >= 0 || st.comboT > 0 ? (st.combo + 1) % 3 : 0; st.swing = 0; st.swingHit = false; st.stats.swings++; st.hyaw = Math.atan2(Fx, Fz); sfx('swing'); } }
-        if (I.c) { if (st.power >= 100) startSpecial(st); else DUELS.tell('POWER NOT FULL: HIT HER, ROLL CLOSE', 0.8); }
+        if (I.c) { if (st.power >= 100) startSpecial(st); else DUELS.tell('HIT HER TO FILL POWER', 0.8); }
       }
       if (st.swing >= 0) { st.swing += dt; const dur = st.combo === 2 ? 0.55 : 0.34, at = st.combo === 2 ? 0.26 : 0.13;
         if (st.swing < at) { st.hx += Fx * 1.6 * dt; st.hz += Fz * 1.6 * dt; }
@@ -9738,8 +9742,8 @@ const DUELS = (function () {
     DUELS.hot(st.power >= 100 && !st.spec && !st.over);
     // camera: behind Harold looking at her (lock-on); portrait pulls back and up
     const port = VH() > VW(); C.cam.fov = port ? 66 : 52; C.cam.updateProjectionMatrix();
-    const fx = st.bx - st.hx, fz = st.bz - st.hz, fd = Math.max(0.01, Math.hypot(fx, fz)), Fx = fx / fd, Fz = fz / fd, back = port ? 7.2 : 6.0, up = port ? 4.6 : 3.7;
-    V.set(st.hx - Fx * back + Fz * 0.8, up + air * 0.5, st.hz - Fz * back - Fx * 0.8); V2.set(st.hx + Fx * Math.min(fd, 4) * 0.6, 1.9, st.hz + Fz * Math.min(fd, 4) * 0.6);
+    const fx = st.bx - st.hx, fz = st.bz - st.hz, fd = Math.max(0.01, Math.hypot(fx, fz)), Fx = fx / fd, Fz = fz / fd, back = port ? 8.6 : 6.6, up = port ? 5.4 : 4.0;
+    V.set(st.hx - Fx * back + Fz * 0.8, up + air * 0.5, st.hz - Fz * back - Fx * 0.8); V2.set(st.hx + Fx * Math.max(2.2, Math.min(fd, 5) * 0.75), port ? 2.4 : 2.1, st.hz + Fz * Math.max(2.2, Math.min(fd, 5) * 0.75));
     if (st.ms === 'intro' && st.phase === 0) { const k = ease(clamp(st.mt / st.mdur, 0, 1)); V.lerpVectors(V3.set(st.bx + 5, 4.5, st.bz - 6), V, k); V2.lerpVectors(V3.set(st.bx, 3, st.bz).clone(), V2, k); }
     if (st.spec && st.spec.kind === 'neon' && st.spec.t > 0.6 && st.spec.t < 2.2) { V.set(st.bx + 6, 4.2, st.bz - 7); V2.set((st.bx + CONDUIT.x) / 2, 3.6, (st.bz + SIGN_Z) / 2); }
     if (st.ms === 'ko') { const a = st.outT * 0.7; V.set(st.bx + Math.sin(a) * 8, 4.2, st.bz - Math.cos(a) * 8); V2.set(st.bx, 2, st.bz); }
