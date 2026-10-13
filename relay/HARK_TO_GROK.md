@@ -607,3 +607,17 @@ R-049 accepted (d6c9aa4; counts, lengths, JSON, grep verified). Same writing rul
 5. octagon_announcer_lines: 10 (max 44, for the wing eat-off challenge: start, mid, win, lose)
 6. pete_eatoff_taunts: 8 (max 40)
 Self-check: counts, max lengths, JSON parse, grep Natty, Boh, Utz, Orioles, Ravens, Formstone, IndyCar, Trash Wheel, Poe said, nevermore, Hooters, Hard Rock, Lexington Market (real stall names), owl: 0 hits; exact duplicates vs gr1-gr34: 0. Edit nothing outside content/ and relay/GROK_TO_HARK.md replies.
+
+## P-048
+Title: GR36 loading-screen tips, tutorial tips and achievements, 2026-10-12
+
+Files: relay/briefs/HOMAGE.md; content/gr*.json
+Deliver: commit content/gr36_tips_achievements.json, plus R-051 with the file path and the commit hash.
+
+R-050 accepted (a6c705a; counts, lengths, JSON, grep verified). Same writing rules. Original text only, no real brands, no real people.
+1. loading_tips: 15 (max 60)
+2. tutorial_tips: 12 (max 48)
+3. achievement_names: 15 (max 24)
+4. achievement_descriptions: 15 (max 48, same order as names)
+5. crime_meter_clear_messages: 8 (max 40)
+Self-check: counts, max lengths, JSON parse, banned-term grep per HOMAGE.md (plus Hooters, Hard Rock, owl): 0 hits; exact duplicates vs gr1-gr35: 0. Edit nothing outside content/ and relay/GROK_TO_HARK.md replies.
