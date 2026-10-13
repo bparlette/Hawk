@@ -13,14 +13,18 @@ const { open, writeResult } = require('./common');
   try {
     await p.goto(`http://127.0.0.1:${port}/?nointro=1&radiotest=1&${kind}=1&${kind}auto=${mode}&sim=${sim}${extra}`);
     await p.waitForFunction(() => window.__duels && __duels.cur, null, { timeout: 120000 });
-    let shot = false, last = null;
+    let shot = false, last = null, prevT = null, stallS = 0;
     while (Date.now() - t0 < maxWall) {
       await p.waitForTimeout(1000);
-      const s = await p.evaluate(() => { const D = __duels, K = D.cur; return { cur: K && K.id, res: D.result, t: +(D.t || 0).toFixed(1), log: D.log.slice(-3), retries: D.retries, st: K && K.st ? { hp: Math.round(K.st.hp), b: Math.round(K.st.bhp ?? K.st.mhp ?? K.st.bossHp ?? 0), ph: K.st.phase ?? K.st.round, s: K.st.bs || K.st.ms, over: K.st.over, won: K.st.won } : null }; });
-      last = s;
+      const s = await p.evaluate(() => { const D = __duels, K = D.cur; return { cur: K && K.id, res: D.result, t: +(D.t || 0).toFixed(1), log: D.log.slice(-3), retries: D.retries, over: D.overOn ? D.overOn() : null, st: K && K.st ? { hp: Math.round(K.st.hp), b: Math.round(K.st.bhp ?? K.st.mhp ?? K.st.bossHp ?? 0), ph: K.st.phase ?? K.st.round, s: K.st.bs || K.st.ms, over: K.st.over, won: K.st.won } : null }; });
       if (res.samples.length < 400 && (res.samples.length === 0 || Math.round(s.t) % 10 === 0)) res.samples.push(s);
       if (!shot && s.t >= 10) { shot = true; await p.screenshot({ path: `${outDir}/${name}_mid.png` }).catch(() => {}); }
-      if (mode === 'lose' && s.log.includes('retry') && s.st && !s.st.over) { res.end = s; res.pass = true; res.reason = `RETRY OK at t=${s.t}s (retries=${s.retries})`; break; }
+      // headless rAF stall guard: if fight time stops advancing for 20 s, force a frame with a screenshot (seen once on CI); recorded, not hidden
+      if (last && prevT === s.t) { stallS++; if (stallS >= 20) { stallS = 0; res.stallKicks = (res.stallKicks || 0) + 1; console.log('STALL t=' + s.t + ' -> screenshot kick'); await p.screenshot({ path: `${outDir}/${name}_stall${res.stallKicks}.png` }).catch(() => {}); } } else stallS = 0;
+      prevT = s.t;
+      // lose: pass once the RETRY flow ran (retries counter, robust to later log lines) and the fight is live again
+      last = s;
+      if (mode === 'lose' && (s.retries >= 1 || s.log.includes('retry')) && s.st && !s.st.over) { res.end = s; res.pass = true; res.reason = `RETRY OK at t=${s.t}s (retries=${s.retries})`; break; }
       if (!s.cur) { res.end = s; res.pass = mode === 'win' && s.res === 'win'; res.reason = `duel ended res=${s.res} at t=${s.t}s`; break; }
     }
     if (!res.end) { res.end = last; res.reason = `timeout after ${((Date.now() - t0) / 1000).toFixed(0)}s, last ${JSON.stringify(last)}`; }
