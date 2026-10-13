@@ -18601,7 +18601,7 @@ window.__carl = CARL;
     for (let x = 10; x < cs.len + 60; x += 22) { K.add(G.cyl(0.05, 0.07, 3.6, 5), '#2a2a30', x, 1.8, -2.5).add(G.sph(0.2, 6, 5), night ? '#ffe090' : '#cfcfcf', x, 3.7, -2.5); }
     F.cgm = K.mesh(toonMat(), grp, 0.006);
     if (C.id === 'keyhwy') { const w = new THREE.Mesh(new THREE.PlaneGeometry(cs.len + 200, 24), new THREE.MeshBasicMaterial({ color: night ? '#0e2040' : '#3a98c0', fog: true })); w.rotation.x = -Math.PI / 2; w.position.set(cs.len / 2, -0.35, 15.2); grp.add(w); }
-    const wg = new THREE.Mesh(new THREE.PlaneGeometry(cs.len + 200, 30), new THREE.MeshBasicMaterial({ color: night ? '#0a1a34' : '#2a78a8', fog: true })); wg.rotation.x = -Math.PI / 2; wg.position.set(cs.len / 2, -3.2, 2); grp.add(wg);
+    const wg = new THREE.Mesh(new THREE.PlaneGeometry(cs.len + 200, 30), new THREE.MeshBasicMaterial({ color: C.id === 'keyhwy' ? (night ? '#0a1a34' : '#2a78a8') : C.id === 'fedhill' ? (night ? '#14301e' : '#4a8a3a') : (night ? '#1a1a22' : '#4a4a52'), fog: true })); wg.rotation.x = -Math.PI / 2; wg.position.set(cs.len / 2, -3.2, 2); grp.add(wg);
     // crowd bob + rivals' bikes live on the scene root so they survive course rebuilds
   }
   F.build = function () {
@@ -18625,7 +18625,7 @@ window.__carl = CARL;
     document.head.appendChild(css); F.layout();
   };
   F.layout = function () {
-    const port = VH() > VW(); F.port = port; F.cam.fov = port ? 62 : 44; F.cam.updateProjectionMatrix(); F.camZ = port ? 14.5 : 12.5; F.camY = port ? 4.6 : 3.8;
+    const port = VH() > VW(); F.port = port; F.cam.fov = port ? 62 : 44; F.cam.updateProjectionMatrix(); F.camZ = port ? 14.5 : 12.5; F.camY = port ? 3.2 : 3.0;
   };
   F.onResize = () => { if (F.cam) F.layout(); };
   function bikeFor(key, quad, col) { const k = key + (quad ? 'q' : 'd'); if (!F.bikes[k]) { const b = buildBike(quad, col); b.root.visible = false; F.scene.add(b.root); F.bikes[k] = b; } return F.bikes[k]; }
@@ -18764,7 +18764,7 @@ window.__carl = CARL;
     // camera: side-on, ahead of the player, a little higher in the air; shake on bumps and turbo FOV kick
     const ly = 0.9 + Math.max(0, st.y) * 0.45, lx = st.x + (F.port ? 3.2 : 4.5), sk = st.shake * 0.12;
     F.camX = F.camX == null ? lx : F.camX + (lx - F.camX) * Math.min(1, rdt * 6); F.camLY = F.camLY == null ? ly : F.camLY + (ly - F.camLY) * Math.min(1, rdt * 4);
-    F.cam.position.set(F.camX + 0.6 + (Math.random() - 0.5) * sk, F.camY + F.camLY * 0.35 + (Math.random() - 0.5) * sk, F.camZ); F.cam.lookAt(F.camX, F.camLY, 0);
+    F.cam.position.set(F.camX + 0.6 + (Math.random() - 0.5) * sk, F.camY + F.camLY * 0.35 + (Math.random() - 0.5) * sk, F.camZ); F.cam.lookAt(F.camX, F.camLY + (F.port ? 1.9 : 0.6), 0);
     const fov = (F.port ? 62 : 44) + (st.turbo ? 5 : 0); F.cam.fov += (fov - F.cam.fov) * Math.min(1, rdt * 5); F.cam.updateProjectionMatrix();
     F.sky.position.x = F.camX; OUT_U && OUT_U.fogC && (OUT_U.fogC.value.copy(F.scene.fog.color), OUT_U.fogN.value = 40, OUT_U.fogF.value = 120);
   };
