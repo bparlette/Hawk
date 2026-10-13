@@ -181,7 +181,7 @@
     A.shadows = [-1, 0, 1].map((l) => { const m = new THREE.Mesh(new THREE.PlaneGeometry(1.25, MZ), new THREE.MeshBasicMaterial({ map: shT, transparent: true, depthWrite: false, fog: false })); m.rotation.x = -Math.PI / 2; m.position.set(sx(l), 0.05, MZ / 2 - 0.4); m.visible = false; sc.add(m); return m; });
     A.foams = [-1, 0, 1].map((l) => { const m = new THREE.Mesh(new THREE.PlaneGeometry(1.4, 1.4), new THREE.MeshBasicMaterial({ map: foT, transparent: true, depthWrite: false, fog: false })); m.rotation.x = -Math.PI / 2; m.position.set(sx(l), 0.06, 0); m.visible = false; sc.add(m); return m; });
     const K = DUELS.kit, G = DUELS.GEO, T = K(); // one can tower (pivot at its base), cloned per lane
-    for (let i = 0; i < 9; i++) T.add(G.cyl(0.36, 0.36, 0.6, 10), i % 2 ? '#d8d8e0' : '#e8c070', (i % 2 ? 0.04 : -0.04), 0.3 + i * 0.6, 0).add(G.cyl(0.37, 0.37, 0.06, 10), '#3a8a5a', 0, 0.5 + i * 0.6, 0);
+    for (let i = 0; i < 9; i++) T.add(G.cyl(0.3, 0.3, 0.7, 10), i % 2 ? '#d8d8e0' : '#e8c070', (i % 2 ? 0.04 : -0.04), 0.35 + i * 0.7, 0).add(G.cyl(0.31, 0.31, 0.06, 10), '#3a8a5a', 0, 0.6 + i * 0.7, 0);
     const tg = T.geo(), tm = toonMat();
     A.towers = [0, 1].map(() => { const g = new THREE.Group(), m = new THREE.Mesh(tg, tm); DUELS.inkHull(m, 0.003); g.add(m); g.visible = false; sc.add(g); return g; });
     A.geysers = [-1, 0, 1].map((l) => { const m = new THREE.Mesh(new THREE.CylinderGeometry(0.45, 0.7, 1, 12, 1, true), new THREE.MeshLambertMaterial({ color: '#fff6dc', emissive: '#6a5a3a', transparent: true, opacity: 0.92 })); m.position.set(sx(l), 0, 0); m.visible = false; sc.add(m); return m; });
@@ -222,15 +222,14 @@
     R.add(G.box(18, 0.3, 0.3), '#2a2630', 0, 1.1, 9.4).add(G.box(18, 0.12, 0.12), '#2a2630', 0, 0.6, 9.4); // railing over the harbor
     for (let x = -8; x <= 8; x += 2) R.add(G.box(0.12, 1.1, 0.12), '#2a2630', x, 0.55, 9.4);
     R.add(G.box(18, 1.4, 0.6), '#5a5660', 0, -0.6, 9.8); // pier edge
-    for (let k = 0; k < 3; k++) R.add(G.cyl(1.0, 1.1, 2.6, 14), '#c87a3a', -6.6, 1.3, 1 + k * 2.6).add(G.sph(1.0, 12, 8), '#d88a4a', -6.6, 2.6, 1 + k * 2.6, 0, 0, 0, 1, 0.6, 1).add(G.cyl(0.12, 0.12, 2, 6), '#a06030', -6.6, 3.8, 1 + k * 2.6); // copper kettles (screen right)
+    for (let k = 0; k < 3; k++) R.add(G.cyl(1.0, 1.1, 2.6, 14), '#c87a3a', -5.6, 1.3, 2 + k * 2.4).add(G.sph(1.0, 12, 8), '#d88a4a', -5.6, 2.6, 2 + k * 2.4, 0, 0, 0, 1, 0.6, 1).add(G.cyl(0.12, 0.12, 2, 6), '#a06030', -5.6, 3.8, 2 + k * 2.4); // copper kettles (screen right)
     for (let k = 0; k < 6; k++) R.add(G.cyl(0.42, 0.42, 0.8, 12), '#9a9ea8', 5.6 + (k % 3) * 0.9, 0.4 + Math.floor(k / 3) * 0.8, 3.4); // keg stack
     sc.add(R.mesh(toonMat(), null, 0.003));
     // the brewhouse wall + brew tower (screen left, world +x) with the lit original sign
     const bw = brickTex(true); bw.wrapS = THREE.RepeatWrapping; bw.repeat.set(2, 1);
-    const house = new THREE.Mesh(new THREE.BoxGeometry(5, 8, 14), new THREE.MeshLambertMaterial({ map: bw })); house.position.set(10.5, 4, 3); sc.add(house);
-    const tower = new THREE.Mesh(new THREE.BoxGeometry(3.4, 18, 3.4), new THREE.MeshLambertMaterial({ map: bw })); tower.position.set(9.5, 9, 11); sc.add(tower);
-    const sign = new THREE.Mesh(new THREE.PlaneGeometry(6.4, 1.6), new THREE.MeshBasicMaterial({ map: neonSign('ONE-EYE', 'BREWERY · EST. ON THE HARBOR', 512, 128), fog: false })); sign.position.set(7.75, 15, 11); sign.rotation.y = -Math.PI / 2; sc.add(sign); A.sign = sign;
-    const sign2 = sign.clone(); sign2.position.set(9.5, 15, 9.25); sign2.rotation.y = Math.PI; sc.add(sign2);
+    const house = new THREE.Mesh(new THREE.BoxGeometry(5, 8, 14), new THREE.MeshLambertMaterial({ map: bw })); house.position.set(8.6, 4, 3); sc.add(house);
+    const tower = new THREE.Mesh(new THREE.BoxGeometry(3.4, 18, 3.4), new THREE.MeshLambertMaterial({ map: bw })); tower.position.set(5.6, 9, 12.2); sc.add(tower);
+    const sign = new THREE.Mesh(new THREE.PlaneGeometry(6.4, 1.6), new THREE.MeshBasicMaterial({ map: neonSign('ONE-EYE', 'BREWERY · EST. ON THE HARBOR', 512, 128), fog: false })); sign.position.set(5.6, 14.5, 10.45); sign.rotation.y = Math.PI; sc.add(sign); A.sign = sign;
     duelFx(sc, A); return A;
   }
   function buildChase() {
@@ -296,7 +295,7 @@
     #duel .bwbox.t { top: 0; } #duel .bwbox.b { bottom: 0; } #duel.bwrep .bwbox { height: 11%; }
     #duel .bwrept { position: absolute; left: 14px; top: calc(11% + 8px); font-size: 13px; color: #ff4a4a; text-shadow: 2px 2px 0 #000; display: none; letter-spacing: 2px; z-index: 2; }
     #duel.bwrep .bwrept { display: block; animation: dlow .5s infinite alternate; }
-    body.duel-brewmaster #duel .dtell { white-space: normal; max-width: 88vw; text-align: center; top: 25%; font-size: 13px; border-color: #ffb040; }
+    body.duel-brewmaster #duel .dtell { white-space: normal; max-width: 88vw; text-align: center; top: auto; bottom: 12%; font-size: 13px; border-color: #ffb040; }
     body.duel-brewmaster #duel .dover { background: rgba(10,8,20,.72); }
     @media (max-width: 480px) { #duel .bwpow { width: 70px; } body.duel-brewmaster #duel .dtell { font-size: 11px; } }`;
     document.head.appendChild(css);
@@ -312,7 +311,7 @@
     const R = C.R; R.root.scale.setScalar(1); R.root.rotation.set(0, Math.PI, 0); R.body.rotation.set(0, 0, 0); R.body.position.set(0, 0, 0);
     if (part === 2) { A.car.add(C.H.root); A.car.add(C.M.root); C.H.root.position.set(-0.45, 0.55, -0.3); C.M.root.position.set(0.45, 0.55, 0.1); C.H.root.rotation.set(0, 0, 0); C.M.root.rotation.set(0, 0, 0);
       A.cab.add(R.root); R.root.position.set(0, -0.6, 0); R.root.scale.setScalar(0.42); R.root.rotation.set(0, 0, 0); setLabels(LBL_CHASE, HINT_CHASE); }
-    else { A.sc.add(C.H.root); A.sc.add(C.M.root); A.sc.add(R.root); C.H.root.position.set(0, 0, 0); C.M.root.position.set(part === 1 ? 4.6 : -4.2, 0, 1.8); R.root.position.set(0, 0, MZ); setLabels(LBL_DUEL, HINT_DUEL); }
+    else { A.sc.add(C.H.root); A.sc.add(C.M.root); A.sc.add(R.root); C.H.root.position.set(0, 0, 0); C.M.root.position.set(part === 1 ? 2.7 : -2.7, 0, 0.8); R.root.position.set(0, 0, MZ); setLabels(LBL_DUEL, HINT_DUEL); }
     if (R.paddle) R.paddle.visible = part === 1;
     clearFx();
   }
@@ -404,8 +403,8 @@
     }
     if (st.healT > 0 && (st.healT -= dt) <= 0) { st.hp = Math.min(100, st.hp + 35); st.stats.heals++; st.cakeT = 0.6; DUELS.say('MAVIS', MAVIS.heal, 2.0); pop('+35 CRAB CAKE', V.set(sx(st.lane) * 0.95, 2.4, 0.2), 'w'); sfx('jump'); }
   }
-  function bossHit(st, dmg, color, cls, label) {
-    const d = st.part === 3 ? Math.max(1, Math.round(dmg * 0.75)) : dmg; st.bhp -= d; flashBoss(color); pop((label ? label + ' ' : '') + d, V.set(C.R.root.position.x, 2.6, C.R.root.position.z - 0.6), cls);
+  function bossHit(st, dmg, color, cls, label) { // part 1 drains 100 -> 50, part 3 50 -> 0 (damage scaled so each part lasts a few rounds)
+    const d = Math.max(1, Math.round(dmg * (st.part === 3 ? 0.5 : 0.62))); st.bhp -= d; flashBoss(color); pop((label ? label + ' ' : '') + d, V.set(C.R.root.position.x, 2.6, C.R.root.position.z - 0.6), cls);
     if (Math.random() < 0.18) DUELS.say('BREWMASTER', line(st.part, 'hurt'), 1.6);
     if (st.part === 1 && st.bhp <= 50) { st.bhp = 50; startFlee(st); return; }
     if (st.part === 3 && st.bhp <= 0) { st.bhp = 0; startKO(st); }
@@ -573,7 +572,7 @@
     return p; }
   function seatPose(p) { p.lgL = [-1.5, 0, 0.1]; p.lgR = [-1.5, 0, -0.1]; p.knL = [1.5, 0, 0]; p.knR = [1.5, 0, 0]; p.ftL = [0, 0, 0]; p.ftR = [0, 0, 0]; p.y = -0.25; return p; }
   function poseBoss(st, dt) {
-    const R = C.R, t = st.t, u = st.mt / Math.max(0.01, st.mdur); if (st.ms === 'ko' || st.ms === 'flee') return;
+    const R = C.R, t = st.t, u = st.mt / Math.max(0.01, st.mdur); for (const m of R.flash) if (m && m.userData.flash) m.userData.flash.value = Math.max(0, m.userData.flash.value - dt * 4); if (st.ms === 'ko' || st.ms === 'flee') return;
     const P = PH[st.part];
     // root motion the core always owns: the spin slide
     const spinning = st.ms === 'spin';
@@ -608,7 +607,7 @@
     // can towers: rise behind him over the two marked lanes, their long shadows grow on the roof; then topple toward Harold
     let ti = 0; for (const l of [-1, 0, 1]) { const sh = A.shadows[l + 1], on = (tT || (tR && st.mt < 0.4)) && st.marked.includes(l); sh.visible = on;
       if (on) { const k = tT ? 0.35 + 0.65 * clamp(st.mt / st.mdur, 0, 1) : 1; sh.scale.set(1, k, 1); sh.position.z = MZ - 0.4 - MZ * k / 2; sh.material.opacity = 0.65 + 0.3 * Math.sin(st.t * 22); warn[l + 1] = Math.max(warn[l + 1], tR ? 0.9 : 0.4 * pulse); }
-      if (st.marked.includes(l) && (tT || tR) && ti < 2) { const g = A.towers[ti++]; g.visible = true; g.position.set(sx(l), 0, MZ - 0.6);
+      if (st.marked.includes(l) && (tT || tR) && ti < 2) { const g = A.towers[ti++]; g.visible = true; g.position.set(sx(l), 0, MZ + 0.9);
         if (tT) { g.scale.set(1, clamp(st.mt / (st.mdur * 0.7), 0.05, 1), 1); g.rotation.x = Math.sin(st.t * 30) * 0.02 * clamp(st.mt / st.mdur, 0, 1); }
         else { g.scale.set(1, 1, 1); g.rotation.x = -Math.PI / 2 * ease(clamp(st.mt / 0.32, 0, 1)); } } }
     for (; ti < 2; ti++) A.towers[ti].visible = false;
@@ -636,7 +635,8 @@
     for (const r of st.rec) { if (r.t > tt) break; f = r; } if (!f) return;
     H.root.position.set(f.hx, f.hy, f.hz); H.root.rotation.y = f.hr; if (f.p) applyPose(H, f.p, 40, dt, true);
     R.root.visible = true; R.root.position.set(f.bx, f.by, f.bz); R.root.rotation.y = f.br; R.body.rotation.x = f.bb; R.arms.forEach((a, i) => { a.sh.rotation.x = f.a[i] ?? 0; });
-    const ang = lerp(-1.1, -0.4, k); V.set(Math.sin(ang) * 5.2 * -1 + 0.5, 1.6 + k * 0.4, MZ * 0.45 + Math.cos(ang) * -1.5); V2.set(0, 1.5, MZ * 0.55);
+    const mx = (f.hx + f.bx) / 2, my = (f.hy + f.by) / 2 + 1.3, mz = (f.hz + f.bz) / 2, ang = lerp(-0.35, 0.25, k), dist = 7.5; // a slow dolly around the side of the blow
+    V.set(mx + Math.cos(ang) * dist, my + 1.2, mz + Math.sin(ang) * dist - 1.2); V2.set(mx, my, mz);
     C.camP.copy(V); C.camL.copy(V2);
   }
   C.render = function (rdt) {
@@ -652,7 +652,7 @@
       const hp = haroldPose(st, t); applyPose(H, hp, 18, dt, false);
       if (st.part === 3 && !st.repDone) record(st, hp);
       // Mavis: by the side; the HON HAYMAKER brings her in under him
-      let mx = st.part === 1 ? 4.6 : -4.2, mz = 1.8; if (st.part === 3 && st.spT >= 0 && st.spT < 2.2) { mx = 0.9; mz = MZ - 1.6; }
+      let mx = st.part === 1 ? 2.7 : -2.7, mz = 0.8; if (st.part === 3 && st.spT >= 0 && st.spT < 2.2) { mx = 1.3; mz = MZ - 1.2; }
       M.root.position.set(damp(M.root.position.x, mx, 8, dt), 0, damp(M.root.position.z, mz, 8, dt)); M.root.rotation.y = mx > 0 ? -0.6 : 0.6; applyPose(M, mavisPose(st, t), 12, dt, false);
       poseBoss(st, dt); tells(st, dt);
     }
@@ -664,8 +664,8 @@
     if (!st.rep) {
       V.set(H.root.position.x * 0.55, port ? 4.4 : 4.1, port ? -5.0 : -5.6); V2.set(H.root.position.x * 0.3, port ? 1.8 : 1.6, MZ + 0.5);
       if (st.ms === 'intro' && st.t < 2.6) { const k = ease(clamp(st.mt / st.mdur, 0, 1)); V.lerpVectors(V3.set(3.0, 3.0, 2.2), V, k); V2.lerpVectors(V3.set(0, 2.6, MZ), V2, k); }
-      if (st.spT >= 0) { V.set(-3.6, 2.4, 1.4); V2.set(0, 1.8 + (st.part === 3 ? 1 : 0), MZ - 0.2); }
-      if (st.ms === 'flee') { V.set(0, 5, -3); V2.set(0, 1.5, 12); }
+      if (st.spT >= 0) { if (st.part === 3) { V.set(-5.2, 3.4, 0.4); V2.set(0.2, 2.6, MZ - 0.8); } else { V.set(-3.6, 2.4, 1.4); V2.set(0, 1.8, MZ - 0.2); } }
+      if (st.ms === 'flee') { V.set(0, 4.6, -6.2); V2.set(0, 2.2, 12); }
       if (st.ms === 'ko' && st.repDone) { V.set(-3.5, 4.0, 1.0); V2.set(1, 0.5, 11); }
       if (st.shake > 0) { V.x += rnd(-1, 1) * st.shake * 0.35; V.y += rnd(-1, 1) * st.shake * 0.35; }
       C.camP.lerp(V, 1 - Math.exp(-7 * dt)); C.camL.lerp(V2, 1 - Math.exp(-7 * dt));
@@ -698,7 +698,7 @@
     DUELS.hot(st.pow >= 1 && !st.over);
     if (st.shake > 0) st.shake = Math.max(0, st.shake - dt * 1.6);
     C.cam.fov = port ? 72 : 58; C.cam.updateProjectionMatrix();
-    V.set(c.carX * 0.5, port ? 4.0 : 3.4, port ? -6.4 : -6.0); V2.set(c.carX * 0.3 + c.tx * 0.2, 1.4, 10);
+    V.set(c.carX * 0.5, port ? 5.6 : 4.4, port ? -7.0 : -6.6); V2.set(c.carX * 0.3 + c.tx * 0.2, 0.8, 12);
     if (c.crashT >= 0) { V.set(-1, 3.4, -3); V2.set(c.tx * 0.6, 1.5, truckZ); }
     if (st.shake > 0) { V.x += rnd(-1, 1) * st.shake * 0.35; V.y += rnd(-1, 1) * st.shake * 0.35; }
     C.camP.lerp(V, 1 - Math.exp(-7 * dt)); C.camL.lerp(V2, 1 - Math.exp(-7 * dt)); C.cam.position.copy(C.camP); C.cam.lookAt(C.camL);
