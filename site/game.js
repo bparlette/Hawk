@@ -9330,7 +9330,7 @@ const DUELS = (function () {
     C.door = new THREE.Group(); C.door.position.set(5.75, 0, 7.94); sc.add(C.door);
     { const D = K(); D.add(G.box(1.5, 2.3, 0.1), '#d4dadf', -0.75, 1.15, 0).add(G.box(0.12, 0.5, 0.12), '#555', -1.35, 1.2, -0.08).add(G.box(1.3, 0.08, 0.02), '#9aa4ac', -0.75, 0.3, -0.06); D.mesh(toonMat(), C.door, 0.003); }
     const wsign = new THREE.Mesh(new THREE.PlaneGeometry(1.3, 0.4), new THREE.MeshBasicMaterial({ map: signTex('WALK-IN', '#1a3a7a', '#ffffff'), fog: false })); wsign.position.set(-0.75, 2.0, -0.07); wsign.rotation.y = Math.PI; C.door.add(wsign);
-    const pass = new THREE.Mesh(new THREE.PlaneGeometry(1.6, 0.42), new THREE.MeshBasicMaterial({ map: signTex('THE PASS', '#14101f', '#ffd23c', 'HARBOR EAST · KITCHEN'), fog: false })); pass.position.set(0, 0.62, CZ - 0.52); pass.rotation.y = Math.PI; sc.add(pass);
+    const pass = new THREE.Mesh(new THREE.PlaneGeometry(1.6, 0.42), new THREE.MeshBasicMaterial({ map: signTex('THE PASS', '#14101f', '#ffd23c', 'HARBOR EAST · KITCHEN'), fog: false })); pass.position.set(1.9, 0.62, CZ - 0.52); pass.rotation.y = Math.PI; sc.add(pass);
     const tk = new THREE.Mesh(new THREE.PlaneGeometry(2.4, 0.42), new THREE.MeshBasicMaterial({ map: ticketTex(), fog: false })); tk.position.set(-4.5, 2.7, 10.45); tk.rotation.y = Math.PI; sc.add(tk);
     // the "86'D" sign that drops on the walk-in door at the KO
     C.sign86 = new THREE.Mesh(new THREE.PlaneGeometry(1.4, 0.7), new THREE.MeshBasicMaterial({ map: signTex("86'D", '#c4161c', '#ffffff', 'KITCHEN CLOSED'), side: THREE.DoubleSide, fog: false })); C.sign86.visible = false; C.sign86.rotation.y = Math.PI; sc.add(C.sign86);
@@ -9618,9 +9618,9 @@ const DUELS = (function () {
       case 'drumTell': arm[0] = [-2.5 + Math.sin(st.mt * 30) * 0.15, 0.2]; arm[1] = [-2.5 - Math.sin(st.mt * 30) * 0.15, -0.2]; bodyRX = -0.1; glow = { m: R.bM, c: '#ff3d3d', v: 0.15 + 0.15 * (Math.sin(st.mt * 22) * 0.5 + 0.5) }; break;
       case 'drum': { const nx = st.seqI < st.seq.length ? st.seq[st.seqI] : st.lastSlam, k = clamp(st.slamT / PH[st.phase].gap, 0, 1); rootX = damp(R.root.position.x, sx(nx) * 0.45, 8, dt);
         const i = st.seqI % 2, up = -2.4 * k + 0.9 * (1 - k); arm[i] = [up, (i ? -1 : 1) * 0.15]; arm[1 - i] = [0.9 - 0.4 * (st.slamFx > 0 ? 1 : 0), (i ? 1 : -1) * 0.15]; bodyRX = 0.25 * (1 - k); break; }
-      case 'panTell': R.pan.visible = true; R.pan.rotation.z = st.fireDir * 0.5 * ease(clamp(u, 0, 1)); R.pan.rotation.x = 0.25 * u; arm[0] = [-0.5, 0.3]; arm[1] = [-0.5, -0.3];
+      case 'panTell': R.pan.visible = true; R.pan.position.set(0, 2.25 + 0.15 * u, 1.0); R.pan.rotation.z = st.fireDir * 0.5 * ease(clamp(u, 0, 1)); R.pan.rotation.x = 0.25 * u; arm[0] = [0.4, 0.9]; arm[1] = [0.4, -0.9];
         glow = { m: R.panM, c: '#ff7a1a', v: 0.3 + 0.4 * u }; if (Math.random() < dt * 30) { R.pan.getWorldPosition(V3); fire(V3.add(V2.set(rnd(-0.3, 0.3), 0.2, rnd(-0.2, 0.2))), V2.set(rnd(-0.3, 0.3), rnd(1, 2), 0), 0.4, 0.4 + u * 0.6); } break;
-      case 'pan': R.pan.visible = true; R.pan.rotation.z = st.fireDir * 0.9; arm[0] = [-0.3, 0.3]; arm[1] = [-0.3, -0.3]; bodyRX = 0.15; break;
+      case 'pan': R.pan.visible = true; R.pan.position.set(0, 2.1, 1.1); R.pan.rotation.z = st.fireDir * 0.9; arm[0] = [0.4, 0.9]; arm[1] = [0.4, -0.9]; bodyRX = 0.15; break;
       case 'open': bodyRX = 0.45 + Math.sin(st.mt * 9) * 0.04; arm[0] = [1.1, 0.25]; arm[1] = [1.1, -0.25]; bodyY = -0.1; if (Math.random() < dt * 6) { R.root.getWorldPosition(V3); V3.y += 2.6; V3.x += rnd(-0.5, 0.5); spark(V3, 1); } break; // mallets stuck in the counter, dazed
       case 'flipped': { const k = st.mt; if (k > 0.6 && k < 1.9) { const a = (k - 0.6) / 1.3; bodyY = Math.sin(a * Math.PI) * 2.6; bodyRX = -a * TAU; } else bodyRX = 0.5; arm[0] = [-2.8, 0.8]; arm[1] = [-2.8, -0.8]; break; }
       case 'down': bodyRX = 0.65; bodyY = -0.3 * ease(clamp(st.mt / 0.5, 0, 1)); arm[0] = [1.3, 0.5]; arm[1] = [1.3, -0.5]; if (Math.random() < dt * 8) { R.root.getWorldPosition(V3); V3.y += 2.6; spark(V3, 2); } break;
@@ -9655,7 +9655,7 @@ const DUELS = (function () {
     const H = C.H; const hx = sx(st.lane) * 0.95, hz = st.flipT >= 0 ? lerp(0, 1.6, clamp(st.flipT / 0.5, 0, 1)) * (st.flipT < 1.6 ? 1 : 1 - (st.flipT - 1.6) / 0.3) : 0;
     H.root.position.set(damp(H.root.position.x, hx, 18, dt), 0, damp(H.root.position.z, hz, 10, dt)); H.root.rotation.y = 0; applyPose(H, haroldPose(st, t), 18, dt, false);
     if (C.hflash > 0) { C.hflash = Math.max(0, C.hflash - dt * 5); H.mat.userData.flash.value = C.hflash * 0.8; }
-    const M = C.M; M.root.position.set(-4.3, 0, 1.6); M.root.rotation.y = 0.9; applyPose(M, mavisPose(st, t), 12, dt, false);
+    const M = C.M; M.root.position.set(-4.4, 0, 3.4); M.root.rotation.y = 1.1; applyPose(M, mavisPose(st, t), 12, dt, false);
     poseChef(st, dt); tells(st, dt);
     DUELS.hot(st.pow >= 1 && !st.over);
     if (st.shake > 0) st.shake = Math.max(0, st.shake - dt * 1.6);
