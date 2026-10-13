@@ -1,6 +1,6 @@
 // node ci/toadcity/run_city.js <port> <w> <h> <outDir>
 // City smoke (from game-int T/w2b/city.js): load the city, wait for frames, teleport to every boss entry ring present
-// in this build and check the ring shows + the ACT label. PASS = city renders, every present ring is here, 0 own console errors.
+// in this build and check the ring shows (or, for entries without a BEAM ring such as carl's door, the ACT label). PASS = city renders, every present ring is here, 0 own console errors.
 const { open, writeResult } = require('./common');
 const IDS = (process.env.CITY_BOSSES || 'crabcake,poolshark,scrubber,honqueen,shellacious,sugarrush,cobblestone,compking,ravenking,brewmaster,carl,rodney').split(',');
 (async () => {
@@ -17,13 +17,13 @@ const IDS = (process.env.CITY_BOSSES || 'crabcake,poolshark,scrubber,honqueen,sh
       const r = await p.evaluate(async (id) => { const C = __cel, D = __duels, K = D && D.kinds[id]; if (!K) return { id, missing: true }; const T = K.trigger; if (!T) return { id, noTrigger: true }; const o = { id, trig: { x: +T.x.toFixed(1), z: +T.z.toFixed(1) } }; const NI = id === 'cobblestone' || id === 'carl'; C.CYC.pin = NI ? 0.5 : 0.1; await new Promise((r) => setTimeout(r, NI ? 2500 : 300));
         C.hero.pos.set(T.x + 0.3, C.groundY(T.x, T.z), T.z + 0.2); await new Promise((r) => setTimeout(r, 1500));
         o.ringHere = D.BEAM.list.some((b) => { const v = b.ring.getWorldPosition(b.ring.position.clone()); return b.ring.visible && Math.hypot(v.x - T.x, v.z - T.z) < 5; });
-        o.act = (document.getElementById('albl-c') || {}).textContent || ''; return o; }, id).catch((e) => ({ id, evalErr: e.message }));
+        o.act = (document.getElementById('albl-c') || {}).textContent || ''; o.hasBeam = D.BEAM.list.some((b) => b.K === K); o.ok = o.hasBeam ? o.ringHere : !!o.act.trim(); return o; }, id).catch((e) => ({ id, evalErr: e.message }));
       res.rings.push(r); console.log('RING', JSON.stringify(r));
       if (!r.missing && !r.noTrigger) await p.screenshot({ path: `${outDir}/${name}_${id}.png` }).catch(() => {});
     }
     res.frames = await p.evaluate(() => __cel.frames);
     const present = res.rings.filter((r) => !r.missing && !r.noTrigger);
-    const bad = present.filter((r) => r.evalErr || !r.ringHere);
+    const bad = present.filter((r) => r.evalErr || !r.ok); // bosses with their own entry (e.g. carl's duckpin door) have no BEAM ring: ACT label must show instead
     res.pass = present.length > 0 && bad.length === 0;
     res.reason = `city rendered (${res.frames} frames); rings ok ${present.length - bad.length}/${present.length}` + (bad.length ? ' BAD: ' + bad.map((r) => r.id).join(',') : '') + `; not in build: ${res.rings.filter((r) => r.missing).map((r) => r.id).join(',') || 'none'}`;
   } catch (e) { res.reason = 'exception: ' + e.message; await p.screenshot({ path: `${outDir}/${name}_exception.png` }).catch(() => {}); }
