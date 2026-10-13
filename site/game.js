@@ -11865,10 +11865,8 @@ window.__carl = CARL;
   function signTex() { return canvasTex(1024, 256, (g, w, h) => {
     g.fillStyle = '#14161c'; g.fillRect(0, 0, w, h); g.fillStyle = '#1fd1c1'; g.fillRect(0, h - 22, w, 10); g.fillRect(0, 12, w, 6);
     g.textAlign = 'center'; g.textBaseline = 'middle'; g.font = 'italic 900 120px ' + FONT; g.lineJoin = 'round';
-    g.strokeStyle = '#0a5e58'; g.lineWidth = 16; g.strokeText(STORE, w / 2, h * 0.44); g.fillStyle = '#f4f6f8'; g.fillText(STORE, w / 2, h * 0.44);
+    g.strokeStyle = '#0a5e58'; g.lineWidth = 16; g.strokeText(STORE, w / 2, h * 0.44, 940); g.fillStyle = '#f4f6f8'; g.fillText(STORE, w / 2, h * 0.44, 940);
     g.font = '900 34px ' + FONT; g.fillStyle = '#1fd1c1'; g.fillText('LOCUST POINT \u00b7 BALTIMORE \u00b7 EST. 1996', w / 2, h * 0.8);
-    // side ornaments: simple drop shapes (decorative, no logo)
-    for (const s of [-1, 1]) { g.save(); g.translate(w / 2 + s * 455, h * 0.44); g.fillStyle = '#1fd1c1'; g.beginPath(); g.moveTo(-26, -30); g.lineTo(26, -30); g.lineTo(14, 0); g.lineTo(0, 34); g.lineTo(-14, 0); g.closePath(); g.fill(); g.restore(); }
   }, 1024); }
   function floorTex() { return canvasTex(512, 512, (g, w, h) => {
     g.fillStyle = '#b9b2a6'; g.fillRect(0, 0, w, h); SEED = 33;
