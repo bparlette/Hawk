@@ -460,7 +460,7 @@ signOn(11, -26, 23, -13, 'n', CURB + 6.7, 8.4, LSIGN.aqua);
 LMCAP(null);
 landmark('aquarium', 'NATIONAL AQUARIUM', 19, -17, 19, { name: 'Big Jimmy', x: 19, z: -5, water: true, duel: 'jimmy' }); // underwater swim fight, 09_duels.js (entered at the aquarium door)
 LMCAP('powerplant');
-// Power Plant complex on pier 4 (far LOD): three joined buildings - Phillips (west), the Power Plant hall + tower + four black stacks (centre), the Amp House cafe (east, original homage signage);
+// Power Plant complex on pier 4 (far LOD): three joined buildings - the Harbor Crab House homage (west), the Power Plant hall + tower + four black stacks (centre), the Amp House cafe (east, original homage signage);
 // footprints / heights match the HD model's PP table in 03b (exterior_2 read at x 0.0188 m/px, y 0.038 m/px)
 mass(44.8, -27, 52.13, -9.5, 11.6, { tr: T.fac[0][0], top: '#4a3a30' });
 mass(52.13, -27, 59.0, -8.8, 15.4, { tr: T.fac[0][1], top: '#2e3036' });
