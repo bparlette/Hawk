@@ -38,6 +38,8 @@
   let save = { caught: {}, bucket: 0, junk: 0, chompy: 0, cane: false, purse: false, lantern: false, key: false, casts: 0 };
   try { Object.assign(save, JSON.parse(localStorage.getItem(LS) || '{}')); } catch (e) {}
   const persist = () => { try { localStorage.setItem(LS, JSON.stringify(save)); } catch (e) {} };
+  // R-056 repair: older builds dropped the cane/purse when a fish or crab crossed the threshold. Upgrades are earned by points, so re-grant on load.
+  { let fixd = false; for (const u of UPG) if (save.chompy >= u.at && !save[u.id]) { save[u.id] = true; fixd = true; } if (fixd) persist(); }
   const isNight = () => NIGHT.value > 0.5 || Q.has('fishnight');
 
   // ---------------- catch meshes (all procedural, vertex-coloured, toon) ----------------
@@ -188,12 +190,12 @@
   }
   function finishCatch(st) {
     const c = st.hook, kind = c[3], junk = ['boot', 'tire', 'cart', 'cone', 'bucket'].includes(kind), rare = kind === 'lantern' || kind === 'key';
+    const prevPts = save.chompy; // R-056: upgrades are judged against the points before THIS catch (fish/crab as well as junk)
     st.catches++; st.landT = 0; st.ph = 'land'; st.list.push(c[0]); save.caught[c[0]] = (save.caught[c[0]] || 0) + 1; let sub = '';
     if (junk) { save.junk++; save.chompy += 20; sub = 'FEEDS CHOMPY +20'; st.feed = true; } else if (!rare) { save.bucket++; save.chompy += kind === 'crab' ? 6 : 4; sub = 'IN THE BUCKET'; }
     if (kind === 'lantern') { save.lantern = true; sub = 'PHANTOMS CAN BE FLASHED NOW'; }
     if (kind === 'key') { save.key = true; sub = 'OPENS THE SEWER STASH'; }
-    const before = UPG.filter((u) => u.at <= save.chompy - (junk ? 20 : 0)).length, after = UPG.filter((u) => u.at <= save.chompy);
-    for (const u of after.slice(before)) { save[u.id] = true; DUELS.say('CHOMPY', 'BURP! ' + u.name + ' UNLOCKED', 3.6); }
+    for (const u of UPG) if (save.chompy >= u.at && (prevPts < u.at || !save[u.id])) { save[u.id] = true; DUELS.say('CHOMPY', 'BURP! ' + u.name + ' UNLOCKED', 3.6); }
     persist(); DUELS.banner((rare ? 'RARE! ' : 'CAUGHT! ') + c[0] + '<small>' + sub + '</small>', 2.2); CITY.log.push('fish:' + c[0] + '@' + S.time.toFixed(1));
     st.held = c; showItem(st, c); updateUI();
   }

@@ -7782,6 +7782,9 @@ const DUELS = (function () {
   #duel .dsay b { color: #ffd23c; display: block; font-size: 9px; margin-bottom: 3px; letter-spacing: 1px; }
   #duel .dtell { position: absolute; left: 50%; top: 58%; transform: translateX(-50%); font-size: 12px; color: #fff; background: rgba(20,16,31,.78); border: 2px solid #ffd23c; border-radius: 8px; padding: 5px 9px; opacity: 0; transition: opacity .12s; white-space: nowrap; }
   #duel .dtell.on { opacity: 1; }
+  /* R-055: long tells (Compression King etc.) wrap inside the viewport instead of running off a 390px phone */
+  #duel .dtell { white-space: normal; width: max-content; max-width: min(92vw, 560px); box-sizing: border-box; text-align: center; line-height: 1.35; overflow-wrap: break-word; }
+  @media (max-width: 480px) { #duel .dtell { font-size: 11px; padding: 4px 8px; } }
   #duel .dhint { position: absolute; left: 50%; bottom: 10px; transform: translateX(-50%); font-size: 9px; background: rgba(20,16,31,.7); padding: 6px 10px; border-radius: 14px; white-space: nowrap; }
   #duel .dhint b { color: #ffd23c; }
   body.touch #duel .dhint { display: none; }
@@ -16800,6 +16803,8 @@ window.__carl = CARL;
   let save = { caught: {}, bucket: 0, junk: 0, chompy: 0, cane: false, purse: false, lantern: false, key: false, casts: 0 };
   try { Object.assign(save, JSON.parse(localStorage.getItem(LS) || '{}')); } catch (e) {}
   const persist = () => { try { localStorage.setItem(LS, JSON.stringify(save)); } catch (e) {} };
+  // R-056 repair: older builds dropped the cane/purse when a fish or crab crossed the threshold. Upgrades are earned by points, so re-grant on load.
+  { let fixd = false; for (const u of UPG) if (save.chompy >= u.at && !save[u.id]) { save[u.id] = true; fixd = true; } if (fixd) persist(); }
   const isNight = () => NIGHT.value > 0.5 || Q.has('fishnight');
 
   // ---------------- catch meshes (all procedural, vertex-coloured, toon) ----------------
@@ -16950,12 +16955,12 @@ window.__carl = CARL;
   }
   function finishCatch(st) {
     const c = st.hook, kind = c[3], junk = ['boot', 'tire', 'cart', 'cone', 'bucket'].includes(kind), rare = kind === 'lantern' || kind === 'key';
+    const prevPts = save.chompy; // R-056: upgrades are judged against the points before THIS catch (fish/crab as well as junk)
     st.catches++; st.landT = 0; st.ph = 'land'; st.list.push(c[0]); save.caught[c[0]] = (save.caught[c[0]] || 0) + 1; let sub = '';
     if (junk) { save.junk++; save.chompy += 20; sub = 'FEEDS CHOMPY +20'; st.feed = true; } else if (!rare) { save.bucket++; save.chompy += kind === 'crab' ? 6 : 4; sub = 'IN THE BUCKET'; }
     if (kind === 'lantern') { save.lantern = true; sub = 'PHANTOMS CAN BE FLASHED NOW'; }
     if (kind === 'key') { save.key = true; sub = 'OPENS THE SEWER STASH'; }
-    const before = UPG.filter((u) => u.at <= save.chompy - (junk ? 20 : 0)).length, after = UPG.filter((u) => u.at <= save.chompy);
-    for (const u of after.slice(before)) { save[u.id] = true; DUELS.say('CHOMPY', 'BURP! ' + u.name + ' UNLOCKED', 3.6); }
+    for (const u of UPG) if (save.chompy >= u.at && (prevPts < u.at || !save[u.id])) { save[u.id] = true; DUELS.say('CHOMPY', 'BURP! ' + u.name + ' UNLOCKED', 3.6); }
     persist(); DUELS.banner((rare ? 'RARE! ' : 'CAUGHT! ') + c[0] + '<small>' + sub + '</small>', 2.2); CITY.log.push('fish:' + c[0] + '@' + S.time.toFixed(1));
     st.held = c; showItem(st, c); updateUI();
   }
