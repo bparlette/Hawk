@@ -40,6 +40,9 @@ const DUELS = (function () {
   #duel .dsay b { color: #ffd23c; display: block; font-size: 9px; margin-bottom: 3px; letter-spacing: 1px; }
   #duel .dtell { position: absolute; left: 50%; top: 58%; transform: translateX(-50%); font-size: 12px; color: #fff; background: rgba(20,16,31,.78); border: 2px solid #ffd23c; border-radius: 8px; padding: 5px 9px; opacity: 0; transition: opacity .12s; white-space: nowrap; }
   #duel .dtell.on { opacity: 1; }
+  /* R-055: long tells (Compression King etc.) wrap inside the viewport instead of running off a 390px phone */
+  #duel .dtell { white-space: normal; width: max-content; max-width: min(92vw, 560px); box-sizing: border-box; text-align: center; line-height: 1.35; overflow-wrap: break-word; }
+  @media (max-width: 480px) { #duel .dtell { font-size: 11px; padding: 4px 8px; } }
   #duel .dhint { position: absolute; left: 50%; bottom: 10px; transform: translateX(-50%); font-size: 9px; background: rgba(20,16,31,.7); padding: 6px 10px; border-radius: 14px; white-space: nowrap; }
   #duel .dhint b { color: #ffd23c; }
   body.touch #duel .dhint { display: none; }
