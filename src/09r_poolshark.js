@@ -64,7 +64,8 @@
   document.head.appendChild(css);
   const POPS = []; for (let i = 0; i < 10; i++) { const e = document.createElement('div'); e.className = 'pspop'; DUELS.hudEl.appendChild(e); POPS.push({ e, t: 9, life: 1, p: new THREE.Vector3() }); }
   let popI = 0;
-  function pop(p, text, cls = '', life = 0.9) { const o = POPS[popI++ % POPS.length]; o.p.copy(p); o.t = 0; o.life = life; o.e.className = 'pspop ' + cls; o.e.textContent = text; }
+  let popLast = -9, popK = 0;
+  function pop(p, text, cls = '', life = 0.9) { const o = POPS[popI++ % POPS.length]; o.p.copy(p); const now = performance.now() / 1000; popK = now - popLast < 0.35 ? (popK + 1) % 4 : 0; popLast = now; o.p.y += popK * 0.55; o.p.x += (popK % 2 ? -0.4 : 0.4) * Math.min(1, popK); o.t = 0; o.life = life; o.e.className = 'pspop ' + cls; o.e.textContent = text; }
   function popTick(dt) {
     const w = VW(), h = VH();
     for (const o of POPS) { if (o.t >= o.life) { if (o.e.style.opacity !== '0') o.e.style.opacity = '0'; continue; } o.t += dt; const u = o.t / o.life;
@@ -542,7 +543,7 @@
 
   DUELS.reg('poolshark', P); window.__poolshark = P;
   // entrance: the ring at the Pendry boss anchor (LANDMARKS 'pendry' .boss = 126, -19.5, DESIGN.md roster: Pendry: The Pool Shark)
-  const L = LANDMARKS.find((l) => l.id === 'pendry'); if (L && L.boss) DUELS.addTrigger('poolshark', L, L.boss.x, L.boss.z, L.boss.x, L.boss.z - 3.2, '#39d8ff');
+  const L = LANDMARKS.find((l) => l.id === 'pendry'); if (L && L.boss) DUELS.addTrigger('poolshark', L, L.boss.x, L.boss.z, L.boss.x + 2.8, L.boss.z + 0.1, '#39d8ff');
   // ?poolshark=1 starts it straight away; &poolsharkauto=win|lose plays it with the bot
   if (Q.has('poolshark')) { let n = 0; MODE.ticks.push(() => { if (n++ === 3 && !DUELS.cur) { if (CINE.intro) CINE.intro.skip = true; const m = Q.get('poolsharkauto'); DUELS.start('poolshark', m === 'win' || m === 'lose' ? { bot: m } : {}); } }); }
 })();
