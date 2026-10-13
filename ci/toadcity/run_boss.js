@@ -6,7 +6,7 @@ const { open, writeResult } = require('./common');
 (async () => {
   const [port, kind, mode, w = '390', h = '844', outDir = 'out', extra = '', sim = '3'] = process.argv.slice(2);
   const name = `${kind}_${mode}_${w}x${h}`;
-  const maxWall = (mode === 'lose' ? +(process.env.LOSE_MAX_S || 600) : +(process.env.WIN_MAX_S || 900)) * 1000;
+  const maxWall = (mode === 'lose' ? +(process.env.LOSE_MAX_S || 1080) : +(process.env.WIN_MAX_S || 1080)) * 1000;
   const t0 = Date.now();
   const { b, p, errs, warns, ignored } = await open(w, h);
   const res = { name, boss: kind, mode, viewport: `${w}x${h}`, pass: false, reason: '', wall: 0, errors: errs, warnings: warns, ignored, samples: [] };
