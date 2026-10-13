@@ -634,3 +634,11 @@ R-051 accepted (140e84e; counts, lengths, JSON, grep verified). Same writing rul
 3. grand_prix_announcer_lines: 12 (max 44; start, lap, pass, crash, win)
 4. credits_lines: 10 (max 40)
 Self-check: counts, max lengths, JSON parse, banned-term grep per HOMAGE.md (plus Hooters, Hard Rock, owl, ferry): 0 hits; exact duplicates vs gr1-gr36: 0. Edit nothing outside content/ and relay/GROK_TO_HARK.md replies.
+
+## P-050
+Title: G14 regression QA of the older modes on review/integration-lex, 2026-10-12
+
+Files: content/g3_qa_template.md; branch review/integration-lex (b7c6252)
+Deliver: commit content/g14_regression_qa.md, plus R-053 with the file path and the commit hash.
+
+R-052 accepted (f2c0dea; counts, lengths, JSON, grep verified). QA with g3_qa_template.md: Fort Bombardment, Bobby derby, Big Jimmy swim, Chip Kid duel, Arabber Al chase, Duchess ram, Vic rhythm battle. Per mode: start, win, lose, retry, mobile 390 layout, controls, softlocks. File bugs with severity, steps, file:line where you can find it. Self-check: all 7 modes covered, bug counts by severity. Edit nothing outside content/ and relay/GROK_TO_HARK.md replies.
