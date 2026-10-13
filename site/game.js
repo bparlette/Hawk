@@ -5353,13 +5353,13 @@ const DUCH = (function () {
     g.fillStyle = '#d8262a'; g.font = '900 78px ' + FONT; g.textAlign = 'center'; g.textBaseline = 'middle'; g.fillText('!', 64, 80); }, 128);
   const BANG = new THREE.Sprite(new THREE.SpriteMaterial({ map: bangT, transparent: true, depthWrite: false, depthTest: false, fog: false })); BANG.scale.setScalar(2.2); BANG.visible = false; BANG.renderOrder = 6; sc.add(BANG);
   // sceptre reach: a red ring (+ a faint disc) on the water around her, radius = her swing reach (8 m)
-  const RING = new THREE.Mesh(new THREE.RingGeometry(7.3, 8.1, 44).rotateX(-Math.PI / 2), new THREE.MeshBasicMaterial({ color: '#ff3030', transparent: true, opacity: 0, depthWrite: false, blending: THREE.AdditiveBlending, fog: false, side: THREE.DoubleSide }));
+  const RING = new THREE.Mesh(new THREE.RingGeometry(7.3, 8.1, 44).rotateX(-Math.PI / 2), new THREE.MeshBasicMaterial({ color: '#ff2a2a', transparent: true, opacity: 0, depthWrite: false, fog: false, side: THREE.DoubleSide })); // (normal blend: reads RED on the blue water)
   const DISC = new THREE.Mesh(new THREE.CircleGeometry(7.3, 36).rotateX(-Math.PI / 2), new THREE.MeshBasicMaterial({ color: '#ff3030', transparent: true, opacity: 0, depthWrite: false, blending: THREE.AdditiveBlending, fog: false, side: THREE.DoubleSide }));
   RING.renderOrder = DISC.renderOrder = 3; RING.visible = DISC.visible = false; sc.add(RING, DISC);
   // splash-wave lanes: a chevron strip on the water along each wave's path (from her bow out to ~38 m)
   const laneT = canvasTex(64, 256, (g, w, h) => { const gr = g.createLinearGradient(0, h, 0, 0); gr.addColorStop(0, 'rgba(255,70,50,0.95)'); gr.addColorStop(1, 'rgba(255,70,50,0)'); g.fillStyle = gr; g.fillRect(0, 0, w, h);
     g.strokeStyle = 'rgba(255,240,200,0.9)'; g.lineWidth = 6; for (let y = h - 20; y > 10; y -= 40) { g.beginPath(); g.moveTo(10, y); g.lineTo(w / 2, y - 18); g.lineTo(w - 10, y); g.stroke(); } }, 64);
-  const LANES = []; for (let k = 0; k < 3; k++) { const g = new THREE.PlaneGeometry(9, 34); g.rotateX(-Math.PI / 2); g.translate(0, 0, 21.6); const m = new THREE.Mesh(g, new THREE.MeshBasicMaterial({ map: laneT, transparent: true, opacity: 0, depthWrite: false, blending: THREE.AdditiveBlending, fog: false, side: THREE.DoubleSide })); m.renderOrder = 3; m.visible = false; sc.add(m); LANES.push(m); }
+  const LANES = []; for (let k = 0; k < 3; k++) { const g = new THREE.PlaneGeometry(9, 34); g.rotateX(-Math.PI / 2); g.translate(0, 0, 21.6); const m = new THREE.Mesh(g, new THREE.MeshBasicMaterial({ map: laneT, transparent: true, opacity: 0, depthWrite: false, fog: false, side: THREE.DoubleSide })); m.renderOrder = 3; m.visible = false; sc.add(m); LANES.push(m); }
   const S = { on: false, phase: 'intro', t: 0, pt: 0, hits: 0, kind: 'taxi', shake: 0, hitstop: 0, duel: false, bot: null, bhp: BHP, pow: 0, combo: 0, comboT: 0, caneK: 0, caneCd: 0, caneT: 0, spT: -1, cakeUsed: false, cakeT: 0, windUsed: false, overShown: false, stats: null };
   const pl = { x: 0, z: 0, h: 0, vx: 0, vz: 0, y: 0, vy: 0, hull: 100, boost: 0, cd: 0, r: 1.6, inv: 0, swing: 0 };
   const du = { x: 0, z: 0, h: 0, vx: 0, vz: 0, st: 'stalk', stT: 0, r: 2.5, swingK: 0, rearK: 0, orbit: 1, wavesFired: 0, sink: 0, stun: 0 };
@@ -5591,7 +5591,7 @@ const DUCH = (function () {
     const pulse = 0.55 + 0.35 * Math.sin(S.t * 22);
     RING.visible = DISC.visible = swT && S.phase === 'fight'; if (RING.visible) { const u = du.st === 'swing' ? 1 : clamp((TELL_SW - du.stT) / TELL_SW, 0, 1); RING.position.set(du.x, WY + 0.09, du.z); DISC.position.set(du.x, WY + 0.07, du.z); RING.material.opacity = (0.35 + 0.55 * u) * pulse + 0.1; DISC.material.opacity = 0.08 + 0.16 * u; RING.rotation.y += dt * 1.5; }
     const nW = wvT && S.phase === 'fight' ? (S.hits >= 1 ? 3 : 1) : 0;
-    LANES.forEach((l, k) => { l.visible = k < nW; if (!l.visible) return; const a = du.h + (k - (nW - 1) / 2) * 0.55, u = clamp((TELL_WV - du.stT) / TELL_WV, 0, 1); l.position.set(du.x, WY + 0.08 + k * 0.004, du.z); l.rotation.y = a; l.material.opacity = (0.3 + 0.6 * u) * pulse + 0.1; });
+    LANES.forEach((l, k) => { l.visible = k < nW; if (!l.visible) return; const a = du.h + (k - (nW - 1) / 2) * 0.55, u = clamp((TELL_WV - du.stT) / TELL_WV, 0, 1); l.position.set(du.x, WY + 0.08 + k * 0.004, du.z); l.rotation.y = a; l.material.opacity = (0.2 + 0.45 * u) * pulse + 0.05; });
     applyPose(hero.J, S.caneT > 0 ? rbSwingPose(1 - S.caneT / 0.32) : rbSeatPose(S.kind === 'paddle', S.t), 14, Math.max(dt, 1 / 60)); applyPose(partner.J, pl.swing > 0 && S.caneT <= 0 ? rbSwingPose(1 - pl.swing) : rbSeatPose(false, S.t + 1), 12, Math.max(dt, 1 / 60));
     // camera: behind the boat, yawed partway toward the Duchess so she stays in frame
     const portrait = rbPortrait(), back = portrait ? 10.5 : 9.0, hgt = (S.kind === 'paddle' ? 1.7 : 1.95) + (portrait ? 0.25 : 0); // just under the canopy line, so the toads show
@@ -8400,7 +8400,8 @@ const JUICE = (function () {
 // polish (hark/polish, 2026-10-13, the Chip Kid / Brewmaster bar): every tell >= 1.0 s with a "!" over him, a red lock ring round Harold + a mark on the sand
 // (snap) or cyan aim beams (bubbles) and a HUD call-out; STRIKE is a 3-hit cane combo on his belly (WHACK, THWACK, CRAB CRACKER finisher) with hit-stop, shake,
 // damage pops and a combo counter; belly hits + clean dodges fill POWER, full POWER = ACT "CANE TORPEDO" (Harold rockets in, flips him belly-up for a free combo);
-// Mavis drops a crab cake from the surface when Harold is low (once a phase), one SECOND WIND; KO = one JUICE.ko() + slow-mo; star grade on the win card.
+// Mavis drops a crab cake from the surface when Harold is low (once a phase), +20 HP between phases, one SECOND WIND, softer hits (snap 15, bubble 9,
+// 1.25 s i-frames: a first-timer who only mashes STRIKE must be able to win); KO = one JUICE.ko() + slow-mo; star grade on the win card.
 // Tests also: ?jimmy=1&jimmyauto=win|lose|mash (mash = swims at him and mashes STRIKE, refills air at the vents, never dashes).
 (function () {
   const TANK = { x: 15.5, z: 15.5, y0: 0.7, y1: 14.5, h: 16.5 }; // the swimmable box (the glass walls sit a little outside)
@@ -8622,8 +8623,8 @@ const JUICE = (function () {
   // ---------------- the fight ----------------
   function lockFrame(st) { V.set(st.bp.x - st.p.x, 0, st.bp.z - st.p.z); if (V.lengthSq() < 1e-4) V.set(0, 0, 1); V.normalize(); return { f: V.clone(), r: new THREE.Vector3(V.z, 0, -V.x).multiplyScalar(-1) }; }
   function hurtHarold(st, dmg, from, kind) {
-    if (st.inv > 0 || st.over || st.torp >= 0) return false; st.hp -= dmg; st.inv = 0.9; st.hurtT = 0.35; DUELS.hurt(); sfx('hurt'); st.stats.hitsTaken++; st.combo = 0; DUELS.combo(0); DUELS.pop('-' + dmg, st.p.clone().setY(st.p.y + 1.4), ''); // polish
-    if (st.hp < 40 && st.hp - 0 > 0 && !st.cakeUsed) { st.cakeUsed = true; st.cake = { p: new THREE.Vector3(st.p.x, TANK.y1, st.p.z), t: 0 }; DUELS.say('MAVIS', ['Harold! Crab cake, coming down!', 'Catch, hon! From the top of the tank!', 'Eat something, dear, you look blue!'][st.phase % 3], 2.2); }
+    if (st.inv > 0 || st.over || st.torp >= 0) return false; st.hp -= dmg; st.inv = 1.25; st.hurtT = 0.35; DUELS.hurt(); sfx('hurt'); st.stats.hitsTaken++; st.combo = 0; DUELS.combo(0); DUELS.pop('-' + dmg, st.p.clone().setY(st.p.y + 1.4), ''); // polish
+    if (st.hp < 45 && st.hp > 0 && !st.cakeUsed) { st.cakeUsed = true; st.cake = { p: new THREE.Vector3(st.p.x, TANK.y1, st.p.z), t: 0 }; DUELS.say('MAVIS', ['Harold! Crab cake, coming down!', 'Catch, hon! From the top of the tank!', 'Eat something, dear, you look blue!'][st.phase % 3], 2.2); }
     V2.copy(st.p).sub(from); V2.y *= 0.5; if (V2.lengthSq() < 1e-4) V2.set(0, 0, -1); st.v.addScaledVector(V2.normalize(), 9); J.H.mat.userData.flash.value = 1; J.hflash = 1;
     burst(st.p, 10, 2.5); if (kind) st.stats[kind]++; return true;
   }
@@ -8645,7 +8646,7 @@ const JUICE = (function () {
       return; }
     if (st.bs === 'snapTell') { if (st.bt > st.bdur) { st.snapTo.copy(st.p); st.lungeV.copy(st.p).sub(st.bp).setY(0).normalize().multiplyScalar(7); setB(st, 'snap', 0.42); st.stats.snaps++; st.snapHit = false; sfx('swing'); } return; }
     if (st.bs === 'snap') { const u = st.bt / st.bdur; if (u < 0.6) st.bp.addScaledVector(st.lungeV, dt);
-      const c = J.R.claws[st.side < 0 ? 0 : 1]; if (c && u > 0.25 && u < 0.85 && !st.snapHit) { c.tip.getWorldPosition(V2); if (V2.distanceTo(st.p) < 2.1 || (st.p.distanceTo(st.bp) < 3.6)) { if (hurtHarold(st, 22, st.bp, 'snapHits')) { st.snapHit = true; sfx('heavy'); DUELS.tell('SNAP!', 0.6); } } }
+      const c = J.R.claws[st.side < 0 ? 0 : 1]; if (c && u > 0.25 && u < 0.85 && !st.snapHit) { c.tip.getWorldPosition(V2); if (V2.distanceTo(st.p) < 2.1 || (st.p.distanceTo(st.bp) < 3.6)) { if (hurtHarold(st, 15, st.bp, 'snapHits')) { st.snapHit = true; sfx('heavy'); DUELS.tell('SNAP!', 0.6); } } }
       if (st.bt > st.bdur) { if (!st.snapHit && st.p.distanceTo(st.bp) < 9) { st.stats.dodges++; addPow(st, 0.12); DUELS.pop('DODGED!', st.p.clone().setY(st.p.y + 1.6), 'word'); } // polish: a clean dodge fills POWER
         st.combo--; if (st.combo > 0) setB(st, 'idle', 0.25); else { setB(st, 'rear', P.rear); st.rearHits = 0; st.combo = 0; DUELS.tell('HE REARS UP! STRIKE HIS BELLY!', 1.4); sfx('ko'); } } return; }
     if (st.bs === 'rear') { if (st.bt > st.bdur) setB(st, 'idle', rnd(...P.idle)); return; }
@@ -8662,7 +8663,7 @@ const JUICE = (function () {
       if (b.home > 0 && b.t < 2) { const want = V2.copy(st.p).sub(b.p).normalize().multiplyScalar(b.v.length()); b.v.lerp(want, Math.min(1, b.home * dt)); }
       b.p.addScaledVector(b.v, dt); b.r = 0.6 + Math.sin(b.t * 12) * 0.05;
       let gone = b.t > 4.5 || Math.abs(b.p.x) > TANK.x + 1 || Math.abs(b.p.z) > TANK.z + 1 || b.p.y < 0 || b.p.y > TANK.h;
-      if (!gone && b.p.distanceTo(st.p) < 1.05) { if (hurtHarold(st, 12, b.p, 'bubbleHits')) { blub(520); if (st.volley) st.volley.hit = true; } gone = true; }
+      if (!gone && b.p.distanceTo(st.p) < 1.05) { if (hurtHarold(st, 9, b.p, 'bubbleHits')) { blub(520); if (st.volley) st.volley.hit = true; } gone = true; }
       if (gone) { burst(b.p, 8, 2); J.blasts.splice(i, 1); } }
     if (st.volley && !J.blasts.length) { if (!st.volley.hit && !st.over) { st.stats.dodges++; addPow(st, 0.1); DUELS.pop('DODGED!', st.p.clone().setY(st.p.y + 1.6), 'word'); } st.volley = null; }
     J.blastM.count = J.blasts.length; J.blastM.visible = J.blasts.length > 0; const m = new THREE.Matrix4(); J.blasts.forEach((b, i) => { m.makeScale(b.r, b.r, b.r).setPosition(b.p); J.blastM.setMatrixAt(i, m); }); J.blastM.instanceMatrix.needsUpdate = true;
@@ -8679,7 +8680,7 @@ const JUICE = (function () {
     if (!torp && (k === 2 || st.rearHits >= 3) && st.bhp > floor) { setB(st, 'idle', rnd(...PH[st.phase].idle)); DUELS.tell('HE SLAMS DOWN! WAIT FOR THE NEXT REAR', 1.0); } // one combo a rear
     if (st.bhp <= floor) { st.bhp = floor;
       if (st.phase === 2) { st.bs = 'dead'; st.bt = 0; st.won = true; st.over = true; JUICE.ko(); DUELS.slowmo(0.35, 1.2); DUELS.impact({ shake: 1.0, flash: '#ffffff', flashA: 0.6, zoom: 1.2, zoomT: 0.6, sfx: 'mega' }); DUELS.banner('K.O.!<small>BIG JIMMY GOES BELLY-UP</small>', 2.2); DUELS.ready(null); DUELS.hot(false); win(st); }
-      else { st.phase++; st.stats.phaseUps++; setB(st, 'roar', 2.0); st.combo = 0; J.blasts.length = 0; st.air = Math.max(st.air, 0.75); st.cakeUsed = false;
+      else { st.phase++; st.stats.phaseUps++; setB(st, 'roar', 2.0); st.combo = 0; J.blasts.length = 0; st.air = Math.max(st.air, 0.75); st.cakeUsed = false; const ph = Math.min(20, 100 - st.hp); if (ph > 0) { st.hp += ph; DUELS.pop('+' + Math.round(ph), st.p.clone().setY(st.p.y + 1.6), 'heal'); }
         DUELS.banner(st.phase === 1 ? 'PHASE 2<small>JIMMY\'S GETTING STEAMED!</small>' : 'PHASE 3<small>ONE VENT SLEEPS AT A TIME!</small>', 1.8); DUELS.sub(J.airEl.outerHTML, 'PHASE ' + (st.phase + 1) + '/3'); J.airEl = DUELS.hudEl.querySelector('.air'); J.airI = J.airEl.querySelector('i'); } }
   }
   function win(st) {
@@ -8721,7 +8722,7 @@ const JUICE = (function () {
         if (d < 3.4 || st.torp > 1.2) { st.torp = -1; st.v.multiplyScalar(-0.3); setB(st, 'rear', 3.0); st.rearHits = 0; DUELS.tell('BELLY-UP! COMBO HIM!', 1.4); damageBoss(st, TORP, 0, true); } }
       // Mavis's crab cake sinks from the surface onto Harold
       if (st.cake) { const c = st.cake; c.t += dt; c.p.lerp(V2.copy(st.p).setY(st.p.y + 0.6), 1 - Math.exp(-dt * (c.t < 0.6 ? 1.2 : 3.5)));
-        if (c.p.distanceTo(st.p) < 1.3 || c.t > 2.6) { const heal = Math.min(25, 100 - st.hp); st.hp += heal; st.stats.cakes++; st.cake = null; DUELS.pop('+' + Math.round(heal) + ' CRAB CAKE', st.p.clone().setY(st.p.y + 1.6), 'heal'); blub(700); } }
+        if (c.p.distanceTo(st.p) < 1.3 || c.t > 2.6) { const heal = Math.min(30, 100 - st.hp); st.hp += heal; st.stats.cakes++; st.cake = null; DUELS.pop('+' + Math.round(heal) + ' CRAB CAKE', st.p.clone().setY(st.p.y + 1.6), 'heal'); blub(700); } }
       // ---- air: drains, vents refill (stand in the bubble column)
       let inVent = false; VENTS.forEach((v, i) => { if (J.ventOn(i) && Math.hypot(st.p.x - v[0], st.p.z - v[1]) < 1.8 && st.p.y < TANK.y1 - 0.5) inVent = true; });
       if (inVent) { st.air = Math.min(1, st.air + dt * 0.5); st.stats.ventT += dt; if (Math.random() < dt * 6) blub(600 + Math.random() * 300); }
@@ -13191,7 +13192,7 @@ window.__carl = CARL;
       DUELS.hitSfx(k === 2 ? 'heavy' : 'light'); DUELS.combo(st.combo); if (k === 2) DUELS.flash('#ffffff', 0.35); // polish: shared hit juice
       pop(pick(WORDS[k]) + ' ' + dmg, V, k === 2 ? 'big' : crit ? 'crit' : ''); addPow(st, k === 2 ? 0.09 : 0.05);
       if (st.mhp <= 0) { st.mhp = 0; phaseDown(st); }
-    } else if (['guard', 'intro'].includes(st.ms)) { st.stats.blocked++; st.combo = 0; DUELS.combo(0); sfx('hit'); spark(V, 3); pop('BLOCKED', V, ''); DUELS.tell('BLOCKED! WAIT FOR HIM TO OPEN UP', 0.7); }
+    } else if (['guard', 'intro'].includes(st.ms)) { st.stats.blocked++; st.combo = 0; DUELS.combo(0); sfx('hit'); spark(V, 3); DUELS.tell('BLOCKED! WAIT FOR IT!', 0.7); }
     else { st.combo = 0; DUELS.combo(0); }
     subHud(st);
   }

@@ -694,13 +694,13 @@ const DUCH = (function () {
     g.fillStyle = '#d8262a'; g.font = '900 78px ' + FONT; g.textAlign = 'center'; g.textBaseline = 'middle'; g.fillText('!', 64, 80); }, 128);
   const BANG = new THREE.Sprite(new THREE.SpriteMaterial({ map: bangT, transparent: true, depthWrite: false, depthTest: false, fog: false })); BANG.scale.setScalar(2.2); BANG.visible = false; BANG.renderOrder = 6; sc.add(BANG);
   // sceptre reach: a red ring (+ a faint disc) on the water around her, radius = her swing reach (8 m)
-  const RING = new THREE.Mesh(new THREE.RingGeometry(7.3, 8.1, 44).rotateX(-Math.PI / 2), new THREE.MeshBasicMaterial({ color: '#ff3030', transparent: true, opacity: 0, depthWrite: false, blending: THREE.AdditiveBlending, fog: false, side: THREE.DoubleSide }));
+  const RING = new THREE.Mesh(new THREE.RingGeometry(7.3, 8.1, 44).rotateX(-Math.PI / 2), new THREE.MeshBasicMaterial({ color: '#ff2a2a', transparent: true, opacity: 0, depthWrite: false, fog: false, side: THREE.DoubleSide })); // (normal blend: reads RED on the blue water)
   const DISC = new THREE.Mesh(new THREE.CircleGeometry(7.3, 36).rotateX(-Math.PI / 2), new THREE.MeshBasicMaterial({ color: '#ff3030', transparent: true, opacity: 0, depthWrite: false, blending: THREE.AdditiveBlending, fog: false, side: THREE.DoubleSide }));
   RING.renderOrder = DISC.renderOrder = 3; RING.visible = DISC.visible = false; sc.add(RING, DISC);
   // splash-wave lanes: a chevron strip on the water along each wave's path (from her bow out to ~38 m)
   const laneT = canvasTex(64, 256, (g, w, h) => { const gr = g.createLinearGradient(0, h, 0, 0); gr.addColorStop(0, 'rgba(255,70,50,0.95)'); gr.addColorStop(1, 'rgba(255,70,50,0)'); g.fillStyle = gr; g.fillRect(0, 0, w, h);
     g.strokeStyle = 'rgba(255,240,200,0.9)'; g.lineWidth = 6; for (let y = h - 20; y > 10; y -= 40) { g.beginPath(); g.moveTo(10, y); g.lineTo(w / 2, y - 18); g.lineTo(w - 10, y); g.stroke(); } }, 64);
-  const LANES = []; for (let k = 0; k < 3; k++) { const g = new THREE.PlaneGeometry(9, 34); g.rotateX(-Math.PI / 2); g.translate(0, 0, 21.6); const m = new THREE.Mesh(g, new THREE.MeshBasicMaterial({ map: laneT, transparent: true, opacity: 0, depthWrite: false, blending: THREE.AdditiveBlending, fog: false, side: THREE.DoubleSide })); m.renderOrder = 3; m.visible = false; sc.add(m); LANES.push(m); }
+  const LANES = []; for (let k = 0; k < 3; k++) { const g = new THREE.PlaneGeometry(9, 34); g.rotateX(-Math.PI / 2); g.translate(0, 0, 21.6); const m = new THREE.Mesh(g, new THREE.MeshBasicMaterial({ map: laneT, transparent: true, opacity: 0, depthWrite: false, fog: false, side: THREE.DoubleSide })); m.renderOrder = 3; m.visible = false; sc.add(m); LANES.push(m); }
   const S = { on: false, phase: 'intro', t: 0, pt: 0, hits: 0, kind: 'taxi', shake: 0, hitstop: 0, duel: false, bot: null, bhp: BHP, pow: 0, combo: 0, comboT: 0, caneK: 0, caneCd: 0, caneT: 0, spT: -1, cakeUsed: false, cakeT: 0, windUsed: false, overShown: false, stats: null };
   const pl = { x: 0, z: 0, h: 0, vx: 0, vz: 0, y: 0, vy: 0, hull: 100, boost: 0, cd: 0, r: 1.6, inv: 0, swing: 0 };
   const du = { x: 0, z: 0, h: 0, vx: 0, vz: 0, st: 'stalk', stT: 0, r: 2.5, swingK: 0, rearK: 0, orbit: 1, wavesFired: 0, sink: 0, stun: 0 };
@@ -932,7 +932,7 @@ const DUCH = (function () {
     const pulse = 0.55 + 0.35 * Math.sin(S.t * 22);
     RING.visible = DISC.visible = swT && S.phase === 'fight'; if (RING.visible) { const u = du.st === 'swing' ? 1 : clamp((TELL_SW - du.stT) / TELL_SW, 0, 1); RING.position.set(du.x, WY + 0.09, du.z); DISC.position.set(du.x, WY + 0.07, du.z); RING.material.opacity = (0.35 + 0.55 * u) * pulse + 0.1; DISC.material.opacity = 0.08 + 0.16 * u; RING.rotation.y += dt * 1.5; }
     const nW = wvT && S.phase === 'fight' ? (S.hits >= 1 ? 3 : 1) : 0;
-    LANES.forEach((l, k) => { l.visible = k < nW; if (!l.visible) return; const a = du.h + (k - (nW - 1) / 2) * 0.55, u = clamp((TELL_WV - du.stT) / TELL_WV, 0, 1); l.position.set(du.x, WY + 0.08 + k * 0.004, du.z); l.rotation.y = a; l.material.opacity = (0.3 + 0.6 * u) * pulse + 0.1; });
+    LANES.forEach((l, k) => { l.visible = k < nW; if (!l.visible) return; const a = du.h + (k - (nW - 1) / 2) * 0.55, u = clamp((TELL_WV - du.stT) / TELL_WV, 0, 1); l.position.set(du.x, WY + 0.08 + k * 0.004, du.z); l.rotation.y = a; l.material.opacity = (0.2 + 0.45 * u) * pulse + 0.05; });
     applyPose(hero.J, S.caneT > 0 ? rbSwingPose(1 - S.caneT / 0.32) : rbSeatPose(S.kind === 'paddle', S.t), 14, Math.max(dt, 1 / 60)); applyPose(partner.J, pl.swing > 0 && S.caneT <= 0 ? rbSwingPose(1 - pl.swing) : rbSeatPose(false, S.t + 1), 12, Math.max(dt, 1 / 60));
     // camera: behind the boat, yawed partway toward the Duchess so she stays in frame
     const portrait = rbPortrait(), back = portrait ? 10.5 : 9.0, hgt = (S.kind === 'paddle' ? 1.7 : 1.95) + (portrait ? 0.25 : 0); // just under the canopy line, so the toads show

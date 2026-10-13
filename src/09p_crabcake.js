@@ -319,7 +319,7 @@
       DUELS.hitSfx(k === 2 ? 'heavy' : 'light'); DUELS.combo(st.combo); if (k === 2) DUELS.flash('#ffffff', 0.35); // polish: shared hit juice
       pop(pick(WORDS[k]) + ' ' + dmg, V, k === 2 ? 'big' : crit ? 'crit' : ''); addPow(st, k === 2 ? 0.09 : 0.05);
       if (st.mhp <= 0) { st.mhp = 0; phaseDown(st); }
-    } else if (['guard', 'intro'].includes(st.ms)) { st.stats.blocked++; st.combo = 0; DUELS.combo(0); sfx('hit'); spark(V, 3); pop('BLOCKED', V, ''); DUELS.tell('BLOCKED! WAIT FOR HIM TO OPEN UP', 0.7); }
+    } else if (['guard', 'intro'].includes(st.ms)) { st.stats.blocked++; st.combo = 0; DUELS.combo(0); sfx('hit'); spark(V, 3); DUELS.tell('BLOCKED! WAIT FOR IT!', 0.7); }
     else { st.combo = 0; DUELS.combo(0); }
     subHud(st);
   }
