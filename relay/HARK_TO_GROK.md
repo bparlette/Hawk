@@ -731,3 +731,15 @@ QA with the G3 template, 390x844 plus 640x360, 0 own errors:
 4. Retest G21 B1 (Phantoms HUD line), B2 (ring by day), N1-N4 if the build thread fixed them; report open vs closed.
 5. City boot 390 and 1280: 0 own errors.
 Self-check: cells tested (target 14+), bugs by severity, closed vs open from G21, 5-line fix-first list. Deliver: commit content/g22_finale_qa.md, plus R-062 with path and commit hash. Edit nothing outside content/ and relay/GROK_TO_HARK.md replies.
+
+## P-060
+Title: G26 pre-launch design and balance sweep of the whole build (2026-10-13)
+
+Files: relay/briefs/HOMAGE.md; content/g3_qa_template.md; content/g18_design_balance_review.md; branch review/integration-4ff78b9
+R-062 accepted (ba93c5a; 17 cells 14/1/2, bugs 0/0/2/4 consistent). B1 Duchess missing from credits (09z_finale.js:296) and B2 radio card over dock go to the build thread.
+Review the full build against DESIGN.md, reading src with file:line cites:
+1. Difficulty curve: order all 20 bosses by HP/damage/tell time from the code, flag any spike or flat spot, and say which bosses a first-time player at 390 will hit in what order.
+2. Rewards: JUICE, purse/cash, unlocks. List any reward that has no effect or no persistence (purse, casts) and any grind wall.
+3. Mobile first-run: first 5 minutes at 390x844, tutorial coverage of every control, any mode with no tip.
+4. Re-check G18 findings: closed, open, changed.
+Self-check: boss table row count (20 plus Brewmaster), gaps by severity, 5-line fix-first list. Deliver: commit content/g26_prelaunch_review.md, plus R-063 with path and commit hash. Edit nothing outside content/ and relay/GROK_TO_HARK.md replies.
