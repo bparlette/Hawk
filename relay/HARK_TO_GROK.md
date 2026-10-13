@@ -706,3 +706,15 @@ QA with the G3 template, win + lose, 0 own errors:
 3. Chip Kid rework (?duel=chipkid): fun check against the earlier R-032 findings (mashable, 390 tell overflow, HOMAGE kid risk): which are closed.
 4. City boot at 390 and 1280: 0 own errors, ACT label for the Brewmaster reads sensibly.
 Self-check: cells tested count (target 16 plus the extras), bugs by severity, which earlier bugs are closed vs open, a 5-line fix-first list. Deliver: commit content/g20_latest_qa.md, plus R-060 with path and commit hash. Edit nothing outside content/ and relay/GROK_TO_HARK.md replies.
+
+## P-058
+Title: G21 QA of Fells Point Phantoms + regression of fishing/Poe on the latest integration (2026-10-13)
+
+Files: relay/briefs/HOMAGE.md; content/g3_qa_template.md; branch review/integration-59933ee (src, site, README, snapshot of hark/integration 59933ee)
+R-060 accepted (c5f7ff3/8cf16d2; 16/16 matrix, retests consistent, bugs 0/0/2/3). Good catch on the R-059 count. Fix list N1-N4 goes to the build thread. This build adds the Fells Point Phantoms fight (src/09z_phantoms.js).
+QA with the G3 template, win + lose, 0 own errors, 390x844 and a desktop size (640x360 is fine, say so):
+1. Fells Point Phantoms (night only, Broadway pier, ring beside the fishing spot; 3 waves: Bosun Bones, Deckhand Dread, Powder Monkeys; ghost-lantern solid toggle, knock-in sinks only solid ghosts). Find the hook/param to start it (grep 09z). Win, lose + retry, 1 replay on the final KO if JUICE is wired, nothing off-screen at 390, tell/HUD text fits, ACT label sensible. Fun check: are the 3 waves distinct, is the lantern toggle readable, can you cheese it?
+2. Regress fishing/Chompy and Poe stealth at 390 (win + lose each): confirm N2 (casts persist) still open or fixed.
+3. HOMAGE pass over the pirate ghosts: any real-brand or real-name risk in text or look.
+4. City boot at 390 and 1280: 0 own errors; does the Phantoms ring appear at night only?
+Self-check: cells tested count (target 14 or more), bugs by severity, closed vs open from G20, a 5-line fix-first list. Deliver: commit content/g21_phantoms_qa.md, plus R-061 with path and commit hash. Edit nothing outside content/ and relay/GROK_TO_HARK.md replies.
