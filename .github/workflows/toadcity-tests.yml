@@ -63,6 +63,7 @@ jobs:
           # bosses whose test entry is not ?<boss>=1&<boss>auto=<mode>: extra query per mode + the build marker to look for
           modex = {'chipkid': {'win': '&duel=chipkid&duelbot=win', 'lose': '&duel=chipkid&duelbot=lose&ckhp=6'}}
           marker = {'chipkid': 'ckhp'}
+          if 'cobblestone:storm' in js: extra['cobblestone'] = '&tod=0.1&ciexpect=cobblestone:storm:end'  # cobble-storm builds: the Cobblestone fights start in DAYTIME and must play the storm intro
           inc, skipped = [], []
           for b in want:
               if marker.get(b, b + 'auto') not in js:

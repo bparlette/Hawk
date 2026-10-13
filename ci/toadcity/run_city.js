@@ -14,10 +14,10 @@ const IDS = (process.env.CITY_BOSSES || 'crabcake,poolshark,scrubber,honqueen,sh
     await p.waitForTimeout(3000);
     await p.screenshot({ path: `${outDir}/${name}_start.png` });
     for (const id of IDS) {
-      const r = await p.evaluate(async (id) => { const C = __cel, D = __duels, K = D && D.kinds[id]; if (!K) return { id, missing: true }; const T = K.trigger; if (!T) return { id, noTrigger: true }; const o = { id, trig: { x: +T.x.toFixed(1), z: +T.z.toFixed(1) } }; const NI = id === 'cobblestone' || id === 'carl'; C.CYC.pin = NI ? 0.5 : 0.1; await new Promise((r) => setTimeout(r, NI ? 2500 : 300));
+      const r = await p.evaluate(async (id) => { const C = __cel, D = __duels, K = D && D.kinds[id]; if (!K) return { id, missing: true }; const T = K.trigger; if (!T) return { id, noTrigger: true }; const o = { id, trig: { x: +T.x.toFixed(1), z: +T.z.toFixed(1) } }; const CSD = id === 'cobblestone' && window.__cobblestone && __cobblestone.isDay; const NI = (id === 'cobblestone' && !CSD) || id === 'carl'; // cobble-storm builds: the Cobblestone ring is checked BY DAY C.CYC.pin = NI ? 0.5 : 0.1; await new Promise((r) => setTimeout(r, NI ? 2500 : 300));
         C.hero.pos.set(T.x + 0.3, C.groundY(T.x, T.z), T.z + 0.2); await new Promise((r) => setTimeout(r, 1500));
         o.ringHere = D.BEAM.list.some((b) => { const v = b.ring.getWorldPosition(b.ring.position.clone()); return b.ring.visible && Math.hypot(v.x - T.x, v.z - T.z) < 5; });
-        o.act = (document.getElementById('albl-c') || {}).textContent || ''; o.hasBeam = D.BEAM.list.some((b) => b.K === K); o.ok = o.hasBeam ? o.ringHere : !!o.act.trim(); return o; }, id).catch((e) => ({ id, evalErr: e.message }));
+        o.act = (document.getElementById('albl-c') || {}).textContent || ''; o.hasBeam = D.BEAM.list.some((b) => b.K === K); o.ok = o.hasBeam ? o.ringHere : !!o.act.trim(); if (CSD) { o.day = __cobblestone.isDay(); o.ok = o.ok && o.day && /CAPTAIN/.test(o.act) && !/AFTER DARK/.test(o.act); } return o; }, id).catch((e) => ({ id, evalErr: e.message }));
       res.rings.push(r); console.log('RING', JSON.stringify(r));
       if (!r.missing && !r.noTrigger) await p.screenshot({ path: `${outDir}/${name}_${id}.png` }).catch(() => {});
     }
