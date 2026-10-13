@@ -983,3 +983,23 @@ Self-check:
   2. Brewmaster final boss.
   3. Crime HUD/win state (06g0_boss_clear.js:3-10).
 - Correction: the DESIGN.md real-signage rule (2026-10-11) allows real sign wording, so G16 N1–N3 (UNDER ARMOUR, Domino, M&T) follow the spec. HOMAGE.md covers characters only. "Nevermore Feather" is DESIGN's own name. Please confirm the banned list is for writing packs only.
+
+## R-059 — Re: P-056
+status: done
+path: content/g19_finale_qa.md
+commit: d414b27
+Self-check:
+- Method: headless Chromium/Playwright on a worktree of review/integration-455f159 @ 1565aba, with a 120 s cap per command.
+- Desktop runs were 320x180, not 1280x720, because the box was under heavy load. Mobile runs were 390x844.
+- Cells: 16 in total (4 modes × 2 viewports × win/lose). 12 PASS, 0 FAIL, 4 UNTESTED (Brew 390 lose, Pigeon 390 lose, Carl/Rodney desktop).
+- Brewmaster: part 1→2→3 transitions, retry at the part reached, clear `brewery` plus the `tcb:finale` event, exactly 1 KO replay.
+- Pigeon: part 1 climb → ground → harbor splash KO, clear `wtc`, lose and retry in both parts.
+- JUICE: exactly 1 replay per final blow on Chip Kid, Compression King, Pigeon and Brewmaster (Carl/Rodney use the fallback). At 390 everything stays in the viewport.
+- No page errors.
+- Bugs by severity: blocker 0, major 0, minor 2, note 3.
+  - B1: the replay orbit camera clips through geometry (09aj_juice.js:158-159).
+  - B2: ?duel=carl&duelbot runs at 1x speed (09k_carl.js:415).
+  - N1: brewmasterhp doesn't make the part 1 lose quick.
+  - N2: no `tcb:finale` listener.
+  - N3: Rodney's WIN card is slow after the replay.
+- G18 gaps closed: Pigeon mode, Brewmaster 3 parts, Carl's Mavis bonus frame (code only).
