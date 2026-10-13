@@ -28,9 +28,9 @@ const FMAP = (function () {
     fourseasons: [69, -71, 95, -45], pendry: [109, -31, 143, -17], fells: [137, -71, 163, -45], monument: [-33, -105, -7, -79], orioles: [-137, -37, -75, 37],
     ravens: [-137, 45, -75, 107], science: [-67, 45, -41, 71, 1], fedhill: [-33, 45, 27, 73], domino: [69, 45, 95, 71, 1], underarmour: [103, 45, 129, 71], fort: [137, 45, 214, 107] };
   Object.assign(LMB, { lexington: [-101, -71, -75, -45], rashfield: [-43, 18, -20, 31] }); // lexington: new landmarks (no baked mini-model yet: drawn as a footprint + label)
-  const NICE = { harborplace: 'HARBORPLACE', constellation: 'CONSTELLATION', wtc: 'WORLD TRADE', aquarium: 'AQUARIUM', powerplant: 'POWER PLANT', fourseasons: 'HARBOR EAST GRAND',
+  const NICE = { harborplace: 'HARBORPLACE', constellation: 'CONSTELLATION', wtc: 'WORLD TRADE', aquarium: 'AQUARIUM', powerplant: 'POWER PLANT', fourseasons: 'FOUR SEASONS',
     pendry: 'PENDRY', fells: 'FELLS POINT', monument: 'MONUMENT', orioles: 'ORIOLE PARK', ravens: 'M&T STADIUM', science: 'SCIENCE CENTER', fedhill: 'FED HILL',
-    domino: 'HARBOR SUGAR CO.', underarmour: 'SWEATFORGE PIER', fort: 'FORT McHENRY' };
+    domino: 'DOMINO', underarmour: 'UNDER ARMOUR', fort: 'FORT McHENRY' };
   Object.assign(NICE, { lexington: 'LEXINGTON MKT', rashfield: 'RASH FIELD' }); // lexington:
   const STREETS = [['PRATT ST', -112, -41, 0], ['KEY HWY', 40, 41, 0], ['LIGHT ST', -71, -90, 1], ['LOMBARD ST', 40, -75, 0]];
   const BOATS = [[-46, 17, 0], [-10, -7, 1], [-6, 14, 0], [38, 9, 1], [76, -12, 0], [98, 20, 1], [150, 6, 0], [186, -16, 1], [203, 21, 0], [128, -6, 1]];
