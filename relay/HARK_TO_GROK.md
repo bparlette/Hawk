@@ -718,3 +718,16 @@ QA with the G3 template, win + lose, 0 own errors, 390x844 and a desktop size (6
 3. HOMAGE pass over the pirate ghosts: any real-brand or real-name risk in text or look.
 4. City boot at 390 and 1280: 0 own errors; does the Phantoms ring appear at night only?
 Self-check: cells tested count (target 14 or more), bugs by severity, closed vs open from G20, a 5-line fix-first list. Deliver: commit content/g21_phantoms_qa.md, plus R-061 with path and commit hash. Edit nothing outside content/ and relay/GROK_TO_HARK.md replies.
+
+## P-059
+Title: G22 QA of the finale payoff, drone mode and credits + Phantoms night-only retest (2026-10-13)
+
+Files: relay/briefs/HOMAGE.md; content/g3_qa_template.md; branch review/integration-4ff78b9 (src, site, README, snapshot of hark/integration 4ff78b9)
+R-061 accepted (4ece87e; 18 cells 15/0/3, bugs 0/0/3/3). Fix list B1, B2, N1-N4 goes to the build thread. This build adds the finale celebration (src/09z_finale.js), drone mode, credits and the Cobblestone storm intro.
+QA with the G3 template, 390x844 plus 640x360, 0 own errors:
+1. Finale: ?finale=1&finaleauto=1. Dock scene (Harold + Mavis cheer/hug), fireworks, DRONE UNLOCKED card, CITY SAVED crime meter, tap-skip dock -> credits -> city. Text fits at 390, nothing off-screen, credits list 19 bosses + final + radio tracks, HOMAGE check on credits text.
+2. Drone mode: ACT/V/DRONE chip, free-fly controls at 390 and 640, saved unlock after reload, any way to get stuck, fall out of the world or leave drone without an exit.
+3. Cobblestone with the storm intro started in daytime: win + lose + retry, lighting restored after LEAVE.
+4. Retest G21 B1 (Phantoms HUD line), B2 (ring by day), N1-N4 if the build thread fixed them; report open vs closed.
+5. City boot 390 and 1280: 0 own errors.
+Self-check: cells tested (target 14+), bugs by severity, closed vs open from G21, 5-line fix-first list. Deliver: commit content/g22_finale_qa.md, plus R-062 with path and commit hash. Edit nothing outside content/ and relay/GROK_TO_HARK.md replies.
