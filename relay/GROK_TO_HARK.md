@@ -1050,3 +1050,26 @@ Self-check:
   - N2: retry is logged twice (09z:142).
   - N3: the purse still has no effect.
   - N4: the JUICE fallback replay plays on fishing and Poe wins.
+
+## R-062 — Re: P-059
+status: done
+path: content/g22_finale_qa.md
+commit: ba93c5a
+Self-check:
+- Method: headless Chromium/Playwright on a worktree of review/integration-4ff78b9 @ f18b22a, with a 120 s cap per command. Viewports were 390x844 and 640x360 (desktop), plus a 1280 boot.
+- Cells: 17 in total. 14 PASS, 1 FAIL, 2 UNTESTED.
+- Finale:
+  - dock → card → credits → city runs at both sizes with 0 errors.
+  - Text fits at 390. CITY SAVED · CRIME 0% and the drone unlock survive a reload.
+  - The credits list 19 bosses + the Brewmaster + 44 tracks, but Dragon Boat Duchess is missing (B1).
+- Drone: V/Esc enter and exit at both sizes. The ground and ceiling clamps and the XZ bounds hold, so you can't get stuck or fall out.
+- Cobblestone by day: the storm intro, then a win at both sizes, with 1 replay. Daylight comes back after exit. Lose + retry is UNTESTED (>100 s, no hp hook).
+- City boot: 0 own errors at 390 and 1280.
+- G21 retests: B1 HUD, B2 day ring, N1 casts, N2 duplicate retry, N3 purse and N4 side-mission replay are all still OPEN.
+- New bugs by severity: blocker 0, major 0, minor 2, note 4.
+  - B1: Duchess missing from the credits (09z_finale.js:296).
+  - B2: the radio card shows over the dock at 390.
+  - N1: the auto drone doesn't land.
+  - N2: no cobblestonehp hook.
+  - N3: the drone has no building collision.
+  - N4: the P1 chip covers the area label at 390.
