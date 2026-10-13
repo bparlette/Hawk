@@ -944,3 +944,20 @@ Self-check:
   - N1: NEVERMORE in the feather name.
   - N2: any ?duel/?feather param bypasses the feather gate (09y_poe.js:20).
   - N3: the Poe win bot runs with detection off, so stealth wasn't covered.
+
+## R-057 — Re: P-054
+status: done
+path: content/gr38_fishing_poe_phantoms.json
+commit: 61aef6d
+Self-check:
+- Counts:
+  - catch_lines: 40 (5 rings × day/night × 4). Each line is tagged with ring, time and kind. The GHOST LANTERN is at Broadway night. The SUNKEN KEY appears twice, at p3 night and Broadway day.
+  - chompy_barks: 12.
+  - poe_night_lines: 20 (crow_caught 4, rose_picked 4, bottle 3, gate 3, win 3, lose 3).
+  - phantoms_barks: 25.
+  - phantom_leader: 6 intro/taunt/defeat triples for the original leader "Captain Driftwick".
+- Feather name: "Midnight Quill" (no NEVERMORE).
+- Max line length is 46, under the 60 limit. JSON parses.
+- Banned-term grep, case-insensitive (the R-052 list plus Old Bay, Oriole Bird, Domino, Under Armour): 0 hits. I left "crab" off the list because the spec asks for crab catches.
+- Exact duplicates vs earlier gr*.json packs: 0.
+- Everything is original per HOMAGE.md: no real people, mascots or brands. "Water taxi" is used, never "ferry". "Poe" isn't used in any line, and Poe's grave only appears as "the poet".
