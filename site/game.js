@@ -9769,8 +9769,8 @@ const DUELS = (function () {
 })();
 
 // ======================= SUGAR RUSH, SUGAR REFINERY ROOF: a 3D arena brawl beside the giant neon sign (boss #15, DESIGN.md roster + BOSS_GANG_UPGRADE_PLAN §3.15).
-// Homage rule: the refinery is "HARBOR SUGAR CO." (original name from hawk-relay content/gr34_homage_names.json); the sign is drawn on a canvas in code.
-// No real refinery name or logo appears anywhere in this file or its art.
+// Signage: the refinery is the real Domino Sugars plant; its "Domino / Sugars" neon script sign is drawn on a canvas in code (DESIGN.md real-signage rule,
+// Brad 2026-10-11: real landmark signs stay real, only bosses/characters are original). No logo file.
 // Sugar Rush is an original sugar-crystal golem (rock-candy ponytail, crystal tiara, sugar-cube limbs, glowing candy-pink eyes). Harold fights her on foot on the
 // refinery roof (camera locked on behind him), Mavis cheers from the elevator house and helps.
 // Her moves (every tell is >= 1.0 s: a "!" over her head + a tell card + a ground mark):
@@ -9794,7 +9794,7 @@ const DUELS = (function () {
   const C = { scene: null, cam: null, title: 'SUGAR RUSH', pips: 3,
     hint: '<b>WASD</b> move · <b>J</b> swing · <b>K</b> roll · <b>E</b> power',
     labels: { a: 'SWING', b: 'ROLL', c: 'POWER', l: '', r: '' } };
-  const NAME = 'HARBOR SUGAR CO.'; // sugarrush: original refinery homage name (gr34_homage_names.json sugar_refinery_names)
+  const NAME = 'DOMINO SUGARS'; // the real refinery name (DESIGN.md real-signage rule, Brad 2026-10-11)
   const BX = 9.6, BZ0 = -7.2, BZ1 = 8.4; // roof bounds the fighters stay inside
   const SIGN_Z = 11.2, CONDUIT = new THREE.Vector3(-5.2, 0, 9.4);
   const PH = [ // per phase: tell lengths (all >= 1.0 s), counts, gaps, open window
@@ -9839,13 +9839,18 @@ const DUELS = (function () {
   }
 
   // ---------------- textures (all drawn in code) ----------------
-  function signTex() { return canvasTex(1024, 256, (g, w, h) => {
-    g.clearRect(0, 0, w, h); g.textAlign = 'center'; g.textBaseline = 'middle'; g.lineJoin = 'round';
-    const draw = (txt, y, size, italic) => { g.font = (italic ? 'italic ' : '') + '900 ' + size + 'px ' + FONT;
-      g.shadowColor = '#ff2a3a'; g.shadowBlur = 26; g.strokeStyle = '#ff3b46'; g.lineWidth = size * 0.16; g.strokeText(txt, w / 2, y);
-      g.shadowBlur = 8; g.strokeStyle = '#ffd0d0'; g.lineWidth = size * 0.05; g.strokeText(txt, w / 2, y); g.shadowBlur = 0; };
-    draw('Harbor Sugar', h * 0.38, 128, true); draw('C O .', h * 0.82, 52, false);
-    g.strokeStyle = '#ff3b46'; g.lineWidth = 6; g.shadowColor = '#ff2a3a'; g.shadowBlur = 14; g.beginPath(); g.moveTo(w * 0.16, h * 0.64); g.quadraticCurveTo(w * 0.5, h * 0.72, w * 0.84, h * 0.6); g.stroke();
+  // the real Domino Sugars sign (DESIGN.md signage rule, Brad 2026-10-11): "Domino" script over "Sugars" in a rounded box, red-orange neon at night,
+  // drawn on canvas in the same style as the city's rooftop sign (03_city.js dominoTex night), no logo file.
+  function signTex() { return canvasTex(1024, 640, (g, w, h) => {
+    g.clearRect(0, 0, w, h); const RED = '#ff3a1c', CORE = '#ffc2a6';
+    const glow = (b) => { g.shadowColor = b ? '#ff2a10' : 'rgba(0,0,0,0)'; g.shadowBlur = b; };
+    g.lineJoin = 'round'; rrect(g, 34, 34, 956, 572, 64); glow(34); g.strokeStyle = RED; g.lineWidth = 20; g.stroke(); glow(0); g.strokeStyle = CORE; g.lineWidth = 5; g.stroke();
+    const word = (txt, x, y, font, slant, fillW) => { g.save(); g.translate(x, y); g.transform(1, 0, -slant, 1, 0, 0); g.font = font; g.textAlign = 'center'; g.textBaseline = 'alphabetic';
+      glow(30); g.fillStyle = RED; g.fillText(txt, 0, 0, fillW); g.lineWidth = 9; g.strokeStyle = RED; g.strokeText(txt, 0, 0, fillW); glow(0); g.lineWidth = 3.5; g.strokeStyle = CORE; g.strokeText(txt, 0, 0, fillW); g.restore(); };
+    word('Domino', 512, 330, 'italic 900 318px "Brush Script MT", "Snell Roundhand", "Apple Chancery", Georgia, "Times New Roman", "DejaVu Serif", serif', 0.16, 900);
+    g.save(); g.beginPath(); g.moveTo(170, 372); g.bezierCurveTo(360, 410, 650, 404, 880, 346); g.lineCap = 'round';
+    glow(26); g.strokeStyle = RED; g.lineWidth = 15; g.stroke(); glow(0); g.strokeStyle = CORE; g.lineWidth = 4; g.stroke(); g.restore();
+    word('Sugars', 520, 555, 'bold 172px Georgia, "Times New Roman", "DejaVu Serif", serif', 0.02, 600);
   }, 512); }
   function roofTex() { return canvasTex(256, 256, (g, w, h) => { g.fillStyle = '#4a4744'; g.fillRect(0, 0, w, h); SEED = 15;
     for (let i = 0; i < 900; i++) { g.fillStyle = srnd() < 0.5 ? 'rgba(255,255,255,.05)' : 'rgba(0,0,0,.08)'; g.fillRect(srnd() * w, srnd() * h, 2, 2); }
@@ -9896,10 +9901,10 @@ const DUELS = (function () {
     const wg = new THREE.BufferGeometry(); wg.setAttribute('position', new THREE.BufferAttribute(new Float32Array(win), 3));
     sc.add(new THREE.Points(wg, new THREE.PointsMaterial({ color: '#ffd890', size: 0.9, sizeAttenuation: true, fog: false })));
     // the neon sign itself + a soft red halo behind it
-    C.sign = new THREE.Mesh(new THREE.PlaneGeometry(21, 5.25), new THREE.MeshBasicMaterial({ map: signTex(), transparent: true, depthWrite: false, side: THREE.DoubleSide, fog: false }));
-    C.sign.position.set(0, 6.3, SIGN_Z); C.sign.rotation.y = Math.PI; sc.add(C.sign); // faces the arena (-z)
-    C.halo = new THREE.Mesh(new THREE.PlaneGeometry(30, 11), new THREE.MeshBasicMaterial({ map: DUELS.dot('#ff3040'), transparent: true, opacity: 0.35, depthWrite: false, blending: THREE.AdditiveBlending, fog: false }));
-    C.halo.position.set(0, 6.3, SIGN_Z + 0.6); C.halo.rotation.y = Math.PI; sc.add(C.halo);
+    C.sign = new THREE.Mesh(new THREE.PlaneGeometry(13.6, 8.5), new THREE.MeshBasicMaterial({ map: signTex(), transparent: true, depthWrite: false, side: THREE.DoubleSide, fog: false }));
+    C.sign.position.set(0, 5.6, SIGN_Z); C.sign.rotation.y = Math.PI; sc.add(C.sign); // faces the arena (-z)
+    C.halo = new THREE.Mesh(new THREE.PlaneGeometry(22, 14), new THREE.MeshBasicMaterial({ map: DUELS.dot('#ff3040'), transparent: true, opacity: 0.35, depthWrite: false, blending: THREE.AdditiveBlending, fog: false }));
+    C.halo.position.set(0, 5.6, SIGN_Z + 0.6); C.halo.rotation.y = Math.PI; sc.add(C.halo);
   }
 
   // ---------------- the Sugar Rush stand-in: a sugar-crystal golem (~3.2 m) ----------------
@@ -10177,7 +10182,7 @@ const DUELS = (function () {
     if (t > 3.3 && !st.said) { st.said = true; DUELS.say('SUGAR RUSH', pick(lines().defeat), 3); }
     if (t > 4.6 && !st.winDone) { st.winDone = true; DUELS.bossCleared('domino', 'sugarrush-duel');
       const g = grade(st), s = st.stats;
-      setTimeout(() => { if (DUELS.cur === C) DUELS.over('win', 'SUGAR RUSH<br>SWEPT UP', 'GRADE <b style="color:#ffd23c;font-size:16px">' + g + '</b> \u00b7 hits taken ' + s.taken + ' \u00b7 best chain x' + s.maxChain + '<br>The refinery roof is clear. Crime at ' + NAME.replace('.', '') + ': 0.'); }, SIM ? 300 : 900); }
+      setTimeout(() => { if (DUELS.cur === C) DUELS.over('win', 'SUGAR RUSH<br>SWEPT UP', 'GRADE <b style="color:#ffd23c;font-size:16px">' + g + '</b> \u00b7 hits taken ' + s.taken + ' \u00b7 best chain x' + s.maxChain + '<br>The refinery roof is clear. Crime at ' + NAME + ': 0.'); }, SIM ? 300 : 900); }
   }
 
   function fxStep(dt) {
@@ -10776,8 +10781,9 @@ const DUELS = (function () {
   window.__crabcake = C; C.PH = PH;
 })();
 
-// ======================= THE COMPRESSION KING, SWEATFORGE PIER GEAR OUTLET (boss #16 in BOSS_GANG_UPGRADE_PLAN; DESIGN.md "fight in a clothing store").
-// Homage rule: the store is an ORIGINAL athletic-gear outlet, "SWEATFORGE PIER" (GR34 athletic_gear_landmark_names). No real brand name, mark or logo anywhere.
+// ======================= THE COMPRESSION KING, UNDER ARMOUR STORE, LOCUST POINT (boss #16 in BOSS_GANG_UPGRADE_PLAN; DESIGN.md "fight in a clothing store").
+// Signage: the store sign carries the real UNDER ARMOUR wording (DESIGN.md real-signage rule, Brad 2026-10-11), procedural lettering only, no logo file.
+// The boss and his moves are original.
 // The King: an athleisure mannequin brute (featureless egg head, charcoal compression gear with teal piping, a crown of stacked sweatbands), ~3 m tall.
 // A free-move lock-on brawl inside the store: Harold walks the shop floor (camera behind him, always facing the King), Mavis cheers by the register.
 //   MANNEQUIN FREEZE: the store lights cycle GREEN / YELLOW / RED (red-light/green-light). Move or swing on RED and a display mannequin lunges at you.
@@ -10812,7 +10818,7 @@ const DUELS = (function () {
   const C = { scene: null, cam: null, title: 'THE COMPRESSION KING', pips: 2,
     hint: '<b>WASD</b> move · <b>J</b> swing · <b>K</b> dodge · <b>E</b> power · freeze on <b>RED</b>',
     labels: { a: 'SWING', b: 'DODGE', c: 'POWER', l: '', r: '' } };
-  const STORE = 'SWEATFORGE PIER', AR = 9.2, BHP = 300; // store name (original homage), arena half-size, boss HP (2 phases of 150)
+  const STORE = 'UNDER ARMOUR', AR = 9.2, BHP = 300; // real store sign wording (DESIGN.md signage rule), arena half-size, boss HP (2 phases of 150)
   const V = new THREE.Vector3(), V2 = new THREE.Vector3(), V3 = new THREE.Vector3(), M4 = new THREE.Matrix4(), QQ = new THREE.Quaternion(), CO = new THREE.Color();
   const PH = [ // per phase
     { mix: ['freeze', 'squeeze', 'hanger', 'squeeze', 'hanger', 'freeze', 'hanger', 'squeeze'], stalk: [1.0, 1.6], sqTell: 1.2, hgTell: 1.1, green: 1.9, red: 1.6, cycles: 3, mash: 9, hangers: 1, open: 1.5 },
@@ -10823,13 +10829,13 @@ const DUELS = (function () {
   const lines = () => { const L = lmk(); return L && L.boss && L.boss.lines; };
   const pick = (a) => a[Math.floor(Math.random() * a.length)];
 
-  // ---------------- textures (all procedural, original lettering) ----------------
+  // ---------------- textures (all procedural lettering) ----------------
   function signTex() { return canvasTex(1024, 256, (g, w, h) => {
     g.fillStyle = '#14161c'; g.fillRect(0, 0, w, h); g.fillStyle = '#1fd1c1'; g.fillRect(0, h - 22, w, 10); g.fillRect(0, 12, w, 6);
     g.textAlign = 'center'; g.textBaseline = 'middle'; g.font = 'italic 900 120px ' + FONT; g.lineJoin = 'round';
     g.strokeStyle = '#0a5e58'; g.lineWidth = 16; g.strokeText(STORE, w / 2, h * 0.44); g.fillStyle = '#f4f6f8'; g.fillText(STORE, w / 2, h * 0.44);
-    g.font = '900 34px ' + FONT; g.fillStyle = '#1fd1c1'; g.fillText('GEAR OUTLET \u00b7 LOCUST POINT \u00b7 EST. 1996', w / 2, h * 0.8);
-    // an original mark: a forged anvil-drop shape (not any real logo)
+    g.font = '900 34px ' + FONT; g.fillStyle = '#1fd1c1'; g.fillText('LOCUST POINT \u00b7 BALTIMORE \u00b7 EST. 1996', w / 2, h * 0.8);
+    // side ornaments: simple drop shapes (decorative, no logo)
     for (const s of [-1, 1]) { g.save(); g.translate(w / 2 + s * 455, h * 0.44); g.fillStyle = '#1fd1c1'; g.beginPath(); g.moveTo(-26, -30); g.lineTo(26, -30); g.lineTo(14, 0); g.lineTo(0, 34); g.lineTo(-14, 0); g.closePath(); g.fill(); g.restore(); }
   }, 1024); }
   function floorTex() { return canvasTex(512, 512, (g, w, h) => {
@@ -11003,7 +11009,7 @@ const DUELS = (function () {
   C.start = function () {
     C.st = null; const ph = Q.get('compkingphase') === '2' ? 2 : 1; const st = reset(ph); DUELS.log.push('compking:' + C.rigKind); subHud(st);
     if (Q.get('compkinghp')) { st.hp = clamp(+Q.get('compkinghp') || 100, 1, 100); st.sw = st.cake = true; } // (test: start low, no crab cake / second wind)
-    DUELS.banner('THE COMPRESSION KING<small>' + STORE + ' \u00b7 GEAR OUTLET</small>', 2.4);
+    DUELS.banner('THE COMPRESSION KING<small>' + STORE + ' \u00b7 LOCUST POINT</small>', 2.4);
     const l = lines(); DUELS.say('THE COMPRESSION KING', l && l.intro ? pick(l.intro) : 'Feel the squeeze, old man!', 3.4);
     C.camP = new THREE.Vector3(0, 6, -12); C.camL = new THREE.Vector3(0, 2, 2);
   };

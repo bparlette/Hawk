@@ -1,6 +1,7 @@
 
-// ======================= THE COMPRESSION KING, SWEATFORGE PIER GEAR OUTLET (boss #16 in BOSS_GANG_UPGRADE_PLAN; DESIGN.md "fight in a clothing store").
-// Homage rule: the store is an ORIGINAL athletic-gear outlet, "SWEATFORGE PIER" (GR34 athletic_gear_landmark_names). No real brand name, mark or logo anywhere.
+// ======================= THE COMPRESSION KING, UNDER ARMOUR STORE, LOCUST POINT (boss #16 in BOSS_GANG_UPGRADE_PLAN; DESIGN.md "fight in a clothing store").
+// Signage: the store sign carries the real UNDER ARMOUR wording (DESIGN.md real-signage rule, Brad 2026-10-11), procedural lettering only, no logo file.
+// The boss and his moves are original.
 // The King: an athleisure mannequin brute (featureless egg head, charcoal compression gear with teal piping, a crown of stacked sweatbands), ~3 m tall.
 // A free-move lock-on brawl inside the store: Harold walks the shop floor (camera behind him, always facing the King), Mavis cheers by the register.
 //   MANNEQUIN FREEZE: the store lights cycle GREEN / YELLOW / RED (red-light/green-light). Move or swing on RED and a display mannequin lunges at you.
@@ -35,7 +36,7 @@
   const C = { scene: null, cam: null, title: 'THE COMPRESSION KING', pips: 2,
     hint: '<b>WASD</b> move · <b>J</b> swing · <b>K</b> dodge · <b>E</b> power · freeze on <b>RED</b>',
     labels: { a: 'SWING', b: 'DODGE', c: 'POWER', l: '', r: '' } };
-  const STORE = 'SWEATFORGE PIER', AR = 9.2, BHP = 300; // store name (original homage), arena half-size, boss HP (2 phases of 150)
+  const STORE = 'UNDER ARMOUR', AR = 9.2, BHP = 300; // real store sign wording (DESIGN.md signage rule), arena half-size, boss HP (2 phases of 150)
   const V = new THREE.Vector3(), V2 = new THREE.Vector3(), V3 = new THREE.Vector3(), M4 = new THREE.Matrix4(), QQ = new THREE.Quaternion(), CO = new THREE.Color();
   const PH = [ // per phase
     { mix: ['freeze', 'squeeze', 'hanger', 'squeeze', 'hanger', 'freeze', 'hanger', 'squeeze'], stalk: [1.0, 1.6], sqTell: 1.2, hgTell: 1.1, green: 1.9, red: 1.6, cycles: 3, mash: 9, hangers: 1, open: 1.5 },
@@ -46,13 +47,13 @@
   const lines = () => { const L = lmk(); return L && L.boss && L.boss.lines; };
   const pick = (a) => a[Math.floor(Math.random() * a.length)];
 
-  // ---------------- textures (all procedural, original lettering) ----------------
+  // ---------------- textures (all procedural lettering) ----------------
   function signTex() { return canvasTex(1024, 256, (g, w, h) => {
     g.fillStyle = '#14161c'; g.fillRect(0, 0, w, h); g.fillStyle = '#1fd1c1'; g.fillRect(0, h - 22, w, 10); g.fillRect(0, 12, w, 6);
     g.textAlign = 'center'; g.textBaseline = 'middle'; g.font = 'italic 900 120px ' + FONT; g.lineJoin = 'round';
     g.strokeStyle = '#0a5e58'; g.lineWidth = 16; g.strokeText(STORE, w / 2, h * 0.44); g.fillStyle = '#f4f6f8'; g.fillText(STORE, w / 2, h * 0.44);
-    g.font = '900 34px ' + FONT; g.fillStyle = '#1fd1c1'; g.fillText('GEAR OUTLET \u00b7 LOCUST POINT \u00b7 EST. 1996', w / 2, h * 0.8);
-    // an original mark: a forged anvil-drop shape (not any real logo)
+    g.font = '900 34px ' + FONT; g.fillStyle = '#1fd1c1'; g.fillText('LOCUST POINT \u00b7 BALTIMORE \u00b7 EST. 1996', w / 2, h * 0.8);
+    // side ornaments: simple drop shapes (decorative, no logo)
     for (const s of [-1, 1]) { g.save(); g.translate(w / 2 + s * 455, h * 0.44); g.fillStyle = '#1fd1c1'; g.beginPath(); g.moveTo(-26, -30); g.lineTo(26, -30); g.lineTo(14, 0); g.lineTo(0, 34); g.lineTo(-14, 0); g.closePath(); g.fill(); g.restore(); }
   }, 1024); }
   function floorTex() { return canvasTex(512, 512, (g, w, h) => {
@@ -226,7 +227,7 @@
   C.start = function () {
     C.st = null; const ph = Q.get('compkingphase') === '2' ? 2 : 1; const st = reset(ph); DUELS.log.push('compking:' + C.rigKind); subHud(st);
     if (Q.get('compkinghp')) { st.hp = clamp(+Q.get('compkinghp') || 100, 1, 100); st.sw = st.cake = true; } // (test: start low, no crab cake / second wind)
-    DUELS.banner('THE COMPRESSION KING<small>' + STORE + ' \u00b7 GEAR OUTLET</small>', 2.4);
+    DUELS.banner('THE COMPRESSION KING<small>' + STORE + ' \u00b7 LOCUST POINT</small>', 2.4);
     const l = lines(); DUELS.say('THE COMPRESSION KING', l && l.intro ? pick(l.intro) : 'Feel the squeeze, old man!', 3.4);
     C.camP = new THREE.Vector3(0, 6, -12); C.camL = new THREE.Vector3(0, 2, 2);
   };
