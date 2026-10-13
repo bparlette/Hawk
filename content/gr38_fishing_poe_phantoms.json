@@ -1,0 +1,357 @@
+{
+  "pack": "GR38",
+  "prompt": "P-054",
+  "feather_name": "Midnight Quill",
+  "catch_lines": [
+    {
+      "ring": "hp",
+      "time": "day",
+      "kind": "fish",
+      "line": "A perch! Shiny as a new nickel, hon."
+    },
+    {
+      "ring": "hp",
+      "time": "day",
+      "kind": "junk",
+      "line": "An old boot. Chompy's lunch is served."
+    },
+    {
+      "ring": "hp",
+      "time": "day",
+      "kind": "crab",
+      "line": "Blue crab! He's waving like he owns the plaza."
+    },
+    {
+      "ring": "hp",
+      "time": "day",
+      "kind": "fish",
+      "line": "Bluegill by the pavilions. Tourists clap."
+    },
+    {
+      "ring": "hp",
+      "time": "night",
+      "kind": "fish",
+      "line": "Catfish under the plaza lights. Whiskers!"
+    },
+    {
+      "ring": "hp",
+      "time": "night",
+      "kind": "junk",
+      "line": "A traffic cone. Who parks in the harbor?"
+    },
+    {
+      "ring": "hp",
+      "time": "night",
+      "kind": "fish",
+      "line": "An eel! Slippery as a tax refund."
+    },
+    {
+      "ring": "hp",
+      "time": "night",
+      "kind": "crab",
+      "line": "Night crab, snapping at the moonlight."
+    },
+    {
+      "ring": "p1",
+      "time": "day",
+      "kind": "fish",
+      "line": "Rockfish off the old warship. Salute!"
+    },
+    {
+      "ring": "p1",
+      "time": "day",
+      "kind": "junk",
+      "line": "A rusty bucket. Bail out, sailor."
+    },
+    {
+      "ring": "p1",
+      "time": "day",
+      "kind": "fish",
+      "line": "White perch, pale as a sail."
+    },
+    {
+      "ring": "p1",
+      "time": "day",
+      "kind": "crab",
+      "line": "A crab climbed the line like a rigging rope."
+    },
+    {
+      "ring": "p1",
+      "time": "night",
+      "kind": "fish",
+      "line": "Black drum! It hums like a deck gun."
+    },
+    {
+      "ring": "p1",
+      "time": "night",
+      "kind": "junk",
+      "line": "A bald tire. Somebody's car is sad."
+    },
+    {
+      "ring": "p1",
+      "time": "night",
+      "kind": "fish",
+      "line": "Bluefish by the bow. All teeth, no manners."
+    },
+    {
+      "ring": "p1",
+      "time": "night",
+      "kind": "crab",
+      "line": "Crab by lantern light. Ahoy, little guy."
+    },
+    {
+      "ring": "p3",
+      "time": "day",
+      "kind": "fish",
+      "line": "Perch near the glass tanks. Jealous fish."
+    },
+    {
+      "ring": "p3",
+      "time": "day",
+      "kind": "junk",
+      "line": "A shopping cart! Chompy, dinner's big."
+    },
+    {
+      "ring": "p3",
+      "time": "day",
+      "kind": "crab",
+      "line": "Blue crab on the aquarium pier. Ticket?"
+    },
+    {
+      "ring": "p3",
+      "time": "day",
+      "kind": "fish",
+      "line": "Rockfish with stripes like a deck chair."
+    },
+    {
+      "ring": "p3",
+      "time": "night",
+      "kind": "fish",
+      "line": "Catfish thinks it escaped a tank. Nope."
+    },
+    {
+      "ring": "p3",
+      "time": "night",
+      "kind": "junk",
+      "line": "A boot with the laces still tied. Spooky."
+    },
+    {
+      "ring": "p3",
+      "time": "night",
+      "kind": "fish",
+      "line": "An eel wrapped the cane like a scarf."
+    },
+    {
+      "ring": "p3",
+      "time": "night",
+      "kind": "rare",
+      "line": "SUNKEN KEY! Rusty, heavy, and very secret."
+    },
+    {
+      "ring": "p4",
+      "time": "day",
+      "kind": "fish",
+      "line": "Bluegill by the brick stacks. Charged up!"
+    },
+    {
+      "ring": "p4",
+      "time": "day",
+      "kind": "junk",
+      "line": "A traffic cone under the old power pier."
+    },
+    {
+      "ring": "p4",
+      "time": "day",
+      "kind": "crab",
+      "line": "Crab with attitude. He wants a rematch."
+    },
+    {
+      "ring": "p4",
+      "time": "day",
+      "kind": "fish",
+      "line": "White perch, sparkling like a light bulb."
+    },
+    {
+      "ring": "p4",
+      "time": "night",
+      "kind": "fish",
+      "line": "Black drum, booming under the neon glow."
+    },
+    {
+      "ring": "p4",
+      "time": "night",
+      "kind": "junk",
+      "line": "A bucket of harbor soup. Chompy approves."
+    },
+    {
+      "ring": "p4",
+      "time": "night",
+      "kind": "fish",
+      "line": "Bluefish snapping at the club bass line."
+    },
+    {
+      "ring": "p4",
+      "time": "night",
+      "kind": "crab",
+      "line": "Night crab doing a sideways two-step."
+    },
+    {
+      "ring": "broadway",
+      "time": "day",
+      "kind": "fish",
+      "line": "Perch by the cobblestones. Classic catch."
+    },
+    {
+      "ring": "broadway",
+      "time": "day",
+      "kind": "junk",
+      "line": "A tire from the water taxi lane. Rude."
+    },
+    {
+      "ring": "broadway",
+      "time": "day",
+      "kind": "crab",
+      "line": "Blue crab, Fells Point's finest pincher."
+    },
+    {
+      "ring": "broadway",
+      "time": "day",
+      "kind": "rare",
+      "line": "SUNKEN KEY! It glints like an old secret."
+    },
+    {
+      "ring": "broadway",
+      "time": "night",
+      "kind": "rare",
+      "line": "GHOST LANTERN! It glows green and hums."
+    },
+    {
+      "ring": "broadway",
+      "time": "night",
+      "kind": "fish",
+      "line": "Catfish in the fog. Was it always there?"
+    },
+    {
+      "ring": "broadway",
+      "time": "night",
+      "kind": "junk",
+      "line": "A cart full of seaweed. Haunted groceries."
+    },
+    {
+      "ring": "broadway",
+      "time": "night",
+      "kind": "fish",
+      "line": "An eel slid up, cold as a ghost's handshake."
+    }
+  ],
+  "chompy_barks": [
+    "BURP! Boots taste like sidewalks.",
+    "Feed me junk, hon! I'm a growing wheel!",
+    "Googly eyes on the prize: more trash!",
+    "Om nom nom. Tires are my chewing gum.",
+    "Is that a cone? It's a party hat now.",
+    "Clean harbor, happy Chompy!",
+    "Shopping cart! Free delivery to my belly.",
+    "Fish? Keep it. I want the gross stuff.",
+    "My wheel spins faster when I'm hungry.",
+    "Burp! Pardon me. That bucket was rich.",
+    "Harold, you're my favorite trash buddy.",
+    "Upgrade unlocked! Thank my tummy."
+  ],
+  "poe_night_lines": {
+    "crow_caught": [
+      "CAW! Intruder in the graveyard!",
+      "A crow spotted you. Hide, Harold!",
+      "Lantern on you! Back to the stones!",
+      "The flock is shrieking. Time to go."
+    ],
+    "rose_picked": [
+      "A rose for an old grave. Quiet now.",
+      "Petals down. The crows didn't blink.",
+      "One more rose laid. The wind sighs.",
+      "Thorns and all, a gift for the dead."
+    ],
+    "bottle": [
+      "The unlabeled bottle, set down softly.",
+      "A toast to the poet. No one saw a thing.",
+      "Bottle placed. The grave seems to nod."
+    ],
+    "gate": [
+      "The gate creaks. Slip out, slow and low.",
+      "Out the gate before the crows turn.",
+      "Latch clicks shut. The graveyard sleeps."
+    ],
+    "win": [
+      "You got the Midnight Quill! The flock bows.",
+      "Clean sneak. The graveyard keeps your secret.",
+      "The Midnight Quill is yours. The crows yield."
+    ],
+    "lose": [
+      "Spotted! The crows chase you to the street.",
+      "Too loud, Harold. The flock remembers.",
+      "Caught in the cone. Try the shadows."
+    ]
+  },
+  "phantoms_barks": [
+    "Boo, hon. Did we scare your cane?",
+    "Fog's rolling in. That means us.",
+    "Cobblestones whisper our names.",
+    "We drift. You trip. Simple math.",
+    "Haunting the pier since forever, pal.",
+    "Who's got the ghost lantern? WE want it.",
+    "Chains rattle, rent's due, toad.",
+    "The water taxi won't stop for ghosts.",
+    "Shh. Footsteps on the old bricks.",
+    "Fells Point after dark is OUR block.",
+    "Little toad, big spooky mistake.",
+    "We float. Stairs are for the living.",
+    "I lost my head. Found it. Lost it again.",
+    "Mist on the masts. Perfect night.",
+    "Rattle the shutters, boys!",
+    "Tell your crab cakes we said boo.",
+    "Moon's up. Sheets on.",
+    "A grandpa with a cane? Fresh meat.",
+    "Haunt it slow, haunt it low.",
+    "Our tavern serves cold tea and colder stares.",
+    "Cross the square and you're cursed, hon.",
+    "Boo! Ha. He jumped. Write it down.",
+    "Ow! You can't hit a ghost! ...Ow again!",
+    "Fading out... back to the fog...",
+    "Okay, okay. Ghosts need naps too."
+  ],
+  "phantom_leader": {
+    "name": "Captain Driftwick",
+    "triples": [
+      {
+        "intro": "Welcome to my fog, little toad.",
+        "taunt": "Your cane passes right through me!",
+        "defeat": "Back to the deep... I drift..."
+      },
+      {
+        "intro": "The bells toll for you tonight.",
+        "taunt": "I've haunted tougher toads than you.",
+        "defeat": "My chains... they're slipping..."
+      },
+      {
+        "intro": "Bring me the lantern, or join my crew.",
+        "taunt": "Boo! Did that cane just shake?",
+        "defeat": "The lantern's light... too bright..."
+      },
+      {
+        "intro": "Fells Point is mine after midnight.",
+        "taunt": "You're slow. Even for the living.",
+        "defeat": "Fine. Keep your cobblestones."
+      },
+      {
+        "intro": "My crew walks the masts. You walk the plank.",
+        "taunt": "Mavis can't save you from a ghost, hon.",
+        "defeat": "I'll see you in the fog... someday..."
+      },
+      {
+        "intro": "Every pier creaks with my name.",
+        "taunt": "Ghost tip: duck. Too late.",
+        "defeat": "Lights out for the captain..."
+      }
+    ]
+  }
+}
