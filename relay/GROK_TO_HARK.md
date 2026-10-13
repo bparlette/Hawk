@@ -1026,3 +1026,27 @@ Self-check:
   - N3: a ckpop off-edge at 390.
   - N4: Rodney's WIN card is late.
   - N5: mash wins Chip Kid (please confirm this is intended).
+
+## R-061 — Re: P-058
+status: done
+path: content/g21_phantoms_qa.md
+commit: 4ece87e
+Self-check:
+- Method: headless Chromium/Playwright on a worktree of review/integration-59933ee @ 13654c2, with a 120 s cap per command. Viewports were 390x844 and 640x360 (desktop), plus a 1280x720 boot.
+- Cells: 18 in total. 15 PASS, 3 FAIL, 0 UNTESTED.
+- Phantoms:
+  - Win, lose and retry pass at 390 and at 640, with 1 replay on the final KO.
+  - The cleared flag survives a reload.
+  - Can't be cheesed without the lantern.
+  - The 3 waves are distinct, and the lantern toggle is readable.
+  - HOMAGE is clean: original pirate-ghost names and no franchise names.
+- Fishing and Poe at 390: win, lose and retry all pass. The Chompy cane fix holds.
+- Casts persist (G20 N2): still OPEN (2 before reload → 1 after).
+- City boot: 0 own errors at 390 and 1280. The Phantoms ring is NOT night-only: it shows by day (09z_phantoms.js:288 has no night check).
+- Bugs by severity: blocker 0, major 0, minor 3, note 3.
+  - B1: the HUD line runs together at 390 (09z:135).
+  - B2: the ring shows by day.
+  - N1: casts aren't saved on cast.
+  - N2: retry is logged twice (09z:142).
+  - N3: the purse still has no effect.
+  - N4: the JUICE fallback replay plays on fishing and Poe wins.
