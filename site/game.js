@@ -4671,6 +4671,7 @@ ICONS.boss = '<circle cx="12" cy="12" r="8.5"/><path d="M7 5.5c2 2.6 2 10.4 0 13
 // THREE.Object3D or { root } (optional .update(dt, st) with st = { t, state, throwK|swingK|rearK }); feet at y = 0, facing +z, ~1.8 m tall.
 // Entry: ACT "CHASE" at Al's parked cart (Fells Point boss anchor); BOARD at a water-taxi stop or the Harborplace paddle boats.
 // Tests: ?rb=al | duchess | duchess-paddle | ride (jump in), ?rbauto=win|lose (scripted pilot), ?rbtime=N (Al's clock), ?rbfresh=1 (ignore saves).
+// polish (hark/polish): the Duchess fight runs on the DUELS core via src/09bd_duchess.js (?duchess=1[&duchessauto=win|lose|mash], paddle: ?duchess=paddle).
 const RB = { mode: null, t: 0, calls: 0, maxCalls: 0, auto: Q.get('rbauto') || null, log: [], freeze: false };
 window.__rb = RB;
 const RB_LS = 'tcb_duchess_beaten';
@@ -5344,36 +5345,79 @@ const DUCH = (function () {
   const spray = rbSpray(sc, 120);
   const boatT = rbBuildTaxi(), boatP = rbBuildPaddle(); sc.add(boatT.root, boatP.root);
   const duch = rbBuildDuchessBoat(true); sc.add(duch.root); const rider = rbDuchessRider(duch);
-  const S = { on: false, phase: 'intro', t: 0, pt: 0, hits: 0, kind: 'taxi', shake: 0, hitstop: 0 };
+  // ---- polish (hark/polish): tells you can read ("!" over her + marks on the water >= 1.1 s), Harold's cane combo on a dizzy Duchess, a POWER meter,
+  // Mavis's crab cake + one second wind, a JUICE KO + star grade. The fight now runs on the DUELS core (09a) through src/09bd_duchess.js: DUELS HUD / RETRY card /
+  // shared JUICE kit / CI runner. Without DUELS (never in this build) it still runs in the old RB mode.
+  const TELL_SW = 1.1, TELL_WV = 1.15, BHP = 300, CANE = [6, 6, 12], CANE_W = ['WHACK!', 'THWACK!', 'ROYAL BONK!'];
+  const bangT = canvasTex(128, 128, (g) => { g.fillStyle = '#ffd23c'; g.strokeStyle = '#14101f'; g.lineWidth = 8; g.beginPath(); g.moveTo(64, 6); g.lineTo(122, 116); g.lineTo(6, 116); g.closePath(); g.fill(); g.stroke();
+    g.fillStyle = '#d8262a'; g.font = '900 78px ' + FONT; g.textAlign = 'center'; g.textBaseline = 'middle'; g.fillText('!', 64, 80); }, 128);
+  const BANG = new THREE.Sprite(new THREE.SpriteMaterial({ map: bangT, transparent: true, depthWrite: false, depthTest: false, fog: false })); BANG.scale.setScalar(2.2); BANG.visible = false; BANG.renderOrder = 6; sc.add(BANG);
+  // sceptre reach: a red ring (+ a faint disc) on the water around her, radius = her swing reach (8 m)
+  const RING = new THREE.Mesh(new THREE.RingGeometry(7.3, 8.1, 44).rotateX(-Math.PI / 2), new THREE.MeshBasicMaterial({ color: '#ff3030', transparent: true, opacity: 0, depthWrite: false, blending: THREE.AdditiveBlending, fog: false, side: THREE.DoubleSide }));
+  const DISC = new THREE.Mesh(new THREE.CircleGeometry(7.3, 36).rotateX(-Math.PI / 2), new THREE.MeshBasicMaterial({ color: '#ff3030', transparent: true, opacity: 0, depthWrite: false, blending: THREE.AdditiveBlending, fog: false, side: THREE.DoubleSide }));
+  RING.renderOrder = DISC.renderOrder = 3; RING.visible = DISC.visible = false; sc.add(RING, DISC);
+  // splash-wave lanes: a chevron strip on the water along each wave's path (from her bow out to ~38 m)
+  const laneT = canvasTex(64, 256, (g, w, h) => { const gr = g.createLinearGradient(0, h, 0, 0); gr.addColorStop(0, 'rgba(255,70,50,0.95)'); gr.addColorStop(1, 'rgba(255,70,50,0)'); g.fillStyle = gr; g.fillRect(0, 0, w, h);
+    g.strokeStyle = 'rgba(255,240,200,0.9)'; g.lineWidth = 6; for (let y = h - 20; y > 10; y -= 40) { g.beginPath(); g.moveTo(10, y); g.lineTo(w / 2, y - 18); g.lineTo(w - 10, y); g.stroke(); } }, 64);
+  const LANES = []; for (let k = 0; k < 3; k++) { const g = new THREE.PlaneGeometry(9, 34); g.rotateX(-Math.PI / 2); g.translate(0, 0, 21.6); const m = new THREE.Mesh(g, new THREE.MeshBasicMaterial({ map: laneT, transparent: true, opacity: 0, depthWrite: false, blending: THREE.AdditiveBlending, fog: false, side: THREE.DoubleSide })); m.renderOrder = 3; m.visible = false; sc.add(m); LANES.push(m); }
+  const S = { on: false, phase: 'intro', t: 0, pt: 0, hits: 0, kind: 'taxi', shake: 0, hitstop: 0, duel: false, bot: null, bhp: BHP, pow: 0, combo: 0, comboT: 0, caneK: 0, caneCd: 0, caneT: 0, spT: -1, cakeUsed: false, cakeT: 0, windUsed: false, overShown: false, stats: null };
   const pl = { x: 0, z: 0, h: 0, vx: 0, vz: 0, y: 0, vy: 0, hull: 100, boost: 0, cd: 0, r: 1.6, inv: 0, swing: 0 };
   const du = { x: 0, z: 0, h: 0, vx: 0, vz: 0, st: 'stalk', stT: 0, r: 2.5, swingK: 0, rearK: 0, orbit: 1, wavesFired: 0, sink: 0, stun: 0 };
+  const CI = { mx: 0, my: 0, a: false, b: false, c: false }; // this step's input (DUELS input in duel mode, IN / PRESS in the old RB mode)
+  const _pv = new THREE.Vector3();
+  const pv = (x, y, z) => _pv.set(x, y, z);
+  const shout = (txt, t = 1.1, col) => { if (S.duel) DUELS.banner(txt, t); else RBH.shout(txt.replace(/<small>.*<\/small>/, ''), t, col); };
+  const speak = (who, line, t) => { if (S.duel) DUELS.say(who, line, t); else RBH.speak(who, line, t); };
+  const callout = (txt, t = 1.2) => { if (S.duel) DUELS.tell(txt, t); else RBH.setHint(txt); };
+  const stop = (s) => { if (S.duel) DUELS.hitstop(s); else S.hitstop = Math.max(S.hitstop, s); };
+  const popAt = (txt, x, y, z, cls) => { if (S.duel) DUELS.pop(txt, pv(x, y, z), cls); };
+  function newStats() { return { hitsTaken: 0, canes: 0, maxCombo: 0, powers: 0, dodges: 0, heals: 0, winds: 0, t0: 0 }; }
   function reset() {
     S.phase = 'intro'; S.t = 0; S.pt = 0; S.hits = 0; S.said = false; spray.clear(); for (const w of WAVES) { w.on = false; w.m.visible = false; }
     const pb = S.kind === 'paddle'; Object.assign(pl, { x: -30, z: 20, h: Math.PI * 0.8, vx: 0, vz: 0, y: 0, vy: 0, hull: 100, boost: 0, cd: 0, r: pb ? 1.2 : 1.6, inv: 0, swing: 0 });
-    Object.assign(du, { x: 10, z: -8, h: -Math.PI * 0.3, vx: 0, vz: 0, st: 'stalk', stT: 2.5, swingK: 0, rearK: 0, orbit: 1, wavesFired: 0, sink: 0, stun: 0 });
+    Object.assign(du, { x: 10, z: -8, h: -Math.PI * 0.3, vx: 0, vz: 0, st: 'stalk', stT: 2.5, swingK: 0, rearK: 0, orbit: 1, wavesFired: 0, sink: 0, stun: 0, swung: false });
+    Object.assign(S, { bhp: BHP, pow: S.pow * 0.5, combo: 0, comboT: 0, caneK: 0, caneCd: 0, caneT: 0, spT: -1, cakeUsed: false, cakeT: 0, overShown: false });
+    BANG.visible = RING.visible = DISC.visible = false; for (const l of LANES) l.visible = false;
     RBH.setPips(0); RB.duStats = { hits: 0, rams: 0, knocks: 0, wavesHit: 0, swingsHit: 0, waves: 0, swings: 0, misses: 0 };
   }
   const myBoat = () => (S.kind === 'paddle' ? boatP : boatT);
   function ambushLine() { RBH.place(); RBH.el.classList.add('on'); RBH.name.textContent = ''; RBH.setHint(''); RBH.speak('DRAGON BOAT DUCHESS', rbPick(rbLines('dragon_boat_duchess').boat_ambush), 2.6); }
-  function start(kind) {
-    S.kind = kind === 'paddle' ? 'paddle' : 'taxi'; reset(); S.on = true; RB.mode = 'duchess';
+  function lend() { const deck = S.kind === 'paddle' ? 0.3 : 0.8; rbLend(myBoat().root, S.kind === 'paddle' ? [-0.42, deck, -0.5] : [-0.5, deck, 0.15], myBoat().root, S.kind === 'paddle' ? [0.42, deck, -0.5] : [0.5, deck, 0.15]); }
+  function start(kind, opts = {}) {
+    S.kind = kind === 'paddle' ? 'paddle' : 'taxi';
+    // polish: the fight runs on the DUELS core when it is there (src/09bd_duchess.js registers the 'duchess' kind)
+    if (typeof DUELS !== 'undefined' && DUELS.kinds.duchess && !DUELS.cur) { RBH.hide(); if (DUELS.start('duchess', { kind: S.kind, bot: opts.bot || RB.auto || null })) return; }
+    S.duel = false; S.bot = null; S.stats = newStats(); S.pow = 0; S.windUsed = false; reset(); S.on = true; RB.mode = 'duchess';
     boatT.root.visible = S.kind === 'taxi'; boatP.root.visible = S.kind === 'paddle';
     rbEnterFight('DRAGON BOAT DUCHESS', TOUCH ? 'STICK steer · SWING ram-boost · JUMP hop waves' : DEV === 'pad' ? 'stick steer · X ram-boost · A hop' : 'A/D steer · W/S throttle · J ram-boost · K hop');
-    const deck = S.kind === 'paddle' ? 0.3 : 0.8; rbLend(myBoat().root, S.kind === 'paddle' ? [-0.42, deck, -0.5] : [-0.5, deck, 0.15], myBoat().root, S.kind === 'paddle' ? [0.42, deck, -0.5] : [0.5, deck, 0.15]);
-    rbLog('duchess start ' + S.kind); place(0);
+    lend(); rbLog('duchess start ' + S.kind); place(0);
+  }
+  function duelStart(K, opts = {}) { // called by DUELS.start through the 'duchess' kind
+    S.duel = true; S.bot = DUELS.bot ? DUELS.bot.mode : null; S.stats = newStats(); S.pow = 0; S.windUsed = false; reset(); S.on = true; RB.mode = null; // (MODE.duel owns the frame now)
+    if (opts.kind) S.kind = opts.kind === 'paddle' ? 'paddle' : 'taxi';
+    boatT.root.visible = S.kind === 'taxi'; boatP.root.visible = S.kind === 'paddle'; lend();
+    DUELS.banner('DRAGON BOAT DUCHESS<small>HARBOUR AMBUSH!</small>', 2.2); DUELS.sub('CRASHES 0/3', ''); DUELS.power(0, false, 'POWER'); DUELS.bars(1, 1);
+    rbLog('duchess start ' + S.kind + ' (duel)'); place(0); syncK(K);
   }
   function exit(won) {
-    S.on = false; rbLeaveFight(); rbLog('duchess exit ' + (won ? 'won' : 'quit'));
+    S.on = false; if (!S.duel) rbLeaveFight(); BANG.visible = RING.visible = DISC.visible = false; rbLog('duchess exit ' + (won ? 'won' : 'quit'));
     if (RIDES.R.on) RIDES.resume(); else { RB.mode = null; rbReturnRigs(); }
   }
+  function grade() { const h = S.stats.hitsTaken, g = h <= 3 ? 'S' : h <= 8 ? 'A' : 'B', stars = g === 'S' ? 3 : g === 'A' ? 2 : 1; return { g, stars, h }; }
   function win() {
-    S.phase = 'won'; S.pt = 0; du.st = 'sink'; du.sink = 0.001; RBH.speak('DRAGON BOAT DUCHESS', rbPick(rbLines('dragon_boat_duchess').defeat), 4.2); RBH.shout('DUCHESS SUNK!', 2.4, '#7dffc0'); sfx('ko');
+    S.phase = 'won'; S.pt = 0; du.st = 'sink'; du.sink = 0.001; S.bhp = 0; S.spT = -1; speak('DRAGON BOAT DUCHESS', rbPick(rbLines('dragon_boat_duchess').defeat), 4.2); sfx('ko');
+    if (S.duel) { // polish: one shared JUICE KO (final-blow replay), a big impact + slow-mo, then she sinks; the grade card follows
+      JUICE.ko(new THREE.Vector3(du.x, WY + 2, du.z)); DUELS.impact({ stop: 0.14, shake: 1.2, flash: '#ffffff', flashA: 0.7, zoom: 1.2, zoomT: 0.6, sfx: 'mega', pop: 'K.O.!', pos: pv(du.x, WY + 4.5, du.z), cls: 'big' });
+      DUELS.slowmo(0.35, 1.0); DUELS.banner('K.O.!<small>DUCHESS SUNK!</small>', 2.4); DUELS.combo(0); DUELS.ready(null); DUELS.hot(false);
+    } else RBH.shout('DUCHESS SUNK!', 2.4, '#7dffc0');
     RB.duchessBeaten = true; try { localStorage.setItem(RB_LS, '1'); } catch (e) {}
     const d = { lm: null, boss: 'Dragon Boat Duchess', id: 'dragon_boat_duchess', roaming: true, first: true, city: BOSS_CLEAR.cityCrime(), at: +S.t.toFixed(1), mode: 'ram' };
     BOSS_CLEAR.log.push(d); for (const f of BOSS_CLEAR.fns) { try { f(d); } catch (e) { console.error(e); } } try { dispatchEvent(new CustomEvent('tcb:bossclear', { detail: d })); } catch (e) {}
-    rbLog('duchess WIN');
+    const G = grade(); rbLog('duchess WIN grade ' + G.g); if (S.duel) DUELS.log.push('duchess:win:' + G.g);
   }
-  function lose() { S.phase = 'lost'; S.pt = 0; RBH.shout('SUNK!', 2, '#ff5f5f'); RBH.speak('DRAGON BOAT DUCHESS', 'Off with their boat! Ha!', 3); sfx('hurt'); rbLog('duchess LOSE'); }
+  function lose() { S.phase = 'lost'; S.pt = 0; shout('SUNK!', 2, '#ff5f5f'); speak('DRAGON BOAT DUCHESS', 'Off with their boat! Ha!', 3); sfx('hurt'); rbLog('duchess LOSE'); if (S.duel) { DUELS.log.push('duchess:lose'); DUELS.ready(null); DUELS.hot(false); } }
+  function addPow(v) { const was = S.pow >= 1; S.pow = clamp(S.pow + v, 0, 1); if (!was && S.pow >= 1) { callout('POWER FULL! ACT = DRAGON-SLAYER RAM', 1.4); if (S.duel) DUELS.hitSfx('power'); } }
+  function dodged(txt, v = 0.12) { S.stats.dodges++; addPow(v); popAt(txt, pl.x, WY + 3, pl.z, 'word'); }
   // ---- physics helpers ----
   function hitObstacles(o, r, bounce) { // circle vs piers / buoys; returns what it hit (or null); pushes o out + reflects its velocity
     let hit = null;
@@ -5385,47 +5429,87 @@ const DUCH = (function () {
   }
   function nearestObstacle(x, z) { let best = null, bd = 1e9; for (const p of PIERS) { const cx = clamp(x, p.x0, p.x1), cz = clamp(z, p.z0, p.z1), d = Math.hypot(x - cx, z - cz); if (d < bd) { bd = d; best = { x: cx, z: cz, d }; } }
     for (const b of BUOYS) { const d = Math.hypot(x - b.x, z - b.z) - b.r; if (d < bd) { bd = d; best = { x: b.x, z: b.z, d }; } } return best; }
-  function autoPilot() {
-    if (RB.auto !== 'win') { IN.mx = 0; IN.my = RB.auto === 'lose' ? -1 : 0; return; }
+  // the scripted pilot (?rbauto= / the DUELS bot): win = lines her up against a pier or buoy and rams, hops waves, canes her while she is dizzy, spends POWER;
+  // mash = a first-timer: holds the stick at her and mashes SWING (no hops, no POWER); lose = reverses away and takes the hits
+  function pilot(mode, o) {
+    o.mx = 0; o.my = 0; o.a = o.b = o.c = false;
+    if (mode === 'lose') { o.my = -1; return; }
+    const dDu = Math.hypot(pl.x - du.x, pl.z - du.z);
+    if (mode === 'mash') { const want = Math.atan2(du.x - pl.x, du.z - pl.z), d = angTo(pl.h, want); o.mx = clamp(-d * 2.2, -1, 1); o.my = 1; S.mashT = (S.mashT || 0) + 1; if (S.mashT % 7 === 0) o.a = true; return; }
+    if (S.pow >= 1 && S.spT < 0 && du.st !== 'sink') { o.c = true; return; }
+    if (du.st === 'stunned' && dDu < 8 && S.caneCd <= 0) { o.a = true; }
     // line up behind her, on the far side from the nearest obstacle, then charge through her toward it
     const ob = nearestObstacle(du.x, du.z); let tx = du.x, tz = du.z, charge = true;
     if (ob) { const ax = du.x - ob.x, az = du.z - ob.z, l = Math.hypot(ax, az) || 1; const bx = du.x + ax / l * 6, bz = du.z + az / l * 6;
-      const dPl = Math.hypot(pl.x - bx, pl.z - bz), dDu = Math.hypot(pl.x - du.x, pl.z - du.z);
+      const dPl = Math.hypot(pl.x - bx, pl.z - bz);
       const aligned = ((du.x - pl.x) * -ax + (du.z - pl.z) * -az) / (l * (dDu || 1)) > 0.8;
       if (!aligned && dPl > 2.5) { tx = bx; tz = bz; charge = false; } }
-    const want = Math.atan2(tx - pl.x, tz - pl.z), d = angTo(pl.h, want); IN.mx = clamp(-d * 2.2, -1, 1); IN.my = Math.abs(d) > 1.6 ? -0.2 : 1;
-    if (charge && Math.abs(d) < 0.3 && Math.hypot(du.x - pl.x, du.z - pl.z) < 12 && pl.cd <= 0) PRESS.add('j');
-    for (const w of WAVES) if (w.on && !w.hit) { const rx = pl.x - w.x, rz = pl.z - w.z, along = rx * w.dx + rz * w.dz; if (along > 0 && along < 5) PRESS.add('k'); }
+    const want = Math.atan2(tx - pl.x, tz - pl.z), d = angTo(pl.h, want); o.mx = clamp(-d * 2.2, -1, 1); o.my = Math.abs(d) > 1.6 ? -0.2 : 1;
+    if (charge && du.st !== 'stunned' && Math.abs(d) < 0.3 && dDu < 12 && pl.cd <= 0) o.a = true;
+    for (const w of WAVES) if (w.on && !w.hit) { const rx = pl.x - w.x, rz = pl.z - w.z, along = rx * w.dx + rz * w.dz; if (along > 0 && along < 5) o.b = true; }
+    if (du.st === 'swingTell' && dDu < 9.5) { o.mx = clamp(-angTo(pl.h, Math.atan2(pl.x - du.x, pl.z - du.z)) * 2.2, -1, 1); o.my = 1; o.a = false; } // steer out of the red ring
   }
+  function autoPilot() { pilot(RB.auto === 'win' ? 'win' : RB.auto, CI); IN.mx = CI.mx; IN.my = CI.my; }
   function simPlayer(dt) {
     const pb = S.kind === 'paddle', top = pb ? 11.5 : 13.5;
-    pl.cd -= dt; pl.boost -= dt; pl.inv -= dt;
-    if (rbBoost() && pl.cd <= 0) { pl.boost = 0.9; pl.cd = 2.4; sfx('swing'); RBH.shout('RAM!', 0.5, '#7de8ff'); }
-    if (rbHop() && pl.y <= 0.001) { pl.vy = 6.2; sfx('jump'); }
+    pl.cd -= dt; pl.boost -= dt; pl.inv -= dt; S.caneCd -= dt; S.caneT -= dt; S.comboT -= dt; if (S.comboT <= 0 && S.combo) { S.combo = 0; if (S.duel) DUELS.combo(0); }
+    const dDu = Math.hypot(du.x - pl.x, du.z - pl.z);
+    // POWER: DRAGON-SLAYER RAM (Mavis floors it; she freezes, Harold homes in, and the hit sends her into the nearest pier / buoy)
+    if (CI.c && S.pow >= 1 && S.spT < 0 && du.st !== 'sink') { S.spT = 0; S.pow = 0; S.stats.powers++; du.st = 'stunned'; du.stT = 2.2; pl.inv = 2.6;
+      shout('DRAGON-SLAYER RAM!<small>MAVIS FLOORS IT</small>', 1.6, '#ffd23c'); speak('MAVIS', 'Hold your hat, Harold!', 1.6);
+      if (S.duel) { DUELS.slowmo(0.55, 0.7); DUELS.hitSfx('power'); DUELS.flash('#ffd23c', 0.45); } }
+    else if (CI.c && S.pow < 1 && S.duel && S.caneCd <= 0) { callout('NEED POWER: CANE HER + DODGE', 0.9); S.caneCd = 0.3; }
+    // SWING: the cane when she is dizzy and alongside, else the ram boost
+    if (CI.a && S.spT < 0) {
+      if (du.st === 'stunned' && dDu < 8.5) { if (S.caneCd <= 0) cane(); }
+      else if (pl.cd <= 0) { pl.boost = 0.9; pl.cd = 2.4; sfx('swing'); if (S.duel) { DUELS.hitSfx('whoosh'); popAt('RAM!', pl.x, WY + 3, pl.z, 'word'); } else RBH.shout('RAM!', 0.5, '#7de8ff'); }
+    }
+    if (CI.b && pl.y <= 0.001) { pl.vy = 6.2; sfx('jump'); }
     pl.vy -= 20 * dt; pl.y = Math.max(0, pl.y + pl.vy * dt); if (pl.y === 0) { if (pl.vy < -4) spray.burst(pl.x, WY + 0.3, pl.z, '#e8f8ff', 8, 3, 4); pl.vy = 0; }
-    const sp = Math.hypot(pl.vx, pl.vz); pl.h -= IN.mx * dt * 2.0 * (0.45 + 0.55 * Math.min(1, sp / 6));
-    const thr = pl.boost > 0 ? 1.7 : clamp(0.62 + IN.my * 0.5, -0.4, 1.12), fx = Math.sin(pl.h), fz = Math.cos(pl.h), grip = pl.boost > 0 ? 4 : 2.1;
-    pl.vx = damp(pl.vx, fx * top * thr, grip, dt); pl.vz = damp(pl.vz, fz * top * thr, grip, dt);
+    const sp = Math.hypot(pl.vx, pl.vz);
+    if (S.spT >= 0) { // the special: auto-steer onto her at full tilt
+      S.spT += dt; pl.h += angTo(pl.h, Math.atan2(du.x - pl.x, du.z - pl.z)) * Math.min(1, dt * 8); pl.vx = damp(pl.vx, Math.sin(pl.h) * 24, 6, dt); pl.vz = damp(pl.vz, Math.cos(pl.h) * 24, 6, dt);
+      if (Math.random() < dt * 30) spray.burst(pl.x, WY + 0.4, pl.z, '#ffd23c', 3, 3, 3);
+      if (S.spT > 2.2) S.spT = -1;
+    } else {
+      pl.h -= CI.mx * dt * 2.0 * (0.45 + 0.55 * Math.min(1, sp / 6));
+      const thr = pl.boost > 0 ? 1.7 : clamp(0.62 + CI.my * 0.5, -0.4, 1.12), fx = Math.sin(pl.h), fz = Math.cos(pl.h), grip = pl.boost > 0 ? 4 : 2.1;
+      pl.vx = damp(pl.vx, fx * top * thr, grip, dt); pl.vz = damp(pl.vz, fz * top * thr, grip, dt);
+    }
     pl.x += pl.vx * dt; pl.z += pl.vz * dt;
     const h = hitObstacles(pl, pl.r, 0.4); if (h && h.vn > 5) { pl.hull -= Math.min(8, h.vn * 0.4); S.shake = 0.35; spray.burst(pl.x, WY + 0.6, pl.z, '#e8f8ff', 8, 3, 4); sfx('hit'); }
   }
-  function damage(n, nx, nz, why) { if (pl.inv > 0 || pl.y > 0.35) return false; pl.hull -= n; pl.inv = 0.8; pl.vx += nx * 11; pl.vz += nz * 11; S.shake = 0.6; S.hitstop = 0.08; spray.burst(pl.x, WY + 0.8, pl.z, '#e8f8ff', 22, 5, 7); sfx('hurt'); RBH.shout(why, 0.8, '#ff5f5f'); return true; }
+  // Harold leans out with the cane: a 3-hit combo (WHACK, THWACK, ROYAL BONK finisher) on a dizzy Duchess; chips her bar, fills POWER, keeps her dizzy a moment longer
+  function cane() {
+    const k = S.comboT > 0 ? (S.caneK + 1) % 3 : 0; S.caneK = k; S.caneCd = k === 2 ? 0.42 : 0.24; S.caneT = 0.32; pl.swing = 1; S.combo++; S.comboT = 1.3; S.stats.canes++; S.stats.maxCombo = Math.max(S.stats.maxCombo, S.combo);
+    const floor = BHP - 100 * (S.hits + 1) + 6, dmg = CANE[k]; S.bhp = Math.max(floor, S.bhp - dmg); du.stT = Math.min(du.stT + 0.18, 2.4); addPow(k === 2 ? 0.2 : 0.1);
+    spray.burst(du.x, WY + 2.2, du.z, '#ffd23c', k === 2 ? 22 : 10, 5, 6); S.shake = Math.max(S.shake, k === 2 ? 0.5 : 0.25); sfx(k === 2 ? 'heavy' : 'hit');
+    if (S.duel) { DUELS.impact({ stop: k === 2 ? 0.1 : 0.06, shake: k === 2 ? 0.55 : 0.25, sfx: k === 2 ? 'heavy' : 'light', pop: CANE_W[k] + ' ' + dmg, pos: pv(du.x, WY + 3.4, du.z), cls: k === 2 ? 'big' : 'crit' });
+      if (k === 2) DUELS.flash('#ffffff', 0.35); DUELS.combo(S.combo); }
+    else S.hitstop = Math.max(S.hitstop, k === 2 ? 0.1 : 0.06);
+  }
+  function damage(n, nx, nz, why) { if (pl.inv > 0 || pl.y > 0.35 || S.spT >= 0) return false; pl.hull -= n; pl.inv = 0.8; pl.vx += nx * 11; pl.vz += nz * 11; S.shake = 0.6; stop(0.08); S.combo = 0; S.stats.hitsTaken++;
+    spray.burst(pl.x, WY + 0.8, pl.z, '#e8f8ff', 22, 5, 7); sfx('hurt');
+    if (S.duel) { DUELS.hurt(); DUELS.combo(0); popAt('-' + n, pl.x, WY + 2.6, pl.z, ''); DUELS.tell(why, 0.8); } else RBH.shout(why, 0.8, '#ff5f5f');
+    if (pl.hull < 35 && pl.hull > 0 && !S.cakeUsed) { S.cakeUsed = true; S.cakeT = 0.9; } // Mavis's crab cake (once a try)
+    return true; }
   function simDuchess(dt) {
     du.stT -= dt; du.swingK = Math.max(0, du.swingK - dt * 2); const dx = pl.x - du.x, dz = pl.z - du.z, dist = Math.hypot(dx, dz), bear = Math.atan2(dx, dz);
     if (du.st === 'stalk') {
       const want = 13 - S.hits, tang = du.orbit, nx = dx / (dist || 1), nz = dz / (dist || 1);
       const vx = (-nz * tang) * 8.5 + nx * (dist - want) * 0.9, vz = (nx * tang) * 8.5 + nz * (dist - want) * 0.9;
       du.vx = damp(du.vx, vx, 1.6, dt); du.vz = damp(du.vz, vz, 1.6, dt); du.h += angTo(du.h, Math.atan2(du.vx, du.vz)) * (1 - Math.exp(-dt * 3));
-      if (du.stT <= 0) { if (dist < 9) { du.st = 'swingTell'; du.stT = 0.8; RB.duStats.swings++; } else { du.st = 'waveTell'; du.stT = 0.9; RB.duStats.waves++; } }
+      if (du.stT <= 0) { if (dist < 9) { du.st = 'swingTell'; du.stT = TELL_SW; RB.duStats.swings++; callout('! SCEPTRE SWING! STEER OUT OF THE RED RING!', TELL_SW); }
+        else { du.st = 'waveTell'; du.stT = TELL_WV; RB.duStats.waves++; callout('! SPLASH WAVE! JUMP TO HOP IT!', TELL_WV); } if (S.duel) DUELS.hitSfx('whoosh'); }
       if (Math.random() < dt * 0.15) du.orbit *= -1;
-    } else if (du.st === 'swingTell') { du.vx = damp(du.vx, dx / (dist || 1) * 5, 2, dt); du.vz = damp(du.vz, dz / (dist || 1) * 5, 2, dt); du.h += angTo(du.h, bear) * (1 - Math.exp(-dt * 5)); du.swingK = 0;
-      if (du.stT <= 0) { du.st = 'swing'; du.stT = 0.4; sfx('swing'); }
+    } else if (du.st === 'swingTell') { du.vx = damp(du.vx, dx / (dist || 1) * 4, 2, dt); du.vz = damp(du.vz, dz / (dist || 1) * 4, 2, dt); du.h += angTo(du.h, bear) * (1 - Math.exp(-dt * 5)); du.swingK = 0;
+      if (du.stT <= 0) { du.st = 'swing'; du.stT = 0.4; du.swung = false; sfx('swing'); }
     } else if (du.st === 'swing') { du.swingK = 1; if (!du.swung && dist < 8 && Math.abs(angTo(du.h, bear)) < 1.5) { du.swung = true; if (damage(14, dx / (dist || 1), dz / (dist || 1), 'SCEPTRE!')) RB.duStats.swingsHit++; }
-      if (du.stT <= 0) { du.st = 'stalk'; du.stT = rnd(1.6, 2.6) - S.hits * 0.3; du.swung = false; }
+      if (du.stT <= 0) { if (!du.swung && dist < 16 && S.phase === 'fight') dodged('DODGED!'); du.st = 'stalk'; du.stT = rnd(1.6, 2.6) - S.hits * 0.3; du.swung = false; }
     } else if (du.st === 'waveTell') { du.vx = damp(du.vx, 0, 2, dt); du.vz = damp(du.vz, 0, 2, dt); du.h += angTo(du.h, bear) * (1 - Math.exp(-dt * 4)); du.rearK = Math.min(1, du.rearK + dt * 2.5);
       if (du.stT <= 0) { const n = S.hits >= 1 ? 3 : 1; for (let k = 0; k < n; k++) fireWave(du.h + (k - (n - 1) / 2) * 0.55); du.st = 'stalk'; du.stT = rnd(2.0, 3.0) - S.hits * 0.3; }
     } else if (du.st === 'knocked') { du.vx = damp(du.vx, 0, 1.0, dt); du.vz = damp(du.vz, 0, 1.0, dt); du.h += dt * 3;
-      if (du.stT <= 0 || Math.hypot(du.vx, du.vz) < 2.5) { du.st = 'stalk'; du.stT = 1.2; RB.duStats.misses++; if (RB.duStats.misses % 2 === 1) RBH.setHint('KNOCK HER INTO A PIER OR A BUOY!'); }
+      if (du.stT <= 0 || Math.hypot(du.vx, du.vz) < 2.5) { du.st = 'stalk'; du.stT = 1.2; RB.duStats.misses++; if (RB.duStats.misses % 2 === 1) callout('KNOCK HER INTO A PIER OR A BUOY!', 1.6); }
     } else if (du.st === 'stunned') { du.vx = damp(du.vx, 0, 3, dt); du.vz = damp(du.vz, 0, 3, dt); du.h += dt * 5; if (du.stT <= 0) { du.st = 'stalk'; du.stT = 1.0; } }
     else if (du.st === 'sink') { du.vx = damp(du.vx, 0, 2, dt); du.vz = damp(du.vz, 0, 2, dt); du.sink += dt; }
     if (du.st !== 'waveTell') du.rearK = Math.max(0, du.rearK - dt * 2);
@@ -5433,16 +5517,25 @@ const DUCH = (function () {
     const knocked = du.st === 'knocked', vBefore = Math.hypot(du.vx, du.vz);
     const h = hitObstacles(du, du.r, knocked ? 0.5 : 0.2);
     if (h && knocked && vBefore > 3.5) { // CRASH: the hit that counts
-      S.hits++; RB.duStats.hits = S.hits; du.st = 'stunned'; du.stT = 1.6; RBH.setPips(S.hits); S.shake = 0.9; S.hitstop = 0.15; if (h.b) h.b.hitT = 1;
+      S.hits++; RB.duStats.hits = S.hits; du.st = 'stunned'; du.stT = 2.2; RBH.setPips(S.hits); S.shake = 0.9; if (h.b) h.b.hitT = 1; S.bhp = Math.min(S.bhp, BHP - 100 * S.hits); addPow(0.15);
       spray.burst(du.x, WY + 1, du.z, '#ffc83a', 18, 6, 7); spray.burst(du.x, WY + 0.6, du.z, '#e8f8ff', 26, 6, 8); sfx('heavy'); rbLog('duchess CRASH ' + h.kind + ' ' + S.hits);
-      if (S.hits >= 3) win(); else { RBH.shout(h.kind === 'buoy' ? 'BUOY BONK! ' + S.hits + '/3' : 'PIER SMASH! ' + S.hits + '/3', 1.2); if (S.hits === 2) RBH.speak('DRAGON BOAT DUCHESS', 'My hull! Do you know what dragon scales COST?', 2.6); }
+      if (S.hits >= 3) win(); else {
+        stop(0.15); if (S.duel) DUELS.impact({ shake: 0.8, sfx: 'mega', flash: '#ffffff', flashA: 0.3 });
+        shout((h.kind === 'buoy' ? 'BUOY BONK! ' : 'PIER SMASH! ') + S.hits + '/3', 1.2);
+        if (S.hits === 2) speak('DRAGON BOAT DUCHESS', 'My hull! Do you know what dragon scales COST?', 2.6); }
     }
     // the player rams her
     const rx = du.x - pl.x, rz = du.z - pl.z, rd = Math.hypot(rx, rz);
-    if (rd < du.r + pl.r) { const nx = rx / (rd || 1), nz = rz / (rd || 1), rel = (pl.vx - du.vx) * nx + (pl.vz - du.vz) * nz;
-      const push = du.r + pl.r - rd; pl.x -= nx * push * 0.6; pl.z -= nz * push * 0.6; du.x += nx * push * 0.4; du.z += nz * push * 0.4;
-      if (rel > 3 && du.st !== 'sink' && du.st !== 'stunned') { const k = 6 + rel * 1.25 + (pl.boost > 0 ? 6 : 0); du.vx = nx * k; du.vz = nz * k; du.st = 'knocked'; du.stT = 2.0; RB.duStats.knocks++;
-        pl.vx -= nx * rel * 0.7; pl.vz -= nz * rel * 0.7; pl.boost = 0; pl.swing = 1; S.shake = 0.45; spray.burst((pl.x + du.x) / 2, WY + 0.8, (pl.z + du.z) / 2, '#e8f8ff', 14, 5, 5); sfx('hit'); rbLog('duchess knock ' + k.toFixed(1)); }
+    if (rd < du.r + pl.r + (S.spT >= 0 ? 0.6 : 0)) { const nx = rx / (rd || 1), nz = rz / (rd || 1), rel = (pl.vx - du.vx) * nx + (pl.vz - du.vz) * nz;
+      const push = Math.max(0, du.r + pl.r - rd); pl.x -= nx * push * 0.6; pl.z -= nz * push * 0.6; du.x += nx * push * 0.4; du.z += nz * push * 0.4;
+      if (S.spT >= 0 && du.st !== 'sink') { // the DRAGON-SLAYER RAM lands: aimed at the nearest pier / buoy
+        const ob = nearestObstacle(du.x, du.z); let ax = nx, az = nz; if (ob) { const l = Math.hypot(ob.x - du.x, ob.z - du.z) || 1; ax = (ob.x - du.x) / l; az = (ob.z - du.z) / l; }
+        du.vx = ax * 30; du.vz = az * 30; du.st = 'knocked'; du.stT = 2.5; S.spT = -1; RB.duStats.knocks++; pl.vx *= 0.2; pl.vz *= 0.2; pl.swing = 1; S.shake = 0.8;
+        spray.burst(du.x, WY + 1.2, du.z, '#ffd23c', 30, 7, 8); sfx('heavy'); rbLog('duchess SLAYER ram');
+        if (S.duel) DUELS.impact({ stop: 0.12, shake: 0.9, flash: '#ffd23c', flashA: 0.5, sfx: 'mega', pop: 'SLAYER RAM!', pos: pv(du.x, WY + 4, du.z), cls: 'big' }); }
+      else if (rel > 3 && du.st !== 'sink' && du.st !== 'stunned') { const k = 6 + rel * 1.25 + (pl.boost > 0 ? 6 : 0); du.vx = nx * k; du.vz = nz * k; du.st = 'knocked'; du.stT = 2.0; RB.duStats.knocks++; addPow(0.08);
+        pl.vx -= nx * rel * 0.7; pl.vz -= nz * rel * 0.7; pl.boost = 0; pl.swing = 1; S.shake = 0.45; spray.burst((pl.x + du.x) / 2, WY + 0.8, (pl.z + du.z) / 2, '#e8f8ff', 14, 5, 5); sfx('hit'); rbLog('duchess knock ' + k.toFixed(1));
+        if (S.duel) DUELS.impact({ stop: 0.05, shake: 0.35, sfx: 'heavy', pop: 'RAMMED!', pos: pv(du.x, WY + 3.6, du.z), cls: 'word' }); }
       else if (rel > 0) { pl.vx -= nx * rel; pl.vz -= nz * rel; } }
   }
   function fireWave(ang) { const w = WAVES.find((q) => !q.on); if (!w) return; Object.assign(w, { on: true, x: du.x + Math.sin(du.h) * 4.6, z: du.z + Math.cos(du.h) * 4.6, dx: Math.sin(ang), dz: Math.cos(ang), t: 0, hit: false }); w.m.visible = true; sfx('heavy');
@@ -5450,40 +5543,62 @@ const DUCH = (function () {
   function simWaves(dt) {
     for (const w of WAVES) { if (!w.on) continue; w.t += dt; const sp = 15; w.x += w.dx * sp * dt; w.z += w.dz * sp * dt;
       const rx = pl.x - w.x, rz = pl.z - w.z, along = rx * w.dx + rz * w.dz, lat = Math.abs(rx * w.dz - rz * w.dx);
-      if (!w.hit && Math.abs(along + 9 * (1 - Math.cos(Math.min(lat / 9, 0.55)))) < 1.3 && lat < 5) { w.hit = true; if (damage(12, w.dx, w.dz, 'SPLASH WAVE!')) RB.duStats.wavesHit++; }
+      if (!w.hit && Math.abs(along + 9 * (1 - Math.cos(Math.min(lat / 9, 0.55)))) < 1.3 && lat < 5) { w.hit = true; if (pl.y > 0.35 && S.phase === 'fight') dodged('HOPPED!', 0.15); else if (damage(12, w.dx, w.dz, 'SPLASH WAVE!')) RB.duStats.wavesHit++; }
       if (w.t > 2.6) { w.on = false; w.m.visible = false; } }
   }
-  function step(dt) {
+  function readCI(I) { // this step's input: the DUELS snapshot (keys / panel / pad / bot) or, in the old RB mode, IN + PRESS
+    if (I) { CI.mx = I.mx + (I.rh ? 1 : 0) - (I.lh ? 1 : 0); CI.mx = clamp(CI.mx, -1, 1); CI.my = I.my; CI.a = !!I.a; CI.b = !!I.b; CI.c = !!I.c; return; }
+    CI.mx = IN.mx; CI.my = IN.my; CI.a = rbBoost(); CI.b = rbHop(); CI.c = false;
+  }
+  function step(dt, I) {
     S.t += dt; S.pt += dt; const P = S.phase;
-    if (P === 'intro') { if (S.pt > 0.3 && !S.said) { S.said = true; RBH.speak('DRAGON BOAT DUCHESS', rbPick(rbLines('dragon_boat_duchess').intro), 3.2); }
-      if (S.pt > 3.4 || (S.pt > 0.8 && (PRESS.has('j') || PRESS.has('k') || PRESS.has('e') || RB.auto))) { S.phase = 'fight'; S.pt = 0; RBH.shout('RAM HER!', 1.2); RBH.setHint('KNOCK HER INTO PIERS + BUOYS 3 TIMES · HOP THE SPLASH WAVES'); } }
-    else if (P === 'fight') { if (RB.auto) autoPilot(); simPlayer(dt); simDuchess(dt); simWaves(dt); if (pl.hull <= 0) { pl.hull = 0; lose(); } }
+    if (P === 'intro') { readCI(I); if (S.pt > 0.3 && !S.said) { S.said = true; speak('DRAGON BOAT DUCHESS', rbPick(rbLines('dragon_boat_duchess').intro), 3.2); }
+      if (S.pt > 3.4 || (S.pt > 0.8 && (CI.a || CI.b || CI.c || PRESS.has('k') || RB.auto || S.bot))) { S.phase = 'fight'; S.pt = 0; S.stats.t0 = S.t; shout('RAM HER!<small>INTO A PIER OR A BUOY · 3 CRASHES</small>', 1.4); if (!S.duel) RBH.setHint('KNOCK HER INTO PIERS + BUOYS 3 TIMES · HOP THE SPLASH WAVES'); } }
+    else if (P === 'fight') { if (I && S.bot) readCI(I); else if (I) readCI(I); else { readCI(null); if (RB.auto) autoPilot(); }
+      simPlayer(dt); simDuchess(dt); simWaves(dt);
+      if (S.cakeT > 0 && (S.cakeT -= dt) <= 0) { const heal = Math.min(30, 100 - pl.hull); pl.hull += heal; S.stats.heals++; speak('MAVIS', rbPick(['Crab cake, Harold! Eat it while you steer!', 'Here, hon! Fresh from the cooler!', 'Patch the hull later, eat this now!']), 2.2); popAt('+' + Math.round(heal) + ' CRAB CAKE', pl.x, WY + 3.2, pl.z, 'heal'); sfx('jump'); }
+      if (pl.hull <= 0) { if (S.duel && !S.windUsed) { S.windUsed = true; S.stats.winds++; pl.hull = 40; pl.inv = 2.2; DUELS.banner('SECOND WIND!<small>MAVIS BAILS OUT THE BOAT</small>', 1.8); DUELS.say('MAVIS', 'Bail, Harold, BAIL! We are not sinking today!', 2.4); DUELS.flash('#9dff6b', 0.45); }
+        else { pl.hull = 0; lose(); } } }
     else if (P === 'won') { simDuchess(dt); pl.vx = damp(pl.vx, 0, 1, dt); pl.vz = damp(pl.vz, 0, 1, dt); pl.x += pl.vx * dt; pl.z += pl.vz * dt;
-      if (S.pt > 4.5 || (S.pt > 1.5 && (PRESS.has('j') || PRESS.has('k') || PRESS.has('e')))) { exit(true); return; } }
-    else if (P === 'lost') { pl.vx = damp(pl.vx, 0, 2, dt); pl.vz = damp(pl.vz, 0, 2, dt); if (S.pt > 1.8) { S.phase = 'retry'; RBH.showRetry('THE DUCHESS SANK YOU<br><span style="font-size:11px;color:#fff">crashes ' + S.hits + ' / 3</span>'); } }
-    else if (P === 'retry') { const c = RB.auto ? (RB.autoQuit ? 'quit' : null) : rbRetryInput();
+      if (S.duel) { if (S.pt > 3.0 && !S.overShown) { S.overShown = true; const G = grade();
+          DUELS.over('win', 'DRAGON BOAT<br>DUCHESS SUNK!', '<span style="color:#ffd23c;font-size:18px;letter-spacing:3px">' + '\u2605'.repeat(G.stars) + '<span style="opacity:.3">' + '\u2605'.repeat(3 - G.stars) + '</span></span><br>GRADE ' + G.g + ' · hits taken ' + G.h + ' · best cane combo x' + S.stats.maxCombo + '<br>The harbour is safe. The boat ride carries on.'); } }
+      else if (S.pt > 4.5 || (S.pt > 1.5 && (PRESS.has('j') || PRESS.has('k') || PRESS.has('e')))) { exit(true); return; } }
+    else if (P === 'lost') { pl.vx = damp(pl.vx, 0, 2, dt); pl.vz = damp(pl.vz, 0, 2, dt);
+      if (S.pt > 1.8) { S.phase = 'retry';
+        if (S.duel) DUELS.over('lose', 'SUNK!', 'The Duchess sank your boat (crashes ' + S.hits + ' / 3). Retry with a fresh hull.');
+        else RBH.showRetry('THE DUCHESS SANK YOU<br><span style="font-size:11px;color:#fff">crashes ' + S.hits + ' / 3</span>'); } }
+    else if (P === 'retry' && !S.duel) { const c = RB.auto ? (RB.autoQuit ? 'quit' : null) : rbRetryInput();
       if (c === 'retry') { RBH.retry.classList.remove('on'); reset(); RB.duStats.retries = (RB.duStats.retries || 0) + 1; rbLog('duchess retry'); } else if (c === 'quit') { exit(false); return; } }
     for (const b of BUOYS) { b.hitT = Math.max(0, b.hitT - dt); }
     pl.swing = Math.max(0, pl.swing - dt * 1.6); spray.tick(dt, WY + 0.1);
   }
+  function duelRetry() { const st = S.stats; reset(); S.stats = st; S.phase = 'fight'; S.pt = 0; DUELS.banner('ROUND AGAIN!<small>FRESH HULL · SHE\'S BACK TO FULL</small>', 1.6); RB.duStats.retries = (RB.duStats.retries || 0) + 1; rbLog('duchess retry'); }
   const camP = new THREE.Vector3(30, 10, 40), camL = new THREE.Vector3(), _M = new THREE.Matrix4(), _V = new THREE.Vector3(), _Q = new THREE.Quaternion(), _E = new THREE.Euler(), _S1 = new THREE.Vector3(1, 1, 1), _S0 = new THREE.Vector3(0.001, 0.001, 0.001);
   function place(dt) {
     const B = myBoat().root; B.position.set(pl.x, WY - 0.05 + pl.y + Math.sin(S.t * 2) * 0.05 - (S.phase === 'lost' || S.phase === 'retry' ? Math.min(1.2, S.pt * 0.8) : 0), pl.z);
-    B.rotation.set(-pl.vy * 0.03 + Math.sin(S.t * 1.7) * 0.02, pl.h, -IN.mx * 0.06 + Math.sin(S.t * 1.3) * 0.03); if (myBoat().wheel) myBoat().wheel.rotation.x += dt * (3 + Math.hypot(pl.vx, pl.vz));
+    B.rotation.set(-pl.vy * 0.03 + Math.sin(S.t * 1.7) * 0.02, pl.h, -CI.mx * 0.06 + Math.sin(S.t * 1.3) * 0.03); if (myBoat().wheel) myBoat().wheel.rotation.x += dt * (3 + Math.hypot(pl.vx, pl.vz));
     const D = duch.root; D.position.set(du.x, WY - 0.05 - (du.sink > 0 ? Math.min(3, du.sink * 0.7) : 0) + Math.sin(S.t * 1.6) * 0.06, du.z);
     D.rotation.set(du.sink > 0 ? -Math.min(0.5, du.sink * 0.25) : 0, du.h, du.sink > 0 ? Math.min(1.1, du.sink * 0.5) : du.st === 'stunned' ? Math.sin(S.t * 14) * 0.08 : 0);
     for (const w of duch.wheels) w.rotation.x += dt * (2 + Math.hypot(du.vx, du.vz) * 0.8);
     duch.neck.rotation.x = -0.55 * du.rearK + Math.sin(S.t * 1.4) * 0.06; duch.head.rotation.x = 0.4 * du.rearK; duch.tail.rotation.y = Math.sin(S.t * 1.8) * 0.3;
-    if (duch.arm) { const tell = du.st === 'swingTell' ? Math.min(1, (0.8 - du.stT) / 0.5) : 0; duch.arm.rotation.x = -2.8 * tell - (du.swingK > 0 ? lerp(2.8, -0.6, 1 - du.swingK) : 0) * (du.st === 'swing' ? 1 : 0); duch.arm.rotation.z = du.st === 'swing' ? -1.4 * (1 - du.swingK) : 0.2;
+    if (duch.arm) { const tell = du.st === 'swingTell' ? Math.min(1, (TELL_SW - du.stT) / 0.6) : 0; duch.arm.rotation.x = -2.8 * tell - (du.swingK > 0 ? lerp(2.8, -0.6, 1 - du.swingK) : 0) * (du.st === 'swing' ? 1 : 0); duch.arm.rotation.z = du.st === 'swing' ? -1.4 * (1 - du.swingK) : 0.2;
       duch.sceptreGlow.scale.setScalar(1 + tell * 1.6 + Math.sin(S.t * 20) * 0.15 * tell); duch.duch.rotation.y = du.st === 'swing' ? -1.2 * (1 - du.swingK) : 0; }
     if (rider && rider.upd) rider.upd(dt, { t: S.t, state: du.st, swingK: du.swingK, rearK: du.rearK });
     for (const w of WAVES) if (w.on) { w.m.position.set(w.x, WY + 0.15, w.z); w.m.rotation.y = Math.atan2(w.dx, w.dz); w.m.scale.set(1, 1 + Math.sin(w.t * 9) * 0.25, 1); }
-    applyPose(hero.J, rbSeatPose(S.kind === 'paddle', S.t), 12, Math.max(dt, 1 / 60)); applyPose(partner.J, pl.swing > 0 ? rbSwingPose(1 - pl.swing) : rbSeatPose(false, S.t + 1), 12, Math.max(dt, 1 / 60));
+    // polish: tells. "!" over her (bobbing), the red reach ring for the sceptre, chevron lanes on the water for the splash waves
+    const swT = du.st === 'swingTell' || (du.st === 'swing' && du.stT > 0.15), wvT = du.st === 'waveTell', tellOn = (du.st === 'swingTell' || wvT) && S.phase === 'fight';
+    BANG.visible = tellOn; if (tellOn) { BANG.position.set(du.x, WY + 6.4 + Math.abs(Math.sin(S.t * 8)) * 0.4, du.z); BANG.scale.setScalar(2.2 + 0.35 * Math.abs(Math.sin(S.t * 12))); }
+    const pulse = 0.55 + 0.35 * Math.sin(S.t * 22);
+    RING.visible = DISC.visible = swT && S.phase === 'fight'; if (RING.visible) { const u = du.st === 'swing' ? 1 : clamp((TELL_SW - du.stT) / TELL_SW, 0, 1); RING.position.set(du.x, WY + 0.09, du.z); DISC.position.set(du.x, WY + 0.07, du.z); RING.material.opacity = (0.35 + 0.55 * u) * pulse + 0.1; DISC.material.opacity = 0.08 + 0.16 * u; RING.rotation.y += dt * 1.5; }
+    const nW = wvT && S.phase === 'fight' ? (S.hits >= 1 ? 3 : 1) : 0;
+    LANES.forEach((l, k) => { l.visible = k < nW; if (!l.visible) return; const a = du.h + (k - (nW - 1) / 2) * 0.55, u = clamp((TELL_WV - du.stT) / TELL_WV, 0, 1); l.position.set(du.x, WY + 0.08 + k * 0.004, du.z); l.rotation.y = a; l.material.opacity = (0.3 + 0.6 * u) * pulse + 0.1; });
+    applyPose(hero.J, S.caneT > 0 ? rbSwingPose(1 - S.caneT / 0.32) : rbSeatPose(S.kind === 'paddle', S.t), 14, Math.max(dt, 1 / 60)); applyPose(partner.J, pl.swing > 0 && S.caneT <= 0 ? rbSwingPose(1 - pl.swing) : rbSeatPose(false, S.t + 1), 12, Math.max(dt, 1 / 60));
     // camera: behind the boat, yawed partway toward the Duchess so she stays in frame
     const portrait = rbPortrait(), back = portrait ? 10.5 : 9.0, hgt = (S.kind === 'paddle' ? 1.7 : 1.95) + (portrait ? 0.25 : 0); // just under the canopy line, so the toads show
     let yaw = pl.h; const bear = Math.atan2(du.x - pl.x, du.z - pl.z), dd = Math.hypot(du.x - pl.x, du.z - pl.z); if (dd < 45) yaw += angTo(yaw, bear) * 0.45;
     let tx = pl.x - Math.sin(yaw) * back, tz = pl.z - Math.cos(yaw) * back, ty = hgt, lx = pl.x + Math.sin(yaw) * 8, lz = pl.z + Math.cos(yaw) * 8, ly = 0.7;
     if (S.phase === 'intro') { const a = du.h + 2.4 - S.pt * 0.3; tx = du.x + Math.sin(a) * 13; tz = du.z + Math.cos(a) * 13; ty = 4.5; lx = du.x; lz = du.z; ly = 2.2; }
+    if (S.phase === 'won') { const a = du.h + 1.2 + S.pt * 0.25; tx = du.x + Math.sin(a) * 15; tz = du.z + Math.cos(a) * 15; ty = 5; lx = du.x; lz = du.z; ly = 1.2; } // polish: hold on her as she sinks
     const k = dt === 0 ? 1 : 1 - Math.exp(-dt * 4);
     camP.x += (tx - camP.x) * k; camP.y += (ty - camP.y) * k; camP.z += (tz - camP.z) * k; camL.x += (lx - camL.x) * k; camL.y += (ly - camL.y) * k; camL.z += (lz - camL.z) * k;
     S.shake = Math.max(0, S.shake - dt * 1.8); const sh = S.shake * 0.35; cam.position.set(camP.x + rnd(-sh, sh), camP.y + rnd(-sh, sh), camP.z + rnd(-sh, sh)); cam.lookAt(camL);
@@ -5491,15 +5606,27 @@ const DUCH = (function () {
     for (const b of BUOYS) { const y = WY + 0.55 + Math.sin(S.t * 1.8 + b.i) * 0.12, tilt = b.hitT * 0.5 * Math.sin(S.t * 25);
       const near = Math.hypot(b.x - cam.position.x, b.z - cam.position.z) < 6.5, sc1 = near ? _S0 : _S1; /* a buoy right at the lens is hidden */ _M.compose(_V.set(b.x, y, b.z), _Q.setFromEuler(_E.set(tilt, 0, tilt)), sc1); BIM.setMatrixAt(b.i, _M); _M.compose(_V.set(b.x, y + 1.15, b.z), _Q.identity(), sc1); BLM.setMatrixAt(b.i, _M); }
     BIM.instanceMatrix.needsUpdate = BLM.instanceMatrix.needsUpdate = true;
+    if (S.duel) return; // (the DUELS HUD is fed from duelStep)
     RBH.setClock(''); RBH.setBar(pl.hull / 100, pl.hull > 40 ? '#7dffc0' : '#ff5f5f', 'HULL ' + Math.ceil(pl.hull) + '%   ' + (pl.cd <= 0 ? 'RAM READY' : ''));
     if (APANEL) APANEL.setAct({ kind: 'power', label: 'RAM', ready: pl.cd <= 0 }, pl.cd <= 0 ? 1 : 1 - pl.cd / 2.4);
   }
-  function frame(rdt) {
+  function frame(rdt) { // the old RB-mode loop (unused while the DUELS kind is registered)
     const steps = RB.freeze ? 0 : SIM ? SIM : 1;
     for (let k = 0; k < steps; k++) { if (k > 0) readInput(); let dt = SIM ? 1 / 60 : rdt; if (S.hitstop > 0) { S.hitstop -= dt; dt *= 0.1; } RB.t += dt; step(dt); if (!S.on) return; if (k < steps - 1) { place(dt); PRESS.clear(); } }
     place(steps ? (SIM ? 1 / 60 : rdt) : 0); RBH.tick(SIM ? rdt * SIM : rdt); PRESS.clear(); rbDraw(sc, cam);
   }
-  return { S, pl, du, start, exit, frame, ambushLine, PIERS, BUOYS, WAVES, sc, cam, duch, rider: () => rider, place, reset };
+  // ---- the DUELS side (src/09bd_duchess.js wires these into the 'duchess' kind) ----
+  function syncK(K) { const s = K.st; s.hp = pl.hull; s.bhp = S.bhp; s.phase = S.hits; s.over = S.phase === 'lost' || S.phase === 'retry' || S.phase === 'won'; s.won = S.phase === 'won'; }
+  function duelStep(dt, I, K) {
+    RB.t += dt; step(dt, I); if (!S.on) return;
+    DUELS.bars(pl.hull / 100, S.bhp / BHP); DUELS.sub('CRASHES ' + S.hits + '/3' + (S.combo > 1 ? ' <span style="color:#ffd23c">x' + S.combo + '</span>' : ''), S.kind === 'paddle' ? 'PADDLE BOAT' : 'WATER TAXI');
+    const rdy = S.pow >= 1 && S.phase === 'fight' && S.spT < 0; DUELS.power(S.pow, rdy, rdy ? 'POWER READY! ACT' : 'POWER'); DUELS.hot(rdy);
+    const near = du.st === 'stunned' && S.phase === 'fight' && S.spT < 0 && Math.hypot(du.x - pl.x, du.z - pl.z) < 8.5; DUELS.ready(near ? 'SWING = CANE HER!' : null);
+    syncK(K);
+  }
+  function duelRender(rdt, K) { place(rdt > 0 ? Math.min(0.05, rdt * (SIM || 1)) : 1e-4); OUT_U.fogC.value.copy(sc.fog.color); OUT_U.fogN.value = sc.fog.near; OUT_U.fogF.value = sc.fog.far; cam.aspect = VW() / VH(); cam.updateProjectionMatrix(); }
+  function duelBot(B, dt) { if (S.phase !== 'fight') { B.a = B.b = B.c = false; B.mx = B.my = 0; return; } const o = {}; pilot(B.mode === 'mash' ? 'mash' : B.mode === 'lose' ? 'lose' : 'win', o); B.mx = o.mx; B.my = o.my; if (o.a) B.a = true; if (o.b) B.b = true; if (o.c) B.c = true; }
+  return { S, pl, du, start, exit, frame, ambushLine, PIERS, BUOYS, WAVES, sc, cam, duch, rider: () => rider, place, reset, camL, duelStart, duelStep, duelRender, duelRetry, duelBot, BANG, RING, LANES };
 })();
 
 RB.frame = (rdt) => { if (RB.mode === 'al') AL.frame(rdt); else if (RB.mode === 'duchess') DUCH.frame(rdt); else if (RB.mode === 'ride') RIDES.frame(rdt); };
@@ -8270,20 +8397,27 @@ const JUICE = (function () {
 // Rig hook: if window.buildBigJimmy exists it is called as buildBigJimmy({ THREE, toonMat, outlineMat, addOdir, QUAL }) and must return
 // { root, body?, soft?, mouth?, claws?: [{ arm, top, bot, tip }] x2, legs?: [left, right], flash?: [materials] } (Object3Ds; any
 // missing optional piece is skipped). Otherwise the procedural stand-in below is used.
+// polish (hark/polish, 2026-10-13, the Chip Kid / Brewmaster bar): every tell >= 1.0 s with a "!" over him, a red lock ring round Harold + a mark on the sand
+// (snap) or cyan aim beams (bubbles) and a HUD call-out; STRIKE is a 3-hit cane combo on his belly (WHACK, THWACK, CRAB CRACKER finisher) with hit-stop, shake,
+// damage pops and a combo counter; belly hits + clean dodges fill POWER, full POWER = ACT "CANE TORPEDO" (Harold rockets in, flips him belly-up for a free combo);
+// Mavis drops a crab cake from the surface when Harold is low (once a phase), one SECOND WIND; KO = one JUICE.ko() + slow-mo; star grade on the win card.
+// Tests also: ?jimmy=1&jimmyauto=win|lose|mash (mash = swims at him and mashes STRIKE, refills air at the vents, never dashes).
 (function () {
   const TANK = { x: 15.5, z: 15.5, y0: 0.7, y1: 14.5, h: 16.5 }; // the swimmable box (the glass walls sit a little outside)
   const VENTS = [[-9.5, -6], [10, -4.5], [0.5, 10.5]];
   const PH = [ // per phase
-    { tell: 0.8, snaps: 1, bubbles: 1, bSpd: 6, home: 0, rear: 2.6, idle: [1.3, 2.1], drain: 1 / 30, speed: 1.6 },
-    { tell: 0.66, snaps: 2, bubbles: 3, bSpd: 7, home: 0, rear: 2.2, idle: [1.0, 1.7], drain: 1 / 25, speed: 2.1 },
-    { tell: 0.55, snaps: 3, bubbles: 5, bSpd: 7.5, home: 0.7, rear: 1.9, idle: [0.7, 1.3], drain: 1 / 21, speed: 2.6 },
+    { tell: 1.15, snaps: 1, bubbles: 1, bSpd: 6, home: 0, rear: 2.6, idle: [1.3, 2.1], drain: 1 / 30, speed: 1.6 },
+    { tell: 1.05, snaps: 2, bubbles: 3, bSpd: 7, home: 0, rear: 2.2, idle: [1.0, 1.7], drain: 1 / 25, speed: 2.1 },
+    { tell: 1.0, snaps: 3, bubbles: 5, bSpd: 7.5, home: 0.7, rear: 1.9, idle: [0.7, 1.3], drain: 1 / 21, speed: 2.6 },
   ];
-  const HPB = 300, HIT = 20; // 5 belly hits a phase, at most 2 per rear
+  const HPB = 300, HIT = 20; // (old single strike; the polish cane combo below hits for CANE[k])
+  const CANE = [12, 12, 22], CANE_W = ['WHACK!', 'THWACK!', 'CRAB CRACKER!'], TORP = 18; // one combo a rear (46), the torpedo flips him for another
   const J = { scene: null, cam: null, title: 'BIG JIMMY', pips: 3,
-    hint: '<b>WASD</b> swim · <b>SPACE</b> up · <b>SHIFT</b> down · <b>J</b> strike · <b>K</b> dash',
-    labels: { a: 'STRIKE', b: 'DASH', c: 'STRIKE', l: '&#9660; DOWN', r: 'UP &#9650;' } };
+    hint: '<b>WASD</b> swim · <b>SPACE</b> up · <b>SHIFT</b> down · <b>J</b> strike · <b>K</b> dash · <b>E</b> power',
+    labels: { a: 'STRIKE', b: 'DASH', c: 'POWER', l: '&#9660; DOWN', r: 'UP &#9650;' } };
   const V = new THREE.Vector3(), V2 = new THREE.Vector3(), V3 = new THREE.Vector3(), UP = new THREE.Vector3(0, 1, 0);
   let U_T = { value: 0 };
+  { const c = document.createElement('style'); c.textContent = 'body.duel-jimmy #duel .dpow { top: calc(env(safe-area-inset-top, 0px) + 114px); }'; document.head.appendChild(c); } // polish: POWER sits under the AIR meter
 
   // ---------------- materials with caustics (the sand, rocks and vents) and swaying kelp ----------------
   const CAU = `float cau(vec2 uv, float t) { vec2 p = mod(uv, 6.28318) - 250.0; vec2 i = p; float c = 1.0; float inten = 0.005;
@@ -8446,7 +8580,18 @@ const JUICE = (function () {
     // the soft-spot marker: a gold glow ring under him while he rears
     J.ring = new THREE.Mesh(new THREE.RingGeometry(1.1, 1.5, 28), new THREE.MeshBasicMaterial({ color: '#ffd23c', transparent: true, opacity: 0.9, side: THREE.DoubleSide, depthWrite: false, fog: false, blending: THREE.AdditiveBlending }));
     sc.add(J.ring); J.ring.visible = false;
+    // polish: the tells. "!" sprite over him, a red lock ring round Harold + its shadow on the sand (snap), cyan aim beams (bubbles), Mavis's crab cake
+    const bangT = canvasTex(128, 128, (g) => { g.fillStyle = '#ffd23c'; g.strokeStyle = '#14101f'; g.lineWidth = 8; g.beginPath(); g.moveTo(64, 6); g.lineTo(122, 116); g.lineTo(6, 116); g.closePath(); g.fill(); g.stroke();
+      g.fillStyle = '#d8262a'; g.font = '900 78px ' + FONT; g.textAlign = 'center'; g.textBaseline = 'middle'; g.fillText('!', 64, 80); }, 128);
+    J.bang = new THREE.Sprite(new THREE.SpriteMaterial({ map: bangT, transparent: true, depthWrite: false, depthTest: false, fog: false })); J.bang.scale.setScalar(1.6); J.bang.visible = false; J.bang.renderOrder = 6; sc.add(J.bang);
+    const add = (geo, col) => { const m = new THREE.Mesh(geo, new THREE.MeshBasicMaterial({ color: col, transparent: true, opacity: 0, depthWrite: false, fog: false, side: THREE.DoubleSide, blending: THREE.AdditiveBlending })); m.visible = false; m.renderOrder = 4; sc.add(m); return m; };
+    J.lock = add(new THREE.TorusGeometry(1, 0.07, 6, 40).rotateX(Math.PI / 2), '#ff3030');
+    J.sandMk = add(new THREE.RingGeometry(1.5, 2.2, 32).rotateX(-Math.PI / 2), '#ff3030');
+    J.beams = []; for (let k = 0; k < 5; k++) { const g = new THREE.BoxGeometry(0.22, 0.22, 1); g.translate(0, 0, 0.5); J.beams.push(add(g, '#7fe8ff')); }
+    const CK = DUELS.kit(); CK.add(DUELS.GEO.cyl(0.42, 0.46, 0.22, 12), '#c8862e', 0, 0, 0).add(DUELS.GEO.sph(0.4, 10, 6), '#e0a048', 0, 0.1, 0, 0, 0, 0, 1, 0.35, 1).add(DUELS.GEO.box(0.18, 0.06, 0.12), '#f4e04a', 0.22, 0.18, 0.1);
+    J.cakeM = CK.mesh(toonMat(), null, 0.004); J.cakeM.visible = false; sc.add(J.cakeM);
   };
+  const floorY = (x, z) => Math.sin(x * 0.35) * 0.25 + Math.cos(z * 0.27 + x * 0.1) * 0.35 + Math.sin((x + z) * 1.7) * 0.05 + Math.max(0, Math.hypot(x, z) - 14) * 0.25; // (the sand's own height field)
   J.ventOn = (i) => !(J.st && J.st.phase === 2 && Math.floor(J.st.t / 9) % 3 === i); // phase 3: one vent sleeps at a time (9 s each)
 
   // ---------------- state ----------------
@@ -8454,12 +8599,13 @@ const JUICE = (function () {
     const st = J.st = { t: 0, phase, bhp: HPB - phase * 100, hp: 100, air: 1, p: new THREE.Vector3(0, 4.5, -10), v: new THREE.Vector3(), yaw: 0, pitch: 0,
       inv: 0, dashCd: 0, dashT: 0, atkT: -1, atkCd: 0, hitDone: false, hurtT: 0, swimT: 0, drownT: 0,
       bp: new THREE.Vector3(0, 5, 5), byaw: Math.PI, bs: 'intro', bt: 0, bdur: 2.6, combo: 0, side: 1, snapTo: new THREE.Vector3(), rear: 0, roar: 0, lungeV: new THREE.Vector3(),
-      over: false, won: false, stats: { snaps: 0, snapHits: 0, bubbles: 0, bubbleHits: 0, strikes: 0, softHits: 0, clangs: 0, dashes: 0, ventT: 0, airOut: 0, phaseUps: 0 } };
-    J.blasts.length = 0; J.blastM.count = 0; J.ring.visible = false;
+      over: false, won: false, pow: J.st ? J.st.pow * 0.5 : 0, combo: 0, comboT: 0, atkK: 0, torp: -1, cake: null, cakeUsed: false, volley: null, snapMiss: false,
+      stats: (J.st && J.st.stats) || { snaps: 0, snapHits: 0, bubbles: 0, bubbleHits: 0, strikes: 0, softHits: 0, clangs: 0, dashes: 0, ventT: 0, airOut: 0, phaseUps: 0, hitsTaken: 0, maxCombo: 0, torpedoes: 0, dodges: 0, cakes: 0, winds: 0 } };
+    J.blasts.length = 0; J.blastM.count = 0; J.ring.visible = false; if (J.cakeM) J.cakeM.visible = false;
     DUELS.bars(1, st.bhp / HPB); return st;
   }
   J.start = function () {
-    const st = reset(0); J.stats0 = st.stats; DUELS.log.push('jimmy:' + J.rigKind);
+    J.st = null; J.windUsed = false; const st = reset(0); J.stats0 = st.stats; DUELS.log.push('jimmy:' + J.rigKind); DUELS.power(0, false, 'POWER');
     DUELS.sub('<div class="air"><div class="n">AIR</div><div class="t"><i></i></div></div>', 'PHASE 1/3'); J.airEl = DUELS.hudEl.querySelector('.air'); J.airI = J.airEl.querySelector('i');
     const L = LANDMARKS.find((l) => l.id === 'aquarium'), lines = L && L.boss && L.boss.lines;
     DUELS.banner('BIG JIMMY<small>NATIONAL AQUARIUM · THE BIG TANK</small>', 2.4);
@@ -8476,7 +8622,8 @@ const JUICE = (function () {
   // ---------------- the fight ----------------
   function lockFrame(st) { V.set(st.bp.x - st.p.x, 0, st.bp.z - st.p.z); if (V.lengthSq() < 1e-4) V.set(0, 0, 1); V.normalize(); return { f: V.clone(), r: new THREE.Vector3(V.z, 0, -V.x).multiplyScalar(-1) }; }
   function hurtHarold(st, dmg, from, kind) {
-    if (st.inv > 0 || st.over) return false; st.hp -= dmg; st.inv = 0.9; st.hurtT = 0.35; DUELS.hurt(); sfx('hurt');
+    if (st.inv > 0 || st.over || st.torp >= 0) return false; st.hp -= dmg; st.inv = 0.9; st.hurtT = 0.35; DUELS.hurt(); sfx('hurt'); st.stats.hitsTaken++; st.combo = 0; DUELS.combo(0); DUELS.pop('-' + dmg, st.p.clone().setY(st.p.y + 1.4), ''); // polish
+    if (st.hp < 40 && st.hp - 0 > 0 && !st.cakeUsed) { st.cakeUsed = true; st.cake = { p: new THREE.Vector3(st.p.x, TANK.y1, st.p.z), t: 0 }; DUELS.say('MAVIS', ['Harold! Crab cake, coming down!', 'Catch, hon! From the top of the tank!', 'Eat something, dear, you look blue!'][st.phase % 3], 2.2); }
     V2.copy(st.p).sub(from); V2.y *= 0.5; if (V2.lengthSq() < 1e-4) V2.set(0, 0, -1); st.v.addScaledVector(V2.normalize(), 9); J.H.mat.userData.flash.value = 1; J.hflash = 1;
     burst(st.p, 10, 2.5); if (kind) st.stats[kind]++; return true;
   }
@@ -8491,21 +8638,23 @@ const JUICE = (function () {
       const sp = P.speed * (dist > 10 ? 1.8 : 1); V2.sub(st.bp); const l = V2.length(); if (l > 0.05) st.bp.addScaledVector(V2, Math.min(1, sp * dt / l)); }
     if (st.bs === 'intro') { if (st.bt > st.bdur) setB(st, 'idle', 1.0); return; }
     if (st.bs === 'idle') { if (st.bt > st.bdur) {
-      if (st.combo > 0) { st.side = -st.side; setB(st, 'snapTell', P.tell); return; }
+      if (st.combo > 0) { st.side = -st.side; setB(st, 'snapTell', P.tell); DUELS.tell('! ANOTHER SNAP! DASH!', P.tell); return; }
       const r = Math.random(); if (dist > 9 && r < 0.55) { setB(st, 'bubbleTell', P.tell + 0.15); return; }
       if (r < 0.62) { st.combo = P.snaps; st.side = Math.random() < 0.5 ? -1 : 1; setB(st, 'snapTell', P.tell); } else setB(st, 'bubbleTell', P.tell + 0.15); }
+      if (st.bs === 'snapTell') { DUELS.tell('! CLAW SNAP! DASH SIDEWAYS (JUMP)!', P.tell); DUELS.hitSfx('whoosh'); } else if (st.bs === 'bubbleTell') { DUELS.tell('! BUBBLE BLAST! SWIM OUT OF THE CYAN LINES!', P.tell + 0.15); blub(200); }
       return; }
     if (st.bs === 'snapTell') { if (st.bt > st.bdur) { st.snapTo.copy(st.p); st.lungeV.copy(st.p).sub(st.bp).setY(0).normalize().multiplyScalar(7); setB(st, 'snap', 0.42); st.stats.snaps++; st.snapHit = false; sfx('swing'); } return; }
     if (st.bs === 'snap') { const u = st.bt / st.bdur; if (u < 0.6) st.bp.addScaledVector(st.lungeV, dt);
       const c = J.R.claws[st.side < 0 ? 0 : 1]; if (c && u > 0.25 && u < 0.85 && !st.snapHit) { c.tip.getWorldPosition(V2); if (V2.distanceTo(st.p) < 2.1 || (st.p.distanceTo(st.bp) < 3.6)) { if (hurtHarold(st, 22, st.bp, 'snapHits')) { st.snapHit = true; sfx('heavy'); DUELS.tell('SNAP!', 0.6); } } }
-      if (st.bt > st.bdur) { st.combo--; if (st.combo > 0) setB(st, 'idle', 0.25); else { setB(st, 'rear', P.rear); st.rearHits = 0; st.combo = 0; DUELS.tell('HE REARS UP! STRIKE HIS BELLY!', 1.4); sfx('ko'); } } return; }
+      if (st.bt > st.bdur) { if (!st.snapHit && st.p.distanceTo(st.bp) < 9) { st.stats.dodges++; addPow(st, 0.12); DUELS.pop('DODGED!', st.p.clone().setY(st.p.y + 1.6), 'word'); } // polish: a clean dodge fills POWER
+        st.combo--; if (st.combo > 0) setB(st, 'idle', 0.25); else { setB(st, 'rear', P.rear); st.rearHits = 0; st.combo = 0; DUELS.tell('HE REARS UP! STRIKE HIS BELLY!', 1.4); sfx('ko'); } } return; }
     if (st.bs === 'rear') { if (st.bt > st.bdur) setB(st, 'idle', rnd(...P.idle)); return; }
     if (st.bs === 'bubbleTell') { if (Math.random() < dt * 30) { J.R.mouth.getWorldPosition(V2); burst(V2, 1, 0.8, 0.5); } if (st.bt > st.bdur) { fireBubbles(st, P); setB(st, 'idle', rnd(...P.idle)); } return; }
     if (st.bs === 'roar') { if (st.bt > st.bdur) setB(st, 'idle', 0.8); return; }
     if (st.bs === 'dead') { st.bp.y = Math.max(1.6, st.bp.y - dt * 1.2); return; }
   }
   function fireBubbles(st, P) {
-    J.R.mouth.getWorldPosition(V2); const dir = V3.copy(st.p).sub(V2).normalize(), n = P.bubbles; st.stats.bubbles += n; blub(240);
+    J.R.mouth.getWorldPosition(V2); const dir = V3.copy(st.p).sub(V2).normalize(), n = P.bubbles; st.stats.bubbles += n; blub(240); st.volley = { hit: false };
     for (let k = 0; k < n; k++) { const a = (k - (n - 1) / 2) * 0.28; const d = dir.clone().applyAxisAngle(UP, a); if (J.blasts.length < 16) J.blasts.push({ p: V2.clone(), v: d.multiplyScalar(P.bSpd), t: 0, home: P.home, r: 0.6 }); }
   }
   function stepBlasts(st, dt) {
@@ -8513,26 +8662,35 @@ const JUICE = (function () {
       if (b.home > 0 && b.t < 2) { const want = V2.copy(st.p).sub(b.p).normalize().multiplyScalar(b.v.length()); b.v.lerp(want, Math.min(1, b.home * dt)); }
       b.p.addScaledVector(b.v, dt); b.r = 0.6 + Math.sin(b.t * 12) * 0.05;
       let gone = b.t > 4.5 || Math.abs(b.p.x) > TANK.x + 1 || Math.abs(b.p.z) > TANK.z + 1 || b.p.y < 0 || b.p.y > TANK.h;
-      if (!gone && b.p.distanceTo(st.p) < 1.05) { if (hurtHarold(st, 12, b.p, 'bubbleHits')) blub(520); gone = true; }
+      if (!gone && b.p.distanceTo(st.p) < 1.05) { if (hurtHarold(st, 12, b.p, 'bubbleHits')) { blub(520); if (st.volley) st.volley.hit = true; } gone = true; }
       if (gone) { burst(b.p, 8, 2); J.blasts.splice(i, 1); } }
+    if (st.volley && !J.blasts.length) { if (!st.volley.hit && !st.over) { st.stats.dodges++; addPow(st, 0.1); DUELS.pop('DODGED!', st.p.clone().setY(st.p.y + 1.6), 'word'); } st.volley = null; }
     J.blastM.count = J.blasts.length; J.blastM.visible = J.blasts.length > 0; const m = new THREE.Matrix4(); J.blasts.forEach((b, i) => { m.makeScale(b.r, b.r, b.r).setPosition(b.p); J.blastM.setMatrixAt(i, m); }); J.blastM.instanceMatrix.needsUpdate = true;
   }
-  function damageBoss(st) {
-    st.bhp -= HIT; st.stats.softHits++; J.R.softM && (J.R.softM.userData.flash.value = 1); sfx('heavy'); DUELS.tell('BELLY HIT!', 0.6); burst(st.bp, 12, 3); DUELS.impact({ stop: 0.07, shake: 0.3, sfx: 'heavy', pop: String(HIT), pos: st.bp.clone().setY(st.bp.y + 1.2), cls: 'crit' }); // chipkid-fun: shared core hit juice
+  function addPow(st, v) { const was = st.pow >= 1; st.pow = clamp(st.pow + v, 0, 1); if (!was && st.pow >= 1 && !st.over) { DUELS.tell('POWER FULL! ACT = CANE TORPEDO', 1.4); DUELS.hitSfx('power'); } }
+  function damageBoss(st, dmg = HIT, k = 0, torp = false) { // polish: the cane combo (k 0..2) and the torpedo land here
+    st.bhp -= dmg; st.stats.softHits++; J.R.softM && (J.R.softM.userData.flash.value = 1); sfx('heavy'); burst(st.bp, k === 2 || torp ? 22 : 12, 3);
+    st.combo++; st.comboT = 1.2; st.stats.maxCombo = Math.max(st.stats.maxCombo, st.combo); DUELS.combo(st.combo); st.air = Math.min(1, st.air + 0.04); // (knocked-loose air bubbles)
+    J.R.soft.getWorldPosition(V3); V3.y += 1.2;
+    DUELS.impact({ stop: k === 2 || torp ? 0.11 : 0.07, shake: k === 2 || torp ? 0.6 : 0.3, sfx: k === 2 || torp ? 'heavy' : 'light', pop: (torp ? 'TORPEDO!' : CANE_W[k]) + ' ' + dmg, pos: V3.clone(), cls: k === 2 || torp ? 'big' : 'crit' });
+    if (k === 2 || torp) DUELS.flash('#ffd23c', 0.35);
+    addPow(st, torp ? 0 : k === 2 ? 0.2 : 0.12);
     const floor = HPB - (st.phase + 1) * 100; st.rearHits = (st.rearHits || 0) + 1;
-    if (st.rearHits >= 2 && st.bhp > floor) { setB(st, 'idle', rnd(...PH[st.phase].idle)); DUELS.tell('HE SLAMS DOWN! TWO HITS A REAR', 0.9); } // two belly hits per rear
+    if (!torp && (k === 2 || st.rearHits >= 3) && st.bhp > floor) { setB(st, 'idle', rnd(...PH[st.phase].idle)); DUELS.tell('HE SLAMS DOWN! WAIT FOR THE NEXT REAR', 1.0); } // one combo a rear
     if (st.bhp <= floor) { st.bhp = floor;
-      if (st.phase === 2) { st.bs = 'dead'; st.bt = 0; st.won = true; st.over = true; JUICE.ko(); win(st); }
-      else { st.phase++; st.stats.phaseUps++; setB(st, 'roar', 2.0); st.combo = 0; J.blasts.length = 0; st.air = Math.max(st.air, 0.75);
+      if (st.phase === 2) { st.bs = 'dead'; st.bt = 0; st.won = true; st.over = true; JUICE.ko(); DUELS.slowmo(0.35, 1.2); DUELS.impact({ shake: 1.0, flash: '#ffffff', flashA: 0.6, zoom: 1.2, zoomT: 0.6, sfx: 'mega' }); DUELS.banner('K.O.!<small>BIG JIMMY GOES BELLY-UP</small>', 2.2); DUELS.ready(null); DUELS.hot(false); win(st); }
+      else { st.phase++; st.stats.phaseUps++; setB(st, 'roar', 2.0); st.combo = 0; J.blasts.length = 0; st.air = Math.max(st.air, 0.75); st.cakeUsed = false;
         DUELS.banner(st.phase === 1 ? 'PHASE 2<small>JIMMY\'S GETTING STEAMED!</small>' : 'PHASE 3<small>ONE VENT SLEEPS AT A TIME!</small>', 1.8); DUELS.sub(J.airEl.outerHTML, 'PHASE ' + (st.phase + 1) + '/3'); J.airEl = DUELS.hudEl.querySelector('.air'); J.airI = J.airEl.querySelector('i'); } }
   }
   function win(st) {
     const L = LANDMARKS.find((l) => l.id === 'aquarium'), lines = L && L.boss && L.boss.lines; if (lines) DUELS.say('BIG JIMMY', lines.defeat[Math.floor(Math.random() * lines.defeat.length)], 4);
-    DUELS.banner('TANK CLEARED!<small>BIG JIMMY IS BEATEN</small>', 3); sfx('ko'); DUELS.bossCleared('aquarium', 'jimmy-swim');
-    setTimeout(() => { if (DUELS.cur === J) DUELS.over('win', 'BIG JIMMY<br>DEFEATED', 'The Aquarium is clear. Crime at the National Aquarium: 0.'); }, SIM ? 400 : 2600);
+    sfx('ko'); DUELS.bossCleared('aquarium', 'jimmy-swim'); setTimeout(() => { if (DUELS.cur === J) DUELS.banner('TANK CLEARED!<small>BIG JIMMY IS BEATEN</small>', 2.4); }, SIM ? 200 : 1600);
+    const h = st.stats.hitsTaken, g = h <= 3 ? 'S' : h <= 8 ? 'A' : 'B', stars = g === 'S' ? 3 : g === 'A' ? 2 : 1; DUELS.log.push('jimmy:grade:' + g); // polish: star grade
+    setTimeout(() => { if (DUELS.cur === J) DUELS.over('win', 'BIG JIMMY<br>DEFEATED', '<span style="color:#ffd23c;font-size:18px;letter-spacing:3px">' + '\u2605'.repeat(stars) + '<span style="opacity:.3">' + '\u2605'.repeat(3 - stars) + '</span></span><br>GRADE ' + g + ' · hits taken ' + h + ' · best combo x' + st.stats.maxCombo + '<br>The Aquarium is clear. Crime at the National Aquarium: 0.'); }, SIM ? 400 : 2600);
   }
   function lose(st, why) { st.over = true; sfx('ko'); DUELS.over('lose', why === 'air' ? 'OUT OF AIR!' : 'STEAMED!', 'Big Jimmy got the best of Harold. Retry from phase ' + (st.phase + 1) + ' with full health and air.'); DUELS.log.push('jimmy:lose:' + why); }
 
+  function startTorp(st) { st.torp = 0; st.pow = 0; st.stats.torpedoes++; st.inv = Math.max(st.inv, 2.0); st.combo = 0; J.blasts.length = 0; DUELS.banner('CANE TORPEDO!<small>POWER</small>', 1.4); DUELS.slowmo(0.55, 0.6); DUELS.hitSfx('power'); DUELS.flash('#7fe8ff', 0.4); }
   J.step = function (dt, I) {
     const st = J.st; if (!st) return; st.t += dt; U_T.value += dt; const P = PH[st.phase];
     if (!st.over) {
@@ -8548,30 +8706,41 @@ const JUICE = (function () {
       V2.copy(st.p).sub(st.bp); const dd = V2.length(); const br = st.bs === 'rear' ? 2.3 : 3.0; if (dd < br && dd > 1e-3 && st.bs !== 'dead') st.p.addScaledVector(V2, (br - dd) / dd);
       // facing: toward Jimmy
       V2.copy(st.bp).sub(st.p); st.yaw += angTo(st.yaw, Math.atan2(V2.x, V2.z)) * Math.min(1, dt * 8); st.pitch = damp(st.pitch, clamp(Math.atan2(V2.y, Math.hypot(V2.x, V2.z)), -0.7, 0.7), 6, dt);
-      // ---- strike
-      if ((I.a || I.c) && st.atkCd <= 0) { st.atkT = 0; st.atkCd = 0.42; st.hitDone = false; st.stats.strikes++; sfx('swing'); }
+      // ---- strike: polish = a 3-hit cane combo (WHACK, THWACK, CRAB CRACKER); POWER = the CANE TORPEDO
+      st.comboT -= dt; st.chainT = (st.chainT || 0) - dt; if (st.comboT <= 0 && st.combo) { st.combo = 0; DUELS.combo(0); }
+      if (I.c && st.pow >= 1 && st.torp < 0 && st.bs !== 'intro' && st.bs !== 'dead') startTorp(st);
+      else if (I.c && st.pow < 1 && st.atkCd <= 0) { DUELS.tell('NEED POWER: BELLY HITS + DODGES', 0.8); st.atkCd = 0.3; }
+      if (I.a && st.atkCd <= 0 && st.torp < 0) { const k = st.chainT > 0 ? (st.atkK + 1) % 3 : 0; st.atkK = k; st.atkT = 0; st.atkCd = k === 2 ? 0.45 : 0.26; st.chainT = 0.8; st.hitDone = false; st.stats.strikes++; sfx('swing'); DUELS.hitSfx('whoosh');
+        if (st.bs === 'rear') { J.R.soft.getWorldPosition(V3); const d = V3.distanceTo(st.p); if (d < 5.5) st.v.addScaledVector(V2.copy(V3).sub(st.p).normalize(), Math.min(7, d * 2)); } } // (the swing carries Harold in under a rearing crab)
       if (st.atkT >= 0) { st.atkT += dt; if (st.atkT > 0.12 && !st.hitDone) { st.hitDone = true;
           V2.set(Math.sin(st.yaw), 0, Math.cos(st.yaw)).multiplyScalar(1.1).add(st.p); J.R.soft.getWorldPosition(V3);
-          if (st.bs === 'rear' && V2.distanceTo(V3) < 2.6) damageBoss(st);
-          else if (V2.distanceTo(st.bp) < 4.2) { st.stats.clangs++; sfx('hit'); DUELS.tell('CLANG! WAIT FOR HIM TO REAR UP', 0.8); V3.copy(st.p).sub(st.bp).normalize(); st.v.addScaledVector(V3, 4); } }
-        if (st.atkT > 0.4) st.atkT = -1; }
+          if (st.bs === 'rear' && V2.distanceTo(V3) < 2.9) damageBoss(st, CANE[st.atkK], st.atkK);
+          else if (V2.distanceTo(st.bp) < 4.2) { st.stats.clangs++; sfx('hit'); DUELS.tell('CLANG! WAIT FOR HIM TO REAR UP', 0.8); DUELS.pop('CLANG', V2.clone(), ''); st.chainT = 0; V3.copy(st.p).sub(st.bp).normalize(); st.v.addScaledVector(V3, 4); } }
+        if (st.atkT > (st.atkK === 2 ? 0.45 : 0.3)) st.atkT = -1; }
+      if (st.torp >= 0) { st.torp += dt; J.R.soft.getWorldPosition(V3); V2.copy(V3).sub(st.p); const d = V2.length(); st.v.copy(V2.normalize().multiplyScalar(18)); if (Math.random() < dt * 40) burst(st.p, 2, 0.6, 0.5);
+        if (d < 3.4 || st.torp > 1.2) { st.torp = -1; st.v.multiplyScalar(-0.3); setB(st, 'rear', 3.0); st.rearHits = 0; DUELS.tell('BELLY-UP! COMBO HIM!', 1.4); damageBoss(st, TORP, 0, true); } }
+      // Mavis's crab cake sinks from the surface onto Harold
+      if (st.cake) { const c = st.cake; c.t += dt; c.p.lerp(V2.copy(st.p).setY(st.p.y + 0.6), 1 - Math.exp(-dt * (c.t < 0.6 ? 1.2 : 3.5)));
+        if (c.p.distanceTo(st.p) < 1.3 || c.t > 2.6) { const heal = Math.min(25, 100 - st.hp); st.hp += heal; st.stats.cakes++; st.cake = null; DUELS.pop('+' + Math.round(heal) + ' CRAB CAKE', st.p.clone().setY(st.p.y + 1.6), 'heal'); blub(700); } }
       // ---- air: drains, vents refill (stand in the bubble column)
       let inVent = false; VENTS.forEach((v, i) => { if (J.ventOn(i) && Math.hypot(st.p.x - v[0], st.p.z - v[1]) < 1.8 && st.p.y < TANK.y1 - 0.5) inVent = true; });
       if (inVent) { st.air = Math.min(1, st.air + dt * 0.5); st.stats.ventT += dt; if (Math.random() < dt * 6) blub(600 + Math.random() * 300); }
       else st.air = Math.max(0, st.air - P.drain * dt);
       if (st.air <= 0) { st.hp -= 9 * dt; st.drownT += dt; st.stats.airOut += dt; if (Math.random() < dt * 3) DUELS.hurt(); }
-      if (st.hp <= 0) { st.hp = 0; lose(st, st.air <= 0 ? 'air' : 'hit'); }
+      if (st.hp <= 0) { if (!J.windUsed) { J.windUsed = true; st.stats.winds++; st.hp = 45; st.air = Math.max(st.air, 0.6); st.inv = 2.2; DUELS.banner('SECOND WIND!<small>MAVIS: KICK, HAROLD, KICK!</small>', 1.8); DUELS.say('MAVIS', 'Kick, Harold! You promised me a crab dinner!', 2.4); DUELS.flash('#9dff6b', 0.45); }
+        else { st.hp = 0; lose(st, st.air <= 0 ? 'air' : 'hit'); } }
     }
     bossThink(st, dt); stepBlasts(st, dt); stepBubbles(dt);
     st.bp.x = clamp(st.bp.x, -TANK.x + 2, TANK.x - 2); st.bp.z = clamp(st.bp.z, -TANK.z + 2, TANK.z - 2); st.bp.y = clamp(st.bp.y, 1.6, TANK.y1 - 1.5);
     DUELS.bars(st.hp / 100, st.bhp / HPB);
+    const rdy = st.pow >= 1 && !st.over && st.torp < 0; DUELS.power(st.pow, rdy, rdy ? 'POWER READY! ACT' : 'POWER'); DUELS.ready(st.bs === 'rear' && !st.over ? 'STRIKE HIS BELLY!' : null);
     if (J.airI) { J.airI.style.width = (st.air * 100).toFixed(1) + '%'; const low = st.air < 0.3; if (low !== J.airLow) { J.airLow = low; J.airEl.classList.toggle('low', low); } }
   };
 
   // ---------------- poses + render ----------------
   function swimPose(t, st) {
     let p;
-    if (st.atkT >= 0) { p = HERO_POSES.atk1(clamp(st.atkT / 0.4, 0, 1)); p.tilt = [0.55 - st.pitch * 0.6, 0, 0]; p.lgL = [0.35 + Math.sin(t * 9) * 0.3, 0, 0.1]; p.lgR = [0.35 - Math.sin(t * 9) * 0.3, 0, -0.1]; return p; }
+    if (st.atkT >= 0) { p = HERO_POSES.atk1(clamp(st.atkT / (st.atkK === 2 ? 0.45 : 0.3), 0, 1)); if (st.atkK === 2) p.torso = [0.5, 0, 0]; p.tilt = [0.55 - st.pitch * 0.6, 0, 0]; p.lgL = [0.35 + Math.sin(t * 9) * 0.3, 0, 0.1]; p.lgR = [0.35 - Math.sin(t * 9) * 0.3, 0, -0.1]; return p; }
     if (st.hurtT > 0) { p = HERO_POSES.hurt(1 - st.hurtT / 0.35); p.tilt = [0.3, 0, 0]; return p; }
     if (st.over && !st.won) { p = HERO_POSES.down(1, false); p.tilt = [-1.2, 0, 0.3]; return p; }
     p = blank(); const sp = st.v.length(), k = Math.min(1, sp / 5), ph = t * (4 + k * 6);
@@ -8601,7 +8770,17 @@ const JUICE = (function () {
     if (st.bs === 'snapTell' && R.flash[st.side < 0 ? 1 : 2]) { const m = R.flash[st.side < 0 ? 1 : 2]; m.userData.flashC.value.set('#ff3030'); m.userData.flash.value = 0.25 + 0.35 * (Math.sin(st.bt * 30) * 0.5 + 0.5); }
     if (st.bs === 'bubbleTell' && R.flash[0]) { R.flash[0].userData.flashC.value.set('#7fe8ff'); R.flash[0].userData.flash.value = 0.15 + 0.3 * (Math.sin(st.bt * 20) * 0.5 + 0.5); }
     if (R.softM) { const g = st.bs === 'rear' ? 0.35 + 0.3 * (Math.sin(t * 14) * 0.5 + 0.5) : 0; R.softM.userData.flashC.value.set('#ffd23c'); R.softM.userData.flash.value = Math.max(g, R.softM.userData.flash.value - dt * 3); }
-    DUELS.hot(st.bs === 'rear'); J.ring.visible = st.bs === 'rear'; if (J.ring.visible) { R.soft.getWorldPosition(J.ring.position); J.ring.lookAt(st.p); J.ring.scale.setScalar(1 + Math.sin(t * 10) * 0.12); }
+    DUELS.hot(st.pow >= 1 && !st.over && st.torp < 0); tellFx(st, dt); J.ring.visible = st.bs === 'rear'; if (J.ring.visible) { R.soft.getWorldPosition(J.ring.position); J.ring.lookAt(st.p); J.ring.scale.setScalar(1 + Math.sin(t * 10) * 0.12); }
+  }
+  function tellFx(st, dt) { // polish: "!" over him, the red lock ring round Harold + its mark on the sand (snap), cyan aim beams (bubbles)
+    const pulse = 0.6 + 0.4 * Math.sin(st.t * 24), tellOn = (st.bs === 'snapTell' || st.bs === 'bubbleTell') && !st.over, u = clamp(st.bt / Math.max(0.01, st.bdur), 0, 1);
+    J.bang.visible = tellOn; if (tellOn) { J.bang.position.copy(st.bp); J.bang.position.y += 3.0 + Math.abs(Math.sin(st.t * 8)) * 0.3; J.bang.scale.setScalar(1.6 + 0.3 * Math.abs(Math.sin(st.t * 12))); }
+    const snapOn = !st.over && (st.bs === 'snapTell' || (st.bs === 'snap' && st.bt < 0.2)); J.lock.visible = J.sandMk.visible = snapOn;
+    if (snapOn) { const k = st.bs === 'snap' ? 1 : u; J.lock.position.copy(st.bs === 'snap' ? st.snapTo : st.p); J.lock.scale.setScalar(lerp(3.2, 1.5, k)); J.lock.material.opacity = (0.35 + 0.55 * k) * pulse;
+      J.sandMk.position.set(J.lock.position.x, floorY(J.lock.position.x, J.lock.position.z) + 0.14, J.lock.position.z); J.sandMk.material.opacity = (0.3 + 0.55 * k) * pulse; J.sandMk.rotation.y += dt * 2; }
+    const n = st.bs === 'bubbleTell' && !st.over ? PH[st.phase].bubbles : 0; J.R.mouth.getWorldPosition(V2); const d0 = V3.copy(st.p).sub(V2), len = Math.min(24, d0.length() + 5); d0.normalize();
+    J.beams.forEach((b, k) => { b.visible = k < n; if (!b.visible) return; const a = (k - (n - 1) / 2) * 0.28; b.position.copy(V2); b.lookAt(V.copy(d0).applyAxisAngle(UP, a).add(V2)); b.scale.set(1 + 0.3 * u, 1 + 0.3 * u, len); b.material.opacity = (0.25 + 0.55 * u) * pulse; });
+    if (J.cakeM) { J.cakeM.visible = !!st.cake; if (st.cake) { J.cakeM.position.copy(st.cake.p); J.cakeM.rotation.y += dt * 3; J.cakeM.rotation.x = Math.sin(st.t * 4) * 0.3; } }
   }
   J.render = function (rdt) {
     const st = J.st, dt = Math.min(0.05, rdt * (SIM || 1));
@@ -8625,15 +8804,18 @@ const JUICE = (function () {
   // ---------------- test bot: ?duel=jimmy&duelbot=win|lose ----------------
   J.botThink = function (B, dt) {
     const st = J.st; if (!st || st.over) return; B.mx = B.my = 0; B.up = B.down = false; if (B.mode === 'lose') return; // lose: float still, take every hit
+    const mash = B.mode === 'mash'; // mash: swims at him + mashes STRIKE (never dashes, never uses POWER), refills air at the vents like the AIR call-out says
+    if (!mash && st.pow >= 1 && st.torp < 0 && (st.bs === 'idle' || st.bs === 'rear')) B.c = true;
+    if (mash) { B.mcd = (B.mcd || 0) - dt; if (B.mcd <= 0) { B.a = true; B.mcd = 0.12; } }
     const { f, r } = lockFrame(st); let tgt = null, keep = false;
     B.cd = (B.cd || 0) - dt;
     // air low: go to the nearest awake vent and hover in the column until full
     if (st.air < (B.airing ? 0.97 : 0.38) && st.bs !== 'rear') { B.airing = true; let best = null, bd = 1e9; VENTS.forEach((v, i) => { if (!J.ventOn(i)) return; const d = Math.hypot(st.p.x - v[0], st.p.z - v[1]); if (d < bd) { bd = d; best = v; } }); if (best) tgt = new THREE.Vector3(best[0], 3, best[1]); } else B.airing = false;
-    if (st.bs === 'rear') { J.R.soft.getWorldPosition(V3); tgt = V3.clone().addScaledVector(V2.copy(st.p).sub(V3).setY(0).normalize(), 1.2); tgt.y = V3.y - 0.3; if (st.p.distanceTo(V3) < 3.0 && B.cd <= 0) { B.a = true; B.cd = 0.45; } }
+    if (st.bs === 'rear') { J.R.soft.getWorldPosition(V3); tgt = V3.clone().addScaledVector(V2.copy(st.p).sub(V3).setY(0).normalize(), 1.2); tgt.y = V3.y - 0.3; if (!mash && st.p.distanceTo(V3) < 3.2 && B.cd <= 0) { B.a = true; B.cd = 0.28; } }
     else if (!tgt) { V3.copy(st.p).sub(st.bp).setY(0).normalize(); tgt = st.bp.clone().addScaledVector(V3, 6.5); tgt.y = st.bp.y; }
     // dodge the snap at the end of the tell, and any bubble coming close
-    if (st.bs === 'snapTell' && st.bdur - st.bt < 0.22 && st.p.distanceTo(st.bp) < 9 && B.cd <= 0) { B.mx = st.side > 0 ? -1 : 1; B.b = true; B.cd = 0.5; keep = true; }
-    for (const b of J.blasts) { const d = b.p.distanceTo(st.p); if (d < 3.2 && b.v.dot(V2.copy(st.p).sub(b.p)) > 0 && B.cd <= 0) { B.mx = (B.flip = !B.flip) ? 1 : -1; B.up = true; B.b = true; B.cd = 0.5; keep = true; } }
+    if (mash) keep = false; else if (st.bs === 'snapTell' && st.bdur - st.bt < 0.22 && st.p.distanceTo(st.bp) < 9 && B.cd <= 0) { B.mx = st.side > 0 ? -1 : 1; B.b = true; B.cd = 0.5; keep = true; }
+    if (!mash) for (const b of J.blasts) { const d = b.p.distanceTo(st.p); if (d < 3.2 && b.v.dot(V2.copy(st.p).sub(b.p)) > 0 && B.cd <= 0) { B.mx = (B.flip = !B.flip) ? 1 : -1; B.up = true; B.b = true; B.cd = 0.5; keep = true; } }
     if (keep) return;
     V2.copy(tgt).sub(st.p); const l = V2.length(); if (l < 0.6) return; V2.divideScalar(l);
     B.mx = clamp(V2.dot(r) * 1.6, -1, 1); B.my = clamp(V2.dot(f) * 1.6, -1, 1); B.up = V2.y > 0.25; B.down = V2.y < -0.25;
@@ -8642,6 +8824,34 @@ const JUICE = (function () {
   // entrance: the glowing ring at the Aquarium's Pratt St doors (the LMHOOK.aquarium stub's door), back out onto the pier after
   const L = LANDMARKS.find((l) => l.id === 'aquarium'); const door = LMHOOK.aquarium && LMHOOK.aquarium.door;
   if (L && door) { if (LMHOOK.aquarium) LMHOOK.aquarium.duel = 'jimmy'; DUELS.addTrigger('jimmy', L, door.x, door.z - 1.6, door.x, door.z - 3.4, '#5fe0ff'); }
+  // polish: ?jimmy=1&jimmyauto=win|lose|mash (the CI boss runner's entry; ?duel=jimmy&duelbot=... still works)
+  { let n = 0; MODE.ticks.push(() => { n++; if (n === 3 && Q.has('jimmy') && !DUELS.cur) { if (CINE.intro) CINE.intro.skip = true; const m = Q.get('jimmyauto'); DUELS.start('jimmy', ['win', 'lose', 'mash'].includes(m) ? { bot: m } : {}); } }); }
+})();
+
+// ======================= DRAGON BOAT DUCHESS on the DUELS core (hark/polish, 2026-10-13).
+// The fight itself lives in src/06h_racers.js (DUCH: the harbour arena, her AI, the tells, Harold's cane combo, POWER, Mavis). This file only registers it as
+// the DUELS kind 'duchess' so it gets the shared duel HUD (bars, call-outs, RETRY / CONTINUE card), the JUICE kit (hit-stop, shake, pops, final-blow replay)
+// and the CI boss runner. The first boat ride's ambush (RIDES in 06h) calls DUCH.start -> DUELS.start('duchess'); exit resumes the ride.
+// Tests: ?duchess=1 (water taxi) or ?duchess=paddle, &duchessauto=win|lose|mash (bot); ?rb=duchess&rbauto=... still works and routes here too.
+(function () {
+  if (typeof DUELS === 'undefined' || typeof RB === 'undefined' || !RB.DUCH) return;
+  const DU = RB.DUCH;
+  const K = { scene: DU.sc, cam: DU.cam, title: 'DRAGON BOAT DUCHESS', pips: 3, built: true,
+    hint: '<b>A / D</b> steer · <b>W / S</b> throttle · <b>J</b> ram / cane · <b>K</b> hop · <b>E</b> power',
+    labels: { a: 'RAM', b: 'HOP', c: 'POWER', l: '&#9664; STEER', r: 'STEER &#9654;' },
+    st: { hp: 100, bhp: 300, phase: 0, over: false, won: false } };
+  K.build = () => {};
+  K.start = (opts) => DU.duelStart(K, opts || {});
+  K.step = (dt, I) => DU.duelStep(dt, I, K);
+  K.render = (rdt) => DU.duelRender(rdt, K);
+  K.retry = () => DU.duelRetry();
+  K.exit = (why) => DU.exit(why === 'win');
+  K.botThink = (B, dt) => DU.duelBot(B, dt);
+  Object.defineProperty(K, 'camL', { get: () => DU.camL });
+  DUELS.reg('duchess', K);
+  let n = 0; MODE.ticks.push(() => { n++; if (n === 3 && Q.has('duchess') && !DUELS.cur) { if (CINE.intro) CINE.intro.skip = true; const m = Q.get('duchessauto');
+    DU.start(Q.get('duchess') === 'paddle' ? 'paddle' : 'taxi', ['win', 'lose', 'mash'].includes(m) ? { bot: m } : {}); } });
+  window.__duchess = K;
 })();
 // ======================= THE CHIP KID, HARBORPLACE: a cane-brawl mech duel (DESIGN.md "More game-style fights" + "Homage bosses"; reworked for FUN, Brad 2026-10-12:
 // "way too hard ... the stick punch is not animated or fun enough ... the power button doesn't do anything special ... it should be easily beaten, with special moves
@@ -12684,6 +12894,9 @@ window.__carl = CARL;
 // Entry: the glowing ring at the Four Seasons boss anchor on Pratt St (LANDMARKS 'fourseasons' boss {x 82, z -42}; DESIGN anchor, not temporary). ACT = FIGHT.
 // Tests: ?crabcake=1 starts at load; &crabcakeauto=win|lose|mash plays it by itself (also ?duel=crabcake&duelbot=...); ?crabcakephase=N starts at phase N.
 // Writing: GR1 bosses.chef_crabcake intro / defeat lines (06e_gr1_data.js) + short placeholder lines below.
+// polish (hark/polish, 2026-10-13, the Chip Kid / Brewmaster bar): call-outs lead with "!" and fit a 390 px phone; the drumroll's first lane glows for the whole
+// tell (>= 1.1 s) and the lane after the next one glows faintly ahead; the cane combo uses the shared core juice (animated damage / word pops, combo counter,
+// hit sounds, a white flash on the SPATULA SMASH finisher); POWER is the big core meter (pulses READY, ACT glows); the KO adds a shared impact before JUICE.ko's replay.
 //
 // RIG HOOK (Opus): if window.buildChefCrabcake exists it is called as buildChefCrabcake({ THREE, toonMat, outlineMat, addOdir, QUAL }) and may return
 //   { root, body?, head?, armL?, armR?, tin?, pan?, flash?: [materials], update?(dt, state, info) }
@@ -12860,8 +13073,8 @@ window.__carl = CARL;
     C.door.rotation.y = -1.4; C.sign86.visible = false; C.skillet.visible = false;
     return st;
   }
-  function subHud(st) { const f = st.pow >= 1;
-    DUELS.sub('POWER<span class="ccpow' + (f ? ' full' : '') + '"><i style="width:' + Math.round(st.pow * 100) + '%"></i></span>' + (st.combo > 1 ? ' <span style="color:#ffd23c">x' + st.combo + '</span>' : ''), 'PHASE ' + (st.phase + 1) + '/3'); }
+  function subHud(st) { const f = st.pow >= 1 && !st.over; // polish: POWER lives on the core meter (pulses when READY); the sub line keeps the combo + phase
+    DUELS.power(st.pow, f, f ? 'POWER READY! ACT = FLIP' : 'POWER'); DUELS.sub(st.combo > 1 ? '<span style="color:#ffd23c">x' + st.combo + ' COMBO</span>' : '', 'PHASE ' + (st.phase + 1) + '/3'); }
   C.start = function (opts) {
     C.st = null; const ph = clamp(+(Q.get('crabcakephase') || 1) - 1, 0, 2) | 0; const st = reset(ph); DUELS.log.push('crabcake:' + C.rigKind); subHud(st);
     DUELS.banner('CHEF CRABCAKE<small>FOUR SEASONS KITCHEN · PHASE ' + (ph + 1) + '</small>', 2.4);
@@ -12880,14 +13093,14 @@ window.__carl = CARL;
   function fire(p, v, life = 0.5, s = 1) { if (C.fires.length < 60) C.fires.push({ p: p.clone(), v: v.clone(), t: 0, life, s }); }
   function spark(p, n = 6) { for (let k = 0; k < n && C.sparks.length < 40; k++) C.sparks.push({ p: p.clone(), v: new THREE.Vector3(rnd(-3, 3), rnd(1, 4), rnd(-3, 1)), t: 0, life: rnd(0.3, 0.6) }); }
   const POPS = [];
-  function pop(text, p, cls = '') { const e = document.createElement('div'); e.className = 'ccpop ' + cls; e.textContent = text; V3.copy(p).project(C.cam); e.style.left = ((V3.x + 1) / 2 * 100).toFixed(1) + '%'; e.style.top = ((1 - V3.y) / 2 * 100).toFixed(1) + '%'; DUELS.hudEl.appendChild(e); POPS.push({ e, t: 0 }); }
+  function pop(text, p, cls = '') { DUELS.pop(text, p, cls === 'w' ? 'word' : cls); } // polish: the core's animated, on-screen-clamped pops (was a static DOM label)
   C.hudPops = function (clear, dt = 0) { for (let i = POPS.length - 1; i >= 0; i--) { POPS[i].t += dt; if (clear || POPS[i].t > 0.85) { POPS[i].e.remove(); POPS.splice(i, 1); } } };
   function flashBoss(c = '#ffffff', v = 0.85) { for (const m of C.R.flash) if (m && m.userData.flashC) { m.userData.flashC.value.set(c); m.userData.flash.value = v; } }
   function setM(st, s, dur) { st.ms = s; st.mt = 0; st.mdur = dur; st.hitThis = false; st.dodged = false; }
   function addPow(st, v) { const was = st.pow >= 1; st.pow = clamp(st.pow + v, 0, 1); if (!was && st.pow >= 1) { DUELS.tell('POWER FULL: ACT = FLIP!', 1.2); sting('ding'); } subHud(st); }
   function hurtHarold(st, dmg, kind) {
     if (st.inv > 0 || st.over || st.flipT >= 0) return false;
-    st.hp -= dmg; st.inv = 1.3; st.hurtT = 0.4; st.stats.hits[kind]++; st.stats.hitsTaken++; st.combo = 0; DUELS.hurt(); sfx('hurt'); C.hflash = 1; st.lane = 0; st.duck = false; st.lockT = 0.3; st.shake = 0.35; st.stop = 0.06;
+    st.hp -= dmg; st.inv = 1.3; st.hurtT = 0.4; st.stats.hits[kind]++; st.stats.hitsTaken++; st.combo = 0; DUELS.combo(0); DUELS.hurt(); sfx('hurt'); C.hflash = 1; st.lane = 0; st.duck = false; st.lockT = 0.3; st.shake = 0.35; st.stop = 0.06;
     pop('-' + dmg, V.set(sx(0), 2.0, 0.2), '');
     if (st.hp <= 0) {
       if (st.wind) { st.wind = false; st.hp = 45; st.stats.winds++; st.inv = 2.0; DUELS.banner('SECOND WIND!<small>HAROLD\'S BACK UP</small>', 1.6); DUELS.say('MAVIS', 'Up you get, Harold! Dinner\'s not over!', 2.2); return true; }
@@ -12905,10 +13118,10 @@ window.__carl = CARL;
     switch (st.ms) {
       case 'intro': if (st.mt > st.mdur) setM(st, 'guard', 0.8); break;
       case 'guard': if (st.mt > st.mdur) { const a = P.mix[st.mixI++ % P.mix.length]; st.stats.attacks[a]++;
-          if (a === 'tin') { setM(st, 'tinTell', P.tin); DUELS.tell('SPICE! DODGE THE RING!', P.tin); sting('tin'); }
-          else if (a === 'drum') { setM(st, 'drumTell', P.drum); DUELS.tell('DRUMROLL! WATCH LANES!', P.drum); sting('drum');
+          if (a === 'tin') { setM(st, 'tinTell', P.tin); DUELS.tell('! SPICE TIN! STEP OUT OF THE RING!', P.tin); sting('tin'); }
+          else if (a === 'drum') { setM(st, 'drumTell', P.drum); DUELS.tell('! DRUMROLL! STAY OFF THE RED LANE!', P.drum); sting('drum');
             const s = []; let prev = 9; for (let k = 0; k < 4; k++) { let l; do { l = [-1, 0, 1][Math.floor(Math.random() * 3)]; } while (l === prev); s.push(l); prev = l; } st.seq = s; st.seqI = 0; st.slamT = 0; }
-          else { setM(st, 'panTell', P.pan); DUELS.tell('FLAMBÉ LINE! DUCK!', P.pan); sting('pan'); st.fireDir = Math.random() < 0.5 ? -1 : 1; }
+          else { setM(st, 'panTell', P.pan); DUELS.tell('! FLAMBÉ LINE! DUCK (JUMP)!', P.pan); sting('pan'); st.fireDir = Math.random() < 0.5 ? -1 : 1; }
           if (Math.random() < 0.25) DUELS.say('CHEF CRABCAKE', pick(MID), 2.0); }
         break;
       // SEASONING BLIND: the ring follows Harold's lane, locks for the last 0.4 s, then the cloud flies at the locked lane
@@ -12936,10 +13149,11 @@ window.__carl = CARL;
       case 'ko': break;
     }
     // Mavis's crab cake (once a phase, when Harold drops low)
-    if (st.healT > 0 && (st.healT -= dt) <= 0) { st.hp = Math.min(100, st.hp + 35); st.stats.heals++; DUELS.say('MAVIS', 'Here, hon: a crab cake! Eat!', 2.0); pop('+35', V.set(sx(st.lane) * 0.95, 2.2, 0.2), 'w'); sfx('jump'); }
+    if (st.healT > 0 && (st.healT -= dt) <= 0) { st.hp = Math.min(100, st.hp + 35); st.stats.heals++; DUELS.say('MAVIS', 'Here, hon: a crab cake! Eat!', 2.0); pop('+35 CRAB CAKE', V.set(sx(st.lane) * 0.95, 2.2, 0.2), 'heal'); sfx('jump'); }
   }
   function phaseDown(st) { clearFx();
-    if (st.phase >= 2) { setM(st, 'ko', 99); st.over = true; st.won = true; st.outT = 0; st.slow = 0.35; st.slowT = 1.3; JUICE.ko(); DUELS.banner('K.O.!<small>CHEF\'S DONE</small>', 2.2); sting('ding'); sfx('ko'); }
+    if (st.phase >= 2) { setM(st, 'ko', 99); st.over = true; st.won = true; st.outT = 0; st.slow = 0.35; st.slowT = 1.3; JUICE.ko(); DUELS.banner('K.O.!<small>CHEF\'S DONE</small>', 2.2); sting('ding'); sfx('ko');
+      DUELS.impact({ flash: '#ffffff', flashA: 0.6, zoom: 1.2, zoomT: 0.6, sfx: 'mega', pop: 'K.O.!', pos: V.set(0, 3.4, MZ - 0.5), cls: 'big' }); DUELS.combo(0); DUELS.power(0, false, 'POWER'); DUELS.hot(false); }
     else { setM(st, 'down', 2.4); DUELS.banner('ORDER UP!<small>PHASE ' + (st.phase + 1) + ' TO HAROLD</small>', 2.0); if (Math.random() < 0.7) DUELS.say('MAVIS', pick(MAVIS.slice(0, 3)), 2.2); }
   }
 
@@ -12973,11 +13187,12 @@ window.__carl = CARL;
     const k = st.swingK; V.set(sx(st.lane) * 0.6 + rnd(-0.3, 0.3), k === 2 ? 2.6 : 2.0, MZ - 0.9);
     if (st.ms === 'open' || st.ms === 'flipped') {
       const crit = st.ms === 'open' && st.mt < 0.4, dmg = SWING[k] + (crit ? 2 : 0); st.mhp -= dmg; st.stats.landed++; st.combo++; st.comboT = 1.1; st.stats.maxCombo = Math.max(st.stats.maxCombo, st.combo);
-      sfx(k === 2 ? 'heavy' : 'hit'); spark(V, k === 2 ? 14 : 6); flashBoss(k === 2 ? '#ffb030' : '#ffffff'); st.stop = k === 2 ? 0.085 : 0.065; st.shake = Math.max(st.shake, k === 2 ? 0.3 : 0.12);
-      pop((k === 2 ? pick(WORDS[2]) + ' ' : '') + dmg, V, k === 2 || crit ? 'big' : ''); addPow(st, k === 2 ? 0.09 : 0.05);
+      sfx(k === 2 ? 'heavy' : 'hit'); spark(V, k === 2 ? 14 : 6); flashBoss(k === 2 ? '#ffb030' : '#ffffff'); st.stop = k === 2 ? 0.09 : 0.065; st.shake = Math.max(st.shake, k === 2 ? 0.35 : 0.14);
+      DUELS.hitSfx(k === 2 ? 'heavy' : 'light'); DUELS.combo(st.combo); if (k === 2) DUELS.flash('#ffffff', 0.35); // polish: shared hit juice
+      pop(pick(WORDS[k]) + ' ' + dmg, V, k === 2 ? 'big' : crit ? 'crit' : ''); addPow(st, k === 2 ? 0.09 : 0.05);
       if (st.mhp <= 0) { st.mhp = 0; phaseDown(st); }
-    } else if (['guard', 'intro'].includes(st.ms)) { st.stats.blocked++; st.combo = 0; sfx('hit'); spark(V, 3); DUELS.tell('BLOCKED! WAIT FOR IT!', 0.7); }
-    else { st.combo = 0; }
+    } else if (['guard', 'intro'].includes(st.ms)) { st.stats.blocked++; st.combo = 0; DUELS.combo(0); sfx('hit'); spark(V, 3); pop('BLOCKED', V, ''); DUELS.tell('BLOCKED! WAIT FOR HIM TO OPEN UP', 0.7); }
+    else { st.combo = 0; DUELS.combo(0); }
     subHud(st);
   }
   // CHEF'S FLIP (team-up): Mavis slides the giant skillet down the pass, Harold vaults onto the counter and flips the chef in slow-mo
@@ -12987,7 +13202,7 @@ window.__carl = CARL;
     st.flipT += dt; const t = st.flipT;
     // the skillet slides in from screen right along the counter, under the chef, then catapults him up
     if (t < 0.5) C.skillet.position.set(lerp(-4.5, 0, ease(t / 0.5)), 1.12, CZ + 0.2);
-    if (t > 0.6 && !st.flipHit) { st.flipHit = true; st.mhp -= FLIP; sfx('heavy'); spark(V.set(0, 2.6, MZ - 0.5), 18); flashBoss('#ffd23c', 1); st.stop = 0.1; st.shake = 0.5; pop('CHEF\'S FLIP! ' + FLIP, V.set(0, 3.2, MZ - 0.5), 'big'); }
+    if (t > 0.6 && !st.flipHit) { st.flipHit = true; st.mhp -= FLIP; sfx('heavy'); spark(V.set(0, 2.6, MZ - 0.5), 18); flashBoss('#ffd23c', 1); st.stop = 0.1; st.shake = 0.5; pop('CHEF\'S FLIP! ' + FLIP, V.set(0, 3.2, MZ - 0.5), 'big'); DUELS.hitSfx('mega'); DUELS.flash('#ffd23c', 0.45); }
     C.skillet.rotation.x = t > 0.6 && t < 1.0 ? -Math.sin((t - 0.6) / 0.4 * Math.PI) * 0.7 : 0;
     if (t > 1.9) { st.flipT = -1; st.flipHit = false; C.skillet.visible = false; if (st.mhp <= 0) { st.mhp = 0; phaseDown(st); } }
   }
@@ -13062,7 +13277,8 @@ window.__carl = CARL;
   function tells(st, dt) {
     // lanes: drumroll warnings (the next lane glows during the gap before its slam; the first one during the end of the tell)
     const warn = [0, 0, 0], P = PH[st.phase], pulse = 0.62 + 0.3 * Math.sin(st.t * 28);
-    if (st.ms === 'drumTell' && st.mdur - st.mt < P.gap) warn[st.seq[0] + 1] = pulse;
+    if (st.ms === 'drumTell') warn[st.seq[0] + 1] = pulse * (0.45 + 0.55 * clamp(st.mt / st.mdur, 0, 1)); // polish: the first slam lane glows for the whole tell (>= 1.1 s)
+    if (st.ms === 'drum' && st.seqI + 1 < st.seq.length && st.seq[st.seqI + 1] !== st.seq[st.seqI]) warn[st.seq[st.seqI + 1] + 1] = 0.22; // and the one after next glows faintly ahead
     if (st.ms === 'drum' && st.seqI < st.seq.length) warn[st.seq[st.seqI] + 1] = pulse * (1.2 - clamp(st.slamT / P.gap, 0, 1) * 0.4);
     if (st.ms === 'drum' && st.slamFx > 0) warn[st.lastSlam + 1] = Math.max(warn[st.lastSlam + 1], 0.9);
     C.lanes.forEach((l, i) => { l.material.opacity = damp(l.material.opacity, warn[i], 24, dt); l.visible = l.material.opacity > 0.01; const c = C.cmarks[i]; c.material.opacity = l.material.opacity; c.visible = l.visible; });

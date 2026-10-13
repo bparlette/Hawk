@@ -10,20 +10,27 @@
 // Rig hook: if window.buildBigJimmy exists it is called as buildBigJimmy({ THREE, toonMat, outlineMat, addOdir, QUAL }) and must return
 // { root, body?, soft?, mouth?, claws?: [{ arm, top, bot, tip }] x2, legs?: [left, right], flash?: [materials] } (Object3Ds; any
 // missing optional piece is skipped). Otherwise the procedural stand-in below is used.
+// polish (hark/polish, 2026-10-13, the Chip Kid / Brewmaster bar): every tell >= 1.0 s with a "!" over him, a red lock ring round Harold + a mark on the sand
+// (snap) or cyan aim beams (bubbles) and a HUD call-out; STRIKE is a 3-hit cane combo on his belly (WHACK, THWACK, CRAB CRACKER finisher) with hit-stop, shake,
+// damage pops and a combo counter; belly hits + clean dodges fill POWER, full POWER = ACT "CANE TORPEDO" (Harold rockets in, flips him belly-up for a free combo);
+// Mavis drops a crab cake from the surface when Harold is low (once a phase), one SECOND WIND; KO = one JUICE.ko() + slow-mo; star grade on the win card.
+// Tests also: ?jimmy=1&jimmyauto=win|lose|mash (mash = swims at him and mashes STRIKE, refills air at the vents, never dashes).
 (function () {
   const TANK = { x: 15.5, z: 15.5, y0: 0.7, y1: 14.5, h: 16.5 }; // the swimmable box (the glass walls sit a little outside)
   const VENTS = [[-9.5, -6], [10, -4.5], [0.5, 10.5]];
   const PH = [ // per phase
-    { tell: 0.8, snaps: 1, bubbles: 1, bSpd: 6, home: 0, rear: 2.6, idle: [1.3, 2.1], drain: 1 / 30, speed: 1.6 },
-    { tell: 0.66, snaps: 2, bubbles: 3, bSpd: 7, home: 0, rear: 2.2, idle: [1.0, 1.7], drain: 1 / 25, speed: 2.1 },
-    { tell: 0.55, snaps: 3, bubbles: 5, bSpd: 7.5, home: 0.7, rear: 1.9, idle: [0.7, 1.3], drain: 1 / 21, speed: 2.6 },
+    { tell: 1.15, snaps: 1, bubbles: 1, bSpd: 6, home: 0, rear: 2.6, idle: [1.3, 2.1], drain: 1 / 30, speed: 1.6 },
+    { tell: 1.05, snaps: 2, bubbles: 3, bSpd: 7, home: 0, rear: 2.2, idle: [1.0, 1.7], drain: 1 / 25, speed: 2.1 },
+    { tell: 1.0, snaps: 3, bubbles: 5, bSpd: 7.5, home: 0.7, rear: 1.9, idle: [0.7, 1.3], drain: 1 / 21, speed: 2.6 },
   ];
-  const HPB = 300, HIT = 20; // 5 belly hits a phase, at most 2 per rear
+  const HPB = 300, HIT = 20; // (old single strike; the polish cane combo below hits for CANE[k])
+  const CANE = [12, 12, 22], CANE_W = ['WHACK!', 'THWACK!', 'CRAB CRACKER!'], TORP = 18; // one combo a rear (46), the torpedo flips him for another
   const J = { scene: null, cam: null, title: 'BIG JIMMY', pips: 3,
-    hint: '<b>WASD</b> swim · <b>SPACE</b> up · <b>SHIFT</b> down · <b>J</b> strike · <b>K</b> dash',
-    labels: { a: 'STRIKE', b: 'DASH', c: 'STRIKE', l: '&#9660; DOWN', r: 'UP &#9650;' } };
+    hint: '<b>WASD</b> swim · <b>SPACE</b> up · <b>SHIFT</b> down · <b>J</b> strike · <b>K</b> dash · <b>E</b> power',
+    labels: { a: 'STRIKE', b: 'DASH', c: 'POWER', l: '&#9660; DOWN', r: 'UP &#9650;' } };
   const V = new THREE.Vector3(), V2 = new THREE.Vector3(), V3 = new THREE.Vector3(), UP = new THREE.Vector3(0, 1, 0);
   let U_T = { value: 0 };
+  { const c = document.createElement('style'); c.textContent = 'body.duel-jimmy #duel .dpow { top: calc(env(safe-area-inset-top, 0px) + 114px); }'; document.head.appendChild(c); } // polish: POWER sits under the AIR meter
 
   // ---------------- materials with caustics (the sand, rocks and vents) and swaying kelp ----------------
   const CAU = `float cau(vec2 uv, float t) { vec2 p = mod(uv, 6.28318) - 250.0; vec2 i = p; float c = 1.0; float inten = 0.005;
@@ -186,7 +193,18 @@
     // the soft-spot marker: a gold glow ring under him while he rears
     J.ring = new THREE.Mesh(new THREE.RingGeometry(1.1, 1.5, 28), new THREE.MeshBasicMaterial({ color: '#ffd23c', transparent: true, opacity: 0.9, side: THREE.DoubleSide, depthWrite: false, fog: false, blending: THREE.AdditiveBlending }));
     sc.add(J.ring); J.ring.visible = false;
+    // polish: the tells. "!" sprite over him, a red lock ring round Harold + its shadow on the sand (snap), cyan aim beams (bubbles), Mavis's crab cake
+    const bangT = canvasTex(128, 128, (g) => { g.fillStyle = '#ffd23c'; g.strokeStyle = '#14101f'; g.lineWidth = 8; g.beginPath(); g.moveTo(64, 6); g.lineTo(122, 116); g.lineTo(6, 116); g.closePath(); g.fill(); g.stroke();
+      g.fillStyle = '#d8262a'; g.font = '900 78px ' + FONT; g.textAlign = 'center'; g.textBaseline = 'middle'; g.fillText('!', 64, 80); }, 128);
+    J.bang = new THREE.Sprite(new THREE.SpriteMaterial({ map: bangT, transparent: true, depthWrite: false, depthTest: false, fog: false })); J.bang.scale.setScalar(1.6); J.bang.visible = false; J.bang.renderOrder = 6; sc.add(J.bang);
+    const add = (geo, col) => { const m = new THREE.Mesh(geo, new THREE.MeshBasicMaterial({ color: col, transparent: true, opacity: 0, depthWrite: false, fog: false, side: THREE.DoubleSide, blending: THREE.AdditiveBlending })); m.visible = false; m.renderOrder = 4; sc.add(m); return m; };
+    J.lock = add(new THREE.TorusGeometry(1, 0.07, 6, 40).rotateX(Math.PI / 2), '#ff3030');
+    J.sandMk = add(new THREE.RingGeometry(1.5, 2.2, 32).rotateX(-Math.PI / 2), '#ff3030');
+    J.beams = []; for (let k = 0; k < 5; k++) { const g = new THREE.BoxGeometry(0.22, 0.22, 1); g.translate(0, 0, 0.5); J.beams.push(add(g, '#7fe8ff')); }
+    const CK = DUELS.kit(); CK.add(DUELS.GEO.cyl(0.42, 0.46, 0.22, 12), '#c8862e', 0, 0, 0).add(DUELS.GEO.sph(0.4, 10, 6), '#e0a048', 0, 0.1, 0, 0, 0, 0, 1, 0.35, 1).add(DUELS.GEO.box(0.18, 0.06, 0.12), '#f4e04a', 0.22, 0.18, 0.1);
+    J.cakeM = CK.mesh(toonMat(), null, 0.004); J.cakeM.visible = false; sc.add(J.cakeM);
   };
+  const floorY = (x, z) => Math.sin(x * 0.35) * 0.25 + Math.cos(z * 0.27 + x * 0.1) * 0.35 + Math.sin((x + z) * 1.7) * 0.05 + Math.max(0, Math.hypot(x, z) - 14) * 0.25; // (the sand's own height field)
   J.ventOn = (i) => !(J.st && J.st.phase === 2 && Math.floor(J.st.t / 9) % 3 === i); // phase 3: one vent sleeps at a time (9 s each)
 
   // ---------------- state ----------------
@@ -194,12 +212,13 @@
     const st = J.st = { t: 0, phase, bhp: HPB - phase * 100, hp: 100, air: 1, p: new THREE.Vector3(0, 4.5, -10), v: new THREE.Vector3(), yaw: 0, pitch: 0,
       inv: 0, dashCd: 0, dashT: 0, atkT: -1, atkCd: 0, hitDone: false, hurtT: 0, swimT: 0, drownT: 0,
       bp: new THREE.Vector3(0, 5, 5), byaw: Math.PI, bs: 'intro', bt: 0, bdur: 2.6, combo: 0, side: 1, snapTo: new THREE.Vector3(), rear: 0, roar: 0, lungeV: new THREE.Vector3(),
-      over: false, won: false, stats: { snaps: 0, snapHits: 0, bubbles: 0, bubbleHits: 0, strikes: 0, softHits: 0, clangs: 0, dashes: 0, ventT: 0, airOut: 0, phaseUps: 0 } };
-    J.blasts.length = 0; J.blastM.count = 0; J.ring.visible = false;
+      over: false, won: false, pow: J.st ? J.st.pow * 0.5 : 0, combo: 0, comboT: 0, atkK: 0, torp: -1, cake: null, cakeUsed: false, volley: null, snapMiss: false,
+      stats: (J.st && J.st.stats) || { snaps: 0, snapHits: 0, bubbles: 0, bubbleHits: 0, strikes: 0, softHits: 0, clangs: 0, dashes: 0, ventT: 0, airOut: 0, phaseUps: 0, hitsTaken: 0, maxCombo: 0, torpedoes: 0, dodges: 0, cakes: 0, winds: 0 } };
+    J.blasts.length = 0; J.blastM.count = 0; J.ring.visible = false; if (J.cakeM) J.cakeM.visible = false;
     DUELS.bars(1, st.bhp / HPB); return st;
   }
   J.start = function () {
-    const st = reset(0); J.stats0 = st.stats; DUELS.log.push('jimmy:' + J.rigKind);
+    J.st = null; J.windUsed = false; const st = reset(0); J.stats0 = st.stats; DUELS.log.push('jimmy:' + J.rigKind); DUELS.power(0, false, 'POWER');
     DUELS.sub('<div class="air"><div class="n">AIR</div><div class="t"><i></i></div></div>', 'PHASE 1/3'); J.airEl = DUELS.hudEl.querySelector('.air'); J.airI = J.airEl.querySelector('i');
     const L = LANDMARKS.find((l) => l.id === 'aquarium'), lines = L && L.boss && L.boss.lines;
     DUELS.banner('BIG JIMMY<small>NATIONAL AQUARIUM · THE BIG TANK</small>', 2.4);
@@ -216,7 +235,8 @@
   // ---------------- the fight ----------------
   function lockFrame(st) { V.set(st.bp.x - st.p.x, 0, st.bp.z - st.p.z); if (V.lengthSq() < 1e-4) V.set(0, 0, 1); V.normalize(); return { f: V.clone(), r: new THREE.Vector3(V.z, 0, -V.x).multiplyScalar(-1) }; }
   function hurtHarold(st, dmg, from, kind) {
-    if (st.inv > 0 || st.over) return false; st.hp -= dmg; st.inv = 0.9; st.hurtT = 0.35; DUELS.hurt(); sfx('hurt');
+    if (st.inv > 0 || st.over || st.torp >= 0) return false; st.hp -= dmg; st.inv = 0.9; st.hurtT = 0.35; DUELS.hurt(); sfx('hurt'); st.stats.hitsTaken++; st.combo = 0; DUELS.combo(0); DUELS.pop('-' + dmg, st.p.clone().setY(st.p.y + 1.4), ''); // polish
+    if (st.hp < 40 && st.hp - 0 > 0 && !st.cakeUsed) { st.cakeUsed = true; st.cake = { p: new THREE.Vector3(st.p.x, TANK.y1, st.p.z), t: 0 }; DUELS.say('MAVIS', ['Harold! Crab cake, coming down!', 'Catch, hon! From the top of the tank!', 'Eat something, dear, you look blue!'][st.phase % 3], 2.2); }
     V2.copy(st.p).sub(from); V2.y *= 0.5; if (V2.lengthSq() < 1e-4) V2.set(0, 0, -1); st.v.addScaledVector(V2.normalize(), 9); J.H.mat.userData.flash.value = 1; J.hflash = 1;
     burst(st.p, 10, 2.5); if (kind) st.stats[kind]++; return true;
   }
@@ -231,21 +251,23 @@
       const sp = P.speed * (dist > 10 ? 1.8 : 1); V2.sub(st.bp); const l = V2.length(); if (l > 0.05) st.bp.addScaledVector(V2, Math.min(1, sp * dt / l)); }
     if (st.bs === 'intro') { if (st.bt > st.bdur) setB(st, 'idle', 1.0); return; }
     if (st.bs === 'idle') { if (st.bt > st.bdur) {
-      if (st.combo > 0) { st.side = -st.side; setB(st, 'snapTell', P.tell); return; }
+      if (st.combo > 0) { st.side = -st.side; setB(st, 'snapTell', P.tell); DUELS.tell('! ANOTHER SNAP! DASH!', P.tell); return; }
       const r = Math.random(); if (dist > 9 && r < 0.55) { setB(st, 'bubbleTell', P.tell + 0.15); return; }
       if (r < 0.62) { st.combo = P.snaps; st.side = Math.random() < 0.5 ? -1 : 1; setB(st, 'snapTell', P.tell); } else setB(st, 'bubbleTell', P.tell + 0.15); }
+      if (st.bs === 'snapTell') { DUELS.tell('! CLAW SNAP! DASH SIDEWAYS (JUMP)!', P.tell); DUELS.hitSfx('whoosh'); } else if (st.bs === 'bubbleTell') { DUELS.tell('! BUBBLE BLAST! SWIM OUT OF THE CYAN LINES!', P.tell + 0.15); blub(200); }
       return; }
     if (st.bs === 'snapTell') { if (st.bt > st.bdur) { st.snapTo.copy(st.p); st.lungeV.copy(st.p).sub(st.bp).setY(0).normalize().multiplyScalar(7); setB(st, 'snap', 0.42); st.stats.snaps++; st.snapHit = false; sfx('swing'); } return; }
     if (st.bs === 'snap') { const u = st.bt / st.bdur; if (u < 0.6) st.bp.addScaledVector(st.lungeV, dt);
       const c = J.R.claws[st.side < 0 ? 0 : 1]; if (c && u > 0.25 && u < 0.85 && !st.snapHit) { c.tip.getWorldPosition(V2); if (V2.distanceTo(st.p) < 2.1 || (st.p.distanceTo(st.bp) < 3.6)) { if (hurtHarold(st, 22, st.bp, 'snapHits')) { st.snapHit = true; sfx('heavy'); DUELS.tell('SNAP!', 0.6); } } }
-      if (st.bt > st.bdur) { st.combo--; if (st.combo > 0) setB(st, 'idle', 0.25); else { setB(st, 'rear', P.rear); st.rearHits = 0; st.combo = 0; DUELS.tell('HE REARS UP! STRIKE HIS BELLY!', 1.4); sfx('ko'); } } return; }
+      if (st.bt > st.bdur) { if (!st.snapHit && st.p.distanceTo(st.bp) < 9) { st.stats.dodges++; addPow(st, 0.12); DUELS.pop('DODGED!', st.p.clone().setY(st.p.y + 1.6), 'word'); } // polish: a clean dodge fills POWER
+        st.combo--; if (st.combo > 0) setB(st, 'idle', 0.25); else { setB(st, 'rear', P.rear); st.rearHits = 0; st.combo = 0; DUELS.tell('HE REARS UP! STRIKE HIS BELLY!', 1.4); sfx('ko'); } } return; }
     if (st.bs === 'rear') { if (st.bt > st.bdur) setB(st, 'idle', rnd(...P.idle)); return; }
     if (st.bs === 'bubbleTell') { if (Math.random() < dt * 30) { J.R.mouth.getWorldPosition(V2); burst(V2, 1, 0.8, 0.5); } if (st.bt > st.bdur) { fireBubbles(st, P); setB(st, 'idle', rnd(...P.idle)); } return; }
     if (st.bs === 'roar') { if (st.bt > st.bdur) setB(st, 'idle', 0.8); return; }
     if (st.bs === 'dead') { st.bp.y = Math.max(1.6, st.bp.y - dt * 1.2); return; }
   }
   function fireBubbles(st, P) {
-    J.R.mouth.getWorldPosition(V2); const dir = V3.copy(st.p).sub(V2).normalize(), n = P.bubbles; st.stats.bubbles += n; blub(240);
+    J.R.mouth.getWorldPosition(V2); const dir = V3.copy(st.p).sub(V2).normalize(), n = P.bubbles; st.stats.bubbles += n; blub(240); st.volley = { hit: false };
     for (let k = 0; k < n; k++) { const a = (k - (n - 1) / 2) * 0.28; const d = dir.clone().applyAxisAngle(UP, a); if (J.blasts.length < 16) J.blasts.push({ p: V2.clone(), v: d.multiplyScalar(P.bSpd), t: 0, home: P.home, r: 0.6 }); }
   }
   function stepBlasts(st, dt) {
@@ -253,26 +275,35 @@
       if (b.home > 0 && b.t < 2) { const want = V2.copy(st.p).sub(b.p).normalize().multiplyScalar(b.v.length()); b.v.lerp(want, Math.min(1, b.home * dt)); }
       b.p.addScaledVector(b.v, dt); b.r = 0.6 + Math.sin(b.t * 12) * 0.05;
       let gone = b.t > 4.5 || Math.abs(b.p.x) > TANK.x + 1 || Math.abs(b.p.z) > TANK.z + 1 || b.p.y < 0 || b.p.y > TANK.h;
-      if (!gone && b.p.distanceTo(st.p) < 1.05) { if (hurtHarold(st, 12, b.p, 'bubbleHits')) blub(520); gone = true; }
+      if (!gone && b.p.distanceTo(st.p) < 1.05) { if (hurtHarold(st, 12, b.p, 'bubbleHits')) { blub(520); if (st.volley) st.volley.hit = true; } gone = true; }
       if (gone) { burst(b.p, 8, 2); J.blasts.splice(i, 1); } }
+    if (st.volley && !J.blasts.length) { if (!st.volley.hit && !st.over) { st.stats.dodges++; addPow(st, 0.1); DUELS.pop('DODGED!', st.p.clone().setY(st.p.y + 1.6), 'word'); } st.volley = null; }
     J.blastM.count = J.blasts.length; J.blastM.visible = J.blasts.length > 0; const m = new THREE.Matrix4(); J.blasts.forEach((b, i) => { m.makeScale(b.r, b.r, b.r).setPosition(b.p); J.blastM.setMatrixAt(i, m); }); J.blastM.instanceMatrix.needsUpdate = true;
   }
-  function damageBoss(st) {
-    st.bhp -= HIT; st.stats.softHits++; J.R.softM && (J.R.softM.userData.flash.value = 1); sfx('heavy'); DUELS.tell('BELLY HIT!', 0.6); burst(st.bp, 12, 3); DUELS.impact({ stop: 0.07, shake: 0.3, sfx: 'heavy', pop: String(HIT), pos: st.bp.clone().setY(st.bp.y + 1.2), cls: 'crit' }); // chipkid-fun: shared core hit juice
+  function addPow(st, v) { const was = st.pow >= 1; st.pow = clamp(st.pow + v, 0, 1); if (!was && st.pow >= 1 && !st.over) { DUELS.tell('POWER FULL! ACT = CANE TORPEDO', 1.4); DUELS.hitSfx('power'); } }
+  function damageBoss(st, dmg = HIT, k = 0, torp = false) { // polish: the cane combo (k 0..2) and the torpedo land here
+    st.bhp -= dmg; st.stats.softHits++; J.R.softM && (J.R.softM.userData.flash.value = 1); sfx('heavy'); burst(st.bp, k === 2 || torp ? 22 : 12, 3);
+    st.combo++; st.comboT = 1.2; st.stats.maxCombo = Math.max(st.stats.maxCombo, st.combo); DUELS.combo(st.combo); st.air = Math.min(1, st.air + 0.04); // (knocked-loose air bubbles)
+    J.R.soft.getWorldPosition(V3); V3.y += 1.2;
+    DUELS.impact({ stop: k === 2 || torp ? 0.11 : 0.07, shake: k === 2 || torp ? 0.6 : 0.3, sfx: k === 2 || torp ? 'heavy' : 'light', pop: (torp ? 'TORPEDO!' : CANE_W[k]) + ' ' + dmg, pos: V3.clone(), cls: k === 2 || torp ? 'big' : 'crit' });
+    if (k === 2 || torp) DUELS.flash('#ffd23c', 0.35);
+    addPow(st, torp ? 0 : k === 2 ? 0.2 : 0.12);
     const floor = HPB - (st.phase + 1) * 100; st.rearHits = (st.rearHits || 0) + 1;
-    if (st.rearHits >= 2 && st.bhp > floor) { setB(st, 'idle', rnd(...PH[st.phase].idle)); DUELS.tell('HE SLAMS DOWN! TWO HITS A REAR', 0.9); } // two belly hits per rear
+    if (!torp && (k === 2 || st.rearHits >= 3) && st.bhp > floor) { setB(st, 'idle', rnd(...PH[st.phase].idle)); DUELS.tell('HE SLAMS DOWN! WAIT FOR THE NEXT REAR', 1.0); } // one combo a rear
     if (st.bhp <= floor) { st.bhp = floor;
-      if (st.phase === 2) { st.bs = 'dead'; st.bt = 0; st.won = true; st.over = true; JUICE.ko(); win(st); }
-      else { st.phase++; st.stats.phaseUps++; setB(st, 'roar', 2.0); st.combo = 0; J.blasts.length = 0; st.air = Math.max(st.air, 0.75);
+      if (st.phase === 2) { st.bs = 'dead'; st.bt = 0; st.won = true; st.over = true; JUICE.ko(); DUELS.slowmo(0.35, 1.2); DUELS.impact({ shake: 1.0, flash: '#ffffff', flashA: 0.6, zoom: 1.2, zoomT: 0.6, sfx: 'mega' }); DUELS.banner('K.O.!<small>BIG JIMMY GOES BELLY-UP</small>', 2.2); DUELS.ready(null); DUELS.hot(false); win(st); }
+      else { st.phase++; st.stats.phaseUps++; setB(st, 'roar', 2.0); st.combo = 0; J.blasts.length = 0; st.air = Math.max(st.air, 0.75); st.cakeUsed = false;
         DUELS.banner(st.phase === 1 ? 'PHASE 2<small>JIMMY\'S GETTING STEAMED!</small>' : 'PHASE 3<small>ONE VENT SLEEPS AT A TIME!</small>', 1.8); DUELS.sub(J.airEl.outerHTML, 'PHASE ' + (st.phase + 1) + '/3'); J.airEl = DUELS.hudEl.querySelector('.air'); J.airI = J.airEl.querySelector('i'); } }
   }
   function win(st) {
     const L = LANDMARKS.find((l) => l.id === 'aquarium'), lines = L && L.boss && L.boss.lines; if (lines) DUELS.say('BIG JIMMY', lines.defeat[Math.floor(Math.random() * lines.defeat.length)], 4);
-    DUELS.banner('TANK CLEARED!<small>BIG JIMMY IS BEATEN</small>', 3); sfx('ko'); DUELS.bossCleared('aquarium', 'jimmy-swim');
-    setTimeout(() => { if (DUELS.cur === J) DUELS.over('win', 'BIG JIMMY<br>DEFEATED', 'The Aquarium is clear. Crime at the National Aquarium: 0.'); }, SIM ? 400 : 2600);
+    sfx('ko'); DUELS.bossCleared('aquarium', 'jimmy-swim'); setTimeout(() => { if (DUELS.cur === J) DUELS.banner('TANK CLEARED!<small>BIG JIMMY IS BEATEN</small>', 2.4); }, SIM ? 200 : 1600);
+    const h = st.stats.hitsTaken, g = h <= 3 ? 'S' : h <= 8 ? 'A' : 'B', stars = g === 'S' ? 3 : g === 'A' ? 2 : 1; DUELS.log.push('jimmy:grade:' + g); // polish: star grade
+    setTimeout(() => { if (DUELS.cur === J) DUELS.over('win', 'BIG JIMMY<br>DEFEATED', '<span style="color:#ffd23c;font-size:18px;letter-spacing:3px">' + '\u2605'.repeat(stars) + '<span style="opacity:.3">' + '\u2605'.repeat(3 - stars) + '</span></span><br>GRADE ' + g + ' · hits taken ' + h + ' · best combo x' + st.stats.maxCombo + '<br>The Aquarium is clear. Crime at the National Aquarium: 0.'); }, SIM ? 400 : 2600);
   }
   function lose(st, why) { st.over = true; sfx('ko'); DUELS.over('lose', why === 'air' ? 'OUT OF AIR!' : 'STEAMED!', 'Big Jimmy got the best of Harold. Retry from phase ' + (st.phase + 1) + ' with full health and air.'); DUELS.log.push('jimmy:lose:' + why); }
 
+  function startTorp(st) { st.torp = 0; st.pow = 0; st.stats.torpedoes++; st.inv = Math.max(st.inv, 2.0); st.combo = 0; J.blasts.length = 0; DUELS.banner('CANE TORPEDO!<small>POWER</small>', 1.4); DUELS.slowmo(0.55, 0.6); DUELS.hitSfx('power'); DUELS.flash('#7fe8ff', 0.4); }
   J.step = function (dt, I) {
     const st = J.st; if (!st) return; st.t += dt; U_T.value += dt; const P = PH[st.phase];
     if (!st.over) {
@@ -288,30 +319,41 @@
       V2.copy(st.p).sub(st.bp); const dd = V2.length(); const br = st.bs === 'rear' ? 2.3 : 3.0; if (dd < br && dd > 1e-3 && st.bs !== 'dead') st.p.addScaledVector(V2, (br - dd) / dd);
       // facing: toward Jimmy
       V2.copy(st.bp).sub(st.p); st.yaw += angTo(st.yaw, Math.atan2(V2.x, V2.z)) * Math.min(1, dt * 8); st.pitch = damp(st.pitch, clamp(Math.atan2(V2.y, Math.hypot(V2.x, V2.z)), -0.7, 0.7), 6, dt);
-      // ---- strike
-      if ((I.a || I.c) && st.atkCd <= 0) { st.atkT = 0; st.atkCd = 0.42; st.hitDone = false; st.stats.strikes++; sfx('swing'); }
+      // ---- strike: polish = a 3-hit cane combo (WHACK, THWACK, CRAB CRACKER); POWER = the CANE TORPEDO
+      st.comboT -= dt; st.chainT = (st.chainT || 0) - dt; if (st.comboT <= 0 && st.combo) { st.combo = 0; DUELS.combo(0); }
+      if (I.c && st.pow >= 1 && st.torp < 0 && st.bs !== 'intro' && st.bs !== 'dead') startTorp(st);
+      else if (I.c && st.pow < 1 && st.atkCd <= 0) { DUELS.tell('NEED POWER: BELLY HITS + DODGES', 0.8); st.atkCd = 0.3; }
+      if (I.a && st.atkCd <= 0 && st.torp < 0) { const k = st.chainT > 0 ? (st.atkK + 1) % 3 : 0; st.atkK = k; st.atkT = 0; st.atkCd = k === 2 ? 0.45 : 0.26; st.chainT = 0.8; st.hitDone = false; st.stats.strikes++; sfx('swing'); DUELS.hitSfx('whoosh');
+        if (st.bs === 'rear') { J.R.soft.getWorldPosition(V3); const d = V3.distanceTo(st.p); if (d < 5.5) st.v.addScaledVector(V2.copy(V3).sub(st.p).normalize(), Math.min(7, d * 2)); } } // (the swing carries Harold in under a rearing crab)
       if (st.atkT >= 0) { st.atkT += dt; if (st.atkT > 0.12 && !st.hitDone) { st.hitDone = true;
           V2.set(Math.sin(st.yaw), 0, Math.cos(st.yaw)).multiplyScalar(1.1).add(st.p); J.R.soft.getWorldPosition(V3);
-          if (st.bs === 'rear' && V2.distanceTo(V3) < 2.6) damageBoss(st);
-          else if (V2.distanceTo(st.bp) < 4.2) { st.stats.clangs++; sfx('hit'); DUELS.tell('CLANG! WAIT FOR HIM TO REAR UP', 0.8); V3.copy(st.p).sub(st.bp).normalize(); st.v.addScaledVector(V3, 4); } }
-        if (st.atkT > 0.4) st.atkT = -1; }
+          if (st.bs === 'rear' && V2.distanceTo(V3) < 2.9) damageBoss(st, CANE[st.atkK], st.atkK);
+          else if (V2.distanceTo(st.bp) < 4.2) { st.stats.clangs++; sfx('hit'); DUELS.tell('CLANG! WAIT FOR HIM TO REAR UP', 0.8); DUELS.pop('CLANG', V2.clone(), ''); st.chainT = 0; V3.copy(st.p).sub(st.bp).normalize(); st.v.addScaledVector(V3, 4); } }
+        if (st.atkT > (st.atkK === 2 ? 0.45 : 0.3)) st.atkT = -1; }
+      if (st.torp >= 0) { st.torp += dt; J.R.soft.getWorldPosition(V3); V2.copy(V3).sub(st.p); const d = V2.length(); st.v.copy(V2.normalize().multiplyScalar(18)); if (Math.random() < dt * 40) burst(st.p, 2, 0.6, 0.5);
+        if (d < 3.4 || st.torp > 1.2) { st.torp = -1; st.v.multiplyScalar(-0.3); setB(st, 'rear', 3.0); st.rearHits = 0; DUELS.tell('BELLY-UP! COMBO HIM!', 1.4); damageBoss(st, TORP, 0, true); } }
+      // Mavis's crab cake sinks from the surface onto Harold
+      if (st.cake) { const c = st.cake; c.t += dt; c.p.lerp(V2.copy(st.p).setY(st.p.y + 0.6), 1 - Math.exp(-dt * (c.t < 0.6 ? 1.2 : 3.5)));
+        if (c.p.distanceTo(st.p) < 1.3 || c.t > 2.6) { const heal = Math.min(25, 100 - st.hp); st.hp += heal; st.stats.cakes++; st.cake = null; DUELS.pop('+' + Math.round(heal) + ' CRAB CAKE', st.p.clone().setY(st.p.y + 1.6), 'heal'); blub(700); } }
       // ---- air: drains, vents refill (stand in the bubble column)
       let inVent = false; VENTS.forEach((v, i) => { if (J.ventOn(i) && Math.hypot(st.p.x - v[0], st.p.z - v[1]) < 1.8 && st.p.y < TANK.y1 - 0.5) inVent = true; });
       if (inVent) { st.air = Math.min(1, st.air + dt * 0.5); st.stats.ventT += dt; if (Math.random() < dt * 6) blub(600 + Math.random() * 300); }
       else st.air = Math.max(0, st.air - P.drain * dt);
       if (st.air <= 0) { st.hp -= 9 * dt; st.drownT += dt; st.stats.airOut += dt; if (Math.random() < dt * 3) DUELS.hurt(); }
-      if (st.hp <= 0) { st.hp = 0; lose(st, st.air <= 0 ? 'air' : 'hit'); }
+      if (st.hp <= 0) { if (!J.windUsed) { J.windUsed = true; st.stats.winds++; st.hp = 45; st.air = Math.max(st.air, 0.6); st.inv = 2.2; DUELS.banner('SECOND WIND!<small>MAVIS: KICK, HAROLD, KICK!</small>', 1.8); DUELS.say('MAVIS', 'Kick, Harold! You promised me a crab dinner!', 2.4); DUELS.flash('#9dff6b', 0.45); }
+        else { st.hp = 0; lose(st, st.air <= 0 ? 'air' : 'hit'); } }
     }
     bossThink(st, dt); stepBlasts(st, dt); stepBubbles(dt);
     st.bp.x = clamp(st.bp.x, -TANK.x + 2, TANK.x - 2); st.bp.z = clamp(st.bp.z, -TANK.z + 2, TANK.z - 2); st.bp.y = clamp(st.bp.y, 1.6, TANK.y1 - 1.5);
     DUELS.bars(st.hp / 100, st.bhp / HPB);
+    const rdy = st.pow >= 1 && !st.over && st.torp < 0; DUELS.power(st.pow, rdy, rdy ? 'POWER READY! ACT' : 'POWER'); DUELS.ready(st.bs === 'rear' && !st.over ? 'STRIKE HIS BELLY!' : null);
     if (J.airI) { J.airI.style.width = (st.air * 100).toFixed(1) + '%'; const low = st.air < 0.3; if (low !== J.airLow) { J.airLow = low; J.airEl.classList.toggle('low', low); } }
   };
 
   // ---------------- poses + render ----------------
   function swimPose(t, st) {
     let p;
-    if (st.atkT >= 0) { p = HERO_POSES.atk1(clamp(st.atkT / 0.4, 0, 1)); p.tilt = [0.55 - st.pitch * 0.6, 0, 0]; p.lgL = [0.35 + Math.sin(t * 9) * 0.3, 0, 0.1]; p.lgR = [0.35 - Math.sin(t * 9) * 0.3, 0, -0.1]; return p; }
+    if (st.atkT >= 0) { p = HERO_POSES.atk1(clamp(st.atkT / (st.atkK === 2 ? 0.45 : 0.3), 0, 1)); if (st.atkK === 2) p.torso = [0.5, 0, 0]; p.tilt = [0.55 - st.pitch * 0.6, 0, 0]; p.lgL = [0.35 + Math.sin(t * 9) * 0.3, 0, 0.1]; p.lgR = [0.35 - Math.sin(t * 9) * 0.3, 0, -0.1]; return p; }
     if (st.hurtT > 0) { p = HERO_POSES.hurt(1 - st.hurtT / 0.35); p.tilt = [0.3, 0, 0]; return p; }
     if (st.over && !st.won) { p = HERO_POSES.down(1, false); p.tilt = [-1.2, 0, 0.3]; return p; }
     p = blank(); const sp = st.v.length(), k = Math.min(1, sp / 5), ph = t * (4 + k * 6);
@@ -341,7 +383,17 @@
     if (st.bs === 'snapTell' && R.flash[st.side < 0 ? 1 : 2]) { const m = R.flash[st.side < 0 ? 1 : 2]; m.userData.flashC.value.set('#ff3030'); m.userData.flash.value = 0.25 + 0.35 * (Math.sin(st.bt * 30) * 0.5 + 0.5); }
     if (st.bs === 'bubbleTell' && R.flash[0]) { R.flash[0].userData.flashC.value.set('#7fe8ff'); R.flash[0].userData.flash.value = 0.15 + 0.3 * (Math.sin(st.bt * 20) * 0.5 + 0.5); }
     if (R.softM) { const g = st.bs === 'rear' ? 0.35 + 0.3 * (Math.sin(t * 14) * 0.5 + 0.5) : 0; R.softM.userData.flashC.value.set('#ffd23c'); R.softM.userData.flash.value = Math.max(g, R.softM.userData.flash.value - dt * 3); }
-    DUELS.hot(st.bs === 'rear'); J.ring.visible = st.bs === 'rear'; if (J.ring.visible) { R.soft.getWorldPosition(J.ring.position); J.ring.lookAt(st.p); J.ring.scale.setScalar(1 + Math.sin(t * 10) * 0.12); }
+    DUELS.hot(st.pow >= 1 && !st.over && st.torp < 0); tellFx(st, dt); J.ring.visible = st.bs === 'rear'; if (J.ring.visible) { R.soft.getWorldPosition(J.ring.position); J.ring.lookAt(st.p); J.ring.scale.setScalar(1 + Math.sin(t * 10) * 0.12); }
+  }
+  function tellFx(st, dt) { // polish: "!" over him, the red lock ring round Harold + its mark on the sand (snap), cyan aim beams (bubbles)
+    const pulse = 0.6 + 0.4 * Math.sin(st.t * 24), tellOn = (st.bs === 'snapTell' || st.bs === 'bubbleTell') && !st.over, u = clamp(st.bt / Math.max(0.01, st.bdur), 0, 1);
+    J.bang.visible = tellOn; if (tellOn) { J.bang.position.copy(st.bp); J.bang.position.y += 3.0 + Math.abs(Math.sin(st.t * 8)) * 0.3; J.bang.scale.setScalar(1.6 + 0.3 * Math.abs(Math.sin(st.t * 12))); }
+    const snapOn = !st.over && (st.bs === 'snapTell' || (st.bs === 'snap' && st.bt < 0.2)); J.lock.visible = J.sandMk.visible = snapOn;
+    if (snapOn) { const k = st.bs === 'snap' ? 1 : u; J.lock.position.copy(st.bs === 'snap' ? st.snapTo : st.p); J.lock.scale.setScalar(lerp(3.2, 1.5, k)); J.lock.material.opacity = (0.35 + 0.55 * k) * pulse;
+      J.sandMk.position.set(J.lock.position.x, floorY(J.lock.position.x, J.lock.position.z) + 0.14, J.lock.position.z); J.sandMk.material.opacity = (0.3 + 0.55 * k) * pulse; J.sandMk.rotation.y += dt * 2; }
+    const n = st.bs === 'bubbleTell' && !st.over ? PH[st.phase].bubbles : 0; J.R.mouth.getWorldPosition(V2); const d0 = V3.copy(st.p).sub(V2), len = Math.min(24, d0.length() + 5); d0.normalize();
+    J.beams.forEach((b, k) => { b.visible = k < n; if (!b.visible) return; const a = (k - (n - 1) / 2) * 0.28; b.position.copy(V2); b.lookAt(V.copy(d0).applyAxisAngle(UP, a).add(V2)); b.scale.set(1 + 0.3 * u, 1 + 0.3 * u, len); b.material.opacity = (0.25 + 0.55 * u) * pulse; });
+    if (J.cakeM) { J.cakeM.visible = !!st.cake; if (st.cake) { J.cakeM.position.copy(st.cake.p); J.cakeM.rotation.y += dt * 3; J.cakeM.rotation.x = Math.sin(st.t * 4) * 0.3; } }
   }
   J.render = function (rdt) {
     const st = J.st, dt = Math.min(0.05, rdt * (SIM || 1));
@@ -365,15 +417,18 @@
   // ---------------- test bot: ?duel=jimmy&duelbot=win|lose ----------------
   J.botThink = function (B, dt) {
     const st = J.st; if (!st || st.over) return; B.mx = B.my = 0; B.up = B.down = false; if (B.mode === 'lose') return; // lose: float still, take every hit
+    const mash = B.mode === 'mash'; // mash: swims at him + mashes STRIKE (never dashes, never uses POWER), refills air at the vents like the AIR call-out says
+    if (!mash && st.pow >= 1 && st.torp < 0 && (st.bs === 'idle' || st.bs === 'rear')) B.c = true;
+    if (mash) { B.mcd = (B.mcd || 0) - dt; if (B.mcd <= 0) { B.a = true; B.mcd = 0.12; } }
     const { f, r } = lockFrame(st); let tgt = null, keep = false;
     B.cd = (B.cd || 0) - dt;
     // air low: go to the nearest awake vent and hover in the column until full
     if (st.air < (B.airing ? 0.97 : 0.38) && st.bs !== 'rear') { B.airing = true; let best = null, bd = 1e9; VENTS.forEach((v, i) => { if (!J.ventOn(i)) return; const d = Math.hypot(st.p.x - v[0], st.p.z - v[1]); if (d < bd) { bd = d; best = v; } }); if (best) tgt = new THREE.Vector3(best[0], 3, best[1]); } else B.airing = false;
-    if (st.bs === 'rear') { J.R.soft.getWorldPosition(V3); tgt = V3.clone().addScaledVector(V2.copy(st.p).sub(V3).setY(0).normalize(), 1.2); tgt.y = V3.y - 0.3; if (st.p.distanceTo(V3) < 3.0 && B.cd <= 0) { B.a = true; B.cd = 0.45; } }
+    if (st.bs === 'rear') { J.R.soft.getWorldPosition(V3); tgt = V3.clone().addScaledVector(V2.copy(st.p).sub(V3).setY(0).normalize(), 1.2); tgt.y = V3.y - 0.3; if (!mash && st.p.distanceTo(V3) < 3.2 && B.cd <= 0) { B.a = true; B.cd = 0.28; } }
     else if (!tgt) { V3.copy(st.p).sub(st.bp).setY(0).normalize(); tgt = st.bp.clone().addScaledVector(V3, 6.5); tgt.y = st.bp.y; }
     // dodge the snap at the end of the tell, and any bubble coming close
-    if (st.bs === 'snapTell' && st.bdur - st.bt < 0.22 && st.p.distanceTo(st.bp) < 9 && B.cd <= 0) { B.mx = st.side > 0 ? -1 : 1; B.b = true; B.cd = 0.5; keep = true; }
-    for (const b of J.blasts) { const d = b.p.distanceTo(st.p); if (d < 3.2 && b.v.dot(V2.copy(st.p).sub(b.p)) > 0 && B.cd <= 0) { B.mx = (B.flip = !B.flip) ? 1 : -1; B.up = true; B.b = true; B.cd = 0.5; keep = true; } }
+    if (mash) keep = false; else if (st.bs === 'snapTell' && st.bdur - st.bt < 0.22 && st.p.distanceTo(st.bp) < 9 && B.cd <= 0) { B.mx = st.side > 0 ? -1 : 1; B.b = true; B.cd = 0.5; keep = true; }
+    if (!mash) for (const b of J.blasts) { const d = b.p.distanceTo(st.p); if (d < 3.2 && b.v.dot(V2.copy(st.p).sub(b.p)) > 0 && B.cd <= 0) { B.mx = (B.flip = !B.flip) ? 1 : -1; B.up = true; B.b = true; B.cd = 0.5; keep = true; } }
     if (keep) return;
     V2.copy(tgt).sub(st.p); const l = V2.length(); if (l < 0.6) return; V2.divideScalar(l);
     B.mx = clamp(V2.dot(r) * 1.6, -1, 1); B.my = clamp(V2.dot(f) * 1.6, -1, 1); B.up = V2.y > 0.25; B.down = V2.y < -0.25;
@@ -382,4 +437,6 @@
   // entrance: the glowing ring at the Aquarium's Pratt St doors (the LMHOOK.aquarium stub's door), back out onto the pier after
   const L = LANDMARKS.find((l) => l.id === 'aquarium'); const door = LMHOOK.aquarium && LMHOOK.aquarium.door;
   if (L && door) { if (LMHOOK.aquarium) LMHOOK.aquarium.duel = 'jimmy'; DUELS.addTrigger('jimmy', L, door.x, door.z - 1.6, door.x, door.z - 3.4, '#5fe0ff'); }
+  // polish: ?jimmy=1&jimmyauto=win|lose|mash (the CI boss runner's entry; ?duel=jimmy&duelbot=... still works)
+  { let n = 0; MODE.ticks.push(() => { n++; if (n === 3 && Q.has('jimmy') && !DUELS.cur) { if (CINE.intro) CINE.intro.skip = true; const m = Q.get('jimmyauto'); DUELS.start('jimmy', ['win', 'lose', 'mash'].includes(m) ? { bot: m } : {}); } }); }
 })();

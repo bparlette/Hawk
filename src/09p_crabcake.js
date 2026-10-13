@@ -22,6 +22,9 @@
 // Entry: the glowing ring at the Four Seasons boss anchor on Pratt St (LANDMARKS 'fourseasons' boss {x 82, z -42}; DESIGN anchor, not temporary). ACT = FIGHT.
 // Tests: ?crabcake=1 starts at load; &crabcakeauto=win|lose|mash plays it by itself (also ?duel=crabcake&duelbot=...); ?crabcakephase=N starts at phase N.
 // Writing: GR1 bosses.chef_crabcake intro / defeat lines (06e_gr1_data.js) + short placeholder lines below.
+// polish (hark/polish, 2026-10-13, the Chip Kid / Brewmaster bar): call-outs lead with "!" and fit a 390 px phone; the drumroll's first lane glows for the whole
+// tell (>= 1.1 s) and the lane after the next one glows faintly ahead; the cane combo uses the shared core juice (animated damage / word pops, combo counter,
+// hit sounds, a white flash on the SPATULA SMASH finisher); POWER is the big core meter (pulses READY, ACT glows); the KO adds a shared impact before JUICE.ko's replay.
 //
 // RIG HOOK (Opus): if window.buildChefCrabcake exists it is called as buildChefCrabcake({ THREE, toonMat, outlineMat, addOdir, QUAL }) and may return
 //   { root, body?, head?, armL?, armR?, tin?, pan?, flash?: [materials], update?(dt, state, info) }
@@ -198,8 +201,8 @@
     C.door.rotation.y = -1.4; C.sign86.visible = false; C.skillet.visible = false;
     return st;
   }
-  function subHud(st) { const f = st.pow >= 1;
-    DUELS.sub('POWER<span class="ccpow' + (f ? ' full' : '') + '"><i style="width:' + Math.round(st.pow * 100) + '%"></i></span>' + (st.combo > 1 ? ' <span style="color:#ffd23c">x' + st.combo + '</span>' : ''), 'PHASE ' + (st.phase + 1) + '/3'); }
+  function subHud(st) { const f = st.pow >= 1 && !st.over; // polish: POWER lives on the core meter (pulses when READY); the sub line keeps the combo + phase
+    DUELS.power(st.pow, f, f ? 'POWER READY! ACT = FLIP' : 'POWER'); DUELS.sub(st.combo > 1 ? '<span style="color:#ffd23c">x' + st.combo + ' COMBO</span>' : '', 'PHASE ' + (st.phase + 1) + '/3'); }
   C.start = function (opts) {
     C.st = null; const ph = clamp(+(Q.get('crabcakephase') || 1) - 1, 0, 2) | 0; const st = reset(ph); DUELS.log.push('crabcake:' + C.rigKind); subHud(st);
     DUELS.banner('CHEF CRABCAKE<small>FOUR SEASONS KITCHEN · PHASE ' + (ph + 1) + '</small>', 2.4);
@@ -218,14 +221,14 @@
   function fire(p, v, life = 0.5, s = 1) { if (C.fires.length < 60) C.fires.push({ p: p.clone(), v: v.clone(), t: 0, life, s }); }
   function spark(p, n = 6) { for (let k = 0; k < n && C.sparks.length < 40; k++) C.sparks.push({ p: p.clone(), v: new THREE.Vector3(rnd(-3, 3), rnd(1, 4), rnd(-3, 1)), t: 0, life: rnd(0.3, 0.6) }); }
   const POPS = [];
-  function pop(text, p, cls = '') { const e = document.createElement('div'); e.className = 'ccpop ' + cls; e.textContent = text; V3.copy(p).project(C.cam); e.style.left = ((V3.x + 1) / 2 * 100).toFixed(1) + '%'; e.style.top = ((1 - V3.y) / 2 * 100).toFixed(1) + '%'; DUELS.hudEl.appendChild(e); POPS.push({ e, t: 0 }); }
+  function pop(text, p, cls = '') { DUELS.pop(text, p, cls === 'w' ? 'word' : cls); } // polish: the core's animated, on-screen-clamped pops (was a static DOM label)
   C.hudPops = function (clear, dt = 0) { for (let i = POPS.length - 1; i >= 0; i--) { POPS[i].t += dt; if (clear || POPS[i].t > 0.85) { POPS[i].e.remove(); POPS.splice(i, 1); } } };
   function flashBoss(c = '#ffffff', v = 0.85) { for (const m of C.R.flash) if (m && m.userData.flashC) { m.userData.flashC.value.set(c); m.userData.flash.value = v; } }
   function setM(st, s, dur) { st.ms = s; st.mt = 0; st.mdur = dur; st.hitThis = false; st.dodged = false; }
   function addPow(st, v) { const was = st.pow >= 1; st.pow = clamp(st.pow + v, 0, 1); if (!was && st.pow >= 1) { DUELS.tell('POWER FULL: ACT = FLIP!', 1.2); sting('ding'); } subHud(st); }
   function hurtHarold(st, dmg, kind) {
     if (st.inv > 0 || st.over || st.flipT >= 0) return false;
-    st.hp -= dmg; st.inv = 1.3; st.hurtT = 0.4; st.stats.hits[kind]++; st.stats.hitsTaken++; st.combo = 0; DUELS.hurt(); sfx('hurt'); C.hflash = 1; st.lane = 0; st.duck = false; st.lockT = 0.3; st.shake = 0.35; st.stop = 0.06;
+    st.hp -= dmg; st.inv = 1.3; st.hurtT = 0.4; st.stats.hits[kind]++; st.stats.hitsTaken++; st.combo = 0; DUELS.combo(0); DUELS.hurt(); sfx('hurt'); C.hflash = 1; st.lane = 0; st.duck = false; st.lockT = 0.3; st.shake = 0.35; st.stop = 0.06;
     pop('-' + dmg, V.set(sx(0), 2.0, 0.2), '');
     if (st.hp <= 0) {
       if (st.wind) { st.wind = false; st.hp = 45; st.stats.winds++; st.inv = 2.0; DUELS.banner('SECOND WIND!<small>HAROLD\'S BACK UP</small>', 1.6); DUELS.say('MAVIS', 'Up you get, Harold! Dinner\'s not over!', 2.2); return true; }
@@ -243,10 +246,10 @@
     switch (st.ms) {
       case 'intro': if (st.mt > st.mdur) setM(st, 'guard', 0.8); break;
       case 'guard': if (st.mt > st.mdur) { const a = P.mix[st.mixI++ % P.mix.length]; st.stats.attacks[a]++;
-          if (a === 'tin') { setM(st, 'tinTell', P.tin); DUELS.tell('SPICE! DODGE THE RING!', P.tin); sting('tin'); }
-          else if (a === 'drum') { setM(st, 'drumTell', P.drum); DUELS.tell('DRUMROLL! WATCH LANES!', P.drum); sting('drum');
+          if (a === 'tin') { setM(st, 'tinTell', P.tin); DUELS.tell('! SPICE TIN! STEP OUT OF THE RING!', P.tin); sting('tin'); }
+          else if (a === 'drum') { setM(st, 'drumTell', P.drum); DUELS.tell('! DRUMROLL! STAY OFF THE RED LANE!', P.drum); sting('drum');
             const s = []; let prev = 9; for (let k = 0; k < 4; k++) { let l; do { l = [-1, 0, 1][Math.floor(Math.random() * 3)]; } while (l === prev); s.push(l); prev = l; } st.seq = s; st.seqI = 0; st.slamT = 0; }
-          else { setM(st, 'panTell', P.pan); DUELS.tell('FLAMBÉ LINE! DUCK!', P.pan); sting('pan'); st.fireDir = Math.random() < 0.5 ? -1 : 1; }
+          else { setM(st, 'panTell', P.pan); DUELS.tell('! FLAMBÉ LINE! DUCK (JUMP)!', P.pan); sting('pan'); st.fireDir = Math.random() < 0.5 ? -1 : 1; }
           if (Math.random() < 0.25) DUELS.say('CHEF CRABCAKE', pick(MID), 2.0); }
         break;
       // SEASONING BLIND: the ring follows Harold's lane, locks for the last 0.4 s, then the cloud flies at the locked lane
@@ -274,10 +277,11 @@
       case 'ko': break;
     }
     // Mavis's crab cake (once a phase, when Harold drops low)
-    if (st.healT > 0 && (st.healT -= dt) <= 0) { st.hp = Math.min(100, st.hp + 35); st.stats.heals++; DUELS.say('MAVIS', 'Here, hon: a crab cake! Eat!', 2.0); pop('+35', V.set(sx(st.lane) * 0.95, 2.2, 0.2), 'w'); sfx('jump'); }
+    if (st.healT > 0 && (st.healT -= dt) <= 0) { st.hp = Math.min(100, st.hp + 35); st.stats.heals++; DUELS.say('MAVIS', 'Here, hon: a crab cake! Eat!', 2.0); pop('+35 CRAB CAKE', V.set(sx(st.lane) * 0.95, 2.2, 0.2), 'heal'); sfx('jump'); }
   }
   function phaseDown(st) { clearFx();
-    if (st.phase >= 2) { setM(st, 'ko', 99); st.over = true; st.won = true; st.outT = 0; st.slow = 0.35; st.slowT = 1.3; JUICE.ko(); DUELS.banner('K.O.!<small>CHEF\'S DONE</small>', 2.2); sting('ding'); sfx('ko'); }
+    if (st.phase >= 2) { setM(st, 'ko', 99); st.over = true; st.won = true; st.outT = 0; st.slow = 0.35; st.slowT = 1.3; JUICE.ko(); DUELS.banner('K.O.!<small>CHEF\'S DONE</small>', 2.2); sting('ding'); sfx('ko');
+      DUELS.impact({ flash: '#ffffff', flashA: 0.6, zoom: 1.2, zoomT: 0.6, sfx: 'mega', pop: 'K.O.!', pos: V.set(0, 3.4, MZ - 0.5), cls: 'big' }); DUELS.combo(0); DUELS.power(0, false, 'POWER'); DUELS.hot(false); }
     else { setM(st, 'down', 2.4); DUELS.banner('ORDER UP!<small>PHASE ' + (st.phase + 1) + ' TO HAROLD</small>', 2.0); if (Math.random() < 0.7) DUELS.say('MAVIS', pick(MAVIS.slice(0, 3)), 2.2); }
   }
 
@@ -311,11 +315,12 @@
     const k = st.swingK; V.set(sx(st.lane) * 0.6 + rnd(-0.3, 0.3), k === 2 ? 2.6 : 2.0, MZ - 0.9);
     if (st.ms === 'open' || st.ms === 'flipped') {
       const crit = st.ms === 'open' && st.mt < 0.4, dmg = SWING[k] + (crit ? 2 : 0); st.mhp -= dmg; st.stats.landed++; st.combo++; st.comboT = 1.1; st.stats.maxCombo = Math.max(st.stats.maxCombo, st.combo);
-      sfx(k === 2 ? 'heavy' : 'hit'); spark(V, k === 2 ? 14 : 6); flashBoss(k === 2 ? '#ffb030' : '#ffffff'); st.stop = k === 2 ? 0.085 : 0.065; st.shake = Math.max(st.shake, k === 2 ? 0.3 : 0.12);
-      pop((k === 2 ? pick(WORDS[2]) + ' ' : '') + dmg, V, k === 2 || crit ? 'big' : ''); addPow(st, k === 2 ? 0.09 : 0.05);
+      sfx(k === 2 ? 'heavy' : 'hit'); spark(V, k === 2 ? 14 : 6); flashBoss(k === 2 ? '#ffb030' : '#ffffff'); st.stop = k === 2 ? 0.09 : 0.065; st.shake = Math.max(st.shake, k === 2 ? 0.35 : 0.14);
+      DUELS.hitSfx(k === 2 ? 'heavy' : 'light'); DUELS.combo(st.combo); if (k === 2) DUELS.flash('#ffffff', 0.35); // polish: shared hit juice
+      pop(pick(WORDS[k]) + ' ' + dmg, V, k === 2 ? 'big' : crit ? 'crit' : ''); addPow(st, k === 2 ? 0.09 : 0.05);
       if (st.mhp <= 0) { st.mhp = 0; phaseDown(st); }
-    } else if (['guard', 'intro'].includes(st.ms)) { st.stats.blocked++; st.combo = 0; sfx('hit'); spark(V, 3); DUELS.tell('BLOCKED! WAIT FOR IT!', 0.7); }
-    else { st.combo = 0; }
+    } else if (['guard', 'intro'].includes(st.ms)) { st.stats.blocked++; st.combo = 0; DUELS.combo(0); sfx('hit'); spark(V, 3); pop('BLOCKED', V, ''); DUELS.tell('BLOCKED! WAIT FOR HIM TO OPEN UP', 0.7); }
+    else { st.combo = 0; DUELS.combo(0); }
     subHud(st);
   }
   // CHEF'S FLIP (team-up): Mavis slides the giant skillet down the pass, Harold vaults onto the counter and flips the chef in slow-mo
@@ -325,7 +330,7 @@
     st.flipT += dt; const t = st.flipT;
     // the skillet slides in from screen right along the counter, under the chef, then catapults him up
     if (t < 0.5) C.skillet.position.set(lerp(-4.5, 0, ease(t / 0.5)), 1.12, CZ + 0.2);
-    if (t > 0.6 && !st.flipHit) { st.flipHit = true; st.mhp -= FLIP; sfx('heavy'); spark(V.set(0, 2.6, MZ - 0.5), 18); flashBoss('#ffd23c', 1); st.stop = 0.1; st.shake = 0.5; pop('CHEF\'S FLIP! ' + FLIP, V.set(0, 3.2, MZ - 0.5), 'big'); }
+    if (t > 0.6 && !st.flipHit) { st.flipHit = true; st.mhp -= FLIP; sfx('heavy'); spark(V.set(0, 2.6, MZ - 0.5), 18); flashBoss('#ffd23c', 1); st.stop = 0.1; st.shake = 0.5; pop('CHEF\'S FLIP! ' + FLIP, V.set(0, 3.2, MZ - 0.5), 'big'); DUELS.hitSfx('mega'); DUELS.flash('#ffd23c', 0.45); }
     C.skillet.rotation.x = t > 0.6 && t < 1.0 ? -Math.sin((t - 0.6) / 0.4 * Math.PI) * 0.7 : 0;
     if (t > 1.9) { st.flipT = -1; st.flipHit = false; C.skillet.visible = false; if (st.mhp <= 0) { st.mhp = 0; phaseDown(st); } }
   }
@@ -400,7 +405,8 @@
   function tells(st, dt) {
     // lanes: drumroll warnings (the next lane glows during the gap before its slam; the first one during the end of the tell)
     const warn = [0, 0, 0], P = PH[st.phase], pulse = 0.62 + 0.3 * Math.sin(st.t * 28);
-    if (st.ms === 'drumTell' && st.mdur - st.mt < P.gap) warn[st.seq[0] + 1] = pulse;
+    if (st.ms === 'drumTell') warn[st.seq[0] + 1] = pulse * (0.45 + 0.55 * clamp(st.mt / st.mdur, 0, 1)); // polish: the first slam lane glows for the whole tell (>= 1.1 s)
+    if (st.ms === 'drum' && st.seqI + 1 < st.seq.length && st.seq[st.seqI + 1] !== st.seq[st.seqI]) warn[st.seq[st.seqI + 1] + 1] = 0.22; // and the one after next glows faintly ahead
     if (st.ms === 'drum' && st.seqI < st.seq.length) warn[st.seq[st.seqI] + 1] = pulse * (1.2 - clamp(st.slamT / P.gap, 0, 1) * 0.4);
     if (st.ms === 'drum' && st.slamFx > 0) warn[st.lastSlam + 1] = Math.max(warn[st.lastSlam + 1], 0.9);
     C.lanes.forEach((l, i) => { l.material.opacity = damp(l.material.opacity, warn[i], 24, dt); l.visible = l.material.opacity > 0.01; const c = C.cmarks[i]; c.material.opacity = l.material.opacity; c.visible = l.visible; });
