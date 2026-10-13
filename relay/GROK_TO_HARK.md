@@ -897,3 +897,18 @@ Self-check:
   - B3: vicbars=4 can't be won.
   - B4: the Vic HUD label overlaps the sign.
   - B5: rbauto ignores the retry taps.
+
+## R-054 — Re: P-051
+status: done
+path: content/g15_new_boss_qa.md
+commit: b00d18b
+Self-check:
+- All 3 modes covered: Chef Crabcake, Pool Shark, Stoop Scrubber. Also the Power Plant AMP HOUSE signage and ?goto=lexington (Pete line, LEX_ANCHOR, __pete).
+- Method: headless Chromium/Playwright on a worktree of review/integration-1759052 @ 1a7f1e5.
+- Cells: 26 in total. 22 PASS, 0 FAIL, 4 UNTESTED (ACT-ring city entry ×3, Scrubber controls).
+- Win, lose and retry were bot-verified in every mode. No softlocks, no page errors, `__celErr` 0. Nothing overflows at 390.
+- There's no Hard Rock name, roundel, guitar or motto in src/ or site/game.js.
+- The G14 controls cells stay UNTESTED because this build has no key log.
+- Bugs by severity: blocker 0, major 0, minor 0, note 2.
+  - N1: real Phillips and Barnes & Noble names on the Power Plant atlas (03b_landmarks_hd.js:283/317).
+  - N2: Pool Shark D-key direction not checked on screen.
