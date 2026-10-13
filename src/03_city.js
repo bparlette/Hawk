@@ -472,11 +472,11 @@ sbox(44.6, CURB + 8.9, -27.2, 67.7, CURB + 9.4, -8.6, '#e4d8bc');
 signOn(52.13, -27, 59.0, -8.8, 's', 12.0, 5, LSIGN.power);
 LMCAP(null);
 landmark('powerplant', 'POWER PLANT', 56, -17, 19, { name: 'Voltage Vic', x: 56, z: -5.5 });
-// Four Seasons (Harbor East): a podium and a glass hotel tower
+// HARBOR EAST GRAND (homage hotel; id fourseasons): a podium and a glass hotel tower
 mass(71, -69, 93, -47, 9, { tr: T.store[1], fh: 9, bay: 4, top: '#4a4640' });
 mass(75, -66, 89, -52, 52, { tr: T.glass, y0: CURB + 9, fh: 3.6, top: '#2a3644', coll: false });
 signOn(71, -69, 93, -47, 's', 9.6, 12, LSIGN.hotel);
-landmark('fourseasons', 'FOUR SEASONS', 82, -58, 20, { name: 'Chef Crabcake', x: 82, z: -42 });
+landmark('fourseasons', 'HARBOR EAST GRAND', 82, -58, 20, { name: 'Chef Crabcake', x: 82, z: -42 });
 // Pendry: the long recreation-pier building with a clock tower and a rooftop pool deck
 mass(112, -29, 140, -21.5, 9, { tr: T.fac[5][1], top: '#6a6056' });
 mass(124, -28, 128, -23, 10, { col: '#c4b090', y0: CURB + 9, coll: false });
@@ -540,7 +540,7 @@ landmark('science', 'SCIENCE CENTER', -54, 58, 16, { name: 'Dr. Shellacious', x:
 landmark('fedhill', 'FEDERAL HILL', -3, 59, 24, { name: 'The Hon Queen', x: HILL.x, z: HILL.z, y: CURB + HILL.h });
 const DOM_H = 23; // refinery roof height (the sign stands on it; HD model in 03b uses the same)
 LMCAP('domino');
-// Domino Sugar: a tall refinery with a giant rooftop neon sign facing the harbour (original lettering)
+// HARBOR SUGAR CO. (homage refinery; id domino): a tall refinery with a giant rooftop neon sign facing the harbour (original lettering)
 mass(72, 48, 92, 66, DOM_H, { tr: T.fac[1][0], top: '#4a4640' });
 { const g = new THREE.CylinderGeometry(3.4, 3.4, 22, 12); place(g, 76, CURB + 11, 69); solid(g, '#c8c4b8'); COLL.push({ x: 76, z: 69, r: 3.6 }); }
 // the rooftop sign's open steel lattice (the sign faces itself are drawn in i_nightfx): verticals, three chords, X-bracing, back struts
@@ -551,12 +551,12 @@ mass(72, 48, 92, 66, DOM_H, { tr: T.fac[1][0], top: '#4a4640' });
     const xa = 73 + k * 2.25, xb = xa + 2.25, L = Math.hypot(2.25, yb - ya), g = new THREE.BoxGeometry(L, 0.1, 0.1); g.rotateZ(s * Math.atan2(yb - ya, 2.25)); place(g, (xa + xb) / 2, y0 + (ya + yb) / 2, zf + 0.05); solid(g, C, false); }
   for (const x of [73, 79.75, 84.25, 91]) { const g = new THREE.BoxGeometry(0.2, 0.2, 6.2); g.rotateX(-0.95); place(g, x, y0 + 2.6, zf + 2.2); solid(g, C, false); } }
 LMCAP(null);
-landmark('domino', 'DOMINO SUGARS', 82, 57, 16, { name: 'Sugar Rush', x: 82, z: 57, y: CURB + DOM_H });
-// Under Armour (Tide Point): brick halls with a clock tower
+landmark('domino', 'HARBOR SUGAR CO.', 82, 57, 16, { name: 'Sugar Rush', x: 82, z: 57, y: CURB + DOM_H });
+// SWEATFORGE PIER (homage gear campus at Tide Point; id underarmour): brick halls with a clock tower
 mass(106, 48, 126, 56, 11, { tr: T.fac[0][0], top: '#4a3a30' }); mass(106, 60, 126, 68, 11, { tr: T.fac[0][1], top: '#4a3a30' });
 mass(113.5, 56.5, 118.5, 59.5, 22, { col: '#9a5a44', top: '#4a3a30' });
 signOn(106, 48, 126, 56, 'n', 7.6, 10, LSIGN.ath);
-landmark('underarmour', 'UNDER ARMOUR', 116, 52, 16, { name: 'The Compression King', x: 116, z: 43 });
+landmark('underarmour', 'SWEATFORGE PIER', 116, 52, 16, { name: 'The Compression King', x: 116, z: 43 });
 // Fort McHenry: a five-point star fort on grass at the tip of Locust Point, with the flag
 (function fort() {
   const cx = 176, cz = 78, R = 17, r = 10.5, V = [];
@@ -650,7 +650,7 @@ const SKY = (function sky() {
 
 
 // ---------------- night lights: instanced lamp glow pools + lamp-head halos (2 draw calls for every lamp), 4 pooled point lights
-// that hop to the lamps nearest the hero, and the Domino Sugar rooftop neon sign (original lettering) ----------------
+// that hop to the lamps nearest the hero, and the HARBOR SUGAR CO. rooftop neon sign (original homage lettering) ----------------
 const NIGHTFX = { pools: [], halos: [], lights: [], neon: null, near: null };
 (function nightFx() {
   const pool = (() => { const c = document.createElement('canvas'); c.width = c.height = 64; const g = c.getContext('2d'); const gr = g.createRadialGradient(32, 32, 0, 32, 32, 32);
@@ -679,8 +679,8 @@ const NIGHTFX = { pools: [], halos: [], lights: [], neon: null, near: null };
     const s = LAMPS.map((L) => [(L.x - x) ** 2 + (L.z - z) ** 2, L]).sort((a, b) => a[0] - b[0]);
     NIGHTFX.lights.forEach((pl, i) => { const L = s[i][1]; pl.position.set(L.x, L.y - 0.6, L.z); });
   };
-  // Domino Sugars: the real two-line script sign ("Domino" over "Sugars", rounded box border) on its open steel lattice, facing the harbour
-  // (Brad 2026-10-10, overriding the original-name rule for this sign only; matched to refs/domino-sugar sign_1 day, sign_2 + sign_night_web night).
+  // HARBOR SUGAR CO.: an original two-line homage sign ("Harbor" script over "SUGAR CO.", rounded box border) on its open steel lattice, facing the harbour
+  // (homage pass 2026-10-13 replaced the earlier real-brand lettering; the frame, colours and neon behaviour are unchanged).
   // Drawn on canvas (script/italic fonts + strokes), no photo or logo file. Day: gold letters on the open frame. Night: red-orange neon with a glowing
   // box outline, a red point light and a red reflection streak across the water. Two planes cross-fade (day / night).
   function dominoTex(night) {
@@ -695,12 +695,12 @@ const NIGHTFX = { pools: [], halos: [], lights: [], neon: null, near: null };
       if (night) { glow(30); g.fillStyle = RED; g.fillText(txt, 0, 0, fillW); g.lineWidth = 9; g.strokeStyle = RED; g.strokeText(txt, 0, 0, fillW); glow(0); g.lineWidth = 3.5; g.strokeStyle = CORE; g.strokeText(txt, 0, 0, fillW); }
       else { const gr = g.createLinearGradient(0, -200, 0, 20); gr.addColorStop(0, '#ffd877'); gr.addColorStop(0.55, GOLD); gr.addColorStop(1, GOLD2); g.lineWidth = 12; g.strokeStyle = INKG; g.strokeText(txt, 0, 0, fillW); g.fillStyle = gr; g.fillText(txt, 0, 0, fillW); }
       g.restore(); };
-    word('Domino', 512, 330, 'italic 900 318px "Brush Script MT", "Snell Roundhand", "Apple Chancery", Georgia, "Times New Roman", "DejaVu Serif", serif', 0.16, 900);
-    // the swash under "Domino" (a hand-drawn tail sweeping back from the o)
+    word('Harbor', 512, 330, 'italic 900 318px "Brush Script MT", "Snell Roundhand", "Apple Chancery", Georgia, "Times New Roman", "DejaVu Serif", serif', 0.16, 900);
+    // the swash under "Harbor" (a hand-drawn tail sweeping back from the o)
     g.save(); g.beginPath(); g.moveTo(170, 372); g.bezierCurveTo(360, 410, 650, 404, 880, 346); g.lineCap = 'round';
     if (night) { glow(26); g.strokeStyle = RED; g.lineWidth = 15; g.stroke(); glow(0); g.strokeStyle = CORE; g.lineWidth = 4; g.stroke(); } else { g.strokeStyle = INKG; g.lineWidth = 20; g.stroke(); g.strokeStyle = GOLD; g.lineWidth = 11; g.stroke(); }
     g.restore();
-    word('Sugars', 520, 555, 'bold 172px Georgia, "Times New Roman", "DejaVu Serif", serif', 0.02, 600);
+    word('SUGAR CO.', 516, 555, 'bold 150px Georgia, "Times New Roman", "DejaVu Serif", serif', 0.02, 600);
     return lowTex(c, 256);
   }
   const SW = 17, SH = 10.6, SX = 82, SY = CURB + DOM_H + 7.1, SZ = 49.7;

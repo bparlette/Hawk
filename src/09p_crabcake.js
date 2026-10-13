@@ -202,7 +202,7 @@
     DUELS.sub('POWER<span class="ccpow' + (f ? ' full' : '') + '"><i style="width:' + Math.round(st.pow * 100) + '%"></i></span>' + (st.combo > 1 ? ' <span style="color:#ffd23c">x' + st.combo + '</span>' : ''), 'PHASE ' + (st.phase + 1) + '/3'); }
   C.start = function (opts) {
     C.st = null; const ph = clamp(+(Q.get('crabcakephase') || 1) - 1, 0, 2) | 0; const st = reset(ph); DUELS.log.push('crabcake:' + C.rigKind); subHud(st);
-    DUELS.banner('CHEF CRABCAKE<small>FOUR SEASONS KITCHEN · PHASE ' + (ph + 1) + '</small>', 2.4);
+    DUELS.banner('CHEF CRABCAKE<small>HARBOR EAST GRAND KITCHEN · PHASE ' + (ph + 1) + '</small>', 2.4);
     const l = lines(); DUELS.say('CHEF CRABCAKE', l && l.intro ? pick(l.intro) : pick(TAUNT), 3.4);
     C.camP = new THREE.Vector3(0, 5, -7); C.camL = new THREE.Vector3(0, 2.4, MZ);
   };
@@ -341,7 +341,7 @@
       if (k > 1.0 && !st.saidBye) { st.saidBye = true; const l = lines(); DUELS.say('CHEF CRABCAKE', l && l.defeat ? pick(l.defeat) : 'My kitchen... it\'s closed...', 3.0); }
       if (k > 2.6 && !st.winDone) { st.winDone = true; DUELS.bossCleared('fourseasons', 'crabcake-duel');
         const h = st.stats.hitsTaken, g = h <= 3 ? 'S' : h <= 8 ? 'A' : 'B', stars = g === 'S' ? 3 : g === 'A' ? 2 : 1; DUELS.log.push('crabcake:grade:' + g);
-        setTimeout(() => { if (DUELS.cur === C) DUELS.over('win', 'CHEF CRABCAKE<br>IS 86\'D', '<span style="color:#ffd23c;font-size:18px;letter-spacing:3px">' + '\u2605'.repeat(stars) + '<span style="opacity:.3">' + '\u2605'.repeat(3 - stars) + '</span></span><br>GRADE ' + g + ' · hits taken ' + h + ' · best combo x' + st.stats.maxCombo + '<br>The Four Seasons kitchen is clear. Crime at Four Seasons: 0. Rematch any time at the ring.'); }, SIM ? 300 : 1100); } }
+        setTimeout(() => { if (DUELS.cur === C) DUELS.over('win', 'CHEF CRABCAKE<br>IS 86\'D', '<span style="color:#ffd23c;font-size:18px;letter-spacing:3px">' + '\u2605'.repeat(stars) + '<span style="opacity:.3">' + '\u2605'.repeat(3 - stars) + '</span></span><br>GRADE ' + g + ' · hits taken ' + h + ' · best combo x' + st.stats.maxCombo + '<br>The Harbor East Grand kitchen is clear. Crime at Harbor East Grand: 0. Rematch any time at the ring.'); }, SIM ? 300 : 1100); } }
   }
   function stepFx(dt) {
     const m = new THREE.Matrix4(), q = C.cam.quaternion;
