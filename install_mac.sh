@@ -80,19 +80,19 @@ say "App -> $DST_APP ($(file -b "$DST_APP/Contents/MacOS/$APP_NAME" | head -n1))
 # Removes any earlier copy of our block from the target, inserts the kit's block before the root close tag.
 # Writes only when something changes, and backs the old file up first.
 merge_block() {
-  local target="$1" kit="$2" st="$3" en="$4" id="$5" close="$6" open="$7" bf tmp
+  local target="$1" kit="$2" st="$3" en="$4" id="$5" rclose="$6" ropen="$7" bf tmp
   bf="$WORK/block.$$"; tmp="$WORK/merged.$$"
   awk -v st="$st" -v en="$en" 'f || $0 ~ st { f=1; print } f && $0 ~ en { exit }' "$kit" > "$bf"
   mkdir -p "$(dirname "$target")"
   if [ ! -f "$target" ]; then cp "$kit" "$target"; say "Created $target"; return; fi
-  awk -v bf="$bf" -v st="$st" -v en="$en" -v id="$id" -v close="$close" -v open="$open" '
+  awk -v bf="$bf" -v st="$st" -v en="$en" -v id="$id" -v rc="$rclose" -v ro="$ropen" '
     BEGIN { while ((getline l < bf) > 0) block = block l "\n" }
     !inb && $0 ~ st { inb=1; buf=$0 "\n"; keep=($0 !~ id); if ($0 ~ en) { if (keep) printf "%s", buf; inb=0 } next }
     inb { buf = buf $0 "\n"; if ($0 ~ id) keep=0; if ($0 ~ en) { if (keep) printf "%s", buf; inb=0; buf="" } next }
-    index($0, close) && !done { printf "%s", block; done=1 }
+    index($0, rc) && !done { printf "%s", block; done=1 }
     { print }
-    END { if (!done) { print open; printf "%s", block; print close } }' "$target" > "$tmp"
-  grep -Eq "$id" "$tmp" && grep -q "$close" "$tmp" || { warn "Could not merge into $target automatically; it is untouched. Add the block from $kit by hand."; return; }
+    END { if (!done) { print ro; printf "%s", block; print rc } }' "$target" > "$tmp" || die "awk failed merging into $target (file untouched)"
+  grep -Eq "$id" "$tmp" && grep -q "$rclose" "$tmp" || die "Could not merge into $target automatically; it is untouched. Add the block from $kit by hand."
   if cmp -s "$tmp" "$target"; then say "$target already up to date"; return; fi
   cp -p "$target" "$target.backup-$STAMP"; say "Backed up $target -> $target.backup-$STAMP"
   cat "$tmp" > "$target"; say "Merged $SYS into $target"
