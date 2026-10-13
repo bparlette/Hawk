@@ -1,0 +1,42 @@
+<!doctype html><meta charset=utf-8><title>toad city music bed</title><script>
+// Built from Toad City's own Voltage Vic procedural club beat (src/06v_vic_rhythm.js lines 149-181, copied verbatim below) rendered offline.
+let AC=null, NOISE=null, mbus=null;
+function setup(secs){ AC=new OfflineAudioContext(2, Math.round(44100*secs), 44100); const n=AC.sampleRate*0.4,b=AC.createBuffer(1,n,AC.sampleRate),d=b.getChannelData(0); for(let i=0;i<n;i++) d[i]=Math.random()*2-1; NOISE=b;
+ mbus=AC.createGain(); mbus.gain.value=0.8; const comp=AC.createDynamicsCompressor(); comp.threshold.value=-14; comp.ratio.value=4; mbus.connect(comp); comp.connect(AC.destination); }
+window.MUSIC=(function(){
+  function env(gn, t, a, peak, d) { gn.gain.setValueAtTime(0.0001, t); gn.gain.exponentialRampToValueAtTime(peak, t + a); gn.gain.exponentialRampToValueAtTime(0.0001, t + a + d); }
+  function noiseSrc(t, dur) { const s = AC.createBufferSource(); s.buffer = NOISE; s.loop = true; s.start(t, Math.random() * 0.3); s.stop(t + dur + 0.05); return s; }
+  const I = {
+    kick(t, v = 1) { const o = AC.createOscillator(), gn = AC.createGain(); o.frequency.setValueAtTime(155, t); o.frequency.exponentialRampToValueAtTime(42, t + 0.16); env(gn, t, 0.003, 0.95 * v, 0.32); o.connect(gn); gn.connect(mbus); o.start(t); o.stop(t + 0.4);
+      const c = noiseSrc(t, 0.02), cg = AC.createGain(), f = AC.createBiquadFilter(); f.type = 'highpass'; f.frequency.value = 2500; env(cg, t, 0.001, 0.25 * v, 0.015); c.connect(f); f.connect(cg); cg.connect(mbus); },
+    snare(t, v = 1) { const n = noiseSrc(t, 0.22), f = AC.createBiquadFilter(), gn = AC.createGain(); f.type = 'bandpass'; f.frequency.value = 1900; f.Q.value = 0.7; env(gn, t, 0.002, 0.6 * v, 0.17); n.connect(f); f.connect(gn); gn.connect(mbus);
+      const o = AC.createOscillator(), og = AC.createGain(); o.type = 'triangle'; o.frequency.setValueAtTime(200, t); o.frequency.exponentialRampToValueAtTime(150, t + 0.08); env(og, t, 0.002, 0.45 * v, 0.09); o.connect(og); og.connect(mbus); o.start(t); o.stop(t + 0.15); },
+    hat(t, v = 1, open = false) { const n = noiseSrc(t, open ? 0.2 : 0.05), f = AC.createBiquadFilter(), gn = AC.createGain(); f.type = 'highpass'; f.frequency.value = 7200; env(gn, t, 0.001, 0.22 * v, open ? 0.16 : 0.035); n.connect(f); f.connect(gn); gn.connect(mbus); },
+    stab(t, hz, v = 1) { const gn = AC.createGain(), f = AC.createBiquadFilter(); f.type = 'lowpass'; f.Q.value = 6; f.frequency.setValueAtTime(2400, t); f.frequency.exponentialRampToValueAtTime(260, t + 0.18); env(gn, t, 0.004, 0.32 * v, 0.2); f.connect(gn); gn.connect(mbus);
+      for (const [type, m] of [['sawtooth', 1], ['square', 1.006], ['sawtooth', 0.5]]) { const o = AC.createOscillator(); o.type = type; o.frequency.value = hz * m; o.connect(f); o.start(t); o.stop(t + 0.26); } },
+    chant(t, word, v = 1) { // HEY / HO: a sawtooth "voice" through two formant band-passes, pitch falling like a crowd shout
+      const o = AC.createOscillator(), o2 = AC.createOscillator(), gn = AC.createGain(), f1 = AC.createBiquadFilter(), f2 = AC.createBiquadFilter(); o.type = o2.type = 'sawtooth';
+      const p0 = word === 'HEY' ? 235 : 190; o.frequency.setValueAtTime(p0, t); o.frequency.exponentialRampToValueAtTime(p0 * 0.78, t + 0.2); o2.frequency.setValueAtTime(p0 * 1.5, t); o2.frequency.exponentialRampToValueAtTime(p0 * 1.17, t + 0.2);
+      f1.type = f2.type = 'bandpass'; f1.Q.value = f2.Q.value = 7;
+      if (word === 'HEY') { f1.frequency.setValueAtTime(560, t); f1.frequency.linearRampToValueAtTime(420, t + 0.18); f2.frequency.setValueAtTime(1800, t); f2.frequency.linearRampToValueAtTime(2300, t + 0.18); }
+      else { f1.frequency.setValueAtTime(520, t); f2.frequency.setValueAtTime(880, t); }
+      env(gn, t, 0.012, 0.5 * v, 0.2); o.connect(f1); o.connect(f2); o2.connect(f1); f1.connect(gn); f2.connect(gn); gn.connect(mbus); o.start(t); o2.start(t); o.stop(t + 0.3); o2.stop(t + 0.3);
+      const n = noiseSrc(t, 0.05), ng = AC.createGain(), nf = AC.createBiquadFilter(); nf.type = 'highpass'; nf.frequency.value = 3000; env(ng, t, 0.002, 0.12 * v, 0.04); n.connect(nf); nf.connect(ng); ng.connect(mbus); },
+    scratch(t, dur = 0.9) { // DJ scratch: band-passed noise + a buzzy saw whose pitch saws back and forth, chopped by the "crossfader"
+      const n = noiseSrc(t, dur), f = AC.createBiquadFilter(), gn = AC.createGain(), o = AC.createOscillator(), og = AC.createGain(); f.type = 'bandpass'; f.Q.value = 3; o.type = 'sawtooth';
+      const strokes = 6, sl = dur / strokes; gn.gain.setValueAtTime(0.0001, t); og.gain.setValueAtTime(0.0001, t);
+      for (let k = 0; k < strokes; k++) { const a = t + k * sl, up = k % 2 === 0; f.frequency.setValueAtTime(up ? 500 : 2600, a); f.frequency.exponentialRampToValueAtTime(up ? 2600 : 500, a + sl * 0.9);
+        o.frequency.setValueAtTime(up ? 90 : 340, a); o.frequency.exponentialRampToValueAtTime(up ? 340 : 90, a + sl * 0.9);
+        gn.gain.setValueAtTime(0.0001, a); gn.gain.exponentialRampToValueAtTime(0.7, a + 0.01); gn.gain.setValueAtTime(0.7, a + sl * 0.7); gn.gain.exponentialRampToValueAtTime(0.0001, a + sl * 0.95);
+        og.gain.setValueAtTime(0.0001, a); og.gain.exponentialRampToValueAtTime(0.12, a + 0.01); og.gain.exponentialRampToValueAtTime(0.0001, a + sl * 0.9); }
+      n.connect(f); f.connect(gn); gn.connect(mbus); o.connect(og); og.connect(mbus); o.start(t); o.stop(t + dur + 0.05); },
+    blip(t, hz, v = 0.25, type = 'square', d = 0.08) { const o = AC.createOscillator(), gn = AC.createGain(); o.type = type; o.frequency.setValueAtTime(hz, t); o.frequency.exponentialRampToValueAtTime(hz * 1.5, t + d); env(gn, t, 0.002, v, d); o.connect(gn); gn.connect(mbus); o.start(t); o.stop(t + d + 0.05); },
+    zap(t) { const n = noiseSrc(t, 0.3), f = AC.createBiquadFilter(), gn = AC.createGain(); f.type = 'bandpass'; f.Q.value = 2; f.frequency.setValueAtTime(5000, t); f.frequency.exponentialRampToValueAtTime(300, t + 0.28); env(gn, t, 0.002, 0.55, 0.26); n.connect(f); f.connect(gn); gn.connect(mbus);
+      const o = AC.createOscillator(), og = AC.createGain(); o.type = 'square'; o.frequency.setValueAtTime(60, t); env(og, t, 0.002, 0.18, 0.25); const lfo = AC.createOscillator(), lg = AC.createGain(); lfo.frequency.value = 38; lg.gain.value = 40; lfo.connect(lg); lg.connect(o.frequency); o.connect(og); og.connect(mbus); o.start(t); lfo.start(t); o.stop(t + 0.3); lfo.stop(t + 0.3); },
+  };
+  // the procedural record: 16 steps per bar, the pattern grows per phase (P1 drums, P2 + bass stabs, P3 + chants + busier hats)
+  const KICK = [1, 0, 0, 0, 0, 0, 1, 0, 1, 0, 1, 0, 0, 0, 0, 0], SNARE = [0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 1], HAT = [0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1, 0];
+  const BASS = [[0, 110], [3, 110], [6, 130.8], [10, 98], [14, 116.5]]; // A2, A2, C3, G2, A#2: a minor stab riff on the off-steps
+  return { I, KICK, SNARE, HAT, BASS };
+})();
+</script>

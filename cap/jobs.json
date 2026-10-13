@@ -1,0 +1,11 @@
+[
+ {"name":"music","kind":"music"},
+ {"name":"pigeon_climb","q":"pigeon=1&pigeonauto=win&pigeonquick=1","max":75,"after":4},
+ {"name":"pigeon_fight","q":"pigeon=1&pigeonpart=2&pigeonauto=win","max":170,"after":7},
+ {"name":"scrubber","q":"scrubber=1&scrubberauto=win&scrubberphase=3","max":170,"after":7},
+ {"name":"honqueen","q":"honqueen=1&honqueenauto=win&honqueenphase=3","max":170,"after":7},
+ {"name":"fish_day","q":"fish=1&fishauto=win&fishspot=broadway","max":200,"after":4},
+ {"name":"fish_p3","q":"fish=1&fishauto=win&fishspot=p3","max":200,"after":4},
+ {"name":"poe_win","q":"poe=1&poeauto=win","max":170,"after":5},
+ {"name":"poe_lose","q":"poe=1&poeauto=lose","max":120,"after":5}
+]
