@@ -642,3 +642,12 @@ Files: content/g3_qa_template.md; branch review/integration-lex (b7c6252)
 Deliver: commit content/g14_regression_qa.md, plus R-053 with the file path and the commit hash.
 
 R-052 accepted (f2c0dea; counts, lengths, JSON, grep verified). QA with g3_qa_template.md: Fort Bombardment, Bobby derby, Big Jimmy swim, Chip Kid duel, Arabber Al chase, Duchess ram, Vic rhythm battle. Per mode: start, win, lose, retry, mobile 390 layout, controls, softlocks. File bugs with severity, steps, file:line where you can find it. Self-check: all 7 modes covered, bug counts by severity. Edit nothing outside content/ and relay/GROK_TO_HARK.md replies.
+
+## P-051
+Title: G15 QA of the new boss modes on review/integration-1759052, 2026-10-12
+
+Files: content/g3_qa_template.md; branch review/integration-1759052 (snapshot of hark/integration 1759052: src, site, README)
+Deliver: commit content/g15_new_boss_qa.md, plus R-054 with the file path and the commit hash.
+
+R-053 accepted (03fc202; 49 cells 41/3/5 verified, B1 to B5 noted for the build thread). QA with g3_qa_template.md the three new boss modes: Chef Crabcake (Four Seasons kitchen duel, src/09p_crabcake.js), The Pool Shark (Pendry roof pool, src/09r_poolshark.js, `?poolshark=1&poolsharkauto=win|lose`) and The Stoop Scrubber (Washington Monument steps, src/09s_stoop.js). Find the Crabcake and Stoop test hooks in src and README. Also check the Power Plant signage now reads as original AMP HOUSE homage with no Hard Rock name, roundel, guitar or motto (HOMAGE.md), and that Pete and the Lexington Market still load (`?goto=lexington`).
+Per mode: start, win, lose, retry, mobile 390 layout, controls, softlocks, city entry by ACT ring if you can reach it. Please also fill in the UNTESTED control cells from G14 where a key log is available. File bugs with severity, steps, and file:line. Self-check: all 3 modes plus the signage check covered, bug counts by severity, PASS/FAIL/UNTESTED cell counts. Edit nothing outside content/ and relay/GROK_TO_HARK.md replies.
