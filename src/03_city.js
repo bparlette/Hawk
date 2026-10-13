@@ -396,6 +396,7 @@ function stand(x0, z0, x1, z1, h, away, col) {
     CB.box(r[0], CURB, r[1], r[2], CURB + h * (i + 1) / n, r[3], i % 2 ? col : new THREE.Color(col).multiplyScalar(0.85), T.white); }
   COLL.push({ x0, x1, z0, z1 }); BLD.push({ x0, x1, z0, z1, h: CURB + h });
 }
+function standColl(x0, z0, x1, z1, h) { COLL.push({ x0, x1, z0, z1 }); BLD.push({ x0, x1, z0, z1, h: CURB + h }); } // stadiums: stand() colliders only
 const LANDMARKS = [];
 function landmark(id, name, x, z, r, boss) { LANDMARKS.push({ id, name, x, z, r, boss }); }
 
@@ -501,22 +502,17 @@ landmark('fells', 'FELLS POINT', 160, -56, 24, { name: 'Arabber Al', x: 167, z: 
 })();
 landmark('monument', 'WASHINGTON MONUMENT', -20, -92, 16, { name: 'The Stoop Scrubber', x: -20, z: -84 });
 // Oriole Park: the long brick warehouse on the east side, a horseshoe of stands round the field, light towers
-(function ballpark() {
-  CB.floor(-124, -26, -92, 26, CURB + 0.012, T.grass, '#fff', 4);
-  { const d = new THREE.CylinderGeometry(7, 7, 0.02, 16); place(d, -100, CURB + 0.02, 0); CB.geom(d, '#b0784a'); }
-  stand(-134, -34, -124, 34, 14, 'w', '#3a5a3a'); stand(-124, -34, -96, -26, 11, 'n', '#3a5a3a'); stand(-124, 26, -96, 34, 11, 's', '#3a5a3a');
+(function ballpark() { // stadiums: the field, stands and light towers are drawn by src/03e_stadiums_hd.js; same colliders + BLD as the old massing
+  standColl(-134, -34, -124, 34, 14); standColl(-124, -34, -96, -26, 11); standColl(-124, 26, -96, 34, 11);
   mass(-88, -34, -80, 34, 22, { tr: T.fac[0][1], top: '#4a3a30' });
   signOn(-88, -34, -80, 34, 'e', 15, 16, LSIGN.ball);
-  for (const [x, z] of [[-128, -30], [-128, 30], [-98, -30], [-98, 30]]) { pole(x, z, 26, 0.35, '#3a3a3a'); sbox(x - 2, CURB + 26, z - 0.5, x + 2, CURB + 28.5, z + 0.5, '#e8e4d0'); }
+  for (const [x, z] of [[-128, -30], [-128, 30], [-98, -30], [-98, 30]]) COLL.push({ x, z, r: 0.5 });
 })();
 landmark('orioles', 'ORIOLE PARK', -100, 0, 34, { name: 'Bird Brain Bobby', x: -91.5, z: 0 });
 // M&T Bank Stadium: a big closed bowl with an entrance gap on the east side
-(function stadium() {
-  CB.floor(-124, 56, -88, 96, CURB + 0.012, T.grass, '#fff', 4);
-  for (let z = 60; z < 94; z += 6) CB.floor(-122, z, -90, z + 0.35, CURB + 0.02, T.white, '#f0f0e8');
-  const C = '#4a3f6a';
-  stand(-134, 48, -124, 104, 22, 'w', C); stand(-124, 48, -80, 56, 20, 'n', C); stand(-124, 96, -80, 104, 20, 's', C);
-  stand(-88, 56, -80, 70, 20, 'e', C); stand(-88, 82, -80, 96, 20, 'e', C);
+(function stadium() { // stadiums: bowl, field and boards are drawn by src/03e_stadiums_hd.js; same colliders + BLD as the old massing
+  standColl(-134, 48, -124, 104, 22); standColl(-124, 48, -80, 56, 20); standColl(-124, 96, -80, 104, 20);
+  standColl(-88, 56, -80, 70, 20); standColl(-88, 82, -80, 96, 20);
   signOn(-88, 56, -80, 70, 'e', 14, 10, LSIGN.stad); signOn(-88, 82, -80, 96, 'e', 14, 10, LSIGN.stad);
 })();
 landmark('ravens', 'M&T BANK STADIUM', -106, 76, 32, { name: 'The Raven King', x: -106, z: 76 });
