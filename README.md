@@ -131,3 +131,14 @@ Game-style boss fights as their own modes (src/09a_duel_core.js core, 09b_jimmy.
 - Full map: LEXINGTON MKT + RASH FIELD labels (footprint fallback, no baked mini-model yet). Minimap dots come from LANDMARKS.
 - Test params: `?goto=<place>` (lexington, lexnear, westminster, poe, rash, hooters, hootersharbor) frames the place with a free camera
   (sim paused); `&gotoplay=1` just drops Harold there. Night: add `&tod=0.5`. Shots: `T/lex/all.sh <port>`, draw calls: `T/lex/dc.sh` (T/ is gitignored).
+## Sugar Rush, sugar refinery roof (hark/boss-sugar-rush) — src/09o_sugarrush.js
+<!-- sugarrush: -->
+- Boss #15 on the duel core (DUELS): a 3D arena brawl on the refinery roof beside the neon sign, which reads the original homage name **HARBOR SUGAR CO.** (canvas-drawn; no real brand name or logo).
+  Entry: the pink ring at the refinery's west door (69.6, 53.5), ACT = FIGHT ("elevator to the roof"). Win = `BOSS_CLEAR.clear('domino')`.
+- Moves (each tell >= 1.0 s with a "!" + tell card + ground mark): CRYSTAL SPIKES (rings, then spikes), SUGAR-HIGH DASH (pink after-images mark the path; dizzy after), MOLASSES POOL (amber ring, then a slow pool, no rolling in it).
+  OPEN after attacks (crystal heart glows) = full damage; on guard hits chip. 3 phases.
+- Harold: 3-hit cane combo with this fight's finisher (ROCK-CANDY CRACKER spin + candy sparkles), ROLL (i-frames, close rolls fill POWER), POWER specials alternating
+  NEON OVERLOAD (cane-cracks the sign conduit, neon beam) and MAVIS BACK-BOOST (team-up vault). Damage pops, hitstop, shake, slow-mo KO (sugar avalanche + raining cubes, tap to skip), star grade on the win card.
+- Controls: stick / WASD move, SWING (J / pad X), ROLL (JUMP, K / pad A), POWER (ACT, E / pad Y).
+- Rig hook: `window.buildSugarRush(ctx)` (contract in the file header); otherwise a procedural sugar-crystal golem stand-in.
+- Tests: `?sugarrush=1` starts it, `&sugarrushauto=win|lose|mash`. Runner: `T/sr/run.js <port> <win|lose|mash> <w> <h> <shot|-> [sim] [shotAt|state]`, entry + city draw calls: `T/sr/entry.js <port> <w> <h>` (T/ is gitignored).

@@ -29,9 +29,9 @@
   const BX = 9.6, BZ0 = -7.2, BZ1 = 8.4; // roof bounds the fighters stay inside
   const SIGN_Z = 11.2, CONDUIT = new THREE.Vector3(-5.2, 0, 9.4);
   const PH = [ // per phase: tell lengths (all >= 1.0 s), counts, gaps, open window
-    { spikes: 1.35, rings: 3, dash: 1.3, dashes: 1, pool: 1.25, pools: 1, guard: [1.5, 2.2], open: 1.7, mix: ['spikes', 'dash', 'pool', 'spikes', 'dash'] },
-    { spikes: 1.2, rings: 4, dash: 1.15, dashes: 1, pool: 1.15, pools: 2, guard: [1.1, 1.8], open: 1.5, mix: ['dash', 'pool', 'spikes', 'dash', 'spikes', 'pool'] },
-    { spikes: 1.05, rings: 5, dash: 1.0, dashes: 2, pool: 1.05, pools: 2, guard: [0.8, 1.4], open: 1.35, mix: ['spikes', 'dash', 'pool', 'dash', 'spikes', 'pool', 'dash'] },
+    { spikes: 1.35, rings: 3, dash: 1.3, dashes: 1, pool: 1.25, pools: 1, guard: [1.3, 1.9], open: 1.5, mix: ['spikes', 'dash', 'pool', 'spikes', 'dash'] },
+    { spikes: 1.2, rings: 4, dash: 1.15, dashes: 1, pool: 1.15, pools: 2, guard: [1.0, 1.6], open: 1.35, mix: ['dash', 'pool', 'spikes', 'dash', 'spikes', 'pool'] },
+    { spikes: 1.05, rings: 5, dash: 1.0, dashes: 2, pool: 1.05, pools: 2, guard: [0.75, 1.25], open: 1.2, mix: ['spikes', 'dash', 'pool', 'dash', 'spikes', 'pool', 'dash'] },
   ];
   const DMG = { spike: 12, dash: 15, splash: 5 }, INV = 1.3, HR = 0.45, BR = 1.15;
   const V = new THREE.Vector3(), V2 = new THREE.Vector3(), V3 = new THREE.Vector3(), M4 = new THREE.Matrix4(), Q4 = new THREE.Quaternion(), ONE = new THREE.Vector3(1, 1, 1);
@@ -256,7 +256,7 @@
   function chooseRings(st, n) { const out = [{ x: st.hx, z: st.hz }]; let guard = 0;
     while (out.length < n && guard++ < 60) { const a = rnd(0, TAU), d = out.length < 3 ? rnd(2.4, 4.2) : rnd(3, 8); const x = clamp(st.hx + Math.cos(a) * d, -BX, BX), z = clamp(st.hz + Math.sin(a) * d, BZ0, BZ1);
       if (out.every((o) => dist2(o.x, o.z, x, z) > 2.3)) out.push({ x, z }); }
-    return out.map((o) => ({ x: o.x, z: o.z, r: 1.35 })); }
+    return out.map((o) => ({ x: o.x, z: o.z, r: 1.45 })); }
   function bossThink(st, dt) {
     const P = PH[st.phase]; st.mt += dt; const u = st.mt / st.mdur;
     switch (st.ms) {
@@ -343,8 +343,8 @@
     const d = dist2(st.hx, st.hz, st.bx, st.bz), reach = BR + (st.combo === 2 ? 2.0 : 1.55);
     if (d > reach || ['down', 'ko', 'intro'].includes(st.ms)) return;
     const open = st.ms === 'open' || st.ms === 'dizzy' || st.ms === 'stun', base = st.combo === 2 ? 14 : 7;
-    const dmg = Math.round(base * (open ? 1.5 : 0.35)); V.set(st.bx, 2.2 + rnd(-0.3, 0.6), st.bz);
-    st.chain++; st.stats.maxChain = Math.max(st.stats.maxChain, st.chain);
+    const dmg = Math.max(1, Math.round(base * (open ? 1.0 : 0.22))); V.set(st.bx, 2.2 + rnd(-0.3, 0.6), st.bz);
+    if (st.t - (st.lastHitT || -9) > 1.6) st.chain = 0; st.lastHitT = st.t; st.chain++; st.stats.maxChain = Math.max(st.stats.maxChain, st.chain);
     if (open) { st.stats.landed++; st.stats.crits++; pop(V, String(dmg), 'crit'); addPower(st, st.combo === 2 ? 9 : 6); } else { st.stats.chips++; pop(V, 'CHIP ' + dmg, 'chip'); addPower(st, 3); }
     if (st.combo === 2) { pop(V2.set(st.bx, 3.4, st.bz), pick(['CRACK!', 'SWEET!', 'CRUNCH!', 'ROCK-CANDY CRACKER!']), 'word'); st.hs = 0.085; st.shake = Math.max(st.shake, 0.4); sfx('heavy'); cubes(V, 5, 4, 1); }
     else { st.hs = 0.065; st.shake = Math.max(st.shake, 0.18); sfx('hit'); }
@@ -514,12 +514,14 @@
   };
   C.onResize = () => {};
 
-  // ---------------- test bot: win = fight it out (walk in, mash the combo in her openings, roll out of rings / lines, POWER when full); lose = stand still ----------------
+  // ---------------- test bot: win = fight it out (walk in, combo in her openings, dodges ~72% of tells, POWER when full); mash = walk in + SWING/POWER only, never dodges; lose = stand still ----------------
   C.botThink = function (B, dt) {
     const st = C.st; if (!st || st.over || st.spec) return; B.mx = 0; B.my = 0; if (B.mode === 'lose') return;
     B.cd = (B.cd || 0) - dt; const d = dist2(st.hx, st.hz, st.bx, st.bz), left = st.mdur - st.mt;
     const fx = (st.bx - st.hx) / Math.max(0.01, d), fz = (st.bz - st.hz) / Math.max(0.01, d);
-    const threat = (x, z) => { if (st.ms === 'spikesTell' && left < 0.5) return st.atk.some((r) => dist2(x, z, r.x, r.z) < r.r + 0.6);
+    if (st.ms !== B.lastMs) { B.lastMs = st.ms; if (/Tell$/.test(st.ms)) B.react = Math.random() < 0.72; }
+    if (B.mode === 'mash') { if (st.power >= 100 && ['open', 'dizzy', 'guard'].includes(st.ms)) { B.c = true; return; } if (d > BR + 1.2) B.my = 1; if (d < BR + 1.6 && B.cd <= 0) { B.a = true; B.cd = 0.15; } return; }
+    const threat = (x, z) => { if (!B.react) return false; if (st.ms === 'spikesTell' && left < 0.5) return st.atk.some((r) => dist2(x, z, r.x, r.z) < r.r + 0.6);
       if ((st.ms === 'dashTell' && left < 0.6 || st.ms === 'dash') && st.dash) { const D = st.dash, ax = D.x1 - D.x0, az = D.z1 - D.z0, L2 = ax * ax + az * az || 1, k = clamp(((x - D.x0) * ax + (z - D.z0) * az) / L2, 0, 1); return dist2(x, z, D.x0 + ax * k, D.z0 + az * k) < BR + HR + 0.7; }
       if (st.ms === 'poolTell' && st.atk[0] && left < 0.5) return dist2(x, z, st.atk[0].x, st.atk[0].z) < st.atk[0].r + 0.3; return false; };
     if (threat(st.hx, st.hz)) { // step sideways (screen right/left) to the safer side
