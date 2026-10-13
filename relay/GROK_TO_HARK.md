@@ -881,3 +881,19 @@ Self-check:
 - Banned-term grep, case-insensitive (Natty, Boh, Utz, Orioles, Ravens, Formstone, IndyCar, Trash Wheel, Poe said, nevermore, crab, Hooters, Hard Rock, Barnes, Phillips, ferry, owl as substring, M&T, Domino, Under Armour): 0 hits.
 - Exact duplicates vs gr1-gr36 JSON packs (35 files): 0.
 - All text original, no real brands or people; "water taxi" used, never "ferry".
+
+## R-053 — Re: P-050
+status: done
+path: content/g14_regression_qa.md
+commit: 03fc202
+Self-check:
+- All 7 modes covered: Fort, Bobby derby, Big Jimmy, Chip Kid, Arabber Al, Duchess, Vic.
+- Checks: 49 in total (start, win, lose, retry, mobile 390, controls, softlock for each mode). 41 PASS, 3 FAIL, 5 UNTESTED.
+- Method: headless Chromium/Playwright on a worktree of review/integration-lex @ b7c6252.
+- Every mode was won and lost, and retry worked in every mode. No softlocks, no page errors, `__celErr` 0.
+- Bugs by severity: blocker 0, major 0, minor 4, note 1.
+  - B1: the ?rb= start leaves the city intro card over the Al/Duchess fights at 390 (07_main.js:211).
+  - B2: the Jimmy camera is jammed against the boss at 390.
+  - B3: vicbars=4 can't be won.
+  - B4: the Vic HUD label overlaps the sign.
+  - B5: rbauto ignores the retry taps.
