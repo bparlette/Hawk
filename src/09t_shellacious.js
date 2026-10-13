@@ -327,7 +327,7 @@
     if (st.healT > 0 && (st.healT -= dt) <= 0) { st.hp = Math.min(100, st.hp + 35); st.stats.heals++; DUELS.say('MAVIS', 'Here, hon: popcorn! Extra butter!', 2.0); pop('+35', V.set(sx(st.lane) * 0.95, 2.2, 0.2), 'w'); sfx('jump'); }
   }
   function phaseDown(st) { clearFx();
-    if (st.phase >= 2) { setM(st, 'ko', 99); st.over = true; st.won = true; st.outT = 0; st.slow = 0.35; st.slowT = 1.3; DUELS.banner('K.O.!<small>THAT\'S A WRAP</small>', 2.2); sting('ding'); sfx('ko'); }
+    if (st.phase >= 2) { setM(st, 'ko', 99); st.over = true; st.won = true; st.outT = 0; st.slow = 0.35; st.slowT = 1.3; JUICE.ko(); DUELS.banner('K.O.!<small>THAT\'S A WRAP</small>', 2.2); sting('ding'); sfx('ko'); }
     else { setM(st, 'down', 2.4); DUELS.banner('CUT!<small>PHASE ' + (st.phase + 1) + ' TO HAROLD</small>', 2.0); if (Math.random() < 0.7) DUELS.say('MAVIS', pick(MAVIS.slice(0, 3)), 2.2); }
   }
 

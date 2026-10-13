@@ -360,7 +360,7 @@
 
   // ---------------- win / lose ----------------
   function koStart(st) { if (st.over) return; st.over = true; st.won = true; st.bhp = 0; st.atk = null; clearAttackFx(); S.sweepRing.visible = false; setB(st, 'ko', 99); st.outT = 0;
-    st.slow = 0.35; st.slowT = 2.4; st.ko = { x: st.b.x, y: st.b.y, z: st.b.z }; DUELS.log.push('scrubber:win'); DUELS.banner('K.O.!<small>SHE SLIPPED ON HER OWN SUDS</small>', 2.2); hud(st);
+    st.slow = 0.35; st.slowT = 2.4; st.ko = { x: st.b.x, y: st.b.y, z: st.b.z }; DUELS.log.push('scrubber:win'); JUICE.ko(); DUELS.banner('K.O.!<small>SHE SLIPPED ON HER OWN SUDS</small>', 2.2); hud(st);
     S.lanes.forEach((L) => { L.foam.visible = true; L.foam.material.opacity = 0.75; }); }
   function stepKO(st, dt) {
     st.outT += dt; const b = st.b, k = st.ko, u = clamp(st.outT / 3.0, 0, 1); // slide from where she fell, down the steps, across the plaza into the fountain

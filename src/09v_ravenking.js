@@ -357,7 +357,7 @@
 
   // ---------------- win / lose ----------------
   function koStart(st) { if (st.over) return; st.over = true; st.won = true; st.bhp = 0; if (st.fum) endFumble(st); st.atk = null; clearAttackFx(); setB(st, 'ko', 99); st.outT = 0;
-    st.slow = 0.35; st.slowT = 2.2; st.ko = { x: st.b.x, z: st.b.z }; DUELS.log.push('ravenking:win'); DUELS.banner('K.O.!<small>SACKED IN HIS OWN END ZONE</small>', 2.2); roar(); hud(st); }
+    st.slow = 0.35; st.slowT = 2.2; st.ko = { x: st.b.x, z: st.b.z }; DUELS.log.push('ravenking:win'); JUICE.ko(); DUELS.banner('K.O.!<small>SACKED IN HIS OWN END ZONE</small>', 2.2); roar(); hud(st); }
   function stepKO(st, dt) {
     st.outT += dt; const b = st.b, k = st.ko, u = clamp(st.outT / 1.8, 0, 1); // tumbles back into the end zone and flattens
     b.x = lerp(k.x, 0, ease(u)); b.z = lerp(k.z, -14.2, ease(u)); b.y = u < 1 ? Math.sin(u * Math.PI) * 3.2 : 0; b.sq = u < 1 ? 1 : Math.max(0.22, b.sq - dt * 6);

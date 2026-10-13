@@ -466,12 +466,13 @@
   }
 
   // ---------------- KO + final-blow replay + into the harbor ----------------
-  function startKO(st) { clearFx(); st.queue.length = 0; setM(st, 'ko', 99); st.over = true; st.won = true; st.outT = 0; st.koAt = st.t; st.slow = 0.3; st.slowT = 1.1; DUELS.banner('K.O.!<small>LAST CALL</small>', 1.6); sting('ding'); sfx('ko'); st.stats.parts.push({ part: 3, t: +st.t.toFixed(1) }); DUELS.log.push('brewmaster:ko'); }
+  function startKO(st) { clearFx(); st.queue.length = 0; setM(st, 'ko', 99); st.over = true; st.won = true; st.outT = 0; st.koAt = st.t; st.slow = 0.3; st.slowT = 1.1; JUICE.ko(); DUELS.banner('K.O.!<small>LAST CALL</small>', 1.6); sting('ding'); sfx('ko'); st.stats.parts.push({ part: 3, t: +st.t.toFixed(1) }); DUELS.log.push('brewmaster:ko'); }
   function outro(st, dt) {
     st.outT += dt; const t = st.outT, R = C.R;
     if (t < 1.2) { R.root.position.z = damp(R.root.position.z, MZ + 1.2, 3, dt); R.body.rotation.x = damp(R.body.rotation.x, -0.5, 5, dt); }
-    if (t >= 1.2 && !st.rep && !st.repDone) { st.rep = { t: 0, a: st.koAt - 1.5, b: st.koAt + 0.35 }; DUELS.hudEl.classList.add('bwrep'); DUELS.log.push('brewmaster:replay'); }
-    if (st.rep) { st.rep.t += dt; if (st.rep.t > 2.6) { st.rep = null; st.repDone = true; st.flyT = 0; DUELS.hudEl.classList.remove('bwrep'); sfx('heavy'); st.shake = 0.5; } return; }
+    // the final-blow replay is the shared JUICE one now (JUICE.ko() in startKO pauses the fight ~0.5 s after the KO and plays it); the local 2.6 s side-camera
+    // replay (record/playback below) is no longer started, so the two never double up. After the slump, straight into the toss over the railing.
+    if (t >= 1.2 && !st.rep && !st.repDone) { st.repDone = true; st.flyT = 0; sfx('heavy'); st.shake = 0.5; }
     if (st.repDone) { st.flyT += dt; const u = clamp(st.flyT / 1.4, 0, 1);
       R.root.position.set(lerp(0, 1.5, u), Math.sin(u * Math.PI) * 4.5 - u * 2.4, lerp(MZ + 1.2, 13, u)); R.root.rotation.x = -u * 5; R.body.rotation.x = -0.6;
       if (u >= 1 && !st.splashed) { st.splashed = true; R.root.visible = false; sting('splash'); for (let k = 0; k < 24; k++) puff(V.set(1.5, -1, 13), V2.set(rnd(-2.5, 2.5), rnd(3, 7), rnd(-1.5, 1.5)), 1.3, rnd(0.6, 1.3)); DUELS.say('BREWMASTER', defeatLine(), 3.2); }

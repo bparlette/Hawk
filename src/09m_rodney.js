@@ -126,7 +126,7 @@
     DUELS.banner((team ? 'OTTERS SCORE' : 'GOAL!') + '<small>' + st.score[0] + ' \u2013 ' + st.score[1] + '</small>', 1.8);
     const l = lines() || LINES; if (team) DUELS.say('RIPTIDE RODNEY', pick(l.score || LINES.score), 2.6);
     DUELS.log.push('rodney:goal:' + team + ':' + st.score.join('-') + ':' + (A[by] ? A[by].name : ''));
-    if (st.score[team] >= WIN) { st.over = true; st.won = team === 0; st.phase = 'over'; st.pt = 0; DUELS.log.push('rodney:' + (st.won ? 'win' : 'lose')); }
+    if (st.score[team] >= WIN) { st.over = true; st.won = team === 0; st.phase = 'over'; st.pt = 0; DUELS.log.push('rodney:' + (st.won ? 'win' : 'lose')); if (st.won) JUICE.ko(); }
   }
   function ballStep(dt) {
     const st = R.st, b = B(); st.noPickT = Math.max(0, st.noPickT - dt);

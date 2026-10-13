@@ -463,7 +463,7 @@ const CARL = (function () {
     startTurn('harold', t.fi + 1);
   }
   function endGame() {
-    const h = scoreOf(G.pl.harold.f) + G.mavis, c = scoreOf(G.pl.carl.f); G.over = true; G.won = h > c; G.final = { h, c }; G.turn = null; drawCard(); setPh(G.won ? 'won' : 'lost');
+    const h = scoreOf(G.pl.harold.f) + G.mavis, c = scoreOf(G.pl.carl.f); G.over = true; G.won = h > c; if (G.won) JUICE.ko(); G.final = { h, c }; G.turn = null; drawCard(); setPh(G.won ? 'won' : 'lost');
     G.log.push('end:' + h + '-' + c);
     if (G.won) { DUELS.banner('YOU WIN!<small>' + h + ' TO ' + c + '</small>', 3); sfx('ko'); clearAlley(h, c); }
     else { DUELS.banner(h === c ? 'TIE GOES TO CARL' : 'CARL WINS<small>' + c + ' TO ' + h + '</small>', 3); DUELS.say('KINGPIN CARL', pick(CARL_TXT.carl_taunts), 3.2); sfx('hurt'); } }

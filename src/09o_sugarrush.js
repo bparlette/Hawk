@@ -363,7 +363,7 @@
   function damageBoss(st, dmg) {
     st.bhp -= dmg; subHud(st);
     if (st.bhp <= 0) { st.bhp = 0; for (const p of C.pools) { p.on = false; p.m.visible = false; } st.atk = []; st.dash = null; C.blob.visible = false;
-      if (st.phase >= 2) { st.spec = null; setM(st, 'ko', 99); st.over = true; st.won = true; st.outT = 0; st.hp = Math.max(st.hp, 1); DUELS.banner('K.O.!<small>SUGAR CRASH</small>', 2.2); DUELS.log.push('sugarrush:ko'); }
+      if (st.phase >= 2) { st.spec = null; setM(st, 'ko', 99); st.over = true; st.won = true; st.outT = 0; st.hp = Math.max(st.hp, 1); JUICE.ko(); DUELS.banner('K.O.!<small>SUGAR CRASH</small>', 2.2); DUELS.log.push('sugarrush:ko'); }
       else { st.spec = null; setM(st, 'down', 2.4); DUELS.banner('CRACKED!<small>PHASE ' + (st.phase + 1) + ' TO HAROLD</small>', 2); if (Math.random() < 0.7) DUELS.say('MAVIS', pick(['That\u2019s my Harold!', 'Crack her again, dear!', 'Mind the spikes, hon!']), 2.2); } }
   }
 
@@ -402,7 +402,7 @@
   function grade(st) { const n = st.stats.taken; return n <= 3 ? 'S' : n <= 8 ? 'A' : 'B'; }
   function outro(st, rdt, I) {
     st.outT += rdt; const t = st.outT, R = C.R;
-    if (koTag && t < 3.2) koTag.classList.add('on');
+    if (koTag && t < 3.2 && !JUICE.replayed()) koTag.classList.add('on'); // (the shared JUICE final-blow replay carries its own TAP TO SKIP)
     if (t > 0.5 && (I.a || I.ok || I.c) && t < 3.0) st.outT = 3.0; // tap to skip
     st.slow = t < 1.6 ? 0.3 : 1;
     if (t < 1.1) { const k = t / 1.1; R.body.rotation.z = Math.sin(t * 40) * 0.05 * k; flashBoss('#ffffff', 0.4 + 0.5 * k); if (Math.random() < rdt * 30) spark(V.set(st.bx + rnd(-1, 1), rnd(0.5, 3), st.bz + rnd(-1, 1)), 2); }
