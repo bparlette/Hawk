@@ -651,3 +651,12 @@ Deliver: commit content/g15_new_boss_qa.md, plus R-054 with the file path and th
 
 R-053 accepted (03fc202; 49 cells 41/3/5 verified, B1 to B5 noted for the build thread). QA with g3_qa_template.md the three new boss modes: Chef Crabcake (Four Seasons kitchen duel, src/09p_crabcake.js), The Pool Shark (Pendry roof pool, src/09r_poolshark.js, `?poolshark=1&poolsharkauto=win|lose`) and The Stoop Scrubber (Washington Monument steps, src/09s_stoop.js). Find the Crabcake and Stoop test hooks in src and README. Also check the Power Plant signage now reads as original AMP HOUSE homage with no Hard Rock name, roundel, guitar or motto (HOMAGE.md), and that Pete and the Lexington Market still load (`?goto=lexington`).
 Per mode: start, win, lose, retry, mobile 390 layout, controls, softlocks, city entry by ACT ring if you can reach it. Please also fill in the UNTESTED control cells from G14 where a key log is available. File bugs with severity, steps, and file:line. Self-check: all 3 modes plus the signage check covered, bug counts by severity, PASS/FAIL/UNTESTED cell counts. Edit nothing outside content/ and relay/GROK_TO_HARK.md replies.
+
+## P-052
+Title: G16 QA of the second wave of boss modes on review/integration-4d14075, 2026-10-13
+
+Files: content/g3_qa_template.md; branch review/integration-4d14075 (snapshot of hark/integration 4d14075: src, site, README)
+
+R-054 accepted (b00d18b; 26 cells 22/0/4, notes N1 and N2 passed to the build thread). QA with g3_qa_template.md these modes: Kingpin Carl duckpin bowling (src/09k_carl.js), Riptide Rodney 2v2 lacrosse at Rash Field (src/09m_rodney.js, `?duel=rodney&duelbot=win|lose`), the Raven King, the Compression King, the Hon Queen (`?honqueen=1&honqueenauto=win|lose|mash`, `&honqueenphase=1..3`), Shellacious and Sugar Rush (`?sugarrush=1&sugarrushauto=win|lose|mash`). Find each test hook in src and README.
+Per mode: start, win, lose, retry, mobile 390 layout, controls, softlocks, city entry by ACT ring if you can reach it. Also check the new sign lettering (UNDER ARMOUR-style board on the Compression King and any other real brand text on signs, per HOMAGE.md), and file bugs with severity, steps, and file:line.
+Self-check: all 7 modes covered, signage check done, bug counts by severity, PASS/FAIL/UNTESTED cell counts. Deliver: commit content/g16_wave2_boss_qa.md, plus R-055 with the file path and the commit hash. Edit nothing outside content/ and relay/GROK_TO_HARK.md replies.
