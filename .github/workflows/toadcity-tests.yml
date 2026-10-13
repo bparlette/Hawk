@@ -56,7 +56,7 @@ jobs:
           python3 - <<'PY'
           import json, os, re
           js = open('game/site/game.js', encoding='utf-8', errors='ignore').read()
-          known = ['crabcake','poolshark','scrubber','honqueen','shellacious','sugarrush','cobblestone','compking','ravenking','brewmaster','pigeon','chipkid']
+          known = ['crabcake','poolshark','scrubber','honqueen','shellacious','sugarrush','cobblestone','compking','ravenking','brewmaster','pigeon','chipkid','jimmy','duchess']  # jimmy + duchess: hark/polish (?jimmy=1&jimmyauto=, ?duchess=1&duchessauto=; skipped on builds without the markers)
           want = [b.strip() for b in os.environ.get('BOSSES','').split(',') if b.strip()] or known
           modes = [m.strip() for m in os.environ.get('MODES','win,lose').split(',') if m.strip()]
           extra = {'cobblestone': '&cobblestonenight=1', 'pigeon': '&pigeonquick=1'}

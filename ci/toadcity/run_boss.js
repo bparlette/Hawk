@@ -1,6 +1,7 @@
 // node ci/toadcity/run_boss.js <port> <boss> <win|lose> <w> <h> <outDir> [extraQuery] [sim]
 // Generic boss runner (from game-int T/w2b/run.js). Loads ?<boss>=1&<boss>auto=<mode>, lets the duel bot play.
 // PASS win  = duel ends with result 'win' (__duels.cur cleared, res === 'win') and 0 own console errors.
+// PASS mash = same as win, with the boss's mash bot (<boss>auto=mash: a first-timer who mashes SWING) (hark/polish).
 // PASS lose = the RETRY flow fires ('retry' in __duels.log, fight reset, not over) and 0 own console errors.
 const { open, writeResult } = require('./common');
 (async () => {
@@ -26,7 +27,7 @@ const { open, writeResult } = require('./common');
       // lose: pass once the RETRY flow ran (retries counter, robust to later log lines) and the fight is live again
       last = s;
       if (mode === 'lose' && (s.retries >= 1 || s.log.includes('retry')) && s.st && !s.st.over) { res.end = s; res.pass = true; res.reason = `RETRY OK at t=${s.t}s (retries=${s.retries})`; break; }
-      if (!s.cur) { res.end = s; res.pass = mode === 'win' && s.res === 'win'; res.reason = `duel ended res=${s.res} at t=${s.t}s`; break; }
+      if (!s.cur) { res.end = s; res.pass = (mode === 'win' || mode === 'mash') && s.res === 'win'; res.reason = `duel ended res=${s.res} at t=${s.t}s`; break; }
     }
     if (!res.end) { res.end = last; res.reason = `timeout after ${((Date.now() - t0) / 1000).toFixed(0)}s, last ${JSON.stringify(last)}`; }
     await p.screenshot({ path: `${outDir}/${name}_end.png` }).catch(() => {});
