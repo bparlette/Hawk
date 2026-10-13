@@ -66,6 +66,8 @@ jobs:
           if 'cobblestone:storm' in js: extra['cobblestone'] = '&tod=0.1&ciexpect=cobblestone:storm:end'  # cobble-storm builds: the Cobblestone fights start in DAYTIME and must play the storm intro
           inc, skipped = [], []
           for b in want:
+              if b == 'finale':
+                  continue
               if marker.get(b, b + 'auto') not in js:
                   skipped.append(b); continue
               for m in modes:
@@ -73,6 +75,10 @@ jobs:
           if os.environ.get('CITY','true') == 'true':
               for w, h in ((390, 844), (1280, 720)):
                   inc.append({'name': f'city-{w}', 'type': 'city', 'boss': '', 'mode': '', 'w': w, 'h': h, 'extra': ''})
+          # finale payoff (src/09z_finale.js): runs whenever the build carries it (?finale=1&finaleauto=1), with the city jobs or when bosses lists 'finale'
+          if 'finaleauto' in js and (os.environ.get('CITY','true') == 'true' or 'finale' in want):
+              for w, h in ((390, 844), (1280, 720)):
+                  inc.append({'name': f'finale-{w}', 'type': 'finale', 'boss': '', 'mode': '', 'w': w, 'h': h, 'extra': ''})
           print('jobs:', [i['name'] for i in inc]); print('not in build (skipped):', skipped)
           with open(os.environ['GITHUB_STEP_SUMMARY'], 'a') as f:
               f.write(f"Planned {len(inc)} jobs. Not in this build: {', '.join(skipped) or 'none'}\n")
@@ -122,6 +128,8 @@ jobs:
           mkdir -p out
           if [ "${{ matrix.type }}" = "city" ]; then
             node run_city.js 8831 ${{ matrix.w }} ${{ matrix.h }} out 2>&1 | tee out/${{ matrix.name }}.log
+          elif [ "${{ matrix.type }}" = "finale" ]; then
+            node run_finale.js 8831 ${{ matrix.w }} ${{ matrix.h }} out 2>&1 | tee out/${{ matrix.name }}.log
           else
             node run_boss.js 8831 ${{ matrix.boss }} ${{ matrix.mode }} ${{ matrix.w }} ${{ matrix.h }} out '${{ matrix.extra }}' 2>&1 | tee out/${{ matrix.name }}.log
           fi
