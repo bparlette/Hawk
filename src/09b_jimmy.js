@@ -262,7 +262,7 @@
     const floor = HPB - (st.phase + 1) * 100; st.rearHits = (st.rearHits || 0) + 1;
     if (st.rearHits >= 2 && st.bhp > floor) { setB(st, 'idle', rnd(...PH[st.phase].idle)); DUELS.tell('HE SLAMS DOWN! TWO HITS A REAR', 0.9); } // two belly hits per rear
     if (st.bhp <= floor) { st.bhp = floor;
-      if (st.phase === 2) { st.bs = 'dead'; st.bt = 0; st.won = true; st.over = true; win(st); }
+      if (st.phase === 2) { st.bs = 'dead'; st.bt = 0; st.won = true; st.over = true; JUICE.ko(); win(st); }
       else { st.phase++; st.stats.phaseUps++; setB(st, 'roar', 2.0); st.combo = 0; J.blasts.length = 0; st.air = Math.max(st.air, 0.75);
         DUELS.banner(st.phase === 1 ? 'PHASE 2<small>JIMMY\'S GETTING STEAMED!</small>' : 'PHASE 3<small>ONE VENT SLEEPS AT A TIME!</small>', 1.8); DUELS.sub(J.airEl.outerHTML, 'PHASE ' + (st.phase + 1) + '/3'); J.airEl = DUELS.hudEl.querySelector('.air'); J.airI = J.airEl.querySelector('i'); } }
   }

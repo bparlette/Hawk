@@ -239,7 +239,7 @@
   function pop(p, text, cls = '') { const P = C.pops.find((q) => q.t > 0.9) || C.pops[0]; P.t = 0; P.p.copy(p); P.e.className = 'ckpop' + (cls ? ' ' + cls : ''); P.e.textContent = text; }
   function burst(p, n, cols, spd = 3.5, life = 0.6, up = 2.5) { for (let k = 0; k < n && C.parts.length < 72; k++) C.parts.push({ p: p.clone(), v: new THREE.Vector3(rnd(-spd, spd), rnd(0.5, up + 1.5), rnd(-spd, spd)), t: 0, life: rnd(life * 0.6, life), c: CO.set(pick(cols)).clone(), r: rnd(0, TAU), s: rnd(0.7, 1.4) }); }
   function flashBoss(c = '#ffffff', v = 0.85) { for (const m of C.R.flash) if (m && m.userData.flashC) { m.userData.flashC.value.set(c); m.userData.flash.value = Math.max(m.userData.flash.value, v); } }
-  function hitstop(st, s) { st.hs = Math.max(st.hs, s); } function shake(st, s) { st.shake = Math.max(st.shake, s); } function slowmo(st, k, s) { st.slowK = k; st.slow = s; }
+  function hitstop(st, s) { JUICE.hitstop(s * 1000, st); } function shake(st, s) { JUICE.shake(s, 0, st); } // (shared kit 09aj_juice.js, bound to this fight's own st.hs / st.shake) function slowmo(st, k, s) { st.slowK = k; st.slow = s; }
 
   // ---------------- lights (Mannequin Freeze) ----------------
   function setLight(st, l) { st.light = l; st.lt = 0; const on = l !== 'off';
@@ -347,7 +347,7 @@
   }
   const isOpen = (st) => ['open', 'stagger'].includes(st.bs); // (posing on GREEN takes normal hits; RED gets you spotted)
   function ko(st) { setB(st, 'ko', 99); st.over = true; st.won = true; st.ko = 0; setLight(st, 'off'); C.hm.classList.remove('on'); for (const h of C.hangers) { h.on = false; h.m.visible = false; } C.dash.count = 0;
-    slowmo(st, 0.3, 1.4); shake(st, 0.6); flashBoss('#ffffff', 1); DUELS.banner('K.O.!<small>EVERYTHING MUST GO</small>', 2.4); tone(1320, 660, 0.6, 'triangle', 0.12); DUELS.log.push('compking:ko'); }
+    slowmo(st, 0.3, 1.4); shake(st, 0.6); flashBoss('#ffffff', 1); JUICE.ko(); DUELS.banner('K.O.!<small>EVERYTHING MUST GO</small>', 2.4); tone(1320, 660, 0.6, 'triangle', 0.12); DUELS.log.push('compking:ko'); }
 
   C.step = function (dt0, I) {
     const st = C.st; if (!st) return;

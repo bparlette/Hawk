@@ -348,7 +348,7 @@
     st.bhp -= dmg; st.stats.landed++; addPower(st, 0.06); const R = P.R; for (const m of R.mats) if (m && m.userData.flashC) { m.userData.flashC.value.set('#ffffff'); m.userData.flash.value = 0.85; }
     V.set(st.sx, (st.pose === 'deck' ? 0.8 : 1.8) + (st.pose === 'edge' ? -0.6 : 0), st.sz); pop(V, word || String(dmg), gold ? 'g' : '', 0.85); V2.copy(V); V.y += 0.4; pop(V, '-' + dmg, '', 0.7); splash(V2.x, V2.y, V2.z, 6, 0);
     if (st.bhp <= 0) { st.bhp = 0; P.balls.length = 0; st.wave = null;
-      if (st.phase >= 2) { setM(st, 'ko', 99); st.over = true; st.won = true; st.outT = 0; st.ts = 0.3; st.tsT = 1.6; DUELS.banner('K.O.!<small>THE SHARK IS SUNK</small>', 2.4); for (const g of P.goons) if (g.on && g.s !== 'fly') launchGoon(st, g); }
+      if (st.phase >= 2) { setM(st, 'ko', 99); st.over = true; st.won = true; st.outT = 0; st.ts = 0.3; st.tsT = 1.6; JUICE.ko(); DUELS.banner('K.O.!<small>THE SHARK IS SUNK</small>', 2.4); for (const g of P.goons) if (g.on && g.s !== 'fly') launchGoon(st, g); }
       else { setM(st, 'down', 2.6); DUELS.banner('PHASE CLEAR!<small>HE DOVE FOR THE DEEP END</small>', 2.0); splash(st.sx, WY, st.sz, 16); st.ts = 0.4; st.tsT = 0.6;
         if (Math.random() < 0.7) DUELS.say('MAVIS', ['That\u2019s my Harold!', 'Scratch on that, fishface!', 'Mind the edge, hon!'][st.phase % 3], 2.0); } }
   }

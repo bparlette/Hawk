@@ -323,7 +323,7 @@
     V.set(st.qx, HT + 2.2, st.qz); pop(V, word || String(dmg), cls || '', 0.85); V2.copy(V); V.y += 0.5; pop(V, '-' + dmg, '', 0.7); spark(V2.x, V2.y - 0.4, V2.z - 0.4, 7);
     if (st.combo >= 3 && st.combo % 3 === 0) { V.set(st.hx, haroldY(st) + 2.6, st.hz); pop(V, st.combo + ' HIT COMBO!', 'p', 0.9); }
     if (st.qhp <= 0) { st.qhp = 0; P.flams.length = 0;
-      if (st.phase >= 2) { setM(st, 'ko', 99); st.over = true; st.won = true; st.outT = 0; st.ts = 0.3; st.tsT = 1.8; DUELS.banner('K.O.!<small>THE BEEHIVE IS FLAT</small>', 2.4); DUELS.log.push('honqueen:ko'); }
+      if (st.phase >= 2) { setM(st, 'ko', 99); st.over = true; st.won = true; st.outT = 0; st.ts = 0.3; st.tsT = 1.8; JUICE.ko(); DUELS.banner('K.O.!<small>THE BEEHIVE IS FLAT</small>', 2.4); DUELS.log.push('honqueen:ko'); }
       else { setM(st, 'down', 2.6); st.hiveS = 1; DUELS.banner('PHASE CLEAR!<small>SHE\u2019S FIXING HER HAIR</small>', 2.0); st.ts = 0.4; st.tsT = 0.6;
         if (Math.random() < 0.7) DUELS.say('MAVIS', ['That\u2019s my Harold!', 'Her hair\u2019s not the only thing coming down, hon!', 'Mind the hill, dear!'][st.phase % 3], 2.0); } }
   }

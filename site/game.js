@@ -7959,6 +7959,195 @@ const DUELS = (function () {
   return D;
 })();
 
+// ======================= JUICE: shared game-feel kit for every boss duel (hark/juice, 2026-10-13).
+// Loaded right after 09a_duel_core.js (name sorts after "09a_" and before "09b" in both C and en_US collation) and before every boss file.
+//   JUICE.hitstop(ms[, st])     freeze the duel for ms. With a fight's own state object st it only raises st.hs (that fight's own clock keeps it, unchanged feel).
+//   JUICE.shake(amp, ms[, st])  camera shake. With st it only raises st.shake (the fight's own camera code reads it). Without, a decaying offset on the duel camera.
+//   JUICE.pop(text, pos, style) a world-anchored damage / word pop in the duel HUD (style: 'hit' | 'crit' | 'word' | 'ko' | 'combo' | {color, size}).
+//   JUICE.combo(n)              a punchy "N HITS" chip (n < 2 hides it).
+//   JUICE.ko([focus])           call at a boss KO: the last ~3 s are already in the ring buffer; ~0.5 s later the fight pauses and the final-blow replay plays.
+//   JUICE.finalBlowReplay([o])  play the replay now (2-3 s, slow-mo around the blow, low dramatic orbit, letterbox, TAP TO SKIP). Returns false with no footage.
+// The replay records the duel camera + the transforms (pos / quat / scale / visible) of every moving object in the duel scene, ~30 Hz, into a ring buffer.
+// While it plays, the fight's step() is NOT called (sim, timers, the bot all wait), the camera + actors are driven from the footage, then everything is put back
+// exactly as it was at replay start and the fight carries on (its own KO outro, then the WIN card). A DUELS.over('win') issued during or before the replay
+// is held and shown when it ends; a duel that never called JUICE.ko still gets a replay of its last seconds right before its WIN card (fallback).
+// Any fresh tap / click / key / pad button skips it. LEAVE / exit restores and stops it. Tests: window.__juice (replays, skips, last, on).
+const JUICE = (function () {
+  const J = { on: false, replays: 0, skips: 0, last: null, log: [] };
+  // ---------------- HUD bits (inside the duel HUD so they hide with it) ----------------
+  const css = document.createElement('style');
+  css.textContent = `
+  #duel .jpop { position: absolute; left: 0; top: 0; transform: translate(-50%, -50%); font-size: 14px; color: #fff; white-space: nowrap; pointer-events: none; opacity: 0;
+    text-shadow: 2px 2px 0 #14101f, -2px -2px 0 #14101f, 2px -2px 0 #14101f, -2px 2px 0 #14101f; will-change: transform, opacity; }
+  #duel .jpop.crit { color: #ffd23c; font-size: 18px; } #duel .jpop.word { color: #ff8ab0; font-size: 16px; } #duel .jpop.ko { color: #ffd23c; font-size: 26px; } #duel .jpop.combo { color: #9dff6b; font-size: 13px; }
+  #duel .jcombo { position: absolute; left: 10px; top: 44%; font-size: 12px; color: #ffd23c; text-shadow: 2px 2px 0 #14101f; opacity: 0; transition: opacity .25s; pointer-events: none; }
+  #duel .jcombo b { font-size: 22px; display: inline-block; margin-right: 4px; } #duel .jcombo.on { opacity: 1; } #duel .jcombo.k b { animation: jpunch .22s ease-out; }
+  @keyframes jpunch { from { transform: scale(1.7) rotate(-8deg); } to { transform: scale(1) rotate(0); } }
+  #duel.jrp > *:not(.jrp) { visibility: hidden !important; }
+  #duel .jrp { position: absolute; inset: 0; display: none; pointer-events: auto; touch-action: none; }
+  #duel.jrp .jrp { display: block; }
+  #duel .jrp i { position: absolute; left: 0; right: 0; height: 12%; background: #000; transition: transform .28s ease-out; }
+  #duel .jrp i.t { top: 0; transform: translateY(-100%); } #duel .jrp i.b { bottom: 0; transform: translateY(100%); }
+  #duel .jrp.in i { transform: none; }
+  #duel .jrp .tag { position: absolute; left: 12px; top: calc(12% - 22px); font-size: 11px; color: #fff; letter-spacing: 2px; }
+  #duel .jrp .tag:before { content: ''; display: inline-block; width: 8px; height: 8px; border-radius: 50%; background: #ff3d4a; margin-right: 7px; vertical-align: 0; animation: jrec .8s infinite alternate; }
+  @keyframes jrec { to { opacity: .2; } }
+  #duel .jrp .sk { position: absolute; right: 12px; bottom: calc(6% - 6px); font-size: 11px; color: #ffd23c; letter-spacing: 1px; animation: jrec .9s infinite alternate; }
+  #duel .jrp .fl { position: absolute; inset: 0; background: #fff; opacity: 0; transition: opacity .25s; pointer-events: none; }
+  #duel .jrp .fl.on { opacity: .75; transition: none; }`;
+  document.head.appendChild(css);
+  let hud = null, ov = null, ovFl = null, comboEl = null; const POPS = [];
+  function ui() {
+    if (hud) return hud; hud = DUELS.hudEl;
+    for (let i = 0; i < 8; i++) { const e = document.createElement('div'); e.className = 'jpop'; hud.appendChild(e); POPS.push({ e, t: 9, life: 1, p: new THREE.Vector3(), rise: 1 }); }
+    comboEl = document.createElement('div'); comboEl.className = 'jcombo'; hud.appendChild(comboEl);
+    ov = document.createElement('div'); ov.className = 'jrp'; ov.innerHTML = '<i class="t"></i><i class="b"></i><div class="tag">FINAL BLOW \u00b7 REPLAY</div><div class="sk">TAP TO SKIP \u25b6</div><div class="fl"></div>';
+    hud.appendChild(ov); ovFl = ov.querySelector('.fl');
+    ov.addEventListener('pointerdown', (e) => { e.preventDefault(); e.stopPropagation(); tapped = true; });
+    return hud;
+  }
+
+  // ---------------- hitstop / shake / pop / combo ----------------
+  let hsT = 0, shA = 0, shT = 0, shD = 0; const shOff = new THREE.Vector3(); let shCam = null;
+  J.hitstop = (ms, st) => { const s = Math.max(0, +ms || 0) / 1000; if (st) { st.hs = Math.max(st.hs || 0, s); return; } hsT = Math.max(hsT, Math.min(0.4, s)); };
+  J.shake = (amp, ms, st) => { amp = +amp || 0; if (st) { st.shake = Math.max(st.shake || 0, amp); return; } if (amp >= shA * (shD > 0 ? shT / shD : 0)) { shA = amp; shD = shT = Math.max(0.05, (+ms || 250) / 1000); } };
+  J.pop = (text, pos, style = 'hit') => { ui(); const P = POPS.find((q) => q.t >= q.life) || POPS.reduce((a, b) => (a.t > b.t ? a : b)); P.t = 0; P.p.copy(pos);
+    const o = typeof style === 'object' ? style : null; P.e.className = 'jpop' + (o ? '' : ' ' + style); P.e.style.color = o && o.color || ''; P.e.style.fontSize = o && o.size ? o.size + 'px' : '';
+    P.life = style === 'ko' ? 1.4 : 0.9; P.rise = style === 'ko' ? 0.6 : 1.2; P.e.textContent = text; };
+  let comboT = 0;
+  J.combo = (n) => { ui(); if (!(n >= 2)) { comboEl.classList.remove('on'); comboT = 0; return; } comboEl.innerHTML = '<b>' + n + '</b>HITS'; comboEl.classList.remove('k'); void comboEl.offsetWidth; comboEl.classList.add('on', 'k'); comboT = 1.4; };
+  const PV = new THREE.Vector3();
+  function hudTick(dt, cam) {
+    for (const P of POPS) { if (P.t >= P.life) continue; P.t += dt; const u = Math.min(1, P.t / P.life);
+      if (u >= 1 || !cam) { P.e.style.opacity = '0'; continue; }
+      PV.copy(P.p); PV.y += u * P.rise; PV.project(cam); if (PV.z > 1) { P.e.style.opacity = '0'; continue; }
+      const x = (PV.x * 0.5 + 0.5) * VW(), y = (-PV.y * 0.5 + 0.5) * VH(), s = u < 0.15 ? 1.6 - u * 4 : 1;
+      P.e.style.transform = 'translate(' + x.toFixed(1) + 'px,' + y.toFixed(1) + 'px) translate(-50%,-50%) scale(' + s.toFixed(2) + ')'; P.e.style.opacity = String(u > 0.7 ? (1 - u) / 0.3 : 1); }
+    if (comboT > 0 && (comboT -= dt) <= 0) comboEl.classList.remove('on');
+  }
+
+  // ---------------- ring buffer: camera + every moving object of the duel scene ----------------
+  const NS = 110, RATE = 1 / 30, CAP = 1500, F = 11;
+  const ring = []; let head = 0, count = 0, lastRec = -9, list = null, listK = null, listN = -1, listT = -9;
+  const save = { list: null, n: 0, buf: null, cam: new Float32Array(12) };
+  function buildList(K) { const L = []; K.scene.traverse((o) => { if (o !== K.scene && L.length < CAP && o.matrixAutoUpdate !== false) L.push(o); }); return L; }
+  function grab(slot, K, L) {
+    const n = L.length; if (!slot.buf || slot.buf.length < n * F) slot.buf = new Float32Array(Math.max(n, 64) * F);
+    const b = slot.buf; for (let i = 0, j = 0; i < n; i++, j += F) { const o = L[i], p = o.position, q = o.quaternion, s = o.scale;
+      b[j] = p.x; b[j + 1] = p.y; b[j + 2] = p.z; b[j + 3] = q.x; b[j + 4] = q.y; b[j + 5] = q.z; b[j + 6] = q.w; b[j + 7] = s.x; b[j + 8] = s.y; b[j + 9] = s.z; b[j + 10] = o.visible ? 1 : 0; }
+    slot.list = L; slot.n = n; const c = slot.cam, cp = K.cam.position, cq = K.cam.quaternion;
+    c[0] = cp.x; c[1] = cp.y; c[2] = cp.z; c[3] = cq.x; c[4] = cq.y; c[5] = cq.z; c[6] = cq.w; c[7] = K.cam.fov || 60;
+    if (K.camL && K.camL.isVector3) { c[8] = K.camL.x; c[9] = K.camL.y; c[10] = K.camL.z; c[11] = 1; } else c[11] = 0;
+  }
+  function record(K, t) {
+    if (t - lastRec < RATE * 0.999 && t >= lastRec) return; lastRec = t;
+    if (K !== listK || !list || K.scene.children.length !== listN || t - listT > 1.5 || t < listT) { list = buildList(K); listK = K; listN = K.scene.children.length; listT = t; }
+    let slot = ring[head]; if (!slot) slot = ring[head] = { t: 0, list: null, n: 0, buf: null, cam: new Float32Array(12) };
+    grab(slot, K, list); slot.t = t; head = (head + 1) % NS; count = Math.min(NS, count + 1);
+  }
+  function reset() { head = 0; count = 0; lastRec = -9; list = null; listK = null; for (const s of ring) { s.list = null; } koAt = -1; koFocus = null; done = false; }
+  const at = (k) => ring[(head - count + k + NS * 2) % NS]; // k = 0 oldest .. count-1 newest
+
+  // apply footage (interpolated between slots a and b by u) onto the live objects
+  function apply(a, b, u) {
+    const same = b && a.list === b.list && a.n === b.n; if (!same) u = 0; const A = a.buf, B = same ? b.buf : A, L = a.list, v = 1 - u;
+    for (let i = 0, j = 0; i < a.n; i++, j += F) { const o = L[i];
+      o.position.set(A[j] * v + B[j] * u, A[j + 1] * v + B[j + 1] * u, A[j + 2] * v + B[j + 2] * u);
+      let bx = B[j + 3], by = B[j + 4], bz = B[j + 5], bw = B[j + 6]; if (A[j + 3] * bx + A[j + 4] * by + A[j + 5] * bz + A[j + 6] * bw < 0) { bx = -bx; by = -by; bz = -bz; bw = -bw; }
+      o.quaternion.set(A[j + 3] * v + bx * u, A[j + 4] * v + by * u, A[j + 5] * v + bz * u, A[j + 6] * v + bw * u).normalize();
+      o.scale.set(A[j + 7] * v + B[j + 7] * u, A[j + 8] * v + B[j + 8] * u, A[j + 9] * v + B[j + 9] * u); o.visible = (u < 0.5 ? A[j + 10] : B[j + 10]) > 0.5; }
+  }
+  function camOf(slot, out, look) { const c = slot.cam; out.set(c[0], c[1], c[2]);
+    if (c[11]) look.set(c[8], c[9], c[10]); else { Q0.set(c[3], c[4], c[5], c[6]); look.set(0, 0, -8).applyQuaternion(Q0).add(out); } }
+  function restoreSave(K) { if (!save.list) return; apply(save, null, 0); const c = save.cam; K.cam.position.set(c[0], c[1], c[2]); K.cam.quaternion.set(c[3], c[4], c[5], c[6]); if (K.cam.fov !== c[7]) { K.cam.fov = c[7]; K.cam.updateProjectionMatrix(); } }
+
+  // ---------------- KO + replay ----------------
+  const Q0 = new THREE.Quaternion(), V0 = new THREE.Vector3(), V1 = new THREE.Vector3(), FOC = new THREE.Vector3(), FOC0 = new THREE.Vector3(), CP = new THREE.Vector3();
+  let koAt = -1, koFocus = null, done = false, rp = null, held = null, tapped = false, padPrev = null;
+  const TAIL = 0.5;
+  J.ko = (focus) => { if (!DUELS.cur || done || koAt >= 0) return; koAt = DUELS.t; koFocus = focus && focus.isVector3 ? focus.clone() : focus && focus.x !== undefined ? new THREE.Vector3(focus.x, focus.y || 1.5, focus.z) : null; J.log.push('ko@' + koAt.toFixed(2)); };
+  J.replayed = () => done;
+  J.finalBlowReplay = (o = {}) => {
+    const K = DUELS.cur; if (!K || !K.scene || !K.cam || rp || count < 8) return false;
+    const tEnd = at(count - 1).t, tKo = o.koAt != null ? o.koAt : koAt >= 0 ? koAt : tEnd - 0.3;
+    const t0 = Math.max(at(0).t, tKo - 1.9), t1 = tEnd;
+    if (t1 - t0 < 0.4) return false;
+    ui(); save.list = buildList(K); grab(save, K, save.list); // the state to put back afterwards
+    // focus: what the camera was looking at on the blow (the fights' camL), or the point handed to JUICE.ko
+    let ki = count - 1; for (let k = 0; k < count; k++) if (at(k).t >= tKo) { ki = k; break; }
+    camOf(at(ki), CP, FOC0); if (koFocus) FOC0.copy(koFocus);
+    const d0 = clamp(CP.distanceTo(FOC0), 3, 14); V0.set(CP.x - FOC0.x, 0, CP.z - FOC0.z); if (V0.lengthSq() < 1e-4) V0.set(0, 0, 1); V0.normalize();
+    rp = { K, t0, t1, tKo, ft: t0, rt: 0, d0, dir: V0.clone(), side: (J.replays % 2 ? -1 : 1), fov0: K.cam.fov, max: 3.0 };
+    done = true; J.on = true; J.replays++; J.last = { at: +DUELS.t.toFixed(2), span: +(t1 - t0).toFixed(2), frames: count, objs: save.n, skipped: false };
+    J.log.push('replay:' + (K.id || '?'));
+    hud.classList.add('jrp'); ov.classList.remove('in'); void ov.offsetWidth; ov.classList.add('in'); ovFl.classList.add('on'); setTimeout(() => ovFl.classList.remove('on'), 60);
+    tapped = false; padPrev = padSnap(); PRESS.clear(); try { DUELS.log.push('juice:replay'); } catch (e) {}
+    return true;
+  };
+  function padSnap() { const s = []; const pads = navigator.getGamepads ? navigator.getGamepads() : []; for (const gp of pads) if (gp) for (let i = 0; i < gp.buttons.length; i++) if (gp.buttons[i] && gp.buttons[i].pressed) s.push(gp.index + ':' + i); return s.join(','); }
+  const tb0 = {};
+  function wantSkip() {
+    let fresh = tapped || PRESS.size > 0; tapped = false;
+    for (const n in TOUCHS.btn) { const v = !!TOUCHS.btn[n]; if (v && !tb0[n]) fresh = true; tb0[n] = v; }
+    const p = padSnap(); if (p && p !== padPrev && p.length > (padPrev || '').length) fresh = true; padPrev = p;
+    PRESS.clear(); return fresh;
+  }
+  function endReplay(skipped) {
+    const r = rp; if (!r) return; rp = null; J.on = false; if (skipped) { J.skips++; if (J.last) J.last.skipped = true; }
+    restoreSave(r.K); if (r.K.cam.fov !== r.fov0) { r.K.cam.fov = r.fov0; r.K.cam.updateProjectionMatrix(); }
+    hud.classList.remove('jrp'); ov.classList.remove('in'); KEYS.clear(); PRESS.clear(); last = performance.now();
+    if (held && DUELS.cur === r.K) { const h = held; held = null; ovr.apply(DUELS, h); } else held = null;
+  }
+  const ease = (x) => x * x * (3 - 2 * x);
+  function replayFrame(rdt) {
+    const r = rp, K = r.K, dt = SIM ? SIM / 30 : Math.min(0.1, rdt); // (?sim= test runs play it at 2x frame-rate so headless CI is not held up)
+    if (r.rt > 0.35 && wantSkip()) { endReplay(true); return; } else if (r.rt <= 0.35) wantSkip();
+    r.rt += dt;
+    // slow-mo ramps in around the blow: 0.85x lead-in, 0.2x at the hit, 0.5x after
+    const dk = r.ft - r.tKo, sp = dk < -0.35 ? 0.85 : dk < 0.3 ? 0.2 + 0.65 * Math.min(1, Math.abs(dk) / 0.35) * (dk < 0 ? 1 : 0.45) : 0.5;
+    r.ft = Math.min(r.t1, r.ft + dt * sp);
+    if (r.ft >= r.t1 - 1e-4 || r.rt > r.max) { endReplay(false); return; }
+    let k = 0; while (k < count - 2 && at(k + 1).t < r.ft) k++;
+    const a = at(k), b = at(Math.min(count - 1, k + 1)), u = b.t > a.t ? clamp((r.ft - a.t) / (b.t - a.t), 0, 1) : 0;
+    apply(a, b, u);
+    // dramatic camera: a low, close orbit round the blow, drifting with the action
+    camOf(a, CP, FOC); camOf(b, V1, V0); FOC.lerp(V0, u); FOC.lerp(FOC0, 0.6);
+    const w = clamp((r.ft - r.t0) / Math.max(0.1, r.t1 - r.t0), 0, 1), e = ease(w), ang = r.side * (1.05 - 1.5 * e), dist = r.d0 * (0.78 - 0.18 * e);
+    V0.copy(r.dir).applyAxisAngle(UP, ang).multiplyScalar(dist); K.cam.position.set(FOC.x + V0.x, FOC.y + r.d0 * (0.04 + 0.14 * e), FOC.z + V0.z);
+    K.cam.lookAt(FOC.x, FOC.y + 0.25, FOC.z); K.cam.rotateZ(r.side * 0.07 * (1 - e));
+    const fov = r.fov0 * (dk > -0.1 && dk < 0.35 ? 0.82 : 0.9); if (Math.abs(K.cam.fov - fov) > 0.01) { K.cam.fov += (fov - K.cam.fov) * Math.min(1, dt * 10); K.cam.updateProjectionMatrix(); }
+    if (dk > -0.02 && dk < 0.06 && !r.flash) { r.flash = true; ovFl.classList.add('on'); setTimeout(() => ovFl && ovFl.classList.remove('on'), 70); }
+    draw(K.scene, K.cam);
+  }
+  const UP = new THREE.Vector3(0, 1, 0);
+
+  // ---------------- hooks into the duel core (property wraps; 09a_duel_core.js itself is untouched) ----------------
+  const ovr = DUELS.over, ofr = DUELS.frame, oex = DUELS.exit, ost = DUELS.start;
+  DUELS.over = function (mode) {
+    if (rp) { held = arguments; return; }
+    if (mode === 'win' && !done && DUELS.cur && J.finalBlowReplay()) { held = arguments; return; } // fallback replay for duels that never called JUICE.ko
+    if (mode !== 'win') { count = 0; koAt = -1; koFocus = null; done = false; } // a loss: next attempt records fresh
+    return ovr.apply(DUELS, arguments);
+  };
+  DUELS.start = function () { reset(); hsT = shT = 0; held = null; const r = ost.apply(DUELS, arguments); return r; };
+  DUELS.exit = function () { if (rp) endReplay(true); held = null; hsT = shT = 0; if (comboEl) J.combo(0); for (const P of POPS) { P.t = 9; P.e.style.opacity = '0'; } const r = oex.apply(DUELS, arguments); reset(); return r; };
+  DUELS.frame = function (rdt) {
+    const K = DUELS.cur; if (!K) return ofr.call(DUELS, rdt);
+    if (rp) { if (rp.K !== K) { rp = null; J.on = false; } else { replayFrame(rdt); return; } }
+    if (koAt >= 0 && !done && DUELS.t - koAt >= TAIL) { if (!J.finalBlowReplay()) done = true; if (rp) { replayFrame(0); return; } }
+    if (hsT > 0) { hsT -= SIM ? SIM / 60 : Math.min(0.1, rdt); draw(K.scene, K.cam); return; } // global hitstop: hold the frame, input stays buffered
+    if (!K.__jw && K.render) { const orr = K.render; K.__jw = true; K.render = function (d) { orr.call(K, d); shakeOn(K, d); }; }
+    ofr.call(DUELS, rdt);
+    if (shCam) { shCam.position.sub(shOff); shCam = null; } // the fights lerp their cameras from their own camP, so the offset is taken back right after the draw
+    if (DUELS.cur === K && K.scene && K.cam && !rp) record(K, DUELS.t);
+    if (DUELS.cur === K) hudTick(SIM ? SIM / 60 : Math.min(0.1, rdt), K.cam);
+  };
+  function shakeOn(K, d) { if (shT <= 0 || !K.cam) return; shT -= SIM ? SIM / 60 : Math.min(0.1, d); const a = shA * Math.max(0, shT / shD) * 0.35;
+    shOff.set(rnd(-1, 1) * a, rnd(-1, 1) * a, rnd(-1, 1) * a * 0.5); K.cam.position.add(shOff); shCam = K.cam; }
+  window.__juice = J;
+  return J;
+})();
+
 // ======================= BIG JIMMY, NATIONAL AQUARIUM: the underwater swim fight (DESIGN.md "More game-style fights").
 // A 3D swim inside the big tank (caustic light on the sand and rocks, swaying kelp, light shafts, rising bubbles, all procedural).
 // Big Jimmy, a giant blue crab, snaps his claws (tell: a claw rises, opens and flashes red; DASH sideways) and spits bubble blasts
@@ -8222,7 +8411,7 @@ const DUELS = (function () {
     const floor = HPB - (st.phase + 1) * 100; st.rearHits = (st.rearHits || 0) + 1;
     if (st.rearHits >= 2 && st.bhp > floor) { setB(st, 'idle', rnd(...PH[st.phase].idle)); DUELS.tell('HE SLAMS DOWN! TWO HITS A REAR', 0.9); } // two belly hits per rear
     if (st.bhp <= floor) { st.bhp = floor;
-      if (st.phase === 2) { st.bs = 'dead'; st.bt = 0; st.won = true; st.over = true; win(st); }
+      if (st.phase === 2) { st.bs = 'dead'; st.bt = 0; st.won = true; st.over = true; JUICE.ko(); win(st); }
       else { st.phase++; st.stats.phaseUps++; setB(st, 'roar', 2.0); st.combo = 0; J.blasts.length = 0; st.air = Math.max(st.air, 0.75);
         DUELS.banner(st.phase === 1 ? 'PHASE 2<small>JIMMY\'S GETTING STEAMED!</small>' : 'PHASE 3<small>ONE VENT SLEEPS AT A TIME!</small>', 1.8); DUELS.sub(J.airEl.outerHTML, 'PHASE ' + (st.phase + 1) + '/3'); J.airEl = DUELS.hudEl.querySelector('.air'); J.airI = J.airEl.querySelector('i'); } }
   }
@@ -8621,7 +8810,7 @@ const DUELS = (function () {
       const dmg = st.punchUp ? 16 : 4; st.mhp -= dmg; st.stats.landed++; sfx(st.punchUp ? 'heavy' : 'hit'); spark(V, st.punchUp ? 14 : 6); for (const m of R.flash) if (m.userData.flashC) { m.userData.flashC.value.set('#ffffff'); m.userData.flash.value = 0.8; }
       if (st.mt < 0.35 && !st.punchUp) st.stats.counters++;
       if (st.mhp <= 0) { st.mhp = 0; st.stats.knockdowns++; C.cans.length = 0;
-        if (st.round >= 2) { setM(st, 'ko', 99); st.over = true; st.won = true; st.outT = 0; bell(3); DUELS.banner('K.O.!<small>THE MECH IS DOWN</small>', 2.4); }
+        if (st.round >= 2) { setM(st, 'ko', 99); st.over = true; st.won = true; st.outT = 0; bell(3); JUICE.ko(); DUELS.banner('K.O.!<small>THE MECH IS DOWN</small>', 2.4); }
         else { setM(st, 'down', 2.6); bell(2); DUELS.banner('DOWN!<small>ROUND ' + (st.round + 1) + ' TO HAROLD</small>', 2.2); if (Math.random() < 0.6) DUELS.say('MAVIS', ['That\u2019s my Harold!', 'Give her mech another one, dear!', 'Mind your back, hon!'][st.round % 3], 2.2); } }
     } else if (['guard', 'intro'].includes(st.ms)) { st.stats.blocked++; sfx('hit'); DUELS.tell('BLOCKED! WAIT FOR THE OPENING', 0.7); if (Math.random() < 0.3 && st.ms === 'guard') { st.jabSide = Math.random() < 0.5 ? -1 : 1; setM(st, 'counterTell', 0.34); } }
   }
@@ -8990,7 +9179,7 @@ const DUELS = (function () {
   function courseOver(st, harold) {
     if (st.ph !== 'eat') return; const C = COURSES[st.c]; st.results.push(harold ? 'H' : 'P'); st.stats.courses.push((harold ? 'H' : 'P') + ':' + st.t.toFixed(1)); if (harold) st.hw++; else st.pw++;
     st.cheat = null; st.hic = null; P.slideM.visible = false; P.strip.material.opacity = 0; blip('bell'); hud(st);
-    if (st.hw >= WIN_N) { st.over = true; st.won = true; setPh(st, 'waddle', 99); st.outT = 0; DUELS.banner('HAROLD WINS!<small>' + st.hw + '-' + st.pw + ' · ' + C.name + ' CLEARED</small>', 2.6); DUELS.log.push('pete:win:' + st.hw + '-' + st.pw); return; }
+    if (st.hw >= WIN_N) { st.over = true; st.won = true; JUICE.ko(); setPh(st, 'waddle', 99); st.outT = 0; DUELS.banner('HAROLD WINS!<small>' + st.hw + '-' + st.pw + ' · ' + C.name + ' CLEARED</small>', 2.6); DUELS.log.push('pete:win:' + st.hw + '-' + st.pw); return; }
     if (st.pw >= WIN_N) { DUELS.banner('PETE TAKES IT<small>' + st.pw + '-' + st.hw + '</small>', 2.2); lose(st, 'courses'); return; }
     DUELS.banner((harold ? 'PLATE CLEAN!' : 'PETE\u2019S PLATE CLEAN!') + '<small>' + C.name + ' TO ' + (harold ? 'HAROLD' : 'PETE') + ' · ' + st.hw + '-' + st.pw + '</small>', 1.8);
     setPh(st, 'fan', 3.0); sayLine(GR4_PETE.mavis_fan[(st.c) % GR4_PETE.mavis_fan.length], 2.6);
@@ -9648,7 +9837,7 @@ const CARL = (function () {
     startTurn('harold', t.fi + 1);
   }
   function endGame() {
-    const h = scoreOf(G.pl.harold.f) + G.mavis, c = scoreOf(G.pl.carl.f); G.over = true; G.won = h > c; G.final = { h, c }; G.turn = null; drawCard(); setPh(G.won ? 'won' : 'lost');
+    const h = scoreOf(G.pl.harold.f) + G.mavis, c = scoreOf(G.pl.carl.f); G.over = true; G.won = h > c; if (G.won) JUICE.ko(); G.final = { h, c }; G.turn = null; drawCard(); setPh(G.won ? 'won' : 'lost');
     G.log.push('end:' + h + '-' + c);
     if (G.won) { DUELS.banner('YOU WIN!<small>' + h + ' TO ' + c + '</small>', 3); sfx('ko'); clearAlley(h, c); }
     else { DUELS.banner(h === c ? 'TIE GOES TO CARL' : 'CARL WINS<small>' + c + ' TO ' + h + '</small>', 3); DUELS.say('KINGPIN CARL', pick(CARL_TXT.carl_taunts), 3.2); sfx('hurt'); } }
@@ -10064,7 +10253,7 @@ window.__carl = CARL;
     DUELS.banner((team ? 'OTTERS SCORE' : 'GOAL!') + '<small>' + st.score[0] + ' \u2013 ' + st.score[1] + '</small>', 1.8);
     const l = lines() || LINES; if (team) DUELS.say('RIPTIDE RODNEY', pick(l.score || LINES.score), 2.6);
     DUELS.log.push('rodney:goal:' + team + ':' + st.score.join('-') + ':' + (A[by] ? A[by].name : ''));
-    if (st.score[team] >= WIN) { st.over = true; st.won = team === 0; st.phase = 'over'; st.pt = 0; DUELS.log.push('rodney:' + (st.won ? 'win' : 'lose')); }
+    if (st.score[team] >= WIN) { st.over = true; st.won = team === 0; st.phase = 'over'; st.pt = 0; DUELS.log.push('rodney:' + (st.won ? 'win' : 'lose')); if (st.won) JUICE.ko(); }
   }
   function ballStep(dt) {
     const st = R.st, b = B(); st.noPickT = Math.max(0, st.noPickT - dt);
@@ -10590,7 +10779,7 @@ window.__carl = CARL;
     V.set(st.qx, HT + 2.2, st.qz); pop(V, word || String(dmg), cls || '', 0.85); V2.copy(V); V.y += 0.5; pop(V, '-' + dmg, '', 0.7); spark(V2.x, V2.y - 0.4, V2.z - 0.4, 7);
     if (st.combo >= 3 && st.combo % 3 === 0) { V.set(st.hx, haroldY(st) + 2.6, st.hz); pop(V, st.combo + ' HIT COMBO!', 'p', 0.9); }
     if (st.qhp <= 0) { st.qhp = 0; P.flams.length = 0;
-      if (st.phase >= 2) { setM(st, 'ko', 99); st.over = true; st.won = true; st.outT = 0; st.ts = 0.3; st.tsT = 1.8; DUELS.banner('K.O.!<small>THE BEEHIVE IS FLAT</small>', 2.4); DUELS.log.push('honqueen:ko'); }
+      if (st.phase >= 2) { setM(st, 'ko', 99); st.over = true; st.won = true; st.outT = 0; st.ts = 0.3; st.tsT = 1.8; JUICE.ko(); DUELS.banner('K.O.!<small>THE BEEHIVE IS FLAT</small>', 2.4); DUELS.log.push('honqueen:ko'); }
       else { setM(st, 'down', 2.6); st.hiveS = 1; DUELS.banner('PHASE CLEAR!<small>SHE\u2019S FIXING HER HAIR</small>', 2.0); st.ts = 0.4; st.tsT = 0.6;
         if (Math.random() < 0.7) DUELS.say('MAVIS', ['That\u2019s my Harold!', 'Her hair\u2019s not the only thing coming down, hon!', 'Mind the hill, dear!'][st.phase % 3], 2.0); } }
   }
@@ -11164,7 +11353,7 @@ window.__carl = CARL;
   function damageBoss(st, dmg) {
     st.bhp -= dmg; subHud(st);
     if (st.bhp <= 0) { st.bhp = 0; for (const p of C.pools) { p.on = false; p.m.visible = false; } st.atk = []; st.dash = null; C.blob.visible = false;
-      if (st.phase >= 2) { st.spec = null; setM(st, 'ko', 99); st.over = true; st.won = true; st.outT = 0; st.hp = Math.max(st.hp, 1); DUELS.banner('K.O.!<small>SUGAR CRASH</small>', 2.2); DUELS.log.push('sugarrush:ko'); }
+      if (st.phase >= 2) { st.spec = null; setM(st, 'ko', 99); st.over = true; st.won = true; st.outT = 0; st.hp = Math.max(st.hp, 1); JUICE.ko(); DUELS.banner('K.O.!<small>SUGAR CRASH</small>', 2.2); DUELS.log.push('sugarrush:ko'); }
       else { st.spec = null; setM(st, 'down', 2.4); DUELS.banner('CRACKED!<small>PHASE ' + (st.phase + 1) + ' TO HAROLD</small>', 2); if (Math.random() < 0.7) DUELS.say('MAVIS', pick(['That\u2019s my Harold!', 'Crack her again, dear!', 'Mind the spikes, hon!']), 2.2); } }
   }
 
@@ -11203,7 +11392,7 @@ window.__carl = CARL;
   function grade(st) { const n = st.stats.taken; return n <= 3 ? 'S' : n <= 8 ? 'A' : 'B'; }
   function outro(st, rdt, I) {
     st.outT += rdt; const t = st.outT, R = C.R;
-    if (koTag && t < 3.2) koTag.classList.add('on');
+    if (koTag && t < 3.2 && !JUICE.replayed()) koTag.classList.add('on'); // (the shared JUICE final-blow replay carries its own TAP TO SKIP)
     if (t > 0.5 && (I.a || I.ok || I.c) && t < 3.0) st.outT = 3.0; // tap to skip
     st.slow = t < 1.6 ? 0.3 : 1;
     if (t < 1.1) { const k = t / 1.1; R.body.rotation.z = Math.sin(t * 40) * 0.05 * k; flashBoss('#ffffff', 0.4 + 0.5 * k); if (Math.random() < rdt * 30) spark(V.set(st.bx + rnd(-1, 1), rnd(0.5, 3), st.bz + rnd(-1, 1)), 2); }
@@ -11630,7 +11819,7 @@ window.__carl = CARL;
     if (st.healT > 0 && (st.healT -= dt) <= 0) { st.hp = Math.min(100, st.hp + 35); st.stats.heals++; DUELS.say('MAVIS', 'Here, hon: a crab cake! Eat!', 2.0); pop('+35', V.set(sx(st.lane) * 0.95, 2.2, 0.2), 'w'); sfx('jump'); }
   }
   function phaseDown(st) { clearFx();
-    if (st.phase >= 2) { setM(st, 'ko', 99); st.over = true; st.won = true; st.outT = 0; st.slow = 0.35; st.slowT = 1.3; DUELS.banner('K.O.!<small>CHEF\'S DONE</small>', 2.2); sting('ding'); sfx('ko'); }
+    if (st.phase >= 2) { setM(st, 'ko', 99); st.over = true; st.won = true; st.outT = 0; st.slow = 0.35; st.slowT = 1.3; JUICE.ko(); DUELS.banner('K.O.!<small>CHEF\'S DONE</small>', 2.2); sting('ding'); sfx('ko'); }
     else { setM(st, 'down', 2.4); DUELS.banner('ORDER UP!<small>PHASE ' + (st.phase + 1) + ' TO HAROLD</small>', 2.0); if (Math.random() < 0.7) DUELS.say('MAVIS', pick(MAVIS.slice(0, 3)), 2.2); }
   }
 
@@ -12053,7 +12242,7 @@ window.__carl = CARL;
   function pop(p, text, cls = '') { const P = C.pops.find((q) => q.t > 0.9) || C.pops[0]; P.t = 0; P.p.copy(p); P.e.className = 'ckpop' + (cls ? ' ' + cls : ''); P.e.textContent = text; }
   function burst(p, n, cols, spd = 3.5, life = 0.6, up = 2.5) { for (let k = 0; k < n && C.parts.length < 72; k++) C.parts.push({ p: p.clone(), v: new THREE.Vector3(rnd(-spd, spd), rnd(0.5, up + 1.5), rnd(-spd, spd)), t: 0, life: rnd(life * 0.6, life), c: CO.set(pick(cols)).clone(), r: rnd(0, TAU), s: rnd(0.7, 1.4) }); }
   function flashBoss(c = '#ffffff', v = 0.85) { for (const m of C.R.flash) if (m && m.userData.flashC) { m.userData.flashC.value.set(c); m.userData.flash.value = Math.max(m.userData.flash.value, v); } }
-  function hitstop(st, s) { st.hs = Math.max(st.hs, s); } function shake(st, s) { st.shake = Math.max(st.shake, s); } function slowmo(st, k, s) { st.slowK = k; st.slow = s; }
+  function hitstop(st, s) { JUICE.hitstop(s * 1000, st); } function shake(st, s) { JUICE.shake(s, 0, st); } // (shared kit 09aj_juice.js, bound to this fight's own st.hs / st.shake) function slowmo(st, k, s) { st.slowK = k; st.slow = s; }
 
   // ---------------- lights (Mannequin Freeze) ----------------
   function setLight(st, l) { st.light = l; st.lt = 0; const on = l !== 'off';
@@ -12161,7 +12350,7 @@ window.__carl = CARL;
   }
   const isOpen = (st) => ['open', 'stagger'].includes(st.bs); // (posing on GREEN takes normal hits; RED gets you spotted)
   function ko(st) { setB(st, 'ko', 99); st.over = true; st.won = true; st.ko = 0; setLight(st, 'off'); C.hm.classList.remove('on'); for (const h of C.hangers) { h.on = false; h.m.visible = false; } C.dash.count = 0;
-    slowmo(st, 0.3, 1.4); shake(st, 0.6); flashBoss('#ffffff', 1); DUELS.banner('K.O.!<small>EVERYTHING MUST GO</small>', 2.4); tone(1320, 660, 0.6, 'triangle', 0.12); DUELS.log.push('compking:ko'); }
+    slowmo(st, 0.3, 1.4); shake(st, 0.6); flashBoss('#ffffff', 1); JUICE.ko(); DUELS.banner('K.O.!<small>EVERYTHING MUST GO</small>', 2.4); tone(1320, 660, 0.6, 'triangle', 0.12); DUELS.log.push('compking:ko'); }
 
   C.step = function (dt0, I) {
     const st = C.st; if (!st) return;
@@ -12690,7 +12879,7 @@ window.__carl = CARL;
     st.bhp -= dmg; st.stats.landed++; addPower(st, 0.06); const R = P.R; for (const m of R.mats) if (m && m.userData.flashC) { m.userData.flashC.value.set('#ffffff'); m.userData.flash.value = 0.85; }
     V.set(st.sx, (st.pose === 'deck' ? 0.8 : 1.8) + (st.pose === 'edge' ? -0.6 : 0), st.sz); pop(V, word || String(dmg), gold ? 'g' : '', 0.85); V2.copy(V); V.y += 0.4; pop(V, '-' + dmg, '', 0.7); splash(V2.x, V2.y, V2.z, 6, 0);
     if (st.bhp <= 0) { st.bhp = 0; P.balls.length = 0; st.wave = null;
-      if (st.phase >= 2) { setM(st, 'ko', 99); st.over = true; st.won = true; st.outT = 0; st.ts = 0.3; st.tsT = 1.6; DUELS.banner('K.O.!<small>THE SHARK IS SUNK</small>', 2.4); for (const g of P.goons) if (g.on && g.s !== 'fly') launchGoon(st, g); }
+      if (st.phase >= 2) { setM(st, 'ko', 99); st.over = true; st.won = true; st.outT = 0; st.ts = 0.3; st.tsT = 1.6; JUICE.ko(); DUELS.banner('K.O.!<small>THE SHARK IS SUNK</small>', 2.4); for (const g of P.goons) if (g.on && g.s !== 'fly') launchGoon(st, g); }
       else { setM(st, 'down', 2.6); DUELS.banner('PHASE CLEAR!<small>HE DOVE FOR THE DEEP END</small>', 2.0); splash(st.sx, WY, st.sz, 16); st.ts = 0.4; st.tsT = 0.6;
         if (Math.random() < 0.7) DUELS.say('MAVIS', ['That\u2019s my Harold!', 'Scratch on that, fishface!', 'Mind the edge, hon!'][st.phase % 3], 2.0); } }
   }
@@ -13251,7 +13440,7 @@ window.__carl = CARL;
 
   // ---------------- win / lose ----------------
   function koStart(st) { if (st.over) return; st.over = true; st.won = true; st.bhp = 0; st.atk = null; clearAttackFx(); S.sweepRing.visible = false; setB(st, 'ko', 99); st.outT = 0;
-    st.slow = 0.35; st.slowT = 2.4; st.ko = { x: st.b.x, y: st.b.y, z: st.b.z }; DUELS.log.push('scrubber:win'); DUELS.banner('K.O.!<small>SHE SLIPPED ON HER OWN SUDS</small>', 2.2); hud(st);
+    st.slow = 0.35; st.slowT = 2.4; st.ko = { x: st.b.x, y: st.b.y, z: st.b.z }; DUELS.log.push('scrubber:win'); JUICE.ko(); DUELS.banner('K.O.!<small>SHE SLIPPED ON HER OWN SUDS</small>', 2.2); hud(st);
     S.lanes.forEach((L) => { L.foam.visible = true; L.foam.material.opacity = 0.75; }); }
   function stepKO(st, dt) {
     st.outT += dt; const b = st.b, k = st.ko, u = clamp(st.outT / 3.0, 0, 1); // slide from where she fell, down the steps, across the plaza into the fountain
@@ -13730,7 +13919,7 @@ window.__carl = CARL;
     if (st.healT > 0 && (st.healT -= dt) <= 0) { st.hp = Math.min(100, st.hp + 35); st.stats.heals++; DUELS.say('MAVIS', 'Here, hon: popcorn! Extra butter!', 2.0); pop('+35', V.set(sx(st.lane) * 0.95, 2.2, 0.2), 'w'); sfx('jump'); }
   }
   function phaseDown(st) { clearFx();
-    if (st.phase >= 2) { setM(st, 'ko', 99); st.over = true; st.won = true; st.outT = 0; st.slow = 0.35; st.slowT = 1.3; DUELS.banner('K.O.!<small>THAT\'S A WRAP</small>', 2.2); sting('ding'); sfx('ko'); }
+    if (st.phase >= 2) { setM(st, 'ko', 99); st.over = true; st.won = true; st.outT = 0; st.slow = 0.35; st.slowT = 1.3; JUICE.ko(); DUELS.banner('K.O.!<small>THAT\'S A WRAP</small>', 2.2); sting('ding'); sfx('ko'); }
     else { setM(st, 'down', 2.4); DUELS.banner('CUT!<small>PHASE ' + (st.phase + 1) + ' TO HAROLD</small>', 2.0); if (Math.random() < 0.7) DUELS.say('MAVIS', pick(MAVIS.slice(0, 3)), 2.2); }
   }
 
@@ -14263,7 +14452,7 @@ window.__carl = CARL;
     if (st.healT > 0 && (st.healT -= dt) <= 0) { st.hp = Math.min(100, st.hp + 35); st.stats.heals++; DUELS.say('MAVIS', 'Here, hon: a crab cake! Eat!', 2.0); pop('+35', V.set(sx(st.lane) * 0.95, 2.2, 0.2), 'w'); sfx('jump'); }
   }
   function phaseDown(st) { clearFx();
-    if (st.phase >= 2) { setM(st, 'ko', 99); st.over = true; st.won = true; st.outT = 0; st.slow = 0.35; st.slowT = 1.3; DUELS.banner('K.O.!<small>BACK TO THE FOG</small>', 2.2); sting('ding'); sfx('ko'); }
+    if (st.phase >= 2) { setM(st, 'ko', 99); st.over = true; st.won = true; st.outT = 0; st.slow = 0.35; st.slowT = 1.3; JUICE.ko(); DUELS.banner('K.O.!<small>BACK TO THE FOG</small>', 2.2); sting('ding'); sfx('ko'); }
     else { setM(st, 'down', 2.4); DUELS.banner('AVAST!<small>PHASE ' + (st.phase + 1) + ' TO HAROLD</small>', 2.0); if (Math.random() < 0.7) DUELS.say(Math.random() < 0.5 ? 'MAVIS' : 'A PHANTOM', Math.random() < 0.5 ? pick(MAVIS.slice(0, 3)) : pick(PHANTOM), 2.2); }
   }
   const isSolid = (st) => st.ms === 'open' || st.ms === 'flared' || st.ms === 'down' || st.ms === 'ko';
@@ -14845,7 +15034,7 @@ window.__carl = CARL;
 
   // ---------------- win / lose ----------------
   function koStart(st) { if (st.over) return; st.over = true; st.won = true; st.bhp = 0; if (st.fum) endFumble(st); st.atk = null; clearAttackFx(); setB(st, 'ko', 99); st.outT = 0;
-    st.slow = 0.35; st.slowT = 2.2; st.ko = { x: st.b.x, z: st.b.z }; DUELS.log.push('ravenking:win'); DUELS.banner('K.O.!<small>SACKED IN HIS OWN END ZONE</small>', 2.2); roar(); hud(st); }
+    st.slow = 0.35; st.slowT = 2.2; st.ko = { x: st.b.x, z: st.b.z }; DUELS.log.push('ravenking:win'); JUICE.ko(); DUELS.banner('K.O.!<small>SACKED IN HIS OWN END ZONE</small>', 2.2); roar(); hud(st); }
   function stepKO(st, dt) {
     st.outT += dt; const b = st.b, k = st.ko, u = clamp(st.outT / 1.8, 0, 1); // tumbles back into the end zone and flattens
     b.x = lerp(k.x, 0, ease(u)); b.z = lerp(k.z, -14.2, ease(u)); b.y = u < 1 ? Math.sin(u * Math.PI) * 3.2 : 0; b.sq = u < 1 ? 1 : Math.max(0.22, b.sq - dt * 6);

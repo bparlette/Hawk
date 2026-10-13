@@ -263,7 +263,7 @@
   function courseOver(st, harold) {
     if (st.ph !== 'eat') return; const C = COURSES[st.c]; st.results.push(harold ? 'H' : 'P'); st.stats.courses.push((harold ? 'H' : 'P') + ':' + st.t.toFixed(1)); if (harold) st.hw++; else st.pw++;
     st.cheat = null; st.hic = null; P.slideM.visible = false; P.strip.material.opacity = 0; blip('bell'); hud(st);
-    if (st.hw >= WIN_N) { st.over = true; st.won = true; setPh(st, 'waddle', 99); st.outT = 0; DUELS.banner('HAROLD WINS!<small>' + st.hw + '-' + st.pw + ' · ' + C.name + ' CLEARED</small>', 2.6); DUELS.log.push('pete:win:' + st.hw + '-' + st.pw); return; }
+    if (st.hw >= WIN_N) { st.over = true; st.won = true; JUICE.ko(); setPh(st, 'waddle', 99); st.outT = 0; DUELS.banner('HAROLD WINS!<small>' + st.hw + '-' + st.pw + ' · ' + C.name + ' CLEARED</small>', 2.6); DUELS.log.push('pete:win:' + st.hw + '-' + st.pw); return; }
     if (st.pw >= WIN_N) { DUELS.banner('PETE TAKES IT<small>' + st.pw + '-' + st.hw + '</small>', 2.2); lose(st, 'courses'); return; }
     DUELS.banner((harold ? 'PLATE CLEAN!' : 'PETE\u2019S PLATE CLEAN!') + '<small>' + C.name + ' TO ' + (harold ? 'HAROLD' : 'PETE') + ' · ' + st.hw + '-' + st.pw + '</small>', 1.8);
     setPh(st, 'fan', 3.0); sayLine(GR4_PETE.mavis_fan[(st.c) % GR4_PETE.mavis_fan.length], 2.6);

@@ -276,7 +276,7 @@
       const dmg = st.punchUp ? 16 : 4; st.mhp -= dmg; st.stats.landed++; sfx(st.punchUp ? 'heavy' : 'hit'); spark(V, st.punchUp ? 14 : 6); for (const m of R.flash) if (m.userData.flashC) { m.userData.flashC.value.set('#ffffff'); m.userData.flash.value = 0.8; }
       if (st.mt < 0.35 && !st.punchUp) st.stats.counters++;
       if (st.mhp <= 0) { st.mhp = 0; st.stats.knockdowns++; C.cans.length = 0;
-        if (st.round >= 2) { setM(st, 'ko', 99); st.over = true; st.won = true; st.outT = 0; bell(3); DUELS.banner('K.O.!<small>THE MECH IS DOWN</small>', 2.4); }
+        if (st.round >= 2) { setM(st, 'ko', 99); st.over = true; st.won = true; st.outT = 0; bell(3); JUICE.ko(); DUELS.banner('K.O.!<small>THE MECH IS DOWN</small>', 2.4); }
         else { setM(st, 'down', 2.6); bell(2); DUELS.banner('DOWN!<small>ROUND ' + (st.round + 1) + ' TO HAROLD</small>', 2.2); if (Math.random() < 0.6) DUELS.say('MAVIS', ['That\u2019s my Harold!', 'Give her mech another one, dear!', 'Mind your back, hon!'][st.round % 3], 2.2); } }
     } else if (['guard', 'intro'].includes(st.ms)) { st.stats.blocked++; sfx('hit'); DUELS.tell('BLOCKED! WAIT FOR THE OPENING', 0.7); if (Math.random() < 0.3 && st.ms === 'guard') { st.jabSide = Math.random() < 0.5 ? -1 : 1; setM(st, 'counterTell', 0.34); } }
   }
