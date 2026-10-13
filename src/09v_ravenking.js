@@ -14,7 +14,7 @@
 //   the first ~1.2 s are gold crits. Then he struts back to his end. Phase 3 chains two attacks per visit.
 // Harold: stick moves, SWING = 3-hit cane combo (3rd = the "BLINDSIDE" overhead), JUMP = dodge hop (short i-frames). POWER fills from hits and
 // clean dodges; when full ACT = the team-up special HAIL MAVIS: Mavis tosses Harold her purse and he throws it in a slow-mo spiral downfield
-// into the Raven King (big damage, dizzy). 3 phases (boss HP 66 / 33, Mavis patches Harold up a little at each phase change).
+// into the Raven King (big damage, dizzy). 3 phases (boss HP 175, phases at 2/3 and 1/3 (raised from 100 after QA: bots won in ~31 s), Mavis patches Harold up a little at each phase change).
 // KO: flattened in the end zone, feathers rain as confetti, the scoreboard flips "NEVERMORE" to "EVERMORE". Win = DUELS.bossCleared('ravens')
 // -> BOSS_CLEAR.clear('ravens') (M&T district crime -> 0) + a star grade by hits taken. Lose = RETRY / LEAVE.
 // Entry: ACT "FIGHT RAVEN" ring at the stadium's boss anchor (LANDMARKS 'ravens' boss {x:-106, z:76}: midfield on the
@@ -43,9 +43,9 @@
   // ---------------- tuning ----------------
   const XL = 7.5, Z0 = -4.0, Z1 = 7.0; // Harold's box on the field
   const BX = 8.5, BZ0 = -9.0, BZ1 = 7.6, HOMEZ = -8.0; // the Raven King's box + his spot at his end
-  const REACH = 2.1, SPD = 5.6, HP0 = 100, BHP0 = 100, BLITZ_V = 19;
+  const REACH = 2.1, SPD = 5.6, HP0 = 100, BHP0 = 175, BLITZ_V = 19;
   const DMG = { blitz: 12, swarm: 5, peck: 7, sack: 12 };
-  const HIT = [3, 3, 6], CRIT = 1.5, POW_HIT = 5, POW_DODGE = 12, HAIL_DMG = 18, PATCH = 18;
+  const HIT = [3, 3, 6], CRIT = 1.5, POW_HIT = 5, POW_DODGE = 12, HAIL_DMG = 30, PATCH = 18;
   const PH = [ // per phase: tell secs (>= 1.0), open window, attacks per visit
     { tell: 1.4, win: 3.3, n: 1 }, { tell: 1.2, win: 2.9, n: 1 }, { tell: 1.05, win: 2.5, n: 2 }];
   const S = { scene: null, cam: null, title: 'THE RAVEN KING', pips: 3,
@@ -191,7 +191,7 @@
 
   // ---------------- state ----------------
   function reset(phase = 0) {
-    const st = S.st = { t: 0, phase, hp: HP0, bhp: [BHP0, 66, 33][phase], bs: 'intro', bt: 0, bdur: 2.4, over: false, won: false, outT: 0,
+    const st = S.st = { t: 0, phase, hp: HP0, bhp: [BHP0, BHP0 * 2 / 3, BHP0 / 3][phase], bs: 'intro', bt: 0, bdur: 2.4, over: false, won: false, outT: 0,
       h: { x: 0, z: 4.2, vx: 0, vz: 0, yaw: Math.PI, jumpT: -1, jy: 0, inv: 0, hurtT: -1, swT: -1, swN: 0, swHit: false, queued: false, comboT: 0 },
       b: { x: 0, y: 0, z: HOMEZ, yaw: 0, fromX: 0, fromZ: HOMEZ, toX: 0, toZ: HOMEZ, flash: 0, hurtT: -1, open: 0, left: 0, last: '', sq: 1 },
       atk: null, fum: null, pow: 0, hail: null, hs: 0, slow: 1, slowT: 0, shk: 0, stats: { hitsTaken: 0, dodges: 0, landed: 0, crits: 0, hails: 0, fumbles: 0, retries: 0 } };
@@ -338,7 +338,7 @@
   }
   function checkPhase(st) {
     if (st.bhp <= 0) { koStart(st); return; }
-    const np = st.bhp <= 33 ? 2 : st.bhp <= 66 ? 1 : 0; if (np > st.phase) { st.phase = np; DUELS.banner('QUARTER ' + (np + 1) + '<small>' + (np === 1 ? 'THE FLOCK GETS FASTER' : 'TWO-PLAY DRIVES · NO HUDDLE') + '</small>', 1.6); say(pick(GR.taunt), 2.2);
+    const np = st.bhp <= BHP0 / 3 ? 2 : st.bhp <= BHP0 * 2 / 3 ? 1 : 0; if (np > st.phase) { st.phase = np; DUELS.banner('QUARTER ' + (np + 1) + '<small>' + (np === 1 ? 'THE FLOCK GETS FASTER' : 'TWO-PLAY DRIVES · NO HUDDLE') + '</small>', 1.6); say(pick(GR.taunt), 2.2);
       st.hp = Math.min(HP0, st.hp + PATCH); DUELS.say('MAVIS', 'Water break, Harold! Drink, hon!', 1.6); boardSet('NEVERMORE', 'QTR ' + (np + 1) + ' · HAROLD vs THE RAVEN KING', false);
       if (st.fum) endFumble(st); st.atk = null; clearAttackFx(); if (!st.hail) { st.b.y = 0; moveTo(st, 'strut', clamp(st.b.x * 0.4, -3, 3), HOMEZ, 1.0); } }
   }
