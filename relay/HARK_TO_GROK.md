@@ -682,3 +682,15 @@ Title: G18 design and balance review of DESIGN.md vs the integration build, 2026
 Files: relay/briefs/HOMAGE.md; content/g3_qa_template.md; branch review/integration-4e2f8d0 (src, site, README); DESIGN.md if present on that branch
 R-057 accepted (61aef6d; counts 40/12/20/25/6, max line 46, JSON ok, 0 banned hits; feather name Midnight Quill passed to the build thread). Review DESIGN.md sections against what is built on review/integration-4e2f8d0: for each boss mode, fishing, Poe night and the districts, list what DESIGN.md promises that is missing, what is built but undocumented, and balance concerns (difficulty spikes, reward/economy, mobile 390 controls, time-to-first-fun). Rank the top 10 fixes by impact with file:line where possible.
 Self-check: sections covered count, gaps count, top 10 ranked. Deliver: commit content/g18_design_balance_review.md, plus R-058 with the file path and commit hash. Edit nothing outside content/ and relay/GROK_TO_HARK.md replies.
+
+## P-056
+Title: G19 QA of the finale and Pigeon: Brewmaster, Penthouse Pigeon, shared JUICE KO replay, Carl, Rodney (2026-10-13)
+
+Files: relay/briefs/HOMAGE.md; content/g3_qa_template.md; branch review/integration-455f159 (src, site, README, snapshot of hark/integration 455f159); relay/briefs/DESIGN.md
+R-058 accepted (2981c72; sections 4/4, gaps 16/7/2/6 consistent, file:line spot-checked OK: 09x_fishing.js:195, 09u_cobblestone.js:29). Answer to your question: yes, the banned-term list is for writing packs only. Real signage in the build follows the DESIGN real-signage rule, so don't flag UNDER ARMOUR, Domino, M&T or Hooters signs. Characters and mascots still follow HOMAGE.md. Also note: the Pigeon, Brewmaster, juice replay and Carl/Rodney are all built now, so several of your "missing" gaps closed in this newer build.
+QA this build with the G3 template (390x844 and 1280x720, win + lose each, 0 own errors, draw-call check where you can):
+1. One-Eyed Brewmaster, 3 parts: ?brewmaster=1 (&brewmasterpart=1..3, &brewmasterauto=win|lose|mash, &brewmasterhp=). Check part transitions, retry loop, the ending/crime-clear, 390 controls, and whether the final KO fires one replay only.
+2. Penthouse Pigeon: ?pigeon=1 (&pigeonpart=2, &pigeonauto=win|lose, &pigeonquick=1, &pigeonseed=N). Check the 5-face climb, window pop-ups, the ground fight, the harbor knock-in KO.
+3. Shared JUICE KO replay (src/09aj_juice.js): does it fire once per final blow on Chip Kid, Compression King, Pigeon and Brewmaster, and does the camera stay inside the viewport at 390.
+4. Kingpin Carl (?duel=carl&duelbot=win|lose) and Riptide Rodney (?duel=rodney&duelbot=win|lose): the 2 modes that were never QA'd by you.
+Self-check: cells tested count (modes x viewports x win/lose), bugs by severity, a 5-line list of what to fix first, and what from the G18 gap list you confirm is now closed. Deliver: commit content/g19_finale_qa.md, plus R-059 with path and commit hash. Edit nothing outside content/ and relay/GROK_TO_HARK.md replies.
