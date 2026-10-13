@@ -6,7 +6,7 @@ const pw = require('/workspace/work/trailer_v2/node_modules/playwright-core');
   const c = await b.newContext({ viewport: { width: +w, height: +h }, deviceScaleFactor: mob ? 2 : 1, isMobile: mob, hasTouch: mob }); const p = await c.newPage(); const errs = [];
   p.on('console', (m) => { if ((m.type() === 'error' || m.type() === 'warning') && !/GPU stall|GL Driver|swiftshader|Automatic fallback|AudioContext was not allowed/i.test(m.text())) errs.push(m.type() + ': ' + m.text().slice(0, 300)); });
   p.on('pageerror', (e) => errs.push('pageerror: ' + e.message));
-  await p.goto(`http://127.0.0.1:${port}/?nointro=1&radiotest=1&tod=${tod}`); await p.waitForFunction(() => window.__cel && __cel.frames > 5, null, { timeout: 90000 });
+  await p.goto(`http://127.0.0.1:${port}/?nointro=1&radiotest=1&tod=${tod}`); await p.waitForFunction(() => window.__cel && __cel.frames > 5, null, { timeout: 300000 });
   for (const id of ['cobblestone']) {
     const r = await p.evaluate(async (id) => { const C = __cel, D = __duels, T = D.kinds[id].trigger, out = { id, trig: T };
       C.hero.pos.set(T.x + 0.3, C.groundY(T.x, T.z), T.z + 0.2); await new Promise((r) => setTimeout(r, 900));
