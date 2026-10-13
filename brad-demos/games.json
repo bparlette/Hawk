@@ -1,5 +1,6 @@
 {
  "categories": [
+  "Resident Evil: Requiem",
   "Shell Shock",
   "Bake-off",
   "Other games",
@@ -1250,6 +1251,228 @@
    "orientation": "any",
    "path": "https://bparlette.github.io/Aistudio/",
    "thumb": "https://bparlette.github.io/Aistudio/og-preview.jpg"
+  },
+  {
+   "id": "re-requiem",
+   "title": "Resident Evil: Requiem · FINAL",
+   "category": "Resident Evil: Requiem",
+   "keys": {
+    "up": "KeyW",
+    "down": "KeyS",
+    "left": "ArrowLeft",
+    "right": "ArrowRight",
+    "attack": "KeyJ",
+    "jump": "KeyE",
+    "special": "KeyK",
+    "start": "Enter"
+   },
+   "labels": {
+    "attack": "J · FIRE",
+    "jump": "E · USE / HIDE",
+    "special": "K · LASER AIM"
+   },
+   "extras": [
+    {
+     "label": "BREATH",
+     "key": "Space"
+    },
+    {
+     "label": "RUN",
+     "key": "ShiftLeft"
+    },
+    {
+     "label": "LIGHT",
+     "key": "KeyF"
+    }
+   ],
+   "autostart": [
+    [
+     900,
+     "Enter"
+    ]
+   ],
+   "orientation": "any",
+   "note": "Hark's featured fan build (2026-10-13), single file, procedural. Source: /workspace/work/re-requiem/game/index.html",
+   "path": "g/re-requiem/index.html"
+  },
+  {
+   "id": "re-requiem-v1",
+   "title": "Requiem v1 · Spencer Estate Wing",
+   "category": "Resident Evil: Requiem",
+   "keys": {
+    "up": "KeyW",
+    "down": "KeyS",
+    "left": "KeyA",
+    "right": "KeyD",
+    "attack": "KeyE",
+    "jump": "Space",
+    "special": "KeyF",
+    "start": "Enter"
+   },
+   "labels": {
+    "attack": "E · USE",
+    "jump": "SPACE",
+    "special": "F · LIGHT"
+   },
+   "autostart": [],
+   "orientation": "landscape",
+   "note": "Earlier build v1 of Brad's Requiem fan game, pasted 2026-10-13, added as-is with no fixes. Mouse to look.",
+   "path": "g/re-requiem-v1/index.html",
+   "thumb": "thumbs/re-requiem-v1.webp?v=1791930898"
+  },
+  {
+   "id": "re-requiem-v2",
+   "title": "Requiem v2 · RE Engine WebGL Edition",
+   "category": "Resident Evil: Requiem",
+   "keys": {
+    "up": "KeyW",
+    "down": "KeyS",
+    "left": "KeyA",
+    "right": "KeyD",
+    "attack": "KeyE",
+    "jump": "Space",
+    "special": "KeyF",
+    "start": "Enter"
+   },
+   "labels": {
+    "attack": "E · USE",
+    "jump": "SPACE",
+    "special": "F · LIGHT"
+   },
+   "autostart": [],
+   "orientation": "landscape",
+   "note": "Earlier build v2 of Brad's Requiem fan game, pasted 2026-10-13, added as-is with no fixes. Mouse to look.",
+   "path": "g/re-requiem-v2/index.html",
+   "thumb": "thumbs/re-requiem-v2.webp?v=1791930908"
+  },
+  {
+   "id": "re-requiem-v3",
+   "title": "Requiem v3 · Director's Cut",
+   "category": "Resident Evil: Requiem",
+   "keys": {
+    "up": "KeyW",
+    "down": "KeyS",
+    "left": "KeyA",
+    "right": "KeyD",
+    "attack": "KeyE",
+    "jump": "Space",
+    "special": "KeyF",
+    "start": "Enter"
+   },
+   "labels": {
+    "attack": "E · USE",
+    "jump": "SPACE",
+    "special": "F · LIGHT"
+   },
+   "autostart": [],
+   "orientation": "landscape",
+   "note": "Earlier build v3 of Brad's Requiem fan game, pasted 2026-10-13, added as-is with no fixes. Mouse to look.",
+   "path": "g/re-requiem-v3/index.html",
+   "thumb": "thumbs/re-requiem-v3.webp?v=1791930920"
+  },
+  {
+   "id": "blox-dough-raid",
+   "title": "Blox Fruits: Awakened Dough Raid",
+   "category": "Other games",
+   "keys": {
+    "up": "KeyW",
+    "down": "KeyS",
+    "left": "KeyA",
+    "right": "KeyD",
+    "attack": "KeyZ",
+    "jump": "Space",
+    "special": "KeyX",
+    "start": "Enter"
+   },
+   "labels": {
+    "attack": "Z",
+    "jump": "SPACE",
+    "special": "X"
+   },
+   "extras": [
+    {
+     "label": "C",
+     "key": "KeyC"
+    },
+    {
+     "label": "V",
+     "key": "KeyV"
+    }
+   ],
+   "autostart": [],
+   "orientation": "portrait",
+   "note": "Painted Anime Edition, added as-is 2026-10-13 from Brad's paste. Boots in 9:16 auto-combo mode. Known bug: boss HP resets to full instead of dying.",
+   "path": "g/blox-dough-raid/index.html",
+   "thumb": "thumbs/blox-dough-raid.webp?v=1791930878"
+  },
+  {
+   "id": "socal-summer-games",
+   "title": "SoCal Summer Games: Painted Edition (1987 Remake)",
+   "category": "Originals",
+   "keys": {
+    "up": "ArrowUp",
+    "down": "ArrowDown",
+    "left": "ArrowLeft",
+    "right": "ArrowRight",
+    "attack": "KeyZ",
+    "jump": "KeyX",
+    "special": "KeyC",
+    "start": "Enter"
+   },
+   "labels": {
+    "attack": "Z",
+    "jump": "X",
+    "special": "C"
+   },
+   "extras": [
+    {
+     "label": "16-BIT",
+     "key": "KeyH"
+    }
+   ],
+   "autostart": [],
+   "orientation": "landscape",
+   "note": "Pasted by Brad 2026-10-13, added as-is with no fixes. WASD also works. H toggles 16-bit mode.",
+   "path": "g/socal-summer-games/index.html",
+   "thumb": "thumbs/socal-summer-games.webp?v=1791930888"
+  },
+  {
+   "id": "viral-overdrive",
+   "title": "VIRAL OVERDRIVE // PolyTrack x Survivors",
+   "category": "Originals",
+   "keys": {
+    "up": "KeyW",
+    "down": "KeyS",
+    "left": "KeyA",
+    "right": "KeyD",
+    "attack": "Space",
+    "jump": "KeyE",
+    "special": "Digit1",
+    "start": "Enter"
+   },
+   "labels": {
+    "attack": "SPACE · GRAPPLE",
+    "jump": "E · NITRO",
+    "special": "1 · MODE"
+   },
+   "extras": [
+    {
+     "label": "MODE 2",
+     "key": "Digit2"
+    },
+    {
+     "label": "MODE 3",
+     "key": "Digit3"
+    },
+    {
+     "label": "16-BIT",
+     "key": "KeyH"
+    }
+   ],
+   "autostart": [],
+   "orientation": "any",
+   "note": "Pasted by Brad 2026-10-13, added as-is with no fixes. Arrows also work. Space grapple/vortex, E nitro/slots, 1/2/3 switch mode, H 16-bit.",
+   "path": "g/viral-overdrive/index.html"
   }
  ]
 }

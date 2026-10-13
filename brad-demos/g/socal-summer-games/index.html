@@ -1,0 +1,2324 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+<script src="../../demo-embed.js"></script>
+<style id="demo-embed-css">
+</style>
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>SoCal Summer Games: Painted Edition (1987 Remake)</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Righteous&family=Permanent+Marker&family=JetBrains+Mono:wght@600;800&display=swap" rel="stylesheet">
+  <style>
+    * { box-sizing: border-box; user-select: none; -webkit-user-select: none; margin: 0; padding: 0; }
+    body {
+      background: #0d0914;
+      color: #fff;
+      font-family: 'Righteous', cursive, sans-serif;
+      overflow: hidden;
+      width: 100vw;
+      height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .font-marker { font-family: 'Permanent Marker', cursive; }
+    .font-mono-code { font-family: 'JetBrains Mono', monospace; }
+
+    #viewport-shell {
+      position: relative;
+      width: 100vw;
+      height: 100vh;
+      overflow: hidden;
+      background: #181026;
+      transition: width 0.35s cubic-bezier(0.16, 1, 0.3, 1), height 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+      box-shadow: 0 0 90px rgba(255, 63, 142, 0.25);
+    }
+    #viewport-shell.shorts-916 {
+      width: min(100vw, calc(100vh * (9 / 16)));
+      height: 100vh;
+      border-left: 3px solid #ff3f8e;
+      border-right: 3px solid #ff3f8e;
+      box-shadow: 0 0 110px rgba(255, 63, 142, 0.55);
+    }
+    canvas#gameCanvas {
+      display: block;
+      width: 100%;
+      height: 100%;
+    }
+    canvas#gameCanvas.pixelated {
+      image-rendering: pixelated;
+      image-rendering: crisp-edges;
+    }
+
+    /* 16-Bit CRT Scanline & Shadowmask Overlay */
+    #crt-overlay {
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+      z-index: 14;
+      display: none;
+      background:
+        linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.42) 50%),
+        radial-gradient(circle at center, transparent 58%, rgba(0, 0, 0, 0.68) 100%);
+      background-size: 100% 4px, 100% 100%;
+    }
+    #crt-overlay.active { display: block; }
+
+    /* Cassette Deck Card Styling */
+    .cassette-card {
+      background: linear-gradient(145deg, #281d38 0%, #160f24 100%);
+      border: 2px solid #ffdd59;
+      box-shadow: 0 6px 0 #ff3f8e, 0 10px 20px rgba(0,0,0,0.6);
+      transition: transform 0.14s ease, box-shadow 0.14s ease, border-color 0.14s ease;
+    }
+    .cassette-card:hover, .cassette-card.selected {
+      transform: translateY(-4px) scale(1.02);
+      border-color: #00d2d3;
+      box-shadow: 0 8px 0 #00d2d3, 0 14px 28px rgba(0, 210, 211, 0.4);
+    }
+    .socal-btn {
+      background: linear-gradient(180deg, #ff5e57 0%, #ff3f8e 100%);
+      border: 2px solid #ffdd59;
+      box-shadow: 0 4px 0 #8c1646;
+      text-shadow: 0 2px 0 rgba(0,0,0,0.6);
+      transition: transform 0.1s, filter 0.15s;
+    }
+    .socal-btn:hover { filter: brightness(1.12); transform: translateY(-1px); }
+    .socal-btn:active { transform: translateY(2px); box-shadow: 0 1px 0 #8c1646; }
+    .socal-btn-teal {
+      background: linear-gradient(180deg, #00d2d3 0%, #01a3a4 100%);
+      border: 2px solid #fff;
+      box-shadow: 0 4px 0 #075959;
+      color: #072227;
+      text-shadow: none;
+    }
+    @keyframes pulseNeon {
+      0%, 100% { box-shadow: 0 0 0 0 rgba(255, 63, 142, 0.7); }
+      50% { box-shadow: 0 0 20px 5px rgba(255, 221, 89, 0.95); }
+    }
+    .viral-pulse { animation: pulseNeon 1.2s infinite; }
+  </style>
+</head>
+<body>
+  <div id="viewport-shell">
+    <canvas id="gameCanvas"></canvas>
+    <div id="crt-overlay"></div>
+
+    <!-- Top Action Bar (Always accessible) -->
+    <div class="absolute top-2.5 left-2.5 right-2.5 z-30 flex flex-wrap items-center justify-between gap-2 pointer-events-none">
+      <div class="flex items-center gap-2 pointer-events-auto">
+        <button id="btnMenuHome" class="px-3 py-1.5 rounded-lg bg-black/75 hover:bg-black border border-pink-500/70 text-amber-300 text-xs tracking-wider shadow-lg">
+          🌴 DECK MENU
+        </button>
+        <div id="hudEventBadge" class="hidden sm:flex items-center gap-2 px-3 py-1 rounded-lg bg-black/70 border border-teal-400/50 text-xs">
+          <span id="hudSponsorTag" class="text-pink-400 font-marker">RADICAL WAX</span>
+          <span class="text-white/40">|</span>
+          <span id="hudPlayerTurn" class="text-teal-300">P1 TURN</span>
+        </div>
+      </div>
+
+      <div class="flex flex-wrap items-center gap-1.5 pointer-events-auto">
+        <button id="btnPixelMode" class="px-3 py-1.5 rounded-lg bg-purple-950/90 hover:bg-purple-800 border border-amber-400/70 text-amber-200 text-xs font-mono-code shadow-lg" title="Shortcut: Key H">
+          📺 16-BIT [H]: OFF
+        </button>
+        <button id="btnViralShort" class="px-3 py-1.5 rounded-lg bg-pink-600/95 hover:bg-pink-500 border border-yellow-300 text-white text-xs tracking-wide shadow-lg">
+          🎬 VIRAL SHORT (9:16)
+        </button>
+        <button id="btnAudioMute" class="px-2.5 py-1.5 rounded-lg bg-black/75 hover:bg-stone-800 border border-white/25 text-white text-xs shadow-lg">
+          🔊 SYNTH
+        </button>
+        <button id="btnSourceModal" class="px-3 py-1.5 rounded-lg bg-teal-900/90 hover:bg-teal-700 border border-teal-300 text-teal-100 text-xs font-mono-code shadow-lg">
+          📦 FILES (2)
+        </button>
+      </div>
+    </div>
+
+    <!-- Viral YouTube Short Dynamic Captions Overlay -->
+    <div id="viralCaptionWrap" class="pointer-events-none absolute top-[13%] left-1/2 -translate-x-1/2 z-25 hidden w-[92%] text-center">
+      <div id="viralCaptionText" class="inline-block px-4 py-2 rounded-xl bg-black/85 border-2 border-yellow-300 text-pink-400 font-marker text-xl sm:text-2xl tracking-wide shadow-[0_6px_25px_rgba(0,0,0,0.9)]">
+        POV: 1987 CALIFORNIA GAMES REMASTERED IN HD 🎨🌴
+      </div>
+    </div>
+
+    <!-- Title Screen & Cassette Tape Event Deck Modal -->
+    <div id="titleModal" class="absolute inset-0 z-20 flex flex-col justify-between p-3 sm:p-6 overflow-y-auto bg-gradient-to-b from-black/40 via-black/55 to-black/85 backdrop-blur-[2px]">
+      <div class="mt-9 sm:mt-8 text-center">
+        <div class="inline-block px-3 py-0.5 rounded-full bg-pink-600/80 border border-yellow-300 text-[11px] tracking-widest uppercase text-yellow-200 mb-1">
+          1987 SOCAL POSTCARD REMAKE • HAND-PAINTED GOUACHE ENGINE
+        </div>
+        <h1 class="text-3xl sm:text-5xl font-extrabold tracking-wider text-transparent bg-clip-text bg-gradient-to-r from-amber-300 via-pink-400 to-teal-300 drop-shadow-[0_4px_0_rgba(0,0,0,0.9)]">
+          SOCAL SUMMER GAMES
+        </h1>
+        <p class="font-marker text-sm sm:text-lg text-amber-200 -mt-1">
+          "PAINTED EDITION" — VENICE • MALIBU • SANTA MONICA
+        </p>
+      </div>
+
+      <!-- Mode & Hot-Seat Selector Bar -->
+      <div class="max-w-4xl w-full mx-auto my-2 flex flex-wrap items-center justify-center gap-2 bg-black/70 border border-white/15 p-2.5 rounded-xl">
+        <button data-mode="TOUR" class="mode-btn socal-btn px-3.5 py-1.5 rounded-lg text-xs uppercase">
+          🏆 Full 6-Event Tour
+        </button>
+        <button data-mode="SINGLE" class="mode-btn socal-btn-teal px-3.5 py-1.5 rounded-lg text-xs uppercase font-bold">
+          🎯 Single Event
+        </button>
+        <button data-mode="VIRAL" class="mode-btn px-3.5 py-1.5 rounded-lg bg-purple-800 hover:bg-purple-700 border border-pink-400 text-xs uppercase">
+          🎬 9:16 Viral Auto-Reel
+        </button>
+        <div class="h-5 w-[1px] bg-white/20 mx-1 hidden sm:block"></div>
+        <div class="flex items-center gap-1.5 text-xs">
+          <span class="text-amber-300">HOT-SEAT:</span>
+          <button id="btnPlayersCycle" class="px-2.5 py-1 rounded bg-stone-800 border border-amber-400/60 text-white font-mono-code">
+            1 PLAYER (vs RAD RICKY CPU)
+          </button>
+        </div>
+      </div>
+
+      <!-- 6 Cassette Tape Event Cards -->
+      <div id="cassetteGrid" class="max-w-4xl w-full mx-auto grid grid-cols-2 sm:grid-cols-3 gap-2.5 sm:gap-3.5 my-1">
+        <!-- Populated by JS -->
+      </div>
+
+      <!-- Sponsor Parody Strip & Footer -->
+      <div class="max-w-4xl w-full mx-auto mt-2 flex flex-wrap items-center justify-between gap-2 text-[11px] text-amber-100/80 bg-black/65 px-3.5 py-2 rounded-lg border border-white/10">
+        <div class="flex flex-wrap items-center gap-3">
+          <span class="text-pink-400 font-bold">OFFICIAL SPONSORS:</span>
+          <span>🏄 RADICAL WAX CO.</span>
+          <span>🕶️ PIER PRESSURE SHADES</span>
+          <span>🥤 MALIBU NEON SODA</span>
+          <span>📼 PACIFIC SYNTH TAPES</span>
+        </div>
+        <div class="font-mono-code text-teal-300">
+          ARROWS/WASD + Z/X/C • GAMEPAD • [H] 16-BIT CRT
+        </div>
+      </div>
+    </div>
+
+    <!-- Podium / Results Modal -->
+    <div id="resultsModal" class="absolute inset-0 z-25 hidden items-center justify-center p-4 bg-black/80 backdrop-blur-md">
+      <div class="max-w-2xl w-full bg-[#1b112c] border-2 border-amber-300 rounded-2xl p-5 sm:p-6 shadow-2xl text-center">
+        <div id="resSubtitle" class="text-xs tracking-widest uppercase text-pink-400">OFFICIAL SOCAL SCORECARD</div>
+        <h2 id="resTitle" class="text-2xl sm:text-4xl font-extrabold text-amber-300 mt-0.5 mb-3">
+          EVENT STANDINGS
+        </h2>
+        <canvas id="podiumCanvas" width="520" height="190" class="w-full h-40 bg-black/40 rounded-xl border border-white/15 mb-3"></canvas>
+        <div id="scoreTableWrap" class="text-left text-xs font-mono-code bg-black/60 p-3 rounded-xl border border-white/10 mb-4 max-h-40 overflow-y-auto"></div>
+        <div class="flex flex-wrap justify-center gap-3">
+          <button id="btnNextEvent" class="socal-btn px-5 py-2.5 rounded-xl text-sm uppercase">
+            ▶ NEXT EVENT
+          </button>
+          <button id="btnRetryEvent" class="socal-btn-teal px-4 py-2.5 rounded-xl text-xs uppercase font-bold">
+            ↻ REPLAY EVENT
+          </button>
+          <button id="btnBackToDeck" class="px-4 py-2.5 rounded-xl bg-stone-800 hover:bg-stone-700 border border-white/20 text-xs uppercase">
+            🌴 CASSETTE DECK
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Mobile / Touch Virtual Controls (Auto-shown on touch or narrow screens) -->
+    <div id="touchHud" class="absolute inset-x-0 bottom-2.5 z-20 pointer-events-none flex justify-between items-end px-3 sm:px-6">
+      <!-- Virtual D-Pad / Stick -->
+      <div class="pointer-events-auto grid grid-cols-3 gap-1 w-32 h-32 sm:w-36 sm:h-36 bg-black/55 backdrop-blur-sm p-1.5 rounded-2xl border border-amber-300/40">
+        <div></div>
+        <button data-tkey="Up" class="t-btn rounded-lg bg-white/15 active:bg-pink-500 text-white text-sm font-bold flex items-center justify-center">▲</button>
+        <div></div>
+        <button data-tkey="Left" class="t-btn rounded-lg bg-white/15 active:bg-pink-500 text-white text-sm font-bold flex items-center justify-center">◀</button>
+        <button data-tkey="Down" class="t-btn rounded-lg bg-white/15 active:bg-pink-500 text-white text-sm font-bold flex items-center justify-center">▼</button>
+        <button data-tkey="Right" class="t-btn rounded-lg bg-white/15 active:bg-pink-500 text-white text-sm font-bold flex items-center justify-center">▶</button>
+      </div>
+
+      <!-- Z / X / C Action Buttons -->
+      <div class="pointer-events-auto flex items-center gap-2 sm:gap-2.5">
+        <button data-tkey="Z" class="t-btn w-14 h-14 sm:w-16 sm:h-16 rounded-full bg-gradient-to-b from-pink-500 to-rose-700 border-2 border-yellow-300 shadow-lg active:scale-95 flex flex-col items-center justify-center">
+          <span class="text-xs sm:text-sm font-extrabold">Z / A</span>
+          <span id="touchLblZ" class="text-[9px] text-yellow-200">PUMP/FLIP</span>
+        </button>
+        <button data-tkey="X" class="t-btn w-14 h-14 sm:w-16 sm:h-16 rounded-full bg-gradient-to-b from-teal-400 to-cyan-700 border-2 border-white shadow-lg active:scale-95 flex flex-col items-center justify-center">
+          <span class="text-xs sm:text-sm font-extrabold">X / B</span>
+          <span id="touchLblX" class="text-[9px] text-teal-100">SPIN/360</span>
+        </button>
+        <button data-tkey="C" class="t-btn w-14 h-14 sm:w-16 sm:h-16 rounded-full bg-gradient-to-b from-amber-400 to-orange-600 border-2 border-white shadow-lg active:scale-95 flex flex-col items-center justify-center">
+          <span class="text-xs sm:text-sm font-extrabold text-black">C / Y</span>
+          <span id="touchLblC" class="text-[9px] text-black font-bold">PLANT/AIR</span>
+        </button>
+      </div>
+    </div>
+
+    <!-- Source Package Exporter Modal (index.html + README.md) -->
+    <div id="exporterModal" class="absolute inset-4 sm:inset-8 z-40 hidden flex-col bg-[#0e0a18] border-2 border-teal-400 rounded-2xl shadow-2xl overflow-hidden">
+      <div class="flex items-center justify-between px-4 py-3 bg-[#191229] border-b border-white/15">
+        <div>
+          <h3 class="text-sm sm:text-base font-bold text-amber-300">📦 DELIVERABLE SOURCE BUNDLE (index.html + README.md)</h3>
+          <p class="text-[11px] text-teal-200 font-mono-code">Zero-build single-file HTML5 game + full controls & 16-bit H-toggle documentation</p>
+        </div>
+        <div class="flex gap-2">
+          <button id="btnDownloadActive" class="px-3 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-mono-code font-bold">⬇ Download</button>
+          <button id="btnCopyActive" class="px-3 py-1.5 rounded-lg bg-stone-800 hover:bg-stone-700 text-white text-xs font-mono-code">📋 Copy</button>
+          <button id="btnCloseExporter" class="px-3 py-1.5 rounded-lg bg-rose-800 hover:bg-rose-700 text-white text-xs font-mono-code">✕ Close</button>
+        </div>
+      </div>
+      <div id="exportTabBar" class="flex gap-2 px-4 py-2 bg-black/50 border-b border-white/10 font-mono-code text-xs"></div>
+      <pre id="exportCodeView" class="flex-1 p-4 overflow-auto text-xs font-mono-code text-amber-100 bg-[#07050c] leading-relaxed"></pre>
+    </div>
+  </div>
+
+  <script>
+    /**
+     * ============================================================================
+     * 1. ORIGINAL WEBAUDIO 80s SURF-ROCK & SYNTH-POP SOUND ENGINE
+     * ============================================================================
+     */
+    class SoCalAudioSynth {
+      constructor() {
+        this.ctx = null;
+        this.muted = false;
+        this.playingLoop = false;
+        this.step = 0;
+        this.eventTheme = 0;
+        this.stepTimer = null;
+      }
+
+      init() {
+        if (!this.ctx) {
+          const AudioCtx = window.AudioContext || window.webkitAudioContext;
+          if (AudioCtx) this.ctx = new AudioCtx();
+        }
+        if (this.ctx && this.ctx.state === 'suspended') this.ctx.resume();
+        if (!this.playingLoop) this.startMusicLoop();
+      }
+
+      startMusicLoop() {
+        this.playingLoop = true;
+        // 132 BPM upbeat 80s surf-rock / synth-pop groove
+        const stepMs = (60 / 132 / 4) * 1000;
+        const bassScale = [110, 110, 130.81, 146.83, 164.81, 146.83, 130.81, 196.00];
+        const leadMelodies = [
+          [440, 0, 523.25, 659.25, 587.33, 0, 523.25, 440, 392, 0, 440, 523.25, 659.25, 783.99, 659.25, 0],
+          [329.63, 392, 440, 0, 523.25, 587.33, 659.25, 0, 587.33, 523.25, 440, 392, 329.63, 0, 392, 440]
+        ];
+
+        this.stepTimer = setInterval(() => {
+          if (this.muted || !this.ctx || this.ctx.state !== 'running') return;
+          const s = this.step % 16;
+          const now = this.ctx.currentTime;
+
+          // LinnDrum-style Kick on 0, 6, 8, 14
+          if (s === 0 || s === 6 || s === 8 || s === 14) {
+            const o = this.ctx.createOscillator();
+            const g = this.ctx.createGain();
+            o.frequency.setValueAtTime(135, now);
+            o.frequency.exponentialRampToValueAtTime(36, now + 0.11);
+            g.gain.setValueAtTime(0.22, now);
+            g.gain.exponentialRampToValueAtTime(0.001, now + 0.12);
+            o.connect(g); g.connect(this.ctx.destination);
+            o.start(now); o.stop(now + 0.13);
+          }
+
+          // gated 80s Snare on 4, 12
+          if (s === 4 || s === 12) {
+            this.playNoiseBurst(0.11, 900, 0.12);
+          }
+
+          // Driving 8th-note Surf Bass
+          if (s % 2 === 0) {
+            const bFreq = bassScale[(s / 2 + this.eventTheme) % bassScale.length];
+            const o = this.ctx.createOscillator();
+            const g = this.ctx.createGain();
+            o.type = 'triangle';
+            o.frequency.setValueAtTime(bFreq, now);
+            g.gain.setValueAtTime(0.14, now);
+            g.gain.exponentialRampToValueAtTime(0.001, now + 0.14);
+            o.connect(g); g.connect(this.ctx.destination);
+            o.start(now); o.stop(now + 0.15);
+          }
+
+          // Reverb Surf Guitar / Synth Lead
+          const mel = leadMelodies[this.eventTheme % leadMelodies.length];
+          const note = mel[s];
+          if (note > 0) {
+            const o = this.ctx.createOscillator();
+            const g = this.ctx.createGain();
+            o.type = (this.eventTheme % 2 === 0) ? 'sawtooth' : 'square';
+            o.frequency.setValueAtTime(note, now);
+            // Slight surf vibrato
+            o.frequency.linearRampToValueAtTime(note * 1.012, now + 0.09);
+            const flt = this.ctx.createBiquadFilter();
+            flt.type = 'lowpass';
+            flt.frequency.value = 1900;
+            g.gain.setValueAtTime(0.065, now);
+            g.gain.exponentialRampToValueAtTime(0.001, now + 0.16);
+            o.connect(flt); flt.connect(g); g.connect(this.ctx.destination);
+            o.start(now); o.stop(now + 0.17);
+          }
+
+          this.step++;
+        }, stepMs);
+      }
+
+      playNoiseBurst(dur = 0.12, filterFreq = 1000, vol = 0.15) {
+        if (this.muted || !this.ctx) return;
+        const now = this.ctx.currentTime;
+        const len = Math.floor(this.ctx.sampleRate * dur);
+        const buf = this.ctx.createBuffer(1, len, this.ctx.sampleRate);
+        const data = buf.getChannelData(0);
+        for (let i = 0; i < len; i++) {
+          data[i] = (Math.random() * 2 - 1) * Math.exp(-i / (len * 0.4));
+        }
+        const src = this.ctx.createBufferSource();
+        src.buffer = buf;
+        const flt = this.ctx.createBiquadFilter();
+        flt.type = 'bandpass';
+        flt.frequency.value = filterFreq;
+        const g = this.ctx.createGain();
+        g.gain.value = vol;
+        src.connect(flt); flt.connect(g); g.connect(this.ctx.destination);
+        src.start(now);
+      }
+
+      playJump() {
+        if (this.muted || !this.ctx) return;
+        const now = this.ctx.currentTime;
+        const o = this.ctx.createOscillator();
+        const g = this.ctx.createGain();
+        o.type = 'sine';
+        o.frequency.setValueAtTime(240, now);
+        o.frequency.exponentialRampToValueAtTime(620, now + 0.16);
+        g.gain.setValueAtTime(0.18, now);
+        g.gain.exponentialRampToValueAtTime(0.001, now + 0.18);
+        o.connect(g); g.connect(this.ctx.destination);
+        o.start(now); o.stop(now + 0.19);
+      }
+
+      playRadicalStinger() {
+        if (this.muted || !this.ctx) return;
+        const now = this.ctx.currentTime;
+        [523.25, 659.25, 783.99, 1046.5].forEach((f, idx) => {
+          const o = this.ctx.createOscillator();
+          const g = this.ctx.createGain();
+          o.type = 'sawtooth';
+          o.frequency.setValueAtTime(f, now + idx * 0.055);
+          g.gain.setValueAtTime(0.12, now + idx * 0.055);
+          g.gain.exponentialRampToValueAtTime(0.001, now + idx * 0.055 + 0.35);
+          o.connect(g); g.connect(this.ctx.destination);
+          o.start(now + idx * 0.055);
+          o.stop(now + idx * 0.055 + 0.36);
+        });
+      }
+
+      playWipeout() {
+        if (this.muted || !this.ctx) return;
+        this.playNoiseBurst(0.38, 420, 0.3);
+        const now = this.ctx.currentTime;
+        const o = this.ctx.createOscillator();
+        const g = this.ctx.createGain();
+        o.type = 'sawtooth';
+        o.frequency.setValueAtTime(190, now);
+        o.frequency.linearRampToValueAtTime(48, now + 0.35);
+        g.gain.setValueAtTime(0.22, now);
+        g.gain.exponentialRampToValueAtTime(0.001, now + 0.36);
+        o.connect(g); g.connect(this.ctx.destination);
+        o.start(now); o.stop(now + 0.37);
+      }
+
+      playSeagullSquawk() {
+        if (this.muted || !this.ctx) return;
+        const now = this.ctx.currentTime;
+        const o = this.ctx.createOscillator();
+        const g = this.ctx.createGain();
+        o.type = 'triangle';
+        o.frequency.setValueAtTime(1350, now);
+        o.frequency.linearRampToValueAtTime(1820, now + 0.07);
+        o.frequency.linearRampToValueAtTime(920, now + 0.22);
+        g.gain.setValueAtTime(0.18, now);
+        g.gain.exponentialRampToValueAtTime(0.001, now + 0.24);
+        o.connect(g); g.connect(this.ctx.destination);
+        o.start(now); o.stop(now + 0.25);
+      }
+    }
+
+    const audio = new SoCalAudioSynth();
+
+    /**
+     * ============================================================================
+     * 2. PROCEDURAL GOUACHE / AIRBRUSH ART & 5-LAYER PARALLAX ENGINE
+     * ============================================================================
+     */
+    const EVENTS_META = [
+      {
+        id: 0, code: 'HALFPIPE', name: 'Half Pipe Skate', sub: 'Venice Concrete Bowl',
+        sponsor: 'RADICAL WAX CO.', hint: 'Press DOWN/Z on ramps to PUMP speed • Z/X/C in air for Kickflip, 360 & McTwist!',
+        lblZ: 'PUMP/FLIP', lblX: '360 SPIN', lblC: 'HANDPLANT', cpuScore: 6800
+      },
+      {
+        id: 1, code: 'SURFING', name: 'Malibu Surfing', sub: 'Pacific Point Break',
+        sponsor: 'PIER PRESSURE SHADES', hint: 'UP/DOWN to Carve Wave • Hold LEFT in Green Barrel for Tube Ride • Launch off Lip for Airs!',
+        lblZ: 'CUTBACK', lblX: '360 AIR', lblC: 'TUBE TUCK', cpuScore: 7400
+      },
+      {
+        id: 2, code: 'FOOTBAG', name: 'Venice Footbag', sub: 'Sunset Hacky Circle',
+        sponsor: 'MALIBU NEON SODA', hint: 'Move LEFT/RIGHT under sack • Z: Knee • X: Foot Stall • C: Head/Dazzle • Bonk the Seagull!',
+        lblZ: 'KNEE KICK', lblX: 'TOE STALL', lblC: 'HEAD/HEEL', cpuScore: 5900
+      },
+      {
+        id: 3, code: 'BMX', name: 'BMX Dirt Course', sub: 'Hollywood Hills Trail',
+        sponsor: 'PACIFIC SYNTH TAPES', hint: 'UP/DOWN steer • Z: Bunnyhop Rocks & Logs • X: Backflip • C: Table/Superman in air!',
+        lblZ: 'BUNNYHOP', lblX: 'BACKFLIP', lblC: 'SUPERMAN', cpuScore: 8200
+      },
+      {
+        id: 4, code: 'SKATING', name: 'Boardwalk Skate', sub: 'Santa Monica Strand',
+        sponsor: 'SUNSET ROLLER CO.', hint: 'UP/DOWN dodge hazards • Z: Jump Cracks/Balls • X: 360 Pirouette • C: Shoot-the-Duck!',
+        lblZ: 'JUMP', lblX: '360 SPIN', lblC: 'CROUCH DUCK', cpuScore: 6500
+      },
+      {
+        id: 5, code: 'DISC', name: 'Flying Disc', sub: 'Huntington Dog Beach',
+        sponsor: 'AERO-DISC 1987', hint: 'Tap Z to lock Power & Angle • Then Sprint (RIGHT) & Press Z/X/C for a Layout Diving Catch!',
+        lblZ: 'THROW/DIVE', lblX: 'SPRINT', lblC: 'LAYOUT', cpuScore: 5400
+      }
+    ];
+
+    // Generate repeatable Gouache Canvas Brush Grain Texture
+    const brushGrainCanvas = document.createElement('canvas');
+    brushGrainCanvas.width = 160;
+    brushGrainCanvas.height = 160;
+    (function buildGouacheGrain() {
+      const gctx = brushGrainCanvas.getContext('2d');
+      for (let i = 0; i < 900; i++) {
+        gctx.fillStyle = i % 2 === 0 ? 'rgba(255, 240, 220, 0.035)' : 'rgba(20, 10, 35, 0.045)';
+        gctx.beginPath();
+        gctx.ellipse(
+          Math.random() * 160, Math.random() * 160,
+          4 + Math.random() * 14, 1 + Math.random() * 3,
+          (Math.random() - 0.5) * 0.5, 0, Math.PI * 2
+        );
+        gctx.fill();
+      }
+    })();
+
+    // Painted Palm Tree Helper
+    function drawPaintedPalm(ctx, x, y, scale = 1.0, sway = 0, darkSilhouette = false) {
+      ctx.save();
+      ctx.translate(x, y);
+      ctx.scale(scale, scale);
+
+      // Curved trunk with gouache segments
+      ctx.strokeStyle = darkSilhouette ? '#190d26' : '#5c3828';
+      ctx.lineWidth = 9;
+      ctx.lineCap = 'round';
+      ctx.beginPath();
+      ctx.moveTo(0, 0);
+      ctx.quadraticCurveTo(14 + sway * 10, -55, 6 + sway * 18, -110);
+      ctx.stroke();
+
+      // Highlight stroke on trunk
+      if (!darkSilhouette) {
+        ctx.strokeStyle = '#9c6347';
+        ctx.lineWidth = 3;
+        ctx.beginPath();
+        ctx.moveTo(2, -4);
+        ctx.quadraticCurveTo(16 + sway * 10, -55, 8 + sway * 18, -108);
+        ctx.stroke();
+      }
+
+      // Crown fronds
+      ctx.translate(6 + sway * 18, -110);
+      const frondAngles = [-2.5, -1.9, -1.2, -0.4, 0.3, 1.0, 1.8, 2.4];
+      frondAngles.forEach((ang, i) => {
+        ctx.save();
+        ctx.rotate(ang + Math.sin(sway + i) * 0.08);
+        ctx.fillStyle = darkSilhouette
+          ? '#140920'
+          : (i % 2 === 0 ? '#16695b' : '#269e79');
+        ctx.beginPath();
+        ctx.moveTo(0, 0);
+        ctx.quadraticCurveTo(24, -14, 48, 8);
+        ctx.quadraticCurveTo(22, 2, 0, 0);
+        ctx.fill();
+        ctx.restore();
+      });
+      ctx.restore();
+    }
+
+    // Draw 5-Layer Hand-Painted SoCal Postcard Parallax Background
+    function drawSoCalParallax(ctx, W, H, camX, time, eventId) {
+      // LAYER 1: Golden-Hour Gouache Sky Gradient + Sun + Painted Cumulus Clouds
+      const skyGrad = ctx.createLinearGradient(0, 0, 0, H * 0.72);
+      if (eventId === 1) {
+        skyGrad.addColorStop(0.0, '#1e1338');
+        skyGrad.addColorStop(0.38, '#9e2a63');
+        skyGrad.addColorStop(0.75, '#ff6b57');
+        skyGrad.addColorStop(1.0, '#ffdd6b');
+      } else {
+        skyGrad.addColorStop(0.0, '#1b1035');
+        skyGrad.addColorStop(0.35, '#8c225d');
+        skyGrad.addColorStop(0.68, '#ff5e57');
+        skyGrad.addColorStop(1.0, '#ffbe55');
+      }
+      ctx.fillStyle = skyGrad;
+      ctx.fillRect(0, 0, W, H);
+
+      // Giant Retro Striped Sunset Sun
+      const sunX = W * 0.74 - (camX * 0.02);
+      const sunY = H * 0.28;
+      const sunR = Math.min(W, H) * 0.16;
+      const sunGrad = ctx.createLinearGradient(sunX, sunY - sunR, sunX, sunY + sunR);
+      sunGrad.addColorStop(0, '#fff275');
+      sunGrad.addColorStop(0.55, '#ff5e57');
+      sunGrad.addColorStop(1, '#ff1e75');
+      ctx.save();
+      ctx.fillStyle = sunGrad;
+      ctx.shadowColor = '#ff5e57';
+      ctx.shadowBlur = 35;
+      ctx.beginPath();
+      ctx.arc(sunX, sunY, sunR, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.restore();
+
+      // Painted Gouache Clouds (Parallax 0.05x)
+      for (let i = 0; i < 6; i++) {
+        const cx = ((i * 290 - camX * 0.05 + time * 8) % (W + 320)) - 160;
+        const cy = H * (0.14 + (i % 3) * 0.07);
+        ctx.fillStyle = i % 2 === 0 ? 'rgba(255, 190, 150, 0.45)' : 'rgba(255, 110, 140, 0.38)';
+        ctx.beginPath();
+        ctx.arc(cx, cy, 34, 0, Math.PI * 2);
+        ctx.arc(cx + 28, cy - 8, 42, 0, Math.PI * 2);
+        ctx.arc(cx + 62, cy + 2, 30, 0, Math.PI * 2);
+        ctx.fill();
+      }
+
+      // LAYER 2: Distant Malibu / Santa Monica Coastal Mountains (Parallax 0.12x)
+      ctx.fillStyle = '#381946';
+      ctx.beginPath();
+      ctx.moveTo(0, H * 0.62);
+      for (let x = 0; x <= W + 60; x += 40) {
+        const wx = x + camX * 0.12;
+        const mh = Math.sin(wx * 0.0045) * 48 + Math.cos(wx * 0.011) * 24;
+        ctx.lineTo(x, H * 0.54 - mh);
+      }
+      ctx.lineTo(W, H);
+      ctx.lineTo(0, H);
+      ctx.closePath();
+      ctx.fill();
+
+      // Warm rim-light on mountain ridges
+      ctx.fillStyle = '#6d265a';
+      ctx.beginPath();
+      ctx.moveTo(0, H * 0.64);
+      for (let x = 0; x <= W + 60; x += 40) {
+        const wx = x + camX * 0.18 + 140;
+        const mh = Math.sin(wx * 0.006) * 32 + Math.cos(wx * 0.015) * 18;
+        ctx.lineTo(x, H * 0.59 - mh);
+      }
+      ctx.lineTo(W, H);
+      ctx.lineTo(0, H);
+      ctx.closePath();
+      ctx.fill();
+
+      // LAYER 3: Pacific Ocean Shimmer + Santa Monica Pier & Ferris Wheel (Parallax 0.28x)
+      const horizonY = H * 0.58;
+      const seaGrad = ctx.createLinearGradient(0, horizonY, 0, H * 0.78);
+      seaGrad.addColorStop(0, '#00a8a8');
+      seaGrad.addColorStop(0.5, '#00d2d3');
+      seaGrad.addColorStop(1, '#f7d794');
+      ctx.fillStyle = seaGrad;
+      ctx.fillRect(0, horizonY, W, H * 0.22);
+
+      // Pier & Neon Ferris Wheel in distance
+      const pierX = ((W * 0.25 - camX * 0.22) % (W * 1.5 + 400));
+      ctx.fillStyle = '#291536';
+      ctx.fillRect(pierX - 120, horizonY - 12, 230, 10);
+      for (let p = -110; p <= 100; p += 22) {
+        ctx.fillRect(pierX + p, horizonY - 2, 4, 22);
+      }
+      // Rotating Ferris Wheel
+      ctx.save();
+      ctx.translate(pierX - 20, horizonY - 48);
+      ctx.strokeStyle = '#ffdd59';
+      ctx.lineWidth = 2.5;
+      ctx.beginPath();
+      ctx.arc(0, 0, 32, 0, Math.PI * 2);
+      ctx.stroke();
+      for (let r = 0; r < 8; r++) {
+        const a = time * 0.6 + (r * Math.PI) / 4;
+        ctx.strokeStyle = r % 2 === 0 ? '#ff3f8e' : '#00d2d3';
+        ctx.beginPath();
+        ctx.moveTo(0, 0);
+        ctx.lineTo(Math.cos(a) * 32, Math.sin(a) * 32);
+        ctx.stroke();
+      }
+      ctx.restore();
+
+      // LAYER 4: Sun-Bleached Beach Sand, Boardwalk Shops & Palms (Parallax 0.45x)
+      if (eventId !== 1) {
+        const sandGrad = ctx.createLinearGradient(0, H * 0.66, 0, H);
+        sandGrad.addColorStop(0, '#f7d794');
+        sandGrad.addColorStop(0.5, '#eab56f');
+        sandGrad.addColorStop(1, '#c98849');
+        ctx.fillStyle = sandGrad;
+        ctx.fillRect(0, H * 0.66, W, H * 0.34);
+
+        // Parody Sponsor Billboards & Lifeguard Towers
+        const sponsors = ['RADICAL WAX', 'PIER PRESSURE', 'MALIBU SODA', '87 SYNTH'];
+        for (let i = 0; i < 5; i++) {
+          const bx = ((i * 380 - camX * 0.45) % (W + 600));
+          const drawX = bx < -150 ? bx + W + 600 : bx;
+          drawPaintedPalm(ctx, drawX, H * 0.69, 0.78, Math.sin(time * 2 + i) * 0.25, false);
+
+          // Sponsor Beach Shack / Billboard
+          if (i % 2 === 0) {
+            ctx.save();
+            ctx.translate(drawX + 70, H * 0.63);
+            ctx.fillStyle = '#231433';
+            ctx.fillRect(0, 0, 96, 36);
+            ctx.strokeStyle = '#ff3f8e';
+            ctx.lineWidth = 3;
+            ctx.strokeRect(0, 0, 96, 36);
+            ctx.fillStyle = '#ffdd59';
+            ctx.font = 'bold 11px Righteous, sans-serif';
+            ctx.textAlign = 'center';
+            ctx.fillText(sponsors[i % sponsors.length], 48, 22);
+            ctx.restore();
+          }
+        }
+      }
+    }
+
+    // Foreground Silhouette Palm Fronds (Layer 5 - 1.35x speed blur)
+    function drawForegroundParallax(ctx, W, H, camX, time) {
+      for (let i = 0; i < 2; i++) {
+        const fx = ((i * 950 - camX * 1.35) % (W + 700));
+        const drawX = fx < -200 ? fx + W + 700 : fx;
+        drawPaintedPalm(ctx, drawX, H + 30, 1.35, Math.sin(time * 2.5 + i) * 0.35, true);
+      }
+      // Subtle Gouache Canvas Brush Grain Overlay
+      ctx.save();
+      ctx.fillStyle = ctx.createPattern(brushGrainCanvas, 'repeat');
+      ctx.fillRect(0, 0, W, H);
+      ctx.restore();
+    }
+
+    /**
+     * ============================================================================
+     * 3. CHUNKY PAINTED 80s CHARACTER CUT-OUT RIG (10 POSEABLE PARTS + SECONDARY HAIR)
+     * ============================================================================
+     */
+    class SoCalAthleteRig {
+      constructor() {
+        this.hairTrail = [0, 0, 0, 0];
+      }
+
+      /**
+       * Renders the articulated 1987 SoCal athlete at (x, y) with rotation, squash/stretch,
+       * pose name ('ride', 'crouch', 'air_grab', 'kickflip', 'handplant', 'swim', 'ragdoll', 'dive'),
+       * and event gear ('skate', 'surf', 'bmx', 'rollers', 'none').
+       */
+      draw(ctx, x, y, angle = 0, pose = 'ride', time = 0, gear = 'skate', scaleX = 1, scaleY = 1) {
+        ctx.save();
+        ctx.translate(x, y);
+        ctx.rotate(angle);
+        ctx.scale(scaleX, scaleY);
+
+        // Compute joint angles from pose + time
+        let torsoRot = 0.1;
+        let headRot = -0.05;
+        let legL = 0.35, kneeL = -0.45;
+        let legR = -0.35, kneeR = -0.45;
+        let armL = -0.5, elbowL = -0.4;
+        let armR = 0.5, elbowR = -0.4;
+
+        if (pose === 'crouch') {
+          torsoRot = 0.48;
+          legL = 0.75; kneeL = -1.15;
+          legR = -0.15; kneeR = -1.15;
+          armL = -0.8; armR = 0.7;
+        } else if (pose === 'kickflip' || pose === 'air_grab') {
+          torsoRot = -0.25;
+          legL = -0.6; kneeL = -0.9;
+          legR = 0.7; kneeR = -0.7;
+          armL = -1.4; armR = 0.25;
+        } else if (pose === 'handplant') {
+          torsoRot = 2.6;
+          armR = 1.4; armL = -1.1;
+          legL = -0.4; legR = 0.4;
+        } else if (pose === 'dive') {
+          torsoRot = 1.35;
+          armL = -1.6; armR = -1.4;
+          legL = 0.2; legR = -0.2;
+        } else if (pose === 'ragdoll') {
+          torsoRot = time * 9;
+          armL = Math.sin(time * 15) * 1.5;
+          armR = Math.cos(time * 15) * 1.5;
+          legL = -armL; legR = -armR;
+        } else if (pose === 'run') {
+          const swing = Math.sin(time * 16) * 0.75;
+          torsoRot = 0.18;
+          legL = swing; kneeL = -Math.abs(swing) * 0.7;
+          legR = -swing; kneeR = -Math.abs(swing) * 0.7;
+          armL = -swing * 0.9; armR = swing * 0.9;
+        } else {
+          // Default rhythmic athletic bounce
+          const b = Math.sin(time * 7) * 0.12;
+          torsoRot = 0.12 + b;
+          armL = -0.55 + b;
+          armR = 0.55 - b;
+        }
+
+        // 1. EVENT GEAR UNDERNEATH ATHLETE
+        if (gear === 'skate') {
+          ctx.save();
+          if (pose === 'kickflip') ctx.scale(1, Math.cos(time * 24));
+          // Painted 80s Neon Cruiser Deck
+          ctx.fillStyle = '#ff3f8e';
+          ctx.strokeStyle = '#140920';
+          ctx.lineWidth = 2.5;
+          ctx.beginPath();
+          ctx.roundRect(-28, 22, 56, 7, 4);
+          ctx.fill(); ctx.stroke();
+          // Yellow grip stripe
+          ctx.fillStyle = '#ffdd59';
+          ctx.fillRect(-20, 22, 40, 2.5);
+          // Trucks & Urethane Wheels
+          [-16, 16].forEach(wx => {
+            ctx.fillStyle = '#d1d8e0';
+            ctx.fillRect(wx - 3, 28, 6, 4);
+            ctx.fillStyle = '#00d2d3';
+            ctx.beginPath();
+            ctx.arc(wx, 33, 5.5, 0, Math.PI * 2);
+            ctx.fill(); ctx.stroke();
+          });
+          ctx.restore();
+        } else if (gear === 'surf') {
+          ctx.save();
+          ctx.fillStyle = '#ffdd59';
+          ctx.strokeStyle = '#140920';
+          ctx.lineWidth = 2.5;
+          ctx.beginPath();
+          ctx.ellipse(4, 26, 44, 7.5, 0, 0, Math.PI * 2);
+          ctx.fill(); ctx.stroke();
+          // Hot-pink twin racing stripes
+          ctx.fillStyle = '#ff3f8e';
+          ctx.fillRect(-26, 23, 58, 2.5);
+          ctx.fillStyle = '#00d2d3';
+          ctx.fillRect(-22, 26, 50, 2.5);
+          ctx.restore();
+        } else if (gear === 'bmx') {
+          ctx.save();
+          ctx.strokeStyle = '#140920';
+          ctx.lineWidth = 3;
+          // Rear & Front Mag Wheels
+          [-24, 24].forEach(wx => {
+            ctx.fillStyle = '#1e272e';
+            ctx.beginPath(); ctx.arc(wx, 24, 14, 0, Math.PI * 2); ctx.fill();
+            ctx.fillStyle = '#ffdd59';
+            ctx.beginPath(); ctx.arc(wx, 24, 9, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
+          });
+          // Neon Chrome BMX Frame
+          ctx.strokeStyle = '#00d2d3';
+          ctx.lineWidth = 4.5;
+          ctx.beginPath();
+          ctx.moveTo(-24, 24); ctx.lineTo(-4, 6); ctx.lineTo(20, 4);
+          ctx.lineTo(24, 24); ctx.lineTo(-4, 20); ctx.closePath();
+          ctx.stroke();
+          // Handlebars
+          ctx.beginPath(); ctx.moveTo(20, 4); ctx.lineTo(16, -12); ctx.stroke();
+          ctx.restore();
+        }
+
+        // 2. BACK ARM
+        this.Limb(ctx, 2, -10, armR, elbowR, '#e59866', '#ffdd59', false);
+
+        // 3. BACK LEG (in teal/pink 80s board shorts)
+        this.Leg(ctx, -6, 6, legL, kneeL, '#00d2d3', gear === 'rollers');
+
+        // 4. TORSO (Chunky Painted Neon Tank Top with 80s Geometric Print)
+        ctx.save();
+        ctx.rotate(torsoRot);
+        ctx.fillStyle = '#ff3f8e';
+        ctx.strokeStyle = '#140920';
+        ctx.lineWidth = 2.8;
+        ctx.beginPath();
+        ctx.roundRect(-11, -20, 22, 28, 6);
+        ctx.fill(); ctx.stroke();
+        // Diagonal neon yellow/teal slash on tank top
+        ctx.fillStyle = '#ffdd59';
+        ctx.beginPath();
+        ctx.moveTo(-9, -12); ctx.lineTo(9, -4); ctx.lineTo(9, 2); ctx.lineTo(-9, -6);
+        ctx.closePath();
+        ctx.fill();
+
+        // 5. HEAD, SUN-BLEACHED HAIR, NEON HEADBAND & WAYFARER SHADES
+        ctx.save();
+        ctx.translate(2, -26);
+        ctx.rotate(headRot);
+
+        // Secondary-motion Flowing Headband Tails
+        ctx.strokeStyle = '#00d2d3';
+        ctx.lineWidth = 4;
+        ctx.beginPath();
+        ctx.moveTo(-8, -2);
+        ctx.quadraticCurveTo(-22, -6 + Math.sin(time * 14) * 7, -32, 2 + Math.cos(time * 14) * 8);
+        ctx.stroke();
+
+        // Head base
+        ctx.fillStyle = '#e59866';
+        ctx.strokeStyle = '#140920';
+        ctx.lineWidth = 2.5;
+        ctx.beginPath();
+        ctx.arc(0, 0, 10.5, 0, Math.PI * 2);
+        ctx.fill(); ctx.stroke();
+
+        // Spiky 80s Sun-Bleached Blonde Hair
+        ctx.fillStyle = '#ffdd59';
+        ctx.beginPath();
+        ctx.moveTo(-11, -3);
+        ctx.lineTo(-14, -12); ctx.lineTo(-5, -10);
+        ctx.lineTo(0, -15); ctx.lineTo(6, -10);
+        ctx.lineTo(12, -12); ctx.lineTo(9, -3);
+        ctx.closePath();
+        ctx.fill(); ctx.stroke();
+
+        // Neon Headband
+        ctx.fillStyle = '#00d2d3';
+        ctx.fillRect(-10, -5, 20, 3.5);
+
+        // Classic Dark Wayfarer Sunglasses with Sunset Lens Glint
+        ctx.fillStyle = '#140920';
+        ctx.fillRect(0, -3, 11, 5.5);
+        ctx.fillStyle = '#ff5e57';
+        ctx.fillRect(2, -2, 3.5, 3.5);
+        ctx.fillRect(6.5, -2, 3.5, 3.5);
+        ctx.restore(); // end head
+
+        ctx.restore(); // end torso
+
+        // 6. FRONT LEG
+        this.Leg(ctx, 5, 6, legR, kneeR, '#ffdd59', gear === 'rollers');
+
+        // 7. FRONT ARM
+        this.Limb(ctx, -2, -10, armL, elbowL, '#e59866', '#00d2d3', true);
+
+        ctx.restore();
+      }
+
+      Limb(ctx, x, y, shoulderAng, elbowAng, skinColor, wristbandColor) {
+        ctx.save();
+        ctx.translate(x, y);
+        ctx.rotate(shoulderAng);
+        ctx.strokeStyle = '#140920';
+        ctx.lineWidth = 6.5;
+        ctx.lineCap = 'round';
+        ctx.beginPath(); ctx.moveTo(0, 0); ctx.lineTo(0, 11); ctx.stroke();
+        ctx.strokeStyle = skinColor;
+        ctx.lineWidth = 4;
+        ctx.beginPath(); ctx.moveTo(0, 0); ctx.lineTo(0, 11); ctx.stroke();
+
+        ctx.translate(0, 11);
+        ctx.rotate(elbowAng);
+        ctx.strokeStyle = '#140920';
+        ctx.lineWidth = 6;
+        ctx.beginPath(); ctx.moveTo(0, 0); ctx.lineTo(0, 10); ctx.stroke();
+        ctx.strokeStyle = skinColor;
+        ctx.lineWidth = 3.6;
+        ctx.beginPath(); ctx.moveTo(0, 0); ctx.lineTo(0, 10); ctx.stroke();
+
+        // 80s Sweatband on wrist
+        ctx.fillStyle = wristbandColor;
+        ctx.fillRect(-3, 5, 6, 3.5);
+        ctx.restore();
+      }
+
+      Leg(ctx, x, y, hipAng, kneeAng, shortColor, hasSkates) {
+        ctx.save();
+        ctx.translate(x, y);
+        ctx.rotate(hipAng);
+        // Board short thigh
+        ctx.fillStyle = shortColor;
+        ctx.strokeStyle = '#140920';
+        ctx.lineWidth = 2.2;
+        ctx.beginPath();
+        ctx.roundRect(-4.5, -2, 9, 12, 3);
+        ctx.fill(); ctx.stroke();
+
+        // Lower calf & sneaker / roller skate
+        ctx.translate(0, 10);
+        ctx.rotate(kneeAng);
+        ctx.strokeStyle = '#140920';
+        ctx.lineWidth = 6.5;
+        ctx.lineCap = 'round';
+        ctx.beginPath(); ctx.moveTo(0, 0); ctx.lineTo(0, 11); ctx.stroke();
+        ctx.strokeStyle = '#e59866';
+        ctx.lineWidth = 4;
+        ctx.beginPath(); ctx.moveTo(0, 0); ctx.lineTo(0, 11); ctx.stroke();
+
+        // Tube socks with twin stripes
+        ctx.fillStyle = '#ffffff';
+        ctx.fillRect(-3, 4, 6, 6);
+        ctx.fillStyle = '#ff3f8e';
+        ctx.fillRect(-3, 5, 6, 1.8);
+
+        // High-top Sneaker or Quad Roller Skate
+        ctx.fillStyle = hasSkates ? '#ff3f8e' : '#ffffff';
+        ctx.strokeStyle = '#140920';
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        ctx.roundRect(-4, 9, 12, 6, 2);
+        ctx.fill(); ctx.stroke();
+        if (hasSkates) {
+          ctx.fillStyle = '#ffdd59';
+          ctx.beginPath();
+          ctx.arc(-1, 17, 3, 0, Math.PI * 2);
+          ctx.arc(6, 17, 3, 0, Math.PI * 2);
+          ctx.fill(); ctx.stroke();
+        }
+        ctx.restore();
+      }
+    }
+
+    const athleteRig = new SoCalAthleteRig();
+
+    /**
+     * ============================================================================
+     * 4. JUICE ENGINE (PARTICLES, MOTION TRAILS, SCREEN SHAKE, HITSTOP, POPUPS)
+     * ============================================================================
+     */
+    const particles = [];
+    const popups = [];
+    const trails = [];
+
+    function spawnParticles(x, y, count = 14, color = '#ffffff', speed = 160, gravity = 260) {
+      for (let i = 0; i < count; i++) {
+        const ang = Math.random() * Math.PI * 2;
+        const spd = (0.3 + Math.random() * 0.7) * speed;
+        particles.push({
+          x, y,
+          vx: Math.cos(ang) * spd,
+          vy: Math.sin(ang) * spd - 40,
+          r: 3 + Math.random() * 5,
+          color,
+          gravity,
+          life: 0.45 + Math.random() * 0.35,
+          maxLife: 0.8
+        });
+      }
+    }
+
+    function addScorePopup(x, y, text, subtext = '', color = '#ffdd59') {
+      popups.push({ x, y, text, subtext, color, life: 1.15 });
+    }
+
+    /**
+     * ============================================================================
+     * 5. GLOBAL GAME STATE, 6 PLAYABLE EVENTS, & HOT-SEAT SCOREBOARD
+     * ============================================================================
+     */
+    const mainCanvas = document.getElementById('gameCanvas');
+    const mainCtx = mainCanvas.getContext('2d');
+
+    // Offscreen 320x180 low-res canvas for 16-bit Pixel Mode (Key H)
+    const pixelCanvas = document.createElement('canvas');
+    pixelCanvas.width = 320;
+    pixelCanvas.height = 180;
+    const pixelCtx = pixelCanvas.getContext('2d');
+
+    const game = {
+      screen: 'TITLE', // 'TITLE' | 'PLAYING' | 'RESULTS'
+      mode: 'SINGLE',  // 'SINGLE' | 'TOUR' | 'VIRAL'
+      eventId: 0,
+      pixelMode: false,
+      numPlayers: 1,
+      currentPlayer: 0,
+      playerScores: [[0,0,0,0,0,0], [0,0,0,0,0,0], [0,0,0,0,0,0], [0,0,0,0,0,0]],
+      bestScores: JSON.parse(localStorage.getItem('socal_painted_bests') || '[4200,4800,3900,5100,4400,3600]'),
+      timeLeft: 60.0,
+      score: 0,
+      combo: 1,
+      bestTrickScore: 0,
+      bestTrickName: 'NONE YET',
+      hintTimer: 6.5,
+      hitstop: 0,
+      slowMoTimer: 0,
+      shake: 0,
+      camX: 0,
+      viralClock: 0,
+      ev: {}
+    };
+
+    // Input State (Keyboard + Touch + Gamepad)
+    const input = { Up: false, Down: false, Left: false, Right: false, Z: false, X: false, C: false };
+    const pressed = { Z: false, X: false, C: false, Up: false };
+
+    function setKey(k, val) {
+      if (val && !input[k]) pressed[k] = true;
+      input[k] = val;
+    }
+
+    window.addEventListener('keydown', e => {
+      if (e.code === 'KeyH') {
+        togglePixelMode();
+        return;
+      }
+      if (e.code === 'ArrowUp' || e.code === 'KeyW') setKey('Up', true);
+      if (e.code === 'ArrowDown' || e.code === 'KeyS') setKey('Down', true);
+      if (e.code === 'ArrowLeft' || e.code === 'KeyA') setKey('Left', true);
+      if (e.code === 'ArrowRight' || e.code === 'KeyD') setKey('Right', true);
+      if (e.code === 'KeyZ' || e.code === 'Space') setKey('Z', true);
+      if (e.code === 'KeyX') setKey('X', true);
+      if (e.code === 'KeyC') setKey('C', true);
+    });
+
+    window.addEventListener('keyup', e => {
+      if (e.code === 'ArrowUp' || e.code === 'KeyW') setKey('Up', false);
+      if (e.code === 'ArrowDown' || e.code === 'KeyS') setKey('Down', false);
+      if (e.code === 'ArrowLeft' || e.code === 'KeyA') setKey('Left', false);
+      if (e.code === 'ArrowRight' || e.code === 'KeyD') setKey('Right', false);
+      if (e.code === 'KeyZ' || e.code === 'Space') setKey('Z', false);
+      if (e.code === 'KeyX') setKey('X', false);
+      if (e.code === 'KeyC') setKey('C', false);
+    });
+
+    // Touch buttons binding
+    document.querySelectorAll('.t-btn').forEach(btn => {
+      const k = btn.getAttribute('data-tkey');
+      btn.addEventListener('touchstart', e => { e.preventDefault(); audio.init(); setKey(k, true); });
+      btn.addEventListener('touchend', e => { e.preventDefault(); setKey(k, false); });
+      btn.addEventListener('mousedown', () => { audio.init(); setKey(k, true); });
+      btn.addEventListener('mouseup', () => setKey(k, false));
+    });
+
+    // Gamepad polling helper
+    function pollGamepad() {
+      if (!navigator.getGamepads) return;
+      const pads = navigator.getGamepads();
+      const gp = pads && pads[0];
+      if (!gp) return;
+      const axX = gp.axes[0] || 0;
+      const axY = gp.axes[1] || 0;
+      setKey('Left', axX < -0.35 || (gp.buttons[14] && gp.buttons[14].pressed));
+      setKey('Right', axX > 0.35 || (gp.buttons[15] && gp.buttons[15].pressed));
+      setKey('Up', axY < -0.35 || (gp.buttons[12] && gp.buttons[12].pressed));
+      setKey('Down', axY > 0.35 || (gp.buttons[13] && gp.buttons[13].pressed));
+      setKey('Z', Boolean(gp.buttons[0] && gp.buttons[0].pressed));
+      setKey('X', Boolean(gp.buttons[1] && gp.buttons[1].pressed) || Boolean(gp.buttons[2] && gp.buttons[2].pressed));
+      setKey('C', Boolean(gp.buttons[3] && gp.buttons[3].pressed));
+    }
+
+    function awardTrick(pts, name, x, y, bigTrick = false) {
+      const total = Math.round(pts * game.combo);
+      game.score += total;
+      game.combo = Math.min(8, +(game.combo + 0.5).toFixed(1));
+      if (total > game.bestTrickScore) {
+        game.bestTrickScore = total;
+        game.bestTrickName = name;
+      }
+      addScorePopup(x, y - 35, `+${total.toLocaleString()}`, `${name} (${game.combo}x)`, bigTrick ? '#00d2d3' : '#ffdd59');
+      if (bigTrick) {
+        audio.playRadicalStinger();
+        game.hitstop = 0.085;
+        game.slowMoTimer = 0.75;
+        spawnParticles(x, y, 24, '#ffdd59', 220, 180);
+      } else {
+        audio.playJump();
+        spawnParticles(x, y, 10, '#ff3f8e', 130, 200);
+      }
+    }
+
+    function triggerWipeout(x, y, reason = 'WIPEOUT!') {
+      audio.playWipeout();
+      game.combo = 1;
+      game.shake = 18;
+      addScorePopup(x, y - 30, reason, 'COMBO RESET', '#ff5e57');
+      spawnParticles(x, y, 28, '#ffffff', 240, 320);
+    }
+
+    /**
+     * ============================================================================
+     * 6. INITIALIZE & UPDATE EACH OF THE 6 SOCAL EVENTS
+     * ============================================================================
+     */
+    function initEventState(eventId) {
+      const meta = EVENTS_META[eventId];
+      game.eventId = eventId;
+      audio.eventTheme = eventId;
+      game.timeLeft = 60.0;
+      game.score = 0;
+      game.combo = 1;
+      game.bestTrickScore = 0;
+      game.bestTrickName = 'NONE';
+      game.hintTimer = 6.5;
+      game.hitstop = 0;
+      game.slowMoTimer = 0;
+      game.camX = 0;
+      particles.length = 0;
+      popups.length = 0;
+      trails.length = 0;
+
+      document.getElementById('hudSponsorTag').textContent = meta.sponsor;
+      document.getElementById('hudPlayerTurn').textContent = `P${game.currentPlayer + 1} • ${meta.name}`;
+      document.getElementById('touchLblZ').textContent = meta.lblZ;
+      document.getElementById('touchLblX').textContent = meta.lblX;
+      document.getElementById('touchLblC').textContent = meta.lblC;
+
+      if (eventId === 0) {
+        // 1. HALF PIPE SKATEBOARD
+        game.ev = {
+          theta: -0.95, omega: 1.7, airY: 0, vy: 0, side: 1,
+          inAir: false, trickAngle: 0, pose: 'ride', bailTimer: 0
+        };
+      } else if (eventId === 1) {
+        // 2. MALIBU SURFING
+        game.ev = {
+          x: 0.48, y: 0.55, vx: 0, vy: 0, inAir: false,
+          rot: 0, tubeTimer: 0, pose: 'ride', bailTimer: 0, waveWallX: 0.22
+        };
+      } else if (eventId === 2) {
+        // 3. VENICE FOOTBAG (HACKY SACK)
+        game.ev = {
+          px: 0.5, sackX: 0.5, sackY: 0.32, svx: 0.08, svy: 0,
+          juggles: 0, gullX: -0.1, gullY: 0.26, gullHit: 0, pose: 'ride'
+        };
+      } else if (eventId === 3) {
+        // 4. BMX DIRT COURSE
+        const obstacles = [];
+        for (let i = 1; i <= 40; i++) {
+          obstacles.push({
+            x: i * 340 + Math.random() * 90,
+            type: i % 3 === 0 ? 'ramp' : (i % 2 === 0 ? 'rock' : 'log'),
+            cleared: false
+          });
+        }
+        game.ev = {
+          dist: 0, speed: 340, y: 0, vy: 0, rot: 0,
+          pose: 'ride', crashTimer: 0, obstacles
+        };
+      } else if (eventId === 4) {
+        // 5. BOARDWALK ROLLER SKATING
+        const hazards = [];
+        for (let i = 1; i <= 45; i++) {
+          hazards.push({
+            x: i * 290 + Math.random() * 80,
+            lane: (i % 3) - 1,
+            type: i % 3 === 0 ? 'ball' : (i % 2 === 0 ? 'crack' : 'sand'),
+            passed: false
+          });
+        }
+        game.ev = {
+          dist: 0, speed: 310, laneY: 0, zHeight: 0, vz: 0,
+          spinAngle: 0, pose: 'ride', stumbleTimer: 0, hazards
+        };
+      } else if (eventId === 5) {
+        // 6. FLYING DISC (FRISBEE)
+        game.ev = {
+          phase: 'AIM_POWER', // 'AIM_POWER' | 'AIM_ANGLE' | 'FLIGHT' | 'CAUGHT'
+          power: 50, angle: 35, meterDir: 1,
+          discX: 120, discY: 0, dvx: 0, dvy: 0,
+          dogX: 260, dogY: 0, diveTimer: 0, pose: 'run'
+        };
+      }
+    }
+
+    // Update & Render Active Event
+    function updateAndDrawEvent(ctx, W, H, dt, time) {
+      const ev = game.ev;
+      const id = game.eventId;
+
+      // Auto-pilot overrides when in 9:16 Viral Short Mode
+      if (game.mode === 'VIRAL') {
+        runViralBotInputs(id, ev, time);
+      }
+
+      if (id === 0) {
+        // ====================================================================
+        // EVENT 1: VENICE HALF PIPE SKATEBOARD
+        // ====================================================================
+        const cx = W * 0.5;
+        const cy = H * 0.42;
+        const R = Math.min(W * 0.36, H * 0.36);
+
+        // Draw Painted Concrete U-Ramp with Graffiti & Coping
+        ctx.save();
+        ctx.fillStyle = '#3b354a';
+        ctx.strokeStyle = '#140920';
+        ctx.lineWidth = 4;
+        ctx.beginPath();
+        ctx.moveTo(cx - R - 70, cy);
+        ctx.lineTo(cx - R - 70, cy + R + 35);
+        ctx.lineTo(cx + R + 70, cy + R + 35);
+        ctx.lineTo(cx + R + 70, cy);
+        ctx.lineTo(cx + R, cy);
+        ctx.arc(cx, cy, R, 0, Math.PI, false);
+        ctx.closePath();
+        ctx.fill(); ctx.stroke();
+
+        // Neon 80s Graffiti on Ramp Transition
+        ctx.fillStyle = 'rgba(255, 63, 142, 0.32)';
+        ctx.font = 'bold 26px Permanent Marker, cursive';
+        ctx.textAlign = 'center';
+        ctx.fillText('VENICE Z-BOYS 87', cx, cy + R * 0.62);
+
+        // Steel Coping Lip
+        ctx.fillStyle = '#ffdd59';
+        ctx.beginPath(); ctx.arc(cx - R, cy, 7, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
+        ctx.beginPath(); ctx.arc(cx + R, cy, 7, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
+        ctx.restore();
+
+        // Physics Update
+        if (ev.bailTimer > 0) {
+          ev.bailTimer -= dt;
+          ev.pose = 'ragdoll';
+          if (ev.bailTimer <= 0) {
+            ev.theta = 0; ev.omega = 1.6; ev.inAir = false; ev.pose = 'ride';
+          }
+        } else if (!ev.inAir) {
+          // Gravity along circular arc
+          const gAcc = -3.8 * Math.sin(ev.theta);
+          ev.omega += gAcc * dt;
+
+          // Pump boost when pressing Down or Z near transitions
+          if ((input.Down || pressed.Z) && Math.abs(ev.theta) > 0.35) {
+            ev.omega += Math.sign(ev.omega) * 2.2 * dt;
+            if (pressed.Z) {
+              spawnParticles(cx + Math.sin(ev.theta) * R, cy + Math.cos(ev.theta) * R, 6, '#ffdd59', 90, 120);
+              game.hintTimer = 0;
+            }
+          }
+          ev.omega = Math.max(-4.6, Math.min(4.6, ev.omega));
+          ev.theta += ev.omega * dt;
+          ev.pose = input.Down ? 'crouch' : 'ride';
+
+          // Launch off coping into air!
+          if (Math.abs(ev.theta) >= Math.PI * 0.48) {
+            ev.side = Math.sign(ev.theta);
+            ev.theta = ev.side * Math.PI * 0.48;
+            const launchSpeed = Math.abs(ev.omega) * R;
+            if (launchSpeed > 180) {
+              ev.inAir = true;
+              ev.airY = 2;
+              ev.vy = launchSpeed * 0.92;
+              ev.trickAngle = 0;
+              audio.playJump();
+            } else {
+              ev.omega = -ev.omega * 0.85;
+            }
+          }
+        } else {
+          // Airborne above coping!
+          ev.airY += ev.vy * dt;
+          ev.vy -= 440 * dt;
+
+          if (pressed.Z) {
+            ev.pose = 'kickflip';
+            awardTrick(450, input.Up ? 'MCTWIST 540!' : 'KICKFLIP INDY', cx + ev.side * R, cy - ev.airY, input.Up);
+            game.hintTimer = 0;
+          } else if (pressed.X) {
+            ev.pose = 'air_grab';
+            ev.trickAngle += Math.PI * 2;
+            awardTrick(600, 'LIEN AIR 360!', cx + ev.side * R, cy - ev.airY, true);
+            game.hintTimer = 0;
+          } else if (pressed.C && ev.airY < 75) {
+            ev.pose = 'handplant';
+            awardTrick(520, 'COPING HANDPLANT!', cx + ev.side * R, cy - ev.airY, false);
+            game.hintTimer = 0;
+          }
+
+          if (input.Left) ev.trickAngle -= 5.5 * dt;
+          if (input.Right) ev.trickAngle += 5.5 * dt;
+          else ev.trickAngle *= 0.9;
+
+          if (ev.airY <= 0) {
+            ev.airY = 0;
+            ev.inAir = false;
+            if (Math.abs(ev.trickAngle % (Math.PI * 2)) > 0.95) {
+              ev.bailTimer = 1.1;
+              triggerWipeout(cx + ev.side * R, cy, 'BAD LANDING!');
+            } else {
+              ev.omega = -ev.side * Math.min(4.4, Math.abs(ev.omega) * 1.04);
+              ev.pose = 'crouch';
+              spawnParticles(cx + ev.side * R, cy, 10, '#00d2d3', 110, 180);
+            }
+          }
+        }
+
+        const sx = cx + Math.sin(ev.theta) * (R - 18);
+        const sy = (cy + Math.cos(ev.theta) * (R - 18)) - ev.airY;
+        const rot = -ev.theta + (ev.inAir ? ev.trickAngle * 0.25 : 0);
+        trails.push({ x: sx, y: sy, color: '#ff3f8e', life: 0.22 });
+        athleteRig.draw(ctx, sx, sy, rot, ev.pose, time, 'skate');
+
+      } else if (id === 1) {
+        // ====================================================================
+        // EVENT 2: MALIBU POINT BREAK SURFING
+        // ====================================================================
+        game.camX += 240 * dt;
+        const waveTopY = H * 0.34;
+        const waveBotY = H * 0.84;
+
+        // Draw Painted Pacific Wave Face
+        const wGrad = ctx.createLinearGradient(0, waveTopY, 0, waveBotY);
+        wGrad.addColorStop(0, '#00f5d4');
+        wGrad.addColorStop(0.35, '#00a8a8');
+        wGrad.addColorStop(1, '#073b4c');
+        ctx.fillStyle = wGrad;
+        ctx.beginPath();
+        ctx.moveTo(0, waveTopY);
+        for (let x = 0; x <= W; x += 25) {
+          const lipY = waveTopY + Math.sin(x * 0.012 + time * 4) * 10 + (x / W) * 45;
+          ctx.lineTo(x, lipY);
+        }
+        ctx.lineTo(W, H);
+        ctx.lineTo(0, H);
+        ctx.closePath();
+        ctx.fill();
+
+        // Crushing Whitewater Foam Wall on the left
+        const tubeEdgeX = W * (0.25 + Math.sin(time * 1.7) * 0.04);
+        ctx.fillStyle = 'rgba(255, 255, 255, 0.88)';
+        ctx.beginPath();
+        ctx.moveTo(0, waveTopY - 15);
+        for (let y = waveTopY - 15; y <= H; y += 22) {
+          ctx.lineTo(tubeEdgeX - 35 + Math.sin(y * 0.08 + time * 11) * 18, y);
+        }
+        ctx.lineTo(0, H);
+        ctx.closePath();
+        ctx.fill();
+
+        // Surfer Physics
+        if (ev.bailTimer > 0) {
+          ev.bailTimer -= dt;
+          ev.pose = 'ragdoll';
+          if (ev.bailTimer <= 0) { ev.x = 0.52; ev.y = 0.58; ev.inAir = false; ev.pose = 'ride'; }
+        } else {
+          if (input.Left) ev.x -= 0.28 * dt;
+          if (input.Right) ev.x += 0.28 * dt;
+          if (!ev.inAir) {
+            if (input.Up) ev.y -= 0.36 * dt;
+            if (input.Down) ev.y += 0.36 * dt;
+            ev.x = Math.max(0.14, Math.min(0.86, ev.x));
+            ev.y = Math.max(0.28, Math.min(0.84, ev.y));
+
+            if (pressed.Z) {
+              awardTrick(340, 'RADICAL CUTBACK!', ev.x * W, ev.y * H, false);
+              spawnParticles(ev.x * W, ev.y * H, 14, '#ffffff', 160, 220);
+              game.hintTimer = 0;
+            }
+
+            // Launch off the wave lip if carving high!
+            const currentLipRatio = (waveTopY + (ev.x * 45)) / H;
+            if (ev.y <= currentLipRatio + 0.03 && (input.Up || pressed.X)) {
+              ev.inAir = true;
+              ev.vy = -0.46;
+              audio.playJump();
+            }
+
+            // Inside the Green Barrel (Tube Ride Scoring!)
+            const inBarrel = ev.x * W > tubeEdgeX - 25 && ev.x * W < tubeEdgeX + 85 && ev.y < 0.62;
+            if (inBarrel) {
+              ev.pose = 'crouch';
+              ev.tubeTimer += dt;
+              if (ev.tubeTimer > 0.45) {
+                ev.tubeTimer = 0;
+                awardTrick(420, 'GREEN ROOM TUBE RIDE!', ev.x * W, ev.y * H, false);
+                game.hintTimer = 0;
+              }
+            } else {
+              ev.pose = 'ride';
+            }
+
+            // Swallowed by crushing whitewater foam!
+            if (ev.x * W < tubeEdgeX - 42) {
+              ev.bailTimer = 1.1;
+              triggerWipeout(ev.x * W, ev.y * H, 'SWALLOWED BY FOAM!');
+            }
+          } else {
+            // Aerial above the wave lip!
+            ev.y += ev.vy * dt;
+            ev.vy += 0.95 * dt;
+            ev.rot += 7.5 * dt;
+            ev.pose = 'air_grab';
+            if (pressed.X || pressed.Z) {
+              awardTrick(780, 'PACIFIC ALLEY-OOP 360!', ev.x * W, ev.y * H, true);
+              game.hintTimer = 0;
+            }
+            if (ev.y >= 0.48) {
+              ev.inAir = false;
+              ev.rot = 0;
+              spawnParticles(ev.x * W, ev.y * H, 18, '#ffffff', 180, 240);
+            }
+          }
+        }
+
+        const sx = ev.x * W;
+        const sy = ev.y * H;
+        trails.push({ x: sx - 18, y: sy + 18, color: '#ffffff', life: 0.25 });
+        athleteRig.draw(ctx, sx, sy, ev.inAir ? ev.rot : (input.Up ? -0.25 : 0.15), ev.pose, time, 'surf');
+
+        // Translucent Curling Barrel Lip Rendered OVER the Surfer for True Tube Ride!
+        ctx.save();
+        const barrelGrad = ctx.createLinearGradient(tubeEdgeX - 20, waveTopY, tubeEdgeX + 110, waveTopY + 130);
+        barrelGrad.addColorStop(0, 'rgba(255, 255, 255, 0.85)');
+        barrelGrad.addColorStop(0.5, 'rgba(0, 245, 212, 0.42)');
+        barrelGrad.addColorStop(1, 'rgba(0, 210, 211, 0.0)');
+        ctx.fillStyle = barrelGrad;
+        ctx.beginPath();
+        ctx.arc(tubeEdgeX + 35, waveTopY + 75, 85, -Math.PI * 0.7, Math.PI * 0.25);
+        ctx.fill();
+        ctx.restore();
+
+      } else if (id === 2) {
+        // ====================================================================
+        // EVENT 3: VENICE FOOTBAG (HACKY SACK) + SEAGULL BONK!
+        // ====================================================================
+        const groundY = H * 0.82;
+        if (input.Left) ev.px -= 0.45 * dt;
+        if (input.Right) ev.px += 0.45 * dt;
+        ev.px = Math.max(0.15, Math.min(0.85, ev.px));
+
+        // Update Seagull flying overhead
+        ev.gullX += 0.18 * dt;
+        if (ev.gullX > 1.15) ev.gullX = -0.15;
+        const gx = ev.gullX * W;
+        const gy = (ev.gullY + Math.sin(time * 5) * 0.03) * H;
+
+        // Draw Painted Seagull
+        ctx.save();
+        ctx.translate(gx, gy);
+        if (ev.gullHit > 0) {
+          ev.gullHit -= dt;
+          ctx.rotate(time * 15);
+        }
+        ctx.strokeStyle = '#ffffff';
+        ctx.lineWidth = 4;
+        ctx.beginPath();
+        const flap = Math.sin(time * 12) * 10;
+        ctx.moveTo(-18, flap); ctx.quadraticCurveTo(-8, -8, 0, 0);
+        ctx.quadraticCurveTo(8, -8, 18, flap);
+        ctx.stroke();
+        ctx.fillStyle = '#ffbe55';
+        ctx.fillRect(14, -2, 7, 4);
+        ctx.restore();
+
+        // Update Hacky Sack Physics
+        ev.sackX += ev.svx * dt;
+        ev.sackY += ev.svy * dt;
+        ev.svy += 0.72 * dt;
+
+        if (ev.sackX < 0.1 || ev.sackX > 0.9) ev.svx *= -1;
+
+        const playerScreenX = ev.px * W;
+        const sackScreenX = ev.sackX * W;
+        const sackScreenY = ev.sackY * H;
+
+        // Check Seagull Bonk!
+        if (ev.gullHit <= 0 && Math.hypot(sackScreenX - gx, sackScreenY - gy) < 34) {
+          ev.gullHit = 1.2;
+          ev.svy = 0.25;
+          audio.playSeagullSquawk();
+          awardTrick(2500, '🐦 SEAGULL BONK BONUS!', gx, gy, true);
+        }
+
+        // Kick / Juggle Window near athlete
+        const distX = Math.abs(sackScreenX - playerScreenX);
+        const distY = Math.abs(sackScreenY - (groundY - 38));
+        if (ev.svy > 0 && distX < 58 && distY < 52 && (pressed.Z || pressed.X || pressed.C || input.Up)) {
+          ev.juggles++;
+          ev.svy = pressed.C ? -0.68 : -0.56;
+          ev.svx = ((ev.sackX - ev.px) * 1.4) + (Math.random() - 0.5) * 0.18;
+          ev.pose = pressed.C ? 'air_grab' : (pressed.X ? 'crouch' : 'kickflip');
+          const trickNames = ['AROUND THE WORLD', 'JESTER HEEL KICK', 'ARCH NEMESIS', 'CALI HACKY STALL', 'HEAD-BUTT DAZZLE'];
+          const tName = trickNames[(ev.juggles + (pressed.C ? 2 : 0)) % trickNames.length];
+          awardTrick(280 + ev.juggles * 45, `${tName} (${ev.juggles}x)`, sackScreenX, sackScreenY, ev.juggles % 4 === 0);
+          game.hintTimer = 0;
+        } else if (ev.sackY * H >= groundY) {
+          // Dropped the footbag on the sand
+          if (ev.juggles > 0) triggerWipeout(sackScreenX, groundY, 'SACK DROPPED!');
+          ev.juggles = 0;
+          ev.sackX = ev.px;
+          ev.sackY = 0.35;
+          ev.svx = (Math.random() - 0.5) * 0.16;
+          ev.svy = -0.25;
+        }
+
+        athleteRig.draw(ctx, playerScreenX, groundY - 26, 0, ev.pose, time, 'none');
+
+        // Draw Painted Crochet Hacky Sack
+        ctx.save();
+        ctx.translate(sackScreenX, sackScreenY);
+        ctx.rotate(time * 8);
+        ctx.fillStyle = '#ff3f8e';
+        ctx.strokeStyle = '#140920';
+        ctx.lineWidth = 2.5;
+        ctx.beginPath(); ctx.arc(0, 0, 10, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
+        ctx.fillStyle = '#ffdd59';
+        ctx.beginPath(); ctx.arc(0, 0, 10, 0, Math.PI); ctx.fill();
+        ctx.restore();
+
+      } else if (id === 3) {
+        // ====================================================================
+        // EVENT 4: BMX DOWNHILL DIRT COURSE
+        // ====================================================================
+        const getTrackY = worldX => H * 0.72 + Math.sin(worldX * 0.0065) * 32 + Math.cos(worldX * 0.015) * 14;
+
+        if (ev.crashTimer > 0) {
+          ev.crashTimer -= dt;
+          ev.pose = 'ragdoll';
+          if (ev.crashTimer <= 0) { ev.y = 0; ev.vy = 0; ev.rot = 0; ev.pose = 'ride'; ev.speed = 320; }
+        } else {
+          ev.speed = Math.min(480, ev.speed + 45 * dt);
+          ev.dist += ev.speed * dt;
+          game.camX = ev.dist;
+
+          if (ev.y <= 0 && pressed.Z) {
+            ev.vy = 340;
+            audio.playJump();
+            game.hintTimer = 0;
+          }
+          ev.y += ev.vy * dt;
+          if (ev.y > 0) {
+            ev.vy -= 720 * dt;
+            if (pressed.X) {
+              ev.rot -= Math.PI * 2;
+              awardTrick(750, 'BMX DIRT BACKFLIP!', W * 0.28, getTrackY(ev.dist) - ev.y, true);
+              game.hintTimer = 0;
+            } else if (pressed.C) {
+              ev.pose = 'dive';
+              awardTrick(520, 'SUPERMAN SEATGRAB!', W * 0.28, getTrackY(ev.dist) - ev.y, false);
+              game.hintTimer = 0;
+            }
+          } else {
+            ev.y = 0;
+            ev.vy = 0;
+            ev.rot = 0;
+            ev.pose = input.Down ? 'crouch' : 'ride';
+          }
+        }
+
+        // Draw Painted Dirt Track Hills
+        ctx.fillStyle = '#9c5533';
+        ctx.strokeStyle = '#3d1e10';
+        ctx.lineWidth = 4;
+        ctx.beginPath();
+        ctx.moveTo(0, H);
+        for (let sx = 0; sx <= W + 20; sx += 20) {
+          const wx = ev.dist + (sx - W * 0.28);
+          ctx.lineTo(sx, getTrackY(wx));
+        }
+        ctx.lineTo(W, H);
+        ctx.closePath();
+        ctx.fill(); ctx.stroke();
+
+        // Draw & Collide with Jumps, Rocks, and Logs
+        const riderScreenX = W * 0.28;
+        const riderGroundY = getTrackY(ev.dist);
+
+        ev.obstacles.forEach(ob => {
+          const ox = riderScreenX + (ob.x - ev.dist);
+          if (ox < -80 || ox > W + 80) return;
+          const oy = getTrackY(ob.x);
+
+          ctx.save();
+          ctx.translate(ox, oy);
+          if (ob.type === 'ramp') {
+            ctx.fillStyle = '#d9822b';
+            ctx.beginPath(); ctx.moveTo(-28, 4); ctx.lineTo(24, -26); ctx.lineTo(24, 4); ctx.closePath();
+            ctx.fill(); ctx.stroke();
+          } else if (ob.type === 'rock') {
+            ctx.fillStyle = '#57606f';
+            ctx.beginPath(); ctx.arc(0, -10, 16, Math.PI, 0); ctx.closePath();
+            ctx.fill(); ctx.stroke();
+          } else {
+            ctx.fillStyle = '#5c3828';
+            ctx.beginPath(); ctx.arc(0, -9, 12, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
+          }
+          ctx.restore();
+
+          if (!ob.cleared && Math.abs(ob.x - ev.dist) < 26 && ev.crashTimer <= 0) {
+            if (ob.type === 'ramp') {
+              ob.cleared = true;
+              ev.vy = Math.max(ev.vy, 430);
+              audio.playJump();
+            } else if (ev.y < 22) {
+              ob.cleared = true;
+              ev.crashTimer = 1.05;
+              triggerWipeout(riderScreenX, riderGroundY, 'BMX CRASH!');
+            } else {
+              ob.cleared = true;
+              awardTrick(260, 'CLEAN BUNNYHOP!', riderScreenX, riderGroundY - ev.y, false);
+            }
+          }
+        });
+
+        athleteRig.draw(ctx, riderScreenX, riderGroundY - ev.y - 26, ev.rot * 0.2, ev.pose, time, 'bmx');
+
+      } else if (id === 4) {
+        // ====================================================================
+        // EVENT 5: SANTA MONICA BOARDWALK ROLLER SKATING
+        // ====================================================================
+        const roadTop = H * 0.63;
+        const roadBot = H * 0.92;
+
+        // Draw Painted Concrete Boardwalk & Pink Curb
+        ctx.fillStyle = '#dcdde1';
+        ctx.fillRect(0, roadTop, W, roadBot - roadTop);
+        ctx.fillStyle = '#ff3f8e';
+        ctx.fillRect(0, roadTop - 6, W, 6);
+
+        if (ev.stumbleTimer > 0) {
+          ev.stumbleTimer -= dt;
+          ev.pose = 'ragdoll';
+        } else {
+          ev.dist += ev.speed * dt;
+          game.camX = ev.dist;
+          if (input.Up) ev.laneY = Math.max(-1, ev.laneY - 3.2 * dt);
+          if (input.Down) ev.laneY = Math.min(1, ev.laneY + 3.2 * dt);
+
+          if (ev.zHeight <= 0 && pressed.Z) {
+            ev.vz = 320;
+            audio.playJump();
+            game.hintTimer = 0;
+          }
+          ev.zHeight += ev.vz * dt;
+          if (ev.zHeight > 0) {
+            ev.vz -= 740 * dt;
+            if (pressed.X) {
+              ev.pose = 'air_grab';
+              awardTrick(580, 'BOARDWALK 360 PIROUETTE!', W * 0.26, roadTop + 40 - ev.zHeight, true);
+              game.hintTimer = 0;
+            }
+          } else {
+            ev.zHeight = 0; ev.vz = 0;
+            if (pressed.C) {
+              ev.pose = 'crouch';
+              awardTrick(360, 'SHOOT-THE-DUCK SLIDE!', W * 0.26, roadTop + 55, false);
+              game.hintTimer = 0;
+            } else {
+              ev.pose = input.C ? 'crouch' : 'ride';
+            }
+          }
+        }
+
+        const skaterX = W * 0.26;
+        const skaterLaneCenterY = (roadTop + roadBot) * 0.5 + ev.laneY * ((roadBot - roadTop) * 0.34);
+
+        // Hazards: Sand traps, cracks, bouncing beach balls
+        ev.hazards.forEach(hz => {
+          const hx = skaterX + (hz.x - ev.dist);
+          if (hx < -60 || hx > W + 60) return;
+          const hy = (roadTop + roadBot) * 0.5 + hz.lane * ((roadBot - roadTop) * 0.34);
+
+          ctx.save();
+          ctx.translate(hx, hy);
+          if (hz.type === 'ball') {
+            const by = -Math.abs(Math.sin(time * 7 + hz.x)) * 22;
+            ctx.fillStyle = '#ff3f8e';
+            ctx.beginPath(); ctx.arc(0, by - 10, 13, 0, Math.PI * 2); ctx.fill();
+            ctx.fillStyle = '#ffdd59';
+            ctx.beginPath(); ctx.arc(0, by - 10, 13, 0, Math.PI); ctx.fill();
+          } else if (hz.type === 'sand') {
+            ctx.fillStyle = '#eab56f';
+            ctx.beginPath(); ctx.ellipse(0, 4, 28, 10, 0, 0, Math.PI * 2); ctx.fill();
+          } else {
+            ctx.strokeStyle = '#2f3640';
+            ctx.lineWidth = 3;
+            ctx.beginPath(); ctx.moveTo(-18, -6); ctx.lineTo(0, 2); ctx.lineTo(18, -4); ctx.stroke();
+          }
+          ctx.restore();
+
+          if (!hz.passed && Math.abs(hz.x - ev.dist) < 24 && ev.stumbleTimer <= 0) {
+            if (Math.abs(hz.lane - ev.laneY) < 0.45 && ev.zHeight < 20) {
+              hz.passed = true;
+              ev.stumbleTimer = 0.9;
+              triggerWipeout(skaterX, skaterLaneCenterY, 'TRIPPED ON BOARDWALK!');
+            } else if (ev.zHeight >= 20) {
+              hz.passed = true;
+              awardTrick(310, 'CLEAN LEAP!', skaterX, skaterLaneCenterY - ev.zHeight, false);
+            }
+          }
+        });
+
+        athleteRig.draw(ctx, skaterX, skaterLaneCenterY - ev.zHeight - 28, 0, ev.pose, time, 'rollers');
+
+      } else if (id === 5) {
+        // ====================================================================
+        // EVENT 6: HUNTINGTON FLYING DISC (THROW + DIVING CATCH)
+        // ====================================================================
+        const groundY = H * 0.80;
+
+        if (ev.phase === 'AIM_POWER' || ev.phase === 'AIM_ANGLE') {
+          ev.power += ev.meterDir * 95 * dt;
+          if (ev.power > 100 || ev.power < 15) ev.meterDir *= -1;
+          ev.power = Math.max(15, Math.min(100, ev.power));
+
+          // Draw Thrower on Left & Power/Angle Arc Meter
+          athleteRig.draw(ctx, W * 0.18, groundY - 26, 0, 'ride', time, 'none');
+
+          ctx.save();
+          ctx.fillStyle = 'rgba(0,0,0,0.75)';
+          ctx.strokeStyle = '#ffdd59';
+          ctx.lineWidth = 2;
+          ctx.fillRect(W * 0.12, groundY - 115, 140, 26);
+          ctx.strokeRect(W * 0.12, groundY - 115, 140, 26);
+          ctx.fillStyle = '#00d2d3';
+          ctx.fillRect(W * 0.12 + 3, groundY - 112, (ev.power / 100) * 134, 20);
+          ctx.fillStyle = '#ffffff';
+          ctx.font = 'bold 11px Righteous';
+          ctx.fillText(`PRESS [Z] TO THROW (${Math.round(ev.power)}%)`, W * 0.12 + 8, groundY - 98);
+          ctx.restore();
+
+          if (pressed.Z) {
+            ev.phase = 'FLIGHT';
+            ev.discX = 140;
+            ev.discY = 42;
+            ev.dvx = 240 + ev.power * 2.8;
+            ev.dvy = 115 + ev.power * 0.9;
+            ev.dogX = 280;
+            ev.dogY = 0;
+            audio.playJump();
+            game.hintTimer = 0;
+          }
+        } else if (ev.phase === 'FLIGHT') {
+          ev.discX += ev.dvx * dt;
+          ev.discY += ev.dvy * dt;
+          ev.dvy -= 92 * dt; // Aerodynamic frisbee lift decay
+          game.camX = Math.max(0, ev.discX - W * 0.38);
+
+          // Catcher sprinting & layout diving
+          const runSpd = (input.Right || input.X) ? 490 : (input.Left ? 210 : 395);
+          ev.dogX += runSpd * dt;
+          if ((pressed.Z || pressed.C) && ev.dogY <= 0) {
+            ev.dogY = 36;
+            ev.diveTimer = 0.55;
+            ev.pose = 'dive';
+            audio.playJump();
+          }
+          if (ev.diveTimer > 0) {
+            ev.diveTimer -= dt;
+            if (ev.diveTimer <= 0) { ev.dogY = 0; ev.pose = 'run'; }
+          } else {
+            ev.pose = 'run';
+          }
+
+          const discScreenX = ev.discX - game.camX;
+          const discScreenY = groundY - ev.discY;
+          const catcherScreenX = ev.dogX - game.camX;
+          const catcherScreenY = groundY - ev.dogY - 26;
+
+          // Draw Glowing Neon Flying Disc
+          ctx.save();
+          ctx.translate(discScreenX, discScreenY);
+          ctx.fillStyle = '#ff3f8e';
+          ctx.strokeStyle = '#ffdd59';
+          ctx.lineWidth = 2.5;
+          ctx.beginPath(); ctx.ellipse(0, 0, 18, 5, 0, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
+          ctx.restore();
+
+          athleteRig.draw(ctx, catcherScreenX, catcherScreenY, ev.pose === 'dive' ? 0.45 : 0, ev.pose, time, 'none');
+
+          // Check Catch or Ground Miss
+          if (Math.hypot(discScreenX - catcherScreenX, discScreenY - catcherScreenY) < 48) {
+            const isDive = ev.pose === 'dive';
+            const distPts = Math.round(ev.discX * 0.65) + (isDive ? 850 : 300);
+            awardTrick(distPts, isDive ? '⚡ LAYOUT DIVING CATCH!' : 'CLEAN BEACH CATCH!', catcherScreenX, catcherScreenY, isDive);
+            ev.phase = 'AIM_POWER';
+            game.camX = 0;
+          } else if (ev.discY <= 0) {
+            triggerWipeout(discScreenX, groundY, 'DISC HIT THE SAND!');
+            ev.phase = 'AIM_POWER';
+            game.camX = 0;
+          }
+        }
+      }
+
+      // Draw Motion Trails
+      for (let i = trails.length - 1; i >= 0; i--) {
+        const tr = trails[i];
+        tr.life -= dt;
+        if (tr.life <= 0) { trails.splice(i, 1); continue; }
+        ctx.fillStyle = tr.color;
+        ctx.globalAlpha = tr.life * 1.4;
+        ctx.beginPath(); ctx.arc(tr.x, tr.y, 6, 0, Math.PI * 2); ctx.fill();
+        ctx.globalAlpha = 1;
+      }
+
+      // Draw & Update Particles
+      for (let i = particles.length - 1; i >= 0; i--) {
+        const p = particles[i];
+        p.x += p.vx * dt;
+        p.y += p.vy * dt;
+        p.vy += p.gravity * dt;
+        p.life -= dt;
+        if (p.life <= 0) { particles.splice(i, 1); continue; }
+        ctx.fillStyle = p.color;
+        ctx.globalAlpha = Math.max(0, p.life / p.maxLife);
+        ctx.beginPath(); ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2); ctx.fill();
+        ctx.globalAlpha = 1;
+      }
+
+      // Draw Floating Score & Combo Popups
+      for (let i = popups.length - 1; i >= 0; i--) {
+        const pop = popups[i];
+        pop.y -= 42 * dt;
+        pop.life -= dt;
+        if (pop.life <= 0) { popups.splice(i, 1); continue; }
+        ctx.save();
+        ctx.globalAlpha = Math.min(1, pop.life * 1.5);
+        ctx.font = 'bold 22px Righteous, sans-serif';
+        ctx.textAlign = 'center';
+        ctx.strokeStyle = '#140920';
+        ctx.lineWidth = 4;
+        ctx.strokeText(pop.text, pop.x, pop.y);
+        ctx.fillStyle = pop.color;
+        ctx.fillText(pop.text, pop.x, pop.y);
+        if (pop.subtext) {
+          ctx.font = 'bold 12px JetBrains Mono, monospace';
+          ctx.fillStyle = '#ffffff';
+          ctx.fillText(pop.subtext, pop.x, pop.y + 16);
+        }
+        ctx.restore();
+      }
+
+      // Draw Self-Teaching 1-Line Hint Banner (fades out after first trick)
+      if (game.hintTimer > 0 && game.mode !== 'VIRAL') {
+        game.hintTimer -= dt;
+        ctx.save();
+        ctx.globalAlpha = Math.min(1, game.hintTimer);
+        ctx.fillStyle = 'rgba(14, 9, 24, 0.82)';
+        ctx.strokeStyle = '#00d2d3';
+        ctx.lineWidth = 2;
+        const bw = Math.min(W - 24, 640);
+        ctx.fillRect((W - bw) / 2, H * 0.14, bw, 32);
+        ctx.strokeRect((W - bw) / 2, H * 0.14, bw, 32);
+        ctx.fillStyle = '#ffdd59';
+        ctx.font = 'bold 12px JetBrains Mono, monospace';
+        ctx.textAlign = 'center';
+        ctx.fillText(EVENTS_META[id].hint, W * 0.5, H * 0.14 + 20);
+        ctx.restore();
+      }
+
+      // Draw Live Scoreboard & Timer Strip
+      ctx.save();
+      ctx.fillStyle = 'rgba(15, 10, 26, 0.82)';
+      ctx.strokeStyle = '#ffdd59';
+      ctx.lineWidth = 2;
+      ctx.fillRect(W * 0.5 - 155, 46, 310, 38);
+      ctx.strokeRect(W * 0.5 - 155, 46, 310, 38);
+
+      ctx.fillStyle = '#ffdd59';
+      ctx.font = 'bold 18px JetBrains Mono, monospace';
+      ctx.textAlign = 'left';
+      ctx.fillText(`SCORE: ${game.score.toLocaleString()}`, W * 0.5 - 142, 70);
+
+      ctx.fillStyle = game.timeLeft < 10 ? '#ff5e57' : '#00d2d3';
+      ctx.textAlign = 'right';
+      ctx.fillText(`${Math.ceil(game.timeLeft)}s`, W * 0.5 + 142, 70);
+      ctx.restore();
+    }
+
+    /**
+     * ============================================================================
+     * 7. VIRAL YOUTUBE SHORT 9:16 AUTO-DIRECTOR (HIGHLIGHT REEL ACROSS ALL 6 EVENTS)
+     * ============================================================================
+     */
+    function runViralBotInputs(id, ev, time) {
+      input.Up = false; input.Down = false; input.Left = false; input.Right = false;
+      if (id === 0) {
+        input.Down = !ev.inAir;
+        input.Up = ev.inAir;
+        if (ev.inAir && ev.vy > 0 && Math.random() < 0.25) pressed.Z = true;
+      } else if (id === 1) {
+        input.Up = Math.sin(time * 2.5) > 0;
+        input.Down = !input.Up;
+        if (ev.inAir) pressed.X = true;
+      } else if (id === 2) {
+        input.Left = ev.px > ev.sackX + 0.02;
+        input.Right = ev.px < ev.sackX - 0.02;
+        if (ev.svy > 0) pressed.C = true;
+      } else if (id === 3) {
+        if (ev.y <= 0 && Math.random() < 0.12) pressed.Z = true;
+        if (ev.y > 35) pressed.X = true;
+      } else if (id === 4) {
+        if (ev.zHeight <= 0 && Math.random() < 0.12) pressed.Z = true;
+        if (ev.zHeight > 25) pressed.X = true;
+      } else if (id === 5) {
+        if (ev.phase !== 'FLIGHT' && ev.power > 82) pressed.Z = true;
+        if (ev.phase === 'FLIGHT') {
+          input.Right = true;
+          if (Math.abs(ev.discX - ev.dogX) < 55) pressed.Z = true;
+        }
+      }
+    }
+
+    const viralCaptions = [
+      '1/6 VENICE HALF PIPE: 540 MCTWIST! 🛹🔥',
+      '2/6 MALIBU POINT BREAK: TUBE RIDE + 360 AIR! 🌊🏄',
+      '3/6 VENICE FOOTBAG: SEAGULL BONK BONUS! 🐦💥',
+      '4/6 HOLLYWOOD HILLS BMX: DIRT BACKFLIP! 🚲⚡',
+      '5/6 SANTA MONICA STRAND: 360 SKATE SPIN! 🛼🌴',
+      '6/6 HUNTINGTON BEACH: LAYOUT DIVING CATCH! 🥏🏆'
+    ];
+
+    function startViralShortMode() {
+      audio.init();
+      game.mode = 'VIRAL';
+      game.screen = 'PLAYING';
+      game.viralClock = 0;
+      initEventState(0);
+      document.getElementById('titleModal').classList.add('hidden');
+      document.getElementById('resultsModal').classList.add('hidden');
+      document.getElementById('viewport-shell').classList.add('shorts-916');
+      document.getElementById('viralCaptionWrap').classList.remove('hidden');
+      document.getElementById('btnViralShort').classList.add('viral-pulse');
+      document.getElementById('viralCaptionText').textContent = viralCaptions[0];
+      resizeCanvas();
+    }
+
+    // Complete Event & Show Painted Podium Standings
+    function finishCurrentEvent() {
+      game.playerScores[game.currentPlayer][game.eventId] = game.score;
+      if (game.score > game.bestScores[game.eventId]) {
+        game.bestScores[game.eventId] = game.score;
+        localStorage.setItem('socal_painted_bests', JSON.stringify(game.bestScores));
+      }
+
+      // Check if next hot-seat player has a turn on this event
+      if (game.currentPlayer + 1 < game.numPlayers) {
+        game.currentPlayer++;
+        initEventState(game.eventId);
+        return;
+      }
+
+      game.currentPlayer = 0;
+      game.screen = 'RESULTS';
+      audio.playRadicalStinger();
+
+      const resModal = document.getElementById('resultsModal');
+      resModal.classList.remove('hidden');
+      resModal.classList.add('flex');
+
+      const meta = EVENTS_META[game.eventId];
+      document.getElementById('resSubtitle').textContent = `${meta.sponsor} PRESENTS`;
+      document.getElementById('resTitle').textContent = `${meta.name.toUpperCase()} — RESULTS`;
+
+      // Build Standings list (Players + CPU Ghost "RAD RICKY")
+      const entries = [];
+      for (let p = 0; p < game.numPlayers; p++) {
+        const totalTour = game.playerScores[p].reduce((a, b) => a + b, 0);
+        entries.push({
+          name: `PLAYER ${p + 1}`,
+          evScore: game.playerScores[p][game.eventId],
+          tourScore: totalTour,
+          isHuman: true
+        });
+      }
+      entries.push({
+        name: 'RAD RICKY (CPU)',
+        evScore: meta.cpuScore,
+        tourScore: meta.cpuScore * (game.eventId + 1),
+        isHuman: false
+      });
+      entries.sort((a, b) => b.evScore - a.evScore);
+
+      // Render Painted Podium Canvas
+      const pCan = document.getElementById('podiumCanvas');
+      const pCtx = pCan.getContext('2d');
+      pCtx.clearRect(0, 0, pCan.width, pCan.height);
+      const podGrad = pCtx.createLinearGradient(0, 0, 0, 190);
+      podGrad.addColorStop(0, '#2c1642');
+      podGrad.addColorStop(1, '#ff5e57');
+      pCtx.fillStyle = podGrad;
+      pCtx.fillRect(0, 0, 520, 190);
+
+      const spots = [
+        { rank: '1ST GOLD 🏆', x: 260, h: 82, col: '#ffdd59', entry: entries[0] },
+        { rank: '2ND SILVER 🥈', x: 135, h: 60, col: '#d1d8e0', entry: entries[1] },
+        { rank: '3RD BRONZE 🥉', x: 385, h: 46, col: '#e67e22', entry: entries[2] || { name: 'SURFER JOE', evScore: 3100 } }
+      ];
+      spots.forEach(sp => {
+        pCtx.fillStyle = sp.col;
+        pCtx.strokeStyle = '#140920';
+        pCtx.lineWidth = 3;
+        pCtx.fillRect(sp.x - 52, 185 - sp.h, 104, sp.h);
+        pCtx.strokeRect(sp.x - 52, 185 - sp.h, 104, sp.h);
+        athleteRig.draw(pCtx, sp.x, 185 - sp.h - 26, 0, 'air_grab', performance.now() / 1000, 'none', 0.85, 0.85);
+        pCtx.fillStyle = '#140920';
+        pCtx.font = 'bold 11px Righteous';
+        pCtx.textAlign = 'center';
+        pCtx.fillText(sp.rank, sp.x, 185 - sp.h + 18);
+        pCtx.fillText(`${sp.entry.name}: ${sp.entry.evScore.toLocaleString()}`, sp.x, 185 - sp.h + 34);
+      });
+
+      // Score Table HTML
+      document.getElementById('scoreTableWrap').innerHTML = entries.map((e, idx) => `
+        <div class="flex justify-between py-1 border-b border-white/10 ${e.isHuman ? 'text-amber-300 font-bold' : 'text-teal-300'}">
+          <span>#${idx + 1} ${e.name} ${idx === 0 ? '👑' : ''}</span>
+          <span>EVENT: ${e.evScore.toLocaleString()} PTS | TOUR TOTAL: ${e.tourScore.toLocaleString()}</span>
+        </div>
+      `).join('') + `<div class="mt-2 text-pink-400">★ BEST TRICK THIS RUN: ${game.bestTrickName} (+${game.bestTrickScore.toLocaleString()} PTS)</div>`;
+
+      renderCassetteGrid();
+    }
+
+    /**
+     * ============================================================================
+     * 8. CASSETTE DECK UI, 16-BIT PIXEL MODE TOGGLE (KEY H), & SOURCE EXPORTER
+     * ============================================================================
+     */
+    function renderCassetteGrid() {
+      const grid = document.getElementById('cassetteGrid');
+      grid.innerHTML = EVENTS_META.map(ev => `
+        <div onclick="launchSingleEvent(${ev.id})" class="cassette-card cursor-pointer rounded-xl p-2.5 sm:p-3 flex flex-col justify-between">
+          <div>
+            <div class="flex items-center justify-between text-[10px] font-mono-code text-teal-300 mb-0.5">
+              <span>SIDE A-0${ev.id + 1}</span>
+              <span class="text-pink-400">${ev.sponsor}</span>
+            </div>
+            <div class="text-sm sm:text-base font-extrabold text-amber-300 leading-tight">${ev.name}</div>
+            <div class="text-[11px] text-white/75">${ev.sub}</div>
+          </div>
+          <div class="mt-2 pt-1.5 border-t border-white/15 flex items-center justify-between text-[11px] font-mono-code">
+            <span class="text-amber-200">BEST: ${game.bestScores[ev.id].toLocaleString()}</span>
+            <span class="px-2 py-0.5 rounded bg-pink-600 text-white text-[10px]">PLAY ▶</span>
+          </div>
+        </div>
+      `).join('');
+    }
+
+    window.launchSingleEvent = function(id) {
+      audio.init();
+      game.mode = 'SINGLE';
+      game.screen = 'PLAYING';
+      document.getElementById('titleModal').classList.add('hidden');
+      document.getElementById('resultsModal').classList.add('hidden');
+      document.getElementById('viralCaptionWrap').classList.add('hidden');
+      document.getElementById('viewport-shell').classList.remove('shorts-916');
+      document.getElementById('btnViralShort').classList.remove('viral-pulse');
+      initEventState(id);
+      resizeCanvas();
+    };
+
+    function togglePixelMode() {
+      game.pixelMode = !game.pixelMode;
+      mainCanvas.classList.toggle('pixelated', game.pixelMode);
+      document.getElementById('crt-overlay').classList.toggle('active', game.pixelMode);
+      document.getElementById('btnPixelMode').textContent = `📺 16-BIT [H]: ${game.pixelMode ? 'ON' : 'OFF'}`;
+    }
+
+    document.getElementById('btnPixelMode').addEventListener('click', togglePixelMode);
+    document.getElementById('btnViralShort').addEventListener('click', startViralShortMode);
+    document.getElementById('btnMenuHome').addEventListener('click', () => {
+      game.screen = 'TITLE';
+      document.getElementById('titleModal').classList.remove('hidden');
+      document.getElementById('resultsModal').classList.add('hidden');
+      document.getElementById('viralCaptionWrap').classList.add('hidden');
+      document.getElementById('viewport-shell').classList.remove('shorts-916');
+      resizeCanvas();
+    });
+
+    document.getElementById('btnAudioMute').addEventListener('click', e => {
+      audio.init();
+      audio.muted = !audio.muted;
+      e.target.textContent = audio.muted ? '🔇 MUTED' : '🔊 SYNTH';
+    });
+
+    document.getElementById('btnPlayersCycle').addEventListener('click', e => {
+      game.numPlayers = (game.numPlayers % 4) + 1;
+      e.target.textContent = game.numPlayers === 1
+        ? '1 PLAYER (vs RAD RICKY CPU)'
+        : `${game.numPlayers} PLAYERS HOT-SEAT`;
+    });
+
+    document.querySelectorAll('.mode-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const m = btn.getAttribute('data-mode');
+        if (m === 'VIRAL') {
+          startViralShortMode();
+        } else {
+          audio.init();
+          game.mode = m;
+          game.screen = 'PLAYING';
+          document.getElementById('titleModal').classList.add('hidden');
+          initEventState(0);
+        }
+      });
+    });
+
+    document.getElementById('btnNextEvent').addEventListener('click', () => {
+      document.getElementById('resultsModal').classList.add('hidden');
+      document.getElementById('resultsModal').classList.remove('flex');
+      game.screen = 'PLAYING';
+      initEventState((game.eventId + 1) % 6);
+    });
+    document.getElementById('btnRetryEvent').addEventListener('click', () => {
+      document.getElementById('resultsModal').classList.add('hidden');
+      document.getElementById('resultsModal').classList.remove('flex');
+      game.screen = 'PLAYING';
+      initEventState(game.eventId);
+    });
+    document.getElementById('btnBackToDeck').addEventListener('click', () => {
+      document.getElementById('resultsModal').classList.add('hidden');
+      document.getElementById('resultsModal').classList.remove('flex');
+      game.screen = 'TITLE';
+      document.getElementById('titleModal').classList.remove('hidden');
+    });
+
+    // Deliverable README + Source Exporter Modal
+    const README_CONTENT = `# SoCal Summer Games: Painted Edition (1987 California Games Remake)
+
+A zero-build, single-file HTML5 Canvas 2D remake of Epyx's 1987 classic featuring procedural hand-painted gouache/airbrush art, 5-layer SoCal parallax, an articulated 10-part 80s cut-out character rig, WebAudio surf-rock & synth-pop music, and a 9:16 Viral YouTube Short Auto-Director.
+
+## How to Run
+1. Save \`index.html\` to any folder on your computer.
+2. Double-click \`index.html\` to play directly in Chrome, Safari, Edge, or Firefox (no build step or external assets required).
+
+## Controls
+- **Movement / Steering / Carve / Pump**: Arrow Keys or \`WASD\`
+- **Trick / Action Button 1 (Kickflip / Cutback / Knee / Bunnyhop / Throw / Dive)**: \`Z\` or \`Space\`
+- **Trick / Action Button 2 (360 Air / Toe Stall / Backflip / Spin)**: \`X\`
+- **Trick / Action Button 3 (Handplant / Tube Tuck / Headbutt / Superman / Crouch)**: \`C\`
+- **16-Bit Pixel & CRT Mode Toggle**: Press **\`H\`** at any time (renders at 320x180 with nearest-neighbor pixel scaling & CRT scanlines)
+- **Gamepad API**: Xbox/PlayStation controller supported automatically (Left Stick/D-Pad + A/B/X/Y)
+- **Mobile / Touch**: On-screen virtual D-Pad and Z/X/C action buttons scale automatically for 390x844 phones.
+`;
+
+    let activeExportTab = 'README.md';
+    function openExporterModal() {
+      const modal = document.getElementById('exporterModal');
+      modal.classList.remove('hidden');
+      modal.classList.add('flex');
+      renderExporterView();
+    }
+    function renderExporterView() {
+      const files = {
+        'README.md': README_CONTENT,
+        'index.html': '<!DOCTYPE html>\n' + document.documentElement.outerHTML
+      };
+      const bar = document.getElementById('exportTabBar');
+      bar.innerHTML = Object.keys(files).map(fn => `
+        <button onclick="switchExportTab('${fn}')" class="px-3 py-1 rounded ${fn === activeExportTab ? 'bg-pink-600 text-white font-bold' : 'bg-stone-800 text-stone-300'}">${fn}</button>
+      `).join('');
+      document.getElementById('exportCodeView').textContent = files[activeExportTab];
+    }
+    window.switchExportTab = function(fn) {
+      activeExportTab = fn;
+      renderExporterView();
+    };
+    document.getElementById('btnSourceModal').addEventListener('click', openExporterModal);
+    document.getElementById('btnCloseExporter').addEventListener('click', () => {
+      document.getElementById('exporterModal').classList.add('hidden');
+      document.getElementById('exporterModal').classList.remove('flex');
+    });
+    document.getElementById('btnDownloadActive').addEventListener('click', () => {
+      const content = activeExportTab === 'README.md' ? README_CONTENT : ('<!DOCTYPE html>\n' + document.documentElement.outerHTML);
+      const blob = new Blob([content], { type: 'text/plain;charset=utf-8' });
+      const a = document.createElement('a');
+      a.href = URL.createObjectURL(blob);
+      a.download = activeExportTab;
+      a.click();
+    });
+    document.getElementById('btnCopyActive').addEventListener('click', () => {
+      const content = activeExportTab === 'README.md' ? README_CONTENT : ('<!DOCTYPE html>\n' + document.documentElement.outerHTML);
+      const ta = document.createElement('textarea');
+      ta.value = content;
+      document.body.appendChild(ta);
+      ta.select();
+      document.execCommand('copy');
+      document.body.removeChild(ta);
+    });
+
+    // Responsive Canvas Sizing
+    function resizeCanvas() {
+      const shell = document.getElementById('viewport-shell');
+      mainCanvas.width = shell.clientWidth;
+      mainCanvas.height = shell.clientHeight;
+    }
+    window.addEventListener('resize', resizeCanvas);
+
+    // Master 60FPS Game Loop
+    let lastTime = performance.now();
+    function masterLoop(now) {
+      requestAnimationFrame(masterLoop);
+      let rawDt = Math.min((now - lastTime) / 1000, 0.05);
+      lastTime = now;
+      const elapsed = now / 1000;
+
+      pollGamepad();
+
+      // Hitstop freeze on big tricks
+      if (game.hitstop > 0) {
+        game.hitstop -= rawDt;
+        return;
+      }
+
+      // Slow-motion zoom on best tricks
+      let dt = rawDt;
+      if (game.slowMoTimer > 0) {
+        game.slowMoTimer -= rawDt;
+        dt *= 0.42;
+      }
+
+      // Choose render target (320x180 offscreen canvas when 16-bit Pixel Mode `H` is active)
+      const targetCtx = game.pixelMode ? pixelCtx : mainCtx;
+      const W = game.pixelMode ? 320 : mainCanvas.width;
+      const H = game.pixelMode ? 180 : mainCanvas.height;
+
+      targetCtx.save();
+
+      // Apply screen shake or slow-mo camera zoom
+      if (game.shake > 0) {
+        game.shake = Math.max(0, game.shake - 45 * rawDt);
+        targetCtx.translate((Math.random() - 0.5) * game.shake, (Math.random() - 0.5) * game.shake);
+      }
+      if (game.slowMoTimer > 0) {
+        targetCtx.translate(W * 0.5, H * 0.5);
+        targetCtx.scale(1.12, 1.12);
+        targetCtx.translate(-W * 0.5, -H * 0.5);
+      }
+
+      // Render 5-Layer Hand-Painted SoCal Postcard Parallax
+      drawSoCalParallax(targetCtx, W, H, game.screen === 'TITLE' ? elapsed * 60 : game.camX, elapsed, game.eventId);
+
+      if (game.screen === 'PLAYING') {
+        if (game.mode === 'VIRAL') {
+          game.viralClock += rawDt;
+          const stage = Math.floor(game.viralClock / 4.2) % 6;
+          if (stage !== game.eventId) {
+            initEventState(stage);
+            document.getElementById('viralCaptionText').textContent = viralCaptions[stage];
+          }
+        } else {
+          game.timeLeft -= rawDt;
+          if (game.timeLeft <= 0) {
+            finishCurrentEvent();
+          }
+        }
+        updateAndDrawEvent(targetCtx, W, H, dt, elapsed);
+      } else {
+        // Title Screen Animated Surfer & Skater Showcase
+        athleteRig.draw(targetCtx, W * 0.25, H * 0.72 + Math.sin(elapsed * 4) * 8, -0.1, 'air_grab', elapsed, 'skate');
+        athleteRig.draw(targetCtx, W * 0.75, H * 0.68 + Math.cos(elapsed * 4) * 8, 0.1, 'ride', elapsed, 'surf');
+      }
+
+      drawForegroundParallax(targetCtx, W, H, game.screen === 'TITLE' ? elapsed * 60 : game.camX, elapsed);
+      targetCtx.restore();
+
+      // If 16-bit Pixel Mode is active, nearest-neighbor upscale 320x180 -> full screen
+      if (game.pixelMode) {
+        mainCtx.imageSmoothingEnabled = false;
+        mainCtx.clearRect(0, 0, mainCanvas.width, mainCanvas.height);
+        mainCtx.drawImage(pixelCanvas, 0, 0, mainCanvas.width, mainCanvas.height);
+      }
+
+      // Clear one-shot key presses
+      pressed.Z = false; pressed.X = false; pressed.C = false; pressed.Up = false;
+    }
+
+    window.onload = function () {
+      resizeCanvas();
+      renderCassetteGrid();
+      initEventState(0);
+      requestAnimationFrame(masterLoop);
+    };
+  </script>
+</body>
+</html>
