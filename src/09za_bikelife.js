@@ -178,7 +178,7 @@
     F.night = isNight(); sc.fog = new THREE.Fog(F.night ? '#14122a' : '#bcdcf0', 40, 120);
     DUELS.sceneLights(sc, F.night ? '#8a90d0' : '#fff2d8', F.night ? '#1a1a30' : '#4a6a7a', F.night ? 0.9 : 1.25, F.night ? '#aab4ff' : '#fff0d0', F.night ? 0.9 : 1.5, new THREE.Vector3(-0.4, 1, 0.8));
     F.sky = new THREE.Mesh(new THREE.PlaneGeometry(200, 70), new THREE.MeshBasicMaterial({ map: skyTex('#7ec4ee', '#d8eefb', false), fog: false })); F.sky.position.set(0, 18, -50); sc.add(F.sky);
-    F.H = buildHero(); sc.add(F.H.root); F.bikes = {}; F.R = [];
+    F.H = buildHero(); sc.add(F.H.root); F.bikes = {}; F.R = {};
     const ui = document.createElement('div'); ui.className = 'bikeui';
     ui.innerHTML = '<div class="trk"><i class="d0"></i><i class="d1"></i><i class="d2"></i><i class="d3"></i><u></u></div><div class="sty"></div><div class="hot"></div>';
     DUELS.hudEl.appendChild(ui); F.ui = { el: ui, trk: ui.querySelector('.trk'), dots: [0, 1, 2, 3].map((k) => ui.querySelector('.d' + k)), sty: ui.querySelector('.sty'), hot: ui.querySelector('.hot') };
@@ -206,13 +206,13 @@
     const st = (F.st = { t: 0, x: 0, y: 0, vy: 0, v: 0, lane: 2, laneT: 2, z: LANE_Z[2], pitch: 0, air: false, airT: 0, heat: 0, stall: false, wheelie: 0, wheelieHeld: false, crash: 0, crashes: 0, style: 0, score: 0, cdown: 3.2, over: false, done: false, finT: 0, quad, shake: 0, mud: false, myHeld: false, spin: 0, turbo: false, flipped: false, msgT: 0, bumpCd: 0, lastGY: 0, slopeV: 0, wasBoost: 0 });
     F.pb = bikeFor('p', quad, save.paint ? '#ffd23c' : '#e83a2a'); F.pb.root.visible = true;
     st.rivals = [0, 1, 2].map((k) => { const feat = k === 0, id = feat ? C.rid : ['wk1', 'wk2'][k - 1], col = feat ? C.rcol : ['#8a7a9a', '#7a9a8a'][k - 1], rq = quad && k !== 1; const rv = feat ? C.rv : C.rv - 0.5 - k * 0.3;
-      const bk = bikeFor('r' + k + C.id, rq, ['#3a8ae8', '#8ae83a', '#e83ad8'][k]); bk.root.visible = true; if (!F.R[k] || F.R[k].cid !== C.id) { if (F.R[k] && F.R[k].rig) bk.root.remove(F.R[k].rig.root); const rig = buildRival(id, col); F.R[k] = { cid: C.id, rig }; bk.root.add(rig.rig ? rig.rig.root : rig.root); F.R[k].rig = rig; if (rig.root.parent !== bk.root) bk.root.add(rig.root); }
-      return { k, id, feat, bike: bk, x: -3 - k * 2.2, lane: [1, 0, 3][k], lane2: [1, 0, 3][k], z: LANE_Z[[1, 0, 3][k]], v: 0, y: 0, pitch: 0, base: rv, fin: null, look: 0, name: feat ? C.rival : id === 'wk1' ? 'CREW RIDER' : 'CREW RIDER' }; });
+      const bk = bikeFor('r' + k + C.id, rq, ['#3a8ae8', '#8ae83a', '#e83ad8'][k]); bk.root.visible = true; const rk = 'r' + k + C.id; if (!F.R[rk]) { const rig = buildRival(id, col); bk.root.add(rig.root); F.R[rk] = rig; } const rigo = F.R[rk];
+      return { k, id, feat, rig: rigo, bike: bk, x: -3 - k * 2.2, lane: [1, 0, 3][k], lane2: [1, 0, 3][k], z: LANE_Z[[1, 0, 3][k]], v: 0, y: 0, pitch: 0, base: rv, fin: null, look: 0, name: feat ? C.rival : id === 'wk1' ? 'CREW RIDER' : 'CREW RIDER' }; });
     st.lane = 2; st.laneT = 2; st.x = 0; F.H.root.visible = true; DUELS.bars(1, 0); updateHUD(true); return st;
   }
   function updateHUD(force) {
     const st = F.st, C = F.cs.C; let place = 1; for (const r of st.rivals) if (r.x > st.x) place++;
-    DUELS.sub('PLACE ' + place + '/4 · ' + Math.round(st.v * 3.6) + ' KM/H', C.name + (st.quad ? ' · 4-WHEELER' : ' · DIRT BIKE'));
+    DUELS.sub('P' + place + '/4 · ' + Math.round(st.v * 3.6) + ' KMH', C.name);
     F.ui.sty.textContent = st.wheelie > 0.2 ? 'WHEELIE ' + st.wheelie.toFixed(1) + 's' + (crowdAt(F.cs, st.x) ? '  CROWD x3!' : '') + '  ' + Math.round(st.style) : (st.score ? 'STYLE ' + Math.round(st.score) : '');
     const W = F.ui.trk.clientWidth || 300; F.ui.dots[0].style.left = (bc(st.x / F.cs.len, 0, 1) * 100) + '%'; F.ui.dots[1].style.left = (bc(st.rivals[0].x / F.cs.len, 0, 1) * 100) + '%'; F.ui.dots[2].style.left = (bc(st.rivals[1].x / F.cs.len, 0, 1) * 100) + '%'; F.ui.dots[3].style.left = (bc(st.rivals[2].x / F.cs.len, 0, 1) * 100) + '%';
     F.ui.hot.classList.toggle('on', st.stall); F.ui.hot.textContent = st.stall ? 'ENGINE OVERHEATED...' : '';
