@@ -39,14 +39,14 @@
   const pick = (a) => a[Math.floor(Math.random() * a.length)];
   const dampA = (a, b, r, dt) => { let d = b - a; while (d > Math.PI) d -= TAU; while (d < -Math.PI) d += TAU; return a + d * (1 - Math.exp(-r * dt)); };
   // ---------------- tuning ----------------
-  const XL = 6.0, Z0 = 0.35, Z1 = 6.4; // Harold's plaza box
+  const XL = 6.0, Z0 = 0.35, Z1 = 6.0; // Harold's plaza box
   const LANES = [-5.2, -2.6, 0, 2.6, 5.2], LW = 2.6;
   const TOPZ = -4.1, TOPY = 1.2, LOWZ = -1.05, LOWY = 0.3; // her spots: top landing / bottom step
   const REACH = 2.0, SPD = 5.4, HP0 = 100, BHP0 = 100;
   const DMG = { slip: 8, bucket: 11, glare: 9, sweep: 9 };
-  const HIT = [4, 4, 8], CRIT = 1.5, POW_HIT = 8, POW_DODGE = 14;
+  const HIT = [3, 3, 6], CRIT = 1.5, POW_HIT = 5, POW_DODGE = 12, SURF_DMG = 18, FX = -5.9, FZ = 7.9; // FX/FZ: the fountain
   const PH = [ // per phase: tell secs, scrub window, attacks per visit up top, lanes foamed
-    { tell: 1.35, win: 3.9, n: 1, lanes: 2 }, { tell: 1.2, win: 3.4, n: 1, lanes: 3 }, { tell: 1.05, win: 3.0, n: 2, lanes: 3 }];
+    { tell: 1.35, win: 3.4, n: 1, lanes: 2 }, { tell: 1.2, win: 3.0, n: 1, lanes: 3 }, { tell: 1.05, win: 2.6, n: 2, lanes: 3 }];
   const S = { scene: null, cam: null, title: 'THE STOOP SCRUBBER', pips: 3,
     hint: '<b>WASD</b> move · <b>J</b> swing · <b>K</b> dodge hop · <b>E</b> STOOP SURF when POWER is full',
     labels: { a: 'SWING', b: 'HOP', c: 'POWER', l: '', r: '' } };
@@ -130,10 +130,10 @@
     K.add(G.box(9, 4.2, 5), '#e8e2d4', 0, 1.2 + 2.1, -9.0).add(G.box(9.6, 0.4, 5.6), '#d8d2c4', 0, 1.2 + 4.4, -9.0).add(G.box(7, 1.6, 4.2), '#e8e2d4', 0, 1.2 + 5.4, -9.0) // plinth
       .add(G.cyl(1.35, 1.65, 34, 14), '#f0eadc', 0, 7.4 + 17, -9.0).add(G.box(3.6, 0.8, 3.6), '#d8d2c4', 0, 7.4 + 34.4, -9.0).add(G.cyl(0.55, 0.75, 3.4, 8), '#7a8a6a', 0, 7.4 + 36.5, -9.0) // column + statue
       .add(G.box(1.6, 2.2, 0.1), '#2a2a30', 0, 1.2 + 1.1, -6.48); // the plinth door
-    for (const s of [-1, 1]) K.add(G.cyl(0.12, 0.14, 3.6, 8), '#22262a', s * 7.2, 1.8, 0.2).add(G.sph(0.32, 10, 8), '#fff4c8', s * 7.2, 3.75, 0.2) // lamp posts
-      .add(G.box(0.06, 0.9, 12), '#22262a', s * 7.6, 0.45, 5).add(G.box(0.1, 0.08, 12), '#22262a', s * 7.6, 0.9, 5); // iron fence
+    for (const s of [-1, 1]) K.add(G.cyl(0.12, 0.14, 3.6, 8), '#22262a', s * 7.6, 1.8, -0.2).add(G.sph(0.32, 10, 8), '#fff4c8', s * 7.6, 3.75, -0.2) // lamp posts
+      .add(G.box(0.06, 0.9, 12), '#22262a', s * 8.6, 0.45, 5).add(G.box(0.1, 0.08, 12), '#22262a', s * 8.6, 0.9, 5); // iron fence
     // the fountain (behind Harold, front-centre): a round basin with a spray
-    K.add(G.cyl(2.3, 2.5, 0.6, 20), '#d8d2c4', 0, 0.3, 9.6).add(G.cyl(2.05, 2.05, 0.05, 20), '#5ab0d8', 0, 0.5, 9.6).add(G.cyl(0.35, 0.5, 1.2, 10), '#d8d2c4', 0, 0.6, 9.6).add(G.cyl(0.9, 0.5, 0.18, 14), '#d8d2c4', 0, 1.25, 9.6);
+    K.add(G.cyl(1.7, 1.85, 0.6, 20), '#d8d2c4', FX, 0.3, FZ).add(G.cyl(1.5, 1.5, 0.05, 20), '#5ab0d8', FX, 0.5, FZ).add(G.cyl(0.3, 0.42, 1.2, 10), '#d8d2c4', FX, 0.6, FZ).add(G.cyl(0.75, 0.4, 0.16, 14), '#d8d2c4', FX, 1.25, FZ);
     S.stage = K.mesh(toonMat(), sc, 0.003);
     const rt = rowTex(), rmat = new THREE.MeshLambertMaterial({ map: rt });
     for (const s of [-1, 1]) { const w = new THREE.Mesh(new THREE.PlaneGeometry(26, 11), rmat); w.position.set(s * 12.5, 5.5, 2); w.rotation.y = -s * Math.PI / 2; sc.add(w); }
@@ -143,7 +143,7 @@
     const ft = foamTex(); ft.wrapS = ft.wrapT = THREE.RepeatWrapping; ft.repeat.set(1, 4);
     const st = stripeTex(); st.wrapS = st.wrapT = THREE.RepeatWrapping; st.repeat.set(1, 6);
     S.lanes = LANES.map((x) => { const g = stairStrip(LW - 0.2), foam = new THREE.Mesh(g, new THREE.MeshBasicMaterial({ map: ft, transparent: true, opacity: 0, depthWrite: false, fog: false }));
-      const tel = new THREE.Mesh(g, new THREE.MeshBasicMaterial({ map: st, color: '#7adfff', transparent: true, opacity: 0, depthWrite: false, blending: THREE.AdditiveBlending, fog: false }));
+      const tel = new THREE.Mesh(g, new THREE.MeshBasicMaterial({ map: st, color: '#1e9cff', transparent: true, opacity: 0, depthWrite: false, fog: false }));
       foam.position.x = tel.position.x = x; foam.renderOrder = 3; tel.renderOrder = 4; foam.visible = tel.visible = false; sc.add(foam, tel); return { x, foam, tel }; });
     S.ft = ft; S.stt = st;
     // bucket shadows (2), the thrown buckets (2), glare lines (2), the sweep ring
@@ -337,7 +337,7 @@
   function checkPhase(st) {
     if (st.bhp <= 0) { koStart(st); return; }
     const np = st.bhp <= 33 ? 2 : st.bhp <= 66 ? 1 : 0; if (np > st.phase) { st.phase = np; DUELS.banner('PHASE ' + (np + 1) + '<small>' + (np === 1 ? 'MORE SUDS, HON' : 'DOUBLE BUCKETS · TWIN GLARE') + '</small>', 1.6); say(pick(GR.taunt), 2.2);
-      st.atk = null; clearAttackFx(); S.sweepRing.visible = false; setB(st, 'dizzy', 1.0); }
+      st.atk = null; clearAttackFx(); S.sweepRing.visible = false; if (!st.surf) { hopTo(st, clamp(st.b.x, -4, 4), TOPY, TOPZ, 0.75); } }
   }
   // ---------------- STOOP SURF (team-up special) ----------------
   function startSurf(st) {
@@ -351,7 +351,7 @@
     const bx = b.x, bz = (b.y > 0.75 ? TOPZ + 0.6 : LOWZ + 0.6);
     if (s.t < 0.55) { const u = s.t / 0.55; h.x = lerp(s.x0, bx, u); h.z = lerp(s.z0, -4.2, u); h.jy = Math.sin(u * Math.PI) * 2.6 + u * 1.2; }
     else if (s.t < 1.35) { const u = (s.t - 0.55) / 0.8; h.x = bx; h.z = lerp(-4.2, bz + 0.2, u); if (b.y > 0.75) h.z = lerp(-4.4, bz, u); h.jy = stepY(h.z) + 0.15; bubbles(h.x, h.jy, h.z + 0.3, 2, 1.2, 1.2, 0.4); }
-    else if (!s.hit) { s.hit = true; const dmg = 22; st.bhp -= dmg; b.flash = 1; b.hurtT = 0; st.hs = 0.12; st.shk = 0.8; sfx('heavy'); splashSfx(); pop(V.set(b.x, b.y + 2.4, b.z), 'STOOP SURF! ' + dmg, 'c'); bubbles(b.x, b.y + 1, b.z, 24, 3.4, 3.4, 1.0);
+    else if (!s.hit) { s.hit = true; const dmg = SURF_DMG; st.bhp -= dmg; b.flash = 1; b.hurtT = 0; st.hs = 0.12; st.shk = 0.8; sfx('heavy'); splashSfx(); pop(V.set(b.x, b.y + 2.4, b.z), 'STOOP SURF! ' + dmg, 'c'); bubbles(b.x, b.y + 1, b.z, 24, 3.4, 3.4, 1.0);
       st.stats.landed++; hud(st); if (st.bhp <= 0) { st.surf = null; h.jy = 0; h.x = clamp(h.x, -XL, XL); h.z = Z0 + 0.4; koStart(st); return; }
       checkPhase(st); }
     else if (s.t > 1.9) { st.surf = null; h.jy = 0; h.z = Math.max(Z0 + 0.3, Z0); h.vx = 0; h.vz = 2; setB(st, 'dizzy', 2.0); b.open = 2.0; if (b.y > 0.75) { b.y = LOWY; b.z = LOWZ; } DUELS.tell('SHE\u2019S DIZZY: FINISH IT!', 1.2); }
@@ -364,9 +364,9 @@
     S.lanes.forEach((L) => { L.foam.visible = true; L.foam.material.opacity = 0.75; }); }
   function stepKO(st, dt) {
     st.outT += dt; const b = st.b, k = st.ko, u = clamp(st.outT / 3.0, 0, 1); // slide from where she fell, down the steps, across the plaza into the fountain
-    const z = lerp(k.z, 9.4, ease(u)), x = lerp(k.x, 0, ease(u)); b.x = x; b.z = z; b.y = z < 7.1 ? stepY(z) + 0.05 : 0.05 + Math.sin(clamp((z - 7.1) / 2.3, 0, 1) * Math.PI) * 1.2;
+    const e = ease(u), z = lerp(k.z, FZ, e), x = lerp(k.x, FX, e * e); b.x = x; b.z = z; b.y = u < 0.82 ? stepY(z) + 0.05 : 0.05 + Math.sin(clamp((u - 0.82) / 0.18, 0, 1) * Math.PI) * 1.3;
     if (st.outT < 3 && Math.random() < 0.5) bubbles(b.x, b.y + 0.2, b.z, 2, 1.0, 1.0, 0.5);
-    if (u >= 1 && !st.splashed) { st.splashed = true; splashSfx(); sfx('ko'); st.shk = 0.6; bubbles(0, 0.6, 9.6, 40, 3.6, 4.4, 1.2); }
+    if (u >= 1 && !st.splashed) { st.splashed = true; splashSfx(); sfx('ko'); st.shk = 0.6; bubbles(FX, 0.6, FZ, 40, 3.6, 4.4, 1.2); }
     if (st.outT > 3.4 && !st.said) { st.said = true; DUELS.say('THE STOOP SCRUBBER', 'Okay hon. ' + pick(GR.defeat), 3.2); }
     if (st.outT > 5.6 && !st.done) { st.done = true; DUELS.bossCleared('monument', 'scrubber');
       const n = st.stats.hitsTaken, g = n <= 3 ? '★★★ S' : n <= 7 ? '★★ A' : '★ B';
@@ -439,7 +439,7 @@
   function poseAttackFx(st) {
     const A = st.atk, t = st.t, b = st.b;
     if (A && A.kind === 'suds') { const live = A.t >= A.tell; for (let i = 0; i < 5; i++) { const L = S.lanes[i], on = A.lanes.includes(i); L.tel.visible = on && !live; L.foam.visible = on && live;
-        if (L.tel.visible) L.tel.material.opacity = 0.25 + 0.35 * (0.5 + 0.5 * Math.sin(t * (10 + 14 * A.t / A.tell))); if (L.foam.visible) L.foam.material.opacity = Math.min(0.92, (A.t - A.tell) * 5) * (A.t > A.tell + A.live - 0.4 ? clamp((A.tell + A.live - A.t) / 0.4, 0, 1) : 1); }
+        if (L.tel.visible) L.tel.material.opacity = 0.5 + 0.4 * (0.5 + 0.5 * Math.sin(t * (10 + 14 * A.t / A.tell))); if (L.foam.visible) L.foam.material.opacity = Math.min(0.92, (A.t - A.tell) * 5) * (A.t > A.tell + A.live - 0.4 ? clamp((A.tell + A.live - A.t) / 0.4, 0, 1) : 1); }
       S.ft.offset.y = -t * 0.9; S.stt.offset.y = t * 1.6; }
     if (A && A.kind === 'bucket') A.targets.forEach((tg, i) => { const k = clamp(A.t / A.tell, 0, 1), sh = S.shadows[i], rg = S.shRings[i], bk = S.buckets[i];
       sh.visible = rg.visible = A.t < A.tell; sh.position.set(tg.x, 0.03, tg.z); const s = lerp(0.6, 2.9, k); sh.scale.set(s, s, 1); sh.material.opacity = 0.25 + 0.45 * k;
@@ -457,13 +457,13 @@
     const H = S.H; H.root.position.set(h.x, (st.surf ? h.jy : h.jy), h.z); H.root.rotation.y = h.yaw; applyPose(H, haroldPose(st, t), 18, dt, h.slipT >= 0);
     if (H.mat.userData.flash) H.mat.userData.flash.value = h.inv > 0 && !st.surf ? (Math.sin(t * 30) > 0 ? 0.35 : 0) : Math.max(0, H.mat.userData.flash.value - dt * 4);
     S.surf.visible = !!st.surf; if (st.surf) { S.surf.position.set(h.x, h.jy - 0.05, h.z); S.surf.rotation.y = 0; }
-    const M = S.M, mx = st.surf && st.surf.t < 0.6 ? lerp(-5.2, h.x - 1.2, 0.25) : st.won && st.outT > 3.5 ? -1.6 : -5.6; M.root.position.set(damp(M.root.position.x, mx, 4, dt), 0, damp(M.root.position.z, 6.6, 4, dt)); M.root.rotation.y = Math.atan2(h.x - M.root.position.x, h.z - M.root.position.z) * 0.6 + Math.PI * 0.85; applyPose(M, mavisPose(st, t), 12, dt, false);
+    const M = S.M, mx = st.surf && st.surf.t < 0.6 ? lerp(-5.2, h.x - 1.2, 0.25) : st.won && st.outT > 3.5 ? -3.4 : -4.4; M.root.position.set(damp(M.root.position.x, mx, 4, dt), 0, damp(M.root.position.z, 6.4, 4, dt)); M.root.rotation.y = Math.atan2(h.x - M.root.position.x, h.z - M.root.position.z) * 0.6 + Math.PI * 0.85; applyPose(M, mavisPose(st, t), 12, dt, false);
     poseBoss(st, dt); poseAttackFx(st);
     // camera: behind + above Harold looking up the steps; portrait sits higher and further back so the whole step face and her shadows fit
     const port = VH() > VW(); S.cam.fov = port ? 62 : 50; S.cam.updateProjectionMatrix();
-    let cx = h.x * 0.45, cy = port ? 7.6 : 5.6, cz = h.z + (port ? 9.6 : 8.2), lx = h.x * 0.3 + st.b.x * 0.15, ly = 1.0, lz = Math.min(h.z, 2) - 3.4;
+    let cx = h.x * 0.4, cy = port ? 9.4 : 6.4, cz = h.z * 0.6 + (port ? 11.5 : 9.6), lx = h.x * 0.3 + st.b.x * 0.15, ly = port ? 1.6 : 1.4, lz = -2.2;
     if (st.surf) { cx = h.x + 3; cy = 3.2; cz = h.z + 5; lx = h.x; ly = 1.2; lz = h.z - 2; }
-    if (st.over && st.won) { cx = 4.5; cy = 4.2; cz = 15.5; lx = st.b.x * 0.5; ly = 0.8; lz = st.b.z - 1; }
+    if (st.over && st.won) { cx = 3.5; cy = port ? 6.5 : 4.5; cz = 15; lx = st.b.x * 0.6; ly = 0.8; lz = st.b.z - 1.5; }
     V.set(cx, cy, cz); V2.set(lx, ly, lz);
     if (st.bs === 'intro' && st.bt < st.bdur) { const k = ease(clamp(st.bt / st.bdur, 0, 1)); V.lerpVectors(V3.set(0, 3.5, 3), V, k); V2.lerpVectors(V3.set(0, 2.5, -4), V2, k); }
     S.camP.lerp(V, 1 - Math.exp(-5 * dt)); S.camL.lerp(V2, 1 - Math.exp(-6 * dt));
