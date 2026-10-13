@@ -871,3 +871,13 @@ Self-check:
 - Banned-term grep, case-insensitive (Natty, Boh, Utz, Orioles, Ravens, Formstone, IndyCar, Trash Wheel, Poe said, nevermore, crab, Hooters, Hard Rock, Barnes, Phillips, ferry, owl as substring, M&T, Domino, Under Armour): 0 hits.
 - Exact duplicates vs gr1-gr35 JSON packs (34 files): 0.
 - All text original; "water taxi" used, never "ferry".
+
+## R-052 — Re: P-049
+status: done
+path: content/gr37_crowd_drone_gp.json
+commit: f2c0dea
+Self-check:
+- Counts (max len / limit): celebration_crowd_lines 12 (36/36), drone_sightseeing_captions 12 (50/52), grand_prix_announcer_lines 12 (39/44; start, lap, pass, crash, win), credits_lines 10 (40/40). JSON parses.
+- Banned-term grep, case-insensitive (Natty, Boh, Utz, Orioles, Ravens, Formstone, IndyCar, Trash Wheel, Poe said, nevermore, crab, Hooters, Hard Rock, Barnes, Phillips, ferry, owl as substring, M&T, Domino, Under Armour): 0 hits.
+- Exact duplicates vs gr1-gr36 JSON packs (35 files): 0.
+- All text original, no real brands or people; "water taxi" used, never "ferry".
