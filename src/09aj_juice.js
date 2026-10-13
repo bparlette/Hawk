@@ -116,8 +116,8 @@ const JUICE = (function () {
     // focus: what the camera was looking at on the blow (the fights' camL), or the point handed to JUICE.ko
     let ki = count - 1; for (let k = 0; k < count; k++) if (at(k).t >= tKo) { ki = k; break; }
     camOf(at(ki), CP, FOC0); if (koFocus) FOC0.copy(koFocus);
-    const d0 = clamp(CP.distanceTo(FOC0), 3, 14); V0.set(CP.x - FOC0.x, 0, CP.z - FOC0.z); if (V0.lengthSq() < 1e-4) V0.set(0, 0, 1); V0.normalize();
-    rp = { K, t0, t1, tKo, ft: t0, rt: 0, d0, dir: V0.clone(), side: (J.replays % 2 ? -1 : 1), fov0: K.cam.fov, max: 3.0 };
+    const d0 = clamp(CP.distanceTo(FOC0), 5, 14), dh = clamp(CP.y - FOC0.y, 0.4, 6); V0.set(CP.x - FOC0.x, 0, CP.z - FOC0.z); if (V0.lengthSq() < 1e-4) V0.set(0, 0, 1); V0.normalize();
+    rp = { K, t0, t1, tKo, ft: t0, rt: 0, d0, dh, dir: V0.clone(), side: (J.replays % 2 ? -1 : 1), fov0: K.cam.fov, max: 3.0 };
     done = true; J.on = true; J.replays++; J.last = { at: +DUELS.t.toFixed(2), span: +(t1 - t0).toFixed(2), frames: count, objs: save.n, skipped: false };
     J.log.push('replay:' + (K.id || '?'));
     hud.classList.add('jrp'); ov.classList.remove('in'); void ov.offsetWidth; ov.classList.add('in'); ovFl.classList.add('on'); setTimeout(() => ovFl.classList.remove('on'), 60);
@@ -150,12 +150,14 @@ const JUICE = (function () {
     let k = 0; while (k < count - 2 && at(k + 1).t < r.ft) k++;
     const a = at(k), b = at(Math.min(count - 1, k + 1)), u = b.t > a.t ? clamp((r.ft - a.t) / (b.t - a.t), 0, 1) : 0;
     apply(a, b, u);
-    // dramatic camera: a low, close orbit round the blow, drifting with the action
-    camOf(a, CP, FOC); camOf(b, V1, V0); FOC.lerp(V0, u); FOC.lerp(FOC0, 0.6);
-    const w = clamp((r.ft - r.t0) / Math.max(0.1, r.t1 - r.t0), 0, 1), e = ease(w), ang = r.side * (0.6 - 0.85 * e), dist = r.d0 * (0.9 - 0.2 * e);
-    V0.copy(r.dir).applyAxisAngle(UP, ang).multiplyScalar(dist); K.cam.position.set(FOC.x + V0.x, Math.max(FOC.y * 0.55, CP.y * 0.25) + r.d0 * (0.03 + 0.1 * e), FOC.z + V0.z); // low and close: under the fight camera, looking up at the blow
-    K.cam.lookAt(FOC.x, FOC.y + 0.25, FOC.z); K.cam.rotateZ(r.side * 0.07 * (1 - e));
-    const fov = r.fov0 * (dk > -0.1 && dk < 0.35 ? 0.82 : 0.9); if (Math.abs(K.cam.fov - fov) > 0.01) { K.cam.fov += (fov - K.cam.fov) * Math.min(1, dt * 10); K.cam.updateProjectionMatrix(); }
+    // dramatic camera: the fight camera's own framing (known good for that arena at 390 and 1280), swung ~25 deg round its look point,
+    // pulled back a touch and dropped lower, with a dutch tilt that settles and a push-in on the blow
+    camOf(a, CP, FOC); camOf(b, V1, V0); CP.lerp(V1, u); FOC.lerp(V0, u); if (koFocus) FOC.lerp(FOC0, 0.5);
+    const w = clamp((r.ft - r.t0) / Math.max(0.1, r.t1 - r.t0), 0, 1), e = ease(w), ang = r.side * (0.45 - 0.65 * e);
+    V0.subVectors(CP, FOC); const oy = V0.y; V0.y = 0; V0.applyAxisAngle(UP, ang).multiplyScalar(1.12); V0.y = oy * 0.62;
+    K.cam.position.copy(FOC).add(V0);
+    K.cam.lookAt(FOC.x, FOC.y + 0.15, FOC.z); K.cam.rotateZ(r.side * 0.07 * (1 - e));
+    const fov = r.fov0 * (dk > -0.1 && dk < 0.35 ? 0.86 : 0.97); if (Math.abs(K.cam.fov - fov) > 0.01) { K.cam.fov += (fov - K.cam.fov) * Math.min(1, dt * 10); K.cam.updateProjectionMatrix(); }
     if (dk > -0.02 && dk < 0.06 && !r.flash) { r.flash = true; ovFl.classList.add('on'); setTimeout(() => ovFl && ovFl.classList.remove('on'), 70); }
     draw(K.scene, K.cam);
   }
