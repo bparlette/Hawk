@@ -577,7 +577,7 @@
   function stormStep(st, dt, I) {
     if (C.skip || I.a || I.b || I.c || I.ok) { C.skip = false; st.mt = st.mdur + 0.01; DUELS.log.push('cobblestone:storm:skip'); return; }
     const t = st.mt + dt, F = C.flags;
-    if (t > 1.0 && !F.a) { F.a = true; strike(true); DUELS.tell('A STORM ROLLS IN\u2026', 1.6); }
+    if (t > 1.0 && !F.a) { F.a = true; strike(true); DUELS.tell('LIGHTNING! THE HARBOR GOES DARK', 1.4); }
     if (t > 2.15 && !F.b) { F.b = true; strike(false); }
   }
   function stormEnd(st) { applyLight(1, 0); C.sunS.visible = false; C.post = 1.6; C.flash = 0; C.flashV.style.opacity = '0'; C.bolt.visible = false; DUELS.log.push('cobblestone:storm:end');
