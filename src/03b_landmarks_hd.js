@@ -136,8 +136,8 @@ function lmHD(id, cx, cz, r, build) {
 }
 scene.onBeforeRender = (r, s, cam) => {
   for (const L of LMHD.list) {
-    const d = Math.hypot(cam.position.x - L.cx, cam.position.z - L.cz) - L.r;
-    const n = LMHD.force === 'near' ? true : LMHD.force === 'far' ? false : (L.isNear ? d < LMHD.near + 8 : d < LMHD.near);
+    const d = Math.hypot(cam.position.x - L.cx, cam.position.z - L.cz) - L.r, nd = L.nearD || LMHD.near; // L.nearD: per-landmark swap distance (batch 3)
+    const n = LMHD.force === 'near' ? true : LMHD.force === 'far' ? false : (L.isNear ? d < nd + 8 : d < nd);
     if (n !== L.isNear) { L.isNear = n; L.near.visible = n; L.far.visible = !n; }
   }
 };

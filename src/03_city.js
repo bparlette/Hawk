@@ -188,8 +188,10 @@ const WATER = (function water() {
     GB.quad(a, b, cc, d, [x / 4, -(z + c) / 4, (x + c) / 4, -z / 4], col, T.grass);
   }
   // a path of steps up the north face and the flagpole on top
+  LMCAP('fedhill'); // landmarks: the flag is the far LOD of the HD park in 03f_landmarks_hd_b3.js
   const fp = new THREE.CylinderGeometry(0.12, 0.15, 12, 6); place(fp, HILL.x, CURB + HILL.h + 6, HILL.z); solid(fp, '#d8d8d0');
   const fl = new THREE.BoxGeometry(3.2, 1.9, 0.06); place(fl, HILL.x + 1.7, CURB + HILL.h + 10.9, HILL.z); CB.geom(fl, '#b03a3a', T.stripes);
+  LMCAP(null); // landmarks
   BLD.push({ x0: HILL.x - 8, x1: HILL.x + 8, z0: HILL.z - 4, z1: HILL.z + 4, h: CURB + HILL.h - 1 });
 })();
 
@@ -478,17 +480,21 @@ mass(71, -69, 93, -47, 9, { tr: T.store[1], fh: 9, bay: 4, top: '#4a4640' });
 mass(75, -66, 89, -52, 52, { tr: T.glass, y0: CURB + 9, fh: 3.6, top: '#2a3644', coll: false });
 signOn(71, -69, 93, -47, 's', 9.6, 12, LSIGN.hotel);
 landmark('fourseasons', 'FOUR SEASONS', 82, -58, 20, { name: 'Chef Crabcake', x: 82, z: -42 });
-// Pendry: the long recreation-pier building with a clock tower and a rooftop pool deck
+// Pendry: the long recreation-pier building with its taller head house and a rooftop pool deck
+LMCAP('pendry'); // landmarks: far LOD of the HD Recreation Pier in 03f_landmarks_hd_b3.js (head house replaces the old clock tower; same collider)
 mass(112, -29, 140, -21.5, 9, { tr: T.fac[5][1], top: '#6a6056' });
-mass(124, -28, 128, -23, 10, { col: '#c4b090', y0: CURB + 9, coll: false });
-{ const g = new THREE.CylinderGeometry(0.01, 2.9, 3, 4); g.rotateY(Math.PI / 4); place(g, 126, CURB + 19 + 1.5, -25.5); solid(g, '#4f6a5a'); }
+mass(119.5, -29.4, 132.5, -21.1, 4.4, { col: '#9a4636', y0: CURB + 9, coll: false, top: '#6a5a52' });
+{ const g = new THREE.CylinderGeometry(0.01, 1, 1, 3); g.rotateZ(Math.PI / 2); g.rotateY(Math.PI / 2); g.scale(6.8, 2.9, 4.2); place(g, 126, CURB + 13.4 + 1.45, -25.25); solid(g, '#6a5a52'); }
 CB.box(130, CURB + 9, -27.5, 138, CURB + 9.05, -23, '#4ac8e0', T.white); // rooftop pool
 signOn(112, -29, 140, -21.5, 's', 4.6, 10, LSIGN.pier);
+LMCAP(null); // landmarks
 landmark('pendry', 'PENDRY', 126, -25, 17, { name: 'The Pool Shark', x: 126, z: -19.5 });
 // Fells Point: low brick rowhouses (generic blocks) round a market hall on cobbles
+LMCAP('fells'); // landmarks: far LOD of the HD Thames St rowhouse block in 03f_landmarks_hd_b3.js
 mass(141, -64, 159, -52, 6, { tr: T.fac[2][0], top: '#5a4a3a' });
 { const g = new THREE.CylinderGeometry(0.01, 1, 1, 4, 1); g.rotateY(Math.PI / 4); g.scale(14, 2.2, 9.5); place(g, 150, CURB + 6 + 1.1, -58); solid(g, '#5a3a2a'); }
 signOn(141, -64, 159, -52, 's', 3.2, 9, LSIGN.fells);
+LMCAP(null); // landmarks
 landmark('fells', 'FELLS POINT', 160, -56, 24, { name: 'Arabber Al', x: 167, z: -58 });
 // Washington Monument: a marble column on a plinth in a green square (Mount Vernon, pulled in to the north edge)
 (function monument() {
@@ -549,22 +555,26 @@ mass(72, 48, 92, 66, DOM_H, { tr: T.fac[1][0], top: '#4a4640' });
 LMCAP(null);
 landmark('domino', 'DOMINO SUGARS', 82, 57, 16, { name: 'Sugar Rush', x: 82, z: 57, y: CURB + DOM_H });
 // Under Armour (Tide Point): brick halls with a clock tower
+LMCAP('underarmour'); // landmarks: far LOD of the HD Tide Point halls in 03f_landmarks_hd_b3.js
 mass(106, 48, 126, 56, 11, { tr: T.fac[0][0], top: '#4a3a30' }); mass(106, 60, 126, 68, 11, { tr: T.fac[0][1], top: '#4a3a30' });
 mass(113.5, 56.5, 118.5, 59.5, 22, { col: '#9a5a44', top: '#4a3a30' });
 signOn(106, 48, 126, 56, 'n', 7.6, 10, LSIGN.ath);
+LMCAP(null); // landmarks
 landmark('underarmour', 'UNDER ARMOUR', 116, 52, 16, { name: 'The Compression King', x: 116, z: 43 });
 // Fort McHenry: a five-point star fort on grass at the tip of Locust Point, with the flag
 (function fort() {
   const cx = 176, cz = 78, R = 17, r = 10.5, V = [];
+  LMCAP('fort'); // landmarks: walls, barracks block and flag = far LOD of the HD fort in 03f_landmarks_hd_b3.js (the gun platform / ramp / set-piece cannon stay city mesh)
   for (let i = 0; i < 10; i++) { const a = -Math.PI / 2 + i * Math.PI / 5, rr = i % 2 ? r : R; V.push([cx + Math.cos(a) * rr, cz + Math.sin(a) * rr]); }
   for (let i = 0; i < 10; i++) {
     if (i === 5) continue; // the sally port (gap facing the city)
     const [ax, az] = V[i], [bx, bz] = V[(i + 1) % 10], L = Math.hypot(bx - ax, bz - az), ang = Math.atan2(-(bz - az), bx - ax);
-    obox((ax + bx) / 2, (az + bz) / 2, L + 1.2, 2.4, 4.2, ang, '#a89878');
+    obox((ax + bx) / 2, (az + bz) / 2, L + 1.2, 2.4, 4.2, ang, '#9a4a36'); obox((ax + bx) / 2, (az + bz) / 2, L + 1.1, 2.3, 0.4, ang, '#5f9440', CURB + 4.2); // landmarks: brick + grass top
     for (let t = 0; t <= 1.001; t += 1.6 / L) COLL.push({ x: lerp(ax, bx, t), z: lerp(az, bz, t), r: 1.3 });
     BLD.push({ x0: Math.min(ax, bx) - 1, x1: Math.max(ax, bx) + 1, z0: Math.min(az, bz) - 1, z1: Math.max(az, bz) + 1, h: CURB + 4.2 });
   }
-  sbox(cx - 6, CURB, cz - 3, cx + 3, CURB + 3.2, cz + 1, '#b8a888'); COLL.push({ x0: cx - 6, x1: cx + 3, z0: cz - 3, z1: cz + 1 });
+  sbox(cx - 6, CURB, cz - 3, cx + 3, CURB + 3.2, cz + 1, '#9a4a36'); COLL.push({ x0: cx - 6, x1: cx + 3, z0: cz - 3, z1: cz + 1 });
+  const fortCap = LM_CAPS.fort; CB.cap = DB.cap = null; // landmarks: pause the capture for the set piece's platform
   // the north bastion gun platform (walkable: RAMPS in f_layout) with a ramp up from the parade ground, and the cannon the set piece starts from
   sbox(173.6, CURB, 63.6, 178.4, CURB + 3.3, 67.6, '#b8a888');
   for (let k = 0; k < 6; k++) { const z0 = 67.6 + k * 0.8; sbox(174.4, CURB, z0, 177.6, CURB + 3.3 * (1 - k / 6), z0 + 0.8, k % 2 ? '#a89878' : '#b0a080', k === 0); }
@@ -572,9 +582,11 @@ landmark('underarmour', 'UNDER ARMOUR', 116, 52, 16, { name: 'The Compression Ki
     sbox(175.45, CURB + 3.3, 64.6, 176.55, CURB + 3.85, 66.0, '#5a3a22');
     for (const sx of [175.3, 176.7]) { const w = new THREE.CylinderGeometry(0.34, 0.34, 0.14, 10); w.rotateZ(Math.PI / 2); place(w, sx, CURB + 3.64, 65.6); solid(w, '#3a2a1a', false); }
     for (let k = 0; k < 4; k++) { const b = new THREE.SphereGeometry(0.17, 6, 4); place(b, 177.4 + (k % 2) * 0.32, CURB + 3.47 + (k > 1 ? 0.27 : 0), 66.4 + (k === 3 ? 0.16 : 0)); solid(b, '#1a1a1e', false); } }
+  CB.cap = fortCap.cb; DB.cap = fortCap.db; // landmarks: resume the capture
   pole(cx + 5, cz + 4, 24, 0.2);
   const fl = new THREE.BoxGeometry(7, 4.2, 0.08); place(fl, cx + 8.6, CURB + 21.6, cz + 4); CB.geom(fl, '#b03a3a', T.stripes);
   const ca = new THREE.BoxGeometry(2.6, 2.2, 0.1); place(ca, cx + 6.4, CURB + 22.6, cz + 4.01); CB.geom(ca, '#2a3a7a');
+  LMCAP(null); // landmarks
 })();
 landmark('fort', 'FORT MCHENRY', 176, 78, 26, { name: 'Admiral Redclaw', x: 176, z: 80 });
 // a few parked cars (vaultable in 06b) along the avenues
