@@ -92,8 +92,8 @@ Screenshots: `shots/coop_shared_*.png`, `shots/coop_split_*.png`, `shots/coop_tu
 - [x] M3 split render (two viewports) + merge animation + perf trims
 - [x] M4 edge cases: P2 revives Harold (hold Y), game over resets both and stays co-op, far KO while split auto-revives beside the partner after 8 s, roof level puff, duel started while split merges instantly (tests/coop/edge.js all pass 1280x720, 0 errors)
 - [x] M5 turn rotation for bosses + minigames (gamepad filter + P2'S TURN card)
-- [ ] M6 coop tests + full regression (CI matrix + local smoke) + screenshots
-- [ ] M7 merge latest hark/integration, deploy, push toadcity/integration (+ Hawk main code/toad-city copy if present), desktop package note
+- [x] M6 coop tests + full regression (CI matrix + local smoke) + screenshots
+- [x] M7 merge latest hark/integration, deploy, push toadcity/integration (+ Hawk main code/toad-city copy if present), desktop package note
 
 ## 8. Status / what's left
 (updated with each commit)
@@ -106,3 +106,10 @@ Screenshots: `shots/coop_shared_*.png`, `shots/coop_split_*.png`, `shots/coop_tu
 - Implementation notes for whoever continues: COOP.on false => original code path everywhere. Shared cam = `sharedCam()`; P1 split cam =
   the original `camStep`; P2 split cam = `updateCameraFor(CAM2, camera2, partner, IN2, ...)`. Split draw = `draw2()` (RT.viewport/scissor,
   2nd view skips the shadow-map update). Turn rotation = `navigator.getGamepads` override (only filters while `C.mode` is set) + `pre()`.
+- 2026-10-14 18:50 ET: SHIPPED. finale-1280 'regression' was not co-op: the finale CI check measured autopilot travel over a 3 s wall-clock window, and the
+  autopilot advances min(dt, 0.05 s) per frame, so at 700-1000 ms swiftshader frames it was 3 frames (2.4 m, fail) vs 4 (3.1 m, pass) by runner luck.
+  Proof co-op costs nothing with no P2: in-page microbench (T/coop/micro.js) COOP-off hooks 0.06 us/frame, getGamepads wrapper 3.2 vs 3.6 us raw;
+  finale A/B vs 84184e7 (T/coop/abjs.js, 3 runs each, 1280x720) 22.3 vs 23.0 frames / 12 s, JS 15.8 vs 14.9 ms/frame (noise); CI: base 84184e7 finale-1280 434 ms frames,
+  coop 726 ms in the same minute. Fix in the harness (toadcity/ci 7bbeed4): flyover sampled over >= 3 s AND >= 6 frames, threshold unchanged.
+  Full matrix run 38646826378 on 132e132: 44/44 pass. hark/integration fast-forwarded to 132e132, deployed + verified, toadcity/integration pushed,
+  Hawk main code/toad-city updated, desktop ed2b267 pushed to toadcity/desktop.
