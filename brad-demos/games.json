@@ -559,6 +559,40 @@
       "thumb": "thumbs/bakeoff-i-cel.webp?v=1791640173"
     },
     {
+      "id": "survivors-plus",
+      "title": "★ Vampire Survivors Remake — Hark Edition (fan remake)",
+      "category": "Other games",
+      "keys": {
+        "up": "ArrowUp",
+        "down": "ArrowDown",
+        "left": "ArrowLeft",
+        "right": "ArrowRight",
+        "attack": "Space",
+        "jump": "Enter",
+        "special": "KeyM",
+        "start": "Enter",
+        "select": "KeyP"
+      },
+      "labels": {
+        "attack": "DASH",
+        "jump": "PICK",
+        "special": "MUTE",
+        "start": "START",
+        "select": "PAUSE"
+      },
+      "extras": [
+        {
+          "label": "MUTE",
+          "key": "KeyM"
+        }
+      ],
+      "autostart": [],
+      "orientation": "any",
+      "note": "Hark fan remake of the bullet-heaven genre (2026-10-13): cel-shaded three.js r160, 1,500+ enemy horde as one instanced draw of baked cel impostors, 8 weapons / 9 passives / 6 evolutions, 10:00 run + Reaper boss. Boots in attract mode; any key/tap plays. Source: /workspace/work/survivors-plus/game",
+      "path": "g/survivors-plus/index.html",
+      "thumb": "thumbs/survivors-plus.webp?v=1791962719"
+    },
+    {
       "id": "crystal-cave",
       "title": "Crystal Cave 2.5D",
       "category": "Other games",
