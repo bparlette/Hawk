@@ -3941,7 +3941,7 @@ const ALL = [hero, partner, ...enemies];
 // beyond 24 m a thug drops its ink outlines and stops casting shadows
 for (const f of ALL) { f.J.ol = []; f.J.sh = []; f.root.traverse((o) => { if (o.isMesh && o.material && o.material.isShaderMaterial && o.material.side === THREE.BackSide) f.J.ol.push(o); else if (o.isMesh && o.castShadow) f.J.sh.push(o); }); f.lodNear = true; }
 function rigLod() {
-  for (const e of enemies) { const near = (e.pos.x - hero.pos.x) ** 2 + (e.pos.z - hero.pos.z) ** 2 < 24 * 24;
+  for (const e of enemies) { const near = (e.pos.x - hero.pos.x) ** 2 + (e.pos.z - hero.pos.z) ** 2 < 24 * 24 || (COOP.on && (e.pos.x - partner.pos.x) ** 2 + (e.pos.z - partner.pos.z) ** 2 < 24 * 24);
     if (near === e.lodNear && e.lodHd === QUAL.hd) continue; e.lodNear = near; e.lodHd = QUAL.hd;
     for (const o of e.J.ol) o.visible = near && QUAL.hd; for (const o of e.J.sh) o.castShadow = near; }
 }
@@ -4032,7 +4032,8 @@ function readInput() {
   if (TOUCHS.btn.l) look -= 1; if (TOUCHS.btn.r) look += 1;
   const pads = navigator.getGamepads ? navigator.getGamepads() : []; IN.padAct = false;
   for (const gp of pads) {
-    if (!gp) continue; const dz = (v) => (Math.abs(v) < 0.18 ? 0 : v);
+    if (!gp) continue; if (COOP.padRole(gp) !== 'p1') continue; // co-op (06cc): a joined Player 2 pad drives Mavis, not Harold
+    const dz = (v) => (Math.abs(v) < 0.18 ? 0 : v);
     mx += dz(gp.axes[0] || 0); my -= dz(gp.axes[1] || 0); look += dz(gp.axes[2] || 0); lookY += dz(gp.axes[3] || 0);
     const b = (i) => !!(gp.buttons[i] && gp.buttons[i].pressed);
     if (b(4)) look -= 1; if (b(5)) look += 1;
@@ -4056,7 +4057,9 @@ function segBox(ax, ay, az, bx, by, bz, b, pad) { // param t of the first hit of
   return t0;
 }
 let lockT = null;
-function updateCamera(dt, rdt) {
+function updateCamera(dt, rdt) { updateCameraFor(CAM, camera, hero, IN, lockT, dt, rdt); }
+// the follow camera, for any toad + camera (single player: CAM / camera / Harold; split-screen co-op also runs it for Mavis on a 2nd camera)
+function updateCameraFor(CAM, camera, hero, IN, lockT, dt, rdt) {
   // orbit input
   CAM.yaw -= IN.look * rdt * 2.3; CAM.yaw -= IN.dragX * 0.0062; CAM.pitch = clamp(CAM.pitch + IN.dragY * 0.0035 + IN.lookY * rdt * 1.4, 0.02, 0.9); IN.dragX = IN.dragY = 0;
   const p = hero.pos; const fighting = lockT && lockT.alive && lockT.state !== 'dying';
@@ -4077,7 +4080,7 @@ function updateCamera(dt, rdt) {
   const tgt = _v.set(p.x, p.y + 1.55 + hero.y * 0.45, p.z);
   if (fighting) { tgt.x += (lockT.pos.x - p.x) * 0.25; tgt.z += (lockT.pos.z - p.z) * 0.25; }
   CAM.pivot.x = damp(CAM.pivot.x, tgt.x, 9, rdt); CAM.pivot.z = damp(CAM.pivot.z, tgt.z, 9, rdt); CAM.pivot.y = damp(CAM.pivot.y, tgt.y, 6, rdt);
-  const portrait = VH() > VW() * 1.15;
+  const aspect = CAM.aspect || VW() / VH(), portrait = aspect < 1 / 1.15;
   const want = lerp(4.4, 5.9, fk) + (portrait ? 1.4 : 0);
   CAM.dist = damp(CAM.dist, want, 2.5, rdt);
   const pitch = CAM.pitch + fk * 0.12;
@@ -4099,10 +4102,10 @@ function updateCamera(dt, rdt) {
   camera.position.copy(CAM.pos);
   if (S.shake > 0) { S.shake = Math.max(0, S.shake - rdt * 3); const k = S.shake * S.shake * 0.25; camera.position.x += rnd(-k, k); camera.position.y += rnd(-k, k); }
   camera.up.set(0, 1, 0); camera.lookAt(CAM.look);
-  setFov(lerp(58, 62, fk));
+  setFov(lerp(58, 62, fk), camera, aspect);
 }
-function setFov(base) { // wider in portrait so the street still fits
-  const aspect = VW() / VH(); let fov = base; if (aspect < 1) fov = clamp(2 * Math.atan(Math.tan((base * 0.82 / 2) * Math.PI / 180) / aspect) * 180 / Math.PI, base, 84);
+function setFov(base, cam = camera, aspect = CAM.aspect || VW() / VH()) { // wider in portrait so the street still fits
+  const camera = cam; let fov = base; if (aspect < 1) fov = clamp(2 * Math.atan(Math.tan((base * 0.82 / 2) * Math.PI / 180) / aspect) * 180 / Math.PI, base, 84);
   if (Math.abs(camera.fov - fov) > 0.05) { camera.fov = fov; camera.updateProjectionMatrix(); }
 }
 
@@ -4492,7 +4495,7 @@ function actContext() {
   if (inFight()) return { kind: 'power', label: 'POWER', ready: POWER.cd <= 0, go: () => startPower() };
   return null;
 }
-function tryAction() { const c = actContext(); if (!c || c.ready === false) return false; c.go(); return true; }
+function tryAction() { const c = actContext(); if (!c || c.ready === false) return false; COOP.noteAct(c); c.go(); return true; } // COOP.noteAct (06cc): a boss / minigame ring can be replayed for Player 2's turn
 // ---- the POWER move: Harold's big cane slam. Hops, flips and drives the cane into the pavement: a shockwave knocks back / downs every thug
 // within ~5 m, a long hit-pause + heavy shake, and Mavis (if she is close and free) spins her handbag into the crowd at the same moment.
 const POWER_W = canvasTex(512, 192, (c) => { comicText(c, 'CANE QUAKE!', 256, 100, 80, '#7dffc0', null, { sx: 1 }); });
@@ -5007,6 +5010,328 @@ function resetTurtles() {
   for (const e of enemies) if (e.alive && e.state !== 'dying') { e.hp = e.maxHp; e.dizzied = false; e.fin = false; e.y = 0; e.set('return'); }
   CAM.yaw = HERO_START.camYaw; snapCam(); cut(); banner('TRY AGAIN!', 1.4);
 }
+
+// ======================= COUCH CO-OP: Player 2 drives MAVIS (COOP_PLAN.md) =======================
+// Drop-in: P1 = keyboard + touch + the first pad that sends input (sticky); any OTHER pad pressing Start or A joins as P2 (Mavis's AI
+// switches off, the pad drives her). Keyboard / touch P1 + one pad: Start on the pad joins it as P2. P2 leaves: pad unplugged, or hold Start 3 s.
+// Camera: one SHARED view framing both while together (pulls back + tilts as they spread, max MAXSEP apart); a toad walking away at the edge is
+// HELD there. Only an INTENTIONAL leave splits: in 'move', at the edge, stick held away from the partner for SPLIT_T (2 s) continuously
+// (0.15 s jitter grace; hits, jumps, swings, cinematics, letting go all reset it). Split = two views (side by side in landscape, stacked in
+// portrait), same world. Back within MERGE_D on the same level for 0.4 s = smooth merge. Bosses / minigames (own-scene modes) = TURN ROTATION:
+// P1's pad only while P1 plays; on exit a P2'S TURN card (P2: A play / B skip) replays the same ring with P2's pad.
+// With no second pad COOP.on stays false and every call site in 06_game / 07_main takes its original path.
+const COOP = (function () {
+  const C = { on: false, p1: null, p2: null, kbUsed: false, prevR: {}, prev2: [], split: false, k: 0, edgeT: 0, edgeWho: null, graceT: 0, mergeT: 0, levelT: 0, farT: 0, koT: 0,
+    leaveT: 0, turn: 0, mode: null, modeAct: null, lastAct: null, lastActT: -1e9, card: null, cardT: 0, log: [], splits: 0, merges: 0, holds: 0, joins: 0, turns: 0, draws2: 0 };
+  const SPLIT_T = 2.0, GRACE = 0.15;
+  const portraitNow = () => VW() / VH() < 1 / 1.15;
+  const MAXSEP = () => (portraitNow() ? 10 : 13), MERGE_D = () => (portraitNow() ? 7.5 : 9);
+  const IN2 = { mx: 0, my: 0, look: 0, lookY: 0, dragX: 0, dragY: 0, lastLook: -9, atk: false, jump: false, act: false, actHeld: false, aE: false, bE: false };
+  const SH = { yaw: 0, pitch: 0.17, dist: 6, pivot: new THREE.Vector3(), pos: new THREE.Vector3(), look: new THREE.Vector3() };
+  const CAM2 = { yaw: 0, pitch: 0.17, dist: 4.4, cur: 4.4, sh: 0.72, pivot: new THREE.Vector3(), look: new THREE.Vector3(), pos: new THREE.Vector3(), fov: 58, lockYawT: 0, fightK: 0, aspect: 1 };
+  const camera2 = new THREE.PerspectiveCamera(62, 1, 0.12, 260);
+  const rawGP = navigator.getGamepads ? navigator.getGamepads.bind(navigator) : () => [];
+  const log = (s) => { C.log.push(s + '@' + (typeof S !== 'undefined' ? S.time.toFixed(1) : 0)); if (C.log.length > 60) C.log.shift(); };
+  // ---- turn rotation: while a mode runs, the mode only sees the active player's pad ----
+  if (navigator.getGamepads) { try { Object.defineProperty(navigator, 'getGamepads', { configurable: true, value: function () { const a = rawGP(); return C.on && C.mode ? filterPads(a) : a; } }); } catch (e) {} }
+  function filterPads(a) { const act = C.turn === 1 ? C.p2 : C.p1; const out = []; for (let i = 0; i < a.length; i++) { const g = a[i]; out.push(g && (g.index === act || (C.turn === 0 && C.p1 === null && g.index !== C.p2)) ? g : null); } return out; }
+  addEventListener('keydown', () => { C.kbUsed = true; });
+  addEventListener('pointerdown', (e) => { if (e.pointerType === 'touch') C.kbUsed = true; }, true);
+  addEventListener('gamepaddisconnected', (e) => { const i = e.gamepad && e.gamepad.index; if (i === C.p2) leave('unplugged'); else if (i === C.p1) C.p1 = null; });
+  const pressedB = (gp, k) => !!(gp.buttons[k] && gp.buttons[k].pressed);
+  function anyIn(gp) { if (gp.buttons.some((b) => b && b.pressed)) return true; for (let i = 0; i < Math.min(4, gp.axes.length); i++) if (Math.abs(gp.axes[i] || 0) > 0.5) return true; return false; }
+  // called by readInput (06_game) for every pad: 'p1' = feeds Harold as before; anything else is skipped there
+  function padRole(gp) {
+    const i = gp.index; if (C.p2 === i) return 'p2';
+    const pv = C.prevR[i] || [], startE = pressedB(gp, 9) && !pv[9], aE = pressedB(gp, 0) && !pv[0]; let role;
+    if (C.p1 === null) {
+      if (startE && C.kbUsed && C.p2 === null && !C.mode) { join(i); role = 'join'; } // keyboard / touch is P1: Start on the pad joins it as P2
+      else { if (anyIn(gp)) C.p1 = i; role = 'p1'; }
+    } else if (C.p1 === i) role = 'p1';
+    else if ((startE || aE) && C.p2 === null && !C.mode) { join(i); role = 'join'; }
+    else role = 'skip';
+    C.prevR[i] = gp.buttons.map((x) => !!(x && x.pressed));
+    return role;
+  }
+  // ---- HUD bits (injected; no index.html edit) ----
+  const st = document.createElement('style');
+  st.textContent = `
+  #coopdiv { position: fixed; z-index: 4; background: #14101f; pointer-events: none; display: none; box-shadow: 0 0 0 1px #ff9ad0; }
+  .cooptag { position: fixed; z-index: 5; font: 9px/1 'PX', monospace; color: #fff; background: #14101f; border: 2px solid #000; padding: 3px 5px; pointer-events: none; display: none; }
+  #cooptag2 { color: #ff9ad0; } #cooptag1 { color: #9dff6b; }
+  #coopedge { position: fixed; z-index: 6; width: 46px; height: 46px; margin: -23px 0 0 -23px; border-radius: 50%; pointer-events: none; display: none;
+    background: conic-gradient(#ff9ad0 calc(var(--p) * 1turn), rgba(20,16,31,.55) 0); -webkit-mask: radial-gradient(circle, transparent 13px, #000 14px); mask: radial-gradient(circle, transparent 13px, #000 14px); }
+  #coopedgeL { position: fixed; z-index: 6; font: 7px/1 'PX', monospace; color: #fff; text-shadow: 1px 1px 0 #000; pointer-events: none; display: none; transform: translate(-50%, 0); white-space: nowrap; }
+  #coopturn { position: fixed; z-index: 30; left: 50%; top: 56%; transform: translate(-50%, -50%); background: #1a1220; border: 3px solid #000; box-shadow: 4px 4px 0 #000; padding: 12px 16px; text-align: center; font: 12px/1.6 'PX', monospace; color: #ff9ad0; display: none; pointer-events: none; max-width: 90vw; }
+  #coopturn b { display: block; font-size: 18px; color: #fff; margin-bottom: 4px; } #coopturn i { display: block; font-style: normal; color: #ffe08a; font-size: 10px; }
+  @media (max-width: 480px) { #coopturn { font-size: 9px; } #coopturn b { font-size: 13px; } }`;
+  document.head.appendChild(st);
+  const mk = (id, cls) => { const e = document.createElement('div'); e.id = id; if (cls) e.className = cls; document.body.appendChild(e); return e; };
+  const elDiv = mk('coopdiv'), elT1 = mk('cooptag1', 'cooptag'), elT2 = mk('cooptag2', 'cooptag'), elEdge = mk('coopedge'), elEdgeL = mk('coopedgeL'), elTurn = mk('coopturn');
+  elT1.textContent = 'P1 HAROLD'; elT2.textContent = 'P2 MAVIS'; elEdgeL.textContent = 'KEEP GOING TO SPLIT';
+  let tagSpr = null;
+  function tags() { if (tagSpr) return tagSpr; const mkS = (txt, col) => { const s = new THREE.Sprite(new THREE.SpriteMaterial({ map: canvasTex(256, 128, (c) => comicText(c, txt, 128, 66, 84, col, null, { sx: 1 })), depthTest: false, transparent: true })); s.scale.set(0.62, 0.31, 1); s.renderOrder = 20; s.visible = false; scene.add(s); return s; };
+    tagSpr = [mkS('P1', '#9dff6b'), mkS('P2', '#ff9ad0')]; return tagSpr; }
+  const hideHud = () => { for (const e of [elDiv, elT1, elT2, elEdge, elEdgeL]) e.style.display = 'none'; if (tagSpr) tagSpr.forEach((s) => (s.visible = false)); };
+  // ---- join / leave ----
+  function join(i) {
+    C.p2 = i; C.on = true; C.joins++; C.joinAt = performance.now(); // (the desktop wrapper skips its Start-to-pause right after a join) C.split = false; C.k = 0; C.edgeT = 0; C.turn = 0; C.prev2 = []; log('join:pad' + i);
+    initShared(true);
+    const P = partner; if (Math.hypot(P.pos.x - hero.pos.x, P.pos.z - hero.pos.z) > MAXSEP() * 0.8 || !!P.roof !== !!hero.roof) { const sl = partnerSlot(); partnerTeleport(sl.x, sl.z, !!hero.roof, 'coop-join'); }
+    if (P.state === 'revive') P.set('move');
+    const n = $('p2n'); if (n) n.textContent = 'P2 MAVIS'; tags();
+    if (typeof banner === 'function') banner('PLAYER 2 JOINED!', 1.8); sfx('ko');
+  }
+  function leave(why) {
+    if (!C.on) return; log('leave:' + why); if (C.split || C.k > 0) merge(true);
+    C.on = false; C.p2 = null; C.card = null; elTurn.style.display = 'none'; C.turn = 0;
+    delete CAM.aspect; camera.aspect = VW() / VH(); camera.far = 260; camera.updateProjectionMatrix(); CAM.yaw = SH.yaw; if (window.__sky) window.__sky.scale.setScalar(1);
+    if (partner.state === 'air' || partner.state === 'airatk') { partner.y = 0; partner.vy = 0; partner.set('move'); } else if (partner.state === 'revive') partner.set('move');
+    const n = $('p2n'); if (n) n.textContent = 'MAVIS'; hideHud();
+    resize(); if (typeof banner === 'function') banner('PLAYER 2 LEFT', 1.4);
+  }
+  // ---- P2 input (raw pad) ----
+  function readP2(dt) {
+    const gp = rawGP()[C.p2]; IN2.atk = IN2.jump = IN2.act = false;
+    if (!gp || gp.connected === false) { leave('gone'); return false; }
+    const dz = (v) => (Math.abs(v) < 0.18 ? 0 : v), b = (k) => pressedB(gp, k), pv = C.prev2;
+    let mx = dz(gp.axes[0] || 0), my = -dz(gp.axes[1] || 0); if (b(14)) mx -= 1; if (b(15)) mx += 1; if (b(12)) my += 1; if (b(13)) my -= 1;
+    const l = Math.hypot(mx, my); if (l > 1) { mx /= l; my /= l; }
+    let look = dz(gp.axes[2] || 0); if (b(4)) look -= 1; if (b(5)) look += 1;
+    IN2.mx = mx; IN2.my = my; IN2.look = clamp(look, -1, 1); IN2.lookY = dz(gp.axes[3] || 0); if (IN2.look || IN2.lookY) IN2.lastLook = S.time;
+    const e = (k) => b(k) && !pv[k];
+    IN2.aE = IN2.aE || e(0); IN2.bE = IN2.bE || e(1); IN2.jump = e(0); IN2.atk = e(2) || e(1); IN2.act = e(3); IN2.actHeld = b(3);
+    if (e(8) && !C.card) FMAP.open('pad');
+    C.leaveT = b(9) ? C.leaveT + dt : 0; // hold Start ~3 s to drop out
+    C.prev2 = gp.buttons.map((x) => !!(x && x.pressed));
+    if (C.card) { IN2.mx = IN2.my = 0; IN2.atk = IN2.jump = IN2.act = false; IN2.actHeld = false; }
+    if (C.leaveT > 3) { leave('start-held'); return false; }
+    return true;
+  }
+  // ---- P2 drives Mavis (scripted states: intro / tp / hop / boost / pclimb / tag / hurt / down / getup / ko stay in 06c updatePartner) ----
+  const OWN = new Set(['move', 'idle', 'atk', 'air', 'airatk', 'revive']);
+  function p2Target(dx, dz, maxD) { const P = partner; let best = null, bs = 1e9;
+    for (const e of enemies) { if (!e.alive || e.state === 'dying' || e.state === 'drown' || e.fin) continue; const ex = e.pos.x - P.pos.x, ez = e.pos.z - P.pos.z, d = Math.hypot(ex, ez); if (d > maxD) continue;
+      const ang = Math.acos(clamp((ex * dx + ez * dz) / (d || 1), -1, 1)), s = d + ang * 2.2 + (e.state === 'down' ? 4 : 0); if (s < bs) { bs = s; best = e; } }
+    return best; }
+  function p2Attack(n, wx, wz) { const P = partner; P.set('atk'); P.atkN = n; P.queued = false; P.hitDone = false; P.hit2 = false;
+    let dx = Math.sin(P.yaw), dz = Math.cos(P.yaw); const wl = Math.hypot(wx, wz); if (wl > 0.1) { dx = wx / wl; dz = wz / wl; }
+    const t = p2Target(dx, dz, 5.2); P.atkT = t; P.yaw = t ? Math.atan2(t.pos.x - P.pos.x, t.pos.z - P.pos.z) : Math.atan2(dx, dz); sfx('swing'); }
+  function p2Revivable() { const H = hero; return H.state === 'ko' && !PART.over && !!H.roof === !!partner.roof && Math.hypot(H.pos.x - partner.pos.x, H.pos.z - partner.pos.z) < REVIVE_R ? H : null; }
+  function updateP2(dt) {
+    const P = partner; if (!OWN.has(P.state) || CINE.intro || PART.over) { updatePartner(dt); return; }
+    P.st += dt; P.at += dt; P.inv = Math.max(0, P.inv - dt); P.ghost = !(P.state === 'move' || P.state === 'atk');
+    const f = camFwd(C.split ? CAM2.yaw : CAM.yaw), r = [-f[1], f[0]];
+    const wx = r[0] * IN2.mx + f[0] * IN2.my, wz = r[1] * IN2.mx + f[1] * IN2.my, wl = Math.hypot(wx, wz);
+    let pose, rate = 16, snapTilt = false;
+    const move = (spd, acc) => { P.vel.x = damp(P.vel.x, wx * spd, acc, dt); P.vel.y = damp(P.vel.y, wz * spd, acc, dt); };
+    switch (P.state) {
+      case 'idle': case 'move': {
+        P.state = 'move'; move(6.6, 12); if (wl > 0.1) P.yaw += angTo(P.yaw, Math.atan2(wx, wz)) * (1 - Math.exp(-dt * 14));
+        P.speed = Math.hypot(P.vel.x, P.vel.y); pose = P.speed > 0.6 ? HERO_POSES.run(P.at, P.speed) : HERO_POSES.idle(P.at);
+        if (P.speed > 4 && Math.random() < dt * 4) dust(P.pos.x, P.pos.y, P.pos.z, 1);
+        if (IN2.actHeld && p2Revivable()) { P.set('revive'); P.rv = 0; P.vel.set(0, 0); break; }
+        if (IN2.atk) p2Attack(1, wx, wz); else if (IN2.jump) { P.set('air'); P.vy = 8.2; sfx('jump'); dust(P.pos.x, P.pos.y, P.pos.z, 3); }
+        break;
+      }
+      case 'atk': {
+        const A = ATK[P.atkN] || ATK[1], u = P.st / A.dur, T = P.atkT; P.speed = 0;
+        let lsp = u < 0.45 ? 2.2 : 0;
+        if (T && T.alive && T.state !== 'dying') { const dx = T.pos.x - P.pos.x, dz = T.pos.z - P.pos.z, d = Math.hypot(dx, dz); P.yaw += angTo(P.yaw, Math.atan2(dx, dz)) * (1 - Math.exp(-dt * 20)); lsp = u < 0.45 ? clamp((d - 1.3) * 6, 0, 9) : 0; }
+        P.vel.set(Math.sin(P.yaw) * lsp, Math.cos(P.yaw) * lsp);
+        const skip = (e) => e.fin;
+        if (!P.hitDone && P.st >= A.hit * A.dur) { P.hitDone = true; spawnSlash(_v.set(P.pos.x, P.pos.y + 0.95 + (P.atkN === 3 ? 0.25 : 0), P.pos.z), P.yaw + (P.atkN === 1 ? 0.25 : P.atkN === 2 ? -0.25 : 0), A.slash, A.roll, P.atkN === 2 ? -1 : 1); resolveSwing(A, P.atkN === 3, P, skip); }
+        if (P.atkN === 3 && !P.hit2 && P.st >= 0.62 * A.dur) { P.hit2 = true; resolveSwing(Object.assign({}, A, { dmg: 1, heavy: true }), true, P, skip); }
+        if (IN2.atk && u > 0.25) P.queued = true;
+        if (u >= (P.atkN === 3 ? 1 : 0.78) && P.queued && P.atkN < 3) p2Attack(P.atkN + 1, wx, wz);
+        else if (u >= 1) { P.set('move'); P.at = 0; }
+        pose = (P.atkN === 3 && HERO_POSES.purse ? HERO_POSES.purse : HERO_POSES[A.pose])(Math.min(u, 1)); rate = 30; snapTilt = P.atkN === 3;
+        if (IN2.jump && u > 0.6) { P.set('air'); P.vy = 8.2; sfx('jump'); }
+        break;
+      }
+      case 'air': case 'airatk': {
+        move(6.0, 4); P.vy -= 24 * dt; P.y += P.vy * dt;
+        if (wl > 0.1 && P.state === 'air') P.yaw += angTo(P.yaw, Math.atan2(wx, wz)) * (1 - Math.exp(-dt * 8));
+        if (P.state === 'air' && IN2.atk) { P.set('airatk'); P.vy = Math.max(P.vy, 3.5); const t = p2Target(Math.sin(P.yaw), Math.cos(P.yaw), 5); if (t) P.yaw = Math.atan2(t.pos.x - P.pos.x, t.pos.z - P.pos.z); sfx('swing'); }
+        if (P.state === 'airatk') { pose = HERO_POSES.airatk(P.st / 0.42); snapTilt = true; rate = 30; if (P.st > 0.25) P.vy = Math.min(P.vy, -10); } else pose = HERO_POSES.jump(P.vy);
+        if (P.y <= 0) { P.y = 0; dust(P.pos.x, P.pos.y, P.pos.z, 3);
+          if (P.state === 'airatk') { spawnSlash(_v.set(P.pos.x, P.pos.y + 0.4, P.pos.z), P.yaw, 'spin', 0); resolveSwing({ range: 2.6, cone: Math.PI, dmg: 3, heavy: true }, true, P, (e) => e.fin); S.shake = Math.max(S.shake, 0.5); }
+          P.vy = 0; P.set('move'); P.J.tilt.rotation.x = 0; }
+        break;
+      }
+      case 'revive': {
+        P.vel.set(0, 0); P.inv = Math.max(P.inv, 0.2); const H = p2Revivable(); pose = HERO_POSES.revive(P.st); rate = 14;
+        if (H) P.yaw += angTo(P.yaw, Math.atan2(H.pos.x - P.pos.x, H.pos.z - P.pos.z)) * (1 - Math.exp(-dt * 12));
+        if (!H || !IN2.actHeld) { P.rv = 0; P.set('move'); break; }
+        P.rv = (P.rv || 0) + dt; if (P.rv >= REVIVE_T) { reviveTurtle(hero, P); P.set('move'); log('p2revive'); }
+        break;
+      }
+    }
+    P.pos.x += P.vel.x * dt; P.pos.z += P.vel.y * dt; collide(P);
+    finishPartner(P, pose || HERO_POSES.idle(P.at), rate, dt, snapTilt, true);
+  }
+  // ---- per step: remember positions, read P2 ----
+  const P0 = { hx: 0, hz: 0, px: 0, pz: 0 };
+  function preStep(dt) { P0.hx = hero.pos.x; P0.hz = hero.pos.z; P0.px = partner.pos.x; P0.pz = partner.pos.z; readP2(dt); }
+  const P2FREE = new Set(['move', 'idle', 'atk', 'air', 'airatk', 'revive', 'hurt', 'down', 'getup', 'ko']);
+  function worldIn(I, yaw) { const f = camFwd(yaw), r = [-f[1], f[0]]; return [r[0] * I.mx + f[0] * I.my, r[1] * I.mx + f[1] * I.my]; }
+  function step(dt) {
+    if (!C.on) return;
+    const H = hero, P = partner; let dx = P.pos.x - H.pos.x, dz = P.pos.z - H.pos.z, sep = Math.hypot(dx, dz);
+    const scripted = CINE.intro || PART.over || CINE_ST.has(H.state) || !P2FREE.has(P.state), levels = !!H.roof !== !!P.roof, MS = MAXSEP();
+    if (!C.split) {
+      // 1. held at the edge: remove the away-from-partner part of this step's motion (walking, knockback, jumps alike)
+      if (!scripted && !levels && sep > MS) {
+        const prevSep = Math.hypot(P0.px - P0.hx, P0.pz - P0.hz), lim = Math.max(MS, prevSep);
+        if (sep > lim + 1e-4) { const ux = dx / sep, uz = dz / sep;
+          const a1 = Math.max(0, -((H.pos.x - P0.hx) * ux + (H.pos.z - P0.hz) * uz)), a2 = Math.max(0, (P.pos.x - P0.px) * ux + (P.pos.z - P0.pz) * uz), ex = sep - lim, tot = a1 + a2;
+          const s1 = tot > 1e-6 ? ex * a1 / tot : ex / 2, s2 = ex - s1;
+          H.pos.x += ux * s1; H.pos.z += uz * s1; P.pos.x -= ux * s2; P.pos.z -= uz * s2; collide(H); collide(P); C.holds++;
+          dx = P.pos.x - H.pos.x; dz = P.pos.z - H.pos.z; sep = Math.hypot(dx, dz); }
+      }
+      // 2. the intentional-split timer: someone in 'move', at the edge, stick held away from the partner, 2 s without a break
+      let who = null;
+      if (!scripted && !levels && sep >= MS - 0.3 && !C.card) { const ux = dx / sep, uz = dz / sep;
+        const yw = CAM.yaw, w1 = worldIn(IN, yw), w2 = worldIn(IN2, yw), m1 = Math.hypot(w1[0], w1[1]), m2 = Math.hypot(w2[0], w2[1]);
+        if (H.state === 'move' && m1 > 0.5 && -(w1[0] * ux + w1[1] * uz) / m1 > 0.45) who = 'p1';
+        else if (P.state === 'move' && m2 > 0.5 && (w2[0] * ux + w2[1] * uz) / m2 > 0.45) who = 'p2'; }
+      if (who && (C.edgeWho === who || C.edgeT === 0)) { C.edgeT += dt; C.edgeWho = who; C.graceT = 0; }
+      else { C.graceT += dt; if (C.graceT > GRACE) { C.edgeT = 0; C.edgeWho = null; } }
+      if (C.edgeT >= SPLIT_T) doSplit();
+      // 3. different levels in one view (Harold climbed / dropped): puff Mavis over
+      if (levels && !scripted && P.state === 'move') { C.levelT += dt; if (C.levelT > 0.5) { const sl = partnerSlot(); partnerTeleport(sl.x, sl.z, !!H.roof, 'coop-level'); C.levelT = 0; } } else C.levelT = 0;
+      // 4. carried far apart by a cinematic: puff Mavis back beside Harold
+      if (!scripted && sep > MS * 1.5 && P.state === 'move') { C.farT += dt; if (C.farT > 1) { const sl = partnerSlot(); partnerTeleport(sl.x, sl.z, !!H.roof, 'coop-far'); C.farT = 0; } } else C.farT = 0;
+    } else {
+      C.edgeT = 0;
+      if (sep < MERGE_D() && !levels && !scripted) { C.mergeT += dt; if (C.mergeT > 0.4) merge(false); } else C.mergeT = 0;
+      if (sep < MERGE_D() && levels && !scripted && P.state === 'move') { C.levelT += dt; if (C.levelT > 1.0) { const sl = partnerSlot(); partnerTeleport(sl.x, sl.z, !!H.roof, 'coop-level'); C.levelT = 0; } } else if (!levels) C.levelT = 0;
+    }
+    // a toad KO'd far from its partner (split) gets back up beside the partner after 8 s
+    const down = H.state === 'ko' ? H : P.state === 'ko' ? P : null, other = down === H ? P : H;
+    if (down && other.hp > 0 && other.state !== 'ko' && sep > 20 && !PART.over) { C.koT += dt; if (C.koT > 8) { const s = settle(other.pos.x - 1.2, other.pos.z + 0.6, !!other.roof); down.roof = !!other.roof; down.pos.set(s.x, s.y, s.z); reviveTurtle(down, other); C.koT = 0; log('farRevive'); } } else C.koT = 0;
+    if (PART.over && (C.split || C.k > 0)) merge(true);
+  }
+  function doSplit() { C.split = true; C.splits++; C.edgeT = 0; C.mergeT = 0; log('split:' + C.edgeWho);
+    CAM.yaw = SH.yaw; CAM.pivot.copy(SH.pivot); CAM.cur = CAM.dist = Math.max(4.4, SH.dist * 0.6); IN.lastLook = S.time;
+    CAM2.yaw = SH.yaw; CAM2.pitch = CAM.pitch; CAM2.pivot.copy(SH.pivot); CAM2.cur = CAM2.dist = CAM.cur; CAM2.fightK = 0; IN2.lastLook = S.time; resize(); }
+  function merge(instant) { if (C.split) { C.merges++; log('merge' + (instant ? ':instant' : '')); } C.split = false; C.mergeT = 0; initShared(instant); if (instant) { C.k = 0; delete CAM.aspect; camera.aspect = VW() / VH(); camera.far = 260; camera.updateProjectionMatrix(); if (window.__sky) window.__sky.scale.setScalar(1); } resize(); }
+  function initShared(instant) {
+    SH.yaw = CAM.yaw; SH.pitch = CAM.pitch; SH.dist = CAM.cur || 4.4;
+    if (instant) SH.pivot.set((hero.pos.x + partner.pos.x) / 2, (hero.pos.y + partner.pos.y) / 2 + 1.4, (hero.pos.z + partner.pos.z) / 2); else SH.pivot.copy(CAM.pivot);
+  }
+  // ---- cameras ----
+  function views() { // viewport rects as fractions of the screen (x, y from the bottom-left, w, h) for k: 0 = one view, 1 = split
+    const k = C.k, land = VW() >= VH();
+    if (land) return [[0, 0, 1 - k / 2, 1], [1 - k / 2, 0, 0.5, 1], land];
+    return [[0, k / 2, 1, 1 - k / 2], [0, -0.5 + k / 2, 1, 0.5], land]; // portrait: P1 on top, P2 slides up from the bottom
+  }
+  function sharedCam(dt, rdt, aspect) {
+    const H = hero, P = partner;
+    SH.yaw -= (IN.look + IN2.look) * rdt * 2.3; SH.yaw -= IN.dragX * 0.0062; SH.pitch = clamp(SH.pitch + IN.dragY * 0.0035 + (IN.lookY + IN2.lookY) * rdt * 1.4, 0.02, 0.9); IN.dragX = IN.dragY = 0;
+    const idle = S.time - Math.max(IN.lastLook, IN2.lastLook) > 1.4, vx = (H.vel.x + P.vel.x) / 2, vz = (H.vel.y + P.vel.y) / 2, sp = Math.hypot(vx, vz);
+    if (idle && sp > 1) { const d = angTo(SH.yaw, Math.atan2(-vx, -vz)); if (Math.abs(d) < 2.2) SH.yaw += d * (1 - Math.exp(-rdt * 0.9 * clamp(sp / 6, 0, 1))); }
+    SH.yaw = wrapA(SH.yaw); CAM.yaw = SH.yaw; // P1's stick is relative to the shared camera
+    const sep = Math.hypot(P.pos.x - H.pos.x, P.pos.z - H.pos.z), sk = clamp((sep - 2) / 10, 0, 1), portrait = aspect < 1 / 1.15;
+    const mx = (H.pos.x + P.pos.x) / 2, mz = (H.pos.z + P.pos.z) / 2, my = (H.pos.y + P.pos.y) / 2 + 1.4 + (H.y + P.y) * 0.22;
+    SH.pivot.x = damp(SH.pivot.x, mx, 6, rdt); SH.pivot.z = damp(SH.pivot.z, mz, 6, rdt); SH.pivot.y = damp(SH.pivot.y, my, 5, rdt);
+    setFov(58, camera, aspect); const vf = camera.fov * Math.PI / 180, hf = 2 * Math.atan(Math.tan(vf / 2) * aspect);
+    const half = sep / 2 + 1.8, want = Math.max(5.4 + (portrait ? 1.4 : 0), half / Math.tan(Math.min(vf, hf) / 2) * 1.05);
+    SH.dist = damp(SH.dist, want, 2.4, rdt);
+    const pitch = clamp(SH.pitch + 0.06 + sk * 0.55, 0.05, 1.1), f = camFwd(SH.yaw), cp = Math.cos(pitch), spp = Math.sin(pitch);
+    const px = SH.pivot.x, py = SH.pivot.y, pz = SH.pivot.z, wx = px - f[0] * SH.dist * cp, wy = py + SH.dist * spp, wz = pz - f[1] * SH.dist * cp;
+    let t = 1; for (const b of BLD) { if (b.x1 < Math.min(px, wx) - 1 || b.x0 > Math.max(px, wx) + 1 || b.z1 < Math.min(pz, wz) - 1 || b.z0 > Math.max(pz, wz) + 1) continue; const hh = segBox(px, py, pz, wx, wy, wz, b, 0.3); if (hh < t) t = hh; }
+    const d = Math.max(sep > 3 ? SH.dist * 0.72 : 0.9, SH.dist * t - 0.15);
+    SH.pos.set(px - f[0] * d * cp, Math.max(py + d * spp, H.pos.y + 0.5), pz - f[1] * d * cp); SH.look.set(px + f[0] * 0.8 * (1 - sk), py - 0.2 + sk * 1.0, pz + f[1] * 0.8 * (1 - sk)); // at the edge, aim a little high so the far toad sits below the top HUD band
+    const T = S.time; SH.pos.x += Math.sin(T * 0.73) * 0.03; SH.pos.y += Math.sin(T * 1.13 + 2) * 0.025;
+    camera.position.copy(SH.pos); if (S.shake > 0) { S.shake = Math.max(0, S.shake - rdt * 3); const kk = S.shake * S.shake * 0.25; camera.position.x += rnd(-kk, kk); camera.position.y += rnd(-kk, kk); }
+    camera.up.set(0, 1, 0); camera.lookAt(SH.look); CAM.pos.copy(SH.pos); CAM.look.copy(SH.look); CAM.pivot.copy(SH.pivot); CAM.cur = d;
+  }
+  function setAspect(cam, a) { if (Math.abs(cam.aspect - a) > 1e-4) { cam.aspect = a; cam.updateProjectionMatrix(); } }
+  function cam(dt, rdt) {
+    C.k = damp(C.k, C.split ? 1 : 0, 7, rdt); if (!C.split && C.k < 0.004) C.k = 0; if (C.split && C.k > 0.996) C.k = 1;
+    const two = C.split || C.k > 0, [v1, v2] = views(), sw = VW(), sh = VH();
+    const a1 = (sw * v1[2]) / (sh * v1[3]), a2 = (sw * v2[2]) / (sh * v2[3]);
+    if (two) CAM.aspect = a1; else delete CAM.aspect;
+    setAspect(camera, a1);
+    if (CINE.intro) camStep(dt, rdt);
+    else if (C.split) camStep(dt, rdt); // P1's own follow camera (cinematics included)
+    else if (cineCamActive()) cineCamera(rdt);
+    else sharedCam(dt, rdt, a1);
+    if (two) { CAM2.aspect = a2; setAspect(camera2, a2); updateCameraFor(CAM2, camera2, partner, IN2, null, dt, rdt); }
+  }
+  // ---- draw: two viewports into the low-res target, then the post pass once ----
+  const _sky = new THREE.Vector3();
+  function draw2() {
+    const W = RT.width, Hh = RT.height, [v1, v2] = views(); C.draws2++;
+    const rect = (v) => [Math.round(v[0] * W), Math.round(v[1] * Hh), Math.round(v[2] * W), Math.round(v[3] * Hh)];
+    const r1 = rect(v1), r2 = rect(v2);
+    RT.scissorTest = true; const tv = tagSpr ? tagSpr.map((t) => t.visible) : null;
+    if (tv) tagSpr[0].visible = false; // each view hides its own toad's tag
+    RT.viewport.set(r1[0], r1[1], r1[2], r1[3]); RT.scissor.set(r1[0], r1[1], r1[2], r1[3]);
+    renderer.setRenderTarget(RT); renderer.render(scene, camera);
+    if (tv) { tagSpr[0].visible = tv[0]; tagSpr[1].visible = false; }
+    const x0 = Math.max(0, r2[0]), y0 = Math.max(0, r2[1]), x1 = Math.min(W, r2[0] + r2[2]), y1 = Math.min(Hh, r2[1] + r2[3]);
+    if (x1 - x0 > 1 && y1 - y0 > 1) {
+      const au = renderer.shadowMap.autoUpdate; renderer.shadowMap.autoUpdate = false; _sky.copy(window.__sky.position); window.__sky.position.copy(camera2.position);
+      RT.viewport.set(r2[0], r2[1], r2[2], r2[3]); RT.scissor.set(x0, y0, x1 - x0, y1 - y0);
+      renderer.setRenderTarget(RT); renderer.render(scene, camera2);
+      renderer.shadowMap.autoUpdate = au; window.__sky.position.copy(_sky);
+    }
+    if (tv) tagSpr[1].visible = tv[1];
+    RT.scissorTest = false; RT.viewport.set(0, 0, W, Hh); RT.scissor.set(0, 0, W, Hh);
+    renderer.setRenderTarget(null); renderer.render(postScene, postCam);
+  }
+  // ---- after the city frame: perf trims in split, HUD, edge ring, tags, the P2'S TURN card ----
+  const _p = new THREE.Vector3();
+  let _gr = null, _grT = -1; const glRect = () => { if (!_gr || S.time - _grT > 1 || S.time < _grT) { const g = document.getElementById('gl'); _gr = g ? g.getBoundingClientRect() : { left: 0, top: 0 }; _grT = S.time; } return _gr; };
+  function post(rdt) {
+    const two = C.split || C.k > 0, [v1, v2, land] = views(), sw = VW(), sh = VH();
+    // split perf: shorter draw distance in both views (fog hides the cut), sky dome shrunk to fit inside it
+    const far = two ? 125 : 260; if (camera.far !== far) { camera.far = far; camera.updateProjectionMatrix(); } if (camera2.far !== 125) { camera2.far = 125; camera2.updateProjectionMatrix(); }
+    const sk = two ? 0.6 : 1; if (window.__sky && window.__sky.scale.x !== sk) window.__sky.scale.setScalar(sk);
+    if (two) { const ff = Math.min(scene.fog.far, 95), fn = Math.min(scene.fog.near, 25); scene.fog.far = ff; scene.fog.near = fn; OUT_U.fogF.value = ff; OUT_U.fogN.value = fn; }
+    if (two) { elDiv.style.display = 'block';
+      const R = glRect();
+      if (land) { const x = R.left + sw * (1 - C.k / 2); Object.assign(elDiv.style, { left: (x - 2) + 'px', top: R.top + 'px', width: '4px', height: sh + 'px' }); Object.assign(elT1.style, { left: (R.left + 8) + 'px', top: (R.top + sh - 26) + 'px' }); Object.assign(elT2.style, { left: (x + 8) + 'px', top: (R.top + sh - 26) + 'px' }); }
+      else { const y = R.top + sh * (1 - C.k / 2); Object.assign(elDiv.style, { left: R.left + 'px', top: (y - 2) + 'px', width: sw + 'px', height: '4px' }); Object.assign(elT1.style, { left: (R.left + 8) + 'px', top: (y - 26) + 'px' }); Object.assign(elT2.style, { left: (R.left + 8) + 'px', top: (R.top + sh - 26) + 'px' }); }
+      elT1.style.display = elT2.style.display = C.k > 0.6 ? 'block' : 'none';
+    } else { elDiv.style.display = elT1.style.display = elT2.style.display = 'none'; }
+    // edge ring over the toad pushing away (fills over the 2 s)
+    if (!C.split && C.edgeT > 0.15) { const f = C.edgeWho === 'p2' ? partner : hero; _p.set(f.pos.x, f.pos.y + f.y + 2.3, f.pos.z).project(camera);
+      const R = glRect(), x = R.left + (_p.x + 1) / 2 * sw, y = R.top + (1 - _p.y) / 2 * sh; elEdge.style.display = elEdgeL.style.display = 'block'; elEdge.style.left = x + 'px'; elEdge.style.top = y + 'px'; elEdge.style.setProperty('--p', clamp(C.edgeT / SPLIT_T, 0, 1).toFixed(3));
+      elEdgeL.style.left = x + 'px'; elEdgeL.style.top = (y + 26) + 'px'; }
+    else elEdge.style.display = elEdgeL.style.display = 'none';
+    if (tagSpr) { const [t1, t2] = tagSpr; t1.visible = hero.root.visible; t2.visible = partner.root.visible; t1.position.set(hero.pos.x, hero.pos.y + hero.y + 2.45, hero.pos.z); t2.position.set(partner.pos.x, partner.pos.y + partner.y + 2.45, partner.pos.z); }
+    if (C.card) { C.cardT += rdt;
+      if (IN2.aE) { const A = C.card.act; C.card = null; elTurn.style.display = 'none'; C.turn = 1; C.turns++; log('turn:p2:' + A.label); try { A.go(); } catch (e) { C.turn = 0; } }
+      else if (IN2.bE || C.cardT > 15) { log('turn:skip'); C.card = null; elTurn.style.display = 'none'; } }
+    IN2.aE = IN2.bE = false;
+  }
+  // ---- mode tracking (runs every frame, before any mode's own frame) ----
+  function modeNow() {
+    if (DERBY.on) return 'derby'; if (VIC.on) return 'vic'; if (FORT.on) return 'fort';
+    if (MODE.duel) { const d = MODE.duel; return 'duel:' + ((d.cur && d.cur.id) || d.id || 'x'); } if (RB.mode) return 'rb:' + RB.mode; return null;
+  }
+  function pre(rdt) {
+    const m = modeNow();
+    if (m && !C.mode) { C.mode = m; if (C.split || C.k > 0) merge(true); C.card = null; elTurn.style.display = 'none';
+      C.modeAct = C.turn === 0 && C.lastAct && performance.now() - C.lastActT < 2000 && C.lastAct.kind !== 'boat' && !/^rb:ride/.test(m) ? C.lastAct : null; C.lastAct = null; log('mode:' + m + ':turn' + C.turn); hideHud(); }
+    else if (m && C.mode && m !== C.mode) { log('mode:' + C.mode + '->' + m); C.mode = m; C.modeAct = null; } // chained (e.g. Brewmaster -> finale): no P2 replay
+    else if (!m && C.mode) { log('exit:' + C.mode + ':turn' + C.turn); C.mode = null; merge(true);
+      if (Math.hypot(partner.pos.x - hero.pos.x, partner.pos.z - hero.pos.z) > 4 || !!partner.roof !== !!hero.roof) { const sl = partnerSlot(); partnerTeleport(sl.x, sl.z, !!hero.roof, 'coop-mode'); }
+      if (C.turn === 1) { C.turn = 0; if (typeof banner === 'function') banner('P1 BACK IN CONTROL', 1.4); }
+      else if (C.modeAct && C.p2 !== null) { const A = C.modeAct; C.card = { act: A }; C.cardT = 0;
+        const nm = (CITY.lmk && CITY.lmk.name) || ''; elTurn.innerHTML = '<b>P2\u2019S TURN!</b>' + (nm ? nm.replace(/[<>&]/g, '') + '<br>' : '') + 'P2: A = PLAY \u00b7 B = SKIP<i>' + String(A.label || 'PLAY').replace(/[<>&]/g, '') + ' \u00b7 PLAYER 2 PLAYS AS HAROLD</i>'; elTurn.style.display = 'block'; log('card'); }
+      C.modeAct = null; }
+    return false;
+  }
+  function noteAct(c) { if (!C.on || C.mode) return; C.lastAct = c; C.lastActT = performance.now(); }
+  function resK() { return C.on && C.split && TOUCH ? 0.8 : 1; }
+  const api = { get on() { return C.on; }, padRole, noteAct, pre, preStep, updateP2, step, cam, post, draw: draw2, split: () => C.split || C.k > 0, resK, C, IN2, SH, CAM2, camera2, join, leave, MAXSEP, MERGE_D, SPLIT_T, _split: () => doSplit() };
+  window.__coop = api;
+  return api;
+})();
 
 // ---------------- arcade control panel (touch screens): the Shell Shock cabinet panel from Brad's demos shell, docked under the game.
 // Ball-top stick (analog, relative: the touch-down point is the centre, the thumb past the radius drags it along) + round arcade buttons:
@@ -7453,7 +7778,7 @@ function camStep(dt, rdt) {
 if (!Q.has('nointro') && !POSE) { CINE.intro = { t: 0, dur: 5.2 }; $('title').classList.add('on'); $('hint').style.opacity = '0'; }
 function resize() { // low-res target: LINES (240) on the short side, the long side follows the screen's aspect (portrait keeps its aspect too)
   const w = VW(), h = VH(), a = w / h; let lw, lh;
-  if (QUAL.hd) { const dpr = Math.min(devicePixelRatio || 1, TOUCH ? 1.5 : 1.25); lw = Math.round(w * dpr); lh = Math.round(h * dpr); }
+  if (QUAL.hd) { const dpr = Math.min(devicePixelRatio || 1, TOUCH ? 1.5 : 1.25) * COOP.resK(); lw = Math.round(w * dpr); lh = Math.round(h * dpr); }
   else if (a >= 1) { lh = LINES; lw = Math.round(LINES * a); } else { lw = LINES; lh = Math.round(LINES / a); }
   LOW.w = lw; LOW.h = lh; renderer.setSize(lw, lh, false); RT.setSize(lw, lh); POST.uniforms.uRes.value.set(lw, lh); SNAP.value.set(lw / 2, lh / 2);
   camera.aspect = a; camera.updateProjectionMatrix();
@@ -7541,12 +7866,13 @@ function frame(now) {
   try {
     let rdt = Math.min(0.05, (now - last) / 1000); last = now; frames++;
     FPS.n++; FPS.t += rdt; if (FPS.t > 1) { FPS.v = Math.round(FPS.n / FPS.t); FPS.n = 0; FPS.t = 0; }
+    if (COOP.on && COOP.pre(rdt)) return; // co-op (06cc): mode tracking for turn rotation; true while the P2'S TURN card holds the city
     if (DERBY.on) { DERBY.frame(rdt); return; } // Bird Brain Bobby's home run derby: its own scene + camera, the city sim is paused
     if (VIC.on) { VIC.frame(rdt); return; } // Voltage Vic's rhythm battle: its own stage + lanes (the city is paused)
     if (FMAP.F.open) { FMAP.frame(rdt); return; } // full-screen map open: the game is paused (no sim, no 3D draw; the canvas keeps its last frame)
     if (FORT.on) { FORT.frame(rdt); return; } // Fort McHenry set piece: its own scene + loop (src/09_fort.js)
     FORT.world();
-    if (window.__cel && __cel.pause) { draw(); return; }
+    if (window.__cel && __cel.pause) { if (COOP.on && COOP.split()) COOP.draw(); else draw(); return; }
     if (MODE.duel) { MODE.duel.frame(rdt); return; } // a boss duel owns input, sim and the draw
     if (RB.mode) { RB.frame(rdt); return; } // racer bosses (src/06h_racers.js): Al's chase / the Duchess's arena (own scenes) or a harbour boat ride
     if (BOT) botThink(rdt);
@@ -7562,15 +7888,17 @@ function frame(now) {
       S.time += dt;
       countAttackers();
       POWER.cd = Math.max(0, POWER.cd - dt);
+      if (COOP.on) COOP.preStep(dt);
       updateHero(dt);
-      updatePartner(dt);
+      if (COOP.on) COOP.updateP2(dt); else updatePartner(dt); // co-op: Player 2 drives Mavis
+      if (COOP.on) COOP.step(dt); // co-op: edge hold, intentional split timer, merge
       for (const e of enemies) { // thugs far from the heroes sleep (hidden, not simulated) to keep draw calls + CPU down on phones
-        const d2 = (e.pos.x - hero.pos.x) ** 2 + (e.pos.z - hero.pos.z) ** 2;
+        let d2 = (e.pos.x - hero.pos.x) ** 2 + (e.pos.z - hero.pos.z) ** 2; if (COOP.on) d2 = Math.min(d2, (e.pos.x - partner.pos.x) ** 2 + (e.pos.z - partner.pos.z) ** 2);
         if (d2 > 48 * 48 && (e.state === 'idle' || e.state === 'return')) { e.root.visible = false; e.hpS.visible = false; continue; }
         if (!e.root.visible && e.state !== 'dead') e.root.visible = true;
         updateEnemy(e, dt); }
       separate();
-      if (k < steps - 1) { updateSprites(rdt); updateSlashes(rdt); PRESS.clear(); camStep(dt, rdt); }
+      if (k < steps - 1) { updateSprites(rdt); updateSlashes(rdt); PRESS.clear(); if (COOP.on) COOP.cam(dt, rdt); else camStep(dt, rdt); }
     }
     const dt = rdt;
     // soft lock target (for the ring + camera framing)
@@ -7580,7 +7908,7 @@ function frame(now) {
     lockT = CINE_ST.has(hero.state) || hero.roof ? null : cand && cand.state !== 'idle' && cand.state !== 'return' ? cand : (lockT && lockT.alive && lockT.state !== 'dying' && Math.hypot(lockT.pos.x - hero.pos.x, lockT.pos.z - hero.pos.z) < 8 && lockT.state !== 'return' ? lockT : null);
     lockRing.visible = !!lockT;
     if (lockT) { lockRing.position.set(lockT.pos.x, lockT.pos.y + 0.03, lockT.pos.z); lockRing.scale.setScalar(lockT.scale); lockRing.userData.b.rotation.z += rdt * 3; }
-    camStep(dt, rdt);
+    if (COOP.on) COOP.cam(dt, rdt); else camStep(dt, rdt);
     // sun + shadow camera follow the hero (snapped to shadow texels to stop shimmering)
     const tx = SHR * 2 / SHM, sx = Math.round(hero.pos.x / tx) * tx, sz = Math.round(hero.pos.z / tx) * tx;
     sun.target.position.set(sx, 0, sz); sun.position.set(sx + SUN_DIR.x * 70, SUN_DIR.y * 70, sz + SUN_DIR.z * 70);
@@ -7590,11 +7918,12 @@ function frame(now) {
     cineUpdate(rdt);
     updateCycle(SIM ? rdt * SIM : rdt);
     cityHud(rdt);
+    if (COOP.on) COOP.post(rdt); // co-op: split-view draw distance, HUD, edge ring
     BARK.tick(rdt);
     if (DERBY.marker) DERBY.marker.tick(S.time);
     for (const f of MODE.ticks) f(rdt);
     PRESS.clear();
-    draw();
+    if (COOP.on && COOP.split()) COOP.draw(); else draw();
   } catch (err) { __celErr.n++; __celErr.last = String(err && err.stack || err); if (__celErr.n < 4) console.error(err); }
 }
 if (Q.has('derby')) { const m = Q.get('derby'); setTimeout(() => DERBY.start(m === 'perfect' || m === 'miss' ? m : undefined), 300); } // ?derby=1 jumps straight in (?derby=perfect / miss: scripted test runs)
@@ -19106,6 +19435,168 @@ window.__carl = CARL;
   });
   window.__poe = P; P.save = save; P.reset = () => { Object.assign(save, { feather: false, clears: 0, spotted: 0 }); persist(); };
 })();
+
+// ======================= POE CATACOMBS (DESIGN.md "Poe night goes full horror (catacombs chapter)"): chapter 2 of the Poe night.
+// NIGHT ONLY survival-horror descent under Westminster church: 3 crypt rooms in a line, a LANTERN CONE with limited OIL (drains while lit; pick up oil flasks),
+// creaking doors that open when you take the room's KEY, shambling "Nevermore" shadows that can't be fought: blind them with the FLASH (B: 15 oil) for 3 s or avoid them.
+// Raven King crows jump-scare the screen now and then (cartoony, PG). Room 3 holds the NEVERMORE FEATHER; lifting it wakes two fast shadows: run for the hatch.
+// Clear = the Nevermore Feather (same save as the graveyard; the Raven King ring reads window.hasNevermoreFeather()).
+// Entry: ring left of the Poe ring at Westminster. Tests: ?cata=1&cataauto=win|lose, ?duel=catacombs&duelbot=win|lose.
+// Rig hook (Opus, optional): window.buildNevermoreShadow({ THREE, toonMat, outlineMat, addOdir, QUAL }) -> { root, update?(dt) }.
+(function () {
+  const P = { scene: null, cam: null, title: 'CATACOMBS', pips: 1,
+    hint: '<b>WASD</b> move · <b>B</b>/<b>K</b> flash (15 oil) · <b>E</b> leave · walk onto glows to take keys, oil, the feather',
+    labels: { a: '', b: 'FLASH', c: 'LEAVE', l: '', r: '' } };
+  const RZ = [0, -12, -24], HW = 7, DOORX = 1.3, OIL0 = 100, DRAIN = 2.2, FLASHC = 15, STUN = 3;
+  const WALLS = [[-HW - 0.6, -HW, -29.5, 5.4], [HW, HW + 0.6, -29.5, 5.4], [-HW, HW, 4.8, 5.4], [-HW, HW, -29.5, -28.9],
+    [-HW, -DOORX, -6.3, -5.7], [DOORX, HW, -6.3, -5.7], [-HW, -DOORX, -18.3, -17.7], [DOORX, HW, -18.3, -17.7]];
+  const DOORS = [{ z: -6, open: false, y: 0 }, { z: -18, open: false, y: 0 }];
+  const KEYS = [{ x: 4.6, z: -2.4, room: 0 }, { x: -4.8, z: -14.5, room: 1 }]; // room 3 holds the feather instead
+  const FEATHER = { x: 0, z: -26.4 }, HATCH = { x: -5.5, z: -22.0 };
+  const OILS = [[-4.8, 1.8], [5, -9], [-5, -9.2], [4.5, -21], [-3, -27]];
+  const SH = [ // shadow patrols: [path], speed
+    { p: [[-4.5, -2], [-4.5, 2.5]], sp: 1.3 }, { p: [[3, 3], [3, -3.2]], sp: 1.5 },
+    { p: [[-4, -9], [4, -9]], sp: 1.4 }, { p: [[4.5, -14], [-4.5, -14]], sp: 1.6 },
+    { p: [[-4.5, -21.5], [-4.5, -26]], sp: 1.5 }, { p: [[4.5, -21.5], [4.5, -26]], sp: 1.7 }];
+  const V = new THREE.Vector3();
+  const angDiff = (a, b) => { let d = b - a; while (d > Math.PI) d -= TAU; while (d < -Math.PI) d += TAU; return d; };
+  const isNight = () => NIGHT.value > 0.5 || Q.has('cata') || Q.has('duel');
+  const ringT = canvasTex(128, 128, (g) => { g.strokeStyle = '#fff'; g.lineWidth = 9; g.beginPath(); g.arc(64, 64, 52, 0, TAU); g.stroke(); g.lineWidth = 4; g.setLineDash([10, 9]); g.beginPath(); g.arc(64, 64, 36, 0, TAU); g.stroke(); });
+  const flat = (col, s, op = 0.8) => { const m = new THREE.Mesh(new THREE.PlaneGeometry(s, s), new THREE.MeshBasicMaterial({ map: ringT, color: col, transparent: true, opacity: op, depthWrite: false, blending: THREE.AdditiveBlending, fog: false })); m.rotation.x = -Math.PI / 2; m.renderOrder = 2; return m; };
+  function hitWall(x, z, r) { for (const w of WALLS) if (x > w[0] - r && x < w[1] + r && z > w[2] - r && z < w[3] + r) return true;
+    for (const d of DOORS) if (!d.open && Math.abs(z - d.z) < 0.3 + r && Math.abs(x) < DOORX + 0.1) return true; return false; }
+  P.hitWall = hitWall;
+  function shadowRig() {
+    let rig = null; try { if (typeof window.buildNevermoreShadow === 'function') rig = window.buildNevermoreShadow({ THREE, toonMat, outlineMat, addOdir, QUAL }); } catch (e) { console.error(e); rig = null; }
+    if (rig && rig.root) { rig.kind = 'hook'; return rig; }
+    const K = DUELS.kit(), G = DUELS.GEO, R = { root: new THREE.Group(), kind: 'standin' }; // original stand-in: a tall hunched inky shade with two pale eyes, facing +z
+    K.add(G.cone(0.55, 1.9, 7), '#0c0a16', 0, 0.95, 0).add(G.sph(0.3, 8, 6), '#14101f', 0, 1.9, 0.12).add(G.sph(0.07, 5, 4), '#e8f4ff', -0.12, 1.95, 0.38).add(G.sph(0.07, 5, 4), '#e8f4ff', 0.12, 1.95, 0.38)
+      .add(G.box(0.12, 0.9, 0.12), '#0c0a16', -0.62, 1.0, 0.25, 0.6, 0, 0.2).add(G.box(0.12, 0.9, 0.12), '#0c0a16', 0.62, 1.0, 0.25, 0.6, 0, -0.2);
+    K.mesh(toonMat(), R.root); return R;
+  }
+  function setPiece() {
+    const K = DUELS.kit(), G = DUELS.GEO, sc = P.scene;
+    for (const w of WALLS) K.add(G.box(w[1] - w[0], 3, w[3] - w[2]), '#4a4440', (w[0] + w[1]) / 2, 1.5, (w[2] + w[3]) / 2);
+    for (const z of RZ) for (const x of [-5.6, 5.6]) K.add(G.box(0.7, 2.6, 0.7), '#6a625a', x, 1.3, z - 3.2).add(G.box(0.9, 0.3, 0.9), '#5a524a', x, 2.7, z - 3.2); // pillars
+    for (const z of RZ) for (const x of [-2.6, 2.6]) K.add(G.box(1.5, 0.7, 0.8), '#7a746c', x, 0.35, z + 2.2).add(G.sph(0.22, 6, 5), '#d8d4c8', x - 0.3, 0.9, z + 2.2); // sarcophagi + a skull
+    P.deco = K.mesh(toonMat(), sc, 0.005);
+    P.doorM = DOORS.map((d) => { const k = DUELS.kit(); k.add(G.box(2.7, 2.6, 0.5), '#3a2416', 0, 1.3, 0).add(G.box(2.7, 0.1, 0.52), '#8a6a2a', 0, 1.9, 0); const m = k.mesh(toonMat(), sc, 0.005); m.position.set(0, 0, d.z); return m; });
+    P.hatch = new THREE.Mesh(new THREE.BoxGeometry(1.8, 0.1, 1.8), new THREE.MeshBasicMaterial({ color: '#6a4a24' })); P.hatch.position.set(HATCH.x, 0.05, HATCH.z); sc.add(P.hatch);
+  }
+  function coneMesh() {
+    const N = 16, pos = [0, 0.1, 0], idx = [], r = 6.2, HALF = 0.62; for (let i = 0; i <= N; i++) { const a = -HALF + (2 * HALF * i) / N; pos.push(Math.sin(a) * r, 0.1, Math.cos(a) * r); if (i > 0) idx.push(0, i, i + 1); }
+    const g = new THREE.BufferGeometry(); g.setAttribute('position', new THREE.BufferAttribute(new Float32Array(pos), 3)); g.setIndex(idx);
+    const m = new THREE.Mesh(g, new THREE.MeshBasicMaterial({ color: '#ffe8a0', transparent: true, opacity: 0.3, depthWrite: false, blending: THREE.AdditiveBlending, side: THREE.DoubleSide, fog: false })); m.frustumCulled = false; m.renderOrder = 2; return m;
+  }
+  P.build = function () {
+    const sc = (P.scene = new THREE.Scene()); P.cam = new THREE.PerspectiveCamera(46, VW() / VH(), 0.1, 90);
+    sc.fog = new THREE.Fog('#05060c', 14, 30); sc.background = new THREE.Color('#05060c');
+    DUELS.sceneLights(sc, '#4a5088', '#0c0c18', 0.55, '#8090d0', 0.35, new THREE.Vector3(-0.3, 1, 0.5));
+    const fl = new THREE.Mesh(new THREE.PlaneGeometry(18, 40), new THREE.MeshLambertMaterial({ color: '#2a2622' })); fl.rotation.x = -Math.PI / 2; fl.position.set(0, 0, -12); sc.add(fl);
+    setPiece();
+    P.H = buildHero(); sc.add(P.H.root); P.cone = coneMesh(); sc.add(P.cone);
+    P.sh = SH.map((s) => { const r = shadowRig(); sc.add(r.root); return { s, rig: r, x: s.p[0][0], z: s.p[0][1], yaw: 0, wp: 1, stun: 0, chase: false, extra: false }; });
+    P.keys = KEYS.map((k) => { const m = flat('#ffd23c', 1.3); m.position.set(k.x, 0.08, k.z); sc.add(m); return { k, m, done: false }; });
+    P.oils = OILS.map((o) => { const m = flat('#6ad0ff', 1.0); m.position.set(o[0], 0.08, o[1]); sc.add(m); return { o, m, done: false }; });
+    P.fth = flat('#b49aff', 1.6); P.fth.position.set(FEATHER.x, 0.08, FEATHER.z); sc.add(P.fth);
+    P.exitR = flat('#6aff8a', 2.0); P.exitR.position.set(HATCH.x, 0.1, HATCH.z); sc.add(P.exitR); P.exitR.visible = false;
+    P.crow = new THREE.Mesh(new THREE.PlaneGeometry(1, 1), new THREE.MeshBasicMaterial({ color: '#000', transparent: true, opacity: 0, depthWrite: false })); P.crow.renderOrder = 9; sc.add(P.crow);
+    P.layout();
+  };
+  P.layout = function () { const port = VH() > VW(); P.cam.fov = port ? 52 : 42; P.cam.aspect = VW() / VH(); P.cam.updateProjectionMatrix(); P.camH = port ? 17 : 14; P.camZ = port ? 7 : 6.4; };
+  P.onResize = () => { if (P.cam) P.layout(); };
+  function ui() { const st = P.st; if (!st) return; DUELS.sub('KEYS ' + st.keys + '/2 · OIL ' + Math.ceil(st.oil) + (st.feather ? ' · RUN FOR THE HATCH!' : ''), 'ROOM ' + (st.room + 1) + '/3'); DUELS.bars(clamp(st.oil / OIL0, 0, 1), st.fear); }
+  function reset() {
+    const st = (P.st = { t: 0, x: 0, z: 3, yaw: Math.PI, spd: 0, oil: OIL0, keys: 0, feather: false, over: false, fear: 0, room: 0, scare: 0, scareT: 4 + Math.random() * 3, fcd: 0, flash: 0, ghost: !!(DUELS.bot && DUELS.bot.mode === 'win'), grace: 2 });
+    for (const d of DOORS) d.open = false; P.doorM.forEach((m) => { m.visible = true; });
+    for (const k of P.keys) { k.done = false; k.m.visible = true; } for (const o of P.oils) { o.done = false; o.m.visible = true; } P.fth.visible = true; P.exitR.visible = false;
+    P.sh = P.sh.filter((s) => { if (s.extra) { s.rig.root.parent && s.rig.root.parent.remove(s.rig.root); return false; } return true; });
+    for (const s of P.sh) { s.x = s.s.p[0][0]; s.z = s.s.p[0][1]; s.wp = 1; s.stun = 0; s.chase = false; } ui(); return st;
+  }
+  P.start = function () { reset(); DUELS.banner('THE CATACOMBS<small>UNDER WESTMINSTER</small>', 2.2); DUELS.say('MAVIS', 'Hold the lantern high, Harold. I do not like the sound of that.', 3.2); DUELS.log.push('cata:start'); };
+  P.retry = function () { reset(); DUELS.banner('ONCE MORE<small>THE DARK IS PATIENT</small>', 1.4); };
+  P.exit = function () { try { dispatchEvent(new CustomEvent('tcb:cata', { detail: { feather: !!(window.__poe && window.__poe.save.feather) } })); } catch (e) {} };
+  function caught(st, why) { st.over = true; DUELS.hurt(); DUELS.banner('NEVERMORE<small>' + why + '</small>', 1.6); DUELS.over('lose', why, 'The shadows closed in. Keys: ' + st.keys + '/2' + (st.feather ? ', feather in hand' : '') + '.'); }
+  P.step = function (dt, I) {
+    const st = P.st; if (!st) return; st.t += dt; if (st.over) return;
+    if (I.c) { DUELS.exit('leave'); return; }
+    let mx = I.mx, my = I.my; const L = Math.hypot(mx, my); if (L > 1) { mx /= L; my /= L; }
+    const sp = 3.1 * Math.min(1, L); let nx = st.x, nz = st.z;
+    if (L > 0.12) { nx += mx * sp * dt; if (!hitWall(nx, st.z, 0.35)) st.x = nx; nz += -my * sp * dt; if (!hitWall(st.x, nz, 0.35)) st.z = nz; st.yaw = Math.atan2(mx, -my); st.spd = sp; } else st.spd = 0;
+    st.room = st.z < -18 ? 2 : st.z < -6 ? 1 : 0;
+    st.oil = Math.max(0, st.oil - DRAIN * dt * (st.oil > 0 ? 1 : 0)); // the lantern burns while you are down here
+    st.fcd -= dt; st.flash = Math.max(0, st.flash - dt);
+    if ((I.b || I.a) && st.fcd <= 0) { if (st.oil >= FLASHC) { st.oil -= FLASHC; st.fcd = 0.8; st.flash = 0.35; DUELS.hitSfx && DUELS.hitSfx('power');
+        for (const s of P.sh) { const dx = s.x - st.x, dz = s.z - st.z, d = Math.hypot(dx, dz); if (d < 6.2 && Math.abs(angDiff(st.yaw, Math.atan2(dx, dz))) < 0.7) { s.stun = STUN; DUELS.pop && DUELS.pop('BLINDED', V.set(s.x, 2.4, s.z), ''); DUELS.log.push('cata:blind'); } } }
+      else { st.fcd = 0.6; DUELS.tell('NOT ENOUGH OIL', 0.8); } }
+    // pickups
+    for (const k of P.keys) if (!k.done && Math.hypot(k.k.x - st.x, k.k.z - st.z) < 0.9) { k.done = true; k.m.visible = false; st.keys++; const d = DOORS[k.k.room]; d.open = true; P.doorM[k.k.room].visible = false; DUELS.tell('KEY! A DOOR CREAKS OPEN', 1.4); DUELS.log.push('cata:key' + st.keys); }
+    for (const o of P.oils) if (!o.done && Math.hypot(o.o[0] - st.x, o.o[1] - st.z) < 0.9) { o.done = true; o.m.visible = false; st.oil = Math.min(OIL0, st.oil + 30); DUELS.tell('OIL +30', 0.9); }
+    if (!st.feather && P.fth.visible && st.keys >= 2 && Math.hypot(FEATHER.x - st.x, FEATHER.z - st.z) < 1) { st.feather = true; P.fth.visible = false; P.exitR.visible = true; DUELS.banner('THE FEATHER!<small>NOW RUN FOR THE HATCH</small>', 1.8); DUELS.log.push('cata:feather');
+      for (const sx of [-5.5, 5.5]) { const r = shadowRig(); P.scene.add(r.root); P.sh.push({ s: { p: [[sx, -27], [sx, -26]], sp: 2.3 }, rig: r, x: sx, z: -27.4, yaw: 0, wp: 1, stun: 0, chase: true, extra: true }); } }
+    // shadows
+    st.grace -= dt; let fear = 0;
+    for (const s of P.sh) {
+      if (s.stun > 0) { s.stun -= dt; continue; }
+      const dx = st.x - s.x, dz = st.z - s.z, d = Math.hypot(dx, dz);
+      if (!st.ghost && st.grace <= 0 && (s.chase || d < 4.4) && d < (s.chase ? 40 : 4.4) && Math.abs((s.z < -18 ? 2 : s.z < -6 ? 1 : 0) - st.room) < 1.1) { const spd = s.s.sp * (s.chase ? 1.05 : 1.35); s.yaw = Math.atan2(dx, dz); const nx2 = s.x + (dx / d) * spd * dt, nz2 = s.z + (dz / d) * spd * dt; if (!hitWall(nx2, s.z, 0.3)) s.x = nx2; if (!hitWall(s.x, nz2, 0.3)) s.z = nz2; fear = Math.max(fear, 1 - d / 5); }
+      else { const w = s.s.p[s.wp], wx = w[0] - s.x, wz = w[1] - s.z, wd = Math.hypot(wx, wz); s.yaw += clamp(angDiff(s.yaw, Math.atan2(wx, wz)), -2 * dt, 2 * dt); if (wd < 0.2) s.wp = (s.wp + 1) % s.s.p.length; else { const m = Math.min(wd, s.s.sp * dt); s.x += (wx / wd) * m; s.z += (wz / wd) * m; } }
+      if (!st.ghost && d < 0.85) { caught(st, 'CAUGHT BY A SHADOW'); return; }
+    }
+    st.fear = lerp(st.fear, fear, Math.min(1, dt * 4));
+    if (st.oil <= 0 && !st.ghost) { st.dark = (st.dark || 0) + dt; if (st.dark > 6) { caught(st, 'THE LANTERN DIED'); return; } } else st.dark = 0;
+    // jump-scare crows (cosmetic, PG)
+    st.scareT -= dt; if (st.scareT <= 0) { st.scareT = 7 + Math.random() * 6; st.scare = 0.5; DUELS.tell('CAW!', 0.5); DUELS.log.push('cata:scare'); } st.scare = Math.max(0, st.scare - dt);
+    ui();
+    if (st.feather && Math.hypot(HATCH.x - st.x, HATCH.z - st.z) < 1.2) {
+      st.over = true; const sv = window.__poe && window.__poe.save; const first = sv ? !sv.feather : false; if (sv) { sv.feather = true; sv.clears++; try { localStorage.setItem('tcb_poe', JSON.stringify(sv)); } catch (e) {} }
+      CITY.log.push('cata:feather@' + S.time.toFixed(1)); try { dispatchEvent(new CustomEvent('tcb:feather', { detail: { first, via: 'catacombs' } })); } catch (e) {}
+      DUELS.over('win', 'OUT OF THE DARK', 'You climb out into the moonlit graveyard with the Nevermore Feather. The Raven King will answer to it now (M&amp;T Stadium).'); }
+  };
+  P.render = function (rdt) {
+    const st = P.st; if (!st) return; const t = st.t, H = P.H;
+    H.root.position.set(st.x, 0, st.z); H.root.rotation.y = st.yaw;
+    applyPose(H, st.spd > 0.2 ? HERO_POSES.run(t, st.spd) : HERO_POSES.idle(t), 16, rdt, false);
+    P.cone.position.set(st.x, 0, st.z); P.cone.rotation.y = st.yaw; P.cone.visible = st.oil > 0; P.cone.material.opacity = (0.16 + 0.14 * Math.min(1, st.oil / 30)) + (st.flash > 0 ? 0.5 : 0) + (st.oil < 20 ? Math.sin(t * 30) * 0.05 : 0);
+    for (const s of P.sh) { s.rig.root.position.set(s.x, s.stun > 0 ? 0 : Math.abs(Math.sin(t * 3 + s.wp)) * 0.08, s.z); s.rig.root.rotation.y = s.yaw; s.rig.root.rotation.z = s.stun > 0 ? Math.sin(t * 40) * 0.12 : 0; s.rig.update && s.rig.update(rdt); }
+    for (const m of P.keys) if (m.m.visible) { m.m.rotation.z += rdt; m.m.material.opacity = 0.5 + 0.35 * Math.sin(t * 3); }
+    for (const m of P.oils) if (m.m.visible) m.m.rotation.z -= rdt;
+    P.fth.rotation.z += rdt; P.exitR.rotation.z += rdt * 1.3;
+    P.crow.material.opacity = st.scare > 0 ? st.scare : 0; P.crow.position.set(st.x, 1.5, st.z + 0.5); P.crow.rotation.x = -Math.PI / 2 + 0.9; P.crow.scale.set(14, 14, 1);
+    const cx = clamp(st.x, -3, 3), cz = clamp(st.z, -25, 1); P.cam.position.set(cx, P.camH, cz + P.camZ); P.cam.lookAt(cx, 0.2, cz - 0.4);
+    OUT_U.fogC.value.copy(P.scene.fog.color); OUT_U.fogN.value = 14; OUT_U.fogF.value = 30;
+  };
+  P.botThink = function (B) {
+    const st = P.st; if (!st || st.over) return; B.mx = B.my = 0; B.up = B.down = false; B.b = false;
+    const go = (tx, tz) => { const dx = tx - st.x, dz = tz - st.z, d = Math.hypot(dx, dz); if (d < 0.15) return d; B.mx = dx / d; B.my = -dz / d; return d; };
+    if (B.mode === 'lose') { const s = P.sh[0]; go(s.x, s.z); return; }
+    // route through the door gaps (x 0) between rooms
+    const via = (tx, tz) => { if (st.z > -6.6 && tz < -6) { if (Math.abs(st.x) > 0.5 && st.z > -5) return go(0, st.z); } if (st.z > -18.6 && tz < -18 && st.z < -6.5 && Math.abs(st.x) > 0.5 && st.z > -17.3) return go(0, st.z); return go(tx, tz); };
+    let tgt; const k = P.keys.find((q) => !q.done);
+    if (k) tgt = [k.k.x, k.k.z]; else if (!st.feather) tgt = [FEATHER.x, FEATHER.z]; else tgt = [HATCH.x, HATCH.z];
+    // when a wall is in the way of a lower room, pass the door centre first
+    if (tgt[1] < -6 && st.z > -5.2 && Math.abs(st.x) > 0.6) tgt = [0, st.z]; else if (tgt[1] < -6 && st.z > -6.6 && st.z <= -5.2) tgt = [0, -7.5];
+    else if (tgt[1] < -18 && st.z > -17.2 && st.z < -6.6 && Math.abs(st.x) > 0.6) tgt = [0, st.z]; else if (tgt[1] < -18 && st.z <= -17.2 && st.z > -18.8) tgt = [0, -19.5];
+    else if (st.feather && st.z < -18 && false) tgt = [HATCH.x, HATCH.z];
+    go(tgt[0], tgt[1]);
+  };
+  DUELS.reg('catacombs', P);
+  let n = 0;
+  MODE.ticks.push((rdt) => {
+    n++;
+    if (n === 1 && window.POE_ANCHOR) {
+      const A = window.POE_ANCHOR, rx = A.x - 1.5, rz = A.z + 1.8, y = groundY(rx, rz);
+      const ring = new THREE.Mesh(new THREE.PlaneGeometry(2.4, 2.4), new THREE.MeshBasicMaterial({ map: ringT, color: '#7a5af0', transparent: true, depthWrite: false, blending: THREE.AdditiveBlending, fog: false }));
+      ring.rotation.x = -Math.PI / 2; ring.position.set(rx, y + 0.05, rz); ring.renderOrder = 2; ring.visible = false; scene.add(ring); P.ring = ring;
+      const act = { kind: 'cata', x: rx, z: rz, r: 1.7, y: 2.2, ok: () => !DUELS.cur && !hero.roof && (!BOT || Q.has('duels') || Q.has('cata')), go: () => { if (!isNight()) { banner('THE CATACOMBS OPEN ONLY AFTER DARK.', 2.4); return; } DUELS.start('catacombs'); } };
+      Object.defineProperty(act, 'label', { get: () => (isNight() ? 'CATACOMBS' : 'CATACOMBS: AFTER DARK'), configurable: true });
+      ACTIONS.push(act); P.act = act;
+    }
+    if (P.ring) { const d = Math.hypot(P.ring.position.x - hero.pos.x, P.ring.position.z - hero.pos.z); P.ring.visible = d < 16 && !DUELS.cur; if (P.ring.visible) { P.ring.rotation.z += rdt * 0.7; P.ring.material.opacity = 0.6 + 0.3 * Math.sin(S.time * 3); } }
+    if (n === 3 && Q.has('cata') && !DUELS.cur) { if (CINE.intro) CINE.intro.skip = true; const m = Q.get('cataauto'); DUELS.start('catacombs', m === 'win' || m === 'lose' ? { bot: m } : {}); }
+  });
+  window.__cata = P;
+})();
 // ======================= FINALE PAYOFF: the celebration after the One-Eyed Brewmaster (Brad 2026-10-13, "FINALE PAYOFF").
 // Trigger: the 'tcb:finale' window event that 09w_brewmaster.js fires after his harbor splash. When the brewmaster duel exits (the win card's CONTINUE),
 // this file takes over the screen through MODE.duel (07_main) with its own small scene + camera, then hands the city back. No shared file is edited.
@@ -19214,7 +19705,7 @@ window.__carl = CARL;
   const drBtn = document.createElement('button'); drBtn.id = 'fdrbtn'; drBtn.type = 'button'; drBtn.textContent = 'DRONE'; document.body.appendChild(drBtn);
   const dhud = document.createElement('div'); dhud.id = 'fdrone';
   dhud.innerHTML = `<div class="dt">DRONE<small></small></div><div class="dap">AUTOPILOT · ${TOUCH ? 'TOUCH' : 'MOVE / DRAG'} TO FLY</div><div class="dret"></div><button class="dauto" type="button" aria-label="Resume the autopilot tour">&#9654; AUTO</button><button class="dx" type="button" aria-label="Land the drone">✕</button>
-    <div class="dh">${TOUCH ? 'STICK FLY · DRAG TURN · JUMP UP · SWING DOWN · ACT LAND' : 'WASD FLY · DRAG / Q R TURN · SPACE / K UP · SHIFT / J DOWN · E / V / ESC LAND'}</div>`;
+    <div class="dh">${TOUCH ? 'STICK FLY · DRAG LOOK · TURN ◀▶ · JUMP UP · SWING DOWN · ACT LAND' : 'WASD FLY · DRAG LOOK / Q R TURN · SPACE / K UP · SHIFT / J DOWN · E / V / ESC LAND'}</div>`;
   document.body.appendChild(dhud);
   const q = (s) => root.querySelector(s);
   const D = { tl: q('.ftl'), say: q('.fsay'), card: q('.fcard'), cred: q('.fcred'), roll: q('.froll'), skip: q('.fskip'), tap: q('.ftap'), alt: dhud.querySelector('.dt small') };
@@ -19518,7 +20009,8 @@ window.__carl = CARL;
   // Power Plant + the Aquarium -> up round the Washington Monument -> home. ANY stick / drag / turn / up / down / key / pad input hands control to the player at
   // the exact pose (free-fly as before); the ▶ AUTO chip (key P) blends back onto the path. ACT / V / Esc / ✕ land as before. After CITY SAVED the cheering city
   // (09z_finale_crowd.js, window.__crowd) is on while the drone flies; the finale's own flyover pins night.
-  const DR = { on: false, pos: new THREE.Vector3(), yaw: 0, pitch: -0.35, vel: new THREE.Vector3(), t: 0, bank: 0, auto: null, fogFar: 0, calls: 0, ft: 0, fts: [] };
+  const DR = { on: false, pos: new THREE.Vector3(), yaw: 0, pitch: -0.35, vel: new THREE.Vector3(), t: 0, bank: 0, auto: null, fogFar: 0, calls: 0, ft: 0, fts: [],
+    thr: 0, cd: 0, ch: 0, fx: 0, spdN: 0, prox: 0, streak: 0, fl: { yaw: 0, pitch: 0, idle: 9 }, rig: null, wind: null };
   const TOUR = [ // [x, y, z,  look x, y, z]
     [-46, 10, -44, -31, 7, -18], [-46, 11, -13, -31, 9, -19], [-24, 8, -2, -6, 10, 44], [-8, 19, 36, -3, 11, 62], [28, 15, 32, 82, 30, 52],
     [68, 24, 30, 84, 30, 50], [108, 15, 8, 150, 6, -50], [152, 13, -36, 165, 3, -70], [166, 10, -75, 150, 2, -92], [176, 14, -96, 120, 6, -60],
@@ -19544,13 +20036,14 @@ window.__carl = CARL;
   function apStop(how) {
     if (!AP.on) return; AP.on = false; dhud.classList.remove('ap'); F.log.push('drone:takeover:' + how);
     _e.setFromQuaternion(camera.quaternion, 'YXZ'); DR.pitch = clamp(_e.x, -1.35, 0.5); DR.yaw = _e.y; DR.bank = _e.z; DR.pos.copy(camera.position);
+    DR.cd = 0; DR.ch = 0; DR.thr = 0; DR.fl.yaw = DR.fl.pitch = 0; DR.fl.idle = 9;
     AP.path.getTangent(AP.u, V2); DR.vel.copy(V2).multiplyScalar(AP.path.getLength() / AP.dur * 0.6); // keep a little of the tour's momentum
     if (F.cred) credEnd('takeover');
   }
   function droneEnter(how) {
     if (DR.on || F.on || !save.drone || MODE.duel || FORT.on || DERBY.on || VIC.on || RB.mode || FMAP.F.open) return false;
     DR.on = true; DR.t = 0; DR.w0 = performance.now(); DR.how = how; DR.yaw = CAM.yaw; DR.pitch = -0.32; DR.vel.set(0, 0, 0); DR.bank = 0;
-    DR.pos.copy(camera.position); DR.pos.y = Math.max(DR.pos.y, hero.pos.y + 6);
+    DR.pos.copy(camera.position); DR.pos.y = Math.max(DR.pos.y, hero.pos.y + 6); DR.cd = 0; DR.ch = 0; DR.thr = 0; DR.fx = 0; DR.fl.yaw = DR.fl.pitch = 0; DR.fl.idle = 9;
     save.flights++; save.lastOn = true; persist(); F.log.push('drone:on:' + how);
     document.body.classList.add('drone'); layout(); MODE.duel = DRONE; labels({ a: 'DOWN', b: 'UP', c: 'LAND', l: '&#9664; TURN', r: 'TURN &#9654;' }); if (APANEL) APANEL.setAct({ kind: 'drone', label: 'LAND' }, 1);
     hero.vel.set(0, 0); KEYS.clear(); PRESS.clear(); IN.mx = IN.my = 0; IN.dragX = IN.dragY = 0;
@@ -19563,7 +20056,7 @@ window.__carl = CARL;
     if (!DR.on) return; DR.on = false; DR.auto = null; MODE.duel = null; save.lastOn = false; persist(); F.log.push('drone:off:' + how);
     if (AP.on) { AP.on = false; dhud.classList.remove('ap'); } if (F.cred) credEnd('land');
     if (window.__crowd) __crowd.off(); if (DR.pinned) { CYC.pin = DR.pin0 === undefined ? null : DR.pin0; DR.pinned = false; }
-    document.body.classList.remove('drone'); labels(null); if (APANEL) APANEL.setAct({ label: 'ACT', kind: 'reset' }, 1);
+    document.body.classList.remove('drone'); droneRigOff(); labels(null); if (APANEL) APANEL.setAct({ label: 'ACT', kind: 'reset' }, 1);
     camera.rotation.set(0, 0, 0); camera.fov = CAM.fov || 58; camera.updateProjectionMatrix(); snapCam(); IN.dragX = IN.dragY = 0; KEYS.clear(); PRESS.clear(); last = performance.now();
   }
   function droneToggle(how) { if (DR.on) droneExit(how); else droneEnter(how); }
@@ -19580,6 +20073,47 @@ window.__carl = CARL;
     go: () => droneEnter('act') };
   ACTIONS.push(DACT);
   const _e = new THREE.Euler(0, 0, 0, 'YXZ');
+
+  // ---- DRONE CAM (Brad's 2026-10-12 spec): a visible little quadcopter, the camera sits above + behind it and moves with speed. Slow/hover: drops level
+  // with the drone (just under) and tilts UP so the skyline fills the screen. Fast: rises, pulls back, widens the FOV and adds motion streaks. Speed is felt
+  // from closeness: flying low (skimming the promenade / stoop windows) adds ground-proximity streaks + wind. Holding full forward ramps a throttle boost.
+  // Free-look: drag / right stick swings the view around the drone without changing heading and springs back. Everything is procedural. ----
+  function buildDroneRig() { // hook: buildDroneRig() returns a THREE.Group with .userData.rotors (spinning blades) + .userData.blink
+    const g = new THREE.Group(), B = (c) => new THREE.MeshBasicMaterial({ color: c });
+    const add = (geo, mat, x, y, z, ry) => { const m = new THREE.Mesh(geo, mat); m.position.set(x, y, z); if (ry) m.rotation.y = ry; g.add(m); return m; };
+    add(new THREE.BoxGeometry(0.62, 0.2, 0.86), B('#2a2e3a'), 0, 0, 0); add(new THREE.BoxGeometry(0.4, 0.16, 0.36), B('#6bffd8'), 0, 0.14, -0.18);
+    add(new THREE.BoxGeometry(1.9, 0.07, 0.1), B('#1b1e27'), 0, 0.02, 0, Math.PI / 4); add(new THREE.BoxGeometry(1.9, 0.07, 0.1), B('#1b1e27'), 0, 0.02, 0, -Math.PI / 4);
+    const rotors = [], disc = new THREE.MeshBasicMaterial({ color: '#dfe8ff', transparent: true, opacity: 0.28, depthWrite: false, side: THREE.DoubleSide });
+    const bladeM = B('#c7d0e8'), bladeG = new THREE.BoxGeometry(0.86, 0.015, 0.07), discG = new THREE.CircleGeometry(0.44, 14);
+    for (const [x, z] of [[0.67, 0.67], [-0.67, 0.67], [0.67, -0.67], [-0.67, -0.67]]) { add(new THREE.CylinderGeometry(0.06, 0.06, 0.16, 6), B('#111'), x, 0.1, z);
+      const d = add(discG, disc, x, 0.2, z); d.rotation.x = -Math.PI / 2; rotors.push(add(bladeG, bladeM, x, 0.2, z)); }
+    add(new THREE.SphereGeometry(0.07, 6, 4), B('#ff3b3b'), -0.34, 0.0, 0.42); add(new THREE.SphereGeometry(0.07, 6, 4), B('#38ff7a'), 0.34, 0.0, 0.42);
+    const blink = add(new THREE.SphereGeometry(0.08, 6, 4), new THREE.MeshBasicMaterial({ color: '#ffffff' }), 0, 0.12, 0.46);
+    g.userData.rotors = rotors; g.userData.blink = blink; g.scale.setScalar(1.5); g.visible = false; return g;
+  }
+  function droneRigOn() { if (!DR.rig) { DR.rig = buildDroneRig(); scene.add(DR.rig); } }
+  function droneRigOff() { if (DR.rig) DR.rig.visible = false; if (DR.wind) { try { DR.wind.src.stop(); } catch (e) {} DR.wind = null; } if (DR.sk) { DR.sk.style.display = 'none'; } }
+  function windTick(amt, prox, rdt) { // wind rush: band-passed noise from the shared AudioContext, louder + brighter with speed and closeness to the ground
+    try {
+      if (!AC || AC.state !== 'running' || !NOISE) return;
+      if (!DR.wind) { const src = AC.createBufferSource(); src.buffer = NOISE; src.loop = true; const f = AC.createBiquadFilter(); f.type = 'bandpass'; f.Q.value = 0.7; const gn = AC.createGain(); gn.gain.value = 0;
+        src.connect(f); f.connect(gn); gn.connect(SFXBUS || AC.destination); src.start(); DR.wind = { src, f, gn }; }
+      const w = DR.wind, v = clamp(amt * (0.45 + 0.55 * prox) + prox * amt * 0.5, 0, 1);
+      w.gn.gain.setTargetAtTime(0.005 + 0.11 * v, AC.currentTime, 0.12); w.f.frequency.setTargetAtTime(380 + 2100 * v, AC.currentTime, 0.12);
+    } catch (e) {}
+  }
+  function streakTick(amt, prox, rdt) { // motion streaks: radial speed lines (more with speed) + low horizontal rush lines near the ground
+    if (!DR.sk) { const c = document.createElement('canvas'); c.id = 'fstreak'; c.style.cssText = 'position:fixed;left:0;top:0;width:100vw;height:100vh;z-index:43;pointer-events:none;display:none'; document.body.appendChild(c); DR.sk = c; DR.skc = c.getContext('2d'); }
+    const c = DR.sk, g = DR.skc; if (amt < 0.04) { if (DR.skOn) { g.clearRect(0, 0, c.width, c.height); DR.skOn = false; } return; }
+    const W = Math.max(2, (innerWidth / 3) | 0), H = Math.max(2, (innerHeight / 3) | 0); if (c.width !== W || c.height !== H) { c.width = W; c.height = H; }
+    c.style.display = 'block'; DR.skOn = true; g.clearRect(0, 0, W, H); const cx = W / 2, cy = H * 0.46, R = Math.hypot(W, H) / 2;
+    const n = Math.round(10 + 34 * amt); g.lineCap = 'round';
+    for (let i = 0; i < n; i++) { const a = Math.random() * 6.2832, r0 = R * (0.38 + Math.random() * 0.4), len = R * (0.05 + 0.2 * amt) * (0.5 + Math.random());
+      g.strokeStyle = 'rgba(255,255,255,' + (0.1 + 0.35 * amt * Math.random()).toFixed(2) + ')'; g.lineWidth = 1 + Math.random() * 1.2;
+      g.beginPath(); g.moveTo(cx + Math.cos(a) * r0, cy + Math.sin(a) * r0 * 0.9); g.lineTo(cx + Math.cos(a) * (r0 + len), cy + Math.sin(a) * (r0 + len) * 0.9); g.stroke(); }
+    if (prox > 0.15) { const m = Math.round(8 + 22 * prox * amt); for (let i = 0; i < m; i++) { const side = Math.random() < 0.5 ? -1 : 1, y = H * (0.66 + Math.random() * 0.3), x0 = cx + side * W * (0.12 + Math.random() * 0.36), len = W * (0.06 + 0.22 * amt) * Math.random();
+      g.strokeStyle = 'rgba(255,240,220,' + (0.08 + 0.3 * prox * Math.random()).toFixed(2) + ')'; g.lineWidth = 1 + Math.random(); g.beginPath(); g.moveTo(x0, y); g.lineTo(x0 + side * len, y + (y - cy) * 0.12); g.stroke(); } }
+  }
   const DRONE = { frame(rdt) {
     DR.t += rdt; readInput();
     let mx = IN.mx, my = IN.my, up = 0, look = IN.look;
@@ -19597,19 +20131,39 @@ window.__carl = CARL;
       AP.u = (AP.u + rdt / AP.dur) % 1; apPose(AP.u, _pp, AP.q, rdt);
       if (AP.blend < 1) { AP.blend = Math.min(1, AP.blend + rdt / 2.2); const k = ease2(AP.blend); camera.position.lerpVectors(AP.fromP, _pp, k); camera.quaternion.slerpQuaternions(AP.fromQ, AP.q, k); }
       else { camera.position.copy(_pp); camera.quaternion.slerp(AP.q, 1 - Math.exp(-6 * rdt)); }
+      if (DR.rig) DR.rig.visible = false; DR.fx = damp(DR.fx, 0, 3, rdt); streakTick(0, 0, rdt); windTick(0, 0, rdt);
       DR.pos.copy(camera.position); IN.dragX = IN.dragY = 0; gy = groundY(clamp(DR.pos.x, WB.x0, WB.x1), clamp(DR.pos.z, WB.z0, WB.z1));
     } else {
-      DR.yaw -= look * rdt * 1.8 + IN.dragX * 0.005; DR.pitch = clamp(DR.pitch - IN.dragY * 0.004 - IN.lookY * rdt * 1.2, -1.35, 0.5); IN.dragX = IN.dragY = 0;
-      const sp = 24, fx = -Math.sin(DR.yaw), fz = -Math.cos(DR.yaw), rx = -fz, rz = fx;
+      // free-look: drag / right stick (pad axis 2 + 3) swings the VIEW around the drone, heading untouched; springs back when released
+      let ax2 = 0; for (const gp of (navigator.getGamepads ? navigator.getGamepads() : [])) { if (gp && Math.abs(gp.axes[2] || 0) > 0.2) ax2 += gp.axes[2]; } look -= ax2; const FL = DR.fl;
+      const flIn = IN.dragX || IN.dragY || ax2 || Math.abs(IN.lookY) > 0.05;
+      FL.yaw = clamp(FL.yaw - IN.dragX * 0.006 - ax2 * rdt * 2.2, -2.5, 2.5); FL.pitch = clamp(FL.pitch - IN.dragY * 0.004 - IN.lookY * rdt * 1.2, -0.6, 0.7);
+      if (flIn) FL.idle = 0; else { FL.idle += rdt; if (FL.idle > 0.9) { FL.yaw = damp(FL.yaw, 0, 2.2, rdt); FL.pitch = damp(FL.pitch, 0, 2.2, rdt); } }
+      IN.dragX = IN.dragY = 0; DR.yaw -= look * rdt * 1.8;
+      // throttle boost: holding full forward ramps the cruise from 24 to 40
+      DR.thr = damp(DR.thr, my > 0.9 ? 1 : 0, my > 0.9 ? 0.55 : 2.5, rdt);
+      const sp = 24 + 16 * DR.thr, fx = -Math.sin(DR.yaw), fz = -Math.cos(DR.yaw), rx = -fz, rz = fx;
       V.set(fx * my + rx * mx, up * 0.8, fz * my + rz * mx).multiplyScalar(sp);
       DR.vel.x = damp(DR.vel.x, V.x, 3, rdt); DR.vel.y = damp(DR.vel.y, V.y, 3, rdt); DR.vel.z = damp(DR.vel.z, V.z, 3, rdt);
       DR.pos.addScaledVector(DR.vel, rdt);
       DR.pos.x = clamp(DR.pos.x, WB.x0 - 30, WB.x1 + 40); DR.pos.z = clamp(DR.pos.z, WB.z0 - 30, WB.z1 + 30);
       gy = groundY(clamp(DR.pos.x, WB.x0, WB.x1), clamp(DR.pos.z, WB.z0, WB.z1)); DR.pos.y = clamp(DR.pos.y, gy + 1.6, 110);
       DR.bank = damp(DR.bank, -mx * 0.18, 4, rdt);
-      camera.position.copy(DR.pos); camera.position.y += Math.sin(DR.t * 2.1) * 0.06; _e.set(DR.pitch, DR.yaw, DR.bank); camera.quaternion.setFromEuler(_e);
+      // speed feel: s = 0 hovering .. 1 flat out; prox = 1 skimming the ground .. 0 above ~14 m
+      const spd = Math.hypot(DR.vel.x, DR.vel.z), s = clamp((spd - 3) / 33, 0, 1); DR.spdN = damp(DR.spdN, s, 4, rdt); const S1 = DR.spdN;
+      DR.prox = clamp(1 - (DR.pos.y - gy - 1.6) / 12, 0, 1);
+      const cdT = 3.2 + 4.6 * S1, chT = -0.25 + 2.1 * S1 + 0.5 * clamp(up, 0, 1), tiltT = 0.16 - 0.4 * S1 - 0.12 * up; // sightseeing: level/under + tilted up when slow
+      DR.cd = damp(DR.cd, cdT, 2.4, rdt); DR.ch = damp(DR.ch, chT, 2.4, rdt); DR.pitch = damp(DR.pitch, tiltT, 2.2, rdt); DR.fx = damp(DR.fx, 18 * S1 + 6 * DR.thr, 2.5, rdt);
+      const yv = DR.yaw + FL.yaw, pv = clamp(DR.pitch + FL.pitch, -1.35, 0.9);
+      camera.position.set(DR.pos.x + Math.sin(yv) * DR.cd, DR.pos.y + DR.ch + Math.sin(DR.t * 2.1) * 0.05, DR.pos.z + Math.cos(yv) * DR.cd);
+      for (const b of BLD) if (camera.position.x > b.x0 - 0.5 && camera.position.x < b.x1 + 0.5 && camera.position.z > b.z0 - 0.5 && camera.position.z < b.z1 + 0.5 && camera.position.y < b.h + 0.8) { camera.position.set(DR.pos.x + Math.sin(yv) * 0.7, Math.max(DR.pos.y + DR.ch, DR.pos.y + 0.4), DR.pos.z + Math.cos(yv) * 0.7); break; }
+      camera.position.y = Math.max(camera.position.y, groundY(clamp(camera.position.x, WB.x0, WB.x1), clamp(camera.position.z, WB.z0, WB.z1)) + 0.9);
+      _e.set(pv, yv, DR.bank * 0.4); camera.quaternion.setFromEuler(_e);
+      droneRigOn(); const rg = DR.rig; rg.visible = DR.cd > 1.2; rg.position.copy(DR.pos); rg.rotation.set(-my * 0.24 - clamp(up, -1, 1) * 0.04, DR.yaw, DR.bank * 1.6, 'YXZ');
+      for (const r of rg.userData.rotors) r.rotation.y += rdt * 70; rg.userData.blink.visible = ((DR.t * 1.6) % 1) < 0.2;
+      streakTick(clamp(S1 * 0.85 + S1 * DR.prox * 0.6, 0, 1), DR.prox, rdt); DR.streak = DR.skOn ? 1 : 0; windTick(S1, DR.prox, rdt);
     }
-    const a = VW() / VH(), fov = a < 0.75 ? 72 : 62; if (camera.fov !== fov || camera.aspect !== a) { camera.fov = fov; camera.aspect = a; camera.updateProjectionMatrix(); }
+    const a = VW() / VH(), fov = (a < 0.75 ? 72 : 62) + DR.fx; if (Math.abs(camera.fov - fov) > 0.01 || camera.aspect !== a) { camera.fov = fov; camera.aspect = a; camera.updateProjectionMatrix(); } DR.fovNow = camera.fov;
     window.__sky.position.copy(camera.position);
     updateCycle(rdt); scene.fog.near = Math.max(scene.fog.near, 60); scene.fog.far = Math.max(scene.fog.far, 230); OUT_U.fogN.value = scene.fog.near; OUT_U.fogF.value = scene.fog.far;
     DR.fr = (DR.fr || 0) + rdt; if (DR.fr > 0.25) { DR.fr = 0; NIGHTFX.near(DR.pos.x, DR.pos.z); D.alt.textContent = 'ALT ' + Math.round(DR.pos.y - gy) + ' m · ' + (CITY.lmk ? CITY.lmk.name : nearLm()); }

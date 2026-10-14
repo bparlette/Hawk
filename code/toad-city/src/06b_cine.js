@@ -98,7 +98,7 @@ function actContext() {
   if (inFight()) return { kind: 'power', label: 'POWER', ready: POWER.cd <= 0, go: () => startPower() };
   return null;
 }
-function tryAction() { const c = actContext(); if (!c || c.ready === false) return false; c.go(); return true; }
+function tryAction() { const c = actContext(); if (!c || c.ready === false) return false; COOP.noteAct(c); c.go(); return true; } // COOP.noteAct (06cc): a boss / minigame ring can be replayed for Player 2's turn
 // ---- the POWER move: Harold's big cane slam. Hops, flips and drives the cane into the pavement: a shockwave knocks back / downs every thug
 // within ~5 m, a long hit-pause + heavy shake, and Mavis (if she is close and free) spins her handbag into the crowd at the same moment.
 const POWER_W = canvasTex(512, 192, (c) => { comicText(c, 'CANE QUAKE!', 256, 100, 80, '#7dffc0', null, { sx: 1 }); });
