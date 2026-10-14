@@ -1,0 +1,36 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
+<title>Lights Out at Hollow Manor</title>
+<meta name="description" content="An original 8-bit horror game. The power is out. Find the breaker.">
+<meta name="theme-color" content="#000000">
+<style>
+*{box-sizing:border-box}
+html,body{margin:0;padding:0;background:#000;color:#bcbcbc;height:100%;overflow:hidden;touch-action:none;-webkit-user-select:none;user-select:none;-webkit-tap-highlight-color:transparent}
+body{display:flex;flex-direction:column;align-items:center;justify-content:center;font-family:monospace}
+canvas{display:block;image-rendering:pixelated;image-rendering:crisp-edges;background:#000;max-width:100vw}
+#touch{display:none;width:100%;max-width:400px;padding:10px 14px 14px;justify-content:space-between;align-items:center;gap:10px}
+#pad{position:relative;width:148px;height:148px;flex:none;border-radius:50%;background:#1c1c1c;border:3px solid #383838;touch-action:none}
+#pad i{position:absolute;width:44px;height:44px;background:#383838;border:2px solid #7c7c7c}
+#pad i.u{left:49px;top:4px}#pad i.d{left:49px;bottom:4px}#pad i.l{left:4px;top:49px}#pad i.r{right:4px;top:49px}
+#pad i::after{content:"";position:absolute;left:14px;top:14px;border:8px solid transparent}
+#pad i.u::after{border-bottom-color:#bcbcbc;top:6px}#pad i.d::after{border-top-color:#bcbcbc;top:18px}#pad i.l::after{border-right-color:#bcbcbc;left:6px}#pad i.r::after{border-left-color:#bcbcbc;left:18px}
+#btns{display:grid;grid-template-columns:auto auto;gap:10px;justify-items:center;align-items:center}
+.b{font:bold 13px monospace;color:#f8f8f8;background:#383838;border:3px solid #7c7c7c;border-radius:50%;width:72px;height:72px;touch-action:none;padding:0}
+.b.light{background:#503000;border-color:#f8b800;color:#f8d878}.b.use{background:#500018;border-color:#e40058}
+.s{font:bold 11px monospace;color:#bcbcbc;background:#1c1c1c;border:2px solid #383838;border-radius:6px;height:30px;width:72px;touch-action:none;padding:0}
+.on{filter:brightness(1.8)}
+</style></head>
+<body>
+<canvas id="c" width="256" height="240"></canvas>
+<div id="touch">
+  <div id="pad"><i class="u"></i><i class="d"></i><i class="l"></i><i class="r"></i></div>
+  <div id="btns">
+    <button class="b light" data-act="light">LIGHT</button><button class="b use" data-act="use">USE</button>
+    <button class="s" data-act="map">MAP</button><button class="s" data-act="mute">SOUND</button>
+  </div>
+</div>
+<script>
+/*GAME*/
+</script>
+</body></html>
