@@ -1114,6 +1114,48 @@
       "thumb": "thumbs/toad-city-drone.webp?v=1791957742"
     },
     {
+      "id": "toad-city-skate",
+      "title": "Toad City Skate",
+      "category": "Originals",
+      "keys": {
+        "up": "ArrowUp",
+        "down": "ArrowDown",
+        "left": "ArrowLeft",
+        "right": "ArrowRight",
+        "attack": "KeyJ",
+        "jump": "Space",
+        "special": "KeyL",
+        "start": "Enter",
+        "select": "KeyP"
+      },
+      "labels": {
+        "attack": "J · FLIP",
+        "jump": "OLLIE",
+        "special": "L · GRIND",
+        "start": "SKATE",
+        "select": "PAUSE"
+      },
+      "extras": [
+        {
+          "label": "GRAB",
+          "key": "KeyK"
+        },
+        {
+          "label": "SPECIAL",
+          "key": "ShiftLeft"
+        },
+        {
+          "label": "MUTE",
+          "key": "KeyM"
+        }
+      ],
+      "autostart": [],
+      "orientation": "any",
+      "note": "Tony Hawk-style 2-minute skate runs on the Toad City Baltimore code + city (same Inner Harbor, rowhouses, landmarks with real signage, toon/ink shading, rig system). Ollies, flips, grabs, spins, stoop-rail grinds, manuals, special meter, 5 goals (score, combo, S-K-A-T-E, secret tape, Harbor Gap). Source /workspace/work/bmore-skate.",
+      "path": "g/toad-city-skate/index.html",
+      "thumb": "thumbs/toad-city-skate.webp?v=1791965651"
+    },
+    {
       "id": "sticker-sticker-stomp",
       "title": "Sticker Stomp",
       "category": "Sticker Series",
