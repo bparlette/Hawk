@@ -1,0 +1,1779 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+<script src="../../demo-embed.js"></script>
+<style id="demo-embed-css">
+</style>
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>VIRAL OVERDRIVE 2.0 // HAWK EDITION (PolyTrack x Survivors)</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@600;800;900&family=Permanent+Marker&family=JetBrains+Mono:wght@500;700;800&display=swap" rel="stylesheet">
+  <style>
+    * { box-sizing: border-box; user-select: none; -webkit-user-select: none; margin: 0; padding: 0; }
+    body {
+      background: #040309;
+      color: #f8fafc;
+      font-family: 'Orbitron', sans-serif;
+      overflow: hidden;
+      width: 100vw;
+      height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .font-marker { font-family: 'Permanent Marker', cursive; }
+    .font-mono-tech { font-family: 'JetBrains Mono', monospace; }
+
+    #viewport-shell {
+      position: relative;
+      width: 100vw;
+      height: 100vh;
+      overflow: hidden;
+      background: #070510;
+      transition: width 0.32s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.32s ease, transform 0.06s ease;
+    }
+    #viewport-shell.shorts-916 {
+      width: min(100vw, calc(100vh * (9 / 16)));
+      height: 100vh;
+      border-left: 3px solid #f43f5e;
+      border-right: 3px solid #f43f5e;
+      box-shadow: 0 0 130px rgba(244, 63, 94, 0.65);
+    }
+    #viewport-shell.chroma-pulse {
+      filter: drop-shadow(-4px 0 0 rgba(255, 0, 85, 0.85)) drop-shadow(4px 0 0 rgba(0, 229, 255, 0.85));
+    }
+
+    canvas.layer-canvas {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      display: block;
+    }
+    canvas.pixelated {
+      image-rendering: pixelated;
+      image-rendering: crisp-edges;
+    }
+
+    /* 16-Bit 320x180 CRT Scanline & Shadowmask Overlay (Key H) */
+    #crt-overlay {
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+      z-index: 24;
+      display: none;
+      background:
+        linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.52) 50%),
+        radial-gradient(circle at center, transparent 52%, rgba(0, 0, 0, 0.82) 100%);
+      background-size: 100% 4px, 100% 100%;
+    }
+    #crt-overlay.active { display: block; }
+
+    .mode-tab {
+      background: rgba(15, 23, 42, 0.88);
+      border: 1.5px solid rgba(148, 163, 184, 0.32);
+      transition: all 0.15s ease;
+    }
+    .mode-tab:hover { border-color: #38bdf8; transform: translateY(-1px); }
+    .mode-tab.active-poly {
+      background: linear-gradient(135deg, #0284c7, #2563eb);
+      border-color: #7dd3fc;
+      box-shadow: 0 0 22px rgba(56, 189, 248, 0.6);
+    }
+    .mode-tab.active-surv {
+      background: linear-gradient(135deg, #b91c1c, #7e22ce);
+      border-color: #fda4af;
+      box-shadow: 0 0 22px rgba(244, 63, 94, 0.6);
+    }
+    .mode-tab.active-mash {
+      background: linear-gradient(135deg, #ea580c, #db2777);
+      border-color: #fde047;
+      box-shadow: 0 0 24px rgba(250, 204, 21, 0.7);
+    }
+
+    @keyframes pulseViral {
+      0%, 100% { box-shadow: 0 0 0 0 rgba(244, 63, 94, 0.8); }
+      50% { box-shadow: 0 0 24px 6px rgba(250, 204, 21, 0.95); }
+    }
+    .viral-active {
+      animation: pulseViral 1.1s infinite;
+      background: linear-gradient(135deg, #e11d48, #ca8a04) !important;
+      border-color: #fef08a !important;
+    }
+
+    /* Custom Range Sliders for Hawk Dev Tuner */
+    input[type="range"].hawk-slider {
+      -webkit-appearance: none;
+      appearance: none;
+      width: 100%;
+      height: 6px;
+      background: #1e293b;
+      border-radius: 4px;
+      outline: none;
+    }
+    input[type="range"].hawk-slider::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      appearance: none;
+      width: 14px;
+      height: 14px;
+      border-radius: 50%;
+      background: #38bdf8;
+      border: 2px solid #fff;
+      cursor: pointer;
+    }
+  </style>
+</head>
+<body>
+  <div id="viewport-shell">
+    <!-- 3D Three.js Canvas (Mode 1 & Mode 3) -->
+    <canvas id="canvas3d" class="layer-canvas"></canvas>
+    <!-- 2D Painted / Speedlines / Damage Popups Canvas (All Modes + Mode 2 Primary) -->
+    <canvas id="canvas2d" class="layer-canvas pointer-events-none"></canvas>
+    <div id="crt-overlay"></div>
+
+    <!-- TOP NAVIGATION & HAWK TOOLS BAR -->
+    <div class="absolute top-2.5 left-2.5 right-2.5 z-30 flex flex-wrap items-center justify-between gap-2 pointer-events-none">
+      <!-- 3 Playable Overdrive Modes -->
+      <div class="flex flex-wrap items-center gap-1.5 pointer-events-auto">
+        <button id="tabPoly" onclick="switchGameMode('POLYTRACK')" class="mode-tab active-poly px-3 py-1.5 rounded-lg text-[11px] sm:text-xs font-extrabold tracking-wider flex items-center gap-1.5">
+          <span>🏎️ [1] POLYTRACK: APEX GRAPPLE</span>
+        </button>
+        <button id="tabSurv" onclick="switchGameMode('SURVIVORS')" class="mode-tab px-3 py-1.5 rounded-lg text-[11px] sm:text-xs font-extrabold tracking-wider flex items-center gap-1.5">
+          <span>🧛 [2] SURVIVORS: DOPAMINE CASINO</span>
+        </button>
+        <button id="tabMash" onclick="switchGameMode('CROSSOVER')" class="mode-tab px-3 py-1.5 rounded-lg text-[11px] sm:text-xs font-extrabold tracking-wider flex items-center gap-1.5">
+          <span>🔥 [3] DRIFT SURVIVORS 3D</span>
+        </button>
+      </div>
+
+      <!-- Global Viral & Engineering Controls -->
+      <div class="flex flex-wrap items-center gap-1.5 pointer-events-auto">
+        <button id="btnHawkTuner" onclick="toggleHawkTuner()" class="px-3 py-1.5 rounded-lg bg-amber-500/95 hover:bg-amber-400 border border-white text-black text-[11px] font-mono-tech font-extrabold shadow-lg">
+          🛠️ HAWK TUNER
+        </button>
+        <button id="btnViralDirector" onclick="toggleViralDirector()" class="px-3 py-1.5 rounded-lg bg-rose-600 hover:bg-rose-500 border border-yellow-300 text-white text-[11px] font-extrabold tracking-wide shadow-lg">
+          🎬 9:16 AUTO-SHORT
+        </button>
+        <button id="btnPixelToggle" onclick="toggle16BitMode()" class="px-2.5 py-1.5 rounded-lg bg-purple-950/90 hover:bg-purple-800 border border-amber-400/70 text-amber-200 text-[11px] font-mono-tech shadow-lg" title="Shortcut: Key H">
+          📺 16-BIT [H]: OFF
+        </button>
+        <button id="btnWebmRec" onclick="toggleWebmRecorder()" class="px-2.5 py-1.5 rounded-lg bg-slate-900/90 hover:bg-slate-800 border border-slate-600 text-slate-200 text-[11px] font-mono-tech shadow-lg">
+          🔴 REC
+        </button>
+        <button id="btnAudioToggle" onclick="toggleAudioMute()" class="px-2.5 py-1.5 rounded-lg bg-slate-900/90 hover:bg-slate-800 border border-slate-600 text-sky-300 text-[11px] font-mono-tech shadow-lg">
+          🔊 132BPM
+        </button>
+        <button onclick="openSourceExporter()" class="px-2.5 py-1.5 rounded-lg bg-emerald-950/90 hover:bg-emerald-800 border border-emerald-400/70 text-emerald-200 text-[11px] font-mono-tech font-bold shadow-lg">
+          📦 SOURCE & CONFIG
+        </button>
+      </div>
+    </div>
+
+    <!-- VIRAL YOUTUBE SHORT DYNAMIC CAPTION BANNER -->
+    <div id="viralCaptionBox" class="pointer-events-none absolute top-[12%] left-1/2 -translate-x-1/2 z-25 hidden w-[94%] text-center">
+      <div id="viralCaptionText" class="inline-block px-4 py-2 rounded-xl bg-black/90 border-2 border-yellow-300 text-amber-300 font-marker text-lg sm:text-2xl tracking-wide shadow-[0_8px_30px_rgba(0,0,0,0.95)]">
+        POV: 290MPH APEX GRAPPLE + LIVE GHOST DELTA (-0.48s) 🪝🏎️
+      </div>
+    </div>
+
+    <!-- MODE 1 TELEMETRY, LIVE GHOST SPLIT DELTA & SEED MUTATOR -->
+    <div id="polyHudBar" class="absolute top-14 left-3 z-25 flex flex-wrap items-center gap-2 pointer-events-auto">
+      <div class="bg-black/85 backdrop-blur-md border border-sky-500/60 px-3.5 py-1.5 rounded-xl flex items-center gap-3 text-xs font-mono-tech shadow-2xl">
+        <div>SPD: <span id="polySpeedTxt" class="text-sky-400 font-extrabold">0</span> <span class="text-[10px] text-slate-400">MPH</span></div>
+        <div class="h-4 w-[1px] bg-slate-700"></div>
+        <div>LAP: <span id="polyTimeTxt" class="text-white font-bold">0.00s</span></div>
+        <div class="h-4 w-[1px] bg-slate-700"></div>
+        <div>GHOST Δ: <span id="polyDeltaTxt" class="text-emerald-400 font-extrabold">-0.00s</span></div>
+        <div class="h-4 w-[1px] bg-slate-700"></div>
+        <div>STYLE: <span id="polyStyleTxt" class="text-pink-400 font-extrabold">0</span></div>
+      </div>
+
+      <div class="flex items-center gap-1 bg-black/80 p-1 rounded-xl border border-slate-700 text-[10px] font-mono-tech">
+        <span class="px-1.5 text-slate-400">SEED:</span>
+        <button onclick="loadPolyTrackPreset(0)" class="px-2 py-1 rounded-lg bg-sky-900/90 hover:bg-sky-700 text-sky-200 font-bold">APEX LOOP</button>
+        <button onclick="loadPolyTrackPreset(1)" class="px-2 py-1 rounded-lg bg-purple-900/90 hover:bg-purple-700 text-purple-200 font-bold">CHASM SPIRAL</button>
+        <button onclick="mutateTrackSeed()" class="px-2 py-1 rounded-lg bg-pink-900/90 hover:bg-pink-700 text-pink-200 font-bold">🎲 MUTATE</button>
+        <button onclick="exportTrackCode()" class="px-2 py-1 rounded-lg bg-amber-500 hover:bg-amber-400 text-black font-extrabold">🔗 SEED</button>
+      </div>
+    </div>
+
+    <!-- MODE 2 & 3 SURVIVORS DOPAMINE BAR, SPATIAL HASH METRICS & CASINO TRIGGERS -->
+    <div id="survHudBar" class="absolute top-14 inset-x-3 z-25 hidden flex-col gap-1.5 pointer-events-none">
+      <div class="w-full h-5 bg-slate-950/90 border-2 border-amber-400/85 rounded-full overflow-hidden relative shadow-lg">
+        <div id="survXpFill" class="h-full bg-gradient-to-r from-cyan-400 via-fuchsia-500 to-yellow-300 transition-all duration-75" style="width: 18%"></div>
+        <div class="absolute inset-0 flex items-center justify-between px-3 text-[10px] font-mono-tech font-extrabold text-white drop-shadow">
+          <span id="survLvlTxt">LV. 1 // DOPAMINE REAPER (PITCH: 1.00x)</span>
+          <span id="survHordeTxt">HORDE: 1,200 | KILLS: 0 | COMBO: 1x</span>
+        </div>
+      </div>
+      <div class="flex flex-wrap items-center justify-between gap-2">
+        <div class="flex items-center gap-1.5 pointer-events-auto">
+          <button onclick="triggerBlackHoleVortex()" class="px-3 py-1 rounded-lg bg-gradient-to-r from-purple-700 to-fuchsia-600 hover:from-purple-600 hover:to-fuchsia-500 border border-yellow-300 text-white text-[11px] font-mono-tech font-extrabold shadow-lg">
+            🌀 [SPACE] BLACK HOLE SINGULARITY
+          </button>
+          <button onclick="openCasinoSlotModal()" class="px-3 py-1 rounded-lg bg-gradient-to-r from-amber-500 to-rose-600 hover:from-amber-400 hover:to-rose-500 border border-white text-black text-[11px] font-mono-tech font-extrabold shadow-lg">
+            🎰 [E] SPIN 777 VARIABLE-RATIO CHEST
+          </button>
+        </div>
+        <div id="godSlayerBadge" class="hidden px-3 py-1 rounded-full bg-yellow-400 text-black font-extrabold text-[11px] tracking-widest animate-bounce shadow-lg">
+          ⚡ 777 GOD-SLAYER SYNERGY (PLASMA SAWS + CHAIN LIGHTNING) ⚡
+        </div>
+      </div>
+    </div>
+
+    <!-- 🛠️ HAWK DEV TUNER DRAWER (Strict Configuration Isolation Live Editor) -->
+    <div id="hawkTunerDrawer" class="absolute top-28 right-3 z-35 hidden w-80 bg-slate-950/95 backdrop-blur-xl border-2 border-amber-400 rounded-2xl p-4 shadow-[0_15px_60px_rgba(0,0,0,0.9)] text-xs font-mono-tech">
+      <div class="flex items-center justify-between border-b border-slate-800 pb-2 mb-3">
+        <div>
+          <div class="text-amber-400 font-extrabold text-sm">🛠️ HAWK_CONFIG TUNER</div>
+          <div class="text-[10px] text-slate-400">Live Game-Feel & Physics Isolation</div>
+        </div>
+        <button onclick="toggleHawkTuner()" class="px-2 py-0.5 rounded bg-slate-800 hover:bg-rose-700 text-white">✕</button>
+      </div>
+
+      <div class="space-y-2.5 max-h-[58vh] overflow-y-auto pr-1">
+        <div>
+          <div class="flex justify-between text-[11px]"><span>Hitstop Freeze (ms)</span><span id="lblHitstop" class="text-sky-400 font-bold">45ms</span></div>
+          <input type="range" min="0" max="120" step="5" value="45" class="hawk-slider" oninput="updateHawkConfig('hitstopMs', this.value, 'lblHitstop', 'ms')" />
+        </div>
+        <div>
+          <div class="flex justify-between text-[11px]"><span>Velocity FOV Warp (°)</span><span id="lblFovWarp" class="text-sky-400 font-bold">92°</span></div>
+          <input type="range" min="65" max="115" step="1" value="92" class="hawk-slider" oninput="updateHawkConfig('maxFovWarp', this.value, 'lblFovWarp', '°')" />
+        </div>
+        <div>
+          <div class="flex justify-between text-[11px]"><span>Grapple Reel Tension</span><span id="lblGrapple" class="text-pink-400 font-bold">48</span></div>
+          <input type="range" min="20" max="90" step="2" value="48" class="hawk-slider" oninput="updateHawkConfig('grappleTension', this.value, 'lblGrapple', '')" />
+        </div>
+        <div>
+          <div class="flex justify-between text-[11px]"><span>Spring Suspension Stiffness</span><span id="lblSpring" class="text-emerald-400 font-bold">18</span></div>
+          <input type="range" min="5" max="40" step="1" value="18" class="hawk-slider" oninput="updateHawkConfig('suspensionStiffness', this.value, 'lblSpring', '')" />
+        </div>
+        <div>
+          <div class="flex justify-between text-[11px]"><span>Drift Slip Angle</span><span id="lblDrift" class="text-amber-300 font-bold">0.38</span></div>
+          <input type="range" min="0.1" max="0.85" step="0.02" value="0.38" class="hawk-slider" oninput="updateHawkConfig('driftSlipFactor', this.value, 'lblDrift', '')" />
+        </div>
+        <div>
+          <div class="flex justify-between text-[11px]"><span>Trauma Screen Shake</span><span id="lblShake" class="text-rose-400 font-bold">1.0x</span></div>
+          <input type="range" min="0" max="2.5" step="0.1" value="1.0" class="hawk-slider" oninput="updateHawkConfig('traumaMultiplier', this.value, 'lblShake', 'x')" />
+        </div>
+        <div>
+          <div class="flex justify-between text-[11px]"><span>777 Jackpot Odds (%)</span><span id="lblOdds" class="text-yellow-300 font-bold">65%</span></div>
+          <input type="range" min="10" max="100" step="5" value="65" class="hawk-slider" oninput="updateHawkConfig('jackpotChancePct', this.value, 'lblOdds', '%')" />
+        </div>
+        <div>
+          <div class="flex justify-between text-[11px]"><span>Synth Tempo (BPM)</span><span id="lblBpm" class="text-purple-400 font-bold">132</span></div>
+          <input type="range" min="90" max="175" step="2" value="132" class="hawk-slider" oninput="updateHawkConfig('synthBpm', this.value, 'lblBpm', '')" />
+        </div>
+      </div>
+
+      <div class="mt-3 pt-2 border-t border-slate-800 flex justify-between items-center">
+        <button onclick="resetHawkConfig()" class="px-2.5 py-1 rounded bg-slate-800 hover:bg-slate-700 text-slate-300 text-[10px]">↺ Reset Defaults</button>
+        <span class="text-[10px] text-emerald-400">60 FPS LOCKED</span>
+      </div>
+    </div>
+
+    <!-- VEGAS 777 VARIABLE-RATIO SLOT MACHINE MODAL -->
+    <div id="casinoSlotModal" class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-35 hidden bg-gradient-to-b from-[#260b38] to-[#0d041a] border-4 border-yellow-400 rounded-2xl p-5 shadow-[0_0_110px_rgba(250,204,21,0.85)] w-[350px] sm:w-[430px] text-center">
+      <div class="text-[10px] font-mono-tech text-pink-400 tracking-widest uppercase">VARIABLE-RATIO DOPAMINE CHEST</div>
+      <h3 class="text-xl sm:text-2xl font-black text-yellow-300 tracking-wider mb-3">
+        🎰 777 SYNERGY EVOLUTION
+      </h3>
+      <div class="grid grid-cols-3 gap-2.5 bg-black/85 p-3.5 rounded-xl border-2 border-pink-500 mb-3">
+        <div id="slotReel0" class="h-20 rounded-lg bg-slate-900 border border-amber-400/50 flex items-center justify-center text-4xl">⚔️</div>
+        <div id="slotReel1" class="h-20 rounded-lg bg-slate-900 border border-amber-400/50 flex items-center justify-center text-4xl">💎</div>
+        <div id="slotReel2" class="h-20 rounded-lg bg-slate-900 border border-amber-400/50 flex items-center justify-center text-4xl">⚡</div>
+      </div>
+      <div id="slotStatusText" class="text-xs font-mono-tech text-emerald-300 mb-3 font-bold">
+        SPINNING REELS... WATCH FOR NEAR-MISS OR 777 JACKPOT!
+      </div>
+      <button onclick="closeCasinoSlotModal()" class="w-full py-2.5 rounded-xl bg-gradient-to-r from-yellow-400 to-amber-500 text-black font-black text-sm tracking-wider uppercase shadow-lg">
+        UNLEASH SYNERGY OVERDRIVE! ▶
+      </button>
+    </div>
+
+    <!-- BOTTOM CONTROLS & MOBILE TOUCH GAMEPAD -->
+    <div class="absolute bottom-3 left-1/2 -translate-x-1/2 z-25 pointer-events-none w-[96%] max-w-4xl flex flex-col items-center gap-2">
+      <!-- Touch Virtual Controls -->
+      <div class="w-full flex justify-between items-end sm:hidden pointer-events-auto px-1">
+        <div class="grid grid-cols-3 gap-1 w-28 h-28 bg-black/70 p-1.5 rounded-2xl border border-sky-400/40">
+          <div></div>
+          <button data-k="Up" class="touch-btn rounded bg-white/15 active:bg-sky-500 text-xs font-bold">▲</button>
+          <div></div>
+          <button data-k="Left" class="touch-btn rounded bg-white/15 active:bg-sky-500 text-xs font-bold">◀</button>
+          <button data-k="Down" class="touch-btn rounded bg-white/15 active:bg-sky-500 text-xs font-bold">▼</button>
+          <button data-k="Right" class="touch-btn rounded bg-white/15 active:bg-sky-500 text-xs font-bold">▶</button>
+        </div>
+        <div class="flex gap-2">
+          <button data-k="Space" class="touch-btn px-3.5 py-4 rounded-2xl bg-gradient-to-b from-pink-500 to-rose-700 border-2 border-yellow-300 text-white text-xs font-black shadow-lg">
+            🪝 GRAPPLE / VORTEX
+          </button>
+          <button onclick="triggerActionE()" class="px-3.5 py-4 rounded-2xl bg-gradient-to-b from-amber-400 to-orange-600 border-2 border-white text-black text-xs font-black shadow-lg">
+            ⚡ NITRO / 777
+          </button>
+        </div>
+      </div>
+
+      <!-- Self-Teaching Control Bar -->
+      <div id="controlHintBanner" class="px-4 py-1.5 rounded-full bg-black/85 border border-white/15 text-[11px] font-mono-tech text-slate-200 text-center shadow-xl">
+        <span class="text-sky-400 font-bold">WASD/ARROWS:</span> Steer & Drift |
+        <span class="text-pink-400 font-bold">HOLD SPACE:</span> 🪝 Pendulum Cyber-Grapple |
+        <span class="text-amber-300 font-bold">SHIFT/E:</span> Nitro Warp |
+        <span class="text-emerald-300 font-bold">GHOST CAR:</span> Live Best-Lap Replay |
+        <span class="text-purple-300 font-bold">H:</span> 16-Bit CRT
+      </div>
+    </div>
+
+    <!-- SOURCE & HAWK_CONFIG EXPORTER MODAL -->
+    <div id="sourceModal" class="absolute inset-4 sm:inset-8 z-40 hidden flex-col bg-[#07060f] border-2 border-emerald-400 rounded-2xl shadow-2xl overflow-hidden">
+      <div class="flex items-center justify-between px-4 py-3 bg-slate-900 border-b border-slate-800">
+        <div>
+          <h3 class="text-sm sm:text-base font-bold text-emerald-300">📦 VIRAL OVERDRIVE 2.0 (HAWK EDITION) // SOURCE & CONFIG EXPORTER</h3>
+          <p class="text-[11px] text-slate-400 font-mono-tech">Download single-file `viral_overdrive_hawk_edition.html` or copy isolated `HAWK_CONFIG` JSON</p>
+        </div>
+        <div class="flex gap-2">
+          <button onclick="downloadFullHtml()" class="px-3 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-mono-tech font-bold">⬇ Download .HTML</button>
+          <button onclick="copySourceToClipboard()" class="px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-mono-tech">📋 Copy HTML</button>
+          <button onclick="closeSourceExporter()" class="px-3 py-1.5 rounded-lg bg-rose-800 hover:bg-rose-700 text-white text-xs font-mono-tech">✕ Close</button>
+        </div>
+      </div>
+      <pre id="sourceCodePre" class="flex-1 p-4 overflow-auto text-xs font-mono-tech text-emerald-100 bg-[#040309] leading-relaxed"></pre>
+    </div>
+  </div>
+
+  <script>
+    /**
+     * ============================================================================
+     * 1. STRICT CONFIGURATION ISOLATION (`HAWK_CONFIG`)
+     * Every physics, game-feel, hitstop, and variable-ratio reward parameter is isolated
+     * here and live-editable via the 🛠️ HAWK TUNER drawer.
+     * ============================================================================
+     */
+    const HAWK_DEFAULTS = {
+      gravity: 38.0,
+      suspensionStiffness: 18.0,
+      driftSlipFactor: 0.38,
+      grappleTension: 48.0,
+      hitstopMs: 45,
+      baseFov: 62,
+      maxFovWarp: 92,
+      traumaMultiplier: 1.0,
+      spatialHashCellSize: 64,
+      jackpotChancePct: 65,
+      synthBpm: 132,
+      gemPitchStep: 1.045
+    };
+    const HAWK_CONFIG = { ...HAWK_DEFAULTS };
+
+    function updateHawkConfig(key, val, labelId, suffix = '') {
+      HAWK_CONFIG[key] = parseFloat(val);
+      const el = document.getElementById(labelId);
+      if (el) el.textContent = val + suffix;
+    }
+
+    function resetHawkConfig() {
+      Object.assign(HAWK_CONFIG, HAWK_DEFAULTS);
+      spawn2dPopup(canvas2d.width * 0.5, canvas2d.height * 0.25, '↺ HAWK_CONFIG RESET TO DEFAULTS', '#38bdf8');
+    }
+
+    function toggleHawkTuner() {
+      const d = document.getElementById('hawkTunerDrawer');
+      d.classList.toggle('hidden');
+    }
+
+    /**
+     * ============================================================================
+     * 2. ESCALATING DOPAMINE WEBAUDIO SYNTHESIZER (132 BPM + PITCH-RAMPING GEMS)
+     * ============================================================================
+     */
+    class HawkAudioSynth {
+      constructor() {
+        this.ctx = null;
+        this.muted = false;
+        this.step = 0;
+        this.running = false;
+      }
+
+      init() {
+        if (!this.ctx) {
+          const AudioCtx = window.AudioContext || window.webkitAudioContext;
+          if (AudioCtx) this.ctx = new AudioCtx();
+        }
+        if (this.ctx && this.ctx.state === 'suspended') this.ctx.resume();
+        if (!this.running) {
+          this.running = true;
+          this.scheduleNextStep();
+        }
+      }
+
+      scheduleNextStep() {
+        if (!this.running) return;
+        const stepMs = (60 / HAWK_CONFIG.synthBpm / 4) * 1000;
+        setTimeout(() => {
+          this.tickSequencer();
+          this.scheduleNextStep();
+        }, stepMs);
+      }
+
+      tickSequencer() {
+        if (this.muted || !this.ctx || this.ctx.state !== 'running') return;
+        const s = this.step % 16;
+        const now = this.ctx.currentTime;
+        const bassNotes = [110, 110, 220, 110, 130.8, 130.8, 261.6, 130.8, 146.8, 146.8, 293.6, 146.8, 164.8, 164.8, 329.6, 196.0];
+        const polyArp = [440, 523.25, 659.25, 880, 659.25, 523.25, 440, 392, 523.25, 659.25, 783.99, 1046.5, 783.99, 659.25, 523.25, 440];
+
+        // Punchy Synth Kick on 0, 4, 8, 12
+        if (s % 4 === 0) {
+          const o = this.ctx.createOscillator();
+          const g = this.ctx.createGain();
+          o.frequency.setValueAtTime(145, now);
+          o.frequency.exponentialRampToValueAtTime(34, now + 0.11);
+          g.gain.setValueAtTime(0.24, now);
+          g.gain.exponentialRampToValueAtTime(0.001, now + 0.12);
+          o.connect(g); g.connect(this.ctx.destination);
+          o.start(now); o.stop(now + 0.13);
+        }
+
+        // Driving Bass
+        if (s % 2 === 0) {
+          const o = this.ctx.createOscillator();
+          const g = this.ctx.createGain();
+          o.type = 'sawtooth';
+          o.frequency.setValueAtTime(bassNotes[s], now);
+          const flt = this.ctx.createBiquadFilter();
+          flt.type = 'lowpass';
+          flt.frequency.value = 680;
+          g.gain.setValueAtTime(0.11, now);
+          g.gain.exponentialRampToValueAtTime(0.001, now + 0.12);
+          o.connect(flt); flt.connect(g); g.connect(this.ctx.destination);
+          o.start(now); o.stop(now + 0.13);
+        }
+
+        // Arpeggio Lead
+        const note = polyArp[s];
+        if (note > 0 && s % 2 === 1) {
+          const o = this.ctx.createOscillator();
+          const g = this.ctx.createGain();
+          o.type = app.mode === 'SURVIVORS' ? 'square' : 'sawtooth';
+          o.frequency.setValueAtTime(note * (app.godSlayer ? 1.25 : 1.0), now);
+          g.gain.setValueAtTime(0.045, now);
+          g.gain.exponentialRampToValueAtTime(0.001, now + 0.11);
+          o.connect(g); g.connect(this.ctx.destination);
+          o.start(now); o.stop(now + 0.12);
+        }
+        this.step++;
+      }
+
+      // Escalating Pitch Dopamine Chime (`baseFreq * Math.pow(1.045, combo)`)
+      playEscalatingGem(comboCount = 1) {
+        if (this.muted || !this.ctx) return;
+        const now = this.ctx.currentTime;
+        const o = this.ctx.createOscillator();
+        const g = this.ctx.createGain();
+        o.type = 'sine';
+        const freq = Math.min(2400, 420 * Math.pow(HAWK_CONFIG.gemPitchStep, comboCount % 32));
+        o.frequency.setValueAtTime(freq, now);
+        o.frequency.exponentialRampToValueAtTime(freq * 1.35, now + 0.075);
+        g.gain.setValueAtTime(0.09, now);
+        g.gain.exponentialRampToValueAtTime(0.001, now + 0.085);
+        o.connect(g); g.connect(this.ctx.destination);
+        o.start(now); o.stop(now + 0.09);
+      }
+
+      playGrappleHook() {
+        if (this.muted || !this.ctx) return;
+        const now = this.ctx.currentTime;
+        const o = this.ctx.createOscillator();
+        const g = this.ctx.createGain();
+        o.type = 'sawtooth';
+        o.frequency.setValueAtTime(240, now);
+        o.frequency.exponentialRampToValueAtTime(1280, now + 0.16);
+        g.gain.setValueAtTime(0.18, now);
+        g.gain.exponentialRampToValueAtTime(0.001, now + 0.18);
+        o.connect(g); g.connect(this.ctx.destination);
+        o.start(now); o.stop(now + 0.19);
+      }
+
+      playJackpotStinger() {
+        if (this.muted || !this.ctx) return;
+        const now = this.ctx.currentTime;
+        [523.25, 659.25, 783.99, 1046.5, 1318.5, 1567.98].forEach((f, i) => {
+          const o = this.ctx.createOscillator();
+          const g = this.ctx.createGain();
+          o.type = 'triangle';
+          o.frequency.setValueAtTime(f, now + i * 0.055);
+          g.gain.setValueAtTime(0.16, now + i * 0.055);
+          g.gain.exponentialRampToValueAtTime(0.001, now + i * 0.055 + 0.42);
+          o.connect(g); g.connect(this.ctx.destination);
+          o.start(now + i * 0.055);
+          o.stop(now + i * 0.055 + 0.43);
+        });
+      }
+
+      playSingularityBoom() {
+        if (this.muted || !this.ctx) return;
+        const now = this.ctx.currentTime;
+        const o = this.ctx.createOscillator();
+        const g = this.ctx.createGain();
+        o.type = 'sine';
+        o.frequency.setValueAtTime(130, now);
+        o.frequency.exponentialRampToValueAtTime(20, now + 0.65);
+        g.gain.setValueAtTime(0.4, now);
+        g.gain.exponentialRampToValueAtTime(0.001, now + 0.68);
+        o.connect(g); g.connect(this.ctx.destination);
+        o.start(now); o.stop(now + 0.7);
+      }
+    }
+
+    const sfx = new HawkAudioSynth();
+
+    /**
+     * ============================================================================
+     * 3. GLOBAL GAME FEEL, HITSTOP, TRAUMA SHAKE, & INPUT STATE
+     * ============================================================================
+     */
+    const canvas3d = document.getElementById('canvas3d');
+    const canvas2d = document.getElementById('canvas2d');
+    const ctx2d = canvas2d.getContext('2d');
+    const shellEl = document.getElementById('viewport-shell');
+
+    const app = {
+      mode: 'POLYTRACK', // 'POLYTRACK' | 'SURVIVORS' | 'CROSSOVER'
+      viralTas: false,
+      viralTimer: 0,
+      pixel16Bit: false,
+      godSlayer: false,
+      godSlayerTimer: 0,
+      hitstopRemainingMs: 0,
+      trauma: 0,
+      comboCount: 1,
+      comboDecayTimer: 0
+    };
+
+    function triggerHitstopAndTrauma(freezeScale = 1.0, traumaAmt = 0.6) {
+      app.hitstopRemainingMs = HAWK_CONFIG.hitstopMs * freezeScale;
+      app.trauma = Math.min(1.0, app.trauma + traumaAmt * HAWK_CONFIG.traumaMultiplier);
+      shellEl.classList.add('chroma-pulse');
+      setTimeout(() => shellEl.classList.remove('chroma-pulse'), 140);
+    }
+
+    const keys = { Up: false, Down: false, Left: false, Right: false, Space: false, Shift: false };
+
+    function setKeyState(k, val) {
+      keys[k] = val;
+    }
+
+    window.addEventListener('keydown', e => {
+      sfx.init();
+      if (e.code === 'KeyH') { toggle16BitMode(); return; }
+      if (e.code === 'Digit1') { switchGameMode('POLYTRACK'); return; }
+      if (e.code === 'Digit2') { switchGameMode('SURVIVORS'); return; }
+      if (e.code === 'Digit3') { switchGameMode('CROSSOVER'); return; }
+      if (e.code === 'KeyR') { resetPolyCar(); return; }
+      if (e.code === 'KeyE') { triggerActionE(); return; }
+
+      if (e.code === 'KeyW' || e.code === 'ArrowUp') setKeyState('Up', true);
+      if (e.code === 'KeyS' || e.code === 'ArrowDown') setKeyState('Down', true);
+      if (e.code === 'KeyA' || e.code === 'ArrowLeft') setKeyState('Left', true);
+      if (e.code === 'KeyD' || e.code === 'ArrowRight') setKeyState('Right', true);
+      if (e.code === 'Space') {
+        e.preventDefault();
+        setKeyState('Space', true);
+        if (app.mode !== 'POLYTRACK') triggerBlackHoleVortex();
+      }
+      if (e.code === 'ShiftLeft' || e.code === 'ShiftRight') setKeyState('Shift', true);
+    });
+
+    window.addEventListener('keyup', e => {
+      if (e.code === 'KeyW' || e.code === 'ArrowUp') setKeyState('Up', false);
+      if (e.code === 'KeyS' || e.code === 'ArrowDown') setKeyState('Down', false);
+      if (e.code === 'KeyA' || e.code === 'ArrowLeft') setKeyState('Left', false);
+      if (e.code === 'KeyD' || e.code === 'ArrowRight') setKeyState('Right', false);
+      if (e.code === 'Space') setKeyState('Space', false);
+      if (e.code === 'ShiftLeft' || e.code === 'ShiftRight') setKeyState('Shift', false);
+    });
+
+    document.querySelectorAll('.touch-btn').forEach(btn => {
+      const k = btn.getAttribute('data-k');
+      btn.addEventListener('touchstart', e => {
+        e.preventDefault();
+        sfx.init();
+        setKeyState(k, true);
+        if (k === 'Space' && app.mode !== 'POLYTRACK') triggerBlackHoleVortex();
+      });
+      btn.addEventListener('touchend', e => { e.preventDefault(); setKeyState(k, false); });
+    });
+
+    function triggerActionE() {
+      sfx.init();
+      if (app.mode === 'POLYTRACK') {
+        polyCar.speed = Math.min(210, polyCar.speed + 65);
+        triggerHitstopAndTrauma(0.6, 0.45);
+        spawn2dPopup(canvas2d.width * 0.5, canvas2d.height * 0.38, '⚡ NITRO FOV OVERDRIVE!', '#38bdf8');
+      } else {
+        openCasinoSlotModal();
+      }
+    }
+
+    /**
+     * ============================================================================
+     * 4. MODE 1: POLYTRACK APEX GRAPPLE + 4-WHEEL SUSPENSION + LIVE GHOST REPLAY
+     * ============================================================================
+     */
+    const renderer3d = new THREE.WebGLRenderer({ canvas: canvas3d, antialias: true, preserveDrawingBuffer: true });
+    const scene3d = new THREE.Scene();
+    scene3d.background = new THREE.Color(0x060410);
+    scene3d.fog = new THREE.FogExp2(0x060410, 0.0034);
+
+    const camera3d = new THREE.PerspectiveCamera(HAWK_CONFIG.baseFov, window.innerWidth / window.innerHeight, 0.1, 1000);
+
+    scene3d.add(new THREE.AmbientLight(0x94a3b8, 0.8));
+    const sunLight = new THREE.DirectionalLight(0xfef08a, 1.25);
+    sunLight.position.set(70, 160, 90);
+    scene3d.add(sunLight);
+
+    const synthGrid = new THREE.GridHelper(1000, 100, 0xf43f5e, 0x1e1b4b);
+    synthGrid.position.y = -0.25;
+    scene3d.add(synthGrid);
+
+    // Build Articulated Stunt Car with Independent Suspension Body, 4 Wheels, Exhaust & Buzzsaws
+    function buildHawkStuntCar(bodyHex = 0x0ea5e9, accentHex = 0xf43f5e) {
+      const root = new THREE.Group();
+      const sprungBody = new THREE.Group();
+
+      const chassis = new THREE.Mesh(
+        new THREE.BoxGeometry(2.5, 0.72, 4.8),
+        new THREE.MeshStandardMaterial({ color: bodyHex, roughness: 0.22, metalness: 0.65 })
+      );
+      chassis.position.y = 0.75;
+      sprungBody.add(chassis);
+
+      const canopy = new THREE.Mesh(
+        new THREE.BoxGeometry(1.85, 0.62, 2.3),
+        new THREE.MeshStandardMaterial({ color: 0x090d16, roughness: 0.1, metalness: 0.92 })
+      );
+      canopy.position.set(0, 1.32, -0.15);
+      sprungBody.add(canopy);
+
+      const wing = new THREE.Mesh(
+        new THREE.BoxGeometry(2.7, 0.18, 0.7),
+        new THREE.MeshStandardMaterial({ color: accentHex, emissive: accentHex, emissiveIntensity: 0.75 })
+      );
+      wing.position.set(0, 1.6, -2.1);
+      sprungBody.add(wing);
+
+      // Twin Afterburner Exhaust Cones
+      const exhaustGroup = new THREE.Group();
+      [-0.6, 0.6].forEach(ex => {
+        const cone = new THREE.Mesh(
+          new THREE.ConeGeometry(0.28, 1.4, 8),
+          new THREE.MeshBasicMaterial({ color: 0x38bdf8 })
+        );
+        cone.rotation.x = -Math.PI / 2;
+        cone.position.set(ex, 0.65, -2.9);
+        exhaustGroup.add(cone);
+      });
+      sprungBody.add(exhaustGroup);
+      root.add(sprungBody);
+
+      // 4 Independent Suspension Wheels
+      const wheels = [];
+      const wGeo = new THREE.CylinderGeometry(0.56, 0.56, 0.48, 16);
+      wGeo.rotateZ(Math.PI / 2);
+      const wMat = new THREE.MeshStandardMaterial({ color: 0x1e293b, emissive: accentHex, emissiveIntensity: 0.4 });
+      [[-1.35, 0.56, 1.5], [1.35, 0.56, 1.5], [-1.35, 0.56, -1.5], [1.35, 0.56, -1.5]].forEach(([x, y, z]) => {
+        const w = new THREE.Mesh(wGeo, wMat);
+        w.position.set(x, y, z);
+        root.add(w);
+        wheels.push(w);
+      });
+
+      // Mode 3 Orbital Plasma Saws + Chain-Lightning Turret
+      const sawRig = new THREE.Group();
+      for (let i = 0; i < 4; i++) {
+        const a = (i / 4) * Math.PI * 2;
+        const blade = new THREE.Mesh(
+          new THREE.CylinderGeometry(1.55, 1.55, 0.12, 16),
+          new THREE.MeshBasicMaterial({ color: 0xfacc15 })
+        );
+        blade.position.set(Math.cos(a) * 5.6, 0.85, Math.sin(a) * 5.6);
+        sawRig.add(blade);
+      }
+      root.add(sawRig);
+
+      root.userData = { sprungBody, wheels, exhaustGroup, sawRig };
+      return root;
+    }
+
+    const playerCarMesh = buildHawkStuntCar(0x0ea5e9, 0xf43f5e);
+    scene3d.add(playerCarMesh);
+
+    // Live Recorded Ghost Car Mesh
+    const ghostCarMesh = buildHawkStuntCar(0x38bdf8, 0x22d3ee);
+    ghostCarMesh.traverse(obj => {
+      if (obj.isMesh) {
+        obj.material = obj.material.clone();
+        obj.material.transparent = true;
+        obj.material.opacity = 0.34;
+      }
+    });
+    ghostCarMesh.userData.sawRig.visible = false;
+    scene3d.add(ghostCarMesh);
+
+    // Grapple Line & 3D Chain Lightning Bolt Line
+    const grappleGeo = new THREE.BufferGeometry().setFromPoints([new THREE.Vector3(), new THREE.Vector3()]);
+    const grappleLine = new THREE.Line(grappleGeo, new THREE.LineBasicMaterial({ color: 0xfacc15, linewidth: 3 }));
+    grappleLine.visible = false;
+    scene3d.add(grappleLine);
+
+    const lightningGeo = new THREE.BufferGeometry().setFromPoints([new THREE.Vector3(), new THREE.Vector3()]);
+    const lightningLine = new THREE.Line(lightningGeo, new THREE.LineBasicMaterial({ color: 0x38bdf8, linewidth: 3 }));
+    lightningLine.visible = false;
+    scene3d.add(lightningLine);
+
+    const trackGroup = new THREE.Group();
+    scene3d.add(trackGroup);
+
+    // Drift Tire Skid Marks Pool
+    const skidGroup = new THREE.Group();
+    scene3d.add(skidGroup);
+
+    let skyAnchors = [];
+    let trackSegments = [];
+
+    // Frame-by-Frame Ghost Recording Storage
+    let currentRunFrames = [];
+    let bestGhostFrames = [];
+    let bestLapTime = 99.99;
+
+    const polyCar = {
+      pos: new THREE.Vector3(0, 3, 0),
+      vel: new THREE.Vector3(0, 0, 0),
+      speed: 0,
+      yaw: 0,
+      pitch: 0,
+      roll: 0,
+      springCompression: 0,
+      springVel: 0,
+      inAir: false,
+      grappling: false,
+      styleScore: 0,
+      runTime: 0,
+      presetId: 0,
+      curveSeed: 1.0
+    };
+
+    function loadPolyTrackPreset(presetId = 0, customSeed = 1.0) {
+      polyCar.presetId = presetId;
+      polyCar.curveSeed = customSeed;
+      while (trackGroup.children.length > 0) trackGroup.remove(trackGroup.children[0]);
+      while (skidGroup.children.length > 0) skidGroup.remove(skidGroup.children[0]);
+      skyAnchors = [];
+      trackSegments = [];
+
+      const count = 96;
+      for (let i = 0; i < count; i++) {
+        const isGap = (i >= 18 && i <= 24) || (i >= 46 && i <= 53) || (i >= 72 && i <= 78);
+        const isRamp = i === 17 || i === 45 || i === 71;
+        const isBoost = i % 11 === 5 && !isGap;
+
+        let x = 0, y = 2.5, z = i * 11.5, bank = 0;
+        if (presetId === 0) {
+          x = Math.sin(i * 0.09 * customSeed) * 34;
+          y = 4 + Math.sin(i * 0.15) * 14 + (i > 26 && i < 44 ? Math.sin((i - 26) * 0.3) * 28 : 0);
+          bank = Math.cos(i * 0.09 * customSeed) * -0.22;
+        } else {
+          x = Math.sin(i * 0.15 * customSeed) * 48;
+          y = 9 + Math.cos(i * 0.17) * 19;
+          bank = Math.sin(i * 0.15) * 0.28;
+        }
+
+        const segPos = new THREE.Vector3(x, Math.max(1.5, y), z);
+        trackSegments.push({ pos: segPos, isGap, isRamp, isBoost, bank });
+
+        if (!isGap) {
+          const roadColor = isRamp ? 0xfacc15 : (isBoost ? 0x00f5d4 : (i % 2 === 0 ? 0x1e293b : 0x0f172a));
+          const roadMat = new THREE.MeshStandardMaterial({
+            color: roadColor,
+            emissive: isRamp ? 0xca8a04 : (isBoost ? 0x0284c7 : 0x000000),
+            roughness: 0.38
+          });
+          const road = new THREE.Mesh(new THREE.BoxGeometry(12.6, 1.2, 12.0), roadMat);
+          road.position.copy(segPos);
+          road.rotation.z = bank;
+          if (isRamp) road.rotation.x = -0.34;
+          trackGroup.add(road);
+
+          const curbMat = new THREE.MeshBasicMaterial({ color: i % 4 === 0 ? 0x38bdf8 : 0xf43f5e });
+          [-6.4, 6.4].forEach(cx => {
+            const curb = new THREE.Mesh(new THREE.BoxGeometry(0.48, 1.7, 12.0), curbMat);
+            curb.position.copy(segPos).add(new THREE.Vector3(cx, 0.35, 0));
+            curb.rotation.z = bank;
+            if (isRamp) curb.rotation.x = -0.34;
+            trackGroup.add(curb);
+          });
+        } else if (i === 21 || i === 49 || i === 75) {
+          // Floating Magnetic Sky Grapple Anchor
+          const anchorPos = segPos.clone().add(new THREE.Vector3(0, 27, 0));
+          const orb = new THREE.Mesh(
+            new THREE.OctahedronGeometry(3.4, 1),
+            new THREE.MeshBasicMaterial({ color: 0xfacc15 })
+          );
+          orb.position.copy(anchorPos);
+          const ring = new THREE.Mesh(
+            new THREE.TorusGeometry(5.5, 0.38, 8, 24),
+            new THREE.MeshBasicMaterial({ color: 0x38bdf8 })
+          );
+          ring.position.copy(anchorPos);
+          trackGroup.add(orb, ring);
+          skyAnchors.push({ pos: anchorPos, orb, ring });
+        }
+      }
+      resetPolyCar();
+    }
+
+    function mutateTrackSeed() {
+      const randomSeed = +(0.65 + Math.random() * 0.95).toFixed(2);
+      loadPolyTrackPreset(polyCar.presetId, randomSeed);
+      spawn2dPopup(canvas2d.width * 0.5, canvas2d.height * 0.28, `🎲 MUTATED TRACK SEED (${randomSeed})`, '#f43f5e');
+    }
+
+    function resetPolyCar() {
+      polyCar.pos.set(0, 4.5, 4);
+      polyCar.vel.set(0, 0, 0);
+      polyCar.speed = 68;
+      polyCar.yaw = 0;
+      polyCar.pitch = 0;
+      polyCar.roll = 0;
+      polyCar.inAir = false;
+      polyCar.grappling = false;
+      polyCar.runTime = 0;
+      currentRunFrames = [];
+    }
+
+    function exportTrackCode() {
+      const code = btoa(JSON.stringify({ p: polyCar.presetId, s: polyCar.curveSeed, best: bestLapTime }));
+      const ta = document.createElement('textarea');
+      ta.value = `HAWK-POLYTRACK://${code}`;
+      document.body.appendChild(ta);
+      ta.select();
+      document.execCommand('copy');
+      document.body.removeChild(ta);
+      spawn2dPopup(canvas2d.width * 0.5, canvas2d.height * 0.25, '🔗 TRACK SEED COPIED TO CLIPBOARD!', '#facc15');
+    }
+
+    /**
+     * ============================================================================
+     * 5. MODE 2 & 3: SPATIAL HASH 1,200-ENEMY SURVIVORS + 3D DRIFT COLOSSEUM
+     * ============================================================================
+     */
+    const horde3dGroup = new THREE.Group();
+    scene3d.add(horde3dGroup);
+    const monsters3d = [];
+
+    function init3dCrossoverHorde() {
+      while (horde3dGroup.children.length > 0) horde3dGroup.remove(horde3dGroup.children[0]);
+      monsters3d.length = 0;
+      const geo = new THREE.BoxGeometry(1.5, 2.5, 1.5);
+      for (let i = 0; i < 320; i++) {
+        const mat = new THREE.MeshStandardMaterial({
+          color: i % 3 === 0 ? 0xf43f5e : (i % 2 === 0 ? 0xa855f7 : 0x10b981),
+          roughness: 0.45
+        });
+        const m = new THREE.Mesh(geo, mat);
+        const a = Math.random() * Math.PI * 2;
+        const r = 24 + Math.random() * 95;
+        m.position.set(Math.cos(a) * r, 1.25, Math.sin(a) * r);
+        horde3dGroup.add(m);
+        monsters3d.push({ mesh: m, vy: 0, ragdollTimer: 0 });
+      }
+    }
+
+    const surv = {
+      px: 0, py: 0,
+      xp: 20, nextXp: 100, level: 1, kills: 0,
+      enemies: [],
+      gems: [],
+      popups: [],
+      lightningArcs: [],
+      blackHole: { active: false, x: 0, y: 0, timer: 0 }
+    };
+
+    function initSurvivorsEngine() {
+      surv.px = 0; surv.py = 0;
+      surv.xp = 20; surv.nextXp = 100; surv.level = 1; surv.kills = 0;
+      surv.enemies.length = 0;
+      surv.gems.length = 0;
+
+      // 1,200 Enemies with Knockback & White Hit-Flash state
+      const palette = [
+        { color: '#f43f5e', r: 9.5 },
+        { color: '#a855f7', r: 12.5 },
+        { color: '#10b981', r: 14.5 },
+        { color: '#facc15', r: 18.5 }
+      ];
+      for (let i = 0; i < 1200; i++) {
+        const ang = Math.random() * Math.PI * 2;
+        const dist = 210 + Math.random() * 740;
+        const t = palette[i % palette.length];
+        surv.enemies.push({
+          x: Math.cos(ang) * dist,
+          y: Math.sin(ang) * dist,
+          vx: 0, vy: 0,
+          r: t.r,
+          color: t.color,
+          flashTimer: 0,
+          phase: Math.random() * Math.PI * 2
+        });
+      }
+    }
+
+    function triggerBlackHoleVortex() {
+      sfx.init();
+      sfx.playSingularityBoom();
+      triggerHitstopAndTrauma(1.1, 0.85);
+
+      if (app.mode === 'CROSSOVER') {
+        monsters3d.forEach(m => {
+          m.vy = 32 + Math.random() * 24;
+          m.ragdollTimer = 1.6;
+        });
+        surv.kills += 240;
+        surv.xp += 95;
+        spawn2dPopup(canvas2d.width * 0.5, canvas2d.height * 0.34, '🌀 3D SINGULARITY SLAM! (+240 KILLS)', '#facc15');
+        updateSurvivorsHud();
+        return;
+      }
+
+      surv.blackHole.active = true;
+      surv.blackHole.x = surv.px + (Math.random() - 0.5) * 70;
+      surv.blackHole.y = surv.py - 35;
+      surv.blackHole.timer = 2.5;
+      spawn2dPopup(canvas2d.width * 0.5, canvas2d.height * 0.3, '🌀 BLACK HOLE SINGULARITY VORTEX!', '#e879f9');
+    }
+
+    // Variable-Ratio Vegas 777 Slot Machine
+    const slotIcons = ['⚔️', '🔥', '💎', '⚡', '💀', '7️⃣'];
+    let slotTimer = null;
+
+    function openCasinoSlotModal() {
+      sfx.init();
+      document.getElementById('casinoSlotModal').classList.remove('hidden');
+      let ticks = 0;
+      clearInterval(slotTimer);
+      const isJackpot = (Math.random() * 100) <= HAWK_CONFIG.jackpotChancePct;
+
+      slotTimer = setInterval(() => {
+        ticks++;
+        sfx.playEscalatingGem(ticks);
+        document.getElementById('slotReel0').textContent = ticks > 8 ? '7️⃣' : slotIcons[ticks % slotIcons.length];
+        document.getElementById('slotReel1').textContent = ticks > 14 ? '7️⃣' : slotIcons[(ticks + 2) % slotIcons.length];
+        document.getElementById('slotReel2').textContent = ticks > 20 ? (isJackpot ? '7️⃣' : '💎') : slotIcons[(ticks + 4) % slotIcons.length];
+
+        if (ticks > 21) {
+          clearInterval(slotTimer);
+          sfx.playJackpotFanfare();
+          document.getElementById('slotStatusText').textContent = isJackpot
+            ? '🎉 TRIPLE 777 JACKPOT!! GOD-SLAYER SYNERGY UNLOCKED!'
+            : '⚡ NEAR-MISS BONUS! HYPER CHAIN-LIGHTNING ACTIVATED!';
+          activateGodSlayerOverdrive();
+        }
+      }, 60);
+    }
+
+    function closeCasinoSlotModal() {
+      clearInterval(slotTimer);
+      document.getElementById('casinoSlotModal').classList.add('hidden');
+      activateGodSlayerOverdrive();
+    }
+
+    function activateGodSlayerOverdrive() {
+      app.godSlayer = true;
+      app.godSlayerTimer = 15.0;
+      triggerHitstopAndTrauma(1.2, 0.9);
+      document.getElementById('godSlayerBadge').classList.remove('hidden');
+      spawn2dPopup(canvas2d.width * 0.5, canvas2d.height * 0.35, '🎰 777 GOD-SLAYER OVERDRIVE!!', '#facc15');
+    }
+
+    function spawn2dPopup(x, y, text, color = '#facc15') {
+      surv.popups.push({ x, y, text, color, life: 1.15 });
+    }
+
+    function updateSurvivorsHud() {
+      if (surv.xp >= surv.nextXp) {
+        surv.level++;
+        surv.xp -= surv.nextXp;
+        surv.nextXp = Math.round(surv.nextXp * 1.25);
+        sfx.playJackpotFanfare();
+        triggerHitstopAndTrauma(0.8, 0.5);
+        spawn2dPopup(canvas2d.width * 0.5, canvas2d.height * 0.22, `⚡ LEVEL UP! LV. ${surv.level}`, '#38bdf8');
+      }
+      const pct = Math.min(100, (surv.xp / surv.nextXp) * 100);
+      document.getElementById('survXpFill').style.width = `${pct}%`;
+      const pitchMult = Math.pow(HAWK_CONFIG.gemPitchStep, app.comboCount % 32).toFixed(2);
+      document.getElementById('survLvlTxt').textContent = `LV. ${surv.level} // PITCH SCALE: ${pitchMult}x`;
+      const activeCount = app.mode === 'CROSSOVER' ? monsters3d.length : surv.enemies.length;
+      document.getElementById('survHordeTxt').textContent = `HORDE: ${activeCount.toLocaleString()} | KILLS: ${surv.kills.toLocaleString()} | COMBO: ${app.comboCount}x`;
+    }
+
+    /**
+     * ============================================================================
+     * 6. MASTER PHYSICS & RENDERING ENGINES FOR ALL 3 MODES
+     * ============================================================================
+     */
+    function updatePolyTrack3D(dt, elapsed) {
+      if (app.viralTas) {
+        keys.Up = true;
+        const segIdx = Math.min(trackSegments.length - 1, Math.floor(polyCar.pos.z / 11.5) + 2);
+        const tSeg = trackSegments[segIdx];
+        if (tSeg) {
+          const dx = tSeg.pos.x - polyCar.pos.x;
+          keys.Left = dx > 1.0;
+          keys.Right = dx < -1.0;
+          keys.Space = tSeg.isGap && polyCar.inAir;
+        }
+      }
+
+      polyCar.runTime += dt;
+      const accel = keys.Shift ? 85 : 52;
+      if (keys.Up) polyCar.speed = Math.min(keys.Shift ? 215 : 155, polyCar.speed + accel * dt);
+      else if (keys.Down) polyCar.speed = Math.max(20, polyCar.speed - 70 * dt);
+      else polyCar.speed = Math.max(38, polyCar.speed - 14 * dt);
+
+      const steerRate = 1.75 * (1 + HAWK_CONFIG.driftSlipFactor * 0.5);
+      if (keys.Left) polyCar.yaw += steerRate * dt;
+      if (keys.Right) polyCar.yaw -= steerRate * dt;
+
+      polyCar.pos.x += Math.sin(polyCar.yaw) * polyCar.speed * 0.42 * dt;
+      polyCar.pos.z += Math.cos(polyCar.yaw) * polyCar.speed * 0.42 * dt;
+
+      // Record Frame for Live Ghost Car Replay
+      currentRunFrames.push({
+        x: polyCar.pos.x, y: polyCar.pos.y, z: polyCar.pos.z,
+        yaw: polyCar.yaw, pitch: polyCar.pitch, roll: polyCar.roll
+      });
+
+      // Check Lap Completion -> Save Ghost Replay!
+      if (polyCar.pos.z > (trackSegments.length - 4) * 11.5) {
+        if (polyCar.runTime < bestLapTime || bestGhostFrames.length === 0) {
+          bestLapTime = polyCar.runTime;
+          bestGhostFrames = [...currentRunFrames];
+        }
+        polyCar.pos.z = 4;
+        polyCar.runTime = 0;
+        currentRunFrames = [];
+        polyCar.styleScore += 3000;
+        sfx.playJackpotFanfare();
+        triggerHitstopAndTrauma(0.9, 0.65);
+        spawn2dPopup(canvas2d.width * 0.5, canvas2d.height * 0.28, `🏁 NEW GHOST RECORD! (${bestLapTime.toFixed(2)}s)`, '#10b981');
+      }
+
+      const idx = Math.max(0, Math.min(trackSegments.length - 1, Math.floor(polyCar.pos.z / 11.5)));
+      const seg = trackSegments[idx];
+      const onRoad = seg && !seg.isGap && Math.abs(polyCar.pos.x - seg.pos.x) < 7.6;
+
+      // Magnetic Pendulum Cyber-Grapple (`SPACE`)
+      let nearestAnchor = null;
+      let minDist = 98;
+      skyAnchors.forEach(a => {
+        a.orb.rotation.y += 3.5 * dt;
+        a.ring.rotation.x += 2.5 * dt;
+        const d = a.pos.distanceTo(polyCar.pos);
+        if (d < minDist) { minDist = d; nearestAnchor = a; }
+      });
+
+      if (keys.Space && nearestAnchor) {
+        if (!polyCar.grappling) {
+          polyCar.grappling = true;
+          sfx.playGrappleHook();
+          triggerHitstopAndTrauma(0.8, 0.5);
+          polyCar.styleScore += 1500;
+          spawn2dPopup(canvas2d.width * 0.5, canvas2d.height * 0.35, '🪝 APEX PENDULUM GRAPPLE! +1,500', '#facc15');
+        }
+        const pull = new THREE.Vector3().subVectors(nearestAnchor.pos, polyCar.pos).normalize();
+        polyCar.vel.y = THREE.MathUtils.lerp(polyCar.vel.y, pull.y * HAWK_CONFIG.grappleTension + 14, 0.16);
+        polyCar.pos.x = THREE.MathUtils.lerp(polyCar.pos.x, nearestAnchor.pos.x, 0.09);
+        polyCar.roll += 10.5 * dt;
+        grappleLine.visible = true;
+        grappleGeo.setFromPoints([polyCar.pos.clone(), nearestAnchor.pos.clone()]);
+      } else {
+        polyCar.grappling = false;
+        grappleLine.visible = false;
+      }
+
+      // Ground Landing, 4-Wheel Spring Suspension & Drift Skid Marks
+      if (onRoad && polyCar.pos.y <= seg.pos.y + 1.65 && polyCar.vel.y <= 0 && !polyCar.grappling) {
+        if (polyCar.inAir) {
+          polyCar.inAir = false;
+          polyCar.roll = seg.bank || 0;
+          polyCar.pitch = 0;
+          polyCar.springCompression = -0.42; // Compress springs on landing!
+          polyCar.styleScore += 650;
+          spawn2dPopup(canvas2d.width * 0.5, canvas2d.height * 0.44, '✨ PERFECT APEX LANDING! +650', '#38bdf8');
+        }
+        polyCar.pos.y = seg.pos.y + 0.9;
+        polyCar.vel.y = 0;
+        polyCar.roll = THREE.MathUtils.lerp(polyCar.roll, (seg.bank || 0) + (keys.Left ? 0.14 : (keys.Right ? -0.14 : 0)), 0.2);
+
+        if (seg.isBoost) {
+          polyCar.speed = Math.min(220, polyCar.speed + 45 * dt);
+        }
+        if (seg.isRamp) {
+          polyCar.vel.y = 34 + polyCar.speed * 0.12;
+          polyCar.inAir = true;
+          sfx.playGrappleHook();
+          spawn2dPopup(canvas2d.width * 0.5, canvas2d.height * 0.32, '🚀 MEGA RAMP LAUNCH! HOLD [SPACE] TO GRAPPLE!', '#f43f5e');
+        }
+
+        // Spawn Neon Drift Skid Ribbons when cornering hard
+        if ((keys.Left || keys.Right) && skidGroup.children.length < 160) {
+          const skid = new THREE.Mesh(
+            new THREE.PlaneGeometry(1.8, 1.8),
+            new THREE.MeshBasicMaterial({ color: 0xf43f5e, side: THREE.DoubleSide, transparent: true, opacity: 0.45 })
+          );
+          skid.rotation.x = Math.PI / 2;
+          skid.position.set(polyCar.pos.x, polyCar.pos.y - 0.25, polyCar.pos.z - 1.5);
+          skidGroup.add(skid);
+        }
+      } else {
+        polyCar.inAir = true;
+        polyCar.vel.y -= HAWK_CONFIG.gravity * dt;
+        polyCar.pos.y += polyCar.vel.y * dt;
+        if (!polyCar.grappling) polyCar.pitch = Math.sin(elapsed * 6) * 0.32;
+        if (polyCar.pos.y < -20) {
+          resetPolyCar();
+          triggerHitstopAndTrauma(1.0, 0.8);
+          spawn2dPopup(canvas2d.width * 0.5, canvas2d.height * 0.4, '💥 VOID WIPEOUT — INSTANT RESTART!', '#f43f5e');
+        }
+      }
+
+      // Hooke's Law Spring Suspension Oscillation on Car Body
+      const springForce = -HAWK_CONFIG.suspensionStiffness * polyCar.springCompression - 4.5 * polyCar.springVel;
+      polyCar.springVel += springForce * dt;
+      polyCar.springCompression += polyCar.springVel * dt;
+
+      playerCarMesh.position.copy(polyCar.pos);
+      playerCarMesh.rotation.set(polyCar.pitch, polyCar.yaw, polyCar.roll);
+      playerCarMesh.userData.sprungBody.position.y = polyCar.springCompression;
+      playerCarMesh.userData.exhaustGroup.scale.z = 0.6 + (polyCar.speed / 140) + Math.sin(elapsed * 40) * 0.25;
+      playerCarMesh.userData.sawRig.visible = false;
+
+      // Render Recorded Ghost Car or Synthetic Pace Ghost
+      if (bestGhostFrames.length > 0) {
+        const fIdx = Math.min(bestGhostFrames.length - 1, currentRunFrames.length);
+        const gf = bestGhostFrames[fIdx];
+        ghostCarMesh.visible = true;
+        ghostCarMesh.position.set(gf.x, gf.y, gf.z);
+        ghostCarMesh.rotation.set(gf.pitch, gf.yaw, gf.roll);
+      } else {
+        const gz = (polyCar.pos.z + 16) % ((trackSegments.length - 5) * 11.5);
+        const gSeg = trackSegments[Math.floor(gz / 11.5)];
+        if (gSeg) {
+          ghostCarMesh.visible = true;
+          ghostCarMesh.position.set(gSeg.pos.x, gSeg.pos.y + 1.1, gz);
+        }
+      }
+
+      // Dynamic Velocity FOV Warp (`baseFov` -> `maxFovWarp`)
+      const targetFov = THREE.MathUtils.lerp(
+        HAWK_CONFIG.baseFov,
+        HAWK_CONFIG.maxFovWarp,
+        Math.min(1, (polyCar.speed - 40) / 160)
+      );
+      camera3d.fov = THREE.MathUtils.lerp(camera3d.fov, targetFov, 0.15);
+      camera3d.updateProjectionMatrix();
+
+      const camTarget = new THREE.Vector3(
+        polyCar.pos.x - Math.sin(polyCar.yaw) * 12.5,
+        polyCar.pos.y + 5.2,
+        polyCar.pos.z - Math.cos(polyCar.yaw) * 12.5
+      );
+      camera3d.position.lerp(camTarget, 0.2);
+      camera3d.lookAt(polyCar.pos.x, polyCar.pos.y + 1.2, polyCar.pos.z + 9);
+
+      // Update Telemetry & Split Delta
+      document.getElementById('polySpeedTxt').textContent = Math.round(polyCar.speed * 1.48);
+      document.getElementById('polyTimeTxt').textContent = polyCar.runTime.toFixed(2) + 's';
+      const delta = (polyCar.runTime - (polyCar.pos.z / 95)).toFixed(2);
+      const dEl = document.getElementById('polyDeltaTxt');
+      dEl.textContent = (delta <= 0 ? '' : '+') + delta + 's';
+      dEl.className = delta <= 0 ? 'text-emerald-400 font-extrabold' : 'text-rose-400 font-extrabold';
+      document.getElementById('polyStyleTxt').textContent = polyCar.styleScore.toLocaleString();
+    }
+
+    // Mode 3: 3D Drift Survivors Colosseum
+    function updateCrossover3D(dt, elapsed) {
+      if (app.viralTas) {
+        keys.Up = true;
+        keys.Left = Math.sin(elapsed * 0.9) > 0;
+        keys.Right = !keys.Left;
+      }
+
+      if (keys.Up) polyCar.speed = Math.min(105, polyCar.speed + 60 * dt);
+      else polyCar.speed = Math.max(50, polyCar.speed - 20 * dt);
+
+      if (keys.Left) polyCar.yaw += 2.4 * dt;
+      if (keys.Right) polyCar.yaw -= 2.4 * dt;
+
+      polyCar.pos.x += Math.sin(polyCar.yaw) * polyCar.speed * 0.45 * dt;
+      polyCar.pos.z += Math.cos(polyCar.yaw) * polyCar.speed * 0.45 * dt;
+      polyCar.pos.y = 0.2;
+      polyCar.pos.clampLength(0, 115);
+
+      playerCarMesh.position.copy(polyCar.pos);
+      playerCarMesh.rotation.set(0, polyCar.yaw, keys.Left ? 0.16 : (keys.Right ? -0.16 : 0));
+      playerCarMesh.userData.sawRig.visible = true;
+      playerCarMesh.userData.sawRig.rotation.y += (app.godSlayer ? 20 : 10) * dt;
+      ghostCarMesh.visible = false;
+      grappleLine.visible = false;
+
+      let closestMonsterPos = null;
+      let minM = 35;
+
+      monsters3d.forEach(m => {
+        if (m.ragdollTimer > 0) {
+          m.ragdollTimer -= dt;
+          m.mesh.position.y += m.vy * dt;
+          m.vy -= 50 * dt;
+          m.mesh.rotation.x += 14 * dt;
+          m.mesh.rotation.z += 14 * dt;
+          if (m.mesh.position.y <= 1.25) {
+            m.mesh.position.y = 1.25;
+            m.ragdollTimer = 0;
+            m.mesh.rotation.set(0, 0, 0);
+            const a = Math.random() * Math.PI * 2;
+            m.mesh.position.set(polyCar.pos.x + Math.cos(a) * 68, 1.25, polyCar.pos.z + Math.sin(a) * 68);
+          }
+          return;
+        }
+
+        const dx = polyCar.pos.x - m.mesh.position.x;
+        const dz = polyCar.pos.z - m.mesh.position.z;
+        const dist = Math.hypot(dx, dz);
+
+        if (dist < minM) { minM = dist; closestMonsterPos = m.mesh.position; }
+
+        if (dist < (app.godSlayer ? 15 : 8.0)) {
+          m.ragdollTimer = 1.15;
+          m.vy = 26 + Math.random() * 16;
+          surv.kills++;
+          surv.xp += 5;
+          app.comboCount++;
+          app.comboDecayTimer = 2.5;
+          if (surv.kills % 12 === 0) {
+            sfx.playEscalatingGem(app.comboCount);
+            updateSurvivorsHud();
+          }
+        } else if (dist > 0.1) {
+          m.mesh.position.x += (dx / dist) * 15 * dt;
+          m.mesh.position.z += (dz / dist) * 15 * dt;
+        }
+      });
+
+      // Roof-Mounted Chain-Lightning Turret Visual
+      if (closestMonsterPos && Math.random() < 0.45) {
+        lightningLine.visible = true;
+        lightningGeo.setFromPoints([
+          polyCar.pos.clone().add(new THREE.Vector3(0, 2.0, 0)),
+          closestMonsterPos.clone().add(new THREE.Vector3(0, 1.2, 0))
+        ]);
+      } else {
+        lightningLine.visible = false;
+      }
+
+      const camPos = new THREE.Vector3(polyCar.pos.x, 28, polyCar.pos.z + 30);
+      camera3d.position.lerp(camPos, 0.16);
+      camera3d.lookAt(polyCar.pos.x, 1, polyCar.pos.z);
+    }
+
+    // Mode 2: 2D Spatial-Hash Vampire Survivors Dopamine Casino
+    function updateAndDrawSurvivors2D(ctx, W, H, dt, elapsed) {
+      ctx.fillStyle = '#0b0616';
+      ctx.fillRect(0, 0, W, H);
+
+      const spd = 220;
+      if (app.viralTas) {
+        surv.px += Math.cos(elapsed * 1.5) * spd * 0.72 * dt;
+        surv.py += Math.sin(elapsed * 1.9) * spd * 0.72 * dt;
+      } else {
+        if (keys.Left) surv.px -= spd * dt;
+        if (keys.Right) surv.px += spd * dt;
+        if (keys.Up) surv.py -= spd * dt;
+        if (keys.Down) surv.py += spd * dt;
+      }
+
+      const cx = W * 0.5;
+      const cy = H * 0.5;
+
+      // Scrolling Neon Cyber-Gothic Grid
+      ctx.strokeStyle = 'rgba(168, 85, 247, 0.15)';
+      ctx.lineWidth = 2;
+      const cell = HAWK_CONFIG.spatialHashCellSize;
+      const ox = -(surv.px % cell);
+      const oy = -(surv.py % cell);
+      for (let x = ox - cell; x < W + cell; x += cell) {
+        ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, H); ctx.stroke();
+      }
+      for (let y = oy - cell; y < H + cell; y += cell) {
+        ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(W, y); ctx.stroke();
+      }
+
+      // Black Hole Singularity Vortex
+      if (surv.blackHole.active) {
+        surv.blackHole.timer -= dt;
+        const bhx = cx + (surv.blackHole.x - surv.px);
+        const bhy = cy + (surv.blackHole.y - surv.py);
+        const rad = 70 + Math.sin(elapsed * 22) * 14;
+        const grad = ctx.createRadialGradient(bhx, bhy, 6, bhx, bhy, rad * 2.3);
+        grad.addColorStop(0, '#000000');
+        grad.addColorStop(0.35, '#a855f7');
+        grad.addColorStop(0.7, '#f43f5e');
+        grad.addColorStop(1, 'rgba(0,0,0,0)');
+        ctx.fillStyle = grad;
+        ctx.beginPath(); ctx.arc(bhx, bhy, rad * 2.3, 0, Math.PI * 2); ctx.fill();
+
+        if (surv.blackHole.timer <= 0) {
+          surv.blackHole.active = false;
+          sfx.playJackpotFanfare();
+          triggerHitstopAndTrauma(1.0, 0.8);
+          spawn2dPopup(bhx, bhy, '💥 SINGULARITY SUPERNOVA!!', '#facc15');
+        }
+      }
+
+      // Magnetized XP Gems with Escalating Pitch Synth
+      for (let i = surv.gems.length - 1; i >= 0; i--) {
+        const g = surv.gems[i];
+        const dx = surv.px - g.x;
+        const dy = surv.py - g.y;
+        const d = Math.hypot(dx, dy);
+        if (d < (app.godSlayer ? 460 : 210)) {
+          g.x += (dx / (d || 1)) * 490 * dt;
+          g.y += (dy / (d || 1)) * 490 * dt;
+        }
+        if (d < 24) {
+          surv.gems.splice(i, 1);
+          surv.xp += 6;
+          app.comboCount++;
+          app.comboDecayTimer = 2.8;
+          if (surv.gems.length % 4 === 0) sfx.playEscalatingGem(app.comboCount);
+          updateSurvivorsHud();
+          continue;
+        }
+        const gx = cx + (g.x - surv.px);
+        const gy = cy + (g.y - surv.py);
+        if (gx < -16 || gx > W + 16 || gy < -16 || gy > H + 16) continue;
+        ctx.fillStyle = g.color;
+        ctx.beginPath();
+        ctx.moveTo(gx, gy - 6); ctx.lineTo(gx + 5, gy); ctx.lineTo(gx, gy + 6); ctx.lineTo(gx - 5, gy);
+        ctx.closePath();
+        ctx.fill();
+      }
+
+      // Orbiting Plasma Saws
+      const bladeCount = app.godSlayer ? 12 : 6;
+      const orbitRad = app.godSlayer ? 145 : 92;
+      const blades = [];
+      for (let b = 0; b < bladeCount; b++) {
+        const ang = elapsed * (app.godSlayer ? 7.5 : 4.5) + (b * Math.PI * 2) / bladeCount;
+        const bx = surv.px + Math.cos(ang) * orbitRad;
+        const by = surv.py + Math.sin(ang) * orbitRad;
+        blades.push({ x: bx, y: by });
+
+        const sbx = cx + (bx - surv.px);
+        const sby = cy + (by - surv.py);
+        ctx.save();
+        ctx.translate(sbx, sby);
+        ctx.rotate(elapsed * 16);
+        ctx.fillStyle = app.godSlayer ? '#facc15' : '#38bdf8';
+        ctx.strokeStyle = '#ffffff';
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        ctx.arc(0, 0, app.godSlayer ? 23 : 16, 0, Math.PI * 1.35);
+        ctx.lineTo(0, 0);
+        ctx.closePath();
+        ctx.fill(); ctx.stroke();
+        ctx.restore();
+      }
+
+      // 777 God-Slayer Sweeping Lasers
+      if (app.godSlayer) {
+        for (let l = 0; l < 4; l++) {
+          const beamAng = elapsed * 3.8 + (l * Math.PI) / 2;
+          ctx.save();
+          ctx.translate(cx, cy);
+          ctx.rotate(beamAng);
+          const lGrad = ctx.createLinearGradient(0, -15, 0, 15);
+          lGrad.addColorStop(0, 'rgba(244, 63, 94, 0)');
+          lGrad.addColorStop(0.5, 'rgba(250, 204, 21, 0.88)');
+          lGrad.addColorStop(1, 'rgba(244, 63, 94, 0)');
+          ctx.fillStyle = lGrad;
+          ctx.fillRect(0, -15, Math.max(W, H), 30);
+          ctx.restore();
+        }
+      }
+
+      // Update & Render 1,200 Enemies with Knockback & White Hit-Flash
+      for (let i = 0; i < surv.enemies.length; i++) {
+        const e = surv.enemies[i];
+        if (e.flashTimer > 0) e.flashTimer -= dt;
+
+        if (surv.blackHole.active) {
+          const bdx = surv.blackHole.x - e.x;
+          const bdy = surv.blackHole.y - e.y;
+          const bd = Math.hypot(bdx, bdy) || 1;
+          e.x += (bdx / bd) * 410 * dt - (bdy / bd) * 230 * dt;
+          e.y += (bdy / bd) * 410 * dt + (bdx / bd) * 230 * dt;
+          if (bd < 48 && surv.blackHole.timer < 0.4) {
+            kill2dMonster(e);
+            continue;
+          }
+        } else {
+          const dx = surv.px - e.x;
+          const dy = surv.py - e.y;
+          const d = Math.hypot(dx, dy) || 1;
+          e.x += ((dx / d) * 76 + e.vx) * dt;
+          e.y += ((dy / d) * 76 + e.vy) * dt;
+          e.vx *= 0.88;
+          e.vy *= 0.88;
+
+          let hit = d < (app.godSlayer ? 160 : 44);
+          if (!hit) {
+            for (let b = 0; b < blades.length; b++) {
+              if (Math.hypot(e.x - blades[b].x, e.y - blades[b].y) < 35) {
+                hit = true;
+                break;
+              }
+            }
+          }
+          if (hit) {
+            kill2dMonster(e);
+            continue;
+          }
+        }
+
+        const ex = cx + (e.x - surv.px);
+        const ey = cy + (e.y - surv.py);
+        if (ex < -28 || ex > W + 28 || ey < -28 || ey > H + 28) continue;
+
+        const wobble = Math.sin(elapsed * 11 + e.phase) * 2.4;
+        ctx.fillStyle = e.flashTimer > 0 ? '#ffffff' : e.color;
+        ctx.strokeStyle = '#07040e';
+        ctx.lineWidth = 2.4;
+        ctx.beginPath();
+        ctx.ellipse(ex, ey, e.r + wobble, e.r - wobble * 0.7, 0, 0, Math.PI * 2);
+        ctx.fill(); ctx.stroke();
+      }
+
+      // Draw Hero
+      ctx.save();
+      ctx.translate(cx, cy);
+      ctx.fillStyle = '#e11d48';
+      ctx.strokeStyle = '#000';
+      ctx.lineWidth = 3;
+      ctx.beginPath();
+      ctx.moveTo(-14, -6); ctx.lineTo(14, -6);
+      ctx.lineTo(21 + Math.sin(elapsed * 13) * 5, 22);
+      ctx.lineTo(-21 + Math.sin(elapsed * 13) * 5, 22);
+      ctx.closePath();
+      ctx.fill(); ctx.stroke();
+      ctx.fillStyle = '#fde047';
+      ctx.beginPath(); ctx.arc(0, -12, 11, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
+      ctx.restore();
+    }
+
+    function kill2dMonster(e) {
+      surv.kills++;
+      if (surv.gems.length < 380) {
+        surv.gems.push({
+          x: e.x, y: e.y,
+          color: surv.kills % 5 === 0 ? '#facc15' : (surv.kills % 2 === 0 ? '#38bdf8' : '#ec4899')
+        });
+      }
+      if (surv.kills % 28 === 0) {
+        spawn2dPopup(
+          canvas2d.width * 0.5 + (Math.random() - 0.5) * 200,
+          canvas2d.height * 0.45 + (Math.random() - 0.5) * 130,
+          `CRIT ${(1100 + surv.level * 260).toLocaleString()}!`,
+          '#fde047'
+        );
+      }
+      const ang = Math.random() * Math.PI * 2;
+      const dist = 370 + Math.random() * 280;
+      e.x = surv.px + Math.cos(ang) * dist;
+      e.y = surv.py + Math.sin(ang) * dist;
+      e.flashTimer = 0.08;
+    }
+
+    /**
+     * ============================================================================
+     * 7. MODE SWITCHING, ANIME SPEEDLINES OVERLAY, & MASTER GAME LOOP
+     * ============================================================================
+     */
+    function switchGameMode(newMode) {
+      sfx.init();
+      app.mode = newMode;
+
+      document.getElementById('tabPoly').className = 'mode-tab px-3 py-1.5 rounded-lg text-[11px] sm:text-xs font-extrabold tracking-wider flex items-center gap-1.5 ' + (newMode === 'POLYTRACK' ? 'active-poly' : '');
+      document.getElementById('tabSurv').className = 'mode-tab px-3 py-1.5 rounded-lg text-[11px] sm:text-xs font-extrabold tracking-wider flex items-center gap-1.5 ' + (newMode === 'SURVIVORS' ? 'active-surv' : '');
+      document.getElementById('tabMash').className = 'mode-tab px-3 py-1.5 rounded-lg text-[11px] sm:text-xs font-extrabold tracking-wider flex items-center gap-1.5 ' + (newMode === 'CROSSOVER' ? 'active-mash' : '');
+
+      const polyHud = document.getElementById('polyHudBar');
+      const survHud = document.getElementById('survHudBar');
+      const hintBanner = document.getElementById('controlHintBanner');
+
+      if (newMode === 'POLYTRACK') {
+        canvas3d.style.display = 'block';
+        horde3dGroup.visible = false;
+        trackGroup.visible = true;
+        skidGroup.visible = true;
+        lightningLine.visible = false;
+        polyHud.classList.remove('hidden');
+        survHud.classList.add('hidden');
+        survHud.classList.remove('flex');
+        hintBanner.innerHTML = `<span class="text-sky-400 font-bold">WASD/ARROWS:</span> Steer & Drift | <span class="text-pink-400 font-bold">HOLD SPACE:</span> 🪝 Pendulum Cyber-Grapple | <span class="text-amber-300 font-bold">E:</span> Nitro Warp | <span class="text-emerald-300 font-bold">GHOST Δ:</span> Live Split Replay`;
+        resetPolyCar();
+      } else if (newMode === 'SURVIVORS') {
+        canvas3d.style.display = 'none';
+        polyHud.classList.add('hidden');
+        survHud.classList.remove('hidden');
+        survHud.classList.add('flex');
+        hintBanner.innerHTML = `<span class="text-pink-400 font-bold">WASD/ARROWS:</span> Move Hero | <span class="text-purple-300 font-bold">SPACE:</span> 🌀 Black Hole Singularity | <span class="text-amber-300 font-bold">E:</span> 🎰 Spin 777 Variable-Ratio Slots | <span class="text-emerald-300 font-bold">H:</span> 16-Bit CRT`;
+        updateSurvivorsHud();
+      } else if (newMode === 'CROSSOVER') {
+        canvas3d.style.display = 'block';
+        trackGroup.visible = false;
+        skidGroup.visible = false;
+        horde3dGroup.visible = true;
+        polyHud.classList.add('hidden');
+        survHud.classList.remove('hidden');
+        survHud.classList.add('flex');
+        polyCar.pos.set(0, 0.2, 0);
+        polyCar.speed = 70;
+        hintBanner.innerHTML = `<span class="text-amber-300 font-bold">3D DRIFT SURVIVORS:</span> Whip Plasma Saws & Chain-Lightning through 3D Hordes! | <span class="text-purple-300 font-bold">SPACE:</span> 3D Singularity Slam | <span class="text-pink-400 font-bold">E:</span> 777 Overdrive`;
+        updateSurvivorsHud();
+      }
+    }
+
+    function toggleViralDirector() {
+      sfx.init();
+      app.viralTas = !app.viralTas;
+      app.viralTimer = 0;
+      shellEl.classList.toggle('shorts-916', app.viralTas);
+      document.getElementById('btnViralDirector').classList.toggle('viral-active', app.viralTas);
+      document.getElementById('viralCaptionBox').classList.toggle('hidden', !app.viralTas);
+      handleResize();
+    }
+
+    function toggle16BitMode() {
+      app.pixel16Bit = !app.pixel16Bit;
+      document.getElementById('crt-overlay').classList.toggle('active', app.pixel16Bit);
+      canvas3d.classList.toggle('pixelated', app.pixel16Bit);
+      canvas2d.classList.toggle('pixelated', app.pixel16Bit);
+      document.getElementById('btnPixelToggle').textContent = `📺 16-BIT [H]: ${app.pixel16Bit ? 'ON' : 'OFF'}`;
+      handleResize();
+    }
+
+    function toggleAudioMute() {
+      sfx.init();
+      sfx.muted = !sfx.muted;
+      document.getElementById('btnAudioToggle').textContent = sfx.muted ? '🔇 MUTED' : `🔊 ${HAWK_CONFIG.synthBpm}BPM`;
+    }
+
+    // 60fps WebM Recorder
+    let mediaRecorder = null;
+    let recordedChunks = [];
+    function toggleWebmRecorder() {
+      const btn = document.getElementById('btnWebmRec');
+      if (mediaRecorder && mediaRecorder.state === 'recording') {
+        mediaRecorder.stop();
+        btn.textContent = '🔴 REC';
+        return;
+      }
+      try {
+        const targetCanvas = app.mode === 'SURVIVORS' ? canvas2d : canvas3d;
+        const stream = targetCanvas.captureStream(60);
+        recordedChunks = [];
+        mediaRecorder = new MediaRecorder(stream, { mimeType: 'video/webm' });
+        mediaRecorder.ondataavailable = e => { if (e.data.size > 0) recordedChunks.push(e.data); };
+        mediaRecorder.onstop = () => {
+          const blob = new Blob(recordedChunks, { type: 'video/webm' });
+          const a = document.createElement('a');
+          a.href = URL.createObjectURL(blob);
+          a.download = `viral_overdrive_hawk_${app.mode.toLowerCase()}.webm`;
+          a.click();
+        };
+        mediaRecorder.start();
+        btn.textContent = '⏹ SAVE';
+        spawn2dPopup(canvas2d.width * 0.5, canvas2d.height * 0.2, '🔴 RECORDING 60FPS .WEBM...', '#f43f5e');
+      } catch (err) {
+        spawn2dPopup(canvas2d.width * 0.5, canvas2d.height * 0.2, 'RECORDER UNSUPPORTED IN THIS FRAME', '#f43f5e');
+      }
+    }
+
+    function openSourceExporter() {
+      const configHeader = `// ISOLATED HAWK_CONFIG SNAPSHOT:\nconst HAWK_CONFIG = ${JSON.stringify(HAWK_CONFIG, null, 2)};\n\n`;
+      document.getElementById('sourceCodePre').textContent = configHeader + '<!DOCTYPE html>\n' + document.documentElement.outerHTML;
+      const m = document.getElementById('sourceModal');
+      m.classList.remove('hidden');
+      m.classList.add('flex');
+    }
+    function closeSourceExporter() {
+      const m = document.getElementById('sourceModal');
+      m.classList.add('hidden');
+      m.classList.remove('flex');
+    }
+    function downloadFullHtml() {
+      const blob = new Blob(['<!DOCTYPE html>\n' + document.documentElement.outerHTML], { type: 'text/html;charset=utf-8' });
+      const a = document.createElement('a');
+      a.href = URL.createObjectURL(blob);
+      a.download = 'viral_overdrive_hawk_edition.html';
+      a.click();
+    }
+    function copySourceToClipboard() {
+      const ta = document.createElement('textarea');
+      ta.value = '<!DOCTYPE html>\n' + document.documentElement.outerHTML;
+      document.body.appendChild(ta);
+      ta.select();
+      document.execCommand('copy');
+      document.body.removeChild(ta);
+      spawn2dPopup(canvas2d.width * 0.5, canvas2d.height * 0.2, '📋 COPIED FULL HTML SOURCE!', '#10b981');
+    }
+
+    function handleResize() {
+      const w = shellEl.clientWidth;
+      const h = shellEl.clientHeight;
+      const scale = app.pixel16Bit ? 0.28 : 1.0;
+
+      renderer3d.setSize(w * scale, h * scale, false);
+      camera3d.aspect = w / h;
+      camera3d.updateProjectionMatrix();
+
+      canvas2d.width = Math.floor(w * scale);
+      canvas2d.height = Math.floor(h * scale);
+    }
+    window.addEventListener('resize', handleResize);
+
+    // Draw Radial Anime Speedlines on 2D Overlay when at high speed or God-Slayer Overdrive
+    function drawAnimeSpeedlines(ctx, W, H, elapsed, intensity) {
+      if (intensity <= 0.05) return;
+      ctx.save();
+      ctx.translate(W * 0.5, H * 0.5);
+      ctx.strokeStyle = `rgba(255, 255, 255, ${intensity * 0.28})`;
+      ctx.lineWidth = 2;
+      const rays = 28;
+      const rInner = Math.min(W, H) * 0.36;
+      const rOuter = Math.max(W, H) * 0.75;
+      for (let i = 0; i < rays; i++) {
+        const a = (i / rays) * Math.PI * 2 + Math.sin(elapsed * 25 + i) * 0.04;
+        ctx.beginPath();
+        ctx.moveTo(Math.cos(a) * rInner, Math.sin(a) * rInner);
+        ctx.lineTo(Math.cos(a) * rOuter, Math.sin(a) * rOuter);
+        ctx.stroke();
+      }
+      ctx.restore();
+    }
+
+    let lastTime = performance.now();
+    function masterAnimate(now) {
+      requestAnimationFrame(masterAnimate);
+      const rawDtMs = Math.min(now - lastTime, 50);
+      lastTime = now;
+
+      // 1. True Hitstop Frame-Freeze Check
+      if (app.hitstopRemainingMs > 0) {
+        app.hitstopRemainingMs -= rawDtMs;
+        return;
+      }
+
+      const dt = rawDtMs / 1000;
+      const elapsed = now / 1000;
+
+      // 2. Directional Trauma Screen Shake Decay
+      if (app.trauma > 0) {
+        app.trauma = Math.max(0, app.trauma - 2.4 * dt);
+        const shakePx = app.trauma * app.trauma * 16;
+        shellEl.style.transform = `translate(${(Math.random() - 0.5) * shakePx}px, ${(Math.random() - 0.5) * shakePx}px)`;
+      } else {
+        shellEl.style.transform = 'none';
+      }
+
+      // Combo & God-Slayer Timers
+      if (app.comboDecayTimer > 0) {
+        app.comboDecayTimer -= dt;
+        if (app.comboDecayTimer <= 0) app.comboCount = 1;
+      }
+      if (app.godSlayerTimer > 0) {
+        app.godSlayerTimer -= dt;
+        if (app.godSlayerTimer <= 0) {
+          app.godSlayer = false;
+          document.getElementById('godSlayerBadge').classList.add('hidden');
+        }
+      }
+
+      // 3. Automated 9:16 Viral Short Director
+      if (app.viralTas) {
+        app.viralTimer += dt;
+        const capEl = document.getElementById('viralCaptionText');
+        if (app.mode === 'POLYTRACK') {
+          capEl.textContent = polyCar.grappling
+            ? '🪝 290MPH PENDULUM GRAPPLE + HITSTOP!! (+1,500)'
+            : 'POV: POLYTRACK WITH 4-WHEEL SUSPENSION & LIVE GHOST Δ 🏎️⚡';
+        } else if (app.mode === 'SURVIVORS') {
+          if (Math.floor(app.viralTimer) % 7 === 3 && !surv.blackHole.active) triggerBlackHoleVortex();
+          if (Math.floor(app.viralTimer) % 10 === 5 && !app.godSlayer) activateGodSlayerOverdrive();
+          capEl.textContent = app.godSlayer
+            ? '🎰 777 VARIABLE-RATIO JACKPOT: GOD-SLAYER OVERDRIVE!! ⚡💀'
+            : '🌀 BLACK HOLE SINGULARITY vs 1,200 SPATIAL-HASH HORDE! 💎';
+        } else {
+          if (Math.floor(app.viralTimer) % 6 === 2 && !app.godSlayer) activateGodSlayerOverdrive();
+          capEl.textContent = '🔥 3D DRIFT SURVIVORS: PLASMA SAWS + CHAIN LIGHTNING! 🏎️🧛';
+        }
+      }
+
+      ctx2d.clearRect(0, 0, canvas2d.width, canvas2d.height);
+
+      if (app.mode === 'POLYTRACK') {
+        updatePolyTrack3D(dt, elapsed);
+        renderer3d.render(scene3d, camera3d);
+        drawAnimeSpeedlines(ctx2d, canvas2d.width, canvas2d.height, elapsed, Math.max(0, (polyCar.speed - 95) / 110));
+      } else if (app.mode === 'SURVIVORS') {
+        updateAndDrawSurvivors2D(ctx2d, canvas2d.width, canvas2d.height, dt, elapsed);
+        drawAnimeSpeedlines(ctx2d, canvas2d.width, canvas2d.height, elapsed, app.godSlayer ? 0.85 : 0);
+      } else if (app.mode === 'CROSSOVER') {
+        updateCrossover3D(dt, elapsed);
+        renderer3d.render(scene3d, camera3d);
+        drawAnimeSpeedlines(ctx2d, canvas2d.width, canvas2d.height, elapsed, app.godSlayer ? 0.9 : 0.35);
+      }
+
+      // Render Floating Popups
+      for (let i = surv.popups.length - 1; i >= 0; i--) {
+        const p = surv.popups[i];
+        p.y -= 42 * dt;
+        p.life -= dt;
+        if (p.life <= 0) { surv.popups.splice(i, 1); continue; }
+        ctx2d.save();
+        ctx2d.globalAlpha = Math.min(1, p.life * 1.6);
+        ctx2d.font = `900 ${app.pixel16Bit ? 10 : 20}px Orbitron, sans-serif`;
+        ctx2d.textAlign = 'center';
+        ctx2d.strokeStyle = '#000';
+        ctx2d.lineWidth = 4;
+        ctx2d.strokeText(p.text, p.x, p.y);
+        ctx2d.fillStyle = p.color;
+        ctx2d.fillText(p.text, p.x, p.y);
+        ctx2d.restore();
+      }
+    }
+
+    window.onload = function () {
+      handleResize();
+      loadPolyTrackPreset(0, 1.0);
+      initSurvivorsEngine();
+      init3dCrossoverHorde();
+      switchGameMode('POLYTRACK');
+      requestAnimationFrame(masterAnimate);
+    };
+  </script>
+</body>
+</html>
