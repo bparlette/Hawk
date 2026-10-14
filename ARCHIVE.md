@@ -34,7 +34,6 @@ Everything Hark built for Brad, in one place (archived 2026-10-14).
 | `code/bmore_demos/` | (no README; working folder) *(main)* | - | serve the folder (`python3 -m http.server`) and open index.html |
 | `code/boss_ent/` | (no README; working folder) *(main + archive/full)* | - | `python3 l10.py` |
 | `code/brad-story/` | Paradise Thunder — progress *(main + archive/full)* | - | assets / notes; no runnable entry point |
-| `code/brief/` | (no README; working folder) *(main)* | - | assets / notes; no runnable entry point |
 | `code/ci_int_pigeon/` | (no README; working folder) *(main + archive/full)* | - | assets / notes; no runnable entry point |
 | `code/ck_tmp/` | (no README; working folder) *(main + archive/full)* | https://toad-city-chipkid.surge.sh | assets / notes; no runnable entry point |
 | `code/cmp/` | (no README; working folder) *(archive/full only)* | - | assets / notes; no runnable entry point |
@@ -118,11 +117,6 @@ Everything Hark built for Brad, in one place (archived 2026-10-14).
 | `code/pfill/` | (no README; working folder) *(main + archive/full)* | https://shellshock-free-city.surge.sh, https://shellshock-paper-city.surge.sh | `python3 contact.py` |
 | `code/phase2/` | (no README; working folder) *(main + archive/full)* | https://shellshock-live.surge.sh | `./deploy.sh` |
 | `code/polytrack-plus/` | PolyTrack Remake — Hark Edition (fan remake) · progress *(main)* | - | `npm install && npm start` |
-| `code/pratt_fin_ocr/` | (no README; working folder) *(main + archive/full)* | - | assets / notes; no runnable entry point |
-| `code/pratt_fin_txt/` | (no README; working folder) *(main)* | - | assets / notes; no runnable entry point |
-| `code/pratt_img/` | (no README; working folder) *(main + archive/full)* | - | assets / notes; no runnable entry point |
-| `code/pratt_report/` | (no README; working folder) *(main + archive/full)* | - | assets / notes; no runnable entry point |
-| `code/pratt_txt/` | (no README; working folder) *(main + archive/full)* | - | assets / notes; no runnable entry point |
 | `code/props_2_6_8/` | (no README; working folder) *(main + archive/full)* | - | `python3 contact.py` |
 | `code/props_3_7/` | (no README; working folder) *(main + archive/full)* | - | serve the folder (`python3 -m http.server`) and open index.html in site/ |
 | `code/props_4/` | (no README; working folder) *(main + archive/full)* | - | `python3 comps.py` |
