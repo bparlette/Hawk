@@ -1,0 +1,551 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>BIG BUMPIN' 3D - Comic Book Bumper Cars</title>
+  <link href="https://fonts.googleapis.com/css2?family=Bangers&display=swap" rel="stylesheet">
+  <style>
+    * { box-sizing: border-box; user-select: none; margin: 0; padding: 0; }
+    body, html { width: 100%; height: 100%; overflow: hidden; background: #1a1a1a; font-family: 'Bangers', cursive, sans-serif; }
+    
+    /* Comic Book Halftone & Frame Overlay */
+    #comic-overlay {
+      position: absolute; inset: 0; pointer-events: none; z-index: 5;
+      background-image: radial-gradient(rgba(0,0,0,0.18) 1px, transparent 0);
+      background-size: 6px 6px;
+      border: 10px solid #000;
+      box-shadow: inset 0 0 0 4px #ffbe0b, inset 0 0 40px rgba(0,0,0,0.85);
+    }
+
+    /* HUD */
+    #hud {
+      position: absolute; top: 20px; left: 20px; right: 20px; z-index: 10;
+      display: flex; justify-content: space-between; pointer-events: none;
+    }
+    .score-card {
+      background: #ffbe0b; border: 4px solid #000; padding: 8px 18px;
+      box-shadow: 6px 6px 0 #000; transform: skew(-6deg);
+      color: #000; font-size: 24px; letter-spacing: 1px;
+    }
+    .score-card span { color: #d90429; font-size: 30px; margin-left: 8px; }
+
+    /* Menu Overlay */
+    #menu {
+      position: absolute; inset: 0; z-index: 20;
+      background: radial-gradient(circle, rgba(255,190,11,0.92) 0%, rgba(217,4,41,0.96) 100%);
+      display: flex; flex-direction: column; align-items: center; justify-content: center;
+      text-align: center; padding: 20px;
+    }
+    h1 {
+      font-size: 84px; color: #ffbe0b; -webkit-text-stroke: 4px #000;
+      text-shadow: 8px 8px 0 #000; transform: rotate(-3deg); margin-bottom: 10px;
+    }
+    h2 {
+      font-size: 32px; color: #fff; -webkit-text-stroke: 2px #000;
+      text-shadow: 4px 4px 0 #000; margin-bottom: 30px; letter-spacing: 2px;
+    }
+    .btn-group { display: flex; gap: 20px; flex-wrap: wrap; justify-content: center; }
+    .comic-btn {
+      font-family: 'Bangers', cursive; font-size: 32px; padding: 14px 34px;
+      background: #fff; color: #000; border: 5px solid #000;
+      box-shadow: 8px 8px 0 #000; cursor: pointer; transform: skew(-5deg);
+      transition: transform 0.1s, background 0.1s;
+    }
+    .comic-btn:hover { background: #00f5d4; transform: skew(-5deg) scale(1.06); }
+    .comic-btn:active { transform: skew(-5deg) translate(4px, 4px); box-shadow: 4px 4px 0 #000; }
+
+    /* Comic Action Words ("WHOP!", "BAM!") */
+    #popups { position: absolute; inset: 0; pointer-events: none; z-index: 15; overflow: hidden; }
+    .comic-word {
+      position: absolute; font-size: 56px; color: #ffbe0b;
+      -webkit-text-stroke: 3px #000; text-shadow: 5px 5px 0 #d90429;
+      transform: translate(-50%, -50%) scale(0);
+      animation: popAnim 0.65s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+    }
+    @keyframes popAnim {
+      0% { transform: translate(-50%, -50%) scale(0) rotate(-15deg); opacity: 1; }
+      50% { transform: translate(-50%, -50%) scale(1.3) rotate(8deg); opacity: 1; }
+      100% { transform: translate(-50%, -80%) scale(0.9) rotate(0deg); opacity: 0; }
+    }
+
+    #controls-hint {
+      position: absolute; bottom: 22px; left: 50%; transform: translateX(-50%);
+      z-index: 10; background: #fff; border: 4px solid #000; padding: 6px 20px;
+      box-shadow: 5px 5px 0 #000; font-size: 22px; letter-spacing: 1px; pointer-events: none;
+    }
+  </style>
+
+  <!-- Three.js & PlayroomKit CDN -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+  <script src="https://unpkg.com/playroomkit/multiplayer.full.umd.js"></script>
+</head>
+<body>
+
+  <div id="comic-overlay"></div>
+
+  <div id="hud">
+    <div class="score-card" id="p0-card">👑 THE KING: <span id="s0">0</span></div>
+    <div class="score-card" id="p1-card">🐔 CHICKEN: <span id="s1">0</span></div>
+    <div class="score-card" id="p2-card">🍔 WHOPPER KID: <span id="s2">0</span></div>
+    <div class="score-card" id="p3-card">🥤 SHAKE BOT: <span id="s3">0</span></div>
+  </div>
+
+  <div id="popups"></div>
+
+  <div id="controls-hint">WASD / ARROWS: Drive & Steer &nbsp;|&nbsp; SPACE: Flame-Broiled Boost!</div>
+
+  <div id="menu">
+    <h1>BIG BUMPIN' 3D</h1>
+    <h2>FLAME-BROILED COMIC BOOK ARENA (1-4 PLAYERS)</h2>
+    <div class="btn-group">
+      <button class="comic-btn" id="btn-solo">SOLO VS 3 BOTS (INSTANT)</button>
+      <button class="comic-btn" id="btn-online">1-4P ONLINE LOBBY</button>
+    </div>
+  </div>
+
+  <script>
+    // --- 1. SCENE, CAMERA & RENDERER ---
+    const scene = new THREE.Scene();
+    scene.background = new THREE.Color(0x2b2d42);
+
+    const camera = new THREE.PerspectiveCamera(50, window.innerWidth / window.innerHeight, 0.1, 1000);
+    camera.position.set(0, 28, 30);
+    camera.lookAt(0, 0, 0);
+
+    const renderer = new THREE.WebGLRenderer({ antialias: true });
+    renderer.setSize(window.innerWidth, window.innerHeight);
+    renderer.shadowMap.enabled = true;
+    document.body.appendChild(renderer.domElement);
+
+    // --- 2. COMIC BOOK CEL-SHADING & OUTLINE HELPERS ---
+    function createToonGradient() {
+      const data = new Uint8Array([45, 135, 255]);
+      const texture = new THREE.DataTexture(data, 3, 1, THREE.LuminanceFormat);
+      texture.minFilter = THREE.NearestFilter;
+      texture.magFilter = THREE.NearestFilter;
+      texture.needsUpdate = true;
+      return texture;
+    }
+    const gradientMap = createToonGradient();
+
+    function comicMat(hex) {
+      return new THREE.MeshToonMaterial({ color: hex, gradientMap });
+    }
+
+    function addComicOutline(mesh, thickness = 1.07) {
+      const outlineMat = new THREE.MeshBasicMaterial({ color: 0x000000, side: THREE.BackSide });
+      const outline = new THREE.Mesh(mesh.geometry, outlineMat);
+      outline.scale.setScalar(thickness);
+      mesh.add(outline);
+    }
+
+    // Lighting
+    const dirLight = new THREE.DirectionalLight(0xffffff, 1.2);
+    dirLight.position.set(15, 30, 15);
+    dirLight.castShadow = true;
+    scene.add(dirLight);
+    scene.add(new THREE.AmbientLight(0xffffff, 0.55));
+
+    // --- 3. BUILD THE "BROILER PIT" ARENA ---
+    const ARENA_RADIUS = 16;
+    const arenaGroup = new THREE.Group();
+    scene.add(arenaGroup);
+
+    // Main Platform
+    const floorGeo = new THREE.CylinderGeometry(ARENA_RADIUS, ARENA_RADIUS - 1.5, 2, 32);
+    const floorMesh = new THREE.Mesh(floorGeo, comicMat(0xf77f00));
+    floorMesh.position.y = -1;
+    floorMesh.receiveShadow = true;
+    addComicOutline(floorMesh, 1.02);
+    arenaGroup.add(floorMesh);
+
+    // Danger Ring
+    const ringGeo = new THREE.RingGeometry(ARENA_RADIUS - 1.5, ARENA_RADIUS, 32);
+    const ringMat = new THREE.MeshBasicMaterial({ color: 0xd90429, side: THREE.DoubleSide });
+    const ringMesh = new THREE.Mesh(ringGeo, ringMat);
+    ringMesh.rotation.x = -Math.PI / 2;
+    ringMesh.position.y = 0.02;
+    arenaGroup.add(ringMesh);
+
+    // Center Spinning Spatula Hazard
+    const hazardGroup = new THREE.Group();
+    const hubMesh = new THREE.Mesh(new THREE.CylinderGeometry(1.6, 1.6, 1.5, 16), comicMat(0xd90429));
+    hubMesh.position.y = 0.75;
+    addComicOutline(hubMesh, 1.08);
+    hazardGroup.add(hubMesh);
+
+    const barGeo = new THREE.BoxGeometry(15, 0.6, 0.8);
+    const barMesh = new THREE.Mesh(barGeo, comicMat(0xffbe0b));
+    barMesh.position.y = 0.6;
+    addComicOutline(barMesh, 1.05);
+    hazardGroup.add(barMesh);
+    scene.add(hazardGroup);
+
+    // --- 4. BUILD THE 4 CHARACTER BUMPER CARS ---
+    const CHARACTERS = [
+      { name: "THE KING", bodyColor: 0xffbe0b, accent: 0xd90429, startPos: [-8, -8] },
+      { name: "CHICKEN", bodyColor: 0xffffff, accent: 0xf77f00, startPos: [8, -8] },
+      { name: "WHOPPER KID", bodyColor: 0xd90429, accent: 0x582f0e, startPos: [-8, 8] },
+      { name: "SHAKE BOT", bodyColor: 0x8338ec, accent: 0x00f5d4, startPos: [8, 8] }
+    ];
+
+    const karts = [];
+    const scores = [0, 0, 0, 0];
+
+    function createBumperCar(cfg, index) {
+      const group = new THREE.Group();
+
+      // Rubber Bumper Base
+      const bumperGeo = new THREE.CylinderGeometry(1.5, 1.6, 0.6, 20);
+      const bumper = new THREE.Mesh(bumperGeo, comicMat(0x222222));
+      bumper.position.y = 0.3;
+      addComicOutline(bumper, 1.06);
+      group.add(bumper);
+
+      // Car Body
+      const chassisGeo = new THREE.SphereGeometry(1.25, 16, 12, 0, Math.PI * 2, 0, Math.PI * 0.65);
+      const chassis = new THREE.Mesh(chassisGeo, comicMat(cfg.bodyColor));
+      chassis.position.y = 0.4;
+      addComicOutline(chassis, 1.06);
+      group.add(chassis);
+
+      // Driver Head
+      const headGeo = new THREE.SphereGeometry(0.6, 14, 14);
+      const head = new THREE.Mesh(headGeo, comicMat(0xffd166));
+      head.position.set(0, 1.5, -0.1);
+      addComicOutline(head, 1.08);
+      group.add(head);
+
+      // Character-Specific Crown / Crest
+      const hatGeo = index === 0
+        ? new THREE.ConeGeometry(0.55, 0.7, 6) // King's Crown
+        : new THREE.BoxGeometry(0.6, 0.5, 0.6);
+      const hat = new THREE.Mesh(hatGeo, comicMat(cfg.accent));
+      hat.position.set(0, 2.15, -0.1);
+      addComicOutline(hat, 1.1);
+      group.add(hat);
+
+      // Direction Nose Cone
+      const noseGeo = new THREE.ConeGeometry(0.35, 0.6, 12);
+      const nose = new THREE.Mesh(noseGeo, comicMat(cfg.accent));
+      nose.rotation.x = Math.PI / 2;
+      nose.position.set(0, 0.65, 1.45);
+      addComicOutline(nose, 1.08);
+      group.add(nose);
+
+      scene.add(group);
+
+      return {
+        index,
+        mesh: group,
+        x: cfg.startPos[0],
+        z: cfg.startPos[1],
+        vx: 0,
+        vz: 0,
+        angle: Math.atan2(-cfg.startPos[0], -cfg.startPos[1]),
+        boostCooldown: 0,
+        lastHitBy: null,
+        isFalling: false,
+        y: 0,
+        vy: 0
+      };
+    }
+
+    CHARACTERS.forEach((cfg, idx) => karts.push(createBumperCar(cfg, idx)));
+
+    // --- 5. COMIC POPUP GENERATOR ("WHOP!", "BAM!", "FLAME-BROILED!") ---
+    const COMIC_WORDS = ["WHOP!", "CRUNCH!", "SIZZLE!", "BUMP!", "KING-SIZED!", "BROILED!"];
+    const popupsContainer = document.getElementById('popups');
+
+    function spawnComicWord(worldX, worldY, worldZ, customText = null) {
+      const vec = new THREE.Vector3(worldX, worldY + 2, worldZ);
+      vec.project(camera);
+      const x = (vec.x * 0.5 + 0.5) * window.innerWidth;
+      const y = (-(vec.y * 0.5) + 0.5) * window.innerHeight;
+
+      const el = document.createElement('div');
+      el.className = 'comic-word';
+      el.innerText = customText || COMIC_WORDS[Math.floor(Math.random() * COMIC_WORDS.length)];
+      el.style.left = `${x}px`;
+      el.style.top = `${y}px`;
+      popupsContainer.appendChild(el);
+      setTimeout(() => el.remove(), 650);
+    }
+
+    // --- 6. INPUT & MULTIPLAYER STATE ---
+    const keys = { up: false, down: false, left: false, right: false, boost: false };
+    window.addEventListener('keydown', e => {
+      if (e.code === 'KeyW' || e.code === 'ArrowUp') keys.up = true;
+      if (e.code === 'KeyS' || e.code === 'ArrowDown') keys.down = true;
+      if (e.code === 'KeyA' || e.code === 'ArrowLeft') keys.left = true;
+      if (e.code === 'KeyD' || e.code === 'ArrowRight') keys.right = true;
+      if (e.code === 'Space') keys.boost = true;
+    });
+    window.addEventListener('keyup', e => {
+      if (e.code === 'KeyW' || e.code === 'ArrowUp') keys.up = false;
+      if (e.code === 'KeyS' || e.code === 'ArrowDown') keys.down = false;
+      if (e.code === 'KeyA' || e.code === 'ArrowLeft') keys.left = false;
+      if (e.code === 'KeyD' || e.code === 'ArrowRight') keys.right = false;
+      if (e.code === 'Space') keys.boost = false;
+    });
+
+    let gameStarted = false;
+    let isOnline = false;
+    let onlinePlayers = [];
+
+    // Solo Mode Button
+    document.getElementById('btn-solo').addEventListener('click', () => {
+      document.getElementById('menu').style.display = 'none';
+      gameStarted = true;
+    });
+
+    // 1-4P Online Lobby via PlayroomKit
+    document.getElementById('btn-online').addEventListener('click', async () => {
+      if (!window.Playroom) {
+        alert("PlayroomKit CDN unavailable; starting Solo vs Bots mode!");
+        document.getElementById('menu').style.display = 'none';
+        gameStarted = true;
+        return;
+      }
+      try {
+        await Playroom.insertCoin({ maxPlayersPerRoom: 4, defaultPlayerStates: { inputs: {} } });
+        document.getElementById('menu').style.display = 'none';
+        isOnline = true;
+        gameStarted = true;
+
+        Playroom.onPlayerJoin((player) => {
+          onlinePlayers.push(player);
+          player.onQuit(() => {
+            onlinePlayers = onlinePlayers.filter(p => p.id !== player.id);
+          });
+        });
+      } catch (err) {
+        document.getElementById('menu').style.display = 'none';
+        gameStarted = true;
+      }
+    });
+
+    // --- 7. PHYSICS, AI & GAMEPLAY LOOP ---
+    function respawnKart(k) {
+      const cfg = CHARACTERS[k.index];
+      k.x = cfg.startPos[0] * 0.7;
+      k.z = cfg.startPos[1] * 0.7;
+      k.y = 6;
+      k.vx = 0; k.vz = 0; k.vy = 0;
+      k.isFalling = false;
+      k.lastHitBy = null;
+    }
+
+    function updateScoreUI() {
+      for (let i = 0; i < 4; i++) {
+        document.getElementById(`s${i}`).innerText = scores[i];
+      }
+    }
+
+    function getDriverInput(index, k) {
+      // Online Player Input
+      if (isOnline && onlinePlayers[index]) {
+        const p = onlinePlayers[index];
+        if (p.id === Playroom.myPlayer().id) {
+          p.setState('inputs', keys);
+          return keys;
+        }
+        return p.getState('inputs') || { up: false, down: false, left: false, right: false, boost: false };
+      }
+
+      // Local Player 1
+      if (index === 0) return keys;
+
+      // Aggressive Comic Bot AI for Remaining Slots
+      let target = karts[0];
+      let minDist = 999;
+      karts.forEach(other => {
+        if (other.index !== index && !other.isFalling) {
+          const d = Math.hypot(other.x - k.x, other.z - k.z);
+          if (d < minDist) { minDist = d; target = other; }
+        }
+      });
+
+      // Avoid edge if near rim
+      const distFromCenter = Math.hypot(k.x, k.z);
+      const aimX = distFromCenter > ARENA_RADIUS - 4 ? 0 : target.x;
+      const aimZ = distFromCenter > ARENA_RADIUS - 4 ? 0 : target.z;
+
+      const desiredAngle = Math.atan2(aimX - k.x, aimZ - k.z);
+      let diff = desiredAngle - k.angle;
+      while (diff > Math.PI) diff -= Math.PI * 2;
+      while (diff < -Math.PI) diff += Math.PI * 2;
+
+      return {
+        up: true,
+        down: false,
+        left: diff > 0.15,
+        right: diff < -0.15,
+        boost: minDist < 6 && Math.abs(diff) < 0.35
+      };
+    }
+
+    function updatePhysics() {
+      if (!gameStarted) return;
+
+      // Spin Center Spatula Hazard
+      hazardGroup.rotation.y += 0.045;
+      const barAngle = hazardGroup.rotation.y;
+
+      // If Online Client (Non-Host), read synced positions from Host
+      if (isOnline && !Playroom.isHost()) {
+        if (Playroom.myPlayer()) Playroom.myPlayer().setState('inputs', keys);
+        const state = Playroom.getState('gameState');
+        if (state) {
+          state.karts.forEach((sk, i) => {
+            karts[i].mesh.position.set(sk.x, sk.y, sk.z);
+            karts[i].mesh.rotation.y = sk.angle;
+          });
+          state.scores.forEach((s, i) => scores[i] = s);
+          updateScoreUI();
+        }
+        return;
+      }
+
+      // Host / Solo Physics Simulation
+      karts.forEach((k, idx) => {
+        const input = getDriverInput(idx, k);
+
+        if (!k.isFalling) {
+          if (input.left) k.angle += 0.065;
+          if (input.right) k.angle -= 0.065;
+
+          const accel = input.up ? 0.028 : (input.down ? -0.018 : 0);
+          k.vx += Math.sin(k.angle) * accel;
+          k.vz += Math.cos(k.angle) * accel;
+
+          if (input.boost && k.boostCooldown <= 0) {
+            k.vx += Math.sin(k.angle) * 0.42;
+            k.vz += Math.cos(k.angle) * 0.42;
+            k.boostCooldown = 75;
+            spawnComicWord(k.x, k.y, k.z, "BROIL BOOST!");
+          }
+          if (k.boostCooldown > 0) k.boostCooldown--;
+        }
+
+        // Apply velocities & friction
+        k.x += k.vx;
+        k.z += k.vz;
+        k.vx *= 0.94;
+        k.vz *= 0.94;
+
+        // Vertical drop / spawn bounce
+        if (k.y > 0 && !k.isFalling) {
+          k.y = Math.max(0, k.y - 0.35);
+        }
+
+        // Check Arena Edge Knockout
+        const distFromCenter = Math.hypot(k.x, k.z);
+        if (distFromCenter > ARENA_RADIUS && !k.isFalling) {
+          k.isFalling = true;
+          spawnComicWord(k.x, k.y, k.z, "FRIED!!");
+          if (k.lastHitBy !== null && k.lastHitBy !== k.index) {
+            scores[k.lastHitBy]++;
+          } else {
+            scores[k.index] = Math.max(0, scores[k.index] - 1);
+          }
+          updateScoreUI();
+        }
+
+        if (k.isFalling) {
+          k.y -= 0.45;
+          k.mesh.rotation.x += 0.15;
+          if (k.y < -18) {
+            k.mesh.rotation.x = 0;
+            respawnKart(k);
+          }
+        }
+
+        // Check Center Spinning Bar Collision
+        if (!k.isFalling && distFromCenter < 7.8) {
+          const cosA = Math.cos(-barAngle);
+          const sinA = Math.sin(-barAngle);
+          const localX = k.x * cosA - k.z * sinA;
+          const localZ = k.x * sinA + k.z * cosA;
+          if (Math.abs(localX) < 7.5 && Math.abs(localZ) < 1.3) {
+            const pushAngle = Math.atan2(k.x, k.z) + 0.5;
+            k.vx = Math.sin(pushAngle) * 0.65;
+            k.vz = Math.cos(pushAngle) * 0.65;
+            spawnComicWord(k.x, k.y, k.z, "SPATULA'D!");
+          }
+        }
+
+        k.mesh.position.set(k.x, k.y, k.z);
+        k.mesh.rotation.y = k.angle;
+      });
+
+      // Kart-to-Kart Bumper Collisions
+      for (let i = 0; i < karts.length; i++) {
+        for (let j = i + 1; j < karts.length; j++) {
+          const a = karts[i];
+          const b = karts[j];
+          if (a.isFalling || b.isFalling) continue;
+
+          const dx = b.x - a.x;
+          const dz = b.z - a.z;
+          const dist = Math.hypot(dx, dz);
+          const minDist = 3.0;
+
+          if (dist < minDist && dist > 0.001) {
+            const nx = dx / dist;
+            const nz = dz / dist;
+            const overlap = minDist - dist;
+
+            // Separate karts
+            a.x -= nx * overlap * 0.5;
+            a.z -= nz * overlap * 0.5;
+            b.x += nx * overlap * 0.5;
+            b.z += nz * overlap * 0.5;
+
+            // Elastic Explosive Comic Bounce
+            const relVx = b.vx - a.vx;
+            const relVz = b.vz - a.vz;
+            const impactSpeed = relVx * nx + relVz * nz;
+
+            if (impactSpeed < 0) {
+              const bounce = Math.max(0.45, Math.abs(impactSpeed) * 1.55);
+              a.vx -= nx * bounce;
+              a.vz -= nz * bounce;
+              b.vx += nx * bounce;
+              b.vz += nz * bounce;
+
+              a.lastHitBy = b.index;
+              b.lastHitBy = a.index;
+
+              spawnComicWord((a.x + b.x) * 0.5, 1, (a.z + b.z) * 0.5);
+            }
+          }
+        }
+      }
+
+      // Sync Online Host State
+      if (isOnline && Playroom.isHost()) {
+        Playroom.setState('gameState', {
+          karts: karts.map(k => ({ x: k.x, y: k.y, z: k.z, angle: k.angle })),
+          scores
+        }, true);
+      }
+    }
+
+    // --- 8. RENDER LOOP & RESIZE ---
+    function animate() {
+      requestAnimationFrame(animate);
+      updatePhysics();
+      renderer.render(scene, camera);
+    }
+    animate();
+
+    window.addEventListener('resize', () => {
+      camera.aspect = window.innerWidth / window.innerHeight;
+      camera.updateProjectionMatrix();
+      renderer.setSize(window.innerWidth, window.innerHeight);
+    });
+  </script>
+</body>
+</html>

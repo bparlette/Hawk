@@ -1963,6 +1963,18 @@
    "autostart": [],
    "orientation": "any",
    "path": "g/pocket-arena.html"
+  },
+  {
+   "id": "big-bumpin-3d",
+   "title": "Big Bumpin' 3D",
+   "category": "Originals",
+   "keys": {
+    "drive": "WASD / Arrows",
+    "boost": "Space"
+   },
+   "autostart": [],
+   "orientation": "any",
+   "path": "g/big-bumpin-3d/index.html"
   }
  ]
 }
