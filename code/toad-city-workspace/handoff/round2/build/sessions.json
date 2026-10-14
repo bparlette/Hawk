@@ -1,0 +1,166 @@
+[
+ {
+  "id": "O1",
+  "ai": "OPUS",
+  "title": "Pier Gulls v1.1 fix pass",
+  "domain": "toad-city-r2-opus-o1-pier-gulls-v1-1-647cb4.surge.sh",
+  "branch": "claude/o1-pier-gulls-v1-1",
+  "dep": "Pier Gulls v1 (f1cfba4). Parallel with O2\u2013O7.",
+  "scope": "Pier Gulls v1.1: real mergeRig, real timings, \u22652 parts/1k tris margin, beanie <55% buried, LOD dip \u2265 \u22122 cm, dark wingtip LOD hands",
+  "md": "/workspace/work/toad-city/handoff/prompts/round2/O1_pier-gulls-v1-1.md"
+ },
+ {
+  "id": "O2",
+  "ai": "OPUS",
+  "title": "Thug gang: Cobblestone Catfish",
+  "domain": "toad-city-r2-opus-o2-cobble-catfish-9a232e.surge.sh",
+  "branch": "claude/o2-cobble-catfish",
+  "dep": "None (parallel with O1\u2013O7). Uses the Harbor Rats v2 reference in the ZIP.",
+  "scope": "Cobblestone Catfish (channel catfish): 4 members + far LOD, district Fells Point, Pendry",
+  "md": "/workspace/work/toad-city/handoff/prompts/round2/O2_cobble-catfish.md"
+ },
+ {
+  "id": "O3",
+  "ai": "OPUS",
+  "title": "Thug gang: Masked Bandits",
+  "domain": "toad-city-r2-opus-o3-masked-bandits-942acf.surge.sh",
+  "branch": "claude/o3-masked-bandits",
+  "dep": "None (parallel with O1\u2013O7). Uses the Harbor Rats v2 reference in the ZIP.",
+  "scope": "Masked Bandits (raccoons): 4 members + far LOD, district Oriole Park, M&T Bank Stadium, Science Center",
+  "md": "/workspace/work/toad-city/handoff/prompts/round2/O3_masked-bandits.md"
+ },
+ {
+  "id": "O4",
+  "ai": "OPUS",
+  "title": "Thug gang: Key Highway Otters",
+  "domain": "toad-city-r2-opus-o4-key-hwy-otters-cf9743.surge.sh",
+  "branch": "claude/o4-key-hwy-otters",
+  "dep": "None (parallel with O1\u2013O7). Uses the Harbor Rats v2 reference in the ZIP.",
+  "scope": "Key Highway Otters (river otters): 4 members + far LOD, district Federal Hill, Domino Sugar, Tide Point, Fort McHenry",
+  "md": "/workspace/work/toad-city/handoff/prompts/round2/O4_key-hwy-otters.md"
+ },
+ {
+  "id": "O5",
+  "ai": "OPUS",
+  "title": "Bosses batch 1: Bird Brain Bobby, The Raven King, Dr. Shellacious, The Hon Queen, Sugar Rush, The Compression King",
+  "domain": "toad-city-r2-opus-o5-bosses-a-495764.surge.sh",
+  "branch": "claude/o5-bosses-a",
+  "dep": "None (parallel with O1\u2013O7).",
+  "scope": "Bosses: bird_brain_bobby, raven_king, dr_shellacious, hon_queen, sugar_rush, compression_king",
+  "md": "/workspace/work/toad-city/handoff/prompts/round2/O5_bosses-a.md"
+ },
+ {
+  "id": "O6",
+  "ai": "OPUS",
+  "title": "Bosses batch 2: Admiral Redclaw, Big Jimmy, Voltage Vic, Chef Crabcake, Arabber Al, The Pool Shark",
+  "domain": "toad-city-r2-opus-o6-bosses-b-3af37f.surge.sh",
+  "branch": "claude/o6-bosses-b",
+  "dep": "None (parallel with O1\u2013O7).",
+  "scope": "Bosses: admiral_redclaw, big_jimmy, voltage_vic, chef_crabcake, arabber_al, pool_shark",
+  "md": "/workspace/work/toad-city/handoff/prompts/round2/O6_bosses-b.md"
+ },
+ {
+  "id": "O7",
+  "ai": "OPUS",
+  "title": "Bosses batch 3: Dragon Boat Duchess, Captain Cobblestone, The Penthouse Pigeon, The Stoop Scrubber, Mister Formstone",
+  "domain": "toad-city-r2-opus-o7-bosses-c-4d59b9.surge.sh",
+  "branch": "claude/o7-bosses-c",
+  "dep": "None (parallel). Mister Formstone (O7) is built last within O7.",
+  "scope": "Bosses: dragon_boat_duchess, captain_cobblestone, penthouse_pigeon, stoop_scrubber, mister_formstone",
+  "md": "/workspace/work/toad-city/handoff/prompts/round2/O7_bosses-c.md"
+ },
+ {
+  "id": "S1",
+  "ai": "SONNET",
+  "title": "Harbor vessels: USS Torsk, Lightship Chesapeake, Pride of Baltimore II, small boats",
+  "domain": "toad-city-r2-sonnet-s1-harbor-vessels-f9f292.surge.sh",
+  "branch": "claude/s1-harbor-vessels",
+  "dep": "None (parallel with S1\u2013S3).",
+  "scope": "USS Torsk, Lightship Chesapeake (LV-116), Pride of Baltimore II, police boat, tug, kayaks, paddle-boat dock",
+  "md": "/workspace/work/toad-city/handoff/prompts/round2/S1_harbor-vessels.md"
+ },
+ {
+  "id": "S2",
+  "ai": "SONNET",
+  "title": "Set-piece interiors: National Aquarium halls and the Science Center IMAX/planetarium",
+  "domain": "toad-city-r2-sonnet-s2-setpiece-interiors-b23628.surge.sh",
+  "branch": "claude/s2-setpiece-interiors",
+  "dep": "None (parallel with S1\u2013S3).",
+  "scope": "National Aquarium interior (ring tank + ramp, Atlantic coral reef, shark tank) and Science Center IMAX/planetarium hall, with colliders, light anchors, spawns",
+  "md": "/workspace/work/toad-city/handoff/prompts/round2/S2_setpiece-interiors.md"
+ },
+ {
+  "id": "S3",
+  "ai": "SONNET",
+  "title": "Baltimore street-life props, batch 2",
+  "domain": "toad-city-r2-sonnet-s3-street-props-2-ce5a57.surge.sh",
+  "branch": "claude/s3-street-props-2",
+  "dep": "None (parallel with S1\u2013S3).",
+  "scope": "Bus shelter (MTA-style), boh-style tower sign (original), screens batch 2, stoop chalk, original team-style banners, snowball stand, corner-store sign set, light-rail stop",
+  "md": "/workspace/work/toad-city/handoff/prompts/round2/S3_street-props-2.md"
+ },
+ {
+  "id": "G1",
+  "ai": "GEMINI",
+  "title": "Independent QA of Harbor Rats v2",
+  "domain": "toad-city-r2-gemini-g1-qa-harbor-rats-v2-4aebd3.surge.sh",
+  "branch": "\u2014 (reply in chat)",
+  "dep": "None. Send any time.",
+  "scope": "Independent QA of Harbor Rats v2 (Hark fix) vs TASK_C + lessons",
+  "md": "/workspace/work/toad-city/handoff/prompts/round2/G1_qa-harbor-rats-v2.md"
+ },
+ {
+  "id": "G2",
+  "ai": "GEMINI",
+  "title": "QA of Sonnet Task A/B after Hark's fixes",
+  "domain": "toad-city-r2-gemini-g2-qa-sonnet-taskab-fixed-2cd88e.surge.sh",
+  "branch": "\u2014 (reply in chat)",
+  "dep": "Hark's Task A/B fix pass must land first (Hark tells Brad).",
+  "scope": "QA of Sonnet Task A/B after Hark's fixes (send after Hark says the fix pass landed)",
+  "md": "/workspace/work/toad-city/handoff/prompts/round2/G2_qa-sonnet-taskab-fixed.md"
+ },
+ {
+  "id": "G3",
+  "ai": "GEMINI",
+  "title": "Standing QA template for every new delivery",
+  "domain": "toad-city-r2-gemini-g3-qa-standing-template-66ef31.surge.sh",
+  "branch": "\u2014 (reply in chat)",
+  "dep": "None. Send any time.",
+  "scope": "Standing QA template for every new delivery",
+  "md": "/workspace/work/toad-city/handoff/prompts/round2/G3_qa-standing-template.md"
+ },
+ {
+  "id": "H1",
+  "ai": "HAIKU",
+  "title": "Variation tables: rowhouse combos, store names, street signs",
+  "domain": "toad-city-r2-haiku-h1-variation-tables-38250a.surge.sh",
+  "branch": "\u2014 (reply in chat)",
+  "dep": "None. Send any time.",
+  "scope": "200 rowhouse colour/trim/awning combos, 120 original store/bar/carryout names, 80 real-street signs, as JSON for the rowhouse kit",
+  "md": "/workspace/work/toad-city/handoff/prompts/round2/H1_variation-tables.md"
+ },
+ {
+  "id": "H2",
+  "ai": "HAIKU",
+  "title": "Delivery lint and canary-check scripts",
+  "domain": "toad-city-r2-haiku-h2-lint-scripts-0dab7d.surge.sh",
+  "branch": "\u2014 (reply in chat)",
+  "dep": "None. Send any time.",
+  "scope": "Delivery lint script and canary-check script (Node, no deps)",
+  "md": "/workspace/work/toad-city/handoff/prompts/round2/H2_lint-scripts.md"
+ },
+ {
+  "id": "GR1",
+  "ai": "GROK",
+  "title": "Writing: thug barks, boss lines, radio bumpers, landmark blurbs",
+  "domain": "toad-city-r2-grok-gr1-barks-radio-blurbs-869e35.surge.sh",
+  "branch": "\u2014 (reply in chat)",
+  "dep": "None. Send any time.",
+  "scope": "Thug barks per gang, boss intro/defeat lines, 10 radio DJ bumpers, 2-sentence blurbs for all 16 landmarks (JSON)",
+  "md": "/workspace/work/toad-city/handoff/prompts/round2/GR1_barks-radio-blurbs.md"
+ },
+ {
+  "id": "INDEX",
+  "domain": "toad-city-r2-index-6f5e0d.surge.sh"
+ }
+]

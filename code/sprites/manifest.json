@@ -1,0 +1,6372 @@
+[
+ {
+  "name": "LENNY",
+  "grp": "HERO",
+  "lv": 0,
+  "poses": [
+   {
+    "n": "idle",
+    "src": "atlas_lenny.png",
+    "f": [
+     0,
+     7,
+     122,
+     150
+    ]
+   },
+   {
+    "n": "walk",
+    "src": "atlas_lenny.png",
+    "f": [
+     124,
+     8,
+     85,
+     149
+    ]
+   },
+   {
+    "n": "walk2",
+    "src": "atlas_lenny.png",
+    "f": [
+     211,
+     12,
+     115,
+     145
+    ]
+   },
+   {
+    "n": "attack",
+    "src": "atlas_lenny.png",
+    "f": [
+     328,
+     17,
+     173,
+     140
+    ]
+   },
+   {
+    "n": "jump",
+    "src": "atlas_lenny.png",
+    "f": [
+     503,
+     25,
+     164,
+     132
+    ]
+   },
+   {
+    "n": "spin1",
+    "src": "sp_lenny.png",
+    "f": [
+     0,
+     0,
+     297,
+     132
+    ],
+    "sp": 1
+   },
+   {
+    "n": "spin2",
+    "src": "sp_lenny.png",
+    "f": [
+     301,
+     2,
+     279,
+     130
+    ],
+    "sp": 1
+   },
+   {
+    "n": "land",
+    "src": "sp_lenny.png",
+    "f": [
+     584,
+     25,
+     193,
+     107
+    ],
+    "sp": 1
+   },
+   {
+    "n": "hurt",
+    "src": "atlas_lenny.png",
+    "f": [
+     669,
+     0,
+     95,
+     157
+    ]
+   },
+   {
+    "n": "down",
+    "src": "atlas_lenny.png",
+    "f": [
+     766,
+     101,
+     158,
+     56
+    ]
+   }
+  ],
+  "err": null
+ },
+ {
+  "name": "RAFE",
+  "grp": "HERO",
+  "lv": 0,
+  "poses": [
+   {
+    "n": "idle",
+    "src": "atlas_rafe.png",
+    "f": [
+     0,
+     2,
+     99,
+     150
+    ]
+   },
+   {
+    "n": "walk",
+    "src": "atlas_rafe.png",
+    "f": [
+     101,
+     0,
+     110,
+     152
+    ]
+   },
+   {
+    "n": "attack",
+    "src": "atlas_rafe.png",
+    "f": [
+     213,
+     15,
+     169,
+     137
+    ]
+   },
+   {
+    "n": "jump",
+    "src": "atlas_rafe.png",
+    "f": [
+     384,
+     11,
+     164,
+     141
+    ]
+   },
+   {
+    "n": "dive1",
+    "src": "sp_rafe.png",
+    "f": [
+     0,
+     21,
+     217,
+     95
+    ],
+    "sp": 1
+   },
+   {
+    "n": "dive2",
+    "src": "sp_rafe.png",
+    "f": [
+     221,
+     39,
+     248,
+     77
+    ],
+    "sp": 1
+   },
+   {
+    "n": "land",
+    "src": "sp_rafe.png",
+    "f": [
+     473,
+     0,
+     124,
+     116
+    ],
+    "sp": 1
+   },
+   {
+    "n": "hurt",
+    "src": "atlas_rafe.png",
+    "f": [
+     550,
+     53,
+     109,
+     99
+    ]
+   },
+   {
+    "n": "down",
+    "src": "atlas_rafe.png",
+    "f": [
+     661,
+     113,
+     127,
+     39
+    ]
+   }
+  ],
+  "err": null
+ },
+ {
+  "name": "MIKO",
+  "grp": "HERO",
+  "lv": 0,
+  "poses": [
+   {
+    "n": "idle",
+    "src": "atlas_miko.png",
+    "f": [
+     0,
+     23,
+     97,
+     150
+    ]
+   },
+   {
+    "n": "walk",
+    "src": "atlas_miko.png",
+    "f": [
+     99,
+     17,
+     99,
+     156
+    ]
+   },
+   {
+    "n": "attack",
+    "src": "atlas_miko.png",
+    "f": [
+     200,
+     0,
+     125,
+     173
+    ]
+   },
+   {
+    "n": "jump",
+    "src": "atlas_miko.png",
+    "f": [
+     327,
+     24,
+     77,
+     149
+    ]
+   },
+   {
+    "n": "copter1",
+    "src": "sp_miko.png",
+    "f": [
+     0,
+     7,
+     145,
+     157
+    ],
+    "sp": 1
+   },
+   {
+    "n": "copter2",
+    "src": "sp_miko.png",
+    "f": [
+     149,
+     0,
+     146,
+     164
+    ],
+    "sp": 1
+   },
+   {
+    "n": "land",
+    "src": "sp_miko.png",
+    "f": [
+     299,
+     24,
+     156,
+     140
+    ],
+    "sp": 1
+   },
+   {
+    "n": "hurt",
+    "src": "atlas_miko.png",
+    "f": [
+     406,
+     7,
+     91,
+     166
+    ]
+   },
+   {
+    "n": "down",
+    "src": "atlas_miko.png",
+    "f": [
+     499,
+     130,
+     147,
+     43
+    ]
+   }
+  ],
+  "err": null
+ },
+ {
+  "name": "DONNY",
+  "grp": "HERO",
+  "lv": 0,
+  "poses": [
+   {
+    "n": "idle",
+    "src": "atlas_donny.png",
+    "f": [
+     0,
+     32,
+     154,
+     150
+    ]
+   },
+   {
+    "n": "walk",
+    "src": "atlas_donny.png",
+    "f": [
+     156,
+     12,
+     94,
+     170
+    ]
+   },
+   {
+    "n": "attack",
+    "src": "atlas_donny.png",
+    "f": [
+     252,
+     33,
+     150,
+     149
+    ]
+   },
+   {
+    "n": "jump",
+    "src": "atlas_donny.png",
+    "f": [
+     404,
+     0,
+     131,
+     182
+    ]
+   },
+   {
+    "n": "vault",
+    "src": "sp_donny.png",
+    "f": [
+     0,
+     0,
+     138,
+     178
+    ],
+    "sp": 1
+   },
+   {
+    "n": "flip",
+    "src": "sp_donny.png",
+    "f": [
+     142,
+     92,
+     216,
+     86
+    ],
+    "sp": 1
+   },
+   {
+    "n": "slam",
+    "src": "sp_donny.png",
+    "f": [
+     362,
+     37,
+     261,
+     141
+    ],
+    "sp": 1
+   },
+   {
+    "n": "hurt",
+    "src": "atlas_donny.png",
+    "f": [
+     537,
+     39,
+     101,
+     143
+    ]
+   },
+   {
+    "n": "down",
+    "src": "atlas_donny.png",
+    "f": [
+     640,
+     123,
+     159,
+     59
+    ]
+   }
+  ],
+  "err": null
+ },
+ {
+  "name": "RAMROD",
+  "grp": "BOSS",
+  "lv": 1,
+  "poses": [
+   {
+    "n": "idle",
+    "src": "atlas_ramrod.png",
+    "f": [
+     0,
+     0,
+     117,
+     190
+    ]
+   },
+   {
+    "n": "walk",
+    "src": "atlas_ramrod.png",
+    "f": [
+     119,
+     4,
+     127,
+     186
+    ]
+   },
+   {
+    "n": "charge",
+    "src": "atlas_ramrod.png",
+    "f": [
+     248,
+     24,
+     161,
+     166
+    ]
+   },
+   {
+    "n": "kick",
+    "src": "atlas_ramrod.png",
+    "f": [
+     411,
+     4,
+     153,
+     186
+    ]
+   },
+   {
+    "n": "fire",
+    "src": "atlas_ramrod.png",
+    "f": [
+     566,
+     7,
+     157,
+     183
+    ]
+   },
+   {
+    "n": "hurt",
+    "src": "atlas_ramrod.png",
+    "f": [
+     725,
+     13,
+     132,
+     177
+    ]
+   },
+   {
+    "n": "down",
+    "src": "atlas_ramrod.png",
+    "f": [
+     859,
+     126,
+     196,
+     64
+    ]
+   }
+  ],
+  "err": null
+ },
+ {
+  "name": "ZAP",
+  "grp": "BOSS",
+  "lv": 1,
+  "poses": [
+   {
+    "n": "idle",
+    "src": "atlas_zap.png",
+    "f": [
+     0,
+     1,
+     116,
+     130
+    ]
+   },
+   {
+    "n": "roll",
+    "src": "atlas_zap.png",
+    "f": [
+     118,
+     0,
+     117,
+     131
+    ]
+   },
+   {
+    "n": "charge",
+    "src": "atlas_zap.png",
+    "f": [
+     237,
+     2,
+     117,
+     129
+    ]
+   },
+   {
+    "n": "ram",
+    "src": "atlas_zap.png",
+    "f": [
+     356,
+     0,
+     117,
+     131
+    ]
+   },
+   {
+    "n": "dying",
+    "src": "atlas_zap.png",
+    "f": [
+     475,
+     3,
+     111,
+     128
+    ]
+   }
+  ],
+  "err": null
+ },
+ {
+  "name": "SCORCHER",
+  "grp": "MINI-BOSS",
+  "lv": 1,
+  "poses": [
+   {
+    "n": "idle",
+    "src": "atlas_scorcher.png",
+    "f": [
+     0,
+     0,
+     144,
+     190
+    ],
+    "ax": 62
+   },
+   {
+    "n": "walk1",
+    "src": "atlas_scorcher.png",
+    "f": [
+     148,
+     0,
+     137,
+     190
+    ],
+    "ax": 59
+   },
+   {
+    "n": "walk2",
+    "src": "atlas_scorcher.png",
+    "f": [
+     289,
+     0,
+     149,
+     190
+    ],
+    "ax": 70
+   },
+   {
+    "n": "tele",
+    "src": "atlas_scorcher.png",
+    "f": [
+     442,
+     24,
+     149,
+     166
+    ],
+    "ax": 71
+   },
+   {
+    "n": "charge",
+    "src": "atlas_scorcher.png",
+    "f": [
+     595,
+     17,
+     168,
+     173
+    ],
+    "ax": 73
+   },
+   {
+    "n": "kwind",
+    "src": "atlas_scorcher.png",
+    "f": [
+     767,
+     8,
+     140,
+     182
+    ],
+    "ax": 78
+   },
+   {
+    "n": "kick",
+    "src": "atlas_scorcher.png",
+    "f": [
+     911,
+     9,
+     155,
+     181
+    ],
+    "ax": 56
+   },
+   {
+    "n": "throw1",
+    "src": "atlas_scorcher.png",
+    "f": [
+     1070,
+     18,
+     125,
+     172
+    ],
+    "ax": 81
+   },
+   {
+    "n": "throw2",
+    "src": "atlas_scorcher.png",
+    "f": [
+     1199,
+     8,
+     144,
+     182
+    ],
+    "ax": 74
+   },
+   {
+    "n": "release",
+    "src": "atlas_scorcher.png",
+    "f": [
+     1347,
+     20,
+     158,
+     170
+    ],
+    "ax": 67
+   },
+   {
+    "n": "hurt",
+    "src": "atlas_scorcher.png",
+    "f": [
+     1509,
+     24,
+     157,
+     166
+    ],
+    "ax": 83
+   },
+   {
+    "n": "down",
+    "src": "atlas_scorcher.png",
+    "f": [
+     1670,
+     120,
+     285,
+     70
+    ],
+    "ax": 142
+   },
+   {
+    "n": "getup1",
+    "src": "atlas_scorcher.png",
+    "f": [
+     1959,
+     45,
+     152,
+     145
+    ],
+    "ax": 98
+   },
+   {
+    "n": "getup2",
+    "src": "atlas_scorcher.png",
+    "f": [
+     2115,
+     44,
+     137,
+     146
+    ],
+    "ax": 68
+   },
+   {
+    "n": "daze",
+    "src": "atlas_scorcher.png",
+    "f": [
+     2256,
+     20,
+     135,
+     170
+    ],
+    "ax": 75
+   }
+  ],
+  "err": null
+ },
+ {
+  "name": "RAZORBACK",
+  "grp": "MINI-BOSS",
+  "lv": 1,
+  "poses": [
+   {
+    "n": "idle",
+    "src": "atlas_razor.png",
+    "f": [
+     0,
+     0,
+     86,
+     170
+    ]
+   },
+   {
+    "n": "grab",
+    "src": "atlas_razor.png",
+    "f": [
+     88,
+     19,
+     108,
+     151
+    ]
+   },
+   {
+    "n": "leap",
+    "src": "atlas_razor.png",
+    "f": [
+     198,
+     11,
+     109,
+     159
+    ]
+   }
+  ],
+  "err": null
+ },
+ {
+  "name": "BRICKJAW",
+  "grp": "BOSS",
+  "lv": 2,
+  "poses": [
+   {
+    "n": "idle",
+    "src": "levels/level2_brickjaw.png",
+    "f": [
+     0,
+     1,
+     118,
+     180
+    ],
+    "ax": 52
+   },
+   {
+    "n": "walk1",
+    "src": "levels/level2_brickjaw.png",
+    "f": [
+     122,
+     0,
+     108,
+     181
+    ],
+    "ax": 49
+   },
+   {
+    "n": "walk2",
+    "src": "levels/level2_brickjaw.png",
+    "f": [
+     234,
+     4,
+     123,
+     177
+    ],
+    "ax": 64
+   },
+   {
+    "n": "wind",
+    "src": "levels/level2_brickjaw.png",
+    "f": [
+     361,
+     2,
+     141,
+     179
+    ],
+    "ax": 77
+   },
+   {
+    "n": "punch",
+    "src": "levels/level2_brickjaw.png",
+    "f": [
+     506,
+     4,
+     144,
+     177
+    ],
+    "ax": 52
+   },
+   {
+    "n": "tele",
+    "src": "levels/level2_brickjaw.png",
+    "f": [
+     654,
+     23,
+     107,
+     158
+    ],
+    "ax": 51
+   },
+   {
+    "n": "charge",
+    "src": "levels/level2_brickjaw.png",
+    "f": [
+     765,
+     14,
+     124,
+     167
+    ],
+    "ax": 39
+   },
+   {
+    "n": "throwUp",
+    "src": "levels/level2_brickjaw.png",
+    "f": [
+     893,
+     0,
+     103,
+     181
+    ],
+    "ax": 57
+   },
+   {
+    "n": "throwRel",
+    "src": "levels/level2_brickjaw.png",
+    "f": [
+     1000,
+     15,
+     133,
+     166
+    ],
+    "ax": 63
+   },
+   {
+    "n": "summon",
+    "src": "levels/level2_brickjaw.png",
+    "f": [
+     1137,
+     3,
+     105,
+     178
+    ],
+    "ax": 52
+   },
+   {
+    "n": "hurt",
+    "src": "levels/level2_brickjaw.png",
+    "f": [
+     1246,
+     3,
+     162,
+     178
+    ],
+    "ax": 92
+   },
+   {
+    "n": "fall",
+    "src": "levels/level2_brickjaw.png",
+    "f": [
+     1412,
+     20,
+     154,
+     161
+    ],
+    "ax": 77
+   },
+   {
+    "n": "down",
+    "src": "levels/level2_brickjaw.png",
+    "f": [
+     1570,
+     121,
+     206,
+     60
+    ],
+    "ax": 103
+   },
+   {
+    "n": "getup",
+    "src": "levels/level2_brickjaw.png",
+    "f": [
+     1780,
+     39,
+     138,
+     142
+    ],
+    "ax": 68
+   }
+  ],
+  "err": null
+ },
+ {
+  "name": "GULCH GATOR",
+  "grp": "BOSS",
+  "lv": 3,
+  "poses": [
+   {
+    "n": "idle",
+    "src": "levels/level3_gator.png",
+    "f": [
+     0,
+     7,
+     137,
+     200
+    ],
+    "ax": 64
+   },
+   {
+    "n": "walk1",
+    "src": "levels/level3_gator.png",
+    "f": [
+     141,
+     0,
+     151,
+     207
+    ],
+    "ax": 84
+   },
+   {
+    "n": "walk2",
+    "src": "levels/level3_gator.png",
+    "f": [
+     296,
+     3,
+     159,
+     204
+    ],
+    "ax": 90
+   },
+   {
+    "n": "wind",
+    "src": "levels/level3_gator.png",
+    "f": [
+     459,
+     4,
+     180,
+     203
+    ],
+    "ax": 97
+   },
+   {
+    "n": "punch",
+    "src": "levels/level3_gator.png",
+    "f": [
+     643,
+     5,
+     231,
+     202
+    ],
+    "ax": 92
+   },
+   {
+    "n": "tele",
+    "src": "levels/level3_gator.png",
+    "f": [
+     878,
+     65,
+     213,
+     142
+    ],
+    "ax": 131
+   },
+   {
+    "n": "charge",
+    "src": "levels/level3_gator.png",
+    "f": [
+     1095,
+     38,
+     200,
+     169
+    ],
+    "ax": 69
+   },
+   {
+    "n": "throw",
+    "src": "levels/level3_gator.png",
+    "f": [
+     1299,
+     1,
+     162,
+     206
+    ],
+    "ax": 92
+   },
+   {
+    "n": "wave",
+    "src": "levels/level3_gator.png",
+    "f": [
+     1465,
+     2,
+     174,
+     205
+    ],
+    "ax": 93
+   },
+   {
+    "n": "stomp",
+    "src": "levels/level3_gator.png",
+    "f": [
+     1643,
+     13,
+     155,
+     194
+    ],
+    "ax": 66
+   },
+   {
+    "n": "summon",
+    "src": "levels/level3_gator.png",
+    "f": [
+     2309,
+     17,
+     161,
+     190
+    ],
+    "ax": 76
+   },
+   {
+    "n": "leap",
+    "src": "levels/level3_gator.png",
+    "f": [
+     2474,
+     29,
+     129,
+     178
+    ],
+    "ax": 76
+   },
+   {
+    "n": "surf",
+    "src": "levels/level3_gator.png",
+    "f": [
+     2607,
+     3,
+     208,
+     204
+    ],
+    "ax": 107
+   },
+   {
+    "n": "land",
+    "src": "levels/level3_gator.png",
+    "f": [
+     2819,
+     67,
+     211,
+     140
+    ],
+    "ax": 114
+   },
+   {
+    "n": "hurt",
+    "src": "levels/level3_gator.png",
+    "f": [
+     1802,
+     15,
+     140,
+     192
+    ],
+    "ax": 56
+   },
+   {
+    "n": "fall",
+    "src": "levels/level3_gator.png",
+    "f": [
+     1946,
+     47,
+     155,
+     160
+    ],
+    "ax": 84
+   },
+   {
+    "n": "down",
+    "src": "levels/level3_gator.png",
+    "f": [
+     2105,
+     146,
+     200,
+     61
+    ],
+    "ax": 100
+   },
+   {
+    "n": "getup",
+    "src": "levels/level3_gator.png",
+    "f": [
+     3034,
+     46,
+     179,
+     161
+    ],
+    "ax": 117
+   }
+  ],
+  "err": null
+ },
+ {
+  "name": "JETWASH",
+  "grp": "BOSS",
+  "lv": 4,
+  "poses": [
+   {
+    "n": "idle",
+    "src": "levels/level4_jetwash.png",
+    "f": [
+     0,
+     0,
+     75,
+     190
+    ],
+    "ax": 41
+   },
+   {
+    "n": "hover",
+    "src": "levels/level4_jetwash.png",
+    "f": [
+     79,
+     10,
+     81,
+     180
+    ],
+    "ax": 43
+   },
+   {
+    "n": "glide",
+    "src": "levels/level4_jetwash.png",
+    "f": [
+     164,
+     13,
+     93,
+     177
+    ],
+    "ax": 56
+   },
+   {
+    "n": "kwind",
+    "src": "levels/level4_jetwash.png",
+    "f": [
+     261,
+     9,
+     83,
+     181
+    ],
+    "ax": 37
+   },
+   {
+    "n": "kick",
+    "src": "levels/level4_jetwash.png",
+    "f": [
+     348,
+     22,
+     144,
+     168
+    ],
+    "ax": 66
+   },
+   {
+    "n": "dive",
+    "src": "levels/level4_jetwash.png",
+    "f": [
+     496,
+     111,
+     158,
+     79
+    ],
+    "ax": 100
+   },
+   {
+    "n": "bomb",
+    "src": "levels/level4_jetwash.png",
+    "f": [
+     658,
+     11,
+     92,
+     179
+    ],
+    "ax": 46
+   },
+   {
+    "n": "fire",
+    "src": "levels/level4_jetwash.png",
+    "f": [
+     754,
+     13,
+     126,
+     177
+    ],
+    "ax": 40
+   },
+   {
+    "n": "radio",
+    "src": "levels/level4_jetwash.png",
+    "f": [
+     884,
+     12,
+     100,
+     178
+    ],
+    "ax": 38
+   },
+   {
+    "n": "hurt",
+    "src": "levels/level4_jetwash.png",
+    "f": [
+     988,
+     9,
+     112,
+     181
+    ],
+    "ax": 66
+   },
+   {
+    "n": "fall",
+    "src": "levels/level4_jetwash.png",
+    "f": [
+     1104,
+     34,
+     158,
+     156
+    ],
+    "ax": 79
+   },
+   {
+    "n": "down",
+    "src": "levels/level4_jetwash.png",
+    "f": [
+     1266,
+     105,
+     173,
+     85
+    ],
+    "ax": 80
+   }
+  ],
+  "err": null
+ },
+ {
+  "name": "GRIMWALE",
+  "grp": "BOSS",
+  "lv": 5,
+  "poses": [
+   {
+    "n": "idle",
+    "src": "levels/level5_grimwale.png",
+    "f": [
+     0,
+     0,
+     94,
+     200
+    ],
+    "ax": 45
+   },
+   {
+    "n": "walk1",
+    "src": "levels/level5_grimwale.png",
+    "f": [
+     98,
+     2,
+     93,
+     198
+    ],
+    "ax": 41
+   },
+   {
+    "n": "walk2",
+    "src": "levels/level5_grimwale.png",
+    "f": [
+     195,
+     2,
+     97,
+     198
+    ],
+    "ax": 44
+   },
+   {
+    "n": "aim",
+    "src": "levels/level5_grimwale.png",
+    "f": [
+     389,
+     15,
+     118,
+     185
+    ],
+    "ax": 43
+   },
+   {
+    "n": "aimE",
+    "src": "levels/level5_grimwale.png",
+    "f": [
+     511,
+     15,
+     118,
+     185
+    ],
+    "ax": 43
+   },
+   {
+    "n": "whirl",
+    "src": "levels/level5_grimwale.png",
+    "f": [
+     633,
+     18,
+     124,
+     182
+    ],
+    "ax": 56
+   },
+   {
+    "n": "bellow",
+    "src": "levels/level5_grimwale.png",
+    "f": [
+     761,
+     6,
+     86,
+     194
+    ],
+    "ax": 50
+   },
+   {
+    "n": "kick",
+    "src": "levels/level5_grimwale.png",
+    "f": [
+     851,
+     5,
+     106,
+     195
+    ],
+    "ax": 36
+   },
+   {
+    "n": "crouch",
+    "src": "levels/level5_grimwale.png",
+    "f": [
+     961,
+     73,
+     83,
+     127
+    ],
+    "ax": 36
+   },
+   {
+    "n": "throw",
+    "src": "levels/level5_grimwale.png",
+    "f": [
+     1191,
+     3,
+     105,
+     197
+    ],
+    "ax": 43
+   },
+   {
+    "n": "charge",
+    "src": "levels/level5_grimwale.png",
+    "f": [
+     1300,
+     18,
+     115,
+     182
+    ],
+    "ax": 59
+   },
+   {
+    "n": "sweep",
+    "src": "levels/level5_grimwale.png",
+    "f": [
+     1419,
+     13,
+     99,
+     187
+    ],
+    "ax": 59
+   },
+   {
+    "n": "hurt",
+    "src": "levels/level5_grimwale.png",
+    "f": [
+     296,
+     5,
+     89,
+     195
+    ],
+    "ax": 52
+   },
+   {
+    "n": "down",
+    "src": "levels/level5_grimwale.png",
+    "f": [
+     1048,
+     142,
+     139,
+     58
+    ],
+    "ax": 69
+   }
+  ],
+  "err": null
+ },
+ {
+  "name": "COLD FRONT",
+  "grp": "BOSS",
+  "lv": 6,
+  "poses": [
+   {
+    "n": "idle",
+    "src": "levels/level6_coldfront.png",
+    "f": [
+     0,
+     8,
+     117,
+     172
+    ],
+    "ax": 49
+   },
+   {
+    "n": "walk1",
+    "src": "levels/level6_coldfront.png",
+    "f": [
+     121,
+     10,
+     120,
+     170
+    ],
+    "ax": 64
+   },
+   {
+    "n": "walk2",
+    "src": "levels/level6_coldfront.png",
+    "f": [
+     245,
+     13,
+     113,
+     167
+    ],
+    "ax": 61
+   },
+   {
+    "n": "aim",
+    "src": "levels/level6_coldfront.png",
+    "f": [
+     362,
+     16,
+     136,
+     164
+    ],
+    "ax": 45
+   },
+   {
+    "n": "throw",
+    "src": "levels/level6_coldfront.png",
+    "f": [
+     502,
+     17,
+     136,
+     163
+    ],
+    "ax": 61
+   },
+   {
+    "n": "kwind",
+    "src": "levels/level6_coldfront.png",
+    "f": [
+     642,
+     5,
+     111,
+     175
+    ],
+    "ax": 55
+   },
+   {
+    "n": "kick",
+    "src": "levels/level6_coldfront.png",
+    "f": [
+     757,
+     7,
+     164,
+     173
+    ],
+    "ax": 62
+   },
+   {
+    "n": "leap",
+    "src": "levels/level6_coldfront.png",
+    "f": [
+     925,
+     9,
+     137,
+     171
+    ],
+    "ax": 51
+   },
+   {
+    "n": "shout",
+    "src": "levels/level6_coldfront.png",
+    "f": [
+     1066,
+     8,
+     123,
+     172
+    ],
+    "ax": 46
+   },
+   {
+    "n": "spin",
+    "src": "levels/level6_coldfront.png",
+    "f": [
+     1193,
+     8,
+     165,
+     172
+    ],
+    "ax": 87
+   },
+   {
+    "n": "crouch",
+    "src": "levels/level6_coldfront.png",
+    "f": [
+     1362,
+     0,
+     125,
+     180
+    ],
+    "ax": 70
+   },
+   {
+    "n": "hurt",
+    "src": "levels/level6_coldfront.png",
+    "f": [
+     1491,
+     5,
+     115,
+     175
+    ],
+    "ax": 68
+   },
+   {
+    "n": "down",
+    "src": "levels/level6_coldfront.png",
+    "f": [
+     1610,
+     126,
+     183,
+     54
+    ],
+    "ax": 91
+   }
+  ],
+  "err": null
+ },
+ {
+  "name": "RUSTMAUL",
+  "grp": "BOSS",
+  "lv": 7,
+  "poses": [
+   {
+    "n": "idle",
+    "src": "levels/level7_rustmaul.png",
+    "f": [
+     0,
+     83,
+     154,
+     200
+    ],
+    "ax": 61
+   },
+   {
+    "n": "walk1",
+    "src": "levels/level7_rustmaul.png",
+    "f": [
+     158,
+     83,
+     148,
+     200
+    ],
+    "ax": 64
+   },
+   {
+    "n": "walk2",
+    "src": "levels/level7_rustmaul.png",
+    "f": [
+     310,
+     83,
+     142,
+     200
+    ],
+    "ax": 53
+   },
+   {
+    "n": "walk3",
+    "src": "levels/level7_rustmaul.png",
+    "f": [
+     456,
+     84,
+     147,
+     199
+    ],
+    "ax": 61
+   },
+   {
+    "n": "rush",
+    "src": "levels/level7_rustmaul.png",
+    "f": [
+     607,
+     114,
+     150,
+     169
+    ],
+    "ax": 82
+   },
+   {
+    "n": "wind",
+    "src": "levels/level7_rustmaul.png",
+    "f": [
+     761,
+     84,
+     109,
+     199
+    ],
+    "ax": 61
+   },
+   {
+    "n": "swing",
+    "src": "levels/level7_rustmaul.png",
+    "f": [
+     874,
+     97,
+     140,
+     186
+    ],
+    "ax": 59
+   },
+   {
+    "n": "throw",
+    "src": "levels/level7_rustmaul.png",
+    "f": [
+     1018,
+     97,
+     136,
+     186
+    ],
+    "ax": 63
+   },
+   {
+    "n": "slamUp",
+    "src": "levels/level7_rustmaul.png",
+    "f": [
+     1158,
+     47,
+     124,
+     236
+    ],
+    "ax": 75
+   },
+   {
+    "n": "slamDn",
+    "src": "levels/level7_rustmaul.png",
+    "f": [
+     1286,
+     122,
+     147,
+     161
+    ],
+    "ax": 53
+   },
+   {
+    "n": "summon",
+    "src": "levels/level7_rustmaul.png",
+    "f": [
+     1437,
+     0,
+     129,
+     283
+    ],
+    "ax": 76
+   },
+   {
+    "n": "pull",
+    "src": "levels/level7_rustmaul.png",
+    "f": [
+     1570,
+     88,
+     170,
+     195
+    ],
+    "ax": 98
+   },
+   {
+    "n": "hurt",
+    "src": "levels/level7_rustmaul.png",
+    "f": [
+     1744,
+     84,
+     127,
+     199
+    ],
+    "ax": 70
+   },
+   {
+    "n": "down",
+    "src": "levels/level7_rustmaul.png",
+    "f": [
+     1875,
+     218,
+     192,
+     65
+    ],
+    "ax": 96
+   }
+  ],
+  "err": null
+ },
+ {
+  "name": "RAZORBACK",
+  "grp": "BOSS",
+  "lv": 8,
+  "poses": [
+   {
+    "n": "idle",
+    "src": "levels/level8_razorback.png",
+    "f": [
+     0,
+     1,
+     100,
+     190
+    ],
+    "ax": 42
+   },
+   {
+    "n": "walk1",
+    "src": "levels/level8_razorback.png",
+    "f": [
+     104,
+     3,
+     87,
+     188
+    ],
+    "ax": 40
+   },
+   {
+    "n": "walk2",
+    "src": "levels/level8_razorback.png",
+    "f": [
+     195,
+     7,
+     104,
+     184
+    ],
+    "ax": 45
+   },
+   {
+    "n": "guard",
+    "src": "levels/level8_razorback.png",
+    "f": [
+     303,
+     11,
+     128,
+     180
+    ],
+    "ax": 57
+   },
+   {
+    "n": "wind",
+    "src": "levels/level8_razorback.png",
+    "f": [
+     435,
+     17,
+     133,
+     174
+    ],
+    "ax": 59
+   },
+   {
+    "n": "punch",
+    "src": "levels/level8_razorback.png",
+    "f": [
+     572,
+     15,
+     201,
+     176
+    ],
+    "ax": 91
+   },
+   {
+    "n": "charge",
+    "src": "levels/level8_razorback.png",
+    "f": [
+     777,
+     19,
+     246,
+     172
+    ],
+    "ax": 103
+   },
+   {
+    "n": "leap",
+    "src": "levels/level8_razorback.png",
+    "f": [
+     1027,
+     0,
+     158,
+     191
+    ],
+    "ax": 98
+   },
+   {
+    "n": "slam",
+    "src": "levels/level8_razorback.png",
+    "f": [
+     1189,
+     34,
+     152,
+     157
+    ],
+    "ax": 81
+   },
+   {
+    "n": "throw",
+    "src": "levels/level8_razorback.png",
+    "f": [
+     1345,
+     7,
+     204,
+     184
+    ],
+    "ax": 82
+   },
+   {
+    "n": "fire",
+    "src": "levels/level8_razorback.png",
+    "f": [
+     1553,
+     15,
+     193,
+     176
+    ],
+    "ax": 78
+   },
+   {
+    "n": "summon",
+    "src": "levels/level8_razorback.png",
+    "f": [
+     1750,
+     0,
+     242,
+     191
+    ],
+    "ax": 125
+   },
+   {
+    "n": "hurt",
+    "src": "levels/level8_razorback.png",
+    "f": [
+     1996,
+     15,
+     144,
+     176
+    ],
+    "ax": 81
+   },
+   {
+    "n": "down",
+    "src": "levels/level8_razorback.png",
+    "f": [
+     2144,
+     113,
+     224,
+     78
+    ],
+    "ax": 112
+   },
+   {
+    "n": "ko",
+    "src": "levels/level8_razorback.png",
+    "f": [
+     2372,
+     115,
+     233,
+     76
+    ],
+    "ax": 116
+   },
+   {
+    "n": "getup",
+    "src": "levels/level8_razorback.png",
+    "f": [
+     2609,
+     50,
+     149,
+     141
+    ],
+    "ax": 85
+   }
+  ],
+  "err": null
+ },
+ {
+  "name": "KARAI",
+  "grp": "BOSS",
+  "lv": 9,
+  "poses": [
+   {
+    "n": "idle",
+    "src": "levels/level9_karai.png",
+    "f": [
+     1,
+     1,
+     128,
+     179
+    ]
+   },
+   {
+    "n": "walk",
+    "src": "levels/level9_karai.png",
+    "f": [
+     132,
+     1,
+     94,
+     188
+    ]
+   },
+   {
+    "n": "slash",
+    "src": "levels/level9_karai.png",
+    "f": [
+     229,
+     1,
+     165,
+     175
+    ]
+   },
+   {
+    "n": "throw",
+    "src": "levels/level9_karai.png",
+    "f": [
+     397,
+     1,
+     144,
+     192
+    ]
+   },
+   {
+    "n": "hurt",
+    "src": "levels/level9_karai.png",
+    "f": [
+     544,
+     1,
+     135,
+     122
+    ]
+   },
+   {
+    "n": "down",
+    "src": "levels/level9_karai.png",
+    "f": [
+     682,
+     1,
+     194,
+     38
+    ]
+   }
+  ],
+  "err": null
+ },
+ {
+  "name": "ARMAGGON",
+  "grp": "BOSS",
+  "lv": 10,
+  "poses": [
+   {
+    "n": "idle",
+    "src": "levels/level10_armaggon.png",
+    "f": [
+     0,
+     25,
+     219,
+     249
+    ],
+    "ax": 126
+   },
+   {
+    "n": "idle2",
+    "src": "levels/level10_armaggon.png",
+    "f": [
+     223,
+     32,
+     233,
+     242
+    ],
+    "ax": 125
+   },
+   {
+    "n": "walk",
+    "src": "levels/level10_armaggon.png",
+    "f": [
+     1308,
+     24,
+     227,
+     250
+    ],
+    "ax": 126
+   },
+   {
+    "n": "bite",
+    "src": "levels/level10_armaggon.png",
+    "f": [
+     460,
+     24,
+     296,
+     250
+    ],
+    "ax": 166
+   },
+   {
+    "n": "fire",
+    "src": "levels/level10_armaggon.png",
+    "f": [
+     760,
+     31,
+     301,
+     243
+    ],
+    "ax": 148
+   },
+   {
+    "n": "hurt",
+    "src": "levels/level10_armaggon.png",
+    "f": [
+     1065,
+     0,
+     239,
+     274
+    ],
+    "ax": 111
+   },
+   {
+    "n": "fall",
+    "src": "levels/level10_armaggon.png",
+    "f": [
+     1543,
+     101,
+     319,
+     173
+    ],
+    "ax": 147
+   },
+   {
+    "n": "lie",
+    "src": "levels/level10_armaggon.png",
+    "f": [
+     1866,
+     158,
+     346,
+     116
+    ],
+    "ax": 172
+   },
+   {
+    "n": "getup",
+    "src": "levels/level10_armaggon.png",
+    "f": [
+     2216,
+     101,
+     287,
+     173
+    ],
+    "ax": 161
+   }
+  ],
+  "err": null
+ },
+ {
+  "name": "LEATHERHEAD",
+  "grp": "BOSS",
+  "lv": 11,
+  "poses": [
+   {
+    "n": "idle",
+    "src": "levels/level11_gator.png",
+    "f": [
+     0,
+     16,
+     227,
+     243
+    ],
+    "ax": 103
+   },
+   {
+    "n": "walk",
+    "src": "levels/level11_gator.png",
+    "f": [
+     229,
+     13,
+     248,
+     246
+    ],
+    "ax": 123
+   },
+   {
+    "n": "tail",
+    "src": "levels/level11_gator.png",
+    "f": [
+     479,
+     47,
+     253,
+     212
+    ],
+    "ax": 118
+   },
+   {
+    "n": "chomp",
+    "src": "levels/level11_gator.png",
+    "f": [
+     734,
+     38,
+     216,
+     221
+    ],
+    "ax": 108
+   },
+   {
+    "n": "crate",
+    "src": "levels/level11_gator.png",
+    "f": [
+     952,
+     0,
+     210,
+     259
+    ],
+    "ax": 113
+   },
+   {
+    "n": "hurt",
+    "src": "levels/level11_gator.png",
+    "f": [
+     1164,
+     3,
+     185,
+     256
+    ],
+    "ax": 90
+   },
+   {
+    "n": "fall",
+    "src": "levels/level11_gator.png",
+    "f": [
+     1355,
+     74,
+     287,
+     185
+    ],
+    "ax": 168
+   },
+   {
+    "n": "lie",
+    "src": "levels/level11_gator.png",
+    "f": [
+     1646,
+     128,
+     345,
+     131
+    ],
+    "ax": 166
+   },
+   {
+    "n": "getup",
+    "src": "levels/level11_gator.png",
+    "f": [
+     1995,
+     75,
+     290,
+     184
+    ],
+    "ax": 128
+   }
+  ],
+  "err": null
+ },
+ {
+  "name": "VIRAL",
+  "grp": "BOSS",
+  "lv": 12,
+  "poses": [
+   {
+    "n": "idle",
+    "src": "levels/level12_viral.png",
+    "f": [
+     0,
+     0,
+     90,
+     175
+    ]
+   },
+   {
+    "n": "walk",
+    "src": "levels/level12_viral.png",
+    "f": [
+     93,
+     0,
+     101,
+     149
+    ]
+   },
+   {
+    "n": "attack",
+    "src": "levels/level12_viral.png",
+    "f": [
+     197,
+     0,
+     169,
+     162
+    ]
+   },
+   {
+    "n": "hurt",
+    "src": "levels/level12_viral.png",
+    "f": [
+     369,
+     0,
+     107,
+     150
+    ]
+   },
+   {
+    "n": "down",
+    "src": "levels/level12_viral.png",
+    "f": [
+     479,
+     0,
+     171,
+     49
+    ]
+   }
+  ],
+  "err": null
+ },
+ {
+  "name": "GENERAL TRAAG",
+  "grp": "BOSS",
+  "lv": 13,
+  "poses": [
+   {
+    "n": "idle",
+    "src": "levels/level13_traag.png",
+    "f": [
+     0,
+     0,
+     177,
+     228
+    ],
+    "ax": 84
+   },
+   {
+    "n": "walk",
+    "src": "levels/level13_traag.png",
+    "f": [
+     179,
+     1,
+     174,
+     227
+    ],
+    "ax": 82
+   },
+   {
+    "n": "fire",
+    "src": "levels/level13_traag.png",
+    "f": [
+     355,
+     1,
+     266,
+     227
+    ],
+    "ax": 92
+   },
+   {
+    "n": "hurt",
+    "src": "levels/level13_traag.png",
+    "f": [
+     623,
+     59,
+     212,
+     169
+    ],
+    "ax": 90
+   },
+   {
+    "n": "down",
+    "src": "levels/level13_traag.png",
+    "f": [
+     837,
+     128,
+     330,
+     100
+    ],
+    "ax": 165
+   }
+  ],
+  "err": null
+ },
+ {
+  "name": "LT. GRANITOR",
+  "grp": "BOSS",
+  "lv": 13,
+  "poses": [
+   {
+    "n": "idle",
+    "src": "levels/level13_granitor.png",
+    "f": [
+     0,
+     76,
+     154,
+     256
+    ],
+    "ax": 78
+   },
+   {
+    "n": "walk",
+    "src": "levels/level13_granitor.png",
+    "f": [
+     156,
+     73,
+     171,
+     259
+    ],
+    "ax": 82
+   },
+   {
+    "n": "leap",
+    "src": "levels/level13_granitor.png",
+    "f": [
+     329,
+     0,
+     180,
+     332
+    ],
+    "ax": 90
+   },
+   {
+    "n": "hurt",
+    "src": "levels/level13_granitor.png",
+    "f": [
+     511,
+     81,
+     154,
+     251
+    ],
+    "ax": 77
+   },
+   {
+    "n": "down",
+    "src": "levels/level13_granitor.png",
+    "f": [
+     667,
+     243,
+     240,
+     89
+    ],
+    "ax": 121
+   }
+  ],
+  "err": null
+ },
+ {
+  "name": "KRANG",
+  "grp": "BOSS",
+  "lv": 14,
+  "poses": [
+   {
+    "n": "idle",
+    "src": "levels/level14_krang.png",
+    "f": [
+     0,
+     1,
+     122,
+     192
+    ],
+    "ax": 64
+   },
+   {
+    "n": "walk1",
+    "src": "levels/level14_krang.png",
+    "f": [
+     126,
+     1,
+     109,
+     192
+    ],
+    "ax": 60
+   },
+   {
+    "n": "walk2",
+    "src": "levels/level14_krang.png",
+    "f": [
+     239,
+     2,
+     115,
+     191
+    ],
+    "ax": 62
+   },
+   {
+    "n": "walk3",
+    "src": "levels/level14_krang.png",
+    "f": [
+     358,
+     1,
+     105,
+     192
+    ],
+    "ax": 60
+   },
+   {
+    "n": "wind",
+    "src": "levels/level14_krang.png",
+    "f": [
+     467,
+     9,
+     104,
+     184
+    ],
+    "ax": 58
+   },
+   {
+    "n": "punch",
+    "src": "levels/level14_krang.png",
+    "f": [
+     575,
+     1,
+     165,
+     192
+    ],
+    "ax": 72
+   },
+   {
+    "n": "rocket",
+    "src": "levels/level14_krang.png",
+    "f": [
+     744,
+     1,
+     176,
+     192
+    ],
+    "ax": 76
+   },
+   {
+    "n": "stompUp",
+    "src": "levels/level14_krang.png",
+    "f": [
+     924,
+     1,
+     149,
+     192
+    ],
+    "ax": 88
+   },
+   {
+    "n": "stompDn",
+    "src": "levels/level14_krang.png",
+    "f": [
+     1077,
+     3,
+     120,
+     190
+    ],
+    "ax": 54
+   },
+   {
+    "n": "summon",
+    "src": "levels/level14_krang.png",
+    "f": [
+     1201,
+     0,
+     117,
+     193
+    ],
+    "ax": 64
+   },
+   {
+    "n": "rage",
+    "src": "levels/level14_krang.png",
+    "f": [
+     1322,
+     1,
+     157,
+     192
+    ],
+    "ax": 92
+   },
+   {
+    "n": "empty",
+    "src": "levels/level14_krang.png",
+    "f": [
+     2069,
+     134,
+     216,
+     59
+    ],
+    "ax": 118
+   },
+   {
+    "n": "hurt",
+    "src": "levels/level14_krang.png",
+    "f": [
+     1483,
+     7,
+     140,
+     186
+    ],
+    "ax": 71
+   },
+   {
+    "n": "fall",
+    "src": "levels/level14_krang.png",
+    "f": [
+     1627,
+     10,
+     218,
+     183
+    ],
+    "ax": 125
+   },
+   {
+    "n": "down",
+    "src": "levels/level14_krang.png",
+    "f": [
+     1849,
+     134,
+     216,
+     59
+    ],
+    "ax": 118
+   }
+  ],
+  "err": null
+ },
+ {
+  "name": "SHREDDER",
+  "grp": "BOSS",
+  "lv": 15,
+  "poses": [
+   {
+    "n": "idle",
+    "src": "levels/level15_shredder.png",
+    "f": [
+     0,
+     0,
+     102,
+     190
+    ],
+    "ax": 42
+   },
+   {
+    "n": "walk",
+    "src": "levels/level15_shredder.png",
+    "f": [
+     106,
+     2,
+     114,
+     188
+    ],
+    "ax": 56
+   },
+   {
+    "n": "attack",
+    "src": "levels/level15_shredder.png",
+    "f": [
+     224,
+     20,
+     128,
+     170
+    ],
+    "ax": 50
+   },
+   {
+    "n": "jump",
+    "src": "levels/level15_shredder.png",
+    "f": [
+     356,
+     19,
+     128,
+     171
+    ],
+    "ax": 72
+   },
+   {
+    "n": "taunt",
+    "src": "levels/level15_shredder.png",
+    "f": [
+     1194,
+     0,
+     129,
+     190
+    ],
+    "ax": 40
+   },
+   {
+    "n": "hurt",
+    "src": "levels/level15_shredder.png",
+    "f": [
+     488,
+     29,
+     108,
+     161
+    ],
+    "ax": 63
+   },
+   {
+    "n": "fall",
+    "src": "levels/level15_shredder.png",
+    "f": [
+     604,
+     28,
+     267,
+     162
+    ],
+    "ax": 155
+   },
+   {
+    "n": "down",
+    "src": "levels/level15_shredder.png",
+    "f": [
+     875,
+     131,
+     205,
+     59
+    ],
+    "ax": 102
+   },
+   {
+    "n": "ko",
+    "src": "levels/level15_shredder.png",
+    "f": [
+     1084,
+     50,
+     106,
+     140
+    ],
+    "ax": 52
+   }
+  ],
+  "err": null
+ },
+ {
+  "name": "SUPER SHREDDER",
+  "grp": "BOSS",
+  "lv": 15,
+  "poses": [
+   {
+    "n": "idle",
+    "src": "levels/level15_super.png",
+    "f": [
+     0,
+     1,
+     105,
+     260
+    ],
+    "ax": 49
+   },
+   {
+    "n": "walk",
+    "src": "levels/level15_super.png",
+    "f": [
+     109,
+     0,
+     104,
+     261
+    ],
+    "ax": 47
+   },
+   {
+    "n": "blast",
+    "src": "levels/level15_super.png",
+    "f": [
+     217,
+     32,
+     101,
+     229
+    ],
+    "ax": 32
+   },
+   {
+    "n": "raise",
+    "src": "levels/level15_super.png",
+    "f": [
+     322,
+     42,
+     96,
+     219
+    ],
+    "ax": 45
+   },
+   {
+    "n": "hurt",
+    "src": "levels/level15_super.png",
+    "f": [
+     422,
+     78,
+     102,
+     183
+    ],
+    "ax": 50
+   },
+   {
+    "n": "down",
+    "src": "levels/level15_super.png",
+    "f": [
+     528,
+     212,
+     169,
+     49
+    ],
+    "ax": 92
+   },
+   {
+    "n": "fall",
+    "src": "levels/level15_super.png",
+    "f": [
+     705,
+     89,
+     158,
+     172
+    ],
+    "ax": 88
+   },
+   {
+    "n": "ko",
+    "src": "levels/level15_super.png",
+    "f": [
+     867,
+     189,
+     153,
+     72
+    ],
+    "ax": 74
+   }
+  ],
+  "err": null
+ },
+ {
+  "name": "FOOT NINJA",
+  "grp": "ENEMY",
+  "lv": 0,
+  "poses": [
+   {
+    "n": "idle",
+    "src": "atlas_ninja.png",
+    "f": [
+     0,
+     16,
+     100,
+     150
+    ]
+   },
+   {
+    "n": "walk",
+    "src": "atlas_ninja.png",
+    "f": [
+     102,
+     0,
+     82,
+     166
+    ]
+   },
+   {
+    "n": "attack",
+    "src": "atlas_ninja.png",
+    "f": [
+     186,
+     9,
+     124,
+     157
+    ]
+   },
+   {
+    "n": "jump",
+    "src": "atlas_ninja.png",
+    "f": [
+     312,
+     51,
+     136,
+     115
+    ]
+   },
+   {
+    "n": "hurt",
+    "src": "atlas_ninja.png",
+    "f": [
+     450,
+     21,
+     96,
+     145
+    ]
+   },
+   {
+    "n": "down",
+    "src": "atlas_ninja.png",
+    "f": [
+     548,
+     131,
+     130,
+     35
+    ]
+   }
+  ],
+  "err": null
+ },
+ {
+  "name": "FOOT GUNNER",
+  "grp": "ENEMY",
+  "lv": 0,
+  "poses": [
+   {
+    "n": "idle",
+    "src": "atlas_gunner.png",
+    "f": [
+     0,
+     16,
+     101,
+     150
+    ]
+   },
+   {
+    "n": "walk",
+    "src": "atlas_gunner.png",
+    "f": [
+     103,
+     0,
+     88,
+     166
+    ]
+   },
+   {
+    "n": "attack",
+    "src": "atlas_gunner.png",
+    "f": [
+     193,
+     9,
+     125,
+     157
+    ]
+   },
+   {
+    "n": "jump",
+    "src": "atlas_gunner.png",
+    "f": [
+     320,
+     51,
+     137,
+     115
+    ]
+   },
+   {
+    "n": "hurt",
+    "src": "atlas_gunner.png",
+    "f": [
+     459,
+     20,
+     99,
+     146
+    ]
+   },
+   {
+    "n": "down",
+    "src": "atlas_gunner.png",
+    "f": [
+     560,
+     124,
+     130,
+     42
+    ]
+   }
+  ],
+  "err": null
+ },
+ {
+  "name": "FOOT ELITE",
+  "grp": "ENEMY",
+  "lv": 15,
+  "poses": [
+   {
+    "n": "idle",
+    "src": "levels/level15_elite.png",
+    "f": [
+     5,
+     9,
+     108,
+     160
+    ],
+    "ax": 53
+   },
+   {
+    "n": "walk",
+    "src": "levels/level15_elite.png",
+    "f": [
+     117,
+     0,
+     101,
+     169
+    ],
+    "ax": 58
+   },
+   {
+    "n": "walk2",
+    "src": "levels/level15_elite.png",
+    "f": [
+     222,
+     1,
+     103,
+     168
+    ],
+    "ax": 47
+   },
+   {
+    "n": "attack",
+    "src": "levels/level15_elite.png",
+    "f": [
+     329,
+     6,
+     156,
+     163
+    ],
+    "ax": 47
+   },
+   {
+    "n": "jump",
+    "src": "levels/level15_elite.png",
+    "f": [
+     489,
+     40,
+     120,
+     129
+    ],
+    "ax": 44
+   },
+   {
+    "n": "throw",
+    "src": "levels/level15_elite.png",
+    "f": [
+     863,
+     7,
+     181,
+     162
+    ],
+    "ax": 87
+   },
+   {
+    "n": "grab",
+    "src": "levels/level15_elite.png",
+    "f": [
+     1048,
+     13,
+     158,
+     156
+    ],
+    "ax": 72
+   },
+   {
+    "n": "dash",
+    "src": "levels/level15_elite.png",
+    "f": [
+     1210,
+     55,
+     175,
+     114
+    ],
+    "ax": 112
+   },
+   {
+    "n": "hurt",
+    "src": "levels/level15_elite.png",
+    "f": [
+     613,
+     20,
+     97,
+     149
+    ],
+    "ax": 37
+   },
+   {
+    "n": "down",
+    "src": "levels/level15_elite.png",
+    "f": [
+     714,
+     130,
+     145,
+     39
+    ],
+    "ax": 72
+   }
+  ],
+  "err": null
+ },
+ {
+  "name": "STREET PUNK",
+  "grp": "ENEMY",
+  "lv": 1,
+  "poses": [
+   {
+    "n": "idle",
+    "src": "levels/enemies_street.png",
+    "f": [
+     4,
+     0,
+     102,
+     165
+    ],
+    "ax": 49
+   },
+   {
+    "n": "walk",
+    "src": "levels/enemies_street.png",
+    "f": [
+     110,
+     0,
+     90,
+     165
+    ],
+    "ax": 44
+   },
+   {
+    "n": "walk2",
+    "src": "levels/enemies_street.png",
+    "f": [
+     204,
+     2,
+     83,
+     163
+    ],
+    "ax": 38
+   },
+   {
+    "n": "attack",
+    "src": "levels/enemies_street.png",
+    "f": [
+     291,
+     23,
+     122,
+     142
+    ],
+    "ax": 53
+   },
+   {
+    "n": "jump",
+    "src": "levels/enemies_street.png",
+    "f": [
+     417,
+     22,
+     137,
+     143
+    ],
+    "ax": 60
+   },
+   {
+    "n": "dash",
+    "src": "levels/enemies_street.png",
+    "f": [
+     828,
+     78,
+     153,
+     87
+    ],
+    "ax": 107
+   },
+   {
+    "n": "grab",
+    "src": "levels/enemies_street.png",
+    "f": [
+     985,
+     78,
+     154,
+     87
+    ],
+    "ax": 90
+   },
+   {
+    "n": "hurt",
+    "src": "levels/enemies_street.png",
+    "f": [
+     558,
+     23,
+     79,
+     142
+    ],
+    "ax": 39
+   },
+   {
+    "n": "down",
+    "src": "levels/enemies_street.png",
+    "f": [
+     641,
+     124,
+     183,
+     41
+    ],
+    "ax": 91
+   }
+  ],
+  "err": null
+ },
+ {
+  "name": "BAT PUNK",
+  "grp": "ENEMY",
+  "lv": 1,
+  "poses": [
+   {
+    "n": "idle",
+    "src": "levels/enemies_street.png",
+    "f": [
+     4,
+     173,
+     60,
+     165
+    ],
+    "ax": 32
+   },
+   {
+    "n": "walk",
+    "src": "levels/enemies_street.png",
+    "f": [
+     68,
+     169,
+     80,
+     169
+    ],
+    "ax": 38
+   },
+   {
+    "n": "walk2",
+    "src": "levels/enemies_street.png",
+    "f": [
+     152,
+     171,
+     87,
+     167
+    ],
+    "ax": 43
+   },
+   {
+    "n": "attack",
+    "src": "levels/enemies_street.png",
+    "f": [
+     243,
+     182,
+     145,
+     156
+    ],
+    "ax": 50
+   },
+   {
+    "n": "jump",
+    "src": "levels/enemies_street.png",
+    "f": [
+     392,
+     172,
+     74,
+     166
+    ],
+    "ax": 48
+   },
+   {
+    "n": "throw",
+    "src": "levels/enemies_street.png",
+    "f": [
+     757,
+     185,
+     115,
+     153
+    ],
+    "ax": 56
+   },
+   {
+    "n": "hurt",
+    "src": "levels/enemies_street.png",
+    "f": [
+     470,
+     195,
+     101,
+     143
+    ],
+    "ax": 66
+   },
+   {
+    "n": "down",
+    "src": "levels/enemies_street.png",
+    "f": [
+     575,
+     297,
+     178,
+     41
+    ],
+    "ax": 89
+   }
+  ],
+  "err": null
+ },
+ {
+  "name": "BRUISER",
+  "grp": "ENEMY",
+  "lv": 1,
+  "poses": [
+   {
+    "n": "idle",
+    "src": "levels/enemies_street.png",
+    "f": [
+     4,
+     348,
+     91,
+     163
+    ],
+    "ax": 40
+   },
+   {
+    "n": "walk",
+    "src": "levels/enemies_street.png",
+    "f": [
+     99,
+     342,
+     82,
+     169
+    ],
+    "ax": 38
+   },
+   {
+    "n": "walk2",
+    "src": "levels/enemies_street.png",
+    "f": [
+     185,
+     344,
+     93,
+     167
+    ],
+    "ax": 48
+   },
+   {
+    "n": "attack",
+    "src": "levels/enemies_street.png",
+    "f": [
+     282,
+     348,
+     146,
+     163
+    ],
+    "ax": 54
+   },
+   {
+    "n": "jump",
+    "src": "levels/enemies_street.png",
+    "f": [
+     432,
+     356,
+     103,
+     155
+    ],
+    "ax": 44
+   },
+   {
+    "n": "shoot",
+    "src": "levels/enemies_street.png",
+    "f": [
+     834,
+     345,
+     146,
+     166
+    ],
+    "ax": 33
+   },
+   {
+    "n": "hurt",
+    "src": "levels/enemies_street.png",
+    "f": [
+     539,
+     360,
+     104,
+     151
+    ],
+    "ax": 62
+   },
+   {
+    "n": "down",
+    "src": "levels/enemies_street.png",
+    "f": [
+     647,
+     461,
+     183,
+     50
+    ],
+    "ax": 91
+   }
+  ],
+  "err": null
+ },
+ {
+  "name": "SEWER RAT-MAN",
+  "grp": "ENEMY",
+  "lv": 3,
+  "poses": [
+   {
+    "n": "idle",
+    "src": "levels/enemies_sewer.png",
+    "f": [
+     4,
+     0,
+     97,
+     165
+    ],
+    "ax": 41
+   },
+   {
+    "n": "walk",
+    "src": "levels/enemies_sewer.png",
+    "f": [
+     105,
+     0,
+     101,
+     165
+    ],
+    "ax": 53
+   },
+   {
+    "n": "walk2",
+    "src": "levels/enemies_sewer.png",
+    "f": [
+     210,
+     2,
+     109,
+     163
+    ],
+    "ax": 55
+   },
+   {
+    "n": "attack",
+    "src": "levels/enemies_sewer.png",
+    "f": [
+     323,
+     44,
+     152,
+     121
+    ],
+    "ax": 75
+   },
+   {
+    "n": "jump",
+    "src": "levels/enemies_sewer.png",
+    "f": [
+     479,
+     26,
+     104,
+     139
+    ],
+    "ax": 49
+   },
+   {
+    "n": "dash",
+    "src": "levels/enemies_sewer.png",
+    "f": [
+     884,
+     94,
+     186,
+     71
+    ],
+    "ax": 103
+   },
+   {
+    "n": "hurt",
+    "src": "levels/enemies_sewer.png",
+    "f": [
+     587,
+     22,
+     97,
+     143
+    ],
+    "ax": 61
+   },
+   {
+    "n": "down",
+    "src": "levels/enemies_sewer.png",
+    "f": [
+     688,
+     114,
+     192,
+     51
+    ],
+    "ax": 96
+   }
+  ],
+  "err": null
+ },
+ {
+  "name": "PIPE MUTANT",
+  "grp": "ENEMY",
+  "lv": 3,
+  "poses": [
+   {
+    "n": "idle",
+    "src": "levels/enemies_sewer.png",
+    "f": [
+     4,
+     169,
+     103,
+     165
+    ],
+    "ax": 49
+   },
+   {
+    "n": "walk",
+    "src": "levels/enemies_sewer.png",
+    "f": [
+     111,
+     169,
+     89,
+     165
+    ],
+    "ax": 45
+   },
+   {
+    "n": "walk2",
+    "src": "levels/enemies_sewer.png",
+    "f": [
+     204,
+     172,
+     84,
+     162
+    ],
+    "ax": 38
+   },
+   {
+    "n": "attack",
+    "src": "levels/enemies_sewer.png",
+    "f": [
+     292,
+     179,
+     135,
+     155
+    ],
+    "ax": 58
+   },
+   {
+    "n": "jump",
+    "src": "levels/enemies_sewer.png",
+    "f": [
+     431,
+     191,
+     135,
+     143
+    ],
+    "ax": 57
+   },
+   {
+    "n": "throw",
+    "src": "levels/enemies_sewer.png",
+    "f": [
+     847,
+     249,
+     150,
+     85
+    ],
+    "ax": 101
+   },
+   {
+    "n": "grab",
+    "src": "levels/enemies_sewer.png",
+    "f": [
+     1001,
+     246,
+     157,
+     88
+    ],
+    "ax": 88
+   },
+   {
+    "n": "hurt",
+    "src": "levels/enemies_sewer.png",
+    "f": [
+     570,
+     192,
+     83,
+     142
+    ],
+    "ax": 42
+   },
+   {
+    "n": "down",
+    "src": "levels/enemies_sewer.png",
+    "f": [
+     657,
+     292,
+     186,
+     42
+    ],
+    "ax": 93
+   }
+  ],
+  "err": null
+ },
+ {
+  "name": "SLUDGE BRUTE",
+  "grp": "ENEMY",
+  "lv": 3,
+  "poses": [
+   {
+    "n": "idle",
+    "src": "levels/enemies_sewer.png",
+    "f": [
+     4,
+     338,
+     104,
+     165
+    ],
+    "ax": 46
+   },
+   {
+    "n": "walk",
+    "src": "levels/enemies_sewer.png",
+    "f": [
+     112,
+     338,
+     90,
+     165
+    ],
+    "ax": 48
+   },
+   {
+    "n": "walk2",
+    "src": "levels/enemies_sewer.png",
+    "f": [
+     206,
+     342,
+     96,
+     161
+    ],
+    "ax": 51
+   },
+   {
+    "n": "attack",
+    "src": "levels/enemies_sewer.png",
+    "f": [
+     306,
+     344,
+     144,
+     159
+    ],
+    "ax": 52
+   },
+   {
+    "n": "shoot",
+    "src": "levels/enemies_sewer.png",
+    "f": [
+     542,
+     348,
+     209,
+     155
+    ],
+    "ax": 50
+   },
+   {
+    "n": "hurt",
+    "src": "levels/enemies_sewer.png",
+    "f": [
+     454,
+     359,
+     84,
+     144
+    ],
+    "ax": 42
+   },
+   {
+    "n": "down",
+    "src": "levels/enemies_sewer.png",
+    "f": [
+     755,
+     459,
+     189,
+     44
+    ],
+    "ax": 94
+   }
+  ],
+  "err": null
+ },
+ {
+  "name": "BIKER PUNK",
+  "grp": "ENEMY",
+  "lv": 4,
+  "poses": [
+   {
+    "n": "idle",
+    "src": "levels/enemies_biker.png",
+    "f": [
+     4,
+     4,
+     83,
+     165
+    ],
+    "ax": 36
+   },
+   {
+    "n": "walk",
+    "src": "levels/enemies_biker.png",
+    "f": [
+     91,
+     2,
+     87,
+     167
+    ],
+    "ax": 41
+   },
+   {
+    "n": "walk2",
+    "src": "levels/enemies_biker.png",
+    "f": [
+     182,
+     0,
+     79,
+     169
+    ],
+    "ax": 45
+   },
+   {
+    "n": "attack",
+    "src": "levels/enemies_biker.png",
+    "f": [
+     265,
+     6,
+     118,
+     163
+    ],
+    "ax": 46
+   },
+   {
+    "n": "jump",
+    "src": "levels/enemies_biker.png",
+    "f": [
+     387,
+     8,
+     120,
+     161
+    ],
+    "ax": 32
+   },
+   {
+    "n": "dash",
+    "src": "levels/enemies_biker.png",
+    "f": [
+     788,
+     82,
+     175,
+     87
+    ],
+    "ax": 100
+   },
+   {
+    "n": "hurt",
+    "src": "levels/enemies_biker.png",
+    "f": [
+     511,
+     13,
+     88,
+     156
+    ],
+    "ax": 55
+   },
+   {
+    "n": "down",
+    "src": "levels/enemies_biker.png",
+    "f": [
+     603,
+     128,
+     181,
+     41
+    ],
+    "ax": 90
+   }
+  ],
+  "err": null
+ },
+ {
+  "name": "CHAIN BIKER",
+  "grp": "ENEMY",
+  "lv": 4,
+  "poses": [
+   {
+    "n": "idle",
+    "src": "levels/enemies_biker.png",
+    "f": [
+     4,
+     173,
+     65,
+     169
+    ],
+    "ax": 27
+   },
+   {
+    "n": "walk",
+    "src": "levels/enemies_biker.png",
+    "f": [
+     73,
+     173,
+     80,
+     169
+    ],
+    "ax": 42
+   },
+   {
+    "n": "walk2",
+    "src": "levels/enemies_biker.png",
+    "f": [
+     157,
+     175,
+     82,
+     167
+    ],
+    "ax": 40
+   },
+   {
+    "n": "attack",
+    "src": "levels/enemies_biker.png",
+    "f": [
+     243,
+     177,
+     172,
+     165
+    ],
+    "ax": 46
+   },
+   {
+    "n": "grab",
+    "src": "levels/enemies_biker.png",
+    "f": [
+     419,
+     177,
+     104,
+     165
+    ],
+    "ax": 44
+   },
+   {
+    "n": "jump",
+    "src": "levels/enemies_biker.png",
+    "f": [
+     527,
+     182,
+     72,
+     160
+    ],
+    "ax": 31
+   },
+   {
+    "n": "throw",
+    "src": "levels/enemies_biker.png",
+    "f": [
+     891,
+     178,
+     145,
+     164
+    ],
+    "ax": 66
+   },
+   {
+    "n": "hurt",
+    "src": "levels/enemies_biker.png",
+    "f": [
+     603,
+     187,
+     90,
+     155
+    ],
+    "ax": 52
+   },
+   {
+    "n": "down",
+    "src": "levels/enemies_biker.png",
+    "f": [
+     697,
+     302,
+     190,
+     40
+    ],
+    "ax": 95
+   }
+  ],
+  "err": null
+ },
+ {
+  "name": "BIG BIKER",
+  "grp": "ENEMY",
+  "lv": 4,
+  "poses": [
+   {
+    "n": "idle",
+    "src": "levels/enemies_biker.png",
+    "f": [
+     4,
+     346,
+     88,
+     168
+    ],
+    "ax": 38
+   },
+   {
+    "n": "walk",
+    "src": "levels/enemies_biker.png",
+    "f": [
+     96,
+     346,
+     104,
+     168
+    ],
+    "ax": 48
+   },
+   {
+    "n": "walk2",
+    "src": "levels/enemies_biker.png",
+    "f": [
+     204,
+     346,
+     103,
+     168
+    ],
+    "ax": 46
+   },
+   {
+    "n": "attack",
+    "src": "levels/enemies_biker.png",
+    "f": [
+     311,
+     348,
+     136,
+     166
+    ],
+    "ax": 53
+   },
+   {
+    "n": "jump",
+    "src": "levels/enemies_biker.png",
+    "f": [
+     451,
+     355,
+     100,
+     159
+    ],
+    "ax": 31
+   },
+   {
+    "n": "shoot",
+    "src": "levels/enemies_biker.png",
+    "f": [
+     863,
+     347,
+     136,
+     167
+    ],
+    "ax": 39
+   },
+   {
+    "n": "hurt",
+    "src": "levels/enemies_biker.png",
+    "f": [
+     555,
+     355,
+     107,
+     159
+    ],
+    "ax": 58
+   },
+   {
+    "n": "down",
+    "src": "levels/enemies_biker.png",
+    "f": [
+     666,
+     463,
+     193,
+     51
+    ],
+    "ax": 96
+   }
+  ],
+  "err": null
+ },
+ {
+  "name": "DOCK THUG",
+  "grp": "ENEMY",
+  "lv": 5,
+  "poses": [
+   {
+    "n": "idle",
+    "src": "levels/enemies_dock.png",
+    "f": [
+     4,
+     4,
+     87,
+     164
+    ],
+    "ax": 39
+   },
+   {
+    "n": "walk",
+    "src": "levels/enemies_dock.png",
+    "f": [
+     95,
+     0,
+     87,
+     168
+    ],
+    "ax": 42
+   },
+   {
+    "n": "walk2",
+    "src": "levels/enemies_dock.png",
+    "f": [
+     186,
+     0,
+     84,
+     168
+    ],
+    "ax": 41
+   },
+   {
+    "n": "attack",
+    "src": "levels/enemies_dock.png",
+    "f": [
+     274,
+     6,
+     140,
+     162
+    ],
+    "ax": 65
+   },
+   {
+    "n": "grab",
+    "src": "levels/enemies_dock.png",
+    "f": [
+     418,
+     4,
+     133,
+     164
+    ],
+    "ax": 63
+   },
+   {
+    "n": "jump",
+    "src": "levels/enemies_dock.png",
+    "f": [
+     555,
+     38,
+     126,
+     130
+    ],
+    "ax": 45
+   },
+   {
+    "n": "dash",
+    "src": "levels/enemies_dock.png",
+    "f": [
+     967,
+     62,
+     152,
+     106
+    ],
+    "ax": 94
+   },
+   {
+    "n": "hurt",
+    "src": "levels/enemies_dock.png",
+    "f": [
+     685,
+     22,
+     98,
+     146
+    ],
+    "ax": 61
+   },
+   {
+    "n": "down",
+    "src": "levels/enemies_dock.png",
+    "f": [
+     787,
+     132,
+     176,
+     36
+    ],
+    "ax": 88
+   }
+  ],
+  "err": null
+ },
+ {
+  "name": "HOOK THUG",
+  "grp": "ENEMY",
+  "lv": 5,
+  "poses": [
+   {
+    "n": "idle",
+    "src": "levels/enemies_dock.png",
+    "f": [
+     4,
+     175,
+     61,
+     165
+    ],
+    "ax": 28
+   },
+   {
+    "n": "walk",
+    "src": "levels/enemies_dock.png",
+    "f": [
+     69,
+     172,
+     85,
+     168
+    ],
+    "ax": 36
+   },
+   {
+    "n": "walk2",
+    "src": "levels/enemies_dock.png",
+    "f": [
+     158,
+     172,
+     94,
+     168
+    ],
+    "ax": 51
+   },
+   {
+    "n": "attack",
+    "src": "levels/enemies_dock.png",
+    "f": [
+     256,
+     177,
+     150,
+     163
+    ],
+    "ax": 54
+   },
+   {
+    "n": "jump",
+    "src": "levels/enemies_dock.png",
+    "f": [
+     410,
+     180,
+     92,
+     160
+    ],
+    "ax": 45
+   },
+   {
+    "n": "throw",
+    "src": "levels/enemies_dock.png",
+    "f": [
+     786,
+     178,
+     136,
+     162
+    ],
+    "ax": 54
+   },
+   {
+    "n": "hurt",
+    "src": "levels/enemies_dock.png",
+    "f": [
+     506,
+     179,
+     92,
+     161
+    ],
+    "ax": 56
+   },
+   {
+    "n": "down",
+    "src": "levels/enemies_dock.png",
+    "f": [
+     602,
+     304,
+     180,
+     36
+    ],
+    "ax": 90
+   }
+  ],
+  "err": null
+ },
+ {
+  "name": "LONGSHOREMAN",
+  "grp": "ENEMY",
+  "lv": 5,
+  "poses": [
+   {
+    "n": "idle",
+    "src": "levels/enemies_dock.png",
+    "f": [
+     4,
+     350,
+     98,
+     162
+    ],
+    "ax": 43
+   },
+   {
+    "n": "walk",
+    "src": "levels/enemies_dock.png",
+    "f": [
+     106,
+     344,
+     84,
+     168
+    ],
+    "ax": 45
+   },
+   {
+    "n": "walk2",
+    "src": "levels/enemies_dock.png",
+    "f": [
+     194,
+     344,
+     85,
+     168
+    ],
+    "ax": 43
+   },
+   {
+    "n": "attack",
+    "src": "levels/enemies_dock.png",
+    "f": [
+     283,
+     350,
+     142,
+     162
+    ],
+    "ax": 53
+   },
+   {
+    "n": "jump",
+    "src": "levels/enemies_dock.png",
+    "f": [
+     429,
+     360,
+     117,
+     152
+    ],
+    "ax": 57
+   },
+   {
+    "n": "shoot",
+    "src": "levels/enemies_dock.png",
+    "f": [
+     842,
+     357,
+     144,
+     155
+    ],
+    "ax": 42
+   },
+   {
+    "n": "hurt",
+    "src": "levels/enemies_dock.png",
+    "f": [
+     550,
+     359,
+     96,
+     153
+    ],
+    "ax": 51
+   },
+   {
+    "n": "down",
+    "src": "levels/enemies_dock.png",
+    "f": [
+     650,
+     458,
+     188,
+     54
+    ],
+    "ax": 94
+   }
+  ],
+  "err": null
+ },
+ {
+  "name": "SNOW GOON",
+  "grp": "ENEMY",
+  "lv": 6,
+  "poses": [
+   {
+    "n": "idle",
+    "src": "levels/enemies_snow.png",
+    "f": [
+     4,
+     0,
+     74,
+     168
+    ],
+    "ax": 32
+   },
+   {
+    "n": "walk",
+    "src": "levels/enemies_snow.png",
+    "f": [
+     82,
+     0,
+     84,
+     168
+    ],
+    "ax": 46
+   },
+   {
+    "n": "walk2",
+    "src": "levels/enemies_snow.png",
+    "f": [
+     170,
+     0,
+     88,
+     168
+    ],
+    "ax": 51
+   },
+   {
+    "n": "attack",
+    "src": "levels/enemies_snow.png",
+    "f": [
+     262,
+     7,
+     149,
+     161
+    ],
+    "ax": 67
+   },
+   {
+    "n": "jump",
+    "src": "levels/enemies_snow.png",
+    "f": [
+     415,
+     29,
+     136,
+     139
+    ],
+    "ax": 55
+   },
+   {
+    "n": "dash",
+    "src": "levels/enemies_snow.png",
+    "f": [
+     836,
+     63,
+     180,
+     105
+    ],
+    "ax": 96
+   },
+   {
+    "n": "hurt",
+    "src": "levels/enemies_snow.png",
+    "f": [
+     555,
+     15,
+     96,
+     153
+    ],
+    "ax": 52
+   },
+   {
+    "n": "down",
+    "src": "levels/enemies_snow.png",
+    "f": [
+     655,
+     130,
+     177,
+     38
+    ],
+    "ax": 88
+   }
+  ],
+  "err": null
+ },
+ {
+  "name": "ICE-AXE GOON",
+  "grp": "ENEMY",
+  "lv": 6,
+  "poses": [
+   {
+    "n": "idle",
+    "src": "levels/enemies_snow.png",
+    "f": [
+     4,
+     172,
+     72,
+     170
+    ],
+    "ax": 27
+   },
+   {
+    "n": "walk",
+    "src": "levels/enemies_snow.png",
+    "f": [
+     80,
+     175,
+     86,
+     167
+    ],
+    "ax": 39
+   },
+   {
+    "n": "walk2",
+    "src": "levels/enemies_snow.png",
+    "f": [
+     170,
+     173,
+     87,
+     169
+    ],
+    "ax": 42
+   },
+   {
+    "n": "attack",
+    "src": "levels/enemies_snow.png",
+    "f": [
+     261,
+     177,
+     89,
+     165
+    ],
+    "ax": 51
+   },
+   {
+    "n": "jump",
+    "src": "levels/enemies_snow.png",
+    "f": [
+     354,
+     180,
+     79,
+     162
+    ],
+    "ax": 30
+   },
+   {
+    "n": "throw",
+    "src": "levels/enemies_snow.png",
+    "f": [
+     715,
+     181,
+     124,
+     161
+    ],
+    "ax": 47
+   },
+   {
+    "n": "hurt",
+    "src": "levels/enemies_snow.png",
+    "f": [
+     437,
+     185,
+     87,
+     157
+    ],
+    "ax": 54
+   },
+   {
+    "n": "down",
+    "src": "levels/enemies_snow.png",
+    "f": [
+     528,
+     296,
+     183,
+     46
+    ],
+    "ax": 91
+   }
+  ],
+  "err": null
+ },
+ {
+  "name": "FREEZE GOON",
+  "grp": "ENEMY",
+  "lv": 6,
+  "poses": [
+   {
+    "n": "idle",
+    "src": "levels/enemies_snow.png",
+    "f": [
+     4,
+     346,
+     99,
+     169
+    ],
+    "ax": 41
+   },
+   {
+    "n": "walk",
+    "src": "levels/enemies_snow.png",
+    "f": [
+     107,
+     347,
+     94,
+     168
+    ],
+    "ax": 49
+   },
+   {
+    "n": "walk2",
+    "src": "levels/enemies_snow.png",
+    "f": [
+     205,
+     347,
+     93,
+     168
+    ],
+    "ax": 43
+   },
+   {
+    "n": "attack",
+    "src": "levels/enemies_snow.png",
+    "f": [
+     302,
+     347,
+     136,
+     168
+    ],
+    "ax": 49
+   },
+   {
+    "n": "jump",
+    "src": "levels/enemies_snow.png",
+    "f": [
+     442,
+     354,
+     84,
+     161
+    ],
+    "ax": 32
+   },
+   {
+    "n": "shoot",
+    "src": "levels/enemies_snow.png",
+    "f": [
+     817,
+     354,
+     146,
+     161
+    ],
+    "ax": 41
+   },
+   {
+    "n": "hurt",
+    "src": "levels/enemies_snow.png",
+    "f": [
+     530,
+     361,
+     99,
+     154
+    ],
+    "ax": 48
+   },
+   {
+    "n": "down",
+    "src": "levels/enemies_snow.png",
+    "f": [
+     633,
+     460,
+     180,
+     55
+    ],
+    "ax": 90
+   }
+  ],
+  "err": null
+ },
+ {
+  "name": "SCAVENGER",
+  "grp": "ENEMY",
+  "lv": 7,
+  "poses": [
+   {
+    "n": "idle",
+    "src": "levels/enemies_scrap.png",
+    "f": [
+     4,
+     1,
+     85,
+     167
+    ],
+    "ax": 37
+   },
+   {
+    "n": "walk",
+    "src": "levels/enemies_scrap.png",
+    "f": [
+     93,
+     0,
+     84,
+     168
+    ],
+    "ax": 45
+   },
+   {
+    "n": "walk2",
+    "src": "levels/enemies_scrap.png",
+    "f": [
+     181,
+     0,
+     83,
+     168
+    ],
+    "ax": 41
+   },
+   {
+    "n": "attack",
+    "src": "levels/enemies_scrap.png",
+    "f": [
+     268,
+     2,
+     119,
+     166
+    ],
+    "ax": 44
+   },
+   {
+    "n": "jump",
+    "src": "levels/enemies_scrap.png",
+    "f": [
+     391,
+     14,
+     122,
+     154
+    ],
+    "ax": 55
+   },
+   {
+    "n": "dash",
+    "src": "levels/enemies_scrap.png",
+    "f": [
+     816,
+     53,
+     173,
+     115
+    ],
+    "ax": 86
+   },
+   {
+    "n": "hurt",
+    "src": "levels/enemies_scrap.png",
+    "f": [
+     517,
+     12,
+     109,
+     156
+    ],
+    "ax": 60
+   },
+   {
+    "n": "down",
+    "src": "levels/enemies_scrap.png",
+    "f": [
+     630,
+     124,
+     182,
+     44
+    ],
+    "ax": 91
+   }
+  ],
+  "err": null
+ },
+ {
+  "name": "CROWBAR GOON",
+  "grp": "ENEMY",
+  "lv": 7,
+  "poses": [
+   {
+    "n": "idle",
+    "src": "levels/enemies_scrap.png",
+    "f": [
+     4,
+     172,
+     70,
+     170
+    ],
+    "ax": 38
+   },
+   {
+    "n": "walk",
+    "src": "levels/enemies_scrap.png",
+    "f": [
+     78,
+     175,
+     86,
+     167
+    ],
+    "ax": 42
+   },
+   {
+    "n": "walk2",
+    "src": "levels/enemies_scrap.png",
+    "f": [
+     168,
+     173,
+     85,
+     169
+    ],
+    "ax": 48
+   },
+   {
+    "n": "attack",
+    "src": "levels/enemies_scrap.png",
+    "f": [
+     257,
+     177,
+     90,
+     165
+    ],
+    "ax": 49
+   },
+   {
+    "n": "jump",
+    "src": "levels/enemies_scrap.png",
+    "f": [
+     351,
+     180,
+     74,
+     162
+    ],
+    "ax": 44
+   },
+   {
+    "n": "throw",
+    "src": "levels/enemies_scrap.png",
+    "f": [
+     697,
+     178,
+     164,
+     164
+    ],
+    "ax": 68
+   },
+   {
+    "n": "hurt",
+    "src": "levels/enemies_scrap.png",
+    "f": [
+     429,
+     189,
+     86,
+     153
+    ],
+    "ax": 53
+   },
+   {
+    "n": "down",
+    "src": "levels/enemies_scrap.png",
+    "f": [
+     519,
+     304,
+     174,
+     38
+    ],
+    "ax": 87
+   }
+  ],
+  "err": null
+ },
+ {
+  "name": "WELDER BRUTE",
+  "grp": "ENEMY",
+  "lv": 7,
+  "poses": [
+   {
+    "n": "idle",
+    "src": "levels/enemies_scrap.png",
+    "f": [
+     4,
+     348,
+     90,
+     166
+    ],
+    "ax": 42
+   },
+   {
+    "n": "walk",
+    "src": "levels/enemies_scrap.png",
+    "f": [
+     98,
+     346,
+     90,
+     168
+    ],
+    "ax": 41
+   },
+   {
+    "n": "walk2",
+    "src": "levels/enemies_scrap.png",
+    "f": [
+     192,
+     346,
+     93,
+     168
+    ],
+    "ax": 50
+   },
+   {
+    "n": "attack",
+    "src": "levels/enemies_scrap.png",
+    "f": [
+     289,
+     355,
+     146,
+     159
+    ],
+    "ax": 57
+   },
+   {
+    "n": "jump",
+    "src": "levels/enemies_scrap.png",
+    "f": [
+     439,
+     359,
+     90,
+     155
+    ],
+    "ax": 39
+   },
+   {
+    "n": "shoot",
+    "src": "levels/enemies_scrap.png",
+    "f": [
+     817,
+     355,
+     150,
+     159
+    ],
+    "ax": 37
+   },
+   {
+    "n": "hurt",
+    "src": "levels/enemies_scrap.png",
+    "f": [
+     533,
+     354,
+     97,
+     160
+    ],
+    "ax": 49
+   },
+   {
+    "n": "down",
+    "src": "levels/enemies_scrap.png",
+    "f": [
+     634,
+     472,
+     179,
+     42
+    ],
+    "ax": 89
+   }
+  ],
+  "err": null
+ },
+ {
+  "name": "FORT GUARD",
+  "grp": "ENEMY",
+  "lv": 8,
+  "poses": [
+   {
+    "n": "idle",
+    "src": "levels/enemies_guard.png",
+    "f": [
+     4,
+     1,
+     93,
+     167
+    ],
+    "ax": 40
+   },
+   {
+    "n": "walk",
+    "src": "levels/enemies_guard.png",
+    "f": [
+     101,
+     0,
+     89,
+     168
+    ],
+    "ax": 40
+   },
+   {
+    "n": "walk2",
+    "src": "levels/enemies_guard.png",
+    "f": [
+     194,
+     0,
+     92,
+     168
+    ],
+    "ax": 45
+   },
+   {
+    "n": "attack",
+    "src": "levels/enemies_guard.png",
+    "f": [
+     290,
+     8,
+     144,
+     160
+    ],
+    "ax": 61
+   },
+   {
+    "n": "jump",
+    "src": "levels/enemies_guard.png",
+    "f": [
+     438,
+     39,
+     144,
+     129
+    ],
+    "ax": 55
+   },
+   {
+    "n": "dash",
+    "src": "levels/enemies_guard.png",
+    "f": [
+     866,
+     59,
+     134,
+     109
+    ],
+    "ax": 85
+   },
+   {
+    "n": "hurt",
+    "src": "levels/enemies_guard.png",
+    "f": [
+     586,
+     19,
+     91,
+     149
+    ],
+    "ax": 57
+   },
+   {
+    "n": "down",
+    "src": "levels/enemies_guard.png",
+    "f": [
+     681,
+     130,
+     181,
+     38
+    ],
+    "ax": 90
+   }
+  ],
+  "err": null
+ },
+ {
+  "name": "BATON GUARD",
+  "grp": "ENEMY",
+  "lv": 8,
+  "poses": [
+   {
+    "n": "idle",
+    "src": "levels/enemies_guard.png",
+    "f": [
+     4,
+     172,
+     64,
+     171
+    ],
+    "ax": 30
+   },
+   {
+    "n": "walk",
+    "src": "levels/enemies_guard.png",
+    "f": [
+     72,
+     175,
+     76,
+     168
+    ],
+    "ax": 29
+   },
+   {
+    "n": "walk2",
+    "src": "levels/enemies_guard.png",
+    "f": [
+     152,
+     175,
+     75,
+     168
+    ],
+    "ax": 36
+   },
+   {
+    "n": "attack",
+    "src": "levels/enemies_guard.png",
+    "f": [
+     231,
+     179,
+     150,
+     164
+    ],
+    "ax": 73
+   },
+   {
+    "n": "jump",
+    "src": "levels/enemies_guard.png",
+    "f": [
+     385,
+     181,
+     100,
+     162
+    ],
+    "ax": 42
+   },
+   {
+    "n": "throw",
+    "src": "levels/enemies_guard.png",
+    "f": [
+     783,
+     185,
+     129,
+     158
+    ],
+    "ax": 57
+   },
+   {
+    "n": "hurt",
+    "src": "levels/enemies_guard.png",
+    "f": [
+     489,
+     191,
+     102,
+     152
+    ],
+    "ax": 50
+   },
+   {
+    "n": "down",
+    "src": "levels/enemies_guard.png",
+    "f": [
+     595,
+     303,
+     184,
+     40
+    ],
+    "ax": 92
+   }
+  ],
+  "err": null
+ },
+ {
+  "name": "HEAVY GUARD",
+  "grp": "ENEMY",
+  "lv": 8,
+  "poses": [
+   {
+    "n": "idle",
+    "src": "levels/enemies_guard.png",
+    "f": [
+     4,
+     347,
+     96,
+     168
+    ],
+    "ax": 44
+   },
+   {
+    "n": "walk",
+    "src": "levels/enemies_guard.png",
+    "f": [
+     104,
+     347,
+     103,
+     168
+    ],
+    "ax": 51
+   },
+   {
+    "n": "walk2",
+    "src": "levels/enemies_guard.png",
+    "f": [
+     211,
+     347,
+     102,
+     168
+    ],
+    "ax": 53
+   },
+   {
+    "n": "attack",
+    "src": "levels/enemies_guard.png",
+    "f": [
+     317,
+     347,
+     138,
+     168
+    ],
+    "ax": 46
+   },
+   {
+    "n": "grab",
+    "src": "levels/enemies_guard.png",
+    "f": [
+     459,
+     347,
+     138,
+     168
+    ],
+    "ax": 54
+   },
+   {
+    "n": "jump",
+    "src": "levels/enemies_guard.png",
+    "f": [
+     601,
+     349,
+     96,
+     166
+    ],
+    "ax": 42
+   },
+   {
+    "n": "shoot",
+    "src": "levels/enemies_guard.png",
+    "f": [
+     1020,
+     349,
+     130,
+     166
+    ],
+    "ax": 38
+   },
+   {
+    "n": "hurt",
+    "src": "levels/enemies_guard.png",
+    "f": [
+     701,
+     355,
+     122,
+     160
+    ],
+    "ax": 57
+   },
+   {
+    "n": "down",
+    "src": "levels/enemies_guard.png",
+    "f": [
+     827,
+     466,
+     189,
+     49
+    ],
+    "ax": 94
+   }
+  ],
+  "err": null
+ },
+ {
+  "name": "EDO SHINOBI",
+  "grp": "ENEMY",
+  "lv": 9,
+  "poses": [
+   {
+    "n": "idle",
+    "src": "levels/enemies_edo.png",
+    "f": [
+     4,
+     15,
+     111,
+     154
+    ],
+    "ax": 53
+   },
+   {
+    "n": "walk",
+    "src": "levels/enemies_edo.png",
+    "f": [
+     119,
+     0,
+     92,
+     169
+    ],
+    "ax": 45
+   },
+   {
+    "n": "walk2",
+    "src": "levels/enemies_edo.png",
+    "f": [
+     215,
+     2,
+     90,
+     167
+    ],
+    "ax": 48
+   },
+   {
+    "n": "attack",
+    "src": "levels/enemies_edo.png",
+    "f": [
+     309,
+     13,
+     147,
+     156
+    ],
+    "ax": 54
+   },
+   {
+    "n": "jump",
+    "src": "levels/enemies_edo.png",
+    "f": [
+     460,
+     41,
+     142,
+     128
+    ],
+    "ax": 58
+   },
+   {
+    "n": "dash",
+    "src": "levels/enemies_edo.png",
+    "f": [
+     895,
+     49,
+     145,
+     120
+    ],
+    "ax": 79
+   },
+   {
+    "n": "hurt",
+    "src": "levels/enemies_edo.png",
+    "f": [
+     606,
+     16,
+     96,
+     153
+    ],
+    "ax": 59
+   },
+   {
+    "n": "down",
+    "src": "levels/enemies_edo.png",
+    "f": [
+     706,
+     121,
+     185,
+     48
+    ],
+    "ax": 92
+   }
+  ],
+  "err": null
+ },
+ {
+  "name": "EDO ASSASSIN",
+  "grp": "ENEMY",
+  "lv": 9,
+  "poses": [
+   {
+    "n": "idle",
+    "src": "levels/enemies_edo.png",
+    "f": [
+     4,
+     174,
+     125,
+     168
+    ],
+    "ax": 36
+   },
+   {
+    "n": "walk",
+    "src": "levels/enemies_edo.png",
+    "f": [
+     133,
+     173,
+     94,
+     169
+    ],
+    "ax": 44
+   },
+   {
+    "n": "walk2",
+    "src": "levels/enemies_edo.png",
+    "f": [
+     231,
+     175,
+     86,
+     167
+    ],
+    "ax": 42
+   },
+   {
+    "n": "attack",
+    "src": "levels/enemies_edo.png",
+    "f": [
+     321,
+     181,
+     166,
+     161
+    ],
+    "ax": 52
+   },
+   {
+    "n": "jump",
+    "src": "levels/enemies_edo.png",
+    "f": [
+     491,
+     189,
+     99,
+     153
+    ],
+    "ax": 49
+   },
+   {
+    "n": "throw",
+    "src": "levels/enemies_edo.png",
+    "f": [
+     886,
+     182,
+     135,
+     160
+    ],
+    "ax": 52
+   },
+   {
+    "n": "hurt",
+    "src": "levels/enemies_edo.png",
+    "f": [
+     594,
+     187,
+     99,
+     155
+    ],
+    "ax": 58
+   },
+   {
+    "n": "down",
+    "src": "levels/enemies_edo.png",
+    "f": [
+     697,
+     303,
+     185,
+     39
+    ],
+    "ax": 92
+   }
+  ],
+  "err": null
+ },
+ {
+  "name": "RONIN GUNNER",
+  "grp": "ENEMY",
+  "lv": 9,
+  "poses": [
+   {
+    "n": "idle",
+    "src": "levels/enemies_edo.png",
+    "f": [
+     4,
+     349,
+     139,
+     165
+    ],
+    "ax": 46
+   },
+   {
+    "n": "walk",
+    "src": "levels/enemies_edo.png",
+    "f": [
+     147,
+     346,
+     99,
+     168
+    ],
+    "ax": 46
+   },
+   {
+    "n": "walk2",
+    "src": "levels/enemies_edo.png",
+    "f": [
+     250,
+     346,
+     98,
+     168
+    ],
+    "ax": 53
+   },
+   {
+    "n": "attack",
+    "src": "levels/enemies_edo.png",
+    "f": [
+     352,
+     354,
+     149,
+     160
+    ],
+    "ax": 59
+   },
+   {
+    "n": "jump",
+    "src": "levels/enemies_edo.png",
+    "f": [
+     505,
+     364,
+     99,
+     150
+    ],
+    "ax": 44
+   },
+   {
+    "n": "shoot",
+    "src": "levels/enemies_edo.png",
+    "f": [
+     893,
+     359,
+     208,
+     155
+    ],
+    "ax": 61
+   },
+   {
+    "n": "hurt",
+    "src": "levels/enemies_edo.png",
+    "f": [
+     608,
+     368,
+     95,
+     146
+    ],
+    "ax": 58
+   },
+   {
+    "n": "down",
+    "src": "levels/enemies_edo.png",
+    "f": [
+     707,
+     473,
+     182,
+     41
+    ],
+    "ax": 91
+   }
+  ],
+  "err": null
+ },
+ {
+  "name": "DECKHAND",
+  "grp": "ENEMY",
+  "lv": 10,
+  "poses": [
+   {
+    "n": "idle",
+    "src": "levels/enemies_pirate.png",
+    "f": [
+     4,
+     1,
+     96,
+     167
+    ],
+    "ax": 42
+   },
+   {
+    "n": "walk",
+    "src": "levels/enemies_pirate.png",
+    "f": [
+     104,
+     0,
+     82,
+     168
+    ],
+    "ax": 38
+   },
+   {
+    "n": "walk2",
+    "src": "levels/enemies_pirate.png",
+    "f": [
+     190,
+     0,
+     88,
+     168
+    ],
+    "ax": 44
+   },
+   {
+    "n": "attack",
+    "src": "levels/enemies_pirate.png",
+    "f": [
+     282,
+     12,
+     168,
+     156
+    ],
+    "ax": 66
+   },
+   {
+    "n": "jump",
+    "src": "levels/enemies_pirate.png",
+    "f": [
+     454,
+     23,
+     145,
+     145
+    ],
+    "ax": 68
+   },
+   {
+    "n": "dash",
+    "src": "levels/enemies_pirate.png",
+    "f": [
+     886,
+     74,
+     152,
+     94
+    ],
+    "ax": 35
+   },
+   {
+    "n": "hurt",
+    "src": "levels/enemies_pirate.png",
+    "f": [
+     603,
+     12,
+     88,
+     156
+    ],
+    "ax": 57
+   },
+   {
+    "n": "down",
+    "src": "levels/enemies_pirate.png",
+    "f": [
+     695,
+     120,
+     187,
+     48
+    ],
+    "ax": 93
+   }
+  ],
+  "err": null
+ },
+ {
+  "name": "BUCCANEER",
+  "grp": "ENEMY",
+  "lv": 10,
+  "poses": [
+   {
+    "n": "idle",
+    "src": "levels/enemies_pirate.png",
+    "f": [
+     4,
+     172,
+     72,
+     169
+    ],
+    "ax": 34
+   },
+   {
+    "n": "walk",
+    "src": "levels/enemies_pirate.png",
+    "f": [
+     80,
+     173,
+     89,
+     168
+    ],
+    "ax": 36
+   },
+   {
+    "n": "walk2",
+    "src": "levels/enemies_pirate.png",
+    "f": [
+     173,
+     173,
+     91,
+     168
+    ],
+    "ax": 37
+   },
+   {
+    "n": "attack",
+    "src": "levels/enemies_pirate.png",
+    "f": [
+     268,
+     183,
+     146,
+     158
+    ],
+    "ax": 48
+   },
+   {
+    "n": "jump",
+    "src": "levels/enemies_pirate.png",
+    "f": [
+     418,
+     189,
+     98,
+     152
+    ],
+    "ax": 38
+   },
+   {
+    "n": "throw",
+    "src": "levels/enemies_pirate.png",
+    "f": [
+     784,
+     186,
+     118,
+     155
+    ],
+    "ax": 44
+   },
+   {
+    "n": "hurt",
+    "src": "levels/enemies_pirate.png",
+    "f": [
+     520,
+     184,
+     85,
+     157
+    ],
+    "ax": 42
+   },
+   {
+    "n": "down",
+    "src": "levels/enemies_pirate.png",
+    "f": [
+     609,
+     298,
+     171,
+     43
+    ],
+    "ax": 85
+   }
+  ],
+  "err": null
+ },
+ {
+  "name": "CANNON BRUTE",
+  "grp": "ENEMY",
+  "lv": 10,
+  "poses": [
+   {
+    "n": "idle",
+    "src": "levels/enemies_pirate.png",
+    "f": [
+     4,
+     355,
+     102,
+     161
+    ],
+    "ax": 48
+   },
+   {
+    "n": "walk",
+    "src": "levels/enemies_pirate.png",
+    "f": [
+     110,
+     348,
+     103,
+     168
+    ],
+    "ax": 47
+   },
+   {
+    "n": "walk2",
+    "src": "levels/enemies_pirate.png",
+    "f": [
+     217,
+     348,
+     99,
+     168
+    ],
+    "ax": 47
+   },
+   {
+    "n": "attack",
+    "src": "levels/enemies_pirate.png",
+    "f": [
+     320,
+     354,
+     146,
+     162
+    ],
+    "ax": 57
+   },
+   {
+    "n": "jump",
+    "src": "levels/enemies_pirate.png",
+    "f": [
+     470,
+     359,
+     96,
+     157
+    ],
+    "ax": 43
+   },
+   {
+    "n": "shoot",
+    "src": "levels/enemies_pirate.png",
+    "f": [
+     852,
+     345,
+     183,
+     171
+    ],
+    "ax": 42
+   },
+   {
+    "n": "hurt",
+    "src": "levels/enemies_pirate.png",
+    "f": [
+     570,
+     362,
+     94,
+     154
+    ],
+    "ax": 48
+   },
+   {
+    "n": "down",
+    "src": "levels/enemies_pirate.png",
+    "f": [
+     668,
+     465,
+     180,
+     51
+    ],
+    "ax": 90
+   }
+  ],
+  "err": null
+ },
+ {
+  "name": "SWAMP FROGMAN",
+  "grp": "ENEMY",
+  "lv": 11,
+  "poses": [
+   {
+    "n": "idle",
+    "src": "levels/enemies_swamp.png",
+    "f": [
+     4,
+     17,
+     130,
+     151
+    ],
+    "ax": 60
+   },
+   {
+    "n": "walk",
+    "src": "levels/enemies_swamp.png",
+    "f": [
+     138,
+     0,
+     105,
+     168
+    ],
+    "ax": 44
+   },
+   {
+    "n": "walk2",
+    "src": "levels/enemies_swamp.png",
+    "f": [
+     247,
+     0,
+     111,
+     168
+    ],
+    "ax": 50
+   },
+   {
+    "n": "attack",
+    "src": "levels/enemies_swamp.png",
+    "f": [
+     362,
+     23,
+     180,
+     145
+    ],
+    "ax": 77
+   },
+   {
+    "n": "jump",
+    "src": "levels/enemies_swamp.png",
+    "f": [
+     546,
+     2,
+     149,
+     166
+    ],
+    "ax": 70
+   },
+   {
+    "n": "dash",
+    "src": "levels/enemies_swamp.png",
+    "f": [
+     992,
+     89,
+     180,
+     79
+    ],
+    "ax": 106
+   },
+   {
+    "n": "hurt",
+    "src": "levels/enemies_swamp.png",
+    "f": [
+     699,
+     2,
+     94,
+     166
+    ],
+    "ax": 49
+   },
+   {
+    "n": "down",
+    "src": "levels/enemies_swamp.png",
+    "f": [
+     797,
+     118,
+     191,
+     50
+    ],
+    "ax": 95
+   }
+  ],
+  "err": null
+ },
+ {
+  "name": "LIZARD OUTLAW",
+  "grp": "ENEMY",
+  "lv": 11,
+  "poses": [
+   {
+    "n": "idle",
+    "src": "levels/enemies_swamp.png",
+    "f": [
+     4,
+     172,
+     88,
+     170
+    ],
+    "ax": 36
+   },
+   {
+    "n": "walk",
+    "src": "levels/enemies_swamp.png",
+    "f": [
+     96,
+     173,
+     101,
+     169
+    ],
+    "ax": 46
+   },
+   {
+    "n": "walk2",
+    "src": "levels/enemies_swamp.png",
+    "f": [
+     201,
+     175,
+     103,
+     167
+    ],
+    "ax": 48
+   },
+   {
+    "n": "attack",
+    "src": "levels/enemies_swamp.png",
+    "f": [
+     308,
+     177,
+     96,
+     165
+    ],
+    "ax": 51
+   },
+   {
+    "n": "jump",
+    "src": "levels/enemies_swamp.png",
+    "f": [
+     408,
+     184,
+     92,
+     158
+    ],
+    "ax": 43
+   },
+   {
+    "n": "throw",
+    "src": "levels/enemies_swamp.png",
+    "f": [
+     808,
+     177,
+     144,
+     165
+    ],
+    "ax": 61
+   },
+   {
+    "n": "hurt",
+    "src": "levels/enemies_swamp.png",
+    "f": [
+     504,
+     180,
+     112,
+     162
+    ],
+    "ax": 49
+   },
+   {
+    "n": "down",
+    "src": "levels/enemies_swamp.png",
+    "f": [
+     620,
+     290,
+     184,
+     52
+    ],
+    "ax": 92
+   }
+  ],
+  "err": null
+ },
+ {
+  "name": "BOG BRUTE",
+  "grp": "ENEMY",
+  "lv": 11,
+  "poses": [
+   {
+    "n": "idle",
+    "src": "levels/enemies_swamp.png",
+    "f": [
+     4,
+     347,
+     116,
+     168
+    ],
+    "ax": 50
+   },
+   {
+    "n": "walk",
+    "src": "levels/enemies_swamp.png",
+    "f": [
+     124,
+     346,
+     115,
+     169
+    ],
+    "ax": 54
+   },
+   {
+    "n": "walk2",
+    "src": "levels/enemies_swamp.png",
+    "f": [
+     243,
+     348,
+     120,
+     167
+    ],
+    "ax": 57
+   },
+   {
+    "n": "attack",
+    "src": "levels/enemies_swamp.png",
+    "f": [
+     367,
+     348,
+     140,
+     167
+    ],
+    "ax": 55
+   },
+   {
+    "n": "jump",
+    "src": "levels/enemies_swamp.png",
+    "f": [
+     511,
+     350,
+     111,
+     165
+    ],
+    "ax": 48
+   },
+   {
+    "n": "shoot",
+    "src": "levels/enemies_swamp.png",
+    "f": [
+     933,
+     347,
+     118,
+     168
+    ],
+    "ax": 44
+   },
+   {
+    "n": "hurt",
+    "src": "levels/enemies_swamp.png",
+    "f": [
+     626,
+     350,
+     109,
+     165
+    ],
+    "ax": 53
+   },
+   {
+    "n": "down",
+    "src": "levels/enemies_swamp.png",
+    "f": [
+     739,
+     458,
+     190,
+     57
+    ],
+    "ax": 95
+   }
+  ],
+  "err": null
+ },
+ {
+  "name": "DIM-X TROOPER",
+  "grp": "ENEMY",
+  "lv": 12,
+  "poses": [
+   {
+    "n": "idle",
+    "src": "levels/enemies_trooper.png",
+    "f": [
+     4,
+     2,
+     87,
+     167
+    ],
+    "ax": 38
+   },
+   {
+    "n": "walk",
+    "src": "levels/enemies_trooper.png",
+    "f": [
+     95,
+     2,
+     88,
+     167
+    ],
+    "ax": 38
+   },
+   {
+    "n": "walk2",
+    "src": "levels/enemies_trooper.png",
+    "f": [
+     187,
+     0,
+     90,
+     169
+    ],
+    "ax": 46
+   },
+   {
+    "n": "attack",
+    "src": "levels/enemies_trooper.png",
+    "f": [
+     281,
+     5,
+     114,
+     164
+    ],
+    "ax": 45
+   },
+   {
+    "n": "jump",
+    "src": "levels/enemies_trooper.png",
+    "f": [
+     399,
+     4,
+     84,
+     165
+    ],
+    "ax": 46
+   },
+   {
+    "n": "dash",
+    "src": "levels/enemies_trooper.png",
+    "f": [
+     755,
+     68,
+     152,
+     101
+    ],
+    "ax": 84
+   },
+   {
+    "n": "hurt",
+    "src": "levels/enemies_trooper.png",
+    "f": [
+     487,
+     16,
+     90,
+     153
+    ],
+    "ax": 46
+   },
+   {
+    "n": "down",
+    "src": "levels/enemies_trooper.png",
+    "f": [
+     581,
+     133,
+     170,
+     36
+    ],
+    "ax": 85
+   }
+  ],
+  "err": null
+ },
+ {
+  "name": "SHOCK TROOPER",
+  "grp": "ENEMY",
+  "lv": 12,
+  "poses": [
+   {
+    "n": "idle",
+    "src": "levels/enemies_trooper.png",
+    "f": [
+     4,
+     173,
+     81,
+     171
+    ],
+    "ax": 34
+   },
+   {
+    "n": "walk",
+    "src": "levels/enemies_trooper.png",
+    "f": [
+     89,
+     175,
+     89,
+     169
+    ],
+    "ax": 39
+   },
+   {
+    "n": "walk2",
+    "src": "levels/enemies_trooper.png",
+    "f": [
+     182,
+     177,
+     86,
+     167
+    ],
+    "ax": 42
+   },
+   {
+    "n": "attack",
+    "src": "levels/enemies_trooper.png",
+    "f": [
+     272,
+     180,
+     154,
+     164
+    ],
+    "ax": 51
+   },
+   {
+    "n": "jump",
+    "src": "levels/enemies_trooper.png",
+    "f": [
+     430,
+     182,
+     98,
+     162
+    ],
+    "ax": 52
+   },
+   {
+    "n": "throw",
+    "src": "levels/enemies_trooper.png",
+    "f": [
+     831,
+     182,
+     151,
+     162
+    ],
+    "ax": 77
+   },
+   {
+    "n": "hurt",
+    "src": "levels/enemies_trooper.png",
+    "f": [
+     532,
+     191,
+     108,
+     153
+    ],
+    "ax": 52
+   },
+   {
+    "n": "down",
+    "src": "levels/enemies_trooper.png",
+    "f": [
+     644,
+     307,
+     183,
+     37
+    ],
+    "ax": 91
+   }
+  ],
+  "err": null
+ },
+ {
+  "name": "STONE HEAVY",
+  "grp": "ENEMY",
+  "lv": 12,
+  "poses": [
+   {
+    "n": "idle",
+    "src": "levels/enemies_trooper.png",
+    "f": [
+     4,
+     348,
+     103,
+     171
+    ],
+    "ax": 46
+   },
+   {
+    "n": "walk",
+    "src": "levels/enemies_trooper.png",
+    "f": [
+     111,
+     350,
+     108,
+     169
+    ],
+    "ax": 54
+   },
+   {
+    "n": "walk2",
+    "src": "levels/enemies_trooper.png",
+    "f": [
+     223,
+     352,
+     113,
+     167
+    ],
+    "ax": 58
+   },
+   {
+    "n": "attack",
+    "src": "levels/enemies_trooper.png",
+    "f": [
+     340,
+     349,
+     143,
+     170
+    ],
+    "ax": 51
+   },
+   {
+    "n": "jump",
+    "src": "levels/enemies_trooper.png",
+    "f": [
+     487,
+     360,
+     110,
+     159
+    ],
+    "ax": 48
+   },
+   {
+    "n": "shoot",
+    "src": "levels/enemies_trooper.png",
+    "f": [
+     901,
+     354,
+     141,
+     165
+    ],
+    "ax": 41
+   },
+   {
+    "n": "hurt",
+    "src": "levels/enemies_trooper.png",
+    "f": [
+     601,
+     362,
+     103,
+     157
+    ],
+    "ax": 47
+   },
+   {
+    "n": "down",
+    "src": "levels/enemies_trooper.png",
+    "f": [
+     708,
+     471,
+     189,
+     48
+    ],
+    "ax": 94
+   }
+  ],
+  "err": null
+ },
+ {
+  "name": "FOOT HEAVY",
+  "grp": "ENEMY",
+  "lv": 15,
+  "poses": [
+   {
+    "n": "idle",
+    "src": "levels/enemies_foot.png",
+    "f": [
+     4,
+     1,
+     112,
+     167
+    ],
+    "ax": 45
+   },
+   {
+    "n": "walk",
+    "src": "levels/enemies_foot.png",
+    "f": [
+     120,
+     0,
+     97,
+     168
+    ],
+    "ax": 47
+   },
+   {
+    "n": "walk2",
+    "src": "levels/enemies_foot.png",
+    "f": [
+     221,
+     0,
+     92,
+     168
+    ],
+    "ax": 49
+   },
+   {
+    "n": "attack",
+    "src": "levels/enemies_foot.png",
+    "f": [
+     317,
+     4,
+     146,
+     164
+    ],
+    "ax": 56
+   },
+   {
+    "n": "jump",
+    "src": "levels/enemies_foot.png",
+    "f": [
+     467,
+     11,
+     107,
+     157
+    ],
+    "ax": 48
+   },
+   {
+    "n": "shoot",
+    "src": "levels/enemies_foot.png",
+    "f": [
+     868,
+     6,
+     141,
+     162
+    ],
+    "ax": 46
+   },
+   {
+    "n": "hurt",
+    "src": "levels/enemies_foot.png",
+    "f": [
+     578,
+     13,
+     91,
+     155
+    ],
+    "ax": 47
+   },
+   {
+    "n": "down",
+    "src": "levels/enemies_foot.png",
+    "f": [
+     673,
+     120,
+     191,
+     48
+    ],
+    "ax": 95
+   }
+  ],
+  "err": null
+ },
+ {
+  "name": "AMBER",
+  "grp": "ALLY",
+  "lv": 1,
+  "poses": [
+   {
+    "n": "tied",
+    "src": "atlas_amber.png",
+    "f": [
+     0,
+     14,
+     63,
+     136
+    ]
+   },
+   {
+    "n": "shout",
+    "src": "atlas_amber.png",
+    "f": [
+     65,
+     14,
+     58,
+     136
+    ]
+   },
+   {
+    "n": "free",
+    "src": "atlas_amber.png",
+    "f": [
+     125,
+     0,
+     62,
+     150
+    ]
+   }
+  ],
+  "err": null
+ }
+]

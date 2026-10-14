@@ -1,0 +1,590 @@
+[
+ {
+  "group": "Landmarks",
+  "name": "landmarks_all",
+  "title": "Every landmark",
+  "sub": "HARBORPLACE · USS CONSTELLATION · WORLD TRADE CENTER · NATIONAL AQUARIUM · POWER PLANT · FOUR SEASONS · PENDRY · FELLS POINT · WASHINGTON MONUMENT · ORIOLE PARK · M&T BANK STADIUM · SCIENCE CENTER · FEDERAL HILL · DOMINO SUGARS · UNDER ARMOUR · FORT MCHENRY",
+  "segs": [
+   "harborplace",
+   "constellation",
+   "wtc",
+   "aquarium",
+   "powerplant",
+   "fourseasons",
+   "pendry",
+   "fells",
+   "monument",
+   "orioles",
+   "ravens",
+   "science",
+   "fedhill",
+   "domino",
+   "underarmour",
+   "fort"
+  ],
+  "recapture": [
+   "landmarks",
+   "stadiums"
+  ],
+  "gif": 3036514,
+  "mp4": 2072530,
+  "webp": 0,
+  "frames": 432
+ },
+ {
+  "group": "Bosses",
+  "name": "bosses_all",
+  "title": "Every boss",
+  "sub": "THE CHIP KID · CAPTAIN COBBLESTONE · THE PENTHOUSE PIGEON · BIG JIMMY · VOLTAGE VIC · CHEF CRABCAKE · THE POOL SHARK · ARABBER AL · THE STOOP SCRUBBER · BIRD BRAIN BOBBY · THE RAVEN KING · DR. SHELLACIOUS · THE HON QUEEN · SUGAR RUSH · THE COMPRESSION KING · ADMIRAL REDCLAW · PIT BEEF PETE · RIPTIDE RODNEY · KINGPIN CARL · THE DRAGON BOAT DUCHESS · THE ONE-EYED BREWMASTER",
+  "segs": [
+   "chipkid",
+   "cobblestone",
+   "pigeon",
+   "jimmy",
+   "vic",
+   "crabcake",
+   "poolshark",
+   "al",
+   "scrubber",
+   "bobby",
+   "ravenking",
+   "shellacious",
+   "honqueen",
+   "sugarrush",
+   "compking",
+   "redclaw",
+   "pete",
+   "rodney",
+   "carl",
+   "duchess",
+   "brewmaster"
+  ],
+  "recapture": [
+   "rigs",
+   "stadiums"
+  ],
+  "gif": 3304854,
+  "mp4": 1469968,
+  "webp": 0,
+  "frames": 504
+ },
+ {
+  "group": "Fighters",
+  "name": "fighters_team",
+  "title": "HAROLD & MAVIS",
+  "sub": "THE PLAYER TEAM (MAVIS = AI PARTNER)",
+  "segs": [
+   "team"
+  ],
+  "recapture": [
+   "rigs"
+  ],
+  "gif": 2205360,
+  "mp4": 128650,
+  "webp": 0,
+  "frames": 39
+ },
+ {
+  "group": "Fighters",
+  "name": "fighters_harbor_rats",
+  "title": "HARBOR RATS",
+  "sub": "TURF: HARBORPLACE / WTC / MONUMENT",
+  "segs": [
+   "harbor_rats"
+  ],
+  "recapture": [
+   "rigs",
+   "gang wiring"
+  ],
+  "gif": 1975417,
+  "mp4": 115972,
+  "webp": 0,
+  "frames": 33
+ },
+ {
+  "group": "Fighters",
+  "name": "fighters_pier_gulls",
+  "title": "PIER GULLS",
+  "sub": "TURF: AQUARIUM / POWER PLANT",
+  "segs": [
+   "pier_gulls"
+  ],
+  "recapture": [
+   "rigs",
+   "gang wiring"
+  ],
+  "gif": 1860777,
+  "mp4": 94137,
+  "webp": 0,
+  "frames": 33
+ },
+ {
+  "group": "Fighters",
+  "name": "fighters_cobble_catfish",
+  "title": "COBBLESTONE CATFISH",
+  "sub": "TURF: HARBOR EAST / FELLS POINT",
+  "segs": [
+   "cobble_catfish"
+  ],
+  "recapture": [
+   "rigs",
+   "gang wiring"
+  ],
+  "gif": 2270145,
+  "mp4": 126359,
+  "webp": 0,
+  "frames": 33
+ },
+ {
+  "group": "Fighters",
+  "name": "fighters_masked_bandits",
+  "title": "MASKED BANDITS",
+  "sub": "TURF: STADIUMS / SCIENCE CENTER",
+  "segs": [
+   "masked_bandits"
+  ],
+  "recapture": [
+   "rigs",
+   "gang wiring"
+  ],
+  "gif": 1737145,
+  "mp4": 78585,
+  "webp": 0,
+  "frames": 33
+ },
+ {
+  "group": "Fighters",
+  "name": "fighters_key_hwy_otters",
+  "title": "KEY HIGHWAY OTTERS",
+  "sub": "TURF: FEDERAL HILL / KEY HWY / FORT",
+  "segs": [
+   "key_hwy_otters"
+  ],
+  "recapture": [
+   "rigs",
+   "gang wiring"
+  ],
+  "gif": 1860067,
+  "mp4": 86648,
+  "webp": 0,
+  "frames": 33
+ },
+ {
+  "group": "Special Moves",
+  "name": "specials_cane_combo",
+  "title": "CANE COMBO",
+  "sub": "HAROLD: 3-HIT CANE STRING",
+  "segs": [
+   "cane_combo"
+  ],
+  "recapture": [
+   "rigs"
+  ],
+  "gif": 1814209,
+  "mp4": 86165,
+  "webp": 0,
+  "frames": 30
+ },
+ {
+  "group": "Special Moves",
+  "name": "specials_air_cane",
+  "title": "AIR CANE",
+  "sub": "JUMP + SWING",
+  "segs": [
+   "air_cane"
+  ],
+  "recapture": [
+   "rigs"
+  ],
+  "gif": 642451,
+  "mp4": 54910,
+  "webp": 0,
+  "frames": 27
+ },
+ {
+  "group": "Special Moves",
+  "name": "specials_cane_quake",
+  "title": "CANE QUAKE",
+  "sub": "POWER: HOP, FLIP, SLAM + MAVIS SPIN",
+  "segs": [
+   "cane_quake"
+  ],
+  "recapture": [
+   "rigs"
+  ],
+  "gif": 1481487,
+  "mp4": 93913,
+  "webp": 0,
+  "frames": 33
+ },
+ {
+  "group": "Special Moves",
+  "name": "specials_purse_swing",
+  "title": "PURSE SWING",
+  "sub": "MAVIS'S HANDBAG",
+  "segs": [
+   "purse_swing"
+  ],
+  "recapture": [
+   "rigs"
+  ],
+  "gif": 2169567,
+  "mp4": 115148,
+  "webp": 0,
+  "frames": 33
+ },
+ {
+  "group": "Special Moves",
+  "name": "specials_tag_finisher",
+  "title": "TAG-TEAM FINISHER",
+  "sub": "DIZZY THUG: FINISH (QTE)",
+  "segs": [
+   "tag_finisher"
+  ],
+  "recapture": [
+   "rigs"
+  ],
+  "gif": 1476832,
+  "mp4": 98399,
+  "webp": 0,
+  "frames": 42
+ },
+ {
+  "group": "Special Moves",
+  "name": "specials_cane_torpedo",
+  "title": "CANE TORPEDO",
+  "sub": "BIG JIMMY DUEL POWER",
+  "segs": [
+   "cane_torpedo"
+  ],
+  "recapture": [
+   "rigs"
+  ],
+  "gif": 1710706,
+  "mp4": 172514,
+  "webp": 0,
+  "frames": 30
+ },
+ {
+  "group": "Special Moves",
+  "name": "specials_chipkid_specials",
+  "title": "HON! HOMER",
+  "sub": "CHIP KID DUEL POWER SPECIAL",
+  "segs": [
+   "chipkid_specials"
+  ],
+  "recapture": [
+   "rigs"
+  ],
+  "gif": 1741919,
+  "mp4": 198903,
+  "webp": 0,
+  "frames": 36
+ },
+ {
+  "group": "Special Moves",
+  "name": "specials_chefs_flip",
+  "title": "CHEF'S FLIP",
+  "sub": "TEAM-UP VS CHEF CRABCAKE",
+  "segs": [
+   "chefs_flip"
+  ],
+  "recapture": [
+   "rigs"
+  ],
+  "gif": 1752060,
+  "mp4": 167751,
+  "webp": 0,
+  "frames": 33
+ },
+ {
+  "group": "Special Moves",
+  "name": "specials_clearance_sale",
+  "title": "CLEARANCE SALE",
+  "sub": "POWER VS THE COMPRESSION KING",
+  "segs": [
+   "clearance_sale"
+  ],
+  "recapture": [
+   "rigs"
+  ],
+  "gif": 508420,
+  "mp4": 59576,
+  "webp": 0,
+  "frames": 33
+ },
+ {
+  "group": "Special Moves",
+  "name": "specials_bank_shot",
+  "title": "BANK SHOT",
+  "sub": "TEAM-UP VS THE POOL SHARK",
+  "segs": [
+   "bank_shot"
+  ],
+  "recapture": [
+   "rigs"
+  ],
+  "gif": 997229,
+  "mp4": 78065,
+  "webp": 0,
+  "frames": 33
+ },
+ {
+  "group": "Special Moves",
+  "name": "specials_stoop_surf",
+  "title": "STOOP SURF",
+  "sub": "TEAM-UP VS THE STOOP SCRUBBER",
+  "segs": [
+   "stoop_surf"
+  ],
+  "recapture": [
+   "rigs"
+  ],
+  "gif": 1364698,
+  "mp4": 74596,
+  "webp": 0,
+  "frames": 33
+ },
+ {
+  "group": "Special Moves",
+  "name": "specials_plot_twist",
+  "title": "PLOT TWIST",
+  "sub": "POWER VS DR. SHELLACIOUS",
+  "segs": [
+   "plot_twist"
+  ],
+  "recapture": [
+   "rigs"
+  ],
+  "gif": 1492711,
+  "mp4": 141065,
+  "webp": 0,
+  "frames": 33
+ },
+ {
+  "group": "Special Moves",
+  "name": "specials_back_boost",
+  "title": "MAVIS BACK-BOOST",
+  "sub": "TEAM-UP VS SUGAR RUSH",
+  "segs": [
+   "back_boost"
+  ],
+  "recapture": [
+   "rigs"
+  ],
+  "gif": 1132181,
+  "mp4": 102228,
+  "webp": 0,
+  "frames": 33
+ },
+ {
+  "group": "Special Moves",
+  "name": "specials_lantern_flare",
+  "title": "LANTERN FLARE",
+  "sub": "POWER VS CAPTAIN COBBLESTONE",
+  "segs": [
+   "lantern_flare"
+  ],
+  "recapture": [
+   "rigs"
+  ],
+  "gif": 1384420,
+  "mp4": 120427,
+  "webp": 0,
+  "frames": 33
+ },
+ {
+  "group": "Special Moves",
+  "name": "specials_hon_haymaker",
+  "title": "HON HAYMAKER",
+  "sub": "TEAM-UP VS THE BREWMASTER",
+  "segs": [
+   "hon_haymaker"
+  ],
+  "recapture": [
+   "rigs"
+  ],
+  "gif": 1673193,
+  "mp4": 131307,
+  "webp": 0,
+  "frames": 33
+ },
+ {
+  "group": "Special Moves",
+  "name": "specials_dragon_slayer_ram",
+  "title": "DRAGON-SLAYER RAM",
+  "sub": "POWER VS THE DRAGON BOAT DUCHESS",
+  "segs": [
+   "dragon_slayer_ram"
+  ],
+  "recapture": [
+   "rigs"
+  ],
+  "gif": 1090531,
+  "mp4": 142358,
+  "webp": 0,
+  "frames": 33
+ },
+ {
+  "group": "Features",
+  "name": "features_fishing",
+  "title": "HARBOR FISHING",
+  "sub": "CAST, HOOK, REEL + FEED CHOMPY",
+  "segs": [
+   "fishing"
+  ],
+  "recapture": [],
+  "gif": 368366,
+  "mp4": 37664,
+  "webp": 0,
+  "frames": 39
+ },
+ {
+  "group": "Features",
+  "name": "features_poe",
+  "title": "POE STEALTH NIGHT",
+  "sub": "SNEAK PAST THE CROW LANTERNS",
+  "segs": [
+   "poe"
+  ],
+  "recapture": [],
+  "gif": 1413899,
+  "mp4": 76782,
+  "webp": 0,
+  "frames": 39
+ },
+ {
+  "group": "Features",
+  "name": "features_phantoms",
+  "title": "FELLS POINT PHANTOMS",
+  "sub": "GHOST PIRATES ON BROADWAY PIER",
+  "segs": [
+   "phantoms"
+  ],
+  "recapture": [],
+  "gif": 1426644,
+  "mp4": 45945,
+  "webp": 0,
+  "frames": 39
+ },
+ {
+  "group": "Features",
+  "name": "features_cobble_storm",
+  "title": "DAYTIME STORM",
+  "sub": "CAPTAIN COBBLESTONE CALLS IT IN",
+  "segs": [
+   "cobble_storm"
+  ],
+  "recapture": [],
+  "gif": 2078972,
+  "mp4": 181384,
+  "webp": 0,
+  "frames": 45
+ },
+ {
+  "group": "Features",
+  "name": "features_final_blow_replay",
+  "title": "FINAL-BLOW REPLAY",
+  "sub": "HIT-STOP, COMBOS + SLOW-MO KO",
+  "segs": [
+   "final_blow_replay"
+  ],
+  "recapture": [],
+  "gif": 1399794,
+  "mp4": 138924,
+  "webp": 0,
+  "frames": 39
+ },
+ {
+  "group": "Features",
+  "name": "features_drone",
+  "title": "THE DRONE",
+  "sub": "UNLOCKED AFTER THE FINALE",
+  "segs": [
+   "drone"
+  ],
+  "recapture": [
+   "finale"
+  ],
+  "gif": 3140333,
+  "mp4": 250584,
+  "webp": 0,
+  "frames": 45
+ },
+ {
+  "group": "Features",
+  "name": "features_fireworks",
+  "title": "FINALE FIREWORKS",
+  "sub": "THE CITY IS SAVED",
+  "segs": [
+   "fireworks"
+  ],
+  "recapture": [
+   "finale"
+  ],
+  "gif": 2159132,
+  "mp4": 120415,
+  "webp": 0,
+  "frames": 45
+ },
+ {
+  "group": "Features",
+  "name": "features_partner_ai",
+  "title": "MAVIS: AI PARTNER",
+  "sub": "FOLLOWS, FIGHTS, REVIVES, TAG-TEAMS",
+  "segs": [
+   "partner_ai"
+  ],
+  "recapture": [],
+  "gif": 2300689,
+  "mp4": 128103,
+  "webp": 0,
+  "frames": 42
+ },
+ {
+  "group": "Features",
+  "name": "features_derby",
+  "title": "HOME RUN DERBY",
+  "sub": "ORIOLE PARK",
+  "segs": [
+   "derby"
+  ],
+  "recapture": [
+   "stadiums"
+  ],
+  "gif": 1689368,
+  "mp4": 114372,
+  "webp": 0,
+  "frames": 39
+ },
+ {
+  "group": "Features",
+  "name": "features_stoop",
+  "title": "MARBLE STOOP SHOWDOWN",
+  "sub": "SLIPPERY SUDS ON THE WHITE MARBLE STEPS",
+  "segs": [
+   "stoop"
+  ],
+  "recapture": [
+   "rigs"
+  ],
+  "gif": 1580110,
+  "mp4": 83184,
+  "webp": 0,
+  "frames": 39
+ },
+ {
+  "group": "Features",
+  "name": "features_grandprix",
+  "title": "HARBOR GRAND PRIX",
+  "sub": "3 LAPS OF PRATT STREET",
+  "segs": [
+   "grandprix"
+  ],
+  "recapture": [],
+  "gif": 2144936,
+  "mp4": 162498,
+  "webp": 0,
+  "frames": 39
+ }
+]

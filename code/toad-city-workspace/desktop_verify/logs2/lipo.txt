@@ -1,0 +1,1 @@
+Architectures in the fat file: desktop/dist/Toad City Baltimore-darwin-universal/Toad City Baltimore.app/Contents/MacOS/Toad City Baltimore are: x86_64 arm64 

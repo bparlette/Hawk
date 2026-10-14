@@ -1,0 +1,15 @@
+f218: stage lvl=1 section=A
+f4977: stage lvl=1 section=B
+f6785: boss fight lvl=1 ramrod
+f8016: cutscene
+f8516: pizza lvl=1
+f8686: results lvl=1
+f8751: loading scene
+f8922: stage lvl=2 section=L0
+f12357: boss fight lvl=2 BRICKJAW
+f13599: outro lvl=2
+f13730: pizza lvl=2
+f13900: results lvl=2
+f13971: back to title
+scripts loaded=levels/level2.js missing=levels/level3.js SS=object
+END f=13971 scene=title level=1 kills=18 levelsWithResults=1,2

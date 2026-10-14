@@ -1,0 +1,1108 @@
+<!doctype html>
+<html lang="en" data-theme="dark">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <title>Toad City Baltimore</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      rel="stylesheet"
+      href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600&family=Geist+Mono:wght@400&display=swap"
+    />
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bangers&display=swap" />
+    <link rel="stylesheet" href="hark.css" />
+    <link rel="stylesheet" href="hark-hero.css" />
+    <style>
+      /* Harbor-night palette: night by default, harbor day on the theme toggle. */
+      :root {
+        --x-navy: #0b1633;
+        --x-ink: #060b1a;
+        --x-orange: #ff6b1a;
+        --x-gold: #f7b500;
+        --x-red: #c8251f;
+        --x-green: #22a64e;
+        --x-cream: #fff3d6;
+        --x-sky: #9cc4dc;
+        --fill-primary-on: light-dark(#fff3d6, #0b1633);
+        --text-primary: light-dark(#0b1633, #fff3d6);
+        --text-secondary: light-dark(#3b4766, #b8c3df);
+        --fill-primary: light-dark(#0b1633, #fff3d6);
+        --text-primary-on: light-dark(#fff3d6, #0b1633);
+        --text-secondary-on: light-dark(#c3cce4, #3b4766);
+        --fill-tertiary: light-dark(#ffe6ad, #152a57);
+        --fill-segment: light-dark(#1d2f5e, #eadfc4);
+        --stroke-primary: light-dark(#0b163340, #fff3d640);
+        --stroke-secondary: light-dark(#0b163324, #fff3d61f);
+        --x-card: light-dark(#ffffff, #13254f);
+        --x-line: light-dark(#060b1a, #02050d);
+        --x-pop: light-dark(#060b1a, #ff6b1a);
+        --x-dots: light-dark(#0b163317, #fff3d60d);
+        --x-display: "Bangers", Impact, "Arial Black", sans-serif;
+      }
+      body {
+        background-image: radial-gradient(var(--x-dots) 1.2px, transparent 1.6px);
+        background-size: 14px 14px;
+        padding-bottom: calc(96px + env(safe-area-inset-bottom, 0px));
+      }
+      .x-display { font-family: var(--x-display); font-weight: 400; letter-spacing: 0.04em; line-height: 0.95; text-transform: uppercase; }
+      .head .x-h2 { font-family: var(--x-display); font-weight: 400; font-size: clamp(40px, 8vw, 64px); line-height: 0.95; letter-spacing: 0.04em; text-shadow: 3px 3px 0 var(--x-orange); }
+      .x-h3 { font-family: var(--x-display); font-weight: 400; font-size: clamp(28px, 5vw, 36px); letter-spacing: 0.04em; line-height: 1; margin-bottom: 12px; }
+
+      /* Ink-outlined card */
+      .x-ink { background: var(--x-card); border: 3px solid var(--x-line); border-radius: var(--r-m); box-shadow: 6px 6px 0 var(--x-pop); overflow: hidden; }
+      .x-ink__body { padding: 18px 20px 22px; display: grid; gap: 10px; align-content: start; }
+      .x-ink__media { margin: 0; border-bottom: 3px solid var(--x-line); background: var(--x-sky); }
+      .x-ink__media img { width: 100%; height: 100%; object-fit: cover; }
+      .x-ink h3 { font-family: var(--x-display); font-weight: 400; font-size: clamp(28px, 5vw, 34px); letter-spacing: 0.04em; line-height: 1; }
+      .x-ink p, .x-ink li { font: var(--type-body); }
+      .x-ink .sub { font: var(--type-small); color: var(--text-secondary); }
+
+      /* Buttons */
+      .x-btn {
+        display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+        min-height: 50px; padding: 10px 22px;
+        font-family: var(--x-display); font-size: 24px; letter-spacing: 0.06em; line-height: 1;
+        color: var(--x-ink); background: var(--x-gold);
+        border: 3px solid var(--x-ink); border-radius: var(--r-s); box-shadow: 4px 4px 0 var(--x-ink);
+        text-decoration: none; cursor: pointer;
+        transition: transform var(--dur-quick) var(--ease-out), box-shadow var(--dur-quick) var(--ease-out);
+      }
+      .x-btn:hover { transform: translate(-2px, -2px); box-shadow: 6px 6px 0 var(--x-ink); }
+      .x-btn:active { transform: translate(2px, 2px); box-shadow: 1px 1px 0 var(--x-ink); }
+      .x-btn--play { background: var(--x-orange); font-size: clamp(34px, 8vw, 48px); padding: 14px 34px; min-height: 68px; box-shadow: 6px 6px 0 var(--x-ink); }
+      .x-btn--play:hover { box-shadow: 8px 8px 0 var(--x-ink); }
+      .x-btn--ghost { background: var(--x-cream); }
+      .x-btns { display: flex; flex-wrap: wrap; align-items: center; gap: 14px 16px; }
+
+      /* Badges */
+      .x-badge {
+        display: inline-flex; align-items: center; gap: 6px; justify-self: start; align-self: start;
+        padding: 4px 11px; border: 2px solid var(--x-ink); border-radius: var(--r-pill);
+        background: var(--x-gold); color: var(--x-ink);
+        font: var(--weight-bold) var(--size-caption)/1.3 var(--sans); letter-spacing: 0.08em; text-transform: uppercase; white-space: nowrap;
+      }
+      .x-badge--red { background: var(--x-red); color: #fff; }
+      .x-badge--green { background: var(--x-green); color: var(--x-ink); }
+      .x-badge--cream { background: var(--x-cream); }
+      .x-tags { display: flex; flex-wrap: wrap; gap: 6px; padding: 0; margin: 0; list-style: none; }
+      .x-tags li { padding: 3px 10px; border-radius: var(--r-pill); background: var(--fill-tertiary); font: var(--type-tag); }
+
+      /* Hero */
+      .hero .x-title { font-family: var(--x-display); font-weight: 400; font-size: clamp(56px, 14vw, 120px); line-height: 0.86; letter-spacing: 0.03em; color: var(--x-gold); -webkit-text-stroke: 2px var(--x-ink); paint-order: stroke fill; text-shadow: 4px 4px 0 var(--x-ink), 7px 7px 0 var(--x-red); }
+      .hero .x-title span { display: block; color: var(--x-cream); }
+      .x-tagline { font: var(--weight-bold) clamp(20px, 3.4vw, 28px)/1.2 var(--sans); text-shadow: 0 2px 10px rgb(6 11 26 / 0.6); max-width: 26ch; }
+      .hero { border: 3px solid var(--x-line); box-shadow: 8px 8px 0 var(--x-pop); }
+      .hero .hero__sub { max-width: 46ch; font-weight: var(--weight-regular); }
+      .hero .x-btns { margin-top: 6px; }
+
+      /* Grids */
+      .x-duo { display: grid; gap: 28px; grid-template-columns: minmax(0, 1fr); }
+      .x-grid { display: grid; gap: 24px; grid-template-columns: repeat(auto-fill, minmax(min(100%, 270px), 1fr)); }
+      @media (min-width: 760px) { .x-duo { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+
+      /* Heroes */
+      .x-char .x-ink__media { aspect-ratio: 4 / 5; max-height: 480px; }
+      .x-char .x-ink__media img { object-fit: contain; }
+      .x-char h3 { font-size: clamp(48px, 10vw, 64px); }
+      .x-moves { margin: 0; padding: 0; list-style: none; display: grid; gap: 8px; }
+      .x-moves li { padding-left: 26px; position: relative; }
+      .x-moves li::before { content: "\2726"; position: absolute; left: 2px; color: var(--x-orange); -webkit-text-stroke: 0.5px var(--x-ink); }
+
+      /* Gangs and landmarks */
+      .x-gang .x-ink__media { aspect-ratio: 5 / 4; }
+      .x-lm .x-ink__media { aspect-ratio: 793 / 615; position: relative; }
+      .x-swap img { position: absolute; inset: 0; transition: opacity 400ms var(--ease-out); }
+      .x-swap .x-night { opacity: 0; }
+      .x-swap.is-night .x-night { opacity: 1; }
+      @media (hover: hover) { .x-swap:hover .x-night { opacity: 1; } .x-swap.is-night:hover .x-night { opacity: 0; } }
+      .x-toggle { justify-self: start; min-height: var(--tap); padding: 8px 14px; border: 2px solid var(--x-line); border-radius: var(--r-pill); background: var(--fill-tertiary); color: var(--text-primary); font: var(--type-label); cursor: pointer; }
+      .x-row { display: flex; flex-wrap: wrap; align-items: center; gap: 10px 14px; margin-bottom: 18px; }
+      .x-row .x-h3 { margin: 0; }
+      .x-names { display: flex; flex-wrap: wrap; gap: 8px; padding: 0; margin: 0 0 20px; list-style: none; }
+      .x-names li { padding: 6px 14px; border: 2px dashed var(--stroke-primary); border-radius: var(--r-pill); font: var(--type-label); }
+      .x-strip { display: grid; gap: 12px; grid-template-columns: repeat(2, minmax(0, 1fr)); margin: 0; }
+      @media (min-width: 760px) { .x-strip { grid-template-columns: repeat(4, minmax(0, 1fr)); } }
+      .x-strip figure { margin: 0; }
+      .x-strip img { width: 100%; aspect-ratio: 16 / 9; object-fit: cover; border: 3px solid var(--x-line); border-radius: var(--r-s); }
+      .x-strip figcaption { font: var(--type-caption); color: var(--text-secondary); padding-top: 6px; }
+
+      /* Bosses */
+      .x-final { display: grid; gap: 16px; align-items: center; padding: 22px; margin-bottom: 28px; background: var(--x-red); color: #fff; border: 3px solid var(--x-line); border-radius: var(--r-m); box-shadow: 8px 8px 0 var(--x-gold); }
+      .x-final h3 { font-family: var(--x-display); font-weight: 400; font-size: clamp(44px, 10vw, 72px); line-height: 0.95; letter-spacing: 0.04em; text-shadow: 3px 3px 0 var(--x-ink); }
+      .x-final__body { display: grid; gap: 10px; }
+      .x-final__body p { font: var(--type-lede); max-width: 44ch; }
+      .x-final__sil { display: grid; place-items: center; width: 112px; height: 112px; border-radius: 50%; background: var(--x-gold); border: 3px solid var(--x-ink); font-size: 64px; line-height: 1; filter: none; }
+      @media (min-width: 640px) { .x-final { grid-template-columns: auto 1fr; padding: 28px 32px; } .x-final__sil { width: 150px; height: 150px; font-size: 84px; } }
+      .x-final__sil, .x-boss__sil { color: var(--x-ink); -webkit-text-fill-color: transparent; text-shadow: 0 0 0 var(--x-ink); }
+      .x-bosses { display: grid; gap: 16px; grid-template-columns: repeat(auto-fill, minmax(min(100%, 250px), 1fr)); }
+      .x-boss { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 14px; align-items: start; padding: 16px; background: var(--x-card); border: 3px solid var(--x-line); border-radius: var(--r-m); box-shadow: 4px 4px 0 var(--x-pop); }
+      .x-boss__sil { display: grid; place-items: center; width: 56px; height: 56px; border-radius: 50%; background: var(--x-gold); border: 2px solid var(--x-ink); font-size: 30px; line-height: 1; }
+      .x-boss h3 { font-family: var(--x-display); font-weight: 400; font-size: 26px; letter-spacing: 0.04em; line-height: 1; }
+      .x-boss__at { font: var(--weight-bold) var(--size-caption)/1.3 var(--sans); letter-spacing: 0.08em; text-transform: uppercase; color: var(--text-secondary); margin: 4px 0 6px; }
+      .x-boss p:not(.x-boss__at) { font: var(--type-small); }
+      .x-boss .x-badge { margin-top: 8px; }
+      .x-final .x-badges { display: flex; flex-wrap: wrap; gap: 8px; }
+      .x-final ol { margin: 0; padding-left: 22px; display: grid; gap: 6px; max-width: 60ch; }
+      .x-final li { font: var(--type-body); }
+
+      /* Playable boss fights: phone-frame cards, swipe row on phones, grid on desktop */
+      .x-fights { display: grid; grid-auto-flow: column; grid-auto-columns: min(70vw, 250px); gap: 20px; overflow-x: auto; scroll-snap-type: x mandatory; padding: 0 10px 14px 0; -webkit-overflow-scrolling: touch; }
+      .x-fights > * { scroll-snap-align: start; }
+      @media (min-width: 900px) { .x-fights { grid-auto-flow: row; grid-auto-columns: auto; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); overflow: visible; padding: 0; gap: 24px; } }
+      .x-phone { margin: 0; padding: 10px; background: var(--x-ink); border-bottom: 3px solid var(--x-line); }
+      .x-phone img { display: block; width: 100%; height: auto; aspect-ratio: 780 / 1688; object-fit: contain; border-radius: var(--r-s); }
+      .x-fight .x-ink__body { padding: 14px 16px 18px; gap: 8px; }
+      .x-fight h3 { font-size: 26px; }
+      .x-fight p { font: var(--type-small); }
+
+      /* How to play */
+      .x-pad { display: flex; align-items: center; justify-content: space-between; gap: 16px; padding: 22px 24px; background: #26324f; border-bottom: 3px solid var(--x-line); }
+      .x-pad__stick { position: relative; width: 84px; height: 84px; border-radius: 50%; background: #121a2e; border: 3px solid var(--x-ink); flex: none; }
+      .x-pad__stick::before { content: ""; position: absolute; left: 50%; top: 22px; width: 10px; height: 34px; margin-left: -5px; background: #c9ced8; border-radius: 4px; }
+      .x-pad__stick i { position: absolute; left: 50%; top: 4px; width: 34px; height: 34px; margin-left: -17px; border-radius: 50%; background: radial-gradient(circle at 35% 30%, #ff8a80, var(--x-red) 60%); border: 3px solid var(--x-ink); }
+      .x-pad__btns { display: grid; grid-template-columns: auto auto; grid-template-rows: auto auto; gap: 8px 10px; align-items: center; }
+      .x-pad__b { display: grid; place-items: center; width: 56px; height: 56px; border-radius: 50%; border: 3px solid var(--x-ink); font-family: var(--x-display); font-weight: 400; font-size: 15px; letter-spacing: 0.04em; color: var(--x-ink); box-shadow: inset 0 -5px 0 rgb(0 0 0 / 0.25); }
+      .x-pad__b--swing { background: #ff5a4f; }
+      .x-pad__b--jump { background: var(--x-gold); }
+      .x-pad__b--act { grid-column: 2; grid-row: 1 / span 2; width: 84px; height: 84px; font-size: 26px; background: #3ccf6a; }
+      .x-keys { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 10px 14px; align-items: center; margin: 0; }
+      .x-keys dt { display: flex; gap: 4px; }
+      .x-keys dd { margin: 0; font: var(--type-body); }
+      kbd { display: inline-grid; place-items: center; min-width: 32px; height: 32px; padding: 0 6px; border: 2px solid var(--x-line); border-radius: 8px; background: var(--x-cream); color: var(--x-ink); box-shadow: 0 3px 0 var(--x-line); font: var(--weight-bold) var(--size-small)/1 var(--sans); }
+      .x-act { margin-block: 28px; }
+      .x-actlist { display: flex; flex-wrap: wrap; gap: 10px; margin: 0; padding: 0; list-style: none; }
+      .x-actlist li { padding: 8px 16px; border: 3px solid var(--x-ink); border-radius: var(--r-pill); background: #3ccf6a; color: var(--x-ink); font-family: var(--x-display); font-size: 20px; letter-spacing: 0.05em; line-height: 1.1; }
+
+      /* Radio section */
+      .x-dial { display: grid; gap: 12px; grid-template-columns: repeat(auto-fill, minmax(min(100%, 220px), 1fr)); margin: 0 0 32px; padding: 0; list-style: none; }
+      .x-dial li { display: grid; gap: 4px; align-content: start; padding: 12px 16px; border: 3px solid var(--x-line); border-radius: var(--r-s); background: var(--x-card); }
+      .x-dial strong { font-family: var(--x-display); font-weight: 400; font-size: 22px; letter-spacing: 0.05em; line-height: 1.05; }
+      .x-dial small { font: var(--type-small); color: var(--text-secondary); }
+      .x-dial .is-on { background: var(--x-gold); color: var(--x-ink); box-shadow: 4px 4px 0 var(--x-pop); }
+      .x-dial .is-on small { color: var(--x-ink); }
+      .x-dial .is-on strong::before { content: ""; display: inline-block; width: 10px; height: 10px; margin-right: 8px; border-radius: 50%; background: var(--x-red); border: 2px solid var(--x-ink); vertical-align: 2px; }
+      .x-tracks { margin: 0 0 16px; padding: 0; list-style: none; counter-reset: trk; columns: 1; column-gap: 32px; }
+      @media (min-width: 640px) { .x-tracks { columns: 2; } }
+      .x-tracks li { counter-increment: trk; break-inside: avoid; display: grid; grid-template-columns: 28px minmax(0, 1fr); gap: 0 8px; padding: 8px 0; border-bottom: 1px solid var(--stroke-secondary); font: var(--type-small); }
+      .x-tracks li::before { content: counter(trk, decimal-leading-zero); grid-row: span 2; color: var(--text-secondary); font: var(--weight-bold) var(--size-caption)/1.6 var(--sans); }
+      .x-tracks b { font-weight: var(--weight-bold); }
+      .x-tracks span { color: var(--text-secondary); }
+      .x-tracks li.is-now { color: var(--text-primary); }
+      .x-tracks li.is-now b::after { content: " · on air"; color: var(--x-orange); font: var(--weight-bold) var(--size-caption)/1 var(--sans); text-transform: uppercase; letter-spacing: 0.06em; }
+      .x-footcta { display: grid; gap: 16px; justify-items: start; width: 100%; padding-bottom: 8px; }
+      .x-footcta p { max-width: 60ch; }
+
+      /* Radio bar */
+      .x-radio { position: fixed; left: 0; right: 0; bottom: 0; z-index: 30; background: var(--x-ink); color: var(--x-cream); border-top: 3px solid var(--x-gold); padding: 8px max(var(--gutter), env(safe-area-inset-left, 0px)) calc(8px + env(safe-area-inset-bottom, 0px)); }
+      .x-radio__in { max-width: var(--page-max); margin: 0 auto; display: grid; align-items: center; gap: 4px 6px; grid-template-columns: auto minmax(0, 1fr) auto auto auto auto; grid-template-areas: "dot label label label label label" "tick tick play skip vol cr"; }
+      @media (min-width: 760px) { .x-radio__in { gap: 10px; grid-template-columns: auto auto minmax(0, 1fr) auto auto auto auto; grid-template-areas: "dot label tick play skip vol cr"; } }
+      .x-radio__dot { grid-area: dot; width: 10px; height: 10px; border-radius: 50%; background: var(--x-red); opacity: 0.55; }
+      .x-radio.is-live .x-radio__dot { opacity: 1; animation: x-pulse 1.4s ease-out infinite; }
+      @keyframes x-pulse { 0% { box-shadow: 0 0 0 0 rgb(255 70 60 / 0.7); } 100% { box-shadow: 0 0 0 10px rgb(255 70 60 / 0); } }
+      .x-radio__label { grid-area: label; font: var(--weight-bold) var(--size-caption)/1.3 var(--sans); letter-spacing: 0.08em; color: var(--x-gold); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+      .x-radio__ticker { grid-area: tick; min-width: 0; overflow: hidden; white-space: nowrap; font: var(--type-label); -webkit-mask-image: linear-gradient(90deg, transparent, #000 10px, #000 calc(100% - 16px), transparent); mask-image: linear-gradient(90deg, transparent, #000 10px, #000 calc(100% - 16px), transparent); }
+      .x-radio__run { display: inline-flex; animation: x-marquee 22s linear infinite; }
+      .x-radio__run > span { padding: 0 48px 0 10px; }
+      @keyframes x-marquee { from { transform: translateX(0); } to { transform: translateX(-50%); } }
+      .x-radio__ticker a { color: var(--x-gold); }
+      .x-rbtn { display: grid; place-items: center; width: var(--tap); height: var(--tap); padding: 0; border-radius: 50%; border: 2px solid var(--x-cream); background: transparent; color: var(--x-cream); font: var(--weight-bold) 16px/1 var(--sans); cursor: pointer; flex: none; }
+      .x-rbtn:hover { background: rgb(255 243 214 / 0.12); }
+      .x-rbtn--play { grid-area: play; background: var(--x-orange); color: var(--x-ink); border-color: var(--x-orange); }
+      .x-rbtn--play:hover { background: var(--x-gold); border-color: var(--x-gold); }
+      #x-skip { grid-area: skip; }
+      .x-vol { grid-area: vol; position: relative; }
+      .x-rbtn--cr { grid-area: cr; font-size: var(--size-small); letter-spacing: 0.04em; }
+      .x-vol__pop { display: none; position: absolute; right: -50px; bottom: calc(100% + 14px); padding: 12px 14px; background: var(--x-ink); border: 3px solid var(--x-gold); border-radius: var(--r-s); font: var(--type-tag); }
+      .x-vol.is-open .x-vol__pop { display: grid; gap: 8px; }
+      .x-vol__pop input { width: 160px; min-height: var(--tap); accent-color: var(--x-orange); }
+      .x-tune { position: absolute; left: 50%; bottom: calc(100% + 12px); transform: translateX(-50%); min-height: var(--tap); padding: 8px 18px; border: 3px solid var(--x-ink); border-radius: var(--r-pill); background: var(--x-gold); color: var(--x-ink); font-family: var(--x-display); font-size: 20px; letter-spacing: 0.06em; white-space: nowrap; cursor: pointer; animation: x-glow 1.6s ease-in-out infinite; }
+      @keyframes x-glow { 0%, 100% { box-shadow: 0 0 6px 1px rgb(247 181 0 / 0.5); } 50% { box-shadow: 0 0 22px 6px rgb(247 181 0 / 0.85); } }
+      .x-radio.is-started .x-tune, .x-radio.is-off .x-tune { display: none; }
+      .x-radio.is-off .x-rbtn, .x-radio.is-off .x-vol { display: none; }
+      .x-radio.is-off .x-radio__run { animation: none; }
+
+      /* Station-ID card */
+      .x-idcard { position: fixed; z-index: 40; top: calc(env(safe-area-inset-top, 0px) + 12px); left: 50%; width: min(420px, calc(100% - 32px)); transform: translate(-50%, calc(-100% - 40px)); padding: 14px 18px 16px; background: var(--x-ink); color: var(--x-cream); border: 3px solid var(--x-gold); border-radius: var(--r-m); box-shadow: 6px 6px 0 var(--x-orange); transition: transform 450ms cubic-bezier(0.2, 1.3, 0.4, 1); pointer-events: none; }
+      .x-idcard.is-shown { transform: translate(-50%, 0); }
+      .x-idcard__st { font: var(--weight-bold) var(--size-caption)/1.3 var(--sans); letter-spacing: 0.08em; color: var(--x-gold); }
+      .x-idcard__title { font-family: var(--x-display); font-size: 30px; letter-spacing: 0.04em; line-height: 1.05; margin-top: 4px; }
+      .x-idcard__artist { font: var(--type-label); color: #c3cce4; }
+
+      /* Credits dialog */
+      .x-credits { width: min(720px, calc(100% - 24px)); max-height: 82vh; padding: 20px 22px; background: var(--x-card); color: var(--text-primary); border: 3px solid var(--x-line); border-radius: var(--r-m); box-shadow: 8px 8px 0 var(--x-pop); }
+      .x-credits::backdrop { background: rgb(6 11 26 / 0.7); }
+      .x-credits__head { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 12px; }
+      .x-credits__head h2 { font-size: 34px; }
+      .x-credits .x-rbtn { border-color: var(--text-primary); color: var(--text-primary); }
+
+      /* Hidden audio-only YouTube players */
+      .x-yt, .x-yt iframe { position: fixed; left: 0; bottom: 0; width: 2px; height: 2px; opacity: 0.01; pointer-events: none; overflow: hidden; border: 0; }
+
+      @media (prefers-reduced-motion: reduce) {
+        .x-radio__run, .x-tune, .x-radio.is-live .x-radio__dot { animation: none; }
+        .x-radio__run > span + span { display: none; }
+        .x-radio__run > span { overflow: hidden; text-overflow: ellipsis; }
+        .x-idcard { transition: none; }
+        .x-btn, .x-swap img { transition: none; }
+      }
+    </style>
+    <script>
+      window.onYouTubeIframeAPIReady = function () { window.xYTReady = true; };
+    </script>
+    <script src="https://www.youtube.com/iframe_api" async onerror="window.xYTFailed = true; window.xRadioFail && window.xRadioFail()"></script>
+  </head>
+  <body>
+    <div class="page" id="top">
+      <header class="nav glass" data-auto></header>
+      <main class="main">
+        <section class="hero">
+          <img class="hero__img" src="hero.jpg" alt="The game's Inner Harbor by day: the Power Plant stacks, the Aquarium pyramid and the harbor water" />
+          <div class="hero__copy">
+            <p class="hero__eyebrow">Open-world brawler · Inner Harbor</p>
+            <h1 class="x-title">Toad City <span>Baltimore</span></h1>
+            <p class="x-tagline">Two tenured mortal normal toads. One harbor full of crime.</p>
+            <p class="hero__sub">An HD cel-shaded open-world brawler on Baltimore's Inner Harbor. Clean it up district by district while day turns to night every 5 minutes.</p>
+            <div class="x-btns">
+              <a class="x-btn x-btn--play" href="https://toad-city-baltimore.surge.sh" target="_blank" rel="noopener">Play now ▶</a>
+              <a class="x-btn x-btn--ghost" href="https://toad-city-baltimore.surge.sh/?retro=1" target="_blank" rel="noopener">32-bit mode</a>
+            </div>
+            <p class="hero__meta">Plays in your browser, phone or desktop.</p>
+          </div>
+        </section>
+
+        <section class="section" id="heroes" data-nav="Heroes">
+          <div class="head">
+            <p class="head__eyebrow">The heroes</p>
+            <h2 class="x-h2">Harold and Mavis</h2>
+            <p class="head__sub">Retired, married, and done with the harbor's nonsense.</p>
+          </div>
+          <div class="x-duo">
+            <article class="x-ink x-char">
+              <figure class="x-ink__media"><img src="harold.png" alt="Harold, a bald toad in round glasses and a cardigan, holding a wooden cane" /></figure>
+              <div class="x-ink__body">
+                <span class="x-badge">You play him</span>
+                <h3>Harold</h3>
+                <p class="sub">Bald, round glasses, cardigan, wooden cane.</p>
+                <ul class="x-moves">
+                  <li><strong>3-hit cane combo</strong> for every thug in reach.</li>
+                  <li><strong>Cane Quake</strong>, his POWER move.</li>
+                </ul>
+              </div>
+            </article>
+            <article class="x-ink x-char">
+              <figure class="x-ink__media"><img src="mavis.png" alt="Mavis, a toad with a gray afro, floral dress and pearls, holding a handbag" /></figure>
+              <div class="x-ink__body">
+                <span class="x-badge x-badge--red">AI partner</span>
+                <h3>Mavis</h3>
+                <p class="sub">His wife. Gray afro, floral dress, pearls, handbag.</p>
+                <ul class="x-moves">
+                  <li><strong>Fights beside you</strong> and swings her handbag.</li>
+                  <li><strong>Hold ACT</strong> to revive her when she goes down.</li>
+                </ul>
+              </div>
+            </article>
+          </div>
+        </section>
+
+        <section class="section" id="fights" data-nav="Boss fights">
+          <div class="head">
+            <p class="head__eyebrow">Each boss is its own mini-game</p>
+            <h2 class="x-h2">PLAYABLE NOW: Boss Fights</h2>
+          </div>
+          <div class="x-fights">
+            <article class="x-ink x-fight">
+              <figure class="x-phone"><img src="fort_rockets_390.png" alt="Phone screenshot of The Bombardment: cannon sights over a fleet with rockets in the sky" /></figure>
+              <div class="x-ink__body">
+                <span class="x-badge x-badge--green">Playable now</span>
+                <h3>The Bombardment</h3>
+                <p class="sub">Fort McHenry</p>
+                <p>A first-person cannon shooting gallery: sink a British-style fleet and shoot their rockets out of the sky while the flag holds through the storm. 4 waves, ending with Admiral Redclaw's flagship.</p>
+              </div>
+            </article>
+            <article class="x-ink x-fight">
+              <figure class="x-phone"><img src="bobby_derby_390.png" alt="Phone screenshot of the Bird Brain Bobby home run derby" /></figure>
+              <div class="x-ink__body">
+                <span class="x-badge x-badge--green">Playable now</span>
+                <h3>Bird Brain Bobby</h3>
+                <p class="sub">Oriole Park</p>
+                <p>A home run derby: read his windups, swing Harold's cane, and hit 10 homers before 10 outs.</p>
+              </div>
+            </article>
+            <article class="x-ink x-fight">
+              <figure class="x-phone"><img src="jimmy_swim_390.png" alt="Phone screenshot of the underwater fight with Big Jimmy" /></figure>
+              <div class="x-ink__body">
+                <span class="x-badge x-badge--green">Playable now</span>
+                <h3>Big Jimmy</h3>
+                <p class="sub">National Aquarium</p>
+                <p>An underwater swim fight: dodge claw snaps, strike his belly when he rears up, and refill your air at the bubble vents.</p>
+              </div>
+            </article>
+            <article class="x-ink x-fight">
+              <figure class="x-phone"><img src="chipkid_duel_390.png" alt="Phone screenshot of the mech duel with The Chip Kid" /></figure>
+              <div class="x-ink__body">
+                <span class="x-badge x-badge--green">Playable now</span>
+                <h3>The Chip Kid</h3>
+                <p class="sub">Harborplace</p>
+                <p>A 3-round mech duel against her crab-chip-bag mech: read the tells, dodge and counter.</p>
+              </div>
+            </article>
+            <article class="x-ink x-fight">
+              <figure class="x-phone"><img src="al_chase_390.png" alt="Phone screenshot of the cobblestone chase after Arabber Al" /></figure>
+              <div class="x-ink__body">
+                <span class="x-badge x-badge--green">Playable now</span>
+                <h3>Arabber Al</h3>
+                <p class="sub">Fells Point</p>
+                <p>A cobblestone chase racer: catch his souped-up horse cart and ram it 3 times.</p>
+              </div>
+            </article>
+            <article class="x-ink x-fight">
+              <figure class="x-phone"><img src="duchess_ram_390.png" alt="Phone screenshot of ramming the Dragon Boat Duchess" /></figure>
+              <div class="x-ink__body">
+                <span class="x-badge x-badge--green">Playable now</span>
+                <h3>Dragon Boat Duchess</h3>
+                <p class="sub">The harbor</p>
+                <p>She ambushes your first boat ride: ram her dragon boat into the piers.</p>
+              </div>
+            </article>
+            <article class="x-ink x-fight">
+              <figure class="x-phone"><img src="vic_rhythm_390.png" alt="Phone screenshot of the Voltage Vic rhythm battle" /></figure>
+              <div class="x-ink__body">
+                <span class="x-badge x-badge--green">Playable now</span>
+                <h3>Voltage Vic</h3>
+                <p class="sub">Power Plant</p>
+                <p>A rhythm battle on a B-MORE 410 track: hit the notes, dodge his drops, 3 phases.</p>
+              </div>
+            </article>
+          </div>
+        </section>
+
+        <section class="section" id="gangs" data-nav="Gangs">
+          <div class="head">
+            <p class="head__eyebrow">The gangs · one per district</p>
+            <h2 class="x-h2">Six crews run the waterfront</h2>
+            <p class="head__sub"><span class="x-badge">Coming to the city soon</span></p>
+          </div>
+          <div class="x-grid">
+            <article class="x-ink x-gang">
+              <figure class="x-ink__media"><img src="gang_harbor_rats.png" alt="Harbor Rats gang in watch caps, one holding a broken oar" /></figure>
+              <div class="x-ink__body">
+                <h3>Harbor Rats</h3>
+                <ul class="x-tags"><li>North Shore</li></ul>
+                <p>Dockside toughs in watch caps. One swings a broken rowboat oar; the bruiser flashes a gold tooth.</p>
+              </div>
+            </article>
+            <article class="x-ink x-gang">
+              <figure class="x-ink__media"><img src="gang_pier_gulls.png" alt="Pier Gulls gang in bucket hats, with a big gull in a gold chain" /></figure>
+              <div class="x-ink__body">
+                <h3>Pier Gulls</h3>
+                <ul class="x-tags"><li>The piers</li></ul>
+                <p>Bucket hats. One swings a frozen rockfish; the bruiser is a great black-backed gull in a gold chain.</p>
+              </div>
+            </article>
+            <article class="x-ink x-gang">
+              <figure class="x-ink__media"><img src="gang_cobble_catfish.png" alt="Cobblestone Catfish gang in newsboy caps" /></figure>
+              <div class="x-ink__body">
+                <h3>Cobblestone Catfish</h3>
+                <ul class="x-tags"><li>Fells Point and Pendry</li></ul>
+                <p>Newsboy caps, and a cobblestone in a net bag on a rope.</p>
+              </div>
+            </article>
+            <article class="x-ink x-gang">
+              <figure class="x-ink__media"><img src="gang_masked_bandits.png" alt="Masked Bandits raccoons in big headphones, one with a traffic cone" /></figure>
+              <div class="x-ink__body">
+                <h3>Masked Bandits</h3>
+                <ul class="x-tags"><li>West side stadiums</li><li>Boss: Kingpin Carl</li></ul>
+                <p>Raccoons in big headphones. One swings a traffic cone.</p>
+              </div>
+            </article>
+            <article class="x-ink x-gang">
+              <figure class="x-ink__media"><img src="gang_key_hwy_otters.png" alt="Key Highway Otters in hard hats, one in a drum-major shako" /></figure>
+              <div class="x-ink__body">
+                <h3>Key Highway Otters</h3>
+                <ul class="x-tags"><li>Federal Hill to Fort McHenry</li><li>Boss: Riptide Rodney</li></ul>
+                <p>Refinery hard hats, a sugar sack on a rope, and a bruiser in a drum-major shako.</p>
+              </div>
+            </article>
+            <article class="x-ink x-gang">
+              <div class="x-ink__body">
+                <span class="x-badge">Coming soon</span>
+                <h3>Fells Point Phantoms</h3>
+                <ul class="x-tags"><li>Broadway pier · night only</li><li>Led by Captain Cobblestone</li></ul>
+                <p>Pirate ghosts drifting in on the fog off the Broadway pier. Knocking them into the water does nothing; flash them with the ghost lantern to make them solid.</p>
+              </div>
+            </article>
+          </div>
+        </section>
+
+        <section class="section" id="landmarks" data-nav="Landmarks">
+          <div class="head">
+            <p class="head__eyebrow">The map</p>
+            <h2 class="x-h2">17 real Inner Harbor landmarks</h2>
+            <p class="head__sub">The real map, compressed about 3x so every block is worth the walk.</p>
+          </div>
+          <section class="stats" aria-label="Landmarks at a glance">
+            <div class="stat"><span class="stat__fig">17</span><span class="stat__label">Real landmarks</span></div>
+            <div class="stat"><span class="stat__fig">7</span><span class="stat__label">In HD, playable now</span></div>
+            <div class="stat"><span class="stat__fig">9</span><span class="stat__label">In blockout, walkable now</span></div>
+            <div class="stat"><span class="stat__fig">~3x</span><span class="stat__label">Map compression</span></div>
+          </section>
+          <div class="x-row">
+            <h3 class="x-h3">HD landmarks</h3>
+            <span class="x-badge x-badge--green">HD · Playable now</span>
+          </div>
+          <div class="x-grid">
+            <article class="x-ink x-lm">
+              <figure class="x-ink__media"><img src="lm_power_plant.jpg" alt="The Power Plant complex with four black smokestacks" /></figure>
+              <div class="x-ink__body">
+                <h3>Power Plant</h3>
+                <p>Four black stacks, Barnes &amp; Noble and the Hard Rock guitar.</p>
+              </div>
+            </article>
+            <article class="x-ink x-lm">
+              <figure class="x-ink__media"><img src="lm_national_aquarium.jpg" alt="The National Aquarium's glass pyramid and red wing" /></figure>
+              <div class="x-ink__body">
+                <h3>National Aquarium</h3>
+                <p>Glass pyramid, the red Australia wing and the neon wave.</p>
+              </div>
+            </article>
+            <article class="x-ink x-lm">
+              <figure class="x-ink__media"><img src="lm_science_center.jpg" alt="The Maryland Science Center's brick block and observatory dome" /></figure>
+              <div class="x-ink__body">
+                <h3>Maryland Science Center</h3>
+                <p>Brick block, observatory dome and the IMAX.</p>
+              </div>
+            </article>
+            <article class="x-ink x-lm">
+              <figure class="x-ink__media"><img src="lm_harborplace.jpg" alt="The Harborplace pavilions on the waterfront" /></figure>
+              <div class="x-ink__body">
+                <h3>Harborplace</h3>
+                <p>The Pratt Street and Light Street pavilions.</p>
+              </div>
+            </article>
+            <article class="x-ink x-lm">
+              <figure class="x-ink__media"><img src="lm_uss_constellation.jpg" alt="The USS Constellation in full rigging" /></figure>
+              <div class="x-ink__body">
+                <h3>USS Constellation</h3>
+                <p>Full rigging, moored at Pier 1.</p>
+              </div>
+            </article>
+            <article class="x-ink x-lm">
+              <figure class="x-ink__media"><img src="lm_world_trade_center.jpg" alt="The pentagon-shaped World Trade Center tower" /></figure>
+              <div class="x-ink__body">
+                <h3>World Trade Center</h3>
+                <p>The pentagon tower on the water.</p>
+              </div>
+            </article>
+            <article class="x-ink x-lm">
+              <figure class="x-ink__media x-swap" id="domino">
+                <img src="lm_domino_sugars_day.jpg" alt="The Domino Sugars sign in gold by day" />
+                <img class="x-night" src="lm_domino_sugars_night.jpg" alt="The Domino Sugars sign glowing red neon at night" />
+              </figure>
+              <div class="x-ink__body">
+                <h3>Domino Sugars</h3>
+                <p>Gold by day, red neon by night.</p>
+                <button class="x-toggle" type="button" id="domino-btn" aria-pressed="false" aria-controls="domino">🌙 Switch to night</button>
+              </div>
+            </article>
+          </div>
+          <div class="x-row">
+            <h3 class="x-h3">In blockout</h3>
+            <span class="x-badge x-badge--cream">Walkable now · HD coming</span>
+          </div>
+          <ul class="x-names">
+            <li>Four Seasons</li>
+            <li>Pendry</li>
+            <li>Fells Point</li>
+            <li>Washington Monument</li>
+            <li>Oriole Park</li>
+            <li>M&amp;T Bank Stadium</li>
+            <li>Federal Hill</li>
+            <li>Under Armour / Tide Point</li>
+            <li>Fort McHenry</li>
+          </ul>
+          <div class="x-row">
+            <h3 class="x-h3">Coming</h3>
+            <span class="x-badge">Coming soon</span>
+          </div>
+          <ul class="x-names">
+            <li>Lexington Market</li>
+          </ul>
+          <div class="x-strip">
+            <figure><img src="lm_blockout_north_shore.jpg" alt="Blockout of the North Shore" /><figcaption>North Shore</figcaption></figure>
+            <figure><img src="lm_blockout_east_pendry_fells.jpg" alt="Blockout of Pendry and Fells Point" /><figcaption>East: Pendry and Fells Point</figcaption></figure>
+            <figure><img src="lm_blockout_south_shore.jpg" alt="Blockout of the South Shore" /><figcaption>South Shore</figcaption></figure>
+            <figure><img src="lm_blockout_west_stadiums_science.jpg" alt="Blockout of the west side stadiums and Science Center" /><figcaption>West: stadiums and Science Center</figcaption></figure>
+          </div>
+        </section>
+
+        <section class="section" id="bosses" data-nav="Bosses">
+          <div class="head">
+            <p class="head__eyebrow">The bosses</p>
+            <h2 class="x-h2">21 Bosses</h2>
+            <p class="head__sub">16 landmark bosses, the roaming Dragon Boat Duchess, 3 new challengers, and the final boss.</p>
+          </div>
+          <article class="x-final">
+            <span class="x-final__sil" aria-hidden="true">🍺</span>
+            <div class="x-final__body">
+              <div class="x-badges"><span class="x-badge">Final boss</span><span class="x-badge x-badge--cream">In production</span></div>
+              <h3>The One-Eyed Brewmaster</h3>
+              <p>A round-headed, one-eyed, handlebar-mustached brewery mascot, fought in 3 parts.</p>
+              <ol>
+                <li>Rooftop fight under his glowing brewery sign.</li>
+                <li>Beer-truck chase down Pratt Street, with Mavis driving and Harold swinging from the window. Ram him 3 times.</li>
+                <li>Street fight with broken-sign weapons, ending with a harbor KO.</li>
+              </ol>
+            </div>
+          </article>
+          <div class="x-bosses">
+            <article class="x-boss"><span class="x-boss__sil" aria-hidden="true">🚀</span><div><h3>Admiral Redclaw</h3><p class="x-boss__at">Fort McHenry · The Bombardment</p><p>1812 redcoat crab with rockets'-red-glare barrages.</p><span class="x-badge x-badge--green">Playable now</span></div></article>
+            <article class="x-boss"><span class="x-boss__sil" aria-hidden="true">⚾</span><div><h3>Bird Brain Bobby</h3><p class="x-boss__at">Oriole Park</p><p>A rogue bird mascot pitching fastballs down the brick hallway.</p><span class="x-badge x-badge--green">Playable now</span></div></article>
+            <article class="x-boss"><span class="x-boss__sil" aria-hidden="true">🦀</span><div><h3>Big Jimmy</h3><p class="x-boss__at">National Aquarium</p><p>Giant blue crab, fought underwater.</p><span class="x-badge x-badge--green">Playable now</span></div></article>
+            <article class="x-boss"><span class="x-boss__sil" aria-hidden="true">🐴</span><div><h3>Arabber Al</h3><p class="x-boss__at">Fells Point</p><p>A car chase against a souped-up horse cart.</p><span class="x-badge x-badge--green">Playable now</span></div></article>
+            <article class="x-boss"><span class="x-boss__sil" aria-hidden="true">⚡</span><div><h3>Voltage Vic</h3><p class="x-boss__at">Power Plant</p><p>Electric-eel DJ whose attacks drop on the club beat.</p><span class="x-badge x-badge--green">Playable now</span></div></article>
+            <article class="x-boss"><span class="x-boss__sil" aria-hidden="true">🤖</span><div><h3>The Chip Kid</h3><p class="x-boss__at">Harborplace</p><p>A kid in a crab-chip-bag mech.</p><span class="x-badge x-badge--green">Playable now</span></div></article>
+            <article class="x-boss"><span class="x-boss__sil" aria-hidden="true">🐉</span><div><h3>Dragon Boat Duchess</h3><p class="x-boss__at">The harbor · roaming</p><p>Roams the harbor; ambushes your first boat ride.</p><span class="x-badge x-badge--green">Playable now</span></div></article>
+            <article class="x-boss"><span class="x-boss__sil" aria-hidden="true">🐦</span><div><h3>The Raven King</h3><p class="x-boss__at">M&amp;T Bank Stadium</p><p>Giant raven linebacker with a "Nevermore" blitz.</p><span class="x-badge x-badge--red">In production</span></div></article>
+            <article class="x-boss"><span class="x-boss__sil" aria-hidden="true">🐢</span><div><h3>Dr. Shellacious</h3><p class="x-boss__at">Science Center</p><p>Mad snapping-turtle scientist, fought in the IMAX.</p><span class="x-badge x-badge--red">In production</span></div></article>
+            <article class="x-boss"><span class="x-boss__sil" aria-hidden="true">💇‍♀️</span><div><h3>The Hon Queen</h3><p class="x-boss__at">Federal Hill</p><p>Beehive, cat-eye glasses, hairspray clouds.</p><span class="x-badge x-badge--red">In production</span></div></article>
+            <article class="x-boss"><span class="x-boss__sil" aria-hidden="true">🍬</span><div><h3>Sugar Rush</h3><p class="x-boss__at">Domino Sugars</p><p>Sugar-crystal golem by the neon sign.</p><span class="x-badge x-badge--red">In production</span></div></article>
+            <article class="x-boss"><span class="x-boss__sil" aria-hidden="true">🏋️</span><div><h3>The Compression King</h3><p class="x-boss__at">Under Armour</p><p>Athleisure mannequin brute.</p><span class="x-badge x-badge--red">In production</span></div></article>
+            <article class="x-boss"><span class="x-boss__sil" aria-hidden="true">👨‍🍳</span><div><h3>Chef Crabcake</h3><p class="x-boss__at">Four Seasons</p><p>Blinding seasoning and crab mallets.</p><span class="x-badge x-badge--red">In production</span></div></article>
+            <article class="x-boss"><span class="x-boss__sil" aria-hidden="true">🦈</span><div><h3>The Pool Shark</h3><p class="x-boss__at">Pendry</p><p>The rooftop-pool heavy.</p><span class="x-badge x-badge--red">In production</span></div></article>
+            <article class="x-boss"><span class="x-boss__sil" aria-hidden="true">👻</span><div><h3>Captain Cobblestone</h3><p class="x-boss__at">USS Constellation</p><p>Ghost privateer.</p><span class="x-badge x-badge--red">In production</span></div></article>
+            <article class="x-boss"><span class="x-boss__sil" aria-hidden="true">🕊️</span><div><h3>The Penthouse Pigeon</h3><p class="x-boss__at">World Trade Center</p><p>Rules the rooftop deck.</p><span class="x-badge x-badge--red">In production</span></div></article>
+            <article class="x-boss"><span class="x-boss__sil" aria-hidden="true">🧽</span><div><h3>The Stoop Scrubber</h3><p class="x-boss__at">Washington Monument</p><p>Marble-step matriarch with slippery suds.</p><span class="x-badge x-badge--red">In production</span></div></article>
+            <article class="x-boss"><span class="x-boss__sil" aria-hidden="true">🐖</span><div><h3>Pit Beef Pete</h3><p class="x-boss__at">Lexington Market · New challenger</p><p>A huge hog in a butcher's apron. A 5-course eating contest, and he cheats by sliding food onto your plate.</p><span class="x-badge x-badge--red">In production</span></div></article>
+            <article class="x-boss"><span class="x-boss__sil" aria-hidden="true">🎳</span><div><h3>Kingpin Carl</h3><p class="x-boss__at">Rowhouse basement lanes · New challenger</p><p>A hefty possum with a lucky towel. Ten frames of duckpin bowling while his Masked Bandits heckle.</p><span class="x-badge x-badge--red">In production</span></div></article>
+            <article class="x-boss"><span class="x-boss__sil" aria-hidden="true">🥍</span><div><h3>Riptide Rodney</h3><p class="x-boss__at">Rash Field · New challenger</p><p>Captain of the Key Highway Otters. 2v2 lacrosse; check a defender into the harbor.</p><span class="x-badge x-badge--red">In production</span></div></article>
+          </div>
+        </section>
+
+        <!-- CLIPS:START (generated by shorts/batch1/mkclips.js; do not hand-edit) -->
+        <style>
+          .x-clip__grid { display: grid; gap: 18px; grid-template-columns: repeat(auto-fill, minmax(min(100%, 200px), 1fr)); margin-top: 18px; }
+          .x-clip__card { margin: 0; }
+          .x-clip__media { position: relative; display: block; aspect-ratio: 9 / 16; background: var(--x-ink); border-bottom: 3px solid var(--x-line); overflow: hidden; }
+          .x-clip__media img { display: block; width: 100%; height: 100%; object-fit: cover; }
+          .x-clip__play { position: absolute; right: 10px; bottom: 10px; width: 40px; height: 40px; border-radius: 50%; display: grid; place-items: center; background: rgba(0,0,0,.62); color: #fff; font-size: 16px; padding-left: 3px; }
+          .x-clip__card .x-ink__body { padding: 12px 16px 16px; gap: 4px; }
+          .x-clip__card h4 { font-family: var(--x-display); font-weight: 400; font-size: clamp(20px, 4vw, 24px); letter-spacing: 0.04em; line-height: 1.05; margin: 0; }
+          .x-clip__link { justify-self: start; margin-top: 6px; font: var(--type-small); color: var(--text-secondary); text-decoration: underline; text-underline-offset: 3px; }
+        </style>
+        <section class="section" id="clips" data-nav="Clips">
+          <div class="head">
+            <p class="head__eyebrow">Clips · vertical Shorts</p>
+            <h2 class="x-h2">Clips</h2>
+            <p class="head__sub">5 quick Shorts cut from real play, with the game's own music and sound. Tap one to watch the full clip.</p>
+          </div>
+          <div class="x-clip__grid">
+            <figure class="x-ink x-clip__card">
+              <a class="x-clip__media" href="clips/01_grandma_vs_penthouse_pigeon.mp4" target="_blank" rel="noopener" aria-label="Watch the Grandma vs the Penthouse Pigeon Short (MP4)">
+                <img src="clips/01_grandma_vs_penthouse_pigeon.gif" alt="Grandma vs the Penthouse Pigeon: looping gameplay GIF" loading="lazy" width="320" height="568" />
+                <span class="x-clip__play" aria-hidden="true">&#9654;</span>
+              </a>
+              <figcaption class="x-ink__body"><h4>Grandma vs the Penthouse Pigeon</h4><p class="sub">Harold climbs a harbor high-rise, smashes every window and topples the tower.</p>
+                <a class="x-clip__link" href="clips/01_grandma_vs_penthouse_pigeon.mp4" target="_blank" rel="noopener">Watch the Short · 28 s · MP4 17.9 MB</a></figcaption>
+            </figure>
+            <figure class="x-ink x-clip__card">
+              <a class="x-clip__media" href="clips/02_stoop_scrubber_marble_steps.mp4" target="_blank" rel="noopener" aria-label="Watch the The Stoop Scrubber Short (MP4)">
+                <img src="clips/02_stoop_scrubber_marble_steps.gif" alt="The Stoop Scrubber: looping gameplay GIF" loading="lazy" width="360" height="640" />
+                <span class="x-clip__play" aria-hidden="true">&#9654;</span>
+              </a>
+              <figcaption class="x-ink__body"><h4>The Stoop Scrubber</h4><p class="sub">Mount Vernon's marble steps, a laser-polished stoop and one slippery finish.</p>
+                <a class="x-clip__link" href="clips/02_stoop_scrubber_marble_steps.mp4" target="_blank" rel="noopener">Watch the Short · 26 s · MP4 13.9 MB</a></figcaption>
+            </figure>
+            <figure class="x-ink x-clip__card">
+              <a class="x-clip__media" href="clips/03_hon_queen_federal_hill.mp4" target="_blank" rel="noopener" aria-label="Watch the The Hon Queen Short (MP4)">
+                <img src="clips/03_hon_queen_federal_hill.gif" alt="The Hon Queen: looping gameplay GIF" loading="lazy" width="360" height="640" />
+                <span class="x-clip__play" aria-hidden="true">&#9654;</span>
+              </a>
+              <figcaption class="x-ink__body"><h4>The Hon Queen</h4><p class="sub">Federal Hill: hairspray clouds, a beehive boulder and lawn flamingos.</p>
+                <a class="x-clip__link" href="clips/03_hon_queen_federal_hill.mp4" target="_blank" rel="noopener">Watch the Short · 24 s · MP4 14.5 MB</a></figcaption>
+            </figure>
+            <figure class="x-ink x-clip__card">
+              <a class="x-clip__media" href="clips/04_chompy_harbor_fishing.mp4" target="_blank" rel="noopener" aria-label="Watch the Chompy's Harbor Fishing Short (MP4)">
+                <img src="clips/04_chompy_harbor_fishing.gif" alt="Chompy's Harbor Fishing: looping gameplay GIF" loading="lazy" width="360" height="640" />
+                <span class="x-clip__play" aria-hidden="true">&#9654;</span>
+              </a>
+              <figcaption class="x-ink__body"><h4>Chompy's Harbor Fishing</h4><p class="sub">Broadway Pier: hook tires and shopping carts to feed Baltimore's trash wheel.</p>
+                <a class="x-clip__link" href="clips/04_chompy_harbor_fishing.mp4" target="_blank" rel="noopener">Watch the Short · 24 s · MP4 4.7 MB</a></figcaption>
+            </figure>
+            <figure class="x-ink x-clip__card">
+              <a class="x-clip__media" href="clips/05_poe_stealth_night_nevermore.mp4" target="_blank" rel="noopener" aria-label="Watch the Poe Night Short (MP4)">
+                <img src="clips/05_poe_stealth_night_nevermore.gif" alt="Poe Night: looping gameplay GIF" loading="lazy" width="360" height="640" />
+                <span class="x-clip__play" aria-hidden="true">&#9654;</span>
+              </a>
+              <figcaption class="x-ink__body"><h4>Poe Night</h4><p class="sub">Sneak past the Raven King's lantern crows to lay three roses on Poe's grave.</p>
+                <a class="x-clip__link" href="clips/05_poe_stealth_night_nevermore.mp4" target="_blank" rel="noopener">Watch the Short · 21 s · MP4 5.5 MB</a></figcaption>
+            </figure>
+          </div>
+        </section>
+        <!-- CLIPS:END -->
+
+        <section class="section" id="coming" data-nav="Coming">
+          <div class="head">
+            <p class="head__eyebrow">On the way</p>
+            <h2 class="x-h2">Coming to the city</h2>
+          </div>
+          <div class="x-grid">
+            <article class="x-ink"><div class="x-ink__body"><span class="x-badge">Coming soon</span><h3>Lexington Market</h3><p>A new downtown-west district, "World Famous since 1782". Health snacks by day, gang turf by night.</p></div></article>
+            <article class="x-ink"><div class="x-ink__body"><span class="x-badge">Coming soon</span><h3>Poe's grave stealth night</h3><p>At Westminster Burying Ground: sneak past the crow sentries. A clean finish unlocks the Raven King.</p></div></article>
+            <article class="x-ink"><div class="x-ink__body"><span class="x-badge">Coming soon</span><h3>Harbor fishing and Chompy</h3><p>Fish off any pier, and feed your junk to Chompy the googly-eyed trash wheel for cane and purse upgrades.</p></div></article>
+            <article class="x-ink"><div class="x-ink__body"><span class="x-badge">Coming soon</span><h3>Harbor Grand Prix</h3><p>An open-wheel street race down Pratt Street and past the ballpark.</p></div></article>
+            <article class="x-ink"><div class="x-ink__body"><span class="x-badge">Coming soon</span><h3>Hooters at Harborplace</h3><p>The orange-lettered octagon on the Light Street Pavilion, still open in Toad City.</p></div></article>
+            <article class="x-ink"><div class="x-ink__body"><span class="x-badge">Coming soon</span><h3>Drone mode</h3><p>Beat the Brewmaster, the whole city celebrates, and drone goggles unlock free flight over the harbor.</p></div></article>
+          </div>
+        </section>
+
+        <section class="section" id="play" data-nav="How to play">
+          <div class="head">
+            <p class="head__eyebrow">How to play</p>
+            <h2 class="x-h2">One cane, one context button</h2>
+            <p class="head__sub">Touch, keyboard or gamepad.</p>
+          </div>
+          <div class="x-duo">
+            <article class="x-ink">
+              <div class="x-pad" aria-hidden="true">
+                <span class="x-pad__stick"><i></i></span>
+                <span class="x-pad__btns">
+                  <b class="x-pad__b x-pad__b--swing">Swing</b>
+                  <b class="x-pad__b x-pad__b--jump">Jump</b>
+                  <b class="x-pad__b x-pad__b--act">ACT</b>
+                </span>
+              </div>
+              <div class="x-ink__body">
+                <h3>Touch</h3>
+                <p>An arcade panel on screen: a ball-top joystick to move, red <strong>SWING</strong>, yellow <strong>JUMP</strong> and the big green <strong>ACT</strong> button.</p>
+              </div>
+            </article>
+            <article class="x-ink">
+              <div class="x-ink__body">
+                <h3>Keyboard</h3>
+                <dl class="x-keys">
+                  <dt><kbd>W</kbd><kbd>A</kbd><kbd>S</kbd><kbd>D</kbd></dt><dd>Move</dd>
+                  <dt><kbd>J</kbd></dt><dd>Cane</dd>
+                  <dt><kbd>K</kbd></dt><dd>Jump</dd>
+                  <dt><kbd>E</kbd></dt><dd>ACT · hold to revive Mavis</dd>
+                  <dt><kbd>Q</kbd><kbd>R</kbd></dt><dd>Camera</dd>
+                  <dt><kbd>H</kbd></dt><dd>Toggle HD / 32-bit</dd>
+                </dl>
+                <p class="sub">🎮 Gamepad works too.</p>
+              </div>
+            </article>
+          </div>
+          <article class="x-ink x-act">
+            <div class="x-ink__body">
+              <h3>ACT does whatever the moment needs</h3>
+              <ul class="x-actlist">
+                <li>Finish</li><li>Sewer</li><li>Climb / Leap</li><li>Ride / Drive / Board</li><li>Kick / Vault</li><li>Power</li>
+              </ul>
+            </div>
+          </article>
+          <div class="x-grid">
+            <article class="x-ink">
+              <div class="x-ink__body">
+                <span class="x-badge">POWER</span>
+                <h3>Cane Quake</h3>
+                <p>A slam shockwave that floors every thug within about 5 m.</p>
+                <ul class="x-tags"><li>~5 m radius</li><li>7 s cooldown</li></ul>
+              </div>
+            </article>
+            <article class="x-ink">
+              <div class="x-ink__body">
+                <span class="x-badge x-badge--red">Finishers</span>
+                <h3>Daze, then ACT</h3>
+                <p>Daze a thug, hit ACT, and land a slow-mo QTE finisher.</p>
+              </div>
+            </article>
+            <article class="x-ink">
+              <div class="x-ink__body">
+                <span class="x-badge x-badge--cream">Water kills</span>
+                <h3>Splash KO</h3>
+                <p>Knock thugs into the harbor for an instant splash KO.</p>
+              </div>
+            </article>
+          </div>
+        </section>
+
+        <section class="section" id="radio" data-nav="Radio">
+          <div class="head">
+            <p class="head__eyebrow">B-MORE 410 Radio</p>
+            <h2 class="x-h2">Eight stations on the dial</h2>
+            <p class="head__sub">REMIX is on this page right now, the same station as the game.</p>
+          </div>
+          <ul class="x-dial">
+            <li class="is-on"><strong>B-MORE 410 REMIX</strong><small>Default · 20-second clips of 30 Baltimore classics, crossfaded</small></li>
+            <li><strong>AUTO</strong></li>
+            <li><strong>B-MORE 410 DAY</strong></li>
+            <li><strong>B-MORE 410 NIGHT</strong></li>
+            <li><strong>DUCKY DYNAMO FM</strong><small>Creative Commons Baltimore club by Ducky Dynamo and DJ AyyMello</small></li>
+            <li><strong>LOR BITEWHO</strong><small>Free Baltimore type beats</small></li>
+            <li><strong>B-MORE CLUB</strong><small>14 tracks</small></li>
+            <li><strong>B-MORE RAP</strong><small>16 tracks</small></li>
+          </ul>
+          <div class="x-row">
+            <h3 class="x-h3">The REMIX 30</h3>
+            <button class="x-btn" type="button" id="x-tunein">📻 Tune in</button>
+          </div>
+          <ol class="x-tracks" id="x-tracklist"></ol>
+          <p class="fineprint">Audio streams from the artists' official YouTube uploads. No audio is hosted here.</p>
+        </section>
+      </main>
+      <footer class="foot">
+        <div class="x-footcta">
+          <a class="x-btn x-btn--play" href="https://toad-city-baltimore.surge.sh" target="_blank" rel="noopener">Play now ▶</a>
+          <p>An original fan-made game. Characters are original; no affiliation with any team, brand or landmark owner. Music streams from artists' official uploads.</p>
+        </div>
+        <nav aria-label="Back to sections" data-auto></nav>
+        <a class="badge" href="https://hark.com/" target="_blank" rel="noopener"><span class="hark-mark"></span><span>built by hark</span></a>
+      </footer>
+    </div>
+
+    <div class="x-idcard" id="x-idcard" role="status" aria-live="polite">
+      <p class="x-idcard__st">B-MORE 410 RADIO · REMIX</p>
+      <p class="x-idcard__title" id="x-id-title"></p>
+      <p class="x-idcard__artist" id="x-id-artist"></p>
+    </div>
+
+    <div class="x-radio" id="x-radio" role="region" aria-label="B-MORE 410 Radio player">
+      <button class="x-tune" type="button" id="x-tune">TAP TO TUNE IN 📻</button>
+      <div class="x-radio__in">
+        <span class="x-radio__dot" aria-hidden="true"></span>
+        <p class="x-radio__label">B-MORE 410 RADIO · REMIX</p>
+        <div class="x-radio__ticker" id="x-ticker"><span class="x-radio__run" id="x-run"><span>Tap play to tune in · 30 Baltimore classics</span><span aria-hidden="true">Tap play to tune in · 30 Baltimore classics</span></span></div>
+        <button class="x-rbtn x-rbtn--play" type="button" id="x-play" aria-label="Play radio">▶</button>
+        <button class="x-rbtn" type="button" id="x-skip" aria-label="Skip track">⏭</button>
+        <div class="x-vol" id="x-vol">
+          <button class="x-rbtn" type="button" id="x-volbtn" aria-label="Volume" aria-expanded="false" aria-controls="x-volpop">🔊</button>
+          <div class="x-vol__pop" id="x-volpop">
+            <label for="x-volrange">Volume</label>
+            <input type="range" id="x-volrange" min="0" max="100" value="70" />
+          </div>
+        </div>
+        <button class="x-rbtn x-rbtn--cr" type="button" id="x-cr" aria-label="Track credits" aria-haspopup="dialog">CR</button>
+      </div>
+    </div>
+
+    <dialog class="x-credits" id="x-credits" aria-labelledby="x-cr-title">
+      <div class="x-credits__head">
+        <h2 class="x-display" id="x-cr-title">REMIX credits</h2>
+        <button class="x-rbtn" type="button" id="x-crclose" aria-label="Close credits">✕</button>
+      </div>
+      <ol class="x-tracks" id="x-crlist"></ol>
+      <p class="fineprint">Audio streams from the artists' official YouTube uploads. No audio is hosted here.</p>
+    </dialog>
+
+    <div class="x-yt" aria-hidden="true"><div id="x-yt-a"></div><div id="x-yt-b"></div></div>
+    <script type="application/json" id="remix-data" src="remix.json"></script>
+    <script src="hark.js"></script>
+    <script>
+      /* Domino Sugars day/night toggle */
+      (function () {
+        var fig = document.getElementById("domino"), btn = document.getElementById("domino-btn");
+        btn.addEventListener("click", function () {
+          var night = fig.classList.toggle("is-night");
+          btn.setAttribute("aria-pressed", night ? "true" : "false");
+          btn.textContent = night ? "☀️ Switch to day" : "🌙 Switch to night";
+        });
+      })();
+
+      /* B-MORE 410 REMIX: two hidden YouTube players, shuffled 20 s clips, equal-power crossfades (hard cuts on iOS). */
+      (function () {
+        var $ = function (id) { return document.getElementById(id); };
+        var bar = $("x-radio"), run = $("x-run"), playBtn = $("x-play");
+        var GAME = "https://toad-city-baltimore.surge.sh";
+        var DATA = null;
+        try { DATA = JSON.parse($("remix-data").textContent); } catch (e) {}
+        var TR = (DATA && DATA.tracks) || [];
+        var CLIP = (DATA && DATA.clip_length_s) || 20;
+        var XF = Math.min((DATA && DATA.crossfade_s) || 3, CLIP / 4);
+        var XF_SKIP = (DATA && DATA.skip_crossfade_s) || 0.8;
+        var IOS = /iPad|iPhone|iPod/.test(navigator.userAgent) || (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1);
+        var DUAL = !IOS;
+        var fbStart = function (d) { return Math.max(0, Math.min(Math.max(30, d * 0.35), d - 25)); };
+        var esc = function (s) { return String(s).replace(/[&<>"]/g, function (c) { return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]; }); };
+
+        // Track lists: the section list and the credits dialog
+        var listHTML = TR.map(function (t) { return '<li data-key="' + esc(t.key) + '"><b>' + esc(t.title) + "</b><span>" + esc(t.artist) + "</span></li>"; }).join("");
+        $("x-tracklist").innerHTML = listHTML;
+        $("x-crlist").innerHTML = listHTML;
+
+        var R = { A: null, B: null, act: null, idle: null, readyA: false, readyB: false, failed: false, started: false, on: false,
+          vol: 70, order: [], pos: 0, cur: null, start: 0, adj: false, t: 0, last: 0, pre: null, fade: null, bad: {}, want: false,
+          warming: false, warm: false };
+        var V = function () { return R.vol; };
+        // A track's clip start: its peak_start_s; only tracks without one fall back to fbStart(duration) once it is known.
+        function hasPeak(t) { return typeof t.peak_start_s === "number" && isFinite(t.peak_start_s); }
+        function startOf(t) { return hasPeak(t) ? Math.max(0, t.peak_start_s) : 0; }
+
+        function shuffle() {
+          var a = TR.map(function (_, i) { return i; });
+          for (var i = a.length - 1; i > 0; i--) { var j = Math.floor(Math.random() * (i + 1)); var k = a[i]; a[i] = a[j]; a[j] = k; }
+          if (R.cur && TR[a[0]] === R.cur && a.length > 1) { var s = a[0]; a[0] = a[1]; a[1] = s; }
+          R.order = a; R.pos = 0;
+        }
+        function nextTrack() {
+          for (var n = 0; n < TR.length * 2; n++) {
+            if (R.pos >= R.order.length) shuffle();
+            var t = TR[R.order[R.pos++]];
+            if (!R.bad[t.youtube_id]) return t;
+          }
+          return null;
+        }
+        function putBack() { if (R.pos > 0) R.pos--; }
+
+        // UI
+        function setTicker(html, plain) {
+          run.innerHTML = "<span>" + html + "</span><span aria-hidden=\"true\">" + html + "</span>";
+          if (plain) run.firstChild.setAttribute("aria-label", plain);
+        }
+        function credit(t) { return "\u201C" + t.title + "\u201D · " + t.artist; }
+        var idTimer = null;
+        function announce(t) {
+          setTicker("NOW PLAYING: " + esc(credit(t)));
+          $("x-id-title").textContent = "\u201C" + t.title + "\u201D";
+          $("x-id-artist").textContent = t.artist;
+          var card = $("x-idcard");
+          card.classList.add("is-shown");
+          clearTimeout(idTimer);
+          idTimer = setTimeout(function () { card.classList.remove("is-shown"); }, 3000);
+          [].forEach.call(document.querySelectorAll(".x-tracks li"), function (li) { li.classList.toggle("is-now", li.getAttribute("data-key") === t.key); });
+        }
+        function render() {
+          bar.classList.toggle("is-live", R.on);
+          bar.classList.toggle("is-started", R.started);
+          playBtn.textContent = R.on ? "❚❚" : "▶";
+          playBtn.setAttribute("aria-label", R.on ? "Pause radio" : "Play radio");
+        }
+        function fail() {
+          if (R.failed) return;
+          R.failed = true; R.on = false;
+          bar.classList.add("is-off"); bar.classList.remove("is-live");
+          setTicker('Radio plays in the game · <a href="' + GAME + '" target="_blank" rel="noopener">Play now</a>');
+        }
+        if (!TR.length) fail();
+
+        // Player helpers
+        function call(p, fn) { try { var a = [].slice.call(arguments, 2); return p && p[fn] ? p[fn].apply(p, a) : undefined; } catch (e) {} }
+        function ptime(p) { var v = call(p, "getCurrentTime"); return isFinite(v) ? v : NaN; }
+        function pdur(p) { return +call(p, "getDuration") || 0; }
+        function vidOf(p) { try { return p.getVideoData().video_id; } catch (e) { return null; } }
+
+        function loadOnActive(t) {
+          if (!t) { fail(); return; }
+          R.cur = t; R.start = startOf(t); R.adj = hasPeak(t); R.t = 0;
+          var p = R.act;
+          call(p, "setVolume", V()); call(p, "unMute");
+          if (IOS) { call(p, "cueVideoById", { videoId: t.youtube_id, startSeconds: R.start }); call(p, "playVideo"); }
+          else call(p, "loadVideoById", { videoId: t.youtube_id, startSeconds: R.start });
+          announce(t);
+        }
+        function cancelPre() {
+          if (!R.pre) return;
+          call(R.idle, "pauseVideo"); call(R.idle, "mute"); call(R.idle, "setVolume", 0);
+          R.pre = null; putBack();
+        }
+        function preload() {
+          if (!DUAL || !R.readyB || R.pre || R.fade || !R.on || !R.cur) return;
+          var t = nextTrack(); if (!t) return;
+          R.pre = { t: t, start: startOf(t), ready: false, adj: hasPeak(t) };
+          call(R.idle, "mute"); call(R.idle, "setVolume", 0);
+          call(R.idle, "loadVideoById", { videoId: t.youtube_id, startSeconds: R.pre.start });
+        }
+        function cross(dur) {
+          var P = R.pre;
+          R.fade = { from: R.act, to: R.idle, t0: performance.now(), dur: dur, P: P, v0: V() };
+          call(R.idle, "setVolume", 0); call(R.idle, "unMute"); call(R.idle, "playVideo");
+          R.cur = P.t; announce(P.t);
+        }
+        function endFade() {
+          var F = R.fade; R.fade = null;
+          call(F.from, "pauseVideo"); call(F.from, "mute"); call(F.from, "setVolume", 0);
+          call(F.to, "setVolume", V());
+          R.act = F.to; R.idle = F.from;
+          R.start = F.P.start; R.adj = F.P.adj; R.t = 0; R.pre = null;
+          preload();
+        }
+        function fadeTick() {
+          var F = R.fade, x = Math.min(1, (performance.now() - F.t0) / 1000 / F.dur);
+          call(F.from, "setVolume", Math.round(F.v0 * Math.cos((x * Math.PI) / 2)));
+          call(F.to, "setVolume", Math.round(V() * Math.sin((x * Math.PI) / 2)));
+          if (x >= 1) endFade();
+        }
+        function hardNext() { cancelPre(); loadOnActive(nextTrack()); }
+        function advance(dur) {
+          if (R.fade) return;
+          if (DUAL && R.pre && R.pre.ready) cross(dur); else hardNext();
+        }
+
+        function tick() {
+          var now = performance.now(), dt = (now - (R.last || now)) / 1000; R.last = now;
+          if (!R.on || !R.cur || R.failed) return;
+          if (R.fade) { fadeTick(); return; }
+          var p = R.act;
+          if (call(p, "getPlayerState") !== 1) return;
+          if (!R.adj) {
+            var d = pdur(p);
+            if (d > 0) {
+              R.adj = true;
+              var s = fbStart(d);
+              if (Math.abs(s - R.start) > 2) { R.start = s; R.t = 0; call(p, "seekTo", s, true); return; }
+            }
+          }
+          var ct = ptime(p);
+          R.t = isFinite(ct) && ct >= R.start - 1 ? Math.max(0, ct - R.start) : R.t + dt;
+          if (!R.pre) preload();
+          if (DUAL && R.pre && R.pre.ready) { if (R.t >= CLIP - XF) cross(XF); }
+          else if (R.t >= CLIP) hardNext();
+        }
+        setInterval(tick, 100);
+
+        // Transport
+        // Prewarm: as soon as A is ready, load the first clip muted so it is buffered before the tap.
+        function prewarm() {
+          if (R.cur || R.on || R.failed) return;
+          var t = nextTrack(); if (!t) { fail(); return; }
+          R.cur = t; R.start = startOf(t); R.adj = hasPeak(t); R.t = 0; R.warming = true;
+          var p = R.act;
+          call(p, "mute"); call(p, "setVolume", 0);
+          call(p, "loadVideoById", { videoId: t.youtube_id, startSeconds: R.start });
+        }
+        function resume() {
+          var p = R.act;
+          call(p, "setVolume", V()); call(p, "unMute"); call(p, "playVideo");
+          announce(R.cur);
+        }
+        // Only used when the tap came before player A was ready (API still loading).
+        function begin() {
+          if (!R.readyA || !R.want) return;
+          R.want = false;
+          if (!R.cur) loadOnActive(nextTrack());
+          else resume();
+        }
+        // Runs synchronously inside the tap handler, so iOS and Chrome count it as the user gesture.
+        function play() {
+          if (R.failed) return;
+          R.started = true; R.on = true; render();
+          if (R.A && R.readyA) {
+            R.want = false;
+            if (!R.cur) loadOnActive(nextTrack());
+            else resume();
+          } else {
+            R.want = true;
+            if (R.A) { call(R.A, "setVolume", V()); call(R.A, "unMute"); call(R.A, "playVideo"); }
+          }
+        }
+        function pause() {
+          if (R.fade) endFade();
+          cancelPre();
+          R.on = false; R.want = false;
+          call(R.act, "pauseVideo");
+          render();
+        }
+        function skip() {
+          if (R.failed) return;
+          if (!R.on) { play(); if (!R.cur) return; }
+          if (!R.readyA) return;
+          if (R.fade) endFade();
+          advance(XF_SKIP);
+        }
+        playBtn.addEventListener("click", function () { R.on ? pause() : play(); });
+        $("x-skip").addEventListener("click", skip);
+        $("x-tune").addEventListener("click", play);
+        $("x-tunein").addEventListener("click", function () { if (!R.on) play(); });
+
+        // Volume
+        var vol = $("x-vol"), volBtn = $("x-volbtn"), range = $("x-volrange");
+        volBtn.addEventListener("click", function () { var o = vol.classList.toggle("is-open"); volBtn.setAttribute("aria-expanded", o ? "true" : "false"); });
+        range.addEventListener("input", function () {
+          R.vol = +range.value;
+          volBtn.textContent = R.vol === 0 ? "🔇" : R.vol < 40 ? "🔉" : "🔊";
+          if (!R.fade) call(R.act, "setVolume", V());
+        });
+        document.addEventListener("click", function (e) { if (!vol.contains(e.target)) { vol.classList.remove("is-open"); volBtn.setAttribute("aria-expanded", "false"); } });
+
+        // Credits
+        var dlg = $("x-credits");
+        $("x-cr").addEventListener("click", function () { if (dlg.showModal) dlg.showModal(); else dlg.setAttribute("open", ""); });
+        $("x-crclose").addEventListener("click", function () { if (dlg.close) dlg.close(); else dlg.removeAttribute("open"); });
+        dlg.addEventListener("click", function (e) { if (e.target === dlg && dlg.close) dlg.close(); });
+
+        // First tap anywhere tunes in (not on the radio's own controls, the dialog, or links out to the game)
+        function firstTap(e) {
+          if (R.started || R.failed) return off();
+          var t = e.target;
+          if (t.closest && (t.closest("#x-radio") || t.closest("#x-credits") || t.closest('a[href^="' + GAME + '"]'))) return;
+          // A touch pointerdown is not a user activation; that tap starts the radio on its touchend instead.
+          if (e.type === "pointerdown" && e.pointerType === "touch") return;
+          if (e.type === "keydown" && /^(Escape|Shift|Control|Alt|Meta)$/.test(e.key)) return;
+          off(); play();
+        }
+        var TAP_EVENTS = ["pointerdown", "touchend", "keydown"];
+        function off() { TAP_EVENTS.forEach(function (n) { document.removeEventListener(n, firstTap, true); }); }
+        TAP_EVENTS.forEach(function (n) { document.addEventListener(n, firstTap, true); });
+
+        // YouTube IFrame API
+        var VARS = { controls: 0, disablekb: 1, fs: 0, playsinline: 1, rel: 0 };
+        function onReady(e) {
+          var p = e.target;
+          if (p === R.B) { R.readyB = true; call(p, "mute"); call(p, "setVolume", 0); preload(); return; }
+          R.readyA = true;
+          if (R.want) { call(p, "setVolume", V()); begin(); }
+          else prewarm();
+        }
+        function onState(e) {
+          var p = e.target, s = e.data;
+          if (R.fade && (p === R.fade.from || p === R.fade.to)) return;
+          if (p === R.idle && p !== R.act) {
+            var P = R.pre; if (!P || s !== 1) return;
+            if (P.ready) { call(p, "pauseVideo"); return; }
+            var vd = vidOf(p); if (vd && vd !== P.t.youtube_id) return;
+            if (!P.adj) { var d = pdur(p); if (d > 0) { P.start = fbStart(d); P.adj = true; call(p, "seekTo", P.start, true); } }
+            call(p, "pauseVideo"); P.ready = true;
+            return;
+          }
+          if (p === R.act && R.warming && s === 1) {
+            R.warming = false; R.warm = true;
+            if (!R.adj) { var d2 = pdur(p); if (d2 > 0) { R.start = fbStart(d2); R.adj = true; if (R.on) call(p, "seekTo", R.start, true); } }
+            if (!R.on) { call(p, "pauseVideo"); call(p, "seekTo", R.start, true); }
+            else { call(p, "setVolume", V()); call(p, "unMute"); }
+            return;
+          }
+          if (s === 0 && R.on) advance(XF_SKIP);
+        }
+        function onError(e) {
+          var p = e.target;
+          if (R.fade && p === R.fade.to) {
+            var F = R.fade; R.fade = null; R.bad[F.P.t.youtube_id] = 1; R.pre = null;
+            call(F.to, "pauseVideo"); call(F.to, "mute");
+            hardNext(); return;
+          }
+          if (p === R.idle && p !== R.act) { if (R.pre) { R.bad[R.pre.t.youtube_id] = 1; R.pre = null; preload(); } return; }
+          if (R.cur) R.bad[R.cur.youtube_id] = 1;
+          if (R.on) hardNext();
+        }
+        function make(id) {
+          return new YT.Player(id, { width: 2, height: 2, playerVars: VARS, events: { onReady: onReady, onStateChange: onState, onError: onError } });
+        }
+        var made = false;
+        function initPlayers() {
+          if (made || R.failed) return;
+          made = true;
+          try {
+            R.A = R.act = make("x-yt-a");
+            if (DUAL) R.B = R.idle = make("x-yt-b");
+          } catch (e) { fail(); }
+        }
+        window.xRadioFail = fail;
+        if (window.xYTFailed) fail();
+        // The API script loads async from <head>; if it is already ready, create the players now, otherwise when it is.
+        if (window.xYTReady || (window.YT && window.YT.Player)) initPlayers();
+        else window.onYouTubeIframeAPIReady = initPlayers;
+        setTimeout(function () { if (!(window.YT && window.YT.Player)) fail(); }, 12000);
+        render();
+      })();
+    </script>
+  </body>
+</html>

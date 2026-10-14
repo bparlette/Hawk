@@ -1,0 +1,8 @@
+file '/workspace/work/toad-city/shorts/batch1/work/05_poe/seg00.mp4'
+file '/workspace/work/toad-city/shorts/batch1/work/05_poe/seg01.mp4'
+file '/workspace/work/toad-city/shorts/batch1/work/05_poe/seg02.mp4'
+file '/workspace/work/toad-city/shorts/batch1/work/05_poe/seg03.mp4'
+file '/workspace/work/toad-city/shorts/batch1/work/05_poe/seg04.mp4'
+file '/workspace/work/toad-city/shorts/batch1/work/05_poe/seg05.mp4'
+file '/workspace/work/toad-city/shorts/batch1/work/05_poe/seg06.mp4'
+file '/workspace/work/toad-city/shorts/batch1/work/05_poe/seg07.mp4'

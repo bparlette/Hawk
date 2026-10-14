@@ -1,0 +1,7 @@
+shot acid_meteor
+shot chasm
+shot arena
+shot arena2
+shot outro_portal
+shot outro_earth
+errors 0

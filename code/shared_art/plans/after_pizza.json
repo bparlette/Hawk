@@ -1,0 +1,1 @@
+{"level": 1, "steps": [{"until": "__SS.STATE.scene==='stage'", "wait": 300, "js": "(()=>{const S=__SS.STATE;S.enemies.length=0;S.queue=[];const p=S.player;p.hp=16;p.inv=99999;p.x=S.camX+70;p.y=190;p.facing=1;})()"}, {"js": "__SS.startPizza()", "wait": 1200, "shot": "/workspace/work/shared_art/shots/after/pizza.png"}]}

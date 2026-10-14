@@ -1,0 +1,10 @@
+local roblox = require("@lune/roblox")
+local p = roblox.Instance.new("Part")
+p.Shape = roblox.Enum.PartType.Cylinder
+p.Orientation = roblox.Vector3.new(0,0,90)
+p:SetAttribute("X", 1)
+print(p.Shape, p.Orientation, p:GetAttribute("X"), p.CFrame)
+local ok, e = pcall(function() p.Bogus = 1 end) print("bogus", ok, e)
+local s = roblox.Instance.new("SpawnLocation") s.Neutral = true s.Duration = 0 print(s.Duration)
+print(typeof(p), p:IsA("BasePart"))
+local ok2, e2 = pcall(function() p.CustomPhysicalProperties = roblox.PhysicalProperties.new(1,0.4,0.8,1,1) end) print(ok2,e2)

@@ -1,0 +1,681 @@
+<!doctype html><html><head><meta charset="utf-8"><style>
+@page { size: Letter; margin: 0.6in 0.62in 0.7in 0.62in; }
+* { box-sizing: border-box; }
+body { font: 9.6pt/1.38 'DejaVu Sans', Helvetica, Arial, sans-serif; color: #1d1a26; margin: 0; }
+h1 { font-size: 19pt; margin: 0 0 8px; color: #14101f; border-bottom: 3px solid #ff3d6e; padding-bottom: 4px; break-after: avoid; }
+h1.sec { break-before: page; }
+h2 { font-size: 13pt; margin: 14px 0 5px; color: #2f2457; break-after: avoid; }
+h3 { font-size: 11pt; margin: 10px 0 4px; break-after: avoid; }
+p { margin: 4px 0 7px; } ul, ol { margin: 3px 0 7px; padding-left: 20px; } li { margin: 1.5px 0; }
+table { border-collapse: collapse; width: 100%; margin: 6px 0 10px; font-size: 8.6pt; break-inside: auto; }
+th, td { border: 1px solid #c9c4d6; padding: 2px 5px; vertical-align: top; text-align: left; }
+th { background: #2f2457; color: #fff; } tr:nth-child(even) td { background: #f5f3fa; } tr { break-inside: avoid; }
+td code { overflow-wrap: break-word; word-break: normal; }
+code { font-family: 'DejaVu Sans Mono', monospace; font-size: 8.4pt; background: #f1eef7; padding: 0 2px; border-radius: 2px; overflow-wrap: anywhere; }
+pre { font-family: 'DejaVu Sans Mono', monospace; font-size: 7.6pt; line-height: 1.32; background: #16131f; color: #ece8f6; padding: 8px 10px;
+      border-radius: 5px; white-space: pre-wrap; word-break: break-all; overflow-wrap: anywhere; margin: 6px 0 10px; }
+pre code { background: none; color: inherit; font-size: inherit; padding: 0; }
+pre.small { font-size: 5.7pt; line-height: 1.17; padding: 6px 7px; }
+.prompt { border: 2px dashed #ff3d6e; border-radius: 8px; padding: 6px 12px 4px; margin: 8px 0; background: #fffafc; font-size: 8.7pt; line-height: 1.34; }
+.prompt table { font-size: 7.9pt; } .prompt pre { font-size: 7.1pt; }
+.prompt > .tag { display: inline-block; background: #ff3d6e; color: #fff; font-weight: 700; font-size: 8pt; padding: 1px 8px; border-radius: 3px; margin: 2px 0 4px; }
+.prompt h1 { font-size: 14pt; border-bottom: 2px solid #2f2457; break-before: auto; }
+.prompt h2 { font-size: 11.5pt; }
+.setting { border-left: 6px solid #23c26b; background: #eefaf2; padding: 8px 12px; margin: 10px 0; border-radius: 4px; }
+.note { border-left: 6px solid #ffd23c; background: #fffbe8; padding: 7px 12px; margin: 8px 0; border-radius: 4px; font-size: 9.4pt; }
+figure { margin: 6px 0 10px; break-inside: avoid; } figure img { width: 100%; max-height: 2.45in; object-fit: cover; border-radius: 5px; border: 1px solid #c9c4d6; display: block; }
+figure.tall2 img { max-height: 2.0in; object-fit: contain; background: #16131f; }
+figure.tall img { max-height: 2.85in; object-fit: contain; background: #16131f; }
+figcaption { font-size: 8.3pt; color: #4b4560; margin-top: 3px; }
+.g2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; } .g3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; }
+.g4 { display: grid; grid-template-columns: 1fr 1fr 1fr 1fr; gap: 8px; } .g4 figure img { height: 1.25in; }
+.g21 { display: grid; grid-template-columns: 1.9fr 1fr 1fr; gap: 12px; align-items: start; }
+.sw { display: grid; grid-template-columns: repeat(8, 1fr); gap: 5px; margin: 6px 0 10px; }
+.sw div { border: 1px solid #c9c4d6; border-radius: 4px; font-size: 7.6pt; overflow: hidden; break-inside: avoid; }
+.sw i { display: block; height: 14px; } .sw span { display: block; padding: 2px 4px; }
+.cover { height: 8.9in; display: flex; flex-direction: column; break-after: page; }
+.cover .band { background: #14101f; color: #fff; padding: 26px 26px 20px; border-radius: 10px; }
+.cover .band .k { color: #ffd23c; font-weight: 700; letter-spacing: 2px; font-size: 10pt; }
+.cover .band .t { font-size: 30pt; font-weight: 800; line-height: 1.1; margin: 8px 0 6px; }
+.cover .band .s { font-size: 12.5pt; color: #d9d3ea; }
+.cover img { width: 100%; height: 4.3in; object-fit: cover; border-radius: 10px; margin: 14px 0 10px; }
+.toc { break-after: page; } .toc ol { list-style: none; padding: 0; font-size: 11pt; } .toc li { display: flex; border-bottom: 1px dotted #aaa; padding: 5px 0; }
+.toc li span:first-child { flex: 1; } .toc li.sub { padding-left: 22px; font-size: 9.8pt; }
+</style></head><body><section class="cover"><div class="band"><div class="k">TOAD CITY BALTIMORE · OUTSIDE-AI BRIEF · CLAUDE SONNET</div>
+<div class="t">Environment: rowhouse kit, street props and vehicles</div><div class="s">Tasks A and B · merged city geometry and rideable vehicles · drop-in three.js modules</div></div>
+<img src="../img/street_night.jpg"><div class="setting"><b>Recommended setting.</b> Use <b>Claude Sonnet</b> (the newest Sonnet available to you) with <b>extended thinking ON at medium effort</b>, and <b>high effort for the first kit piece</b> (the Formstone rowhouse), the first prop and the first vehicle, because those set the pattern. Work on one kit piece or prop family per session and self-test it in <code>viewer.html</code> before you move on. Hand finished, QA-passed modules to <b>Claude Haiku</b> for variations (Appendix B).</div>
+<p style="font-size:8.6pt;color:#4b4560;margin-top:auto">Prepared for Brad Parlette, 11 October 2026. Everything is built procedurally in code; real Baltimore signage is redrawn on canvas, never copied from logo files. The starter kit (<code>toadcity_kit.js</code>, <code>viewer.html</code> and two example modules) comes as <code>toadcity_starter_kit.zip</code>. Its core is printed in the appendix in case the zip is missing.</p></section><section class="toc"><h1>Contents</h1><ol><li class=""><span>1 · Project overview</span><span>3</span></li><li class=""><span>2 · Style guide and quality bar</span><span>5</span></li><li class=""><span>3 · Code starter and interface</span><span>7</span></li><li class=""><span>4 · Task A: Baltimore rowhouse and city-block kit</span><span>9</span></li><li class=""><span>5 · Task B: Street props and vehicles</span><span>13</span></li><li class=""><span>6 · Delivery instructions</span><span>16</span></li><li class=""><span>Appendix A · Kit core (props and city)</span><span>17</span></li><li class=""><span>Appendix B · Haiku helper prompts</span><span>19</span></li></ol></section><h1 class="sec">1 · Project overview</h1>
+<p><b>Toad City Baltimore</b> is an open-world, cel-shaded street brawler set on Baltimore's Inner Harbor, built for phones first. You play <b>Harold</b>, an elderly toad with a cane. His wife <b>Mavis</b> (grey afro, floral dress, a handbag she swings) fights beside you under AI control. Together you clear crime out of each district around the harbour. Each landmark district has a set-piece fight and a boss, and the final boss is Mister Formstone. The real map is compressed about 3×: landmarks sit about one block apart, with a 6 m brick promenade along the water and land about two blocks deep. Day turns to night every 5 minutes (a 600 s loop), and at night the windows, street lamps and neon light up.</p>
+<div class="g21"><figure class=""><img src="../img/city_day.jpg"><figcaption>City overview, day: the harbour basin, the street grid and the landmark massings (in-house). Night lights about 45% of windows and warm lamps along the promenade.</figcaption></figure>
+<figure class="tall"><img src="../img/phone_day.jpg"><figcaption>iPhone portrait 390×844: the game view above the arcade control panel.</figcaption></figure>
+<figure class="tall"><img src="../img/arcade_panel.jpg"><figcaption>The arcade panel (ball-top stick, round buttons, big ACT button). Assets must read in the view above it.</figcaption></figure></div>
+<h2>Tech stack</h2>
+<ul><li><b>three.js r160</b> with plain ES modules. The game source is a set of <code>src/*.js</code> files that a shell script concatenates into one module (<code>game.js</code>). There is no bundler and no framework.</li>
+<li><b>Everything procedural:</b> geometry comes from three.js primitives in code, and every texture is drawn on a <code>&lt;canvas&gt;</code> at load. There are no image, model or font files to license. Audio is separate (not part of this work).</li>
+<li><b>Look:</b> MeshLambert plus a 3-band toon ramp injected with <code>onBeforeCompile</code>, vertex colours, inverted-hull ink outlines and PCF soft shadows from one sun. A <code>?retro=1</code> 32-bit mode exists, but the kit is HD-only and that is what you deliver for.</li>
+<li><b>How deliveries plug in:</b> each module is a file that receives the kit object <code>K</code> (the same functions the game uses). In-house, we strip the <code>export</code> keywords, append the file to <code>src/</code>, bind <code>K</code> to the game's globals and register the build function in the gang, boss, prop or vehicle tables. If your module runs in the kit viewer, it runs in the game.</li></ul>
+<h2>Target devices and performance budgets</h2>
+<p>The main target is an <b>iPhone in portrait, 390×844 CSS px at DPR 2</b> (the game view is the tall area above the arcade panel), plus desktop Chrome and Safari. Aim for 60 fps, with a 30 fps floor on a mid-range iPhone. Current city frames measure <b>76–168 draw calls and 99k–346k triangles</b> at five spots (day, 390×844, including the shadow pass), so new assets must be lean.</p>
+<table><tr><th>Budget</th><th>Limit</th><th>Notes</th></tr>
+<tr><td>Whole frame (iPhone)</td><td>≤ 250 draw calls, ≤ 400k tris</td><td>Includes the shadow pass. The in-house team owns this number; your assets must not blow it.</td></tr>
+<tr><td>Reference: Harold / Mavis</td><td>60 / 54 parts · 14.0k / 15.7k tris</td><td>Measured in the kit viewer. Each part is a mesh plus an ink hull.</td></tr>
+<tr><td>Reference: current thug</td><td>26–33 parts · 7.6k–8.5k tris</td><td>Two materials (one toon plus the shared outline).</td></tr>
+<tr><td>New gang member (Task C)</td><td>≤ 40 parts · ≤ 12k tris · ≤ 3 mats</td><td>Far LOD (<code>opts.lod = 1</code>): ≤ 14 parts, ≤ 3k tris, no fine detail.</td></tr>
+<tr><td>Boss (Task D)</td><td>≤ 70 parts · ≤ 22k tris · ≤ 4 mats</td><td>One boss on screen at a time.</td></tr>
+<tr><td>Rowhouse kit (Task A)</td><td>house ≤ 2.5k · corner ≤ 3.5k · block ≤ 30k tris</td><td>Merged: a full block is ≤ 4 draw calls. One 1024² atlas for the whole kit.</td></tr>
+<tr><td>Static props (Task B)</td><td>120–2,500 tris each</td><td>Merged into the chunk, so they add no draw calls. Per-prop limits are in the task.</td></tr>
+<tr><td>Vehicles (Task B)</td><td>600–6,000 tris · 3–12 meshes</td><td>Their own Group, so they move. At most 2 materials each.</td></tr>
+<tr><td>Textures</td><td>canvas only · ≤ 1024² atlas · ≤ 256² per character map</td><td>Drawn in code at load; mipmapped in HD.</td></tr></table>
+<p><b>Merged geometry and shared materials:</b> the static city is written into merged builders, each 64 m chunk being one toon mesh, one outline hull, one glow mesh and one decal mesh, and the chunks are frustum-culled. Characters are groups of parts that share one toon material per rig. <b>LOD the game already does:</b> thugs beyond 24 m drop their ink hulls and stop casting shadows, and beyond 48 m they sleep (hidden). Hulls must therefore be BackSide ShaderMaterial children so this code can find them.</p>
+<h2>Coordinates and scale</h2>
+<table><tr><th>Item</th><th>Value</th><th>Item</th><th>Value</th></tr>
+<tr><td>Units / axes</td><td>metres · Y up · X east · Z south (north = −Z)</td><td>Facing at yaw 0</td><td>+Z (characters, vehicles, house fronts)</td></tr>
+<tr><td>City block</td><td>24 × 24 m</td><td>Street</td><td>10 m wide (grid period 34 m)</td></tr>
+<tr><td>Promenade</td><td>6 m brick strip on every water edge</td><td>Kerb / pavement top</td><td><code>CURB = 0.16</code></td></tr>
+<tr><td>Ground floor / upper floor</td><td><code>GF = 4.4</code> / <code>FH = 3.4</code></td><td>Parapet</td><td><code>PAR = 1.3</code></td></tr>
+<tr><td>Water surface</td><td><code>WY = −0.85</code></td><td>Render chunk / collision cell</td><td>64 m / 16 m</td></tr>
+<tr><td>World bounds</td><td>x −136…213, z −106…104</td><td>Harbour basin</td><td>x −60…400, z −30…30</td></tr>
+<tr><td>Harold / Mavis</td><td>about 1.6 m / about 2.0 m (afro)</td><td>Thug / bruiser</td><td>about 2.0 m / ×1.2</td></tr></table>
+<div class="note"><b>Signage rule.</b> Brad wants the city to look like the real Inner Harbor: storefronts, signs and props <b>may use real Baltimore businesses' names and sign styles where they really exist</b> (Phillips Seafood, Barnes &amp; Noble and Hard Rock Cafe at the Power Plant, the water-taxi branding, Natty Boh-style corner-bar signs, Utz, Old Bay). The neon sign in section 2 shows how: the real script wording <b>redrawn on canvas</b>, never a copied logo file or photo. <b>Bosses and thugs stay original characters</b> (no real people).</div>
+<p><b>Readability on a phone:</b> silhouettes must read at 6–10 m on a 390×844 screen; exaggerate key shapes by 10–20% (heads, hands, cornices, stoops, lamp heads); give each gang, district or vehicle one accent colour; check every asset in both the day and the night preset before delivery.</p><h1 class="sec">2 · Style guide and quality bar</h1>
+<p>Everything you deliver must look like it belongs next to Harold and Mavis below. These are the <b>asset starters</b>: renders of the real game models through the kit viewer you were given. They are the quality bar.</p>
+<div class="g2"><figure class=""><img src="../img/heroes_day.jpg"><figcaption>Harold and Mavis, day preset: chunky primitives, warty skin map, floral and curls maps, three hard cel bands, ink hulls.</figcaption></figure>
+<figure class=""><img src="../img/heroes_night.jpg"><figcaption>The same at night: hemisphere and sun drop, a warm lamp and a cool camera-side fill keep the characters readable.</figcaption></figure></div>
+<div class="g2"><figure class=""><img src="../img/thugs_day.jpg"><figcaption>The current thugs (to be replaced by Task C gangs): readable but plain. Your work must reach Harold-level detail.</figcaption></figure>
+<figure class=""><img src="../img/example_day.jpg"><figcaption>The kit examples: a gull thug (character interface) and a bench (prop interface, with an atlas decal). The readout shows the budget check.</figcaption></figure></div>
+<h2>Palette</h2><div class="sw"><div><i style="background:#14101f"></i><span><b>#14101f</b><br>INK: outlines, black</span></div><div><i style="background:#6f7f34"></i><span><b>#6f7f34</b><br>Harold skin</span></div><div><i style="background:#b8b47a"></i><span><b>#b8b47a</b><br>Harold throat</span></div><div><i style="background:#7a5232"></i><span><b>#7a5232</b><br>Harold cardigan</span></div><div><i style="background:#5e3e24"></i><span><b>#5e3e24</b><br>cardigan trim</span></div><div><i style="background:#5a5248"></i><span><b>#5a5248</b><br>Harold slacks</span></div><div><i style="background:#7f8f3e"></i><span><b>#7f8f3e</b><br>Mavis skin</span></div><div><i style="background:#5f73b0"></i><span><b>#5f73b0</b><br>Mavis dress base</span></div><div><i style="background:#f08ab0"></i><span><b>#f08ab0</b><br>floral pink</span></div><div><i style="background:#c8c6c2"></i><span><b>#c8c6c2</b><br>Mavis afro</span></div><div><i style="background:#6a1f3a"></i><span><b>#6a1f3a</b><br>handbag</span></div><div><i style="background:#c8a040"></i><span><b>#c8a040</b><br>gold: clasp, bangle</span></div><div><i style="background:#e8d888"></i><span><b>#e8d888</b><br>toad eye gold</span></div><div><i style="background:#ff3d6e"></i><span><b>#ff3d6e</b><br>accent pink-red</span></div><div><i style="background:#7b4dff"></i><span><b>#7b4dff</b><br>accent violet</span></div><div><i style="background:#ff9f1c"></i><span><b>#ff9f1c</b><br>accent orange</span></div><div><i style="background:#23c26b"></i><span><b>#23c26b</b><br>accent green</span></div><div><i style="background:#2f5bd3"></i><span><b>#2f5bd3</b><br>accent blue</span></div><div><i style="background:#ffd23c"></i><span><b>#ffd23c</b><br>accent yellow</span></div><div><i style="background:#1fd3c6"></i><span><b>#1fd3c6</b><br>accent teal</span></div><div><i style="background:#8a4a3a"></i><span><b>#8a4a3a</b><br>red brick</span></div><div><i style="background:#6f6a62"></i><span><b>#6f6a62</b><br>grey stone</span></div><div><i style="background:#9a6a44"></i><span><b>#9a6a44</b><br>tan brick</span></div><div><i style="background:#5a4f5c"></i><span><b>#5a4f5c</b><br>plum</span></div><div><i style="background:#4f5a52"></i><span><b>#4f5a52</b><br>green-grey</span></div><div><i style="background:#a4907a"></i><span><b>#a4907a</b><br>sandstone</span></div><div><i style="background:#c9b48a"></i><span><b>#c9b48a</b><br>trim cream</span></div><div><i style="background:#eae6dc"></i><span><b>#eae6dc</b><br>marble stoop</span></div><div><i style="background:#ffa050"></i><span><b>#ffa050</b><br>lamp light</span></div><div><i style="background:#ffe08a"></i><span><b>#ffe08a</b><br>lit window</span></div><div><i style="background:#ff3a1c"></i><span><b>#ff3a1c</b><br>neon red</span></div><div><i style="background:#c8d0ff"></i><span><b>#c8d0ff</b><br>night camera fill</span></div></div>
+<p>Use mid-value base colours, because the toon ramp multiplies them by 0.46, 0.78 or 1.06. <b>Never use pure #000 or #fff</b>: use INK <code>#14101f</code> for black and at most <code>#f2f2f2</code> for white. Shadows are tinted slightly cool.</p>
+<h2>Toon ramp (cel bands)</h2>
+<ul><li>The lighting ratio <i>r</i> (lit luminance ÷ base luminance) is snapped to three bands: <b>shadow 0.46</b> (r below 0.38–0.44), <b>mid 0.78</b> and <b>lit 1.06</b> (r above 0.86–0.92). Edges are hard (smoothstep over 0.06).</li>
+<li>The shadow band is tinted by (0.88, 0.86, 1.10) at 50%. Strong local light (r above 1.35, such as a lamp at night) passes through unbanded.</li>
+<li>A hit-flash uniform mixes the whole rig to white (<code>mat.userData.flash</code>). Every sub-material of a rig must share it.</li></ul>
+<h2>Ink outlines</h2>
+<ul><li>The outlines are <b>inverted hulls</b>: back faces of the same geometry pushed out along a mitred vertex direction (<code>odir</code>, from <code>addOdir()</code>), coloured INK <code>#14101f</code>.</li>
+<li>Width = <code>uW × camera distance</code>, with the distance clamped to 2.5–36 m. <b>Characters 0.0042</b>, <b>city 0.0034</b>, <b>props 0.0030</b>. That gives a near-constant 2–3 px line on a phone, which fades into the fog colour with distance.</li>
+<li>Only major masses get hulls. Use <code>outline: false</code> on parts thinner than about 4 cm (characters) or 6 cm (buildings), and on flat decals. Never use screen-space edge detection.</li></ul>
+<h2>Night lighting rules</h2>
+<table><tr><th>Preset</th><th>Sky / fog</th><th>Hemisphere (sky / ground, intensity)</th><th>Sun (colour, intensity, direction)</th></tr>
+<tr><td>Day</td><td>#9cc4dc / #b4c0c6</td><td>#dfe6ff / #8a7f74, 1.45</td><td>#fff3dc, 2.1, (−0.5, 1.7, 0.42)</td></tr>
+<tr><td>Dusk</td><td>#b0706a / #8a6060</td><td>#ffb08a / #5a4040, 0.85</td><td>#ff9a58, 1.25, (−1, 0.32, −0.25)</td></tr>
+<tr><td>Night</td><td>#0a0f1a / #0b0f17</td><td>#4a5a88 / #14141c, 0.32</td><td>moonlight #8aa0e8, 0.45, (0.45, 1.2, −0.9)</td></tr></table>
+<ul><li><b>NIGHT</b> (0 for day to 1 for night) drives every glow. Windows light by a stable seeded hash (about 45% lit, warm <code>#ffe08a</code>/<code>#ffbf3c</code>). Shop glass, signs and neon always glow.</li>
+<li>Street lamps are warm orange <code>#ffa050</code>: additive glow pools on the ground, billboard halos, and 4 pooled point lights (intensity 16, range 15 m) that follow the hero. Assets <b>never add their own lights</b>; they register lamp points instead.</li>
+<li>A cool camera-side fill (<code>#c8d0ff</code>, 3.2) keeps characters readable at night. Do not make character bodies emissive; only intentional glow parts (a ghost, crystals, sparks) may glow.</li></ul>
+<div class="g4"><figure class=""><img src="../img/street_night.jpg"><figcaption>Night street (in-game): lit windows, lamp pools and shop signs (current placeholders; real Baltimore signs are now wanted).</figcaption></figure>
+<figure class=""><img src="../img/city_night.jpg"><figcaption>City at night: about 45% of windows lit, warm promenade lamps.</figcaption></figure>
+<figure class=""><img src="../img/sign_day.jpg"><figcaption>Neon sign quality bar, day: canvas-drawn lettering on a steel lattice.</figcaption></figure>
+<figure class=""><img src="../img/sign_night.jpg"><figcaption>The same sign at night: red-orange neon, soft glow, water reflection streak.</figcaption></figure></div>
+<h1 class="sec">3 · Code starter and interface</h1>
+<p>Every delivery is a <b>drop-in JS module</b>: no imports, one <code>META</code>, build functions that take <code>K</code>. Below is a real excerpt from the game, the opening of the thug builder exactly as it ships, followed by the kit examples that define the interface you must follow.</p>
+<h2>Real excerpt: how the game builds a thug (src/04_actors.js)</h2><pre>function buildThug(look) {
+  const mat = toonMat(); const d = THUG_D, J = skeleton(d, mat);
+  const { jacket, pants, skin } = look;
+  part(J.hips, G.sph(0.22, 0.15, 0.17), pants, 0, 0.02, 0);
+  part(J.hips, G.cyl(0.235, 0.235, 0.07, 14), &#x27;#14101f&#x27;, 0, 0.1, 0, { outline: false });
+  part(J.torso, G.sph(look.big ? 0.33 : 0.27, 0.33, look.big ? 0.24 : 0.2), jacket, 0, 0.3, 0);
+  if (!look.big) { part(J.torso, G.box(0.09, 0.5, 0.03), &#x27;#14101f&#x27;, 0.0, 0.3, 0.195, { outline: false }); part(J.torso, G.cyl(0.16, 0.2, 0.12, 12), jacket, 0, 0.6, 0); }
+  else { part(J.torso, G.cyl(0.03, 0.03, 0.5, 6), &#x27;#ffd23c&#x27;, 0, 0.48, 0.2, { rot: [Math.PI / 2 - 0.3, 0, Math.PI / 2], outline: false }); }
+  const head = J.head = grp(J.neck, 0, 0, 0); head.userData.mat = mat;
+  part(head, G.cyl(0.08, 0.09, 0.12, 10), skin, 0, 0.03, 0);
+  part(head, G.sph(0.17, 0.2, 0.18), skin, 0, 0.2, 0.01);</pre>
+<p>The pattern: one <code>toonMat</code> per rig → <code>skeleton(d, mat)</code> → <code>part(joint, G.prim(…), colour, x, y, z, opts)</code> on each joint → <code>J.head</code> group under <code>J.neck</code> → <code>J.kind</code> → return <code>J</code>. The game wraps <code>J</code> in a Fighter (position, yaw, HP, AI), drives the joints with the pose tables and flashes <code>J.mat</code> on hits.</p>
+<table><tr><th>K member</th><th>What it is (reuse it; do not re-create it)</th></tr>
+<tr><td><code>K.THREE</code></td><td>three.js r160 namespace (the game's own instance)</td></tr>
+<tr><td><code>K.toonMat(opts)</code></td><td>The cel-shaded Lambert material with vertex colours and hit-flash. One per character rig; sub-materials with a map copy its <code>userData.flash</code> and <code>flashC</code>.</td></tr>
+<tr><td><code>K.basicMat(opts)</code></td><td>An unlit material for glow parts (opacity driven by <code>K.NIGHT.value</code>).</td></tr>
+<tr><td><code>K.OUT_CHAR / OUT_PROP / OUT_CITY</code></td><td>The three shared outline hull materials (widths 0.0042 / 0.0030 / 0.0034).</td></tr>
+<tr><td><code>K.G.sph / cap / box / cyl / tor</code></td><td>The primitive geometry makers. They pick HD segment counts for you.</td></tr>
+<tr><td><code>K.part(parent, geom, colour, x, y, z, {rot, outline, mat, shadow})</code></td><td>Bakes the colour, adds the ink hull and casts shadows. The parent group must carry <code>userData.mat</code>.</td></tr>
+<tr><td><code>K.grp(parent, x, y, z)</code> · <code>K.skeleton(d, mat)</code></td><td>Groups; the 18-joint rig: tilt, hips, torso, neck, shL/R, elL/R, haL/R, lgL/R, knL/R, ftL/R, swL/R.</td></tr>
+<tr><td><code>K.HERO_D / K.THUG_D</code></td><td>Rig proportions (hip height, limb lengths).</td></tr>
+<tr><td><code>K.blank() · legsStance() · runLegs() · applyPose()</code></td><td>Pose objects and helpers. <code>K.THUG_POSES</code> and <code>K.HERO_POSES</code> are the game's own animations.</td></tr>
+<tr><td><code>K.place(geom, x, y, z, ry)</code> · <code>K.makeOut()</code> · <code>K.makeAtlas(tiles)</code></td><td>The static-geometry path: world placement, the merging collector (<code>out.solid / glow / decal / coll / bld / lamp / hook / build</code>) and the single canvas atlas.</td></tr>
+<tr><td><code>K.CITY_MAT · K.GLOW_MAT · K.LIGHT · K.applyLight · K.NIGHT · K.INK</code></td><td>The shared city materials, the day/dusk/night presets and the ink colour.</td></tr></table><h2>Prop interface: example_bench.js (complete)</h2><pre>// example_bench.js — the SHAPE every delivered static prop / kit piece must follow.
+// No imports. Write placed world-space geometry into `out`; the game merges it into its chunk meshes (3 draw calls per chunk total).
+export const META = { id: &#x27;bench_slat&#x27;, kind: &#x27;prop&#x27;, footprint: [1.8, 0.6], height: 0.9 };
+
+export function buildBench(K, out, x, z, ang = 0, opts = {}) {
+  const { THREE, place } = K, wood = opts.wood || &#x27;#9a6a44&#x27;, iron = opts.iron || &#x27;#2c322e&#x27;;
+  const P = (g, lx, ly, lz) =&gt; { g.translate(lx, ly, lz); return place(g, x, 0.16, z, ang); }; // 0.16 = kerb / pavement height
+  for (const [ly, lz, rx] of [[0.45, 0.0, 0], [0.45, 0.12, 0], [0.45, -0.12, 0]]) out.solid(P(new THREE.BoxGeometry(1.8, 0.05, 0.1), 0, ly, lz), wood);
+  for (const ly of [0.62, 0.78]) out.solid(P(new THREE.BoxGeometry(1.8, 0.1, 0.05), 0, ly, -0.22), wood);
+  for (const s of [-1, 1]) { out.solid(P(new THREE.BoxGeometry(0.06, 0.45, 0.42), s * 0.8, 0.22, 0), iron); out.solid(P(new THREE.BoxGeometry(0.06, 0.45, 0.05), s * 0.8, 0.7, -0.22), iron); }
+  // a painted back-plate via the kit atlas (draw it once per module, reuse it for every instance)
+  const atlas = buildBench.atlas || (buildBench.atlas = K.makeAtlas({ plate: { w: 256, h: 64, draw(c, w, h) { c.fillStyle = &#x27;#2f5a3a&#x27;; c.fillRect(0, 0, w, h);
+    c.strokeStyle = &#x27;#f2e6c8&#x27;; c.lineWidth = 4; c.strokeRect(6, 6, w - 12, h - 12); c.fillStyle = &#x27;#f2e6c8&#x27;; c.font = &#x27;bold 30px Georgia, serif&#x27;; c.textAlign = &#x27;center&#x27;; c.fillText(&#x27;HARBOR PARK&#x27;, w / 2, 43); } } }));
+  out.decal(P(new THREE.PlaneGeometry(0.9, 0.2), 0, 0.7, -0.19), atlas, &#x27;plate&#x27;);
+  out.coll({ x, z, r: 0.7 });
+  return META;
+}
+</pre><h2>Rules that make code drop in</h2><ul>
+<li>No <code>import</code>. No globals, no <code>window</code>, no DOM except canvas drawing inside texture or atlas functions. No <code>Math.random()</code> at build time (use a seeded LCG from <code>opts.seed</code>).</li>
+<li>Characters return the rig <code>J</code> (bosses also export <code>POSES</code> and <code>ATTACKS</code>). Static pieces write only through <code>out</code>. Vehicles return <code>{ root, kind, seats, collider, waterline, animate }</code>.</li>
+<li>Facing is +Z, the base sits at y = 0 and units are metres. Materials come only from <code>K</code>. Never change <code>toadcity_kit.js</code>.</li></ul><h1 class="sec">4 · Task A: Baltimore rowhouse and city-block kit</h1>
+<p>The box below is the <b>complete copy-paste prompt</b> for this task. Give it to the model together with <code>toadcity_starter_kit.zip</code>. The same text is in <code>prompts/TASK_A_rowhouse_city_block_kit.md</code>.</p>
+<div class="prompt"><span class="tag">COPY-PASTE PROMPT · TASK A</span><p>You are the environment-kit builder for Toad City Baltimore (Claude Sonnet, extended thinking on, medium effort; use high effort for the first kit piece, because it sets the pattern). Self-test every piece in viewer.html before you move on.</p>
+<h2>Context (read first)</h2>
+<p>You are making game assets for <strong>Toad City Baltimore</strong>, a browser open-world brawler set on Baltimore's Inner Harbor. The heroes are Harold, an elderly toad with a cane, and his wife Mavis, who has a grey afro and fights with her handbag. They clean the crime out of each district. Everything is built in code and cel-shaded with ink outlines. The game uses <strong>three.js r160</strong> with plain ES modules: no bundler, no image files, no model files. Every texture is drawn on a canvas at load time.</p>
+<p>You were given the <strong>starter kit</strong>: <code>toadcity_kit.js</code> (the game's own materials, outline method, rig and pose code, plus the prop collector), <code>viewer.html</code> (a standalone test bench), <code>example_gull_thug.js</code> (character interface) and <code>example_bench.js</code> (prop interface). If the files did not come with this brief, rebuild them from the appendix of the PDF. Your modules must run against the kit unchanged, because the game passes the same <code>K</code> object to them.</p>
+<p><strong>Conventions (all units are metres):</strong></p>
+<ul>
+<li>Y is up, X is east and Z is south (north is −Z). Facing for a character or vehicle at yaw 0 is <strong>+Z</strong>, and its feet or base sit at y = 0.</li>
+<li>Pavement top (kerb) <code>CURB = 0.16</code>. Ground floor height <code>GF = 4.4</code>, upper floors <code>FH = 3.4</code>, parapet <code>PAR = 1.3</code>. Harbour water surface <code>WY = −0.85</code>.</li>
+<li>City block: 24 × 24 m. Street: 10 m wide (grid period 34 m). Brick promenade on every water edge: 6 m. Render chunks are 64 m and the collision grid is 16 m.</li>
+<li>Character scale: Harold is about 1.6 m tall, Mavis about 2.0 m to the top of her afro, and a standard thug about 2.0 m. The bruiser is the thug rig scaled ×1.2.</li>
+</ul>
+<p><strong>Hard rules for every delivery:</strong></p>
+<ol>
+<li><strong>No <code>import</code> statements in your modules.</strong> Everything comes in through the <code>K</code> argument. Each file has one <code>export const META</code> and one or more <code>export function buildXxx(K, …)</code>.</li>
+<li><strong>Materials:</strong> create them only through <code>K.toonMat()</code>, <code>K.basicMat()</code> or <code>K.makeAtlas()</code>. Outlines must use the shared <code>K.OUT_CHAR</code>, <code>K.OUT_PROP</code> or <code>K.OUT_CITY</code> hulls (which <code>K.part()</code> and <code>out.build()</code> add for you). Do not use PBR materials, post-processing, edge-detection passes or lights inside assets. Lamps go through <code>out.lamp()</code>.</li>
+<li><strong>Textures:</strong> draw them on canvas only. Use at most one 1024² atlas per task family and at most 256² per character map. Do not use image files, web fonts or network fetches. Text uses font stacks such as <code>Impact, "Arial Black", Georgia, serif</code>.</li>
+<li><strong>Deterministic:</strong> do not call <code>Math.random()</code> at build time. Use a seeded LCG (<code>seed = seed * 16807 % 2147483647</code>) taken from <code>opts.seed</code>.</li>
+<li><strong>Do not edit <code>toadcity_kit.js</code>.</strong> If you need something it lacks, add the helper inside your own module and say so in the README.</li>
+<li><strong>Real signage, original characters:</strong> storefronts, signs and props in the Inner Harbor area <strong>may use real Baltimore businesses' names and sign styles where they really exist there</strong>. Examples: Phillips Seafood, Barnes &amp; Noble and Hard Rock Cafe at the Power Plant, the harbour water-taxi branding, Natty Boh-style corner-bar signs, Utz, Old Bay. Recreate the lettering, colours and sign shapes <strong>drawn on canvas or built from geometry</strong>; never copy or embed logo image files, photos or traced artwork. Only put a real name where that business really is or is typical (a crab house, a corner bar, the Power Plant shops); fill everything else with plausible Baltimore signage. <strong>Characters stay original:</strong> no real people, likenesses, real gang colours or symbols, official mascots or film/game characters, and no brand logos on thugs or bosses. Third-party code is allowed only under MIT or CC0, credited with its URL in <code>LICENSES.md</code>.</li>
+<li>Do <strong>not</strong> model landmark buildings (stadiums, the aquarium, the power plant, towers, the fort, the monument and so on). The in-house team builds those.</li>
+<li>Use three.js r160 APIs only. The code must have no console errors in Chrome or iOS Safari.</li>
+</ol>
+<h1>Task A: Baltimore rowhouse and city-block kit</h1>
+<h2>Goal</h2>
+<p>Build a modular kit that fills the generic 24 × 24 m city blocks around the harbour with recognisably <strong>Baltimore</strong> rowhouse streets. The kit covers Formstone fronts, white marble stoops, bracketed cornices, painted window screens, corner bars and corner shops, in 3- and 4-storey variants. It must merge into the game's chunk meshes, so the whole city stays at a few draw calls per 64 m chunk.</p>
+<h2>Pieces to build</h2>
+<ol>
+<li><strong><code>buildRowhouse(K, out, atlas, x, z, ang, opts)</code></strong>: one house. Frontage 4.2–6.0 m (2 or 3 window bays), depth 12–14 m, 3 or 4 storeys (<code>opts.floors</code>). Front facade options in <code>opts.front</code>:</li>
+<li><code>formstone</code>: faux-stone cement facing in irregular blocks, grey-beige to pink-grey, drawn on the kit atlas.</li>
+<li><code>brick</code>: red or tan brick, with optional painted brick (<code>opts.paint</code>).</li>
+<li>
+<p><code>permastone</code>: a smoother variant of Formstone.
+   The house also has:</p>
+</li>
+<li>
+<p><strong>A white marble stoop</strong>: 3–5 steps, 1.3–1.5 m wide, projecting 1.4–1.8 m onto the pavement, with a slight bevel. Use near-white <code>#eae6dc</code> with a cool shadow band.</p>
+</li>
+<li><strong>A cornice</strong>: a bracketed metal or wood cornice at the roofline, with 0.5–0.8 m projection, 4–8 brackets and a dentil band. Painted cornice colours come from the palette.</li>
+<li><strong>Windows</strong>: 1/1 sash with lintels and sills; some ground-floor windows get <strong>painted window screens</strong>, which are original folk-art scenes drawn on canvas (a red-roof cottage by a lake, a swan, a lighthouse, a sailboat). Use at least 4 designs and no copies of real artworks.</li>
+<li>The door with transom and number, a basement window grille, a downspout, and a flat roof with a low parapet, a hatch and an optional rooftop deck.</li>
+<li><strong><code>buildCornerBar(K, out, atlas, x, z, ang, opts)</code></strong>: the end-of-row corner building with a chamfered corner door, a neon or painted sign: real Baltimore corner-bar styles are welcome (Natty Boh-style beer signs, "TAVERN", "CRAB HOUSE", "BAR &amp; GRILL"), drawn on canvas, glass-block windows and an awning. The neon glows at night through <code>out.glow()</code>.</li>
+<li><strong><code>buildCornerShop(K, out, atlas, x, z, ang, opts)</code></strong>: a corner store with a big front window, a roll-up security shutter (half-open option) and a sign ("CORNER MARKET", "CARRYOUT", "BARBER", "HARDWARE", "LAUNDROMAT", "DELI"), plus real local product signs in the window (Utz, Old Bay, Natty Boh-style), drawn on canvas.</li>
+<li><strong><code>buildRowBlock(K, out, atlas, x0, z0, x1, z1, opts)</code></strong>: fills one block. Houses face all four streets and stand shoulder to shoulder, with a corner bar or shop on 1–2 corners and a 3 m rear alley or yard strip in the middle (<code>out.coll</code> closes it). It mixes fronts, heights, colours and stoops from <code>opts.seed</code>. Neighbours never repeat the same front and colour.</li>
+<li><strong><code>KIT_TILES</code></strong>: the canvas-drawn tiles (Formstone, brick, painted screens, signs, door and window details) for <strong>one</strong> 1024² atlas, made with <code>K.makeAtlas(KIT_TILES)</code>.</li>
+</ol>
+<h2>Interface (must match exactly)</h2>
+<p>File names: <code>src/rowkit_tiles.js</code>, <code>src/rowkit_rowhouse.js</code>, <code>src/rowkit_corner.js</code> and <code>src/rowkit_block.js</code>.</p>
+<pre><code class="language-js">export const META = { id: 'rowhouse', kind: 'kit', footprint: [4.8, 13], floors: [3, 4] };
+export function buildRowhouse(K, out, atlas, x, z, ang = 0, opts = {}) {
+  // (x, z) = centre of the FRONT wall at pavement level; the front faces +Z rotated by ang. Base sits on K's CURB (0.16).
+  // Write only through: out.solid(geom, colour, outline?), out.glow(geom, colour), out.decal(geom, atlas, tileName),
+  //                     out.coll({x0,x1,z0,z1} | {x,z,r}), out.bld({x0,x1,z0,z1,h}), out.lamp(x,y,z), out.hook(type, data)
+  return { width, depth, height };   // so the block filler can pack houses
+}
+</code></pre>
+<ul>
+<li>Geometry is placed in <strong>world space</strong> with <code>K.place(geom, x, y, z, ry)</code>. <code>out.build()</code> merges everything into one toon mesh, one outline hull, one glow mesh and one decal mesh.</li>
+<li><strong>Night windows:</strong> each window pane goes through <code>out.glow(paneGeom, colour)</code>, with roughly 45% lit chosen by the seeded RNG. Lit panes use warm <code>#ffe08a</code> / <code>#ffbf3c</code>; unlit panes are not written to glow (they stay as dark glass in <code>out.solid</code>). Shop glass and neon always glow.</li>
+<li><code>out.bld()</code> adds one camera-collision box per house. <code>out.coll()</code> gives the house footprint and each stoop. <code>out.hook('climb', {x, z, ang, top})</code> marks one drainpipe or ladder per block for the CLIMB action.</li>
+</ul>
+<h2>Performance budget</h2>
+<ul>
+<li><strong>One house ≤ 2,500 triangles</strong>, a corner building ≤ 3,500, and <strong>one full block ≤ 30,000</strong>.</li>
+<li>Materials: only what <code>out</code> uses (<code>K.CITY_MAT</code>, the glow material and <strong>one</strong> kit atlas for the whole task). A full block must build to <strong>≤ 4 draw calls</strong> (plus the shadow pass).</li>
+<li>Outline hulls only on major masses (house box, stoop, cornice, bay edges). Use <code>outline: false</code> for anything under about 6 cm (mullions, bricks, trim strips).</li>
+</ul>
+<h2>Style</h2>
+<ul>
+<li>Use chunky, slightly exaggerated proportions: cornices a bit deeper, stoops a bit whiter and wider than in reality, to read on a phone.</li>
+<li>Formstone gets bold irregular block outlines drawn in a darker tone of the base (not <code>K.INK</code>) so that it does not become noise at a distance.</li>
+<li>Wall colours come from the building palette (red brick <code>#8a4a3a</code>, grey stone <code>#6f6a62</code>, tan brick <code>#9a6a44</code>, plum <code>#5a4f5c</code>, green-grey <code>#4f5a52</code>, sandstone <code>#a4907a</code>) plus painted-brick pastels (<code>#c9b48a</code>, <code>#b8a27a</code>, <code>#9ab0b8</code>, <code>#c49a9a</code>).</li>
+</ul>
+<h2>Acceptance checklist</h2>
+<ul>
+<li>☐ All five pieces exist with the exact signatures. <code>viewer.html?show=street</code> shows two facing blocks across a 10 m street with a pavement, in day and night.</li>
+<li>☐ Formstone, white marble stoops, bracketed cornices, painted screens, corner bar and corner shop are all present and recognisable.</li>
+<li>☐ Both 3- and 4-storey variants exist, with at least 3 front types and at least 4 painted screen designs.</li>
+<li>☐ Budgets are measured: house ≤ 2.5k, corner ≤ 3.5k and block ≤ 30k triangles; a full block uses ≤ 4 draw calls; there is one atlas in total.</li>
+<li>☐ Night: about 45% of windows lit (seeded, stable on rebuild), with shop glass and neon glowing.</li>
+<li>☐ Colliders, camera boxes and climb hooks are written. Nothing floats and nothing sinks below <code>CURB</code>.</li>
+<li>☐ Same seed gives the same block; a different seed gives a visibly different mix.</li>
+<li>☐ Signs read as real Baltimore: real names and sign styles only where they really exist or are typical, all drawn on canvas or built from geometry (no logo image files). <code>LICENSES.md</code> is present.</li>
+</ul>
+<h2>Do NOT</h2>
+<ul>
+<li>Do not model landmarks or any specific real building.</li>
+<li>Do not use per-house materials or per-house meshes; everything goes through <code>out</code>.</li>
+<li>Do not use image textures, logo files, or photos pasted as textures. Real names and sign styles must be redrawn on canvas.</li>
+</ul>
+<h2>Session plan</h2>
+<p>The <strong>first piece sets the pattern</strong>: build the 3-storey Formstone rowhouse to full quality and self-test it before anything else. Then build the other fronts and 4 storeys, then the corner bar and corner shop, then the block filler, then the previews.</p>
+<h2>Delivery and self-test</h2>
+<p><strong>Make one zip per task:</strong> <code>toadcity_task&lt;LETTER&gt;_&lt;short-name&gt;_v&lt;N&gt;.zip</code>, laid out like this:</p>
+<pre><code>src/                  your modules (snake_case file names, e.g. gang_harbor_rats.js, boss_raven_king.js, rowkit_rowhouse.js)
+toadcity_kit.js       the kit, byte-identical to the one you were given
+viewer.html           your test bench (start from the kit's viewer.html): imports ./src/*.js, ?show=&lt;id&gt;, ?night=1, ?pose=…
+previews/             &lt;asset_id&gt;_day.png and &lt;asset_id&gt;_night.png at 1280x720, plus &lt;group&gt;_phone_390x844.png
+README.md             exports, how to view, the MEASURED budget table (parts, tris, draw calls, materials), known issues
+LICENSES.md           &quot;All original, procedural&quot; or credits (name, URL, licence) for any MIT / CC0 source used
+</code></pre>
+<p><strong>Self-test loop</strong> (run it for every asset before you move to the next):</p>
+<ol>
+<li>Serve the folder (<code>python3 -m http.server 8000</code>) and open <code>viewer.html?show=&lt;id&gt;</code>. Check day, then press N for night, then P to cycle poses.</li>
+<li>Read the corner readout. <strong>Draw calls and triangles must be inside the budget</strong> for the asset type. Count your materials too.</li>
+<li>Look at the asset at gameplay distance in a 390×844 window, the iPhone portrait view. The silhouette must read at about 6–10 m away.</li>
+<li>Take screenshots. Headless Chrome works with <code>--use-gl=swiftshader</code>; wait for <code>window.__ready === true</code>, then save the <code>previews/</code> PNGs.</li>
+<li>The console must show zero errors. Fix the asset before you move on.</li>
+</ol>
+<p><strong>Do not send:</strong> model or image files (GLB, OBJ, FBX, PNG/JPG textures), minified code, copies of three.js, or anything with an unclear licence.</p></div><h1 class="sec">5 · Task B: Street props and vehicles</h1>
+<p>The box below is the <b>complete copy-paste prompt</b> for this task. Give it to the model together with <code>toadcity_starter_kit.zip</code>. The same text is in <code>prompts/TASK_B_street_props_vehicles.md</code>.</p>
+<div class="prompt"><span class="tag">COPY-PASTE PROMPT · TASK B</span><p>You are the props and vehicles builder for Toad City Baltimore (Claude Sonnet, extended thinking on, medium effort; use high effort for the first prop and the first vehicle, because they set the pattern). Self-test every piece in viewer.html before you move on.</p>
+<h2>Context (read first)</h2>
+<p>You are making game assets for <strong>Toad City Baltimore</strong>, a browser open-world brawler set on Baltimore's Inner Harbor. The heroes are Harold, an elderly toad with a cane, and his wife Mavis, who has a grey afro and fights with her handbag. They clean the crime out of each district. Everything is built in code and cel-shaded with ink outlines. The game uses <strong>three.js r160</strong> with plain ES modules: no bundler, no image files, no model files. Every texture is drawn on a canvas at load time.</p>
+<p>You were given the <strong>starter kit</strong>: <code>toadcity_kit.js</code> (the game's own materials, outline method, rig and pose code, plus the prop collector), <code>viewer.html</code> (a standalone test bench), <code>example_gull_thug.js</code> (character interface) and <code>example_bench.js</code> (prop interface). If the files did not come with this brief, rebuild them from the appendix of the PDF. Your modules must run against the kit unchanged, because the game passes the same <code>K</code> object to them.</p>
+<p><strong>Conventions (all units are metres):</strong></p>
+<ul>
+<li>Y is up, X is east and Z is south (north is −Z). Facing for a character or vehicle at yaw 0 is <strong>+Z</strong>, and its feet or base sit at y = 0.</li>
+<li>Pavement top (kerb) <code>CURB = 0.16</code>. Ground floor height <code>GF = 4.4</code>, upper floors <code>FH = 3.4</code>, parapet <code>PAR = 1.3</code>. Harbour water surface <code>WY = −0.85</code>.</li>
+<li>City block: 24 × 24 m. Street: 10 m wide (grid period 34 m). Brick promenade on every water edge: 6 m. Render chunks are 64 m and the collision grid is 16 m.</li>
+<li>Character scale: Harold is about 1.6 m tall, Mavis about 2.0 m to the top of her afro, and a standard thug about 2.0 m. The bruiser is the thug rig scaled ×1.2.</li>
+</ul>
+<p><strong>Hard rules for every delivery:</strong></p>
+<ol>
+<li><strong>No <code>import</code> statements in your modules.</strong> Everything comes in through the <code>K</code> argument. Each file has one <code>export const META</code> and one or more <code>export function buildXxx(K, …)</code>.</li>
+<li><strong>Materials:</strong> create them only through <code>K.toonMat()</code>, <code>K.basicMat()</code> or <code>K.makeAtlas()</code>. Outlines must use the shared <code>K.OUT_CHAR</code>, <code>K.OUT_PROP</code> or <code>K.OUT_CITY</code> hulls (which <code>K.part()</code> and <code>out.build()</code> add for you). Do not use PBR materials, post-processing, edge-detection passes or lights inside assets. Lamps go through <code>out.lamp()</code>.</li>
+<li><strong>Textures:</strong> draw them on canvas only. Use at most one 1024² atlas per task family and at most 256² per character map. Do not use image files, web fonts or network fetches. Text uses font stacks such as <code>Impact, "Arial Black", Georgia, serif</code>.</li>
+<li><strong>Deterministic:</strong> do not call <code>Math.random()</code> at build time. Use a seeded LCG (<code>seed = seed * 16807 % 2147483647</code>) taken from <code>opts.seed</code>.</li>
+<li><strong>Do not edit <code>toadcity_kit.js</code>.</strong> If you need something it lacks, add the helper inside your own module and say so in the README.</li>
+<li><strong>Real signage, original characters:</strong> storefronts, signs and props in the Inner Harbor area <strong>may use real Baltimore businesses' names and sign styles where they really exist there</strong>. Examples: Phillips Seafood, Barnes &amp; Noble and Hard Rock Cafe at the Power Plant, the harbour water-taxi branding, Natty Boh-style corner-bar signs, Utz, Old Bay. Recreate the lettering, colours and sign shapes <strong>drawn on canvas or built from geometry</strong>; never copy or embed logo image files, photos or traced artwork. Only put a real name where that business really is or is typical (a crab house, a corner bar, the Power Plant shops); fill everything else with plausible Baltimore signage. <strong>Characters stay original:</strong> no real people, likenesses, real gang colours or symbols, official mascots or film/game characters, and no brand logos on thugs or bosses. Third-party code is allowed only under MIT or CC0, credited with its URL in <code>LICENSES.md</code>.</li>
+<li>Do <strong>not</strong> model landmark buildings (stadiums, the aquarium, the power plant, towers, the fort, the monument and so on). The in-house team builds those.</li>
+<li>Use three.js r160 APIs only. The code must have no console errors in Chrome or iOS Safari.</li>
+</ol>
+<h1>Task B: Street props and vehicles</h1>
+<h2>Goal</h2>
+<p>Build the street-level props and vehicles that make the harbour city feel alive. Static props merge into the city mesh through <code>out</code>. Vehicles and rideables are their own small Groups, because the heroes ride and drive them (the ACT button: RIDE, DRIVE, BOARD).</p>
+<h2>Static props (merged; signature <code>buildXxx(K, out, x, z, ang = 0, opts = {})</code>)</h2>
+<table>
+<thead>
+<tr>
+<th>id</th>
+<th>Prop</th>
+<th>Notes</th>
+<th>Tris budget</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>lamp_<wbr>acorn</code></td>
+<td>Historic acorn street lamp</td>
+<td>Dark green cast-iron post with an acorn globe; globe through <code>out.glow</code>; calls <code>out.lamp(x, y, z)</code> at the globe</td>
+<td>≤ 350</td>
+</tr>
+<tr>
+<td><code>lamp_<wbr>cobra</code></td>
+<td>Modern cobra-head lamp</td>
+<td>For avenues; head through <code>out.glow</code>, <code>out.lamp</code></td>
+<td>≤ 250</td>
+</tr>
+<tr>
+<td><code>bench_<wbr>park</code></td>
+<td>Park bench</td>
+<td>Wood slats on iron ends; <code>out.hook('seat', …)</code></td>
+<td>≤ 250</td>
+</tr>
+<tr>
+<td><code>bench_<wbr>bus</code></td>
+<td>Bus-stop bench</td>
+<td>Baltimore bus-stop sign style, drawn on canvas</td>
+<td>≤ 300</td>
+</tr>
+<tr>
+<td><code>trash_<wbr>can</code></td>
+<td>Public trash can</td>
+<td>Plus a variant with an attached recycling bin</td>
+<td>≤ 250</td>
+</tr>
+<tr>
+<td><code>crab_<wbr>shack</code></td>
+<td>Crab shack / steamed-crab stand</td>
+<td>Small wooden stand (about 4 × 3 m), counter, chalkboard menu, "STEAMED CRABS" sign that glows at night (real local flavour welcome: Old Bay tins, Utz, Natty Boh-style signs, drawn on canvas), crab-pot stack</td>
+<td>≤ 2,500</td>
+</tr>
+<tr>
+<td><code>manhole</code></td>
+<td>Manhole cover</td>
+<td>Flush with the road (y = 0.005), with a ring decal; <code>out.hook('manhole', {x, z})</code></td>
+<td>≤ 120</td>
+</tr>
+<tr>
+<td><code>ladder_<wbr>wall</code></td>
+<td>Wall ladder</td>
+<td>Fixed steel ladder from the ground to a roof height <code>opts.top</code>; <code>out.hook('climb', {x, z, ang, top})</code></td>
+<td>≤ 300</td>
+</tr>
+<tr>
+<td><code>ladder_<wbr>drop</code></td>
+<td>Fire-escape drop ladder</td>
+<td>Bottom section only, hanging at 1.6 m; <code>out.hook('climb', …)</code></td>
+<td>≤ 300</td>
+</tr>
+<tr>
+<td><code>parked_<wbr>car_<wbr>*</code></td>
+<td>Parked cars (sedan, hatchback, pickup)</td>
+<td>Static versions of the drivable cars; any colour from the palette</td>
+<td>≤ 1,500</td>
+</tr>
+</tbody>
+</table>
+<h2>Vehicles and rideables (own Group; signature <code>buildXxx(K, opts = {})</code>)</h2>
+<table>
+<thead>
+<tr>
+<th>id</th>
+<th>Vehicle</th>
+<th>Notes</th>
+<th>Budget</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>water_<wbr>taxi</code></td>
+<td>Harbour water taxi</td>
+<td>About 9 m covered launch, the real harbour water-taxi branding, lettering and colour scheme, recreated on canvas and in geometry (no copied logo files), bench seats, a pilot wheel. The player drives it</td>
+<td>≤ 4,000 tris, ≤ 8 meshes</td>
+</tr>
+<tr>
+<td><code>paddle_<wbr>boat</code></td>
+<td>Two-seat pedal boat</td>
+<td>Swan-ish or generic dragon-head pedal boat for 2 riders</td>
+<td>≤ 2,500 tris, ≤ 6 meshes</td>
+</tr>
+<tr>
+<td><code>dragon_<wbr>boat</code></td>
+<td>Racing dragon boat</td>
+<td>About 12 m long and narrow, dragon head and tail, 10 paddler benches and a drum; paddles animate</td>
+<td>≤ 6,000 tris, ≤ 10 meshes</td>
+</tr>
+<tr>
+<td><code>car_<wbr>sedan</code>, <code>car_hatch</code></td>
+<td>Drivable cars</td>
+<td>Wheels spin and steer; doors are not needed. Fells Point set piece: the heroes lean out of both windows</td>
+<td>≤ 2,000 tris, ≤ 7 meshes</td>
+</tr>
+<tr>
+<td><code>box_<wbr>truck</code></td>
+<td>Box truck</td>
+<td>"MOVING &amp; STORAGE" or a real Baltimore delivery look (e.g. Utz), drawn on canvas; the roll-up rear door is optional</td>
+<td>≤ 2,500 tris, ≤ 7 meshes</td>
+</tr>
+<tr>
+<td><code>arabber_<wbr>cart</code></td>
+<td>Arabber produce cart with pony</td>
+<td>Painted wooden cart with a canopy, bells and fruit crates, pulled by a stylised pony with a simple walk cycle in <code>animate</code></td>
+<td>≤ 5,000 tris, ≤ 12 meshes</td>
+</tr>
+<tr>
+<td><code>skateboard</code></td>
+<td>Skateboard</td>
+<td>Deck, trucks and wheels; the rider stands on <code>seats[0]</code></td>
+<td>≤ 600 tris, ≤ 3 meshes</td>
+</tr>
+</tbody>
+</table>
+<p>Vehicle return value (must match exactly):</p>
+<pre><code class="language-js">export function buildWaterTaxi(K, opts = {}) {
+  const out = K.makeOut();             // build the static body with the same out.* calls as props, at the local origin
+  /* … out.solid(…) … */
+  const root = new K.THREE.Group(); root.add(out.build());   // body = 3-4 draw calls
+  const wheels = []; /* moving parts: K.grp + K.part with a shared K.toonMat (set group.userData.mat) */
+  return {
+    root, kind: 'boat',                // 'boat' | 'car' | 'cart' | 'board'
+    seats: [{ x: 0, y: 0.9, z: -1.2, ang: 0, pose: 'stand' }],   // local-space rider anchors; pose: 'stand' | 'sit' | 'lean_out'
+    collider: { w: 2.6, l: 9.0, h: 2.4 },                         // local box, centred, along +Z
+    waterline: 0.35,                   // boats: local y that sits on the water surface (WY = -0.85)
+    animate(v, dt, speed, steer, t) { /* spin wheels / paddles, bob boats, pony walk; must be cheap */ },
+  };
+}
+</code></pre>
+<ul>
+<li>Facing is +Z. Wheels sit on y = 0 (cars, carts, board) and boats float with <code>waterline</code> on the water plane.</li>
+<li>Night: headlights, tail lights, cabin lights and the crab-shack sign use <code>out.glow()</code>. Vehicles do not add lights.</li>
+</ul>
+<h2>Performance budget</h2>
+<ul>
+<li>Static props: the per-prop triangle budgets in the table above. They add <strong>no draw calls</strong>, because they merge into the chunk.</li>
+<li>Vehicles: the triangle and mesh budgets in the table. Use at most 2 materials per vehicle (the <code>out</code> materials plus one shared <code>toonMat</code> for moving parts), and no textures beyond the shared prop atlas.</li>
+<li>Use <strong>one 1024² atlas for the whole of Task B</strong> (<code>src/props_tiles.js</code> exporting <code>PROP_TILES</code>) for signs, menus, livery text and the manhole ring.</li>
+</ul>
+<h2>Style</h2>
+<ul>
+<li>Use chunky toy-like proportions with readable silhouettes at 10–20 m: slightly oversized lamp heads, wheels and cabins.</li>
+<li>Ink outlines on major masses only. Glass is a dark blue-grey (<code>#6a8a9a</code> by day) with no transparency.</li>
+<li>Real Baltimore flavour: real names and sign styles where they really exist (water-taxi branding, Old Bay, Utz, Natty Boh-style signs), arabber colour schemes (painted red, yellow and green wood with scrollwork), the crab-shack chalkboard, harbour-boat bunting.</li>
+</ul>
+<h2>Acceptance checklist</h2>
+<ul>
+<li>☐ Every prop and vehicle in the two tables exists with the exact signature and return shape.</li>
+<li>☐ <code>viewer.html?show=props</code> shows all static props in a row on a pavement strip; <code>?show=vehicles</code> shows every vehicle with <code>animate()</code> running (wheels spin, paddles stroke, the pony walks, boats bob on a water plane at <code>WY</code>).</li>
+<li>☐ Budgets are measured and written in the README (triangles per prop; triangles, meshes and draw calls per vehicle). There is one atlas in total.</li>
+<li>☐ Hooks are present: manhole → <code>'manhole'</code>, ladders → <code>'climb'</code>, benches → <code>'seat'</code>, lamps → <code>out.lamp</code>.</li>
+<li>☐ Night previews show the lamp globes, headlights and signs glowing and readable.</li>
+<li>☐ Seats line up with the hero rig (Harold is about 1.6 m tall), and the <code>collider</code> box matches the visible hull.</li>
+<li>☐ Liveries and signs use real Baltimore names and styles where they really exist, all redrawn on canvas or built from geometry (no logo image files). <code>LICENSES.md</code> is present.</li>
+</ul>
+<h2>Do NOT</h2>
+<ul>
+<li>Do not embed logo image files or photos; recreate real lettering and liveries on canvas or in geometry.</li>
+<li>Do not model landmark buildings or piers. The in-house team does those.</li>
+<li>Do not use skinned meshes or GLTF. Do not add per-prop materials.</li>
+</ul>
+<h2>Session plan</h2>
+<p>Do the lamp and bench first (the pattern piece: self-test it, then the hooks), then the other static props, then the car (the vehicle pattern piece), then the boats, then the cart and the skateboard, then the previews.</p>
+<h2>Delivery and self-test</h2>
+<p><strong>Make one zip per task:</strong> <code>toadcity_task&lt;LETTER&gt;_&lt;short-name&gt;_v&lt;N&gt;.zip</code>, laid out like this:</p>
+<pre><code>src/                  your modules (snake_case file names, e.g. gang_harbor_rats.js, boss_raven_king.js, rowkit_rowhouse.js)
+toadcity_kit.js       the kit, byte-identical to the one you were given
+viewer.html           your test bench (start from the kit's viewer.html): imports ./src/*.js, ?show=&lt;id&gt;, ?night=1, ?pose=…
+previews/             &lt;asset_id&gt;_day.png and &lt;asset_id&gt;_night.png at 1280x720, plus &lt;group&gt;_phone_390x844.png
+README.md             exports, how to view, the MEASURED budget table (parts, tris, draw calls, materials), known issues
+LICENSES.md           &quot;All original, procedural&quot; or credits (name, URL, licence) for any MIT / CC0 source used
+</code></pre>
+<p><strong>Self-test loop</strong> (run it for every asset before you move to the next):</p>
+<ol>
+<li>Serve the folder (<code>python3 -m http.server 8000</code>) and open <code>viewer.html?show=&lt;id&gt;</code>. Check day, then press N for night, then P to cycle poses.</li>
+<li>Read the corner readout. <strong>Draw calls and triangles must be inside the budget</strong> for the asset type. Count your materials too.</li>
+<li>Look at the asset at gameplay distance in a 390×844 window, the iPhone portrait view. The silhouette must read at about 6–10 m away.</li>
+<li>Take screenshots. Headless Chrome works with <code>--use-gl=swiftshader</code>; wait for <code>window.__ready === true</code>, then save the <code>previews/</code> PNGs.</li>
+<li>The console must show zero errors. Fix the asset before you move on.</li>
+</ol>
+<p><strong>Do not send:</strong> model or image files (GLB, OBJ, FBX, PNG/JPG textures), minified code, copies of three.js, or anything with an unclear licence.</p></div><h1 style="margin-top:18px">6 · Delivery instructions</h1><p>The full delivery and self-test block is the last part of every copy-paste prompt above. In summary: <b>one zip per task</b>, named <code>toadcity_task&lt;LETTER&gt;_&lt;short-name&gt;_v&lt;N&gt;.zip</code>, containing <code>src/</code> (your modules), an unchanged <code>toadcity_kit.js</code>, <code>viewer.html</code>, <code>previews/</code> (day and night PNGs at 1280×720 per asset, plus a 390×844 phone framing), a <code>README.md</code> with the measured budget table, and <code>LICENSES.md</code>.</p>
+<div class="note"><b>Licences.</b> Everything should be procedural or original. If any snippet comes from elsewhere, it must be MIT or CC0 and credited in <code>LICENSES.md</code> (name, URL, licence). three.js itself is MIT and is loaded by the viewer only, never copied into <code>src/</code>. Do not send anything with an unclear licence, and no photographs, logo image files or traced artwork. Real sign wording and styles are fine when redrawn in code.</div>
+<p><b>Hand-back:</b> one zip per task, versioned (<code>_v1</code>, <code>_v2</code> …); re-deliver the whole zip after fixes, not a diff. A separate QA model reviews each zip (pass/fail per asset, with numbered fixes), so expect one fix round. List anything unfinished under <i>Known issues</i> in the README.</p><h1 class="sec">Appendix A · Kit core (props and city)</h1><p>The prop and city core of <code>toadcity_kit.js</code>, printed so you can rebuild it if the zip is missing (… marks omitted sections: characters and poses, lighting presets). The file ends by exporting every function and constant above as <code>export const K = { … }</code>. Use the zip copy when you have it.</p><pre class="small">// toadcity_kit.js — Toad City Baltimore: the shared character / prop kit (HD cel-shaded path only).
+// This is a faithful standalone copy of the game&#x27;s own materials, outline method and rig code (three.js r160),
+// so modules built against it drop straight into the game. Deliveries NEVER import anything: they receive this object as `K`.
+import * as THREE from &#x27;three&#x27;;
+
+const TAU = Math.PI * 2;
+const clamp = (v, a, b) =&gt; (v &lt; a ? a : v &gt; b ? b : v);
+const lerp = (a, b, t) =&gt; a + (b - a) * t;
+const damp = (a, b, r, dt) =&gt; a + (b - a) * (1 - Math.exp(-r * dt));
+const wrapA = (a) =&gt; { a = (a + Math.PI) % TAU; if (a &lt; 0) a += TAU; return a - Math.PI; };
+const ease = (t) =&gt; t * t * (3 - 2 * t);
+const QUAL = { hd: true, outlines: [], texs: [] };   // the game runs HD by default; the kit is HD-only
+const INK = &#x27;#14101f&#x27;;                              // the one ink colour: outlines, shadows on signs, dark trims
+const NIGHT = { value: 0 };                         // 0 day .. 1 night (the game drives it; viewers set it)
+
+// ---- toon (cel) material: MeshLambert + vertex colours + 3 hard bands + a hit-flash uniform ----
+function toonMat(opts = {}) {
+  const m = new THREE.MeshLambertMaterial(Object.assign({ vertexColors: true }, opts));
+  m.userData.flash = { value: 0 }; m.userData.flashC = { value: new THREE.Color(1, 1, 1) };
+  m.onBeforeCompile = (sh) =&gt; {
+    sh.uniforms.uFlash = m.userData.flash; sh.uniforms.uFlashC = m.userData.flashC;
+    sh.fragmentShader = sh.fragmentShader
+      .replace(&#x27;#include &lt;common&gt;&#x27;, &#x27;#include &lt;common&gt;\nuniform float uFlash; uniform vec3 uFlashC;&#x27;)
+      .replace(&#x27;#include &lt;opaque_fragment&gt;&#x27;, `
+        { // HD cel bands: shadow 0.46 / mid 0.78 / lit 1.06 of the base colour, hard edges; shadows tinted cool
+          float ld = max(dot(diffuseColor.rgb, vec3(0.299, 0.587, 0.114)), 1e-3), lo = dot(outgoingLight, vec3(0.299, 0.587, 0.114)), r = lo / ld;
+          float b = mix(0.46, 0.78, smoothstep(0.38, 0.44, r)); b = mix(b, 1.06, smoothstep(0.86, 0.92, r)); b = mix(b, r, step(1.35, r));
+          outgoingLight *= b / max(r, 1e-3);
+          outgoingLight = mix(outgoingLight, outgoingLight * vec3(0.88, 0.86, 1.1), (1.0 - smoothstep(0.38, 0.44, r)) * 0.5); }
+        outgoingLight = mix(outgoingLight, uFlashC, uFlash);
+        #include &lt;opaque_fragment&gt;`);
+  };
+  m.customProgramCacheKey = () =&gt; &#x27;psx&#x27; + (opts.map ? &#x27;M&#x27; : &#x27;&#x27;);
+  return m;
+}
+// unlit material for neon, glows and lamp heads (night-only things fade with opacity)
+function basicMat(opts) { return new THREE.MeshBasicMaterial(opts); }
+// ---- ink outlines: inverted hulls. Back faces pushed out along a mitred direction (attribute `odir`), width ~constant on screen ----
+const OUT_U = { fogC: { value: new THREE.Color(&#x27;#000&#x27;) }, fogN: { value: 100 }, fogF: { value: 200 } };
+function outlineMat(w) {
+  return new THREE.ShaderMaterial({
+    uniforms: { uW: { value: w }, uC: { value: new THREE.Color(INK) }, uFogC: OUT_U.fogC, uFogN: OUT_U.fogN, uFogF: OUT_U.fogF },
+    vertexShader: `attribute vec3 odir; uniform float uW; varying float vD;
+      void main() { vec4 wp = modelMatrix * vec4(position, 1.0); vec3 wd = mat3(modelMatrix) * odir;
+        float d = distance(wp.xyz, cameraPosition); wp.xyz += wd * uW * clamp(d, 2.5, 36.0);
+        vD = d; gl_Position = projectionMatrix * viewMatrix * wp; }`,
+    fragmentShader: `uniform vec3 uC; uniform vec3 uFogC; uniform float uFogN; uniform float uFogF; varying float vD;
+      void main() { gl_FragColor = vec4(mix(uC, uFogC, smoothstep(uFogN, uFogF, vD)), 1.0);
+        #include &lt;colorspace_fragment&gt;
+      }`,
+    side: THREE.BackSide,
+  });
+}
+// the three shared outline widths: city 0.0034, characters 0.0042, props 0.0030 (fraction of camera distance, clamped 2.5..36 m)
+const OUT_CITY = outlineMat(0.0034), OUT_CHAR = outlineMat(0.0042), OUT_PROP = outlineMat(0.0030);
+function addOdir(g) {
+  const p = g.attributes.position, n = g.attributes.normal, map = new Map(), keys = [];
+  for (let i = 0; i &lt; p.count; i++) {
+    const k = Math.round(p.getX(i) * 1e3) + &#x27;,&#x27; + Math.round(p.getY(i) * 1e3) + &#x27;,&#x27; + Math.round(p.getZ(i) * 1e3);
+    keys.push(k); let e = map.get(k); if (!e) map.set(k, (e = []));
+    const nx = n.getX(i), ny = n.getY(i), nz = n.getZ(i);
+    if (!e.some((q) =&gt; q[0] * nx + q[1] * ny + q[2] * nz &gt; 0.985)) e.push([nx, ny, nz]);
+  }
+  const res = new Map();
+  for (const [k, e] of map) {
+    let x = 0, y = 0, z = 0; for (const q of e) { x += q[0]; y += q[1]; z += q[2]; }
+    const l = Math.hypot(x, y, z) || 1; x /= l; y /= l; z /= l;
+    let mn = 1; for (const q of e) mn = Math.min(mn, q[0] * x + q[1] * y + q[2] * z);
+    const s = 1 / Math.max(mn, 0.35); res.set(k, [x * s, y * s, z * s]);
+  }
+  const o = new Float32Array(p.count * 3);
+  for (let i = 0; i &lt; p.count; i++) { const d = res.get(keys[i]); o[i * 3] = d[0]; o[i * 3 + 1] = d[1]; o[i * 3 + 2] = d[2]; }
+  g.setAttribute(&#x27;odir&#x27;, new THREE.BufferAttribute(o, 3));
+  return g;
+}
+function bakeColor(g, col) {
+  const c = new THREE.Color(col), n = g.attributes.position.count, a = new Float32Array(n * 3);
+  for (let i = 0; i &lt; n; i++) { a[i * 3] = c.r; a[i * 3 + 1] = c.g; a[i * 3 + 2] = c.b; }
+  g.setAttribute(&#x27;color&#x27;, new THREE.BufferAttribute(a, 3)); return g;
+}
+// canvas -&gt; texture (the game draws every texture on a canvas at load: no image files). HD = full-size source, trilinear mipmaps.
+function lowTex(src) {
+  const t = new THREE.CanvasTexture(src); t.colorSpace = THREE.SRGBColorSpace; t.minFilter = THREE.LinearMipmapLinearFilter; t.magFilter = THREE.LinearFilter;
+  t.generateMipmaps = true; t.anisotropy = 4; t.userData.src = src; QUAL.texs.push(t); return t;
+}
+
+// …
+
+// ---------------- characters: procedural stylised rigs (groups of toon parts with outline hulls) ----------------
+const G = { // low-poly on purpose (32-bit era budgets)
+  sph: (rx, ry, rz, ws = 8, hs = 6) =&gt; new THREE.SphereGeometry(1, QUAL.hd ? Math.max(ws * 2, 18) : Math.min(ws, 9), QUAL.hd ? Math.max(hs * 2, 12) : Math.min(hs, 7)).scale(rx, ry, rz),
+  cap: (r, len, rs = 6) =&gt; new THREE.CapsuleGeometry(r, len, QUAL.hd ? 4 : 2, QUAL.hd ? 12 : Math.min(rs, 6)),
+  box: (w, h, d) =&gt; new THREE.BoxGeometry(w, h, d),
+  cyl: (rt, rb, h, s = 7, open = false) =&gt; new THREE.CylinderGeometry(rt, rb, h, QUAL.hd ? Math.max(s * 2, 14) : Math.min(s, 8), 1, open),
+  tor: (R, r, arc = TAU) =&gt; new THREE.TorusGeometry(R, r, QUAL.hd ? 6 : 3, QUAL.hd ? 16 : 7, arc),
+};
+function part(parent, geom, col, x = 0, y = 0, z = 0, o = {}) {
+  bakeColor(geom, col); const ol = o.outline !== false &amp;&amp; geom.attributes.normal;
+  if (ol) addOdir(geom);
+  const m = new THREE.Mesh(geom, o.mat || parent.userData.mat || parent.parent?.userData.mat);
+  m.position.set(x, y, z); if (o.rot) m.rotation.set(o.rot[0], o.rot[1], o.rot[2]);
+  if (ol) { const h = new THREE.Mesh(geom, o.olMat || OUT_CHAR); h.castShadow = false; h.visible = QUAL.hd; m.add(h); QUAL.outlines.push(h); }
+  geom.computeBoundingSphere(); m.castShadow = o.shadow !== false &amp;&amp; geom.boundingSphere.radius &gt; 0.1; parent.add(m);
+  return m;
+}
+function grp(parent, x = 0, y = 0, z = 0) { const g = new THREE.Group(); g.position.set(x, y, z); parent.add(g); return g; }
+
+// …
+// ================= static props / building kit: merged geometry =================
+const _m4 = new THREE.Matrix4(), _q = new THREE.Quaternion(), _e = new THREE.Euler(), _v = new THREE.Vector3(), _s = new THREE.Vector3();
+// place(): bake a world transform into a geometry (the city is built in world space, then merged)
+function place(g, x, y, z, ry = 0, rx = 0, rz = 0) { return g.applyMatrix4(_m4.compose(_v.set(x, y, z), _q.setFromEuler(_e.set(rx, ry, rz)), _s.set(1, 1, 1))); }
+// makeOut(): the collector a static kit piece writes into. In the game the same five calls feed the chunked city meshes
+// (one merged toon mesh + one merged outline hull per 64 m chunk), the night-glow layer and the collision grid.
+//   out.solid(geom, colour, outline = true)   opaque cel-shaded geometry (already placed in world space)
+//   out.glow(geom, colour)                    unlit geometry that lights up at night (window panes, sign faces, lamp heads); dark by day
+//   out.coll({x, z, r} | {x0, x1, z0, z1})    character collider (circle or axis-aligned box), metres
+//   out.bld({x0, x1, z0, z1, h})              camera-blocking box + roof height
+//   out.lamp(x, y, z)                         a street-lamp light point (the game adds the glow pool, halo and pooled point light)
+//   out.hook(type, data)                      a gameplay hook the ACT button uses: &#x27;manhole&#x27; {x, z} (drops to the sewer), &#x27;climb&#x27; {x, z, ang, top}
+//                                             (ladder / climbable wall, top = roof height), &#x27;seat&#x27; {x, y, z, ang} (bench sit spot)
+//   out.decal(geom, atlas, name)              textured geometry (painted window screens, signs, Formstone pattern): geom&#x27;s 0..1 uv is remapped
+//                                             into the named tile of a kit atlas made with makeAtlas(); alpha &lt; 0.5 is cut out
+function mergeGeoms(list, withUv = false) {
+  let n = 0; for (const g of list) n += g.attributes.position.count;
+  const P = new Float32Array(n * 3), N = new Float32Array(n * 3), C = new Float32Array(n * 3), U = withUv ? new Float32Array(n * 2) : null; let o = 0;
+  for (const g of list) { const c = g.attributes.position.count; P.set(g.attributes.position.array, o * 3); N.set(g.attributes.normal.array, o * 3); C.set(g.attributes.color.array, o * 3); if (U) U.set(g.attributes.uv.array, o * 2); o += c; }
+  const m = new THREE.BufferGeometry(); m.setAttribute(&#x27;position&#x27;, new THREE.BufferAttribute(P, 3)); m.setAttribute(&#x27;normal&#x27;, new THREE.BufferAttribute(N, 3)); m.setAttribute(&#x27;color&#x27;, new THREE.BufferAttribute(C, 3));
+  if (U) m.setAttribute(&#x27;uv&#x27;, new THREE.BufferAttribute(U, 2));
+  m.computeBoundingSphere(); return m;
+}
+const CITY_MAT = toonMat();                                   // ONE shared material for every static kit piece
+const GLOW_MAT = new THREE.MeshBasicMaterial({ vertexColors: true, transparent: true, opacity: 0 });
+// makeAtlas(): every texture a kit needs is DRAWN on canvas at load (no image files) and packed into ONE 1024x1024 atlas
+//   tiles = { name: { w, h, draw(ctx, w, h) } }   (w, h in px; keep the total under 1024x1024)
+function makeAtlas(tiles, size = 1024) {
+  const c = document.createElement(&#x27;canvas&#x27;); c.width = c.height = size; const x = c.getContext(&#x27;2d&#x27;), R = {}; let ax = 0, ay = 0, row = 0;
+  for (const [name, t] of Object.entries(tiles)) {
+    if (ax + t.w &gt; size) { ax = 0; ay += row; row = 0; } if (ay + t.h &gt; size) throw new Error(&#x27;atlas full at &#x27; + name);
+    x.save(); x.translate(ax, ay); x.beginPath(); x.rect(0, 0, t.w, t.h); x.clip(); t.draw(x, t.w, t.h); x.restore();
+    R[name] = [(ax + 1) / size, 1 - (ay + t.h - 1) / size, (t.w - 2) / size, (t.h - 2) / size]; ax += t.w; row = Math.max(row, t.h);
+  }
+  const tex = lowTex(c); const mat = toonMat({ map: tex, alphaTest: 0.5, side: THREE.DoubleSide });
+  return { canvas: c, tex, mat, rect: (n) =&gt; R[n] };
+}
+function makeOut() {
+  const S = [], OL = [], GL = [], DC = new Map(), out = { COLL: [], BLD: [], LAMPS: [], HOOKS: {} };
+  const flat = (g) =&gt; (g.index ? g.toNonIndexed() : g);
+  out.solid = (g, col, outline = true) =&gt; { g = flat(g); bakeColor(g, col); if (g.attributes.uv) g.deleteAttribute(&#x27;uv&#x27;); S.push(g); if (outline) OL.push(g); };
+  out.glow = (g, col) =&gt; { g = flat(g); bakeColor(g, col); if (g.attributes.uv) g.deleteAttribute(&#x27;uv&#x27;); GL.push(g); };
+  out.decal = (g, atlas, name) =&gt; { g = flat(g); const r = atlas.rect(name), uv = g.attributes.uv; if (!r) throw new Error(&#x27;no tile &#x27; + name);
+    for (let i = 0; i &lt; uv.count; i++) uv.setXY(i, r[0] + uv.getX(i) * r[2], r[1] + uv.getY(i) * r[3]);
+    bakeColor(g, &#x27;#ffffff&#x27;); (DC.get(atlas) || DC.set(atlas, []).get(atlas)).push(g); };
+  out.coll = (c) =&gt; out.COLL.push(c); out.bld = (b) =&gt; out.BLD.push(b); out.lamp = (x, y, z) =&gt; out.LAMPS.push({ x, y, z });
+  out.hook = (type, data) =&gt; (out.HOOKS[type] || (out.HOOKS[type] = [])).push(data);
+  // build(): 1 toon mesh + 1 outline hull + 1 glow mesh = 3 draw calls for everything written so far
+  out.build = () =&gt; {
+    const grp = new THREE.Group();
+    if (S.length) { const m = new THREE.Mesh(mergeGeoms(S), CITY_MAT); m.castShadow = m.receiveShadow = true; grp.add(m); }
+    if (OL.length) { const g = addOdir(mergeGeoms(OL)); const h = new THREE.Mesh(g, OUT_CITY); grp.add(h); QUAL.outlines.push(h); }
+    if (GL.length) { const m = new THREE.Mesh(mergeGeoms(GL), GLOW_MAT); m.renderOrder = 2; grp.add(m); }
+    for (const [atlas, list] of DC) { const m = new THREE.Mesh(mergeGeoms(list, true), atlas.mat); m.castShadow = m.receiveShadow = true; grp.add(m); } // +1 call per atlas
+    return grp;
+  };
+  return out;
+}</pre><h1 class="sec">Appendix B · Haiku helper prompts</h1><p>Short, low-effort prompts for <b>Claude Haiku</b> (extended thinking off). Use them only on Sonnet modules that have <b>passed QA</b>. Haiku makes colour, window, sign and trim variations and tidies file names and READMEs, without touching geometry logic, budgets or interfaces. The same text is in <code>prompts/HAIKU_helper_prompts.md</code>.</p><p><strong>H1: Colour variants</strong></p>
+<pre><code>Here is a finished Toad City module (three.js, no imports, uses K). Add an exported const COLOR_VARIANTS = [ … ] with
+6 colour sets for the colour options it already reads from opts (do not add new options). Use ONLY these hexes:
+#8a4a3a #6f6a62 #9a6a44 #5a4f5c #4f5a52 #a4907a #c9b48a #b8a27a #9ab0b8 #c49a9a #2f5a3a #2c322e #eae6dc.
+Never use #000000 or #ffffff. Change nothing else. Return the full file.
+</code></pre>
+<p><strong>H2: Window variants</strong></p>
+<pre><code>In this rowhouse module, add 3 extra window styles to the existing window option list (e.g. 2/2 sash, arched lintel,
+shuttered). Reuse the existing window function and its out.solid / out.glow calls; keep each new style within the
+same triangle count as the current window (±10%). Return only the changed functions and the new option names.
+</code></pre>
+<p><strong>H3: Sign text variants</strong></p>
+<pre><code>This module draws shop/bar signs on canvas tiles. Add 8 more sign texts that fit Baltimore corner businesses
+(e.g. &quot;CARRYOUT&quot;, &quot;SUBS &amp; PIZZA&quot;, &quot;LIQUORS&quot;, &quot;BAIT &amp; TACKLE&quot;, Natty Boh-style beer signs, Utz and Old Bay window
+signs). Real Baltimore names and sign styles are allowed; redraw them on canvas, never paste logo image files. Keep the same font stack, colours and tile size. Return the updated tile list.
+</code></pre>
+<p><strong>H4: Trim and cornice variants</strong></p>
+<pre><code>Add 4 cornice / trim colour + bracket-count presets to this module's opts (bracket counts 4–8, colours from the
+palette above). Keep geometry code unchanged; only add presets and a one-line comment each. Return the full file.
+</code></pre>
+<p><strong>H5: Tidy file names and README</strong></p>
+<pre><code>Rename files in this delivery to snake_case with the task prefix (rowkit_, props_, veh_), update every reference in
+viewer.html and README.md, and rewrite README.md to this outline: 1) Exports (name, signature, one line each)
+2) How to view (viewer.html URLs) 3) Measured budget table (copy numbers, do not invent) 4) Variants 5) Known issues.
+Do not change any code inside the modules. List every rename you made.
+</code></pre>
+<p><strong>H6: Licence check</strong></p>
+<pre><code>Read these files. List every external source, URL, or copied snippet you can find. If there are none, write
+LICENSES.md as &quot;All assets are original and procedural (three.js r160, MIT, loaded by the viewer only).&quot;
+If there are some, list name, URL, licence; flag anything that is not MIT or CC0.
+</code></pre></body></html>

@@ -1,0 +1,195 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex,nofollow">
+<title>G3 · Standing QA template for every new delivery · Toad City round 2</title><style>body{margin:0;font:16px/1.5 system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;color:#1d1a26;background:#f6f4fb}
+header{background:#14101f;color:#fff;padding:18px 20px}header .k{color:#ffd23c;font-weight:700;letter-spacing:2px;font-size:12px}
+header h1{margin:6px 0 4px;font-size:24px}header p{margin:0;color:#d9d3ea;font-size:14px}
+main{max-width:980px;margin:0 auto;padding:16px}
+.bar{position:sticky;top:0;z-index:5;display:flex;gap:10px;flex-wrap:wrap;background:#f6f4fb;padding:10px 0;border-bottom:1px solid #ddd}
+.btn{display:inline-block;background:#ff3d6e;color:#fff;border:0;border-radius:8px;padding:10px 16px;font-weight:700;font-size:15px;cursor:pointer;text-decoration:none}
+.btn.alt{background:#2f2457}
+.card{background:#fff;border:1px solid #ddd;border-radius:10px;padding:14px 18px;margin:14px 0}
+.prompt h1{font-size:22px;border-bottom:3px solid #ff3d6e}.prompt h2{font-size:18px;color:#2f2457;margin-top:22px}
+table{border-collapse:collapse;width:100%;font-size:13.5px;display:block;overflow-x:auto}th,td{border:1px solid #c9c4d6;padding:4px 6px;text-align:left;vertical-align:top}th{background:#2f2457;color:#fff}
+pre{background:#16131f;color:#ece8f6;padding:10px;border-radius:6px;overflow-x:auto;font-size:12.5px;white-space:pre-wrap;word-break:break-word}code{font-family:ui-monospace,Menlo,Consolas,monospace;font-size:.92em}
+blockquote{border-left:5px solid #ffd23c;background:#fffbe8;margin:10px 0;padding:6px 12px}
+.imgs{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:12px}.imgs figure{margin:0}.imgs img{width:100%;border-radius:6px;border:1px solid #ccc}
+figcaption{font-size:13px;color:#4b4560}#ok{color:#23c26b;font-weight:700;align-self:center}
+</style></head><body>
+<header><div class="k">TOAD CITY BALTIMORE · ROUND 2 · GEMINI PRO</div><h1>G3 · Standing QA template for every new delivery</h1>
+<p>Paste the whole prompt into a fresh Gemini Pro chat and attach the ZIP kit below. Gemini Pro (newest), thinking set to high.</p></header>
+<main><div class="bar"><button class="btn" id="cp">Copy prompt</button><a class="btn alt" href="Toad_City_Round2_GEMINI.zip" download>Download ZIP kit (10 MB)</a><a class="btn alt" href="prompt.md" download>Prompt as .md</a><span id="ok"></span></div>
+<div class="card"><b>Depends on:</b> None. Send any time.<br><b>Delivery:</b> <code>— (reply in chat)</code></div>
+<div class="card prompt"><h1>G3 · Standing QA template for every new delivery</h1>
+<p><strong>For:</strong> Gemini Pro · <strong>Setting:</strong> Gemini Pro (newest), thinking set to high. · <strong>Depends on:</strong> None. Send any time. · <strong>Delivers: a reply in this chat</strong></p>
+<p>Attach <code>Toad_City_Round2_GEMINI.zip</code> to this chat together with this prompt. Everything bulky (code, references, renders) is in the ZIP; this prompt names the files.</p>
+<h2>HARD RULES (read first; repeated at the very end)</h2>
+<ol>
+<li>You are a reviewer. You never rewrite whole files; you give targeted, numbered fixes with numbers.</li>
+<li>Judge each delivery only against its own brief and the lessons in this prompt.</li>
+<li>Every claim cites a file and line, a measured number, or a named image. Anything you cannot verify is marked UNVERIFIED with the evidence you need.</li>
+<li>Do not trust README numbers: recompute what you can from the code (part counts, segment counts, materials).</li>
+<li>Characters must be original (no real people, mascots, team marks, brand logos). Environment may use real Baltimore names where they really are, redrawn in code.</li>
+<li>Use the real game facts in §3, not general three.js assumptions.</li>
+<li>Score with the rubric in <code>qa/QA_GEMINI_PRO_review_prompt.md</code>: PASS needs all three gates, total ≥ 75 and no category at 0.</li>
+<li>Severity: blocker = gate failure or crash; major = checklist item missed; minor = polish.</li>
+<li>Read Hark's own review only after you finish yours, then add a "Coverage vs Hark" section.</li>
+<li>Output markdown only, in the order of §5.</li>
+<li>Answer the Step 0 comprehension check at the top of your reply, then continue straight into the full deliverable in the same reply; do not wait for GO. If any Step 0 answer reveals a conflict or a missing file, state your assumption and proceed.</li>
+</ol>
+<h2>Step 0 · Comprehension check (at the TOP of your reply, then continue straight into the full deliverable in the same reply)</h2>
+<ol>
+<li><strong>List every file in the ZIP</strong> (full path) and say in a few words what you will use it for.</li>
+<li><strong>Restate, numbered and in your own words, every HARD RULE above and every lesson or fix row in §2</strong> (one line each).</li>
+<li><strong>Answer these questions.</strong> Every answer is in the sections below; quote the exact number, name or code.
+   - Q1. How many lines may the intake checklist have?
+   - Q2. What is the code-block title of the template?
+   - Q3. What is the maximum length of the template?
+   - Q4. How does the template handle canary strings?
+   - Q5. Name the static-prop position test round 2 requires.</li>
+<li><strong>Quote the three canary instructions</strong> this prompt contains (they are marked "Canary 1/2/3 of 3" somewhere in the middle) and confirm you will include each string exactly.</li>
+</ol>
+<p>Then continue straight into the full deliverable in this same reply; do not wait for GO. If any Step 0 answer reveals a conflict or a missing file, state your assumption and proceed. Brad hands your whole reply to Hark, who checks the Step 0 answers.</p>
+<h2>ZIP contents</h2>
+<table>
+<thead>
+<tr>
+<th>ZIP path</th>
+<th>What it is</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>README_ZIP.md</code></td>
+<td>Index of the ZIP.</td>
+</tr>
+<tr>
+<td><code>qa/QA_GEMINI_PRO_review_prompt.md</code></td>
+<td>The scoring format: gates I/B/O, 100-point rubric, output format.</td>
+</tr>
+<tr>
+<td><code>kit/toadcity_kit.js</code></td>
+<td>The real starter kit the builders must ship byte-identical.</td>
+</tr>
+<tr>
+<td><code>kit/real_poses_04_actors.js</code>, <code>kit/real_mergeRig.js</code></td>
+<td>The game's real poses and real <code>mergeRig</code>, verbatim.</td>
+</tr>
+<tr>
+<td><code>briefs/TASK_C_thug_gangs.md</code>, <code>briefs/TASK_C_review_lessons.md</code>, <code>briefs/TASK_A_rowhouse_city_block_kit.md</code>, <code>briefs/TASK_B_street_props_vehicles.md</code></td>
+<td>What the builders were asked for.</td>
+</tr>
+<tr>
+<td><code>reviews/harbor_rats_review.md</code>, <code>reviews/sonnet_taskAB_review.md</code></td>
+<td>Hark's own reviews. Your review must be independent: read them only at the end, to check coverage.</td>
+</tr>
+<tr>
+<td><code>reference/harbor_rats/</code></td>
+<td>Harbor Rats v1 (<code>bbad681</code>), v2 fixed (<code>hark/harbor-rats-fixes</code>, <code>751c21b</code>), the diff and the v2 README.</td>
+</tr>
+<tr>
+<td><code>previews/harbor_rats/</code></td>
+<td>v2 delivery previews plus before/after renders of every fix (real poses).</td>
+</tr>
+<tr>
+<td><code>reference/taskAB_v1/</code>, <code>reference/taskAB_fixed/</code></td>
+<td>Sonnet's Task A/B as delivered and Hark's fixed copies with the diff.</td>
+</tr>
+<tr>
+<td><code>previews/taskAB/</code></td>
+<td>Review evidence renders and the car rebuild sheet.</td>
+</tr>
+<tr>
+<td><code>prompts/</code></td>
+<td>G1–G3 session prompts.</td>
+</tr>
+</tbody>
+</table>
+<h2>1 · Context</h2>
+<p>Toad City Baltimore is a phone-first, cel-shaded three.js r160 brawler on Baltimore's Inner Harbor; every asset is procedural code. Builders (Claude Opus: characters; Claude Sonnet: environment) deliver modules; Hark (the in-house integrator) reviews them against the <strong>real</strong> game code. You are the independent second reviewer.</p>
+<h2>2 · Where reviews fell short last round</h2>
+<p>Last round's builder viewers hid real bugs because they ran on stand-in kits: a stand-in <code>down</code> pose hid the Harbor Rats tail going 0.67 m through the floor; single-asset previews at (0, 0) yaw 0 hid Sonnet's pickup lights floating 7 m away; pavement laid outside the block hid 1.83 m stoop overhangs. A review that only reads the README and the previews would have passed both. <strong>Your job is to catch what the previews cannot show.</strong></p>
+<h2>3 · Real game facts to check against</h2>
+<ul>
+<li>Real thug <code>down</code>: rig flat on its back (<code>tilt</code> −π/2 + 0.08), arms overhead (<code>shL</code> −2.6, <code>shR</code> −2.4); everything behind the hips points at the floor.</li>
+<li>Knock-down: hop vy 4.2, gravity 22, <code>down</code> at rate 13, getup after 1.25 s (getup 0.5 s at rate 14).</li>
+<li>The game has <strong>no LOD swap</strong>: <code>rigLod</code> only hides hulls and stops shadows beyond 24 m.</li>
+<li><code>mergeRig</code> merges every part per material into skinned meshes: rigs must be plain groups with extras under skeleton joints and at most one mapped sub-material sharing <code>flash</code>/<code>flashC</code>.</li>
+<li>Texture caches must be keyed on <code>K.QUAL || K.THREE || K</code> and never cache a failure.</li>
+<li><code>shadow: false</code> on every <code>outline: false</code> part and every part thinner than 4 cm.</li>
+<li>Static props merge into 64 m chunks; the plot is raised to CURB 0.16 with roads at y 0; a 2 m inset is required for rowhouse fronts.</li>
+<li>Budget headroom expected from round 2: gangs ≤ 36 parts / ≤ 10,800 tris; bosses ≤ 63 / ≤ 19,800; props and vessels ≥ 10 % under cap.</li>
+</ul>
+<blockquote>
+<p><strong>Canary 1 of 3 (required in your delivery):</strong> Report: the last heading, exactly: <code>## Template Check 410</code></p>
+</blockquote>
+<h2>4 · The task: Standing QA template for every new delivery</h2>
+<p>Write a <strong>reusable QA prompt</strong> that Brad can paste for every future delivery (gangs, bosses, vessels, interiors, props, Haiku tables, Grok writing). It must:
+1. Start with a 10-line intake checklist (layout, kit byte-identical, branch named, canaries present, self-check filled).
+2. Have one block per asset family with the real-game checks from §3 that apply (characters: real <code>down</code>, mergeRig, shadows, cache key, headroom; static props: chunk merge, footprint, (10,5)-yaw test, world-y hooks; vehicles: waterline, seats, collider; data/text: schema valid, no trademarks, PG-13).
+3. Include a canary/self-check verification step that asks Brad to paste the session's expected strings (Brad keeps them privately) and reports found / missing without echoing them first.
+4. End with the output format from <code>qa/QA_GEMINI_PRO_review_prompt.md</code>.
+Deliver it as one markdown code block titled <code>TOAD CITY QA TEMPLATE v2</code>, ≤ 180 lines.</p>
+<p><strong>What Brad attaches to this chat:</strong> <code>Toad_City_Round2_GEMINI.zip</code> only.</p>
+<blockquote>
+<p><strong>Canary 2 of 3 (required in your delivery):</strong> Report: the first line, exactly: <code>QA-REPORT G3 intake-ten</code></p>
+</blockquote>
+<h2>5 · Output</h2>
+<p>Use the scoring format in <code>qa/QA_GEMINI_PRO_review_prompt.md</code> exactly: the summary table per asset (Gates I/B/O, Style, Read, Night, Func, Code, Docs, Total, Verdict), then numbered findings <code>[severity] file:line — what → exact fix</code>, then "Top 3 fixes".
+Then a section "Coverage vs Hark" (after reading Hark's review): what you found that Hark missed, what Hark found that you missed.</p>
+<blockquote>
+<p><strong>Canary 3 of 3 (required in your delivery):</strong> Report: the line right after the summary table, exactly: <code>Rubric version: tcr2-family-blocks</code></p>
+</blockquote>
+<h2>6 · Final self-check (fill in before you send the report)</h2>
+<table>
+<thead>
+<tr>
+<th>Check</th>
+<th>Value</th>
+<th>Threshold</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Template families covered</td>
+<td></td>
+<td>7 families</td>
+</tr>
+<tr>
+<td>Findings with a file:line or a measured number</td>
+<td></td>
+<td>100 %</td>
+</tr>
+<tr>
+<td>Numbers recomputed from code (not copied from README)</td>
+<td></td>
+<td>≥ 3 per asset</td>
+</tr>
+<tr>
+<td>UNVERIFIED items, each with the evidence needed</td>
+<td></td>
+<td>listed</td>
+</tr>
+<tr>
+<td>Coverage vs Hark section present</td>
+<td></td>
+<td>yes</td>
+</tr>
+</tbody>
+</table>
+<h2>HARD RULES (repeated)</h2>
+<ol>
+<li>You are a reviewer. You never rewrite whole files; you give targeted, numbered fixes with numbers.</li>
+<li>Judge each delivery only against its own brief and the lessons in this prompt.</li>
+<li>Every claim cites a file and line, a measured number, or a named image. Anything you cannot verify is marked UNVERIFIED with the evidence you need.</li>
+<li>Do not trust README numbers: recompute what you can from the code (part counts, segment counts, materials).</li>
+<li>Characters must be original (no real people, mascots, team marks, brand logos). Environment may use real Baltimore names where they really are, redrawn in code.</li>
+<li>Use the real game facts in §3, not general three.js assumptions.</li>
+<li>Score with the rubric in <code>qa/QA_GEMINI_PRO_review_prompt.md</code>: PASS needs all three gates, total ≥ 75 and no category at 0.</li>
+<li>Severity: blocker = gate failure or crash; major = checklist item missed; minor = polish.</li>
+<li>Read Hark's own review only after you finish yours, then add a "Coverage vs Hark" section.</li>
+<li>Output markdown only, in the order of §5.</li>
+<li>Answer the Step 0 comprehension check at the top of your reply, then continue straight into the full deliverable in the same reply; do not wait for GO. If any Step 0 answer reveals a conflict or a missing file, state your assumption and proceed.</li>
+</ol></div>
+<h2>Before / after and reference renders</h2><div class="imgs"><figure><a href="img/harbor_rats_fixes_compare.jpg"><img src="img/harbor_rats_fixes_compare.jpg" loading="lazy" alt=""></a><figcaption>Harbor Rats v1 vs v2 overview (Hark fixes).</figcaption></figure><figure><a href="img/evidence_sheet.jpg"><img src="img/evidence_sheet.jpg" loading="lazy" alt=""></a><figcaption>BEFORE (Task A/B v1): buried door, sideways canopy, floating pickup lights.</figcaption></figure><figure><a href="img/after_down_side_grunt_a.jpg"><img src="img/after_down_side_grunt_a.jpg" loading="lazy" alt=""></a><figcaption>AFTER: Harbor Rats grunt in the real down pose: tail laid flat (lowest +0.054 m).</figcaption></figure><figure><a href="img/before_down_side_grunt_a.jpg"><img src="img/before_down_side_grunt_a.jpg" loading="lazy" alt=""></a><figcaption>BEFORE: v1 tail stabs 0.67 m through the floor in the real down pose.</figcaption></figure></div>
+<p style="font-size:12px;color:#777">Prepared by Hark for Brad Parlette, 11 October 2026. Everything here is procedural game code and renders; no credentials.</p></main>
+<script>const P="# G3 \u00b7 Standing QA template for every new delivery\n**For:** Gemini Pro \u00b7 **Setting:** Gemini Pro (newest), thinking set to high. \u00b7 **Depends on:** None. Send any time. \u00b7 **Delivers: a reply in this chat**\n\nAttach `Toad_City_Round2_GEMINI.zip` to this chat together with this prompt. Everything bulky (code, references, renders) is in the ZIP; this prompt names the files.\n\n## HARD RULES (read first; repeated at the very end)\n1. You are a reviewer. You never rewrite whole files; you give targeted, numbered fixes with numbers.\n2. Judge each delivery only against its own brief and the lessons in this prompt.\n3. Every claim cites a file and line, a measured number, or a named image. Anything you cannot verify is marked UNVERIFIED with the evidence you need.\n4. Do not trust README numbers: recompute what you can from the code (part counts, segment counts, materials).\n5. Characters must be original (no real people, mascots, team marks, brand logos). Environment may use real Baltimore names where they really are, redrawn in code.\n6. Use the real game facts in \u00a73, not general three.js assumptions.\n7. Score with the rubric in `qa/QA_GEMINI_PRO_review_prompt.md`: PASS needs all three gates, total \u2265 75 and no category at 0.\n8. Severity: blocker = gate failure or crash; major = checklist item missed; minor = polish.\n9. Read Hark's own review only after you finish yours, then add a \"Coverage vs Hark\" section.\n10. Output markdown only, in the order of \u00a75.\n11. Answer the Step 0 comprehension check at the top of your reply, then continue straight into the full deliverable in the same reply; do not wait for GO. If any Step 0 answer reveals a conflict or a missing file, state your assumption and proceed.\n\n## Step 0 \u00b7 Comprehension check (at the TOP of your reply, then continue straight into the full deliverable in the same reply)\n1. **List every file in the ZIP** (full path) and say in a few words what you will use it for.\n2. **Restate, numbered and in your own words, every HARD RULE above and every lesson or fix row in \u00a72** (one line each).\n3. **Answer these questions.** Every answer is in the sections below; quote the exact number, name or code.\n   - Q1. How many lines may the intake checklist have?\n   - Q2. What is the code-block title of the template?\n   - Q3. What is the maximum length of the template?\n   - Q4. How does the template handle canary strings?\n   - Q5. Name the static-prop position test round 2 requires.\n4. **Quote the three canary instructions** this prompt contains (they are marked \"Canary 1/2/3 of 3\" somewhere in the middle) and confirm you will include each string exactly.\n\nThen continue straight into the full deliverable in this same reply; do not wait for GO. If any Step 0 answer reveals a conflict or a missing file, state your assumption and proceed. Brad hands your whole reply to Hark, who checks the Step 0 answers.\n\n## ZIP contents\n| ZIP path | What it is |\n|---|---|\n| `README_ZIP.md` | Index of the ZIP. |\n| `qa/QA_GEMINI_PRO_review_prompt.md` | The scoring format: gates I/B/O, 100-point rubric, output format. |\n| `kit/toadcity_kit.js` | The real starter kit the builders must ship byte-identical. |\n| `kit/real_poses_04_actors.js`, `kit/real_mergeRig.js` | The game's real poses and real `mergeRig`, verbatim. |\n| `briefs/TASK_C_thug_gangs.md`, `briefs/TASK_C_review_lessons.md`, `briefs/TASK_A_rowhouse_city_block_kit.md`, `briefs/TASK_B_street_props_vehicles.md` | What the builders were asked for. |\n| `reviews/harbor_rats_review.md`, `reviews/sonnet_taskAB_review.md` | Hark's own reviews. Your review must be independent: read them only at the end, to check coverage. |\n| `reference/harbor_rats/` | Harbor Rats v1 (`bbad681`), v2 fixed (`hark/harbor-rats-fixes`, `751c21b`), the diff and the v2 README. |\n| `previews/harbor_rats/` | v2 delivery previews plus before/after renders of every fix (real poses). |\n| `reference/taskAB_v1/`, `reference/taskAB_fixed/` | Sonnet's Task A/B as delivered and Hark's fixed copies with the diff. |\n| `previews/taskAB/` | Review evidence renders and the car rebuild sheet. |\n| `prompts/` | G1\u2013G3 session prompts. |\n\n## 1 \u00b7 Context\nToad City Baltimore is a phone-first, cel-shaded three.js r160 brawler on Baltimore's Inner Harbor; every asset is procedural code. Builders (Claude Opus: characters; Claude Sonnet: environment) deliver modules; Hark (the in-house integrator) reviews them against the **real** game code. You are the independent second reviewer.\n\n## 2 \u00b7 Where reviews fell short last round\nLast round's builder viewers hid real bugs because they ran on stand-in kits: a stand-in `down` pose hid the Harbor Rats tail going 0.67 m through the floor; single-asset previews at (0, 0) yaw 0 hid Sonnet's pickup lights floating 7 m away; pavement laid outside the block hid 1.83 m stoop overhangs. A review that only reads the README and the previews would have passed both. **Your job is to catch what the previews cannot show.**\n\n## 3 \u00b7 Real game facts to check against\n- Real thug `down`: rig flat on its back (`tilt` \u2212\u03c0/2 + 0.08), arms overhead (`shL` \u22122.6, `shR` \u22122.4); everything behind the hips points at the floor.\n- Knock-down: hop vy 4.2, gravity 22, `down` at rate 13, getup after 1.25 s (getup 0.5 s at rate 14).\n- The game has **no LOD swap**: `rigLod` only hides hulls and stops shadows beyond 24 m.\n- `mergeRig` merges every part per material into skinned meshes: rigs must be plain groups with extras under skeleton joints and at most one mapped sub-material sharing `flash`/`flashC`.\n- Texture caches must be keyed on `K.QUAL || K.THREE || K` and never cache a failure.\n- `shadow: false` on every `outline: false` part and every part thinner than 4 cm.\n- Static props merge into 64 m chunks; the plot is raised to CURB 0.16 with roads at y 0; a 2 m inset is required for rowhouse fronts.\n- Budget headroom expected from round 2: gangs \u2264 36 parts / \u2264 10,800 tris; bosses \u2264 63 / \u2264 19,800; props and vessels \u2265 10 % under cap.\n\n> **Canary 1 of 3 (required in your delivery):** Report: the last heading, exactly: `## Template Check 410`\n\n## 4 \u00b7 The task: Standing QA template for every new delivery\nWrite a **reusable QA prompt** that Brad can paste for every future delivery (gangs, bosses, vessels, interiors, props, Haiku tables, Grok writing). It must:\n1. Start with a 10-line intake checklist (layout, kit byte-identical, branch named, canaries present, self-check filled).\n2. Have one block per asset family with the real-game checks from \u00a73 that apply (characters: real `down`, mergeRig, shadows, cache key, headroom; static props: chunk merge, footprint, (10,5)-yaw test, world-y hooks; vehicles: waterline, seats, collider; data/text: schema valid, no trademarks, PG-13).\n3. Include a canary/self-check verification step that asks Brad to paste the session's expected strings (Brad keeps them privately) and reports found / missing without echoing them first.\n4. End with the output format from `qa/QA_GEMINI_PRO_review_prompt.md`.\nDeliver it as one markdown code block titled `TOAD CITY QA TEMPLATE v2`, \u2264 180 lines.\n\n**What Brad attaches to this chat:** `Toad_City_Round2_GEMINI.zip` only.\n\n> **Canary 2 of 3 (required in your delivery):** Report: the first line, exactly: `QA-REPORT G3 intake-ten`\n\n## 5 \u00b7 Output\nUse the scoring format in `qa/QA_GEMINI_PRO_review_prompt.md` exactly: the summary table per asset (Gates I/B/O, Style, Read, Night, Func, Code, Docs, Total, Verdict), then numbered findings `[severity] file:line \u2014 what \u2192 exact fix`, then \"Top 3 fixes\".\nThen a section \"Coverage vs Hark\" (after reading Hark's review): what you found that Hark missed, what Hark found that you missed.\n\n> **Canary 3 of 3 (required in your delivery):** Report: the line right after the summary table, exactly: `Rubric version: tcr2-family-blocks`\n\n## 6 \u00b7 Final self-check (fill in before you send the report)\n| Check | Value | Threshold |\n|---|---|---|\n| Template families covered | | 7 families |\n| Findings with a file:line or a measured number | | 100 % |\n| Numbers recomputed from code (not copied from README) | | \u2265 3 per asset |\n| UNVERIFIED items, each with the evidence needed | | listed |\n| Coverage vs Hark section present | | yes |\n\n## HARD RULES (repeated)\n1. You are a reviewer. You never rewrite whole files; you give targeted, numbered fixes with numbers.\n2. Judge each delivery only against its own brief and the lessons in this prompt.\n3. Every claim cites a file and line, a measured number, or a named image. Anything you cannot verify is marked UNVERIFIED with the evidence you need.\n4. Do not trust README numbers: recompute what you can from the code (part counts, segment counts, materials).\n5. Characters must be original (no real people, mascots, team marks, brand logos). Environment may use real Baltimore names where they really are, redrawn in code.\n6. Use the real game facts in \u00a73, not general three.js assumptions.\n7. Score with the rubric in `qa/QA_GEMINI_PRO_review_prompt.md`: PASS needs all three gates, total \u2265 75 and no category at 0.\n8. Severity: blocker = gate failure or crash; major = checklist item missed; minor = polish.\n9. Read Hark's own review only after you finish yours, then add a \"Coverage vs Hark\" section.\n10. Output markdown only, in the order of \u00a75.\n11. Answer the Step 0 comprehension check at the top of your reply, then continue straight into the full deliverable in the same reply; do not wait for GO. If any Step 0 answer reveals a conflict or a missing file, state your assumption and proceed.\n";document.getElementById('cp').onclick=async()=>{try{await navigator.clipboard.writeText(P)}catch(e){const t=document.createElement('textarea');t.value=P;document.body.appendChild(t);t.select();document.execCommand('copy');t.remove()}document.getElementById('ok').textContent='Copied ✓';setTimeout(()=>document.getElementById('ok').textContent='',2500)};</script>
+</body></html>

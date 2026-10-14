@@ -1,0 +1,4 @@
+[{"url":"http://127.0.0.1:8732/orig/viral.html","out":"/workspace/work/re-requiem/qa/viral.png","thumb":"/workspace/work/demos/src/thumbs/viral-overdrive.webp","w":640,"h":400,"pre":5000,"keys":[[200,"Digit1",100],[800,"KeyW",2500]],"wait":1500},
+ {"url":"http://127.0.0.1:8732/game/index.html","out":"/workspace/work/re-requiem/qa/rq_title_1280.png","w":1280,"h":720,"pre":3000,"wait":500},
+ {"url":"http://127.0.0.1:8732/game/index.html","out":"/workspace/work/re-requiem/qa/rq_play_1280.png","w":1280,"h":720,"pre":2500,"keys":[[100,"Enter",100],[300,"KeyW",2500]],"wait":800},
+ {"url":"http://127.0.0.1:8732/game/index.html","out":"/workspace/work/re-requiem/qa/rq_play_390.png","w":390,"h":844,"touch":true,"pre":2500,"keys":[[100,"Enter",100],[300,"KeyW",2500]],"wait":800}]

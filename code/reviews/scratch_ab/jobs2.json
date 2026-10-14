@@ -1,0 +1,13 @@
+[
+ {"q":"show=street&hud=0&pos=-14,4.5,-5&look=6,3.5,-5&fov=62","out":"shots/street_down_day.png"},
+ {"q":"show=street&hud=0&night=1&pos=-14,4.5,-5&look=6,3.5,-5&fov=62","out":"shots/street_down_night.png"},
+ {"q":"show=street&hud=0&pos=2,3.2,-1.5&look=2,4.5,-12&fov=62","out":"shots/facade_A_9m_day.png"},
+ {"q":"show=street&hud=0&night=1&pos=2,3.2,-1.5&look=2,4.5,-12&fov=62","out":"shots/facade_A_9m_night.png"},
+ {"q":"show=street&hud=0&pos=-10,3,-4&look=-6,1.6,-10&fov=62","out":"shots/stoops_close_day.png"},
+ {"q":"show=street&hud=0&pos=-45,9,-5&look=0,5,-10&fov=62","out":"shots/street_far_day.png"},
+ {"q":"show=street&hud=0&pos=16,5,-5&look=11,4,-10&fov=62","out":"shots/corner_east_day.png"},
+ {"q":"show=street&hud=0&night=1&pos=16,5,-5&look=11,4,-10&fov=62","out":"shots/corner_east_night.png"},
+ {"q":"show=block&hud=0&yaw=210&pitch=40","out":"shots/block_back_day.png"},
+ {"q":"show=block&hud=0&yaw=120&pitch=30","out":"shots/block_side_day.png"},
+ {"q":"show=block&hud=0&night=1&yaw=38&pitch=36","out":"shots/block_night.png"}
+]

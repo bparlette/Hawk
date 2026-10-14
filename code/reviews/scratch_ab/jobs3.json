@@ -1,0 +1,10 @@
+[
+ {"q":"show=block&hud=0&pos=10,26,20&look=0,3,0&fov=55","out":"shots/block_top_day.png"},
+ {"q":"show=block&hud=0&night=1&pos=-22,14,24&look=0,5,0&fov=55","out":"shots/block_night_close.png"},
+ {"q":"show=block&hud=0&pos=-22,14,24&look=0,5,0&fov=55","out":"shots/block_day_close.png"},
+ {"q":"show=corner_bar&hud=0&cam=phone","out":"shots/corner_bar_phone_day.png"},
+ {"q":"show=corner_bar&hud=0&cam=phone&night=1","out":"shots/corner_bar_phone_night.png"},
+ {"q":"show=corner_shop&hud=0&cam=phone","out":"shots/corner_shop_phone_day.png"},
+ {"q":"show=corner_shop&hud=0&cam=phone&night=1","out":"shots/corner_shop_phone_night.png"},
+ {"q":"show=houses&hud=0","out":"shots/houses_day.png","w":1280,"h":720}
+]

@@ -1,0 +1,27 @@
+{
+ "exterior_1.jpg": {
+  "title": "File:Baltimore Inner Harbor Circle.jpg",
+  "page": "https://commons.wikimedia.org/wiki/File:Baltimore_Inner_Harbor_Circle.jpg",
+  "query": "Four Seasons Hotel Baltimore"
+ },
+ "exterior_2.jpg": {
+  "title": "File:Baltimore Marriott Waterfront Hotel and Legg Mason Tower, night.jpg",
+  "page": "https://commons.wikimedia.org/wiki/File:Baltimore_Marriott_Waterfront_Hotel_and_Legg_Mason_Tower,_night.jpg",
+  "query": "Four Seasons Hotel Baltimore"
+ },
+ "exterior_3.jpg": {
+  "title": "File:Four Seasons Balt.jpg",
+  "page": "https://commons.wikimedia.org/wiki/File:Four_Seasons_Balt.jpg",
+  "query": "Four Seasons Hotel Baltimore"
+ },
+ "fs_web_2.jpg": {
+  "title": "fs_web_2",
+  "page": "https://harboreast.com/hotels/four-seasons-hotel-baltimore/",
+  "image": "https://harboreast.com/wp-content/uploads/2023/10/HE-Website-Header.png"
+ },
+ "fs_web_3.jpg": {
+  "title": "fs_web_3",
+  "page": "https://www.resortpass.com/hotels/four-seasons-hotel-baltimore/gallery/item_55564",
+  "image": "https://s3.us-west-2.amazonaws.com/assets.resortpass.com/uploads/image/picture/55564/FOURSEasonsbaltimore_outside.jpg"
+ }
+}

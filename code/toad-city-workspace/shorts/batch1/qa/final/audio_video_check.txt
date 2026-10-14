@@ -1,0 +1,6 @@
+01_grandma_vs_penthouse_pigeon dur=27.833333 stream|codec_name=h264|codec_type=video|width=1080|height=1920|start_time=0.000000 stream|codec_name=aac|codec_type=audio|sample_rate=44100|channels=2|start_time=0.000000  mean_volume: -17.7 dB max_volume: -0.0 dB 
+02_stoop_scrubber_marble_steps dur=25.700000 stream|codec_name=h264|codec_type=video|width=1080|height=1920|start_time=0.000000 stream|codec_name=aac|codec_type=audio|sample_rate=44100|channels=2|start_time=0.000000  mean_volume: -17.7 dB max_volume: -0.1 dB 
+03_hon_queen_federal_hill dur=24.333333 stream|codec_name=h264|codec_type=video|width=1080|height=1920|start_time=0.000000 stream|codec_name=aac|codec_type=audio|sample_rate=44100|channels=2|start_time=0.000000  mean_volume: -17.6 dB max_volume: -0.6 dB 
+04_chompy_harbor_fishing dur=24.133333 stream|codec_name=h264|codec_type=video|width=1080|height=1920|start_time=0.000000 stream|codec_name=aac|codec_type=audio|sample_rate=44100|channels=2|start_time=0.000000  mean_volume: -18.0 dB max_volume: -1.1 dB 
+05_poe_stealth_night_nevermore dur=20.500000 stream|codec_name=h264|codec_type=video|width=1080|height=1920|start_time=0.000000 stream|codec_name=aac|codec_type=audio|sample_rate=44100|channels=2|start_time=0.000000  mean_volume: -21.4 dB max_volume: -1.4 dB 
+QADONE

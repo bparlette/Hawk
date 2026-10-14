@@ -1,0 +1,165 @@
+{
+  "total_count": 8,
+  "artifacts": [
+    {
+      "id": 11840415609,
+      "node_id": "MDg6QXJ0aWZhY3QxMTg0MDQxNTYwOQ==",
+      "name": "cap-scrubber",
+      "size_in_bytes": 36693078,
+      "url": "https://api.github.com/repos/bparlette/Hawk/actions/artifacts/11840415609",
+      "archive_download_url": "https://api.github.com/repos/bparlette/Hawk/actions/artifacts/11840415609/zip",
+      "expired": false,
+      "digest": "sha256:b4b2510c2dca278b0c82bf706abb650e12b9dd2d2cd06f9cf9cffe1cb976fb50",
+      "created_at": "2026-10-13T18:50:46Z",
+      "updated_at": "2026-10-13T18:50:46Z",
+      "expires_at": "2026-10-18T18:50:44Z",
+      "workflow_run": {
+        "id": 38449240537,
+        "repository_id": 1413871150,
+        "head_repository_id": 1413871150,
+        "head_branch": "toadcity/shorts",
+        "head_sha": "c14ff37e83945b2b9f6a163668b4a0867c9b02ae"
+      }
+    },
+    {
+      "id": 11840096638,
+      "node_id": "MDg6QXJ0aWZhY3QxMTg0MDA5NjYzOA==",
+      "name": "cap-music",
+      "size_in_bytes": 17884471,
+      "url": "https://api.github.com/repos/bparlette/Hawk/actions/artifacts/11840096638",
+      "archive_download_url": "https://api.github.com/repos/bparlette/Hawk/actions/artifacts/11840096638/zip",
+      "expired": false,
+      "digest": "sha256:e3589678b5ce2a1ef96fe37f3b36fc8a4608a58d648e46a97034160340986cfd",
+      "created_at": "2026-10-13T18:46:20Z",
+      "updated_at": "2026-10-13T18:46:20Z",
+      "expires_at": "2026-10-18T18:46:18Z",
+      "workflow_run": {
+        "id": 38449240537,
+        "repository_id": 1413871150,
+        "head_repository_id": 1413871150,
+        "head_branch": "toadcity/shorts",
+        "head_sha": "c14ff37e83945b2b9f6a163668b4a0867c9b02ae"
+      }
+    },
+    {
+      "id": 11840036969,
+      "node_id": "MDg6QXJ0aWZhY3QxMTg0MDAzNjk2OQ==",
+      "name": "cap-poe_lose",
+      "size_in_bytes": 3909968,
+      "url": "https://api.github.com/repos/bparlette/Hawk/actions/artifacts/11840036969",
+      "archive_download_url": "https://api.github.com/repos/bparlette/Hawk/actions/artifacts/11840036969/zip",
+      "expired": false,
+      "digest": "sha256:a1af39ded3beb2ad933a54af33ea1fd0f72c7d8a963ebbad5b0bd0bebc7843d2",
+      "created_at": "2026-10-13T18:47:18Z",
+      "updated_at": "2026-10-13T18:47:18Z",
+      "expires_at": "2026-10-18T18:47:16Z",
+      "workflow_run": {
+        "id": 38449240537,
+        "repository_id": 1413871150,
+        "head_repository_id": 1413871150,
+        "head_branch": "toadcity/shorts",
+        "head_sha": "c14ff37e83945b2b9f6a163668b4a0867c9b02ae"
+      }
+    },
+    {
+      "id": 11839882358,
+      "node_id": "MDg6QXJ0aWZhY3QxMTgzOTg4MjM1OA==",
+      "name": "cap-poe_win",
+      "size_in_bytes": 10927623,
+      "url": "https://api.github.com/repos/bparlette/Hawk/actions/artifacts/11839882358",
+      "archive_download_url": "https://api.github.com/repos/bparlette/Hawk/actions/artifacts/11839882358/zip",
+      "expired": false,
+      "digest": "sha256:58e3bbb9dc55d9cc5008f7d6de1ffdb11ea060852655cdaa3b5f525864e3a7d2",
+      "created_at": "2026-10-13T18:49:02Z",
+      "updated_at": "2026-10-13T18:49:02Z",
+      "expires_at": "2026-10-18T18:49:00Z",
+      "workflow_run": {
+        "id": 38449240537,
+        "repository_id": 1413871150,
+        "head_repository_id": 1413871150,
+        "head_branch": "toadcity/shorts",
+        "head_sha": "c14ff37e83945b2b9f6a163668b4a0867c9b02ae"
+      }
+    },
+    {
+      "id": 11839863477,
+      "node_id": "MDg6QXJ0aWZhY3QxMTgzOTg2MzQ3Nw==",
+      "name": "cap-fish_day",
+      "size_in_bytes": 25451355,
+      "url": "https://api.github.com/repos/bparlette/Hawk/actions/artifacts/11839863477",
+      "archive_download_url": "https://api.github.com/repos/bparlette/Hawk/actions/artifacts/11839863477/zip",
+      "expired": false,
+      "digest": "sha256:21010a772250facd75747592b7751c65c41233e1e0236b91cb54d5e80574bff6",
+      "created_at": "2026-10-13T18:54:05Z",
+      "updated_at": "2026-10-13T18:54:05Z",
+      "expires_at": "2026-10-18T18:54:02Z",
+      "workflow_run": {
+        "id": 38449240537,
+        "repository_id": 1413871150,
+        "head_repository_id": 1413871150,
+        "head_branch": "toadcity/shorts",
+        "head_sha": "c14ff37e83945b2b9f6a163668b4a0867c9b02ae"
+      }
+    },
+    {
+      "id": 11839803306,
+      "node_id": "MDg6QXJ0aWZhY3QxMTgzOTgwMzMwNg==",
+      "name": "cap-fish_p3",
+      "size_in_bytes": 24121970,
+      "url": "https://api.github.com/repos/bparlette/Hawk/actions/artifacts/11839803306",
+      "archive_download_url": "https://api.github.com/repos/bparlette/Hawk/actions/artifacts/11839803306/zip",
+      "expired": false,
+      "digest": "sha256:b217bf64e271c0baeb5e3849367ac8eb1b1f167bd9835b1ffcd6070f901ea636",
+      "created_at": "2026-10-13T18:53:17Z",
+      "updated_at": "2026-10-13T18:53:17Z",
+      "expires_at": "2026-10-18T18:53:14Z",
+      "workflow_run": {
+        "id": 38449240537,
+        "repository_id": 1413871150,
+        "head_repository_id": 1413871150,
+        "head_branch": "toadcity/shorts",
+        "head_sha": "c14ff37e83945b2b9f6a163668b4a0867c9b02ae"
+      }
+    },
+    {
+      "id": 11839694212,
+      "node_id": "MDg6QXJ0aWZhY3QxMTgzOTY5NDIxMg==",
+      "name": "cap-pigeon_fight",
+      "size_in_bytes": 48268652,
+      "url": "https://api.github.com/repos/bparlette/Hawk/actions/artifacts/11839694212",
+      "archive_download_url": "https://api.github.com/repos/bparlette/Hawk/actions/artifacts/11839694212/zip",
+      "expired": false,
+      "digest": "sha256:b89ff2624d56b11e43af629e16f12e550c6d2437ddc7f6a97a3596e31b7d9ff7",
+      "created_at": "2026-10-13T18:53:30Z",
+      "updated_at": "2026-10-13T18:53:30Z",
+      "expires_at": "2026-10-18T18:53:27Z",
+      "workflow_run": {
+        "id": 38449240537,
+        "repository_id": 1413871150,
+        "head_repository_id": 1413871150,
+        "head_branch": "toadcity/shorts",
+        "head_sha": "c14ff37e83945b2b9f6a163668b4a0867c9b02ae"
+      }
+    },
+    {
+      "id": 11839154018,
+      "node_id": "MDg6QXJ0aWZhY3QxMTgzOTE1NDAxOA==",
+      "name": "cap-honqueen",
+      "size_in_bytes": 41465107,
+      "url": "https://api.github.com/repos/bparlette/Hawk/actions/artifacts/11839154018",
+      "archive_download_url": "https://api.github.com/repos/bparlette/Hawk/actions/artifacts/11839154018/zip",
+      "expired": false,
+      "digest": "sha256:1c6a7de202107dd0f4a4422c1ba97e99d7a39082c85a4f9cb0e3ee2bbda5344b",
+      "created_at": "2026-10-13T18:49:55Z",
+      "updated_at": "2026-10-13T18:49:55Z",
+      "expires_at": "2026-10-18T18:49:53Z",
+      "workflow_run": {
+        "id": 38449240537,
+        "repository_id": 1413871150,
+        "head_repository_id": 1413871150,
+        "head_branch": "toadcity/shorts",
+        "head_sha": "c14ff37e83945b2b9f6a163668b4a0867c9b02ae"
+      }
+    }
+  ]
+}

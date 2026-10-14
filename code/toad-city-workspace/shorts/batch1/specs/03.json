@@ -1,0 +1,121 @@
+{
+ "name": "03_honqueen",
+ "out": "/workspace/work/toad-city/shorts/batch1/final/03_hon_queen_federal_hill.mp4",
+ "music": "club_c",
+ "music_db": -10,
+ "segs": [
+  {
+   "src": "honqueen",
+   "a": 8.0,
+   "b": 9.2,
+   "flash": 0.12
+  },
+  {
+   "src": "honqueen",
+   "a": 0.0,
+   "b": 2.6
+  },
+  {
+   "src": "honqueen",
+   "a": 2.6,
+   "b": 5.2
+  },
+  {
+   "src": "honqueen",
+   "a": 5.4,
+   "b": 7.6
+  },
+  {
+   "src": "honqueen",
+   "a": 8.0,
+   "b": 11.0
+  },
+  {
+   "src": "honqueen",
+   "a": 15.4,
+   "b": 19.9
+  },
+  {
+   "src": "honqueen",
+   "a": 20.17,
+   "b": 23.2
+  },
+  {
+   "src": "honqueen",
+   "a": 26.0,
+   "b": 29.6
+  }
+ ],
+ "hit": {
+  "seg": 5,
+  "t": 19.6
+ },
+ "captions": [
+  {
+   "text": "SHE THREW HER BEEHIVE AT ME",
+   "t0": 0,
+   "t1": 1.2,
+   "y": 470,
+   "color": "#ffd23a",
+   "size": 100
+  },
+  {
+   "text": "FEDERAL HILL HAS A QUEEN, HON",
+   "t0": 1.2,
+   "t1": 3.8,
+   "y": 470,
+   "colors": [
+    "#ffffff",
+    "#ff6fae"
+   ]
+  },
+  {
+   "text": "EXTRA HOLD HAIRSPRAY",
+   "t0": 3.8,
+   "t1": 6.4,
+   "y": 470,
+   "color": "#ff6fae"
+  },
+  {
+   "text": "TEASE! BACKCOMB!",
+   "t0": 6.4,
+   "t1": 8.6,
+   "y": 470
+  },
+  {
+   "text": "THE BEEHIVE IS A WEAPON",
+   "t0": 8.6,
+   "t1": 11.6,
+   "y": 470,
+   "color": "#ffd23a"
+  },
+  {
+   "text": "LAWN FLAMINGOS?!",
+   "t0": 11.6,
+   "t1": 15.6,
+   "y": 470,
+   "color": "#ff6fae"
+  },
+  {
+   "text": "K.O., HON",
+   "t0": 15.8,
+   "t1": 17.0,
+   "y": 470,
+   "color": "#ffd23a",
+   "size": 120
+  },
+  {
+   "text": "THE BEEHIVE IS FLAT",
+   "t0": 17.0,
+   "t1": 19.1,
+   "y": 1180
+  },
+  {
+   "text": "\"GO GET A CRAB CAKE, HON.\"",
+   "t0": 20.6,
+   "t1": 22.7,
+   "y": 470,
+   "color": "#ff6fae"
+  }
+ ]
+}

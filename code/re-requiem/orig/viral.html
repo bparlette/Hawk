@@ -1,0 +1,1567 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>VIRAL OVERDRIVE // PolyTrack x Survivors (3-in-1 Viral Arcade Hub)</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@600;800;900&family=Permanent+Marker&family=JetBrains+Mono:wght@600;800&display=swap" rel="stylesheet">
+  <style>
+    * { box-sizing: border-box; user-select: none; -webkit-user-select: none; margin: 0; padding: 0; }
+    body {
+      background: #05040a;
+      color: #f8fafc;
+      font-family: 'Orbitron', sans-serif;
+      overflow: hidden;
+      width: 100vw;
+      height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .font-marker { font-family: 'Permanent Marker', cursive; }
+    .font-mono-tech { font-family: 'JetBrains Mono', monospace; }
+
+    #viewport-shell {
+      position: relative;
+      width: 100vw;
+      height: 100vh;
+      overflow: hidden;
+      background: #090614;
+      transition: width 0.35s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.35s ease;
+    }
+    #viewport-shell.shorts-916 {
+      width: min(100vw, calc(100vh * (9 / 16)));
+      height: 100vh;
+      border-left: 3px solid #f43f5e;
+      border-right: 3px solid #f43f5e;
+      box-shadow: 0 0 120px rgba(244, 63, 94, 0.55);
+    }
+
+    canvas.layer-canvas {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      display: block;
+    }
+    canvas.pixelated {
+      image-rendering: pixelated;
+      image-rendering: crisp-edges;
+    }
+
+    /* 16-Bit CRT Scanlines & Vignette Overlay (Key H) */
+    #crt-overlay {
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+      z-index: 22;
+      display: none;
+      background:
+        linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.48) 50%),
+        radial-gradient(circle at center, transparent 55%, rgba(0, 0, 0, 0.78) 100%);
+      background-size: 100% 4px, 100% 100%;
+    }
+    #crt-overlay.active { display: block; }
+
+    /* Neon Tab Buttons */
+    .mode-tab {
+      background: rgba(15, 23, 42, 0.85);
+      border: 1.5px solid rgba(148, 163, 184, 0.35);
+      transition: all 0.16s ease;
+    }
+    .mode-tab:hover {
+      border-color: #38bdf8;
+      transform: translateY(-1px);
+    }
+    .mode-tab.active-poly {
+      background: linear-gradient(135deg, #0284c7, #2563eb);
+      border-color: #7dd3fc;
+      box-shadow: 0 0 20px rgba(56, 189, 248, 0.55);
+    }
+    .mode-tab.active-surv {
+      background: linear-gradient(135deg, #b91c1c, #7e22ce);
+      border-color: #fda4af;
+      box-shadow: 0 0 20px rgba(244, 63, 94, 0.55);
+    }
+    .mode-tab.active-mash {
+      background: linear-gradient(135deg, #ea580c, #db2777);
+      border-color: #fde047;
+      box-shadow: 0 0 24px rgba(250, 204, 21, 0.65);
+    }
+
+    @keyframes pulseViral {
+      0%, 100% { box-shadow: 0 0 0 0 rgba(244, 63, 94, 0.8); }
+      50% { box-shadow: 0 0 22px 6px rgba(250, 204, 21, 0.95); }
+    }
+    .viral-active {
+      animation: pulseViral 1.15s infinite;
+      background: linear-gradient(135deg, #e11d48, #ca8a04) !important;
+      border-color: #fef08a !important;
+    }
+
+    /* Slot Machine Popup Animation */
+    @keyframes slotPop {
+      0% { transform: translate(-50%, -50%) scale(0.7); opacity: 0; }
+      100% { transform: translate(-50%, -50%) scale(1); opacity: 1; }
+    }
+    .slot-modal-anim {
+      animation: slotPop 0.22s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+    }
+  </style>
+</head>
+<body>
+  <div id="viewport-shell">
+    <!-- 3D Three.js Canvas (Used by Mode 1: PolyTrack & Mode 3: Drift Survivors) -->
+    <canvas id="canvas3d" class="layer-canvas"></canvas>
+    <!-- 2D Painted / HUD Overlay Canvas (Used by Mode 2: Survivors & 2D Speedlines/Popups) -->
+    <canvas id="canvas2d" class="layer-canvas pointer-events-none"></canvas>
+    <div id="crt-overlay"></div>
+
+    <!-- TOP NAVIGATION & INSTANT GAME SWITCHER BAR -->
+    <div class="absolute top-2.5 left-2.5 right-2.5 z-30 flex flex-wrap items-center justify-between gap-2 pointer-events-none">
+      <!-- 3 Game Mode Switchers -->
+      <div class="flex flex-wrap items-center gap-1.5 pointer-events-auto">
+        <button id="tabPoly" onclick="switchGameMode('POLYTRACK')" class="mode-tab active-poly px-3 py-1.5 rounded-lg text-[11px] sm:text-xs font-extrabold tracking-wider flex items-center gap-1.5">
+          <span>🏎️ [1] POLYTRACK: GRAPPLE</span>
+        </button>
+        <button id="tabSurv" onclick="switchGameMode('SURVIVORS')" class="mode-tab px-3 py-1.5 rounded-lg text-[11px] sm:text-xs font-extrabold tracking-wider flex items-center gap-1.5">
+          <span>🧛 [2] SURVIVORS: CASINO</span>
+        </button>
+        <button id="tabMash" onclick="switchGameMode('CROSSOVER')" class="mode-tab px-3 py-1.5 rounded-lg text-[11px] sm:text-xs font-extrabold tracking-wider flex items-center gap-1.5">
+          <span>🔥 [3] DRIFT SURVIVORS 3D</span>
+        </button>
+      </div>
+
+      <!-- Global Viral Tools: 9:16 Auto-Director, WebM Recorder, 16-Bit H Toggle, Source Exporter -->
+      <div class="flex flex-wrap items-center gap-1.5 pointer-events-auto">
+        <button id="btnViralDirector" onclick="toggleViralDirector()" class="px-3 py-1.5 rounded-lg bg-rose-600 hover:bg-rose-500 border border-yellow-300 text-white text-[11px] font-extrabold tracking-wide shadow-lg">
+          🎬 VIRAL SHORT TAS (9:16)
+        </button>
+        <button id="btnPixelToggle" onclick="toggle16BitMode()" class="px-2.5 py-1.5 rounded-lg bg-purple-950/90 hover:bg-purple-800 border border-amber-400/70 text-amber-200 text-[11px] font-mono-tech shadow-lg" title="Shortcut: Key H">
+          📺 16-BIT [H]: OFF
+        </button>
+        <button id="btnWebmRec" onclick="toggleWebmRecorder()" class="px-2.5 py-1.5 rounded-lg bg-slate-900/90 hover:bg-slate-800 border border-slate-600 text-slate-200 text-[11px] font-mono-tech shadow-lg">
+          🔴 REC .WEBM
+        </button>
+        <button id="btnAudioToggle" onclick="toggleAudioMute()" class="px-2.5 py-1.5 rounded-lg bg-slate-900/90 hover:bg-slate-800 border border-slate-600 text-sky-300 text-[11px] font-mono-tech shadow-lg">
+          🔊 SYNTH
+        </button>
+        <button onclick="openSourceExporter()" class="px-2.5 py-1.5 rounded-lg bg-emerald-950/90 hover:bg-emerald-800 border border-emerald-400/70 text-emerald-200 text-[11px] font-mono-tech font-bold shadow-lg">
+          📦 CODE
+        </button>
+      </div>
+    </div>
+
+    <!-- VIRAL YOUTUBE SHORT DYNAMIC CAPTION BANNER -->
+    <div id="viralCaptionBox" class="pointer-events-none absolute top-[12%] left-1/2 -translate-x-1/2 z-25 hidden w-[94%] text-center">
+      <div id="viralCaptionText" class="inline-block px-4 py-2 rounded-xl bg-black/90 border-2 border-yellow-300 text-amber-300 font-marker text-lg sm:text-2xl tracking-wide shadow-[0_8px_30px_rgba(0,0,0,0.95)]">
+        POV: YOU MISS THE RAMP AT 280MPH... SO YOU GRAPPLE THE SKY HOOK! 🪝🏎️
+      </div>
+    </div>
+
+    <!-- CONTEXTUAL SUB-HUD FOR MODE 1 (POLYTRACK TRACK MUTATOR & TELEMETRY) -->
+    <div id="polyHudBar" class="absolute top-14 left-3 z-25 flex flex-wrap items-center gap-2 pointer-events-auto">
+      <div class="bg-black/80 backdrop-blur-md border border-sky-500/50 px-3 py-1.5 rounded-lg flex items-center gap-3 text-xs font-mono-tech">
+        <div>SPEED: <span id="polySpeedTxt" class="text-sky-400 font-extrabold">0</span> <span class="text-[10px] text-slate-400">MPH</span></div>
+        <div class="h-4 w-[1px] bg-slate-700"></div>
+        <div>TIME: <span id="polyTimeTxt" class="text-amber-300 font-bold">0.00s</span></div>
+        <div class="h-4 w-[1px] bg-slate-700"></div>
+        <div>STYLE: <span id="polyStyleTxt" class="text-pink-400 font-extrabold">0</span></div>
+      </div>
+      <div class="flex items-center gap-1 bg-black/75 p-1 rounded-lg border border-slate-700 text-[10px] font-mono-tech">
+        <span class="px-1.5 text-slate-400">TRACK:</span>
+        <button onclick="loadPolyTrackPreset(0)" class="px-2 py-1 rounded bg-sky-900/80 hover:bg-sky-700 text-sky-200 font-bold">MEGA LOOP</button>
+        <button onclick="loadPolyTrackPreset(1)" class="px-2 py-1 rounded bg-purple-900/80 hover:bg-purple-700 text-purple-200 font-bold">VOID CORKSCREW</button>
+        <button onclick="loadPolyTrackPreset(2)" class="px-2 py-1 rounded bg-rose-900/80 hover:bg-rose-700 text-rose-200 font-bold">SKY ISLANDS</button>
+        <button onclick="exportTrackCode()" class="px-2 py-1 rounded bg-amber-600/90 hover:bg-amber-500 text-black font-extrabold" title="Copy Base64 Track Code">🔗 SHARE</button>
+      </div>
+    </div>
+
+    <!-- CONTEXTUAL SUB-HUD FOR MODE 2 & 3 (SURVIVORS XP BAR, HORDE COUNT, & BLACK HOLE TRIGGER) -->
+    <div id="survHudBar" class="absolute top-14 inset-x-3 z-25 hidden flex-col gap-1.5 pointer-events-none">
+      <div class="w-full h-5 bg-slate-950/90 border-2 border-amber-400/80 rounded-full overflow-hidden relative shadow-lg">
+        <div id="survXpFill" class="h-full bg-gradient-to-r from-cyan-400 via-fuchsia-500 to-yellow-300 transition-all duration-100" style="width: 15%"></div>
+        <div class="absolute inset-0 flex items-center justify-between px-3 text-[10px] font-mono-tech font-extrabold text-white drop-shadow">
+          <span id="survLvlTxt">LV. 1 // DOPAMINE OVERLORD</span>
+          <span id="survHordeTxt">ACTIVE HORDE: 450 | KILLS: 0</span>
+        </div>
+      </div>
+      <div class="flex flex-wrap items-center justify-between gap-2">
+        <div class="flex items-center gap-1.5 pointer-events-auto">
+          <button onclick="triggerBlackHoleVortex()" class="px-3 py-1 rounded-lg bg-gradient-to-r from-purple-700 to-fuchsia-600 hover:from-purple-600 hover:to-fuchsia-500 border border-yellow-300 text-white text-[11px] font-mono-tech font-extrabold shadow-lg">
+            🌀 [SPACE] BLACK HOLE VORTEX
+          </button>
+          <button onclick="openCasinoSlotModal()" class="px-3 py-1 rounded-lg bg-gradient-to-r from-amber-500 to-rose-600 hover:from-amber-400 hover:to-rose-500 border border-white text-black text-[11px] font-mono-tech font-extrabold shadow-lg">
+            🎰 [E] SPIN 777 EVOLUTION SLOTS
+          </button>
+        </div>
+        <div id="godSlayerBadge" class="hidden px-3 py-1 rounded-full bg-yellow-400 text-black font-extrabold text-[11px] tracking-widest animate-bounce">
+          ⚡ 777 GOD-SLAYER OVERDRIVE ACTIVE! ⚡
+        </div>
+      </div>
+    </div>
+
+    <!-- VEGAS 777 SLOT MACHINE EVOLUTION MODAL -->
+    <div id="casinoSlotModal" class="absolute top-1/2 left-1/2 z-35 hidden slot-modal-anim bg-gradient-to-b from-[#240b36] to-[#0f051d] border-4 border-yellow-400 rounded-2xl p-5 shadow-[0_0_90px_rgba(250,204,21,0.75)] w-[350px] sm:w-[420px] text-center">
+      <div class="text-[11px] font-mono-tech text-pink-400 tracking-widest uppercase">DOPAMINE CASINO CHEST</div>
+      <h3 class="text-xl sm:text-2xl font-black text-yellow-300 tracking-wider mb-3">
+        🎰 777 WEAPON EVOLUTION
+      </h3>
+      <div class="grid grid-cols-3 gap-2.5 bg-black/80 p-3.5 rounded-xl border-2 border-pink-500 mb-4">
+        <div id="slotReel0" class="h-20 rounded-lg bg-slate-900 border border-amber-400/50 flex items-center justify-center text-4xl">⚔️</div>
+        <div id="slotReel1" class="h-20 rounded-lg bg-slate-900 border border-amber-400/50 flex items-center justify-center text-4xl">💎</div>
+        <div id="slotReel2" class="h-20 rounded-lg bg-slate-900 border border-amber-400/50 flex items-center justify-center text-4xl">🔥</div>
+      </div>
+      <div id="slotStatusText" class="text-xs font-mono-tech text-emerald-300 mb-3 font-bold">
+        ROLLING FOR TRIPLE 777 GOD-SLAYER SYNERGY...
+      </div>
+      <button onclick="closeCasinoSlotModal()" class="w-full py-2.5 rounded-xl bg-gradient-to-r from-yellow-400 to-amber-500 text-black font-black text-sm tracking-wider uppercase shadow-lg">
+        UNLEASH OVERDRIVE! ▶
+      </button>
+    </div>
+
+    <!-- BOTTOM CONTROLS HINT & TOUCH GAMEPAD -->
+    <div id="controlsFooter" class="absolute bottom-3 left-1/2 -translate-x-1/2 z-25 pointer-events-none w-[95%] max-w-3xl flex flex-col items-center gap-2">
+      <!-- Touch Virtual Controls for Mobile / Tablet -->
+      <div class="w-full flex justify-between items-end sm:hidden pointer-events-auto px-1">
+        <div class="grid grid-cols-3 gap-1 w-28 h-28 bg-black/65 p-1.5 rounded-2xl border border-sky-400/40">
+          <div></div>
+          <button data-k="Up" class="touch-btn rounded bg-white/15 active:bg-sky-500 text-xs font-bold">▲</button>
+          <div></div>
+          <button data-k="Left" class="touch-btn rounded bg-white/15 active:bg-sky-500 text-xs font-bold">◀</button>
+          <button data-k="Down" class="touch-btn rounded bg-white/15 active:bg-sky-500 text-xs font-bold">▼</button>
+          <button data-k="Right" class="touch-btn rounded bg-white/15 active:bg-sky-500 text-xs font-bold">▶</button>
+        </div>
+        <div class="flex gap-2">
+          <button data-k="Space" class="touch-btn px-3.5 py-4 rounded-2xl bg-gradient-to-b from-pink-500 to-rose-700 border-2 border-yellow-300 text-white text-xs font-black shadow-lg">
+            🪝 GRAPPLE / VORTEX
+          </button>
+          <button onclick="triggerActionE()" class="px-3.5 py-4 rounded-2xl bg-gradient-to-b from-amber-400 to-orange-600 border-2 border-white text-black text-xs font-black shadow-lg">
+            ⚡ NITRO / 777
+          </button>
+        </div>
+      </div>
+
+      <!-- Desktop One-Line Self-Teaching Control Strip -->
+      <div id="controlHintBanner" class="px-4 py-1.5 rounded-full bg-black/80 border border-white/15 text-[11px] font-mono-tech text-slate-200 text-center shadow-xl">
+        <span class="text-sky-400 font-bold">WASD / ARROWS:</span> Drive & Air-Flip |
+        <span class="text-pink-400 font-bold">HOLD SPACE:</span> 🪝 Cyber-Grapple Sky Anchors |
+        <span class="text-amber-300 font-bold">SHIFT / E:</span> Nitro Boost |
+        <span class="text-emerald-300 font-bold">R:</span> Instant Restart |
+        <span class="text-purple-300 font-bold">H:</span> 16-Bit CRT
+      </div>
+    </div>
+
+    <!-- SOURCE EXPORTER & README MODAL -->
+    <div id="sourceModal" class="absolute inset-4 sm:inset-8 z-40 hidden flex-col bg-[#080711] border-2 border-emerald-400 rounded-2xl shadow-2xl overflow-hidden">
+      <div class="flex items-center justify-between px-4 py-3 bg-slate-900 border-b border-slate-800">
+        <div>
+          <h3 class="text-sm sm:text-base font-bold text-emerald-300">📦 VIRAL OVERDRIVE // SOURCE EXPORTER</h3>
+          <p class="text-[11px] text-slate-400 font-mono-tech">Download single-file `viral_arcade_hub.html` or copy the Base64 Track Code</p>
+        </div>
+        <div class="flex gap-2">
+          <button onclick="downloadFullHtml()" class="px-3 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-mono-tech font-bold">⬇ Download .HTML</button>
+          <button onclick="copySourceToClipboard()" class="px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-mono-tech">📋 Copy Code</button>
+          <button onclick="closeSourceExporter()" class="px-3 py-1.5 rounded-lg bg-rose-800 hover:bg-rose-700 text-white text-xs font-mono-tech">✕ Close</button>
+        </div>
+      </div>
+      <pre id="sourceCodePre" class="flex-1 p-4 overflow-auto text-xs font-mono-tech text-emerald-100 bg-[#05040a] leading-relaxed"></pre>
+    </div>
+  </div>
+
+  <script>
+    /**
+     * ============================================================================
+     * 1. PROCEDURAL WEBAUDIO SYNTHESIZER (EUROBEAT + GOTHIC SYNTH + 777 JACKPOT)
+     * ============================================================================
+     */
+    class ViralAudioEngine {
+      constructor() {
+        this.ctx = null;
+        this.muted = false;
+        this.step = 0;
+        this.loopStarted = false;
+      }
+
+      init() {
+        if (!this.ctx) {
+          const AudioCtx = window.AudioContext || window.webkitAudioContext;
+          if (AudioCtx) this.ctx = new AudioCtx();
+        }
+        if (this.ctx && this.ctx.state === 'suspended') this.ctx.resume();
+        if (!this.loopStarted) {
+          this.loopStarted = true;
+          this.startSequencer();
+        }
+      }
+
+      startSequencer() {
+        // 138 BPM High-Octane Synthwave / Gothic Chiptune Arpeggiator
+        const stepMs = (60 / 138 / 4) * 1000;
+        const polyBass = [110, 110, 220, 110, 130.8, 130.8, 261.6, 130.8, 146.8, 146.8, 293.6, 146.8, 164.8, 164.8, 329.6, 196.0];
+        const polyLead = [440, 0, 523.2, 659.2, 587.3, 523.2, 440, 392.0, 523.2, 0, 659.2, 784.0, 880.0, 784.0, 659.2, 523.2];
+        const survLead = [293.6, 349.2, 440.0, 587.3, 554.3, 440.0, 349.2, 329.6, 293.6, 0, 440.0, 523.2, 493.8, 440.0, 392.0, 329.6];
+
+        setInterval(() => {
+          if (this.muted || !this.ctx || this.ctx.state !== 'running') return;
+          const s = this.step % 16;
+          const now = this.ctx.currentTime;
+
+          // Punchy Four-on-the-Floor Synth Kick
+          if (s % 4 === 0) {
+            const o = this.ctx.createOscillator();
+            const g = this.ctx.createGain();
+            o.frequency.setValueAtTime(140, now);
+            o.frequency.exponentialRampToValueAtTime(34, now + 0.11);
+            g.gain.setValueAtTime(0.22, now);
+            g.gain.exponentialRampToValueAtTime(0.001, now + 0.12);
+            o.connect(g); g.connect(this.ctx.destination);
+            o.start(now); o.stop(now + 0.13);
+          }
+
+          // Octave Driving Bass
+          if (s % 2 === 0) {
+            const bf = polyBass[s];
+            const o = this.ctx.createOscillator();
+            const g = this.ctx.createGain();
+            o.type = 'sawtooth';
+            o.frequency.setValueAtTime(bf, now);
+            const flt = this.ctx.createBiquadFilter();
+            flt.type = 'lowpass';
+            flt.frequency.value = 650;
+            g.gain.setValueAtTime(0.11, now);
+            g.gain.exponentialRampToValueAtTime(0.001, now + 0.12);
+            o.connect(flt); flt.connect(g); g.connect(this.ctx.destination);
+            o.start(now); o.stop(now + 0.13);
+          }
+
+          // Mode-specific Synth Lead
+          const leadArr = app.mode === 'SURVIVORS' ? survLead : polyLead;
+          const note = leadArr[s];
+          if (note > 0) {
+            const o = this.ctx.createOscillator();
+            const g = this.ctx.createGain();
+            o.type = app.mode === 'SURVIVORS' ? 'square' : 'sawtooth';
+            o.frequency.setValueAtTime(note * (app.godSlayer ? 1.25 : 1), now);
+            g.gain.setValueAtTime(0.05, now);
+            g.gain.exponentialRampToValueAtTime(0.001, now + 0.13);
+            o.connect(g); g.connect(this.ctx.destination);
+            o.start(now); o.stop(now + 0.14);
+          }
+          this.step++;
+        }, stepMs);
+      }
+
+      playGrappleZap() {
+        if (this.muted || !this.ctx) return;
+        const now = this.ctx.currentTime;
+        const o = this.ctx.createOscillator();
+        const g = this.ctx.createGain();
+        o.type = 'sawtooth';
+        o.frequency.setValueAtTime(260, now);
+        o.frequency.exponentialRampToValueAtTime(1180, now + 0.18);
+        g.gain.setValueAtTime(0.18, now);
+        g.gain.exponentialRampToValueAtTime(0.001, now + 0.19);
+        o.connect(g); g.connect(this.ctx.destination);
+        o.start(now); o.stop(now + 0.2);
+      }
+
+      playGemChime(ComboPitch = 1) {
+        if (this.muted || !this.ctx) return;
+        const now = this.ctx.currentTime;
+        const o = this.ctx.createOscillator();
+        const g = this.ctx.createGain();
+        o.type = 'sine';
+        const base = Math.min(1800, 520 + ComboPitch * 35);
+        o.frequency.setValueAtTime(base, now);
+        o.frequency.exponentialRampToValueAtTime(base * 1.45, now + 0.08);
+        g.gain.setValueAtTime(0.08, now);
+        g.gain.exponentialRampToValueAtTime(0.001, now + 0.09);
+        o.connect(g); g.connect(this.ctx.destination);
+        o.start(now); o.stop(now + 0.1);
+      }
+
+      playJackpotFanfare() {
+        if (this.muted || !this.ctx) return;
+        const now = this.ctx.currentTime;
+        [523.25, 659.25, 783.99, 1046.5, 1318.5, 1567.98].forEach((freq, i) => {
+          const o = this.ctx.createOscillator();
+          const g = this.ctx.createGain();
+          o.type = 'triangle';
+          o.frequency.setValueAtTime(freq, now + i * 0.065);
+          g.gain.setValueAtTime(0.16, now + i * 0.065);
+          g.gain.exponentialRampToValueAtTime(0.001, now + i * 0.065 + 0.45);
+          o.connect(g); g.connect(this.ctx.destination);
+          o.start(now + i * 0.065);
+          o.stop(now + i * 0.065 + 0.46);
+        });
+      }
+
+      playBlackHoleBoom() {
+        if (this.muted || !this.ctx) return;
+        const now = this.ctx.currentTime;
+        const o = this.ctx.createOscillator();
+        const g = this.ctx.createGain();
+        o.type = 'sine';
+        o.frequency.setValueAtTime(125, now);
+        o.frequency.exponentialRampToValueAtTime(22, now + 0.65);
+        g.gain.setValueAtTime(0.38, now);
+        g.gain.exponentialRampToValueAtTime(0.001, now + 0.68);
+        o.connect(g); g.connect(this.ctx.destination);
+        o.start(now); o.stop(now + 0.7);
+      }
+    }
+
+    const sfx = new ViralAudioEngine();
+
+    /**
+     * ============================================================================
+     * 2. GLOBAL APP STATE & INPUT CONTROLLER
+     * ============================================================================
+     */
+    const canvas3d = document.getElementById('canvas3d');
+    const canvas2d = document.getElementById('canvas2d');
+    const ctx2d = canvas2d.getContext('2d');
+
+    const app = {
+      mode: 'POLYTRACK', // 'POLYTRACK' | 'SURVIVORS' | 'CROSSOVER'
+      viralTas: false,
+      viralTimer: 0,
+      pixel16Bit: false,
+      godSlayer: false,
+      godSlayerTimer: 0,
+      shake: 0,
+      gemPitch: 0
+    };
+
+    const keys = { Up: false, Down: false, Left: false, Right: false, Space: false, Shift: false };
+    const justPressed = { Space: false };
+
+    function setKeyState(k, val) {
+      if (val && !keys[k]) justPressed[k] = true;
+      keys[k] = val;
+    }
+
+    window.addEventListener('keydown', e => {
+      sfx.init();
+      if (e.code === 'KeyH') { toggle16BitMode(); return; }
+      if (e.code === 'Digit1') { switchGameMode('POLYTRACK'); return; }
+      if (e.code === 'Digit2') { switchGameMode('SURVIVORS'); return; }
+      if (e.code === 'Digit3') { switchGameMode('CROSSOVER'); return; }
+      if (e.code === 'KeyR') { resetPolyCar(); return; }
+      if (e.code === 'KeyE') { triggerActionE(); return; }
+
+      if (e.code === 'KeyW' || e.code === 'ArrowUp') setKeyState('Up', true);
+      if (e.code === 'KeyS' || e.code === 'ArrowDown') setKeyState('Down', true);
+      if (e.code === 'KeyA' || e.code === 'ArrowLeft') setKeyState('Left', true);
+      if (e.code === 'KeyD' || e.code === 'ArrowRight') setKeyState('Right', true);
+      if (e.code === 'Space') {
+        e.preventDefault();
+        setKeyState('Space', true);
+        if (app.mode !== 'POLYTRACK') triggerBlackHoleVortex();
+      }
+      if (e.code === 'ShiftLeft' || e.code === 'ShiftRight') setKeyState('Shift', true);
+    });
+
+    window.addEventListener('keyup', e => {
+      if (e.code === 'KeyW' || e.code === 'ArrowUp') setKeyState('Up', false);
+      if (e.code === 'KeyS' || e.code === 'ArrowDown') setKeyState('Down', false);
+      if (e.code === 'KeyA' || e.code === 'ArrowLeft') setKeyState('Left', false);
+      if (e.code === 'KeyD' || e.code === 'ArrowRight') setKeyState('Right', false);
+      if (e.code === 'Space') setKeyState('Space', false);
+      if (e.code === 'ShiftLeft' || e.code === 'ShiftRight') setKeyState('Shift', false);
+    });
+
+    document.querySelectorAll('.touch-btn').forEach(btn => {
+      const k = btn.getAttribute('data-k');
+      btn.addEventListener('touchstart', e => {
+        e.preventDefault();
+        sfx.init();
+        setKeyState(k, true);
+        if (k === 'Space' && app.mode !== 'POLYTRACK') triggerBlackHoleVortex();
+      });
+      btn.addEventListener('touchend', e => { e.preventDefault(); setKeyState(k, false); });
+    });
+
+    function triggerActionE() {
+      sfx.init();
+      if (app.mode === 'POLYTRACK') {
+        polyCar.speed = Math.min(185, polyCar.speed + 55);
+        spawn2dPopup(canvas2d.width * 0.5, canvas2d.height * 0.4, '⚡ NITRO OVERDRIVE!', '#38bdf8');
+      } else {
+        openCasinoSlotModal();
+      }
+    }
+
+    /**
+     * ============================================================================
+     * 3. THREE.JS 3D ENGINE (POLYTRACK STUNT RACER + 3D DRIFT SURVIVORS MASHUP)
+     * ============================================================================
+     */
+    const renderer3d = new THREE.WebGLRenderer({ canvas: canvas3d, antialias: true, preserveDrawingBuffer: true });
+    const scene3d = new THREE.Scene();
+    scene3d.background = new THREE.Color(0x070512);
+    scene3d.fog = new THREE.FogExp2(0x070512, 0.0038);
+
+    const camera3d = new THREE.PerspectiveCamera(65, window.innerWidth / window.innerHeight, 0.1, 900);
+
+    // Synthwave Lighting
+    scene3d.add(new THREE.AmbientLight(0x94a3b8, 0.75));
+    const dirLight = new THREE.DirectionalLight(0xfef08a, 1.15);
+    dirLight.position.set(60, 140, 80);
+    scene3d.add(dirLight);
+
+    // Synthwave Sunset Neon Grid Floor (Below the track / Arena floor for Mode 3)
+    const gridHelper = new THREE.GridHelper(900, 90, 0xf43f5e, 0x1e1b4b);
+    gridHelper.position.y = -0.2;
+    scene3d.add(gridHelper);
+
+    const arenaFloor = new THREE.Mesh(
+      new THREE.PlaneGeometry(900, 900),
+      new THREE.MeshStandardMaterial({ color: 0x090616, roughness: 0.8, metalness: 0.2 })
+    );
+    arenaFloor.rotation.x = -Math.PI / 2;
+    arenaFloor.position.y = -0.35;
+    scene3d.add(arenaFloor);
+
+    // Low-Poly Cyber Stunt Car Group
+    function createStuntCarMesh(bodyHex = 0x0ea5e9, neonHex = 0xf43f5e) {
+      const car = new THREE.Group();
+      const chassis = new THREE.Mesh(
+        new THREE.BoxGeometry(2.4, 0.75, 4.6),
+        new THREE.MeshStandardMaterial({ color: bodyHex, roughness: 0.25, metalness: 0.6 })
+      );
+      chassis.position.y = 0.7;
+      car.add(chassis);
+
+      const cockpit = new THREE.Mesh(
+        new THREE.BoxGeometry(1.8, 0.65, 2.2),
+        new THREE.MeshStandardMaterial({ color: 0x0f172a, roughness: 0.1, metalness: 0.9 })
+      );
+      cockpit.position.set(0, 1.3, -0.2);
+      car.add(cockpit);
+
+      // Rear Cyber Spoiler
+      const spoiler = new THREE.Mesh(
+        new THREE.BoxGeometry(2.6, 0.18, 0.65),
+        new THREE.MeshStandardMaterial({ color: neonHex, emissive: neonHex, emissiveIntensity: 0.65 })
+      );
+      spoiler.position.set(0, 1.55, -2.0);
+      car.add(spoiler);
+
+      // 4 Glowing Rim Wheels
+      const wheelGeo = new THREE.CylinderGeometry(0.55, 0.55, 0.45, 16);
+      wheelGeo.rotateZ(Math.PI / 2);
+      const wheelMat = new THREE.MeshStandardMaterial({ color: 0x1e293b, emissive: neonHex, emissiveIntensity: 0.35 });
+      [[-1.3, 0.55, 1.45], [1.3, 0.55, 1.45], [-1.3, 0.55, -1.45], [1.3, 0.55, -1.45]].forEach(([x, y, z]) => {
+        const w = new THREE.Mesh(wheelGeo, wheelMat);
+        w.position.set(x, y, z);
+        car.add(w);
+      });
+
+      // Mode 3 Orbital Drift Buzzsaws (Hidden in pure PolyTrack mode, active in Crossover)
+      const sawGroup = new THREE.Group();
+      for (let i = 0; i < 4; i++) {
+        const ang = (i / 4) * Math.PI * 2;
+        const saw = new THREE.Mesh(
+          new THREE.CylinderGeometry(1.4, 1.4, 0.12, 12),
+          new THREE.MeshBasicMaterial({ color: 0xfacc15, wireframe: false })
+        );
+        saw.position.set(Math.cos(ang) * 5.2, 0.8, Math.sin(ang) * 5.2);
+        sawGroup.add(saw);
+      }
+      car.add(sawGroup);
+      car.userData.sawGroup = sawGroup;
+
+      return car;
+    }
+
+    const playerCarMesh = createStuntCarMesh(0x0ea5e9, 0xf43f5e);
+    scene3d.add(playerCarMesh);
+
+    const ghostCarMesh = createStuntCarMesh(0x38bdf8, 0x38bdf8);
+    ghostCarMesh.traverse(c => {
+      if (c.isMesh) {
+        c.material = c.material.clone();
+        c.material.transparent = true;
+        c.material.opacity = 0.32;
+      }
+    });
+    ghostCarMesh.userData.sawGroup.visible = false;
+    scene3d.add(ghostCarMesh);
+
+    // Cyber-Grapple Laser Beam Line & Floating Sky Anchors
+    const grappleLineGeo = new THREE.BufferGeometry().setFromPoints([new THREE.Vector3(), new THREE.Vector3()]);
+    const grappleLine = new THREE.Line(
+      grappleLineGeo,
+      new THREE.LineBasicMaterial({ color: 0xfacc15, linewidth: 3 })
+    );
+    grappleLine.visible = false;
+    scene3d.add(grappleLine);
+
+    const trackGroup = new THREE.Group();
+    scene3d.add(trackGroup);
+
+    let skyAnchors = [];
+    let trackSegments = [];
+
+    const polyCar = {
+      pos: new THREE.Vector3(0, 2, 0),
+      vel: new THREE.Vector3(0, 0, 0),
+      speed: 0,
+      yaw: 0,
+      pitch: 0,
+      roll: 0,
+      inAir: false,
+      grappling: false,
+      grappleTarget: null,
+      styleScore: 0,
+      runTime: 0,
+      presetId: 0
+    };
+
+    // Build Procedural 3D PolyTrack Course with Ramps, Gaps, Loop-de-Loop & Sky Grapple Orbs
+    function loadPolyTrackPreset(presetId = 0) {
+      polyCar.presetId = presetId;
+      while (trackGroup.children.length > 0) trackGroup.remove(trackGroup.children[0]);
+      skyAnchors = [];
+      trackSegments = [];
+
+      const segCount = 95;
+      for (let i = 0; i < segCount; i++) {
+        // Leave intentional stunt gaps where player must Jump or Cyber-Grapple!
+        const isGap = (i >= 18 && i <= 24) || (i >= 46 && i <= 53) || (i >= 72 && i <= 78);
+
+        let x = 0, y = 2, z = i * 11;
+        if (presetId === 0) {
+          // Mega Loop & Sky Canyon
+          x = Math.sin(i * 0.09) * 32;
+          y = 4 + Math.sin(i * 0.16) * 14 + (i > 25 && i < 45 ? Math.sin((i - 25) * 0.3) * 26 : 0);
+        } else if (presetId === 1) {
+          // Void Corkscrew
+          x = Math.sin(i * 0.16) * 48;
+          y = 8 + Math.cos(i * 0.18) * 18;
+        } else {
+          // Sky Islands
+          x = Math.cos(i * 0.12) * 38;
+          y = 12 + (i % 12) * 2.2;
+        }
+
+        const segPos = new THREE.Vector3(x, Math.max(1.5, y), z);
+        trackSegments.push({ pos: segPos, isGap, isRamp: i === 17 || i === 45 || i === 71 });
+
+        if (!isGap) {
+          const isRamp = i === 17 || i === 45 || i === 71;
+          const roadMat = new THREE.MeshStandardMaterial({
+            color: isRamp ? 0xfacc15 : (i % 2 === 0 ? 0x1e293b : 0x0f172a),
+            emissive: isRamp ? 0xca8a04 : 0x000000,
+            roughness: 0.4
+          });
+          const road = new THREE.Mesh(new THREE.BoxGeometry(12, 1.2, 11.5), roadMat);
+          road.position.copy(segPos);
+          if (isRamp) road.rotation.x = -0.32;
+          trackGroup.add(road);
+
+          // Neon Curb Rails
+          const curbMat = new THREE.MeshBasicMaterial({ color: i % 4 === 0 ? 0x38bdf8 : 0xf43f5e });
+          [-6.2, 6.2].forEach(cx => {
+            const curb = new THREE.Mesh(new THREE.BoxGeometry(0.45, 1.6, 11.5), curbMat);
+            curb.position.copy(segPos).add(new THREE.Vector3(cx, 0.3, 0));
+            if (isRamp) curb.rotation.x = -0.32;
+            trackGroup.add(curb);
+          });
+        } else if (i === 21 || i === 49 || i === 75) {
+          // Spawn Giant Glowing Cyber-Grapple Sky Anchor Orb above the abyss!
+          const anchorPos = segPos.clone().add(new THREE.Vector3(0, 26, 0));
+          const orb = new THREE.Mesh(
+            new THREE.OctahedronGeometry(3.2, 1),
+            new THREE.MeshBasicMaterial({ color: 0xfacc15, wireframe: false })
+          );
+          orb.position.copy(anchorPos);
+          const ring = new THREE.Mesh(
+            new THREE.TorusGeometry(5.2, 0.35, 8, 24),
+            new THREE.MeshBasicMaterial({ color: 0x38bdf8 })
+          );
+          ring.position.copy(anchorPos);
+          trackGroup.add(orb, ring);
+          skyAnchors.push({ pos: anchorPos, orb, ring });
+        }
+      }
+
+      resetPolyCar();
+    }
+
+    function resetPolyCar() {
+      polyCar.pos.set(0, 4.5, 4);
+      polyCar.vel.set(0, 0, 0);
+      polyCar.speed = 65;
+      polyCar.yaw = 0;
+      polyCar.pitch = 0;
+      polyCar.roll = 0;
+      polyCar.inAir = false;
+      polyCar.grappling = false;
+      polyCar.runTime = 0;
+    }
+
+    function exportTrackCode() {
+      const payload = btoa(JSON.stringify({ preset: polyCar.presetId, style: polyCar.styleScore, v: 'POLYTRACK_GRAPPLE_1' }));
+      const ta = document.createElement('textarea');
+      ta.value = `POLYTRACK://2026/${payload}`;
+      document.body.appendChild(ta);
+      ta.select();
+      document.execCommand('copy');
+      document.body.removeChild(ta);
+      spawn2dPopup(canvas2d.width * 0.5, canvas2d.height * 0.25, '🔗 COPIED TRACK CODE TO CLIPBOARD!', '#facc15');
+    }
+
+    /**
+     * ============================================================================
+     * 4. MODE 3 CROSSOVER: 3D VEHICULAR DRIFT SURVIVORS HORDE ENGINE
+     * ============================================================================
+     */
+    const horde3dGroup = new THREE.Group();
+    scene3d.add(horde3dGroup);
+    const monsters3d = [];
+
+    function init3dCrossoverHorde() {
+      while (horde3dGroup.children.length > 0) horde3dGroup.remove(horde3dGroup.children[0]);
+      monsters3d.length = 0;
+
+      const geo = new THREE.BoxGeometry(1.5, 2.4, 1.5);
+      for (let i = 0; i < 240; i++) {
+        const mat = new THREE.MeshStandardMaterial({
+          color: i % 3 === 0 ? 0xf43f5e : (i % 2 === 0 ? 0xa855f7 : 0x22c55e),
+          roughness: 0.5
+        });
+        const m = new THREE.Mesh(geo, mat);
+        const ang = Math.random() * Math.PI * 2;
+        const rad = 25 + Math.random() * 95;
+        m.position.set(Math.cos(ang) * rad, 1.2, Math.sin(ang) * rad);
+        horde3dGroup.add(m);
+        monsters3d.push({ mesh: m, vy: 0, ragdollTimer: 0 });
+      }
+    }
+
+    /**
+     * ============================================================================
+     * 5. GAME 2: VAMPIRE SURVIVORS — DOPAMINE CASINO & BLACK HOLE EDITION (2D)
+     * ============================================================================
+     */
+    const surv = {
+      px: 0, py: 0,
+      hp: 100,
+      xp: 15, nextXp: 100, level: 1, kills: 0,
+      enemies: [],
+      gems: [],
+      projectiles: [],
+      popups: [],
+      blackHole: { active: false, x: 0, y: 0, timer: 0 }
+    };
+
+    function initSurvivorsEngine() {
+      surv.px = 0;
+      surv.py = 0;
+      surv.xp = 20;
+      surv.nextXp = 100;
+      surv.level = 1;
+      surv.kills = 0;
+      surv.enemies.length = 0;
+      surv.gems.length = 0;
+      surv.projectiles.length = 0;
+
+      // Spawn 900 High-Speed Painted Swarm Monsters around the player
+      for (let i = 0; i < 900; i++) {
+        spawnSurvivorMonster(i);
+      }
+    }
+
+    function spawnSurvivorMonster(idx = 0) {
+      const ang = Math.random() * Math.PI * 2;
+      const dist = 220 + Math.random() * 680;
+      const types = [
+        { color: '#f43f5e', r: 10, hp: 25 }, // Crimson Bat
+        { color: '#a855f7', r: 13, hp: 45 }, // Necro Ghoul
+        { color: '#10b981', r: 15, hp: 70 }, // Poison Skull
+        { color: '#facc15', r: 20, hp: 140 } // Elite Gold Knight
+      ];
+      const t = types[idx % types.length];
+      surv.enemies.push({
+        x: surv.px + Math.cos(ang) * dist,
+        y: surv.py + Math.sin(ang) * dist,
+        r: t.r,
+        color: t.color,
+        hp: t.hp,
+        phase: Math.random() * Math.PI * 2
+      });
+    }
+
+    function triggerBlackHoleVortex() {
+      sfx.init();
+      sfx.playBlackHoleBoom();
+      app.shake = 22;
+
+      if (app.mode === 'CROSSOVER') {
+        // Suck and launch all 3D monsters in Crossover mode!
+        monsters3d.forEach(m => {
+          m.vy = 28 + Math.random() * 22;
+          m.ragdollTimer = 1.6;
+        });
+        surv.kills += 180;
+        surv.xp += 85;
+        spawn2dPopup(canvas2d.width * 0.5, canvas2d.height * 0.35, '🌀 3D GRAVITY SINGULARITY!! (+180 KILLS)', '#facc15');
+        updateSurvivorsHud();
+        return;
+      }
+
+      surv.blackHole.active = true;
+      surv.blackHole.x = surv.px + (Math.random() - 0.5) * 80;
+      surv.blackHole.y = surv.py - 40;
+      surv.blackHole.timer = 2.4;
+      spawn2dPopup(canvas2d.width * 0.5, canvas2d.height * 0.3, '🌀 BLACK HOLE RAGDOLL VORTEX!', '#e879f9');
+    }
+
+    // Vegas 777 Slot Machine Modal Logic
+    const slotIcons = ['⚔️', '🔥', '💎', '⚡', '💀', '7️⃣'];
+    let slotInterval = null;
+
+    function openCasinoSlotModal() {
+      sfx.init();
+      const modal = document.getElementById('casinoSlotModal');
+      modal.classList.remove('hidden');
+      let ticks = 0;
+      clearInterval(slotInterval);
+      slotInterval = setInterval(() => {
+        ticks++;
+        sfx.playGemChime(ticks);
+        document.getElementById('slotReel0').textContent = ticks > 8 ? '7️⃣' : slotIcons[ticks % slotIcons.length];
+        document.getElementById('slotReel1').textContent = ticks > 14 ? '7️⃣' : slotIcons[(ticks + 2) % slotIcons.length];
+        document.getElementById('slotReel2').textContent = ticks > 20 ? '7️⃣' : slotIcons[(ticks + 4) % slotIcons.length];
+
+        if (ticks > 21) {
+          clearInterval(slotInterval);
+          sfx.playJackpotFanfare();
+          document.getElementById('slotStatusText').textContent = '🎉 JACKPOT 777! GOD-SLAYER SCYTHES & ORBITAL LASERS UNLOCKED!';
+          activateGodSlayerOverdrive();
+        }
+      }, 65);
+    }
+
+    function closeCasinoSlotModal() {
+      clearInterval(slotInterval);
+      document.getElementById('casinoSlotModal').classList.add('hidden');
+      activateGodSlayerOverdrive();
+    }
+
+    function activateGodSlayerOverdrive() {
+      app.godSlayer = true;
+      app.godSlayerTimer = 14.0;
+      app.shake = 25;
+      document.getElementById('godSlayerBadge').classList.remove('hidden');
+      spawn2dPopup(canvas2d.width * 0.5, canvas2d.height * 0.35, '🎰 777 GOD-SLAYER OVERDRIVE!!', '#facc15');
+    }
+
+    function spawn2dPopup(x, y, text, color = '#facc15') {
+      surv.popups.push({ x, y, text, color, life: 1.1 });
+    }
+
+    function updateSurvivorsHud() {
+      if (surv.xp >= surv.nextXp) {
+        surv.level++;
+        surv.xp -= surv.nextXp;
+        surv.nextXp = Math.round(surv.nextXp * 1.25);
+        sfx.playJackpotFanfare();
+        spawn2dPopup(canvas2d.width * 0.5, canvas2d.height * 0.22, `⚡ LEVEL UP! LV. ${surv.level}`, '#38bdf8');
+      }
+      const pct = Math.min(100, (surv.xp / surv.nextXp) * 100);
+      document.getElementById('survXpFill').style.width = `${pct}%`;
+      document.getElementById('survLvlTxt').textContent = `LV. ${surv.level} // ${app.godSlayer ? '777 GOD-SLAYER' : 'DOPAMINE REAPER'}`;
+      const activeCount = app.mode === 'CROSSOVER' ? monsters3d.length : surv.enemies.length;
+      document.getElementById('survHordeTxt').textContent = `ACTIVE HORDE: ${activeCount.toLocaleString()} | KILLS: ${surv.kills.toLocaleString()}`;
+    }
+
+    /**
+     * ============================================================================
+     * 6. UPDATE & RENDER LOOPS FOR ALL 3 MODES
+     * ============================================================================
+     */
+    function updatePolyTrack3D(dt, elapsed) {
+      // Viral TAS Auto-Driver when 9:16 Viral Short mode is active
+      if (app.viralTas) {
+        keys.Up = true;
+        // Auto-steer toward next track waypoint
+        const segIdx = Math.min(trackSegments.length - 1, Math.floor(polyCar.pos.z / 11) + 2);
+        const targetSeg = trackSegments[segIdx];
+        if (targetSeg) {
+          const dx = targetSeg.pos.x - polyCar.pos.x;
+          keys.Left = dx > 1.2;
+          keys.Right = dx < -1.2;
+          // Auto-fire Cyber-Grapple when flying over a gap!
+          keys.Space = targetSeg.isGap && polyCar.inAir;
+        }
+      }
+
+      polyCar.runTime += dt;
+      const accel = keys.Shift ? 78 : 48;
+      if (keys.Up) polyCar.speed = Math.min(keys.Shift ? 195 : 145, polyCar.speed + accel * dt);
+      else if (keys.Down) polyCar.speed = Math.max(20, polyCar.speed - 65 * dt);
+      else polyCar.speed = Math.max(35, polyCar.speed - 14 * dt);
+
+      if (keys.Left) polyCar.yaw += 1.65 * dt;
+      if (keys.Right) polyCar.yaw -= 1.65 * dt;
+
+      // Forward movement vector
+      polyCar.pos.x += Math.sin(polyCar.yaw) * polyCar.speed * 0.42 * dt;
+      polyCar.pos.z += Math.cos(polyCar.yaw) * polyCar.speed * 0.42 * dt;
+
+      // Loop back to start if end of track reached
+      if (polyCar.pos.z > (trackSegments.length - 4) * 11) {
+        polyCar.pos.z = 4;
+        polyCar.styleScore += 2500;
+        spawn2dPopup(canvas2d.width * 0.5, canvas2d.height * 0.3, '🏁 LAP COMPLETE! +2,500 STYLE', '#22c55e');
+      }
+
+      // Find current track segment underneath car
+      const idx = Math.max(0, Math.min(trackSegments.length - 1, Math.floor(polyCar.pos.z / 11)));
+      const seg = trackSegments[idx];
+      const onRoadWidth = seg && !seg.isGap && Math.abs(polyCar.pos.x - seg.pos.x) < 7.5;
+
+      // CYBER-GRAPPLE HOOK MECHANIC (Spacebar while airborne or near Sky Anchor)
+      let nearestAnchor = null;
+      let minAnchorDist = 95;
+      skyAnchors.forEach(a => {
+        a.orb.rotation.y += 3 * dt;
+        a.ring.rotation.x += 2 * dt;
+        const d = a.pos.distanceTo(polyCar.pos);
+        if (d < minAnchorDist) {
+          minAnchorDist = d;
+          nearestAnchor = a;
+        }
+      });
+
+      if (keys.Space && nearestAnchor) {
+        if (!polyCar.grappling) {
+          polyCar.grappling = true;
+          sfx.playGrappleZap();
+          polyCar.styleScore += 1250;
+          spawn2dPopup(canvas2d.width * 0.5, canvas2d.height * 0.36, '🪝 CYBER-GRAPPLE LOCKED! +1,250 STYLE', '#facc15');
+        }
+        // Pull car toward sky anchor + forward slingshot arc!
+        const pullDir = new THREE.Vector3().subVectors(nearestAnchor.pos, polyCar.pos).normalize();
+        polyCar.vel.y = THREE.MathUtils.lerp(polyCar.vel.y, pullDir.y * 42 + 12, 0.15);
+        polyCar.pos.x = THREE.MathUtils.lerp(polyCar.pos.x, nearestAnchor.pos.x, 0.08);
+        polyCar.roll += 9.5 * dt; // 360 Grapple Barrel Roll!
+
+        grappleLine.visible = true;
+        grappleLineGeo.setFromPoints([polyCar.pos.clone(), nearestAnchor.pos.clone()]);
+      } else {
+        polyCar.grappling = false;
+        grappleLine.visible = false;
+      }
+
+      // Vertical Gravity & Ramp Launches
+      if (onRoadWidth && polyCar.pos.y <= seg.pos.y + 1.6 && polyCar.vel.y <= 0 && !polyCar.grappling) {
+        if (polyCar.inAir) {
+          polyCar.inAir = false;
+          polyCar.roll = 0;
+          polyCar.pitch = 0;
+          polyCar.styleScore += 500;
+          spawn2dPopup(canvas2d.width * 0.5, canvas2d.height * 0.45, '✨ CLEAN STUNT LANDING! +500', '#38bdf8');
+        }
+        polyCar.pos.y = seg.pos.y + 0.9;
+        polyCar.vel.y = 0;
+        if (seg.isRamp) {
+          polyCar.vel.y = 32 + polyCar.speed * 0.12;
+          polyCar.inAir = true;
+          sfx.playGrappleZap();
+          spawn2dPopup(canvas2d.width * 0.5, canvas2d.height * 0.32, '🚀 MEGA RAMP LAUNCH! HOLD [SPACE] TO GRAPPLE!', '#f43f5e');
+        }
+      } else {
+        polyCar.inAir = true;
+        polyCar.vel.y -= 36 * dt;
+        polyCar.pos.y += polyCar.vel.y * dt;
+        if (!polyCar.grappling) {
+          polyCar.pitch = Math.sin(elapsed * 6) * 0.35;
+        }
+        // Respawn if car falls into the synthwave void
+        if (polyCar.pos.y < -18) {
+          resetPolyCar();
+          spawn2dPopup(canvas2d.width * 0.5, canvas2d.height * 0.4, '💥 FELL INTO VOID — INSTANT RESTART!', '#f43f5e');
+        }
+      }
+
+      // Sync Player Car & Ghost Car Meshes
+      playerCarMesh.position.copy(polyCar.pos);
+      playerCarMesh.rotation.set(polyCar.pitch, polyCar.yaw, polyCar.roll);
+      playerCarMesh.userData.sawGroup.visible = false;
+
+      // Ghost car runs slightly ahead on the spline for competitive pacing
+      const ghostZ = (polyCar.pos.z + 18 + Math.sin(elapsed * 2) * 6) % ((trackSegments.length - 5) * 11);
+      const gIdx = Math.max(0, Math.min(trackSegments.length - 1, Math.floor(ghostZ / 11)));
+      const gSeg = trackSegments[gIdx];
+      if (gSeg) {
+        ghostCarMesh.visible = true;
+        ghostCarMesh.position.set(gSeg.pos.x, gSeg.pos.y + 1.2, ghostZ);
+      }
+
+      // Chase Camera with Dynamic FOV Speed Stretch
+      camera3d.fov = THREE.MathUtils.lerp(camera3d.fov, polyCar.inAir || polyCar.grappling ? 82 : 65 + polyCar.speed * 0.08, 0.12);
+      camera3d.updateProjectionMatrix();
+      const camTarget = new THREE.Vector3(
+        polyCar.pos.x - Math.sin(polyCar.yaw) * 12,
+        polyCar.pos.y + 5.2,
+        polyCar.pos.z - Math.cos(polyCar.yaw) * 12
+      );
+      camera3d.position.lerp(camTarget, 0.18);
+      camera3d.lookAt(polyCar.pos.x, polyCar.pos.y + 1.2, polyCar.pos.z + 8);
+
+      // Update Top Telemetry HUD
+      document.getElementById('polySpeedTxt').textContent = Math.round(polyCar.speed * 1.45);
+      document.getElementById('polyTimeTxt').textContent = polyCar.runTime.toFixed(2) + 's';
+      document.getElementById('polyStyleTxt').textContent = polyCar.styleScore.toLocaleString();
+    }
+
+    // Mode 3: 3D Vehicular Drift Survivors Update
+    function updateCrossover3D(dt, elapsed) {
+      if (app.viralTas) {
+        keys.Up = true;
+        keys.Left = Math.sin(elapsed * 0.8) > 0;
+        keys.Right = !keys.Left;
+      }
+
+      if (keys.Up) polyCar.speed = Math.min(95, polyCar.speed + 55 * dt);
+      else polyCar.speed = Math.max(45, polyCar.speed - 20 * dt);
+
+      if (keys.Left) polyCar.yaw += 2.2 * dt;
+      if (keys.Right) polyCar.yaw -= 2.2 * dt;
+
+      polyCar.pos.x += Math.sin(polyCar.yaw) * polyCar.speed * 0.45 * dt;
+      polyCar.pos.z += Math.cos(polyCar.yaw) * polyCar.speed * 0.45 * dt;
+      polyCar.pos.y = 0.2;
+      polyCar.pos.clampLength(0, 110);
+
+      playerCarMesh.position.copy(polyCar.pos);
+      playerCarMesh.rotation.set(0, polyCar.yaw, (keys.Left ? 0.12 : (keys.Right ? -0.12 : 0)));
+      playerCarMesh.userData.sawGroup.visible = true;
+      playerCarMesh.userData.sawGroup.rotation.y += (app.godSlayer ? 18 : 9) * dt;
+      ghostCarMesh.visible = false;
+      grappleLine.visible = false;
+
+      // Update 240 3D Swarm Monsters chasing the car & getting ragdolled by Drift Saws!
+      monsters3d.forEach(m => {
+        if (m.ragdollTimer > 0) {
+          m.ragdollTimer -= dt;
+          m.mesh.position.y += m.vy * dt;
+          m.vy -= 48 * dt;
+          m.mesh.rotation.x += 12 * dt;
+          m.mesh.rotation.z += 12 * dt;
+          if (m.mesh.position.y <= 1.2) {
+            m.mesh.position.y = 1.2;
+            m.ragdollTimer = 0;
+            m.mesh.rotation.set(0, 0, 0);
+            // Respawn monster around perimeter
+            const a = Math.random() * Math.PI * 2;
+            m.mesh.position.set(polyCar.pos.x + Math.cos(a) * 65, 1.2, polyCar.pos.z + Math.sin(a) * 65);
+          }
+          return;
+        }
+
+        const dx = polyCar.pos.x - m.mesh.position.x;
+        const dz = polyCar.pos.z - m.mesh.position.z;
+        const dist = Math.hypot(dx, dz);
+
+        if (dist < (app.godSlayer ? 14 : 7.5)) {
+          // Hit by Car or Spinning Drift Buzzsaws!
+          m.ragdollTimer = 1.1;
+          m.vy = 24 + Math.random() * 14;
+          surv.kills++;
+          surv.xp += 4;
+          if (surv.kills % 15 === 0) {
+            sfx.playGemChime((surv.kills / 15) % 12);
+            updateSurvivorsHud();
+          }
+        } else if (dist > 0.1) {
+          m.mesh.position.x += (dx / dist) * 14 * dt;
+          m.mesh.position.z += (dz / dist) * 14 * dt;
+        }
+      });
+
+      // Isometric Action Chase Camera
+      const camPos = new THREE.Vector3(polyCar.pos.x, 26, polyCar.pos.z + 28);
+      camera3d.position.lerp(camPos, 0.15);
+      camera3d.lookAt(polyCar.pos.x, 1, polyCar.pos.z);
+    }
+
+    // Mode 2: 2D Vampire Survivors Painted Dopamine Casino Renderer
+    function updateAndDrawSurvivors2D(ctx, W, H, dt, elapsed) {
+      // Clear with Painted Gothic Midnight Ground
+      ctx.fillStyle = '#0d0818';
+      ctx.fillRect(0, 0, W, H);
+
+      // Move Hero (or Auto-Pilot in Viral TAS mode)
+      const spd = 210;
+      if (app.viralTas) {
+        surv.px += Math.cos(elapsed * 1.4) * spd * 0.7 * dt;
+        surv.py += Math.sin(elapsed * 1.8) * spd * 0.7 * dt;
+      } else {
+        if (keys.Left) surv.px -= spd * dt;
+        if (keys.Right) surv.px += spd * dt;
+        if (keys.Up) surv.py -= spd * dt;
+        if (keys.Down) surv.py += spd * dt;
+      }
+
+      const cx = W * 0.5;
+      const cy = H * 0.5;
+
+      // Draw Scrolling Gothic Cobblestone Tiles & Pentagram Runes
+      ctx.strokeStyle = 'rgba(139, 92, 246, 0.14)';
+      ctx.lineWidth = 2;
+      const tile = 80;
+      const offX = -(surv.px % tile);
+      const offY = -(surv.py % tile);
+      for (let x = offX - tile; x < W + tile; x += tile) {
+        ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, H); ctx.stroke();
+      }
+      for (let y = offY - tile; y < H + tile; y += tile) {
+        ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(W, y); ctx.stroke();
+      }
+
+      // Update Black Hole Singularity Vortex
+      if (surv.blackHole.active) {
+        surv.blackHole.timer -= dt;
+        const bhScreenX = cx + (surv.blackHole.x - surv.px);
+        const bhScreenY = cy + (surv.blackHole.y - surv.py);
+
+        // Draw Swirling Event Horizon
+        const rad = 65 + Math.sin(elapsed * 20) * 12;
+        const grad = ctx.createRadialGradient(bhScreenX, bhScreenY, 8, bhScreenX, bhScreenY, rad * 2.2);
+        grad.addColorStop(0, '#000000');
+        grad.addColorStop(0.35, '#a855f7');
+        grad.addColorStop(0.7, '#ec4899');
+        grad.addColorStop(1, 'rgba(0,0,0,0)');
+        ctx.fillStyle = grad;
+        ctx.beginPath(); ctx.arc(bhScreenX, bhScreenY, rad * 2.2, 0, Math.PI * 2); ctx.fill();
+
+        if (surv.blackHole.timer <= 0) {
+          surv.blackHole.active = false;
+          sfx.playJackpotFanfare();
+          spawn2dPopup(bhScreenX, bhScreenY, '💥 SINGULARITY SUPERNOVA!!', '#facc15');
+        }
+      }
+
+      // Draw & Magnetize XP Gems
+      for (let i = surv.gems.length - 1; i >= 0; i--) {
+        const g = surv.gems[i];
+        const dx = surv.px - g.x;
+        const dy = surv.py - g.y;
+        const d = Math.hypot(dx, dy);
+        if (d < (app.godSlayer ? 420 : 190)) {
+          g.x += (dx / (d || 1)) * 460 * dt;
+          g.y += (dy / (d || 1)) * 460 * dt;
+        }
+        if (d < 22) {
+          surv.gems.splice(i, 1);
+          surv.xp += 6;
+          app.gemPitch = (app.gemPitch + 1) % 16;
+          if (surv.gems.length % 5 === 0) sfx.playGemChime(app.gemPitch);
+          updateSurvivorsHud();
+          continue;
+        }
+        const gx = cx + (g.x - surv.px);
+        const gy = cy + (g.y - surv.py);
+        if (gx < -20 || gx > W + 20 || gy < -20 || gy > H + 20) continue;
+        ctx.fillStyle = g.color;
+        ctx.beginPath();
+        ctx.moveTo(gx, gy - 6); ctx.lineTo(gx + 5, gy); ctx.lineTo(gx, gy + 6); ctx.lineTo(gx - 5, gy);
+        ctx.closePath();
+        ctx.fill();
+      }
+
+      // Orbiting Evolved Scythes & God-Slayer Lasers around Hero
+      const bladeCount = app.godSlayer ? 10 : 5;
+      const orbitRad = app.godSlayer ? 135 : 85;
+      const bladePositions = [];
+
+      for (let b = 0; b < bladeCount; b++) {
+        const ang = elapsed * (app.godSlayer ? 7 : 4.2) + (b * Math.PI * 2) / bladeCount;
+        const bx = surv.px + Math.cos(ang) * orbitRad;
+        const by = surv.py + Math.sin(ang) * orbitRad;
+        bladePositions.push({ x: bx, y: by });
+
+        const sbx = cx + (bx - surv.px);
+        const sby = cy + (by - surv.py);
+        ctx.save();
+        ctx.translate(sbx, sby);
+        ctx.rotate(elapsed * 14);
+        ctx.fillStyle = app.godSlayer ? '#facc15' : '#38bdf8';
+        ctx.strokeStyle = '#ffffff';
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        ctx.arc(0, 0, app.godSlayer ? 22 : 15, 0, Math.PI * 1.3);
+        ctx.lineTo(0, 0);
+        ctx.closePath();
+        ctx.fill(); ctx.stroke();
+        ctx.restore();
+      }
+
+      // If 777 God-Slayer Overdrive is active, draw sweeping Rainbow Orbital Beams!
+      if (app.godSlayer) {
+        for (let l = 0; l < 4; l++) {
+          const beamAng = elapsed * 3.5 + (l * Math.PI) / 2;
+          ctx.save();
+          ctx.translate(cx, cy);
+          ctx.rotate(beamAng);
+          const lGrad = ctx.createLinearGradient(0, -14, 0, 14);
+          lGrad.addColorStop(0, 'rgba(244, 63, 94, 0)');
+          lGrad.addColorStop(0.5, 'rgba(250, 204, 21, 0.85)');
+          lGrad.addColorStop(1, 'rgba(244, 63, 94, 0)');
+          ctx.fillStyle = lGrad;
+          ctx.fillRect(0, -14, Math.max(W, H), 28);
+          ctx.restore();
+        }
+      }
+
+      // Update & Render 900 Painted Horde Monsters
+      for (let i = 0; i < surv.enemies.length; i++) {
+        const e = surv.enemies[i];
+
+        if (surv.blackHole.active) {
+          // Sucked into Black Hole Vortex!
+          const bdx = surv.blackHole.x - e.x;
+          const bdy = surv.blackHole.y - e.y;
+          const bd = Math.hypot(bdx, bdy) || 1;
+          e.x += (bdx / bd) * 390 * dt - (bdy / bd) * 220 * dt;
+          e.y += (bdy / bd) * 390 * dt + (bdx / bd) * 220 * dt;
+          if (bd < 45 && surv.blackHole.timer < 0.35) {
+            killMonster(e);
+            continue;
+          }
+        } else {
+          // Chase Hero
+          const dx = surv.px - e.x;
+          const dy = surv.py - e.y;
+          const d = Math.hypot(dx, dy) || 1;
+          e.x += (dx / d) * 72 * dt;
+          e.y += (dy / d) * 72 * dt;
+
+          // Check collision with Orbiting Scythes or God-Slayer Aura
+          let hit = d < (app.godSlayer ? 155 : 42);
+          if (!hit) {
+            for (let b = 0; b < bladePositions.length; b++) {
+              if (Math.hypot(e.x - bladePositions[b].x, e.y - bladePositions[b].y) < 34) {
+                hit = true;
+                break;
+              }
+            }
+          }
+          if (hit) {
+            killMonster(e);
+            continue;
+          }
+        }
+
+        const ex = cx + (e.x - surv.px);
+        const ey = cy + (e.y - surv.py);
+        if (ex < -30 || ex > W + 30 || ey < -30 || ey > H + 30) continue;
+
+        // Painted Squash-and-Stretch Monster Silhouette
+        const wobble = Math.sin(elapsed * 10 + e.phase) * 2.2;
+        ctx.fillStyle = e.color;
+        ctx.strokeStyle = '#090514';
+        ctx.lineWidth = 2.5;
+        ctx.beginPath();
+        ctx.ellipse(ex, ey, e.r + wobble, e.r - wobble * 0.7, 0, 0, Math.PI * 2);
+        ctx.fill(); ctx.stroke();
+
+        // Glowing Eyes
+        ctx.fillStyle = '#ffffff';
+        ctx.fillRect(ex - 4, ey - 3, 3, 3);
+        ctx.fillRect(ex + 2, ey - 3, 3, 3);
+      }
+
+      // Draw Painted Gothic Hero in Center
+      ctx.save();
+      ctx.translate(cx, cy);
+      // Crimson Cape
+      ctx.fillStyle = '#e11d48';
+      ctx.strokeStyle = '#000';
+      ctx.lineWidth = 3;
+      ctx.beginPath();
+      ctx.moveTo(-14, -6);
+      ctx.lineTo(14, -6);
+      ctx.lineTo(20 + Math.sin(elapsed * 12) * 5, 22);
+      ctx.lineTo(-20 + Math.sin(elapsed * 12) * 5, 22);
+      ctx.closePath();
+      ctx.fill(); ctx.stroke();
+      // Hero Head & Crown
+      ctx.fillStyle = '#fde047';
+      ctx.beginPath(); ctx.arc(0, -12, 11, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
+      ctx.restore();
+    }
+
+    function killMonster(e) {
+      surv.kills++;
+      if (surv.gems.length < 350) {
+        surv.gems.push({
+          x: e.x, y: e.y,
+          color: surv.kills % 5 === 0 ? '#facc15' : (surv.kills % 2 === 0 ? '#38bdf8' : '#ec4899')
+        });
+      }
+      if (surv.kills % 25 === 0) {
+        spawn2dPopup(
+          canvas2d.width * 0.5 + (Math.random() - 0.5) * 180,
+          canvas2d.height * 0.45 + (Math.random() - 0.5) * 120,
+          `CRIT ${(950 + surv.level * 240).toLocaleString()}!`,
+          '#fde047'
+        );
+      }
+      // Respawn monster off-screen to keep the 900-strong horde endless
+      const ang = Math.random() * Math.PI * 2;
+      const dist = 360 + Math.random() * 260;
+      e.x = surv.px + Math.cos(ang) * dist;
+      e.y = surv.py + Math.sin(ang) * dist;
+    }
+
+    /**
+     * ============================================================================
+     * 7. HUB NAVIGATION, 9:16 VIRAL AUTO-DIRECTOR, & MASTER RENDER LOOP
+     * ============================================================================
+     */
+    function switchGameMode(newMode) {
+      sfx.init();
+      app.mode = newMode;
+
+      document.getElementById('tabPoly').className = 'mode-tab px-3 py-1.5 rounded-lg text-[11px] sm:text-xs font-extrabold tracking-wider flex items-center gap-1.5 ' + (newMode === 'POLYTRACK' ? 'active-poly' : '');
+      document.getElementById('tabSurv').className = 'mode-tab px-3 py-1.5 rounded-lg text-[11px] sm:text-xs font-extrabold tracking-wider flex items-center gap-1.5 ' + (newMode === 'SURVIVORS' ? 'active-surv' : '');
+      document.getElementById('tabMash').className = 'mode-tab px-3 py-1.5 rounded-lg text-[11px] sm:text-xs font-extrabold tracking-wider flex items-center gap-1.5 ' + (newMode === 'CROSSOVER' ? 'active-mash' : '');
+
+      const polyHud = document.getElementById('polyHudBar');
+      const survHud = document.getElementById('survHudBar');
+      const hintBanner = document.getElementById('controlHintBanner');
+
+      if (newMode === 'POLYTRACK') {
+        canvas3d.style.display = 'block';
+        horde3dGroup.visible = false;
+        trackGroup.visible = true;
+        polyHud.classList.remove('hidden');
+        survHud.classList.add('hidden');
+        survHud.classList.remove('flex');
+        hintBanner.innerHTML = `<span class="text-sky-400 font-bold">WASD/ARROWS:</span> Drive & Air-Flip | <span class="text-pink-400 font-bold">HOLD SPACE:</span> 🪝 Cyber-Grapple Sky Orbs | <span class="text-amber-300 font-bold">E:</span> Nitro | <span class="text-emerald-300 font-bold">R:</span> Restart`;
+        resetPolyCar();
+      } else if (newMode === 'SURVIVORS') {
+        canvas3d.style.display = 'none';
+        polyHud.classList.add('hidden');
+        survHud.classList.remove('hidden');
+        survHud.classList.add('flex');
+        hintBanner.innerHTML = `<span class="text-pink-400 font-bold">WASD/ARROWS:</span> Move Hero | <span class="text-purple-300 font-bold">SPACE:</span> 🌀 Black Hole Vortex | <span class="text-amber-300 font-bold">E:</span> 🎰 Spin 777 Evolution Slots | <span class="text-emerald-300 font-bold">H:</span> 16-Bit CRT`;
+        updateSurvivorsHud();
+      } else if (newMode === 'CROSSOVER') {
+        canvas3d.style.display = 'block';
+        trackGroup.visible = false;
+        horde3dGroup.visible = true;
+        polyHud.classList.add('hidden');
+        survHud.classList.remove('hidden');
+        survHud.classList.add('flex');
+        polyCar.pos.set(0, 0.2, 0);
+        polyCar.speed = 65;
+        hintBanner.innerHTML = `<span class="text-amber-300 font-bold">3D DRIFT SURVIVORS:</span> Drift the Stunt Car with <span class="text-sky-400 font-bold">WASD</span> to shred 3D Hordes with Buzzsaws! | <span class="text-purple-300 font-bold">SPACE:</span> Gravity Singularity | <span class="text-pink-400 font-bold">E:</span> 777 Overdrive`;
+        updateSurvivorsHud();
+      }
+    }
+
+    function toggleViralDirector() {
+      sfx.init();
+      app.viralTas = !app.viralTas;
+      app.viralTimer = 0;
+      const shell = document.getElementById('viewport-shell');
+      const btn = document.getElementById('btnViralDirector');
+      const capBox = document.getElementById('viralCaptionBox');
+
+      shell.classList.toggle('shorts-916', app.viralTas);
+      btn.classList.toggle('viral-active', app.viralTas);
+      capBox.classList.toggle('hidden', !app.viralTas);
+      handleResize();
+    }
+
+    function toggle16BitMode() {
+      app.pixel16Bit = !app.pixel16Bit;
+      document.getElementById('crt-overlay').classList.toggle('active', app.pixel16Bit);
+      canvas3d.classList.toggle('pixelated', app.pixel16Bit);
+      canvas2d.classList.toggle('pixelated', app.pixel16Bit);
+      document.getElementById('btnPixelToggle').textContent = `📺 16-BIT [H]: ${app.pixel16Bit ? 'ON' : 'OFF'}`;
+      handleResize();
+    }
+
+    function toggleAudioMute() {
+      sfx.init();
+      sfx.muted = !sfx.muted;
+      document.getElementById('btnAudioToggle').textContent = sfx.muted ? '🔇 MUTED' : '🔊 SYNTH';
+    }
+
+    // 60FPS WebM Video Recorder
+    let mediaRecorder = null;
+    let recordedChunks = [];
+    function toggleWebmRecorder() {
+      const btn = document.getElementById('btnWebmRec');
+      if (mediaRecorder && mediaRecorder.state === 'recording') {
+        mediaRecorder.stop();
+        btn.textContent = '🔴 REC .WEBM';
+        return;
+      }
+      try {
+        const targetCanvas = app.mode === 'SURVIVORS' ? canvas2d : canvas3d;
+        const stream = targetCanvas.captureStream(60);
+        recordedChunks = [];
+        mediaRecorder = new MediaRecorder(stream, { mimeType: 'video/webm' });
+        mediaRecorder.ondataavailable = e => { if (e.data.size > 0) recordedChunks.push(e.data); };
+        mediaRecorder.onstop = () => {
+          const blob = new Blob(recordedChunks, { type: 'video/webm' });
+          const a = document.createElement('a');
+          a.href = URL.createObjectURL(blob);
+          a.download = `viral_overdrive_${app.mode.toLowerCase()}.webm`;
+          a.click();
+        };
+        mediaRecorder.start();
+        btn.textContent = '⏹ SAVE .WEBM';
+        spawn2dPopup(canvas2d.width * 0.5, canvas2d.height * 0.2, '🔴 RECORDING 60FPS .WEBM VIDEO...', '#f43f5e');
+      } catch (err) {
+        spawn2dPopup(canvas2d.width * 0.5, canvas2d.height * 0.2, 'RECORDER UNSUPPORTED IN THIS FRAME', '#f43f5e');
+      }
+    }
+
+    // Source Exporter Modal
+    function openSourceExporter() {
+      document.getElementById('sourceCodePre').textContent = '<!DOCTYPE html>\n' + document.documentElement.outerHTML;
+      const m = document.getElementById('sourceModal');
+      m.classList.remove('hidden');
+      m.classList.add('flex');
+    }
+    function closeSourceExporter() {
+      const m = document.getElementById('sourceModal');
+      m.classList.add('hidden');
+      m.classList.remove('flex');
+    }
+    function downloadFullHtml() {
+      const blob = new Blob(['<!DOCTYPE html>\n' + document.documentElement.outerHTML], { type: 'text/html;charset=utf-8' });
+      const a = document.createElement('a');
+      a.href = URL.createObjectURL(blob);
+      a.download = 'viral_arcade_hub.html';
+      a.click();
+    }
+    function copySourceToClipboard() {
+      const ta = document.createElement('textarea');
+      ta.value = '<!DOCTYPE html>\n' + document.documentElement.outerHTML;
+      document.body.appendChild(ta);
+      ta.select();
+      document.execCommand('copy');
+      document.body.removeChild(ta);
+      spawn2dPopup(canvas2d.width * 0.5, canvas2d.height * 0.2, '📋 COPIED FULL HTML SOURCE!', '#10b981');
+    }
+
+    function handleResize() {
+      const shell = document.getElementById('viewport-shell');
+      const w = shell.clientWidth;
+      const h = shell.clientHeight;
+      const scale = app.pixel16Bit ? 0.28 : 1.0;
+
+      renderer3d.setSize(w * scale, h * scale, false);
+      camera3d.aspect = w / h;
+      camera3d.updateProjectionMatrix();
+
+      canvas2d.width = Math.floor(w * scale);
+      canvas2d.height = Math.floor(h * scale);
+    }
+    window.addEventListener('resize', handleResize);
+
+    // Master 60fps Game & Viral Director Loop
+    let lastTime = performance.now();
+    function masterAnimate(now) {
+      requestAnimationFrame(masterAnimate);
+      const dt = Math.min((now - lastTime) / 1000, 0.05);
+      lastTime = now;
+      const elapsed = now / 1000;
+
+      if (app.godSlayerTimer > 0) {
+        app.godSlayerTimer -= dt;
+        if (app.godSlayerTimer <= 0) {
+          app.godSlayer = false;
+          document.getElementById('godSlayerBadge').classList.add('hidden');
+        }
+      }
+
+      // Automated 9:16 Viral Short Caption & Event Choreography
+      if (app.viralTas) {
+        app.viralTimer += dt;
+        const capEl = document.getElementById('viralCaptionText');
+        if (app.mode === 'POLYTRACK') {
+          if (polyCar.grappling) {
+            capEl.textContent = '🪝 280MPH CYBER-GRAPPLE RECOVERY!! (+5,000 STYLE)';
+          } else if (polyCar.inAir) {
+            capEl.textContent = '🚀 FLYING OFF THE VOID RAMP... WAIT FOR IT 😱';
+          } else {
+            capEl.textContent = 'POV: POLYTRACK WITH A CYBER-GRAPPLE HOOK 🏎️⚡';
+          }
+        } else if (app.mode === 'SURVIVORS') {
+          if (Math.floor(app.viralTimer) % 7 === 3 && !surv.blackHole.active) {
+            triggerBlackHoleVortex();
+          }
+          if (Math.floor(app.viralTimer) % 11 === 6 && !app.godSlayer) {
+            activateGodSlayerOverdrive();
+          }
+          capEl.textContent = app.godSlayer
+            ? '🎰 777 JACKPOT: GOD-SLAYER OVERDRIVE UNLEASHED!! ⚡💀'
+            : '🌀 BLACK HOLE VORTEX vs 1,000 VAMPIRE HORDE! 💎';
+        } else {
+          if (Math.floor(app.viralTimer) % 6 === 2 && !app.godSlayer) {
+            activateGodSlayerOverdrive();
+          }
+          capEl.textContent = '🔥 WHAT IF POLYTRACK + VAMPIRE SURVIVORS HAD A BABY?! 🏎️🧛';
+        }
+      }
+
+      // Render Active Engine
+      ctx2d.clearRect(0, 0, canvas2d.width, canvas2d.height);
+
+      if (app.mode === 'POLYTRACK') {
+        updatePolyTrack3D(dt, elapsed);
+        renderer3d.render(scene3d, camera3d);
+      } else if (app.mode === 'SURVIVORS') {
+        updateAndDrawSurvivors2D(ctx2d, canvas2d.width, canvas2d.height, dt, elapsed);
+      } else if (app.mode === 'CROSSOVER') {
+        updateCrossover3D(dt, elapsed);
+        renderer3d.render(scene3d, camera3d);
+      }
+
+      // Render 2D Floating Popups across all modes
+      for (let i = surv.popups.length - 1; i >= 0; i--) {
+        const p = surv.popups[i];
+        p.y -= 38 * dt;
+        p.life -= dt;
+        if (p.life <= 0) { surv.popups.splice(i, 1); continue; }
+        ctx2d.save();
+        ctx2d.globalAlpha = Math.min(1, p.life * 1.6);
+        ctx2d.font = `900 ${app.pixel16Bit ? 10 : 20}px Orbitron, sans-serif`;
+        ctx2d.textAlign = 'center';
+        ctx2d.strokeStyle = '#000';
+        ctx2d.lineWidth = 4;
+        ctx2d.strokeText(p.text, p.x, p.y);
+        ctx2d.fillStyle = p.color;
+        ctx2d.fillText(p.text, p.x, p.y);
+        ctx2d.restore();
+      }
+
+      justPressed.Space = false;
+    }
+
+    window.onload = function () {
+      handleResize();
+      loadPolyTrackPreset(0);
+      initSurvivorsEngine();
+      init3dCrossoverHorde();
+      switchGameMode('POLYTRACK');
+      requestAnimationFrame(masterAnimate);
+    };
+  </script>
+</body>
+</html>

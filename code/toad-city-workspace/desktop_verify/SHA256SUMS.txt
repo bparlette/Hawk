@@ -1,0 +1,2 @@
+50cbe718e1807eb2d0792c164645e2163ed957dc4309933a88f25bedc5ed2a2b  out/ToadCityBaltimore-esde.zip
+1acab4d58b6dca07cc80d1b9b58a545210fca6659b01aeb7d4dc8c81cbb46816  out/ToadCityBaltimore-mac-universal.zip

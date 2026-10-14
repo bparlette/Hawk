@@ -1,0 +1,79 @@
+[
+ {
+  "out": "shots/props_day_wide.png",
+  "q": "show=props&hud=0",
+  "errs": [],
+  "verr": [],
+  "stats": {
+   "calls": 27,
+   "tris": 12836
+  },
+  "extra": null
+ },
+ {
+  "out": "shots/props_night_wide.png",
+  "q": "show=props&hud=0&night=1",
+  "errs": [],
+  "verr": [],
+  "stats": {
+   "calls": 27,
+   "tris": 12836
+  },
+  "extra": null
+ },
+ {
+  "out": "shots/props_night_cars_phone.png",
+  "q": "show=props&hud=0&night=1&pos=24,9,24&look=20,1,0&fov=62",
+  "errs": [],
+  "verr": [],
+  "stats": {
+   "calls": 6,
+   "tris": 4424
+  },
+  "extra": null
+ },
+ {
+  "out": "shots/props_lamps_phone_day.png",
+  "q": "show=props&hud=0&pos=-16,3,9&look=-16,2,0&fov=62",
+  "errs": [],
+  "verr": [],
+  "stats": {
+   "calls": 5,
+   "tris": 4402
+  },
+  "extra": null
+ },
+ {
+  "out": "shots/props_lamps_phone_night.png",
+  "q": "show=props&hud=0&night=1&pos=-16,3,9&look=-16,2,0&fov=62",
+  "errs": [],
+  "verr": [],
+  "stats": {
+   "calls": 5,
+   "tris": 4402
+  },
+  "extra": null
+ },
+ {
+  "out": "shots/vehicles_day_wide.png",
+  "q": "show=vehicles&hud=0&steps=30",
+  "errs": [],
+  "verr": [],
+  "stats": {
+   "calls": 456,
+   "tris": 170090
+  },
+  "extra": null
+ },
+ {
+  "out": "shots/vehicles_night_wide.png",
+  "q": "show=vehicles&hud=0&night=1&steps=30",
+  "errs": [],
+  "verr": [],
+  "stats": {
+   "calls": 456,
+   "tris": 170090
+  },
+  "extra": null
+ }
+]

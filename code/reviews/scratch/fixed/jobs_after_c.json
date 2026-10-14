@@ -1,0 +1,30 @@
+[
+ {
+  "page": "scratch/fixed/viewer_cmp.html",
+  "out": "/workspace/work/reviews/scratch/fixed/after_down_side_grunt_a.png",
+  "q": "show=harbor_rats.grunt_a&t=0.5&pose=down&cp=3.6,0.7,-0.75&ct=0,0.3,-0.75&fov=32",
+  "w": 1280,
+  "h": 720
+ },
+ {
+  "page": "scratch/fixed/viewer_cmp.html",
+  "out": "/workspace/work/reviews/scratch/fixed/after_down_side_bruiser.png",
+  "q": "show=harbor_rats.bruiser&t=0.5&pose=down&cp=4.2,0.8,-0.9&ct=0,0.35,-0.9&fov=32",
+  "w": 1280,
+  "h": 720
+ },
+ {
+  "page": "scratch/fixed/viewer_cmp.html",
+  "out": "/workspace/work/reviews/scratch/fixed/after_shoulder_down_grunt_a.png",
+  "q": "show=harbor_rats.grunt_a&t=0.5&pose=down&cp=1.25,1.25,-0.75&ct=0.25,0.3,-1.5&fov=32",
+  "w": 1000,
+  "h": 800
+ },
+ {
+  "page": "scratch/fixed/viewer_cmp.html",
+  "out": "/workspace/work/reviews/scratch/fixed/after_shoulder_windup_armed.png",
+  "q": "show=harbor_rats.armed&t=0.5&pose=windup&cp=-1.3,1.75,-1.2&ct=-0.2,1.4,-0.2&fov=32",
+  "w": 1000,
+  "h": 800
+ }
+]

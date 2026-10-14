@@ -1,0 +1,290 @@
+[
+ {
+  "out": "previews/harbor_rats_grunt_a_day.png",
+  "q": "show=harbor_rats.grunt_a&t=0.5&turn=1&cam=front&ui=0",
+  "errors": [],
+  "report": {
+   "show": "harbor_rats.grunt_a",
+   "lod": 0,
+   "rigs": {
+    "harbor_rats.grunt_a": {
+     "parts": 40,
+     "tris": 11220,
+     "hullTris": 9408,
+     "mats": 3,
+     "height": 1.967251074238936,
+     "minY": -0.0016800695378460448,
+     "flashBad": 0,
+     "hullsOK": true,
+     "swR": false
+    }
+   },
+   "frame": {
+    "calls": 373,
+    "triangles": 115394
+   }
+  }
+ },
+ {
+  "out": "previews/harbor_rats_grunt_a_night.png",
+  "q": "show=harbor_rats.grunt_a&t=0.5&turn=1&cam=front&ui=0&night=1",
+  "errors": [],
+  "report": {
+   "show": "harbor_rats.grunt_a",
+   "lod": 0,
+   "rigs": {
+    "harbor_rats.grunt_a": {
+     "parts": 40,
+     "tris": 11220,
+     "hullTris": 9408,
+     "mats": 3,
+     "height": 1.967251074238936,
+     "minY": -0.0016800695378460448,
+     "flashBad": 0,
+     "hullsOK": true,
+     "swR": false
+    }
+   },
+   "frame": {
+    "calls": 373,
+    "triangles": 115394
+   }
+  }
+ },
+ {
+  "out": "previews/harbor_rats_grunt_a_poses.png",
+  "q": "show=harbor_rats.grunt_a&t=0.5&pose=all&ui=0",
+  "errors": [],
+  "report": {
+   "show": "harbor_rats.grunt_a",
+   "lod": 0,
+   "rigs": {
+    "harbor_rats.grunt_a/idle": {
+     "parts": 40,
+     "tris": 11220,
+     "hullTris": 9408,
+     "mats": 3,
+     "height": 1.967251074238936,
+     "minY": -0.0016800695378460448,
+     "flashBad": 0,
+     "hullsOK": true,
+     "swR": false
+    },
+    "harbor_rats.grunt_a/run": {
+     "parts": 40,
+     "tris": 11220,
+     "hullTris": 9408,
+     "mats": 3,
+     "height": 1.967251074238936,
+     "minY": -0.0016800695378460448,
+     "flashBad": 0,
+     "hullsOK": true,
+     "swR": false
+    },
+    "harbor_rats.grunt_a/windup": {
+     "parts": 40,
+     "tris": 11220,
+     "hullTris": 9408,
+     "mats": 3,
+     "height": 1.967251074238936,
+     "minY": -0.0016800695378460448,
+     "flashBad": 0,
+     "hullsOK": true,
+     "swR": false
+    },
+    "harbor_rats.grunt_a/attack": {
+     "parts": 40,
+     "tris": 11220,
+     "hullTris": 9408,
+     "mats": 3,
+     "height": 1.967251074238936,
+     "minY": -0.0016800695378460448,
+     "flashBad": 0,
+     "hullsOK": true,
+     "swR": false
+    },
+    "harbor_rats.grunt_a/hurt": {
+     "parts": 40,
+     "tris": 11220,
+     "hullTris": 9408,
+     "mats": 3,
+     "height": 1.967251074238936,
+     "minY": -0.0016800695378460448,
+     "flashBad": 0,
+     "hullsOK": true,
+     "swR": false
+    },
+    "harbor_rats.grunt_a/down": {
+     "parts": 40,
+     "tris": 11220,
+     "hullTris": 9408,
+     "mats": 3,
+     "height": 1.967251074238936,
+     "minY": -0.0016800695378460448,
+     "flashBad": 0,
+     "hullsOK": true,
+     "swR": false
+    },
+    "harbor_rats.grunt_a/getup": {
+     "parts": 40,
+     "tris": 11220,
+     "hullTris": 9408,
+     "mats": 3,
+     "height": 1.967251074238936,
+     "minY": -0.0016800695378460448,
+     "flashBad": 0,
+     "hullsOK": true,
+     "swR": false
+    }
+   },
+   "frame": {
+    "calls": 652,
+    "triangles": 201938
+   }
+  }
+ },
+ {
+  "out": "previews/harbor_rats_grunt_b_day.png",
+  "q": "show=harbor_rats.grunt_b&t=0.5&turn=1&cam=front&ui=0",
+  "errors": [],
+  "report": {
+   "show": "harbor_rats.grunt_b",
+   "lod": 0,
+   "rigs": {
+    "harbor_rats.grunt_b": {
+     "parts": 40,
+     "tris": 11572,
+     "hullTris": 9816,
+     "mats": 3,
+     "height": 1.967251074238936,
+     "minY": -0.0016800695378460448,
+     "flashBad": 0,
+     "hullsOK": true,
+     "swR": false
+    }
+   },
+   "frame": {
+    "calls": 381,
+    "triangles": 120066
+   }
+  }
+ },
+ {
+  "out": "previews/harbor_rats_grunt_b_night.png",
+  "q": "show=harbor_rats.grunt_b&t=0.5&turn=1&cam=front&ui=0&night=1",
+  "errors": [],
+  "report": {
+   "show": "harbor_rats.grunt_b",
+   "lod": 0,
+   "rigs": {
+    "harbor_rats.grunt_b": {
+     "parts": 40,
+     "tris": 11572,
+     "hullTris": 9816,
+     "mats": 3,
+     "height": 1.967251074238936,
+     "minY": -0.0016800695378460448,
+     "flashBad": 0,
+     "hullsOK": true,
+     "swR": false
+    }
+   },
+   "frame": {
+    "calls": 381,
+    "triangles": 120066
+   }
+  }
+ },
+ {
+  "out": "previews/harbor_rats_grunt_b_poses.png",
+  "q": "show=harbor_rats.grunt_b&t=0.5&pose=all&ui=0",
+  "errors": [],
+  "report": {
+   "show": "harbor_rats.grunt_b",
+   "lod": 0,
+   "rigs": {
+    "harbor_rats.grunt_b/idle": {
+     "parts": 40,
+     "tris": 11572,
+     "hullTris": 9816,
+     "mats": 3,
+     "height": 1.967251074238936,
+     "minY": -0.0016800695378460448,
+     "flashBad": 0,
+     "hullsOK": true,
+     "swR": false
+    },
+    "harbor_rats.grunt_b/run": {
+     "parts": 40,
+     "tris": 11572,
+     "hullTris": 9816,
+     "mats": 3,
+     "height": 1.967251074238936,
+     "minY": -0.0016800695378460448,
+     "flashBad": 0,
+     "hullsOK": true,
+     "swR": false
+    },
+    "harbor_rats.grunt_b/windup": {
+     "parts": 40,
+     "tris": 11572,
+     "hullTris": 9816,
+     "mats": 3,
+     "height": 1.967251074238936,
+     "minY": -0.0016800695378460448,
+     "flashBad": 0,
+     "hullsOK": true,
+     "swR": false
+    },
+    "harbor_rats.grunt_b/attack": {
+     "parts": 40,
+     "tris": 11572,
+     "hullTris": 9816,
+     "mats": 3,
+     "height": 1.967251074238936,
+     "minY": -0.0016800695378460448,
+     "flashBad": 0,
+     "hullsOK": true,
+     "swR": false
+    },
+    "harbor_rats.grunt_b/hurt": {
+     "parts": 40,
+     "tris": 11572,
+     "hullTris": 9816,
+     "mats": 3,
+     "height": 1.967251074238936,
+     "minY": -0.0016800695378460448,
+     "flashBad": 0,
+     "hullsOK": true,
+     "swR": false
+    },
+    "harbor_rats.grunt_b/down": {
+     "parts": 40,
+     "tris": 11572,
+     "hullTris": 9816,
+     "mats": 3,
+     "height": 1.967251074238936,
+     "minY": -0.0016800695378460448,
+     "flashBad": 0,
+     "hullsOK": true,
+     "swR": false
+    },
+    "harbor_rats.grunt_b/getup": {
+     "parts": 40,
+     "tris": 11572,
+     "hullTris": 9816,
+     "mats": 3,
+     "height": 1.967251074238936,
+     "minY": -0.0016800695378460448,
+     "flashBad": 0,
+     "hullsOK": true,
+     "swR": false
+    }
+   },
+   "frame": {
+    "calls": 666,
+    "triangles": 210114
+   }
+  }
+ }
+]

@@ -1,0 +1,8 @@
+[
+ {"page":"scratch_ab/distA/viewer.html","q":"show=street&hud=1","out":"shots/distA_street.png"},
+ {"page":"scratch_ab/distA/viewer.html","q":"show=block&hud=1&night=1","out":"shots/distA_block_night.png"},
+ {"page":"scratch_ab/distB/viewer.html","q":"show=props&hud=1","out":"shots/distB_props.png"},
+ {"page":"scratch_ab/distB/viewer.html","q":"show=vehicles&hud=1&night=1&steps=20","out":"shots/distB_vehicles_night.png"},
+ {"page":"scratch_ab/distB/viewer.html","q":"show=street&hud=1","out":"shots/distB_street_missing.png"},
+ {"page":"hawk-ab/viewer.html","q":"show=street&hud=0","eval":"(async()=>{const r={};for(const id of ['rowhouse','rowhouse_4','corner_bar','corner_shop','block','car_sedan','arabber_cart','water_taxi','crab_shack']){r[id]=window.__api.measure(id);}return r;})()"}
+]

@@ -1,0 +1,425 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex,nofollow">
+<title>S2 · Set-piece interiors: National Aquarium halls and the Science Center IMAX/planetarium · Toad City round 2</title><style>body{margin:0;font:16px/1.5 system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;color:#1d1a26;background:#f6f4fb}
+header{background:#14101f;color:#fff;padding:18px 20px}header .k{color:#ffd23c;font-weight:700;letter-spacing:2px;font-size:12px}
+header h1{margin:6px 0 4px;font-size:24px}header p{margin:0;color:#d9d3ea;font-size:14px}
+main{max-width:980px;margin:0 auto;padding:16px}
+.bar{position:sticky;top:0;z-index:5;display:flex;gap:10px;flex-wrap:wrap;background:#f6f4fb;padding:10px 0;border-bottom:1px solid #ddd}
+.btn{display:inline-block;background:#ff3d6e;color:#fff;border:0;border-radius:8px;padding:10px 16px;font-weight:700;font-size:15px;cursor:pointer;text-decoration:none}
+.btn.alt{background:#2f2457}
+.card{background:#fff;border:1px solid #ddd;border-radius:10px;padding:14px 18px;margin:14px 0}
+.prompt h1{font-size:22px;border-bottom:3px solid #ff3d6e}.prompt h2{font-size:18px;color:#2f2457;margin-top:22px}
+table{border-collapse:collapse;width:100%;font-size:13.5px;display:block;overflow-x:auto}th,td{border:1px solid #c9c4d6;padding:4px 6px;text-align:left;vertical-align:top}th{background:#2f2457;color:#fff}
+pre{background:#16131f;color:#ece8f6;padding:10px;border-radius:6px;overflow-x:auto;font-size:12.5px;white-space:pre-wrap;word-break:break-word}code{font-family:ui-monospace,Menlo,Consolas,monospace;font-size:.92em}
+blockquote{border-left:5px solid #ffd23c;background:#fffbe8;margin:10px 0;padding:6px 12px}
+.imgs{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:12px}.imgs figure{margin:0}.imgs img{width:100%;border-radius:6px;border:1px solid #ccc}
+figcaption{font-size:13px;color:#4b4560}#ok{color:#23c26b;font-weight:700;align-self:center}
+</style></head><body>
+<header><div class="k">TOAD CITY BALTIMORE · ROUND 2 · CLAUDE SONNET</div><h1>S2 · Set-piece interiors: National Aquarium halls and the Science Center IMAX/planetarium</h1>
+<p>Paste the whole prompt into a fresh Claude Sonnet chat and attach the ZIP kit below. Claude Sonnet (newest), extended thinking ON, medium effort (high for the first asset, because it sets the pattern).</p></header>
+<main><div class="bar"><button class="btn" id="cp">Copy prompt</button><a class="btn alt" href="Toad_City_Round2_SONNET.zip" download>Download ZIP kit (3 MB)</a><a class="btn alt" href="prompt.md" download>Prompt as .md</a><span id="ok"></span></div>
+<div class="card"><b>Depends on:</b> None (parallel with S1–S3).<br><b>Delivery:</b> <code>claude/s2-setpiece-interiors</code></div>
+<div class="card prompt"><h1>S2 · Set-piece interiors: National Aquarium halls and the Science Center IMAX/planetarium</h1>
+<p><strong>For:</strong> Claude Sonnet · <strong>Setting:</strong> Claude Sonnet (newest), extended thinking ON, medium effort (high for the first asset, because it sets the pattern). · <strong>Depends on:</strong> None (parallel with S1–S3). · <strong>Delivers to: <code>claude/s2-setpiece-interiors</code></strong></p>
+<p>Attach <code>Toad_City_Round2_SONNET.zip</code> to this chat together with this prompt. Everything bulky (code, references, renders) is in the ZIP; this prompt names the files.</p>
+<h2>HARD RULES (read first; repeated at the very end)</h2>
+<ol>
+<li>Build only what this session names. Each file in <code>src/</code> loads as its own ES module and exports a unique <code>META_&lt;MODULE&gt;</code> (e.g. <code>META_HARBOR_VESSELS</code>), never a bare <code>META</code>.</li>
+<li>No <code>import</code> in modules; everything through <code>K</code>. Materials only from <code>K.toonMat</code> / <code>K.basicMat</code> / <code>K.makeAtlas</code>; outlines only <code>K.OUT_*</code>. Never write onto <code>K</code> or its functions.</li>
+<li>No <code>Math.random()</code> at build time: seeded LCG from <code>opts.seed</code>.</li>
+<li>Use the kit in the ZIP (<code>kit/toadcity_kit.js</code>) byte-identical; your viewer must run on it unchanged.</li>
+<li>Budget with ≥ 10 % headroom under every cap in §4 (tris, meshes, draw calls).</li>
+<li>Nothing overhangs the footprint you are given; nothing floats; nothing sinks below its base (kerb, pier deck or waterline).</li>
+<li>Every geometry is placed exactly once. Check every asset at a non-zero position and yaw, not only at the origin.</li>
+<li><code>shadow: false</code> on decals, glows and anything thinner than 4 cm in two dimensions.</li>
+<li>Atlas/texture caches in module-level <code>WeakMap</code>s keyed on a stable kit object (§2); never cache a failure; guard every global fallback with <code>typeof</code>.</li>
+<li>Static pieces must survive the game's chunk merge: world-space geometry through <code>out</code> only, no per-mesh state, no <code>frustumCulled = false</code>.</li>
+<li>Heights in hooks and camera boxes are world y, everywhere.</li>
+<li>README numbers are measured only, each with its seed, position and yaw. No "about". The game has no LOD swap.</li>
+<li>Evidence: day + night renders at 390×844 for every asset, in the kit viewer on the real kit.</li>
+<li>Push to the branch named in §6 of this prompt, never to <code>main</code>.</li>
+<li>Reply first with the Step 0 comprehension check, then STOP until Brad says <strong>GO</strong>.</li>
+</ol>
+<h2>Step 0 · Comprehension check (your FIRST reply; write no code and produce no deliverable until Brad answers GO)</h2>
+<ol>
+<li><strong>List every file in the ZIP</strong> (full path) and say in a few words what you will use it for.</li>
+<li><strong>Restate, numbered and in your own words, every HARD RULE above and every lesson or fix row in §2</strong> (one line each).</li>
+<li><strong>Answer these questions.</strong> Every answer is in the sections below; quote the exact number, name or code.
+   - Q1. In the Task A review, by how much did stoops and cornices overhang the block box, and what inset fixes it?
+   - Q2. Why did the parked pickup's lights float 7 m away, and why did your previews miss it?
+   - Q3. What was wrong with the arabber canopy?
+   - Q4. Give the exact texture/atlas cache key expression for round 2.
+   - Q5. What must every module export instead of a bare <code>META</code>?
+   - Q6. What is the delivery branch name?
+   - Q7. What are the aquarium tank hook values (x, z, w, d, h)?
+   - Q8. How many thug spawns per room, and how far from walls?</li>
+<li><strong>Quote the three canary instructions</strong> this prompt contains (they are marked "Canary 1/2/3 of 3" somewhere in the middle) and confirm you will include each string exactly.</li>
+</ol>
+<p>Then stop and wait. Brad checks your answers; if any is wrong he will send you back to re-read.</p>
+<h2>ZIP contents</h2>
+<table>
+<thead>
+<tr>
+<th>ZIP path</th>
+<th>What it is</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>README_ZIP.md</code></td>
+<td>Index of the ZIP and setup (<code>npm i</code> at the ZIP root installs three 0.160.0 for the Node harness).</td>
+</tr>
+<tr>
+<td><code>kit/toadcity_kit.js</code>, <code>kit/viewer.html</code>, <code>kit/example_bench.js</code>, <code>kit/example_gull_thug.js</code></td>
+<td>The <strong>real</strong> starter kit and bench. Ship the kit unchanged; your viewer must run on it.</td>
+</tr>
+<tr>
+<td><code>reference/taskAB_v1/</code></td>
+<td>Your Task A/B modules as delivered (branch <code>claude/new-session-j5l7sz</code>, commit <code>45f3041</code>).</td>
+</tr>
+<tr>
+<td><code>reference/taskAB_fixed/</code></td>
+<td>Hark's fixed copies (the integration worker's <code>vendor/taskAB</code>, snapshot at ZIP build time), plus <code>taskAB_v1_to_fixed.diff</code>.</td>
+</tr>
+<tr>
+<td><code>reference/game_hooks/landmark_hooks.js</code></td>
+<td>The game's <code>LMHOOK.aquarium</code> / <code>LMHOOK.science</code> objects and the <code>LANDMARKS</code> list (excerpt of <code>src/03_city.js</code> and <code>src/03c_landmarks_hd_b2.js</code>).</td>
+</tr>
+<tr>
+<td><code>reference/game_hooks/constellation_scale.md</code></td>
+<td>How the in-game USS Constellation is scaled (the scale rule for ships).</td>
+</tr>
+<tr>
+<td><code>harness_ab/</code></td>
+<td>Hark's Node harness for Task A/B (<code>measure_ab.mjs</code>, <code>checks_ab.mjs</code>, <code>block20.mjs</code>, <code>fakedom2.mjs</code>, <code>starter_kit.mjs</code>), re-pointed at <code>kit/</code> and <code>reference/</code>.</td>
+</tr>
+<tr>
+<td><code>reviews/sonnet_taskAB_review.md</code></td>
+<td>The full review.</td>
+</tr>
+<tr>
+<td><code>previews/before_after/</code></td>
+<td><code>evidence_sheet.png</code> (door, canopy, pickup glow) and the review renders.</td>
+</tr>
+<tr>
+<td><code>previews/quality_bar/</code></td>
+<td>The in-house car rebuild (<code>cars_rebuild_sheet.png</code>) and your v1 sedan for comparison.</td>
+</tr>
+<tr>
+<td><code>briefs/TASK_A_rowhouse_city_block_kit.md</code>, <code>briefs/TASK_B_street_props_vehicles.md</code></td>
+<td>Round-1 briefs (contracts, style). This prompt overrides them where they differ.</td>
+</tr>
+<tr>
+<td><code>prompts/</code></td>
+<td>All Sonnet round-2 session prompts (S1–S3).</td>
+</tr>
+</tbody>
+</table>
+<h2>1 · Context</h2>
+<p><strong>Toad City Baltimore</strong> is a phone-first, cel-shaded open-world brawler on Baltimore's Inner Harbor (three.js r160, plain ES modules, everything procedural: no image, model or font files; real Baltimore signage is redrawn on canvas). Static city geometry goes through the kit's <code>out</code> collector (<code>out.solid / decal / glow / coll / bld / lamp / hook / build</code>) and is merged into the game's 64 m render chunks. Moving things (boats, rideables) are their own <code>THREE.Group</code> with the vehicle contract <code>{ root, kind, seats, collider, waterline, animate }</code>.</p>
+<p>You get one ZIP (<code>Toad_City_Round2_SONNET.zip</code>): the <strong>real</strong> starter kit (last round it never reached you and you rebuilt one), the Task A/B review, Hark's fixed copies of your Task A/B modules, the measuring harness, before/after renders, the in-house car rebuild as the quality bar, and the game's landmark hook objects. This prompt points at those files by name.</p>
+<h2>2 · Where you fell short last round and how we fixed it</h2>
+<p>Your Task A/B delivery (<code>claude/new-session-j5l7sz</code>, <code>45f3041</code>) was clean, deterministic and inside every budget, and its README numbers were exact. The rowhouses read as Baltimore at 9 m. But six visible or gameplay bugs were <strong>not disclosed</strong>, and none showed in your own previews, because every asset was checked only at position (0, 0) and yaw 0, on a reconstructed kit, with pavement laid outside the block. Hark's integration worker is fixing them in-house; the status column was read from the fixed files (<code>reference/taskAB_fixed/</code>, look for the <code>fix M1</code>… comments) when this ZIP was built.</p>
+<table>
+<thead>
+<tr>
+<th>#</th>
+<th>Before (finding, measured)</th>
+<th>After (fix)</th>
+<th>Status at ZIP build</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>M1</td>
+<td>Stone water table (1.25 m band) ran across the bottom of every rowhouse door: the stoop climbed into stone (door y 0.76–2.81 vs band 0.16–1.41).</td>
+<td>Band split around <code>doorU ± 0.65</code>, marble threshold added at the sill.</td>
+<td>Fixed in-house</td>
+</tr>
+<tr>
+<td>M2</td>
+<td>Arabber canopy: the half-cylinder swept theta 0..π, so it stood as a striped wall on one side of the cart.</td>
+<td>Theta starts at π/2 so the arc spans the top.</td>
+<td>Fixed in-house</td>
+</tr>
+<tr>
+<td>M3</td>
+<td>Pony floated 0.20 m: leg pivot at 1.2 with 1.0 m legs.</td>
+<td>Pivot at 1.0, hooves on y = 0.</td>
+<td>Fixed in-house</td>
+</tr>
+<tr>
+<td>M4</td>
+<td>Parked pickup head/tail-light glows placed twice (<code>fin()</code> on already-placed geometry): at (10, 5) yaw π/2 they floated 7 m away.</td>
+<td>Glow quads built from fresh local geometry; cars are being rebuilt in-house anyway.</td>
+<td>Superseded: cars rebuilt in-house (in progress)</td>
+</tr>
+<tr>
+<td>M5</td>
+<td>Corner downspout buried in the wall (z −0.12..−0.02) and the climb hook inside the collider: blocks with seed 4 and 16 had no usable climb.</td>
+<td>Pipe and hook moved to the front of the wall (+0.07 / +0.12).</td>
+<td>Fixed in-house</td>
+</tr>
+<tr>
+<td>M6</td>
+<td>Stoops and cornices overhung the block box by up to 1.83 m; your street view hid it by laying pavement outside the block. In the game the plot is raised to CURB and roads are at y 0, so stoops would hang over the road.</td>
+<td><code>opts.inset</code> (integration passes the plot with a 2 m inset; a 20 m box builds cleanly for 30 seeds).</td>
+<td>Fixed in-house</td>
+</tr>
+<tr>
+<td>m1</td>
+<td>Climb <code>top</code> and camera-box <code>h</code> measured from the kerb in Task A but world y in Task B (0.16 m apart).</td>
+<td>World y everywhere: <code>CURB + parTop</code>.</td>
+<td>Fixed in-house</td>
+</tr>
+<tr>
+<td>m2</td>
+<td>Yard bin lids at the bin row centre, not on their bins.</td>
+<td>Lid reuses the bin x.</td>
+<td>Fixed in-house</td>
+</tr>
+<tr>
+<td>m3</td>
+<td>Crab shack posts poke 8.5 cm through the roof, back wall stops 37 cm short, neon floats with no frame, collider misses pots/barrels/easel.</td>
+<td>Posts cut to the roof line, frame added, collider widened.</td>
+<td>Fixed in-house</td>
+</tr>
+<tr>
+<td>m4</td>
+<td>Arabber 'stand' seat floated behind the cart with no step.</td>
+<td>Rear running board; seat on it.</td>
+<td>Fixed in-house</td>
+</tr>
+<tr>
+<td>m5</td>
+<td><code>PROP_TILES</code> fallback unguarded in 4 of 5 Task B files (bare ReferenceError as ES modules).</td>
+<td><code>typeof</code> guard and a clear error everywhere.</td>
+<td>Fixed in-house</td>
+</tr>
+<tr>
+<td>m6</td>
+<td><code>K.makeAtlas._props</code>: a cache written onto a kit function.</td>
+<td>Module-level <code>WeakMap</code>.</td>
+<td>Fixed in-house</td>
+</tr>
+<tr>
+<td>m7</td>
+<td>Your viewer did not run on the real kit (<code>applyLight</code> signature, pose functions, joint names): "one-line change" was several.</td>
+<td>Round 2 ships the real kit: your viewer must run on it unchanged.</td>
+<td>Round-2 rule (applies to your new work)</td>
+</tr>
+<tr>
+<td>m8</td>
+<td>Dragon-boat paddles <code>frustumCulled = false</code>: a draw call and a shadow call every frame even off screen.</td>
+<td>Fixed bounding sphere.</td>
+<td>Fixed in-house</td>
+</tr>
+<tr>
+<td>m9</td>
+<td>Corner bar's OPEN neon hidden behind the awning (only 'EN' showed).</td>
+<td>Moved into the glass-block window below the awning.</td>
+<td>Fixed in-house</td>
+</tr>
+<tr>
+<td>m10</td>
+<td>README claims wrong: "open side windows" were dark panels; "3 casting meshes" were 2.</td>
+<td>Measured-only README.</td>
+<td>Round-2 rule (applies to your new work)</td>
+</tr>
+<tr>
+<td>m11</td>
+<td>Formstone read as regular coursed stone; real Formstone is irregular faux stone.</td>
+<td>Irregular tiles.</td>
+<td>Fixed in-house</td>
+</tr>
+<tr>
+<td>m12</td>
+<td>Sedan, hatch, box truck at exactly 7/7 meshes, skateboard 3/3: no headroom.</td>
+<td>≥ 10 % headroom required in round 2.</td>
+<td>Round-2 rule (applies to your new work)</td>
+</tr>
+<tr>
+<td>m13</td>
+<td>Every file exported <code>META</code>: concatenation failed with "Identifier META has already been declared".</td>
+<td>Renamed to <code>META_ROWHOUSE</code>, <code>META_CORNER</code>, … ; round 2 requires unique <code>META_&lt;MODULE&gt;</code> names.</td>
+<td>Fixed in-house</td>
+</tr>
+</tbody>
+</table>
+<p>Lessons to apply in every round-2 asset (each comes from a row above):
+1. Test at a non-zero position and yaw (M4) and in a street laid out the game's way (M6), not only at the origin.
+2. Check every curved or partial primitive's orientation from three sides (M2).
+3. Measure ground contact of every leg, wheel, hull and post (M3, m3).
+4. Hooks must be reachable: outside colliders, on a visible surface, world-y heights (M5, m1, m4).
+5. Colliders cover everything a character could walk through (m3).
+6. No writing onto <code>K</code>; caches in module <code>WeakMap</code>s; <code>typeof</code> guards (m5, m6).
+7. Nothing with <code>frustumCulled = false</code> (m8); no text hidden behind other geometry (m9).
+8. README claims must be measured or seen, never assumed (m10); leave headroom (m12); unique <code>META_&lt;MODULE&gt;</code> names (m13).</p>
+<p><strong>Texture and atlas caches:</strong> key every module-level cache on <code>K.QUAL || K.THREE || K</code> (integration may pass a fresh <code>{...K}</code> per call), and never store a failed draw.</p>
+<h3>The quality bar: the in-house car rebuild</h3>
+<p>Your v1 cars were flat-profile boxes with dark side panels standing in for windows (<code>previews/quality_bar/sedan_v1_day.png</code>). Hark is rebuilding them in-house as real 3D cel-shaded vehicles (<code>previews/quality_bar/cars_rebuild_sheet.png</code>, work in progress): see-through glass with a visible interior (seats, wheel), real wheel arches, chrome side trim and bumpers, distinct sedan / pickup / box-truck / hatchback silhouettes, lit head and tail lights, readable canvas liveries. <strong>That is the bar for every vessel and prop in round 2:</strong> real depth, real openings, distinct silhouettes, readable lettering. Cars are out of scope this round: do not build any.</p>
+<h2>3 · The task: Set-piece interiors: National Aquarium halls and the Science Center IMAX/planetarium</h2>
+<p>Build two arena-sized brawl interiors that plug into the game's landmark hooks (<code>reference/game_hooks/landmark_hooks.js</code>):
+- <code>LMHOOK.aquarium</code> = <code>{ stub: true, kind: 'underwater_tank', door: {x, z}, tank: { x: 17, y: CURB + 1, z: -19.5, w: 10, d: 11, h: 12 } }</code> (boss: Big Jimmy, a giant blue crab, fought underwater).
+- <code>LMHOOK.science</code> = <code>{ stub: true, kind: 'imax_theatre', door: {x, z}, screen: { x: -46.8, y: CURB + 1, z: 58, w: 8, h: 6, facing: 'west' }, hall: { x0, x1, z0, z1 } }</code> (boss: Dr. Shellacious, a mad snapping-turtle scientist).</p>
+<p>Interiors are <strong>separate rooms</strong> entered through <code>door</code>: you build them at a local origin, the game places them off-map and teleports in. The hook values above tell you where the door and screen are in the city; inside you are free within the footprints below.</p>
+<p><strong><code>aquarium_interior</code></strong>: the ring-tank hall: a central cylindrical tank you walk around on a <strong>spiralling ramp</strong> (2 turns, ≥ 3 m wide, with rails); the <strong>Atlantic coral reef</strong> tank (colourful canvas coral, a school of fish as one animated layer) and the <strong>shark tank</strong> (big glass wall, 3–5 sharks on a slow loop). The bottom of the ring tank is the boss floor: a walkable <code>underwater: true</code> zone where Big Jimmy fights. Blue water light, caustic pattern on the floor (canvas, animated by UV offset only).
+<strong><code>science_imax</code></strong>: the IMAX / planetarium hall: raked seating rows (walkable steps), the big curved screen (canvas starfield / planets that glow at night and by day: it is indoors), the projector booth at the back, the planetarium dome above, exhibit plinths on the floor in front of the screen as cover. Dr. Shellacious fights on the stage in front of the screen.</p>
+<blockquote>
+<p><strong>Canary 1 of 3 (required in your delivery):</strong> README.md: the last section heading, exactly: <code>## Interior Check 410</code></p>
+</blockquote>
+<h2>4 · Interface and budgets</h2>
+<pre><code class="language-js">export function buildAquariumInterior(K, out, atlas, opts = {}) -&gt; {
+  footprint: [w, d], heroSpawn: {x, y, z, ang}, bossSpawn: {x, y, z, ang},
+  spawns: [{x, y, z, ang}, …],            // ≥ 8 thug spawn points, all on walkable floor, ≥ 2 m from walls
+  exits: [{x, z, ang, to: 'door'}],        // back to the city door
+  zones: [{ kind: 'underwater', x0, x1, z0, z1, y0, y1 }],   // aquarium only
+  lights: [{ x, y, z, color, intensity, range }],             // ANCHORS only: the game's pooled lights use them; never add THREE lights
+  animate(t) {}                             // optional: fish/shark/caustic layer (≤ 2 draw calls), no per-frame allocation
+}
+export function buildScienceImax(K, out, atlas, opts = {}) -&gt; { same shape, no zones }
+</code></pre>
+<ul>
+<li>All static geometry through <code>out</code> (solid / decal / glow), colliders through <code>out.coll</code>, camera boxes <code>out.bld</code> (the camera must never clip a wall: give every room part a camera box), lamps <code>out.lamp</code>.</li>
+<li>Walkable surfaces are flat or ramps ≤ 20 % grade; every step ≤ 0.35 m. Return the ramp as a list of walkable slabs in the result: <code>walk: [{x0, x1, z0, z1, y0, y1}]</code> so the game can compute floor height.</li>
+<li>Footprints (hard limits): aquarium ≤ 40 × 40 m, height ≤ 16 m; IMAX ≤ 32 × 28 m, height ≤ 14 m. Nothing outside.</li>
+</ul>
+<table>
+<thead>
+<tr>
+<th>Asset</th>
+<th>Cap</th>
+<th>Round-2 target</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>aquarium_interior</code></td>
+<td>40,000 tris, 6 draw calls (4 merged layers + ≤ 2 animated)</td>
+<td>≤ 36,000 tris, ≤ 6 calls</td>
+</tr>
+<tr>
+<td><code>science_imax</code></td>
+<td>30,000 tris, 5 draw calls</td>
+<td>≤ 27,000 tris, ≤ 5 calls</td>
+</tr>
+<tr>
+<td>Atlas</td>
+<td>one 1024² canvas atlas for both rooms</td>
+<td>one</td>
+</tr>
+<tr>
+<td>Thug spawns</td>
+<td>≥ 8 per room, on walkable floor, ≥ 2 m from walls and colliders</td>
+<td>≥ 8</td>
+</tr>
+</tbody>
+</table>
+<blockquote>
+<p><strong>Canary 2 of 3 (required in your delivery):</strong> Every src/*.js file: line 2, exactly: <code>// tcr2 s2 ring-tank-ramp</code></p>
+</blockquote>
+<h2>5 · Self-test and evidence</h2>
+<ul>
+<li>Serve the ZIP root and open <code>kit/viewer.html</code> (or your own viewer started from it) on the <strong>real kit</strong>. Day, night (N), every asset.</li>
+<li>Render every asset at <strong>390×844, day and night</strong>, at gameplay distance (6–10 m), plus 1280×720 day/night. Headless Chrome with <code>--use-gl=swiftshader</code>; wait for <code>window.__ready === true</code>.</li>
+<li>Build every asset at the origin <strong>and</strong> at (10, 5) with yaw π/2; diff their bounding boxes (glows, decals, colliders and hooks must move with the body).</li>
+<li>Run the relevant <code>harness_ab/</code> script against your <code>src/</code> and keep the JSON under <code>tools/</code>.</li>
+<li>Zero console errors.</li>
+</ul>
+<blockquote>
+<p><strong>Canary 3 of 3 (required in your delivery):</strong> Final message: the first line of the filled self-check block, exactly: <code>SELF-CHECK S2 planetarium-lantern</code></p>
+</blockquote>
+<h2>6 · Delivery</h2>
+<ul>
+<li><strong>Branch:</strong> push to <strong><code>claude/s2-setpiece-interiors</code></strong> on <code>https://github.com/bparlette/hawk</code>. If your environment forces its own branch name, push there and name it in your first and last message. That is how Task A/B arrived (<code>claude/new-session-j5l7sz</code>).</li>
+<li><strong>Layout:</strong> <code>src/</code> (your modules), <code>kit/</code> (unchanged copy of the ZIP kit), <code>viewer.html</code>, <code>previews/</code> (every PNG in §5), <code>tools/</code>, <code>README.md</code> (exports, how to view, measured table, known issues with measured sizes), <code>LICENSES.md</code>, <code>dist/toadcity_s2_setpiece_interiors_v1.zip</code>.</li>
+<li>Final message to Brad: branch, commit, zip path, and the filled §7.</li>
+</ul>
+<h2>7 · Final self-check (measured numbers only)</h2>
+<table>
+<thead>
+<tr>
+<th>Check</th>
+<th>aquarium_interior</th>
+<th>science_imax</th>
+<th>Threshold</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Tris / draw calls</td>
+<td></td>
+<td></td>
+<td>§4 targets</td>
+</tr>
+<tr>
+<td>Footprint measured (w × d × h)</td>
+<td></td>
+<td></td>
+<td>≤ 40×40×16 / ≤ 32×28×14</td>
+</tr>
+<tr>
+<td>Spawns: count / min distance to a wall or collider</td>
+<td></td>
+<td></td>
+<td>≥ 8 / ≥ 2 m</td>
+</tr>
+<tr>
+<td>Max step height / max ramp grade</td>
+<td></td>
+<td></td>
+<td>≤ 0.35 m / ≤ 20 %</td>
+</tr>
+<tr>
+<td>Camera boxes cover every wall (camera never clips at 6 m)</td>
+<td></td>
+<td></td>
+<td>yes</td>
+</tr>
+<tr>
+<td>Light anchors returned / THREE lights created</td>
+<td></td>
+<td></td>
+<td>≥ 1 / 0</td>
+</tr>
+<tr>
+<td><code>animate</code> allocations per frame</td>
+<td></td>
+<td></td>
+<td>0</td>
+</tr>
+<tr>
+<td>Day + night 390×844 renders (hero spawn, boss spawn, overview)</td>
+<td></td>
+<td></td>
+<td>yes</td>
+</tr>
+<tr>
+<td>Console errors</td>
+<td></td>
+<td></td>
+<td>0</td>
+</tr>
+</tbody>
+</table>
+<h2>HARD RULES (repeated)</h2>
+<ol>
+<li>Build only what this session names. Each file in <code>src/</code> loads as its own ES module and exports a unique <code>META_&lt;MODULE&gt;</code> (e.g. <code>META_HARBOR_VESSELS</code>), never a bare <code>META</code>.</li>
+<li>No <code>import</code> in modules; everything through <code>K</code>. Materials only from <code>K.toonMat</code> / <code>K.basicMat</code> / <code>K.makeAtlas</code>; outlines only <code>K.OUT_*</code>. Never write onto <code>K</code> or its functions.</li>
+<li>No <code>Math.random()</code> at build time: seeded LCG from <code>opts.seed</code>.</li>
+<li>Use the kit in the ZIP (<code>kit/toadcity_kit.js</code>) byte-identical; your viewer must run on it unchanged.</li>
+<li>Budget with ≥ 10 % headroom under every cap in §4 (tris, meshes, draw calls).</li>
+<li>Nothing overhangs the footprint you are given; nothing floats; nothing sinks below its base (kerb, pier deck or waterline).</li>
+<li>Every geometry is placed exactly once. Check every asset at a non-zero position and yaw, not only at the origin.</li>
+<li><code>shadow: false</code> on decals, glows and anything thinner than 4 cm in two dimensions.</li>
+<li>Atlas/texture caches in module-level <code>WeakMap</code>s keyed on a stable kit object (§2); never cache a failure; guard every global fallback with <code>typeof</code>.</li>
+<li>Static pieces must survive the game's chunk merge: world-space geometry through <code>out</code> only, no per-mesh state, no <code>frustumCulled = false</code>.</li>
+<li>Heights in hooks and camera boxes are world y, everywhere.</li>
+<li>README numbers are measured only, each with its seed, position and yaw. No "about". The game has no LOD swap.</li>
+<li>Evidence: day + night renders at 390×844 for every asset, in the kit viewer on the real kit.</li>
+<li>Push to the branch named in §6 of this prompt, never to <code>main</code>.</li>
+<li>Reply first with the Step 0 comprehension check, then STOP until Brad says <strong>GO</strong>.</li>
+</ol></div>
+<h2>Before / after and reference renders</h2><div class="imgs"><figure><a href="img/evidence_sheet.jpg"><img src="img/evidence_sheet.jpg" loading="lazy" alt=""></a><figcaption>BEFORE (Task A/B v1): buried door, sideways canopy, floating pickup lights.</figcaption></figure><figure><a href="img/cars_rebuild_sheet.jpg"><img src="img/cars_rebuild_sheet.jpg" loading="lazy" alt=""></a><figcaption>QUALITY BAR: in-house car rebuild (work in progress): glass, interiors, arches, trim.</figcaption></figure><figure><a href="img/block_night_close.jpg"><img src="img/block_night_close.jpg" loading="lazy" alt=""></a><figcaption>Task A block at night.</figcaption></figure><figure><a href="img/street_game_night.jpg"><img src="img/street_game_night.jpg" loading="lazy" alt=""></a><figcaption>Street at night in the game.</figcaption></figure></div>
+<p style="font-size:12px;color:#777">Prepared by Hark for Brad Parlette, 11 October 2026. Everything here is procedural game code and renders; no credentials.</p></main>
+<script>const P="# S2 \u00b7 Set-piece interiors: National Aquarium halls and the Science Center IMAX/planetarium\n**For:** Claude Sonnet \u00b7 **Setting:** Claude Sonnet (newest), extended thinking ON, medium effort (high for the first asset, because it sets the pattern). \u00b7 **Depends on:** None (parallel with S1\u2013S3). \u00b7 **Delivers to: `claude/s2-setpiece-interiors`**\n\nAttach `Toad_City_Round2_SONNET.zip` to this chat together with this prompt. Everything bulky (code, references, renders) is in the ZIP; this prompt names the files.\n\n## HARD RULES (read first; repeated at the very end)\n1. Build only what this session names. Each file in `src/` loads as its own ES module and exports a unique `META_<MODULE>` (e.g. `META_HARBOR_VESSELS`), never a bare `META`.\n2. No `import` in modules; everything through `K`. Materials only from `K.toonMat` / `K.basicMat` / `K.makeAtlas`; outlines only `K.OUT_*`. Never write onto `K` or its functions.\n3. No `Math.random()` at build time: seeded LCG from `opts.seed`.\n4. Use the kit in the ZIP (`kit/toadcity_kit.js`) byte-identical; your viewer must run on it unchanged.\n5. Budget with \u2265 10 % headroom under every cap in \u00a74 (tris, meshes, draw calls).\n6. Nothing overhangs the footprint you are given; nothing floats; nothing sinks below its base (kerb, pier deck or waterline).\n7. Every geometry is placed exactly once. Check every asset at a non-zero position and yaw, not only at the origin.\n8. `shadow: false` on decals, glows and anything thinner than 4 cm in two dimensions.\n9. Atlas/texture caches in module-level `WeakMap`s keyed on a stable kit object (\u00a72); never cache a failure; guard every global fallback with `typeof`.\n10. Static pieces must survive the game's chunk merge: world-space geometry through `out` only, no per-mesh state, no `frustumCulled = false`.\n11. Heights in hooks and camera boxes are world y, everywhere.\n12. README numbers are measured only, each with its seed, position and yaw. No \"about\". The game has no LOD swap.\n13. Evidence: day + night renders at 390\u00d7844 for every asset, in the kit viewer on the real kit.\n14. Push to the branch named in \u00a76 of this prompt, never to `main`.\n15. Reply first with the Step 0 comprehension check, then STOP until Brad says **GO**.\n\n## Step 0 \u00b7 Comprehension check (your FIRST reply; write no code and produce no deliverable until Brad answers GO)\n1. **List every file in the ZIP** (full path) and say in a few words what you will use it for.\n2. **Restate, numbered and in your own words, every HARD RULE above and every lesson or fix row in \u00a72** (one line each).\n3. **Answer these questions.** Every answer is in the sections below; quote the exact number, name or code.\n   - Q1. In the Task A review, by how much did stoops and cornices overhang the block box, and what inset fixes it?\n   - Q2. Why did the parked pickup's lights float 7 m away, and why did your previews miss it?\n   - Q3. What was wrong with the arabber canopy?\n   - Q4. Give the exact texture/atlas cache key expression for round 2.\n   - Q5. What must every module export instead of a bare `META`?\n   - Q6. What is the delivery branch name?\n   - Q7. What are the aquarium tank hook values (x, z, w, d, h)?\n   - Q8. How many thug spawns per room, and how far from walls?\n4. **Quote the three canary instructions** this prompt contains (they are marked \"Canary 1/2/3 of 3\" somewhere in the middle) and confirm you will include each string exactly.\n\nThen stop and wait. Brad checks your answers; if any is wrong he will send you back to re-read.\n\n## ZIP contents\n| ZIP path | What it is |\n|---|---|\n| `README_ZIP.md` | Index of the ZIP and setup (`npm i` at the ZIP root installs three 0.160.0 for the Node harness). |\n| `kit/toadcity_kit.js`, `kit/viewer.html`, `kit/example_bench.js`, `kit/example_gull_thug.js` | The **real** starter kit and bench. Ship the kit unchanged; your viewer must run on it. |\n| `reference/taskAB_v1/` | Your Task A/B modules as delivered (branch `claude/new-session-j5l7sz`, commit `45f3041`). |\n| `reference/taskAB_fixed/` | Hark's fixed copies (the integration worker's `vendor/taskAB`, snapshot at ZIP build time), plus `taskAB_v1_to_fixed.diff`. |\n| `reference/game_hooks/landmark_hooks.js` | The game's `LMHOOK.aquarium` / `LMHOOK.science` objects and the `LANDMARKS` list (excerpt of `src/03_city.js` and `src/03c_landmarks_hd_b2.js`). |\n| `reference/game_hooks/constellation_scale.md` | How the in-game USS Constellation is scaled (the scale rule for ships). |\n| `harness_ab/` | Hark's Node harness for Task A/B (`measure_ab.mjs`, `checks_ab.mjs`, `block20.mjs`, `fakedom2.mjs`, `starter_kit.mjs`), re-pointed at `kit/` and `reference/`. |\n| `reviews/sonnet_taskAB_review.md` | The full review. |\n| `previews/before_after/` | `evidence_sheet.png` (door, canopy, pickup glow) and the review renders. |\n| `previews/quality_bar/` | The in-house car rebuild (`cars_rebuild_sheet.png`) and your v1 sedan for comparison. |\n| `briefs/TASK_A_rowhouse_city_block_kit.md`, `briefs/TASK_B_street_props_vehicles.md` | Round-1 briefs (contracts, style). This prompt overrides them where they differ. |\n| `prompts/` | All Sonnet round-2 session prompts (S1\u2013S3). |\n\n## 1 \u00b7 Context\n**Toad City Baltimore** is a phone-first, cel-shaded open-world brawler on Baltimore's Inner Harbor (three.js r160, plain ES modules, everything procedural: no image, model or font files; real Baltimore signage is redrawn on canvas). Static city geometry goes through the kit's `out` collector (`out.solid / decal / glow / coll / bld / lamp / hook / build`) and is merged into the game's 64 m render chunks. Moving things (boats, rideables) are their own `THREE.Group` with the vehicle contract `{ root, kind, seats, collider, waterline, animate }`.\n\nYou get one ZIP (`Toad_City_Round2_SONNET.zip`): the **real** starter kit (last round it never reached you and you rebuilt one), the Task A/B review, Hark's fixed copies of your Task A/B modules, the measuring harness, before/after renders, the in-house car rebuild as the quality bar, and the game's landmark hook objects. This prompt points at those files by name.\n\n## 2 \u00b7 Where you fell short last round and how we fixed it\nYour Task A/B delivery (`claude/new-session-j5l7sz`, `45f3041`) was clean, deterministic and inside every budget, and its README numbers were exact. The rowhouses read as Baltimore at 9 m. But six visible or gameplay bugs were **not disclosed**, and none showed in your own previews, because every asset was checked only at position (0, 0) and yaw 0, on a reconstructed kit, with pavement laid outside the block. Hark's integration worker is fixing them in-house; the status column was read from the fixed files (`reference/taskAB_fixed/`, look for the `fix M1`\u2026 comments) when this ZIP was built.\n\n| # | Before (finding, measured) | After (fix) | Status at ZIP build |\n|---|---|---|---|\n| M1 | Stone water table (1.25 m band) ran across the bottom of every rowhouse door: the stoop climbed into stone (door y 0.76\u20132.81 vs band 0.16\u20131.41). | Band split around `doorU \u00b1 0.65`, marble threshold added at the sill. | Fixed in-house |\n| M2 | Arabber canopy: the half-cylinder swept theta 0..\u03c0, so it stood as a striped wall on one side of the cart. | Theta starts at \u03c0/2 so the arc spans the top. | Fixed in-house |\n| M3 | Pony floated 0.20 m: leg pivot at 1.2 with 1.0 m legs. | Pivot at 1.0, hooves on y = 0. | Fixed in-house |\n| M4 | Parked pickup head/tail-light glows placed twice (`fin()` on already-placed geometry): at (10, 5) yaw \u03c0/2 they floated 7 m away. | Glow quads built from fresh local geometry; cars are being rebuilt in-house anyway. | Superseded: cars rebuilt in-house (in progress) |\n| M5 | Corner downspout buried in the wall (z \u22120.12..\u22120.02) and the climb hook inside the collider: blocks with seed 4 and 16 had no usable climb. | Pipe and hook moved to the front of the wall (+0.07 / +0.12). | Fixed in-house |\n| M6 | Stoops and cornices overhung the block box by up to 1.83 m; your street view hid it by laying pavement outside the block. In the game the plot is raised to CURB and roads are at y 0, so stoops would hang over the road. | `opts.inset` (integration passes the plot with a 2 m inset; a 20 m box builds cleanly for 30 seeds). | Fixed in-house |\n| m1 | Climb `top` and camera-box `h` measured from the kerb in Task A but world y in Task B (0.16 m apart). | World y everywhere: `CURB + parTop`. | Fixed in-house |\n| m2 | Yard bin lids at the bin row centre, not on their bins. | Lid reuses the bin x. | Fixed in-house |\n| m3 | Crab shack posts poke 8.5 cm through the roof, back wall stops 37 cm short, neon floats with no frame, collider misses pots/barrels/easel. | Posts cut to the roof line, frame added, collider widened. | Fixed in-house |\n| m4 | Arabber 'stand' seat floated behind the cart with no step. | Rear running board; seat on it. | Fixed in-house |\n| m5 | `PROP_TILES` fallback unguarded in 4 of 5 Task B files (bare ReferenceError as ES modules). | `typeof` guard and a clear error everywhere. | Fixed in-house |\n| m6 | `K.makeAtlas._props`: a cache written onto a kit function. | Module-level `WeakMap`. | Fixed in-house |\n| m7 | Your viewer did not run on the real kit (`applyLight` signature, pose functions, joint names): \"one-line change\" was several. | Round 2 ships the real kit: your viewer must run on it unchanged. | Round-2 rule (applies to your new work) |\n| m8 | Dragon-boat paddles `frustumCulled = false`: a draw call and a shadow call every frame even off screen. | Fixed bounding sphere. | Fixed in-house |\n| m9 | Corner bar's OPEN neon hidden behind the awning (only 'EN' showed). | Moved into the glass-block window below the awning. | Fixed in-house |\n| m10 | README claims wrong: \"open side windows\" were dark panels; \"3 casting meshes\" were 2. | Measured-only README. | Round-2 rule (applies to your new work) |\n| m11 | Formstone read as regular coursed stone; real Formstone is irregular faux stone. | Irregular tiles. | Fixed in-house |\n| m12 | Sedan, hatch, box truck at exactly 7/7 meshes, skateboard 3/3: no headroom. | \u2265 10 % headroom required in round 2. | Round-2 rule (applies to your new work) |\n| m13 | Every file exported `META`: concatenation failed with \"Identifier META has already been declared\". | Renamed to `META_ROWHOUSE`, `META_CORNER`, \u2026 ; round 2 requires unique `META_<MODULE>` names. | Fixed in-house |\n\nLessons to apply in every round-2 asset (each comes from a row above):\n1. Test at a non-zero position and yaw (M4) and in a street laid out the game's way (M6), not only at the origin.\n2. Check every curved or partial primitive's orientation from three sides (M2).\n3. Measure ground contact of every leg, wheel, hull and post (M3, m3).\n4. Hooks must be reachable: outside colliders, on a visible surface, world-y heights (M5, m1, m4).\n5. Colliders cover everything a character could walk through (m3).\n6. No writing onto `K`; caches in module `WeakMap`s; `typeof` guards (m5, m6).\n7. Nothing with `frustumCulled = false` (m8); no text hidden behind other geometry (m9).\n8. README claims must be measured or seen, never assumed (m10); leave headroom (m12); unique `META_<MODULE>` names (m13).\n\n**Texture and atlas caches:** key every module-level cache on `K.QUAL || K.THREE || K` (integration may pass a fresh `{...K}` per call), and never store a failed draw.\n\n### The quality bar: the in-house car rebuild\nYour v1 cars were flat-profile boxes with dark side panels standing in for windows (`previews/quality_bar/sedan_v1_day.png`). Hark is rebuilding them in-house as real 3D cel-shaded vehicles (`previews/quality_bar/cars_rebuild_sheet.png`, work in progress): see-through glass with a visible interior (seats, wheel), real wheel arches, chrome side trim and bumpers, distinct sedan / pickup / box-truck / hatchback silhouettes, lit head and tail lights, readable canvas liveries. **That is the bar for every vessel and prop in round 2:** real depth, real openings, distinct silhouettes, readable lettering. Cars are out of scope this round: do not build any.\n\n## 3 \u00b7 The task: Set-piece interiors: National Aquarium halls and the Science Center IMAX/planetarium\nBuild two arena-sized brawl interiors that plug into the game's landmark hooks (`reference/game_hooks/landmark_hooks.js`):\n- `LMHOOK.aquarium` = `{ stub: true, kind: 'underwater_tank', door: {x, z}, tank: { x: 17, y: CURB + 1, z: -19.5, w: 10, d: 11, h: 12 } }` (boss: Big Jimmy, a giant blue crab, fought underwater).\n- `LMHOOK.science` = `{ stub: true, kind: 'imax_theatre', door: {x, z}, screen: { x: -46.8, y: CURB + 1, z: 58, w: 8, h: 6, facing: 'west' }, hall: { x0, x1, z0, z1 } }` (boss: Dr. Shellacious, a mad snapping-turtle scientist).\n\nInteriors are **separate rooms** entered through `door`: you build them at a local origin, the game places them off-map and teleports in. The hook values above tell you where the door and screen are in the city; inside you are free within the footprints below.\n\n**`aquarium_interior`**: the ring-tank hall: a central cylindrical tank you walk around on a **spiralling ramp** (2 turns, \u2265 3 m wide, with rails); the **Atlantic coral reef** tank (colourful canvas coral, a school of fish as one animated layer) and the **shark tank** (big glass wall, 3\u20135 sharks on a slow loop). The bottom of the ring tank is the boss floor: a walkable `underwater: true` zone where Big Jimmy fights. Blue water light, caustic pattern on the floor (canvas, animated by UV offset only).\n**`science_imax`**: the IMAX / planetarium hall: raked seating rows (walkable steps), the big curved screen (canvas starfield / planets that glow at night and by day: it is indoors), the projector booth at the back, the planetarium dome above, exhibit plinths on the floor in front of the screen as cover. Dr. Shellacious fights on the stage in front of the screen.\n\n> **Canary 1 of 3 (required in your delivery):** README.md: the last section heading, exactly: `## Interior Check 410`\n\n## 4 \u00b7 Interface and budgets\n```js\nexport function buildAquariumInterior(K, out, atlas, opts = {}) -> {\n  footprint: [w, d], heroSpawn: {x, y, z, ang}, bossSpawn: {x, y, z, ang},\n  spawns: [{x, y, z, ang}, \u2026],            // \u2265 8 thug spawn points, all on walkable floor, \u2265 2 m from walls\n  exits: [{x, z, ang, to: 'door'}],        // back to the city door\n  zones: [{ kind: 'underwater', x0, x1, z0, z1, y0, y1 }],   // aquarium only\n  lights: [{ x, y, z, color, intensity, range }],             // ANCHORS only: the game's pooled lights use them; never add THREE lights\n  animate(t) {}                             // optional: fish/shark/caustic layer (\u2264 2 draw calls), no per-frame allocation\n}\nexport function buildScienceImax(K, out, atlas, opts = {}) -> { same shape, no zones }\n```\n- All static geometry through `out` (solid / decal / glow), colliders through `out.coll`, camera boxes `out.bld` (the camera must never clip a wall: give every room part a camera box), lamps `out.lamp`.\n- Walkable surfaces are flat or ramps \u2264 20 % grade; every step \u2264 0.35 m. Return the ramp as a list of walkable slabs in the result: `walk: [{x0, x1, z0, z1, y0, y1}]` so the game can compute floor height.\n- Footprints (hard limits): aquarium \u2264 40 \u00d7 40 m, height \u2264 16 m; IMAX \u2264 32 \u00d7 28 m, height \u2264 14 m. Nothing outside.\n\n| Asset | Cap | Round-2 target |\n|---|---|---|\n| `aquarium_interior` | 40,000 tris, 6 draw calls (4 merged layers + \u2264 2 animated) | \u2264 36,000 tris, \u2264 6 calls |\n| `science_imax` | 30,000 tris, 5 draw calls | \u2264 27,000 tris, \u2264 5 calls |\n| Atlas | one 1024\u00b2 canvas atlas for both rooms | one |\n| Thug spawns | \u2265 8 per room, on walkable floor, \u2265 2 m from walls and colliders | \u2265 8 |\n\n> **Canary 2 of 3 (required in your delivery):** Every src/*.js file: line 2, exactly: `// tcr2 s2 ring-tank-ramp`\n\n## 5 \u00b7 Self-test and evidence\n- Serve the ZIP root and open `kit/viewer.html` (or your own viewer started from it) on the **real kit**. Day, night (N), every asset.\n- Render every asset at **390\u00d7844, day and night**, at gameplay distance (6\u201310 m), plus 1280\u00d7720 day/night. Headless Chrome with `--use-gl=swiftshader`; wait for `window.__ready === true`.\n- Build every asset at the origin **and** at (10, 5) with yaw \u03c0/2; diff their bounding boxes (glows, decals, colliders and hooks must move with the body).\n- Run the relevant `harness_ab/` script against your `src/` and keep the JSON under `tools/`.\n- Zero console errors.\n\n> **Canary 3 of 3 (required in your delivery):** Final message: the first line of the filled self-check block, exactly: `SELF-CHECK S2 planetarium-lantern`\n\n## 6 \u00b7 Delivery\n- **Branch:** push to **`claude/s2-setpiece-interiors`** on `https://github.com/bparlette/hawk`. If your environment forces its own branch name, push there and name it in your first and last message. That is how Task A/B arrived (`claude/new-session-j5l7sz`).\n- **Layout:** `src/` (your modules), `kit/` (unchanged copy of the ZIP kit), `viewer.html`, `previews/` (every PNG in \u00a75), `tools/`, `README.md` (exports, how to view, measured table, known issues with measured sizes), `LICENSES.md`, `dist/toadcity_s2_setpiece_interiors_v1.zip`.\n- Final message to Brad: branch, commit, zip path, and the filled \u00a77.\n\n## 7 \u00b7 Final self-check (measured numbers only)\n| Check | aquarium_interior | science_imax | Threshold |\n|---|---|---|---|\n| Tris / draw calls | | | \u00a74 targets |\n| Footprint measured (w \u00d7 d \u00d7 h) | | | \u2264 40\u00d740\u00d716 / \u2264 32\u00d728\u00d714 |\n| Spawns: count / min distance to a wall or collider | | | \u2265 8 / \u2265 2 m |\n| Max step height / max ramp grade | | | \u2264 0.35 m / \u2264 20 % |\n| Camera boxes cover every wall (camera never clips at 6 m) | | | yes |\n| Light anchors returned / THREE lights created | | | \u2265 1 / 0 |\n| `animate` allocations per frame | | | 0 |\n| Day + night 390\u00d7844 renders (hero spawn, boss spawn, overview) | | | yes |\n| Console errors | | | 0 |\n\n## HARD RULES (repeated)\n1. Build only what this session names. Each file in `src/` loads as its own ES module and exports a unique `META_<MODULE>` (e.g. `META_HARBOR_VESSELS`), never a bare `META`.\n2. No `import` in modules; everything through `K`. Materials only from `K.toonMat` / `K.basicMat` / `K.makeAtlas`; outlines only `K.OUT_*`. Never write onto `K` or its functions.\n3. No `Math.random()` at build time: seeded LCG from `opts.seed`.\n4. Use the kit in the ZIP (`kit/toadcity_kit.js`) byte-identical; your viewer must run on it unchanged.\n5. Budget with \u2265 10 % headroom under every cap in \u00a74 (tris, meshes, draw calls).\n6. Nothing overhangs the footprint you are given; nothing floats; nothing sinks below its base (kerb, pier deck or waterline).\n7. Every geometry is placed exactly once. Check every asset at a non-zero position and yaw, not only at the origin.\n8. `shadow: false` on decals, glows and anything thinner than 4 cm in two dimensions.\n9. Atlas/texture caches in module-level `WeakMap`s keyed on a stable kit object (\u00a72); never cache a failure; guard every global fallback with `typeof`.\n10. Static pieces must survive the game's chunk merge: world-space geometry through `out` only, no per-mesh state, no `frustumCulled = false`.\n11. Heights in hooks and camera boxes are world y, everywhere.\n12. README numbers are measured only, each with its seed, position and yaw. No \"about\". The game has no LOD swap.\n13. Evidence: day + night renders at 390\u00d7844 for every asset, in the kit viewer on the real kit.\n14. Push to the branch named in \u00a76 of this prompt, never to `main`.\n15. Reply first with the Step 0 comprehension check, then STOP until Brad says **GO**.\n";document.getElementById('cp').onclick=async()=>{try{await navigator.clipboard.writeText(P)}catch(e){const t=document.createElement('textarea');t.value=P;document.body.appendChild(t);t.select();document.execCommand('copy');t.remove()}document.getElementById('ok').textContent='Copied ✓';setTimeout(()=>document.getElementById('ok').textContent='',2500)};</script>
+</body></html>

@@ -1,0 +1,494 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex,nofollow">
+<title>O1 · Pier Gulls v1.1 fix pass · Toad City round 2</title><style>body{margin:0;font:16px/1.5 system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;color:#1d1a26;background:#f6f4fb}
+header{background:#14101f;color:#fff;padding:18px 20px}header .k{color:#ffd23c;font-weight:700;letter-spacing:2px;font-size:12px}
+header h1{margin:6px 0 4px;font-size:24px}header p{margin:0;color:#d9d3ea;font-size:14px}
+main{max-width:980px;margin:0 auto;padding:16px}
+.bar{position:sticky;top:0;z-index:5;display:flex;gap:10px;flex-wrap:wrap;background:#f6f4fb;padding:10px 0;border-bottom:1px solid #ddd}
+.btn{display:inline-block;background:#ff3d6e;color:#fff;border:0;border-radius:8px;padding:10px 16px;font-weight:700;font-size:15px;cursor:pointer;text-decoration:none}
+.btn.alt{background:#2f2457}
+.card{background:#fff;border:1px solid #ddd;border-radius:10px;padding:14px 18px;margin:14px 0}
+.prompt h1{font-size:22px;border-bottom:3px solid #ff3d6e}.prompt h2{font-size:18px;color:#2f2457;margin-top:22px}
+table{border-collapse:collapse;width:100%;font-size:13.5px;display:block;overflow-x:auto}th,td{border:1px solid #c9c4d6;padding:4px 6px;text-align:left;vertical-align:top}th{background:#2f2457;color:#fff}
+pre{background:#16131f;color:#ece8f6;padding:10px;border-radius:6px;overflow-x:auto;font-size:12.5px;white-space:pre-wrap;word-break:break-word}code{font-family:ui-monospace,Menlo,Consolas,monospace;font-size:.92em}
+blockquote{border-left:5px solid #ffd23c;background:#fffbe8;margin:10px 0;padding:6px 12px}
+.imgs{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:12px}.imgs figure{margin:0}.imgs img{width:100%;border-radius:6px;border:1px solid #ccc}
+figcaption{font-size:13px;color:#4b4560}#ok{color:#23c26b;font-weight:700;align-self:center}
+</style></head><body>
+<header><div class="k">TOAD CITY BALTIMORE · ROUND 2 · CLAUDE OPUS</div><h1>O1 · Pier Gulls v1.1 fix pass</h1>
+<p>Paste the whole prompt into a fresh Claude Opus chat and attach the ZIP kit below. Claude Opus (newest), extended thinking ON, high effort.</p></header>
+<main><div class="bar"><button class="btn" id="cp">Copy prompt</button><a class="btn alt" href="Toad_City_Round2_OPUS.zip" download>Download ZIP kit (7 MB)</a><a class="btn alt" href="prompt.md" download>Prompt as .md</a><span id="ok"></span></div>
+<div class="card"><b>Depends on:</b> Pier Gulls v1 (f1cfba4). Parallel with O2–O7.<br><b>Delivery:</b> <code>claude/o1-pier-gulls-v1-1</code></div>
+<div class="card prompt"><h1>O1 · Pier Gulls v1.1 fix pass</h1>
+<p><strong>For:</strong> Claude Opus · <strong>Setting:</strong> Claude Opus (newest), extended thinking ON, high effort. · <strong>Depends on:</strong> Pier Gulls v1 (f1cfba4). Parallel with O2–O7. · <strong>Delivers to: <code>claude/o1-pier-gulls-v1-1</code></strong></p>
+<p>Attach <code>Toad_City_Round2_OPUS.zip</code> to this chat together with this prompt. Everything bulky (code, references, renders) is in the ZIP; this prompt names the files.</p>
+<h2>HARD RULES (read first; repeated at the very end)</h2>
+<ol>
+<li>Build only what this session names. One file per gang or boss in <code>src/</code>, loaded as its own ES module.</li>
+<li>No <code>import</code> in your modules; everything comes through <code>K</code>. Materials only from <code>K.toonMat</code> / <code>K.basicMat</code> / <code>K.makeAtlas</code>; outlines only the shared <code>K.OUT_CHAR</code>.</li>
+<li>No <code>Math.random()</code> at build time: seeded LCG (<code>s = s * 16807 % 2147483647</code>) from <code>opts.seed</code>.</li>
+<li>Use the kit in the ZIP (<code>kit/toadcity_kit.js</code>) byte-identical. Never edit it, never rebuild a kit from memory.</li>
+<li>Test with the real poses and the real <code>kit/real_mergeRig.js</code>. Never emulate either.</li>
+<li>Budget with headroom: every HD gull ≤ 38 parts and ≤ 11,000 tris (at least 2 parts and 1,000 tris under the 40 / 12,000 caps), ≤ 3 materials.</li>
+<li>Far LOD ≤ 14 parts, ≤ 3,000 tris; its lowest point in the knock-down ≥ −0.02 m; hands in the dark wingtip colour.</li>
+<li>No vertex of a non-hull mesh below y = −0.03 m in any real pose or blend (feet and weapon excepted).</li>
+<li><code>shadow: false</code> on every <code>outline: false</code> part and on every part thinner than 4 cm in two dimensions.</li>
+<li>Texture caches keyed on a stable kit object (see §2A fix 4); never cache a failed draw.</li>
+<li>In idle, no part reaches more than 0.35 m beyond <code>META.radius</code> horizontally (weapon excepted); report the measured value.</li>
+<li>README numbers are measured only, each with its pose and time. No "about". The game has no LOD swap: never claim one.</li>
+<li>Evidence: day + night renders at 390×844 with the real poses, merged and unmerged, for every asset.</li>
+<li>Change only what §3 lists; keep everything that already passes. Push to the branch named in §6.</li>
+<li>Reply first with the Step 0 comprehension check, then STOP until Brad says <strong>GO</strong>.</li>
+</ol>
+<h2>Step 0 · Comprehension check (your FIRST reply; write no code and produce no deliverable until Brad answers GO)</h2>
+<ol>
+<li><strong>List every file in the ZIP</strong> (full path) and say in a few words what you will use it for.</li>
+<li><strong>Restate, numbered and in your own words, every HARD RULE above and every lesson or fix row in §2</strong> (one line each).</li>
+<li><strong>Answer these questions.</strong> Every answer is in the sections below; quote the exact number, name or code.
+   - Q1. What is the real windup duration for a bruiser, and its damping rate?
+   - Q2. Attack: pose argument, rate, lunge time, and when does the thug go back to chase?
+   - Q3. Hurt and dizzy damping rates?
+   - Q4. Thug getup: duration and rate?
+   - Q5. How many triangles does your v1 armed gull have, and how many must you cut?
+   - Q6. How much of the beanie may be buried in the head?
+   - Q7. What colour must the far-LOD hands be?
+   - Q8. What is the delivery branch name?</li>
+<li><strong>Quote the three canary instructions</strong> this prompt contains (they are marked "Canary 1/2/3 of 3" somewhere in the middle) and confirm you will include each string exactly.</li>
+</ol>
+<p>Then stop and wait. Brad checks your answers; if any is wrong he will send you back to re-read.</p>
+<h2>ZIP contents</h2>
+<table>
+<thead>
+<tr>
+<th>ZIP path</th>
+<th>What it is</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>README_ZIP.md</code></td>
+<td>Index of the ZIP and the one-line setup (<code>npm i</code> at the ZIP root installs three 0.160.0 for the Node harness).</td>
+</tr>
+<tr>
+<td><code>kit/toadcity_kit.js</code></td>
+<td>The <strong>real</strong> starter kit. Its <code>THUG_POSES</code> / <code>HERO_POSES</code> / <code>applyPose</code> are byte-identical to the game's <code>src/04_actors.js</code>. Ship it unchanged.</td>
+</tr>
+<tr>
+<td><code>kit/viewer.html</code>, <code>kit/example_gull_thug.js</code>, <code>kit/example_bench.js</code></td>
+<td>The kit test bench and the two interface examples.</td>
+</tr>
+<tr>
+<td><code>kit/real_mergeRig.js</code></td>
+<td>The game's real <code>mergeRig()</code> (verbatim from <code>src/04b_rig_merge.js</code>) as an ES module.</td>
+</tr>
+<tr>
+<td><code>kit/real_poses_04_actors.js</code></td>
+<td>The game's real pose code, verbatim, for reading.</td>
+</tr>
+<tr>
+<td><code>kit/real_viewer.html</code></td>
+<td>Real-pose viewer: <code>?mods=../src/&lt;file&gt;.js&amp;show=&lt;id&gt;&amp;pose=all</code>, <code>&amp;merge=1</code> (real mergeRig), <code>&amp;seq=knockdown|attack|hurt</code> (real game timings; <code>window.__report.seq.minY</code> gives the lowest vertex per rig, unmerged).</td>
+</tr>
+<tr>
+<td><code>harness/realK.mjs</code>, <code>harness/fakedom.mjs</code>, <code>harness/measure_gang.mjs</code></td>
+<td>Hark's Node harness. <code>GANG=./src/gang_&lt;id&gt;.js node harness/measure_gang.mjs</code> writes <code>results_gang.json</code>: parts, tris, hulls, shadow casters, heights, per-pose lowest point and limb gaps, real mergeRig result, determinism.</td>
+</tr>
+<tr>
+<td><code>reference/harbor_rats/</code></td>
+<td>Harbor Rats v1 (<code>bbad681</code>), the fixed v2 (Hark's branch <code>hark/harbor-rats-fixes</code>, commit <code>751c21b</code>), the v1→v2 diff and the v2 README.</td>
+</tr>
+<tr>
+<td><code>reference/pier_gulls_v1/</code></td>
+<td>Your Pier Gulls v1 (<code>f1cfba4</code>): module, README and QA page.</td>
+</tr>
+<tr>
+<td><code>reviews/harbor_rats_review.md</code>, <code>reviews/TASK_C_review_lessons.md</code></td>
+<td>The full Harbor Rats review and the lessons list.</td>
+</tr>
+<tr>
+<td><code>previews/before_after/</code></td>
+<td>Before/after renders of every Harbor Rats fix (real poses), and <code>harbor_rats_fixes_compare.png</code>.</td>
+</tr>
+<tr>
+<td><code>briefs/TASK_C_thug_gangs.md</code>, <code>briefs/TASK_D_bosses.md</code></td>
+<td>Round-1 briefs (full interfaces, roster, style rules). This prompt overrides them where they differ.</td>
+</tr>
+<tr>
+<td><code>prompts/</code></td>
+<td>All Opus round-2 session prompts (O1–O7).</td>
+</tr>
+</tbody>
+</table>
+<h2>1 · Context</h2>
+<p><strong>Toad City Baltimore</strong> is a phone-first, cel-shaded open-world brawler on Baltimore's Inner Harbor (three.js r160, plain ES modules, everything procedural: no image, model or font files). You play Harold, an elderly toad with a cane; his wife Mavis (grey afro, handbag) fights beside him. Each district has a thug gang; each landmark has a boss. Characters are plain <code>THREE.Group</code> rigs built from primitives with <code>K.part()</code>, posed by code, cel-shaded with ink hulls, then merged by the game's <code>mergeRig()</code> into 2–4 draw calls.</p>
+<p>You get one ZIP (<code>Toad_City_Round2_OPUS.zip</code>). It holds the <strong>real</strong> starter kit (last round it never reached you and you rebuilt one from memory), the real <code>mergeRig</code>, the real poses, Hark's measuring harness, a real-pose viewer, the fixed Harbor Rats reference, the reviews and before/after renders. Bulky material lives in the ZIP; this prompt points at it by file name.</p>
+<p><strong>This session is the Pier Gulls v1.1 fix pass</strong>, not a new gang. Your v1 (<code>f1cfba4</code> on <code>claude/new-session-z5ikqq</code>, <code>dist/toadcity_taskC_pier_gulls_v1.zip</code>, QA page <code>tools/qa.html</code>) is in the ZIP at <code>reference/pier_gulls_v1/</code>. Gang 1 (Harbor Rats) stays Hark's fixed version: do not touch it.</p>
+<h2>2 · Where you fell short last round and how we fixed it</h2>
+<h3>A. Harbor Rats (gang 1, <code>bbad681</code>): what the review found and the exact fix</h3>
+<p>Hark measured v1 against the <strong>real game code</strong> (real poses, real <code>mergeRig</code>). Full fixed module: <code>reference/harbor_rats/gang_harbor_rats_v2_FIXED.js</code>; full diff: <code>reference/harbor_rats/harbor_rats_v1_to_v2.diff</code>. Renders: <code>previews/before_after/before_*.png</code> vs <code>after_*.png</code>.</p>
+<table>
+<thead>
+<tr>
+<th>#</th>
+<th>Before (measured)</th>
+<th>After (fix)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>1</td>
+<td><strong>Tail through the floor in the real <code>down</code> pose:</strong> lowest point −0.67 m (grunts), −0.80 m (bruiser). <code>animateGang('down')</code> only lifted the tail base, still −0.52 / −0.62 m.</td>
+<td><code>animateGang</code> lays all three tail segments flat in <code>'down'</code> (−0.15, 0.1, 0.15 rad) and, in every other state, blends toward flat as <code>J.tilt.rotation.x</code> puts the rig on its back (smoothstep 0.5→1.2 rad), so the getup blend never stabs down. Lowest point now +0.054 m (grunt), +0.065 m (bruiser).</td>
+</tr>
+<tr>
+<td>2</td>
+<td><strong>3 cm shoulder gap</strong> when the arms go overhead (real <code>down</code>: <code>shL</code> −2.6 / <code>shR</code> −2.4; armed <code>windup</code>: <code>shR</code> −2.9).</td>
+<td><code>HR_D.shX</code> 0.30 → <strong>0.27</strong>; the bruiser keeps 0.30 because it has fur shoulder balls. Gap now ≤ 1 cm.</td>
+</tr>
+<tr>
+<td>3</td>
+<td><strong>Stray ink line across every belly.</strong> The neckerchief diamond knot was sunk into the belly, so its ink hull crossed the surface; whiskers (9 mm boxes) also cast shadows.</td>
+<td>Diamond moved proud of the belly (z +0.02 → +0.04, tilt −0.25 → −0.45). <code>shadow: false</code> added to every <code>outline: false</code> part (whiskers, teeth, eyes, brows, strap, toothpick, earring, inner ears, oar band).</td>
+</tr>
+<tr>
+<td>4</td>
+<td><strong>Fur texture cache keyed on <code>K</code></strong>, and it cached <code>null</code> when <code>document</code> was missing: a <code>{...K}</code> wrapper redrew the canvas per spawn, and a DOM-less first build locked the rig out of fur forever.</td>
+<td><code>const key = K.QUAL \|\| K.THREE \|\| K;</code> and <code>HR_FUR.set(key, tex)</code> only after a successful draw.</td>
+</tr>
+<tr>
+<td>5</td>
+<td><strong>LOD 1 drift:</strong> the armed rat dropped the mustard neckerchief (gang colour gone at distance); LOD forearms always fur (grunt_a HD forearms are navy); LOD ignored the bruiser's ×1.22 depth.</td>
+<td>LOD keeps the diamond on every member; the armed LOD drops the hips sphere instead; forearm colour follows <code>L.sleeves</code>; depth × <code>sz</code> as in HD.</td>
+</tr>
+<tr>
+<td>6</td>
+<td><strong>Ears sliced through the beanie cuff and do-rag</strong> (side views).</td>
+<td>Ear groups moved from (±0.155, 0.33) to (±0.17, 0.35).</td>
+</tr>
+<tr>
+<td>7</td>
+<td>Sleeve material chosen by comparing colour values (<code>upCol === C.fur</code>).</td>
+<td>Branch on the look (<code>L.sleeves</code>), never on colour equality.</td>
+</tr>
+<tr>
+<td>8</td>
+<td><strong>README not measured:</strong> "about 34 hulls + about 23 shadow casters" (measured 28–29 and 27–30); "can clip the ground slightly" (it was 0.66 m); claimed "the game swaps LOD 1 in" (it does not); <code>tools/</code> listed but missing from the zip.</td>
+<td>Every README number now comes from a script, with pose and time; known issues carry their measured size; the zip contains what the README lists.</td>
+</tr>
+<tr>
+<td>9</td>
+<td>Viewer mapped game state <code>getup</code> → <code>'down'</code>.</td>
+<td><code>getup</code> → <code>'idle'</code> (the tail lifts with the tilt).</td>
+</tr>
+<tr>
+<td>10</td>
+<td>Every member at exactly <strong>40/40 parts</strong>: no room for any fix.</td>
+<td>Round 2 requires headroom (see §4). Note: the v2 reference still sits at 40/40; copy its technique, not its part count.</td>
+</tr>
+</tbody>
+</table>
+<p>Key snippets (before → after):</p>
+<pre><code class="language-js">// 1. tail in down (animateGang)
+- const lift = state === 'down' ? -0.5 : ...;  J.tail.rotation.x = B[0] + lift;   // tail1/tail2 keep their curl
++ const th = J.tilt ? -J.tilt.rotation.x : 0, u = Math.min(1, Math.max(0, (th - 0.5) / 0.7));
++ const k = state === 'down' ? 1 : u * u * (3 - 2 * u), side = 1.2 * Math.sin(Math.PI * k);
++ // each segment = lerp(standing, flat [[-0.15,0,sw],[0.1,0,sw],[0.15,0,sw]], k), + side swing on the base
+// 2. shoulder pivot
+- shX: 0.3        + shX: 0.27   (bruiser: HR_D_BIG = { ...HR_D, shX: 0.3 } with fur shoulder balls)
+// 3. thin parts and the diamond
+- { outline: false }                 + { outline: false, shadow: false }
+- part(J.torso, G.box(.17,.17,.045), C.mustard, 0, .47, .17*sz + .02, { rot: [-0.25, 0, PI/4] })
++ part(J.torso, G.box(.17,.17,.045), C.mustard, 0, .47, .17*sz + .04, { rot: [-0.45, 0, PI/4] })   // proud of the belly
+// 4. cache
+- if (HR_FUR.has(K)) return HR_FUR.get(K); ... HR_FUR.set(K, tex);
++ const key = K.QUAL || K.THREE || K; if (HR_FUR.has(key)) return HR_FUR.get(key); ... if (tex) HR_FUR.set(key, tex);
+</code></pre>
+<h3>B. Pier Gulls (gang 2, <code>f1cfba4</code>): good, but three things were not real</h3>
+<p>Pier Gulls v1 passed its own QA suite (<code>tools/qa.html</code>). Three gaps:
+- <strong><code>mergeRig</code> was emulated.</strong> Your README says "The real mergeRig() was not available to me." It is now in <code>kit/real_mergeRig.js</code>; use only that.
+- <strong>Timings were assumed.</strong> You used rate 14 for idle 0.5 s, hurt 0.3 s, windup 0.4 s, attack 0.5 s. The game's real thug timings (<code>src/06_game.js</code>) are:</p>
+<table>
+<thead>
+<tr>
+<th>State</th>
+<th>Pose call</th>
+<th>Damping rate</th>
+<th>Duration / exit</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>idle / chase</td>
+<td><code>idle(t)</code> / <code>run(t, sp)</code></td>
+<td>14</td>
+<td>until the AI changes state</td>
+</tr>
+<tr>
+<td>windup</td>
+<td><code>windup(st)</code></td>
+<td>12</td>
+<td>0.5 s (bruiser 0.7 s), then attack</td>
+</tr>
+<tr>
+<td>attack</td>
+<td><code>attack(st / 0.3)</code></td>
+<td>26</td>
+<td>lunge 4 m/s for the first 0.12 s; back to chase at 0.55 s</td>
+</tr>
+<tr>
+<td>hurt</td>
+<td><code>hurt(st / 0.32)</code></td>
+<td>24</td>
+<td>back to chase at 0.34 s</td>
+</tr>
+<tr>
+<td>dizzy</td>
+<td><code>dizzy(st)</code></td>
+<td>10</td>
+<td>until the QTE ends</td>
+</tr>
+<tr>
+<td>knock-down</td>
+<td>hop vy 4.2, gravity 22, then <code>down(st, grounded)</code></td>
+<td>13</td>
+<td>getup after 1.25 s (or <code>dying</code> holds <code>down(1, true)</code>)</td>
+</tr>
+<tr>
+<td>getup</td>
+<td><code>getup(st / 0.5)</code></td>
+<td>14</td>
+<td>0.5 s, then windup or chase</td>
+</tr>
+</tbody>
+</table>
+<ul>
+<li><strong>Margins were thin:</strong> armed 36 parts / 11,656 tris, grunt_b 11,056, bruiser 11,072 tris (cap 12,000). The far LOD dipped to −2.1 cm in the knock-down.</li>
+</ul>
+<h2>3 · The task: Pier Gulls v1.1</h2>
+<p>Measured numbers from your own v1 README (idle, t = 0):</p>
+<table>
+<thead>
+<tr>
+<th>member</th>
+<th>HD parts</th>
+<th>HD tris</th>
+<th>v1.1 target</th>
+<th>LOD 1 knock-down low point</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>grunt_a</td>
+<td>33</td>
+<td>10,760</td>
+<td>≤ 38 / ≤ 11,000 (passes)</td>
+<td>−2.1 cm → ≥ −2.0 cm</td>
+</tr>
+<tr>
+<td>grunt_b</td>
+<td>33</td>
+<td>11,056</td>
+<td>cut ≥ 56 tris</td>
+<td>−2.1 cm → ≥ −2.0 cm</td>
+</tr>
+<tr>
+<td>armed</td>
+<td>36</td>
+<td>11,656</td>
+<td>cut ≥ 656 tris</td>
+<td>check</td>
+</tr>
+<tr>
+<td>bruiser</td>
+<td>33</td>
+<td>11,072</td>
+<td>cut ≥ 72 tris</td>
+<td>check</td>
+</tr>
+</tbody>
+</table>
+<p>Do exactly these, then re-measure everything:
+1. <strong>Real <code>mergeRig</code>:</strong> delete the emulation from your QA; import <code>kit/real_mergeRig.js</code> in the viewer and in <code>tools/qa.js</code>; report draw calls after merge, that the hit-flash covers every merged mesh, and that <code>animateGang</code> still moves the merged bones.
+2. <strong>Real timings:</strong> replace your assumed phases with the table in §2B (windup 0.5 s / bruiser 0.7 s at rate 12; attack <code>attack(st/0.3)</code> at rate 26 with a 0.12 s lunge, back to chase at 0.55 s; hurt 0.32 s at rate 24; dizzy rate 10; getup 0.5 s at rate 14; idle/chase rate 14). <code>kit/real_viewer.html?seq=attack|hurt|knockdown</code> plays them. Re-run every ground and shoulder check through these sequences.
+3. <strong>Margins:</strong> every HD member ≤ 38 parts and ≤ 11,000 tris (lower segment counts on hidden spheres first; do not drop the gang read).
+4. <strong>Beanie:</strong> the bruiser's beanie must be &lt; 55 % buried in the head (measure the share of its surface inside the head volume; report it).
+5. <strong>Far LOD:</strong> lowest point in the knock-down ≥ −0.02 m (it was −0.021 m); hands in the dark wingtip colour so the LOD keeps the gull read.
+6. <strong>README:</strong> measured numbers only, with the new timings named in "How things are measured"; remove every "assumed" line.</p>
+<blockquote>
+<p><strong>Canary 1 of 3 (required in your delivery):</strong> README_pier_gulls.md: the last section heading, exactly: <code>## Gull Check 410</code></p>
+</blockquote>
+<h2>4 · Interface and budgets</h2>
+<p>Unchanged from v1 (<code>GANG</code>, <code>META</code>, <code>buildPierGull(K, member, opts)</code>, <code>animateGang</code>). Budgets for v1.1:</p>
+<table>
+<thead>
+<tr>
+<th>Budget (per member)</th>
+<th>Cap</th>
+<th>v1.1 target</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>HD parts</td>
+<td>40</td>
+<td><strong>≤ 38</strong></td>
+</tr>
+<tr>
+<td>HD tris</td>
+<td>12,000</td>
+<td><strong>≤ 11,000</strong></td>
+</tr>
+<tr>
+<td>Materials</td>
+<td>3</td>
+<td>≤ 3</td>
+</tr>
+<tr>
+<td>LOD 1 parts / tris</td>
+<td>14 / 3,000</td>
+<td>≤ 14 / ≤ 3,000</td>
+</tr>
+<tr>
+<td>LOD 1 knock-down low point</td>
+<td>—</td>
+<td>≥ −0.02 m</td>
+</tr>
+<tr>
+<td>Beanie buried share (bruiser)</td>
+<td>—</td>
+<td>&lt; 55 %</td>
+</tr>
+</tbody>
+</table>
+<ul>
+<li><strong>No LOD swap exists in the game.</strong> <code>rigLod</code> (<code>06_game.js</code>) only hides ink hulls and stops shadow casting beyond 24 m. Ship <code>opts.lod === 1</code> anyway; never write that the game swaps it in.</li>
+<li><strong><code>mergeRig</code> only auto-wraps <code>buildThug</code>/<code>buildHero</code>.</strong> Your rig will be passed through it explicitly. Unmerged, an HD gang member costs about 95 draw calls; merged, 3 (+2 shadow). Plain groups only; every extra group (tail, ears, weapon, cape) parented under a skeleton joint; at most one mapped sub-material sharing <code>flash</code>/<code>flashC</code>.</li>
+<li><strong>Each file loads as its own ES module.</strong> Never rely on concatenation into <code>game.js</code>; export names may repeat across files, but <code>GANG.id</code> / <code>META.id</code> must be unique game-wide.</li>
+</ul>
+<blockquote>
+<p><strong>Canary 2 of 3 (required in your delivery):</strong> src/gang_pier_gulls.js: line 2, exactly: <code>// tcr2 o1 rockfish-tide</code></p>
+</blockquote>
+<h2>5 · Self-test and evidence</h2>
+<p>Render with <code>kit/real_viewer.html</code> (real poses, real kit) through headless Chrome (<code>--use-gl=swiftshader</code>, wait for <code>window.__ready === true</code>). For <strong>every</strong> member or boss:
+- <strong>Before/after (or new) renders, day and night, at 390×844</strong> (the phone framing: <code>&amp;cam=phone</code>), plus 1280×720 day/night and the pose strip (<code>&amp;pose=all</code>).
+- The <strong>real-pose strip</strong> must include the real <code>down</code> (arms overhead, flat on its back) and the <code>&amp;seq=knockdown</code> sequence; record <code>window.__report.seq.minY</code> for each rig.
+- A <strong>merged</strong> render (<code>&amp;merge=1</code>) day and night, and the hit-flash (<code>&amp;flash=0.85</code>) merged.
+- Run <code>harness/measure_gang.mjs</code> (gangs) and keep <code>results_gang.json</code> in the delivery under <code>tools/</code>.
+- <strong>Before/after pairs</strong> for each change (v1 render left, v1.1 right): merged flash, knock-down strip, LOD hands, bruiser beanie side view.</p>
+<blockquote>
+<p><strong>Canary 3 of 3 (required in your delivery):</strong> Final message: the first line of the filled self-check block, exactly: <code>SELF-CHECK O1 pier-four-lantern</code></p>
+</blockquote>
+<h2>6 · Delivery</h2>
+<ul>
+<li><strong>Branch:</strong> push to <strong><code>claude/o1-pier-gulls-v1-1</code></strong> on <code>https://github.com/bparlette/hawk</code> (branch it from <code>f1cfba4</code>). If your environment forces its own branch name, push there and name it in your first and last message.</li>
+<li><strong>Layout:</strong> as v1, plus <code>dist/toadcity_taskC_pier_gulls_v1_1.zip</code>; <code>previews/before_after/</code>.</li>
+<li>Final message to Brad: branch, commit, zip path, filled §7.</li>
+</ul>
+<h2>7 · Final self-check (measured numbers only)</h2>
+<table>
+<thead>
+<tr>
+<th>Check</th>
+<th>grunt_a</th>
+<th>grunt_b</th>
+<th>armed</th>
+<th>bruiser</th>
+<th>Threshold</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>HD parts / tris / materials</td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td>≤ 38 / ≤ 11,000 / ≤ 3</td>
+</tr>
+<tr>
+<td>LOD 1 parts / tris</td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td>≤ 14 / ≤ 3,000</td>
+</tr>
+<tr>
+<td>Real <code>mergeRig</code> draw calls after / flash covers all / bones animate</td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td>≤ 3 / yes / yes</td>
+</tr>
+<tr>
+<td>Lowest point: <code>seq=knockdown</code>, <code>seq=attack</code>, <code>seq=hurt</code> (HD)</td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td>≥ −0.03 m</td>
+</tr>
+<tr>
+<td>LOD 1 lowest point in knock-down</td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td>≥ −0.02 m</td>
+</tr>
+<tr>
+<td>Shoulder gap <code>down(1,true)</code> / <code>windup(0.6)</code></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td>≤ 1 cm</td>
+</tr>
+<tr>
+<td>Beanie buried share</td>
+<td>—</td>
+<td>—</td>
+<td>—</td>
+<td></td>
+<td>&lt; 55 %</td>
+</tr>
+<tr>
+<td>LOD hands colour = wingtip colour</td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td>yes</td>
+</tr>
+<tr>
+<td>Console errors</td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td>0</td>
+</tr>
+</tbody>
+</table>
+<h2>HARD RULES (repeated)</h2>
+<ol>
+<li>Build only what this session names. One file per gang or boss in <code>src/</code>, loaded as its own ES module.</li>
+<li>No <code>import</code> in your modules; everything comes through <code>K</code>. Materials only from <code>K.toonMat</code> / <code>K.basicMat</code> / <code>K.makeAtlas</code>; outlines only the shared <code>K.OUT_CHAR</code>.</li>
+<li>No <code>Math.random()</code> at build time: seeded LCG (<code>s = s * 16807 % 2147483647</code>) from <code>opts.seed</code>.</li>
+<li>Use the kit in the ZIP (<code>kit/toadcity_kit.js</code>) byte-identical. Never edit it, never rebuild a kit from memory.</li>
+<li>Test with the real poses and the real <code>kit/real_mergeRig.js</code>. Never emulate either.</li>
+<li>Budget with headroom: every HD gull ≤ 38 parts and ≤ 11,000 tris (at least 2 parts and 1,000 tris under the 40 / 12,000 caps), ≤ 3 materials.</li>
+<li>Far LOD ≤ 14 parts, ≤ 3,000 tris; its lowest point in the knock-down ≥ −0.02 m; hands in the dark wingtip colour.</li>
+<li>No vertex of a non-hull mesh below y = −0.03 m in any real pose or blend (feet and weapon excepted).</li>
+<li><code>shadow: false</code> on every <code>outline: false</code> part and on every part thinner than 4 cm in two dimensions.</li>
+<li>Texture caches keyed on a stable kit object (see §2A fix 4); never cache a failed draw.</li>
+<li>In idle, no part reaches more than 0.35 m beyond <code>META.radius</code> horizontally (weapon excepted); report the measured value.</li>
+<li>README numbers are measured only, each with its pose and time. No "about". The game has no LOD swap: never claim one.</li>
+<li>Evidence: day + night renders at 390×844 with the real poses, merged and unmerged, for every asset.</li>
+<li>Change only what §3 lists; keep everything that already passes. Push to the branch named in §6.</li>
+<li>Reply first with the Step 0 comprehension check, then STOP until Brad says <strong>GO</strong>.</li>
+</ol></div>
+<h2>Before / after and reference renders</h2><div class="imgs"><figure><a href="img/pier_gulls_lineup_day.jpg"><img src="img/pier_gulls_lineup_day.jpg" loading="lazy" alt=""></a><figcaption>Pier Gulls v1 lineup, day (your delivery).</figcaption></figure><figure><a href="img/pier_gulls_lineup_night.jpg"><img src="img/pier_gulls_lineup_night.jpg" loading="lazy" alt=""></a><figcaption>Pier Gulls v1 lineup, night.</figcaption></figure><figure><a href="img/pier_gulls_bruiser_knockdown_60fps.jpg"><img src="img/pier_gulls_bruiser_knockdown_60fps.jpg" loading="lazy" alt=""></a><figcaption>Pier Gulls v1 knock-down strip (assumed timings).</figcaption></figure><figure><a href="img/pier_gulls_armed_hd_vs_lod1.jpg"><img src="img/pier_gulls_armed_hd_vs_lod1.jpg" loading="lazy" alt=""></a><figcaption>Pier Gulls v1 armed: HD vs LOD 1.</figcaption></figure><figure><a href="img/after_real_merged_flash.jpg"><img src="img/after_real_merged_flash.jpg" loading="lazy" alt=""></a><figcaption>Real mergeRig + hit-flash on the fixed rats.</figcaption></figure></div>
+<p style="font-size:12px;color:#777">Prepared by Hark for Brad Parlette, 11 October 2026. Everything here is procedural game code and renders; no credentials.</p></main>
+<script>const P="# O1 \u00b7 Pier Gulls v1.1 fix pass\n**For:** Claude Opus \u00b7 **Setting:** Claude Opus (newest), extended thinking ON, high effort. \u00b7 **Depends on:** Pier Gulls v1 (f1cfba4). Parallel with O2\u2013O7. \u00b7 **Delivers to: `claude/o1-pier-gulls-v1-1`**\n\nAttach `Toad_City_Round2_OPUS.zip` to this chat together with this prompt. Everything bulky (code, references, renders) is in the ZIP; this prompt names the files.\n\n## HARD RULES (read first; repeated at the very end)\n1. Build only what this session names. One file per gang or boss in `src/`, loaded as its own ES module.\n2. No `import` in your modules; everything comes through `K`. Materials only from `K.toonMat` / `K.basicMat` / `K.makeAtlas`; outlines only the shared `K.OUT_CHAR`.\n3. No `Math.random()` at build time: seeded LCG (`s = s * 16807 % 2147483647`) from `opts.seed`.\n4. Use the kit in the ZIP (`kit/toadcity_kit.js`) byte-identical. Never edit it, never rebuild a kit from memory.\n5. Test with the real poses and the real `kit/real_mergeRig.js`. Never emulate either.\n6. Budget with headroom: every HD gull \u2264 38 parts and \u2264 11,000 tris (at least 2 parts and 1,000 tris under the 40 / 12,000 caps), \u2264 3 materials.\n7. Far LOD \u2264 14 parts, \u2264 3,000 tris; its lowest point in the knock-down \u2265 \u22120.02 m; hands in the dark wingtip colour.\n8. No vertex of a non-hull mesh below y = \u22120.03 m in any real pose or blend (feet and weapon excepted).\n9. `shadow: false` on every `outline: false` part and on every part thinner than 4 cm in two dimensions.\n10. Texture caches keyed on a stable kit object (see \u00a72A fix 4); never cache a failed draw.\n11. In idle, no part reaches more than 0.35 m beyond `META.radius` horizontally (weapon excepted); report the measured value.\n12. README numbers are measured only, each with its pose and time. No \"about\". The game has no LOD swap: never claim one.\n13. Evidence: day + night renders at 390\u00d7844 with the real poses, merged and unmerged, for every asset.\n14. Change only what \u00a73 lists; keep everything that already passes. Push to the branch named in \u00a76.\n15. Reply first with the Step 0 comprehension check, then STOP until Brad says **GO**.\n\n## Step 0 \u00b7 Comprehension check (your FIRST reply; write no code and produce no deliverable until Brad answers GO)\n1. **List every file in the ZIP** (full path) and say in a few words what you will use it for.\n2. **Restate, numbered and in your own words, every HARD RULE above and every lesson or fix row in \u00a72** (one line each).\n3. **Answer these questions.** Every answer is in the sections below; quote the exact number, name or code.\n   - Q1. What is the real windup duration for a bruiser, and its damping rate?\n   - Q2. Attack: pose argument, rate, lunge time, and when does the thug go back to chase?\n   - Q3. Hurt and dizzy damping rates?\n   - Q4. Thug getup: duration and rate?\n   - Q5. How many triangles does your v1 armed gull have, and how many must you cut?\n   - Q6. How much of the beanie may be buried in the head?\n   - Q7. What colour must the far-LOD hands be?\n   - Q8. What is the delivery branch name?\n4. **Quote the three canary instructions** this prompt contains (they are marked \"Canary 1/2/3 of 3\" somewhere in the middle) and confirm you will include each string exactly.\n\nThen stop and wait. Brad checks your answers; if any is wrong he will send you back to re-read.\n\n## ZIP contents\n| ZIP path | What it is |\n|---|---|\n| `README_ZIP.md` | Index of the ZIP and the one-line setup (`npm i` at the ZIP root installs three 0.160.0 for the Node harness). |\n| `kit/toadcity_kit.js` | The **real** starter kit. Its `THUG_POSES` / `HERO_POSES` / `applyPose` are byte-identical to the game's `src/04_actors.js`. Ship it unchanged. |\n| `kit/viewer.html`, `kit/example_gull_thug.js`, `kit/example_bench.js` | The kit test bench and the two interface examples. |\n| `kit/real_mergeRig.js` | The game's real `mergeRig()` (verbatim from `src/04b_rig_merge.js`) as an ES module. |\n| `kit/real_poses_04_actors.js` | The game's real pose code, verbatim, for reading. |\n| `kit/real_viewer.html` | Real-pose viewer: `?mods=../src/<file>.js&show=<id>&pose=all`, `&merge=1` (real mergeRig), `&seq=knockdown|attack|hurt` (real game timings; `window.__report.seq.minY` gives the lowest vertex per rig, unmerged). |\n| `harness/realK.mjs`, `harness/fakedom.mjs`, `harness/measure_gang.mjs` | Hark's Node harness. `GANG=./src/gang_<id>.js node harness/measure_gang.mjs` writes `results_gang.json`: parts, tris, hulls, shadow casters, heights, per-pose lowest point and limb gaps, real mergeRig result, determinism. |\n| `reference/harbor_rats/` | Harbor Rats v1 (`bbad681`), the fixed v2 (Hark's branch `hark/harbor-rats-fixes`, commit `751c21b`), the v1\u2192v2 diff and the v2 README. |\n| `reference/pier_gulls_v1/` | Your Pier Gulls v1 (`f1cfba4`): module, README and QA page. |\n| `reviews/harbor_rats_review.md`, `reviews/TASK_C_review_lessons.md` | The full Harbor Rats review and the lessons list. |\n| `previews/before_after/` | Before/after renders of every Harbor Rats fix (real poses), and `harbor_rats_fixes_compare.png`. |\n| `briefs/TASK_C_thug_gangs.md`, `briefs/TASK_D_bosses.md` | Round-1 briefs (full interfaces, roster, style rules). This prompt overrides them where they differ. |\n| `prompts/` | All Opus round-2 session prompts (O1\u2013O7). |\n\n## 1 \u00b7 Context\n**Toad City Baltimore** is a phone-first, cel-shaded open-world brawler on Baltimore's Inner Harbor (three.js r160, plain ES modules, everything procedural: no image, model or font files). You play Harold, an elderly toad with a cane; his wife Mavis (grey afro, handbag) fights beside him. Each district has a thug gang; each landmark has a boss. Characters are plain `THREE.Group` rigs built from primitives with `K.part()`, posed by code, cel-shaded with ink hulls, then merged by the game's `mergeRig()` into 2\u20134 draw calls.\n\nYou get one ZIP (`Toad_City_Round2_OPUS.zip`). It holds the **real** starter kit (last round it never reached you and you rebuilt one from memory), the real `mergeRig`, the real poses, Hark's measuring harness, a real-pose viewer, the fixed Harbor Rats reference, the reviews and before/after renders. Bulky material lives in the ZIP; this prompt points at it by file name.\n\n**This session is the Pier Gulls v1.1 fix pass**, not a new gang. Your v1 (`f1cfba4` on `claude/new-session-z5ikqq`, `dist/toadcity_taskC_pier_gulls_v1.zip`, QA page `tools/qa.html`) is in the ZIP at `reference/pier_gulls_v1/`. Gang 1 (Harbor Rats) stays Hark's fixed version: do not touch it.\n\n## 2 \u00b7 Where you fell short last round and how we fixed it\n### A. Harbor Rats (gang 1, `bbad681`): what the review found and the exact fix\nHark measured v1 against the **real game code** (real poses, real `mergeRig`). Full fixed module: `reference/harbor_rats/gang_harbor_rats_v2_FIXED.js`; full diff: `reference/harbor_rats/harbor_rats_v1_to_v2.diff`. Renders: `previews/before_after/before_*.png` vs `after_*.png`.\n\n| # | Before (measured) | After (fix) |\n|---|---|---|\n| 1 | **Tail through the floor in the real `down` pose:** lowest point \u22120.67 m (grunts), \u22120.80 m (bruiser). `animateGang('down')` only lifted the tail base, still \u22120.52 / \u22120.62 m. | `animateGang` lays all three tail segments flat in `'down'` (\u22120.15, 0.1, 0.15 rad) and, in every other state, blends toward flat as `J.tilt.rotation.x` puts the rig on its back (smoothstep 0.5\u21921.2 rad), so the getup blend never stabs down. Lowest point now +0.054 m (grunt), +0.065 m (bruiser). |\n| 2 | **3 cm shoulder gap** when the arms go overhead (real `down`: `shL` \u22122.6 / `shR` \u22122.4; armed `windup`: `shR` \u22122.9). | `HR_D.shX` 0.30 \u2192 **0.27**; the bruiser keeps 0.30 because it has fur shoulder balls. Gap now \u2264 1 cm. |\n| 3 | **Stray ink line across every belly.** The neckerchief diamond knot was sunk into the belly, so its ink hull crossed the surface; whiskers (9 mm boxes) also cast shadows. | Diamond moved proud of the belly (z +0.02 \u2192 +0.04, tilt \u22120.25 \u2192 \u22120.45). `shadow: false` added to every `outline: false` part (whiskers, teeth, eyes, brows, strap, toothpick, earring, inner ears, oar band). |\n| 4 | **Fur texture cache keyed on `K`**, and it cached `null` when `document` was missing: a `{...K}` wrapper redrew the canvas per spawn, and a DOM-less first build locked the rig out of fur forever. | `const key = K.QUAL \\|\\| K.THREE \\|\\| K;` and `HR_FUR.set(key, tex)` only after a successful draw. |\n| 5 | **LOD 1 drift:** the armed rat dropped the mustard neckerchief (gang colour gone at distance); LOD forearms always fur (grunt_a HD forearms are navy); LOD ignored the bruiser's \u00d71.22 depth. | LOD keeps the diamond on every member; the armed LOD drops the hips sphere instead; forearm colour follows `L.sleeves`; depth \u00d7 `sz` as in HD. |\n| 6 | **Ears sliced through the beanie cuff and do-rag** (side views). | Ear groups moved from (\u00b10.155, 0.33) to (\u00b10.17, 0.35). |\n| 7 | Sleeve material chosen by comparing colour values (`upCol === C.fur`). | Branch on the look (`L.sleeves`), never on colour equality. |\n| 8 | **README not measured:** \"about 34 hulls + about 23 shadow casters\" (measured 28\u201329 and 27\u201330); \"can clip the ground slightly\" (it was 0.66 m); claimed \"the game swaps LOD 1 in\" (it does not); `tools/` listed but missing from the zip. | Every README number now comes from a script, with pose and time; known issues carry their measured size; the zip contains what the README lists. |\n| 9 | Viewer mapped game state `getup` \u2192 `'down'`. | `getup` \u2192 `'idle'` (the tail lifts with the tilt). |\n| 10 | Every member at exactly **40/40 parts**: no room for any fix. | Round 2 requires headroom (see \u00a74). Note: the v2 reference still sits at 40/40; copy its technique, not its part count. |\n\nKey snippets (before \u2192 after):\n```js\n// 1. tail in down (animateGang)\n- const lift = state === 'down' ? -0.5 : ...;  J.tail.rotation.x = B[0] + lift;   // tail1/tail2 keep their curl\n+ const th = J.tilt ? -J.tilt.rotation.x : 0, u = Math.min(1, Math.max(0, (th - 0.5) / 0.7));\n+ const k = state === 'down' ? 1 : u * u * (3 - 2 * u), side = 1.2 * Math.sin(Math.PI * k);\n+ // each segment = lerp(standing, flat [[-0.15,0,sw],[0.1,0,sw],[0.15,0,sw]], k), + side swing on the base\n// 2. shoulder pivot\n- shX: 0.3        + shX: 0.27   (bruiser: HR_D_BIG = { ...HR_D, shX: 0.3 } with fur shoulder balls)\n// 3. thin parts and the diamond\n- { outline: false }                 + { outline: false, shadow: false }\n- part(J.torso, G.box(.17,.17,.045), C.mustard, 0, .47, .17*sz + .02, { rot: [-0.25, 0, PI/4] })\n+ part(J.torso, G.box(.17,.17,.045), C.mustard, 0, .47, .17*sz + .04, { rot: [-0.45, 0, PI/4] })   // proud of the belly\n// 4. cache\n- if (HR_FUR.has(K)) return HR_FUR.get(K); ... HR_FUR.set(K, tex);\n+ const key = K.QUAL || K.THREE || K; if (HR_FUR.has(key)) return HR_FUR.get(key); ... if (tex) HR_FUR.set(key, tex);\n```\n\n### B. Pier Gulls (gang 2, `f1cfba4`): good, but three things were not real\nPier Gulls v1 passed its own QA suite (`tools/qa.html`). Three gaps:\n- **`mergeRig` was emulated.** Your README says \"The real mergeRig() was not available to me.\" It is now in `kit/real_mergeRig.js`; use only that.\n- **Timings were assumed.** You used rate 14 for idle 0.5 s, hurt 0.3 s, windup 0.4 s, attack 0.5 s. The game's real thug timings (`src/06_game.js`) are:\n\n| State | Pose call | Damping rate | Duration / exit |\n|---|---|---|---|\n| idle / chase | `idle(t)` / `run(t, sp)` | 14 | until the AI changes state |\n| windup | `windup(st)` | 12 | 0.5 s (bruiser 0.7 s), then attack |\n| attack | `attack(st / 0.3)` | 26 | lunge 4 m/s for the first 0.12 s; back to chase at 0.55 s |\n| hurt | `hurt(st / 0.32)` | 24 | back to chase at 0.34 s |\n| dizzy | `dizzy(st)` | 10 | until the QTE ends |\n| knock-down | hop vy 4.2, gravity 22, then `down(st, grounded)` | 13 | getup after 1.25 s (or `dying` holds `down(1, true)`) |\n| getup | `getup(st / 0.5)` | 14 | 0.5 s, then windup or chase |\n\n- **Margins were thin:** armed 36 parts / 11,656 tris, grunt_b 11,056, bruiser 11,072 tris (cap 12,000). The far LOD dipped to \u22122.1 cm in the knock-down.\n\n## 3 \u00b7 The task: Pier Gulls v1.1\nMeasured numbers from your own v1 README (idle, t = 0):\n\n| member | HD parts | HD tris | v1.1 target | LOD 1 knock-down low point |\n|---|---|---|---|---|\n| grunt_a | 33 | 10,760 | \u2264 38 / \u2264 11,000 (passes) | \u22122.1 cm \u2192 \u2265 \u22122.0 cm |\n| grunt_b | 33 | 11,056 | cut \u2265 56 tris | \u22122.1 cm \u2192 \u2265 \u22122.0 cm |\n| armed | 36 | 11,656 | cut \u2265 656 tris | check |\n| bruiser | 33 | 11,072 | cut \u2265 72 tris | check |\n\nDo exactly these, then re-measure everything:\n1. **Real `mergeRig`:** delete the emulation from your QA; import `kit/real_mergeRig.js` in the viewer and in `tools/qa.js`; report draw calls after merge, that the hit-flash covers every merged mesh, and that `animateGang` still moves the merged bones.\n2. **Real timings:** replace your assumed phases with the table in \u00a72B (windup 0.5 s / bruiser 0.7 s at rate 12; attack `attack(st/0.3)` at rate 26 with a 0.12 s lunge, back to chase at 0.55 s; hurt 0.32 s at rate 24; dizzy rate 10; getup 0.5 s at rate 14; idle/chase rate 14). `kit/real_viewer.html?seq=attack|hurt|knockdown` plays them. Re-run every ground and shoulder check through these sequences.\n3. **Margins:** every HD member \u2264 38 parts and \u2264 11,000 tris (lower segment counts on hidden spheres first; do not drop the gang read).\n4. **Beanie:** the bruiser's beanie must be < 55 % buried in the head (measure the share of its surface inside the head volume; report it).\n5. **Far LOD:** lowest point in the knock-down \u2265 \u22120.02 m (it was \u22120.021 m); hands in the dark wingtip colour so the LOD keeps the gull read.\n6. **README:** measured numbers only, with the new timings named in \"How things are measured\"; remove every \"assumed\" line.\n\n> **Canary 1 of 3 (required in your delivery):** README_pier_gulls.md: the last section heading, exactly: `## Gull Check 410`\n\n## 4 \u00b7 Interface and budgets\nUnchanged from v1 (`GANG`, `META`, `buildPierGull(K, member, opts)`, `animateGang`). Budgets for v1.1:\n\n| Budget (per member) | Cap | v1.1 target |\n|---|---|---|\n| HD parts | 40 | **\u2264 38** |\n| HD tris | 12,000 | **\u2264 11,000** |\n| Materials | 3 | \u2264 3 |\n| LOD 1 parts / tris | 14 / 3,000 | \u2264 14 / \u2264 3,000 |\n| LOD 1 knock-down low point | \u2014 | \u2265 \u22120.02 m |\n| Beanie buried share (bruiser) | \u2014 | < 55 % |\n\n- **No LOD swap exists in the game.** `rigLod` (`06_game.js`) only hides ink hulls and stops shadow casting beyond 24 m. Ship `opts.lod === 1` anyway; never write that the game swaps it in.\n- **`mergeRig` only auto-wraps `buildThug`/`buildHero`.** Your rig will be passed through it explicitly. Unmerged, an HD gang member costs about 95 draw calls; merged, 3 (+2 shadow). Plain groups only; every extra group (tail, ears, weapon, cape) parented under a skeleton joint; at most one mapped sub-material sharing `flash`/`flashC`.\n- **Each file loads as its own ES module.** Never rely on concatenation into `game.js`; export names may repeat across files, but `GANG.id` / `META.id` must be unique game-wide.\n\n> **Canary 2 of 3 (required in your delivery):** src/gang_pier_gulls.js: line 2, exactly: `// tcr2 o1 rockfish-tide`\n\n## 5 \u00b7 Self-test and evidence\nRender with `kit/real_viewer.html` (real poses, real kit) through headless Chrome (`--use-gl=swiftshader`, wait for `window.__ready === true`). For **every** member or boss:\n- **Before/after (or new) renders, day and night, at 390\u00d7844** (the phone framing: `&cam=phone`), plus 1280\u00d7720 day/night and the pose strip (`&pose=all`).\n- The **real-pose strip** must include the real `down` (arms overhead, flat on its back) and the `&seq=knockdown` sequence; record `window.__report.seq.minY` for each rig.\n- A **merged** render (`&merge=1`) day and night, and the hit-flash (`&flash=0.85`) merged.\n- Run `harness/measure_gang.mjs` (gangs) and keep `results_gang.json` in the delivery under `tools/`.\n- **Before/after pairs** for each change (v1 render left, v1.1 right): merged flash, knock-down strip, LOD hands, bruiser beanie side view.\n\n> **Canary 3 of 3 (required in your delivery):** Final message: the first line of the filled self-check block, exactly: `SELF-CHECK O1 pier-four-lantern`\n\n## 6 \u00b7 Delivery\n- **Branch:** push to **`claude/o1-pier-gulls-v1-1`** on `https://github.com/bparlette/hawk` (branch it from `f1cfba4`). If your environment forces its own branch name, push there and name it in your first and last message.\n- **Layout:** as v1, plus `dist/toadcity_taskC_pier_gulls_v1_1.zip`; `previews/before_after/`.\n- Final message to Brad: branch, commit, zip path, filled \u00a77.\n\n## 7 \u00b7 Final self-check (measured numbers only)\n| Check | grunt_a | grunt_b | armed | bruiser | Threshold |\n|---|---|---|---|---|---|\n| HD parts / tris / materials | | | | | \u2264 38 / \u2264 11,000 / \u2264 3 |\n| LOD 1 parts / tris | | | | | \u2264 14 / \u2264 3,000 |\n| Real `mergeRig` draw calls after / flash covers all / bones animate | | | | | \u2264 3 / yes / yes |\n| Lowest point: `seq=knockdown`, `seq=attack`, `seq=hurt` (HD) | | | | | \u2265 \u22120.03 m |\n| LOD 1 lowest point in knock-down | | | | | \u2265 \u22120.02 m |\n| Shoulder gap `down(1,true)` / `windup(0.6)` | | | | | \u2264 1 cm |\n| Beanie buried share | \u2014 | \u2014 | \u2014 | | < 55 % |\n| LOD hands colour = wingtip colour | | | | | yes |\n| Console errors | | | | | 0 |\n\n## HARD RULES (repeated)\n1. Build only what this session names. One file per gang or boss in `src/`, loaded as its own ES module.\n2. No `import` in your modules; everything comes through `K`. Materials only from `K.toonMat` / `K.basicMat` / `K.makeAtlas`; outlines only the shared `K.OUT_CHAR`.\n3. No `Math.random()` at build time: seeded LCG (`s = s * 16807 % 2147483647`) from `opts.seed`.\n4. Use the kit in the ZIP (`kit/toadcity_kit.js`) byte-identical. Never edit it, never rebuild a kit from memory.\n5. Test with the real poses and the real `kit/real_mergeRig.js`. Never emulate either.\n6. Budget with headroom: every HD gull \u2264 38 parts and \u2264 11,000 tris (at least 2 parts and 1,000 tris under the 40 / 12,000 caps), \u2264 3 materials.\n7. Far LOD \u2264 14 parts, \u2264 3,000 tris; its lowest point in the knock-down \u2265 \u22120.02 m; hands in the dark wingtip colour.\n8. No vertex of a non-hull mesh below y = \u22120.03 m in any real pose or blend (feet and weapon excepted).\n9. `shadow: false` on every `outline: false` part and on every part thinner than 4 cm in two dimensions.\n10. Texture caches keyed on a stable kit object (see \u00a72A fix 4); never cache a failed draw.\n11. In idle, no part reaches more than 0.35 m beyond `META.radius` horizontally (weapon excepted); report the measured value.\n12. README numbers are measured only, each with its pose and time. No \"about\". The game has no LOD swap: never claim one.\n13. Evidence: day + night renders at 390\u00d7844 with the real poses, merged and unmerged, for every asset.\n14. Change only what \u00a73 lists; keep everything that already passes. Push to the branch named in \u00a76.\n15. Reply first with the Step 0 comprehension check, then STOP until Brad says **GO**.\n";document.getElementById('cp').onclick=async()=>{try{await navigator.clipboard.writeText(P)}catch(e){const t=document.createElement('textarea');t.value=P;document.body.appendChild(t);t.select();document.execCommand('copy');t.remove()}document.getElementById('ok').textContent='Copied ✓';setTimeout(()=>document.getElementById('ok').textContent='',2500)};</script>
+</body></html>

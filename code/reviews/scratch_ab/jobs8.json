@@ -1,0 +1,1 @@
+[{"page": "scratch_ab/swapkit/viewer.html", "q": "show=street&hud=1", "out": "shots/swapkit_street.png", "timeout": 20000}, {"page": "scratch_ab/swapkit/viewer.html", "q": "show=car_sedan&hud=1", "out": "shots/swapkit_sedan.png", "timeout": 20000}]

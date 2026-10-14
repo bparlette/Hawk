@@ -1,0 +1,1 @@
+Hark review harness for Task A/B. From the ZIP root: `npm i`, then `node harness_ab/measure_ab.mjs` (set SRC=./src/ to point at your modules; default reference/taskAB_fixed/). Writes JSON next to the script. `sonnet_kit.mjs` is your round-1 reconstructed kit, kept only so the old comparisons run; use kit/toadcity_kit.js for new work.

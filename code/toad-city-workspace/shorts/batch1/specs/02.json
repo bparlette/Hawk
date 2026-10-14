@@ -1,0 +1,117 @@
+{
+ "name": "02_scrubber",
+ "out": "/workspace/work/toad-city/shorts/batch1/final/02_stoop_scrubber_marble_steps.mp4",
+ "music": "club_b",
+ "music_db": -10,
+ "segs": [
+  {
+   "src": "scrubber",
+   "a": 20.2,
+   "b": 21.4,
+   "flash": 0.12
+  },
+  {
+   "src": "scrubber",
+   "a": 0.0,
+   "b": 3.0
+  },
+  {
+   "src": "scrubber",
+   "a": 3.0,
+   "b": 5.6
+  },
+  {
+   "src": "scrubber",
+   "a": 5.6,
+   "b": 8.4
+  },
+  {
+   "src": "scrubber",
+   "a": 9.2,
+   "b": 12.0
+  },
+  {
+   "src": "scrubber",
+   "a": 13.0,
+   "b": 16.3
+  },
+  {
+   "src": "scrubber",
+   "a": 16.63,
+   "b": 19.6
+  },
+  {
+   "src": "scrubber",
+   "a": 19.6,
+   "b": 25.0
+  }
+ ],
+ "hit": {
+  "seg": 5,
+  "t": 15.88
+ },
+ "captions": [
+  {
+   "text": "NEVER TRACK MUD ON A BALTIMORE STOOP",
+   "t0": 0,
+   "t1": 1.2,
+   "y": 470,
+   "color": "#ffd23a",
+   "size": 96
+  },
+  {
+   "text": "SHE SCRUBBED THESE MARBLE STEPS AT DAWN",
+   "t0": 1.2,
+   "t1": 4.2,
+   "y": 470
+  },
+  {
+   "text": "SHE POLISHED THEM INTO A LASER",
+   "t0": 4.2,
+   "t1": 6.8,
+   "y": 470,
+   "color": "#9dff6b"
+  },
+  {
+   "text": "SUDS. EVERYWHERE.",
+   "t0": 6.8,
+   "t1": 9.6,
+   "y": 470,
+   "color": "#7fe3ff"
+  },
+  {
+   "text": "WIPE YOUR FEET, HON!",
+   "t0": 9.6,
+   "t1": 12.4,
+   "y": 470,
+   "color": "#ff6fae"
+  },
+  {
+   "text": "SCRUB-A-DUB...",
+   "t0": 12.4,
+   "t1": 15.2,
+   "y": 470
+  },
+  {
+   "text": "SHE SLIPPED ON HER OWN SUDS",
+   "t0": 18.7,
+   "t1": 21.3,
+   "y": 470,
+   "color": "#ffd23a"
+  },
+  {
+   "text": "ALL. THE. WAY. DOWN.",
+   "t0": 21.3,
+   "t1": 22.7,
+   "y": 470
+  },
+  {
+   "text": "\"OKAY HON.\"",
+   "t0": 22.7,
+   "t1": 24.05,
+   "y": 470,
+   "color": "#ff6fae",
+   "size": 110
+  }
+ ]
+}

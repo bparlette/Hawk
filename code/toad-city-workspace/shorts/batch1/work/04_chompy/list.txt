@@ -1,0 +1,8 @@
+file '/workspace/work/toad-city/shorts/batch1/work/04_chompy/seg00.mp4'
+file '/workspace/work/toad-city/shorts/batch1/work/04_chompy/seg01.mp4'
+file '/workspace/work/toad-city/shorts/batch1/work/04_chompy/seg02.mp4'
+file '/workspace/work/toad-city/shorts/batch1/work/04_chompy/seg03.mp4'
+file '/workspace/work/toad-city/shorts/batch1/work/04_chompy/seg04.mp4'
+file '/workspace/work/toad-city/shorts/batch1/work/04_chompy/seg05.mp4'
+file '/workspace/work/toad-city/shorts/batch1/work/04_chompy/seg06.mp4'
+file '/workspace/work/toad-city/shorts/batch1/work/04_chompy/seg07.mp4'

@@ -1,0 +1,21 @@
+{"bpm": 160, "fps": 30,
+ "beats": [
+  ["title", 3.0, ""],
+  ["brawl", 3.0, "BRAWL THE STREETS"],
+  ["manhole", 2.25, "DROP INTO THE SEWERS"],
+  ["skate", 3.0, "SKATE THE SEWERS"],
+  ["freeflow", 3.0, "FREEFLOW COMBAT"],
+  ["exitsewer", 2.25, "POP UP ANYWHERE"],
+  ["subway", 3.0, "HIT THE SUBWAY"],
+  ["elevator", 2.25, "ENTER THE BUILDINGS"],
+  ["roofleap", 2.25, "RUN THE ROOFTOPS"],
+  ["stealth", 3.0, "GHOST THE ROOFTOPS"],
+  ["comic", 2.25, "3 CAMERA STYLES"],
+  ["oneshot", 2.25, "3 CAMERA STYLES"],
+  ["van", 2.25, "DRIVE THE PARTY VAN"],
+  ["daynight", 3.0, "DAY TO NIGHT"],
+  ["fire", 3.0, "FIGHT THROUGH THE FIRE"],
+  ["boss", 3.75, "TAKE DOWN THE BOSS"],
+  ["win", 2.25, "SAVE THE CITY"],
+  ["end", 3.75, ""]
+ ]}

@@ -1,0 +1,191 @@
+{
+  "name": "finale_390x844",
+  "viewport": "390x844",
+  "pass": true,
+  "reason": "CROWD build; phases dock card fly; bursts 16; flyover moved 3.0 m; crowd 415 people / 59 windows / 19 signs / 0 stoops; draw calls 96; frame 704.8 ms (swiftshader); takeover yes; chip resume true; chip \"CITY SAVED · CRIME 0%\"",
+  "wall": 61,
+  "errors": [],
+  "warnings": [],
+  "ignored": [],
+  "phases": [
+    "dock",
+    "card",
+    "fly"
+  ],
+  "shots": [
+    "out/finale_390x844_fireworks.png",
+    "out/finale_390x844_card.png",
+    "out/finale_390x844_flyover.png",
+    "out/finale_390x844_takeover.png",
+    "out/finale_390x844_city.png"
+  ],
+  "crowdBuild": true,
+  "auto": {
+    "log": [
+      "start:param",
+      "cheer",
+      "hug",
+      "card",
+      "drone:unlocked",
+      "finish",
+      "city:saved:0",
+      "flyover",
+      "drone:on:finale",
+      "drone:autopilot:finale",
+      "credits",
+      "drone:takeover:touch",
+      "credits:end:takeover",
+      "drone:autopilot:chip",
+      "drone:off:v",
+      "drone:on:v",
+      "drone:autopilot:v",
+      "drone:off:v"
+    ],
+    "credits": {
+      "bosses": 20,
+      "bossNames": [
+        "The Chip Kid",
+        "Dragon Boat Duchess",
+        "Captain Cobblestone",
+        "The Penthouse Pigeon",
+        "Big Jimmy",
+        "Voltage Vic",
+        "Chef Crabcake",
+        "The Pool Shark",
+        "Arabber Al",
+        "The Stoop Scrubber",
+        "Bird Brain Bobby",
+        "The Raven King",
+        "Dr. Shellacious",
+        "The Hon Queen",
+        "Sugar Rush",
+        "The Compression King",
+        "Admiral Redclaw",
+        "Pit Beef Pete",
+        "Riptide Rodney",
+        "Kingpin Carl"
+      ],
+      "final": "The One-Eyed Brewmaster",
+      "tracks": 44
+    },
+    "city": {
+      "chip": "CITY SAVED · CRIME 0%",
+      "chipOn": true,
+      "crime": 0,
+      "ls": {
+        "saved": true,
+        "drone": true,
+        "runs": 1,
+        "flights": 2,
+        "lastOn": false
+      },
+      "modeFree": true,
+      "body": "touch hd radio"
+    },
+    "moved": 3,
+    "crowd": {
+      "on": true,
+      "people": 415,
+      "windows": 59,
+      "signs": 19,
+      "stoops": 0,
+      "bursts": 0,
+      "confetti": 0,
+      "loud": 0.52,
+      "spots": 2547,
+      "winSpots": 960,
+      "stoopSpots": 164,
+      "refills": 2,
+      "inScene": true
+    },
+    "perf": {
+      "calls": 96,
+      "tris": 320230,
+      "ftAvg": 704.8,
+      "ftP90": 936.8,
+      "n": 6,
+      "low": "585x1071"
+    },
+    "takeover": {
+      "ap": false,
+      "drone": true
+    },
+    "resume": {
+      "ap": true,
+      "chipVisible": true
+    },
+    "landed": {
+      "on": false,
+      "people": 0,
+      "windows": 0,
+      "signs": 0,
+      "stoops": 0,
+      "bursts": 0,
+      "confetti": 2,
+      "loud": 0.99,
+      "spots": 2547,
+      "winSpots": 960,
+      "stoopSpots": 164,
+      "refills": 7,
+      "inScene": false
+    },
+    "relaunch": {
+      "drone": true,
+      "ap": true,
+      "crowd": {
+        "on": true,
+        "people": 321,
+        "windows": 13,
+        "signs": 10,
+        "stoops": 0,
+        "bursts": 0,
+        "confetti": 2,
+        "loud": 0.46,
+        "spots": 2547,
+        "winSpots": 960,
+        "stoopSpots": 164,
+        "refills": 9,
+        "inScene": true
+      }
+    }
+  },
+  "skip": {
+    "afterTap1": {
+      "drone": true,
+      "ap": true
+    },
+    "afterTap2": {
+      "drone": true,
+      "ap": false
+    },
+    "log": [
+      "start:param",
+      "skip:dock:tap",
+      "finish",
+      "drone:unlocked",
+      "city:saved:0",
+      "flyover",
+      "drone:on:finale",
+      "drone:autopilot:finale",
+      "credits",
+      "drone:takeover:touch",
+      "credits:end:takeover"
+    ]
+  },
+  "ok": {
+    "phases": true,
+    "fireworks": true,
+    "hug": true,
+    "unlocked": true,
+    "credits": true,
+    "autopilot": true,
+    "crowd": true,
+    "takeover": true,
+    "resume": true,
+    "land": true,
+    "relaunchAuto": true,
+    "city": true,
+    "skip": true,
+    "celErr": true
+  }
+}

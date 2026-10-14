@@ -1,0 +1,30 @@
+f218: stage lvl=1 section=A
+f591: pickup on floor: slice
+f666: bark: STAY SHARP!
+f1101: enemy fly/toss
+f1713: boss fight lvl=1 SCORCHER
+f1905: dodge seen
+f2668: bark: BLADE AND HONOR!
+f3767: bark: BY THE BOOK!
+f5030: stage lvl=1 section=B
+f5030: prop broken
+f6666: barrel rolling
+f7190: boss fight lvl=1 ramrod
+f7260: bark: FORM IS EVERYTHING!
+f8243: cutscene
+f8743: pizza lvl=1
+f8913: results lvl=1
+f9252: loading scene
+f9423: stage lvl=2 section=L0
+f11819: bark: SLICE OF LIFE!
+f12555: taunt seen: SLOWPOKE!
+f13476: boss fight lvl=2 BRICKJAW
+f14997: outro lvl=2
+f15017: bark: THEY WENT DOWN THE SEWER!
+f15128: pizza lvl=2
+f15298: results lvl=2
+f17207: back to title
+after: LEVELS loaded=1,- LVLOAD=
+scripts loaded=levels/level2.js missing=levels/level3.js SS=object
+END f=17207 scene=title level=1 kills=18 levelsWithResults=1,2
+exit 0

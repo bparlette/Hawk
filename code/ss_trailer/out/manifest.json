@@ -1,0 +1,291 @@
+{
+ "levels": {
+  "1": {
+   "name": "HALLWAY FIRE",
+   "boss": "RAMROD",
+   "stills": [
+    "screens/level1/01_title.jpg",
+    "screens/level1/02_combat1.jpg",
+    "screens/level1/03_combat2.jpg",
+    "screens/level1/04_tag_in.jpg",
+    "screens/level1/05_midboss_zaproller.jpg",
+    "screens/level1/06_boss_intro.jpg",
+    "screens/level1/07_boss_fight.jpg",
+    "screens/level1/08_boss_ko.jpg",
+    "screens/level1/09_cutscene.jpg",
+    "screens/level1/10_results.jpg"
+   ],
+   "video": "out/level1.mp4",
+   "duration": 7.2,
+   "size": 2438771
+  },
+  "2": {
+   "name": "STREET RUMBLE",
+   "boss": "BRICKJAW",
+   "stills": [
+    "screens/level2/01_level_card.jpg",
+    "screens/level2/02_combat1.jpg",
+    "screens/level2/03_combat2.jpg",
+    "screens/level2/04_combat3.jpg",
+    "screens/level2/05_tag_in.jpg",
+    "screens/level2/06_boss_intro.jpg",
+    "screens/level2/07_boss_fight.jpg",
+    "screens/level2/08_boss_ko.jpg",
+    "screens/level2/09_cutscene.jpg",
+    "screens/level2/10_results.jpg"
+   ],
+   "video": "out/level2.mp4",
+   "duration": 7.2,
+   "size": 2037729
+  },
+  "3": {
+   "name": "SEWER SHOWDOWN",
+   "boss": "GULCH GATOR",
+   "stills": [
+    "screens/level3/01_level_card.jpg",
+    "screens/level3/02_combat1.jpg",
+    "screens/level3/03_combat2.jpg",
+    "screens/level3/04_combat3.jpg",
+    "screens/level3/05_tag_in.jpg",
+    "screens/level3/06_boss_intro.jpg",
+    "screens/level3/07_boss_fight.jpg",
+    "screens/level3/08_boss_ko.jpg",
+    "screens/level3/09_cutscene.jpg",
+    "screens/level3/10_results.jpg"
+   ],
+   "video": "out/level3.mp4",
+   "duration": 7.2,
+   "size": 2063408
+  },
+  "4": {
+   "name": "SUNSET SHRED",
+   "boss": "JETWASH",
+   "stills": [
+    "screens/level4/01_level_card.jpg",
+    "screens/level4/02_combat1.jpg",
+    "screens/level4/03_combat2.jpg",
+    "screens/level4/04_combat3.jpg",
+    "screens/level4/05_tag_in.jpg",
+    "screens/level4/06_boss_intro.jpg",
+    "screens/level4/07_boss_fight.jpg",
+    "screens/level4/08_boss_ko.jpg",
+    "screens/level4/09_cutscene.jpg",
+    "screens/level4/10_results.jpg"
+   ],
+   "video": "out/level4.mp4",
+   "duration": 7.2,
+   "size": 2445161
+  },
+  "5": {
+   "name": "DOCKSIDE DOUBLE-CROSS",
+   "boss": "GRIMWALE",
+   "stills": [
+    "screens/level5/01_level_card.jpg",
+    "screens/level5/02_combat1.jpg",
+    "screens/level5/03_combat2.jpg",
+    "screens/level5/04_combat3.jpg",
+    "screens/level5/05_tag_in.jpg",
+    "screens/level5/06_boss_intro.jpg",
+    "screens/level5/07_boss_fight.jpg",
+    "screens/level5/08_boss_ko.jpg",
+    "screens/level5/09_cutscene.jpg",
+    "screens/level5/10_results.jpg"
+   ],
+   "video": "out/level5.mp4",
+   "duration": 7.2,
+   "size": 1668692
+  },
+  "6": {
+   "name": "FROSTBITE BOULEVARD",
+   "boss": "COLD FRONT",
+   "stills": [
+    "screens/level6/01_level_card.jpg",
+    "screens/level6/02_combat1.jpg",
+    "screens/level6/03_combat2.jpg",
+    "screens/level6/04_combat3.jpg",
+    "screens/level6/05_tag_in.jpg",
+    "screens/level6/06_boss_intro.jpg",
+    "screens/level6/07_boss_fight.jpg",
+    "screens/level6/08_boss_ko.jpg",
+    "screens/level6/09_cutscene.jpg",
+    "screens/level6/10_results.jpg"
+   ],
+   "video": "out/level6.mp4",
+   "duration": 7.2,
+   "size": 1611357
+  },
+  "7": {
+   "name": "SCRAPYARD SMASH",
+   "boss": "RUSTMAUL",
+   "stills": [
+    "screens/level7/01_level_card.jpg",
+    "screens/level7/02_combat1.jpg",
+    "screens/level7/03_combat2.jpg",
+    "screens/level7/04_combat3.jpg",
+    "screens/level7/05_tag_in.jpg",
+    "screens/level7/06_boss_intro.jpg",
+    "screens/level7/07_boss_fight.jpg",
+    "screens/level7/08_boss_ko.jpg",
+    "screens/level7/09_cutscene.jpg",
+    "screens/level7/10_results.jpg"
+   ],
+   "video": "out/level7.mp4",
+   "duration": 7.2,
+   "size": 2391138
+  },
+  "8": {
+   "name": "FORTRESS OF RAZORBACK",
+   "boss": "RAZORBACK",
+   "stills": [
+    "screens/level8/01_level_card.jpg",
+    "screens/level8/02_combat1.jpg",
+    "screens/level8/03_combat2.jpg",
+    "screens/level8/04_combat3.jpg",
+    "screens/level8/05_tag_in.jpg",
+    "screens/level8/06_boss_intro.jpg",
+    "screens/level8/07_boss_fight.jpg",
+    "screens/level8/08_boss_ko.jpg",
+    "screens/level8/09_cutscene.jpg",
+    "screens/level8/10_results.jpg"
+   ],
+   "video": "out/level8.mp4",
+   "duration": 7.2,
+   "size": 2398996
+  },
+  "9": {
+   "name": "SHADOWS OF EDO",
+   "boss": "KARAI",
+   "stills": [
+    "screens/level9/01_level_card.jpg",
+    "screens/level9/02_combat1.jpg",
+    "screens/level9/03_combat2.jpg",
+    "screens/level9/04_combat3.jpg",
+    "screens/level9/05_tag_in.jpg",
+    "screens/level9/06_boss_intro.jpg",
+    "screens/level9/07_boss_fight.jpg",
+    "screens/level9/08_boss_ko.jpg",
+    "screens/level9/09_cutscene.jpg",
+    "screens/level9/10_results.jpg"
+   ],
+   "video": "out/level9.mp4",
+   "duration": 7.2,
+   "size": 2401489
+  },
+  "10": {
+   "name": "PIRATE SHIP",
+   "boss": "ARMAGGON",
+   "stills": [
+    "screens/level10/01_level_card.jpg",
+    "screens/level10/02_combat1.jpg",
+    "screens/level10/03_combat2.jpg",
+    "screens/level10/04_combat3.jpg",
+    "screens/level10/05_tag_in.jpg",
+    "screens/level10/06_boss_intro.jpg",
+    "screens/level10/07_boss_fight.jpg",
+    "screens/level10/08_boss_ko.jpg",
+    "screens/level10/09_cutscene.jpg",
+    "screens/level10/10_results.jpg"
+   ],
+   "video": "out/level10.mp4",
+   "duration": 7.2,
+   "size": 2426432
+  },
+  "11": {
+   "name": "WILD WEST TRAIN",
+   "boss": "LEATHERHEAD",
+   "stills": [
+    "screens/level11/01_level_card.jpg",
+    "screens/level11/02_combat1.jpg",
+    "screens/level11/03_combat2.jpg",
+    "screens/level11/04_hazard.jpg",
+    "screens/level11/05_tag_in.jpg",
+    "screens/level11/06_boss_intro.jpg",
+    "screens/level11/07_boss_fight.jpg",
+    "screens/level11/08_boss_ko.jpg",
+    "screens/level11/09_cutscene.jpg",
+    "screens/level11/10_results.jpg"
+   ],
+   "video": "out/level11.mp4",
+   "duration": 7.2,
+   "size": 2457073
+  },
+  "12": {
+   "name": "FUTURE NYC 2105",
+   "boss": "VIRAL",
+   "stills": [
+    "screens/level12/01_level_card.jpg",
+    "screens/level12/02_combat1.jpg",
+    "screens/level12/03_combat2.jpg",
+    "screens/level12/04_combat3.jpg",
+    "screens/level12/05_tag_in.jpg",
+    "screens/level12/06_boss_intro.jpg",
+    "screens/level12/07_boss_fight.jpg",
+    "screens/level12/08_boss_ko.jpg",
+    "screens/level12/09_cutscene.jpg",
+    "screens/level12/10_results.jpg"
+   ],
+   "video": "out/level12.mp4",
+   "duration": 7.2,
+   "size": 2421986
+  },
+  "13": {
+   "name": "DIMENSION X",
+   "boss": "LT. GRANITOR",
+   "stills": [
+    "screens/level13/01_combat1.jpg",
+    "screens/level13/02_combat2.jpg",
+    "screens/level13/03_hazard.jpg",
+    "screens/level13/04_tag_in.jpg",
+    "screens/level13/05_midboss_general traag.jpg",
+    "screens/level13/06_boss_intro.jpg",
+    "screens/level13/07_boss_fight.jpg",
+    "screens/level13/08_boss_ko.jpg",
+    "screens/level13/09_cutscene.jpg",
+    "screens/level13/10_results.jpg"
+   ],
+   "video": "out/level13.mp4",
+   "duration": 7.2,
+   "size": 2330085
+  },
+  "14": {
+   "name": "TECHNODROME PORTAL",
+   "boss": "KRANG",
+   "stills": [
+    "screens/level14/01_level_card.jpg",
+    "screens/level14/02_combat1.jpg",
+    "screens/level14/03_combat2.jpg",
+    "screens/level14/04_combat3.jpg",
+    "screens/level14/05_tag_in.jpg",
+    "screens/level14/06_boss_intro.jpg",
+    "screens/level14/07_boss_fight.jpg",
+    "screens/level14/08_boss_ko.jpg",
+    "screens/level14/09_cutscene.jpg"
+   ],
+   "video": "out/level14.mp4",
+   "duration": 7.2,
+   "size": 2197833
+  },
+  "15": {
+   "name": "SHREDDER'S TOWER",
+   "boss": "SHREDDER",
+   "stills": [
+    "screens/level15/01_level_card.jpg",
+    "screens/level15/02_combat1.jpg",
+    "screens/level15/03_combat2.jpg",
+    "screens/level15/04_combat3.jpg",
+    "screens/level15/05_tag_in.jpg",
+    "screens/level15/06_boss_intro.jpg",
+    "screens/level15/07_boss_fight.jpg",
+    "screens/level15/08_boss_ko.jpg"
+   ],
+   "video": "out/level15.mp4",
+   "duration": 7.2,
+   "size": 2439999
+  }
+ },
+ "full": {
+  "video": "out/full_trailer.mp4",
+  "duration": 76.0,
+  "size": 14244931
+ }
+}

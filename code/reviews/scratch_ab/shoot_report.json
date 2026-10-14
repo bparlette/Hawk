@@ -1,0 +1,46 @@
+[
+ {
+  "out": "shots/street_day.png",
+  "q": "show=street&hud=1",
+  "errs": [],
+  "verr": [],
+  "stats": {
+   "calls": 8,
+   "tris": 28420
+  },
+  "extra": null
+ },
+ {
+  "out": "shots/street_night.png",
+  "q": "show=street&night=1&hud=1",
+  "errs": [],
+  "verr": [],
+  "stats": {
+   "calls": 8,
+   "tris": 28420
+  },
+  "extra": null
+ },
+ {
+  "out": "shots/street_game_day.png",
+  "q": "show=street&cam=game&hud=0",
+  "errs": [],
+  "verr": [],
+  "stats": {
+   "calls": 8,
+   "tris": 28420
+  },
+  "extra": null
+ },
+ {
+  "out": "shots/street_game_night.png",
+  "q": "show=street&cam=game&night=1&hud=0",
+  "errs": [],
+  "verr": [],
+  "stats": {
+   "calls": 8,
+   "tris": 28420
+  },
+  "extra": null
+ }
+]

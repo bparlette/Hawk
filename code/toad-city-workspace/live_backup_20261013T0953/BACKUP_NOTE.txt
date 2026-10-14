@@ -1,0 +1,1 @@
+Live before signage restore (game.js 4c7675d3). Fetched files at top level; full site tree = git archive d7551f1 site/ in full_site_d7551f1/ if game.js md5 matches.

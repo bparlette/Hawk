@@ -1,0 +1,26 @@
+f68: loading scene
+f239: stage lvl=5 section=L0
+f466: dodge seen
+f2008: bark: STAY SHARP!
+f2225: bark: BY THE BOOK!
+f3614: stage lvl=5 section=L1
+f4194: boss fight lvl=5 GRIMWALE
+f4617: bark: BLADE AND HONOR!
+f5549: bark: FORM IS EVERYTHING!
+f5651: outro lvl=5
+f5671: bark: THE CARGO'S GOING UPTOWN!
+f5781: bark: BUNDLE UP, BROS. IT'S SNOWING UP THERE!
+f5902: pizza lvl=5
+f6072: results lvl=5
+f6583: stage lvl=6 section=L0
+f7688: taunt seen: COME GET SOME!
+f10046: stage lvl=6 section=L1
+f10047: boss fight lvl=6 COLD FRONT
+f11624: outro lvl=6
+f11644: bark: THAT PLOW CAME FROM THE JUNKYARD!
+f11744: bark: LET'S GO SCRAP SOME BAD GUYS!
+f11845: pizza lvl=6
+f12015: results lvl=6
+f12523: stage lvl=7 section=L0
+scripts loaded=levels/level5.js,levels/level6.js,levels/level7.js missing= SS=object
+END f=14000 scene=stage level=7 kills=6 levelsWithResults=5,6

@@ -1,0 +1,167 @@
+[
+ {
+  "out": "shots/arabber_side_day.png",
+  "q": "show=arabber_cart&hud=0&yaw=90&pitch=4",
+  "errs": [],
+  "verr": [],
+  "stats": {
+   "calls": 55,
+   "tris": 19717
+  },
+  "extra": null
+ },
+ {
+  "out": "shots/arabber_34_day.png",
+  "q": "show=arabber_cart&hud=0&yaw=35&pitch=18",
+  "errs": [],
+  "verr": [],
+  "stats": {
+   "calls": 55,
+   "tris": 19717
+  },
+  "extra": null
+ },
+ {
+  "out": "shots/arabber_34_night.png",
+  "q": "show=arabber_cart&hud=0&yaw=35&pitch=18&night=1",
+  "errs": [],
+  "verr": [],
+  "stats": {
+   "calls": 55,
+   "tris": 19717
+  },
+  "extra": null
+ },
+ {
+  "out": "shots/crab_side_day.png",
+  "q": "show=crab_shack&hud=0&yaw=90&pitch=4",
+  "errs": [],
+  "verr": [],
+  "stats": {
+   "calls": 28,
+   "tris": 9656
+  },
+  "extra": null
+ },
+ {
+  "out": "shots/crab_34_day.png",
+  "q": "show=crab_shack&hud=0&yaw=25&pitch=15",
+  "errs": [],
+  "verr": [],
+  "stats": {
+   "calls": 28,
+   "tris": 9656
+  },
+  "extra": null
+ },
+ {
+  "out": "shots/crab_34_night.png",
+  "q": "show=crab_shack&hud=0&yaw=25&pitch=15&night=1",
+  "errs": [],
+  "verr": [],
+  "stats": {
+   "calls": 28,
+   "tris": 9656
+  },
+  "extra": null
+ },
+ {
+  "out": "shots/truck_day.png",
+  "q": "show=box_truck&hud=0&yaw=40&pitch=12",
+  "errs": [],
+  "verr": [],
+  "stats": {
+   "calls": 52,
+   "tris": 17688
+  },
+  "extra": null
+ },
+ {
+  "out": "shots/sedan_day.png",
+  "q": "show=car_sedan&hud=0&yaw=60&pitch=15",
+  "errs": [],
+  "verr": [],
+  "stats": {
+   "calls": 52,
+   "tris": 17770
+  },
+  "extra": null
+ },
+ {
+  "out": "shots/sedan_night.png",
+  "q": "show=car_sedan&hud=0&yaw=60&pitch=15&night=1",
+  "errs": [],
+  "verr": [],
+  "stats": {
+   "calls": 52,
+   "tris": 17770
+  },
+  "extra": null
+ },
+ {
+  "out": "shots/taxi_day.png",
+  "q": "show=water_taxi&hud=0&yaw=40&pitch=15",
+  "errs": [],
+  "verr": [],
+  "stats": {
+   "calls": 91,
+   "tris": 34790
+  },
+  "extra": null
+ },
+ {
+  "out": "shots/taxi_night.png",
+  "q": "show=water_taxi&hud=0&yaw=40&pitch=15&night=1",
+  "errs": [],
+  "verr": [],
+  "stats": {
+   "calls": 91,
+   "tris": 34790
+  },
+  "extra": null
+ },
+ {
+  "out": "shots/paddle_day.png",
+  "q": "show=paddle_boat&hud=0&yaw=40&pitch=15",
+  "errs": [],
+  "verr": [],
+  "stats": {
+   "calls": 49,
+   "tris": 18060
+  },
+  "extra": null
+ },
+ {
+  "out": "shots/dragon_day.png",
+  "q": "show=dragon_boat&hud=0&yaw=70&pitch=20",
+  "errs": [],
+  "verr": [],
+  "stats": {
+   "calls": 91,
+   "tris": 35647
+  },
+  "extra": null
+ },
+ {
+  "out": "shots/skate_day.png",
+  "q": "show=skateboard&hud=0&yaw=50&pitch=20",
+  "errs": [],
+  "verr": [],
+  "stats": {
+   "calls": 27,
+   "tris": 8812
+  },
+  "extra": null
+ },
+ {
+  "out": "shots/manhole_day.png",
+  "q": "show=manhole&hud=0&yaw=30&pitch=20",
+  "errs": [],
+  "verr": [],
+  "stats": {
+   "calls": 25,
+   "tris": 8486
+  },
+  "extra": null
+ }
+]

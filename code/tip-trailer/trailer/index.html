@@ -1,0 +1,210 @@
+<!doctype html>
+<html lang="en" data-resolution="portrait">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=1080, height=1920" />
+    <script src="assets/gsap.min.js"></script>
+    <style>
+      @font-face { font-family: "Anton"; src: url("assets/fonts/Anton.ttf"); }
+      @font-face { font-family: "Bungee"; src: url("assets/fonts/Bungee.ttf"); }
+      @font-face { font-family: "PressStart"; src: url("assets/fonts/PressStart2P.ttf"); }
+      * { margin: 0; padding: 0; box-sizing: border-box; }
+      html, body { width: 1080px; height: 1920px; overflow: hidden; background: #000; }
+      #root { position: relative; width: 100%; height: 100%; overflow: hidden; background: #000; }
+      #stage { position: absolute; inset: 0; }
+      .vw { position: absolute; inset: 0; transform-origin: 50% 82%; }
+      .shot { position: absolute; inset: 0; width: 1080px; height: 1920px; object-fit: cover; image-rendering: pixelated; }
+      .art { position: absolute; inset: 0; overflow: hidden; }
+      .artimg { position: absolute; inset: 0; width: 1080px; height: 1920px; object-fit: cover; display: block; }
+      .shade { position: absolute; inset: 0; background: linear-gradient(180deg, rgba(10,4,20,0.55) 0%, rgba(10,4,20,0.15) 40%, rgba(10,4,20,0.65) 100%); }
+      .layer { position: absolute; inset: 0; }
+      .pix { font-family: "PressStart", monospace; color: #fff; text-shadow: 5px 5px 0 #1a0820; }
+      .cold-line { position: absolute; left: 0; right: 0; text-align: center; font-size: 34px; line-height: 1.3; }
+      #cold1 { top: 300px; color: #ffe9b0; }
+      #cold2 { top: 380px; }
+      .red { color: #ff5a4a; }
+      .card { display: flex; flex-direction: column; align-items: center; justify-content: center; }
+      .chrome { font-family: "Anton", sans-serif; text-transform: uppercase; line-height: 0.95; text-align: center;
+        background: linear-gradient(180deg, #ffffff 0%, #cfe8ff 38%, #4a5a7a 50%, #ffd27a 62%, #ff6a2a 100%);
+        -webkit-background-clip: text; background-clip: text; color: transparent;
+        -webkit-text-stroke: 4px #1a0820; filter: drop-shadow(10px 10px 0 #c8102e) drop-shadow(0 0 30px rgba(0,0,0,0.6)); }
+      .big { font-size: 150px; letter-spacing: 6px; display: block; }
+      .huge { font-size: 250px; letter-spacing: 4px; display: block; }
+      .huge2 { font-size: 150px; letter-spacing: 2px; display: block; }
+      .crew-sub { margin-top: 50px; font-size: 32px; color: #ffd848; display: block; }
+      .callout { position: absolute; left: 60px; right: 60px; top: 1120px; padding: 34px 20px; background: #c8102e;
+        border: 8px solid #ffd848; box-shadow: 14px 14px 0 #1a0820; text-align: center; }
+      .callout-txt { font-size: 50px; line-height: 1.2; color: #fff; display: block; }
+      #bolt { position: absolute; left: 260px; top: 380px; }
+      #logo-box { position: absolute; left: 0; right: 0; top: 640px; text-align: center; }
+      .logo-word { font-family: "Bungee", sans-serif; display: block; line-height: 1; text-align: center;
+        background: linear-gradient(180deg, #ffffff 0%, #a8d8ff 30%, #2a3a6a 50%, #ffe08a 56%, #ff8a2a 80%, #c8102e 100%);
+        -webkit-background-clip: text; background-clip: text; color: transparent; -webkit-text-stroke: 5px #1a0820;
+        filter: drop-shadow(12px 12px 0 #1a0820) drop-shadow(0 0 40px rgba(255,120,40,0.55)); }
+      #logo-gulf { font-size: 280px; letter-spacing: 10px; }
+      #logo-thunder { font-size: 170px; letter-spacing: 2px; }
+      .tag { position: absolute; left: 0; right: 0; top: 1290px; text-align: center; font-size: 30px; color: #ffd848; }
+      .end-logo { position: absolute; left: 0; right: 0; top: 200px; text-align: center; font-family: "Bungee", sans-serif; font-size: 112px; line-height: 1;
+        background: linear-gradient(180deg, #ffffff 0%, #a8d8ff 35%, #2a3a6a 50%, #ffe08a 56%, #ff8a2a 85%);
+        -webkit-background-clip: text; background-clip: text; color: transparent; -webkit-text-stroke: 4px #1a0820; filter: drop-shadow(8px 8px 0 #1a0820); }
+      .playfree { position: absolute; left: 0; right: 0; top: 400px; text-align: center; font-family: "Bungee", sans-serif; font-size: 150px; line-height: 1;
+        color: #ffd848; -webkit-text-stroke: 5px #1a0820; filter: drop-shadow(10px 10px 0 #c8102e); }
+      .url { position: absolute; left: 0; right: 0; top: 625px; text-align: center; font-size: 42px; color: #fff; }
+      .endsub { position: absolute; left: 0; right: 0; top: 1730px; text-align: center; font-size: 26px; color: #ffe9b0; }
+      #flash { position: absolute; inset: 0; background: #fff; opacity: 0; pointer-events: none; }
+      #fade { position: absolute; inset: 0; background: #000; opacity: 0; pointer-events: none; }
+    </style>
+  </head>
+  <body>
+    <div id="root" data-composition-id="main" data-start="0" data-duration="50" data-width="1080" data-height="1920">
+      <div id="stage">
+      <div class="vw" id="w-sunset"><video id="v-sunset" class="clip shot" src="assets/clips/sunset.mp4" muted playsinline data-start="0" data-duration="4" data-track-index="0"></video></div>
+      <div class="vw" id="w-s1a"><video id="v-s1a" class="clip shot" src="assets/clips/s1a.mp4" muted playsinline data-start="6" data-duration="2" data-track-index="0"></video></div>
+      <div class="vw" id="w-s1b"><video id="v-s1b" class="clip shot" src="assets/clips/s1b.mp4" muted playsinline data-start="8" data-duration="2" data-track-index="0"></video></div>
+      <div class="vw" id="w-s4a"><video id="v-s4a" class="clip shot" src="assets/clips/s4a.mp4" muted playsinline data-start="12" data-duration="2" data-track-index="0"></video></div>
+      <div class="vw" id="w-s4b"><video id="v-s4b" class="clip shot" src="assets/clips/s4b.mp4" muted playsinline data-start="14" data-duration="2" data-track-index="0"></video></div>
+      <div class="vw" id="w-s2a"><video id="v-s2a" class="clip shot" src="assets/clips/s2a.mp4" muted playsinline data-start="16" data-duration="2" data-track-index="0"></video></div>
+      <div class="vw" id="w-s2b"><video id="v-s2b" class="clip shot" src="assets/clips/s2b.mp4" muted playsinline data-start="18" data-duration="2" data-track-index="0"></video></div>
+      <div class="vw" id="w-s3a"><video id="v-s3a" class="clip shot" src="assets/clips/s3a.mp4" muted playsinline data-start="20" data-duration="2" data-track-index="0"></video></div>
+      <div class="vw" id="w-s3b"><video id="v-s3b" class="clip shot" src="assets/clips/s3b.mp4" muted playsinline data-start="22" data-duration="2" data-track-index="0"></video></div>
+      <div class="vw" id="w-s5a"><video id="v-s5a" class="clip shot" src="assets/clips/s5a.mp4" muted playsinline data-start="26" data-duration="2" data-track-index="0"></video></div>
+      <div class="vw" id="w-s5b"><video id="v-s5b" class="clip shot" src="assets/clips/s5b.mp4" muted playsinline data-start="28" data-duration="2" data-track-index="0"></video></div>
+      <div class="vw" id="w-m1"><video id="v-m1" class="clip shot" src="assets/clips/m1.mp4" muted playsinline data-start="30.0" data-duration="0.5" data-track-index="0"></video></div>
+      <div class="vw" id="w-m2"><video id="v-m2" class="clip shot" src="assets/clips/m2.mp4" muted playsinline data-start="30.5" data-duration="0.5" data-track-index="0"></video></div>
+      <div class="vw" id="w-m3"><video id="v-m3" class="clip shot" src="assets/clips/m3.mp4" muted playsinline data-start="31.0" data-duration="0.5" data-track-index="0"></video></div>
+      <div class="vw" id="w-m4"><video id="v-m4" class="clip shot" src="assets/clips/m4.mp4" muted playsinline data-start="31.5" data-duration="0.5" data-track-index="0"></video></div>
+      <div class="vw" id="w-m5"><video id="v-m5" class="clip shot" src="assets/clips/m5.mp4" muted playsinline data-start="32.0" data-duration="0.5" data-track-index="0"></video></div>
+      <div class="vw" id="w-m6"><video id="v-m6" class="clip shot" src="assets/clips/m6.mp4" muted playsinline data-start="32.5" data-duration="0.5" data-track-index="0"></video></div>
+      <div class="vw" id="w-m7"><video id="v-m7" class="clip shot" src="assets/clips/m7.mp4" muted playsinline data-start="33.0" data-duration="0.5" data-track-index="0"></video></div>
+      <div class="vw" id="w-m8"><video id="v-m8" class="clip shot" src="assets/clips/m8.mp4" muted playsinline data-start="33.5" data-duration="0.5" data-track-index="0"></video></div>
+      <div class="vw" id="w-s5c"><video id="v-s5c" class="clip shot" src="assets/clips/s5c.mp4" muted playsinline data-start="34" data-duration="2" data-track-index="0"></video></div>
+      <div class="vw" id="w-endbg"><video id="v-endbg" class="clip shot" src="assets/clips/endbg.mp4" muted playsinline data-start="42" data-duration="8" data-track-index="0"></video></div>
+      <div class="clip art" id="art-gulf" data-start="4" data-duration="2" data-track-index="1"><img class="artimg" id="art-gulf-img" src="assets/img/boat-painted-crop.jpg" alt="" /><div class="shade"></div></div>
+      <div class="clip art" id="art-kasbah" data-start="10" data-duration="2" data-track-index="1"><img class="artimg" id="art-kasbah-img" src="assets/img/souk.png" alt="" /><div class="shade"></div></div>
+      <div class="clip art" id="art-crew" data-start="24" data-duration="2" data-track-index="1"><img class="artimg" id="art-crew-img" src="assets/img/chase.jpg" alt="" /><div class="shade"></div></div>
+      <div class="clip art" id="art-logo" data-start="36" data-duration="6" data-track-index="1"><img class="artimg" id="art-logo-img" src="assets/img/boat-16bit-crop.png" alt="" /><div class="shade"></div></div>
+      <div class="clip layer" id="cold" data-start="0" data-duration="4" data-track-index="2">
+        <div class="pix cold-line" id="cold1">SUNSET KEY, GULF OF MEXICO</div>
+        <div class="pix cold-line red" id="cold2">THE RED TIDE WANTS IT ALL.</div>
+      </div>
+      <div class="clip layer card" id="card-gulf" data-start="4" data-duration="2" data-track-index="2">
+        <div class="chrome big" id="gulf-t1">FROM THE</div><div class="chrome huge" id="gulf-t2">GULF...</div>
+      </div>
+      <div class="clip layer card" id="card-kasbah" data-start="10" data-duration="2" data-track-index="2">
+        <div class="chrome big" id="kas-t1">TO THE</div><div class="chrome huge" id="kas-t2">KASBAH...</div>
+      </div>
+      <div class="clip layer card" id="card-crew" data-start="24" data-duration="2" data-track-index="2">
+        <div class="chrome huge2" id="crew-t1">STORM STERLING</div>
+        <div class="chrome big" id="crew-t2">&amp; MAC</div>
+        <div class="pix crew-sub" id="crew-t3">ABOARD THE THUNDERHEAD</div>
+      </div>
+      <div class="clip layer" id="co1" data-start="6.1" data-duration="1.8" data-track-index="3"><div class="callout" id="co1-box"><span class="pix callout-txt">BOAT CHASES</span></div></div>
+      <div class="clip layer" id="co2" data-start="12.1" data-duration="1.8" data-track-index="3"><div class="callout" id="co2-box"><span class="pix callout-txt">ROOFTOP SHOOTOUTS</span></div></div>
+      <div class="clip layer" id="co3" data-start="16.1" data-duration="1.8" data-track-index="3"><div class="callout" id="co3-box"><span class="pix callout-txt">BEACH BRAWLS</span></div></div>
+      <div class="clip layer" id="co4" data-start="20.1" data-duration="1.8" data-track-index="3"><div class="callout" id="co4-box"><span class="pix callout-txt">JET-SKI CHASES</span></div></div>
+      <div class="clip layer" id="co5" data-start="26.1" data-duration="1.8" data-track-index="3"><div class="callout" id="co5-box"><span class="pix callout-txt">STUNT SHOWDOWNS</span></div></div>
+      <div class="clip layer" id="logo" data-start="36" data-duration="6" data-track-index="3">
+        <svg id="bolt" viewBox="0 0 200 400" width="560" height="1120"><polygon points="120,0 30,220 95,220 60,400 175,150 108,150 150,0" fill="#ffd848" stroke="#1a0820" stroke-width="10" stroke-linejoin="round"/></svg>
+        <div id="logo-box">
+          <div class="logo-word" id="logo-gulf">GULF</div>
+          <div class="logo-word" id="logo-thunder">THUNDER</div>
+        </div>
+        <div class="pix tag" id="logo-tag">AN ORIGINAL 16-BIT ACTION HOMAGE</div>
+      </div>
+      <div class="clip layer" id="endcard" data-start="42" data-duration="8" data-track-index="3">
+        <div class="end-logo" id="end-logo">GULF THUNDER</div>
+        <div class="playfree" id="end-play">PLAY FREE</div>
+        <div class="pix url" id="end-url">gulf-thunder.surge.sh</div>
+        <div class="pix endsub" id="end-sub">5 STAGES · PHONE OR DESKTOP</div>
+      </div>
+      </div>
+      <audio id="music" src="assets/music.wav" data-start="0" data-duration="50" data-track-index="9" data-volume="1"></audio>
+      <div id="flash"></div>
+      <div id="fade"></div>
+    </div>
+    <script>
+      const tl = gsap.timeline({ paused: true });
+      tl.fromTo("#w-sunset", {scale:1.12}, {scale:1.0, duration:4, ease:"none"}, 0);
+      tl.fromTo("#cold1", {opacity:0, y:20}, {opacity:1, y:0, duration:0.6, ease:"steps(6)"}, 0.4);
+      tl.fromTo("#cold2", {opacity:0, y:20}, {opacity:1, y:0, duration:0.6, ease:"steps(6)"}, 2.0);
+      tl.to("#cold", {opacity:0, duration:0.25}, 3.7);
+      tl.fromTo("#gulf-t1", {scale:2.6, opacity:0}, {scale:1, opacity:1, duration:0.22, ease:"power4.in"}, 4);
+      tl.fromTo("#gulf-t2", {scale:3.2, opacity:0}, {scale:1, opacity:1, duration:0.25, ease:"power4.in"}, 4.35);
+      tl.to("#gulf-t2", {scale:1.08, duration:1.3, ease:"none"}, 4.6);
+      tl.fromTo("#kas-t1", {scale:2.6, opacity:0}, {scale:1, opacity:1, duration:0.22, ease:"power4.in"}, 10);
+      tl.fromTo("#kas-t2", {scale:3.2, opacity:0}, {scale:1, opacity:1, duration:0.25, ease:"power4.in"}, 10.35);
+      tl.to("#kas-t2", {scale:1.08, duration:1.3, ease:"none"}, 10.6);
+      tl.fromTo("#art-gulf-img", {scale:1.0}, {scale:1.12, duration:2, ease:"none"}, 4);
+      tl.fromTo("#art-kasbah-img", {scale:1.0}, {scale:1.12, duration:2, ease:"none"}, 10);
+      tl.fromTo("#art-crew-img", {scale:1.0}, {scale:1.12, duration:2, ease:"none"}, 24);
+      tl.fromTo("#art-logo-img", {scale:1.0}, {scale:1.12, duration:6, ease:"none"}, 36);
+      tl.fromTo("#crew-t1", {x:-1200}, {x:0, duration:0.3, ease:"power3.out"}, 24.0);
+      tl.fromTo("#crew-t2", {x:1200}, {x:0, duration:0.3, ease:"power3.out"}, 24.4);
+      tl.fromTo("#crew-t3", {opacity:0}, {opacity:1, duration:0.4, ease:"steps(4)"}, 24.9);
+      tl.fromTo("#w-s2a", {scale:1.18}, {scale:1.34, duration:2, ease:"none"}, 16);
+      tl.fromTo("#w-s2b", {scale:1.18}, {scale:1.34, duration:2, ease:"none"}, 18);
+      tl.fromTo("#w-s5a", {scale:1.18}, {scale:1.34, duration:2, ease:"none"}, 26);
+      tl.fromTo("#w-s5b", {scale:1.18}, {scale:1.34, duration:2, ease:"none"}, 28);
+      tl.fromTo("#w-s5c", {scale:1.18}, {scale:1.34, duration:2, ease:"none"}, 34);
+      tl.fromTo("#co1-box", {x:-1100}, {x:0, duration:0.25, ease:"steps(5)"}, 6.1);
+      tl.fromTo("#co1-box", {scale:1}, {scale:1.06, duration:0.12, yoyo:true, repeat:3, ease:"steps(1)", immediateRender:false}, 6.3999999999999995);
+      tl.to("#co1-box", {x:1100, duration:0.2, ease:"steps(4)"}, 7.6499999999999995);
+      tl.fromTo("#co2-box", {x:-1100}, {x:0, duration:0.25, ease:"steps(5)"}, 12.1);
+      tl.fromTo("#co2-box", {scale:1}, {scale:1.06, duration:0.12, yoyo:true, repeat:3, ease:"steps(1)", immediateRender:false}, 12.4);
+      tl.to("#co2-box", {x:1100, duration:0.2, ease:"steps(4)"}, 13.65);
+      tl.fromTo("#co3-box", {x:-1100}, {x:0, duration:0.25, ease:"steps(5)"}, 16.1);
+      tl.fromTo("#co3-box", {scale:1}, {scale:1.06, duration:0.12, yoyo:true, repeat:3, ease:"steps(1)", immediateRender:false}, 16.400000000000002);
+      tl.to("#co3-box", {x:1100, duration:0.2, ease:"steps(4)"}, 17.650000000000002);
+      tl.fromTo("#co4-box", {x:-1100}, {x:0, duration:0.25, ease:"steps(5)"}, 20.1);
+      tl.fromTo("#co4-box", {scale:1}, {scale:1.06, duration:0.12, yoyo:true, repeat:3, ease:"steps(1)", immediateRender:false}, 20.400000000000002);
+      tl.to("#co4-box", {x:1100, duration:0.2, ease:"steps(4)"}, 21.650000000000002);
+      tl.fromTo("#co5-box", {x:-1100}, {x:0, duration:0.25, ease:"steps(5)"}, 26.1);
+      tl.fromTo("#co5-box", {scale:1}, {scale:1.06, duration:0.12, yoyo:true, repeat:3, ease:"steps(1)", immediateRender:false}, 26.400000000000002);
+      tl.to("#co5-box", {x:1100, duration:0.2, ease:"steps(4)"}, 27.650000000000002);
+      tl.fromTo("#logo-box", {scale:4, opacity:0}, {scale:1, opacity:1, duration:0.3, ease:"power4.in"}, 36.0);
+      tl.fromTo("#bolt", {opacity:0, scale:0.6}, {opacity:1, scale:1, duration:0.12, ease:"none"}, 36.3);
+      tl.to("#bolt", {opacity:0.25, duration:0.08, yoyo:true, repeat:5, ease:"steps(1)"}, 36.45);
+      tl.to("#logo-box", {scale:1.06, duration:5.2, ease:"none"}, 36.6);
+      tl.fromTo("#logo-tag", {opacity:0, y:30}, {opacity:1, y:0, duration:0.5, ease:"steps(5)"}, 38.4);
+      tl.to("#logo", {opacity:0, duration:0.2}, 41.8);
+      tl.fromTo("#end-logo", {opacity:0, y:-60}, {opacity:1, y:0, duration:0.35, ease:"power3.out"}, 42.1);
+      tl.fromTo("#end-play", {scale:3, opacity:0}, {scale:1, opacity:1, duration:0.25, ease:"power4.in"}, 42.6);
+      tl.fromTo("#end-url", {opacity:0}, {opacity:1, duration:0.5, ease:"steps(5)"}, 43.3);
+      tl.fromTo("#end-sub", {opacity:0}, {opacity:1, duration:0.5, ease:"steps(5)"}, 44.0);
+      tl.to("#end-play", {scale:1.07, duration:0.25, yoyo:true, repeat:9, ease:"sine.inOut"}, 45.0);
+      tl.to("#fade", {opacity:1, duration:1.2, ease:"none"}, 48.8);
+      tl.fromTo("#flash", {opacity:0.9}, {opacity:0, duration:0.3, ease:"power2.out", immediateRender:false}, 4);
+      tl.fromTo("#stage", {x:-18, y:12}, {x:0, y:0, duration:0.35, ease:"elastic.out(1.2,0.3)", immediateRender:false}, 4);
+      tl.fromTo("#flash", {opacity:0.9}, {opacity:0, duration:0.3, ease:"power2.out", immediateRender:false}, 10);
+      tl.fromTo("#stage", {x:-18, y:12}, {x:0, y:0, duration:0.35, ease:"elastic.out(1.2,0.3)", immediateRender:false}, 10);
+      tl.fromTo("#flash", {opacity:0.9}, {opacity:0, duration:0.3, ease:"power2.out", immediateRender:false}, 24);
+      tl.fromTo("#stage", {x:-18, y:12}, {x:0, y:0, duration:0.35, ease:"elastic.out(1.2,0.3)", immediateRender:false}, 24);
+      tl.fromTo("#flash", {opacity:0.9}, {opacity:0, duration:0.3, ease:"power2.out", immediateRender:false}, 34.17);
+      tl.fromTo("#stage", {x:-18, y:12}, {x:0, y:0, duration:0.35, ease:"elastic.out(1.2,0.3)", immediateRender:false}, 34.17);
+      tl.fromTo("#flash", {opacity:0.9}, {opacity:0, duration:0.3, ease:"power2.out", immediateRender:false}, 36);
+      tl.fromTo("#stage", {x:-18, y:12}, {x:0, y:0, duration:0.35, ease:"elastic.out(1.2,0.3)", immediateRender:false}, 36);
+      tl.fromTo("#flash", {opacity:0.9}, {opacity:0, duration:0.3, ease:"power2.out", immediateRender:false}, 42);
+      tl.fromTo("#stage", {x:-18, y:12}, {x:0, y:0, duration:0.35, ease:"elastic.out(1.2,0.3)", immediateRender:false}, 42);
+      tl.fromTo("#flash", {opacity:0.45}, {opacity:0, duration:0.12, ease:"power1.out", immediateRender:false}, 6);
+      tl.fromTo("#flash", {opacity:0.45}, {opacity:0, duration:0.12, ease:"power1.out", immediateRender:false}, 8);
+      tl.fromTo("#flash", {opacity:0.45}, {opacity:0, duration:0.12, ease:"power1.out", immediateRender:false}, 12);
+      tl.fromTo("#flash", {opacity:0.45}, {opacity:0, duration:0.12, ease:"power1.out", immediateRender:false}, 14);
+      tl.fromTo("#flash", {opacity:0.45}, {opacity:0, duration:0.12, ease:"power1.out", immediateRender:false}, 16);
+      tl.fromTo("#flash", {opacity:0.45}, {opacity:0, duration:0.12, ease:"power1.out", immediateRender:false}, 18);
+      tl.fromTo("#flash", {opacity:0.45}, {opacity:0, duration:0.12, ease:"power1.out", immediateRender:false}, 20);
+      tl.fromTo("#flash", {opacity:0.45}, {opacity:0, duration:0.12, ease:"power1.out", immediateRender:false}, 22);
+      tl.fromTo("#flash", {opacity:0.45}, {opacity:0, duration:0.12, ease:"power1.out", immediateRender:false}, 26);
+      tl.fromTo("#flash", {opacity:0.45}, {opacity:0, duration:0.12, ease:"power1.out", immediateRender:false}, 28);
+      tl.fromTo("#flash", {opacity:0.45}, {opacity:0, duration:0.12, ease:"power1.out", immediateRender:false}, 30.0);
+      tl.fromTo("#flash", {opacity:0.45}, {opacity:0, duration:0.12, ease:"power1.out", immediateRender:false}, 30.5);
+      tl.fromTo("#flash", {opacity:0.45}, {opacity:0, duration:0.12, ease:"power1.out", immediateRender:false}, 31.0);
+      tl.fromTo("#flash", {opacity:0.45}, {opacity:0, duration:0.12, ease:"power1.out", immediateRender:false}, 31.5);
+      tl.fromTo("#flash", {opacity:0.45}, {opacity:0, duration:0.12, ease:"power1.out", immediateRender:false}, 32.0);
+      tl.fromTo("#flash", {opacity:0.45}, {opacity:0, duration:0.12, ease:"power1.out", immediateRender:false}, 32.5);
+      tl.fromTo("#flash", {opacity:0.45}, {opacity:0, duration:0.12, ease:"power1.out", immediateRender:false}, 33.0);
+      tl.fromTo("#flash", {opacity:0.45}, {opacity:0, duration:0.12, ease:"power1.out", immediateRender:false}, 33.5);
+      tl.fromTo("#flash", {opacity:0.45}, {opacity:0, duration:0.12, ease:"power1.out", immediateRender:false}, 35.5);
+      window.__timelines["main"] = tl;
+    </script>
+  </body>
+</html>

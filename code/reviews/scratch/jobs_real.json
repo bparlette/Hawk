@@ -1,0 +1,72 @@
+[
+ {
+  "page": "scratch/viewer_real.html",
+  "out": "/workspace/work/reviews/scratch/shots/real_grunt_a_poses.png",
+  "q": "show=harbor_rats.grunt_a&t=0.5&pose=all&ui=0",
+  "w": 1600,
+  "h": 600
+ },
+ {
+  "page": "scratch/viewer_real.html",
+  "out": "/workspace/work/reviews/scratch/shots/real_armed_poses.png",
+  "q": "show=harbor_rats.armed&t=0.5&pose=all&ui=0",
+  "w": 1600,
+  "h": 600
+ },
+ {
+  "page": "scratch/viewer_real.html",
+  "out": "/workspace/work/reviews/scratch/shots/real_bruiser_poses.png",
+  "q": "show=harbor_rats.bruiser&t=0.5&pose=all&ui=0",
+  "w": 1600,
+  "h": 600
+ },
+ {
+  "page": "scratch/viewer_real.html",
+  "out": "/workspace/work/reviews/scratch/shots/real_down_side.png",
+  "q": "show=harbor_rats.grunt_a&t=0.5&pose=down&cam=side&zoom=1.6&look=0.3",
+  "w": 1280,
+  "h": 720
+ },
+ {
+  "page": "scratch/viewer_real.html",
+  "out": "/workspace/work/reviews/scratch/shots/real_down_side_noanim.png",
+  "q": "show=harbor_rats.grunt_a&t=0.5&pose=down&cam=side&zoom=1.6&look=0.3&anim=0",
+  "w": 1280,
+  "h": 720
+ },
+ {
+  "page": "scratch/viewer_real.html",
+  "out": "/workspace/work/reviews/scratch/shots/real_merged_lineup.png",
+  "q": "show=harbor_rats&t=0.5&merge=1",
+  "w": 1280,
+  "h": 720
+ },
+ {
+  "page": "scratch/viewer_real.html",
+  "out": "/workspace/work/reviews/scratch/shots/real_merged_flash.png",
+  "q": "show=harbor_rats&t=0.5&merge=1&flash=0.85",
+  "w": 1280,
+  "h": 720
+ },
+ {
+  "page": "scratch/viewer_real.html",
+  "out": "/workspace/work/reviews/scratch/shots/real_merged_attack_night.png",
+  "q": "show=harbor_rats&t=0.5&merge=1&pose=attack&night=1",
+  "w": 1280,
+  "h": 720
+ },
+ {
+  "page": "scratch/viewer_real.html",
+  "out": "/workspace/work/reviews/scratch/shots/real_armed_attack_side.png",
+  "q": "show=harbor_rats.armed&t=0.5&pose=attack&cam=side",
+  "w": 1280,
+  "h": 720
+ },
+ {
+  "page": "scratch/viewer_real.html",
+  "out": "/workspace/work/reviews/scratch/shots/real_windup_front.png",
+  "q": "show=harbor_rats&t=0.5&pose=windup&cam=front",
+  "w": 1280,
+  "h": 720
+ }
+]

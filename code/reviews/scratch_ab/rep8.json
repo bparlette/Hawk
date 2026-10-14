@@ -1,0 +1,31 @@
+[
+ {
+  "out": "shots/swapkit_street.png",
+  "q": "show=street&hud=1",
+  "page": "scratch_ab/swapkit/viewer.html",
+  "errs": [
+   "pageerror: Cannot read properties of undefined (reading 'sky')",
+   "timeout waiting for __ready"
+  ],
+  "verr": [
+   "Uncaught TypeError: Cannot read properties of undefined (reading 'sky')"
+  ],
+  "stats": null,
+  "extra": null
+ },
+ {
+  "out": "shots/swapkit_sedan.png",
+  "q": "show=car_sedan&hud=1",
+  "page": "scratch_ab/swapkit/viewer.html",
+  "errs": [
+   "pageerror: Cannot read properties of undefined (reading 'sky')",
+   "timeout waiting for __ready"
+  ],
+  "verr": [
+   "TypeError: Cannot set properties of undefined (setting 'tilt')\n    at haroldDummy (http://127.0.0.1:39147/scratch_ab/swapkit/viewer.html?show=car_sedan&hud=1:106:51)\n    at placeRider (http://127.0.0.1:39147/scratch_ab/swapkit/viewer.html?show=car_sedan&hud=1:113:13)\n    at http://127.0.0.1:39147/scratch_ab/swapkit/viewer.html?show=car_sedan&hud=1:232:34\n    at Array.forEach (<anonymous>)\n    at singleVehicle (http://127.0.0.1:39147/scratch_ab/swapkit/viewer.html?show=car_sedan&hud=1:232:19)\n    at http://127.0.0.1:39147/scratch_ab/swapkit/viewer.html?show=car_sedan&hud=1:246:15",
+   "Uncaught TypeError: Cannot read properties of undefined (reading 'sky')"
+  ],
+  "stats": null,
+  "extra": null
+ }
+]

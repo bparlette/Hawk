@@ -1,0 +1,19 @@
+f68: loading scene
+f239: stage lvl=6 section=L0
+f388: taunt seen: NICE SHELL, NERD!
+f530: bark: BY THE BOOK!
+f744: bark: SLICE OF LIFE!
+f1345: bark: FORM IS EVERYTHING!
+f2023: dodge seen
+f3496: stage lvl=6 section=L1
+f3497: boss fight lvl=6 COLD FRONT
+f5041: bark: BLADE AND HONOR!
+f5218: outro lvl=6
+f5238: bark: THAT PLOW CAME FROM THE JUNKYARD!
+f5338: bark: LET'S GO SCRAP SOME BAD GUYS!
+f5439: pizza lvl=6
+f5609: results lvl=6
+after: LEVELS loaded=1,,,,,6,7 LVLOAD=6,7
+scripts loaded=levels/level6.js,levels/level7.js missing= SS=object
+END f=5609 scene=stage level=6 kills=17 levelsWithResults=6
+exit 0

@@ -1,0 +1,290 @@
+[
+ {
+  "out": "previews/harbor_rats_armed_day.png",
+  "q": "show=harbor_rats.armed&t=0.5&turn=1&cam=front&ui=0",
+  "errors": [],
+  "report": {
+   "show": "harbor_rats.armed",
+   "lod": 0,
+   "rigs": {
+    "harbor_rats.armed": {
+     "parts": 40,
+     "tris": 10588,
+     "hullTris": 9024,
+     "mats": 3,
+     "height": 1.967251074238936,
+     "minY": -0.0016800695378460448,
+     "flashBad": 0,
+     "hullsOK": true,
+     "swR": true
+    }
+   },
+   "frame": {
+    "calls": 373,
+    "triangles": 109794
+   }
+  }
+ },
+ {
+  "out": "previews/harbor_rats_armed_night.png",
+  "q": "show=harbor_rats.armed&t=0.5&turn=1&cam=front&ui=0&night=1",
+  "errors": [],
+  "report": {
+   "show": "harbor_rats.armed",
+   "lod": 0,
+   "rigs": {
+    "harbor_rats.armed": {
+     "parts": 40,
+     "tris": 10588,
+     "hullTris": 9024,
+     "mats": 3,
+     "height": 1.967251074238936,
+     "minY": -0.0016800695378460448,
+     "flashBad": 0,
+     "hullsOK": true,
+     "swR": true
+    }
+   },
+   "frame": {
+    "calls": 373,
+    "triangles": 109794
+   }
+  }
+ },
+ {
+  "out": "previews/harbor_rats_armed_poses.png",
+  "q": "show=harbor_rats.armed&t=0.5&pose=all&ui=0",
+  "errors": [],
+  "report": {
+   "show": "harbor_rats.armed",
+   "lod": 0,
+   "rigs": {
+    "harbor_rats.armed/idle": {
+     "parts": 40,
+     "tris": 10588,
+     "hullTris": 9024,
+     "mats": 3,
+     "height": 1.967251074238936,
+     "minY": -0.0016800695378460448,
+     "flashBad": 0,
+     "hullsOK": true,
+     "swR": true
+    },
+    "harbor_rats.armed/run": {
+     "parts": 40,
+     "tris": 10588,
+     "hullTris": 9024,
+     "mats": 3,
+     "height": 1.967251074238936,
+     "minY": -0.0016800695378460448,
+     "flashBad": 0,
+     "hullsOK": true,
+     "swR": true
+    },
+    "harbor_rats.armed/windup": {
+     "parts": 40,
+     "tris": 10588,
+     "hullTris": 9024,
+     "mats": 3,
+     "height": 1.967251074238936,
+     "minY": -0.0016800695378460448,
+     "flashBad": 0,
+     "hullsOK": true,
+     "swR": true
+    },
+    "harbor_rats.armed/attack": {
+     "parts": 40,
+     "tris": 10588,
+     "hullTris": 9024,
+     "mats": 3,
+     "height": 1.967251074238936,
+     "minY": -0.0016800695378460448,
+     "flashBad": 0,
+     "hullsOK": true,
+     "swR": true
+    },
+    "harbor_rats.armed/hurt": {
+     "parts": 40,
+     "tris": 10588,
+     "hullTris": 9024,
+     "mats": 3,
+     "height": 1.967251074238936,
+     "minY": -0.0016800695378460448,
+     "flashBad": 0,
+     "hullsOK": true,
+     "swR": true
+    },
+    "harbor_rats.armed/down": {
+     "parts": 40,
+     "tris": 10588,
+     "hullTris": 9024,
+     "mats": 3,
+     "height": 1.967251074238936,
+     "minY": -0.0016800695378460448,
+     "flashBad": 0,
+     "hullsOK": true,
+     "swR": true
+    },
+    "harbor_rats.armed/getup": {
+     "parts": 40,
+     "tris": 10588,
+     "hullTris": 9024,
+     "mats": 3,
+     "height": 1.967251074238936,
+     "minY": -0.0016800695378460448,
+     "flashBad": 0,
+     "hullsOK": true,
+     "swR": true
+    }
+   },
+   "frame": {
+    "calls": 652,
+    "triangles": 192138
+   }
+  }
+ },
+ {
+  "out": "previews/harbor_rats_bruiser_day.png",
+  "q": "show=harbor_rats.bruiser&t=0.5&turn=1&cam=front&ui=0",
+  "errors": [],
+  "report": {
+   "show": "harbor_rats.bruiser",
+   "lod": 0,
+   "rigs": {
+    "harbor_rats.bruiser": {
+     "parts": 40,
+     "tris": 10544,
+     "hullTris": 10144,
+     "mats": 3,
+     "height": 2.360701289086723,
+     "minY": -0.0020160834454153384,
+     "flashBad": 0,
+     "hullsOK": true,
+     "swR": false
+    }
+   },
+   "frame": {
+    "calls": 389,
+    "triangles": 121746
+   }
+  }
+ },
+ {
+  "out": "previews/harbor_rats_bruiser_night.png",
+  "q": "show=harbor_rats.bruiser&t=0.5&turn=1&cam=front&ui=0&night=1",
+  "errors": [],
+  "report": {
+   "show": "harbor_rats.bruiser",
+   "lod": 0,
+   "rigs": {
+    "harbor_rats.bruiser": {
+     "parts": 40,
+     "tris": 10544,
+     "hullTris": 10144,
+     "mats": 3,
+     "height": 2.360701289086723,
+     "minY": -0.0020160834454153384,
+     "flashBad": 0,
+     "hullsOK": true,
+     "swR": false
+    }
+   },
+   "frame": {
+    "calls": 389,
+    "triangles": 121746
+   }
+  }
+ },
+ {
+  "out": "previews/harbor_rats_bruiser_poses.png",
+  "q": "show=harbor_rats.bruiser&t=0.5&pose=all&ui=0",
+  "errors": [],
+  "report": {
+   "show": "harbor_rats.bruiser",
+   "lod": 0,
+   "rigs": {
+    "harbor_rats.bruiser/idle": {
+     "parts": 40,
+     "tris": 10544,
+     "hullTris": 10144,
+     "mats": 3,
+     "height": 2.360701289086723,
+     "minY": -0.0020160834454153384,
+     "flashBad": 0,
+     "hullsOK": true,
+     "swR": false
+    },
+    "harbor_rats.bruiser/run": {
+     "parts": 40,
+     "tris": 10544,
+     "hullTris": 10144,
+     "mats": 3,
+     "height": 2.360701289086723,
+     "minY": -0.0020160834454153384,
+     "flashBad": 0,
+     "hullsOK": true,
+     "swR": false
+    },
+    "harbor_rats.bruiser/windup": {
+     "parts": 40,
+     "tris": 10544,
+     "hullTris": 10144,
+     "mats": 3,
+     "height": 2.360701289086723,
+     "minY": -0.0020160834454153384,
+     "flashBad": 0,
+     "hullsOK": true,
+     "swR": false
+    },
+    "harbor_rats.bruiser/attack": {
+     "parts": 40,
+     "tris": 10544,
+     "hullTris": 10144,
+     "mats": 3,
+     "height": 2.360701289086723,
+     "minY": -0.0020160834454153384,
+     "flashBad": 0,
+     "hullsOK": true,
+     "swR": false
+    },
+    "harbor_rats.bruiser/hurt": {
+     "parts": 40,
+     "tris": 10544,
+     "hullTris": 10144,
+     "mats": 3,
+     "height": 2.360701289086723,
+     "minY": -0.0020160834454153384,
+     "flashBad": 0,
+     "hullsOK": true,
+     "swR": false
+    },
+    "harbor_rats.bruiser/down": {
+     "parts": 40,
+     "tris": 10544,
+     "hullTris": 10144,
+     "mats": 3,
+     "height": 2.360701289086723,
+     "minY": -0.0020160834454153384,
+     "flashBad": 0,
+     "hullsOK": true,
+     "swR": false
+    },
+    "harbor_rats.bruiser/getup": {
+     "parts": 40,
+     "tris": 10544,
+     "hullTris": 10144,
+     "mats": 3,
+     "height": 2.360701289086723,
+     "minY": -0.0020160834454153384,
+     "flashBad": 0,
+     "hullsOK": true,
+     "swR": false
+    }
+   },
+   "frame": {
+    "calls": 678,
+    "triangles": 212262
+   }
+  }
+ }
+]

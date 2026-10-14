@@ -1,0 +1,78 @@
+{
+ "L1": {
+  "meter": {
+   "n": 129,
+   "avg": 1.95,
+   "p50": 1,
+   "p95": 6,
+   "max": 51
+  },
+  "eng": {
+   "frames": 432,
+   "drawn": 432,
+   "steps": 561,
+   "dropped": 22,
+   "updMs": 0.53,
+   "drawMs": 2.15,
+   "lightMs": 0.074,
+   "p95": 7,
+   "light": "on"
+  },
+  "st": {
+   "t": 696,
+   "en": 2,
+   "an": 8
+  }
+ },
+ "L8": {
+  "meter": {
+   "n": 97,
+   "avg": 2.57,
+   "p50": 1,
+   "p95": 10,
+   "max": 67
+  },
+  "eng": {
+   "frames": 488,
+   "drawn": 488,
+   "steps": 677,
+   "dropped": 73,
+   "updMs": 0.17,
+   "drawMs": 1.79,
+   "lightMs": 0.018,
+   "p95": 4,
+   "light": "on"
+  },
+  "st": {
+   "t": 802,
+   "en": 2,
+   "an": 5
+  }
+ },
+ "L15": {
+  "meter": {
+   "n": 128,
+   "avg": 4.23,
+   "p50": 1,
+   "p95": 21,
+   "max": 68
+  },
+  "eng": {
+   "frames": 565,
+   "drawn": 565,
+   "steps": 768,
+   "dropped": 88,
+   "updMs": 0.47,
+   "drawMs": 1.6,
+   "lightMs": 0.014,
+   "p95": 7,
+   "light": "on"
+  },
+  "st": {
+   "t": 890,
+   "en": 2,
+   "an": 7
+  }
+ },
+ "errors": []
+}

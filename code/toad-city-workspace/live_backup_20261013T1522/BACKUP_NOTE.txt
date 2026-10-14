@@ -1,0 +1,1 @@
+Live before pigeon+chipkid+fixes deploy (game.js = commit 838d77e build, md5 3f070680; brewmaster+juice). Fetched files at top level; full site tree = git archive 838d77e site/ in full_site_838d77e/site. Rollback: surge full_site_838d77e/site toad-city-baltimore.surge.sh

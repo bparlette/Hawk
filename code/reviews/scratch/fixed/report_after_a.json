@@ -1,0 +1,210 @@
+[
+ {
+  "out": "/workspace/work/reviews/scratch/fixed/after_down_side_grunt_a.png",
+  "q": "show=harbor_rats.grunt_a&t=0.5&pose=down&cam=side&zoom=1.6&look=0.3",
+  "errors": [],
+  "report": {
+   "show": "harbor_rats.grunt_a",
+   "lod": 0,
+   "rigs": {
+    "harbor_rats.grunt_a": {
+     "parts": 40,
+     "tris": 11220,
+     "hullTris": 9408,
+     "mats": 3,
+     "height": 1.967251074238936,
+     "minY": -0.0016800695378460448,
+     "flashBad": 0,
+     "hullsOK": true,
+     "swR": false
+    }
+   },
+   "frame": {
+    "calls": 87,
+    "triangles": 27074
+   }
+  }
+ },
+ {
+  "out": "/workspace/work/reviews/scratch/fixed/after_down_side_bruiser.png",
+  "q": "show=harbor_rats.bruiser&t=0.5&pose=down&cam=side&zoom=1.4&look=0.35",
+  "errors": [],
+  "report": {
+   "show": "harbor_rats.bruiser",
+   "lod": 0,
+   "rigs": {
+    "harbor_rats.bruiser": {
+     "parts": 40,
+     "tris": 10544,
+     "hullTris": 10144,
+     "mats": 3,
+     "height": 2.360701289086723,
+     "minY": -0.0020160834454153384,
+     "flashBad": 0,
+     "hullsOK": true,
+     "swR": false
+    }
+   },
+   "frame": {
+    "calls": 85,
+    "triangles": 28278
+   }
+  }
+ },
+ {
+  "out": "/workspace/work/reviews/scratch/fixed/after_down_top_grunt_a.png",
+  "q": "show=harbor_rats.grunt_a&t=0.5&pose=down&cam=top&zoom=1.5",
+  "errors": [],
+  "report": {
+   "show": "harbor_rats.grunt_a",
+   "lod": 0,
+   "rigs": {
+    "harbor_rats.grunt_a": {
+     "parts": 40,
+     "tris": 11220,
+     "hullTris": 9408,
+     "mats": 3,
+     "height": 1.967251074238936,
+     "minY": -0.0016800695378460448,
+     "flashBad": 0,
+     "hullsOK": true,
+     "swR": false
+    }
+   },
+   "frame": {
+    "calls": 44,
+    "triangles": 15518
+   }
+  }
+ },
+ {
+  "out": "/workspace/work/reviews/scratch/fixed/after_shoulder_windup_armed.png",
+  "q": "show=harbor_rats.armed&t=0.5&pose=windup&cam=front&zoom=2.2&look=1.55",
+  "errors": [],
+  "report": {
+   "show": "harbor_rats.armed",
+   "lod": 0,
+   "rigs": {
+    "harbor_rats.armed": {
+     "parts": 40,
+     "tris": 10588,
+     "hullTris": 9024,
+     "mats": 3,
+     "height": 1.967251074238936,
+     "minY": -0.0016800695378460448,
+     "flashBad": 0,
+     "hullsOK": true,
+     "swR": true
+    }
+   },
+   "frame": {
+    "calls": 86,
+    "triangles": 24234
+   }
+  }
+ },
+ {
+  "out": "/workspace/work/reviews/scratch/fixed/after_shoulder_down_grunt_a.png",
+  "q": "show=harbor_rats.grunt_a&t=0.5&pose=down&cam=three&zoom=2.4&look=0.35",
+  "errors": [],
+  "report": {
+   "show": "harbor_rats.grunt_a",
+   "lod": 0,
+   "rigs": {
+    "harbor_rats.grunt_a": {
+     "parts": 40,
+     "tris": 11220,
+     "hullTris": 9408,
+     "mats": 3,
+     "height": 1.967251074238936,
+     "minY": -0.0016800695378460448,
+     "flashBad": 0,
+     "hullsOK": true,
+     "swR": false
+    }
+   },
+   "frame": {
+    "calls": 90,
+    "triangles": 27242
+   }
+  }
+ },
+ {
+  "out": "/workspace/work/reviews/scratch/fixed/after_whisker_chest_bruiser.png",
+  "q": "show=harbor_rats.bruiser&t=0.5&cam=front&zoom=2&look=1.5",
+  "errors": [],
+  "report": {
+   "show": "harbor_rats.bruiser",
+   "lod": 0,
+   "rigs": {
+    "harbor_rats.bruiser": {
+     "parts": 40,
+     "tris": 10544,
+     "hullTris": 10144,
+     "mats": 3,
+     "height": 2.360701289086723,
+     "minY": -0.0020160834454153384,
+     "flashBad": 0,
+     "hullsOK": true,
+     "swR": false
+    }
+   },
+   "frame": {
+    "calls": 90,
+    "triangles": 27222
+   }
+  }
+ },
+ {
+  "out": "/workspace/work/reviews/scratch/fixed/after_whisker_chest_grunt_a.png",
+  "q": "show=harbor_rats.grunt_a&t=0.5&cam=front&zoom=2.2&look=1.3",
+  "errors": [],
+  "report": {
+   "show": "harbor_rats.grunt_a",
+   "lod": 0,
+   "rigs": {
+    "harbor_rats.grunt_a": {
+     "parts": 40,
+     "tris": 11220,
+     "hullTris": 9408,
+     "mats": 3,
+     "height": 1.967251074238936,
+     "minY": -0.0016800695378460448,
+     "flashBad": 0,
+     "hullsOK": true,
+     "swR": false
+    }
+   },
+   "frame": {
+    "calls": 86,
+    "triangles": 25634
+   }
+  }
+ },
+ {
+  "out": "/workspace/work/reviews/scratch/fixed/after_ears_side_grunt_a.png",
+  "q": "show=harbor_rats.grunt_a&t=0.5&cam=side&zoom=3.2&look=1.7",
+  "errors": [],
+  "report": {
+   "show": "harbor_rats.grunt_a",
+   "lod": 0,
+   "rigs": {
+    "harbor_rats.grunt_a": {
+     "parts": 40,
+     "tris": 11220,
+     "hullTris": 9408,
+     "mats": 3,
+     "height": 1.967251074238936,
+     "minY": -0.0016800695378460448,
+     "flashBad": 0,
+     "hullsOK": true,
+     "swR": false
+    }
+   },
+   "frame": {
+    "calls": 74,
+    "triangles": 20762
+   }
+  }
+ }
+]

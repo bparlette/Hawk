@@ -1,0 +1,98 @@
+{
+ "grunt_a": {
+  "no_animateGang": {
+   "tailMinY_grounded": -0.66,
+   "tailMinY_falling": -0.418,
+   "bodyMinY_grounded_excl_tail_weapon": 0.044
+  },
+  "animateGang_down": {
+   "tailMinY_grounded": -0.516,
+   "tailMinY_falling": -0.247,
+   "bodyMinY_grounded_excl_tail_weapon": 0.044
+  },
+  "sequence_getup_as_idle": {
+   "tailMinY": -0.515,
+   "worstAt": "down@1.23"
+  },
+  "sequence_getup_as_hurt": {
+   "tailMinY": -0.515,
+   "worstAt": "down@1.23"
+  },
+  "sequence_getup_as_down": {
+   "tailMinY": -0.515,
+   "worstAt": "down@1.23"
+  }
+ },
+ "grunt_b": {
+  "no_animateGang": {
+   "tailMinY_grounded": -0.66,
+   "tailMinY_falling": -0.418,
+   "bodyMinY_grounded_excl_tail_weapon": 0.044
+  },
+  "animateGang_down": {
+   "tailMinY_grounded": -0.516,
+   "tailMinY_falling": -0.247,
+   "bodyMinY_grounded_excl_tail_weapon": 0.044
+  },
+  "sequence_getup_as_idle": {
+   "tailMinY": -0.515,
+   "worstAt": "down@1.23"
+  },
+  "sequence_getup_as_hurt": {
+   "tailMinY": -0.515,
+   "worstAt": "down@1.23"
+  },
+  "sequence_getup_as_down": {
+   "tailMinY": -0.515,
+   "worstAt": "down@1.23"
+  }
+ },
+ "armed": {
+  "no_animateGang": {
+   "tailMinY_grounded": -0.66,
+   "tailMinY_falling": -0.418,
+   "bodyMinY_grounded_excl_tail_weapon": 0.044
+  },
+  "animateGang_down": {
+   "tailMinY_grounded": -0.516,
+   "tailMinY_falling": -0.247,
+   "bodyMinY_grounded_excl_tail_weapon": 0.044
+  },
+  "sequence_getup_as_idle": {
+   "tailMinY": -0.515,
+   "worstAt": "down@1.23"
+  },
+  "sequence_getup_as_hurt": {
+   "tailMinY": -0.515,
+   "worstAt": "down@1.23"
+  },
+  "sequence_getup_as_down": {
+   "tailMinY": -0.515,
+   "worstAt": "down@1.23"
+  }
+ },
+ "bruiser": {
+  "no_animateGang": {
+   "tailMinY_grounded": -0.792,
+   "tailMinY_falling": -0.501,
+   "bodyMinY_grounded_excl_tail_weapon": 0
+  },
+  "animateGang_down": {
+   "tailMinY_grounded": -0.619,
+   "tailMinY_falling": -0.296,
+   "bodyMinY_grounded_excl_tail_weapon": 0
+  },
+  "sequence_getup_as_idle": {
+   "tailMinY": -0.618,
+   "worstAt": "down@1.23"
+  },
+  "sequence_getup_as_hurt": {
+   "tailMinY": -0.618,
+   "worstAt": "down@1.23"
+  },
+  "sequence_getup_as_down": {
+   "tailMinY": -0.618,
+   "worstAt": "down@1.23"
+  }
+ }
+}

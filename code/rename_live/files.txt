@@ -1,0 +1,16 @@
+../trailer_v2/site_final/index.html
+../aistudio-games/games/shell-shock-live-home/index.html
+../g16js/trailer/index.html
+../aistudio-games/games/shell-shock-16bit-home/index.html
+../aistudio-games/games/index.html
+../aistudio-games/games/README.md
+../aistudio-games/games/sprites/index.html
+../sprites/out/index.html
+../deploy/shell-shock-live-action/index.html
+../g16js/site/index.html
+../deploy/shell-shock-live-action/sw.js
+../g16js/site/sw.js
+../aistudio-games/games/shell-shock-live/index.html
+../aistudio-games/games/shell-shock-16bit/index.html
+../aistudio-games/games/shell-shock-live/sw.js
+../aistudio-games/games/shell-shock-16bit/sw.js

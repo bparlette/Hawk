@@ -1,0 +1,32 @@
+{
+ "tower_1.jpg": {
+  "title": "File:Baltimore World Trade Center Detail - Sarah Stierch.jpg",
+  "page": "https://commons.wikimedia.org/wiki/File:Baltimore_World_Trade_Center_Detail_-_Sarah_Stierch.jpg",
+  "query": "World Trade Center Baltimore"
+ },
+ "tower_2.jpg": {
+  "title": "File:Baltimore World Trade Center Jan. 18 2025.jpg",
+  "page": "https://commons.wikimedia.org/wiki/File:Baltimore_World_Trade_Center_Jan._18_2025.jpg",
+  "query": "World Trade Center Baltimore"
+ },
+ "tower_3.jpg": {
+  "title": "File:Baltimore World Trade Center 2.jpg",
+  "page": "https://commons.wikimedia.org/wiki/File:Baltimore_World_Trade_Center_2.jpg",
+  "query": "World Trade Center Baltimore"
+ },
+ "night_1.jpg": {
+  "title": "File:Baltimore Inner Harbor from Federal Hill.jpg",
+  "page": "https://commons.wikimedia.org/wiki/File:Baltimore_Inner_Harbor_from_Federal_Hill.jpg",
+  "query": "World Trade Center Baltimore night"
+ },
+ "wtc_1.jpg": {
+  "title": "File:The Inner Harbor of Baltimore, Maryland.jpg",
+  "page": "https://commons.wikimedia.org/wiki/File:The_Inner_Harbor_of_Baltimore,_Maryland.jpg",
+  "query": "Baltimore World Trade Center Inner Harbor"
+ },
+ "wtc_2.jpg": {
+  "title": "File:The Baltimore Inner Harbor.jpg",
+  "page": "https://commons.wikimedia.org/wiki/File:The_Baltimore_Inner_Harbor.jpg",
+  "query": "Baltimore World Trade Center Inner Harbor"
+ }
+}

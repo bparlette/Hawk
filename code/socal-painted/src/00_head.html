@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
+<meta name="theme-color" content="#1b1530">
+<title>California Games Remastered — Hark Edition (fan remake)</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0;-webkit-user-select:none;user-select:none;-webkit-tap-highlight-color:transparent;-webkit-touch-callout:none}
+html,body{width:100%;height:100%;overflow:hidden;background:#1b1530;color:#fff;touch-action:none;overscroll-behavior:none;
+ font-family:Impact,"Avenir Next Condensed","Arial Black","Helvetica Neue",system-ui,sans-serif}
+#cv,#hud{position:fixed;left:0;top:0;width:100vw;height:100vh;height:100dvh;display:block;touch-action:none}
+#hud{pointer-events:none;z-index:5}
+.ui{position:fixed;inset:0;display:none;align-items:center;justify-content:center;z-index:20;
+ padding:max(10px,env(safe-area-inset-top)) max(10px,env(safe-area-inset-right)) max(10px,env(safe-area-inset-bottom)) max(10px,env(safe-area-inset-left))}
+.ui.on{display:flex}
+.panel{width:min(540px,100%);max-height:100%;overflow:auto;background:rgba(27,21,48,.9);border:3px solid #14101f;border-radius:16px;
+ box-shadow:5px 5px 0 #14101f,inset 0 0 0 2px rgba(255,210,60,.45);padding:16px 14px;text-align:center}
+.logo{font-size:clamp(38px,11vw,64px);line-height:.86;font-style:italic;color:#ffd23c;-webkit-text-stroke:2px #14101f;text-shadow:4px 4px 0 #14101f,0 0 0 #000;letter-spacing:1px;transform:rotate(-4deg);margin:6px 0 4px}
+.logo span{display:block;color:#ff5fa2;font-size:.62em;letter-spacing:3px}
+.panel h2{font-size:clamp(24px,6vw,34px);font-style:italic;color:#ffd23c;-webkit-text-stroke:1.5px #14101f;text-shadow:3px 3px 0 #14101f;margin-bottom:4px;letter-spacing:1px}
+.sub{font:800 12px/1.3 system-ui,-apple-system,"Segoe UI",sans-serif;color:#2fd3ff;letter-spacing:2px;margin:6px 0 10px;text-transform:uppercase}
+.tag{display:inline-block;font:900 11px/1 system-ui,sans-serif;background:#ffd23c;color:#14101f;border:2px solid #14101f;box-shadow:2px 2px 0 #14101f;border-radius:7px;padding:5px 8px;letter-spacing:.5px}
+.fan{font:600 11px/1.45 system-ui,-apple-system,sans-serif;color:#d8d2f0;opacity:.85;margin-top:10px}
+.btn{display:block;width:100%;min-height:54px;margin:9px 0;border-radius:14px;border:3px solid #14101f;cursor:pointer;background:#ff5fa2;color:#fff;
+ font:inherit;font-style:italic;font-size:21px;letter-spacing:1px;-webkit-text-stroke:1px #14101f;text-shadow:2px 2px 0 #14101f;box-shadow:4px 4px 0 #14101f;touch-action:manipulation}
+.btn.alt{background:#2fd3ff}.btn.yel{background:#ffd23c}.btn.dim{background:#3b3160}
+.btn:active,.btn.press{transform:translate(3px,3px);box-shadow:1px 1px 0 #14101f}
+.btn:focus-visible,.chip:focus-visible,.spon:focus-visible,.evb:focus-visible{outline:3px solid #fff;outline-offset:2px}
+.row{display:flex;gap:9px;align-items:center;justify-content:center;flex-wrap:wrap}
+.row .btn{flex:1;min-width:120px}
+.chip{min-height:46px;min-width:46px;padding:0 14px;border-radius:12px;border:3px solid #14101f;background:#3b3160;color:#fff;font:inherit;font-size:16px;font-style:italic;cursor:pointer;box-shadow:3px 3px 0 #14101f;letter-spacing:.5px}
+.chip.on{background:#ffd23c;color:#14101f}
+.prow{display:flex;gap:7px;align-items:center;margin:7px 0;padding:7px;border-radius:12px;background:rgba(20,16,31,.55);border:2px solid #14101f}
+.badge{width:40px;height:40px;border-radius:50%;border:3px solid #14101f;box-shadow:2px 2px 0 #14101f;flex:none}
+.prow input{flex:1;min-width:0;height:46px;border-radius:10px;border:3px solid #14101f;background:#fff6dc;color:#14101f;font:inherit;font-size:19px;font-style:italic;padding:0 10px;text-transform:uppercase;-webkit-user-select:text;user-select:text}
+.spon{height:46px;border-radius:10px;border:3px solid #14101f;font:900 11px/1.05 system-ui,sans-serif;padding:0 6px;cursor:pointer;width:118px;color:#14101f;box-shadow:2px 2px 0 #14101f}
+.evgrid{display:grid;grid-template-columns:1fr 1fr;gap:9px;margin:8px 0}
+.evb{min-height:72px;border-radius:14px;border:3px solid #14101f;box-shadow:4px 4px 0 #14101f;cursor:pointer;font:inherit;font-style:italic;font-size:19px;color:#fff;-webkit-text-stroke:1px #14101f;text-shadow:2px 2px 0 #14101f;line-height:1.05;padding:6px}
+.evb small{display:block;font:800 10px/1.2 system-ui,sans-serif;-webkit-text-stroke:0;text-shadow:none;color:#14101f;letter-spacing:.5px;margin-top:3px;font-style:normal}
+.evb:active{transform:translate(3px,3px);box-shadow:1px 1px 0 #14101f}
+table.st{width:100%;border-collapse:collapse;font:800 14px/1.25 system-ui,-apple-system,sans-serif;margin:8px 0}
+table.st td,table.st th{padding:6px 4px;border-bottom:2px solid rgba(20,16,31,.7);text-align:left}
+table.st th{color:#2fd3ff;font-size:10px;letter-spacing:1px}
+table.st td.n{text-align:right;font-variant-numeric:tabular-nums}
+table.st small{color:#bdb4e0;font-size:10px}
+.cpu{color:#9fe8ff}
+#awards,#champ{align-items:flex-end}
+#awards .panel,#champ .panel{background:rgba(27,21,48,.86);max-height:52vh;padding:10px 12px}
+#awards .btn,#champ .btn{min-height:48px;margin:6px 0;font-size:18px}
+#topbar{position:fixed;z-index:30;top:max(8px,env(safe-area-inset-top));right:max(8px,env(safe-area-inset-right));display:flex;gap:6px}
+#topbar button{width:44px;height:44px;border-radius:12px;border:3px solid #14101f;background:#fff6dc;color:#14101f;font:inherit;font-size:15px;cursor:pointer;touch-action:manipulation;box-shadow:2px 2px 0 #14101f}
+#topbar button.on{background:#ffd23c}
+#touch{position:fixed;inset:0;z-index:10;display:none;pointer-events:none}
+#touch.on{display:block}
+#stickzone{position:absolute;left:0;bottom:0;width:52%;height:44%;pointer-events:auto;touch-action:none}
+#stickbase{position:absolute;width:124px;height:124px;margin:-62px 0 0 -62px;border-radius:50%;background:rgba(20,16,31,.35);border:3px solid rgba(255,255,255,.55);opacity:.55;left:90px;top:calc(100% - 110px)}
+#stickbase.act{opacity:1}
+#stickknob{position:absolute;left:50%;top:50%;width:54px;height:54px;margin:-27px 0 0 -27px;border-radius:50%;background:#ffd23c;border:3px solid #14101f;box-shadow:2px 2px 0 #14101f}
+.tb{position:absolute;border-radius:50%;border:3px solid #14101f;box-shadow:3px 3px 0 #14101f;font:900 14px/1 Impact,"Arial Black",system-ui,sans-serif;color:#14101f;
+ display:flex;align-items:center;justify-content:center;text-align:center;touch-action:none;pointer-events:auto;letter-spacing:.5px;white-space:pre-line;padding:3px}
+.tb.down{transform:translate(2px,2px);box-shadow:1px 1px 0 #14101f;filter:brightness(1.15)}
+.tb.off{display:none}
+#tbA{width:84px;height:84px;right:calc(env(safe-area-inset-right,0px) + 20px);bottom:calc(env(safe-area-inset-bottom,0px) + 30px);background:#ff5fa2;font-size:16px}
+#tbB{width:64px;height:64px;right:calc(env(safe-area-inset-right,0px) + 116px);bottom:calc(env(safe-area-inset-bottom,0px) + 20px);background:#2fd3ff}
+#tbC{width:64px;height:64px;right:calc(env(safe-area-inset-right,0px) + 40px);bottom:calc(env(safe-area-inset-bottom,0px) + 128px);background:#ffd23c}
+</style>
+</head>
+<body>
+<canvas id="cv" tabindex="0"></canvas>
+<canvas id="hud"></canvas>
+<div id="touch"><div id="stickzone"><div id="stickbase"><div id="stickknob"></div></div></div>
+ <button class="tb" id="tbA">A</button><button class="tb" id="tbB">B</button><button class="tb" id="tbC">C</button></div>
+<div id="topbar"><button id="bPause" title="Pause (P / Esc)" aria-label="Pause">II</button><button id="bMute" title="Mute (M)" aria-label="Mute">♪</button><button id="b16" title="16-bit mode (H)" aria-label="16-bit mode">16</button></div>
+
+<div class="ui" id="menu"><div class="panel">
+ <span class="tag">★ HARK EDITION · FAN REMAKE</span>
+ <div class="logo">CALIFORNIA<br>GAMES<span>REMASTERED</span></div>
+ <div class="sub">Half Pipe · Foot Bag · Surfing · Roller Skating · BMX · Flying Disk</div>
+ <button class="btn" id="mAll">COMPETE IN ALL EVENTS</button>
+ <button class="btn alt" id="mOne">COMPETE IN ONE EVENT</button>
+ <div class="row"><button class="btn yel" id="mPrac" style="color:#14101f;-webkit-text-stroke:0;text-shadow:none">PRACTICE</button><button class="btn dim" id="mRec">RECORDS</button></div>
+ <button class="btn dim" id="mDemo">WATCH DEMO</button>
+ <div class="fan">Unofficial fan remake of the 1987 classic. All art and music made in code; sponsors are parodies.<br>Arrows/WASD · Z/Space = A · X = B · C = C · P pause · M mute · H 16-bit</div>
+</div></div>
+
+<div class="ui" id="setup"><div class="panel">
+ <h2>WHO'S COMPETING?</h2>
+ <div class="sub">Type a name · tap the sponsor to change it</div>
+ <div id="plist"></div>
+ <div class="row"><button class="chip" id="pAdd">+ PLAYER</button><button class="chip" id="pDel">− PLAYER</button><button class="chip on" id="pCpu">CPU RIVALS: ON</button></div>
+ <button class="btn" id="pGo">LET'S GO!</button>
+ <button class="btn dim" id="pBack">BACK</button>
+</div></div>
+
+<div class="ui" id="pick"><div class="panel">
+ <h2 id="pickT">PICK AN EVENT</h2>
+ <div class="evgrid" id="evgrid"></div>
+ <button class="btn dim" id="pickBack">BACK</button>
+</div></div>
+
+<div class="ui" id="records"><div class="panel">
+ <h2>EVENT RECORDS</h2>
+ <table class="st" id="recT"></table>
+ <button class="btn dim" id="recBack">BACK</button>
+</div></div>
+
+<div class="ui" id="pause"><div class="panel">
+ <h2>PAUSED</h2>
+ <button class="btn" id="psResume">RESUME</button>
+ <button class="btn alt" id="psRetry">RESTART THIS TURN</button>
+ <button class="btn dim" id="psQuit">QUIT TO MENU</button>
+</div></div>
+
+<div class="ui" id="awards"><div class="panel">
+ <h2 id="awT">TROPHIES</h2>
+ <table class="st" id="awTab"></table>
+ <div class="row"><button class="btn" id="awNext">NEXT EVENT</button><button class="btn alt" id="awRetry">PLAY AGAIN</button></div>
+ <button class="btn dim" id="awMenu">MENU</button>
+</div></div>
+
+<div class="ui" id="champ"><div class="panel">
+ <h2 id="chT">CALIFORNIA CHAMPION</h2>
+ <table class="st" id="chTab"></table>
+ <div class="row"><button class="btn" id="chAgain">NEW COMPETITION</button><button class="btn dim" id="chMenu">MENU</button></div>
+</div></div>
+<script type="module">
+import * as THREE from './three.module.min.js';

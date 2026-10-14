@@ -1,0 +1,8 @@
+file '/workspace/work/toad-city/shorts/batch1/work/03_honqueen/seg00.mp4'
+file '/workspace/work/toad-city/shorts/batch1/work/03_honqueen/seg01.mp4'
+file '/workspace/work/toad-city/shorts/batch1/work/03_honqueen/seg02.mp4'
+file '/workspace/work/toad-city/shorts/batch1/work/03_honqueen/seg03.mp4'
+file '/workspace/work/toad-city/shorts/batch1/work/03_honqueen/seg04.mp4'
+file '/workspace/work/toad-city/shorts/batch1/work/03_honqueen/seg05.mp4'
+file '/workspace/work/toad-city/shorts/batch1/work/03_honqueen/seg06.mp4'
+file '/workspace/work/toad-city/shorts/batch1/work/03_honqueen/seg07.mp4'

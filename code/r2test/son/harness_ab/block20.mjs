@@ -1,0 +1,6 @@
+import { fakeDocument } from './fakedom2.mjs'; globalThis.document = fakeDocument;
+const K = (await import('./sonnet_kit.mjs')).K; const S = (process.env.SRC || new URL('../reference/taskAB_fixed/', import.meta.url).pathname);
+const T = await import(S + 'rowkit_tiles.js'), RH = await import(S + 'rowkit_rowhouse.js'), C = await import(S + 'rowkit_corner.js'), B = await import(S + 'rowkit_block.js');
+const A = K.makeAtlas(T.KIT_TILES); const builders = { buildRowhouse: RH.buildRowhouse, buildCornerBar: C.buildCornerBar, buildCornerShop: C.buildCornerShop };
+for (const [lo, hi] of [[2, 22], [1.2, 22.8]]) { let mx = 0, minW = 99, ok = 0; for (let s = 1; s <= 30; s++) { const out = K.makeOut(); const info = B.buildRowBlock(K, out, A, lo, lo, hi, hi, { seed: s, builders }); const g = out.build(); g.traverse((m) => { if (!m.isMesh) return; const p = m.geometry.attributes.position; for (let i = 0; i < p.count; i++) { const o = Math.max(-p.getX(i), p.getX(i) - 24, -p.getZ(i), p.getZ(i) - 24); if (o > mx && p.getY(i) < 1.5) mx = o; } }); for (const q of info.pieces) if (!q.corner) minW = Math.min(minW, q.w); ok++; }
+  console.log(`box ${lo}..${hi}: built ${ok}/30, max low overhang beyond the 24 m plot ${mx.toFixed(2)} m, narrowest house ${minW} m`); }

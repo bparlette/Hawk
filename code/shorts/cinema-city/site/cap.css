@@ -1,0 +1,6 @@
+*{transition:none!important}
+#hpbox,#proto,#hint,#combo,#touch{display:none!important}
+#title .k{display:none!important}
+#title{bottom:36%!important}
+#title .t{font-size:62px!important}
+#title .s{font-size:14px!important}

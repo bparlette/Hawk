@@ -1,0 +1,77 @@
+30 stage4 0.5 play 16  undefined  pistol,pistol,pistol
+60 stage4 1 play 16  undefined  jump,pistol,pistol
+90 stage4 1.5 play 16  undefined  land,jump,pistol,pistol
+120 stage4 2 play 16  undefined  pistol,land,jump,pistol,pistol
+150 stage4 2.5 play 16  undefined  land,jump,pistol,eshot,punch,eshot,pistol,eshot
+180 stage4 3 play 16  undefined  land,pistol,pistol
+210 stage4 3.5 play 16  undefined  punch,pistol,punch,pistol,hit,punch,pistol
+240 stage4 4 play 16  undefined  hit,punch,jump,pistol,pistol
+270 stage4 4.5 play 16  undefined  land,pistol,break,jump,pistol,boom
+300 stage4 5 play 16  undefined  pistol,eshot,land,pistol,jump,pistol
+330 stage4 5.5 play 16  undefined  pistol,land,jump,eshot,pistol
+360 stage4 6 play 16  undefined  punch,pistol,land,pistol
+390 stage4 6.5 play 16  undefined  pistol,punch,pistol,punch
+420 stage4 7 play 16  undefined  pistol,hit,punch,pistol,hit,punch,jump,pistol
+450 stage4 7.5 play 16  undefined  pistol,land,jump,pistol,eshot
+480 stage4 8 play 16  undefined  pistol,pistol,land,punch
+510 stage4 8.5 play 16  undefined  pistol,hit,punch,jump,pistol,pistol
+540 stage4 9 play 16  undefined  land,pistol,jump,eshot,pistol
+570 stage4 9.5 play 16  undefined  pistol,land,pistol,punch
+600 stage4 10 play 16  undefined  pistol,hit,punch,jump,pistol,pistol
+630 stage4 10.5 play 16  undefined  land,jump,pistol,eshot,pistol
+660 stage4 11 play 16  undefined  land,pistol,pistol
+690 stage4 11.5 play 16  undefined  pistol,punch,pistol,hit,punch,jump,eshot,pistol
+720 stage4 12 play 16  undefined  pistol,land,jump,eshot,pistol
+750 stage4 12.5 play 16  undefined  punch,pistol,land,pistol,hit,punch,jump
+780 stage4 13 play 16  undefined  pistol,pistol,land,jump
+810 stage4 13.5 play 16  undefined  pistol,eshot,pistol,land,pistol
+840 stage4 14 play 16  undefined  eshot,pistol,pistol
+870 stage4 14.5 play 16  undefined  punch,pistol,hit,punch,jump,pistol,eshot
+900 stage4 15 play 16  undefined  pistol,pistol,land,jump,eshot,pistol,punch
+930 stage4 15.5 play 16  undefined  pistol,land,pistol
+960 stage4 16 play 16  undefined  pistol,punch,eshot,pistol,punch
+990 stage4 16.5 play 16  undefined  pistol,hit,punch,pistol,hit,punch,jump,pistol
+1020 stage4 17 play 16  undefined  eshot,pistol,land,pistol,jump
+1050 stage4 17.5 play 16  undefined  pistol,pistol,land,jump,eshot
+1080 stage4 18 play 16  undefined  pistol,pistol,land,jump,pistol,eshot
+1110 stage4 18.5 play 16  undefined  pistol,punch,pistol,land,hit,punch
+1140 stage4 19 play 16  undefined  pistol,eshot,pistol
+1170 stage4 19.5 play 16  undefined  pistol,punch,pistol,punch
+1200 stage4 20 play 16  undefined  pistol,hit,punch,jump,eshot,pistol,pistol
+1230 stage4 20.5 play 16  undefined  land,jump,pistol,eshot,pistol
+1260 stage4 21 play 16  undefined  land,pistol,punch,pistol,hit,punch
+1290 stage4 21.5 play 16  undefined  pistol,pistol,jump,pistol
+1320 stage4 22 play 16  undefined  pistol,land,jump,eshot,pistol,eshot,punch
+1350 stage4 22.5 play 16  undefined  pistol,land,pistol
+1380 stage4 23 play 16  undefined  pistol,punch,pistol,punch,pistol
+1410 stage4 23.5 play 16  undefined  hit,punch,pistol,hit,punch,jump,pistol
+1440 stage4 24 play 16  undefined  pistol,land,jump,pistol
+1470 stage4 24.5 play 16 THE GUN BROKER:152 undefined [THE GUN BROKER!] pistol,land,jump,pistol,pistol
+1500 stage4 25 play 16 THE GUN BROKER:140 undefined [THE GUN BROKER!] pistol,pistol
+1530 stage4 25.5 play 16 THE GUN BROKER:128 undefined [THE GUN BROKER!] pistol,boom,pistol
+1560 stage4 26 play 16 THE GUN BROKER:120 undefined [THE GUN BROKER!] pistol,pistol
+1590 stage4 26.5 play 16 THE GUN BROKER:112 undefined  eshot,pistol,pistol,jump,pistol
+1620 stage4 27 play 16 THE GUN BROKER:100 undefined  pistol,pistol
+1650 stage4 27.5 play 16 THE GUN BROKER:96 undefined  pistol,pistol,boom
+1680 stage4 28 play 16 THE GUN BROKER:92 undefined  eshot,pistol,pistol,pistol
+1710 stage4 28.5 play 16 THE GUN BROKER:80 undefined  pistol,jump,pistol
+1740 stage4 29 play 16 THE GUN BROKER:72 undefined  pistol,pistol
+1770 stage4 29.5 play 16 THE GUN BROKER:64 undefined  eshot,pistol,pistol,boom,pistol
+1800 stage4 30 play 16 THE GUN BROKER:52 undefined  pistol,pistol
+1830 stage4 30.5 play 16 THE GUN BROKER:44 undefined  pistol,jump,pistol
+1860 stage4 31 play 16 THE GUN BROKER:36 undefined  eshot,pistol,pistol,pistol
+1890 stage4 31.5 play 16 THE GUN BROKER:28 undefined  pistol,boom,pistol
+1920 stage4 32 play 16 THE GUN BROKER:20 undefined  eshot,pistol,pistol
+1950 stage4 32.5 play 16 THE GUN BROKER:12 undefined  pistol,pistol
+1980 stage4 33 play 16 THE GUN BROKER:4 undefined  eshot,eshot,pistol,pistol,pistol
+2010 stage4 33.5 play 16 THE GUN BROKER:0D undefined [THE BROKER IS DOWN!] jump,small,pistol,break,small,small,small,small,pistol
+2040 stage4 34 play 16 THE GUN BROKER:0D undefined [THE BROKER IS DOWN!] break,boom,pistol,small,small,land,small,pistol,small,boom
+2070 stage4 34.5 play 16 THE GUN BROKER:0D undefined [THE BROKER IS DOWN!] pistol,small,small,pistol,small,small,small,small,small,pistol,small
+2100 stage4 35 end 16 THE GUN BROKER:0D undefined [THE BROKER IS DOWN!] small,small,small,small,small,small,small
+2130 stage4 35.5 end 16 THE GUN BROKER:0D undefined [STAGE CLEAR!] clear,small,small,small,small,small,small
+2160 stage4 36 end 16 THE GUN BROKER:0D undefined [STAGE CLEAR!] small,small,small,small,small
+2190 stage4 36.5 end 16 THE GUN BROKER:0D undefined [STAGE CLEAR!] small,small,small,small,small,small,small
+2220 stage4 37 end 16 THE GUN BROKER:0D undefined [STAGE CLEAR!] small,small,small,small,small,small,small,small
+2250 stage4 37.5 end 16 THE GUN BROKER:0D undefined [STAGE CLEAR!] small,small,small,small,small,small
+2280 stage4 38 end 16 THE GUN BROKER:0D undefined [STAGE CLEAR!] small,small,small,small,small,small,small,small
+2310 story4 undefined undefined 0    small,small,small,small,small,type,type,type

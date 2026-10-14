@@ -1,0 +1,25 @@
+{
+ "levels": {
+  "6": {
+   "stills": [
+    "screens/level6/01_combat1.jpg",
+    "screens/level6/02_combat2.jpg",
+    "screens/level6/03_boss_intro_coldfront.jpg",
+    "screens/level6/04_boss_fight_coldfront.jpg",
+    "screens/level6/05_boss_fight_coldfront_2.jpg",
+    "screens/level6/06_boss_ko_coldfront.jpg",
+    "screens/level6/07_results.jpg"
+   ],
+   "name": "FROSTBITE BOULEVARD",
+   "boss": "COLD FRONT",
+   "video": "out/level6.mp4",
+   "duration": 8.0,
+   "size": 1959284
+  }
+ },
+ "full": {
+  "video": "out/full_trailer.mp4",
+  "duration": 7.2,
+  "size": 1405776
+ }
+}

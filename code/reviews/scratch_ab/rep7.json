@@ -1,0 +1,328 @@
+[
+ {
+  "out": "shots/distA_street.png",
+  "q": "show=street&hud=1",
+  "page": "scratch_ab/distA/viewer.html",
+  "errs": [],
+  "verr": [],
+  "stats": {
+   "calls": 8,
+   "tris": 28420
+  },
+  "extra": null
+ },
+ {
+  "out": "shots/distA_block_night.png",
+  "q": "show=block&hud=1&night=1",
+  "page": "scratch_ab/distA/viewer.html",
+  "errs": [],
+  "verr": [],
+  "stats": {
+   "calls": 6,
+   "tris": 14062
+  },
+  "extra": null
+ },
+ {
+  "out": "shots/distB_props.png",
+  "q": "show=props&hud=1",
+  "page": "scratch_ab/distB/viewer.html",
+  "errs": [],
+  "verr": [],
+  "stats": {
+   "calls": 27,
+   "tris": 12836
+  },
+  "extra": null
+ },
+ {
+  "out": "shots/distB_vehicles_night.png",
+  "q": "show=vehicles&hud=1&night=1&steps=20",
+  "page": "scratch_ab/distB/viewer.html",
+  "errs": [],
+  "verr": [],
+  "stats": {
+   "calls": 456,
+   "tris": 170090
+  },
+  "extra": null
+ },
+ {
+  "out": "shots/distB_street_missing.png",
+  "q": "show=street&hud=1",
+  "page": "scratch_ab/distB/viewer.html",
+  "errs": [],
+  "verr": [
+   "Error: module src/rowkit_rowhouse.js is not in this delivery\n    at need (http://127.0.0.1:39513/scratch_ab/distB/viewer.html?show=street&hud=1:47:40)\n    at blockOf (http://127.0.0.1:39513/scratch_ab/distB/viewer.html?show=street&hud=1:156:13)\n    at Object.street (http://127.0.0.1:39513/scratch_ab/distB/viewer.html?show=street&hud=1:193:5)\n    at http://127.0.0.1:39513/scratch_ab/distB/viewer.html?show=street&hud=1:244:38"
+  ],
+  "stats": {
+   "calls": 0,
+   "tris": 0
+  },
+  "extra": null
+ },
+ {
+  "q": "show=street&hud=0",
+  "page": "hawk-ab/viewer.html",
+  "errs": [],
+  "verr": [],
+  "stats": {
+   "calls": 8,
+   "tris": 28420
+  },
+  "extra": {
+   "rowhouse": {
+    "meshes": 3,
+    "hulls": 1,
+    "parts": 3,
+    "drawCalls": 4,
+    "shadowCalls": 2,
+    "tris": 1516,
+    "trisNoHull": 1434,
+    "materials": 4,
+    "geoms": 4,
+    "coll": 2,
+    "bld": 1,
+    "lamps": 0,
+    "hooks": {},
+    "meta": {
+     "width": 4.876710712386626,
+     "depth": 13.196603424473015,
+     "height": 12.149999999999999
+    },
+    "bbox": [
+     -2.47,
+     0.16,
+     -13.2,
+     2.47,
+     13.41,
+     1.63
+    ]
+   },
+   "rowhouse_4": {
+    "meshes": 3,
+    "hulls": 1,
+    "parts": 3,
+    "drawCalls": 4,
+    "shadowCalls": 2,
+    "tris": 1684,
+    "trisNoHull": 1602,
+    "materials": 4,
+    "geoms": 4,
+    "coll": 2,
+    "bld": 1,
+    "lamps": 0,
+    "hooks": {},
+    "meta": {
+     "width": 4.876710712386626,
+     "depth": 13.196603424473015,
+     "height": 15.549999999999999
+    },
+    "bbox": [
+     -2.47,
+     0.16,
+     -13.2,
+     2.47,
+     16.81,
+     1.63
+    ]
+   },
+   "corner_bar": {
+    "meshes": 3,
+    "hulls": 1,
+    "parts": 3,
+    "drawCalls": 4,
+    "shadowCalls": 2,
+    "tris": 2102,
+    "trisNoHull": 1952,
+    "materials": 4,
+    "geoms": 4,
+    "coll": 3,
+    "bld": 2,
+    "lamps": 0,
+    "hooks": {},
+    "meta": {
+     "width": 7.495754280591269,
+     "depth": 7.5,
+     "height": 12.149999999999999,
+     "corner": 1
+    },
+    "bbox": [
+     -3.78,
+     0.16,
+     -7.5,
+     4.47,
+     12.37,
+     1.1
+    ]
+   },
+   "corner_shop": {
+    "meshes": 3,
+    "hulls": 1,
+    "parts": 3,
+    "drawCalls": 4,
+    "shadowCalls": 2,
+    "tris": 1988,
+    "trisNoHull": 1830,
+    "materials": 4,
+    "geoms": 4,
+    "coll": 3,
+    "bld": 2,
+    "lamps": 0,
+    "hooks": {},
+    "meta": {
+     "width": 7.495754280591269,
+     "depth": 7.5,
+     "height": 12.149999999999999,
+     "corner": 1
+    },
+    "bbox": [
+     -3.78,
+     0.16,
+     -7.5,
+     4.47,
+     12.37,
+     1.12
+    ]
+   },
+   "block": {
+    "meshes": 3,
+    "hulls": 1,
+    "parts": 3,
+    "drawCalls": 4,
+    "shadowCalls": 2,
+    "tris": 14038,
+    "trisNoHull": 12804,
+    "materials": 4,
+    "geoms": 4,
+    "coll": 28,
+    "bld": 14,
+    "lamps": 0,
+    "hooks": {
+     "climb": 1
+    },
+    "bbox": [
+     -1.77,
+     0.16,
+     -1.82,
+     25.82,
+     16.81,
+     25.67
+    ]
+   },
+   "car_sedan": {
+    "meshes": 7,
+    "hulls": 1,
+    "parts": 7,
+    "drawCalls": 8,
+    "shadowCalls": 6,
+    "tris": 922,
+    "trisNoHull": 826,
+    "materials": 5,
+    "geoms": 8,
+    "seats": 2,
+    "collider": {
+     "w": 1.9000000000000001,
+     "l": 4.67,
+     "h": 1.5
+    },
+    "waterline": 0,
+    "kind": "car",
+    "bbox": [
+     -1.05,
+     0,
+     -2.34,
+     1.05,
+     1.46,
+     2.34
+    ]
+   },
+   "arabber_cart": {
+    "meshes": 10,
+    "hulls": 1,
+    "parts": 10,
+    "drawCalls": 11,
+    "shadowCalls": 9,
+    "tris": 2869,
+    "trisNoHull": 2615,
+    "materials": 5,
+    "geoms": 11,
+    "seats": 2,
+    "collider": {
+     "w": 1.8,
+     "l": 6.27,
+     "h": 3.52
+    },
+    "waterline": 0,
+    "kind": "cart",
+    "bbox": [
+     -0.9,
+     -0.03,
+     -3.14,
+     0.9,
+     3.52,
+     3.14
+    ]
+   },
+   "water_taxi": {
+    "meshes": 4,
+    "hulls": 1,
+    "parts": 4,
+    "drawCalls": 5,
+    "shadowCalls": 3,
+    "tris": 1118,
+    "trisNoHull": 1012,
+    "materials": 5,
+    "geoms": 5,
+    "seats": 4,
+    "collider": {
+     "w": 3,
+     "l": 9.1,
+     "h": 2.75
+    },
+    "waterline": 0.35,
+    "kind": "boat",
+    "bbox": [
+     -1.55,
+     0,
+     -4.55,
+     1.55,
+     4.07,
+     4.55
+    ]
+   },
+   "crab_shack": {
+    "meshes": 3,
+    "hulls": 1,
+    "parts": 3,
+    "drawCalls": 4,
+    "shadowCalls": 2,
+    "tris": 1208,
+    "trisNoHull": 920,
+    "materials": 4,
+    "geoms": 4,
+    "coll": 1,
+    "bld": 1,
+    "lamps": 1,
+    "hooks": {},
+    "meta": {
+     "id": "crab_shack",
+     "kind": "prop",
+     "footprint": [
+      4,
+      3
+     ],
+     "height": 4.1
+    },
+    "bbox": [
+     -2.99,
+     0.16,
+     -1.69,
+     2.74,
+     4.86,
+     2.13
+    ]
+   }
+  }
+ }
+]

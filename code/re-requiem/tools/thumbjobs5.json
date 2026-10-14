@@ -1,0 +1,1 @@
+[{"url":"http://127.0.0.1:8732/orig/v2.html","out":"/workspace/work/re-requiem/qa/th_v2.png","w":640,"h":400,"pre":3500,"click":"#btn-play","eval":"camHolder.position.set(-1.5,1.7,4); state.yaw=Math.PI/2; stalkerGroup.position.set(-6,0,4);","wait":1500}]

@@ -1,0 +1,208 @@
+30 stage3 0.5 play 0  boat  shot,shot,shot,shot,shot
+60 stage3 1 play 0  boat  shot,shot,shot,shot
+90 stage3 1.5 play 0  boat  shot,shot,shot,shot
+120 stage3 2 play 0  boat  shot,shot,shot,shot,shot
+150 stage3 2.5 play 0  boat  shot,shot,shot,shot
+180 stage3 3 play 0  boat  shot,shot,shot,shot
+210 stage3 3.5 play 0  boat  shot,shot,shot,shot
+240 stage3 4 play 0  boat  shot,shot,shot,shot,shot
+270 stage3 4.5 play 0  boat  shot,shot,shot,shot
+300 stage3 5 play 1  boat  shot,shot,shot,shot
+330 stage3 5.5 play 1  boat  shot,shot,shot,shot,shot
+360 stage3 6 play 1  boat  shot,shot,shot,shot
+390 stage3 6.5 play 1  boat  shot,shot,shot,small,shot
+420 stage3 7 play 1  boat  shot,shot,shot,shot
+450 stage3 7.5 play 2  boat  shot,shot,shot,shot,shot
+480 stage3 8 play 1  boat  shot,shot,small,shot,shot
+510 stage3 8.5 play 2 GATOR GUNBOAT:240 boat [PURSUIT FROM BEHIND!] alarm,missile,missile,shot,missile,missile,missile,missile,shot,shot,shot
+540 stage3 9 play 2 GATOR GUNBOAT:192 boat [PURSUIT FROM BEHIND!] shot,shot,shot,shot,shot
+570 stage3 9.5 play 2 GATOR GUNBOAT:144 boat [PURSUIT FROM BEHIND!] shot,shot,shot,shot
+600 stage3 10 play 2 GATOR GUNBOAT:144 boat [PURSUIT FROM BEHIND!] eshot,eshot,shot,shot,shot,shot
+630 stage3 10.5 play 2 GATOR GUNBOAT:144 boat  shot,shot,shot,shot
+660 stage3 11 play 2 GATOR GUNBOAT:144 boat  shot,eshot,shot,shot,small,shot,shot
+690 stage3 11.5 play 2 GATOR GUNBOAT:144 boat  eshot,shot,shot,shot,shot
+720 stage3 12 play 2 GATOR GUNBOAT:144 boat  shot,shot,eshot,shot,shot
+750 stage3 12.5 play 2 GATOR GUNBOAT:144 boat  shot,shot,shot,shot,shot
+780 stage3 13 play 2 GATOR GUNBOAT:144 boat  shot,shot,eshot,shot,small,shot
+810 stage3 13.5 play 2 GATOR GUNBOAT:144 boat  eshot,eshot,shot,shot,shot,shot
+840 stage3 14 play 2 GATOR GUNBOAT:144 boat  shot,shot,shot,shot,eshot
+870 stage3 14.5 play 2 GATOR GUNBOAT:144 boat  shot,shot,shot,shot,shot
+900 stage3 15 play 2 GATOR GUNBOAT:144 boat  eshot,shot,shot,shot,shot
+930 stage3 15.5 play 1 GATOR GUNBOAT:144 boat  eshot,shot,small,shot,shot,shot
+960 stage3 16 play 1 GATOR GUNBOAT:144 boat  shot,shot,shot,shot,shot
+990 stage3 16.5 play 1 GATOR GUNBOAT:144 boat  shot,eshot,small,shot,shot,shot
+1020 stage3 17 play 1 GATOR GUNBOAT:144 boat  eshot,eshot,shot,shot,shot,shot
+1050 stage3 17.5 play 1 GATOR GUNBOAT:144 boat  shot,shot,eshot,shot,shot
+1080 stage3 18 play 1 GATOR GUNBOAT:144 boat  shot,shot,shot,shot,shot
+1110 stage3 18.5 play 1 GATOR GUNBOAT:144 boat  shot,shot,eshot,shot,small,shot
+1140 stage3 19 play 1 GATOR GUNBOAT:144 boat [IT'S PASSING US!] eshot,shot,shot,shot,shot
+1170 stage3 19.5 play 1 GATOR GUNBOAT:144 boat [IT'S PASSING US!] eshot,eshot,shot,shot,shot,shot,shot
+1200 stage3 20 play 1 GATOR GUNBOAT:144 boat [IT'S PASSING US!] shot,shot,shot,shot
+1230 stage3 20.5 play 1 GATOR GUNBOAT:138 boat [IT'S PASSING US!] eshot,shot,shot,shot,shot
+1260 stage3 21 play 0 GATOR GUNBOAT:138 boat  eshot,shot,shot,shot,shot,eshot,eshot
+1290 stage3 21.5 play 0 GATOR GUNBOAT:132 boat  shot,shot,shot,shot,shot
+1320 stage3 22 play 0 GATOR GUNBOAT:126 boat  shot,shot,shot,shot
+1350 stage3 22.5 play 0 GATOR GUNBOAT:120 boat  shot,shot,eshot,eshot,shot,shot
+1380 stage3 23 play 0 GATOR GUNBOAT:115 boat  shot,eshot,eshot,eshot,eshot,eshot,shot,shot,shot,shot
+1410 stage3 23.5 play 0 GATOR GUNBOAT:113 boat  shot,shot,shot,shot
+1440 stage3 24 play 0 GATOR GUNBOAT:105 boat  eshot,eshot,shot,shot,shot,shot
+1470 stage3 24.5 play 0 GATOR GUNBOAT:100 boat  shot,shot,shot,shot
+1500 stage3 25 play 0 GATOR GUNBOAT:100 boat  shot,shot,shot,eshot,eshot,shot,shot
+1530 stage3 25.5 play 0 GATOR GUNBOAT:95 boat  shot,eshot,eshot,eshot,eshot,eshot,shot,shot,shot
+1560 stage3 26 play 0 GATOR GUNBOAT:91 boat  shot,shot,shot,shot
+1590 stage3 26.5 play 0 GATOR GUNBOAT:87 boat  shot,eshot,eshot,shot,shot,shot,shot
+1620 stage3 27 play 0 GATOR GUNBOAT:77 boat  shot,shot,shot,shot
+1650 stage3 27.5 play 0 GATOR GUNBOAT:70 boat  shot,shot,shot,shot,eshot,eshot
+1680 stage3 28 play 0 GATOR GUNBOAT:67 boat  shot,shot,eshot,eshot,eshot,eshot,eshot,shot,shot
+1710 stage3 28.5 play 0 GATOR GUNBOAT:66 boat  shot,shot,shot,shot,shot
+1740 stage3 29 play 0 GATOR GUNBOAT:66 boat  shot,shot,eshot,eshot,shot,shot
+1770 stage3 29.5 play 0 GATOR GUNBOAT:66 boat  shot,shot,shot,shot
+1800 stage3 30 play 0 GATOR GUNBOAT:66 boat  shot,shot,shot,shot,shot
+1830 stage3 30.5 play 0 GATOR GUNBOAT:66 boat  eshot,eshot,shot,shot,shot,eshot,eshot,eshot,eshot,eshot,shot
+1860 stage3 31 play 0 GATOR GUNBOAT:63 boat  shot,shot,shot,shot
+1890 stage3 31.5 play 0 GATOR GUNBOAT:55 boat  shot,shot,shot,eshot,eshot,shot
+1920 stage3 32 play 0 GATOR GUNBOAT:47 boat  shot,shot,shot,shot,shot
+1950 stage3 32.5 play 0 GATOR GUNBOAT:45 boat  shot,shot,shot,shot
+1980 stage3 33 play 0 GATOR GUNBOAT:45 boat  shot,eshot,eshot,shot,shot,shot,eshot,eshot,eshot,eshot,eshot
+2010 stage3 33.5 play 0 GATOR GUNBOAT:45 boat  shot,shot,small,shot,shot,shot
+2040 stage3 34 play 0 GATOR GUNBOAT:45 boat  shot,shot,shot,eshot,eshot,shot
+2070 stage3 34.5 play 0 GATOR GUNBOAT:42 boat  shot,shot,shot,shot
+2100 stage3 35 play 0 GATOR GUNBOAT:32 boat  shot,shot,shot,shot
+2130 stage3 35.5 play 0 GATOR GUNBOAT:31 boat  shot,shot,eshot,eshot,shot,shot,shot
+2160 stage3 36 play 0 GATOR GUNBOAT:31 boat  shot,eshot,eshot,eshot,eshot,eshot,shot,shot,shot
+2190 stage3 36.5 play 0 GATOR GUNBOAT:31 boat  shot,shot,shot,shot
+2220 stage3 37 play 0 GATOR GUNBOAT:29 boat  shot,eshot,eshot,shot,shot,shot,shot
+2250 stage3 37.5 play 0 GATOR GUNBOAT:22 boat  shot,shot,shot,shot
+2280 stage3 38 play 0 GATOR GUNBOAT:15 boat  shot,shot,shot,eshot,eshot,shot
+2310 stage3 38.5 play 0 GATOR GUNBOAT:7 boat  shot,shot,small,eshot,eshot,eshot,eshot,eshot,shot,shot
+2340 stage3 39 play 0 GATOR GUNBOAT:-1D boat  shot,shot,shot,shot,boom,boom,small,shot
+2370 stage3 39.5 play 0 GATOR GUNBOAT:-1D boat  boom,shot,shot,boom,boom,shot,boom,shot,boom,boom
+2400 stage3 40 play 0 GATOR GUNBOAT:-1D boat  shot,boom,small,shot,boom,boom,boom,boom,shot,boom,boom,boom,shot,small,small,boom
+2430 stage3 40.5 play 0 GATOR GUNBOAT:-1D boat  shot,boom,shot,boom,small,shot,boom,boom,shot,boom,boom,shot,boom
+2460 stage3 41 play 0 GATOR GUNBOAT:-1D boat  small,shot,boom,shot,boom,small,boom,boom,shot,boom,boom,boom,shot,boom
+2490 stage3 41.5 play 0  jet [LAUNCH JET-SKI!] bigboom,boost,shot,shot,shot,shot,shot
+2520 stage3 42 play 0  jet [LAUNCH JET-SKI!] shot,shot,shot,shot,shot
+2550 stage3 42.5 play 0  jet [LAUNCH JET-SKI!] shot,shot,shot,shot,shot
+2580 stage3 43 play 0  jet [LAUNCH JET-SKI!] shot,shot,shot,shot,shot
+2610 stage3 43.5 play 0  jet [LAUNCH JET-SKI!] shot,shot,shot,shot,shot
+2640 stage3 44 play 0  jet  shot,shot,shot,shot,shot
+2670 stage3 44.5 play 0  jet  shot,shot,shot,shot,shot
+2700 stage3 45 play 1  jet  shot,shot,shot,shot,shot
+2730 stage3 45.5 play 2  jet  small,shot,shot,shot,shot,shot
+2760 stage3 46 play 2  jet  shot,shot,shot,shot,shot
+2790 stage3 46.5 play 3  jet  shot,shot,shot,shot,shot
+2820 stage3 47 play 3  jet  shot,shot,shot,shot,shot
+2850 stage3 47.5 play 5  jet  shot,shot,shot,shot,shot
+2880 stage3 48 play 6  jet  shot,shot,shot,shot,shot
+2910 stage3 48.5 play 5  jet  shot,shot,small,shot,shot,shot
+2940 stage3 49 play 5  jet  shot,shot,shot,shot,shot
+2970 stage3 49.5 play 8  jet  shot,shot,shot,shot,shot
+3000 stage3 50 play 8  jet  shot,shot,shot,shot,shot
+3030 stage3 50.5 play 7  jet  shot,shot,shot,shot,small,shot
+3060 stage3 51 play 9  jet  shot,shot,shot,shot,shot
+3090 stage3 51.5 play 9  jet  shot,shot,shot,shot,small,shot
+3120 stage3 52 play 8  jet  shot,small,shot,shot,shot,shot
+3150 stage3 52.5 play 7  jet  shot,small,shot,shot,shot,shot
+3180 stage3 53 play 7  jet  shot,boom,shot,shot,shot,shot
+3210 stage3 53.5 play 8  jet  shot,shot,shot,shot,shot
+3240 stage3 54 play 9  jet  shot,shot,shot,shot,shot
+3270 stage3 54.5 play 6  jet  shot,shot,small,shot,shot,shot
+3300 stage3 55 play 6  jet  shot,shot,shot,shot,small,shot
+3330 stage3 55.5 play 8  jet  shot,shot,shot,shot,shot
+3360 stage3 56 play 8  jet  shot,shot,shot,shot,shot
+3390 stage3 56.5 play 8  jet  shot,shot,shot,shot,shot
+3420 stage3 57 play 10  jet  shot,shot,shot,shot,shot
+3450 stage3 57.5 play 11  jet  shot,shot,shot,shot,shot
+3480 stage3 58 play 10  jet  shot,small,shot,shot,shot,shot
+3510 stage3 58.5 play 7  jet  shot,small,shot,shot,shot,shot
+3540 stage3 59 play 6  jet  shot,small,shot,small,shot,shot,shot
+3570 stage3 59.5 play 6  jet  shot,shot,shot,small,shot,shot
+3600 stage3 60 play 7  jet  shot,shot,shot,shot,shot
+3630 stage3 60.5 play 6  jet  shot,small,shot,shot,shot,shot
+3660 stage3 61 play 7  jet  shot,shot,shot,shot,shot
+3690 stage3 61.5 play 9  jet  shot,shot,shot,shot,shot
+3720 stage3 62 play 9  jet  shot,shot,shot,shot,shot
+3750 stage3 62.5 play 7  jet  shot,small,shot,shot,small,shot,shot
+3780 stage3 63 play 8  jet  shot,shot,shot,shot,shot
+3810 stage3 63.5 play 9  jet  shot,shot,shot,shot,shot
+3840 stage3 64 play 9  jet  shot,shot,shot,shot,shot
+3870 stage3 64.5 play 10  jet  shot,shot,shot,shot,shot
+3900 stage3 65 play 10  jet  shot,shot,shot,shot,shot
+3930 stage3 65.5 play 10  boat [BACK ABOARD! HOLD SPECIAL TO CLOAK] pickup,shot,shot,shot,shot
+3960 stage3 66 play 7  boat [BACK ABOARD! HOLD SPECIAL TO CLOAK] shot,shot,small,shot,shot,small
+3990 stage3 66.5 play 6  boat [BACK ABOARD! HOLD SPECIAL TO CLOAK] shot,shot,shot,shot,small,shot
+4020 stage3 67 play 5  boat [BACK ABOARD! HOLD SPECIAL TO CLOAK] shot,shot,shot,shot,small
+4050 stage3 67.5 play 4  boat [BACK ABOARD! HOLD SPECIAL TO CLOAK] shot,shot,shot,shot,small
+4080 stage3 68 play 2  boat [BACK ABOARD! HOLD SPECIAL TO CLOAK] shot,small,shot,shot,shot,shot
+4110 stage3 68.5 play 2  boat  shot,shot,shot,shot
+4140 stage3 69 play 1  boat  shot,shot,shot,shot
+4170 stage3 69.5 play 1  boat  shot,shot,shot,shot
+4200 stage3 70 play 1  boat  shot,shot,shot,shot,shot
+4230 stage3 70.5 play 1  boat  shot,shot,shot,shot
+4260 stage3 71 play 3  boat  shot,shot,shot,shot
+4290 stage3 71.5 play 3  boat  shot,shot,shot,shot,shot
+4320 stage3 72 play 3  boat  shot,shot,shot,shot
+4350 stage3 72.5 play 3  boat  shot,shot,shot,shot
+4380 stage3 73 play 3  boat  shot,shot,shot,shot
+4410 stage3 73.5 play 3  boat  shot,shot,shot,small,shot,shot
+4440 stage3 74 play 2  boat  shot,shot,shot,shot
+4470 stage3 74.5 play 1  boat  shot,shot,shot,shot,small
+4500 stage3 75 play 2  boat  shot,shot,shot,shot,shot
+4530 stage3 75.5 play 2  boat  shot,shot,shot,shot
+4560 stage3 76 play 3  boat  shot,shot,shot,shot
+4590 stage3 76.5 play 3  boat  shot,shot,shot,shot
+4620 stage3 77 play 3  boat  shot,shot,shot,shot,shot
+4650 stage3 77.5 play 3  boat  shot,shot,shot,shot
+4680 stage3 78 play 2  boat  shot,shot,small,shot,shot
+4710 stage3 78.5 play 3  boat  shot,shot,shot,shot,shot
+4740 stage3 79 play 4  boat  shot,shot,shot,shot
+4770 stage3 79.5 play 4  boat  shot,shot,shot,shot
+4800 stage3 80 play 3  boat  shot,boom,shot,shot,shot
+4830 stage3 80.5 play 3  boat  shot,small,shot,shot,shot,shot
+4860 stage3 81 play 3  boat  shot,shot,shot,shot
+4890 stage3 81.5 play 3  boat  shot,shot,shot,shot
+4920 stage3 82 play 3  boat  shot,shot,shot,shot,shot
+4950 stage3 82.5 play 4  boat  shot,shot,shot,shot
+4980 stage3 83 play 5  boat  shot,shot,shot,shot
+5010 stage3 83.5 play 5  boat  shot,shot,shot,shot
+5040 stage3 84 play 5  boat  shot,shot,shot,shot,cloak
+5070 stage3 84.5 play 5  boat  pickup
+5100 stage3 85 play 5  boat  
+5130 stage3 85.5 play 6  boat  
+5160 stage3 86 play 6  boat  
+5190 stage3 86.5 play 7  boat  
+5220 stage3 87 play 7  boat  
+5250 stage3 87.5 play 7  boat  
+5280 stage3 88 play 8  boat  
+5310 stage3 88.5 play 8  boat  
+5340 stage3 89 play 8  boat  
+5370 stage3 89.5 play 10  boat [SPOTTED!] shot,cloak,alarm,eshot,eshot,eshot,cloak,eshot,cloak,shot,cloak,cloak,cloak,shot
+5400 stage3 90 play 10  boat [SPOTTED!] cloak,cloak,cloak,shot,cloak,cloak,cloak,shot,cloak,cloak,cloak,shot,cloak,cloak,cloak,shot,eshot,eshot,eshot
+5430 stage3 90.5 play 11  boat  cloak,eshot,cloak,cloak,shot,cloak,cloak,cloak,shot,cloak,cloak,cloak,shot,cloak,cloak,cloak,shot
+5460 stage3 91 play 10  boat  cloak,cloak,cloak,shot,cloak,small,cloak,eshot,eshot,eshot,cloak,shot,eshot,cloak,cloak,cloak,shot,cloak,cloak,cloak,shot
+5490 stage3 91.5 play 10  boat  cloak,cloak,cloak,shot,cloak,cloak,cloak,shot,cloak,cloak,cloak,shot,cloak,eshot,eshot,eshot,cloak,eshot,cloak,shot,eshot
+5520 stage3 92 play 10  boat  cloak,cloak,cloak,shot,cloak,cloak,cloak,shot,cloak,cloak,cloak,shot,cloak,cloak,cloak,shot
+5550 stage3 92.5 play 9  boat  cloak,cloak,cloak,shot,eshot,eshot,eshot,cloak,eshot,cloak,eshot,cloak,shot,cloak,cloak,cloak,shot,cloak,cloak,cloak,shot
+5580 stage3 93 play 9  boat  cloak,cloak,cloak,shot,cloak,cloak,cloak,shot,cloak,cloak,eshot,eshot,eshot,cloak,shot,eshot,cloak,small,eshot,cloak,cloak,shot
+5610 stage3 93.5 play 8  boat [THE OIL RIG!] cloak,cloak,shot,small,shot,shot,shot
+5640 stage3 94 play 7  boat [THE OIL RIG!] eshot,eshot,eshot,shot,small,eshot,eshot,shot,shot,shot
+5670 stage3 94.5 play 7  boat [THE OIL RIG!] shot,shot,eshot,eshot,eshot,shot,eshot,eshot,shot
+5700 stage3 95 play 6  boat [THE OIL RIG!] shot,shot,shot,shot,eshot,eshot,eshot,shot,eshot
+5730 stage3 95.5 play 6  boat  eshot,shot,shot,shot,shot
+5760 stage3 96 play 6  boat  shot,eshot,eshot,eshot,shot,eshot,eshot,shot,shot
+5790 stage3 96.5 play 5  boat  shot,shot,shot,eshot,eshot,eshot,shot,eshot,shot
+5820 stage3 97 play 5  boat  shot,shot,shot,shot
+5850 stage3 97.5 play 5  boat  eshot,eshot,eshot,shot,eshot,shot,shot,shot
+5880 stage3 98 play 5  boat  shot,shot,eshot,eshot,eshot,shot,eshot,shot
+5910 stage3 98.5 play 5  boat  shot,shot,shot,shot,eshot,eshot,eshot,shot
+5940 stage3 99 play 5  boat  eshot,shot,shot,shot,shot
+5970 stage3 99.5 play 5  boat  shot,eshot,eshot,eshot,shot,eshot,shot,shot
+6000 stage3 100 dock 3  boat  shot,shot,shot,eshot,eshot,eshot,shot,eshot,small
+6030 stage3 100.5 dock 3  boat [STAGE CLEAR!] clear
+6060 stage3 101 dock 3  boat [STAGE CLEAR!] eshot,eshot,eshot
+6090 stage3 101.5 dock 3  boat [STAGE CLEAR!] eshot,eshot,eshot
+6120 stage3 102 dock 3  boat [STAGE CLEAR!] eshot,eshot
+6150 stage3 102.5 dock 3  boat [STAGE CLEAR!] eshot
+6180 stage3 103 dock 3  boat [STAGE CLEAR!] eshot,eshot,eshot
+6210 stage3 103.5 dock 3  boat [STAGE CLEAR!] eshot,eshot,eshot
+6240 story3 undefined undefined 0    type

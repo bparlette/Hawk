@@ -1,0 +1,58 @@
+[
+ {
+  "page": "scratch/fixed/viewer_cmp.html",
+  "out": "/workspace/work/reviews/scratch/fixed/after_ears_side_bruiser.png",
+  "q": "show=harbor_rats.bruiser&t=0.5&cam=side&zoom=2.8&look=2.05",
+  "w": 900,
+  "h": 700
+ },
+ {
+  "page": "scratch/fixed/viewer_cmp.html",
+  "out": "/workspace/work/reviews/scratch/fixed/after_ears_turn_grunt_a.png",
+  "q": "show=harbor_rats.grunt_a&t=0.5&turn=1&zoom=2&look=1.6",
+  "w": 1400,
+  "h": 600
+ },
+ {
+  "page": "scratch/fixed/viewer_cmp.html",
+  "out": "/workspace/work/reviews/scratch/fixed/after_ears_turn_bruiser.png",
+  "q": "show=harbor_rats.bruiser&t=0.5&turn=1&zoom=1.8&look=1.9",
+  "w": 1400,
+  "h": 600
+ },
+ {
+  "page": "scratch/fixed/viewer_cmp.html",
+  "out": "/workspace/work/reviews/scratch/fixed/after_lod_lineup.png",
+  "q": "show=harbor_rats&t=0.5&lod=1",
+  "w": 1280,
+  "h": 720
+ },
+ {
+  "page": "scratch/fixed/viewer_cmp.html",
+  "out": "/workspace/work/reviews/scratch/fixed/after_lod_turn_bruiser.png",
+  "q": "show=harbor_rats.bruiser&t=0.5&lod=1&turn=1",
+  "w": 1400,
+  "h": 600
+ },
+ {
+  "page": "scratch/fixed/viewer_cmp.html",
+  "out": "/workspace/work/reviews/scratch/fixed/after_lod_vs_hd_armed.png",
+  "q": "show=harbor_rats.armed&t=0.5&lod=1&turn=1",
+  "w": 1400,
+  "h": 600
+ },
+ {
+  "page": "scratch/fixed/viewer_cmp.html",
+  "out": "/workspace/work/reviews/scratch/fixed/after_poses_grunt_a.png",
+  "q": "show=harbor_rats.grunt_a&t=0.5&pose=all&ui=0",
+  "w": 1600,
+  "h": 600
+ },
+ {
+  "page": "scratch/fixed/viewer_cmp.html",
+  "out": "/workspace/work/reviews/scratch/fixed/after_poses_bruiser.png",
+  "q": "show=harbor_rats.bruiser&t=0.5&pose=all&ui=0",
+  "w": 1600,
+  "h": 600
+ }
+]

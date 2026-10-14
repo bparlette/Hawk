@@ -1,0 +1,195 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=1920, height=1080" />
+    <script src="assets/gsap.min.js"></script>
+    <style>
+      @font-face { font-family: "Bungee"; src: url("assets/fonts/Bungee.ttf"); }
+      @font-face { font-family: "Anton"; src: url("assets/fonts/Anton.ttf"); }
+      @font-face { font-family: "PressStart"; src: url("assets/fonts/PressStart2P.ttf"); }
+      * { margin: 0; padding: 0; box-sizing: border-box; }
+      html, body { width: 1920px; height: 1080px; overflow: hidden; background: #000; }
+      #root { position: relative; width: 1920px; height: 1080px; overflow: hidden; background: #000; }
+      .vw { position: absolute; inset: 0; transform-origin: 50% 30%; }
+      .shot { position: absolute; inset: 0; width: 1920px; height: 1080px; }
+      .capwrap { position: absolute; inset: 0; pointer-events: none; }
+      .capbar { position: absolute; left: 0; right: 0; top: 590px; margin: 0 auto; width: max-content; padding: 10px 46px 14px; background: linear-gradient(180deg, #e8202a, #a00818);
+        border: 6px solid #111; box-shadow: 10px 10px 0 #111, 0 0 40px rgba(255,60,40,.45); transform: skewX(-8deg); }
+      .captxt { display: block; font-family: "Bungee", sans-serif; font-size: 68px; line-height: 1; color: #fff; letter-spacing: 2px;
+        text-shadow: 4px 4px 0 #111, -2px -2px 0 #111, 2px -2px 0 #111, -2px 2px 0 #111; }
+      .chip { position: absolute; left: 0; right: 0; top: 700px; margin: 0 auto; width: max-content; padding: 8px 22px; background: #ffd23a; border: 4px solid #111;
+        font-family: "PressStart", monospace; font-size: 22px; color: #111; box-shadow: 6px 6px 0 #111; }
+      #flash { position: absolute; inset: 0; background: #fff; opacity: 0; pointer-events: none; }
+      #titledim { position: absolute; inset: 0; background: radial-gradient(ellipse at 50% 45%, rgba(0,0,0,.35), rgba(0,0,0,.85)); }
+      #logo { position: absolute; left: 50%; top: 170px; width: 1100px; margin-left: -550px; filter: drop-shadow(0 12px 0 #000) drop-shadow(0 0 40px rgba(120,255,120,.35)); }
+      #tag { position: absolute; left: 0; right: 0; top: 720px; text-align: center; font-family: "PressStart", monospace; font-size: 30px; color: #ffe27a; text-shadow: 4px 4px 0 #000; }
+      #endbg { position: absolute; inset: 0; width: 1920px; height: 1080px; object-fit: cover; filter: blur(6px) brightness(.45) saturate(1.2); transform: scale(1.06); }
+      #endlogo { position: absolute; left: 50%; top: 110px; width: 1000px; margin-left: -500px; filter: drop-shadow(0 12px 0 #000) drop-shadow(0 0 50px rgba(120,255,120,.4)); }
+      #endplay { position: absolute; left: 0; right: 0; top: 640px; text-align: center; }
+      #endplay span { display: inline-block; font-family: "Bungee", sans-serif; font-size: 92px; color: #fff; padding: 8px 48px 16px; background: linear-gradient(180deg, #e8202a, #a00818);
+        border: 7px solid #111; box-shadow: 12px 12px 0 #111; transform: skewX(-8deg); text-shadow: 5px 5px 0 #111; }
+      #endurl { position: absolute; left: 0; right: 0; top: 830px; text-align: center; font-family: "PressStart", monospace; font-size: 44px; color: #ffd23a; text-shadow: 5px 5px 0 #000; }
+    </style>
+  </head>
+  <body>
+    <div id="root" data-composition-id="main" data-start="0" data-duration="49.5" data-width="1920" data-height="1080">
+      <div class="vw" id="w-title"><video id="v-title" class="clip shot" src="assets/clips/title.mp4" muted playsinline data-start="0" data-duration="3.0" data-track-index="0"></video></div>
+      <div class="vw" id="w-brawl"><video id="v-brawl" class="clip shot" src="assets/clips/brawl.mp4" muted playsinline data-start="3.0" data-duration="3.0" data-track-index="0"></video></div>
+      <div class="vw" id="w-manhole"><video id="v-manhole" class="clip shot" src="assets/clips/manhole.mp4" muted playsinline data-start="6.0" data-duration="2.25" data-track-index="0"></video></div>
+      <div class="vw" id="w-skate"><video id="v-skate" class="clip shot" src="assets/clips/skate.mp4" muted playsinline data-start="8.25" data-duration="3.0" data-track-index="0"></video></div>
+      <div class="vw" id="w-freeflow"><video id="v-freeflow" class="clip shot" src="assets/clips/freeflow.mp4" muted playsinline data-start="11.25" data-duration="3.0" data-track-index="0"></video></div>
+      <div class="vw" id="w-exitsewer"><video id="v-exitsewer" class="clip shot" src="assets/clips/exitsewer.mp4" muted playsinline data-start="14.25" data-duration="2.25" data-track-index="0"></video></div>
+      <div class="vw" id="w-subway"><video id="v-subway" class="clip shot" src="assets/clips/subway.mp4" muted playsinline data-start="16.5" data-duration="3.0" data-track-index="0"></video></div>
+      <div class="vw" id="w-elevator"><video id="v-elevator" class="clip shot" src="assets/clips/elevator.mp4" muted playsinline data-start="19.5" data-duration="2.25" data-track-index="0"></video></div>
+      <div class="vw" id="w-roofleap"><video id="v-roofleap" class="clip shot" src="assets/clips/roofleap.mp4" muted playsinline data-start="21.75" data-duration="2.25" data-track-index="0"></video></div>
+      <div class="vw" id="w-stealth"><video id="v-stealth" class="clip shot" src="assets/clips/stealth.mp4" muted playsinline data-start="24.0" data-duration="3.0" data-track-index="0"></video></div>
+      <div class="vw" id="w-comic"><video id="v-comic" class="clip shot" src="assets/clips/comic.mp4" muted playsinline data-start="27.0" data-duration="2.25" data-track-index="0"></video></div>
+      <div class="vw" id="w-oneshot"><video id="v-oneshot" class="clip shot" src="assets/clips/oneshot.mp4" muted playsinline data-start="29.25" data-duration="2.25" data-track-index="0"></video></div>
+      <div class="vw" id="w-van"><video id="v-van" class="clip shot" src="assets/clips/van.mp4" muted playsinline data-start="31.5" data-duration="2.25" data-track-index="0"></video></div>
+      <div class="vw" id="w-daynight"><video id="v-daynight" class="clip shot" src="assets/clips/daynight.mp4" muted playsinline data-start="33.75" data-duration="3.0" data-track-index="0"></video></div>
+      <div class="vw" id="w-fire"><video id="v-fire" class="clip shot" src="assets/clips/fire.mp4" muted playsinline data-start="36.75" data-duration="3.0" data-track-index="0"></video></div>
+      <div class="vw" id="w-boss"><video id="v-boss" class="clip shot" src="assets/clips/boss.mp4" muted playsinline data-start="39.75" data-duration="3.75" data-track-index="0"></video></div>
+      <div class="vw" id="w-win"><video id="v-win" class="clip shot" src="assets/clips/win.mp4" muted playsinline data-start="43.5" data-duration="2.25" data-track-index="0"></video></div>
+      <div class="clip" id="titlecard" data-start="0" data-duration="2.3" data-track-index="1" style="position:absolute;inset:0">
+        <div id="titledim"></div>
+        <img id="logo" src="assets/img/logo.png" alt="SHELL SHOCK 3D" />
+        <div id="tag">AN ORIGINAL 3D ARCADE BRAWLER</div>
+      </div>
+      <div class="clip" id="endcard" data-start="45.75" data-duration="3.75" data-track-index="1" style="position:absolute;inset:0">
+        <img id="endbg" src="assets/img/endbg.png" alt="" />
+        <img id="endlogo" src="assets/img/logo.png" alt="SHELL SHOCK 3D" />
+        <div id="endplay"><span>PLAY FREE</span></div>
+        <div id="endurl">shellshock-3d.surge.sh</div>
+      </div>
+      <div class="clip capwrap" id="cap-brawl" data-start="3.080" data-duration="2.880" data-track-index="2"><div class="capbar" id="cap-brawl-bar"><span class="captxt">BRAWL THE STREETS</span></div><div class="chip" id="cap-brawl-chip">FREE-ROAM NYC</div></div>
+      <div class="clip capwrap" id="cap-manhole" data-start="6.080" data-duration="2.130" data-track-index="2"><div class="capbar" id="cap-manhole-bar"><span class="captxt">DROP INTO THE SEWERS</span></div><div class="chip" id="cap-manhole-chip">ONE MANHOLE AWAY</div></div>
+      <div class="clip capwrap" id="cap-skate" data-start="8.330" data-duration="2.880" data-track-index="2"><div class="capbar" id="cap-skate-bar"><span class="captxt">SKATE THE SEWERS</span></div><div class="chip" id="cap-skate-chip">WALL RIDES · KICKFLIPS</div></div>
+      <div class="clip capwrap" id="cap-freeflow" data-start="11.330" data-duration="2.880" data-track-index="2"><div class="capbar" id="cap-freeflow-bar"><span class="captxt">FREEFLOW COMBAT</span></div><div class="chip" id="cap-freeflow-chip">CHAIN · COUNTER · TAKEDOWN</div></div>
+      <div class="clip capwrap" id="cap-exitsewer" data-start="14.330" data-duration="2.130" data-track-index="2"><div class="capbar" id="cap-exitsewer-bar"><span class="captxt">POP UP ANYWHERE</span></div><div class="chip" id="cap-exitsewer-chip">CLIMB OUT ON BLOCK 2</div></div>
+      <div class="clip capwrap" id="cap-subway" data-start="16.580" data-duration="2.880" data-track-index="2"><div class="capbar" id="cap-subway-bar"><span class="captxt">HIT THE SUBWAY</span></div><div class="chip" id="cap-subway-chip">DODGE THE EXPRESS</div></div>
+      <div class="clip capwrap" id="cap-elevator" data-start="19.580" data-duration="2.130" data-track-index="2"><div class="capbar" id="cap-elevator-bar"><span class="captxt">ENTER THE BUILDINGS</span></div><div class="chip" id="cap-elevator-chip">RIDE TO THE ROOF</div></div>
+      <div class="clip capwrap" id="cap-roofleap" data-start="21.830" data-duration="2.130" data-track-index="2"><div class="capbar" id="cap-roofleap-bar"><span class="captxt">RUN THE ROOFTOPS</span></div><div class="chip" id="cap-roofleap-chip">CHASE CAM</div></div>
+      <div class="clip capwrap" id="cap-stealth" data-start="24.080" data-duration="2.880" data-track-index="2"><div class="capbar" id="cap-stealth-bar"><span class="captxt">GHOST THE ROOFTOPS</span></div><div class="chip" id="cap-stealth-chip">SILENT TAKEDOWNS</div></div>
+      <div class="clip capwrap" id="cap-comic" data-start="27.080" data-duration="2.130" data-track-index="2"><div class="capbar" id="cap-comic-bar"><span class="captxt">3 CAMERA STYLES</span></div><div class="chip" id="cap-comic-chip">COMIC</div></div>
+      <div class="clip capwrap" id="cap-oneshot" data-start="29.330" data-duration="2.130" data-track-index="2"><div class="capbar" id="cap-oneshot-bar"><span class="captxt">3 CAMERA STYLES</span></div><div class="chip" id="cap-oneshot-chip">ONE-SHOT</div></div>
+      <div class="clip capwrap" id="cap-van" data-start="31.580" data-duration="2.130" data-track-index="2"><div class="capbar" id="cap-van-bar"><span class="captxt">DRIVE THE PARTY VAN</span></div><div class="chip" id="cap-van-chip">DRIFT · SMASH · HONK</div></div>
+      <div class="clip capwrap" id="cap-daynight" data-start="33.830" data-duration="2.880" data-track-index="2"><div class="capbar" id="cap-daynight-bar"><span class="captxt">DAY TO NIGHT</span></div><div class="chip" id="cap-daynight-chip">NEON CITY AFTER DARK</div></div>
+      <div class="clip capwrap" id="cap-fire" data-start="36.830" data-duration="2.880" data-track-index="2"><div class="capbar" id="cap-fire-bar"><span class="captxt">FIGHT THROUGH THE FIRE</span></div><div class="chip" id="cap-fire-chip">SCORCHER</div></div>
+      <div class="clip capwrap" id="cap-boss" data-start="39.830" data-duration="3.630" data-track-index="2"><div class="capbar" id="cap-boss-bar"><span class="captxt">TAKE DOWN THE BOSS</span></div><div class="chip" id="cap-boss-chip">RAMROD</div></div>
+      <div class="clip capwrap" id="cap-win" data-start="43.580" data-duration="2.130" data-track-index="2"><div class="capbar" id="cap-win-bar"><span class="captxt">SAVE THE CITY</span></div></div>
+      <div class="clip" id="flashwrap" data-start="0" data-duration="49.5" data-track-index="3" style="position:absolute;inset:0;pointer-events:none"><div id="flash"></div></div>
+      <audio id="music" src="assets/music.wav" data-start="0" data-duration="49.5" data-track-index="9" data-volume="1"></audio>
+    </div>
+    <script>
+      window.__timelines = window.__timelines || {};
+      const tl = gsap.timeline({ paused: true });
+      tl.set("#flash", {opacity: 0}, 0);
+      tl.fromTo("#logo", {scale: 2.4, opacity: 0}, {scale: 1, opacity: 1, duration: 0.45, ease: "back.out(1.6)"}, 0.1);
+      tl.fromTo("#tag", {opacity: 0, y: 40}, {opacity: 1, y: 0, duration: 0.3}, 0.55);
+      tl.to("#logo", {scale: 0.5, opacity: 0, y: -260, duration: 0.35, ease: "power2.in"}, 1.75);
+      tl.to("#tag", {opacity: 0, duration: 0.2}, 1.75);
+      tl.fromTo("#titledim", {opacity: 0.72}, {opacity: 0, duration: 0.4}, 1.75);
+      tl.fromTo("#w-brawl", {scale: 1.045}, {scale: 1, duration: 0.32, ease: "power3.out"}, 3.0);
+      tl.fromTo("#flash", {opacity: 0.75}, {opacity: 0, duration: 0.16, ease: "power1.out", immediateRender: false}, 3.0);
+      tl.fromTo("#cap-brawl-bar", {x: -1400, skewX: -18}, {x: 0, skewX: -8, duration: 0.24, ease: "power4.out"}, 3.080);
+      tl.fromTo("#cap-brawl-chip", {x: 1200}, {x: 0, duration: 0.24, ease: "power4.out"}, 3.200);
+      tl.to("#cap-brawl-bar", {x: 1500, duration: 0.18, ease: "power2.in"}, 5.740);
+      tl.to("#cap-brawl-chip", {x: -1500, duration: 0.18, ease: "power2.in"}, 5.740);
+      tl.fromTo("#w-manhole", {scale: 1.045}, {scale: 1, duration: 0.32, ease: "power3.out"}, 6.0);
+      tl.fromTo("#flash", {opacity: 0.75}, {opacity: 0, duration: 0.16, ease: "power1.out", immediateRender: false}, 6.0);
+      tl.fromTo("#cap-manhole-bar", {x: -1400, skewX: -18}, {x: 0, skewX: -8, duration: 0.24, ease: "power4.out"}, 6.080);
+      tl.fromTo("#cap-manhole-chip", {x: 1200}, {x: 0, duration: 0.24, ease: "power4.out"}, 6.200);
+      tl.to("#cap-manhole-bar", {x: 1500, duration: 0.18, ease: "power2.in"}, 7.990);
+      tl.to("#cap-manhole-chip", {x: -1500, duration: 0.18, ease: "power2.in"}, 7.990);
+      tl.fromTo("#w-skate", {scale: 1.045}, {scale: 1, duration: 0.32, ease: "power3.out"}, 8.25);
+      tl.fromTo("#flash", {opacity: 0.75}, {opacity: 0, duration: 0.16, ease: "power1.out", immediateRender: false}, 8.25);
+      tl.fromTo("#cap-skate-bar", {x: -1400, skewX: -18}, {x: 0, skewX: -8, duration: 0.24, ease: "power4.out"}, 8.330);
+      tl.fromTo("#cap-skate-chip", {x: 1200}, {x: 0, duration: 0.24, ease: "power4.out"}, 8.450);
+      tl.to("#cap-skate-bar", {x: 1500, duration: 0.18, ease: "power2.in"}, 10.990);
+      tl.to("#cap-skate-chip", {x: -1500, duration: 0.18, ease: "power2.in"}, 10.990);
+      tl.fromTo("#w-freeflow", {scale: 1.045}, {scale: 1, duration: 0.32, ease: "power3.out"}, 11.25);
+      tl.fromTo("#flash", {opacity: 0.75}, {opacity: 0, duration: 0.16, ease: "power1.out", immediateRender: false}, 11.25);
+      tl.fromTo("#cap-freeflow-bar", {x: -1400, skewX: -18}, {x: 0, skewX: -8, duration: 0.24, ease: "power4.out"}, 11.330);
+      tl.fromTo("#cap-freeflow-chip", {x: 1200}, {x: 0, duration: 0.24, ease: "power4.out"}, 11.450);
+      tl.to("#cap-freeflow-bar", {x: 1500, duration: 0.18, ease: "power2.in"}, 13.990);
+      tl.to("#cap-freeflow-chip", {x: -1500, duration: 0.18, ease: "power2.in"}, 13.990);
+      tl.fromTo("#w-exitsewer", {scale: 1.045}, {scale: 1, duration: 0.32, ease: "power3.out"}, 14.25);
+      tl.fromTo("#flash", {opacity: 0.75}, {opacity: 0, duration: 0.16, ease: "power1.out", immediateRender: false}, 14.25);
+      tl.fromTo("#cap-exitsewer-bar", {x: -1400, skewX: -18}, {x: 0, skewX: -8, duration: 0.24, ease: "power4.out"}, 14.330);
+      tl.fromTo("#cap-exitsewer-chip", {x: 1200}, {x: 0, duration: 0.24, ease: "power4.out"}, 14.450);
+      tl.to("#cap-exitsewer-bar", {x: 1500, duration: 0.18, ease: "power2.in"}, 16.240);
+      tl.to("#cap-exitsewer-chip", {x: -1500, duration: 0.18, ease: "power2.in"}, 16.240);
+      tl.fromTo("#w-subway", {scale: 1.045}, {scale: 1, duration: 0.32, ease: "power3.out"}, 16.5);
+      tl.fromTo("#flash", {opacity: 0.75}, {opacity: 0, duration: 0.16, ease: "power1.out", immediateRender: false}, 16.5);
+      tl.fromTo("#cap-subway-bar", {x: -1400, skewX: -18}, {x: 0, skewX: -8, duration: 0.24, ease: "power4.out"}, 16.580);
+      tl.fromTo("#cap-subway-chip", {x: 1200}, {x: 0, duration: 0.24, ease: "power4.out"}, 16.700);
+      tl.to("#cap-subway-bar", {x: 1500, duration: 0.18, ease: "power2.in"}, 19.240);
+      tl.to("#cap-subway-chip", {x: -1500, duration: 0.18, ease: "power2.in"}, 19.240);
+      tl.fromTo("#w-elevator", {scale: 1.045}, {scale: 1, duration: 0.32, ease: "power3.out"}, 19.5);
+      tl.fromTo("#flash", {opacity: 0.75}, {opacity: 0, duration: 0.16, ease: "power1.out", immediateRender: false}, 19.5);
+      tl.fromTo("#cap-elevator-bar", {x: -1400, skewX: -18}, {x: 0, skewX: -8, duration: 0.24, ease: "power4.out"}, 19.580);
+      tl.fromTo("#cap-elevator-chip", {x: 1200}, {x: 0, duration: 0.24, ease: "power4.out"}, 19.700);
+      tl.to("#cap-elevator-bar", {x: 1500, duration: 0.18, ease: "power2.in"}, 21.490);
+      tl.to("#cap-elevator-chip", {x: -1500, duration: 0.18, ease: "power2.in"}, 21.490);
+      tl.fromTo("#w-roofleap", {scale: 1.045}, {scale: 1, duration: 0.32, ease: "power3.out"}, 21.75);
+      tl.fromTo("#flash", {opacity: 0.75}, {opacity: 0, duration: 0.16, ease: "power1.out", immediateRender: false}, 21.75);
+      tl.fromTo("#cap-roofleap-bar", {x: -1400, skewX: -18}, {x: 0, skewX: -8, duration: 0.24, ease: "power4.out"}, 21.830);
+      tl.fromTo("#cap-roofleap-chip", {x: 1200}, {x: 0, duration: 0.24, ease: "power4.out"}, 21.950);
+      tl.to("#cap-roofleap-bar", {x: 1500, duration: 0.18, ease: "power2.in"}, 23.740);
+      tl.to("#cap-roofleap-chip", {x: -1500, duration: 0.18, ease: "power2.in"}, 23.740);
+      tl.fromTo("#w-stealth", {scale: 1.045}, {scale: 1, duration: 0.32, ease: "power3.out"}, 24.0);
+      tl.fromTo("#flash", {opacity: 0.75}, {opacity: 0, duration: 0.16, ease: "power1.out", immediateRender: false}, 24.0);
+      tl.fromTo("#cap-stealth-bar", {x: -1400, skewX: -18}, {x: 0, skewX: -8, duration: 0.24, ease: "power4.out"}, 24.080);
+      tl.fromTo("#cap-stealth-chip", {x: 1200}, {x: 0, duration: 0.24, ease: "power4.out"}, 24.200);
+      tl.to("#cap-stealth-bar", {x: 1500, duration: 0.18, ease: "power2.in"}, 26.740);
+      tl.to("#cap-stealth-chip", {x: -1500, duration: 0.18, ease: "power2.in"}, 26.740);
+      tl.fromTo("#w-comic", {scale: 1.045}, {scale: 1, duration: 0.32, ease: "power3.out"}, 27.0);
+      tl.fromTo("#flash", {opacity: 0.75}, {opacity: 0, duration: 0.16, ease: "power1.out", immediateRender: false}, 27.0);
+      tl.fromTo("#cap-comic-bar", {x: -1400, skewX: -18}, {x: 0, skewX: -8, duration: 0.24, ease: "power4.out"}, 27.080);
+      tl.fromTo("#cap-comic-chip", {x: 1200}, {x: 0, duration: 0.24, ease: "power4.out"}, 27.200);
+      tl.to("#cap-comic-bar", {x: 1500, duration: 0.18, ease: "power2.in"}, 28.990);
+      tl.to("#cap-comic-chip", {x: -1500, duration: 0.18, ease: "power2.in"}, 28.990);
+      tl.fromTo("#w-oneshot", {scale: 1.045}, {scale: 1, duration: 0.32, ease: "power3.out"}, 29.25);
+      tl.fromTo("#flash", {opacity: 0.75}, {opacity: 0, duration: 0.16, ease: "power1.out", immediateRender: false}, 29.25);
+      tl.fromTo("#cap-oneshot-bar", {x: -1400, skewX: -18}, {x: 0, skewX: -8, duration: 0.24, ease: "power4.out"}, 29.330);
+      tl.fromTo("#cap-oneshot-chip", {x: 1200}, {x: 0, duration: 0.24, ease: "power4.out"}, 29.450);
+      tl.to("#cap-oneshot-bar", {x: 1500, duration: 0.18, ease: "power2.in"}, 31.240);
+      tl.to("#cap-oneshot-chip", {x: -1500, duration: 0.18, ease: "power2.in"}, 31.240);
+      tl.fromTo("#w-van", {scale: 1.045}, {scale: 1, duration: 0.32, ease: "power3.out"}, 31.5);
+      tl.fromTo("#flash", {opacity: 0.75}, {opacity: 0, duration: 0.16, ease: "power1.out", immediateRender: false}, 31.5);
+      tl.fromTo("#cap-van-bar", {x: -1400, skewX: -18}, {x: 0, skewX: -8, duration: 0.24, ease: "power4.out"}, 31.580);
+      tl.fromTo("#cap-van-chip", {x: 1200}, {x: 0, duration: 0.24, ease: "power4.out"}, 31.700);
+      tl.to("#cap-van-bar", {x: 1500, duration: 0.18, ease: "power2.in"}, 33.490);
+      tl.to("#cap-van-chip", {x: -1500, duration: 0.18, ease: "power2.in"}, 33.490);
+      tl.fromTo("#w-daynight", {scale: 1.045}, {scale: 1, duration: 0.32, ease: "power3.out"}, 33.75);
+      tl.fromTo("#flash", {opacity: 0.75}, {opacity: 0, duration: 0.16, ease: "power1.out", immediateRender: false}, 33.75);
+      tl.fromTo("#cap-daynight-bar", {x: -1400, skewX: -18}, {x: 0, skewX: -8, duration: 0.24, ease: "power4.out"}, 33.830);
+      tl.fromTo("#cap-daynight-chip", {x: 1200}, {x: 0, duration: 0.24, ease: "power4.out"}, 33.950);
+      tl.to("#cap-daynight-bar", {x: 1500, duration: 0.18, ease: "power2.in"}, 36.490);
+      tl.to("#cap-daynight-chip", {x: -1500, duration: 0.18, ease: "power2.in"}, 36.490);
+      tl.fromTo("#w-fire", {scale: 1.045}, {scale: 1, duration: 0.32, ease: "power3.out"}, 36.75);
+      tl.fromTo("#flash", {opacity: 0.75}, {opacity: 0, duration: 0.16, ease: "power1.out", immediateRender: false}, 36.75);
+      tl.fromTo("#cap-fire-bar", {x: -1400, skewX: -18}, {x: 0, skewX: -8, duration: 0.24, ease: "power4.out"}, 36.830);
+      tl.fromTo("#cap-fire-chip", {x: 1200}, {x: 0, duration: 0.24, ease: "power4.out"}, 36.950);
+      tl.to("#cap-fire-bar", {x: 1500, duration: 0.18, ease: "power2.in"}, 39.490);
+      tl.to("#cap-fire-chip", {x: -1500, duration: 0.18, ease: "power2.in"}, 39.490);
+      tl.fromTo("#w-boss", {scale: 1.045}, {scale: 1, duration: 0.32, ease: "power3.out"}, 39.75);
+      tl.fromTo("#flash", {opacity: 0.75}, {opacity: 0, duration: 0.16, ease: "power1.out", immediateRender: false}, 39.75);
+      tl.fromTo("#cap-boss-bar", {x: -1400, skewX: -18}, {x: 0, skewX: -8, duration: 0.24, ease: "power4.out"}, 39.830);
+      tl.fromTo("#cap-boss-chip", {x: 1200}, {x: 0, duration: 0.24, ease: "power4.out"}, 39.950);
+      tl.to("#cap-boss-bar", {x: 1500, duration: 0.18, ease: "power2.in"}, 43.240);
+      tl.to("#cap-boss-chip", {x: -1500, duration: 0.18, ease: "power2.in"}, 43.240);
+      tl.fromTo("#w-win", {scale: 1.045}, {scale: 1, duration: 0.32, ease: "power3.out"}, 43.5);
+      tl.fromTo("#flash", {opacity: 0.75}, {opacity: 0, duration: 0.16, ease: "power1.out", immediateRender: false}, 43.5);
+      tl.fromTo("#cap-win-bar", {x: -1400, skewX: -18}, {x: 0, skewX: -8, duration: 0.24, ease: "power4.out"}, 43.580);
+      tl.to("#cap-win-bar", {x: 1500, duration: 0.18, ease: "power2.in"}, 45.490);
+      tl.fromTo("#flash", {opacity: 0.9}, {opacity: 0, duration: 0.25, immediateRender: false}, 45.75);
+      tl.fromTo("#endlogo", {scale: 1.8, opacity: 0}, {scale: 1, opacity: 1, duration: 0.4, ease: "back.out(1.7)"}, 45.800);
+      tl.fromTo("#endplay", {y: 80, opacity: 0}, {y: 0, opacity: 1, duration: 0.3, ease: "power3.out"}, 46.100);
+      tl.fromTo("#endurl", {y: 80, opacity: 0}, {y: 0, opacity: 1, duration: 0.3, ease: "power3.out"}, 46.250);
+      tl.to("#endplay", {scale: 1.06, duration: 0.1875, yoyo: true, repeat: 7, ease: "sine.inOut"}, 46.650);
+      window.__timelines["main"] = tl;
+    </script>
+  </body>
+</html>

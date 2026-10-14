@@ -1,0 +1,941 @@
+{
+  "total_count": 10,
+  "jobs": [
+    {
+      "id": 115475558320,
+      "run_id": 38449240537,
+      "workflow_name": "toadcity-shorts",
+      "head_branch": "toadcity/shorts",
+      "run_url": "https://api.github.com/repos/bparlette/Hawk/actions/runs/38449240537",
+      "run_attempt": 1,
+      "node_id": "CR_kwDOVEX2Ls8AAAAa4uEvsA",
+      "head_sha": "c14ff37e83945b2b9f6a163668b4a0867c9b02ae",
+      "url": "https://api.github.com/repos/bparlette/Hawk/actions/jobs/115475558320",
+      "html_url": "https://github.com/bparlette/Hawk/actions/runs/38449240537/job/115475558320",
+      "status": "completed",
+      "conclusion": "success",
+      "created_at": "2026-10-13T18:44:46Z",
+      "started_at": "2026-10-13T18:44:48Z",
+      "completed_at": "2026-10-13T18:44:52Z",
+      "name": "plan",
+      "steps": [
+        {
+          "name": "Set up job",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 1,
+          "started_at": "2026-10-13T18:44:49Z",
+          "completed_at": "2026-10-13T18:44:50Z"
+        },
+        {
+          "name": "Run actions/checkout@v4",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 2,
+          "started_at": "2026-10-13T18:44:50Z",
+          "completed_at": "2026-10-13T18:44:51Z"
+        },
+        {
+          "name": "Run echo \"m=$(python3 -c 'import json;print(json.dumps(json.load(open(\"cap/jobs.json\"))))')\" >> $GITHUB_OUTPUT",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 3,
+          "started_at": "2026-10-13T18:44:51Z",
+          "completed_at": "2026-10-13T18:44:51Z"
+        },
+        {
+          "name": "Post Run actions/checkout@v4",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 6,
+          "started_at": "2026-10-13T18:44:51Z",
+          "completed_at": "2026-10-13T18:44:51Z"
+        },
+        {
+          "name": "Complete job",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 7,
+          "started_at": "2026-10-13T18:44:51Z",
+          "completed_at": "2026-10-13T18:44:52Z"
+        }
+      ],
+      "check_run_url": "https://api.github.com/repos/bparlette/Hawk/check-runs/115475558320",
+      "labels": [
+        "ubuntu-latest"
+      ],
+      "runner_id": 1000001112,
+      "runner_name": "GitHub Actions 1000001112",
+      "runner_group_id": 0,
+      "runner_group_name": "GitHub Actions"
+    },
+    {
+      "id": 115475611616,
+      "run_id": 38449240537,
+      "workflow_name": "toadcity-shorts",
+      "head_branch": "toadcity/shorts",
+      "run_url": "https://api.github.com/repos/bparlette/Hawk/actions/runs/38449240537",
+      "run_attempt": 1,
+      "node_id": "CR_kwDOVEX2Ls8AAAAa4uH_4A",
+      "head_sha": "c14ff37e83945b2b9f6a163668b4a0867c9b02ae",
+      "url": "https://api.github.com/repos/bparlette/Hawk/actions/jobs/115475611616",
+      "html_url": "https://github.com/bparlette/Hawk/actions/runs/38449240537/job/115475611616",
+      "status": "completed",
+      "conclusion": "success",
+      "created_at": "2026-10-13T18:44:53Z",
+      "started_at": "2026-10-13T18:44:56Z",
+      "completed_at": "2026-10-13T18:49:04Z",
+      "name": "cap (poe_win, poe=1&poeauto=win, 170, 5)",
+      "steps": [
+        {
+          "name": "Set up job",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 1,
+          "started_at": "2026-10-13T18:44:56Z",
+          "completed_at": "2026-10-13T18:44:57Z"
+        },
+        {
+          "name": "Run actions/checkout@v4",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 2,
+          "started_at": "2026-10-13T18:44:57Z",
+          "completed_at": "2026-10-13T18:44:58Z"
+        },
+        {
+          "name": "Run actions/setup-node@v4",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 3,
+          "started_at": "2026-10-13T18:44:58Z",
+          "completed_at": "2026-10-13T18:45:03Z"
+        },
+        {
+          "name": "deps",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 4,
+          "started_at": "2026-10-13T18:45:03Z",
+          "completed_at": "2026-10-13T18:45:36Z"
+        },
+        {
+          "name": "capture",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 5,
+          "started_at": "2026-10-13T18:45:36Z",
+          "completed_at": "2026-10-13T18:49:00Z"
+        },
+        {
+          "name": "Run actions/upload-artifact@v4",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 6,
+          "started_at": "2026-10-13T18:49:00Z",
+          "completed_at": "2026-10-13T18:49:02Z"
+        },
+        {
+          "name": "Post Run actions/setup-node@v4",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 11,
+          "started_at": "2026-10-13T18:49:02Z",
+          "completed_at": "2026-10-13T18:49:02Z"
+        },
+        {
+          "name": "Post Run actions/checkout@v4",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 12,
+          "started_at": "2026-10-13T18:49:02Z",
+          "completed_at": "2026-10-13T18:49:02Z"
+        },
+        {
+          "name": "Complete job",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 13,
+          "started_at": "2026-10-13T18:49:02Z",
+          "completed_at": "2026-10-13T18:49:02Z"
+        }
+      ],
+      "check_run_url": "https://api.github.com/repos/bparlette/Hawk/check-runs/115475611616",
+      "labels": [
+        "ubuntu-latest"
+      ],
+      "runner_id": 1000001115,
+      "runner_name": "GitHub Actions 1000001115",
+      "runner_group_id": 0,
+      "runner_group_name": "GitHub Actions"
+    },
+    {
+      "id": 115475611647,
+      "run_id": 38449240537,
+      "workflow_name": "toadcity-shorts",
+      "head_branch": "toadcity/shorts",
+      "run_url": "https://api.github.com/repos/bparlette/Hawk/actions/runs/38449240537",
+      "run_attempt": 1,
+      "node_id": "CR_kwDOVEX2Ls8AAAAa4uH__w",
+      "head_sha": "c14ff37e83945b2b9f6a163668b4a0867c9b02ae",
+      "url": "https://api.github.com/repos/bparlette/Hawk/actions/jobs/115475611647",
+      "html_url": "https://github.com/bparlette/Hawk/actions/runs/38449240537/job/115475611647",
+      "status": "in_progress",
+      "conclusion": null,
+      "created_at": "2026-10-13T18:44:53Z",
+      "started_at": "2026-10-13T18:44:56Z",
+      "completed_at": null,
+      "name": "cap (pigeon_climb, pigeon=1&pigeonauto=win&pigeonquick=1, 75, 4)",
+      "steps": [
+        {
+          "name": "Set up job",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 1,
+          "started_at": "2026-10-13T18:44:56Z",
+          "completed_at": "2026-10-13T18:44:57Z"
+        },
+        {
+          "name": "Run actions/checkout@v4",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 2,
+          "started_at": "2026-10-13T18:44:57Z",
+          "completed_at": "2026-10-13T18:44:59Z"
+        },
+        {
+          "name": "Run actions/setup-node@v4",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 3,
+          "started_at": "2026-10-13T18:44:59Z",
+          "completed_at": "2026-10-13T18:45:03Z"
+        },
+        {
+          "name": "deps",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 4,
+          "started_at": "2026-10-13T18:45:03Z",
+          "completed_at": "2026-10-13T18:45:39Z"
+        },
+        {
+          "name": "capture",
+          "status": "in_progress",
+          "conclusion": null,
+          "number": 5,
+          "started_at": "2026-10-13T18:45:39Z",
+          "completed_at": null
+        },
+        {
+          "name": "Run actions/upload-artifact@v4",
+          "status": "pending",
+          "conclusion": null,
+          "number": 6,
+          "started_at": null,
+          "completed_at": null
+        },
+        {
+          "name": "Post Run actions/setup-node@v4",
+          "status": "pending",
+          "conclusion": null,
+          "number": 11,
+          "started_at": null,
+          "completed_at": null
+        },
+        {
+          "name": "Post Run actions/checkout@v4",
+          "status": "pending",
+          "conclusion": null,
+          "number": 12,
+          "started_at": null,
+          "completed_at": null
+        }
+      ],
+      "check_run_url": "https://api.github.com/repos/bparlette/Hawk/check-runs/115475611647",
+      "labels": [
+        "ubuntu-latest"
+      ],
+      "runner_id": 1000001114,
+      "runner_name": "GitHub Actions 1000001114",
+      "runner_group_id": 0,
+      "runner_group_name": "GitHub Actions"
+    },
+    {
+      "id": 115475611668,
+      "run_id": 38449240537,
+      "workflow_name": "toadcity-shorts",
+      "head_branch": "toadcity/shorts",
+      "run_url": "https://api.github.com/repos/bparlette/Hawk/actions/runs/38449240537",
+      "run_attempt": 1,
+      "node_id": "CR_kwDOVEX2Ls8AAAAa4uIAFA",
+      "head_sha": "c14ff37e83945b2b9f6a163668b4a0867c9b02ae",
+      "url": "https://api.github.com/repos/bparlette/Hawk/actions/jobs/115475611668",
+      "html_url": "https://github.com/bparlette/Hawk/actions/runs/38449240537/job/115475611668",
+      "status": "in_progress",
+      "conclusion": null,
+      "created_at": "2026-10-13T18:44:53Z",
+      "started_at": "2026-10-13T18:44:56Z",
+      "completed_at": null,
+      "name": "cap (fish_p3, fish=1&fishauto=win&fishspot=p3, 200, 4)",
+      "steps": [
+        {
+          "name": "Set up job",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 1,
+          "started_at": "2026-10-13T18:44:57Z",
+          "completed_at": "2026-10-13T18:44:58Z"
+        },
+        {
+          "name": "Run actions/checkout@v4",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 2,
+          "started_at": "2026-10-13T18:44:58Z",
+          "completed_at": "2026-10-13T18:44:59Z"
+        },
+        {
+          "name": "Run actions/setup-node@v4",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 3,
+          "started_at": "2026-10-13T18:44:59Z",
+          "completed_at": "2026-10-13T18:45:03Z"
+        },
+        {
+          "name": "deps",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 4,
+          "started_at": "2026-10-13T18:45:03Z",
+          "completed_at": "2026-10-13T18:45:46Z"
+        },
+        {
+          "name": "capture",
+          "status": "in_progress",
+          "conclusion": null,
+          "number": 5,
+          "started_at": "2026-10-13T18:45:46Z",
+          "completed_at": null
+        },
+        {
+          "name": "Run actions/upload-artifact@v4",
+          "status": "pending",
+          "conclusion": null,
+          "number": 6,
+          "started_at": null,
+          "completed_at": null
+        },
+        {
+          "name": "Post Run actions/setup-node@v4",
+          "status": "pending",
+          "conclusion": null,
+          "number": 11,
+          "started_at": null,
+          "completed_at": null
+        },
+        {
+          "name": "Post Run actions/checkout@v4",
+          "status": "pending",
+          "conclusion": null,
+          "number": 12,
+          "started_at": null,
+          "completed_at": null
+        }
+      ],
+      "check_run_url": "https://api.github.com/repos/bparlette/Hawk/check-runs/115475611668",
+      "labels": [
+        "ubuntu-latest"
+      ],
+      "runner_id": 1000001113,
+      "runner_name": "GitHub Actions 1000001113",
+      "runner_group_id": 0,
+      "runner_group_name": "GitHub Actions"
+    },
+    {
+      "id": 115475611680,
+      "run_id": 38449240537,
+      "workflow_name": "toadcity-shorts",
+      "head_branch": "toadcity/shorts",
+      "run_url": "https://api.github.com/repos/bparlette/Hawk/actions/runs/38449240537",
+      "run_attempt": 1,
+      "node_id": "CR_kwDOVEX2Ls8AAAAa4uIAIA",
+      "head_sha": "c14ff37e83945b2b9f6a163668b4a0867c9b02ae",
+      "url": "https://api.github.com/repos/bparlette/Hawk/actions/jobs/115475611680",
+      "html_url": "https://github.com/bparlette/Hawk/actions/runs/38449240537/job/115475611680",
+      "status": "completed",
+      "conclusion": "success",
+      "created_at": "2026-10-13T18:44:53Z",
+      "started_at": "2026-10-13T18:44:56Z",
+      "completed_at": "2026-10-13T18:47:21Z",
+      "name": "cap (poe_lose, poe=1&poeauto=lose, 120, 5)",
+      "steps": [
+        {
+          "name": "Set up job",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 1,
+          "started_at": "2026-10-13T18:44:57Z",
+          "completed_at": "2026-10-13T18:44:58Z"
+        },
+        {
+          "name": "Run actions/checkout@v4",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 2,
+          "started_at": "2026-10-13T18:44:58Z",
+          "completed_at": "2026-10-13T18:44:59Z"
+        },
+        {
+          "name": "Run actions/setup-node@v4",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 3,
+          "started_at": "2026-10-13T18:44:59Z",
+          "completed_at": "2026-10-13T18:45:03Z"
+        },
+        {
+          "name": "deps",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 4,
+          "started_at": "2026-10-13T18:45:03Z",
+          "completed_at": "2026-10-13T18:45:57Z"
+        },
+        {
+          "name": "capture",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 5,
+          "started_at": "2026-10-13T18:45:57Z",
+          "completed_at": "2026-10-13T18:47:16Z"
+        },
+        {
+          "name": "Run actions/upload-artifact@v4",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 6,
+          "started_at": "2026-10-13T18:47:16Z",
+          "completed_at": "2026-10-13T18:47:18Z"
+        },
+        {
+          "name": "Post Run actions/setup-node@v4",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 11,
+          "started_at": "2026-10-13T18:47:18Z",
+          "completed_at": "2026-10-13T18:47:18Z"
+        },
+        {
+          "name": "Post Run actions/checkout@v4",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 12,
+          "started_at": "2026-10-13T18:47:18Z",
+          "completed_at": "2026-10-13T18:47:18Z"
+        },
+        {
+          "name": "Complete job",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 13,
+          "started_at": "2026-10-13T18:47:18Z",
+          "completed_at": "2026-10-13T18:47:18Z"
+        }
+      ],
+      "check_run_url": "https://api.github.com/repos/bparlette/Hawk/check-runs/115475611680",
+      "labels": [
+        "ubuntu-latest"
+      ],
+      "runner_id": 1000001116,
+      "runner_name": "GitHub Actions 1000001116",
+      "runner_group_id": 0,
+      "runner_group_name": "GitHub Actions"
+    },
+    {
+      "id": 115475611699,
+      "run_id": 38449240537,
+      "workflow_name": "toadcity-shorts",
+      "head_branch": "toadcity/shorts",
+      "run_url": "https://api.github.com/repos/bparlette/Hawk/actions/runs/38449240537",
+      "run_attempt": 1,
+      "node_id": "CR_kwDOVEX2Ls8AAAAa4uIAMw",
+      "head_sha": "c14ff37e83945b2b9f6a163668b4a0867c9b02ae",
+      "url": "https://api.github.com/repos/bparlette/Hawk/actions/jobs/115475611699",
+      "html_url": "https://github.com/bparlette/Hawk/actions/runs/38449240537/job/115475611699",
+      "status": "completed",
+      "conclusion": "success",
+      "created_at": "2026-10-13T18:44:53Z",
+      "started_at": "2026-10-13T18:44:56Z",
+      "completed_at": "2026-10-13T18:50:49Z",
+      "name": "cap (scrubber, scrubber=1&scrubberauto=win&scrubberphase=3, 170, 7)",
+      "steps": [
+        {
+          "name": "Set up job",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 1,
+          "started_at": "2026-10-13T18:44:56Z",
+          "completed_at": "2026-10-13T18:44:57Z"
+        },
+        {
+          "name": "Run actions/checkout@v4",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 2,
+          "started_at": "2026-10-13T18:44:57Z",
+          "completed_at": "2026-10-13T18:44:58Z"
+        },
+        {
+          "name": "Run actions/setup-node@v4",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 3,
+          "started_at": "2026-10-13T18:44:58Z",
+          "completed_at": "2026-10-13T18:45:04Z"
+        },
+        {
+          "name": "deps",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 4,
+          "started_at": "2026-10-13T18:45:04Z",
+          "completed_at": "2026-10-13T18:45:39Z"
+        },
+        {
+          "name": "capture",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 5,
+          "started_at": "2026-10-13T18:45:39Z",
+          "completed_at": "2026-10-13T18:50:44Z"
+        },
+        {
+          "name": "Run actions/upload-artifact@v4",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 6,
+          "started_at": "2026-10-13T18:50:44Z",
+          "completed_at": "2026-10-13T18:50:46Z"
+        },
+        {
+          "name": "Post Run actions/setup-node@v4",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 11,
+          "started_at": "2026-10-13T18:50:46Z",
+          "completed_at": "2026-10-13T18:50:46Z"
+        },
+        {
+          "name": "Post Run actions/checkout@v4",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 12,
+          "started_at": "2026-10-13T18:50:46Z",
+          "completed_at": "2026-10-13T18:50:46Z"
+        },
+        {
+          "name": "Complete job",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 13,
+          "started_at": "2026-10-13T18:50:46Z",
+          "completed_at": "2026-10-13T18:50:46Z"
+        }
+      ],
+      "check_run_url": "https://api.github.com/repos/bparlette/Hawk/check-runs/115475611699",
+      "labels": [
+        "ubuntu-latest"
+      ],
+      "runner_id": 1000001117,
+      "runner_name": "GitHub Actions 1000001117",
+      "runner_group_id": 0,
+      "runner_group_name": "GitHub Actions"
+    },
+    {
+      "id": 115475611750,
+      "run_id": 38449240537,
+      "workflow_name": "toadcity-shorts",
+      "head_branch": "toadcity/shorts",
+      "run_url": "https://api.github.com/repos/bparlette/Hawk/actions/runs/38449240537",
+      "run_attempt": 1,
+      "node_id": "CR_kwDOVEX2Ls8AAAAa4uIAZg",
+      "head_sha": "c14ff37e83945b2b9f6a163668b4a0867c9b02ae",
+      "url": "https://api.github.com/repos/bparlette/Hawk/actions/jobs/115475611750",
+      "html_url": "https://github.com/bparlette/Hawk/actions/runs/38449240537/job/115475611750",
+      "status": "completed",
+      "conclusion": "success",
+      "created_at": "2026-10-13T18:44:53Z",
+      "started_at": "2026-10-13T18:44:56Z",
+      "completed_at": "2026-10-13T18:46:23Z",
+      "name": "cap (music, music)",
+      "steps": [
+        {
+          "name": "Set up job",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 1,
+          "started_at": "2026-10-13T18:44:57Z",
+          "completed_at": "2026-10-13T18:44:58Z"
+        },
+        {
+          "name": "Run actions/checkout@v4",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 2,
+          "started_at": "2026-10-13T18:44:58Z",
+          "completed_at": "2026-10-13T18:44:59Z"
+        },
+        {
+          "name": "Run actions/setup-node@v4",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 3,
+          "started_at": "2026-10-13T18:44:59Z",
+          "completed_at": "2026-10-13T18:45:03Z"
+        },
+        {
+          "name": "deps",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 4,
+          "started_at": "2026-10-13T18:45:03Z",
+          "completed_at": "2026-10-13T18:45:50Z"
+        },
+        {
+          "name": "capture",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 5,
+          "started_at": "2026-10-13T18:45:50Z",
+          "completed_at": "2026-10-13T18:46:18Z"
+        },
+        {
+          "name": "Run actions/upload-artifact@v4",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 6,
+          "started_at": "2026-10-13T18:46:18Z",
+          "completed_at": "2026-10-13T18:46:21Z"
+        },
+        {
+          "name": "Post Run actions/setup-node@v4",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 11,
+          "started_at": "2026-10-13T18:46:21Z",
+          "completed_at": "2026-10-13T18:46:21Z"
+        },
+        {
+          "name": "Post Run actions/checkout@v4",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 12,
+          "started_at": "2026-10-13T18:46:21Z",
+          "completed_at": "2026-10-13T18:46:21Z"
+        },
+        {
+          "name": "Complete job",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 13,
+          "started_at": "2026-10-13T18:46:21Z",
+          "completed_at": "2026-10-13T18:46:21Z"
+        }
+      ],
+      "check_run_url": "https://api.github.com/repos/bparlette/Hawk/check-runs/115475611750",
+      "labels": [
+        "ubuntu-latest"
+      ],
+      "runner_id": 1000001120,
+      "runner_name": "GitHub Actions 1000001120",
+      "runner_group_id": 0,
+      "runner_group_name": "GitHub Actions"
+    },
+    {
+      "id": 115475611763,
+      "run_id": 38449240537,
+      "workflow_name": "toadcity-shorts",
+      "head_branch": "toadcity/shorts",
+      "run_url": "https://api.github.com/repos/bparlette/Hawk/actions/runs/38449240537",
+      "run_attempt": 1,
+      "node_id": "CR_kwDOVEX2Ls8AAAAa4uIAcw",
+      "head_sha": "c14ff37e83945b2b9f6a163668b4a0867c9b02ae",
+      "url": "https://api.github.com/repos/bparlette/Hawk/actions/jobs/115475611763",
+      "html_url": "https://github.com/bparlette/Hawk/actions/runs/38449240537/job/115475611763",
+      "status": "completed",
+      "conclusion": "success",
+      "created_at": "2026-10-13T18:44:53Z",
+      "started_at": "2026-10-13T18:44:56Z",
+      "completed_at": "2026-10-13T18:49:57Z",
+      "name": "cap (honqueen, honqueen=1&honqueenauto=win&honqueenphase=3, 170, 7)",
+      "steps": [
+        {
+          "name": "Set up job",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 1,
+          "started_at": "2026-10-13T18:44:56Z",
+          "completed_at": "2026-10-13T18:44:57Z"
+        },
+        {
+          "name": "Run actions/checkout@v4",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 2,
+          "started_at": "2026-10-13T18:44:57Z",
+          "completed_at": "2026-10-13T18:44:58Z"
+        },
+        {
+          "name": "Run actions/setup-node@v4",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 3,
+          "started_at": "2026-10-13T18:44:58Z",
+          "completed_at": "2026-10-13T18:45:10Z"
+        },
+        {
+          "name": "deps",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 4,
+          "started_at": "2026-10-13T18:45:10Z",
+          "completed_at": "2026-10-13T18:45:43Z"
+        },
+        {
+          "name": "capture",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 5,
+          "started_at": "2026-10-13T18:45:43Z",
+          "completed_at": "2026-10-13T18:49:53Z"
+        },
+        {
+          "name": "Run actions/upload-artifact@v4",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 6,
+          "started_at": "2026-10-13T18:49:53Z",
+          "completed_at": "2026-10-13T18:49:55Z"
+        },
+        {
+          "name": "Post Run actions/setup-node@v4",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 11,
+          "started_at": "2026-10-13T18:49:55Z",
+          "completed_at": "2026-10-13T18:49:55Z"
+        },
+        {
+          "name": "Post Run actions/checkout@v4",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 12,
+          "started_at": "2026-10-13T18:49:55Z",
+          "completed_at": "2026-10-13T18:49:55Z"
+        },
+        {
+          "name": "Complete job",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 13,
+          "started_at": "2026-10-13T18:49:55Z",
+          "completed_at": "2026-10-13T18:49:55Z"
+        }
+      ],
+      "check_run_url": "https://api.github.com/repos/bparlette/Hawk/check-runs/115475611763",
+      "labels": [
+        "ubuntu-latest"
+      ],
+      "runner_id": 1000001118,
+      "runner_name": "GitHub Actions 1000001118",
+      "runner_group_id": 0,
+      "runner_group_name": "GitHub Actions"
+    },
+    {
+      "id": 115475611767,
+      "run_id": 38449240537,
+      "workflow_name": "toadcity-shorts",
+      "head_branch": "toadcity/shorts",
+      "run_url": "https://api.github.com/repos/bparlette/Hawk/actions/runs/38449240537",
+      "run_attempt": 1,
+      "node_id": "CR_kwDOVEX2Ls8AAAAa4uIAdw",
+      "head_sha": "c14ff37e83945b2b9f6a163668b4a0867c9b02ae",
+      "url": "https://api.github.com/repos/bparlette/Hawk/actions/jobs/115475611767",
+      "html_url": "https://github.com/bparlette/Hawk/actions/runs/38449240537/job/115475611767",
+      "status": "in_progress",
+      "conclusion": null,
+      "created_at": "2026-10-13T18:44:53Z",
+      "started_at": "2026-10-13T18:44:56Z",
+      "completed_at": null,
+      "name": "cap (fish_day, fish=1&fishauto=win&fishspot=broadway, 200, 4)",
+      "steps": [
+        {
+          "name": "Set up job",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 1,
+          "started_at": "2026-10-13T18:44:57Z",
+          "completed_at": "2026-10-13T18:44:58Z"
+        },
+        {
+          "name": "Run actions/checkout@v4",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 2,
+          "started_at": "2026-10-13T18:44:58Z",
+          "completed_at": "2026-10-13T18:44:59Z"
+        },
+        {
+          "name": "Run actions/setup-node@v4",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 3,
+          "started_at": "2026-10-13T18:44:59Z",
+          "completed_at": "2026-10-13T18:45:04Z"
+        },
+        {
+          "name": "deps",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 4,
+          "started_at": "2026-10-13T18:45:04Z",
+          "completed_at": "2026-10-13T18:46:00Z"
+        },
+        {
+          "name": "capture",
+          "status": "in_progress",
+          "conclusion": null,
+          "number": 5,
+          "started_at": "2026-10-13T18:46:00Z",
+          "completed_at": null
+        },
+        {
+          "name": "Run actions/upload-artifact@v4",
+          "status": "pending",
+          "conclusion": null,
+          "number": 6,
+          "started_at": null,
+          "completed_at": null
+        },
+        {
+          "name": "Post Run actions/setup-node@v4",
+          "status": "pending",
+          "conclusion": null,
+          "number": 11,
+          "started_at": null,
+          "completed_at": null
+        },
+        {
+          "name": "Post Run actions/checkout@v4",
+          "status": "pending",
+          "conclusion": null,
+          "number": 12,
+          "started_at": null,
+          "completed_at": null
+        }
+      ],
+      "check_run_url": "https://api.github.com/repos/bparlette/Hawk/check-runs/115475611767",
+      "labels": [
+        "ubuntu-latest"
+      ],
+      "runner_id": 1000001119,
+      "runner_name": "GitHub Actions 1000001119",
+      "runner_group_id": 0,
+      "runner_group_name": "GitHub Actions"
+    },
+    {
+      "id": 115475611953,
+      "run_id": 38449240537,
+      "workflow_name": "toadcity-shorts",
+      "head_branch": "toadcity/shorts",
+      "run_url": "https://api.github.com/repos/bparlette/Hawk/actions/runs/38449240537",
+      "run_attempt": 1,
+      "node_id": "CR_kwDOVEX2Ls8AAAAa4uIBMQ",
+      "head_sha": "c14ff37e83945b2b9f6a163668b4a0867c9b02ae",
+      "url": "https://api.github.com/repos/bparlette/Hawk/actions/jobs/115475611953",
+      "html_url": "https://github.com/bparlette/Hawk/actions/runs/38449240537/job/115475611953",
+      "status": "in_progress",
+      "conclusion": null,
+      "created_at": "2026-10-13T18:44:53Z",
+      "started_at": "2026-10-13T18:44:56Z",
+      "completed_at": null,
+      "name": "cap (pigeon_fight, pigeon=1&pigeonpart=2&pigeonauto=win, 170, 7)",
+      "steps": [
+        {
+          "name": "Set up job",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 1,
+          "started_at": "2026-10-13T18:44:56Z",
+          "completed_at": "2026-10-13T18:44:57Z"
+        },
+        {
+          "name": "Run actions/checkout@v4",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 2,
+          "started_at": "2026-10-13T18:44:57Z",
+          "completed_at": "2026-10-13T18:44:59Z"
+        },
+        {
+          "name": "Run actions/setup-node@v4",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 3,
+          "started_at": "2026-10-13T18:44:59Z",
+          "completed_at": "2026-10-13T18:45:03Z"
+        },
+        {
+          "name": "deps",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 4,
+          "started_at": "2026-10-13T18:45:03Z",
+          "completed_at": "2026-10-13T18:45:42Z"
+        },
+        {
+          "name": "capture",
+          "status": "in_progress",
+          "conclusion": null,
+          "number": 5,
+          "started_at": "2026-10-13T18:45:42Z",
+          "completed_at": null
+        },
+        {
+          "name": "Run actions/upload-artifact@v4",
+          "status": "pending",
+          "conclusion": null,
+          "number": 6,
+          "started_at": null,
+          "completed_at": null
+        },
+        {
+          "name": "Post Run actions/setup-node@v4",
+          "status": "pending",
+          "conclusion": null,
+          "number": 11,
+          "started_at": null,
+          "completed_at": null
+        },
+        {
+          "name": "Post Run actions/checkout@v4",
+          "status": "pending",
+          "conclusion": null,
+          "number": 12,
+          "started_at": null,
+          "completed_at": null
+        }
+      ],
+      "check_run_url": "https://api.github.com/repos/bparlette/Hawk/check-runs/115475611953",
+      "labels": [
+        "ubuntu-latest"
+      ],
+      "runner_id": 1000001121,
+      "runner_name": "GitHub Actions 1000001121",
+      "runner_group_id": 0,
+      "runner_group_name": "GitHub Actions"
+    }
+  ]
+}

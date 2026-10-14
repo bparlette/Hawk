@@ -1,0 +1,126 @@
+{
+ "name": "04_chompy",
+ "out": "/workspace/work/toad-city/shorts/batch1/final/04_chompy_harbor_fishing.mp4",
+ "music": "chill",
+ "music_db": -9,
+ "segs": [
+  {
+   "src": "fish_day",
+   "a": 45.0,
+   "b": 46.2,
+   "flash": 0.12
+  },
+  {
+   "src": "fish_day",
+   "a": 0.0,
+   "b": 3.2
+  },
+  {
+   "src": "fish_day",
+   "a": 3.4,
+   "b": 6.6
+  },
+  {
+   "src": "fish_day",
+   "a": 8.3,
+   "b": 10.9
+  },
+  {
+   "src": "fish_day",
+   "a": 22.6,
+   "b": 25.8,
+   "speed": 1.25
+  },
+  {
+   "src": "fish_day",
+   "a": 30.4,
+   "b": 33.9
+  },
+  {
+   "src": "fish_day",
+   "a": 38.0,
+   "b": 41.2,
+   "speed": 1.25
+  },
+  {
+   "src": "fish_day",
+   "a": 43.3,
+   "b": 47.0
+  }
+ ],
+ "hit": {
+  "seg": 7,
+  "t": 46.0
+ },
+ "captions": [
+  {
+   "text": "BALTIMORE'S HUNGRIEST TRASH WHEEL",
+   "t0": 0,
+   "t1": 1.2,
+   "y": 1260,
+   "color": "#ffd23a",
+   "size": 96
+  },
+  {
+   "text": "GONE FISHIN' IN THE INNER HARBOR",
+   "t0": 1.2,
+   "t1": 4.4,
+   "y": 1260
+  },
+  {
+   "text": "BITE! HOOK IT! REEL IT!",
+   "t0": 4.4,
+   "t1": 7.6,
+   "y": 1260,
+   "color": "#9dff6b"
+  },
+  {
+   "text": "CAUGHT: ONE BALD TIRE",
+   "t0": 7.6,
+   "t1": 9.4,
+   "y": 1260
+  },
+  {
+   "text": "MEET CHOMPY",
+   "t0": 9.4,
+   "t1": 10.2,
+   "y": 1260,
+   "color": "#ff6fae",
+   "size": 110
+  },
+  {
+   "text": "HE EATS YOUR JUNK CATCHES",
+   "t0": 10.2,
+   "t1": 12.76,
+   "y": 1260
+  },
+  {
+   "text": "A SHOPPING CART?!",
+   "t0": 12.8,
+   "t1": 16.26,
+   "y": 1260,
+   "color": "#ffd23a"
+  },
+  {
+   "text": "FEED HIM ENOUGH = CANE UPGRADE",
+   "t0": 16.3,
+   "t1": 18.8,
+   "y": 1260,
+   "color": "#9dff6b"
+  },
+  {
+   "text": "ONE MORE CART...",
+   "t0": 18.8,
+   "t1": 21.4,
+   "y": 1260
+  },
+  {
+   "text": "CHOMP.",
+   "t0": 21.5,
+   "t1": 22.5,
+   "y": 1260,
+   "color": "#ff6fae",
+   "size": 150
+  }
+ ]
+}

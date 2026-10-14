@@ -1,0 +1,22 @@
+{
+ "fort_1.jpg": {
+  "title": "File:Fort McHenry Interior.jpg",
+  "page": "https://commons.wikimedia.org/wiki/File:Fort_McHenry_Interior.jpg",
+  "query": "Fort McHenry"
+ },
+ "fort_2.jpg": {
+  "title": "File:FtMcHenryEntrance.JPG",
+  "page": "https://commons.wikimedia.org/wiki/File:FtMcHenryEntrance.JPG",
+  "query": "Fort McHenry"
+ },
+ "aerial_web_1.jpg": {
+  "title": "aerial_web_1",
+  "page": "https://baltimore.org/what-to-do/behind-the-ramparts-of-fort-mchenry/",
+  "image": "https://baltimore.org/wp-content/uploads/2020/02/behind-the-ramparts-of-fort-mchenry-aerial.jpg"
+ },
+ "aerial_web_2.jpg": {
+  "title": "aerial_web_2",
+  "page": "https://www.alamy.com/stock-photo/fort-mchenry-baltimore-aerial.html",
+  "image": "https://c8.alamy.com/comp/2WE2CFB/fort-mchenry-is-a-historical-american-coastal-pentagonal-bastion-fort-on-locust-point-now-a-neighborhood-of-baltimore-maryland-2WE2CFB.jpg"
+ }
+}

@@ -1,0 +1,27 @@
+{
+ "exterior_1.jpg": {
+  "title": "File:Maryland Science Center, Baltimore.jpg",
+  "page": "https://commons.wikimedia.org/wiki/File:Maryland_Science_Center,_Baltimore.jpg",
+  "query": "Maryland Science Center"
+ },
+ "exterior_2.jpg": {
+  "title": "File:Mdsci.jpg",
+  "page": "https://commons.wikimedia.org/wiki/File:Mdsci.jpg",
+  "query": "Maryland Science Center"
+ },
+ "msc_web_1.jpg": {
+  "title": "msc_web_1",
+  "page": "https://www.thebanner.com/economy/nonprofit-philanthropy/maryland-science-center-upgrades-YRETHOTYKBDXNE3MB4ZEFPHZR4/",
+  "image": "https://cloudfront-us-east-1.images.arcpublishing.com/baltimorebanner/JQW2MFH5E5F3FN3JG7MRZX5JHI.jpg"
+ },
+ "msc_web_2.jpg": {
+  "title": "msc_web_2",
+  "page": "https://dmv.kidsoutandabout.com/content/imax-showing-maryland-air-maryland-science-center",
+  "image": "https://dmv.kidsoutandabout.com/sites/default/files/2025-06/field_enhanced_activity_image/Science-Center-scaled.jpg"
+ },
+ "msc_web_3.jpg": {
+  "title": "msc_web_3",
+  "page": "https://www.tripadvisor.com/Attractions-g28941-Activities-c49-t35-Maryland.html",
+  "image": "https://dynamic-media-cdn.tripadvisor.com/media/photo-o/03/f1/2b/59/maryland-science-center.jpg?w=1200&h=-1&s=1"
+ }
+}

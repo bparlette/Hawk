@@ -1,0 +1,101 @@
+SHELL SHOCK 3D — vertical Short / TikTok copy (DRAFTS ONLY — nothing has been posted or uploaded)
+Video: shellshock3d-short-9x16.mp4 (1080x1920, all real in-engine footage captured from the browser build)
+Link: https://shellshock-3d.surge.sh
+
+=====================================================================
+YOUTUBE SHORTS
+=====================================================================
+Title (≤100 chars):
+Tony Hawk meets TMNT Arkham — a TMNT-inspired 3D brawler you can play free in your browser #shorts
+
+Description:
+SHELL SHOCK 3D is a TMNT-inspired 3D beat-'em-up that runs right in your browser — no download, no install.
+Brawl the streets of 3 A.M. New York, drop through a manhole and skate the sewers, chain freeflow counters,
+run the rooftops, sneak up on sentries, drive the party van, and take down the boss.
+
+▶ Play free: https://shellshock-3d.surge.sh
+Works on desktop (keyboard / gamepad) and phones (touch).
+
+All footage is real in-engine gameplay captured from the browser build. No pre-rendered shots.
+
+Unofficial fan project, not affiliated with Nickelodeon/Paramount. All characters, art and music in the game are original.
+
+#shorts #indiegame #browsergame #beatemup #retrogaming #gamedev #threejs
+
+=====================================================================
+TIKTOK CAPTION
+=====================================================================
+Tony Hawk meets TMNT Arkham… and it runs in your browser 🐢🛹 Skate the sewers, freeflow-counter the street gangs, take the rooftops. Play free → shellshock-3d.surge.sh (link in bio) · TMNT-inspired unofficial fan project, not affiliated with Nickelodeon/Paramount.
+#indiegame #browsergame #beatemup #gamedev #retrogaming #tmnt #ninjaturtles #90skid #arcade #fyp
+
+(Note: TikTok captions don't make links clickable — put https://shellshock-3d.surge.sh in the bio.)
+
+=====================================================================
+REDDIT — r/TMNT (draft)
+=====================================================================
+Sub rules checked 2026-10-12 (https://www.reddit.com/r/TMNT/about/rules.json):
+ - Self-promotion IS allowed "provided the posts provide unique original content"; mods decide, and the poster is
+   expected to stay in the thread and engage with comments.
+ - Content must be TMNT-related; no low-effort posts; rule 11 "No AI generated content" (fine — the footage is real
+   in-engine and the art is hand-made, but be ready to say so if asked).
+ - No links to unofficial copyrighted episodes/streams (not applicable).
+ Recommendation: upload the video natively (not just a link), post from an account with some normal sub activity, and
+ reply to comments for the first hour or two.
+
+Title:
+I built a TMNT-inspired 3D brawler that runs in your browser — skate the sewers, fight on the rooftops, Turtles in Time vibes [OC]
+
+Body:
+Hey shellheads — this is a passion project I've been working on: SHELL SHOCK 3D, an unofficial, TMNT-inspired
+3D beat-'em-up that plays free in the browser (desktop or phone, no install).
+
+The art direction is a love letter to late-80s/early-90s Turtles New York: the "Big Apple, 3 A.M." street from
+Turtles in Time, the burning-apartment opening and news van from the '89 arcade game, the sewer lair, and the
+rooftop fight from the 1990 movie. Everything in it is original (painted textures, original characters and music) —
+no ripped assets.
+
+What you can do in level 1:
+- Brawl the street with combos, throws and specials
+- Drop into a manhole and skateboard through the sewers
+- Freeflow counters (Arkham-style), stealth takedowns on the rooftops
+- Ride the subway, take the elevator to the roofs, drive the party van
+- Day-to-night cycle, 3 camera styles, and a boss fight to finish
+
+Everything in the clip is real gameplay captured from the browser build.
+
+Play: https://shellshock-3d.surge.sh
+
+Would love feedback — especially on what you'd want in level 2. Unofficial fan project, not affiliated with
+Nickelodeon/Paramount.
+
+=====================================================================
+REDDIT — r/retrogaming (draft — READ THE RULE NOTE FIRST)
+=====================================================================
+Sub rules checked 2026-10-12 (https://www.reddit.com/r/retrogaming/about/rules.json):
+ - Rule 1 Self-Promotion: your own content should be no more than ~10% of your submissions (Reddit self-promo
+   guideline).
+ - Rule 2 "Not Vintage": top-level posts must be about 5th-gen-and-earlier platforms (Dreamcast allowed). The rule says
+   explicitly: "If you've posted about a modern game in a retro style consider posting to /r/indiegaming, /r/gaming,
+   or /r/retroish." → A new 3D browser game is very likely to be REMOVED here, even framed as a homage.
+ - Rule 11: no AI-generated self-promotion or media.
+ - No low-effort posts — add body text.
+ Recommendation: post this draft to r/retroish or r/indiegaming instead (same text works). If you still want
+ r/retrogaming, the only angle that fits is a discussion post about the 1989 arcade game / Turtles in Time, mentioning
+ the project in a comment — not a promo post.
+
+Title:
+Turtles in Time's "Big Apple, 3 A.M." rebuilt as a 3D brawler you can play in your browser (unofficial homage, real gameplay)
+
+Body:
+I grew up feeding quarters into the 1989 TMNT cabinet and wearing out Turtles in Time on the SNES, so I tried to
+build what a 3D version of that era might feel like: SHELL SHOCK 3D, a free browser beat-'em-up.
+
+The combat is a port of my 16-bit-style brawler (same depth-range hit rules, combos, throws and specials, the
+classic 3-lives tag-in), now running in a 3D New York: the street at 3 A.M., the sewers (with a skateboard),
+rooftops, a subway platform and a walk-in apartment building. Characters are hand-painted sprites as billboards in
+the 3D scene, HD-2D style. All original art and music.
+
+Clip is real in-engine footage. Play free: https://shellshock-3d.surge.sh
+
+Curious what retro brawler fans think the 3D version gets right or wrong. Unofficial fan project, not affiliated
+with Nickelodeon/Paramount.

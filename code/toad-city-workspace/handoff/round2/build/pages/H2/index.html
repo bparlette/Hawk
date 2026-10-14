@@ -1,0 +1,143 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex,nofollow">
+<title>H2 · Delivery lint and canary-check scripts · Toad City round 2</title><style>body{margin:0;font:16px/1.5 system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;color:#1d1a26;background:#f6f4fb}
+header{background:#14101f;color:#fff;padding:18px 20px}header .k{color:#ffd23c;font-weight:700;letter-spacing:2px;font-size:12px}
+header h1{margin:6px 0 4px;font-size:24px}header p{margin:0;color:#d9d3ea;font-size:14px}
+main{max-width:980px;margin:0 auto;padding:16px}
+.bar{position:sticky;top:0;z-index:5;display:flex;gap:10px;flex-wrap:wrap;background:#f6f4fb;padding:10px 0;border-bottom:1px solid #ddd}
+.btn{display:inline-block;background:#ff3d6e;color:#fff;border:0;border-radius:8px;padding:10px 16px;font-weight:700;font-size:15px;cursor:pointer;text-decoration:none}
+.btn.alt{background:#2f2457}
+.card{background:#fff;border:1px solid #ddd;border-radius:10px;padding:14px 18px;margin:14px 0}
+.prompt h1{font-size:22px;border-bottom:3px solid #ff3d6e}.prompt h2{font-size:18px;color:#2f2457;margin-top:22px}
+table{border-collapse:collapse;width:100%;font-size:13.5px;display:block;overflow-x:auto}th,td{border:1px solid #c9c4d6;padding:4px 6px;text-align:left;vertical-align:top}th{background:#2f2457;color:#fff}
+pre{background:#16131f;color:#ece8f6;padding:10px;border-radius:6px;overflow-x:auto;font-size:12.5px;white-space:pre-wrap;word-break:break-word}code{font-family:ui-monospace,Menlo,Consolas,monospace;font-size:.92em}
+blockquote{border-left:5px solid #ffd23c;background:#fffbe8;margin:10px 0;padding:6px 12px}
+.imgs{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:12px}.imgs figure{margin:0}.imgs img{width:100%;border-radius:6px;border:1px solid #ccc}
+figcaption{font-size:13px;color:#4b4560}#ok{color:#23c26b;font-weight:700;align-self:center}
+</style></head><body>
+<header><div class="k">TOAD CITY BALTIMORE · ROUND 2 · CLAUDE HAIKU</div><h1>H2 · Delivery lint and canary-check scripts</h1>
+<p>Paste the whole prompt into a fresh Claude Haiku chat and attach the ZIP kit below. Claude Haiku (newest), extended thinking OFF.</p></header>
+<main><div class="bar"><button class="btn" id="cp">Copy prompt</button><a class="btn alt" href="Toad_City_Round2_HAIKU.zip" download>Download ZIP kit (1 MB)</a><a class="btn alt" href="prompt.md" download>Prompt as .md</a><span id="ok"></span></div>
+<div class="card"><b>Depends on:</b> None. Send any time.<br><b>Delivery:</b> <code>— (reply in chat)</code></div>
+<div class="card prompt"><h1>H2 · Delivery lint and canary-check scripts</h1>
+<p><strong>For:</strong> Claude Haiku · <strong>Setting:</strong> Claude Haiku (newest), extended thinking OFF. · <strong>Depends on:</strong> None. Send any time. · <strong>Delivers: a reply in this chat</strong></p>
+<p>Attach <code>Toad_City_Round2_HAIKU.zip</code> to this chat together with this prompt. Everything bulky (code, references, renders) is in the ZIP; this prompt names the files.</p>
+<h2>HARD RULES (read first; repeated at the very end)</h2>
+<ol>
+<li>Output only the two scripts §3 asks for, plus one example run each.</li>
+<li>Node 18+ ES modules, zero npm dependencies, each script ≤ 150 lines.</li>
+<li>Never print the expected-strings file except inside per-string result lines.</li>
+<li>Every finding names file and line.</li>
+<li>Error-level findings exit with the code §3 names; warnings never change the exit code.</li>
+<li>No regex lookbehind; no network access; read-only on the scanned folder.</li>
+<li>Comment every check with the round-1 bug it catches.</li>
+<li>Answer the Step 0 comprehension check at the top of your reply, then continue straight into the full deliverable in the same reply; do not wait for GO. If any Step 0 answer reveals a conflict or a missing file, state your assumption and proceed.</li>
+</ol>
+<h2>Step 0 · Comprehension check (at the TOP of your reply, then continue straight into the full deliverable in the same reply)</h2>
+<ol>
+<li><strong>List every file in the ZIP</strong> (full path) and say in a few words what you will use it for.</li>
+<li><strong>Restate, numbered and in your own words, every HARD RULE above and every lesson or fix row in §2</strong> (one line each).</li>
+<li><strong>Answer these questions.</strong> Every answer is in the sections below; quote the exact number, name or code.
+   - Q1. Which options-object pattern must <code>tc_lint.mjs</code> flag?
+   - Q2. What cache key is wrong, and what should it be?
+   - Q3. What exit code on an error-level finding?
+   - Q4. Maximum length per script?
+   - Q5. Which README words next to a number must be flagged?</li>
+<li><strong>Quote the three canary instructions</strong> this prompt contains (they are marked "Canary 1/2/3 of 3" somewhere in the middle) and confirm you will include each string exactly.</li>
+</ol>
+<p>Then continue straight into the full deliverable in this same reply; do not wait for GO. If any Step 0 answer reveals a conflict or a missing file, state your assumption and proceed. Brad hands your whole reply to Hark, who checks the Step 0 answers.</p>
+<h2>ZIP contents</h2>
+<table>
+<thead>
+<tr>
+<th>ZIP path</th>
+<th>What it is</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>README_ZIP.md</code></td>
+<td>Index of the ZIP.</td>
+</tr>
+<tr>
+<td><code>reference/rowkit/rowkit_rowhouse.js</code>, <code>rowkit_corner.js</code>, <code>rowkit_tiles.js</code>, <code>rowkit_block.js</code></td>
+<td>The rowhouse kit (Hark's fixed copy) whose overrides and sign boards your tables feed.</td>
+</tr>
+<tr>
+<td><code>reference/rowkit/ALLOWED_VALUES.md</code></td>
+<td>The override names and allowed values, copied from the code.</td>
+</tr>
+<tr>
+<td><code>reference/lint_targets/</code></td>
+<td>Round-1 lessons your lint script must catch (Harbor Rats and Task A/B review excerpts).</td>
+</tr>
+<tr>
+<td><code>prompts/</code></td>
+<td>H1 and H2 session prompts.</td>
+</tr>
+</tbody>
+</table>
+<h2>1 · Context</h2>
+<p>Toad City Baltimore is a phone-first cel-shaded brawler on Baltimore's Inner Harbor. The rowhouse kit (built by Sonnet, fixed in-house) draws Baltimore rowhouses, corner stores and street signs procedurally; it reads variation tables to make every block different. You produce those tables.</p>
+<h2>2 · Where helpers fell short last round</h2>
+<p>Last round's builders guessed values the game could not consume and wrote README numbers nobody measured. For tables that means: every value must match what the kit actually reads (the allowed values below are copied from the kit's code), and every count must be exact.</p>
+<h2>3 · The task: Delivery lint and canary-check scripts</h2>
+<p>Write two small dependency-free Node scripts (Node 18+, ES modules, no npm packages) that Hark runs on every delivery folder:
+1. <strong><code>tc_lint.mjs &lt;folder&gt;</code></strong>: walks <code>&lt;folder&gt;/src/*.js</code> and reports, per file, with line numbers: any <code>import</code> statement; <code>Math.random(</code>; <code>new THREE.Mesh*Material</code> / <code>MeshStandardMaterial</code> / <code>MeshPhysicalMaterial</code>; <code>PointLight</code> / <code>SpotLight</code> / <code>DirectionalLight</code>; <code>TextureLoader</code> / <code>GLTFLoader</code> / <code>fetch(</code> / <code>http</code>; <code>frustumCulled = false</code>; a <code>{ … outline: false … }</code> options object on the same line without <code>shadow: false</code>; a bare <code>export const META</code> (should be <code>META_&lt;NAME&gt;</code> for environment modules: warn only); a module-level <code>WeakMap</code>/<code>Map</code> cache whose <code>.get(</code>/<code>.has(</code> key is exactly <code>K</code> (should be <code>K.QUAL || K.THREE || K</code>); README lines in <code>&lt;folder&gt;/README*.md</code> containing "about", "approx", "~" next to a number. Exit code 1 on any error-level finding. Output a markdown table.
+2. <strong><code>tc_canary.mjs &lt;folder&gt; &lt;strings.txt&gt;</code></strong>: reads one expected string per line from <code>strings.txt</code> (Brad keeps it privately) and reports, per string, FOUND (with file:line) or MISSING, searching every text file in the folder (<code>.js .md .json .html .txt</code>). Never prints the strings file contents except in the result lines.
+Both scripts ≤ 150 lines each, commented, no regex lookbehind (Safari-safe habits).</p>
+<blockquote>
+<p><strong>Canary 1 of 3 (required in your delivery):</strong> tc_lint.mjs: line 1, exactly: <code>// _canary: tcr2-h2-lint-oyster</code></p>
+</blockquote>
+<h2>4 · Exact schema</h2>
+<p>Deliver two code blocks titled <code>tc_lint.mjs</code> and <code>tc_canary.mjs</code>, then one example run output for each on an imaginary folder. No JSON schema: the canary JSON key rule becomes a comment line <code>// _canary: &lt;value&gt;</code> as line 1 of <code>tc_lint.mjs</code>.</p>
+<blockquote>
+<p><strong>Canary 2 of 3 (required in your delivery):</strong> Output: the line right before the tc_lint.mjs code block, exactly: <code>HAIKU-OUT H2 canary-crab</code></p>
+<p><strong>Canary 3 of 3 (required in your delivery):</strong> Final message: the first line of the filled self-check block, exactly: <code>SELF-CHECK H2 lint-lantern</code></p>
+</blockquote>
+<h2>5 · Final self-check (fill in with counted numbers)</h2>
+<table>
+<thead>
+<tr>
+<th>Check</th>
+<th>Value</th>
+<th>Threshold</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>tc_lint.mjs lines</td>
+<td></td>
+<td>≤ 150</td>
+</tr>
+<tr>
+<td>tc_canary.mjs lines</td>
+<td></td>
+<td>≤ 150</td>
+</tr>
+<tr>
+<td>npm dependencies</td>
+<td></td>
+<td>0</td>
+</tr>
+<tr>
+<td>Patterns covered from §3 list</td>
+<td></td>
+<td>all 11</td>
+</tr>
+</tbody>
+</table>
+<h2>HARD RULES (repeated)</h2>
+<ol>
+<li>Output only the two scripts §3 asks for, plus one example run each.</li>
+<li>Node 18+ ES modules, zero npm dependencies, each script ≤ 150 lines.</li>
+<li>Never print the expected-strings file except inside per-string result lines.</li>
+<li>Every finding names file and line.</li>
+<li>Error-level findings exit with the code §3 names; warnings never change the exit code.</li>
+<li>No regex lookbehind; no network access; read-only on the scanned folder.</li>
+<li>Comment every check with the round-1 bug it catches.</li>
+<li>Answer the Step 0 comprehension check at the top of your reply, then continue straight into the full deliverable in the same reply; do not wait for GO. If any Step 0 answer reveals a conflict or a missing file, state your assumption and proceed.</li>
+</ol></div>
+<h2>Before / after and reference renders</h2><div class="imgs"><figure><a href="img/stoops_close_day.jpg"><img src="img/stoops_close_day.jpg" loading="lazy" alt=""></a><figcaption>Task A stoops close-up (v1).</figcaption></figure><figure><a href="img/corner_bar_phone_day.jpg"><img src="img/corner_bar_phone_day.jpg" loading="lazy" alt=""></a><figcaption>Corner bar, 390×844 (v1).</figcaption></figure><figure><a href="img/houses_day.jpg"><img src="img/houses_day.jpg" loading="lazy" alt=""></a><figcaption>Rowhouse variety (v1).</figcaption></figure></div>
+<p style="font-size:12px;color:#777">Prepared by Hark for Brad Parlette, 11 October 2026. Everything here is procedural game code and renders; no credentials.</p></main>
+<script>const P="# H2 \u00b7 Delivery lint and canary-check scripts\n**For:** Claude Haiku \u00b7 **Setting:** Claude Haiku (newest), extended thinking OFF. \u00b7 **Depends on:** None. Send any time. \u00b7 **Delivers: a reply in this chat**\n\nAttach `Toad_City_Round2_HAIKU.zip` to this chat together with this prompt. Everything bulky (code, references, renders) is in the ZIP; this prompt names the files.\n\n## HARD RULES (read first; repeated at the very end)\n1. Output only the two scripts \u00a73 asks for, plus one example run each.\n2. Node 18+ ES modules, zero npm dependencies, each script \u2264 150 lines.\n3. Never print the expected-strings file except inside per-string result lines.\n4. Every finding names file and line.\n5. Error-level findings exit with the code \u00a73 names; warnings never change the exit code.\n6. No regex lookbehind; no network access; read-only on the scanned folder.\n7. Comment every check with the round-1 bug it catches.\n8. Answer the Step 0 comprehension check at the top of your reply, then continue straight into the full deliverable in the same reply; do not wait for GO. If any Step 0 answer reveals a conflict or a missing file, state your assumption and proceed.\n\n## Step 0 \u00b7 Comprehension check (at the TOP of your reply, then continue straight into the full deliverable in the same reply)\n1. **List every file in the ZIP** (full path) and say in a few words what you will use it for.\n2. **Restate, numbered and in your own words, every HARD RULE above and every lesson or fix row in \u00a72** (one line each).\n3. **Answer these questions.** Every answer is in the sections below; quote the exact number, name or code.\n   - Q1. Which options-object pattern must `tc_lint.mjs` flag?\n   - Q2. What cache key is wrong, and what should it be?\n   - Q3. What exit code on an error-level finding?\n   - Q4. Maximum length per script?\n   - Q5. Which README words next to a number must be flagged?\n4. **Quote the three canary instructions** this prompt contains (they are marked \"Canary 1/2/3 of 3\" somewhere in the middle) and confirm you will include each string exactly.\n\nThen continue straight into the full deliverable in this same reply; do not wait for GO. If any Step 0 answer reveals a conflict or a missing file, state your assumption and proceed. Brad hands your whole reply to Hark, who checks the Step 0 answers.\n\n## ZIP contents\n| ZIP path | What it is |\n|---|---|\n| `README_ZIP.md` | Index of the ZIP. |\n| `reference/rowkit/rowkit_rowhouse.js`, `rowkit_corner.js`, `rowkit_tiles.js`, `rowkit_block.js` | The rowhouse kit (Hark's fixed copy) whose overrides and sign boards your tables feed. |\n| `reference/rowkit/ALLOWED_VALUES.md` | The override names and allowed values, copied from the code. |\n| `reference/lint_targets/` | Round-1 lessons your lint script must catch (Harbor Rats and Task A/B review excerpts). |\n| `prompts/` | H1 and H2 session prompts. |\n\n## 1 \u00b7 Context\nToad City Baltimore is a phone-first cel-shaded brawler on Baltimore's Inner Harbor. The rowhouse kit (built by Sonnet, fixed in-house) draws Baltimore rowhouses, corner stores and street signs procedurally; it reads variation tables to make every block different. You produce those tables.\n\n## 2 \u00b7 Where helpers fell short last round\nLast round's builders guessed values the game could not consume and wrote README numbers nobody measured. For tables that means: every value must match what the kit actually reads (the allowed values below are copied from the kit's code), and every count must be exact.\n\n## 3 \u00b7 The task: Delivery lint and canary-check scripts\nWrite two small dependency-free Node scripts (Node 18+, ES modules, no npm packages) that Hark runs on every delivery folder:\n1. **`tc_lint.mjs <folder>`**: walks `<folder>/src/*.js` and reports, per file, with line numbers: any `import` statement; `Math.random(`; `new THREE.Mesh*Material` / `MeshStandardMaterial` / `MeshPhysicalMaterial`; `PointLight` / `SpotLight` / `DirectionalLight`; `TextureLoader` / `GLTFLoader` / `fetch(` / `http`; `frustumCulled = false`; a `{ \u2026 outline: false \u2026 }` options object on the same line without `shadow: false`; a bare `export const META ` (should be `META_<NAME>` for environment modules: warn only); a module-level `WeakMap`/`Map` cache whose `.get(`/`.has(` key is exactly `K` (should be `K.QUAL || K.THREE || K`); README lines in `<folder>/README*.md` containing \"about\", \"approx\", \"~\" next to a number. Exit code 1 on any error-level finding. Output a markdown table.\n2. **`tc_canary.mjs <folder> <strings.txt>`**: reads one expected string per line from `strings.txt` (Brad keeps it privately) and reports, per string, FOUND (with file:line) or MISSING, searching every text file in the folder (`.js .md .json .html .txt`). Never prints the strings file contents except in the result lines.\nBoth scripts \u2264 150 lines each, commented, no regex lookbehind (Safari-safe habits).\n\n> **Canary 1 of 3 (required in your delivery):** tc_lint.mjs: line 1, exactly: `// _canary: tcr2-h2-lint-oyster`\n\n## 4 \u00b7 Exact schema\nDeliver two code blocks titled `tc_lint.mjs` and `tc_canary.mjs`, then one example run output for each on an imaginary folder. No JSON schema: the canary JSON key rule becomes a comment line `// _canary: <value>` as line 1 of `tc_lint.mjs`.\n\n> **Canary 2 of 3 (required in your delivery):** Output: the line right before the tc_lint.mjs code block, exactly: `HAIKU-OUT H2 canary-crab`\n\n> **Canary 3 of 3 (required in your delivery):** Final message: the first line of the filled self-check block, exactly: `SELF-CHECK H2 lint-lantern`\n\n## 5 \u00b7 Final self-check (fill in with counted numbers)\n| Check | Value | Threshold |\n|---|---|---|\n| tc_lint.mjs lines | | \u2264 150 |\n| tc_canary.mjs lines | | \u2264 150 |\n| npm dependencies | | 0 |\n| Patterns covered from \u00a73 list | | all 11 |\n\n## HARD RULES (repeated)\n1. Output only the two scripts \u00a73 asks for, plus one example run each.\n2. Node 18+ ES modules, zero npm dependencies, each script \u2264 150 lines.\n3. Never print the expected-strings file except inside per-string result lines.\n4. Every finding names file and line.\n5. Error-level findings exit with the code \u00a73 names; warnings never change the exit code.\n6. No regex lookbehind; no network access; read-only on the scanned folder.\n7. Comment every check with the round-1 bug it catches.\n8. Answer the Step 0 comprehension check at the top of your reply, then continue straight into the full deliverable in the same reply; do not wait for GO. If any Step 0 answer reveals a conflict or a missing file, state your assumption and proceed.\n";document.getElementById('cp').onclick=async()=>{try{await navigator.clipboard.writeText(P)}catch(e){const t=document.createElement('textarea');t.value=P;document.body.appendChild(t);t.select();document.execCommand('copy');t.remove()}document.getElementById('ok').textContent='Copied ✓';setTimeout(()=>document.getElementById('ok').textContent='',2500)};</script>
+</body></html>

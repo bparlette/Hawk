@@ -1,0 +1,11 @@
+f68: loading scene
+f239: stage lvl=2 section=L0
+f2501 TAG-IN RAFE deaths=3 bodies=1
+f3956: boss fight lvl=2 BRICKJAW
+f4501 TAG-IN MIKO deaths=6 bodies=2
+f5353: outro lvl=2
+f5484: pizza lvl=2
+f5654: results lvl=2
+f5721: back to title
+scripts loaded=levels/level2.js missing=levels/level3.js SS=object
+END f=5721 scene=title level=1 kills=18 levelsWithResults=2

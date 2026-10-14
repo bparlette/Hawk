@@ -1,0 +1,2189 @@
+{
+ "A": {
+  "sonnetKit": {
+   "rowhouse": {
+    "meshes": 3,
+    "hulls": 1,
+    "drawCalls": 4,
+    "shadowCasters": 2,
+    "tris": 1562,
+    "hullTris": 88,
+    "trisInclHull": 1650,
+    "materials": 4,
+    "bbox": [
+     -2.883,
+     0.16,
+     -12.262,
+     2.883,
+     12.81,
+     1.565
+    ],
+    "coll": 2,
+    "bld": 1,
+    "hooks": {},
+    "lamps": 0,
+    "ret": {
+     "w": 5.7,
+     "d": 12.26,
+     "h": 12.15
+    },
+    "hash": "dd6fdbf4f241"
+   },
+   "rowhouse_brick": {
+    "meshes": 3,
+    "hulls": 1,
+    "drawCalls": 4,
+    "shadowCasters": 2,
+    "tris": 1462,
+    "hullTris": 88,
+    "trisInclHull": 1550,
+    "materials": 4,
+    "bbox": [
+     -2.396,
+     0.16,
+     -13.328,
+     2.396,
+     12.81,
+     1.497
+    ],
+    "coll": 2,
+    "bld": 1,
+    "hooks": {},
+    "lamps": 0,
+    "ret": {
+     "w": 4.73,
+     "d": 13.33,
+     "h": 12.15
+    },
+    "hash": "c30af6dbb683"
+   },
+   "rowhouse_permastone": {
+    "meshes": 3,
+    "hulls": 1,
+    "drawCalls": 4,
+    "shadowCasters": 2,
+    "tris": 1554,
+    "hullTris": 90,
+    "trisInclHull": 1644,
+    "materials": 4,
+    "bbox": [
+     -2.809,
+     0.16,
+     -12.393,
+     2.809,
+     13.41,
+     1.829
+    ],
+    "coll": 2,
+    "bld": 1,
+    "hooks": {},
+    "lamps": 0,
+    "ret": {
+     "w": 5.55,
+     "d": 12.39,
+     "h": 12.15
+    },
+    "hash": "fcead9358c06"
+   },
+   "rowhouse_4": {
+    "meshes": 3,
+    "hulls": 1,
+    "drawCalls": 4,
+    "shadowCasters": 2,
+    "tris": 1764,
+    "hullTris": 88,
+    "trisInclHull": 1852,
+    "materials": 4,
+    "bbox": [
+     -2.883,
+     0.16,
+     -12.262,
+     2.883,
+     16.21,
+     1.565
+    ],
+    "coll": 2,
+    "bld": 1,
+    "hooks": {},
+    "lamps": 0,
+    "ret": {
+     "w": 5.7,
+     "d": 12.26,
+     "h": 15.55
+    },
+    "hash": "5b7fe6e2f6d2"
+   },
+   "corner_bar": {
+    "meshes": 3,
+    "hulls": 1,
+    "drawCalls": 4,
+    "shadowCasters": 2,
+    "tris": 2230,
+    "hullTris": 150,
+    "trisInclHull": 2380,
+    "materials": 4,
+    "bbox": [
+     -3.731,
+     0.16,
+     -7.5,
+     4.419,
+     15.77,
+     1.1
+    ],
+    "coll": 3,
+    "bld": 2,
+    "hooks": {},
+    "lamps": 0,
+    "ret": {
+     "w": 7.4,
+     "d": 7.5,
+     "h": 15.55
+    },
+    "hash": "fdb9f2ed1e56"
+   },
+   "corner_shop": {
+    "meshes": 3,
+    "hulls": 1,
+    "drawCalls": 4,
+    "shadowCasters": 2,
+    "tris": 2040,
+    "hullTris": 158,
+    "trisInclHull": 2198,
+    "materials": 4,
+    "bbox": [
+     -3.731,
+     0.16,
+     -7.5,
+     4.419,
+     15.77,
+     1.12
+    ],
+    "coll": 3,
+    "bld": 2,
+    "hooks": {},
+    "lamps": 0,
+    "ret": {
+     "w": 7.4,
+     "d": 7.5,
+     "h": 15.55
+    },
+    "hash": "79863a5d3925"
+   },
+   "block": {
+    "meshes": 3,
+    "hulls": 1,
+    "drawCalls": 4,
+    "shadowCasters": 2,
+    "tris": 12804,
+    "hullTris": 1234,
+    "trisInclHull": 14038,
+    "materials": 4,
+    "bbox": [
+     -13.771,
+     0.16,
+     -13.817,
+     13.822,
+     16.81,
+     13.67
+    ],
+    "coll": 28,
+    "bld": 14,
+    "hooks": {
+     "climb": 1
+    },
+    "lamps": 0,
+    "ret": {
+     "houses": 12,
+     "corners": [
+      "bar"
+     ]
+    },
+    "hash": "207ce64ac0ad"
+   }
+  },
+  "starterKit": {
+   "rowhouse": {
+    "meshes": 3,
+    "hulls": 1,
+    "drawCalls": 4,
+    "shadowCasters": 2,
+    "tris": 1562,
+    "hullTris": 88,
+    "trisInclHull": 1650,
+    "materials": 4,
+    "bbox": [
+     -2.883,
+     0.16,
+     -12.262,
+     2.883,
+     12.81,
+     1.565
+    ],
+    "coll": 2,
+    "bld": 1,
+    "hooks": {},
+    "lamps": 0,
+    "ret": {
+     "w": 5.7,
+     "d": 12.26,
+     "h": 12.15
+    },
+    "hash": "dd6fdbf4f241"
+   },
+   "rowhouse_brick": {
+    "meshes": 3,
+    "hulls": 1,
+    "drawCalls": 4,
+    "shadowCasters": 2,
+    "tris": 1462,
+    "hullTris": 88,
+    "trisInclHull": 1550,
+    "materials": 4,
+    "bbox": [
+     -2.396,
+     0.16,
+     -13.328,
+     2.396,
+     12.81,
+     1.497
+    ],
+    "coll": 2,
+    "bld": 1,
+    "hooks": {},
+    "lamps": 0,
+    "ret": {
+     "w": 4.73,
+     "d": 13.33,
+     "h": 12.15
+    },
+    "hash": "c30af6dbb683"
+   },
+   "rowhouse_permastone": {
+    "meshes": 3,
+    "hulls": 1,
+    "drawCalls": 4,
+    "shadowCasters": 2,
+    "tris": 1554,
+    "hullTris": 90,
+    "trisInclHull": 1644,
+    "materials": 4,
+    "bbox": [
+     -2.809,
+     0.16,
+     -12.393,
+     2.809,
+     13.41,
+     1.829
+    ],
+    "coll": 2,
+    "bld": 1,
+    "hooks": {},
+    "lamps": 0,
+    "ret": {
+     "w": 5.55,
+     "d": 12.39,
+     "h": 12.15
+    },
+    "hash": "fcead9358c06"
+   },
+   "rowhouse_4": {
+    "meshes": 3,
+    "hulls": 1,
+    "drawCalls": 4,
+    "shadowCasters": 2,
+    "tris": 1764,
+    "hullTris": 88,
+    "trisInclHull": 1852,
+    "materials": 4,
+    "bbox": [
+     -2.883,
+     0.16,
+     -12.262,
+     2.883,
+     16.21,
+     1.565
+    ],
+    "coll": 2,
+    "bld": 1,
+    "hooks": {},
+    "lamps": 0,
+    "ret": {
+     "w": 5.7,
+     "d": 12.26,
+     "h": 15.55
+    },
+    "hash": "5b7fe6e2f6d2"
+   },
+   "corner_bar": {
+    "meshes": 3,
+    "hulls": 1,
+    "drawCalls": 4,
+    "shadowCasters": 2,
+    "tris": 2230,
+    "hullTris": 150,
+    "trisInclHull": 2380,
+    "materials": 4,
+    "bbox": [
+     -3.731,
+     0.16,
+     -7.5,
+     4.419,
+     15.77,
+     1.1
+    ],
+    "coll": 3,
+    "bld": 2,
+    "hooks": {},
+    "lamps": 0,
+    "ret": {
+     "w": 7.4,
+     "d": 7.5,
+     "h": 15.55
+    },
+    "hash": "fdb9f2ed1e56"
+   },
+   "corner_shop": {
+    "meshes": 3,
+    "hulls": 1,
+    "drawCalls": 4,
+    "shadowCasters": 2,
+    "tris": 2040,
+    "hullTris": 158,
+    "trisInclHull": 2198,
+    "materials": 4,
+    "bbox": [
+     -3.731,
+     0.16,
+     -7.5,
+     4.419,
+     15.77,
+     1.12
+    ],
+    "coll": 3,
+    "bld": 2,
+    "hooks": {},
+    "lamps": 0,
+    "ret": {
+     "w": 7.4,
+     "d": 7.5,
+     "h": 15.55
+    },
+    "hash": "79863a5d3925"
+   },
+   "block": {
+    "meshes": 3,
+    "hulls": 1,
+    "drawCalls": 4,
+    "shadowCasters": 2,
+    "tris": 12804,
+    "hullTris": 1234,
+    "trisInclHull": 14038,
+    "materials": 4,
+    "bbox": [
+     -13.771,
+     0.16,
+     -13.817,
+     13.822,
+     16.81,
+     13.67
+    ],
+    "coll": 28,
+    "bld": 14,
+    "hooks": {
+     "climb": 1
+    },
+    "lamps": 0,
+    "ret": {
+     "houses": 12,
+     "corners": [
+      "bar"
+     ]
+    },
+    "hash": "207ce64ac0ad"
+   }
+  }
+ },
+ "B": {
+  "sonnetKit": {
+   "lamp_acorn": {
+    "meshes": 2,
+    "hulls": 1,
+    "drawCalls": 3,
+    "shadowCasters": 1,
+    "tris": 268,
+    "hullTris": 42,
+    "trisInclHull": 310,
+    "materials": 3,
+    "bbox": [
+     -0.27,
+     0.16,
+     -0.27,
+     0.27,
+     5.3,
+     0.27
+    ],
+    "coll": 1,
+    "hooks": {},
+    "lamps": [
+     {
+      "x": 0,
+      "y": 4.66,
+      "z": 0
+     }
+    ],
+    "hash": "b18f3c602ad5"
+   },
+   "lamp_cobra": {
+    "meshes": 2,
+    "hulls": 1,
+    "drawCalls": 3,
+    "shadowCasters": 1,
+    "tris": 152,
+    "hullTris": 48,
+    "trisInclHull": 200,
+    "materials": 3,
+    "bbox": [
+     -0.476,
+     0.16,
+     -0.24,
+     0.476,
+     7.45,
+     1.97
+    ],
+    "coll": 1,
+    "hooks": {},
+    "lamps": [
+     {
+      "x": 0,
+      "y": 7.16,
+      "z": 1.55
+     }
+    ],
+    "hash": "268f43c4bd71"
+   },
+   "bench_park": {
+    "meshes": 1,
+    "hulls": 1,
+    "drawCalls": 2,
+    "shadowCasters": 1,
+    "tris": 110,
+    "hullTris": 40,
+    "trisInclHull": 150,
+    "materials": 2,
+    "bbox": [
+     -0.9,
+     0.16,
+     -0.313,
+     0.9,
+     1.06,
+     0.23
+    ],
+    "coll": 1,
+    "hooks": {
+     "seat": [
+      {
+       "x": 0,
+       "y": 0.61,
+       "z": 0,
+       "ang": 0
+      }
+     ]
+    },
+    "lamps": [],
+    "hash": "88270bb393c4"
+   },
+   "bench_bus": {
+    "meshes": 2,
+    "hulls": 1,
+    "drawCalls": 3,
+    "shadowCasters": 2,
+    "tris": 76,
+    "hullTris": 50,
+    "trisInclHull": 126,
+    "materials": 3,
+    "bbox": [
+     -0.86,
+     0.16,
+     -0.25,
+     1.36,
+     2.36,
+     0.25
+    ],
+    "coll": 1,
+    "hooks": {
+     "seat": [
+      {
+       "x": 0,
+       "y": 0.62,
+       "z": 0,
+       "ang": 0
+      }
+     ]
+    },
+    "lamps": [],
+    "hash": "b9fcfd929ed2"
+   },
+   "trash_can": {
+    "meshes": 1,
+    "hulls": 1,
+    "drawCalls": 2,
+    "shadowCasters": 1,
+    "tris": 72,
+    "hullTris": 16,
+    "trisInclHull": 88,
+    "materials": 2,
+    "bbox": [
+     -0.325,
+     0.16,
+     -0.325,
+     0.325,
+     1.093,
+     0.325
+    ],
+    "coll": 1,
+    "hooks": {},
+    "lamps": [],
+    "hash": "871cbeb33130"
+   },
+   "trash_can_recycling": {
+    "meshes": 2,
+    "hulls": 1,
+    "drawCalls": 3,
+    "shadowCasters": 2,
+    "tris": 156,
+    "hullTris": 32,
+    "trisInclHull": 188,
+    "materials": 3,
+    "bbox": [
+     -0.325,
+     0.16,
+     -0.325,
+     1.005,
+     1.093,
+     0.325
+    ],
+    "coll": 1,
+    "hooks": {},
+    "lamps": [],
+    "hash": "66b5d267e4d9"
+   },
+   "crab_shack": {
+    "meshes": 3,
+    "hulls": 1,
+    "drawCalls": 4,
+    "shadowCasters": 2,
+    "tris": 920,
+    "hullTris": 288,
+    "trisInclHull": 1208,
+    "materials": 4,
+    "bbox": [
+     -2.99,
+     0.16,
+     -1.694,
+     2.74,
+     4.858,
+     2.135
+    ],
+    "coll": 1,
+    "hooks": {},
+    "lamps": [
+     {
+      "x": 0,
+      "y": 3.3600000000000003,
+      "z": 1.7
+     }
+    ],
+    "hash": "bbf5c082b7b5"
+   },
+   "manhole": {
+    "meshes": 2,
+    "hulls": 0,
+    "drawCalls": 2,
+    "shadowCasters": 2,
+    "tris": 50,
+    "hullTris": 0,
+    "trisInclHull": 50,
+    "materials": 2,
+    "bbox": [
+     -0.46,
+     0.005,
+     -0.46,
+     0.46,
+     0.019,
+     0.46
+    ],
+    "coll": 0,
+    "hooks": {
+     "manhole": [
+      {
+       "x": 0,
+       "z": 0
+      }
+     ]
+    },
+    "lamps": [],
+    "hash": "c19b32b6dd3c"
+   },
+   "ladder_wall": {
+    "meshes": 1,
+    "hulls": 1,
+    "drawCalls": 2,
+    "shadowCasters": 1,
+    "tris": 190,
+    "hullTris": 16,
+    "trisInclHull": 206,
+    "materials": 2,
+    "bbox": [
+     -0.255,
+     0.16,
+     0.01,
+     0.255,
+     6.16,
+     0.175
+    ],
+    "coll": 0,
+    "hooks": {
+     "climb": [
+      {
+       "x": 0,
+       "z": 0.15,
+       "ang": 0,
+       "top": 6.16
+      }
+     ]
+    },
+    "lamps": [],
+    "hash": "e6a6c6b7f1b6"
+   },
+   "ladder_drop": {
+    "meshes": 1,
+    "hulls": 1,
+    "drawCalls": 2,
+    "shadowCasters": 1,
+    "tris": 98,
+    "hullTris": 26,
+    "trisInclHull": 124,
+    "materials": 2,
+    "bbox": [
+     -0.32,
+     1.645,
+     -0.15,
+     0.32,
+     4.045,
+     0.36
+    ],
+    "coll": 0,
+    "hooks": {
+     "climb": [
+      {
+       "x": 0,
+       "z": 0.15,
+       "ang": 0,
+       "top": 4.5600000000000005
+      }
+     ]
+    },
+    "lamps": [],
+    "hash": "f476e6768973"
+   },
+   "parked_car_sedan": {
+    "meshes": 3,
+    "hulls": 1,
+    "drawCalls": 4,
+    "shadowCasters": 2,
+    "tris": 522,
+    "hullTris": 96,
+    "trisInclHull": 618,
+    "materials": 4,
+    "bbox": [
+     -1.05,
+     0.016,
+     -2.325,
+     1.05,
+     1.46,
+     2.345
+    ],
+    "coll": 1,
+    "hooks": {},
+    "lamps": [],
+    "hash": "4971b1ac27d4"
+   },
+   "parked_car_hatchback": {
+    "meshes": 3,
+    "hulls": 1,
+    "drawCalls": 4,
+    "shadowCasters": 2,
+    "tris": 518,
+    "hullTris": 92,
+    "trisInclHull": 610,
+    "materials": 4,
+    "bbox": [
+     -1.025,
+     0.016,
+     -2.045,
+     1.025,
+     1.5,
+     2.065
+    ],
+    "coll": 1,
+    "hooks": {},
+    "lamps": [],
+    "hash": "fcb1c22bc84f"
+   },
+   "parked_car_pickup": {
+    "meshes": 2,
+    "hulls": 1,
+    "drawCalls": 3,
+    "shadowCasters": 1,
+    "tris": 504,
+    "hullTris": 130,
+    "trisInclHull": 634,
+    "materials": 3,
+    "bbox": [
+     -1.015,
+     0.019,
+     -2.78,
+     1.015,
+     1.68,
+     2.72
+    ],
+    "coll": 1,
+    "hooks": {},
+    "lamps": [],
+    "hash": "1e7a9692f7a0"
+   },
+   "water_taxi": {
+    "meshes": 4,
+    "hulls": 1,
+    "drawCalls": 5,
+    "shadowCasters": 3,
+    "tris": 1012,
+    "hullTris": 106,
+    "trisInclHull": 1118,
+    "materials": 5,
+    "bbox": [
+     -1.547,
+     0,
+     -4.55,
+     1.547,
+     4.07,
+     4.55
+    ],
+    "kind": "boat",
+    "seats": [
+     {
+      "x": -0.5,
+      "y": 0.9,
+      "z": 0.7500000476837159,
+      "ang": 0,
+      "pose": "stand"
+     },
+     {
+      "x": 0.95,
+      "y": 1.38,
+      "z": -0.4499999523162842,
+      "ang": -1.5707963267948966,
+      "pose": "sit"
+     },
+     {
+      "x": 0.95,
+      "y": 1.38,
+      "z": -1.7499999523162841,
+      "ang": -1.5707963267948966,
+      "pose": "sit"
+     },
+     {
+      "x": -0.95,
+      "y": 1.38,
+      "z": -1.0499999523162842,
+      "ang": 1.5707963267948966,
+      "pose": "sit"
+     }
+    ],
+    "collider": {
+     "w": 3,
+     "l": 9.1,
+     "h": 2.75
+    },
+    "waterline": 0.35,
+    "keys": [
+     "animate",
+     "collider",
+     "kind",
+     "parts",
+     "root",
+     "seats",
+     "waterline"
+    ],
+    "hash": "e8976526ed49"
+   },
+   "paddle_boat": {
+    "meshes": 4,
+    "hulls": 1,
+    "drawCalls": 5,
+    "shadowCasters": 3,
+    "tris": 880,
+    "hullTris": 332,
+    "trisInclHull": 1212,
+    "materials": 4,
+    "bbox": [
+     -0.995,
+     0,
+     -2.098,
+     0.995,
+     2.48,
+     2.098
+    ],
+    "kind": "boat",
+    "seats": [
+     {
+      "x": 0.35,
+      "y": 0.66,
+      "z": -0.0923395872116089,
+      "ang": 0,
+      "pose": "sit"
+     },
+     {
+      "x": -0.35,
+      "y": 0.66,
+      "z": -0.0923395872116089,
+      "ang": 0,
+      "pose": "sit"
+     }
+    ],
+    "collider": {
+     "w": 1.99,
+     "l": 4.2,
+     "h": 2.48
+    },
+    "waterline": 0.28,
+    "keys": [
+     "animate",
+     "collider",
+     "kind",
+     "parts",
+     "root",
+     "seats",
+     "waterline"
+    ],
+    "hash": "b233e935b5d6"
+   },
+   "dragon_boat": {
+    "meshes": 4,
+    "hulls": 1,
+    "drawCalls": 5,
+    "shadowCasters": 3,
+    "tris": 1703,
+    "hullTris": 272,
+    "trisInclHull": 1975,
+    "materials": 5,
+    "bbox": [
+     -0.642,
+     -0.7,
+     -7.224,
+     0.642,
+     2.341,
+     7.224
+    ],
+    "kind": "boat",
+    "seats": [
+     {
+      "x": 0,
+      "y": 1,
+      "z": 3.9264965534210203,
+      "ang": 3.141592653589793,
+      "pose": "sit"
+     },
+     {
+      "x": 0.28,
+      "y": 0.58,
+      "z": -0.5235034465789795,
+      "ang": 0,
+      "pose": "sit"
+     },
+     {
+      "x": -0.28,
+      "y": 0.58,
+      "z": -0.5235034465789795,
+      "ang": 0,
+      "pose": "sit"
+     },
+     {
+      "x": 0.1,
+      "y": 0.62,
+      "z": -5.57350344657898,
+      "ang": 0,
+      "pose": "stand"
+     }
+    ],
+    "collider": {
+     "w": 1.28,
+     "l": 14.45,
+     "h": 2.34
+    },
+    "waterline": 0.22,
+    "keys": [
+     "animate",
+     "collider",
+     "kind",
+     "parts",
+     "root",
+     "seats",
+     "waterline"
+    ],
+    "hash": "b3ebb17d8767"
+   },
+   "car_sedan": {
+    "meshes": 7,
+    "hulls": 1,
+    "drawCalls": 8,
+    "shadowCasters": 6,
+    "tris": 826,
+    "hullTris": 96,
+    "trisInclHull": 922,
+    "materials": 5,
+    "bbox": [
+     -1.05,
+     0,
+     -2.335,
+     1.05,
+     1.46,
+     2.335
+    ],
+    "kind": "car",
+    "seats": [
+     {
+      "x": 0.4,
+      "y": 0.62,
+      "z": 0.19000000953674318,
+      "ang": 0,
+      "pose": "lean_out",
+      "side": "left"
+     },
+     {
+      "x": -0.4,
+      "y": 0.62,
+      "z": 0.19000000953674318,
+      "ang": 0,
+      "pose": "lean_out",
+      "side": "right"
+     }
+    ],
+    "collider": {
+     "w": 1.9000000000000001,
+     "l": 4.67,
+     "h": 1.5
+    },
+    "waterline": 0,
+    "keys": [
+     "animate",
+     "collider",
+     "kind",
+     "parts",
+     "root",
+     "seats",
+     "waterline"
+    ],
+    "hash": "b4182e01a4c1"
+   },
+   "car_hatch": {
+    "meshes": 7,
+    "hulls": 1,
+    "drawCalls": 8,
+    "shadowCasters": 6,
+    "tris": 822,
+    "hullTris": 92,
+    "trisInclHull": 914,
+    "materials": 5,
+    "bbox": [
+     -1.025,
+     0,
+     -2.055,
+     1.025,
+     1.5,
+     2.055
+    ],
+    "kind": "car",
+    "seats": [
+     {
+      "x": 0.4,
+      "y": 0.62,
+      "z": 0.14000000953674316,
+      "ang": 0,
+      "pose": "lean_out",
+      "side": "left"
+     },
+     {
+      "x": -0.4,
+      "y": 0.62,
+      "z": 0.14000000953674316,
+      "ang": 0,
+      "pose": "lean_out",
+      "side": "right"
+     }
+    ],
+    "collider": {
+     "w": 1.85,
+     "l": 4.11,
+     "h": 1.5
+    },
+    "waterline": 0,
+    "keys": [
+     "animate",
+     "collider",
+     "kind",
+     "parts",
+     "root",
+     "seats",
+     "waterline"
+    ],
+    "hash": "aed0073ca7f0"
+   },
+   "box_truck": {
+    "meshes": 7,
+    "hulls": 1,
+    "drawCalls": 8,
+    "shadowCasters": 6,
+    "tris": 774,
+    "hullTris": 66,
+    "trisInclHull": 840,
+    "materials": 5,
+    "bbox": [
+     -1.298,
+     0,
+     -3.487,
+     1.298,
+     3.07,
+     3.487
+    ],
+    "kind": "car",
+    "seats": [
+     {
+      "x": 0.5,
+      "y": 1.35,
+      "z": 1.8125000476837159,
+      "ang": 0,
+      "pose": "sit"
+     },
+     {
+      "x": -0.5,
+      "y": 1.35,
+      "z": 1.8125000476837159,
+      "ang": 0,
+      "pose": "sit"
+     }
+    ],
+    "collider": {
+     "w": 2.6,
+     "l": 6.97,
+     "h": 3.07
+    },
+    "waterline": 0,
+    "keys": [
+     "animate",
+     "collider",
+     "kind",
+     "parts",
+     "root",
+     "seats",
+     "waterline"
+    ],
+    "hash": "8844b23fb39c"
+   },
+   "arabber_cart": {
+    "meshes": 10,
+    "hulls": 1,
+    "drawCalls": 11,
+    "shadowCasters": 9,
+    "tris": 2615,
+    "hullTris": 254,
+    "trisInclHull": 2869,
+    "materials": 5,
+    "bbox": [
+     -0.9,
+     -0.033,
+     -3.137,
+     0.9,
+     3.52,
+     3.137
+    ],
+    "kind": "cart",
+    "seats": [
+     {
+      "x": 0,
+      "y": 1.24,
+      "z": -0.6673537540435791,
+      "ang": 0,
+      "pose": "sit"
+     },
+     {
+      "x": 0,
+      "y": 0.5,
+      "z": -3.137353754043579,
+      "ang": 0,
+      "pose": "stand"
+     }
+    ],
+    "collider": {
+     "w": 1.8,
+     "l": 6.27,
+     "h": 3.52
+    },
+    "waterline": 0,
+    "keys": [
+     "animate",
+     "collider",
+     "kind",
+     "parts",
+     "root",
+     "seats",
+     "waterline"
+    ],
+    "hash": "548ed0358c5e"
+   },
+   "skateboard": {
+    "meshes": 3,
+    "hulls": 1,
+    "drawCalls": 4,
+    "shadowCasters": 3,
+    "tris": 328,
+    "hullTris": 48,
+    "trisInclHull": 376,
+    "materials": 3,
+    "bbox": [
+     -0.168,
+     0.012,
+     -0.462,
+     0.168,
+     0.163,
+     0.462
+    ],
+    "kind": "board",
+    "seats": [
+     {
+      "x": 0,
+      "y": 0.13,
+      "z": 0,
+      "ang": 1.5707963267948966,
+      "pose": "stand"
+     }
+    ],
+    "collider": {
+     "w": 0.34,
+     "l": 0.92,
+     "h": 0.16
+    },
+    "waterline": 0,
+    "keys": [
+     "animate",
+     "collider",
+     "kind",
+     "parts",
+     "root",
+     "seats",
+     "waterline"
+    ],
+    "hash": "7c290b6d9bbd"
+   }
+  },
+  "starterKit": {
+   "lamp_acorn": {
+    "meshes": 2,
+    "hulls": 1,
+    "drawCalls": 3,
+    "shadowCasters": 1,
+    "tris": 268,
+    "hullTris": 42,
+    "trisInclHull": 310,
+    "materials": 3,
+    "bbox": [
+     -0.27,
+     0.16,
+     -0.27,
+     0.27,
+     5.3,
+     0.27
+    ],
+    "coll": 1,
+    "hooks": {},
+    "lamps": [
+     {
+      "x": 0,
+      "y": 4.66,
+      "z": 0
+     }
+    ],
+    "hash": "b18f3c602ad5"
+   },
+   "lamp_cobra": {
+    "meshes": 2,
+    "hulls": 1,
+    "drawCalls": 3,
+    "shadowCasters": 1,
+    "tris": 152,
+    "hullTris": 48,
+    "trisInclHull": 200,
+    "materials": 3,
+    "bbox": [
+     -0.476,
+     0.16,
+     -0.24,
+     0.476,
+     7.45,
+     1.97
+    ],
+    "coll": 1,
+    "hooks": {},
+    "lamps": [
+     {
+      "x": 0,
+      "y": 7.16,
+      "z": 1.55
+     }
+    ],
+    "hash": "268f43c4bd71"
+   },
+   "bench_park": {
+    "meshes": 1,
+    "hulls": 1,
+    "drawCalls": 2,
+    "shadowCasters": 1,
+    "tris": 110,
+    "hullTris": 40,
+    "trisInclHull": 150,
+    "materials": 2,
+    "bbox": [
+     -0.9,
+     0.16,
+     -0.313,
+     0.9,
+     1.06,
+     0.23
+    ],
+    "coll": 1,
+    "hooks": {
+     "seat": [
+      {
+       "x": 0,
+       "y": 0.61,
+       "z": 0,
+       "ang": 0
+      }
+     ]
+    },
+    "lamps": [],
+    "hash": "88270bb393c4"
+   },
+   "bench_bus": {
+    "meshes": 2,
+    "hulls": 1,
+    "drawCalls": 3,
+    "shadowCasters": 2,
+    "tris": 76,
+    "hullTris": 50,
+    "trisInclHull": 126,
+    "materials": 3,
+    "bbox": [
+     -0.86,
+     0.16,
+     -0.25,
+     1.36,
+     2.36,
+     0.25
+    ],
+    "coll": 1,
+    "hooks": {
+     "seat": [
+      {
+       "x": 0,
+       "y": 0.62,
+       "z": 0,
+       "ang": 0
+      }
+     ]
+    },
+    "lamps": [],
+    "hash": "b9fcfd929ed2"
+   },
+   "trash_can": {
+    "meshes": 1,
+    "hulls": 1,
+    "drawCalls": 2,
+    "shadowCasters": 1,
+    "tris": 72,
+    "hullTris": 16,
+    "trisInclHull": 88,
+    "materials": 2,
+    "bbox": [
+     -0.325,
+     0.16,
+     -0.325,
+     0.325,
+     1.093,
+     0.325
+    ],
+    "coll": 1,
+    "hooks": {},
+    "lamps": [],
+    "hash": "871cbeb33130"
+   },
+   "trash_can_recycling": {
+    "meshes": 2,
+    "hulls": 1,
+    "drawCalls": 3,
+    "shadowCasters": 2,
+    "tris": 156,
+    "hullTris": 32,
+    "trisInclHull": 188,
+    "materials": 3,
+    "bbox": [
+     -0.325,
+     0.16,
+     -0.325,
+     1.005,
+     1.093,
+     0.325
+    ],
+    "coll": 1,
+    "hooks": {},
+    "lamps": [],
+    "hash": "66b5d267e4d9"
+   },
+   "crab_shack": {
+    "meshes": 3,
+    "hulls": 1,
+    "drawCalls": 4,
+    "shadowCasters": 2,
+    "tris": 920,
+    "hullTris": 288,
+    "trisInclHull": 1208,
+    "materials": 4,
+    "bbox": [
+     -2.99,
+     0.16,
+     -1.694,
+     2.74,
+     4.858,
+     2.135
+    ],
+    "coll": 1,
+    "hooks": {},
+    "lamps": [
+     {
+      "x": 0,
+      "y": 3.3600000000000003,
+      "z": 1.7
+     }
+    ],
+    "hash": "bbf5c082b7b5"
+   },
+   "manhole": {
+    "meshes": 2,
+    "hulls": 0,
+    "drawCalls": 2,
+    "shadowCasters": 2,
+    "tris": 50,
+    "hullTris": 0,
+    "trisInclHull": 50,
+    "materials": 2,
+    "bbox": [
+     -0.46,
+     0.005,
+     -0.46,
+     0.46,
+     0.019,
+     0.46
+    ],
+    "coll": 0,
+    "hooks": {
+     "manhole": [
+      {
+       "x": 0,
+       "z": 0
+      }
+     ]
+    },
+    "lamps": [],
+    "hash": "c19b32b6dd3c"
+   },
+   "ladder_wall": {
+    "meshes": 1,
+    "hulls": 1,
+    "drawCalls": 2,
+    "shadowCasters": 1,
+    "tris": 190,
+    "hullTris": 16,
+    "trisInclHull": 206,
+    "materials": 2,
+    "bbox": [
+     -0.255,
+     0.16,
+     0.01,
+     0.255,
+     6.16,
+     0.175
+    ],
+    "coll": 0,
+    "hooks": {
+     "climb": [
+      {
+       "x": 0,
+       "z": 0.15,
+       "ang": 0,
+       "top": 6.16
+      }
+     ]
+    },
+    "lamps": [],
+    "hash": "e6a6c6b7f1b6"
+   },
+   "ladder_drop": {
+    "meshes": 1,
+    "hulls": 1,
+    "drawCalls": 2,
+    "shadowCasters": 1,
+    "tris": 98,
+    "hullTris": 26,
+    "trisInclHull": 124,
+    "materials": 2,
+    "bbox": [
+     -0.32,
+     1.645,
+     -0.15,
+     0.32,
+     4.045,
+     0.36
+    ],
+    "coll": 0,
+    "hooks": {
+     "climb": [
+      {
+       "x": 0,
+       "z": 0.15,
+       "ang": 0,
+       "top": 4.5600000000000005
+      }
+     ]
+    },
+    "lamps": [],
+    "hash": "f476e6768973"
+   },
+   "parked_car_sedan": {
+    "meshes": 3,
+    "hulls": 1,
+    "drawCalls": 4,
+    "shadowCasters": 2,
+    "tris": 522,
+    "hullTris": 96,
+    "trisInclHull": 618,
+    "materials": 4,
+    "bbox": [
+     -1.05,
+     0.016,
+     -2.325,
+     1.05,
+     1.46,
+     2.345
+    ],
+    "coll": 1,
+    "hooks": {},
+    "lamps": [],
+    "hash": "4971b1ac27d4"
+   },
+   "parked_car_hatchback": {
+    "meshes": 3,
+    "hulls": 1,
+    "drawCalls": 4,
+    "shadowCasters": 2,
+    "tris": 518,
+    "hullTris": 92,
+    "trisInclHull": 610,
+    "materials": 4,
+    "bbox": [
+     -1.025,
+     0.016,
+     -2.045,
+     1.025,
+     1.5,
+     2.065
+    ],
+    "coll": 1,
+    "hooks": {},
+    "lamps": [],
+    "hash": "fcb1c22bc84f"
+   },
+   "parked_car_pickup": {
+    "meshes": 2,
+    "hulls": 1,
+    "drawCalls": 3,
+    "shadowCasters": 1,
+    "tris": 504,
+    "hullTris": 130,
+    "trisInclHull": 634,
+    "materials": 3,
+    "bbox": [
+     -1.015,
+     0.019,
+     -2.78,
+     1.015,
+     1.68,
+     2.72
+    ],
+    "coll": 1,
+    "hooks": {},
+    "lamps": [],
+    "hash": "1e7a9692f7a0"
+   },
+   "water_taxi": {
+    "meshes": 4,
+    "hulls": 1,
+    "drawCalls": 5,
+    "shadowCasters": 3,
+    "tris": 1012,
+    "hullTris": 106,
+    "trisInclHull": 1118,
+    "materials": 5,
+    "bbox": [
+     -1.547,
+     0,
+     -4.55,
+     1.547,
+     4.07,
+     4.55
+    ],
+    "kind": "boat",
+    "seats": [
+     {
+      "x": -0.5,
+      "y": 0.9,
+      "z": 0.7500000476837159,
+      "ang": 0,
+      "pose": "stand"
+     },
+     {
+      "x": 0.95,
+      "y": 1.38,
+      "z": -0.4499999523162842,
+      "ang": -1.5707963267948966,
+      "pose": "sit"
+     },
+     {
+      "x": 0.95,
+      "y": 1.38,
+      "z": -1.7499999523162841,
+      "ang": -1.5707963267948966,
+      "pose": "sit"
+     },
+     {
+      "x": -0.95,
+      "y": 1.38,
+      "z": -1.0499999523162842,
+      "ang": 1.5707963267948966,
+      "pose": "sit"
+     }
+    ],
+    "collider": {
+     "w": 3,
+     "l": 9.1,
+     "h": 2.75
+    },
+    "waterline": 0.35,
+    "keys": [
+     "animate",
+     "collider",
+     "kind",
+     "parts",
+     "root",
+     "seats",
+     "waterline"
+    ],
+    "hash": "e8976526ed49"
+   },
+   "paddle_boat": {
+    "meshes": 4,
+    "hulls": 1,
+    "drawCalls": 5,
+    "shadowCasters": 3,
+    "tris": 880,
+    "hullTris": 332,
+    "trisInclHull": 1212,
+    "materials": 4,
+    "bbox": [
+     -0.995,
+     0,
+     -2.098,
+     0.995,
+     2.48,
+     2.098
+    ],
+    "kind": "boat",
+    "seats": [
+     {
+      "x": 0.35,
+      "y": 0.66,
+      "z": -0.0923395872116089,
+      "ang": 0,
+      "pose": "sit"
+     },
+     {
+      "x": -0.35,
+      "y": 0.66,
+      "z": -0.0923395872116089,
+      "ang": 0,
+      "pose": "sit"
+     }
+    ],
+    "collider": {
+     "w": 1.99,
+     "l": 4.2,
+     "h": 2.48
+    },
+    "waterline": 0.28,
+    "keys": [
+     "animate",
+     "collider",
+     "kind",
+     "parts",
+     "root",
+     "seats",
+     "waterline"
+    ],
+    "hash": "b233e935b5d6"
+   },
+   "dragon_boat": {
+    "meshes": 4,
+    "hulls": 1,
+    "drawCalls": 5,
+    "shadowCasters": 3,
+    "tris": 1703,
+    "hullTris": 272,
+    "trisInclHull": 1975,
+    "materials": 5,
+    "bbox": [
+     -0.642,
+     -0.7,
+     -7.224,
+     0.642,
+     2.341,
+     7.224
+    ],
+    "kind": "boat",
+    "seats": [
+     {
+      "x": 0,
+      "y": 1,
+      "z": 3.9264965534210203,
+      "ang": 3.141592653589793,
+      "pose": "sit"
+     },
+     {
+      "x": 0.28,
+      "y": 0.58,
+      "z": -0.5235034465789795,
+      "ang": 0,
+      "pose": "sit"
+     },
+     {
+      "x": -0.28,
+      "y": 0.58,
+      "z": -0.5235034465789795,
+      "ang": 0,
+      "pose": "sit"
+     },
+     {
+      "x": 0.1,
+      "y": 0.62,
+      "z": -5.57350344657898,
+      "ang": 0,
+      "pose": "stand"
+     }
+    ],
+    "collider": {
+     "w": 1.28,
+     "l": 14.45,
+     "h": 2.34
+    },
+    "waterline": 0.22,
+    "keys": [
+     "animate",
+     "collider",
+     "kind",
+     "parts",
+     "root",
+     "seats",
+     "waterline"
+    ],
+    "hash": "b3ebb17d8767"
+   },
+   "car_sedan": {
+    "meshes": 7,
+    "hulls": 1,
+    "drawCalls": 8,
+    "shadowCasters": 6,
+    "tris": 826,
+    "hullTris": 96,
+    "trisInclHull": 922,
+    "materials": 5,
+    "bbox": [
+     -1.05,
+     0,
+     -2.335,
+     1.05,
+     1.46,
+     2.335
+    ],
+    "kind": "car",
+    "seats": [
+     {
+      "x": 0.4,
+      "y": 0.62,
+      "z": 0.19000000953674318,
+      "ang": 0,
+      "pose": "lean_out",
+      "side": "left"
+     },
+     {
+      "x": -0.4,
+      "y": 0.62,
+      "z": 0.19000000953674318,
+      "ang": 0,
+      "pose": "lean_out",
+      "side": "right"
+     }
+    ],
+    "collider": {
+     "w": 1.9000000000000001,
+     "l": 4.67,
+     "h": 1.5
+    },
+    "waterline": 0,
+    "keys": [
+     "animate",
+     "collider",
+     "kind",
+     "parts",
+     "root",
+     "seats",
+     "waterline"
+    ],
+    "hash": "b4182e01a4c1"
+   },
+   "car_hatch": {
+    "meshes": 7,
+    "hulls": 1,
+    "drawCalls": 8,
+    "shadowCasters": 6,
+    "tris": 822,
+    "hullTris": 92,
+    "trisInclHull": 914,
+    "materials": 5,
+    "bbox": [
+     -1.025,
+     0,
+     -2.055,
+     1.025,
+     1.5,
+     2.055
+    ],
+    "kind": "car",
+    "seats": [
+     {
+      "x": 0.4,
+      "y": 0.62,
+      "z": 0.14000000953674316,
+      "ang": 0,
+      "pose": "lean_out",
+      "side": "left"
+     },
+     {
+      "x": -0.4,
+      "y": 0.62,
+      "z": 0.14000000953674316,
+      "ang": 0,
+      "pose": "lean_out",
+      "side": "right"
+     }
+    ],
+    "collider": {
+     "w": 1.85,
+     "l": 4.11,
+     "h": 1.5
+    },
+    "waterline": 0,
+    "keys": [
+     "animate",
+     "collider",
+     "kind",
+     "parts",
+     "root",
+     "seats",
+     "waterline"
+    ],
+    "hash": "aed0073ca7f0"
+   },
+   "box_truck": {
+    "meshes": 7,
+    "hulls": 1,
+    "drawCalls": 8,
+    "shadowCasters": 6,
+    "tris": 774,
+    "hullTris": 66,
+    "trisInclHull": 840,
+    "materials": 5,
+    "bbox": [
+     -1.298,
+     0,
+     -3.487,
+     1.298,
+     3.07,
+     3.487
+    ],
+    "kind": "car",
+    "seats": [
+     {
+      "x": 0.5,
+      "y": 1.35,
+      "z": 1.8125000476837159,
+      "ang": 0,
+      "pose": "sit"
+     },
+     {
+      "x": -0.5,
+      "y": 1.35,
+      "z": 1.8125000476837159,
+      "ang": 0,
+      "pose": "sit"
+     }
+    ],
+    "collider": {
+     "w": 2.6,
+     "l": 6.97,
+     "h": 3.07
+    },
+    "waterline": 0,
+    "keys": [
+     "animate",
+     "collider",
+     "kind",
+     "parts",
+     "root",
+     "seats",
+     "waterline"
+    ],
+    "hash": "8844b23fb39c"
+   },
+   "arabber_cart": {
+    "meshes": 10,
+    "hulls": 1,
+    "drawCalls": 11,
+    "shadowCasters": 9,
+    "tris": 2615,
+    "hullTris": 254,
+    "trisInclHull": 2869,
+    "materials": 5,
+    "bbox": [
+     -0.9,
+     -0.033,
+     -3.137,
+     0.9,
+     3.52,
+     3.137
+    ],
+    "kind": "cart",
+    "seats": [
+     {
+      "x": 0,
+      "y": 1.24,
+      "z": -0.6673537540435791,
+      "ang": 0,
+      "pose": "sit"
+     },
+     {
+      "x": 0,
+      "y": 0.5,
+      "z": -3.137353754043579,
+      "ang": 0,
+      "pose": "stand"
+     }
+    ],
+    "collider": {
+     "w": 1.8,
+     "l": 6.27,
+     "h": 3.52
+    },
+    "waterline": 0,
+    "keys": [
+     "animate",
+     "collider",
+     "kind",
+     "parts",
+     "root",
+     "seats",
+     "waterline"
+    ],
+    "hash": "548ed0358c5e"
+   },
+   "skateboard": {
+    "meshes": 3,
+    "hulls": 1,
+    "drawCalls": 4,
+    "shadowCasters": 3,
+    "tris": 328,
+    "hullTris": 48,
+    "trisInclHull": 376,
+    "materials": 3,
+    "bbox": [
+     -0.168,
+     0.012,
+     -0.462,
+     0.168,
+     0.163,
+     0.462
+    ],
+    "kind": "board",
+    "seats": [
+     {
+      "x": 0,
+      "y": 0.13,
+      "z": 0,
+      "ang": 1.5707963267948966,
+      "pose": "stand"
+     }
+    ],
+    "collider": {
+     "w": 0.34,
+     "l": 0.92,
+     "h": 0.16
+    },
+    "waterline": 0,
+    "keys": [
+     "animate",
+     "collider",
+     "kind",
+     "parts",
+     "root",
+     "seats",
+     "waterline"
+    ],
+    "hash": "7c290b6d9bbd"
+   }
+  }
+ },
+ "kits": {},
+ "checks": {
+  "litRatio": {
+   "overall": 0.446,
+   "min": 0.32,
+   "max": 0.54,
+   "note": "front/upper windows counted by stats; side-wall windows (rowhouse ends) are not counted"
+  },
+  "blockSeeds": {
+   "trisMax": 15246,
+   "trisMin": 13914,
+   "dcSet": [
+    4
+   ],
+   "climbSet": [
+    1
+   ],
+   "minYmin": 0.16,
+   "xzExtent": [
+    -13.834,
+    -13.833,
+    13.828,
+    13.812
+   ],
+   "housesSet": [
+    10,
+    12,
+    11
+   ]
+  }
+ },
+ "determinism": {
+  "block": {
+   "same": true,
+   "differs": true,
+   "a": "207ce64ac0ad",
+   "b": "207ce64ac0ad",
+   "c": "8e59f0e9fd27"
+  },
+  "water_taxi": {
+   "same": true,
+   "seedChangesLook": false
+  },
+  "paddle_boat": {
+   "same": true,
+   "seedChangesLook": false
+  },
+  "dragon_boat": {
+   "same": true,
+   "seedChangesLook": false
+  },
+  "car_sedan": {
+   "same": true,
+   "seedChangesLook": true
+  },
+  "car_hatch": {
+   "same": true,
+   "seedChangesLook": true
+  },
+  "box_truck": {
+   "same": true,
+   "seedChangesLook": true
+  },
+  "arabber_cart": {
+   "same": true,
+   "seedChangesLook": false
+  },
+  "skateboard": {
+   "same": true,
+   "seedChangesLook": false
+  },
+  "atlasA": {
+   "identical": true,
+   "calls": 105298
+  },
+  "atlasB": {
+   "identical": true,
+   "calls": 1363
+  },
+  "kitsAgreeA": [
+   [
+    "rowhouse",
+    true
+   ],
+   [
+    "rowhouse_brick",
+    true
+   ],
+   [
+    "rowhouse_permastone",
+    true
+   ],
+   [
+    "rowhouse_4",
+    true
+   ],
+   [
+    "corner_bar",
+    true
+   ],
+   [
+    "corner_shop",
+    true
+   ],
+   [
+    "block",
+    true
+   ]
+  ],
+  "kitsAgreeB": [
+   [
+    "lamp_acorn",
+    true
+   ],
+   [
+    "lamp_cobra",
+    true
+   ],
+   [
+    "bench_park",
+    true
+   ],
+   [
+    "bench_bus",
+    true
+   ],
+   [
+    "trash_can",
+    true
+   ],
+   [
+    "trash_can_recycling",
+    true
+   ],
+   [
+    "crab_shack",
+    true
+   ],
+   [
+    "manhole",
+    true
+   ],
+   [
+    "ladder_wall",
+    true
+   ],
+   [
+    "ladder_drop",
+    true
+   ],
+   [
+    "parked_car_sedan",
+    true
+   ],
+   [
+    "parked_car_hatchback",
+    true
+   ],
+   [
+    "parked_car_pickup",
+    true
+   ],
+   [
+    "water_taxi",
+    true
+   ],
+   [
+    "paddle_boat",
+    true
+   ],
+   [
+    "dragon_boat",
+    true
+   ],
+   [
+    "car_sedan",
+    true
+   ],
+   [
+    "car_hatch",
+    true
+   ],
+   [
+    "box_truck",
+    true
+   ],
+   [
+    "arabber_cart",
+    true
+   ],
+   [
+    "skateboard",
+    true
+   ]
+  ],
+  "mathRandomCalls": 232580
+ },
+ "timing": {
+  "blockGeomMs": 39.7,
+  "blockGeomPlusBuildMs": 44.4,
+  "dragonAnimateUs": 12.6,
+  "cartAnimateUs": 0.82
+ },
+ "docCalls": {
+  "count": 11,
+  "sites": [
+   "    at file:///workspace/work/reviews/scratch_ab/starter_kit.mjs:122:22 |     at file:///workspace/work/reviews/scratch_ab/starter_kit.mjs:128:3 |     at ModuleJob.run (node:internal/modules/esm/module_job:343:25)",
+   "    at file:///workspace/work/reviews/scratch_ab/starter_kit.mjs:131:22 |     at file:///workspace/work/reviews/scratch_ab/starter_kit.mjs:135:3 |     at ModuleJob.run (node:internal/modules/esm/module_job:343:25)",
+   "    at file:///workspace/work/reviews/scratch_ab/starter_kit.mjs:137:22 |     at file:///workspace/work/reviews/scratch_ab/starter_kit.mjs:141:3 |     at ModuleJob.run (node:internal/modules/esm/module_job:343:25)",
+   "    at Object.makeAtlas sonnet_kit.mjs:175 |     at atlas measure_ab.mjs:26 |     at rowhouse measure_ab.mjs:30",
+   "    at Object.makeAtlas starter_kit.mjs:426 |     at atlas measure_ab.mjs:26 |     at rowhouse measure_ab.mjs:30",
+   "    at Object.makeAtlas sonnet_kit.mjs:175 |     at atlas measure_ab.mjs:26 |     at file:///workspace/work/reviews/scratch_ab/measure_ab.mjs:53:106",
+   "    at Object.makeAtlas starter_kit.mjs:426 |     at atlas measure_ab.mjs:26 |     at file:///workspace/work/reviews/scratch_ab/measure_ab.mjs:53:106",
+   "    at Object.makeAtlas sonnet_kit.mjs:175 |     at file:///workspace/work/reviews/scratch_ab/measure_ab.mjs:64:52",
+   "    at Object.makeAtlas sonnet_kit.mjs:175 |     at file:///workspace/work/reviews/scratch_ab/measure_ab.mjs:64:173"
+  ]
+ }
+}

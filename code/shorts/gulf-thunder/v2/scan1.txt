@@ -1,0 +1,193 @@
+30 stage1 0.5 play 0  boat  shot,shot,shot,shot,shot
+60 stage1 1 play 0  boat  shot,shot,shot,shot
+90 stage1 1.5 play 0  boat  shot,shot,shot,shot
+120 stage1 2 play 0  boat  shot,shot,shot,shot,shot
+150 stage1 2.5 play 0  boat  shot,shot,shot,shot
+180 stage1 3 play 0  boat  shot,shot,shot,shot
+210 stage1 3.5 play 0  boat  shot,shot,shot,shot
+240 stage1 4 play 0  boat  shot,shot,shot,shot,shot
+270 stage1 4.5 play 3  boat  shot,shot,shot,shot
+300 stage1 5 play 3  boat  shot,shot,shot,shot
+330 stage1 5.5 play 1  boat  shot,small,small,shot,shot,shot,shot
+360 stage1 6 play 1  boat  shot,shot,shot,shot
+390 stage1 6.5 play 1  boat  shot,shot,shot,shot
+420 stage1 7 play 2  boat  shot,shot,small,shot,shot,small
+450 stage1 7.5 play 1  boat  shot,small,shot,shot,shot,shot
+480 stage1 8 play 1  boat  shot,shot,shot,shot
+510 stage1 8.5 play 0  boat  shot,shot,shot,shot,small
+540 stage1 9 play 1  boat  shot,shot,shot,shot,shot
+570 stage1 9.5 play 4  boat  shot,shot,shot,shot
+600 stage1 10 play 3  boat  shot,shot,shot,small,shot
+630 stage1 10.5 play 3  boat  shot,small,shot,shot,shot
+660 stage1 11 play 2  boat  shot,shot,shot,shot,small,shot
+690 stage1 11.5 play 2  boat  shot,shot,shot,shot
+720 stage1 12 play 7  boat  shot,shot,small,shot,shot
+750 stage1 12.5 play 7  boat  missile,shot,missile,missile,missile,missile,missile,shot,shot,shot,shot
+780 stage1 13 play 6  boat  shot,shot,boom,shot,shot
+810 stage1 13.5 play 1  boat  small,small,shot,small,small,shot,shot,boom,small,shot
+840 stage1 14 play 1  boat  shot,shot,shot,shot
+870 stage1 14.5 play 1  boat  shot,shot,shot,shot,shot
+900 stage1 15 play 1  boat  shot,shot,shot,shot
+930 stage1 15.5 play 2  boat  shot,shot,shot,shot
+960 stage1 16 play 2  boat  shot,shot,shot,shot,shot
+990 stage1 16.5 play 2  boat  shot,shot,shot,shot
+1020 stage1 17 play 3  boat  shot,shot,shot,shot
+1050 stage1 17.5 play 3  boat  shot,shot,shot,shot
+1080 stage1 18 play 5  boat  shot,shot,shot,shot,shot
+1110 stage1 18.5 play 6  boat  shot,shot,shot,shot
+1140 stage1 19 play 6  boat  shot,shot,shot,shot
+1170 stage1 19.5 play 6  boat  shot,shot,shot,shot,shot
+1200 stage1 20 play 7  boat  shot,shot,shot,shot
+1230 stage1 20.5 play 6  boat  eshot,eshot,shot,shot,shot,shot,small
+1260 stage1 21 play 5  boat  shot,shot,shot,boom,shot
+1290 stage1 21.5 play 6  boat  shot,shot,shot,shot,shot
+1320 stage1 22 play 7  boat  shot,shot,shot,shot
+1350 stage1 22.5 play 8  boat  eshot,shot,shot,small,shot,pickup,shot
+1380 stage1 23 play 7  boat  shot,shot,shot,shot,small,shot
+1410 stage1 23.5 play 8  boat  eshot,shot,shot,shot,shot
+1440 stage1 24 play 6  boat  eshot,eshot,shot,shot,shot,small,shot
+1470 stage1 24.5 play 6  boat  eshot,shot,shot,shot,boom,shot
+1500 stage1 25 play 5  boat  eshot,shot,shot,small,shot,shot,small,shot
+1530 stage1 25.5 play 4  boat  eshot,shot,shot,shot,shot
+1560 stage1 26 play 4  boat  eshot,shot,shot,shot,shot
+1590 stage1 26.5 play 6  boat  eshot,shot,shot,shot,shot,shot
+1620 stage1 27 play 5  boat  eshot,eshot,shot,shot,shot,shot
+1650 stage1 27.5 play 5  boat  eshot,shot,shot,shot,shot
+1680 stage1 28 play 6  boat  eshot,eshot,shot,shot,shot,shot
+1710 stage1 28.5 play 8  boat  eshot,eshot,shot,shot,shot,shot,shot
+1740 stage1 29 play 7  boat  small,shot,shot,shot,shot
+1770 stage1 29.5 play 7  boat  eshot,eshot,eshot,shot,shot,shot,shot
+1800 stage1 30 play 8  boat  eshot,eshot,shot,shot,shot,shot,shot
+1830 stage1 30.5 play 8  boat  eshot,shot,shot,small,shot,boom,shot
+1860 stage1 31 play 8  boat  eshot,eshot,shot,boom,shot,shot,shot
+1890 stage1 31.5 play 8  boat  eshot,eshot,eshot,eshot,shot,shot,shot,shot
+1920 stage1 32 play 8  boat  eshot,eshot,eshot,shot,shot,shot,shot,shot
+1950 stage1 32.5 play 8  boat  shot,shot,shot,shot
+1980 stage1 33 play 9  boat  eshot,eshot,eshot,shot,shot,shot,shot
+2010 stage1 33.5 play 9  boat  eshot,shot,shot,shot,shot,shot
+2040 stage1 34 play 9  boat  eshot,eshot,eshot,shot,shot,shot,shot
+2070 stage1 34.5 play 11  boat  shot,shot,shot,shot
+2100 stage1 35 play 9  boat  eshot,eshot,shot,small,shot,shot,shot
+2130 stage1 35.5 play 8  boat  eshot,shot,shot,small,shot,shot,shot
+2160 stage1 36 play 7  boat  eshot,shot,shot,shot,shot
+2190 stage1 36.5 play 6  boat  eshot,boom,shot,shot,shot,shot
+2220 stage1 37 play 6  boat  eshot,shot,shot,shot,shot,shot
+2250 stage1 37.5 play 7  boat  eshot,eshot,eshot,shot,shot,shot,shot
+2280 stage1 38 play 6  boat  small,shot,shot,shot,shot,small
+2310 stage1 38.5 play 5  boat  shot,shot,shot,shot
+2340 stage1 39 play 5  boat  eshot,shot,shot,shot,shot,shot
+2370 stage1 39.5 play 6  boat  eshot,shot,shot,shot,shot
+2400 stage1 40 play 4  boat  shot,shot,small,shot,shot,small
+2430 stage1 40.5 play 5  boat  eshot,shot,shot,shot,shot,shot
+2460 stage1 41 play 6  boat  eshot,shot,shot,shot,shot
+2490 stage1 41.5 play 4  boat  eshot,eshot,shot,shot,shot,small,shot
+2520 stage1 42 play 4  boat  eshot,shot,shot,shot,shot
+2550 stage1 42.5 play 4  boat  shot,shot,shot,shot,shot
+2580 stage1 43 play 4  boat  eshot,shot,shot,shot,small,shot
+2610 stage1 43.5 play 4  boat  shot,shot,shot,shot
+2640 stage1 44 play 4  boat  eshot,shot,small,shot,shot,shot,shot
+2670 stage1 44.5 play 7  boat  shot,shot,shot,shot
+2700 stage1 45 play 7  boat  eshot,shot,shot,shot,shot
+2730 stage1 45.5 play 7  boat  eshot,shot,shot,shot,shot
+2760 stage1 46 play 6  boat  shot,boom,small,shot,shot,shot,shot
+2790 stage1 46.5 play 6  boat  eshot,eshot,shot,shot,shot,shot
+2820 stage1 47 play 7  boat  shot,shot,shot,shot,small
+2850 stage1 47.5 play 8  boat  eshot,eshot,shot,shot,shot,shot,shot
+2880 stage1 48 play 6  boat  small,shot,shot,shot,shot
+2910 stage1 48.5 play 6  boat  eshot,eshot,shot,shot,shot,shot
+2940 stage1 49 play 5  boat  eshot,eshot,shot,shot,shot,shot
+2970 stage1 49.5 play 6  boat  eshot,shot,shot,shot,shot,shot
+3000 stage1 50 play 6  boat  eshot,shot,shot,shot,shot
+3030 stage1 50.5 play 7  boat  eshot,shot,shot,shot,shot
+3060 stage1 51 play 7  boat  eshot,shot,shot,shot,shot,shot
+3090 stage1 51.5 play 6  boat  eshot,eshot,shot,small,shot,shot,shot
+3120 stage1 52 play 6  boat  eshot,shot,shot,shot,shot
+3150 stage1 52.5 play 5  boat  eshot,eshot,shot,shot,shot,shot
+3180 stage1 53 play 4  boat  eshot,shot,shot,shot,shot,shot
+3210 stage1 53.5 play 4  boat  shot,shot,shot,shot
+3240 stage1 54 play 3  boat  eshot,shot,boom,shot,shot,pickup,shot
+3270 stage1 54.5 play 2  boat  eshot,shot,shot,shot,shot,shot
+3300 stage1 55 play 2  boat  shot,shot,shot,shot
+3330 stage1 55.5 play 2  boat  eshot,eshot,shot,shot,shot,shot
+3360 stage1 56 play 1  boat  eshot,eshot,shot,shot,shot,shot
+3390 stage1 56.5 play 1 RED TIDE YACHT:216 boat [WARNING!] shot,shot,shot,shot,shot
+3420 stage1 57 play 1 RED TIDE YACHT:212 boat [WARNING!] eshot,shot,shot,shot,shot
+3450 stage1 57.5 play 1 RED TIDE YACHT:207 boat [WARNING!] eshot,shot,shot,shot,shot
+3480 stage1 58 play 1 RED TIDE YACHT:202 boat [WARNING!] eshot,shot,shot,shot,shot,shot
+3510 stage1 58.5 play 1 RED TIDE YACHT:200 boat  shot,shot,shot,shot
+3540 stage1 59 play 1 RED TIDE YACHT:196 boat  shot,shot,shot,shot
+3570 stage1 59.5 play 1 RED TIDE YACHT:193 boat  eshot,eshot,shot,shot,shot,shot
+3600 stage1 60 play 0 RED TIDE YACHT:187 boat  shot,shot,shot,shot,shot
+3630 stage1 60.5 play 0 RED TIDE YACHT:182 boat  shot,shot,shot,shot
+3660 stage1 61 play 0 RED TIDE YACHT:174 boat  eshot,eshot,shot,shot,shot,shot
+3690 stage1 61.5 play 0 RED TIDE YACHT:170 boat  shot,shot,shot,shot,eshot,eshot,shot
+3720 stage1 62 play 0 RED TIDE YACHT:165 boat  shot,shot,shot,shot
+3750 stage1 62.5 play 0 RED TIDE YACHT:161 boat  shot,shot,shot,eshot,eshot,shot
+3780 stage1 63 play 0 RED TIDE YACHT:156 boat  eshot,eshot,eshot,eshot,eshot,eshot,eshot,shot,shot,shot,shot
+3810 stage1 63.5 play 0 RED TIDE YACHT:148 boat  shot,shot,eshot,eshot,shot,shot,shot
+3840 stage1 64 play 0 RED TIDE YACHT:138 boat  shot,shot,shot,shot
+3870 stage1 64.5 play 0 RED TIDE YACHT:130 boat  shot,eshot,eshot,shot,shot,shot
+3900 stage1 65 play 0 RED TIDE YACHT:124 boat  shot,shot,shot,small,shot,small,shot
+3930 stage1 65.5 play 0 RED TIDE YACHT:118 boat  eshot,eshot,shot,shot,shot,shot
+3960 stage1 66 play 0 RED TIDE YACHT:114 boat  shot,shot,eshot,eshot,eshot,eshot,eshot,eshot,eshot,shot,eshot,eshot,shot
+3990 stage1 66.5 play 0 RED TIDE YACHT:110 boat  shot,shot,shot,shot
+4020 stage1 67 play 0 RED TIDE YACHT:109 boat  shot,shot,shot,eshot,eshot,shot,shot
+4050 stage1 67.5 play 0 RED TIDE YACHT:106 boat  shot,shot,shot,shot
+4080 stage1 68 play 0 RED TIDE YACHT:101 boat  shot,shot,eshot,eshot,shot,shot
+4110 stage1 68.5 play 0 RED TIDE YACHT:98 boat  shot,shot,shot,shot,shot
+4140 stage1 69 play 0 RED TIDE YACHT:94 boat  shot,eshot,eshot,shot,shot,shot,eshot,eshot,eshot,eshot,eshot,eshot,eshot
+4170 stage1 69.5 play 0 RED TIDE YACHT:89 boat  shot,shot,shot,shot
+4200 stage1 70 play 0 RED TIDE YACHT:85 boat  eshot,eshot,shot,shot,shot,shot
+4230 stage1 70.5 play 0 RED TIDE YACHT:80 boat  shot,shot,shot,shot,eshot,eshot,shot
+4260 stage1 71 play 1 RED TIDE YACHT:78 boat  shot,small,shot,shot,shot
+4290 stage1 71.5 play 1 RED TIDE YACHT:74 boat  shot,shot,eshot,eshot,eshot,eshot,eshot,eshot,eshot,shot,eshot,eshot,shot
+4320 stage1 72 play 1 RED TIDE YACHT:68 boat  shot,shot,shot,shot,shot
+4350 stage1 72.5 play 1 RED TIDE YACHT:62 boat  shot,eshot,eshot,shot,shot,shot
+4380 stage1 73 play 1 RED TIDE YACHT:58 boat  shot,shot,shot,shot
+4410 stage1 73.5 play 1 RED TIDE YACHT:53 boat  shot,eshot,eshot,shot,shot,shot,eshot,eshot,eshot,eshot,eshot,eshot,eshot
+4440 stage1 74 play 1 RED TIDE YACHT:49 boat  shot,shot,shot,shot,shot
+4470 stage1 74.5 play 0 RED TIDE YACHT:45 boat  eshot,eshot,shot,shot,shot,shot
+4500 stage1 75 play 0 RED TIDE YACHT:41 boat  shot,shot,shot,shot,eshot,eshot
+4530 stage1 75.5 play 0 RED TIDE YACHT:36 boat  shot,shot,shot,shot,shot
+4560 stage1 76 play 0 RED TIDE YACHT:32 boat  shot,eshot,eshot,eshot,eshot,eshot,eshot,eshot,shot,eshot,eshot,shot,shot
+4590 stage1 76.5 play 0 RED TIDE YACHT:29 boat  shot,shot,shot,shot
+4620 stage1 77 play 2 RED TIDE YACHT:27 boat  shot,shot,eshot,eshot,shot,shot
+4650 stage1 77.5 play 0 RED TIDE YACHT:24 boat  shot,small,shot,small,shot,shot,shot
+4680 stage1 78 play 0 RED TIDE YACHT:21 boat  shot,eshot,eshot,shot,shot,eshot,eshot,eshot,eshot,eshot,eshot,eshot,shot
+4710 stage1 78.5 play 0 RED TIDE YACHT:17 boat  shot,shot,shot,shot
+4740 stage1 79 play 0 RED TIDE YACHT:14 boat  eshot,eshot,shot,shot,shot,shot,shot
+4770 stage1 79.5 play 0 RED TIDE YACHT:4 boat  shot,shot,shot,eshot,eshot,shot
+4800 stage1 80 play 0 RED TIDE YACHT:0D boat  shot,shot,boom,boom,shot,shot
+4830 stage1 80.5 play 0 RED TIDE YACHT:0D boat  small,shot,boom,boom,shot,boom,boom,shot,boom,shot,small,boom,boom
+4860 stage1 81 play 0 RED TIDE YACHT:0D boat  shot,boom,boom,shot,boom,boom,shot,boom,shot,boom,boom,boom,shot,boom
+4890 stage1 81.5 play 0 RED TIDE YACHT:0D boat  boom,shot,boom,boom,boom,shot,boom,shot,boom,shot,boom
+4920 stage1 82 play 0  boat  shot,boom,small,shot,small,shot,boom,boom,boom,boom,shot,bigboom
+4950 stage1 82.5 play 0  boat  shot,shot,shot,shot,shot
+4980 stage1 83 play 0  boat  shot,shot,shot,shot
+5010 stage1 83.5 play 0  boat  shot,shot,shot,shot
+5040 stage1 84 play 0  boat  shot,shot,shot,shot
+5070 stage1 84.5 play 0  boat  shot,shot,shot,shot,shot
+5100 stage1 85 play 0  boat  shot,shot,shot,shot
+5130 stage1 85.5 play 0  boat  shot,shot,shot,shot
+5160 stage1 86 play 0  boat  shot,shot,shot,shot,shot
+5190 stage1 86.5 play 0  boat  shot,shot,shot,shot
+5220 stage1 87 play 0  boat  shot,shot,shot,shot
+5250 stage1 87.5 play 0  boat  shot,shot,shot,shot
+5280 stage1 88 play 0  boat  shot,shot,shot,shot,shot
+5310 stage1 88.5 play 0  boat  shot,shot,shot,shot
+5340 stage1 89 play 0  boat  shot,shot,shot,shot
+5370 stage1 89.5 play 0  boat  shot,shot,shot,shot,shot
+5400 stage1 90 play 0  boat  shot,shot,shot,shot
+5430 stage1 90.5 play 0  boat  shot,shot,shot,shot
+5460 stage1 91 play 0  boat  shot,shot,shot,shot
+5490 stage1 91.5 play 0  boat  shot,shot,shot,shot,shot
+5520 stage1 92 play 0  boat  shot,shot,shot,shot
+5550 stage1 92.5 dock 0  boat  shot
+5580 stage1 93 dock 0  boat [STAGE CLEAR!] clear
+5610 stage1 93.5 dock 0  boat [STAGE CLEAR!] 
+5640 stage1 94 dock 0  boat [STAGE CLEAR!] 
+5670 stage1 94.5 dock 0  boat [STAGE CLEAR!] 
+5700 stage1 95 dock 0  boat [STAGE CLEAR!] 
+5730 stage1 95.5 dock 0  boat [STAGE CLEAR!] 
+5760 stage1 96 dock 0  boat [STAGE CLEAR!] 
+5790 story1 undefined undefined 0    type,type,type,type,type,type,type

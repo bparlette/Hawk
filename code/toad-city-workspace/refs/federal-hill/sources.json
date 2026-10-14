@@ -1,0 +1,27 @@
+{
+ "park_1.jpg": {
+  "title": "File:FederalHillPark.jpg",
+  "page": "https://commons.wikimedia.org/wiki/File:FederalHillPark.jpg",
+  "query": "Federal Hill Park Baltimore"
+ },
+ "park_2.jpg": {
+  "title": "File:Baltimore's Inner Harbor, viewed from a slope of Federal Hill Park.jpg",
+  "page": "https://commons.wikimedia.org/wiki/File:Baltimore%27s_Inner_Harbor,_viewed_from_a_slope_of_Federal_Hill_Park.jpg",
+  "query": "Federal Hill Park Baltimore"
+ },
+ "park_3.jpg": {
+  "title": "File:Federal Hill Park.jpg",
+  "page": "https://commons.wikimedia.org/wiki/File:Federal_Hill_Park.jpg",
+  "query": "Federal Hill Park Baltimore"
+ },
+ "view_1.jpg": {
+  "title": "File:Baltimore Inner Harbor Skyline Night Panorama.jpg",
+  "page": "https://commons.wikimedia.org/wiki/File:Baltimore_Inner_Harbor_Skyline_Night_Panorama.jpg",
+  "query": "view from Federal Hill Baltimore skyline"
+ },
+ "fh_1.jpg": {
+  "title": "File:A view of Inner Harbor from Federal Hill Park.jpg",
+  "page": "https://commons.wikimedia.org/wiki/File:A_view_of_Inner_Harbor_from_Federal_Hill_Park.jpg",
+  "query": "Federal Hill Baltimore Inner Harbor view"
+ }
+}

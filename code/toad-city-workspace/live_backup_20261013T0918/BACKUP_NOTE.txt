@@ -1,0 +1,1 @@
+Backup of live toad-city-baltimore.surge.sh taken Tue Oct 13 09:19:27 UTC 2026 before wave2a deploy. Files fetched from live (index.html, game.js, viewer*, three, webp, font, home/index.html) + remaining assets from git 0572db7:site (live game.js md5 6b50aa8f == 0572db7).

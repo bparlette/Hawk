@@ -1,0 +1,177 @@
+[
+ {
+  "name": "hook",
+  "stage": null,
+  "part": "hook",
+  "t0": 0,
+  "t1": 1.5
+ },
+ {
+  "name": "title",
+  "stage": null,
+  "part": "title",
+  "t0": 1.5,
+  "t1": 4.5
+ },
+ {
+  "name": "s1banner",
+  "stage": 1,
+  "part": "banner",
+  "t0": 4.5,
+  "t1": 5.5
+ },
+ {
+  "name": "s1play",
+  "stage": 1,
+  "part": "gameplay",
+  "t0": 5.5,
+  "t1": 9.033
+ },
+ {
+  "name": "s1intro",
+  "stage": 1,
+  "part": "boss",
+  "t0": 9.033,
+  "t1": 10.033
+ },
+ {
+  "name": "s1ko",
+  "stage": 1,
+  "part": "boss+KO",
+  "t0": 10.033,
+  "t1": 13.4
+ },
+ {
+  "name": "s2banner",
+  "stage": 2,
+  "part": "banner",
+  "t0": 13.4,
+  "t1": 14.4
+ },
+ {
+  "name": "s2play",
+  "stage": 2,
+  "part": "gameplay",
+  "t0": 14.4,
+  "t1": 17.933
+ },
+ {
+  "name": "s2intro",
+  "stage": 2,
+  "part": "boss",
+  "t0": 17.933,
+  "t1": 18.933
+ },
+ {
+  "name": "s2ko",
+  "stage": 2,
+  "part": "boss+KO",
+  "t0": 18.933,
+  "t1": 22.133
+ },
+ {
+  "name": "s3banner",
+  "stage": 3,
+  "part": "banner",
+  "t0": 22.133,
+  "t1": 23.133
+ },
+ {
+  "name": "s3play",
+  "stage": 3,
+  "part": "gameplay",
+  "t0": 23.133,
+  "t1": 26.567
+ },
+ {
+  "name": "s3intro",
+  "stage": 3,
+  "part": "boss",
+  "t0": 26.567,
+  "t1": 27.567
+ },
+ {
+  "name": "s3ko",
+  "stage": 3,
+  "part": "boss+KO",
+  "t0": 27.567,
+  "t1": 29.133
+ },
+ {
+  "name": "s3replay",
+  "stage": 3,
+  "part": "replay",
+  "t0": 29.133,
+  "t1": 32.733
+ },
+ {
+  "name": "s4banner",
+  "stage": 4,
+  "part": "banner",
+  "t0": 32.733,
+  "t1": 33.733
+ },
+ {
+  "name": "s4play",
+  "stage": 4,
+  "part": "gameplay",
+  "t0": 33.733,
+  "t1": 37.233
+ },
+ {
+  "name": "s4intro",
+  "stage": 4,
+  "part": "boss",
+  "t0": 37.233,
+  "t1": 38.233
+ },
+ {
+  "name": "s4ko",
+  "stage": 4,
+  "part": "boss+KO",
+  "t0": 38.233,
+  "t1": 41.667
+ },
+ {
+  "name": "s5banner",
+  "stage": 5,
+  "part": "banner",
+  "t0": 41.667,
+  "t1": 42.667
+ },
+ {
+  "name": "s5play",
+  "stage": 5,
+  "part": "gameplay",
+  "t0": 42.667,
+  "t1": 46.2
+ },
+ {
+  "name": "s5intro",
+  "stage": 5,
+  "part": "boss",
+  "t0": 46.2,
+  "t1": 48.2
+ },
+ {
+  "name": "s5ko",
+  "stage": 5,
+  "part": "boss+KO",
+  "t0": 48.2,
+  "t1": 49.4
+ },
+ {
+  "name": "s5replay",
+  "stage": 5,
+  "part": "replay",
+  "t0": 49.4,
+  "t1": 52.4
+ },
+ {
+  "name": "end",
+  "stage": null,
+  "part": "end",
+  "t0": 52.4,
+  "t1": 55.4
+ }
+]

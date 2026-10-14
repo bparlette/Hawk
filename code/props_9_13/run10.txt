@@ -1,0 +1,22 @@
+f68: loading scene
+f239: stage lvl=10 section=L0
+f289: bark: WHOA! A PIRATE SHIP?! WHAT YEAR IS IT?
+f2290: bark: BLADE AND HONOR!
+f3254: dodge seen
+f3266: bark: FORM IS EVERYTHING!
+f4126: stage lvl=10 section=L1
+f4127: boss fight lvl=10 ARMAGGON
+f5347: bark: FEEDING FRENZY! KEEP MOVING!
+f5594: taunt seen: TOO SCARED?
+f5787: bark: BY THE BOOK!
+f6071: bark: STAY SHARP!
+f6248: outro lvl=10
+f6272: bark: CHUM'S UP, SHARK-FACE!
+f6418: bark: THE RIFT! IS THAT... A TRAIN?!
+f6718: pizza lvl=10
+f6888: results lvl=10
+f7393: stage lvl=11 section=L0
+f7606: fell in a hole lvl=11
+f9248: bark: MMM, EXTRA CHEESE!
+scripts loaded=levels/level10.js,levels/level11.js missing= SS=object
+END f=9500 scene=stage level=11 kills=11 levelsWithResults=10

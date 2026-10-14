@@ -1,0 +1,57 @@
+[
+ {
+  "out": "shots/corner_bar_fit_day.png",
+  "q": "show=corner_bar&hud=0&yaw=40&pitch=12&zoom=0.8",
+  "errs": [],
+  "verr": [],
+  "stats": {
+   "calls": 7,
+   "tris": 2138
+  },
+  "extra": null
+ },
+ {
+  "out": "shots/corner_shop_fit_day.png",
+  "q": "show=corner_shop&hud=0&yaw=40&pitch=12&zoom=0.8",
+  "errs": [],
+  "verr": [],
+  "stats": {
+   "calls": 7,
+   "tris": 2024
+  },
+  "extra": null
+ },
+ {
+  "out": "shots/corner_shop_fit_night.png",
+  "q": "show=corner_shop&hud=0&yaw=40&pitch=12&zoom=0.8&night=1",
+  "errs": [],
+  "verr": [],
+  "stats": {
+   "calls": 7,
+   "tris": 2024
+  },
+  "extra": null
+ },
+ {
+  "out": "shots/street_westend_day.png",
+  "q": "show=street&hud=0&pos=-20,4,-5&look=-12,4,-10&fov=62",
+  "errs": [],
+  "verr": [],
+  "stats": {
+   "calls": 8,
+   "tris": 28420
+  },
+  "extra": null
+ },
+ {
+  "out": "shots/street_westend_night.png",
+  "q": "show=street&hud=0&night=1&pos=-20,4,-5&look=-12,4,-10&fov=62",
+  "errs": [],
+  "verr": [],
+  "stats": {
+   "calls": 8,
+   "tris": 28420
+  },
+  "extra": null
+ }
+]

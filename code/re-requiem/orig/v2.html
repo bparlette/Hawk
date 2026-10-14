@@ -1,0 +1,1166 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>RESIDENT EVIL: REQUIEM — RE Engine WebGL Edition</title>
+  <style>
+    * { box-sizing: border-box; user-select: none; margin: 0; padding: 0; }
+    body {
+      background: #030305; color: #dcdcdc;
+      font-family: 'Segoe UI', Roboto, Helvetica, serif;
+      overflow: hidden; width: 100vw; height: 100vh;
+      display: flex; align-items: center; justify-content: center;
+    }
+    #viewport-wrap {
+      position: relative; width: 100vw; height: 100vh;
+      overflow: hidden; background: #000;
+      transition: width 0.35s ease, height 0.35s ease, border 0.35s ease;
+    }
+    #viewport-wrap.shorts-mode {
+      width: calc(100vh * (9 / 16));
+      height: 100vh;
+      border-left: 2px solid #331111;
+      border-right: 2px solid #331111;
+      box-shadow: 0 0 80px rgba(255, 0, 0, 0.2);
+    }
+    canvas#webgl { display: block; width: 100%; height: 100%; }
+
+    /* Post-FX & Slats Overlay */
+    #wardrobe-slats {
+      position: absolute; inset: 0; pointer-events: none; display: none; z-index: 6;
+      background: repeating-linear-gradient(
+        0deg,
+        rgba(0,0,0,0.96) 0px,
+        rgba(0,0,0,0.96) 28px,
+        rgba(0,0,0,0.08) 28px,
+        rgba(0,0,0,0.08) 46px
+      );
+      box-shadow: inset 0 0 120px #000;
+    }
+    #blood-vignette {
+      position: absolute; inset: 0; pointer-events: none; z-index: 5;
+      background: radial-gradient(circle, transparent 45%, rgba(140, 0, 0, 0.0) 100%);
+      transition: background 0.25s ease;
+    }
+
+    /* RE-Style Bottom-Left ECG & Status */
+    #hud-bottom-left {
+      position: absolute; bottom: 22px; left: 22px; z-index: 10;
+      display: flex; align-items: center; gap: 14px;
+      background: linear-gradient(135deg, rgba(12,14,18,0.88), rgba(5,6,8,0.92));
+      border: 1px solid rgba(255,255,255,0.12);
+      border-left: 3px solid #2ecc71;
+      padding: 10px 16px; border-radius: 4px;
+      box-shadow: 0 8px 32px rgba(0,0,0,0.8);
+    }
+    #ecg-canvas { width: 130px; height: 44px; background: rgba(0,0,0,0.5); border-radius: 2px; }
+    .status-meta { font-size: 11px; letter-spacing: 1.5px; color: #aaa; }
+    #ecg-label { font-size: 16px; font-weight: 800; color: #2ecc71; letter-spacing: 2px; }
+
+    /* RE-Style Bottom-Right Weapon & Ammo */
+    #hud-bottom-right {
+      position: absolute; bottom: 22px; right: 22px; z-index: 10;
+      text-align: right;
+      background: linear-gradient(135deg, rgba(12,14,18,0.88), rgba(5,6,8,0.92));
+      border: 1px solid rgba(255,255,255,0.12);
+      padding: 10px 18px; border-radius: 4px;
+    }
+    #ammo-count { font-size: 28px; font-weight: 800; color: #fff; font-family: monospace; }
+    #ammo-reserve { font-size: 15px; color: #888; font-family: monospace; }
+    .weapon-name { font-size: 10px; letter-spacing: 2px; color: #999; text-transform: uppercase; }
+
+    /* Top-Left Objectives & Crests */
+    #hud-top-left {
+      position: absolute; top: 20px; left: 20px; z-index: 10;
+      background: rgba(8,8,12,0.8); border: 1px solid rgba(255,255,255,0.1);
+      padding: 12px 16px; border-radius: 4px; max-width: 310px;
+    }
+    #obj-title { font-size: 11px; color: #c0392b; font-weight: 800; letter-spacing: 2px; margin-bottom: 4px; }
+    #obj-desc { font-size: 13px; color: #eee; line-height: 1.4; }
+    .crest-slots { display: flex; gap: 8px; margin-top: 8px; }
+    .crest-badge {
+      padding: 4px 8px; font-size: 11px; border-radius: 3px;
+      background: rgba(255,255,255,0.06); color: #666; border: 1px solid #333;
+      font-weight: 700;
+    }
+    .crest-badge.collected {
+      background: rgba(212, 175, 55, 0.2); color: #f1c40f; border-color: #f1c40f;
+      box-shadow: 0 0 10px rgba(241, 196, 15, 0.35);
+    }
+
+    /* Top-Right Action Bar (Viral Auto-Director + Exporter) */
+    #hud-top-right {
+      position: absolute; top: 20px; right: 20px; z-index: 25;
+      display: flex; gap: 10px; flex-wrap: wrap; justify-content: flex-end;
+    }
+    .top-btn {
+      cursor: pointer; border: 1px solid rgba(255,255,255,0.2);
+      background: rgba(15,15,20,0.9); color: #fff;
+      padding: 9px 14px; border-radius: 4px; font-weight: 700; font-size: 12px;
+      letter-spacing: 0.8px; transition: all 0.2s;
+    }
+    .top-btn:hover { background: #c0392b; border-color: #e74c3c; }
+    .top-btn.viral-active {
+      background: #e74c3c; border-color: #ff7979;
+      animation: pulseRed 1.2s infinite;
+    }
+    @keyframes pulseRed {
+      0%, 100% { box-shadow: 0 0 0 0 rgba(231,76,60,0.7); }
+      50% { box-shadow: 0 0 16px 4px rgba(231,76,60,0.9); }
+    }
+
+    /* Dynamic Reticle & Context Prompt */
+    #reticle {
+      position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
+      width: 18px; height: 18px; border: 1.5px solid rgba(255,255,255,0.55);
+      border-radius: 50%; pointer-events: none; z-index: 8;
+      transition: width 0.12s, height 0.12s, border-color 0.12s;
+    }
+    #reticle::after {
+      content: ''; position: absolute; top: 50%; left: 50%;
+      width: 3px; height: 3px; background: #fff; border-radius: 50%;
+      transform: translate(-50%, -50%);
+    }
+    #prompt-box {
+      position: absolute; top: 58%; left: 50%; transform: translateX(-50%);
+      background: rgba(0,0,0,0.85); border: 1px solid rgba(255,255,255,0.25);
+      color: #fff; padding: 6px 14px; font-size: 13px; border-radius: 3px;
+      letter-spacing: 1px; pointer-events: none; z-index: 9; display: none;
+    }
+
+    /* Viral Short Captions Overlay */
+    #shorts-caption {
+      position: absolute; top: 18%; left: 50%; transform: translateX(-50%);
+      z-index: 15; text-align: center; pointer-events: none; display: none;
+      width: 90%;
+    }
+    #shorts-caption span {
+      display: inline-block; background: rgba(0,0,0,0.82);
+      color: #ffeb3b; font-weight: 900; font-size: 22px;
+      padding: 6px 14px; border-radius: 6px; text-transform: uppercase;
+      border: 2px solid #ff3b30; text-shadow: 0 2px 8px #000;
+    }
+
+    /* Start / End / Exporter Modals */
+    #title-overlay {
+      position: absolute; inset: 0; z-index: 20;
+      background: radial-gradient(circle, rgba(15,10,12,0.82) 0%, rgba(2,2,4,0.97) 100%);
+      display: flex; flex-direction: column; align-items: center; justify-content: center;
+      text-align: center; padding: 24px;
+    }
+    #title-overlay h1 {
+      font-size: 42px; letter-spacing: 8px; font-weight: 900; color: #eee;
+      text-shadow: 0 0 24px rgba(192,57,43,0.8); margin-bottom: 6px;
+    }
+    #title-overlay h2 {
+      font-size: 14px; letter-spacing: 5px; color: #c0392b; margin-bottom: 24px;
+    }
+    .ctrl-grid {
+      display: grid; grid-template-columns: repeat(2, auto); gap: 8px 24px;
+      text-align: left; background: rgba(255,255,255,0.04);
+      padding: 16px 24px; border: 1px solid rgba(255,255,255,0.1);
+      border-radius: 6px; margin-bottom: 24px; font-size: 13px;
+    }
+    .btn-row { display: flex; gap: 14px; flex-wrap: wrap; justify-content: center; }
+    .cta-btn {
+      cursor: pointer; padding: 13px 26px; font-size: 14px; font-weight: 800;
+      letter-spacing: 2px; text-transform: uppercase; border-radius: 4px;
+      border: 1px solid #e74c3c; background: #c0392b; color: #fff;
+      transition: transform 0.15s, background 0.15s;
+    }
+    .cta-btn:hover { background: #e74c3c; transform: scale(1.03); }
+    .cta-btn.secondary { background: #1e272e; border-color: #f39c12; color: #f1c40f; }
+
+    /* Source Exporter Modal */
+    #export-modal {
+      position: absolute; inset: 40px; z-index: 30;
+      background: #0d0f14; border: 1px solid #333; border-radius: 8px;
+      display: none; flex-direction: column; overflow: hidden;
+      box-shadow: 0 20px 70px #000;
+    }
+    .modal-hdr {
+      display: flex; justify-content: space-between; align-items: center;
+      padding: 12px 18px; background: #161922; border-bottom: 1px solid #2c3140;
+    }
+    .file-tabs { display: flex; gap: 6px; padding: 10px 18px; background: #11131a; border-bottom: 1px solid #222; flex-wrap: wrap; }
+    .file-tab {
+      padding: 6px 12px; font-size: 12px; background: #1c202b; color: #aaa;
+      border: 1px solid #2e3446; border-radius: 4px; cursor: pointer; font-family: monospace;
+    }
+    .file-tab.active { background: #c0392b; color: #fff; border-color: #e74c3c; }
+    #code-view {
+      flex: 1; padding: 16px; overflow: auto; font-family: 'SFMono-Regular', Consolas, monospace;
+      font-size: 12px; color: #d4d4d4; white-space: pre; background: #090a0f;
+    }
+  </style>
+</head>
+<body>
+  <div id="viewport-wrap">
+    <canvas id="webgl"></canvas>
+    <div id="wardrobe-slats"></div>
+    <div id="blood-vignette"></div>
+    <div id="reticle"></div>
+    <div id="prompt-box">[E] INTERACT</div>
+    <div id="shorts-caption"><span id="shorts-text"></span></div>
+
+    <!-- Top-Left HUD -->
+    <div id="hud-top-left">
+      <div id="obj-title">SPENCER WING — OBJECTIVE</div>
+      <div id="obj-desc">Collect the 3 Family Crests to unlock the North Iron Gate.</div>
+      <div class="crest-slots">
+        <div id="badge-0" class="crest-badge">MOON</div>
+        <div id="badge-1" class="crest-badge">SUN</div>
+        <div id="badge-2" class="crest-badge">ECLIPSE</div>
+      </div>
+    </div>
+
+    <!-- Top-Right Action Buttons -->
+    <div id="hud-top-right">
+      <button id="btn-viral" class="top-btn">🎬 VIRAL SHORT AUTO-DIRECTOR (9:16)</button>
+      <button id="btn-aspect" class="top-btn">📱 16:9 / 9:16</button>
+      <button id="btn-files" class="top-btn">📦 SOURCE FILES (6)</button>
+    </div>
+
+    <!-- Bottom-Left ECG Monitor -->
+    <div id="hud-bottom-left">
+      <canvas id="ecg-canvas" width="130" height="44"></canvas>
+      <div>
+        <div class="status-meta">GRACE ASHCROFT</div>
+        <div id="ecg-label">FINE</div>
+      </div>
+    </div>
+
+    <!-- Bottom-Right Weapon HUD -->
+    <div id="hud-bottom-right">
+      <div class="weapon-name">9mm Custom Kendo</div>
+      <div><span id="ammo-count">12</span> <span id="ammo-reserve">/ 24</span></div>
+    </div>
+
+    <!-- Title / Pause Overlay -->
+    <div id="title-overlay">
+      <h1>RESIDENT EVIL: REQUIEM</h1>
+      <h2>RE ENGINE WEBGL — SPENCER ESTATE STALKER DEMO</h2>
+      <div class="ctrl-grid">
+        <div><b>WASD</b> : Move / Strafe</div>
+        <div><b>SHIFT / C</b> : Sprint / Crouch Stealth</div>
+        <div><b>MOUSE + LMB</b> : Aim & Fire 9mm</div>
+        <div><b>R / F</b> : Reload / Flashlight</div>
+        <div><b>E</b> : Pickup Crest / Hide in Wardrobe</div>
+        <div><b>🎬 AUTO-DIRECTOR</b> : Watch Viral Short TAS</div>
+      </div>
+      <div class="btn-row">
+        <button id="btn-play" class="cta-btn">ENTER SPENCER WING (PLAY)</button>
+        <button id="btn-watch-short" class="cta-btn secondary">🎬 RUN VIRAL YOUTUBE SHORT</button>
+      </div>
+    </div>
+
+    <!-- Modular Source Exporter Modal -->
+    <div id="export-modal">
+      <div class="modal-hdr">
+        <strong>📦 Modular Three.js Project Architecture (6 Files)</strong>
+        <div style="display:flex;gap:8px;">
+          <button id="btn-dl-file" class="top-btn">⬇ Download Current File</button>
+          <button id="btn-close-modal" class="top-btn">✕ Close</button>
+        </div>
+      </div>
+      <div class="file-tabs" id="file-tabs"></div>
+      <pre id="code-view"></pre>
+    </div>
+  </div>
+
+  <!-- Three.js + PostProcessing CDN -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+  <script>
+    // ============================================================================
+    // 1. PROCEDURAL PBR TEXTURE & NORMAL MAP GENERATOR (RE ENGINE SURFACES)
+    // ============================================================================
+    function createProceduralPBR(type) {
+      const size = 256;
+      const diffCanvas = document.createElement('canvas');
+      const normCanvas = document.createElement('canvas');
+      diffCanvas.width = normCanvas.width = size;
+      diffCanvas.height = normCanvas.height = size;
+      const dCtx = diffCanvas.getContext('2d');
+      const nCtx = normCanvas.getContext('2d');
+
+      // Base Normal Blue
+      nCtx.fillStyle = 'rgb(128,128,255)';
+      nCtx.fillRect(0, 0, size, size);
+
+      if (type === 'wallpaper') {
+        dCtx.fillStyle = '#1d1618';
+        dCtx.fillRect(0, 0, size, size);
+        // Victorian stripes & grime
+        for (let x = 0; x < size; x += 32) {
+          dCtx.fillStyle = 'rgba(45, 22, 26, 0.55)';
+          dCtx.fillRect(x, 0, 14, size);
+          nCtx.fillStyle = 'rgb(142, 128, 255)';
+          nCtx.fillRect(x, 0, 4, size);
+        }
+        // Mold/Water damage
+        for (let i = 0; i < 600; i++) {
+          const rx = Math.random() * size, ry = Math.random() * size;
+          dCtx.fillStyle = `rgba(8, 6, 6, ${Math.random() * 0.25})`;
+          dCtx.fillRect(rx, ry, 6, 6);
+          nCtx.fillStyle = `rgb(${115 + Math.random()*26}, ${115 + Math.random()*26}, 255)`;
+          nCtx.fillRect(rx, ry, 3, 3);
+        }
+      } else if (type === 'woodfloor') {
+        dCtx.fillStyle = '#241710';
+        dCtx.fillRect(0, 0, size, size);
+        for (let y = 0; y < size; y += 32) {
+          dCtx.strokeStyle = '#0c0704';
+          dCtx.lineWidth = 2;
+          dCtx.strokeRect(0, y, size, 32);
+          nCtx.fillStyle = 'rgb(128, 105, 255)';
+          nCtx.fillRect(0, y, size, 3);
+        }
+        for (let i = 0; i < 800; i++) {
+          dCtx.fillStyle = `rgba(15, 8, 4, ${Math.random()*0.2})`;
+          dCtx.fillRect(Math.random()*size, Math.random()*size, 18, 2);
+        }
+      }
+
+      const diffTex = new THREE.CanvasTexture(diffCanvas);
+      const normTex = new THREE.CanvasTexture(normCanvas);
+      diffTex.wrapS = diffTex.wrapT = normTex.wrapS = normTex.wrapT = THREE.RepeatWrapping;
+      diffTex.repeat.set(4, 2);
+      normTex.repeat.set(4, 2);
+      return { map: diffTex, normalMap: normTex };
+    }
+
+    // ============================================================================
+    // 2. WEBAUDIO PROCEDURAL HORROR SYNTH (HEARTBEAT, DRONE, GUNSHOT, SHRIEK)
+    // ============================================================================
+    class HorrorAudioEngine {
+      constructor() { this.ctx = null; this.lastBeat = 0; }
+      init() {
+        if (this.ctx) return;
+        this.ctx = new (window.AudioContext || window.webkitAudioContext)();
+        // Sub-bass room drone
+        const osc = this.ctx.createOscillator();
+        const gain = this.ctx.createGain();
+        osc.type = 'sawtooth';
+        osc.frequency.value = 41;
+        gain.gain.value = 0.035;
+        const filter = this.ctx.createBiquadFilter();
+        filter.type = 'lowpass';
+        filter.frequency.value = 95;
+        osc.connect(filter);
+        filter.connect(gain);
+        gain.connect(this.ctx.destination);
+        osc.start();
+      }
+      playHeartbeat(intensity = 0.5) {
+        if (!this.ctx) return;
+        const now = this.ctx.currentTime;
+        const osc = this.ctx.createOscillator();
+        const g = this.ctx.createGain();
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(58, now);
+        osc.frequency.exponentialRampToValueAtTime(28, now + 0.16);
+        g.gain.setValueAtTime(0.15 + intensity * 0.25, now);
+        g.gain.exponentialRampToValueAtTime(0.001, now + 0.18);
+        osc.connect(g);
+        g.connect(this.ctx.destination);
+        osc.start(now);
+        osc.stop(now + 0.19);
+      }
+      playGunshot() {
+        if (!this.ctx) return;
+        const now = this.ctx.currentTime;
+        const buf = this.ctx.createBuffer(1, this.ctx.sampleRate * 0.22, this.ctx.sampleRate);
+        const data = buf.getChannelData(0);
+        for (let i = 0; i < data.length; i++) {
+          data[i] = (Math.random() * 2 - 1) * Math.exp(-i / (this.ctx.sampleRate * 0.045));
+        }
+        const src = this.ctx.createBufferSource();
+        src.buffer = buf;
+        const g = this.ctx.createGain();
+        g.gain.value = 0.55;
+        src.connect(g);
+        g.connect(this.ctx.destination);
+        src.start(now);
+      }
+      playStinger() {
+        if (!this.ctx) return;
+        const now = this.ctx.currentTime;
+        [210, 295, 418].forEach(freq => {
+          const o = this.ctx.createOscillator();
+          const g = this.ctx.createGain();
+          o.type = 'sawtooth';
+          o.frequency.setValueAtTime(freq, now);
+          o.frequency.linearRampToValueAtTime(freq * 1.15, now + 0.65);
+          g.gain.setValueAtTime(0.14, now);
+          g.gain.exponentialRampToValueAtTime(0.001, now + 0.7);
+          o.connect(g);
+          g.connect(this.ctx.destination);
+          o.start(now);
+          o.stop(now + 0.72);
+        });
+      }
+    }
+    const audio = new HorrorAudioEngine();
+
+    // ============================================================================
+    // 3. THREE.JS SCENE, RE ENGINE LIGHTING, & VOLUMETRIC FLASHLIGHT
+    // ============================================================================
+    const wrapEl = document.getElementById('viewport-wrap');
+    const canvas = document.getElementById('webgl');
+    const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, powerPreference: 'high-performance' });
+    renderer.setSize(wrapEl.clientWidth, wrapEl.clientHeight);
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+    renderer.shadowMap.enabled = true;
+    renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+    renderer.toneMapping = THREE.ACESFilmicToneMapping;
+    renderer.toneMappingExposure = 0.95;
+
+    const scene = new THREE.Scene();
+    scene.background = new THREE.Color(0x030305);
+    scene.fog = new THREE.FogExp2(0x040407, 0.075);
+
+    const camera = new THREE.PerspectiveCamera(68, wrapEl.clientWidth / wrapEl.clientHeight, 0.1, 80);
+    const camHolder = new THREE.Group();
+    camHolder.position.set(0, 1.7, 10);
+    camHolder.add(camera);
+    scene.add(camHolder);
+
+    // Subtle ambient fill
+    scene.add(new THREE.AmbientLight(0x161824, 0.35));
+
+    // Dual-Cone Volumetric Flashlight + 9mm Viewmodel
+    const flashGroup = new THREE.Group();
+    scene.add(flashGroup);
+
+    const spotCore = new THREE.SpotLight(0xfff4e0, 3.8, 28, Math.PI / 6.5, 0.45, 1.6);
+    spotCore.castShadow = true;
+    spotCore.shadow.mapSize.width = 1024;
+    spotCore.shadow.mapSize.height = 1024;
+    flashGroup.add(spotCore);
+    flashGroup.add(spotCore.target);
+    spotCore.target.position.set(0, 0, -10);
+
+    const spotSpill = new THREE.SpotLight(0x99b4ff, 0.85, 16, Math.PI / 3.2, 0.85, 2.0);
+    flashGroup.add(spotSpill);
+    flashGroup.add(spotSpill.target);
+    spotSpill.target.position.set(0, 0, -10);
+
+    // Volumetric Cone Mesh
+    const coneGeo = new THREE.ConeGeometry(2.6, 9, 24, 1, true);
+    coneGeo.translate(0, -4.5, 0);
+    coneGeo.rotateX(-Math.PI / 2);
+    const coneMat = new THREE.MeshBasicMaterial({
+      color: 0xfff3d6, transparent: true, opacity: 0.045,
+      side: THREE.DoubleSide, depthWrite: false, blending: THREE.AdditiveBlending
+    });
+    const lightCone = new THREE.Mesh(coneGeo, coneMat);
+    flashGroup.add(lightCone);
+
+    // First-Person 9mm Kendo Pistol Viewmodel
+    const gunGroup = new THREE.Group();
+    const gunSlide = new THREE.Mesh(
+      new THREE.BoxGeometry(0.08, 0.1, 0.38),
+      new THREE.MeshStandardMaterial({ color: 0x1e2229, metalness: 0.85, roughness: 0.25 })
+    );
+    const gunGrip = new THREE.Mesh(
+      new THREE.BoxGeometry(0.07, 0.18, 0.1),
+      new THREE.MeshStandardMaterial({ color: 0x2c1b12, roughness: 0.8 })
+    );
+    gunGrip.position.set(0, -0.11, 0.12);
+    gunGrip.rotation.x = 0.25;
+    const muzzleLight = new THREE.PointLight(0xffaa33, 0, 8);
+    muzzleLight.position.set(0, 0.05, -0.3);
+    gunGroup.add(gunSlide, gunGrip, muzzleLight);
+    gunGroup.position.set(0.24, -0.22, -0.42);
+    camera.add(gunGroup);
+
+    // ============================================================================
+    // 4. SPENCER MANSION ARCHITECTURE, CREST PEDESTALS, & WARDROBES
+    // ============================================================================
+    const wallPBR = createProceduralPBR('wallpaper');
+    const floorPBR = createProceduralPBR('woodfloor');
+
+    const wallMat = new THREE.MeshStandardMaterial({
+      map: wallPBR.map, normalMap: wallPBR.normalMap,
+      roughness: 0.72, metalness: 0.08
+    });
+    const floorMat = new THREE.MeshStandardMaterial({
+      map: floorPBR.map, normalMap: floorPBR.normalMap,
+      roughness: 0.55, metalness: 0.1
+    });
+
+    const floorMesh = new THREE.Mesh(new THREE.PlaneGeometry(36, 36), floorMat);
+    floorMesh.rotation.x = -Math.PI / 2;
+    floorMesh.receiveShadow = true;
+    scene.add(floorMesh);
+
+    const ceilMesh = new THREE.Mesh(
+      new THREE.PlaneGeometry(36, 36),
+      new THREE.MeshStandardMaterial({ color: 0x0b0a0e, roughness: 0.9 })
+    );
+    ceilMesh.rotation.x = Math.PI / 2;
+    ceilMesh.position.y = 4.2;
+    scene.add(ceilMesh);
+
+    const colliders = [];
+    function buildWall(x, z, w, d) {
+      const m = new THREE.Mesh(new THREE.BoxGeometry(w, 4.2, d), wallMat);
+      m.position.set(x, 2.1, z);
+      m.castShadow = true;
+      m.receiveShadow = true;
+      scene.add(m);
+      colliders.push({ x, z, hw: w / 2, hd: d / 2 });
+      // Baseboard trim
+      const trim = new THREE.Mesh(
+        new THREE.BoxGeometry(w + 0.06, 0.25, d + 0.06),
+        new THREE.MeshStandardMaterial({ color: 0x1a0f0a, roughness: 0.5 })
+      );
+      trim.position.set(x, 0.125, z);
+      scene.add(trim);
+    }
+
+    // Outer Mansion Bounds
+    buildWall(0, -15, 30, 1);
+    buildWall(0, 15, 30, 1);
+    buildWall(-15, 0, 1, 30);
+    buildWall(15, 0, 1, 30);
+
+    // Inner Victorian Corridors & Pillars
+    buildWall(-5.5, 4, 1.2, 11);
+    buildWall(5.5, 4, 1.2, 11);
+    buildWall(-6.5, -5.5, 8, 1.2);
+    buildWall(6.5, -5.5, 8, 1.2);
+
+    // Flickering Red Wall Sconces
+    const sconces = [];
+    [[-4.6, 2.6, 5], [4.6, 2.6, 5], [-4.6, 2.6, -4.6], [4.6, 2.6, -4.6]].forEach(([x, y, z]) => {
+      const l = new THREE.PointLight(0xff4422, 0.8, 10);
+      l.position.set(x, y, z);
+      scene.add(l);
+      sconces.push(l);
+    });
+
+    // North Escape Iron Gate
+    const gateGroup = new THREE.Group();
+    gateGroup.position.set(0, 0, -14.2);
+    for (let i = -4; i <= 4; i++) {
+      const bar = new THREE.Mesh(
+        new THREE.CylinderGeometry(0.05, 0.05, 4.0, 8),
+        new THREE.MeshStandardMaterial({ color: 0x222629, metalness: 0.9, roughness: 0.3 })
+      );
+      bar.position.set(i * 0.4, 2.0, 0);
+      gateGroup.add(bar);
+    }
+    const gateLight = new THREE.PointLight(0xe74c3c, 1.4, 8);
+    gateLight.position.set(0, 3.2, -13.5);
+    scene.add(gateGroup, gateLight);
+
+    // 3 Family Crests on Marble Pedestals
+    const crests = [];
+    const crestDefs = [
+      { id: 0, name: 'MOON', x: 0, z: 3.5, color: 0x48dbfb },
+      { id: 1, name: 'SUN', x: -10.5, z: 8.5, color: 0xfeca57 },
+      { id: 2, name: 'ECLIPSE', x: 10.5, z: -9.5, color: 0xff6b6b }
+    ];
+    crestDefs.forEach(def => {
+      const ped = new THREE.Mesh(
+        new THREE.CylinderGeometry(0.45, 0.55, 1.1, 16),
+        new THREE.MeshStandardMaterial({ color: 0x3b3b44, roughness: 0.4 })
+      );
+      ped.position.set(def.x, 0.55, def.z);
+      ped.castShadow = true;
+      scene.add(ped);
+
+      const crest = new THREE.Mesh(
+        new THREE.OctahedronGeometry(0.28, 1),
+        new THREE.MeshStandardMaterial({
+          color: def.color, emissive: def.color, emissiveIntensity: 0.7,
+          metalness: 0.85, roughness: 0.15
+        })
+      );
+      crest.position.set(def.x, 1.45, def.z);
+      scene.add(crest);
+      crests.push({ ...def, mesh: crest, collected: false });
+    });
+
+    // Wooden Hideable Wardrobes
+    const wardrobes = [];
+    [[ -3.9, 1.5, Math.PI / 2 ], [ 12.8, 0, -Math.PI / 2 ]].forEach(([x, z, rotY]) => {
+      const wGroup = new THREE.Group();
+      const box = new THREE.Mesh(
+        new THREE.BoxGeometry(1.5, 2.9, 1.1),
+        new THREE.MeshStandardMaterial({ color: 0x2d180e, roughness: 0.65 })
+      );
+      box.position.y = 1.45;
+      box.castShadow = true;
+      wGroup.add(box);
+      wGroup.position.set(x, 0, z);
+      wGroup.rotation.y = rotY;
+      scene.add(wGroup);
+      wardrobes.push({ x, z, rotY, group: wGroup });
+    });
+
+    // 600 Volumetric Dust Motes
+    const dustGeo = new THREE.BufferGeometry();
+    const dustCount = 600;
+    const dustPos = new Float32Array(dustCount * 3);
+    for (let i = 0; i < dustCount * 3; i += 3) {
+      dustPos[i] = (Math.random() - 0.5) * 28;
+      dustPos[i + 1] = Math.random() * 4.0;
+      dustPos[i + 2] = (Math.random() - 0.5) * 28;
+    }
+    dustGeo.setAttribute('position', new THREE.BufferAttribute(dustPos, 3));
+    const dustParticles = new THREE.Points(
+      dustGeo,
+      new THREE.PointsMaterial({ color: 0xdcdde1, size: 0.045, transparent: true, opacity: 0.45 })
+    );
+    scene.add(dustParticles);
+
+    // ============================================================================
+    // 5. ARTICULATED STALKER MONSTER RIG & AI STATE MACHINE
+    // ============================================================================
+    const stalkerGroup = new THREE.Group();
+    const fleshMat = new THREE.MeshStandardMaterial({ color: 0x191316, roughness: 0.35, metalness: 0.2 });
+
+    const sTorso = new THREE.Mesh(new THREE.CylinderGeometry(0.45, 0.32, 1.65, 12), fleshMat);
+    sTorso.position.y = 1.9;
+    sTorso.castShadow = true;
+
+    const sHead = new THREE.Mesh(new THREE.SphereGeometry(0.34, 14, 14), fleshMat);
+    sHead.position.y = 2.95;
+    const eyeMat = new THREE.MeshBasicMaterial({ color: 0xff2200 });
+    const eyeL = new THREE.Mesh(new THREE.SphereGeometry(0.055, 8, 8), eyeMat);
+    const eyeR = eyeL.clone();
+    eyeL.position.set(-0.11, 2.98, 0.29);
+    eyeR.position.set(0.11, 2.98, 0.29);
+
+    const sArmL = new THREE.Mesh(new THREE.CylinderGeometry(0.11, 0.08, 1.55, 8), fleshMat);
+    sArmL.position.set(-0.6, 1.85, 0.2);
+    const sArmR = sArmL.clone();
+    sArmR.position.set(0.6, 1.85, 0.2);
+
+    const sLegL = new THREE.Mesh(new THREE.CylinderGeometry(0.14, 0.1, 1.2, 8), fleshMat);
+    sLegL.position.set(-0.24, 0.6, 0);
+    const sLegR = sLegL.clone();
+    sLegR.position.set(0.24, 0.6, 0);
+
+    stalkerGroup.add(sTorso, sHead, eyeL, eyeR, sArmL, sArmR, sLegL, sLegR);
+    stalkerGroup.position.set(0, 0, -9);
+    scene.add(stalkerGroup);
+
+    const stalker = {
+      group: stalkerGroup,
+      stunTimer: 0,
+      speed: 4.1,
+      patrolAngle: 0
+    };
+
+    // Hit Spark / Blood Particle Pool
+    const hitParticles = [];
+    function spawnBloodBurst(pos) {
+      for (let i = 0; i < 16; i++) {
+        const p = new THREE.Mesh(
+          new THREE.SphereGeometry(0.045, 6, 6),
+          new THREE.MeshBasicMaterial({ color: i % 3 === 0 ? 0xffaa00 : 0x990000 })
+        );
+        p.position.copy(pos);
+        p.userData = {
+          vel: new THREE.Vector3((Math.random() - 0.5) * 5, Math.random() * 3.5, (Math.random() - 0.5) * 5),
+          life: 0.45
+        };
+        scene.add(p);
+        hitParticles.push(p);
+      }
+    }
+
+    // ============================================================================
+    // 6. PLAYER STATE, CONTROLS, & VIRAL SHORT AUTO-DIRECTOR (TAS)
+    // ============================================================================
+    const state = {
+      playing: false,
+      viralMode: false,
+      viralTime: 0,
+      viralShotDone: false,
+      viralStingerDone: false,
+      hp: 100,
+      ammo: 12,
+      reserve: 24,
+      hiding: false,
+      crouching: false,
+      yaw: 0,
+      pitch: 0,
+      collectedCount: 0,
+      recoil: 0
+    };
+
+    const keys = {};
+    window.addEventListener('keydown', e => {
+      keys[e.code] = true;
+      if (e.code === 'KeyF') {
+        spotCore.visible = !spotCore.visible;
+        spotSpill.visible = spotCore.visible;
+        lightCone.visible = spotCore.visible;
+      }
+      if (e.code === 'KeyC') state.crouching = !state.crouching;
+      if (e.code === 'KeyR' && state.ammo < 12 && state.reserve > 0) {
+        const needed = Math.min(12 - state.ammo, state.reserve);
+        state.ammo += needed;
+        state.reserve -= needed;
+        updateAmmoHUD();
+      }
+      if (e.code === 'KeyE') tryInteract();
+    });
+    window.addEventListener('keyup', e => keys[e.code] = false);
+
+    window.addEventListener('mousemove', e => {
+      if (document.pointerLockElement !== canvas || state.viralMode) return;
+      state.yaw -= e.movementX * 0.0022;
+      state.pitch = Math.max(-1.2, Math.min(1.2, state.pitch - e.movementY * 0.0022));
+    });
+
+    window.addEventListener('mousedown', e => {
+      if (document.pointerLockElement === canvas && e.button === 0 && !state.viralMode) {
+        firePistol();
+      }
+    });
+
+    function updateAmmoHUD() {
+      document.getElementById('ammo-count').textContent = state.ammo;
+      document.getElementById('ammo-reserve').textContent = '/ ' + state.reserve;
+    }
+
+    function firePistol() {
+      if (state.ammo <= 0 || state.hiding) return;
+      state.ammo--;
+      updateAmmoHUD();
+      audio.playGunshot();
+      state.recoil = 0.16;
+      muzzleLight.intensity = 4.5;
+      setTimeout(() => muzzleLight.intensity = 0, 55);
+
+      const ray = new THREE.Raycaster();
+      ray.setFromCamera(new THREE.Vector2(0, 0), camera);
+      const hits = ray.intersectObjects(stalkerGroup.children, true);
+      if (hits.length > 0 && hits[0].distance < 22) {
+        stalker.stunTimer = 5.0;
+        spawnBloodBurst(hits[0].point);
+      }
+    }
+
+    function tryInteract() {
+      if (state.hiding) {
+        state.hiding = false;
+        document.getElementById('wardrobe-slats').style.display = 'none';
+        camHolder.position.set(-2.3, 1.7, 1.5);
+        return;
+      }
+      // Check Crests
+      for (const c of crests) {
+        if (!c.collected && camHolder.position.distanceTo(c.mesh.position) < 2.5) {
+          c.collected = true;
+          c.mesh.visible = false;
+          state.collectedCount++;
+          document.getElementById('badge-' + c.id).classList.add('collected');
+          return;
+        }
+      }
+      // Check Wardrobes
+      for (const w of wardrobes) {
+        if (Math.hypot(camHolder.position.x - w.x, camHolder.position.z - w.z) < 2.4) {
+          state.hiding = true;
+          document.getElementById('wardrobe-slats').style.display = 'block';
+          camHolder.position.set(w.x, 1.5, w.z);
+          state.yaw = -Math.PI / 2;
+          state.pitch = 0;
+          return;
+        }
+      }
+    }
+
+    // ============================================================================
+    // 7. VIRAL YOUTUBE SHORT CHOREOGRAPHED AUTO-DIRECTOR (9:16 CINEMATIC TAS)
+    // ============================================================================
+    const captionBox = document.getElementById('shorts-caption');
+    const captionTxt = document.getElementById('shorts-text');
+
+    function startViralShortDirector() {
+      audio.init();
+      document.getElementById('title-overlay').style.display = 'none';
+      wrapEl.classList.add('shorts-mode');
+      onResize();
+      document.getElementById('btn-viral').classList.add('viral-active');
+      captionBox.style.display = 'block';
+
+      // Reset choreographed state
+      state.playing = true;
+      state.viralMode = true;
+      state.viralTime = 0;
+      state.viralShotDone = false;
+      state.viralStingerDone = false;
+      state.hiding = false;
+      document.getElementById('wardrobe-slats').style.display = 'none';
+      crests.forEach(c => { c.collected = false; c.mesh.visible = true; });
+      document.querySelectorAll('.crest-badge').forEach(b => b.classList.remove('collected'));
+      camHolder.position.set(0, 1.7, 10.5);
+      state.yaw = 0;
+      state.pitch = 0;
+      stalker.stunTimer = 0;
+      stalkerGroup.position.set(0, 0, -8);
+    }
+
+    function updateViralDirector(dt) {
+      state.viralTime += dt;
+      const t = state.viralTime;
+
+      if (t < 2.6) {
+        // Phase 1: Walk down creepy corridor toward Moon Crest
+        captionTxt.textContent = 'POV: Resident Evil Requiem at 3AM 🔦';
+        camHolder.position.z = THREE.MathUtils.lerp(10.5, 4.4, t / 2.6);
+        state.yaw = Math.sin(t * 2.5) * 0.12;
+        state.pitch = -0.08;
+        stalkerGroup.position.set(0, 0, -6.5);
+      } else if (t < 3.6) {
+        // Phase 2: Grab the Moon Crest + Stalker Ambush!
+        if (!crests[0].collected) {
+          crests[0].collected = true;
+          crests[0].mesh.visible = false;
+          document.getElementById('badge-0').classList.add('collected');
+        }
+        if (!state.viralStingerDone) {
+          state.viralStingerDone = true;
+          audio.playStinger();
+        }
+        captionTxt.textContent = 'WAIT... WHAT IS THAT IN THE FOG?! 😱';
+        stalkerGroup.position.z = THREE.MathUtils.lerp(-5.5, -1.2, (t - 2.6) / 1.0);
+        state.yaw = THREE.MathUtils.lerp(state.yaw, 0, 0.2);
+        state.pitch = 0.12 + (Math.random() - 0.5) * 0.04;
+      } else if (t < 5.0) {
+        // Phase 3: Panic turn & dive into Wardrobe!
+        captionTxt.textContent = 'HIDE IN THE WARDROBE!! 🚪💨';
+        const p = (t - 3.6) / 1.4;
+        camHolder.position.x = THREE.MathUtils.lerp(0, -3.5, p);
+        camHolder.position.z = THREE.MathUtils.lerp(4.4, 1.5, p);
+        state.yaw = THREE.MathUtils.lerp(0, Math.PI / 2, p);
+        stalkerGroup.position.set(0, 0, THREE.MathUtils.lerp(-1.2, 1.0, p));
+      } else if (t < 8.4) {
+        // Phase 4: Inside Wardrobe peeking through slats as Stalker prowls right past!
+        state.hiding = true;
+        document.getElementById('wardrobe-slats').style.display = 'block';
+        captionTxt.textContent = 'DON\'T BREATHE... 💀💓';
+        camHolder.position.set(-3.7, 1.5, 1.5);
+        const p = (t - 5.0) / 3.4;
+        stalkerGroup.position.set(-1.3, 0, THREE.MathUtils.lerp(-1.5, 3.8, p));
+        stalkerGroup.rotation.y = -Math.PI / 2;
+        state.yaw = -Math.PI / 2 + Math.sin(t * 4) * 0.04;
+        state.pitch = 0.05;
+      } else if (t < 10.4) {
+        // Phase 5: Burst out of Wardrobe & Headshot Stun!
+        state.hiding = false;
+        document.getElementById('wardrobe-slats').style.display = 'none';
+        captionTxt.textContent = 'HEADSHOT STUN + ESCAPE! 🔥🔫';
+        camHolder.position.set(-1.8, 1.7, 1.5);
+        const dx = stalkerGroup.position.x - camHolder.position.x;
+        const dz = stalkerGroup.position.z - camHolder.position.z;
+        state.yaw = Math.atan2(-dx, -dz);
+        state.pitch = 0.14;
+        if (!state.viralShotDone && t > 8.8) {
+          state.viralShotDone = true;
+          firePistol();
+          stalker.stunTimer = 6.0;
+          spawnBloodBurst(new THREE.Vector3(stalkerGroup.position.x, 2.7, stalkerGroup.position.z));
+        }
+      } else if (t < 13.5) {
+        // Phase 6: Sprint to the North Gate!
+        const p = (t - 10.4) / 3.1;
+        camHolder.position.x = THREE.MathUtils.lerp(-1.8, 0, p);
+        camHolder.position.z = THREE.MathUtils.lerp(1.5, -12.5, p);
+        state.yaw = 0;
+        state.pitch = 0;
+        gateLight.color.setHex(0x2ecc71);
+        captionTxt.textContent = 'ESCAPED THE SPENCER WING! 🏆';
+      } else {
+        // Loop the Viral Short seamlessly
+        state.viralTime = 0;
+        state.viralShotDone = false;
+        state.viralStingerDone = false;
+        crests[0].collected = false;
+        crests[0].mesh.visible = true;
+        document.getElementById('badge-0').classList.remove('collected');
+        gateLight.color.setHex(0xe74c3c);
+      }
+    }
+
+    // ============================================================================
+    // 8. LIVE ECG HEARTBEAT MONITOR CANVAS
+    // ============================================================================
+    const ecgCanvas = document.getElementById('ecg-canvas');
+    const ecgCtx = ecgCanvas.getContext('2d');
+    let ecgX = 0;
+
+    function drawECG(dt, stalkerDist) {
+      ecgCtx.fillStyle = 'rgba(0, 0, 0, 0.14)';
+      ecgCtx.fillRect(0, 0, ecgCanvas.width, ecgCanvas.height);
+
+      const danger = stalkerDist < 7.5;
+      const caution = stalkerDist < 13.0;
+      const color = danger ? '#ff3b30' : (caution ? '#f1c40f' : '#2ecc71');
+      const label = document.getElementById('ecg-label');
+      label.textContent = danger ? 'DANGER' : (caution ? 'CAUTION' : 'FINE');
+      label.style.color = color;
+      document.getElementById('hud-bottom-left').style.borderLeftColor = color;
+
+      const speed = danger ? 140 : (caution ? 95 : 65);
+      const prevX = ecgX;
+      ecgX = (ecgX + speed * dt) % ecgCanvas.width;
+      if (ecgX < prevX) ecgCtx.clearRect(0, 0, 14, ecgCanvas.height);
+
+      let y = 22;
+      if (ecgX > 48 && ecgX < 56) y = 6;
+      else if (ecgX >= 56 && ecgX < 64) y = 38;
+      else if (ecgX >= 64 && ecgX < 72) y = 14;
+
+      ecgCtx.strokeStyle = color;
+      ecgCtx.lineWidth = 2;
+      ecgCtx.beginPath();
+      ecgCtx.moveTo(Math.max(0, ecgX - 4), 22);
+      ecgCtx.lineTo(ecgX, y);
+      ecgCtx.stroke();
+    }
+
+    // ============================================================================
+    // 9. MAIN RENDER & KINEMATIC ANIMATION LOOP
+    // ============================================================================
+    let lastTime = performance.now();
+
+    function animate(now) {
+      requestAnimationFrame(animate);
+      const dt = Math.min((now - lastTime) / 1000, 0.05);
+      lastTime = now;
+      const elapsed = now / 1000;
+
+      // Sconce light flicker
+      sconces.forEach((l, i) => {
+        l.intensity = 0.7 + Math.sin(elapsed * 13 + i * 3) * 0.18;
+      });
+
+      // Dust motes drift
+      const posAttr = dustGeo.attributes.position;
+      for (let i = 1; i < posAttr.count * 3; i += 3) {
+        posAttr.array[i] -= 0.12 * dt;
+        if (posAttr.array[i] < 0) posAttr.array[i] = 4.0;
+      }
+      posAttr.needsUpdate = true;
+
+      // Rotate Crests
+      crests.forEach(c => {
+        if (!c.collected) {
+          c.mesh.rotation.y += 1.8 * dt;
+          c.mesh.position.y = 1.45 + Math.sin(elapsed * 3 + c.id) * 0.08;
+        }
+      });
+
+      // Update Hit Particles
+      for (let i = hitParticles.length - 1; i >= 0; i--) {
+        const p = hitParticles[i];
+        p.position.addScaledVector(p.userData.vel, dt);
+        p.userData.vel.y -= 9.8 * dt;
+        p.userData.life -= dt;
+        if (p.userData.life <= 0) {
+          scene.remove(p);
+          hitParticles.splice(i, 1);
+        }
+      }
+
+      if (state.playing) {
+        if (state.viralMode) {
+          updateViralDirector(dt);
+        } else if (!state.hiding) {
+          // Manual First-Person Movement
+          const moveSpeed = state.crouching ? 2.6 : ((keys['ShiftLeft'] || keys['ShiftRight']) ? 6.2 : 4.2);
+          const fwd = new THREE.Vector3(-Math.sin(state.yaw), 0, -Math.cos(state.yaw));
+          const right = new THREE.Vector3(Math.cos(state.yaw), 0, -Math.sin(state.yaw));
+          const move = new THREE.Vector3();
+          if (keys['KeyW']) move.add(fwd);
+          if (keys['KeyS']) move.sub(fwd);
+          if (keys['KeyD']) move.add(right);
+          if (keys['KeyA']) move.sub(right);
+
+          if (move.lengthSq() > 0) {
+            move.normalize();
+            camHolder.position.addScaledVector(move, moveSpeed * dt);
+            // Wall collisions
+            for (const c of colliders) {
+              const dx = camHolder.position.x - c.x;
+              const dz = camHolder.position.z - c.z;
+              const rx = c.hw + 0.45, rz = c.hd + 0.45;
+              if (Math.abs(dx) < rx && Math.abs(dz) < rz) {
+                if (rx - Math.abs(dx) < rz - Math.abs(dz)) camHolder.position.x = c.x + Math.sign(dx) * rx;
+                else camHolder.position.z = c.z + Math.sign(dz) * rz;
+              }
+            }
+          }
+          const targetHeight = state.crouching ? 1.05 : 1.7;
+          const bob = move.lengthSq() > 0 ? Math.sin(elapsed * 9) * 0.055 : 0;
+          camHolder.position.y = THREE.MathUtils.lerp(camHolder.position.y, targetHeight + bob, 0.18);
+
+          // Stalker AI Chase / Patrol
+          if (stalker.stunTimer > 0) {
+            stalker.stunTimer -= dt;
+            sHead.rotation.z = Math.sin(elapsed * 25) * 0.35;
+          } else {
+            sHead.rotation.z = 0;
+            const toPlayer = new THREE.Vector3().subVectors(camHolder.position, stalkerGroup.position);
+            toPlayer.y = 0;
+            const dist = toPlayer.length();
+            if (dist > 1.1) {
+              toPlayer.normalize();
+              stalkerGroup.position.addScaledVector(toPlayer, stalker.speed * dt);
+              stalkerGroup.rotation.y = Math.atan2(toPlayer.x, toPlayer.z);
+            }
+          }
+        }
+
+        // Stalker Limb Kinematics
+        const walkPhase = elapsed * (stalker.stunTimer > 0 ? 2 : 8);
+        sLegL.rotation.x = Math.sin(walkPhase) * 0.55;
+        sLegR.rotation.x = -Math.sin(walkPhase) * 0.55;
+        sArmL.rotation.x = -0.6 + Math.cos(walkPhase) * 0.35;
+        sArmR.rotation.x = -0.6 - Math.cos(walkPhase) * 0.35;
+
+        // Camera & Flashlight Inertia
+        state.recoil = Math.max(0, state.recoil - 0.8 * dt);
+        camera.rotation.order = 'YXZ';
+        camera.rotation.y = state.yaw;
+        camera.rotation.x = state.pitch + state.recoil;
+        gunGroup.position.z = -0.42 + state.recoil * 0.35;
+
+        flashGroup.position.copy(camHolder.position);
+        flashGroup.rotation.order = 'YXZ';
+        flashGroup.rotation.y = THREE.MathUtils.lerp(flashGroup.rotation.y, state.yaw, 0.22);
+        flashGroup.rotation.x = THREE.MathUtils.lerp(flashGroup.rotation.x, state.pitch, 0.22);
+
+        // Proximity Heartbeat & Blood Vignette
+        const sDist = camHolder.position.distanceTo(stalkerGroup.position);
+        drawECG(dt, sDist);
+        const vigAlpha = Math.max(0, Math.min(0.75, (10 - sDist) / 10));
+        document.getElementById('blood-vignette').style.background =
+          `radial-gradient(circle, transparent 40%, rgba(165, 0, 0, ${vigAlpha.toFixed(2)}) 100%)`;
+
+        if (elapsed - audio.lastBeat > (sDist < 7 ? 0.42 : 0.85)) {
+          audio.lastBeat = elapsed;
+          audio.playHeartbeat(vigAlpha);
+        }
+
+        // Context Prompt
+        const promptEl = document.getElementById('prompt-box');
+        let promptTxt = '';
+        for (const c of crests) {
+          if (!c.collected && camHolder.position.distanceTo(c.mesh.position) < 2.5) {
+            promptTxt = `[E] PICK UP ${c.name} CREST`;
+          }
+        }
+        for (const w of wardrobes) {
+          if (Math.hypot(camHolder.position.x - w.x, camHolder.position.z - w.z) < 2.4) {
+            promptTxt = state.hiding ? '[E] EXIT WARDROBE' : '[E] HIDE INSIDE WARDROBE';
+          }
+        }
+        if (promptTxt && !state.viralMode) {
+          promptEl.style.display = 'block';
+          promptEl.textContent = promptTxt;
+        } else {
+          promptEl.style.display = 'none';
+        }
+      }
+
+      renderer.render(scene, camera);
+    }
+    requestAnimationFrame(animate);
+
+    // ============================================================================
+    // 10. UI HANDLERS & 6-FILE MODULAR PROJECT EXPORTER
+    // ============================================================================
+    function onResize() {
+      camera.aspect = wrapEl.clientWidth / wrapEl.clientHeight;
+      camera.updateProjectionMatrix();
+      renderer.setSize(wrapEl.clientWidth, wrapEl.clientHeight);
+    }
+    window.addEventListener('resize', onResize);
+
+    document.getElementById('btn-play').addEventListener('click', () => {
+      audio.init();
+      document.getElementById('title-overlay').style.display = 'none';
+      state.playing = true;
+      state.viralMode = false;
+      captionBox.style.display = 'none';
+      document.getElementById('btn-viral').classList.remove('viral-active');
+      canvas.requestPointerLock();
+    });
+
+    document.getElementById('btn-watch-short').addEventListener('click', startViralShortDirector);
+    document.getElementById('btn-viral').addEventListener('click', startViralShortDirector);
+
+    document.getElementById('btn-aspect').addEventListener('click', () => {
+      wrapEl.classList.toggle('shorts-mode');
+      onResize();
+    });
+
+    // Modular File Exporter
+    const modularFiles = {
+      'index.html': document.documentElement.outerHTML,
+      'shaders/REPostProcessShader.glsl': `// RE Engine Chromatic Aberration + Film Grain + Vignette Fragment Shader
+uniform sampler2D tDiffuse;
+uniform float uTime;
+uniform float uFearIntensity;
+varying vec2 vUv;
+void main() {
+  vec2 uv = vUv;
+  float shift = 0.0025 + uFearIntensity * 0.008;
+  float r = texture2D(tDiffuse, uv + vec2(shift, 0.0)).r;
+  float g = texture2D(tDiffuse, uv).g;
+  float b = texture2D(tDiffuse, uv - vec2(shift, 0.0)).b;
+  float grain = (fract(sin(dot(uv * uTime, vec2(12.9898,78.233))) * 43758.5453) - 0.5) * 0.06;
+  float dist = distance(uv, vec2(0.5));
+  float vig = smoothstep(0.78, 0.32, dist);
+  gl_FragColor = vec4((vec3(r, g, b) + grain) * vig, 1.0);
+}`,
+      'engine/ProceduralPBR.js': createProceduralPBR.toString(),
+      'engine/HorrorAudioEngine.js': HorrorAudioEngine.toString(),
+      'engine/ViralShortDirector.js': updateViralDirector.toString(),
+      'README.md': `# Resident Evil: Requiem — RE Engine WebGL Edition\n\n## Features\n- Procedural PBR Normal & Roughness Maps\n- Volumetric Dual-Cone Flashlight + 600 Dust Motes\n- Live ECG Heartbeat Monitor & WebAudio Sub-Bass Synth\n- Built-in 9:16 Viral YouTube Short Auto-Director (TAS)\n`
+    };
+
+    let currentFileKey = 'index.html';
+    const tabsEl = document.getElementById('file-tabs');
+    const codeViewEl = document.getElementById('code-view');
+
+    Object.keys(modularFiles).forEach(fname => {
+      const btn = document.createElement('button');
+      btn.className = 'file-tab' + (fname === currentFileKey ? ' active' : '');
+      btn.textContent = fname;
+      btn.onclick = () => {
+        currentFileKey = fname;
+        document.querySelectorAll('.file-tab').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        codeViewEl.textContent = modularFiles[fname];
+      };
+      tabsEl.appendChild(btn);
+    });
+    codeViewEl.textContent = modularFiles[currentFileKey];
+
+    document.getElementById('btn-files').addEventListener('click', () => {
+      document.exitPointerLock();
+      document.getElementById('export-modal').style.display = 'flex';
+    });
+    document.getElementById('btn-close-modal').addEventListener('click', () => {
+      document.getElementById('export-modal').style.display = 'none';
+    });
+    document.getElementById('btn-dl-file').addEventListener('click', () => {
+      const blob = new Blob([modularFiles[currentFileKey]], { type: 'text/plain' });
+      const a = document.createElement('a');
+      a.href = URL.createObjectURL(blob);
+      a.download = currentFileKey.split('/').pop();
+      a.click();
+    });
+  </script>
+</body>
+</html>

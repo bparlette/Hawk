@@ -1,0 +1,6 @@
+file '/workspace/work/shorts/cinema-city/seg/s00.mp4'
+file '/workspace/work/shorts/cinema-city/seg/s01.mp4'
+file '/workspace/work/shorts/cinema-city/seg/s02.mp4'
+file '/workspace/work/shorts/cinema-city/seg/s03.mp4'
+file '/workspace/work/shorts/cinema-city/seg/s04.mp4'
+file '/workspace/work/shorts/cinema-city/seg/s05.mp4'

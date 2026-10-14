@@ -1,0 +1,2 @@
+2daab48c364b9e15fb03433815fa4794  site/game.js
+a562f2c83b83fe63cf5f23570393706e  site/index.html

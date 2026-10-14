@@ -1,0 +1,9 @@
+[
+ {"q":"show=props&hud=0","out":"shots/props_day_wide.png","w":1280,"h":720},
+ {"q":"show=props&hud=0&night=1","out":"shots/props_night_wide.png","w":1280,"h":720},
+ {"q":"show=props&hud=0&night=1&pos=24,9,24&look=20,1,0&fov=62","out":"shots/props_night_cars_phone.png"},
+ {"q":"show=props&hud=0&pos=-16,3,9&look=-16,2,0&fov=62","out":"shots/props_lamps_phone_day.png"},
+ {"q":"show=props&hud=0&night=1&pos=-16,3,9&look=-16,2,0&fov=62","out":"shots/props_lamps_phone_night.png"},
+ {"q":"show=vehicles&hud=0&steps=30","out":"shots/vehicles_day_wide.png","w":1280,"h":720},
+ {"q":"show=vehicles&hud=0&night=1&steps=30","out":"shots/vehicles_night_wide.png","w":1280,"h":720}
+]

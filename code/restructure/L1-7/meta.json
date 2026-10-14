@@ -1,0 +1,341 @@
+{
+ "bg": {
+  "level1_lobby.jpg": [
+   1968,
+   512
+  ],
+  "level2_rooftops.jpg": [
+   1724,
+   512
+  ],
+  "level3_pumpstation.jpg": [
+   1968,
+   512
+  ],
+  "level4_tunnel.jpg": [
+   1624,
+   512
+  ],
+  "level5_shipdeck.jpg": [
+   1968,
+   512
+  ],
+  "level6_park.jpg": [
+   1711,
+   512
+  ],
+  "level7_foundry.jpg": [
+   1968,
+   512
+  ],
+  "level5_harbour.jpg": [
+   1968,
+   512
+  ],
+  "level2_rooftop_boss.jpg": [
+   1032,
+   512
+  ],
+  "level4_tunnel_boss.jpg": [
+   1032,
+   512
+  ],
+  "level7_shaft.jpg": [
+   1032,
+   448
+  ]
+ },
+ "props": {
+  "level1_twist.png": {
+   "size": [
+    760,
+    350
+   ],
+   "scale": "sheet px = 2x world px",
+   "frames": {
+    "hole": [
+     0,
+     0,
+     240,
+     127
+    ],
+    "crack": [
+     243,
+     0,
+     240,
+     102
+    ],
+    "beam": [
+     486,
+     0,
+     220,
+     45
+    ],
+    "debris": [
+     0,
+     130,
+     140,
+     90
+    ],
+    "door": [
+     143,
+     130,
+     123,
+     220
+    ]
+   }
+  },
+  "level2_twist.png": {
+   "size": [
+    760,
+    240
+   ],
+   "scale": "sheet px = 2x world px",
+   "frames": {
+    "heli": [
+     0,
+     0,
+     400,
+     221
+    ],
+    "lamp": [
+     403,
+     0,
+     60,
+     78
+    ],
+    "escape": [
+     466,
+     0,
+     154,
+     240
+    ],
+    "hatch": [
+     623,
+     0,
+     100,
+     103
+    ]
+   }
+  },
+  "level3_twist.png": {
+   "size": [
+    1024,
+    356
+   ],
+   "scale": "sheet px = 2x world px",
+   "frames": {
+    "wave": [
+     0,
+     0,
+     768,
+     191
+    ],
+    "gateShut": [
+     771,
+     0,
+     220,
+     175
+    ],
+    "gush": [
+     0,
+     194,
+     260,
+     64
+    ],
+    "frame": [
+     263,
+     194,
+     220,
+     162
+    ],
+    "raft": [
+     486,
+     194,
+     100,
+     50
+    ],
+    "drum": [
+     589,
+     194,
+     40,
+     62
+    ],
+    "ladder": [
+     632,
+     194,
+     50,
+     160
+    ]
+   }
+  },
+  "level4_twist.png": {
+   "size": [
+    720,
+    205
+   ],
+   "scale": "sheet px = 2x world px",
+   "frames": {
+    "truckGun": [
+     0,
+     0,
+     340,
+     132
+    ],
+    "truck": [
+     343,
+     0,
+     340,
+     116
+    ],
+    "turret": [
+     0,
+     135,
+     140,
+     47
+    ],
+    "spray": [
+     143,
+     135,
+     200,
+     70
+    ]
+   }
+  },
+  "level5_twist.png": {
+   "size": [
+    760,
+    551
+   ],
+   "scale": "sheet px = 2x world px",
+   "frames": {
+    "boat": [
+     0,
+     0,
+     600,
+     211
+    ],
+    "wake": [
+     0,
+     214,
+     600,
+     42
+    ],
+    "jetski": [
+     603,
+     214,
+     140,
+     54
+    ],
+    "bow": [
+     0,
+     271,
+     120,
+     60
+    ],
+    "buoy": [
+     123,
+     271,
+     58,
+     110
+    ],
+    "deck": [
+     0,
+     384,
+     720,
+     167
+    ]
+   }
+  },
+  "level6_twist.png": {
+   "size": [
+    760,
+    287
+   ],
+   "scale": "sheet px = 2x world px",
+   "frames": {
+    "ice0": [
+     0,
+     0,
+     180,
+     73
+    ],
+    "ice1": [
+     183,
+     0,
+     180,
+     75
+    ],
+    "ice2": [
+     366,
+     0,
+     180,
+     78
+    ],
+    "ice3": [
+     549,
+     0,
+     180,
+     84
+    ],
+    "slide": [
+     0,
+     87,
+     185,
+     200
+    ],
+    "drift": [
+     188,
+     87,
+     120,
+     73
+    ],
+    "sawhorse": [
+     311,
+     87,
+     60,
+     64
+    ]
+   }
+  },
+  "level7_twist.png": {
+   "size": [
+    760,
+    424
+   ],
+   "scale": "sheet px = 2x world px",
+   "frames": {
+    "lift": [
+     0,
+     0,
+     600,
+     282
+    ],
+    "brake": [
+     603,
+     0,
+     80,
+     80
+    ],
+    "cube": [
+     0,
+     285,
+     100,
+     84
+    ],
+    "hook": [
+     103,
+     285,
+     25,
+     100
+    ],
+    "sparks": [
+     131,
+     285,
+     100,
+     139
+    ]
+   }
+  }
+ }
+}

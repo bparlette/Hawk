@@ -1,0 +1,372 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+<title>Toad City kit viewer</title>
+<style>
+  html, body { margin: 0; height: 100%; background: #14101f; overflow: hidden; font: 11px/1.35 ui-monospace, Menlo, Consolas, monospace; color: #f2e6c8; }
+  canvas { display: block; width: 100vw; height: 100vh; touch-action: none; }
+  #hud { position: fixed; left: 6px; top: 6px; padding: 5px 7px; background: rgba(20,16,31,.82); border: 1px solid #5a4f5c; border-radius: 4px; white-space: pre; pointer-events: none; max-width: 96vw; }
+  #hud b { color: #ffd23c; } #hud .bad { color: #ff3a1c; font-weight: bold; } #hud .ok { color: #8fd694; }
+  #err { position: fixed; left: 6px; bottom: 6px; right: 6px; color: #ff9a8a; white-space: pre-wrap; background: rgba(20,16,31,.9); padding: 4px 6px; display: none; }
+  body.nohud #hud { display: none; }
+</style>
+<script type="importmap">
+{ "imports": { "three": "https://unpkg.com/three@0.160.0/build/three.module.js", "three/addons/": "https://unpkg.com/three@0.160.0/examples/jsm/" } }
+</script>
+</head>
+<body>
+<div id="hud">loading…</div>
+<div id="err"></div>
+<script type="module">
+// Toad City kit viewer — the test bench every delivery is checked in.
+//   viewer.html?show=<id>[&night=1][&pose=<n>][&cam=fit|game|phone|front|top][&yaw=deg&pitch=deg&dist=m][&t=seconds][&hud=0]
+//   Task A ids: street · block · rowhouse · rowhouse_brick · rowhouse_permastone · rowhouse_4 · corner_bar · corner_shop · houses · atlas
+//   Task B ids: props · vehicles · any single prop / vehicle id (lamp_acorn … skateboard)
+//   Keys: N night/day · P cycle pose / variant · C cycle camera · Space pause animation · H hide readout
+//   Everything is built at load by the modules in ./src; three.js r160 is loaded from the import map and never copied into src/.
+import * as THREE from 'three';
+import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+import { K } from './toadcity_kit.js';
+
+const Q = new URLSearchParams(location.search);
+const qn = (k, d) => (Q.has(k) ? parseFloat(Q.get(k)) : d);
+const SHOW = Q.get('show') || 'street';
+const errBox = document.getElementById('err'), hud = document.getElementById('hud');
+const errors = [];
+const logErr = (m) => { errors.push(String(m)); errBox.style.display = 'block'; errBox.textContent = errors.join('\n'); };
+addEventListener('error', (e) => logErr(e.message)); addEventListener('unhandledrejection', (e) => logErr(e.reason?.stack || e.reason));
+window.__errors = errors;
+if (Q.get('hud') === '0') document.body.classList.add('nohud');
+
+// ---- modules (each is optional: a Task A zip has no props files and vice versa) ----
+const FILES = ['props_tiles', 'props_street', 'props_crab_shack', 'veh_cars', 'veh_boats', 'veh_carts']; // @FILES (the delivery zips list only their own modules)
+const M = {};
+await Promise.all(FILES.map(async (f) => { try { M[f] = await import(`./src/${f}.js`); } catch (e) { if (!/Failed to fetch dynamically imported module/.test(String(e))) logErr(`src/${f}.js: ${e.message}`); } }));
+const need = (f) => { if (!M[f]) throw new Error(`module src/${f}.js is not in this delivery`); return M[f]; };
+
+// ---- the static props / vehicles registry (id → module, builder) ----
+const STATIC = [
+  ['lamp_acorn', 'props_street', 'buildLampAcorn'], ['lamp_cobra', 'props_street', 'buildLampCobra'], ['bench_park', 'props_street', 'buildBenchPark'],
+  ['bench_bus', 'props_street', 'buildBenchBus'], ['trash_can', 'props_street', 'buildTrashCan'], ['crab_shack', 'props_crab_shack', 'buildCrabShack'],
+  ['manhole', 'props_street', 'buildManhole'], ['ladder_wall', 'props_street', 'buildLadderWall'], ['ladder_drop', 'props_street', 'buildLadderDrop'],
+  ['parked_car_sedan', 'veh_cars', 'buildParkedCarSedan'], ['parked_car_hatchback', 'veh_cars', 'buildParkedCarHatchback'], ['parked_car_pickup', 'veh_cars', 'buildParkedCarPickup'],
+];
+const VEHICLES = [
+  ['water_taxi', 'veh_boats', 'buildWaterTaxi'], ['paddle_boat', 'veh_boats', 'buildPaddleBoat'], ['dragon_boat', 'veh_boats', 'buildDragonBoat'],
+  ['car_sedan', 'veh_cars', 'buildCarSedan'], ['car_hatch', 'veh_cars', 'buildCarHatch'], ['box_truck', 'veh_cars', 'buildBoxTruck'],
+  ['arabber_cart', 'veh_carts', 'buildArabberCart'], ['skateboard', 'veh_carts', 'buildSkateboard'],
+];
+
+let atlasA = null, atlasB = null;
+const getAtlasA = () => atlasA || (atlasA = K.makeAtlas(need('rowkit_tiles').KIT_TILES));
+const getAtlasB = () => atlasB || (atlasB = K.makeAtlas(need('props_tiles').PROP_TILES));
+
+// ---- scene, renderer, lights ----
+const renderer = new THREE.WebGLRenderer({ antialias: true, preserveDrawingBuffer: true });
+renderer.setPixelRatio(Math.min(devicePixelRatio, 2)); renderer.setSize(innerWidth, innerHeight);
+renderer.shadowMap.enabled = true; renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+document.body.appendChild(renderer.domElement);
+const scene = new THREE.Scene();
+const camera = new THREE.PerspectiveCamera(42, innerWidth / innerHeight, 0.1, 400);
+const hemi = new THREE.HemisphereLight(), sun = new THREE.DirectionalLight(), fill = new THREE.DirectionalLight();
+sun.castShadow = true; sun.shadow.mapSize.set(2048, 2048); sun.shadow.bias = -0.0006; sun.shadow.normalBias = 0.06;
+scene.add(hemi, sun, sun.target, fill, fill.target);
+const controls = new OrbitControls(camera, renderer.domElement); controls.enableDamping = false;
+const rig = { scene, hemi, sun, fill };
+
+// ---- tiny helpers for the viewer's own stage (ground, water, dummies) — kit materials only ----
+const stageMat = K.toonMat();
+const stageGroup = new THREE.Group(); stageGroup.userData.mat = stageMat;
+const slab = (g, x0, x1, z0, z1, top, thick, col) => { // a flat slab, top face at y = top
+  const m = K.part(g, K.G.box(x1 - x0, thick, z1 - z0), col, (x0 + x1) / 2, top - thick / 2, (z0 + z1) / 2, { outline: false, shadow: false }); m.receiveShadow = true; return m;
+};
+function stageStreet(g, x0, x1, z0, z1) { slab(g, x0, x1, z0, z1, 0, 0.5, '#4a4a50'); } // asphalt at y = 0
+function stageWater(g, x0, x1, z0, z1) { slab(g, x0, x1, z0, z1, K.WY, 0.4, '#3a6a8a'); }
+function stagePromenade(g, x0, x1, z0, z1) { slab(g, x0, x1, z0, z1, K.CURB, 0.6, '#8a4a3a'); }
+function stagePavement(g, x0, x1, z0, z1) { slab(g, x0, x1, z0, z1, K.CURB, 0.6, '#8a8478'); }
+
+// Harold-sized scale dummy (1.6 m) built with the kit rig: used to check seat anchors and silhouettes.
+function haroldDummy(pose = 'stand', side = 1) {
+  const mat = K.toonMat(), d = K.HERO_D, J = K.skeleton(d, mat);
+  const skin = '#6f7f34', card = '#7a5232';
+  K.part(J.hips, K.G.sph(0.17, 0.12, 0.13), card, 0, 0.02, 0);
+  K.part(J.torso, K.G.sph(0.2, 0.28, 0.14), card, 0, 0.26, 0);
+  K.part(J.torso, K.G.sph(0.11, 0.1, 0.1), '#b8b47a', 0, 0.2, 0.1, { outline: false });
+  const head = J.head = K.grp(J.neck, 0, 0, 0); head.userData.mat = mat;
+  K.part(head, K.G.sph(0.17, 0.11, 0.15), skin, 0, 0.1, 0.02);
+  for (const s of [-1, 1]) K.part(head, K.G.sph(0.045, 0.045, 0.045), '#e8d888', s * 0.09, 0.19, 0.08, { outline: false });
+  for (const k of ['L', 'R']) {
+    K.part(J['el' + k], K.G.cap(0.04, 0.2), card, 0, -0.1, 0, { outline: false }); K.part(J['sh' + k], K.G.cap(0.045, 0.16), card, 0, -0.1, 0, { outline: false });
+    K.part(J['ha' + k], K.G.sph(0.05, 0.05, 0.05), skin, 0, -0.04, 0, { outline: false });
+    K.part(J['lg' + k], K.G.cap(0.06, 0.2), '#5a5248', 0, -0.17, 0, { outline: false }); K.part(J['kn' + k], K.G.cap(0.05, 0.2), '#5a5248', 0, -0.17, 0, { outline: false });
+    K.part(J['ft' + k], K.G.sph(0.07, 0.04, 0.12), skin, 0, 0.02, 0.05, { outline: false });
+  }
+  const p = K.legsStance(K.blank(), 0.06); p.tilt = [0, 0, 0];
+  if (pose === 'sit') { p.hipsY = -0.04; p.lgL = [-1.5, 0, 0]; p.lgR = [-1.5, 0, 0]; p.knL = [1.5, 0, 0]; p.knR = [1.5, 0, 0]; p.shL = [-0.5, 0, 0]; p.shR = [-0.5, 0, 0]; p.elL = [-0.6, 0, 0]; p.elR = [-0.6, 0, 0]; }
+  if (pose === 'lean_out') { p.hipsY = -0.04; p.lgL = [-1.5, 0, 0]; p.lgR = [-1.5, 0, 0]; p.knL = [1.5, 0, 0]; p.knR = [1.5, 0, 0]; p.torso = [0, 0, -0.95 * side]; p.shR = [0, 0, -0.6]; p.elR = [0, 0, -0.3]; }
+  K.applyPose(J, p); J.userData.pose = pose; J.userData.dummy = true; return J;
+}
+// anchors (see README): 'stand' = feet point; 'sit' / 'lean_out' = hips (seat surface) point
+function placeRider(root, seat) {
+  const h = haroldDummy(seat.pose, Math.sign(seat.x) || 1); h.position.set(seat.x, seat.y, seat.z); h.rotation.y = seat.ang || 0;
+  if (seat.pose !== 'stand') h.position.y = seat.y - K.HERO_D.hip - 0.04; // the rig origin sits at the feet; hips land on the anchor
+  root.add(h); return h;
+}
+
+// ---- measuring: the numbers the README tables are made of ----
+const isHull = (m) => m.material === K.OUT_CITY || m.material === K.OUT_CHAR || m.material === K.OUT_PROP;
+function triCount(m) { const g = m.geometry; return g.index ? g.index.count / 3 : g.attributes.position.count / 3; }
+function measure(obj) {
+  const r = { meshes: 0, hulls: 0, parts: 0, drawCalls: 0, shadowCalls: 0, tris: 0, trisNoHull: 0, materials: new Set(), geoms: new Set() };
+  obj.updateMatrixWorld(true);
+  const walk = (o, f) => { if (o.userData && o.userData.dummy) return; f(o); o.children.forEach((c) => walk(c, f)); }; // the Harold scale dummies are not part of the asset
+  walk(obj, (m) => {
+    if (!m.isMesh || !m.visible) return;
+    let vis = true; for (let p = m; p; p = p.parent) if (!p.visible) vis = false; if (!vis) return;
+    const t = triCount(m); r.drawCalls++; r.tris += t; r.geoms.add(m.geometry); r.materials.add(m.material);
+    if (isHull(m)) r.hulls++; else { r.meshes++; r.trisNoHull += t; if (m.castShadow) r.shadowCalls++; }
+  });
+  r.parts = r.meshes; r.materials = r.materials.size; r.geoms = r.geoms.size; r.tris = Math.round(r.tris); r.trisNoHull = Math.round(r.trisNoHull);
+  return r;
+}
+const bbox = (o) => new THREE.Box3().setFromObject(o);
+
+// ---- the shows ----
+// each show returns { group, update?(dt, t), label, ground: <stage kind>, ext, cam, yaw?, pitch? }
+function buildAssetOnly(id, extra = {}) { // used by measure(): the asset alone, no ground
+  const st = STATIC.find((s) => s[0] === id), ve = VEHICLES.find((s) => s[0] === id);
+  if (st) { const out = K.makeOut(); const meta = need(st[1])[st[2]](K, out, 0, 0, 0, Object.assign({ seed: 7, atlas: getAtlasB() }, extra)); const grp = out.build(); return { grp, out, meta, kind: 'static' }; }
+  if (ve) { const v = need(ve[1])[ve[2]](K, { seed: 7, atlas: getAtlasB() }); return { grp: v.root, v, kind: 'vehicle' }; }
+  if (id === 'rowhouse' || id.startsWith('rowhouse_')) {
+    const out = K.makeOut(); const o = rowhouseOpts(id); const meta = need('rowkit_rowhouse').buildRowhouse(K, out, getAtlasA(), 0, 0, 0, o); return { grp: out.build(), out, meta, kind: 'house' };
+  }
+  if (id === 'corner_bar') { const out = K.makeOut(); const meta = need('rowkit_corner').buildCornerBar(K, out, getAtlasA(), 0, 0, 0, { seed: 5 }); return { grp: out.build(), out, meta, kind: 'corner' }; }
+  if (id === 'corner_shop') { const out = K.makeOut(); const meta = need('rowkit_corner').buildCornerShop(K, out, getAtlasA(), 0, 0, 0, { seed: 5 }); return { grp: out.build(), out, meta, kind: 'corner' }; }
+  if (id === 'block') { const out = K.makeOut(); blockOf(out, 0, 0, 24, 24, { seed: 11 }); return { grp: out.build(), out, kind: 'block' }; }
+  throw new Error('unknown asset id ' + id);
+}
+function rowhouseOpts(id) {
+  const o = { seed: 3, front: 'formstone', floors: 3 };
+  if (id === 'rowhouse_brick') o.front = 'brick'; if (id === 'rowhouse_permastone') o.front = 'permastone'; if (id === 'rowhouse_4') o.floors = 4;
+  return o;
+}
+function blockOf(out, x0, z0, x1, z1, opts) {
+  const R = need('rowkit_rowhouse'), C = need('rowkit_corner'), B = need('rowkit_block');
+  return B.buildRowBlock(K, out, getAtlasA(), x0, z0, x1, z1, Object.assign({ builders: { buildRowhouse: R.buildRowhouse, buildCornerBar: C.buildCornerBar, buildCornerShop: C.buildCornerShop } }, opts));
+}
+
+const SHOWS = {
+  atlas() {
+    const a = Q.get('which') === 'B' || !M.rowkit_tiles ? getAtlasB() : getAtlasA();
+    const g = new THREE.Group(); const t = a.tex; const m = new THREE.Mesh(new THREE.PlaneGeometry(10, 10), new THREE.MeshBasicMaterial({ map: t, transparent: true }));
+    m.position.y = 5; g.add(m); return { group: g, label: 'atlas 1024²', ground: 'none', cam: 'front' };
+  },
+  rowhouse(id = 'rowhouse') {
+    const out = K.makeOut(); const a = getAtlasA(), R = need('rowkit_rowhouse'); const meta = R.buildRowhouse(K, out, a, 0, 0, 0, rowhouseOpts(id));
+    const g = new THREE.Group(); g.add(out.build()); return { group: g, label: id + ' ' + JSON.stringify(meta), ground: 'pavement', ext: [-8, 8, -16, 6], cam: 'fit' };
+  },
+  houses() { // a lineup of fronts / heights: formstone, brick, painted brick, permastone, 4-storey
+    const out = K.makeOut(); const a = getAtlasA(), R = need('rowkit_rowhouse'); let x = 0; const opts = [
+      { front: 'formstone', floors: 3, seed: 1 }, { front: 'brick', floors: 3, seed: 2 }, { front: 'brick', paint: true, floors: 4, seed: 3 },
+      { front: 'permastone', floors: 3, seed: 4 }, { front: 'formstone', floors: 4, seed: 5 }, { front: 'brick', floors: 4, seed: 6 }];
+    const ws = [5.2, 4.6, 5.6, 5.0, 4.4, 5.8];
+    let tot = ws.reduce((s, w) => s + w, 0); x = -tot / 2;
+    opts.forEach((o, i) => { const w = ws[i]; o.width = w; R.buildRowhouse(K, out, a, x + w / 2, 0, 0, Object.assign(o, { left: i > 0, right: i < opts.length - 1 })); x += w; });
+    const g = new THREE.Group(); g.add(out.build()); return { group: g, label: 'houses lineup', ground: 'pavement', ext: [-22, 22, -14, 8], cam: 'fit' };
+  },
+  corner_bar() {
+    const out = K.makeOut(); const a = getAtlasA(); const meta = need('rowkit_corner').buildCornerBar(K, out, a, 0, 0, 0, { seed: 5 });
+    const g = new THREE.Group(); g.add(out.build()); return { group: g, label: 'corner_bar ' + JSON.stringify(meta), ground: 'pavement', ext: [-14, 14, -14, 14], cam: 'fit' };
+  },
+  corner_shop() {
+    const out = K.makeOut(); const a = getAtlasA(); const meta = need('rowkit_corner').buildCornerShop(K, out, a, 0, 0, 0, { seed: 5 });
+    const g = new THREE.Group(); g.add(out.build()); return { group: g, label: 'corner_shop ' + JSON.stringify(meta), ground: 'pavement', ext: [-14, 14, -14, 14], cam: 'fit' };
+  },
+  block() {
+    const out = K.makeOut(); const meta = blockOf(out, -12, -12, 12, 12, { seed: qn('seed', 11) });
+    const g = new THREE.Group(); g.add(out.build()); return { group: g, label: 'block seed ' + qn('seed', 11), ground: 'blocks', ext: [-17, 17, -17, 17], cam: 'fit', yaw: 38, pitch: 36 };
+  },
+  street() { // two facing blocks across a 10 m street (grid period 34 m): block A spans z -34..-10, block B z 0..24 mirrored → street is z -10..0
+    const out = K.makeOut(); const sA = qn('seed', 11);
+    blockOf(out, -12, -34, 12, -10, { seed: sA }); blockOf(out, -12, 0, 12, 24, { seed: sA + 1 });
+    const g = new THREE.Group(); g.add(out.build()); return { group: g, label: 'street: two facing blocks', ground: 'street', ext: [-24, 24, -34, 24], cam: 'street' };
+  },
+  props() { // every static prop in a row on a pavement strip; parked cars turn to line up with the row
+    const g = new THREE.Group(); const out = K.makeOut(); let x = 0; const pos = [];
+    const list = STATIC.filter(([, f]) => M[f]);
+    list.forEach(([id, f, fn], i) => { const car = id.startsWith('parked_car'), m0 = { footprint: id === 'crab_shack' ? [4.2, 3] : car ? [4.6, 1.9] : id === 'ladder_wall' || id === 'ladder_drop' ? [0.8, 0.5] : id === 'bench_bus' ? [2.6, 0.6] : id === 'lamp_cobra' ? [1.2, 2] : [1.3, 0.8] }; const w = m0.footprint[0] + 0.7; pos.push([x + w / 2, car]); x += w; });
+    const x0 = x / 2;
+    list.forEach(([id, f, fn], i) => { const [px, car] = pos[i]; need(f)[fn](K, out, px - x0, car ? 3.4 : (id === 'ladder_wall' || id === 'ladder_drop' ? -1.2 : 0), car ? Math.PI / 2 : 0, { seed: 3 + i * 5, atlas: getAtlasB(), recycling: id === 'trash_can', top: id === 'ladder_wall' ? 5 : undefined }); });
+    g.add(out.build()); return { group: g, label: 'props (' + list.length + ')', ground: 'propsrow', ext: [-x0 - 3, x0 + 3, -6, 8], cam: 'front', propsWidth: x };
+  },
+  vehicles() { // the parade: boats on the water, land vehicles on the road, all facing +X, ~3/4 view
+    const g = new THREE.Group(); const upd = [];
+    const place = { water_taxi: [-14, -22], paddle_boat: [-14, -14.5], dragon_boat: [-14, -9.5], car_sedan: [13, -22], car_hatch: [13, -17.5], box_truck: [13, -12.5], arabber_cart: [13, -6.5], skateboard: [13, -1.5] };
+    const grp = Q.get('group');
+    VEHICLES.forEach(([id, f, fn], vi) => {
+      if (!M[f]) return; const water = ['water_taxi', 'paddle_boat', 'dragon_boat'].includes(id); if (grp === 'water' && !water || grp === 'land' && water) return;
+      const v = need(f)[fn](K, { seed: 11 + vi * 3, atlas: getAtlasB() }); const [px, pz] = place[id];
+      v.root.position.set(px, v.kind === 'boat' ? K.WY - v.waterline : 0, pz); v.root.rotation.y = Math.PI / 2; g.add(v.root); upd.push(v);
+      if (v.seats && Q.get('riders') !== '0') v.seats.forEach((s) => placeRider(v.root, s));
+    });
+    return { group: g, label: 'vehicles (' + VEHICLES.length + ')', ground: 'vehicles', ext: [-30, 30, -30, 10], cam: 'fit', yaw: -62, pitch: 32, update: (dt, t) => upd.forEach((v) => v.animate(v, dt, 3 + Math.sin(t) * 1.5, Math.sin(t * 0.8) * 0.5, t)) };
+  },
+};
+
+function single(id) {
+  const st = STATIC.find((s) => s[0] === id), ve = VEHICLES.find((s) => s[0] === id);
+  if (st) {
+    const out = K.makeOut(); const meta = need(st[1])[st[2]](K, out, 0, 0, 0, { seed: qn('seed', 7), atlas: getAtlasB(), recycling: Q.get('recycling') === '1', top: Q.has('top') ? qn('top', 6) : undefined }); const g = new THREE.Group(); g.add(out.build());
+    const sz = meta.footprint || [2, 2]; // the hero dummy next to it for scale
+    const onRoad = id.startsWith('parked_car') || id === 'manhole'; const h = haroldDummy('stand'); h.position.set(-(Math.max(sz[0], 1) / 2 + (id === 'crab_shack' ? 1.9 : id === 'manhole' ? 1.6 : 0.9)), onRoad ? 0 : K.CURB, 0.5); g.add(h);
+    return { group: g, label: id + ' ' + JSON.stringify(meta), ground: onRoad ? 'road' : 'pavement', ext: [-6, 6, -6, 6], cam: 'fit' };
+  }
+  return null;
+}
+function singleVehicle(id) {
+  const ve = VEHICLES.find((s) => s[0] === id); if (!ve) return null;
+  const v = need(ve[1])[ve[2]](K, { seed: qn('seed', 7), atlas: getAtlasB() }); const g = new THREE.Group(); const water = v.kind === 'boat';
+  v.root.position.y = water ? K.WY - v.waterline : 0; g.add(v.root);
+  (v.seats || []).forEach((s) => placeRider(v.root, s)); // Harold dummies at every seat anchor
+  const c = v.collider || { w: 2, l: 4, h: 2 };
+  // collider wireframe (a box centred along +Z, base at y = 0): it must match the visible hull
+  const wf = new THREE.LineSegments(new THREE.EdgesGeometry(new THREE.BoxGeometry(c.w, c.h, c.l)), new THREE.LineBasicMaterial({ color: '#23c26b' }));
+  wf.position.set(0, c.h / 2, 0); wf.visible = Q.get('collider') === '1'; v.root.add(wf);
+  return { group: g, label: id + ' ' + JSON.stringify({ kind: v.kind, seats: (v.seats || []).length, collider: c, waterline: v.waterline }), ground: water ? 'water' : 'road', ext: [-Math.max(c.l, 6), Math.max(c.l, 6), -Math.max(c.l, 6), Math.max(c.l, 6)], cam: 'fit',
+    update: (dt, t) => v.animate(v, dt, 3 + Math.sin(t) * 1.5, Math.sin(t * 0.8) * 0.5, t), v, wf };
+}
+
+// ---- build the requested show ----
+let show;
+try {
+  if (SHOWS[SHOW]) show = SHOWS[SHOW]();
+  else if (SHOW === 'rowhouse_brick' || SHOW === 'rowhouse_permastone' || SHOW === 'rowhouse_4') show = SHOWS.rowhouse(SHOW);
+  else show = singleVehicle(SHOW) || single(SHOW);
+  if (!show) throw new Error('unknown ?show=' + SHOW);
+} catch (e) { logErr(e.stack || e.message); show = { group: new THREE.Group(), label: 'error', ground: 'none', ext: [-5, 5, -5, 5] }; }
+
+// ground / stage
+function buildStage(kind) {
+    if (kind === 'pavement') { stagePavement(stageGroup, -60, 60, -60, 60); slab(stageGroup, -60, 60, 12, 60, 0, 0.5, '#4a4a50'); stagePavement(stageGroup, -60, 60, -60, 9.5); }
+  if (kind === 'road') { slab(stageGroup, -60, 60, -60, 60, 0, 0.5, '#4a4a50'); stagePavement(stageGroup, -60, 60, -60, -8); }
+  if (kind === 'blocks') { stageStreet(stageGroup, -80, 80, -80, 80); stagePavement(stageGroup, -14.5, 14.5, -14.5, 14.5); }
+  if (kind === 'street') { slab(stageGroup, -60, 60, -60, 60, 0, 0.5, '#4a4a50'); // asphalt everywhere, pavement slabs under the blocks, 2.5 m pavements each side of the street (z -10..0)
+    stagePavement(stageGroup, -60, 60, -34, -7.5); stagePavement(stageGroup, -60, 60, -2.5, 24); slab(stageGroup, -60, 60, -34, -7.5, K.CURB, 0.6, '#8a8478'); }
+  if (kind === 'propsrow') { slab(stageGroup, -80, 80, -80, 80, 0, 0.5, '#4a4a50'); stagePavement(stageGroup, -80, 80, -6, 2.4); }
+  if (kind === 'water') { stageWater(stageGroup, -80, 80, -80, 80); stagePromenade(stageGroup, 8, 80, -80, 80); }
+  if (kind === 'vehicles') { stageWater(stageGroup, -80, -2.5, -80, 80); stagePromenade(stageGroup, -2.5, 3, -80, 80); slab(stageGroup, 3, 80, -80, 80, 0, 0.5, '#4a4a50'); }
+  scene.add(stageGroup.children.length ? stageGroup : new THREE.Group());
+}
+buildStage(show.ground);
+if (show.group) scene.add(show.group);
+
+// hero dummies line the props row for scale
+if (SHOW === 'props') { const h = haroldDummy('stand'); h.position.set(-(show.propsWidth || 40) / 2 - 1.6, K.CURB, 1.2); scene.add(h); }
+
+// ---- lighting + camera ----
+let night = Q.get('night') === '1', paused = false, tNow = qn('t', 0), camMode = Q.get('cam') || show.cam || 'fit', variant = qn('pose', 0);
+const CAMS = ['fit', 'game', 'phone', 'front', 'top'];
+function setLight() { K.applyLight(rig, night ? 'night' : 'day'); const d = sun.userData.dir; sun.position.set(d[0], d[1], d[2]).normalize().multiplyScalar(80).add(sun.target.position); }
+function frameCamera() {
+  const b = show.group ? bbox(show.group) : new THREE.Box3(new THREE.Vector3(-3, 0, -3), new THREE.Vector3(3, 3, 3)); const c = b.getCenter(new THREE.Vector3()), s = b.getSize(new THREE.Vector3());
+  const r = Math.max(s.length() * 0.5, 2.5); const asp = innerWidth / innerHeight;
+  const tanH = Math.tan(THREE.MathUtils.degToRad(camera.fov / 2)), foot = Math.hypot(s.x, s.z);
+  let yaw = qn('yaw', show.yaw ?? 32) * Math.PI / 180, pitch = qn('pitch', show.pitch ?? 22) * Math.PI / 180;
+  let dist = Math.max((s.y * 0.5 + 0.25) / tanH, (foot * 0.55) / (tanH * asp)) * 1.12 + foot * 0.25; void r;
+  let tgt = c.clone();
+  const mode = camMode;
+  if (mode === 'front') { yaw = qn('yaw', 0) * Math.PI / 180; pitch = qn('pitch', 8) * Math.PI / 180; }
+  if (mode === 'top') { pitch = qn('pitch', 52) * Math.PI / 180; yaw = qn('yaw', 20) * Math.PI / 180; }
+  if (mode === 'street') { yaw = qn('yaw', 35) * Math.PI / 180; pitch = qn('pitch', 30) * Math.PI / 180; dist *= 0.62; tgt.y = 4; tgt.z -= 4; }
+  if (mode === 'game' || mode === 'phone') { // gameplay distance: a 390x844 portrait window, camera about 9 m away
+    const base = new THREE.Vector3(c.x, Math.max(b.min.y, 0) + Math.min(s.y, 4) * 0.45, c.z); tgt = base; dist = qn('dist', mode === 'phone' ? Math.max(9, r * 1.6) : 9); pitch = qn('pitch', 24) * Math.PI / 180;
+  }
+  if (Q.has('dist')) dist = qn('dist', dist); dist *= qn('zoom', 1);
+  camera.position.set(tgt.x + Math.sin(yaw) * Math.cos(pitch) * dist, tgt.y + Math.sin(pitch) * dist, tgt.z + Math.cos(yaw) * Math.cos(pitch) * dist);
+  controls.target.copy(tgt);
+  if (Q.has('pos')) { const p = Q.get('pos').split(',').map(Number), l = (Q.get('look') || '0,0,0').split(',').map(Number); camera.position.set(p[0], p[1], p[2]); controls.target.set(l[0], l[1], l[2]); }
+  if (Q.has('fov')) camera.fov = qn('fov', 42); camera.near = 0.2; camera.far = 600; camera.updateProjectionMatrix(); controls.update();
+  const ext = b.clone().expandByScalar(4); const sc = sun.shadow.camera, R = Math.max(ext.getSize(new THREE.Vector3()).length() * 0.5, 14);
+  sun.target.position.copy(c); sc.left = -R; sc.right = R; sc.top = R; sc.bottom = -R; sc.near = 1; sc.far = R * 6; sc.updateProjectionMatrix(); sun.shadow.needsUpdate = true;
+}
+setLight(); frameCamera();
+const setVariant = (i) => { variant = i; if (show.setVariant) show.setVariant(i); };
+addEventListener('keydown', (e) => {
+  const k = e.key.toLowerCase();
+  if (k === 'n') { night = !night; setLight(); frameCamera(); }
+  if (k === 'p') setVariant(variant + 1);
+  if (k === 'c') { camMode = CAMS[(CAMS.indexOf(camMode) + 1) % CAMS.length]; frameCamera(); }
+  if (k === ' ') paused = !paused;
+  if (k === 'h') document.body.classList.toggle('nohud');
+});
+addEventListener('resize', () => { renderer.setSize(innerWidth, innerHeight); camera.aspect = innerWidth / innerHeight; frameCamera(); });
+camera.aspect = innerWidth / innerHeight; camera.updateProjectionMatrix(); frameCamera();
+
+// ---- budgets table used by the HUD (green / red) ----
+const BUD = {
+  rowhouse: { tris: 2500, label: 'house ≤2.5k' }, corner_bar: { tris: 3500, label: 'corner ≤3.5k' }, corner_shop: { tris: 3500, label: 'corner ≤3.5k' }, block: { tris: 30000, dc: 4, label: 'block ≤30k, ≤4 draw calls' },
+  lamp_acorn: { tris: 350 }, lamp_cobra: { tris: 250 }, bench_park: { tris: 250 }, bench_bus: { tris: 300 }, trash_can: { tris: 250 }, crab_shack: { tris: 2500 }, manhole: { tris: 120 },
+  ladder_wall: { tris: 300 }, ladder_drop: { tris: 300 }, parked_car_sedan: { tris: 1500 }, parked_car_hatchback: { tris: 1500 }, parked_car_pickup: { tris: 1500 },
+  water_taxi: { tris: 4000, meshes: 8 }, paddle_boat: { tris: 2500, meshes: 6 }, dragon_boat: { tris: 6000, meshes: 10 }, car_sedan: { tris: 2000, meshes: 7 }, car_hatch: { tris: 2000, meshes: 7 },
+  box_truck: { tris: 2500, meshes: 7 }, arabber_cart: { tris: 5000, meshes: 12 }, skateboard: { tris: 600, meshes: 3 },
+};
+function budgetKey(id) { return id.startsWith('rowhouse') ? 'rowhouse' : id; }
+function readout() {
+  const info = renderer.info, lines = [];
+  const key = budgetKey(SHOW), b = BUD[key];
+  lines.push(`<b>${SHOW}</b>  ${night ? 'NIGHT' : 'DAY'}  cam:${camMode}`);
+  if (b && show.group) {
+    const m = measure(show.group), bits = [];
+    const cls = (ok) => (ok ? 'ok' : 'bad');
+    bits.push(`tris <span class="${cls(m.tris - (SHOW === 'props' || SHOW === 'vehicles' ? 1e9 : 0) <= b.tris)}">${m.tris}</span>/${b.tris}`);
+    if (b.dc) bits.push(`draw calls <span class="${cls(m.drawCalls <= b.dc)}">${m.drawCalls}</span>/${b.dc}`);
+    if (b.meshes) bits.push(`meshes <span class="${cls(m.meshes <= b.meshes)}">${m.meshes}</span>/${b.meshes} (+${m.hulls} hulls)`);
+    lines.push(bits.join('  ') + `  mats ${m.materials}`);
+  } else if (show.group) { const m = measure(show.group); lines.push(`asset: ${m.tris} tris (${m.trisNoHull} without hulls) · ${m.meshes} meshes + ${m.hulls} hulls · ${m.materials} materials`); }
+  lines.push(`scene: ${info.render.calls} draw calls · ${info.render.triangles} tris (incl. ground, dummy, shadow pass) · ${info.memory.textures} tex`);
+  lines.push(show.label.length > 150 ? show.label.slice(0, 150) + '…' : show.label);
+  hud.innerHTML = lines.join('\n');
+}
+
+// ---- loop ----
+const clock = new THREE.Clock(); let frames = 0;
+function frame() {
+  const dt = Math.min(clock.getDelta(), 0.05); if (!paused) tNow += dt;
+  if (show.update) show.update(dt, tNow);
+  fill.position.copy(camera.position); fill.target.position.copy(controls.target);
+  controls.update(); renderer.render(scene, camera); if (frames % 10 === 0) readout(); frames++;
+  if (frames === 3 && !window.__ready) { readout(); window.__ready = true; }
+  requestAnimationFrame(frame);
+}
+if (Q.has('t')) { paused = true; const dt = 1 / 60; for (let i = 0; i < Math.round(tNow * 60); i++) show.update && show.update(dt, i * dt); }
+frame();
+
+// ---- API for the headless harness (tools/measure.mjs, tools/shoot.mjs) ----
+window.__api = {
+  assets: () => [...STATIC.map((s) => s[0]), ...VEHICLES.map((s) => s[0])],
+  measure(id, extra) {
+    const a = buildAssetOnly(id, extra); const r = measure(a.grp);
+    if (a.out) { r.coll = a.out.COLL.length; r.bld = a.out.BLD.length; r.lamps = a.out.LAMPS.length; r.hooks = Object.fromEntries(Object.entries(a.out.HOOKS).map(([k, v]) => [k, v.length])); }
+    if (a.v) { r.seats = a.v.seats.length; r.collider = a.v.collider; r.waterline = a.v.waterline; r.kind = a.v.kind; }
+    if (a.meta) r.meta = a.meta; r.bbox = (() => { const b = bbox(a.grp); return [b.min.x, b.min.y, b.min.z, b.max.x, b.max.y, b.max.z].map((v) => +v.toFixed(2)); })();
+    return r;
+  },
+  // determinism check: hash of every merged vertex of a block / house built with a given seed
+  hash(id, seed) {
+    const out = K.makeOut(); const R = need('rowkit_rowhouse'), C = need('rowkit_corner');
+    const stats = { windows: 0, lit: 0 };
+    if (id === 'block') blockOf(out, 0, 0, 24, 24, { seed, stats }); else if (id === 'house') R.buildRowhouse(K, out, getAtlasA(), 0, 0, 0, { seed });
+    else C.buildCornerBar(K, out, getAtlasA(), 0, 0, 0, { seed });
+    let h = 0, n = 0; out.build().traverse((m) => { if (!m.isMesh) return; const a = m.geometry.attributes.position.array; for (let i = 0; i < a.length; i += 7) { h = (h * 31 + Math.round(a[i] * 1000) + i) % 1000000007; n++; } });
+    return { hash: h, verts: n, windows: stats.windows, lit: stats.lit, coll: out.COLL.length, hooks: Object.fromEntries(Object.entries(out.HOOKS).map(([k, v]) => [k, v.length])), lamps: out.LAMPS.length };
+  },
+  setNight(v) { night = !!v; setLight(); frameCamera(); }, setCam(m) { camMode = m; frameCamera(); }, step(n = 1, dt = 1 / 30) { for (let i = 0; i < n; i++) show.update && show.update(dt, (tNow += dt)); },
+  stats: () => ({ calls: renderer.info.render.calls, tris: renderer.info.render.triangles }),
+  atlasPng: () => (atlasA || atlasB || (M.rowkit_tiles ? getAtlasA() : getAtlasB())).canvas.toDataURL('image/png'),
+  K,
+};
+</script>
+</body>
+</html>

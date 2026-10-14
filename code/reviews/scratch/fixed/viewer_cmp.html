@@ -1,0 +1,228 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>FIX compare viewer (real poses; ?src=orig for bbad681)</title>
+<style>
+  html, body { margin: 0; height: 100%; background: #14101f; overflow: hidden; font: 12px/1.35 ui-monospace, Menlo, Consolas, monospace; }
+  canvas { display: block; }
+  #ro { position: fixed; left: 8px; top: 8px; padding: 6px 8px; background: rgba(20, 16, 31, 0.78); color: #f2f2f2; border-radius: 4px; white-space: pre; pointer-events: none; max-width: calc(100vw - 32px); overflow: hidden; }
+  #ro b { color: #ffd23c; font-weight: 600; }
+  #ro .bad { color: #ff3a1c; }
+  .lbl { position: fixed; transform: translate(-50%, 0); color: #14101f; background: rgba(242, 242, 242, 0.85); padding: 1px 6px; border-radius: 3px; font-weight: 600; white-space: nowrap; pointer-events: none; }
+  body.hide-ui #ro { display: none; }
+</style>
+<script type="importmap">{ "imports": { "three": "https://unpkg.com/three@0.160.0/build/three.module.js" } }</script>
+</head>
+<body>
+<div id="ro">loading…</div>
+<div id="tag" style="position:fixed;right:10px;top:8px;padding:4px 10px;background:#ffd23c;color:#14101f;font:700 22px/1.2 sans-serif;border-radius:4px"></div>
+<script type="module">
+// Toad City kit viewer — test bench for character modules.
+// URL: ?show=<gang id> (lineup) | <gang id>.<member> | gull_lookout | thug
+//      &night=1  &pose=idle|run|windup|attack|hurt|down|getup|all  &lod=1  &cam=three|front|side|back|phone
+//      &t=<seconds, freezes time>  &flash=0.85  &anim=0 (skip animateGang)  &ui=0 (hide readout)  &dist=<m, phone view>
+//      &zoom=<x, closer>  &look=<target height m>  &turn=1 (front / 3/4 / side / back of one member)
+// Keys: N night, P next pose, L LOD, F hit-flash, A animateGang on/off, C camera preset.
+import * as THREE from 'three';
+import { K, mergeRig } from '../kitreal_browser.js';
+import * as GULL from '../../hawk-hr/example_gull_thug.js';
+const _src = new URLSearchParams(location.search).get('src');
+const HARBOR_RATS = await import(_src === 'orig' ? './orig/gang_harbor_rats.js' : _src ? './' + _src + '.js' : '../../hawk-hr/src/gang_harbor_rats.js');
+
+const MODULES = [GULL, HARBOR_RATS];         // add new delivery modules here
+const POSES = ['idle', 'run', 'windup', 'attack', 'hurt', 'down', 'getup'];
+const Q = new URLSearchParams(location.search);
+const S = {
+  show: Q.get('show') || 'harbor_rats', night: Q.get('night') === '1', pose: Q.get('pose') || 'idle', lod: Q.get('lod') === '1' ? 1 : 0,
+  cam: Q.get('cam') || 'three', fixedT: Q.has('t') ? parseFloat(Q.get('t')) : null, flash: parseFloat(Q.get('flash') || '0'),
+  anim: Q.get('anim') !== '0', dist: parseFloat(Q.get('dist') || '8'), zoom: parseFloat(Q.get('zoom') || '1'), turn: Q.get('turn') === '1', look: Q.has('look') ? parseFloat(Q.get('look')) : null,
+};
+if (Q.get('ui') === '0') document.body.classList.add('hide-ui');
+
+// ---- registry: every module exports META and one build function; gang modules also export GANG ----
+const REG = {};   // id -> { label, build(opts) -> J, meta, animate }
+for (const M of MODULES) {
+  const buildName = Object.keys(M).find((k) => k.startsWith('build') && typeof M[k] === 'function');
+  const build = M[buildName];
+  if (M.GANG) {
+    for (const mem of M.GANG.members) REG[M.GANG.id + '.' + mem] = { label: mem, meta: M.META[mem], build: (o) => build(K, mem, o), animate: M.animateGang };
+    REG[M.GANG.id] = { group: M.GANG.members.map((mem) => M.GANG.id + '.' + mem) };
+  } else {
+    REG[M.META.id] = { label: M.META.id, meta: M.META, build: (o) => build(K, o), animate: M.animateBoss };
+  }
+}
+REG.thug = { label: 'current thug', meta: { scale: 1 }, build: () => K.buildThug({}) };
+
+// ---- renderer, scene, lights ----
+const renderer = new THREE.WebGLRenderer({ antialias: true, preserveDrawingBuffer: true });
+renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+renderer.setSize(innerWidth, innerHeight);
+renderer.shadowMap.enabled = true; renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+renderer.info.autoReset = false;
+document.body.appendChild(renderer.domElement);
+const scene = new THREE.Scene(); scene.fog = new THREE.Fog('#b4c0c6', 40, 120);
+K.OUT_U.fogN.value = 40; K.OUT_U.fogF.value = 120;
+const camera = new THREE.PerspectiveCamera(35, innerWidth / innerHeight, 0.1, 300);
+const hemi = new THREE.HemisphereLight('#ffffff', '#888888', 1); scene.add(hemi);
+const sun = new THREE.DirectionalLight('#ffffff', 1); sun.castShadow = true;
+sun.shadow.mapSize.set(2048, 2048); Object.assign(sun.shadow.camera, { left: -9, right: 9, top: 9, bottom: -9, near: 1, far: 80 });
+sun.shadow.bias = -0.0004; sun.shadow.normalBias = 0.02; scene.add(sun, sun.target);
+const lamp = new THREE.PointLight('#ffa050', 16, 15, 2); lamp.position.set(-2.6, 3.6, 2.4); scene.add(lamp);   // street lamp (night)
+const fill = new THREE.PointLight('#c8d0ff', 3.2, 0, 0.6); camera.add(fill); scene.add(camera);               // cool camera-side fill (night)
+const ground = new THREE.Mesh(new THREE.PlaneGeometry(200, 200), new THREE.MeshLambertMaterial({ color: '#958ea0' }));
+ground.rotation.x = -Math.PI / 2; ground.receiveShadow = true; scene.add(ground);
+function setNight(on) {
+  S.night = on; K.applyLight({ scene, hemi, sun }, on ? 'night' : 'day');
+  ground.material.color.set(on ? '#3a3850' : '#958ea0');
+  lamp.intensity = on ? 16 : 0; fill.intensity = on ? 3.2 : 0;
+}
+
+// ---- rigs ----
+let rigs = [];   // { J, id, entry, pose, label }
+function clearRigs() { for (const r of rigs) { scene.remove(r.J.root); r.el?.remove(); } rigs = []; }
+function addRig(id, x, z, pose) {
+  const e = REG[id]; if (!e || !e.build) throw new Error('unknown id ' + id);
+  const J0 = e.build({ lod: S.lod, seed: 7 }); const J = Q.get('merge') === '1' ? mergeRig(J0) : J0;
+  if (Q.get('noshw') === '1') J.root.traverse((o) => { if (o.isMesh && o.geometry.parameters && o.geometry.parameters.height === 0.009) o.castShadow = false; });
+  if (Q.get('ol') === '0') J.root.traverse((o) => { if (o.isMesh && o.material.isShaderMaterial && o.material.side === THREE.BackSide) o.visible = false; });
+  if (Q.has('dbg')) { const m = Q.get('dbg'); J.root.traverse((o) => { if (!o.isMesh) return; const p = o.geometry.parameters || {}; const hull = o.material.isShaderMaterial;
+    const diamond = p.width === 0.17 && p.height === 0.17; const belly = o.geometry.type === 'SphereGeometry' && Math.abs((p.radius||0) - 1) < 1e-6 && false;
+    if (m === 'diamondHull' && diamond && hull) o.visible = false; if (m === 'diamond' && diamond) o.visible = false; if (m === 'noshadow') o.castShadow = false; if (m === 'allHulls' && hull) o.visible = false; }); }
+  J.root.position.set(x, 0, z); J.root.scale.setScalar(e.meta?.scale || 1);
+  scene.add(J.root);
+  const el = document.createElement('div'); el.className = 'lbl'; el.textContent = pose === 'all' ? '' : e.label; document.body.appendChild(el);
+  const r = { J, id, entry: e, pose, el }; rigs.push(r); return r;
+}
+function rebuild() {
+  clearRigs();
+  const g = REG[S.show]?.group;
+  if (S.pose === 'all') {
+    const id = g ? g[0] : S.show;
+    POSES.forEach((p, i) => { const r = addRig(id, (i - 3) * 1.7, 0, p); r.el.textContent = p; });
+  } else if (S.turn) {
+    const id = g ? g[0] : S.show;
+    [['front', 0], ['3/4', 0.7], ['side', Math.PI / 2], ['back', Math.PI]].forEach(([n, ry], i) => { const r = addRig(id, (i - 1.5) * 1.6, 0, S.pose); r.J.root.rotation.y = ry; r.el.textContent = n; });
+  } else if (g && S.cam === 'phone') {   // street formation for the phone check: two in front, two behind
+    const F = [[-1.25, 0.6], [1.25, 0.6], [-0.55, -0.6], [0.7, -0.95]];
+    g.forEach((id, i) => addRig(id, F[i % 4][0], F[i % 4][1] - Math.floor(i / 4) * 2, S.pose));
+  } else if (g) {
+    g.forEach((id, i) => addRig(id, (i - (g.length - 1) / 2) * 1.6, 0, S.pose));
+  } else addRig(S.show, 0, 0, S.pose);
+  frameCamera(); measure();
+}
+
+// pose u-values for still frames; animated frames sweep u through 0..1
+function poseFor(r, t) {
+  const P = K.THUG_POSES, J = r.J, still = S.fixedT !== null;
+  const u = still ? null : (t * 0.7) % 1;
+  switch (r.pose) {
+    case 'run': return P.run(t, 4.5, J);
+    case 'windup': return P.windup(still ? 0.6 : u, J);
+    case 'attack': return P.attack(still ? 0.4 : u, J);
+    case 'hurt': return P.hurt(still ? 0.15 : u, J);
+    case 'down': return P.down(still ? 1 : u, still ? true : u > 0.8);
+    case 'getup': return P.getup(still ? 0.35 : u, J);
+    default: return P.idle(t, J);
+  }
+}
+const STATE = { idle: 'idle', run: 'run', windup: 'attack', attack: 'attack', hurt: 'hurt', down: 'down', getup: 'idle' };   // getup -> idle: animateGang lifts the tail with the tilt (README)
+
+// ---- camera ----
+const CAMS = ['three', 'front', 'side', 'back', 'phone'];
+function frameCamera() {
+  const xs = rigs.map((r) => r.J.root.position.x), w = rigs.length > 1 ? Math.max(...xs) - Math.min(...xs) + 1.6 : 1.4;
+  const aspect = innerWidth / innerHeight;
+  camera.fov = S.cam === 'phone' ? 60 : 32; camera.aspect = aspect;
+  const vfov = THREE.MathUtils.degToRad(camera.fov), hfov = 2 * Math.atan(Math.tan(vfov / 2) * aspect);
+  const dist = S.cam === 'phone' ? S.dist : (Math.max(2.5 / (2 * Math.tan(vfov / 2)), w / (2 * Math.tan(hfov / 2))) + 0.8) / S.zoom;
+  const dirs = { top: [0, 0], three: [0.62, 0.78], front: [0, 1], side: [1, 0], back: [0, -1], phone: [0, 1] };
+  let [dx, dz] = dirs[S.cam] || dirs.three;
+  if (S.pose === 'all' && S.cam === 'three') { dx = 0.3; dz = 0.954; }   // long pose rows: shallow three-quarter so nothing leaves frame
+  const y = S.cam === 'phone' ? 3.0 : 1.35;   // phone: the game's chase camera sits above and behind the hero
+  const ly = S.look !== null ? S.look : S.cam === 'phone' ? 0.6 : 1.05;
+  camera.position.set(dx * dist, (S.look !== null ? ly : y) + (S.cam === 'phone' ? 0 : 0.35), dz * dist);
+  if (S.cam === 'top') { camera.position.set(0.001, dist, 0.35); camera.up.set(0, 0, -1); }
+  camera.lookAt(0, S.cam === 'top' ? 0 : ly, S.cam === 'top' ? 0.35 : 0);
+  if (Q.has('cp')) { const c = Q.get('cp').split(',').map(Number), t = (Q.get('ct') || '0,1,0').split(',').map(Number); camera.up.set(0, 1, 0); camera.position.set(c[0], c[1], c[2]); camera.lookAt(t[0], t[1], t[2]); if (Q.has('fov')) camera.fov = +Q.get('fov'); }
+  camera.updateProjectionMatrix();
+}
+
+// ---- measurement: parts, triangles, materials, height, flash sharing ----
+const triCount = (g) => (g.index ? g.index.count : g.attributes.position.count) / 3;
+function measureRig(J) {
+  let parts = 0, tris = 0, hullTris = 0; const mats = new Set(); const flashOK = [];
+  J.root.updateMatrixWorld(true);
+  J.root.traverse((o) => {
+    if (!o.isMesh || !o.visible) return;
+    mats.add(o.material);
+    if (o.material.side === THREE.BackSide && o.material.isShaderMaterial) { hullTris += triCount(o.geometry); return; }
+    parts++; tris += triCount(o.geometry);
+    if (o.material.userData.flash !== J.mat.userData.flash || o.material.userData.flashC !== J.mat.userData.flashC) flashOK.push(o);
+  });
+  const box = new THREE.Box3();
+  J.root.traverse((o) => { if (o.isMesh && o.visible && !(o.material.side === THREE.BackSide)) box.expandByObject(o); });
+  const hullsOK = [...mats].filter((m) => m.side === THREE.BackSide).every((m) => m === K.OUT_CHAR);
+  return { parts, tris, hullTris, mats: mats.size, height: box.max.y - box.min.y, minY: box.min.y, flashBad: flashOK.length, hullsOK, swR: !!J.swR };
+}
+let REPORT = {};
+function measure() {
+  // measure each rig in the idle pose at t=0 (snap), then restore
+  REPORT = { show: S.show, lod: S.lod, rigs: {} };
+  for (const r of rigs) {
+    const save = r.pose; r.pose = 'idle'; K.applyPose(r.J, poseFor(r, 0), 1e4, 1, true); r.J.root.updateMatrixWorld(true);
+    REPORT.rigs[r.id + (S.pose === 'all' ? '/' + save : '')] = measureRig(r.J); r.pose = save;
+  }
+}
+
+// ---- loop ----
+const clock = new THREE.Clock(); let frames = 0, last = 0;
+const ro = document.getElementById('ro');
+function frame() {
+  const t = S.fixedT !== null ? S.fixedT : clock.getElapsedTime(), dt = S.fixedT !== null ? 1 : Math.min(t - last, 0.05); last = t;
+  for (const r of rigs) {
+    K.applyPose(r.J, poseFor(r, t), S.fixedT !== null ? 1e4 : 14, dt, true);
+    if (S.anim && r.entry.animate) r.entry.animate(r.J, t, STATE[r.pose]);
+    r.J.mat.userData.flash.value = S.flash;
+  }
+  renderer.info.reset();
+  renderer.render(scene, camera);
+  // labels under each rig
+  const v = new THREE.Vector3();
+  for (const r of rigs) {
+    v.set(r.J.root.position.x, -0.05, r.J.root.position.z).project(camera);
+    r.el.style.left = ((v.x + 1) / 2 * innerWidth) + 'px'; r.el.style.top = ((1 - v.y) / 2 * innerHeight + 4) + 'px';
+  }
+  if (frames % 10 === 0) {
+    const lines = [`<b>${S.show}</b>  pose ${S.pose}  ${S.night ? 'NIGHT' : 'DAY'}  LOD ${S.lod}  cam ${S.cam}`,
+      `frame: ${renderer.info.render.calls} draw calls · ${(renderer.info.render.triangles / 1000).toFixed(1)}k tris (incl. shadow pass)`];
+    const lim = S.lod ? { parts: 14, tris: 3000 } : { parts: 40, tris: 12000 };
+    for (const [id, m] of Object.entries(REPORT.rigs || {})) {
+      const bad = (c) => (c ? '' : ' class="bad"');
+      lines.push(`${id.padEnd(22)} <span${bad(m.parts <= lim.parts)}>${String(m.parts).padStart(2)} parts</span> · <span${bad(m.tris <= lim.tris)}>${(m.tris / 1000).toFixed(2)}k tris</span> (+${(m.hullTris / 1000).toFixed(2)}k hull) · <span${bad(m.mats <= 3)}>${m.mats} mats</span> · h ${m.height.toFixed(2)} m · <span${bad(!m.flashBad)}>flash ${m.flashBad ? 'BAD' : 'ok'}</span>`);
+    }
+    ro.innerHTML = lines.join('\n');
+  }
+  frames++;
+  if (frames === 3) { REPORT.frame = { calls: renderer.info.render.calls, triangles: renderer.info.render.triangles }; window.__report = REPORT; window.__ready = true; }
+  requestAnimationFrame(frame);
+}
+
+addEventListener('keydown', (e) => {
+  const k = e.key.toLowerCase();
+  if (k === 'n') setNight(!S.night);
+  else if (k === 'p') { S.pose = POSES[(POSES.indexOf(S.pose) + 1) % POSES.length]; rebuild(); }
+  else if (k === 'l') { S.lod = S.lod ? 0 : 1; rebuild(); }
+  else if (k === 'f') S.flash = S.flash ? 0 : 0.85;
+  else if (k === 'a') S.anim = !S.anim;
+  else if (k === 'c') { S.cam = CAMS[(CAMS.indexOf(S.cam) + 1) % CAMS.length]; frameCamera(); }
+});
+addEventListener('resize', () => { renderer.setSize(innerWidth, innerHeight); frameCamera(); });
+
+document.getElementById('tag').textContent = Q.get('tag') || (Q.get('src') === 'orig' ? 'BEFORE (bbad681)' : 'AFTER (fixes)');
+setNight(S.night); rebuild(); frame();
+window.__S = S; window.__REG = REG;
+</script>
+</body>
+</html>

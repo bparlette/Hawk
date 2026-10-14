@@ -1,0 +1,18 @@
+f68: loading scene
+f239: stage lvl=3 section=L0
+f754: bark: BLADE AND HONOR!
+f1037: bark: FORM IS EVERYTHING!
+f2557: taunt seen: NICE SHELL, NERD!
+f3763: stage lvl=3 section=L1
+f4175: boss fight lvl=3 GULCH GATOR
+f4894: bark: BY THE BOOK!
+f5573: bark: STAY SHARP!
+f5750: outro lvl=3
+f5770: bark: PHEW! FRESH AIR UP THAT LADDER...
+f5860: bark: THAT'S THE HIGHWAY! GRAB A BOARD!
+f5961: pizza lvl=3
+f6131: results lvl=3
+after: LEVELS loaded=1,,3,4 LVLOAD=3,4
+scripts loaded=levels/level3.js,levels/level4.js missing= SS=object
+END f=6131 scene=stage level=3 kills=19 levelsWithResults=3
+exit 0

@@ -1,0 +1,7 @@
+[
+ {"url":"http://127.0.0.1:8731/g/blox-dough-raid/index.html","out":"/workspace/work/re-requiem/qa/blox.png","thumb":"/workspace/work/demos/src/thumbs/blox-dough-raid.webp","w":640,"h":400,"click":"#btn-play","wait":5000},
+ {"url":"http://127.0.0.1:8731/g/socal-summer-games/index.html","out":"/workspace/work/re-requiem/qa/socal.png","thumb":"/workspace/work/demos/src/thumbs/socal-summer-games.webp","w":640,"h":400,"pre":5000,"wait":4000},
+ {"url":"http://127.0.0.1:8731/g/re-requiem-v1/index.html","out":"/workspace/work/re-requiem/qa/v1.png","thumb":"/workspace/work/demos/src/thumbs/re-requiem-v1.webp","w":640,"h":400,"pre":5000,"click":"#btnStartGame","keys":[[300,"KeyW",1500]],"wait":2500},
+ {"url":"http://127.0.0.1:8731/g/re-requiem-v2/index.html","out":"/workspace/work/re-requiem/qa/v2.png","thumb":"/workspace/work/demos/src/thumbs/re-requiem-v2.webp","w":640,"h":400,"pre":4000,"click":"#btn-play","keys":[[300,"KeyW",1500]],"wait":2500},
+ {"url":"http://127.0.0.1:8731/g/re-requiem-v3/index.html","out":"/workspace/work/re-requiem/qa/v3.png","thumb":"/workspace/work/demos/src/thumbs/re-requiem-v3.webp","w":640,"h":400,"pre":5000,"click":"#btn-viral","wait":6000}
+]

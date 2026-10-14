@@ -1,0 +1,18 @@
+f68: loading scene
+f239: stage lvl=7 section=L0
+f407: bark: BY THE BOOK!
+f551: dodge seen
+f1621: bark: STAY SHARP!
+f2436: bark: WHOA! LET GO!
+f4140: stage lvl=7 section=L1
+f4141: boss fight lvl=7 RUSTMAUL
+f4735: bark: FORM IS EVERYTHING!
+f5430: outro lvl=7
+f5450: bark: EVERY SCRAP TRUCK HEADS FOR THAT TOWER...
+f5560: bark: THE FORTRESS. LET'S END THIS!
+f5671: pizza lvl=7
+f5841: results lvl=7
+after: LEVELS loaded=1,,,,,,7,8 LVLOAD=7,8
+scripts loaded=levels/level7.js,levels/level8.js missing= SS=object
+END f=5841 scene=stage level=7 kills=19 levelsWithResults=7
+exit 0

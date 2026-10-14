@@ -1,0 +1,20 @@
+f68: loading scene
+f239: stage lvl=8 section=L0
+f400: bark: BY THE BOOK!
+f554: bark: FORM IS EVERYTHING!
+f750: bark: STAY SHARP!
+f3850: dodge seen
+f4765: stage lvl=8 section=L1
+f4766: boss fight lvl=8 RAZORBACK
+f5510: bark: BLADE AND HONOR!
+f6131: bark: HE'S SUPERCHARGED! STAY SHARP!
+f7324: outro lvl=8
+f7344: bark: AMBER! HANG ON!
+f7515: bark: LET'S GO HOME, AMBER!
+f8036: pizza lvl=8
+f8206: results lvl=8
+f10117: back to title
+after: LEVELS loaded=1,,,,,,,- LVLOAD=
+scripts loaded=levels/level8.js missing=levels/level9.js SS=object
+END f=10117 scene=title level=1 kills=19 levelsWithResults=8
+exit 0

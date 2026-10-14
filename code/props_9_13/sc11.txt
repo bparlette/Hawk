@@ -1,0 +1,19 @@
+spawned purple,gunner,star
+shot car_hats
+shot tower
+shot tunnel
+shot tunnel_exit
+shot coal
+shot boulder_lift
+shot boulder_thrown
+shot crate_thrown
+node:internal/process/promises:394
+    triggerUncaughtException(err, true /* fromPromise */);
+    ^
+
+page.evaluate: Target page, context or browser has been closed
+    at ev (/workspace/work/props_9_13/scenes.js:21:28)
+    at outro (/workspace/work/props_9_13/scenes.js:55:55)
+    at /workspace/work/props_9_13/async /workspace/work/props_9_13/scenes.js:124:5
+
+Node.js v22.23.3

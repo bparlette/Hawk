@@ -1,0 +1,37 @@
+{
+ "pier_1.jpg": {
+  "title": "File:City Recreation Pier (21603728955).jpg",
+  "page": "https://commons.wikimedia.org/wiki/File:City_Recreation_Pier_(21603728955).jpg",
+  "query": "Recreation Pier Baltimore"
+ },
+ "pier_2.jpg": {
+  "title": "File:Recreation Pier-3.jpg",
+  "page": "https://commons.wikimedia.org/wiki/File:Recreation_Pier-3.jpg",
+  "query": "Recreation Pier Baltimore"
+ },
+ "pier_3.jpg": {
+  "title": "File:Recreation Pier-2.jpg",
+  "page": "https://commons.wikimedia.org/wiki/File:Recreation_Pier-2.jpg",
+  "query": "Recreation Pier Baltimore"
+ },
+ "pendry_1.jpg": {
+  "title": "File:Sagamore Pendry Baltimore.jpg",
+  "page": "https://commons.wikimedia.org/wiki/File:Sagamore_Pendry_Baltimore.jpg",
+  "query": "Sagamore Pendry"
+ },
+ "pendry_2.jpg": {
+  "title": "File:Rec Pier Sagamore Pendry Hotel June 2017 03.jpg",
+  "page": "https://commons.wikimedia.org/wiki/File:Rec_Pier_Sagamore_Pendry_Hotel_June_2017_03.jpg",
+  "query": "Sagamore Pendry"
+ },
+ "pool_web_1.jpg": {
+  "title": "pool_web_1",
+  "page": "https://www.cntraveler.com/hotels/baltimore/sagamore-pendry-baltimore",
+  "image": "https://media.cntraveler.com/photos/594acf7d063e4a785b737ec9/16:9/w_2560%2Cc_limit/Pool-SagamorePendry-BaltimoreMD-CRHotel.jpg"
+ },
+ "pool_web_2.jpg": {
+  "title": "pool_web_2",
+  "page": "https://www.pendry.com/baltimore/gallery/",
+  "image": "https://uploads.pendry.com/redesign/wp-content/uploads/sites/3/2025/07/22195714/SPB-Pool-2025-1-1536x1112.jpg"
+ }
+}

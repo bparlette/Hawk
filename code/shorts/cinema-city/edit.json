@@ -1,0 +1,145 @@
+[
+ {
+  "name": "intro",
+  "ranges": [
+   [
+    "intro2",
+    0,
+    94
+   ],
+   [
+    "intro2",
+    101,
+    165
+   ]
+  ],
+  "music": "intro",
+  "ov": [
+   [
+    "title.png",
+    1.2,
+    4.9
+   ]
+  ]
+ },
+ {
+  "name": "fight1",
+  "ranges": [
+   [
+    "fin1",
+    0,
+    135
+   ]
+  ],
+  "music": "groove",
+  "ov": [
+   [
+    "tag.png",
+    0.9,
+    3.2
+   ],
+   [
+    "ko.png",
+    3.47,
+    4.53
+   ]
+  ],
+  "hits": [
+   3.47
+  ]
+ },
+ {
+  "name": "replay1",
+  "ranges": [
+   [
+    "rp_fin",
+    40,
+    151
+   ]
+  ],
+  "music": "replay",
+  "whoosh": true,
+  "ov": [
+   [
+    "replay_slow.png",
+    0.0,
+    3.73
+   ],
+   [
+    "ko.png",
+    3.03,
+    3.73
+   ]
+  ],
+  "hits": [
+   3.03
+  ]
+ },
+ {
+  "name": "fight2",
+  "ranges": [
+   [
+    "big1",
+    8,
+    140
+   ]
+  ],
+  "music": "groove",
+  "ov": [
+   [
+    "ko.png",
+    3.6,
+    4.43
+   ]
+  ],
+  "hits": [
+   3.6
+  ]
+ },
+ {
+  "name": "replay2",
+  "ranges": [
+   [
+    "rp_big",
+    1,
+    62
+   ]
+  ],
+  "music": "replay",
+  "whoosh": true,
+  "ov": [
+   [
+    "replay_slow.png",
+    0.0,
+    2.07
+   ],
+   [
+    "ko.png",
+    0.87,
+    2.07
+   ]
+  ],
+  "hits": [
+   0.87
+  ]
+ },
+ {
+  "name": "end",
+  "ranges": [
+   [
+    "intro2",
+    101,
+    185
+   ]
+  ],
+  "music": "end",
+  "bg": true,
+  "ov": [
+   [
+    "end.png",
+    0.0,
+    2.83
+   ]
+  ]
+ }
+]

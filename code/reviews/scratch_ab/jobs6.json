@@ -1,0 +1,17 @@
+[
+ {"q":"show=arabber_cart&hud=0&yaw=90&pitch=4","out":"shots/arabber_side_day.png"},
+ {"q":"show=arabber_cart&hud=0&yaw=35&pitch=18","out":"shots/arabber_34_day.png"},
+ {"q":"show=arabber_cart&hud=0&yaw=35&pitch=18&night=1","out":"shots/arabber_34_night.png"},
+ {"q":"show=crab_shack&hud=0&yaw=90&pitch=4","out":"shots/crab_side_day.png"},
+ {"q":"show=crab_shack&hud=0&yaw=25&pitch=15","out":"shots/crab_34_day.png"},
+ {"q":"show=crab_shack&hud=0&yaw=25&pitch=15&night=1","out":"shots/crab_34_night.png"},
+ {"q":"show=box_truck&hud=0&yaw=40&pitch=12","out":"shots/truck_day.png"},
+ {"q":"show=car_sedan&hud=0&yaw=60&pitch=15","out":"shots/sedan_day.png"},
+ {"q":"show=car_sedan&hud=0&yaw=60&pitch=15&night=1","out":"shots/sedan_night.png"},
+ {"q":"show=water_taxi&hud=0&yaw=40&pitch=15","out":"shots/taxi_day.png"},
+ {"q":"show=water_taxi&hud=0&yaw=40&pitch=15&night=1","out":"shots/taxi_night.png"},
+ {"q":"show=paddle_boat&hud=0&yaw=40&pitch=15","out":"shots/paddle_day.png"},
+ {"q":"show=dragon_boat&hud=0&yaw=70&pitch=20","out":"shots/dragon_day.png"},
+ {"q":"show=skateboard&hud=0&yaw=50&pitch=20","out":"shots/skate_day.png"},
+ {"q":"show=manhole&hud=0&yaw=30&pitch=20","out":"shots/manhole_day.png"}
+]

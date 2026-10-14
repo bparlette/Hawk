@@ -1,0 +1,229 @@
+﻿2026-10-13T18:44:56.9123633Z Current runner version: '2.337.0'
+2026-10-13T18:44:56.9145402Z ##[group]Runner Image Provisioner
+2026-10-13T18:44:56.9146242Z Hosted Compute Agent
+2026-10-13T18:44:56.9146736Z Version: 20261002.596
+2026-10-13T18:44:56.9147521Z Commit: c3d12f3313a95f25162a1503be624f3b0617f8c0
+2026-10-13T18:44:56.9148209Z Build Date: 2026-10-02T22:28:27Z
+2026-10-13T18:44:56.9148770Z Worker ID: {162117df-76ca-449d-9a71-29414ee22183}
+2026-10-13T18:44:56.9149413Z Region: centralus
+2026-10-13T18:44:56.9149885Z Cloud: Azure
+2026-10-13T18:44:56.9150338Z ##[endgroup]
+2026-10-13T18:44:56.9151589Z ##[group]Operating System
+2026-10-13T18:44:56.9152096Z Ubuntu
+2026-10-13T18:44:56.9152533Z 24.04.5
+2026-10-13T18:44:56.9153008Z LTS
+2026-10-13T18:44:56.9153430Z ##[endgroup]
+2026-10-13T18:44:56.9153881Z ##[group]Runner Image
+2026-10-13T18:44:56.9154381Z Image: ubuntu-24.04
+2026-10-13T18:44:56.9154869Z Version: 20261004.327.1
+2026-10-13T18:44:56.9155915Z Included Software: https://github.com/actions/runner-images/blob/ubuntu24/20261004.327/images/ubuntu/Ubuntu2404-Readme.md
+2026-10-13T18:44:56.9157362Z Image Release: https://github.com/actions/runner-images/releases/tag/ubuntu24%2F20261004.327
+2026-10-13T18:44:56.9158231Z ##[endgroup]
+2026-10-13T18:44:56.9159748Z ##[group]GITHUB_TOKEN Permissions
+2026-10-13T18:44:56.9161845Z Contents: read
+2026-10-13T18:44:56.9162356Z Metadata: read
+2026-10-13T18:44:56.9162937Z Packages: read
+2026-10-13T18:44:56.9163764Z ##[endgroup]
+2026-10-13T18:44:56.9166463Z Secret source: Actions
+2026-10-13T18:44:56.9167905Z Cache mode: write
+2026-10-13T18:44:56.9168882Z Prepare workflow directory
+2026-10-13T18:44:56.9439309Z Prepare all required actions
+2026-10-13T18:44:56.9479154Z Getting action download info
+2026-10-13T18:44:57.2105386Z Download action repository 'actions/checkout@v4' (SHA:11d5960a326750d5838078e36cf38b85af677262)
+2026-10-13T18:44:57.3082746Z Download action repository 'actions/setup-node@v4' (SHA:49933ea5288caeca8642d1e84afbd3f7d6820020)
+2026-10-13T18:44:57.4371742Z Download action repository 'actions/upload-artifact@v4' (SHA:ea165f8d65b6e75b540449e92b4886f43607fa02)
+2026-10-13T18:44:57.6786021Z Complete job name: cap (scrubber, scrubber=1&scrubberauto=win&scrubberphase=3, 170, 7)
+2026-10-13T18:44:57.7372751Z ##[group]Run actions/checkout@v4
+2026-10-13T18:44:57.7373430Z with:
+2026-10-13T18:44:57.7373983Z   repository: bparlette/Hawk
+2026-10-13T18:44:57.7377442Z   token: ***
+2026-10-13T18:44:57.7377962Z   ssh-strict: true
+2026-10-13T18:44:57.7378436Z   ssh-user: git
+2026-10-13T18:44:57.7378882Z   persist-credentials: true
+2026-10-13T18:44:57.7379454Z   clean: true
+2026-10-13T18:44:57.7379925Z   sparse-checkout-cone-mode: true
+2026-10-13T18:44:57.7380462Z   fetch-depth: 1
+2026-10-13T18:44:57.7380916Z   fetch-tags: false
+2026-10-13T18:44:57.7381356Z   show-progress: true
+2026-10-13T18:44:57.7381828Z   lfs: false
+2026-10-13T18:44:57.7382272Z   submodules: false
+2026-10-13T18:44:57.7382720Z   set-safe-directory: true
+2026-10-13T18:44:57.7383214Z   allow-unsafe-pr-checkout: false
+2026-10-13T18:44:57.7383849Z ##[endgroup]
+2026-10-13T18:44:57.8261694Z Syncing repository: bparlette/Hawk
+2026-10-13T18:44:57.8264129Z ##[group]Getting Git version info
+2026-10-13T18:44:57.8265242Z Working directory is '/home/runner/work/Hawk/Hawk'
+2026-10-13T18:44:57.8266673Z [command]/usr/bin/git version
+2026-10-13T18:44:57.8300799Z git version 2.55.0
+2026-10-13T18:44:57.8316588Z ##[endgroup]
+2026-10-13T18:44:57.8328479Z Temporarily overriding HOME='/home/runner/work/_temp/5916e5eb-7c73-478c-bbe7-b161a859e41e' before making global git config changes
+2026-10-13T18:44:57.8330394Z Adding repository directory to the temporary git global config as a safe directory
+2026-10-13T18:44:57.8332209Z [command]/usr/bin/git config --global --add safe.directory /home/runner/work/Hawk/Hawk
+2026-10-13T18:44:57.8373624Z Deleting the contents of '/home/runner/work/Hawk/Hawk'
+2026-10-13T18:44:57.8378597Z ##[group]Initializing the repository
+2026-10-13T18:44:57.8381997Z [command]/usr/bin/git init /home/runner/work/Hawk/Hawk
+2026-10-13T18:44:57.8485360Z hint: Using 'master' as the name for the initial branch. This default branch name
+2026-10-13T18:44:57.8487407Z hint: will change to "main" in Git 3.0. To configure the initial branch name
+2026-10-13T18:44:57.8488780Z hint: to use in all of your new repositories, which will suppress this warning,
+2026-10-13T18:44:57.8490020Z hint: call:
+2026-10-13T18:44:57.8490601Z hint:
+2026-10-13T18:44:57.8491381Z hint: 	git config --global init.defaultBranch <name>
+2026-10-13T18:44:57.8492296Z hint:
+2026-10-13T18:44:57.8493114Z hint: Names commonly chosen instead of 'master' are 'main', 'trunk' and
+2026-10-13T18:44:57.8494329Z hint: 'development'. The just-created branch can be renamed via this command:
+2026-10-13T18:44:57.8495308Z hint:
+2026-10-13T18:44:57.8496002Z hint: 	git branch -m <name>
+2026-10-13T18:44:57.8496809Z hint:
+2026-10-13T18:44:57.8497851Z hint: Disable this message with "git config set advice.defaultBranchName false"
+2026-10-13T18:44:57.8499100Z Initialized empty Git repository in /home/runner/work/Hawk/Hawk/.git/
+2026-10-13T18:44:57.8501650Z [command]/usr/bin/git remote add origin https://github.com/bparlette/Hawk
+2026-10-13T18:44:57.8535088Z ##[endgroup]
+2026-10-13T18:44:57.8536248Z ##[group]Disabling automatic garbage collection
+2026-10-13T18:44:57.8537506Z [command]/usr/bin/git config --local gc.auto 0
+2026-10-13T18:44:57.8562084Z ##[endgroup]
+2026-10-13T18:44:57.8563302Z ##[group]Setting up auth
+2026-10-13T18:44:57.8568026Z [command]/usr/bin/git config --local --name-only --get-regexp core\.sshCommand
+2026-10-13T18:44:57.8592811Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'core\.sshCommand' && git config --local --unset-all 'core.sshCommand' || :"
+2026-10-13T18:44:57.8939332Z [command]/usr/bin/git config --local --name-only --get-regexp http\.https\:\/\/github\.com\/\.extraheader
+2026-10-13T18:44:57.8949392Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'http\.https\:\/\/github\.com\/\.extraheader' && git config --local --unset-all 'http.https://github.com/.extraheader' || :"
+2026-10-13T18:44:57.9084415Z [command]/usr/bin/git config --local --name-only --get-regexp ^includeIf\.gitdir:
+2026-10-13T18:44:57.9110375Z [command]/usr/bin/git submodule foreach --recursive git config --local --show-origin --name-only --get-regexp remote.origin.url
+2026-10-13T18:44:57.9289831Z [command]/usr/bin/git config --local http.https://github.com/.extraheader AUTHORIZATION: basic ***
+2026-10-13T18:44:57.9318944Z ##[endgroup]
+2026-10-13T18:44:57.9319900Z ##[group]Fetching the repository
+2026-10-13T18:44:57.9326861Z [command]/usr/bin/git -c protocol.version=2 fetch --no-tags --prune --no-recurse-submodules --depth=1 origin +c14ff37e83945b2b9f6a163668b4a0867c9b02ae:refs/remotes/origin/toadcity/shorts
+2026-10-13T18:44:58.7836432Z From https://github.com/bparlette/Hawk
+2026-10-13T18:44:58.7839138Z  * [new ref]         c14ff37e83945b2b9f6a163668b4a0867c9b02ae -> origin/toadcity/shorts
+2026-10-13T18:44:58.7845327Z ##[endgroup]
+2026-10-13T18:44:58.7848379Z ##[group]Determining the checkout info
+2026-10-13T18:44:58.7850780Z ##[endgroup]
+2026-10-13T18:44:58.7852755Z [command]/usr/bin/git sparse-checkout disable
+2026-10-13T18:44:58.7892000Z [command]/usr/bin/git config --local --unset-all extensions.worktreeConfig
+2026-10-13T18:44:58.7918316Z ##[group]Checking out the ref
+2026-10-13T18:44:58.7921747Z [command]/usr/bin/git checkout --progress --force -B toadcity/shorts refs/remotes/origin/toadcity/shorts
+2026-10-13T18:44:58.8502797Z Switched to a new branch 'toadcity/shorts'
+2026-10-13T18:44:58.8506178Z branch 'toadcity/shorts' set up to track 'origin/toadcity/shorts'.
+2026-10-13T18:44:58.8511407Z ##[endgroup]
+2026-10-13T18:44:58.8544996Z [command]/usr/bin/git log -1 --format=%H
+2026-10-13T18:44:58.8563862Z c14ff37e83945b2b9f6a163668b4a0867c9b02ae
+2026-10-13T18:44:58.8901056Z ##[group]Run actions/setup-node@v4
+2026-10-13T18:44:58.8902225Z with:
+2026-10-13T18:44:58.8903123Z   node-version: 20
+2026-10-13T18:44:58.8904146Z   always-auth: false
+2026-10-13T18:44:58.8905272Z   check-latest: false
+2026-10-13T18:44:58.8913886Z   token: ***
+2026-10-13T18:44:58.8914770Z ##[endgroup]
+2026-10-13T18:44:59.0108349Z Attempting to download 20...
+2026-10-13T18:44:59.0198962Z (node:2091) [DEP0040] DeprecationWarning: The `punycode` module is deprecated. Please use a userland alternative instead.
+2026-10-13T18:44:59.0201520Z (Use `node --trace-deprecation ...` to show where the warning was created)
+2026-10-13T18:44:59.8451325Z Acquiring 20.20.2 - x64 from https://github.com/actions/node-versions/releases/download/20.20.2-23521894959/node-20.20.2-linux-x64.tar.gz
+2026-10-13T18:45:00.4020481Z Extracting ...
+2026-10-13T18:45:00.4110393Z [command]/usr/bin/tar xz --strip 1 --warning=no-unknown-keyword --overwrite -C /home/runner/work/_temp/7eea0767-4350-45d1-8ebf-cc760b405bb8 -f /home/runner/work/_temp/05d0a8df-f6b0-493c-ab31-b010312ae1e6
+2026-10-13T18:45:01.3422819Z Adding to the cache ...
+2026-10-13T18:45:03.8357405Z ##[group]Environment details
+2026-10-13T18:45:04.0193764Z node: v20.20.2
+2026-10-13T18:45:04.0194336Z npm: 10.8.2
+2026-10-13T18:45:04.0194872Z yarn: 1.22.22
+2026-10-13T18:45:04.0195537Z ##[endgroup]
+2026-10-13T18:45:04.0320411Z ##[group]Run sudo apt-get update -qq && sudo apt-get install -y -qq ffmpeg > /dev/null
+2026-10-13T18:45:04.0321169Z [36;1msudo apt-get update -qq && sudo apt-get install -y -qq ffmpeg > /dev/null[0m
+2026-10-13T18:45:04.0321945Z [36;1mcd cap && npm init -y > /dev/null && npm install --no-audit --no-fund --silent playwright@1.48.2 && npx playwright install --with-deps chromium > /dev/null[0m
+2026-10-13T18:45:04.0586711Z shell: /usr/bin/bash -e {0}
+2026-10-13T18:45:04.0587309Z ##[endgroup]
+2026-10-13T18:45:26.4724841Z 
+2026-10-13T18:45:26.4732261Z Running kernel seems to be up-to-date.
+2026-10-13T18:45:26.4732860Z 
+2026-10-13T18:45:26.4733165Z No services need to be restarted.
+2026-10-13T18:45:26.4733467Z 
+2026-10-13T18:45:26.4733723Z No containers need to be restarted.
+2026-10-13T18:45:26.4733997Z 
+2026-10-13T18:45:26.4734298Z No user sessions are running outdated binaries.
+2026-10-13T18:45:26.4734635Z 
+2026-10-13T18:45:26.4735232Z No VM guests are running outdated hypervisor (qemu) binaries on this host.
+2026-10-13T18:45:34.4634863Z 
+2026-10-13T18:45:34.4636122Z Running kernel seems to be up-to-date.
+2026-10-13T18:45:34.4636519Z 
+2026-10-13T18:45:34.4636725Z Restarting services...
+2026-10-13T18:45:34.4695483Z  systemctl restart php8.3-fpm.service
+2026-10-13T18:45:34.5466706Z 
+2026-10-13T18:45:34.5467965Z No containers need to be restarted.
+2026-10-13T18:45:34.5468435Z 
+2026-10-13T18:45:34.5469053Z No user sessions are running outdated binaries.
+2026-10-13T18:45:34.5469448Z 
+2026-10-13T18:45:34.5469965Z No VM guests are running outdated hypervisor (qemu) binaries on this host.
+2026-10-13T18:45:39.9560879Z ##[group]Run (cd site && nohup python3 -m http.server 8831 --bind 127.0.0.1 > /tmp/http.log 2>&1 &)
+2026-10-13T18:45:39.9561890Z [36;1m(cd site && nohup python3 -m http.server 8831 --bind 127.0.0.1 > /tmp/http.log 2>&1 &)[0m
+2026-10-13T18:45:39.9562577Z [36;1msleep 2; mkdir -p out[0m
+2026-10-13T18:45:39.9563144Z [36;1mif [ "" = "music" ]; then node cap/music.js out 2>&1 | tee out/music.log;[0m
+2026-10-13T18:45:39.9564129Z [36;1melse node cap/capture.js 8831 scrubber 'scrubber=1&scrubberauto=win&scrubberphase=3' out 170 7 0 0 2>&1 | tee out/scrubber.log; fi[0m
+2026-10-13T18:45:39.9565024Z [36;1mls -la out[0m
+2026-10-13T18:45:39.9615423Z shell: /usr/bin/bash -e {0}
+2026-10-13T18:45:39.9615899Z ##[endgroup]
+2026-10-13T18:45:47.4449993Z warm frames 2 ac {"base":100,"sr":44100,"len":8820000} wall 5096
+2026-10-13T18:45:47.8573587Z f 0 wall 6 {"t":0.23,"cur":"scrubber","res":null,"j":0,"jr":0,"lg":["start:scrubber","scrubber:standin","say:Hon, I scrubbed these steps at dawn. Don't you DARE."],"hp":100,"bhp":33,"fish":{"ch":0,"j":0},"poe":{},"f":0}
+2026-10-13T18:46:22.8924562Z f 150 wall 41 {"t":5.23,"cur":"scrubber","res":null,"j":0,"jr":0,"lg":[],"hp":100,"bhp":33,"fish":{"ch":0,"j":0},"poe":{},"f":150}
+2026-10-13T18:46:56.3193645Z f 300 wall 74 {"t":10.23,"cur":"scrubber","res":null,"j":0,"jr":0,"lg":[],"hp":100,"bhp":28,"fish":{"ch":0,"j":0},"poe":{},"f":300}
+2026-10-13T18:47:28.3862350Z f 450 wall 106 {"t":15.23,"cur":"scrubber","res":null,"j":0,"jr":0,"lg":[],"hp":100,"bhp":5,"fish":{"ch":0,"j":0},"poe":{},"f":450}
+2026-10-13T18:48:01.8236307Z f 600 wall 139 {"t":17.17,"cur":"scrubber","res":null,"j":0,"jr":1,"lg":[],"hp":100,"bhp":0,"fish":{"ch":0,"j":0},"poe":{},"f":600}
+2026-10-13T18:48:34.3528045Z f 750 wall 172 {"t":22.17,"cur":"scrubber","res":null,"j":0,"jr":1,"lg":[],"hp":100,"bhp":0,"fish":{"ch":0,"j":0},"poe":{},"f":750}
+2026-10-13T18:48:51.3527607Z end trigger at 842 {"t":25.23,"cur":null,"res":"win","j":0,"jr":1,"lg":["exit:scrubber:win"],"hp":null,"bhp":null,"fish":{"ch":0,"j":0},"poe":{},"f":842}
+2026-10-13T18:49:21.1683041Z f 900 wall 219 {"t":25.23,"cur":null,"res":"win","j":0,"jr":1,"lg":[],"hp":null,"bhp":null,"fish":{"ch":0,"j":0},"poe":{},"f":900}
+2026-10-13T18:50:36.6653145Z f 1050 wall 294 {"t":25.23,"cur":null,"res":"win","j":0,"jr":1,"lg":[],"hp":null,"bhp":null,"fish":{"ch":0,"j":0},"poe":{},"f":1050}
+2026-10-13T18:50:39.3238812Z audio peak 0.394 skip samples 8820
+2026-10-13T18:50:39.3267890Z done scrubber wall 297s errors 0 
+2026-10-13T18:50:39.3605578Z total 69776
+2026-10-13T18:50:39.3606139Z drwxr-xr-x 2 runner runner     4096 Oct 13 18:50 .
+2026-10-13T18:50:39.3606739Z drwxr-xr-x 7 runner runner     4096 Oct 13 18:45 ..
+2026-10-13T18:50:39.3607587Z -rw-r--r-- 1 runner runner   122941 Oct 13 18:50 scrubber.jsonl
+2026-10-13T18:50:39.3608223Z -rw-r--r-- 1 runner runner     1431 Oct 13 18:50 scrubber.log
+2026-10-13T18:50:39.3608961Z -rw-r--r-- 1 runner runner 36062794 Oct 13 18:50 scrubber_raw.mp4
+2026-10-13T18:50:39.3609647Z -rw-r--r-- 1 runner runner 35244764 Oct 13 18:50 scrubber_sfx.wav
+2026-10-13T18:50:44.3676128Z ##[group]Run actions/upload-artifact@v4
+2026-10-13T18:50:44.3676478Z with:
+2026-10-13T18:50:44.3676740Z   name: cap-scrubber
+2026-10-13T18:50:44.3677051Z   path: out/
+2026-10-13T18:50:44.3677454Z   retention-days: 5
+2026-10-13T18:50:44.3677747Z   if-no-files-found: warn
+2026-10-13T18:50:44.3678054Z   compression-level: 6
+2026-10-13T18:50:44.3678332Z   overwrite: false
+2026-10-13T18:50:44.3678620Z   include-hidden-files: false
+2026-10-13T18:50:44.3678930Z ##[endgroup]
+2026-10-13T18:50:44.5071062Z (node:4479) [DEP0040] DeprecationWarning: The `punycode` module is deprecated. Please use a userland alternative instead.
+2026-10-13T18:50:44.5072080Z (Use `node --trace-deprecation ...` to show where the warning was created)
+2026-10-13T18:50:44.5131747Z With the provided path, there will be 4 files uploaded
+2026-10-13T18:50:44.5138521Z Artifact name is valid!
+2026-10-13T18:50:44.5139231Z Root directory input is valid!
+2026-10-13T18:50:44.8295860Z Beginning upload of artifact content to blob storage
+2026-10-13T18:50:45.0668450Z (node:4479) [DEP0169] DeprecationWarning: `url.parse()` behavior is not standardized and prone to errors that have security implications. Use the WHATWG URL API instead. CVEs are not issued for `url.parse()` vulnerabilities.
+2026-10-13T18:50:45.6906639Z Uploaded bytes 8388608
+2026-10-13T18:50:45.8705782Z Uploaded bytes 16777216
+2026-10-13T18:50:46.0388777Z Uploaded bytes 25165824
+2026-10-13T18:50:46.0410834Z Uploaded bytes 33554432
+2026-10-13T18:50:46.1818071Z Uploaded bytes 36693078
+2026-10-13T18:50:46.2230702Z Finished uploading artifact content to blob storage!
+2026-10-13T18:50:46.2233327Z SHA256 digest of uploaded artifact zip is b4b2510c2dca278b0c82bf706abb650e12b9dd2d2cd06f9cf9cffe1cb976fb50
+2026-10-13T18:50:46.2235118Z Finalizing artifact upload
+2026-10-13T18:50:46.4899438Z Artifact cap-scrubber.zip successfully finalized. Artifact ID 11840415609
+2026-10-13T18:50:46.4900610Z Artifact cap-scrubber has been successfully uploaded! Final size is 36693078 bytes. Artifact ID is 11840415609
+2026-10-13T18:50:46.4906550Z Artifact download URL: https://github.com/bparlette/Hawk/actions/runs/38449240537/artifacts/11840415609
+2026-10-13T18:50:46.5069200Z Post job cleanup.
+2026-10-13T18:50:46.6142423Z (node:4493) [DEP0040] DeprecationWarning: The `punycode` module is deprecated. Please use a userland alternative instead.
+2026-10-13T18:50:46.6143610Z (Use `node --trace-deprecation ...` to show where the warning was created)
+2026-10-13T18:50:46.6278009Z Post job cleanup.
+2026-10-13T18:50:46.7066567Z [command]/usr/bin/git version
+2026-10-13T18:50:46.7107419Z git version 2.55.0
+2026-10-13T18:50:46.7154475Z Temporarily overriding HOME='/home/runner/work/_temp/167f0470-126b-4c4c-9af9-aad3b559da22' before making global git config changes
+2026-10-13T18:50:46.7158903Z Adding repository directory to the temporary git global config as a safe directory
+2026-10-13T18:50:46.7161875Z [command]/usr/bin/git config --global --add safe.directory /home/runner/work/Hawk/Hawk
+2026-10-13T18:50:46.7228917Z [command]/usr/bin/git config --local --name-only --get-regexp core\.sshCommand
+2026-10-13T18:50:46.7238337Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'core\.sshCommand' && git config --local --unset-all 'core.sshCommand' || :"
+2026-10-13T18:50:46.7492500Z [command]/usr/bin/git config --local --name-only --get-regexp http\.https\:\/\/github\.com\/\.extraheader
+2026-10-13T18:50:46.7529464Z http.https://github.com/.extraheader
+2026-10-13T18:50:46.7548452Z [command]/usr/bin/git config --local --unset-all http.https://github.com/.extraheader
+2026-10-13T18:50:46.7609040Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'http\.https\:\/\/github\.com\/\.extraheader' && git config --local --unset-all 'http.https://github.com/.extraheader' || :"
+2026-10-13T18:50:46.7869774Z [command]/usr/bin/git config --local --name-only --get-regexp ^includeIf\.gitdir:
+2026-10-13T18:50:46.7879145Z [command]/usr/bin/git submodule foreach --recursive git config --local --show-origin --name-only --get-regexp remote.origin.url
+2026-10-13T18:50:46.8212134Z Cleaning up orphan processes
+2026-10-13T18:50:46.8448890Z Terminate orphan process: pid (4241) (bash)
+2026-10-13T18:50:46.8472440Z Terminate orphan process: pid (4242) (python3)
+2026-10-13T18:50:46.8497976Z ##[warning]Node.js 20 is deprecated. The following actions target Node.js 20 but are being forced to run on Node.js 24: actions/checkout@v4, actions/setup-node@v4, actions/upload-artifact@v4. For more information see: https://github.blog/changelog/2025-09-19-deprecation-of-node-20-on-github-actions-runners/

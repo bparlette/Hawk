@@ -1,0 +1,8 @@
+file 'seg_hook.mp4'
+file 'seg_title.mp4'
+file 'seg_stage1.mp4'
+file 'seg_r1live.mp4'
+file 'seg_r1replay.mp4'
+file 'seg_r2live.mp4'
+file 'seg_r2replay.mp4'
+file 'seg_end.mp4'

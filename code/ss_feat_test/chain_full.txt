@@ -1,0 +1,75 @@
+f218: stage lvl=1 section=A
+f537: dodge seen
+f1044: bark: BLADE AND HONOR!
+f1412: bark: MMM, EXTRA CHEESE!
+f1862: boss fight lvl=1 SCORCHER
+f1959: bark: FORM IS EVERYTHING!
+f4860: stage lvl=1 section=B
+f6155: taunt seen: C'MON!
+f6721: boss fight lvl=1 ramrod
+f7625: cutscene
+f8125: pizza lvl=1
+f8295: results lvl=1
+f8632: loading scene
+f8803: stage lvl=2 section=L0
+f9192: bark: BY THE BOOK!
+f12659: boss fight lvl=2 BRICKJAW
+f14123: outro lvl=2
+f14143: bark: THEY WENT DOWN THE SEWER!
+f14254: pizza lvl=2
+f14424: results lvl=2
+f14933: stage lvl=3 section=L0
+f18566: stage lvl=3 section=L1
+f18944: boss fight lvl=3 GULCH GATOR
+f20269: bark: STAY SHARP!
+f20446: outro lvl=3
+f20466: bark: PHEW! FRESH AIR UP THAT LADDER...
+f20556: bark: THAT'S THE HIGHWAY! GRAB A BOARD!
+f20657: pizza lvl=3
+f20827: results lvl=3
+f21333: stage lvl=4 section=L0
+f22381: stage lvl=4 section=L1
+f23680: boss fight lvl=4 JETWASH
+f25083: outro lvl=4
+f25107: bark: HIS CARGO'S BOUND FOR THE DOCKS!
+f25193: bark: TAKE THE EXIT! NEXT STOP: THE DOCKS!
+f25284: pizza lvl=4
+f25454: results lvl=4
+f25963: stage lvl=5 section=L0
+f28856: stage lvl=5 section=L1
+f29310: boss fight lvl=5 GRIMWALE
+f30586: outro lvl=5
+f30606: bark: THE CARGO'S GOING UPTOWN!
+f30716: bark: BUNDLE UP, BROS. IT'S SNOWING UP THERE!
+f30837: pizza lvl=5
+f31007: results lvl=5
+f31513: stage lvl=6 section=L0
+f35303: stage lvl=6 section=L1
+f35304: boss fight lvl=6 COLD FRONT
+f37017: outro lvl=6
+f37037: bark: THAT PLOW CAME FROM THE JUNKYARD!
+f37137: bark: LET'S GO SCRAP SOME BAD GUYS!
+f37238: pizza lvl=6
+f37408: results lvl=6
+f37913: stage lvl=7 section=L0
+f38169: bark: WHOA! LET GO!
+f41415: stage lvl=7 section=L1
+f41416: boss fight lvl=7 RUSTMAUL
+f42793: outro lvl=7
+f42813: bark: EVERY SCRAP TRUCK HEADS FOR THAT TOWER...
+f42923: bark: THE FORTRESS. LET'S END THIS!
+f43034: pizza lvl=7
+f43204: results lvl=7
+f43713: stage lvl=8 section=L0
+f48070: stage lvl=8 section=L1
+f48071: boss fight lvl=8 RAZORBACK
+f49705: bark: HE'S SUPERCHARGED! STAY SHARP!
+f50535: outro lvl=8
+f50555: bark: AMBER! HANG ON!
+f50726: bark: LET'S GO HOME, AMBER!
+f51247: pizza lvl=8
+f51417: results lvl=8
+f53327: back to title
+after: LEVELS loaded=1,-,-,-,-,-,-,- LVLOAD=
+scripts loaded=levels/level2.js,levels/level3.js,levels/level4.js,levels/level5.js,levels/level6.js,levels/level7.js,levels/level8.js missing=levels/level9.js SS=object
+END f=53327 scene=title level=1 kills=19 levelsWithResults=1,2,3,4,5,6,7,8

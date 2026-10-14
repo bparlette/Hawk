@@ -1,0 +1,398 @@
+{
+ "mirroredTextTilesA": {},
+ "mirroredTilesB_static": {},
+ "okTilesB_static": {
+  "ad_oldbay": 1,
+  "bus_plate": 2,
+  "crab_sign": 1,
+  "crab_menu": 1,
+  "manhole": 1,
+  "recycle": 1
+ },
+ "blockInPlot": {
+  "maxOut": 1.83,
+  "seedsClimbInsideColl": [
+   4,
+   16
+  ],
+  "belowCurb": 0,
+  "sample": [
+   {
+    "s": 1,
+    "beyondVertsLowY": 3780,
+    "maxOutM": 1.74,
+    "belowCurb": 0,
+    "climbInsideColliders": 0,
+    "climbTop": 12.15
+   },
+   {
+    "s": 2,
+    "beyondVertsLowY": 3818,
+    "maxOutM": 1.83,
+    "belowCurb": 0,
+    "climbInsideColliders": 0,
+    "climbTop": 12.15
+   },
+   {
+    "s": 3,
+    "beyondVertsLowY": 4468,
+    "maxOutM": 1.83,
+    "belowCurb": 0,
+    "climbInsideColliders": 0,
+    "climbTop": 12.15
+   },
+   {
+    "s": 4,
+    "beyondVertsLowY": 3838,
+    "maxOutM": 1.82,
+    "belowCurb": 0,
+    "climbInsideColliders": 1,
+    "climbTop": 15.55
+   }
+  ]
+ },
+ "block18": {
+  "pieces": [
+   {
+    "row": "N",
+    "w": 5.57,
+    "corner": null
+   },
+   {
+    "row": "N",
+    "w": 5.58,
+    "corner": null
+   },
+   {
+    "row": "N",
+    "w": 6.85,
+    "corner": "bar"
+   },
+   {
+    "row": "S",
+    "w": 4.5,
+    "corner": null
+   },
+   {
+    "row": "S",
+    "w": 4.5,
+    "corner": null
+   },
+   {
+    "row": "S",
+    "w": 4.5,
+    "corner": null
+   },
+   {
+    "row": "S",
+    "w": 4.5,
+    "corner": null
+   },
+   {
+    "row": "W",
+    "w": 3,
+    "corner": null
+   },
+   {
+    "row": "E",
+    "w": 3,
+    "corner": null
+   }
+  ],
+  "coll": 20
+ },
+ "block18_rowDepth6": [
+  {
+   "row": "N",
+   "w": 5.57,
+   "corner": null
+  },
+  {
+   "row": "N",
+   "w": 5.58,
+   "corner": null
+  },
+  {
+   "row": "N",
+   "w": 6.85,
+   "corner": "bar"
+  },
+  {
+   "row": "S",
+   "w": 4.5,
+   "corner": null
+  },
+  {
+   "row": "S",
+   "w": 4.5,
+   "corner": null
+  },
+  {
+   "row": "S",
+   "w": 4.5,
+   "corner": null
+  },
+  {
+   "row": "S",
+   "w": 4.5,
+   "corner": null
+  },
+  {
+   "row": "W",
+   "w": 6,
+   "corner": null
+  },
+  {
+   "row": "E",
+   "w": 6,
+   "corner": null
+  }
+ ],
+ "cornerPipe_cs-1": {
+  "pipeZ": [
+   -0.12,
+   -0.02
+  ],
+  "frontWallZ": 0,
+  "hook": {
+   "x": 3.58,
+   "z": -0.12
+  },
+  "hookInsideColliders": 1
+ },
+ "cornerPipe_cs1": {
+  "pipeZ": [
+   -0.12,
+   -0.02
+  ],
+  "frontWallZ": 0,
+  "hook": {
+   "x": -3.58,
+   "z": -0.12
+  },
+  "hookInsideColliders": 1
+ },
+ "rowhouseClimb": {
+  "hook": {
+   "x": -2.318355356193313,
+   "z": 0.12,
+   "ang": 0,
+   "top": 12.149999999999999
+  },
+  "insideColl": 0
+ },
+ "doorVsWaterTable": {
+  "doorY": [
+   0.76,
+   2.81
+  ],
+  "doorZ": 0.04,
+  "waterTableY": [
+   0.16,
+   1.41
+  ],
+  "waterTableFrontZ": 0.1,
+  "waterTableX": [
+   -2.44,
+   2.44
+  ]
+ },
+ "arabber": {
+  "hoofMinY": [
+   0.2,
+   0.2,
+   0.2,
+   0.2
+  ],
+  "rearWheelMinY": -0.028,
+  "seats": [
+   {
+    "x": 0,
+    "y": 1.24,
+    "z": -0.6673537540435791,
+    "ang": 0,
+    "pose": "sit"
+   },
+   {
+    "x": 0,
+    "y": 0.5,
+    "z": -3.137353754043579,
+    "ang": 0,
+    "pose": "stand"
+   }
+  ]
+ },
+ "canopy": [
+  [
+   0,
+   0.45,
+   1.72,
+   1.84
+  ],
+  [
+   0.45,
+   0.78,
+   1.84,
+   2.17
+  ],
+  [
+   0.78,
+   0.9,
+   2.17,
+   2.62
+  ],
+  [
+   0.78,
+   0.9,
+   2.62,
+   3.07
+  ],
+  [
+   0.45,
+   0.78,
+   3.07,
+   3.4
+  ],
+  [
+   0,
+   0.45,
+   3.4,
+   3.52
+  ]
+ ],
+ "pickupGlow_0": {
+  "solidX": [
+   -1.01,
+   1.01
+  ],
+  "solidZ": [
+   -2.78,
+   2.72
+  ],
+  "glowX": [
+   -0.98,
+   0.98
+  ],
+  "glowZ": [
+   -2.73,
+   2.71
+  ]
+ },
+ "pickupGlow_10": {
+  "solidX": [
+   7.22,
+   12.72
+  ],
+  "solidZ": [
+   3.98,
+   6.01
+  ],
+  "glowX": [
+   14.02,
+   15.98
+  ],
+  "glowZ": [
+   -7.7,
+   -2.27
+  ]
+ },
+ "crabRoof": {
+  "frontPostTop": 2.82,
+  "roofUndersideAtFront": 2.665,
+  "roofTopAtFront": 2.735,
+  "backPostTop": 2.82,
+  "roofUndersideAtBack": 2.946,
+  "backWallTop": 2.575,
+  "roofAtBackWall": 2.948
+ },
+ "yardBins": [
+  [
+   "#5a5248",
+   11.51,
+   0.16
+  ],
+  [
+   "#2c322e",
+   12,
+   0.86
+  ],
+  [
+   "#4f5a52",
+   12.26,
+   0.16
+  ],
+  [
+   "#2c322e",
+   12,
+   0.86
+  ],
+  [
+   "#5a5248",
+   12.2,
+   0.16
+  ],
+  [
+   "#2c322e",
+   12,
+   0.86
+  ]
+ ],
+ "climbTopB": 6.16,
+ "climbTopA": 12.149999999999999,
+ "bldH_A": 12.149999999999999,
+ "wl_water_taxi": {
+  "waterline": 0.35,
+  "seats": [
+   [
+    "stand",
+    0.9
+   ],
+   [
+    "sit",
+    1.38
+   ],
+   [
+    "sit",
+    1.38
+   ],
+   [
+    "sit",
+    1.38
+   ]
+  ]
+ },
+ "wl_paddle_boat": {
+  "waterline": 0.28,
+  "seats": [
+   [
+    "sit",
+    0.66
+   ],
+   [
+    "sit",
+    0.66
+   ]
+  ]
+ },
+ "wl_dragon_boat": {
+  "waterline": 0.22,
+  "seats": [
+   [
+    "sit",
+    1
+   ],
+   [
+    "sit",
+    0.58
+   ],
+   [
+    "sit",
+    0.58
+   ],
+   [
+    "stand",
+    0.62
+   ]
+  ]
+ }
+}

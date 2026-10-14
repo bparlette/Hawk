@@ -1,0 +1,11 @@
+{
+ "levels": {
+  "1": {
+   "name": "HALLWAY FIRE",
+   "boss": "SCORCHER \u00b7 RAMROD",
+   "video": "out/level1.mp4",
+   "duration": 9.2,
+   "size": 2329520
+  }
+ }
+}

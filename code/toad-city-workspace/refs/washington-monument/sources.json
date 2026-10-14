@@ -1,0 +1,27 @@
+{
+ "monument_1.jpg": {
+  "title": "File:Baltimore Washington Monument.jpg",
+  "page": "https://commons.wikimedia.org/wiki/File:Baltimore_Washington_Monument.jpg",
+  "query": "Washington Monument Baltimore"
+ },
+ "monument_3.jpg": {
+  "title": "File:Washington Monument, Baltimore, Statue of George Washington by Enrico Causici (cropped).jpg",
+  "page": "https://commons.wikimedia.org/wiki/File:Washington_Monument,_Baltimore,_Statue_of_George_Washington_by_Enrico_Causici_(cropped).jpg",
+  "query": "Washington Monument Baltimore"
+ },
+ "mtvernon_2.jpg": {
+  "title": "File:Mount Vernon Place Historic District - Baltimore MD, 2025.jpg",
+  "page": "https://commons.wikimedia.org/wiki/File:Mount_Vernon_Place_Historic_District_-_Baltimore_MD,_2025.jpg",
+  "query": "Mount Vernon Place Baltimore"
+ },
+ "mvp_1.jpg": {
+  "title": "File:Washington Monument with Mount Vernon Place United Methodist Church, Baltimore, MD.jpg",
+  "page": "https://commons.wikimedia.org/wiki/File:Washington_Monument_with_Mount_Vernon_Place_United_Methodist_Church,_Baltimore,_MD.jpg",
+  "query": "Washington Monument Mount Vernon Baltimore"
+ },
+ "mvp_2.jpg": {
+  "title": "File:Mount Vernon Place and Washington Monument, Baltimore, Maryland, circa 1907-1914 (cropped).jpg",
+  "page": "https://commons.wikimedia.org/wiki/File:Mount_Vernon_Place_and_Washington_Monument,_Baltimore,_Maryland,_circa_1907-1914_(cropped).jpg",
+  "query": "Washington Monument Mount Vernon Baltimore"
+ }
+}

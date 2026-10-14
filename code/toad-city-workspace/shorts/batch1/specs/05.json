@@ -1,0 +1,130 @@
+{
+ "name": "05_poe",
+ "out": "/workspace/work/toad-city/shorts/batch1/final/05_poe_stealth_night_nevermore.mp4",
+ "music": "night",
+ "music_db": -7,
+ "segs": [
+  {
+   "src": "poe_win",
+   "a": 0.0,
+   "b": 1.3,
+   "gamma": 1.12
+  },
+  {
+   "src": "poe_win",
+   "a": 1.3,
+   "b": 4.6,
+   "gamma": 1.12
+  },
+  {
+   "src": "poe_win",
+   "a": 4.6,
+   "b": 7.0,
+   "gamma": 1.12
+  },
+  {
+   "src": "poe_lose",
+   "a": 0.6,
+   "b": 3.25,
+   "speed": 0.85,
+   "gamma": 1.12
+  },
+  {
+   "src": "poe_lose",
+   "a": 3.25,
+   "b": 4.4,
+   "zoom": 1.45,
+   "cx": 800,
+   "cy": 980,
+   "flash": 0.15,
+   "gamma": 1.12
+  },
+  {
+   "src": "poe_lose",
+   "a": 5.0,
+   "b": 6.4,
+   "gamma": 1.12
+  },
+  {
+   "src": "poe_win",
+   "a": 7.0,
+   "b": 10.2,
+   "gamma": 1.12
+  },
+  {
+   "src": "poe_win",
+   "a": 10.23,
+   "b": 13.2,
+   "gamma": 1.12
+  }
+ ],
+ "hit": {
+  "seg": 6,
+  "t": 8.2
+ },
+ "extra_fx": [
+  {
+   "wav": "scare",
+   "t": 10.1,
+   "db": -1
+  }
+ ],
+ "captions": [
+  {
+   "text": "SNEAKING ONTO POE'S GRAVE AT MIDNIGHT",
+   "t0": 0,
+   "t1": 1.3,
+   "y": 1340,
+   "color": "#ffd23a",
+   "size": 96
+  },
+  {
+   "text": "THREE ROSES...",
+   "t0": 1.3,
+   "t1": 4.6,
+   "y": 1340
+  },
+  {
+   "text": "THE RAVEN KING'S CROWS CARRY LANTERNS",
+   "t0": 4.6,
+   "t1": 7.0,
+   "y": 1340,
+   "color": "#ffd23a"
+  },
+  {
+   "text": "DON'T. MOVE.",
+   "t0": 7.0,
+   "t1": 10.1,
+   "y": 1340,
+   "size": 110
+  },
+  {
+   "text": "NEVERMORE.",
+   "t0": 10.12,
+   "t1": 11.27,
+   "y": 1340,
+   "color": "#ff3b3b",
+   "size": 170
+  },
+  {
+   "text": "...ONCE MORE. QUIETLY.",
+   "t0": 11.27,
+   "t1": 12.67,
+   "y": 1340
+  },
+  {
+   "text": "AND A BOTTLE FOR EDGAR",
+   "t0": 12.67,
+   "t1": 15.87,
+   "y": 1340,
+   "color": "#ffd23a"
+  },
+  {
+   "text": "\"EVERMORE, OLD FRIEND.\"",
+   "t0": 15.9,
+   "t1": 18.8,
+   "y": 1340,
+   "color": "#ff6fae"
+  }
+ ]
+}

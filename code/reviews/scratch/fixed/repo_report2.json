@@ -1,0 +1,356 @@
+[
+ {
+  "out": "previews/harbor_rats_lineup_day.png",
+  "q": "show=harbor_rats&t=0.5&cam=three",
+  "errors": [],
+  "report": {
+   "show": "harbor_rats",
+   "lod": 0,
+   "rigs": {
+    "harbor_rats.grunt_a": {
+     "parts": 40,
+     "tris": 11220,
+     "hullTris": 9408,
+     "mats": 3,
+     "height": 1.967251074238936,
+     "minY": -0.0016800695378460448,
+     "flashBad": 0,
+     "hullsOK": true,
+     "swR": false
+    },
+    "harbor_rats.grunt_b": {
+     "parts": 40,
+     "tris": 11572,
+     "hullTris": 9816,
+     "mats": 3,
+     "height": 1.967251074238936,
+     "minY": -0.0016800695378460448,
+     "flashBad": 0,
+     "hullsOK": true,
+     "swR": false
+    },
+    "harbor_rats.armed": {
+     "parts": 40,
+     "tris": 10588,
+     "hullTris": 9024,
+     "mats": 3,
+     "height": 1.967251074238936,
+     "minY": -0.0016800695378460448,
+     "flashBad": 0,
+     "hullsOK": true,
+     "swR": true
+    },
+    "harbor_rats.bruiser": {
+     "parts": 40,
+     "tris": 10544,
+     "hullTris": 10144,
+     "mats": 3,
+     "height": 2.360701289086723,
+     "minY": -0.0020160834454153384,
+     "flashBad": 0,
+     "hullsOK": true,
+     "swR": false
+    }
+   },
+   "frame": {
+    "calls": 379,
+    "triangles": 116750
+   }
+  }
+ },
+ {
+  "out": "previews/harbor_rats_lineup_night.png",
+  "q": "show=harbor_rats&t=0.5&cam=three&night=1&ui=0",
+  "errors": [],
+  "report": {
+   "show": "harbor_rats",
+   "lod": 0,
+   "rigs": {
+    "harbor_rats.grunt_a": {
+     "parts": 40,
+     "tris": 11220,
+     "hullTris": 9408,
+     "mats": 3,
+     "height": 1.967251074238936,
+     "minY": -0.0016800695378460448,
+     "flashBad": 0,
+     "hullsOK": true,
+     "swR": false
+    },
+    "harbor_rats.grunt_b": {
+     "parts": 40,
+     "tris": 11572,
+     "hullTris": 9816,
+     "mats": 3,
+     "height": 1.967251074238936,
+     "minY": -0.0016800695378460448,
+     "flashBad": 0,
+     "hullsOK": true,
+     "swR": false
+    },
+    "harbor_rats.armed": {
+     "parts": 40,
+     "tris": 10588,
+     "hullTris": 9024,
+     "mats": 3,
+     "height": 1.967251074238936,
+     "minY": -0.0016800695378460448,
+     "flashBad": 0,
+     "hullsOK": true,
+     "swR": true
+    },
+    "harbor_rats.bruiser": {
+     "parts": 40,
+     "tris": 10544,
+     "hullTris": 10144,
+     "mats": 3,
+     "height": 2.360701289086723,
+     "minY": -0.0020160834454153384,
+     "flashBad": 0,
+     "hullsOK": true,
+     "swR": false
+    }
+   },
+   "frame": {
+    "calls": 379,
+    "triangles": 116750
+   }
+  }
+ },
+ {
+  "out": "previews/harbor_rats_lod1_day.png",
+  "q": "show=harbor_rats&t=0.5&cam=three&lod=1",
+  "errors": [],
+  "report": {
+   "show": "harbor_rats",
+   "lod": 1,
+   "rigs": {
+    "harbor_rats.grunt_a": {
+     "parts": 14,
+     "tris": 1760,
+     "hullTris": 1760,
+     "mats": 2,
+     "height": 1.9337889203493344,
+     "minY": -0.029128238830279818,
+     "flashBad": 0,
+     "hullsOK": true,
+     "swR": false
+    },
+    "harbor_rats.grunt_b": {
+     "parts": 14,
+     "tris": 1760,
+     "hullTris": 1760,
+     "mats": 2,
+     "height": 1.9337889203493344,
+     "minY": -0.029128238830279818,
+     "flashBad": 0,
+     "hullsOK": true,
+     "swR": false
+    },
+    "harbor_rats.armed": {
+     "parts": 14,
+     "tris": 1376,
+     "hullTris": 1376,
+     "mats": 2,
+     "height": 1.9597557384695818,
+     "minY": -0.029128238830279818,
+     "flashBad": 0,
+     "hullsOK": true,
+     "swR": true
+    },
+    "harbor_rats.bruiser": {
+     "parts": 14,
+     "tris": 1760,
+     "hullTris": 1760,
+     "mats": 2,
+     "height": 2.3205467044192014,
+     "minY": -0.034953886596335915,
+     "flashBad": 0,
+     "hullsOK": true,
+     "swR": false
+    }
+   },
+   "frame": {
+    "calls": 161,
+    "triangles": 19522
+   }
+  }
+ },
+ {
+  "out": "previews/harbor_rats_hitflash.png",
+  "q": "show=harbor_rats&t=0.5&cam=front&flash=0.85",
+  "errors": [],
+  "report": {
+   "show": "harbor_rats",
+   "lod": 0,
+   "rigs": {
+    "harbor_rats.grunt_a": {
+     "parts": 40,
+     "tris": 11220,
+     "hullTris": 9408,
+     "mats": 3,
+     "height": 1.967251074238936,
+     "minY": -0.0016800695378460448,
+     "flashBad": 0,
+     "hullsOK": true,
+     "swR": false
+    },
+    "harbor_rats.grunt_b": {
+     "parts": 40,
+     "tris": 11572,
+     "hullTris": 9816,
+     "mats": 3,
+     "height": 1.967251074238936,
+     "minY": -0.0016800695378460448,
+     "flashBad": 0,
+     "hullsOK": true,
+     "swR": false
+    },
+    "harbor_rats.armed": {
+     "parts": 40,
+     "tris": 10588,
+     "hullTris": 9024,
+     "mats": 3,
+     "height": 1.967251074238936,
+     "minY": -0.0016800695378460448,
+     "flashBad": 0,
+     "hullsOK": true,
+     "swR": true
+    },
+    "harbor_rats.bruiser": {
+     "parts": 40,
+     "tris": 10544,
+     "hullTris": 10144,
+     "mats": 3,
+     "height": 2.360701289086723,
+     "minY": -0.0020160834454153384,
+     "flashBad": 0,
+     "hullsOK": true,
+     "swR": false
+    }
+   },
+   "frame": {
+    "calls": 379,
+    "triangles": 116750
+   }
+  }
+ },
+ {
+  "out": "previews/harbor_rats_phone_390x844.png",
+  "q": "show=harbor_rats&t=0.5&cam=phone&dist=8&ui=0",
+  "errors": [],
+  "report": {
+   "show": "harbor_rats",
+   "lod": 0,
+   "rigs": {
+    "harbor_rats.grunt_a": {
+     "parts": 40,
+     "tris": 11220,
+     "hullTris": 9408,
+     "mats": 3,
+     "height": 1.967251074238936,
+     "minY": -0.0016800695378460448,
+     "flashBad": 0,
+     "hullsOK": true,
+     "swR": false
+    },
+    "harbor_rats.grunt_b": {
+     "parts": 40,
+     "tris": 11572,
+     "hullTris": 9816,
+     "mats": 3,
+     "height": 1.967251074238936,
+     "minY": -0.0016800695378460448,
+     "flashBad": 0,
+     "hullsOK": true,
+     "swR": false
+    },
+    "harbor_rats.armed": {
+     "parts": 40,
+     "tris": 10588,
+     "hullTris": 9024,
+     "mats": 3,
+     "height": 1.967251074238936,
+     "minY": -0.0016800695378460448,
+     "flashBad": 0,
+     "hullsOK": true,
+     "swR": true
+    },
+    "harbor_rats.bruiser": {
+     "parts": 40,
+     "tris": 10544,
+     "hullTris": 10144,
+     "mats": 3,
+     "height": 2.360701289086723,
+     "minY": -0.0020160834454153384,
+     "flashBad": 0,
+     "hullsOK": true,
+     "swR": false
+    }
+   },
+   "frame": {
+    "calls": 379,
+    "triangles": 116750
+   }
+  }
+ },
+ {
+  "out": "previews/harbor_rats_phone_390x844_night.png",
+  "q": "show=harbor_rats&t=0.5&cam=phone&dist=8&ui=0&night=1",
+  "errors": [],
+  "report": {
+   "show": "harbor_rats",
+   "lod": 0,
+   "rigs": {
+    "harbor_rats.grunt_a": {
+     "parts": 40,
+     "tris": 11220,
+     "hullTris": 9408,
+     "mats": 3,
+     "height": 1.967251074238936,
+     "minY": -0.0016800695378460448,
+     "flashBad": 0,
+     "hullsOK": true,
+     "swR": false
+    },
+    "harbor_rats.grunt_b": {
+     "parts": 40,
+     "tris": 11572,
+     "hullTris": 9816,
+     "mats": 3,
+     "height": 1.967251074238936,
+     "minY": -0.0016800695378460448,
+     "flashBad": 0,
+     "hullsOK": true,
+     "swR": false
+    },
+    "harbor_rats.armed": {
+     "parts": 40,
+     "tris": 10588,
+     "hullTris": 9024,
+     "mats": 3,
+     "height": 1.967251074238936,
+     "minY": -0.0016800695378460448,
+     "flashBad": 0,
+     "hullsOK": true,
+     "swR": true
+    },
+    "harbor_rats.bruiser": {
+     "parts": 40,
+     "tris": 10544,
+     "hullTris": 10144,
+     "mats": 3,
+     "height": 2.360701289086723,
+     "minY": -0.0020160834454153384,
+     "flashBad": 0,
+     "hullsOK": true,
+     "swR": false
+    }
+   },
+   "frame": {
+    "calls": 379,
+    "triangles": 116750
+   }
+  }
+ }
+]
