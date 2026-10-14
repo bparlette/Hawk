@@ -90,7 +90,7 @@ Screenshots: `shots/coop_shared_*.png`, `shots/coop_split_*.png`, `shots/coop_tu
 - [x] M1 pad roles + join/leave, P2 controls Mavis in the city
 - [x] M2 shared camera + edge hold + intentional split timer + indicator
 - [x] M3 split render (two viewports) + merge animation + perf trims
-- [~] M4 vehicles / roofs / cine / game-over / mode exit edge cases (coded: level puff, far puff, far-KO auto revive after 8 s, instant merge on mode exit / game over; water taxi + paddle boat are RB own-scene rides so both toads ride along automatically; not separately tested yet)
+- [x] M4 edge cases: P2 revives Harold (hold Y), game over resets both and stays co-op, far KO while split auto-revives beside the partner after 8 s, roof level puff, duel started while split merges instantly (tests/coop/edge.js all pass 1280x720, 0 errors)
 - [x] M5 turn rotation for bosses + minigames (gamepad filter + P2'S TURN card)
 - [ ] M6 coop tests + full regression (CI matrix + local smoke) + screenshots
 - [ ] M7 merge latest hark/integration, deploy, push toadcity/integration (+ Hawk main code/toad-city copy if present), desktop package note
