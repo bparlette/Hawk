@@ -6,7 +6,7 @@ R = json.load(open(sys.argv[1]))
 qa = next(x['report'] for x in R if x['report'] and 'members' in x['report'])
 frames = {x['q']: x['report']['frame'] for x in R if x['report'] and 'frame' in x['report'] and 'show=' in x['q'] and x['out'] == ''}
 errs = sum(len(x['errors']) for x in R)
-cm = lambda v: f"{v * 100:.1f} cm"
+cm = lambda v: f"{(round(v * 100, 1) or 0.0):.1f} cm".replace("-", "−")   # no "-0.0"; true minus sign
 m_ = lambda v: f"{v:.3f} m"
 print(f"QA run: {len(R)} jobs, {errs} console errors/warnings. All acceptance checks: {'PASS' if qa['allPass'] else 'FAIL'}.\n")
 print("| member | LOD | parts | tris | hull tris | hulls | materials | shadow casters | draw calls (meshes + hulls) | height | feet min y (idle) |")
@@ -34,11 +34,15 @@ if 'stars' in next(iter(qa['members'].values())):
         st = v['stars']; g = v['shoulderGapDizzy']
         print(f"| {m} | {st['hd']['starsY']:.2f} m | {cm(st['hd']['clearance'])} ({st['hd']['part']}) | {cm(st['hdAnim']['clearance']) if st.get('hdAnim') else 'n/a'} | {cm(st['lod']['clearance'])} ({st['lod']['part']}) | {cm(g['L'])} / {cm(g['R'])} |")
 print("\n**Down pose and shoulders** (`down(1, true)` snapped; knock-down end = last frame of the 60 fps `down` phase):\n")
-print("| member | shoulder gap down L / R | shoulder gap windup L / R | tail min y, down(1,true) | tail min y, knock-down end | head min y, down(1,true) | min y excl. feet+weapon, down(1,true) |")
-print("|---|---|---|---|---|---|---|")
+W06 = 'shoulderGapWindup06' in next(iter(qa['members'].values()))
+EARS = 'ears' in next(iter(qa['members'].values()))['downEndSnapped']
+print("| member | shoulder gap down L / R | shoulder gap windup(1) L / R |" + (" windup(0.6) L / R |" if W06 else "") + " tail min y, down(1,true) | tail min y, knock-down end |" + (" ears min y, down(1,true) | tail / ears with animateGang |" if EARS else "") + " head min y, down(1,true) | min y excl. feet+weapon, down(1,true) |")
+print("|---|---|---|---|---|---|---|" + ("---|" if W06 else "") + ("---|---|" if EARS else ""))
 for m, v in qa['members'].items():
     gd, gw, de, ke = v['shoulderGapDown'], v['shoulderGapWindup'], v['downEndSnapped'], v['sequences']['knockdown']['downEnd']
-    print(f"| {m} | {cm(gd['L'])} / {cm(gd['R'])} | {cm(gw['L'])} / {cm(gw['R'])} | {cm(de.get('tail', float('nan')))} | {cm(ke.get('tail', float('nan')))} | {cm(de['head'])} | {cm(v['downEndSnappedMinY'])} |")
+    w6 = f" {cm(v['shoulderGapWindup06']['L'])} / {cm(v['shoulderGapWindup06']['R'])} |" if W06 else ""
+    da = v.get('downEndSnappedAnim', {}); ea = f" {cm(de['ears'])} | {cm(da['tail'])} / {cm(da['ears'])} |" if EARS and da else (" n/a | n/a |" if EARS else "")
+    print(f"| {m} | {cm(gd['L'])} / {cm(gd['R'])} | {cm(gw['L'])} / {cm(gw['R'])} |{w6} {cm(de.get('tail', float('nan')))} | {cm(ke.get('tail', float('nan')))} |{ea} {cm(de['head'])} | {cm(v['downEndSnappedMinY'])} |")
 print("\n**Outlines, shadows, LOD silhouette** (buried = share of a part's surface inside other outlined parts; stray ink rendered at 6 m, 256², 4 views, in idle and both dizzy sway extremes):\n")
 print("| member | worst buried share (part) | worst stray ink px (part, view) | shadow-rule violations HD / LOD | LOD IoU front / 3/4 / side |")
 print("|---|---|---|---|---|")
@@ -47,13 +51,20 @@ for m, v in qa['members'].items():
     sv = max(hs['strayPx'], key=lambda k: hs['strayPx'][k]) if hs['strayPx'] else ''
     iou = v['silhouetteIoU']
     print(f"| {m} | {hb['buried'] * 100:.1f} % ({hb['part']}) | {hs['maxStrayPx']} ({hs['part']}, {sv}) | {len(v['hd']['shadowRule'])} / {len(v['lod']['shadowRule'])} | {iou['front']:.3f} / {iou['three']:.3f} / {iou['side']:.3f} |")
-print("\n**The game's real `mergeRig()`** (`tools/game/04b_rig_merge.js`, run on the HD rig):\n")
-print("| member | meshes + hulls before | merged meshes (solid + outline) | bones | draw calls + shadow calls | max vertex Δ merged vs parts (7 poses) | flash: unflashed px of rig px (flash 0.85) | animateGang moves merged tail | render diff px: interior / edge (of rig px) | farthest vertex from culling sphere centre, all sequences (r = 2.6) |")
+print("\n**The game's real `mergeRig()`** (" + ("`kit/real_mergeRig.js`, the ZIP's copy" if qa.get('kit', '').startswith('zip') else "`tools/game/04b_rig_merge.js`") + ", run on the HD rig):\n")
+print("| member | meshes + hulls before | merged meshes (solid + outline) | bones | draw calls + shadow calls | max vertex Δ merged vs parts (7 poses) | flash: unflashed px of rig px (flash 0.85) | animateGang moves merged tail | render diff px: interior / edge (of rig px) | farthest vertex from culling sphere centre, all sequences (pass: r = " + str(qa.get('cullRadius', 2.6)) + (f"; info: ZIP kit r = {qa['cullRadiusZip']}" if 'cullRadiusZip' in qa else '') + ") |")
 print("|---|---|---|---|---|---|---|---|---|---|")
 for m, v in qa['members'].items():
     g = v['merge']; am = f"{g['animMoves']['moved_m'] * 100:.1f} cm ({g['animMoves']['tailVerts']} verts)" if g.get('animMoves') else 'n/a'
     edge = g['renderDiffPx'] - g['renderDiffInteriorPx']
-    print(f"| {m} | {g['meshesBefore']} + {g['hullsBefore']} | {g['mergedMeshes']} ({g['mergedSolid']} + {g['mergedOutline']}) | {g['bones']} | {g['drawCalls']} + {g['shadowCalls']} | {g['maxVertexDy_m'] * 1000:.3f} mm | {g['flashPx']['unflashedPx']} of {g['flashPx']['rigPx']} | {am} | {g['renderDiffInteriorPx']} / {edge} (of {g['renderRigPx']}) | {v['cullReachMax']:.2f} m |")
+    print(f"| {m} | {g['meshesBefore']} + {g['hullsBefore']} | {g['mergedMeshes']} ({g['mergedSolid']} + {g['mergedOutline']}) | {g['bones']} | {g['drawCalls']} + {g['shadowCalls']} | {g['maxVertexDy_m'] * 1000:.3f} mm | {g['flashPx']['unflashedPx']} of {g['flashPx']['rigPx']} | {am} | {g['renderDiffInteriorPx']} / {edge} (of {g['renderRigPx']}) | {v['cullReachMax']:.2f} m" + (f" ({'inside' if v['cullReachMax'] <= qa['cullRadiusZip'] else 'outside'} 1.9)" if 'cullRadiusZip' in qa else '') + " |")
+if 'idleReach' in next(iter(qa['members'].values())):
+    print("\n**Idle reach and determinism** (reach = farthest non-hull vertex from the root's vertical axis over idle t = 0 .. 2 s at 15 fps, weapon excepted, minus META.radius; hash = every part's world vertices, colours and joint transforms after `idle(0)`):\n")
+    print("| member | META.radius | farthest reach (part) | beyond radius (limit 0.35 m) | hash seed 7 (twice) | HD and LOD same seed → same hash | seed 8 hash (differs) |")
+    print("|---|---|---|---|---|---|---|")
+    for m, v in qa['members'].items():
+        r, d = v['idleReach'], v['determinism']
+        print(f"| {m} | {r['radius_m']:.2f} m | {r['reach_m']:.3f} m ({r['part']}, t = {r.get('t', 0):.2f} s) | {r['beyond_m']:.3f} m | `{d['hashSeed7']}` | {'yes' if d['same'] and d['sameLod'] else 'NO'} | `{d['hashSeed8']}` ({'yes' if d['seedChangesRig'] else 'no'}) |")
 if len(sys.argv) > 2:
     B = json.load(open(sys.argv[2])); qb = next(x['report'] for x in B if x['report'] and 'members' in x['report'])
     def row(v):

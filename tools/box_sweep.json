@@ -1,0 +1,42 @@
+{
+ "grunt_a": {
+  "y": -0.0046,
+  "pose": "down",
+  "part": "tail"
+ },
+ "grunt_a/lod1": {
+  "y": -0.0147,
+  "pose": "getup(0.3)",
+  "part": "shin"
+ },
+ "grunt_b": {
+  "y": -0.0046,
+  "pose": "down",
+  "part": "tail"
+ },
+ "grunt_b/lod1": {
+  "y": -0.0147,
+  "pose": "getup(0.3)",
+  "part": "shin"
+ },
+ "armed": {
+  "y": -0.0046,
+  "pose": "down",
+  "part": "tail"
+ },
+ "armed/lod1": {
+  "y": -0.0147,
+  "pose": "getup(0.3)",
+  "part": "shin"
+ },
+ "bruiser": {
+  "y": -0.0188,
+  "pose": "down",
+  "part": "sash"
+ },
+ "bruiser/lod1": {
+  "y": -0.0199,
+  "pose": "getup(0.3)",
+  "part": "shin"
+ }
+}

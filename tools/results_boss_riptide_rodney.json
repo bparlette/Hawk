@@ -1,0 +1,426 @@
+{
+ "id": "riptide_rodney",
+ "meta": {
+  "id": "riptide_rodney",
+  "name": "Riptide Rodney",
+  "district": "rash_field",
+  "hp": 125,
+  "scale": 1.2,
+  "radius": 0.75,
+  "height": 2.35,
+  "gang": "key_hwy_otters"
+ },
+ "budgets": {
+  "zipKit": {
+   "parts": 42,
+   "tris": 10532,
+   "hulls": 28,
+   "hullTris": 9212,
+   "mats": 1,
+   "matKinds": [
+    "toon"
+   ],
+   "badHull": 0,
+   "flashBad": 0,
+   "shadowCasters": 18,
+   "shadowBad": [],
+   "drawCallsUnmerged": 70
+  },
+  "zipKit/lod1": {
+   "parts": 40,
+   "tris": 10508,
+   "hulls": 28,
+   "hullTris": 9212,
+   "mats": 1,
+   "matKinds": [
+    "toon"
+   ],
+   "badHull": 0,
+   "flashBad": 0,
+   "shadowCasters": 18,
+   "shadowBad": [],
+   "drawCallsUnmerged": 68
+  },
+  "realGame": {
+   "parts": 42,
+   "tris": 10532,
+   "hulls": 28,
+   "hullTris": 9212,
+   "mats": 1,
+   "matKinds": [
+    "toon"
+   ],
+   "badHull": 0,
+   "flashBad": 0,
+   "shadowCasters": 18,
+   "shadowBad": [],
+   "drawCallsUnmerged": 70
+  },
+  "realGame/lod1": {
+   "parts": 40,
+   "tris": 10508,
+   "hulls": 28,
+   "hullTris": 9212,
+   "mats": 1,
+   "matKinds": [
+    "toon"
+   ],
+   "badHull": 0,
+   "flashBad": 0,
+   "shadowCasters": 18,
+   "shadowBad": [],
+   "drawCallsUnmerged": 68
+  },
+  "limits": {
+   "parts": 63,
+   "tris": 19800
+  },
+  "pass": true
+ },
+ "idle0": {
+  "minY": 0.015,
+  "maxY": 2.36,
+  "height": 2.345,
+  "heightNoWeapon": 2.192,
+  "meta": 2.35,
+  "heightErrPct": -0.2,
+  "zMin": -0.307,
+  "zMax": 0.815,
+  "xMin": -1.037,
+  "xMax": 0.494
+ },
+ "reach": {
+  "idleMaxHoriz": 0.914,
+  "atT": 0,
+  "part": "haR",
+  "radius": 0.75,
+  "beyondRadius": 0.164,
+  "pass": true
+ },
+ "poses": {
+  "idle": {
+   "minY": 0.046,
+   "lowest": "knR",
+   "cullR": 1.241,
+   "gaps": {}
+  },
+  "idle_t1.1": {
+   "minY": 0.037,
+   "lowest": "knR",
+   "cullR": 1.229,
+   "gaps": {}
+  },
+  "run_0.3": {
+   "minY": 0.141,
+   "lowest": "knL",
+   "cullR": 1.283,
+   "gaps": {}
+  },
+  "run_0.6": {
+   "minY": 0.273,
+   "lowest": "knL",
+   "cullR": 1.306,
+   "gaps": {}
+  },
+  "hurt_0": {
+   "minY": 0.043,
+   "lowest": "knR",
+   "cullR": 1.435,
+   "gaps": {}
+  },
+  "hurt_0.5": {
+   "minY": 0.043,
+   "lowest": "knR",
+   "cullR": 1.441,
+   "gaps": {}
+  },
+  "down_air_0.3": {
+   "minY": 0.708,
+   "lowest": "knR",
+   "cullR": 1.846,
+   "gaps": {}
+  },
+  "down_1_ground": {
+   "minY": 0.159,
+   "lowest": "tail",
+   "cullR": 2.043,
+   "gaps": {}
+  },
+  "atk1_0.2": {
+   "minY": 0.137,
+   "lowest": "knL",
+   "cullR": 1.444,
+   "gaps": {}
+  },
+  "atk1_0.5": {
+   "minY": 0.137,
+   "lowest": "knL",
+   "cullR": 1.428,
+   "gaps": {}
+  },
+  "atk1_0.8": {
+   "minY": 0.137,
+   "lowest": "knL",
+   "cullR": 1.334,
+   "gaps": {}
+  },
+  "atk2_0.2": {
+   "minY": 0.164,
+   "lowest": "knL",
+   "cullR": 1.504,
+   "gaps": {}
+  },
+  "atk2_0.5": {
+   "minY": 0.164,
+   "lowest": "knL",
+   "cullR": 1.586,
+   "gaps": {}
+  },
+  "atk2_0.8": {
+   "minY": 0.164,
+   "lowest": "knL",
+   "cullR": 1.582,
+   "gaps": {}
+  },
+  "atk3_0.2": {
+   "minY": 0.024,
+   "lowest": "knR",
+   "cullR": 1.322,
+   "gaps": {}
+  },
+  "atk3_0.5": {
+   "minY": 0.014,
+   "lowest": "knR",
+   "cullR": 1.545,
+   "gaps": {}
+  },
+  "atk3_0.8": {
+   "minY": 0.015,
+   "lowest": "knR",
+   "cullR": 1.71,
+   "gaps": {}
+  }
+ },
+ "seq": {
+  "knockdown": {
+   "minY": 0.043,
+   "at": 0.733,
+   "lowest": "hurt:knR",
+   "cullR": 2.043,
+   "cullAt": 1.983,
+   "cullWhat": "down:haL"
+  },
+  "hurt": {
+   "minY": 0.026,
+   "at": 1.35,
+   "lowest": "idle:knR",
+   "cullR": 1.449,
+   "cullAt": 0.733,
+   "cullWhat": "hurt:swR"
+  },
+  "run": {
+   "minY": 0.03,
+   "at": 1.733,
+   "lowest": "idle:knR",
+   "cullR": 1.309,
+   "cullAt": 1.483,
+   "cullWhat": "run:swR"
+  },
+  "atk1": {
+   "minY": 0.025,
+   "at": 1.633,
+   "lowest": "idle:knR",
+   "cullR": 1.654,
+   "cullAt": 0.867,
+   "cullWhat": "atk1:swR"
+  },
+  "atk2": {
+   "minY": 0.023,
+   "at": 1.583,
+   "lowest": "idle:knR",
+   "cullR": 1.586,
+   "cullAt": 1.067,
+   "cullWhat": "atk2:swR"
+  },
+  "atk3": {
+   "minY": 0.014,
+   "at": 1.167,
+   "lowest": "atk3:knR",
+   "cullR": 1.715,
+   "cullAt": 1.167,
+   "cullWhat": "atk3:swR"
+  },
+  "chain": {
+   "minY": 0.014,
+   "at": 4.717,
+   "lowest": "atk3:knR",
+   "cullR": 2.043,
+   "cullAt": 6.517,
+   "cullWhat": "down:haL"
+  },
+  "worstMinY": 0.014,
+  "worstCullR": 2.043,
+  "passFloor": true,
+  "passCull26": true,
+  "cull19Info": false
+ },
+ "attacks": {
+  "count": 3,
+  "poses": [
+   "atk1",
+   "atk2",
+   "atk3"
+  ],
+  "contractOk": true,
+  "each": [
+   {
+    "id": "riptide_shot",
+    "pose": "atk1",
+    "strike": "haR",
+    "active": [
+     0.46,
+     0.6
+    ],
+    "peakU": 0.5,
+    "peakSpeed": 24.045,
+    "peakInActive": true
+   },
+   {
+    "id": "cross_check",
+    "pose": "atk2",
+    "strike": "haL",
+    "active": [
+     0.38,
+     0.6
+    ],
+    "peakU": 0.444,
+    "peakSpeed": 9.762,
+    "peakInActive": true
+   },
+   {
+    "id": "stick_sweep",
+    "pose": "atk3",
+    "strike": "haR",
+    "active": [
+     0.4,
+     0.62
+    ],
+    "peakU": 0.533,
+    "peakSpeed": 19.226,
+    "peakInActive": true
+   }
+  ],
+  "allPeaksInActive": true
+ },
+ "merge": {
+  "ok": true,
+  "drawCalls": 2,
+  "toonCalls": 1,
+  "outlineCalls": 1,
+  "shadowCalls": 1,
+  "bones": 17,
+  "flashShared": true,
+  "partsBefore": 42,
+  "trisBefore": 10532
+ },
+ "determinism": {
+  "hash": "6179de3f1a734fdd",
+  "sameSeedEqual": true,
+  "seed8Differs": false,
+  "noSeedOk": true,
+  "negSeedOk": true,
+  "hugeSeedOk": true,
+  "threeUuidRandomCalls": 3724,
+  "independentOfMathRandom": true,
+  "mathRandomInSource": false,
+  "canvas": {
+   "firstBuildOps": 0,
+   "secondBuildOps": 0,
+   "wrapperKOps": 0,
+   "cachedOnSameK": true,
+   "cachedForWrapperK": true,
+   "noDocumentBuildOk": true,
+   "drawsAfterDocumentReturns": true
+  }
+ },
+ "misc": {
+  "kitKeys": 48
+ },
+ "extra": {
+  "cradle": {
+   "minY": 0.022,
+   "lowest": "played idle t 1.50:knR",
+   "cullR": 1.317
+  },
+  "pass": {
+   "minY": 0.022,
+   "lowest": "played idle t 1.50:knR",
+   "cullR": 1.311
+  },
+  "shoot": {
+   "minY": 0.022,
+   "lowest": "played idle t 1.50:knR",
+   "cullR": 1.654
+  },
+  "check": {
+   "minY": 0.022,
+   "lowest": "played idle t 1.50:knR",
+   "cullR": 1.586
+  },
+  "stunned": {
+   "minY": 0.022,
+   "lowest": "played idle t 1.50:knR",
+   "cullR": 1.512
+  }
+ },
+ "extraPass": true,
+ "buildMs": {
+  "median": 6.28,
+  "min": 4.81,
+  "max": 6.9,
+  "n": 20,
+  "env": "node v22.22.0"
+ },
+ "summary": {
+  "pass": true,
+  "parts": 42,
+  "tris": 10532,
+  "mats": 1,
+  "matKinds": [
+   "toon"
+  ],
+  "mergedCalls": 2,
+  "height": 2.345,
+  "heightErrPct": -0.2,
+  "worstMinY": 0.014,
+  "worstCullR": 2.043,
+  "buildMs": 6.28,
+  "extra": 5,
+  "idleBeyondRadius": 0.164,
+  "reachPart": "haR",
+  "strikes": "atk1@0.5 atk2@0.444 atk3@0.533"
+ },
+ "hooks": {
+  "jPoseStates": {
+   "ok": true,
+   "posed": 27,
+   "ballHiddenAfterShot": true,
+   "mergedCalls": 2
+  },
+  "wingmanVariant": {
+   "ok": true,
+   "meta": "otter_wingman",
+   "scale": 1,
+   "hasStick": false,
+   "parts": 35,
+   "hulls": 24,
+   "mats": 1,
+   "tris": 9372,
+   "minY": 0.07,
+   "maxY": 1.905,
+   "zMin": -0.235,
+   "zMax": 0.293,
+   "mergedCalls": 2
+  }
+ }
+}

@@ -1,0 +1,397 @@
+[
+ {
+  "out": "previews/arabber_al_day.png",
+  "q": "show=arabber_al&cam=three&t=1.1&ui=0",
+  "errors": [],
+  "report": {
+   "show": "arabber_al",
+   "rigs": {
+    "arabber_al": {
+     "parts": 58,
+     "tris": 14452,
+     "hullTris": 14428,
+     "mats": 1,
+     "height": 2.066,
+     "minY": 0
+    }
+   },
+   "frame": {
+    "calls": 167,
+    "triangles": 42434
+   }
+  }
+ },
+ {
+  "out": "previews/arabber_al_night.png",
+  "q": "show=arabber_al&cam=three&t=1.1&night=1&ui=0",
+  "errors": [],
+  "report": {
+   "show": "arabber_al",
+   "rigs": {
+    "arabber_al": {
+     "parts": 58,
+     "tris": 14452,
+     "hullTris": 14428,
+     "mats": 1,
+     "height": 2.066,
+     "minY": 0
+    }
+   },
+   "frame": {
+    "calls": 167,
+    "triangles": 42434
+   }
+  }
+ },
+ {
+  "out": "previews/arabber_al_phone_390x844.png",
+  "q": "show=arabber_al&cam=phone&t=1.1&ui=0",
+  "errors": [],
+  "report": {
+   "show": "arabber_al",
+   "rigs": {
+    "arabber_al": {
+     "parts": 58,
+     "tris": 14452,
+     "hullTris": 14428,
+     "mats": 1,
+     "height": 2.066,
+     "minY": 0
+    }
+   },
+   "frame": {
+    "calls": 318,
+    "triangles": 79250
+   }
+  }
+ },
+ {
+  "out": "previews/arabber_al_phone_390x844_night.png",
+  "q": "show=arabber_al&cam=phone&t=1.1&night=1&ui=0",
+  "errors": [],
+  "report": {
+   "show": "arabber_al",
+   "rigs": {
+    "arabber_al": {
+     "parts": 58,
+     "tris": 14452,
+     "hullTris": 14428,
+     "mats": 1,
+     "height": 2.066,
+     "minY": 0
+    }
+   },
+   "frame": {
+    "calls": 318,
+    "triangles": 79250
+   }
+  }
+ },
+ {
+  "out": "previews/arabber_al_phone_390x844_merged.png",
+  "q": "show=arabber_al&cam=phone&t=1.1&merge=1&ui=0",
+  "errors": [],
+  "report": {
+   "show": "arabber_al",
+   "rigs": {
+    "arabber_al": {
+     "parts": 1,
+     "tris": 14452,
+     "hullTris": 14428,
+     "mats": 1,
+     "height": 2.058,
+     "minY": 0
+    }
+   },
+   "frame": {
+    "calls": 155,
+    "triangles": 80150
+   }
+  }
+ },
+ {
+  "out": "previews/arabber_al_phone_390x844_night_merged.png",
+  "q": "show=arabber_al&cam=phone&t=1.1&night=1&merge=1&ui=0",
+  "errors": [],
+  "report": {
+   "show": "arabber_al",
+   "rigs": {
+    "arabber_al": {
+     "parts": 1,
+     "tris": 14452,
+     "hullTris": 14428,
+     "mats": 1,
+     "height": 2.058,
+     "minY": 0
+    }
+   },
+   "frame": {
+    "calls": 155,
+    "triangles": 80150
+   }
+  }
+ },
+ {
+  "out": "previews/arabber_al_merged_day.png",
+  "q": "show=arabber_al&cam=three&t=1.1&merge=1&ui=0",
+  "errors": [],
+  "report": {
+   "show": "arabber_al",
+   "rigs": {
+    "arabber_al": {
+     "parts": 1,
+     "tris": 14452,
+     "hullTris": 14428,
+     "mats": 1,
+     "height": 2.058,
+     "minY": 0
+    }
+   },
+   "frame": {
+    "calls": 4,
+    "triangles": 43334
+   }
+  }
+ },
+ {
+  "out": "previews/arabber_al_merged_night.png",
+  "q": "show=arabber_al&cam=three&t=1.1&night=1&merge=1&ui=0",
+  "errors": [],
+  "report": {
+   "show": "arabber_al",
+   "rigs": {
+    "arabber_al": {
+     "parts": 1,
+     "tris": 14452,
+     "hullTris": 14428,
+     "mats": 1,
+     "height": 2.058,
+     "minY": 0
+    }
+   },
+   "frame": {
+    "calls": 4,
+    "triangles": 43334
+   }
+  }
+ },
+ {
+  "out": "previews/arabber_al_merged_flash.png",
+  "q": "show=arabber_al&cam=three&t=1.1&merge=1&flash=0.85&ui=0",
+  "errors": [],
+  "report": {
+   "show": "arabber_al",
+   "rigs": {
+    "arabber_al": {
+     "parts": 1,
+     "tris": 14452,
+     "hullTris": 14428,
+     "mats": 1,
+     "height": 2.058,
+     "minY": 0
+    }
+   },
+   "frame": {
+    "calls": 4,
+    "triangles": 43334
+   }
+  }
+ },
+ {
+  "out": "previews/arabber_al_flash_unmerged.png",
+  "q": "show=arabber_al&cam=three&t=1.1&flash=0.85&ui=0",
+  "errors": [],
+  "report": {
+   "show": "arabber_al",
+   "rigs": {
+    "arabber_al": {
+     "parts": 58,
+     "tris": 14452,
+     "hullTris": 14428,
+     "mats": 1,
+     "height": 2.066,
+     "minY": 0
+    }
+   },
+   "frame": {
+    "calls": 167,
+    "triangles": 42434
+   }
+  }
+ },
+ {
+  "out": "previews/arabber_al_turn.png",
+  "q": "show=arabber_al&turn=1&t=1.1&ui=0",
+  "errors": [],
+  "report": {
+   "show": "arabber_al",
+   "rigs": {
+    "arabber_al": {
+     "parts": 58,
+     "tris": 14452,
+     "hullTris": 14428,
+     "mats": 1,
+     "height": 2.066,
+     "minY": 0
+    }
+   },
+   "frame": {
+    "calls": 665,
+    "triangles": 169730
+   }
+  }
+ },
+ {
+  "out": "previews/arabber_al_poses.png",
+  "q": "show=arabber_al&pose=all&t=1.1&ui=0",
+  "errors": [],
+  "report": {
+   "show": "arabber_al",
+   "rigs": {
+    "arabber_al": {
+     "parts": 58,
+     "tris": 14452,
+     "hullTris": 14428,
+     "mats": 1,
+     "height": 2.066,
+     "minY": 0
+    }
+   },
+   "frame": {
+    "calls": 1163,
+    "triangles": 297026
+   }
+  }
+ },
+ {
+  "out": "previews/arabber_al_poses_night_merged.png",
+  "q": "show=arabber_al&pose=all&t=1.1&night=1&merge=1&ui=0",
+  "errors": [],
+  "report": {
+   "show": "arabber_al",
+   "rigs": {
+    "arabber_al": {
+     "parts": 1,
+     "tris": 14452,
+     "hullTris": 14428,
+     "mats": 1,
+     "height": 2.058,
+     "minY": 0
+    }
+   },
+   "frame": {
+    "calls": 22,
+    "triangles": 303326
+   }
+  }
+ },
+ {
+  "out": "previews/arabber_al_angry.png",
+  "q": "show=arabber_al&pose=all&t=1.1&angry=1&ui=0",
+  "errors": [],
+  "report": {
+   "show": "arabber_al",
+   "rigs": {
+    "arabber_al": {
+     "parts": 58,
+     "tris": 14452,
+     "hullTris": 14428,
+     "mats": 1,
+     "height": 2.066,
+     "minY": 0
+    }
+   },
+   "frame": {
+    "calls": 1163,
+    "triangles": 297026
+   }
+  }
+ },
+ {
+  "out": "previews/arabber_al_atk1_strip.png",
+  "q": "show=arabber_al&strip=atk1&n=8&ui=0",
+  "errors": [],
+  "report": {
+   "show": "arabber_al",
+   "rigs": {},
+   "frame": {
+    "calls": 1317,
+    "triangles": 334706
+   }
+  }
+ },
+ {
+  "out": "previews/arabber_al_atk2_strip.png",
+  "q": "show=arabber_al&strip=atk2&n=8&ui=0",
+  "errors": [],
+  "report": {
+   "show": "arabber_al",
+   "rigs": {},
+   "frame": {
+    "calls": 1329,
+    "triangles": 339458
+   }
+  }
+ },
+ {
+  "out": "previews/arabber_al_atk3_strip.png",
+  "q": "show=arabber_al&strip=atk3&n=8&ui=0",
+  "errors": [],
+  "report": {
+   "show": "arabber_al",
+   "rigs": {},
+   "frame": {
+    "calls": 1329,
+    "triangles": 339458
+   }
+  }
+ },
+ {
+  "out": "previews/arabber_al_knockdown_strip.png",
+  "q": "show=arabber_al&strip=knockdown&n=9&ui=0",
+  "errors": [],
+  "report": {
+   "show": "arabber_al",
+   "rigs": {},
+   "frame": {
+    "calls": 1495,
+    "triangles": 381890
+   }
+  }
+ },
+ {
+  "out": "previews/arabber_al_knockdown_strip_merged.png",
+  "q": "show=arabber_al&strip=knockdown&n=9&merge=1&ui=0",
+  "errors": [],
+  "report": {
+   "show": "arabber_al",
+   "rigs": {},
+   "frame": {
+    "calls": 28,
+    "triangles": 389990
+   }
+  }
+ },
+ {
+  "out": "previews/arabber_al_sheet.png",
+  "q": "show=arabber_al&sheet=1&t=1.1",
+  "errors": [],
+  "report": {
+   "show": "arabber_al",
+   "rigs": {
+    "arabber_al": {
+     "parts": 58,
+     "tris": 14452,
+     "hullTris": 14428,
+     "mats": 1,
+     "height": 2.066,
+     "minY": 0
+    }
+   },
+   "frame": {
+    "calls": 1169,
+    "triangles": 297304
+   }
+  }
+ }
+]

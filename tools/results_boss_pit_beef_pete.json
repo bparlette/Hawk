@@ -1,0 +1,417 @@
+{
+ "id": "pit_beef_pete",
+ "meta": {
+  "id": "pit_beef_pete",
+  "name": "Pit Beef Pete",
+  "district": "lexington",
+  "hp": 140,
+  "scale": 1.35,
+  "radius": 0.95,
+  "height": 2.75
+ },
+ "budgets": {
+  "zipKit": {
+   "parts": 38,
+   "tris": 10524,
+   "hulls": 33,
+   "hullTris": 9696,
+   "mats": 1,
+   "matKinds": [
+    "toon"
+   ],
+   "badHull": 0,
+   "flashBad": 0,
+   "shadowCasters": 25,
+   "shadowBad": [],
+   "drawCallsUnmerged": 71
+  },
+  "zipKit/lod1": {
+   "parts": 36,
+   "tris": 9732,
+   "hulls": 33,
+   "hullTris": 9696,
+   "mats": 1,
+   "matKinds": [
+    "toon"
+   ],
+   "badHull": 0,
+   "flashBad": 0,
+   "shadowCasters": 25,
+   "shadowBad": [],
+   "drawCallsUnmerged": 69
+  },
+  "realGame": {
+   "parts": 38,
+   "tris": 10524,
+   "hulls": 33,
+   "hullTris": 9696,
+   "mats": 1,
+   "matKinds": [
+    "toon"
+   ],
+   "badHull": 0,
+   "flashBad": 0,
+   "shadowCasters": 25,
+   "shadowBad": [],
+   "drawCallsUnmerged": 71
+  },
+  "realGame/lod1": {
+   "parts": 36,
+   "tris": 9732,
+   "hulls": 33,
+   "hullTris": 9696,
+   "mats": 1,
+   "matKinds": [
+    "toon"
+   ],
+   "badHull": 0,
+   "flashBad": 0,
+   "shadowCasters": 25,
+   "shadowBad": [],
+   "drawCallsUnmerged": 69
+  },
+  "limits": {
+   "parts": 63,
+   "tris": 19800
+  },
+  "pass": true
+ },
+ "idle0": {
+  "minY": 0,
+  "maxY": 2.756,
+  "height": 2.756,
+  "heightNoWeapon": 2.756,
+  "meta": 2.75,
+  "heightErrPct": 0.2,
+  "zMin": -0.601,
+  "zMax": 0.933,
+  "xMin": -0.987,
+  "xMax": 1.039
+ },
+ "reach": {
+  "idleMaxHoriz": 1.267,
+  "atT": 0.5,
+  "part": "haL",
+  "radius": 0.95,
+  "beyondRadius": 0.317,
+  "pass": true
+ },
+ "poses": {
+  "idle": {
+   "minY": 0,
+   "lowest": "stool",
+   "cullR": 1.116,
+   "gaps": {}
+  },
+  "idle_t1.1": {
+   "minY": 0,
+   "lowest": "stool",
+   "cullR": 1.116,
+   "gaps": {}
+  },
+  "run_0.3": {
+   "minY": 0.03,
+   "lowest": "stool",
+   "cullR": 1.142,
+   "gaps": {}
+  },
+  "run_0.6": {
+   "minY": 0.054,
+   "lowest": "stool",
+   "cullR": 1.159,
+   "gaps": {}
+  },
+  "hurt_0": {
+   "minY": 0,
+   "lowest": "stool",
+   "cullR": 1.159,
+   "gaps": {}
+  },
+  "hurt_0.5": {
+   "minY": 0,
+   "lowest": "stool",
+   "cullR": 1.181,
+   "gaps": {}
+  },
+  "down_air_0.3": {
+   "minY": 0,
+   "lowest": "stool",
+   "cullR": 1.135,
+   "gaps": {}
+  },
+  "down_1_ground": {
+   "minY": 0,
+   "lowest": "stool",
+   "cullR": 1.18,
+   "gaps": {}
+  },
+  "atk1_0.2": {
+   "minY": 0,
+   "lowest": "stool",
+   "cullR": 1.236,
+   "gaps": {}
+  },
+  "atk1_0.5": {
+   "minY": 0,
+   "lowest": "stool",
+   "cullR": 1.187,
+   "gaps": {}
+  },
+  "atk1_0.8": {
+   "minY": 0,
+   "lowest": "stool",
+   "cullR": 1.135,
+   "gaps": {}
+  },
+  "atk2_0.2": {
+   "minY": 0,
+   "lowest": "stool",
+   "cullR": 1.117,
+   "gaps": {}
+  },
+  "atk2_0.5": {
+   "minY": 0.052,
+   "lowest": "stool",
+   "cullR": 1.182,
+   "gaps": {}
+  },
+  "atk2_0.8": {
+   "minY": 0.079,
+   "lowest": "stool",
+   "cullR": 1.214,
+   "gaps": {}
+  },
+  "atk3_0.2": {
+   "minY": 0,
+   "lowest": "stool",
+   "cullR": 1.128,
+   "gaps": {}
+  },
+  "atk3_0.5": {
+   "minY": 0,
+   "lowest": "stool",
+   "cullR": 1.161,
+   "gaps": {}
+  },
+  "atk3_0.8": {
+   "minY": 0,
+   "lowest": "stool",
+   "cullR": 1.123,
+   "gaps": {}
+  }
+ },
+ "seq": {
+  "knockdown": {
+   "minY": 0,
+   "at": 0,
+   "lowest": "idle:stool",
+   "cullR": 1.201,
+   "cullAt": 0.733,
+   "cullWhat": "hurt:swR"
+  },
+  "hurt": {
+   "minY": 0,
+   "at": 0,
+   "lowest": "idle:stool",
+   "cullR": 1.201,
+   "cullAt": 0.733,
+   "cullWhat": "hurt:swR"
+  },
+  "run": {
+   "minY": 0,
+   "at": 0,
+   "lowest": "idle:stool",
+   "cullR": 1.161,
+   "cullAt": 1.483,
+   "cullWhat": "run:head"
+  },
+  "atk1": {
+   "minY": 0,
+   "at": 0,
+   "lowest": "idle:stool",
+   "cullR": 1.388,
+   "cullAt": 0.767,
+   "cullWhat": "atk1:swR"
+  },
+  "atk2": {
+   "minY": 0,
+   "at": 0,
+   "lowest": "idle:stool",
+   "cullR": 1.214,
+   "cullAt": 1.167,
+   "cullWhat": "atk2:swR"
+  },
+  "atk3": {
+   "minY": 0,
+   "at": 0,
+   "lowest": "idle:stool",
+   "cullR": 1.269,
+   "cullAt": 1.133,
+   "cullWhat": "atk3:head"
+  },
+  "chain": {
+   "minY": 0,
+   "at": 0,
+   "lowest": "idle:stool",
+   "cullR": 1.388,
+   "cullAt": 1.467,
+   "cullWhat": "atk1:swR"
+  },
+  "worstMinY": 0,
+  "worstCullR": 1.388,
+  "passFloor": true,
+  "passCull26": true,
+  "cull19Info": true
+ },
+ "attacks": {
+  "count": 3,
+  "poses": [
+   "atk1",
+   "atk2",
+   "atk3"
+  ],
+  "contractOk": true,
+  "each": [
+   {
+    "id": "cheat_slide",
+    "pose": "atk1",
+    "strike": "haR",
+    "active": [
+     0.4,
+     0.62
+    ],
+    "peakU": 0.5,
+    "peakSpeed": 25.428,
+    "peakInActive": true
+   },
+   {
+    "id": "belly_bump",
+    "pose": "atk2",
+    "strike": "torso",
+    "active": [
+     0.46,
+     0.6
+    ],
+    "peakU": 0.517,
+    "peakSpeed": 0.925,
+    "peakInActive": true
+   },
+   {
+    "id": "hiccup_blast",
+    "pose": "atk3",
+    "strike": "head",
+    "active": [
+     0.54,
+     0.68
+    ],
+    "peakU": 0.597,
+    "peakSpeed": 4.254,
+    "peakInActive": true
+   }
+  ],
+  "allPeaksInActive": true
+ },
+ "merge": {
+  "ok": true,
+  "drawCalls": 2,
+  "toonCalls": 1,
+  "outlineCalls": 1,
+  "shadowCalls": 1,
+  "bones": 18,
+  "flashShared": true,
+  "partsBefore": 38,
+  "trisBefore": 10524
+ },
+ "determinism": {
+  "hash": "cbb9edfbaea6eaf7",
+  "sameSeedEqual": true,
+  "seed8Differs": false,
+  "noSeedOk": true,
+  "negSeedOk": true,
+  "hugeSeedOk": true,
+  "threeUuidRandomCalls": 3668,
+  "independentOfMathRandom": true,
+  "mathRandomInSource": false,
+  "canvas": {
+   "firstBuildOps": 0,
+   "secondBuildOps": 0,
+   "wrapperKOps": 0,
+   "cachedOnSameK": true,
+   "cachedForWrapperK": true,
+   "noDocumentBuildOk": true,
+   "drawsAfterDocumentReturns": true
+  }
+ },
+ "misc": {
+  "kitKeys": 48
+ },
+ "extra": {
+  "eat": {
+   "minY": 0,
+   "lowest": "static u 0:stool",
+   "cullR": 1.139
+  },
+  "full": {
+   "minY": 0,
+   "lowest": "static u 0:stool",
+   "cullR": 1.182
+  },
+  "hiccup": {
+   "minY": 0,
+   "lowest": "static u 0:stool",
+   "cullR": 1.245
+  },
+  "cheat_slide": {
+   "minY": 0,
+   "lowest": "static u 0:stool",
+   "cullR": 1.391
+  }
+ },
+ "extraPass": true,
+ "buildMs": {
+  "median": 6.9,
+  "min": 4.83,
+  "max": 13.83,
+  "n": 20,
+  "env": "node v22.22.0"
+ },
+ "summary": {
+  "pass": true,
+  "parts": 38,
+  "tris": 10524,
+  "mats": 1,
+  "matKinds": [
+   "toon"
+  ],
+  "mergedCalls": 2,
+  "height": 2.756,
+  "heightErrPct": 0.2,
+  "worstMinY": 0,
+  "worstCullR": 1.391,
+  "buildMs": 6.9,
+  "extra": 4,
+  "idleBeyondRadius": 0.317,
+  "reachPart": "haL",
+  "strikes": "atk1@0.5 atk2@0.517 atk3@0.597"
+ },
+ "hooks": {
+  "separateTable": {
+   "ok": true,
+   "scale": 1.35,
+   "parts": 10,
+   "hulls": 8,
+   "mats": 1,
+   "tris": 1224,
+   "minY": 0,
+   "maxY": 1.553,
+   "zMin": -0.54,
+   "zMax": 0.567
+  },
+  "jPoseStates": {
+   "ok": true,
+   "posed": 24,
+   "puffedAtFull1": 1,
+   "mergedCalls": 2
+  }
+ }
+}

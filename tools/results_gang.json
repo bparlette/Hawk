@@ -1,0 +1,1979 @@
+{
+ "budgets": {
+  "starterKit": {
+   "grunt_a": {
+    "parts": 32,
+    "tris": 9400,
+    "hulls": 23,
+    "hullTris": 8524,
+    "mats": 3,
+    "badHull": 0,
+    "flashBad": 0,
+    "shadowCasters": 19,
+    "drawCallsUnmerged": 55,
+    "height": 1.899,
+    "minY": 0.043,
+    "maxY": 1.942,
+    "heightUnscaled": 1.899,
+    "groups": [
+     "tail",
+     "head"
+    ],
+    "kind": "thug",
+    "meta": true,
+    "headZ": [
+     -0.17,
+     0.39
+    ]
+   },
+   "grunt_a/lod1": {
+    "parts": 12,
+    "tris": 1648,
+    "hulls": 12,
+    "hullTris": 1648,
+    "mats": 2,
+    "badHull": 0,
+    "flashBad": 0,
+    "shadowCasters": 12,
+    "drawCallsUnmerged": 24,
+    "height": 1.875,
+    "minY": 0.037,
+    "maxY": 1.912,
+    "heightUnscaled": 1.875,
+    "groups": [
+     "tail",
+     "head"
+    ],
+    "kind": "thug",
+    "meta": true,
+    "headZ": [
+     -0.18,
+     0.4
+    ]
+   },
+   "grunt_b": {
+    "parts": 31,
+    "tris": 9140,
+    "hulls": 22,
+    "hullTris": 8264,
+    "mats": 3,
+    "badHull": 0,
+    "flashBad": 0,
+    "shadowCasters": 18,
+    "drawCallsUnmerged": 53,
+    "height": 1.836,
+    "minY": 0.043,
+    "maxY": 1.879,
+    "heightUnscaled": 1.836,
+    "groups": [
+     "tail",
+     "head"
+    ],
+    "kind": "thug",
+    "meta": true,
+    "headZ": [
+     -0.11,
+     0.36
+    ]
+   },
+   "grunt_b/lod1": {
+    "parts": 11,
+    "tris": 1592,
+    "hulls": 11,
+    "hullTris": 1592,
+    "mats": 2,
+    "badHull": 0,
+    "flashBad": 0,
+    "shadowCasters": 11,
+    "drawCallsUnmerged": 22,
+    "height": 1.842,
+    "minY": 0.037,
+    "maxY": 1.879,
+    "heightUnscaled": 1.842,
+    "groups": [
+     "tail",
+     "head"
+    ],
+    "kind": "thug",
+    "meta": true,
+    "headZ": [
+     -0.11,
+     0.4
+    ]
+   },
+   "armed": {
+    "parts": 32,
+    "tris": 9752,
+    "hulls": 23,
+    "hullTris": 8876,
+    "mats": 3,
+    "badHull": 0,
+    "flashBad": 0,
+    "shadowCasters": 19,
+    "drawCallsUnmerged": 55,
+    "height": 1.836,
+    "minY": 0.043,
+    "maxY": 1.879,
+    "heightUnscaled": 1.836,
+    "heightNoWeapon": 1.836,
+    "groups": [
+     "tail",
+     "swR",
+     "head"
+    ],
+    "kind": "thug",
+    "meta": true,
+    "headZ": [
+     -0.11,
+     0.36
+    ]
+   },
+   "armed/lod1": {
+    "parts": 12,
+    "tris": 1704,
+    "hulls": 12,
+    "hullTris": 1704,
+    "mats": 2,
+    "badHull": 0,
+    "flashBad": 0,
+    "shadowCasters": 12,
+    "drawCallsUnmerged": 24,
+    "height": 1.842,
+    "minY": 0.037,
+    "maxY": 1.879,
+    "heightUnscaled": 1.842,
+    "heightNoWeapon": 1.842,
+    "groups": [
+     "tail",
+     "swR",
+     "head"
+    ],
+    "kind": "thug",
+    "meta": true,
+    "headZ": [
+     -0.11,
+     0.4
+    ]
+   },
+   "bruiser": {
+    "parts": 33,
+    "tris": 9592,
+    "hulls": 24,
+    "hullTris": 8716,
+    "mats": 3,
+    "badHull": 0,
+    "flashBad": 0,
+    "shadowCasters": 21,
+    "drawCallsUnmerged": 57,
+    "height": 2.517,
+    "minY": 0.038,
+    "maxY": 2.554,
+    "heightUnscaled": 2.098,
+    "groups": [
+     "tail",
+     "head"
+    ],
+    "kind": "thug",
+    "meta": true,
+    "headZ": [
+     -0.13,
+     0.43
+    ]
+   },
+   "bruiser/lod1": {
+    "parts": 12,
+    "tris": 1648,
+    "hulls": 12,
+    "hullTris": 1648,
+    "mats": 2,
+    "badHull": 0,
+    "flashBad": 0,
+    "shadowCasters": 12,
+    "drawCallsUnmerged": 24,
+    "height": 2.399,
+    "minY": 0.043,
+    "maxY": 2.442,
+    "heightUnscaled": 1.999,
+    "groups": [
+     "tail",
+     "head"
+    ],
+    "kind": "thug",
+    "meta": true,
+    "headZ": [
+     -0.14,
+     0.48
+    ]
+   }
+  },
+  "realGame": {
+   "grunt_a": {
+    "parts": 32,
+    "tris": 9400,
+    "hulls": 23,
+    "hullTris": 8524,
+    "mats": 3,
+    "badHull": 0,
+    "flashBad": 0,
+    "shadowCasters": 19,
+    "drawCallsUnmerged": 55,
+    "height": 1.899,
+    "minY": 0.043,
+    "maxY": 1.942,
+    "heightUnscaled": 1.899,
+    "groups": [
+     "tail",
+     "head"
+    ],
+    "kind": "thug",
+    "meta": true,
+    "headZ": [
+     -0.17,
+     0.39
+    ]
+   },
+   "grunt_a/lod1": {
+    "parts": 12,
+    "tris": 1648,
+    "hulls": 12,
+    "hullTris": 1648,
+    "mats": 2,
+    "badHull": 0,
+    "flashBad": 0,
+    "shadowCasters": 12,
+    "drawCallsUnmerged": 24,
+    "height": 1.875,
+    "minY": 0.037,
+    "maxY": 1.912,
+    "heightUnscaled": 1.875,
+    "groups": [
+     "tail",
+     "head"
+    ],
+    "kind": "thug",
+    "meta": true,
+    "headZ": [
+     -0.18,
+     0.4
+    ]
+   },
+   "grunt_b": {
+    "parts": 31,
+    "tris": 9140,
+    "hulls": 22,
+    "hullTris": 8264,
+    "mats": 3,
+    "badHull": 0,
+    "flashBad": 0,
+    "shadowCasters": 18,
+    "drawCallsUnmerged": 53,
+    "height": 1.836,
+    "minY": 0.043,
+    "maxY": 1.879,
+    "heightUnscaled": 1.836,
+    "groups": [
+     "tail",
+     "head"
+    ],
+    "kind": "thug",
+    "meta": true,
+    "headZ": [
+     -0.11,
+     0.36
+    ]
+   },
+   "grunt_b/lod1": {
+    "parts": 11,
+    "tris": 1592,
+    "hulls": 11,
+    "hullTris": 1592,
+    "mats": 2,
+    "badHull": 0,
+    "flashBad": 0,
+    "shadowCasters": 11,
+    "drawCallsUnmerged": 22,
+    "height": 1.842,
+    "minY": 0.037,
+    "maxY": 1.879,
+    "heightUnscaled": 1.842,
+    "groups": [
+     "tail",
+     "head"
+    ],
+    "kind": "thug",
+    "meta": true,
+    "headZ": [
+     -0.11,
+     0.4
+    ]
+   },
+   "armed": {
+    "parts": 32,
+    "tris": 9752,
+    "hulls": 23,
+    "hullTris": 8876,
+    "mats": 3,
+    "badHull": 0,
+    "flashBad": 0,
+    "shadowCasters": 19,
+    "drawCallsUnmerged": 55,
+    "height": 1.836,
+    "minY": 0.043,
+    "maxY": 1.879,
+    "heightUnscaled": 1.836,
+    "heightNoWeapon": 1.836,
+    "groups": [
+     "tail",
+     "swR",
+     "head"
+    ],
+    "kind": "thug",
+    "meta": true,
+    "headZ": [
+     -0.11,
+     0.36
+    ]
+   },
+   "armed/lod1": {
+    "parts": 12,
+    "tris": 1704,
+    "hulls": 12,
+    "hullTris": 1704,
+    "mats": 2,
+    "badHull": 0,
+    "flashBad": 0,
+    "shadowCasters": 12,
+    "drawCallsUnmerged": 24,
+    "height": 1.842,
+    "minY": 0.037,
+    "maxY": 1.879,
+    "heightUnscaled": 1.842,
+    "heightNoWeapon": 1.842,
+    "groups": [
+     "tail",
+     "swR",
+     "head"
+    ],
+    "kind": "thug",
+    "meta": true,
+    "headZ": [
+     -0.11,
+     0.4
+    ]
+   },
+   "bruiser": {
+    "parts": 33,
+    "tris": 9592,
+    "hulls": 24,
+    "hullTris": 8716,
+    "mats": 3,
+    "badHull": 0,
+    "flashBad": 0,
+    "shadowCasters": 21,
+    "drawCallsUnmerged": 57,
+    "height": 2.517,
+    "minY": 0.038,
+    "maxY": 2.554,
+    "heightUnscaled": 2.098,
+    "groups": [
+     "tail",
+     "head"
+    ],
+    "kind": "thug",
+    "meta": true,
+    "headZ": [
+     -0.13,
+     0.43
+    ]
+   },
+   "bruiser/lod1": {
+    "parts": 12,
+    "tris": 1648,
+    "hulls": 12,
+    "hullTris": 1648,
+    "mats": 2,
+    "badHull": 0,
+    "flashBad": 0,
+    "shadowCasters": 12,
+    "drawCallsUnmerged": 24,
+    "height": 2.399,
+    "minY": 0.043,
+    "maxY": 2.442,
+    "heightUnscaled": 1.999,
+    "groups": [
+     "tail",
+     "head"
+    ],
+    "kind": "thug",
+    "meta": true,
+    "headZ": [
+     -0.14,
+     0.48
+    ]
+   },
+   "current_thug_0": {
+    "parts": 27,
+    "tris": 7584,
+    "hulls": 20,
+    "hullTris": 7016,
+    "mats": 2,
+    "badHull": 0,
+    "flashBad": 0,
+    "shadowCasters": 23,
+    "drawCallsUnmerged": 47
+   },
+   "current_thug_1": {
+    "parts": 30,
+    "tris": 8208,
+    "hulls": 23,
+    "hullTris": 7640,
+    "mats": 2,
+    "badHull": 0,
+    "flashBad": 0,
+    "shadowCasters": 25,
+    "drawCallsUnmerged": 53
+   },
+   "current_thug_2": {
+    "parts": 28,
+    "tris": 8544,
+    "hulls": 21,
+    "hullTris": 7976,
+    "mats": 2,
+    "badHull": 0,
+    "flashBad": 0,
+    "shadowCasters": 24,
+    "drawCallsUnmerged": 49
+   },
+   "current_thug_3": {
+    "parts": 33,
+    "tris": 7926,
+    "hulls": 26,
+    "hullTris": 7358,
+    "mats": 2,
+    "badHull": 0,
+    "flashBad": 0,
+    "shadowCasters": 28,
+    "drawCallsUnmerged": 59
+   },
+   "current_thug_4": {
+    "parts": 26,
+    "tris": 7916,
+    "hulls": 19,
+    "hullTris": 7304,
+    "mats": 2,
+    "badHull": 0,
+    "flashBad": 0,
+    "shadowCasters": 24,
+    "drawCallsUnmerged": 45
+   }
+  }
+ },
+ "poses": {
+  "starterKit": {
+   "grunt_a": {
+    "idle": {
+     "minY": 0.043,
+     "maxY": 1.942,
+     "under": [],
+     "gaps": {}
+    },
+    "run": {
+     "minY": 0.266,
+     "maxY": 1.993,
+     "under": [],
+     "gaps": {}
+    },
+    "windup": {
+     "minY": 0.016,
+     "maxY": 1.937,
+     "under": [],
+     "gaps": {}
+    },
+    "attack": {
+     "minY": 0.015,
+     "maxY": 1.924,
+     "under": [],
+     "gaps": {}
+    },
+    "hurt": {
+     "minY": 0.009,
+     "maxY": 1.869,
+     "under": [],
+     "gaps": {}
+    },
+    "down": {
+     "minY": -0.005,
+     "maxY": 0.705,
+     "under": [],
+     "gaps": {}
+    },
+    "down+anim": {
+     "minY": -0.005,
+     "maxY": 0.705,
+     "under": [],
+     "gaps": {}
+    },
+    "getup": {
+     "minY": 0.009,
+     "maxY": 1.817,
+     "under": [],
+     "gaps": {}
+    }
+   },
+   "grunt_a/lod1": {
+    "idle": {
+     "minY": 0.037,
+     "maxY": 1.912,
+     "under": [],
+     "gaps": {}
+    },
+    "run": {
+     "minY": 0.279,
+     "maxY": 1.972,
+     "under": [],
+     "gaps": {}
+    },
+    "windup": {
+     "minY": 0.01,
+     "maxY": 1.912,
+     "under": [],
+     "gaps": {}
+    },
+    "attack": {
+     "minY": 0.064,
+     "maxY": 1.899,
+     "under": [],
+     "gaps": {}
+    },
+    "hurt": {
+     "minY": -0.006,
+     "maxY": 1.906,
+     "under": [],
+     "gaps": {}
+    },
+    "down": {
+     "minY": -0.004,
+     "maxY": 0.732,
+     "under": [],
+     "gaps": {}
+    },
+    "down+anim": {
+     "minY": -0.004,
+     "maxY": 0.732,
+     "under": [],
+     "gaps": {}
+    },
+    "getup": {
+     "minY": -0.015,
+     "maxY": 1.823,
+     "under": [],
+     "gaps": {}
+    }
+   },
+   "grunt_b": {
+    "idle": {
+     "minY": 0.043,
+     "maxY": 1.879,
+     "under": [],
+     "gaps": {}
+    },
+    "run": {
+     "minY": 0.266,
+     "maxY": 1.926,
+     "under": [],
+     "gaps": {}
+    },
+    "windup": {
+     "minY": 0.016,
+     "maxY": 1.854,
+     "under": [],
+     "gaps": {}
+    },
+    "attack": {
+     "minY": 0.015,
+     "maxY": 1.859,
+     "under": [],
+     "gaps": {}
+    },
+    "hurt": {
+     "minY": 0.009,
+     "maxY": 1.817,
+     "under": [],
+     "gaps": {}
+    },
+    "down": {
+     "minY": -0.005,
+     "maxY": 0.654,
+     "under": [],
+     "gaps": {}
+    },
+    "down+anim": {
+     "minY": -0.005,
+     "maxY": 0.654,
+     "under": [],
+     "gaps": {}
+    },
+    "getup": {
+     "minY": 0.009,
+     "maxY": 1.744,
+     "under": [],
+     "gaps": {}
+    }
+   },
+   "grunt_b/lod1": {
+    "idle": {
+     "minY": 0.037,
+     "maxY": 1.879,
+     "under": [],
+     "gaps": {}
+    },
+    "run": {
+     "minY": 0.279,
+     "maxY": 1.927,
+     "under": [],
+     "gaps": {}
+    },
+    "windup": {
+     "minY": 0.01,
+     "maxY": 1.855,
+     "under": [],
+     "gaps": {}
+    },
+    "attack": {
+     "minY": 0.064,
+     "maxY": 1.86,
+     "under": [],
+     "gaps": {}
+    },
+    "hurt": {
+     "minY": -0.006,
+     "maxY": 1.889,
+     "under": [],
+     "gaps": {}
+    },
+    "down": {
+     "minY": -0.004,
+     "maxY": 0.728,
+     "under": [],
+     "gaps": {}
+    },
+    "down+anim": {
+     "minY": -0.004,
+     "maxY": 0.728,
+     "under": [],
+     "gaps": {}
+    },
+    "getup": {
+     "minY": -0.015,
+     "maxY": 1.748,
+     "under": [],
+     "gaps": {}
+    }
+   },
+   "armed": {
+    "idle": {
+     "minY": 0.043,
+     "maxY": 1.879,
+     "under": [],
+     "gaps": {}
+    },
+    "run": {
+     "minY": 0.266,
+     "maxY": 1.926,
+     "under": [],
+     "gaps": {}
+    },
+    "windup": {
+     "minY": 0.016,
+     "maxY": 1.998,
+     "under": [],
+     "gaps": {}
+    },
+    "attack": {
+     "minY": 0.015,
+     "maxY": 1.802,
+     "under": [],
+     "gaps": {}
+    },
+    "hurt": {
+     "minY": 0.009,
+     "maxY": 1.817,
+     "under": [],
+     "gaps": {}
+    },
+    "down": {
+     "minY": -0.148,
+     "maxY": 0.654,
+     "under": [
+      "swR:-0.15"
+     ],
+     "gaps": {}
+    },
+    "down+anim": {
+     "minY": -0.148,
+     "maxY": 0.654,
+     "under": [
+      "swR:-0.15"
+     ],
+     "gaps": {}
+    },
+    "getup": {
+     "minY": 0.009,
+     "maxY": 1.744,
+     "under": [],
+     "gaps": {}
+    }
+   },
+   "armed/lod1": {
+    "idle": {
+     "minY": 0.037,
+     "maxY": 1.879,
+     "under": [],
+     "gaps": {}
+    },
+    "run": {
+     "minY": 0.279,
+     "maxY": 1.927,
+     "under": [],
+     "gaps": {}
+    },
+    "windup": {
+     "minY": 0.01,
+     "maxY": 2.015,
+     "under": [],
+     "gaps": {}
+    },
+    "attack": {
+     "minY": 0.064,
+     "maxY": 1.804,
+     "under": [],
+     "gaps": {}
+    },
+    "hurt": {
+     "minY": -0.006,
+     "maxY": 1.889,
+     "under": [],
+     "gaps": {}
+    },
+    "down": {
+     "minY": -0.134,
+     "maxY": 0.728,
+     "under": [
+      "swR:-0.13"
+     ],
+     "gaps": {}
+    },
+    "down+anim": {
+     "minY": -0.134,
+     "maxY": 0.728,
+     "under": [
+      "swR:-0.13"
+     ],
+     "gaps": {}
+    },
+    "getup": {
+     "minY": -0.015,
+     "maxY": 1.748,
+     "under": [],
+     "gaps": {}
+    }
+   },
+   "bruiser": {
+    "idle": {
+     "minY": 0.038,
+     "maxY": 2.554,
+     "under": [],
+     "gaps": {}
+    },
+    "run": {
+     "minY": 0.314,
+     "maxY": 2.568,
+     "under": [],
+     "gaps": {}
+    },
+    "windup": {
+     "minY": 0.005,
+     "maxY": 2.532,
+     "under": [],
+     "gaps": {}
+    },
+    "attack": {
+     "minY": 0.012,
+     "maxY": 2.508,
+     "under": [],
+     "gaps": {}
+    },
+    "hurt": {
+     "minY": -0.01,
+     "maxY": 2.317,
+     "under": [],
+     "gaps": {}
+    },
+    "down": {
+     "minY": -0.019,
+     "maxY": 0.9,
+     "under": [],
+     "gaps": {}
+    },
+    "down+anim": {
+     "minY": -0.019,
+     "maxY": 0.9,
+     "under": [],
+     "gaps": {}
+    },
+    "getup": {
+     "minY": -0.013,
+     "maxY": 2.258,
+     "under": [],
+     "gaps": {}
+    }
+   },
+   "bruiser/lod1": {
+    "idle": {
+     "minY": 0.043,
+     "maxY": 2.442,
+     "under": [],
+     "gaps": {}
+    },
+    "run": {
+     "minY": 0.325,
+     "maxY": 2.497,
+     "under": [],
+     "gaps": {}
+    },
+    "windup": {
+     "minY": 0.011,
+     "maxY": 2.426,
+     "under": [],
+     "gaps": {}
+    },
+    "attack": {
+     "minY": 0.076,
+     "maxY": 2.418,
+     "under": [],
+     "gaps": {}
+    },
+    "hurt": {
+     "minY": -0.009,
+     "maxY": 2.284,
+     "under": [],
+     "gaps": {}
+    },
+    "down": {
+     "minY": -0.002,
+     "maxY": 0.874,
+     "under": [],
+     "gaps": {}
+    },
+    "down+anim": {
+     "minY": -0.002,
+     "maxY": 0.874,
+     "under": [],
+     "gaps": {}
+    },
+    "getup": {
+     "minY": -0.02,
+     "maxY": 2.258,
+     "under": [],
+     "gaps": {}
+    }
+   }
+  },
+  "realGame": {
+   "grunt_a": {
+    "idle": {
+     "minY": 0.043,
+     "maxY": 1.942,
+     "under": [],
+     "gaps": {}
+    },
+    "run": {
+     "minY": 0.266,
+     "maxY": 1.993,
+     "under": [],
+     "gaps": {}
+    },
+    "windup": {
+     "minY": 0.016,
+     "maxY": 1.937,
+     "under": [],
+     "gaps": {}
+    },
+    "attack": {
+     "minY": 0.015,
+     "maxY": 1.924,
+     "under": [],
+     "gaps": {}
+    },
+    "hurt": {
+     "minY": 0.009,
+     "maxY": 1.869,
+     "under": [],
+     "gaps": {}
+    },
+    "down": {
+     "minY": -0.005,
+     "maxY": 0.705,
+     "under": [],
+     "gaps": {}
+    },
+    "down+anim": {
+     "minY": -0.005,
+     "maxY": 0.705,
+     "under": [],
+     "gaps": {}
+    },
+    "getup": {
+     "minY": 0.009,
+     "maxY": 1.817,
+     "under": [],
+     "gaps": {}
+    }
+   },
+   "grunt_a/lod1": {
+    "idle": {
+     "minY": 0.037,
+     "maxY": 1.912,
+     "under": [],
+     "gaps": {}
+    },
+    "run": {
+     "minY": 0.279,
+     "maxY": 1.972,
+     "under": [],
+     "gaps": {}
+    },
+    "windup": {
+     "minY": 0.01,
+     "maxY": 1.912,
+     "under": [],
+     "gaps": {}
+    },
+    "attack": {
+     "minY": 0.064,
+     "maxY": 1.899,
+     "under": [],
+     "gaps": {}
+    },
+    "hurt": {
+     "minY": -0.006,
+     "maxY": 1.906,
+     "under": [],
+     "gaps": {}
+    },
+    "down": {
+     "minY": -0.004,
+     "maxY": 0.732,
+     "under": [],
+     "gaps": {}
+    },
+    "down+anim": {
+     "minY": -0.004,
+     "maxY": 0.732,
+     "under": [],
+     "gaps": {}
+    },
+    "getup": {
+     "minY": -0.015,
+     "maxY": 1.823,
+     "under": [],
+     "gaps": {}
+    }
+   },
+   "grunt_b": {
+    "idle": {
+     "minY": 0.043,
+     "maxY": 1.879,
+     "under": [],
+     "gaps": {}
+    },
+    "run": {
+     "minY": 0.266,
+     "maxY": 1.926,
+     "under": [],
+     "gaps": {}
+    },
+    "windup": {
+     "minY": 0.016,
+     "maxY": 1.854,
+     "under": [],
+     "gaps": {}
+    },
+    "attack": {
+     "minY": 0.015,
+     "maxY": 1.859,
+     "under": [],
+     "gaps": {}
+    },
+    "hurt": {
+     "minY": 0.009,
+     "maxY": 1.817,
+     "under": [],
+     "gaps": {}
+    },
+    "down": {
+     "minY": -0.005,
+     "maxY": 0.654,
+     "under": [],
+     "gaps": {}
+    },
+    "down+anim": {
+     "minY": -0.005,
+     "maxY": 0.654,
+     "under": [],
+     "gaps": {}
+    },
+    "getup": {
+     "minY": 0.009,
+     "maxY": 1.744,
+     "under": [],
+     "gaps": {}
+    }
+   },
+   "grunt_b/lod1": {
+    "idle": {
+     "minY": 0.037,
+     "maxY": 1.879,
+     "under": [],
+     "gaps": {}
+    },
+    "run": {
+     "minY": 0.279,
+     "maxY": 1.927,
+     "under": [],
+     "gaps": {}
+    },
+    "windup": {
+     "minY": 0.01,
+     "maxY": 1.855,
+     "under": [],
+     "gaps": {}
+    },
+    "attack": {
+     "minY": 0.064,
+     "maxY": 1.86,
+     "under": [],
+     "gaps": {}
+    },
+    "hurt": {
+     "minY": -0.006,
+     "maxY": 1.889,
+     "under": [],
+     "gaps": {}
+    },
+    "down": {
+     "minY": -0.004,
+     "maxY": 0.728,
+     "under": [],
+     "gaps": {}
+    },
+    "down+anim": {
+     "minY": -0.004,
+     "maxY": 0.728,
+     "under": [],
+     "gaps": {}
+    },
+    "getup": {
+     "minY": -0.015,
+     "maxY": 1.748,
+     "under": [],
+     "gaps": {}
+    }
+   },
+   "armed": {
+    "idle": {
+     "minY": 0.043,
+     "maxY": 1.879,
+     "under": [],
+     "gaps": {}
+    },
+    "run": {
+     "minY": 0.266,
+     "maxY": 1.926,
+     "under": [],
+     "gaps": {}
+    },
+    "windup": {
+     "minY": 0.016,
+     "maxY": 1.998,
+     "under": [],
+     "gaps": {}
+    },
+    "attack": {
+     "minY": 0.015,
+     "maxY": 1.802,
+     "under": [],
+     "gaps": {}
+    },
+    "hurt": {
+     "minY": 0.009,
+     "maxY": 1.817,
+     "under": [],
+     "gaps": {}
+    },
+    "down": {
+     "minY": -0.148,
+     "maxY": 0.654,
+     "under": [
+      "swR:-0.15"
+     ],
+     "gaps": {}
+    },
+    "down+anim": {
+     "minY": -0.148,
+     "maxY": 0.654,
+     "under": [
+      "swR:-0.15"
+     ],
+     "gaps": {}
+    },
+    "getup": {
+     "minY": 0.009,
+     "maxY": 1.744,
+     "under": [],
+     "gaps": {}
+    }
+   },
+   "armed/lod1": {
+    "idle": {
+     "minY": 0.037,
+     "maxY": 1.879,
+     "under": [],
+     "gaps": {}
+    },
+    "run": {
+     "minY": 0.279,
+     "maxY": 1.927,
+     "under": [],
+     "gaps": {}
+    },
+    "windup": {
+     "minY": 0.01,
+     "maxY": 2.015,
+     "under": [],
+     "gaps": {}
+    },
+    "attack": {
+     "minY": 0.064,
+     "maxY": 1.804,
+     "under": [],
+     "gaps": {}
+    },
+    "hurt": {
+     "minY": -0.006,
+     "maxY": 1.889,
+     "under": [],
+     "gaps": {}
+    },
+    "down": {
+     "minY": -0.134,
+     "maxY": 0.728,
+     "under": [
+      "swR:-0.13"
+     ],
+     "gaps": {}
+    },
+    "down+anim": {
+     "minY": -0.134,
+     "maxY": 0.728,
+     "under": [
+      "swR:-0.13"
+     ],
+     "gaps": {}
+    },
+    "getup": {
+     "minY": -0.015,
+     "maxY": 1.748,
+     "under": [],
+     "gaps": {}
+    }
+   },
+   "bruiser": {
+    "idle": {
+     "minY": 0.038,
+     "maxY": 2.554,
+     "under": [],
+     "gaps": {}
+    },
+    "run": {
+     "minY": 0.314,
+     "maxY": 2.568,
+     "under": [],
+     "gaps": {}
+    },
+    "windup": {
+     "minY": 0.005,
+     "maxY": 2.532,
+     "under": [],
+     "gaps": {}
+    },
+    "attack": {
+     "minY": 0.012,
+     "maxY": 2.508,
+     "under": [],
+     "gaps": {}
+    },
+    "hurt": {
+     "minY": -0.01,
+     "maxY": 2.317,
+     "under": [],
+     "gaps": {}
+    },
+    "down": {
+     "minY": -0.019,
+     "maxY": 0.9,
+     "under": [],
+     "gaps": {}
+    },
+    "down+anim": {
+     "minY": -0.019,
+     "maxY": 0.9,
+     "under": [],
+     "gaps": {}
+    },
+    "getup": {
+     "minY": -0.013,
+     "maxY": 2.258,
+     "under": [],
+     "gaps": {}
+    }
+   },
+   "bruiser/lod1": {
+    "idle": {
+     "minY": 0.043,
+     "maxY": 2.442,
+     "under": [],
+     "gaps": {}
+    },
+    "run": {
+     "minY": 0.325,
+     "maxY": 2.497,
+     "under": [],
+     "gaps": {}
+    },
+    "windup": {
+     "minY": 0.011,
+     "maxY": 2.426,
+     "under": [],
+     "gaps": {}
+    },
+    "attack": {
+     "minY": 0.076,
+     "maxY": 2.418,
+     "under": [],
+     "gaps": {}
+    },
+    "hurt": {
+     "minY": -0.009,
+     "maxY": 2.284,
+     "under": [],
+     "gaps": {}
+    },
+    "down": {
+     "minY": -0.002,
+     "maxY": 0.874,
+     "under": [],
+     "gaps": {}
+    },
+    "down+anim": {
+     "minY": -0.002,
+     "maxY": 0.874,
+     "under": [],
+     "gaps": {}
+    },
+    "getup": {
+     "minY": -0.02,
+     "maxY": 2.258,
+     "under": [],
+     "gaps": {}
+    }
+   }
+  },
+  "realThugBaseline": {
+   "look0:idle": {
+    "minY": -0.047,
+    "maxY": 2.078,
+    "under": [
+     "ftL:-0.04",
+     "ftL:-0.04",
+     "ftR:-0.05",
+     "ftR:-0.04"
+    ],
+    "gaps": {}
+   },
+   "look0:windup": {
+    "minY": -0.074,
+    "maxY": 2.044,
+    "under": [
+     "ftL:-0.04",
+     "ftL:-0.03",
+     "ftR:-0.07",
+     "ftR:-0.07"
+    ],
+    "gaps": {}
+   },
+   "look0:attack": {
+    "minY": -0.067,
+    "maxY": 2.055,
+    "under": [
+     "ftR:-0.07",
+     "ftR:-0.06"
+    ],
+    "gaps": {}
+   },
+   "look0:hurt": {
+    "minY": -0.08,
+    "maxY": 1.882,
+    "under": [
+     "ftL:-0.07",
+     "ftL:-0.06",
+     "ftR:-0.08",
+     "ftR:-0.07",
+     "knR:-0.03"
+    ],
+    "gaps": {}
+   },
+   "look0:getup": {
+    "minY": -0.07,
+    "maxY": 1.911,
+    "under": [
+     "ftL:-0.05",
+     "ftL:-0.04",
+     "ftR:-0.07",
+     "ftR:-0.06",
+     "knR:-0.03"
+    ],
+    "gaps": {}
+   },
+   "look1:idle": {
+    "minY": -0.047,
+    "maxY": 2.039,
+    "under": [
+     "ftL:-0.04",
+     "ftL:-0.04",
+     "ftR:-0.05",
+     "ftR:-0.04"
+    ],
+    "gaps": {}
+   },
+   "look1:windup": {
+    "minY": -0.074,
+    "maxY": 2.059,
+    "under": [
+     "ftL:-0.04",
+     "ftL:-0.03",
+     "ftR:-0.07",
+     "ftR:-0.07"
+    ],
+    "gaps": {}
+   },
+   "look1:attack": {
+    "minY": -0.067,
+    "maxY": 1.97,
+    "under": [
+     "ftR:-0.07",
+     "ftR:-0.06"
+    ],
+    "gaps": {}
+   },
+   "look1:hurt": {
+    "minY": -0.08,
+    "maxY": 1.898,
+    "under": [
+     "ftL:-0.07",
+     "ftL:-0.06",
+     "ftR:-0.08",
+     "ftR:-0.07",
+     "knR:-0.03"
+    ],
+    "gaps": {}
+   },
+   "look1:down": {
+    "minY": -0.223,
+    "maxY": 0.699,
+    "under": [
+     "swR:-0.19",
+     "swR:-0.22"
+    ],
+    "gaps": {}
+   },
+   "look1:getup": {
+    "minY": -0.07,
+    "maxY": 1.91,
+    "under": [
+     "ftL:-0.05",
+     "ftL:-0.04",
+     "ftR:-0.07",
+     "ftR:-0.06",
+     "knR:-0.03"
+    ],
+    "gaps": {}
+   },
+   "look3:idle": {
+    "minY": -0.047,
+    "maxY": 2.135,
+    "under": [
+     "ftL:-0.04",
+     "ftL:-0.04",
+     "ftR:-0.05",
+     "ftR:-0.04"
+    ],
+    "gaps": {}
+   },
+   "look3:windup": {
+    "minY": -0.074,
+    "maxY": 2.098,
+    "under": [
+     "ftL:-0.04",
+     "ftL:-0.03",
+     "ftR:-0.07",
+     "ftR:-0.07"
+    ],
+    "gaps": {}
+   },
+   "look3:attack": {
+    "minY": -0.067,
+    "maxY": 2.013,
+    "under": [
+     "ftR:-0.07",
+     "ftR:-0.06"
+    ],
+    "gaps": {}
+   },
+   "look3:hurt": {
+    "minY": -0.08,
+    "maxY": 1.874,
+    "under": [
+     "ftL:-0.07",
+     "ftL:-0.06",
+     "ftR:-0.08",
+     "ftR:-0.07",
+     "knR:-0.03"
+    ],
+    "gaps": {}
+   },
+   "look3:down": {
+    "minY": -0.238,
+    "maxY": 0.68,
+    "under": [
+     "swR:-0.24"
+    ],
+    "gaps": {}
+   },
+   "look3:getup": {
+    "minY": -0.07,
+    "maxY": 1.943,
+    "under": [
+     "ftL:-0.05",
+     "ftL:-0.04",
+     "ftR:-0.07",
+     "ftR:-0.06",
+     "knR:-0.03"
+    ],
+    "gaps": {}
+   },
+   "look4:idle": {
+    "minY": -0.056,
+    "maxY": 2.397,
+    "under": [
+     "ftL:-0.05",
+     "ftL:-0.04",
+     "ftR:-0.06",
+     "ftR:-0.05"
+    ],
+    "gaps": {}
+   },
+   "look4:windup": {
+    "minY": -0.089,
+    "maxY": 2.364,
+    "under": [
+     "ftL:-0.05",
+     "ftL:-0.04",
+     "ftR:-0.09",
+     "ftR:-0.08"
+    ],
+    "gaps": {}
+   },
+   "look4:attack": {
+    "minY": -0.081,
+    "maxY": 2.375,
+    "under": [
+     "ftR:-0.08",
+     "ftR:-0.07"
+    ],
+    "gaps": {}
+   },
+   "look4:hurt": {
+    "minY": -0.096,
+    "maxY": 2.249,
+    "under": [
+     "ftL:-0.08",
+     "ftL:-0.08",
+     "knL:-0.03",
+     "ftR:-0.10",
+     "ftR:-0.09",
+     "knR:-0.04"
+    ],
+    "gaps": {}
+   },
+   "look4:getup": {
+    "minY": -0.084,
+    "maxY": 2.236,
+    "under": [
+     "ftL:-0.06",
+     "ftL:-0.05",
+     "ftR:-0.08",
+     "ftR:-0.08",
+     "knR:-0.04"
+    ],
+    "gaps": {}
+   }
+  }
+ },
+ "merge": {
+  "grunt_a": {
+   "ok": true,
+   "drawCalls": 3,
+   "meshes": [
+    {
+     "skinned": true,
+     "verts": 1770,
+     "tris": 1244,
+     "hasUv": true,
+     "map": true
+    },
+    {
+     "skinned": true,
+     "verts": 10934,
+     "tris": 8156,
+     "hasUv": true,
+     "map": false
+    },
+    {
+     "ol": true,
+     "skinned": true,
+     "verts": 12042,
+     "tris": 8524,
+     "hasUv": false,
+     "map": false
+    }
+   ],
+   "bones": 16,
+   "tailIsBone": true,
+   "partsBefore": 32,
+   "trisBefore": 9400
+  },
+  "grunt_a/lod1": {
+   "ok": true,
+   "drawCalls": 2,
+   "meshes": [
+    {
+     "skinned": true,
+     "verts": 4464,
+     "tris": 1648,
+     "hasUv": true,
+     "map": false
+    },
+    {
+     "ol": true,
+     "skinned": true,
+     "verts": 4464,
+     "tris": 1648,
+     "hasUv": false,
+     "map": false
+    }
+   ],
+   "bones": 11,
+   "tailIsBone": true,
+   "partsBefore": 12,
+   "trisBefore": 1648
+  },
+  "grunt_b": {
+   "ok": true,
+   "drawCalls": 3,
+   "meshes": [
+    {
+     "skinned": true,
+     "verts": 1770,
+     "tris": 1244,
+     "hasUv": true,
+     "map": true
+    },
+    {
+     "skinned": true,
+     "verts": 9777,
+     "tris": 7896,
+     "hasUv": true,
+     "map": false
+    },
+    {
+     "ol": true,
+     "skinned": true,
+     "verts": 10885,
+     "tris": 8264,
+     "hasUv": false,
+     "map": false
+    }
+   ],
+   "bones": 16,
+   "tailIsBone": true,
+   "partsBefore": 31,
+   "trisBefore": 9140
+  },
+  "grunt_b/lod1": {
+   "ok": true,
+   "drawCalls": 2,
+   "meshes": [
+    {
+     "skinned": true,
+     "verts": 4376,
+     "tris": 1592,
+     "hasUv": true,
+     "map": false
+    },
+    {
+     "ol": true,
+     "skinned": true,
+     "verts": 4376,
+     "tris": 1592,
+     "hasUv": false,
+     "map": false
+    }
+   ],
+   "bones": 11,
+   "tailIsBone": true,
+   "partsBefore": 11,
+   "trisBefore": 1592
+  },
+  "armed": {
+   "ok": true,
+   "drawCalls": 3,
+   "meshes": [
+    {
+     "skinned": true,
+     "verts": 1770,
+     "tris": 1244,
+     "hasUv": true,
+     "map": true
+    },
+    {
+     "skinned": true,
+     "verts": 11080,
+     "tris": 8508,
+     "hasUv": true,
+     "map": false
+    },
+    {
+     "ol": true,
+     "skinned": true,
+     "verts": 12188,
+     "tris": 8876,
+     "hasUv": false,
+     "map": false
+    }
+   ],
+   "bones": 17,
+   "tailIsBone": true,
+   "partsBefore": 32,
+   "trisBefore": 9752
+  },
+  "armed/lod1": {
+   "ok": true,
+   "drawCalls": 2,
+   "meshes": [
+    {
+     "skinned": true,
+     "verts": 4712,
+     "tris": 1704,
+     "hasUv": true,
+     "map": false
+    },
+    {
+     "ol": true,
+     "skinned": true,
+     "verts": 4712,
+     "tris": 1704,
+     "hasUv": false,
+     "map": false
+    }
+   ],
+   "bones": 12,
+   "tailIsBone": true,
+   "partsBefore": 12,
+   "trisBefore": 1704
+  },
+  "bruiser": {
+   "ok": true,
+   "drawCalls": 3,
+   "meshes": [
+    {
+     "skinned": true,
+     "verts": 6666,
+     "tris": 2876,
+     "hasUv": true,
+     "map": true
+    },
+    {
+     "skinned": true,
+     "verts": 5753,
+     "tris": 6716,
+     "hasUv": true,
+     "map": false
+    },
+    {
+     "ol": true,
+     "skinned": true,
+     "verts": 11757,
+     "tris": 8716,
+     "hasUv": false,
+     "map": false
+    }
+   ],
+   "bones": 16,
+   "tailIsBone": true,
+   "partsBefore": 33,
+   "trisBefore": 9592
+  },
+  "bruiser/lod1": {
+   "ok": true,
+   "drawCalls": 2,
+   "meshes": [
+    {
+     "skinned": true,
+     "verts": 4464,
+     "tris": 1648,
+     "hasUv": true,
+     "map": false
+    },
+    {
+     "ol": true,
+     "skinned": true,
+     "verts": 4464,
+     "tris": 1648,
+     "hasUv": false,
+     "map": false
+    }
+   ],
+   "bones": 11,
+   "tailIsBone": true,
+   "partsBefore": 12,
+   "trisBefore": 1648
+  },
+  "current_thug_1": {
+   "drawCalls": 2
+  }
+ },
+ "determinism": {
+  "starterKit": {
+   "grunt_a": {
+    "sameSeedEqual": true,
+    "seed8Differs": true,
+    "noSeedOk": true,
+    "negSeedOk": true,
+    "hugeSeedOk": true
+   },
+   "grunt_a/lod1": {
+    "sameSeedEqual": true,
+    "seed8Differs": false,
+    "noSeedOk": true,
+    "negSeedOk": true,
+    "hugeSeedOk": true
+   },
+   "grunt_b": {
+    "sameSeedEqual": true,
+    "seed8Differs": true,
+    "noSeedOk": true,
+    "negSeedOk": true,
+    "hugeSeedOk": true
+   },
+   "grunt_b/lod1": {
+    "sameSeedEqual": true,
+    "seed8Differs": false,
+    "noSeedOk": true,
+    "negSeedOk": true,
+    "hugeSeedOk": true
+   },
+   "armed": {
+    "sameSeedEqual": true,
+    "seed8Differs": true,
+    "noSeedOk": true,
+    "negSeedOk": true,
+    "hugeSeedOk": true
+   },
+   "armed/lod1": {
+    "sameSeedEqual": true,
+    "seed8Differs": false,
+    "noSeedOk": true,
+    "negSeedOk": true,
+    "hugeSeedOk": true
+   },
+   "bruiser": {
+    "sameSeedEqual": true,
+    "seed8Differs": true,
+    "noSeedOk": true,
+    "negSeedOk": true,
+    "hugeSeedOk": true
+   },
+   "bruiser/lod1": {
+    "sameSeedEqual": true,
+    "seed8Differs": false,
+    "noSeedOk": true,
+    "negSeedOk": true,
+    "hugeSeedOk": true
+   }
+  },
+  "realGame": {
+   "grunt_a": {
+    "sameSeedEqual": true,
+    "seed8Differs": true,
+    "noSeedOk": true,
+    "negSeedOk": true,
+    "hugeSeedOk": true
+   },
+   "grunt_a/lod1": {
+    "sameSeedEqual": true,
+    "seed8Differs": false,
+    "noSeedOk": true,
+    "negSeedOk": true,
+    "hugeSeedOk": true
+   },
+   "grunt_b": {
+    "sameSeedEqual": true,
+    "seed8Differs": true,
+    "noSeedOk": true,
+    "negSeedOk": true,
+    "hugeSeedOk": true
+   },
+   "grunt_b/lod1": {
+    "sameSeedEqual": true,
+    "seed8Differs": false,
+    "noSeedOk": true,
+    "negSeedOk": true,
+    "hugeSeedOk": true
+   },
+   "armed": {
+    "sameSeedEqual": true,
+    "seed8Differs": true,
+    "noSeedOk": true,
+    "negSeedOk": true,
+    "hugeSeedOk": true
+   },
+   "armed/lod1": {
+    "sameSeedEqual": true,
+    "seed8Differs": false,
+    "noSeedOk": true,
+    "negSeedOk": true,
+    "hugeSeedOk": true
+   },
+   "bruiser": {
+    "sameSeedEqual": true,
+    "seed8Differs": true,
+    "noSeedOk": true,
+    "negSeedOk": true,
+    "hugeSeedOk": true
+   },
+   "bruiser/lod1": {
+    "sameSeedEqual": true,
+    "seed8Differs": false,
+    "noSeedOk": true,
+    "negSeedOk": true,
+    "hugeSeedOk": true
+   }
+  },
+  "mathRandomCallsDuringBuilds": 52432,
+  "redrawnForWrapperK": false,
+  "furCanvas": {
+   "identicalAcrossKitInstances": true,
+   "drawCalls": 5683,
+   "redrawnOnSameK": false
+  },
+  "furShared": true,
+  "colorsOverrideParts": 0,
+  "unknownMemberFallsBackTo": "grunt_a",
+  "kitKeysUnchanged": 48,
+  "nullTexCachedAfterDocAppears": 3
+ },
+ "misc": {},
+ "idle0": {
+  "starterKit:grunt_a": {
+   "minY": 0.016,
+   "maxY": 1.915,
+   "h": 1.899
+  },
+  "starterKit:grunt_a/lod1": {
+   "minY": 0.01,
+   "maxY": 1.885,
+   "h": 1.875
+  },
+  "starterKit:grunt_b": {
+   "minY": 0.016,
+   "maxY": 1.852,
+   "h": 1.836
+  },
+  "starterKit:grunt_b/lod1": {
+   "minY": 0.01,
+   "maxY": 1.852,
+   "h": 1.842
+  },
+  "starterKit:armed": {
+   "minY": 0.016,
+   "maxY": 1.852,
+   "h": 1.836
+  },
+  "starterKit:armed/lod1": {
+   "minY": 0.01,
+   "maxY": 1.852,
+   "h": 1.842
+  },
+  "starterKit:bruiser": {
+   "minY": 0.005,
+   "maxY": 2.522,
+   "h": 2.517
+  },
+  "starterKit:bruiser/lod1": {
+   "minY": 0.011,
+   "maxY": 2.409,
+   "h": 2.399
+  },
+  "realGame:grunt_a": {
+   "minY": 0.016,
+   "maxY": 1.915,
+   "h": 1.899
+  },
+  "realGame:grunt_a/lod1": {
+   "minY": 0.01,
+   "maxY": 1.885,
+   "h": 1.875
+  },
+  "realGame:grunt_b": {
+   "minY": 0.016,
+   "maxY": 1.852,
+   "h": 1.836
+  },
+  "realGame:grunt_b/lod1": {
+   "minY": 0.01,
+   "maxY": 1.852,
+   "h": 1.842
+  },
+  "realGame:armed": {
+   "minY": 0.016,
+   "maxY": 1.852,
+   "h": 1.836
+  },
+  "realGame:armed/lod1": {
+   "minY": 0.01,
+   "maxY": 1.852,
+   "h": 1.842
+  },
+  "realGame:bruiser": {
+   "minY": 0.005,
+   "maxY": 2.522,
+   "h": 2.517
+  },
+  "realGame:bruiser/lod1": {
+   "minY": 0.011,
+   "maxY": 2.409,
+   "h": 2.399
+  }
+ }
+}

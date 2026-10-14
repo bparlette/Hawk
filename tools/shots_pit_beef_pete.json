@@ -1,0 +1,595 @@
+[
+ {
+  "out": "previews/pit_beef_pete_day.png",
+  "q": "show=pit_beef_pete&cam=three&t=1.1&ui=0",
+  "errors": [],
+  "report": {
+   "show": "pit_beef_pete",
+   "rigs": {
+    "pit_beef_pete": {
+     "parts": 38,
+     "tris": 10524,
+     "hullTris": 9696,
+     "mats": 1,
+     "height": 2.756,
+     "minY": 0
+    }
+   },
+   "frame": {
+    "calls": 97,
+    "triangles": 28650
+   }
+  }
+ },
+ {
+  "out": "previews/pit_beef_pete_night.png",
+  "q": "show=pit_beef_pete&cam=three&t=1.1&night=1&ui=0",
+  "errors": [],
+  "report": {
+   "show": "pit_beef_pete",
+   "rigs": {
+    "pit_beef_pete": {
+     "parts": 38,
+     "tris": 10524,
+     "hullTris": 9696,
+     "mats": 1,
+     "height": 2.756,
+     "minY": 0
+    }
+   },
+   "frame": {
+    "calls": 97,
+    "triangles": 28650
+   }
+  }
+ },
+ {
+  "out": "previews/pit_beef_pete_phone_390x844.png",
+  "q": "show=pit_beef_pete&cam=phone&t=1.1&ui=0",
+  "errors": [],
+  "report": {
+   "show": "pit_beef_pete",
+   "rigs": {
+    "pit_beef_pete": {
+     "parts": 38,
+     "tris": 10524,
+     "hullTris": 9696,
+     "mats": 1,
+     "height": 2.756,
+     "minY": 0
+    }
+   },
+   "frame": {
+    "calls": 248,
+    "triangles": 65466
+   }
+  }
+ },
+ {
+  "out": "previews/pit_beef_pete_phone_390x844_night.png",
+  "q": "show=pit_beef_pete&cam=phone&t=1.1&night=1&ui=0",
+  "errors": [],
+  "report": {
+   "show": "pit_beef_pete",
+   "rigs": {
+    "pit_beef_pete": {
+     "parts": 38,
+     "tris": 10524,
+     "hullTris": 9696,
+     "mats": 1,
+     "height": 2.756,
+     "minY": 0
+    }
+   },
+   "frame": {
+    "calls": 248,
+    "triangles": 65466
+   }
+  }
+ },
+ {
+  "out": "previews/pit_beef_pete_phone_390x844_merged.png",
+  "q": "show=pit_beef_pete&cam=phone&t=1.1&merge=1&ui=0",
+  "errors": [],
+  "report": {
+   "show": "pit_beef_pete",
+   "rigs": {
+    "pit_beef_pete": {
+     "parts": 1,
+     "tris": 10524,
+     "hullTris": 9696,
+     "mats": 1,
+     "height": 2.756,
+     "minY": 0
+    }
+   },
+   "frame": {
+    "calls": 155,
+    "triangles": 67562
+   }
+  }
+ },
+ {
+  "out": "previews/pit_beef_pete_phone_390x844_night_merged.png",
+  "q": "show=pit_beef_pete&cam=phone&t=1.1&night=1&merge=1&ui=0",
+  "errors": [],
+  "report": {
+   "show": "pit_beef_pete",
+   "rigs": {
+    "pit_beef_pete": {
+     "parts": 1,
+     "tris": 10524,
+     "hullTris": 9696,
+     "mats": 1,
+     "height": 2.756,
+     "minY": 0
+    }
+   },
+   "frame": {
+    "calls": 155,
+    "triangles": 67562
+   }
+  }
+ },
+ {
+  "out": "previews/pit_beef_pete_merged_day.png",
+  "q": "show=pit_beef_pete&cam=three&t=1.1&merge=1&ui=0",
+  "errors": [],
+  "report": {
+   "show": "pit_beef_pete",
+   "rigs": {
+    "pit_beef_pete": {
+     "parts": 1,
+     "tris": 10524,
+     "hullTris": 9696,
+     "mats": 1,
+     "height": 2.756,
+     "minY": 0
+    }
+   },
+   "frame": {
+    "calls": 4,
+    "triangles": 30746
+   }
+  }
+ },
+ {
+  "out": "previews/pit_beef_pete_merged_night.png",
+  "q": "show=pit_beef_pete&cam=three&t=1.1&night=1&merge=1&ui=0",
+  "errors": [],
+  "report": {
+   "show": "pit_beef_pete",
+   "rigs": {
+    "pit_beef_pete": {
+     "parts": 1,
+     "tris": 10524,
+     "hullTris": 9696,
+     "mats": 1,
+     "height": 2.756,
+     "minY": 0
+    }
+   },
+   "frame": {
+    "calls": 4,
+    "triangles": 30746
+   }
+  }
+ },
+ {
+  "out": "previews/pit_beef_pete_merged_flash.png",
+  "q": "show=pit_beef_pete&cam=three&t=1.1&merge=1&flash=0.85&ui=0",
+  "errors": [],
+  "report": {
+   "show": "pit_beef_pete",
+   "rigs": {
+    "pit_beef_pete": {
+     "parts": 1,
+     "tris": 10524,
+     "hullTris": 9696,
+     "mats": 1,
+     "height": 2.756,
+     "minY": 0
+    }
+   },
+   "frame": {
+    "calls": 4,
+    "triangles": 30746
+   }
+  }
+ },
+ {
+  "out": "previews/pit_beef_pete_flash_unmerged.png",
+  "q": "show=pit_beef_pete&cam=three&t=1.1&flash=0.85&ui=0",
+  "errors": [],
+  "report": {
+   "show": "pit_beef_pete",
+   "rigs": {
+    "pit_beef_pete": {
+     "parts": 38,
+     "tris": 10524,
+     "hullTris": 9696,
+     "mats": 1,
+     "height": 2.756,
+     "minY": 0
+    }
+   },
+   "frame": {
+    "calls": 97,
+    "triangles": 28650
+   }
+  }
+ },
+ {
+  "out": "previews/pit_beef_pete_turn.png",
+  "q": "show=pit_beef_pete&turn=1&t=1.1&ui=0",
+  "errors": [],
+  "report": {
+   "show": "pit_beef_pete",
+   "rigs": {
+    "pit_beef_pete": {
+     "parts": 38,
+     "tris": 10524,
+     "hullTris": 9696,
+     "mats": 1,
+     "height": 2.756,
+     "minY": 0
+    }
+   },
+   "frame": {
+    "calls": 385,
+    "triangles": 114594
+   }
+  }
+ },
+ {
+  "out": "previews/pit_beef_pete_poses.png",
+  "q": "show=pit_beef_pete&pose=all&t=1.1&ui=0",
+  "errors": [],
+  "report": {
+   "show": "pit_beef_pete",
+   "rigs": {
+    "pit_beef_pete": {
+     "parts": 38,
+     "tris": 10524,
+     "hullTris": 9696,
+     "mats": 1,
+     "height": 2.756,
+     "minY": 0
+    }
+   },
+   "frame": {
+    "calls": 673,
+    "triangles": 200538
+   }
+  }
+ },
+ {
+  "out": "previews/pit_beef_pete_poses_night_merged.png",
+  "q": "show=pit_beef_pete&pose=all&t=1.1&night=1&merge=1&ui=0",
+  "errors": [],
+  "report": {
+   "show": "pit_beef_pete",
+   "rigs": {
+    "pit_beef_pete": {
+     "parts": 1,
+     "tris": 10524,
+     "hullTris": 9696,
+     "mats": 1,
+     "height": 2.756,
+     "minY": 0
+    }
+   },
+   "frame": {
+    "calls": 22,
+    "triangles": 215210
+   }
+  }
+ },
+ {
+  "out": "previews/pit_beef_pete_angry.png",
+  "q": "show=pit_beef_pete&pose=all&t=1.1&angry=1&ui=0",
+  "errors": [],
+  "report": {
+   "show": "pit_beef_pete",
+   "rigs": {
+    "pit_beef_pete": {
+     "parts": 38,
+     "tris": 10524,
+     "hullTris": 9696,
+     "mats": 1,
+     "height": 2.756,
+     "minY": 0
+    }
+   },
+   "frame": {
+    "calls": 673,
+    "triangles": 200538
+   }
+  }
+ },
+ {
+  "out": "previews/pit_beef_pete_atk1_strip.png",
+  "q": "show=pit_beef_pete&strip=atk1&n=8&ui=0",
+  "errors": [],
+  "report": {
+   "show": "pit_beef_pete",
+   "rigs": {},
+   "frame": {
+    "calls": 769,
+    "triangles": 229186
+   }
+  }
+ },
+ {
+  "out": "previews/pit_beef_pete_atk2_strip.png",
+  "q": "show=pit_beef_pete&strip=atk2&n=8&ui=0",
+  "errors": [],
+  "report": {
+   "show": "pit_beef_pete",
+   "rigs": {},
+   "frame": {
+    "calls": 769,
+    "triangles": 229186
+   }
+  }
+ },
+ {
+  "out": "previews/pit_beef_pete_atk3_strip.png",
+  "q": "show=pit_beef_pete&strip=atk3&n=8&ui=0",
+  "errors": [],
+  "report": {
+   "show": "pit_beef_pete",
+   "rigs": {},
+   "frame": {
+    "calls": 769,
+    "triangles": 229186
+   }
+  }
+ },
+ {
+  "out": "previews/pit_beef_pete_knockdown_strip.png",
+  "q": "show=pit_beef_pete&strip=knockdown&n=9&ui=0",
+  "errors": [],
+  "report": {
+   "show": "pit_beef_pete",
+   "rigs": {},
+   "frame": {
+    "calls": 865,
+    "triangles": 257834
+   }
+  }
+ },
+ {
+  "out": "previews/pit_beef_pete_knockdown_strip_merged.png",
+  "q": "show=pit_beef_pete&strip=knockdown&n=9&merge=1&ui=0",
+  "errors": [],
+  "report": {
+   "show": "pit_beef_pete",
+   "rigs": {},
+   "frame": {
+    "calls": 28,
+    "triangles": 276698
+   }
+  }
+ },
+ {
+  "out": "previews/pit_beef_pete_sheet.png",
+  "q": "show=pit_beef_pete&sheet=1&t=1.1",
+  "errors": [],
+  "report": {
+   "show": "pit_beef_pete",
+   "rigs": {
+    "pit_beef_pete": {
+     "parts": 38,
+     "tris": 10524,
+     "hullTris": 9696,
+     "mats": 1,
+     "height": 2.756,
+     "minY": 0
+    }
+   },
+   "frame": {
+    "calls": 679,
+    "triangles": 200816
+   }
+  }
+ },
+ {
+  "out": "previews/pit_beef_pete_states.png",
+  "q": "show=pit_beef_pete&pose=states&t=1.1&ui=0",
+  "errors": [],
+  "report": {
+   "show": "pit_beef_pete",
+   "rigs": {
+    "pit_beef_pete": {
+     "parts": 38,
+     "tris": 10524,
+     "hullTris": 9696,
+     "mats": 1,
+     "height": 2.756,
+     "minY": 0
+    }
+   },
+   "frame": {
+    "calls": 385,
+    "triangles": 114594
+   }
+  }
+ },
+ {
+  "out": "previews/pit_beef_pete_states_night_merged.png",
+  "q": "show=pit_beef_pete&pose=states&t=1.1&night=1&merge=1&ui=0",
+  "errors": [],
+  "report": {
+   "show": "pit_beef_pete",
+   "rigs": {
+    "pit_beef_pete": {
+     "parts": 1,
+     "tris": 10524,
+     "hullTris": 9696,
+     "mats": 1,
+     "height": 2.756,
+     "minY": 0
+    }
+   },
+   "frame": {
+    "calls": 13,
+    "triangles": 122978
+   }
+  }
+ },
+ {
+  "out": "previews/pit_beef_pete_table_day.png",
+  "q": "show=pit_beef_pete&cam=three&t=1.1&opts=%7B%22table%22%3Atrue%7D&ui=0",
+  "errors": [],
+  "report": {
+   "show": "pit_beef_pete",
+   "rigs": {
+    "pit_beef_pete": {
+     "parts": 48,
+     "tris": 11748,
+     "hullTris": 10812,
+     "mats": 1,
+     "height": 2.756,
+     "minY": 0
+    }
+   },
+   "frame": {
+    "calls": 123,
+    "triangles": 32106
+   }
+  }
+ },
+ {
+  "out": "previews/pit_beef_pete_table_night.png",
+  "q": "show=pit_beef_pete&cam=three&t=1.1&night=1&opts=%7B%22table%22%3Atrue%7D&ui=0",
+  "errors": [],
+  "report": {
+   "show": "pit_beef_pete",
+   "rigs": {
+    "pit_beef_pete": {
+     "parts": 48,
+     "tris": 11748,
+     "hullTris": 10812,
+     "mats": 1,
+     "height": 2.756,
+     "minY": 0
+    }
+   },
+   "frame": {
+    "calls": 123,
+    "triangles": 32106
+   }
+  }
+ },
+ {
+  "out": "previews/pit_beef_pete_table_phone_390x844.png",
+  "q": "show=pit_beef_pete&cam=phone&t=1.1&opts=%7B%22table%22%3Atrue%7D&ui=0",
+  "errors": [],
+  "report": {
+   "show": "pit_beef_pete",
+   "rigs": {
+    "pit_beef_pete": {
+     "parts": 48,
+     "tris": 11748,
+     "hullTris": 10812,
+     "mats": 1,
+     "height": 2.756,
+     "minY": 0
+    }
+   },
+   "frame": {
+    "calls": 274,
+    "triangles": 68922
+   }
+  }
+ },
+ {
+  "out": "previews/pit_beef_pete_table_poses.png",
+  "q": "show=pit_beef_pete&pose=all&t=1.1&opts=%7B%22table%22%3Atrue%7D&ui=0",
+  "errors": [],
+  "report": {
+   "show": "pit_beef_pete",
+   "rigs": {
+    "pit_beef_pete": {
+     "parts": 48,
+     "tris": 11748,
+     "hullTris": 10812,
+     "mats": 1,
+     "height": 2.756,
+     "minY": 0
+    }
+   },
+   "frame": {
+    "calls": 855,
+    "triangles": 224730
+   }
+  }
+ },
+ {
+  "out": "previews/pit_beef_pete_table_poses_merged.png",
+  "q": "show=pit_beef_pete&pose=all&t=1.1&merge=1&opts=%7B%22table%22%3Atrue%7D&ui=0",
+  "errors": [],
+  "report": {
+   "show": "pit_beef_pete",
+   "rigs": {
+    "pit_beef_pete": {
+     "parts": 1,
+     "tris": 11748,
+     "hullTris": 10812,
+     "mats": 1,
+     "height": 2.756,
+     "minY": 0
+    }
+   },
+   "frame": {
+    "calls": 22,
+    "triangles": 240158
+   }
+  }
+ },
+ {
+  "out": "previews/pit_beef_pete_table_sheet.png",
+  "q": "show=pit_beef_pete&sheet=1&t=1.1&opts=%7B%22table%22%3Atrue%7D",
+  "errors": [],
+  "report": {
+   "show": "pit_beef_pete",
+   "rigs": {
+    "pit_beef_pete": {
+     "parts": 48,
+     "tris": 11748,
+     "hullTris": 10812,
+     "mats": 1,
+     "height": 2.756,
+     "minY": 0
+    }
+   },
+   "frame": {
+    "calls": 861,
+    "triangles": 225008
+   }
+  }
+ },
+ {
+  "out": "previews/pit_beef_pete_table_states.png",
+  "q": "show=pit_beef_pete&pose=states&t=1.1&opts=%7B%22table%22%3Atrue%7D&ui=0",
+  "errors": [],
+  "report": {
+   "show": "pit_beef_pete",
+   "rigs": {
+    "pit_beef_pete": {
+     "parts": 48,
+     "tris": 11748,
+     "hullTris": 10812,
+     "mats": 1,
+     "height": 2.756,
+     "minY": 0
+    }
+   },
+   "frame": {
+    "calls": 489,
+    "triangles": 128418
+   }
+  }
+ }
+]

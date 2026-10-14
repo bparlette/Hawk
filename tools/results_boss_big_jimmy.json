@@ -1,0 +1,400 @@
+{
+ "id": "big_jimmy",
+ "meta": {
+  "id": "big_jimmy",
+  "name": "Big Jimmy",
+  "district": "aquarium",
+  "hp": 140,
+  "scale": 1.45,
+  "radius": 1.7,
+  "height": 2.3
+ },
+ "budgets": {
+  "zipKit": {
+   "parts": 45,
+   "tris": 14364,
+   "hulls": 43,
+   "hullTris": 14340,
+   "mats": 3,
+   "matKinds": [
+    "toon",
+    "toon",
+    "toon"
+   ],
+   "badHull": 0,
+   "flashBad": 0,
+   "shadowCasters": 35,
+   "shadowBad": [],
+   "drawCallsUnmerged": 88
+  },
+  "zipKit/lod1": {
+   "parts": 39,
+   "tris": 14112,
+   "hulls": 37,
+   "hullTris": 14088,
+   "mats": 3,
+   "matKinds": [
+    "toon",
+    "toon",
+    "toon"
+   ],
+   "badHull": 0,
+   "flashBad": 0,
+   "shadowCasters": 35,
+   "shadowBad": [],
+   "drawCallsUnmerged": 76
+  },
+  "realGame": {
+   "parts": 45,
+   "tris": 14364,
+   "hulls": 43,
+   "hullTris": 14340,
+   "mats": 3,
+   "matKinds": [
+    "toon",
+    "toon",
+    "toon"
+   ],
+   "badHull": 0,
+   "flashBad": 0,
+   "shadowCasters": 35,
+   "shadowBad": [],
+   "drawCallsUnmerged": 88
+  },
+  "realGame/lod1": {
+   "parts": 39,
+   "tris": 14112,
+   "hulls": 37,
+   "hullTris": 14088,
+   "mats": 3,
+   "matKinds": [
+    "toon",
+    "toon",
+    "toon"
+   ],
+   "badHull": 0,
+   "flashBad": 0,
+   "shadowCasters": 35,
+   "shadowBad": [],
+   "drawCallsUnmerged": 76
+  },
+  "pass": true
+ },
+ "idle0": {
+  "minY": 0.009,
+  "maxY": 2.255,
+  "height": 2.246,
+  "heightNoWeapon": 2.246,
+  "meta": 2.3,
+  "heightErrPct": -2.3,
+  "zMin": -0.87,
+  "zMax": 1.914,
+  "xMin": -1.827,
+  "xMax": 1.827
+ },
+ "reach": {
+  "idleMaxHoriz": 1.851,
+  "atT": 2.6,
+  "part": "elL",
+  "radius": 1.7,
+  "beyondRadius": 0.151,
+  "pass": true
+ },
+ "poses": {
+  "idle": {
+   "minY": 0.07,
+   "lowest": "lgR",
+   "cullR": 1.362,
+   "gaps": {}
+  },
+  "idle_t1.1": {
+   "minY": 0.097,
+   "lowest": "lgR",
+   "cullR": 1.37,
+   "gaps": {}
+  },
+  "run_0.3": {
+   "minY": 0.123,
+   "lowest": "lgL",
+   "cullR": 1.32,
+   "gaps": {}
+  },
+  "run_0.6": {
+   "minY": 0.128,
+   "lowest": "lgR",
+   "cullR": 1.323,
+   "gaps": {}
+  },
+  "hurt_0": {
+   "minY": 0.319,
+   "lowest": "lgL",
+   "cullR": 2.271,
+   "gaps": {}
+  },
+  "hurt_0.5": {
+   "minY": 0.2,
+   "lowest": "lgR",
+   "cullR": 1.887,
+   "gaps": {}
+  },
+  "down_air_0.3": {
+   "minY": 0.816,
+   "lowest": "body",
+   "cullR": 2.188,
+   "gaps": {}
+  },
+  "down_1_ground": {
+   "minY": 0.333,
+   "lowest": "body",
+   "cullR": 1.89,
+   "gaps": {}
+  },
+  "atk1_0.2": {
+   "minY": 0.125,
+   "lowest": "lgR",
+   "cullR": 1.894,
+   "gaps": {}
+  },
+  "atk1_0.5": {
+   "minY": 0.137,
+   "lowest": "lgR",
+   "cullR": 1.964,
+   "gaps": {}
+  },
+  "atk1_0.8": {
+   "minY": 0.137,
+   "lowest": "lgR",
+   "cullR": 1.837,
+   "gaps": {}
+  },
+  "atk2_0.2": {
+   "minY": 0.142,
+   "lowest": "lgL",
+   "cullR": 2.119,
+   "gaps": {}
+  },
+  "atk2_0.5": {
+   "minY": 0.116,
+   "lowest": "lgR",
+   "cullR": 1.555,
+   "gaps": {}
+  },
+  "atk2_0.8": {
+   "minY": 0.187,
+   "lowest": "lgL",
+   "cullR": 1.494,
+   "gaps": {}
+  },
+  "atk3_0.2": {
+   "minY": 0.167,
+   "lowest": "lgL",
+   "cullR": 1.441,
+   "gaps": {}
+  },
+  "atk3_0.5": {
+   "minY": 0.293,
+   "lowest": "lgL",
+   "cullR": 2.051,
+   "gaps": {}
+  },
+  "atk3_0.8": {
+   "minY": 0.075,
+   "lowest": "haL",
+   "cullR": 2.276,
+   "gaps": {}
+  }
+ },
+ "seq": {
+  "knockdown": {
+   "minY": 0.042,
+   "at": 2.65,
+   "lowest": "idle:lgL",
+   "cullR": 2.336,
+   "cullAt": 1.017,
+   "cullWhat": "down:haL"
+  },
+  "hurt": {
+   "minY": 0.071,
+   "at": 0,
+   "lowest": "idle:lgL",
+   "cullR": 2.052,
+   "cullAt": 0.5,
+   "cullWhat": "hurt:haL"
+  },
+  "run": {
+   "minY": 0.059,
+   "at": 2,
+   "lowest": "idle:lgR",
+   "cullR": 1.366,
+   "cullAt": 0.3,
+   "cullWhat": "idle:haR"
+  },
+  "atk1": {
+   "minY": 0.053,
+   "at": 2.1,
+   "lowest": "idle:lgR",
+   "cullR": 2.227,
+   "cullAt": 0.883,
+   "cullWhat": "atk1:haL"
+  },
+  "atk2": {
+   "minY": 0.059,
+   "at": 2,
+   "lowest": "idle:lgR",
+   "cullR": 2.252,
+   "cullAt": 0.783,
+   "cullWhat": "atk2:haL"
+  },
+  "atk3": {
+   "minY": 0.045,
+   "at": 2.4,
+   "lowest": "idle:lgL",
+   "cullR": 2.276,
+   "cullAt": 1.55,
+   "cullWhat": "atk3:haL"
+  },
+  "chain": {
+   "minY": 0.071,
+   "at": 0,
+   "lowest": "idle:lgL",
+   "cullR": 2.339,
+   "cullAt": 6.15,
+   "cullWhat": "down:haL"
+  },
+  "worstMinY": 0.042,
+  "worstCullR": 2.339,
+  "passFloor": true,
+  "passCull26": true,
+  "cull19Info": false
+ },
+ "attacks": {
+  "count": 3,
+  "poses": [
+   "atk1",
+   "atk2",
+   "atk3"
+  ],
+  "contractOk": true,
+  "each": [
+   {
+    "id": "pincer_crush",
+    "pose": "atk1",
+    "strike": "haR",
+    "active": [
+     0.42,
+     0.6
+    ],
+    "peakU": 0.485,
+    "peakSpeed": 13.474,
+    "peakInActive": true
+   },
+   {
+    "id": "sideways_rush",
+    "pose": "atk2",
+    "strike": "haL",
+    "active": [
+     0.34,
+     0.66
+    ],
+    "peakU": 0.467,
+    "peakSpeed": 13.786,
+    "peakInActive": true
+   },
+   {
+    "id": "belly_slam",
+    "pose": "atk3",
+    "strike": "haR",
+    "active": [
+     0.6,
+     0.74
+    ],
+    "peakU": 0.655,
+    "peakSpeed": 29.144,
+    "peakInActive": true
+   }
+  ],
+  "allPeaksInActive": true
+ },
+ "merge": {
+  "ok": true,
+  "drawCalls": 4,
+  "toonCalls": 3,
+  "outlineCalls": 1,
+  "shadowCalls": 3,
+  "bones": 26,
+  "flashShared": true,
+  "partsBefore": 45,
+  "trisBefore": 14364
+ },
+ "determinism": {
+  "hash": "22275ccb63ea27c4",
+  "sameSeedEqual": true,
+  "seed8Differs": false,
+  "noSeedOk": true,
+  "negSeedOk": true,
+  "hugeSeedOk": true,
+  "threeUuidRandomCalls": 4872,
+  "independentOfMathRandom": true,
+  "mathRandomInSource": false,
+  "canvas": {
+   "firstBuildOps": 0,
+   "secondBuildOps": 0,
+   "wrapperKOps": 0,
+   "cachedOnSameK": true,
+   "cachedForWrapperK": true,
+   "noDocumentBuildOk": true,
+   "drawsAfterDocumentReturns": true
+  }
+ },
+ "misc": {
+  "kitKeys": 48
+ },
+ "summary": {
+  "pass": true,
+  "parts": 45,
+  "tris": 14364,
+  "mats": 3,
+  "matKinds": [
+   "toon",
+   "toon",
+   "toon"
+  ],
+  "mergedCalls": 4,
+  "height": 2.246,
+  "heightErrPct": -2.3,
+  "worstMinY": 0.042,
+  "worstCullR": 2.339,
+  "idleBeyondRadius": 0.151,
+  "reachPart": "elL",
+  "strikes": "atk1@0.485 atk2@0.467 atk3@0.655"
+ },
+ "hooks": {
+  "swimFight": {
+   "ok": true,
+   "keys": [
+    "root",
+    "body",
+    "soft",
+    "mouth",
+    "claws",
+    "legs",
+    "flash",
+    "J"
+   ],
+   "okShape": true,
+   "tipWorld": [
+    0.15,
+    1.47,
+    1.12
+   ],
+   "parts": 45,
+   "hulls": 43,
+   "mats": 3,
+   "tris": 14364,
+   "minY": 0.047,
+   "maxY": 1.504,
+   "zMin": -0.6,
+   "zMax": 1.242
+  }
+ }
+}

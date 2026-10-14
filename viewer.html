@@ -28,15 +28,15 @@
 //      &merge=1 (run the game's real mergeRig from tools/game/04b_rig_merge.js on every rig)
 // Keys: N night, P next pose, L LOD, F hit-flash, A animateGang on/off, C camera preset.
 import * as THREE from 'three';
-import { K } from './toadcity_kit.js';
-import * as GULL from './example_gull_thug.js';
-import * as HARBOR_RATS from './src/gang_harbor_rats.js';
-import * as PIER_GULLS from './src/gang_pier_gulls.js';
-import * as COBBLE_CATFISH from './src/gang_cobble_catfish.js';
-import * as MASKED_BANDITS from './src/gang_masked_bandits.js';
-import { loadMergeRig } from './tools/game_merge.js';
-
-const MODULES = [GULL, HARBOR_RATS, PIER_GULLS, COBBLE_CATFISH, MASKED_BANDITS];         // add new delivery modules here
+const KIT_ZIP = new URLSearchParams(location.search).get('kit') === 'zip';   // ?kit=zip: the round-2 ZIP's real kit (gang 5 evidence)
+const { K } = KIT_ZIP ? await import('./kit/toadcity_kit.js') : await import('./toadcity_kit.js');
+import { attachDizzy } from './tools/game/thug_dizzy.js';
+attachDizzy(K);   // no-op on the repo kit (it has dizzy); on the ZIP kit it attaches the game's dizzy at run time
+// gang modules load dynamically so a copy of this bench can ship with one gang: &gangs=<id>,<id> picks the files
+// (default: all five; with &kit=zip only the otters, the one gang built on the ZIP kit)
+const GANGS = (new URLSearchParams(location.search).get('gangs') || (KIT_ZIP ? 'key_hwy_otters' : 'harbor_rats,pier_gulls,cobble_catfish,masked_bandits,key_hwy_otters')).split(',').filter(Boolean);
+const MODULES = [await import(KIT_ZIP ? './kit/example_gull_thug.js' : './example_gull_thug.js')];
+for (const g of GANGS) MODULES.push(await import(`./src/gang_${g}.js`));
 const POSES = ['idle', 'run', 'windup', 'attack', 'hurt', 'down', 'getup'];
 const Q = new URLSearchParams(location.search);
 const S = {
@@ -45,7 +45,7 @@ const S = {
   anim: Q.get('anim') !== '0', dist: parseFloat(Q.get('dist') || '8'), zoom: parseFloat(Q.get('zoom') || '1'), merge: Q.get('merge') === '1', stars: Q.get('stars') === '1', turn: Q.get('turn') === '1', strip: Q.get('strip'), look: Q.has('look') ? parseFloat(Q.get('look')) : null,
 };
 if (Q.get('ui') === '0') document.body.classList.add('hide-ui');
-const MERGE = S.merge ? await loadMergeRig(K) : null;   // the game's real mergeRig, optional
+const MERGE = S.merge ? (KIT_ZIP ? (await import('./kit/real_mergeRig.js')).mergeRig : await (await import('./tools/game_merge.js')).loadMergeRig(K)) : null;   // the game's real mergeRig, optional
 
 // ---- registry: every module exports META and one build function; gang modules also export GANG ----
 const REG = {};   // id -> { label, build(opts) -> J, meta, animate }
@@ -80,7 +80,7 @@ const fill = new THREE.PointLight('#c8d0ff', 3.2, 0, 0.6); camera.add(fill); sce
 const ground = new THREE.Mesh(new THREE.PlaneGeometry(200, 200), new THREE.MeshLambertMaterial({ color: '#958ea0' }));
 ground.rotation.x = -Math.PI / 2; ground.receiveShadow = true; scene.add(ground);
 function setNight(on) {
-  S.night = on; K.applyLight({ scene, hemi, sun }, on ? 'night' : 'day');
+  S.night = on; if (KIT_ZIP) K.applyLight(scene, hemi, sun, on ? 'night' : 'day'); else K.applyLight({ scene, hemi, sun }, on ? 'night' : 'day');   // the ZIP kit takes (scene, hemi, sun, name)
   ground.material.color.set(on ? '#3a3850' : '#958ea0');
   lamp.intensity = on ? 16 : 0; fill.intensity = on ? 3.2 : 0;
 }
@@ -140,12 +140,12 @@ function poseFor(r, t) {
 const STATE = { idle: 'idle', run: 'run', windup: 'attack', attack: 'attack', hurt: 'hurt', down: 'down', getup: 'idle' };
 // the game's sequences at 60 fps (real timings): idle/chase rate 14; windup 0.5 s (big 0.7 s) rate 12; attack pose over 0.3 s
 // at rate 26, chase from 0.55 s; hurt pose over 0.32 s at rate 24, next state at 0.34 s; knock-down hop (vy 4.2, g 22) with
-// the down pose at rate 14 for 1.25 s; thug getup over 0.5 s at rate 14; dizzy (THUG_POSES.dizzy) at rate 10, from hurt, to chase. Phase fn args: (t, u, landed, J, tl, big).
+// down(st, grounded) at rate 13 for 1.25 s (st in seconds); thug getup over 0.5 s at rate 14; dizzy (THUG_POSES.dizzy) at rate 10, from hurt, to chase. Phase fn args: (t, u, landed, J, tl, big).
 const P_ = K.THUG_POSES, cl_ = (v) => Math.min(1, Math.max(0, v));
 const SEQ = {
   knockdown: { samples: [0.5, 0.67, 0.84, 1.0, 1.15, 1.35, 1.7, 2.09, 2.3, 2.59, 3.15], phases: (big) => [
     ['idle', 0.5, 14, 'idle', (t, u, g, J) => P_.idle(t, J)], ['hurt', 0.34, 24, 'hurt', (t, u, g, J, tl) => P_.hurt(cl_(tl / 0.32), J)],
-    ['down', 1.25, 14, 'down', (t, u, g) => P_.down(u, g), true], ['getup', 0.5, 14, 'idle', (t, u, g, J) => P_.getup(u, J)], ['idle', 0.6, 14, 'idle', (t, u, g, J) => P_.idle(t, J)]] },
+    ['down', 1.25, 13, 'down', (t, u, g, J, tl) => P_.down(tl, g), true], ['getup', 0.5, 14, 'idle', (t, u, g, J) => P_.getup(u, J)], ['idle', 0.6, 14, 'idle', (t, u, g, J) => P_.idle(t, J)]] },
   attack: { samples: [0.4, 0.6, 0.8, 0.9, 0.96, 1.02, 1.1, 1.25, 1.45, 1.75, 2.2], phases: (big) => [
     ['idle', 0.4, 14, 'idle', (t, u, g, J) => P_.idle(t, J)], ['windup', big ? 0.7 : 0.5, 12, 'attack', (t, u, g, J) => P_.windup(u, J)],
     ['attack', 0.55, 26, 'attack', (t, u, g, J, tl) => P_.attack(cl_(tl / 0.3), J)], ['chase', 0.6, 14, 'run', (t, u, g, J) => P_.run(t, 4.5, J)], ['idle', 0.5, 14, 'idle', (t, u, g, J) => P_.idle(t, J)]] },

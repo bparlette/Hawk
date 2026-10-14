@@ -1,0 +1,392 @@
+{
+ "id": "voltage_vic",
+ "meta": {
+  "id": "voltage_vic",
+  "name": "Voltage Vic",
+  "district": "powerplant",
+  "hp": 120,
+  "scale": 1.12,
+  "radius": 0.75,
+  "height": 2.5,
+  "bpm": 130
+ },
+ "budgets": {
+  "zipKit": {
+   "parts": 50,
+   "tris": 9572,
+   "hulls": 32,
+   "hullTris": 9272,
+   "mats": 2,
+   "matKinds": [
+    "toon",
+    "basic"
+   ],
+   "badHull": 0,
+   "flashBad": 0,
+   "shadowCasters": 22,
+   "shadowBad": [],
+   "drawCallsUnmerged": 82
+  },
+  "zipKit/lod1": {
+   "parts": 46,
+   "tris": 9524,
+   "hulls": 30,
+   "hullTris": 9248,
+   "mats": 2,
+   "matKinds": [
+    "toon",
+    "basic"
+   ],
+   "badHull": 0,
+   "flashBad": 0,
+   "shadowCasters": 22,
+   "shadowBad": [],
+   "drawCallsUnmerged": 76
+  },
+  "realGame": {
+   "parts": 50,
+   "tris": 9572,
+   "hulls": 32,
+   "hullTris": 9272,
+   "mats": 2,
+   "matKinds": [
+    "toon",
+    "basic"
+   ],
+   "badHull": 0,
+   "flashBad": 0,
+   "shadowCasters": 22,
+   "shadowBad": [],
+   "drawCallsUnmerged": 82
+  },
+  "realGame/lod1": {
+   "parts": 46,
+   "tris": 9524,
+   "hulls": 30,
+   "hullTris": 9248,
+   "mats": 2,
+   "matKinds": [
+    "toon",
+    "basic"
+   ],
+   "badHull": 0,
+   "flashBad": 0,
+   "shadowCasters": 22,
+   "shadowBad": [],
+   "drawCallsUnmerged": 76
+  },
+  "pass": true
+ },
+ "idle0": {
+  "minY": -0.096,
+  "maxY": 2.421,
+  "height": 2.517,
+  "heightNoWeapon": 2.517,
+  "meta": 2.5,
+  "heightErrPct": 0.7,
+  "zMin": -0.42,
+  "zMax": 0.873,
+  "xMin": -0.595,
+  "xMax": 0.726
+ },
+ "reach": {
+  "idleMaxHoriz": 0.852,
+  "atT": 2,
+  "part": "haR",
+  "radius": 0.75,
+  "beyondRadius": 0.102,
+  "pass": true
+ },
+ "poses": {
+  "idle": {
+   "minY": 0.044,
+   "lowest": "knR",
+   "cullR": 1.155,
+   "gaps": {}
+  },
+  "idle_t1.1": {
+   "minY": 0.013,
+   "lowest": "knR",
+   "cullR": 1.135,
+   "gaps": {}
+  },
+  "run_0.3": {
+   "minY": 0.067,
+   "lowest": "knL",
+   "cullR": 1.173,
+   "gaps": {}
+  },
+  "run_0.6": {
+   "minY": 0.096,
+   "lowest": "knR",
+   "cullR": 1.184,
+   "gaps": {}
+  },
+  "hurt_0": {
+   "minY": 0.041,
+   "lowest": "knR",
+   "cullR": 1.153,
+   "gaps": {}
+  },
+  "hurt_0.5": {
+   "minY": 0.041,
+   "lowest": "knR",
+   "cullR": 1.151,
+   "gaps": {}
+  },
+  "down_air_0.3": {
+   "minY": 0.717,
+   "lowest": "knR",
+   "cullR": 2.092,
+   "gaps": {}
+  },
+  "down_1_ground": {
+   "minY": 0.105,
+   "lowest": "torso",
+   "cullR": 2.261,
+   "gaps": {}
+  },
+  "atk1_0.2": {
+   "minY": 0.103,
+   "lowest": "knR",
+   "cullR": 1.292,
+   "gaps": {}
+  },
+  "atk1_0.5": {
+   "minY": 0.144,
+   "lowest": "knR",
+   "cullR": 1.491,
+   "gaps": {}
+  },
+  "atk1_0.8": {
+   "minY": 0.094,
+   "lowest": "knL",
+   "cullR": 1.141,
+   "gaps": {}
+  },
+  "atk2_0.2": {
+   "minY": 0.113,
+   "lowest": "knL",
+   "cullR": 1.151,
+   "gaps": {}
+  },
+  "atk2_0.5": {
+   "minY": 0.113,
+   "lowest": "knL",
+   "cullR": 1.155,
+   "gaps": {}
+  },
+  "atk2_0.8": {
+   "minY": 0.113,
+   "lowest": "knL",
+   "cullR": 1.151,
+   "gaps": {}
+  },
+  "atk3_0.2": {
+   "minY": 0.048,
+   "lowest": "knR",
+   "cullR": 1.147,
+   "gaps": {}
+  },
+  "atk3_0.5": {
+   "minY": 0.089,
+   "lowest": "knR",
+   "cullR": 1.303,
+   "gaps": {}
+  },
+  "atk3_0.8": {
+   "minY": 0.089,
+   "lowest": "knR",
+   "cullR": 1.279,
+   "gaps": {}
+  }
+ },
+ "seq": {
+  "knockdown": {
+   "minY": 0.014,
+   "at": 2.6,
+   "lowest": "idle:knR",
+   "cullR": 2.289,
+   "cullAt": 1.75,
+   "cullWhat": "down:swL"
+  },
+  "hurt": {
+   "minY": 0.014,
+   "at": 1.2,
+   "lowest": "idle:knR",
+   "cullR": 1.177,
+   "cullAt": 0.45,
+   "cullWhat": "hurt:swL"
+  },
+  "run": {
+   "minY": 0.014,
+   "at": 0.283,
+   "lowest": "idle:knR",
+   "cullR": 1.221,
+   "cullAt": 1.333,
+   "cullWhat": "run:head"
+  },
+  "atk1": {
+   "minY": 0.014,
+   "at": 0.283,
+   "lowest": "idle:knR",
+   "cullR": 1.515,
+   "cullAt": 0.833,
+   "cullWhat": "atk1:swL"
+  },
+  "atk2": {
+   "minY": 0.014,
+   "at": 0.283,
+   "lowest": "idle:knR",
+   "cullR": 1.205,
+   "cullAt": 0.883,
+   "cullWhat": "atk2:swR"
+  },
+  "atk3": {
+   "minY": 0.014,
+   "at": 0.283,
+   "lowest": "idle:knR",
+   "cullR": 1.304,
+   "cullAt": 1.283,
+   "cullWhat": "atk3:swL"
+  },
+  "chain": {
+   "minY": 0.013,
+   "at": 7.667,
+   "lowest": "idle:knR",
+   "cullR": 2.288,
+   "cullAt": 6.567,
+   "cullWhat": "down:swL"
+  },
+  "worstMinY": 0.013,
+  "worstCullR": 2.289,
+  "passFloor": true,
+  "passCull26": true,
+  "cull19Info": false
+ },
+ "attacks": {
+  "count": 3,
+  "poses": [
+   "atk1",
+   "atk2",
+   "atk3"
+  ],
+  "contractOk": true,
+  "each": [
+   {
+    "id": "bass_drop",
+    "pose": "atk1",
+    "strike": "haR",
+    "active": [
+     0.5,
+     0.66
+    ],
+    "peakU": 0.545,
+    "peakSpeed": 26.297,
+    "peakInActive": true
+   },
+   {
+    "id": "zap_scratch",
+    "pose": "atk2",
+    "strike": "haR",
+    "active": [
+     0.5,
+     0.75
+    ],
+    "peakU": 0.527,
+    "peakSpeed": 10.75,
+    "peakInActive": true
+   },
+   {
+    "id": "club_spin",
+    "pose": "atk3",
+    "strike": "haL",
+    "active": [
+     0.3333333333333333,
+     0.6666666666666666
+    ],
+    "peakU": 0.53,
+    "peakSpeed": 21.121,
+    "peakInActive": true
+   }
+  ],
+  "allPeaksInActive": true
+ },
+ "merge": {
+  "ok": true,
+  "drawCalls": 3,
+  "toonCalls": 2,
+  "outlineCalls": 1,
+  "shadowCalls": 2,
+  "bones": 17,
+  "flashShared": true,
+  "partsBefore": 50,
+  "trisBefore": 9572
+ },
+ "determinism": {
+  "hash": "27d09c9d048365d7",
+  "sameSeedEqual": true,
+  "seed8Differs": false,
+  "noSeedOk": true,
+  "negSeedOk": true,
+  "hugeSeedOk": true,
+  "threeUuidRandomCalls": 4312,
+  "independentOfMathRandom": true,
+  "mathRandomInSource": false,
+  "canvas": {
+   "firstBuildOps": 0,
+   "secondBuildOps": 0,
+   "wrapperKOps": 0,
+   "cachedOnSameK": true,
+   "cachedForWrapperK": true,
+   "noDocumentBuildOk": true,
+   "drawsAfterDocumentReturns": true
+  }
+ },
+ "misc": {
+  "kitKeys": 48
+ },
+ "summary": {
+  "pass": true,
+  "parts": 50,
+  "tris": 9572,
+  "mats": 2,
+  "matKinds": [
+   "toon",
+   "basic"
+  ],
+  "mergedCalls": 3,
+  "height": 2.517,
+  "heightErrPct": 0.7,
+  "worstMinY": 0.013,
+  "worstCullR": 2.289,
+  "idleBeyondRadius": 0.102,
+  "reachPart": "haR",
+  "strikes": "atk1@0.545 atk2@0.527 atk3@0.53"
+ },
+ "hooks": {
+  "rhythmStage": {
+   "ok": true,
+   "hasPose": true,
+   "booth": true,
+   "posed": 12,
+   "materialTypes": [
+    "MeshLambertMaterial",
+    "MeshBasicMaterial"
+   ],
+   "parts": 58,
+   "hulls": 39,
+   "mats": 2,
+   "tris": 9972,
+   "minY": -0.08,
+   "maxY": 2.104,
+   "zMin": -0.325,
+   "zMax": 0.9
+  },
+  "brawlWithGameKit": {
+   "ok": true,
+   "mergedCalls": 3,
+   "basicMatFallback": "MeshBasicMaterial"
+  }
+ }
+}

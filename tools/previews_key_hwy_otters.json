@@ -1,0 +1,651 @@
+[
+ {
+  "out": "previews/key_hwy_otters_grunt_a_phone_day.png",
+  "q": "mods=../src/gang_key_hwy_otters.js&show=key_hwy_otters.grunt_a&cam=phone&dist=4.5&t=0.5&ui=0",
+  "w": 390,
+  "h": 844,
+  "dpr": 2,
+  "page": "kit/real_viewer.html"
+ },
+ {
+  "out": "previews/key_hwy_otters_grunt_a_phone_day_merged.png",
+  "q": "mods=../src/gang_key_hwy_otters.js&show=key_hwy_otters.grunt_a&cam=phone&dist=4.5&t=0.5&ui=0&merge=1",
+  "w": 390,
+  "h": 844,
+  "dpr": 2,
+  "page": "kit/real_viewer.html"
+ },
+ {
+  "out": "previews/key_hwy_otters_grunt_a_day.png",
+  "q": "mods=../src/gang_key_hwy_otters.js&show=key_hwy_otters.grunt_a&t=0.5&turn=1&cam=front&ui=0",
+  "w": 1280,
+  "h": 720,
+  "dpr": 1,
+  "page": "kit/real_viewer.html"
+ },
+ {
+  "out": "previews/key_hwy_otters_grunt_a_day_merged.png",
+  "q": "mods=../src/gang_key_hwy_otters.js&show=key_hwy_otters.grunt_a&t=0.5&turn=1&cam=front&ui=0&merge=1",
+  "w": 1280,
+  "h": 720,
+  "dpr": 1,
+  "page": "kit/real_viewer.html"
+ },
+ {
+  "out": "previews/key_hwy_otters_grunt_a_phone_night.png",
+  "q": "mods=../src/gang_key_hwy_otters.js&show=key_hwy_otters.grunt_a&cam=phone&dist=4.5&t=0.5&ui=0&night=1",
+  "w": 390,
+  "h": 844,
+  "dpr": 2,
+  "page": "kit/real_viewer.html"
+ },
+ {
+  "out": "previews/key_hwy_otters_grunt_a_phone_night_merged.png",
+  "q": "mods=../src/gang_key_hwy_otters.js&show=key_hwy_otters.grunt_a&cam=phone&dist=4.5&t=0.5&ui=0&merge=1&night=1",
+  "w": 390,
+  "h": 844,
+  "dpr": 2,
+  "page": "kit/real_viewer.html"
+ },
+ {
+  "out": "previews/key_hwy_otters_grunt_a_night.png",
+  "q": "mods=../src/gang_key_hwy_otters.js&show=key_hwy_otters.grunt_a&t=0.5&turn=1&cam=front&ui=0&night=1",
+  "w": 1280,
+  "h": 720,
+  "dpr": 1,
+  "page": "kit/real_viewer.html"
+ },
+ {
+  "out": "previews/key_hwy_otters_grunt_a_night_merged.png",
+  "q": "mods=../src/gang_key_hwy_otters.js&show=key_hwy_otters.grunt_a&t=0.5&turn=1&cam=front&ui=0&merge=1&night=1",
+  "w": 1280,
+  "h": 720,
+  "dpr": 1,
+  "page": "kit/real_viewer.html"
+ },
+ {
+  "out": "previews/key_hwy_otters_grunt_a_poses.png",
+  "q": "mods=../src/gang_key_hwy_otters.js&show=key_hwy_otters.grunt_a&t=0.5&pose=all&ui=0&zoom=0.85",
+  "w": 1600,
+  "h": 600,
+  "dpr": 1,
+  "page": "kit/real_viewer.html"
+ },
+ {
+  "out": "previews/key_hwy_otters_grunt_a_flash_merged.png",
+  "q": "mods=../src/gang_key_hwy_otters.js&show=key_hwy_otters.grunt_a&t=0.5&turn=1&cam=front&ui=0&merge=1&flash=0.85",
+  "w": 1280,
+  "h": 720,
+  "dpr": 1,
+  "page": "kit/real_viewer.html"
+ },
+ {
+  "out": "previews/key_hwy_otters_grunt_a_seq_knockdown.png",
+  "q": "mods=../src/gang_key_hwy_otters.js&show=key_hwy_otters.grunt_a&seq=knockdown&cam=side&zoom=0.6",
+  "w": 1280,
+  "h": 720,
+  "dpr": 1,
+  "page": "kit/real_viewer.html",
+  "wait": 8250
+ },
+ {
+  "out": "previews/key_hwy_otters_grunt_a_seq_knockdown_merged.png",
+  "q": "mods=../src/gang_key_hwy_otters.js&show=key_hwy_otters.grunt_a&seq=knockdown&cam=side&zoom=0.6&merge=1",
+  "w": 1280,
+  "h": 720,
+  "dpr": 1,
+  "page": "kit/real_viewer.html",
+  "wait": 8250
+ },
+ {
+  "out": "previews/key_hwy_otters_grunt_a_knockdown_60fps.png",
+  "q": "kit=zip&gangs=key_hwy_otters&show=key_hwy_otters.grunt_a&strip=knockdown&ui=0&merge=1",
+  "w": 1800,
+  "h": 520,
+  "page": "bench.html"
+ },
+ {
+  "out": "previews/key_hwy_otters_grunt_a_attack_60fps.png",
+  "q": "kit=zip&gangs=key_hwy_otters&show=key_hwy_otters.grunt_a&strip=attack&ui=0&merge=1",
+  "w": 1800,
+  "h": 520,
+  "page": "bench.html"
+ },
+ {
+  "out": "previews/key_hwy_otters_grunt_a_dizzy_60fps.png",
+  "q": "kit=zip&gangs=key_hwy_otters&show=key_hwy_otters.grunt_a&strip=dizzy&ui=0&merge=1",
+  "w": 1800,
+  "h": 560,
+  "page": "bench.html"
+ },
+ {
+  "out": "previews/_tmp_grunt_a_hd.png",
+  "q": "kit=zip&gangs=key_hwy_otters&show=key_hwy_otters.grunt_a&t=0.5&turn=1&cam=front&ui=0",
+  "w": 1280,
+  "h": 360,
+  "page": "bench.html"
+ },
+ {
+  "out": "previews/_tmp_grunt_a_lod.png",
+  "q": "kit=zip&gangs=key_hwy_otters&show=key_hwy_otters.grunt_a&t=0.5&turn=1&cam=front&ui=0&lod=1",
+  "w": 1280,
+  "h": 360,
+  "page": "bench.html"
+ },
+ {
+  "out": "previews/key_hwy_otters_grunt_a_closeup_day.png",
+  "q": "kit=zip&gangs=key_hwy_otters&show=key_hwy_otters.grunt_a&t=0.5&cam=front&zoom=2.4&look=1.3&ui=0",
+  "w": 1280,
+  "h": 720,
+  "page": "bench.html"
+ },
+ {
+  "out": "previews/key_hwy_otters_grunt_b_phone_day.png",
+  "q": "mods=../src/gang_key_hwy_otters.js&show=key_hwy_otters.grunt_b&cam=phone&dist=4.5&t=0.5&ui=0",
+  "w": 390,
+  "h": 844,
+  "dpr": 2,
+  "page": "kit/real_viewer.html"
+ },
+ {
+  "out": "previews/key_hwy_otters_grunt_b_phone_day_merged.png",
+  "q": "mods=../src/gang_key_hwy_otters.js&show=key_hwy_otters.grunt_b&cam=phone&dist=4.5&t=0.5&ui=0&merge=1",
+  "w": 390,
+  "h": 844,
+  "dpr": 2,
+  "page": "kit/real_viewer.html"
+ },
+ {
+  "out": "previews/key_hwy_otters_grunt_b_day.png",
+  "q": "mods=../src/gang_key_hwy_otters.js&show=key_hwy_otters.grunt_b&t=0.5&turn=1&cam=front&ui=0",
+  "w": 1280,
+  "h": 720,
+  "dpr": 1,
+  "page": "kit/real_viewer.html"
+ },
+ {
+  "out": "previews/key_hwy_otters_grunt_b_day_merged.png",
+  "q": "mods=../src/gang_key_hwy_otters.js&show=key_hwy_otters.grunt_b&t=0.5&turn=1&cam=front&ui=0&merge=1",
+  "w": 1280,
+  "h": 720,
+  "dpr": 1,
+  "page": "kit/real_viewer.html"
+ },
+ {
+  "out": "previews/key_hwy_otters_grunt_b_phone_night.png",
+  "q": "mods=../src/gang_key_hwy_otters.js&show=key_hwy_otters.grunt_b&cam=phone&dist=4.5&t=0.5&ui=0&night=1",
+  "w": 390,
+  "h": 844,
+  "dpr": 2,
+  "page": "kit/real_viewer.html"
+ },
+ {
+  "out": "previews/key_hwy_otters_grunt_b_phone_night_merged.png",
+  "q": "mods=../src/gang_key_hwy_otters.js&show=key_hwy_otters.grunt_b&cam=phone&dist=4.5&t=0.5&ui=0&merge=1&night=1",
+  "w": 390,
+  "h": 844,
+  "dpr": 2,
+  "page": "kit/real_viewer.html"
+ },
+ {
+  "out": "previews/key_hwy_otters_grunt_b_night.png",
+  "q": "mods=../src/gang_key_hwy_otters.js&show=key_hwy_otters.grunt_b&t=0.5&turn=1&cam=front&ui=0&night=1",
+  "w": 1280,
+  "h": 720,
+  "dpr": 1,
+  "page": "kit/real_viewer.html"
+ },
+ {
+  "out": "previews/key_hwy_otters_grunt_b_night_merged.png",
+  "q": "mods=../src/gang_key_hwy_otters.js&show=key_hwy_otters.grunt_b&t=0.5&turn=1&cam=front&ui=0&merge=1&night=1",
+  "w": 1280,
+  "h": 720,
+  "dpr": 1,
+  "page": "kit/real_viewer.html"
+ },
+ {
+  "out": "previews/key_hwy_otters_grunt_b_poses.png",
+  "q": "mods=../src/gang_key_hwy_otters.js&show=key_hwy_otters.grunt_b&t=0.5&pose=all&ui=0&zoom=0.85",
+  "w": 1600,
+  "h": 600,
+  "dpr": 1,
+  "page": "kit/real_viewer.html"
+ },
+ {
+  "out": "previews/key_hwy_otters_grunt_b_flash_merged.png",
+  "q": "mods=../src/gang_key_hwy_otters.js&show=key_hwy_otters.grunt_b&t=0.5&turn=1&cam=front&ui=0&merge=1&flash=0.85",
+  "w": 1280,
+  "h": 720,
+  "dpr": 1,
+  "page": "kit/real_viewer.html"
+ },
+ {
+  "out": "previews/key_hwy_otters_grunt_b_seq_knockdown.png",
+  "q": "mods=../src/gang_key_hwy_otters.js&show=key_hwy_otters.grunt_b&seq=knockdown&cam=side&zoom=0.6",
+  "w": 1280,
+  "h": 720,
+  "dpr": 1,
+  "page": "kit/real_viewer.html",
+  "wait": 8250
+ },
+ {
+  "out": "previews/key_hwy_otters_grunt_b_seq_knockdown_merged.png",
+  "q": "mods=../src/gang_key_hwy_otters.js&show=key_hwy_otters.grunt_b&seq=knockdown&cam=side&zoom=0.6&merge=1",
+  "w": 1280,
+  "h": 720,
+  "dpr": 1,
+  "page": "kit/real_viewer.html",
+  "wait": 8250
+ },
+ {
+  "out": "previews/key_hwy_otters_grunt_b_knockdown_60fps.png",
+  "q": "kit=zip&gangs=key_hwy_otters&show=key_hwy_otters.grunt_b&strip=knockdown&ui=0&merge=1",
+  "w": 1800,
+  "h": 520,
+  "page": "bench.html"
+ },
+ {
+  "out": "previews/key_hwy_otters_grunt_b_attack_60fps.png",
+  "q": "kit=zip&gangs=key_hwy_otters&show=key_hwy_otters.grunt_b&strip=attack&ui=0&merge=1",
+  "w": 1800,
+  "h": 520,
+  "page": "bench.html"
+ },
+ {
+  "out": "previews/key_hwy_otters_grunt_b_dizzy_60fps.png",
+  "q": "kit=zip&gangs=key_hwy_otters&show=key_hwy_otters.grunt_b&strip=dizzy&ui=0&merge=1",
+  "w": 1800,
+  "h": 560,
+  "page": "bench.html"
+ },
+ {
+  "out": "previews/_tmp_grunt_b_hd.png",
+  "q": "kit=zip&gangs=key_hwy_otters&show=key_hwy_otters.grunt_b&t=0.5&turn=1&cam=front&ui=0",
+  "w": 1280,
+  "h": 360,
+  "page": "bench.html"
+ },
+ {
+  "out": "previews/_tmp_grunt_b_lod.png",
+  "q": "kit=zip&gangs=key_hwy_otters&show=key_hwy_otters.grunt_b&t=0.5&turn=1&cam=front&ui=0&lod=1",
+  "w": 1280,
+  "h": 360,
+  "page": "bench.html"
+ },
+ {
+  "out": "previews/key_hwy_otters_grunt_b_closeup_day.png",
+  "q": "kit=zip&gangs=key_hwy_otters&show=key_hwy_otters.grunt_b&t=0.5&cam=front&zoom=2.4&look=1.3&ui=0",
+  "w": 1280,
+  "h": 720,
+  "page": "bench.html"
+ },
+ {
+  "out": "previews/key_hwy_otters_armed_phone_day.png",
+  "q": "mods=../src/gang_key_hwy_otters.js&show=key_hwy_otters.armed&cam=phone&dist=4.5&t=0.5&ui=0",
+  "w": 390,
+  "h": 844,
+  "dpr": 2,
+  "page": "kit/real_viewer.html"
+ },
+ {
+  "out": "previews/key_hwy_otters_armed_phone_day_merged.png",
+  "q": "mods=../src/gang_key_hwy_otters.js&show=key_hwy_otters.armed&cam=phone&dist=4.5&t=0.5&ui=0&merge=1",
+  "w": 390,
+  "h": 844,
+  "dpr": 2,
+  "page": "kit/real_viewer.html"
+ },
+ {
+  "out": "previews/key_hwy_otters_armed_day.png",
+  "q": "mods=../src/gang_key_hwy_otters.js&show=key_hwy_otters.armed&t=0.5&turn=1&cam=front&ui=0",
+  "w": 1280,
+  "h": 720,
+  "dpr": 1,
+  "page": "kit/real_viewer.html"
+ },
+ {
+  "out": "previews/key_hwy_otters_armed_day_merged.png",
+  "q": "mods=../src/gang_key_hwy_otters.js&show=key_hwy_otters.armed&t=0.5&turn=1&cam=front&ui=0&merge=1",
+  "w": 1280,
+  "h": 720,
+  "dpr": 1,
+  "page": "kit/real_viewer.html"
+ },
+ {
+  "out": "previews/key_hwy_otters_armed_phone_night.png",
+  "q": "mods=../src/gang_key_hwy_otters.js&show=key_hwy_otters.armed&cam=phone&dist=4.5&t=0.5&ui=0&night=1",
+  "w": 390,
+  "h": 844,
+  "dpr": 2,
+  "page": "kit/real_viewer.html"
+ },
+ {
+  "out": "previews/key_hwy_otters_armed_phone_night_merged.png",
+  "q": "mods=../src/gang_key_hwy_otters.js&show=key_hwy_otters.armed&cam=phone&dist=4.5&t=0.5&ui=0&merge=1&night=1",
+  "w": 390,
+  "h": 844,
+  "dpr": 2,
+  "page": "kit/real_viewer.html"
+ },
+ {
+  "out": "previews/key_hwy_otters_armed_night.png",
+  "q": "mods=../src/gang_key_hwy_otters.js&show=key_hwy_otters.armed&t=0.5&turn=1&cam=front&ui=0&night=1",
+  "w": 1280,
+  "h": 720,
+  "dpr": 1,
+  "page": "kit/real_viewer.html"
+ },
+ {
+  "out": "previews/key_hwy_otters_armed_night_merged.png",
+  "q": "mods=../src/gang_key_hwy_otters.js&show=key_hwy_otters.armed&t=0.5&turn=1&cam=front&ui=0&merge=1&night=1",
+  "w": 1280,
+  "h": 720,
+  "dpr": 1,
+  "page": "kit/real_viewer.html"
+ },
+ {
+  "out": "previews/key_hwy_otters_armed_poses.png",
+  "q": "mods=../src/gang_key_hwy_otters.js&show=key_hwy_otters.armed&t=0.5&pose=all&ui=0&zoom=0.85",
+  "w": 1600,
+  "h": 600,
+  "dpr": 1,
+  "page": "kit/real_viewer.html"
+ },
+ {
+  "out": "previews/key_hwy_otters_armed_flash_merged.png",
+  "q": "mods=../src/gang_key_hwy_otters.js&show=key_hwy_otters.armed&t=0.5&turn=1&cam=front&ui=0&merge=1&flash=0.85",
+  "w": 1280,
+  "h": 720,
+  "dpr": 1,
+  "page": "kit/real_viewer.html"
+ },
+ {
+  "out": "previews/key_hwy_otters_armed_seq_knockdown.png",
+  "q": "mods=../src/gang_key_hwy_otters.js&show=key_hwy_otters.armed&seq=knockdown&cam=side&zoom=0.6",
+  "w": 1280,
+  "h": 720,
+  "dpr": 1,
+  "page": "kit/real_viewer.html",
+  "wait": 8250
+ },
+ {
+  "out": "previews/key_hwy_otters_armed_seq_knockdown_merged.png",
+  "q": "mods=../src/gang_key_hwy_otters.js&show=key_hwy_otters.armed&seq=knockdown&cam=side&zoom=0.6&merge=1",
+  "w": 1280,
+  "h": 720,
+  "dpr": 1,
+  "page": "kit/real_viewer.html",
+  "wait": 8250
+ },
+ {
+  "out": "previews/key_hwy_otters_armed_knockdown_60fps.png",
+  "q": "kit=zip&gangs=key_hwy_otters&show=key_hwy_otters.armed&strip=knockdown&ui=0&merge=1",
+  "w": 1800,
+  "h": 520,
+  "page": "bench.html"
+ },
+ {
+  "out": "previews/key_hwy_otters_armed_attack_60fps.png",
+  "q": "kit=zip&gangs=key_hwy_otters&show=key_hwy_otters.armed&strip=attack&ui=0&merge=1",
+  "w": 1800,
+  "h": 520,
+  "page": "bench.html"
+ },
+ {
+  "out": "previews/key_hwy_otters_armed_dizzy_60fps.png",
+  "q": "kit=zip&gangs=key_hwy_otters&show=key_hwy_otters.armed&strip=dizzy&ui=0&merge=1",
+  "w": 1800,
+  "h": 560,
+  "page": "bench.html"
+ },
+ {
+  "out": "previews/_tmp_armed_hd.png",
+  "q": "kit=zip&gangs=key_hwy_otters&show=key_hwy_otters.armed&t=0.5&turn=1&cam=front&ui=0",
+  "w": 1280,
+  "h": 360,
+  "page": "bench.html"
+ },
+ {
+  "out": "previews/_tmp_armed_lod.png",
+  "q": "kit=zip&gangs=key_hwy_otters&show=key_hwy_otters.armed&t=0.5&turn=1&cam=front&ui=0&lod=1",
+  "w": 1280,
+  "h": 360,
+  "page": "bench.html"
+ },
+ {
+  "out": "previews/key_hwy_otters_armed_closeup_day.png",
+  "q": "kit=zip&gangs=key_hwy_otters&show=key_hwy_otters.armed&t=0.5&cam=front&zoom=2.4&look=1.3&ui=0",
+  "w": 1280,
+  "h": 720,
+  "page": "bench.html"
+ },
+ {
+  "out": "previews/key_hwy_otters_bruiser_phone_day.png",
+  "q": "mods=../src/gang_key_hwy_otters.js&show=key_hwy_otters.bruiser&cam=phone&dist=4.5&t=0.5&ui=0",
+  "w": 390,
+  "h": 844,
+  "dpr": 2,
+  "page": "kit/real_viewer.html"
+ },
+ {
+  "out": "previews/key_hwy_otters_bruiser_phone_day_merged.png",
+  "q": "mods=../src/gang_key_hwy_otters.js&show=key_hwy_otters.bruiser&cam=phone&dist=4.5&t=0.5&ui=0&merge=1",
+  "w": 390,
+  "h": 844,
+  "dpr": 2,
+  "page": "kit/real_viewer.html"
+ },
+ {
+  "out": "previews/key_hwy_otters_bruiser_day.png",
+  "q": "mods=../src/gang_key_hwy_otters.js&show=key_hwy_otters.bruiser&t=0.5&turn=1&cam=front&ui=0",
+  "w": 1280,
+  "h": 720,
+  "dpr": 1,
+  "page": "kit/real_viewer.html"
+ },
+ {
+  "out": "previews/key_hwy_otters_bruiser_day_merged.png",
+  "q": "mods=../src/gang_key_hwy_otters.js&show=key_hwy_otters.bruiser&t=0.5&turn=1&cam=front&ui=0&merge=1",
+  "w": 1280,
+  "h": 720,
+  "dpr": 1,
+  "page": "kit/real_viewer.html"
+ },
+ {
+  "out": "previews/key_hwy_otters_bruiser_phone_night.png",
+  "q": "mods=../src/gang_key_hwy_otters.js&show=key_hwy_otters.bruiser&cam=phone&dist=4.5&t=0.5&ui=0&night=1",
+  "w": 390,
+  "h": 844,
+  "dpr": 2,
+  "page": "kit/real_viewer.html"
+ },
+ {
+  "out": "previews/key_hwy_otters_bruiser_phone_night_merged.png",
+  "q": "mods=../src/gang_key_hwy_otters.js&show=key_hwy_otters.bruiser&cam=phone&dist=4.5&t=0.5&ui=0&merge=1&night=1",
+  "w": 390,
+  "h": 844,
+  "dpr": 2,
+  "page": "kit/real_viewer.html"
+ },
+ {
+  "out": "previews/key_hwy_otters_bruiser_night.png",
+  "q": "mods=../src/gang_key_hwy_otters.js&show=key_hwy_otters.bruiser&t=0.5&turn=1&cam=front&ui=0&night=1",
+  "w": 1280,
+  "h": 720,
+  "dpr": 1,
+  "page": "kit/real_viewer.html"
+ },
+ {
+  "out": "previews/key_hwy_otters_bruiser_night_merged.png",
+  "q": "mods=../src/gang_key_hwy_otters.js&show=key_hwy_otters.bruiser&t=0.5&turn=1&cam=front&ui=0&merge=1&night=1",
+  "w": 1280,
+  "h": 720,
+  "dpr": 1,
+  "page": "kit/real_viewer.html"
+ },
+ {
+  "out": "previews/key_hwy_otters_bruiser_poses.png",
+  "q": "mods=../src/gang_key_hwy_otters.js&show=key_hwy_otters.bruiser&t=0.5&pose=all&ui=0&zoom=0.85",
+  "w": 1600,
+  "h": 600,
+  "dpr": 1,
+  "page": "kit/real_viewer.html"
+ },
+ {
+  "out": "previews/key_hwy_otters_bruiser_flash_merged.png",
+  "q": "mods=../src/gang_key_hwy_otters.js&show=key_hwy_otters.bruiser&t=0.5&turn=1&cam=front&ui=0&merge=1&flash=0.85",
+  "w": 1280,
+  "h": 720,
+  "dpr": 1,
+  "page": "kit/real_viewer.html"
+ },
+ {
+  "out": "previews/key_hwy_otters_bruiser_seq_knockdown.png",
+  "q": "mods=../src/gang_key_hwy_otters.js&show=key_hwy_otters.bruiser&seq=knockdown&cam=side&zoom=0.6",
+  "w": 1280,
+  "h": 720,
+  "dpr": 1,
+  "page": "kit/real_viewer.html",
+  "wait": 8250
+ },
+ {
+  "out": "previews/key_hwy_otters_bruiser_seq_knockdown_merged.png",
+  "q": "mods=../src/gang_key_hwy_otters.js&show=key_hwy_otters.bruiser&seq=knockdown&cam=side&zoom=0.6&merge=1",
+  "w": 1280,
+  "h": 720,
+  "dpr": 1,
+  "page": "kit/real_viewer.html",
+  "wait": 8250
+ },
+ {
+  "out": "previews/key_hwy_otters_bruiser_knockdown_60fps.png",
+  "q": "kit=zip&gangs=key_hwy_otters&show=key_hwy_otters.bruiser&strip=knockdown&ui=0&merge=1",
+  "w": 1800,
+  "h": 520,
+  "page": "bench.html"
+ },
+ {
+  "out": "previews/key_hwy_otters_bruiser_attack_60fps.png",
+  "q": "kit=zip&gangs=key_hwy_otters&show=key_hwy_otters.bruiser&strip=attack&ui=0&merge=1",
+  "w": 1800,
+  "h": 520,
+  "page": "bench.html"
+ },
+ {
+  "out": "previews/key_hwy_otters_bruiser_dizzy_60fps.png",
+  "q": "kit=zip&gangs=key_hwy_otters&show=key_hwy_otters.bruiser&strip=dizzy&ui=0&merge=1",
+  "w": 1800,
+  "h": 560,
+  "page": "bench.html"
+ },
+ {
+  "out": "previews/_tmp_bruiser_hd.png",
+  "q": "kit=zip&gangs=key_hwy_otters&show=key_hwy_otters.bruiser&t=0.5&turn=1&cam=front&ui=0",
+  "w": 1280,
+  "h": 360,
+  "page": "bench.html"
+ },
+ {
+  "out": "previews/_tmp_bruiser_lod.png",
+  "q": "kit=zip&gangs=key_hwy_otters&show=key_hwy_otters.bruiser&t=0.5&turn=1&cam=front&ui=0&lod=1",
+  "w": 1280,
+  "h": 360,
+  "page": "bench.html"
+ },
+ {
+  "out": "previews/key_hwy_otters_bruiser_closeup_day.png",
+  "q": "kit=zip&gangs=key_hwy_otters&show=key_hwy_otters.bruiser&t=0.5&cam=front&zoom=2.4&look=1.3&ui=0",
+  "w": 1280,
+  "h": 720,
+  "page": "bench.html"
+ },
+ {
+  "out": "previews/key_hwy_otters_lineup_phone_day.png",
+  "q": "mods=../src/gang_key_hwy_otters.js&show=key_hwy_otters&cam=phone&t=0.5&ui=0",
+  "w": 390,
+  "h": 844,
+  "dpr": 2,
+  "page": "kit/real_viewer.html"
+ },
+ {
+  "out": "previews/key_hwy_otters_lineup_phone_day_merged.png",
+  "q": "mods=../src/gang_key_hwy_otters.js&show=key_hwy_otters&cam=phone&t=0.5&ui=0&merge=1",
+  "w": 390,
+  "h": 844,
+  "dpr": 2,
+  "page": "kit/real_viewer.html"
+ },
+ {
+  "out": "previews/key_hwy_otters_lineup_day.png",
+  "q": "mods=../src/gang_key_hwy_otters.js&show=key_hwy_otters&t=0.5&cam=front&ui=0",
+  "w": 1280,
+  "h": 720,
+  "dpr": 1,
+  "page": "kit/real_viewer.html"
+ },
+ {
+  "out": "previews/key_hwy_otters_lineup_phone_night.png",
+  "q": "mods=../src/gang_key_hwy_otters.js&show=key_hwy_otters&cam=phone&t=0.5&ui=0&night=1",
+  "w": 390,
+  "h": 844,
+  "dpr": 2,
+  "page": "kit/real_viewer.html"
+ },
+ {
+  "out": "previews/key_hwy_otters_lineup_phone_night_merged.png",
+  "q": "mods=../src/gang_key_hwy_otters.js&show=key_hwy_otters&cam=phone&t=0.5&ui=0&merge=1&night=1",
+  "w": 390,
+  "h": 844,
+  "dpr": 2,
+  "page": "kit/real_viewer.html"
+ },
+ {
+  "out": "previews/key_hwy_otters_lineup_night.png",
+  "q": "mods=../src/gang_key_hwy_otters.js&show=key_hwy_otters&t=0.5&cam=front&ui=0&night=1",
+  "w": 1280,
+  "h": 720,
+  "dpr": 1,
+  "page": "kit/real_viewer.html"
+ },
+ {
+  "out": "previews/key_hwy_otters_lineup_lod.png",
+  "q": "mods=../src/gang_key_hwy_otters.js&show=key_hwy_otters&t=0.5&cam=front&ui=0&lod=1",
+  "w": 1280,
+  "h": 720,
+  "dpr": 1,
+  "page": "kit/real_viewer.html"
+ },
+ {
+  "out": "previews/key_hwy_otters_lineup_seq_knockdown.png",
+  "q": "mods=../src/gang_key_hwy_otters.js&show=key_hwy_otters&seq=knockdown&cam=three",
+  "w": 1280,
+  "h": 720,
+  "dpr": 1,
+  "page": "kit/real_viewer.html",
+  "wait": 8250
+ },
+ {
+  "out": "previews/key_hwy_otters_lineup_seq_knockdown_lod.png",
+  "q": "mods=../src/gang_key_hwy_otters.js&show=key_hwy_otters&seq=knockdown&cam=three&lod=1",
+  "w": 1280,
+  "h": 720,
+  "dpr": 1,
+  "page": "kit/real_viewer.html",
+  "wait": 8250
+ },
+ {
+  "out": "previews/key_hwy_otters_lineup_stars.png",
+  "q": "kit=zip&gangs=key_hwy_otters&show=key_hwy_otters&pose=idle&t=0.5&cam=front&ui=0&stars=1",
+  "w": 1280,
+  "h": 720,
+  "page": "bench.html"
+ },
+ {
+  "out": "",
+  "q": "gang=key_hwy_otters&kit=zip&inkMargin=8&hdTris=10800",
+  "page": "tools/qa.html",
+  "w": 900,
+  "h": 700,
+  "timeout": 1500000
+ }
+]

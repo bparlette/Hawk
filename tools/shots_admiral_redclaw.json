@@ -1,0 +1,397 @@
+[
+ {
+  "out": "previews/admiral_redclaw_day.png",
+  "q": "show=admiral_redclaw&cam=three&t=1.1&ui=0",
+  "errors": [],
+  "report": {
+   "show": "admiral_redclaw",
+   "rigs": {
+    "admiral_redclaw": {
+     "parts": 58,
+     "tris": 14672,
+     "hullTris": 14484,
+     "mats": 2,
+     "height": 3.135,
+     "minY": -0.097
+    }
+   },
+   "frame": {
+    "calls": 156,
+    "triangles": 42786
+   }
+  }
+ },
+ {
+  "out": "previews/admiral_redclaw_night.png",
+  "q": "show=admiral_redclaw&cam=three&t=1.1&night=1&ui=0",
+  "errors": [],
+  "report": {
+   "show": "admiral_redclaw",
+   "rigs": {
+    "admiral_redclaw": {
+     "parts": 58,
+     "tris": 14672,
+     "hullTris": 14484,
+     "mats": 2,
+     "height": 3.135,
+     "minY": -0.097
+    }
+   },
+   "frame": {
+    "calls": 156,
+    "triangles": 42786
+   }
+  }
+ },
+ {
+  "out": "previews/admiral_redclaw_phone_390x844.png",
+  "q": "show=admiral_redclaw&cam=phone&t=1.1&ui=0",
+  "errors": [],
+  "report": {
+   "show": "admiral_redclaw",
+   "rigs": {
+    "admiral_redclaw": {
+     "parts": 58,
+     "tris": 14672,
+     "hullTris": 14484,
+     "mats": 2,
+     "height": 3.135,
+     "minY": -0.097
+    }
+   },
+   "frame": {
+    "calls": 307,
+    "triangles": 79602
+   }
+  }
+ },
+ {
+  "out": "previews/admiral_redclaw_phone_390x844_night.png",
+  "q": "show=admiral_redclaw&cam=phone&t=1.1&night=1&ui=0",
+  "errors": [],
+  "report": {
+   "show": "admiral_redclaw",
+   "rigs": {
+    "admiral_redclaw": {
+     "parts": 58,
+     "tris": 14672,
+     "hullTris": 14484,
+     "mats": 2,
+     "height": 3.135,
+     "minY": -0.097
+    }
+   },
+   "frame": {
+    "calls": 307,
+    "triangles": 79602
+   }
+  }
+ },
+ {
+  "out": "previews/admiral_redclaw_phone_390x844_merged.png",
+  "q": "show=admiral_redclaw&cam=phone&t=1.1&merge=1&ui=0",
+  "errors": [],
+  "report": {
+   "show": "admiral_redclaw",
+   "rigs": {
+    "admiral_redclaw": {
+     "parts": 2,
+     "tris": 14672,
+     "hullTris": 14484,
+     "mats": 2,
+     "height": 3.122,
+     "minY": -0.09
+    }
+   },
+   "frame": {
+    "calls": 157,
+    "triangles": 80646
+   }
+  }
+ },
+ {
+  "out": "previews/admiral_redclaw_phone_390x844_night_merged.png",
+  "q": "show=admiral_redclaw&cam=phone&t=1.1&night=1&merge=1&ui=0",
+  "errors": [],
+  "report": {
+   "show": "admiral_redclaw",
+   "rigs": {
+    "admiral_redclaw": {
+     "parts": 2,
+     "tris": 14672,
+     "hullTris": 14484,
+     "mats": 2,
+     "height": 3.122,
+     "minY": -0.09
+    }
+   },
+   "frame": {
+    "calls": 157,
+    "triangles": 80646
+   }
+  }
+ },
+ {
+  "out": "previews/admiral_redclaw_merged_day.png",
+  "q": "show=admiral_redclaw&cam=three&t=1.1&merge=1&ui=0",
+  "errors": [],
+  "report": {
+   "show": "admiral_redclaw",
+   "rigs": {
+    "admiral_redclaw": {
+     "parts": 2,
+     "tris": 14672,
+     "hullTris": 14484,
+     "mats": 2,
+     "height": 3.122,
+     "minY": -0.09
+    }
+   },
+   "frame": {
+    "calls": 6,
+    "triangles": 43830
+   }
+  }
+ },
+ {
+  "out": "previews/admiral_redclaw_merged_night.png",
+  "q": "show=admiral_redclaw&cam=three&t=1.1&night=1&merge=1&ui=0",
+  "errors": [],
+  "report": {
+   "show": "admiral_redclaw",
+   "rigs": {
+    "admiral_redclaw": {
+     "parts": 2,
+     "tris": 14672,
+     "hullTris": 14484,
+     "mats": 2,
+     "height": 3.122,
+     "minY": -0.09
+    }
+   },
+   "frame": {
+    "calls": 6,
+    "triangles": 43830
+   }
+  }
+ },
+ {
+  "out": "previews/admiral_redclaw_merged_flash.png",
+  "q": "show=admiral_redclaw&cam=three&t=1.1&merge=1&flash=0.85&ui=0",
+  "errors": [],
+  "report": {
+   "show": "admiral_redclaw",
+   "rigs": {
+    "admiral_redclaw": {
+     "parts": 2,
+     "tris": 14672,
+     "hullTris": 14484,
+     "mats": 2,
+     "height": 3.122,
+     "minY": -0.09
+    }
+   },
+   "frame": {
+    "calls": 6,
+    "triangles": 43830
+   }
+  }
+ },
+ {
+  "out": "previews/admiral_redclaw_flash_unmerged.png",
+  "q": "show=admiral_redclaw&cam=three&t=1.1&flash=0.85&ui=0",
+  "errors": [],
+  "report": {
+   "show": "admiral_redclaw",
+   "rigs": {
+    "admiral_redclaw": {
+     "parts": 58,
+     "tris": 14672,
+     "hullTris": 14484,
+     "mats": 2,
+     "height": 3.135,
+     "minY": -0.097
+    }
+   },
+   "frame": {
+    "calls": 156,
+    "triangles": 42786
+   }
+  }
+ },
+ {
+  "out": "previews/admiral_redclaw_turn.png",
+  "q": "show=admiral_redclaw&turn=1&t=1.1&ui=0",
+  "errors": [],
+  "report": {
+   "show": "admiral_redclaw",
+   "rigs": {
+    "admiral_redclaw": {
+     "parts": 58,
+     "tris": 14672,
+     "hullTris": 14484,
+     "mats": 2,
+     "height": 3.135,
+     "minY": -0.097
+    }
+   },
+   "frame": {
+    "calls": 621,
+    "triangles": 171138
+   }
+  }
+ },
+ {
+  "out": "previews/admiral_redclaw_poses.png",
+  "q": "show=admiral_redclaw&pose=all&t=1.1&ui=0",
+  "errors": [],
+  "report": {
+   "show": "admiral_redclaw",
+   "rigs": {
+    "admiral_redclaw": {
+     "parts": 58,
+     "tris": 14672,
+     "hullTris": 14484,
+     "mats": 2,
+     "height": 3.135,
+     "minY": -0.097
+    }
+   },
+   "frame": {
+    "calls": 1086,
+    "triangles": 299490
+   }
+  }
+ },
+ {
+  "out": "previews/admiral_redclaw_poses_night_merged.png",
+  "q": "show=admiral_redclaw&pose=all&t=1.1&night=1&merge=1&ui=0",
+  "errors": [],
+  "report": {
+   "show": "admiral_redclaw",
+   "rigs": {
+    "admiral_redclaw": {
+     "parts": 2,
+     "tris": 14672,
+     "hullTris": 14484,
+     "mats": 2,
+     "height": 3.122,
+     "minY": -0.09
+    }
+   },
+   "frame": {
+    "calls": 36,
+    "triangles": 306798
+   }
+  }
+ },
+ {
+  "out": "previews/admiral_redclaw_angry.png",
+  "q": "show=admiral_redclaw&pose=all&t=1.1&angry=1&ui=0",
+  "errors": [],
+  "report": {
+   "show": "admiral_redclaw",
+   "rigs": {
+    "admiral_redclaw": {
+     "parts": 58,
+     "tris": 14672,
+     "hullTris": 14484,
+     "mats": 2,
+     "height": 3.135,
+     "minY": -0.097
+    }
+   },
+   "frame": {
+    "calls": 1086,
+    "triangles": 299490
+   }
+  }
+ },
+ {
+  "out": "previews/admiral_redclaw_atk1_strip.png",
+  "q": "show=admiral_redclaw&strip=atk1&n=8&ui=0",
+  "errors": [],
+  "report": {
+   "show": "admiral_redclaw",
+   "rigs": {},
+   "frame": {
+    "calls": 1241,
+    "triangles": 342274
+   }
+  }
+ },
+ {
+  "out": "previews/admiral_redclaw_atk2_strip.png",
+  "q": "show=admiral_redclaw&strip=atk2&n=8&ui=0",
+  "errors": [],
+  "report": {
+   "show": "admiral_redclaw",
+   "rigs": {},
+   "frame": {
+    "calls": 1241,
+    "triangles": 342274
+   }
+  }
+ },
+ {
+  "out": "previews/admiral_redclaw_atk3_strip.png",
+  "q": "show=admiral_redclaw&strip=atk3&n=8&ui=0",
+  "errors": [],
+  "report": {
+   "show": "admiral_redclaw",
+   "rigs": {},
+   "frame": {
+    "calls": 1241,
+    "triangles": 342274
+   }
+  }
+ },
+ {
+  "out": "previews/admiral_redclaw_knockdown_strip.png",
+  "q": "show=admiral_redclaw&strip=knockdown&n=9&ui=0",
+  "errors": [],
+  "report": {
+   "show": "admiral_redclaw",
+   "rigs": {},
+   "frame": {
+    "calls": 1396,
+    "triangles": 385058
+   }
+  }
+ },
+ {
+  "out": "previews/admiral_redclaw_knockdown_strip_merged.png",
+  "q": "show=admiral_redclaw&strip=knockdown&n=9&merge=1&ui=0",
+  "errors": [],
+  "report": {
+   "show": "admiral_redclaw",
+   "rigs": {},
+   "frame": {
+    "calls": 46,
+    "triangles": 394454
+   }
+  }
+ },
+ {
+  "out": "previews/admiral_redclaw_sheet.png",
+  "q": "show=admiral_redclaw&sheet=1&t=1.1",
+  "errors": [],
+  "report": {
+   "show": "admiral_redclaw",
+   "rigs": {
+    "admiral_redclaw": {
+     "parts": 58,
+     "tris": 14672,
+     "hullTris": 14484,
+     "mats": 2,
+     "height": 3.135,
+     "minY": -0.097
+    }
+   },
+   "frame": {
+    "calls": 1092,
+    "triangles": 299768
+   }
+  }
+ }
+]
