@@ -153,6 +153,8 @@ function readInput() {
     const dz = (v) => (Math.abs(v) < 0.18 ? 0 : v);
     mx += dz(gp.axes[0] || 0); my -= dz(gp.axes[1] || 0); look += dz(gp.axes[2] || 0); lookY += dz(gp.axes[3] || 0);
     const b = (i) => !!(gp.buttons[i] && gp.buttons[i].pressed);
+    if (b(14)) mx -= 1; if (b(15)) mx += 1;
+    if (b(12)) my += 1; if (b(13)) my -= 1;
     if (b(4)) look -= 1; if (b(5)) look += 1;
     const prev = PAD_PREV[gp.index] || []; if (b(3)) IN.padAct = true;
     if ((b(2) && !prev[2]) || (b(1) && !prev[1])) PRESS.add('j'); if (b(0) && !prev[0]) PRESS.add('k'); if (b(3) && !prev[3]) PRESS.add('e'); if (b(8) && !prev[8]) FMAP.open('pad');

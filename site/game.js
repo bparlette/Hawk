@@ -4036,6 +4036,8 @@ function readInput() {
     const dz = (v) => (Math.abs(v) < 0.18 ? 0 : v);
     mx += dz(gp.axes[0] || 0); my -= dz(gp.axes[1] || 0); look += dz(gp.axes[2] || 0); lookY += dz(gp.axes[3] || 0);
     const b = (i) => !!(gp.buttons[i] && gp.buttons[i].pressed);
+    if (b(14)) mx -= 1; if (b(15)) mx += 1;
+    if (b(12)) my += 1; if (b(13)) my -= 1;
     if (b(4)) look -= 1; if (b(5)) look += 1;
     const prev = PAD_PREV[gp.index] || []; if (b(3)) IN.padAct = true;
     if ((b(2) && !prev[2]) || (b(1) && !prev[1])) PRESS.add('j'); if (b(0) && !prev[0]) PRESS.add('k'); if (b(3) && !prev[3]) PRESS.add('e'); if (b(8) && !prev[8]) FMAP.open('pad');
@@ -6738,7 +6740,7 @@ const AL = (function () {
   }
   function frame(rdt) {
     const steps = RB.freeze ? 0 : SIM ? SIM : 1;
-    for (let k = 0; k < steps; k++) { if (k > 0) readInput(); let dt = SIM ? 1 / 60 : rdt; if (S.hitstop > 0) { S.hitstop -= dt; dt *= 0.1; } RB.t += dt; step(dt); if (!S.on) return; if (k < steps - 1) { place(dt); PRESS.clear(); } }
+    for (let k = 0; k < steps; k++) { readInput(); let dt = SIM ? 1 / 60 : rdt; if (S.hitstop > 0) { S.hitstop -= dt; dt *= 0.1; } RB.t += dt; step(dt); if (!S.on) return; if (k < steps - 1) { place(dt); PRESS.clear(); } }
     place(steps ? (SIM ? 1 / 60 : rdt) : 0); RBH.tick(SIM ? rdt * SIM : rdt); PRESS.clear(); rbDraw(sc, cam);
   }
   return { S, pl, al, start, exit, frame, L, ZONES, at, world, widthAt, zoneAt, gapS, deckO, sc, cam, car, cart, rider: () => rider, place };
@@ -6818,7 +6820,7 @@ const RIDES = (function () {
   }
   function frame(rdt) {
     const steps = SIM ? SIM : 1;
-    for (let k = 0; k < steps; k++) { if (k > 0) readInput(); const dt = SIM ? 1 / 60 : rdt; S.time += dt; RB.t += dt; step(dt); if (RB.mode !== 'ride') return; if (k < steps - 1) PRESS.clear(); }
+    for (let k = 0; k < steps; k++) { readInput(); const dt = SIM ? 1 / 60 : rdt; S.time += dt; RB.t += dt; step(dt); if (RB.mode !== 'ride') return; if (k < steps - 1) PRESS.clear(); }
     const dt = rdt; // the ride camera: low behind the boat (just under the canopy line, so the toads show), sweeping round as it turns
     { const back = rbPortrait() ? 10 : 8.5, B = R.boat.root.position, yb = R.yaw; CAM.yaw = wrapA(yb + Math.PI); CAM.pivot.set(hero.pos.x, hero.pos.y + 1.55, hero.pos.z);
       const k = R.camInit ? 1 - Math.exp(-dt * 3) : 1; R.camInit = true; R.cp = R.cp || new THREE.Vector3();
@@ -7134,7 +7136,7 @@ const DUCH = (function () {
   }
   function frame(rdt) { // the old RB-mode loop (unused while the DUELS kind is registered)
     const steps = RB.freeze ? 0 : SIM ? SIM : 1;
-    for (let k = 0; k < steps; k++) { if (k > 0) readInput(); let dt = SIM ? 1 / 60 : rdt; if (S.hitstop > 0) { S.hitstop -= dt; dt *= 0.1; } RB.t += dt; step(dt); if (!S.on) return; if (k < steps - 1) { place(dt); PRESS.clear(); } }
+    for (let k = 0; k < steps; k++) { readInput(); let dt = SIM ? 1 / 60 : rdt; if (S.hitstop > 0) { S.hitstop -= dt; dt *= 0.1; } RB.t += dt; step(dt); if (!S.on) return; if (k < steps - 1) { place(dt); PRESS.clear(); } }
     place(steps ? (SIM ? 1 / 60 : rdt) : 0); RBH.tick(SIM ? rdt * SIM : rdt); PRESS.clear(); rbDraw(sc, cam);
   }
   // ---- the DUELS side (src/09bd_duchess.js wires these into the 'duchess' kind) ----
