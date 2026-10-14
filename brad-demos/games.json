@@ -1966,11 +1966,12 @@
   },
   {
    "id": "big-bumpin-3d",
-   "title": "Big Bumpin' 3D",
+   "title": "Big Bumpin'",
    "category": "Originals",
    "keys": {
     "drive": "WASD / Arrows",
-    "boost": "Space"
+    "action": "Space / E",
+    "camera": "C"
    },
    "autostart": [],
    "orientation": "any",
