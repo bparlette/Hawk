@@ -19705,7 +19705,7 @@ window.__carl = CARL;
   const drBtn = document.createElement('button'); drBtn.id = 'fdrbtn'; drBtn.type = 'button'; drBtn.textContent = 'DRONE'; document.body.appendChild(drBtn);
   const dhud = document.createElement('div'); dhud.id = 'fdrone';
   dhud.innerHTML = `<div class="dt">DRONE<small></small></div><div class="dap">AUTOPILOT · ${TOUCH ? 'TOUCH' : 'MOVE / DRAG'} TO FLY</div><div class="dret"></div><button class="dauto" type="button" aria-label="Resume the autopilot tour">&#9654; AUTO</button><button class="dx" type="button" aria-label="Land the drone">✕</button>
-    <div class="dh">${TOUCH ? 'STICK FLY · DRAG TURN · JUMP UP · SWING DOWN · ACT LAND' : 'WASD FLY · DRAG / Q R TURN · SPACE / K UP · SHIFT / J DOWN · E / V / ESC LAND'}</div>`;
+    <div class="dh">${TOUCH ? 'STICK FLY · DRAG LOOK · TURN ◀▶ · JUMP UP · SWING DOWN · ACT LAND' : 'WASD FLY · DRAG LOOK / Q R TURN · SPACE / K UP · SHIFT / J DOWN · E / V / ESC LAND'}</div>`;
   document.body.appendChild(dhud);
   const q = (s) => root.querySelector(s);
   const D = { tl: q('.ftl'), say: q('.fsay'), card: q('.fcard'), cred: q('.fcred'), roll: q('.froll'), skip: q('.fskip'), tap: q('.ftap'), alt: dhud.querySelector('.dt small') };
@@ -20009,7 +20009,8 @@ window.__carl = CARL;
   // Power Plant + the Aquarium -> up round the Washington Monument -> home. ANY stick / drag / turn / up / down / key / pad input hands control to the player at
   // the exact pose (free-fly as before); the ▶ AUTO chip (key P) blends back onto the path. ACT / V / Esc / ✕ land as before. After CITY SAVED the cheering city
   // (09z_finale_crowd.js, window.__crowd) is on while the drone flies; the finale's own flyover pins night.
-  const DR = { on: false, pos: new THREE.Vector3(), yaw: 0, pitch: -0.35, vel: new THREE.Vector3(), t: 0, bank: 0, auto: null, fogFar: 0, calls: 0, ft: 0, fts: [] };
+  const DR = { on: false, pos: new THREE.Vector3(), yaw: 0, pitch: -0.35, vel: new THREE.Vector3(), t: 0, bank: 0, auto: null, fogFar: 0, calls: 0, ft: 0, fts: [],
+    thr: 0, cd: 0, ch: 0, fx: 0, spdN: 0, prox: 0, streak: 0, fl: { yaw: 0, pitch: 0, idle: 9 }, rig: null, wind: null };
   const TOUR = [ // [x, y, z,  look x, y, z]
     [-46, 10, -44, -31, 7, -18], [-46, 11, -13, -31, 9, -19], [-24, 8, -2, -6, 10, 44], [-8, 19, 36, -3, 11, 62], [28, 15, 32, 82, 30, 52],
     [68, 24, 30, 84, 30, 50], [108, 15, 8, 150, 6, -50], [152, 13, -36, 165, 3, -70], [166, 10, -75, 150, 2, -92], [176, 14, -96, 120, 6, -60],
@@ -20035,13 +20036,14 @@ window.__carl = CARL;
   function apStop(how) {
     if (!AP.on) return; AP.on = false; dhud.classList.remove('ap'); F.log.push('drone:takeover:' + how);
     _e.setFromQuaternion(camera.quaternion, 'YXZ'); DR.pitch = clamp(_e.x, -1.35, 0.5); DR.yaw = _e.y; DR.bank = _e.z; DR.pos.copy(camera.position);
+    DR.cd = 0; DR.ch = 0; DR.thr = 0; DR.fl.yaw = DR.fl.pitch = 0; DR.fl.idle = 9;
     AP.path.getTangent(AP.u, V2); DR.vel.copy(V2).multiplyScalar(AP.path.getLength() / AP.dur * 0.6); // keep a little of the tour's momentum
     if (F.cred) credEnd('takeover');
   }
   function droneEnter(how) {
     if (DR.on || F.on || !save.drone || MODE.duel || FORT.on || DERBY.on || VIC.on || RB.mode || FMAP.F.open) return false;
     DR.on = true; DR.t = 0; DR.w0 = performance.now(); DR.how = how; DR.yaw = CAM.yaw; DR.pitch = -0.32; DR.vel.set(0, 0, 0); DR.bank = 0;
-    DR.pos.copy(camera.position); DR.pos.y = Math.max(DR.pos.y, hero.pos.y + 6);
+    DR.pos.copy(camera.position); DR.pos.y = Math.max(DR.pos.y, hero.pos.y + 6); DR.cd = 0; DR.ch = 0; DR.thr = 0; DR.fx = 0; DR.fl.yaw = DR.fl.pitch = 0; DR.fl.idle = 9;
     save.flights++; save.lastOn = true; persist(); F.log.push('drone:on:' + how);
     document.body.classList.add('drone'); layout(); MODE.duel = DRONE; labels({ a: 'DOWN', b: 'UP', c: 'LAND', l: '&#9664; TURN', r: 'TURN &#9654;' }); if (APANEL) APANEL.setAct({ kind: 'drone', label: 'LAND' }, 1);
     hero.vel.set(0, 0); KEYS.clear(); PRESS.clear(); IN.mx = IN.my = 0; IN.dragX = IN.dragY = 0;
@@ -20054,7 +20056,7 @@ window.__carl = CARL;
     if (!DR.on) return; DR.on = false; DR.auto = null; MODE.duel = null; save.lastOn = false; persist(); F.log.push('drone:off:' + how);
     if (AP.on) { AP.on = false; dhud.classList.remove('ap'); } if (F.cred) credEnd('land');
     if (window.__crowd) __crowd.off(); if (DR.pinned) { CYC.pin = DR.pin0 === undefined ? null : DR.pin0; DR.pinned = false; }
-    document.body.classList.remove('drone'); labels(null); if (APANEL) APANEL.setAct({ label: 'ACT', kind: 'reset' }, 1);
+    document.body.classList.remove('drone'); droneRigOff(); labels(null); if (APANEL) APANEL.setAct({ label: 'ACT', kind: 'reset' }, 1);
     camera.rotation.set(0, 0, 0); camera.fov = CAM.fov || 58; camera.updateProjectionMatrix(); snapCam(); IN.dragX = IN.dragY = 0; KEYS.clear(); PRESS.clear(); last = performance.now();
   }
   function droneToggle(how) { if (DR.on) droneExit(how); else droneEnter(how); }
@@ -20071,6 +20073,47 @@ window.__carl = CARL;
     go: () => droneEnter('act') };
   ACTIONS.push(DACT);
   const _e = new THREE.Euler(0, 0, 0, 'YXZ');
+
+  // ---- DRONE CAM (Brad's 2026-10-12 spec): a visible little quadcopter, the camera sits above + behind it and moves with speed. Slow/hover: drops level
+  // with the drone (just under) and tilts UP so the skyline fills the screen. Fast: rises, pulls back, widens the FOV and adds motion streaks. Speed is felt
+  // from closeness: flying low (skimming the promenade / stoop windows) adds ground-proximity streaks + wind. Holding full forward ramps a throttle boost.
+  // Free-look: drag / right stick swings the view around the drone without changing heading and springs back. Everything is procedural. ----
+  function buildDroneRig() { // hook: buildDroneRig() returns a THREE.Group with .userData.rotors (spinning blades) + .userData.blink
+    const g = new THREE.Group(), B = (c) => new THREE.MeshBasicMaterial({ color: c });
+    const add = (geo, mat, x, y, z, ry) => { const m = new THREE.Mesh(geo, mat); m.position.set(x, y, z); if (ry) m.rotation.y = ry; g.add(m); return m; };
+    add(new THREE.BoxGeometry(0.62, 0.2, 0.86), B('#2a2e3a'), 0, 0, 0); add(new THREE.BoxGeometry(0.4, 0.16, 0.36), B('#6bffd8'), 0, 0.14, -0.18);
+    add(new THREE.BoxGeometry(1.9, 0.07, 0.1), B('#1b1e27'), 0, 0.02, 0, Math.PI / 4); add(new THREE.BoxGeometry(1.9, 0.07, 0.1), B('#1b1e27'), 0, 0.02, 0, -Math.PI / 4);
+    const rotors = [], disc = new THREE.MeshBasicMaterial({ color: '#dfe8ff', transparent: true, opacity: 0.28, depthWrite: false, side: THREE.DoubleSide });
+    const bladeM = B('#c7d0e8'), bladeG = new THREE.BoxGeometry(0.86, 0.015, 0.07), discG = new THREE.CircleGeometry(0.44, 14);
+    for (const [x, z] of [[0.67, 0.67], [-0.67, 0.67], [0.67, -0.67], [-0.67, -0.67]]) { add(new THREE.CylinderGeometry(0.06, 0.06, 0.16, 6), B('#111'), x, 0.1, z);
+      const d = add(discG, disc, x, 0.2, z); d.rotation.x = -Math.PI / 2; rotors.push(add(bladeG, bladeM, x, 0.2, z)); }
+    add(new THREE.SphereGeometry(0.07, 6, 4), B('#ff3b3b'), -0.34, 0.0, 0.42); add(new THREE.SphereGeometry(0.07, 6, 4), B('#38ff7a'), 0.34, 0.0, 0.42);
+    const blink = add(new THREE.SphereGeometry(0.08, 6, 4), new THREE.MeshBasicMaterial({ color: '#ffffff' }), 0, 0.12, 0.46);
+    g.userData.rotors = rotors; g.userData.blink = blink; g.scale.setScalar(1.5); g.visible = false; return g;
+  }
+  function droneRigOn() { if (!DR.rig) { DR.rig = buildDroneRig(); scene.add(DR.rig); } }
+  function droneRigOff() { if (DR.rig) DR.rig.visible = false; if (DR.wind) { try { DR.wind.src.stop(); } catch (e) {} DR.wind = null; } if (DR.sk) { DR.sk.style.display = 'none'; } }
+  function windTick(amt, prox, rdt) { // wind rush: band-passed noise from the shared AudioContext, louder + brighter with speed and closeness to the ground
+    try {
+      if (!AC || AC.state !== 'running' || !NOISE) return;
+      if (!DR.wind) { const src = AC.createBufferSource(); src.buffer = NOISE; src.loop = true; const f = AC.createBiquadFilter(); f.type = 'bandpass'; f.Q.value = 0.7; const gn = AC.createGain(); gn.gain.value = 0;
+        src.connect(f); f.connect(gn); gn.connect(SFXBUS || AC.destination); src.start(); DR.wind = { src, f, gn }; }
+      const w = DR.wind, v = clamp(amt * (0.45 + 0.55 * prox) + prox * amt * 0.5, 0, 1);
+      w.gn.gain.setTargetAtTime(0.005 + 0.11 * v, AC.currentTime, 0.12); w.f.frequency.setTargetAtTime(380 + 2100 * v, AC.currentTime, 0.12);
+    } catch (e) {}
+  }
+  function streakTick(amt, prox, rdt) { // motion streaks: radial speed lines (more with speed) + low horizontal rush lines near the ground
+    if (!DR.sk) { const c = document.createElement('canvas'); c.id = 'fstreak'; c.style.cssText = 'position:fixed;left:0;top:0;width:100vw;height:100vh;z-index:43;pointer-events:none;display:none'; document.body.appendChild(c); DR.sk = c; DR.skc = c.getContext('2d'); }
+    const c = DR.sk, g = DR.skc; if (amt < 0.04) { if (DR.skOn) { g.clearRect(0, 0, c.width, c.height); DR.skOn = false; } return; }
+    const W = Math.max(2, (innerWidth / 3) | 0), H = Math.max(2, (innerHeight / 3) | 0); if (c.width !== W || c.height !== H) { c.width = W; c.height = H; }
+    c.style.display = 'block'; DR.skOn = true; g.clearRect(0, 0, W, H); const cx = W / 2, cy = H * 0.46, R = Math.hypot(W, H) / 2;
+    const n = Math.round(10 + 34 * amt); g.lineCap = 'round';
+    for (let i = 0; i < n; i++) { const a = Math.random() * 6.2832, r0 = R * (0.38 + Math.random() * 0.4), len = R * (0.05 + 0.2 * amt) * (0.5 + Math.random());
+      g.strokeStyle = 'rgba(255,255,255,' + (0.1 + 0.35 * amt * Math.random()).toFixed(2) + ')'; g.lineWidth = 1 + Math.random() * 1.2;
+      g.beginPath(); g.moveTo(cx + Math.cos(a) * r0, cy + Math.sin(a) * r0 * 0.9); g.lineTo(cx + Math.cos(a) * (r0 + len), cy + Math.sin(a) * (r0 + len) * 0.9); g.stroke(); }
+    if (prox > 0.15) { const m = Math.round(8 + 22 * prox * amt); for (let i = 0; i < m; i++) { const side = Math.random() < 0.5 ? -1 : 1, y = H * (0.66 + Math.random() * 0.3), x0 = cx + side * W * (0.12 + Math.random() * 0.36), len = W * (0.06 + 0.22 * amt) * Math.random();
+      g.strokeStyle = 'rgba(255,240,220,' + (0.08 + 0.3 * prox * Math.random()).toFixed(2) + ')'; g.lineWidth = 1 + Math.random(); g.beginPath(); g.moveTo(x0, y); g.lineTo(x0 + side * len, y + (y - cy) * 0.12); g.stroke(); } }
+  }
   const DRONE = { frame(rdt) {
     DR.t += rdt; readInput();
     let mx = IN.mx, my = IN.my, up = 0, look = IN.look;
@@ -20088,19 +20131,39 @@ window.__carl = CARL;
       AP.u = (AP.u + rdt / AP.dur) % 1; apPose(AP.u, _pp, AP.q, rdt);
       if (AP.blend < 1) { AP.blend = Math.min(1, AP.blend + rdt / 2.2); const k = ease2(AP.blend); camera.position.lerpVectors(AP.fromP, _pp, k); camera.quaternion.slerpQuaternions(AP.fromQ, AP.q, k); }
       else { camera.position.copy(_pp); camera.quaternion.slerp(AP.q, 1 - Math.exp(-6 * rdt)); }
+      if (DR.rig) DR.rig.visible = false; DR.fx = damp(DR.fx, 0, 3, rdt); streakTick(0, 0, rdt); windTick(0, 0, rdt);
       DR.pos.copy(camera.position); IN.dragX = IN.dragY = 0; gy = groundY(clamp(DR.pos.x, WB.x0, WB.x1), clamp(DR.pos.z, WB.z0, WB.z1));
     } else {
-      DR.yaw -= look * rdt * 1.8 + IN.dragX * 0.005; DR.pitch = clamp(DR.pitch - IN.dragY * 0.004 - IN.lookY * rdt * 1.2, -1.35, 0.5); IN.dragX = IN.dragY = 0;
-      const sp = 24, fx = -Math.sin(DR.yaw), fz = -Math.cos(DR.yaw), rx = -fz, rz = fx;
+      // free-look: drag / right stick (pad axis 2 + 3) swings the VIEW around the drone, heading untouched; springs back when released
+      let ax2 = 0; for (const gp of (navigator.getGamepads ? navigator.getGamepads() : [])) { if (gp && Math.abs(gp.axes[2] || 0) > 0.2) ax2 += gp.axes[2]; } look -= ax2; const FL = DR.fl;
+      const flIn = IN.dragX || IN.dragY || ax2 || Math.abs(IN.lookY) > 0.05;
+      FL.yaw = clamp(FL.yaw - IN.dragX * 0.006 - ax2 * rdt * 2.2, -2.5, 2.5); FL.pitch = clamp(FL.pitch - IN.dragY * 0.004 - IN.lookY * rdt * 1.2, -0.6, 0.7);
+      if (flIn) FL.idle = 0; else { FL.idle += rdt; if (FL.idle > 0.9) { FL.yaw = damp(FL.yaw, 0, 2.2, rdt); FL.pitch = damp(FL.pitch, 0, 2.2, rdt); } }
+      IN.dragX = IN.dragY = 0; DR.yaw -= look * rdt * 1.8;
+      // throttle boost: holding full forward ramps the cruise from 24 to 40
+      DR.thr = damp(DR.thr, my > 0.9 ? 1 : 0, my > 0.9 ? 0.55 : 2.5, rdt);
+      const sp = 24 + 16 * DR.thr, fx = -Math.sin(DR.yaw), fz = -Math.cos(DR.yaw), rx = -fz, rz = fx;
       V.set(fx * my + rx * mx, up * 0.8, fz * my + rz * mx).multiplyScalar(sp);
       DR.vel.x = damp(DR.vel.x, V.x, 3, rdt); DR.vel.y = damp(DR.vel.y, V.y, 3, rdt); DR.vel.z = damp(DR.vel.z, V.z, 3, rdt);
       DR.pos.addScaledVector(DR.vel, rdt);
       DR.pos.x = clamp(DR.pos.x, WB.x0 - 30, WB.x1 + 40); DR.pos.z = clamp(DR.pos.z, WB.z0 - 30, WB.z1 + 30);
       gy = groundY(clamp(DR.pos.x, WB.x0, WB.x1), clamp(DR.pos.z, WB.z0, WB.z1)); DR.pos.y = clamp(DR.pos.y, gy + 1.6, 110);
       DR.bank = damp(DR.bank, -mx * 0.18, 4, rdt);
-      camera.position.copy(DR.pos); camera.position.y += Math.sin(DR.t * 2.1) * 0.06; _e.set(DR.pitch, DR.yaw, DR.bank); camera.quaternion.setFromEuler(_e);
+      // speed feel: s = 0 hovering .. 1 flat out; prox = 1 skimming the ground .. 0 above ~14 m
+      const spd = Math.hypot(DR.vel.x, DR.vel.z), s = clamp((spd - 3) / 33, 0, 1); DR.spdN = damp(DR.spdN, s, 4, rdt); const S1 = DR.spdN;
+      DR.prox = clamp(1 - (DR.pos.y - gy - 1.6) / 12, 0, 1);
+      const cdT = 3.2 + 4.6 * S1, chT = -0.25 + 2.1 * S1 + 0.5 * clamp(up, 0, 1), tiltT = 0.16 - 0.4 * S1 - 0.12 * up; // sightseeing: level/under + tilted up when slow
+      DR.cd = damp(DR.cd, cdT, 2.4, rdt); DR.ch = damp(DR.ch, chT, 2.4, rdt); DR.pitch = damp(DR.pitch, tiltT, 2.2, rdt); DR.fx = damp(DR.fx, 18 * S1 + 6 * DR.thr, 2.5, rdt);
+      const yv = DR.yaw + FL.yaw, pv = clamp(DR.pitch + FL.pitch, -1.35, 0.9);
+      camera.position.set(DR.pos.x + Math.sin(yv) * DR.cd, DR.pos.y + DR.ch + Math.sin(DR.t * 2.1) * 0.05, DR.pos.z + Math.cos(yv) * DR.cd);
+      for (const b of BLD) if (camera.position.x > b.x0 - 0.5 && camera.position.x < b.x1 + 0.5 && camera.position.z > b.z0 - 0.5 && camera.position.z < b.z1 + 0.5 && camera.position.y < b.h + 0.8) { camera.position.set(DR.pos.x + Math.sin(yv) * 0.7, Math.max(DR.pos.y + DR.ch, DR.pos.y + 0.4), DR.pos.z + Math.cos(yv) * 0.7); break; }
+      camera.position.y = Math.max(camera.position.y, groundY(clamp(camera.position.x, WB.x0, WB.x1), clamp(camera.position.z, WB.z0, WB.z1)) + 0.9);
+      _e.set(pv, yv, DR.bank * 0.4); camera.quaternion.setFromEuler(_e);
+      droneRigOn(); const rg = DR.rig; rg.visible = DR.cd > 1.2; rg.position.copy(DR.pos); rg.rotation.set(-my * 0.24 - clamp(up, -1, 1) * 0.04, DR.yaw, DR.bank * 1.6, 'YXZ');
+      for (const r of rg.userData.rotors) r.rotation.y += rdt * 70; rg.userData.blink.visible = ((DR.t * 1.6) % 1) < 0.2;
+      streakTick(clamp(S1 * 0.85 + S1 * DR.prox * 0.6, 0, 1), DR.prox, rdt); DR.streak = DR.skOn ? 1 : 0; windTick(S1, DR.prox, rdt);
     }
-    const a = VW() / VH(), fov = a < 0.75 ? 72 : 62; if (camera.fov !== fov || camera.aspect !== a) { camera.fov = fov; camera.aspect = a; camera.updateProjectionMatrix(); }
+    const a = VW() / VH(), fov = (a < 0.75 ? 72 : 62) + DR.fx; if (Math.abs(camera.fov - fov) > 0.01 || camera.aspect !== a) { camera.fov = fov; camera.aspect = a; camera.updateProjectionMatrix(); } DR.fovNow = camera.fov;
     window.__sky.position.copy(camera.position);
     updateCycle(rdt); scene.fog.near = Math.max(scene.fog.near, 60); scene.fog.far = Math.max(scene.fog.far, 230); OUT_U.fogN.value = scene.fog.near; OUT_U.fogF.value = scene.fog.far;
     DR.fr = (DR.fr || 0) + rdt; if (DR.fr > 0.25) { DR.fr = 0; NIGHTFX.near(DR.pos.x, DR.pos.z); D.alt.textContent = 'ALT ' + Math.round(DR.pos.y - gy) + ' m · ' + (CITY.lmk ? CITY.lmk.name : nearLm()); }
