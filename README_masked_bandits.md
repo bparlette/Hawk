@@ -140,10 +140,10 @@ QA run: 44 jobs, 0 console errors/warnings. All acceptance checks: PASS.
 
 | member | knockdown 60 fps | knockdown A | attack 60 fps | attack A | run 60 fps | run A | dizzy 60 fps | dizzy A | pose sweeps | LOD 1 (knockdown / attack / run / dizzy) |
 |---|---|---|---|---|---|---|---|---|---|---|
-| grunt_a | -0.8 cm (ftR/sneaker, idle) | -0.8 cm (ftR/sneaker, idle) | 0.6 cm (ftR/sneaker, idle) | 0.6 cm (ftR/sneaker, idle) | 2.1 cm (ftR/sneaker, idle) | 2.1 cm (ftR/sneaker, idle) | 0.1 cm (ftR/sneaker, idle) | 0.1 cm (ftR/sneaker, idle) | -0.9 cm (ftR/sneaker, idle) | -1.4 cm / -0.1 cm / 1.4 cm / -0.5 cm |
-| grunt_b | -0.8 cm (ftR/sneaker, idle) | -0.8 cm (ftR/sneaker, idle) | 0.6 cm (ftR/sneaker, idle) | 0.6 cm (ftR/sneaker, idle) | 2.1 cm (ftR/sneaker, idle) | 2.1 cm (ftR/sneaker, idle) | 0.1 cm (ftR/sneaker, idle) | 0.1 cm (ftR/sneaker, idle) | -0.9 cm (ftR/sneaker, idle) | -1.4 cm / -0.1 cm / 1.4 cm / -0.5 cm |
-| armed | -0.8 cm (ftR/sneaker, idle) | -0.8 cm (ftR/sneaker, idle) | 0.6 cm (ftR/sneaker, idle) | 0.6 cm (ftR/sneaker, idle) | 2.1 cm (ftR/sneaker, idle) | 2.1 cm (ftR/sneaker, idle) | 0.1 cm (ftR/sneaker, idle) | 0.1 cm (ftR/sneaker, idle) | -0.9 cm (ftR/sneaker, idle) | -1.4 cm / -0.1 cm / 1.4 cm / -0.5 cm |
-| bruiser | -0.9 cm (ftR/sneaker, idle) | -0.9 cm (ftR/sneaker, idle) | -0.9 cm (ftR/sneaker, idle) | -0.9 cm (ftR/sneaker, idle) | 2.5 cm (ftR/sneaker, idle) | 2.5 cm (ftR/sneaker, idle) | 0.1 cm (ftR/sneaker, idle) | 0.1 cm (ftR/sneaker, idle) | -1.1 cm (ftR/sneaker, idle) | -1.9 cm / -1.9 cm / 1.5 cm / -0.7 cm |
+| grunt_a | −0.8 cm (ftR/sneaker, idle) | −0.8 cm (ftR/sneaker, idle) | 0.6 cm (ftR/sneaker, idle) | 0.6 cm (ftR/sneaker, idle) | 2.1 cm (ftR/sneaker, idle) | 2.1 cm (ftR/sneaker, idle) | 0.1 cm (ftR/sneaker, idle) | 0.1 cm (ftR/sneaker, idle) | −0.9 cm (ftR/sneaker, idle) | −1.4 cm / −0.1 cm / 1.4 cm / −0.5 cm |
+| grunt_b | −0.8 cm (ftR/sneaker, idle) | −0.8 cm (ftR/sneaker, idle) | 0.6 cm (ftR/sneaker, idle) | 0.6 cm (ftR/sneaker, idle) | 2.1 cm (ftR/sneaker, idle) | 2.1 cm (ftR/sneaker, idle) | 0.1 cm (ftR/sneaker, idle) | 0.1 cm (ftR/sneaker, idle) | −0.9 cm (ftR/sneaker, idle) | −1.4 cm / −0.1 cm / 1.4 cm / −0.5 cm |
+| armed | −0.8 cm (ftR/sneaker, idle) | −0.8 cm (ftR/sneaker, idle) | 0.6 cm (ftR/sneaker, idle) | 0.6 cm (ftR/sneaker, idle) | 2.1 cm (ftR/sneaker, idle) | 2.1 cm (ftR/sneaker, idle) | 0.1 cm (ftR/sneaker, idle) | 0.1 cm (ftR/sneaker, idle) | −0.9 cm (ftR/sneaker, idle) | −1.4 cm / −0.1 cm / 1.4 cm / −0.5 cm |
+| bruiser | −0.9 cm (ftR/sneaker, idle) | −0.9 cm (ftR/sneaker, idle) | −0.9 cm (ftR/sneaker, idle) | −0.9 cm (ftR/sneaker, idle) | 2.5 cm (ftR/sneaker, idle) | 2.5 cm (ftR/sneaker, idle) | 0.1 cm (ftR/sneaker, idle) | 0.1 cm (ftR/sneaker, idle) | −1.1 cm (ftR/sneaker, idle) | −1.9 cm / −1.9 cm / 1.5 cm / −0.7 cm |
 
 **Dizzy** (hurt → `THUG_POSES.dizzy` 3 s at rate 10 → chase; stars sprite at 2.2 × scale + 0.15 m above the root):
 
@@ -156,12 +156,12 @@ QA run: 44 jobs, 0 console errors/warnings. All acceptance checks: PASS.
 
 **Down pose and shoulders** (`down(1, true)` snapped; knock-down end = last frame of the 60 fps `down` phase):
 
-| member | shoulder gap down L / R | shoulder gap windup L / R | tail min y, down(1,true) | tail min y, knock-down end | head min y, down(1,true) | min y excl. feet+weapon, down(1,true) |
-|---|---|---|---|---|---|---|
-| grunt_a | 0.0 cm / 0.0 cm | 0.0 cm / 0.0 cm | 2.5 cm | 2.5 cm | 25.7 cm | 2.5 cm |
-| grunt_b | 0.0 cm / 0.0 cm | 0.0 cm / 0.0 cm | 2.5 cm | 2.5 cm | 25.7 cm | 2.5 cm |
-| armed | 0.0 cm / 0.0 cm | 0.0 cm / 0.0 cm | 2.5 cm | 2.5 cm | 25.7 cm | 2.5 cm |
-| bruiser | 0.0 cm / 0.0 cm | 0.0 cm / 0.0 cm | 2.8 cm | 2.8 cm | 30.9 cm | 2.8 cm |
+| member | shoulder gap down L / R | shoulder gap windup(1) L / R | windup(0.6) L / R | tail min y, down(1,true) | tail min y, knock-down end | ears min y, down(1,true) | tail / ears with animateGang | head min y, down(1,true) | min y excl. feet+weapon, down(1,true) |
+|---|---|---|---|---|---|---|---|---|---|
+| grunt_a | 0.0 cm / 0.0 cm | 0.0 cm / 0.0 cm | 0.0 cm / 0.0 cm | 2.5 cm | 2.5 cm | 46.3 cm | 2.5 cm / 46.3 cm | 25.7 cm | 2.5 cm |
+| grunt_b | 0.0 cm / 0.0 cm | 0.0 cm / 0.0 cm | 0.0 cm / 0.0 cm | 2.5 cm | 2.5 cm | 44.3 cm | 2.5 cm / 44.3 cm | 25.7 cm | 2.5 cm |
+| armed | 0.0 cm / 0.0 cm | 0.0 cm / 0.0 cm | 0.0 cm / 0.0 cm | 2.5 cm | 2.5 cm | 44.3 cm | 2.5 cm / 44.3 cm | 25.7 cm | 2.5 cm |
+| bruiser | 0.0 cm / 0.0 cm | 0.0 cm / 0.0 cm | 0.0 cm / 0.0 cm | 2.8 cm | 2.8 cm | 53.1 cm | 2.8 cm / 53.1 cm | 30.9 cm | 2.8 cm |
 
 **Outlines, shadows, LOD silhouette** (buried = share of a part's surface inside other outlined parts; stray ink rendered at 6 m, 256², 4 views, in idle and both dizzy sway extremes):
 
@@ -174,12 +174,21 @@ QA run: 44 jobs, 0 console errors/warnings. All acceptance checks: PASS.
 
 **The game's real `mergeRig()`** (`tools/game/04b_rig_merge.js`, run on the HD rig):
 
-| member | meshes + hulls before | merged meshes (solid + outline) | bones | draw calls + shadow calls | max vertex Δ merged vs parts (7 poses) | flash: unflashed px of rig px (flash 0.85) | animateGang moves merged tail | render diff px: interior / edge (of rig px) | farthest vertex from culling sphere centre, all sequences (r = 2.6) |
+| member | meshes + hulls before | merged meshes (solid + outline) | bones | draw calls + shadow calls | max vertex Δ merged vs parts (7 poses) | flash: unflashed px of rig px (flash 0.85) | animateGang moves merged tail | render diff px: interior / edge (of rig px) | farthest vertex from culling sphere centre, all sequences (pass: r = 2.6; info: ZIP kit r = 1.9) |
 |---|---|---|---|---|---|---|---|---|---|
-| grunt_a | 30 + 23 | 3 (2 + 1) | 16 | 3 + 2 | 0.000 mm | 0 of 7683 | 1.9 cm (1224 verts) | 0 / 97 (of 9319) | 2.15 m |
-| grunt_b | 32 + 25 | 3 (2 + 1) | 16 | 3 + 2 | 0.000 mm | 0 of 7576 | 1.9 cm (1224 verts) | 1 / 98 (of 9252) | 2.15 m |
-| armed | 31 + 24 | 3 (2 + 1) | 17 | 3 + 2 | 0.000 mm | 0 of 7942 | 1.9 cm (1224 verts) | 4 / 107 (of 9698) | 2.46 m |
-| bruiser | 29 + 22 | 3 (2 + 1) | 16 | 3 + 2 | 0.000 mm | 0 of 12349 | 2.3 cm (1224 verts) | 0 / 2 (of 14605) | 2.17 m |
+| grunt_a | 30 + 23 | 3 (2 + 1) | 16 | 3 + 2 | 0.000 mm | 0 of 7683 | 1.9 cm (1224 verts) | 0 / 97 (of 9319) | 2.15 m (outside 1.9) |
+| grunt_b | 32 + 25 | 3 (2 + 1) | 16 | 3 + 2 | 0.000 mm | 0 of 7576 | 1.9 cm (1224 verts) | 1 / 98 (of 9252) | 2.15 m (outside 1.9) |
+| armed | 31 + 24 | 3 (2 + 1) | 17 | 3 + 2 | 0.000 mm | 0 of 7942 | 1.9 cm (1224 verts) | 4 / 107 (of 9698) | 2.46 m (outside 1.9) |
+| bruiser | 29 + 22 | 3 (2 + 1) | 16 | 3 + 2 | 0.000 mm | 0 of 12349 | 2.3 cm (1224 verts) | 0 / 2 (of 14605) | 2.17 m (outside 1.9) |
+
+**Idle reach and determinism** (reach = farthest non-hull vertex from the root's vertical axis over idle t = 0 .. 2 s at 15 fps, weapon excepted, minus META.radius; hash = every part's world vertices, colours and joint transforms after `idle(0)`):
+
+| member | META.radius | farthest reach (part) | beyond radius (limit 0.35 m) | hash seed 7 (twice) | HD and LOD same seed → same hash | seed 8 hash (differs) |
+|---|---|---|---|---|---|---|
+| grunt_a | 0.42 m | 0.620 m (haL/paw, t = 0.00 s) | 0.200 m | `44ae809b` | yes | `b5a61347` (yes) |
+| grunt_b | 0.42 m | 0.620 m (haL/paw, t = 0.00 s) | 0.200 m | `9516f2e7` | yes | `14469343` (yes) |
+| armed | 0.42 m | 0.630 m (haR/paw, t = 0.00 s) | 0.210 m | `12a04a4b` | yes | `e50475b7` (yes) |
+| bruiser | 0.55 m | 0.768 m (haL/paw, t = 0.00 s) | 0.218 m | `fe787ddb` | yes | `8e0b8fd7` (yes) |
 
 Per-member pass flags (caps, margins, ground, shoulders, stray hulls, shadows, flash, hulls, merge, height, feet): grunt_a: PASS, grunt_b: PASS, armed: PASS, bruiser: PASS
 
@@ -193,6 +202,12 @@ Per-member pass flags (caps, margins, ground, shoulders, stray hulls, shadows, f
 - **Real game code:** `HERO_POSES.down`, `THUG_POSES.down` and `THUG_POSES.dizzy`.
 - **Verbatim from the appendix:** everything this module uses from `K`.
 - **Still stand-ins:** `HERO_POSES.idle/run`, `buildThug`, the light presets and the prop collector.
+
+## Re-run at the game's down timings
+
+The QA was re-run with the knock-down at `down(st, grounded)` (`st` in seconds) damped at rate 13, then getup 0.5 s at rate 14 (`06_game.js`). The earlier run used the fraction form at rate 14.
+
+I compared every distance in the old and new reports (ground clearances, down-pose clearances, shoulder gaps, stars clearance, culling reach, stray ink, buried share) value by value: **the largest change is 0.0 cm, so no number moved and no version was bumped.** The new report adds only checks that did not exist then: windup(0.6) gaps, idle reach, the determinism hash, and ear clearance in `down`. They are in the tables above, and all pass.
 
 ## Known issues (with sizes)
 
