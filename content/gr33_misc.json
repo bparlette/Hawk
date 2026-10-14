@@ -1,0 +1,78 @@
+{
+  "water_taxi_announcements": [
+    "Next stop, the old cannery pier. Mind the gap.",
+    "Water taxi now boarding. Life vests under seats.",
+    "Please stay seated while we cross the channel.",
+    "Hold the rail, folks. Wake coming off starboard.",
+    "Last water taxi of the night leaves in ten.",
+    "Now at the lighthouse dock. Watch your step.",
+    "No fishing off the stern. We've talked.",
+    "Gulls are not passengers. Do not feed the gulls.",
+    "Tickets good all day. Hop on, hop off, hon.",
+    "Captain says the fog is lifting. Captain lies.",
+    "Next stop, the brick warehouses. Bring a jacket.",
+    "Thanks for riding. Tip jar's by the life ring."
+  ],
+  "pier_vendor_cries": [
+    "Fried fish sandwich! Hot off the grease!",
+    "Kettle corn! Sweet, salty, still warm!",
+    "Fresh lemonade, ice to the top!",
+    "Bait! Worms! Minnows! Lucky lures!",
+    "Postcards of the harbor, three a buck!",
+    "Shaved ice in every color you can name!",
+    "Corn on the cob, butter and old spice!",
+    "Painted buoys! Hang one on the porch!",
+    "Clam strips! Crispy and golden!",
+    "Sun hats! Your head will thank you, hon!",
+    "Cotton candy taller than your kid!",
+    "Boiled peanuts, salty like the bay air!"
+  ],
+  "tunnel_toll_booth_lines": [
+    "Exact change or the long line, your call.",
+    "Lane three's closed. It's always closed.",
+    "Toll went up a quarter. Don't shoot me.",
+    "Keep your windows up in the tunnel, hon.",
+    "No receipts, the printer's on strike.",
+    "Your tag didn't beep. Back up. Slowly.",
+    "Have a nice day under the water, sweetie.",
+    "Pennies? You brought me a sock of pennies?",
+    "Gate's stuck. Give it a gentle honk.",
+    "Headlights on, sunglasses off. Tunnel rules."
+  ],
+  "parking_lot_attendant_lines": [
+    "Game day rate. Don't make that face at me.",
+    "Pull all the way up, then a little more.",
+    "Cash only. The card thing ate a card.",
+    "Leave the keys, I'll stack you in tight.",
+    "You're blocked in till the fourth quarter.",
+    "Tailgating's fine. Grills off the curb, hon.",
+    "Lot's full. Try the church lot, pray a bit.",
+    "Your ticket says compact. That's a van.",
+    "Watch the pothole, it's got a name now.",
+    "Lights off, doors locked, go cheer loud."
+  ],
+  "dog_park_regular_chatter": [
+    "He's friendly, he just greets with his face.",
+    "Whose dog is eating the tennis ball? Again?",
+    "She's a rescue. Rescued me, mostly.",
+    "Don't throw the stick, he'll bring a log.",
+    "That beagle runs this whole park, hon.",
+    "Big dogs on the left, gossip on the right.",
+    "He only sits if you say it in a whisper.",
+    "Water bowl's by the gate. Bring it back.",
+    "Somebody's poodle rolled in mud. Not mine.",
+    "Same time tomorrow? Rain or shine, right?"
+  ],
+  "rowhouse_window_signs": [
+    "Beware of Cat. Dog is Fine.",
+    "Porch Sale Saturday. No Early Birds.",
+    "Room for Rent. Quiet Types Only.",
+    "Please Stop Parking Here. Love, Us.",
+    "Snowball Stand Opens Memorial Day",
+    "Lost: One Orange Cat. Answers to Hon",
+    "We Saw You Take the Flowerpot.",
+    "Welcome Home, Sailor!",
+    "Ring Twice. Bell Is Mostly Broken.",
+    "Happy 90th, Aunt Dot! Honk!"
+  ]
+}

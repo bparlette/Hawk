@@ -1,0 +1,142 @@
+{
+  "victory_cheers": [
+    "That's how we do it on the stoop!",
+    "Down goes the big shot, hon!",
+    "Harbor's quiet again. For now.",
+    "Tell your gang the block is ours.",
+    "Rowhouse rules: last one standing wins.",
+    "You picked the wrong alley, pal.",
+    "Somebody call a tow truck for that ego.",
+    "Mallet down, crown off, game over.",
+    "The whole neighborhood heard that one.",
+    "Feathers everywhere. Worth it.",
+    "Boss? More like boss-ted.",
+    "Next time bring a bigger cape.",
+    "Sweep the pier, we got a winner!",
+    "Even the gulls are cheering.",
+    "One less legend on the waterfront."
+  ],
+  "pause_jokes": [
+    "Paused. The gulls are still plotting, though.",
+    "Take five. The boss is stretching too.",
+    "Hydrate, hon. Champions drink water.",
+    "Your stoop called. It misses you.",
+    "Time stopped. The parking meter did not.",
+    "Go ahead, grab a snack. We won't tell.",
+    "The pigeons union demands a break too.",
+    "Nobody moves. Except you, to the fridge.",
+    "Paused mid-wheelie. Gravity is patient.",
+    "Even legends need a bathroom break.",
+    "The arabber cart is double-parked. Again.",
+    "Pause menu: the only safe spot in town.",
+    "Fun fact: the boss also pauses to cry.",
+    "Resume when ready. The harbor will wait.",
+    "Your skateboard is judging you silently."
+  ],
+  "npc_lines": [
+    "Watch the paint, that car's older than me!",
+    "You skating or flying, kid?",
+    "Hon, slow down, you'll scare the cat!",
+    "Somebody's gotta fix that pothole.",
+    "Ain't nobody parking here till Tuesday.",
+    "Was that a bike or a rocket?",
+    "My stoop, my rules. Keep moving.",
+    "Nice trick! Now do it again.",
+    "These gulls stole my fries twice today.",
+    "Get off my lawn! I don't have a lawn!",
+    "Is that the kid from the news?",
+    "Beep beep! Learn to share the road!",
+    "Hey, you dropped your dignity back there.",
+    "Tell your mother I said hi.",
+    "Bus is late again. Shocker.",
+    "I seen better jumps at the rec center.",
+    "You want directions or trouble?",
+    "The arabber's got peaches today, hon!",
+    "Who let the pigeon drive?",
+    "Rain's coming. Feel it in my knee."
+  ],
+  "mission_names": [
+    {
+      "title": "Stoop Sweep",
+      "brief": "Clear every gang tag off the rowhouse steps before sunset."
+    },
+    {
+      "title": "Peach Run",
+      "brief": "Escort the arabber cart across town without spilling a single peach."
+    },
+    {
+      "title": "Fry Thief Patrol",
+      "brief": "Chase the fry-stealing gulls off the pier before the lunch rush."
+    },
+    {
+      "title": "Beehive Rescue",
+      "brief": "Find the missing hairspray before the neighborhood dance starts."
+    },
+    {
+      "title": "Tow Zone Panic",
+      "brief": "Move six double-parked cars before the tow truck rolls in."
+    },
+    {
+      "title": "Harbor Lights",
+      "brief": "Relight the waterfront lamps while dodging the dock crew."
+    },
+    {
+      "title": "Mallet Mayhem",
+      "brief": "Grab the stolen mallet back from the market bullies."
+    },
+    {
+      "title": "Pigeon Express",
+      "brief": "Deliver three secret notes by rooftop before the bell rings."
+    },
+    {
+      "title": "Pothole Derby",
+      "brief": "Win a race down the bumpiest street in the city."
+    },
+    {
+      "title": "Rooftop Relay",
+      "brief": "Pass the baton across five rooftops without touching the street."
+    },
+    {
+      "title": "Market Day Melee",
+      "brief": "Protect the vendors from a gang raid at the weekend market."
+    },
+    {
+      "title": "Night Bus Chase",
+      "brief": "Catch the last bus before it leaves your crew stranded."
+    },
+    {
+      "title": "Crown Heist",
+      "brief": "Steal the feathered king's crown from his tower lair."
+    },
+    {
+      "title": "Mural Mission",
+      "brief": "Repaint the block mural before the festival parade arrives."
+    },
+    {
+      "title": "Last Call Lap",
+      "brief": "Finish one final Grand Prix lap before the lights go out."
+    }
+  ],
+  "street_signs": [
+    "Hon's Hair Palace",
+    "Stoop Street",
+    "Pier Nine Snacks",
+    "Arabber Alley",
+    "Gull Crossing",
+    "No Parking Ever",
+    "Rowhouse Row",
+    "Mallet & Sons Hardware",
+    "Peach Cart Parking",
+    "Harborview Ave",
+    "Beehive Lane",
+    "Slow: Kids On Bikes",
+    "Dockside Diner",
+    "Lucky Duckpin Lanes",
+    "Rooftop Way",
+    "Old Mill Rd",
+    "Steamer Pot Cafe",
+    "Corner Store Open 24/7",
+    "Pigeon Plaza",
+    "Marina Bait & Tackle"
+  ]
+}

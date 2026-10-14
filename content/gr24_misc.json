@@ -1,0 +1,80 @@
+{
+  "gp_pit_radio_lines": [
+    "Box this lap, box this lap, tires are gone.",
+    "Gap behind is two seconds and closing.",
+    "Watch the manhole cover in turn three.",
+    "Light rain on the harbor straight, careful.",
+    "You're purple in sector two. Keep it up.",
+    "Yellow flag at the hairpin, no passing.",
+    "Fuel is tight. Lift and coast, please.",
+    "Car ahead is struggling on the cobbles.",
+    "Brakes are hot. Ease off on the long run.",
+    "Push now, push now, this is your window.",
+    "Safety car out. Stay close, stay calm.",
+    "Checkered flag. Get it home in one piece."
+  ],
+  "drone_pilot_tips": [
+    "Fly low over the rowhouses to stay off radar.",
+    "Gulls dive at drones. Hold your altitude steady.",
+    "Battery under twenty? Head for the nearest roof.",
+    "Harbor wind pushes you east. Correct early.",
+    "Tap boost on straights, never in tight alleys.",
+    "Shadows on the street show where you are.",
+    "Land on a water taxi roof for a quick recharge.",
+    "Steeple gaps are tight. Slow down to thread them.",
+    "Hold still to snap a photo. Shaky shots score low.",
+    "Lost signal? Your drone floats back to the pad."
+  ],
+  "octagon_announcer_lines": [
+    "Welcome to the wing-house octagon!",
+    "In the blue corner, sauced and ready!",
+    "In the red corner, extra crispy!",
+    "Gloves up! Napkins down! Fight!",
+    "Round two! Somebody bring more ranch!",
+    "Oh, that one hurt the whole table!",
+    "The cage is rattling, folks!",
+    "He's down! The ref is counting!",
+    "Back on his feet! What a comeback!",
+    "That's a flying elbow off the booth!",
+    "Final round, leave it all on the plate!",
+    "Your new wing-house champion!"
+  ],
+  "carl_lines": [
+    "Carl don't lose. Carl gets delayed.",
+    "You stepped in my parking spot, hon.",
+    "I been fighting since the stoop days.",
+    "My mother hits harder than you.",
+    "Let's settle this on the steps, pal.",
+    "I got a cousin for every block.",
+    "This jacket's older than you, kid.",
+    "Fine. You win. Don't tell nobody.",
+    "Rodney! Get over here and help!",
+    "Carl will remember this, sweetheart."
+  ],
+  "rodney_lines": [
+    "Rodney's here. Party's over.",
+    "I don't do warmups. Warmups do me.",
+    "You beat Carl? Carl trips on air.",
+    "I eat lightning for breakfast, hon.",
+    "Hold my lemon ice for a second.",
+    "This is my corner. Find your own.",
+    "I've got moves you ain't seen yet.",
+    "Ow. Okay. That was a good one.",
+    "Rodney needs a nap after that.",
+    "Next time I'm bringing my sister."
+  ],
+  "lexington_stall_barks": [
+    "Hot pit beef, sliced while you wait!",
+    "Fresh rye, still warm from the oven!",
+    "Pickles by the barrel, get 'em here!",
+    "Lemon sticks! Peppermint optional!",
+    "Fried chicken, crunch you can hear!",
+    "Coddies two for a buck, hon!",
+    "Sweet potato pie, last few slices!",
+    "Smoked sausage on a soft roll!",
+    "Cold sodas, colder than the harbor!",
+    "Glazed donuts, still dripping!",
+    "Fresh oysters on ice, step right up!",
+    "Peach cobbler by the spoonful!"
+  ]
+}

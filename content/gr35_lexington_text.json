@@ -1,0 +1,76 @@
+{
+  "market_stall_signs": [
+    "Stoop Street Pickles",
+    "Hon's Hot Pretzel Cart",
+    "Granny Dot's Pie Shelf",
+    "Arabber Annie's Fruit",
+    "Rowhouse Rye & Bread Co.",
+    "The Lucky Lemon Stand",
+    "Smoky Pete's Sausage Nook",
+    "Mister Mustard's Dogs",
+    "Harbor Haze Coffee",
+    "Beehive Bakery Bar",
+    "Sweet Stoop Fudge",
+    "Two-Tone Taco Window"
+  ],
+  "market_vendor_barks": [
+    "Fresh pretzels, still warm, get 'em quick!",
+    "Pickles! Sour, half-sour, sorta-sour!",
+    "Pie by the slice, pie by the pound, hon!",
+    "Peaches so ripe they'll sing to you!",
+    "Hot links, cold drinks, no waiting!",
+    "Fudge samples for anybody with a smile!",
+    "Lemonade squeezed while you watch, folks!",
+    "Rye bread, still steaming, step right up!",
+    "Two tacos, one coin, zero regrets!",
+    "Coffee strong enough to wake the pigeons!",
+    "Mustard on everything, that's the law here!",
+    "Buy a pie, get a wink for free, hon!"
+  ],
+  "burying_ground_tour_captions": [
+    "Lanterns flicker here, but nobody's home.",
+    "Shh. The stones like it quiet after dark.",
+    "That chill? Just the harbor breeze. Probably.",
+    "Old gates creak like they're telling jokes.",
+    "A tiny glow drifts by, then giggles away.",
+    "Fog rolls in to hide the tour's best secrets.",
+    "Legend says the ivy hums on foggy nights.",
+    "Watch your step. The shadows play tag here.",
+    "The moon checks in every night at midnight.",
+    "Tour over! The ghosts wave goodbye. Maybe."
+  ],
+  "rash_field_crowd_lines": [
+    "Kick it! Kick it! Kick it high!",
+    "That's a goal, hon! Did you see it?",
+    "Who brought the extra snacks?",
+    "Ref, get some glasses already!",
+    "Volleyball by the water, best life!",
+    "Somebody grab that runaway kite!",
+    "Run, kid, run! You got this!",
+    "Sunburn tomorrow, glory today!",
+    "Best seat on the whole field!",
+    "Wave! We're on the big screen!"
+  ],
+  "octagon_announcer_lines": [
+    "Ladies and gents, welcome to the Wing Cage!",
+    "Hot sauce loaded, napkins ready, EAT!",
+    "Ten wings down and the sauce is flowing!",
+    "Halfway there and somebody's sweating!",
+    "Pete's slowing down! Is this an upset?!",
+    "Crowd is roaring, keep those jaws moving!",
+    "Last plate! Last plate! Finish strong!",
+    "WINNER! A new champion of the Wing Cage!",
+    "Pete takes it! Better luck next round!",
+    "Defeat! Wipe your face and try again!"
+  ],
+  "pete_eatoff_taunts": [
+    "You chew like a sleepy turtle!",
+    "I warm up with more wings than that!",
+    "Need a bib, rookie? Or a nap?",
+    "My grandma eats faster than you!",
+    "Sauce too spicy for you, champ?",
+    "I eat plates for dessert, kid!",
+    "Clock's ticking, chompers!",
+    "Go home and practice on crackers!"
+  ]
+}

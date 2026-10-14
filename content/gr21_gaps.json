@@ -1,0 +1,81 @@
+{
+  "sewer_metro_lines": [
+    "Mind the drip. The pipes remember everything.",
+    "Sewer grate pops. Somebody slid in here before.",
+    "Grind the rail, not your teeth.",
+    "Metro doors closing. Kickflip now or wait.",
+    "Next stop: Tunnel Nine. Hold onto your board.",
+    "Rats scatter. Wheels keep rolling.",
+    "Echo check: your ollie sounds louder down here.",
+    "Track lights flicker. Duck the low beam.",
+    "Board snapped? Spare decks behind the pump room.",
+    "Storm drain run open. Speed is the only map.",
+    "Last train leaves at midnight. Skate faster.",
+    "Pipe gap ahead. Commit or swim.",
+    "Tagged a tunnel wall. Style points banked.",
+    "Metro guard is napping. Tiptoe on those wheels.",
+    "Daylight above. Manhole exit, three blocks up."
+  ],
+  "octagon_storefront": [
+    "SIGN: The Eight-Sided Snack Shack",
+    "SIGN: Octo-Bites, Open Every Angle",
+    "NPC: Eight walls, zero corners to hide in.",
+    "NPC: Grab a pretzel stick. Water taxi's late.",
+    "NPC: Best seat? Pick a wall. They're all good.",
+    "NPC: We fry it, you fly it. Napkins extra.",
+    "BLURB: Harbor eatery shaped like a stop sign.",
+    "BLURB: Famous for funnel fries and salt breeze.",
+    "BLURB: Built by a sailor who hated corners.",
+    "BLURB: Every window faces the harbor. Somehow."
+  ],
+  "landmark_signs": [
+    "Rockwave Diner",
+    "Pagehaven Books",
+    "Owlfeather Grill",
+    "Dockside Dry Goods",
+    "Lumen Tower Hotel",
+    "Pier Seven Arcade",
+    "The Copper Kettle",
+    "Bluebell Cinema",
+    "Harborlight Music Hall",
+    "Saltmarsh Market"
+  ],
+  "pigeon_climb_popups": [
+    "CHOPPER INCOMING!",
+    "ROTOR WASH! HOLD TIGHT!",
+    "HELICOPTER DODGED! +500",
+    "GOLDEN MALLET GET!",
+    "MALLET SMASH! +1000",
+    "FEATHERS FLYING! +250",
+    "LEDGE GRAB! +100",
+    "NEW HEIGHT RECORD!",
+    "PIGEON BONK! +300",
+    "COMBO x3! KEEP CLIMBING",
+    "BREADCRUMB BONUS +50",
+    "ROOFTOP REACHED! +2000"
+  ],
+  "bike_builder_ui": [
+    "Place Ramp",
+    "Ramp too steep. Lower the angle.",
+    "Add Mud Pit",
+    "Mud pit placed. Bring a towel.",
+    "Snap to Stoop",
+    "Stoop spot taken. Try next door.",
+    "Rotate Piece",
+    "Undo Last Piece",
+    "Test Ride Your Track",
+    "Track saved! Share the chaos.",
+    "Piece limit reached (40/40).",
+    "Clear Track? This can't be undone."
+  ],
+  "sugar_elevator_lines": [
+    "Freight elevator to the roof. Smells like syrup.",
+    "Going up. Sugar dust in every crack.",
+    "Cable groans. Hope the candy plant paid its bills.",
+    "Floor six: caramel vats. Do not lick the walls.",
+    "Doors jam halfway. Pry them with your mallet.",
+    "Lights die. Emergency brake glows pink.",
+    "Rooftop ahead. The sign is bigger up close.",
+    "Ding. Top floor. The whole harbor glitters."
+  ]
+}

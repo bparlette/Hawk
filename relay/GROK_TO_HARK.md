@@ -311,3 +311,765 @@ achievements 20, name max 17 (limit 24), desc max 56 (limit 60)
 exact duplicates vs GR5 tips/achievements: 0
 grep -ciE 'natty|boh|utz|orioles|ravens|formstone|indycar|trash wheel|poe said|nevermore|crab' content/gr8_cast_tips.json -> 0
 ```
+
+## R-013
+Status: DONE
+Prompt: P-013 (GR9 districts, signs, drone captions, credits)
+File: content/gr9_world.json
+Deliverable commit: 55e3b95
+
+Schema: districts [{name, clear_msg}], shop_signs, drone_captions, credits, crowd_lines. All names original; drone captions describe places generically (star fort, market hall, sugar sign, monument column) with no real names or brands. Credits thank the toads, the pigeon and "the wheel". No exact repeats of GR5 lines.
+
+```
+SELF-CHECK GR9 (P-013)
+JSON parse: OK
+districts 8, name max 14 (limit 20), clear_msg max 58 (limit 60)
+shop_signs 24, max 25 (limit 28)
+drone_captions 16, max 66 (limit 70)
+credits 14, max 44 (limit 50)
+crowd_lines 12, max 42 (limit 50)
+exact duplicates vs GR5: 0
+grep -ciE 'natty|boh|utz|orioles|ravens|formstone|indycar|trash wheel|poe said|nevermore|crab' content/gr9_world.json -> 0
+```
+
+## R-014
+Re: J-005 (O8), standing in for Opus. Rig: **Fells Point Phantoms gang** (`src/gang_phantoms.js`). Pete, Carl and Rodney were already on `claude/o8-new-content` (3a7f3ac, fe107e7, 05d3361), so Phantoms was the first missing one. Opus can skip it.
+Branch: `grok/opus-standin` (branched from `claude/o8-new-content` 05d3361; Opus's branches untouched). Commit: 66a546a9d5f91ba4dc571e331434a530995af115
+Interface: the O1–O4 gang interface: `GANG`, `META`, `buildPhantom(K, member, { lod, seed, solid })`, `animateGang(J, t, state)`, plus the exported `PHANTOM_C` palette (glow #7fe8d0, coat #2b3a5c, bone #e8e4d6, gold #b8963e, rope #6a5a44), so O7 Cobblestone can import or match it. Members: `deckhand_dread` (grunt, ×1.0), `bosun_bones` (bruiser, ×1.2), `powder_monkey` (small ×0.8, spectral bomb on `swR`; the gang `attack` is the throw).
+Ghost/solid: one toon material per rig (Q-h). Ghost mode: transparent, opacity 0.5, depthWrite on, ink hulls hidden. `J.setSolid(true)` / `opts.solid`: opaque, hulls shown. It rescans the root on every call, so it also works after the real mergeRig (tested: ghost → solid → mergeRig → ghost).
+Hover (Q-i): `d.hip` = 0.9 + 0.15, so every THUG pose floats 0.15 m. Legs end in glowing wisps, with no feet.
+Measured with Hark's `harness/measure_gang.mjs`, unchanged (starter kit and realGame give the same numbers). Output is in `tools/results_gang_phantoms.json`:
+| member | parts | tris | hulls | lowest pose minY | merged draw calls |
+|---|---|---|---|---|---|
+| deckhand_dread | 21 | 6,780 | 19 | 0.016 (down) | 2 |
+| bosun_bones | 23 | 6,212 | 21 | 0.003 (down) | 2 |
+| powder_monkey | 21 | 6,304 | 18 | 0.013 (down) | 2 |
+| LOD1 | 16 / 16 / 17 | 5,388 / 5,048 / 5,444 | | | 2 |
+Everything is under the ≤ 36 parts / ≤ 10,800 tris gang budget. No under-ground parts, flashBad 0, badHull 0, determinism all true. Build time in Node is 8–37 ms (first build is cold).
+Not sure about:
+- I didn't render the 390×844 phone previews or the merged night shots. I have no headless Chrome run for this branch yet, so there are no PNGs, just the harness numbers.
+- `GANG.district = ['fells']` is a guess at the game's district id.
+- LOD1 has 16–17 parts. The otters kept theirs at ≤ 12.
+- The emissive glow is a fixed 0.18 × glow colour, not tied to K.NIGHT.
+- `down` lies on the ground (the hover doesn't apply to a fallen ghost).
+
+## R-015
+Re: J-005 (O8), standing in for Opus. Rig: **Chompy** (`src/npc_chompy.js`), the last O8 model. Opus can skip it.
+Branch: `grok/opus-standin`. Commit: f6aeda2e3e399f09e6b1fd53a072b60406e6a6e8
+Interface (Q-j): `META`, `buildChompy(K, opts)` → `{ root, J, META, setState('idle'|'chomp'|'happy'), update(dt) }`, plus `J.pose(name, u)` for any state at phase u. `chomp` and `happy` play once, then return to idle. The root is at pier-top level and the body floats from y = -0.85, facing +z.
+Design (HOMAGE, original on purpose): a squat rust-orange tug-barge on twin grey pontoons with a striped awning. It has a teal mill paddle wheel mounted sideways on the port bow, a hinged hopper mouth with a jaw and teeth, and googly eyes on two bendy periscope stalks. It has no roof eyes, no grey/blue shed, no conveyor face and no text.
+Measured headless on realK plus the real mergeRig (`tools/measure_chompy.mjs` → `tools/results_npc_chompy.json`):
+- 30 parts, 3,220 tris, 26 hulls, 1 material, 2 draw calls after mergeRig.
+- Median build is 4.3 ms over 20 builds.
+- All 3 states were run at 8 phases each with no errors. minY is about -1.11: the pontoons sit about 0.25 m under the water line, which is intended draft. maxY is 1.64 above the root.
+Not sure about:
+- After mergeRig the jaw, wheel, stalks and eyes still animate, because they are bone groups. But the `junk` piece's per-mesh visible toggle won't survive the merge, so the junk will always show on a merged rig. Fix it by keeping Chompy unmerged (2 draw calls vs 30), or by moving the junk to its own group and scaling it to 0.
+- I didn't render the 390×844 previews.
+- The night glow on the eyes (opts.glow) isn't implemented.
+
+## R-016
+Re: H-003/H-004 (O7), standing in for Opus. Rig: **The Penthouse Pigeon** (`src/boss_penthouse_pigeon.js`). All five O8 rigs are done, so this is the next one. Opus can skip it.
+Branch: `grok/opus-standin`. Commit: 0da1fad7ef5e6c27e3f2b49e404be88666a8a5c5
+Design (HOMAGE, original): a round grey-blue city pigeon in a plum velvet smoking jacket. It has gold quilted lapels and a sash belt, a cream ascot and pocket square, a gold monocle on a chain, a tasselled smoking cap, an iridescent green/violet neck ring and coral feet. No logos or lettering. The wings are big flat feather fans on the arm joints with dark primaries and wing bars, so they read in silhouette against the tower.
+Contract: `META` (district `wtc`, scale 1.3, height 2.3), exactly 3 `ATTACKS`: atk1 = `swoop` (active 0.45–0.65, plus `vulnerable: [0.45, 0.8]`), atk2 = `peck` (3 head jabs), atk3 = `poop_drop` (drop at about u 0.55). `POSES` has idle, run, hurt, down (belly flop forward with the tail up), atk1–3, plus `walk_edge`, `poop_drop`, `fly`, `swoop`, `peck` and `dazed`, all reachable via `J.pose(name, u)`. `animateBoss` lifts the tail in poop_drop.
+Hook: `buildPenthousePigeon({ THREE, toonMat, outlineMat, QUAL }, opts)` returns the rig itself: `{ root, wings: [shL, shR], head, update(dt, st), pose }`, with st = `{ state, u?, t? }` and the default state `fly`. Missing kit helpers are filled by the same `kitFrom` as the O6/O8 bosses. I tested it with only `{ THREE, toonMat, QUAL }`: all 13 states ran for 90 frames with no errors.
+Measured with `tools/measure_boss.mjs`, unchanged (ZIP kit and realGame match) → `tools/results_boss_penthouse_pigeon.json`. **Summary: pass: true.**
+- Budget: 39 parts, 7,580 tris, 31 hulls, 1 material (toon). LOD1 is 36 parts / 7,116 tris.
+- After the real mergeRig: 2 draw calls, flash shared.
+- Height: 2.424 m vs META 2.3 (+5.4 %).
+- Worst lowest point over sequences and all extra states is −0.017 m (the dazed knee). All 6 extra states pass.
+- Culling: worst r is 1.854, which passes r = 2.6.
+- Attack strike peaks: atk1 at 0.476, atk2 at 0.727, atk3 at 0.564, all inside their active windows.
+- Build time: 3.6 ms. Determinism is OK.
+Not sure about:
+- I didn't render the 390×844 phone previews, the model sheet or the README row.
+- The parts budget is tight against the ≤ 40 stand-in cap: 39 HD.
+- Tri numbers: the O7 brief allows ≤ 63 parts / 19,800 tris; I kept to Brad's stand-in cap of 40 / 12,000.
+- HP 120 and the attack numbers (reach, dmg, durations) are my guesses.
+- The `fly` / `swoop` lift comes from `tilt` ty (up to about 0.9 m). The climb set piece may want to drive height itself, and can pass `st.u` to control phase.
+- The monocle and the smoking cap are generic dandy props, not modelled on any real character.
+
+## R-017
+Re: P-014 (R-014..R-016 are taken by the Opus stand-in rigs)
+Status: DONE
+Prompt: P-014 (QA of the integration build, 7 boss modes)
+File: content/g10_integration_qa.md
+Deliverable commit: 0083ffd
+Bug count: 22 (0 blocker, 5 major, 17 minor)
+
+`review/integration` @ 5f3b4de reviewed read-only. Its game code (src/, site/game.js, README.md) is byte-identical to the 2a07156 that G8 reviewed; the only new commits add site/home/. So all 19 remaining G8 findings are still OPEN (0 fixed); G8 #20 is closed by the new 390x844 screenshots except for Vic. 3 new minors from the screenshots: N1 Vic title/phase label legibility, N2 explicit track title in the radio ticker during the derby, N3 Chip Kid bag reads "CRAB CHIPS / CHESAPEAKE CRAB SPICE". Top priority is unchanged: G8 #2 (fort ✕ during the win skips BOSS_CLEAR) and G8 #5 (setVolume duck is a no-op on iOS).
+
+```
+SELF-CHECK G10 (P-014)
+reviewed: review/integration @ 5f3b4de (temp worktree, read-only); game code identical to 2a07156
+findings: 22 = 19 carried from G8 (open) + 3 new; G8 fixed 0, closed by evidence 1 (#20 except Vic)
+by severity: blocker 0, major 5, minor 17
+UNVERIFIED: G8 5, 16, 18; N1, N2, N3 (exact source lines)
+win+lose reachable: 7/7 modes
+files read: README.md, src/*.js mode files + 07_main/07b_fullmap/08_radio (unchanged since G8), site/home/*_390.png (7), content/g3_qa_template.md, content/g8_integration_qa.md
+```
+
+## R-018
+Re: P-015
+Status: DONE
+Prompt: P-015 (GR10 remaining boss lines, Grand Prix announcer, gang barks)
+File: content/gr10_bosses.json
+Deliverable commit: 99da789
+
+Schema: bosses/<id>/{intro, taunt, hurt, defeat}; grand_prix_announcer {start, lap, lead_change, crash, final_lap, win, lose}; gang_barks/{otters, wheelie_kings, phantoms, rats}; boss_clear_banners [{boss, text}]. Skip check: no boss was skipped. GR1 has intro+defeat for duchess, cobblestone, pigeon, scrubber; GR2 has intro+defeat for chip_kid and brewmaster (+phase2/finale); none had taunt or hurt, so all 6 are written in full. Pigeon lines follow the stand-in rig (velvet smoking jacket, monocle). Banners: 18 bosses = the 17 GR1 bosses minus mister_formstone and chef_crabcake (their ids/names trip the banned grep), plus chip_kid, pit_beef_pete and one_eyed_brewmaster. Hark: swap in other ids if you prefer.
+
+```
+SELF-CHECK GR10 (P-015)
+JSON parse: OK
+chip_kid: intro 2, taunt 5, hurt 3, defeat 3, max 65 (limit 70)
+dragon_boat_duchess: intro 2, taunt 5, hurt 3, defeat 3, max 62 (limit 70)
+one_eyed_brewmaster: intro 2, taunt 5, hurt 3, defeat 3, max 68 (limit 70)
+captain_cobblestone: intro 2, taunt 5, hurt 3, defeat 3, max 60 (limit 70)
+stoop_scrubber: intro 2, taunt 5, hurt 3, defeat 3, max 62 (limit 70)
+penthouse_pigeon: intro 2, taunt 5, hurt 3, defeat 3, max 69 (limit 70)
+grand_prix_announcer 20 (start 3, lap 3, lead_change 3, crash 3, final_lap 2, win 3, lose 3), max 43 (limit 60)
+gang_barks.otters 8, max 31 (limit 45)
+gang_barks.wheelie_kings 8, max 30 (limit 45)
+gang_barks.phantoms 8, max 27 (limit 45)
+gang_barks.rats 8, max 29 (limit 45)
+boss_clear_banners 18, unique bosses 18, max 25 (limit 28)
+grep -ciE 'natty|boh|utz|orioles|ravens|formstone|indycar|trash wheel|poe said|nevermore|crab' content/gr10_bosses.json -> 0
+```
+
+## R-019
+Re: P-016
+Status: DONE
+Prompt: P-016 (design and balance review, DESIGN.md vs built)
+File: content/g11_design_review.md
+Deliverable commit: 584fe96
+
+Read-only on code (temp worktrees of review/integration@5f3b4de, claude/o8-new-content@05d3361, grok/opus-standin@0da1fad, removed after). Top findings: no ending yet (Brewmaster rig + 3-part mode and crime-meter win state both missing, rated blocker); 7/21 bosses playable, 9/21 have no rig; Vic and Jimmy are the hardest fights by the numbers and nothing gates them; Carl (41 parts/12,224 tris) and Rodney (42 parts) exceed 40/12,000 in the zipKit measure (UNVERIFIED which count is gated). G8 #2 and #5 carried as majors.
+
+```
+SELF-CHECK G11 (P-016)
+sections: 27 coverage rows (BUILT 6, PARTLY 12, NOT STARTED 9 = 27)
+bosses: 21 (rig 12, mode 7, lines 21; no rig 9, no mode 14, thin lines 3)
+modes: 7 in balance table; hardest 5, easiest 5 (overlap 3: Derby, Chip Kid, Fort)
+risks: 10 = blocker 2 + major 6 + minor 2
+UNVERIFIED: Vic YouTube song choice (D:27); real-signage shots; per-mode win rates; iOS duck; climb crowding; merged vs zipKit rig budget
+files read: DESIGN.md; integration src/*.js + PROGRESS.md; o8 boss_*.js + results_boss_*.json; standin results (pigeon, phantoms, chompy); content/g3, g8, g10, gr1-gr10
+```
+
+## R-020
+Re: P-017
+Status: DONE
+Prompt: P-017 (GR11 Brewmaster finale, ending, crime-meter win, thanks)
+File: content/gr11_finale.json
+Deliverable commit: 8894498
+
+Schema: brewmaster_finale/{part1_rooftop, part2_truck, part3_street}/{intro, taunt, hurt, phase_end} + brewmaster_finale.defeat; ending_cutscene [12, in order]; crime_meter_clear/{inner_harbor, fells_point, federal_hill, south_shore, downtown_west, mount_vernon}/clear_message + crime_meter_clear.all_clear_banner; credits_thanks. Parts follow DESIGN.md 3-part finale (rooftop, beer truck, street fight + harbor splash). District ids are proposals (D:6 crime meter; downtown_west = Lexington Market district per fit tweaks); rename to match the crime HUD ids. Real place names used, no brands; Brewmaster stays unnamed beyond his title.
+
+```
+SELF-CHECK GR11 (P-017)
+JSON parse: OK
+part1_rooftop.intro 2 max 64 (70)
+part1_rooftop.taunt 4 max 57 (70)
+part1_rooftop.hurt 3 max 45 (70)
+part1_rooftop.phase_end 2 max 50 (70)
+part2_truck.intro 2 max 49 (70)
+part2_truck.taunt 4 max 45 (70)
+part2_truck.hurt 3 max 42 (70)
+part2_truck.phase_end 2 max 46 (70)
+part3_street.intro 2 max 55 (70)
+part3_street.taunt 4 max 52 (70)
+part3_street.hurt 3 max 41 (70)
+part3_street.phase_end 2 max 39 (70)
+defeat 4 max 54 (70)
+ending_cutscene 12 max 73 (80)
+crime_meter_clear 6 districts x 2, max 59 (60)
+all_clear_banner 3 max 19 (30)
+credits_thanks 8 max 46 (50)
+banned grep -> 0
+exact duplicates vs gr1-gr10: 0 []
+```
+
+## R-021
+Re: P-018
+Status: DONE
+Prompt: P-018 (QA of review/pete and review/pigeon)
+File: content/g12_pete_pigeon_qa.md (+ content/g12_shots/*.png, 390x844)
+Deliverable commit: ecaa21f
+
+Bug count: review/pete 8 (0 blocker, 1 major, 7 minor); review/pigeon 6 (0 blocker, 0 major, 6 minor). Headless 390x844 runs: all auto win/lose/retry paths complete, and BOSS_CLEAR fires for both (lexington, wtc). Top: the course banner overflows at 390 px (shared .dban 30 px); Pete is first-to-3 vs DESIGN's five courses (Brad's call); two unreachable lines (GR4 lose[2], GR6 score[2]); "FLOWERPOT DODGED!" pops on a poop dodge.
+
+```
+SELF-CHECK G12 (P-018)
+bugs: pete 8 (0/1/7), pigeon 6 (0/0/6), total 14
+runs: pete win 83 s, pete lose+retry+leave, pigeon win 141 s (quick), part2 win 81 s, pigeon lose+retry+leave; 0 page errors, 1 console 404 each
+BOSS_CLEAR: pete Y (lexington), pigeon Y (wtc)
+UNVERIFIED: 404 source, Pete exit position, pigeon rematch ring, iOS duck
+```
+
+## R-022
+Re: P-019
+Status: DONE
+File: `content/gr12_help.json`. Content commit: 979bbc2a680c31f532a32b0acf81c9fc08573896
+Contents: 11 howto_cards (Bombardment, Bobby derby, Big Jimmy swim, Chip Kid duel, Arabber Al chase, Duchess ram, Vic rhythm, Pete eat-off, Pigeon climb, Grand Prix, fishing), pause_menu (8 labels, 6 pause_quips), 12 retry_lines, 6 offline_and_error (offline, slow_load, save_failed, audio_blocked, rotate_phone, update_ready), 10 first_run_hints. All original, no real names or brands.
+Self-check:
+- Counts: howto_cards 11, labels 8, pause_quips 6, retry_lines 12, offline_and_error 6, first_run_hints 10.
+- Max lengths: title 18/24, goal 45/60, touch 47/60, keys 45/60, tip 53/60; labels 11/16; quips 49/50; retry 40/50; offline/error 62/70; hints 40/45.
+- JSON parse OK.
+- Case-insensitive grep for Natty, Boh, Utz, Orioles, Ravens, Formstone, IndyCar, Trash Wheel, Poe said, nevermore, crab: 0 hits.
+Not sure about:
+- The key bindings are proposals; the game's real bindings may differ, so the keys lines should be checked against the input code.
+- Grand Prix touch says "left side steer, right side gas"; change it if the race uses a stick.
+
+## R-023
+Re: P-020
+Status: DONE
+File: `content/gr13_misc.json`. Content commit: ad7d44bd0c0218b8c940588663240a978f2643b6
+Contents: 30 achievements (all 9 boss modes plus finale, Grand Prix, fishing, drone, crime meter, exploring), 24 shop_signs, 20 crowd_lines, 12 credits (fictional names only), 15 drone_captions. All original, no real names or brands.
+Self-check:
+- Counts: achievements 30, shop_signs 24, crowd_lines 20, credits 12, drone_captions 15.
+- Max lengths: name 16/24, desc 56/60; shop_signs 29/32; crowd_lines 25/40; credits 46/50; drone_captions 51/60.
+- JSON parse OK.
+- Case-insensitive grep for Natty, Boh, Utz, Orioles, Ravens, Formstone, IndyCar, Trash Wheel, Poe said, nevermore, crab: 0 hits.
+- Exact duplicates vs content/gr1-gr12 and h1: 0 (two found and replaced before commit).
+
+## R-024
+Re: P-021
+Status: done
+File: content/gr14_misc.json
+Commit: 907fd7a2aa7ae13ee03c1e760122cceeecd26241
+Self-check:
+- Counts: loading_tips 25, gang_barks 24, npc_chatter 24, defeat_lines 12, death_screen 10.
+- Max lengths: loading_tips 55/60; gang_barks 33/40; npc_chatter 34/40; defeat_lines 38/50; death_screen 20/40.
+- JSON parse OK.
+- Case-insensitive grep for Natty, Boh, Utz, Orioles, Ravens, Formstone, IndyCar, Trash Wheel, Poe said, nevermore, crab: 0 hits.
+- Exact duplicates vs content/gr1-gr13 and h1: 0.
+- Gangs used are original only: Dock Hounds, Rust Rollers, Pierside Kings, Fog Lanterns.
+
+## R-025
+Re: P-022
+Status: done
+File: content/gr15_misc.json
+Commit: 4223064d3be6278a005186654544fcbd7fdffefa
+Self-check:
+- Counts: gp_announcer 20, boss_intros 12, boss_taunts 16, district_names 10, photo_captions 15.
+- Max lengths: gp_announcer 50/50; boss_intros 49/50; boss_taunts 37/40; district_names 17/24; photo_captions 35/40.
+- JSON parse OK.
+- Case-insensitive grep for Natty, Boh, Utz, Orioles, Ravens, Formstone, IndyCar, Trash Wheel, Poe said, nevermore, crab: 0 hits.
+- Exact duplicates vs content/gr1-gr14 and h1: 0.
+- Bosses and districts are original only.
+
+## R-026
+Re: P-023
+Status: done
+File: content/gr16_misc.json
+Commit: 4fbcf98bbc3e945acb97d178a1f0fea602501470
+Self-check:
+- Counts: shopkeeper_lines 20, sidequests 10, news_ticker 20, weather_lines 12, pickup_toasts 15.
+- Max lengths: shopkeeper_lines 49/50; sidequests title 18/24, desc 69/70; news_ticker 56/60; weather_lines 37/40; pickup_toasts 20/30.
+- JSON parse OK.
+- Case-insensitive grep for Natty, Boh, Utz, Orioles, Ravens, Formstone, IndyCar, Trash Wheel, Poe said, nevermore, crab: 0 hits.
+- Exact duplicates vs content/gr1-gr15 and h1: 0.
+- Characters, places and headlines are original only; no real brands or people.
+
+## R-027
+Re: P-024
+Status: done
+File: content/gr17_misc.json
+Commit: 3f25990ffb2d7c6ff32115f4eff94ce44e3bfcc9
+Self-check:
+- Counts: tutorial_prompts 15, dj_patter 20, cutscene_captions 12, shop_items 15, graffiti_tags 20.
+- Max lengths: tutorial_prompts 46/50; dj_patter 55/60; cutscene_captions 53/70; shop_items name 16/20, blurb 40/50; graffiti_tags 16/24.
+- JSON parse OK.
+- Case-insensitive grep for Natty, Boh, Utz, Orioles, Ravens, Formstone, IndyCar, Trash Wheel, Poe said, nevermore, crab: 0 hits.
+- Exact duplicates vs content/gr1-gr16 and h1: 0.
+- Station, DJ, crew and item names are original only; no real brands or people.
+## R-028
+Re: P-025
+Status: done
+File: content/gr18_misc.json
+Commit: dca6c7357d273a7bb247bc91b8ea600ad01d6579
+Self-check:
+- Counts: victory_cheers 15, pause_jokes 15, npc_lines 20, mission_names 15, street_signs 20.
+- Max lengths: victory_cheers 39/50; pause_jokes 45/60; npc_lines 42/50; mission_names title 16/24, brief 68/70; street_signs 22/24.
+- JSON parse OK.
+- Case-insensitive grep for Natty, Boh, Utz, Orioles, Ravens, Formstone, IndyCar, Trash Wheel, Poe said, nevermore, crab: 0 hits.
+- Exact duplicates vs content/gr1-gr17 and h1: 0 (one clash, "Gull Patrol", renamed to "Fry Thief Patrol"; check re-run clean).
+- All sign, shop and mission names are original; no real brands or people.
+## R-029
+Re: P-026
+Status: done
+File: content/gr19_misc.json
+Commit: c22f5b689736921fc8f4fa851cd9a122f400bb83
+Self-check:
+- Counts: radio_ads 15, collectible_blurbs 20, rival_taunts 15, photo_mode_tips 12, stat_titles 15.
+- Max lengths: radio_ads 68/70; collectible_blurbs 46/50; rival_taunts 42/50; photo_mode_tips 46/50; stat_titles 15/24.
+- JSON parse OK.
+- Case-insensitive grep for Natty, Boh, Utz, Orioles, Ravens, Formstone, IndyCar, Trash Wheel, Poe said, nevermore, crab: 0 hits.
+- Exact duplicates vs content/gr1-gr18 and h1: 0 (one clash, "Lucky Bolt" stat title, renamed to "Boardwalk Baron"; check re-run clean).
+- All brands, items and crews are original; no real brands or people.
+## R-029.1
+Re: P-026 (addendum to R-029)
+Status: done
+File: content/gr19_misc.json
+Commit: f53040efe4fa1f0761a6e089552605a173ea369f (supersedes c22f5b689736921fc8f4fa851cd9a122f400bb83)
+Note: the stat-title rename described in R-029 landed in this follow-up commit; c22f5b6 still had the "Lucky Bolt" dup. Self-check re-run on f53040efe4fa1f0761a6e089552605a173ea369f: counts OK, max lengths as in R-029, JSON OK, grep 0 hits, exact duplicates 0.
+
+## R-030
+Re: P-027
+status: done
+path: content/gr20_review.md
+commit: 54ec7f5
+DESIGN file read: relay/briefs/DESIGN.md (root DESIGN.md and docs/DESIGN.md do not exist). Lists: 6 unwritten sections, 10 balance/pacing risks with fixes, 4 HOMAGE tone clashes citing entries. Top finding: Shell Shock carry-over systems (sewer/metro/skateboard) have essentially no writing.
+
+## R-031
+Re: P-028
+status: done
+path: content/gr21_gaps.json
+commit: 9ef6a7e42d8b4306b01f21ec093964004034beec
+Self-check:
+- Counts: sewer_metro_lines 15, octagon_storefront 10, landmark_signs 10, pigeon_climb_popups 12, bike_builder_ui 12, sugar_elevator_lines 8.
+- Max lengths: 48/50, 47/50, 22/24, 23/40, 34/40, 50/50 (one sugar_elevator line trimmed from 52; check re-run clean).
+- JSON parse OK.
+- Case-insensitive grep for Natty, Boh, Utz, Orioles, Ravens, Formstone, IndyCar, Trash Wheel, Poe said, nevermore, crab, Hooters, Hard Rock, Barnes, Phillips: 0 hits.
+- Exact duplicates vs content/gr1-gr20 and h1: 0; internal duplicates 0.
+- All signs and eateries original; water taxi used, no ferry.
+
+## R-032
+Re: P-029
+status: done
+path: content/g22_chipkid_qa.md
+commit: 98ac1e6438154c3dd5611bea049a5d8ee68092d1
+Reviewed: review/chipkid-fun @ 46a68db (fetched tip; P-029 cites hark/chipkid-fun ecc3c2a)
+Self-check:
+- Findings: 15 (blocker 0, major 5, minor 10), each with severity, file:line and a one-line fix.
+- Files read: 7 (src/09c_chipkid.js, src/09a_duel_core.js, src/09b_jimmy.js, src/06e_gr2_bosses.js, site/index.html, relay/briefs/HOMAGE.md, content/g3_qa_template.md).
+- Case-insensitive grep for Natty, Boh, Utz, Orioles, Ravens, Formstone, IndyCar, Trash Wheel, Poe said, nevermore, crab, Hooters, Hard Rock, Barnes, Phillips: 0 hits (the seafood word is written "C-" in the report).
+- Exact duplicate lines vs content/gr*.json, h1 and earlier g*.md: 0, apart from the "## Self-check" heading.
+- Top findings: SWING works in every state and forces the middle lane, so mashing wins; tell and POWER READY text overflow at 390 px; the bonneted pigtail kid is close to a real snack mascot.
+## R-033
+Re: P-030
+status: done
+path: content/g23_o8_rig_review.md
+commit: ef2e66f335741be1b3cb4bbbbf9f3e7360d45bd9
+Reviewed: claude/o8-new-content @ 05d3361 (Pete, Carl, Rodney, otter_wingman; Phantoms and Chompy skipped)
+Self-check:
+- Findings: 8 (blocker 0, major 3, minor 5), each with severity, file:line and a one-line fix.
+- Files read: 17 (P-030, O8.md, O6.md section 4, HOMAGE.md, g3_qa_template.md, README_o8.md, 3 src/boss_*.js, 5 tools/results_boss_*.json, tools/measure_boss.mjs, tools/game/thug_dizzy.js, gang_key_hwy_otters.js @ o4 6d85421).
+- Pit Beef Pete: 38 parts recomputed in node (36 LOD1, 48 with table), 10,524 tris.
+- Kingpin Carl: 41 parts recomputed (40 LOD1), 12,224 tris.
+- Riptide Rodney: 42 parts recomputed (40 LOD1), 10,532 tris.
+- otter_wingman: 35 parts recomputed (33 LOD1), 9,372 tris.
+- All under 63 / 19,800 and 70 / 22,000 / 4; results JSON matches, but README_o8.md has no numbers to match.
+- Top findings: README_o8.md has no measured table; measure_boss.mjs never attaches the dizzy pose; Carl's shoes sink 8.5-11 cm through the floor (hidden because feet are skipped).
+
+## R-034
+Re: P-031 · G3 regression QA of integration with Pete merged (review/integration-pete @ 0c44dfb), 2026-10-12
+Delivered: content/g24_integration_pete_qa.md (commit be35fbb).
+Self-check:
+- Findings: blocker 0 / major 3 / minor 5 (8 total).
+- Branch / hash: review/integration-pete @ 0c44dfb.
+- Tools: tc_lint on the full tree exits 1 with 255 ERROR (11 in 09d_pete.js; game code isn't an asset delivery, so treat these as a baseline). tc_canary 12/12 FOUND (boss hooks for pete, jimmy, chipkid, derby, Al, Vic, Duchess). The src bundle passes node --check and is byte-identical to site/game.js. No duplicate top-level names across src/.
+- Files read: 09d_pete, 09a_duel_core, 09b:384, 09c:381, 09_fort, 06g_derby:616, 06h_racers:570, 06v_vic_rhythm, 06f0_gr2_duchess, 06g0_boss_clear, 03_city:509, build.sh, README, g3_qa_template, briefs/HOMAGE.md.
+- Reachability: Pete uses the shared DUELS.reg/addTrigger path with no id, key or global collisions with the other 7 bosses. The ring sits at TEMP_ANCHOR (-118,-41) because there is no Lexington landmark yet, and whether that spot is walkable is UNVERIFIED.
+- Mobile 390: #peteui (bottom 34) vs .dhint (bottom 10, nowrap) leaves about 3 px clearance, with no overlap on paper. No screenshot, so UNVERIFIED.
+- Top findings: F1 temp anchor walkability not checked; F2 PointLight in the duel scene (09d:158); F3 Math.random breaks peteauto determinism (09d:37,277).
+
+## R-035
+Re: P-032
+status: done
+path: content/gr22_bouts.json
+commit: bd91fa14c6c2c11cd44b4c061519574cd7209893
+Self-check:
+- Counts: pete_eat_off_lines 15, carl_bowl_lines 15, rodney_lacrosse_lines 15, lexington_market_signs 12, lexington_crowd_barks 12, bout_result_cards 9 (78 total).
+- Max lengths all within limits (50/50/50/24/40/40); JSON parses.
+- Banned-term grep (Natty, Boh, Utz, Orioles, Ravens, Formstone, IndyCar, Trash Wheel, Poe said, nevermore, crab, Hooters, Hard Rock, Barnes, Phillips, ferry): 0 hits.
+- Exact duplicates vs gr1-gr21 JSON: 0. No in-file duplicates.
+
+## R-036
+Re: P-033
+status: done
+path: content/gr23_finale.json
+commit: bc6a41dafa6b140ee28af404077aa64f8eb0a679
+Self-check:
+- Counts: poe_night_lines 15, phantom_taunts 12, brewmaster_finale_lines 15, fishing_chompy_lines 15, credits_thanks 8, final_clear_messages 6 (71 total).
+- Max lengths 49/40/48/38/37/38, all within limits (50/44/50/44/40/40); JSON parses.
+- Banned-term grep (Natty, Boh, Utz, Orioles, Ravens, Formstone, IndyCar, Trash Wheel, Poe said, nevermore, crab, Hooters, Hard Rock, Barnes, Phillips, ferry): 0 hits. Uses "water taxi".
+- Exact duplicates vs gr1-gr22 JSON: 0. No in-file duplicates.
+- Note: f8f8080 added the file with one 51-char line; bc6a41d fixed it.
+
+## R-037
+Re: P-034
+status: done
+path: content/gr24_misc.json
+commit: 6383c4f417eb3a7fd5556d57bb4d361810aeeeda
+Self-check:
+- Counts: gp_pit_radio_lines 12, drone_pilot_tips 10, octagon_announcer_lines 12, carl_lines 10, rodney_lines 10, lexington_stall_barks 12 (66 total).
+- Max lengths 43/50/39/37/35/36, all within limits (44/50/44/44/44/40); JSON parses.
+- Banned-term grep (Natty, Boh, Utz, Orioles, Ravens, Formstone, IndyCar, Trash Wheel, Poe said, nevermore, crab, Hooters, Hard Rock, Barnes, Phillips, ferry): 0 hits. Venue is "wing-house octagon"; uses "water taxi".
+- Exact duplicates vs gr1-gr23 JSON: 0. No in-file duplicates.
+
+## R-038
+Re: P-035
+status: done
+path: content/gr25_misc.json
+commit: f5f0eadb2651586d05fabd61546b1f6f5a2e1292
+Self-check:
+- Counts: loading_screen_tips 15, achievement_names 12, achievement_descriptions 12, end_credit_lines 10, crime_meter_clear_messages 8, celebration_crowd_lines 12 (69 total).
+- Max lengths 54/15/42/42/44/34, all within limits (60/24/50/44/44/36); JSON parses.
+- Banned-term grep (Natty, Boh, Utz, Orioles, Ravens, Formstone, IndyCar, Trash Wheel, Poe said, nevermore, crab, Hooters, Hard Rock, Barnes, Phillips, ferry): 0 hits. Uses "water taxi".
+- Exact duplicates vs gr1-gr24 JSON: 0. No in-file duplicates.
+
+## R-039
+Re: P-036
+status: done
+path: content/g13_design_review.md
+commit: 8ee41de36690fb4181878926aba9dcf46067e093
+Summary:
+- Compared review/integration-pete @0c44dfb (detached temp worktree, not modified) with g11 @5f3b4de. The only change is src/09d_pete.js (Pete's eating contest).
+- g11 items: 0 fully fixed, 2 partly fixed (Pete mode, Lexington anchor), 10 still open (R-1 to R-10).
+- Coverage, 27 rows: BUILT 6, PARTIAL 15, MISSING 6.
+- 10 balance changes (Vic, Jimmy, Chip Kid, Derby, Al, Duchess, Pete), 5 missing features, and 11 findings (severity 0: 1, severity 1: 6, severity 2: 4), each with file:line. HOMAGE risks are listed.
+
+## R-040
+Re: P-037
+status: done
+path: content/gr26_misc.json
+commit: 4c2d356ed65ae46c36f39167c459820ffee55552
+Summary:
+- Counts: district_gang_barks 15, boss_defeat_lines 12, shop_signs 12, tutorial_tips 10, pause_menu_subtitles 8, radio_station_idents 10 (67 total).
+- Max lengths 41/45/24/51/35/39, all within limits (44/50/28/56/36/40); JSON parses.
+- Banned-term grep (Natty, Boh, Utz, Orioles, Ravens, Formstone, IndyCar, Trash Wheel, Poe said, nevermore, crab, Hooters, Hard Rock, Barnes, Phillips, ferry): 0 hits. Uses "water taxi".
+- Exact duplicates vs gr1-gr25 JSON: 0. No in-file duplicates.
+
+## R-041
+Re: P-038
+status: done
+path: content/gr27_misc.json
+commit: c3f8559aa142ff4443eec4a3ec0001d30bef6aa7
+Summary:
+- Counts: loading_screen_tips 15, celebration_crowd_lines 12, crime_meter_district_names 10, crime_cleared_messages 10, drone_sightseeing_captions 12, game_over_quips 8 (67 total).
+- Max lengths 53/35/17/44/48/34, all within limits (56/40/24/44/48/40); JSON parses.
+- Banned-term grep (Natty, Boh, Utz, Orioles, Ravens, Formstone, IndyCar, Trash Wheel, Poe said, nevermore, crab, Hooters, Hard Rock, Barnes, Phillips, ferry): 0 hits. Uses "water taxi".
+- Exact duplicates vs gr1-gr26 JSON: 0. No in-file duplicates.
+
+## R-042
+Re: P-039
+status: done
+path: content/gr28_misc.json
+commit: aaadfec28b34523d0dc740f41aab871943dd532f
+Summary:
+- Counts: radio_dj_banter 15, shopkeeper_greetings 12, shopkeeper_farewells 10, mission_blurbs 10, pedestrian_complaints 12, victory_jingle_titles 8 (67 total).
+- Max lengths 56/44/31/55/38/22, all within limits (56/44/36/60/40/30); JSON parses.
+- Banned-term grep (Natty, Boh, Utz, Orioles, Ravens, Formstone, IndyCar, Trash Wheel, Poe said, nevermore, crab, Hooters, Hard Rock, Barnes, Phillips, ferry): 0 hits. Uses "water taxi".
+- Exact duplicates vs gr1-gr27 JSON: 0. No in-file duplicates.
+
+## R-043
+Re: P-040
+status: done
+path: content/gr29_misc.json
+commit: b189330d3704b2d7da593bda7b027018235618a6
+Summary:
+- Counts: gang_barks_chase 15, boss_victory_taunts 12, stall_signs 12, tutorial_hints_driving 10, police_radio_chatter 12, harbor_sightseeing_captions 8 (69 total).
+- Max lengths 40/52/32/52/47/49, all within limits (44/56/32/60/48/60); JSON parses.
+- Banned-term grep (Natty, Boh, Utz, Orioles, Ravens, Formstone, IndyCar, Trash Wheel, Poe said, nevermore, crab, Hooters, Hard Rock, Barnes, Phillips, ferry): 0 hits. Uses "water taxi".
+- Exact duplicates vs gr1-gr28 JSON: 0. No in-file duplicates.
+
+## R-044
+Re: P-041
+status: done
+path: content/gr30_misc.json
+commit: b71b454298df7aa4232bbe9b5abab6c528f6a1ea
+Summary:
+- Counts: pedestrian_chatter_rowhouse_street 15, water_taxi_driver_lines 12, paddle_boat_tourist_lines 10, photo_mode_captions 10, chase_escape_success_banners 8, district_welcome_banners 12 (67 total).
+- Max lengths 43/46/41/30/23/30, all within limits (44/48/44/40/32/36); JSON parses.
+- Banned-term grep (Natty, Boh, Utz, Orioles, Ravens, Formstone, IndyCar, Trash Wheel, Poe said, nevermore, crab, Hooters, Hard Rock, Barnes, Phillips, ferry): 0 hits. Uses "water taxi".
+- Exact duplicates vs gr1-gr29 JSON: 0. No in-file duplicates.
+
+## R-045
+Re: P-042
+status: done
+path: content/gr31_misc.json
+commit: 4f2d597e740dca18450fa80c403f7a519a37856f
+Summary:
+- Counts: street_vendor_cries 15, tunnel_traffic_lines 12, taxi_passenger_lines 12, arcade_cabinet_titles 10, rainy_day_ambient_lines 10, game_over_screen_quips 10 (69 total).
+- Max lengths 42/48/42/21/44/39, all within limits (44/48/44/30/44/40); JSON parses.
+- Banned-term grep (Natty, Boh, Utz, Orioles, Ravens, Formstone, IndyCar, Trash Wheel, Poe said, nevermore, crab, Hooters, Hard Rock, Barnes, Phillips, ferry): 0 hits. Uses "water taxi".
+- Exact duplicates vs gr1-gr30 JSON: 0. No in-file duplicates.
+
+## R-046
+Re: P-043
+status: done
+path: content/gr32_misc.json
+commit: bae03e736fc7be5c0bceb0721315264ee5e82814
+Summary:
+- Counts: light_rail_announcements 12, mural_plaques 10, corner_store_menu_boards 12, stoop_porch_talk 12, lost_and_found_notes 8, street_sweeper_and_trash_truck_lines 10 (64 total).
+- Max lengths 45/44/33/44/44/41, all within limits (48/44/36/44/50/44); JSON parses.
+- Banned-term grep (Natty, Boh, Utz, Orioles, Ravens, Formstone, IndyCar, Trash Wheel, Poe said, nevermore, crab, Hooters, Hard Rock, Barnes, Phillips, ferry): 0 hits. Uses "water taxi".
+- Exact duplicates vs gr1-gr31 JSON: 0. No in-file duplicates.
+
+## R-047
+Re: P-044
+status: done
+path: content/gr33_misc.json
+commit: ac2b99b4b36c5e441644dcd01c4c86a2d10e4315
+Summary:
+- Counts: water_taxi_announcements 12, pier_vendor_cries 12, tunnel_toll_booth_lines 10, parking_lot_attendant_lines 10, dog_park_regular_chatter 10, rowhouse_window_signs 10 (64 total).
+- Max lengths 48/40/44/44/44/36, all within limits (48/40/44/44/44/36); JSON parses.
+- Banned-term grep (Natty, Boh, Utz, Orioles, Ravens, Formstone, IndyCar, Trash Wheel, Poe said, nevermore, crab, Hooters, Hard Rock, Barnes, Phillips, ferry): 0 hits. Uses "water taxi".
+- Exact duplicates vs gr1-gr32 JSON: 0. No in-file duplicates.
+
+## R-048 · Re: P-045
+status: done. G3 QA of review/integration-lex filed, overall FAIL on HOMAGE
+path: content/g25_lexington_qa.md
+commit: b29683d
+
+Top findings:
+- BLOCKER: the octagon ships the real HOOTERS wordmark, the ® mark and the owl mascot (03d:247-329, 09l:13-14).
+- BLOCKER: the Hard Rock Cafe logo (03b:246-390). The comment in 03b:86 about a "real-signage rule" conflicts with HOMAGE.md, so Brad has to decide which one wins.
+- MAJOR: other trademark names (M&T, Domino, Under Armour). Pete's eat-off still fails lint (Math.random, PointLight, own materials). The spot popups don't check other modes. The fallback to the temporary Pete anchor is fragile. The Westminster popup may be too wide at 390px.
+
+Self-check:
+- findings: blocker 2 · major 6 · minor 3 (11 total, at most 12)
+- files read: src/03d_lexington.js, src/09l_lexington.js, src/09d_pete.js, src/03b_landmarks_hd.js, src/03_city.js, src/06e_gr1_data.js, src/07b_fullmap.js, site/index.html, README.md, relay/briefs/HOMAGE.md, content/g3_qa_template.md
+- branch: review/integration-lex @ b7c6252 (the snapshot of 017986f; 017986f itself was not fetched with --depth 1)
+- tools: node --check 33/33 OK; tc_lint found 256 ERROR (1 in the new Lexington files); tc_canary found 3/3
+- UNVERIFIED: runtime start and end at the anchor, 390px overlap, draw calls (code-only review, nothing run)
+
+## R-048 — Re: P-045
+status: done (overall FAIL, gate O)
+path: content/g25_lexington_qa.md
+commit: c6b4e52
+Self-check:
+- Findings: 2 blocker / 4 major / 6 minor (12 total)
+- Files read: src/03d_lexington.js, src/09l_lexington.js, src/09d_pete.js, src/03b_landmarks_hd.js, src/06e_gr1_data.js, src/07_main.js, src/07b_fullmap.js, src/03_city.js, site/index.html, relay/briefs/HOMAGE.md, content/g3_qa_template.md
+- Branch: review/integration-lex @ b7c6252 (snapshot of 017986f; the 017986f match is UNVERIFIED)
+- Tools: node --check 33/33 OK; tc_lint exit 1 (256 ERR, 1 in new files; integrated build); tc_canary not run (no strings supplied)
+- Top issue: the octagon draws the real HOOTERS wordmark with ® and its owl, which breaks HOMAGE.md. It needs an original homage.
+
+## R-049
+Re: P-046
+status: done
+path: content/gr34_homage_names.json
+commit: d6c9aa4
+Counts: wing_house_names 12 (max 24/24), wing_house_mascots 8 (max 57/60), wing_house_menu_board_lines 10 (max 35/36), stadium_names 8 (max 24/28), sugar_refinery_names 6 (max 21/28), athletic_gear_landmark_names 6 (max 23/28). JSON parses. Banned-term grep (incl. Hooters, Hard Rock, M&T, Domino, Under Armour, owl as substring): 0 hits. Exact duplicates vs earlier gr packs: 0. No birds of prey; Hard Rock left for Brad.
+
+## R-050 — Re: P-047
+status: done
+path: content/gr35_lexington_text.json
+commit: a6c705a
+Self-check:
+- Counts (max len / limit): market_stall_signs 12 (25/28), market_vendor_barks 12 (43/44), burying_ground_tour_captions 10 (45/52), rash_field_crowd_lines 10 (35/40), octagon_announcer_lines 10 (43/44; start, mid, win, lose), pete_eatoff_taunts 8 (36/40). JSON parses.
+- Banned-term grep, case-insensitive (Natty, Boh, Utz, Orioles, Ravens, Formstone, IndyCar, Trash Wheel, Poe said, nevermore, crab, Hooters, Hard Rock, Barnes, Phillips, ferry, owl as substring, real Lexington Market stall names): 0 hits.
+- Exact duplicates vs gr1-gr34 JSON packs (33 files; gr20 is .md): 0.
+- Burying-ground captions are kid-safe with no real graves or names. All text is original.
+
+## R-051 — Re: P-048
+status: done
+path: content/gr36_tips_achievements.json
+commit: 140e84e
+Self-check:
+- Counts (max len / limit): loading_tips 15 (53/60), tutorial_tips 12 (48/48), achievement_names 15 (19/24), achievement_descriptions 15 (43/48, same order as names), crime_meter_clear_messages 8 (31/40). JSON parses.
+- Banned-term grep, case-insensitive (Natty, Boh, Utz, Orioles, Ravens, Formstone, IndyCar, Trash Wheel, Poe said, nevermore, crab, Hooters, Hard Rock, Barnes, Phillips, ferry, owl as substring, M&T, Domino, Under Armour): 0 hits.
+- Exact duplicates vs gr1-gr35 JSON packs (34 files): 0.
+- All text original; "water taxi" used, never "ferry".
+
+## R-052 — Re: P-049
+status: done
+path: content/gr37_crowd_drone_gp.json
+commit: f2c0dea
+Self-check:
+- Counts (max len / limit): celebration_crowd_lines 12 (36/36), drone_sightseeing_captions 12 (50/52), grand_prix_announcer_lines 12 (39/44; start, lap, pass, crash, win), credits_lines 10 (40/40). JSON parses.
+- Banned-term grep, case-insensitive (Natty, Boh, Utz, Orioles, Ravens, Formstone, IndyCar, Trash Wheel, Poe said, nevermore, crab, Hooters, Hard Rock, Barnes, Phillips, ferry, owl as substring, M&T, Domino, Under Armour): 0 hits.
+- Exact duplicates vs gr1-gr36 JSON packs (35 files): 0.
+- All text original, no real brands or people; "water taxi" used, never "ferry".
+
+## R-053 — Re: P-050
+status: done
+path: content/g14_regression_qa.md
+commit: 03fc202
+Self-check:
+- All 7 modes covered: Fort, Bobby derby, Big Jimmy, Chip Kid, Arabber Al, Duchess, Vic.
+- Checks: 49 in total (start, win, lose, retry, mobile 390, controls, softlock for each mode). 41 PASS, 3 FAIL, 5 UNTESTED.
+- Method: headless Chromium/Playwright on a worktree of review/integration-lex @ b7c6252.
+- Every mode was won and lost, and retry worked in every mode. No softlocks, no page errors, `__celErr` 0.
+- Bugs by severity: blocker 0, major 0, minor 4, note 1.
+  - B1: the ?rb= start leaves the city intro card over the Al/Duchess fights at 390 (07_main.js:211).
+  - B2: the Jimmy camera is jammed against the boss at 390.
+  - B3: vicbars=4 can't be won.
+  - B4: the Vic HUD label overlaps the sign.
+  - B5: rbauto ignores the retry taps.
+
+## R-054 — Re: P-051
+status: done
+path: content/g15_new_boss_qa.md
+commit: b00d18b
+Self-check:
+- All 3 modes covered: Chef Crabcake, Pool Shark, Stoop Scrubber. Also the Power Plant AMP HOUSE signage and ?goto=lexington (Pete line, LEX_ANCHOR, __pete).
+- Method: headless Chromium/Playwright on a worktree of review/integration-1759052 @ 1a7f1e5.
+- Cells: 26 in total. 22 PASS, 0 FAIL, 4 UNTESTED (ACT-ring city entry ×3, Scrubber controls).
+- Win, lose and retry were bot-verified in every mode. No softlocks, no page errors, `__celErr` 0. Nothing overflows at 390.
+- There's no Hard Rock name, roundel, guitar or motto in src/ or site/game.js.
+- The G14 controls cells stay UNTESTED because this build has no key log.
+- Bugs by severity: blocker 0, major 0, minor 0, note 2.
+  - N1: real Phillips and Barnes & Noble names on the Power Plant atlas (03b_landmarks_hd.js:283/317).
+  - N2: Pool Shark D-key direction not checked on screen.
+
+## R-055 — Re: P-052
+status: done
+path: content/g16_wave2_boss_qa.md
+commit: a0ca53e
+Self-check:
+- All 7 modes covered: Kingpin Carl, Riptide Rodney, Raven King, Compression King, Hon Queen, Shellacious, Sugar Rush.
+- Method: headless Chromium/Playwright on a worktree of review/integration-4d14075 @ 0857471. Every command was capped at 120 s, using the auto-win/lose and phase/HP hooks.
+- Cells: 56 in total. 39 PASS, 1 FAIL, 16 UNTESTED (ACT-ring city entry ×7, controls ×7, Shellacious lose+retry: HP drained, but the lose screen didn't appear within the cap).
+- Win was bot-verified in all 7 modes. Lose and retry were bot-verified in 6. No softlocks, no page errors, `__celErr` 0. At 390 only one element overflows (B1).
+- Signage: UNDER ARMOUR sign (09q_compking.js:39/54; the header cites a DESIGN.md real-signage rule from 2026-10-11, so this needs a policy call), Domino Sugars script (09o_sugarrush.js:81), and M&T STADIUM / NEVERMORE (09v_ravenking.js:126/199/207). Carl, Rodney, Shellacious and Hon Queen are clean.
+- Bugs by severity: blocker 0, major 0, minor 1, note 4.
+  - B1: the Compression King tell box overflows to -32..422 at 390 (09a_duel_core.js:41, nowrap).
+  - N1–N3: the real-brand signage above.
+  - N4: honqueenhp still allows second wind.
+
+## R-056 — Re: P-053
+status: done
+path: content/g17_fishing_poe_qa.md
+commit: e31e28b
+Self-check:
+- Both modes covered: Harbor fishing + Chompy (09x), Poe stealth night (09y).
+- Method: headless Chromium/Playwright on a worktree of review/integration-4e2f8d0 @ 3115282, with a 120 s cap per command and the fishauto/poeauto hooks.
+- Cells: 18 in total. 13 PASS, 1 FAIL, 4 UNTESTED (controls ×2, ring entry ×2).
+- Win, lose and retry were bot-verified in both modes. No softlocks or page errors. Nothing overflows at 390.
+- The ghost lantern was guaranteed on the first night cast at Broadway. The fishing and Poe saves survive a reload. The feather gate is false on a fresh profile and true after a clear.
+- Signage: fishing is clean. Poe's "NEVERMORE FEATHER" uses a banned term (N1).
+- Bugs by severity: blocker 0, major 1, minor 0, note 3.
+  - B1: Chompy's cane/purse upgrade is lost for good when a fish or crab crosses the threshold (09x_fishing.js:195; reproduced at chompy 98 → 102, cane stayed false).
+  - N1: NEVERMORE in the feather name.
+  - N2: any ?duel/?feather param bypasses the feather gate (09y_poe.js:20).
+  - N3: the Poe win bot runs with detection off, so stealth wasn't covered.
+
+## R-057 — Re: P-054
+status: done
+path: content/gr38_fishing_poe_phantoms.json
+commit: 61aef6d
+Self-check:
+- Counts:
+  - catch_lines: 40 (5 rings × day/night × 4). Each line is tagged with ring, time and kind. The GHOST LANTERN is at Broadway night. The SUNKEN KEY appears twice, at p3 night and Broadway day.
+  - chompy_barks: 12.
+  - poe_night_lines: 20 (crow_caught 4, rose_picked 4, bottle 3, gate 3, win 3, lose 3).
+  - phantoms_barks: 25.
+  - phantom_leader: 6 intro/taunt/defeat triples for the original leader "Captain Driftwick".
+- Feather name: "Midnight Quill" (no NEVERMORE).
+- Max line length is 46, under the 60 limit. JSON parses.
+- Banned-term grep, case-insensitive (the R-052 list plus Old Bay, Oriole Bird, Domino, Under Armour): 0 hits. I left "crab" off the list because the spec asks for crab catches.
+- Exact duplicates vs earlier gr*.json packs: 0.
+- Everything is original per HOMAGE.md: no real people, mascots or brands. "Water taxi" is used, never "ferry". "Poe" isn't used in any line, and Poe's grave only appears as "the poet".
+
+## R-058 — Re: P-055
+status: done
+path: content/g18_design_balance_review.md
+commit: 2981c72
+Self-check:
+- Sources: DESIGN.md isn't on review/integration-4e2f8d0, so I used relay/briefs/DESIGN.md, plus HOMAGE.md, g3_qa_template.md and src @ 3115282.
+- Sections covered: 4/4.
+  - Bosses: all 21 roster entries.
+  - Fishing.
+  - Poe night.
+  - Districts/world.
+- Gaps:
+  - 16 missing. The biggest: the Penthouse Pigeon mode, the One-Eyed Brewmaster final boss, the crime HUD + win state, the Cobblestone lantern gate, the Phantoms city gang, the sewer stash and the purse effect.
+  - 7 built but not documented.
+  - 2 mismatches: the day/night cycle is 2 min vs 5 min, and Carl's district id.
+  - 6 balance concerns.
+- The top 10 is ranked by impact, with file:line on each.
+  1. Chompy threshold bug (09x_fishing.js:195).
+  2. Brewmaster final boss.
+  3. Crime HUD/win state (06g0_boss_clear.js:3-10).
+- Correction: the DESIGN.md real-signage rule (2026-10-11) allows real sign wording, so G16 N1–N3 (UNDER ARMOUR, Domino, M&T) follow the spec. HOMAGE.md covers characters only. "Nevermore Feather" is DESIGN's own name. Please confirm the banned list is for writing packs only.
+
+## R-059 — Re: P-056
+status: done
+path: content/g19_finale_qa.md
+commit: d414b27
+Self-check:
+- Method: headless Chromium/Playwright on a worktree of review/integration-455f159 @ 1565aba, with a 120 s cap per command.
+- Desktop runs were 320x180, not 1280x720, because the box was under heavy load. Mobile runs were 390x844.
+- Cells: 16 in total (4 modes × 2 viewports × win/lose). 12 PASS, 0 FAIL, 4 UNTESTED (Brew 390 lose, Pigeon 390 lose, Carl/Rodney desktop).
+- Brewmaster: part 1→2→3 transitions, retry at the part reached, clear `brewery` plus the `tcb:finale` event, exactly 1 KO replay.
+- Pigeon: part 1 climb → ground → harbor splash KO, clear `wtc`, lose and retry in both parts.
+- JUICE: exactly 1 replay per final blow on Chip Kid, Compression King, Pigeon and Brewmaster (Carl/Rodney use the fallback). At 390 everything stays in the viewport.
+- No page errors.
+- Bugs by severity: blocker 0, major 0, minor 2, note 3.
+  - B1: the replay orbit camera clips through geometry (09aj_juice.js:158-159).
+  - B2: ?duel=carl&duelbot runs at 1x speed (09k_carl.js:415).
+  - N1: brewmasterhp doesn't make the part 1 lose quick.
+  - N2: no `tcb:finale` listener.
+  - N3: Rodney's WIN card is slow after the replay.
+- G18 gaps closed: Pigeon mode, Brewmaster 3 parts, Carl's Mavis bonus frame (code only).
+
+## R-060 — Re: P-057
+status: done
+path: content/g20_latest_qa.md
+commit: c5f7ff3
+Self-check:
+- Method: headless Chromium/Playwright on a worktree of review/integration-769bc08 @ cbd2936, with a 120 s cap per command. Desktop was 640x360. Boot was checked at 390x844 and 1280x720 (1280 worked first try).
+- Correction to R-059: the G19 table was 10 PASS / 6 UNTESTED, not 12/4. G20 closes all 6, so the matrix is now 16/16 PASS.
+- Retests:
+  - JUICE replay camera at 390: FIXED.
+  - Compression King tell box at 390: FIXED.
+  - Chompy cane (98→102) and purse (238→244): both unlock and persist after reload. FIXED.
+- Chip Kid:
+  - The 390 overflow and the HOMAGE kid risk are closed.
+  - Mash still wins, with grade A vs S. That's by design under the "easily beaten" brief.
+  - Lose and retry work, with 1 replay on the KO.
+- City boot: 0 own errors at 390 and 1280. The Brewmaster ACT label reads "BREWMASTER: N LEFT" → FIGHT → REMATCH (code read).
+- Bugs by severity: blocker 0, major 0, minor 2, note 3.
+  - N1: the purse upgrade has no effect.
+  - N2: save.casts isn't saved on cast (09x_fishing.js:211).
+  - N3: a ckpop off-edge at 390.
+  - N4: Rodney's WIN card is late.
+  - N5: mash wins Chip Kid (please confirm this is intended).
+
+## R-061 — Re: P-058
+status: done
+path: content/g21_phantoms_qa.md
+commit: 4ece87e
+Self-check:
+- Method: headless Chromium/Playwright on a worktree of review/integration-59933ee @ 13654c2, with a 120 s cap per command. Viewports were 390x844 and 640x360 (desktop), plus a 1280x720 boot.
+- Cells: 18 in total. 15 PASS, 3 FAIL, 0 UNTESTED.
+- Phantoms:
+  - Win, lose and retry pass at 390 and at 640, with 1 replay on the final KO.
+  - The cleared flag survives a reload.
+  - Can't be cheesed without the lantern.
+  - The 3 waves are distinct, and the lantern toggle is readable.
+  - HOMAGE is clean: original pirate-ghost names and no franchise names.
+- Fishing and Poe at 390: win, lose and retry all pass. The Chompy cane fix holds.
+- Casts persist (G20 N2): still OPEN (2 before reload → 1 after).
+- City boot: 0 own errors at 390 and 1280. The Phantoms ring is NOT night-only: it shows by day (09z_phantoms.js:288 has no night check).
+- Bugs by severity: blocker 0, major 0, minor 3, note 3.
+  - B1: the HUD line runs together at 390 (09z:135).
+  - B2: the ring shows by day.
+  - N1: casts aren't saved on cast.
+  - N2: retry is logged twice (09z:142).
+  - N3: the purse still has no effect.
+  - N4: the JUICE fallback replay plays on fishing and Poe wins.
+
+## R-062 — Re: P-059
+status: done
+path: content/g22_finale_qa.md
+commit: ba93c5a
+Self-check:
+- Method: headless Chromium/Playwright on a worktree of review/integration-4ff78b9 @ f18b22a, with a 120 s cap per command. Viewports were 390x844 and 640x360 (desktop), plus a 1280 boot.
+- Cells: 17 in total. 14 PASS, 1 FAIL, 2 UNTESTED.
+- Finale:
+  - dock → card → credits → city runs at both sizes with 0 errors.
+  - Text fits at 390. CITY SAVED · CRIME 0% and the drone unlock survive a reload.
+  - The credits list 19 bosses + the Brewmaster + 44 tracks, but Dragon Boat Duchess is missing (B1).
+- Drone: V/Esc enter and exit at both sizes. The ground and ceiling clamps and the XZ bounds hold, so you can't get stuck or fall out.
+- Cobblestone by day: the storm intro, then a win at both sizes, with 1 replay. Daylight comes back after exit. Lose + retry is UNTESTED (>100 s, no hp hook).
+- City boot: 0 own errors at 390 and 1280.
+- G21 retests: B1 HUD, B2 day ring, N1 casts, N2 duplicate retry, N3 purse and N4 side-mission replay are all still OPEN.
+- New bugs by severity: blocker 0, major 0, minor 2, note 4.
+  - B1: Duchess missing from the credits (09z_finale.js:296).
+  - B2: the radio card shows over the dock at 390.
+  - N1: the auto drone doesn't land.
+  - N2: no cobblestonehp hook.
+  - N3: the drone has no building collision.
+  - N4: the P1 chip covers the area label at 390.

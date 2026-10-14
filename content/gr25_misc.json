@@ -1,0 +1,83 @@
+{
+  "loading_screen_tips": [
+    "Hop a water taxi to cross the harbor fast.",
+    "Rowhouse stoops make great spots to catch your breath.",
+    "Gulls steal snacks. Keep your fries close.",
+    "Clear a district to lower its crime meter for good.",
+    "Pit stops on the harbor circuit save precious seconds.",
+    "Drones see more from above the rooftops.",
+    "Market stalls restock every in-game morning.",
+    "Fishing at dusk pulls in the rarest catches.",
+    "Talk to locals twice. Some have a second tip.",
+    "Cobblestones are slick in the rain. Brake early.",
+    "Night brings out the Phantoms. Carry a lantern.",
+    "Spend coins at the market for better gear.",
+    "The octagon crowd cheers louder for clean wins.",
+    "Row the inner harbor for hidden collectibles.",
+    "Check the map often. New spots open after bosses."
+  ],
+  "achievement_names": [
+    "Harbor Hopper",
+    "Stoop Sitter",
+    "Gull Wrangler",
+    "Pit Perfect",
+    "Sky Scout",
+    "Market Regular",
+    "Dusk Angler",
+    "Phantom Chaser",
+    "Octagon Champ",
+    "Clean Streets",
+    "Local Legend",
+    "Credits Crasher"
+  ],
+  "achievement_descriptions": [
+    "Ride the water taxi to every stop.",
+    "Rest on ten different rowhouse stoops.",
+    "Shoo away fifty snack-stealing gulls.",
+    "Finish a pit stop in under three seconds.",
+    "Fly a drone over every district.",
+    "Buy something from every market stall.",
+    "Catch a rare fish after sundown.",
+    "Send five Phantoms packing in one night.",
+    "Win the octagon without taking a hit.",
+    "Bring every crime meter down to zero.",
+    "Help every local with their errands.",
+    "Watch the end credits all the way through."
+  ],
+  "end_credit_lines": [
+    "Thanks to every stoop sitter who waved.",
+    "Thanks to the gulls. We forgive you.",
+    "Cheers to the stall keepers, hon.",
+    "Big thanks to the water taxi crew.",
+    "Thanks to the pit crew for fast hands.",
+    "To the neighbors who lent us a lawn chair.",
+    "Thanks to the corner store for the snacks.",
+    "To the anglers who shared their spots.",
+    "Thanks to the octagon crowd for the noise.",
+    "And thanks to you for playing, hon."
+  ],
+  "crime_meter_clear_messages": [
+    "District cleared. The stoops are safe again.",
+    "Crime meter zero. Neighbors wave you by.",
+    "All clear. Porch lights are back on.",
+    "This block is clean. Take a bow.",
+    "District secured. The corner store reopens.",
+    "Streets are quiet. Nice work out there.",
+    "Meter's empty. Kids are back outside.",
+    "Cleared! The whole block owes you a soda."
+  ],
+  "celebration_crowd_lines": [
+    "That's our hero right there!",
+    "Whole block's cheering for you!",
+    "Somebody get this one a parade!",
+    "You did it, hon! You really did!",
+    "Best day this harbor's ever had!",
+    "Honk if you love a clean street!",
+    "Ring the bells down at the pier!",
+    "Three cheers for the new champ!",
+    "Encore! Encore! Do it again!",
+    "Tell your mother, you're a legend!",
+    "Lawn chairs up, everybody, cheer!",
+    "Now that's how we do it here!"
+  ]
+}
