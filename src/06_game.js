@@ -58,7 +58,7 @@ const ALL = [hero, partner, ...enemies];
 // beyond 24 m a thug drops its ink outlines and stops casting shadows
 for (const f of ALL) { f.J.ol = []; f.J.sh = []; f.root.traverse((o) => { if (o.isMesh && o.material && o.material.isShaderMaterial && o.material.side === THREE.BackSide) f.J.ol.push(o); else if (o.isMesh && o.castShadow) f.J.sh.push(o); }); f.lodNear = true; }
 function rigLod() {
-  for (const e of enemies) { const near = (e.pos.x - hero.pos.x) ** 2 + (e.pos.z - hero.pos.z) ** 2 < 24 * 24;
+  for (const e of enemies) { const near = (e.pos.x - hero.pos.x) ** 2 + (e.pos.z - hero.pos.z) ** 2 < 24 * 24 || (COOP.on && (e.pos.x - partner.pos.x) ** 2 + (e.pos.z - partner.pos.z) ** 2 < 24 * 24);
     if (near === e.lodNear && e.lodHd === QUAL.hd) continue; e.lodNear = near; e.lodHd = QUAL.hd;
     for (const o of e.J.ol) o.visible = near && QUAL.hd; for (const o of e.J.sh) o.castShadow = near; }
 }
@@ -149,7 +149,8 @@ function readInput() {
   if (TOUCHS.btn.l) look -= 1; if (TOUCHS.btn.r) look += 1;
   const pads = navigator.getGamepads ? navigator.getGamepads() : []; IN.padAct = false;
   for (const gp of pads) {
-    if (!gp) continue; const dz = (v) => (Math.abs(v) < 0.18 ? 0 : v);
+    if (!gp) continue; if (COOP.padRole(gp) !== 'p1') continue; // co-op (06cc): a joined Player 2 pad drives Mavis, not Harold
+    const dz = (v) => (Math.abs(v) < 0.18 ? 0 : v);
     mx += dz(gp.axes[0] || 0); my -= dz(gp.axes[1] || 0); look += dz(gp.axes[2] || 0); lookY += dz(gp.axes[3] || 0);
     const b = (i) => !!(gp.buttons[i] && gp.buttons[i].pressed);
     if (b(4)) look -= 1; if (b(5)) look += 1;
@@ -173,7 +174,9 @@ function segBox(ax, ay, az, bx, by, bz, b, pad) { // param t of the first hit of
   return t0;
 }
 let lockT = null;
-function updateCamera(dt, rdt) {
+function updateCamera(dt, rdt) { updateCameraFor(CAM, camera, hero, IN, lockT, dt, rdt); }
+// the follow camera, for any toad + camera (single player: CAM / camera / Harold; split-screen co-op also runs it for Mavis on a 2nd camera)
+function updateCameraFor(CAM, camera, hero, IN, lockT, dt, rdt) {
   // orbit input
   CAM.yaw -= IN.look * rdt * 2.3; CAM.yaw -= IN.dragX * 0.0062; CAM.pitch = clamp(CAM.pitch + IN.dragY * 0.0035 + IN.lookY * rdt * 1.4, 0.02, 0.9); IN.dragX = IN.dragY = 0;
   const p = hero.pos; const fighting = lockT && lockT.alive && lockT.state !== 'dying';
@@ -194,7 +197,7 @@ function updateCamera(dt, rdt) {
   const tgt = _v.set(p.x, p.y + 1.55 + hero.y * 0.45, p.z);
   if (fighting) { tgt.x += (lockT.pos.x - p.x) * 0.25; tgt.z += (lockT.pos.z - p.z) * 0.25; }
   CAM.pivot.x = damp(CAM.pivot.x, tgt.x, 9, rdt); CAM.pivot.z = damp(CAM.pivot.z, tgt.z, 9, rdt); CAM.pivot.y = damp(CAM.pivot.y, tgt.y, 6, rdt);
-  const portrait = VH() > VW() * 1.15;
+  const aspect = CAM.aspect || VW() / VH(), portrait = aspect < 1 / 1.15;
   const want = lerp(4.4, 5.9, fk) + (portrait ? 1.4 : 0);
   CAM.dist = damp(CAM.dist, want, 2.5, rdt);
   const pitch = CAM.pitch + fk * 0.12;
@@ -216,10 +219,10 @@ function updateCamera(dt, rdt) {
   camera.position.copy(CAM.pos);
   if (S.shake > 0) { S.shake = Math.max(0, S.shake - rdt * 3); const k = S.shake * S.shake * 0.25; camera.position.x += rnd(-k, k); camera.position.y += rnd(-k, k); }
   camera.up.set(0, 1, 0); camera.lookAt(CAM.look);
-  setFov(lerp(58, 62, fk));
+  setFov(lerp(58, 62, fk), camera, aspect);
 }
-function setFov(base) { // wider in portrait so the street still fits
-  const aspect = VW() / VH(); let fov = base; if (aspect < 1) fov = clamp(2 * Math.atan(Math.tan((base * 0.82 / 2) * Math.PI / 180) / aspect) * 180 / Math.PI, base, 84);
+function setFov(base, cam = camera, aspect = CAM.aspect || VW() / VH()) { // wider in portrait so the street still fits
+  const camera = cam; let fov = base; if (aspect < 1) fov = clamp(2 * Math.atan(Math.tan((base * 0.82 / 2) * Math.PI / 180) / aspect) * 180 / Math.PI, base, 84);
   if (Math.abs(camera.fov - fov) > 0.05) { camera.fov = fov; camera.updateProjectionMatrix(); }
 }
 
