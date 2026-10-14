@@ -1,0 +1,135 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<script src="../../demo-embed.js"></script>
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,maximum-scale=1,minimum-scale=1,user-scalable=no">
+<meta name="theme-color" content="#14101f">
+<title>Toad City: Dead Streets</title>
+<meta name="description" content="A twin-stick zombie horde run through Toad City Baltimore's Inner Harbor: Harold and Mavis fight from W Pratt St to the water taxi at Broadway Pier.">
+<style>
+  html, body { margin: 0; height: 100%; overflow: hidden; background: #14101f; touch-action: none; overscroll-behavior: none; position: fixed; width: 100%; -webkit-user-select: none; user-select: none; -webkit-touch-callout: none; }
+  body { font-family: Impact, "Arial Black", "Helvetica Neue", Arial, system-ui, sans-serif; color: #fff; letter-spacing: .5px; }
+  #gl { position: fixed; left: 0; top: 0; width: 100vw; height: 100vh; height: 100dvh; display: block; outline: none; cursor: crosshair; }
+  .ink { text-shadow: 2px 2px 0 #14101f, -1px -1px 0 #14101f, 1px -1px 0 #14101f, -1px 1px 0 #14101f; }
+  #hud { position: fixed; left: 0; right: 0; top: 0; padding: calc(env(safe-area-inset-top, 0px) + 8px) 10px 0; z-index: 10; pointer-events: none; display: none; }
+  body.playing #hud { display: block; }
+  #hud .row { display: flex; align-items: center; gap: 7px; }
+  .chip { background: rgba(20,16,31,.82); border: 2px solid #14101f; box-shadow: 3px 3px 0 rgba(20,16,31,.55); border-radius: 9px; padding: 5px 9px; font-size: 15px; line-height: 1; white-space: nowrap; }
+  #hp { position: relative; flex: 0 1 220px; min-width: 110px; height: 22px; background: #14101f; border: 2px solid #14101f; border-radius: 8px; box-shadow: 3px 3px 0 rgba(20,16,31,.55); overflow: hidden; }
+  #hpF { position: absolute; left: 0; top: 0; bottom: 0; width: 100%; background: linear-gradient(#7dff6b, #3fbf3a); transition: width .12s; }
+  #hp.low #hpF { background: linear-gradient(#ff6a7a, #d23a3a); animation: blink .35s infinite alternate; }
+  #hp span { position: absolute; left: 8px; top: 3px; font-size: 14px; color: #fff; text-shadow: 1px 1px 0 #14101f; }
+  #hp span::before { content: "♥ "; color: #ff5f7a; }
+  #score { margin-left: auto; font-size: 20px; color: #ffd23c; }
+  .chip.k { color: #c8f070; } .chip.k::before { content: "KILLS "; color: #fff; font-size: 11px; }
+  .chip.h { color: #ff8a9a; } .chip.h::before { content: "HORDE "; color: #fff; font-size: 11px; }
+  #objrow { margin-top: 7px; }
+  #obj { background: #ffd23c; color: #14101f; transform: rotate(-1.5deg); white-space: normal; max-width: 70vw; line-height: 1.05; }
+  #objT { color: #7fe8ff; font-size: 18px; }
+  #prog { position: relative; height: 8px; margin: 8px 2px 0; background: rgba(20,16,31,.7); border: 2px solid #14101f; border-radius: 6px; max-width: 460px; }
+  #prog i { position: absolute; top: -1px; width: 6px; height: 6px; margin-left: -3px; background: #7dff6b; border-radius: 2px; }
+  #progMe { position: absolute; top: -5px; width: 12px; height: 12px; margin-left: -6px; background: #ff3d6e; border: 2px solid #14101f; border-radius: 50%; }
+  #boss { position: fixed; left: 50%; top: calc(env(safe-area-inset-top, 0px) + 112px); transform: translateX(-50%); width: min(420px, 80vw); z-index: 11; pointer-events: none; display: none; text-align: center; font-size: 13px; letter-spacing: 2px; }
+  body.bossOn.playing #boss { display: block; }
+  #boss .bar { height: 14px; background: #14101f; border: 2px solid #14101f; border-radius: 6px; overflow: hidden; margin-top: 3px; box-shadow: 3px 3px 0 rgba(20,16,31,.55); }
+  #bossF { height: 100%; width: 100%; background: linear-gradient(#ff8a3d, #d23a3a); }
+  #wpn { position: fixed; left: 50%; bottom: calc(env(safe-area-inset-bottom, 0px) + 12px); transform: translateX(-50%); z-index: 14; display: none; gap: 6px; align-items: center; pointer-events: auto; cursor: pointer; }
+  body.playing #wpn { display: flex; }
+  #wpn .chip { font-size: 15px; } #wName { color: #ffd23c; } #wpn.low #wAmmo { color: #ff5f7a; animation: blink .3s infinite alternate; }
+  .chip.bm::before { content: ""; display: inline-block; width: 9px; height: 12px; background: #d23a3a; border: 2px solid #ffd23c; border-radius: 3px; margin-right: 5px; vertical-align: -2px; }
+  .chip.sc::before { content: "SCRAP "; color: #c8c8d0; font-size: 11px; }
+  @keyframes blink { from { opacity: 1; } to { opacity: .5; } }
+  #hint { position: fixed; left: 50%; bottom: calc(env(safe-area-inset-bottom, 0px) + 58px); transform: translateX(-50%); z-index: 14; background: #ffd23c; color: #14101f; border: 2px solid #14101f; border-radius: 9px; padding: 6px 10px; font-size: 14px; box-shadow: 3px 3px 0 #14101f; pointer-events: none; display: none; white-space: nowrap; }
+  #combo { position: fixed; right: 12px; top: calc(env(safe-area-inset-top, 0px) + 150px); z-index: 12; font-size: 22px; color: #c8f070; transform: rotate(4deg); opacity: 0; transition: opacity .2s; pointer-events: none; }
+  #combo.on { opacity: 1; }
+  #pops { position: fixed; inset: 0; pointer-events: none; z-index: 12; overflow: hidden; }
+  .pop { position: absolute; left: 0; top: 0; font-size: 16px; color: #fff; white-space: nowrap; text-shadow: 2px 2px 0 #14101f, -2px -2px 0 #14101f, 2px -2px 0 #14101f, -2px 2px 0 #14101f; }
+  .pop.gold { color: #ffd23c; font-size: 19px; } .pop.bad { color: #ff5f7a; }
+  #ban { position: fixed; left: 50%; top: 34%; transform: translate(-50%,-50%) rotate(-4deg) scale(.7); font-size: 42px; color: #c8f070; text-align: center; line-height: 1.05; opacity: 0; transition: opacity .15s, transform .15s; z-index: 13; pointer-events: none; white-space: nowrap;
+    text-shadow: 3px 3px 0 #14101f, -2px -2px 0 #14101f, 2px -2px 0 #14101f, -2px 2px 0 #14101f, 6px 7px 0 #5a2a6a; }
+  #ban.on { opacity: 1; transform: translate(-50%,-50%) rotate(-4deg) scale(1); }
+  #ban small { display: block; font-size: 15px; color: #fff; margin-top: 6px; letter-spacing: 2px; text-shadow: 2px 2px 0 #14101f; }
+  #say { position: fixed; left: 50%; top: calc(env(safe-area-inset-top, 0px) + 150px); transform: translateX(-50%); max-width: min(340px, 84vw); background: #fff8e6; color: #14101f; border: 3px solid #14101f; box-shadow: 4px 4px 0 #14101f;
+    border-radius: 14px; padding: 7px 12px 8px; font: 700 14px/1.3 "Comic Sans MS", "Chalkboard SE", "Trebuchet MS", system-ui, sans-serif; opacity: 0; transition: opacity .2s; z-index: 13; pointer-events: none; text-align: center; }
+  #say.on { opacity: 1; } #say b { display: block; font: 900 10px/1 Impact, "Arial Black", sans-serif; color: #5a2a6a; letter-spacing: 1px; margin-bottom: 3px; }
+  #vign { position: fixed; inset: 0; pointer-events: none; z-index: 9; opacity: 0; transition: opacity .3s; }
+  #card { position: fixed; inset: 0; display: none; align-items: center; justify-content: center; z-index: 30; background: rgba(20,16,31,.5); }
+  #card.on { display: flex; }
+  #card .box { width: min(460px, 90vw); background: #fff8e6; color: #14101f; border: 4px solid #14101f; box-shadow: 8px 8px 0 #14101f; border-radius: 16px; padding: 18px 18px 16px; text-align: center; transform: rotate(-1deg);
+    background-image: radial-gradient(rgba(20,16,31,.09) 1.2px, transparent 1.4px); background-size: 7px 7px; }
+  #cardT { font-size: 34px; line-height: 1; color: #5a8a2a; text-shadow: 2px 2px 0 #14101f; } #cardT small { display: block; font-size: 13px; color: #14101f; text-shadow: none; letter-spacing: 3px; margin-top: 6px; }
+  #cardB { font: 600 15px/1.45 "Trebuchet MS", "Helvetica Neue", Arial, system-ui, sans-serif; margin: 12px 0 14px; } #cardB p { margin: 6px 0; } #cardB b { font-family: Impact, "Arial Black", sans-serif; font-weight: normal; font-size: 18px; }
+  #cardB .tip { font-size: 13px; color: #4a3a5a; } .gold { color: #b8860b; font-weight: 800; } .bad { color: #d23a3a; font-weight: 800; }
+  body.touch #cardB .kb { display: none; } body:not(.touch) #cardB .tc { display: none; }
+  .res { display: grid; grid-template-columns: 1fr 1fr; gap: 4px 12px; margin: 4px 0 10px; text-align: left; font-size: 13px; } .res b { float: right; }
+  .btn { font: 21px Impact, "Arial Black", sans-serif; letter-spacing: 1px; padding: 12px 20px; border-radius: 12px; border: 3px solid #14101f; box-shadow: 4px 4px 0 #14101f; background: #c8f070; color: #14101f; cursor: pointer; touch-action: manipulation; margin: 4px; }
+  .btn:active { transform: translate(3px,3px); box-shadow: 1px 1px 0 #14101f; } .btn.b2 { background: #cfc8ef; }
+  #title { position: fixed; inset: 0; z-index: 25; display: none; flex-direction: column; align-items: center; justify-content: center; gap: 12px; text-align: center; background: linear-gradient(rgba(20,16,31,.1), rgba(20,16,31,.6)); }
+  #title.on { display: flex; }
+  #title h1 { margin: 0; font-size: clamp(40px, 11vw, 100px); line-height: .9; color: #c8f070; transform: rotate(-5deg); text-shadow: 4px 4px 0 #14101f, -3px -3px 0 #14101f, 3px -3px 0 #14101f, -3px 3px 0 #14101f, 8px 9px 0 #5a2a6a; font-weight: normal; }
+  #title h1 span { display: block; color: #fff; font-size: .4em; letter-spacing: 4px; }
+  #title .sub { font: 700 15px/1.4 "Trebuchet MS", Arial, system-ui, sans-serif; background: rgba(20,16,31,.8); padding: 8px 14px; border-radius: 10px; max-width: 86vw; }
+  #title .ctl { font: 600 13px/1.5 "Trebuchet MS", Arial, system-ui, sans-serif; color: #efe9d8; background: rgba(20,16,31,.72); padding: 8px 12px; border-radius: 10px; max-width: 86vw; }
+  #title .ctl b { color: #c8f070; } body.touch #title .kb { display: none; } body:not(.touch) #title .tc { display: none; }
+  #best { color: #ffd23c; font-size: 16px; }
+  #joyL, #joyR, .tb { position: fixed; z-index: 15; display: none; touch-action: none; }
+  body.touch.playing #joyL, body.touch.playing #joyR, body.touch.playing .tb { display: block; }
+  #joyL, #joyR { bottom: calc(env(safe-area-inset-bottom, 0px) + 22px); width: 132px; height: 132px; border-radius: 50%; background: rgba(20,16,31,.38); border: 3px solid rgba(255,255,255,.35); }
+  #joyL { left: calc(env(safe-area-inset-left, 0px) + 16px); } #joyR { right: calc(env(safe-area-inset-right, 0px) + 16px); border-color: rgba(255,120,120,.5); }
+  #joyL::after, #joyR::after { position: absolute; bottom: -16px; left: 50%; transform: translateX(-50%); font-size: 10px; opacity: .75; } #joyL::after { content: "MOVE"; } #joyR::after { content: "AIM + FIRE"; white-space: nowrap; }
+  #knobL, #knobR { position: absolute; left: 50%; top: 50%; width: 54px; height: 54px; border-radius: 50%; border: 3px solid #14101f; box-shadow: 3px 3px 0 #14101f; transform: translate(-50%,-50%); }
+  #knobL { background: #c8f070; } #knobR { background: #ff5f7a; }
+  .tb { width: 58px; height: 58px; border-radius: 50%; border: 3px solid #14101f; box-shadow: 3px 3px 0 #14101f; color: #14101f; font-size: 11px; text-align: center; line-height: 52px; }
+  .tb.dn { transform: translate(2px,2px); box-shadow: 1px 1px 0 #14101f; }
+  #bBuild { right: calc(env(safe-area-inset-right, 0px) + 160px); bottom: calc(env(safe-area-inset-bottom, 0px) + 30px); background: #ffd23c; }
+  #bBomb { right: calc(env(safe-area-inset-right, 0px) + 150px); bottom: calc(env(safe-area-inset-bottom, 0px) + 100px); background: #ff8a3d; }
+  #bShove { right: calc(env(safe-area-inset-right, 0px) + 92px); bottom: calc(env(safe-area-inset-bottom, 0px) + 166px); background: #7fe8ff; }
+  #bSwap { right: calc(env(safe-area-inset-right, 0px) + 20px); bottom: calc(env(safe-area-inset-bottom, 0px) + 174px); background: #cfc8ef; }
+  body.touch #wpn { left: calc(env(safe-area-inset-left, 0px) + 10px); transform: none; bottom: calc(env(safe-area-inset-bottom, 0px) + 172px); flex-direction: column; align-items: flex-start; }
+  body.touch #hint { bottom: calc(env(safe-area-inset-bottom, 0px) + 236px); }
+  #ctlbar { position: fixed; z-index: 16; right: calc(env(safe-area-inset-right, 0px) + 10px); top: calc(env(safe-area-inset-top, 0px) + 74px); display: none; gap: 6px; flex-direction: column; align-items: flex-end; }
+  body.playing #ctlbar { display: flex; }
+  #ctlbar button { font: 12px Impact, "Arial Black", sans-serif; letter-spacing: 1px; padding: 7px 10px; border-radius: 8px; border: 2px solid #14101f; background: rgba(255,248,230,.92); color: #14101f; box-shadow: 2px 2px 0 #14101f; cursor: pointer; touch-action: manipulation; }
+  #keys { position: fixed; right: 10px; bottom: 10px; z-index: 13; font: 600 11px/1.5 "Trebuchet MS", Arial, system-ui, sans-serif; background: rgba(20,16,31,.7); padding: 6px 10px; border-radius: 10px; display: none; pointer-events: none; text-align: right; }
+  #keys b { color: #c8f070; } body.playing:not(.touch) #keys { display: block; } body.kfade #keys { display: none !important; }
+  @media (max-width: 1500px) { #keys { bottom: auto; top: calc(env(safe-area-inset-top, 0px) + 150px); } }
+  #pausedT { position: fixed; inset: 0; display: none; align-items: center; justify-content: center; z-index: 29; font-size: 48px; color: #c8f070; background: rgba(20,16,31,.5); pointer-events: none; }
+  body.paused #pausedT { display: flex; }
+  @media (max-width: 480px) { .chip { font-size: 13px; padding: 4px 7px; } #score { font-size: 17px; } #ban { font-size: 32px; } #cardT { font-size: 28px; } .btn { font-size: 18px; padding: 11px 14px; } #obj { max-width: 62vw; } .chip.k::before, .chip.h::before { font-size: 9px; } }
+  @media (max-width: 900px) and (max-height: 500px) { #keys { display: none !important; } }
+  @media (max-aspect-ratio: 1/1) { #keys { display: none !important; } }
+</style>
+</head>
+<body>
+<canvas id="gl"></canvas>
+<div id="vign"></div>
+<div id="hud" class="ink">
+  <div class="row"><div id="hp"><div id="hpF"></div><span id="hpT">100</span></div><div class="chip k" id="kills">0</div><div class="chip h" id="horde">0</div><div class="chip" id="score">0</div></div>
+  <div class="row" id="objrow"><div class="chip" id="obj">Fight east</div><div class="chip" id="objT"></div></div>
+  <div id="prog"><div id="progMe"></div></div>
+</div>
+<div id="boss" class="ink">THE HARBOR HULK<div class="bar"><div id="bossF"></div></div></div>
+<div id="wpn" class="ink"><div class="chip" id="wName">PISTOL</div><div class="chip" id="wAmmo">12 / ∞</div><div class="chip bm" id="bombs">2</div><div class="chip sc" id="scrap">12</div></div>
+<div id="hint"></div>
+<div id="combo" class="ink"></div>
+<div id="pops"></div>
+<div id="ban"></div>
+<div id="say"></div>
+<div id="ctlbar"><button type="button" id="pauseB">PAUSE</button><button type="button" id="muteB">SOUND ON</button></div>
+<div id="keys"><b>WASD</b> move · <b>mouse</b> aim/fire (or <b>arrows</b>)<br><b>F</b> build · <b>G</b> bomb · <b>V</b> shove · <b>Q/E 1-4</b> guns · <b>R</b> reload · <b>P</b> pause · <b>M</b> sound</div>
+<div id="joyL"><div id="knobL"></div></div>
+<div id="joyR"><div id="knobR"></div></div>
+<div class="tb" id="bBuild">BUILD</div><div class="tb" id="bBomb">BOMB</div><div class="tb" id="bShove">SHOVE</div><div class="tb" id="bSwap">SWAP</div>
+<div id="pausedT" class="ink">PAUSED</div>
+<div id="title">
+  <h1>TOAD CITY<span>DEAD STREETS</span></h1>
+  <div class="sub">The Inner Harbor's gone rotten. Harold and Mavis have one way out: the water taxi at Broadway Pier.</div>
+  <div class="ctl"><span class="kb"><b>WASD</b> move · <b>mouse</b> aim + fire · <b>F</b> barricade · <b>G</b> bomb</span><span class="tc">Left stick: move · Right stick: aim + fire</span><br>Hold the line at Pratt &amp; Light and President St · Survive the Harbor Hulk</div>
+  <button type="button" class="btn" id="startB">START THE RUN ▶</button>
+  <div id="best" class="ink"></div>
+</div>
+<div id="card"><div class="box"><div id="cardT"></div><div id="cardB"></div><button type="button" class="btn" id="cardBtn">OK</button><button type="button" class="btn b2" id="cardBtn2" style="display:none">MENU</button></div></div>
+<script type="module" src="game.js"></script>
+</body>
+</html>
