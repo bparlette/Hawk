@@ -1485,6 +1485,44 @@
       "thumb": "thumbs/blox-dough-raid.webp?v=1791939086"
     },
     {
+      "id": "socal-summer-games-plus",
+      "title": "★ California Games Remastered — Hark Edition (fan remake)",
+      "category": "Originals",
+      "keys": {
+        "up": "ArrowUp",
+        "down": "ArrowDown",
+        "left": "ArrowLeft",
+        "right": "ArrowRight",
+        "attack": "KeyZ",
+        "jump": "KeyX",
+        "special": "KeyC",
+        "start": "Enter",
+        "select": "KeyP"
+      },
+      "labels": {
+        "attack": "A",
+        "jump": "B",
+        "special": "C",
+        "start": "START",
+        "select": "PAUSE"
+      },
+      "extras": [
+        {
+          "label": "16-BIT",
+          "key": "KeyH"
+        },
+        {
+          "label": "MUTE",
+          "key": "KeyM"
+        }
+      ],
+      "autostart": [],
+      "orientation": "any",
+      "note": "Hark fan remaster of Epyx's 1987 California Games (2026-10-14): Half Pipe, Foot Bag, Surfing, Roller Skating, BMX, Flying Disk with the original rules, names/sponsors, trophies 5/3/1 and a champion. Cel-shaded three.js r160, original music. H = 16-bit mode. Boots in attract; any key/tap opens the menu. Source: /workspace/work/socal-painted/src",
+      "path": "g/socal-summer-games-plus/index.html",
+      "thumb": "thumbs/socal-summer-games-plus.webp?v=1791954332"
+    },
+    {
       "id": "socal-summer-games",
       "title": "SoCal Summer Games: Painted Edition (1987 Remake)",
       "category": "Originals",
