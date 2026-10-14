@@ -9,6 +9,24 @@
 <meta name="theme-color" content="#07080c" />
 <title>Brad's Demos</title>
 <link rel="stylesheet" href="shell.css" />
+<style id="gbp-css">
+#game-builder-prompt { margin: 30px 2px 6px; padding: 14px 12px 16px; border: 1px solid #2a2d38; border-radius: 12px; background: #12141b; }
+#game-builder-prompt h2 { margin: 0 0 6px; font: 900 19px/1.1 Impact, "Arial Black", system-ui, sans-serif; letter-spacing: 1.5px; color: #ffd23c; text-shadow: 2px 2px 0 #a3201a; }
+#game-builder-prompt .gbp-lead { margin: 0 0 12px; font-size: 13px; line-height: 1.45; color: #c9cedb; }
+#game-builder-prompt .gbp-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 10px 14px; margin-bottom: 10px; }
+#gbpCopy { min-height: 48px; padding: 0 22px; border: 0; border-radius: 10px; background: #ffd23c; color: #14101f; font: 900 16px/1 Impact, "Arial Black", system-ui, sans-serif; letter-spacing: 1px; cursor: pointer; box-shadow: 0 3px 0 #a3201a; touch-action: manipulation; }
+#gbpCopy:active { transform: translateY(2px); box-shadow: 0 1px 0 #a3201a; }
+#gbpCopy.ok { background: #46d17a; box-shadow: 0 3px 0 #1d6b3c; }
+#game-builder-prompt a { color: #ffd23c; text-decoration: underline; text-underline-offset: 2px; word-break: break-word; }
+#game-builder-prompt .gbp-dl { font-size: 13px; font-weight: 800; }
+#gbpText { margin: 0; max-height: 60vh; overflow: auto; -webkit-overflow-scrolling: touch; padding: 12px; border: 1px solid #2a2d38; border-radius: 10px; background: #07080c; color: #e9ecf4;
+  font: 12.5px/1.5 ui-monospace, SFMono-Regular, Menlo, Consolas, "Liberation Mono", monospace; white-space: pre-wrap; overflow-wrap: anywhere; word-break: break-word;
+  user-select: text; -webkit-user-select: text; -webkit-touch-callout: default; }
+#game-builder-prompt h3 { margin: 16px 0 6px; font-size: 11px; font-weight: 900; letter-spacing: 2px; color: #ffd23c; text-transform: uppercase; }
+#game-builder-prompt ul { margin: 0; padding-left: 18px; font-size: 13px; line-height: 1.6; color: #c9cedb; }
+#pickBody > #game-builder-prompt:first-child { display: none; }
+@media (max-width: 420px) { #gbpText { font-size: 12px; padding: 10px; } #game-builder-prompt { padding: 12px 10px 14px; } }
+</style>
 </head>
 <body>
 <header id="top">
@@ -42,8 +60,165 @@
     <div id="pickTitle"><b>BRAD'S DEMOS</b><span>Every prototype, one tap away</span></div>
     <button id="pickClose" type="button" aria-label="Back to game" hidden>✕</button>
   </div>
-  <div id="pickBody"></div>
+  <div id="pickBody">
+  <section id="game-builder-prompt" aria-labelledby="gbpH">
+    <h2 id="gbpH">Build your own: Game Builder Prompt</h2>
+    <p class="gbp-lead">Describe your game in 1–3 sentences at the top, then paste the whole thing into any AI (Gemini, ChatGPT, Claude).</p>
+    <div class="gbp-actions">
+      <button id="gbpCopy" type="button">Copy prompt</button>
+      <a class="gbp-dl" href="game-builder-prompt.txt" download="game-builder-prompt.txt">Download .txt</a>
+    </div>
+    <pre id="gbpText">GAME DESCRIPTION (write 1 to 3 sentences, then paste everything below into any AI):
+[DESCRIBE YOUR GAME HERE]
+
+You are building the game described above as a finished, playable browser game. Quality bar: it should feel like a tight indie arcade game, not a tech demo. Read every rule below before writing code. These rules beat any urge to add features.
+
+DELIVERABLE
+Output one complete, self-contained index.html: inline CSS and JS, no build step, no Tailwind, no web fonts, no external images unless they are generated in code. If you use three.js, load exactly one pinned version (for example r128) and mention it. Then give a short controls list. No feature brochure.
+
+PICK THE RIGHT TECH
+2D game: vanilla Canvas 2D. Render at a low internal resolution and scale up for a pixel look, or at native resolution for a painted look.
+3D game: three.js with MeshToonMaterial or MeshStandardMaterial, a few lights, fog, and a capped pixel ratio. Build the art from primitives and canvas-generated textures. Keep draw calls low: merge static geometry and use InstancedMesh for crowds and debris.
+Never claim an engine you are not using. three.js is three.js, not "Unreal" or "RE Engine".
+
+ARCHITECTURE
+1. Loop: requestAnimationFrame plus a fixed-timestep accumulator. Simulate at 60 Hz, clamp frame time to 0.1 s, render once per frame.
+2. State machine: title, play, paused, dead, win. Each state has a way out. Pause when the tab is hidden (visibilitychange). Clear held keys on window blur.
+3. Time: one game clock. Hitstop and slow motion scale it. Delayed events go on a game-time queue, never setTimeout or setInterval. Restart cancels the queue.
+4. Restart resets everything: entities, pools, timers, score, camera and audio layers. Test by restarting 10 times in a row.
+5. Smoothing is dt-based: value += (target - value) * (1 - Math.exp(-rate * dt)). Never lerp by a fixed amount per frame.
+6. Zero allocations in the per-frame path. Reuse vectors, pool particles, projectiles and enemies. Dispose anything removed from a three.js scene.
+
+GAME DESIGN
+7. The goal is visible in the first 3 seconds, in five words or fewer (for example SURVIVE 60s, ESCAPE THE MANOR, BEAT THE BOSS), with the threat on screen.
+8. The player can win and can lose. Every bar on screen is wired to a real value. Enemies never refill at zero.
+9. Result card on win or loss: 2 or 3 stats (time, best combo, rank or best score saved in localStorage) and one-tap RETRY that restarts in under 1 second.
+10. Threats telegraph: a ground marker, flash or windup of at least 0.4 s. The player has a counter: dodge with invulnerability frames, block, hide or parry.
+11. Hits depend on aim, range or timing. Nothing auto-hits. Special moves cost a meter or have a visible cooldown. No rigged rewards.
+12. A 60 to 120 second session with a ramp: calm start, rising pressure, a mid-point twist (phase 2, wave surge, lights out), a climax.
+
+FEEL AND JUICE
+13. On every meaningful hit: 40 to 120 ms hitstop, screenshake that decays with dt, a white flash or squash and stretch, a particle burst, a sound, and a damage number or combo bump.
+14. Movement has acceleration and friction, coyote time and input buffering for jumps and attacks (about 100 ms), and camera-relative controls in 3D.
+15. The camera leads the action slightly, never clips into walls, and pulls back for big moments.
+
+AUDIO (PROCEDURAL WEB AUDIO)
+16. Synthesize everything: oscillators, one shared white-noise buffer, biquad filters, gain envelopes, and a DynamicsCompressor on the master. Create or resume the AudioContext on the first tap or key.
+17. Distinct sounds for hit, hurt, pickup, dodge, win and lose. A simple step-sequenced music loop that adds a layer as intensity rises. State-driven audio such as a proximity heartbeat. Mute on M plus a mute button.
+
+MOBILE AND 9:16
+18. Detect touch and show controls automatically: a floating left stick and large right-side buttons (at least 56 px), using pointer events with setPointerCapture. Set touch-action none and user-scalable no; no scrolling, no zoom, no long-press menus. Keyboard and mouse also work, with the same actions.
+19. Portrait 9:16 is a first-class layout: adjust camera distance or FOV, put the HUD in the top band and controls in the bottom band, and keep the middle 60 percent clear. Landscape must also work. Respect safe areas (viewport-fit=cover).
+
+PERFORMANCE BUDGET
+20. 60 fps on a mid-range phone. devicePixelRatio capped at 1.5 (1.25 on desktop). Under about 150 draw calls in 3D. At most about 300 active enemies and 500 particles, pooled. Minimal DOM writes per frame; prefer drawing the HUD on canvas.
+
+ART DIRECTION (pick one and commit; state which)
+A. Painted 2D on a restrained 16-bit base: a limited palette of 16 to 32 colours, clean silhouettes, soft painted gradients and rim light on top, and an optional 16-BIT toggle that renders at low resolution with pixelated upscaling and palette snapping. Default off.
+B. Toon 3D: MeshToonMaterial with a 3 or 4 step ramp, inverted-hull outlines, bright sky, readable chunky shapes.
+C. Dark atmospheric 3D: fog, one hero light (flashlight or lantern), post shader with grain and vignette, lightning or flicker as reveals.
+D. Neon arcade: black background, additive glow, 3 accent colours, speed lines.
+Whatever you pick: high-contrast silhouettes, the player always the brightest or most saturated thing, enemies in a contrasting hue.
+
+SHORTS AND VERTICAL-VIDEO READABILITY
+21. Frame one is already action, not a menu. An attract mode may play the real game by itself, and the first touch or key hands over control and clears all demo inputs.
+22. Big readable text (at least 5 percent of screen height), short captions, a punchy event every 3 to 5 seconds, and an unmistakable climax and result screen.
+
+HONESTY RULES
+23. Every visible button does something. No source exporters, auto-directors, fake "AI engine" or "ray tracing" labels, no README-only features, no placeholder buttons.
+24. Fan games say fan game. Do not use real logos or ripped assets.
+25. If something does not work yet, leave it out instead of faking it.
+
+TEST AND ACCEPTANCE (run through it, then report pass or fail for each line)
+- Loads with zero console errors or warnings from your code.
+- Goal readable within 3 seconds; first input starts play.
+- Can win; can lose; retry is one tap and fully resets (try it 10 times).
+- Works with touch only, and with keyboard only.
+- Portrait 9:16 and landscape both playable, with nothing covering the action.
+- Steady 60 fps target on a phone; no memory growth over 3 minutes.
+- Pause on tab hide; no stuck keys after alt-tab.
+- Every button works; no fake claims anywhere in the UI or title.
+
+TOOLS AND REFERENCES
+- MDN Canvas API: https://developer.mozilla.org/en-US/docs/Web/API/Canvas_API
+- MDN Web Audio API: https://developer.mozilla.org/en-US/docs/Web/API/Web_Audio_API
+- MDN Pointer events: https://developer.mozilla.org/en-US/docs/Web/API/Pointer_events
+- MDN Game development: https://developer.mozilla.org/en-US/docs/Games
+- three.js docs: https://threejs.org/docs/
+- three.js manual: https://threejs.org/manual/
+- Fix Your Timestep (Gaffer on Games): https://gafferongames.com/post/fix_your_timestep/
+- Kenney free game assets (CC0): https://kenney.nl/assets
+- OpenGameArt: https://opengameart.org/
+- jsfxr sound generator: https://sfxr.me/
+- ZzFX tiny sound effects: https://github.com/KilledByAPixel/ZzFX
+- Lospec palettes for 16-bit looks: https://lospec.com/palette-list
+Example builds that follow these rules (play them for feel):
+- Resident Evil Requiem fan game: https://bparlette.github.io/Hawk/brad-demos/#re-requiem
+- Blox Fruits Dough Raid, Turtles Edition: https://bparlette.github.io/Hawk/brad-demos/#blox-dough-raid-plus
+
+Now build the game described at the top.
+</pre>
+    <h3>Example builds</h3>
+    <ul>
+      <li><a href="#re-requiem" data-play="re-requiem">Resident Evil Requiem fan game</a></li>
+      <li><a href="#blox-dough-raid-plus" data-play="blox-dough-raid-plus">Blox Fruits Dough Raid, Turtles Edition</a></li>
+    </ul>
+    <h3>Tools and references</h3>
+    <ul>
+      <li><a href="https://developer.mozilla.org/en-US/docs/Web/API/Canvas_API" target="_blank" rel="noopener">MDN Canvas API</a></li>
+      <li><a href="https://developer.mozilla.org/en-US/docs/Web/API/Web_Audio_API" target="_blank" rel="noopener">MDN Web Audio API</a></li>
+      <li><a href="https://developer.mozilla.org/en-US/docs/Web/API/Pointer_events" target="_blank" rel="noopener">MDN Pointer events</a></li>
+      <li><a href="https://developer.mozilla.org/en-US/docs/Games" target="_blank" rel="noopener">MDN Game development</a></li>
+      <li><a href="https://threejs.org/docs/" target="_blank" rel="noopener">three.js docs</a></li>
+      <li><a href="https://threejs.org/manual/" target="_blank" rel="noopener">three.js manual</a></li>
+      <li><a href="https://gafferongames.com/post/fix_your_timestep/" target="_blank" rel="noopener">Fix Your Timestep (Gaffer on Games)</a></li>
+      <li><a href="https://kenney.nl/assets" target="_blank" rel="noopener">Kenney free game assets (CC0)</a></li>
+      <li><a href="https://opengameart.org/" target="_blank" rel="noopener">OpenGameArt</a></li>
+      <li><a href="https://sfxr.me/" target="_blank" rel="noopener">jsfxr sound generator</a></li>
+      <li><a href="https://github.com/KilledByAPixel/ZzFX" target="_blank" rel="noopener">ZzFX tiny sound effects</a></li>
+      <li><a href="https://lospec.com/palette-list" target="_blank" rel="noopener">Lospec palettes for 16-bit looks</a></li>
+    </ul>
+  </section>
+  </div>
 </section>
 <script src="shell.js"></script>
+<script id="gbp-js">
+(function () {
+  // The picker rebuilds #pickBody from games.json; keep this section as its last child.
+  var body = document.getElementById("pickBody"), sec = document.getElementById("game-builder-prompt");
+  if (!body || !sec) return;
+  var jumped = false;
+  function keepLast() {
+    if (body.lastElementChild !== sec && body.querySelector(".foot")) {
+      body.appendChild(sec);
+      if (!jumped && location.hash === "#game-builder-prompt") { jumped = true; setTimeout(function () { sec.scrollIntoView(); }, 30); }
+    }
+  }
+  new MutationObserver(keepLast).observe(body, { childList: true });
+  var btn = document.getElementById("gbpCopy"), pre = document.getElementById("gbpText"), t;
+  function done(ok) {
+    btn.textContent = ok ? "Copied!" : "Select + copy manually"; btn.classList.toggle("ok", ok);
+    clearTimeout(t); t = setTimeout(function () { btn.textContent = "Copy prompt"; btn.classList.remove("ok"); }, 2000);
+  }
+  function fallback() {
+    var ta = document.createElement("textarea"); ta.value = pre.textContent; ta.setAttribute("readonly", "");
+    ta.style.cssText = "position:fixed;top:0;left:0;opacity:0;font-size:16px;user-select:text;-webkit-user-select:text";
+    document.body.appendChild(ta); ta.focus(); ta.select(); try { ta.setSelectionRange(0, ta.value.length); } catch (_) {}
+    var ok = false; try { ok = document.execCommand("copy"); } catch (_) {}
+    document.body.removeChild(ta); done(ok);
+  }
+  btn.addEventListener("click", function () {
+    if (navigator.clipboard && navigator.clipboard.writeText && window.isSecureContext) {
+      navigator.clipboard.writeText(pre.textContent).then(function () { done(true); }, fallback);
+    } else fallback();
+  });
+  [].forEach.call(sec.querySelectorAll("a[data-play]"), function (a) {
+    a.addEventListener("click", function (e) {
+      var s = window.__demoShell; if (!s) return;
+      e.preventDefault(); history.replaceState(null, "", "#" + a.dataset.play); s.start(a.dataset.play);
+    });
+  });
+})();
+</script>
 </body>
 </html>

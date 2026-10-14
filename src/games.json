@@ -571,6 +571,41 @@
       "autostart": []
     },
     {
+      "id": "survivors-plus",
+      "title": "★ Vampire Survivors Remake — Hark Edition (fan remake)",
+      "category": "Other games",
+      "keys": {
+        "up": "ArrowUp",
+        "down": "ArrowDown",
+        "left": "ArrowLeft",
+        "right": "ArrowRight",
+        "attack": "Space",
+        "jump": "Enter",
+        "special": "KeyM",
+        "start": "Enter",
+        "select": "KeyP"
+      },
+      "labels": {
+        "attack": "DASH",
+        "jump": "PICK",
+        "special": "MUTE",
+        "start": "START",
+        "select": "PAUSE"
+      },
+      "extras": [
+        {
+          "label": "MUTE",
+          "key": "KeyM"
+        }
+      ],
+      "autostart": [],
+      "orientation": "any",
+      "note": "Hark fan remake of the bullet-heaven genre (2026-10-13): cel-shaded three.js r160, 1,500+ enemy horde as one instanced draw of baked cel impostors, 8 weapons / 9 passives / 6 evolutions, 10:00 run + Reaper boss. Boots in attract mode; any key/tap plays. Source: /workspace/work/survivors-plus/game",
+      "source": "/workspace/work/survivors-plus/pub",
+      "query": "",
+      "embed": ""
+    },
+    {
       "id": "crystal-cave",
       "title": "Crystal Cave 2.5D",
       "category": "Other games",
@@ -966,6 +1001,47 @@
       "autostart": []
     },
     {
+      "id": "blox-dough-raid-plus",
+      "title": "★ Blox Fruits: Dough Raid — Turtles Edition",
+      "category": "Other games",
+      "keys": {
+        "up": "KeyW",
+        "down": "KeyS",
+        "left": "KeyA",
+        "right": "KeyD",
+        "attack": "KeyZ",
+        "jump": "Space",
+        "special": "KeyX",
+        "start": "Enter"
+      },
+      "labels": {
+        "attack": "Z JAB",
+        "jump": "SORU",
+        "special": "X RIVER",
+        "start": "FIGHT"
+      },
+      "extras": [
+        {
+          "label": "C ROLL",
+          "key": "KeyC"
+        },
+        {
+          "label": "V FISTS",
+          "key": "KeyV"
+        },
+        {
+          "label": "MUTE",
+          "key": "KeyM"
+        }
+      ],
+      "autostart": [],
+      "orientation": "any",
+      "note": "Featured remake of the Painted Anime Edition: real boss fight (telegraphed AOEs, phase 2, KO/victory), articulated rigs, energy costs, touch controls. Boots in the 9:16 auto-combo; Enter/any move key = manual fight.",
+      "source": "/workspace/work/blox-raid/pub",
+      "query": "",
+      "embed": ""
+    },
+    {
       "id": "blox-dough-raid",
       "title": "Blox Fruits: Awakened Dough Raid",
       "category": "Other games",
@@ -1128,6 +1204,45 @@
       },
       "autostart": [],
       "note": "Earlier build v3 of Brad's Requiem fan game, pasted 2026-10-13, added as-is with no fixes. Mouse to look."
+    },
+    {
+      "id": "socal-summer-games-plus",
+      "title": "★ California Games Remastered — Hark Edition (fan remake)",
+      "category": "Originals",
+      "keys": {
+        "up": "ArrowUp",
+        "down": "ArrowDown",
+        "left": "ArrowLeft",
+        "right": "ArrowRight",
+        "attack": "KeyZ",
+        "jump": "KeyX",
+        "special": "KeyC",
+        "start": "Enter",
+        "select": "KeyP"
+      },
+      "labels": {
+        "attack": "A",
+        "jump": "B",
+        "special": "C",
+        "start": "START",
+        "select": "PAUSE"
+      },
+      "extras": [
+        {
+          "label": "16-BIT",
+          "key": "KeyH"
+        },
+        {
+          "label": "MUTE",
+          "key": "KeyM"
+        }
+      ],
+      "autostart": [],
+      "orientation": "any",
+      "note": "Hark fan remaster of Epyx's 1987 California Games (2026-10-14): Half Pipe, Foot Bag, Surfing, Roller Skating, BMX, Flying Disk with the original rules, names/sponsors, trophies 5/3/1 and a champion. Cel-shaded three.js r160, original music. H = 16-bit mode. Boots in attract; any key/tap opens the menu. Source: /workspace/work/socal-painted/src",
+      "source": "/workspace/work/socal-painted/build",
+      "query": "",
+      "embed": ""
     },
     {
       "id": "socal-summer-games",
