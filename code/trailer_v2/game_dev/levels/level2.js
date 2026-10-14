@@ -1,0 +1,169 @@
+// Level 2: STREET RUMBLE. Built only on the public plugin API (window.SS); see ss_level_api.md.
+// City street at night: open manholes (fall in = hurt; knock enemies in for a KO) and fire hydrants that
+// sputter, then blast a jet of water along the sidewalk. Boss: BRICKJAW, the block's self-appointed landlord.
+(function () {
+  "use strict";
+  const SS = window.SS; if (!SS) return;
+  const A = SS.api;
+
+  // ---- Music: an original funky street groove (D minor, 132 BPM) + a re-keyed boss track ----
+  const CH = ["Dm", "Dm", "F", "G", "Dm", "Dm", "Am", "C", "Dm", "Dm", "F", "G", "Dm", "Dm", "Am", "Am"];
+  const B1 = "D5:2 .:1 D5:1 F5:2 A5:2 .:2 G5:1 F5:1 D5:4";
+  const music = A.track({ bpm: 132, loop: true, chords: CH,
+    lead: [B1, "C5:2 D5:2 .:2 F5:2 E5:2 D5:2 C5:2 A4:2", "F5:2 .:1 F5:1 A5:2 C6:2 .:2 A5:2 G5:2 F5:2", "G5:3 A5:1 G5:2 D5:2 B4:4 .:4",
+      B1, "A5:2 G5:2 F5:2 D5:2 F5:2 G5:2 A5:4", "C6:2 A5:2 E5:2 A5:2 C6:3 B5:1 A5:4", "G5:2 E5:2 C5:2 E5:2 G5:4 .:4",
+      B1, "D6:2 C6:2 A5:2 F5:2 G5:2 A5:2 D5:4", "F5:2 .:1 F5:1 A5:2 C6:2 .:2 D6:2 C6:2 A5:2", "B5:3 A5:1 G5:2 B5:2 D6:4 .:4",
+      B1, "A5:2 G5:2 F5:2 D5:2 F5:2 G5:2 A5:4", "E5:2 A5:2 C6:2 E6:2 D6:2 C6:2 A5:4", "E6:4 .:2 C6:2 A5:4 .:4"].join(" "),
+    bass: A.bassLine(CH, [0, 12, 0, 7, 0, 12, 10, 12]),
+    arp: A.arpLine(CH, 24, [0, 2, 1, 3]),
+    drums: A.rep("k..hs.hkk.h.s.hh", 15).concat(["k.s.s.s.ssssssso"]) });
+  const bossMusic = A.transpose(A.TRACKS.boss, 2, 176);
+
+  // ---- Hazard: open manholes ----
+  const manholes = {
+    init: () => ({ holes: [{ x: 640, y: 198 }, { x: 1150, y: 182 }, { x: 1720, y: 205 }], steam: 0 }),
+    update(st, api, p) {
+      st.steam++;
+      for (const h of st.holes) {
+        if (Math.abs(h.x - api.camX - api.W / 2) > api.W) continue;
+        if (Math.abs(p.x - h.x) < 9 && Math.abs(p.y - h.y) < 4) api.dropPlayer(h.x, h.y, 2);
+        for (const e of api.enemies) // enemies only fall in when knocked into the hole
+          if (!e.boss && (e.state === "down" || e.state === "hurt") && e.z < 2 && Math.abs(e.x - h.x) < 10 && Math.abs(e.y - h.y) < 5) {
+            api.koEnemy(e); e.t = 20; api.fx("smoke", h.x, h.y - 6, 18); api.SFX.land();
+          }
+      }
+    },
+    drawBack(st, api, cx) {
+      for (const h of st.holes) {
+        const x = Math.round(h.x - cx), y = h.y; if (x < -30 || x > api.W + 30) continue;
+        const c = api.ctx;
+        c.fillStyle = "#3a3a40"; c.beginPath(); c.ellipse(x, y, 13, 5, 0, 0, 6.29); c.fill();      // rim
+        c.fillStyle = "#050507"; c.beginPath(); c.ellipse(x, y, 11, 4, 0, 0, 6.29); c.fill();      // the hole
+        c.fillStyle = "#4a4a52"; c.beginPath(); c.ellipse(x + 20, y + 3, 11, 4, 0, 0, 6.29); c.fill(); // cover, shoved aside
+        api.rect(x + 13, y + 2, 14, 1, "#2a2a30"); api.rect(x + 13, y + 4, 14, 1, "#2a2a30");
+        c.globalAlpha = 0.25; // lazy steam
+        for (let i = 0; i < 3; i++) { const ph = ((st.steam * 0.6 + i * 20) % 60) / 60; c.fillStyle = "#c8c8d8"; c.beginPath(); c.arc(x + Math.sin(ph * 6 + i) * 3, y - 4 - ph * 26, 3 + ph * 5, 0, 6.29); c.fill(); }
+        c.globalAlpha = 1;
+      }
+    },
+  };
+
+  // ---- Hazard: fire hydrants (sputter as a warning, then a jet along the sidewalk) ----
+  const IDLE = 210, WARN = 48, SPRAY = 62, JET = 120;
+  const hydrants = {
+    init: () => ({ list: [{ x: 330, dir: 1, t: 0 }, { x: 1030, dir: -1, t: 90 }, { x: 1540, dir: 1, t: 40 }, { x: 2160, dir: -1, t: 150 }] }),
+    update(st, api, p) {
+      for (const h of st.list) {
+        h.t = (h.t + 1) % (IDLE + WARN + SPRAY);
+        const ph = h.t < IDLE ? "idle" : h.t < IDLE + WARN ? "warn" : "spray";
+        if (ph === "warn" && h.t === IDLE && Math.abs(h.x - api.camX - api.W / 2) < api.W / 2 + 20) api.SFX.rumble();
+        if (ph !== "spray") { h.hit = null; continue; }
+        h.hit = h.hit || new Set();
+        const x0 = Math.min(h.x, h.x + h.dir * JET), x1 = Math.max(h.x, h.x + h.dir * JET), y0 = api.floorTop - 2, y1 = api.floorTop + 20;
+        if (!h.hit.has(p) && p.inv === 0 && p.z < 10 && p.x > x0 && p.x < x1 && p.y > y0 && p.y < y1) { h.hit.add(p); api.hurtPlayer(1, false, h.dir); }
+        for (const e of api.enemies) if (!e.boss && !h.hit.has(e) && e.x > x0 && e.x < x1 && e.y > y0 && e.y < y1 && ["walk", "attack", "hurt"].includes(e.state)) { h.hit.add(e); api.hitEnemy(e, 1, true, h.dir); }
+      }
+    },
+    drawBack(st, api, cx) {
+      for (const h of st.list) {
+        const warn = h.t >= IDLE && h.t < IDLE + WARN, jx = warn && h.t % 4 < 2 ? 1 : 0, x = Math.round(h.x - cx) + jx, y = api.floorTop - 2;
+        if (x < -20 || x > api.W + 20) continue;
+        api.rect(x - 4, y - 14, 8, 14, "#c8241a"); api.rect(x - 4, y - 14, 2, 14, "#ff6a4a"); api.rect(x - 5, y - 16, 10, 3, "#a81a10");
+        api.rect(x - 2, y - 19, 4, 3, "#c8241a"); api.rect(x - 7, y - 10, 3, 4, "#a81a10"); api.rect(x + 4, y - 10, 3, 4, "#a81a10"); api.rect(x - 5, y - 1, 10, 2, "#5a1008");
+        if (warn) { // sputter + warning mark
+          for (let i = 0; i < 3; i++) api.rect(x + h.dir * (6 + ((h.t * 2 + i * 5) % 12)), y - 9 - ((h.t + i * 3) % 6), 1, 1, "#bfe4ff");
+          if (Math.floor(h.t / 6) % 2) api.ptext("!", x, y - 28, 2, "#ffe060");
+        }
+      }
+    },
+    drawFront(st, api, cx) {
+      const c = api.ctx;
+      for (const h of st.list) {
+        if (h.t < IDLE + WARN) continue;
+        const k = (h.t - IDLE - WARN) / SPRAY, len = JET * Math.min(1, k * 5) * (k > 0.85 ? (1 - k) / 0.15 : 1), x = h.x - cx, y = api.floorTop - 8;
+        if (x + JET < -10 && x - JET > api.W + 10) continue;
+        c.save(); c.globalAlpha = 0.75;
+        const g = c.createLinearGradient(x, 0, x + h.dir * len, 0); g.addColorStop(0, "rgba(220,240,255,0.95)"); g.addColorStop(1, "rgba(120,180,255,0.25)");
+        c.fillStyle = g; c.beginPath(); c.moveTo(x + h.dir * 5, y - 3); c.lineTo(x + h.dir * len, y - 8 + Math.sin(api.t * 0.5) * 2); c.lineTo(x + h.dir * len, y + 12); c.lineTo(x + h.dir * 5, y + 2); c.closePath(); c.fill();
+        c.globalAlpha = 1; c.restore();
+        for (let i = 0; i < 8; i++) { const u = ((api.t * 3 + i * 17) % 100) / 100; api.rect(x + h.dir * u * len, y - 6 + (i % 4) * 4 + Math.sin(u * 9 + i) * 2, 2, 1, "#ffffff"); }
+      }
+    },
+  };
+
+  // ---- BRICKJAW: painted sprite sheet levels/level2_brickjaw.png (photoreal live-action cutouts, like the turtles) ----
+  // Frames face right, feet on the frame bottom, [x, y, w, h, anchorX] with anchorX = stance centre between the boots.
+  // Drawn at BJ_K: the 180 px idle frame is 90 world px tall (same size as the old tinted ramrod at scale 1.05).
+  const BJ_IMG = "levels/level2_brickjaw.png", BJ_K = 0.5;
+  const BJF = { idle: [0,1,118,180,52], walk1: [122,0,108,181,49], walk2: [234,4,123,177,64], wind: [361,2,141,179,77], punch: [506,4,144,177,52], tele: [654,23,107,158,51], charge: [765,14,124,167,39], throwUp: [893,0,103,181,57], throwRel: [1000,15,133,166,63], summon: [1137,3,105,178,52], hurt: [1246,3,162,178,92], fall: [1412,20,154,161,77], down: [1570,121,206,60,103], getup: [1780,39,138,142,68] };
+  const BJ_WALK = ["walk1", "idle", "walk2", "idle"];
+  let BJ_RED = null;
+  function redSheet() { // red-washed copy of the sheet for the telegraph / low-HP blink (works without ctx.filter)
+    if (BJ_RED) return BJ_RED;
+    const im = A.img(BJ_IMG); if (!im || !im.complete || !im.naturalWidth) return null;
+    const cv = document.createElement("canvas"); cv.width = im.naturalWidth; cv.height = im.naturalHeight;
+    const c = cv.getContext("2d"); c.drawImage(im, 0, 0); c.globalCompositeOperation = "source-atop";
+    c.fillStyle = "rgba(255,40,30,0.5)"; c.fillRect(0, 0, cv.width, cv.height);
+    return (BJ_RED = cv);
+  }
+  function brickFrame(e) {
+    const s = e.state, t = e.t;
+    if (s === "dying") return t < 18 ? "fall" : "down";
+    if (s === "down") return t < 10 ? "fall" : "down";
+    if (s === "getup") return t < 6 ? "down" : "getup";
+    if (s === "hurt" || s === "stagger") return "hurt";
+    if (s === "tele") return "tele";
+    if (s === "charge") return "charge";
+    if (s === "kwind") return "wind";
+    if (s === "kick") return "punch";
+    if (s === "summon") return "summon";
+    if (s === "fire") return t < 4 ? "wind" : "punch"; // fallback move: jabs the brick fist as the shots fly
+    if (s === "throw") { // brick raised, then a forward release on each throw (t = 14 + 12i)
+      const n = BOSS.throwN || 1;
+      if (t < 14) return "throwUp";
+      if (t >= 14 + n * 12) return "idle";
+      return (t - 14) % 12 < 5 ? "throwRel" : "throwUp";
+    }
+    if ((s === "walk" || s === "enter") && e.walkT > 0) return BJ_WALK[Math.floor(e.walkT / 9) % 4];
+    return "idle";
+  }
+  const BOSS = {
+    name: "BRICKJAW", base: "ramrod", hp: 36, scale: 1.05, speed: 1.1, // ramrod behaviours; art is the painted Brickjaw sheet
+    moves: ["charge", "kick", "throw", "summon"], proj: "brick", throwN: 2, minions: ["purple", "heavy"], summonCd: 700, cool: 105, pitch: 95,
+    lines: { intro: "THIS IS MY BLOCK, SHELL-FOR-BRAINS!", hit: ["HEY! WATCH THE JACKET!", "YOU'RE GONNA PAY FOR THAT!", "LUCKY SHOT, GREENIE!"], summon: "BOYS! GET 'EM!", ko: "MY... BEAUTIFUL... BLOCK..." },
+    draw(api, e, sx, sy) { // level15 spr() anchor pattern: stance centre on sx
+      const fr = brickFrame(e), F = BJF[fr] || BJF.idle;
+      const red = (e.state === "tele" && e.t % 6 < 3) || (e.state === "throw" && e.t < 14 && e.t % 6 < 3) || (e.hp < e.maxHp * 0.3 && e.state !== "dying" && e.life % 12 < 3);
+      const base = api.img(BJ_IMG), im = red ? redSheet() || base : base;
+      const jx = e.state === "stagger" ? (e.t % 4 < 2 ? 1 : -1) : e.state === "kwind" ? -e.facing : 0;
+      if (!im || im.complete === false || im.naturalWidth === 0) { api.rect(sx - 14, sy - 90, 28, 90, "#3a2448"); return; }
+      api.drawFrame(im, F, sx + jx + (F[2] / 2 - F[4]) * BJ_K * e.facing, sy, BJ_K, e.facing);
+    },
+  };
+
+  SS.registerLevel({
+    number: 2,
+    name: "STREET RUMBLE",
+    card: { title: "STREET RUMBLE", tagline: "THE GANG'S ALL HERE. AND THEY'RE ALL MAD.", color: "#e83aa0" },
+    music, bossMusic,
+    hues: { purple: 300, blue: 190, star: 30, dasher: 120, heavy: 330, gunner: 260 },
+    sections: [{
+      bg: "levels/level2_street.jpg", floor: [168, 218], length: 2320,
+      locks: [0, 460, 920, 1400],
+      waves: [["purple", "purple", "blue"], ["star", "heavy", "purple", "blue"], ["dasher", "purple", "sword", "star", "dasher"], ["heavy", "dasher", "gunner", "blue", "purple"]],
+      grade: "rgba(20,10,60,0.12)", weather: "rain",
+      hazards: [manholes, hydrants],
+      // v1.1: breakable / throwable props (some hide pizza) and a free slice by the curb
+      props: [{ kind: "crate", x: 220, y: 206, drop: "slice" }, { kind: "barrel", x: 520, y: 190 }, { kind: "trash", x: 800, y: 176 }, { kind: "cone", x: 880, y: 212 },
+        { kind: "barrel", x: 1290, y: 202 }, { kind: "crate", x: 1480, y: 210, drop: "pizza" }, { kind: "trash", x: 1880, y: 180, drop: "slice" }, { kind: "cone", x: 2010, y: 214 }],
+      pickups: [{ kind: "slice", x: 1000, y: 214 }],
+    }],
+    boss: BOSS,
+    images: [BJ_IMG],
+    outro: { // a short beat after the boss: the brother spots where the gang went next
+      update: (api, st, t) => { if (t === 20) api.playerBark(true, "THEY WENT DOWN THE SEWER!"); return t > 130; },
+      draw: () => {},
+    },
+    onUnload() { manholes.init = hydrants.init = null; BJ_RED = null; },
+  });
+})();

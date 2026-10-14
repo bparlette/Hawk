@@ -1,0 +1,68 @@
+{
+ "dir": "/workspace/work/deploy/shell-shock-live-action",
+ "phases": {
+  "lv15": {
+   "errors": [],
+   "failed": [],
+   "scenes": [
+    "0title:title",
+    "1grid:title",
+    "2grid_pick:title",
+    "3select:select",
+    "4stage:stage/L15",
+    "5moved:stage/L15"
+   ],
+   "webp": 29,
+   "png": 0,
+   "wakeLock": {
+    "req": 1,
+    "rel": 0,
+    "native": true,
+    "type": "screen"
+   },
+   "nativeRng": {
+    "?<global code": 1,
+    "unlockAudio<?": 44100,
+    "noise<k": 60,
+    "noise<schedTick": 74,
+    "noise<s": 46,
+    "noise<?": 6,
+    "shakeStep<simStep": 20,
+    "noise<voice": 2
+   },
+   "brokenImgs": []
+  },
+  "nolock": {
+   "errors": [],
+   "failed": [],
+   "scenes": [
+    "0title:title",
+    "1menu:title",
+    "2select:select",
+    "3stage:stage/L1",
+    "4moved:stage/L1"
+   ],
+   "webp": 24,
+   "png": 0,
+   "player": {
+    "x": 134,
+    "hp": 16
+   },
+   "wakeLock": {
+    "req": 0,
+    "rel": 0,
+    "native": true
+   },
+   "nativeRng": {
+    "?<global code": 1,
+    "unlockAudio<?": 44100,
+    "noise<k": 32,
+    "noise<schedTick": 50,
+    "noise<s": 22,
+    "noise<voice": 3
+   },
+   "brokenImgs": []
+  }
+ },
+ "http404": []
+}

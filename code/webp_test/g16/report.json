@@ -1,0 +1,72 @@
+{
+ "dir": "/workspace/work/g16js/site",
+ "phases": {
+  "lv15": {
+   "errors": [],
+   "failed": [],
+   "scenes": [
+    "0title:title",
+    "1grid:title",
+    "2grid_pick:title",
+    "3select:select",
+    "4stage:stage/L15",
+    "5moved:stage/L15"
+   ],
+   "webp": 29,
+   "png": 0,
+   "wakeLock": {
+    "req": 1,
+    "rel": 0,
+    "native": true,
+    "type": "screen"
+   },
+   "nativeRng": {
+    "?<global code": 1,
+    "unlockAudio<?": 44100,
+    "noise<k": 61,
+    "noise<schedTick": 77,
+    "noise<s": 43,
+    "noise<?": 13,
+    "shakeStep<simStep": 48,
+    "noise<voice": 5,
+    "?<voice": 12
+   },
+   "brokenImgs": []
+  },
+  "nolock": {
+   "errors": [],
+   "failed": [],
+   "scenes": [
+    "0title:title",
+    "1menu:title",
+    "2select:select",
+    "3stage:stage/L1",
+    "4moved:stage/L1"
+   ],
+   "webp": 24,
+   "png": 0,
+   "player": {
+    "x": 60,
+    "hp": 6
+   },
+   "wakeLock": {
+    "req": 0,
+    "rel": 0,
+    "native": true
+   },
+   "nativeRng": {
+    "?<global code": 1,
+    "unlockAudio<?": 44100,
+    "noise<k": 33,
+    "noise<schedTick": 49,
+    "noise<s": 28,
+    "noise<?": 10,
+    "shakeStep<simStep": 40,
+    "?<voice": 8,
+    "noise<voice": 3
+   },
+   "brokenImgs": []
+  }
+ },
+ "http404": []
+}

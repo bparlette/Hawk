@@ -1,0 +1,36 @@
+{
+ "dir": "/tmp/orig/deploy/shell-shock-live-action",
+ "phases": {
+  "gallery": {
+   "errors": [],
+   "failed": [],
+   "scenes": [
+    "0title:title",
+    "1menu_gal:title",
+    "2gallery:title",
+    "3gallery_moved:title",
+    "4gallery_card:title",
+    "5gallery_enemies:title"
+   ],
+   "webp": 0,
+   "png": 52,
+   "gal": {
+    "imgsBroken": []
+   },
+   "wakeLock": {
+    "req": 0,
+    "rel": 0,
+    "native": true
+   },
+   "nativeRng": {
+    "?<global code": 1,
+    "unlockAudio<?": 44100,
+    "noise<k": 30,
+    "noise<schedTick": 40,
+    "noise<s": 25
+   },
+   "brokenImgs": []
+  }
+ },
+ "http404": []
+}
