@@ -1253,7 +1253,8 @@
    ],
    "orientation": "any",
    "note": "Hark's featured fan build (2026-10-13), single file, procedural. Source: /workspace/work/re-requiem/game/index.html",
-   "path": "g/re-requiem/index.html"
+   "path": "g/re-requiem/index.html",
+   "thumb": "thumbs/re-requiem.webp?v=1791938512"
   },
   {
    "id": "re-requiem-v1",
@@ -1278,7 +1279,7 @@
    "orientation": "landscape",
    "note": "Earlier build v1 of Brad's Requiem fan game, pasted 2026-10-13, added as-is with no fixes. Mouse to look.",
    "path": "g/re-requiem-v1/index.html",
-   "thumb": "thumbs/re-requiem-v1.webp?v=1791933857"
+   "thumb": "thumbs/re-requiem-v1.webp?v=1791939086"
   },
   {
    "id": "re-requiem-v2",
@@ -1303,7 +1304,7 @@
    "orientation": "landscape",
    "note": "Earlier build v2 of Brad's Requiem fan game, pasted 2026-10-13, added as-is with no fixes. Mouse to look.",
    "path": "g/re-requiem-v2/index.html",
-   "thumb": "thumbs/re-requiem-v2.webp?v=1791933876"
+   "thumb": "thumbs/re-requiem-v2.webp?v=1791939086"
   },
   {
    "id": "re-requiem-v3",
@@ -1328,7 +1329,7 @@
    "orientation": "landscape",
    "note": "Earlier build v3 of Brad's Requiem fan game, pasted 2026-10-13, added as-is with no fixes. Mouse to look.",
    "path": "g/re-requiem-v3/index.html",
-   "thumb": "thumbs/re-requiem-v3.webp?v=1791933899"
+   "thumb": "thumbs/re-requiem-v3.webp?v=1791939086"
   },
   {
    "id": "blox-dough-raid-plus",
@@ -1403,7 +1404,7 @@
    "orientation": "portrait",
    "note": "Painted Anime Edition, added as-is 2026-10-13 from Brad's paste. Boots in 9:16 auto-combo mode. Known bug: boss HP resets to full instead of dying.",
    "path": "g/blox-dough-raid/index.html",
-   "thumb": "thumbs/blox-dough-raid.webp?v=1791933829"
+   "thumb": "thumbs/blox-dough-raid.webp?v=1791939086"
   },
   {
    "id": "socal-summer-games",
@@ -1434,7 +1435,7 @@
    "orientation": "landscape",
    "note": "Pasted by Brad 2026-10-13, added as-is with no fixes. WASD also works. H toggles 16-bit mode.",
    "path": "g/socal-summer-games/index.html",
-   "thumb": "thumbs/socal-summer-games.webp?v=1791933839"
+   "thumb": "thumbs/socal-summer-games.webp?v=1791939086"
   },
   {
    "id": "viral-overdrive",
