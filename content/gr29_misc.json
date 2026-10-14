@@ -1,0 +1,83 @@
+{
+  "gang_barks_chase": [
+    "Cut through the alley, he's on foot!",
+    "Don't lose him by the rowhouses!",
+    "He went over the stoop, go go go!",
+    "Somebody block the corner, now!",
+    "Faster! My grandma runs faster!",
+    "He's heading for the pier, cut him off!",
+    "Watch the pigeons, they're on his side!",
+    "Left at the corner store! No, YOUR left!",
+    "Get the scooter, he's getting away!",
+    "He jumped the fence like a cat, hon!",
+    "Split up! Meet back at the stoop!",
+    "Stop running, we just wanna talk!",
+    "Who left a shopping cart here?!",
+    "He took the shortcut by the laundromat!",
+    "I'm outta breath, you chase him!"
+  ],
+  "boss_victory_taunts": [
+    "That's my block, and now it's my win. Go home, kid.",
+    "You came all this way just to sit on the curb?",
+    "Next time bring a crew. And a better plan.",
+    "I've seen tougher fights over the last parking spot.",
+    "Tell the whole harbor who sent you packing.",
+    "Dust yourself off, hon. Then stay down.",
+    "You fought hard. Wrong boss, wrong night.",
+    "My cousin can take you, and she's on a cane.",
+    "Go grab a snowball and think about what happened.",
+    "That was a warmup. You were the warmup.",
+    "The stoop always wins. Remember that.",
+    "Come back when your shoes stop squeaking."
+  ],
+  "stall_signs": [
+    "FRESH-ISH PRETZELS",
+    "Snowballs: Every Flavor But Blue",
+    "Grandma's Pit Beef, Since Ever",
+    "Lemon Sticks, 2 for 1",
+    "Hats That Fit Most Heads",
+    "Socks! Mostly Pairs!",
+    "Fried Dough, Ask for Extra",
+    "Hon's Hand-Painted Screens",
+    "Arabber Fruit, Straight Off Cart",
+    "Old Records, New Scratches",
+    "Pickles by the Pound",
+    "No Pigeons Served Here"
+  ],
+  "tutorial_hints_driving": [
+    "Hold the gas to go, tap the brake to not hit things.",
+    "Drift around corners by braking while you turn.",
+    "Cobblestones are bumpy. Slow down near the docks.",
+    "Boost refills when you drive close to other cars.",
+    "Lost? Follow the glowing arrow on the road.",
+    "Hop curbs carefully. Hydrants do not move.",
+    "Park in the marked spot to finish a delivery.",
+    "Bridges are fast lanes. Potholes are not.",
+    "Honk to clear pedestrians. Please be polite.",
+    "Flip over? Hold reset to get back on four wheels."
+  ],
+  "police_radio_chatter": [
+    "Unit 9, suspect last seen near the pier.",
+    "Copy that, heading east on the boulevard.",
+    "Be advised: rogue scooter in the bus lane.",
+    "Dispatch, I need backup at the market.",
+    "Suspect is wearing a very loud shirt.",
+    "All units, pigeons are blocking the road again.",
+    "Car 4, grab coffee on your way, over.",
+    "Negative, the van went under the overpass.",
+    "Reports of loud singing on the water taxi.",
+    "Roadblock set at the harbor bridge.",
+    "Suspect vehicle has three hubcaps. Look sharp.",
+    "Ten-four. Pursuit ending, suspect lost."
+  ],
+  "harbor_sightseeing_captions": [
+    "The water taxi waves hello as it chugs past.",
+    "Old brick warehouses glow orange at sunset.",
+    "Gulls patrol the pier looking for dropped fries.",
+    "Paddle boats shaped like dragons drift by.",
+    "The lighthouse still blinks for anyone listening.",
+    "Tall ships rest at the dock, ropes creaking.",
+    "Rowhouse rooftops stack up behind the harbor.",
+    "Night lights shimmer on the water like confetti."
+  ]
+}

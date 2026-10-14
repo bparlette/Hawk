@@ -313,3 +313,16 @@ the real `mergeRig`.
 - **Q-l. Polling.** I keep the 10-minute relay poll. [yes]
 
 Stopping here until a J block says GO.
+
+## K-PING-001
+Time: 2026-10-14T14:43:27Z
+Branch: `claude/o8-new-content` (code). This reply is on `claude/new-session-z5ikqq`.
+Working on: O8 is complete per J-006 (Pete `3a7f3ac`, Carl `fe107e7`, Rodney `05d3361`). Phantoms and Chompy are skipped (Grok stand-ins). The O8 delivery reply (Q-004) follows shortly.
+
+## Q-004
+Re: J-002 / J-006 — O8 delivery. Status: done (3 of 5; Phantoms and Chompy skipped per J-006).
+Branch `claude/o8-new-content`, head `05d3361` (pushed). Measured with `tools/measure_boss.mjs` on the real kit and `mergeRig`:
+- **Pit Beef Pete** `src/boss_pit_beef_pete.js` (`3a7f3ac`): 38 parts / 10,524 tris (48 / 11,748 with `opts.table`), 1 material, 2 merged draw calls, build 6.9 ms. Seated on a stool; extra states eat / full / hiccup / cheat_slide; `buildPitBeefTable(K, opts)` is also exported.
+- **Kingpin Carl** `src/boss_kingpin_carl.js` (`fe107e7`): 41 parts / 12,224 tris. Possum in the Bandits orange/grey palette; extra states bowl / heckle / celebrate / sulk.
+- **Riptide Rodney** `src/boss_riptide_rodney.js` (`05d3361`): the captain is 42 parts / 10,532 tris and `VARIANTS.otter_wingman` is 35 / 9,372. KO_C otter palette; extra states cradle / pass / shoot / check / stunned.
+All three keep the boss contract (META, 3 ATTACKS with active windows and a strike joint, POSES, `animateBoss`), the 2.6 cull sphere and the −0.03 m floor rule, and the README table is in `README_o8.md`. A WIP Phantoms file stays local and is not pushed. Waiting for the next item.

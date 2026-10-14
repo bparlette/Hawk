@@ -1,0 +1,81 @@
+{
+  "pedestrian_chatter_rowhouse_street": [
+    "Hon, you scrubbed your steps yet today?",
+    "My neighbor painted his door purple again.",
+    "Somebody's grilling, and it ain't me.",
+    "That alley cat owns this whole block.",
+    "Saved this parking spot with a lawn chair.",
+    "Who keeps feeding the pigeons on my stoop?",
+    "Corner store's out of lemon sticks again.",
+    "I heard sirens. Probably the new kid.",
+    "My screen door squeaks louder than my aunt.",
+    "Rain's coming. I can feel it in my knee.",
+    "You see that car fly by? Twice?",
+    "Don't step on the chalk drawings, hon.",
+    "The ice cream truck skipped us again.",
+    "Mind the hose, I'm washing the sidewalk.",
+    "Bet the whole street heard that one."
+  ],
+  "water_taxi_driver_lines": [
+    "Welcome aboard the water taxi. Hold on to hats.",
+    "Next stop, the old pier. Mind the gap, hon.",
+    "Keep your hands inside. The gulls get greedy.",
+    "I've run this harbor longer than you've lived.",
+    "Smooth water today. Lucky you.",
+    "That splash? Totally on purpose.",
+    "Water taxi rule one: no swimming off the back.",
+    "Look left for the brick warehouses. Pretty, huh?",
+    "Tips are welcome. Seasick bags are free.",
+    "We dock in two minutes. Grab your stuff.",
+    "Hang tight, big wake coming through!",
+    "Thanks for riding. Watch your step off the dock."
+  ],
+  "paddle_boat_tourist_lines": [
+    "Pedal harder! We're going in circles!",
+    "Why is the dragon boat so slow?",
+    "My legs are done. Your turn, hon.",
+    "Take a picture of me pretending to steer!",
+    "Is that a duck or a very small goose?",
+    "We passed that buoy three times now.",
+    "I think the harbor is moving, not us.",
+    "Wave at the water taxi! They waved back!",
+    "Who packed snacks? Please say you did.",
+    "Best twelve dollars I ever pedaled away."
+  ],
+  "photo_mode_captions": [
+    "Golden hour on the harbor",
+    "Stoop life, frozen in time",
+    "Rowhouse rooftops at dusk",
+    "Mid-air and totally fine",
+    "The pigeons approve this shot",
+    "Neon glow on wet pavement",
+    "One perfect water taxi wake",
+    "Blink and you missed the chase",
+    "Market crowd, maximum chaos",
+    "Hometown hero, blurry edition"
+  ],
+  "chase_escape_success_banners": [
+    "LOST 'EM IN THE ALLEYS!",
+    "CLEAN GETAWAY, HON!",
+    "SHAKEN OFF THE TAIL!",
+    "GONE LIKE A GULL!",
+    "OUTRAN THE WHOLE BLOCK!",
+    "ESCAPE ARTIST!",
+    "THEY'RE STILL LOOKING!",
+    "SLIPPED AWAY CLEAN!"
+  ],
+  "district_welcome_banners": [
+    "Welcome to the Harbor Front",
+    "Now Entering Rowhouse Row",
+    "Welcome to Old Market Square",
+    "You're in Pigeon Heights, Hon",
+    "Welcome to the Warehouse Docks",
+    "Now Entering Stoop Hill",
+    "Welcome to Snowball Corners",
+    "Now Entering Brick Mill Flats",
+    "Welcome to Lighthouse Point",
+    "Now Entering Tugboat Bend",
+    "Welcome to Neon Alley",
+    "You Made It to Steeple Park"
+  ]
+}

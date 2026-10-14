@@ -1,0 +1,76 @@
+{
+  "_round": "GR10",
+  "bosses": {
+    "chip_kid": {
+      "intro": ["Chip Kid: Mech online! Snack time, and YOU'RE the snack, grandpa!", "Chip Kid: Harborplace is my playground. No old people allowed!"],
+      "taunt": ["Chip Kid: Sneeze, grandpa! Seasoning cloud incoming!", "Chip Kid: My mech is bigger than your whole rowhouse!", "Chip Kid: Can barrage! Duck, duck, too slow!", "Chip Kid: Mom says I can stay out till I win.", "Chip Kid: Crunch time! Get it? CRUNCH time!"],
+      "hurt": ["Chip Kid: Hey! You dented my snack bag!", "Chip Kid: Ow! That's not fair, you're old!", "Chip Kid: Mech, stop wobbling! Stop it!"],
+      "defeat": ["Chip Kid: My mech! It's all crumbs now!", "Chip Kid: I'm telling my mom! MOOOM!", "Chip Kid: Fine. You win. But I'm keeping the snacks."]
+    },
+    "dragon_boat_duchess": {
+      "intro": ["Duchess: Bow, peasant! The harbor bends to my royal paddle!", "Duchess: A rowboat? Against MY dragon? How quaint."],
+      "taunt": ["Duchess: My dragon has more teeth than your whole crew.", "Duchess: Splash! Do learn to swim, darling.", "Duchess: Rule one of the harbor: the Duchess has right of way.", "Duchess: Paddle faster, toad. Royalty doesn't wait.", "Duchess: Another pier? Lovely. Smash into it for me."],
+      "hurt": ["Duchess: My figurehead! Do you know what that cost?", "Duchess: How DARE you ram a royal vessel!", "Duchess: My tiara's slipping. Unacceptable!"],
+      "defeat": ["Duchess: Sinking... with dignity. Mostly.", "Duchess: Fine. The harbor is yours. Mop it yourself.", "Duchess: My dragon's taking on water. And so am I."]
+    },
+    "one_eyed_brewmaster": {
+      "intro": ["Brewmaster: The whole city drinks from my taps. You're no exception.", "Brewmaster: Every gang answers to me. Tonight you answer too."],
+      "taunt": ["Brewmaster: One eye open, and it's watching you fail.", "Brewmaster: My truck's full and my patience is empty.", "Brewmaster: You're flat, toad. All foam, no fizz.", "Brewmaster: I've been brewing trouble since before you hopped.", "Brewmaster: My sign lights this harbor. You light nothing."],
+      "hurt": ["Brewmaster: Ack! My good eye!", "Brewmaster: That's coming out of your tab, toad!", "Brewmaster: You cracked my sign. You'll pay for every letter!"],
+      "defeat": ["Brewmaster: The taps run dry... the sign goes dark...", "Brewmaster: Last call... for me. Didn't see it coming.", "Brewmaster: The harbor's yours, toad. Keep it clean."]
+    },
+    "captain_cobblestone": {
+      "intro": ["Cobblestone: Yarr, a living toad aboard me ghost ship? Bold!", "Cobblestone: Me lantern's lit. Your luck's not."],
+      "taunt": ["Cobblestone: Two hundred years at sea, and ye still bore me.", "Cobblestone: Walk the plank, matey! It's a short one!", "Cobblestone: Me crew's dead and still faster than ye.", "Cobblestone: Swing that cane all ye like. I'm mostly fog.", "Cobblestone: The deck creaks for ye, toad. So does yer back."],
+      "hurt": ["Cobblestone: Blast! Ye clipped me lantern!", "Cobblestone: Arr, that one rattled me bones!", "Cobblestone: How does a stick hit a ghost?!"],
+      "defeat": ["Cobblestone: Me lantern dims... the fog calls me home...", "Cobblestone: Ye've earned the ship, landlubber.", "Cobblestone: Tell the harbor... Cobblestone fought well..."]
+    },
+    "stoop_scrubber": {
+      "intro": ["Scrubber: Hon, I scrubbed these steps at dawn. Don't you DARE.", "Scrubber: Muddy feet on my marble? Oh, it's ON, toad."],
+      "taunt": ["Scrubber: Slippery, ain't it? That's elbow grease, hon.", "Scrubber: My bucket's full and my brush is angry.", "Scrubber: Wipe your feet! WIPE THEM!", "Scrubber: These steps shine brighter than your future.", "Scrubber: Suds in your eyes, sweetie? Oops."],
+      "hurt": ["Scrubber: My bucket! You kicked my bucket!", "Scrubber: Ugh, a scuff! A SCUFF, hon!", "Scrubber: Now I gotta scrub that twice!"],
+      "defeat": ["Scrubber: Alright, hon. You can sit. Just wipe your feet.", "Scrubber: My brush is bent. My pride too.", "Scrubber: Clean fight, toad. Cleaner than my steps."]
+    },
+    "penthouse_pigeon": {
+      "intro": ["Pigeon: Ah, a visitor. Straighten your hat, we dress for dinner here.", "Pigeon: Welcome to the penthouse, toad. Mind the velvet."],
+      "taunt": ["Pigeon: *adjusts monocle* Is that... a toad? On MY roof?", "Pigeon: My smoking jacket costs more than your block.", "Pigeon: Coo. Such dreadful manners, climbing uninvited.", "Pigeon: I'd offer you a seat, but you'd soil it.", "Pigeon: The view's divine. Pity you'll be leaving so soon."],
+      "hurt": ["Pigeon: My monocle! It's popped right out!", "Pigeon: The velvet! You've wrinkled the velvet!", "Pigeon: Coo! Most uncivilized!"],
+      "defeat": ["Pigeon: Very well. The penthouse is yours. Do water the plants.", "Pigeon: Defeated by a toad. Mother will never let me forget.", "Pigeon: *drops monocle* I need a little lie-down."]
+    }
+  },
+  "grand_prix_announcer": {
+    "start": ["Engines roaring on Pratt Street!", "Lights out and away they go!", "Harold's off the line like a rocket!"],
+    "lap": ["Lap one done, and the toad is flying!", "Through the hairpin, clean as a whistle!", "Halfway there! Tires are smoking!"],
+    "lead_change": ["Harold takes the lead! What a move!", "He's been passed! The toad drops to second!", "Back in front! The crowd goes wild!"],
+    "crash": ["Into the barrier! That'll leave a mark!", "Spin! He's facing the wrong way!", "Cone hit! Cones everywhere!"],
+    "final_lap": ["FINAL LAP! Everything on the line!", "One more lap! Hold it together, Harold!"],
+    "win": ["Checkered flag! Harold wins it!", "A toad takes the Harbor Grand Prix!", "Victory lap for the old toad!"],
+    "lose": ["Second place. Close, but no trophy.", "Out of the race! Tow truck to turn four!", "So close! Mavis says next year, hon."]
+  },
+  "gang_barks": {
+    "otters": ["Splash zone, grandpa!", "Otters run this waterfront.", "Wet fur, dry wit.", "Captain says check him!", "Swim back to your lily pad.", "We float, you sink.", "Key Highway, baby!", "Towel break? Nah, keep playing."],
+    "wheelie_kings": ["Front wheel's on vacation!", "One wheel, all attitude.", "Bertie's watching, ride clean.", "Lean back and fly!", "Curb hop! Curb hop!", "Pedal faster, grandpa!", "Kings never touch down.", "Bike life, no brakes!"],
+    "phantoms": ["Boo, matey!", "Fog's thick, night's young.", "Back to the mist with ye!", "Me bones are restless.", "Haunt the pier, lads!", "A living toad? Fresh!", "Douse that lantern!", "Arr, the dead don't sleep."],
+    "rats": ["Smell that? Cheese and money.", "Harbor Rats, represent!", "Tails up, boys!", "This pier's ours, grandpa.", "Scram before we nibble you.", "Fries on the bricks? Mine!", "Rat pack, roll out!", "Squeak squeak, you're done."]
+  },
+  "boss_clear_banners": [
+    {"boss": "bird_brain_bobby", "text": "BOBBY STRUCK OUT!"},
+    {"boss": "raven_king", "text": "THE RAVEN KING FALLS!"},
+    {"boss": "dr_shellacious", "text": "DR. SHELLACIOUS CRACKED!"},
+    {"boss": "hon_queen", "text": "THE HON QUEEN BOWS!"},
+    {"boss": "sugar_rush", "text": "SUGAR RUSH CRASHED!"},
+    {"boss": "compression_king", "text": "COMPRESSION KING CRUSHED!"},
+    {"boss": "admiral_redclaw", "text": "THE FLAG STILL WAVES!"},
+    {"boss": "big_jimmy", "text": "BIG JIMMY BEATEN!"},
+    {"boss": "voltage_vic", "text": "VIC UNPLUGGED!"},
+    {"boss": "arabber_al", "text": "AL GOT BUSTED!"},
+    {"boss": "pool_shark", "text": "POOL SHARK SUNK!"},
+    {"boss": "dragon_boat_duchess", "text": "THE DUCHESS SINKS!"},
+    {"boss": "captain_cobblestone", "text": "GHOST SHIP CLEARED!"},
+    {"boss": "penthouse_pigeon", "text": "PIGEON DETHRONED!"},
+    {"boss": "stoop_scrubber", "text": "STOOP SCRUBBED CLEAN!"},
+    {"boss": "chip_kid", "text": "CHIP KID RAN HOME!"},
+    {"boss": "pit_beef_pete", "text": "PETE'S PLATE IS EMPTY!"},
+    {"boss": "one_eyed_brewmaster", "text": "LAST CALL, BREWMASTER!"}
+  ]
+}

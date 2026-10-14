@@ -1,0 +1,10 @@
+{
+  "pack": "GR34",
+  "prompt": "P-046",
+  "wing_house_names": ["Dockside Drumstick Den","The Wing Octagon","Pier Eight Wing Shack","Saucy Tugboat Wings","Harbor Heat House","Flats and Drums","Eight Corners Wing Co.","Bayfront Blaze Bar","The Hot Sauce Lighthouse","Wingtide Tavern","Pickle Barrel Wings","Rowhouse Wing Works"],
+  "wing_house_mascots": ["Captain Drumstick, a chicken in a tiny sailor cap","Sauce Bossman, a walking hot sauce bottle with a mustache","Celery Steve, a nervous celery stick who hates the heat","Tuggy, a grinning tugboat that toots when wings are ready","Blue Cheese Betty, a dip cup in pearls and curlers","Pepper Pete Jr., a chili pepper in a tracksuit","Napkin Ned, a paper napkin who is always out of breath","Ranch Hand Randy, a cowboy dip cup with a lasso"],
+  "wing_house_menu_board_lines": ["Ten wings, two dips, zero regrets","Harbor Heat: sign the waiver first","Mild, medium, or call your mother","Harbor dry rub, house secret","Drum or flat? Pick a side, hon","Celery is free. Respect is earned","Wing Wednesday: double sauce","Lemon pepper, the quiet favorite","Ask about the eight-sided challenge","Extra napkins at the register"],
+  "stadium_names": ["Harborline Field","Blackbird Field House","Camden Gate Grounds","Purple Tide Arena","Stadium at Russell Point","Ironworks Field","Gridiron Wharf","Southside Thunderdome"],
+  "sugar_refinery_names": ["Sweetwater Refinery","Sugar Pier Works","Crystal Cane Mills","Harbor Sugar Co.","Golden Granule Plant","Lockerman Sugar Works"],
+  "athletic_gear_landmark_names": ["Shieldline Point","Tidewater Gear Campus","Sweatforge Pier","Ironclad Athletic Wharf","Locust Point Gear Yard","Hustle Harbor HQ"]
+}

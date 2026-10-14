@@ -1,0 +1,81 @@
+{
+  "district_gang_barks": [
+    "This stoop's spoken for, bub.",
+    "Wrong alley, champ. Turn it around.",
+    "Our block, our rules, our marble steps.",
+    "You lost, or just looking for trouble?",
+    "Pigeons got more sense than you, hon.",
+    "Back off before I call my cousin.",
+    "Nobody rolls through Fells without a nod.",
+    "Eyes up, the new kid's walking funny.",
+    "Hey! That's my parking chair!",
+    "Harbor's that way. Start swimming.",
+    "We seen your kind at the arabber cart.",
+    "Keep moving, or keep the bruises.",
+    "Whole rowhouse is watching you, pal.",
+    "Ain't no water taxi coming to save you.",
+    "Told ya, this corner bites back."
+  ],
+  "boss_defeat_lines": [
+    "Fine! Keep the block. I'm keeping my dignity.",
+    "My crown... it was rented anyway.",
+    "Tell my mother I went down swinging, hon.",
+    "You got lucky. Real lucky. Annoyingly lucky.",
+    "I'll be back after a long nap and a sandwich.",
+    "That's it, I'm retiring to the county.",
+    "My whole gang saw that. I'm moving.",
+    "Not the beehive! Anything but the beehive!",
+    "Okay, okay, you win the harbor. Happy?",
+    "Ow. Ow. Okay, that one really stung.",
+    "Somebody hand me a towel and an ice pack.",
+    "Next time I'm bringing my big brother."
+  ],
+  "shop_signs": [
+    "Stoop & Scoop Ice Cream",
+    "Hon's Hair Hive",
+    "Rowhouse Hardware",
+    "Mallet & Pot Seafood",
+    "Charm City Pawn & Pickle",
+    "Tugboat Tackle",
+    "Marble Step Laundromat",
+    "Painted Screen Gallery",
+    "Seasoning Shack",
+    "Harbor Lights Diner",
+    "Pigeon Pete's Pretzels",
+    "Duckpin Dan's Lanes"
+  ],
+  "tutorial_tips": [
+    "Tap jump twice near a wall to scramble up.",
+    "Hold the dash button to slide under parked cars.",
+    "Coins glow brighter when a combo is building.",
+    "Stoops are safe spots. Sit to refill your health.",
+    "Ride the water taxi to skip across the harbor.",
+    "Watch the boss wind up, then dodge to the side.",
+    "Arabber carts sell snacks that boost your speed.",
+    "Open the map to see which districts are cleared.",
+    "Gang barks warn you a fight is about to start.",
+    "Pause anytime to swap gear without losing progress."
+  ],
+  "pause_menu_subtitles": [
+    "Catch your breath, hon.",
+    "The harbor will wait.",
+    "Stoop break in progress.",
+    "Even pigeons need a rest.",
+    "Grab a snack. We'll hold the block.",
+    "Water taxi's idling for you.",
+    "Rowhouse lights still on.",
+    "Back when you're ready, bub."
+  ],
+  "radio_station_idents": [
+    "WHON 98.6, the beehive of the dial.",
+    "Harbor Hits FM, smooth as low tide.",
+    "Stoop Radio: talk from the front steps.",
+    "Duckpin Disco 104, knock 'em down.",
+    "KCHM Charm City Classics, all day.",
+    "Pigeon Talk AM, we coo, you call.",
+    "Tugboat Tunes, rolling into port.",
+    "Rowhouse Rock 101, loud as the block.",
+    "Mallet Jams, hammering out the hits.",
+    "Night Shift 88, for harbor owls."
+  ]
+}

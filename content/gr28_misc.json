@@ -1,0 +1,81 @@
+{
+  "radio_dj_banter": [
+    "You're on Harbor Static, the station that never sleeps.",
+    "Traffic on the bridge is worse than my cousin's cooking.",
+    "Weather: humid, then more humid, then a storm, hon.",
+    "Next tune goes out to the guy honking on Pratt. Relax.",
+    "Caller says pigeons stole his fries. Again. Stay strong.",
+    "We play hits, misses, and whatever the intern found.",
+    "Somebody parked a sofa in a bus lane. Classic Tuesday.",
+    "Stay hydrated, stay humble, and stay off my stoop.",
+    "Word is the water taxi captain does karaoke. True.",
+    "Late night crew, this one's for the dock workers.",
+    "If you hear sirens, that's not the song. Pull over.",
+    "Our studio cat just knocked the mic over. Live radio!",
+    "Shoutout to whoever painted their door neon green.",
+    "Dedication from Aunt Dot: get off the couch, Dennis.",
+    "Static clears, rowhouses glow. Good night, harbor town."
+  ],
+  "shopkeeper_greetings": [
+    "Come on in, hon, mind the cat.",
+    "Welcome! Everything's fresh-ish today.",
+    "Look who finally showed up. Browse away.",
+    "Bell's broke, so just holler if you need me.",
+    "Ah, a customer! Don't touch the jars.",
+    "Fresh batch just came out. Smell that?",
+    "Elbows off the counter. What'll it be?",
+    "Hiya! Sale rack's in the back, sorta.",
+    "You look hungry. I can fix that.",
+    "Back again? I saved you the good stuff.",
+    "Welcome to the shop that time forgot.",
+    "Step lively, the floor squeaks but holds."
+  ],
+  "shopkeeper_farewells": [
+    "Come back soon, hon!",
+    "Don't be a stranger now.",
+    "Mind the step on your way out.",
+    "Say hi to your grandmom for me.",
+    "Spend it wisely, kiddo.",
+    "Door sticks. Give it a shove.",
+    "Stay out of trouble. Or don't.",
+    "See ya next payday!",
+    "Watch for pigeons out there.",
+    "Thanks! Receipts are optional."
+  ],
+  "mission_blurbs": [
+    "Deliver hot pit beef across town before it gets cold.",
+    "Escort a nervous parade float down a crowded avenue.",
+    "Recover a stolen parking chair from a rooftop gang.",
+    "Win back the block's pride at the stoop-sitting finals.",
+    "Chase a runaway arabber pony through the market maze.",
+    "Ride the water taxi and tag every rival's graffiti.",
+    "Find six lost cats before the neighborhood bake sale.",
+    "Outrun a storm surge with a van full of snowballs.",
+    "Sneak a birthday cake past the nosiest neighbor alive.",
+    "Fix the rowhouse lights before the holiday block party."
+  ],
+  "pedestrian_complaints": [
+    "Watch it! These are new sneakers!",
+    "Hey, I'm walkin' here, hon!",
+    "You almost hit my grocery bag!",
+    "Who taught you to drive, a goose?",
+    "My coffee! You owe me a coffee!",
+    "Slow down, there's kids on this block!",
+    "I just got this hair done, pal!",
+    "Ugh, the bus is late again.",
+    "Somebody took my parking chair!",
+    "It's too hot for this nonsense.",
+    "Quit splashing me with puddles!",
+    "Every day with you people, honestly."
+  ],
+  "victory_jingle_titles": [
+    "Stoop Champion Shuffle",
+    "Harbor Lights Hooray",
+    "Rowhouse Rumble Win",
+    "Pigeon Parade Fanfare",
+    "Big Block Blowout",
+    "Water Taxi Triumph",
+    "Snowball Sunday Stomp",
+    "Hon You Did It"
+  ]
+}

@@ -159,3 +159,612 @@ R-011 accepted (counts, lengths, JSON, grep all verified). The Chompy crab was o
 4. `loading_tips` 20 (<= 80), `tutorial_tips` 12 (<= 90).
 5. `achievements` 20 {name <= 24, desc <= 60}, original names.
 Self-check: counts per key, max lengths, JSON parse OK, grep 0 hits for "Natty", "Boh", "Utz", "Orioles", "Ravens", "Formstone", "IndyCar", "Trash Wheel", "Poe said", "nevermore", "crab". Edit nothing outside content/ and relay/HARK_TO_GROK.md replies.
+
+## P-013
+Title: GR9 writing batch: districts, signs, drone captions, credits, 2026-10-12
+Files: relay/briefs/HOMAGE.md; content/gr8_cast_tips.json (voice)
+Deliver: commit content/gr9_world.json, plus R-013 with the self-check block, the file path and the commit hash.
+
+R-012 accepted (counts, lengths, JSON, grep all verified). Rules as before (original characters, no real names or brands, grep list as P-012):
+1. `districts` 8 {name <= 20, clear_msg <= 60}: crime-meter district names for a Baltimore-style harbor city, plus the message shown when a district is cleared.
+2. `shop_signs` 24 (<= 28): original stall/shop names for markets, rowhouse corner stores, crab-free seafood, snowball stands, arcades.
+3. `drone_captions` 16 (<= 70): sightseeing captions for the drone mode over harbor, rowhouses, fort, market, bridges.
+4. `credits` 14 lines (<= 50): end credits, jokey, thanks to the toads, the pigeon, the trash wheel (call it "the wheel").
+5. `crowd_lines` 12 (<= 50): celebration crowd shouts after a boss falls.
+Self-check: counts per key, max lengths, JSON parse OK, grep 0 hits for "Natty", "Boh", "Utz", "Orioles", "Ravens", "Formstone", "IndyCar", "Trash Wheel", "Poe said", "nevermore", "crab". Edit nothing outside content/ and relay/HARK_TO_GROK.md replies.
+
+## P-014
+Title: QA of the integration build, 2026-10-12
+Files: content/g3_qa_template.md; branch review/integration (commit 5f3b4de, fetch it from Hawk)
+Deliver: commit content/g10_integration_qa.md, plus R-014 with the file path, the commit hash and the bug count.
+
+R-013 accepted (counts, lengths, JSON, grep all verified). Review the build with the G3 template. Cover Fort Bombardment, Bobby derby, Big Jimmy swim, Chip Kid duel, Arabber Al chase, Duchess ram and the Vic rhythm battle. Every bug cites file:line or a measured number, and is rated blocker, major or minor. Mark anything you cannot verify as UNVERIFIED with the evidence needed. Edit nothing outside content/ and relay/GROK_TO_HARK.md.
+
+## P-015
+Title: GR10 writing batch: remaining boss lines, Grand Prix announcer, gang barks, 2026-10-12
+Files: relay/briefs/HOMAGE.md; content/gr*.json (voice; grep them first and skip anything already written)
+Deliver: commit content/gr10_bosses.json, plus R-018 with the self-check block, the file path and the commit hash.
+
+R-017 accepted (22 findings, severities add up, 19 carried plus 3 new). R-014 to R-016 (Phantoms, Chompy, Penthouse Pigeon stand-in rigs, grok/opus-standin 66a546a, f6aeda2, 0da1fad) accepted too: budgets pass. Rules as before (original characters, no real names or brands, lines <= 90 chars unless stated, grep list as P-013):
+1. For each of chip_kid, dragon_boat_duchess, one_eyed_brewmaster, captain_cobblestone, stoop_scrubber, penthouse_pigeon: `intro` 2, `taunt` 5, `hurt` 3, `defeat` 3 (<= 70). Skip a boss only if an earlier gr file already has all four lists, and say which.
+2. `grand_prix_announcer` 20 (<= 60): start, lap, lead change, crash, final lap, win, lose.
+3. `gang_barks` for 4 gangs (otters, wheelie_kings, phantoms, rats), 8 each (<= 45), one gang per key.
+4. `boss_clear_banners` 18 (<= 28): one per boss.
+Self-check: counts per key, max lengths, JSON parse OK, grep 0 hits for "Natty", "Boh", "Utz", "Orioles", "Ravens", "Formstone", "IndyCar", "Trash Wheel", "Poe said", "nevermore", "crab". Edit nothing outside content/ and relay/HARK_TO_GROK.md replies.
+
+## P-016
+Title: Design and balance review: DESIGN.md against what is built, 2026-10-12
+Files: relay/briefs/DESIGN.md (copied from Brad's design doc); branch review/integration (commit 5f3b4de, already on Hawk); claude/o8-new-content (Pete, Carl, Rodney rigs); grok/opus-standin (Phantoms, Chompy, Pigeon rigs); content/g3_qa_template.md
+Deliver: commit content/g11_design_review.md, plus R-019 with the self-check block, the file path and the commit hash.
+
+R-018 accepted (counts, lengths, JSON, grep all verified; your banner id swap is fine, I will wire it). Next job is a design review, read-only on the code. Rules as before: every claim cites a DESIGN.md heading and a file:line or measured number in the branches above; mark anything you cannot verify UNVERIFIED with the evidence needed; edit nothing outside content/ and relay/GROK_TO_HARK.md.
+1. Coverage table: every DESIGN.md section (bosses, fort bombardment, game-style fights, drone, 3-part Brewmaster finale, Grand Prix, Hooters storefront, Pigeon climb, Bike Life, sixth gang, Lexington Market, side missions) marked BUILT / PARTLY / NOT STARTED, with the file or branch that shows it.
+2. Roster check: the 21-boss list against DESIGN.md numbering and the 2026-10-11 swaps (Chip Kid, Brewmaster final, roaming Duchess). List any boss with no rig, no mode or no lines in content/gr*.json.
+3. Balance: for each built boss mode, pull the numbers (player HP, boss HP, damage per hit, timers, win and lose conditions) into one table, and flag the 5 hardest and 5 easiest fights to win with a reason from the numbers.
+4. Fit and risk: 10 concrete design risks (phone 390x844 controls, 11 on-screen things at once, radio ducking, difficulty ramp, missing win/lose paths), each rated blocker, major or minor with a proposed fix of one line.
+Self-check: counts per section (sections, bosses, modes, risks), severities add up, UNVERIFIED listed, files read.
+
+## P-017
+Title: GR11 writing batch: Brewmaster 3-part finale script, ending, crime-meter win state, 2026-10-12
+Files: relay/briefs/HOMAGE.md; content/g11_design_review.md (the two blockers); content/gr*.json (grep first, skip duplicates)
+Deliver: commit content/gr11_finale.json, plus R-020 with the self-check block, the file path and the commit hash.
+
+R-019 accepted (27 = 6+12+9, 10 risks = 2+6+2, consistent). Your two blockers are text we can fill now. Rules as before (original characters, no real names or brands, JSON, stated counts).
+1. `brewmaster_finale`: parts 1, 2, 3, each with `intro` 2, `taunt` 4, `hurt` 3, `phase_end` 2 (<= 70), plus `defeat` 4 (<= 70).
+2. `ending_cutscene`: 12 captions (<= 80), toad skyline at dawn, in order.
+3. `crime_meter_clear`: 6 districts x `clear_message` 2 (<= 60) and `all_clear_banner` 3 (<= 30).
+4. `credits_thanks` 8 (<= 50).
+Self-check: counts per key, max lengths, JSON parse OK, grep 0 hits for "Natty", "Boh", "Utz", "Orioles", "Ravens", "Formstone", "IndyCar", "Trash Wheel", "Poe said", "nevermore", "crab". Edit nothing outside content/ and relay/HARK_TO_GROK.md replies.
+
+## P-018
+Title: QA of the Pit Beef Pete and Penthouse Pigeon builds, 2026-10-12
+Files: content/g3_qa_template.md; branches review/pete (commit e39289b, src/09d_pete.js) and review/pigeon (commit f07e716, src/09d_pigeon.js), fetch both from Hawk; content/gr4_new_content.json, content/gr6_bikes_pigeon.json (the lines wired in)
+Deliver: commit content/g12_pete_pigeon_qa.md, plus R-021 with the file path, the commit hash and the bug count per branch.
+
+R-020 accepted (counts, lengths, JSON, grep all verified). Two new modes are built and need a QA pass with the G3 template, one section per branch. Pete is a 5-course eat-off (test params ?pete=1&peteauto=win|lose, ?petecourse=N). The Pigeon is a 5-face WTC climb plus a ground fight (?pigeon=1&pigeonauto=win|lose, ?pigeonpart=2, ?pigeonquick=1, ?pigeonseed=N). Check rules and numbers in the code against DESIGN.md (relay/briefs/DESIGN.md), the wired Grok lines (fit, length, tone, any line never reachable), mobile 390x844 fit of prompts and HUD text, the lose/retry paths, entry rings, and whether BOSS_CLEAR fires. Every bug cites file:line or a measured number and is rated blocker, major or minor. Mark anything you cannot verify as UNVERIFIED with the evidence needed. Edit nothing outside content/ and relay/GROK_TO_HARK.md.
+
+## P-019
+Title: GR12 writing batch: how-to-play cards, pause/retry/offline text, touch hints, 2026-10-12
+Files: relay/briefs/HOMAGE.md; relay/briefs/DESIGN.md (mode rules); content/g12_pete_pigeon_qa.md; content/gr*.json (grep first, skip duplicates)
+Deliver: commit content/gr12_help.json, plus R-022 with the self-check block, the file path and the commit hash.
+
+R-021 accepted (14 bugs, consistent, runs and BOSS_CLEAR checks good). Carl and Rodney are not committed yet, so no QA this round. Writing instead, rules as before (original characters, no real names or brands, JSON, stated counts).
+1. `howto_cards`: one per mode for Fort Bombardment, Bobby derby, Big Jimmy swim, Chip Kid duel, Arabber Al chase, Duchess ram, Vic rhythm, Pete eat-off, Pigeon climb, Grand Prix, fishing: `title` (<= 24), `goal` (<= 60), `touch` (<= 60), `keys` (<= 60), `tip` (<= 60). 11 cards.
+2. `pause_menu`: 8 labels (<= 16) and 6 `pause_quips` (<= 50).
+3. `retry_lines`: 12 (<= 50), upbeat, never mean.
+4. `offline_and_error`: 6 friendly messages (<= 70): offline, slow load, save failed, audio blocked, rotate phone, update ready.
+5. `first_run_hints`: 10 touch hints (<= 45).
+Self-check: counts per key, max lengths, JSON parse OK, grep 0 hits for "Natty", "Boh", "Utz", "Orioles", "Ravens", "Formstone", "IndyCar", "Trash Wheel", "Poe said", "nevermore", "crab". Edit nothing outside content/ and relay/GROK_TO_HARK.md replies.
+
+## P-020
+Title: GR13 writing batch: achievements, shop signs, celebration crowd lines, credits roll, 2026-10-12
+Files: relay/briefs/HOMAGE.md; content/gr*.json (grep first, skip duplicates of earlier batches)
+Deliver: commit content/gr13_misc.json, plus R-023 with the self-check block, the file path and the commit hash.
+
+R-022 accepted (counts, lengths, JSON, grep all verified). Same rules (original characters, no real names or brands, JSON, stated counts).
+1. `achievements`: 30, each `name` (<= 24) and `desc` (<= 60), covering every boss mode, fishing, drone, Grand Prix, crime meter, exploring.
+2. `shop_signs`: 24 original stall/shop signs (<= 32), fun harbor-city flavor.
+3. `crowd_lines`: 20 celebration crowd shouts (<= 40).
+4. `credits`: 12 short credit lines (<= 50), fictional, no real people.
+5. `drone_captions`: 15 sightseeing captions (<= 60) not already in earlier files.
+Self-check: counts per key, max lengths, JSON parse OK, grep 0 hits for "Natty", "Boh", "Utz", "Orioles", "Ravens", "Formstone", "IndyCar", "Trash Wheel", "Poe said", "nevermore", "crab". Edit nothing outside content/ and relay/GROK_TO_HARK.md replies.
+
+## P-021
+Title: GR14 writing batch: loading tips, district gang barks, NPC chatter, boss defeat lines, 2026-10-12
+Files: relay/briefs/HOMAGE.md; content/gr*.json (grep first, skip duplicates of earlier batches)
+Deliver: commit content/gr14_misc.json, plus R-024 with the self-check block, the file path and the commit hash.
+
+R-023 accepted (counts, lengths, JSON, grep all verified). Same rules.
+1. `loading_tips`: 25 (<= 60), gameplay hints, harbor-city humor.
+2. `gang_barks`: 24 street-gang taunts (<= 40), original gangs only.
+3. `npc_chatter`: 24 pedestrian one-liners (<= 40), mixed weather/food/traffic.
+4. `defeat_lines`: 12 boss defeat quips (<= 50) not already used.
+5. `death_screen`: 10 "wasted" style messages (<= 40).
+Self-check: counts per key, max lengths, JSON parse OK, no exact duplicates vs earlier gr*.json, grep 0 hits for "Natty", "Boh", "Utz", "Orioles", "Ravens", "Formstone", "IndyCar", "Trash Wheel", "Poe said", "nevermore", "crab". Edit nothing outside content/ and relay/GROK_TO_HARK.md replies.
+
+## P-022
+Title: GR15 writing batch: Grand Prix announcer, boss intros and taunts, district names, photo-mode captions, 2026-10-12
+Files: relay/briefs/HOMAGE.md; content/gr*.json (grep first, skip duplicates of earlier batches)
+Deliver: commit content/gr15_misc.json, plus R-025 with the self-check block, the file path and the commit hash.
+
+R-024 accepted (counts, lengths, JSON, grep all verified). Same rules.
+1. `gp_announcer`: 20 Grand Prix announcer calls (<= 50): start, lead change, crash, final lap, finish.
+2. `boss_intros`: 12 boss entrance lines (<= 50), original bosses only.
+3. `boss_taunts`: 16 mid-fight taunts (<= 40).
+4. `district_names`: 10 original district names for the crime meter (<= 24).
+5. `photo_captions`: 15 photo-mode captions (<= 40).
+Self-check: counts per key, max lengths, JSON parse OK, no exact duplicates vs earlier gr*.json, grep 0 hits for "Natty", "Boh", "Utz", "Orioles", "Ravens", "Formstone", "IndyCar", "Trash Wheel", "Poe said", "nevermore", "crab". Edit nothing outside content/ and relay/GROK_TO_HARK.md replies.
+
+## P-023
+Title: GR16 writing batch: shop NPC dialogue, side-quest text, radio/news ticker, weather lines, 2026-10-12
+Files: relay/briefs/HOMAGE.md; content/gr*.json (grep first, skip duplicates of earlier batches)
+Deliver: commit content/gr16_misc.json, plus R-026 with the self-check block, the file path and the commit hash.
+
+R-025 accepted (counts, lengths, JSON, grep, duplicates all verified). Same rules.
+1. `shopkeeper_lines`: 20 shopkeeper greet/farewell lines (<= 50), original characters.
+2. `sidequests`: 10 objects with `title` (<= 24) and `desc` (<= 70).
+3. `news_ticker`: 20 fictional harbor-city headlines (<= 60), no real brands or people.
+4. `weather_lines`: 12 weather/time-of-day pedestrian remarks (<= 40).
+5. `pickup_toasts`: 15 item pickup toasts (<= 30).
+Self-check: counts per key, max lengths, JSON parse OK, no exact duplicates vs earlier gr*.json, grep 0 hits for "Natty", "Boh", "Utz", "Orioles", "Ravens", "Formstone", "IndyCar", "Trash Wheel", "Poe said", "nevermore", "crab". Edit nothing outside content/ and relay/GROK_TO_HARK.md replies.
+
+## P-024
+Title: GR17 writing batch: tutorial prompts, radio DJ patter, cutscene captions, shop item names, graffiti, 2026-10-12
+Files: relay/briefs/HOMAGE.md; content/gr*.json (grep first, skip duplicates of earlier batches)
+Deliver: commit content/gr17_misc.json, plus R-027 with the self-check block, the file path and the commit hash.
+
+R-026 accepted (counts, lengths, JSON, grep, duplicates all verified). Same rules.
+1. `tutorial_prompts`: 15 control/hint prompts (<= 50).
+2. `dj_patter`: 20 radio DJ between-song lines (<= 60), original station and DJ names only.
+3. `cutscene_captions`: 12 short story captions (<= 70).
+4. `shop_items`: 15 objects with `name` (<= 20) and `blurb` (<= 50), original items.
+5. `graffiti_tags`: 20 wall tags (<= 24).
+Self-check: counts per key, max lengths, JSON parse OK, no exact duplicates vs earlier gr*.json, grep 0 hits for "Natty", "Boh", "Utz", "Orioles", "Ravens", "Formstone", "IndyCar", "Trash Wheel", "Poe said", "nevermore", "crab". Edit nothing outside content/ and relay/GROK_TO_HARK.md replies.
+
+## P-025
+Title: GR18 writing batch: boss victory cheers, pause-menu jokes, car horn/NPC lines, mission names, street signs, 2026-10-12
+Files: relay/briefs/HOMAGE.md; content/gr*.json (grep first, skip duplicates of earlier batches)
+Deliver: commit content/gr18_misc.json, plus R-028 with the self-check block, the file path and the commit hash.
+
+R-027 accepted (counts, lengths, JSON, grep, duplicates all verified). Same rules.
+1. `victory_cheers`: 15 post-boss-win lines (<= 50).
+2. `pause_jokes`: 15 pause-menu jokes (<= 60).
+3. `npc_lines`: 20 pedestrian one-liners (<= 50).
+4. `mission_names`: 15 objects with `title` (<= 24) and `brief` (<= 70).
+5. `street_signs`: 20 original street/shop signs (<= 24).
+Self-check: counts per key, max lengths, JSON parse OK, no exact duplicates vs earlier gr*.json, grep 0 hits for "Natty", "Boh", "Utz", "Orioles", "Ravens", "Formstone", "IndyCar", "Trash Wheel", "Poe said", "nevermore", "crab". Edit nothing outside content/ and relay/GROK_TO_HARK.md replies.
+
+## P-026
+Title: GR19 writing batch: radio ads, collectible descriptions, rival crew taunts, tips, 2026-10-12
+Files: relay/briefs/HOMAGE.md; content/gr*.json (grep first, skip duplicates of earlier batches)
+Deliver: commit content/gr19_misc.json, plus R-029 with the self-check block, the file path and the commit hash.
+
+R-028 accepted (counts, lengths, JSON, grep, duplicates all verified). Same rules.
+1. `radio_ads`: 15 fictional radio ads (<= 70), no real brands.
+2. `collectible_blurbs`: 20 collectible descriptions (<= 50).
+3. `rival_taunts`: 15 rival-crew taunts (<= 50).
+4. `photo_mode_tips`: 12 tips (<= 50).
+5. `stat_titles`: 15 player title unlocks (<= 24).
+Self-check: counts per key, max lengths, JSON parse OK, no exact duplicates vs earlier gr*.json, grep 0 hits for "Natty", "Boh", "Utz", "Orioles", "Ravens", "Formstone", "IndyCar", "Trash Wheel", "Poe said", "nevermore", "crab". Edit nothing outside content/ and relay/GROK_TO_HARK.md replies.
+
+## P-027
+Title: Design review of DESIGN.md vs content written so far, 2026-10-12
+Files: DESIGN.md (if present, else docs/DESIGN.md); relay/briefs/HOMAGE.md; content/gr*.json
+Deliver: commit content/gr20_review.md, plus R-030 with the file path and the commit hash.
+
+R-029.1 accepted (counts, lengths, JSON, grep, duplicates all verified; commit f53040e). Same rules.
+1. List up to 10 DESIGN.md sections with no matching writing in content/gr*.json.
+2. List up to 10 balance or pacing risks (mission length, difficulty spikes, economy), each with a one-line fix.
+3. List up to 5 content tone clashes versus HOMAGE.md.
+Self-check: counts per list, and say which DESIGN.md file you read. Edit nothing outside content/ and relay/GROK_TO_HARK.md replies.
+
+## P-028
+Title: GR21 gap-fill writing from your R-030 review, 2026-10-12
+Files: relay/briefs/HOMAGE.md; content/gr*.json; content/gr20_review.md
+Deliver: commit content/gr21_gaps.json, plus R-031 with the file path and the commit hash.
+
+R-030 accepted (counts 6/10/4 verified, commit 54ec7f5). Same rules as before. Write original text for your six gaps. Water taxi, not ferry.
+1. sewer_metro_lines: 15 (sewer, metro, skateboard carry-over; max 50 chars)
+2. octagon_storefront: 10 (sign, NPC, blurb for the harbor octagon eatery, no real brand; max 50)
+3. landmark_signs: 10 (original stand-ins for the real-signage rule, no real brand names; max 24)
+4. pigeon_climb_popups: 12 (helicopter, golden mallet, score ticks; max 40)
+5. bike_builder_ui: 12 (ramp, mud pit, stoop placement; max 40)
+6. sugar_elevator_lines: 8 (roof elevator set piece; max 50)
+Self-check: counts, max lengths, JSON parse, grep Natty, Boh, Utz, Orioles, Ravens, Formstone, IndyCar, Trash Wheel, Poe said, nevermore, crab, Hooters, Hard Rock, Barnes, Phillips: 0 hits; exact duplicates vs gr1-gr20: 0. Edit nothing outside content/ and relay/GROK_TO_HARK.md replies.
+
+## P-029
+Title: G3 QA of the reworked Chip Kid duel (review/chipkid-fun), 2026-10-12
+Files: content/g3_qa_template.md; relay/briefs/HOMAGE.md; branch review/chipkid-fun (src/, site/, README.md; snapshot of hark/chipkid-fun ecc3c2a)
+Deliver: commit content/g22_chipkid_qa.md, plus R-032 with the self-check block, the file path and the commit hash.
+
+R-031 accepted (counts 15/10/10/12/12/8, lengths, JSON, grep, duplicates all verified; commit 9ef6a7e). Next job is QA, not writing.
+Fetch review/chipkid-fun (git fetch --depth 1 origin review/chipkid-fun). It reworks the Chip Kid duel for fun: 3-hit cane combo with trail, hitstop, shake, sparks and damage numbers; a POWER meter with 3 specials (Old Bay Cyclone, Crab-Mallet Pound, "Hon!" Homer); slow telegraphed attacks, half damage, i-frames, crab cakes, second wind, slow-mo KO with a grade and REMATCH. The same hit juice is now shared by the Big Jimmy belly hits.
+1. Use the G3 template, adapted for a live mode (skip ZIP-only lines): read the duel code in src/ and judge by numbers from the code (damage, telegraph frames, i-frames, meter fill, special cost, second-wind threshold).
+2. File up to 15 findings, each with severity (blocker / major / minor), file:line, and a one-line fix. Look for: unwinnable or trivially mashable fights, specials that skip the boss, meter never reaching a special, hitstop or slow-mo that can stick, REMATCH not resetting state, Big Jimmy regressions from the shared juice, text overflow at 390 px.
+3. Check every on-screen string against relay/briefs/HOMAGE.md (original characters; "Hon!" and the crab cake and Old Bay food-and-place gags are fine, no real brands or mascots).
+Self-check: findings count per severity, number of files read, and say which branch and short hash you reviewed. Edit nothing outside content/ and relay/GROK_TO_HARK.md replies.
+
+## P-030
+Title: G3 review of Opus O8 rigs (Pete, Carl, Rodney) on claude/o8-new-content, 2026-10-12
+Files: relay/briefs/O8.md; relay/briefs/O6.md (budgets, section 4); relay/briefs/HOMAGE.md; content/g3_qa_template.md; branch claude/o8-new-content (head 05d3361; README_o8.md, src/boss_*.js, harness/)
+Deliver: commit content/g23_o8_rig_review.md, plus R-033 with the self-check block, the file path and the commit hash.
+
+R-032 accepted (15 findings 0/5/10, consistent, file:line cited). Next job is a rig review of Opus's O8 deliveries. Fetch the branch (git fetch --depth 1 origin claude/o8-new-content). Pete, Carl and Rodney (+ otter_wingman) are committed; Phantoms and Chompy are yours (grok/opus-standin), so skip them.
+1. For each of the 3 bosses plus the wingman, compare README_o8.md numbers against the O6 caps (parts <= 70, tris <= 22,000, materials <= 4) and the 63 / 19,800 targets. Recompute at least the part count by reading the build code, and say whether each README figure matches.
+2. Check every state the O8 brief requires exists in the code (Pete: eat, full, hiccup, cheat_slide, plus the table/plate as a separate optional part; Carl: bowl, heckle, celebrate, sulk; Rodney: cradle, pass, shoot, check, stunned; wingman via opts.variant). Check that the lowest point in every pose is reported and that the dizzy pose is attached at test time, not baked in.
+3. Check Rodney's palette against claude/o4-key-hwy-otters and every design against relay/briefs/HOMAGE.md (original characters, no real people, brands, logos or mascots). Check the lacrosse stick is original.
+4. File up to 12 findings, each blocker / major / minor with file:line and a one-line fix. Mark anything you cannot verify as UNVERIFIED with the evidence needed.
+Self-check: findings per severity, number of files read, branch and short hash reviewed, and one line per boss with the part count you recomputed. Edit nothing outside content/ and relay/GROK_TO_HARK.md replies.
+
+## P-031
+Title: G3 regression QA of integration with Pete merged (review/integration-pete @ 0c44dfb), 2026-10-12
+Files: content/g3_qa_template.md; relay/briefs/HOMAGE.md; branch review/integration-pete (git fetch --depth 1 origin review/integration-pete)
+
+R-033 accepted (8 findings 0/3/5, recomputed counts, consistent). Next job is a regression pass on the merged build. Fetch the branch.
+1. Check that Pete's eat-off is reachable from the world and that it did not break the other bosses' hooks: Fort Bombardment, Bobby derby, Big Jimmy swim, Chip Kid duel, Arabber Al chase, Duchess ram, Vic rhythm battle. Read the boss registry and scene-switch code for collisions (ids, key bindings, shared globals, duplicate function names across src/).
+2. Check mobile at 390 px for overlap between the new Pete HUD and existing HUD elements.
+3. File up to 12 findings, blocker / major / minor with file:line and a one-line fix. Mark anything you cannot verify as UNVERIFIED.
+Deliver: commit content/g24_integration_pete_qa.md, plus R-034 with the self-check block (findings per severity, files read, branch and short hash). Edit nothing outside content/ and relay/GROK_TO_HARK.md replies.
+
+## P-032
+Title: GR22 Pete, Carl and Rodney bout text plus Lexington Market, 2026-10-12
+Files: relay/briefs/HOMAGE.md; relay/briefs/O8.md; content/gr*.json
+Deliver: commit content/gr22_bouts.json, plus R-035 with the file path and the commit hash.
+
+R-034 accepted (0/3/5 = 8 findings, tc_canary 12/12, consistent). Same rules as before. Original text only, water taxi not ferry.
+1. pete_eat_off_lines: 15 (Pete announcer, eat, full, hiccup, cheat-slide; max 50 chars)
+2. carl_bowl_lines: 15 (Carl bowling heckle, celebrate, sulk; max 50)
+3. rodney_lacrosse_lines: 15 (cradle, pass, shoot, check, stunned; max 50)
+4. lexington_market_signs: 12 (stall signs, no real brand names; max 24)
+5. lexington_crowd_barks: 12 (market shoppers cheering the bouts; max 40)
+6. bout_result_cards: 9 (win, lose, rematch for each of the three bouts; max 40)
+Self-check: counts, max lengths, JSON parse, grep Natty, Boh, Utz, Orioles, Ravens, Formstone, IndyCar, Trash Wheel, Poe said, nevermore, crab, Hooters, Hard Rock, Barnes, Phillips: 0 hits; exact duplicates vs gr1-gr21: 0. Edit nothing outside content/ and relay/GROK_TO_HARK.md replies.
+
+## P-033
+Title: GR23 Poe night, Phantoms, Brewmaster finale and fishing text, 2026-10-12
+Files: relay/briefs/HOMAGE.md; content/gr*.json
+Deliver: commit content/gr23_finale.json, plus R-036 with the file path and the commit hash.
+
+R-035 accepted (counts, lengths, JSON, grep, dups verified). Same rules as before. Original text only, water taxi not ferry.
+1. poe_night_lines: 15 (spooky night-mode narrator, original, no quoted poems; max 50 chars)
+2. phantom_taunts: 12 (ghostly rival taunts; max 44)
+3. brewmaster_finale_lines: 15 (one-eyed final boss intro, phases, defeat; max 50)
+4. fishing_chompy_lines: 15 (fishing catch, miss, Chompy snap; max 44)
+5. credits_thanks: 8 (max 40)
+6. final_clear_messages: 6 (max 40)
+Self-check: counts, max lengths, JSON parse, grep Natty, Boh, Utz, Orioles, Ravens, Formstone, IndyCar, Trash Wheel, Poe said, nevermore, crab, Hooters, Hard Rock, Barnes, Phillips: 0 hits; exact duplicates vs gr1-gr22: 0. Edit nothing outside content/ and relay/GROK_TO_HARK.md replies.
+
+## P-034
+Title: GR24 Grand Prix, drone, Hooters octagon and Rodney/Carl text, 2026-10-12
+Files: relay/briefs/HOMAGE.md; content/gr*.json
+Deliver: commit content/gr24_misc.json, plus R-037 with the file path and the commit hash.
+
+R-036 accepted (counts, lengths, JSON, grep verified). Same rules as before. Original text only, water taxi not ferry, no brand names for the octagon (call it the wing-house octagon).
+1. gp_pit_radio_lines: 12 (pit-crew radio in a street race; max 44)
+2. drone_pilot_tips: 10 (max 50)
+3. octagon_announcer_lines: 12 (cage-match ring announcer; max 44)
+4. carl_lines: 10 (max 44)
+5. rodney_lines: 10 (max 44)
+6. lexington_stall_barks: 12 (market vendors; max 40)
+Self-check: counts, max lengths, JSON parse, grep Natty, Boh, Utz, Orioles, Ravens, Formstone, IndyCar, Trash Wheel, Poe said, nevermore, crab, Hooters, Hard Rock, Barnes, Phillips: 0 hits; exact duplicates vs gr1-gr23: 0. Edit nothing outside content/ and relay/GROK_TO_HARK.md replies.
+
+## P-035
+Title: GR25 loading tips, achievements, end credits, 2026-10-12
+Files: relay/briefs/HOMAGE.md; content/gr*.json
+Deliver: commit content/gr25_misc.json, plus R-038 with the file path and the commit hash.
+
+R-037 accepted (counts, lengths, JSON, grep, dups verified). Same rules. Original text only, no brands or real names.
+1. loading_screen_tips: 15 (max 60)
+2. achievement_names: 12 (max 24)
+3. achievement_descriptions: 12, same order as names (max 50)
+4. end_credit_lines: 10 (playful thank-you lines for the cast of locals; max 44)
+5. crime_meter_clear_messages: 8 (district cleared; max 44)
+6. celebration_crowd_lines: 12 (max 36)
+Self-check: counts, max lengths, JSON parse, grep Natty, Boh, Utz, Orioles, Ravens, Formstone, IndyCar, Trash Wheel, Poe said, nevermore, crab, Hooters, Hard Rock, Barnes, Phillips, ferry: 0 hits; exact duplicates vs gr1-gr24: 0. Edit nothing outside content/ and relay/GROK_TO_HARK.md replies.
+
+## P-036
+Title: G13 design and balance review of DESIGN.md vs the integration build, 2026-10-12
+Files: relay/briefs/DESIGN.md; relay/briefs/HOMAGE.md; content/g11_design_review.md; content/g3_qa_template.md; branch review/integration-pete
+Deliver: commit content/g13_design_review.md, plus R-039 with the file path and the commit hash.
+
+R-038 accepted (counts, lengths, JSON, grep, dups verified). Re-review DESIGN.md against what is now built on review/integration-pete, building on g11 (do not repeat its findings; mark which g11 items are now fixed).
+1. Per section of DESIGN.md: built / partial / missing, with file:line evidence.
+2. Balance: top 10 numbers (damage, speeds, timers, rewards) that look off, with a proposed value and why.
+3. Top 5 missing features ranked by player impact.
+4. Findings tagged 0/1/2 severity, each with file:line.
+Self-check: findings counts per severity, every finding has file:line, HOMAGE risks listed. Edit nothing outside content/ and relay/GROK_TO_HARK.md replies.
+
+## P-037
+Title: GR26 district barks, boss defeat lines, shop signs, 2026-10-12
+Files: relay/briefs/HOMAGE.md; content/gr*.json
+Deliver: commit content/gr26_misc.json, plus R-040 with the file path and the commit hash.
+
+R-039 accepted (8ee41de; coverage rows, 10 balance items, 5 missing features, findings with file:line checked). Same writing rules. Original text only, no brands or real names.
+1. district_gang_barks: 15 (max 44)
+2. boss_defeat_lines: 12 (max 50)
+3. shop_signs: 12 (original stall and shop names, max 28)
+4. tutorial_tips: 10 (max 56)
+5. pause_menu_subtitles: 8 (max 36)
+6. radio_station_idents: 10 (max 40)
+Self-check: counts, max lengths, JSON parse, grep Natty, Boh, Utz, Orioles, Ravens, Formstone, IndyCar, Trash Wheel, Poe said, nevermore, crab, Hooters, Hard Rock, Barnes, Phillips, ferry: 0 hits; exact duplicates vs gr1-gr25: 0. Edit nothing outside content/ and relay/GROK_TO_HARK.md replies.
+
+## P-038
+Title: GR27 loading tips, crowd lines, crime-meter text, 2026-10-12
+Files: relay/briefs/HOMAGE.md; content/gr*.json
+Deliver: commit content/gr27_misc.json, plus R-041 with the file path and the commit hash.
+
+R-040 accepted (4c2d356; counts, lengths, JSON, grep, dups verified). Same writing rules. Original text only, no brands or real names.
+1. loading_screen_tips: 15 (max 56)
+2. celebration_crowd_lines: 12 (max 40)
+3. crime_meter_district_names: 10 (max 24)
+4. crime_cleared_messages: 10 (max 44)
+5. drone_sightseeing_captions: 12 (max 48)
+6. game_over_quips: 8 (max 40)
+Self-check: counts, max lengths, JSON parse, grep Natty, Boh, Utz, Orioles, Ravens, Formstone, IndyCar, Trash Wheel, Poe said, nevermore, crab, Hooters, Hard Rock, Barnes, Phillips, ferry: 0 hits; exact duplicates vs gr1-gr26: 0. Edit nothing outside content/ and relay/GROK_TO_HARK.md replies.
+
+## P-039
+Title: GR28 radio DJ banter, shopkeeper lines, mission blurbs, 2026-10-12
+Files: relay/briefs/HOMAGE.md; content/gr*.json
+Deliver: commit content/gr28_misc.json, plus R-042 with the file path and the commit hash.
+
+R-041 accepted (c3f8559; counts, lengths, JSON, grep, dups verified). Same writing rules. Original text only, no brands or real names.
+1. radio_dj_banter: 15 (max 56)
+2. shopkeeper_greetings: 12 (max 44)
+3. shopkeeper_farewells: 10 (max 36)
+4. mission_blurbs: 10 (max 60)
+5. pedestrian_complaints: 12 (max 40)
+6. victory_jingle_titles: 8 (max 30)
+Self-check: counts, max lengths, JSON parse, grep Natty, Boh, Utz, Orioles, Ravens, Formstone, IndyCar, Trash Wheel, Poe said, nevermore, crab, Hooters, Hard Rock, Barnes, Phillips, ferry: 0 hits; exact duplicates vs gr1-gr27: 0. Edit nothing outside content/ and relay/GROK_TO_HARK.md replies.
+
+## P-040
+Title: GR29 gang barks, boss defeat lines, stall signs, 2026-10-12
+Files: relay/briefs/HOMAGE.md; content/gr*.json
+Deliver: commit content/gr29_misc.json, plus R-043 with the file path and the commit hash.
+
+R-042 accepted (aaadfec; counts, lengths, JSON, grep verified). Same writing rules. Original text only, no brands or real names.
+1. gang_barks_chase: 15 (max 44)
+2. boss_victory_taunts: 12 (max 56)
+3. stall_signs: 12 (max 32)
+4. tutorial_hints_driving: 10 (max 60)
+5. police_radio_chatter: 12 (max 48)
+6. harbor_sightseeing_captions: 8 (max 60)
+Self-check: counts, max lengths, JSON parse, grep Natty, Boh, Utz, Orioles, Ravens, Formstone, IndyCar, Trash Wheel, Poe said, nevermore, crab, Hooters, Hard Rock, Barnes, Phillips, ferry: 0 hits; exact duplicates vs gr1-gr28: 0. Edit nothing outside content/ and relay/GROK_TO_HARK.md replies.
+
+## P-041
+Title: GR30 pedestrian chatter, boat-ride lines, photo-mode text, 2026-10-12
+Files: relay/briefs/HOMAGE.md; content/gr*.json
+Deliver: commit content/gr30_misc.json, plus R-044 with the file path and the commit hash.
+
+R-043 accepted (b189330; counts, lengths, JSON, grep, dups verified). Same writing rules. Original text only, no brands or real names.
+1. pedestrian_chatter_rowhouse_street: 15 (max 44)
+2. water_taxi_driver_lines: 12 (max 48)
+3. paddle_boat_tourist_lines: 10 (max 44)
+4. photo_mode_captions: 10 (max 40)
+5. chase_escape_success_banners: 8 (max 32)
+6. district_welcome_banners: 12 (max 36)
+Self-check: counts, max lengths, JSON parse, grep Natty, Boh, Utz, Orioles, Ravens, Formstone, IndyCar, Trash Wheel, Poe said, nevermore, crab, Hooters, Hard Rock, Barnes, Phillips, ferry: 0 hits; exact duplicates vs gr1-gr29: 0. Edit nothing outside content/ and relay/GROK_TO_HARK.md replies.
+
+## P-042
+Title: GR31 vendor cries, bridge/tunnel lines, ride-share and arcade text, 2026-10-12
+Files: relay/briefs/HOMAGE.md; content/gr*.json
+Deliver: commit content/gr31_misc.json, plus R-045 with the file path and the commit hash.
+
+R-044 accepted (b71b454; counts, lengths, JSON, grep, dups verified). Same writing rules. Original text only, no brands or real names.
+1. street_vendor_cries: 15 (max 44)
+2. tunnel_traffic_lines: 12 (max 48)
+3. taxi_passenger_lines: 12 (max 44)
+4. arcade_cabinet_titles: 10 (max 30)
+5. rainy_day_ambient_lines: 10 (max 44)
+6. game_over_screen_quips: 10 (max 40)
+Self-check: counts, max lengths, JSON parse, grep Natty, Boh, Utz, Orioles, Ravens, Formstone, IndyCar, Trash Wheel, Poe said, nevermore, crab, Hooters, Hard Rock, Barnes, Phillips, ferry: 0 hits; exact duplicates vs gr1-gr30: 0. Edit nothing outside content/ and relay/GROK_TO_HARK.md replies.
+
+## P-043
+Title: GR32 light-rail announcements, mural plaques, corner-store menus, stoop porch talk, lost-and-found notes, 2026-10-12
+Files: relay/briefs/HOMAGE.md; content/gr*.json
+Deliver: commit content/gr32_misc.json, plus R-046 with the file path and the commit hash.
+
+R-045 accepted (4f2d597; counts, lengths, JSON, grep, dups verified). Same writing rules. Original text only, no brands or real names.
+1. light_rail_announcements: 12 (max 48)
+2. mural_plaques: 10 (max 44)
+3. corner_store_menu_boards: 12 (max 36)
+4. stoop_porch_talk: 12 (max 44)
+5. lost_and_found_notes: 8 (max 50)
+6. street_sweeper_and_trash_truck_lines: 10 (max 44)
+Self-check: counts, max lengths, JSON parse, grep Natty, Boh, Utz, Orioles, Ravens, Formstone, IndyCar, Trash Wheel, Poe said, nevermore, crab, Hooters, Hard Rock, Barnes, Phillips, ferry: 0 hits; exact duplicates vs gr1-gr31: 0. Edit nothing outside content/ and relay/GROK_TO_HARK.md replies.
+
+## P-044
+Title: GR33 ferry-free harbor extras: water taxi, pier vendors, bridge toll booth, stadium parking, dog park, 2026-10-12
+Files: relay/briefs/HOMAGE.md; content/gr*.json
+Deliver: commit content/gr33_misc.json, plus R-047 with the file path and the commit hash.
+
+R-046 accepted (bae03e7; counts, lengths, JSON, grep, dups verified). Same writing rules. Original text only, no brands or real names.
+1. water_taxi_announcements: 12 (max 48)
+2. pier_vendor_cries: 12 (max 40)
+3. tunnel_toll_booth_lines: 10 (max 44)
+4. parking_lot_attendant_lines: 10 (max 44)
+5. dog_park_regular_chatter: 10 (max 44)
+6. rowhouse_window_signs: 10 (max 36)
+Self-check: counts, max lengths, JSON parse, grep Natty, Boh, Utz, Orioles, Ravens, Formstone, IndyCar, Trash Wheel, Poe said, nevermore, crab, Hooters, Hard Rock, Barnes, Phillips, ferry: 0 hits; exact duplicates vs gr1-gr32: 0. Edit nothing outside content/ and relay/GROK_TO_HARK.md replies.
+
+## P-045
+Title: G3 QA of Lexington Market, Westminster Burying Ground, Rash Field and Hooters octagon signs (review/integration-lex @ 017986f), 2026-10-12
+Files: content/g3_qa_template.md; relay/briefs/HOMAGE.md; branch review/integration-lex (git fetch --depth 1 origin review/integration-lex)
+
+R-047 accepted (ac2b99b; counts, lengths, JSON, grep, dups verified). Next job is QA of the newest build. Fetch the branch (snapshot of hark/integration 017986f: Pete merged, plus the new Lexington district).
+1. Read the new Lexington Market, Westminster Burying Ground, Rash Field and Hooters octagon code (grep src/ for LEX_ANCHOR, lexington, octagon, burying, rash). Check that Pete's eat-off uses the real Lexington anchor and still starts and ends cleanly.
+2. Check HOMAGE.md: no real brand names or logos on the octagon signs, stalls or graves (signs should be original homages). List any risk.
+3. Check collisions with the other modes (Fort Bombardment, Bobby derby, duels, racers, Vic rhythm): duplicate ids, shared globals, tick hooks, full-map and radio holds.
+4. Check mobile at 390 px for sign or HUD overlap, and draw-call or mesh-count risks (count new meshes per district from the source).
+5. File up to 12 findings, blocker / major / minor with file:line and a one-line fix. Mark anything you cannot verify as UNVERIFIED.
+Deliver: commit content/g25_lexington_qa.md, plus R-048 with the self-check block (findings per severity, files read, branch and short hash). Edit nothing outside content/ and relay/GROK_TO_HARK.md replies.
+
+## P-046
+Title: GR34 original homage text for the wing-house octagon and landmark rename options, 2026-10-12
+
+Files: relay/briefs/HOMAGE.md; content/gr*.json
+Deliver: commit content/gr34_homage_names.json, plus R-049 with the file path and the commit hash.
+
+R-048 accepted (c6b4e52; findings with file:line, self-check present). Good catch on the octagon and the landmark names; Brad rules on Hard Rock. Same writing rules. Original text only, no real brands, no real mascots.
+1. wing_house_names: 12 original names for the harbor octagon wing restaurant (max 24, no owl, no orange-and-white pun on any real chain)
+2. wing_house_mascots: 8 original mascot ideas, one line each (max 60, not a bird of prey)
+3. wing_house_menu_board_lines: 10 (max 36)
+4. stadium_names: 8 original homage names for the football stadium landmark (max 28)
+5. sugar_refinery_names: 6 homage names for the sugar refinery landmark (max 28)
+6. athletic_gear_landmark_names: 6 homage names for the Under Armour-style waterfront landmark (max 28)
+Self-check: counts, max lengths, JSON parse, grep Natty, Boh, Utz, Orioles, Ravens, Formstone, IndyCar, Trash Wheel, Hooters, Hard Rock, M&T, Domino, Under Armour, owl: 0 hits; exact duplicates vs gr1-gr33: 0. Edit nothing outside content/ and relay/GROK_TO_HARK.md replies.
+
+## P-047
+Title: GR35 original text for the new Lexington district and wing-house octagon challenge, 2026-10-12
+
+Files: relay/briefs/HOMAGE.md; content/gr*.json
+Deliver: commit content/gr35_lexington_text.json, plus R-050 with the file path and the commit hash.
+
+R-049 accepted (d6c9aa4; counts, lengths, JSON, grep verified). Same writing rules. Original text only, no real brands, no real people.
+1. market_stall_signs: 12 (max 28)
+2. market_vendor_barks: 12 (max 44)
+3. burying_ground_tour_captions: 10 (max 52, spooky but kid-safe, no real graves or names)
+4. rash_field_crowd_lines: 10 (max 40)
+5. octagon_announcer_lines: 10 (max 44, for the wing eat-off challenge: start, mid, win, lose)
+6. pete_eatoff_taunts: 8 (max 40)
+Self-check: counts, max lengths, JSON parse, grep Natty, Boh, Utz, Orioles, Ravens, Formstone, IndyCar, Trash Wheel, Poe said, nevermore, Hooters, Hard Rock, Lexington Market (real stall names), owl: 0 hits; exact duplicates vs gr1-gr34: 0. Edit nothing outside content/ and relay/GROK_TO_HARK.md replies.
+
+## P-048
+Title: GR36 loading-screen tips, tutorial tips and achievements, 2026-10-12
+
+Files: relay/briefs/HOMAGE.md; content/gr*.json
+Deliver: commit content/gr36_tips_achievements.json, plus R-051 with the file path and the commit hash.
+
+R-050 accepted (a6c705a; counts, lengths, JSON, grep verified). Same writing rules. Original text only, no real brands, no real people.
+1. loading_tips: 15 (max 60)
+2. tutorial_tips: 12 (max 48)
+3. achievement_names: 15 (max 24)
+4. achievement_descriptions: 15 (max 48, same order as names)
+5. crime_meter_clear_messages: 8 (max 40)
+Self-check: counts, max lengths, JSON parse, banned-term grep per HOMAGE.md (plus Hooters, Hard Rock, owl): 0 hits; exact duplicates vs gr1-gr35: 0. Edit nothing outside content/ and relay/GROK_TO_HARK.md replies.
+
+## P-049
+Title: GR37 celebration crowd lines, drone captions and Grand Prix announcer, 2026-10-12
+
+Files: relay/briefs/HOMAGE.md; content/gr*.json
+Deliver: commit content/gr37_crowd_drone_gp.json, plus R-052 with the file path and the commit hash.
+
+R-051 accepted (140e84e; counts, lengths, JSON, grep verified). Same writing rules. Original text only, no real brands, no real people.
+1. celebration_crowd_lines: 12 (max 36)
+2. drone_sightseeing_captions: 12 (max 52)
+3. grand_prix_announcer_lines: 12 (max 44; start, lap, pass, crash, win)
+4. credits_lines: 10 (max 40)
+Self-check: counts, max lengths, JSON parse, banned-term grep per HOMAGE.md (plus Hooters, Hard Rock, owl, ferry): 0 hits; exact duplicates vs gr1-gr36: 0. Edit nothing outside content/ and relay/GROK_TO_HARK.md replies.
+
+## P-050
+Title: G14 regression QA of the older modes on review/integration-lex, 2026-10-12
+
+Files: content/g3_qa_template.md; branch review/integration-lex (b7c6252)
+Deliver: commit content/g14_regression_qa.md, plus R-053 with the file path and the commit hash.
+
+R-052 accepted (f2c0dea; counts, lengths, JSON, grep verified). QA with g3_qa_template.md: Fort Bombardment, Bobby derby, Big Jimmy swim, Chip Kid duel, Arabber Al chase, Duchess ram, Vic rhythm battle. Per mode: start, win, lose, retry, mobile 390 layout, controls, softlocks. File bugs with severity, steps, file:line where you can find it. Self-check: all 7 modes covered, bug counts by severity. Edit nothing outside content/ and relay/GROK_TO_HARK.md replies.
+
+## P-051
+Title: G15 QA of the new boss modes on review/integration-1759052, 2026-10-12
+
+Files: content/g3_qa_template.md; branch review/integration-1759052 (snapshot of hark/integration 1759052: src, site, README)
+Deliver: commit content/g15_new_boss_qa.md, plus R-054 with the file path and the commit hash.
+
+R-053 accepted (03fc202; 49 cells 41/3/5 verified, B1 to B5 noted for the build thread). QA with g3_qa_template.md the three new boss modes: Chef Crabcake (Four Seasons kitchen duel, src/09p_crabcake.js), The Pool Shark (Pendry roof pool, src/09r_poolshark.js, `?poolshark=1&poolsharkauto=win|lose`) and The Stoop Scrubber (Washington Monument steps, src/09s_stoop.js). Find the Crabcake and Stoop test hooks in src and README. Also check the Power Plant signage now reads as original AMP HOUSE homage with no Hard Rock name, roundel, guitar or motto (HOMAGE.md), and that Pete and the Lexington Market still load (`?goto=lexington`).
+Per mode: start, win, lose, retry, mobile 390 layout, controls, softlocks, city entry by ACT ring if you can reach it. Please also fill in the UNTESTED control cells from G14 where a key log is available. File bugs with severity, steps, and file:line. Self-check: all 3 modes plus the signage check covered, bug counts by severity, PASS/FAIL/UNTESTED cell counts. Edit nothing outside content/ and relay/GROK_TO_HARK.md replies.
+
+## P-052
+Title: G16 QA of the second wave of boss modes on review/integration-4d14075, 2026-10-13
+
+Files: content/g3_qa_template.md; branch review/integration-4d14075 (snapshot of hark/integration 4d14075: src, site, README)
+
+R-054 accepted (b00d18b; 26 cells 22/0/4, notes N1 and N2 passed to the build thread). QA with g3_qa_template.md these modes: Kingpin Carl duckpin bowling (src/09k_carl.js), Riptide Rodney 2v2 lacrosse at Rash Field (src/09m_rodney.js, `?duel=rodney&duelbot=win|lose`), the Raven King, the Compression King, the Hon Queen (`?honqueen=1&honqueenauto=win|lose|mash`, `&honqueenphase=1..3`), Shellacious and Sugar Rush (`?sugarrush=1&sugarrushauto=win|lose|mash`). Find each test hook in src and README.
+Per mode: start, win, lose, retry, mobile 390 layout, controls, softlocks, city entry by ACT ring if you can reach it. Also check the new sign lettering (UNDER ARMOUR-style board on the Compression King and any other real brand text on signs, per HOMAGE.md), and file bugs with severity, steps, and file:line.
+Self-check: all 7 modes covered, signage check done, bug counts by severity, PASS/FAIL/UNTESTED cell counts. Deliver: commit content/g16_wave2_boss_qa.md, plus R-055 with the file path and the commit hash. Edit nothing outside content/ and relay/GROK_TO_HARK.md replies.
+
+## P-053
+Title: G17 QA of Harbor fishing + Chompy and Poe stealth night on review/integration-4e2f8d0, 2026-10-13
+
+Files: content/g3_qa_template.md; branch review/integration-4e2f8d0 (snapshot of hark/integration 4e2f8d0: src, site, README)
+
+R-055 accepted (a0ca53e; 56 cells 39/1/16, B1 tell box overflow and the signage notes N1-N3 passed to the build thread). QA with g3_qa_template.md these modes: Harbor fishing + Chompy (src/09x_fishing.js: 5 pier rings, cast/hook/reel with tension and runs, day and night fish lists, junk feeds Chompy, cane/purse flags, guaranteed ghost lantern on the first night cast at the Broadway pier, rare sunken key) and Poe stealth night (src/09y_poe.js: top-down graveyard sneak, 3 crow lantern cones, tombstone line of sight, sneak, pebbles, 3 roses, unlabeled bottle, gate, Nevermore Feather saved and window.hasNevermoreFeather() gating the Raven King ring). Find test hooks in src and README.
+Per mode: start, win, lose, retry, mobile 390 layout, controls, softlocks, city entry by ring if reachable, save/flag persistence. Check for real brand text on signs per HOMAGE.md. File bugs with severity, steps, file:line.
+Self-check: both modes covered, signage check done, bug counts by severity, PASS/FAIL/UNTESTED cell counts. Deliver: commit content/g17_fishing_poe_qa.md, plus R-056 with the file path and commit hash. Edit nothing outside content/ and relay/GROK_TO_HARK.md replies.
+
+## P-054
+Title: GR38 writing for fishing, Poe night and Fells Point Phantoms, 2026-10-13
+
+Files: relay/briefs/HOMAGE.md; content/gr37_crowd_drone_gp.json (format reference)
+R-056 accepted (e31e28b; 18 cells 13/1/4, B1 Chompy threshold bug and N1 to N3 passed to the build thread). Write original text as JSON with stated counts and a max line length of 60: (1) 40 fish/junk/crab catch lines for the 5 Harbor pier rings (day and night, with the ghost lantern and sunken key as rares), (2) 12 Chompy reaction barks, (3) 20 Poe night lines: crow caught, rose picked, bottle, gate, win and lose, with a feather name that avoids the banned term, (4) 25 Fells Point Phantoms gang barks and 6 intro/taunt/defeat triples for their leader. No real names or brands for characters. Self-check: counts per group, max line length, 0 banned hits, JSON valid. Deliver: commit content/gr38_fishing_poe_phantoms.json, plus R-057 with path and commit. Edit nothing outside content/ and relay/GROK_TO_HARK.md replies.
+
+## P-055
+Title: G18 design and balance review of DESIGN.md vs the integration build, 2026-10-13
+
+Files: relay/briefs/HOMAGE.md; content/g3_qa_template.md; branch review/integration-4e2f8d0 (src, site, README); DESIGN.md if present on that branch
+R-057 accepted (61aef6d; counts 40/12/20/25/6, max line 46, JSON ok, 0 banned hits; feather name Midnight Quill passed to the build thread). Review DESIGN.md sections against what is built on review/integration-4e2f8d0: for each boss mode, fishing, Poe night and the districts, list what DESIGN.md promises that is missing, what is built but undocumented, and balance concerns (difficulty spikes, reward/economy, mobile 390 controls, time-to-first-fun). Rank the top 10 fixes by impact with file:line where possible.
+Self-check: sections covered count, gaps count, top 10 ranked. Deliver: commit content/g18_design_balance_review.md, plus R-058 with the file path and commit hash. Edit nothing outside content/ and relay/GROK_TO_HARK.md replies.
+
+## P-056
+Title: G19 QA of the finale and Pigeon: Brewmaster, Penthouse Pigeon, shared JUICE KO replay, Carl, Rodney (2026-10-13)
+
+Files: relay/briefs/HOMAGE.md; content/g3_qa_template.md; branch review/integration-455f159 (src, site, README, snapshot of hark/integration 455f159); relay/briefs/DESIGN.md
+R-058 accepted (2981c72; sections 4/4, gaps 16/7/2/6 consistent, file:line spot-checked OK: 09x_fishing.js:195, 09u_cobblestone.js:29). Answer to your question: yes, the banned-term list is for writing packs only. Real signage in the build follows the DESIGN real-signage rule, so don't flag UNDER ARMOUR, Domino, M&T or Hooters signs. Characters and mascots still follow HOMAGE.md. Also note: the Pigeon, Brewmaster, juice replay and Carl/Rodney are all built now, so several of your "missing" gaps closed in this newer build.
+QA this build with the G3 template (390x844 and 1280x720, win + lose each, 0 own errors, draw-call check where you can):
+1. One-Eyed Brewmaster, 3 parts: ?brewmaster=1 (&brewmasterpart=1..3, &brewmasterauto=win|lose|mash, &brewmasterhp=). Check part transitions, retry loop, the ending/crime-clear, 390 controls, and whether the final KO fires one replay only.
+2. Penthouse Pigeon: ?pigeon=1 (&pigeonpart=2, &pigeonauto=win|lose, &pigeonquick=1, &pigeonseed=N). Check the 5-face climb, window pop-ups, the ground fight, the harbor knock-in KO.
+3. Shared JUICE KO replay (src/09aj_juice.js): does it fire once per final blow on Chip Kid, Compression King, Pigeon and Brewmaster, and does the camera stay inside the viewport at 390.
+4. Kingpin Carl (?duel=carl&duelbot=win|lose) and Riptide Rodney (?duel=rodney&duelbot=win|lose): the 2 modes that were never QA'd by you.
+Self-check: cells tested count (modes x viewports x win/lose), bugs by severity, a 5-line list of what to fix first, and what from the G18 gap list you confirm is now closed. Deliver: commit content/g19_finale_qa.md, plus R-059 with path and commit hash. Edit nothing outside content/ and relay/GROK_TO_HARK.md replies.
+
+## P-057
+Title: G20 QA of the latest integration: retest G19 gaps + the fixed bugs (2026-10-13)
+
+Files: relay/briefs/HOMAGE.md; content/g3_qa_template.md; branch review/integration-769bc08 (src, site, README, snapshot of hark/integration 769bc08)
+R-059 accepted (d414b27; 12 PASS / 0 FAIL / 4 UNTESTED, bug counts 0/0/2/3 consistent, JUICE once-per-KO table is useful). This build adds the Pigeon JUICE.ko at the harbor knock-in, the Chip Kid rework, the Chompy cane/purse fix and the tell-box wrap (R-055 B1, R-056 B1 should be closed).
+QA with the G3 template, win + lose, 0 own errors:
+1. Close the 4 UNTESTED cells from G19: Brewmaster 390 lose, Pigeon 390 lose, Carl and Rodney at a desktop size. If the box is loaded, use 640x360 rather than 320x180 and say so. Use &carlauto for Carl (the spec hook runs at 1x).
+2. Retest G19 B1 (JUICE replay camera clipping at 390, 09aj_juice.js:158) and R-055 B1 (Compression King tell box at 390) and R-056 B1 (Chompy cane/purse after reload): fixed, still open, or changed.
+3. Chip Kid rework (?duel=chipkid): fun check against the earlier R-032 findings (mashable, 390 tell overflow, HOMAGE kid risk): which are closed.
+4. City boot at 390 and 1280: 0 own errors, ACT label for the Brewmaster reads sensibly.
+Self-check: cells tested count (target 16 plus the extras), bugs by severity, which earlier bugs are closed vs open, a 5-line fix-first list. Deliver: commit content/g20_latest_qa.md, plus R-060 with path and commit hash. Edit nothing outside content/ and relay/GROK_TO_HARK.md replies.
+
+## P-058
+Title: G21 QA of Fells Point Phantoms + regression of fishing/Poe on the latest integration (2026-10-13)
+
+Files: relay/briefs/HOMAGE.md; content/g3_qa_template.md; branch review/integration-59933ee (src, site, README, snapshot of hark/integration 59933ee)
+R-060 accepted (c5f7ff3/8cf16d2; 16/16 matrix, retests consistent, bugs 0/0/2/3). Good catch on the R-059 count. Fix list N1-N4 goes to the build thread. This build adds the Fells Point Phantoms fight (src/09z_phantoms.js).
+QA with the G3 template, win + lose, 0 own errors, 390x844 and a desktop size (640x360 is fine, say so):
+1. Fells Point Phantoms (night only, Broadway pier, ring beside the fishing spot; 3 waves: Bosun Bones, Deckhand Dread, Powder Monkeys; ghost-lantern solid toggle, knock-in sinks only solid ghosts). Find the hook/param to start it (grep 09z). Win, lose + retry, 1 replay on the final KO if JUICE is wired, nothing off-screen at 390, tell/HUD text fits, ACT label sensible. Fun check: are the 3 waves distinct, is the lantern toggle readable, can you cheese it?
+2. Regress fishing/Chompy and Poe stealth at 390 (win + lose each): confirm N2 (casts persist) still open or fixed.
+3. HOMAGE pass over the pirate ghosts: any real-brand or real-name risk in text or look.
+4. City boot at 390 and 1280: 0 own errors; does the Phantoms ring appear at night only?
+Self-check: cells tested count (target 14 or more), bugs by severity, closed vs open from G20, a 5-line fix-first list. Deliver: commit content/g21_phantoms_qa.md, plus R-061 with path and commit hash. Edit nothing outside content/ and relay/GROK_TO_HARK.md replies.
+
+## P-059
+Title: G22 QA of the finale payoff, drone mode and credits + Phantoms night-only retest (2026-10-13)
+
+Files: relay/briefs/HOMAGE.md; content/g3_qa_template.md; branch review/integration-4ff78b9 (src, site, README, snapshot of hark/integration 4ff78b9)
+R-061 accepted (4ece87e; 18 cells 15/0/3, bugs 0/0/3/3). Fix list B1, B2, N1-N4 goes to the build thread. This build adds the finale celebration (src/09z_finale.js), drone mode, credits and the Cobblestone storm intro.
+QA with the G3 template, 390x844 plus 640x360, 0 own errors:
+1. Finale: ?finale=1&finaleauto=1. Dock scene (Harold + Mavis cheer/hug), fireworks, DRONE UNLOCKED card, CITY SAVED crime meter, tap-skip dock -> credits -> city. Text fits at 390, nothing off-screen, credits list 19 bosses + final + radio tracks, HOMAGE check on credits text.
+2. Drone mode: ACT/V/DRONE chip, free-fly controls at 390 and 640, saved unlock after reload, any way to get stuck, fall out of the world or leave drone without an exit.
+3. Cobblestone with the storm intro started in daytime: win + lose + retry, lighting restored after LEAVE.
+4. Retest G21 B1 (Phantoms HUD line), B2 (ring by day), N1-N4 if the build thread fixed them; report open vs closed.
+5. City boot 390 and 1280: 0 own errors.
+Self-check: cells tested (target 14+), bugs by severity, closed vs open from G21, 5-line fix-first list. Deliver: commit content/g22_finale_qa.md, plus R-062 with path and commit hash. Edit nothing outside content/ and relay/GROK_TO_HARK.md replies.
+
+## P-060
+Title: G26 pre-launch design and balance sweep of the whole build (2026-10-13)
+
+Files: relay/briefs/HOMAGE.md; content/g3_qa_template.md; content/g18_design_balance_review.md; branch review/integration-4ff78b9
+R-062 accepted (ba93c5a; 17 cells 14/1/2, bugs 0/0/2/4 consistent). B1 Duchess missing from credits (09z_finale.js:296) and B2 radio card over dock go to the build thread.
+Review the full build against DESIGN.md, reading src with file:line cites:
+1. Difficulty curve: order all 20 bosses by HP/damage/tell time from the code, flag any spike or flat spot, and say which bosses a first-time player at 390 will hit in what order.
+2. Rewards: JUICE, purse/cash, unlocks. List any reward that has no effect or no persistence (purse, casts) and any grind wall.
+3. Mobile first-run: first 5 minutes at 390x844, tutorial coverage of every control, any mode with no tip.
+4. Re-check G18 findings: closed, open, changed.
+Self-check: boss table row count (20 plus Brewmaster), gaps by severity, 5-line fix-first list. Deliver: commit content/g26_prelaunch_review.md, plus R-063 with path and commit hash. Edit nothing outside content/ and relay/GROK_TO_HARK.md replies.
+
+## P-061
+Title: G27 install Toad City Baltimore on Brad's Mac and check it launches from ES-DE (2026-10-13)
+
+Files: branch toadcity/desktop: install_mac.sh, uninstall_mac.sh, desktop/README.md (controls, Gatekeeper, RetroArch note), es-de/ (system, find rule, ROM stub, gamelist, media). Release: https://github.com/bparlette/Hawk/releases/tag/desktop-v2 (pre-release; the installer always takes the newest desktop-v* release).
+Deliver: R-064 in relay/GROK_TO_HARK.md with the checklist below filled in, plus content/g27_mac_install_report.md (commit hash in the reply). Screenshots, if you can take them, go in content/g27/.
+
+Brad asked for this one: unlike the usual repo-only jobs, this job runs ON BRAD'S MAC (the machine you operate for him). Only the commands below; no sudo, no purchases, no posts, nothing else installed, and no change to any other ES-DE system. If any step needs a password, an Apple ID, a System Settings approval or anything you can't do, stop and write it in R-064 instead of working around it.
+
+1. Quit ES-DE if it is running (it rewrites its files on exit). Note the macOS version and chip (`sw_vers; uname -m`).
+2. Install (idempotent; it backs up and merges ~/ES-DE/custom_systems/es_systems.xml + es_find_rules.xml rather than overwriting them):
+   `curl -fsSL https://raw.githubusercontent.com/bparlette/Hawk/toadcity/desktop/install_mac.sh | bash`
+   Paste the full output into the report. Then check:
+   - `file ~/Applications/"Toad City Baltimore.app"/Contents/MacOS/"Toad City Baltimore"` shows a universal binary (x86_64 + arm64)
+   - `xattr -l ~/Applications/"Toad City Baltimore.app" | grep -c quarantine` prints 0 (if not: `xattr -dr com.apple.quarantine ~/Applications/"Toad City Baltimore.app"` and say so)
+   - `grep -c toadcity ~/ES-DE/custom_systems/es_systems.xml` >= 1, `grep -c TOADCITY ~/ES-DE/custom_systems/es_find_rules.xml` >= 1, and every system that was in the file before is still there (compare with the .backup-* file if one was made)
+   - `ls ~/ROMs/toadcity ~/ES-DE/downloaded_media/toadcity/*` (stub + screenshots, marquees, videos, titlescreens, covers, fanart, miximages). If Brad moved his ROM or media folder in ES-DE settings, the installer uses that folder; report which paths it printed.
+3. Run the installer a second time: it must finish with "already up to date" for both custom files and create no new backup.
+4. Start ES-DE. Confirm: a "Toad City Baltimore" system appears; its game shows the screenshot/miximage, the marquee and the video preview; name, description, developer Brad Parlette, players 1-4 show in the details. If the system is missing: Main menu > Utilities > Rescan ROM directory, then quote the lines mentioning "toadcity" or "TOADCITY" from ~/ES-DE/logs/es_log.txt.
+5. Launch the game with the controller. Confirm: it opens fullscreen with no window bar or cursor, the title is "Toad City Baltimore", audio plays, and the controller moves Harold right away with no mouse click. Play ~1 minute (walk, swing, open the map with Select).
+6. Quit: hold Select+Start (Back+Start) for 1 second. A "HOLD TO QUIT" bar shows and the game closes back into ES-DE (not to the desktop, no crash dialog). Launch again and quit by holding Esc for 1 second. A quick Esc tap must NOT quit.
+7. Optional, if quick: in ES-DE pick the alternative emulator "Toad City Baltimore (open -W script)" for the game, launch, quit, confirm ES-DE comes back; then set it back to the default.
+8. Leave it installed. Do not run uninstall_mac.sh.
+
+Report format (R-064): one line per step PASS/FAIL/SKIP with the evidence (command output or what you saw), the macOS version + chip, the ES-DE version (Main menu > About, or the app's Get Info), the controller model, any Gatekeeper or permission prompt and what clicked it through, and a short list of bugs (step, expected, actual). Edit nothing outside content/ and relay/GROK_TO_HARK.md replies.
