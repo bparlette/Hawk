@@ -1,0 +1,109 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<script src="../../demo-embed.js"></script>
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,maximum-scale=1,minimum-scale=1,user-scalable=no">
+<meta name="theme-color" content="#14101f">
+<title>Toad City Paperboy</title>
+<meta name="description" content="A Paperboy-style rowhouse delivery run on the Toad City Baltimore engine: Harold rides E Fort Ave for a week.">
+<style>
+  html, body { margin: 0; height: 100%; overflow: hidden; background: #14101f; touch-action: none; overscroll-behavior: none; position: fixed; width: 100%; -webkit-user-select: none; user-select: none; -webkit-touch-callout: none; }
+  body { font-family: Impact, "Arial Black", "Helvetica Neue", Arial, system-ui, sans-serif; color: #fff; letter-spacing: .5px; }
+  #gl { position: fixed; left: 0; top: 0; width: 100vw; height: 100vh; height: 100dvh; display: block; outline: none; }
+  .ink { text-shadow: 2px 2px 0 #14101f, -1px -1px 0 #14101f, 1px -1px 0 #14101f, -1px 1px 0 #14101f; }
+  #hud { position: fixed; left: 0; right: 0; top: 0; padding: calc(env(safe-area-inset-top, 0px) + 8px) 10px 0; z-index: 10; pointer-events: none; display: none; }
+  body.playing #hud { display: block; }
+  #hud .row { display: flex; align-items: center; gap: 8px; }
+  .chip { background: #14101f; border: 2px solid #14101f; box-shadow: 3px 3px 0 rgba(20,16,31,.55); border-radius: 9px; padding: 5px 9px; font-size: 15px; line-height: 1; white-space: nowrap; }
+  #hDay { background: #ffd23c; color: #14101f; transform: rotate(-3deg); }
+  #hScore { margin-left: auto; font-size: 20px; color: #ffd23c; background: rgba(20,16,31,.82); }
+  .chip.pap { background: #efe9d8; color: #14101f; } .chip.pap.low { background: #ff3d6e; color: #fff; animation: blink .35s infinite alternate; }
+  .chip.pap::before { content: ""; display: inline-block; width: 16px; height: 9px; background: #efe9d8; border: 2px solid #14101f; border-radius: 5px; margin-right: 5px; vertical-align: -1px; box-shadow: inset 6px 0 0 -3px #d23a3a; }
+  .chip.subs { background: #2f5a36; } .chip.lives { color: #ff5f7a; background: rgba(20,16,31,.82); letter-spacing: 2px; }
+  @keyframes blink { from { opacity: 1; } to { opacity: .55; } }
+  #hBar { position: relative; height: 10px; margin: 8px 2px 0; background: rgba(20,16,31,.7); border: 2px solid #14101f; border-radius: 6px; }
+  #hBar i { position: absolute; top: 1px; width: 6px; height: 4px; margin-left: -3px; background: #ffd23c; border-radius: 2px; }
+  #hBar i.ok { background: #7dff6b; } #hBar i.x { background: #ff3d6e; }
+  #hBarMe { position: absolute; top: -5px; width: 14px; height: 14px; margin-left: -7px; background: #ff3d6e; border: 2px solid #14101f; border-radius: 50%; }
+  #timer { position: fixed; left: 50%; top: calc(env(safe-area-inset-top, 0px) + 74px); transform: translateX(-50%); font-size: 30px; color: #7fe8ff; z-index: 11; pointer-events: none; }
+  #pops { position: fixed; inset: 0; pointer-events: none; z-index: 12; overflow: hidden; }
+  .pop { position: absolute; left: 0; top: 0; font-size: 18px; color: #fff; white-space: nowrap; text-shadow: 2px 2px 0 #14101f, -2px -2px 0 #14101f, 2px -2px 0 #14101f, -2px 2px 0 #14101f; }
+  .pop.gold { color: #ffd23c; font-size: 22px; } .pop.bad { color: #ff5f7a; }
+  #ban { position: fixed; left: 50%; top: 34%; transform: translate(-50%,-50%) rotate(-4deg) scale(.7); font-size: 40px; color: #ffd23c; text-align: center; line-height: 1.05; opacity: 0; transition: opacity .15s, transform .15s; z-index: 13; pointer-events: none; white-space: nowrap;
+    text-shadow: 3px 3px 0 #14101f, -2px -2px 0 #14101f, 2px -2px 0 #14101f, -2px 2px 0 #14101f; }
+  #ban.on { opacity: 1; transform: translate(-50%,-50%) rotate(-4deg) scale(1); }
+  #ban small { display: block; font-size: 15px; color: #fff; margin-top: 6px; letter-spacing: 2px; }
+  #say { position: fixed; left: 50%; top: calc(env(safe-area-inset-top, 0px) + 92px); transform: translateX(-50%); max-width: min(340px, 88vw); background: #fff8e6; color: #14101f; border: 3px solid #14101f; box-shadow: 4px 4px 0 #14101f;
+    border-radius: 14px; padding: 7px 12px 8px; font: 700 14px/1.3 "Comic Sans MS", "Chalkboard SE", "Trebuchet MS", system-ui, sans-serif; opacity: 0; transition: opacity .2s; z-index: 13; pointer-events: none; text-align: center; }
+  #say.on { opacity: 1; } #say b { display: block; font: 900 10px/1 Impact, "Arial Black", sans-serif; color: #d23a3a; letter-spacing: 1px; margin-bottom: 3px; }
+  #vign { position: fixed; inset: 0; pointer-events: none; z-index: 9; opacity: 0; transition: opacity .3s; }
+  /* cards */
+  #card { position: fixed; inset: 0; display: none; align-items: center; justify-content: center; z-index: 30; background: rgba(20,16,31,.45); }
+  #card.on { display: flex; }
+  #card .box { width: min(440px, 90vw); background: #fff8e6; color: #14101f; border: 4px solid #14101f; box-shadow: 8px 8px 0 #14101f; border-radius: 16px; padding: 18px 18px 16px; text-align: center; transform: rotate(-1deg);
+    background-image: radial-gradient(rgba(20,16,31,.09) 1.2px, transparent 1.4px); background-size: 7px 7px; }
+  #cardT { font-size: 34px; line-height: 1; color: #d23a3a; text-shadow: 2px 2px 0 #14101f; } #cardT small { display: block; font-size: 13px; color: #14101f; text-shadow: none; letter-spacing: 3px; margin-top: 6px; }
+  #cardB { font: 600 15px/1.45 "Trebuchet MS", "Helvetica Neue", Arial, system-ui, sans-serif; margin: 12px 0 14px; } #cardB p { margin: 6px 0; } #cardB b { font-family: Impact, "Arial Black", sans-serif; font-weight: normal; font-size: 18px; }
+  #cardB .tip { font-size: 13px; color: #4a3a5a; font-style: italic; } .gold { color: #b8860b; font-weight: 800; } .bad { color: #d23a3a; font-weight: 800; }
+  .route { display: flex; flex-wrap: wrap; gap: 3px; justify-content: center; margin: 4px 0 10px; } .route i { width: 12px; height: 16px; background: #5a5560; border: 2px solid #14101f; border-radius: 2px; }
+  .route i.s { background: #ffd23c; } .route i.x { background: #ff3d6e; } .route i.n { background: #7dff6b; }
+  .btn { font: 22px Impact, "Arial Black", sans-serif; letter-spacing: 1px; padding: 13px 22px; border-radius: 12px; border: 3px solid #14101f; box-shadow: 4px 4px 0 #14101f; background: #ffd23c; color: #14101f; cursor: pointer; touch-action: manipulation; }
+  .btn:active { transform: translate(3px,3px); box-shadow: 1px 1px 0 #14101f; } .btn.b2 { background: #cfc8ef; margin-left: 8px; }
+  /* title */
+  #title { position: fixed; inset: 0; z-index: 25; display: none; flex-direction: column; align-items: center; justify-content: center; gap: 12px; text-align: center; background: linear-gradient(rgba(20,16,31,.15), rgba(20,16,31,.55)); }
+  #title.on { display: flex; }
+  #title h1 { margin: 0; font-size: clamp(42px, 11vw, 96px); line-height: .9; color: #ffd23c; transform: rotate(-5deg); text-shadow: 4px 4px 0 #14101f, -3px -3px 0 #14101f, 3px -3px 0 #14101f, -3px 3px 0 #14101f, 8px 9px 0 #d23a3a; font-weight: normal; }
+  #title h1 span { display: block; color: #fff; font-size: .42em; letter-spacing: 4px; }
+  #title .sub { font: 700 15px/1.4 "Trebuchet MS", Arial, system-ui, sans-serif; background: rgba(20,16,31,.78); padding: 8px 14px; border-radius: 10px; max-width: 88vw; }
+  #title .ctl { font: 600 13px/1.5 "Trebuchet MS", Arial, system-ui, sans-serif; color: #efe9d8; background: rgba(20,16,31,.7); padding: 8px 12px; border-radius: 10px; max-width: 88vw; }
+  #title .ctl b { color: #ffd23c; } body.touch #title .kb { display: none; } body:not(.touch) #title .tc { display: none; }
+  #best { color: #ffd23c; font-size: 16px; }
+  /* touch deck */
+  #joy, #throwB { position: fixed; z-index: 15; display: none; touch-action: none; }
+  html.demo-embed #joy, html.demo-embed #throwB { display: none !important; } /* inside Brad's Demos the shell's own stick + buttons drive the game */
+  html.demo-embed #keys { display: none !important; }
+  body.touch.playing #joy, body.touch.playing #throwB { display: block; }
+  #joy { left: calc(env(safe-area-inset-left, 0px) + 18px); bottom: calc(env(safe-area-inset-bottom, 0px) + 22px); width: 140px; height: 140px; border-radius: 50%; background: rgba(20,16,31,.38); border: 3px solid rgba(255,255,255,.35); }
+  #joy::before { content: "FAST"; position: absolute; top: 6px; left: 50%; transform: translateX(-50%); font-size: 10px; opacity: .7; } #joy::after { content: "SLOW"; position: absolute; bottom: 6px; left: 50%; transform: translateX(-50%); font-size: 10px; opacity: .7; }
+  #knob { position: absolute; left: 50%; top: 50%; width: 58px; height: 58px; border-radius: 50%; background: #ffd23c; border: 3px solid #14101f; box-shadow: 3px 3px 0 #14101f; transform: translate(-50%,-50%); }
+  #throwB { right: calc(env(safe-area-inset-right, 0px) + 20px); bottom: calc(env(safe-area-inset-bottom, 0px) + 34px); width: 112px; height: 112px; border-radius: 50%; background: #ff3d6e; border: 4px solid #14101f; box-shadow: 5px 5px 0 #14101f; color: #fff; font-size: 22px; }
+  #throwB.dn { transform: translate(3px,3px); box-shadow: 2px 2px 0 #14101f; }
+  #throwB span { position: absolute; left: 0; right: 0; top: 50%; transform: translateY(-50%); text-align: center; }
+  #ctlbar { position: fixed; z-index: 16; right: calc(env(safe-area-inset-right, 0px) + 10px); top: calc(env(safe-area-inset-top, 0px) + 74px); display: none; gap: 6px; flex-direction: column; align-items: flex-end; }
+  body.playing #ctlbar { display: flex; }
+  #ctlbar button { font: 12px Impact, "Arial Black", sans-serif; letter-spacing: 1px; padding: 7px 10px; border-radius: 8px; border: 2px solid #14101f; background: rgba(255,248,230,.92); color: #14101f; box-shadow: 2px 2px 0 #14101f; cursor: pointer; touch-action: manipulation; }
+  #keys { position: fixed; left: 50%; bottom: 10px; transform: translateX(-50%); z-index: 14; font: 600 12px/1 "Trebuchet MS", Arial, system-ui, sans-serif; background: rgba(20,16,31,.72); padding: 7px 12px; border-radius: 14px; white-space: nowrap; display: none; pointer-events: none; }
+  #keys b { color: #ffd23c; } body.playing:not(.touch) #keys { display: block; }
+  #pausedT { position: fixed; inset: 0; display: none; align-items: center; justify-content: center; z-index: 29; font-size: 48px; color: #ffd23c; background: rgba(20,16,31,.5); pointer-events: none; }
+  body.paused #pausedT { display: flex; }
+  @media (max-width: 480px) { .chip { font-size: 13px; padding: 4px 7px; } #hScore { font-size: 17px; } #ban { font-size: 30px; } #cardT { font-size: 28px; } .btn { font-size: 19px; padding: 12px 16px; } }
+</style>
+</head>
+<body>
+<canvas id="gl"></canvas>
+<div id="vign"></div>
+<div id="hud" class="ink">
+  <div class="row"><div class="chip" id="hDay">MON</div><div class="chip pap"><span id="hPap">10</span></div><div class="chip subs">SUBS <span id="hSubs">0</span></div><div class="chip lives" id="hLives">♥♥♥</div><div class="chip" id="hScore">0</div></div>
+  <div id="hBar"><div id="hBarFill"></div><div id="hBarMe"></div></div>
+</div>
+<div id="timer" class="ink" style="display:none">30s</div>
+<div id="pops"></div>
+<div id="ban"></div>
+<div id="say"></div>
+<div id="ctlbar"><button type="button" id="pauseB">PAUSE</button><button type="button" id="muteB">SOUND ON</button></div>
+<div id="keys"><b>← →</b> steer (← houses) · <b>↑ ↓</b> speed · <b>SPACE</b> throw · <b>P</b> pause · <b>M</b> sound</div>
+<div id="joy"><div id="knob"></div></div>
+<div id="throwB"><span>THROW</span></div>
+<div id="pausedT" class="ink">PAUSED</div>
+<div id="title">
+  <h1>TOAD CITY<span>PAPERBOY</span></h1>
+  <div class="sub">Harold's paper route: one week on E Fort Ave, Locust Point. Keep the subscribers happy.</div>
+  <div class="ctl"><span class="kb"><b>← →</b> steer · <b>↑ ↓</b> speed · <b>SPACE</b> throw</span><span class="tc">Left pad: steer + speed · <b>THROW</b> button</span><br>Mailbox = PERFECT · Dark houses: smash a window · Grab bundles for papers</div>
+  <button type="button" class="btn" id="startB">START ROUTE ▶</button>
+  <div id="best" class="ink"></div>
+</div>
+<div id="card"><div class="box"><div id="cardT"></div><div id="cardB"></div><button type="button" class="btn" id="cardBtn">OK</button><button type="button" class="btn b2" id="cardBtn2" style="display:none">MENU</button></div></div>
+<script type="module" src="game.js"></script>
+</body>
+</html>
