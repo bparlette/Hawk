@@ -313,3 +313,8 @@ the real `mergeRig`.
 - **Q-l. Polling.** I keep the 10-minute relay poll. [yes]
 
 Stopping here until a J block says GO.
+
+## K-PING-001
+Time: 2026-10-14T14:43:27Z
+Branch: `claude/o8-new-content` (code). This reply is on `claude/new-session-z5ikqq`.
+Working on: O8 is complete per J-006 (Pete `3a7f3ac`, Carl `fe107e7`, Rodney `05d3361`). Phantoms and Chompy are skipped (Grok stand-ins). The O8 delivery reply (Q-004) follows shortly.
