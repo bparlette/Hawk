@@ -2121,6 +2121,14 @@ const THUG_POSES = {
     const p = HERO_POSES.down(u, ground); p.ty = ground ? 0.2 : 0.5; return p;
   },
   getup(u, J) { const p = THUG_POSES.idle(0, J); legsStance(p, 0.2, 1.2 * (1 - u)); p.torso = [0.9 * (1 - u), 0, 0]; return p; },
+  // dizzy (QTE window): seeing stars; t = seconds in state. Loose wobbling stagger, arms dangling, head lolling.
+  dizzy(t, J) {
+    const p = blank(); legsStance(p, 0.16, 0.35); const w = Math.sin(t * 5.5), w2 = Math.sin(t * 3.1 + 1);
+    p.hips = [0, 0, 0.08 * w]; p.torso = [0.25 + 0.06 * w2, 0.15 * w2, -0.18 * w]; p.neck = [0.35, 0.2 * w2, 0.3 * w];
+    p.shL = [0.1, 0, 0.35 + 0.15 * w]; p.shR = [0.1, 0, -0.35 + 0.15 * w]; p.elL = [-0.35, 0, 0]; p.elR = [-0.35, 0, 0];
+    if (J && J.swR) p.swR = [Math.PI / 2 - 0.2, 0, 0];
+    return p;
+  },
 };
 // apply a pose to a rig, damped (rate r); tilt angles are applied raw when `snapTilt`
 function applyPose(J, p, r, dt, snapTilt) {
@@ -2208,7 +2216,7 @@ function mergeRig(J) {
   };
   const add = (geo, mat, ol) => {
     const m = new THREE.SkinnedMesh(geo, mat); m.bind(skel, _I4);
-    m.boundingSphere = new THREE.Sphere(new THREE.Vector3(0, 0.95, 0), 1.9); // rig-space bounds (culling without per-frame CPU skinning)
+    m.boundingSphere = new THREE.Sphere(new THREE.Vector3(0, 0.95, 0), 2.6); // 2.6 covers a ~2 m rig lying flat in 'down' (reaches ~2.48 m from centre) // rig-space bounds (culling without per-frame CPU skinning)
     m.castShadow = !ol; m.receiveShadow = false;
     if (ol) { m.visible = QUAL.hd; QUAL.outlines.push(m); }
     root.add(m); return m;
@@ -3734,6 +3742,12 @@ window.__cel = { S, hero, partner, PART, BOOST_P, hurtTurtle, reviveTurtle, part
 // No visible video (Brad 2026-10-11 09:06): the YouTube iframe is 2x2 px, opacity .01, pointer-events:none, behind everything; controls=0, fs=0, disablekb=1,
 // allow="autoplay" only. Starts on the first tap / keypress with the title track. The station-ID card drops from the bar on every switch.
 // ?radio=0 disables it, ?radiotest=1 swaps the YouTube player for a stub (headless logic checks), ?radiobc=1 forces the Bandcamp player for the CC tracks.
+// B-MORE 410 REMIX (Brad 2026-10-11: "make a remix channel the default channel ... each song plays the most played 20 seconds ... then remixes into the next"):
+// first on the dial and the default. Shuffles Brad's 30 Baltimore classics (no repeats until all 30 have played), plays a 20 s clip of each from its peak start
+// (REMIX_PEAK, baked offline by radio/remix_heatmap.py from YouTube's Most Replayed heatmap; never scraped at runtime), then crossfades into the next clip.
+// Two hidden audio-only players: the next clip is preloaded muted at its peak, and the last 3 s run an equal-power crossfade with a short tape-drag
+// (playbackRate 0.5) on the outgoing clip. iOS Safari ignores setVolume and lets one page play one audible stream, so on iOS one player hard-cuts
+// clip to clip with a fast seek ("play to play"). ?remix1=1 forces the one-player mode, ?remix2=1 the two-player mode, ?remixclip=N shortens clips (tests), ?radiolog=1 logs clips to the console.
 // Test hook: window.__radio ----------------
 const RADIO = (function () {
   if (Q.get('radio') === '0') return null;
@@ -3768,18 +3782,33 @@ const RADIO = (function () {
     ducky: [T.syc, T.bullet, T.crash, T.cock, T.para], lor: [T.icant, T.hood, T.back, T.war, T.took, T.run, T.every, T.anthem],
     club: [T.c1, T.c2, T.c3, T.c4, T.c5, T.c7, T.c9, T.c13, T.c14, T.c17, T.c18, T.c19, T.c29, T.c30],
     rap: [T.c6, T.c8, T.c10, T.c11, T.c12, T.c15, T.c16, T.c20, T.c21, T.c22, T.c23, T.c24, T.c25, T.c26, T.c27, T.c28] };
-  const STATIONS = ['auto', 'day', 'night', 'ducky', 'lor', 'club', 'rap', 'off'];
-  const SNAME = { auto: 'AUTO', day: 'B-MORE 410 DAY', night: 'B-MORE 410 NIGHT', ducky: 'DUCKY DYNAMO FM', lor: 'LOR BITEWHO', club: 'B-MORE CLUB', rap: 'B-MORE RAP', off: 'OFF' };
-  const SSHORT = { auto: 'AUTO', day: 'DAY', night: 'NIGHT', ducky: 'DUCKY FM', lor: 'LOR BITEWHO', club: 'B-MORE CLUB', rap: 'B-MORE RAP', off: 'OFF' };
+  // ---- REMIX: peak start per track (seconds). A number = heatmap peak (best 20 s window by summed intensityScoreNormalized). null = FALLBACK: no heatmap could be
+  // fetched at build time (2026-10-11: youtube.com answered the build box with HTTP 429 / google.com/sorry for every watch page, see radio/remix_heatmap.log), so the
+  // clip starts 35% into the track (at least 30 s in, past the intro; at most length - 25 s), worked out from player.getDuration() once the track loads (45 s until then).
+  // Re-run radio/remix_heatmap.py from an unblocked machine and paste radio/remix_peaks.json here to replace the fallbacks.
+  const REMIX_PEAK = {
+    quUSjngSmN0: null, qEnptXwZSfo: null, '1zRb_WNEeaw': null, rvZWAEDI6bY: null, '1kbwFhD597Q': null, gXVaIiexbRk: null, u2hse3dRJZ8: null, gVCCuHMRpco: null, // fallback (no heatmap)
+    l_xzOk0w3qU: null, BbXklS6t4AM: null, 'RT0GKX-Pfkg': null, '9WyLkGp9eM0': null, fHAigWTZioI: null, 'BWpbV-DrI_0': null, GI7wtAZaXXs: null, mze0GuD2k6c: null, // fallback
+    Av5jyGX2yE8: null, SrYcZfalGjI: null, kUlr1WLU6ys: null, f32eCeneIbY: null, '7Z3ExxAPSF8': null, _Dru5adhPjU: null, KKIunI_nlKg: null, jovjP6StSWU: null, // fallback
+    Svmcd4uvkiY: null, '8pWftkom4_I': null, 'RknlZpl-VpM': null, V16BdeeA4YY: null, uwl1zto209M: null, XIs3B_CL0l8: null, // fallback
+  };
+  // Pool: Brad's 30 Baltimore classics only (Baltimore artists, already in the radio). The CC BY-ND / BY-NC-ND tracks stay off REMIX (ND = no adaptations, and a
+  // crossfaded excerpt mix could count as one); Lor Bitewho / NASG CHAZ are left out because their Baltimore origin isn't confirmed.
+  const POOL = [T.c1, T.c2, T.c3, T.c4, T.c5, T.c6, T.c7, T.c8, T.c9, T.c10, T.c11, T.c12, T.c13, T.c14, T.c15, T.c16, T.c17, T.c18, T.c19, T.c20, T.c21, T.c22, T.c23, T.c24, T.c25, T.c26, T.c27, T.c28, T.c29, T.c30];
+  const shuffle = (a, avoid) => { for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } if (avoid && a[0] === avoid && a.length > 1) [a[0], a[a.length - 1]] = [a[a.length - 1], a[0]]; return a; };
+  TRACKS.remix = shuffle(POOL.slice());
+  const STATIONS = ['remix', 'auto', 'day', 'night', 'ducky', 'lor', 'club', 'rap', 'off'];
+  const SNAME = { remix: 'B-MORE 410 REMIX', auto: 'AUTO', day: 'B-MORE 410 DAY', night: 'B-MORE 410 NIGHT', ducky: 'DUCKY DYNAMO FM', lor: 'LOR BITEWHO', club: 'B-MORE CLUB', rap: 'B-MORE RAP', off: 'OFF' };
+  const SSHORT = { remix: 'REMIX', auto: 'AUTO', day: 'DAY', night: 'NIGHT', ducky: 'DUCKY FM', lor: 'LOR BITEWHO', club: 'B-MORE CLUB', rap: 'B-MORE RAP', off: 'OFF' };
   const ICON = '<svg class="ric" viewBox="0 0 24 18" aria-label="radio"><path d="M6 4 L17 0.8" stroke="currentColor" stroke-width="1.6" fill="none"/><rect x="1" y="4" width="22" height="13" rx="2.5" fill="currentColor"/><circle cx="7" cy="11" r="3.6" fill="#120a22"/><circle cx="7" cy="11" r="1.3" fill="currentColor"/><rect x="13" y="7" width="7.5" height="3" rx="1" fill="#120a22"/><circle cx="15" cy="13.6" r="1.2" fill="#120a22"/><circle cx="18.6" cy="13.6" r="1.2" fill="#120a22"/></svg>';
   // ⏮ / ⏭ as inline SVG (the emoji / symbol glyphs are missing on some devices)
   const PREV = '<svg class="rsv" viewBox="0 0 20 14" aria-hidden="true"><rect x="1" y="1" width="2.6" height="12" fill="currentColor"/><path d="M11 1 L3.6 7 L11 13Z M19 1 L11.6 7 L19 13Z" fill="currentColor"/></svg>';
   const NEXT = '<svg class="rsv" viewBox="0 0 20 14" aria-hidden="true"><path d="M1 1 L8.4 7 L1 13Z M9 1 L16.4 7 L9 13Z" fill="currentColor"/><rect x="16.4" y="1" width="2.6" height="12" fill="currentColor"/></svg>';
-  const STATION = 'B-MORE 410 RADIO', VOL = 70, FADE = 1.6, BIG_S = 5, LONG_MS = 550, LS = 'tcb_radio_station';
+  const STATION = 'B-MORE 410 RADIO', VOL = 70, FADE = 1.6, BIG_S = 5, LONG_MS = 550, LS = 'tcb_radio_station2'; // new key with REMIX: everyone starts on the new default once, then the dial is remembered
   const TEST = Q.has('radiotest'), FORCE_BC = Q.get('radiobc') === '1';
   let saved = null; try { saved = localStorage.getItem(LS); } catch (e) {}
-  const st0 = STATIONS.includes(saved) ? saved : 'auto';
-  const R = { station: st0, lastSt: st0 === 'off' ? 'auto' : st0, on: st0 !== 'off', started: false, ready: false, playing: false, list: null, idx: { day: -1, night: -1, ducky: -1, lor: -1, club: -1, rap: -1 }, cur: null,
+  const st0 = STATIONS.includes(saved) ? saved : 'remix';
+  const R = { station: st0, lastSt: st0 === 'off' ? 'remix' : st0, on: st0 !== 'off', started: false, ready: false, playing: false, list: null, idx: { remix: -1, day: -1, night: -1, ducky: -1, lor: -1, club: -1, rap: -1 }, cur: null,
     vol: 0, goal: 0, after: null, bad: new Set(), ytFail: new Set(), log: [], offAir: false, player: null, bigT: 0, ids: 0, test: TEST, bc: null, bcLeft: 0, bcTapped: false, noSignal: false };
 
   // ---- DOM + CSS (self-contained). No visible video: the YouTube iframe sits in a 2x2 px, opacity .01, pointer-events:none box behind
@@ -3861,7 +3890,7 @@ const RADIO = (function () {
     `<li><span class="t">"${esc(t.title)}"${t.tag ? ` (${esc(t.tag)})` : ''}</span> · <span class="m">${esc(who(t))}</span><br>${t.lic
       ? `Licence: <a href="${t.licUrl}" target="_blank" rel="noopener">${t.lic}</a> · Source: <a href="${t.src}" target="_blank" rel="noopener">${esc(t.src.replace('https://', ''))}</a> · YouTube: <a href="${t.yt}" target="_blank" rel="noopener">${t.yt.replace('https://', '')}</a>`
       : `YouTube upload, played through the YouTube embed (not shipped with the game): <a href="${t.yt}" target="_blank" rel="noopener">${t.yt.replace('https://', '')}</a>`}</li>`).join('')}</ul>
-    <p>Creative Commons tracks are played unedited from the artists' own YouTube / Bandcamp pages. No audio is shipped with the game. Stations: AUTO, B-MORE 410 DAY, B-MORE 410 NIGHT, DUCKY DYNAMO FM, LOR BITEWHO, B-MORE CLUB, B-MORE RAP.</p>`;
+    <p>Creative Commons tracks are played unedited from the artists' own YouTube / Bandcamp pages. No audio is shipped with the game. B-MORE 410 REMIX plays 20-second clips of Brad's Baltimore classics through the same YouTube embeds, crossfaded live in the player (nothing is cut or downloaded). Stations: B-MORE 410 REMIX, AUTO, B-MORE 410 DAY, B-MORE 410 NIGHT, DUCKY DYNAMO FM, LOR BITEWHO, B-MORE CLUB, B-MORE RAP.</p>`;
   const showCred = (on) => { cred.classList.toggle('hide', !on); R.credOpen = on; };
 
   let lastHtml = '';
@@ -3904,7 +3933,9 @@ const RADIO = (function () {
   const listFor = (st) => (TRACKS[st] ? st : nightNow() ? 'night' : 'day');
   const playable = (t) => !R.bad.has(t.id) && (t.bc || !(R.ytFail.has(t.id) || R.noSignal));
   function step(list, dir) { // next / previous playable track in a playlist; null if none can play
-    const L = TRACKS[list]; for (let k = 1; k <= L.length; k++) { const i = (((R.idx[list] + dir * k) % L.length) + L.length) % L.length; if (playable(L[i])) { R.idx[list] = i; return L[i]; } } return null;
+    const L = TRACKS[list]; for (let k = 1; k <= L.length; k++) { const raw = R.idx[list] + dir * k;
+      if (list === 'remix' && dir > 0 && raw >= L.length) { const lastT = L[R.idx.remix] || null; shuffle(L, lastT); R.idx.remix = -1; R.log.push({ at: +(S.time || 0).toFixed(2), reason: 'reshuffle', list: 'remix', id: '' }); return step(list, dir); } // all 30 played: new shuffle, never the same track twice in a row
+      const i = ((raw % L.length) + L.length) % L.length; if (playable(L[i])) { R.idx[list] = i; return L[i]; } } return null;
   }
   // ---- Bandcamp embed (official player; no JS API) ----
   function clearBC() { R.bc = null; R.bcLeft = 0; R.bcTapped = false; bcw.classList.remove('on', 'tapped'); const f = bcw.querySelector('iframe, .rbcstub'); if (f) f.remove(); }
@@ -3918,14 +3949,16 @@ const RADIO = (function () {
     bcw.appendChild(f);
   }
   addEventListener('blur', () => { setTimeout(() => { const f = bcw.querySelector('iframe'); if (f && document.activeElement === f && R.bc && !R.bcTapped) { R.bcTapped = true; R.bcLeft = R.bc.len + 2; bcw.classList.add('tapped'); bcw.querySelector('b').textContent = 'ON AIR · ' + R.bc.title; duck(true); render(); } }, 0); });
-  function stopYT() { try { if (R.player && R.ready) R.player.pauseVideo(); } catch (e) {} R.playing = false; }
+  function stopYT() { rxCancel(); try { if (R.player && R.ready) R.player.pauseVideo(); } catch (e) {} R.playing = false; }
   function play(t, reason) { // put a track on the air (YouTube, or the Bandcamp embed for a CC track YouTube refused)
     R.cur = t; clearBC(); bcw.querySelector('b').textContent = 'TAP ▶ TO PLAY';
+    if (R.list === 'remix') rxClip(t); else rxCancel();
     if (isBC(t)) { stopYT(); duck(false); showBC(t); }
     else if (R.player && R.ready) {
-      try { if (R.started && R.on) { R.vol = 0; R.player.setVolume(0); R.goal = VOL; R.player.loadVideoById(t.id); } else R.player.cueVideoById(t.id); } catch (e) {}
+      try { if (R.started && R.on) { R.vol = 0; R.player.setVolume(0); R.goal = VOL; R.player.loadVideoById(vid(t)); } else R.player.cueVideoById(vid(t)); } catch (e) {}
     }
-    stationId(reason);
+    if (R.list === 'remix' && /^(remix|next|prev|skip)$/.test(reason)) clipCredit(t, reason); else stationId(reason);
+    if (R.list === 'remix' && R.started && R.on) rxPreload();
   }
   function offAir() { R.offAir = true; R.cur = R.cur || TITLE; R.playing = false; duck(false); clearBC(); stopYT(); render(); }
   function tune(list, dir, reason) { // move along a playlist; if that whole list can't play, borrow another one
@@ -3936,15 +3969,18 @@ const RADIO = (function () {
   }
   function fadeThen(fn, fast) { R.goal = 0; R.after = fn; R.fast = !!fast; } // crossfade: volume down, swap, back up (a player's own switch uses a quick dip)
   function swap(fn, fast) { if (R.started && R.on && R.vol > 1 && !isBC(R.cur) && !R.after) fadeThen(fn, fast); else { R.after = null; fn(); } }
-  function advance(reason) { tune(R.list || listFor(R.station), 1, reason); }
+  function advance(reason) { if (R.list === 'remix' && R.station === 'remix') return rxAdvance(reason); tune(R.list || listFor(R.station), 1, reason); }
   function skip(dir) { // N / B / ⏭ / ⏮
     if (!R.started) start();
     if (!R.on) { setStation(R.lastSt); return; }
+    if (R.list === 'remix' && dir > 0 && RX.dual && RX.pre && RX.pre.ready && !RX.fade && R.playing) { rxCross(XF_FAST, 'next'); return; } // ⏭ on REMIX: a quick crossfade into the preloaded clip
+    if (R.list === 'remix') rxCancel();
     swap(() => tune(R.list, dir, dir > 0 ? 'next' : 'prev'), true);
   }
   function setStation(st, why) { // the dial: auto / day / night / ducky / off
     if (!STATIONS.includes(st)) return;
     const wasOn = R.on; R.station = st; try { localStorage.setItem(LS, st); } catch (e) {}
+    if (RX.fade || (R.list === 'remix' && st !== 'remix')) rxCancel();
     if (st === 'off') { R.on = false; R.after = null; R.goal = 0; stopYT(); duck(false); if (R.bc) clearBC(); R.wasBC = isBC(R.cur); stationId('off'); return; }
     R.lastSt = st; R.on = true; R.offAir = false;
     const list = listFor(st);
@@ -3957,14 +3993,89 @@ const RADIO = (function () {
     const t = R.cur; if (!t) return;
     if (isBC(t)) { showBC(t); return; }
     try { if (R.player && R.ready) { R.vol = 0; R.player.setVolume(0); R.goal = VOL; R.player.playVideo(); } } catch (e) {}
+    if (R.list === 'remix') { rxClip(t, true); rxPreload(); }
   }
   const cycle = () => { if (!R.started) start(); setStation(STATIONS[(STATIONS.indexOf(R.station) + 1) % STATIONS.length]); };
-  const toggle = () => { if (!R.started) start(); setStation(R.on ? 'off' : R.lastSt || 'auto'); };
+  const toggle = () => { if (!R.started) start(); setStation(R.on ? 'off' : R.lastSt || 'remix'); };
   function duck(on) { try { if (SFXBUS) SFXBUS.gain.setTargetAtTime(on ? 0.62 : 1, AC.currentTime, 0.3); } catch (e) {} }
 
+
+  // ---- B-MORE 410 REMIX engine: 20 s peak clips, next clip preloaded muted on the idle player, equal-power crossfade (or a fast-seek cut on iOS) ----
+  const IOS = /iPad|iPhone|iPod/.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+  const CLIP = Math.max(4, +Q.get('remixclip') || 20), XF = Math.min(3, CLIP / 4), XF_FAST = 0.8, RXLOG = Q.has('radiolog');
+  const RX = { dual: Q.get('remix2') === '1' ? true : Q.get('remix1') === '1' ? false : !IOS, A: null, B: null, bReady: false, idle: null, pre: null, fade: null, start: 0, t: 0, adj: false, clips: 0, fades: 0 };
+  const rlog = (o) => { const e = { at: +(S.time || 0).toFixed(2), ...o }; R.log.push(e); if (RXLOG) console.log('[remix]', JSON.stringify(e)); };
+  const peakOf = (t) => (REMIX_PEAK[t.id] != null ? REMIX_PEAK[t.id] : 45); // 45 s = the fallback guess until the length is known
+  const fbStart = (dur) => Math.max(0, Math.min(Math.max(30, dur * 0.35), dur - CLIP - 5));
+  const vid = (t) => (R.list === 'remix' ? { videoId: t.id, startSeconds: R.cur === t ? RX.start : peakOf(t) } : t.id);
+  const ptime = (p) => { try { const v = p.getCurrentTime(); return isFinite(v) ? v : NaN; } catch (e) { return NaN; } };
+  const pdur = (p) => { try { return +p.getDuration() || 0; } catch (e) { return 0; } };
+  function clipCredit(t, reason) { // each clip: the credit changes in the slim top bar (the big card only drops on a station switch)
+    lastHtml = ''; render(); rlog({ reason: 'clip', st: R.station, list: 'remix', id: t.id, title: t.title, start: RX.start, peak: REMIX_PEAK[t.id] != null ? 'heatmap' : 'fallback', mode: RX.dual ? 'crossfade' : 'cut', why: reason, text: idText(t) });
+  }
+  function rxClip(t, keep) { if (!keep) { RX.start = peakOf(t); RX.adj = REMIX_PEAK[t.id] != null; } RX.t = 0; RX.clips++; }
+  function rxCancel() { // drop the preload / any crossfade in flight (station switch, off, ⏮); the preloaded track goes back in the shuffle
+    if (RX.fade) { const f = RX.fade; RX.fade = null; try { f.from.setPlaybackRate(1); f.from.setVolume(Math.round(R.vol)); } catch (e) {} }
+    if (RX.pre) { const p = RX.idle; try { p.pauseVideo(); p.mute(); p.setVolume(0); } catch (e) {} const L = TRACKS.remix; R.idx.remix = (R.idx.remix - 1 + L.length) % L.length; RX.pre = null; }
+  }
+  function rxPreload() { // next clip on the idle player: muted, playing just long enough to buffer at its peak, then paused there
+    if (!RX.dual || !RX.bReady || !RX.idle || RX.pre || RX.fade || !R.started || !R.on || R.list !== 'remix') return;
+    const t = step('remix', 1); if (!t) return;
+    RX.pre = { t, start: peakOf(t), ready: false, adj: REMIX_PEAK[t.id] != null, at: performance.now() };
+    try { const p = RX.idle; p.mute(); p.setVolume(0); p.loadVideoById({ videoId: t.id, startSeconds: RX.pre.start }); } catch (e) {}
+    rlog({ reason: 'preload', id: t.id, start: RX.pre.start });
+  }
+  function rxIdleState(s) { // state events from the idle (preloading) player
+    const P = RX.pre; if (!P || RX.fade) return;
+    if (s === 1 && P.ready) { try { RX.idle.pauseVideo(); } catch (e) {} return; } // keep the preloaded clip parked at its peak
+    if (s === 1 && !P.ready) {
+      const p = RX.idle; let vd = null; try { vd = p.getVideoData ? p.getVideoData().video_id : p.vid; } catch (e) {} if (vd && vd !== P.t.id) return; // (a stale event from the previous video)
+      if (!P.adj) { const d = pdur(p); if (d > 0) { P.start = fbStart(d); P.adj = true; try { p.seekTo(P.start, true); } catch (e) {} } }
+      try { p.pauseVideo(); } catch (e) {} P.ready = true; rlog({ reason: 'preloaded', id: P.t.id, start: +P.start.toFixed(1), ms: Math.round(performance.now() - P.at) });
+    }
+  }
+  function rxIdleError(code) { const P = RX.pre; if (!P) return; R.bad.add(P.t.id); rlog({ reason: 'error ' + code + ' (preload)', id: P.t.id }); RX.pre = null; rxPreload(); }
+  function rxCross(dur, why) { // equal-power crossfade: out = cos, in = sin; a tape-drag on the outgoing clip near the end
+    const P = RX.pre, from = R.player, to = RX.idle;
+    RX.fade = { from, to, t: 0, t0: performance.now(), dur, why, tape: false, P, v0: Math.max(R.vol, 1) };
+    try { to.setVolume(0); to.unMute(); to.playVideo(); } catch (e) {}
+    RX.fades++; rlog({ reason: 'xfade-start', from: R.cur && R.cur.id, to: P.t.id, dur, clipT: +RX.t.toFixed(2), why });
+  }
+  function rxFadeTick(dt) {
+    const F = RX.fade; F.t = (performance.now() - F.t0) / 1000; const x = Math.min(1, F.t / F.dur);
+    try { F.from.setVolume(Math.round(F.v0 * Math.cos(x * Math.PI / 2))); F.to.setVolume(Math.round(VOL * Math.sin(x * Math.PI / 2))); } catch (e) {}
+    if (!F.tape && x > 0.72) { F.tape = true; try { F.from.setPlaybackRate(0.5); } catch (e) {} } // tape-drag on the way out
+    if (x < 1) return;
+    try { F.from.pauseVideo(); F.from.mute(); F.from.setPlaybackRate(1); F.from.setVolume(0); } catch (e) {}
+    RX.fade = null; R.player = F.to; RX.idle = F.from; RX.pre = null;
+    R.cur = F.P.t; R.vol = R.goal = VOL; R.playing = true; RX.start = F.P.start; RX.adj = true; RX.t = Math.max(0, (ptime(F.to) || F.P.start + F.t) - F.P.start); RX.clips++;
+    rlog({ reason: 'xfade-end', id: R.cur.id, ms: Math.round(F.t * 1000) }); clipCredit(R.cur, F.why); rxPreload();
+  }
+  function rxAdvance(reason) { // the clip is over (or the track ended / errored): crossfade if the next one is ready, else a quick cut
+    if (RX.fade) return;
+    if (RX.dual && RX.pre && RX.pre.ready && reason !== 'skip') return rxCross(reason === 'remix' ? XF : XF_FAST, reason);
+    if (RX.pre) rxCancel();
+    const go = () => tune('remix', 1, reason === 'skip' ? 'skip' : 'remix');
+    if (reason === 'skip') { R.after = null; go(); } else swap(go, true);
+  }
+  function rxTick(dt) {
+    if (R.station !== 'remix' || R.list !== 'remix' || !R.started || !R.on || R.offAir || !R.cur) return;
+    if (RX.fade) { rxFadeTick(dt); return; }
+    if (!R.playing || R.after) return;
+    const ct = ptime(R.player);
+    if (!RX.adj) { const d = pdur(R.player); if (d > 0) { RX.adj = true; const s0 = fbStart(d); if (Math.abs(s0 - RX.start) > 2) { RX.start = s0; try { R.player.seekTo(s0, true); } catch (e) {} RX.t = 0; rlog({ reason: 'fallback-start', id: R.cur.id, start: +s0.toFixed(1), len: Math.round(d) }); return; } } }
+    RX.t = isFinite(ct) && ct >= RX.start - 1 ? Math.max(0, ct - RX.start) : RX.t + dt;
+    if (!RX.pre && RX.dual) rxPreload();
+    const lead = RX.dual && RX.pre && RX.pre.ready ? XF : 0.4; // dual: the fade fills the last 3 s; one player: a 0.35 s dip then the cut
+    if (RX.t >= CLIP - lead) { rlog({ reason: 'clip-end', id: R.cur.id, clipT: +RX.t.toFixed(2) }); rxAdvance('remix'); }
+  }
   // ---- YouTube IFrame Player API (or the test stub) ----
-  function onReady() { R.ready = true; try { R.player.setVolume(0); } catch (e) {} const t = R.cur; if (t && !isBC(t)) { try { if (R.started && R.on) { R.player.loadVideoById(t.id); R.goal = VOL; } else R.player.cueVideoById(t.id); } catch (e) {} } render(); }
+  function onReady(e) {
+    if (e && e.target && RX.B && e.target === RX.B && RX.A !== RX.B) { RX.bReady = true; try { RX.B.mute(); RX.B.setVolume(0); } catch (er) {} rxPreload(); return; } // the second (remix) player
+    R.ready = true; try { R.player.setVolume(0); } catch (e) {} const t = R.cur; if (t && !isBC(t)) { try { if (R.started && R.on) { R.player.loadVideoById(vid(t)); R.goal = VOL; } else R.player.cueVideoById(vid(t)); } catch (e) {} } render(); }
   function onState(e) {
+    if (e && e.target && R.player && e.target !== R.player) { if (RX.fade && e.target === RX.fade.to) return; rxIdleState(e.data); return; } // events from the idle remix player
+    if (RX.fade && e && e.data !== 1) return; // the outgoing clip is being faded out / paused by the crossfade
     const s = e.data; // -1 unstarted, 0 ended, 1 playing, 2 paused, 3 buffering, 5 cued
     if (s === 1) { R.playing = true; if (!R.on || isBC(R.cur)) { try { R.player.pauseVideo(); } catch (er) {} } else { duck(true); if (R.goal === 0 && !R.after) R.goal = VOL; } }
     else if (s === 0) { R.playing = false; if (R.on && !isBC(R.cur)) advance('next'); }
@@ -3972,15 +4083,23 @@ const RADIO = (function () {
     render();
   }
   function onError(e) { // 2 bad id, 5 html5, 100 gone, 101/150 embedding not allowed: a CC track falls back to Bandcamp, anything else is skipped
+    if (e && e.target && R.player && e.target !== R.player) { if (RX.fade && e.target === RX.fade.to) { const P = RX.fade.P; rxCancel(); R.bad.add(P.t.id); rxPreload(); } else rxIdleError(e.data); return; }
     const t = R.cur; if (!t || isBC(t)) return; R.log.push({ at: +(S.time || 0).toFixed(2), reason: 'error ' + (e && e.data), id: t.id }); R.playing = false;
     if (t.bc) { R.ytFail.add(t.id); play(t, 'bandcamp'); } else { R.bad.add(t.id); advance('skip'); }
   }
-  function makeStub() { // ?radiotest=1: same calls, no network; the box shows a placeholder of the same size
+  function makeStub() { // ?radiotest=1: same calls, no network; the box shows a placeholder of the same size. Each stub keeps a clock (getCurrentTime) and a 200 s length.
     const sd = document.createElement('div'); sd.id = 'rstub'; rplay.appendChild(sd);
-    const P = { v: 0, vid: null, state: -1, calls: [], setVolume(v) { this.v = v; }, getVolume() { return this.v; },
-      loadVideoById(id) { this.vid = id; this.calls.push('load ' + id); setTimeout(() => onState({ data: 1 }), 30); }, cueVideoById(id) { this.vid = id; this.calls.push('cue ' + id); },
-      playVideo() { this.calls.push('play'); setTimeout(() => onState({ data: 1 }), 30); }, pauseVideo() { this.calls.push('pause'); setTimeout(() => onState({ data: 2 }), 10); }, stopVideo() { this.calls.push('stop'); } };
-    R.player = P; setTimeout(onReady, 50);
+    const mk = (name) => { const P = { name, v: 0, muted: false, rate: 1, vid: null, pos: 0, t0: 0, on: false, calls: [], setVolume(v) { this.v = v; }, getVolume() { return this.v; },
+      mute() { this.muted = true; }, unMute() { this.muted = false; }, isMuted() { return this.muted; }, setPlaybackRate(r) { this.sync(); this.rate = r; }, getDuration() { return this.vid ? 200 : 0; },
+      sync() { if (this.on) { const n = performance.now(); this.pos += (n - this.t0) / 1000 * this.rate; this.t0 = n; } }, getCurrentTime() { this.sync(); return this.pos; },
+      seekTo(s) { this.sync(); this.pos = s; this.calls.push('seek ' + s); },
+      loadVideoById(a) { const id = typeof a === 'object' ? a.videoId : a; this.vid = id; this.pos = (typeof a === 'object' && a.startSeconds) || 0; this.on = false; this.calls.push('load ' + id + '@' + this.pos);
+        setTimeout(() => { if (this.vid !== id) return; this.on = true; this.t0 = performance.now(); onState({ data: 1, target: P }); }, 30); },
+      cueVideoById(a) { const id = typeof a === 'object' ? a.videoId : a; this.vid = id; this.pos = (typeof a === 'object' && a.startSeconds) || 0; this.calls.push('cue ' + id); },
+      playVideo() { this.calls.push('play'); setTimeout(() => { this.sync(); this.on = true; this.t0 = performance.now(); onState({ data: 1, target: P }); }, 30); },
+      pauseVideo() { this.sync(); this.on = false; this.calls.push('pause'); setTimeout(() => onState({ data: 2, target: P }), 10); }, stopVideo() { this.calls.push('stop'); } }; return P; };
+    const A = mk('A'); R.player = RX.A = A; setTimeout(() => onReady({ target: A }), 50);
+    if (RX.dual) { const B = mk('B'); RX.B = RX.idle = B; setTimeout(() => onReady({ target: B }), 80); }
   }
   function noSignal() { // YouTube unreachable (offline, blocked network): the CC tracks still play through Bandcamp; the rest wait
     if (R.ready) return; R.noSignal = true;
@@ -3991,7 +4110,11 @@ const RADIO = (function () {
     f.width = 2; f.height = 2; f.frameBorder = '0';
     f.src = 'https://www.youtube.com/embed/' + TITLE.id + '?enablejsapi=1&playsinline=1&controls=0&fs=0&disablekb=1&rel=0&iv_load_policy=3&modestbranding=1&origin=' + encodeURIComponent(location.origin);
     rplay.appendChild(f);
-    const mk = () => { R.player = new YT.Player('rplayer', { events: { onReady, onStateChange: onState, onError } }); };
+    let f2 = null; if (RX.dual) { // the second hidden audio-only player for REMIX crossfades (same 2x2 px, opacity .01, pointer-events:none box)
+      f2 = document.createElement('iframe'); f2.id = 'rplayer2'; f2.title = 'B-MORE 410 REMIX audio'; f2.setAttribute('allow', 'autoplay'); f2.setAttribute('tabindex', '-1'); f2.setAttribute('aria-hidden', 'true');
+      f2.width = 2; f2.height = 2; f2.frameBorder = '0'; f2.src = f.src.replace(TITLE.id, POOL[0].id); rplay.appendChild(f2); }
+    const mk = () => { R.player = RX.A = new YT.Player('rplayer', { events: { onReady, onStateChange: onState, onError } });
+      if (f2) RX.B = RX.idle = new YT.Player('rplayer2', { events: { onReady, onStateChange: onState, onError } }); };
     if (window.YT && YT.Player) mk(); else { const prev = window.onYouTubeIframeAPIReady; window.onYouTubeIframeAPIReady = () => { prev && prev(); mk(); };
       const s = document.createElement('script'); s.src = 'https://www.youtube.com/iframe_api'; s.async = true; s.onerror = noSignal; setTimeout(() => { if (!R.ready) noSignal(); }, 15000); document.head.appendChild(s); }
   }
@@ -4000,7 +4123,10 @@ const RADIO = (function () {
   // ---- start on the first gesture ----
   function start() {
     if (R.started) return; R.started = true; R.startT = performance.now();
-    if (R.on && R.cur) { if (isBC(R.cur)) showBC(R.cur); else if (R.player && R.ready) { try { R.player.setVolume(0); R.vol = 0; R.player.loadVideoById(R.cur.id); } catch (e) {} R.goal = VOL; } }
+    if (R.on && R.cur) { if (isBC(R.cur)) showBC(R.cur); else if (R.player && R.ready) { try { R.player.setVolume(0); R.vol = 0; R.player.loadVideoById(vid(R.cur)); } catch (e) {} R.goal = VOL; } }
+    // Browsers only let a page start audible media from a gesture: the first tap starts the active player (above) and, in REMIX's two-player mode, rxPreload()
+    // below starts the second one (muted load + play) inside the same gesture, so its later unmute + play for the crossfade is allowed
+    if (R.list === 'remix' && R.on) { RX.t = 0; rlog({ reason: 'clip', st: R.station, list: 'remix', id: R.cur.id, title: R.cur.title, start: RX.start, peak: REMIX_PEAK[R.cur.id] != null ? 'heatmap' : 'fallback', mode: RX.dual ? 'crossfade' : 'cut', why: 'tune-in' }); rxPreload(); }
     if (R.on) stationId('tune-in'); else render();
   }
   const gesture = () => { audioInit(); start(); };
@@ -4027,15 +4153,18 @@ const RADIO = (function () {
   cred.addEventListener('click', (e) => e.stopPropagation());
 
   // ---- tick: AUTO day/night switch, volume fades, Bandcamp timer, card timer ----
-  { const list = listFor(R.station); R.list = list; R.idx[list] = TRACKS[list].indexOf(TITLE); R.cur = TITLE; if (isBC(TITLE)) showBC(TITLE); stationId('start'); } // the title track tunes in first
+  { const list = listFor(R.station); R.list = list;
+    if (list === 'remix') { R.idx.remix = 0; R.cur = TRACKS.remix[0]; rxClip(R.cur); RX.clips = 0; stationId('start'); } // REMIX (default) tunes in on the first clip of its shuffle
+    else { R.idx[list] = TRACKS[list].indexOf(TITLE); R.cur = TITLE; if (isBC(TITLE)) showBC(TITLE); stationId('start'); } } // other stations: the title track tunes in first
   let last = performance.now();
   setInterval(() => {
     const now = performance.now(), dt = Math.min(0.5, (now - last) / 1000); last = now;
+    rxTick(dt);
     if (R.station === 'auto' && R.on && !R.offAir && !R.after) { const want = nightNow() ? 'night' : 'day'; if (R.list !== want) swap(() => tune(want, 1, want === 'night' ? 'dusk' : 'dawn')); }
     if (R.bigT > 0) { R.bigT -= dt; if (R.bigT <= 0) card.classList.remove('on'); }
     if (R.bc && R.on && R.started && R.bcLeft > 0) { R.bcLeft -= dt; if (R.bcLeft <= 0) advance('next'); }
     const stp = VOL / (R.fast && R.goal === 0 ? 0.35 : FADE) * dt;
-    if (R.vol !== R.goal) { R.vol = R.vol < R.goal ? Math.min(R.goal, R.vol + stp) : Math.max(R.goal, R.vol - stp); try { R.player && R.ready && R.player.setVolume(Math.round(R.vol)); } catch (e) {} }
+    if (R.vol !== R.goal && !RX.fade) { R.vol = R.vol < R.goal ? Math.min(R.goal, R.vol + stp) : Math.max(R.goal, R.vol - stp); try { R.player && R.ready && R.player.setVolume(Math.round(R.vol)); } catch (e) {} }
     if (R.after && R.vol <= 0.01) { const f = R.after; R.after = null; f(); }
     if (R.started && R.on && !R.playing) render();
   }, 100);
@@ -4044,6 +4173,6 @@ const RADIO = (function () {
   window.__radio = { R, T, TRACKS, STATIONS, toggle, setStation, cycle, skip, start, advance, idText, isBC, get station() { return R.station; }, get text() { return R.tickerText; },
     get card() { return card.classList.contains('on') ? card.textContent : ''; }, get stored() { try { return localStorage.getItem(LS); } catch (e) { return null; } },
     simEnd: () => onState({ data: 0 }), simError: (c = 150) => onError({ data: c }), simBCEnd: () => { if (R.bc) R.bcLeft = 0.01; }, showCred,
-    get vol() { return R.vol; }, get sfx() { return SFXBUS ? SFXBUS.gain.value : null; } };
+    RX, REMIX_PEAK, POOL, CLIP, get vol() { return R.vol; }, get sfx() { return SFXBUS ? SFXBUS.gain.value : null; } };
   return R;
 })();
