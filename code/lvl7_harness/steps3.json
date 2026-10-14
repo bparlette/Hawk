@@ -1,0 +1,1 @@
+[{"until":"__SS.STATE.enemies.filter(e=>e.entered).length>=2","wait":10},{"js":"(()=>{const S=__SS.STATE,p=S.player;p.x=150;p.y=168;return 1})()","wait":200,"shot":"shot_gameplay.png"}]

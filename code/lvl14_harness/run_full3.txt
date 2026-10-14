@@ -1,0 +1,20 @@
+f68: loading scene
+f239: stage lvl=14 section=L0
+f1204: dodge seen
+f1243: bark: FORM IS EVERYTHING!
+f2507: bark: BLADE AND HONOR!
+f3438: bark: BY THE BOOK!
+f4313: stage lvl=14 section=L1
+f4314: boss fight lvl=14 KRANG
+f4620: bark: TOO TOUGH! HIT HIM WHEN THE BRAIN GLOWS!
+f4997: bark: STAY SHARP!
+f5713: bark: HE'S OVERLOADING! WATCH THE SKY!
+f6445: outro lvl=14
+f6515: bark: THE BRAIN'S GETTING AWAY!
+f6910: bark: SHREDDER'S TOWER... THIS ENDS TONIGHT!
+f7221: pizza lvl=14
+f7391: results lvl=14
+f7461: back to title
+after: LEVELS loaded=1,,,,,,,,,,,,,- LVLOAD=
+scripts loaded=levels/level14.js missing=levels/level15.js SS=object
+END f=7461 scene=title level=1 kills=17 levelsWithResults=14

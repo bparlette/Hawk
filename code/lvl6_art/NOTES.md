@@ -1,0 +1,11 @@
+# L6 COLD FRONT sprite task — progress notes
+- [15:58 EDT Oct 8] Start. Boss currently tinted gunner atlas (BT) x1.35 + code tank/skates. States used: walk/idle, charge, tele, kwind, kick, throw(proj snowball, engine), slam, summon, spray(custom), spin(custom, shards), hurt, stagger, down, dying. Plan: painted sheet levels/level6_coldfront.png incl. cryo tank, skates, shard/snowball/frost puff.
+- [16:05] Generated cf_sheetA (idle,skate1,skate2,aim,throw), cf_sheetB (kick,leap,shout,spin,hurt,down), cf_sheetC (shard,snowball,frost puff) in lvl6_art/ (generator saved to /workspace root; moved).
+- [16:12] Sheet A top band had pale-green gradient (not keyed) -> key.py flood re-key -> cf_sheetA_k.png OK. Sheet B character inconsistent with A (lighter parka/smaller tank) -> regenerating B2 with ref_A.png as reference.
+- [16:20] B2 consistent with A. Keyed B2/C (cf_sheetB2_k.png, cf_sheetC_k.png). Writing pack.py.
+- [16:30] pack.py -> level6_coldfront.png (P, 1905x~180) + meta.json [x,y,w,h,anchorX,nozX,nozY]; nozzle = rightmost px in rows 15-75%. view/anchors.png checked: scale ~1.4x turtle, B matches A.
+- [16:40] level6.js wired in lvl6_art/level6.js (orig backup level6.orig.js). node --check OK. NEXT: harness test.
+- [16:50] Resynced lvl6_test from built (cp loop; no rsync) + new level6.js/png; regen game.js. Headless play.js L6 boss->outro->results OK (run_sprite.txt), continues into L7-10, no exceptions.
+- [16:50] Resynced lvl6_test from built (cp loop; no rsync) + new level6.js/png; regen game.js. Headless play.js L6 boss->outro->results OK (run_sprite.txt), continues into L7-10, no exceptions.
+- [17:05] playwright poses.js (lvl6_harness) -> lvl6_art/shots/*.png, 0 page errors. Reviewing.
+- [17:15] fix.py contrast 1.12 -> final level6_coldfront.png (80 KB). Copied level6.js + level6_coldfront.png to built + deploy (identical, node --check OK). NOT deployed. DONE pending coordinator.

@@ -1,0 +1,7 @@
+const { chromium } = require("/workspace/work/ss_trailer/node_modules/playwright");
+(async () => { const NU=require("url").URL; const pv=process.env.HTTPS_PROXY||process.env.HTTP_PROXY; const pu=pv&&!/127\.0\.0\.1/.test(process.argv[2])?new NU(pv):null; const b = await chromium.launch(pu?{proxy:{server:pu.protocol+"//"+pu.host,username:decodeURIComponent(pu.username),password:decodeURIComponent(pu.password)}}:{}); const p = await (await b.newContext({ viewport: { width: 390, height: 844 }, isMobile: true, hasTouch: true })).newPage();
+  const errs = [], bad = []; p.on("pageerror", (e) => errs.push("pageerror " + e)); p.on("console", (m) => { if (m.type() === "error") errs.push(m.text()); });
+  p.on("response", (r) => { if (r.status() >= 400) bad.push(r.status() + " " + r.url()); }); p.on("requestfailed", (r) => bad.push("failed " + r.url()));
+  await p.goto(process.argv[2], { waitUntil: "load", timeout: 90000 }); await p.waitForTimeout(4000);
+  const r = await p.evaluate(() => { const a = document.getElementById("trailerbtn"); const ims = [...document.images]; return { trailer: a && a.href, imgs: ims.length, broken: ims.filter((i) => i.complete && i.naturalWidth === 0).map((i) => i.src).slice(0, 5), title: document.title }; });
+  console.log(JSON.stringify(r)); console.log("BAD", JSON.stringify(bad.slice(0, 10))); console.log("ERRORS", JSON.stringify(errs.slice(0, 10))); await p.screenshot({ path: "site_local.png" }); await b.close(); })();

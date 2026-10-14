@@ -1,0 +1,18 @@
+f68: loading scene
+f239: stage lvl=12 section=L0
+f2377: dodge seen
+f2444: bark: FORM IS EVERYTHING!
+f3842: stage lvl=12 section=L1
+f3843: boss fight lvl=12 VIRAL
+f4887: bark: SHE'S COPYING HERSELF! HIT THE ONE THAT FLICKERS LESS!
+f4897: bark: BLADE AND HONOR!
+f5748: outro lvl=12
+f5778: bark: SHE'S GONE... BUT LOOK AT THE RIFT!
+f5878: bark: IT'S SNAPPING BACK TO WHERE IT CAME FROM...
+f5998: bark: DIMENSION X! AFTER IT, BROS!
+f6149: pizza lvl=12
+f6319: results lvl=12
+f6381: back to title
+after: LEVELS loaded=1,,,,,,,,,,,- LVLOAD=
+scripts loaded=levels/level12.js missing=levels/level13.js SS=object
+END f=6381 scene=title level=1 kills=17 levelsWithResults=12

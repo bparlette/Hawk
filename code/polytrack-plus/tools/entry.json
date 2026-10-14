@@ -1,0 +1,7 @@
+{"id": "polytrack-plus", "title": "★ PolyTrack Remake — Hark Edition (fan remake)", "category": "Other games",
+ "keys": {"up": "ArrowUp", "down": "ArrowDown", "left": "ArrowLeft", "right": "ArrowRight", "attack": "KeyW", "jump": "KeyS", "special": "Enter", "start": "KeyR"},
+ "labels": {"attack": "GAS", "jump": "BRAKE", "special": "⚑ CHECKPOINT", "start": "RESTART"},
+ "extras": [{"label": "BUILDER", "key": "KeyB"}, {"label": "PAUSE", "key": "Escape"}, {"label": "MUTE", "key": "KeyM"}],
+ "autostart": [], "orientation": "any",
+ "note": "Hark fan remake of PolyTrack (Kodub), 2026-10-13. three.js r160 local, raycast-suspension physics, loop/jumps/banked turns, medals, localStorage ghost, track builder. Boots in an autopilot attract lap; any key/tap = race. Source: /workspace/work/polytrack-plus/game",
+ "path": "g/polytrack-plus/index.html", "thumb": "thumbs/polytrack-plus.webp"}

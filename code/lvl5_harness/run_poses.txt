@@ -1,0 +1,20 @@
+shot m_harp_aim.png
+shot m_harp_fly.png
+shot m_toss_aim.png
+shot m_toss_fly.png
+shot m_sweep_whirl.png
+shot m_sweep_spin.png
+shot p_idle.png
+shot p_walk1.png
+shot p_walk2.png
+shot p_hurt.png
+shot p_charge.png
+shot p_kick.png
+shot p_slam_crouch.png
+shot p_summon.png
+shot p_aim.png
+shot p_getup.png
+shot p_down.png
+shot ko.png
+shot outro.png
+ERRORS 0 []

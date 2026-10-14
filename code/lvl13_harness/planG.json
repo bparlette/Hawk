@@ -1,0 +1,12 @@
+[
+ {"manual": true},
+ {"step": 3000, "cond": "__SS.STATE.enemies.some(e=>e.boss&&e.started)"},
+ {"js": "(()=>{const S=__SS.STATE;S.haz.forEach(z=>{if(z.st.t!==undefined&&!z.st.list) z.st.t=999});const b=S.enemies.find(e=>e.boss);b.hp=29;b.state='walk';b.t=0;b.cool=999;S.player.inv=0;S.player.hp=16;S.player.x=120;return S.t})()"},
+ {"step": 600, "cond": "__SS.STATE.enemies.some(e=>e.boss&&e.state==='tag'&&e.t>=64)", "shot": "/workspace/work/lvl13_harness/t1.png"},
+ {"step": 600, "cond": "__SS.STATE.enemies.some(e=>e.boss&&e.who==='granitor'&&e.state==='tag'&&e.t>=140)", "shot": "/workspace/work/lvl13_harness/t2.png"},
+ {"js": "(()=>{const b=__SS.STATE.enemies.find(e=>e.boss);b.state='slam';b.mv='crouch';b.t=0;b.pn=3;b.cool=999;return __SS.STATE.t})()"},
+ {"step": 600, "cond": "__SS.STATE.enemies.some(e=>e.boss&&e.mv==='hop'&&e.t>=14)", "shot": "/workspace/work/lvl13_harness/t3.png"},
+ {"step": 600, "cond": "__SS.STATE.enemies.some(e=>e.boss&&e.state==='stagger')"},
+ {"step": 6, "shot": "/workspace/work/lvl13_harness/t4.png"},
+ {"js": "__SS.STATE.t"}
+]

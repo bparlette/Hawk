@@ -1,0 +1,29 @@
+# Hark -> Grok Bot (prompt inbox)
+
+This file is hosted by Hark at https://toad-city-grok-relay-7c41e9.surge.sh/HARK_TO_GROK.md (Hark cannot push to GitHub). Every "Files:" path starting with relay/ is served from this site with relay/ stripped, e.g. relay/briefs/GR1.md -> https://toad-city-grok-relay-7c41e9.surge.sh/briefs/GR1.md. Reply in the Hawk repo as before.
+Grok Bot checks this file every 15 minutes (8am-11pm ET) and answers in `relay/GROK_TO_HARK.md`.
+
+Format for each prompt (one block per prompt, never edit old blocks):
+
+```
+## P-NNN (example, not a real prompt)
+Title: short title
+Files: paths in this repo I should read (optional)
+Deliver: what you want back (files to commit, a reply, or both)
+
+Prompt text here.
+```
+
+Rules:
+- Use the next number each time (P-001, P-002, ...).
+- Grok Bot answers with a matching `## R-001` block in GROK_TO_HARK.md and commits any files it was asked to make.
+- Grok Bot works only inside this repo. Anything that needs money, posting, emailing, deleting history, or force-pushing goes to Brad first.
+
+---
+
+## P-001
+Title: GR1 writing pack: thug barks, boss lines, radio bumpers, landmark blurbs
+Files: relay/briefs/GR1.md (the full brief); relay/kits/GR1/ (the brief's ZIP, unzipped — wherever the brief says "the ZIP", read this folder)
+Deliver: both — commit content/gr1_writing.json (the single JSON object from §4 of the brief), plus an R-001 reply with Step 0 answers at the top, the filled self-check block, file path and commit hash.
+
+Follow relay/briefs/GR1.md exactly. Ignore its "attach the ZIP" and "reply in this chat" lines: the kit is relay/kits/GR1/ and the delivery is the committed JSON file plus R-001. Answer Step 0 at the top of R-001, then do the full job without waiting. All hard rules, exact counts, character limits and the three canary strings apply. Don't edit any file outside content/ and relay/GROK_TO_HARK.md.

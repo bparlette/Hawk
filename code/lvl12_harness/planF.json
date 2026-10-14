@@ -1,0 +1,18 @@
+[
+ {"until":"__SS.STATE.scene==='stage'&&__SS.STATE.player","js":"window.__t0=__SS.STATE.t"},
+ {"until":"__SS.STATE.t-window.__t0>170","js":"(()=>{const S=__SS.STATE;const h=S.haz.find(z=>z.st.cars);h.st.t=150;h.st.lane=1;h.st.dir=-1;S.player.y=178;S.player.x=150;S.player.inv=0;})()"},
+ {"until":"(()=>{const h=__SS.STATE.haz.find(z=>z.st.cars);return h.st.t>=178&&Math.floor((h.st.t-150)/5)%2===0})()","js":"__SS.STATE.player.inv=0","shot":"shot_gameplay.png"},
+ {"until":"(()=>{const h=__SS.STATE.haz.find(z=>z.st.cars);return h.st.cars.length&&h.st.cars[0].x-__SS.STATE.camX<250})()","js":"__SS.STATE.player.inv=0","shot":"f_car.png"},
+ {"js":"(()=>{const S=__SS.STATE;S.enemies.length=0;S.queue=[];S.wave=4;S.locked=false;S.player.x=1000;S.player.y=176;const d=S.haz.find(z=>'cd' in z.st);d.st.d=null;d.st.cd=1;const q=S.haz.find(z=>z.st.list&&z.st.list[0].o!==undefined);window.__q=q;})()"},
+ {"until":"(()=>{const S=__SS.STATE;const d=S.haz.find(z=>'cd' in z.st);if(d.st.d&&d.st.d.ph==='scan'){d.st.d.lx=S.player.x;d.st.d.ly=S.player.y;}return d.st.d&&d.st.d.ph==='lock'&&d.st.d.t>34})()","js":"(()=>{const S=__SS.STATE;S.player.inv=0;return [S.camX, window.__q.st.list.map(p=>[p.x,(S.t+p.o)%206])]})()"},
+ {"until":"(()=>{const S=__SS.STATE;return window.__q.st.list.some(p=>p.x>S.camX+20&&p.x<S.camX+364&&((S.t+p.o)%206)>=176&&((S.t+p.o)%206)<=200)})()","js":"__SS.STATE.player.inv=0","shot":"shot_hazard.png"},
+ {"js":"(()=>{const S=__SS.STATE;S.enemies.length=0;S.queue=[];S.fadeOut=1;})()"},
+ {"until":"(()=>{const b=__SS.STATE.enemies.find(e=>e.boss);return b&&b.state==='walk'})()","js":"(()=>{const S=__SS.STATE,b=S.enemies.find(e=>e.boss);b.hp=24;S.player.x=110;S.player.y=200;})()"},
+ {"until":"(()=>{const b=__SS.STATE.enemies.find(e=>e.boss);return b.p2&&b.state==='walk'})()","js":"(()=>{const S=__SS.STATE,b=S.enemies.find(e=>e.boss);b.state='fire';b.t=0;b.x=300;b.y=200;S.player.x=90;S.player.y=180;S.player.inv=0;})()"},
+ {"until":"(()=>{const b=__SS.STATE.enemies.find(e=>e.boss);return b.state!=='fire'||b.t>52})()","js":"__SS.STATE.player.inv=0","shot":"shot_boss.png"},
+ {"until":"(()=>{const b=__SS.STATE.enemies.find(e=>e.boss);return b.state==='walk'})()","js":"(()=>{const S=__SS.STATE,b=S.enemies.find(e=>e.boss);b.state='throw';b.t=0;S.player.inv=0;})()"},
+ {"wait":1150,"js":"__SS.STATE.player.inv=0","shot":"shot_swarm.png"},
+ {"js":"(()=>{const S=__SS.STATE,b=S.enemies.find(e=>e.boss);SS.api.hitEnemy(b,99,true,1,4,true);})()"},
+ {"until":"!!__SS.STATE.outro&&__SS.STATE.outro.t>150","shot":"shot_outro.png"},
+ {"until":"!!__SS.STATE.outro&&__SS.STATE.outro.t>300","shot":"shot_outro2.png"}
+]

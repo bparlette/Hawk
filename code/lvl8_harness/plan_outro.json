@@ -1,0 +1,6 @@
+[
+ {"until":"__SS.STATE.scene==='stage'","js":"(()=>{const S=__SS.STATE;S.enemies.length=0;S.queue=[];S.fadeOut=1;})()"},
+ {"until":"(()=>{const b=__SS.STATE.enemies.find(e=>e.boss);if(b&&b.state==='throne'&&b.t<200)b.t=236;return b&&b.p1go&&b.state==='walk'})()","js":"(()=>{const S=__SS.STATE;const b=S.enemies.find(e=>e.boss);b.hp=0;b.state='dying';b.t=0;S.player.x=110;})()"},
+ {"until":"__SS.STATE.outro&&__SS.STATE.outro.st.broke&&__SS.STATE.outro.t-__SS.STATE.outro.st.broke>45","shot":"../lvl8_art/shots/o1_rescue.png"},
+ {"until":"__SS.STATE.outro&&__SS.STATE.outro.st.endT>150","shot":"../lvl8_art/shots/o2_finale.png"}
+]

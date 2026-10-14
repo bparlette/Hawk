@@ -1,0 +1,11 @@
+[
+ {"until":"__SS.STATE.scene==='stage'","js":"window.__t0=__SS.STATE.t"},
+ {"until":"__SS.STATE.t-window.__t0>60","shot":"g1.png"},
+ {"until":"__SS.STATE.t-window.__t0>330","shot":"g2.png"},
+ {"js":"(()=>{const S=__SS.STATE;S.enemies.length=0;S.queue=[];S.wave=1;S.locked=false;S.player.x=900;S.player.y=196;window.__t0=S.t;const h=S.haz.find(z=>z.st.list&&z.st.list[0]&&z.st.list[0].x===420);if(h)h.st.list.forEach(s=>s.t=225);return S.haz.length})()"},
+ {"until":"__SS.STATE.t-window.__t0>40","shot":"h1.png"},
+ {"until":"__SS.STATE.t-window.__t0>70","shot":"h2.png"},
+ {"until":"__SS.STATE.locked&&__SS.STATE.enemies.length>0","js":"window.__t0=__SS.STATE.t"},
+ {"until":"__SS.STATE.t-window.__t0>200","shot":"h3.png"},
+ {"until":"__SS.STATE.t-window.__t0>320","shot":"h4.png"}
+]

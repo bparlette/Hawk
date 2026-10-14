@@ -1,0 +1,24 @@
+f68: loading scene
+f239: stage lvl=14 section=L0
+f400: bark: BLADE AND HONOR!
+f746: bark: BY THE BOOK!
+f1294: dodge seen
+f2501 TAG-IN RAFE deaths=3 bodies=1
+f2575: bark: TOO EASY!
+f4501 TAG-IN MIKO deaths=6 bodies=2
+f4665: stage lvl=14 section=L1
+f4666: boss fight lvl=14 KRANG
+f4978: bark: TOO TOUGH! HIT HIM WHEN THE BRAIN GLOWS!
+f5285: bark: NUNCHUCKED, DUDE!
+f5896: bark: PARTY'S ON!
+f6490: bark: HE'S OVERLOADING! WATCH THE SKY!
+FORCE progress at f7067 prog=14,L,0,boss,1,0,0 px=348
+f7237: outro lvl=14
+f7307: bark: THE BRAIN'S GETTING AWAY!
+f7702: bark: SHREDDER'S TOWER... THIS ENDS TONIGHT!
+f8013: pizza lvl=14
+f8183: results lvl=14
+f8251: back to title
+after: LEVELS loaded=1,,,,,,,,,,,,,- LVLOAD=
+scripts loaded=levels/level14.js missing=levels/level15.js SS=object
+END f=8251 scene=title level=1 kills=17 levelsWithResults=14

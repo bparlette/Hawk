@@ -1,0 +1,16 @@
+f218: stage lvl=1 section=A
+f498: bark: BY THE BOOK!
+f1628: dodge seen
+f2043: boss fight lvl=1 SCORCHER
+f3865: bark: SLICE OF LIFE!
+f4147: bark: MMM, EXTRA CHEESE!
+f4341: bark: BLADE AND HONOR!
+f5201: bark: FORM IS EVERYTHING!
+f5387: stage lvl=1 section=B
+f7546: boss fight lvl=1 ramrod
+f8492: bark: STAY SHARP!
+f8590: cutscene
+f9090: pizza lvl=1
+f9260: results lvl=1
+scripts loaded=levels/level2.js missing= SS=object
+END f=9260 scene=stage level=1 kills=32 levelsWithResults=1

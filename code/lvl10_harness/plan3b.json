@@ -1,0 +1,40 @@
+[
+{
+"until": "__SS.STATE.scene==='stage'",
+"js": "(()=>{const S=__SS.STATE;S.enemies.length=0;S.queue=[];S.wave=4;S.locked=false;S.player.x=2500;S.player.y=190;return 1})()"
+},
+{
+"down": "ArrowRight",
+"wait": 300
+},
+{
+"js": "(()=>{const S=__SS.STATE;S.enemies.length=0;S.queue=[];S.wave=4;S.locked=false;return 1})()",
+"wait": 2500
+},
+{
+"up": "ArrowRight",
+"until": "__SS.STATE.enemies.some(e=>e.boss)",
+"js": "window.__b=__SS.STATE.enemies.find(e=>e.boss);window.__t0=__SS.STATE.t;1"
+},
+{
+"until": "__SS.STATE.t-window.__t0>40",
+"js": "(()=>{__b.hp=0;__b.state='dying';__b.t=0;window.__t0=__SS.STATE.t;return 1})()"
+},
+{
+"until": "!!__SS.STATE.outro",
+"js": "window.__t0=__SS.STATE.t;1"
+},
+{
+"until": "__SS.STATE.t-window.__t0>210",
+"shot": "o2.png"
+},
+{
+"until": "__SS.STATE.t-window.__t0>400",
+"shot": "o3.png"
+},
+{
+"until": "!!__SS.STATE.results",
+"wait": 1500,
+"shot": "r1.png"
+}
+]

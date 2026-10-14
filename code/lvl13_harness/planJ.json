@@ -1,0 +1,8 @@
+[
+ {"manual": true},
+ {"step": 3000, "cond": "__SS.STATE.scene==='stage' && __SS.STATE.enemies.length>=1"},
+ {"js": "(()=>{const S=__SS.STATE;S.enemies=[];S.queue=[];S.wave=2;S.locked=false;S.player.x=1000;S.player.y=186;S.player.inv=0;S.player.grabbedBy=null;for(const z of S.haz){if(z.st.cd!==undefined){z.st.list.push({x:1085,y:180,t:20});} if(z.st.list&&z.st.list[0]&&z.st.list[0].rx){z.st.list[2].t=250+40;}} return S.t})()"},
+ {"step": 24, "cond": "false", "shot": "/workspace/work/lvl13_harness/s_chasm.png"},
+ {"js": "(()=>{const S=__SS.STATE;S.player.x=1150;S.player.y=180;for(const z of S.haz){if(z.st.list&&z.st.list[0]&&z.st.list[0].rx){z.st.list[2].t=250+52+8;}} return S.camX})()"},
+ {"step": 10, "cond": "false", "shot": "/workspace/work/lvl13_harness/s_acid.png"}
+]

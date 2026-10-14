@@ -1,0 +1,8 @@
+[
+ {"until": "!!window.__L11", "wait": 900, "js": "(()=>{const G=__L11.g();G.evCd=99999;G.car={t:40,n:0};G.carWave=0;__SS.STATE.queue.push('star','blue');return 1})()"},
+ {"until": "__L11.g().car && __L11.g().car.t > 104", "shot": "s_gameplay.png"},
+ {"until": "!__L11.g().car", "js": "(()=>{__SS.STATE.player.hp=16;__L11.startEvent('tunnel');return 1})()"},
+ {"until": "__L11.g().ev && __L11.g().ev.x < 300", "shot": "s_tunnel.png"},
+ {"until": "!__L11.g().ev", "js": "(()=>{__SS.STATE.player.hp=16;__L11.startEvent('tower');return 1})()"},
+ {"until": "__L11.g().ev && __L11.g().ev.x < 190", "shot": "s_tower.png"}
+]

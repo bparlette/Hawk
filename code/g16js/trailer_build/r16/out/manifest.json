@@ -1,0 +1,137 @@
+{
+ "levels": {
+  "6": {
+   "game_stills": [],
+   "game_video": "out/game/level6.mp4",
+   "game_duration": 8.0,
+   "game_size": 2306534,
+   "game_w": 1068,
+   "game_h": 624
+  },
+  "1": {
+   "game_stills": [],
+   "game_video": "out/game/level1.mp4",
+   "game_duration": 9.2,
+   "game_size": 2310210,
+   "game_w": 1068,
+   "game_h": 624
+  },
+  "2": {
+   "game_stills": [],
+   "game_video": "out/game/level2.mp4",
+   "game_duration": 8.0,
+   "game_size": 1959065,
+   "game_w": 1068,
+   "game_h": 624
+  },
+  "3": {
+   "game_stills": [],
+   "game_video": "out/game/level3.mp4",
+   "game_duration": 8.0,
+   "game_size": 2121436,
+   "game_w": 1068,
+   "game_h": 624
+  },
+  "4": {
+   "game_stills": [],
+   "game_video": "out/game/level4.mp4",
+   "game_duration": 8.0,
+   "game_size": 1871288,
+   "game_w": 1068,
+   "game_h": 624
+  },
+  "5": {
+   "game_stills": [],
+   "game_video": "out/game/level5.mp4",
+   "game_duration": 8.0,
+   "game_size": 1672675,
+   "game_w": 1068,
+   "game_h": 624
+  },
+  "7": {
+   "game_stills": [],
+   "game_video": "out/game/level7.mp4",
+   "game_duration": 8.0,
+   "game_size": 2701543,
+   "game_w": 1068,
+   "game_h": 624
+  },
+  "8": {
+   "game_stills": [],
+   "game_video": "out/game/level8.mp4",
+   "game_duration": 8.0,
+   "game_size": 2691703,
+   "game_w": 1068,
+   "game_h": 624
+  },
+  "9": {
+   "game_stills": [],
+   "game_video": "out/game/level9.mp4",
+   "game_duration": 8.0,
+   "game_size": 2440162,
+   "game_w": 1068,
+   "game_h": 624
+  },
+  "10": {
+   "game_stills": [],
+   "game_video": "out/game/level10.mp4",
+   "game_duration": 8.0,
+   "game_size": 2545733,
+   "game_w": 1068,
+   "game_h": 624
+  },
+  "11": {
+   "game_stills": [],
+   "game_video": "out/game/level11.mp4",
+   "game_duration": 8.0,
+   "game_size": 2573181,
+   "game_w": 1068,
+   "game_h": 624
+  },
+  "12": {
+   "game_stills": [],
+   "game_video": "out/game/level12.mp4",
+   "game_duration": 8.0,
+   "game_size": 2646732,
+   "game_w": 1068,
+   "game_h": 624
+  },
+  "13": {
+   "game_stills": [],
+   "game_video": "out/game/level13.mp4",
+   "game_duration": 9.2,
+   "game_size": 2651041,
+   "game_w": 1068,
+   "game_h": 624
+  },
+  "14": {
+   "game_stills": [],
+   "game_video": "out/game/level14.mp4",
+   "game_duration": 8.0,
+   "game_size": 2443769,
+   "game_w": 1068,
+   "game_h": 624
+  },
+  "15": {
+   "game_stills": [],
+   "game_video": "out/game/level15.mp4",
+   "game_duration": 9.2,
+   "game_size": 2913508,
+   "game_w": 1068,
+   "game_h": 624
+  }
+ },
+ "full_screen": {
+  "video": "out/full_screen.mp4",
+  "duration": 64.0,
+  "size": 16864055,
+  "w": 1068,
+  "h": 770,
+  "inputs": "out/full_screen_inputs.json"
+ },
+ "full": {
+  "video": "out/full_trailer.mp4",
+  "duration": 64.0,
+  "size": 16594909
+ }
+}

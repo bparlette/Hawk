@@ -1,0 +1,14 @@
+# L2 BRICKJAW painted sheet — progress notes
+- [15:58 EDT Oct 8] Start. Brief: /workspace/work/BOSS_TASK_TEMPLATE.md. Boss currently atlas_ramrod tinted hue 280, scale 1.05 (idle ~90 world px tall). Backup level2.orig.js.
+- Pipeline copied from lvl3_art (gator, cfg.draw + GTF frame table + fxSheet red/white + spr anchor). Target K=0.5, idle stored 180px (=90 world px, same as old).
+- States used (moves charge,kick,throw,summon + fallback fire): enter/walk, tele, charge, kwind, kick, throw(throwN 2 at t14,26; ends t54), fire(fallback rays, t5..25, ends 38), summon, hurt, stagger, down, getup, dying.
+- Frames plan: idle, walk1, walk2, tele(crouch), charge(shoulder barge), wind(fist cocked), punch(brick-fist haymaker), throwUp(brick overhead), throwRel(release), summon(whistle/beckon), hurt, fall, down, getup.
+- Audit: L2 has no separate boss arena bg (single section level2_street.jpg). NOTED, left as is per assignment.
+- [16:05] brick_sheetA.png generated (already alpha-keyed RGBA): idle, walk, walk(near dup), wind(fist overhead), punch (fist CLIPPED at right edge). Design approved: purple flat cap, sleeveless purple leather vest, white tank, gold chain + key ring, grey pants, black boots, red brick gauntlet fists. Next: sheet B (punch, tele, charge, throwUp, throwRel, summon) and C (hurt, fall, down, getup, walk2).
+- [16:10] sheets B,C generated.
+- [16:20] seg.py/pack.py/view.py: 14 frames packed -> level2_brickjaw.png (1922x181, 95KB P) + meta.json; C sheet x1.12. view/frames.jpg
+- [16:30] level2.js (built) wired: BJF table, brickFrame() state map, red sheet via source-atop, spr anchor, BOSS cfg (scale 1.05 kept -> bossHeight unchanged), images:[BJ_IMG]; removed atlas/tint. png in built/levels. node --check OK. NEXT: harness.
+- [16:40] lvl2_test synced from built, lvl2_h/game.js regen'd from built index.html; play.js run1.txt: L2 boss BRICKJAW -> outro -> pizza -> results, no exception (continues through L8).
+- [16:50] gpose.js (lvl2_h) -> 20 shots in lvl2_art/shots, 0 page errors (first attempt browser crashed, rerun OK).
+- [17:00] red wash 0.62->0.5. Copied level2.js + level2_brickjaw.png to built + deploy (identical). run2.txt headless L2 boss->outro->results OK. DONE (not deployed).
+- [17:10] chromium reinstalled (cache wiped); final gpose rerun pw2.txt: 20 shots, 0 page errors. shots/b_idle_next_to_turtle.png.

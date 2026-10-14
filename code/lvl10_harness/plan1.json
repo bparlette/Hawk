@@ -1,0 +1,9 @@
+[
+ {"until":"__SS.STATE.scene==='stage'","js":"window.__t0=__SS.STATE.t"},
+ {"until":"__SS.STATE.t-window.__t0>200","shot":"g1.png"},
+ {"until":"__SS.STATE.t-window.__t0>300","shot":"g2.png"},
+ {"until":"__SS.STATE.t-window.__t0>400","shot":"g3.png"},
+ {"until":"__SS.STATE.t-window.__t0>470","shot":"g4.png"},
+ {"until":"__SS.STATE.t-window.__t0>540","shot":"g5.png"},
+ {"until":"__SS.STATE.t-window.__t0>620","js":"(()=>{const S=__SS.STATE;return [S.player.hp,S.enemies.length,S.locked,S.wave]})()","shot":"g6.png"}
+]

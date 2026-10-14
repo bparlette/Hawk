@@ -1,0 +1,26 @@
+f68: loading scene
+f239: stage lvl=11 section=L0
+f404: dodge seen
+f714: bark: HIT THE DECK!
+f847: fell in a hole lvl=11
+f2410: bark: BLADE AND HONOR!
+f2501 TAG-IN RAFE deaths=3 bodies=1
+f2731: bark: THAT ALL YA GOT?
+f4607: stage lvl=11 section=L1
+f4608: boss fight lvl=11 LEATHERHEAD
+f5001 TAG-IN MIKO deaths=6 bodies=1
+f5396: bark: PARTY'S ON!
+f5795: bark: HE'S EVEN STRONGER NOW! WATCH THE TUNNELS!
+f5815: bark: SHELL YEAH!
+f6592: bark: NUNCHUCKED, DUDE!
+f6773: outro lvl=11
+f6803: bark: WHAT'S THAT GLOW UP AHEAD?!
+f6913: bark: THE TIME RIFT! IT'S PULLING US IN!
+f7023: bark: HANG ON TO YOUR SHELLS!
+f7244: pizza lvl=11
+f7414: results lvl=11
+f9327: back to title
+after: LEVELS loaded=1,,,,,,,,,,- LVLOAD=
+scripts loaded=levels/level11.js missing=levels/level12.js SS=object
+COUNTS {"event tunnel":2,"ducked":1,"boxcar wave=1":1,"event tower":1,"boss move roll":1}
+END f=9327 scene=title level=1 kills=20 levelsWithResults=11

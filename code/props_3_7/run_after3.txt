@@ -1,0 +1,4 @@
+shot geysers_pipe_rats
+shot boss_wave_vents
+shot outro_ladder
+errors 0

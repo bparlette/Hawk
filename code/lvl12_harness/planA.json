@@ -1,0 +1,11 @@
+[
+ {"until":"__SS.STATE.scene==='stage'&&__SS.STATE.player","js":"window.__t0=__SS.STATE.t"},
+ {"until":"__SS.STATE.t-window.__t0>200","shot":"a1.png"},
+ {"js":"(()=>{const S=__SS.STATE;const h=S.haz.find(z=>z.st.cars);h.st.t=150;S.player.y=192;return S.haz.length})()"},
+ {"wait":900,"shot":"a2.png"},
+ {"js":"(()=>{const S=__SS.STATE;const h=S.haz.find(z=>z.st.cars);h.st.t=209;S.player.y=176;})()"},
+ {"wait":250,"shot":"a3.png"},
+ {"js":"(()=>{const S=__SS.STATE;S.enemies.length=0;S.queue=[];S.wave=1;S.locked=false;S.player.x=760;S.player.y=200;window.__t0=S.t;const d=S.haz.find(z=>'cd' in z.st);d.st.cd=1;})()"},
+ {"until":"(()=>{const S=__SS.STATE;const d=S.haz.find(z=>'cd' in z.st);return d.st.d&&d.st.d.ph==='lock'&&d.st.d.t>30})()","shot":"b1.png"},
+ {"until":"(()=>{const S=__SS.STATE;const q=S.haz.find(z=>z.st.list&&z.st.list[0].o!==undefined);return q.st.list.some(p=>Math.abs(p.x-S.camX-192)<190&&((S.t+p.o)%206)>165)})()","shot":"b2.png"}
+]

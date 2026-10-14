@@ -1,0 +1,1027 @@
+{
+ "pages": {
+  "https://bparlette.github.io/Offtherip/": [
+   200,
+   "https://bparlette.github.io/Offtherip/"
+  ],
+  "https://bparlette.github.io/Offtherip/shop/": [
+   200,
+   "https://bparlette.github.io/Offtherip/shop/"
+  ],
+  "https://bparlette.github.io/Offtherip/verdict/": [
+   200,
+   "https://bparlette.github.io/Offtherip/verdict/"
+  ],
+  "https://bparlette.github.io/Offtherip/watch/": [
+   200,
+   "https://bparlette.github.io/Offtherip/watch/"
+  ],
+  "https://bparlette.github.io/Offtherip/want-list/": [
+   200,
+   "https://bparlette.github.io/Offtherip/want-list/"
+  ],
+  "https://bparlette.github.io/Offtherip/about/": [
+   200,
+   "https://bparlette.github.io/Offtherip/about/"
+  ],
+  "https://bparlette.github.io/Offtherip/verdict/day-23/": [
+   200,
+   "https://bparlette.github.io/Offtherip/verdict/day-23/"
+  ],
+  "https://bparlette.github.io/Offtherip/giveaways/": [
+   200,
+   "https://bparlette.github.io/Offtherip/giveaways/"
+  ],
+  "https://bparlette.github.io/Offtherip/privacy/": [
+   200,
+   "https://bparlette.github.io/Offtherip/privacy/"
+  ],
+  "https://bparlette.github.io/Offtherip/terms/": [
+   200,
+   "https://bparlette.github.io/Offtherip/terms/"
+  ],
+  "https://bparlette.github.io/Offtherip/verdict/day-22/": [
+   200,
+   "https://bparlette.github.io/Offtherip/verdict/day-22/"
+  ],
+  "https://bparlette.github.io/Offtherip/verdict/day-21/": [
+   200,
+   "https://bparlette.github.io/Offtherip/verdict/day-21/"
+  ],
+  "https://bparlette.github.io/Offtherip/verdict/day-20/": [
+   200,
+   "https://bparlette.github.io/Offtherip/verdict/day-20/"
+  ],
+  "https://bparlette.github.io/Offtherip/verdict/day-19/": [
+   200,
+   "https://bparlette.github.io/Offtherip/verdict/day-19/"
+  ],
+  "https://bparlette.github.io/Offtherip/verdict/day-18/": [
+   200,
+   "https://bparlette.github.io/Offtherip/verdict/day-18/"
+  ],
+  "https://bparlette.github.io/Offtherip/verdict/day-17/": [
+   200,
+   "https://bparlette.github.io/Offtherip/verdict/day-17/"
+  ]
+ },
+ "links": {
+  "https://offtheripcollectables.com/": [
+   "/"
+  ],
+  "https://bparlette.github.io/Offtherip/assets/img/favicon-48.png": [
+   "/",
+   "/about/",
+   "/giveaways/",
+   "/privacy/",
+   "/shop/",
+   "/terms/",
+   "/verdict/",
+   "/verdict/day-17/",
+   "/verdict/day-18/",
+   "/verdict/day-19/",
+   "/verdict/day-20/",
+   "/verdict/day-21/",
+   "/verdict/day-22/",
+   "/verdict/day-23/",
+   "/want-list/",
+   "/watch/"
+  ],
+  "https://bparlette.github.io/Offtherip/manifest.webmanifest": [
+   "/",
+   "/about/",
+   "/giveaways/",
+   "/privacy/",
+   "/shop/",
+   "/terms/",
+   "/verdict/",
+   "/verdict/day-17/",
+   "/verdict/day-18/",
+   "/verdict/day-19/",
+   "/verdict/day-20/",
+   "/verdict/day-21/",
+   "/verdict/day-22/",
+   "/verdict/day-23/",
+   "/want-list/",
+   "/watch/"
+  ],
+  "https://bparlette.github.io/Offtherip/assets/img/apple-touch-icon.png": [
+   "/",
+   "/about/",
+   "/giveaways/",
+   "/privacy/",
+   "/shop/",
+   "/terms/",
+   "/verdict/",
+   "/verdict/day-17/",
+   "/verdict/day-18/",
+   "/verdict/day-19/",
+   "/verdict/day-20/",
+   "/verdict/day-21/",
+   "/verdict/day-22/",
+   "/verdict/day-23/",
+   "/want-list/",
+   "/watch/"
+  ],
+  "https://offtheripcollectables.com/assets/img/og-image.jpg": [
+   "/",
+   "/about/",
+   "/giveaways/",
+   "/privacy/",
+   "/shop/",
+   "/terms/",
+   "/verdict/",
+   "/verdict/day-17/",
+   "/verdict/day-18/",
+   "/verdict/day-19/",
+   "/verdict/day-20/",
+   "/verdict/day-21/",
+   "/verdict/day-22/",
+   "/verdict/day-23/",
+   "/want-list/",
+   "/watch/"
+  ],
+  "https://bparlette.github.io/Offtherip/#main": [
+   "/"
+  ],
+  "https://www.ebay.com/str/offtheripollectables": [
+   "/",
+   "/about/",
+   "/giveaways/",
+   "/privacy/",
+   "/shop/",
+   "/terms/",
+   "/verdict/",
+   "/verdict/day-17/",
+   "/verdict/day-18/",
+   "/verdict/day-19/",
+   "/verdict/day-20/",
+   "/verdict/day-21/",
+   "/verdict/day-22/",
+   "/verdict/day-23/",
+   "/want-list/",
+   "/watch/"
+  ],
+  "https://bparlette.github.io/Offtherip/": [
+   "/",
+   "/about/",
+   "/giveaways/",
+   "/privacy/",
+   "/shop/",
+   "/terms/",
+   "/verdict/",
+   "/verdict/day-17/",
+   "/verdict/day-18/",
+   "/verdict/day-19/",
+   "/verdict/day-20/",
+   "/verdict/day-21/",
+   "/verdict/day-22/",
+   "/verdict/day-23/",
+   "/want-list/",
+   "/watch/"
+  ],
+  "https://bparlette.github.io/Offtherip/shop/": [
+   "/",
+   "/about/",
+   "/giveaways/",
+   "/privacy/",
+   "/shop/",
+   "/terms/",
+   "/verdict/",
+   "/verdict/day-17/",
+   "/verdict/day-18/",
+   "/verdict/day-19/",
+   "/verdict/day-20/",
+   "/verdict/day-21/",
+   "/verdict/day-22/",
+   "/verdict/day-23/",
+   "/want-list/",
+   "/watch/"
+  ],
+  "https://bparlette.github.io/Offtherip/verdict/": [
+   "/",
+   "/about/",
+   "/giveaways/",
+   "/privacy/",
+   "/shop/",
+   "/terms/",
+   "/verdict/",
+   "/verdict/day-17/",
+   "/verdict/day-18/",
+   "/verdict/day-19/",
+   "/verdict/day-20/",
+   "/verdict/day-21/",
+   "/verdict/day-22/",
+   "/verdict/day-23/",
+   "/want-list/",
+   "/watch/"
+  ],
+  "https://bparlette.github.io/Offtherip/watch/": [
+   "/",
+   "/about/",
+   "/giveaways/",
+   "/privacy/",
+   "/shop/",
+   "/terms/",
+   "/verdict/",
+   "/verdict/day-17/",
+   "/verdict/day-18/",
+   "/verdict/day-19/",
+   "/verdict/day-20/",
+   "/verdict/day-21/",
+   "/verdict/day-22/",
+   "/verdict/day-23/",
+   "/want-list/",
+   "/watch/"
+  ],
+  "https://bparlette.github.io/Offtherip/want-list/": [
+   "/",
+   "/about/",
+   "/giveaways/",
+   "/privacy/",
+   "/shop/",
+   "/terms/",
+   "/verdict/",
+   "/verdict/day-17/",
+   "/verdict/day-18/",
+   "/verdict/day-19/",
+   "/verdict/day-20/",
+   "/verdict/day-21/",
+   "/verdict/day-22/",
+   "/verdict/day-23/",
+   "/want-list/",
+   "/watch/"
+  ],
+  "https://bparlette.github.io/Offtherip/about/": [
+   "/",
+   "/about/",
+   "/giveaways/",
+   "/privacy/",
+   "/shop/",
+   "/terms/",
+   "/verdict/",
+   "/verdict/day-17/",
+   "/verdict/day-18/",
+   "/verdict/day-19/",
+   "/verdict/day-20/",
+   "/verdict/day-21/",
+   "/verdict/day-22/",
+   "/verdict/day-23/",
+   "/want-list/",
+   "/watch/"
+  ],
+  "https://bparlette.github.io/Offtherip/shop/#inventory": [
+   "/"
+  ],
+  "https://www.ebay.com/itm/298711979378": [
+   "/",
+   "/shop/"
+  ],
+  "https://i.ebayimg.com/images/g/Z9EAAeSwoLZquWZI/s-l300.webp": [
+   "/",
+   "/shop/"
+  ],
+  "https://www.ebay.com/itm/298507720440": [
+   "/",
+   "/shop/"
+  ],
+  "https://i.ebayimg.com/images/g/fXQAAeSwgxZqV-dB/s-l300.webp": [
+   "/",
+   "/shop/"
+  ],
+  "https://www.ebay.com/itm/298714863710": [
+   "/",
+   "/shop/"
+  ],
+  "https://i.ebayimg.com/images/g/0GwAAeSwTnRqur1P/s-l300.webp": [
+   "/",
+   "/shop/"
+  ],
+  "https://www.ebay.com/itm/298730495932": [
+   "/",
+   "/shop/"
+  ],
+  "https://i.ebayimg.com/images/g/yYUAAeSwdvtqur1K/s-l300.webp": [
+   "/",
+   "/shop/"
+  ],
+  "https://www.ebay.com/itm/298708532964": [
+   "/",
+   "/shop/"
+  ],
+  "https://i.ebayimg.com/images/g/lBgAAeSw~UZqt5rl/s-l300.webp": [
+   "/",
+   "/shop/"
+  ],
+  "https://www.ebay.com/itm/298630536815": [
+   "/",
+   "/shop/"
+  ],
+  "https://i.ebayimg.com/images/g/nt8AAeSwijdqlLHp/s-l300.webp": [
+   "/",
+   "/shop/"
+  ],
+  "https://www.ebay.com/itm/298732538584": [
+   "/",
+   "/shop/"
+  ],
+  "https://i.ebayimg.com/images/g/Um8AAeSwsSdqwnvE/s-l300.webp": [
+   "/",
+   "/shop/"
+  ],
+  "https://www.ebay.com/itm/298717516529": [
+   "/",
+   "/shop/"
+  ],
+  "https://i.ebayimg.com/images/g/U-YAAeSwYxZqvAZp/s-l300.webp": [
+   "/",
+   "/shop/"
+  ],
+  "https://www.ebay.com/itm/298707680241": [
+   "/",
+   "/shop/"
+  ],
+  "https://i.ebayimg.com/images/g/JLYAAeSwNwBqtyec/s-l300.webp": [
+   "/",
+   "/shop/"
+  ],
+  "https://www.ebay.com/itm/298714863643": [
+   "/",
+   "/shop/"
+  ],
+  "https://i.ebayimg.com/images/g/-3wAAeSw~hNqur1J/s-l300.webp": [
+   "/",
+   "/shop/"
+  ],
+  "https://www.youtube.com/@offtheripcollectables": [
+   "/",
+   "/about/",
+   "/giveaways/",
+   "/privacy/",
+   "/shop/",
+   "/terms/",
+   "/verdict/",
+   "/verdict/day-17/",
+   "/verdict/day-18/",
+   "/verdict/day-19/",
+   "/verdict/day-20/",
+   "/verdict/day-21/",
+   "/verdict/day-22/",
+   "/verdict/day-23/",
+   "/want-list/",
+   "/watch/"
+  ],
+  "https://www.youtube.com/watch?v=Nn6-vh25-SE": [
+   "/",
+   "/verdict/",
+   "/watch/"
+  ],
+  "https://i.ytimg.com/vi/Nn6-vh25-SE/hqdefault.jpg": [
+   "/",
+   "/verdict/",
+   "/watch/"
+  ],
+  "https://www.youtube.com/watch?v=1hKP-Vk3fOA": [
+   "/",
+   "/giveaways/",
+   "/watch/"
+  ],
+  "https://i.ytimg.com/vi/1hKP-Vk3fOA/hqdefault.jpg": [
+   "/",
+   "/giveaways/",
+   "/watch/"
+  ],
+  "https://www.youtube.com/watch?v=yDUrxwYYLe4": [
+   "/",
+   "/verdict/",
+   "/watch/"
+  ],
+  "https://i.ytimg.com/vi/yDUrxwYYLe4/hqdefault.jpg": [
+   "/",
+   "/watch/"
+  ],
+  "https://www.youtube.com/watch?v=1JVB00cSXq0": [
+   "/",
+   "/watch/"
+  ],
+  "https://i.ytimg.com/vi/1JVB00cSXq0/hqdefault.jpg": [
+   "/",
+   "/watch/"
+  ],
+  "https://www.youtube.com/watch?v=3B0DDgOQ1_o": [
+   "/",
+   "/verdict/",
+   "/watch/"
+  ],
+  "https://i.ytimg.com/vi/3B0DDgOQ1_o/hqdefault.jpg": [
+   "/",
+   "/watch/"
+  ],
+  "https://www.youtube.com/watch?v=DqdDgCN_Du8": [
+   "/",
+   "/giveaways/",
+   "/watch/"
+  ],
+  "https://i.ytimg.com/vi/DqdDgCN_Du8/hqdefault.jpg": [
+   "/",
+   "/giveaways/",
+   "/watch/"
+  ],
+  "https://bparlette.github.io/Offtherip/verdict/day-23/": [
+   "/",
+   "/verdict/",
+   "/verdict/day-22/"
+  ],
+  "https://bparlette.github.io/Offtherip/giveaways/": [
+   "/",
+   "/about/",
+   "/giveaways/",
+   "/privacy/",
+   "/shop/",
+   "/terms/",
+   "/verdict/",
+   "/verdict/day-17/",
+   "/verdict/day-18/",
+   "/verdict/day-19/",
+   "/verdict/day-20/",
+   "/verdict/day-21/",
+   "/verdict/day-22/",
+   "/verdict/day-23/",
+   "/want-list/",
+   "/watch/"
+  ],
+  "https://www.ebay.com/str/offtheripollectables?_tab=feedback": [
+   "/"
+  ],
+  "https://bparlette.github.io/Offtherip/privacy/": [
+   "/",
+   "/about/",
+   "/giveaways/",
+   "/privacy/",
+   "/shop/",
+   "/terms/",
+   "/verdict/",
+   "/verdict/day-17/",
+   "/verdict/day-18/",
+   "/verdict/day-19/",
+   "/verdict/day-20/",
+   "/verdict/day-21/",
+   "/verdict/day-22/",
+   "/verdict/day-23/",
+   "/want-list/",
+   "/watch/"
+  ],
+  "https://www.instagram.com/offtheripcollectables/": [
+   "/",
+   "/about/",
+   "/giveaways/",
+   "/privacy/",
+   "/shop/",
+   "/terms/",
+   "/verdict/",
+   "/verdict/day-17/",
+   "/verdict/day-18/",
+   "/verdict/day-19/",
+   "/verdict/day-20/",
+   "/verdict/day-21/",
+   "/verdict/day-22/",
+   "/verdict/day-23/",
+   "/want-list/",
+   "/watch/"
+  ],
+  "https://www.tiktok.com/@offtheripcollectables": [
+   "/",
+   "/about/",
+   "/giveaways/",
+   "/privacy/",
+   "/shop/",
+   "/terms/",
+   "/verdict/",
+   "/verdict/day-17/",
+   "/verdict/day-18/",
+   "/verdict/day-19/",
+   "/verdict/day-20/",
+   "/verdict/day-21/",
+   "/verdict/day-22/",
+   "/verdict/day-23/",
+   "/want-list/",
+   "/watch/"
+  ],
+  "https://www.threads.net/@offtheripcollectables": [
+   "/",
+   "/about/",
+   "/giveaways/",
+   "/privacy/",
+   "/shop/",
+   "/terms/",
+   "/verdict/",
+   "/verdict/day-17/",
+   "/verdict/day-18/",
+   "/verdict/day-19/",
+   "/verdict/day-20/",
+   "/verdict/day-21/",
+   "/verdict/day-22/",
+   "/verdict/day-23/",
+   "/want-list/",
+   "/watch/"
+  ],
+  "https://cdn.jsdelivr.net/gh/bparlette/Offtherip@main/src/assets/img/logo-256.png": [
+   "/",
+   "/about/",
+   "/giveaways/",
+   "/privacy/",
+   "/shop/",
+   "/terms/",
+   "/verdict/",
+   "/verdict/day-17/",
+   "/verdict/day-18/",
+   "/verdict/day-19/",
+   "/verdict/day-20/",
+   "/verdict/day-21/",
+   "/verdict/day-22/",
+   "/verdict/day-23/",
+   "/want-list/",
+   "/watch/"
+  ],
+  "mailto:hello@offtheripcollectables.com": [
+   "/",
+   "/about/",
+   "/giveaways/",
+   "/privacy/",
+   "/shop/",
+   "/terms/",
+   "/verdict/",
+   "/verdict/day-17/",
+   "/verdict/day-18/",
+   "/verdict/day-19/",
+   "/verdict/day-20/",
+   "/verdict/day-21/",
+   "/verdict/day-22/",
+   "/verdict/day-23/",
+   "/want-list/",
+   "/watch/"
+  ],
+  "https://bparlette.github.io/Offtherip/terms/": [
+   "/",
+   "/about/",
+   "/giveaways/",
+   "/privacy/",
+   "/shop/",
+   "/terms/",
+   "/verdict/",
+   "/verdict/day-17/",
+   "/verdict/day-18/",
+   "/verdict/day-19/",
+   "/verdict/day-20/",
+   "/verdict/day-21/",
+   "/verdict/day-22/",
+   "/verdict/day-23/",
+   "/want-list/",
+   "/watch/"
+  ],
+  "https://bparlette.github.io/Offtherip/assets/js/main.js": [
+   "/",
+   "/about/",
+   "/giveaways/",
+   "/privacy/",
+   "/shop/",
+   "/terms/",
+   "/verdict/",
+   "/verdict/day-17/",
+   "/verdict/day-18/",
+   "/verdict/day-19/",
+   "/verdict/day-20/",
+   "/verdict/day-21/",
+   "/verdict/day-22/",
+   "/verdict/day-23/",
+   "/want-list/",
+   "/watch/"
+  ],
+  "https://offtheripcollectables.com/shop/": [
+   "/shop/"
+  ],
+  "https://bparlette.github.io/Offtherip/assets/fonts/anton-400.woff2": [
+   "/about/",
+   "/giveaways/",
+   "/privacy/",
+   "/shop/",
+   "/terms/",
+   "/verdict/",
+   "/verdict/day-17/",
+   "/verdict/day-18/",
+   "/verdict/day-19/",
+   "/verdict/day-20/",
+   "/verdict/day-21/",
+   "/verdict/day-22/",
+   "/verdict/day-23/",
+   "/want-list/",
+   "/watch/"
+  ],
+  "https://bparlette.github.io/Offtherip/assets/css/main.css": [
+   "/about/",
+   "/giveaways/",
+   "/privacy/",
+   "/shop/",
+   "/terms/",
+   "/verdict/",
+   "/verdict/day-17/",
+   "/verdict/day-18/",
+   "/verdict/day-19/",
+   "/verdict/day-20/",
+   "/verdict/day-21/",
+   "/verdict/day-22/",
+   "/verdict/day-23/",
+   "/want-list/",
+   "/watch/"
+  ],
+  "https://bparlette.github.io/Offtherip/shop/#main": [
+   "/shop/"
+  ],
+  "https://www.ebay.com/sch/i.html?_ssn=offtheripollectables&_nkw=basketball&_sop=10": [
+   "/shop/"
+  ],
+  "https://www.ebay.com/sch/i.html?_ssn=offtheripollectables&_nkw=football&_sop=10": [
+   "/shop/"
+  ],
+  "https://www.ebay.com/sch/i.html?_ssn=offtheripollectables&_nkw=baseball&_sop=10": [
+   "/shop/"
+  ],
+  "https://www.ebay.com/sch/i.html?_ssn=offtheripollectables&_nkw=pokemon&_sop=10": [
+   "/shop/"
+  ],
+  "https://www.ebay.com/sch/i.html?_ssn=offtheripollectables&_nkw=one%20piece&_sop=10": [
+   "/shop/"
+  ],
+  "https://www.ebay.com/sch/i.html?_ssn=offtheripollectables&_nkw=dragon%20ball&_sop=10": [
+   "/shop/"
+  ],
+  "https://www.ebay.com/sch/i.html?_ssn=offtheripollectables&_nkw=(psa%2Cbgs%2Csgc%2Ccgc)&_sop=10": [
+   "/shop/"
+  ],
+  "https://www.ebay.com/sch/i.html?_ssn=offtheripollectables&_sop=10": [
+   "/shop/"
+  ],
+  "https://www.ebay.com/itm/298732538565": [
+   "/shop/"
+  ],
+  "https://i.ebayimg.com/images/g/19EAAeSwG3Jqwnu~/s-l300.webp": [
+   "/shop/"
+  ],
+  "https://www.ebay.com/itm/298733255787": [
+   "/shop/"
+  ],
+  "https://i.ebayimg.com/images/g/gPMAAeSwPGRqwuFy/s-l300.webp": [
+   "/shop/"
+  ],
+  "https://www.ebay.com/itm/298624718736": [
+   "/shop/"
+  ],
+  "https://i.ebayimg.com/images/g/migAAeSwcZxqkfaA/s-l300.webp": [
+   "/shop/"
+  ],
+  "https://www.ebay.com/itm/298701845526": [
+   "/shop/"
+  ],
+  "https://i.ebayimg.com/images/g/6UYAAeSwFrlqtFqm/s-l300.webp": [
+   "/shop/"
+  ],
+  "https://www.ebay.com/itm/298721973516": [
+   "/shop/"
+  ],
+  "https://i.ebayimg.com/images/g/XgUAAeSwU6JqvYB~/s-l300.webp": [
+   "/shop/"
+  ],
+  "https://www.ebay.com/itm/298708532948": [
+   "/shop/"
+  ],
+  "https://i.ebayimg.com/images/g/JYIAAeSwMCtqt5rg/s-l300.webp": [
+   "/shop/"
+  ],
+  "https://www.ebay.com/itm/298647722472": [
+   "/shop/"
+  ],
+  "https://i.ebayimg.com/images/g/8FYAAeSw9kBqnBTd/s-l300.webp": [
+   "/shop/"
+  ],
+  "https://www.ebay.com/itm/298714783036": [
+   "/shop/"
+  ],
+  "https://i.ebayimg.com/images/g/Rj8AAeSwOoxqurUI/s-l300.webp": [
+   "/shop/"
+  ],
+  "https://www.ebay.com/itm/298735456021": [
+   "/shop/"
+  ],
+  "https://i.ebayimg.com/images/g/uQAAAeSwSihqw~fy/s-l300.webp": [
+   "/shop/"
+  ],
+  "https://www.ebay.com/itm/298704231333": [
+   "/shop/"
+  ],
+  "https://i.ebayimg.com/images/g/UeUAAeSwEhhqtXYu/s-l300.webp": [
+   "/shop/"
+  ],
+  "https://www.ebay.com/itm/298730505667": [
+   "/shop/"
+  ],
+  "https://i.ebayimg.com/images/g/qOwAAeSwIMdqwXFr/s-l300.webp": [
+   "/shop/"
+  ],
+  "https://www.ebay.com/itm/297837357818": [
+   "/shop/"
+  ],
+  "https://i.ebayimg.com/images/g/s9oAAeSwDu9pOznY/s-l300.webp": [
+   "/shop/"
+  ],
+  "https://www.ebay.com/itm/298707680254": [
+   "/shop/"
+  ],
+  "https://i.ebayimg.com/images/g/As0AAeSwBBdqtyeb/s-l300.webp": [
+   "/shop/"
+  ],
+  "https://www.ebay.com/itm/298708532953": [
+   "/shop/"
+  ],
+  "https://i.ebayimg.com/images/g/0OcAAeSwzd1qt5rg/s-l300.webp": [
+   "/shop/"
+  ],
+  "https://www.ebay.com/itm/298607569673": [
+   "/shop/"
+  ],
+  "https://i.ebayimg.com/images/g/fI4AAeSwFJZqiKez/s-l500.webp": [
+   "/shop/"
+  ],
+  "https://www.ebay.com/itm/297841819895": [
+   "/shop/"
+  ],
+  "https://i.ebayimg.com/images/g/K7cAAeSwNhtpPaG6/s-l500.webp": [
+   "/shop/"
+  ],
+  "https://www.ebay.com/itm/297841785007": [
+   "/shop/"
+  ],
+  "https://i.ebayimg.com/images/g/N1cAAeSwcxppPZeA/s-l500.webp": [
+   "/shop/"
+  ],
+  "https://www.ebay.com/itm/297841791483": [
+   "/shop/"
+  ],
+  "https://i.ebayimg.com/images/g/EzUAAeSwjfBpPZqT/s-l500.webp": [
+   "/shop/"
+  ],
+  "https://www.ebay.com/itm/298607739212": [
+   "/shop/"
+  ],
+  "https://i.ebayimg.com/images/g/2-QAAeSwuTdqiNTp/s-l500.webp": [
+   "/shop/"
+  ],
+  "https://www.ebay.com/itm/298605060601": [
+   "/shop/"
+  ],
+  "https://i.ebayimg.com/images/g/7UIAAeSwFJZqh2Wo/s-l500.webp": [
+   "/shop/"
+  ],
+  "https://www.ebay.com/itm/298607743645": [
+   "/shop/"
+  ],
+  "https://i.ebayimg.com/images/g/1UUAAeSwdABqiNWH/s-l500.webp": [
+   "/shop/"
+  ],
+  "https://www.ebay.com/itm/297841814858": [
+   "/shop/"
+  ],
+  "https://i.ebayimg.com/images/g/AREAAeSwBO9pPZ-L/s-l500.webp": [
+   "/shop/"
+  ],
+  "https://www.ebay.com/itm/297990932476": [
+   "/shop/"
+  ],
+  "https://i.ebayimg.com/images/g/USAAAeSwm7Zpf7jB/s-l500.webp": [
+   "/shop/"
+  ],
+  "https://www.ebay.com/itm/297988290636": [
+   "/shop/"
+  ],
+  "https://i.ebayimg.com/images/g/c7YAAeSw1u1pfqnt/s-l500.webp": [
+   "/shop/"
+  ],
+  "https://www.ebay.com/itm/297981640937": [
+   "/shop/"
+  ],
+  "https://i.ebayimg.com/images/g/6c0AAeSwBRppe894/s-l500.webp": [
+   "/shop/"
+  ],
+  "https://www.ebay.com/itm/297841802034": [
+   "/shop/"
+  ],
+  "https://i.ebayimg.com/images/g/TFQAAeSw2gBpPZxz/s-l500.webp": [
+   "/shop/"
+  ],
+  "https://bparlette.github.io/Offtherip/shop/#hitlist": [
+   "/shop/"
+  ],
+  "https://bparlette.github.io/Offtherip/assets/js/shop.js": [
+   "/shop/"
+  ],
+  "https://offtheripcollectables.com/verdict/": [
+   "/verdict/"
+  ],
+  "https://bparlette.github.io/Offtherip/verdict/#main": [
+   "/verdict/"
+  ],
+  "https://www.youtube.com/watch?v=HbpY-rOTvdg": [
+   "/verdict/",
+   "/watch/"
+  ],
+  "https://www.youtube.com/watch?v=UQaEThvotUc": [
+   "/verdict/",
+   "/watch/"
+  ],
+  "https://www.youtube.com/watch?v=Mvq7dSu9F1w": [
+   "/verdict/"
+  ],
+  "https://www.youtube.com/watch?v=kGMpc6Qd2Ok": [
+   "/verdict/"
+  ],
+  "https://bparlette.github.io/Offtherip/verdict/#hitlist": [
+   "/verdict/"
+  ],
+  "https://bparlette.github.io/Offtherip/assets/js/verdict.js": [
+   "/verdict/"
+  ],
+  "https://offtheripcollectables.com/watch/": [
+   "/watch/"
+  ],
+  "https://bparlette.github.io/Offtherip/watch/#main": [
+   "/watch/"
+  ],
+  "https://www.youtube.com/@offtheripcollectables?sub_confirmation=1": [
+   "/watch/"
+  ],
+  "https://www.youtube-nocookie.com/embed/videoseries?list=UUoc5YV93E64NXWy0XyFOf9A": [
+   "/watch/"
+  ],
+  "https://www.youtube.com/@offtheripcollectables/search?query=Daily%20Pack%20Verdict": [
+   "/watch/"
+  ],
+  "https://www.youtube.com/@offtheripcollectables/search?query=Up%20or%20Down": [
+   "/watch/"
+  ],
+  "https://www.youtube.com/@offtheripcollectables/search?query=giveaway": [
+   "/giveaways/",
+   "/watch/"
+  ],
+  "https://www.youtube.com/@offtheripcollectables/search?query=box%20opening": [
+   "/watch/"
+  ],
+  "https://www.youtube.com/@offtheripcollectables/videos": [
+   "/watch/"
+  ],
+  "https://www.youtube.com/watch?v=RRUdn4hagdg": [
+   "/watch/"
+  ],
+  "https://i.ytimg.com/vi/RRUdn4hagdg/hqdefault.jpg": [
+   "/watch/"
+  ],
+  "https://i.ytimg.com/vi/HbpY-rOTvdg/hqdefault.jpg": [
+   "/watch/"
+  ],
+  "https://www.youtube.com/watch?v=mH3G5kd0qdo": [
+   "/watch/"
+  ],
+  "https://i.ytimg.com/vi/mH3G5kd0qdo/hqdefault.jpg": [
+   "/watch/"
+  ],
+  "https://i.ytimg.com/vi/UQaEThvotUc/hqdefault.jpg": [
+   "/watch/"
+  ],
+  "https://www.youtube.com/watch?v=ePSR70EEJqo": [
+   "/watch/"
+  ],
+  "https://i.ytimg.com/vi/ePSR70EEJqo/hqdefault.jpg": [
+   "/watch/"
+  ],
+  "https://www.youtube.com/watch?v=WfGGzvMNqRc": [
+   "/watch/"
+  ],
+  "https://i.ytimg.com/vi/WfGGzvMNqRc/hqdefault.jpg": [
+   "/watch/"
+  ],
+  "https://offtheripcollectables.com/want-list/": [
+   "/want-list/"
+  ],
+  "https://bparlette.github.io/Offtherip/want-list/#main": [
+   "/want-list/"
+  ],
+  "https://offtheripcollectables.com/about/": [
+   "/about/"
+  ],
+  "https://bparlette.github.io/Offtherip/about/#main": [
+   "/about/"
+  ],
+  "https://offtheripcollectables.com/verdict/day-23/": [
+   "/verdict/day-23/"
+  ],
+  "https://bparlette.github.io/Offtherip/verdict/day-23/#main": [
+   "/verdict/day-23/"
+  ],
+  "https://www.youtube-nocookie.com/embed/Nn6-vh25-SE": [
+   "/verdict/day-23/"
+  ],
+  "https://bparlette.github.io/Offtherip/verdict/day-22/": [
+   "/verdict/day-21/",
+   "/verdict/day-23/"
+  ],
+  "https://offtheripcollectables.com/giveaways/": [
+   "/giveaways/"
+  ],
+  "https://bparlette.github.io/Offtherip/giveaways/#main": [
+   "/giveaways/"
+  ],
+  "https://offtheripcollectables.com/privacy/": [
+   "/privacy/"
+  ],
+  "https://bparlette.github.io/Offtherip/privacy/#main": [
+   "/privacy/"
+  ],
+  "https://offtheripcollectables.com/terms/": [
+   "/terms/"
+  ],
+  "https://bparlette.github.io/Offtherip/terms/#main": [
+   "/terms/"
+  ],
+  "https://offtheripcollectables.com/verdict/day-22/": [
+   "/verdict/day-22/"
+  ],
+  "https://bparlette.github.io/Offtherip/verdict/day-22/#main": [
+   "/verdict/day-22/"
+  ],
+  "https://www.youtube-nocookie.com/embed/yDUrxwYYLe4": [
+   "/verdict/day-22/"
+  ],
+  "https://bparlette.github.io/Offtherip/verdict/day-21/": [
+   "/verdict/day-20/",
+   "/verdict/day-22/"
+  ],
+  "https://offtheripcollectables.com/verdict/day-21/": [
+   "/verdict/day-21/"
+  ],
+  "https://bparlette.github.io/Offtherip/verdict/day-21/#main": [
+   "/verdict/day-21/"
+  ],
+  "https://www.youtube-nocookie.com/embed/3B0DDgOQ1_o": [
+   "/verdict/day-21/"
+  ],
+  "https://bparlette.github.io/Offtherip/verdict/day-20/": [
+   "/verdict/day-19/",
+   "/verdict/day-21/"
+  ],
+  "https://offtheripcollectables.com/verdict/day-20/": [
+   "/verdict/day-20/"
+  ],
+  "https://bparlette.github.io/Offtherip/verdict/day-20/#main": [
+   "/verdict/day-20/"
+  ],
+  "https://www.youtube-nocookie.com/embed/HbpY-rOTvdg": [
+   "/verdict/day-20/"
+  ],
+  "https://bparlette.github.io/Offtherip/verdict/day-19/": [
+   "/verdict/day-18/",
+   "/verdict/day-20/"
+  ],
+  "https://offtheripcollectables.com/verdict/day-19/": [
+   "/verdict/day-19/"
+  ],
+  "https://bparlette.github.io/Offtherip/verdict/day-19/#main": [
+   "/verdict/day-19/"
+  ],
+  "https://www.youtube-nocookie.com/embed/UQaEThvotUc": [
+   "/verdict/day-19/"
+  ],
+  "https://bparlette.github.io/Offtherip/verdict/day-18/": [
+   "/verdict/day-17/",
+   "/verdict/day-19/"
+  ],
+  "https://offtheripcollectables.com/verdict/day-18/": [
+   "/verdict/day-18/"
+  ],
+  "https://bparlette.github.io/Offtherip/verdict/day-18/#main": [
+   "/verdict/day-18/"
+  ],
+  "https://www.youtube-nocookie.com/embed/Mvq7dSu9F1w": [
+   "/verdict/day-18/"
+  ],
+  "https://bparlette.github.io/Offtherip/verdict/day-17/": [
+   "/verdict/day-18/"
+  ],
+  "https://offtheripcollectables.com/verdict/day-17/": [
+   "/verdict/day-17/"
+  ],
+  "https://bparlette.github.io/Offtherip/verdict/day-17/#main": [
+   "/verdict/day-17/"
+  ],
+  "https://www.youtube-nocookie.com/embed/kGMpc6Qd2Ok": [
+   "/verdict/day-17/"
+  ]
+ }
+}

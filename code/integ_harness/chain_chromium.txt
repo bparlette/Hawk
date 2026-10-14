@@ -1,0 +1,252 @@
+f218: stage lvl=1 section=A
+f1897: boss lvl=1 SCORCHER
+f2673: boss KO lvl=1 SCORCHER
+f5238: stage lvl=1 section=B
+f8588: cutscene lvl=1
+f9088: pizza lvl=1
+f9258: results lvl=1
+f9348: RESULTS-CARD lvl=1 -> ["CONTINUE: ATTACK, ENTER OR TAP","NEXT: LEVEL 2 - STREET RUMBLE"]
+f9361: map before lvl=2
+shot map_to_2
+f9501: loading lvl=1
+f10113: stage lvl=2 section=L0
+f14115: boss lvl=2 BRICKJAW
+f15423: boss KO lvl=2 BRICKJAW
+f15600: outro lvl=2
+f15731: pizza lvl=2
+f15901: results lvl=2
+f15991: RESULTS-CARD lvl=2 -> ["CONTINUE: ATTACK, ENTER OR TAP","NEXT: LEVEL 3 - SEWER SHOWDOWN"]
+f16011: map before lvl=3
+shot map_to_3
+f16151: loading lvl=2
+f16763: stage lvl=3 section=L0
+.. f=19612 scene=stage lv=3 30s
+f20273: stage lvl=3 section=L1
+f20660: boss lvl=3 GULCH GATOR
+f22049: boss KO lvl=3 GULCH GATOR
+f22226: outro lvl=3
+f22406: outro-text lvl=3: NEXT: THE HIGHWAY
+f22437: pizza lvl=3
+f22607: results lvl=3
+f22697: RESULTS-CARD lvl=3 -> ["CONTINUE: ATTACK, ENTER OR TAP","NEXT: LEVEL 4 - SUNSET SHRED"]
+f22711: map before lvl=4
+shot map_to_4
+f22851: loading lvl=3
+f23482: stage lvl=4 section=L0
+f24705: stage lvl=4 section=L1
+f26041: boss lvl=4 JETWASH
+f27306: boss KO lvl=4 JETWASH
+f27483: outro lvl=4
+f27684: pizza lvl=4
+f27854: results lvl=4
+f27944: RESULTS-CARD lvl=4 -> ["CONTINUE: ATTACK, ENTER OR TAP","NEXT: LEVEL 5 - DOCKSIDE DOUBLE-CROSS"]
+f27961: map before lvl=5
+shot map_to_5
+f28101: loading lvl=4
+f28732: stage lvl=5 section=L0
+f31788: stage lvl=5 section=L1
+f32404: boss lvl=5 GRIMWALE
+f33787: boss KO lvl=5 GRIMWALE
+f33964: outro lvl=5
+f34215: pizza lvl=5
+f34385: results lvl=5
+f34475: RESULTS-CARD lvl=5 -> ["CONTINUE: ATTACK, ENTER OR TAP","NEXT: LEVEL 6 - FROSTBITE BOULEVARD"]
+f34491: map before lvl=6
+shot map_to_6
+f34631: loading lvl=5
+f35262: stage lvl=6 section=L0
+f38589: stage lvl=6 section=L1
+f38590: boss lvl=6 COLD FRONT
+f40293: boss KO lvl=6 COLD FRONT
+f40470: outro lvl=6
+f40530: outro-text lvl=6: NEXT STOP: THE JUNKYARD
+f40691: pizza lvl=6
+f40861: results lvl=6
+f40951: RESULTS-CARD lvl=6 -> ["CONTINUE: ATTACK, ENTER OR TAP","NEXT: LEVEL 7 - SCRAPYARD SMASH"]
+f40971: map before lvl=7
+shot map_to_7
+f41111: loading lvl=6
+f41742: stage lvl=7 section=L0
+.. f=43972 scene=stage lv=7 60s
+f45727: stage lvl=7 section=L1
+f45728: boss lvl=7 RUSTMAUL
+f46944: boss KO lvl=7 RUSTMAUL
+f47126: outro lvl=7
+f47306: outro-text lvl=7: NEXT: THE FORTRESS
+f47367: pizza lvl=7
+f47537: results lvl=7
+f47627: RESULTS-CARD lvl=7 -> ["CONTINUE: ATTACK, ENTER OR TAP","NEXT: LEVEL 8 - FORTRESS OF RAZORBACK"]
+f47641: map before lvl=8
+shot map_to_8
+f47781: loading lvl=7
+f48412: stage lvl=8 section=L0
+f52670: stage lvl=8 section=L1
+f52671: boss lvl=8 RAZORBACK
+f55104: boss KO lvl=8 RAZORBACK
+f55281: outro lvl=8
+shot l8_outro_150
+shot l8_outro_330
+f55641: outro-text lvl=8: TO BE CONTINUED
+f55701: outro-text lvl=8: A RIFT TEARS OPEN... TO BE CONTINUED IN TIME...
+shot l8_outro_520
+f55993: pizza lvl=8
+f56163: results lvl=8
+f56253: RESULTS-CARD lvl=8 -> ["CONTINUE: ATTACK, ENTER OR TAP","NEXT: LEVEL 9 - SHADOWS OF EDO"]
+shot l8_results
+f56271: map before lvl=9
+shot map_to_9
+f56411: loading lvl=8
+f57042: stage lvl=9 section=L0
+shot l9_gameplay
+shot l9_gameplay2
+f60981: stage lvl=9 section=L1
+f60982: boss lvl=9 KARAI
+shot l9_boss_KARAI_260
+shot l9_boss_KARAI_900
+f63482: boss KO lvl=9 KARAI
+f63659: outro lvl=9
+shot l9_outro_150
+shot l9_outro_330
+f64100: pizza lvl=9
+f64270: results lvl=9
+f64360: RESULTS-CARD lvl=9 -> ["CONTINUE: ATTACK, ENTER OR TAP","NEXT: LEVEL 10 - PIRATE SHIP"]
+shot l9_results
+f64381: map before lvl=10
+shot map_to_10
+f64521: loading lvl=9
+f65152: stage lvl=10 section=L0
+shot l10_gameplay
+.. f=65853 scene=stage lv=10 91s
+shot l10_gameplay2
+f69516: stage lvl=10 section=L1
+f69517: boss lvl=10 ARMAGGON
+shot l10_boss_ARMAGGON_260
+shot l10_boss_ARMAGGON_900
+f71678: boss KO lvl=10 ARMAGGON
+f71855: outro lvl=10
+shot l10_outro_150
+shot l10_outro_330
+f72275: outro-text lvl=10: NEXT STOP: THE WILD WEST!
+f72325: pizza lvl=10
+f72495: results lvl=10
+f72585: RESULTS-CARD lvl=10 -> ["CONTINUE: ATTACK, ENTER OR TAP","NEXT: LEVEL 11 - WILD WEST TRAIN"]
+shot l10_results
+f72601: map before lvl=11
+shot map_to_11
+f72741: loading lvl=10
+f73372: stage lvl=11 section=L0
+shot l11_gameplay
+shot l11_gameplay2
+f77851: stage lvl=11 section=L1
+f77852: boss lvl=11 LEATHERHEAD
+shot l11_boss_LEATHERHEAD_260
+shot l11_boss_LEATHERHEAD_900
+f79957: boss KO lvl=11 LEATHERHEAD
+f80137: outro lvl=11
+shot l11_outro_150
+shot l11_outro_330
+f80557: outro-text lvl=11: NEXT STOP: NEW YORK CITY, 2105
+f80608: pizza lvl=11
+f80778: results lvl=11
+f80868: RESULTS-CARD lvl=11 -> ["CONTINUE: ATTACK, ENTER OR TAP","NEXT: LEVEL 12 - FUTURE NYC 2105"]
+shot l11_results
+f80881: map before lvl=12
+shot map_to_12
+f81021: loading lvl=11
+f81652: stage lvl=12 section=L0
+shot l12_gameplay
+shot l12_gameplay2
+f85086: stage lvl=12 section=L1
+f85087: boss lvl=12 VIRAL
+shot l12_boss_VIRAL_260
+.. f=85948 scene=stage lv=12 121s
+shot l12_boss_VIRAL_900
+f86988: boss KO lvl=12 VIRAL
+f87165: outro lvl=12
+shot l12_outro_150
+f87405: outro-text lvl=12: NEXT STOP: DIMENSION X
+shot l12_outro_330
+f87566: pizza lvl=12
+f87736: results lvl=12
+f87826: RESULTS-CARD lvl=12 -> ["CONTINUE: ATTACK, ENTER OR TAP","NEXT: LEVEL 13 - DIMENSION X"]
+shot l12_results
+f87841: map before lvl=13
+shot map_to_13
+f87981: loading lvl=12
+f88612: stage lvl=13 section=L0
+shot l13_gameplay
+shot l13_gameplay2
+f93468: stage lvl=13 section=L1
+f93469: boss lvl=13 GENERAL TRAAG
+shot l13_boss_GENERALTRAAG_260
+shot l13_boss_GENERALTRAAG_900
+f94506: boss lvl=13 LT. GRANITOR
+shot l13_boss_LTGRANITOR_260
+shot l13_boss_LTGRANITOR_900
+f95711: boss KO lvl=13 LT. GRANITOR
+f95892: outro lvl=13
+shot l13_outro_150
+shot l13_outro_330
+shot l13_outro_520
+f96525: pizza lvl=13
+f96695: results lvl=13
+f96785: RESULTS-CARD lvl=13 -> ["CONTINUE: ATTACK, ENTER OR TAP","NEXT: LEVEL 14 - TECHNODROME PORTAL"]
+shot l13_results
+f96801: map before lvl=14
+shot map_to_14
+f96941: loading lvl=13
+f97572: stage lvl=14 section=L0
+shot l14_gameplay
+shot l14_gameplay2
+f101718: stage lvl=14 section=L1
+f101719: boss lvl=14 KRANG
+shot l14_boss_KRANG_260
+shot l14_boss_KRANG_900
+f103557: boss KO lvl=14 KRANG
+f103734: outro lvl=14
+shot l14_outro_150
+shot l14_outro_330
+.. f=104065 scene=stage lv=14 151s
+shot l14_outro_520
+f104274: outro-text lvl=14: NEXT: THE FINAL ASCENT
+f104510: pizza lvl=14
+f104680: results lvl=14
+f104770: RESULTS-CARD lvl=14 -> ["NEXT: LEVEL 15 - SHREDDER'S TOWER","CONTINUE: ATTACK, ENTER OR TAP"]
+shot l14_results
+f104791: map before lvl=15
+shot map_to_15
+f104931: loading lvl=14
+f105562: stage lvl=15 section=L0
+shot l15_gameplay
+shot l15_gameplay2
+f108353: stage lvl=15 section=L1
+f108354: boss lvl=15 SHREDDER
+shot l15_boss_SHREDDER_260
+shot l15_boss_SHREDDER_900
+f110252: boss KO lvl=15 SHREDDER
+f110593: stage lvl=15 section=L2
+f114010: boss lvl=15 SUPER SHREDDER
+shot l15_boss_SUPERSHREDDER_260
+shot l15_boss_SUPERSHREDDER_900
+f116861: boss KO lvl=15 SUPER SHREDDER
+f117038: outro lvl=15
+shot l15_outro_150
+shot l15_outro_330
+f117398: outro-text lvl=15: THE END
+f117518: outro-text lvl=15: THANKS FOR PLAYING SHELL SHOCK LIVE!
+shot l15_outro_520
+shot l15_outro_700
+shot l15_outro_860
+f117999: pizza lvl=15
+f118169: results lvl=15
+f118259: RESULTS-CARD lvl=15 -> ["HIGH SCORE! ATTACK, ENTER OR TAP","THE END","CONGRATULATIONS! THE CITY IS SAFE."]
+shot l15_results
+f118271: INITIALS entry (score 112950)
+shot initials
+f118351: INITIALS saved
+f118396: back to title after finale
+shot title_after
+RESULTS TEXTS {"1":["CONTINUE: ATTACK, ENTER OR TAP","NEXT: LEVEL 2 - STREET RUMBLE"],"2":["CONTINUE: ATTACK, ENTER OR TAP","NEXT: LEVEL 3 - SEWER SHOWDOWN"],"3":["CONTINUE: ATTACK, ENTER OR TAP","NEXT: LEVEL 4 - SUNSET SHRED"],"4":["CONTINUE: ATTACK, ENTER OR TAP","NEXT: LEVEL 5 - DOCKSIDE DOUBLE-CROSS"],"5":["CONTINUE: ATTACK, ENTER OR TAP","NEXT: LEVEL 6 - FROSTBITE BOULEVARD"],"6":["CONTINUE: ATTACK, ENTER OR TAP","NEXT: LEVEL 7 - SCRAPYARD SMASH"],"7":["CONTINUE: ATTACK, ENTER OR TAP","NEXT: LEVEL 8 - FORTRESS OF RAZORBACK"],"8":["CONTINUE: ATTACK, ENTER OR TAP","NEXT: LEVEL 9 - SHADOWS OF EDO"],"9":["CONTINUE: ATTACK, ENTER OR TAP","NEXT: LEVEL 10 - PIRATE SHIP"],"10":["CONTINUE: ATTACK, ENTER OR TAP","NEXT: LEVEL 11 - WILD WEST TRAIN"],"11":["CONTINUE: ATTACK, ENTER OR TAP","NEXT: LEVEL 12 - FUTURE NYC 2105"],"12":["CONTINUE: ATTACK, ENTER OR TAP","NEXT: LEVEL 13 - DIMENSION X"],"13":["CONTINUE: ATTACK, ENTER OR TAP","NEXT: LEVEL 14 - TECHNODROME PORTAL"],"14":["NEXT: LEVEL 15 - SHREDDER'S TOWER","CONTINUE: ATTACK, ENTER OR TAP"],"15":["HIGH SCORE! ATTACK, ENTER OR TAP","THE END","CONGRATULATIONS! THE CITY IS SAFE."]}
+HISCORES [{"n":"LEN","s":112950,"l":15,"d":1},{"n":"LEN","s":12000,"l":1,"d":1},{"n":"RAF","s":10000,"l":1,"d":1},{"n":"MIK","s":8500,"l":1,"d":1},{"n":"DON","s":7000,"l":1,"d":1},{"n":"AMB","s":6000,"l":1,"d":1},{"n":"ZAP","s":5000,"l":1,"d":1},{"n":"RAM","s":4000,"l":1,"d":1},{"n":"JAX","s":3000,"l":1,"d":1},{"n":"KIT","s":2000,"l":1,"d":1}]
+PAGE ERRORS 0 []
+DONE in 178 s

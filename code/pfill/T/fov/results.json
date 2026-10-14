@@ -1,0 +1,386 @@
+[
+ {
+  "name": "a-free-p",
+  "errs": [],
+  "ov": {
+   "sw": 460,
+   "sh": 1194,
+   "iw": 390,
+   "ih": 844,
+   "sx": 0,
+   "sy": 0
+  },
+  "overflow": false,
+  "eval": {
+   "cv": [
+    768,
+    554,
+    "311.913px",
+    "225px"
+   ],
+   "cam": {
+    "err": "camera is not defined"
+   }
+  }
+ },
+ {
+  "name": "a-free-l",
+  "errs": [],
+  "ov": {
+   "sw": 1280,
+   "sh": 1104,
+   "iw": 1280,
+   "ih": 720,
+   "sx": 0,
+   "sy": 0
+  },
+  "overflow": false,
+  "eval": {
+   "cv": [
+    768,
+    448,
+    "301px",
+    "175.583px"
+   ],
+   "cam": {
+    "err": "camera is not defined"
+   }
+  }
+ },
+ {
+  "name": "b-paper-p",
+  "errs": [],
+  "ov": {
+   "sw": 460,
+   "sh": 1194,
+   "iw": 390,
+   "ih": 844,
+   "sx": 0,
+   "sy": 0
+  },
+  "overflow": false,
+  "eval": {
+   "cv": [
+    768,
+    554,
+    "311.913px",
+    "225px"
+   ],
+   "cam": {
+    "err": "camera is not defined"
+   }
+  }
+ },
+ {
+  "name": "b-paper-l",
+  "errs": [],
+  "ov": {
+   "sw": 1280,
+   "sh": 1104,
+   "iw": 1280,
+   "ih": 720,
+   "sx": 0,
+   "sy": 0
+  },
+  "overflow": false,
+  "eval": {
+   "cv": [
+    768,
+    448,
+    "301px",
+    "175.583px"
+   ],
+   "cam": {
+    "err": "camera is not defined"
+   }
+  }
+ },
+ {
+  "name": "c-gta-p",
+  "errs": [],
+  "ov": {
+   "sw": 460,
+   "sh": 1194,
+   "iw": 390,
+   "ih": 844,
+   "sx": 0,
+   "sy": 0
+  },
+  "overflow": false,
+  "eval": {
+   "cv": [
+    768,
+    554,
+    "311.913px",
+    "225px"
+   ],
+   "cam": {
+    "err": "camera is not defined"
+   }
+  }
+ },
+ {
+  "name": "c-gta-l",
+  "errs": [],
+  "ov": {
+   "sw": 1280,
+   "sh": 1104,
+   "iw": 1280,
+   "ih": 720,
+   "sx": 0,
+   "sy": 0
+  },
+  "overflow": false,
+  "eval": {
+   "cv": [
+    768,
+    448,
+    "301px",
+    "175.583px"
+   ],
+   "cam": {
+    "err": "camera is not defined"
+   }
+  }
+ },
+ {
+  "name": "d-skyline-p",
+  "errs": [],
+  "ov": {
+   "sw": 460,
+   "sh": 1194,
+   "iw": 390,
+   "ih": 844,
+   "sx": 0,
+   "sy": 0
+  },
+  "overflow": false,
+  "eval": {
+   "cv": [
+    768,
+    554,
+    "311.913px",
+    "225px"
+   ],
+   "cam": {
+    "err": "camera is not defined"
+   }
+  }
+ },
+ {
+  "name": "d-skyline-l",
+  "errs": [],
+  "ov": {
+   "sw": 1280,
+   "sh": 1104,
+   "iw": 1280,
+   "ih": 720,
+   "sx": 0,
+   "sy": 0
+  },
+  "overflow": false,
+  "eval": {
+   "cv": [
+    768,
+    448,
+    "301px",
+    "175.583px"
+   ],
+   "cam": {
+    "err": "camera is not defined"
+   }
+  }
+ },
+ {
+  "name": "e-gta32-p",
+  "errs": [],
+  "ov": {
+   "sw": 460,
+   "sh": 1194,
+   "iw": 390,
+   "ih": 844,
+   "sx": 0,
+   "sy": 0
+  },
+  "overflow": false,
+  "eval": {
+   "cv": [
+    768,
+    554,
+    "311.913px",
+    "225px"
+   ],
+   "cam": {
+    "err": "camera is not defined"
+   }
+  }
+ },
+ {
+  "name": "e-gta32-l",
+  "errs": [],
+  "ov": {
+   "sw": 1280,
+   "sh": 1104,
+   "iw": 1280,
+   "ih": 720,
+   "sx": 0,
+   "sy": 0
+  },
+  "overflow": false,
+  "eval": {
+   "cv": [
+    768,
+    448,
+    "301px",
+    "175.583px"
+   ],
+   "cam": {
+    "err": "camera is not defined"
+   }
+  }
+ },
+ {
+  "name": "f-free16-p",
+  "errs": [],
+  "ov": {
+   "sw": 460,
+   "sh": 1194,
+   "iw": 390,
+   "ih": 844,
+   "sx": 0,
+   "sy": 0
+  },
+  "overflow": false,
+  "eval": {
+   "cv": [
+    768,
+    554,
+    "311.913px",
+    "225px"
+   ],
+   "cam": {
+    "err": "camera is not defined"
+   }
+  }
+ },
+ {
+  "name": "f-free16-l",
+  "errs": [],
+  "ov": {
+   "sw": 1280,
+   "sh": 1104,
+   "iw": 1280,
+   "ih": 720,
+   "sx": 0,
+   "sy": 0
+  },
+  "overflow": false,
+  "eval": {
+   "cv": [
+    768,
+    448,
+    "301px",
+    "175.583px"
+   ],
+   "cam": {
+    "err": "camera is not defined"
+   }
+  }
+ },
+ {
+  "name": "g-hd2d-p",
+  "errs": [],
+  "ov": {
+   "sw": 460,
+   "sh": 1194,
+   "iw": 390,
+   "ih": 844,
+   "sx": 0,
+   "sy": 0
+  },
+  "overflow": false,
+  "eval": {
+   "cv": [
+    768,
+    554,
+    "311.913px",
+    "225px"
+   ],
+   "cam": {
+    "err": "camera is not defined"
+   }
+  }
+ },
+ {
+  "name": "g-hd2d-l",
+  "errs": [],
+  "ov": {
+   "sw": 1280,
+   "sh": 1104,
+   "iw": 1280,
+   "ih": 720,
+   "sx": 0,
+   "sy": 0
+  },
+  "overflow": false,
+  "eval": {
+   "cv": [
+    768,
+    448,
+    "301px",
+    "175.583px"
+   ],
+   "cam": {
+    "err": "camera is not defined"
+   }
+  }
+ },
+ {
+  "name": "h-iso-p",
+  "errs": [],
+  "ov": {
+   "sw": 460,
+   "sh": 1194,
+   "iw": 390,
+   "ih": 844,
+   "sx": 0,
+   "sy": 0
+  },
+  "overflow": false,
+  "eval": {
+   "cv": [
+    768,
+    554,
+    "311.913px",
+    "225px"
+   ],
+   "cam": {
+    "err": "camera is not defined"
+   }
+  }
+ },
+ {
+  "name": "h-iso-l",
+  "errs": [],
+  "ov": {
+   "sw": 1280,
+   "sh": 1104,
+   "iw": 1280,
+   "ih": 720,
+   "sx": 0,
+   "sy": 0
+  },
+  "overflow": false,
+  "eval": {
+   "cv": [
+    768,
+    448,
+    "301px",
+    "175.583px"
+   ],
+   "cam": {
+    "err": "camera is not defined"
+   }
+  }
+ }
+]

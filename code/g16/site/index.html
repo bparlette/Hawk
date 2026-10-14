@@ -1,0 +1,44 @@
+<!doctype html>
+<html lang="en"><head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Shell Shock 16 · Genesis ROM</title>
+<meta name="theme-color" content="#120a1e">
+<style>
+  html,body{margin:0;background:#120a1e;color:#e8e0ff;font-family:system-ui,-apple-system,sans-serif}
+  header{padding:14px 16px 6px;display:flex;align-items:baseline;gap:10px;flex-wrap:wrap}
+  h1{font-size:20px;margin:0;letter-spacing:1px;color:#ffd84a;font-family:monospace}
+  .sub{opacity:.7;font-size:13px}
+  #wrap{width:100%;max-width:960px;margin:0 auto}
+  #game{width:100%;aspect-ratio:4/3;max-height:82vh;background:#000}
+  .info{max-width:960px;margin:0 auto;padding:12px 16px 40px;font-size:14px;line-height:1.5}
+  .info a{color:#5ae0ff}
+  table{border-collapse:collapse;margin:8px 0}td{padding:3px 12px 3px 0}
+  .btn{display:inline-block;background:#ffd84a;color:#120a1e;padding:8px 14px;border-radius:8px;text-decoration:none;font-weight:700;margin:6px 8px 6px 0}
+</style></head><body>
+<header><h1>SHELL SHOCK 16</h1><span class="sub">Level 1 · real Sega Genesis ROM, running in Genesis Plus GX</span></header>
+<div id="wrap"><div id="game"></div></div>
+<pre id="diag" style="color:#f88;font-size:11px;white-space:pre-wrap;margin:0 16px"></pre>
+<div class="info">
+  <a class="btn" href="shellshock16.bin" download>Download ROM (.bin)</a>
+  <table>
+    <tr><td><b>Genesis pad</b></td><td>D-pad move · <b>B</b> attack (3-hit combo) · <b>C</b> jump (B in the air = jump kick) · <b>A</b> spin special (costs a little health) · <b>START</b> pause</td></tr>
+    <tr><td><b>Keyboard</b></td><td>Arrows move · Enter = START · see the emulator's Controls menu (gamepad icon) for the A/B/C keys</td></tr>
+    <tr><td><b>Phone</b></td><td>On-screen pad appears automatically; tap ⛶ for fullscreen in landscape</td></tr>
+  </table>
+  Clear the punk wave, follow GO! to the stairs, then beat Ramrod. Works with a Bluetooth/USB controller in Chrome.
+  The same .bin runs in RetroArch (Genesis Plus GX or PicoDrive core), on a Mega Drive flash cart, or on a Raspberry Pi.
+</div>
+<script>
+  EJS_player = "#game";
+  EJS_core = "segaMD";
+  EJS_gameUrl = "shellshock16.bin";
+  EJS_gameName = "Shell Shock 16";
+  EJS_pathtodata = "ejs/";
+  EJS_startOnLoaded = true;
+  EJS_DEBUG_XX = false;
+  (function(){var w=console.warn;console.warn=function(){try{var d=document.getElementById("diag");d.textContent+=Array.from(arguments).map(String).join(" ")+"\n";}catch(e){}w.apply(console,arguments)};window.addEventListener("error",function(e){var d=document.getElementById("diag");if(d)d.textContent+="ERR "+e.message+"\n"});})();
+  EJS_color = "#ffd84a";
+  EJS_backgroundColor = "#120a1e";
+</script>
+<script src="ejs/loader.js"></script>
+</body></html>

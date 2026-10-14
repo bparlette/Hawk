@@ -1,0 +1,3 @@
+Transfers: MSY taxi flat $36 1-2 ppl, $15pp 3+ => $45, Door 7 (flymsy.com/taxis-2). UberX ~$42, XL ~$59, 26 min. RTA 202 $1.25, 35-60min, 45-90 min gaps.
+Weekend: No Saints home game (Oct 25 in Paris vs PIT 8:30am CT). Krewe of BOO parade Sat Oct 24 6:30pm French Quarter; Monster Mash 8pm Warehouse District. NO Film Fest Oct22-Nov1. Treme Fall Fest Oct 24. Oktoberfest Deutsches Haus thru Oct 24.
+Picks: Acme Oyster House 724 Iberville no res 11-10; Parkway Bakery Wed-Sun 10-6; Cafe du Monde 800 Decatur cash only; Snug Harbor 626 Frenchmen 7:30/9:30 buy ahead; Spotted Cat 623 Frenchmen 2pm-2am; WWII Museum 9-5 $27-37 timed; Jewel of the South 1026 St Louis book ahead, closed Tue.

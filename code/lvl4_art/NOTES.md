@@ -1,0 +1,7 @@
+# L4 Jetwash sprite task — progress notes
+- [start 15:58 EDT Oct 8] Task: replace tinted gunner atlas + code-drawn jetpack in levels/level4.js bossDraw with painted sheet levels/level4_jetwash.png. Pipeline = lvl14_art (seg/pack/anchors) + level15 spr() pattern.
+- [16:05] jw_sheetA.png generated OK (hover idle, hover2, glide, kick wind-up, kick) — design: orange flight suit, black chest rig, chrome helmet amber visor, gunmetal twin-rocket jetpack, forearm launcher, painted flames. Next: sheet B (tele climb, charge dive, throw/bomb, fire, summon) + C (hurt, fall, down, idle-cal) using A as ref.
+- [16:20] pack.py -> level4_jetwash.png (1443x190 P, 72KB) + meta.json [x,y,w,h,anchorX,footY,glowX,glowY]. Frames: idle hover glide kwind kick dive bomb fire radio hurt fall down. view/anchors.png OK. NEXT: fringe check, wire into level4.js
+- [16:40] level4.js wired (lvl4_art/level4.js; orig in level4.orig.js). lvl4_test resynced from built (cp -r; no rsync) + game.js regenerated. node play.js: L4 boss->KO->outro->results, no exception (lvl4_harness/run_sprite.txt). NEXT: playwright pose shots.
+- [16:55] playwright needs: . lvl4_harness/env.sh (LD_LIBRARY_PATH). poses.js -> shots/*.png, 0 errors.
+- [17:10] Final: fight.js natural fight (walk/tele/charge/fire/summon) -> KO -> outro -> results, 0 page errors; poses.js 12 poses 0 errors. Copied level4.js + level4_jetwash.png to built + deploy (identical, node --check OK). NOT deployed (coordinator deploys). DONE.

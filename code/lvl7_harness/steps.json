@@ -1,0 +1,4 @@
+[{"js":"(()=>{const S=__SS.STATE,h=S.haz,p=S.player;p.x=120;const m=h[2].st;m.ph='lift';m.t=25;m.x=150;m.y=192;m.vict=[p];m.held=true;return 1})()","wait":200,"shot":"shot_magnet.png"},
+ {"js":"(()=>{__SS.STATE.fadeOut=1;return 1})()","until":"(()=>{const b=__SS.STATE.enemies.find(e=>e.boss);return b&&b.state==='walk'&&b.life>150})()"},
+ {"js":"(()=>{const S=__SS.STATE,c=S.haz[0].st;c.t=362;const b=S.enemies.find(e=>e.boss);b.state='pull';b.t=70;b.x=290;b.y=200;S.player.x=140;S.player.y=196;return [b.x,b.y]})()","wait":120,"shot":"shot_boss_warn.png"},
+ {"js":"(()=>{const S=__SS.STATE,c=S.haz[0].st;c.t=399;const b=S.enemies.find(e=>e.boss);b.state='summon';b.cm='scrap';b.t=10;return 1})()","wait":250,"shot":"shot_boss.png"}]

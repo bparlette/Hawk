@@ -1,0 +1,166 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
+<meta name="theme-color" content="#1b1530">
+<title>PolyTrack Remake — Hark Edition (fan remake)</title>
+<style>
+  html, body { margin: 0; height: 100%; overflow: hidden; background: #1b1530; touch-action: none; -webkit-user-select: none; user-select: none; -webkit-touch-callout: none; -webkit-tap-highlight-color: transparent; }
+  body { font-family: Impact, "Arial Black", "Avenir Next Condensed", "Helvetica Neue", system-ui, sans-serif; color: #fff; }
+  #gl { position: fixed; inset: 0; width: 100vw; height: 100vh; height: 100dvh; display: block; outline: none; }
+  #hud { position: fixed; inset: 0; width: 100vw; height: 100vh; height: 100dvh; pointer-events: none; z-index: 5; }
+  button { font-family: inherit; }
+  .ink { color: #fff; text-shadow: 3px 3px 0 #14101f, -2px -2px 0 #14101f, 2px -2px 0 #14101f, -2px 2px 0 #14101f; }
+
+  /* small corner buttons */
+  #corner { position: fixed; z-index: 30; top: calc(env(safe-area-inset-top, 0px) + 8px); right: calc(env(safe-area-inset-right, 0px) + 8px); display: flex; gap: 6px; }
+  .cb { all: unset; box-sizing: border-box; width: 44px; height: 44px; border-radius: 12px; background: #ffd23c; color: #14101f; border: 3px solid #14101f; box-shadow: 3px 3px 0 #14101f;
+    display: flex; align-items: center; justify-content: center; font: 900 18px/1 system-ui, sans-serif; cursor: pointer; touch-action: manipulation; }
+  .cb:active { transform: translate(2px, 2px); box-shadow: 1px 1px 0 #14101f; }
+  .cb.off { background: #8d86a8; }
+  .cb svg { width: 22px; height: 22px; }
+
+  /* cards */
+  .card { position: fixed; z-index: 40; left: 50%; transform: translateX(-50%); background: #fff6ea; color: #14101f; border: 4px solid #14101f; border-radius: 18px; box-shadow: 7px 7px 0 #14101f;
+    text-align: center; padding: 16px 18px 14px; box-sizing: border-box; width: min(92vw, 470px); display: none; }
+  .card.show { display: block; animation: pop .22s cubic-bezier(.3,1.6,.6,1); }
+  @keyframes pop { from { transform: translateX(-50%) scale(.6); } to { transform: translateX(-50%) scale(1); } }
+  .card h1 { margin: 0; font-size: clamp(26px, 7.4vw, 40px); line-height: .95; letter-spacing: .5px; color: #ff3b30; text-shadow: 3px 3px 0 #14101f; -webkit-text-stroke: 1.5px #14101f; }
+  .card h1 small { display: block; font-size: .46em; color: #14101f; -webkit-text-stroke: 0; text-shadow: none; letter-spacing: 2px; margin-top: 4px; }
+  .card .tag { display: inline-block; margin: 8px 0 4px; padding: 4px 10px; background: #14101f; color: #ffd23c; border-radius: 8px; font-size: clamp(16px, 4.6vw, 22px); letter-spacing: 1px; }
+  .card .row { display: flex; gap: 8px; justify-content: center; margin-top: 12px; flex-wrap: wrap; }
+  .btn { all: unset; box-sizing: border-box; cursor: pointer; padding: 11px 16px; min-height: 48px; min-width: 112px; border-radius: 12px; background: #ffd23c; color: #14101f; border: 3px solid #14101f;
+    box-shadow: 4px 4px 0 #14101f; font: 400 clamp(17px, 4.4vw, 21px)/1 Impact, "Arial Black", system-ui, sans-serif; letter-spacing: 1px; display: inline-flex; align-items: center; justify-content: center; gap: 6px; touch-action: manipulation; }
+  .btn.red { background: #ff3b30; color: #fff; }
+  .btn.teal { background: #36e0c8; }
+  .btn:active { transform: translate(2px, 2px); box-shadow: 2px 2px 0 #14101f; }
+  .btn kbd { font: 700 11px/1 system-ui, sans-serif; background: rgba(20,16,31,.15); padding: 3px 5px; border-radius: 4px; }
+  .medals { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; margin-top: 10px; }
+  .medal { border: 3px solid #14101f; border-radius: 10px; padding: 5px 2px 4px; background: #fff; font: 700 12px/1.15 system-ui, sans-serif; }
+  .medal b { display: block; font: 400 15px/1 Impact, "Arial Black", sans-serif; margin-top: 2px; }
+  .medal i { display: block; width: 18px; height: 18px; border-radius: 50%; margin: 0 auto 3px; border: 2px solid #14101f; }
+  .medal.got { box-shadow: inset 0 -5px 0 rgba(20,16,31,.15); background: #fff3b8; }
+  .best { font: 700 14px/1.3 system-ui, sans-serif; margin-top: 8px; }
+  .hint { font: 600 12px/1.4 system-ui, sans-serif; color: #4a4466; margin-top: 10px; }
+  .fan { font: 700 11px/1.3 system-ui, sans-serif; color: #6b6488; margin-top: 8px; }
+  #title { top: 50%; left: calc(env(safe-area-inset-left, 0px) + 22px); transform: translateY(-50%); width: min(40vw, 440px); }
+  #title.show { animation: popl .22s cubic-bezier(.3,1.6,.6,1); }
+  @keyframes popl { from { transform: translateY(-50%) scale(.6); } to { transform: translateY(-50%) scale(1); } }
+  @media (max-aspect-ratio: 1/1) { #title { top: auto; bottom: calc(env(safe-area-inset-bottom, 0px) + 14px); left: 50%; transform: translateX(-50%); width: min(94vw, 470px); padding: 12px 12px 10px; }
+    #title.show { animation: pop .22s cubic-bezier(.3,1.6,.6,1); } #title .hint { display: none; } #title .best { display: none; } #title h1 { font-size: 28px; } #title .row { flex-wrap: nowrap; } #title .btn { min-width: 0; padding: 10px 12px; font-size: 18px; } #title .medal { font-size: 10px; } #title .medal b { font-size: 13px; } }
+  #result { top: 18%; }
+  #pause { top: 26%; }
+  .big { font-size: clamp(40px, 12vw, 64px); line-height: 1; margin: 6px 0 0; color: #14101f; }
+  .delta { font: 700 15px/1.2 system-ui, sans-serif; }
+  .delta.good { color: #1a8f5a; } .delta.bad { color: #d12a3a; }
+
+  /* touch driving controls */
+  #touch { position: fixed; inset: 0; z-index: 20; pointer-events: none; display: none; }
+  body.touch #touch.on { display: block; }
+  #stickZone { position: absolute; left: 0; bottom: 0; width: 50%; height: 42%; pointer-events: auto; touch-action: none; }
+  #stickBase { position: absolute; width: 132px; height: 132px; margin: -66px 0 0 -66px; border-radius: 50%; border: 4px solid rgba(20,16,31,.75); background: rgba(255,246,234,.22); display: none; }
+  #stickKnob { position: absolute; left: 50%; top: 50%; width: 62px; height: 62px; margin: -31px 0 0 -31px; border-radius: 50%; background: #ffd23c; border: 4px solid #14101f; box-shadow: 3px 3px 0 #14101f; }
+  #stickHint { position: absolute; left: calc(env(safe-area-inset-left, 0px) + 22px); bottom: calc(env(safe-area-inset-bottom, 0px) + 46px); font: 700 13px/1.2 system-ui, sans-serif; color: #fff; opacity: .85; text-shadow: 2px 2px 0 #14101f; }
+  .pad { position: absolute; pointer-events: auto; touch-action: none; border-radius: 50%; border: 4px solid #14101f; box-shadow: 4px 4px 0 #14101f; display: flex; align-items: center; justify-content: center;
+    font: 400 18px/1 Impact, "Arial Black", sans-serif; color: #14101f; letter-spacing: 1px; }
+  .pad.on { transform: translate(2px, 2px) scale(.96); box-shadow: 2px 2px 0 #14101f; filter: brightness(1.12); }
+  #gas { width: 104px; height: 104px; right: calc(env(safe-area-inset-right, 0px) + 18px); bottom: calc(env(safe-area-inset-bottom, 0px) + 28px); background: #36e0c8; }
+  #brake { width: 78px; height: 78px; right: calc(env(safe-area-inset-right, 0px) + 136px); bottom: calc(env(safe-area-inset-bottom, 0px) + 18px); background: #ff5f6d; color: #fff; text-shadow: 2px 2px 0 #14101f; }
+
+  /* builder UI */
+  #bui { position: fixed; inset: 0; z-index: 25; pointer-events: none; display: none; }
+  #bui.show { display: block; }
+  #bbar { position: absolute; left: 0; right: 0; bottom: 0; padding: 8px 8px calc(env(safe-area-inset-bottom, 0px) + 8px); background: rgba(20,16,31,.88); border-top: 3px solid #ffd23c; pointer-events: auto; }
+  #pal { display: flex; touch-action: pan-x; gap: 6px; overflow-x: auto; padding-bottom: 6px; scrollbar-width: none; }
+  #pal::-webkit-scrollbar { display: none; }
+  .pb { all: unset; touch-action: pan-x; flex: 0 0 auto; box-sizing: border-box; width: 68px; height: 64px; border-radius: 10px; background: #fff6ea; border: 3px solid #14101f; color: #14101f; cursor: pointer; text-align: center;
+    font: 700 10px/1.05 system-ui, sans-serif; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; touch-action: manipulation; }
+  .pb canvas { width: 34px; height: 34px; }
+  .pb.sel { background: #ffd23c; box-shadow: 0 0 0 3px #ffd23c; }
+  #tools { display: flex; gap: 6px; flex-wrap: wrap; justify-content: center; }
+  .tb { all: unset; box-sizing: border-box; min-width: 50px; height: 44px; padding: 0 10px; border-radius: 10px; background: #36e0c8; border: 3px solid #14101f; color: #14101f; cursor: pointer;
+    font: 400 15px/1 Impact, "Arial Black", sans-serif; letter-spacing: .5px; display: inline-flex; align-items: center; justify-content: center; touch-action: manipulation; }
+  .tb.del.on { background: #ff5f6d; color: #fff; }
+  .tb.go { background: #ffd23c; }
+  .tb.quit { background: #fff6ea; }
+  #bmsg { position: absolute; left: 50%; transform: translateX(-50%); top: calc(env(safe-area-inset-top, 0px) + 62px); background: #fff6ea; color: #14101f; border: 3px solid #14101f; border-radius: 10px;
+    padding: 6px 12px; font: 700 13px/1.3 system-ui, sans-serif; box-shadow: 3px 3px 0 #14101f; max-width: 86vw; text-align: center; }
+  #btitle { position: absolute; left: calc(env(safe-area-inset-left, 0px) + 10px); top: calc(env(safe-area-inset-top, 0px) + 10px); font-size: 22px; }
+  @media (max-width: 600px) { #btitle { font-size: 18px; } }
+</style>
+</head>
+<body>
+<canvas id="gl" tabindex="0"></canvas>
+<canvas id="hud"></canvas>
+
+<div id="corner">
+  <button class="cb" id="bRespawn" title="Back to last checkpoint (Enter)" aria-label="Respawn at checkpoint"><svg viewBox="0 0 24 24" fill="none" stroke="#14101f" stroke-width="3" stroke-linecap="round"><path d="M6 21V4"/><path d="M6 4h11l-2.5 4L17 12H6" fill="#14101f"/></svg></button>
+  <button class="cb" id="bRestart" title="Restart (R)" aria-label="Restart"><svg viewBox="0 0 24 24" fill="none" stroke="#14101f" stroke-width="3" stroke-linecap="round"><path d="M4 12a8 8 0 1 0 2.4-5.7"/><path d="M4 3v5h5"/></svg></button>
+  <button class="cb" id="bMute" title="Mute (M)" aria-label="Mute"><svg viewBox="0 0 24 24" fill="#14101f"><path d="M3 9h4l5-4v14l-5-4H3z"/><path id="mwave" d="M15.5 8.5a5 5 0 0 1 0 7M18 6a8.5 8.5 0 0 1 0 12" fill="none" stroke="#14101f" stroke-width="2.6" stroke-linecap="round"/></svg></button>
+  <button class="cb" id="bPause" title="Pause (Esc / P)" aria-label="Pause"><svg viewBox="0 0 24 24" fill="#14101f"><rect x="5" y="4" width="5" height="16" rx="1"/><rect x="14" y="4" width="5" height="16" rx="1"/></svg></button>
+</div>
+
+<div class="card" id="title">
+  <h1>POLYTRACK REMAKE<small>HARK EDITION · FAN REMAKE</small></h1>
+  <div class="tag">BEAT THE AUTHOR TIME</div>
+  <div class="medals" id="tMedals"></div>
+  <div class="best" id="tBest"></div>
+  <div class="row">
+    <button class="btn red" id="bRace">▶ RACE <kbd>ANY KEY</kbd></button>
+    <button class="btn teal" id="bBuild">BUILDER <kbd>B</kbd></button>
+  </div>
+  <div class="hint" id="tHint">Gas W / ↑ · brake/reverse S / ↓ · steer A D / ← → · air-pitch with gas/brake<br>R restart · Enter last checkpoint · Esc pause · M mute</div>
+  <div class="fan">Fan remake inspired by PolyTrack by Kodub. All art, audio and code made from scratch by Hark — no original assets.</div>
+</div>
+
+<div class="card" id="result">
+  <div class="tag" id="rTag">FINISH!</div>
+  <div class="big" id="rTime">0:00.00</div>
+  <div class="delta" id="rDelta"></div>
+  <div class="medals" id="rMedals"></div>
+  <div class="best" id="rBest"></div>
+  <div class="row">
+    <button class="btn red" id="bRetry">⟲ RETRY <kbd>R</kbd></button>
+    <button class="btn teal" id="bBack">MENU <kbd>ESC</kbd></button>
+  </div>
+</div>
+
+<div class="card" id="pause">
+  <div class="tag">PAUSED</div>
+  <div class="row">
+    <button class="btn red" id="bResume">▶ RESUME <kbd>ESC</kbd></button>
+    <button class="btn" id="bPRestart">⟲ RESTART <kbd>R</kbd></button>
+    <button class="btn teal" id="bPMenu">MENU</button>
+  </div>
+  <div class="hint">Ghost of your best run is saved on this device.</div>
+</div>
+
+<div id="touch">
+  <div id="stickZone"><div id="stickBase"><div id="stickKnob"></div></div><div id="stickHint">◀ DRAG TO STEER ▶</div></div>
+  <div class="pad" id="brake">BRAKE</div>
+  <div class="pad" id="gas">GAS</div>
+</div>
+
+<div id="bui">
+  <div id="btitle" class="ink">TRACK BUILDER</div>
+  <div id="bmsg">Pick a piece, tap the grid to place it.</div>
+  <div id="bbar">
+    <div id="pal"></div>
+    <div id="tools">
+      <button class="tb" id="tRot" title="Rotate (Q / E)">⟳ ROTATE</button>
+      <button class="tb" id="tLvDn" title="Level down (Z)">▼</button>
+      <button class="tb" id="tLv" title="Current height level">LV 0</button>
+      <button class="tb" id="tLvUp" title="Level up (C)">▲</button>
+      <button class="tb del" id="tDel" title="Delete mode (X)">✖ DELETE</button>
+      <button class="tb go" id="tTest" title="Test drive (T)">▶ TEST</button>
+      <button class="tb" id="tClear" title="Clear all pieces">CLEAR</button>
+      <button class="tb" id="tCopy" title="Load a copy of the main track">LOAD MAIN</button>
+      <button class="tb quit" id="tExit" title="Back to the menu (Esc)">EXIT</button>
+    </div>
+  </div>
+</div>
+
+<script type="module" src="./main.js"></script>
+</body>
+</html>

@@ -1,0 +1,7 @@
+[
+ {"until": "!!window.__L11", "wait": 600, "js": "(()=>{const S=__SS.STATE;S.enemies.forEach(e=>{e.hp=0;e.state='dying';e.t=0});S.queue=[];return 1})()"},
+ {"until": "!__SS.STATE.locked", "wait": 300, "js": "(()=>{const S=__SS.STATE;S.player.x=860;S.player.hp=16;return S.camX})()"},
+ {"until": "__L11.g().car && __L11.g().car.t > 55", "shot": "d1.png"},
+ {"until": "__L11.g().car && __L11.g().car.t > 112", "shot": "d2.png"},
+ {"until": "__L11.g().car && __L11.g().car.t > 158", "shot": "d3.png"}
+]

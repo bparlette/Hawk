@@ -1,0 +1,23 @@
+f68: loading scene
+f239: stage lvl=12 section=L0
+f2359: taunt seen: C'MON!
+f3001 TAG-IN RAFE deaths=3 bodies=1
+f3364: bark: LIGHTS OUT!
+f3576: bark: THAT ALL YA GOT?
+f4029: stage lvl=12 section=L1
+f4030: boss fight lvl=12 VIRAL
+f4551: bark: WHO'S NEXT?!
+f5246: bark: SHE SPLIT! THE FAKES GLITCH MORE!
+f5501 TAG-IN MIKO deaths=6 bodies=1
+f5892: bark: TOTALLY TUBULAR!
+f5991: bark: NUNCHUCKED, DUDE!
+f6168: outro lvl=12
+f6198: bark: SHE'S GONE... BUT LOOK AT THE RIFT!
+f6298: bark: IT'S SNAPPING BACK TO WHERE IT CAME FROM...
+f6418: bark: DIMENSION X! AFTER IT, BROS!
+f6569: pizza lvl=12
+f6739: results lvl=12
+f6801: back to title
+after: LEVELS loaded=1,,,,,,,,,,,- LVLOAD=
+scripts loaded=levels/level12.js missing=levels/level13.js SS=object
+END f=6801 scene=title level=1 kills=17 levelsWithResults=12

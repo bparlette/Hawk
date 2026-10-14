@@ -1,0 +1,31 @@
+[
+{
+"js": "(()=>{const S=__SS.STATE,p=S.player;S.enemies.forEach(e=>{if(!e.boss){e.x=-999;e.hp=0;e.state='dying';e.t=89;}});S.queue=[];S.locked=false;p.hp=16;p.inv=999;if(!window.__camHook){window.__camHook=1;let v=S.camX;Object.defineProperty(S,'camX',{configurable:true,get(){return window.__cam!=null?window.__cam:v},set(q){v=q}});setInterval(()=>{if(window.__noEn)__SS.STATE.enemies.forEach(e=>{if(!e.boss){e.x=-999;e.hp=0;e.state='dying';e.t=89;}});},50);}window.__noEn=1;window.__cam=300-150;p.x=300;p.y=200;p.facing=1;})()",
+"wait": 1500
+},
+{
+"js": "(()=>{const H=__SS.STATE.haz[1].st.list[0];H.t=100;})()",
+"wait": 60,
+"shot": "shots/before_l2_hydrant_idle.png"
+},
+{
+"js": "(()=>{const H=__SS.STATE.haz[1].st.list[0];H.t=230;})()",
+"wait": 60,
+"shot": "shots/before_l2_hydrant_warn.png"
+},
+{
+"js": "(()=>{const S=__SS.STATE,H=S.haz[1].st.list[0];H.t=278;S.player.y=214;S.player.x=280})()",
+"wait": 120,
+"shot": "shots/before_l2_hydrant_spray.png"
+},
+{
+"js": "(()=>{const S=__SS.STATE,p=S.player;S.enemies.forEach(e=>{if(!e.boss){e.x=-999;e.hp=0;e.state='dying';e.t=89;}});S.queue=[];S.locked=false;p.hp=16;p.inv=999;if(!window.__camHook){window.__camHook=1;let v=S.camX;Object.defineProperty(S,'camX',{configurable:true,get(){return window.__cam!=null?window.__cam:v},set(q){v=q}});setInterval(()=>{if(window.__noEn)__SS.STATE.enemies.forEach(e=>{if(!e.boss){e.x=-999;e.hp=0;e.state='dying';e.t=89;}});},50);}window.__noEn=1;window.__cam=600-150;p.x=600;p.y=214;p.facing=1;})()",
+"wait": 1500,
+"shot": "shots/before_l2_manhole.png"
+},
+{
+"js": "(()=>{const S=__SS.STATE,p=S.player;S.enemies.forEach(e=>{if(!e.boss){e.x=-999;e.hp=0;e.state='dying';e.t=89;}});S.queue=[];S.locked=false;p.hp=16;p.inv=999;if(!window.__camHook){window.__camHook=1;let v=S.camX;Object.defineProperty(S,'camX',{configurable:true,get(){return window.__cam!=null?window.__cam:v},set(q){v=q}});setInterval(()=>{if(window.__noEn)__SS.STATE.enemies.forEach(e=>{if(!e.boss){e.x=-999;e.hp=0;e.state='dying';e.t=89;}});},50);}window.__noEn=1;window.__cam=1110-150;p.x=1110;p.y=214;p.facing=1;})()",
+"wait": 1500,
+"shot": "shots/before_l2_manhole2.png"
+}
+]

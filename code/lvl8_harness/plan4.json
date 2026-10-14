@@ -1,0 +1,8 @@
+[
+ {"until":"__SS.STATE.scene==='stage'","js":"(()=>{const S=__SS.STATE;S.enemies.length=0;S.queue=[];S.fadeOut=1;})()"},
+ {"until":"(()=>{const b=__SS.STATE.enemies.find(e=>e.boss);if(b&&b.state==='throne'&&b.t<200)b.t=236;return b&&b.p1go&&b.state==='walk'})()","js":"(()=>{const S=__SS.STATE;const b=S.enemies.find(e=>e.boss);b.hp=0;b.state='dying';b.t=0;S.player.x=120;})()"},
+ {"until":"__SS.STATE.outro&&__SS.STATE.outro.t>110","shot":"o1.png"},
+ {"until":"__SS.STATE.outro&&__SS.STATE.outro.st.broke&&__SS.STATE.outro.t-__SS.STATE.outro.st.broke>215","shot":"o2.png"},
+ {"until":"__SS.STATE.outro&&__SS.STATE.outro.st.endT>140","shot":"o3.png"},
+ {"until":"__SS.STATE.results&&__SS.STATE.results.t>80","shot":"o4.png"}
+]

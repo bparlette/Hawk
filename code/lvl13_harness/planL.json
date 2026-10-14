@@ -1,0 +1,7 @@
+[
+ {"manual": true},
+ {"step": 3000, "cond": "__SS.STATE.scene==='stage' && __SS.STATE.enemies.filter(e=>e.x>__SS.STATE.camX+20&&e.x<__SS.STATE.camX+364).length>=2"},
+ {"js": "(()=>{const S=__SS.STATE;S.player.hp=16;S.player.inv=0;S.player.grabbedBy=null;S.player.x=170;S.player.y=180;S.player.vz=4.2;S.player.z=0.1;return [S.t,S.enemies.map(e=>e.type+':'+Math.round(e.x))]})()"},
+ {"step": 26, "cond": "false", "shot": "/workspace/work/lvl13_harness/s_gameplay.png"},
+ {"js": "(()=>{const S=__SS.STATE;return [S.t,S.enemies.map(e=>e.type+':'+Math.round(e.x)+':'+e.state)]})()"}
+]

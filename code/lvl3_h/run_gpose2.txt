@@ -1,0 +1,27 @@
+shot g_idle
+shot g_idle_facing
+shot g_walk1
+shot g_walk2
+shot g_tele
+shot g_charge
+shot g_kwind
+shot g_kick
+shot g_throw
+shot g_throw_release
+shot g_summon
+shot g_wave_raise
+shot g_wave_send
+shot g_vents_stomp
+shot g_surf
+shot g_hurt
+shot g_fall
+shot g_down
+shot g_getup
+shot g_slam_crouch
+shot g_slam_leap
+shot g_slam_land
+shot g_flash
+shot g_ko_fall
+shot g_ko
+shot g_outro
+PAGE ERRORS 0

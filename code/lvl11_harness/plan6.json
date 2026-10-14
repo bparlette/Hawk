@@ -1,0 +1,5 @@
+[
+ {"until": "!!window.__L11", "wait": 300, "js": "(()=>{const G=__L11.g();G.evCd=99999;G.car={t:40,n:0};G.carWave=1;const S=__SS.STATE;S.queue=['purple','blue','star'];return 1})()"},
+ {"until": "__L11.g().car && __L11.g().car.t > 96", "shot": "e1.png"},
+ {"until": "__L11.g().car && __L11.g().car.t > 156", "shot": "e2.png"}
+]

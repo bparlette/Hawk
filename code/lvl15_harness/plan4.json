@@ -1,0 +1,7 @@
+[
+ {"until":"__SS.STATE.scene==='stage'","js":"(()=>{const S=__SS.STATE;S.fadeOut=1;})()"},
+ {"until":"__SS.STATE.sec===1","js":"(()=>{const S=__SS.STATE;S.fadeOut=1;})()"},
+ {"until":"__SS.STATE.sec===2","js":"window.__t0=__SS.STATE.t"},
+ {"until":"__SS.STATE.t-window.__t0>140","js":"(()=>{const S=__SS.STATE;S.player.hp=16;})()","shot":"l1.png"},
+ {"until":"__SS.STATE.t-window.__t0>300","js":"__SS.STATE.player.hp=16","shot":"l2.png"}
+]

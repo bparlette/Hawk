@@ -1,0 +1,20 @@
+# L14 Krang sprite task — progress notes
+- [start 14:56 EDT Oct 8] Task: replace code-drawn drawKrang() in levels/level14.js with painted sprite sheet (levels/level14_krang.png).
+- Reference: /workspace/work/lvl14_harness/ref_krang.png (classic Krang android body).
+- Style decision: turtle atlases + Karai (L9) + Shredder (L15) are photoreal live-action cutouts; Armaggon (L10) is comic-illustrated. Going with the photoreal live-action look (matches turtles, which is the stated comparison). Refs for generate_image: lvl14_test/atlas_rafe.png, lvl15_art/l15_gen_shredder.png, lvl14_harness/ref_krang.png.
+- Pipeline (from lvl15_art/sprites.py): generate on chroma green (transparent_background), connected components -> frames, uniform scale, frame rect [x,y,w,h,anchorX], de-fringe green, PNG optimize/quantize.
+- Generated raw sheets (in this dir): krang_sheetA.png (white bg! keyed by flood-fill in seg.py: idle, walk, walk, punch, rocket-arm), krang_sheetB.png (green-keyed: punch, stompUp, stompDown, summon, rage, hurt), krang_sheetC.png (punch, lying-overhead[unused], knocked-back), krang_sheetD.png (punch+guard merged, walk/passing, lying side view head-left).
+- Wind-up pose failed twice in generation (model always draws a punch) -> using D2 guard/hunch pose for kwind. Not regenerating further.
+- Cross-sheet scale calibrated with the punch pose present in every sheet.
+- Engine: api.drawFrame(im,[x,y,w,h],x,y,k,facing) bottom-centre; level15 spr() pattern adds anchor offset. Laser eye origin in drawFront: (b.x+f*7, b.y-86).
+- [15:27] Resumed. Packed sheet level14_krang.png (2289x193, P) + meta.json [x,y,w,h,anchorX,waistX,waistY] confirmed present; reviewing frames (view/pack1.png, pack2.png).
+- [15:35] Frames reviewed OK. fix.py: 'empty' brain window painted dark (old mask missed it); walk2 has a gen artefact between legs -> left in sheet but NOT used (walk cycle = walk1,idle,walk3,idle). Final sheet: level14_krang.png (re-quantized from krang_rgba_fixed.png); meta.json unchanged. NEXT: wire into level14.js.
+- [15:45] Plan for wiring: KR_K=0.5, spr() anchor pattern, frame map per state; throw-with-fist-out = punch frame cropped at wrist (crop right side keeps anchor valid); laser eye from idle frame. lvl14_test index.html is OLD engine (pre v1.1) -> will resync lvl14_test from built site + regen harness game.js before testing.
+- [15:55] Anchors recomputed (anchors.py): anchorX = median x of maroon briefs (gold-belt median drifted up to 20px). meta.json updated; old in meta_goldanchor.json. view/anchors2.png checked OK.
+- [16:05] level14.js wired (built copy), backup of original at lvl14_art/level14.orig.js; sheet + js copied to built/levels and deploy/levels (identical). node --check OK. NEXT: resync lvl14_test from built + tests.
+- [16:12] Headless play.js (regen game.js from current index.html): L14 fight -> phase 2 -> KO -> outro -> results, no exceptions (run_sprite.txt, run_sprite2.txt). FORCE-progress in phase 2 also happens with ORIGINAL level14.js on current engine (run_orig_v11.txt) -> pre-existing bot limit, not this change. NEXT: playwright screenshots.
+- [16:18] Chromium for playwright missing (~/.cache wiped). Installing chromium via npx playwright install.
+- [16:22] Playwright plan_sprite.json run: 20 shots in lvl14_art/shots/, 0 PAGEERROR/console errors.
+- [16:30] Shots reviewed: scale/style match turtles; laser origin on eye OK; down/empty/outro OK. Fix: throw = rocket frame only t24-33 pre-launch, stump once fist is out (avoid double fist). Copied to all 3 dirs. multi.js runs 'until' BEFORE 'js' -> re-shooting punch/rocket with split steps.
+- [16:36] Final: node --check both OK, built==deploy for js+png, headless run_sprite3 OK. Deploying.
+- [16:40] DEPLOYED shellshock-live.surge.sh; curl level14.js + level14_krang.png both 200. DONE.

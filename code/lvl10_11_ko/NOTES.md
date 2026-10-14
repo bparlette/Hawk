@@ -1,0 +1,3 @@
+- [16:30] gen1 sheets keyed (seg.py), packed (pack.py) -> l10_/l11_ sheets + meta.json; L10 fall/lie flipped to head-left
+- [16:50] wired level10/11.js (fall t<10, lie, getup t<12; L10 tele->hurt). L11 harness plan11.json OK, 0 errors, contact_l11.jpg reviewed
+- [17:20] L10 harness (plan10.json + plan10d.json for results): down/getup/hurt/tele/dying/outro/results OK, 0 page errors; fixed pre-existing outro rift ellipse negative-radius warning (Math.max). Installed level10/11.js + sheets in built + deploy (identical). Originals in orig/ and level1x.orig.js. NOT deployed. DONE.

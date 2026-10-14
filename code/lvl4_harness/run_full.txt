@@ -1,0 +1,17 @@
+f68: loading scene
+f239: stage lvl=4 section=L0
+f547: bark: STAY SHARP!
+f1406: stage lvl=4 section=L1
+f2817: boss fight lvl=4 JETWASH
+f2909: bark: BY THE BOOK!
+f3634: bark: BLADE AND HONOR!
+f4441: outro lvl=4
+f4465: bark: HIS CARGO'S BOUND FOR THE DOCKS!
+f4551: bark: TAKE THE EXIT! NEXT STOP: THE DOCKS!
+f4642: pizza lvl=4
+f4812: results lvl=4
+f4881: back to title
+after: LEVELS loaded=1,,,- LVLOAD=
+scripts loaded=levels/level4.js missing=levels/level5.js SS=object
+bossStates={"enter":1,"walk":21,"down":12,"getup":12,"hurt":8,"throw":1,"stagger":1,"kwind":1,"summon":1,"dying":1} playerHits=7
+END f=4881 scene=title level=1 kills=17 levelsWithResults=4

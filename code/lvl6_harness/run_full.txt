@@ -1,0 +1,16 @@
+f68: loading scene
+f239: stage lvl=6 section=L0
+f447: dodge seen
+f575: bark: STAY SHARP!
+f3160: bark: BY THE BOOK!
+f3665: stage lvl=6 section=L1
+f3666: boss fight lvl=6 COLD FRONT
+f5257: outro lvl=6
+f5277: bark: THAT PLOW CAME FROM THE JUNKYARD!
+f5377: bark: LET'S GO SCRAP SOME BAD GUYS!
+f5478: pizza lvl=6
+f5648: results lvl=6
+f5711: back to title
+after: LEVELS loaded=1,,,,,- LVLOAD=
+scripts loaded=levels/level6.js missing=levels/level7.js SS=object
+END f=5711 scene=title level=1 kills=17 levelsWithResults=6

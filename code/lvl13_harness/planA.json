@@ -1,0 +1,9 @@
+[
+ {"wait": 2600, "js": "(()=>{const p=__SS.STATE.player; p.vz=4.2; p.z=0.1; return 1})()"},
+ {"wait": 450, "shot": "/workspace/work/lvl13_harness/g1.png"},
+ {"js": "(()=>{const S=__SS.STATE;S.enemies=[];S.queue=[];S.wave=1;S.locked=false;S.player.x=760;S.player.y=180;S.player.inv=9999;return 1})()", "wait": 1600},
+ {"js": "(()=>{const S=__SS.STATE;for(const z of S.haz){if(z.st.list&&z.st.list[0]&&z.st.list[0].rx){z.st.list[1].t=250+52+12;} if(z.st.cd!==undefined){z.st.list.push({x:S.player.x+40,y:S.player.y,t:36});}} return S.haz.length})()", "wait": 180, "shot": "/workspace/work/lvl13_harness/h1.png"},
+ {"js": "(()=>{const S=__SS.STATE;S.enemies=[];S.queue=[];S.wave=4;S.locked=false;S.player.x=2560;return 1})()", "wait": 3500},
+ {"js": "(()=>{const S=__SS.STATE;S.player.x=Math.max(S.player.x, 2590);return S.sec})()", "wait": 3500},
+ {"js": "(()=>{const S=__SS.STATE;const b=S.enemies.find(e=>e.boss);return b?[b.state,b.x,b.name]:S.sec})()", "wait": 3500, "shot": "/workspace/work/lvl13_harness/b1.png"}
+]

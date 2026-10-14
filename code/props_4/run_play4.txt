@@ -1,0 +1,32 @@
+f68: loading scene
+f239: stage lvl=4 section=L0
+f554: bark: STAY SHARP!
+f1502: stage lvl=4 section=L1
+f1903: bark: FORM IS EVERYTHING!
+f2070: bark: MMM, EXTRA CHEESE!
+f2642: boss fight lvl=4 JETWASH
+f3881: bark: BY THE BOOK!
+f4196: outro lvl=4
+f4220: bark: HIS CARGO'S BOUND FOR THE DOCKS!
+f4306: bark: TAKE THE EXIT! NEXT STOP: THE DOCKS!
+f4397: pizza lvl=4
+f4567: results lvl=4
+f5073: stage lvl=5 section=L0
+f5485: dodge seen
+f8058: stage lvl=5 section=L1
+f8620: boss fight lvl=5 GRIMWALE
+f9598: bark: BLADE AND HONOR!
+f10144: outro lvl=5
+f10164: bark: THE CARGO'S GOING UPTOWN!
+f10274: bark: BUNDLE UP, BROS. IT'S SNOWING UP THERE!
+f10395: pizza lvl=5
+f10565: results lvl=5
+f11073: stage lvl=6 section=L0
+f14522: stage lvl=6 section=L1
+f14523: boss fight lvl=6 COLD FRONT
+f15949: outro lvl=6
+f15969: bark: THAT PLOW CAME FROM THE JUNKYARD!
+after: LEVELS loaded=1,,,-,-,6 LVLOAD=6
+scripts loaded=levels/level4.js,levels/level5.js,levels/level6.js missing= SS=object
+bossStates={"enter":3,"walk":54,"kwind":4,"hurt":24,"stagger":6,"down":26,"getup":26,"throw":1,"summon":3,"dying":3,"kick":4,"spin":1} playerHits=19
+END f=16000 scene=stage level=6 kills=17 levelsWithResults=4,5

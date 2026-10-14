@@ -1,0 +1,7 @@
+shot /workspace/work/lvl3_art/shots/k14_idle.png
+shot /workspace/work/lvl3_art/shots/k14_walk.png
+shot /workspace/work/lvl3_art/shots/k14_punch.png
+shot /workspace/work/lvl3_art/shots/k14_rocket.png
+shot /workspace/work/lvl3_art/shots/k14_fistout.png
+shot /workspace/work/lvl3_art/shots/k14_fistout2.png
+shot /workspace/work/lvl3_art/shots/k14_fistreturn.png

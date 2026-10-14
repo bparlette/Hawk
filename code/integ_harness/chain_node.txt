@@ -1,0 +1,175 @@
+f218: stage lvl=1 section=A
+f1940: boss fight lvl=1 SCORCHER
+f2031: bark: BLADE AND HONOR!
+f2132: dodge seen
+f2493: bark: BY THE BOOK!
+f4689: stage lvl=1 section=B
+f4936: taunt seen: TOO SCARED?
+f5199: bark: STAY SHARP!
+f6212: boss fight lvl=1 ramrod
+f7369: cutscene
+f7869: pizza lvl=1
+f8039: results lvl=1
+f8372: loading scene
+f8543: stage lvl=2 section=L0
+f8827: bark: FORM IS EVERYTHING!
+f10072: fell in a hole lvl=2
+f11911: boss fight lvl=2 BRICKJAW
+f13254: outro lvl=2
+f13274: bark: THEY WENT DOWN THE SEWER!
+f13385: pizza lvl=2
+f13555: results lvl=2
+f14063: stage lvl=3 section=L0
+f18115: stage lvl=3 section=L1
+f18500: boss fight lvl=3 GULCH GATOR
+f20041: outro lvl=3
+f20061: bark: PHEW! FRESH AIR UP THAT LADDER...
+f20151: bark: THAT'S THE HIGHWAY! GRAB A BOARD!
+f20252: pizza lvl=3
+f20422: results lvl=3
+f20933: stage lvl=4 section=L0
+f22170: stage lvl=4 section=L1
+f23432: boss fight lvl=4 JETWASH
+f25044: outro lvl=4
+f25068: bark: HIS CARGO'S BOUND FOR THE DOCKS!
+f25154: bark: TAKE THE EXIT! NEXT STOP: THE DOCKS!
+f25245: pizza lvl=4
+f25415: results lvl=4
+f25923: stage lvl=5 section=L0
+f28819: stage lvl=5 section=L1
+f29289: boss fight lvl=5 GRIMWALE
+f30719: outro lvl=5
+f30739: bark: THE CARGO'S GOING UPTOWN!
+f30849: bark: BUNDLE UP, BROS. IT'S SNOWING UP THERE!
+f30970: pizza lvl=5
+f31140: results lvl=5
+f31653: stage lvl=6 section=L0
+f32672: taunt seen: HEH HEH!
+f34497: taunt seen: COME GET SOME!
+f35184: stage lvl=6 section=L1
+f35185: boss fight lvl=6 COLD FRONT
+f36629: outro lvl=6
+f36649: bark: THAT PLOW CAME FROM THE JUNKYARD!
+f36749: bark: LET'S GO SCRAP SOME BAD GUYS!
+f36850: pizza lvl=6
+f37020: results lvl=6
+f37533: stage lvl=7 section=L0
+f37784: bark: WHOA! LET GO!
+f41404: stage lvl=7 section=L1
+f41405: boss fight lvl=7 RUSTMAUL
+f42886: outro lvl=7
+f42906: bark: EVERY SCRAP TRUCK HEADS FOR THAT TOWER...
+f43016: bark: THE FORTRESS. LET'S END THIS!
+f43127: pizza lvl=7
+f43297: results lvl=7
+f43803: stage lvl=8 section=L0
+f48005: stage lvl=8 section=L1
+f48006: boss fight lvl=8 RAZORBACK
+f49501: bark: HE'S SUPERCHARGED! STAY SHARP!
+f50819: outro lvl=8
+f50839: bark: AMBER! HANG ON!
+f51010: bark: LET'S GO HOME, AMBER!
+f51531: pizza lvl=8
+f51701: results lvl=8
+f52213: stage lvl=9 section=L0
+f52263: bark: WHERE... WHEN ARE WE?!
+f52380: bark: NINJAS. WHY IS IT ALWAYS NINJAS?
+f52484: bark: ARCHERS! WATCH THE RED MARKS!
+f52934: bark: SMOKE BOMBS! HEADS UP!
+f52981: taunt seen: SLOWPOKE!
+f56039: stage lvl=9 section=L1
+f56040: boss fight lvl=9 KARAI
+f57228: bark: SHE'S EVEN FASTER NOW! WATCH HER SHADOW!
+f57301: bark: CLONES?! ONLY ONE HAS A SHADOW!
+f58518: outro lvl=9
+f58538: bark: SHE VANISHED... TYPICAL NINJA.
+f58638: bark: THE RIFT! IT'S PULLING US IN!
+f58718: bark: HERE WE GO AGAAAIN!
+f58959: pizza lvl=9
+f59129: results lvl=9
+f59633: stage lvl=10 section=L0
+f59683: bark: WHOA! A PIRATE SHIP?! WHAT YEAR IS IT?
+f63894: stage lvl=10 section=L1
+f63895: boss fight lvl=10 ARMAGGON
+f65168: bark: FEEDING FRENZY! KEEP MOVING!
+f66510: outro lvl=10
+f66534: bark: CHUM'S UP, SHARK-FACE!
+f66680: bark: THE RIFT! IS THAT... A TRAIN?!
+f66980: pizza lvl=10
+f67150: results lvl=10
+f67663: stage lvl=11 section=L0
+f68133: bark: HIT THE DECK!
+f68276: fell in a hole lvl=11
+f71923: stage lvl=11 section=L1
+f71924: boss fight lvl=11 LEATHERHEAD
+f73150: bark: HE'S EVEN STRONGER NOW! WATCH THE TUNNELS!
+f73576: bark: MMM, EXTRA CHEESE!
+f74026: outro lvl=11
+f74056: bark: WHAT'S THAT GLOW UP AHEAD?!
+f74166: bark: THE TIME RIFT! IT'S PULLING US IN!
+f74276: bark: HANG ON TO YOUR SHELLS!
+f74497: pizza lvl=11
+f74667: results lvl=11
+f75173: stage lvl=12 section=L0
+f79322: stage lvl=12 section=L1
+f79323: boss fight lvl=12 VIRAL
+f80258: bark: SHE SPLIT! THE FAKES GLITCH MORE!
+f81248: outro lvl=12
+f81278: bark: SHE'S GONE... BUT LOOK AT THE RIFT!
+f81378: bark: IT'S SNAPPING BACK TO WHERE IT CAME FROM...
+f81498: bark: DIMENSION X! AFTER IT, BROS!
+f81649: pizza lvl=12
+f81819: results lvl=12
+f82323: stage lvl=13 section=L0
+f82373: bark: WHOA... I FEEL LIGHTER!
+f82910: fell in a hole lvl=13
+f82910: bark: YEOW! THAT ACID BURNS!
+f83159: bark: TOXIC CHASM! JUMP IT OR GO AROUND!
+f86704: stage lvl=13 section=L1
+f86705: boss fight lvl=13 GENERAL TRAAG
+f87836: boss fight lvl=13 LT. GRANITOR
+f87956: bark: A TAG TEAM?! WATCH THE SKY!
+f89076: outro lvl=13
+f89116: bark: THE TECHNODROME... IT'S PHASING OUT!
+f89206: bark: THAT PORTAL LEADS HOME! GO!
+f89683: pizza lvl=13
+f89853: results lvl=13
+f90363: stage lvl=14 section=L0
+f94384: stage lvl=14 section=L1
+f94385: boss fight lvl=14 KRANG
+f94704: bark: TOO TOUGH! HIT HIM WHEN THE BRAIN GLOWS!
+f95669: bark: HE'S OVERLOADING! WATCH THE SKY!
+f96798: outro lvl=14
+f96868: bark: THE BRAIN'S GETTING AWAY!
+f97263: bark: SHREDDER'S TOWER... THIS ENDS TONIGHT!
+f97574: pizza lvl=14
+f97744: results lvl=14
+f98253: stage lvl=15 section=L0
+f99555: bark: HOT AND FRESH!
+f101486: bark: TOP FLOOR. SHREDDER'S WAITING!
+f101593: stage lvl=15 section=L1
+f101594: boss fight lvl=15 SHREDDER
+f102642: bark: HE'S GETTING FASTER! STAY SHARP!
+f103336: bark: HE FELL INTO THE MUTAGEN RESERVOIR!
+f103431: bark: AFTER HIM! DOWN TO THE LABS!
+f103550: stage lvl=15 section=L2
+f106343: boss fight lvl=15 SUPER SHREDDER
+f107906: bark: HE'S EVEN STRONGER NOW! HIT HIM HARD!
+f109280: outro lvl=15
+f109288: bark: THE WHOLE LAB IS COMING DOWN!
+f109370: bark: GO GO GO!
+f109520: bark: WE DID IT! SHREDDER'S FINISHED!
+f110241: pizza lvl=15
+f110411: results lvl=15
+f112327: back to title
+f116414: bark: A WHOLE PIE! YES!
+f118400: bark: SLICE OF LIFE!
+FORCE progress at f201915 prog=13,L,0,boss,1,0,0 px=28
+FORCE progress at f209884 prog=14,L,0,boss,1,0,0 px=367
+f271940: taunt seen: NICE SHELL, NERD!
+FORCE progress at f323690 prog=14,L,0,boss,1,0,0 px=372
+FORCE progress at f346463 prog=1,A,5,boss,1,0,29 px=1695
+f382687: taunt seen: C'MON!
+after: LEVELS loaded=1,-,-,-,-,-,-,-,9,-,-,-,-,-,- LVLOAD=9
+scripts loaded=levels/level2.js,levels/level3.js,levels/level4.js,levels/level5.js,levels/level6.js,levels/level7.js,levels/level8.js,levels/level9.js,levels/level10.js,levels/level11.js,levels/level12.js,levels/level13.js,levels/level14.js,levels/level15.js,levels/level2.js,levels/level3.js,levels/level4.js,levels/level5.js,levels/level6.js,levels/level7.js,levels/level8.js,levels/level9.js,levels/level10.js,levels/level11.js,levels/level12.js,levels/level13.js,levels/level14.js,levels/level15.js,levels/level2.js,levels/level3.js,levels/level4.js,levels/level5.js,levels/level6.js,levels/level7.js,levels/level8.js,levels/level9.js,levels/level10.js,levels/level11.js,levels/level12.js,levels/level13.js,levels/level14.js,levels/level15.js,levels/level2.js,levels/level3.js,levels/level4.js,levels/level5.js,levels/level6.js,levels/level7.js,levels/level8.js,levels/level9.js missing= SS=object
+END f=400000 scene=stage level=9 kills=22 levelsWithResults=1,2,3,4,5,6,7,8,9,10,11,12,13,14,15

@@ -1,0 +1,9 @@
+shot shots/before_l8_laser_off.png
+shot shots/before_l8_laser_on.png
+shot shots/before_l8_laser_warn_vent_blast.png
+shot shots/before_l8_panels.png
+shot shots/before_l8_panels2.png
+shot shots/before_l8_throne.png
+shot shots/before_l8_glass.png
+shot shots/before_l8_glass2.png
+ERRORS 0

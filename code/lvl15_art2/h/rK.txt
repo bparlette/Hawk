@@ -1,0 +1,3 @@
+shot /workspace/work/lvl15_art2/shots/k14_shred_idle.png
+shot /workspace/work/lvl15_art2/shots/k14_shred_taunt.png
+shot /workspace/work/lvl15_art2/shots/k14_shred_end.png

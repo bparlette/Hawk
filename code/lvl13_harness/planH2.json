@@ -1,0 +1,79 @@
+[
+{
+"manual": true
+},
+{
+"step": 3000,
+"cond": "__SS.STATE.enemies.some(e=>e.boss&&e.started)"
+},
+{
+"step": 400,
+"cond": "false"
+},
+{
+"js": "(()=>{const S=__SS.STATE;S.haz.forEach(z=>{if(z.st.t!==undefined&&!z.st.list) z.st.t=999});const b=S.enemies.find(e=>e.boss);b.state='fire';b.mv='blast';b.t=0;b.cool=999;b.x=290;S.player.inv=0;S.player.hp=16;S.player.x=70;S.player.y=b.y;return S.t})()"
+},
+{
+"step": 600,
+"cond": "__SS.STATE.enemies.some(e=>e.boss&&e.state==='fire'&&e.t>=48)",
+"shot": "/workspace/work/lvl13_harness/h_blast.png"
+},
+{
+"step": 60,
+"cond": "__SS.STATE.enemies.some(e=>e.boss&&e.state==='walk')"
+},
+{
+"js": "(()=>{const S=__SS.STATE;const b=S.enemies.find(e=>e.boss);b.state='summon';b.mv='call';b.t=0;b.cool=999;return S.t})()"
+},
+{
+"step": 75,
+"cond": "false",
+"shot": "/workspace/work/lvl13_harness/h_call.png"
+},
+{
+"step": 50,
+"cond": "false",
+"shot": "/workspace/work/lvl13_harness/h_drop.png"
+},
+{
+"js": "(()=>{const S=__SS.STATE;const b=S.enemies.find(e=>e.boss);b.state='summon';b.mv='door';b.t=0;b.cool=999;return S.t})()"
+},
+{
+"step": 120,
+"cond": "false",
+"shot": "/workspace/work/lvl13_harness/h_door.png"
+},
+{
+"js": "(()=>{const S=__SS.STATE;const b=S.enemies.find(e=>e.boss);S.player.inv=0;b.hp=1;b.inv=0;b.state='walk';SS.api.hitEnemy(b,3,true,1);return [b.state,S.t]})()"
+},
+{
+"step": 40,
+"cond": "false",
+"shot": "/workspace/work/lvl13_harness/h_ko.png"
+},
+{
+"step": 900,
+"cond": "__SS.STATE.outro && __SS.STATE.outro.t>=150",
+"shot": "/workspace/work/lvl13_harness/o1.png"
+},
+{
+"step": 900,
+"cond": "__SS.STATE.outro && __SS.STATE.outro.st.phase===1 && __SS.STATE.outro.st.k>=8",
+"shot": "/workspace/work/lvl13_harness/o2.png"
+},
+{
+"step": 900,
+"cond": "__SS.STATE.outro && __SS.STATE.outro.st.phase===2 && __SS.STATE.outro.st.k>=100",
+"shot": "/workspace/work/lvl13_harness/o3.png"
+},
+{
+"step": 900,
+"cond": "__SS.STATE.outro && __SS.STATE.outro.st.k>=280",
+"shot": "/workspace/work/lvl13_harness/o4.png"
+},
+{
+"step": 1500,
+"cond": "__SS.STATE.results && __SS.STATE.results.t>90",
+"shot": "/workspace/work/lvl13_harness/r1.png"
+}
+]

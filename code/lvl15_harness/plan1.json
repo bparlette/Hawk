@@ -1,0 +1,19 @@
+[
+ {"until":"__SS.STATE.scene==='stage'","js":"window.__t0=__SS.STATE.t"},
+ {"until":"__SS.STATE.t-window.__t0>150","js":"__SS.STATE.player.hp=16","shot":"e1.png"},
+ {"until":"__SS.STATE.t-window.__t0>245","js":"__SS.STATE.player.hp=16","shot":"e2.png"},
+ {"until":"__SS.STATE.t-window.__t0>400","js":"(()=>{const S=__SS.STATE;S.player.hp=16;S.fadeOut=1;window.__t0=S.t})()"},
+ {"until":"__SS.STATE.t-window.__t0>130","shot":"p1.png"},
+ {"until":"__SS.STATE.t-window.__t0>500","js":"__SS.STATE.player.hp=16","shot":"p2.png"},
+ {"until":"__SS.STATE.t-window.__t0>620","js":"__SS.STATE.player.hp=16","shot":"p3.png"},
+ {"js":"(()=>{const b=__SS.STATE.enemies.find(e=>e.boss);b.hp=20;})()"},
+ {"until":"__SS.STATE.t-window.__t0>760","js":"__SS.STATE.player.hp=16","shot":"p4.png"},
+ {"until":"__SS.STATE.t-window.__t0>1000","js":"(()=>{const b=__SS.STATE.enemies.find(e=>e.boss);b.state='walk';b.inv=0;SS.api.hitEnemy(b,99,true,1,4,true);window.__t0=__SS.STATE.t})()"},
+ {"until":"__SS.STATE.t-window.__t0>40","shot":"k1.png"},
+ {"until":"__SS.STATE.t-window.__t0>75","shot":"k2.png"},
+ {"until":"__SS.STATE.t-window.__t0>125","shot":"k3.png"},
+ {"until":"__SS.STATE.sec===2","js":"window.__t0=__SS.STATE.t"},
+ {"until":"__SS.STATE.t-window.__t0>200","js":"__SS.STATE.player.hp=16","shot":"l1.png"},
+ {"until":"__SS.STATE.t-window.__t0>300","js":"__SS.STATE.player.hp=16","shot":"l2.png"},
+ {"until":"__SS.STATE.t-window.__t0>360","js":"__SS.STATE.player.hp=16","shot":"l3.png"}
+]

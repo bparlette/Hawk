@@ -1,0 +1,10 @@
+[
+ {"until": "!!window.__L11", "wait": 800, "js": "__L11.startEvent('tunnel')"},
+ {"until": "__L11.g().ev && __L11.g().ev.x < 330", "shot": "c1.png"},
+ {"until": "__L11.g().ev && __L11.g().ev.x < 130", "shot": "c2.png"},
+ {"until": "__L11.g().ev && __L11.g().ev.x < 40", "shot": "c3.png"},
+ {"until": "__L11.g().ev && __L11.g().ev.x < -300", "shot": "c4.png"},
+ {"until": "!__L11.g().ev", "wait": 500, "js": "__L11.startEvent('tower')"},
+ {"until": "__L11.g().ev && __L11.g().ev.x < 300", "shot": "c5.png"},
+ {"until": "__L11.g().ev && __L11.g().ev.x < 90", "shot": "c6.png"}
+]

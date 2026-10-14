@@ -1,0 +1,13 @@
+js-> 1
+js-> [171.3,180.2]
+shot shots/l11_idle.png
+js-> "getup"
+shot shots/l11_down_fall.png
+node:internal/process/promises:394
+    triggerUncaughtException(err, true /* fromPromise */);
+    ^
+
+page.evaluate: Target page, context or browser has been closed
+    at /workspace/work/lvl10_11_ko/multi.js:14:65
+
+Node.js v22.23.3

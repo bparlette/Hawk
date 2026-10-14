@@ -1,0 +1,11 @@
+[
+ {"wait": 1500, "shot": "a1.png"},
+ {"wait": 2600, "shot": "a2.png"},
+ {"wait": 900, "shot": "a3.png"},
+ {"wait": 900, "shot": "a4.png"},
+ {"wait": 1500, "shot": "a5.png"},
+ {"js": "(()=>{const S=__SS.STATE;S.enemies.forEach(e=>{e.hp=0;e.state='dying';e.t=0});S.queue=[];S.player.x=900;return S.camX})()", "wait": 3000, "shot": "a6.png"},
+ {"wait": 1500, "shot": "a7.png"},
+ {"wait": 1500, "shot": "a8.png"},
+ {"wait": 2500, "shot": "a9.png"}
+]

@@ -1,0 +1,19 @@
+f68: loading scene
+f239: stage lvl=12 section=L0
+f449: bark: BY THE BOOK!
+f1415: bark: FORM IS EVERYTHING!
+f3118: bark: BLADE AND HONOR!
+f3674: stage lvl=12 section=L1
+f3675: boss fight lvl=12 VIRAL
+f3914: bark: STAY SHARP!
+f4598: bark: SHE SPLIT! THE FAKES GLITCH MORE!
+f5539: outro lvl=12
+f5569: bark: SHE'S GONE... BUT LOOK AT THE RIFT!
+f5669: bark: IT'S SNAPPING BACK TO WHERE IT CAME FROM...
+f5789: bark: DIMENSION X! AFTER IT, BROS!
+f5940: pizza lvl=12
+f6110: results lvl=12
+f6181: back to title
+after: LEVELS loaded=1,,,,,,,,,,,- LVLOAD=
+scripts loaded=levels/level12.js missing=levels/level13.js SS=object
+END f=6181 scene=title level=1 kills=17 levelsWithResults=12

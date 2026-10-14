@@ -1,0 +1,919 @@
+{
+  "categories": [
+    "Shell Shock",
+    "Bake-off",
+    "Other games",
+    "Retro Arcade"
+  ],
+  "games": [
+    {
+      "id": "shell-shock-live",
+      "title": "Shell Shock Live",
+      "category": "Shell Shock",
+      "source": "/workspace/work/deploy/shell-shock-live-action",
+      "query": "?nosw&noboot",
+      "embed": "cab",
+      "orientation": "landscape",
+      "keys": {
+        "attack": "KeyJ",
+        "jump": "KeyK",
+        "special": "KeyL",
+        "start": "Enter",
+        "select": "Escape"
+      },
+      "extras": [
+        {
+          "label": "MUTE",
+          "key": "KeyM"
+        },
+        {
+          "label": "CRT",
+          "key": "KeyC"
+        }
+      ],
+      "autostart": [
+        [
+          900,
+          "Enter"
+        ],
+        [
+          700,
+          "Enter"
+        ],
+        [
+          700,
+          "Enter"
+        ],
+        [
+          700,
+          "Enter"
+        ],
+        [
+          700,
+          "Enter"
+        ]
+      ],
+      "note": "surge: shellshock-live.surge.sh"
+    },
+    {
+      "id": "shell-shock-16bit",
+      "title": "Shell Shock 16-Bit",
+      "category": "Shell Shock",
+      "source": "/workspace/work/g16js/site",
+      "query": "?nosw&noboot",
+      "embed": "cab",
+      "orientation": "landscape",
+      "keys": {
+        "attack": "KeyJ",
+        "jump": "KeyK",
+        "special": "KeyL",
+        "start": "Enter",
+        "select": "Escape"
+      },
+      "extras": [
+        {
+          "label": "MUTE",
+          "key": "KeyM"
+        },
+        {
+          "label": "CRT",
+          "key": "KeyC"
+        }
+      ],
+      "autostart": [
+        [
+          900,
+          "Enter"
+        ],
+        [
+          700,
+          "Enter"
+        ],
+        [
+          700,
+          "Enter"
+        ],
+        [
+          700,
+          "Enter"
+        ],
+        [
+          700,
+          "Enter"
+        ]
+      ],
+      "note": "surge: shellshock16bit.surge.sh"
+    },
+    {
+      "id": "shell-shock-16-rom",
+      "title": "Shell Shock 16 (Genesis ROM)",
+      "category": "Shell Shock",
+      "source": "/workspace/work/g16/site2",
+      "query": "",
+      "embed": "g16",
+      "orientation": "landscape",
+      "keys": {
+        "attack": "KeyJ",
+        "jump": "KeyK",
+        "special": "KeyL",
+        "start": "Enter"
+      },
+      "labels": {
+        "attack": "B · ATTACK",
+        "jump": "C · JUMP",
+        "special": "A · SPECIAL"
+      },
+      "autostart": [
+        [
+          1200,
+          "Enter"
+        ],
+        [
+          1500,
+          "Enter"
+        ],
+        [
+          1200,
+          "Enter"
+        ],
+        [
+          1200,
+          "Enter"
+        ]
+      ],
+      "note": "surge: shellshock16.surge.sh. Real ROM in a GPGX wasm player."
+    },
+    {
+      "id": "shell-shock-3d",
+      "title": "Shell Shock 3D",
+      "category": "Shell Shock",
+      "source": "/workspace/work/ss3d/site",
+      "query": "?nosw&noboot",
+      "embed": "cab",
+      "orientation": "landscape",
+      "keys": {
+        "attack": "KeyJ",
+        "jump": "KeyK",
+        "special": "KeyL",
+        "start": "Enter",
+        "select": "Escape"
+      },
+      "extras": [
+        {
+          "label": "USE",
+          "key": "KeyE"
+        },
+        {
+          "label": "MUTE",
+          "key": "KeyM"
+        }
+      ],
+      "autostart": [
+        [
+          900,
+          "Enter"
+        ],
+        [
+          700,
+          "Enter"
+        ],
+        [
+          700,
+          "Enter"
+        ],
+        [
+          700,
+          "Enter"
+        ]
+      ],
+      "note": "Snapshot of /workspace/work/ss3d/site taken 2026-10-10 while another agent was updating it: re-sync with ./build.py --resync shell-shock-3d"
+    },
+    {
+      "id": "bakeoff-a-free",
+      "title": "A · Free City",
+      "category": "Bake-off",
+      "source": "/workspace/work/ss3d-bakeoff/site_free",
+      "query": "?nosw&noboot",
+      "embed": "cab",
+      "orientation": "landscape",
+      "keys": {
+        "attack": "KeyJ",
+        "jump": "KeyK",
+        "special": "KeyL",
+        "start": "Enter",
+        "select": "Escape"
+      },
+      "extras": [
+        {
+          "label": "CAM ◀",
+          "key": "KeyQ"
+        },
+        {
+          "label": "CAM ▶",
+          "key": "KeyE"
+        }
+      ],
+      "autostart": [
+        [
+          900,
+          "Enter"
+        ],
+        [
+          700,
+          "Enter"
+        ],
+        [
+          700,
+          "Enter"
+        ],
+        [
+          700,
+          "Enter"
+        ]
+      ]
+    },
+    {
+      "id": "bakeoff-b-paper",
+      "title": "B · Paper City",
+      "category": "Bake-off",
+      "source": "/workspace/work/ss3d-bakeoff/site_paper",
+      "query": "?nosw&noboot",
+      "embed": "cab",
+      "orientation": "landscape",
+      "keys": {
+        "attack": "KeyJ",
+        "jump": "KeyK",
+        "special": "KeyL",
+        "start": "Enter",
+        "select": "Escape"
+      },
+      "extras": [
+        {
+          "label": "CAM ◀",
+          "key": "KeyQ"
+        },
+        {
+          "label": "CAM ▶",
+          "key": "KeyE"
+        }
+      ],
+      "autostart": [
+        [
+          900,
+          "Enter"
+        ],
+        [
+          700,
+          "Enter"
+        ],
+        [
+          700,
+          "Enter"
+        ],
+        [
+          700,
+          "Enter"
+        ]
+      ]
+    },
+    {
+      "id": "bakeoff-c-gta",
+      "title": "C · GTA City",
+      "category": "Bake-off",
+      "source": "/workspace/work/ss3d-bakeoff/site_gta",
+      "query": "?nosw&noboot",
+      "embed": "cab",
+      "orientation": "landscape",
+      "keys": {
+        "attack": "KeyJ",
+        "jump": "KeyK",
+        "special": "KeyL",
+        "start": "Enter",
+        "select": "Escape"
+      },
+      "extras": [
+        {
+          "label": "CAM ◀",
+          "key": "KeyQ"
+        },
+        {
+          "label": "CAM ▶",
+          "key": "KeyE"
+        }
+      ],
+      "autostart": [
+        [
+          900,
+          "Enter"
+        ],
+        [
+          700,
+          "Enter"
+        ],
+        [
+          700,
+          "Enter"
+        ],
+        [
+          700,
+          "Enter"
+        ]
+      ]
+    },
+    {
+      "id": "bakeoff-d-skyline",
+      "title": "D · Skyline City",
+      "category": "Bake-off",
+      "source": "/workspace/work/ss3d-bakeoff/site_skyline",
+      "query": "?nosw&noboot",
+      "embed": "cab",
+      "orientation": "landscape",
+      "keys": {
+        "attack": "KeyJ",
+        "jump": "KeyK",
+        "special": "KeyL",
+        "start": "Enter",
+        "select": "Escape"
+      },
+      "extras": [
+        {
+          "label": "CAM ◀",
+          "key": "KeyQ"
+        },
+        {
+          "label": "CAM ▶",
+          "key": "KeyE"
+        }
+      ],
+      "autostart": [
+        [
+          900,
+          "Enter"
+        ],
+        [
+          700,
+          "Enter"
+        ],
+        [
+          700,
+          "Enter"
+        ],
+        [
+          700,
+          "Enter"
+        ]
+      ]
+    },
+    {
+      "id": "bakeoff-e-gta32",
+      "title": "E · GTA 32",
+      "category": "Bake-off",
+      "source": "/workspace/work/ss3d-bakeoff/e_gta32/site_gta32",
+      "query": "?nosw&noboot",
+      "embed": "cab",
+      "orientation": "landscape",
+      "keys": {
+        "attack": "KeyJ",
+        "jump": "KeyK",
+        "special": "KeyL",
+        "start": "Enter",
+        "select": "Escape"
+      },
+      "extras": [
+        {
+          "label": "CAM ◀",
+          "key": "KeyQ"
+        },
+        {
+          "label": "CAM ▶",
+          "key": "KeyE"
+        }
+      ],
+      "autostart": [
+        [
+          900,
+          "Enter"
+        ],
+        [
+          700,
+          "Enter"
+        ],
+        [
+          700,
+          "Enter"
+        ],
+        [
+          700,
+          "Enter"
+        ]
+      ]
+    },
+    {
+      "id": "bakeoff-f-free16",
+      "title": "F · Free 16",
+      "category": "Bake-off",
+      "source": "/workspace/work/ss3d-bakeoff/f_free16/site_f",
+      "query": "?nosw&noboot",
+      "embed": "cab",
+      "orientation": "landscape",
+      "keys": {
+        "attack": "KeyJ",
+        "jump": "KeyK",
+        "special": "KeyL",
+        "start": "Enter",
+        "select": "Escape"
+      },
+      "extras": [
+        {
+          "label": "CAM ◀",
+          "key": "KeyQ"
+        },
+        {
+          "label": "CAM ▶",
+          "key": "KeyE"
+        }
+      ],
+      "autostart": [
+        [
+          900,
+          "Enter"
+        ],
+        [
+          700,
+          "Enter"
+        ],
+        [
+          700,
+          "Enter"
+        ],
+        [
+          700,
+          "Enter"
+        ]
+      ]
+    },
+    {
+      "id": "bakeoff-g-hd2d",
+      "title": "G · HD-2D",
+      "category": "Bake-off",
+      "source": "/workspace/work/ss3d-bakeoff/g_hd2d/site_hd2d",
+      "query": "?nosw&noboot",
+      "embed": "cab",
+      "orientation": "landscape",
+      "keys": {
+        "attack": "KeyJ",
+        "jump": "KeyK",
+        "special": "KeyL",
+        "start": "Enter",
+        "select": "Escape"
+      },
+      "extras": [
+        {
+          "label": "CAM ◀",
+          "key": "KeyQ"
+        },
+        {
+          "label": "CAM ▶",
+          "key": "KeyE"
+        }
+      ],
+      "autostart": [
+        [
+          900,
+          "Enter"
+        ],
+        [
+          700,
+          "Enter"
+        ],
+        [
+          700,
+          "Enter"
+        ],
+        [
+          700,
+          "Enter"
+        ]
+      ]
+    },
+    {
+      "id": "bakeoff-h-iso",
+      "title": "H · Iso City",
+      "category": "Bake-off",
+      "source": "/workspace/work/ss3d-bakeoff/h_iso/site_iso",
+      "query": "?nosw&noboot",
+      "embed": "cab",
+      "orientation": "landscape",
+      "keys": {
+        "attack": "KeyJ",
+        "jump": "KeyK",
+        "special": "KeyL",
+        "start": "Enter",
+        "select": "Escape"
+      },
+      "extras": [
+        {
+          "label": "CAM ◀",
+          "key": "KeyQ"
+        },
+        {
+          "label": "CAM ▶",
+          "key": "KeyE"
+        }
+      ],
+      "autostart": [
+        [
+          900,
+          "Enter"
+        ],
+        [
+          700,
+          "Enter"
+        ],
+        [
+          700,
+          "Enter"
+        ],
+        [
+          700,
+          "Enter"
+        ]
+      ]
+    },
+    {
+      "id": "bakeoff-i-cel",
+      "title": "I · Cel City",
+      "category": "Bake-off",
+      "source": "/workspace/work/ss3d-bakeoff/i_cel/site",
+      "query": "",
+      "embed": "cel",
+      "orientation": "any",
+      "keys": {
+        "attack": "KeyJ",
+        "jump": "KeyK",
+        "start": "Enter"
+      },
+      "labels": {
+        "attack": "SLASH"
+      },
+      "extras": [
+        {
+          "label": "CAM ◀",
+          "key": "KeyQ"
+        },
+        {
+          "label": "CAM ▶",
+          "key": "KeyE"
+        }
+      ],
+      "autostart": []
+    },
+    {
+      "id": "crystal-cave",
+      "title": "Crystal Cave 2.5D",
+      "category": "Other games",
+      "source": "/workspace/work/scroller25d/dist",
+      "query": "",
+      "embed": "cave",
+      "orientation": "landscape",
+      "keys": {
+        "up": null,
+        "down": null,
+        "attack": "KeyX",
+        "jump": "Space",
+        "start": "Enter"
+      },
+      "labels": {
+        "attack": "RUN"
+      },
+      "autostart": []
+    },
+    {
+      "id": "knockout",
+      "title": "Knockout! Round One",
+      "category": "Other games",
+      "source": "/workspace/work/knockout/site",
+      "query": "",
+      "embed": "knockout",
+      "orientation": "portrait",
+      "keys": {
+        "attack": "KeyJ",
+        "jump": "KeyK",
+        "special": "KeyC",
+        "start": "Enter",
+        "select": "KeyP"
+      },
+      "labels": {
+        "attack": "L PUNCH",
+        "jump": "R PUNCH",
+        "special": "GUARD",
+        "start": "STAR",
+        "select": "PAUSE"
+      },
+      "extras": [
+        {
+          "label": "★ STAR",
+          "key": "Enter"
+        },
+        {
+          "label": "MUTE",
+          "key": "KeyM"
+        }
+      ],
+      "autostart": [
+        [
+          900,
+          "Enter"
+        ],
+        [
+          900,
+          "Enter"
+        ],
+        [
+          900,
+          "Enter"
+        ]
+      ]
+    },
+    {
+      "id": "hollow-manor",
+      "title": "Lights Out at Hollow Manor",
+      "category": "Other games",
+      "source": "/workspace/work/hollow-manor/site",
+      "query": "",
+      "embed": "hollow",
+      "orientation": "portrait",
+      "keys": {
+        "attack": "KeyF",
+        "jump": "KeyE",
+        "special": "KeyM",
+        "start": "Enter"
+      },
+      "labels": {
+        "attack": "LIGHT",
+        "jump": "USE",
+        "special": "MAP"
+      },
+      "extras": [
+        {
+          "label": "SOUND",
+          "key": "KeyN"
+        }
+      ],
+      "autostart": [
+        [
+          900,
+          "Enter"
+        ],
+        [
+          900,
+          "Enter"
+        ],
+        [
+          900,
+          "Enter"
+        ]
+      ]
+    },
+    {
+      "id": "rta-barrel-climb",
+      "title": "Barrel Climb",
+      "category": "Retro Arcade",
+      "source": "/workspace/work/rta-standalone",
+      "file": "01q.html",
+      "query": "?level=1",
+      "embed": "rta",
+      "orientation": "portrait",
+      "keys": {
+        "attack": "KeyZ",
+        "jump": "KeyX",
+        "start": "Enter"
+      },
+      "labels": {
+        "attack": "A · JUMP",
+        "jump": "B",
+        "start": "PAUSE"
+      },
+      "extras": [
+        {
+          "label": "MUTE",
+          "key": "KeyM"
+        }
+      ],
+      "autostart": [
+        [
+          700,
+          "KeyZ"
+        ]
+      ]
+    },
+    {
+      "id": "rta-pipe-pests",
+      "title": "Pipe Pests",
+      "category": "Retro Arcade",
+      "source": "/workspace/work/rta-standalone",
+      "file": "02q.html",
+      "query": "?level=1",
+      "embed": "rta",
+      "orientation": "portrait",
+      "keys": {
+        "attack": "KeyZ",
+        "jump": "KeyX",
+        "start": "Enter"
+      },
+      "labels": {
+        "attack": "A · JUMP",
+        "jump": "B",
+        "start": "PAUSE"
+      },
+      "extras": [
+        {
+          "label": "MUTE",
+          "key": "KeyM"
+        }
+      ],
+      "autostart": [
+        [
+          700,
+          "KeyZ"
+        ]
+      ]
+    },
+    {
+      "id": "rta-ring-rush",
+      "title": "Ring Rush",
+      "category": "Retro Arcade",
+      "source": "/workspace/work/rta-standalone",
+      "file": "03q.html",
+      "query": "?level=1",
+      "embed": "rta",
+      "orientation": "portrait",
+      "keys": {
+        "attack": "KeyZ",
+        "jump": "KeyX",
+        "start": "Enter"
+      },
+      "labels": {
+        "attack": "A · JUMP",
+        "jump": "B",
+        "start": "PAUSE"
+      },
+      "extras": [
+        {
+          "label": "MUTE",
+          "key": "KeyM"
+        }
+      ],
+      "autostart": [
+        [
+          700,
+          "KeyZ"
+        ]
+      ]
+    },
+    {
+      "id": "rta-gem-columns",
+      "title": "Gem Columns",
+      "category": "Retro Arcade",
+      "source": "/workspace/work/rta-standalone",
+      "file": "04q.html",
+      "query": "?level=1",
+      "embed": "rta",
+      "orientation": "portrait",
+      "keys": {
+        "attack": "KeyZ",
+        "jump": "KeyX",
+        "start": "Enter"
+      },
+      "labels": {
+        "attack": "A · ROTATE",
+        "jump": "B",
+        "start": "PAUSE"
+      },
+      "extras": [
+        {
+          "label": "MUTE",
+          "key": "KeyM"
+        }
+      ],
+      "autostart": [
+        [
+          700,
+          "KeyZ"
+        ]
+      ]
+    },
+    {
+      "id": "rta-balloon-brawl",
+      "title": "Balloon Brawl",
+      "category": "Retro Arcade",
+      "source": "/workspace/work/rta-standalone",
+      "file": "05q.html",
+      "query": "?level=1",
+      "embed": "rta",
+      "orientation": "portrait",
+      "keys": {
+        "attack": "KeyZ",
+        "jump": "KeyX",
+        "start": "Enter"
+      },
+      "labels": {
+        "attack": "A · FLAP",
+        "jump": "B",
+        "start": "PAUSE"
+      },
+      "extras": [
+        {
+          "label": "MUTE",
+          "key": "KeyM"
+        }
+      ],
+      "autostart": [
+        [
+          700,
+          "KeyZ"
+        ]
+      ]
+    },
+    {
+      "id": "rta-turbo-coast",
+      "title": "Turbo Coast",
+      "category": "Retro Arcade",
+      "source": "/workspace/work/rta-standalone",
+      "file": "06q.html",
+      "query": "?level=1",
+      "embed": "rta",
+      "orientation": "portrait",
+      "keys": {
+        "attack": "KeyZ",
+        "jump": "KeyX",
+        "start": "Enter"
+      },
+      "labels": {
+        "attack": "A · GAS",
+        "jump": "B · BRAKE",
+        "start": "PAUSE"
+      },
+      "extras": [
+        {
+          "label": "MUTE",
+          "key": "KeyM"
+        }
+      ],
+      "autostart": [
+        [
+          700,
+          "KeyZ"
+        ]
+      ]
+    },
+    {
+      "id": "rta-duck-shoot",
+      "title": "Duck Shoot",
+      "category": "Retro Arcade",
+      "source": "/workspace/work/rta-standalone",
+      "file": "07q.html",
+      "query": "?level=1",
+      "embed": "rta",
+      "orientation": "portrait",
+      "keys": {
+        "attack": "KeyZ",
+        "jump": "KeyX",
+        "start": "Enter"
+      },
+      "labels": {
+        "attack": "A · FIRE",
+        "jump": "B",
+        "start": "PAUSE"
+      },
+      "extras": [
+        {
+          "label": "MUTE",
+          "key": "KeyM"
+        }
+      ],
+      "autostart": [
+        [
+          700,
+          "KeyZ"
+        ]
+      ]
+    },
+    {
+      "id": "live-at-eleven",
+      "title": "Live at Eleven",
+      "category": "Bake-off",
+      "source": "/workspace/work/live11/site",
+      "query": "",
+      "embed": "cab",
+      "orientation": "any",
+      "keys": {
+        "attack": "KeyJ",
+        "jump": "KeyK",
+        "special": "KeyL",
+        "start": "Enter"
+      },
+      "autostart": []
+    }
+  ]
+}

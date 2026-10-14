@@ -1,0 +1,30 @@
+f68: loading scene
+f239: stage lvl=13 section=L0
+f289: bark: WHOA... I FEEL LIGHTER!
+f389: dodge seen
+f981: bark: TOXIC CHASM! JUMP IT OR GO AROUND!
+f1129: fell in a hole lvl=13
+f2396: bark: BY THE BOOK!
+f2501 TAG-IN RAFE deaths=3 bodies=1
+f4856: bark: TOO EASY!
+f5004 TAG-IN MIKO deaths=6 bodies=2
+f5818: stage lvl=13 section=L1
+f5819: boss fight lvl=13 GENERAL TRAAG
+f6363: bark: TOTALLY TUBULAR!
+f6851: bark: SHELL YEAH!
+f7105: boss fight lvl=13 LT. GRANITOR
+f7225: bark: A TAG TEAM?! WATCH THE SKY!
+f8052: bark: NUNCHUCKED, DUDE!
+f8229: outro lvl=13
+f8269: bark: THE TECHNODROME... IT'S PHASING OUT!
+f8359: bark: THAT PORTAL LEADS HOME! GO!
+f8832: pizza lvl=13
+f9002: results lvl=13
+f9071: back to title
+f10049: bark: YEOW! THAT ACID BURNS!
+f11503 TAG-IN RAFE deaths=3 bodies=1
+f13001 TAG-IN MIKO deaths=6 bodies=2
+FORCE progress at f15962 prog=13,L,0,boss,1,0,0 px=115
+after: LEVELS loaded=1,,,,,,,,,,,,13 LVLOAD=13
+scripts loaded=levels/level13.js,levels/level13.js missing=levels/level14.js SS=object
+END f=16000 scene=stage level=13 kills=16 levelsWithResults=13

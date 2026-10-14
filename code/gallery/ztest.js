@@ -1,0 +1,28 @@
+const { chromium, devices } = require('/workspace/work/sstest/node_modules/playwright');
+const base = process.argv[2], out = process.argv[3], W = 384, H = 224;
+const fs = require('fs'); fs.mkdirSync(out, { recursive: true });
+(async () => {
+  const b = await chromium.launch({ args: ['--autoplay-policy=no-user-gesture-required'] });
+  const d = devices['iPhone 13 landscape'];
+  const ctx = await b.newContext({ ...d, deviceScaleFactor: 2 });
+  const page = await ctx.newPage(); const errs = [], miss = [];
+  page.on('pageerror', (e) => errs.push(String(e)));
+  page.on('console', (m) => { if (m.type() === 'error') miss.push(m.text()); });
+  page.on('requestfailed', (r) => miss.push('FAIL ' + r.url()));
+  page.on('response', (r) => { if (r.status() >= 400) miss.push(r.status() + ' ' + r.url()); });
+  await page.goto(base + '/index.html', { waitUntil: 'load' });
+  const cv = page.locator('canvas').first();
+  const tap = async (x, y) => { const r = await cv.boundingBox(); await page.touchscreen.tap(r.x + x / W * r.width, r.y + y / H * r.height); await page.waitForTimeout(350); };
+  const shot = async (n) => { await cv.screenshot({ path: out + '/' + n + '.png' }); };
+  const cdp = await ctx.newCDPSession(page); await cdp.send('Performance.enable');
+  const mem = async () => { const m = await cdp.send('Performance.getMetrics'); const g = (k) => (m.metrics.find((x) => x.name === k) || {}).value; return { heapMB: +(g('JSHeapUsedSize') / 1048576).toFixed(1), nodes: g('Nodes') }; };
+  await page.waitForTimeout(3000); await tap(W / 2, 150); await page.waitForTimeout(500); await tap(W / 2, 158); await page.waitForTimeout(3000);
+  await tap(30, 100); await page.waitForTimeout(1500); await shot('z1_zoom');
+  await tap(20, 10); await page.waitForTimeout(1000); await shot('z2_back');
+  await tap(100, 100); await page.waitForTimeout(1500); await shot('z3_zoom2');
+  await tap(20, 10); await page.waitForTimeout(1000); await shot('z4_back2');
+  console.log('end mem', JSON.stringify(await mem()));
+  console.log('pageerrors', errs.length, errs.slice(0, 5).join(' | '));
+  console.log('missing', [...new Set(miss)].slice(0, 15).join('\n'));
+  await b.close();
+})();

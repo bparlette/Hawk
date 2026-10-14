@@ -1,0 +1,15 @@
+[
+ {"until":"__SS.STATE.scene==='stage'","js":"window.__t0=__SS.STATE.t"},
+ {"until":"__SS.STATE.t-window.__t0>60","js":"(()=>{const S=__SS.STATE;S.enemies.length=0;S.queue=[];S.wave=1;S.locked=false;S.player.x=1080;S.player.y=180;window.__t0=S.t;})()"},
+ {"until":"__SS.STATE.t-window.__t0>130","shot":"h1.png"},
+ {"until":"__SS.STATE.t-window.__t0>210","shot":"h2.png"},
+ {"js":"(()=>{const S=__SS.STATE;S.enemies.length=0;S.queue=[];S.fadeOut=1;window.__t0=S.t;})()"},
+ {"until":"__SS.STATE.t-window.__t0>130","js":"(()=>{const S=__SS.STATE;return [S.sec,S.phase,S.enemies.map(e=>[e.name,e.state,e.x,e.y,e.z])]})()","shot":"c1.png"},
+ {"until":"__SS.STATE.t-window.__t0>360","shot":"c2.png"},
+ {"until":"__SS.STATE.t-window.__t0>560","js":"(()=>{const S=__SS.STATE;const b=S.enemies.find(e=>e.boss);return [b.state,b.hp,b.x,b.y]})()","shot":"c3.png"},
+ {"until":"__SS.STATE.t-window.__t0>700","shot":"c4.png"},
+ {"js":"(()=>{const S=__SS.STATE;const b=S.enemies.find(e=>e.boss);b.hp=28;window.__t0=S.t;return b.state})()"},
+ {"until":"__SS.STATE.enemies.find(e=>e.boss)&&__SS.STATE.enemies.find(e=>e.boss).state==='rage'","js":"window.__t0=__SS.STATE.t"},
+ {"until":"__SS.STATE.t-window.__t0>75","shot":"r1.png"},
+ {"until":"__SS.STATE.t-window.__t0>140","shot":"r2.png"}
+]

@@ -1,0 +1,8 @@
+[
+ {"manual": true},
+ {"step": 3000, "cond": "__SS.STATE.scene==='stage' && __SS.STATE.enemies.length>=3 && __SS.STATE.enemies.filter(e=>e.x>__SS.STATE.camX+30&&e.x<__SS.STATE.camX+354).length>=3"},
+ {"js": "(()=>{const S=__SS.STATE;S.player.inv=0;S.player.grabbedBy=null;S.player.x=170;S.player.y=185;S.player.vz=4.2;S.player.z=0.1;return [S.t,S.enemies.map(e=>e.type+':'+Math.round(e.x))]})()"},
+ {"step": 24, "cond": "false", "shot": "/workspace/work/lvl13_harness/s_gameplay.png"},
+ {"js": "(()=>{const S=__SS.STATE;S.enemies=[];S.queue=[];S.wave=2;S.locked=false;S.player.x=1000;S.player.y=186;S.player.inv=0;S.player.grabbedBy=null;for(const z of S.haz){if(z.st.cd!==undefined){z.st.list.push({x:1085,y:180,t:20});} if(z.st.list&&z.st.list[0]&&z.st.list[0].rx){z.st.list[2].t=250+40;}} return S.t})()"},
+ {"step": 24, "cond": "false", "shot": "/workspace/work/lvl13_harness/s_chasm.png"}
+]

@@ -1,0 +1,11 @@
+# Props L3+L7 painted sprite task — notes
+- [16:30 EDT Oct 8] Start. Backups level3.orig.js/level7.orig.js (md5 built==deploy). Boss code off-limits.
+- [16:50] Generated raw/ sheets: l3_geyser(black), l3_grate(cold grate ok; stone floor -> ellipse mask), l3_misc(rat tail, ladder; gush keyed out -> redo), l3_wave(black), l7_rig(magnet, cable), l7_roll(tire, drum, 4 scrap), l3_gush(black), l7_ram, l7_belt(+beacons), l7_sparks(black), l3_hot(magenta; hot grate+puddle)
+- [17:05] pack.py -> level3_props.png / level7_props.png (+meta.json). site/ = symlinked copy of deploy with orig level3/7. scenes.js = frozen hazard scenes. Chromium libs were missing: sudo apt-get install libatk1.0-0 etc.
+- [17:20] before shots done (shots/before_*.png, 0 errors). Note: p.inv>0 hides player on odd STATE.t/3 -> force S.t=6k before shots. Writing level3.js/level7.js sprite code next.
+- [17:40] level3.js/level7.js written via edit3.py/edit7.py from *.orig.js; installed in site/levels for testing.
+- [17:55] chromium cache wiped by sandbox restart; reinstalled (cd lvl7_harness && npx playwright install chromium; libs via apt).
+- [18:10] after shots L3 OK (wave = 3 painted crests), 0 errors. Rerunning L7 with scrap timing.
+- [18:35] Seeded headless gameplay A/B (h/play.js, LCG Math.random, state trace every 25f to f9000): orig vs new traces byte-identical for L3 and L7 (boss, KO, outro, pizza, results, into next level). 0 exceptions.
+- [18:40] Installed level3.js, level7.js, level3_props.png, level7_props.png into built/ and deploy/ levels (md5 identical, node --check OK). NOT deployed.
+- [18:50] contact_before_after.jpg + view_level{3,7}_props.jpg written. DONE (not deployed).

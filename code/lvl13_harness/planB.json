@@ -1,0 +1,7 @@
+[
+ {"wait": 1500},
+ {"js": "(()=>{const S=__SS.STATE;S.enemies=[];S.queue=[];S.wave=4;S.locked=false;S.player.x=2560;return [S.phase,S.camX]})()", "wait": 1500},
+ {"js": "(()=>{const S=__SS.STATE;return [S.phase,S.camX,S.player.x,S.fadeOut,S.sec,S.enemies.length,S.locked,S.wave]})()", "wait": 100},
+ {"js": "(()=>{const S=__SS.STATE;S.player.x=2585;return [S.phase,S.camX,S.player.x,S.fadeOut,S.sec]})()", "wait": 2500},
+ {"js": "(()=>{const S=__SS.STATE;return [S.phase,S.camX,S.player.x,S.fadeOut,S.sec]})()"}
+]

@@ -1,0 +1,29 @@
+f68: loading scene
+f239: stage lvl=15 section=L0
+f461: bark: BLADE AND HONOR!
+f770: dodge seen
+f1879: taunt seen: SLOWPOKE!
+f2516: bark: FORM IS EVERYTHING!
+f2756: taunt seen: C'MON!
+f3235: bark: TOP FLOOR. SHREDDER'S WAITING!
+f3325: stage lvl=15 section=L1
+f3326: boss fight lvl=15 SHREDDER
+f4415: bark: HE'S GETTING FASTER! STAY SHARP!
+f5434: bark: HE FELL INTO THE MUTAGEN RESERVOIR!
+f5529: bark: AFTER HIM! DOWN TO THE LABS!
+f5648: stage lvl=15 section=L2
+f6587: taunt seen: COME GET SOME!
+f8184: boss fight lvl=15 SUPER SHREDDER
+f9944: bark: HE'S EVEN STRONGER NOW! HIT HIM HARD!
+f10795: bark: STAY SHARP!
+f11087: outro lvl=15
+f11095: bark: THE WHOLE LAB IS COMING DOWN!
+f11177: bark: GO GO GO!
+f11327: bark: WE DID IT! SHREDDER'S FINISHED!
+f12048: pizza lvl=15
+f12218: results lvl=15
+f12281: back to title
+after: LEVELS loaded=1,,,,,,,,,,,,,,- LVLOAD=
+scripts loaded=levels/level15.js?t=1791480844192 missing=levels/level16.js?t=1791480848290 SS=object
+END f=12281 scene=title level=1 kills=35 levelsWithResults=15
+exit=0

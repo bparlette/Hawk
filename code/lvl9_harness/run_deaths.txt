@@ -1,0 +1,31 @@
+f68: loading scene
+f239: stage lvl=9 section=L0
+f289: bark: WHERE... WHEN ARE WE?!
+f403: bark: NINJAS. WHY IS IT ALWAYS NINJAS?
+f506: bark: ARCHERS! WATCH THE RED MARKS!
+f1139: bark: SMOKE BOMBS! HEADS UP!
+f1556: dodge seen
+f1566: bark: BLADE AND HONOR!
+f2501 TAG-IN RAFE deaths=3 bodies=1
+f3523: bark: THAT ALL YA GOT?
+f3766: bark: TOO EASY!
+f4371: stage lvl=9 section=L1
+f4372: boss fight lvl=9 KARAI
+f4501 TAG-IN MIKO deaths=6 bodies=1
+f4728: bark: TOTALLY TUBULAR!
+f5025: bark: SHELL YEAH!
+f5496: taunt seen: TOO SCARED?
+f5520: bark: SHE'S EVEN FASTER NOW! WATCH HER SHADOW!
+f5698: bark: NUNCHUCKED, DUDE!
+f6229: bark: CLONES?! ONLY ONE HAS A SHADOW!
+f6841: outro lvl=9
+f6861: bark: SHE VANISHED... TYPICAL NINJA.
+f6961: bark: THE RIFT! IT'S PULLING US IN!
+f7041: bark: HERE WE GO AGAAAIN!
+f7282: pizza lvl=9
+f7452: results lvl=9
+f7521: back to title
+after: LEVELS loaded=1,,,,,,,,- LVLOAD=
+scripts loaded=levels/level9.js missing=levels/level10.js SS=object
+END f=7521 scene=title level=1 kills=20 levelsWithResults=9
+exit 0

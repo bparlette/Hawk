@@ -1,0 +1,15 @@
+# L3 Gator + L14 fist art task — progress notes
+- [15:45 EDT Oct 8] Start. Task A: painted Krang fist (fistDraw L14). Task B: Gulch Gator painted sheet (L3). Pipeline = lvl14_art.
+- [15:58] Task A: fistDraw now draws painted fist cut from punch frame of level14_krang.png, sheet rect [715,35,25,22] at KR_K, code jet flame kept; STEEL consts removed. Built copy edited (backup lvl3_art/level14.pre_fist.js). node --check OK. Not yet copied to deploy.
+- [16:02] fist rect tweaked to [714,35,26,22]. Now generating gator sheet A (design anchor). Design: photoreal animatronic gator brute, dark charcoal/moss scales, spiked black leather vest, chain bandolier, yellow rubber sewer waders w/ suspenders, rusty iron knuckle bands — distinct from L11 Leatherhead (illustrated, brown vest, purple pants).
+- [16:08] gator_sheetA.png generated (WHITE bg again despite chroma flag; RGB): idle, walk, walk, wind, punch(fist clipped at right edge). Design approved by me: black studded vest, chain, yellow waders, black boots, dark gator. Next: sheets B (tele/charge/throw/wave/stomp) and C (hurt/fall/down/summon/leap/land) w/ sheetA as ref.
+- [16:14] sheets B,C generated.
+- [16:18] sheet D generated (idle calib, punch, surf, ground-pound land).
+- [16:23] sheet E generated (ground-pound land, getup kneel, clean tele crouch). A punch + D land clipped at edge -> use D punch; B stomp toe barely clipped (ok).
+- [16:35] pack.py + view.py: 18 frames packed (level3_gator.png, meta.json), uniform scale (E sheet x0.8), anchor = stance centre between boots (clipped to wader columns to skip the tail). view/frames.jpg shows each frame next to Rafe at game scale.
+- [16:45] level3.js (built) wired: GTF frames table, gatorFrame() state map (dying/down/getup/hurt/tele/charge/kwind/kick/slam/summon/throw surf|wave|vents|plain/fire/walk), red/white fx sheets via source-atop, spr anchor; removed atlas/tint/scale/HEAD/drawGatorHead/RED/WHITE; images:[GT_IMG]. png copied to built/levels. node --check OK. NEXT: harness tests.
+- [16:52] synced lvl3_test + lvl14_test from built (tar), regenerated lvl3_h/game.js + lvl14_harness/game.js from built index.html. Headless: lvl3_h/run_gator1.txt L3 boss -> results, no errors (continues to L8). lvl14_harness/run_fist1.txt see below.
+- [17:00] gpose.js (lvl3_h) Playwright shots -> lvl3_art/shots/g_*.png, 0 page errors. Reviewing.
+- [17:12] Review 1 OK (style/scale match). Re-shooting with turtle visible (inv=0 before each shot) + fist plan_fist.json (lvl14_harness). One combined run timed out the sandbox -> run separately.
+- [17:22] Re-shots OK (turtle visible). Copied level3.js, level3_gator.png, level14.js to deploy; cmp identical; node --check both dirs OK. Deploying.
+- [17:26] DEPLOYED shellshock-live.surge.sh; curl checks recorded in report. DONE.

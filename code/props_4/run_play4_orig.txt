@@ -1,0 +1,17 @@
+f68: loading scene
+f239: stage lvl=4 section=L0
+f556: taunt seen: COME GET SOME!
+f1427: stage lvl=4 section=L1
+f1933: bark: FORM IS EVERYTHING!
+f2479: bark: BY THE BOOK!
+f2852: boss fight lvl=4 JETWASH
+f3788: bark: STAY SHARP!
+f4588: outro lvl=4
+f4612: bark: HIS CARGO'S BOUND FOR THE DOCKS!
+f4698: bark: TAKE THE EXIT! NEXT STOP: THE DOCKS!
+f4789: pizza lvl=4
+f4959: results lvl=4
+after: LEVELS loaded=1,,,4,5 LVLOAD=4,5
+scripts loaded=levels/level4.js,levels/level5.js missing= SS=object
+bossStates={"enter":1,"walk":19,"hurt":8,"throw":1,"down":11,"getup":11,"stagger":1,"tele":1,"kwind":1,"dying":1} playerHits=12
+END f=5000 scene=stage level=4 kills=17 levelsWithResults=4

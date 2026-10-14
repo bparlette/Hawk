@@ -1,0 +1,11 @@
+[
+ {"until": "!!window.__L11", "wait": 200, "js": "(()=>{const S=__SS.STATE;S.enemies.forEach(e=>{e.hp=0;e.state='dying';e.t=0});S.queue=[];S.wave=4;S.locked=false;S.player.x=2595;__L11.g().evCd=99999;return 1})()"},
+ {"until": "(()=>{const b=__SS.STATE.enemies.find(e=>e.boss);return b&&b.state==='walk'})()", "wait": 200, "js": "(()=>{const S=__SS.STATE,b=S.enemies.find(e=>e.boss),p=S.player;p.x=b.x-60;p.y=b.y;p.hp=16;b.facing=-1;b.state='attack';b.mv='roll';b.t=0;return 1})()"},
+ {"until": "(()=>{const b=__SS.STATE.enemies.find(e=>e.boss);return b.t>20})()", "shot": "g1.png"},
+ {"until": "(()=>{const b=__SS.STATE.enemies.find(e=>e.boss);return b.state==='grab' && b.t>12})()", "shot": "g2.png"},
+ {"until": "(()=>{const b=__SS.STATE.enemies.find(e=>e.boss);return b.state==='walk'})()", "wait":300, "js": "(()=>{const S=__SS.STATE,b=S.enemies.find(e=>e.boss),p=S.player;p.hp=16;b.x=300;b.y=p.y;b.facing=-1;b.state='attack';b.mv='chomp';b.t=0;return 1})()"},
+ {"until": "(()=>{const b=__SS.STATE.enemies.find(e=>e.boss);return b.t>52 || b.state!=='attack'})()", "shot": "g3.png"},
+ {"until": "(()=>{const b=__SS.STATE.enemies.find(e=>e.boss);return b.state==='walk'})()", "wait":300, "js": "(()=>{const S=__SS.STATE,b=S.enemies.find(e=>e.boss),p=S.player;p.hp=16;b.state='attack';b.mv='lift';b.p2=true;b.t=0;return 1})()"},
+ {"until": "(()=>{const b=__SS.STATE.enemies.find(e=>e.boss);return b.t>30 || b.state!=='attack'})()", "shot": "g4.png"},
+ {"until": "(()=>{const b=__SS.STATE.enemies.find(e=>e.boss);return b.t>62 || b.state!=='attack'})()", "shot": "g5.png"}
+]

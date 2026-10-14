@@ -1,0 +1,4 @@
+[
+ {"until":"__SS.STATE.scene==='stage'&&__SS.STATE.player&&__SS.STATE.haz.length===3","js":"(()=>{const S=__SS.STATE;S.enemies.length=0;S.queue=[];S.player.grabbedBy=null;S.player.x=110;S.player.y=200;const d=S.haz.find(z=>'cd' in z.st);d.st.cd=99999;d.st.d={x:S.camX+140,y:193,ph:'lock',t:0,side:-1,shots:0,lx:110,ly:200,rx:110,ry:200};const q=S.haz.find(z=>z.st.list&&z.st.list[0].o!==undefined);const p=q.st.list[0];p.x=270;p.y=186;p.o=((150-S.t)%206+206)%206;return [S.camX,S.wave,S.locked]})()"},
+ {"until":"(()=>{const S=__SS.STATE;const d=S.haz.find(z=>'cd' in z.st);return !d.st.d||d.st.d.t>34})()","js":"(()=>{const S=__SS.STATE;S.player.inv=0;S.player.grabbedBy=null;return S.camX})()","shot":"shot_hazard.png"}
+]

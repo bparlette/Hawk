@@ -1,0 +1,17 @@
+[
+ {"manual": true},
+ {"step": 3000, "cond": "__SS.STATE.scene==='stage' && __SS.STATE.enemies.length>=3 && __SS.STATE.enemies.every(e=>e.x>__SS.STATE.camX+20&&e.x<__SS.STATE.camX+364)"},
+ {"step": 30, "cond": "false"},
+ {"js": "(()=>{const S=__SS.STATE;S.player.inv=0;S.player.hp=16;S.player.x=150;S.player.vz=4.2;S.player.z=0.1;return S.t})()"},
+ {"step": 22, "cond": "false", "shot": "/workspace/work/lvl13_harness/s_gameplay.png"},
+ {"js": "(()=>{const S=__SS.STATE;S.enemies=[];S.queue=[];S.wave=1;S.locked=false;S.player.x=845;S.player.y=180;return S.t})()"},
+ {"step": 50, "cond": "false", "shot": "/workspace/work/lvl13_harness/s_door1.png"},
+ {"step": 50, "cond": "false", "shot": "/workspace/work/lvl13_harness/s_door2.png"},
+ {"js": "(()=>{const S=__SS.STATE;S.enemies=[];S.queue=[];S.wave=2;S.locked=false;S.player.x=1000;S.player.y=186;S.player.inv=0;for(const z of S.haz){if(z.st.cd!==undefined){z.st.list.push({x:1080,y:182,t:20});} if(z.st.list&&z.st.list[0]&&z.st.list[0].rx){z.st.list[2].t=250+30;}} return S.t})()"},
+ {"step": 20, "cond": "false", "shot": "/workspace/work/lvl13_harness/s_chasm.png"},
+ {"js": "(()=>{const S=__SS.STATE;S.player.x=1000;S.player.y=160;S.player.inv=0;S.player.z=0;return S.t})()"},
+ {"step": 14, "cond": "false", "shot": "/workspace/work/lvl13_harness/s_fall.png"},
+ {"js": "(()=>{const S=__SS.STATE;return [S.player.sinkT,S.player.y]})()"},
+ {"step": 30, "cond": "false"},
+ {"js": "(()=>{const S=__SS.STATE;return [S.player.sinkT,S.player.y,S.player.hp]})()"}
+]

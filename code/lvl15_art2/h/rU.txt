@@ -1,0 +1,6 @@
+shot /workspace/work/lvl15_art2/shots/su_idle.png
+shot /workspace/work/lvl15_art2/shots/su_fall.png
+shot /workspace/work/lvl15_art2/shots/su_down.png
+shot /workspace/work/lvl15_art2/shots/su_ko1.png
+shot /workspace/work/lvl15_art2/shots/su_ko2.png
+shot /workspace/work/lvl15_art2/shots/su_outro.png

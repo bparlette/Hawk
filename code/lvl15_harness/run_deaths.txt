@@ -1,0 +1,31 @@
+f68: loading scene
+f239: stage lvl=15 section=L0
+f1025: taunt seen: NICE SHELL, NERD!
+f1109: bark: BY THE BOOK!
+f1711: dodge seen
+f1940: bark: FORM IS EVERYTHING!
+f2001 TAG-IN RAFE deaths=3 bodies=1
+f2952: bark: TOP FLOOR. SHREDDER'S WAITING!
+f3054: stage lvl=15 section=L1
+f3055: boss fight lvl=15 SHREDDER
+f3501 TAG-IN MIKO deaths=6 bodies=1
+f3573: bark: SHELL YEAH!
+f4203: bark: HE'S GETTING FASTER! STAY SHARP!
+f4263: bark: NUNCHUCKED, DUDE!
+f4517: bark: TOTALLY TUBULAR!
+f5133: bark: HE FELL INTO THE MUTAGEN RESERVOIR!
+f5228: bark: AFTER HIM! DOWN TO THE LABS!
+f5347: stage lvl=15 section=L2
+f8164: boss fight lvl=15 SUPER SHREDDER
+f9968: bark: HE'S EVEN STRONGER NOW! HIT HIM HARD!
+f11586: outro lvl=15
+f11594: bark: THE WHOLE LAB IS COMING DOWN!
+f11676: bark: GO GO GO!
+f11826: bark: WE DID IT! SHREDDER'S FINISHED!
+f12547: pizza lvl=15
+f12717: results lvl=15
+f12781: back to title
+after: LEVELS loaded=1,,,,,,,,,,,,,,- LVLOAD=
+scripts loaded=levels/level15.js?t=1791480861682 missing=levels/level16.js?t=1791480866262 SS=object
+END f=12781 scene=title level=1 kills=35 levelsWithResults=15
+exit=0

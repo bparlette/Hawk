@@ -1,0 +1,7 @@
+audio { dur: 16.633333333333333, events: 329 }
+frames 150 28s
+frames 300 85s
+frames 450 153s
+frames 498 dur 16.600
+QA miss 0 / 37
+DONE /workspace/work/mashup-brawler/render/clip5.mp4

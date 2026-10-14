@@ -1,0 +1,24 @@
+f68: loading scene
+f239: stage lvl=13 section=L0
+f289: bark: WHOA... I FEEL LIGHTER!
+f389: dodge seen
+f1230: fell in a hole lvl=13
+f1230: bark: YEOW! THAT ACID BURNS!
+f1287: bark: TOXIC CHASM! JUMP IT OR GO AROUND!
+f2038: bark: BY THE BOOK!
+f4153: bark: FORM IS EVERYTHING!
+f4825: stage lvl=13 section=L1
+f4826: boss fight lvl=13 GENERAL TRAAG
+f5859: boss fight lvl=13 LT. GRANITOR
+f5979: bark: A TAG TEAM?! WATCH THE SKY!
+f6565: bark: BLADE AND HONOR!
+f7059: outro lvl=13
+f7099: bark: THE TECHNODROME... IT'S PHASING OUT!
+f7189: bark: THAT PORTAL LEADS HOME! GO!
+f7666: pizza lvl=13
+f7836: results lvl=13
+f7901: back to title
+f24641: bark: STAY SHARP!
+after: LEVELS loaded=1,,,,,,,,,,,,13 LVLOAD=13
+scripts loaded=levels/level13.js,levels/level13.js,levels/level13.js,levels/level13.js missing=levels/level14.js SS=object
+END f=30000 scene=stage level=13 kills=16 levelsWithResults=13

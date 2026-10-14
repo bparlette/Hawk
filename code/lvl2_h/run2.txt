@@ -1,0 +1,17 @@
+f68: loading scene
+f239: stage lvl=2 section=L0
+f449: bark: BY THE BOOK!
+f1198: bark: FORM IS EVERYTHING!
+f1284: taunt seen: NICE SHELL, NERD!
+f2003: fell in a hole lvl=2
+f2511: bark: BLADE AND HONOR!
+f3576: bark: STAY SHARP!
+f3969: boss fight lvl=2 BRICKJAW
+f5491: outro lvl=2
+f5511: bark: THEY WENT DOWN THE SEWER!
+f5622: pizza lvl=2
+f5792: results lvl=2
+f6303: stage lvl=3 section=L0
+f6787: dodge seen
+scripts loaded=levels/level2.js?t=1791490290960,levels/level3.js?t=1791490291886 missing= SS=object
+END f=7000 scene=stage level=3 kills=3 levelsWithResults=2

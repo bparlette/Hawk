@@ -1,0 +1,19 @@
+f68: loading scene
+f239: stage lvl=4 section=L0
+f552: bark: FORM IS EVERYTHING!
+f983: bark: STAY SHARP!
+f1451: stage lvl=4 section=L1
+f2003 TAG-IN RAFE deaths=3 bodies=1
+f2590: boss fight lvl=4 JETWASH
+f2687: bark: TOO EASY!
+f4001 TAG-IN MIKO deaths=6 bodies=2
+f4290: outro lvl=4
+f4314: bark: HIS CARGO'S BOUND FOR THE DOCKS!
+f4400: bark: TAKE THE EXIT! NEXT STOP: THE DOCKS!
+f4491: pizza lvl=4
+f4661: results lvl=4
+f4731: back to title
+after: LEVELS loaded=1,,,- LVLOAD=
+scripts loaded=levels/level4.js missing=levels/level5.js SS=object
+bossStates={"enter":1,"walk":18,"hurt":7,"down":9,"getup":9,"stagger":2,"throw":1,"fire":2,"kwind":1,"dying":1} playerHits=6
+END f=4731 scene=title level=1 kills=17 levelsWithResults=4

@@ -1,0 +1,21 @@
+shot b_idle
+shot b_idle_facing
+shot b_walk1
+shot b_walk2
+shot b_tele
+shot b_charge
+shot b_kwind
+shot b_kick
+shot b_throw
+shot b_throw_release
+shot b_fire
+shot b_summon
+shot b_hurt
+shot b_fall
+shot b_down
+shot b_getup
+shot b_flash
+shot b_ko_fall
+shot b_ko
+shot b_outro
+PAGE ERRORS 0

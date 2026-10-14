@@ -1,0 +1,10 @@
+[
+ {"until": "!!window.__L11", "wait": 300, "js": "(()=>{const S=__SS.STATE;S.enemies.forEach(e=>{e.hp=0;e.state='dying';e.t=0});S.queue=[];__L11.startEvent('tunnel');return 1})()"},
+ {"until": "__L11.g().ev && __L11.g().ev.x < 420", "shot": "i1.png"},
+ {"until": "__L11.g().ev && __L11.g().ev.x < (__SS.STATE.player.x-__SS.STATE.camX)+220", "js": "(()=>{dispatchEvent(new KeyboardEvent('keydown',{key:'ArrowDown'}));return 1})()"},
+ {"until": "__SS.STATE.player.ducked || __L11.g().ev.x < (__SS.STATE.player.x-__SS.STATE.camX)", "js": "(()=>{dispatchEvent(new KeyboardEvent('keyup',{key:'ArrowDown'}));const p=__SS.STATE.player;return [p.ducked,p.downT,p.y]})()"},
+ {"until": "__L11.g().ev && __L11.g().ev.x < (__SS.STATE.player.x-__SS.STATE.camX)+20", "shot": "i2.png", "js": "(()=>{const p=__SS.STATE.player;return [p.ducked,p.downT,p.hp]})()"},
+ {"until": "__L11.g().ev && __L11.g().ev.x < -200", "js": "(()=>{const p=__SS.STATE.player;return [p.ducked,p.downT,p.hp]})()", "shot": "i3.png"},
+ {"until": "!__L11.g().ev", "wait": 200, "js": "__L11.startEvent('tower')"},
+ {"until": "__L11.g().ev && __L11.g().ev.x < 200", "shot": "i4.png"}
+]

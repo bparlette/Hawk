@@ -1,0 +1,59 @@
+f68: loading scene
+f239: stage lvl=2 section=L0
+f400: bark: FORM IS EVERYTHING!
+f1436: taunt seen: SLOWPOKE!
+f1489: bark: BLADE AND HONOR!
+f1615: bark: SLICE OF LIFE!
+f4148: boss fight lvl=2 BRICKJAW
+f4239: bark: BY THE BOOK!
+f5331: bark: STAY SHARP!
+f5508: outro lvl=2
+f5528: bark: THEY WENT DOWN THE SEWER!
+f5639: pizza lvl=2
+f5809: results lvl=2
+f6313: stage lvl=3 section=L0
+f9013: dodge seen
+f9967: stage lvl=3 section=L1
+f10385: boss fight lvl=3 GULCH GATOR
+f11947: outro lvl=3
+f11967: bark: PHEW! FRESH AIR UP THAT LADDER...
+f12057: bark: THAT'S THE HIGHWAY! GRAB A BOARD!
+f12158: pizza lvl=3
+f12328: results lvl=3
+f12833: stage lvl=4 section=L0
+f14023: stage lvl=4 section=L1
+f14997: bark: HOT AND FRESH!
+f15183: boss fight lvl=4 JETWASH
+f17017: outro lvl=4
+f17041: bark: HIS CARGO'S BOUND FOR THE DOCKS!
+f17127: bark: TAKE THE EXIT! NEXT STOP: THE DOCKS!
+f17218: pizza lvl=4
+f17388: results lvl=4
+f17893: stage lvl=5 section=L0
+f20809: stage lvl=5 section=L1
+f21307: boss fight lvl=5 GRIMWALE
+f22909: outro lvl=5
+f22929: bark: THE CARGO'S GOING UPTOWN!
+f23039: bark: BUNDLE UP, BROS. IT'S SNOWING UP THERE!
+f23160: pizza lvl=5
+f23330: results lvl=5
+f23843: stage lvl=6 section=L0
+f27247: stage lvl=6 section=L1
+f27248: boss fight lvl=6 COLD FRONT
+f29030: outro lvl=6
+f29050: bark: THAT PLOW CAME FROM THE JUNKYARD!
+f29150: bark: LET'S GO SCRAP SOME BAD GUYS!
+f29251: pizza lvl=6
+f29421: results lvl=6
+f29933: stage lvl=7 section=L0
+f32109: bark: WHOA! LET GO!
+f33790: stage lvl=7 section=L1
+f33791: boss fight lvl=7 RUSTMAUL
+f35255: outro lvl=7
+f35275: bark: EVERY SCRAP TRUCK HEADS FOR THAT TOWER...
+f35385: bark: THE FORTRESS. LET'S END THIS!
+f35496: pizza lvl=7
+f35666: results lvl=7
+f36173: stage lvl=8 section=L0
+scripts loaded=levels/level2.js?t=1791489860909,levels/level3.js?t=1791489863195,levels/level4.js?t=1791489865222,levels/level5.js?t=1791489866914,levels/level6.js?t=1791489868806,levels/level7.js?t=1791489870695,levels/level8.js?t=1791489872354 missing= SS=object
+END f=40000 scene=stage level=8 kills=16 levelsWithResults=2,3,4,5,6,7

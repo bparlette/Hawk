@@ -1,0 +1,8 @@
+[
+ {"until": "!!window.__L11", "wait": 200, "js": "(()=>{const S=__SS.STATE;S.enemies.forEach(e=>{e.hp=0;e.state='dying';e.t=0});S.queue=[];S.wave=4;S.locked=false;S.player.x=2595;__L11.g().evCd=99999;return 1})()"},
+ {"until": "(()=>{const b=__SS.STATE.enemies.find(e=>e.boss);return b&&b.state==='lurk'&&b.t>80})()", "shot": "s_boss_intro.png"},
+ {"until": "(()=>{const b=__SS.STATE.enemies.find(e=>e.boss);return b&&b.state==='walk'})()", "wait": 200, "js": "(()=>{const S=__SS.STATE,b=S.enemies.find(e=>e.boss),p=S.player;p.x=b.x-50;p.y=b.y+4;p.hp=16;b.facing=-1;b.state='attack';b.mv='tail';b.t=0;b.hitP=false;return 1})()"},
+ {"until": "(()=>{const b=__SS.STATE.enemies.find(e=>e.boss);return b.t>28})()", "shot": "s_boss_tail.png"},
+ {"until": "(()=>{const b=__SS.STATE.enemies.find(e=>e.boss);return b.state==='walk'})()", "wait": 300, "js": "(()=>{const S=__SS.STATE,b=S.enemies.find(e=>e.boss),p=S.player;p.x=b.x-50;p.y=b.y;p.hp=16;p.downT=0;p.inv=0;b.facing=-1;b.state='attack';b.mv='roll';b.t=30;return 1})()"},
+ {"until": "(()=>{const b=__SS.STATE.enemies.find(e=>e.boss);return (b.state==='grab' && b.t>18) || b.state==='walk'})()", "shot": "s_boss_roll.png"}
+]

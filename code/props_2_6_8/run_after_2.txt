@@ -1,0 +1,6 @@
+shot shots/after_l2_hydrant_idle.png
+shot shots/after_l2_hydrant_warn.png
+shot shots/after_l2_hydrant_spray.png
+shot shots/after_l2_manhole.png
+shot shots/after_l2_manhole2.png
+ERRORS 0

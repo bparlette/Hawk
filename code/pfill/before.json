@@ -1,0 +1,409 @@
+[
+{
+"name": "shell-shock-live",
+"url": "http://127.0.0.1:8761/g/shell-shock-live/index.html?nosw&noboot",
+"w": 390,
+"h": 844,
+"keys": [
+[
+900,
+"Enter"
+],
+[
+700,
+"Enter"
+],
+[
+700,
+"Enter"
+],
+[
+700,
+"Enter"
+],
+[
+700,
+"Enter"
+]
+],
+"wait": 3000
+},
+{
+"name": "shell-shock-16bit",
+"url": "http://127.0.0.1:8761/g/shell-shock-16bit/index.html?nosw&noboot",
+"w": 390,
+"h": 844,
+"keys": [
+[
+900,
+"Enter"
+],
+[
+700,
+"Enter"
+],
+[
+700,
+"Enter"
+],
+[
+700,
+"Enter"
+],
+[
+700,
+"Enter"
+]
+],
+"wait": 3000
+},
+{
+"name": "bakeoff-a-free",
+"url": "http://127.0.0.1:8761/g/bakeoff-a-free/index.html?nosw&noboot",
+"w": 390,
+"h": 844,
+"keys": [
+[
+900,
+"Enter"
+],
+[
+700,
+"Enter"
+],
+[
+700,
+"Enter"
+],
+[
+700,
+"Enter"
+]
+],
+"wait": 3000
+},
+{
+"name": "bakeoff-b-paper",
+"url": "http://127.0.0.1:8761/g/bakeoff-b-paper/index.html?nosw&noboot",
+"w": 390,
+"h": 844,
+"keys": [
+[
+900,
+"Enter"
+],
+[
+700,
+"Enter"
+],
+[
+700,
+"Enter"
+],
+[
+700,
+"Enter"
+]
+],
+"wait": 3000
+},
+{
+"name": "bakeoff-c-gta",
+"url": "http://127.0.0.1:8761/g/bakeoff-c-gta/index.html?nosw&noboot",
+"w": 390,
+"h": 844,
+"keys": [
+[
+900,
+"Enter"
+],
+[
+700,
+"Enter"
+],
+[
+700,
+"Enter"
+],
+[
+700,
+"Enter"
+]
+],
+"wait": 3000
+},
+{
+"name": "bakeoff-d-skyline",
+"url": "http://127.0.0.1:8761/g/bakeoff-d-skyline/index.html?nosw&noboot",
+"w": 390,
+"h": 844,
+"keys": [
+[
+900,
+"Enter"
+],
+[
+700,
+"Enter"
+],
+[
+700,
+"Enter"
+],
+[
+700,
+"Enter"
+]
+],
+"wait": 3000
+},
+{
+"name": "bakeoff-e-gta32",
+"url": "http://127.0.0.1:8761/g/bakeoff-e-gta32/index.html?nosw&noboot",
+"w": 390,
+"h": 844,
+"keys": [
+[
+900,
+"Enter"
+],
+[
+700,
+"Enter"
+],
+[
+700,
+"Enter"
+],
+[
+700,
+"Enter"
+]
+],
+"wait": 3000
+},
+{
+"name": "bakeoff-f-free16",
+"url": "http://127.0.0.1:8761/g/bakeoff-f-free16/index.html?nosw&noboot",
+"w": 390,
+"h": 844,
+"keys": [
+[
+900,
+"Enter"
+],
+[
+700,
+"Enter"
+],
+[
+700,
+"Enter"
+],
+[
+700,
+"Enter"
+]
+],
+"wait": 3000
+},
+{
+"name": "bakeoff-g-hd2d",
+"url": "http://127.0.0.1:8761/g/bakeoff-g-hd2d/index.html?nosw&noboot",
+"w": 390,
+"h": 844,
+"keys": [
+[
+900,
+"Enter"
+],
+[
+700,
+"Enter"
+],
+[
+700,
+"Enter"
+],
+[
+700,
+"Enter"
+]
+],
+"wait": 3000
+},
+{
+"name": "bakeoff-h-iso",
+"url": "http://127.0.0.1:8761/g/bakeoff-h-iso/index.html?nosw&noboot",
+"w": 390,
+"h": 844,
+"keys": [
+[
+900,
+"Enter"
+],
+[
+700,
+"Enter"
+],
+[
+700,
+"Enter"
+],
+[
+700,
+"Enter"
+]
+],
+"wait": 3000
+},
+{
+"name": "bakeoff-i-cel",
+"url": "http://127.0.0.1:8761/g/bakeoff-i-cel/index.html",
+"w": 390,
+"h": 844,
+"keys": [],
+"wait": 3000
+},
+{
+"name": "crystal-cave",
+"url": "http://127.0.0.1:8761/g/crystal-cave/index.html",
+"w": 390,
+"h": 844,
+"keys": [],
+"wait": 3000
+},
+{
+"name": "knockout",
+"url": "http://127.0.0.1:8761/g/knockout/index.html",
+"w": 390,
+"h": 844,
+"keys": [
+[
+900,
+"Enter"
+],
+[
+900,
+"Enter"
+],
+[
+900,
+"Enter"
+]
+],
+"wait": 3000
+},
+{
+"name": "hollow-manor",
+"url": "http://127.0.0.1:8761/g/hollow-manor/index.html",
+"w": 390,
+"h": 844,
+"keys": [
+[
+900,
+"Enter"
+],
+[
+900,
+"Enter"
+],
+[
+900,
+"Enter"
+]
+],
+"wait": 3000
+},
+{
+"name": "rta-barrel-climb",
+"url": "http://127.0.0.1:8761/g/rta-barrel-climb/index.html?level=1",
+"w": 390,
+"h": 844,
+"keys": [
+[
+700,
+"KeyZ"
+]
+],
+"wait": 3000
+},
+{
+"name": "rta-pipe-pests",
+"url": "http://127.0.0.1:8761/g/rta-pipe-pests/index.html?level=1",
+"w": 390,
+"h": 844,
+"keys": [
+[
+700,
+"KeyZ"
+]
+],
+"wait": 3000
+},
+{
+"name": "rta-ring-rush",
+"url": "http://127.0.0.1:8761/g/rta-ring-rush/index.html?level=1",
+"w": 390,
+"h": 844,
+"keys": [
+[
+700,
+"KeyZ"
+]
+],
+"wait": 3000
+},
+{
+"name": "rta-gem-columns",
+"url": "http://127.0.0.1:8761/g/rta-gem-columns/index.html?level=1",
+"w": 390,
+"h": 844,
+"keys": [
+[
+700,
+"KeyZ"
+]
+],
+"wait": 3000
+},
+{
+"name": "rta-balloon-brawl",
+"url": "http://127.0.0.1:8761/g/rta-balloon-brawl/index.html?level=1",
+"w": 390,
+"h": 844,
+"keys": [
+[
+700,
+"KeyZ"
+]
+],
+"wait": 3000
+},
+{
+"name": "rta-turbo-coast",
+"url": "http://127.0.0.1:8761/g/rta-turbo-coast/index.html?level=1",
+"w": 390,
+"h": 844,
+"keys": [
+[
+700,
+"KeyZ"
+]
+],
+"wait": 3000
+},
+{
+"name": "rta-duck-shoot",
+"url": "http://127.0.0.1:8761/g/rta-duck-shoot/index.html?level=1",
+"w": 390,
+"h": 844,
+"keys": [
+[
+700,
+"KeyZ"
+]
+],
+"wait": 3000
+}
+]

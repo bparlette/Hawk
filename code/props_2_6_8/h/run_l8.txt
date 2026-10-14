@@ -1,0 +1,21 @@
+f68: loading scene
+f239: stage lvl=8 section=L0
+f2253: taunt seen: HEH HEH!
+f2327: bark: BY THE BOOK!
+f3312: bark: BLADE AND HONOR!
+f4281: stage lvl=8 section=L1
+f4282: boss fight lvl=8 RAZORBACK
+f5727: bark: HE'S SUPERCHARGED! STAY SHARP!
+f6189: bark: STAY SHARP!
+f7077: outro lvl=8
+f7097: bark: AMBER! HANG ON!
+f7268: bark: LET'S GO HOME, AMBER!
+f7789: pizza lvl=8
+f7959: results lvl=8
+f8463: stage lvl=9 section=L0
+f8513: bark: WHERE... WHEN ARE WE?!
+f8627: bark: NINJAS. WHY IS IT ALWAYS NINJAS?
+f8734: bark: ARCHERS! WATCH THE RED MARKS!
+scripts loaded=levels/level8.js,levels/level9.js missing= SS=object
+END f=9000 scene=stage level=9 kills=3 levelsWithResults=8
+exit 0

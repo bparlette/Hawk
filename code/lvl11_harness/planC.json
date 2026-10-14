@@ -1,0 +1,7 @@
+[
+ {"until": "!!window.__L11", "wait": 200, "js": "(()=>{const S=__SS.STATE;S.enemies.forEach(e=>{e.hp=0;e.state='dying';e.t=0});S.queue=[];S.wave=4;S.locked=false;S.player.x=2595;__L11.g().evCd=99999;return 1})()"},
+ {"until": "(()=>{const b=__SS.STATE.enemies.find(e=>e.boss);return b&&b.state==='walk'})()", "wait": 200, "js": "(()=>{const b=__SS.STATE.enemies.find(e=>e.boss);b.hp=1;b.roared=true;SS.api.hitEnemy(b,5,true,1);return b.state})()"},
+ {"until": "!!__SS.STATE.outro && __SS.STATE.outro.t > 230", "shot": "s_outro_rift.png"},
+ {"until": "!!__SS.STATE.outro && __SS.STATE.outro.t > 300", "shot": "s_outro2.png"},
+ {"until": "!!__SS.STATE.outro && __SS.STATE.outro.t > 400", "shot": "s_outro_2105.png"}
+]

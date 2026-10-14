@@ -1,0 +1,16 @@
+[
+ {"wait": 1500},
+ {"js": "(()=>{const S=__SS.STATE;S.enemies=[];S.queue=[];S.wave=4;S.locked=false;S.player.x=2560;return 1})()", "wait": 1500},
+ {"js": "(()=>{const S=__SS.STATE;S.player.x=2585;return 1})()"},
+ {"until": "__SS.STATE.sec===1 && __SS.STATE.enemies.some(e=>e.boss&&e.started)", "wait": 2500, "shot": "/workspace/work/lvl13_harness/b1.png"},
+ {"js": "(()=>{const S=__SS.STATE;const b=S.enemies.find(e=>e.boss);b.state='fire';b.mv='blast';b.t=0;b.cool=200;S.player.inv=200;return [b.x,b.y]})()", "wait": 1500, "shot": "/workspace/work/lvl13_harness/b2.png"},
+ {"js": "(()=>{const S=__SS.STATE;const b=S.enemies.find(e=>e.boss);b.state='slam';b.mv='crouch';b.t=0;b.pn=1;S.player.inv=300;return 1})()", "wait": 1300, "shot": "/workspace/work/lvl13_harness/b3.png"},
+ {"js": "(()=>{const S=__SS.STATE;const b=S.enemies.find(e=>e.boss);b.state='summon';b.mv='call';b.t=0;S.player.inv=300;return 1})()", "wait": 1700, "shot": "/workspace/work/lvl13_harness/b4.png"},
+ {"js": "(()=>{const S=__SS.STATE;const b=S.enemies.find(e=>e.boss);b.hp=29;b.state='walk';b.cool=300;return 1})()", "until": "__SS.STATE.enemies.some(e=>e.boss&&e.state==='tag'&&e.t>60)", "shot": "/workspace/work/lvl13_harness/t1.png"},
+ {"until": "__SS.STATE.enemies.some(e=>e.boss&&e.state==='walk'&&e.p2)", "wait": 300, "shot": "/workspace/work/lvl13_harness/t2.png"},
+ {"js": "(()=>{const S=__SS.STATE;const b=S.enemies.find(e=>e.boss);b.state='slam';b.mv='crouch';b.t=0;b.pn=3;S.player.inv=400;window.SS&&0;return 1})()", "wait": 1100, "shot": "/workspace/work/lvl13_harness/t3.png"},
+ {"js": "(()=>{const S=__SS.STATE;const b=S.enemies.find(e=>e.boss);b.hp=1;b.inv=0;b.state='walk';SS.api.hitEnemy(b,3,true,1);return [b.state,b.hp]})()", "until": "__SS.STATE.outro && __SS.STATE.outro.t>200", "shot": "/workspace/work/lvl13_harness/o1.png"},
+ {"until": "__SS.STATE.outro && __SS.STATE.outro.st.phase===2 && __SS.STATE.outro.st.k>60", "shot": "/workspace/work/lvl13_harness/o2.png"},
+ {"until": "__SS.STATE.outro && __SS.STATE.outro.st.k>260", "shot": "/workspace/work/lvl13_harness/o3.png"},
+ {"until": "__SS.STATE.results && __SS.STATE.results.t>90", "shot": "/workspace/work/lvl13_harness/r1.png"}
+]

@@ -1,0 +1,10 @@
+[
+ {"until": "!!window.__L11", "wait": 1500, "js": "__L11.startEvent('tunnel')"},
+ {"wait": 1300, "shot": "b1.png"},
+ {"wait": 700, "shot": "b2.png"},
+ {"wait": 500, "shot": "b3.png"},
+ {"wait": 800, "shot": "b4.png"},
+ {"wait": 3000, "js": "__L11.startEvent('tower')"},
+ {"wait": 1700, "shot": "b5.png"},
+ {"wait": 500, "shot": "b6.png"}
+]

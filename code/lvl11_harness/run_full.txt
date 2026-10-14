@@ -1,0 +1,19 @@
+f68: loading scene
+f239: stage lvl=11 section=L0
+f1280: bark: STAY SHARP!
+f1908: fell in a hole lvl=11
+f2658: dodge seen
+f4046: stage lvl=11 section=L1
+f4047: boss fight lvl=11 LEATHERHEAD
+f5249: bark: HE'S EVEN STRONGER NOW! WATCH THE TUNNELS!
+f6111: outro lvl=11
+f6141: bark: WHAT'S THAT GLOW UP AHEAD?!
+f6251: bark: THE TIME RIFT! IT'S PULLING US IN!
+f6361: bark: HANG ON TO YOUR SHELLS!
+f6582: pizza lvl=11
+f6752: results lvl=11
+f8667: back to title
+after: LEVELS loaded=1,,,,,,,,,,- LVLOAD=
+scripts loaded=levels/level11.js missing=levels/level12.js SS=object
+END f=8667 scene=title level=1 kills=20 levelsWithResults=11
+exit=0

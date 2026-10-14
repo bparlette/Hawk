@@ -1,0 +1,16 @@
+f68: loading scene
+f239: stage lvl=2 section=L0
+f400: bark: FORM IS EVERYTHING!
+f1128: dodge seen
+f2022: bark: STAY SHARP!
+f3290: bark: BLADE AND HONOR!
+f3949: boss fight lvl=2 BRICKJAW
+f5476: outro lvl=2
+f5496: bark: THEY WENT DOWN THE SEWER!
+f5607: pizza lvl=2
+f5777: results lvl=2
+f6283: stage lvl=3 section=L0
+f7966: taunt seen: SLOWPOKE!
+scripts loaded=levels/level2.js,levels/level3.js missing= SS=object
+END f=9000 scene=stage level=3 kills=9 levelsWithResults=2
+exit 0

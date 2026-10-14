@@ -1,0 +1,15 @@
+shot /workspace/work/lvl15_art2/shots/sh_idle.png
+shot /workspace/work/lvl15_art2/shots/sh_fall.png
+shot /workspace/work/lvl15_art2/shots/sh_down.png
+shot /workspace/work/lvl15_art2/shots/sh_ko_0.png
+shot /workspace/work/lvl15_art2/shots/sh_ko_1.png
+shot /workspace/work/lvl15_art2/shots/sh_ko_2.png
+shot /workspace/work/lvl15_art2/shots/sh_ko_3.png
+shot /workspace/work/lvl15_art2/shots/sh_ko_4.png
+shot /workspace/work/lvl15_art2/shots/sh_ko_5.png
+shot /workspace/work/lvl15_art2/shots/sh_ko_6.png
+shot /workspace/work/lvl15_art2/shots/sh_ko_7.png
+shot /workspace/work/lvl15_art2/shots/sh_ko_8.png
+shot /workspace/work/lvl15_art2/shots/sh_ko_9.png
+shot /workspace/work/lvl15_art2/shots/sh_ko_10.png
+shot /workspace/work/lvl15_art2/shots/sh_ko_11.png

@@ -1,0 +1,8 @@
+[
+ {"until": "!!window.__L11", "wait": 200, "js": "(()=>{const S=__SS.STATE;S.enemies.forEach(e=>{e.hp=0;e.state='dying';e.t=0});S.queue=[];S.wave=4;S.locked=false;S.player.x=2595;__L11.g().evCd=99999;return 1})()"},
+ {"until": "__SS.STATE.enemies.some(e=>e.boss)", "wait": 100},
+ {"until": "(()=>{const b=__SS.STATE.enemies.find(e=>e.boss);return b&&b.state==='lurk'&&b.t>100})()", "shot": "f1.png"},
+ {"until": "(()=>{const b=__SS.STATE.enemies.find(e=>e.boss);return b&&b.state==='walk'})()", "wait": 400, "shot": "f2.png"},
+ {"js": "(()=>{const b=__SS.STATE.enemies.find(e=>e.boss);b.state='attack';b.mv='tail';b.t=0;b.hitP=false;return 1})()", "until": "(()=>{const b=__SS.STATE.enemies.find(e=>e.boss);return b.t>25})()", "shot": "f3.png"},
+ {"until": "(()=>{const b=__SS.STATE.enemies.find(e=>e.boss);return b.t>47 || b.state!=='attack'})()", "shot": "f4.png"}
+]

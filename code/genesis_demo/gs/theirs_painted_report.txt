@@ -1,0 +1,14 @@
+Size: 56x72 px (7x9 tiles)
+Colors used: 14 + transparent
+
+CRAM words (0x0BGR):
+0x0000, 0x0688, 0x0468, 0x0466, 0x0664, 0x0246, 0x0444, 0x0244, 0x0442, 0x0224, 0x0222, 0x0022, 0x0020, 0x0002, 0x0000
+
+Suggested hardware sprites (max 32x32 each):
+  #1: at (0,0) size 32x32 = 4x4 tiles
+  #2: at (32,0) size 24x32 = 3x4 tiles
+  #3: at (0,32) size 32x32 = 4x4 tiles
+  #4: at (32,32) size 24x32 = 3x4 tiles
+  #5: at (0,64) size 32x8 = 4x1 tiles
+  #6: at (32,64) size 24x8 = 3x1 tiles
+Total hardware sprites for this frame: 6

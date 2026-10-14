@@ -1,0 +1,15 @@
+[
+ {"until":"__SS.STATE.scene==='stage'","js":"window.__t0=__SS.STATE.t"},
+ {"until":"(()=>__SS.STATE.haz[2].st.list.some(d=>d.t>70))()","wait":100,"shot":"shot_gameplay.png"},
+ {"js":"(()=>{const S=__SS.STATE;S.enemies.length=0;S.queue=[];S.wave=2;S.locked=false;S.player.x=1040;S.player.y=196;})()"},
+ {"wait":400,"js":"(()=>{const S=__SS.STATE;S.haz[0].st.list[1].t=205;S.haz[1].st.list[3].t=262;S.queue=['gunner','heavy','purple'];S.player.x=1080;S.player.y=196;return S.camX})()"},
+ {"wait":300,"shot":"shot_hazard.png"},
+ {"js":"(()=>{const S=__SS.STATE;S.enemies.length=0;S.queue=[];S.fadeOut=1;})()"},
+ {"until":"(()=>{const b=__SS.STATE.enemies.find(e=>e.boss);if(b&&b.state==='throne'&&b.t<200)b.t=236;return b&&b.p1go&&b.state==='walk'})()","js":"(()=>{const S=__SS.STATE;const b=S.enemies.find(e=>e.boss);b.hp=28;S.player.x=110;})()"},
+ {"until":"(()=>{const b=__SS.STATE.enemies.find(e=>e.boss);return b&&b.state==='rage'&&b.t>128})()","shot":"shot_boss.png"},
+ {"js":"(()=>{const S=__SS.STATE;const b=S.enemies.find(e=>e.boss);b.hp=0;b.state='dying';b.t=0;})()"},
+ {"until":"__SS.STATE.outro&&__SS.STATE.outro.t>5","js":"window.ff=(n)=>{const o=__SS.STATE.outro,L=__SS.LEVELS[7];for(let i=0;i<n&&__SS.STATE.outro;i++){o.t++;if(L.outro.update(SS.api,o.st,o.t)){break}}return [o.t,o.st.broke,o.st.endT]};ff(380)"},
+ {"wait":2500,"shot":"shot_finale.png"},
+ {"js":"ff(400)"},
+ {"until":"__SS.STATE.results&&__SS.STATE.results.t>90","shot":"shot_results.png"}
+]

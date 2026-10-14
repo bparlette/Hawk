@@ -1,0 +1,10 @@
+[
+ {"wait": 1200},
+ {"js": "(()=>{const S=__SS.STATE;S.enemies=[];S.queue=[];S.wave=4;S.locked=false;S.player.x=2560;return 1})()", "wait": 1200},
+ {"js": "(()=>{const S=__SS.STATE;S.player.x=2585;return 1})()"},
+ {"until": "__SS.STATE.sec===1 && __SS.STATE.enemies.some(e=>e.boss&&e.started)"},
+ {"js": "(()=>{const S=__SS.STATE;const b=S.enemies.find(e=>e.boss);b.state='fire';b.mv='blast';b.t=0;b.cool=400;S.player.inv=900;S.player.x=60;S.player.y=b.y;return 1})()", "until": "__SS.STATE.enemies.some(e=>e.boss&&e.state==='fire'&&e.t>=47)", "shot": "/workspace/work/lvl13_harness/d1.png"},
+ {"js": "(()=>{const S=__SS.STATE;const b=S.enemies.find(e=>e.boss);b.state='summon';b.mv='call';b.t=0;b.cool=400;return 1})()", "until": "__SS.STATE.enemies.some(e=>e.boss&&e.state==='walk')", "wait": 1200, "shot": "/workspace/work/lvl13_harness/d2.png"},
+ {"js": "(()=>{const S=__SS.STATE;const b=S.enemies.find(e=>e.boss);b.state='slam';b.mv='crouch';b.t=0;b.pn=1;b.cool=400;return 1})()", "until": "__SS.STATE.enemies.some(e=>e.boss&&e.state==='stagger')", "wait": 250, "shot": "/workspace/work/lvl13_harness/d3.png"},
+ {"js": "(()=>{const S=__SS.STATE;const b=S.enemies.find(e=>e.boss);b.state='summon';b.mv='door';b.t=0;b.cool=400;return 1})()", "until": "__SS.STATE.enemies.length>=3", "wait": 600, "shot": "/workspace/work/lvl13_harness/d4.png"}
+]

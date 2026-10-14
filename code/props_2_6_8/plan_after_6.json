@@ -1,0 +1,50 @@
+[
+{
+"js": "(()=>{const S=__SS.STATE,p=S.player;S.enemies.forEach(e=>{if(!e.boss){e.x=-999;e.hp=0;e.state='dying';e.t=89;}});S.queue=[];S.locked=false;p.hp=16;p.inv=999;if(!window.__camHook){window.__camHook=1;let v=S.camX;Object.defineProperty(S,'camX',{configurable:true,get(){return window.__cam!=null?window.__cam:v},set(q){v=q}});setInterval(()=>{if(window.__noEn)__SS.STATE.enemies.forEach(e=>{if(!e.boss){e.x=-999;e.hp=0;e.state='dying';e.t=89;}});},50);}window.__noEn=1;window.__cam=230-150;p.x=230;p.y=200;p.facing=1;})()",
+"wait": 1500
+},
+{
+"js": "(()=>{const S=__SS.STATE,I=S.haz[2].st,B=S.haz[1].st;I.cd=1e9;B.cd=1e9;S.haz[3].st.cd=1e9;I.list.push({x:S.camX+200,y:180,t:30},{x:S.camX+300,y:205,t:62});B.list.push({x0:S.camX+40,y0:150,tx:S.camX+200,ty:190,t:22,T:54,big:false},{x0:S.camX+360,y0:150,tx:S.camX+260,ty:200,t:26,T:62,big:true});})()",
+"wait": 40
+},
+{
+"js": "__SS.STATE.haz[1].st.list.map(b=>[b.t,b.T,b.x0|0,b.tx|0,b.big])",
+"shot": "shots/after_l6_icicles_snowballs.png"
+},
+{
+"js": "(()=>{const S=__SS.STATE,st=S.haz[3].st;S.player.x=S.camX+60;S.player.y=208;st.ph='go';st.t=10;st.x=S.camX+200;st.dir=1;st.hit=new Set();st.y=184;S.haz[3].h._u=S.haz[3].h.update;S.haz[3].h.update=null;})()",
+"wait": 120,
+"shot": "shots/after_l6_plow_r.png"
+},
+{
+"js": "(()=>{const S=__SS.STATE,st=S.haz[3].st;st.dir=-1;st.x=S.camX+220;})()",
+"wait": 80,
+"shot": "shots/after_l6_plow_l.png"
+},
+{
+"js": "(()=>{const S=__SS.STATE;S.haz[3].h.update=S.haz[3].h._u;S.haz[3].st.ph='idle';S.haz[3].st.cd=1e9;})()",
+"wait": 50
+},
+{
+"js": "(()=>{const S=__SS.STATE,p=S.player;S.enemies.forEach(e=>{if(!e.boss){e.x=-999;e.hp=0;e.state='dying';e.t=89;}});S.queue=[];S.locked=false;p.hp=16;p.inv=999;if(!window.__camHook){window.__camHook=1;let v=S.camX;Object.defineProperty(S,'camX',{configurable:true,get(){return window.__cam!=null?window.__cam:v},set(q){v=q}});setInterval(()=>{if(window.__noEn)__SS.STATE.enemies.forEach(e=>{if(!e.boss){e.x=-999;e.hp=0;e.state='dying';e.t=89;}});},50);}window.__noEn=1;window.__cam=1110-150;p.x=1110;p.y=186;p.facing=1;})()",
+"wait": 1500,
+"shot": "shots/after_l6_ice.png"
+},
+{
+"js": "(()=>{window.__cam=null;window.__noEn=0;})()"
+},
+{
+"until": "(()=>{const S=__SS.STATE;return S.sec===1&&!!S.enemies.find(e=>e.boss&&(e.state==='walk'))})()",
+"tick": "(()=>{const S=__SS.STATE,p=S.player;p.hp=16;p.inv=999;if(S.sec===0){S.enemies.forEach(e=>{e.hp=0;e.state='dying';e.t=89;});S.queue=[];p.x=Math.min(p.x+30,S.camX+370);p.y=190;}})()",
+"tries": 600
+},
+{
+"js": "(()=>{const S=__SS.STATE,p=S.player,e=S.enemies.find(e=>e.boss);S.enemies.filter(m=>!m.boss).forEach(m=>{m.x=-999});p.inv=0;p.x=S.camX+120;p.y=190;e.x=S.camX+250;e.y=190;e.facing=-1;e.state='spray';e.t=40;e.cool=999;})()",
+"wait": 2600
+},
+{
+"js": "(()=>{const p=__SS.STATE.player;return [p.hurtT,p.inv,p.hp]})()",
+"wait": 300,
+"shot": "shots/after_l6_frozen.png"
+}
+]

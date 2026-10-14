@@ -1,0 +1,108 @@
+[
+{
+"until": "__SS.STATE.scene==='stage'",
+"js": "(()=>{const S=__SS.STATE;S.enemies.length=0;S.queue=[];S.fadeOut=1;})()"
+},
+{
+"until": "(()=>{const b=__SS.STATE.enemies.find(e=>e.boss);return b&&b.state==='throne'&&b.t>150})()",
+"wait": 50,
+"shot": "../lvl8_art/shots/s00_throne.png"
+},
+{
+"until": "(()=>{const b=__SS.STATE.enemies.find(e=>e.boss);if(b&&b.state==='throne'&&b.t<200)b.t=236;return b&&b.p1go&&b.state==='walk'})()",
+"js": "(()=>{const S=__SS.STATE,b=S.enemies.find(e=>e.boss);b.hp=b.maxHp;window.HOLD={t:0,w:0,z:0};window.CFG0=b.cfg;window.pose=(st,t,o)=>{const S=__SS.STATE,b=S.enemies.find(e=>e.boss);o=o||{};HOLD.t=t;HOLD.w=o.walkT||0;HOLD.z=o.z||0;b.cfg=Object.assign({},CFG0,{update:(api,e)=>{e.t=HOLD.t;e.walkT=HOLD.w;e.z=HOLD.z;e.vx=0;return true}});b.state=st;b.t=t;b.x=200;b.y=192;b.z=HOLD.z;b.vx=0;b.inv=9999;b.facing=1;b.walkT=HOLD.w;S.player.x=b.x+52;S.player.y=b.y+2;S.player.inv=9999;S.player.facing=-1;S.enemies.forEach(e=>{if(!e.boss)e.hp=0});return [b.state,b.t,b.x,b.y]};})()"
+},
+{
+"wait": 700,
+"shot": "../lvl8_art/shots/s01_walk_a.png"
+},
+{
+"wait": 150,
+"shot": "../lvl8_art/shots/s02_walk_b.png"
+},
+{
+"js": "pose('walk',0,null)",
+"wait": 30,
+"shot": "../lvl8_art/shots/p00_idle.png"
+},
+{
+"js": "pose('walk',10,{\"walkT\": 10})",
+"wait": 30,
+"shot": "../lvl8_art/shots/p01_walk1.png"
+},
+{
+"js": "pose('walk',28,{\"walkT\": 28})",
+"wait": 30,
+"shot": "../lvl8_art/shots/p02_walk2.png"
+},
+{
+"js": "pose('kwind',4,null)",
+"wait": 30,
+"shot": "../lvl8_art/shots/p03_kwind.png"
+},
+{
+"js": "pose('kick',8,null)",
+"wait": 30,
+"shot": "../lvl8_art/shots/p04_kick.png"
+},
+{
+"js": "pose('tele',4,null)",
+"wait": 30,
+"shot": "../lvl8_art/shots/p05_tele.png"
+},
+{
+"js": "pose('charge',3,null)",
+"wait": 30,
+"shot": "../lvl8_art/shots/p06_charge.png"
+},
+{
+"js": "pose('slam',28,{\"z\": 30})",
+"wait": 30,
+"shot": "../lvl8_art/shots/p07_slam_air.png"
+},
+{
+"js": "pose('slam',50,null)",
+"wait": 30,
+"shot": "../lvl8_art/shots/p08_slam_land.png"
+},
+{
+"js": "pose('throw',26,null)",
+"wait": 30,
+"shot": "../lvl8_art/shots/p09_throw.png"
+},
+{
+"js": "pose('fire',3,null)",
+"wait": 30,
+"shot": "../lvl8_art/shots/p10_fire.png"
+},
+{
+"js": "pose('summon',4,null)",
+"wait": 30,
+"shot": "../lvl8_art/shots/p11_summon.png"
+},
+{
+"js": "pose('hurt',2,null)",
+"wait": 30,
+"shot": "../lvl8_art/shots/p12_hurt.png"
+},
+{
+"js": "pose('stagger',5,null)",
+"wait": 30,
+"shot": "../lvl8_art/shots/p13_stagger.png"
+},
+{
+"js": "pose('down',20,null)",
+"wait": 30,
+"shot": "../lvl8_art/shots/p14_down.png"
+},
+{
+"js": "pose('getup',4,null)",
+"wait": 30,
+"shot": "../lvl8_art/shots/p15_getup.png"
+},
+{
+"js": "(()=>{const S=__SS.STATE,b=S.enemies.find(e=>e.boss);b.cfg=CFG0;b.hp=0;b.state='dying';b.t=0;b.inv=0;})()",
+"wait": 500,
+"shot": "../lvl8_art/shots/p20_ko.png"
+}
+]

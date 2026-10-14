@@ -1,0 +1,6 @@
+[
+ {"until":"__SS.STATE.scene==='stage'","js":"(()=>{const S=__SS.STATE;S.enemies.length=0;S.queue=[];S.fadeOut=1;window.__t0=S.t;})()"},
+ {"until":"(()=>{const b=__SS.STATE.enemies.find(e=>e.boss);return b&&b.p1go&&b.state==='walk'})()","js":"(()=>{const S=__SS.STATE;const b=S.enemies.find(e=>e.boss);b.hp=28;})()"},
+ {"until":"(()=>{const b=__SS.STATE.enemies.find(e=>e.boss);return b&&b.state==='rage'&&b.t>72})()","js":"(()=>{const b=__SS.STATE.enemies.find(e=>e.boss);return [b.state,b.t,b.x,b.y,b.z,__SS.STATE.enemies.length]})()","shot":"r1.png"},
+ {"until":"(()=>{const b=__SS.STATE.enemies.find(e=>e.boss);return b&&b.state==='rage'&&b.t>125})()","shot":"r2.png"}
+]

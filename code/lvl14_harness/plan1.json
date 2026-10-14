@@ -1,0 +1,11 @@
+[
+ {"until":"__SS.STATE.scene==='stage'","js":"window.__t0=__SS.STATE.t"},
+ {"until":"__SS.STATE.t-window.__t0>200","js":"__SS.STATE.player.hp=16","shot":"a1.png"},
+ {"js":"(()=>{const S=__SS.STATE;S.enemies.length=0;S.queue=[];S.wave=1;S.locked=false;S.player.x=900;S.player.y=192;window.__t0=S.t;})()"},
+ {"until":"__SS.STATE.t-window.__t0>200","js":"__SS.STATE.player.hp=16","shot":"a2.png"},
+ {"until":"__SS.STATE.t-window.__t0>320","js":"__SS.STATE.player.hp=16","shot":"a3.png"},
+ {"until":"__SS.STATE.t-window.__t0>420","js":"__SS.STATE.player.hp=16","shot":"a4.png"},
+ {"until":"__SS.STATE.t-window.__t0>520","js":"__SS.STATE.player.hp=16","shot":"a5.png"},
+ {"until":"__SS.STATE.t-window.__t0>620","js":"__SS.STATE.player.hp=16","shot":"a6.png"},
+ {"until":"__SS.STATE.t-window.__t0>720","js":"__SS.STATE.player.hp=16","shot":"a7.png"}
+]

@@ -1,0 +1,10 @@
+[
+ {"until": "__SS.STATE.enemies.some(e=>e.boss&&e.started)"},
+ {"js": "(()=>{const S=__SS.STATE;const b=S.enemies.find(e=>e.boss);b.hp=29;b.cool=999;S.player.inv=2000;S.player.x=120;return S.t})()", "until": "__SS.STATE.enemies.some(e=>e.boss&&e.state==='tag'&&e.t>=62)", "shot": "/workspace/work/lvl13_harness/t1.png"},
+ {"js": "(()=>{const b=__SS.STATE.enemies.find(e=>e.boss);return [b.state,b.t]})()"},
+ {"until": "__SS.STATE.enemies.some(e=>e.boss&&e.who==='granitor'&&e.state==='tag'&&e.t>=130)", "shot": "/workspace/work/lvl13_harness/t2.png"},
+ {"js": "(()=>{const S=__SS.STATE;const b=S.enemies.find(e=>e.boss);b.state='slam';b.mv='crouch';b.t=0;b.pn=3;b.cool=999;return [S.t]})()", "until": "__SS.STATE.enemies.some(e=>e.boss&&e.mv==='hop'&&e.t>=12)", "shot": "/workspace/work/lvl13_harness/t3.png"},
+ {"js": "(()=>{const b=__SS.STATE.enemies.find(e=>e.boss);return [b.state,b.mv,b.t,b.pn]})()"},
+ {"until": "__SS.STATE.enemies.some(e=>e.boss&&e.state==='stagger')", "shot": "/workspace/work/lvl13_harness/t4.png"},
+ {"js": "(()=>{const b=__SS.STATE.enemies.find(e=>e.boss);return [b.state,b.mv,b.t,b.pn,__SS.STATE.t]})()"}
+]
