@@ -1514,6 +1514,40 @@
       "note": "Pasted by Brad 2026-10-13 (second attempt by the other AI), added as-is with no fixes.",
       "path": "g/viral-overdrive-2/index.html",
       "thumb": "thumbs/viral-overdrive.webp?v=1791937634"
+    },
+    {
+      "id": "drift-survivors-after-hark",
+      "title": "DRIFT SURVIVORS — Toon 3D Fan Game - after harkinstructions",
+      "category": "Originals",
+      "keys": {
+        "up": "KeyW",
+        "down": "KeyS",
+        "left": "KeyA",
+        "right": "KeyD",
+        "attack": "Space",
+        "jump": "KeyF",
+        "special": "KeyE",
+        "start": "Enter"
+      },
+      "labels": {
+        "attack": "SPACE · DODGE",
+        "jump": "F · HOOK",
+        "special": "E · EMP"
+      },
+      "extras": [
+        {
+          "label": "PAUSE",
+          "key": "KeyP"
+        },
+        {
+          "label": "MUTE",
+          "key": "KeyM"
+        }
+      ],
+      "autostart": [],
+      "orientation": "any",
+      "note": "Pasted by Brad 2026-10-13: the other AI's official remake after reading Hark's instructions. Added as-is with no fixes.",
+      "path": "g/drift-survivors-after-hark/index.html"
     }
   ]
 }
