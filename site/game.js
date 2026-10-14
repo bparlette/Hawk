@@ -20870,6 +20870,7 @@ const GPRIX = (function () {
   #crimechip.on { display: block; }
   #crimechip .cr1, #crimechip .cr2 { display: flex; justify-content: space-between; white-space: nowrap; overflow: hidden; }
   #crimechip .cr2 { color: #ff9ad0; margin-top: 2px; }
+  #crimechip .cr2 span { flex: 1 1 auto; min-width: 0; overflow: hidden; text-overflow: ellipsis; margin-right: 5px; } #crimechip .cr2 b { flex: none; }
   #crimechip .cr2.clr { color: #7dff6b; }
   #crimechip .bar { height: 5px; background: #000; margin-top: 3px; border: 1px solid #000; }
   #crimechip .bar i { display: block; height: 100%; width: 100%; background: #ff3d6e; transition: width .6s; }
@@ -20889,7 +20890,7 @@ const GPRIX = (function () {
     const lv = L && bc.crime[L.id] !== undefined ? bc.crime[L.id] : null;
     const k = city + '|' + (L ? L.id : '') + '|' + lv; if (k === key) return; key = k;
     cityB.textContent = city + '%'; bar.style.width = city + '%'; bar.style.background = city === 0 ? '#7dff6b' : city < 50 ? '#ffd23c' : '#ff3d6e';
-    if (L && lv !== null) { dN.textContent = L.name.length > 15 ? L.name.slice(0, 14) + '.' : L.name; dV.textContent = lv === 0 ? 'CLEAR' : lv + '%'; dist.classList.toggle('clr', lv === 0); dist.style.visibility = 'visible'; }
+    if (L && lv !== null) { dN.textContent = L.name; dV.textContent = lv === 0 ? 'CLEAR' : lv + '%'; dist.classList.toggle('clr', lv === 0); dist.style.visibility = 'visible'; }
     else { dN.textContent = 'OUT ON THE STREETS'; dV.textContent = ''; dist.classList.remove('clr'); dist.style.visibility = 'visible'; }
   }
   setInterval(refresh, 400); BOSS_CLEAR.on(() => { key = ''; setTimeout(refresh, 0); }); setTimeout(refresh, 0);
