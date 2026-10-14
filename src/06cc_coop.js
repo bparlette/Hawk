@@ -167,6 +167,7 @@ const COOP = (function () {
     if (!C.on) return;
     const H = hero, P = partner; let dx = P.pos.x - H.pos.x, dz = P.pos.z - H.pos.z, sep = Math.hypot(dx, dz);
     const scripted = CINE.intro || PART.over || CINE_ST.has(H.state) || !P2FREE.has(P.state), levels = !!H.roof !== !!P.roof, MS = MAXSEP();
+    C.dbg = { intro: !!CINE.intro, over: PART.over, hs: H.state, ps: P.state, levels, sep: +sep.toFixed(2) };
     if (!C.split) {
       // 1. held at the edge: remove the away-from-partner part of this step's motion (walking, knockback, jumps alike)
       if (!scripted && !levels && sep > MS) {
@@ -226,7 +227,7 @@ const COOP = (function () {
     setFov(58, camera, aspect); const vf = camera.fov * Math.PI / 180, hf = 2 * Math.atan(Math.tan(vf / 2) * aspect);
     const half = sep / 2 + 1.8, want = Math.max(4.6 + (portrait ? 1.4 : 0), half / Math.tan(Math.min(vf, hf) / 2) * 1.05);
     SH.dist = damp(SH.dist, want, 2.4, rdt);
-    const pitch = clamp(SH.pitch + sk * 0.42, 0.05, 1.05), f = camFwd(SH.yaw), cp = Math.cos(pitch), spp = Math.sin(pitch);
+    const pitch = clamp(SH.pitch + sk * 0.55, 0.05, 1.1), f = camFwd(SH.yaw), cp = Math.cos(pitch), spp = Math.sin(pitch);
     const px = SH.pivot.x, py = SH.pivot.y, pz = SH.pivot.z, wx = px - f[0] * SH.dist * cp, wy = py + SH.dist * spp, wz = pz - f[1] * SH.dist * cp;
     let t = 1; for (const b of BLD) { if (b.x1 < Math.min(px, wx) - 1 || b.x0 > Math.max(px, wx) + 1 || b.z1 < Math.min(pz, wz) - 1 || b.z0 > Math.max(pz, wz) + 1) continue; const hh = segBox(px, py, pz, wx, wy, wz, b, 0.3); if (hh < t) t = hh; }
     const d = Math.max(sep > 3 ? SH.dist * 0.72 : 0.9, SH.dist * t - 0.15);

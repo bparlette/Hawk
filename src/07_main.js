@@ -157,7 +157,7 @@ function frame(now) {
     if (FMAP.F.open) { FMAP.frame(rdt); return; } // full-screen map open: the game is paused (no sim, no 3D draw; the canvas keeps its last frame)
     if (FORT.on) { FORT.frame(rdt); return; } // Fort McHenry set piece: its own scene + loop (src/09_fort.js)
     FORT.world();
-    if (window.__cel && __cel.pause) { draw(); return; }
+    if (window.__cel && __cel.pause) { if (COOP.on && COOP.split()) COOP.draw(); else draw(); return; }
     if (MODE.duel) { MODE.duel.frame(rdt); return; } // a boss duel owns input, sim and the draw
     if (RB.mode) { RB.frame(rdt); return; } // racer bosses (src/06h_racers.js): Al's chase / the Duchess's arena (own scenes) or a harbour boat ride
     if (BOT) botThink(rdt);
