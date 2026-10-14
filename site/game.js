@@ -20871,6 +20871,7 @@ const GPRIX = (function () {
   #crimechip .cr1, #crimechip .cr2 { display: flex; justify-content: space-between; white-space: nowrap; overflow: hidden; }
   #crimechip .cr2 { color: #ff9ad0; margin-top: 2px; }
   #crimechip .cr2 span { flex: 1 1 auto; min-width: 0; overflow: hidden; text-overflow: ellipsis; margin-right: 5px; } #crimechip .cr2 b { flex: none; }
+  #crimechip .cr3 { display: none; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-top: 2px; font-size: 6px; }
   #crimechip .cr2.clr { color: #7dff6b; }
   #crimechip .bar { height: 5px; background: #000; margin-top: 3px; border: 1px solid #000; }
   #crimechip .bar i { display: block; height: 100%; width: 100%; background: #ff3d6e; transition: width .6s; }
@@ -20878,21 +20879,61 @@ const GPRIX = (function () {
   body.cine #crimechip, body.duel #crimechip, body.fort #crimechip, body.derby #crimechip, body.vicfight #crimechip, body.rbmode #crimechip, body.finale #crimechip { display: none !important; }`;
   document.head.appendChild(st);
   const el = document.createElement('div'); el.id = 'crimechip'; el.className = 'ui';
-  el.innerHTML = '<div class="cr1"><span>CITY CRIME</span><b></b></div><div class="bar"><i></i></div><div class="cr2"><span></span><b></b></div>';
+  el.innerHTML = '<div class="cr1"><span>CITY CRIME</span><b></b></div><div class="bar"><i></i></div><div class="cr2"><span></span><b></b></div><div class="cr3"></div>';
   document.body.appendChild(el);
-  const q = (s) => el.querySelector(s), cityB = q('.cr1 b'), bar = q('.bar i'), dist = q('.cr2'), dN = q('.cr2 span'), dV = q('.cr2 b');
+  const q = (s) => el.querySelector(s), cityB = q('.cr1 b'), bar = q('.bar i'), dist = q('.cr2'), dN = q('.cr2 span'), dV = q('.cr2 b'), gang = q('.cr3');
   const HIDE = /\b(cine|duel|fort|derby|vicfight|rbmode|finale)\b/;
   let key = '';
   function refresh() {
-    const bc = BOSS_CLEAR, city = bc.cityCrime(), L = (typeof CITY !== 'undefined') ? CITY.lmk : null;
+    const bc = BOSS_CLEAR, GW = (typeof GANGWIRE !== 'undefined') ? GANGWIRE : null, city = GW ? GW.cityCrime() : bc.cityCrime(), L = (typeof CITY !== 'undefined') ? CITY.lmk : null;
     const saved = document.getElementById('fcrime'); const hide = HIDE.test(document.body.className) || (saved && saved.classList.contains('on')) || (typeof MODE !== 'undefined' && MODE.duel) || (typeof FMAP !== 'undefined' && FMAP.F && FMAP.F.open);
     el.classList.toggle('on', !hide);
-    const lv = L && bc.crime[L.id] !== undefined ? bc.crime[L.id] : null;
-    const k = city + '|' + (L ? L.id : '') + '|' + lv; if (k === key) return; key = k;
+    const lv = L && bc.crime[L.id] !== undefined ? (GW ? GW.districtCrime(L.id) : bc.crime[L.id]) : null;
+    const gg = L && GW ? GW.gangAt(L.id) : null, gk = gg ? gg.name + ' ' + Math.min(GW.kos[L.id] || 0, GW.need(L.id)) + '/' + GW.need(L.id) : '';
+    const k = city + '|' + (L ? L.id : '') + '|' + lv + '|' + gk; if (k === key) return; key = k;
     cityB.textContent = city + '%'; bar.style.width = city + '%'; bar.style.background = city === 0 ? '#7dff6b' : city < 50 ? '#ffd23c' : '#ff3d6e';
+    gang.textContent = gg && lv !== 0 ? gk.replace(/ (\d+)\/(\d+)$/, '  $1/$2 DOWN') : ''; gang.style.display = gang.textContent ? 'block' : 'none'; gang.style.color = gg ? gg.accent : '';
     if (L && lv !== null) { dN.textContent = L.name; dV.textContent = lv === 0 ? 'CLEAR' : lv + '%'; dist.classList.toggle('clr', lv === 0); dist.style.visibility = 'visible'; }
     else { dN.textContent = 'OUT ON THE STREETS'; dV.textContent = ''; dist.classList.remove('clr'); dist.style.visibility = 'visible'; }
   }
   setInterval(refresh, 400); BOSS_CLEAR.on(() => { key = ''; setTimeout(refresh, 0); }); setTimeout(refresh, 0);
-  window.__crime = { text: () => el.innerText, city: () => BOSS_CLEAR.cityCrime(), clear: (id) => BOSS_CLEAR.clear(id), goto: (id) => { const l = LANDMARKS.find((x) => x.id === id); if (l) { hero.pos.x = l.x; hero.pos.z = l.z; } return !!l; }, ids: () => LANDMARKS.map((x) => x.id), shown: () => el.classList.contains('on') && getComputedStyle(el).display !== 'none' };
+  window.__crime = { text: () => el.innerText, city: () => (typeof GANGWIRE !== 'undefined' ? GANGWIRE.cityCrime() : BOSS_CLEAR.cityCrime()), clear: (id) => BOSS_CLEAR.clear(id), goto: (id) => { const l = LANDMARKS.find((x) => x.id === id); if (l) { hero.pos.x = l.x; hero.pos.z = l.z; } return !!l; }, ids: () => LANDMARKS.map((x) => x.id), shown: () => el.classList.contains('on') && getComputedStyle(el).display !== 'none' };
+})();
+// ---------------- item l part 2: GANG TURF (the five Task C gangs + the live thug posts) and thug-driven district crime ----------------
+// Every street thug post belongs to the gang that holds the nearest landmark (Harbor Rats north shore, Pier Gulls piers, Cobblestone Catfish
+// Fells Point/Pendry, Masked Bandits west side + Lexington, Key Hwy Otters south shore). Stand-in thugs keep the shared rig (Opus gang rigs drop in
+// later behind buildGangThug(gangId, member)); each gets its gang colour on its hp pip. Knocking thugs out chips their district's crime from 100
+// down to 40; beating the district boss takes it to 0 (BOSS_CLEAR). The HUD chip (09zh) shows GANGWIRE.districtCrime / cityCrime and the gang row.
+// Test hooks: window.__gang = { gangs(), of(id), kos(), crime(id), city(), ko(id, n), reset() }.
+const GANGWIRE = (function () {
+  const GANGS = [
+    { id: 'harbor_rats', name: 'HARBOR RATS', short: 'RATS', accent: '#ffd23c', lm: ['harborplace', 'constellation', 'wtc', 'monument'] },
+    { id: 'pier_gulls', name: 'PIER GULLS', short: 'GULLS', accent: '#2f5bd3', lm: ['aquarium', 'powerplant', 'fourseasons'] },
+    { id: 'cobble_catfish', name: 'COBBLESTONE CATFISH', short: 'CATFISH', accent: '#1fd3c6', lm: ['fells', 'pendry', 'fort'] },
+    { id: 'masked_bandits', name: 'MASKED BANDITS', short: 'BANDITS', accent: '#ff9f1c', lm: ['orioles', 'ravens', 'science', 'lexington', 'duckpin'] },
+    { id: 'key_hwy_otters', name: 'KEY HWY OTTERS', short: 'OTTERS', accent: '#c47a3a', lm: ['domino', 'underarmour', 'fedhill', 'rashfield'] },
+  ];
+  const LS = 'tcb_gang_kos', FLOOR = 40; let kos = {}; try { kos = JSON.parse(localStorage.getItem(LS) || '{}') || {}; } catch (e) {}
+  const byLm = {}; for (const g of GANGS) for (const l of g.lm) byLm[l] = g;
+  const posts = {}; // landmark id -> thug posts in its district
+  function nearestLm(x, z) { let best = null, bd = 1e9; for (const L of LANDMARKS) { if (!byLm[L.id] || L.id === 'rashfield' && false) continue; const d = Math.hypot(L.x - x, L.z - z); if (d < bd) { bd = d; best = L; } } return best; }
+  for (const e of enemies) { const L = nearestLm(e.post.x, e.post.z); if (!L) continue; e.gang = byLm[L.id]; e.turf = L.id; posts[L.id] = (posts[L.id] || 0) + 1; }
+  const need = (id) => Math.max(6, 3 * (posts[id] || 0)); // knock-outs that break a district's street gang
+  function districtCrime(id) {
+    if (typeof BOSS_CLEAR === 'undefined') return 100; if (BOSS_CLEAR.cleared.has(id) || BOSS_CLEAR.crime[id] === 0) return 0;
+    if (!byLm[id]) return BOSS_CLEAR.crime[id] === undefined ? 100 : BOSS_CLEAR.crime[id];
+    return 100 - Math.round((100 - FLOOR) * Math.min(1, (kos[id] || 0) / need(id)));
+  }
+  function cityCrime() { if (typeof BOSS_CLEAR === 'undefined') return 100; const k = Object.keys(BOSS_CLEAR.crime); return k.length ? Math.round(k.reduce((a, id) => a + districtCrime(id), 0) / k.length) : 0; }
+  const ev = []; const G = { GANGS, byLm, posts, kos, ev, districtCrime, cityCrime, need, gangAt: (id) => byLm[id] || null };
+  // gang colour strip on each thug's hp pip
+  if (typeof drawHp === 'function') { const _d = drawHp; drawHp = function (e) { _d(e); if (!e.gang) return; const c = e.hpC.getContext('2d'); c.fillStyle = e.gang.accent; c.fillRect(0, 0, 128, 3); e.hpT.needsUpdate = true; }; }
+  function koIn(id, n) { const before = districtCrime(id); kos[id] = (kos[id] || 0) + (n || 1); try { localStorage.setItem(LS, JSON.stringify(kos)); } catch (e) {}
+    if (before > FLOOR && districtCrime(id) === FLOOR) { const L = LANDMARKS.find((l) => l.id === id), g = byLm[id]; ev.push('broken:' + id); if (typeof banner === 'function' && g && L) banner(g.short + ' BROKEN!', 2.6); } }
+  // count every thug knock-out once (a dead thug respawns after 14 s, which clears the flag)
+  const seen = new Set();
+  setInterval(() => { for (const e of enemies) { if (e.state === 'dead') { if (!seen.has(e.id)) { seen.add(e.id); if (e.turf) koIn(e.turf, 1); } } else if (seen.has(e.id)) seen.delete(e.id); } }, 250);
+  window.__gang = { gangs: () => GANGS.map((g) => g.id), of: (id) => (byLm[id] ? byLm[id].id : null), kos: () => Object.assign({}, kos), crime: districtCrime, city: cityCrime, need, ko: (id, n) => koIn(id, n), posts: () => Object.assign({}, posts),
+    reset: () => { for (const k of Object.keys(kos)) delete kos[k]; try { localStorage.removeItem(LS); } catch (e) {} }, tagged: () => enemies.filter((e) => e.gang).length, total: () => enemies.length };
+  return G;
 })();
