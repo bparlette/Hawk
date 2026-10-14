@@ -3,540 +3,792 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>BIG BUMPIN' 3D - Comic Book Bumper Cars</title>
+  <title>BIG BUMPIN' - Broiler Arena Replica</title>
   <link href="https://fonts.googleapis.com/css2?family=Bangers&display=swap" rel="stylesheet">
   <style>
     * { box-sizing: border-box; user-select: none; margin: 0; padding: 0; }
-    body, html { width: 100%; height: 100%; overflow: hidden; background: #1a1a1a; font-family: 'Bangers', cursive, sans-serif; }
-    
-    /* Comic Book Halftone & Frame Overlay */
-    #comic-overlay {
+    body, html { width: 100%; height: 100%; overflow: hidden; background: #0d0d0d; font-family: 'Bangers', cursive; }
+
+    /* Comic Halftone & Ink Frame */
+    #comic-frame {
       position: absolute; inset: 0; pointer-events: none; z-index: 5;
-      background-image: radial-gradient(rgba(0,0,0,0.18) 1px, transparent 0);
-      background-size: 6px 6px;
-      border: 10px solid #000;
-      box-shadow: inset 0 0 0 4px #ffbe0b, inset 0 0 40px rgba(0,0,0,0.85);
+      background-image: radial-gradient(rgba(0,0,0,0.22) 1px, transparent 0);
+      background-size: 5px 5px;
+      border: 8px solid #000;
+      box-shadow: inset 0 0 0 4px #ffbe0b, inset 0 0 60px rgba(0,0,0,0.9);
     }
 
-    /* HUD */
+    /* Top Player Status Bars (Authentic 4-Corner Arcade HUD) */
     #hud {
-      position: absolute; top: 20px; left: 20px; right: 20px; z-index: 10;
-      display: flex; justify-content: space-between; pointer-events: none;
+      position: absolute; top: 16px; left: 16px; right: 16px; z-index: 10;
+      display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; pointer-events: none;
     }
-    .score-card {
-      background: #ffbe0b; border: 4px solid #000; padding: 8px 18px;
-      box-shadow: 6px 6px 0 #000; transform: skew(-6deg);
-      color: #000; font-size: 24px; letter-spacing: 1px;
+    .p-hud {
+      background: #1a1a1a; border: 4px solid #000; padding: 8px 12px;
+      box-shadow: 5px 5px 0 #000; transform: skew(-4deg); color: #fff;
     }
-    .score-card span { color: #d90429; font-size: 30px; margin-left: 8px; }
+    .p-header { display: flex; justify-content: space-between; font-size: 22px; letter-spacing: 1px; margin-bottom: 4px; }
+    .hp-bar-bg { width: 100%; height: 14px; background: #333; border: 2px solid #000; margin-bottom: 4px; position: relative; }
+    .hp-bar-fill { height: 100%; width: 100%; background: linear-gradient(90deg, #ef233c, #ffbe0b, #38b000); transition: width 0.1s; }
+    .heat-bar-bg { width: 100%; height: 7px; background: #222; border: 1px solid #000; }
+    .heat-bar-fill { height: 100%; width: 0%; background: #ff0055; transition: width 0.1s; }
+    .p-powerup { font-size: 16px; color: #00f5d4; margin-top: 3px; height: 18px; }
 
-    /* Menu Overlay */
-    #menu {
-      position: absolute; inset: 0; z-index: 20;
-      background: radial-gradient(circle, rgba(255,190,11,0.92) 0%, rgba(217,4,41,0.96) 100%);
-      display: flex; flex-direction: column; align-items: center; justify-content: center;
-      text-align: center; padding: 20px;
+    /* Bottom Player Dashboard */
+    #bottom-hud {
+      position: absolute; bottom: 20px; left: 24px; right: 24px; z-index: 10;
+      display: flex; justify-content: space-between; align-items: flex-end; pointer-events: none;
     }
-    h1 {
-      font-size: 84px; color: #ffbe0b; -webkit-text-stroke: 4px #000;
-      text-shadow: 8px 8px 0 #000; transform: rotate(-3deg); margin-bottom: 10px;
+    #weapon-box {
+      background: #ffbe0b; border: 5px solid #000; padding: 10px 22px;
+      box-shadow: 7px 7px 0 #000; transform: rotate(-2deg); color: #000;
     }
-    h2 {
-      font-size: 32px; color: #fff; -webkit-text-stroke: 2px #000;
-      text-shadow: 4px 4px 0 #000; margin-bottom: 30px; letter-spacing: 2px;
+    #weapon-box .lbl { font-size: 18px; color: #d90429; }
+    #weapon-box .val { font-size: 36px; }
+    #controls-bar {
+      background: #fff; border: 4px solid #000; padding: 8px 18px;
+      box-shadow: 5px 5px 0 #000; font-size: 20px; color: #000; pointer-events: auto;
     }
-    .btn-group { display: flex; gap: 20px; flex-wrap: wrap; justify-content: center; }
-    .comic-btn {
-      font-family: 'Bangers', cursive; font-size: 32px; padding: 14px 34px;
-      background: #fff; color: #000; border: 5px solid #000;
-      box-shadow: 8px 8px 0 #000; cursor: pointer; transform: skew(-5deg);
-      transition: transform 0.1s, background 0.1s;
+    .cam-btn {
+      font-family: 'Bangers', cursive; font-size: 18px; padding: 4px 12px; margin-left: 10px;
+      background: #00f5d4; border: 3px solid #000; cursor: pointer;
     }
-    .comic-btn:hover { background: #00f5d4; transform: skew(-5deg) scale(1.06); }
-    .comic-btn:active { transform: skew(-5deg) translate(4px, 4px); box-shadow: 4px 4px 0 #000; }
 
-    /* Comic Action Words ("WHOP!", "BAM!") */
-    #popups { position: absolute; inset: 0; pointer-events: none; z-index: 15; overflow: hidden; }
-    .comic-word {
-      position: absolute; font-size: 56px; color: #ffbe0b;
+    /* Comic Onomatopoeia Popups */
+    #popups { position: absolute; inset: 0; pointer-events: none; z-index: 12; overflow: hidden; }
+    .comic-pop {
+      position: absolute; font-size: 52px; color: #ffbe0b;
       -webkit-text-stroke: 3px #000; text-shadow: 5px 5px 0 #d90429;
       transform: translate(-50%, -50%) scale(0);
-      animation: popAnim 0.65s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+      animation: bang 0.6s cubic-bezier(0.18, 0.89, 0.32, 1.28) forwards;
     }
-    @keyframes popAnim {
-      0% { transform: translate(-50%, -50%) scale(0) rotate(-15deg); opacity: 1; }
-      50% { transform: translate(-50%, -50%) scale(1.3) rotate(8deg); opacity: 1; }
-      100% { transform: translate(-50%, -80%) scale(0.9) rotate(0deg); opacity: 0; }
+    @keyframes bang {
+      0% { transform: translate(-50%, -50%) scale(0) rotate(-12deg); opacity: 1; }
+      55% { transform: translate(-50%, -50%) scale(1.25) rotate(6deg); opacity: 1; }
+      100% { transform: translate(-50%, -85%) scale(0.9) rotate(0deg); opacity: 0; }
     }
 
-    #controls-hint {
-      position: absolute; bottom: 22px; left: 50%; transform: translateX(-50%);
-      z-index: 10; background: #fff; border: 4px solid #000; padding: 6px 20px;
-      box-shadow: 5px 5px 0 #000; font-size: 22px; letter-spacing: 1px; pointer-events: none;
+    /* Lobby Menu */
+    #menu {
+      position: absolute; inset: 0; z-index: 30;
+      background: radial-gradient(circle, rgba(255,190,11,0.94) 0%, rgba(180,0,20,0.98) 100%);
+      display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center;
     }
+    h1 { font-size: 92px; color: #ffbe0b; -webkit-text-stroke: 4px #000; text-shadow: 9px 9px 0 #000; transform: rotate(-2deg); }
+    h2 { font-size: 30px; color: #fff; -webkit-text-stroke: 1.5px #000; text-shadow: 3px 3px 0 #000; margin: 10px 0 28px; }
+    .btn-row { display: flex; gap: 20px; flex-wrap: wrap; justify-content: center; }
+    .btn {
+      font-family: 'Bangers', cursive; font-size: 32px; padding: 14px 32px;
+      background: #fff; color: #000; border: 5px solid #000; box-shadow: 7px 7px 0 #000;
+      cursor: pointer; transform: skew(-5deg); transition: 0.1s;
+    }
+    .btn:hover { background: #00f5d4; transform: skew(-5deg) scale(1.06); }
   </style>
 
-  <!-- Three.js & PlayroomKit CDN -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
   <script src="https://unpkg.com/playroomkit/multiplayer.full.umd.js"></script>
 </head>
 <body>
 
-  <div id="comic-overlay"></div>
+  <div id="comic-frame"></div>
 
   <div id="hud">
-    <div class="score-card" id="p0-card">👑 THE KING: <span id="s0">0</span></div>
-    <div class="score-card" id="p1-card">🐔 CHICKEN: <span id="s1">0</span></div>
-    <div class="score-card" id="p2-card">🍔 WHOPPER KID: <span id="s2">0</span></div>
-    <div class="score-card" id="p3-card">🥤 SHAKE BOT: <span id="s3">0</span></div>
+    <div class="p-hud">
+      <div class="p-header"><span>👑 THE KING</span><span id="k0">0 KOs</span></div>
+      <div class="hp-bar-bg"><div class="hp-bar-fill" id="hp0"></div></div>
+      <div class="heat-bar-bg"><div class="heat-bar-fill" id="ht0"></div></div>
+      <div class="p-powerup" id="pw0">READY</div>
+    </div>
+    <div class="p-hud">
+      <div class="p-header"><span>🐔 CHICKEN</span><span id="k1">0 KOs</span></div>
+      <div class="hp-bar-bg"><div class="hp-bar-fill" id="hp1"></div></div>
+      <div class="heat-bar-bg"><div class="heat-bar-fill" id="ht1"></div></div>
+      <div class="p-powerup" id="pw1">READY</div>
+    </div>
+    <div class="p-hud">
+      <div class="p-header"><span>🧒 WHOPPER JR</span><span id="k2">0 KOs</span></div>
+      <div class="hp-bar-bg"><div class="hp-bar-fill" id="hp2"></div></div>
+      <div class="heat-bar-bg"><div class="heat-bar-fill" id="ht2"></div></div>
+      <div class="p-powerup" id="pw2">READY</div>
+    </div>
+    <div class="p-hud">
+      <div class="p-header"><span>🍔 BROILER BOT</span><span id="k3">0 KOs</span></div>
+      <div class="hp-bar-bg"><div class="hp-bar-fill" id="hp3"></div></div>
+      <div class="heat-bar-bg"><div class="heat-bar-fill" id="ht3"></div></div>
+      <div class="p-powerup" id="pw3">READY</div>
+    </div>
   </div>
 
   <div id="popups"></div>
 
-  <div id="controls-hint">WASD / ARROWS: Drive & Steer &nbsp;|&nbsp; SPACE: Flame-Broiled Boost!</div>
+  <div id="bottom-hud">
+    <div id="weapon-box">
+      <div class="lbl">EQUIPPED POWER-UP (SPACE / E)</div>
+      <div class="val" id="my-weapon">NONE - COLLECT BARRELS!</div>
+    </div>
+    <div id="controls-bar">
+      <b>W/S</b>: Gas/Rev &nbsp;|&nbsp; <b>A/D</b>: Steer &nbsp;|&nbsp; <b>SPACE</b>: Use Power-Up / Ram
+      <button class="cam-btn" id="cam-toggle">🎥 CAM: CHASE (C)</button>
+    </div>
+  </div>
 
   <div id="menu">
-    <h1>BIG BUMPIN' 3D</h1>
-    <h2>FLAME-BROILED COMIC BOOK ARENA (1-4 PLAYERS)</h2>
-    <div class="btn-group">
-      <button class="comic-btn" id="btn-solo">SOLO VS 3 BOTS (INSTANT)</button>
-      <button class="comic-btn" id="btn-online">1-4P ONLINE LOBBY</button>
+    <h1>BIG BUMPIN'</h1>
+    <h2>THE BROILER ARENA — WALLED CARNIVAL BUMPER CARS</h2>
+    <div class="btn-row">
+      <button class="btn" id="start-solo">PLAY BROILER ARENA (VS BOTS)</button>
+      <button class="btn" id="start-online">1-4P ONLINE MULTIPLAYER</button>
     </div>
   </div>
 
   <script>
-    // --- 1. SCENE, CAMERA & RENDERER ---
+    // --- 1. CORE SCENE & TOON SHADER PIPELINE ---
     const scene = new THREE.Scene();
-    scene.background = new THREE.Color(0x2b2d42);
+    scene.background = new THREE.Color(0x191224);
+    scene.fog = new THREE.FogExp2(0x191224, 0.008);
 
-    const camera = new THREE.PerspectiveCamera(50, window.innerWidth / window.innerHeight, 0.1, 1000);
-    camera.position.set(0, 28, 30);
-    camera.lookAt(0, 0, 0);
-
+    const camera = new THREE.PerspectiveCamera(58, window.innerWidth / window.innerHeight, 0.1, 500);
     const renderer = new THREE.WebGLRenderer({ antialias: true });
     renderer.setSize(window.innerWidth, window.innerHeight);
     renderer.shadowMap.enabled = true;
     document.body.appendChild(renderer.domElement);
 
-    // --- 2. COMIC BOOK CEL-SHADING & OUTLINE HELPERS ---
-    function createToonGradient() {
-      const data = new Uint8Array([45, 135, 255]);
-      const texture = new THREE.DataTexture(data, 3, 1, THREE.LuminanceFormat);
-      texture.minFilter = THREE.NearestFilter;
-      texture.magFilter = THREE.NearestFilter;
-      texture.needsUpdate = true;
-      return texture;
-    }
-    const gradientMap = createToonGradient();
+    // 4-Band Comic Book Cel-Shading Texture
+    const toonData = new Uint8Array([35, 110, 190, 255]);
+    const toonTex = new THREE.DataTexture(toonData, 4, 1, THREE.LuminanceFormat);
+    toonTex.minFilter = THREE.NearestFilter;
+    toonTex.magFilter = THREE.NearestFilter;
+    toonTex.needsUpdate = true;
 
-    function comicMat(hex) {
-      return new THREE.MeshToonMaterial({ color: hex, gradientMap });
+    function toonMat(color, emissive = 0x000000) {
+      return new THREE.MeshToonMaterial({ color, emissive, gradientMap: toonTex });
     }
 
-    function addComicOutline(mesh, thickness = 1.07) {
-      const outlineMat = new THREE.MeshBasicMaterial({ color: 0x000000, side: THREE.BackSide });
-      const outline = new THREE.Mesh(mesh.geometry, outlineMat);
-      outline.scale.setScalar(thickness);
-      mesh.add(outline);
+    function addInkOutline(mesh, scale = 1.06) {
+      const outMat = new THREE.MeshBasicMaterial({ color: 0x000000, side: THREE.BackSide });
+      const outMesh = new THREE.Mesh(mesh.geometry, outMat);
+      outMesh.scale.setScalar(scale);
+      mesh.add(outMesh);
     }
 
-    // Lighting
-    const dirLight = new THREE.DirectionalLight(0xffffff, 1.2);
-    dirLight.position.set(15, 30, 15);
-    dirLight.castShadow = true;
-    scene.add(dirLight);
-    scene.add(new THREE.AmbientLight(0xffffff, 0.55));
+    // Carnival Arena Lighting
+    const ambient = new THREE.AmbientLight(0xffffff, 0.6);
+    scene.add(ambient);
+    const mainLight = new THREE.DirectionalLight(0xfff1d0, 1.2);
+    mainLight.position.set(20, 45, 25);
+    mainLight.castShadow = true;
+    scene.add(mainLight);
 
-    // --- 3. BUILD THE "BROILER PIT" ARENA ---
-    const ARENA_RADIUS = 16;
-    const arenaGroup = new THREE.Group();
-    scene.add(arenaGroup);
+    // --- 2. BUILD "THE BROILER" WALLED OCTAGONAL BUMPER-CAR RINK ---
+    const ARENA_SIZE = 28;
+    const arena = new THREE.Group();
+    scene.add(arena);
 
-    // Main Platform
-    const floorGeo = new THREE.CylinderGeometry(ARENA_RADIUS, ARENA_RADIUS - 1.5, 2, 32);
-    const floorMesh = new THREE.Mesh(floorGeo, comicMat(0xf77f00));
-    floorMesh.position.y = -1;
-    floorMesh.receiveShadow = true;
-    addComicOutline(floorMesh, 1.02);
-    arenaGroup.add(floorMesh);
+    // Checkerboard Metallic Bumper Floor
+    const floorCanvas = document.createElement('canvas');
+    floorCanvas.width = 512; floorCanvas.height = 512;
+    const ctx = floorCanvas.getContext('2d');
+    for (let y = 0; y < 8; y++) {
+      for (let x = 0; x < 8; x++) {
+        ctx.fillStyle = (x + y) % 2 === 0 ? '#2b2d42' : '#3a3d56';
+        ctx.fillRect(x * 64, y * 64, 64, 64);
+        ctx.strokeStyle = '#000'; ctx.lineWidth = 4;
+        ctx.strokeRect(x * 64, y * 64, 64, 64);
+      }
+    }
+    const floorTex = new THREE.CanvasTexture(floorCanvas);
+    floorTex.wrapS = floorTex.wrapT = THREE.RepeatWrapping;
+    floorTex.repeat.set(4, 4);
 
-    // Danger Ring
-    const ringGeo = new THREE.RingGeometry(ARENA_RADIUS - 1.5, ARENA_RADIUS, 32);
-    const ringMat = new THREE.MeshBasicMaterial({ color: 0xd90429, side: THREE.DoubleSide });
-    const ringMesh = new THREE.Mesh(ringGeo, ringMat);
-    ringMesh.rotation.x = -Math.PI / 2;
-    ringMesh.position.y = 0.02;
-    arenaGroup.add(ringMesh);
+    const floorGeo = new THREE.CylinderGeometry(ARENA_SIZE, ARENA_SIZE, 2, 8);
+    const floorMat = new THREE.MeshToonMaterial({ map: floorTex, gradientMap: toonTex });
+    const floor = new THREE.Mesh(floorGeo, floorMat);
+    floor.position.y = -1;
+    floor.rotation.y = Math.PI / 8;
+    floor.receiveShadow = true;
+    arena.add(floor);
 
-    // Center Spinning Spatula Hazard
-    const hazardGroup = new THREE.Group();
-    const hubMesh = new THREE.Mesh(new THREE.CylinderGeometry(1.6, 1.6, 1.5, 16), comicMat(0xd90429));
-    hubMesh.position.y = 0.75;
-    addComicOutline(hubMesh, 1.08);
-    hazardGroup.add(hubMesh);
+    // 8 Walled Carnival Shock Bumpers + Neon Pillars
+    const wallPanels = [];
+    for (let i = 0; i < 8; i++) {
+      const ang = (i / 8) * Math.PI * 2;
+      const dist = ARENA_SIZE * Math.cos(Math.PI / 8) - 0.8;
+      const wx = Math.sin(ang) * dist;
+      const wz = Math.cos(ang) * dist;
 
-    const barGeo = new THREE.BoxGeometry(15, 0.6, 0.8);
-    const barMesh = new THREE.Mesh(barGeo, comicMat(0xffbe0b));
-    barMesh.position.y = 0.6;
-    addComicOutline(barMesh, 1.05);
-    hazardGroup.add(barMesh);
-    scene.add(hazardGroup);
+      // Wall Bumper Beam
+      const isShockWall = i % 2 === 0;
+      const wallGeo = new THREE.BoxGeometry(21.5, 3.2, 1.8);
+      const wallMesh = new THREE.Mesh(wallGeo, toonMat(isShockWall ? 0x00f5d4 : 0xd90429, isShockWall ? 0x003344 : 0x000000));
+      wallMesh.position.set(wx, 1.6, wz);
+      wallMesh.rotation.y = ang;
+      addInkOutline(wallMesh, 1.04);
+      arena.add(wallMesh);
 
-    // --- 4. BUILD THE 4 CHARACTER BUMPER CARS ---
-    const CHARACTERS = [
-      { name: "THE KING", bodyColor: 0xffbe0b, accent: 0xd90429, startPos: [-8, -8] },
-      { name: "CHICKEN", bodyColor: 0xffffff, accent: 0xf77f00, startPos: [8, -8] },
-      { name: "WHOPPER KID", bodyColor: 0xd90429, accent: 0x582f0e, startPos: [-8, 8] },
-      { name: "SHAKE BOT", bodyColor: 0x8338ec, accent: 0x00f5d4, startPos: [8, 8] }
+      // Corner Carnival Pylon
+      const pAng = ang + Math.PI / 8;
+      const px = Math.sin(pAng) * (ARENA_SIZE - 0.5);
+      const pz = Math.cos(pAng) * (ARENA_SIZE - 0.5);
+      const pylon = new THREE.Mesh(new THREE.CylinderGeometry(1.4, 1.4, 6, 12), toonMat(0xffbe0b));
+      pylon.position.set(px, 3, pz);
+      addInkOutline(pylon, 1.06);
+      arena.add(pylon);
+
+      wallPanels.push({ nx: -Math.sin(ang), nz: -Math.cos(ang), dist, isShockWall });
+    }
+
+    // Overhead Electric Conductive Grid (Classic Bumper Car Ceiling)
+    const gridWire = new THREE.GridHelper(ARENA_SIZE * 1.8, 14, 0xffbe0b, 0x444466);
+    gridWire.position.y = 14;
+    arena.add(gridWire);
+
+    // 4 Flame-Broiler Floor Grates (Timed Fire Hazards)
+    const broilerGrates = [];
+    const grateCoords = [[-11, -11], [11, -11], [-11, 11], [11, 11]];
+    grateCoords.forEach(([gx, gz]) => {
+      const gGroup = new THREE.Group();
+      gGroup.position.set(gx, 0.05, gz);
+
+      const base = new THREE.Mesh(new THREE.CylinderGeometry(3.8, 3.8, 0.2, 16), toonMat(0x222222));
+      addInkOutline(base, 1.04);
+      gGroup.add(base);
+
+      const flameCone = new THREE.Mesh(new THREE.ConeGeometry(3.2, 6.5, 12), toonMat(0xff5400, 0xd90429));
+      flameCone.position.y = 3.2;
+      flameCone.visible = false;
+      addInkOutline(flameCone, 1.06);
+      gGroup.add(flameCone);
+
+      scene.add(gGroup);
+      broilerGrates.push({ x: gx, z: gz, radius: 3.8, flameMesh: flameCone, active: false });
+    });
+
+    // --- 3. AUTHENTIC BUMPER CAR BUILDER (WITH CONDUCTIVE POLE, SPARKS & HANDS OF THE KING) ---
+    const ROSTER = [
+      { name: "THE KING", color: 0xffbe0b, trim: 0xd90429, pos: [-16, -16] },
+      { name: "SUBSERVIENT CHICKEN", color: 0xffffff, trim: 0xf77f00, pos: [16, -16] },
+      { name: "WHOPPER JR", color: 0xd90429, trim: 0xffbe0b, pos: [-16, 16] },
+      { name: "BROILER BOT", color: 0x7209b7, trim: 0x00f5d4, pos: [16, 16] }
     ];
 
-    const karts = [];
-    const scores = [0, 0, 0, 0];
+    const cars = [];
 
-    function createBumperCar(cfg, index) {
-      const group = new THREE.Group();
+    function buildBumperCar(cfg, index) {
+      const root = new THREE.Group();
 
-      // Rubber Bumper Base
-      const bumperGeo = new THREE.CylinderGeometry(1.5, 1.6, 0.6, 20);
-      const bumper = new THREE.Mesh(bumperGeo, comicMat(0x222222));
-      bumper.position.y = 0.3;
-      addComicOutline(bumper, 1.06);
-      group.add(bumper);
+      // Oversized Black Rubber Bumper Skirt
+      const skirt = new THREE.Mesh(new THREE.CylinderGeometry(2.1, 2.25, 0.75, 24), toonMat(0x1b1b1b));
+      skirt.position.y = 0.4;
+      addInkOutline(skirt, 1.05);
+      root.add(skirt);
 
-      // Car Body
-      const chassisGeo = new THREE.SphereGeometry(1.25, 16, 12, 0, Math.PI * 2, 0, Math.PI * 0.65);
-      const chassis = new THREE.Mesh(chassisGeo, comicMat(cfg.bodyColor));
-      chassis.position.y = 0.4;
-      addComicOutline(chassis, 1.06);
-      group.add(chassis);
+      // Metallic Bumper Ring
+      const chrome = new THREE.Mesh(new THREE.TorusGeometry(2.12, 0.16, 10, 24), toonMat(0xdcdcdc));
+      chrome.rotation.x = Math.PI / 2;
+      chrome.position.y = 0.45;
+      root.add(chrome);
 
-      // Driver Head
-      const headGeo = new THREE.SphereGeometry(0.6, 14, 14);
-      const head = new THREE.Mesh(headGeo, comicMat(0xffd166));
-      head.position.set(0, 1.5, -0.1);
-      addComicOutline(head, 1.08);
-      group.add(head);
+      // Molded Fiberglass Carnival Body
+      const body = new THREE.Mesh(new THREE.CylinderGeometry(1.4, 1.9, 1.1, 20), toonMat(cfg.color));
+      body.position.y = 1.0;
+      addInkOutline(body, 1.06);
+      root.add(body);
 
-      // Character-Specific Crown / Crest
-      const hatGeo = index === 0
-        ? new THREE.ConeGeometry(0.55, 0.7, 6) // King's Crown
-        : new THREE.BoxGeometry(0.6, 0.5, 0.6);
-      const hat = new THREE.Mesh(hatGeo, comicMat(cfg.accent));
-      hat.position.set(0, 2.15, -0.1);
-      addComicOutline(hat, 1.1);
-      group.add(hat);
+      // Front Hood Grille & Headlights
+      const hood = new THREE.Mesh(new THREE.BoxGeometry(1.5, 0.7, 1.2), toonMat(cfg.trim));
+      hood.position.set(0, 1.05, 1.2);
+      addInkOutline(hood, 1.06);
+      root.add(hood);
 
-      // Direction Nose Cone
-      const noseGeo = new THREE.ConeGeometry(0.35, 0.6, 12);
-      const nose = new THREE.Mesh(noseGeo, comicMat(cfg.accent));
-      nose.rotation.x = Math.PI / 2;
-      nose.position.set(0, 0.65, 1.45);
-      addComicOutline(nose, 1.08);
-      group.add(nose);
+      // Steering Wheel & Driver Mascot
+      const head = new THREE.Mesh(new THREE.SphereGeometry(0.68, 16, 16), toonMat(0xffcb77));
+      head.position.set(0, 2.15, -0.15);
+      addInkOutline(head, 1.08);
+      root.add(head);
 
-      scene.add(group);
+      // King's Crown / Mascot Crest
+      const crown = new THREE.Mesh(
+        index === 0 ? new THREE.CylinderGeometry(0.65, 0.5, 0.65, 7) : new THREE.ConeGeometry(0.6, 0.8, 8),
+        toonMat(cfg.trim)
+      );
+      crown.position.set(0, 2.85, -0.15);
+      addInkOutline(crown, 1.08);
+      root.add(crown);
+
+      // Classic Rear Stinger Pole (Reaches toward overhead electric grid)
+      const pole = new THREE.Mesh(new THREE.CylinderGeometry(0.07, 0.09, 12.5, 8), toonMat(0xaaaaaa));
+      pole.position.set(0, 6.8, -1.65);
+      pole.rotation.x = -0.12;
+      root.add(pole);
+
+      // Power-Up Visual Attachments:
+      // 1) "Hands of the King" Giant Spring Fists
+      const fistsGroup = new THREE.Group();
+      const leftFist = new THREE.Mesh(new THREE.BoxGeometry(1.1, 1.1, 1.6), toonMat(0xffbe0b));
+      leftFist.position.set(-1.3, 1.1, 2.7);
+      addInkOutline(leftFist, 1.08);
+      const rightFist = leftFist.clone();
+      rightFist.position.x = 1.3;
+      fistsGroup.add(leftFist, rightFist);
+      fistsGroup.visible = false;
+      root.add(fistsGroup);
+
+      // 2) Ice Cube Freeze Block
+      const iceCube = new THREE.Mesh(
+        new THREE.BoxGeometry(4.6, 4.2, 4.6),
+        new THREE.MeshToonMaterial({ color: 0x00f5d4, transparent: true, opacity: 0.65, gradientMap: toonTex })
+      );
+      iceCube.position.y = 2.0;
+      iceCube.visible = false;
+      root.add(iceCube);
+
+      // 3) Shock Aura Ring
+      const shockRing = new THREE.Mesh(new THREE.TorusGeometry(2.8, 0.18, 8, 24), toonMat(0x00f5d4, 0x00f5d4));
+      shockRing.rotation.x = Math.PI / 2;
+      shockRing.position.y = 0.8;
+      shockRing.visible = false;
+      root.add(shockRing);
+
+      scene.add(root);
 
       return {
         index,
-        mesh: group,
-        x: cfg.startPos[0],
-        z: cfg.startPos[1],
+        name: cfg.name,
+        mesh: root,
+        fistsGroup,
+        iceCube,
+        shockRing,
+        x: cfg.pos[0],
+        z: cfg.pos[1],
+        y: 0,
+        vy: 0,
         vx: 0,
         vz: 0,
-        angle: Math.atan2(-cfg.startPos[0], -cfg.startPos[1]),
-        boostCooldown: 0,
-        lastHitBy: null,
-        isFalling: false,
-        y: 0,
-        vy: 0
+        angle: Math.atan2(-cfg.pos[0], -cfg.pos[1]),
+        hp: 100,
+        heat: 0,
+        kos: 0,
+        powerup: null,
+        powerTimer: 0,
+        frozenTimer: 0,
+        stunTimer: 0,
+        lastAttacker: null
       };
     }
 
-    CHARACTERS.forEach((cfg, idx) => karts.push(createBumperCar(cfg, idx)));
+    ROSTER.forEach((cfg, i) => cars.push(buildBumperCar(cfg, i)));
 
-    // --- 5. COMIC POPUP GENERATOR ("WHOP!", "BAM!", "FLAME-BROILED!") ---
-    const COMIC_WORDS = ["WHOP!", "CRUNCH!", "SIZZLE!", "BUMP!", "KING-SIZED!", "BROILED!"];
-    const popupsContainer = document.getElementById('popups');
+    // --- 4. MYSTERY BARREL POWER-UP SPAWNER ---
+    const POWER_TYPES = ["HANDS OF THE KING", "ICE CUBE FREEZE", "ELECTRO-ZAP", "FLAME TURBO", "WHOPPER HEAL"];
+    const barrels = [];
 
-    function spawnComicWord(worldX, worldY, worldZ, customText = null) {
-      const vec = new THREE.Vector3(worldX, worldY + 2, worldZ);
-      vec.project(camera);
-      const x = (vec.x * 0.5 + 0.5) * window.innerWidth;
-      const y = (-(vec.y * 0.5) + 0.5) * window.innerHeight;
+    function createBarrel(bx, bz) {
+      const grp = new THREE.Group();
+      const cyl = new THREE.Mesh(new THREE.CylinderGeometry(1.1, 1.1, 2.0, 14), toonMat(0xd90429));
+      cyl.position.y = 1.2;
+      addInkOutline(cyl, 1.07);
+      grp.add(cyl);
 
-      const el = document.createElement('div');
-      el.className = 'comic-word';
-      el.innerText = customText || COMIC_WORDS[Math.floor(Math.random() * COMIC_WORDS.length)];
-      el.style.left = `${x}px`;
-      el.style.top = `${y}px`;
-      popupsContainer.appendChild(el);
-      setTimeout(() => el.remove(), 650);
+      const stripe = new THREE.Mesh(new THREE.CylinderGeometry(1.15, 1.15, 0.55, 14), toonMat(0xffbe0b));
+      stripe.position.y = 1.2;
+      grp.add(stripe);
+
+      grp.position.set(bx, 0, bz);
+      scene.add(grp);
+      return { mesh: grp, x: bx, z: bz, active: true, respawn: 0 };
     }
 
-    // --- 6. INPUT & MULTIPLAYER STATE ---
-    const keys = { up: false, down: false, left: false, right: false, boost: false };
+    [[0, 0], [-14, 0], [14, 0], [0, -14], [0, 14]].forEach(([x, z]) => barrels.push(createBarrel(x, z)));
+
+    // --- 5. COMIC POPUPS & PARTICLE SPARKS ---
+    const popupsDiv = document.getElementById('popups');
+    function popText(wx, wy, wz, text) {
+      const v = new THREE.Vector3(wx, wy + 2.6, wz).project(camera);
+      if (v.z > 1) return;
+      const el = document.createElement('div');
+      el.className = 'comic-pop';
+      el.innerText = text;
+      el.style.left = `${(v.x * 0.5 + 0.5) * window.innerWidth}px`;
+      el.style.top = `${(-(v.y * 0.5) + 0.5) * window.innerHeight}px`;
+      popupsDiv.appendChild(el);
+      setTimeout(() => el.remove(), 600);
+    }
+
+    // --- 6. INPUTS, CAMERA MODES & MULTIPLAYER ---
+    const inputState = { up: false, down: false, left: false, right: false, action: false };
+    let chaseCam = true;
+    let camShake = 0;
+
+    function toggleCam() {
+      chaseCam = !chaseCam;
+      document.getElementById('cam-toggle').innerText = chaseCam ? '🎥 CAM: CHASE (C)' : '🎥 CAM: ARENA TV (C)';
+    }
+    document.getElementById('cam-toggle').addEventListener('click', toggleCam);
+
     window.addEventListener('keydown', e => {
-      if (e.code === 'KeyW' || e.code === 'ArrowUp') keys.up = true;
-      if (e.code === 'KeyS' || e.code === 'ArrowDown') keys.down = true;
-      if (e.code === 'KeyA' || e.code === 'ArrowLeft') keys.left = true;
-      if (e.code === 'KeyD' || e.code === 'ArrowRight') keys.right = true;
-      if (e.code === 'Space') keys.boost = true;
+      if (e.code === 'KeyW' || e.code === 'ArrowUp') inputState.up = true;
+      if (e.code === 'KeyS' || e.code === 'ArrowDown') inputState.down = true;
+      if (e.code === 'KeyA' || e.code === 'ArrowLeft') inputState.left = true;
+      if (e.code === 'KeyD' || e.code === 'ArrowRight') inputState.right = true;
+      if (e.code === 'Space' || e.code === 'KeyE') inputState.action = true;
+      if (e.code === 'KeyC') toggleCam();
     });
     window.addEventListener('keyup', e => {
-      if (e.code === 'KeyW' || e.code === 'ArrowUp') keys.up = false;
-      if (e.code === 'KeyS' || e.code === 'ArrowDown') keys.down = false;
-      if (e.code === 'KeyA' || e.code === 'ArrowLeft') keys.left = false;
-      if (e.code === 'KeyD' || e.code === 'ArrowRight') keys.right = false;
-      if (e.code === 'Space') keys.boost = false;
+      if (e.code === 'KeyW' || e.code === 'ArrowUp') inputState.up = false;
+      if (e.code === 'KeyS' || e.code === 'ArrowDown') inputState.down = false;
+      if (e.code === 'KeyA' || e.code === 'ArrowLeft') inputState.left = false;
+      if (e.code === 'KeyD' || e.code === 'ArrowRight') inputState.right = false;
+      if (e.code === 'Space' || e.code === 'KeyE') inputState.action = false;
     });
 
-    let gameStarted = false;
-    let isOnline = false;
-    let onlinePlayers = [];
+    let running = false;
+    let onlineMode = false;
+    let roomPlayers = [];
 
-    // Solo Mode Button
-    document.getElementById('btn-solo').addEventListener('click', () => {
+    document.getElementById('start-solo').onclick = () => {
       document.getElementById('menu').style.display = 'none';
-      gameStarted = true;
-    });
+      running = true;
+    };
 
-    // 1-4P Online Lobby via PlayroomKit
-    document.getElementById('btn-online').addEventListener('click', async () => {
+    document.getElementById('start-online').onclick = async () => {
       if (!window.Playroom) {
-        alert("PlayroomKit CDN unavailable; starting Solo vs Bots mode!");
         document.getElementById('menu').style.display = 'none';
-        gameStarted = true;
+        running = true;
         return;
       }
       try {
-        await Playroom.insertCoin({ maxPlayersPerRoom: 4, defaultPlayerStates: { inputs: {} } });
+        await Playroom.insertCoin({ maxPlayersPerRoom: 4 });
         document.getElementById('menu').style.display = 'none';
-        isOnline = true;
-        gameStarted = true;
-
-        Playroom.onPlayerJoin((player) => {
-          onlinePlayers.push(player);
-          player.onQuit(() => {
-            onlinePlayers = onlinePlayers.filter(p => p.id !== player.id);
-          });
+        onlineMode = true;
+        running = true;
+        Playroom.onPlayerJoin(p => {
+          roomPlayers.push(p);
+          p.onQuit(() => roomPlayers = roomPlayers.filter(x => x.id !== p.id));
         });
-      } catch (err) {
+      } catch (e) {
         document.getElementById('menu').style.display = 'none';
-        gameStarted = true;
+        running = true;
       }
-    });
+    };
 
-    // --- 7. PHYSICS, AI & GAMEPLAY LOOP ---
-    function respawnKart(k) {
-      const cfg = CHARACTERS[k.index];
-      k.x = cfg.startPos[0] * 0.7;
-      k.z = cfg.startPos[1] * 0.7;
-      k.y = 6;
-      k.vx = 0; k.vz = 0; k.vy = 0;
-      k.isFalling = false;
-      k.lastHitBy = null;
+    // --- 7. AUTHENTIC BIG BUMPIN' GAMEPLAY & PHYSICS ENGINE ---
+    let frameCount = 0;
+
+    function activatePowerup(c) {
+      if (!c.powerup) {
+        // Mini-lunge bump if no powerup held
+        if (c.heat < 75) {
+          c.vx += Math.sin(c.angle) * 0.32;
+          c.vz += Math.cos(c.angle) * 0.32;
+          c.heat = Math.min(100, c.heat + 22);
+        }
+        return;
+      }
+
+      const p = c.powerup;
+      c.powerup = null;
+
+      if (p === "HANDS OF THE KING") {
+        c.powerTimer = 300; // 5 seconds of double damage & giant fists
+        c.fistsGroup.visible = true;
+        popText(c.x, c.y, c.z, "2X2 HANDS OF THE KING!");
+      } else if (p === "FLAME TURBO") {
+        c.vx += Math.sin(c.angle) * 0.95;
+        c.vz += Math.cos(c.angle) * 0.95;
+        popText(c.x, c.y, c.z, "FLAME BROILED TURBO!");
+      } else if (p === "WHOPPER HEAL") {
+        c.hp = Math.min(100, c.hp + 45);
+        c.heat = 0;
+        popText(c.x, c.y, c.z, "+45 HP WHOPPER!");
+      } else if (p === "ELECTRO-ZAP") {
+        c.shockRing.visible = true;
+        c.powerTimer = 240;
+        popText(c.x, c.y, c.z, "POWER SURGE!");
+      } else if (p === "ICE CUBE FREEZE") {
+        // Freeze nearest opponent within range
+        let nearest = null, bestD = 18;
+        cars.forEach(other => {
+          if (other.index !== c.index) {
+            const d = Math.hypot(other.x - c.x, other.z - c.z);
+            if (d < bestD) { bestD = d; nearest = other; }
+          }
+        });
+        if (nearest) {
+          nearest.frozenTimer = 180;
+          nearest.iceCube.visible = true;
+          popText(nearest.x, nearest.y, nearest.z, "DEEP FREEZE!");
+        } else {
+          popText(c.x, c.y, c.z, "NO TARGET IN RANGE!");
+        }
+      }
     }
 
-    function updateScoreUI() {
-      for (let i = 0; i < 4; i++) {
-        document.getElementById(`s${i}`).innerText = scores[i];
-      }
-    }
+    function getAIControl(c) {
+      // Find closest barrel if unarmed, or closest enemy to ram
+      let tx = 0, tz = 0;
+      let targetDist = 999;
 
-    function getDriverInput(index, k) {
-      // Online Player Input
-      if (isOnline && onlinePlayers[index]) {
-        const p = onlinePlayers[index];
-        if (p.id === Playroom.myPlayer().id) {
-          p.setState('inputs', keys);
-          return keys;
-        }
-        return p.getState('inputs') || { up: false, down: false, left: false, right: false, boost: false };
+      if (!c.powerup) {
+        barrels.forEach(b => {
+          if (b.active) {
+            const d = Math.hypot(b.x - c.x, b.z - c.z);
+            if (d < targetDist) { targetDist = d; tx = b.x; tz = b.z; }
+          }
+        });
       }
 
-      // Local Player 1
-      if (index === 0) return keys;
+      if (targetDist > 16 || c.powerup) {
+        cars.forEach(other => {
+          if (other.index !== c.index) {
+            const d = Math.hypot(other.x - c.x, other.z - c.z);
+            if (d < targetDist) { targetDist = d; tx = other.x; tz = other.z; }
+          }
+        });
+      }
 
-      // Aggressive Comic Bot AI for Remaining Slots
-      let target = karts[0];
-      let minDist = 999;
-      karts.forEach(other => {
-        if (other.index !== index && !other.isFalling) {
-          const d = Math.hypot(other.x - k.x, other.z - k.z);
-          if (d < minDist) { minDist = d; target = other; }
-        }
-      });
-
-      // Avoid edge if near rim
-      const distFromCenter = Math.hypot(k.x, k.z);
-      const aimX = distFromCenter > ARENA_RADIUS - 4 ? 0 : target.x;
-      const aimZ = distFromCenter > ARENA_RADIUS - 4 ? 0 : target.z;
-
-      const desiredAngle = Math.atan2(aimX - k.x, aimZ - k.z);
-      let diff = desiredAngle - k.angle;
+      const desired = Math.atan2(tx - c.x, tz - c.z);
+      let diff = desired - c.angle;
       while (diff > Math.PI) diff -= Math.PI * 2;
       while (diff < -Math.PI) diff += Math.PI * 2;
 
       return {
         up: true,
         down: false,
-        left: diff > 0.15,
-        right: diff < -0.15,
-        boost: minDist < 6 && Math.abs(diff) < 0.35
+        left: diff > 0.12,
+        right: diff < -0.12,
+        action: (c.powerup && targetDist < 12) || (targetDist < 5.5 && Math.abs(diff) < 0.25 && Math.random() < 0.08)
       };
     }
 
-    function updatePhysics() {
-      if (!gameStarted) return;
+    function updateHUD() {
+      cars.forEach((c, i) => {
+        document.getElementById(`hp${i}`).style.width = `${Math.max(0, c.hp)}%`;
+        document.getElementById(`ht${i}`).style.width = `${Math.min(100, c.heat)}%`;
+        document.getElementById(`k${i}`).innerText = `${c.kos} KOs`;
+        const status = c.frozenTimer > 0 ? "❄️ FROZEN!" : (c.stunTimer > 0 ? "⚡ OVERHEATED!" : (c.powerup || "NONE"));
+        document.getElementById(`pw${i}`).innerText = status;
+      });
+      const p0 = cars[0];
+      document.getElementById('my-weapon').innerText = p0.powerup
+        ? `🔥 ${p0.powerup} (PRESS SPACE!)`
+        : (p0.powerTimer > 0 ? "👑 HANDS OF THE KING ACTIVE!" : "NONE - HIT A CROWN BARREL!");
+    }
 
-      // Spin Center Spatula Hazard
-      hazardGroup.rotation.y += 0.045;
-      const barAngle = hazardGroup.rotation.y;
+    function stepSimulation() {
+      if (!running) return;
+      frameCount++;
 
-      // If Online Client (Non-Host), read synced positions from Host
-      if (isOnline && !Playroom.isHost()) {
-        if (Playroom.myPlayer()) Playroom.myPlayer().setState('inputs', keys);
-        const state = Playroom.getState('gameState');
-        if (state) {
-          state.karts.forEach((sk, i) => {
-            karts[i].mesh.position.set(sk.x, sk.y, sk.z);
-            karts[i].mesh.rotation.y = sk.angle;
-          });
-          state.scores.forEach((s, i) => scores[i] = s);
-          updateScoreUI();
-        }
-        return;
-      }
-
-      // Host / Solo Physics Simulation
-      karts.forEach((k, idx) => {
-        const input = getDriverInput(idx, k);
-
-        if (!k.isFalling) {
-          if (input.left) k.angle += 0.065;
-          if (input.right) k.angle -= 0.065;
-
-          const accel = input.up ? 0.028 : (input.down ? -0.018 : 0);
-          k.vx += Math.sin(k.angle) * accel;
-          k.vz += Math.cos(k.angle) * accel;
-
-          if (input.boost && k.boostCooldown <= 0) {
-            k.vx += Math.sin(k.angle) * 0.42;
-            k.vz += Math.cos(k.angle) * 0.42;
-            k.boostCooldown = 75;
-            spawnComicWord(k.x, k.y, k.z, "BROIL BOOST!");
-          }
-          if (k.boostCooldown > 0) k.boostCooldown--;
-        }
-
-        // Apply velocities & friction
-        k.x += k.vx;
-        k.z += k.vz;
-        k.vx *= 0.94;
-        k.vz *= 0.94;
-
-        // Vertical drop / spawn bounce
-        if (k.y > 0 && !k.isFalling) {
-          k.y = Math.max(0, k.y - 0.35);
-        }
-
-        // Check Arena Edge Knockout
-        const distFromCenter = Math.hypot(k.x, k.z);
-        if (distFromCenter > ARENA_RADIUS && !k.isFalling) {
-          k.isFalling = true;
-          spawnComicWord(k.x, k.y, k.z, "FRIED!!");
-          if (k.lastHitBy !== null && k.lastHitBy !== k.index) {
-            scores[k.lastHitBy]++;
-          } else {
-            scores[k.index] = Math.max(0, scores[k.index] - 1);
-          }
-          updateScoreUI();
-        }
-
-        if (k.isFalling) {
-          k.y -= 0.45;
-          k.mesh.rotation.x += 0.15;
-          if (k.y < -18) {
-            k.mesh.rotation.x = 0;
-            respawnKart(k);
-          }
-        }
-
-        // Check Center Spinning Bar Collision
-        if (!k.isFalling && distFromCenter < 7.8) {
-          const cosA = Math.cos(-barAngle);
-          const sinA = Math.sin(-barAngle);
-          const localX = k.x * cosA - k.z * sinA;
-          const localZ = k.x * sinA + k.z * cosA;
-          if (Math.abs(localX) < 7.5 && Math.abs(localZ) < 1.3) {
-            const pushAngle = Math.atan2(k.x, k.z) + 0.5;
-            k.vx = Math.sin(pushAngle) * 0.65;
-            k.vz = Math.cos(pushAngle) * 0.65;
-            spawnComicWord(k.x, k.y, k.z, "SPATULA'D!");
-          }
-        }
-
-        k.mesh.position.set(k.x, k.y, k.z);
-        k.mesh.rotation.y = k.angle;
+      // Cycle Flame-Broiler Floor Grates every 3.5 seconds
+      const broilerActive = (Math.floor(frameCount / 140) % 2) === 1;
+      broilerGrates.forEach(g => {
+        g.active = broilerActive;
+        g.flameMesh.visible = broilerActive;
+        if (broilerActive) g.flameMesh.rotation.y += 0.25;
       });
 
-      // Kart-to-Kart Bumper Collisions
-      for (let i = 0; i < karts.length; i++) {
-        for (let j = i + 1; j < karts.length; j++) {
-          const a = karts[i];
-          const b = karts[j];
-          if (a.isFalling || b.isFalling) continue;
+      // Rotate and Respawn Mystery Crown Barrels
+      barrels.forEach(b => {
+        if (!b.active) {
+          b.respawn--;
+          if (b.respawn <= 0) { b.active = true; b.mesh.visible = true; }
+        } else {
+          b.mesh.rotation.y += 0.05;
+          b.mesh.position.y = Math.sin(frameCount * 0.08) * 0.35;
+        }
+      });
 
-          const dx = b.x - a.x;
-          const dz = b.z - a.z;
+      // Step Each Bumper Car
+      cars.forEach((c, idx) => {
+        const ctrl = idx === 0 ? inputState : getAIControl(c);
+
+        // Cooldowns & Timers
+        if (c.heat > 0) c.heat = Math.max(0, c.heat - 0.28);
+        if (c.heat >= 100 && c.stunTimer <= 0) {
+          c.stunTimer = 90;
+          popText(c.x, c.y, c.z, "OVERHEATED!");
+        }
+        if (c.stunTimer > 0) c.stunTimer--;
+        if (c.frozenTimer > 0) {
+          c.frozenTimer--;
+          if (c.frozenTimer === 0) c.iceCube.visible = false;
+        }
+        if (c.powerTimer > 0) {
+          c.powerTimer--;
+          if (c.powerTimer === 0) {
+            c.fistsGroup.visible = false;
+            c.shockRing.visible = false;
+          }
+        }
+
+        // Steering & Throttle (Disabled if Frozen or Stunned)
+        if (c.frozenTimer <= 0 && c.stunTimer <= 0) {
+          const turnRate = 0.058;
+          if (ctrl.left) c.angle += turnRate;
+          if (ctrl.right) c.angle -= turnRate;
+
+          const topAccel = c.powerTimer > 0 ? 0.046 : 0.036;
+          if (ctrl.up) {
+            c.vx += Math.sin(c.angle) * topAccel;
+            c.vz += Math.cos(c.angle) * topAccel;
+          } else if (ctrl.down) {
+            c.vx -= Math.sin(c.angle) * 0.024;
+            c.vz -= Math.cos(c.angle) * 0.024;
+          }
+
+          if (ctrl.action) {
+            activatePowerup(c);
+            if (idx === 0) inputState.action = false;
+          }
+        }
+
+        // Apply Velocity & Heavy Bumper Car Friction
+        c.x += c.vx;
+        c.z += c.vz;
+        c.vx *= 0.935;
+        c.vz *= 0.935;
+
+        // Gravity for Vertical Broiler Launches
+        if (c.y > 0 || c.vy !== 0) {
+          c.y += c.vy;
+          c.vy -= 0.045;
+          if (c.y <= 0) { c.y = 0; c.vy = 0; }
+        }
+
+        // Check Mystery Barrel Collection
+        barrels.forEach(b => {
+          if (b.active && Math.hypot(c.x - b.x, c.z - b.z) < 3.1 && !c.powerup) {
+            b.active = false;
+            b.mesh.visible = false;
+            b.respawn = 320;
+            c.powerup = POWER_TYPES[Math.floor(Math.random() * POWER_TYPES.length)];
+            popText(c.x, c.y, c.z, c.powerup + "!");
+          }
+        });
+
+        // Check Flame-Broiler Floor Grate Hazard
+        broilerGrates.forEach(g => {
+          if (g.active && Math.hypot(c.x - g.x, c.z - g.z) < g.radius && c.y < 0.5) {
+            c.vy = 0.68;
+            c.hp -= 12;
+            c.heat += 25;
+            if (idx === 0) camShake = 0.7;
+            popText(c.x, c.y, c.z, "FLAME BROILED! -12");
+          }
+        });
+
+        // Check Walled Octagonal Shock Bumpers
+        wallPanels.forEach(w => {
+          // Project car onto wall outward normal
+          const outX = -w.nx;
+          const outZ = -w.nz;
+          const proj = c.x * outX + c.z * outZ;
+          const maxR = w.dist - 2.2;
+          if (proj > maxR) {
+            const pen = proj - maxR;
+            c.x -= outX * pen;
+            c.z -= outZ * pen;
+
+            // Reflect velocity off bumper wall
+            const dot = c.vx * outX + c.vz * outZ;
+            if (dot > 0) {
+              const bounceMult = w.isShockWall ? 1.85 : 1.25;
+              c.vx -= outX * dot * (1 + bounceMult);
+              c.vz -= outZ * dot * (1 + bounceMult);
+              if (w.isShockWall) {
+                c.heat += 14;
+                c.hp -= 4;
+                popText(c.x, c.y, c.z, "SHOCK WALL!");
+                if (idx === 0) camShake = 0.45;
+              }
+            }
+          }
+        });
+
+        // Check Car Wreck / KO Respawn
+        if (c.hp <= 0) {
+          popText(c.x, c.y + 1, c.z, "WRECKED!! KO!");
+          if (c.lastAttacker !== null && c.lastAttacker !== c.index) {
+            cars[c.lastAttacker].kos++;
+          }
+          c.hp = 100;
+          c.heat = 0;
+          c.y = 8;
+          c.vx = 0; c.vz = 0;
+          c.x = ROSTER[c.index].pos[0] * 0.75;
+          c.z = ROSTER[c.index].pos[1] * 0.75;
+        }
+
+        c.mesh.position.set(c.x, c.y, c.z);
+        c.mesh.rotation.y = c.angle;
+      });
+
+      // Car-to-Car High-Impact Bumper Collisions
+      for (let i = 0; i < cars.length; i++) {
+        for (let j = i + 1; j < cars.length; j++) {
+          const a = cars[i], b = cars[j];
+          const dx = b.x - a.x, dz = b.z - a.z;
           const dist = Math.hypot(dx, dz);
-          const minDist = 3.0;
+          const minDist = 4.25;
 
           if (dist < minDist && dist > 0.001) {
-            const nx = dx / dist;
-            const nz = dz / dist;
+            const nx = dx / dist, nz = dz / dist;
             const overlap = minDist - dist;
+            a.x -= nx * overlap * 0.5; a.z -= nz * overlap * 0.5;
+            b.x += nx * overlap * 0.5; b.z += nz * overlap * 0.5;
 
-            // Separate karts
-            a.x -= nx * overlap * 0.5;
-            a.z -= nz * overlap * 0.5;
-            b.x += nx * overlap * 0.5;
-            b.z += nz * overlap * 0.5;
+            const rvx = b.vx - a.vx, rvz = b.vz - a.vz;
+            const sepVel = rvx * nx + rvz * nz;
 
-            // Elastic Explosive Comic Bounce
-            const relVx = b.vx - a.vx;
-            const relVz = b.vz - a.vz;
-            const impactSpeed = relVx * nx + relVz * nz;
+            if (sepVel < 0) {
+              const force = Math.max(0.38, Math.abs(sepVel) * 1.45);
+              a.vx -= nx * force; a.vz -= nz * force;
+              b.vx += nx * force; b.vz += nz * force;
 
-            if (impactSpeed < 0) {
-              const bounce = Math.max(0.45, Math.abs(impactSpeed) * 1.55);
-              a.vx -= nx * bounce;
-              a.vz -= nz * bounce;
-              b.vx += nx * bounce;
-              b.vz += nz * bounce;
+              // Calculate Directional Ramming Bonus (Front Hood hits hurt more!)
+              const aForwardHit = Math.max(0.3, Math.sin(a.angle) * nx + Math.cos(a.angle) * nz);
+              const bForwardHit = Math.max(0.3, -(Math.sin(b.angle) * nx + Math.cos(b.angle) * nz));
 
-              a.lastHitBy = b.index;
-              b.lastHitBy = a.index;
+              let dmgToB = Math.round(force * 22 * aForwardHit * (a.fistsGroup.visible ? 2.2 : 1));
+              let dmgToA = Math.round(force * 22 * bForwardHit * (b.fistsGroup.visible ? 2.2 : 1));
 
-              spawnComicWord((a.x + b.x) * 0.5, 1, (a.z + b.z) * 0.5);
+              if (a.shockRing.visible) { dmgToB += 10; b.heat += 30; }
+              if (b.shockRing.visible) { dmgToA += 10; a.heat += 30; }
+
+              b.hp -= dmgToB; b.heat += dmgToB * 0.8; b.lastAttacker = a.index;
+              a.hp -= dmgToA; a.heat += dmgToA * 0.8; a.lastAttacker = b.index;
+
+              if (i === 0 || j === 0) camShake = Math.min(1.0, force * 1.2);
+              popText((a.x + b.x) * 0.5, 1.5, (a.z + b.z) * 0.5, dmgToB > 18 || dmgToA > 18 ? "WHOPPER CRASH!!" : "BUMP!");
             }
           }
         }
       }
 
-      // Sync Online Host State
-      if (isOnline && Playroom.isHost()) {
-        Playroom.setState('gameState', {
-          karts: karts.map(k => ({ x: k.x, y: k.y, z: k.z, angle: k.angle })),
-          scores
-        }, true);
+      // Dynamic Third-Person Chase Camera vs Arena TV Camera
+      const p0 = cars[0];
+      if (chaseCam) {
+        const targetCamX = p0.x - Math.sin(p0.angle) * 14.5;
+        const targetCamZ = p0.z - Math.cos(p0.angle) * 14.5;
+        camera.position.x += (targetCamX - camera.position.x) * 0.12;
+        camera.position.z += (targetCamZ - camera.position.z) * 0.12;
+        camera.position.y += (8.5 - camera.position.y) * 0.12;
+        if (camShake > 0.01) {
+          camera.position.x += (Math.random() - 0.5) * camShake;
+          camera.position.y += (Math.random() - 0.5) * camShake;
+          camShake *= 0.85;
+        }
+        camera.lookAt(p0.x + Math.sin(p0.angle) * 6, p0.y + 1.8, p0.z + Math.cos(p0.angle) * 6);
+      } else {
+        camera.position.set(0, 38, 38);
+        camera.lookAt(0, 0, 0);
       }
+
+      updateHUD();
     }
 
-    // --- 8. RENDER LOOP & RESIZE ---
     function animate() {
       requestAnimationFrame(animate);
-      updatePhysics();
+      stepSimulation();
       renderer.render(scene, camera);
     }
     animate();
