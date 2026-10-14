@@ -1548,6 +1548,74 @@
       "orientation": "any",
       "note": "Pasted by Brad 2026-10-13: the other AI's official remake after reading Hark's instructions. Added as-is with no fixes.",
       "path": "g/drift-survivors-after-hark/index.html"
+    },
+    {
+      "id": "outrun-remaster",
+      "title": "OutRun Remaster",
+      "category": "Retro Arcade",
+      "keys": {
+        "left": "ArrowLeft",
+        "right": "ArrowRight",
+        "up": "ArrowUp",
+        "down": "ArrowDown",
+        "start": "Enter"
+      },
+      "labels": {
+        "left": "◀ STEER",
+        "right": "STEER ▶",
+        "up": "GAS",
+        "down": "BRK",
+        "start": "START"
+      },
+      "extras": [
+        {
+          "label": "MUTE",
+          "key": "KeyM"
+        }
+      ],
+      "autostart": [
+        [
+          900,
+          "Enter"
+        ]
+      ],
+      "orientation": "any",
+      "path": "g/outrun-remaster/index.html",
+      "thumb": "thumbs/outrun-remaster.svg"
+    },
+    {
+      "id": "outrun-remaster-rulebook",
+      "title": "OutRun Remaster: Rulebook Edition",
+      "category": "Retro Arcade",
+      "keys": {
+        "left": "ArrowLeft",
+        "right": "ArrowRight",
+        "up": "ArrowUp",
+        "down": "ArrowDown",
+        "start": "Enter"
+      },
+      "labels": {
+        "left": "◀ STEER",
+        "right": "STEER ▶",
+        "up": "GAS",
+        "down": "BRK",
+        "start": "START"
+      },
+      "extras": [
+        {
+          "label": "MUTE",
+          "key": "KeyM"
+        }
+      ],
+      "autostart": [
+        [
+          900,
+          "Enter"
+        ]
+      ],
+      "orientation": "any",
+      "path": "g/outrun-remaster-rulebook/index.html",
+      "thumb": "thumbs/outrun-remaster-rulebook.svg"
     }
   ]
 }
