@@ -127,6 +127,8 @@ function inject() {
   }
   const gameOwnsStart = () => { try { return (typeof VIC !== 'undefined' && VIC.on) || (typeof FORT !== 'undefined' && FORT.on); } catch (_) { return false; } };
   let stDown = 0, stCombo = false, aPrev = false, bPrev = false;
+  // couch co-op (game src/06cc_coop.js): Start on a second pad joins Player 2; that press must not also open the pause screen
+  const coopJoin = (now) => { try { return !!(window.__coop && window.__coop.C && now - (window.__coop.C.joinAt || -1e9) < 1500); } catch (_) { return false; } };
   function padPoll() {
     let pads = [];
     try { pads = navigator.getGamepads ? Array.from(navigator.getGamepads() || []) : []; } catch (_) {}
@@ -139,7 +141,7 @@ function inject() {
     const now = performance.now();
     if (st) { if (!stDown) { stDown = now; stCombo = false; } if (vw) stCombo = true; }
     else if (stDown) { // Start released: a short tap (no View during it) toggles pause
-      if (!stCombo && now - stDown < 700 && (paused || !gameOwnsStart())) setPaused(!paused);
+      if (!stCombo && now - stDown < 700 && (paused || !gameOwnsStart()) && !coopJoin(now)) setPaused(!paused);
       stDown = 0;
     }
     if (paused && a && !aPrev) setPaused(false);

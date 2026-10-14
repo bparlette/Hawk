@@ -49,6 +49,7 @@ Tested target: Xbox Wireless Controller (Xbox Series X|S, model 1914) and Xbox O
 | View (two squares) | full map |
 | Start / Menu (three lines) | **pause** (desktop pause screen; A or Start resumes). Voltage Vic's intro and the fort's retry screen keep Start for themselves. |
 | **View + Start, hold 1 s** | **quit to ES-DE** (a HOLD TO QUIT bar shows) |
+| **2nd controller: A or Start** | **Player 2 drops in as Mavis** (couch co-op; that Start press does not pause). P2 drops out when its controller is turned off / unplugged (or Start held 3 s). |
 - Button prompts: while a controller is in use, the game's prompts that name a face button ("Y", "A / X: TRY AGAIN", "X boost · A hop")
   are redrawn as round Xbox-coloured glyphs (A green, B red, X blue, Y yellow). No game file is changed; the wrapper restyles them.
 
