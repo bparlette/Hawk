@@ -20313,7 +20313,7 @@ window.__carl = CARL;
     { c: 0, name: 'KEY HIGHWAY RIDE-OUT', x: -70, z: 41 },
     { c: 3, name: 'FEDERAL HILL RIDE-OUT', x: 20, z: 41 },
     { c: 2, name: 'ROWHOUSE BLOCK RIDE-OUT', x: 90, z: 41 },
-    { c: 1, name: 'FELLS POINT RIDE-OUT', x: 126, z: -12 },
+    { c: 1, name: 'FELLS POINT RIDE-OUT', x: 113, z: -19.5 },
   ];
   const V = new THREE.Vector3();
   // test params: ?bike=1 [&bikeauto=win|lose] [&bikecourse=N], or the CI boss form ?bikelife=1&bikelifeauto=win (course 0) and ?bikelife1=1&bikelife1auto=... (courses 1-3)
@@ -21482,7 +21482,7 @@ const ROOFTOP = (function () {
   // ---------- test bot ----------
   S.botThink = function (B, dt) { if (!sim || sim.st.over) return; sim.bot(B); };
   DUELS.reg('rooftop', S);
-  S.trigger = { x: 122, z: -12 };
+  S.trigger = { x: 120, z: -19.5 };
   function setupTrigger() {
     const T = S.trigger, rt = canvasTex(128, 128, (g) => { g.strokeStyle = '#fff'; g.lineWidth = 9; g.beginPath(); g.arc(64, 64, 52, 0, TAU); g.stroke(); g.lineWidth = 4; g.setLineDash([10, 9]); g.beginPath(); g.arc(64, 64, 38, 0, TAU); g.stroke(); }, 128);
     const r = new THREE.Mesh(new THREE.PlaneGeometry(2.6, 2.6), new THREE.MeshBasicMaterial({ map: rt, color: '#9dff6b', transparent: true, depthWrite: false, blending: THREE.AdditiveBlending, fog: false }));

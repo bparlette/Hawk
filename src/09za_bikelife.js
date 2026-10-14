@@ -26,7 +26,7 @@
     { c: 0, name: 'KEY HIGHWAY RIDE-OUT', x: -70, z: 41 },
     { c: 3, name: 'FEDERAL HILL RIDE-OUT', x: 20, z: 41 },
     { c: 2, name: 'ROWHOUSE BLOCK RIDE-OUT', x: 90, z: 41 },
-    { c: 1, name: 'FELLS POINT RIDE-OUT', x: 126, z: -12 },
+    { c: 1, name: 'FELLS POINT RIDE-OUT', x: 113, z: -19.5 },
   ];
   const V = new THREE.Vector3();
   // test params: ?bike=1 [&bikeauto=win|lose] [&bikecourse=N], or the CI boss form ?bikelife=1&bikelifeauto=win (course 0) and ?bikelife1=1&bikelife1auto=... (courses 1-3)

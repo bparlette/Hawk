@@ -265,7 +265,7 @@ const ROOFTOP = (function () {
   // ---------- test bot ----------
   S.botThink = function (B, dt) { if (!sim || sim.st.over) return; sim.bot(B); };
   DUELS.reg('rooftop', S);
-  S.trigger = { x: 122, z: -12 };
+  S.trigger = { x: 120, z: -19.5 };
   function setupTrigger() {
     const T = S.trigger, rt = canvasTex(128, 128, (g) => { g.strokeStyle = '#fff'; g.lineWidth = 9; g.beginPath(); g.arc(64, 64, 52, 0, TAU); g.stroke(); g.lineWidth = 4; g.setLineDash([10, 9]); g.beginPath(); g.arc(64, 64, 38, 0, TAU); g.stroke(); }, 128);
     const r = new THREE.Mesh(new THREE.PlaneGeometry(2.6, 2.6), new THREE.MeshBasicMaterial({ map: rt, color: '#9dff6b', transparent: true, depthWrite: false, blending: THREE.AdditiveBlending, fog: false }));
