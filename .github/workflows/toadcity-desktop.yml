@@ -109,6 +109,12 @@ jobs:
           [ ! -d "$H/Applications/$APP.app" ] && grep -q '<name>mysys</name>' "$CS/es_systems.xml" && ! grep -q toadcity "$CS/es_systems.xml"
           grep -q 'name="MINE"' "$CS/es_find_rules.xml" && ! grep -q TOADCITY "$CS/es_find_rules.xml"
           [ ! -d "$H/ES-DE/downloaded_media/toadcity" ] && [ ! -e "$H/ROMs/toadcity" ]
+          # manual path: unzipped ES-DE kit + app zip in ~/Downloads, run the bundled installer (no network)
+          mkdir -p "$H/Downloads/ToadCityBaltimore-esde" && cp "$APP_ZIP" "$H/Downloads/"
+          (cd "$H/Downloads/ToadCityBaltimore-esde" && ditto -x -k "$ESDE_ZIP" .)
+          env -u APP_ZIP -u ESDE_ZIP bash "$H/Downloads/ToadCityBaltimore-esde/install_mac.sh" | tee inst3.log
+          grep -q "kit next to this script" inst3.log && grep -q "Using local $H/Downloads/" inst3.log
+          test -x "$H/Applications/$APP.app/Contents/MacOS/$APP" && grep -q '<name>toadcity</name>' "$CS/es_systems.xml"
           echo "INSTALLER_TEST_OK"
       - uses: actions/upload-artifact@v4
         with:
@@ -128,6 +134,7 @@ jobs:
             inst1.log
             inst2.log
             uninst.log
+            inst3.log
           if-no-files-found: ignore
       - name: Pre-release ${{ env.TAG }}
         if: ${{ inputs.release != 'false' }}
@@ -147,3 +154,8 @@ jobs:
           gh release create "$TAG" out/*.zip out/SHA256SUMS.txt --prerelease --target "$GITHUB_SHA" \
             --title "Toad City Baltimore desktop $TAG" --notes-file notes.md
           echo "Release: https://github.com/${GITHUB_REPOSITORY}/releases/tag/$TAG" >> "$GITHUB_STEP_SUMMARY"
+          # rolling copy with fixed download URLs: .../releases/download/desktop-latest/<asset>
+          gh release delete desktop-latest --yes --cleanup-tag 2>/dev/null || true
+          git push origin :refs/tags/desktop-latest 2>/dev/null || true
+          gh release create desktop-latest out/*.zip out/SHA256SUMS.txt --prerelease --target "$GITHUB_SHA" \
+            --title "Toad City Baltimore desktop (latest = $TAG)" --notes-file notes.md

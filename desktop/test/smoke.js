@@ -68,6 +68,20 @@ async function mockPad(page, pressed) {
   const shotB = await page.screenshot({ path: path.join(OUT, 'after_pad_1280.png') });
   ok('mocked gamepad input changes the frame (no click needed)', !shotA.equals(shotB));
   await mockPad(page, []);
+  // Start tap pauses (frame loop held), A resumes; View+Start does not pause
+  const fr = async () => page.evaluate(() => new Promise((r) => { let n = 0; const t0 = performance.now(); const f = () => { n++; if (performance.now() - t0 < 1000) requestAnimationFrame(f); }; requestAnimationFrame(f); setTimeout(() => r(n), 1200); }));
+  await mockPad(page, [9]); await sleep(200); await mockPad(page, []); await sleep(300);
+  const p1 = await page.evaluate(() => ({ paused: window.__toadcityDesktop.isPaused(), overlay: !!document.querySelector('#tc-pause.on'), glyphs: document.querySelectorAll('#tc-pause .tc-g').length }));
+  await page.screenshot({ path: path.join(OUT, 'paused_1280.png') });
+  ok('Start tap pauses (overlay with Xbox glyphs)', p1.paused && p1.overlay && p1.glyphs >= 4, p1);
+  await mockPad(page, [0]); await sleep(200); await mockPad(page, []); await sleep(300);
+  const p2 = await page.evaluate(() => window.__toadcityDesktop.isPaused());
+  ok('A resumes', p2 === false);
+  // game prompts get Xbox glyphs while the game is in pad mode
+  const gl = await page.evaluate(() => { const d = document.createElement('div'); d.id = 'tc-glyph-probe'; d.textContent = 'A / X: TRY AGAIN    Y: QUIT'; document.body.appendChild(d); return true; });
+  await sleep(1800);
+  const g2 = await page.evaluate(() => { const d = document.getElementById('tc-glyph-probe'); const dev = (typeof DEV !== 'undefined') ? DEV : null; const r = { dev, glyphs: d ? d.querySelectorAll('.tc-g').length : -1, html: d ? d.innerHTML.slice(0, 200) : '' }; if (d) d.remove(); return r; });
+  ok('button prompts get Xbox glyphs in pad mode', g2.dev !== 'pad' || g2.glyphs === 3, g2);
   // short Esc tap must NOT quit
   const tapExit = waitExit(app, 1500);
   await page.keyboard.down('Escape'); await sleep(250); await page.keyboard.up('Escape');

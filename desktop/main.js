@@ -22,6 +22,11 @@ app.setName(TITLE);
 if (process.env.TOADCITY_DATA) app.setPath('userData', process.env.TOADCITY_DATA);
 app.commandLine.appendSwitch('autoplay-policy', 'no-user-gesture-required');
 app.commandLine.appendSwitch('disable-features', 'HardwareMediaKeyHandling');
+// Xbox Wireless / Series / One controllers on macOS: read them through Apple's GameController framework (standard mapping
+// incl. View/Menu/stick clicks, Bluetooth and USB). Chromium turned this on by default in April 2026 (crbug 400455006,
+// 374313514: newer Xbox pads not detected over USB / inverted axes on the old HID path); force it in case this Electron's
+// Chromium predates that. An unknown feature name is ignored.
+app.commandLine.appendSwitch('enable-features', 'XboxUseGameControllerDataFetcherMac');
 app.commandLine.appendSwitch('enable-gpu-rasterization');
 app.commandLine.appendSwitch('ignore-gpu-blocklist');
 

@@ -7,7 +7,10 @@ other game: fullscreen, no cursor, controller live at once, and quitting drops s
 ```bash
 curl -fsSL https://raw.githubusercontent.com/bparlette/Hawk/toadcity/desktop/install_mac.sh | bash
 ```
-Quit ES-DE first. `install_mac.sh` is idempotent (run it again to update). It:
+Quit ES-DE first. bparlette/Hawk is a public repo, so neither the script nor the release download needs a GitHub login.
+**No-curl alternative:** download `ToadCityBaltimore-mac-universal.zip` and `ToadCityBaltimore-esde.zip` from
+https://github.com/bparlette/Hawk/releases/tag/desktop-latest into ~/Downloads, double-click the ES-DE zip, then run
+`bash ~/Downloads/ToadCityBaltimore-esde/install_mac.sh` (it uses the kit beside it and the app zip in ~/Downloads, no network). `install_mac.sh` is idempotent (run it again to update). It:
 1. downloads the newest `desktop-v*` pre-release from bparlette/Hawk (`ToadCityBaltimore-mac-universal.zip` + `ToadCityBaltimore-esde.zip`);
 2. installs `~/Applications/Toad City Baltimore.app` and removes the quarantine attribute (`xattr -dr com.apple.quarantine`), re-signing ad-hoc if needed;
 3. merges the `toadcity` system into `~/ES-DE/custom_systems/es_systems.xml` and the `TOADCITY` find rule into
@@ -20,6 +23,34 @@ Quit ES-DE first. `install_mac.sh` is idempotent (run it again to update). It:
 
 **Gatekeeper:** the app is not signed or notarized by Apple. The installer removes the quarantine. By hand:
 `xattr -dr com.apple.quarantine ~/Applications/"Toad City Baltimore.app"`, or right-click the app in Finder > Open once.
+
+## Xbox controller (macOS, Bluetooth or USB)
+Tested target: Xbox Wireless Controller (Xbox Series X|S, model 1914) and Xbox One S / Elite 2, which macOS supports natively.
+- **Pair over Bluetooth:** hold the pairing button on top of the controller until the Xbox button flashes fast, then System
+  Settings > Bluetooth > "Xbox Wireless Controller" > Connect. **USB:** plug in a USB-C (Series) / micro-USB (One) data cable.
+  Either way it should appear in System Settings > Game Controllers. Update the controller's firmware (Xbox Accessories app on
+  Windows/Xbox) if macOS doesn't list it.
+- The app reads Xbox pads through Apple's GameController framework (`--enable-features=XboxUseGameControllerDataFetcherMac`),
+  which reports the W3C **standard** gamepad mapping over both Bluetooth and USB. Chromium made this the default in April 2026
+  because the older USB/HID path missed newer Xbox pads over USB on macOS (crbug.com/400455006) and inverted wired sticks on
+  macOS 15 (crbug.com/374313514); the switch makes sure this build uses it either way.
+- If a USB-connected pad isn't seen on macOS 15.4+: System Settings > Game Controllers > select the controller > allow it for
+  "Toad City Baltimore" (some 15.4+ builds only route USB controllers to apps listed there), or use Bluetooth.
+
+| Xbox button | In Toad City |
+|---|---|
+| A | jump / confirm (the game's own mapping) |
+| X | swing (attack) |
+| B | swing too, and back / close in the map and menus that offer it (the game's own mapping: B is not a pure "back" in the city) |
+| Y | act (talk, enter, pick up: the in-world prompt shows a yellow **Y** glyph) |
+| Left stick / D-pad | move (D-pad in duels) |
+| Right stick, LB / RB | camera |
+| LT / RT | used by the duels and the fort (block/aim/fire) where those modes say so |
+| View (two squares) | full map |
+| Start / Menu (three lines) | **pause** (desktop pause screen; A or Start resumes). Voltage Vic's intro and the fort's retry screen keep Start for themselves. |
+| **View + Start, hold 1 s** | **quit to ES-DE** (a HOLD TO QUIT bar shows) |
+- Button prompts: while a controller is in use, the game's prompts that name a face button ("Y", "A / X: TRY AGAIN", "X boost · A hop")
+  are redrawn as round Xbox-coloured glyphs (A green, B red, X blue, Y yellow). No game file is changed; the wrapper restyles them.
 
 ## Controls in the desktop build
 - Controller, keyboard and mouse work exactly as on the web (Gamepad API, standard mapping). No click is needed first: the window takes focus on launch.

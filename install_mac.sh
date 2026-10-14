@@ -36,15 +36,22 @@ if [ -z "${ROMS_DIR:-}" ]; then r="$(setting ROMDirectory)"; if [ -n "$r" ] && [
 if [ -z "${MEDIA_DIR:-}" ]; then m="$(setting MediaDirectory)"; if [ -n "$m" ] && [[ "$m" != *%ESPATH%* ]]; then MEDIA_DIR="${m/#\~/$HOME}"; else MEDIA_DIR="$ESDE_DIR/downloaded_media"; fi; fi
 
 WORK="$(mktemp -d)"; trap 'rm -rf "$WORK"' EXIT
+# When this script is run from the unzipped ES-DE kit (ToadCityBaltimore-esde.zip), use that kit and look for the app zip
+# next to it or in ~/Downloads before downloading anything. (When piped from curl there is no script dir.)
+HERE=""; if [ -n "${BASH_SOURCE[0]:-}" ] && [ -f "${BASH_SOURCE[0]}" ]; then HERE="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"; fi
+LOCAL_KIT=""; if [ -z "${ESDE_ZIP:-}" ] && [ -n "$HERE" ] && [ -f "$HERE/custom_systems/es_systems.xml" ]; then LOCAL_KIT="$HERE"; fi
+if [ -z "${APP_ZIP:-}" ] && [ -n "$LOCAL_KIT" ]; then
+  for z in "$HERE/$APP_ASSET" "$HERE/../$APP_ASSET" "$HOME/Downloads/$APP_ASSET"; do [ -f "$z" ] && { APP_ZIP="$z"; break; }; done
+fi
 
 # ---------------------------------------------------------------- 1. download
 asset_url() { # $1 = asset file name; picks it from $TAG, or from the newest desktop-v* release (pre-releases included)
   local json url
   if [ -n "${TAG:-}" ]; then printf 'https://github.com/%s/releases/download/%s/%s' "$REPO" "$TAG" "$1"; return; fi
-  json="$(curl -fsSL -H 'Accept: application/vnd.github+json' "https://api.github.com/repos/$REPO/releases?per_page=50")" \
-    || die "Could not reach the GitHub API to find the latest release (offline or rate-limited?). Retry, or set TAG=desktop-vN."
-  url="$(printf '%s\n' "$json" | grep -o "\"browser_download_url\": *\"[^\"]*/releases/download/desktop-v[0-9][^\"/]*/$1\"" | head -n1 | sed 's/.*"\(https[^"]*\)"$/\1/')"
-  [ -n "$url" ] || die "No desktop-v* release with $1 found in $REPO."
+  # the GitHub API lists pre-releases newest first; if it is unreachable or rate-limited, use the rolling desktop-latest release
+  json="$(curl -fsSL -H 'Accept: application/vnd.github+json' "https://api.github.com/repos/$REPO/releases?per_page=50" 2>/dev/null || true)"
+  url="$(printf '%s\n' "$json" | grep -o "\"browser_download_url\": *\"[^\"]*/releases/download/desktop-v[0-9][^\"/]*/$1\"" | head -n1 | sed 's/.*"\(https[^"]*\)"$/\1/' || true)"
+  [ -n "$url" ] || url="https://github.com/$REPO/releases/download/desktop-latest/$1"
   printf '%s' "$url"
 }
 fetch() { # $1 asset, $2 local override, $3 dest
@@ -53,10 +60,10 @@ fetch() { # $1 asset, $2 local override, $3 dest
   curl -fL --retry 3 --progress-bar -o "$3" "$u" || die "Download failed: $u"
 }
 fetch "$APP_ASSET" "${APP_ZIP:-}" "$WORK/app.zip"
-fetch "$ESDE_ASSET" "${ESDE_ZIP:-}" "$WORK/esde.zip"
 mkdir -p "$WORK/app" "$WORK/esde"
 ditto -x -k "$WORK/app.zip" "$WORK/app"
-ditto -x -k "$WORK/esde.zip" "$WORK/esde"
+if [ -n "$LOCAL_KIT" ]; then say "Using the ES-DE kit next to this script: $LOCAL_KIT"; cp -R "$LOCAL_KIT/." "$WORK/esde/"
+else fetch "$ESDE_ASSET" "${ESDE_ZIP:-}" "$WORK/esde.zip"; ditto -x -k "$WORK/esde.zip" "$WORK/esde"; fi
 SRC_APP="$(find "$WORK/app" -maxdepth 2 -name "$APP_NAME.app" -type d | head -n1)"
 [ -n "$SRC_APP" ] || die "The app zip has no '$APP_NAME.app'."
 KIT="$(find "$WORK/esde" -maxdepth 2 -type d -name custom_systems | head -n1)"; KIT="$(dirname "${KIT:-$WORK/esde/x}")"
@@ -126,8 +133,9 @@ VERIFY
   1. Start ES-DE. A "Toad City Baltimore" system appears in the system carousel (with ES-DE's "ports" theme art),
      with one game showing the screenshot, marquee and video.
      If it is missing: ES-DE > Main menu > Utilities > Rescan ROM directory, then check ~/ES-DE/logs/es_log.txt for "toadcity".
-  2. Launch it: the game opens fullscreen, no cursor, controller works right away.
-  3. Hold Select+Start (Back+Start) or Esc for 1 second: the game quits and ES-DE comes back. (Cmd+Q also works.)
+  2. Launch it: the game opens fullscreen, no cursor, the Xbox controller works right away
+     (A jump, X/B swing, Y act, LB/RB turn camera, View map, Start pause).
+  3. Hold View+Start (the two small buttons) or Esc for 1 second: the game quits and ES-DE comes back. (Cmd+Q also works.)
   Quick checks from Terminal:
      file "$DST_APP/Contents/MacOS/$APP_NAME"                 # -> universal binary, x86_64 + arm64
      xattr -l "$DST_APP" | grep -c quarantine || true          # -> 0
