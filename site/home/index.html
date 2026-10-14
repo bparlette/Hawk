@@ -246,6 +246,7 @@
         .x-idcard { transition: none; }
         .x-btn, .x-swap img { transition: none; }
       }
+      .x-live { text-decoration: none; cursor: pointer; } .x-live:hover { filter: brightness(1.08); } .x-liverow { display: flex; flex-wrap: wrap; gap: 8px; }
     </style>
     <script>
       window.onYouTubeIframeAPIReady = function () { window.xYTReady = true; };
@@ -426,7 +427,7 @@
             </article>
             <article class="x-ink x-gang">
               <div class="x-ink__body">
-                <span class="x-badge">Coming soon</span>
+                <div class="x-liverow"><a class="x-badge x-badge--green x-live" href="https://toad-city-baltimore.surge.sh/?phantoms=1" target="_blank" rel="noopener">Play now ▶</a><a class="x-badge x-badge--cream x-live" href="gallery/features_phantoms.mp4" target="_blank" rel="noopener">▶ Watch the loop</a></div>
                 <h3>Fells Point Phantoms</h3>
                 <ul class="x-tags"><li>Broadway pier · night only</li><li>Led by Captain Cobblestone</li></ul>
                 <p>Pirate ghosts drifting in on the fog off the Broadway pier. Knocking them into the water does nothing; flash them with the ghost lantern to make them solid.</p>
@@ -515,15 +516,15 @@
             <li>Pendry</li>
             <li>Fells Point</li>
             <li>Washington Monument</li>
-            <li>Oriole Park</li>
-            <li>M&amp;T Bank Stadium</li>
+            <li>Oriole Park · HD ballpark</li>
+            <li>M&amp;T Bank Stadium · HD field</li>
             <li>Federal Hill</li>
             <li>Under Armour / Tide Point</li>
             <li>Fort McHenry</li>
           </ul>
           <div class="x-row">
-            <h3 class="x-h3">Coming</h3>
-            <span class="x-badge">Coming soon</span>
+            <h3 class="x-h3">New district</h3>
+            <span class="x-badge x-badge--green">Walkable now</span>
           </div>
           <ul class="x-names">
             <li>Lexington Market</li>
@@ -545,7 +546,7 @@
           <article class="x-final">
             <span class="x-final__sil" aria-hidden="true">🍺</span>
             <div class="x-final__body">
-              <div class="x-badges"><span class="x-badge">Final boss</span><span class="x-badge x-badge--cream">In production</span></div>
+              <div class="x-badges"><span class="x-badge">Final boss</span><a class="x-badge x-badge--green x-live" href="https://toad-city-baltimore.surge.sh/?brewmaster=1" target="_blank" rel="noopener">Play now ▶</a><a class="x-badge x-badge--cream x-live" href="gallery/bosses_all.mp4" target="_blank" rel="noopener">▶ All 21 bosses</a></div>
               <h3>The One-Eyed Brewmaster</h3>
               <p>A round-headed, one-eyed, handlebar-mustached brewery mascot, fought in 3 parts.</p>
               <ol>
@@ -563,19 +564,19 @@
             <article class="x-boss"><span class="x-boss__sil" aria-hidden="true">⚡</span><div><h3>Voltage Vic</h3><p class="x-boss__at">Power Plant</p><p>Electric-eel DJ whose attacks drop on the club beat.</p><span class="x-badge x-badge--green">Playable now</span></div></article>
             <article class="x-boss"><span class="x-boss__sil" aria-hidden="true">🤖</span><div><h3>The Chip Kid</h3><p class="x-boss__at">Harborplace</p><p>A kid in a crab-chip-bag mech.</p><span class="x-badge x-badge--green">Playable now</span></div></article>
             <article class="x-boss"><span class="x-boss__sil" aria-hidden="true">🐉</span><div><h3>Dragon Boat Duchess</h3><p class="x-boss__at">The harbor · roaming</p><p>Roams the harbor; ambushes your first boat ride.</p><span class="x-badge x-badge--green">Playable now</span></div></article>
-            <article class="x-boss"><span class="x-boss__sil" aria-hidden="true">🐦</span><div><h3>The Raven King</h3><p class="x-boss__at">M&amp;T Bank Stadium</p><p>Giant raven linebacker with a "Nevermore" blitz.</p><span class="x-badge x-badge--red">In production</span></div></article>
-            <article class="x-boss"><span class="x-boss__sil" aria-hidden="true">🐢</span><div><h3>Dr. Shellacious</h3><p class="x-boss__at">Science Center</p><p>Mad snapping-turtle scientist, fought in the IMAX.</p><span class="x-badge x-badge--red">In production</span></div></article>
-            <article class="x-boss"><span class="x-boss__sil" aria-hidden="true">💇‍♀️</span><div><h3>The Hon Queen</h3><p class="x-boss__at">Federal Hill</p><p>Beehive, cat-eye glasses, hairspray clouds.</p><span class="x-badge x-badge--red">In production</span></div></article>
-            <article class="x-boss"><span class="x-boss__sil" aria-hidden="true">🍬</span><div><h3>Sugar Rush</h3><p class="x-boss__at">Domino Sugars</p><p>Sugar-crystal golem by the neon sign.</p><span class="x-badge x-badge--red">In production</span></div></article>
-            <article class="x-boss"><span class="x-boss__sil" aria-hidden="true">🏋️</span><div><h3>The Compression King</h3><p class="x-boss__at">Under Armour</p><p>Athleisure mannequin brute.</p><span class="x-badge x-badge--red">In production</span></div></article>
-            <article class="x-boss"><span class="x-boss__sil" aria-hidden="true">👨‍🍳</span><div><h3>Chef Crabcake</h3><p class="x-boss__at">Four Seasons</p><p>Blinding seasoning and crab mallets.</p><span class="x-badge x-badge--red">In production</span></div></article>
-            <article class="x-boss"><span class="x-boss__sil" aria-hidden="true">🦈</span><div><h3>The Pool Shark</h3><p class="x-boss__at">Pendry</p><p>The rooftop-pool heavy.</p><span class="x-badge x-badge--red">In production</span></div></article>
-            <article class="x-boss"><span class="x-boss__sil" aria-hidden="true">👻</span><div><h3>Captain Cobblestone</h3><p class="x-boss__at">USS Constellation</p><p>Ghost privateer.</p><span class="x-badge x-badge--red">In production</span></div></article>
-            <article class="x-boss"><span class="x-boss__sil" aria-hidden="true">🕊️</span><div><h3>The Penthouse Pigeon</h3><p class="x-boss__at">World Trade Center</p><p>Rules the rooftop deck.</p><span class="x-badge x-badge--red">In production</span></div></article>
-            <article class="x-boss"><span class="x-boss__sil" aria-hidden="true">🧽</span><div><h3>The Stoop Scrubber</h3><p class="x-boss__at">Washington Monument</p><p>Marble-step matriarch with slippery suds.</p><span class="x-badge x-badge--red">In production</span></div></article>
-            <article class="x-boss"><span class="x-boss__sil" aria-hidden="true">🐖</span><div><h3>Pit Beef Pete</h3><p class="x-boss__at">Lexington Market · New challenger</p><p>A huge hog in a butcher's apron. A 5-course eating contest, and he cheats by sliding food onto your plate.</p><span class="x-badge x-badge--red">In production</span></div></article>
-            <article class="x-boss"><span class="x-boss__sil" aria-hidden="true">🎳</span><div><h3>Kingpin Carl</h3><p class="x-boss__at">Rowhouse basement lanes · New challenger</p><p>A hefty possum with a lucky towel. Ten frames of duckpin bowling while his Masked Bandits heckle.</p><span class="x-badge x-badge--red">In production</span></div></article>
-            <article class="x-boss"><span class="x-boss__sil" aria-hidden="true">🥍</span><div><h3>Riptide Rodney</h3><p class="x-boss__at">Rash Field · New challenger</p><p>Captain of the Key Highway Otters. 2v2 lacrosse; check a defender into the harbor.</p><span class="x-badge x-badge--red">In production</span></div></article>
+            <article class="x-boss"><span class="x-boss__sil" aria-hidden="true">🐦</span><div><h3>The Raven King</h3><p class="x-boss__at">M&amp;T Bank Stadium</p><p>Giant raven linebacker with a "Nevermore" blitz.</p><a class="x-badge x-badge--green x-live" href="https://toad-city-baltimore.surge.sh/?ravenking=1" target="_blank" rel="noopener">Play now ▶</a></div></article>
+            <article class="x-boss"><span class="x-boss__sil" aria-hidden="true">🐢</span><div><h3>Dr. Shellacious</h3><p class="x-boss__at">Science Center</p><p>Mad snapping-turtle scientist, fought in the IMAX.</p><a class="x-badge x-badge--green x-live" href="https://toad-city-baltimore.surge.sh/?shellacious=1" target="_blank" rel="noopener">Play now ▶</a></div></article>
+            <article class="x-boss"><span class="x-boss__sil" aria-hidden="true">💇‍♀️</span><div><h3>The Hon Queen</h3><p class="x-boss__at">Federal Hill</p><p>Beehive, cat-eye glasses, hairspray clouds.</p><a class="x-badge x-badge--green x-live" href="https://toad-city-baltimore.surge.sh/?honqueen=1" target="_blank" rel="noopener">Play now ▶</a></div></article>
+            <article class="x-boss"><span class="x-boss__sil" aria-hidden="true">🍬</span><div><h3>Sugar Rush</h3><p class="x-boss__at">Domino Sugars</p><p>Sugar-crystal golem by the neon sign.</p><a class="x-badge x-badge--green x-live" href="https://toad-city-baltimore.surge.sh/?sugarrush=1" target="_blank" rel="noopener">Play now ▶</a></div></article>
+            <article class="x-boss"><span class="x-boss__sil" aria-hidden="true">🏋️</span><div><h3>The Compression King</h3><p class="x-boss__at">Under Armour</p><p>Athleisure mannequin brute.</p><a class="x-badge x-badge--green x-live" href="https://toad-city-baltimore.surge.sh/?compking=1" target="_blank" rel="noopener">Play now ▶</a></div></article>
+            <article class="x-boss"><span class="x-boss__sil" aria-hidden="true">👨‍🍳</span><div><h3>Chef Crabcake</h3><p class="x-boss__at">Four Seasons</p><p>Blinding seasoning and crab mallets.</p><a class="x-badge x-badge--green x-live" href="https://toad-city-baltimore.surge.sh/?crabcake=1" target="_blank" rel="noopener">Play now ▶</a></div></article>
+            <article class="x-boss"><span class="x-boss__sil" aria-hidden="true">🦈</span><div><h3>The Pool Shark</h3><p class="x-boss__at">Pendry</p><p>The rooftop-pool heavy.</p><a class="x-badge x-badge--green x-live" href="https://toad-city-baltimore.surge.sh/?poolshark=1" target="_blank" rel="noopener">Play now ▶</a></div></article>
+            <article class="x-boss"><span class="x-boss__sil" aria-hidden="true">👻</span><div><h3>Captain Cobblestone</h3><p class="x-boss__at">USS Constellation</p><p>Ghost privateer.</p><a class="x-badge x-badge--green x-live" href="https://toad-city-baltimore.surge.sh/?cobblestone=1" target="_blank" rel="noopener">Play now ▶</a></div></article>
+            <article class="x-boss"><span class="x-boss__sil" aria-hidden="true">🕊️</span><div><h3>The Penthouse Pigeon</h3><p class="x-boss__at">World Trade Center</p><p>Rules the rooftop deck.</p><a class="x-badge x-badge--green x-live" href="https://toad-city-baltimore.surge.sh/?pigeon=1" target="_blank" rel="noopener">Play now ▶</a></div></article>
+            <article class="x-boss"><span class="x-boss__sil" aria-hidden="true">🧽</span><div><h3>The Stoop Scrubber</h3><p class="x-boss__at">Washington Monument</p><p>Marble-step matriarch with slippery suds.</p><a class="x-badge x-badge--green x-live" href="https://toad-city-baltimore.surge.sh/?scrubber=1" target="_blank" rel="noopener">Play now ▶</a></div></article>
+            <article class="x-boss"><span class="x-boss__sil" aria-hidden="true">🐖</span><div><h3>Pit Beef Pete</h3><p class="x-boss__at">Lexington Market · New challenger</p><p>A huge hog in a butcher's apron. A 5-course eating contest, and he cheats by sliding food onto your plate.</p><a class="x-badge x-badge--green x-live" href="https://toad-city-baltimore.surge.sh/?pete=1" target="_blank" rel="noopener">Play now ▶</a></div></article>
+            <article class="x-boss"><span class="x-boss__sil" aria-hidden="true">🎳</span><div><h3>Kingpin Carl</h3><p class="x-boss__at">Rowhouse basement lanes · New challenger</p><p>A hefty possum with a lucky towel. Ten frames of duckpin bowling while his Masked Bandits heckle.</p><a class="x-badge x-badge--green x-live" href="https://toad-city-baltimore.surge.sh/?carl=1" target="_blank" rel="noopener">Play now ▶</a></div></article>
+            <article class="x-boss"><span class="x-boss__sil" aria-hidden="true">🥍</span><div><h3>Riptide Rodney</h3><p class="x-boss__at">Rash Field · New challenger</p><p>Captain of the Key Highway Otters. 2v2 lacrosse; check a defender into the harbor.</p><a class="x-badge x-badge--green x-live" href="https://toad-city-baltimore.surge.sh/?duel=rodney" target="_blank" rel="noopener">Play now ▶</a></div></article>
           </div>
         </section>
 
@@ -641,18 +642,259 @@
         </section>
         <!-- CLIPS:END -->
 
+        <!-- GALLERY:START (generated by gifs/mkhtml.js; re-run gifs/recapture.sh, do not hand-edit) -->
+        <style>
+          .x-gal__group { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; margin: 28px 0 14px; }
+          .x-gal__grid { display: grid; gap: 18px; grid-template-columns: repeat(auto-fill, minmax(min(100%, 260px), 1fr)); }
+          .x-gal__grid--wide { grid-template-columns: repeat(auto-fill, minmax(min(100%, 420px), 1fr)); }
+          .x-gal__grid--tall { grid-template-columns: repeat(auto-fill, minmax(min(46%, 200px), 1fr)); }
+          .x-gal__media--tall { aspect-ratio: 9 / 16; }
+          .x-gal__card { margin: 0; }
+          .x-gal__feat { display: grid; grid-template-columns: minmax(0, 300px) 1fr; align-items: center; }
+          .x-gal__feat .x-gal__feat-media { aspect-ratio: 9 / 16; border-bottom: 0; border-right: 3px solid var(--x-line); }
+          .x-gal__feat-media video { object-fit: contain; background: #000; } .x-gal__feat .x-ink__body { padding: 24px 32px; } .x-gal__feat h4 { font-size: clamp(28px, 5vw, 44px); }
+          @media (max-width: 640px) { .x-gal__feat { grid-template-columns: 1fr; } .x-gal__feat .x-gal__feat-media { border-right: 0; border-bottom: 3px solid var(--x-line); } }
+          .x-gal__media { aspect-ratio: 16 / 9; background: var(--x-ink); border-bottom: 3px solid var(--x-line); }
+          .x-gal__media video, .x-gal__media img { display: block; width: 100%; height: 100%; object-fit: cover; }
+          .x-gal__card .x-ink__body { padding: 12px 16px 16px; gap: 4px; }
+          .x-gal__card h4 { font-family: var(--x-display); font-weight: 400; font-size: clamp(22px, 4vw, 26px); letter-spacing: 0.04em; line-height: 1; margin: 0; }
+          .x-gal__gif { justify-self: start; margin-top: 6px; font: var(--type-small); color: var(--text-secondary); text-decoration: underline; text-underline-offset: 3px; }
+        </style>
+        <section class="section" id="gallery" data-nav="Gallery">
+          <div class="head">
+            <p class="head__eyebrow">Gallery · captured in-engine</p>
+            <h2 class="x-h2">See it move</h2>
+            <p class="head__sub">The ending, 35 looping clips straight from the current build: every landmark, every boss, the crews, the specials and the features.</p>
+          </div>
+          <h3 class="x-h3 x-gal__group">The Ending <span class="x-badge x-badge--green">Featured</span></h3>
+          <figure class="x-ink x-gal__card x-gal__feat">
+            <div class="x-gal__media x-gal__media--tall x-gal__feat-media"><video controls playsinline preload="none" poster="gallery/ending/toadcity_ending.jpg" src="gallery/ending/toadcity_ending.mp4" aria-label="Toad City: the ending, with sound"></video></div>
+            <figcaption class="x-ink__body"><h4>The Ending</h4><p class="sub">Beat the Brewmaster and see how Toad City's story wraps up. Spoilers, with sound · 1:19</p><a class="x-gal__gif" href="gallery/ending/toadcity_ending.mp4" target="_blank" rel="noopener">Open full screen · 12.6 MB</a></figcaption>
+          </figure>
+          <h3 class="x-h3 x-gal__group">Fly the whole Inner Harbor <span class="x-badge x-badge--cream">The tour</span></h3>
+          <div class="x-gal__grid x-gal__grid--wide">
+            <figure class="x-ink x-gal__card">
+              <div class="x-gal__media"><video class="x-gal__vid" muted loop playsinline preload="none" poster="gallery/landmarks_all.jpg" data-src="gallery/landmarks_all.mp4" aria-label="Every landmark: looping gameplay clip"></video>
+                <noscript><img src="gallery/landmarks_all.gif" alt="Every landmark: looping gameplay GIF" loading="lazy" /></noscript></div>
+              <figcaption class="x-ink__body"><h4>Every landmark</h4><p class="sub">16 landmarks, back to back</p><a class="x-gal__gif" href="gallery/landmarks_all.gif" target="_blank" rel="noopener">GIF · 2.9 MB</a></figcaption>
+            </figure>
+          </div>
+          <h3 class="x-h3 x-gal__group">Every boss, mid-fight <span class="x-badge x-badge--cream">The roster</span></h3>
+          <div class="x-gal__grid x-gal__grid--wide">
+            <figure class="x-ink x-gal__card">
+              <div class="x-gal__media"><video class="x-gal__vid" muted loop playsinline preload="none" poster="gallery/bosses_all.jpg" data-src="gallery/bosses_all.mp4" aria-label="Every boss: looping gameplay clip"></video>
+                <noscript><img src="gallery/bosses_all.gif" alt="Every boss: looping gameplay GIF" loading="lazy" /></noscript></div>
+              <figcaption class="x-ink__body"><h4>Every boss</h4><p class="sub">21 bosses, back to back</p><a class="x-gal__gif" href="gallery/bosses_all.gif" target="_blank" rel="noopener">GIF · 3.2 MB</a></figcaption>
+            </figure>
+          </div>
+          <h3 class="x-h3 x-gal__group">Harold, Mavis and the gangs <span class="x-badge x-badge--cream">6 loops</span></h3>
+          <div class="x-gal__grid">
+            <figure class="x-ink x-gal__card">
+              <div class="x-gal__media"><video class="x-gal__vid" muted loop playsinline preload="none" poster="gallery/fighters_team.jpg" data-src="gallery/fighters_team.mp4" aria-label="Harold &amp; Mavis: looping gameplay clip"></video>
+                <noscript><img src="gallery/fighters_team.gif" alt="Harold &amp; Mavis: looping gameplay GIF" loading="lazy" /></noscript></div>
+              <figcaption class="x-ink__body"><h4>Harold &amp; Mavis</h4><p class="sub">The Player Team (Mavis = AI Partner)</p><a class="x-gal__gif" href="gallery/fighters_team.gif" target="_blank" rel="noopener">GIF · 2.1 MB</a></figcaption>
+            </figure>
+            <figure class="x-ink x-gal__card">
+              <div class="x-gal__media"><video class="x-gal__vid" muted loop playsinline preload="none" poster="gallery/fighters_harbor_rats.jpg" data-src="gallery/fighters_harbor_rats.mp4" aria-label="Harbor Rats: looping gameplay clip"></video>
+                <noscript><img src="gallery/fighters_harbor_rats.gif" alt="Harbor Rats: looping gameplay GIF" loading="lazy" /></noscript></div>
+              <figcaption class="x-ink__body"><h4>Harbor Rats</h4><p class="sub">Turf: Harborplace / WTC / Monument</p><a class="x-gal__gif" href="gallery/fighters_harbor_rats.gif" target="_blank" rel="noopener">GIF · 1.9 MB</a></figcaption>
+            </figure>
+            <figure class="x-ink x-gal__card">
+              <div class="x-gal__media"><video class="x-gal__vid" muted loop playsinline preload="none" poster="gallery/fighters_pier_gulls.jpg" data-src="gallery/fighters_pier_gulls.mp4" aria-label="Pier Gulls: looping gameplay clip"></video>
+                <noscript><img src="gallery/fighters_pier_gulls.gif" alt="Pier Gulls: looping gameplay GIF" loading="lazy" /></noscript></div>
+              <figcaption class="x-ink__body"><h4>Pier Gulls</h4><p class="sub">Turf: Aquarium / Power Plant</p><a class="x-gal__gif" href="gallery/fighters_pier_gulls.gif" target="_blank" rel="noopener">GIF · 1.8 MB</a></figcaption>
+            </figure>
+            <figure class="x-ink x-gal__card">
+              <div class="x-gal__media"><video class="x-gal__vid" muted loop playsinline preload="none" poster="gallery/fighters_cobble_catfish.jpg" data-src="gallery/fighters_cobble_catfish.mp4" aria-label="Cobblestone Catfish: looping gameplay clip"></video>
+                <noscript><img src="gallery/fighters_cobble_catfish.gif" alt="Cobblestone Catfish: looping gameplay GIF" loading="lazy" /></noscript></div>
+              <figcaption class="x-ink__body"><h4>Cobblestone Catfish</h4><p class="sub">Turf: Harbor East / Fells Point</p><a class="x-gal__gif" href="gallery/fighters_cobble_catfish.gif" target="_blank" rel="noopener">GIF · 2.2 MB</a></figcaption>
+            </figure>
+            <figure class="x-ink x-gal__card">
+              <div class="x-gal__media"><video class="x-gal__vid" muted loop playsinline preload="none" poster="gallery/fighters_masked_bandits.jpg" data-src="gallery/fighters_masked_bandits.mp4" aria-label="Masked Bandits: looping gameplay clip"></video>
+                <noscript><img src="gallery/fighters_masked_bandits.gif" alt="Masked Bandits: looping gameplay GIF" loading="lazy" /></noscript></div>
+              <figcaption class="x-ink__body"><h4>Masked Bandits</h4><p class="sub">Turf: Stadiums / Science Center</p><a class="x-gal__gif" href="gallery/fighters_masked_bandits.gif" target="_blank" rel="noopener">GIF · 1.7 MB</a></figcaption>
+            </figure>
+            <figure class="x-ink x-gal__card">
+              <div class="x-gal__media"><video class="x-gal__vid" muted loop playsinline preload="none" poster="gallery/fighters_key_hwy_otters.jpg" data-src="gallery/fighters_key_hwy_otters.mp4" aria-label="Key Highway Otters: looping gameplay clip"></video>
+                <noscript><img src="gallery/fighters_key_hwy_otters.gif" alt="Key Highway Otters: looping gameplay GIF" loading="lazy" /></noscript></div>
+              <figcaption class="x-ink__body"><h4>Key Highway Otters</h4><p class="sub">Turf: Federal Hill / Key Hwy / Fort</p><a class="x-gal__gif" href="gallery/fighters_key_hwy_otters.gif" target="_blank" rel="noopener">GIF · 1.8 MB</a></figcaption>
+            </figure>
+          </div>
+          <h3 class="x-h3 x-gal__group">Specials and tag-team finishers <span class="x-badge x-badge--cream">16 loops</span></h3>
+          <div class="x-gal__grid">
+            <figure class="x-ink x-gal__card">
+              <div class="x-gal__media"><video class="x-gal__vid" muted loop playsinline preload="none" poster="gallery/specials_cane_combo.jpg" data-src="gallery/specials_cane_combo.mp4" aria-label="Cane Combo: looping gameplay clip"></video>
+                <noscript><img src="gallery/specials_cane_combo.gif" alt="Cane Combo: looping gameplay GIF" loading="lazy" /></noscript></div>
+              <figcaption class="x-ink__body"><h4>Cane Combo</h4><p class="sub">Harold: 3-Hit Cane String</p><a class="x-gal__gif" href="gallery/specials_cane_combo.gif" target="_blank" rel="noopener">GIF · 1.7 MB</a></figcaption>
+            </figure>
+            <figure class="x-ink x-gal__card">
+              <div class="x-gal__media"><video class="x-gal__vid" muted loop playsinline preload="none" poster="gallery/specials_air_cane.jpg" data-src="gallery/specials_air_cane.mp4" aria-label="Air Cane: looping gameplay clip"></video>
+                <noscript><img src="gallery/specials_air_cane.gif" alt="Air Cane: looping gameplay GIF" loading="lazy" /></noscript></div>
+              <figcaption class="x-ink__body"><h4>Air Cane</h4><p class="sub">Jump + Swing</p><a class="x-gal__gif" href="gallery/specials_air_cane.gif" target="_blank" rel="noopener">GIF · 0.6 MB</a></figcaption>
+            </figure>
+            <figure class="x-ink x-gal__card">
+              <div class="x-gal__media"><video class="x-gal__vid" muted loop playsinline preload="none" poster="gallery/specials_cane_quake.jpg" data-src="gallery/specials_cane_quake.mp4" aria-label="Cane Quake: looping gameplay clip"></video>
+                <noscript><img src="gallery/specials_cane_quake.gif" alt="Cane Quake: looping gameplay GIF" loading="lazy" /></noscript></div>
+              <figcaption class="x-ink__body"><h4>Cane Quake</h4><p class="sub">Power: Hop, Flip, Slam + Mavis Spin</p><a class="x-gal__gif" href="gallery/specials_cane_quake.gif" target="_blank" rel="noopener">GIF · 1.4 MB</a></figcaption>
+            </figure>
+            <figure class="x-ink x-gal__card">
+              <div class="x-gal__media"><video class="x-gal__vid" muted loop playsinline preload="none" poster="gallery/specials_purse_swing.jpg" data-src="gallery/specials_purse_swing.mp4" aria-label="Purse Swing: looping gameplay clip"></video>
+                <noscript><img src="gallery/specials_purse_swing.gif" alt="Purse Swing: looping gameplay GIF" loading="lazy" /></noscript></div>
+              <figcaption class="x-ink__body"><h4>Purse Swing</h4><p class="sub">Mavis's Handbag</p><a class="x-gal__gif" href="gallery/specials_purse_swing.gif" target="_blank" rel="noopener">GIF · 2.1 MB</a></figcaption>
+            </figure>
+            <figure class="x-ink x-gal__card">
+              <div class="x-gal__media"><video class="x-gal__vid" muted loop playsinline preload="none" poster="gallery/specials_tag_finisher.jpg" data-src="gallery/specials_tag_finisher.mp4" aria-label="Tag-Team Finisher: looping gameplay clip"></video>
+                <noscript><img src="gallery/specials_tag_finisher.gif" alt="Tag-Team Finisher: looping gameplay GIF" loading="lazy" /></noscript></div>
+              <figcaption class="x-ink__body"><h4>Tag-Team Finisher</h4><p class="sub">Dizzy Thug: Finish (QTE)</p><a class="x-gal__gif" href="gallery/specials_tag_finisher.gif" target="_blank" rel="noopener">GIF · 1.4 MB</a></figcaption>
+            </figure>
+            <figure class="x-ink x-gal__card">
+              <div class="x-gal__media"><video class="x-gal__vid" muted loop playsinline preload="none" poster="gallery/specials_cane_torpedo.jpg" data-src="gallery/specials_cane_torpedo.mp4" aria-label="Cane Torpedo: looping gameplay clip"></video>
+                <noscript><img src="gallery/specials_cane_torpedo.gif" alt="Cane Torpedo: looping gameplay GIF" loading="lazy" /></noscript></div>
+              <figcaption class="x-ink__body"><h4>Cane Torpedo</h4><p class="sub">Big Jimmy Duel Power</p><a class="x-gal__gif" href="gallery/specials_cane_torpedo.gif" target="_blank" rel="noopener">GIF · 1.6 MB</a></figcaption>
+            </figure>
+            <figure class="x-ink x-gal__card">
+              <div class="x-gal__media"><video class="x-gal__vid" muted loop playsinline preload="none" poster="gallery/specials_chipkid_specials.jpg" data-src="gallery/specials_chipkid_specials.mp4" aria-label="Hon! Homer: looping gameplay clip"></video>
+                <noscript><img src="gallery/specials_chipkid_specials.gif" alt="Hon! Homer: looping gameplay GIF" loading="lazy" /></noscript></div>
+              <figcaption class="x-ink__body"><h4>Hon! Homer</h4><p class="sub">Chip Kid Duel Power Special</p><a class="x-gal__gif" href="gallery/specials_chipkid_specials.gif" target="_blank" rel="noopener">GIF · 1.7 MB</a></figcaption>
+            </figure>
+            <figure class="x-ink x-gal__card">
+              <div class="x-gal__media"><video class="x-gal__vid" muted loop playsinline preload="none" poster="gallery/specials_chefs_flip.jpg" data-src="gallery/specials_chefs_flip.mp4" aria-label="Chef's Flip: looping gameplay clip"></video>
+                <noscript><img src="gallery/specials_chefs_flip.gif" alt="Chef's Flip: looping gameplay GIF" loading="lazy" /></noscript></div>
+              <figcaption class="x-ink__body"><h4>Chef's Flip</h4><p class="sub">Team-Up Vs Chef Crabcake</p><a class="x-gal__gif" href="gallery/specials_chefs_flip.gif" target="_blank" rel="noopener">GIF · 1.7 MB</a></figcaption>
+            </figure>
+            <figure class="x-ink x-gal__card">
+              <div class="x-gal__media"><video class="x-gal__vid" muted loop playsinline preload="none" poster="gallery/specials_clearance_sale.jpg" data-src="gallery/specials_clearance_sale.mp4" aria-label="Clearance Sale: looping gameplay clip"></video>
+                <noscript><img src="gallery/specials_clearance_sale.gif" alt="Clearance Sale: looping gameplay GIF" loading="lazy" /></noscript></div>
+              <figcaption class="x-ink__body"><h4>Clearance Sale</h4><p class="sub">Power Vs The Compression King</p><a class="x-gal__gif" href="gallery/specials_clearance_sale.gif" target="_blank" rel="noopener">GIF · 0.5 MB</a></figcaption>
+            </figure>
+            <figure class="x-ink x-gal__card">
+              <div class="x-gal__media"><video class="x-gal__vid" muted loop playsinline preload="none" poster="gallery/specials_bank_shot.jpg" data-src="gallery/specials_bank_shot.mp4" aria-label="Bank Shot: looping gameplay clip"></video>
+                <noscript><img src="gallery/specials_bank_shot.gif" alt="Bank Shot: looping gameplay GIF" loading="lazy" /></noscript></div>
+              <figcaption class="x-ink__body"><h4>Bank Shot</h4><p class="sub">Team-Up Vs The Pool Shark</p><a class="x-gal__gif" href="gallery/specials_bank_shot.gif" target="_blank" rel="noopener">GIF · 1.0 MB</a></figcaption>
+            </figure>
+            <figure class="x-ink x-gal__card">
+              <div class="x-gal__media"><video class="x-gal__vid" muted loop playsinline preload="none" poster="gallery/specials_stoop_surf.jpg" data-src="gallery/specials_stoop_surf.mp4" aria-label="Stoop Surf: looping gameplay clip"></video>
+                <noscript><img src="gallery/specials_stoop_surf.gif" alt="Stoop Surf: looping gameplay GIF" loading="lazy" /></noscript></div>
+              <figcaption class="x-ink__body"><h4>Stoop Surf</h4><p class="sub">Team-Up Vs The Stoop Scrubber</p><a class="x-gal__gif" href="gallery/specials_stoop_surf.gif" target="_blank" rel="noopener">GIF · 1.3 MB</a></figcaption>
+            </figure>
+            <figure class="x-ink x-gal__card">
+              <div class="x-gal__media"><video class="x-gal__vid" muted loop playsinline preload="none" poster="gallery/specials_plot_twist.jpg" data-src="gallery/specials_plot_twist.mp4" aria-label="Plot Twist: looping gameplay clip"></video>
+                <noscript><img src="gallery/specials_plot_twist.gif" alt="Plot Twist: looping gameplay GIF" loading="lazy" /></noscript></div>
+              <figcaption class="x-ink__body"><h4>Plot Twist</h4><p class="sub">Power Vs Dr. Shellacious</p><a class="x-gal__gif" href="gallery/specials_plot_twist.gif" target="_blank" rel="noopener">GIF · 1.4 MB</a></figcaption>
+            </figure>
+            <figure class="x-ink x-gal__card">
+              <div class="x-gal__media"><video class="x-gal__vid" muted loop playsinline preload="none" poster="gallery/specials_back_boost.jpg" data-src="gallery/specials_back_boost.mp4" aria-label="Mavis Back-Boost: looping gameplay clip"></video>
+                <noscript><img src="gallery/specials_back_boost.gif" alt="Mavis Back-Boost: looping gameplay GIF" loading="lazy" /></noscript></div>
+              <figcaption class="x-ink__body"><h4>Mavis Back-Boost</h4><p class="sub">Team-Up Vs Sugar Rush</p><a class="x-gal__gif" href="gallery/specials_back_boost.gif" target="_blank" rel="noopener">GIF · 1.1 MB</a></figcaption>
+            </figure>
+            <figure class="x-ink x-gal__card">
+              <div class="x-gal__media"><video class="x-gal__vid" muted loop playsinline preload="none" poster="gallery/specials_lantern_flare.jpg" data-src="gallery/specials_lantern_flare.mp4" aria-label="Lantern Flare: looping gameplay clip"></video>
+                <noscript><img src="gallery/specials_lantern_flare.gif" alt="Lantern Flare: looping gameplay GIF" loading="lazy" /></noscript></div>
+              <figcaption class="x-ink__body"><h4>Lantern Flare</h4><p class="sub">Power Vs Captain Cobblestone</p><a class="x-gal__gif" href="gallery/specials_lantern_flare.gif" target="_blank" rel="noopener">GIF · 1.3 MB</a></figcaption>
+            </figure>
+            <figure class="x-ink x-gal__card">
+              <div class="x-gal__media"><video class="x-gal__vid" muted loop playsinline preload="none" poster="gallery/specials_hon_haymaker.jpg" data-src="gallery/specials_hon_haymaker.mp4" aria-label="Hon Haymaker: looping gameplay clip"></video>
+                <noscript><img src="gallery/specials_hon_haymaker.gif" alt="Hon Haymaker: looping gameplay GIF" loading="lazy" /></noscript></div>
+              <figcaption class="x-ink__body"><h4>Hon Haymaker</h4><p class="sub">Team-Up Vs The Brewmaster</p><a class="x-gal__gif" href="gallery/specials_hon_haymaker.gif" target="_blank" rel="noopener">GIF · 1.6 MB</a></figcaption>
+            </figure>
+            <figure class="x-ink x-gal__card">
+              <div class="x-gal__media"><video class="x-gal__vid" muted loop playsinline preload="none" poster="gallery/specials_dragon_slayer_ram.jpg" data-src="gallery/specials_dragon_slayer_ram.mp4" aria-label="Dragon-Slayer Ram: looping gameplay clip"></video>
+                <noscript><img src="gallery/specials_dragon_slayer_ram.gif" alt="Dragon-Slayer Ram: looping gameplay GIF" loading="lazy" /></noscript></div>
+              <figcaption class="x-ink__body"><h4>Dragon-Slayer Ram</h4><p class="sub">Power Vs The Dragon Boat Duchess</p><a class="x-gal__gif" href="gallery/specials_dragon_slayer_ram.gif" target="_blank" rel="noopener">GIF · 1.0 MB</a></figcaption>
+            </figure>
+          </div>
+          <h3 class="x-h3 x-gal__group">The stuff that makes it Baltimore <span class="x-badge x-badge--cream">11 loops</span></h3>
+          <div class="x-gal__grid">
+            <figure class="x-ink x-gal__card">
+              <div class="x-gal__media"><video class="x-gal__vid" muted loop playsinline preload="none" poster="gallery/features_fishing.jpg" data-src="gallery/features_fishing.mp4" aria-label="Harbor Fishing: looping gameplay clip"></video>
+                <noscript><img src="gallery/features_fishing.gif" alt="Harbor Fishing: looping gameplay GIF" loading="lazy" /></noscript></div>
+              <figcaption class="x-ink__body"><h4>Harbor Fishing</h4><p class="sub">Cast, Hook, Reel + Feed Chompy</p><a class="x-gal__gif" href="gallery/features_fishing.gif" target="_blank" rel="noopener">GIF · 0.4 MB</a></figcaption>
+            </figure>
+            <figure class="x-ink x-gal__card">
+              <div class="x-gal__media"><video class="x-gal__vid" muted loop playsinline preload="none" poster="gallery/features_poe.jpg" data-src="gallery/features_poe.mp4" aria-label="Poe Stealth Night: looping gameplay clip"></video>
+                <noscript><img src="gallery/features_poe.gif" alt="Poe Stealth Night: looping gameplay GIF" loading="lazy" /></noscript></div>
+              <figcaption class="x-ink__body"><h4>Poe Stealth Night</h4><p class="sub">Sneak Past The Crow Lanterns</p><a class="x-gal__gif" href="gallery/features_poe.gif" target="_blank" rel="noopener">GIF · 1.3 MB</a></figcaption>
+            </figure>
+            <figure class="x-ink x-gal__card">
+              <div class="x-gal__media"><video class="x-gal__vid" muted loop playsinline preload="none" poster="gallery/features_phantoms.jpg" data-src="gallery/features_phantoms.mp4" aria-label="Fells Point Phantoms: looping gameplay clip"></video>
+                <noscript><img src="gallery/features_phantoms.gif" alt="Fells Point Phantoms: looping gameplay GIF" loading="lazy" /></noscript></div>
+              <figcaption class="x-ink__body"><h4>Fells Point Phantoms</h4><p class="sub">Ghost Pirates On Broadway Pier</p><a class="x-gal__gif" href="gallery/features_phantoms.gif" target="_blank" rel="noopener">GIF · 1.4 MB</a></figcaption>
+            </figure>
+            <figure class="x-ink x-gal__card">
+              <div class="x-gal__media"><video class="x-gal__vid" muted loop playsinline preload="none" poster="gallery/features_cobble_storm.jpg" data-src="gallery/features_cobble_storm.mp4" aria-label="Daytime Storm: looping gameplay clip"></video>
+                <noscript><img src="gallery/features_cobble_storm.gif" alt="Daytime Storm: looping gameplay GIF" loading="lazy" /></noscript></div>
+              <figcaption class="x-ink__body"><h4>Daytime Storm</h4><p class="sub">Captain Cobblestone Calls It In</p><a class="x-gal__gif" href="gallery/features_cobble_storm.gif" target="_blank" rel="noopener">GIF · 2.0 MB</a></figcaption>
+            </figure>
+            <figure class="x-ink x-gal__card">
+              <div class="x-gal__media"><video class="x-gal__vid" muted loop playsinline preload="none" poster="gallery/features_final_blow_replay.jpg" data-src="gallery/features_final_blow_replay.mp4" aria-label="Final-Blow Replay: looping gameplay clip"></video>
+                <noscript><img src="gallery/features_final_blow_replay.gif" alt="Final-Blow Replay: looping gameplay GIF" loading="lazy" /></noscript></div>
+              <figcaption class="x-ink__body"><h4>Final-Blow Replay</h4><p class="sub">Hit-Stop, Combos + Slow-Mo Ko</p><a class="x-gal__gif" href="gallery/features_final_blow_replay.gif" target="_blank" rel="noopener">GIF · 1.3 MB</a></figcaption>
+            </figure>
+            <figure class="x-ink x-gal__card">
+              <div class="x-gal__media"><video class="x-gal__vid" muted loop playsinline preload="none" poster="gallery/features_drone.jpg" data-src="gallery/features_drone.mp4" aria-label="The Drone: looping gameplay clip"></video>
+                <noscript><img src="gallery/features_drone.gif" alt="The Drone: looping gameplay GIF" loading="lazy" /></noscript></div>
+              <figcaption class="x-ink__body"><h4>The Drone</h4><p class="sub">Unlocked After The Finale</p><a class="x-gal__gif" href="gallery/features_drone.gif" target="_blank" rel="noopener">GIF · 3.0 MB</a></figcaption>
+            </figure>
+            <figure class="x-ink x-gal__card">
+              <div class="x-gal__media"><video class="x-gal__vid" muted loop playsinline preload="none" poster="gallery/features_fireworks.jpg" data-src="gallery/features_fireworks.mp4" aria-label="Finale Fireworks: looping gameplay clip"></video>
+                <noscript><img src="gallery/features_fireworks.gif" alt="Finale Fireworks: looping gameplay GIF" loading="lazy" /></noscript></div>
+              <figcaption class="x-ink__body"><h4>Finale Fireworks</h4><p class="sub">The City Is Saved</p><a class="x-gal__gif" href="gallery/features_fireworks.gif" target="_blank" rel="noopener">GIF · 2.1 MB</a></figcaption>
+            </figure>
+            <figure class="x-ink x-gal__card">
+              <div class="x-gal__media"><video class="x-gal__vid" muted loop playsinline preload="none" poster="gallery/features_partner_ai.jpg" data-src="gallery/features_partner_ai.mp4" aria-label="Mavis: AI Partner: looping gameplay clip"></video>
+                <noscript><img src="gallery/features_partner_ai.gif" alt="Mavis: AI Partner: looping gameplay GIF" loading="lazy" /></noscript></div>
+              <figcaption class="x-ink__body"><h4>Mavis: AI Partner</h4><p class="sub">Follows, Fights, Revives, Tag-Teams</p><a class="x-gal__gif" href="gallery/features_partner_ai.gif" target="_blank" rel="noopener">GIF · 2.2 MB</a></figcaption>
+            </figure>
+            <figure class="x-ink x-gal__card">
+              <div class="x-gal__media"><video class="x-gal__vid" muted loop playsinline preload="none" poster="gallery/features_derby.jpg" data-src="gallery/features_derby.mp4" aria-label="Home Run Derby: looping gameplay clip"></video>
+                <noscript><img src="gallery/features_derby.gif" alt="Home Run Derby: looping gameplay GIF" loading="lazy" /></noscript></div>
+              <figcaption class="x-ink__body"><h4>Home Run Derby</h4><p class="sub">Oriole Park</p><a class="x-gal__gif" href="gallery/features_derby.gif" target="_blank" rel="noopener">GIF · 1.6 MB</a></figcaption>
+            </figure>
+            <figure class="x-ink x-gal__card">
+              <div class="x-gal__media"><video class="x-gal__vid" muted loop playsinline preload="none" poster="gallery/features_stoop.jpg" data-src="gallery/features_stoop.mp4" aria-label="Marble Stoop Showdown: looping gameplay clip"></video>
+                <noscript><img src="gallery/features_stoop.gif" alt="Marble Stoop Showdown: looping gameplay GIF" loading="lazy" /></noscript></div>
+              <figcaption class="x-ink__body"><h4>Marble Stoop Showdown</h4><p class="sub">Slippery Suds On The White Marble Steps</p><a class="x-gal__gif" href="gallery/features_stoop.gif" target="_blank" rel="noopener">GIF · 1.5 MB</a></figcaption>
+            </figure>
+            <figure class="x-ink x-gal__card">
+              <div class="x-gal__media"><video class="x-gal__vid" muted loop playsinline preload="none" poster="gallery/features_grandprix.jpg" data-src="gallery/features_grandprix.mp4" aria-label="Harbor Grand Prix: looping gameplay clip"></video>
+                <noscript><img src="gallery/features_grandprix.gif" alt="Harbor Grand Prix: looping gameplay GIF" loading="lazy" /></noscript></div>
+              <figcaption class="x-ink__body"><h4>Harbor Grand Prix</h4><p class="sub">3 Laps Of Pratt Street</p><a class="x-gal__gif" href="gallery/features_grandprix.gif" target="_blank" rel="noopener">GIF · 2.0 MB</a></figcaption>
+            </figure>
+          </div>
+        </section>
+        <script>
+          /* Gallery: load each clip only when it nears the viewport, play while visible, pause when not. */
+          (function () {
+            var vids = [].slice.call(document.querySelectorAll(".x-gal__vid"));
+            if (!("IntersectionObserver" in window)) { vids.forEach(function (v) { v.src = v.dataset.src; v.autoplay = true; }); return; }
+            var io = new IntersectionObserver(function (es) {
+              es.forEach(function (e) { var v = e.target;
+                if (e.isIntersecting) { if (!v.src) { v.src = v.dataset.src; } var p = v.play(); if (p && p.catch) p.catch(function () {}); }
+                else if (v.src) v.pause(); });
+            }, { rootMargin: "200px 0px" });
+            vids.forEach(function (v) { io.observe(v); });
+          })();
+        </script>
+        <!-- GALLERY:END -->
+
         <section class="section" id="coming" data-nav="Coming">
           <div class="head">
-            <p class="head__eyebrow">On the way</p>
-            <h2 class="x-h2">Coming to the city</h2>
+            <p class="head__eyebrow">Just shipped</p>
+            <h2 class="x-h2">New in the city</h2>
           </div>
           <div class="x-grid">
-            <article class="x-ink"><div class="x-ink__body"><span class="x-badge">Coming soon</span><h3>Lexington Market</h3><p>A new downtown-west district, "World Famous since 1782". Health snacks by day, gang turf by night.</p></div></article>
-            <article class="x-ink"><div class="x-ink__body"><span class="x-badge">Coming soon</span><h3>Poe's grave stealth night</h3><p>At Westminster Burying Ground: sneak past the crow sentries. A clean finish unlocks the Raven King.</p></div></article>
-            <article class="x-ink"><div class="x-ink__body"><span class="x-badge">Coming soon</span><h3>Harbor fishing and Chompy</h3><p>Fish off any pier, and feed your junk to Chompy the googly-eyed trash wheel for cane and purse upgrades.</p></div></article>
-            <article class="x-ink"><div class="x-ink__body"><span class="x-badge">Coming soon</span><h3>Harbor Grand Prix</h3><p>An open-wheel street race down Pratt Street and past the ballpark.</p></div></article>
-            <article class="x-ink"><div class="x-ink__body"><span class="x-badge">Coming soon</span><h3>Hooters at Harborplace</h3><p>The orange-lettered octagon on the Light Street Pavilion, still open in Toad City.</p></div></article>
-            <article class="x-ink"><div class="x-ink__body"><span class="x-badge">Coming soon</span><h3>Drone mode</h3><p>Beat the Brewmaster, the whole city celebrates, and drone goggles unlock free flight over the harbor.</p></div></article>
+            <article class="x-ink"><div class="x-ink__body"><div class="x-liverow"><a class="x-badge x-badge--green x-live" href="https://toad-city-baltimore.surge.sh/" target="_blank" rel="noopener">Walk there now ▶</a></div><h3>Lexington Market</h3><p>A new downtown-west district, "World Famous since 1782". Health snacks by day, gang turf by night.</p></div></article>
+            <article class="x-ink"><div class="x-ink__body"><div class="x-liverow"><a class="x-badge x-badge--green x-live" href="https://toad-city-baltimore.surge.sh/?poe=1" target="_blank" rel="noopener">Play now ▶</a><a class="x-badge x-badge--cream x-live" href="gallery/features_poe.mp4" target="_blank" rel="noopener">▶ Watch the loop</a></div><h3>Poe's grave stealth night</h3><p>At Westminster Burying Ground: sneak past the crow sentries. A clean finish unlocks the Raven King.</p></div></article>
+            <article class="x-ink"><div class="x-ink__body"><div class="x-liverow"><a class="x-badge x-badge--green x-live" href="https://toad-city-baltimore.surge.sh/?fish=1" target="_blank" rel="noopener">Play now ▶</a><a class="x-badge x-badge--cream x-live" href="gallery/features_fishing.mp4" target="_blank" rel="noopener">▶ Watch the loop</a></div><h3>Harbor fishing and Chompy</h3><p>Fish off any pier, and feed your junk to Chompy the googly-eyed trash wheel for cane and purse upgrades.</p></div></article>
+            <article class="x-ink"><div class="x-ink__body"><div class="x-liverow"><a class="x-badge x-badge--green x-live" href="https://toad-city-baltimore.surge.sh/?duel=grandprix" target="_blank" rel="noopener">Play now ▶</a><a class="x-badge x-badge--cream x-live" href="gallery/features_grandprix.mp4" target="_blank" rel="noopener">▶ Watch the loop</a></div><h3>Harbor Grand Prix</h3><p>An open-wheel street race down Pratt Street and past the ballpark.</p></div></article>
+            <article class="x-ink"><div class="x-ink__body"><div class="x-liverow"><a class="x-badge x-badge--green x-live" href="https://toad-city-baltimore.surge.sh/" target="_blank" rel="noopener">Walk there now ▶</a></div><h3>Hooters at Harborplace</h3><p>The orange-lettered octagon on the Light Street Pavilion, still open in Toad City.</p></div></article>
+            <article class="x-ink"><div class="x-ink__body"><div class="x-liverow"><a class="x-badge x-badge--green x-live" href="https://toad-city-baltimore.surge.sh/?finale=1" target="_blank" rel="noopener">Play now ▶</a><a class="x-badge x-badge--cream x-live" href="gallery/features_drone.mp4" target="_blank" rel="noopener">▶ Watch the loop</a></div><h3>Drone mode</h3><p>Beat the Brewmaster, the whole city celebrates, and drone goggles unlock free flight over the harbor.</p></div></article>
+          
+            <article class="x-ink"><div class="x-ink__body"><div class="x-liverow"><a class="x-badge x-badge--green x-live" href="https://toad-city-baltimore.surge.sh/" target="_blank" rel="noopener">Play now ▶</a><a class="x-badge x-badge--cream x-live" href="https://toad-city-baltimore.surge.sh/?oldrigs=1" target="_blank" rel="noopener">Old rigs</a></div><h3>Real rigs for Harold, Mavis and the Brewmaster</h3><p>Smooth-skinned procedural skeletons with hand-keyed walks, swings and hugs. Add ?oldrigs=1 to compare with the old blocky rigs.</p></div></article>
+            <article class="x-ink"><div class="x-ink__body"><div class="x-liverow"><a class="x-badge x-badge--green x-live" href="https://toad-city-baltimore.surge.sh/?duchess=1" target="_blank" rel="noopener">Duchess ▶</a><a class="x-badge x-badge--green x-live" href="https://toad-city-baltimore.surge.sh/?jimmy=1" target="_blank" rel="noopener">Big Jimmy ▶</a><a class="x-badge x-badge--green x-live" href="https://toad-city-baltimore.surge.sh/?crabcake=1" target="_blank" rel="noopener">Chef Crabcake ▶</a></div><h3>First fights, polished</h3><p>The Dragon Boat Duchess, Big Jimmy and Chef Crabcake got clearer tells, cane combos on dizzy bosses, new POWER moves and Mavis crab-cake heals.</p></div></article>
+            <article class="x-ink"><div class="x-ink__body"><div class="x-liverow"><a class="x-badge x-badge--green x-live" href="https://toad-city-baltimore.surge.sh/?finale=1" target="_blank" rel="noopener">See the finale ▶</a><a class="x-badge x-badge--cream x-live" href="gallery/features_fireworks.mp4" target="_blank" rel="noopener">▶ Fireworks loop</a></div><h3>The city cheers back</h3><p>Beat the Brewmaster and the drone takes an autopilot flyover while toad townsfolk wave from windows, rooftops and marble stoops.</p></div></article>
+            <article class="x-ink"><div class="x-ink__body"><div class="x-liverow"><a class="x-badge x-badge--green x-live" href="https://toad-city-baltimore.surge.sh/" target="_blank" rel="noopener">Walk there now ▶</a><a class="x-badge x-badge--cream x-live" href="gallery/features_derby.mp4" target="_blank" rel="noopener">▶ Derby loop</a></div><h3>Camden Yards and M&amp;T in HD</h3><p>A real diamond with chalk, bases and the B&amp;O warehouse; a striped 100-yard field with purple end zones.</p></div></article>
+            <article class="x-ink"><div class="x-ink__body"><div class="x-liverow"><a class="x-badge x-badge--green x-live" href="https://github.com/bparlette/Hawk/releases/tag/desktop-v2" target="_blank" rel="noopener">Download desktop-v2 ▶</a></div><h3>Toad City for Mac + ES-DE</h3><p>An unsigned universal Mac app with controller support and an ES-DE setup kit (pre-release).</p></div></article>
           </div>
         </section>
 
