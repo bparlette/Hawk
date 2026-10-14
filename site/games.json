@@ -558,6 +558,40 @@
    "thumb": "thumbs/bakeoff-i-cel.webp?v=1791640173"
   },
   {
+   "id": "survivors-plus",
+   "title": "★ Vampire Survivors Remake — Hark Edition (fan remake)",
+   "category": "Other games",
+   "keys": {
+    "up": "ArrowUp",
+    "down": "ArrowDown",
+    "left": "ArrowLeft",
+    "right": "ArrowRight",
+    "attack": "Space",
+    "jump": "Enter",
+    "special": "KeyM",
+    "start": "Enter",
+    "select": "KeyP"
+   },
+   "labels": {
+    "attack": "DASH",
+    "jump": "PICK",
+    "special": "MUTE",
+    "start": "START",
+    "select": "PAUSE"
+   },
+   "extras": [
+    {
+     "label": "MUTE",
+     "key": "KeyM"
+    }
+   ],
+   "autostart": [],
+   "orientation": "any",
+   "note": "Hark fan remake of the bullet-heaven genre (2026-10-13): cel-shaded three.js r160, 1,500+ enemy horde as one instanced draw of baked cel impostors, 8 weapons / 9 passives / 6 evolutions, 10:00 run + Reaper boss. Boots in attract mode; any key/tap plays. Source: /workspace/work/survivors-plus/game",
+   "path": "g/survivors-plus/index.html",
+   "thumb": "thumbs/survivors-plus.webp?v=1791962716"
+  },
+  {
    "id": "crystal-cave",
    "title": "Crystal Cave 2.5D",
    "category": "Other games",
@@ -932,6 +966,46 @@
    "thumb": "thumbs/toad-street-32.webp?v=1791683427"
   },
   {
+   "id": "blox-dough-raid-plus",
+   "title": "★ Blox Fruits: Dough Raid — Turtles Edition",
+   "category": "Other games",
+   "keys": {
+    "up": "KeyW",
+    "down": "KeyS",
+    "left": "KeyA",
+    "right": "KeyD",
+    "attack": "KeyZ",
+    "jump": "Space",
+    "special": "KeyX",
+    "start": "Enter"
+   },
+   "labels": {
+    "attack": "Z JAB",
+    "jump": "SORU",
+    "special": "X RIVER",
+    "start": "FIGHT"
+   },
+   "extras": [
+    {
+     "label": "C ROLL",
+     "key": "KeyC"
+    },
+    {
+     "label": "V FISTS",
+     "key": "KeyV"
+    },
+    {
+     "label": "MUTE",
+     "key": "KeyM"
+    }
+   ],
+   "autostart": [],
+   "orientation": "any",
+   "note": "Featured remake of the Painted Anime Edition: real boss fight (telegraphed AOEs, phase 2, KO/victory), articulated rigs, energy costs, touch controls. Boots in the 9:16 auto-combo; Enter/any move key = manual fight.",
+   "path": "g/blox-dough-raid-plus/index.html",
+   "thumb": "thumbs/blox-dough-raid-plus.webp?v=1791933456"
+  },
+  {
    "id": "blox-dough-raid",
    "title": "Blox Fruits: Awakened Dough Raid",
    "category": "Other games",
@@ -964,7 +1038,7 @@
    "orientation": "portrait",
    "note": "Painted Anime Edition, added as-is 2026-10-13 from Brad's paste. Boots in 9:16 auto-combo mode. Known bug: boss HP resets to full instead of dying.",
    "path": "g/blox-dough-raid/index.html",
-   "thumb": "thumbs/blox-dough-raid.webp?v=1791930878"
+   "thumb": "thumbs/blox-dough-raid.webp?v=1791939086"
   },
   {
    "id": "re-requiem",
@@ -1007,7 +1081,8 @@
    ],
    "orientation": "any",
    "note": "Hark's featured fan build (2026-10-13), single file, procedural. Source: /workspace/work/re-requiem/game/index.html",
-   "path": "g/re-requiem/index.html"
+   "path": "g/re-requiem/index.html",
+   "thumb": "thumbs/re-requiem.webp?v=1791938512"
   },
   {
    "id": "re-requiem-v1",
@@ -1032,7 +1107,7 @@
    "orientation": "landscape",
    "note": "Earlier build v1 of Brad's Requiem fan game, pasted 2026-10-13, added as-is with no fixes. Mouse to look.",
    "path": "g/re-requiem-v1/index.html",
-   "thumb": "thumbs/re-requiem-v1.webp?v=1791930898"
+   "thumb": "thumbs/re-requiem-v1.webp?v=1791939086"
   },
   {
    "id": "re-requiem-v2",
@@ -1057,7 +1132,7 @@
    "orientation": "landscape",
    "note": "Earlier build v2 of Brad's Requiem fan game, pasted 2026-10-13, added as-is with no fixes. Mouse to look.",
    "path": "g/re-requiem-v2/index.html",
-   "thumb": "thumbs/re-requiem-v2.webp?v=1791930908"
+   "thumb": "thumbs/re-requiem-v2.webp?v=1791939086"
   },
   {
    "id": "re-requiem-v3",
@@ -1082,7 +1157,45 @@
    "orientation": "landscape",
    "note": "Earlier build v3 of Brad's Requiem fan game, pasted 2026-10-13, added as-is with no fixes. Mouse to look.",
    "path": "g/re-requiem-v3/index.html",
-   "thumb": "thumbs/re-requiem-v3.webp?v=1791930920"
+   "thumb": "thumbs/re-requiem-v3.webp?v=1791939086"
+  },
+  {
+   "id": "socal-summer-games-plus",
+   "title": "★ California Games Remastered — Hark Edition (fan remake)",
+   "category": "Originals",
+   "keys": {
+    "up": "ArrowUp",
+    "down": "ArrowDown",
+    "left": "ArrowLeft",
+    "right": "ArrowRight",
+    "attack": "KeyZ",
+    "jump": "KeyX",
+    "special": "KeyC",
+    "start": "Enter",
+    "select": "KeyP"
+   },
+   "labels": {
+    "attack": "A",
+    "jump": "B",
+    "special": "C",
+    "start": "START",
+    "select": "PAUSE"
+   },
+   "extras": [
+    {
+     "label": "16-BIT",
+     "key": "KeyH"
+    },
+    {
+     "label": "MUTE",
+     "key": "KeyM"
+    }
+   ],
+   "autostart": [],
+   "orientation": "any",
+   "note": "Hark fan remaster of Epyx's 1987 California Games (2026-10-14): Half Pipe, Foot Bag, Surfing, Roller Skating, BMX, Flying Disk with the original rules, names/sponsors, trophies 5/3/1 and a champion. Cel-shaded three.js r160, original music. H = 16-bit mode. Boots in attract; any key/tap opens the menu. Source: /workspace/work/socal-painted/src",
+   "path": "g/socal-summer-games-plus/index.html",
+   "thumb": "thumbs/socal-summer-games-plus.webp?v=1791953886"
   },
   {
    "id": "socal-summer-games",
@@ -1113,7 +1226,7 @@
    "orientation": "landscape",
    "note": "Pasted by Brad 2026-10-13, added as-is with no fixes. WASD also works. H toggles 16-bit mode.",
    "path": "g/socal-summer-games/index.html",
-   "thumb": "thumbs/socal-summer-games.webp?v=1791930888"
+   "thumb": "thumbs/socal-summer-games.webp?v=1791939086"
   },
   {
    "id": "viral-overdrive",
@@ -1151,7 +1264,8 @@
    "autostart": [],
    "orientation": "any",
    "note": "Pasted by Brad 2026-10-13, added as-is with no fixes. Arrows also work. Space grapple/vortex, E nitro/slots, 1/2/3 switch mode, H 16-bit.",
-   "path": "g/viral-overdrive/index.html"
+   "path": "g/viral-overdrive/index.html",
+   "thumb": "thumbs/viral-overdrive.webp?v=1791937634"
   }
  ]
 }
