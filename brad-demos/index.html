@@ -72,101 +72,36 @@
   <div id="pickBody">
   <section id="game-builder-prompt" aria-labelledby="gbpH">
     <h2 id="gbpH">Build your own: Game Builder Prompt</h2>
-    <p class="gbp-lead">Describe your game in 1–3 sentences at the top, then paste the whole thing into any AI (Gemini, ChatGPT, Claude).</p>
+    <p class="gbp-lead">Describe your game at the top, paste it into any AI (Gemini, ChatGPT, Claude), then send the follow-up prompts one at a time.</p>
     <div class="gbp-actions">
       <button id="gbpCopy" type="button">Copy prompt</button>
       <a class="gbp-dl" href="game-builder-prompt.txt" download="game-builder-prompt.txt">Download .txt</a>
     </div>
-    <pre id="gbpText">GAME DESCRIPTION (write 1 to 3 sentences, then paste everything below into any AI):
-[DESCRIBE YOUR GAME HERE]
+    <pre id="gbpText">MY GAME: [Describe it in 1 to 3 sentences. Name the game it's like, if any.]
 
-You are building the game described above as a finished, playable browser game. Quality bar: it should feel like a tight indie arcade game, not a tech demo. Read every rule below before writing code. These rules beat any urge to add features.
+Build this as one self-contained index.html I can open in a browser. Make it feel like a real game someone would play for 10 minutes, not a demo.
 
-DELIVERABLE
-Output one complete, self-contained index.html: inline CSS and JS, no build step, no Tailwind, no web fonts, no external images unless they are generated in code. If you use three.js, load exactly one pinned version (for example r128) and mention it. Then give a short controls list. No feature brochure.
+SPEND YOUR EFFORT HERE, IN THIS ORDER
+1. The fantasy. Before coding, write 3 lines: what the player does every second, what makes it exciting, and what the big moment is. Build toward that.
+2. Content. Real variety: several enemy types, weapons or moves, upgrades or levels, a boss or finale. More game beats more polish.
+3. Look. Pick one strong art style and commit (toon 3D with outlines, painted 2D, pixel art, or neon). Give the player and main enemies detailed, recognizable models made from many shapes, not single boxes or cones. The player should be the brightest thing on screen.
+4. Feel. Hits get screenshake, a flash, particles and a sound. Movement has weight.
 
-PICK THE RIGHT TECH
-2D game: vanilla Canvas 2D. Render at a low internal resolution and scale up for a pixel look, or at native resolution for a painted look.
-3D game: three.js with MeshToonMaterial or MeshStandardMaterial, a few lights, fog, and a capped pixel ratio. Build the art from primitives and canvas-generated textures. Keep draw calls low: merge static geometry and use InstancedMesh for crowds and debris.
-Never claim an engine you are not using. three.js is three.js, not "Unreal" or "RE Engine".
+ONLY THESE RULES ARE HARD
+- Must be possible to win and to lose, with a results screen and a Retry that fully resets.
+- Works on a phone (touch controls appear automatically, portrait works) and on a keyboard.
+- No fake features: every button works, nothing claims to be something it isn't.
+- Sounds made in code with Web Audio; no downloaded assets. three.js from one CDN link is fine.
 
-ARCHITECTURE
-1. Loop: requestAnimationFrame plus a fixed-timestep accumulator. Simulate at 60 Hz, clamp frame time to 0.1 s, render once per frame.
-2. State machine: title, play, paused, dead, win. Each state has a way out. Pause when the tab is hidden (visibilitychange). Clear held keys on window blur.
-3. Time: one game clock. Hitstop and slow motion scale it. Delayed events go on a game-time queue, never setTimeout or setInterval. Restart cancels the queue.
-4. Restart resets everything: entities, pools, timers, score, camera and audio layers. Test by restarting 10 times in a row.
-5. Smoothing is dt-based: value += (target - value) * (1 - Math.exp(-rate * dt)). Never lerp by a fixed amount per frame.
-6. Zero allocations in the per-frame path. Reuse vectors, pool particles, projectiles and enemies. Dispose anything removed from a three.js scene.
+Don't explain the rules back to me or write a checklist. Just output the full file, then a short list of controls.
 
-GAME DESIGN
-7. The goal is visible in the first 3 seconds, in five words or fewer (for example SURVIVE 60s, ESCAPE THE MANOR, BEAT THE BOSS), with the threat on screen.
-8. The player can win and can lose. Every bar on screen is wired to a real value. Enemies never refill at zero.
-9. Result card on win or loss: 2 or 3 stats (time, best combo, rank or best score saved in localStorage) and one-tap RETRY that restarts in under 1 second.
-10. Threats telegraph: a ground marker, flash or windup of at least 0.4 s. The player has a counter: dodge with invulnerability frames, block, hide or parry.
-11. Hits depend on aim, range or timing. Nothing auto-hits. Special moves cost a meter or have a visible cooldown. No rigged rewards.
-12. A 60 to 120 second session with a ramp: calm start, rising pressure, a mid-point twist (phase 2, wave surge, lights out), a climax.
-
-FEEL AND JUICE
-13. On every meaningful hit: 40 to 120 ms hitstop, screenshake that decays with dt, a white flash or squash and stretch, a particle burst, a sound, and a damage number or combo bump.
-14. Movement has acceleration and friction, coyote time and input buffering for jumps and attacks (about 100 ms), and camera-relative controls in 3D.
-15. The camera leads the action slightly, never clips into walls, and pulls back for big moments.
-
-AUDIO (PROCEDURAL WEB AUDIO)
-16. Synthesize everything: oscillators, one shared white-noise buffer, biquad filters, gain envelopes, and a DynamicsCompressor on the master. Create or resume the AudioContext on the first tap or key.
-17. Distinct sounds for hit, hurt, pickup, dodge, win and lose. A simple step-sequenced music loop that adds a layer as intensity rises. State-driven audio such as a proximity heartbeat. Mute on M plus a mute button.
-
-MOBILE AND 9:16
-18. Detect touch and show controls automatically: a floating left stick and large right-side buttons (at least 56 px), using pointer events with setPointerCapture. Set touch-action none and user-scalable no; no scrolling, no zoom, no long-press menus. Keyboard and mouse also work, with the same actions.
-19. Portrait 9:16 is a first-class layout: adjust camera distance or FOV, put the HUD in the top band and controls in the bottom band, and keep the middle 60 percent clear. Landscape must also work. Respect safe areas (viewport-fit=cover).
-
-PERFORMANCE BUDGET
-20. 60 fps on a mid-range phone. devicePixelRatio capped at 1.5 (1.25 on desktop). Under about 150 draw calls in 3D. At most about 300 active enemies and 500 particles, pooled. Minimal DOM writes per frame; prefer drawing the HUD on canvas.
-
-ART DIRECTION (pick one and commit; state which)
-A. Painted 2D on a restrained 16-bit base: a limited palette of 16 to 32 colours, clean silhouettes, soft painted gradients and rim light on top, and an optional 16-BIT toggle that renders at low resolution with pixelated upscaling and palette snapping. Default off.
-B. Toon 3D: MeshToonMaterial with a 3 or 4 step ramp, inverted-hull outlines, bright sky, readable chunky shapes.
-C. Dark atmospheric 3D: fog, one hero light (flashlight or lantern), post shader with grain and vignette, lightning or flicker as reveals.
-D. Neon arcade: black background, additive glow, 3 accent colours, speed lines.
-Whatever you pick: high-contrast silhouettes, the player always the brightest or most saturated thing, enemies in a contrasting hue.
-
-SHORTS AND VERTICAL-VIDEO READABILITY
-21. Frame one is already action, not a menu. An attract mode may play the real game by itself, and the first touch or key hands over control and clears all demo inputs.
-22. Big readable text (at least 5 percent of screen height), short captions, a punchy event every 3 to 5 seconds, and an unmistakable climax and result screen.
-
-HONESTY RULES
-23. Every visible button does something. No source exporters, auto-directors, fake "AI engine" or "ray tracing" labels, no README-only features, no placeholder buttons.
-24. Fan games say fan game. Do not use real logos or ripped assets.
-25. If something does not work yet, leave it out instead of faking it.
-
-TEST AND ACCEPTANCE (run through it, then report pass or fail for each line)
-- Loads with zero console errors or warnings from your code.
-- Goal readable within 3 seconds; first input starts play.
-- Can win; can lose; retry is one tap and fully resets (try it 10 times).
-- Works with touch only, and with keyboard only.
-- Portrait 9:16 and landscape both playable, with nothing covering the action.
-- Steady 60 fps target on a phone; no memory growth over 3 minutes.
-- Pause on tab hide; no stuck keys after alt-tab.
-- Every button works; no fake claims anywhere in the UI or title.
-
-TOOLS AND REFERENCES
-- MDN Canvas API: https://developer.mozilla.org/en-US/docs/Web/API/Canvas_API
-- MDN Web Audio API: https://developer.mozilla.org/en-US/docs/Web/API/Web_Audio_API
-- MDN Pointer events: https://developer.mozilla.org/en-US/docs/Web/API/Pointer_events
-- MDN Game development: https://developer.mozilla.org/en-US/docs/Games
-- three.js docs: https://threejs.org/docs/
-- three.js manual: https://threejs.org/manual/
-- Fix Your Timestep (Gaffer on Games): https://gafferongames.com/post/fix_your_timestep/
-- Kenney free game assets (CC0): https://kenney.nl/assets
-- OpenGameArt: https://opengameart.org/
-- jsfxr sound generator: https://sfxr.me/
-- ZzFX tiny sound effects: https://github.com/KilledByAPixel/ZzFX
-- Lospec palettes for 16-bit looks: https://lospec.com/palette-list
-Example builds that follow these rules (play them for feel):
-- Resident Evil Requiem fan game: https://bparlette.github.io/Hawk/brad-demos/#re-requiem
-- Blox Fruits Dough Raid, Turtles Edition: https://bparlette.github.io/Hawk/brad-demos/#blox-dough-raid-plus
-
-Now build the game described at the top.
-</pre>
+---
+FOLLOW-UP PROMPTS (send one at a time after it works)
+- "Play it in your head as a first-time player. What's boring or confusing in the first 30 seconds? Fix it."
+- "Make the player and enemy models twice as detailed and give the world more landmarks."
+- "Add more content: 3 new enemy types and 3 new upgrades. Keep everything else working."
+- "Add juice: hitstop, combo text, and a dramatic boss intro and death."
+- "It lags on my phone. Find the slowest part and fix it without removing content."</pre>
     <h3>Example builds</h3>
     <ul>
       <li><a href="#re-requiem" data-play="re-requiem">Resident Evil Requiem fan game</a></li>
