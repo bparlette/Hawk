@@ -33,9 +33,14 @@ const { open, writeResult } = require('./common');
         if (s.drone && s.ap && s.crowd && s.crowd.people > 0) break;
       }
       await p.waitForTimeout(1500);
-      const a0 = await st(); await p.waitForTimeout(3000); const a1 = await st(); await shot('flyover');
+      // the autopilot advances by min(frame dt, 0.05 s) per frame, so on a slow swiftshader runner (700-1000 ms frames) 3 s of wall clock is only 3-4 frames
+      // (~0.77 m each) and "moved > 3 m" became a coin flip on frame count. Sample over >= 3 s AND >= 6 rendered frames (cap 15 s) so the check measures the tour moving.
+      const fr = () => p.evaluate(() => window.__cel ? __cel.frames : 0);
+      const a0 = await st(); const f0 = await fr(), w0 = Date.now(); await p.waitForTimeout(3000);
+      while ((await fr()) - f0 < 6 && Date.now() - w0 < 15000) await p.waitForTimeout(400);
+      const a1 = await st(); const flyFrames = (await fr()) - f0, flyMs = Date.now() - w0; await shot('flyover');
       const moved = a0.pos && a1.pos ? Math.hypot(a1.pos[0] - a0.pos[0], a1.pos[1] - a0.pos[1], a1.pos[2] - a0.pos[2]) : 0;
-      console.log('FLYOVER', JSON.stringify({ moved, crowd: a1.crowd, perf: a1.perf }));
+      console.log('FLYOVER', JSON.stringify({ moved, frames: flyFrames, ms: flyMs, crowd: a1.crowd, perf: a1.perf }));
       // input takes over
       if (mob) await tap(); else { await p.keyboard.down('w'); await p.waitForTimeout(600); await p.keyboard.up('w'); }
       await p.waitForTimeout(800); const tk = await st(); await shot('takeover');
@@ -74,7 +79,7 @@ const { open, writeResult } = require('./common');
         celErr: ld2.celErr === 0 && s2.celErr === 0,
       };
       res.ok = ok; const bad = Object.keys(ok).filter((k) => !ok[k]); res.pass = bad.length === 0;
-      res.reason = `CROWD build; phases ${res.phases.join(' ')}; bursts ${a1.bursts}; flyover moved ${moved.toFixed(1)} m; crowd ${cr.people} people / ${cr.windows} windows / ${cr.signs} signs / ${cr.stoops} stoops; draw calls ${a1.perf && a1.perf.calls}; frame ${a1.perf && a1.perf.ftAvg} ms (swiftshader); takeover ${tk.ap ? 'NO' : 'yes'}; chip resume ${rs.ap}; chip "${city.chip}"`
+      res.reason = `CROWD build; phases ${res.phases.join(' ')}; bursts ${a1.bursts}; flyover moved ${moved.toFixed(1)} m in ${flyFrames} frames / ${(flyMs / 1000).toFixed(1)} s; crowd ${cr.people} people / ${cr.windows} windows / ${cr.signs} signs / ${cr.stoops} stoops; draw calls ${a1.perf && a1.perf.calls}; frame ${a1.perf && a1.perf.ftAvg} ms (swiftshader); takeover ${tk.ap ? 'NO' : 'yes'}; chip resume ${rs.ap}; chip "${city.chip}"`
         + (bad.length ? ' BAD: ' + bad.join(',') : '') + (ld2.celErr ? ' celErr ' + ld2.celLast : '');
     } else {
       const seen = new Set(); const want = { fireworks: false, card: false, cred: false, drone: false };
