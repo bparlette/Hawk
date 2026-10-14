@@ -1,0 +1,135 @@
+## 09_fort.js
+// ---------------- Fort McHenry set piece: "The Bombardment" (DESIGN.md, Brad 2026-10-11) ----------------
+// Walk up the north-bastion ramp at Fort McHenry and take the cannon (ACT / E / pad Y or A, or tap the prompt): the game cuts to a first-person
+// Duck Hunt-style shooting gallery over the water. Tap / click aims + fires (pad: stick aims, A fires; keys: WASD aims, Space fires), with a cannon
+// reload. 4 waves of original sailing warships (plain red pennants, no real flags or insignia): sloops (cannonballs), bomb ketches (high-arc
+## 06g_derby.js
+// (BOSS_CLEAR, the boss-clear + crime-meter hook, lives in src/06g0_boss_clear.js)
+// ---------------- Bird Brain Bobby, Oriole Park: HOME RUN DERBY (DESIGN.md "Game-style boss fights") ----------------
+// Its own little scene (the city is not drawn while it runs): a batter's-box camera behind Harold (cane = bat) facing Bobby on the mound,
+// in a ballpark walled by brick warehouses. Bobby throws fastballs / curves / changeups / knuckleballs, each with its own windup tell
+## 06h_racers.js
+// ---------------- RACER BOSSES (DESIGN.md "More game-style fights"): Arabber Al's CHASE RACER (Fells Point) + the Dragon Boat Duchess's
+// BOAT RAMMING RACE (the roaming water boss who ambushes the first boat ride), plus the harbour WATER TAXI / PADDLE BOAT rides she needs.
+// Both fights run in their own little scene + camera (the city sim pauses, like the full map); Harold + Mavis's real rigs are lent to it.
+//  - Al: a behind-the-car racer round a Fells Point cobblestone loop (rowhouse streets, narrow alleys, two water-taxi crossings where a
+## 06v_vic_rhythm.js
+// ---------------- Voltage Vic, Power Plant: RHYTHM BATTLE (DESIGN.md "Game-style boss fights") ----------------
+// Vic (electric-eel DJ) spins three B-MORE 410 radio records, one per phase, through the radio's own hidden YouTube player (Brad's picks,
+// 2026-10-11): phase 1 "Dance My Pain Away" (Rod Lee), phase 2 "How U Wanna Carry It" (Miss Tony), phase 3 "Doo Doo Brown" (2 Hyped
+// Brothers & A Dog). Each phase is a ~45-55 s section from the track's peak, with a quick DJ scratch between records. Notes come from a
+## 09b_jimmy.js
+// ======================= BIG JIMMY, NATIONAL AQUARIUM: the underwater swim fight (DESIGN.md "More game-style fights").
+// A 3D swim inside the big tank (caustic light on the sand and rocks, swaying kelp, light shafts, rising bubbles, all procedural).
+// Big Jimmy, a giant blue crab, snaps his claws (tell: a claw rises, opens and flashes red; DASH sideways) and spits bubble blasts
+// (tell: his mouth froths and he glows cyan; swim or dash out of the line). After a snap combo he REARS UP and shows his soft
+## 09bd_duchess.js
+// ======================= DRAGON BOAT DUCHESS on the DUELS core (hark/polish, 2026-10-13).
+// The fight itself lives in src/06h_racers.js (DUCH: the harbour arena, her AI, the tells, Harold's cane combo, POWER, Mavis). This file only registers it as
+// the DUELS kind 'duchess' so it gets the shared duel HUD (bars, call-outs, RETRY / CONTINUE card), the JUICE kit (hit-stop, shake, pops, final-blow replay)
+// and the CI boss runner. The first boat ride's ambush (RIDES in 06h) calls DUCH.start -> DUELS.start('duchess'); exit resumes the ride.
+## 09c_chipkid.js
+// ======================= THE CHIP KID, HARBORPLACE: a cane-brawl mech duel (DESIGN.md "More game-style fights" + "Homage bosses"; reworked for FUN, Brad 2026-10-12:
+// "way too hard ... the stick punch is not animated or fun enough ... the power button doesn't do anything special ... it should be easily beaten, with special moves
+// and lots of animated action scenes worthy of replay").
+// A behind-the-player view: Harold in a makeshift ring on the Harborplace plaza, Mavis cheering from the corner, facing The Chip Kid's giant
+## 09d_pete.js
+// ======================= PIT BEEF PETE, LEXINGTON MARKET: the eating contest (boss 18; DESIGN.md 2026-10-12 "New bosses with their own game style" + "Fit tweaks").
+// A night event inside the market hall: Harold and Pit Beef Pete (a huge hog in a butcher's apron and paper cap) side by side at a long stall counter,
+// plates in front of them, Mavis behind Harold. Five courses, all Baltimore: CRAB CAKE, PIT BEEF, LAKE TROUT, CODDIES, COOKIE TOWER (fudge-topped
+// cookies, described generically, no brand). Each course is a race to clear your plate first; first to 3 courses wins and Pete waddles off.
+## 09d_pigeon.js
+// ======================= THE PENTHOUSE PIGEON, WORLD TRADE CENTER (boss 16): a Rampage-style climb, then a ground fight (DESIGN.md "Additions (Brad, 2026-10-12 09:54)").
+// Runs as a DUELS kind (09a_duel_core.js: own scene + camera, HUD, input, bot, RETRY / LEAVE, radio duck, exit back to the street).
+// PART 1, THE CLIMB: Harold clings to the five-sided tower (the city WTC's look: tan precast spandrels, dark ribbon glass, solid corner piers, crown band).
+//   Stick / WASD climbs; going past a corner swings him round onto the next face. SMASH (cane) breaks the window at his chest: points pop up and each
+## 09k_carl.js
+// ======================= KINGPIN CARL, ROWHOUSE BASEMENT LANES: ten frames of duckpin bowling (feature `carl`, Brad 2026-10-12; DESIGN.md
+// "New bosses with their own game style" + "Fit tweaks": Carl's lanes sit under a rowhouse block in the Lexington Market district, entered by a cellar
+// door at night; his hecklers are the Masked Bandits, whose boss he is). Boss 19 of 21.
+// The fight: real duckpin rules. Small balls with no finger holes, 10 small pins, up to 3 balls a frame, deadwood cleared after every ball.
+## 09m_rodney.js
+// ======================= RIPTIDE RODNEY, RASH FIELD: 2v2 lacrosse (DESIGN.md "Additions (Brad, 2026-10-12)", rodney).
+// Harold (cane stick) and Mavis (purse stick, AI) vs the Key Highway Otters' captain Riptide Rodney and his wingman, on the waterfront
+// Rash Field. First to 5 goals. The camera sits behind the near sideline, Harold's side attacks the right-hand goal.
+//   CRADLE: walk over a loose ball to scoop it; the ball rides in the stick pocket until you throw it or get checked.
+## 09n_honqueen.js
+// ======================= THE HON QUEEN, FEDERAL HILL: a king-of-the-hill slope brawl (DESIGN.md roster "Fed Hill: The Hon Queen (beehive, cat-eye
+// glasses, hairspray clouds, pushes you down the hill)"; BOSS_GANG_UPGRADE_PLAN #14). Branch hark/boss-hon-queen. Runs on the DUELS core (09a): own scene +
+// camera, radio ducked, city HUD hidden, arcade panel relabelled.
+// A view up the grassy south slope of Federal Hill. The Hon Queen (an ORIGINAL cartoon toad-lady: towering red beehive with a pink bow, rhinestone cat-eye
+## 09o_sugarrush.js
+// ======================= SUGAR RUSH, SUGAR REFINERY ROOF: a 3D arena brawl beside the giant neon sign (boss #15, DESIGN.md roster + BOSS_GANG_UPGRADE_PLAN §3.15).
+// Signage: the refinery is the real Domino Sugars plant; its "Domino / Sugars" neon script sign is drawn on a canvas in code (DESIGN.md real-signage rule,
+// Brad 2026-10-11: real landmark signs stay real, only bosses/characters are original). No logo file.
+// Sugar Rush is an original sugar-crystal golem (rock-candy ponytail, crystal tiara, sugar-cube limbs, glowing candy-pink eyes). Harold fights her on foot on the
+## 09p_crabcake.js
+// ======================= CHEF CRABCAKE, FOUR SEASONS: a hotel-kitchen line fight (boss 13; DESIGN.md Bosses + BOSS_GANG_UPGRADE_PLAN #17).
+// A behind-the-player view across the steel pass of a big Harbor East hotel kitchen: Harold on the floor side, Mavis by the dish station, Chef Crabcake
+// (an original red crab in chef's whites and a tall toque, two wooden crab mallets) behind the counter, ranges, hoods, hanging pots and the walk-in behind him.
+// No real logos: the kitchen signs are generic ("PASS", "WALK-IN", "CHESAPEAKE SPICE").
+## 09q_compking.js
+// ======================= THE COMPRESSION KING, UNDER ARMOUR STORE, LOCUST POINT (boss #16 in BOSS_GANG_UPGRADE_PLAN; DESIGN.md "fight in a clothing store").
+// Signage: the store sign carries the real UNDER ARMOUR wording (DESIGN.md real-signage rule, Brad 2026-10-11), procedural lettering only, no logo file.
+// The boss and his moves are original.
+// The King: an athleisure mannequin brute (featureless egg head, charcoal compression gear with teal piping, a crown of stacked sweatbands), ~3 m tall.
+## 09r_poolshark.js
+// ======================= THE POOL SHARK, PENDRY: a rooftop pool-deck brawl (DESIGN.md: "Pendry: relax in the pool, then throw thugs into the harbor";
+// BOSS_GANG_UPGRADE_PLAN #18). Branch hark/boss-pool-shark. Runs on the DUELS core (09a): own scene + camera, radio ducked, city HUD hidden.
+// A 3/4 view over the Pendry roof pool deck: Harold walks the deck (stick / WASD), CANE (3-hit combo: SCRATCH! > CORNER POCKET! > 8-BALL! spin),
+// HOP (jump), BANK (ACT: spends a full POWER meter). The Pool Shark (an original cartoon shark hustler: loud cabana shirt, gold chain,
+## 09s_stoop.js
+// ======================= THE STOOP SCRUBBER, WASHINGTON MONUMENT: the marble-steps brawl (boss 17; DESIGN.md boss list + handoff/BOSS_GANG_UPGRADE_PLAN.md #20).
+// (Not the queued "stoop-defense" / Hold the Stoop tower-defense mode: this file, its ids and its params all say "scrubber".)
+// A set piece on the duel core (09a: MODE.duel, the shared HUD, RETRY / LEAVE, radio duck, panel relabel, exit back to the street).
+// The arena: the monument's marble steps on Mount Vernon Place at golden hour. The Stoop Scrubber (an original stout goose matriarch in a
+## 09t_shellacious.js
+// ======================= DR. SHELLACIOUS, SCIENCE CENTER IMAX: a mad-scientist turtle duel in front of the giant dome screen (DESIGN.md "Bosses":
+// Science Center: Dr. Shellacious, mad snapping-turtle scientist, IMAX; BOSS_GANG_UPGRADE_PLAN #13). A behind-the-player view down the front aisle of the
+// big theater: Harold on the carpet, Mavis by the front row with a popcorn tub, Dr. Shellacious (an original snapping turtle in a lab coat, goggles, wild
+// white hair, a glowing beaker) in front of the huge curved screen playing an original monster movie ("ATTACK OF THE 50-FOOT TADPOLE" in fake 3D).
+## 09u_cobblestone.js
+// ======================= CAPTAIN COBBLESTONE, USS CONSTELLATION (night): a ghost-privateer duel on the main deck (boss 15 in DESIGN's roster; BOSS_GANG_UPGRADE_PLAN #19).
+// A behind-the-player view down the moonlit main deck of the old sloop-of-war: Harold amidships, Mavis by the capstan, Captain Cobblestone (an original ghost
+// sea-captain: a see-through teal coat, a battered tricorn, a fog beard, a peg leg, a ghost lantern in one hand and a cobblestone-in-a-net "persuader" in the
+// other) on the deck aft, three haunted deck guns behind him, the mainmast + rigging over him, the harbor skyline in the fog. Fells Point Phantoms (stand-in
+## 09v_ravenking.js
+// ======================= THE RAVEN KING, M&T STADIUM: the "Nevermore" blitz on the field (boss 12; DESIGN.md boss list + handoff/BOSS_GANG_UPGRADE_PLAN.md #12).
+// A set piece on the duel core (09a: MODE.duel, the shared HUD, RETRY / LEAVE, radio duck, panel relabel, exit back to the street).
+// The arena: the stadium's own field under the night lights (an ORIGINAL homage: no team names, logos or real people; generic purple/black/gold
+// crowd, an original crowned raven, the end zone + scoreboard read "NEVERMORE"). The Raven King (a giant crowned raven linebacker in shoulder pads)
+## 09w_brewmaster.js
+// ======================= THE ONE-EYED BREWMASTER: the FINAL boss, a three-part finale on the DUELS core (DESIGN.md "Final boss: The One-Eyed Brewmaster in 3 parts",
+// Brad 2026-10-12; roster #21 FINAL). An ORIGINAL homage per hawk-relay/relay/briefs/HOMAGE.md: a round-headed, one-eyed (one big eye behind a gold monocle,
+// the other squinted shut), big-handlebar-mustache brewery mascot with a single curl of hair, in his own outfit (rolled white shirt sleeves, a rust-copper
+// vest, a leather brewer's apron, a teal bow tie). No real beer brand, name, logo or official mascot face on him, his truck or his brewery: the lettering is
+## 09x_fishing.js
+// ======================= HARBOR FISHING + CHOMPY (DESIGN.md 2026-10-12 "New side missions", "Fit tweaks": ghost lantern guaranteed, Chompy is original).
+// Walk to a glowing ring at the end of any pier and press ACT (FISH). A side-on dock scene: Harold rigs a line on his cane.
+//   CAST (A / J / tap): a power marker sweeps back and forth, stop it in the green band for a PERFECT cast (quicker, better bites; rare odds up).
+//   BITE: the bobber nibbles, then plunges: tap A inside 0.9 s to set the hook (too early = reel in empty; too late = it got away).
+## 09y_poe.js
+// ======================= POE STEALTH NIGHT, Westminster Burying Ground (DESIGN.md: "Poe stealth night", "Poe night: three roses and an unlabeled bottle",
+// "Poe night goes full horror" for the catacomb chapter, which is a later pass; this file is chapter 1, the graveyard).
+// NIGHT ONLY. A top-down sneak across the graveyard: lay THREE ROSES on the old graves and the UNLABELED BOTTLE on Poe's grave (the last), then slip out the gate.
+//   Three crow sentries (the Raven King's flock) patrol with lantern cones. Hide behind tombstones (a stone blocks the cone), SNEAK (hold SHIFT / the L button:
+## 09za_bikelife.js
+// ======================= BALTIMORE BIKE LIFE (DESIGN.md "Side quest: Baltimore Bike Life: Excitebike-style side-scrolling racer").
+// Four courses, one per district (Key Highway, Fells Point, Rowhouse Block, Federal Hill), each with 4 lanes, ramps, mud, bumps, crowd zones, night variants.
+//   Throttle is automatic. TURBO = hold B / K (engine HEAT climbs; at 100% the engine stalls on the shoulder until it cools under 45%).
+//   LANES = stick up / down (WASD / arrows / pad d-pad). LEAN: hold WHEELIE (R / SPACE) on the ground to pop a wheelie (style meter, crowd zones pay x3; hold it
+## 09zg_grandprix.js
+// ======================= HARBOR GRAND PRIX: the downtown street race (item j; DESIGN.md "Side quest: Harbor Grand Prix street race", Brad 2026-10-12).
+// Nods to the real Grand Prix of Baltimore (2011-13) without any series, team or sponsor branding: original open-wheel racers, a closed loop along
+// Pratt Street by the harbor, a turn past Oriole Park, a hairpin by the Convention Center, concrete barriers, catch fencing, grandstands and city blocks.
+// A DUELS-core mode (own scene + chase camera): 3 laps against 3 rival racers. Win = take the checkered flag FIRST; any other finish offers RETRY / LEAVE.
+## 09zj_stoopdef.js
+// ======================= HOLD THE STOOP: neighborhood tower defense (Brad 2026-10-12 14:06 "top 20 play styles", DESIGN.md "Hold the Stoop").
+// Harold's rowhouse stoop with 5 lanes of sidewalk. Gang waves (Fells Point Phantoms, Masked Bandits, Wheelie Kings, then a boss stand-in) walk up the lanes
+// toward the front door. Place neighborhood defenders on the sidewalk squares: Mavis's PURSE swinger, a CRAB POT trap, the OLD BAY sneezer, a LAWN-CHAIR grandma,
+// and a BOX-FAN blower that pushes thugs back into the gutter (the gutter is OUT, like the harbor rule). Currency = STOOP BUCKS: bottle caps fall from the sky
+## 09z_finale.js
+// ======================= FINALE PAYOFF: the celebration after the One-Eyed Brewmaster (Brad 2026-10-13, "FINALE PAYOFF").
+// Trigger: the 'tcb:finale' window event that 09w_brewmaster.js fires after his harbor splash. When the brewmaster duel exits (the win card's CONTINUE),
+// this file takes over the screen through MODE.duel (07_main) with its own small scene + camera, then hands the city back. No shared file is edited.
+//   1) DOCK: Harold (bald, glasses, cane) and Mavis (gray afro, purse), their own buildHero() rigs, on an Inner Harbor dock at night: they watch,

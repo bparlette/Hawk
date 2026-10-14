@@ -1,0 +1,34 @@
+Build "JUNGLE FURY": an original browser run-and-gun in the spirit of 1987 NES Contra. Single self-contained index.html, vanilla JS + one <canvas>, no external assets, no libraries. Original names, art and music only (no Konami names, sprites or tunes).
+
+LOOK (art direction, non-negotiable)
+- Internal resolution 256x240, scaled with integer nearest-neighbour (image-rendering: pixelated), letterboxed on black. Portrait phones get the game on top and the touch controls underneath, never covering the play area.
+- Limited NES-style palette (~24 colours). All sprites drawn as hand-authored pixel maps in code (string arrays → offscreen canvases), not rectangles. Use 2-frame idle, 4-frame run, jump-spin ball, prone, aim-up and diagonal poses for the player. Commando: blue pants, bare arms, red bandana.
+- Parallax: 3 layers (sky gradient with stars, distant mountains, near jungle canopy). Foreground has palm trees, waterfalls drawn as animated tiles, and river water with scrolling shimmer.
+- Juice: muzzle flash, 2-frame bullet sprites, 6-frame explosions with debris, screen shake on big hits, hit-flash white on enemies, death spin for the player, a 2-second blink when respawning.
+
+GAMEPLAY (feel is the point)
+- Fixed 60 Hz update with accumulator; render interpolated. Gravity, variable jump height (release early = short hop), coyote time 80 ms, jump buffer 100 ms.
+- 8-way aiming; shooting while running, jumping, prone. Drop through thin platforms with down+jump.
+- One-hit deaths, 3 lives, 2 continues, extra life at 20,000 and every 50,000.
+- Weapons from flying capsules shot out of the sky: M (machine gun), S (5-way spread), L (laser), F (spiral flame), R (rapid fire). Lose the weapon on death.
+- Enemies: running soldiers, prone snipers, wall turrets that rotate to aim, pillbox sensors, leaping soldiers from water, a 2-phase stage-end fortress wall boss with 2 cannons and a core.
+- Stage 1: Jungle, ~90 seconds of scrolling with bridge segments that explode as you cross them, ending in the boss wall. Then a short Stage 2: Waterfall (vertical climb) ending in a rock-golem boss. Then a victory screen.
+- Camera only scrolls forward (left-to-right in Stage 1, upward in Stage 2).
+
+AUDIO
+- WebAudio chip-tune: square/triangle/noise synth. Original driving march loop per stage, boss loop, and SFX for shoot (per weapon), jump, explode, power-up, death. Mute button and M key. Start audio only after the first input.
+
+CONTROLS
+- Keyboard: arrows/WASD move+aim, Z/J jump, X/K fire, Enter pause.
+- Gamepad API support.
+- Touch: left virtual stick (8-way, dead zone), right-side JUMP and FIRE buttons (fire auto-repeats while held), pause button top-right. Buttons are 64px or bigger with clear pressed states. Prevent scroll, zoom and long-press menus.
+
+SCREENS
+- Title with a pixel logo, blinking PRESS START, and a 1P/2P option (2P = same-keyboard co-op: second player on IJKL + N/M).
+- HUD: score, lives as medal icons, current weapon letter.
+- Game over with continue countdown, stage-clear tally, victory screen with final score and best score kept in memory.
+
+QUALITY BAR
+- Must hold 60 fps on a mid-range phone: pool bullets and particles, no per-frame allocations.
+- Syntax-check before finishing. Then simulate 600 frames headless to confirm no exceptions, with the player able to reach the Stage 1 boss.
+- Report in 5 lines what landed and anything cut.
