@@ -16,7 +16,10 @@ goes back to AI. With no second pad, nothing changes: Mavis stays AI and the gam
 - **P2 joins** by pressing **Start (Menu, button 9) or A (button 0)** on any other connected pad. Banner `PLAYER 2 JOINED: MAVIS`.
 - P2 in the city: left stick move, A jump, X or B purse combo (3 hits, 3rd is a spin), jump + X = air slam,
   Y = ACT (hold next to a downed Harold = revive), right stick / LB / RB = orbit P2's own camera when split.
-- P2 leaves: pad disconnect, or hold Start for 3 s. Mavis goes back to AI.
+- P2 leaves: pad disconnect / controller turned off, or hold Start for 3 s (web; in the desktop build a Start tap is pause, the
+  hold still works on the web only if the pause screen isn't up). Mavis goes back to AI.
+- Desktop (ES-DE Electron) wrapper: Start = pause there; the wrapper skips its pause for a Start press that just joined P2
+  (`C.joinAt`, branch toadcity/desktop preload.js). Pressing A on the 2nd pad also joins and never pauses.
 - Back/View on either pad opens the full map (as today).
 
 ## 3. Camera: shared, held at the edge, intentional split, merge
@@ -32,8 +35,10 @@ goes back to AI. With no second pad, nothing changes: Mavis stays AI and the gam
   camera like single-player, P1 left/top. Same world, same thugs, same crime meter.
 - **Merge**: when both are on the same level and within `MERGE_D` = 9 m for 0.4 s, the P2 view slides away and P1's view
   eases into the shared camera (0.6 s). Mode exits, game-over resets and vehicle boarding force an instant merge.
-- **Perf in split**: second view skips the shadow-map update, camera far 260 -> 200 and fog pulled in, touch devices render
-  at 0.8x resolution, far thugs sleep by distance to the nearer toad.
+- **Perf in split**: second view skips the shadow-map update, both cameras far 260 -> 125 with fog pulled in to 95 m (sky dome
+  shrunk to 0.6x so it stays inside), touch devices render at 0.8x resolution, far thugs sleep by distance to the nearer toad.
+  Measured (swiftshader, tests/coop/perf.js): split = 159 draw calls at 390x844 / 130 at 1280x720, vs 116-259 for a normal
+  single-player city view (ccheck drawcalls), i.e. split costs about one normal view, not two.
 
 ## 4. Easy vs hard classification
 | Part | Type | How |
@@ -82,14 +87,22 @@ Screenshots: `shots/coop_shared_*.png`, `shots/coop_split_*.png`, `shots/coop_tu
 
 ## 7. Milestones
 - [x] M0 plan (this file), branch + Hawk mirror
-- [ ] M1 pad roles + join/leave, P2 controls Mavis in the city
-- [ ] M2 shared camera + edge hold + intentional split timer + indicator
-- [ ] M3 split render (two viewports) + merge animation + perf trims
-- [ ] M4 vehicles / roofs / cine / game-over / mode exit edge cases
-- [ ] M5 turn rotation for bosses + minigames (gamepad filter + P2'S TURN card)
+- [x] M1 pad roles + join/leave, P2 controls Mavis in the city
+- [x] M2 shared camera + edge hold + intentional split timer + indicator
+- [x] M3 split render (two viewports) + merge animation + perf trims
+- [~] M4 vehicles / roofs / cine / game-over / mode exit edge cases (coded: level puff, far puff, far-KO auto revive after 8 s, instant merge on mode exit / game over; water taxi + paddle boat are RB own-scene rides so both toads ride along automatically; not separately tested yet)
+- [x] M5 turn rotation for bosses + minigames (gamepad filter + P2'S TURN card)
 - [ ] M6 coop tests + full regression (CI matrix + local smoke) + screenshots
 - [ ] M7 merge latest hark/integration, deploy, push toadcity/integration (+ Hawk main code/toad-city copy if present), desktop package note
 
 ## 8. Status / what's left
 (updated with each commit)
 - 2026-10-14 15:35 ET: plan written, nothing built yet.
+- 2026-10-14 16:45 ET: src/06cc_coop.js built + hooks (06_game readInput/padRole, updateCamera -> updateCameraFor, rigLod; 06b tryAction -> COOP.noteAct;
+  07_main pre/preStep/updateP2/step/cam/post/draw + split-safe pause draw + resize resK). tests/coop/coop.js: 1280x720 all 21 checks PASS, 0 errors
+  (single-player unchanged, join, shared cam, 1.5 s hold / knockback / jump spam / broken pushes don't split, 2 s push splits, mission credit
+  while split, merge, Chip Kid duel P1 turn -> P2'S TURN card -> P2 turn, leave). Run: `node tests/coop/coop.js <port> <w> <h> [shotDir] [sim]`
+  (`ONLY=boss` skips the camera block). Note: screenshots pause the sim via `__cel.pause` (frames keep running during a capture otherwise).
+- Implementation notes for whoever continues: COOP.on false => original code path everywhere. Shared cam = `sharedCam()`; P1 split cam =
+  the original `camStep`; P2 split cam = `updateCameraFor(CAM2, camera2, partner, IN2, ...)`. Split draw = `draw2()` (RT.viewport/scissor,
+  2nd view skips the shadow-map update). Turn rotation = `navigator.getGamepads` override (only filters while `C.mode` is set) + `pre()`.

@@ -5075,7 +5075,7 @@ const COOP = (function () {
   const hideHud = () => { for (const e of [elDiv, elT1, elT2, elEdge, elEdgeL]) e.style.display = 'none'; if (tagSpr) tagSpr.forEach((s) => (s.visible = false)); };
   // ---- join / leave ----
   function join(i) {
-    C.p2 = i; C.on = true; C.joins++; C.split = false; C.k = 0; C.edgeT = 0; C.turn = 0; C.prev2 = []; log('join:pad' + i);
+    C.p2 = i; C.on = true; C.joins++; C.joinAt = performance.now(); // (the desktop wrapper skips its Start-to-pause right after a join) C.split = false; C.k = 0; C.edgeT = 0; C.turn = 0; C.prev2 = []; log('join:pad' + i);
     initShared(true);
     const P = partner; if (Math.hypot(P.pos.x - hero.pos.x, P.pos.z - hero.pos.z) > MAXSEP() * 0.8 || !!P.roof !== !!hero.roof) { const sl = partnerSlot(); partnerTeleport(sl.x, sl.z, !!hero.roof, 'coop-join'); }
     if (P.state === 'revive') P.set('move');
@@ -5085,7 +5085,7 @@ const COOP = (function () {
   function leave(why) {
     if (!C.on) return; log('leave:' + why); if (C.split || C.k > 0) merge(true);
     C.on = false; C.p2 = null; C.card = null; elTurn.style.display = 'none'; C.turn = 0;
-    delete CAM.aspect; camera.aspect = VW() / VH(); camera.far = 260; camera.updateProjectionMatrix(); CAM.yaw = SH.yaw;
+    delete CAM.aspect; camera.aspect = VW() / VH(); camera.far = 260; camera.updateProjectionMatrix(); CAM.yaw = SH.yaw; if (window.__sky) window.__sky.scale.setScalar(1);
     if (partner.state === 'air' || partner.state === 'airatk') { partner.y = 0; partner.vy = 0; partner.set('move'); } else if (partner.state === 'revive') partner.set('move');
     const n = $('p2n'); if (n) n.textContent = 'MAVIS'; hideHud();
     resize(); if (typeof banner === 'function') banner('PLAYER 2 LEFT', 1.4);
@@ -5215,7 +5215,7 @@ const COOP = (function () {
   function doSplit() { C.split = true; C.splits++; C.edgeT = 0; C.mergeT = 0; log('split:' + C.edgeWho);
     CAM.yaw = SH.yaw; CAM.pivot.copy(SH.pivot); CAM.cur = CAM.dist = Math.max(4.4, SH.dist * 0.6); IN.lastLook = S.time;
     CAM2.yaw = SH.yaw; CAM2.pitch = CAM.pitch; CAM2.pivot.copy(SH.pivot); CAM2.cur = CAM2.dist = CAM.cur; CAM2.fightK = 0; IN2.lastLook = S.time; resize(); }
-  function merge(instant) { if (C.split) { C.merges++; log('merge' + (instant ? ':instant' : '')); } C.split = false; C.mergeT = 0; initShared(instant); if (instant) { C.k = 0; delete CAM.aspect; } resize(); }
+  function merge(instant) { if (C.split) { C.merges++; log('merge' + (instant ? ':instant' : '')); } C.split = false; C.mergeT = 0; initShared(instant); if (instant) { C.k = 0; delete CAM.aspect; camera.aspect = VW() / VH(); camera.far = 260; camera.updateProjectionMatrix(); if (window.__sky) window.__sky.scale.setScalar(1); } resize(); }
   function initShared(instant) {
     SH.yaw = CAM.yaw; SH.pitch = CAM.pitch; SH.dist = CAM.cur || 4.4;
     if (instant) SH.pivot.set((hero.pos.x + partner.pos.x) / 2, (hero.pos.y + partner.pos.y) / 2 + 1.4, (hero.pos.z + partner.pos.z) / 2); else SH.pivot.copy(CAM.pivot);
@@ -5284,18 +5284,22 @@ const COOP = (function () {
   }
   // ---- after the city frame: perf trims in split, HUD, edge ring, tags, the P2'S TURN card ----
   const _p = new THREE.Vector3();
+  let _gr = null, _grT = -1; const glRect = () => { if (!_gr || S.time - _grT > 1 || S.time < _grT) { const g = document.getElementById('gl'); _gr = g ? g.getBoundingClientRect() : { left: 0, top: 0 }; _grT = S.time; } return _gr; };
   function post(rdt) {
     const two = C.split || C.k > 0, [v1, v2, land] = views(), sw = VW(), sh = VH();
-    const far = two ? 200 : 260; if (camera.far !== far) { camera.far = far; camera.updateProjectionMatrix(); } if (camera2.far !== 200) { camera2.far = 200; camera2.updateProjectionMatrix(); }
-    if (two) { const ff = Math.min(scene.fog.far, 110), fn = Math.min(scene.fog.near, 30); scene.fog.far = ff; scene.fog.near = fn; OUT_U.fogF.value = ff; OUT_U.fogN.value = fn; }
+    // split perf: shorter draw distance in both views (fog hides the cut), sky dome shrunk to fit inside it
+    const far = two ? 125 : 260; if (camera.far !== far) { camera.far = far; camera.updateProjectionMatrix(); } if (camera2.far !== 125) { camera2.far = 125; camera2.updateProjectionMatrix(); }
+    const sk = two ? 0.6 : 1; if (window.__sky && window.__sky.scale.x !== sk) window.__sky.scale.setScalar(sk);
+    if (two) { const ff = Math.min(scene.fog.far, 95), fn = Math.min(scene.fog.near, 25); scene.fog.far = ff; scene.fog.near = fn; OUT_U.fogF.value = ff; OUT_U.fogN.value = fn; }
     if (two) { elDiv.style.display = 'block';
-      if (land) { const x = sw * (1 - C.k / 2); Object.assign(elDiv.style, { left: (x - 2) + 'px', top: '0px', width: '4px', height: sh + 'px' }); Object.assign(elT1.style, { left: '8px', bottom: '8px' }); Object.assign(elT2.style, { left: (x + 8) + 'px', bottom: '8px' }); }
-      else { const y = sh * (C.k / 2); Object.assign(elDiv.style, { left: '0px', top: (sh - y - 2) + 'px', width: sw + 'px', height: '4px' }); Object.assign(elT1.style, { left: '8px', bottom: (y + 8) + 'px' }); Object.assign(elT2.style, { left: '8px', bottom: '8px' }); }
+      const R = glRect();
+      if (land) { const x = R.left + sw * (1 - C.k / 2); Object.assign(elDiv.style, { left: (x - 2) + 'px', top: R.top + 'px', width: '4px', height: sh + 'px' }); Object.assign(elT1.style, { left: (R.left + 8) + 'px', top: (R.top + sh - 26) + 'px' }); Object.assign(elT2.style, { left: (x + 8) + 'px', top: (R.top + sh - 26) + 'px' }); }
+      else { const y = R.top + sh * (1 - C.k / 2); Object.assign(elDiv.style, { left: R.left + 'px', top: (y - 2) + 'px', width: sw + 'px', height: '4px' }); Object.assign(elT1.style, { left: (R.left + 8) + 'px', top: (y - 26) + 'px' }); Object.assign(elT2.style, { left: (R.left + 8) + 'px', top: (R.top + sh - 26) + 'px' }); }
       elT1.style.display = elT2.style.display = C.k > 0.6 ? 'block' : 'none';
     } else { elDiv.style.display = elT1.style.display = elT2.style.display = 'none'; }
     // edge ring over the toad pushing away (fills over the 2 s)
     if (!C.split && C.edgeT > 0.15) { const f = C.edgeWho === 'p2' ? partner : hero; _p.set(f.pos.x, f.pos.y + f.y + 2.3, f.pos.z).project(camera);
-      const x = (_p.x + 1) / 2 * sw, y = (1 - _p.y) / 2 * sh; elEdge.style.display = elEdgeL.style.display = 'block'; elEdge.style.left = x + 'px'; elEdge.style.top = y + 'px'; elEdge.style.setProperty('--p', clamp(C.edgeT / SPLIT_T, 0, 1).toFixed(3));
+      const R = glRect(), x = R.left + (_p.x + 1) / 2 * sw, y = R.top + (1 - _p.y) / 2 * sh; elEdge.style.display = elEdgeL.style.display = 'block'; elEdge.style.left = x + 'px'; elEdge.style.top = y + 'px'; elEdge.style.setProperty('--p', clamp(C.edgeT / SPLIT_T, 0, 1).toFixed(3));
       elEdgeL.style.left = x + 'px'; elEdgeL.style.top = (y + 26) + 'px'; }
     else elEdge.style.display = elEdgeL.style.display = 'none';
     if (tagSpr) { const [t1, t2] = tagSpr; t1.visible = hero.root.visible; t2.visible = partner.root.visible; t1.position.set(hero.pos.x, hero.pos.y + hero.y + 2.45, hero.pos.z); t2.position.set(partner.pos.x, partner.pos.y + partner.y + 2.45, partner.pos.z); }
@@ -5324,7 +5328,7 @@ const COOP = (function () {
   }
   function noteAct(c) { if (!C.on || C.mode) return; C.lastAct = c; C.lastActT = performance.now(); }
   function resK() { return C.on && C.split && TOUCH ? 0.8 : 1; }
-  const api = { get on() { return C.on; }, padRole, noteAct, pre, preStep, updateP2, step, cam, post, draw: draw2, split: () => C.split || C.k > 0, resK, C, IN2, SH, CAM2, camera2, join, leave, MAXSEP, MERGE_D, SPLIT_T };
+  const api = { get on() { return C.on; }, padRole, noteAct, pre, preStep, updateP2, step, cam, post, draw: draw2, split: () => C.split || C.k > 0, resK, C, IN2, SH, CAM2, camera2, join, leave, MAXSEP, MERGE_D, SPLIT_T, _split: () => doSplit() };
   window.__coop = api;
   return api;
 })();
