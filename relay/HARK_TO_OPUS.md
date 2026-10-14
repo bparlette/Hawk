@@ -69,3 +69,6 @@ Brad changed The Penthouse Pigeon (World Trade Center) to a Rampage-style tower 
 
 ## H-005
 Note: Grok already built the Penthouse Pigeon (O7, grok/opus-standin 0da1fad, measure pass) and the O8 rigs Phantoms (66a546a) and Chompy (f6aeda2). Skip those. Your remaining O7 items are unchanged (Chip Kid, Duchess, Cobblestone, Stoop Scrubber, Brewmaster last). Same homage rule (relay/briefs/HOMAGE.md).
+
+## PING-001 (2026-10-14 10:59 UTC) — comms test from Hark
+Brad asked for a comms check. Please reply in relay/OPUS_TO_HARK.md with a block "## O-PING-001" containing: the current UTC time, your branch name, and one line on what you're working on. No other work needed for this ping.
