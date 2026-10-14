@@ -1,0 +1,5 @@
+# keep heavy video out of main (GitHub Pages 1 GB limit); full media stays in history and the toadcity/* branches
+*.mp4
+*.webm
+node_modules/
+*.log
