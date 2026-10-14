@@ -903,6 +903,44 @@
       "thumb": "thumbs/cinema-city.webp?v=1791654906"
     },
     {
+      "id": "wasteland-van",
+      "title": "★ ROADKILL RIG — Hark Original",
+      "category": "Originals",
+      "keys": {
+        "up": "KeyW",
+        "down": "KeyS",
+        "left": "KeyA",
+        "right": "KeyD",
+        "attack": "Space",
+        "jump": "ShiftLeft",
+        "special": "KeyR",
+        "start": "Enter",
+        "select": "KeyP"
+      },
+      "labels": {
+        "attack": "NITRO",
+        "jump": "DRIFT",
+        "special": "R FLIP",
+        "start": "DRIVE",
+        "select": "PAUSE"
+      },
+      "extras": [
+        {
+          "label": "MUTE",
+          "key": "KeyM"
+        },
+        {
+          "label": "16-BIT",
+          "key": "KeyH"
+        }
+      ],
+      "autostart": [],
+      "orientation": "any",
+      "note": "Hark original (2026-10-13): spiked war-van stunt racer x 1,000+ zombie horde survival. Three.js r160 local, cel/halftone/outline look, raycast suspension, 4 weapons + 4 evolutions, GRAVEMAW boss, extraction win. Source: /workspace/work/wasteland-van (src/ -> build.sh -> site/).",
+      "path": "g/wasteland-van/index.html",
+      "thumb": "thumbs/wasteland-van.webp?v=1791952931"
+    },
+    {
       "id": "gulf-thunder",
       "title": "Gulf Thunder",
       "category": "Originals",
