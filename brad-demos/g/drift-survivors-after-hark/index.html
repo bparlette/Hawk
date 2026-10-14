@@ -1,0 +1,1926 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<script src="../../demo-embed.js"></script>
+<style id="demo-embed-css">
+</style>
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<title>DRIFT SURVIVORS — Toon 3D Fan Game</title>
+<style>
+  * {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+    user-select: none;
+    -webkit-user-select: none;
+    -webkit-touch-callout: none;
+    touch-action: none;
+  }
+  html, body {
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+    background: #0d1322;
+    font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  }
+  #gl-canvas, #hud-canvas {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    display: block;
+  }
+  #hud-canvas {
+    pointer-events: none;
+  }
+  .ui-btn {
+    position: absolute;
+    z-index: 10;
+    background: #1b2436;
+    color: #fff;
+    border: 3px solid #080b12;
+    border-radius: 10px;
+    font-weight: 900;
+    font-size: 13px;
+    padding: 8px 12px;
+    cursor: pointer;
+    box-shadow: 0 4px 0 #080b12;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+  .ui-btn:active {
+    transform: translateY(2px);
+    box-shadow: 0 2px 0 #080b12;
+  }
+  #btn-mute {
+    top: max(12px, env(safe-area-inset-top));
+    right: max(12px, env(safe-area-inset-right));
+  }
+  #btn-pause {
+    top: max(12px, env(safe-area-inset-top));
+    right: calc(max(12px, env(safe-area-inset-right)) + 96px);
+  }
+  #modal-card {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    z-index: 20;
+    background: #161e2e;
+    border: 4px solid #080b12;
+    border-radius: 16px;
+    padding: 24px 28px;
+    text-align: center;
+    color: #fff;
+    box-shadow: 0 10px 0 #080b12, 0 20px 40px rgba(0,0,0,0.65);
+    min-width: 280px;
+    display: none;
+  }
+  #modal-title {
+    font-size: 32px;
+    font-weight: 900;
+    letter-spacing: 1.5px;
+    margin-bottom: 14px;
+    color: #ffde3b;
+    text-shadow: 3px 3px 0 #080b12;
+  }
+  .stat-line {
+    font-size: 16px;
+    font-weight: 800;
+    color: #cbd5e1;
+    margin: 6px 0;
+    display: flex;
+    justify-content: space-between;
+    gap: 20px;
+    border-bottom: 2px solid #26334d;
+    padding-bottom: 4px;
+  }
+  .stat-val {
+    color: #fff;
+    font-weight: 900;
+  }
+  .action-btn {
+    margin-top: 18px;
+    width: 100%;
+    padding: 14px 20px;
+    font-size: 18px;
+    font-weight: 900;
+    letter-spacing: 1.5px;
+    color: #080b12;
+    background: #ffde3b;
+    border: 3px solid #080b12;
+    border-radius: 10px;
+    cursor: pointer;
+    box-shadow: 0 5px 0 #080b12;
+    text-transform: uppercase;
+  }
+  .action-btn:active {
+    transform: translateY(3px);
+    box-shadow: 0 2px 0 #080b12;
+  }
+</style>
+</head>
+<body>
+  <canvas id="gl-canvas"></canvas>
+  <canvas id="hud-canvas"></canvas>
+
+  <button id="btn-pause" class="ui-btn">PAUSE [P]</button>
+  <button id="btn-mute" class="ui-btn">MUTE [M]</button>
+
+  <div id="modal-card">
+    <div id="modal-title">PAUSED</div>
+    <div id="modal-stats">
+      <div class="stat-line"><span>TIME</span><span id="stat-time" class="stat-val">0.0s</span></div>
+      <div class="stat-line"><span>BEST COMBO</span><span id="stat-combo" class="stat-val">0</span></div>
+      <div class="stat-line"><span>BEST SCORE</span><span id="stat-best" class="stat-val">0</span></div>
+    </div>
+    <button id="btn-modal-action" class="action-btn">RESUME</button>
+  </div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script>
+(() => {
+  'use strict';
+
+  // ==========================================================================
+  // 1. PROCEDURAL WEB AUDIO SYNTHESIZER (NO EXTERNAL ASSETS)
+  // ==========================================================================
+  class SoundEngine {
+    constructor() {
+      this.ctx = null;
+      this.comp = null;
+      this.noiseBuf = null;
+      this.muted = false;
+      this.stepIndex = 0;
+      this.stepAccum = 0;
+      this.heartAccum = 0;
+    }
+
+    init() {
+      if (!this.ctx) {
+        const AudioCtx = window.AudioContext || window.webkitAudioContext;
+        if (!AudioCtx) return;
+        this.ctx = new AudioCtx();
+        this.comp = this.ctx.createDynamicsCompressor();
+        this.comp.threshold.setValueAtTime(-18, this.ctx.currentTime);
+        this.comp.knee.setValueAtTime(12, this.ctx.currentTime);
+        this.comp.ratio.setValueAtTime(8, this.ctx.currentTime);
+        this.comp.attack.setValueAtTime(0.003, this.ctx.currentTime);
+        this.comp.release.setValueAtTime(0.15, this.ctx.currentTime);
+        this.comp.connect(this.ctx.destination);
+
+        // One shared 1-second white-noise buffer
+        const sr = this.ctx.sampleRate;
+        this.noiseBuf = this.ctx.createBuffer(1, sr, sr);
+        const data = this.noiseBuf.getChannelData(0);
+        for (let i = 0; i < sr; i++) {
+          data[i] = Math.random() * 2 - 1;
+        }
+      }
+      if (this.ctx && this.ctx.state === 'suspended') {
+        this.ctx.resume();
+      }
+    }
+
+    toggleMute() {
+      this.muted = !this.muted;
+      return this.muted;
+    }
+
+    resetLayers() {
+      this.stepIndex = 0;
+      this.stepAccum = 0;
+      this.heartAccum = 0;
+    }
+
+    tone(type, fStart, fEnd, dur, vol) {
+      if (!this.ctx || this.muted || this.ctx.state !== 'running') return;
+      const t = this.ctx.currentTime;
+      const osc = this.ctx.createOscillator();
+      const gain = this.ctx.createGain();
+      osc.type = type;
+      osc.frequency.setValueAtTime(fStart, t);
+      if (fEnd !== fStart) {
+        osc.frequency.exponentialRampToValueAtTime(Math.max(15, fEnd), t + dur);
+      }
+      gain.gain.setValueAtTime(vol, t);
+      gain.gain.exponentialRampToValueAtTime(0.001, t + dur);
+      osc.connect(gain);
+      gain.connect(this.comp);
+      osc.start(t);
+      osc.stop(t + dur + 0.01);
+    }
+
+    noise(dur, filterFreq, vol) {
+      if (!this.ctx || this.muted || !this.noiseBuf || this.ctx.state !== 'running') return;
+      const t = this.ctx.currentTime;
+      const src = this.ctx.createBufferSource();
+      src.buffer = this.noiseBuf;
+      const filter = this.ctx.createBiquadFilter();
+      filter.type = 'bandpass';
+      filter.frequency.setValueAtTime(filterFreq, t);
+      const gain = this.ctx.createGain();
+      gain.gain.setValueAtTime(vol, t);
+      gain.gain.exponentialRampToValueAtTime(0.001, t + dur);
+      src.connect(filter);
+      filter.connect(gain);
+      gain.connect(this.comp);
+      src.start(t);
+      src.stop(t + dur + 0.01);
+    }
+
+    playHit(combo) {
+      const mul = Math.min(2.0, 1 + combo * 0.03);
+      this.tone('triangle', 190 * mul, 55, 0.09, 0.25);
+      this.noise(0.06, 1200, 0.18);
+    }
+
+    playPickup(combo) {
+      const mul = Math.min(2.2, 1 + (combo % 16) * 0.06);
+      this.tone('sine', 520 * mul, 880 * mul, 0.08, 0.14);
+    }
+
+    playDodge() {
+      this.tone('sine', 240, 680, 0.14, 0.22);
+      this.noise(0.1, 1800, 0.12);
+    }
+
+    playSpecial() {
+      this.tone('sawtooth', 320, 65, 0.35, 0.32);
+      this.noise(0.28, 600, 0.3);
+    }
+
+    playHurt() {
+      this.tone('sawtooth', 140, 38, 0.26, 0.38);
+      this.noise(0.22, 420, 0.35);
+    }
+
+    playWin() {
+      const notes = [261.6, 329.6, 392.0, 523.2];
+      for (let i = 0; i < notes.length; i++) {
+        this.tone('triangle', notes[i], notes[i] * 1.02, 0.28 + i * 0.08, 0.2);
+      }
+    }
+
+    playLose() {
+      this.tone('sawtooth', 190, 42, 0.55, 0.32);
+    }
+
+    updateSequencer(dt, intensity, lowHp, bossDist) {
+      if (!this.ctx || this.muted || this.ctx.state !== 'running') return;
+
+      // Step-sequenced 132 BPM arcade loop
+      const stepDur = (60 / 132) / 4;
+      this.stepAccum += dt;
+      while (this.stepAccum >= stepDur) {
+        this.stepAccum -= stepDur;
+        const s = this.stepIndex % 16;
+        this.stepIndex++;
+
+        // Layer 1: Kick & Bass
+        if (s === 0 || s === 4 || s === 8 || s === 12) {
+          this.tone('sine', 120, 36, 0.11, 0.24);
+        }
+        const bassScale = [65.4, 65.4, 77.8, 87.3, 65.4, 98.0, 87.3, 77.8];
+        if (s % 2 === 0) {
+          const bf = bassScale[(s >> 1) % bassScale.length];
+          this.tone('sawtooth', bf, bf * 0.98, 0.09, 0.1);
+        }
+
+        // Layer 2: Snare / Hat when intensity >= 1
+        if (intensity >= 1) {
+          if (s === 4 || s === 12) this.noise(0.08, 1100, 0.14);
+          if (s % 2 === 1) this.noise(0.03, 5200, 0.06);
+        }
+
+        // Layer 3: Urgent Lead Arp when Phase 2 (intensity >= 2)
+        if (intensity >= 2) {
+          const arp = [261.6, 311.1, 392.0, 523.2];
+          const af = arp[s % arp.length];
+          this.tone('square', af, af, 0.06, 0.07);
+        }
+      }
+
+      // State-driven proximity / low-HP heartbeat
+      const dangerFactor = (lowHp || bossDist < 12) ? 1 : 0;
+      if (dangerFactor > 0) {
+        const beatInterval = lowHp ? 0.38 : 0.55;
+        this.heartAccum += dt;
+        if (this.heartAccum >= beatInterval) {
+          this.heartAccum = 0;
+          this.tone('sine', 68, 28, 0.12, 0.28);
+        }
+      }
+    }
+  }
+
+  const sfx = new SoundEngine();
+
+  // ==========================================================================
+  // 2. TOON 3D RENDERER & SCENE SETUP (THREE.JS r128)
+  // ==========================================================================
+  const glCanvas = document.getElementById('gl-canvas');
+  const hudCanvas = document.getElementById('hud-canvas');
+  const ctx2d = hudCanvas.getContext('2d');
+
+  const isMobileTouch = ('ontouchstart' in window) || (navigator.maxTouchPoints > 0);
+  const maxDPR = isMobileTouch ? 1.5 : 1.25;
+
+  const renderer = new THREE.WebGLRenderer({
+    canvas: glCanvas,
+    antialias: true,
+    powerPreference: 'high-performance'
+  });
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, maxDPR));
+  renderer.setClearColor(0x1a2639, 1);
+
+  const scene = new THREE.Scene();
+  scene.background = new THREE.Color(0x1a2639);
+  scene.fog = new THREE.FogExp2(0x1a2639, 0.011);
+
+  const camera = new THREE.PerspectiveCamera(55, 1, 0.5, 160);
+
+  // Lights
+  const hemiLight = new THREE.HemisphereLight(0xdbeafe, 0x1e293b, 0.85);
+  scene.add(hemiLight);
+
+  const dirLight = new THREE.DirectionalLight(0xfffbeb, 0.95);
+  dirLight.position.set(28, 48, 24);
+  scene.add(dirLight);
+
+  // 4-step Toon Ramp Texture
+  function makeToonGradient() {
+    const c = document.createElement('canvas');
+    c.width = 4;
+    c.height = 1;
+    const g = c.getContext('2d');
+    g.fillStyle = '#384860'; g.fillRect(0, 0, 1, 1);
+    g.fillStyle = '#6c82a3'; g.fillRect(1, 0, 1, 1);
+    g.fillStyle = '#b4c6e0'; g.fillRect(2, 0, 1, 1);
+    g.fillStyle = '#ffffff'; g.fillRect(3, 0, 1, 1);
+    const tex = new THREE.CanvasTexture(c);
+    tex.minFilter = THREE.NearestFilter;
+    tex.magFilter = THREE.NearestFilter;
+    tex.generateMipmaps = false;
+    return tex;
+  }
+  const toonRamp = makeToonGradient();
+  const outlineMat = new THREE.MeshBasicMaterial({ color: 0x080b12, side: THREE.BackSide });
+  const flashWhiteMat = new THREE.MeshBasicMaterial({ color: 0xffffff });
+
+  function makeToonMesh(geo, colorHex, outlineScale = 1.07) {
+    const group = new THREE.Group();
+    const mat = new THREE.MeshToonMaterial({ color: colorHex, gradientMap: toonRamp });
+    const mesh = new THREE.Mesh(geo, mat);
+    group.add(mesh);
+    if (outlineScale > 1.0) {
+      const out = new THREE.Mesh(geo, outlineMat);
+      out.scale.setScalar(outlineScale);
+      group.add(out);
+    }
+    group.userData.mainMesh = mesh;
+    group.userData.baseMat = mat;
+    return group;
+  }
+
+  // Arena Floor with Procedural Grid Texture
+  const ARENA_RADIUS = 38;
+  function makeArenaTexture() {
+    const c = document.createElement('canvas');
+    c.width = 256;
+    c.height = 256;
+    const g = c.getContext('2d');
+    g.fillStyle = '#24324a';
+    g.fillRect(0, 0, 256, 256);
+    g.strokeStyle = '#2f4260';
+    g.lineWidth = 6;
+    g.strokeRect(0, 0, 256, 256);
+    g.fillStyle = '#1d283b';
+    g.fillRect(16, 16, 224, 224);
+    const tex = new THREE.CanvasTexture(c);
+    tex.wrapS = THREE.RepeatWrapping;
+    tex.wrapT = THREE.RepeatWrapping;
+    tex.repeat.set(14, 14);
+    return tex;
+  }
+
+  const floorGeo = new THREE.CylinderGeometry(ARENA_RADIUS, ARENA_RADIUS + 2, 3, 48);
+  const floorMat = new THREE.MeshToonMaterial({ map: makeArenaTexture(), gradientMap: toonRamp });
+  const floorMesh = new THREE.Mesh(floorGeo, floorMat);
+  floorMesh.position.y = -1.5;
+  scene.add(floorMesh);
+
+  // Outer Warning Rim Ring (1 single draw call)
+  const rimGeo = new THREE.RingGeometry(ARENA_RADIUS - 0.8, ARENA_RADIUS, 48);
+  rimGeo.rotateX(-Math.PI / 2);
+  const rimMesh = new THREE.Mesh(rimGeo, new THREE.MeshBasicMaterial({ color: 0xf43f5e }));
+  rimMesh.position.y = 0.03;
+  scene.add(rimMesh);
+
+  // 4 Grappling Energy Pylons around the Arena
+  const PYLONS = [
+    { x: -16, z: -16 },
+    { x: 16, z: -16 },
+    { x: -16, z: 16 },
+    { x: 16, z: 16 }
+  ];
+  const pylonGeo = new THREE.CylinderGeometry(1.1, 1.4, 5.5, 12);
+  PYLONS.forEach(p => {
+    const py = makeToonMesh(pylonGeo, 0x38bdf8, 1.06);
+    py.position.set(p.x, 2.75, p.z);
+    scene.add(py);
+  });
+
+  // ==========================================================================
+  // 3. PLAYER STUNT CAR, BOSS RIG & INSTANCED POOLS
+  // ==========================================================================
+  // Player Car (Brightest golden-yellow silhouette)
+  const playerGroup = new THREE.Group();
+  const chassisMesh = makeToonMesh(new THREE.BoxGeometry(1.9, 0.75, 3.1), 0xffde3b, 1.07);
+  chassisMesh.position.y = 0.55;
+  const cabinMesh = makeToonMesh(new THREE.BoxGeometry(1.4, 0.55, 1.5), 0x38bdf8, 1.07);
+  cabinMesh.position.set(0, 1.1, -0.2);
+  const spoilerMesh = makeToonMesh(new THREE.BoxGeometry(2.1, 0.2, 0.5), 0xf43f5e, 1.07);
+  spoilerMesh.position.set(0, 1.15, 1.35);
+  playerGroup.add(chassisMesh, cabinMesh, spoilerMesh);
+  scene.add(playerGroup);
+
+  // Player Shield / I-frame Ring
+  const iframeRingGeo = new THREE.RingGeometry(2.0, 2.35, 24);
+  iframeRingGeo.rotateX(-Math.PI / 2);
+  const iframeRing = new THREE.Mesh(iframeRingGeo, new THREE.MeshBasicMaterial({ color: 0x38bdf8, transparent: true, opacity: 0.8 }));
+  iframeRing.position.y = 0.15;
+  iframeRing.visible = false;
+  playerGroup.add(iframeRing);
+
+  // Grapple Taut Line
+  const grappleGeo = new THREE.BufferGeometry().setFromPoints([new THREE.Vector3(), new THREE.Vector3()]);
+  const grappleLine = new THREE.Line(grappleGeo, new THREE.LineBasicMaterial({ color: 0x38bdf8, linewidth: 3 }));
+  grappleLine.visible = false;
+  scene.add(grappleLine);
+
+  // EMP Nova Expanding Ring
+  const empRingGeo = new THREE.RingGeometry(0.8, 1.3, 36);
+  empRingGeo.rotateX(-Math.PI / 2);
+  const empRingMat = new THREE.MeshBasicMaterial({ color: 0x38bdf8, side: THREE.DoubleSide });
+  const empRingMesh = new THREE.Mesh(empRingGeo, empRingMat);
+  empRingMesh.position.y = 0.35;
+  empRingMesh.visible = false;
+  scene.add(empRingMesh);
+
+  // Dread Behemoth Boss Rig (Contrasting Deep Crimson/Magenta)
+  const bossGroup = new THREE.Group();
+  const bossTorso = makeToonMesh(new THREE.BoxGeometry(3.4, 3.8, 2.6), 0xe11d48, 1.06);
+  bossTorso.position.y = 2.4;
+  const bossHead = makeToonMesh(new THREE.BoxGeometry(2.0, 1.8, 2.0), 0xfbbf24, 1.07);
+  bossHead.position.y = 5.1;
+  const bossShoulderL = makeToonMesh(new THREE.BoxGeometry(1.4, 2.8, 1.4), 0x881337, 1.06);
+  bossShoulderL.position.set(-2.5, 2.5, 0.4);
+  const bossShoulderR = makeToonMesh(new THREE.BoxGeometry(1.4, 2.8, 1.4), 0x881337, 1.06);
+  bossShoulderR.position.set(2.5, 2.5, 0.4);
+  bossGroup.add(bossTorso, bossHead, bossShoulderL, bossShoulderR);
+  scene.add(bossGroup);
+
+  // Boss Telegraph Ground Rings (Warning Fill + Outer Border)
+  const teleOuterGeo = new THREE.RingGeometry(7.2, 7.6, 36);
+  teleOuterGeo.rotateX(-Math.PI / 2);
+  const teleOuterMesh = new THREE.Mesh(teleOuterGeo, new THREE.MeshBasicMaterial({ color: 0xff2a55 }));
+  teleOuterMesh.position.y = 0.08;
+  teleOuterMesh.visible = false;
+  scene.add(teleOuterMesh);
+
+  const teleFillGeo = new THREE.CircleGeometry(7.3, 36);
+  teleFillGeo.rotateX(-Math.PI / 2);
+  const teleFillMat = new THREE.MeshBasicMaterial({ color: 0xff2a55, transparent: true, opacity: 0.38 });
+  const teleFillMesh = new THREE.Mesh(teleFillGeo, teleFillMat);
+  teleFillMesh.position.y = 0.06;
+  teleFillMesh.visible = false;
+  scene.add(teleFillMesh);
+
+  // Pooled InstancedMesh for Up to 160 Swarm Enemies (1 draw call)
+  const MAX_ENEMIES = 160;
+  const enemyGeo = new THREE.ConeGeometry(0.85, 2.1, 7);
+  enemyGeo.translate(0, 1.05, 0);
+  const enemyMat = new THREE.MeshToonMaterial({ color: 0xffffff, gradientMap: toonRamp });
+  const enemyInst = new THREE.InstancedMesh(enemyGeo, enemyMat, MAX_ENEMIES);
+  enemyInst.instanceMatrix.setUsage(THREE.DynamicDrawUsage);
+  const colorPurple = new THREE.Color(0xa855f7);
+  const colorWhite = new THREE.Color(0xffffff);
+  for (let i = 0; i < MAX_ENEMIES; i++) {
+    enemyInst.setColorAt(i, colorPurple);
+  }
+  scene.add(enemyInst);
+
+  // Pooled InstancedMesh for Up to 32 Player Projectiles (1 draw call)
+  const MAX_BULLETS = 32;
+  const bulletGeo = new THREE.BoxGeometry(0.42, 0.42, 1.35);
+  const bulletMat = new THREE.MeshBasicMaterial({ color: 0xfffbeb });
+  const bulletInst = new THREE.InstancedMesh(bulletGeo, bulletMat, MAX_BULLETS);
+  bulletInst.instanceMatrix.setUsage(THREE.DynamicDrawUsage);
+  scene.add(bulletInst);
+
+  // Pooled InstancedMesh for Up to 60 XP/Nitro Gems (1 draw call)
+  const MAX_GEMS = 60;
+  const gemGeo = new THREE.OctahedronGeometry(0.6, 0);
+  const gemMat = new THREE.MeshBasicMaterial({ color: 0x34d399 });
+  const gemInst = new THREE.InstancedMesh(gemGeo, gemMat, MAX_GEMS);
+  gemInst.instanceMatrix.setUsage(THREE.DynamicDrawUsage);
+  scene.add(gemInst);
+
+  // Pooled InstancedMesh for Up to 300 Particles (1 draw call)
+  const MAX_PARTICLES = 300;
+  const partGeo = new THREE.BoxGeometry(0.45, 0.45, 0.45);
+  const partMat = new THREE.MeshBasicMaterial({ color: 0xffffff });
+  const partInst = new THREE.InstancedMesh(partGeo, partMat, MAX_PARTICLES);
+  partInst.instanceMatrix.setUsage(THREE.DynamicDrawUsage);
+  for (let i = 0; i < MAX_PARTICLES; i++) {
+    partInst.setColorAt(i, colorWhite);
+  }
+  scene.add(partInst);
+
+  // Zero-allocation reusable math objects
+  const dummyObj = new THREE.Object3D();
+  const tmpVecA = new THREE.Vector3();
+  const tmpVecB = new THREE.Vector3();
+  const tmpColor = new THREE.Color();
+  const zeroMatrix = new THREE.Matrix4().makeScale(0, 0, 0);
+
+  // ==========================================================================
+  // 4. PRE-ALLOCATED ENTITY POOLS & GAME-TIME QUEUE
+  // ==========================================================================
+  const enemies = Array.from({ length: MAX_ENEMIES }, () => ({
+    active: false, x: 0, z: 0, vx: 0, vz: 0, hp: 0, maxHp: 30, flashTimer: 0, phase: 0
+  }));
+
+  const bullets = Array.from({ length: MAX_BULLETS }, () => ({
+    active: false, x: 0, z: 0, vx: 0, vz: 0, life: 0
+  }));
+
+  const gems = Array.from({ length: MAX_GEMS }, () => ({
+    active: false, x: 0, z: 0, phase: 0
+  }));
+
+  const particles = Array.from({ length: MAX_PARTICLES }, () => ({
+    active: false, x: 0, y: 0, z: 0, vx: 0, vy: 0, vz: 0, life: 0, maxLife: 0.4, colorHex: 0xffffff
+  }));
+
+  const MAX_POPUPS = 40;
+  const popups = Array.from({ length: MAX_POPUPS }, () => ({
+    active: false, x: 0, y: 0, z: 0, text: '', color: '#ffde3b', life: 0, maxLife: 0.65
+  }));
+
+  const MAX_EVENTS = 24;
+  const eventQueue = Array.from({ length: MAX_EVENTS }, () => ({
+    active: false, triggerTime: 0, type: 0
+  }));
+
+  function scheduleGameEvent(delaySec, typeCode) {
+    for (let i = 0; i < MAX_EVENTS; i++) {
+      if (!eventQueue[i].active) {
+        eventQueue[i].active = true;
+        eventQueue[i].triggerTime = game.clock + delaySec;
+        eventQueue[i].type = typeCode;
+        return;
+      }
+    }
+  }
+
+  // ==========================================================================
+  // 5. GAME STATE & CORE OBJECTS
+  // ==========================================================================
+  const STATE = { TITLE: 'title', PLAY: 'play', PAUSED: 'paused', DEAD: 'dead', WIN: 'win' };
+
+  const game = {
+    state: STATE.TITLE,
+    clock: 0,
+    timeLeft: 75.0,
+    hitstop: 0,
+    timeScale: 1.0,
+    slowMoTimer: 0,
+    shake: 0,
+    score: 0,
+    bestScore: parseInt(localStorage.getItem('drift_survivors_best') || '0', 10) || 0,
+    combo: 0,
+    bestCombo: 0,
+    comboTimer: 0,
+    phase: 1,
+    spawnAccum: 0,
+    bannerText: 'BEAT THE BOSS',
+    bannerTimer: 3.5,
+    empVisualRadius: 0
+  };
+
+  const player = {
+    x: 0, z: 14,
+    vx: 0, vz: 0,
+    yaw: Math.PI,
+    hp: 100, maxHp: 100,
+    specialMeter: 50, maxSpecial: 100,
+    dodgeCd: 0, dodgeMaxCd: 1.35,
+    iframeTimer: 0,
+    fireCd: 0,
+    squashY: 1.0,
+    flashTimer: 0,
+    grapplePylonIdx: -1,
+    inputBufferDodge: 0,
+    inputBufferSpec: 0
+  };
+
+  const boss = {
+    active: true,
+    x: 0, z: -12,
+    vx: 0, vz: 0,
+    yaw: 0,
+    hp: 1200, maxHp: 1200,
+    state: 'chase', // 'chase' | 'windup' | 'dash' | 'recover'
+    stateTimer: 2.5,
+    windupDuration: 0.75,
+    teleX: 0, teleZ: 0,
+    flashTimer: 0,
+    squashY: 1.0
+  };
+
+  const camState = {
+    x: 0, y: 26, z: 32,
+    lookX: 0, lookZ: 0
+  };
+
+  // ==========================================================================
+  // 6. INPUT HANDLING (KEYBOARD + POINTER-CAPTURED TOUCH CONTROLS)
+  // ==========================================================================
+  const keys = Object.create(null);
+  const touchState = {
+    showTouch: isMobileTouch,
+    stickId: null,
+    stickStartX: 0, stickStartY: 0,
+    stickCurX: 0, stickCurY: 0,
+    dx: 0, dy: 0,
+    dodgeId: null,
+    specId: null,
+    grappleId: null,
+    grappleHeld: false
+  };
+
+  function clearInputs() {
+    for (const k in keys) keys[k] = false;
+    touchState.stickId = null;
+    touchState.dx = 0;
+    touchState.dy = 0;
+    touchState.dodgeId = null;
+    touchState.specId = null;
+    touchState.grappleId = null;
+    touchState.grappleHeld = false;
+  }
+
+  function handOverFromAttract() {
+    sfx.init();
+    if (game.state === STATE.TITLE) {
+      resetGame(STATE.PLAY);
+    }
+  }
+
+  window.addEventListener('keydown', (e) => {
+    if (e.code === 'KeyM') {
+      const m = sfx.toggleMute();
+      document.getElementById('btn-mute').textContent = m ? 'UNMUTE [M]' : 'MUTE [M]';
+      return;
+    }
+    if (e.code === 'KeyP' || e.code === 'Escape') {
+      if (game.state === STATE.PLAY) setGameState(STATE.PAUSED);
+      else if (game.state === STATE.PAUSED) setGameState(STATE.PLAY);
+      return;
+    }
+    if (game.state === STATE.DEAD || game.state === STATE.WIN) {
+      if (e.code === 'Space' || e.code === 'Enter') {
+        sfx.init();
+        resetGame(STATE.PLAY);
+      }
+      return;
+    }
+    if (game.state === STATE.TITLE) {
+      handOverFromAttract();
+    }
+    keys[e.code] = true;
+    if (e.code === 'Space' || e.code === 'ShiftLeft' || e.code === 'KeyZ') {
+      player.inputBufferDodge = 0.12;
+    }
+    if (e.code === 'KeyE' || e.code === 'KeyX' || e.code === 'Enter') {
+      player.inputBufferSpec = 0.12;
+    }
+  });
+
+  window.addEventListener('keyup', (e) => {
+    keys[e.code] = false;
+  });
+
+  window.addEventListener('blur', () => {
+    clearInputs();
+    if (game.state === STATE.PLAY) setGameState(STATE.PAUSED);
+  });
+
+  document.addEventListener('visibilitychange', () => {
+    if (document.hidden) {
+      clearInputs();
+      if (game.state === STATE.PLAY) setGameState(STATE.PAUSED);
+    }
+  });
+
+  // Touch / Pointer Controls on glCanvas
+  function getTouchLayout(w, h) {
+    const padBottom = Math.max(24, h * 0.05);
+    const r = Math.max(34, Math.min(46, Math.min(w, h) * 0.085));
+    return {
+      btnRadius: r,
+      dodgeX: w - r * 3.1,
+      dodgeY: h - padBottom - r * 1.1,
+      specX: w - r * 1.35,
+      specY: h - padBottom - r * 2.5,
+      grapX: w - r * 1.35,
+      grapY: h - padBottom - r * 0.75,
+      stickDefX: r * 2.1,
+      stickDefY: h - padBottom - r * 1.4,
+      stickRadius: r * 1.25
+    };
+  }
+
+  glCanvas.addEventListener('pointerdown', (e) => {
+    e.preventDefault();
+    sfx.init();
+    if (e.pointerType === 'touch') touchState.showTouch = true;
+
+    if (game.state === STATE.TITLE) {
+      handOverFromAttract();
+    }
+    if (game.state !== STATE.PLAY) return;
+
+    try { glCanvas.setPointerCapture(e.pointerId); } catch (_) {}
+
+    const w = window.innerWidth;
+    const h = window.innerHeight;
+    const lay = getTouchLayout(w, h);
+    const px = e.clientX;
+    const py = e.clientY;
+
+    // Check right-side action buttons first
+    if (Math.hypot(px - lay.dodgeX, py - lay.dodgeY) <= lay.btnRadius * 1.25) {
+      touchState.dodgeId = e.pointerId;
+      player.inputBufferDodge = 0.12;
+      return;
+    }
+    if (Math.hypot(px - lay.specX, py - lay.specY) <= lay.btnRadius * 1.25) {
+      touchState.specId = e.pointerId;
+      player.inputBufferSpec = 0.12;
+      return;
+    }
+    if (Math.hypot(px - lay.grapX, py - lay.grapY) <= lay.btnRadius * 1.25) {
+      touchState.grappleId = e.pointerId;
+      touchState.grappleHeld = true;
+      return;
+    }
+
+    // Left half (or remaining area): Floating Virtual Stick
+    if (px < w * 0.65 && touchState.stickId === null) {
+      touchState.stickId = e.pointerId;
+      touchState.stickStartX = px;
+      touchState.stickStartY = py;
+      touchState.stickCurX = px;
+      touchState.stickCurY = py;
+      touchState.dx = 0;
+      touchState.dy = 0;
+    } else if (e.pointerType === 'mouse') {
+      // Desktop mouse click triggers Dodge (LMB)
+      player.inputBufferDodge = 0.12;
+    }
+  });
+
+  glCanvas.addEventListener('pointermove', (e) => {
+    if (e.pointerId === touchState.stickId) {
+      const maxDist = 52;
+      const rx = e.clientX - touchState.stickStartX;
+      const ry = e.clientY - touchState.stickStartY;
+      const d = Math.hypot(rx, ry);
+      if (d > 0) {
+        const clamped = Math.min(d, maxDist);
+        touchState.stickCurX = touchState.stickStartX + (rx / d) * clamped;
+        touchState.stickCurY = touchState.stickStartY + (ry / d) * clamped;
+        touchState.dx = (rx / d) * (clamped / maxDist);
+        touchState.dy = (ry / d) * (clamped / maxDist);
+      }
+    }
+  });
+
+  function releasePointer(e) {
+    if (e.pointerId === touchState.stickId) {
+      touchState.stickId = null;
+      touchState.dx = 0;
+      touchState.dy = 0;
+    }
+    if (e.pointerId === touchState.dodgeId) touchState.dodgeId = null;
+    if (e.pointerId === touchState.specId) touchState.specId = null;
+    if (e.pointerId === touchState.grappleId) {
+      touchState.grappleId = null;
+      touchState.grappleHeld = false;
+    }
+  }
+  glCanvas.addEventListener('pointerup', releasePointer);
+  glCanvas.addEventListener('pointercancel', releasePointer);
+
+  // Top Bar UI Buttons
+  document.getElementById('btn-mute').addEventListener('click', (e) => {
+    e.stopPropagation();
+    sfx.init();
+    const m = sfx.toggleMute();
+    e.target.textContent = m ? 'UNMUTE [M]' : 'MUTE [M]';
+  });
+
+  document.getElementById('btn-pause').addEventListener('click', (e) => {
+    e.stopPropagation();
+    sfx.init();
+    if (game.state === STATE.TITLE) {
+      handOverFromAttract();
+      setGameState(STATE.PAUSED);
+    } else if (game.state === STATE.PLAY) {
+      setGameState(STATE.PAUSED);
+    } else if (game.state === STATE.PAUSED) {
+      setGameState(STATE.PLAY);
+    }
+  });
+
+  document.getElementById('btn-modal-action').addEventListener('click', (e) => {
+    e.stopPropagation();
+    sfx.init();
+    if (game.state === STATE.PAUSED) {
+      setGameState(STATE.PLAY);
+    } else {
+      resetGame(STATE.PLAY);
+    }
+  });
+
+  // ==========================================================================
+  // 7. STATE MACHINE & FULL RESET
+  // ==========================================================================
+  const modalCard = document.getElementById('modal-card');
+  const modalTitle = document.getElementById('modal-title');
+  const btnModalAction = document.getElementById('btn-modal-action');
+
+  function setGameState(nextState) {
+    game.state = nextState;
+    clearInputs();
+
+    if (nextState === STATE.PAUSED || nextState === STATE.DEAD || nextState === STATE.WIN) {
+      const elapsed = Math.max(0, 75.0 - game.timeLeft);
+      if (game.score > game.bestScore) {
+        game.bestScore = game.score;
+        try { localStorage.setItem('drift_survivors_best', String(game.bestScore)); } catch (_) {}
+      }
+      document.getElementById('stat-time').textContent = elapsed.toFixed(1) + 's';
+      document.getElementById('stat-combo').textContent = String(game.bestCombo);
+      document.getElementById('stat-best').textContent = String(game.bestScore);
+
+      if (nextState === STATE.PAUSED) {
+        modalTitle.textContent = 'PAUSED';
+        modalTitle.style.color = '#38bdf8';
+        btnModalAction.textContent = 'RESUME';
+      } else if (nextState === STATE.WIN) {
+        modalTitle.textContent = 'VICTORY!';
+        modalTitle.style.color = '#34d399';
+        btnModalAction.textContent = 'RETRY';
+      } else {
+        modalTitle.textContent = 'WRECKED!';
+        modalTitle.style.color = '#f43f5e';
+        btnModalAction.textContent = 'RETRY';
+      }
+      modalCard.style.display = 'block';
+    } else {
+      modalCard.style.display = 'none';
+    }
+  }
+
+  function resetGame(targetState) {
+    clearInputs();
+    sfx.resetLayers();
+
+    // Cancel queued events
+    for (let i = 0; i < MAX_EVENTS; i++) eventQueue[i].active = false;
+    // Clear pools
+    for (let i = 0; i < MAX_ENEMIES; i++) {
+      enemies[i].active = false;
+      enemyInst.setMatrixAt(i, zeroMatrix);
+    }
+    enemyInst.instanceMatrix.needsUpdate = true;
+
+    for (let i = 0; i < MAX_BULLETS; i++) {
+      bullets[i].active = false;
+      bulletInst.setMatrixAt(i, zeroMatrix);
+    }
+    bulletInst.instanceMatrix.needsUpdate = true;
+
+    for (let i = 0; i < MAX_GEMS; i++) {
+      gems[i].active = false;
+      gemInst.setMatrixAt(i, zeroMatrix);
+    }
+    gemInst.instanceMatrix.needsUpdate = true;
+
+    for (let i = 0; i < MAX_PARTICLES; i++) {
+      particles[i].active = false;
+      partInst.setMatrixAt(i, zeroMatrix);
+    }
+    partInst.instanceMatrix.needsUpdate = true;
+
+    for (let i = 0; i < MAX_POPUPS; i++) popups[i].active = false;
+
+    // Reset Game Clock & Stats
+    game.clock = 0;
+    game.timeLeft = 75.0;
+    game.hitstop = 0;
+    game.timeScale = 1.0;
+    game.slowMoTimer = 0;
+    game.shake = 0;
+    game.score = 0;
+    game.combo = 0;
+    game.bestCombo = 0;
+    game.comboTimer = 0;
+    game.phase = 1;
+    game.spawnAccum = 0;
+    game.bannerText = 'BEAT THE BOSS';
+    game.bannerTimer = 3.2;
+    game.empVisualRadius = 0;
+    empRingMesh.visible = false;
+
+    // Reset Player
+    player.x = 0;
+    player.z = 15;
+    player.vx = 0;
+    player.vz = 0;
+    player.yaw = Math.PI;
+    player.hp = player.maxHp;
+    player.specialMeter = 50;
+    player.dodgeCd = 0;
+    player.iframeTimer = 0;
+    player.fireCd = 0;
+    player.squashY = 1.0;
+    player.flashTimer = 0;
+    player.grapplePylonIdx = -1;
+    player.inputBufferDodge = 0;
+    player.inputBufferSpec = 0;
+    grappleLine.visible = false;
+
+    // Reset Boss
+    boss.active = true;
+    boss.x = 0;
+    boss.z = -12;
+    boss.vx = 0;
+    boss.vz = 0;
+    boss.yaw = 0;
+    boss.hp = boss.maxHp;
+    boss.state = 'chase';
+    boss.stateTimer = 2.2;
+    boss.windupDuration = 0.75;
+    boss.flashTimer = 0;
+    boss.squashY = 1.0;
+    bossGroup.visible = true;
+    teleOuterMesh.visible = false;
+    teleFillMesh.visible = false;
+
+    // Seed initial threats on screen immediately
+    for (let i = 0; i < 6; i++) {
+      const ang = (i / 6) * Math.PI * 2;
+      spawnEnemy(Math.cos(ang) * 18, Math.sin(ang) * 18 - 4);
+    }
+
+    setGameState(targetState);
+  }
+
+  // ==========================================================================
+  // 8. SPAWNERS & COMBAT HELPERS (POOLED, ZERO ALLOCATIONS)
+  // ==========================================================================
+  function spawnEnemy(x, z) {
+    for (let i = 0; i < MAX_ENEMIES; i++) {
+      const e = enemies[i];
+      if (!e.active) {
+        e.active = true;
+        e.x = x;
+        e.z = z;
+        e.vx = 0;
+        e.vz = 0;
+        e.hp = game.phase === 2 ? 40 : 25;
+        e.maxHp = e.hp;
+        e.flashTimer = 0;
+        e.phase = i * 0.7;
+        return;
+      }
+    }
+  }
+
+  function spawnBullet(x, z, vx, vz) {
+    for (let i = 0; i < MAX_BULLETS; i++) {
+      const b = bullets[i];
+      if (!b.active) {
+        b.active = true;
+        b.x = x;
+        b.z = z;
+        b.vx = vx;
+        b.vz = vz;
+        b.life = 1.1;
+        return;
+      }
+    }
+  }
+
+  function spawnGem(x, z) {
+    for (let i = 0; i < MAX_GEMS; i++) {
+      const g = gems[i];
+      if (!g.active) {
+        g.active = true;
+        g.x = x;
+        g.z = z;
+        g.phase = i * 0.5;
+        return;
+      }
+    }
+  }
+
+  function spawnBurst(x, y, z, colorHex, count, speed) {
+    let spawned = 0;
+    for (let i = 0; i < MAX_PARTICLES && spawned < count; i++) {
+      const p = particles[i];
+      if (!p.active) {
+        p.active = true;
+        p.x = x;
+        p.y = y;
+        p.z = z;
+        const a = Math.random() * Math.PI * 2;
+        const spd = (0.3 + Math.random() * 0.7) * speed;
+        p.vx = Math.cos(a) * spd;
+        p.vy = 2.5 + Math.random() * speed * 0.65;
+        p.vz = Math.sin(a) * spd;
+        p.maxLife = 0.28 + Math.random() * 0.25;
+        p.life = p.maxLife;
+        p.colorHex = colorHex;
+        tmpColor.setHex(colorHex);
+        partInst.setColorAt(i, tmpColor);
+        spawned++;
+      }
+    }
+    if (spawned > 0 && partInst.instanceColor) {
+      partInst.instanceColor.needsUpdate = true;
+    }
+  }
+
+  function spawnPopup(x, y, z, text, color) {
+    for (let i = 0; i < MAX_POPUPS; i++) {
+      const pop = popups[i];
+      if (!pop.active) {
+        pop.active = true;
+        pop.x = x + (Math.random() - 0.5) * 1.2;
+        pop.y = y;
+        pop.z = z;
+        pop.text = text;
+        pop.color = color;
+        pop.maxLife = 0.65;
+        pop.life = pop.maxLife;
+        return;
+      }
+    }
+  }
+
+  function bumpCombo(points) {
+    game.combo++;
+    if (game.combo > game.bestCombo) game.bestCombo = game.combo;
+    game.comboTimer = 3.2;
+    game.score += points * Math.min(8, 1 + Math.floor(game.combo / 5));
+  }
+
+  function damagePlayer(amount) {
+    if (player.iframeTimer > 0 || game.state !== STATE.PLAY) return;
+    player.hp = Math.max(0, player.hp - amount);
+    player.iframeTimer = 0.85;
+    player.flashTimer = 0.18;
+    player.squashY = 0.55;
+    game.hitstop = 0.085;
+    game.shake = Math.min(1.6, game.shake + 0.95);
+    game.combo = 0;
+    sfx.playHurt();
+    spawnBurst(player.x, 1.0, player.z, 0xf43f5e, 18, 12);
+    spawnPopup(player.x, 2.2, player.z, '-' + amount, '#ff4757');
+
+    if (player.hp <= 0) {
+      sfx.playLose();
+      setGameState(STATE.DEAD);
+    }
+  }
+
+  function damageBoss(dmg, hitstopDur) {
+    if (!boss.active) return;
+    boss.hp = Math.max(0, boss.hp - dmg);
+    boss.flashTimer = 0.1;
+    boss.squashY = 1.26;
+    game.hitstop = Math.max(game.hitstop, hitstopDur);
+    game.shake = Math.min(1.5, game.shake + 0.45);
+    bumpCombo(dmg);
+    sfx.playHit(game.combo);
+    spawnBurst(boss.x, 2.8, boss.z, 0xfbbf24, 12, 11);
+    spawnPopup(boss.x, 5.5, boss.z, String(dmg), '#ffde3b');
+
+    // Mid-point Phase 2 Twist at 50% Boss HP
+    if (game.phase === 1 && boss.hp <= boss.maxHp * 0.5 && boss.hp > 0) {
+      game.phase = 2;
+      boss.windupDuration = 0.52;
+      game.bannerText = 'OVERDRIVE PHASE 2!';
+      game.bannerTimer = 2.8;
+      game.shake = 1.1;
+      spawnBurst(boss.x, 3.0, boss.z, 0xf43f5e, 32, 16);
+      for (let k = 0; k < 8; k++) {
+        const a = (k / 8) * Math.PI * 2;
+        spawnEnemy(boss.x + Math.cos(a) * 9, boss.z + Math.sin(a) * 9);
+      }
+    }
+
+    // Boss Defeated -> Dramatic Climax & Win
+    if (boss.hp <= 0) {
+      boss.active = false;
+      bossGroup.visible = false;
+      teleOuterMesh.visible = false;
+      teleFillMesh.visible = false;
+      game.hitstop = 0.12;
+      game.slowMoTimer = 0.85;
+      game.shake = 1.6;
+      game.bannerText = 'BOSS OBLITERATED!';
+      game.bannerTimer = 2.5;
+      sfx.playWin();
+      spawnBurst(boss.x, 3.0, boss.z, 0xffde3b, 60, 20);
+      if (game.state === STATE.PLAY) {
+        scheduleGameEvent(0.45, 1); // Win screen after slow-mo climax
+      } else if (game.state === STATE.TITLE) {
+        scheduleGameEvent(0.9, 2); // Restart attract loop
+      }
+    }
+  }
+
+  // ==========================================================================
+  // 9. FIXED-TIMESTEP SIMULATION (60 HZ)
+  // ==========================================================================
+  function simulateStep(rawDt) {
+    if (game.state === STATE.PAUSED || game.state === STATE.DEAD || game.state === STATE.WIN) {
+      return;
+    }
+
+    // Hitstop freezes simulation while keeping shake decaying
+    if (game.hitstop > 0) {
+      game.hitstop = Math.max(0, game.hitstop - rawDt);
+      game.shake += (0 - game.shake) * (1 - Math.exp(-10 * rawDt));
+      return;
+    }
+
+    if (game.slowMoTimer > 0) {
+      game.slowMoTimer = Math.max(0, game.slowMoTimer - rawDt);
+      game.timeScale = 0.3;
+    } else {
+      game.timeScale = 1.0;
+    }
+
+    const dt = rawDt * game.timeScale;
+    game.clock += dt;
+
+    // Process Game-Time Event Queue
+    for (let i = 0; i < MAX_EVENTS; i++) {
+      const ev = eventQueue[i];
+      if (ev.active && game.clock >= ev.triggerTime) {
+        ev.active = false;
+        if (ev.type === 1 && game.state === STATE.PLAY) {
+          setGameState(STATE.WIN);
+          return;
+        } else if (ev.type === 2 && game.state === STATE.TITLE) {
+          resetGame(STATE.TITLE);
+          return;
+        }
+      }
+    }
+
+    // Countdown Timer
+    if (game.state === STATE.PLAY && boss.active) {
+      game.timeLeft = Math.max(0, game.timeLeft - dt);
+      if (game.timeLeft <= 0) {
+        sfx.playLose();
+        setGameState(STATE.DEAD);
+        return;
+      }
+    }
+
+    // Decay Timers & Smooth Values (dt-based exponential smoothing)
+    game.shake += (0 - game.shake) * (1 - Math.exp(-9 * rawDt));
+    if (game.bannerTimer > 0) game.bannerTimer = Math.max(0, game.bannerTimer - dt);
+    if (game.comboTimer > 0) {
+      game.comboTimer -= dt;
+      if (game.comboTimer <= 0) game.combo = 0;
+    }
+
+    player.dodgeCd = Math.max(0, player.dodgeCd - dt);
+    player.iframeTimer = Math.max(0, player.iframeTimer - dt);
+    player.fireCd = Math.max(0, player.fireCd - dt);
+    player.flashTimer = Math.max(0, player.flashTimer - dt);
+    player.inputBufferDodge = Math.max(0, player.inputBufferDodge - rawDt);
+    player.inputBufferSpec = Math.max(0, player.inputBufferSpec - rawDt);
+    player.squashY += (1.0 - player.squashY) * (1 - Math.exp(-14 * dt));
+    boss.squashY += (1.0 - boss.squashY) * (1 - Math.exp(-12 * dt));
+    boss.flashTimer = Math.max(0, boss.flashTimer - dt);
+
+    // Determine Movement & Action Inputs (Real AI in Title Attract Mode vs Player)
+    let inX = 0;
+    let inZ = 0;
+    let wantGrapple = false;
+
+    if (game.state === STATE.TITLE) {
+      // Attract mode plays the real simulation rules automatically
+      const orbitA = game.clock * 1.15;
+      const targetX = boss.x + Math.cos(orbitA) * 13;
+      const targetZ = boss.z + Math.sin(orbitA) * 13;
+      const dx = targetX - player.x;
+      const dz = targetZ - player.z;
+      const d = Math.hypot(dx, dz) || 1;
+      inX = dx / d;
+      inZ = dz / d;
+
+      // Auto-dodge when inside Boss telegraph
+      if (boss.state === 'windup' && boss.stateTimer < 0.22) {
+        const bDist = Math.hypot(player.x - boss.teleX, player.z - boss.teleZ);
+        if (bDist < 8.5 && player.dodgeCd <= 0) player.inputBufferDodge = 0.1;
+      }
+      if (player.specialMeter >= 100 && Math.hypot(player.x - boss.x, player.z - boss.z) < 15) {
+        player.inputBufferSpec = 0.1;
+      }
+      wantGrapple = (Math.floor(game.clock) % 5 === 2);
+    } else {
+      if (keys['KeyA'] || keys['ArrowLeft']) inX -= 1;
+      if (keys['KeyD'] || keys['ArrowRight']) inX += 1;
+      if (keys['KeyW'] || keys['ArrowUp']) inZ -= 1;
+      if (keys['KeyS'] || keys['ArrowDown']) inZ += 1;
+      inX += touchState.dx;
+      inZ += touchState.dy;
+      const len = Math.hypot(inX, inZ);
+      if (len > 1) {
+        inX /= len;
+        inZ /= len;
+      }
+      wantGrapple = Boolean(keys['KeyF'] || keys['KeyC'] || touchState.grappleHeld);
+    }
+
+    // Buffered Dodge Activation (Grants Invulnerability Frames + Speed Impulse)
+    if (player.inputBufferDodge > 0 && player.dodgeCd <= 0) {
+      player.inputBufferDodge = 0;
+      player.dodgeCd = player.dodgeMaxCd;
+      player.iframeTimer = 0.45;
+      player.squashY = 1.38;
+      const dirX = Math.abs(inX) + Math.abs(inZ) > 0.1 ? inX : Math.sin(player.yaw);
+      const dirZ = Math.abs(inX) + Math.abs(inZ) > 0.1 ? inZ : Math.cos(player.yaw);
+      const n = Math.hypot(dirX, dirZ) || 1;
+      player.vx = (dirX / n) * 34;
+      player.vz = (dirZ / n) * 34;
+      sfx.playDodge();
+      spawnBurst(player.x, 0.6, player.z, 0x38bdf8, 14, 9);
+      spawnPopup(player.x, 2.0, player.z, 'NITRO DODGE!', '#38bdf8');
+    }
+
+    // Buffered Special Move Activation (EMP Overdrive Blast)
+    if (player.inputBufferSpec > 0 && player.specialMeter >= 100) {
+      player.inputBufferSpec = 0;
+      player.specialMeter = 0;
+      player.iframeTimer = Math.max(player.iframeTimer, 0.4);
+      player.squashY = 1.45;
+      game.empVisualRadius = 1.0;
+      empRingMesh.visible = true;
+      empRingMesh.position.set(player.x, 0.35, player.z);
+      game.hitstop = 0.095;
+      game.shake = 1.35;
+      sfx.playSpecial();
+      spawnPopup(player.x, 2.8, player.z, 'EMP NOVA!', '#38bdf8');
+
+      // Damage enemies & boss within 15m radius
+      for (let i = 0; i < MAX_ENEMIES; i++) {
+        const e = enemies[i];
+        if (e.active && Math.hypot(e.x - player.x, e.z - player.z) < 15.5) {
+          e.active = false;
+          spawnGem(e.x, e.z);
+          spawnBurst(e.x, 1.0, e.z, 0xa855f7, 6, 9);
+          bumpCombo(25);
+        }
+      }
+      if (boss.active && Math.hypot(boss.x - player.x, boss.z - player.z) < 16.5) {
+        damageBoss(165, 0.1);
+      }
+    }
+
+    // Grapple Hook Whip Physics around Nearest Pylon
+    player.grapplePylonIdx = -1;
+    if (wantGrapple) {
+      let bestIdx = -1;
+      let bestDist = 17.0;
+      for (let i = 0; i < PYLONS.length; i++) {
+        const d = Math.hypot(player.x - PYLONS[i].x, player.z - PYLONS[i].z);
+        if (d < bestDist) {
+          bestDist = d;
+          bestIdx = i;
+        }
+      }
+      if (bestIdx !== -1) {
+        player.grapplePylonIdx = bestIdx;
+        const py = PYLONS[bestIdx];
+        const rx = py.x - player.x;
+        const rz = py.z - player.z;
+        const d = Math.hypot(rx, rz) || 1;
+        const nx = rx / d;
+        const nz = rz / d;
+        // Tangential whip + inward centripetal pull
+        player.vx += (nx * 28 - nz * 38) * dt;
+        player.vz += (nz * 28 + nx * 38) * dt;
+      }
+    }
+
+    // Player Acceleration & Exponential Friction
+    const accel = 58.0;
+    player.vx += inX * accel * dt;
+    player.vz += inZ * accel * dt;
+    const damp = 1 - Math.exp(-3.4 * dt);
+    player.vx += (0 - player.vx) * damp;
+    player.vz += (0 - player.vz) * damp;
+
+    player.x += player.vx * dt;
+    player.z += player.vz * dt;
+
+    // Keep Player inside Arena
+    const pDist = Math.hypot(player.x, player.z);
+    if (pDist > ARENA_RADIUS - 1.6) {
+      const clampR = ARENA_RADIUS - 1.6;
+      player.x = (player.x / pDist) * clampR;
+      player.z = (player.z / pDist) * clampR;
+    }
+
+    // Smooth Car Heading
+    const speedSq = player.vx * player.vx + player.vz * player.vz;
+    if (speedSq > 1.5) {
+      const targetYaw = Math.atan2(player.vx, player.vz);
+      let diff = targetYaw - player.yaw;
+      while (diff > Math.PI) diff -= Math.PI * 2;
+      while (diff < -Math.PI) diff += Math.PI * 2;
+      player.yaw += diff * (1 - Math.exp(-14 * dt));
+    }
+
+    // Auto-Aimed Twin Cannon Projectiles (Requires line-of-sight range & projectile travel)
+    if (player.fireCd <= 0) {
+      let targetX = boss.x;
+      let targetZ = boss.z;
+      let bestD = boss.active ? Math.hypot(boss.x - player.x, boss.z - player.z) : 999;
+
+      for (let i = 0; i < MAX_ENEMIES; i++) {
+        const e = enemies[i];
+        if (e.active) {
+          const d = Math.hypot(e.x - player.x, e.z - player.z);
+          if (d < bestD) {
+            bestD = d;
+            targetX = e.x;
+            targetZ = e.z;
+          }
+        }
+      }
+      if (bestD < 26) {
+        player.fireCd = 0.17;
+        const dx = targetX - player.x;
+        const dz = targetZ - player.z;
+        const inv = 1 / (Math.hypot(dx, dz) || 1);
+        spawnBullet(player.x, player.z, dx * inv * 38, dz * inv * 38);
+      }
+    }
+
+    // Update EMP Visual Ring
+    if (game.empVisualRadius > 0) {
+      game.empVisualRadius += 42 * dt;
+      empRingMesh.scale.setScalar(game.empVisualRadius);
+      if (game.empVisualRadius > 16) {
+        game.empVisualRadius = 0;
+        empRingMesh.visible = false;
+      }
+    }
+
+    // Update Bullets & Projectile Hit Detection
+    for (let i = 0; i < MAX_BULLETS; i++) {
+      const b = bullets[i];
+      if (!b.active) continue;
+      b.x += b.vx * dt;
+      b.z += b.vz * dt;
+      b.life -= dt;
+      if (b.life <= 0 || Math.hypot(b.x, b.z) > ARENA_RADIUS) {
+        b.active = false;
+        continue;
+      }
+
+      // Check Boss Hit
+      if (boss.active && Math.hypot(b.x - boss.x, b.z - boss.z) < 2.3) {
+        b.active = false;
+        player.specialMeter = Math.min(100, player.specialMeter + 3.5);
+        damageBoss(22, 0.042);
+        continue;
+      }
+
+      // Check Swarm Enemy Hit
+      for (let j = 0; j < MAX_ENEMIES; j++) {
+        const e = enemies[j];
+        if (e.active && Math.hypot(b.x - e.x, b.z - e.z) < 1.15) {
+          b.active = false;
+          e.hp -= 25;
+          e.flashTimer = 0.09;
+          player.specialMeter = Math.min(100, player.specialMeter + 4);
+          if (e.hp <= 0) {
+            e.active = false;
+            game.hitstop = Math.max(game.hitstop, 0.04);
+            game.shake = Math.min(1.2, game.shake + 0.15);
+            bumpCombo(30);
+            sfx.playHit(game.combo);
+            spawnGem(e.x, e.z);
+            spawnBurst(e.x, 1.0, e.z, 0xa855f7, 7, 9);
+            spawnPopup(e.x, 2.0, e.z, '+30', '#34d399');
+          }
+          break;
+        }
+      }
+    }
+
+    // Spawn Undead Swarm Ramping with Time & Phase
+    const spawnInterval = game.phase === 2 ? 0.55 : 0.95;
+    game.spawnAccum += dt;
+    if (game.spawnAccum >= spawnInterval && boss.active) {
+      game.spawnAccum = 0;
+      const ang = Math.random() * Math.PI * 2;
+      spawnEnemy(Math.cos(ang) * (ARENA_RADIUS - 2.5), Math.sin(ang) * (ARENA_RADIUS - 2.5));
+    }
+
+    // Update Swarm Enemies & High-Speed Drift Roadkill
+    const playerSpeed = Math.hypot(player.vx, player.vz);
+    const isRamming = (player.iframeTimer > 0 || player.grapplePylonIdx !== -1 || playerSpeed > 18.5);
+
+    for (let i = 0; i < MAX_ENEMIES; i++) {
+      const e = enemies[i];
+      if (!e.active) continue;
+      e.flashTimer = Math.max(0, e.flashTimer - dt);
+
+      const dx = player.x - e.x;
+      const dz = player.z - e.z;
+      const d = Math.hypot(dx, dz) || 1;
+      const spd = game.phase === 2 ? 7.6 : 5.8;
+      e.vx = (dx / d) * spd;
+      e.vz = (dz / d) * spd;
+      e.x += e.vx * dt;
+      e.z += e.vz * dt;
+
+      if (d < 1.85) {
+        if (isRamming) {
+          e.active = false;
+          player.specialMeter = Math.min(100, player.specialMeter + 7);
+          game.hitstop = Math.max(game.hitstop, 0.048);
+          game.shake = Math.min(1.3, game.shake + 0.25);
+          bumpCombo(50);
+          sfx.playHit(game.combo);
+          spawnGem(e.x, e.z);
+          spawnBurst(e.x, 1.0, e.z, 0xffde3b, 10, 12);
+          spawnPopup(e.x, 2.2, e.z, 'ROADKILL!', '#ffde3b');
+        } else {
+          e.active = false;
+          damagePlayer(14);
+        }
+      }
+    }
+
+    // Update Dread Behemoth Boss State Machine (Clear 0.75s / 0.52s Telegraph!)
+    if (boss.active) {
+      boss.stateTimer -= dt;
+      const dx = player.x - boss.x;
+      const dz = player.z - boss.z;
+      const distToPlayer = Math.hypot(dx, dz) || 1;
+
+      if (boss.state === 'chase') {
+        teleOuterMesh.visible = false;
+        teleFillMesh.visible = false;
+        const bSpd = game.phase === 2 ? 7.8 : 5.8;
+        boss.vx = (dx / distToPlayer) * bSpd;
+        boss.vz = (dz / distToPlayer) * bSpd;
+        boss.x += boss.vx * dt;
+        boss.z += boss.vz * dt;
+        boss.yaw = Math.atan2(dx, dz);
+
+        if (boss.stateTimer <= 0 || distToPlayer < 8.5) {
+          boss.state = 'windup';
+          boss.stateTimer = boss.windupDuration; // >= 0.52s telegraph
+          // Lock telegraph zone slightly ahead of player
+          boss.teleX = Math.max(-30, Math.min(30, player.x + player.vx * 0.2));
+          boss.teleZ = Math.max(-30, Math.min(30, player.z + player.vz * 0.2));
+          teleOuterMesh.position.set(boss.teleX, 0.08, boss.teleZ);
+          teleFillMesh.position.set(boss.teleX, 0.06, boss.teleZ);
+          teleOuterMesh.visible = true;
+          teleFillMesh.visible = true;
+        }
+      } else if (boss.state === 'windup') {
+        // Boss crouches and flashes warning ring on ground
+        const prog = 1.0 - Math.max(0, boss.stateTimer / boss.windupDuration);
+        teleFillMesh.scale.setScalar(0.15 + prog * 0.85);
+        boss.squashY = 0.68;
+        boss.yaw = Math.atan2(boss.teleX - boss.x, boss.teleZ - boss.z);
+
+        if (boss.stateTimer <= 0) {
+          boss.state = 'dash';
+          boss.stateTimer = 0.26;
+          boss.squashY = 1.35;
+        }
+      } else if (boss.state === 'dash') {
+        boss.x += (boss.teleX - boss.x) * (1 - Math.exp(-18 * dt));
+        boss.z += (boss.teleZ - boss.z) * (1 - Math.exp(-18 * dt));
+        if (boss.stateTimer <= 0) {
+          // Slam Impact!
+          teleOuterMesh.visible = false;
+          teleFillMesh.visible = false;
+          boss.squashY = 0.6;
+          game.shake = Math.min(1.5, game.shake + 0.75);
+          spawnBurst(boss.x, 0.6, boss.z, 0xff2a55, 28, 15);
+          if (Math.hypot(player.x - boss.x, player.z - boss.z) < 7.3) {
+            damagePlayer(28);
+          }
+          boss.state = 'recover';
+          boss.stateTimer = game.phase === 2 ? 1.0 : 1.45;
+        }
+      } else if (boss.state === 'recover') {
+        if (boss.stateTimer <= 0) {
+          boss.state = 'chase';
+          boss.stateTimer = game.phase === 2 ? 1.8 : 2.6;
+        }
+      }
+
+      // Direct Boss Body Collision / Grapple Slam Counter
+      if (Math.hypot(player.x - boss.x, player.z - boss.z) < 2.8) {
+        if (player.grapplePylonIdx !== -1 || player.iframeTimer > 0) {
+          damageBoss(65, 0.075);
+          // Bounce player safely out
+          player.vx = -dx / distToPlayer * 24;
+          player.vz = -dz / distToPlayer * 24;
+          player.iframeTimer = Math.max(player.iframeTimer, 0.3);
+        } else {
+          damagePlayer(20);
+        }
+      }
+    }
+
+    // Update Pickup Gems (Magnetize & Fill Special Meter)
+    for (let i = 0; i < MAX_GEMS; i++) {
+      const g = gems[i];
+      if (!g.active) continue;
+      const dx = player.x - g.x;
+      const dz = player.z - g.z;
+      const d = Math.hypot(dx, dz) || 1;
+      if (d < 8.5) {
+        g.x += (dx / d) * 22 * dt;
+        g.z += (dz / d) * 22 * dt;
+      }
+      if (d < 1.8) {
+        g.active = false;
+        player.specialMeter = Math.min(100, player.specialMeter + 9);
+        player.hp = Math.min(player.maxHp, player.hp + 2);
+        bumpCombo(15);
+        sfx.playPickup(game.combo);
+      }
+    }
+
+    // Update Pooled 3D Particles
+    for (let i = 0; i < MAX_PARTICLES; i++) {
+      const p = particles[i];
+      if (!p.active) continue;
+      p.x += p.vx * dt;
+      p.y += p.vy * dt;
+      p.z += p.vz * dt;
+      p.vy -= 24 * dt;
+      p.life -= dt;
+      if (p.life <= 0) p.active = false;
+    }
+
+    // Update Pooled 2D Damage/Combo Popups
+    for (let i = 0; i < MAX_POPUPS; i++) {
+      const pop = popups[i];
+      if (!pop.active) continue;
+      pop.y += 2.6 * dt;
+      pop.life -= rawDt;
+      if (pop.life <= 0) pop.active = false;
+    }
+
+    // Step Procedural Audio Sequencer
+    const intensity = game.phase === 2 ? 2 : (game.clock > 12 ? 1 : 0);
+    const bDist = boss.active ? Math.hypot(player.x - boss.x, player.z - boss.z) : 99;
+    sfx.updateSequencer(dt, intensity, player.hp <= 30, bDist);
+
+    // Camera Lead & Smooth Follow (Portrait 9:16 vs Landscape Adaptive Framing)
+    const isPortrait = window.innerHeight > window.innerWidth;
+    const baseHeight = isPortrait ? 36 : 25;
+    const baseBack = isPortrait ? 28 : 21;
+    const zoomOut = (boss.state === 'windup' || game.empVisualRadius > 0) ? 4.5 : 0;
+
+    const leadX = player.x + player.vx * 0.22;
+    const leadZ = player.z + player.vz * 0.22;
+    const camSmooth = 1 - Math.exp(-7.5 * rawDt);
+
+    camState.lookX += (leadX - camState.lookX) * camSmooth;
+    camState.lookZ += (leadZ - camState.lookZ) * camSmooth;
+    camState.x += (leadX - camState.x) * camSmooth;
+    camState.y += ((baseHeight + zoomOut) - camState.y) * camSmooth;
+    camState.z += ((leadZ + baseBack + zoomOut * 0.7) - camState.z) * camSmooth;
+  }
+
+  // ==========================================================================
+  // 10. RENDER SYNC & 2D HUD DRAWING
+  // ==========================================================================
+  function syncSceneAndRender() {
+    // Player Transform & Squash/Stretch + White Hit Flash
+    playerGroup.position.set(player.x, 0, player.z);
+    playerGroup.rotation.y = player.yaw;
+    const invSq = 1 / Math.sqrt(Math.max(0.4, player.squashY));
+    playerGroup.scale.set(invSq, player.squashY, invSq);
+    chassisMesh.userData.mainMesh.material = player.flashTimer > 0 ? flashWhiteMat : chassisMesh.userData.baseMat;
+    iframeRing.visible = player.iframeTimer > 0;
+
+    // Grapple Line
+    if (player.grapplePylonIdx !== -1) {
+      const py = PYLONS[player.grapplePylonIdx];
+      const posArr = grappleGeo.attributes.position.array;
+      posArr[0] = player.x; posArr[1] = 1.0; posArr[2] = player.z;
+      posArr[3] = py.x;     posArr[4] = 3.2; posArr[5] = py.z;
+      grappleGeo.attributes.position.needsUpdate = true;
+      grappleLine.visible = true;
+    } else {
+      grappleLine.visible = false;
+    }
+
+    // Boss Transform & White Flash
+    if (boss.active) {
+      bossGroup.position.set(boss.x, 0, boss.z);
+      bossGroup.rotation.y = boss.yaw;
+      const bInv = 1 / Math.sqrt(Math.max(0.4, boss.squashY));
+      bossGroup.scale.set(bInv, boss.squashY, bInv);
+      bossTorso.userData.mainMesh.material = boss.flashTimer > 0 ? flashWhiteMat : bossTorso.userData.baseMat;
+    }
+
+    // Sync Instanced Swarm Enemies
+    for (let i = 0; i < MAX_ENEMIES; i++) {
+      const e = enemies[i];
+      if (!e.active) {
+        enemyInst.setMatrixAt(i, zeroMatrix);
+      } else {
+        dummyObj.position.set(e.x, Math.abs(Math.sin(game.clock * 10 + e.phase)) * 0.35, e.z);
+        dummyObj.rotation.set(0, Math.atan2(e.vx, e.vz), 0);
+        dummyObj.scale.setScalar(e.flashTimer > 0 ? 1.22 : 1.0);
+        dummyObj.updateMatrix();
+        enemyInst.setMatrixAt(i, dummyObj.matrix);
+        enemyInst.setColorAt(i, e.flashTimer > 0 ? colorWhite : colorPurple);
+      }
+    }
+    enemyInst.instanceMatrix.needsUpdate = true;
+    if (enemyInst.instanceColor) enemyInst.instanceColor.needsUpdate = true;
+
+    // Sync Instanced Bullets
+    for (let i = 0; i < MAX_BULLETS; i++) {
+      const b = bullets[i];
+      if (!b.active) {
+        bulletInst.setMatrixAt(i, zeroMatrix);
+      } else {
+        dummyObj.position.set(b.x, 0.85, b.z);
+        dummyObj.rotation.set(0, Math.atan2(b.vx, b.vz), 0);
+        dummyObj.scale.setScalar(1.0);
+        dummyObj.updateMatrix();
+        bulletInst.setMatrixAt(i, dummyObj.matrix);
+      }
+    }
+    bulletInst.instanceMatrix.needsUpdate = true;
+
+    // Sync Instanced Gems
+    for (let i = 0; i < MAX_GEMS; i++) {
+      const g = gems[i];
+      if (!g.active) {
+        gemInst.setMatrixAt(i, zeroMatrix);
+      } else {
+        dummyObj.position.set(g.x, 0.75 + Math.sin(game.clock * 6 + g.phase) * 0.2, g.z);
+        dummyObj.rotation.set(0, game.clock * 3 + g.phase, 0);
+        dummyObj.scale.setScalar(1.0);
+        dummyObj.updateMatrix();
+        gemInst.setMatrixAt(i, dummyObj.matrix);
+      }
+    }
+    gemInst.instanceMatrix.needsUpdate = true;
+
+    // Sync Instanced Particles
+    for (let i = 0; i < MAX_PARTICLES; i++) {
+      const p = particles[i];
+      if (!p.active) {
+        partInst.setMatrixAt(i, zeroMatrix);
+      } else {
+        dummyObj.position.set(p.x, Math.max(0.1, p.y), p.z);
+        dummyObj.rotation.set(p.life * 8, p.life * 6, 0);
+        dummyObj.scale.setScalar(Math.max(0.05, p.life / p.maxLife));
+        dummyObj.updateMatrix();
+        partInst.setMatrixAt(i, dummyObj.matrix);
+      }
+    }
+    partInst.instanceMatrix.needsUpdate = true;
+
+    // Apply Screenshake to Camera
+    const sx = (Math.random() - 0.5) * game.shake;
+    const sy = (Math.random() - 0.5) * game.shake;
+    camera.position.set(camState.x + sx, camState.y + sy, camState.z);
+    camera.lookAt(camState.lookX + sx * 0.4, 0.8, camState.lookZ + sy * 0.4);
+
+    renderer.render(scene, camera);
+    drawHUD();
+  }
+
+  function drawBar(x, y, w, h, frac, fillHex, label) {
+    ctx2d.fillStyle = '#080b12';
+    ctx2d.fillRect(x - 3, y - 3, w + 6, h + 6);
+    ctx2d.fillStyle = '#1e293b';
+    ctx2d.fillRect(x, y, w, h);
+    ctx2d.fillStyle = fillHex;
+    ctx2d.fillRect(x, y, Math.max(0, Math.min(1, frac)) * w, h);
+    ctx2d.font = '900 11px system-ui, sans-serif';
+    ctx2d.fillStyle = '#ffffff';
+    ctx2d.textAlign = 'left';
+    ctx2d.fillText(label, x + 6, y + h - 4);
+  }
+
+  function drawHUD() {
+    const w = window.innerWidth;
+    const h = window.innerHeight;
+    ctx2d.clearRect(0, 0, w, h);
+
+    // Top Band Layout (Keeps middle 60% completely unobstructed)
+    const topY = Math.max(12, h * 0.02);
+    const barW = Math.min(340, w * 0.58);
+    const barX = 14;
+
+    // Boss Health Bar + Timer
+    const bossFrac = boss.hp / boss.maxHp;
+    drawBar(barX, topY, barW, 20, bossFrac, '#f43f5e', `DREAD BEHEMOTH: ${Math.ceil(boss.hp)} HP`);
+
+    // Player HP & EMP Overdrive Meter
+    drawBar(barX, topY + 28, barW * 0.55, 16, player.hp / player.maxHp, '#22c55e', `HP ${Math.ceil(player.hp)}`);
+    const empReady = player.specialMeter >= 100;
+    drawBar(
+      barX + barW * 0.58,
+      topY + 28,
+      barW * 0.42,
+      16,
+      player.specialMeter / 100,
+      empReady ? '#ffde3b' : '#38bdf8',
+      empReady ? 'EMP READY!' : `EMP ${Math.floor(player.specialMeter)}%`
+    );
+
+    // Timer & Combo Pill on Top-Left Row 3
+    ctx2d.font = '900 16px system-ui, sans-serif';
+    ctx2d.fillStyle = game.timeLeft < 15 ? '#f43f5e' : '#ffde3b';
+    ctx2d.textAlign = 'left';
+    ctx2d.strokeStyle = '#080b12';
+    ctx2d.lineWidth = 4;
+    const timerTxt = `TIME: ${game.timeLeft.toFixed(1)}s   SCORE: ${game.score}`;
+    ctx2d.strokeText(timerTxt, barX, topY + 64);
+    ctx2d.fillText(timerTxt, barX, topY + 64);
+
+    if (game.combo > 1) {
+      const cTxt = `${game.combo}x COMBO!`;
+      ctx2d.fillStyle = '#38bdf8';
+      ctx2d.strokeText(cTxt, barX + 225, topY + 64);
+      ctx2d.fillText(cTxt, barX + 225, topY + 64);
+    }
+
+    // Big Goal / Event Banner (>= 5% of screen height, positioned at top 17% band)
+    if (game.bannerTimer > 0 || game.state === STATE.TITLE) {
+      const fontPx = Math.max(26, Math.floor(h * 0.052));
+      ctx2d.font = `900 ${fontPx}px system-ui, sans-serif`;
+      ctx2d.textAlign = 'center';
+      ctx2d.lineWidth = 7;
+      ctx2d.strokeStyle = '#080b12';
+      const titleText = game.state === STATE.TITLE ? 'BEAT THE BOSS' : game.bannerText;
+      ctx2d.strokeText(titleText, w * 0.5, h * 0.16);
+      ctx2d.fillStyle = '#ffde3b';
+      ctx2d.fillText(titleText, w * 0.5, h * 0.16);
+
+      if (game.state === STATE.TITLE) {
+        const subPx = Math.max(15, Math.floor(h * 0.025));
+        ctx2d.font = `900 ${subPx}px system-ui, sans-serif`;
+        const pulse = 0.65 + Math.sin(performance.now() * 0.008) * 0.35;
+        ctx2d.fillStyle = `rgba(56, 189, 248, ${pulse.toFixed(2)})`;
+        ctx2d.strokeText('TAP OR PRESS ANY KEY TO TAKE CONTROL', w * 0.5, h * 0.21);
+        ctx2d.fillText('TAP OR PRESS ANY KEY TO TAKE CONTROL', w * 0.5, h * 0.21);
+      }
+    }
+
+    // 3D-Projected Damage & Combo Numbers
+    ctx2d.font = '900 18px system-ui, sans-serif';
+    ctx2d.textAlign = 'center';
+    ctx2d.lineWidth = 4;
+    ctx2d.strokeStyle = '#080b12';
+    for (let i = 0; i < MAX_POPUPS; i++) {
+      const pop = popups[i];
+      if (!pop.active) continue;
+      tmpVecA.set(pop.x, pop.y, pop.z).project(camera);
+      if (tmpVecA.z > 1) continue;
+      const sx = (tmpVecA.x * 0.5 + 0.5) * w;
+      const sy = (-tmpVecA.y * 0.5 + 0.5) * h;
+      ctx2d.fillStyle = pop.color;
+      ctx2d.strokeText(pop.text, sx, sy);
+      ctx2d.fillText(pop.text, sx, sy);
+    }
+
+    // Bottom Band Touch Controls (Automatically visible on touch devices)
+    if (touchState.showTouch && game.state === STATE.PLAY) {
+      const lay = getTouchLayout(w, h);
+      const sx = touchState.stickId !== null ? touchState.stickStartX : lay.stickDefX;
+      const sy = touchState.stickId !== null ? touchState.stickStartY : lay.stickDefY;
+      const kx = touchState.stickId !== null ? touchState.stickCurX : lay.stickDefX;
+      const ky = touchState.stickId !== null ? touchState.stickCurY : lay.stickDefY;
+
+      // Floating Left Stick
+      ctx2d.beginPath();
+      ctx2d.arc(sx, sy, lay.stickRadius, 0, Math.PI * 2);
+      ctx2d.fillStyle = 'rgba(15, 23, 42, 0.55)';
+      ctx2d.fill();
+      ctx2d.lineWidth = 3;
+      ctx2d.strokeStyle = 'rgba(255, 255, 255, 0.45)';
+      ctx2d.stroke();
+
+      ctx2d.beginPath();
+      ctx2d.arc(kx, ky, lay.stickRadius * 0.46, 0, Math.PI * 2);
+      ctx2d.fillStyle = 'rgba(255, 222, 59, 0.85)';
+      ctx2d.fill();
+
+      // Right-Side Action Buttons (>= 56px diameter)
+      drawTouchButton(lay.dodgeX, lay.dodgeY, lay.btnRadius, 'DODGE', player.dodgeCd <= 0 ? '#38bdf8' : '#475569');
+      drawTouchButton(lay.specX, lay.specY, lay.btnRadius, 'EMP', player.specialMeter >= 100 ? '#ffde3b' : '#475569');
+      drawTouchButton(lay.grapX, lay.grapY, lay.btnRadius, 'HOOK', touchState.grappleHeld ? '#34d399' : '#a855f7');
+    }
+  }
+
+  function drawTouchButton(x, y, r, label, colorHex) {
+    ctx2d.beginPath();
+    ctx2d.arc(x, y, r, 0, Math.PI * 2);
+    ctx2d.fillStyle = colorHex;
+    ctx2d.globalAlpha = 0.82;
+    ctx2d.fill();
+    ctx2d.globalAlpha = 1.0;
+    ctx2d.lineWidth = 3;
+    ctx2d.strokeStyle = '#080b12';
+    ctx2d.stroke();
+    ctx2d.font = '900 12px system-ui, sans-serif';
+    ctx2d.fillStyle = '#080b12';
+    ctx2d.textAlign = 'center';
+    ctx2d.fillText(label, x, y + 4);
+  }
+
+  // ==========================================================================
+  // 11. RESIZE & FIXED-TIMESTEP MAIN LOOP
+  // ==========================================================================
+  function onResize() {
+    const w = window.innerWidth;
+    const h = window.innerHeight;
+    const dpr = Math.min(window.devicePixelRatio || 1, maxDPR);
+    renderer.setPixelRatio(dpr);
+    renderer.setSize(w, h);
+    hudCanvas.width = Math.floor(w * dpr);
+    hudCanvas.height = Math.floor(h * dpr);
+    ctx2d.setTransform(dpr, 0, 0, dpr, 0, 0);
+
+    camera.aspect = w / h;
+    // Portrait 9:16 first-class FOV adjustment
+    camera.fov = h > w ? 66 : 52;
+    camera.updateProjectionMatrix();
+  }
+  window.addEventListener('resize', onResize);
+  onResize();
+
+  // Boot directly into Frame-1 Attract Action
+  resetGame(STATE.TITLE);
+
+  const FIXED_DT = 1 / 60;
+  let accumulator = 0;
+  let lastFrameTime = performance.now();
+
+  function frameLoop(now) {
+    requestAnimationFrame(frameLoop);
+    let frameDt = (now - lastFrameTime) / 1000;
+    lastFrameTime = now;
+    if (frameDt > 0.1) frameDt = 0.1; // Clamp to 0.1s max
+
+    accumulator += frameDt;
+    while (accumulator >= FIXED_DT) {
+      simulateStep(FIXED_DT);
+      accumulator -= FIXED_DT;
+    }
+    syncSceneAndRender();
+  }
+  requestAnimationFrame(frameLoop);
+})();
+</script>
+</body>
+</html>
