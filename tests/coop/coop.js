@@ -31,7 +31,8 @@ setInterval(() => { const c = window.__coop, cel = window.__cel; if (!c || !cel)
   const E = (fn, a) => p.evaluate(fn, a);
   const gt = () => E(() => __cel.S.time);
   const waitGame = async (sec) => { const t0 = await gt(); await p.waitForFunction((t) => __cel.S.time >= t, t0 + sec, { timeout: 180000, polling: 50 }); };
-  const btn = async (pi, k, holdSec = 0.15) => { await E(([pi, k]) => { __pads[pi].buttons[k].pressed = true; __pads[pi].buttons[k].value = 1; }, [pi, k]); await waitGame(holdSec); await E(([pi, k]) => { __pads[pi].buttons[k].pressed = false; __pads[pi].buttons[k].value = 0; }, [pi, k]); await waitGame(0.05); };
+  const btn = async (pi, k, holdSec = 0.15) => { await E(([pi, k]) => { __pads[pi].buttons[k].pressed = true; __pads[pi].buttons[k].value = 1; }, [pi, k]); await waitGameOrWall(holdSec); await E(([pi, k]) => { __pads[pi].buttons[k].pressed = false; __pads[pi].buttons[k].value = 0; }, [pi, k]); await waitGameOrWall(0.05); };
+  const waitGameOrWall = async (sec) => { const t0 = await gt(); await p.waitForFunction(([t, w]) => __cel.S.time >= t || Date.now() > w, [t0 + sec, Date.now() + 400 + sec * 1000], { timeout: 60000, polling: 30 }); };
   const st = () => E(() => { const c = __coop, cel = __cel, H = cel.hero, P = cel.partner; const proj = (f, cam) => { const v = new cel.THREE.Vector3(f.pos.x, f.pos.y + 1, f.pos.z).project(cam); return [+v.x.toFixed(2), +v.y.toFixed(2), +v.z.toFixed(3)]; };
     return { on: c.on, split: c.C.split, k: +c.C.k.toFixed(2), sep: +Math.hypot(P.pos.x - H.pos.x, P.pos.z - H.pos.z).toFixed(2), edgeT: +c.C.edgeT.toFixed(2), holds: c.C.holds, splits: c.C.splits, merges: c.C.merges, draws2: c.C.draws2, mode: c.C.mode, turn: c.C.turn, card: !!c.C.card, p1: c.C.p1, p2: c.C.p2,
       hs: H.state, ps: P.state, hpos: [+H.pos.x.toFixed(1), +H.pos.z.toFixed(1)], ppos: [+P.pos.x.toFixed(1), +P.pos.z.toFixed(1)], prH: proj(H, cel.camera), prP: proj(P, cel.camera), MS: c.MAXSEP(), dbg: c.C.dbg, IN2: [+c.IN2.mx.toFixed(2), +c.IN2.my.toFixed(2)], yaw: +cel.CAM.yaw.toFixed(2), log: c.C.log.slice(-6), kills: cel.S.kills, fps: cel.FPS.v }; });
@@ -57,6 +58,7 @@ setInterval(() => { const c = window.__coop, cel = window.__cel; if (!c || !cel)
   await waitGame(0.6); const pA = await E(() => __cel.partner.pos.x); await E(() => { __drv.p2 = { x: -30, z: -32.6 }; }); await waitGame(0.6); await E(() => { __drv.p2 = 'stop'; }); await waitGame(0.3);
   const pB = await E(() => __cel.partner.pos.x); s = await st();
   T('P2 stick moves Mavis', pB - pA > 1.5, { dx: +(pB - pA).toFixed(2) });
+  if (!process.env.ONLY) {
   // 3. shared camera keeps both on screen
   const inView = (pr) => Math.abs(pr[0]) <= 1 && Math.abs(pr[1]) <= 1 && pr[2] < 1;
   T('shared camera: both on screen when close', inView(s.prH) && inView(s.prP) && !s.split && s.draws2 === 0, s);
@@ -103,6 +105,7 @@ setInterval(() => { const c = window.__coop, cel = window.__cel; if (!c || !cel)
   T('merge: walking back together returns to one view', !s.split && s.merges === 1 && s.sep < __MERGE(s), s);
   await waitGame(1.2); s = await st(); T('merge animation finished (k=0, single render)', s.k === 0, { k: s.k });
   await shot('merged');
+  }
   // 8. boss turn rotation (a duel ring): P1 plays first with only pad 0 visible to the mode, then P2's turn with only pad 1
   const ring = await E(() => { const D = window.__duels; const id = Object.keys(D.kinds).find((k) => D.kinds[k].trigger && k === 'chipkid') || Object.keys(D.kinds).find((k) => D.kinds[k].trigger); const t = D.kinds[id].trigger; return { id, x: t.x, z: t.z }; });
   await E((r) => { const H = __cel.hero, P = __cel.partner; H.pos.set(r.x, __cel.groundY(r.x, r.z), r.z); H.vel.set(0, 0); P.pos.set(r.x + 1.2, H.pos.y, r.z + 0.6); P.vel.set(0, 0); }, ring);

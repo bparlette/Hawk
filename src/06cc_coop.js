@@ -50,7 +50,7 @@ const COOP = (function () {
   #coopedge { position: fixed; z-index: 6; width: 46px; height: 46px; margin: -23px 0 0 -23px; border-radius: 50%; pointer-events: none; display: none;
     background: conic-gradient(#ff9ad0 calc(var(--p) * 1turn), rgba(20,16,31,.55) 0); -webkit-mask: radial-gradient(circle, transparent 13px, #000 14px); mask: radial-gradient(circle, transparent 13px, #000 14px); }
   #coopedgeL { position: fixed; z-index: 6; font: 7px/1 'PX', monospace; color: #fff; text-shadow: 1px 1px 0 #000; pointer-events: none; display: none; transform: translate(-50%, 0); white-space: nowrap; }
-  #coopturn { position: fixed; z-index: 30; left: 50%; top: 34%; transform: translate(-50%, -50%); background: #1a1220; border: 3px solid #000; box-shadow: 4px 4px 0 #000; padding: 12px 16px; text-align: center; font: 12px/1.6 'PX', monospace; color: #ff9ad0; display: none; pointer-events: none; max-width: 90vw; }
+  #coopturn { position: fixed; z-index: 30; left: 50%; top: 56%; transform: translate(-50%, -50%); background: #1a1220; border: 3px solid #000; box-shadow: 4px 4px 0 #000; padding: 12px 16px; text-align: center; font: 12px/1.6 'PX', monospace; color: #ff9ad0; display: none; pointer-events: none; max-width: 90vw; }
   #coopturn b { display: block; font-size: 18px; color: #fff; margin-bottom: 4px; } #coopturn i { display: block; font-style: normal; color: #ffe08a; font-size: 10px; }
   @media (max-width: 480px) { #coopturn { font-size: 9px; } #coopturn b { font-size: 13px; } }`;
   document.head.appendChild(st);
@@ -58,7 +58,7 @@ const COOP = (function () {
   const elDiv = mk('coopdiv'), elT1 = mk('cooptag1', 'cooptag'), elT2 = mk('cooptag2', 'cooptag'), elEdge = mk('coopedge'), elEdgeL = mk('coopedgeL'), elTurn = mk('coopturn');
   elT1.textContent = 'P1 HAROLD'; elT2.textContent = 'P2 MAVIS'; elEdgeL.textContent = 'KEEP GOING TO SPLIT';
   let tagSpr = null;
-  function tags() { if (tagSpr) return tagSpr; const mkS = (txt, col) => { const s = new THREE.Sprite(new THREE.SpriteMaterial({ map: canvasTex(256, 128, (c) => comicText(c, txt, 128, 66, 84, col, null, { sx: 1 })), depthTest: false, transparent: true })); s.scale.set(0.9, 0.45, 1); s.renderOrder = 20; s.visible = false; scene.add(s); return s; };
+  function tags() { if (tagSpr) return tagSpr; const mkS = (txt, col) => { const s = new THREE.Sprite(new THREE.SpriteMaterial({ map: canvasTex(256, 128, (c) => comicText(c, txt, 128, 66, 84, col, null, { sx: 1 })), depthTest: false, transparent: true })); s.scale.set(0.62, 0.31, 1); s.renderOrder = 20; s.visible = false; scene.add(s); return s; };
     tagSpr = [mkS('P1', '#9dff6b'), mkS('P2', '#ff9ad0')]; return tagSpr; }
   const hideHud = () => { for (const e of [elDiv, elT1, elT2, elEdge, elEdgeL]) e.style.display = 'none'; if (tagSpr) tagSpr.forEach((s) => (s.visible = false)); };
   // ---- join / leave ----
@@ -167,7 +167,6 @@ const COOP = (function () {
     if (!C.on) return;
     const H = hero, P = partner; let dx = P.pos.x - H.pos.x, dz = P.pos.z - H.pos.z, sep = Math.hypot(dx, dz);
     const scripted = CINE.intro || PART.over || CINE_ST.has(H.state) || !P2FREE.has(P.state), levels = !!H.roof !== !!P.roof, MS = MAXSEP();
-    C.dbg = { intro: !!CINE.intro, over: PART.over, hs: H.state, ps: P.state, levels, sep: +sep.toFixed(2) };
     if (!C.split) {
       // 1. held at the edge: remove the away-from-partner part of this step's motion (walking, knockback, jumps alike)
       if (!scripted && !levels && sep > MS) {
@@ -225,13 +224,13 @@ const COOP = (function () {
     const mx = (H.pos.x + P.pos.x) / 2, mz = (H.pos.z + P.pos.z) / 2, my = (H.pos.y + P.pos.y) / 2 + 1.4 + (H.y + P.y) * 0.22;
     SH.pivot.x = damp(SH.pivot.x, mx, 6, rdt); SH.pivot.z = damp(SH.pivot.z, mz, 6, rdt); SH.pivot.y = damp(SH.pivot.y, my, 5, rdt);
     setFov(58, camera, aspect); const vf = camera.fov * Math.PI / 180, hf = 2 * Math.atan(Math.tan(vf / 2) * aspect);
-    const half = sep / 2 + 1.8, want = Math.max(4.6 + (portrait ? 1.4 : 0), half / Math.tan(Math.min(vf, hf) / 2) * 1.05);
+    const half = sep / 2 + 1.8, want = Math.max(5.4 + (portrait ? 1.4 : 0), half / Math.tan(Math.min(vf, hf) / 2) * 1.05);
     SH.dist = damp(SH.dist, want, 2.4, rdt);
-    const pitch = clamp(SH.pitch + sk * 0.55, 0.05, 1.1), f = camFwd(SH.yaw), cp = Math.cos(pitch), spp = Math.sin(pitch);
+    const pitch = clamp(SH.pitch + 0.06 + sk * 0.55, 0.05, 1.1), f = camFwd(SH.yaw), cp = Math.cos(pitch), spp = Math.sin(pitch);
     const px = SH.pivot.x, py = SH.pivot.y, pz = SH.pivot.z, wx = px - f[0] * SH.dist * cp, wy = py + SH.dist * spp, wz = pz - f[1] * SH.dist * cp;
     let t = 1; for (const b of BLD) { if (b.x1 < Math.min(px, wx) - 1 || b.x0 > Math.max(px, wx) + 1 || b.z1 < Math.min(pz, wz) - 1 || b.z0 > Math.max(pz, wz) + 1) continue; const hh = segBox(px, py, pz, wx, wy, wz, b, 0.3); if (hh < t) t = hh; }
     const d = Math.max(sep > 3 ? SH.dist * 0.72 : 0.9, SH.dist * t - 0.15);
-    SH.pos.set(px - f[0] * d * cp, Math.max(py + d * spp, H.pos.y + 0.5), pz - f[1] * d * cp); SH.look.set(px + f[0] * 0.8, py - 0.2 - sk * 0.4, pz + f[1] * 0.8);
+    SH.pos.set(px - f[0] * d * cp, Math.max(py + d * spp, H.pos.y + 0.5), pz - f[1] * d * cp); SH.look.set(px + f[0] * 0.8 * (1 - sk), py - 0.2 + sk * 1.0, pz + f[1] * 0.8 * (1 - sk)); // at the edge, aim a little high so the far toad sits below the top HUD band
     const T = S.time; SH.pos.x += Math.sin(T * 0.73) * 0.03; SH.pos.y += Math.sin(T * 1.13 + 2) * 0.025;
     camera.position.copy(SH.pos); if (S.shake > 0) { S.shake = Math.max(0, S.shake - rdt * 3); const kk = S.shake * S.shake * 0.25; camera.position.x += rnd(-kk, kk); camera.position.y += rnd(-kk, kk); }
     camera.up.set(0, 1, 0); camera.lookAt(SH.look); CAM.pos.copy(SH.pos); CAM.look.copy(SH.look); CAM.pivot.copy(SH.pivot); CAM.cur = d;
@@ -255,9 +254,11 @@ const COOP = (function () {
     const W = RT.width, Hh = RT.height, [v1, v2] = views(); C.draws2++;
     const rect = (v) => [Math.round(v[0] * W), Math.round(v[1] * Hh), Math.round(v[2] * W), Math.round(v[3] * Hh)];
     const r1 = rect(v1), r2 = rect(v2);
-    RT.scissorTest = true;
+    RT.scissorTest = true; const tv = tagSpr ? tagSpr.map((t) => t.visible) : null;
+    if (tv) tagSpr[0].visible = false; // each view hides its own toad's tag
     RT.viewport.set(r1[0], r1[1], r1[2], r1[3]); RT.scissor.set(r1[0], r1[1], r1[2], r1[3]);
     renderer.setRenderTarget(RT); renderer.render(scene, camera);
+    if (tv) { tagSpr[0].visible = tv[0]; tagSpr[1].visible = false; }
     const x0 = Math.max(0, r2[0]), y0 = Math.max(0, r2[1]), x1 = Math.min(W, r2[0] + r2[2]), y1 = Math.min(Hh, r2[1] + r2[3]);
     if (x1 - x0 > 1 && y1 - y0 > 1) {
       const au = renderer.shadowMap.autoUpdate; renderer.shadowMap.autoUpdate = false; _sky.copy(window.__sky.position); window.__sky.position.copy(camera2.position);
@@ -265,6 +266,7 @@ const COOP = (function () {
       renderer.setRenderTarget(RT); renderer.render(scene, camera2);
       renderer.shadowMap.autoUpdate = au; window.__sky.position.copy(_sky);
     }
+    if (tv) tagSpr[1].visible = tv[1];
     RT.scissorTest = false; RT.viewport.set(0, 0, W, Hh); RT.scissor.set(0, 0, W, Hh);
     renderer.setRenderTarget(null); renderer.render(postScene, postCam);
   }
