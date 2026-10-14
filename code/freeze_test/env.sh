@@ -1,0 +1,10 @@
+R=/workspace/work/freeze_test/root
+export LD_LIBRARY_PATH=$R/usr/lib/aarch64-linux-gnu:$R/usr/lib/aarch64-linux-gnu/pulseaudio:$R/usr/lib/aarch64-linux-gnu/blas:$R/usr/lib/aarch64-linux-gnu/lapack:/workspace/work/sstest/debs/root/usr/lib/aarch64-linux-gnu
+export GST_PLUGIN_PATH=$R/usr/lib/aarch64-linux-gnu/gstreamer-1.0
+export __EGL_VENDOR_LIBRARY_DIRS=$R/usr/share/glvnd/egl_vendor.d
+export LIBGL_DRIVERS_PATH=$R/usr/lib/aarch64-linux-gnu/dri
+export GBM_BACKENDS_PATH=$R/usr/lib/aarch64-linux-gnu/gbm
+export LIBGL_ALWAYS_SOFTWARE=1
+export PLAYWRIGHT_SKIP_VALIDATE_HOST_REQUIREMENTS=1
+export GIO_EXTRA_MODULES=$R/usr/lib/aarch64-linux-gnu/gio/modules
+export PLAYWRIGHT_BROWSERS_PATH=/workspace/work/freeze_test/pw-browsers

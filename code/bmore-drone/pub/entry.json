@@ -1,0 +1,35 @@
+{
+ "id": "toad-city-drone",
+ "title": "Toad City Drone Racer",
+ "category": "Originals",
+ "keys": {
+  "up": "KeyW",
+  "down": "KeyS",
+  "left": "KeyA",
+  "right": "KeyD",
+  "attack": "ShiftLeft",
+  "jump": "Space",
+  "special": "KeyV",
+  "start": "Enter"
+ },
+ "labels": {
+  "attack": "SHIFT · BOOST",
+  "jump": "SPACE · CLIMB",
+  "special": "V · CAM"
+ },
+ "extras": [
+  {
+   "label": "PAUSE",
+   "key": "KeyP"
+  },
+  {
+   "label": "MUTE",
+   "key": "KeyM"
+  }
+ ],
+ "autostart": [],
+ "orientation": "any",
+ "note": "FPV drone race around the Inner Harbor on the Toad City Baltimore engine (same city kit, HD landmarks, toon/ink shading). Source /workspace/work/bmore-drone.",
+ "path": "g/toad-city-drone/index.html",
+ "thumb": "thumbs/toad-city-drone.webp?v=1791957742"
+}

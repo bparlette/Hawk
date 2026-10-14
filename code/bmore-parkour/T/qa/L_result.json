@@ -1,0 +1,23 @@
+{
+ "menuCards": 3,
+ "overflow": {
+  "sw": 1280,
+  "iw": 1280,
+  "sh": 720,
+  "ih": 720
+ },
+ "tapCard": "ok",
+ "lose": "busted",
+ "tapRetry": "ok",
+ "retryState": "count",
+ "fall": "fell",
+ "tapRestart": "ok",
+ "win": 19.8,
+ "botlog": "jump@9 zip@10 roll@30 jump@48 jump@77 zip@78 roll@98 jump@145 zip@146 roll@166 jump@180 zip@181",
+ "resultText": "19.80 | GOLD MEDAL | NEW BEST!",
+ "tapRetry2": "ok",
+ "retry2State": "count",
+ "errCount": 0,
+ "celErr": 0,
+ "errs": []
+}

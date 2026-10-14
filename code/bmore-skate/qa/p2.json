@@ -1,0 +1,16 @@
+{ "w": 390, "h": 844, "q": "?bot=route&runlen=30&sim=3", "steps": [
+  { "wait": 800, "shot": "qa/p2_title.png", "eval": "JSON.stringify({st:__cel.GM.state, touch:document.body.classList.contains('touch')})" },
+  { "tap": "#startB" },
+  { "until": "__cel.GM.state==='play'", "timeout": 60000, "label": "play" },
+  { "wait": 2500, "shot": "qa/p2_play.png", "eval": "JSON.stringify({S:[__cel.SKP.S.x,__cel.SKP.S.z,__cel.SKP.S.mode,__cel.SKP.S.score], fps:__cel.FPS.v})" },
+  { "tap": "#pauseB" },
+  { "wait": 600, "shot": "qa/p2_pause.png", "eval": "JSON.stringify({paused:__cel.GM.paused})" },
+  { "tap": "#resumeB" },
+  { "wait": 300, "eval": "JSON.stringify({paused:__cel.GM.paused, st:__cel.GM.state})" },
+  { "until": "__cel.GM.state==='results' && document.getElementById('resC').classList.contains('on')", "timeout": 400000, "label": "results" },
+  { "wait": 800, "shot": "qa/p2_res.png", "eval": "JSON.stringify({res:__cel.GM.lastResult, err:__celErr})" },
+  { "tap": "#retryB" },
+  { "wait": 500, "eval": "JSON.stringify({afterRetry:__cel.GM.state, score:__cel.SKP.S.score, t:__cel.GM.timeLeft})" },
+  { "until": "__cel.GM.state==='play'", "timeout": 60000, "label": "play again" },
+  { "wait": 1500, "shot": "qa/p2_play2.png", "eval": "JSON.stringify({err:__celErr, ev:__bot.B.ev.slice(0,40)})" }
+] }

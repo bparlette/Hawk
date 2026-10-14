@@ -1,0 +1,1 @@
+RESULT {"case":"1s","ok":true,"len":150,"name":"SCORCHER","end":{"cam":0,"bosses":[{"n":"SCORCHER","sx":173,"y":185,"z":0,"st":"walk","hp":18,"inv":0}],"px":60,"floor":[2]},"skipped":false,"hp":[18,11],"frameErrors":0,"pageErrors":0}

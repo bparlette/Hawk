@@ -1,0 +1,3 @@
+Skipping host requirements validation logic because `PLAYWRIGHT_SKIP_VALIDATE_HOST_REQUIREMENTS` env variable is set.
+CONSOLE Origin null is not allowed by Access-Control-Allow-Origin. Status code: 0
+RESULT {"case":"1r","ok":true,"len":180,"name":"RAMROD","end":{"cam":0,"bosses":[{"n":"ramrod","sx":177,"y":189,"z":0,"st":"walk","hp":30,"inv":0}],"px":50,"floor":[1]},"skipped":true,"hp":[30,29],"frameErrors":0,"pageErrors":0}

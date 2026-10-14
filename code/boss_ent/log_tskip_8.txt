@@ -1,0 +1,3 @@
+Skipping host requirements validation logic because `PLAYWRIGHT_SKIP_VALIDATE_HOST_REQUIREMENTS` env variable is set.
+CONSOLE Origin null is not allowed by Access-Control-Allow-Origin. Status code: 0
+RESULT {"case":"8","ok":false,"err":"page.waitForFunction: Timeout 60000ms exceeded.","pageErrors":0}

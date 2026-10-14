@@ -1,0 +1,30 @@
+# hell-cave arena (MAP23 south room): weak horde in front, knights behind -> infighting, clutch, BFG clear
+1 0 give
+1 0 pos 4100 2050 270
+1 0 weapon 3 1
+1 0 god 1
+1 0 health 41
+1 0 spawn 1 4100 1730 90 10 52
+1 0 spawn 11 4100 1620 90 10 58
+1 0 spawn 17 4100 1460 90 5 74
+1 0 spawn 30 4100 1660 90 3 140
+2 0 alert
+40 0 cap 1
+40 0 god 0
+40 0 buddha 1
+40 0 clutch 12
+40 60 in 0 0 0 0
+60 80 in 0 0 100 1
+80 112 in 0 0 -100 1
+112 128 in 0 0 100 1
+128 0 weapon 6 1
+130 132 in 0 0 0 1
+132 200 in 0 0 0 0
+200 0 weapon 4 1
+202 204 in 0 0 0 1
+204 222 in 0 0 0 0
+222 224 in 0 0 -200 1
+224 300 in 0 0 0 0
+120 0 info
+230 0 info
+300 0 quit

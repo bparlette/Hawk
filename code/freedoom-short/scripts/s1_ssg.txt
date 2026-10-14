@@ -1,0 +1,11 @@
+# hook: super shotgun point-blank into the zombie horde (MAP23 corridor)
+1 0 give
+1 0 pos 2380 3105 0
+1 0 weapon 8 1
+1 0 god 1
+21 0 cap 1
+23 25 in 0 0 0 1
+25 80 in 0 0 0 0
+80 82 in 0 0 0 1
+82 120 in 0 0 0 0
+120 0 quit

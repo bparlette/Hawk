@@ -1,0 +1,6 @@
+{ "w": 1280, "h": 720, "q": "?autostart&bot=route", "steps": [
+  { "until": "__cel.GM.state==='play' && __cel.SKP.S.t > 20", "timeout": 400000, "label": "t20" },
+  { "shot": "qa/d1_20.png", "eval": "JSON.stringify({fps:__cel.FPS.v, hist:__cel.FPS.hist, S:[__cel.SKP.S.x,__cel.SKP.S.z,__cel.SKP.S.score], err:__celErr, dpr:__cel.renderer.getPixelRatio()})" },
+  { "until": "__cel.GM.state==='play' && __cel.SKP.S.t > 45", "timeout": 400000, "label": "t45" },
+  { "shot": "qa/d1_45.png", "eval": "JSON.stringify({fps:__cel.FPS.v, hist:__cel.FPS.hist, S:[__cel.SKP.S.x,__cel.SKP.S.z,__cel.SKP.S.score], err:__celErr})" }
+] }

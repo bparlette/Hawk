@@ -1,0 +1,1 @@
+L3 errors 0 | seen dasher:down* dasher:walk* purple:hurt* purple:walk*

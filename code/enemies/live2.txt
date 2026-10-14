@@ -1,0 +1,1 @@
+L2 errors 0 | seen blue:down* blue:dying* blue:hurt* purple:down* purple:dying* purple:fly* purple:hurt*

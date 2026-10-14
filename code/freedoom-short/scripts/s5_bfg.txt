@@ -1,0 +1,12 @@
+# finale: BFG down the packed corridor
+1 0 give
+1 0 pos 2330 3105 0
+1 0 weapon 6 1
+1 0 god 1
+10 0 cap 1
+12 14 in 0 0 0 1
+14 75 in 0 0 0 0
+75 77 in 0 0 0 1
+77 160 in 0 0 0 0
+160 0 info
+160 0 quit

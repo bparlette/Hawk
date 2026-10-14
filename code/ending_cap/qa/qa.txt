@@ -1,0 +1,41 @@
+== size
+47294642
+== ffprobe
+index=0
+codec_name=h264
+profile=High
+width=1080
+height=1920
+pix_fmt=yuv420p
+r_frame_rate=30/1
+nb_frames=2380
+index=1
+codec_name=aac
+profile=LC
+sample_rate=44100
+channels=2
+r_frame_rate=0/0
+nb_frames=3415
+duration=79.333333
+size=47294642
+bit_rate=4769207
+== faststart (moov before mdat?)
+['ftyp', 'moov', 'free', 'mdat'] FASTSTART OK
+== volumedetect (whole)
+[Parsed_volumedetect_0 @ 0xffff7c0018d0] mean_volume: -16.9 dB
+[Parsed_volumedetect_0 @ 0xffff7c0018d0] max_volume: -1.4 dB
+== volumedetect 0s+10s
+[Parsed_volumedetect_0 @ 0xffff880018d0] mean_volume: -15.9 dB
+[Parsed_volumedetect_0 @ 0xffff880018d0] max_volume: -1.4 dB
+== volumedetect 15s+10s
+[Parsed_volumedetect_0 @ 0xffff900018d0] mean_volume: -16.0 dB
+[Parsed_volumedetect_0 @ 0xffff900018d0] max_volume: -1.4 dB
+== volumedetect 25s+10s
+[Parsed_volumedetect_0 @ 0xffff980018d0] mean_volume: -17.2 dB
+[Parsed_volumedetect_0 @ 0xffff980018d0] max_volume: -1.4 dB
+== volumedetect 45s+10s
+[Parsed_volumedetect_0 @ 0xffff800018d0] mean_volume: -16.9 dB
+[Parsed_volumedetect_0 @ 0xffff800018d0] max_volume: -1.5 dB
+== volumedetect 75s+10s
+[Parsed_volumedetect_0 @ 0xffff8c0018d0] mean_volume: -20.0 dB
+[Parsed_volumedetect_0 @ 0xffff8c0018d0] max_volume: -1.4 dB

@@ -1,0 +1,56 @@
+{
+ "portrait": {
+  "flown": {
+   "spd": 25.06779073977858,
+   "src": "touch",
+   "ry": 1,
+   "p": [
+    84.20965973231853,
+    3.477600160142991,
+    4.902835859994088
+   ]
+  },
+  "paused": {
+   "paused": true,
+   "on": true
+  },
+  "resumed": true,
+  "last": {
+   "st": "done",
+   "t": 36.48,
+   "lap": 1,
+   "next": 0,
+   "pos": 3,
+   "crashes": 0,
+   "fps": 2,
+   "shown": 1,
+   "err": 0
+  },
+  "results": {
+   "place": 3,
+   "total": 36.4800000000001,
+   "bestLap": 36.4800000000001,
+   "laps": [
+    36.4800000000001
+   ],
+   "crashes": 0,
+   "pen": 0,
+   "medal": "silver",
+   "newRec": true,
+   "newLap": true,
+   "clean": 19,
+   "close": 0,
+   "win": false
+  },
+  "afterRetry": {
+   "st": "count",
+   "resOn": false
+  },
+  "sw": 390,
+  "errors": [],
+  "err": {
+   "n": 0,
+   "last": ""
+  }
+ }
+}

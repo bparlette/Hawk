@@ -1,0 +1,34 @@
+{
+ "id": "toad-city-rooftops",
+ "title": "Toad City Rooftops",
+ "category": "Originals",
+ "keys": {
+  "up": "KeyW",
+  "down": "KeyS",
+  "left": "KeyA",
+  "right": "KeyD",
+  "attack": "ShiftLeft",
+  "jump": "Space",
+  "special": "KeyE",
+  "start": "Enter",
+  "select": "KeyP"
+ },
+ "labels": {
+  "attack": "SHIFT · SLIDE",
+  "jump": "SPACE · JUMP",
+  "special": "E · CAM",
+  "start": "START",
+  "select": "PAUSE"
+ },
+ "extras": [
+  {
+   "label": "MUSIC",
+   "key": "KeyM"
+  }
+ ],
+ "autostart": [],
+ "orientation": "any",
+ "note": "Rooftop parkour on the Toad City Baltimore engine (same city kit, rowhouse roofs, HD landmarks with real signage, toon/ink shading): 3 courses, FOXTROT police drone chaser, medals. Source /workspace/work/bmore-parkour.",
+ "path": "g/toad-city-rooftops/index.html",
+ "thumb": "thumbs/toad-city-rooftops.webp?v=1791968340"
+}

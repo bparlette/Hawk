@@ -1,0 +1,31 @@
+{
+ "w": 1280,
+ "h": 720,
+ "q": "?autostart&bot=route&sim=2",
+ "steps": [
+  {
+   "until": "__cel.SKP.S.mode==='grind' && __cel.SKP.S.z < -49",
+   "timeout": 600000,
+   "label": "stoop grind"
+  },
+  {
+   "shot": "qa/th_grind.png",
+   "eval": "JSON.stringify([__cel.SKP.S.x,__cel.SKP.S.y,__cel.SKP.S.z,__cel.SKP.S.mode])"
+  },
+  {
+   "until": "__cel.SKP.S.mode==='ground' && __cel.SKP.S.v > 5 && __cel.SKP.S.z < -40",
+   "timeout": 600000,
+   "label": "rolling"
+  },
+  {
+   "eval": "(()=>{window.requestAnimationFrame=()=>0;const S=__cel.SKP.S,c=__cel.camera,px=Math.cos(S.h),pz=-Math.sin(S.h);c.position.set(S.x+px*1.5,S.y+0.55,S.z+pz*1.5);c.fov=40;c.updateProjectionMatrix();c.lookAt(S.x,S.y+0.35,S.z);__cel.renderer.render(__cel.scene,c);return JSON.stringify([S.x,S.y,S.z,S.h,S.mode])})()",
+   "wait": 400,
+   "shot": "qa/feet_side.png"
+  },
+  {
+   "eval": "(()=>{const S=__cel.SKP.S,c=__cel.camera;c.position.set(S.x-Math.sin(S.h)*1.6+Math.cos(S.h)*0.6,S.y+1.0,S.z-Math.cos(S.h)*1.6-Math.sin(S.h)*0.6);c.lookAt(S.x,S.y+0.3,S.z);__cel.renderer.render(__cel.scene,c);return 'ok'})()",
+   "wait": 400,
+   "shot": "qa/feet_back.png"
+  }
+ ]
+}

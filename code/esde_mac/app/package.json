@@ -1,0 +1,14 @@
+{
+  "name": "browser-arcade",
+  "productName": "Browser Arcade",
+  "version": "1.0.0",
+  "description": "Offline Electron runtime for Shell Shock: Live Action and Street Fighter: World Brawl, for ES-DE",
+  "main": "main.js",
+  "author": "Brad Parlette",
+  "license": "UNLICENSED",
+  "private": true,
+  "devDependencies": {
+    "@electron/packager": "20.3.0",
+    "electron": "44.7.0"
+  }
+}

@@ -1,0 +1,45 @@
+.venv/
+__pycache__/
+*.pyc
+.DS_Store
+*.log
+benchmarks/results.jsonl
+
+# Environment variables & secrets
+.env
+.env.*
+*.env
+*.token
+*.key
+*.pem
+*.secret
+
+# Screenshots & audio files (prevents accidental recording leaks)
+*.png
+*.jpg
+*.jpeg
+*.wav
+*.mp3
+*.m4a
+!docs/audio_samples/*.wav
+!docs/audio_samples/*.mp3
+!docs/assets/*.png
+!docs/assets/*.jpg
+!assets/*.png
+!assets/**/*.png
+
+# Editor & OS artifacts
+.vscode/
+.idea/
+*.swp
+*~
+
+# Personal test suites (kept private, never published to public git)
+tests/personal/
+tests_personal/
+
+# Working layer split directories
+assets/themes/couch_duo_layers/
+assets/themes/couch_duo_parts/
+assets/critic_silhouette.png
+

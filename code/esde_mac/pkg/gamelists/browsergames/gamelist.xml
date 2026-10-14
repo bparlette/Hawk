@@ -1,0 +1,23 @@
+<?xml version="1.0"?>
+<gameList>
+	<game>
+		<path>./Shell Shock - Live Action.sh</path>
+		<name>Shell Shock: Live Action</name>
+		<desc>A side-scrolling beat-'em-up starring four live-action turtle brothers. Fight through 15 levels, from a burning apartment hallway and the sewers to a Wild West train, with multi-phase boss fights, throws, specials, pizza pickups, tag-in team play, three difficulty levels, a stage map, high scores and a gallery of every hero, boss and enemy. Progress and high scores are saved.</desc>
+		<releasedate>20260101T000000</releasedate>
+		<developer>Browser Arcade (fan game)</developer>
+		<publisher>Browser Arcade</publisher>
+		<genre>Beat 'em Up</genre>
+		<players>1</players>
+	</game>
+	<game>
+		<path>./Street Fighter - World Brawl.sh</path>
+		<name>Street Fighter: World Brawl</name>
+		<desc>A fan-made street-brawler tour of the world. Pick one of 12 world warriors, each with their own stats and special move, and fight through stages starting at Ryu's Dojo, with mid-bosses and boss fights along the way. Stages 1-3 are playable now; the world map shows the rest of the tour as coming soon. Three difficulty levels and saved high scores.</desc>
+		<releasedate>20260101T000000</releasedate>
+		<developer>Browser Arcade (fan game)</developer>
+		<publisher>Browser Arcade</publisher>
+		<genre>Beat 'em Up</genre>
+		<players>1</players>
+	</game>
+</gameList>

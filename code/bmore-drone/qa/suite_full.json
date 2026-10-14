@@ -1,0 +1,218 @@
+{
+ "fps_1280": {
+  "v": 1,
+  "samples": [
+   0,
+   0,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   2,
+   1,
+   1
+  ],
+  "ms": 633.2999999999993,
+  "calls": 1,
+  "tris": 2,
+  "st": "count",
+  "t": 0,
+  "px": [
+   1280,
+   720
+  ],
+  "loadS": 14.545,
+  "errors": []
+ },
+ "fps_390": {
+  "v": 3,
+  "samples": [
+   0,
+   0,
+   0,
+   1,
+   2,
+   2,
+   3,
+   3,
+   3,
+   3,
+   3,
+   3,
+   3,
+   3,
+   3,
+   3
+  ],
+  "ms": 350,
+  "calls": 1,
+  "tris": 2,
+  "st": "count",
+  "t": 0,
+  "px": [
+   585,
+   1266
+  ],
+  "loadS": 16.783,
+  "errors": []
+ },
+ "win": {
+  "last": {
+   "st": "done",
+   "t": 109.34,
+   "lap": 3,
+   "next": 0,
+   "pos": 3,
+   "crashes": 0,
+   "fps": 1,
+   "shown": 1,
+   "err": 0
+  },
+  "results": {
+   "place": 3,
+   "total": 109.33999999999538,
+   "bestLap": 36.419999999992754,
+   "laps": [
+    36.4800000000001,
+    36.44000000000253,
+    36.419999999992754
+   ],
+   "crashes": 0,
+   "pen": 0,
+   "medal": "silver",
+   "newRec": true,
+   "newLap": true,
+   "clean": 57,
+   "close": 0,
+   "win": false
+  },
+  "medals": {
+   "gold": 101.5,
+   "silver": 115.5,
+   "bronze": 133
+  },
+  "ref": 99.21596549198085,
+  "errors": [],
+  "err": {
+   "n": 0,
+   "last": ""
+  }
+ },
+ "retry1280": {
+  "st": "count",
+  "t": 0,
+  "lap": 0,
+  "resOn": false
+ },
+ "portrait": {
+  "flown": {
+   "spd": 25.007893488717684,
+   "src": "touch",
+   "ry": 1,
+   "p": [
+    101.43041981392267,
+    3.373421808216859,
+    0.8412917874092036
+   ]
+  },
+  "paused": {
+   "paused": true,
+   "on": true
+  },
+  "resumed": true,
+  "last": {
+   "st": "done",
+   "t": 36.48,
+   "lap": 1,
+   "next": 0,
+   "pos": 4,
+   "crashes": 0,
+   "fps": 2,
+   "shown": 1,
+   "err": 0
+  },
+  "results": {
+   "place": 3,
+   "total": 36.4800000000001,
+   "bestLap": 36.4800000000001,
+   "laps": [
+    36.4800000000001
+   ],
+   "crashes": 0,
+   "pen": 0,
+   "medal": "silver",
+   "newRec": true,
+   "newLap": true,
+   "clean": 19,
+   "close": 0,
+   "win": false
+  },
+  "afterRetry": {
+   "st": "count",
+   "resOn": false
+  },
+  "sw": 390,
+  "errors": [],
+  "err": {
+   "n": 0,
+   "last": ""
+  }
+ },
+ "dnf": {
+  "last": {
+   "st": "done",
+   "t": 25.02,
+   "lap": 0,
+   "next": 1,
+   "pos": 4,
+   "crashes": 0,
+   "fps": 2,
+   "shown": 1,
+   "err": 0
+  },
+  "results": {
+   "place": 0,
+   "total": null,
+   "laps": [],
+   "crashes": 0,
+   "pen": 0,
+   "medal": null,
+   "dnf": "TIME UP",
+   "win": false
+  },
+  "errors": []
+ },
+ "crash": {
+  "last": {
+   "st": "race",
+   "t": 6.5,
+   "lap": 0,
+   "next": 2,
+   "pos": 4,
+   "crashes": 1,
+   "fps": 2,
+   "shown": 0,
+   "err": 0
+  },
+  "after": {
+   "st": "race",
+   "pen": 2,
+   "last": 1,
+   "inv": 0.8399999999999994,
+   "p": [
+    -4.161940324116424,
+    2.8392284049325407,
+    15.512991977128689
+   ]
+  },
+  "errors": []
+ },
+ "short": {
+  "frames": 360,
+  "errors": []
+ }
+}

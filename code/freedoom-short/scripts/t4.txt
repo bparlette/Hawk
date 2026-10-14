@@ -1,0 +1,10 @@
+1 0 give
+1 0 pos -1100 60 0
+1 0 weapon 6 1
+1 0 buddha 1
+1 0 alert
+2 0 info
+3 0 cap 1
+60 62 in 0 0 0 1
+62 160 in 0 0 0 0
+160 0 quit

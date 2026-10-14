@@ -1,0 +1,501 @@
+{
+  "name": "pigeon_win_390x844",
+  "boss": "pigeon",
+  "mode": "win",
+  "viewport": "390x844",
+  "pass": true,
+  "reason": "duel ended res=win at t=74.9s",
+  "wall": 300,
+  "errors": [],
+  "warnings": [],
+  "ignored": [],
+  "samples": [
+    {
+      "cur": "pigeon",
+      "res": null,
+      "t": 0.3,
+      "log": [
+        "start:pigeon",
+        "say:Welcome to the top, peasant toad.",
+        "pigeon:standin:part1"
+      ],
+      "retries": 0,
+      "over": false,
+      "st": {
+        "hp": 100,
+        "b": 0,
+        "over": false,
+        "won": false
+      }
+    },
+    {
+      "cur": "pigeon",
+      "res": null,
+      "t": 9.5,
+      "log": [
+        "say:Welcome to the top, peasant toad.",
+        "pigeon:standin:part1",
+        "say:The penthouse is MINE. The view, the breadcrumbs, all of it."
+      ],
+      "retries": 0,
+      "over": false,
+      "st": {
+        "hp": 100,
+        "b": 0,
+        "over": false,
+        "won": false
+      }
+    },
+    {
+      "cur": "pigeon",
+      "res": null,
+      "t": 9.8,
+      "log": [
+        "say:Welcome to the top, peasant toad.",
+        "pigeon:standin:part1",
+        "say:The penthouse is MINE. The view, the breadcrumbs, all of it."
+      ],
+      "retries": 0,
+      "over": false,
+      "st": {
+        "hp": 100,
+        "b": 0,
+        "over": false,
+        "won": false
+      }
+    },
+    {
+      "cur": "pigeon",
+      "res": null,
+      "t": 10.1,
+      "log": [
+        "say:Welcome to the top, peasant toad.",
+        "pigeon:standin:part1",
+        "say:The penthouse is MINE. The view, the breadcrumbs, all of it."
+      ],
+      "retries": 0,
+      "over": false,
+      "st": {
+        "hp": 100,
+        "b": 0,
+        "over": false,
+        "won": false
+      }
+    },
+    {
+      "cur": "pigeon",
+      "res": null,
+      "t": 19.5,
+      "log": [
+        "pigeon:standin:part1",
+        "say:The penthouse is MINE. The view, the breadcrumbs, all of it.",
+        "hurt:heli"
+      ],
+      "retries": 0,
+      "over": false,
+      "st": {
+        "hp": 95,
+        "b": 0,
+        "over": false,
+        "won": false
+      }
+    },
+    {
+      "cur": "pigeon",
+      "res": null,
+      "t": 19.8,
+      "log": [
+        "pigeon:standin:part1",
+        "say:The penthouse is MINE. The view, the breadcrumbs, all of it.",
+        "hurt:heli"
+      ],
+      "retries": 0,
+      "over": false,
+      "st": {
+        "hp": 95,
+        "b": 0,
+        "over": false,
+        "won": false
+      }
+    },
+    {
+      "cur": "pigeon",
+      "res": null,
+      "t": 20.1,
+      "log": [
+        "pigeon:standin:part1",
+        "say:The penthouse is MINE. The view, the breadcrumbs, all of it.",
+        "hurt:heli"
+      ],
+      "retries": 0,
+      "over": false,
+      "st": {
+        "hp": 95,
+        "b": 0,
+        "over": false,
+        "won": false
+      }
+    },
+    {
+      "cur": "pigeon",
+      "res": null,
+      "t": 20.4,
+      "log": [
+        "pigeon:standin:part1",
+        "say:The penthouse is MINE. The view, the breadcrumbs, all of it.",
+        "hurt:heli"
+      ],
+      "retries": 0,
+      "over": false,
+      "st": {
+        "hp": 95,
+        "b": 0,
+        "over": false,
+        "won": false
+      }
+    },
+    {
+      "cur": "pigeon",
+      "res": null,
+      "t": 29.5,
+      "log": [
+        "hurt:heli",
+        "say:Coo-coo! Here comes a flowerpot. Duck!",
+        "say:Don't touch the tomatoes!"
+      ],
+      "retries": 0,
+      "over": false,
+      "st": {
+        "hp": 100,
+        "b": 0,
+        "over": false,
+        "won": false
+      }
+    },
+    {
+      "cur": "pigeon",
+      "res": null,
+      "t": 29.8,
+      "log": [
+        "hurt:heli",
+        "say:Coo-coo! Here comes a flowerpot. Duck!",
+        "say:Don't touch the tomatoes!"
+      ],
+      "retries": 0,
+      "over": false,
+      "st": {
+        "hp": 100,
+        "b": 0,
+        "over": false,
+        "won": false
+      }
+    },
+    {
+      "cur": "pigeon",
+      "res": null,
+      "t": 30,
+      "log": [
+        "hurt:heli",
+        "say:Coo-coo! Here comes a flowerpot. Duck!",
+        "say:Don't touch the tomatoes!"
+      ],
+      "retries": 0,
+      "over": false,
+      "st": {
+        "hp": 100,
+        "b": 0,
+        "over": false,
+        "won": false
+      }
+    },
+    {
+      "cur": "pigeon",
+      "res": null,
+      "t": 30.3,
+      "log": [
+        "hurt:heli",
+        "say:Coo-coo! Here comes a flowerpot. Duck!",
+        "say:Don't touch the tomatoes!"
+      ],
+      "retries": 0,
+      "over": false,
+      "st": {
+        "hp": 100,
+        "b": 0,
+        "over": false,
+        "won": false
+      }
+    },
+    {
+      "cur": "pigeon",
+      "res": null,
+      "t": 39.8,
+      "log": [
+        "say:Coo-coo! Here comes a flowerpot. Duck!",
+        "say:Don't touch the tomatoes!",
+        "pigeon:collapse"
+      ],
+      "retries": 0,
+      "over": false,
+      "st": {
+        "hp": 100,
+        "b": 0,
+        "over": false,
+        "won": false
+      }
+    },
+    {
+      "cur": "pigeon",
+      "res": null,
+      "t": 40.2,
+      "log": [
+        "say:Coo-coo! Here comes a flowerpot. Duck!",
+        "say:Don't touch the tomatoes!",
+        "pigeon:collapse"
+      ],
+      "retries": 0,
+      "over": false,
+      "st": {
+        "hp": 100,
+        "b": 0,
+        "over": false,
+        "won": false
+      }
+    },
+    {
+      "cur": "pigeon",
+      "res": null,
+      "t": 49.6,
+      "log": [
+        "say:Coo! Nobody knocks down MY tower!",
+        "pigeon:part2",
+        "say:My penthouse! My view! My crumbs!"
+      ],
+      "retries": 0,
+      "over": false,
+      "st": {
+        "hp": 100,
+        "b": 0,
+        "over": false,
+        "won": false
+      }
+    },
+    {
+      "cur": "pigeon",
+      "res": null,
+      "t": 49.9,
+      "log": [
+        "say:Coo! Nobody knocks down MY tower!",
+        "pigeon:part2",
+        "say:My penthouse! My view! My crumbs!"
+      ],
+      "retries": 0,
+      "over": false,
+      "st": {
+        "hp": 100,
+        "b": 0,
+        "over": false,
+        "won": false
+      }
+    },
+    {
+      "cur": "pigeon",
+      "res": null,
+      "t": 50.2,
+      "log": [
+        "say:Coo! Nobody knocks down MY tower!",
+        "pigeon:part2",
+        "say:My penthouse! My view! My crumbs!"
+      ],
+      "retries": 0,
+      "over": false,
+      "st": {
+        "hp": 100,
+        "b": 0,
+        "over": false,
+        "won": false
+      }
+    },
+    {
+      "cur": "pigeon",
+      "res": null,
+      "t": 59.5,
+      "log": [
+        "pigeon:part2",
+        "say:My penthouse! My view! My crumbs!",
+        "pigeon:grab"
+      ],
+      "retries": 0,
+      "over": false,
+      "st": {
+        "hp": 100,
+        "b": 0,
+        "over": false,
+        "won": false
+      }
+    },
+    {
+      "cur": "pigeon",
+      "res": null,
+      "t": 59.8,
+      "log": [
+        "pigeon:part2",
+        "say:My penthouse! My view! My crumbs!",
+        "pigeon:grab"
+      ],
+      "retries": 0,
+      "over": false,
+      "st": {
+        "hp": 100,
+        "b": 0,
+        "over": false,
+        "won": false
+      }
+    },
+    {
+      "cur": "pigeon",
+      "res": null,
+      "t": 60.1,
+      "log": [
+        "say:My penthouse! My view! My crumbs!",
+        "pigeon:grab",
+        "say:Down here I still out-strut you."
+      ],
+      "retries": 0,
+      "over": false,
+      "st": {
+        "hp": 100,
+        "b": 0,
+        "over": false,
+        "won": false
+      }
+    },
+    {
+      "cur": "pigeon",
+      "res": null,
+      "t": 60.4,
+      "log": [
+        "say:My penthouse! My view! My crumbs!",
+        "pigeon:grab",
+        "say:Down here I still out-strut you."
+      ],
+      "retries": 0,
+      "over": false,
+      "st": {
+        "hp": 100,
+        "b": 0,
+        "over": false,
+        "won": false
+      }
+    },
+    {
+      "cur": "pigeon",
+      "res": null,
+      "t": 69.5,
+      "log": [
+        "pigeon:grab",
+        "say:Down here I still out-strut you.",
+        "say:You'll pay for every window, toad!"
+      ],
+      "retries": 0,
+      "over": false,
+      "st": {
+        "hp": 100,
+        "b": 0,
+        "over": false,
+        "won": false
+      }
+    },
+    {
+      "cur": "pigeon",
+      "res": null,
+      "t": 69.8,
+      "log": [
+        "pigeon:grab",
+        "say:Down here I still out-strut you.",
+        "say:You'll pay for every window, toad!"
+      ],
+      "retries": 0,
+      "over": false,
+      "st": {
+        "hp": 100,
+        "b": 0,
+        "over": false,
+        "won": false
+      }
+    },
+    {
+      "cur": "pigeon",
+      "res": null,
+      "t": 70.1,
+      "log": [
+        "say:Down here I still out-strut you.",
+        "say:You'll pay for every window, toad!",
+        "pigeon:grab"
+      ],
+      "retries": 0,
+      "over": false,
+      "st": {
+        "hp": 100,
+        "b": 0,
+        "over": false,
+        "won": false
+      }
+    },
+    {
+      "cur": "pigeon",
+      "res": null,
+      "t": 70.4,
+      "log": [
+        "say:Down here I still out-strut you.",
+        "say:You'll pay for every window, toad!",
+        "pigeon:grab"
+      ],
+      "retries": 0,
+      "over": false,
+      "st": {
+        "hp": 100,
+        "b": 0,
+        "over": false,
+        "won": false
+      }
+    }
+  ],
+  "end": {
+    "cur": null,
+    "res": "win",
+    "t": 74.9,
+    "log": [
+      "say:Pigeon down. On the penthouse deck.",
+      "pigeon:win:18700",
+      "exit:pigeon:win"
+    ],
+    "retries": 0,
+    "over": false,
+    "st": null
+  },
+  "final": {
+    "log": [
+      "hurt:heli",
+      "pigeon:collapse",
+      "pigeon:part2",
+      "pigeon:grab",
+      "pigeon:grab",
+      "pigeon:finish",
+      "pigeon:knock",
+      "pigeon:knock",
+      "pigeon:splash",
+      "juice:replay",
+      "pigeon:win:18700",
+      "exit:pigeon:win"
+    ],
+    "bossClear": [
+      "wtc"
+    ],
+    "celErr": {
+      "n": 0,
+      "last": ""
+    },
+    "overText": "\n    HAROLDPENTHOUSE PIGEON\n    SCORE 18,700K.O.!\n    PENTHOUSE PIGEONPigeon down. On the penthouse deck.SLAM! NOW COMBO HIM!SPLASHDOWN!THE PENTHOUSE PIGEON IS ALL WETWASD climb / walk · J smash · K jump · E tongue-grab\n    POWERTHE PENTHOUSE PIGEONIS ALL WETFinal score 18,700. The World Trade Cente"
+  }
+}

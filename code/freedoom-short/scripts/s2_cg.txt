@@ -1,0 +1,12 @@
+# chaingun mow-down with sweeps
+1 0 give
+1 0 pos 2380 3105 0
+1 0 weapon 3 1
+1 0 god 1
+24 0 cap 1
+24 40 in 0 0 -150 1
+40 56 in 0 0 300 1
+56 72 in 0 0 -300 1
+72 88 in 0 0 300 1
+88 104 in 0 0 -150 1
+104 0 quit

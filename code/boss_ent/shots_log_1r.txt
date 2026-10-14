@@ -1,0 +1,1 @@
+RESULT {"case":"1r","ok":false,"err":"page.waitForFunction: Timeout 60000ms exceeded.","pageErrors":0}

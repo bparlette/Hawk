@@ -1,0 +1,243 @@
+<!doctype html>
+<html lang="en" data-resolution="portrait">
+<head><meta charset="UTF-8"/><meta name="viewport" content="width=1080, height=1920"/>
+<script src="assets/gsap.min.js"></script>
+<style>
+@font-face{font-family:Bangers;src:url(assets/fonts/Bangers-Regular.ttf)}
+@font-face{font-family:Anton;src:url(assets/fonts/Anton-Regular.ttf)}
+@font-face{font-family:Russo;src:url(assets/fonts/RussoOne-Regular.ttf)}
+@font-face{font-family:VT323;src:url(assets/fonts/VT323-Regular.ttf)}
+*{margin:0;padding:0;box-sizing:border-box}
+html,body{width:1080px;height:1920px;overflow:hidden;background:#000}
+#root{position:relative;width:1080px;height:1920px;overflow:hidden}
+.scene,.layer,.full{position:absolute;left:0;top:0;width:1080px;height:1920px;overflow:hidden}
+.wrap{position:absolute;left:0;top:0;width:1080px;height:1920px}
+.kb{position:absolute;left:-104px;top:0;width:1288px;height:1920px;transform-origin:50% 50%}
+.bub{position:absolute;left:0;top:0;width:1080px;height:1920px}
+svg.full{position:absolute;left:0;top:0;width:1080px;height:1920px}
+.bbox{position:absolute;border-style:solid;border-color:#111;display:flex;align-items:center;justify-content:center;text-align:center;padding:14px 30px;font-family:Bangers;letter-spacing:2px;line-height:1.02;color:#111;box-shadow:10px 12px 0 rgba(0,0,0,.35)}
+.bbox.shout{color:#d4001a;-webkit-text-stroke:2px #111}
+.cap{position:absolute;left:0;width:1080px;text-align:center;font-family:Anton;letter-spacing:6px}
+.cap span{display:inline-block;padding:6px 40px 12px;background:linear-gradient(180deg,#ff2d6f,#b0005a);color:#fff7c2;border:6px solid #fff;box-shadow:12px 12px 0 #000;text-shadow:5px 5px 0 #2a0030}
+.pow{position:absolute;font-family:Bangers;font-size:190px;-webkit-text-stroke:8px #111;text-shadow:12px 12px 0 #111}
+.ios{position:absolute;left:36px;top:70px;width:1008px;padding:26px 32px 30px;border-radius:44px;background:rgba(245,245,247,.93);box-shadow:0 18px 50px rgba(0,0,0,.45);font-family:-apple-system,'Helvetica Neue',Helvetica,Arial,sans-serif;color:#111}
+.ios-head{display:flex;align-items:center;gap:18px;font-size:30px;color:#6b6b70;letter-spacing:1px}
+.ios-icon{width:58px;height:58px;border-radius:14px;background:linear-gradient(135deg,#7b2ff7,#f107a3);color:#fff;font-weight:800;font-size:28px;display:flex;align-items:center;justify-content:center}
+.ios-app{flex:1;font-weight:600}
+.ios-now{font-size:28px}
+.ios-title{margin-top:14px;font-size:40px;font-weight:700}
+.ios-body{margin-top:6px;font-size:42px;line-height:1.2}
+.term{position:absolute;left:60px;top:150px;width:960px;padding:24px 34px 34px;background:rgba(0,14,4,.86);border:4px solid #39ff6a;box-shadow:0 0 30px rgba(57,255,106,.55),inset 0 0 40px rgba(57,255,106,.15);font-family:VT323;color:#39ff6a;text-shadow:0 0 10px #39ff6a;transform-origin:50% 0}
+.term-h{font-size:40px;border-bottom:3px solid #39ff6a;padding-bottom:8px;margin-bottom:14px;letter-spacing:3px}
+.term-b{font-size:72px;line-height:1.05;letter-spacing:2px;white-space:normal;overflow-wrap:break-word}
+.ch{opacity:0}
+.title{position:absolute;left:0;top:200px;width:1080px;text-align:center;font-family:Anton;transform-origin:50% 40%}
+.t1,.t2{font-size:200px;line-height:.95;letter-spacing:8px;background:linear-gradient(180deg,#fff 0%,#9ff3ff 38%,#1a6fd1 50%,#ffe28a 62%,#ff7a00 100%);-webkit-background-clip:text;background-clip:text;color:transparent;-webkit-text-stroke:5px #1a0033;filter:drop-shadow(10px 10px 0 #ff2d6f)}
+.t1{font-size:150px;font-family:Russo;letter-spacing:14px}
+.endtxt{position:absolute;left:0;top:760px;width:1080px;text-align:center;font-family:Russo;font-size:190px;color:#ff2d6f;text-shadow:0 0 30px #ff2d6f,8px 8px 0 #2a0040;letter-spacing:6px}
+#endq{display:inline-block;color:#ffe600;text-shadow:0 0 30px #ffe600,8px 8px 0 #2a0040}
+.scan{position:absolute;inset:0;background:repeating-linear-gradient(0deg,rgba(255,255,255,.04) 0 2px,transparent 2px 6px)}
+.vignette{background:radial-gradient(ellipse at center,rgba(0,0,0,0) 55%,rgba(0,0,0,.45) 100%)}
+</style></head>
+<body>
+<div id="root" data-composition-id="main" data-start="0" data-duration="47.0" data-width="1080" data-height="1920" data-fps="30">
+<div id="sc_p00" class="clip scene" data-start="0.0" data-duration="3.4" data-track-index="1" style="z-index:1">
+      <img id="im_p00" src="assets/img/p00_flyover.jpg" style="position:absolute;left:0;top:0;width:1080px;height:2184px;transform-origin:540px 1420px;"/></div><div id="sc_p01" class="clip scene" data-start="3.4" data-duration="2.0" data-track-index="1" style="z-index:1">
+      <div id="wr_p01" class="wrap"><img id="im_p01" src="assets/img/p01_captain_load.jpg" class="kb"/></div></div><div id="sc_p02" class="clip scene" data-start="5.4" data-duration="2.6" data-track-index="1" style="z-index:1">
+      <div id="wr_p02" class="wrap"><img id="im_p02" src="assets/img/p02_speedboat_gulf.jpg" class="kb"/></div></div><div id="sc_p03" class="clip scene" data-start="8.0" data-duration="2.6" data-track-index="1" style="z-index:1">
+      <div id="wr_p03" class="wrap"><img id="im_p03" src="assets/img/p03_pool.jpg" class="kb"/></div></div><div id="sc_p04" class="clip scene" data-start="10.6" data-duration="1.4" data-track-index="1" style="z-index:1">
+      <div id="wr_p04" class="wrap"><img id="im_p04" src="assets/img/p04_boarding.jpg" class="kb"/></div></div><div id="sc_p04b" class="clip scene" data-start="12.0" data-duration="2.0" data-track-index="1" style="z-index:1">
+      <div id="wr_p04b" class="wrap"><img id="im_p04b" src="assets/img/p04b_dogs_left.jpg" class="kb"/></div></div><div id="sc_p05" class="clip scene" data-start="14.0" data-duration="2.0" data-track-index="1" style="z-index:1">
+      <div id="wr_p05" class="wrap"><img id="im_p05" src="assets/img/p05_boat_ride.jpg" class="kb"/></div></div><div id="sc_p06" class="clip scene" data-start="16.0" data-duration="2.6" data-track-index="1" style="z-index:1">
+      <div id="wr_p06" class="wrap"><img id="im_p06" src="assets/img/p06_golfcart.jpg" class="kb"/></div></div><div id="sc_p06b" class="clip scene" data-start="18.6" data-duration="1.8" data-track-index="1" style="z-index:1">
+      <div id="wr_p06b" class="wrap"><img id="im_p06b" src="assets/img/p06b_cart_air.jpg" class="kb"/></div></div><div id="sc_p07" class="clip scene" data-start="20.4" data-duration="2.0" data-track-index="1" style="z-index:1">
+      <div id="wr_p07" class="wrap"><img id="im_p07" src="assets/img/p07_meet.jpg" class="kb"/></div></div><div id="sc_p07b" class="clip scene" data-start="22.4" data-duration="2.6" data-track-index="1" style="z-index:1">
+      <div id="wr_p07b" class="wrap"><img id="im_p07b" src="assets/img/p07b_slowmo_walk.jpg" class="kb"/></div></div><div id="sc_p07c" class="clip scene" data-start="25.0" data-duration="2.3" data-track-index="1" style="z-index:1">
+      <div id="wr_p07c" class="wrap"><img id="im_p07c" src="assets/img/p07c_strikeout.jpg" class="kb"/></div></div><div id="sc_p08a" class="clip scene" data-start="27.3" data-duration="2.3" data-track-index="1" style="z-index:1">
+      <div id="wr_p08a" class="wrap"><img id="im_p08a" src="assets/img/p08a_shot_slide.jpg" class="kb"/></div></div><div id="sc_p08" class="clip scene" data-start="29.6" data-duration="1.8" data-track-index="1" style="z-index:1">
+      <div id="wr_p08" class="wrap"><img id="im_p08" src="assets/img/p08_shots.jpg" class="kb"/></div></div><div id="sc_p09" class="clip scene" data-start="31.4" data-duration="2.4" data-track-index="1" style="z-index:1">
+      <div id="wr_p09" class="wrap"><img id="im_p09" src="assets/img/p09_standoff.jpg" class="kb"/></div></div><div id="sc_p09b" class="clip scene" data-start="33.8" data-duration="1.6" data-track-index="1" style="z-index:1">
+      <div id="wr_p09b" class="wrap"><img id="im_p09b" src="assets/img/p09b_shirt_rip.jpg" class="kb"/></div></div><div id="sc_p10" class="clip scene" data-start="35.4" data-duration="2.8" data-track-index="1" style="z-index:1">
+      <div id="wr_p10" class="wrap"><img id="im_p10" src="assets/img/p10_brawl.jpg" class="kb"/></div></div><div id="sc_p11b" class="clip scene" data-start="38.2" data-duration="2.0" data-track-index="1" style="z-index:1">
+      <div id="wr_p11b" class="wrap"><img id="im_p11b" src="assets/img/p11b_dogs_swam.jpg" class="kb"/></div></div><div id="sc_p11" class="clip scene" data-start="40.2" data-duration="2.2" data-track-index="1" style="z-index:1">
+      <div id="wr_p11" class="wrap"><img id="im_p11" src="assets/img/p11_aftermath.jpg" class="kb"/><img id="im_p11g" src="assets/img/p11_gray.jpg" class="kb" style="opacity:0"/></div></div><div id="sc_end" class="clip scene" data-start="42.4" data-duration="1.2" data-track-index="1" style="z-index:1;background:#05030a">
+      <div class="scan"></div>
+      <div id="endtxt" class="endtxt">THE END<span id="endq">?</span></div></div><div id="sc_p12" class="clip scene" data-start="43.6" data-duration="3.4" data-track-index="1" style="z-index:1">
+      <div id="wr_p12" class="wrap"><img id="im_p12" src="assets/img/p12_endcard.jpg" class="kb"/></div></div><div id="whipA" class="clip scene" data-start="35.22" data-duration="0.18" style="z-index:5"><img src="assets/img/p09b_whip.jpg" class="kb" id="whA"/></div>
+<div id="whipB" class="clip scene" data-start="35.4" data-duration="0.2" style="z-index:5"><img src="assets/img/p10_whip.jpg" class="kb" id="whB"/></div><div id="pow0" class="clip pow" data-start="35.62" data-duration="0.55" style="left:640px;top:760px;color:#ff2d55;z-index:20;transform:rotate(-12deg)">WHAM!</div><div id="pow1" class="clip pow" data-start="36.82" data-duration="0.55" style="left:80px;top:1180px;color:#ffe600;z-index:20;transform:rotate(10deg)">POW!</div><div id="ios" class="clip ios" data-start="36.3" data-duration="1.9" style="z-index:30">
+  <div class="ios-head"><div class="ios-icon">AI</div><div class="ios-app">AI ASSISTANT</div><div class="ios-now">now</div></div>
+  <div class="ios-title">Brad's iPhone</div>
+  <div class="ios-body">I've booked your table... and an ambulance for them.</div></div><div id="term" class="clip term" data-start="5.6" data-duration="2.4" style="z-index:30">
+  <div class="term-h">&#9632; THUNDER-NAV // VOICE LINK</div><div class="term-b">&gt; <span class="ch" id="ch0">E</span><span class="ch" id="ch1">T</span><span class="ch" id="ch2">A</span><span class="ch" id="ch3"> </span><span class="ch" id="ch4">T</span><span class="ch" id="ch5">O</span><span class="ch" id="ch6"> </span><span class="ch" id="ch7">T</span><span class="ch" id="ch8">H</span><span class="ch" id="ch9">E</span><span class="ch" id="ch10"> </span><span class="ch" id="ch11">D</span><span class="ch" id="ch12">O</span><span class="ch" id="ch13">N</span><span class="ch" id="ch14">:</span><span class="ch" id="ch15"> </span><span class="ch" id="ch16">4</span><span class="ch" id="ch17"> </span><span class="ch" id="ch18">M</span><span class="ch" id="ch19">I</span><span class="ch" id="ch20">N</span><span class="ch" id="ch21">U</span><span class="ch" id="ch22">T</span><span class="ch" id="ch23">E</span><span class="ch" id="ch24">S</span><span class="ch" id="ch25">.</span><span class="ch" id="ch26"> </span><span class="ch" id="ch27">R</span><span class="ch" id="ch28">E</span><span class="ch" id="ch29">C</span><span class="ch" id="ch30">O</span><span class="ch" id="ch31">M</span><span class="ch" id="ch32">M</span><span class="ch" id="ch33">E</span><span class="ch" id="ch34">N</span><span class="ch" id="ch35">D</span><span class="ch" id="ch36"> </span><span class="ch" id="ch37">S</span><span class="ch" id="ch38">U</span><span class="ch" id="ch39">N</span><span class="ch" id="ch40">S</span><span class="ch" id="ch41">C</span><span class="ch" id="ch42">R</span><span class="ch" id="ch43">E</span><span class="ch" id="ch44">E</span><span class="ch" id="ch45">N</span><span class="ch" id="ch46">.</span><span class="ch" id="ch47">.</span><span class="ch" id="ch48">.</span><span class="ch" id="ch49"> </span><span class="ch" id="ch50">B</span><span class="ch" id="ch51">R</span><span class="ch" id="ch52">O</span><span class="ch" id="ch53">T</span><span class="ch" id="ch54">H</span><span class="ch" id="ch55">E</span><span class="ch" id="ch56">R</span><span class="ch" id="ch57">.</span><span id="cur">&#9608;</span></div></div><div class="clip layer" data-start="8.75" data-duration="1.85" style="z-index:25">
+    <div id="bub0" class="bub" style="transform-origin:165px 1080px;">
+      <svg class="full" viewBox="0 0 1080 1920"><polygon points="131,526 165,1080 199,526" fill="#ffffff" stroke="#111" stroke-width="8" stroke-linejoin="round"/></svg>
+      <div class="bbox speech" style="left:50px;top:290px;width:620px;height:240px;border-radius:60px;border-width:8px;background:#ffffff;font-size:62px;transform:rotate(0deg)"><span>HEY GUYS, HAVE YOU HEARD ABOUT THIS NEW AI?</span></div>
+      <svg class="full" viewBox="0 0 1080 1920"><polygon points="139,514 165,1066 191,514" fill="#ffffff"/></svg>
+    </div></div><div class="clip layer" data-start="14.25" data-duration="1.75" style="z-index:25">
+    <div id="bub1" class="bub" style="transform-origin:625px 745px;">
+      <svg class="full" viewBox="0 0 1080 1920"><polygon points="591,466 625,745 659,466" fill="#ffffff" stroke="#111" stroke-width="8" stroke-linejoin="round"/></svg>
+      <div class="bbox speech" style="left:330px;top:300px;width:560px;height:170px;border-radius:60px;border-width:8px;background:#ffffff;font-size:84px;transform:rotate(0deg)"><span>LIFE IS GOOD.</span></div>
+      <svg class="full" viewBox="0 0 1080 1920"><polygon points="599,454 625,731 651,454" fill="#ffffff"/></svg>
+    </div></div><div class="clip layer" data-start="16.2" data-duration="2.4" style="z-index:25">
+    <div id="bub2" class="bub" style="transform-origin:760px 640px;">
+      <svg class="full" viewBox="0 0 1080 1920"><polygon points="716,466 760,640 784,466" fill="#ffffff" stroke="#111" stroke-width="8" stroke-linejoin="round"/></svg>
+      <div class="bbox speech" style="left:40px;top:140px;width:780px;height:330px;border-radius:60px;border-width:8px;background:#ffffff;font-size:58px;transform:rotate(0deg)"><span>BOYS, WE&#x27;RE GOING ON AN ADVENTURE... AND WE&#x27;RE GOING BUCK WILD AT THAT BAR!</span></div>
+      <svg class="full" viewBox="0 0 1080 1920"><polygon points="724,454 760,626 776,454" fill="#ffffff"/></svg>
+    </div></div><div class="clip layer" data-start="18.7" data-duration="1.7" style="z-index:25">
+    <div id="bub3" class="bub" style="transform-origin:845px 515px;">
+      <svg class="full" viewBox="0 0 1080 1920"><polygon points="586,386 845,515 674,386" fill="#ffe600" stroke="#111" stroke-width="10" stroke-linejoin="round"/></svg>
+      <div class="bbox shout" style="left:60px;top:180px;width:640px;height:210px;border-radius:28px;border-width:10px;background:#ffe600;font-size:120px;transform:rotate(-2deg)"><span>BUCK WILD!</span></div>
+      <svg class="full" viewBox="0 0 1080 1920"><polygon points="596,372 845,497 664,372" fill="#ffe600"/></svg>
+    </div></div><div class="clip layer" data-start="20.75" data-duration="1.65" style="z-index:25">
+    <div id="bub4" class="bub" style="transform-origin:360px 720px;">
+      <svg class="full" viewBox="0 0 1080 1920"><polygon points="316,526 360,720 404,526" fill="#ffe600" stroke="#111" stroke-width="10" stroke-linejoin="round"/></svg>
+      <div class="bbox shout" style="left:40px;top:330px;width:580px;height:200px;border-radius:28px;border-width:10px;background:#ffe600;font-size:120px;transform:rotate(-2deg)"><span>BROTHER!</span></div>
+      <svg class="full" viewBox="0 0 1080 1920"><polygon points="326,512 360,702 394,512" fill="#ffe600"/></svg>
+    </div></div><div class="clip layer" data-start="25.4" data-duration="1.9" style="z-index:25">
+    <div id="bub5" class="bub" style="transform-origin:262px 625px;">
+      <svg class="full" viewBox="0 0 1080 1920"><polygon points="228,456 262,625 296,456" fill="#ffffff" stroke="#111" stroke-width="8" stroke-linejoin="round"/></svg>
+      <div class="bbox speech" style="left:60px;top:250px;width:620px;height:210px;border-radius:60px;border-width:8px;background:#ffffff;font-size:70px;transform:rotate(0deg)"><span>SO... COME HERE OFTEN?</span></div>
+      <svg class="full" viewBox="0 0 1080 1920"><polygon points="236,444 262,611 288,444" fill="#ffffff"/></svg>
+    </div></div><div class="clip layer" data-start="27.65" data-duration="1.95" style="z-index:25">
+    <div id="bub6" class="bub" style="transform-origin:135px 470px;">
+      <svg class="full" viewBox="0 0 1080 1920"><polygon points="101,376 135,470 169,376" fill="#ffffff" stroke="#111" stroke-width="8" stroke-linejoin="round"/></svg>
+      <div class="bbox speech" style="left:60px;top:130px;width:640px;height:250px;border-radius:60px;border-width:8px;background:#ffffff;font-size:64px;transform:rotate(0deg)"><span>FIRST ROUND&#x27;S ON THE HOUSE... FOR HIM.</span></div>
+      <svg class="full" viewBox="0 0 1080 1920"><polygon points="109,364 135,456 161,364" fill="#ffffff"/></svg>
+    </div></div><div class="clip layer" data-start="31.7" data-duration="2.1" style="z-index:25">
+    <div id="bub7" class="bub" style="transform-origin:560px 630px;">
+      <svg class="full" viewBox="0 0 1080 1920"><polygon points="516,426 560,630 604,426" fill="#ffe600" stroke="#111" stroke-width="10" stroke-linejoin="round"/></svg>
+      <div class="bbox shout" style="left:110px;top:200px;width:860px;height:230px;border-radius:28px;border-width:10px;background:#ffe600;font-size:84px;transform:rotate(-2deg)"><span>WHATCHA GONNA DO, BROTHER?</span></div>
+      <svg class="full" viewBox="0 0 1080 1920"><polygon points="526,412 560,612 594,412" fill="#ffe600"/></svg>
+    </div></div><div class="clip layer" data-start="44.5" data-duration="2.5" style="z-index:25">
+    <div id="bub8" class="bub" style="transform-origin:135px 960px;">
+      <svg class="full" viewBox="0 0 1080 1920"><polygon points="156,886 135,960 244,886" fill="#ffe600" stroke="#111" stroke-width="10" stroke-linejoin="round"/></svg>
+      <div class="bbox shout" style="left:130px;top:650px;width:800px;height:240px;border-radius:28px;border-width:10px;background:#ffe600;font-size:68px;transform:rotate(-2deg)"><span>SAY YOUR PRAYERS AND EAT YOUR VITAMINS!</span></div>
+      <svg class="full" viewBox="0 0 1080 1920"><polygon points="166,872 135,942 234,872" fill="#ffe600"/></svg>
+    </div></div><div id="cap0" class="clip cap" data-start="0.5" data-duration="2.9" style="top:1560px;font-size:120px;z-index:22"><span>ST. PETE BEACH, FL</span></div><div id="cap1" class="clip cap" data-start="8.0" data-duration="2.6" style="top:1600px;font-size:130px;z-index:22"><span>MEANWHILE...</span></div><div id="cap2" class="clip cap" data-start="20.45" data-duration="1.95" style="top:1600px;font-size:130px;z-index:22"><span>THE DON CESAR</span></div><div id="cap3" class="clip cap" data-start="29.7" data-duration="1.7" style="top:1580px;font-size:160px;z-index:22"><span>LAST CALL</span></div><div id="cap4" class="clip cap" data-start="38.7" data-duration="1.5" style="top:1600px;font-size:140px;z-index:22"><span>THEY SWAM.</span></div><div id="title" class="clip title" data-start="43.7" data-duration="3.3" style="z-index:24">
+  <div class="t1">PARADISE</div><div class="t2">THUNDER</div></div><div id="fadeout" class="clip full" data-start="46.4" data-duration="0.6" style="background:#000;z-index:60;opacity:0"></div><div id="flash" class="clip full" data-start="0" data-duration="47.0" style="background:#fff;opacity:0;z-index:50"></div><div class="clip full vignette" data-start="0" data-duration="47.0" style="z-index:40"></div><audio id="music" class="clip" src="assets/music.wav" data-start="0" data-duration="47.0" data-volume="1"></audio>
+</div>
+<script>
+window.__timelines = window.__timelines || {};
+const tl = gsap.timeline({ paused: true });
+tl.set("#flash",{opacity:0},0);tl.set("#fadeout",{opacity:0},0);tl.set("#im_p11g",{opacity:0},0);
+tl.fromTo("#im_p00",{scale:1,y:0},{scale:1.35,y:-400,duration:3.4,ease:"sine.inOut"},0.0);
+tl.fromTo("#im_p01",{scale:1.0,x:40,y:-0.0},{scale:1.08,x:-20,y:-30,duration:2.0,ease:"sine.inOut"},3.4);
+tl.fromTo("#im_p02",{scale:1.08,x:-40,y:0},{scale:1.0,x:40,y:-0.0,duration:2.6,ease:"sine.inOut"},5.4);
+tl.fromTo("#im_p03",{scale:1.0,x:0,y:-0.0},{scale:1.07,x:30,y:0,duration:2.6,ease:"sine.inOut"},8.0);
+tl.fromTo("#im_p04",{scale:1.05,x:30,y:0},{scale:1.0,x:-30,y:-0.0,duration:1.4,ease:"sine.inOut"},10.6);
+tl.fromTo("#im_p04b",{scale:1.0,x:-20,y:-0.0},{scale:1.08,x:20,y:40,duration:2.0,ease:"sine.inOut"},12.0);
+tl.fromTo("#im_p05",{scale:1.06,x:-30,y:0},{scale:1.0,x:30,y:-0.0,duration:2.0,ease:"sine.inOut"},14.0);
+tl.fromTo("#im_p06",{scale:1.0,x:0,y:-0.0},{scale:1.08,x:-10,y:20,duration:2.6,ease:"sine.inOut"},16.0);
+tl.fromTo("#im_p06b",{scale:1.12,x:0,y:40},{scale:1.02,x:0,y:-19.200000000000045,duration:1.8,ease:"sine.inOut"},18.6);
+tl.fromTo("#im_p07",{scale:1.0,x:30,y:-0.0},{scale:1.06,x:0,y:0,duration:2.0,ease:"sine.inOut"},20.4);
+tl.fromTo("#im_p07b",{scale:1.02,x:0,y:10},{scale:1.06,x:0,y:-10,duration:2.6,ease:"none"},22.4);
+tl.fromTo("#im_p07c",{scale:1.06,x:-30,y:0},{scale:1.0,x:20,y:-0.0,duration:2.3,ease:"sine.inOut"},25.0);
+tl.fromTo("#im_p08a",{scale:1.0,x:60,y:-0.0},{scale:1.08,x:-40,y:0,duration:2.3,ease:"sine.inOut"},27.3);
+tl.fromTo("#im_p08",{scale:1.08,x:0,y:-30},{scale:1.0,x:0,y:-0.0,duration:1.8,ease:"sine.inOut"},29.6);
+tl.fromTo("#im_p09",{scale:1.0,x:0,y:-0.0},{scale:1.1,x:0,y:40,duration:2.4,ease:"sine.inOut"},31.4);
+tl.fromTo("#im_p09b",{scale:1.04,x:0,y:0},{scale:1.14,x:0,y:30,duration:1.6,ease:"sine.inOut"},33.8);
+tl.fromTo("#im_p10",{scale:1.1,x:0,y:0},{scale:1.0,x:0,y:-0.0,duration:2.8,ease:"sine.inOut"},35.4);
+tl.fromTo("#im_p11b",{scale:1.0,x:0,y:-0.0},{scale:1.08,x:0,y:-20,duration:2.0,ease:"sine.inOut"},38.2);
+tl.fromTo(["#im_p11","#im_p11g"],{scale:1.0,x:0,y:-0.0},{scale:1.03,duration:1.2,ease:"none"},40.2);
+tl.to(["#im_p11","#im_p11g"],{scale:1.16,duration:0.12,ease:"power4.out"},41.400000000000006);
+tl.to("#im_p11g",{opacity:1,duration:0.45,ease:"power1.in"},41.400000000000006);
+tl.set("#flash",{opacity:0.9},41.400000000000006);tl.to("#flash",{opacity:0,duration:0.25},41.400000000000006);
+tl.fromTo("#endtxt",{scale:2.4,opacity:0},{scale:1,opacity:1,duration:0.25,ease:"power4.out"},42.4);
+tl.fromTo("#endq",{rotation:0},{rotation:18,duration:0.12,yoyo:true,repeat:5,ease:"sine.inOut"},42.75);
+tl.fromTo("#im_p12",{scale:1.08,x:0,y:-40},{scale:1.0,x:0,y:-0.0,duration:3.4,ease:"sine.inOut"},43.6);
+tl.fromTo("#whA",{x:0},{x:-1100,duration:0.18,ease:"power2.in"},35.22);
+tl.fromTo("#whB",{x:1100},{x:0,duration:0.2,ease:"power2.out"},35.4);
+tl.set("#flash",{opacity:0.85},35.65);tl.to("#flash",{opacity:0,duration:0.14},35.65);
+tl.fromTo("#wr_p10",{x:-26,y:14},{x:0,y:0,duration:0.22,ease:"elastic.out(1,0.3)"},35.65);
+tl.set("#flash",{opacity:0.85},36.25);tl.to("#flash",{opacity:0,duration:0.14},36.25);
+tl.fromTo("#wr_p10",{x:-26,y:14},{x:0,y:0,duration:0.22,ease:"elastic.out(1,0.3)"},36.25);
+tl.set("#flash",{opacity:0.85},36.85);tl.to("#flash",{opacity:0,duration:0.14},36.85);
+tl.fromTo("#wr_p10",{x:-26,y:14},{x:0,y:0,duration:0.22,ease:"elastic.out(1,0.3)"},36.85);
+tl.set("#flash",{opacity:0.85},37.45);tl.to("#flash",{opacity:0,duration:0.14},37.45);
+tl.fromTo("#wr_p10",{x:-26,y:14},{x:0,y:0,duration:0.22,ease:"elastic.out(1,0.3)"},37.45);
+tl.set("#flash",{opacity:0.7},33.85);tl.to("#flash",{opacity:0,duration:0.2},33.85);
+tl.set("#flash",{opacity:0.7},18.6);tl.to("#flash",{opacity:0,duration:0.2},18.6);
+tl.set("#flash",{opacity:0.7},29.6);tl.to("#flash",{opacity:0,duration:0.2},29.6);
+tl.fromTo("#pow0",{scale:0.2},{scale:1,duration:0.16,ease:"back.out(3)"},35.62);
+tl.fromTo("#pow1",{scale:0.2},{scale:1,duration:0.16,ease:"back.out(3)"},36.82);
+tl.fromTo("#ios",{y:-320},{y:0,duration:0.35,ease:"back.out(1.4)"},36.3);
+tl.fromTo("#term",{scaleY:0},{scaleY:1,duration:0.15},5.6);
+tl.set("#ch0",{opacity:1},5.8);
+tl.set("#ch1",{opacity:1},5.828);
+tl.set("#ch2",{opacity:1},5.856);
+tl.set("#ch3",{opacity:1},5.884);
+tl.set("#ch4",{opacity:1},5.912);
+tl.set("#ch5",{opacity:1},5.94);
+tl.set("#ch6",{opacity:1},5.968);
+tl.set("#ch7",{opacity:1},5.996);
+tl.set("#ch8",{opacity:1},6.024);
+tl.set("#ch9",{opacity:1},6.052);
+tl.set("#ch10",{opacity:1},6.08);
+tl.set("#ch11",{opacity:1},6.108);
+tl.set("#ch12",{opacity:1},6.136);
+tl.set("#ch13",{opacity:1},6.164);
+tl.set("#ch14",{opacity:1},6.192);
+tl.set("#ch15",{opacity:1},6.22);
+tl.set("#ch16",{opacity:1},6.248);
+tl.set("#ch17",{opacity:1},6.276);
+tl.set("#ch18",{opacity:1},6.304);
+tl.set("#ch19",{opacity:1},6.332);
+tl.set("#ch20",{opacity:1},6.36);
+tl.set("#ch21",{opacity:1},6.388);
+tl.set("#ch22",{opacity:1},6.416);
+tl.set("#ch23",{opacity:1},6.444);
+tl.set("#ch24",{opacity:1},6.472);
+tl.set("#ch25",{opacity:1},6.5);
+tl.set("#ch26",{opacity:1},6.528);
+tl.set("#ch27",{opacity:1},6.556);
+tl.set("#ch28",{opacity:1},6.584);
+tl.set("#ch29",{opacity:1},6.612);
+tl.set("#ch30",{opacity:1},6.64);
+tl.set("#ch31",{opacity:1},6.668);
+tl.set("#ch32",{opacity:1},6.696);
+tl.set("#ch33",{opacity:1},6.724);
+tl.set("#ch34",{opacity:1},6.752);
+tl.set("#ch35",{opacity:1},6.78);
+tl.set("#ch36",{opacity:1},6.808);
+tl.set("#ch37",{opacity:1},6.836);
+tl.set("#ch38",{opacity:1},6.864);
+tl.set("#ch39",{opacity:1},6.892);
+tl.set("#ch40",{opacity:1},6.92);
+tl.set("#ch41",{opacity:1},6.948);
+tl.set("#ch42",{opacity:1},6.976);
+tl.set("#ch43",{opacity:1},7.004);
+tl.set("#ch44",{opacity:1},7.032);
+tl.set("#ch45",{opacity:1},7.06);
+tl.set("#ch46",{opacity:1},7.088);
+tl.set("#ch47",{opacity:1},7.116);
+tl.set("#ch48",{opacity:1},7.144);
+tl.set("#ch49",{opacity:1},7.172);
+tl.set("#ch50",{opacity:1},7.2);
+tl.set("#ch51",{opacity:1},7.228);
+tl.set("#ch52",{opacity:1},7.256);
+tl.set("#ch53",{opacity:1},7.284);
+tl.set("#ch54",{opacity:1},7.312);
+tl.set("#ch55",{opacity:1},7.34);
+tl.set("#ch56",{opacity:1},7.368);
+tl.set("#ch57",{opacity:1},7.396);
+tl.fromTo("#bub0",{scale:0.1,opacity:0},{scale:1,opacity:1,duration:0.2,ease:"back.out(2.2)"},8.75);
+tl.fromTo("#bub1",{scale:0.1,opacity:0},{scale:1,opacity:1,duration:0.2,ease:"back.out(2.2)"},14.25);
+tl.fromTo("#bub2",{scale:0.1,opacity:0},{scale:1,opacity:1,duration:0.2,ease:"back.out(2.2)"},16.2);
+tl.fromTo("#bub3",{scale:0.1,opacity:0},{scale:1,opacity:1,duration:0.2,ease:"back.out(2.2)"},18.7);
+tl.fromTo("#bub4",{scale:0.1,opacity:0},{scale:1,opacity:1,duration:0.2,ease:"back.out(2.2)"},20.75);
+tl.fromTo("#bub5",{scale:0.1,opacity:0},{scale:1,opacity:1,duration:0.2,ease:"back.out(2.2)"},25.4);
+tl.fromTo("#bub6",{scale:0.1,opacity:0},{scale:1,opacity:1,duration:0.2,ease:"back.out(2.2)"},27.65);
+tl.fromTo("#bub7",{scale:0.1,opacity:0},{scale:1,opacity:1,duration:0.2,ease:"back.out(2.2)"},31.7);
+tl.fromTo("#bub8",{scale:0.1,opacity:0},{scale:1,opacity:1,duration:0.2,ease:"back.out(2.2)"},44.5);
+tl.fromTo("#cap0",{x:-1200,skewX:-25},{x:0,skewX:-8,duration:0.28,ease:"power3.out"},0.5);
+tl.fromTo("#cap1",{x:-1200,skewX:-25},{x:0,skewX:-8,duration:0.28,ease:"power3.out"},8.0);
+tl.fromTo("#cap2",{x:-1200,skewX:-25},{x:0,skewX:-8,duration:0.28,ease:"power3.out"},20.45);
+tl.fromTo("#cap3",{x:-1200,skewX:-25},{x:0,skewX:-8,duration:0.28,ease:"power3.out"},29.7);
+tl.fromTo("#cap4",{x:-1200,skewX:-25},{x:0,skewX:-8,duration:0.28,ease:"power3.out"},38.7);
+tl.fromTo("#title",{scale:3,opacity:0},{scale:1,opacity:1,duration:0.35,ease:"power4.out"},43.7);
+tl.set("#flash",{opacity:0.9},44.0);tl.to("#flash",{opacity:0,duration:0.35},44.0);
+tl.to("#fadeout",{opacity:1,duration:0.6},46.4);
+window.__timelines["main"] = tl;
+tl.seek(0);
+</script>
+</body></html>

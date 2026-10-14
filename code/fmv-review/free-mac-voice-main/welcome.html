@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Free Mac Voice Control — Start Guide</title>
+<style>
+  :root { color-scheme: light dark; }
+  body { font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", sans-serif;
+         max-width: 660px; margin: 0 auto; padding: 32px 20px 64px; line-height: 1.6; }
+  h1 { font-size: 2rem; margin-bottom: 0.25em; }
+  .sub { opacity: 0.7; margin-top: 0; }
+  .step { border: 1px solid #c8c8c8; border-radius: 16px; padding: 22px; margin: 20px 0; }
+  .step h2 { margin: 0 0 0.5em; font-size: 1.25rem; }
+  .key { display: inline-block; border: 1px solid #999; border-bottom-width: 3px;
+         border-radius: 8px; padding: 3px 12px; font-weight: 700; background: #f2f2f2;
+         white-space: nowrap; }
+  .chip { display: inline-block; border: 1px solid #b5b5b5; border-radius: 999px;
+          padding: 7px 15px; margin: 4px 3px; font-size: 0.95rem; }
+  button { font-size: 1rem; padding: 11px 20px; border-radius: 12px;
+           border: 1px solid #999; background: #f2f2f2; cursor: pointer; }
+  button:active { transform: scale(0.98); }
+  #meter { height: 20px; background: #e4e4e4; border-radius: 10px; overflow: hidden; margin-top: 12px; }
+  #meterFill { height: 100%; width: 0%; background: #34c759; transition: width 60ms linear; }
+  .mono { font-family: ui-monospace, Menlo, monospace; font-size: 0.9em; }
+  .dim { opacity: 0.65; }
+  .trouble li { margin-bottom: 10px; }
+  @media (prefers-color-scheme: dark) {
+    .key, button { background: #2c2c2e; }
+    #meter { background: #3a3a3c; }
+    .step { border-color: #4a4a4c; }
+  }
+</style>
+</head>
+<body>
+
+<h1>🎙️ Talk to your Mac</h1>
+<p class="sub">Free voice control is installed. The entire manual is below — 60 seconds, three steps.</p>
+
+<div class="step">
+  <h2>Step 1 — Permissions <span class="dim">(one time)</span></h2>
+  <p>macOS blocks every app until you say OK — no installer can skip this, it's the OS itself. The installer already popped the <b>Allow</b> dialogs for you; if you missed one, run <span class="mono">bash prime_permissions.sh</span> from the terminal app you'll use.</p>
+  <ol>
+    <li><b>Microphone</b> <span class="dim">— click Allow in the popup</span></li>
+    <li><b>Accessibility</b> <span class="dim">— click Allow in the popup</span></li>
+    <li><b>Input Monitoring</b> <span class="dim">— the one manual toggle: System Settings → Privacy &amp; Security → flip it on for your terminal app (Apple offers no popup for this one)</span></li>
+    <li><b>Screen Recording</b> <span class="dim">— macOS 26+, click Allow in the popup; only needed for “click the … button”</span></li>
+  </ol>
+  <p class="dim">If you previously denied one, no popup re-appears — flip it by hand in Settings. Restart your terminal after.</p>
+</div>
+
+<div class="step">
+  <h2>Step 2 — Talk</h2>
+  <p style="font-size: 1.3rem;">Hold <span class="key">Right Option ⌥</span>, speak, release.</p>
+  <p>That's the whole thing. Release the key and your Mac does it. Press <span class="key">Esc</span> to quit.</p>
+  <p class="dim">Tip: double-click <b>Voice Control.command</b> anytime to start — no terminal typing needed.</p>
+</div>
+
+<div class="step">
+  <h2>Step 3 — Try saying…</h2>
+  <div>
+    <span class="chip">“open notes”</span>
+    <span class="chip">“set volume to 30”</span>
+    <span class="chip">“play”</span>
+    <span class="chip">“set a timer for 5 minutes”</span>
+    <span class="chip">“search best pizza near me”</span>
+    <span class="chip">“click the Reply button”</span>
+    <span class="chip">“what time is it”</span>
+    <span class="chip">“lock”</span>
+  </div>
+  <p class="dim">Say “help” anytime to hear everything it understands. It costs $0 per command — everything runs on your Mac.</p>
+</div>
+
+<div class="step">
+  <h2>Want it always listening?</h2>
+  <p style="font-size: 1.15rem;">Double-click <b>Voice Control (Always On).command</b> — hands-free control with the wake word <b>“Mac”</b>.</p>
+  <p>Say <b>“Mac, open notes”</b> or simply say <b>“Mac”</b>, hear the chime, and you have 15 seconds to speak freely. Ambient chatter and TV dialogue are ignored automatically. <span class="key">Ctrl-C</span> or close the window to stop.</p>
+  <p class="dim">In a noisy room, push-to-talk (<span class="key">Right Option ⌥</span>) is also always ready. During install you can choose <b>start at login</b> so it runs silently in the background, even after a reboot.</p>
+</div>
+
+<div class="step">
+  <h2>Use your iPhone as the mic <span class="dim">(Mac mini has none built in)</span></h2>
+  <p>The installer already tried to set this up for you: if your iPhone was nearby with the same Apple ID, Wi-Fi and Bluetooth on, it set your iPhone as the Mac's input and saved <span class="mono">VOICE_MIC=iPhone</span> — the app then prefers your iPhone whenever it's in range and falls back to the Mac default otherwise. To re-run it any time: <span class="mono">bash prime_permissions.sh</span>. You can also force a mic per run with <span class="mono">--mic NAME</span> (e.g. <span class="mono">--mic iPhone</span>).</p>
+  <p><b>Option A — built-in, free, no app:</b> on your iPhone and Mac, sign into the same Apple ID with Wi-Fi and Bluetooth on, keep the iPhone nearby and unlocked. Then on the Mac: <b>System Settings → Sound → Input → choose your iPhone</b>. Done.</p>
+  <p><b>Option B — WO Mic (free app):</b> install <b>WO Mic</b> from the iOS App Store plus the free Mac client from wolicheng.com, connect over Wi-Fi, then pick “WO Mic” as the input. Works fine; the app is ad-supported and reviews are mixed, so try Option A first.</p>
+</div>
+
+<div class="step">
+  <h2>Mic check</h2>
+  <p>Make sure your Mac can hear you <span class="dim">(see above if you need a microphone)</span>:</p>
+  <button id="micBtn">Test my microphone</button>
+  <div id="meterWrap" style="display:none">
+    <div id="meter"><div id="meterFill"></div></div>
+  </div>
+</div>
+
+<div class="step">
+  <h2>🗣️ Choose your voice <span class="dim">(Kokoro-82M neural TTS)</span></h2>
+  <p>Your Mac speaks responses in natural human speech. Click to audition the voices:</p>
+  <div style="display:flex; flex-wrap:wrap; gap:8px; margin: 12px 0;">
+    <button onclick="playVoice('fenrir')">▶️ Fenrir (Cinematic Male — Default)</button>
+    <button onclick="playVoice('heart')">▶️ Heart (Warm Female — Recommended)</button>
+    <button onclick="playVoice('adam')">▶️ Adam (Deep Male)</button>
+    <button onclick="playVoice('sarah')">▶️ Sarah (Clear Female)</button>
+    <button onclick="playVoice('george')">▶️ George (British Male)</button>
+    <button onclick="playVoice('emma')">▶️ Emma (British Female)</button>
+  </div>
+  <audio id="welcomeAudio" preload="none"></audio>
+  <p class="dim" style="font-size:0.9rem;">To switch anytime by voice: say <b>“Mac, use voice Heart”</b> or <b>“Mac, pick a voice”</b>.</p>
+</div>
+
+<div class="step">
+  <h2>If something doesn't work</h2>
+  <ul class="trouble">
+    <li><b>Nothing happens at all</b> → a permission in Step 1 is off. This fixes it 9 times out of 10.</li>
+    <li><b>“I didn't understand” a lot</b> → make sure Ollama is running: open Terminal and run <span class="mono">ollama serve</span>. It handles unusual phrasing.</li>
+    <li><b>“Click the … button” can't see anything</b> → grant <b>Screen Recording</b> (macOS 26+) in Step 1.</li>
+    <li><b>Weird phrasing works but slowly</b> → normal. The instant path handles exact commands; the ~1-second local AI handles the rest.</li>
+    <li><b>Always-listening triggers on the TV</b> → expected — there's no wake word. Use push-to-talk in noisy rooms, or raise the bar with <span class="mono">--sensitivity 4.5</span>.</li>
+    <li><b>Start-at-login asks for Microphone permission again</b> → normal. macOS grants mic access per app; allow it once for Python and it sticks.</li>
+  </ul>
+</div>
+
+<p class="dim" style="font-size: 0.85rem;">Curious how it works under the hood? Read <a href="ARCHITECTURE.md">ARCHITECTURE.md</a> — the full implementation, latency math, and honest limits.<br>
+Full command list: <span class="mono">python3 free_voice.py --list</span></p>
+
+<script>
+(function () {
+  var btn = document.getElementById('micBtn');
+  var wrap = document.getElementById('meterWrap');
+  var fill = document.getElementById('meterFill');
+  var status = document.getElementById('micStatus');
+  btn.addEventListener('click', function () {
+    if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+      wrap.style.display = 'block';
+      status.textContent = '⚠️ This browser can’t access the mic from a local file — try opening this page in Safari or Chrome, or skip this test.';
+      return;
+    }
+    navigator.mediaDevices.getUserMedia({ audio: true }).then(function (stream) {
+      wrap.style.display = 'block';
+      var Ctx = window.AudioContext || window.webkitAudioContext;
+      var ctx = new Ctx();
+      var src = ctx.createMediaStreamSource(stream);
+      var analyser = ctx.createAnalyser();
+      analyser.fftSize = 512;
+      src.connect(analyser);
+      var data = new Uint8Array(analyser.frequencyBinCount);
+      var heard = false;
+      (function tick() {
+        analyser.getByteTimeDomainData(data);
+        var peak = 0;
+        for (var i = 0; i < data.length; i++) {
+          var v = Math.abs(data[i] - 128) / 128;
+          if (v > peak) peak = v;
+        }
+        fill.style.width = Math.min(100, peak * 160) + '%';
+        if (peak > 0.12) heard = true;
+        status.textContent = heard
+          ? '✅ Your mic works! You’re good to go.'
+          : 'Listening… speak now. Your voice should move the green bar.';
+        requestAnimationFrame(tick);
+      })();
+    }).catch(function () {
+      wrap.style.display = 'block';
+      status.textContent = '⚠️ Mic blocked — allow microphone access in the address bar and try again.';
+    });
+  });
+
+  window.playVoice = function(name) {
+    var audio = document.getElementById('welcomeAudio');
+    if (!audio) return;
+    audio.src = 'docs/audio_samples/' + name + '_sample.mp3';
+    audio.play().catch(function() {
+      audio.src = 'docs/audio_samples/' + name + '_sample.wav';
+      audio.play();
+    });
+  };
+})();
+</script>
+
+</body>
+</html>

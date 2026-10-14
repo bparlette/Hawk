@@ -1,0 +1,42 @@
+{
+  "claim_ref": "DWC-2026-000418",
+  "rulepack": "fmc-541@2024-05-28+545.5+41310",
+  "invoice_no": "DD-7754120",
+  "billing_party": "Maersk A/S",
+  "invoiced": "1500",
+  "disputed": "1500",
+  "dispute_deadline": "2026-09-13",
+  "fmc_eligible": true,
+  "fmc_blockers": [],
+  "fmc_submit_to": "chargecomplaints@fmc.gov",
+  "needs_human_review": true,
+  "files": {
+    "carrier_md": {
+      "path": "01_carrier_dispute.md",
+      "sha256": "4a6a38e773c42483a19c86a7af328f4f5a8fe173b36e4e459da5c72cd83e5242"
+    },
+    "carrier_html": {
+      "path": "01_carrier_dispute.html",
+      "sha256": "83e49c3373561c56a5077b7909d6bc838db4ca08b07cb7d5a4e07d5296befc3c"
+    },
+    "fmc_md": {
+      "path": "02_fmc_charge_complaint.md",
+      "sha256": "959b0d0c065a0254afa793230cea4b26c5a70cf4242bd0a6f892784010bb294e"
+    },
+    "fmc_html": {
+      "path": "02_fmc_charge_complaint.html",
+      "sha256": "7f0568aa71871d61fdee769c74f3083004878f1ee38cc4a02747e1f0251bee3a"
+    },
+    "schedule": {
+      "path": "03_day_schedule.csv",
+      "sha256": "8656e2f2e62464cc8dda03921ab0cefbfbebbb68920bd169c905ff644e4fc48e"
+    }
+  },
+  "exhibits": [
+    {
+      "label": "Carrier invoice DD-7754120",
+      "path": "exhibits/01_invoice_DD-7754120.pdf",
+      "sha256": "7e33fe3d4b9e108be336706c8b8f98e21d6179dd5a78237ee1f0897e35fb60ad"
+    }
+  ]
+}

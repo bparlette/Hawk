@@ -1,0 +1,1 @@
+RESULT {"case":"1z","ok":true,"len":170,"name":"ZAP-ROLLERS","end":{"cam":0,"bosses":[{"n":"zap","sx":152,"y":170,"z":0,"st":"walk","hp":10,"inv":0},{"n":"zap","sx":188,"y":200,"z":0,"st":"walk","hp":10,"inv":0}],"px":60,"floor":[2]},"skipped":false,"hp":[20,10],"frameErrors":0,"pageErrors":0}

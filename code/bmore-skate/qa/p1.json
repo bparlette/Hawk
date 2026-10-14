@@ -1,0 +1,5 @@
+{ "w": 1280, "h": 720, "q": "?autostart", "steps": [
+  { "wait": 500, "eval": "JSON.stringify({cam: __cel.camera.position, S: {x:__cel.SKP.S.x,y:__cel.SKP.S.y,z:__cel.SKP.S.z,m:__cel.SKP.S.mode}, err: __celErr, st: __cel.GM.state})" },
+  { "wait": 4500, "shot": "qa/p1a.png", "eval": "JSON.stringify({cam: __cel.camera.position, S: {x:__cel.SKP.S.x,y:__cel.SKP.S.y,z:__cel.SKP.S.z,m:__cel.SKP.S.mode,v:__cel.SKP.S.v}, err: __celErr, fps: __cel.FPS.v, calls: __cel.renderer.info.render.calls})" },
+  { "wait": 3000, "shot": "qa/p1b.png", "eval": "JSON.stringify({S: {x:__cel.SKP.S.x,y:__cel.SKP.S.y,z:__cel.SKP.S.z,m:__cel.SKP.S.mode,v:__cel.SKP.S.v}, err: __celErr, fps: __cel.FPS.v})" }
+] }

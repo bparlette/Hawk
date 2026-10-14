@@ -1,0 +1,32 @@
+{
+  "version": 1,
+  "planHash": "33f5f1ddcf3af7c6",
+  "totalFrames": 1410,
+  "segmentFrames": 120,
+  "completed": [
+    {
+      "index": 0,
+      "startFrame": 0,
+      "endFrame": 120,
+      "path": "/workspace/work/brad-story/video/pt/renders/.hf-segments/33f5f1ddcf3af7c6/segment_00000.mp4",
+      "bytes": 8663102,
+      "completedAt": "2026-10-10T21:15:15.303Z"
+    },
+    {
+      "index": 1,
+      "startFrame": 120,
+      "endFrame": 240,
+      "path": "/workspace/work/brad-story/video/pt/renders/.hf-segments/33f5f1ddcf3af7c6/segment_00001.mp4",
+      "bytes": 8960425,
+      "completedAt": "2026-10-10T21:15:54.704Z"
+    },
+    {
+      "index": 2,
+      "startFrame": 240,
+      "endFrame": 360,
+      "path": "/workspace/work/brad-story/video/pt/renders/.hf-segments/33f5f1ddcf3af7c6/segment_00002.mp4",
+      "bytes": 8375439,
+      "completedAt": "2026-10-10T21:16:39.867Z"
+    }
+  ]
+}

@@ -1,0 +1,10 @@
+const pw = require('playwright'); const { liveRoute } = require('./t0.js');
+(async()=>{ const b = await pw.webkit.launch(); const c = await b.newContext({...pw.devices['iPhone 13']}); await c.route(/surge\.sh/, liveRoute);
+await c.addInitScript(()=>{ window.__n=0; window.__ss0 = typeof speechSynthesis; if (window.speechSynthesis){ const s=speechSynthesis.speak.bind(speechSynthesis); speechSynthesis.speak=(u)=>{__n++; return s(u)}; }});
+const p = await c.newPage();
+await p.goto('https://sf-worldbrawl.surge.sh/?debug&nomap'); await p.waitForTimeout(2000);
+console.log(await p.evaluate(()=>[__ss0, __n, speechSynthesis.speak.toString().slice(0,60)]));
+await p.evaluate(()=>{ __SS.STATE.player = null; });
+await p.keyboard.press('m'); await p.keyboard.press('m');
+console.log(await p.evaluate(()=>{ const S=__SS.STATE; S.player={bro:{name:'RYU'}}; __SS.playerBark(true,'HELLO'); return [__n, S.pBark && S.pBark.s, S.muted]; }));
+await b.close(); })();

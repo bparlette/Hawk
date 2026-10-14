@@ -1,0 +1,7 @@
+{"id": "toad-city-dead-streets", "title": "Toad City: Dead Streets", "category": "Originals",
+ "keys": {"up": "KeyW", "down": "KeyS", "left": "KeyA", "right": "KeyD", "attack": "KeyJ", "jump": "KeyF", "special": "KeyG", "start": "Enter"},
+ "labels": {"attack": "J · FIRE", "jump": "F · BUILD", "special": "G · BOMB"},
+ "extras": [{"label": "SWAP", "key": "KeyE"}, {"label": "SHOVE", "key": "KeyV"}, {"label": "PAUSE", "key": "KeyP"}, {"label": "MUTE", "key": "KeyM"}],
+ "autostart": [], "orientation": "any",
+ "note": "Twin-stick zombie horde run on the Toad City Baltimore engine (same city kit, real-name signs, Harold/Mavis rigs, Fells Point + WTC landmarks, toon/ink/halftone shading). W Pratt St to the Broadway Pier water taxi: 2 barricade holds, 4 weapons, specials, the Harbor Hulk boss. Source /workspace/work/bmore-zombies.",
+ "path": "g/toad-city-dead-streets/index.html", "thumb": "thumbs/toad-city-dead-streets.webp"}

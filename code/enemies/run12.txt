@@ -1,0 +1,1 @@
+{"lv":12,"n":7,"types":"purple:walk blue:walk dasher:walk sword:walk star:walk heavy:walk gunner:walk"} errors 0

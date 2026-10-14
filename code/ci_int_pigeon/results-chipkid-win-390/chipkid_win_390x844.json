@@ -1,0 +1,250 @@
+{
+  "name": "chipkid_win_390x844",
+  "boss": "chipkid",
+  "mode": "win",
+  "viewport": "390x844",
+  "pass": true,
+  "reason": "duel ended res=win at t=53.2s",
+  "wall": 134,
+  "errors": [],
+  "warnings": [],
+  "ignored": [],
+  "samples": [
+    {
+      "cur": "chipkid",
+      "res": null,
+      "t": 0.4,
+      "log": [
+        "start:chipkid",
+        "chipkid:standin",
+        "say:Ew, old people! Mech, crunch 'em into crumbs!"
+      ],
+      "retries": 0,
+      "over": false,
+      "st": {
+        "hp": 100,
+        "b": 220,
+        "ph": 0,
+        "s": "intro",
+        "over": false,
+        "won": false
+      }
+    },
+    {
+      "cur": "chipkid",
+      "res": null,
+      "t": 9.9,
+      "log": [
+        "chipkid:standin",
+        "say:Ew, old people! Mech, crunch 'em into crumbs!",
+        "special:cyclone"
+      ],
+      "retries": 0,
+      "over": false,
+      "st": {
+        "hp": 100,
+        "b": 125,
+        "ph": 0,
+        "s": "stun",
+        "over": false,
+        "won": false
+      }
+    },
+    {
+      "cur": "chipkid",
+      "res": null,
+      "t": 10.2,
+      "log": [
+        "chipkid:standin",
+        "say:Ew, old people! Mech, crunch 'em into crumbs!",
+        "special:cyclone"
+      ],
+      "retries": 0,
+      "over": false,
+      "st": {
+        "hp": 100,
+        "b": 113,
+        "ph": 0,
+        "s": "stun",
+        "over": false,
+        "won": false
+      }
+    },
+    {
+      "cur": "chipkid",
+      "res": null,
+      "t": 19.5,
+      "log": [
+        "say:That’s my Harold!",
+        "say:My mech has a turbo button, you know! Somewhere!",
+        "special:mallet"
+      ],
+      "retries": 0,
+      "over": false,
+      "st": {
+        "hp": 100,
+        "b": 168,
+        "ph": 1,
+        "s": "stun",
+        "over": false,
+        "won": false
+      }
+    },
+    {
+      "cur": "chipkid",
+      "res": null,
+      "t": 20,
+      "log": [
+        "say:That’s my Harold!",
+        "say:My mech has a turbo button, you know! Somewhere!",
+        "special:mallet"
+      ],
+      "retries": 0,
+      "over": false,
+      "st": {
+        "hp": 100,
+        "b": 168,
+        "ph": 1,
+        "s": "stun",
+        "over": false,
+        "won": false
+      }
+    },
+    {
+      "cur": "chipkid",
+      "res": null,
+      "t": 29.7,
+      "log": [
+        "special:mallet",
+        "special:homer",
+        "say:Give that mech another one, dear!"
+      ],
+      "retries": 0,
+      "over": false,
+      "st": {
+        "hp": 100,
+        "b": 0,
+        "ph": 1,
+        "s": "down",
+        "over": false,
+        "won": false
+      }
+    },
+    {
+      "cur": "chipkid",
+      "res": null,
+      "t": 30.3,
+      "log": [
+        "special:mallet",
+        "special:homer",
+        "say:Give that mech another one, dear!"
+      ],
+      "retries": 0,
+      "over": false,
+      "st": {
+        "hp": 100,
+        "b": 264,
+        "ph": 2,
+        "s": "guard",
+        "over": false,
+        "won": false
+      }
+    },
+    {
+      "cur": "chipkid",
+      "res": null,
+      "t": 39.6,
+      "log": [
+        "special:homer",
+        "say:Give that mech another one, dear!",
+        "special:cyclone"
+      ],
+      "retries": 0,
+      "over": false,
+      "st": {
+        "hp": 100,
+        "b": 126,
+        "ph": 2,
+        "s": "open",
+        "over": false,
+        "won": false
+      }
+    },
+    {
+      "cur": "chipkid",
+      "res": null,
+      "t": 40,
+      "log": [
+        "special:homer",
+        "say:Give that mech another one, dear!",
+        "special:cyclone"
+      ],
+      "retries": 0,
+      "over": false,
+      "st": {
+        "hp": 100,
+        "b": 105,
+        "ph": 2,
+        "s": "open",
+        "over": false,
+        "won": false
+      }
+    },
+    {
+      "cur": "chipkid",
+      "res": null,
+      "t": 50,
+      "log": [
+        "juice:replay",
+        "say:Harold! You popped the whole bag!",
+        "say:Fine! I didn't want this dumb harbor anyway! Hmph!"
+      ],
+      "retries": 0,
+      "over": false,
+      "st": {
+        "hp": 100,
+        "b": 0,
+        "ph": 2,
+        "s": "ko",
+        "over": true,
+        "won": true
+      }
+    }
+  ],
+  "end": {
+    "cur": null,
+    "res": "win",
+    "t": 53.2,
+    "log": [
+      "say:Fine! I didn't want this dumb harbor anyway! Hmph!",
+      "chipkid:win:S",
+      "exit:chipkid:win"
+    ],
+    "retries": 0,
+    "over": false,
+    "st": null
+  },
+  "final": {
+    "log": [
+      "start:chipkid",
+      "chipkid:standin",
+      "special:cyclone",
+      "special:mallet",
+      "special:homer",
+      "special:cyclone",
+      "special:mallet",
+      "chipkid:ko",
+      "juice:replay",
+      "chipkid:win:S",
+      "exit:chipkid:win"
+    ],
+    "bossClear": [
+      "harborplace"
+    ],
+    "celErr": {
+      "n": 0,
+      "last": ""
+    },
+    "overText": "\n    HAROLDTHE CHIP KID\n    ROUND 3/3\n    THE CHIP KIDFine! I didn't want this dumb harbor anyway! Hmph!NICE DODGE! +POWERK.O.!!THE FINAL BLOWJ swing (3-hit combo) · E POWER special · A / D dodge · S duck\n    20HIT COMBO!POWER⚡ CRAB-MALLET POUND!WHACK!9714WHACK!91114WHACK!POUND!50KABOOM!THE CHIP KID"
+  }
+}

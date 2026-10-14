@@ -1,0 +1,13 @@
+# rockets into the packed corridor from range -> multi-gib -> kill-cam
+1 0 give
+1 0 pos 2330 3105 0
+1 0 weapon 4 1
+1 0 god 1
+3 0 cap 1
+5 7 in 0 0 0 1
+7 27 in 0 0 0 0
+27 29 in 0 0 0 1
+29 49 in 0 0 0 0
+49 51 in 0 0 0 1
+51 120 in 0 0 0 0
+120 0 quit

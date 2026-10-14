@@ -1,0 +1,1 @@
+RESULT {"case":"4","ok":true,"len":165,"name":"JETWASH","end":{"cam":0,"bosses":[{"n":"JETWASH","sx":161,"y":188,"z":14.534769204713607,"st":"walk","hp":38,"inv":0}],"px":60,"floor":[1]},"skipped":false,"hp":[38,31],"frameErrors":0,"pageErrors":0}

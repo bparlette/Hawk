@@ -1,0 +1,41 @@
+npm warn deprecated inflight@1.0.6: This module is not supported, and leaks memory. Do not use it. Check out lru-cache if you want a good and tested way to coalesce async requests by a key value, which is much more comprehensive and powerful.
+npm warn deprecated rimraf@2.7.1: Rimraf versions prior to v4 are no longer supported
+npm warn deprecated glob@7.2.3: Old versions of glob are not supported, and contain widely publicized security vulnerabilities, which have been fixed in the current version. Please update. Support for old versions may be purchased (at exorbitant rates) by contacting i@izs.me
+npm warn deprecated har-validator@5.1.5: this library is no longer supported
+npm warn deprecated uuid@3.4.0: uuid@10 and below is no longer supported.  For ESM codebases, update to uuid@latest.  For CommonJS codebases, use uuid@11 (but be aware this version will likely be deprecated in 2028).
+npm warn deprecated request@2.88.2: request has been deprecated, see https://github.com/request/request/issues/3142
+npm warn deprecated fstream@1.0.12: This package is no longer supported.
+
+   [90mRunning as [4mrbparle@gmail.com[24m[39m[90m (Free)[39m
+
+[90m        project:[39m .
+[90m         domain:[39m shellshock-live.surge.sh
+[90m           size:[39m 129 files, 17.0 MB
+
+
+
+
+  [90m[90m┌──────────────────────────────────────────────────────────────────────────────[39m[90m┬────────────────────┐[39m[39m
+  [90m[90m│[39m  [90mCertificate: Sectigo Public Server Authentication CA DV R36[39m                 [90m│[39m  [32mValid[39m             [90m│[39m[39m
+  [90m[90m│[39m  [90m *.surge.sh, surge.sh[39m                                                       [90m│[39m  [32m69 more days[39m      [90m│[39m[39m
+  [90m[90m└──────────────────────────────────────────────────────────────────────────────[39m[90m┴────────────────────┘[39m[39m
+  [90m[90m┌──────────[39m[90m┬──────────────────────────────────────────────────────────────────────────────[39m[90m┬─────────┐[39m[39m
+  [90m[90m│[39m[31m          [39m[90m│[39m[31m   [36mns1.surge.world   ns2.surge.world[31m[90m  [31m [90m  [31m[3m[90mor CNAME…[23m[31m      [90m   [31m                   [39m[90m│[39m[31m         [39m[90m│[39m[39m
+  [90m[90m│[39m[31m    [90mNS[31m    [39m[90m│[39m[31m   [36mns3.surge.world   ns4.surge.world[31m[90m  [31m [90m  [31m[90m[3m[31m[23m[3m[33mgeo.surge.world[31m[23m[90m   [31m                   [39m[90m│[39m[31m         [39m[90m│[39m[39m
+  [90m[90m├──────────[39m[90m┼──────────────────[39m[90m┬───────────────────────[39m[90m┬─────────────────────[39m[90m┬─────────────[39m[90m┼─────────┤[39m[39m
+  [90m[90m│[39m   [90mHTTP[39m   [90m│[39m   sfo.surge.sh   [90m│[39m   US, San Francisco   [90m│[39m   138.197.235.123   [90m│[39m   D.Ocean   [90m│[39m   [32m✔[39m [32m◍[39m   [90m│[39m[39m
+  [90m[90m│[39m   [90mHTTP[39m   [90m│[39m   lhr.surge.sh   [90m│[39m   GB, London          [90m│[39m   46.101.67.123     [90m│[39m   D.Ocean   [90m│[39m   [32m✔[39m [32m◍[39m   [90m│[39m[39m
+  [90m[90m│[39m   [90mHTTP[39m   [90m│[39m   yyz.surge.sh   [90m│[39m   CA, Toronto         [90m│[39m   159.203.50.177    [90m│[39m   D.Ocean   [90m│[39m   [32m✔[39m [32m◍[39m   [90m│[39m[39m
+  [90m[90m│[39m   [90mHTTP[39m   [90m│[39m   jfk.surge.sh   [90m│[39m   US, New York        [90m│[39m   159.203.159.100   [90m│[39m   D.Ocean   [90m│[39m   [32m✔[39m [32m◍[39m   [90m│[39m[39m
+  [90m[90m│[39m   [90mHTTP[39m   [90m│[39m   ams.surge.sh   [90m│[39m   NL, Amsterdam       [90m│[39m   188.166.132.94    [90m│[39m   D.Ocean   [90m│[39m   [32m✔[39m [32m◍[39m   [90m│[39m[39m
+  [90m[90m│[39m   [90mHTTP[39m   [90m│[39m   fra.surge.sh   [90m│[39m   DE, Frankfurt       [90m│[39m   138.68.112.220    [90m│[39m   D.Ocean   [90m│[39m   [32m✔[39m [32m◍[39m   [90m│[39m[39m
+  [90m[90m│[39m   [90mHTTP[39m   [90m│[39m   sgp.surge.sh   [90m│[39m   SG, Singapore       [90m│[39m   139.59.195.30     [90m│[39m   D.Ocean   [90m│[39m   [32m✔[39m [32m◍[39m   [90m│[39m[39m
+  [90m[90m│[39m   [90mHTTP[39m   [90m│[39m   blr.surge.sh   [90m│[39m   IN, Bangalore       [90m│[39m   139.59.50.135     [90m│[39m   D.Ocean   [90m│[39m   [32m✔[39m [32m◍[39m   [90m│[39m[39m
+  [90m[90m│[39m   [90mHTTP[39m   [90m│[39m   syd.surge.sh   [90m│[39m   AU, Sydney          [90m│[39m   45.76.126.95      [90m│[39m   Vultr     [90m│[39m   [32m✔[39m [32m◍[39m   [90m│[39m[39m
+  [90m[90m│[39m   [90mHTTP[39m   [90m│[39m   nrt.surge.sh   [90m│[39m   JP, Tokyo           [90m│[39m   172.104.96.133    [90m│[39m   Linode    [90m│[39m   [32m✔[39m [32m◍[39m   [90m│[39m[39m
+  [90m[90m└──────────[39m[90m┴──────────────────[39m[90m┴───────────────────────[39m[90m┴─────────────────────[39m[90m┴─────────────[39m[90m┴─────────┘[39m[39m
+   [90mLive preview ............................................... [4m1791503519204-shellshock-live.surge.sh[24m[39m
+   [90mProduction ............................................................... [4mshellshock-live.surge.sh[24m[39m
+
+   [32mSuccess![39m[90m - Published to [4mshellshock-live.surge.sh[24m[39m
+

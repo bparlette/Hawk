@@ -1,0 +1,14 @@
+<?xml version="1.0"?>
+<!-- ES-DE custom systems file (macOS): ~/ES-DE/custom_systems/es_systems.xml -->
+<systemList>
+    <system>
+        <name>browsergames</name>
+        <fullname>Browser Arcade</fullname>
+        <path>%ROMPATH%/browsergames</path>
+        <extension>.sh .SH .app .APP</extension>
+        <command label="Browser Arcade (suspend ES-DE)">%ENABLESHORTCUTS% %EMULATOR_OS-SHELL% %ROM%</command>
+        <command label="Browser Arcade (keep ES-DE running)">%RUNINBACKGROUND% %ENABLESHORTCUTS% %EMULATOR_OS-SHELL% %ROM%</command>
+        <platform>pc</platform>
+        <theme>arcade</theme>
+    </system>
+</systemList>

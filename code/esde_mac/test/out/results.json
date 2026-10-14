@@ -1,0 +1,282 @@
+[
+  {
+    "name": "shellshock: boots on app:// with injected tweaks",
+    "pass": true,
+    "info": {
+      "url": "app://shellshock/index.html?debug&level=3",
+      "title": "SHELL SHOCK: LIVE ACTION",
+      "cls": "fill arcade-notouch arcade-app on-title",
+      "injected": true,
+      "gp": "function",
+      "gpList": true,
+      "canvas": [
+        1234,
+        720
+      ],
+      "vp": [
+        1280,
+        720
+      ],
+      "fsbtn": "none",
+      "touch": 0,
+      "ontouch": false
+    }
+  },
+  {
+    "name": "shellshock: navigator.getGamepads available",
+    "pass": true
+  },
+  {
+    "name": "shellshock: canvas fills viewport (no cabinet, no fs button)",
+    "pass": true,
+    "info": {
+      "canvas": [
+        1234,
+        720
+      ],
+      "vp": [
+        1280,
+        720
+      ],
+      "fsbtn": "none"
+    }
+  },
+  {
+    "name": "shellshock: fetch() of levels/*.js as text works, HEAD ok, missing=404",
+    "pass": true,
+    "info": {
+      "ok": true,
+      "len": 14078,
+      "type": "text/javascript; charset=utf-8",
+      "head": true,
+      "headType": "text/javascript; charset=utf-8",
+      "miss": 404
+    }
+  },
+  {
+    "name": "shellshock: no non-local requests",
+    "pass": true,
+    "info": []
+  },
+  {
+    "name": "shellshock: mocked gamepad Start is read by the game",
+    "pass": true,
+    "info": {
+      "scene": "select"
+    }
+  },
+  {
+    "name": "shellshock: a level script + level art loaded during play",
+    "pass": true,
+    "info": {
+      "scripts": [
+        "levels/level3.js"
+      ],
+      "scene": "loading",
+      "res": [
+        "level2.js",
+        "level2.js",
+        "level99.js",
+        "level3.js",
+        "enemies_sewer.png",
+        "level3_sewer.jpg",
+        "level3_sewer_boss.jpg",
+        "level3_gator.png",
+        "level3_props.png"
+      ]
+    }
+  },
+  {
+    "name": "shellshock: Esc held 1 s quits the app",
+    "pass": true,
+    "info": {
+      "ex": {
+        "exited": true,
+        "code": 0
+      },
+      "log": [
+        "[page] [arcade] quitting via esc",
+        "[arcade] quit: esc"
+      ]
+    }
+  },
+  {
+    "name": "shellshock: localStorage survives relaunch (userData)",
+    "pass": true,
+    "info": {
+      "before": [
+        "ssla_progress",
+        "arcade_test_marker"
+      ],
+      "after": [
+        "ssla_progress",
+        "arcade_test_marker"
+      ]
+    }
+  },
+  {
+    "name": "shellshock: short Esc tap does not quit",
+    "pass": true
+  },
+  {
+    "name": "shellshock: gamepad Select+Start held 1 s quits",
+    "pass": true,
+    "info": {
+      "t2": {
+        "exited": true,
+        "code": 0
+      },
+      "log": [
+        "[page] [arcade] quitting via gamepad select+start",
+        "[arcade] quit: gamepad select+start"
+      ]
+    }
+  },
+  {
+    "name": "sfbrawl: boots on app:// with injected tweaks",
+    "pass": true,
+    "info": {
+      "url": "app://sfbrawl/index.html?level=2",
+      "title": "STREET FIGHTER: WORLD BRAWL (fan game)",
+      "cls": "fill arcade-notouch arcade-app",
+      "injected": true,
+      "gp": "function",
+      "gpList": true,
+      "canvas": [
+        1234,
+        720
+      ],
+      "vp": [
+        1280,
+        720
+      ],
+      "fsbtn": "none",
+      "touch": 0,
+      "ontouch": false
+    }
+  },
+  {
+    "name": "sfbrawl: navigator.getGamepads available",
+    "pass": true
+  },
+  {
+    "name": "sfbrawl: canvas fills viewport (no cabinet, no fs button)",
+    "pass": true,
+    "info": {
+      "canvas": [
+        1234,
+        720
+      ],
+      "vp": [
+        1280,
+        720
+      ],
+      "fsbtn": "none"
+    }
+  },
+  {
+    "name": "sfbrawl: fetch() of levels/*.js as text works, HEAD ok, missing=404",
+    "pass": true,
+    "info": {
+      "ok": true,
+      "len": 16232,
+      "type": "text/javascript; charset=utf-8",
+      "head": true,
+      "headType": "text/javascript; charset=utf-8",
+      "miss": 404
+    }
+  },
+  {
+    "name": "sfbrawl: no non-local requests",
+    "pass": true,
+    "info": []
+  },
+  {
+    "name": "sfbrawl: mocked gamepad Start is read by the game",
+    "pass": true,
+    "info": {
+      "scene": null
+    }
+  },
+  {
+    "name": "sfbrawl: a level script + level art loaded during play",
+    "pass": true,
+    "info": {
+      "scripts": [
+        "levels/level2.js"
+      ],
+      "scene": null,
+      "res": [
+        "level1.js",
+        "level1.js",
+        "level99.js",
+        "level4.js",
+        "level5.js",
+        "level6.js",
+        "level7.js",
+        "level8.js",
+        "level9.js",
+        "level10.js",
+        "level11.js",
+        "level12.js",
+        "level2.js",
+        "level2_warehouse.jpg",
+        "level2_arena.jpg",
+        "level2_sodom.png",
+        "level2_props.png"
+      ]
+    }
+  },
+  {
+    "name": "sfbrawl: Esc held 1 s quits the app",
+    "pass": true,
+    "info": {
+      "ex": {
+        "exited": true,
+        "code": 0
+      },
+      "log": [
+        "[page] [arcade] quitting via esc",
+        "[arcade] quit: esc"
+      ]
+    }
+  },
+  {
+    "name": "sfbrawl: localStorage survives relaunch (userData)",
+    "pass": true,
+    "info": {
+      "before": [
+        "arcade_test_marker"
+      ],
+      "after": [
+        "arcade_test_marker"
+      ]
+    }
+  },
+  {
+    "name": "sfbrawl: short Esc tap does not quit",
+    "pass": true
+  },
+  {
+    "name": "sfbrawl: gamepad Select+Start held 1 s quits",
+    "pass": true,
+    "info": {
+      "t2": {
+        "exited": true,
+        "code": 0
+      },
+      "log": [
+        "[page] [arcade] quitting via gamepad select+start",
+        "[arcade] quit: gamepad select+start"
+      ]
+    }
+  },
+  {
+    "name": "per-game userData folders created",
+    "pass": true,
+    "info": [
+      "sfbrawl",
+      "shellshock"
+    ]
+  }
+]

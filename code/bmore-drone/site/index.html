@@ -1,0 +1,157 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,maximum-scale=1,minimum-scale=1,user-scalable=no">
+<meta name="theme-color" content="#0b0f17">
+<title>Toad City Drone Racer</title>
+<style>
+  html, body { margin: 0; height: 100%; overflow: hidden; background: #0b0f17; touch-action: none; overscroll-behavior: none; position: fixed; width: 100%; -webkit-user-select: none; user-select: none; -webkit-touch-callout: none; }
+  body { font-family: Impact, "Haettenschweiler", "Arial Narrow Bold", "Arial Black", "Helvetica Neue", sans-serif; color: #fff; }
+  #gl { position: fixed; left: 0; top: 0; width: 100vw; height: 100vh; height: 100dvh; display: block; outline: none; }
+  .ink { -webkit-text-stroke: 1.5px #14101f; text-shadow: 2px 2px 0 #14101f, 3px 3px 0 #14101f; paint-order: stroke fill; }
+  .hud { position: fixed; z-index: 10; pointer-events: none; display: none; }
+  body.racing .hud, body.paused .hud { display: block; }
+  /* top bar */
+  #hudTop { left: 0; right: 0; top: calc(env(safe-area-inset-top, 0px) + 8px); display: none; justify-content: space-between; align-items: flex-start; padding: 0 10px; }
+  body.racing #hudTop, body.paused #hudTop { display: flex; }
+  .card { background: #ffd23c; color: #14101f; border: 3px solid #14101f; box-shadow: 4px 4px 0 #14101f; border-radius: 10px; padding: 4px 10px 3px; transform: skewX(-8deg); }
+  .card b { display: block; font-size: 11px; letter-spacing: 1.5px; font-weight: 400; opacity: .8; }
+  .card .v { font-size: 26px; line-height: 1; letter-spacing: 1px; }
+  #cLap { background: #ff3d6e; color: #fff; }
+  #cPos { background: #7fe8ff; }
+  #tcol { display: flex; flex-direction: column; align-items: center; gap: 4px; }
+  #time { font-size: 30px; line-height: 1; letter-spacing: 1px; }
+  #delta { font-size: 17px; opacity: 0; transition: opacity .2s; }
+  #delta.on { opacity: 1; }
+  #delta.up { color: #ff5f7a; } #delta.dn { color: #9dff6b; }
+  #gateN { font-size: 14px; letter-spacing: 1px; color: #ffd23c; }
+  #rcol { display: flex; flex-direction: column; align-items: flex-end; gap: 6px; }
+  #pauseB { pointer-events: auto; width: 40px; height: 36px; border-radius: 9px; border: 3px solid #14101f; background: #e9e4ff; color: #14101f; font: 900 16px/1 system-ui, sans-serif; box-shadow: 3px 3px 0 #14101f; cursor: pointer; }
+  /* bottom: speed + boost + minimap */
+  #hudBot { left: 50%; transform: translateX(-50%); bottom: calc(env(safe-area-inset-bottom, 0px) + 14px); display: none; align-items: flex-end; gap: 12px; }
+  body.racing #hudBot, body.paused #hudBot { display: flex; }
+  #spd { font-size: 40px; line-height: .9; text-align: right; min-width: 84px; }
+  #spd small { display: block; font-size: 12px; letter-spacing: 2px; color: #ffd23c; }
+  #boostW { width: 150px; }
+  #boostW b { font-size: 12px; letter-spacing: 2px; color: #ffd23c; display: block; margin-bottom: 3px; }
+  #boostBar { height: 14px; background: #14101f; border: 2px solid #14101f; box-shadow: 3px 3px 0 #14101f; transform: skewX(-14deg); position: relative; overflow: hidden; }
+  #boostFill { position: absolute; left: 0; top: 0; bottom: 0; width: 100%; background: linear-gradient(90deg, #ff8a3d, #ffd23c); }
+  #boostBar.hot #boostFill { background: linear-gradient(90deg, #ff3d6e, #ffd23c, #fff); }
+  #mm { position: fixed; z-index: 10; left: calc(env(safe-area-inset-left, 0px) + 10px); bottom: calc(env(safe-area-inset-bottom, 0px) + 12px); width: 170px; height: 105px; border: 3px solid #14101f; border-radius: 10px; box-shadow: 4px 4px 0 #14101f; background: #3a3a40; display: none; }
+  body.racing #mm, body.paused #mm { display: block; }
+  /* gate arrow, popups, countdown */
+  #arrow { position: fixed; z-index: 11; left: 0; top: 0; width: 44px; height: 44px; margin: -22px 0 0 -22px; display: none; pointer-events: none; }
+  #arrow svg { width: 100%; height: 100%; }
+  #arrowD { position: fixed; z-index: 11; font-size: 15px; display: none; pointer-events: none; transform: translate(-50%, 26px); color: #ffd23c; }
+  #lmk { position: fixed; z-index: 12; left: 50%; top: 22%; transform: translate(-50%, -10px) skewX(-8deg); opacity: 0; transition: opacity .25s, transform .25s; pointer-events: none; background: #14101f; color: #ffd23c; padding: 6px 14px 4px; border-radius: 8px; font-size: 20px; letter-spacing: 2px; white-space: nowrap; box-shadow: 4px 4px 0 #ff3d6e; }
+  #lmk.on { opacity: 1; transform: translate(-50%, 0) skewX(-8deg); }
+  #pop { position: fixed; z-index: 12; left: 50%; top: 34%; transform: translate(-50%, 0) scale(.6); opacity: 0; pointer-events: none; font-size: 44px; letter-spacing: 2px; white-space: nowrap; transition: transform .18s cubic-bezier(.3, 1.8, .5, 1), opacity .18s; }
+  #pop.on { opacity: 1; transform: translate(-50%, 0) scale(1); }
+  #pop small { display: block; text-align: center; font-size: 20px; }
+  #count { position: fixed; z-index: 13; left: 50%; top: 40%; transform: translate(-50%, -50%); font-size: 120px; pointer-events: none; display: none; color: #ffd23c; }
+  #count.go { color: #9dff6b; }
+  /* touch */
+  #touch { position: fixed; inset: 0; z-index: 9; pointer-events: none; display: none; }
+  body.touch.racing #touch { display: block; }
+  .stick { position: fixed; width: 140px; height: 140px; border-radius: 50%; border: 3px solid rgba(20,16,31,.75); background: rgba(233,228,255,.16); opacity: .55; bottom: calc(env(safe-area-inset-bottom, 0px) + 140px); }
+  #stL { left: 22px; } #stR { right: 22px; }
+  .stick .knob { position: absolute; left: 42px; top: 42px; width: 56px; height: 56px; border-radius: 50%; background: #ffd23c; border: 3px solid #14101f; box-shadow: 2px 2px 0 #14101f; }
+  .stick span { position: absolute; left: 0; right: 0; top: -22px; text-align: center; font-size: 12px; letter-spacing: 1.5px; color: #fff; -webkit-text-stroke: 1px #14101f; }
+  .btn { pointer-events: auto; position: fixed; border-radius: 50%; border: 3px solid #14101f; box-shadow: 3px 3px 0 #14101f; font-family: inherit; font-size: 15px; letter-spacing: 1px; color: #14101f; cursor: pointer; touch-action: none; }
+  #bBoost { width: 74px; height: 74px; right: 26px; bottom: calc(env(safe-area-inset-bottom, 0px) + 300px); background: #ff8a3d; }
+  #bBoost.on { background: #ffd23c; transform: scale(.94); }
+  #bCam { width: 50px; height: 50px; right: 112px; bottom: calc(env(safe-area-inset-bottom, 0px) + 318px); background: #7fe8ff; font-size: 12px; }
+  @media (orientation: landscape) { .stick { bottom: calc(env(safe-area-inset-bottom, 0px) + 26px); } #bBoost { bottom: 190px; } #bCam { bottom: 208px; } body.touch #hudBot { bottom: 8px; } body.touch #mm { display: none; } }
+  @media (orientation: portrait) { body.touch #mm { bottom: auto; top: calc(env(safe-area-inset-top, 0px) + 96px); width: 130px; height: 80px; } body.touch #hudBot { bottom: calc(env(safe-area-inset-bottom, 0px) + 300px); left: 26px; transform: none; flex-direction: column; align-items: flex-start; gap: 4px; } body.touch #boostW { width: 120px; } body.touch #spd { font-size: 30px; text-align: left; } }
+  /* menus */
+  .scr { position: fixed; inset: 0; z-index: 30; display: none; align-items: center; justify-content: center; background: radial-gradient(ellipse at center, rgba(11,15,23,.35), rgba(11,15,23,.82)); }
+  .scr.on { display: flex; }
+  .panel { width: min(92vw, 470px); max-height: 92vh; overflow: auto; background: #e9e4ff; color: #14101f; border: 4px solid #14101f; border-radius: 16px; box-shadow: 8px 8px 0 #14101f; padding: 16px 18px 18px; box-sizing: border-box; text-align: center; }
+  .title { font-size: 40px; line-height: .92; letter-spacing: 1px; color: #ffd23c; margin: 2px 0 2px; }
+  .title em { display: block; font-style: normal; color: #ff3d6e; font-size: 30px; }
+  .sub { font: 700 12px/1.35 system-ui, -apple-system, "Segoe UI", sans-serif; margin: 6px 0 12px; color: #3a3450; }
+  .row { display: flex; gap: 6px; margin: 7px 0; align-items: center; }
+  .row label { flex: 0 0 76px; text-align: left; font-size: 15px; letter-spacing: 1px; }
+  .seg { flex: 1; display: flex; gap: 4px; }
+  .seg button { flex: 1; padding: 8px 2px 6px; border: 3px solid #14101f; border-radius: 9px; background: #fff; font-family: inherit; font-size: 15px; letter-spacing: 1px; color: #14101f; cursor: pointer; }
+  .seg button.on { background: #ffd23c; box-shadow: 2px 2px 0 #14101f; }
+  .big { display: block; width: 100%; margin-top: 12px; padding: 12px 0 9px; border: 4px solid #14101f; border-radius: 12px; background: #ff3d6e; color: #fff; font-family: inherit; font-size: 28px; letter-spacing: 2px; box-shadow: 5px 5px 0 #14101f; cursor: pointer; }
+  .big.alt { background: #7fe8ff; color: #14101f; font-size: 20px; padding: 9px 0 7px; }
+  .big:active, .seg button:active { transform: translate(2px, 2px); box-shadow: 1px 1px 0 #14101f; }
+  .best { font: 700 13px/1.4 system-ui, sans-serif; margin-top: 10px; color: #3a3450; }
+  .ctl { font: 600 11px/1.45 system-ui, sans-serif; margin-top: 10px; color: #4a4460; text-align: left; background: #fff; border: 2px solid #14101f; border-radius: 8px; padding: 6px 8px; }
+  .ctl b { color: #14101f; }
+  #medal { width: 110px; height: 110px; margin: 4px auto 2px; }
+  #rTitle { font-size: 38px; letter-spacing: 1px; }
+  #rRows { font: 700 14px/1.6 system-ui, sans-serif; text-align: left; margin: 8px auto 0; max-width: 300px; }
+  #rRows div { display: flex; justify-content: space-between; border-bottom: 2px dashed #b9b0d8; }
+  #rRows .nb { color: #c0244a; }
+  #loading { position: fixed; inset: 0; z-index: 40; display: flex; align-items: center; justify-content: center; flex-direction: column; background: #0b0f17; color: #ffd23c; font-size: 26px; letter-spacing: 2px; }
+  #loading small { font: 600 12px system-ui, sans-serif; color: #b9b0d8; margin-top: 8px; letter-spacing: 0; }
+  #hint { position: fixed; z-index: 11; left: 50%; bottom: calc(env(safe-area-inset-bottom, 0px) + 72px); transform: translateX(-50%); font: 700 12px system-ui, sans-serif; color: #fff; background: rgba(20,16,31,.7); padding: 5px 10px; border-radius: 8px; pointer-events: none; opacity: 0; transition: opacity .4s; white-space: nowrap; }
+  #hint.on { opacity: 1; }
+  body.touch #hint { bottom: auto; top: 30%; }
+  #hint { max-width: calc(100vw - 24px); text-align: center; white-space: normal; box-sizing: border-box; }
+</style>
+</head>
+<body>
+<canvas id="gl" tabindex="0"></canvas>
+<div id="loading">BUILDING BALTIMORE…<small>Toad City Baltimore streets, harbour and landmarks</small></div>
+
+<div id="hudTop" class="hud">
+  <div style="display:flex;gap:8px;align-items:flex-start">
+    <div class="card" id="cLap"><b>LAP</b><div class="v" id="lap">1/3</div></div>
+  </div>
+  <div id="tcol"><div id="time" class="ink">0:00.00</div><div id="delta" class="ink"></div><div id="gateN" class="ink">GATE 1/21</div></div>
+  <div id="rcol"><div style="display:flex;gap:8px;align-items:flex-start"><div class="card" id="cPos"><b>POS</b><div class="v" id="pos">1st</div></div><button id="pauseB" aria-label="Pause">II</button></div></div>
+</div>
+<div id="hudBot" class="hud">
+  <div id="spd" class="ink">0<small>KM/H</small></div>
+  <div id="boostW"><b class="ink">BOOST</b><div id="boostBar"><div id="boostFill"></div></div></div>
+</div>
+<canvas id="mm" width="340" height="210"></canvas>
+<div id="arrow"><svg viewBox="0 0 44 44"><path d="M22 3 L40 38 L22 29 L4 38 Z" fill="#ffd23c" stroke="#14101f" stroke-width="4" stroke-linejoin="round"/></svg></div>
+<div id="arrowD" class="ink">0m</div>
+<div id="lmk"></div>
+<div id="pop" class="ink"></div>
+<div id="count" class="ink">3</div>
+<div id="hint"></div>
+
+<div id="touch">
+  <div class="stick" id="stL"><span id="stLl">FLY</span><div class="knob"></div></div>
+  <div class="stick" id="stR"><span id="stRl">ALT / STRAFE</span><div class="knob"></div></div>
+  <button class="btn" id="bBoost">BOOST</button>
+  <button class="btn" id="bCam">CAM</button>
+</div>
+
+<div class="scr" id="sMenu"><div class="panel">
+  <div class="title ink">TOAD CITY<em class="ink">DRONE RACER</em></div>
+  <div class="sub">Three laps of ring gates around the Inner Harbor: under the Pratt St skywalk, past Domino Sugars, over Federal Hill and down Light St by Camden Yards. Beat Mavis, Voltage Vic and Sugar Rush.</div>
+  <div class="row"><label>FLIGHT</label><div class="seg" data-k="mode"><button data-v="arcade">ARCADE</button><button data-v="acro">ACRO</button></div></div>
+  <div class="row"><label>CAMERA</label><div class="seg" data-k="cam"><button data-v="chase">CHASE</button><button data-v="fpv">FPV</button></div></div>
+  <div class="row"><label>TIME</label><div class="seg" data-k="tod"><button data-v="day">DAY</button><button data-v="dusk">DUSK</button><button data-v="night">NIGHT</button></div></div>
+  <div class="row"><label>RIVALS</label><div class="seg" data-k="rivals"><button data-v="ai">3 AI</button><button data-v="ghost">GHOST</button><button data-v="both">BOTH</button></div></div>
+  <button class="big" id="bStart">RACE!</button>
+  <div class="best" id="bestT">No times yet: set the first record.</div>
+  <div class="ctl" id="ctl"></div>
+</div></div>
+
+<div class="scr" id="sPause"><div class="panel">
+  <div class="title ink" style="font-size:36px">PAUSED</div>
+  <button class="big" id="bResume">RESUME</button>
+  <button class="big alt" id="bRestart">RESTART RACE</button>
+  <button class="big alt" id="bMusic">MUSIC: ON</button>
+  <button class="big alt" id="bQuit">MAIN MENU</button>
+</div></div>
+
+<div class="scr" id="sRes"><div class="panel">
+  <svg id="medal" viewBox="0 0 110 110"></svg>
+  <div id="rTitle" class="ink" style="color:#ffd23c">FINISHED!</div>
+  <div id="rRows"></div>
+  <button class="big" id="bRetry">RETRY</button>
+  <button class="big alt" id="bMenu">MAIN MENU</button>
+</div></div>
+<script type="module" src="game.js"></script>
+</body>
+</html>

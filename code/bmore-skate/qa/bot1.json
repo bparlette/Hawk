@@ -1,0 +1,9 @@
+{ "w": 1280, "h": 720, "q": "?autostart&bot=route&sim=8&lowq", "steps": [
+  { "wait": 1000, "shot": "qa/b1_0.png" },
+  { "until": "__cel.GM.state==='play' && __cel.SKP.S.t > 30", "timeout": 400000, "label": "t30" },
+  { "shot": "qa/b1_30.png", "eval": "JSON.stringify({fps:__cel.FPS.v, S:[__cel.SKP.S.x,__cel.SKP.S.z,__cel.SKP.S.score], goals:__cel.GOALS.done})" },
+  { "until": "__cel.GM.state==='results'", "timeout": 900000, "label": "results" },
+  { "wait": 1500, "shot": "qa/b1_res.png", "eval": "JSON.stringify({res:__cel.GM.lastResult, fpsHist:__cel.FPS.hist, err:__celErr})" },
+  { "eval": "JSON.stringify({log:__bot.B.log, ev:__bot.B.ev})" },
+  { "eval": "JSON.stringify(__bot.B.trace)" }
+] }

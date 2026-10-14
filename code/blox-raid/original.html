@@ -1,0 +1,763 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>BLOX FRUITS: AWAKENED DOUGH RAID — Painted Anime Edition</title>
+  <style>
+    * { box-sizing: border-box; user-select: none; margin: 0; padding: 0; }
+    body {
+      background: #070913; color: #fff;
+      font-family: 'Segoe UI', Impact, system-ui, sans-serif;
+      overflow: hidden; width: 100vw; height: 100vh;
+      display: flex; align-items: center; justify-content: center;
+    }
+    #viewport {
+      position: relative; width: 100vw; height: 100vh;
+      overflow: hidden; background: #101828;
+      transition: width 0.35s ease, border 0.35s ease;
+    }
+    #viewport.shorts-mode {
+      width: calc(100vh * (9 / 16));
+      height: 100vh;
+      border-left: 3px solid #f59e0b;
+      border-right: 3px solid #f59e0b;
+      box-shadow: 0 0 90px rgba(245, 158, 11, 0.35);
+    }
+    canvas#webgl { display: block; width: 100%; height: 100%; }
+
+    /* Anime Impact Frame & Speedlines Overlay */
+    #impact-flash {
+      position: absolute; inset: 0; pointer-events: none; z-index: 12;
+      mix-blend-mode: difference; background: #fff; opacity: 0;
+      transition: opacity 0.05s;
+    }
+
+    /* Top Boss Health Bar */
+    #boss-hud {
+      position: absolute; top: 18px; left: 50%; transform: translateX(-50%);
+      width: min(560px, 88%); z-index: 10; text-align: center;
+    }
+    .boss-title {
+      font-size: 16px; font-weight: 900; letter-spacing: 2px;
+      color: #ff4757; text-shadow: 2px 2px 0 #000, -1px -1px 0 #000;
+      margin-bottom: 4px;
+    }
+    .boss-bar-bg {
+      width: 100%; height: 20px; background: #1e272e;
+      border: 3px solid #000; border-radius: 10px; overflow: hidden;
+      box-shadow: 0 4px 0 #000;
+    }
+    #boss-bar-fill {
+      width: 100%; height: 100%;
+      background: linear-gradient(90deg, #ff4757, #ffa502);
+      transition: width 0.12s ease-out;
+    }
+
+    /* Top-Right Viral Controls */
+    #top-actions {
+      position: absolute; top: 68px; right: 16px; z-index: 20;
+      display: flex; flex-direction: column; gap: 8px; align-items: flex-end;
+    }
+    .action-btn {
+      cursor: pointer; padding: 9px 14px; font-weight: 900; font-size: 12px;
+      letter-spacing: 1px; color: #fff; background: #1e293b;
+      border: 2px solid #000; border-radius: 6px;
+      box-shadow: 0 3px 0 #000; transition: transform 0.1s, background 0.15s;
+    }
+    .action-btn:hover { background: #f59e0b; color: #000; transform: translateY(-1px); }
+    .action-btn.active-viral { background: #ef4444; color: #fff; animation: pulse 1s infinite; }
+    @keyframes pulse { 50% { transform: scale(1.05); } }
+
+    /* Combo & Bounty Counter (Left) */
+    #combo-hud {
+      position: absolute; top: 32%; left: 20px; z-index: 10;
+      pointer-events: none;
+    }
+    #combo-num {
+      font-size: 54px; font-weight: 900; font-style: italic;
+      color: #feca57; text-shadow: 4px 4px 0 #000, -2px -2px 0 #000;
+      line-height: 0.9; display: none;
+    }
+    #bounty-tag {
+      margin-top: 8px; font-size: 14px; font-weight: 800;
+      background: rgba(0,0,0,0.75); border: 2px solid #feca57;
+      padding: 5px 10px; border-radius: 6px; color: #feca57;
+      display: inline-block; box-shadow: 0 3px 0 #000;
+    }
+
+    /* Viral Short Caption Banner */
+    #viral-caption {
+      position: absolute; top: 15%; left: 50%; transform: translateX(-50%);
+      z-index: 15; width: 92%; text-align: center; pointer-events: none; display: none;
+    }
+    #viral-caption span {
+      display: inline-block; background: #000; color: #facc15;
+      font-weight: 900; font-size: 21px; padding: 6px 14px;
+      border: 3px solid #fff; border-radius: 8px;
+      text-transform: uppercase; box-shadow: 0 6px 0 rgba(0,0,0,0.8);
+    }
+
+    /* Bottom Blox Fruits Skill Hotbar & Player Stats */
+    #bottom-hud {
+      position: absolute; bottom: 18px; left: 50%; transform: translateX(-50%);
+      z-index: 10; display: flex; flex-direction: column; align-items: center; gap: 10px;
+      width: min(540px, 94%);
+    }
+    .stat-bars { width: 100%; display: flex; flex-direction: column; gap: 5px; }
+    .bar-row {
+      width: 100%; height: 18px; background: #0f172a;
+      border: 2.5px solid #000; border-radius: 6px; position: relative; overflow: hidden;
+    }
+    .bar-fill { height: 100%; transition: width 0.15s; }
+    #hp-fill { background: linear-gradient(90deg, #22c55e, #4ade80); width: 100%; }
+    #en-fill { background: linear-gradient(90deg, #0ea5e9, #38bdf8); width: 100%; }
+    .bar-txt {
+      position: absolute; inset: 0; font-size: 11px; font-weight: 900;
+      display: flex; align-items: center; justify-content: center;
+      text-shadow: 1px 1px 0 #000;
+    }
+
+    .hotbar { display: flex; gap: 8px; }
+    .skill-slot {
+      width: 72px; height: 72px; background: linear-gradient(180deg, #334155, #0f172a);
+      border: 3px solid #000; border-radius: 10px; position: relative;
+      display: flex; flex-direction: column; align-items: center; justify-content: center;
+      box-shadow: 0 5px 0 #000; cursor: pointer; overflow: hidden;
+    }
+    .skill-slot.ready:hover { border-color: #facc15; transform: translateY(-2px); }
+    .skill-key {
+      position: absolute; top: 4px; left: 6px; font-size: 12px;
+      font-weight: 900; color: #facc15; text-shadow: 1px 1px 0 #000;
+    }
+    .skill-name {
+      font-size: 10px; font-weight: 800; text-align: center;
+      padding: 0 4px; margin-top: 14px; color: #fff; text-shadow: 1px 1px 0 #000;
+    }
+    .cd-overlay {
+      position: absolute; bottom: 0; left: 0; width: 100%; height: 0%;
+      background: rgba(0, 0, 0, 0.75); transition: height 0.1s linear;
+    }
+
+    /* Floating Damage Numbers Layer */
+    #dmg-layer { position: absolute; inset: 0; pointer-events: none; z-index: 11; overflow: hidden; }
+    .dmg-pop {
+      position: absolute; font-weight: 900; font-style: italic;
+      font-size: 26px; color: #ffeb3b;
+      text-shadow: 2px 2px 0 #000, -2px -2px 0 #d63031;
+      transform: translate(-50%, -50%);
+      animation: floatUp 0.75s ease-out forwards;
+    }
+    @keyframes floatUp {
+      0% { opacity: 1; transform: translate(-50%, -50%) scale(0.6); }
+      30% { transform: translate(-50%, -90%) scale(1.25); }
+      100% { opacity: 0; transform: translate(-50%, -150%) scale(0.9); }
+    }
+  </style>
+</head>
+<body>
+  <div id="viewport">
+    <canvas id="webgl"></canvas>
+    <div id="impact-flash"></div>
+    <div id="dmg-layer"></div>
+
+    <!-- Boss Raid Bar -->
+    <div id="boss-hud">
+      <div class="boss-title">☠️ RIP_INDRA [LV. 2550 RAID BOSS] ☠️</div>
+      <div class="boss-bar-bg"><div id="boss-bar-fill"></div></div>
+    </div>
+
+    <!-- Viral Short Caption -->
+    <div id="viral-caption"><span id="viral-txt">POV: 30M BOUNTY DOUGH V2 COMBO 🔥🍩</span></div>
+
+    <!-- Combo & Bounty -->
+    <div id="combo-hud">
+      <div id="combo-num">12 HIT!</div>
+      <div id="bounty-tag">🏴‍☠️ BOUNTY: <span id="bounty-val">30,000,000</span></div>
+    </div>
+
+    <!-- Top-Right Action Controls -->
+    <div id="top-actions">
+      <button id="btn-viral" class="action-btn">🎬 VIRAL SHORT AUTO-COMBO (9:16)</button>
+      <button id="btn-play" class="action-btn">🎮 MANUAL PLAY (16:9)</button>
+    </div>
+
+    <!-- Bottom Blox Fruits Skill Hotbar -->
+    <div id="bottom-hud">
+      <div class="stat-bars">
+        <div class="bar-row">
+          <div id="hp-fill" class="bar-fill"></div>
+          <div class="bar-txt">HEALTH <span id="hp-txt" style="margin-left:6px">12,845 / 12,845</span></div>
+        </div>
+        <div class="bar-row">
+          <div id="en-fill" class="bar-fill"></div>
+          <div class="bar-txt">ENERGY <span id="en-txt" style="margin-left:6px">12,845 / 12,845</span></div>
+        </div>
+      </div>
+
+      <div class="hotbar">
+        <div class="skill-slot ready" onclick="triggerSkill('KeyZ')">
+          <span class="skill-key">[Z]</span>
+          <span class="skill-name">MISSILE JAB</span>
+          <div id="cd-Z" class="cd-overlay"></div>
+        </div>
+        <div class="skill-slot ready" onclick="triggerSkill('KeyX')">
+          <span class="skill-key">[X]</span>
+          <span class="skill-name">PASTRY RIVER</span>
+          <div id="cd-X" class="cd-overlay"></div>
+        </div>
+        <div class="skill-slot ready" onclick="triggerSkill('KeyC')">
+          <span class="skill-key">[C]</span>
+          <span class="skill-name">PIERCING CLOTHESLINE</span>
+          <div id="cd-C" class="cd-overlay"></div>
+        </div>
+        <div class="skill-slot ready" onclick="triggerSkill('KeyV')">
+          <span class="skill-key">[V]</span>
+          <span class="skill-name">DOUGH FIST FUSILLADE</span>
+          <div id="cd-V" class="cd-overlay"></div>
+        </div>
+        <div class="skill-slot ready" onclick="triggerSkill('Space')">
+          <span class="skill-key">[SPC]</span>
+          <span class="skill-name">SORU DASH</span>
+          <div id="cd-Space" class="cd-overlay"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+  <script>
+    // ============================================================================
+    // 1. PAINTED ANIME CEL-SHADER & INVERTED-HULL INK OUTLINE GENERATOR
+    // ============================================================================
+    function createToonRamp() {
+      const c = document.createElement('canvas');
+      c.width = 4; c.height = 1;
+      const ctx = c.getContext('2d');
+      const grad = ctx.createLinearGradient(0, 0, 4, 0);
+      grad.addColorStop(0.0, '#2a2e45');
+      grad.addColorStop(0.45, '#6c7599');
+      grad.addColorStop(0.75, '#c8d0e8');
+      grad.addColorStop(1.0, '#ffffff');
+      ctx.fillStyle = grad;
+      ctx.fillRect(0, 0, 4, 1);
+      const tex = new THREE.CanvasTexture(c);
+      tex.minFilter = THREE.NearestFilter;
+      tex.magFilter = THREE.NearestFilter;
+      return tex;
+    }
+    const toonRamp = createToonRamp();
+
+    function createPaintedMesh(geo, hexColor, outlineThickness = 0.055, emissiveHex = 0x000000) {
+      const group = new THREE.Group();
+      const mat = new THREE.MeshToonMaterial({
+        color: hexColor,
+        gradientMap: toonRamp,
+        emissive: emissiveHex,
+        emissiveIntensity: emissiveHex ? 0.55 : 0
+      });
+      const mainMesh = new THREE.Mesh(geo, mat);
+      mainMesh.castShadow = true;
+      mainMesh.receiveShadow = true;
+      group.add(mainMesh);
+
+      if (outlineThickness > 0) {
+        const outMat = new THREE.MeshBasicMaterial({ color: 0x090a10, side: THREE.BackSide });
+        const outMesh = new THREE.Mesh(geo, outMat);
+        outMesh.scale.setScalar(1 + outlineThickness);
+        group.add(outMesh);
+      }
+      return group;
+    }
+
+    // ============================================================================
+    // 2. WEBAUDIO ANIME SFX SYNTH (HAKI LIGHTNING, HEAVY PUNCH, BARRAGE)
+    // ============================================================================
+    class AnimeAudio {
+      constructor() { this.ctx = null; }
+      init() {
+        if (!this.ctx) this.ctx = new (window.AudioContext || window.webkitAudioContext)();
+      }
+      playBoom(pitch = 95, dur = 0.28) {
+        if (!this.ctx) return;
+        const now = this.ctx.currentTime;
+        const osc = this.ctx.createOscillator();
+        const g = this.ctx.createGain();
+        osc.type = 'sawtooth';
+        osc.frequency.setValueAtTime(pitch, now);
+        osc.frequency.exponentialRampToValueAtTime(22, now + dur);
+        g.gain.setValueAtTime(0.32, now);
+        g.gain.exponentialRampToValueAtTime(0.001, now + dur);
+        osc.connect(g);
+        g.connect(this.ctx.destination);
+        osc.start(now);
+        osc.stop(now + dur);
+      }
+      playHakiZap() {
+        if (!this.ctx) return;
+        const now = this.ctx.currentTime;
+        const osc = this.ctx.createOscillator();
+        const g = this.ctx.createGain();
+        osc.type = 'square';
+        osc.frequency.setValueAtTime(520, now);
+        osc.frequency.exponentialRampToValueAtTime(90, now + 0.14);
+        g.gain.setValueAtTime(0.15, now);
+        g.gain.exponentialRampToValueAtTime(0.001, now + 0.15);
+        osc.connect(g);
+        g.connect(this.ctx.destination);
+        osc.start(now);
+        osc.stop(now + 0.16);
+      }
+    }
+    const sfx = new AnimeAudio();
+
+    // ============================================================================
+    // 3. THREE.JS SCENE, PAINTED SKY DOME, & FLOATING ISLAND ARENA
+    // ============================================================================
+    const viewport = document.getElementById('viewport');
+    const canvas = document.getElementById('webgl');
+    const renderer = new THREE.WebGLRenderer({ canvas, antialias: true });
+    renderer.setSize(viewport.clientWidth, viewport.clientHeight);
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+    renderer.shadowMap.enabled = true;
+
+    const scene = new THREE.Scene();
+    scene.background = new THREE.Color(0x162038);
+    scene.fog = new THREE.FogExp2(0x162038, 0.012);
+
+    const camera = new THREE.PerspectiveCamera(58, viewport.clientWidth / viewport.clientHeight, 0.1, 250);
+
+    scene.add(new THREE.AmbientLight(0xffd6a5, 0.65));
+    const sun = new THREE.DirectionalLight(0xfff3b0, 1.15);
+    sun.position.set(25, 45, 25);
+    sun.castShadow = true;
+    scene.add(sun);
+
+    //Stylized Anime Ocean Plane
+    const sea = new THREE.Mesh(
+      new THREE.PlaneGeometry(300, 300),
+      new THREE.MeshToonMaterial({ color: 0x0ea5e9, gradientMap: toonRamp })
+    );
+    sea.rotation.x = -Math.PI / 2;
+    sea.position.y = -2.2;
+    scene.add(sea);
+
+    // Floating Castle on the Sea Arena
+    const arenaBase = createPaintedMesh(new THREE.CylinderGeometry(22, 17, 4, 24), 0x475569, 0.025);
+    arenaBase.position.y = -2.0;
+    scene.add(arenaBase);
+
+    const arenaTop = createPaintedMesh(new THREE.CylinderGeometry(21.5, 21.5, 0.5, 24), 0x94a3b8, 0.02);
+    arenaTop.position.y = 0.0;
+    scene.add(arenaTop);
+
+    // Painted Anime Stone Pillars & Sakura Trees
+    for (let i = 0; i < 8; i++) {
+      const a = (i / 8) * Math.PI * 2;
+      const px = Math.cos(a) * 18.5;
+      const pz = Math.sin(a) * 18.5;
+      const pillar = createPaintedMesh(new THREE.CylinderGeometry(0.9, 1.1, 6, 8), 0x64748b, 0.045);
+      pillar.position.set(px, 3, pz);
+      scene.add(pillar);
+
+      if (i % 2 === 0) {
+        const crown = createPaintedMesh(new THREE.DodecahedronGeometry(2.6, 1), 0xf472b6, 0.04, 0x831843);
+        crown.position.set(px, 7.2, pz);
+        scene.add(crown);
+      }
+    }
+
+    // ============================================================================
+    // 4. AWAKENED DOUGH PLAYER & RIP_INDRA RAID BOSS RIGS
+    // ============================================================================
+    function buildFighter(coatColor, auraColor) {
+      const root = new THREE.Group();
+      const torso = createPaintedMesh(new THREE.BoxGeometry(1.1, 1.4, 0.65), coatColor, 0.06);
+      torso.position.y = 1.6;
+      const head = createPaintedMesh(new THREE.BoxGeometry(0.85, 0.85, 0.85), 0xfde047, 0.06);
+      head.position.y = 2.8;
+      // Glowing Haki Arm L & R
+      const armL = createPaintedMesh(new THREE.BoxGeometry(0.42, 1.25, 0.42), 0x111827, 0.07, auraColor);
+      armL.position.set(-0.82, 1.6, 0);
+      const armR = createPaintedMesh(new THREE.BoxGeometry(0.42, 1.25, 0.42), 0x111827, 0.07, auraColor);
+      armR.position.set(0.82, 1.6, 0);
+      // Floating Awakened Dough Ring behind back
+      const doughRing = createPaintedMesh(new THREE.TorusGeometry(1.15, 0.22, 10, 24), 0xfef3c7, 0.05, 0xf59e0b);
+      doughRing.position.set(0, 2.0, -0.55);
+      root.add(torso, head, armL, armR, doughRing);
+      scene.add(root);
+      return { root, armL, armR, doughRing };
+    }
+
+    const player = {
+      ...buildFighter(0xdc2626, 0xf59e0b),
+      pos: new THREE.Vector3(0, 0.25, 9),
+      yaw: 0,
+      rolling: false,
+      cds: { KeyZ: 0, KeyX: 0, KeyC: 0, KeyV: 0, Space: 0 }
+    };
+
+    const boss = {
+      ...buildFighter(0xf8fafc, 0xec4899),
+      pos: new THREE.Vector3(0, 0.25, -5),
+      hp: 50000,
+      maxHp: 50000,
+      stun: 0,
+      airY: 0
+    };
+    boss.root.scale.setScalar(1.35);
+
+    // ============================================================================
+    // 5. ANIME VFX ENGINE (SHOCKWAVES, DOUGH SPIKES, FIST BARRAGE, LIGHTNING)
+    // ============================================================================
+    const vfxList = [];
+    let shakePower = 0;
+    let comboCount = 0;
+    let comboResetTimer = 0;
+    let bounty = 30000000;
+
+    function triggerImpactFrame() {
+      const el = document.getElementById('impact-flash');
+      el.style.opacity = '0.9';
+      setTimeout(() => { el.style.opacity = '0'; }, 55);
+    }
+
+    function spawnDamagePop(worldPos, dmg) {
+      const v = worldPos.clone();
+      v.y += 2.6 + Math.random() * 1.5;
+      v.x += (Math.random() - 0.5) * 2.2;
+      v.project(camera);
+      const x = (v.x * 0.5 + 0.5) * viewport.clientWidth;
+      const y = (-(v.y * 0.5) + 0.5) * viewport.clientHeight;
+
+      const div = document.createElement('div');
+      div.className = 'dmg-pop';
+      div.style.left = x + 'px';
+      div.style.top = y + 'px';
+      div.textContent = dmg.toLocaleString();
+      document.getElementById('dmg-layer').appendChild(div);
+      setTimeout(() => div.remove(), 750);
+    }
+
+    function hitBoss(dmg, launchY = 0) {
+      sfx.playBoom(110 + Math.random() * 50, 0.22);
+      sfx.playHakiZap();
+      boss.hp = Math.max(0, boss.hp - dmg);
+      if (boss.hp === 0) boss.hp = boss.maxHp;
+      boss.stun = 1.2;
+      if (launchY > 0) boss.airY = launchY;
+      document.getElementById('boss-bar-fill').style.width = ((boss.hp / boss.maxHp) * 100) + '%';
+
+      comboCount++;
+      comboResetTimer = 3.0;
+      const cEl = document.getElementById('combo-num');
+      cEl.style.display = 'block';
+      cEl.textContent = comboCount + ' HIT!';
+
+      bounty += Math.floor(dmg * 3.5);
+      document.getElementById('bounty-val').textContent = bounty.toLocaleString();
+
+      spawnDamagePop(boss.pos, dmg);
+      shakePower = Math.min(0.65, shakePower + 0.22);
+
+      // Spawn Expanding Cel-Shaded Shockwave Ring + Haki Sparks
+      const ring = createPaintedMesh(new THREE.TorusGeometry(1.2, 0.18, 8, 24), 0xfef08a, 0.04, 0xf59e0b);
+      ring.position.copy(boss.pos).add(new THREE.Vector3(0, 1.5 + boss.airY, 0));
+      ring.rotation.x = Math.PI / 2;
+      scene.add(ring);
+      vfxList.push({ mesh: ring, type: 'ring', life: 0.45 });
+
+      // Red/Black Conqueror Haki Lightning Bolts
+      const pts = [];
+      for (let i = 0; i < 6; i++) {
+        pts.push(new THREE.Vector3(
+          boss.pos.x + (Math.random() - 0.5) * 5,
+          boss.pos.y + 1 + boss.airY + i * 1.1,
+          boss.pos.z + (Math.random() - 0.5) * 5
+        ));
+      }
+      const lineGeo = new THREE.BufferGeometry().setFromPoints(pts);
+      const bolt = new THREE.Line(lineGeo, new THREE.LineBasicMaterial({ color: 0xff0044, linewidth: 3 }));
+      scene.add(bolt);
+      vfxList.push({ mesh: bolt, type: 'bolt', life: 0.18 });
+    }
+
+    // ============================================================================
+    // 6. BLOX FRUITS AWAKENED DOUGH V2 SKILL MOVESET (Z, X, C, V, SPACE)
+    // ============================================================================
+    function triggerSkill(code) {
+      sfx.init();
+      if (player.cds[code] > 0) return;
+
+      const toBoss = new THREE.Vector3().subVectors(boss.pos, player.pos);
+      toBoss.y = 0;
+      if (toBoss.lengthSq() > 0.01) {
+        player.yaw = Math.atan2(toBoss.x, toBoss.z);
+      }
+
+      if (code === 'KeyZ') {
+        // [Z] MISSILE JAB: Giant Blazing Dough Fist Projectile
+        player.cds.KeyZ = 1.8;
+        triggerImpactFrame();
+        const fist = createPaintedMesh(new THREE.DodecahedronGeometry(1.4, 1), 0xfef3c7, 0.06, 0xf59e0b);
+        fist.position.copy(player.pos).add(new THREE.Vector3(0, 2.0, 0));
+        const dir = toBoss.clone().normalize();
+        scene.add(fist);
+        vfxList.push({ mesh: fist, type: 'proj', vel: dir.multiplyScalar(32), life: 0.9 });
+      } else if (code === 'KeyX') {
+        // [X] PASTRY RIVER: Erupting Ground Dough Spikes + Air Launcher
+        player.cds.KeyX = 2.4;
+        triggerImpactFrame();
+        for (let i = 0; i < 6; i++) {
+          setTimeout(() => {
+            const spike = createPaintedMesh(new THREE.ConeGeometry(0.95, 4.8, 7), 0xfef3c7, 0.06, 0xd97706);
+            spike.position.set(
+              boss.pos.x + (Math.random() - 0.5) * 4.5,
+              1.8,
+              boss.pos.z + (Math.random() - 0.5) * 4.5
+            );
+            spike.rotation.z = (Math.random() - 0.5) * 0.4;
+            scene.add(spike);
+            vfxList.push({ mesh: spike, type: 'spike', life: 0.55 });
+            hitBoss(2480, 4.2);
+          }, i * 75);
+        }
+      } else if (code === 'KeyC') {
+        // [C] PIERCING CLOTHESLINE: Spin into Giant Spiked Dough Donut Wheel & Slam
+        player.cds.KeyC = 3.0;
+        player.rolling = true;
+        const startPos = player.pos.clone();
+        const targetPos = boss.pos.clone();
+        let step = 0;
+        const rollInt = setInterval(() => {
+          step++;
+          player.pos.lerpVectors(startPos, targetPos, step / 10);
+          player.doughRing.scale.setScalar(2.2);
+          if (step >= 10) {
+            clearInterval(rollInt);
+            player.rolling = false;
+            player.doughRing.scale.setScalar(1.0);
+            triggerImpactFrame();
+            hitBoss(6420, 0);
+          }
+        }, 28);
+      } else if (code === 'KeyV') {
+        // [V] DOUGH FIST FUSILLADE: 16-Portal Dimensional Mochi Barrage!
+        player.cds.KeyV = 4.2;
+        triggerImpactFrame();
+        for (let i = 0; i < 14; i++) {
+          setTimeout(() => {
+            const angle = Math.random() * Math.PI * 2;
+            const portalPos = new THREE.Vector3(
+              boss.pos.x + Math.cos(angle) * 6.5,
+              3.5 + Math.random() * 4.5,
+              boss.pos.z + Math.sin(angle) * 6.5
+            );
+            const portal = createPaintedMesh(new THREE.RingGeometry(0.2, 1.3, 16), 0xf59e0b, 0.04, 0xfef08a);
+            portal.position.copy(portalPos);
+            portal.lookAt(boss.pos.x, boss.pos.y + 2, boss.pos.z);
+            scene.add(portal);
+            vfxList.push({ mesh: portal, type: 'spike', life: 0.35 });
+
+            const punch = createPaintedMesh(new THREE.BoxGeometry(0.9, 0.9, 2.4), 0x111827, 0.07, 0xef4444);
+            punch.position.copy(portalPos);
+            punch.lookAt(boss.pos.x, boss.pos.y + 1.5, boss.pos.z);
+            scene.add(punch);
+            vfxList.push({ mesh: punch, type: 'spike', life: 0.22 });
+
+            hitBoss(1890, 2.8);
+          }, i * 65);
+        }
+      } else if (code === 'Space') {
+        // [SPACE] SORU FLASH STEP
+        player.cds.Space = 1.0;
+        sfx.playHakiZap();
+        const afterImg = createPaintedMesh(new THREE.BoxGeometry(1.1, 2.2, 0.65), 0x38bdf8, 0.0, 0x0ea5e9);
+        afterImg.position.copy(player.pos).add(new THREE.Vector3(0, 1.4, 0));
+        scene.add(afterImg);
+        vfxList.push({ mesh: afterImg, type: 'spike', life: 0.28 });
+
+        const offset = new THREE.Vector3(Math.sin(player.yaw) * 5.5, 0, Math.cos(player.yaw) * 5.5);
+        player.pos.add(offset);
+        player.pos.clampLength(0, 16.5);
+      }
+    }
+
+    // ============================================================================
+    // 7. VIRAL YOUTUBE SHORT AUTO-COMBO DIRECTOR (9:16 TAS LOOP)
+    // ============================================================================
+    let viralMode = true;
+    let viralTimer = 0;
+    let viralStage = 0;
+    const captionEl = document.getElementById('viral-caption');
+    const captionTxt = document.getElementById('viral-txt');
+
+    function setViralMode(enabled) {
+      viralMode = enabled;
+      viralTimer = 0;
+      viralStage = 0;
+      if (enabled) {
+        viewport.classList.add('shorts-mode');
+        captionEl.style.display = 'block';
+        document.getElementById('btn-viral').classList.add('active-viral');
+      } else {
+        viewport.classList.remove('shorts-mode');
+        captionEl.style.display = 'none';
+        document.getElementById('btn-viral').classList.remove('active-viral');
+      }
+      onResize();
+    }
+
+    function updateViralAutoDirector(dt) {
+      viralTimer += dt;
+      // Orbit player smoothly around boss
+      const orbitAngle = viralTimer * 0.9;
+      if (!player.rolling) {
+        player.pos.x = Math.sin(orbitAngle) * 8.5;
+        player.pos.z = Math.cos(orbitAngle) * 8.5;
+      }
+
+      if (viralTimer > 0.6 && viralStage === 0) {
+        viralStage = 1;
+        captionTxt.textContent = 'POV: 30M BOUNTY DOUGH V2 ONE-SHOT COMBO 🍩⚡';
+        triggerSkill('KeyX'); // Pastry River Air Launcher
+      } else if (viralTimer > 2.2 && viralStage === 1) {
+        viralStage = 2;
+        captionTxt.textContent = 'PIERCING CLOTHESLINE SLAM!! 🌀💥';
+        triggerSkill('KeyC'); // Rolling Donut Slam
+      } else if (viralTimer > 3.8 && viralStage === 2) {
+        viralStage = 3;
+        captionTxt.textContent = 'AWAKENED DOUGH FIST FUSILLADE (V) 🔥👊';
+        triggerSkill('KeyV'); // 14-Portal Barrage
+      } else if (viralTimer > 5.8 && viralStage === 3) {
+        viralStage = 4;
+        captionTxt.textContent = 'FINISHER: HAKI MISSILE JAB!! ☠️🏆';
+        triggerSkill('KeyZ'); // Finisher
+      } else if (viralTimer > 7.6) {
+        viralTimer = 0;
+        viralStage = 0;
+      }
+    }
+
+    // ============================================================================
+    // 8. INPUT, CAMERA SHAKE, & MAIN RENDER LOOP
+    // ============================================================================
+    const keys = {};
+    window.addEventListener('keydown', e => {
+      keys[e.code] = true;
+      if (['KeyZ', 'KeyX', 'KeyC', 'KeyV', 'Space'].includes(e.code)) {
+        if (viralMode) setViralMode(false);
+        triggerSkill(e.code);
+      }
+    });
+    window.addEventListener('keyup', e => keys[e.code] = false);
+
+    document.getElementById('btn-viral').onclick = () => setViralMode(true);
+    document.getElementById('btn-play').onclick = () => setViralMode(false);
+
+    function onResize() {
+      camera.aspect = viewport.clientWidth / viewport.clientHeight;
+      camera.updateProjectionMatrix();
+      renderer.setSize(viewport.clientWidth, viewport.clientHeight);
+    }
+    window.addEventListener('resize', onResize);
+
+    // Start in 9:16 Viral Short Mode immediately so user sees the action right away
+    setViralMode(true);
+
+    let lastTime = performance.now();
+    function animate(now) {
+      requestAnimationFrame(animate);
+      const dt = Math.min((now - lastTime) / 1000, 0.05);
+      lastTime = now;
+      const elapsed = now / 1000;
+
+      // Cooldowns
+      ['KeyZ', 'KeyX', 'KeyC', 'KeyV', 'Space'].forEach(k => {
+        player.cds[k] = Math.max(0, player.cds[k] - dt);
+        const slotId = k === 'Space' ? 'cd-Space' : 'cd-' + k.replace('Key', '');
+        const el = document.getElementById(slotId);
+        if (el) el.style.height = Math.min(100, (player.cds[k] / 3.0) * 100) + '%';
+      });
+
+      if (comboResetTimer > 0) {
+        comboResetTimer -= dt;
+        if (comboResetTimer <= 0) {
+          comboCount = 0;
+          document.getElementById('combo-num').style.display = 'none';
+        }
+      }
+
+      if (viralMode) {
+        updateViralAutoDirector(dt);
+      } else {
+        // Manual WASD Movement
+        const spd = 11.5;
+        if (keys['KeyW'] || keys['ArrowUp']) player.pos.z -= spd * dt;
+        if (keys['KeyS'] || keys['ArrowDown']) player.pos.z += spd * dt;
+        if (keys['KeyA'] || keys['ArrowLeft']) player.pos.x -= spd * dt;
+        if (keys['KeyD'] || keys['ArrowRight']) player.pos.x += spd * dt;
+        player.pos.clampLength(0, 17.5);
+      }
+
+      // Sync Player Rig
+      player.root.position.copy(player.pos);
+      player.root.lookAt(boss.pos.x, player.pos.y, boss.pos.z);
+      player.doughRing.rotation.z = elapsed * (player.rolling ? 18 : 2.5);
+
+      // Sync Boss Rig & Air Juggle Gravity
+      boss.airY = Math.max(0, boss.airY - 11 * dt);
+      if (boss.stun > 0) {
+        boss.stun -= dt;
+        boss.root.rotation.z = Math.sin(elapsed * 32) * 0.18;
+      } else {
+        boss.root.rotation.z = 0;
+        const dir = new THREE.Vector3().subVectors(player.pos, boss.pos);
+        dir.y = 0;
+        if (dir.length() > 3.2) {
+          dir.normalize();
+          boss.pos.addScaledVector(dir, 4.5 * dt);
+        }
+      }
+      boss.root.position.set(boss.pos.x, boss.pos.y + boss.airY, boss.pos.z);
+      boss.root.lookAt(player.pos.x, boss.pos.y + boss.airY, player.pos.z);
+      boss.doughRing.rotation.z = -elapsed * 2.2;
+
+      // Update VFX Entities
+      for (let i = vfxList.length - 1; i >= 0; i--) {
+        const v = vfxList[i];
+        v.life -= dt;
+        if (v.type === 'ring') {
+          v.mesh.scale.addScalar(14 * dt);
+        } else if (v.type === 'proj') {
+          v.mesh.position.addScaledVector(v.vel, dt);
+          if (v.mesh.position.distanceTo(boss.pos) < 3.2) {
+            hitBoss(4950, 2.5);
+            v.life = 0;
+          }
+        }
+        if (v.life <= 0) {
+          scene.remove(v.mesh);
+          vfxList.splice(i, 1);
+        }
+      }
+
+      // Dynamic Third-Person Anime Action Camera + Screen Shake
+      shakePower = Math.max(0, shakePower - 1.8 * dt);
+      const sx = (Math.random() - 0.5) * shakePower;
+      const sy = (Math.random() - 0.5) * shakePower;
+
+      const midPoint = new THREE.Vector3().addVectors(player.pos, boss.pos).multiplyScalar(0.5);
+      const camTargetPos = new THREE.Vector3(
+        player.pos.x * 1.35 + sx,
+        9.5 + sy,
+        player.pos.z * 1.35 + 11.5
+      );
+      camera.position.lerp(camTargetPos, 0.12);
+      camera.lookAt(midPoint.x, 2.2 + boss.airY * 0.4, midPoint.z);
+
+      renderer.render(scene, camera);
+    }
+    requestAnimationFrame(animate);
+  </script>
+</body>
+</html>

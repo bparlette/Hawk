@@ -1,0 +1,101 @@
+{
+ "segments": [
+  {
+   "shot": "s1_ssg",
+   "in": 0,
+   "out": 84,
+   "start": 0.0,
+   "dur": 2.8,
+   "file": "/tmp/fdedit/seg0.mp4"
+  },
+  {
+   "shot": "s2_cg",
+   "in": 0,
+   "out": 66,
+   "start": 2.8,
+   "dur": 2.2,
+   "file": "/tmp/fdedit/seg1.mp4"
+  },
+  {
+   "shot": "s3_rl",
+   "in": 0,
+   "out": 118,
+   "start": 5.0,
+   "dur": 3.933333333333333,
+   "file": "/tmp/fdedit/seg2.mp4"
+  },
+  {
+   "shot": "s6_arena_rl",
+   "in": 0,
+   "out": 80,
+   "start": 8.9333,
+   "dur": 2.6666666666666665,
+   "file": "/tmp/fdedit/seg3.mp4"
+  },
+  {
+   "shot": "s4_arena",
+   "in": 10,
+   "out": 242,
+   "start": 11.6,
+   "dur": 7.733333333333333,
+   "file": "/tmp/fdedit/seg4.mp4"
+  },
+  {
+   "shot": "s5_bfg",
+   "in": 66,
+   "out": 148,
+   "start": 19.3333,
+   "dur": 2.7333333333333334,
+   "file": "/tmp/fdedit/seg5.mp4"
+  },
+  {
+   "shot": "endcard",
+   "start": 22.0667,
+   "dur": 4.5,
+   "file": "/tmp/fdedit/seg_end.mp4"
+  }
+ ],
+ "captions": [
+  [
+   0.0,
+   2.8,
+   "THIS SHOOTER IS|100% FREE."
+  ],
+  [
+   2.8,
+   5.0,
+   "EVERY PIXEL|OPEN SOURCE."
+  ],
+  [
+   5.0,
+   6.9,
+   "WE MODDED IN|3X THE MONSTERS"
+  ],
+  [
+   6.9,
+   8.9333,
+   "+ SLOW-MO|KILL CAM"
+  ],
+  [
+   8.9333,
+   11.6,
+   "COMBO COUNTER|BUILT IN"
+  ],
+  [
+   12.2,
+   13.899999999999999,
+   "10% HEALTH.|NO PROBLEM."
+  ],
+  [
+   13.899999999999999,
+   17.8,
+   "ONE SHOT.|WHOLE ROOM."
+  ],
+  [
+   19.3333,
+   22.0667,
+   "PLAYS IN YOUR|BROWSER"
+  ]
+ ],
+ "total": 26.566666666666666
+}

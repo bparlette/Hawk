@@ -1,0 +1,20 @@
+# hell-cave arena: rocket barrage into imps + barrels
+1 0 give
+1 0 pos 4100 2050 270
+1 0 weapon 4 1
+1 0 god 1
+1 0 spawn 11 4100 1840 90 10 58
+1 0 spawn 1 4100 1720 90 10 52
+1 0 spawn 30 4100 1790 90 4 90
+2 0 alert
+20 0 cap 1
+22 24 in 0 0 0 1
+24 42 in 0 0 0 0
+42 44 in 0 0 -150 1
+44 62 in 0 0 0 0
+62 64 in 0 0 150 1
+64 82 in 0 0 150 0
+82 84 in 0 0 0 1
+84 130 in 0 0 -60 0
+130 0 info
+130 0 quit
