@@ -1,0 +1,18 @@
+{
+  "name": "toad-city-baltimore",
+  "productName": "Toad City Baltimore",
+  "version": "1.0.0",
+  "description": "Toad City Baltimore desktop wrapper for ES-DE (macOS)",
+  "main": "main.js",
+  "author": "Brad Parlette",
+  "license": "UNLICENSED",
+  "private": true,
+  "scripts": {
+    "start": "electron .",
+    "package:mac": "node package.mjs darwin universal"
+  },
+  "devDependencies": {
+    "@electron/packager": "20.3.0",
+    "electron": "44.7.1"
+  }
+}

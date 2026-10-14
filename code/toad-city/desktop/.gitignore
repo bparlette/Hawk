@@ -1,0 +1,6 @@
+node_modules/
+dist/
+site/
+icons/icon.icns
+icons/*.iconset/
+test/out/

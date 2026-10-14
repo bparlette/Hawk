@@ -1,0 +1,42 @@
+name: toadcity-shorts
+on:
+  push:
+    branches: [toadcity/shorts]
+jobs:
+  plan:
+    runs-on: ubuntu-latest
+    outputs:
+      m: ${{ steps.p.outputs.m }}
+    steps:
+      - uses: actions/checkout@v4
+      - id: p
+        run: echo "m=$(python3 -c 'import json;print(json.dumps(json.load(open("cap/jobs.json"))))')" >> $GITHUB_OUTPUT
+  cap:
+    needs: plan
+    runs-on: ubuntu-latest
+    timeout-minutes: 340
+    strategy:
+      fail-fast: false
+      matrix:
+        include: ${{ fromJson(needs.plan.outputs.m) }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: 20 }
+      - name: deps
+        run: |
+          sudo apt-get update -qq && sudo apt-get install -y -qq ffmpeg > /dev/null
+          cd cap && npm init -y > /dev/null && npm install --no-audit --no-fund --silent playwright@1.48.2 && npx playwright install --with-deps chromium > /dev/null
+      - name: capture
+        run: |
+          (cd site && nohup python3 -m http.server 8831 --bind 127.0.0.1 > /tmp/http.log 2>&1 &)
+          sleep 2; mkdir -p out
+          if [ "${{ matrix.kind }}" = "music" ]; then node cap/music.js out 2>&1 | tee out/music.log;
+          else node cap/capture.js 8831 ${{ matrix.name }} '${{ matrix.q }}' out ${{ matrix.max }} ${{ matrix.after }} 0 0 2>&1 | tee out/${{ matrix.name }}.log; fi
+          ls -la out
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: cap-${{ matrix.name }}
+          path: out/
+          retention-days: 5
