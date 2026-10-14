@@ -7526,6 +7526,7 @@ function cityHud(rdt) {
   if (APANEL) { const c = actContext(); APANEL.setAct(c, c && c.kind === 'power' ? 1 - POWER.cd / POWER.CD : 1); }
   if (CITY.lmkT > 0) { CITY.lmkT -= rdt; if (CITY.lmkT <= 0) { $('lmk').classList.remove('on'); BARK.lmBlurb(null); } }
   if (MAP) { CITY.mapT -= rdt; if (CITY.mapT <= 0) { CITY.mapT = 0.1; const { g, bg, X, Z } = MAP; g.drawImage(bg, 0, 0);
+    for (const L of LANDMARKS) if (BOSS_CLEAR.cleared.has(L.id)) { g.fillStyle = '#7dff6b'; g.strokeStyle = '#000'; g.lineWidth = 1.5; g.beginPath(); g.arc(X(L.x), Z(L.z), 3.6, 0, TAU); g.fill(); g.stroke(); } // beaten districts go green
     g.fillStyle = '#ff3d6e'; for (const e of enemies) if (e.alive && e.state !== 'dying' && Math.hypot(e.pos.x - hero.pos.x, e.pos.z - hero.pos.z) < 60) g.fillRect(X(e.pos.x) - 2, Z(e.pos.z) - 2, 4, 4);
     g.fillStyle = '#ff9ad0'; g.beginPath(); g.arc(X(partner.pos.x), Z(partner.pos.z), 3, 0, TAU); g.fill();
     const hx = X(hero.pos.x), hz = Z(hero.pos.z), a = hero.yaw; g.fillStyle = '#9dff6b'; g.strokeStyle = '#000'; g.lineWidth = 2; g.beginPath();
@@ -20855,4 +20856,42 @@ const GPRIX = (function () {
   }
   let n = 0; MODE.ticks.push(() => { n++; if (n === 1) setupTrigger(); if (n === 3 && Q.get('gpauto') && !DUELS.cur) { if (CINE.intro) CINE.intro.skip = true; const m = Q.get('gpauto'); DUELS.start('grandprix', m === 'win' || m === 'lose' ? { bot: m } : {}); } });
   window.__gprix = S; S.GPS = GPS;
+})();
+// ---------------- item l: CRIME METER HUD (city mode) ----------------
+// A small chip under the minimap: CITY CRIME nn% with a bar, plus the district you stand in (CITY.lmk) with its own crime level
+// (100 until its boss is beaten, 0 after: BOSS_CLEAR.crime). Cleared landmarks turn green on the minimap (07_main.js draws them).
+// Hidden in every special mode (duel, fort, derby, Vic, racer, finale, cinematics) and once the finale's CITY SAVED chip takes over.
+// Test hooks: window.__crime = { text(), city(), shown() }.
+(function () {
+  if (typeof BOSS_CLEAR === 'undefined') return;
+  const st = document.createElement('style');
+  st.textContent = `
+  #crimechip { position: fixed; z-index: 11; left: calc(env(safe-area-inset-left, 0px) + 6px); top: calc(env(safe-area-inset-top, 0px) + 132px); width: 150px; box-sizing: border-box; padding: 4px 5px 5px; display: none; background: #1a1220; border: 2px solid #000; box-shadow: 2px 2px 0 #000; font: 7px/1.5 'PX', monospace; color: #ffe08a; pointer-events: none; opacity: .92; }
+  #crimechip.on { display: block; }
+  #crimechip .cr1, #crimechip .cr2 { display: flex; justify-content: space-between; white-space: nowrap; overflow: hidden; }
+  #crimechip .cr2 { color: #ff9ad0; margin-top: 2px; }
+  #crimechip .cr2.clr { color: #7dff6b; }
+  #crimechip .bar { height: 5px; background: #000; margin-top: 3px; border: 1px solid #000; }
+  #crimechip .bar i { display: block; height: 100%; width: 100%; background: #ff3d6e; transition: width .6s; }
+  @media (max-width: 480px) { #crimechip { width: 120px; top: calc(env(safe-area-inset-top, 0px) + 114px); } }
+  body.cine #crimechip, body.duel #crimechip, body.fort #crimechip, body.derby #crimechip, body.vicfight #crimechip, body.rbmode #crimechip, body.finale #crimechip { display: none !important; }`;
+  document.head.appendChild(st);
+  const el = document.createElement('div'); el.id = 'crimechip'; el.className = 'ui';
+  el.innerHTML = '<div class="cr1"><span>CITY CRIME</span><b></b></div><div class="bar"><i></i></div><div class="cr2"><span></span><b></b></div>';
+  document.body.appendChild(el);
+  const q = (s) => el.querySelector(s), cityB = q('.cr1 b'), bar = q('.bar i'), dist = q('.cr2'), dN = q('.cr2 span'), dV = q('.cr2 b');
+  const HIDE = /\b(cine|duel|fort|derby|vicfight|rbmode|finale)\b/;
+  let key = '';
+  function refresh() {
+    const bc = BOSS_CLEAR, city = bc.cityCrime(), L = (typeof CITY !== 'undefined') ? CITY.lmk : null;
+    const saved = document.getElementById('fcrime'); const hide = HIDE.test(document.body.className) || (saved && saved.classList.contains('on')) || (typeof MODE !== 'undefined' && MODE.duel) || (typeof FMAP !== 'undefined' && FMAP.F && FMAP.F.open);
+    el.classList.toggle('on', !hide);
+    const lv = L && bc.crime[L.id] !== undefined ? bc.crime[L.id] : null;
+    const k = city + '|' + (L ? L.id : '') + '|' + lv; if (k === key) return; key = k;
+    cityB.textContent = city + '%'; bar.style.width = city + '%'; bar.style.background = city === 0 ? '#7dff6b' : city < 50 ? '#ffd23c' : '#ff3d6e';
+    if (L && lv !== null) { dN.textContent = L.name.length > 15 ? L.name.slice(0, 14) + '.' : L.name; dV.textContent = lv === 0 ? 'CLEAR' : lv + '%'; dist.classList.toggle('clr', lv === 0); dist.style.visibility = 'visible'; }
+    else { dN.textContent = 'OUT ON THE STREETS'; dV.textContent = ''; dist.classList.remove('clr'); dist.style.visibility = 'visible'; }
+  }
+  setInterval(refresh, 400); BOSS_CLEAR.on(() => { key = ''; setTimeout(refresh, 0); }); setTimeout(refresh, 0);
+  window.__crime = { text: () => el.innerText, city: () => BOSS_CLEAR.cityCrime(), clear: (id) => BOSS_CLEAR.clear(id), goto: (id) => { const l = LANDMARKS.find((x) => x.id === id); if (l) { hero.pos.x = l.x; hero.pos.z = l.z; } return !!l; }, ids: () => LANDMARKS.map((x) => x.id), shown: () => el.classList.contains('on') && getComputedStyle(el).display !== 'none' };
 })();

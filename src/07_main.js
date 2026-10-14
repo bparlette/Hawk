@@ -136,6 +136,7 @@ function cityHud(rdt) {
   if (APANEL) { const c = actContext(); APANEL.setAct(c, c && c.kind === 'power' ? 1 - POWER.cd / POWER.CD : 1); }
   if (CITY.lmkT > 0) { CITY.lmkT -= rdt; if (CITY.lmkT <= 0) { $('lmk').classList.remove('on'); BARK.lmBlurb(null); } }
   if (MAP) { CITY.mapT -= rdt; if (CITY.mapT <= 0) { CITY.mapT = 0.1; const { g, bg, X, Z } = MAP; g.drawImage(bg, 0, 0);
+    for (const L of LANDMARKS) if (BOSS_CLEAR.cleared.has(L.id)) { g.fillStyle = '#7dff6b'; g.strokeStyle = '#000'; g.lineWidth = 1.5; g.beginPath(); g.arc(X(L.x), Z(L.z), 3.6, 0, TAU); g.fill(); g.stroke(); } // beaten districts go green
     g.fillStyle = '#ff3d6e'; for (const e of enemies) if (e.alive && e.state !== 'dying' && Math.hypot(e.pos.x - hero.pos.x, e.pos.z - hero.pos.z) < 60) g.fillRect(X(e.pos.x) - 2, Z(e.pos.z) - 2, 4, 4);
     g.fillStyle = '#ff9ad0'; g.beginPath(); g.arc(X(partner.pos.x), Z(partner.pos.z), 3, 0, TAU); g.fill();
     const hx = X(hero.pos.x), hz = Z(hero.pos.z), a = hero.yaw; g.fillStyle = '#9dff6b'; g.strokeStyle = '#000'; g.lineWidth = 2; g.beginPath();
