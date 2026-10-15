@@ -248,6 +248,7 @@
   // ---------------- Harold gets hit ----------------
   function hurtHarold(st, dmg, kind) {
     if (st.over || st.spec) return false;
+    if (st.roll < 0) { dmg = BOSSX.hurt(st, dmg); if (dmg <= 0) return false; }
     if (st.roll >= 0) { // a roll through the hit: a close dodge (POWER)
       if (!st.hitThis) { st.stats.close++; addPower(st, 14); pop(V.set(st.hx, 2.2, st.hz), 'CLOSE!', 'word'); } return false; }
     if (st.inv > 0) return false;
@@ -361,6 +362,7 @@
     damageBoss(st, dmg);
   }
   function damageBoss(st, dmg) {
+    dmg = BOSSX.hit(st, dmg, 'bhp');
     st.bhp -= dmg; subHud(st);
     if (st.bhp <= 0) { st.bhp = 0; for (const p of C.pools) { p.on = false; p.m.visible = false; } st.atk = []; st.dash = null; C.blob.visible = false;
       if (st.phase >= 2) { st.spec = null; setM(st, 'ko', 99); st.over = true; st.won = true; st.outT = 0; st.hp = Math.max(st.hp, 1); JUICE.ko(); DUELS.banner('K.O.!<small>SUGAR CRASH</small>', 2.2); DUELS.log.push('sugarrush:ko'); }

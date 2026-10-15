@@ -250,6 +250,7 @@
   function splash(x, y, z, n = 10, col = 1) { for (let k = 0; k < n && P.fxs.length < 64; k++) P.fxs.push({ p: new THREE.Vector3(x, y, z), v: new THREE.Vector3(rnd(-2.5, 2.5), rnd(2, 5.5), rnd(-2.5, 2.5)), t: 0, life: rnd(0.4, 0.8), c: col }); }
   function hurtHarold(st, dmg, kind) {
     if (st.inv > 0 || st.over || st.bankT >= 0) return false;
+    dmg = BOSSX.hurt(st, dmg); if (dmg <= 0) return false; 
     st.hp -= dmg; st.inv = 1.2; st.hurtT = 0.4; st.atkT = -1; st.stats.hitsTaken++; st.stats.hits[kind]++; DUELS.hurt(); sfx('hurt'); P.hflash = 1; st.shake = Math.max(st.shake, 0.35); st.hs = 0.06;
     V.set(st.hx, 1.8, st.hz); pop(V, '-' + dmg, 'r', 0.8);
     if (st.hp <= 0 && !st.secondWind) { st.secondWind = true; st.hp = 40; DUELS.banner('SECOND WIND!<small>MAVIS: GET UP, HAROLD!</small>', 1.8); DUELS.log.push('poolshark:secondwind'); return true; }
@@ -345,6 +346,7 @@
 
   // ---------------- Harold ----------------
   function hitShark(st, dmg, word, gold) {
+    dmg = BOSSX.hit(st, dmg, 'bhp');
     st.bhp -= dmg; st.stats.landed++; addPower(st, 0.06); const R = P.R; for (const m of R.mats) if (m && m.userData.flashC) { m.userData.flashC.value.set('#ffffff'); m.userData.flash.value = 0.85; }
     V.set(st.sx, (st.pose === 'deck' ? 0.8 : 1.8) + (st.pose === 'edge' ? -0.6 : 0), st.sz); pop(V, word || String(dmg), gold ? 'g' : '', 0.85); V2.copy(V); V.y += 0.4; pop(V, '-' + dmg, '', 0.7); splash(V2.x, V2.y, V2.z, 6, 0);
     if (st.bhp <= 0) { st.bhp = 0; P.balls.length = 0; st.wave = null;

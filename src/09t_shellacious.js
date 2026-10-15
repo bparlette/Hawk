@@ -259,6 +259,7 @@
   function addPow(st, v) { const was = st.pow >= 1; st.pow = clamp(st.pow + v, 0, 1); if (!was && st.pow >= 1) { DUELS.tell('POWER FULL: ACT = PLOT TWIST!', 1.2); sting('ding'); } subHud(st); }
   function hurtHarold(st, dmg, kind) {
     if (st.inv > 0 || st.over || st.twT >= 0) return false;
+    dmg = BOSSX.hurt(st, dmg); if (dmg <= 0) return false; 
     st.hp -= dmg; st.inv = 1.3; st.hurtT = 0.4; st.stats.hits[kind]++; st.stats.hitsTaken++; st.combo = 0; DUELS.hurt(); sfx('hurt'); C.hflash = 1; C.hflashC = kind === 'freeze' ? '#9ff0ff' : kind === 'beaker' ? '#7dff9a' : '#ffffff';
     st.lane = 0; st.duck = false; st.lockT = 0.3; st.shake = 0.35; st.stop = 0.06; st.gotHit = true;
     pop('-' + dmg, V.set(sx(0), 2.0, 0.2), '');
@@ -360,7 +361,7 @@
   function landSwing(st) {
     const k = st.swingK; V.set(sx(st.lane) * 0.5 + rnd(-0.3, 0.3), k === 2 ? 2.4 : 1.8, MZ - 0.8);
     if (st.ms === 'open' || st.ms === 'flipped') {
-      const crit = st.ms === 'open' && st.mt < 0.4, dmg = SWING[k] + (crit ? 2 : 0); st.mhp -= dmg; st.stats.landed++; st.combo++; st.comboT = 1.1; st.stats.maxCombo = Math.max(st.stats.maxCombo, st.combo);
+      const crit = st.ms === 'open' && st.mt < 0.4; let dmg = BOSSX.hit(st, SWING[k] + (crit ? 2 : 0), 'mhp'); st.mhp -= dmg; st.stats.landed++; st.combo++; st.comboT = 1.1; st.stats.maxCombo = Math.max(st.stats.maxCombo, st.combo);
       sfx(k === 2 ? 'heavy' : 'hit'); spark(V, k === 2 ? 16 : 6); flashBoss(k === 2 ? '#5ad8ff' : '#ffffff'); st.stop = k === 2 ? 0.085 : 0.065; st.shake = Math.max(st.shake, k === 2 ? 0.3 : 0.12);
       pop((k === 2 ? pick(WORDS[2]) + ' ' : '') + dmg, V, k === 2 || crit ? 'big' : ''); addPow(st, k === 2 ? 0.09 : 0.05);
       if (st.mhp <= 0) { st.mhp = 0; phaseDown(st); }

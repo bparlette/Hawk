@@ -9719,7 +9719,7 @@ const DUELS = (function () {
       const I = (D.I = input()); if (k < steps - 1) PRESS.clear();
       if (overMode) { D.overT += dt; if (I.ok || I.a) overPick(true); else if (I.back || I.b) overPick(false); if (!D.cur) return; }
       if (!K.lbl) { K.lbl = true; labels(K.labels); } // (re-applied on the first duel frame: the city HUD may have relabelled ACT in the frame the duel started)
-    K.step(dt, I); if (!D.cur) return; hudTick(dt); if (D.hold) break; // chipkid-fun: (test freeze)
+    BOSSX.frame(dt, I); K.step(dt * BOSSX.tempo(), I); if (!D.cur) return; hudTick(dt); if (D.hold) break; // chipkid-fun: (test freeze)
     }
     const frozen = J.hs > 0; K.render(frozen ? 0 : rdt); J.draw(K, rdt); // chipkid-fun: J.draw = draw() with the shared shake / zoom / pop layer (no-ops unless a duel asks); polish: poses hold still during a hitstop
     if (!(frozen && !K.buffer)) PRESS.clear();
@@ -9744,6 +9744,32 @@ const DUELS = (function () {
   if (Q.get('duel')) { const id = Q.get('duel'); let n = 0; MODE.ticks.push(() => { if (n++ === 3 && !D.cur) { if (CINE.intro) CINE.intro.skip = true; D.start(id); } }); }
   window.__duels = D; D.BC = BOSS_CLEAR;
   return D;
+})();
+// ======================= BOSSX (Brad 2026-10-15 "bosses ... interactively fight more"): a shared reactivity layer for the brawl bosses on the DUELS core.
+// Each brawl boss calls BOSSX.hurt(st, dmg) when it is about to hit Harold and BOSSX.hit(st, dmg, hpField) when Harold lands a hit. On top of every boss's own moves:
+//   PARRY: swing within 0.2 s before a hit lands -> no damage, "PARRY!", the boss is STAGGERED for 1.8 s (Harold's hits x1.6)
+//   GUARD: 7+ hits in an unbroken string -> the boss guards the next few swings ("GUARD!") and shoves back: mix in moves, don't just mash
+//   SITTING DUCK: stand still (no stick) 3 s and hits on you do x1.5 ("MOVE IT!")
+//   ENRAGED: the first time the boss drops under half of its (phase) health: "ENRAGED!" and the whole fight runs ~10% faster
+// Off for auto / bot test runs (?<boss>auto=, ?duelbot=) so the CI scripts stay deterministic.
+const BOSSX = (function () {
+  const OFF = Q.get('bossx') === '0' || [...Q.keys()].some((k) => /auto$|^duelbot$/.test(k)) || (BOT && !Q.has('bossx'));
+  const B = { cur: null, swingT: -9, still: 0, t: 0, stagT: 0, string: 0, lastHit: -9, guardN: 0, rage: false, max: {}, stats: { parries: 0, guards: 0, ducks: 0, rages: 0 }, log: [] };
+  const pop = (txt, cls = 'word') => { try { DUELS.pop(txt, new THREE.Vector3(0, 2.4, 0), cls); } catch (e) {} };
+  function frame(dt, I) { if (OFF) return; const cur = DUELS.cur; if (cur !== B.cur) { B.cur = cur; B.swingT = -9; B.still = 0; B.stagT = 0; B.string = 0; B.guardN = 0; B.rage = false; B.max = {}; }
+    B.t += dt; if (I && (I.a || I.b)) B.swingT = B.t; B.still = I && Math.hypot(I.mx || 0, I.my || 0) < 0.15 ? B.still + dt : 0; B.stagT = Math.max(0, B.stagT - dt); if (B.t - B.lastHit > 1.1) B.string = 0; }
+  function hurt(st, dmg) { if (OFF) return dmg;
+    if (B.t - B.swingT < 0.2 && B.t - B.swingT >= 0) { B.stats.parries++; B.stagT = 1.8; B.swingT = -9; pop('PARRY!', 'g'); sfx('ko'); try { DUELS.shake(0.3); } catch (e) {} B.log.push('parry'); return 0; }
+    if (B.still > 3) { B.stats.ducks++; pop('MOVE IT!', 'r'); B.log.push('duck'); return Math.round(dmg * 1.5); }
+    return B.rage ? Math.round(dmg * 1.1) : dmg; }
+  function hit(st, dmg, field) { if (OFF) return dmg; B.lastHit = B.t; B.string++;
+    const hp = st[field]; if (typeof hp === 'number') { if (!(B.max[field] >= hp) || hp > B.max[field]) B.max[field] = Math.max(B.max[field] || 0, hp); if (!B.rage && B.max[field] > 0 && hp - dmg < B.max[field] * 0.5) { B.rage = true; B.stats.rages++; try { DUELS.banner('ENRAGED!<small>FASTER NOW</small>', 1.4); } catch (e) {} B.log.push('rage'); } }
+    if (B.stagT > 0) return Math.round(dmg * 1.6);
+    if (B.guardN > 0) { B.guardN--; pop('GUARD!', ''); sfx('swing'); return 0; }
+    if (B.string >= 7) { B.string = 0; B.guardN = 3; B.stats.guards++; B.log.push('guard'); }
+    return dmg; }
+  const tempo = () => (OFF || !B.rage || B.stagT > 0 ? 1 : 1.1);
+  window.__bossx = B; return { frame, hurt, hit, tempo, B, get off() { return OFF; } };
 })();
 
 // ======================= JUICE: shared game-feel kit for every boss duel (hark/juice, 2026-10-13).
@@ -10675,7 +10701,7 @@ const JUICE = (function () {
   function moment(name) { const w = window.__ckShot; if (w && (w === name || name.startsWith(w + ':'))) { window.__ckShot = null; window.__ckShotAt = name; DUELS.hold = true; } } // test screenshots
   function setM(st, s, dur) { st.ms = s; st.mt = 0; st.mdur = dur; st.hitThis = false; st.dodged = false; }
   function hurtHarold(st, dmg, kind) {
-    if (st.inv > 0 || st.over || st.sp) return false; st.hp -= dmg; st.inv = 1.3; st.hurtT = 0.45; st.stats.hitsBy[kind]++; st.stats.hitsTaken++; st.stats.dmgTaken += dmg; DUELS.hurt(); sfx('hurt'); C.hflash = 1; st.lane = 0; st.duck = false; st.lockT = 0.3; st.sw = null; st.combo = 0;
+    if (st.inv > 0 || st.over || st.sp) return false; dmg = BOSSX.hurt(st, dmg); if (dmg <= 0) return false; st.hp -= dmg; st.inv = 1.3; st.hurtT = 0.45; st.stats.hitsBy[kind]++; st.stats.hitsTaken++; st.stats.dmgTaken += dmg; DUELS.hurt(); sfx('hurt'); C.hflash = 1; st.lane = 0; st.duck = false; st.lockT = 0.3; st.sw = null; st.combo = 0;
     st.meter = Math.min(100, st.meter + 6); powHud(st); DUELS.shake(0.25); V.set(C.H.root.position.x, 2.2, 0.2); DUELS.pop('-' + dmg, V, ''); DUELS.log.push('hurt:' + kind);
     if (st.hp <= 0) {
       if (mercy() && !st.wind) { st.wind = true; st.hp = 50; st.stats.secondWind++; st.inv = 2.2; DUELS.banner('SECOND WIND!<small>MAVIS: GET UP, HAROLD!</small>', 1.8); DUELS.say('MAVIS', 'Get UP, Harold! You promised me crab cakes!', 2.4); DUELS.flash('#9dff6b', 0.45); V.set(C.H.root.position.x, 2.4, 0.2); DUELS.pop('+50', V, 'heal'); st.meter = 100; powHud(st); return true; }
@@ -13582,6 +13608,7 @@ window.__carl = CARL;
   const haroldY = (st) => gy(st.hz) + st.hy;
   function hurtHarold(st, dmg, kind, kbz = -6, kbx = 0) {
     if (st.inv > 0 || st.over || st.salT >= 0 || st.tumbleT >= 0) return false;
+    dmg = BOSSX.hurt(st, dmg); if (dmg <= 0) return false; 
     st.hp -= dmg; st.inv = 1.2; st.hurtT = 0.4; st.atkT = -1; st.combo = 0; st.stats.hitsTaken++; st.stats.hits[kind]++; DUELS.hurt(); sfx('hurt'); P.hflash = 1; st.shake = Math.max(st.shake, 0.4); st.hs = 0.06;
     st.kbz = Math.min(st.kbz, kbz); st.kbx += kbx; V.set(st.hx, haroldY(st) + 1.8, st.hz); pop(V, '-' + dmg, 'r', 0.8);
     if (st.hp <= 0 && !st.secondWind) { st.secondWind = true; st.hp = 40; DUELS.banner('SECOND WIND!<small>MAVIS: GET UP, HAROLD!</small>', 1.8); DUELS.log.push('honqueen:secondwind'); return true; }
@@ -13656,6 +13683,7 @@ window.__carl = CARL;
 
   // ---------------- Harold ----------------
   function hitQueen(st, dmg, word, cls) {
+    dmg = BOSSX.hit(st, dmg, 'qhp');
     st.qhp -= dmg; st.stats.landed++; addPower(st, 0.06); st.combo++; st.comboT = 1.4; st.stats.maxCombo = Math.max(st.stats.maxCombo, st.combo);
     const R = P.R; for (const m of R.mats) if (m && m.userData.flashC) { m.userData.flashC.value.set('#ffffff'); m.userData.flash.value = 0.85; }
     V.set(st.qx, HT + 2.2, st.qz); pop(V, word || String(dmg), cls || '', 0.85); V2.copy(V); V.y += 0.5; pop(V, '-' + dmg, '', 0.7); spark(V2.x, V2.y - 0.4, V2.z - 0.4, 7);
@@ -14120,6 +14148,7 @@ window.__carl = CARL;
   // ---------------- Harold gets hit ----------------
   function hurtHarold(st, dmg, kind) {
     if (st.over || st.spec) return false;
+    if (st.roll < 0) { dmg = BOSSX.hurt(st, dmg); if (dmg <= 0) return false; }
     if (st.roll >= 0) { // a roll through the hit: a close dodge (POWER)
       if (!st.hitThis) { st.stats.close++; addPower(st, 14); pop(V.set(st.hx, 2.2, st.hz), 'CLOSE!', 'word'); } return false; }
     if (st.inv > 0) return false;
@@ -14233,6 +14262,7 @@ window.__carl = CARL;
     damageBoss(st, dmg);
   }
   function damageBoss(st, dmg) {
+    dmg = BOSSX.hit(st, dmg, 'bhp');
     st.bhp -= dmg; subHud(st);
     if (st.bhp <= 0) { st.bhp = 0; for (const p of C.pools) { p.on = false; p.m.visible = false; } st.atk = []; st.dash = null; C.blob.visible = false;
       if (st.phase >= 2) { st.spec = null; setM(st, 'ko', 99); st.over = true; st.won = true; st.outT = 0; st.hp = Math.max(st.hp, 1); JUICE.ko(); DUELS.banner('K.O.!<small>SUGAR CRASH</small>', 2.2); DUELS.log.push('sugarrush:ko'); }
@@ -14652,6 +14682,7 @@ window.__carl = CARL;
   function addPow(st, v) { const was = st.pow >= 1; st.pow = clamp(st.pow + v, 0, 1); if (!was && st.pow >= 1) { DUELS.tell('POWER FULL: ACT = FLIP!', 1.2); sting('ding'); } subHud(st); }
   function hurtHarold(st, dmg, kind) {
     if (st.inv > 0 || st.over || st.flipT >= 0) return false;
+    dmg = BOSSX.hurt(st, dmg); if (dmg <= 0) return false; 
     st.hp -= dmg; st.inv = 1.3; st.hurtT = 0.4; st.stats.hits[kind]++; st.stats.hitsTaken++; st.combo = 0; DUELS.combo(0); DUELS.hurt(); sfx('hurt'); C.hflash = 1; st.lane = 0; st.duck = false; st.lockT = 0.3; st.shake = 0.35; st.stop = 0.06;
     pop('-' + dmg, V.set(sx(0), 2.0, 0.2), '');
     if (st.hp <= 0) {
@@ -14738,7 +14769,7 @@ window.__carl = CARL;
   function landSwing(st) {
     const k = st.swingK; V.set(sx(st.lane) * 0.6 + rnd(-0.3, 0.3), k === 2 ? 2.6 : 2.0, MZ - 0.9);
     if (st.ms === 'open' || st.ms === 'flipped') {
-      const crit = st.ms === 'open' && st.mt < 0.4, dmg = SWING[k] + (crit ? 2 : 0); st.mhp -= dmg; st.stats.landed++; st.combo++; st.comboT = 1.1; st.stats.maxCombo = Math.max(st.stats.maxCombo, st.combo);
+      const crit = st.ms === 'open' && st.mt < 0.4; let dmg = BOSSX.hit(st, SWING[k] + (crit ? 2 : 0), 'mhp'); st.mhp -= dmg; st.stats.landed++; st.combo++; st.comboT = 1.1; st.stats.maxCombo = Math.max(st.stats.maxCombo, st.combo);
       sfx(k === 2 ? 'heavy' : 'hit'); spark(V, k === 2 ? 14 : 6); flashBoss(k === 2 ? '#ffb030' : '#ffffff'); st.stop = k === 2 ? 0.09 : 0.065; st.shake = Math.max(st.shake, k === 2 ? 0.35 : 0.14);
       DUELS.hitSfx(k === 2 ? 'heavy' : 'light'); DUELS.combo(st.combo); if (k === 2) DUELS.flash('#ffffff', 0.35); // polish: shared hit juice
       pop(pick(WORDS[k]) + ' ' + dmg, V, k === 2 ? 'big' : crit ? 'crit' : ''); addPow(st, k === 2 ? 0.09 : 0.05);
@@ -15223,6 +15254,7 @@ window.__carl = CARL;
   }
   function damageBoss(st, dmg, crit, word) {
     if (st.bs === 'roar' || st.bs === 'ko' || st.bs === 'intro') return;
+    dmg = BOSSX.hit(st, dmg, 'bhp');
     // he guards in his tight gear unless he's OPEN: stalking = 35%, wind-ups / lunges / throws = 60%, open / dizzy / posing on GREEN = 150% gold crits
     const k = crit ? 1.5 : st.bs === 'stalk' ? 0.35 : 0.6, d = Math.max(1, Math.round(dmg * k)); st.bhp -= d; st.stats.landed++; if (crit) st.stats.crits++;
     if (!crit && st.bs === 'stalk' && Math.random() < 0.35) pop(V2.set(st.bx, 3.2, st.bz), 'TOO TIGHT! WAIT FOR AN OPENING', '');
@@ -15669,6 +15701,7 @@ window.__carl = CARL;
   function splash(x, y, z, n = 10, col = 1) { for (let k = 0; k < n && P.fxs.length < 64; k++) P.fxs.push({ p: new THREE.Vector3(x, y, z), v: new THREE.Vector3(rnd(-2.5, 2.5), rnd(2, 5.5), rnd(-2.5, 2.5)), t: 0, life: rnd(0.4, 0.8), c: col }); }
   function hurtHarold(st, dmg, kind) {
     if (st.inv > 0 || st.over || st.bankT >= 0) return false;
+    dmg = BOSSX.hurt(st, dmg); if (dmg <= 0) return false; 
     st.hp -= dmg; st.inv = 1.2; st.hurtT = 0.4; st.atkT = -1; st.stats.hitsTaken++; st.stats.hits[kind]++; DUELS.hurt(); sfx('hurt'); P.hflash = 1; st.shake = Math.max(st.shake, 0.35); st.hs = 0.06;
     V.set(st.hx, 1.8, st.hz); pop(V, '-' + dmg, 'r', 0.8);
     if (st.hp <= 0 && !st.secondWind) { st.secondWind = true; st.hp = 40; DUELS.banner('SECOND WIND!<small>MAVIS: GET UP, HAROLD!</small>', 1.8); DUELS.log.push('poolshark:secondwind'); return true; }
@@ -15764,6 +15797,7 @@ window.__carl = CARL;
 
   // ---------------- Harold ----------------
   function hitShark(st, dmg, word, gold) {
+    dmg = BOSSX.hit(st, dmg, 'bhp');
     st.bhp -= dmg; st.stats.landed++; addPower(st, 0.06); const R = P.R; for (const m of R.mats) if (m && m.userData.flashC) { m.userData.flashC.value.set('#ffffff'); m.userData.flash.value = 0.85; }
     V.set(st.sx, (st.pose === 'deck' ? 0.8 : 1.8) + (st.pose === 'edge' ? -0.6 : 0), st.sz); pop(V, word || String(dmg), gold ? 'g' : '', 0.85); V2.copy(V); V.y += 0.4; pop(V, '-' + dmg, '', 0.7); splash(V2.x, V2.y, V2.z, 6, 0);
     if (st.bhp <= 0) { st.bhp = 0; P.balls.length = 0; st.wave = null;
@@ -16191,6 +16225,7 @@ window.__carl = CARL;
   // ---------------- Harold: hurt / dodge bookkeeping ----------------
   function haroldHit(st, dmg, kind) {
     const h = st.h; if (h.inv > 0 || st.over || st.surf) return false;
+    dmg = BOSSX.hurt(st, dmg); if (dmg <= 0) return false; 
     st.hp = Math.max(0, st.hp - dmg); h.inv = 1.3; h.hurtT = 0; st.stats.hitsTaken++; DUELS.hurt(); sfx('hurt'); st.shk = Math.max(st.shk, 0.35);
     pop(V.set(h.x, 2.0, h.z), '-' + dmg, ''); h.swT = -1; h.queued = false;
     if (kind === 'slip') { h.slipT = 0; h.vz = 3.2; h.vx = rnd(-1.5, 1.5); }
@@ -16293,7 +16328,7 @@ window.__carl = CARL;
   function startSwing(st, n) { const h = st.h; h.swN = n; h.swT = 0; h.swHit = false; sfx('swing'); }
   function tryHit(st) {
     const h = st.h, b = st.b; if (!bossLow(st) || st.over) return; const d = Math.hypot(b.x - h.x, b.z - h.z); if (d > REACH + (h.swN === 2 ? 0.4 : 0)) return;
-    const crit = b.open > 0 || st.bs === 'dizzy'; let dmg = HIT[h.swN] * (crit ? CRIT : 1); dmg = Math.round(dmg);
+    const crit = b.open > 0 || st.bs === 'dizzy'; let dmg = HIT[h.swN] * (crit ? CRIT : 1); dmg = BOSSX.hit(st, Math.round(dmg), 'bhp');
     st.bhp -= dmg; st.stats.landed++; if (crit) st.stats.crits++; st.pow = Math.min(100, st.pow + POW_HIT); b.flash = 1; b.hurtT = 0;
     st.hs = h.swN === 2 ? 0.085 : 0.065; st.shk = Math.max(st.shk, h.swN === 2 ? 0.45 : 0.22); sfx(h.swN === 2 ? 'heavy' : 'hit');
     pop(V.set(b.x, b.y + 2.3, b.z), (h.swN === 2 ? 'SPLOOSH! ' : '') + dmg + (crit ? '!' : ''), crit ? 'c' : h.swN === 2 ? 'w' : '');
@@ -16739,6 +16774,7 @@ window.__carl = CARL;
   function addPow(st, v) { const was = st.pow >= 1; st.pow = clamp(st.pow + v, 0, 1); if (!was && st.pow >= 1) { DUELS.tell('POWER FULL: ACT = PLOT TWIST!', 1.2); sting('ding'); } subHud(st); }
   function hurtHarold(st, dmg, kind) {
     if (st.inv > 0 || st.over || st.twT >= 0) return false;
+    dmg = BOSSX.hurt(st, dmg); if (dmg <= 0) return false; 
     st.hp -= dmg; st.inv = 1.3; st.hurtT = 0.4; st.stats.hits[kind]++; st.stats.hitsTaken++; st.combo = 0; DUELS.hurt(); sfx('hurt'); C.hflash = 1; C.hflashC = kind === 'freeze' ? '#9ff0ff' : kind === 'beaker' ? '#7dff9a' : '#ffffff';
     st.lane = 0; st.duck = false; st.lockT = 0.3; st.shake = 0.35; st.stop = 0.06; st.gotHit = true;
     pop('-' + dmg, V.set(sx(0), 2.0, 0.2), '');
@@ -16840,7 +16876,7 @@ window.__carl = CARL;
   function landSwing(st) {
     const k = st.swingK; V.set(sx(st.lane) * 0.5 + rnd(-0.3, 0.3), k === 2 ? 2.4 : 1.8, MZ - 0.8);
     if (st.ms === 'open' || st.ms === 'flipped') {
-      const crit = st.ms === 'open' && st.mt < 0.4, dmg = SWING[k] + (crit ? 2 : 0); st.mhp -= dmg; st.stats.landed++; st.combo++; st.comboT = 1.1; st.stats.maxCombo = Math.max(st.stats.maxCombo, st.combo);
+      const crit = st.ms === 'open' && st.mt < 0.4; let dmg = BOSSX.hit(st, SWING[k] + (crit ? 2 : 0), 'mhp'); st.mhp -= dmg; st.stats.landed++; st.combo++; st.comboT = 1.1; st.stats.maxCombo = Math.max(st.stats.maxCombo, st.combo);
       sfx(k === 2 ? 'heavy' : 'hit'); spark(V, k === 2 ? 16 : 6); flashBoss(k === 2 ? '#5ad8ff' : '#ffffff'); st.stop = k === 2 ? 0.085 : 0.065; st.shake = Math.max(st.shake, k === 2 ? 0.3 : 0.12);
       pop((k === 2 ? pick(WORDS[2]) + ' ' : '') + dmg, V, k === 2 || crit ? 'big' : ''); addPow(st, k === 2 ? 0.09 : 0.05);
       if (st.mhp <= 0) { st.mhp = 0; phaseDown(st); }
@@ -17289,6 +17325,7 @@ window.__carl = CARL;
   // a hit (inv-gated) or a drain tick (not inv-gated, small): both go through here
   function damage(st, dmg, kind, drain) {
     if (st.over || st.flareT >= 0) return false;
+    if (!drain) { dmg = BOSSX.hurt(st, dmg); if (dmg <= 0) return false; }
     if (!drain) { if (st.inv > 0) return false; st.inv = 1.3; st.hurtT = 0.4; st.lockT = 0.3; st.shake = 0.35; st.stop = 0.06; DUELS.hurt(); sfx('hurt'); C.hflash = 1; st.lane = st.lane; st.duck = false; pop('-' + dmg, V.set(sx(st.lane) * 0.95, 2.0, 0.2), ''); }
     st.hp -= dmg;
     if (!drain || !st.drained) { st.stats.hits[kind]++; st.stats.hitsTaken++; st.combo = 0; if (drain) st.drained = true; }
@@ -17380,7 +17417,7 @@ window.__carl = CARL;
   function landSwing(st) {
     const k = st.swingK; V.set(sx(st.lane) * 0.6 + rnd(-0.3, 0.3), k === 2 ? 2.4 : 1.9, st.landed ? 1.6 : MZ - 0.6);
     if (isSolid(st) && st.ms !== 'down') {
-      const crit = st.ms === 'open' && st.mt < 0.4, dmg = SWING[k] + (crit ? 2 : 0); st.mhp -= dmg; st.stats.landed++; st.combo++; st.comboT = 1.1; st.stats.maxCombo = Math.max(st.stats.maxCombo, st.combo);
+      const crit = st.ms === 'open' && st.mt < 0.4; let dmg = BOSSX.hit(st, SWING[k] + (crit ? 2 : 0), 'mhp'); st.mhp -= dmg; st.stats.landed++; st.combo++; st.comboT = 1.1; st.stats.maxCombo = Math.max(st.stats.maxCombo, st.combo);
       sfx(k === 2 ? 'heavy' : 'hit'); spark(V, k === 2 ? 14 : 6); flashBoss(k === 2 ? '#9affd8' : '#ffffff'); st.stop = k === 2 ? 0.085 : 0.065; st.shake = Math.max(st.shake, k === 2 ? 0.3 : 0.12);
       pop((k === 2 ? pick(WORDS[2]) + ' ' : '') + dmg, V, k === 2 || crit ? 'big' : ''); addPow(st, k === 2 ? 0.09 : 0.05);
       if (st.mhp <= 0) { st.mhp = 0; phaseDown(st); }
@@ -17863,6 +17900,7 @@ window.__carl = CARL;
   // ---------------- Harold: hurt / dodge bookkeeping ----------------
   function haroldHit(st, dmg, kind, kx = 0, kz = 0) {
     const h = st.h; if (h.inv > 0 || st.over || st.hail) return false;
+    dmg = BOSSX.hurt(st, dmg); if (dmg <= 0) return false; 
     st.hp = Math.max(0, st.hp - dmg); h.inv = 1.3; h.hurtT = 0; st.stats.hitsTaken++; DUELS.hurt(); sfx('hurt'); st.shk = Math.max(st.shk, 0.4);
     pop(V.set(h.x, 2.0, h.z), '-' + dmg, ''); h.swT = -1; h.queued = false; h.vx = kx; h.vz = kz;
     if (Math.random() < 0.35) say(pick(GR.taunt), 2.0);
@@ -17966,7 +18004,7 @@ window.__carl = CARL;
   function startSwing(st, n) { const h = st.h; h.swN = n; h.swT = 0; h.swHit = false; sfx('swing'); }
   function tryHit(st) {
     const h = st.h, b = st.b; if (!bossOpen(st) || st.over) return; const d = Math.hypot(b.x - h.x, b.z - h.z); if (d > REACH + (h.swN === 2 ? 0.4 : 0)) return;
-    const crit = b.open > 0 || st.bs === 'dizzy'; const dmg = Math.round(HIT[h.swN] * (crit ? CRIT : 1));
+    const crit = b.open > 0 || st.bs === 'dizzy'; const dmg = BOSSX.hit(st, Math.round(HIT[h.swN] * (crit ? CRIT : 1)), 'bhp');
     st.bhp -= dmg; st.stats.landed++; if (crit) st.stats.crits++; st.pow = Math.min(100, st.pow + POW_HIT); b.flash = 1; b.hurtT = 0;
     st.hs = h.swN === 2 ? 0.085 : 0.065; st.shk = Math.max(st.shk, h.swN === 2 ? 0.45 : 0.22); sfx(h.swN === 2 ? 'heavy' : 'hit');
     pop(V.set(b.x, 3.6, b.z), (h.swN === 2 ? 'BLINDSIDE! ' : '') + dmg + (crit ? '!' : ''), crit ? 'c' : h.swN === 2 ? 'w' : '');
