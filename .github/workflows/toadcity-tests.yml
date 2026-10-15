@@ -26,6 +26,10 @@ on:
         description: "Free-text label shown in the run name (e.g. the builder's name) so you can find your run"
         required: false
         default: ""
+      coop:
+        description: "Run the couch co-op jobs (game tests/coop: main, edge, areas, perf)"
+        required: false
+        default: "true"
       ci_ref:
         description: "Hawk branch holding ci/toadcity runner scripts"
         required: false
@@ -46,12 +50,15 @@ jobs:
         with:
           ref: ${{ inputs.ref }}
           path: game
-          sparse-checkout: site
+          sparse-checkout: |
+            site
+            tests
       - id: m
         env:
           BOSSES: ${{ inputs.bosses }}
           MODES: ${{ inputs.modes }}
           CITY: ${{ inputs.city }}
+          COOP: ${{ inputs.coop }}
         run: |
           python3 - <<'PY'
           import json, os, re
@@ -79,6 +86,10 @@ jobs:
           if 'finaleauto' in js and (os.environ.get('CITY','true') == 'true' or 'finale' in want):
               for w, h in ((390, 844), (1280, 720)):
                   inc.append({'name': f'finale-{w}', 'type': 'finale', 'boss': '', 'mode': '', 'w': w, 'h': h, 'extra': ''})
+          import os.path
+          if os.environ.get('COOP','true') == 'true' and os.path.exists('game/tests/coop/coop.js'):
+              for t, w, h in (('coop', 1280, 720), ('coop', 390, 844), ('edge', 1280, 720), ('perf', 390, 844)) + ((('areas', 1280, 720), ('areas', 390, 844)) if os.path.exists('game/tests/coop/areas.js') else ()):
+                  inc.append({'name': f'coop-{t}-{w}', 'type': 'coop', 'boss': t, 'mode': '', 'w': w, 'h': h, 'extra': ''})
           print('jobs:', [i['name'] for i in inc]); print('not in build (skipped):', skipped)
           with open(os.environ['GITHUB_STEP_SUMMARY'], 'a') as f:
               f.write(f"Planned {len(inc)} jobs. Not in this build: {', '.join(skipped) or 'none'}\n")
@@ -100,7 +111,9 @@ jobs:
         with:
           ref: ${{ needs.plan.outputs.sha }}
           path: game
-          sparse-checkout: site
+          sparse-checkout: |
+            site
+            tests
       - uses: actions/checkout@v4
         with:
           ref: ${{ inputs.ci_ref }}
@@ -128,6 +141,8 @@ jobs:
           mkdir -p out
           if [ "${{ matrix.type }}" = "city" ]; then
             node run_city.js 8831 ${{ matrix.w }} ${{ matrix.h }} out 2>&1 | tee out/${{ matrix.name }}.log
+          elif [ "${{ matrix.type }}" = "coop" ]; then
+            node run_coop.js 8831 ${{ matrix.boss }} ${{ matrix.w }} ${{ matrix.h }} out ../../../game 2>&1 | tee out/${{ matrix.name }}.log
           elif [ "${{ matrix.type }}" = "finale" ]; then
             node run_finale.js 8831 ${{ matrix.w }} ${{ matrix.h }} out 2>&1 | tee out/${{ matrix.name }}.log
           else
