@@ -22,33 +22,39 @@ hero.J.mat.userData.flashC.value.set('#fff'); hero.roof = false; hero.name = 'HA
 // the AI partner: MAVIS, Harold's wife (grey afro, floral dress, pearls, handbag), always computer-controlled (see 06c_partner.js)
 const partner = new Fighter(buildHero({ wife: true }), { x: -46, z: -34.6, yaw: HERO_START.yaw, hp: 100, r: 0.45 });
 partner.J.mat.userData.flashC.value.set('#fff'); partner.roof = false; partner.name = 'MAVIS'; partner.isPartner = true;
-const POSTS = [ // thugs spread over the districts: a pair (or trio) near every landmark; look 4 is the bruiser
+const POSTS = [ // thugs spread over the districts: a pair (or trio) near every landmark; look 4 is the bruiser, 5..9 the archetypes (rusher, thrower, shield, dodger, lookout: 09zm THUGX), mixed in more as you go
   { x: -24, z: -33.5, look: 0 }, { x: -20, z: -32, look: 1 },                         // Constellation / WTC promenade (first fight)
-  { x: 17, z: -33.5, look: 2 }, { x: 21, z: -32.2, look: 3 },                          // Aquarium
-  { x: 54, z: -33.6, look: 1 }, { x: 58, z: -32, look: 4 },                            // Power Plant
-  { x: 80, z: -41, look: 0 }, { x: 85, z: -40, look: 2 },                              // Four Seasons (Pratt St)
-  { x: 123, z: -33, look: 3 }, { x: 129, z: -33.5, look: 1 },                          // Pendry
-  { x: 166, z: -56, look: 0 }, { x: 167, z: -50, look: 2 }, { x: 165, z: -63, look: 4 }, // Fells Point square
-  { x: -24, z: -85, look: 3 }, { x: -16, z: -85, look: 1 },                            // Washington Monument
-  { x: -71, z: -6, look: 0 }, { x: -70, z: 2, look: 2 },                               // Oriole Park (Light St)
-  { x: -92, z: -4, look: 3 },                                                          // Oriole Park (warehouse alley)
-  { x: -71, z: 52, look: 1 }, { x: -84, z: 76, look: 4 },                              // M&T Bank Stadium
-  { x: -54, z: 33.5, look: 2 }, { x: -48, z: 33.2, look: 0 },                          // Science Center promenade
-  { x: -6, z: 50, look: 3 }, { x: -1, z: 57, look: 1 },                                // Federal Hill
-  { x: 80, z: 40, look: 0 }, { x: 85, z: 41, look: 2 },                                // Domino Sugar (Key Hwy)
-  { x: 114, z: 41, look: 3 }, { x: 119, z: 40.5, look: 1 },                            // Under Armour
-  { x: 172, z: 52, look: 0 }, { x: 178, z: 77, look: 4 },                              // Fort McHenry
+  { x: 17, z: -33.5, look: 5 }, { x: 21, z: -32.2, look: 3 },                          // Aquarium
+  { x: 54, z: -33.6, look: 6 }, { x: 58, z: -32, look: 4 },                            // Power Plant
+  { x: 80, z: -41, look: 8 }, { x: 85, z: -40, look: 2 },                              // Four Seasons (Pratt St)
+  { x: 123, z: -33, look: 5 }, { x: 129, z: -33.5, look: 6 },                          // Pendry
+  { x: 166, z: -56, look: 9 }, { x: 167, z: -50, look: 8 }, { x: 165, z: -63, look: 7 }, // Fells Point square
+  { x: -24, z: -85, look: 6 }, { x: -16, z: -85, look: 5 },                            // Washington Monument
+  { x: -71, z: -6, look: 8 }, { x: -70, z: 2, look: 2 },                               // Oriole Park (Light St)
+  { x: -92, z: -4, look: 9 },                                                          // Oriole Park (warehouse alley)
+  { x: -71, z: 52, look: 6 }, { x: -84, z: 76, look: 7 },                              // M&T Bank Stadium
+  { x: -54, z: 33.5, look: 5 }, { x: -48, z: 33.2, look: 8 },                          // Science Center promenade
+  { x: -6, z: 50, look: 7 }, { x: -1, z: 57, look: 6 },                                // Federal Hill
+  { x: 80, z: 40, look: 9 }, { x: 85, z: 41, look: 5 },                                // Domino Sugar (Key Hwy)
+  { x: 114, z: 41, look: 8 }, { x: 119, z: 40.5, look: 7 },                            // Under Armour
+  { x: 172, z: 52, look: 6 }, { x: 178, z: 77, look: 4 },                              // Fort McHenry
 ].map((p) => Object.assign({ yaw: 0 }, p));
-const enemies = POSTS.map((p, i) => {
-  const look = THUG_LOOKS[p.look], big = !!look.big;
-  const e = new Fighter(buildThug(look), { x: p.x, z: p.z, yaw: p.yaw, hp: big ? 16 : 8, scale: big ? 1.2 : 1, r: big ? 0.55 : 0.42 });
-  e.J.mat.userData.flashC.value.set('#fff'); e.post = p; e.big = big; e.armed = !!look.weapon; e.cool = 0; e.slot = (i / POSTS.length) * TAU; e.respawn = 0; e.id = i;
+function mkThug(p, i) {
+  const look = THUG_LOOKS[p.look], big = !!look.big, mook = look.arch === 'mook';
+  const e = new Fighter(buildThug(look), { x: p.x, z: p.z, yaw: p.yaw, hp: big ? 16 : mook ? 3 : 8, scale: big ? 1.2 : mook ? 0.86 : 1, r: big ? 0.55 : 0.42 });
+  e.J.mat.userData.flashC.value.set('#fff'); e.post = p; e.big = big; e.armed = !!look.weapon && look.weapon !== 'lid'; e.cool = 0; e.slot = (i / POSTS.length) * TAU; e.respawn = 0; e.id = i; e.arch = look.arch || 'brawler'; e.look = p.look;
+  if (mook) e.dizzied = true; // mooks: one- or two-hit KOs, no dizzy / QTE
   // hp pip above the head
   const c = document.createElement('canvas'); c.width = 128; c.height = 20; e.hpC = c; e.hpT = new THREE.CanvasTexture(c); e.hpT.colorSpace = THREE.SRGBColorSpace;
   e.hpS = new THREE.Sprite(new THREE.SpriteMaterial({ map: e.hpT, depthTest: false, transparent: true, fog: false })); e.hpS.scale.set(1.1, 0.17, 1); e.hpS.renderOrder = 15; e.hpS.visible = false; scene.add(e.hpS); e.hpShow = 0;
   e.dz = new THREE.Sprite(new THREE.SpriteMaterial({ map: FXT.dizzy, depthTest: false, transparent: true, fog: false })); e.dz.renderOrder = 16; e.dz.visible = false; e.dz.scale.set(1.0, 0.5, 1); scene.add(e.dz);
   e.bang = null; return e;
-});
+}
+const enemies = POSTS.map((p, i) => mkThug(p, i));
+// the street-life pool (09zm_streetlife.js): extra thugs for parties, stoop ambushes, hordes and brawls. They sleep 'dead' until the director wakes them
+const POOL_N = QUAL.hd && !TOUCH ? 18 : 14;
+for (let k = 0; k < POOL_N; k++) { const e = mkThug({ x: 0, z: 0, yaw: 0, look: [10, 11, 10, 11, 5, 8, 6, 0, 10, 11, 9, 7, 10, 11, 2, 3, 10, 11][k], pool: true }, POSTS.length + k);
+  e.pool = true; e.set('dead'); e.respawn = 1e9; e.root.visible = false; e.dead = true; e.slept = true; enemies.push(e); }
 function drawHp(e) {
   const c = e.hpC.getContext('2d'); c.clearRect(0, 0, 128, 20); c.fillStyle = INK; c.fillRect(0, 0, 128, 20);
   c.fillStyle = '#ff3d6e'; c.fillRect(4, 4, 120 * Math.max(0, e.hp) / e.maxHp, 12); c.fillStyle = 'rgba(255,255,255,.45)'; c.fillRect(4, 4, 120 * Math.max(0, e.hp) / e.maxHp, 4); e.hpT.needsUpdate = true;
@@ -241,6 +247,7 @@ function pickTarget(dirx, dirz, maxD = 7) {
 }
 function hitEnemy(e, dmg, heavy, fromYaw, by = hero) {
   if (!e.alive || e.state === 'dying' || e.state === 'drown' || (e.state === 'down' && !heavy)) return false;
+  if (e.arch !== 'brawler' && THUGX.guard(e, dmg, heavy, fromYaw, by)) return false; // shield block / dodge (09zm)
   e.hp -= dmg; e.lastBy = by; e.flash = 1; e.J.mat.userData.flashC.value.set('#fff'); e.hpShow = 2.5; drawHp(e); S.hits++;
   S.combo++; S.comboT = 1.3; S.maxCombo = Math.max(S.maxCombo, S.combo);
   const kx = Math.sin(fromYaw), kz = Math.cos(fromYaw);
@@ -411,12 +418,13 @@ function updateEnemy(e, dt) {
   switch (e.state) {
     case 'idle': {
       pose = THUG_POSES.idle(e.at, J); if (dP < 14) face(toHeroYaw, 3); else face(e.post.yaw, 2);
-      if (heroOk && heroFromPost < 8) { e.set('chase'); if (!e.bang) e.bang = spawnSprite(FXT.bang, _v.set(e.pos.x, e.pos.y + 2.35 * e.scale, e.pos.z), 0.7, 0.8, { aspect: 0.5 }); }
+      if (heroOk && heroFromPost < (e.aggro || 8)) { e.set('chase'); if (!e.bang) e.bang = spawnSprite(FXT.bang, _v.set(e.pos.x, e.pos.y + 2.35 * e.scale, e.pos.z), 0.7, 0.8, { aspect: 0.5 }); }
       break;
     }
     case 'chase': {
-      if (!heroOk || heroFromPost > 11.5 || fromPost > 9.5) { e.set('return'); break; }
-      const canAtk = e.cool <= 0 && ATTACKERS < 2;
+      if (!heroOk || heroFromPost > (e.leash || 11.5) || fromPost > (e.leash ? e.leash - 2 : 9.5)) { e.set('return'); break; }
+      if (e.arch !== 'brawler') { const xp = THUGX.chase(e, dt, tg, T0, dP, toHeroYaw, walkTo, face); if (xp) { pose = xp; break; } } // archetype moves (09zm)
+      const canAtk = e.cool <= 0 && ATTACKERS < (e.arch === 'mook' ? 4 : 2);
       if (canAtk && dP < (e.armed ? 1.9 : 1.65)) { e.set('windup'); ATTACKERS++; sfx('swing'); break; }
       // approach to striking range if we may attack, else hold a ring around the hero and circle
       if (canAtk) walkTo(tg.pos.x - dx / dP * 1.3, tg.pos.z - dz / dP * 1.3, SP);
@@ -433,7 +441,7 @@ function updateEnemy(e, dt) {
     case 'attack': {
       pose = THUG_POSES.attack(e.st / 0.3, J); rate = 26; const lunge = e.st < 0.12 ? 4 : 0; v = [Math.sin(e.yaw) * lunge, Math.cos(e.yaw) * lunge];
       if (!e.hitDone && e.st > 0.1) { e.hitDone = true; const ang = Math.abs(angTo(e.yaw, toHeroYaw)); const reach = (e.armed ? 2.0 : 1.7) * e.scale;
-        if (dP < reach && ang < 1.0 && tg.y < 0.9 && T0) hurtTurtle(tg, e.big ? 16 : e.armed ? 11 : 8, e.pos.x, e.pos.z, e.big); }
+        if (dP < reach && ang < 1.0 && tg.y < 0.9 && T0) hurtTurtle(tg, Math.round((e.big ? 16 : e.arch === 'mook' ? 4 : e.armed ? 11 : 8) * (e.elite ? 1.3 : 1)), e.pos.x, e.pos.z, e.big); }
       if (e.st > 0.55) { e.hitDone = false; e.set('chase'); e.cool = rnd(1.1, 2.0) + (e.big ? 0.6 : 0); ATTACKERS = Math.max(0, ATTACKERS - 1); }
       break;
     }
@@ -464,16 +472,17 @@ function updateEnemy(e, dt) {
       if (e.st > 0.7) {
         for (let k = 0; k < 6; k++) spawnSprite(FXT.puff, _v.set(e.pos.x + rnd(-0.6, 0.6), e.pos.y + 0.3, e.pos.z + rnd(-0.6, 0.6)), rnd(0.8, 1.3), 0.5, { kind: 'grow', depth: true, vel: new THREE.Vector3(rnd(-2, 2), 1.5, rnd(-2, 2)) });
         spawnSprite(FXT.star, _v.set(e.pos.x, e.pos.y + 0.6, e.pos.z), 1.4, 0.3);
-        e.set('dead'); e.root.visible = false; e.hpS.visible = false; S.kills++; sfx('ko'); if (e.lastBy === partner) PART.kos++; else PART.heroKos++; e.respawn = 14; e.landed = false; $('kon').textContent = S.kills;
+        e.set('dead'); e.root.visible = false; e.hpS.visible = false; S.kills++; sfx('ko'); if (e.lastBy === partner) PART.kos++; else PART.heroKos++; e.respawn = 14; e.landed = false; $('kon').textContent = S.kills; THUGX.died(e);
       }
       break;
     }
     case 'dead': {
       e.respawn -= dt; const far = Math.hypot(hero.pos.x - e.post.x, hero.pos.z - e.post.z) > 12;
       if (e.respawn <= 0 && far) { e.hp = e.maxHp; e.dead = false; e.pos.set(e.post.x, 0, e.post.z); e.yaw = e.post.yaw; e.root.visible = true; e.set('idle'); e.y = 0; e.J.tilt.rotation.set(0, 0, 0); e.bang = null;
-        for (let k = 0; k < 4; k++) spawnSprite(FXT.puff, _v.set(e.pos.x + rnd(-0.5, 0.5), 0.4, e.pos.z + rnd(-0.5, 0.5)), 1, 0.45, { kind: 'grow', depth: true }); }
+        for (let k = 0; k < 4; k++) spawnSprite(FXT.puff, _v.set(e.pos.x + rnd(-0.5, 0.5), 0.4, e.pos.z + rnd(-0.5, 0.5)), 1, 0.45, { kind: 'grow', depth: true }); THUGX.respawned(e); }
       return;
     }
+    default: { THUGX.vv = null; THUGX.rate = 14; pose = THUGX.state(e, dt, tg, T0, dP, toHeroYaw, walkTo, face); if (THUGX.vv) v = THUGX.vv; rate = THUGX.rate; break; } // archetype / street-life states (09zm)
     case 'return': {
       const d = walkTo(e.post.x, e.post.z, SP * 0.8); pose = d > 0.2 ? THUG_POSES.run(e.at, SP * 0.8, J) : THUG_POSES.idle(e.at, J);
       if (d < 0.3) e.set('idle'); if (heroOk && heroFromPost < 7) e.set('chase');

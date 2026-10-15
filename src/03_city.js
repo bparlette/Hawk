@@ -197,7 +197,8 @@ const WATER = (function water() {
 
 // ---------------- generic blocks: 1-3 buildings per block, storefronts on every street face ----------------
 const DOOR_AT = { x: -44.95, z: -58 }; // the kickable STAFF door (06b) sits on the east face of this block's building
-function bld(x0, z0, x1, z1, fl, pal, o) { const h = building(x0, z0, x1, z1, fl, pal, o); COLL.push({ x0, x1, z0, z1 }); return h; }
+const BLDS = []; // generic street buildings (rect + roof height): stoop / doorway spawns and the rooftop route (09zm_streetlife.js)
+function bld(x0, z0, x1, z1, fl, pal, o) { const h = building(x0, z0, x1, z1, fl, pal, o); COLL.push({ x0, x1, z0, z1 }); BLDS.push({ x0, x1, z0, z1, fl, h: GF + fl * FH + PAR - 0.6, shops: o && o.shops }); return h; }
 SEED = 1234;
 for (const b of GEN) {
   const ix0 = b.x0 + 3, ix1 = b.x1 - 3, iz0 = b.z0 + 3, iz1 = b.z1 - 3;

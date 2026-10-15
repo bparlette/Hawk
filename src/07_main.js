@@ -1,7 +1,7 @@
 
 // ---------------- autopilot for tests (?bot=1): walk up the street and back, fight every thug met, orbit the camera mid-fight ----------------
 const CORNER_PTS = [['HARBORPLACE', -40, -33], ['CONSTELLATION', -31, -33], ['WTC', -12, -33], ['AQUARIUM', 19, -33], ['POWERPLANT', 56, -33], ['PRATT', 70, -38.5], ['FOURSEASONS', 82, -41.5]]; // east along the promenade past 6 landmarks
-function near0() { let n = 0; for (const e of enemies) if (e.alive && e.state !== 'dying' && e.state !== 'idle' && e.state !== 'return' && Math.hypot(e.pos.x - hero.pos.x, e.pos.z - hero.pos.z) < 4) n++; return n; }
+function near0() { let n = 0; for (const e of enemies) if (e.alive && e.state !== 'dying' && e.state !== 'idle' && e.state !== 'return' && !e.calm && Math.hypot(e.pos.x - hero.pos.x, e.pos.z - hero.pos.z) < 4) n++; return n; }
 const BOTR = { i: 0, log: [], corners: [], t: 0, orbitT: 0, atkT: 0, done: false, fightT: 0, fights: 0, yaws: [] };
 function botThink(dt) {
   BOTR.t += dt; const b = (IN.bot = IN.bot || { mx: 0, my: 0, look: 0 });
@@ -14,7 +14,7 @@ function botThink(dt) {
   // QTE: a dizzy thug in reach -> press the action button (after a human-ish reaction delay) instead of swinging
   if (near0() >= 2 && POWER.cd <= 0 && hero.state === 'move' && !qteInRange()) { b.act = true; BOTR.power = (BOTR.power || 0) + 1; }
   if (QTE && qteInRange()) { b.mx = b.my = 0; BOTR.qteT = (BOTR.qteT || 0) + dt; if (BOTR.qteT > 0.2) { b.act = true; BOTR.qteT = 0; BOTR.qtePressed = (BOTR.qtePressed || 0) + 1; } return; } else BOTR.qteT = 0;
-  const near = enemies.filter((e) => e.alive && e.state !== 'dying' && e.state !== 'return' && e.state !== 'idle' && Math.hypot(e.pos.x - hero.pos.x, e.pos.z - hero.pos.z) < 9);
+  const near = enemies.filter((e) => e.alive && e.state !== 'dying' && e.state !== 'return' && e.state !== 'idle' && !e.calm && Math.hypot(e.pos.x - hero.pos.x, e.pos.z - hero.pos.z) < 9);
   let tx, tz, stopAt = 0.8;
   if (near.length) {
     near.sort((a, c) => Math.hypot(a.pos.x - hero.pos.x, a.pos.z - hero.pos.z) - Math.hypot(c.pos.x - hero.pos.x, c.pos.z - hero.pos.z));

@@ -85,7 +85,7 @@ const VEHICLES = []; // phase 2+: { kind: 'boat' | 'car' | 'skate', label: 'BOAR
 const RIDE = { v: null }; // the vehicle Harold is in / on right now
 const POWER = { cd: 0, CD: 7, uses: 0, joins: 0, hits: 0 };
 function nearestIn(list, r0 = 1.6) { const h = hero; let best = null, bd = 1e9; for (const o of list) { const d = Math.hypot(o.x - h.pos.x, o.z - h.pos.z); if (d < (o.r || r0) && d < bd) { bd = d; best = o; } } return best; }
-function inFight() { for (const e of enemies) { if (!e.alive || e.state === 'dying' || e.state === 'idle' || e.state === 'return' || e.state === 'dead') continue; if (Math.hypot(e.pos.x - hero.pos.x, e.pos.z - hero.pos.z) < 7.5) return true; } return false; }
+function inFight() { for (const e of enemies) { if (!e.alive || e.state === 'dying' || e.state === 'idle' || e.state === 'return' || e.state === 'dead' || e.calm) continue; if (Math.hypot(e.pos.x - hero.pos.x, e.pos.z - hero.pos.z) < 7.5) return true; } return false; }
 function actContext() {
   const h = hero; if (CINE.intro || PART.over) return null;
   const qt = qteTarget(); if (qt) return { kind: 'fin', label: 'FINISH', go: () => startFinisher(qt) };

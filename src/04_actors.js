@@ -135,6 +135,14 @@ const THUG_LOOKS = [
   { jacket: '#ff9f1c', pants: '#3d6bff', skin: '#8d5a3b', hair: 'cap', hairC: '#1fd3c6', shoe: '#fff', weapon: null, sleeve: false },
   { jacket: '#23c26b', pants: '#3a2f5a', skin: '#e8a878', hair: 'spikes', hairC: '#ff4fd8', shoe: '#ffd23c', weapon: 'bat', sleeve: false },
   { jacket: '#f2f2f2', pants: '#c42b48', skin: '#b9784b', hair: 'bald', hairC: '#3a2416', shoe: '#14101f', weapon: null, sleeve: false, big: true },
+  // thug archetypes (09zm_streetlife.js THUGX): each has its own silhouette / colour tell
+  { jacket: '#d8202f', pants: '#1b1b24', skin: '#a86b43', hair: 'cap', hairC: '#14101f', shoe: '#ff3d6e', weapon: null, sleeve: true, arch: 'rusher' },   // 5 RUSHER: red jacket, black cap
+  { jacket: '#2fae5a', pants: '#4a3a28', skin: '#e8b48a', hair: 'beanie', hairC: '#3fbf5a', shoe: '#fff', weapon: 'bottle', sleeve: false, arch: 'thrower' }, // 6 THROWER: green beanie + bottle
+  { jacket: '#5a6478', pants: '#2c2c3c', skin: '#7d4f33', hair: 'bald', hairC: '#3a2416', shoe: '#14101f', weapon: 'lid', sleeve: false, big: true, arch: 'shield' }, // 7 SHIELD: big, trash-can lid
+  { jacket: '#1fd3c6', pants: '#14101f', skin: '#f0b989', hair: 'spikes', hairC: '#1fd3c6', shoe: '#fff', weapon: null, sleeve: true, arch: 'dodger' },    // 8 DODGER: teal spikes
+  { jacket: '#ffd23c', pants: '#2f5bd3', skin: '#c98a5a', hair: 'beanie', hairC: '#ff3d6e', shoe: '#14101f', weapon: null, sleeve: true, arch: 'lookout' },  // 9 LOOKOUT: yellow jacket, whistles
+  { jacket: '#8a8fa3', pants: '#3a3a48', skin: '#b9784b', hair: 'cap', hairC: '#7b4dff', shoe: '#fff', weapon: null, sleeve: true, arch: 'mook' },          // 10 MOOK: grey hoodie
+  { jacket: '#a35bd0', pants: '#2c2c3c', skin: '#e8a878', hair: 'mohawk', hairC: '#23c26b', shoe: '#ffd23c', weapon: null, sleeve: false, arch: 'mook' },  // 11 MOOK
 ];
 function buildThug(look) {
   const mat = toonMat(); const d = THUG_D, J = skeleton(d, mat);
@@ -167,7 +175,9 @@ function buildThug(look) {
   }
   if (look.weapon) {
     const w = J.swR = grp(J.haR, 0, -0.04, 0); w.userData.mat = mat;
-    if (look.weapon === 'pipe') { part(w, G.cyl(0.04, 0.04, 0.95, 8), '#9aa3c5', 0, 0.35, 0); part(w, G.cyl(0.06, 0.06, 0.1, 8), '#5f6688', 0, 0.8, 0); }
+    if (look.weapon === 'bottle') { part(w, G.cyl(0.05, 0.06, 0.22, 8), '#2f8f4a', 0, 0.08, 0); part(w, G.cyl(0.02, 0.03, 0.1, 6), '#2f8f4a', 0, 0.24, 0, { outline: false }); }
+    else if (look.weapon === 'lid') { const l = J.lid = grp(J.haL, 0.04, -0.04, 0.1); l.userData.mat = mat; part(l, G.cyl(0.36, 0.36, 0.05, 14), '#9aa3b5', 0, 0, 0, { rot: [Math.PI / 2, 0, 0] }); part(l, G.cyl(0.07, 0.07, 0.07, 8), '#5f6688', 0, 0, 0.05, { rot: [Math.PI / 2, 0, 0], outline: false }); }
+    else if (look.weapon === 'pipe') { part(w, G.cyl(0.04, 0.04, 0.95, 8), '#9aa3c5', 0, 0.35, 0); part(w, G.cyl(0.06, 0.06, 0.1, 8), '#5f6688', 0, 0.8, 0); }
     else { part(w, G.cyl(0.075, 0.03, 0.95, 10), '#d9944f', 0, 0.38, 0); part(w, G.cyl(0.035, 0.035, 0.08, 8), '#14101f', 0, -0.06, 0); }
   }
   J.kind = 'thug'; return J;
