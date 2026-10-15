@@ -223,6 +223,7 @@
   // ---------------- Harold: hurt / dodge bookkeeping ----------------
   function haroldHit(st, dmg, kind) {
     const h = st.h; if (h.inv > 0 || st.over || st.surf) return false;
+    dmg = BOSSX.hurt(st, dmg); if (dmg <= 0) return false; 
     st.hp = Math.max(0, st.hp - dmg); h.inv = 1.3; h.hurtT = 0; st.stats.hitsTaken++; DUELS.hurt(); sfx('hurt'); st.shk = Math.max(st.shk, 0.35);
     pop(V.set(h.x, 2.0, h.z), '-' + dmg, ''); h.swT = -1; h.queued = false;
     if (kind === 'slip') { h.slipT = 0; h.vz = 3.2; h.vx = rnd(-1.5, 1.5); }
@@ -325,7 +326,7 @@
   function startSwing(st, n) { const h = st.h; h.swN = n; h.swT = 0; h.swHit = false; sfx('swing'); }
   function tryHit(st) {
     const h = st.h, b = st.b; if (!bossLow(st) || st.over) return; const d = Math.hypot(b.x - h.x, b.z - h.z); if (d > REACH + (h.swN === 2 ? 0.4 : 0)) return;
-    const crit = b.open > 0 || st.bs === 'dizzy'; let dmg = HIT[h.swN] * (crit ? CRIT : 1); dmg = Math.round(dmg);
+    const crit = b.open > 0 || st.bs === 'dizzy'; let dmg = HIT[h.swN] * (crit ? CRIT : 1); dmg = BOSSX.hit(st, Math.round(dmg), 'bhp');
     st.bhp -= dmg; st.stats.landed++; if (crit) st.stats.crits++; st.pow = Math.min(100, st.pow + POW_HIT); b.flash = 1; b.hurtT = 0;
     st.hs = h.swN === 2 ? 0.085 : 0.065; st.shk = Math.max(st.shk, h.swN === 2 ? 0.45 : 0.22); sfx(h.swN === 2 ? 'heavy' : 'hit');
     pop(V.set(b.x, b.y + 2.3, b.z), (h.swN === 2 ? 'SPLOOSH! ' : '') + dmg + (crit ? '!' : ''), crit ? 'c' : h.swN === 2 ? 'w' : '');

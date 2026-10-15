@@ -332,6 +332,7 @@
   }
   function damageBoss(st, dmg, crit, word) {
     if (st.bs === 'roar' || st.bs === 'ko' || st.bs === 'intro') return;
+    dmg = BOSSX.hit(st, dmg, 'bhp');
     // he guards in his tight gear unless he's OPEN: stalking = 35%, wind-ups / lunges / throws = 60%, open / dizzy / posing on GREEN = 150% gold crits
     const k = crit ? 1.5 : st.bs === 'stalk' ? 0.35 : 0.6, d = Math.max(1, Math.round(dmg * k)); st.bhp -= d; st.stats.landed++; if (crit) st.stats.crits++;
     if (!crit && st.bs === 'stalk' && Math.random() < 0.35) pop(V2.set(st.bx, 3.2, st.bz), 'TOO TIGHT! WAIT FOR AN OPENING', '');

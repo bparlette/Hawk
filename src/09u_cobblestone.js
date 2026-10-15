@@ -279,6 +279,7 @@
   // a hit (inv-gated) or a drain tick (not inv-gated, small): both go through here
   function damage(st, dmg, kind, drain) {
     if (st.over || st.flareT >= 0) return false;
+    if (!drain) { dmg = BOSSX.hurt(st, dmg); if (dmg <= 0) return false; }
     if (!drain) { if (st.inv > 0) return false; st.inv = 1.3; st.hurtT = 0.4; st.lockT = 0.3; st.shake = 0.35; st.stop = 0.06; DUELS.hurt(); sfx('hurt'); C.hflash = 1; st.lane = st.lane; st.duck = false; pop('-' + dmg, V.set(sx(st.lane) * 0.95, 2.0, 0.2), ''); }
     st.hp -= dmg;
     if (!drain || !st.drained) { st.stats.hits[kind]++; st.stats.hitsTaken++; st.combo = 0; if (drain) st.drained = true; }
@@ -370,7 +371,7 @@
   function landSwing(st) {
     const k = st.swingK; V.set(sx(st.lane) * 0.6 + rnd(-0.3, 0.3), k === 2 ? 2.4 : 1.9, st.landed ? 1.6 : MZ - 0.6);
     if (isSolid(st) && st.ms !== 'down') {
-      const crit = st.ms === 'open' && st.mt < 0.4, dmg = SWING[k] + (crit ? 2 : 0); st.mhp -= dmg; st.stats.landed++; st.combo++; st.comboT = 1.1; st.stats.maxCombo = Math.max(st.stats.maxCombo, st.combo);
+      const crit = st.ms === 'open' && st.mt < 0.4; let dmg = BOSSX.hit(st, SWING[k] + (crit ? 2 : 0), 'mhp'); st.mhp -= dmg; st.stats.landed++; st.combo++; st.comboT = 1.1; st.stats.maxCombo = Math.max(st.stats.maxCombo, st.combo);
       sfx(k === 2 ? 'heavy' : 'hit'); spark(V, k === 2 ? 14 : 6); flashBoss(k === 2 ? '#9affd8' : '#ffffff'); st.stop = k === 2 ? 0.085 : 0.065; st.shake = Math.max(st.shake, k === 2 ? 0.3 : 0.12);
       pop((k === 2 ? pick(WORDS[2]) + ' ' : '') + dmg, V, k === 2 || crit ? 'big' : ''); addPow(st, k === 2 ? 0.09 : 0.05);
       if (st.mhp <= 0) { st.mhp = 0; phaseDown(st); }

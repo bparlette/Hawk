@@ -48,7 +48,7 @@
   const HX = -1.05, PX = 1.28, CZ = -0.3, TOP = 0.95, PLZ = -0.15; // Harold / Pete x, counter z centre, counter top, plate z
   const WIN0 = 0.5, WIN1 = 0.93; // swat window (fraction of the slide)
   const P = { scene: null, cam: null, title: "PETE'S PLATE", pips: 1,
-    hint: '<b>J</b> eat (steady!) · <b>K</b> swat Pete\'s slide · <b>E</b> sip lemonade / beat a hiccup',
+    hint: '<b>X / J</b> EAT on the beat (keep the dot in the green) · <b>A / K</b> SWAT Pete\'s slide on the glow · <b>Y / E</b> SIP lemonade / beat a HIC!',
     labels: { a: 'EAT', b: 'SWAT', c: 'SIP', l: 'SIP', r: 'SWAT' } };
   const V = new THREE.Vector3(), V2 = new THREE.Vector3(), M4 = new THREE.Matrix4(), Q4 = new THREE.Quaternion();
 
@@ -204,8 +204,11 @@
       #peteui .cups b.e { background: transparent; opacity: .45; }
       body.duel-pete #duel .dtell { top: 50%; font-size: 13px; }`;
     document.head.appendChild(css);
-    const ui = document.createElement('div'); ui.id = 'peteui'; ui.innerHTML = '<div class="n">FULLNESS</div><div class="fl"><i></i></div><div class="cups">LEMONADE<span></span></div>'; DUELS.hudEl.appendChild(ui);
-    P.ui = { el: ui, bar: ui.querySelector('.fl i'), cups: ui.querySelector('.cups span'), pn: DUELS.hudEl.querySelector('.dbar.p .n') };
+    const ui = document.createElement('div'); ui.id = 'peteui'; ui.innerHTML = '<div class="n">FULLNESS</div><div class="fl"><i></i></div><div class="cups">LEMONADE<span></span></div>'
+      + '<div class="n" style="margin-top:6px">BEAT <span class="stk" style="color:#ffd23c"></span></div><div class="bt" style="position:relative;height:10px;border:2px solid #14101f;border-radius:6px;background:linear-gradient(90deg,#ff3d6e 0 18%,#3fd13a 18% 50%,#3a3a48 50%)"><i style="position:absolute;top:-3px;width:4px;height:14px;background:#fff;left:0"></i></div>'
+      + '<div class="warn" style="margin-top:4px;color:#ff3d6e;font-weight:900;opacity:0">SLOW DOWN!</div>'
+      + '<div class="how" style="margin-top:6px;font-size:9px;line-height:1.35;color:#fff;opacity:.92">GOAL: CLEAR YOUR PLATE BEFORE PETE \u00b7 FIRST TO 3 COURSES<br>EAT: X / J ON THE BEAT \u00b7 SWAT: A / K \u00b7 SIP: Y / E</div>'; DUELS.hudEl.appendChild(ui);
+    P.ui = { el: ui, bar: ui.querySelector('.fl i'), cups: ui.querySelector('.cups span'), pn: DUELS.hudEl.querySelector('.dbar.p .n'), beat: ui.querySelector('.bt i'), stk: ui.querySelector('.stk'), warn: ui.querySelector('.warn') };
   };
 
   // ---------------- state ----------------
@@ -235,7 +238,7 @@
   const pete = (txt, d = 3) => DUELS.say('PIT BEEF PETE', txt, d);
   P.start = function (opts = {}) {
     P.st = null; const c0 = clamp(+(Q.get('petecourse') || 1) - 1, 0, 4) | 0; const st = reset(c0); DUELS.log.push('pete:' + P.rigKind + ':' + LEX.id + ':' + LEX.src);
-    P.ui.pn.textContent = "HAROLD'S PLATE"; DUELS.banner('PIT BEEF PETE<small>LEXINGTON MARKET · EAT-OFF</small>', 2.4);
+    P.ui.pn.textContent = "HAROLD'S PLATE"; DUELS.banner('PIT BEEF PETE<small>CLEAR YOUR PLATE FIRST \u00b7 EAT ON THE BEAT: X / J<br>SWAT HIS SLIDE: A / K \u00b7 SIP: Y / E</small>', 3.4);
     pete(GR4_PETE.pete_taunts[0], 3.2);
     P.camP = new THREE.Vector3(0, 3.4, 7); P.camL = new THREE.Vector3(0, 1.4, CZ);
   };
@@ -263,7 +266,7 @@
   function courseOver(st, harold) {
     if (st.ph !== 'eat') return; const C = COURSES[st.c]; st.results.push(harold ? 'H' : 'P'); st.stats.courses.push((harold ? 'H' : 'P') + ':' + st.t.toFixed(1)); if (harold) st.hw++; else st.pw++;
     st.cheat = null; st.hic = null; P.slideM.visible = false; P.strip.material.opacity = 0; blip('bell'); hud(st);
-    if (st.hw >= WIN_N) { st.over = true; st.won = true; JUICE.ko(); setPh(st, 'waddle', 99); st.outT = 0; DUELS.banner('HAROLD WINS!<small>' + st.hw + '-' + st.pw + ' · ' + C.name + ' CLEARED</small>', 2.6); DUELS.log.push('pete:win:' + st.hw + '-' + st.pw); return; }
+    if (st.hw >= WIN_N) { st.over = true; st.won = true; JUICE.ko(); setPh(st, 'waddle', 99); st.outT = 0; DUELS.banner('HAROLD WINS!<small>CHAMPION EATER \u00b7 ' + st.hw + '-' + st.pw + ' \u00b7 BEST STREAK ' + (st.stats.bestStreak || 0) + '</small>', 3.0); DUELS.shake && DUELS.shake(0.5); blip('bell'); DUELS.log.push('pete:win:' + st.hw + '-' + st.pw); return; }
     if (st.pw >= WIN_N) { DUELS.banner('PETE TAKES IT<small>' + st.pw + '-' + st.hw + '</small>', 2.2); lose(st, 'courses'); return; }
     DUELS.banner((harold ? 'PLATE CLEAN!' : 'PETE\u2019S PLATE CLEAN!') + '<small>' + C.name + ' TO ' + (harold ? 'HAROLD' : 'PETE') + ' · ' + st.hw + '-' + st.pw + '</small>', 1.8);
     setPh(st, 'fan', 3.0); sayLine(GR4_PETE.mavis_fan[(st.c) % GR4_PETE.mavis_fan.length], 2.6);
@@ -284,10 +287,15 @@
     else if (ch && (ch.ph === 'slide' || ch.ph === 'tell')) { st.stats.whiffs++; DUELS.tell('TOO EARLY! WAIT FOR THE STRIP', 0.7); }
     else { st.swatCd = 0.3; }
   }
+  function beatHud(st, dt) { if (!P.ui || !P.ui.beat) return; const e = clamp((st.t - st.lastEat) / 0.9, 0, 1); P.ui.beat.style.left = (e * 100).toFixed(0) + '%';
+    P.ui.stk.textContent = st.streak ? 'STREAK ' + st.streak + (st.streak >= 10 ? ' (x3)' : st.streak >= 5 ? ' (x2)' : '') : ''; st.warnT = Math.max(0, (st.warnT || 0) - dt); P.ui.warn.style.opacity = st.warnT > 0 ? (0.5 + 0.5 * Math.sin(st.t * 30)).toFixed(2) : 0; }
   function eat(st) {
     if (st.coughT > 0 || st.hic) return; const C = COURSES[st.c], dtE = st.t - st.lastEat; st.lastEat = st.t;
     st.hRem = Math.max(0, st.hRem - 1); st.full += C.full; st.stats.bites++; st.biteT = 0; st.biteN++; blip('chomp'); crumbs(HX + 0.08, TOP + 1.15, PLZ + 0.25, 2);
-    if (dtE < GULP) { st.full += 3.6; st.gulps++; st.stats.gulps++; if (st.gulps === 1) DUELS.tell('TOO FAST! GULP!', 0.5); if (st.gulps >= 3) { st.coughT = 0.7; st.gulps = 0; st.stats.coughs++; DUELS.tell('*COUGH COUGH* EASY, HAROLD!', 0.8); sfx('hurt'); } }
+    // rhythm: a bite 0.16-0.45 s after the last one is ON THE BEAT and builds a STREAK (x2 bites at 5, x3 at 10). Mashing = GULPS: SLOW DOWN! warning, 3 = choke
+    const inBeat = dtE >= 0.16 && dtE <= 0.45; st.streak = inBeat ? (st.streak || 0) + 1 : dtE < GULP ? 0 : Math.max(0, (st.streak || 0) - 2); st.stats.bestStreak = Math.max(st.stats.bestStreak || 0, st.streak);
+    const mult = st.streak >= 10 ? 3 : st.streak >= 5 ? 2 : 1; if (mult > 1) st.hRem = Math.max(0, st.hRem - (mult - 1)); if ((st.streak === 5 || st.streak === 10) && inBeat) { DUELS.tell('STREAK! x' + mult + ' BITES', 0.7); blip('bell'); }
+    if (dtE < GULP) { st.full += 3.6; st.gulps++; st.stats.gulps++; st.warnT = 1.2; if (st.gulps < 3) DUELS.tell('SLOW DOWN! ' + (3 - st.gulps) + ' MORE GULP' + (st.gulps === 2 ? '' : 'S') + ' = CHOKE', 0.6); if (st.gulps >= 3) { st.coughT = 1.2; st.full += 6; st.gulps = 0; st.stats.coughs++; DUELS.tell('*CHOKE* COUGH COUGH! SLOW DOWN, HAROLD', 1.0); sfx('hurt'); } }
     else st.gulps = 0;
     plates(st); if (st.hRem <= 0) courseOver(st, true);
   }
@@ -312,8 +320,8 @@
         if (!st.hic && st.sipT < 0) { st.hicT -= dt * (st.full > 55 ? 1.6 : 1); if (st.hicT <= 0) { st.hic = { t: 0, win: 1.0 - st.c * 0.04 }; st.hicT = rnd(5, 8); DUELS.tell(GR4_PETE.hiccup[st.stats.hicOk % 3].replace('TAP NOW', 'TAP ACT') + ' (ACT / E)', st.hic.win); sfx('jump'); } }
         if (!st.cheat && st.cheatsLeft > 0) { st.cheatT -= dt; if (st.cheatT <= 0 && st.pRem > 4) { startCheat(st); st.cheatT = rnd(2.4, 3.6) - st.c * 0.15; } }
         stepCheat(st, dt);
-        if (!st.cheat || st.cheat.ph === 'back') { st.pRem -= C.pete * dt * (st.t % 4 < 3.4 ? 1.08 : 0.55); st.chew += dt * 9; } // he chomps in bursts
-        plates(st);
+        if (!st.cheat || st.cheat.ph === 'back') { st.pRem -= C.pete * (st.c === 0 ? 0.8 : 0.9) * dt * (st.t % 4 < 3.4 ? 1.08 : 0.55); st.chew += dt * 9; } // he chomps in bursts (eased: the first course is winnable on a first try)
+        plates(st); beatHud(st, dt);
         if (st.full >= 100) { st.full = 100; hud(st); lose(st, 'full'); break; }
         if (st.pRem <= 0) { st.pRem = 0; courseOver(st, false); }
         break; }

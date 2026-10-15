@@ -161,7 +161,7 @@ const COOP = (function () {
   // ---- per step: remember positions, read P2 ----
   const P0 = { hx: 0, hz: 0, px: 0, pz: 0 };
   function preStep(dt) { P0.hx = hero.pos.x; P0.hz = hero.pos.z; P0.px = partner.pos.x; P0.pz = partner.pos.z; readP2(dt); }
-  const P2FREE = new Set(['move', 'idle', 'atk', 'air', 'airatk', 'revive', 'hurt', 'down', 'getup', 'ko']);
+  const P2FREE = new Set(['move', 'idle', 'atk', 'air', 'airatk', 'revive', 'hurt', 'down', 'getup', 'ko', 'ride']);
   function worldIn(I, yaw) { const f = camFwd(yaw), r = [-f[1], f[0]]; return [r[0] * I.mx + f[0] * I.my, r[1] * I.mx + f[1] * I.my]; }
   function step(dt) {
     if (!C.on) return;
@@ -181,8 +181,8 @@ const COOP = (function () {
       let who = null;
       if (!scripted && !levels && sep >= MS - 0.3 && !C.card) { const ux = dx / sep, uz = dz / sep;
         const yw = CAM.yaw, w1 = worldIn(IN, yw), w2 = worldIn(IN2, yw), m1 = Math.hypot(w1[0], w1[1]), m2 = Math.hypot(w2[0], w2[1]);
-        if (H.state === 'move' && m1 > 0.5 && -(w1[0] * ux + w1[1] * uz) / m1 > 0.45) who = 'p1';
-        else if (P.state === 'move' && m2 > 0.5 && (w2[0] * ux + w2[1] * uz) / m2 > 0.45) who = 'p2'; }
+        if ((H.state === 'move' || H.state === 'ride') && m1 > 0.5 && -(w1[0] * ux + w1[1] * uz) / m1 > 0.45) who = 'p1';
+        else if ((P.state === 'move' || P.state === 'ride') && m2 > 0.5 && (w2[0] * ux + w2[1] * uz) / m2 > 0.45) who = 'p2'; }
       if (who && (C.edgeWho === who || C.edgeT === 0)) { C.edgeT += dt; C.edgeWho = who; C.graceT = 0; }
       else { C.graceT += dt; if (C.graceT > GRACE) { C.edgeT = 0; C.edgeWho = null; } }
       if (C.edgeT >= SPLIT_T) doSplit();

@@ -268,7 +268,7 @@
   function moment(name) { const w = window.__ckShot; if (w && (w === name || name.startsWith(w + ':'))) { window.__ckShot = null; window.__ckShotAt = name; DUELS.hold = true; } } // test screenshots
   function setM(st, s, dur) { st.ms = s; st.mt = 0; st.mdur = dur; st.hitThis = false; st.dodged = false; }
   function hurtHarold(st, dmg, kind) {
-    if (st.inv > 0 || st.over || st.sp) return false; st.hp -= dmg; st.inv = 1.3; st.hurtT = 0.45; st.stats.hitsBy[kind]++; st.stats.hitsTaken++; st.stats.dmgTaken += dmg; DUELS.hurt(); sfx('hurt'); C.hflash = 1; st.lane = 0; st.duck = false; st.lockT = 0.3; st.sw = null; st.combo = 0;
+    if (st.inv > 0 || st.over || st.sp) return false; dmg = BOSSX.hurt(st, dmg); if (dmg <= 0) return false; st.hp -= dmg; st.inv = 1.3; st.hurtT = 0.45; st.stats.hitsBy[kind]++; st.stats.hitsTaken++; st.stats.dmgTaken += dmg; DUELS.hurt(); sfx('hurt'); C.hflash = 1; st.lane = 0; st.duck = false; st.lockT = 0.3; st.sw = null; st.combo = 0;
     st.meter = Math.min(100, st.meter + 6); powHud(st); DUELS.shake(0.25); V.set(C.H.root.position.x, 2.2, 0.2); DUELS.pop('-' + dmg, V, ''); DUELS.log.push('hurt:' + kind);
     if (st.hp <= 0) {
       if (mercy() && !st.wind) { st.wind = true; st.hp = 50; st.stats.secondWind++; st.inv = 2.2; DUELS.banner('SECOND WIND!<small>MAVIS: GET UP, HAROLD!</small>', 1.8); DUELS.say('MAVIS', 'Get UP, Harold! You promised me crab cakes!', 2.4); DUELS.flash('#9dff6b', 0.45); V.set(C.H.root.position.x, 2.4, 0.2); DUELS.pop('+50', V, 'heal'); st.meter = 100; powHud(st); return true; }

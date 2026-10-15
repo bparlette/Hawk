@@ -299,7 +299,7 @@ const DUELS = (function () {
       const I = (D.I = input()); if (k < steps - 1) PRESS.clear();
       if (overMode) { D.overT += dt; if (I.ok || I.a) overPick(true); else if (I.back || I.b) overPick(false); if (!D.cur) return; }
       if (!K.lbl) { K.lbl = true; labels(K.labels); } // (re-applied on the first duel frame: the city HUD may have relabelled ACT in the frame the duel started)
-    K.step(dt, I); if (!D.cur) return; hudTick(dt); if (D.hold) break; // chipkid-fun: (test freeze)
+    BOSSX.frame(dt, I); K.step(dt * BOSSX.tempo(), I); if (!D.cur) return; hudTick(dt); if (D.hold) break; // chipkid-fun: (test freeze)
     }
     const frozen = J.hs > 0; K.render(frozen ? 0 : rdt); J.draw(K, rdt); // chipkid-fun: J.draw = draw() with the shared shake / zoom / pop layer (no-ops unless a duel asks); polish: poses hold still during a hitstop
     if (!(frozen && !K.buffer)) PRESS.clear();
