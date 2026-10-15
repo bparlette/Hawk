@@ -363,6 +363,60 @@
   addEventListener("blur", function () { /* focus moved into the iframe: nothing held by the shell */ if (active) { JOY.id = null; } });
   document.addEventListener("visibilitychange", function () { if (document.hidden && active) releaseAll(active); });
 
+  // ---------------------------------------------------------------- universal gamepad / cabinet polling
+  var PAD_PREV = {};
+  var PAD_JOY = { up: false, down: false, left: false, right: false };
+  function pollGamepads() {
+    var pads = navigator.getGamepads ? navigator.getGamepads() : [];
+    var gp = null;
+    for (var i = 0; i < pads.length; i++) { if (pads[i] && pads[i].connected) { gp = pads[i]; break; } }
+    if (gp) {
+      var prev = PAD_PREV[gp.index] || [];
+      var b = function (idx) { return !!(gp.buttons[idx] && gp.buttons[idx].pressed); };
+      var dz = function (v) { return Math.abs(v) < 0.22 ? 0 : v; };
+      var ax = dz(gp.axes[0] || 0), ay = dz(gp.axes[1] || 0);
+
+      // Directions: Left Stick or D-Pad (buttons 12=up, 13=down, 14=left, 15=right)
+      var nd = {
+        up: ay < -0.4 || b(12),
+        down: ay > 0.4 || b(13),
+        left: ax < -0.4 || b(14),
+        right: ax > 0.4 || b(15)
+      };
+
+      if (nd.up !== PAD_JOY.up || nd.down !== PAD_JOY.down || nd.left !== PAD_JOY.left || nd.right !== PAD_JOY.right) {
+        PAD_JOY = nd;
+        setDirs(nd);
+      }
+
+      // Buttons (Xbox standard: 0=A, 1=B, 2=X, 3=Y, 8=Back/View, 9=Start)
+      var btnMap = [
+        { name: "jump", pressed: b(0) },                       // A -> Jump
+        { name: "attack", pressed: b(2) || b(1) },             // X or B -> Attack
+        { name: "special", pressed: b(3) },                    // Y -> Special
+        { name: "start", pressed: b(9) }                       // Start -> Pause / Menu
+      ];
+
+      btnMap.forEach(function (m) {
+        var was = prev[m.name];
+        if (m.pressed && !was) btnDown(m.name);
+        else if (!m.pressed && was) btnUp(m.name);
+        prev[m.name] = m.pressed;
+      });
+
+      // View / Back (button 8) or Guide: Toggle Game Picker
+      if (b(8) && !prev[8]) {
+        if (picker.hidden) openPicker();
+        else if (active) closePicker();
+      }
+      prev[8] = b(8);
+
+      PAD_PREV[gp.index] = prev;
+    }
+    requestAnimationFrame(pollGamepads);
+  }
+  requestAnimationFrame(pollGamepads);
+
   // ---------------------------------------------------------------- orientation tip
   var tipped = {};
   function maybeOrientationTip(g) {
