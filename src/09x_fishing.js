@@ -15,7 +15,7 @@
 // Rig hook (Opus, optional): window.buildChompy({ THREE, toonMat, outlineMat, addOdir, QUAL }) -> { root, wheel?, eyes?: [pupil objects], update?(dt, chew) }.
 (function () {
   const F = { scene: null, cam: null, title: 'CATCH', pips: 1,
-    hint: '<b>J</b> cast / hook · hold <b>K</b> reel · <b>E</b> leave',
+    hint: '<b>A / J</b> cast (stop in green) + hook on BITE · hold <b>B / K</b> reel: keep TENSION in the GREEN · <b>Y / E</b> leave',
     labels: { a: 'CAST', b: 'REEL', c: 'LEAVE', l: '', r: '' } };
   const SPOTS = [
     { id: 'hp', name: 'HARBORPLACE PLAZA', x: -52, z: -28.2 },
@@ -24,13 +24,17 @@
     { id: 'p4', name: 'POWER PLANT PIER', x: 56, z: -28.2 },
     { id: 'broadway', name: 'BROADWAY PIER', x: 126, z: -28.2 },
   ];
-  const GOAL = 5, LINES = 3, BITE_WIN = 0.9, UPG = [{ at: 100, id: 'cane', name: 'CANE UPGRADE' }, { at: 240, id: 'purse', name: 'PURSE UPGRADE' }];
+  const GOAL = 5, LINES = 4, BITE_WIN = 1.0, UPG = [{ at: 100, id: 'cane', name: 'CANE UPGRADE' }, { at: 240, id: 'purse', name: 'PURSE UPGRADE' }];
   // name, colour, fight size (0.6 easy .. 1.4 hard), kind, Chompy points (junk only feeds him)
   const DAY = [['PERCH', '#e8b030', 0.8, 'fish'], ['BLUEGILL', '#3a8a9a', 0.75, 'fish'], ['STRIPED ROCKFISH', '#8a9a7a', 1.1, 'fish'], ['WHITE PERCH', '#c8ccd0', 0.85, 'fish']];
   const NIGHT_L = [['CHANNEL CATFISH', '#5a5648', 1.2, 'fish'], ['AMERICAN EEL', '#3a4a2a', 1.0, 'eel'], ['BLACK DRUM', '#4a4a58', 1.25, 'fish'], ['SNAPPER BLUEFISH', '#4a7a90', 1.0, 'fish']];
   const CRAB = ['BLUE CRAB', '#2a6ab0', 0.9, 'crab'];
   const JUNK = [['OLD BOOT', '#6a4a2a', 0.8, 'boot'], ['BALD TIRE', '#2a2a30', 1.0, 'tire'], ['SHOPPING CART', '#b8bcc4', 1.2, 'cart'], ['TRAFFIC CONE', '#ff7a1a', 0.7, 'cone'], ['RUSTY BUCKET', '#8a6a4a', 0.75, 'bucket']];
   const LANTERN = ['GHOST LANTERN', '#8affd8', 0.7, 'lantern'], KEY = ['SUNKEN KEY', '#e8c040', 0.8, 'key'];
+  // fight patterns (Brad 2026-10-15 playability pass): steady / runner (long runs: ease off) / diver (hard tugs every few s) / thrasher (jerky tension) / heavy junk (slow, no fight)
+  const PAT = { 'PERCH': 'steady', 'BLUEGILL': 'steady', 'WHITE PERCH': 'steady', 'STRIPED ROCKFISH': 'runner', 'SNAPPER BLUEFISH': 'runner', 'CHANNEL CATFISH': 'diver', 'BLACK DRUM': 'diver', 'AMERICAN EEL': 'thrasher', 'BLUE CRAB': 'thrasher' };
+  const PATN = { steady: 'STEADY', runner: 'RUNNER: EASE OFF WHEN IT RUNS', diver: 'DIVER: BIG TUGS', thrasher: 'THRASHER: JERKY LINE', heavy: 'DEAD WEIGHT' };
+  const G0 = 0.3, G1 = 0.78; // the green tension band
   const rnd = (a, b) => a + Math.random() * (b - a), pickA = (a) => a[Math.floor(Math.random() * a.length)];
   const V = new THREE.Vector3(), V3 = new THREE.Vector3();
   // ---------------- saved progress ----------------
@@ -128,8 +132,10 @@
     F.fx = new THREE.InstancedMesh(new THREE.PlaneGeometry(0.1, 0.1), new THREE.MeshBasicMaterial({ map: DUELS.dot('#ffffff', false), transparent: true, depthWrite: false, fog: false }), 30); F.fx.count = 0; F.fx.frustumCulled = false; sc.add(F.fx); F.fxs = [];
     // UI: cast meter + Chompy meter + catch list, inside the duel HUD
     const ui = document.createElement('div'); ui.className = 'fshui';
-    ui.innerHTML = '<div class="m"><u></u><i></i></div><div class="cm"><span class="cn">CHOMPY</span><b><em></em></b></div><div class="lst"></div>';
-    DUELS.hudEl.appendChild(ui); F.ui = { el: ui, m: ui.querySelector('.m'), mi: ui.querySelector('.m i'), mu: ui.querySelector('.m u'), cm: ui.querySelector('.cm em'), cn: ui.querySelector('.cn'), lst: ui.querySelector('.lst'), pn: DUELS.hudEl.querySelector('.dbar.p .n'), bn: DUELS.hudEl.querySelector('.dbar.b .n') };
+    ui.innerHTML = '<div class="tn" style="display:none;margin:4px 0"><div style="font-size:10px;color:#ffd23c">TENSION \u00b7 KEEP IT IN THE GREEN <span class="tp" style="color:#9fe8ff"></span></div><div style="position:relative;height:12px;border:2px solid #14101f;border-radius:6px;background:linear-gradient(90deg,#3a5a7a 0 ' + G0 * 100 + '%,#3fd13a ' + G0 * 100 + '% ' + G1 * 100 + '%,#ff3d6e ' + G1 * 100 + '%)"><i style="position:absolute;top:-4px;width:5px;height:18px;background:#fff;border:1px solid #14101f;left:0"></i></div><div class="tw" style="font-size:10px;font-weight:900;height:12px"></div></div>'
+      + '<div class="how" style="font-size:9px;line-height:1.35;opacity:.92">GOAL: LAND ' + GOAL + ' CATCHES \u00b7 ' + LINES + ' LINES<br>CAST: A / J \u00b7 BITE: A / J FAST \u00b7 REEL: HOLD B / K \u00b7 LEAVE: Y / E</div>'
+      + '<div class="m"><u></u><i></i></div><div class="cm"><span class="cn">CHOMPY</span><b><em></em></b></div><div class="lst"></div>';
+    DUELS.hudEl.appendChild(ui); F.ui = { tn: ui.querySelector('.tn'), ti: ui.querySelector('.tn i'), tw: ui.querySelector('.tw'), tp: ui.querySelector('.tp'), el: ui, m: ui.querySelector('.m'), mi: ui.querySelector('.m i'), mu: ui.querySelector('.m u'), cm: ui.querySelector('.cm em'), cn: ui.querySelector('.cn'), lst: ui.querySelector('.lst'), pn: DUELS.hudEl.querySelector('.dbar.p .n'), bn: DUELS.hudEl.querySelector('.dbar.b .n') };
     const css = document.createElement('style'); css.textContent = `
       #duel .fshui { display: none; position: absolute; inset: 0; pointer-events: none; }
       body.duel-fishing #duel .fshui { display: block; }
@@ -166,14 +172,14 @@
     const st = F.st; if (!st) return; const lv = UPG.filter((u) => save.chompy >= u.at).length, nxt = UPG[lv];
     F.ui.cm.style.width = (nxt ? clamp((save.chompy - (UPG[lv - 1] ? UPG[lv - 1].at : 0)) / (nxt.at - (UPG[lv - 1] ? UPG[lv - 1].at : 0)), 0, 1) * 100 : 100).toFixed(0) + '%';
     F.ui.cn.textContent = 'CHOMPY ' + (nxt ? 'NEXT: ' + nxt.name : 'FULL');
-    DUELS.sub('CATCH ' + st.catches + '/' + GOAL + ' · LINES ' + '♥'.repeat(Math.max(0, st.lines)), F.spot ? F.spot.name : '');
+    DUELS.sub('CATCH ' + st.catches + '/' + GOAL + ' · LINES ' + '♥'.repeat(Math.max(0, st.lines)) + ' · SCORE ' + (st.score || 0), F.spot ? F.spot.name : '');
     F.ui.lst.textContent = st.list.slice(-4).join(' · ');
   }
   F.start = function (opts = {}) {
     F.spot = F.spotNext || SPOTS.find((s) => s.id === (Q.get('fishspot') || 'p1')) || SPOTS[1]; F.spotNext = null;
     if (F.night !== isNight()) { F.rebuildSky(); }
     F.ui.pn.textContent = 'LINE'; F.ui.bn.textContent = 'CATCH';
-    reset(); DUELS.banner('HARBOR FISHING<small>' + F.spot.name + (F.night ? ' · NIGHT' : '') + '</small>', 2.2);
+    reset(); DUELS.banner('HARBOR FISHING<small>' + F.spot.name + (F.night ? ' · NIGHT' : '') + '<br>CAST A / J \u00b7 HOOK ON THE BITE \u00b7 HOLD B / K, TENSION IN THE GREEN</small>', 3.2);
     DUELS.say('HAROLD', pickA(['Nothing like a quiet pier, Mavis.', 'Fish, crabs, and the occasional shopping cart.', 'Chompy eats whatever I hook. Delightful.']), 3);
     F.camP = new THREE.Vector3(); F.log = DUELS.log.push('fish:' + F.spot.id + ':' + (F.night ? 'night' : 'day') + ':' + F.C.kind);
   };
@@ -186,13 +192,15 @@
   function setTell(t, d = 0.9) { DUELS.tell(t, d); }
   function beginBite(st) {
     const r = pickCatch(F.spot, st.perfect); st.hook = r.c; st.guar = r.why === 'guaranteed';
-    st.ph = 'bite'; st.bt = 0; setTell('BITE! TAP A!', BITE_WIN); fxAdd(st.bobx, -0.3, 0.1, 0, 1.8, 0, 0.5);
+    st.ph = 'bite'; st.bt = 0; setTell('BITE! PRESS A / J NOW!', BITE_WIN); sfx('jump'); sfx('hit'); fxAdd(st.bobx, -0.3, 0.1, 0, 1.8, 0, 0.5);
   }
   function finishCatch(st) {
     const c = st.hook, kind = c[3], junk = ['boot', 'tire', 'cart', 'cone', 'bucket'].includes(kind), rare = kind === 'lantern' || kind === 'key';
     const prevPts = save.chompy; // R-056: upgrades are judged against the points before THIS catch (fish/crab as well as junk)
     st.catches++; st.landT = 0; st.ph = 'land'; st.list.push(c[0]); save.caught[c[0]] = (save.caught[c[0]] || 0) + 1; let sub = '';
-    if (junk) { save.junk++; save.chompy += 20; sub = 'FEEDS CHOMPY +20'; st.feed = true; } else if (!rare) { save.bucket++; save.chompy += kind === 'crab' ? 6 : 4; sub = 'IN THE BUCKET'; }
+    if (junk) { save.junk++; save.chompy += 20; sub = 'FEEDS CHOMPY +20'; st.feed = true; } else if (!rare) { save.bucket++; save.chompy += kind === 'crab' ? 6 : 4;
+      const lb = +(c[2] * rnd(3.5, 9) * (st.perfect ? 1.15 : 1) * (st.cleanReel ? 1.1 : 1)).toFixed(1), pts = Math.round(lb * 10 * (st.cleanReel ? 1.5 : 1)); save.best = save.best || {}; const rec = !(save.best[c[0]] >= lb); if (rec) save.best[c[0]] = lb;
+      st.score = (st.score || 0) + pts; save.score = (save.score || 0) + pts; sub = lb + ' LB \u00b7 +' + pts + (st.cleanReel ? ' CLEAN REEL!' : '') + (rec ? ' \u00b7 NEW BEST!' : ''); }
     if (kind === 'lantern') { save.lantern = true; sub = 'PHANTOMS CAN BE FLASHED NOW'; }
     if (kind === 'key') { save.key = true; sub = 'OPENS THE SEWER STASH'; }
     for (const u of UPG) if (save.chompy >= u.at && (prevPts < u.at || !save[u.id])) { save[u.id] = true; DUELS.say('CHOMPY', 'BURP! ' + u.name + ' UNLOCKED', 3.6); }
@@ -221,15 +229,24 @@
       else if (st.wt >= st.biteAt) beginBite(st);
     } else if (st.ph === 'bite') {
       st.bt += dt; st.boby = -0.35 - 0.24 * Math.min(1, st.bt * 8); st.bobx = st.tx;
-      if (I.a) { st.ph = 'reel'; st.p = 0.18; st.ten = 0.25; st.run = 0; st.runT = rnd(1.4, 2.4); st.tellT = 0; const c = st.hook, kind = c[3]; st.size = c[2]; st.noRun = ['boot', 'tire', 'cart', 'cone', 'bucket', 'lantern', 'key'].includes(kind) && kind !== 'key' || st.guar; showItem(st, c); DUELS.banner('HOOKED!<small>HOLD B · EASE OFF ON RUNS</small>', 1.4); }
+      if (I.a) { st.ph = 'reel'; st.p = 0.18; st.ten = 0.25; st.run = 0; st.runT = rnd(1.4, 2.4); st.tellT = 0; const c = st.hook, kind = c[3]; st.size = c[2]; st.noRun = ['boot', 'tire', 'cart', 'cone', 'bucket', 'lantern', 'key'].includes(kind) && kind !== 'key' || st.guar; st.pat = st.noRun ? 'heavy' : PAT[c[0]] || 'steady'; st.cleanReel = true; st.dive = rnd(1.6, 2.6); if (st.pat !== 'runner' && st.pat !== 'heavy') st.noRun = true; DUELS.tell(PATN[st.pat], 1.2); showItem(st, c); DUELS.banner('HOOKED!<small>HOLD B · EASE OFF ON RUNS</small>', 1.4); }
       else if (st.bt >= BITE_WIN) { st.ph = 'ready'; st.cd = 0.4; DUELS.tell('IT GOT AWAY...', 1); st.hook = null; }
     } else if (st.ph === 'reel') {
       const sz = st.size, rate = (0.17 / sz) * (st.perfect ? 1.2 : 1) * (save.cane ? 1.2 : 1) * (st.noRun ? 1.15 : 1);
       if (!st.noRun) { if (st.run > 0) { st.run -= dt; if (st.run <= 0) { st.runT = rnd(1.5, 2.6); } } else { st.runT -= dt; if (st.runT <= 0.5 && st.tellT <= 0) { st.tellT = 0.5; setTell('IT RUNS! EASE OFF!', 0.9); } if (st.runT <= 0) { st.run = 0.9; st.tellT = 0; } } }
-      if (hold) { st.p += rate * dt; st.ten += (0.30 + (st.run > 0 ? 0.95 * sz : 0)) * dt; if (st.run > 0) st.p -= 0.12 * dt; } else { st.ten -= 0.6 * dt; st.p -= (st.run > 0 ? 0.05 : 0.02) * dt; }
+      // pattern pulls on the line
+      let pull = st.run > 0 ? 0.95 * sz : 0; if (st.pat === 'diver') { st.dive -= dt; if (st.dive < 0.5 && st.dive > 0 && st.tellT <= 0) { st.tellT = 0.5; setTell('TUG INCOMING! EASE OFF!', 0.6); } if (st.dive <= 0) { pull = 1.6 * sz; if (st.dive < -0.55) { st.dive = rnd(1.6, 2.6); st.tellT = 0; } } }
+      if (st.pat === 'thrasher') pull += Math.abs(Math.sin(st.t * 9)) * 0.55 * sz;
+      if (hold) st.ten += (0.36 + pull) * dt; else st.ten -= (0.62 - pull * 0.4) * dt;
+      const green = st.ten >= G0 && st.ten <= G1;
+      if (hold) st.p += rate * dt * (green ? 1.5 : st.ten > G1 ? 0.6 : 0.4); else st.p -= (st.run > 0 ? 0.05 : 0.02) * dt;
+      if (!green && st.ten > G1) st.cleanReel = false; if (st.ten < G0 && !hold) st.p -= 0.02 * dt;
       st.ten = clamp(st.ten, 0, 1.01); st.p = clamp(st.p, 0, 1); DUELS.bars(st.ten, st.p);
+      F.ui.tn.style.display = 'block'; F.ui.ti.style.left = (clamp(st.ten, 0, 1) * 98).toFixed(1) + '%'; F.ui.tp.textContent = PATN[st.pat] || '';
+      F.ui.tw.textContent = st.ten > 0.9 ? 'LET GO! ABOUT TO SNAP' : st.ten > G1 ? 'TOO TIGHT' : green ? (hold ? 'GOOD! REELING' : 'HOLD B / K') : 'SLACK: HOLD B / K'; F.ui.tw.style.color = st.ten > G1 ? '#ff3d6e' : green ? '#3fd13a' : '#9fe8ff';
       st.bobx = lerp(st.tx, F.hx + 1.5, ease(st.p)); st.boby = -0.35 + Math.sin(st.t * 12) * 0.03 * (hold ? 1 : 0.4);
       if (hold && Math.random() < dt * 8) fxAdd(st.bobx, -0.3, 0.1, rnd(-0.5, 0.5), rnd(0.8, 1.6), 0, 0.4);
+      if (st.ten >= 1 || st.p >= 1) F.ui.tn.style.display = 'none';
       if (st.ten >= 1) { st.lines--; st.ph = 'snap'; st.snap = 0; st.hook = null; DUELS.hurt(); DUELS.banner('SNAP!<small>LINE BROKE</small>', 1.2); updateUI(); DUELS.bars(0, 0); }
       else if (st.p >= 1) { DUELS.bars(0, 0); finishCatch(st); }
     } else if (st.ph === 'snap') {
