@@ -30,6 +30,16 @@ The map is an illustrated 2.5D view of the game's own layout (basin, piers, prom
 Touch: the arcade panel from Brad's demos shell docked under a tall game view (ball-top stick, SWING red, JUMP yellow, white buttons = camera,
 ACT = big glowing green button). Stick and buttons ~18% larger than the demos shell; hit areas scaled to match. No floating pad.
 
+## Couch co-op (src/06cc_coop.js, COOP_PLAN.md)
+- Player 2 drops in as **Mavis** by pressing **A or Start on a second controller** (P1 = keyboard/touch + the first pad that moves). Keyboard/touch P1 + one pad: Start on the pad.
+  P2: left stick move, A jump, X/B purse combo (jump + X = slam), hold Y beside a downed Harold = revive, right stick / LB / RB = P2's camera when split.
+  P2 drops out by turning the pad off / unplugging it, or holding Start 3 s. No second pad = the single-player game, unchanged.
+- One shared camera while together (pulls back and tilts as they spread, max 13 m apart, 10 m in portrait); the toad walking away is held at the edge.
+  The screen splits only after **2 s of deliberately pushing away at the edge** (a ring fills over that toad's head); hits, jumps, swings and letting go reset it.
+  Split = side by side (landscape) or stacked (portrait), shorter draw distance in both views. Walk back within 9 m (7.5 m portrait) and it merges.
+- Bosses and own-scene minigames are **turn rotation**: P1 plays (only P1's pad reaches the mode), then a P2'S TURN card (P2: A play, B skip) replays the same ring for P2.
+- Tests: `node tests/coop/coop.js <port> <w> <h> [shotDir] [sim]`, `node tests/coop/edge.js <port> <w> <h>`, `node tests/coop/perf.js <port> <w> <h>` (two simulated Xbox pads). Hooks: `window.__coop`.
+
 ## ACT (one context button) — src/06b_cine.js `actContext()`
 Priority: FINISH (dizzy-thug QTE) > SEWER (`MANHOLES`) > CLIMB / LEAP (`CLIMBS`) > RIDE / DRIVE / BOARD (`VEHICLES`, `RIDE.v`; ACT again = GET OFF)
 > KICK OPEN / VAULT (street actions) > POWER (in a fight). Phase 1 fills only the street actions + POWER; MANHOLES / CLIMBS / VEHICLES are empty hook lists.

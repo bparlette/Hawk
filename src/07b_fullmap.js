@@ -212,6 +212,7 @@ const FMAP = (function () {
   const ap = $('apanel'); if (ap) ap.addEventListener('pointerdown', (e) => { if (F.open) { e.preventDefault(); e.stopPropagation(); close('panel'); } }, { capture: true }); // the arcade panel is "outside" too
   addEventListener('keydown', (e) => {
     const k = e.key.toLowerCase();
+    if (window.__casefile && __casefile.isOpen()) return; // the case file layer (09zl) owns Esc/Tab while it is up
     if (k === 'tab') { e.preventDefault(); if (!e.repeat) toggle('tab'); return; }
     if (F.open && k === 'escape') { close('esc'); return; }
   }, { capture: true });

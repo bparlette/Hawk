@@ -10,12 +10,15 @@
 //      action is in reach and no fight is on) = DRONE, also key V and the DRONE chip under the HD button. Free-fly camera over the city: stick / WASD
 //      moves, drag / Q R / L R buttons / right stick turns, JUMP (K / Space) climbs, SWING (J / Shift / C) dives, ACT / V / Esc / ✕ lands (exits).
 //      The city sim is paused while flying (thugs hold still); the camera, radio and controls are restored on landing.
-//   4) CREDITS roll: Harold & Mavis, the 19 bosses by name (from the brewery gate's own list, 09w C.gate.others(), else LANDMARKS bosses), the final
+//   4) CREDITS roll: Harold & Mavis, every boss by name (the brewery gate's own list, 09w C.gate.others(), else LANDMARKS bosses, plus non-landmark bosses such as Dragon Boat Duchess, R-062), the final
 //      boss, and RADIO CREDITS built from 08_radio.js's track data (window.__radio.TRACKS: title, artist, prod, licence). Tap skips.
 //   5) Back in the free-roam city on the Harborplace promenade: banner CITY SAVED, every district's crime -> 0 (BOSS_CLEAR.crime) and a
 //      "CITY SAVED · CRIME 0%" meter chip (saved, shown on every later visit).
 // Length ~51 s (dock 15 s, drone card 4 s, credits 32 s). Tap / A / B / ACT / Space after 1 s = skip ahead (dock -> credits, credits -> city);
 // SKIP ▸▸ button / Esc = straight back to the city.
+// finale-crowd (hark/finale-crowd): after the DRONE UNLOCKED card the drone launches on its own into an AUTOPILOT FLYOVER of the cheering city (credits roll over
+// it in the lower part of the screen); any input takes over, ▶ AUTO / P resumes; every later launch starts on autopilot too. Crowd: 09z_finale_crowd.js.
+// &flyover=1 (with or without ?finale=1) jumps straight to the flyover (no credits); &apu=0..1 starts the tour at that fraction.
 // Tests: ?finale=1 jumps straight to the celebration (skips the intro). &finaleauto=1 = CI timing (dock 6 s, card 2.2 s, credits 7 s), then in the city a
 // scripted 3.5 s drone flight (enter, climb + fly, land). State on window.__finale (F.phase, F.log, F.bursts, credits counts, drone state).
 (function () {
@@ -80,6 +83,16 @@
   #fdrone .dh { position: absolute; left: 0; right: 0; bottom: 3%; text-align: center; font-size: 7px; line-height: 1.8; text-shadow: 1px 1px 0 #000; opacity: .9; }
   #fdrone .dx { all: unset; position: absolute; right: 8px; top: calc(env(safe-area-inset-top, 0px) + 36px); pointer-events: auto; cursor: pointer; width: 30px; height: 30px; border-radius: 6px; border: 2px solid #000; background: #2a1650; color: #6bffd8; text-align: center; font: 900 16px/28px system-ui, sans-serif; box-shadow: 2px 2px 0 #000; }
   #fdrone .dret { position: absolute; left: 50%; top: 50%; width: 22px; height: 22px; margin: -11px 0 0 -11px; border: 2px solid #6bffd888; border-radius: 50%; }
+  #fdrone .dap { position: absolute; left: 50%; top: calc(env(safe-area-inset-top, 0px) + 66px); transform: translateX(-50%); font-size: 7px; color: #ffd23c; text-shadow: 1px 1px 0 #000; white-space: nowrap;
+    padding: 4px 6px; background: #14101fb0; border: 2px solid #000; display: none; animation: fdap 1.6s ease-in-out infinite; }
+  @keyframes fdap { 50% { opacity: .55; } }
+  #fdrone.ap .dap { display: block; }
+  #fdrone .dauto { all: unset; position: absolute; right: 44px; top: calc(env(safe-area-inset-top, 0px) + 36px); pointer-events: auto; cursor: pointer; height: 26px; padding: 0 7px; border: 2px solid #000; background: #6bffd8; color: #14101f;
+    font: 8px/26px 'PX', monospace; box-shadow: 2px 2px 0 #000; touch-action: manipulation; }
+  #fdrone.ap .dauto { display: none; }
+  body.fincred #fin { display: block; } body.fincred #fin .ftl, body.fincred #fin .fsay, body.fincred #fin .fcard, body.fincred #fin .ftap { display: none; }
+  body.fincred #fin .fcred { background: none; top: 54%; bottom: 7%; overflow: hidden; -webkit-mask-image: linear-gradient(180deg, transparent, #000 18%, #000 82%, transparent); mask-image: linear-gradient(180deg, transparent, #000 18%, #000 82%, transparent); }
+  body.fincred #fin .fskip { top: auto; bottom: calc(env(safe-area-inset-bottom, 0px) + 8px); }
   @media (max-width: 480px) { #fin .ftl { font-size: 14px; top: 11%; } #fin .fcard h2 { font-size: 13px; } #fin .froll h1 { font-size: 15px; } }`;
   document.head.appendChild(css);
   const DRONE_SVG = '<svg viewBox="0 0 24 24">' + ICONS.drone + '</svg>';
@@ -92,16 +105,17 @@
   const crimeChip = document.createElement('div'); crimeChip.id = 'fcrime'; document.body.appendChild(crimeChip);
   const drBtn = document.createElement('button'); drBtn.id = 'fdrbtn'; drBtn.type = 'button'; drBtn.textContent = 'DRONE'; document.body.appendChild(drBtn);
   const dhud = document.createElement('div'); dhud.id = 'fdrone';
-  dhud.innerHTML = `<div class="dt">DRONE<small></small></div><div class="dret"></div><button class="dx" type="button" aria-label="Land the drone">✕</button>
-    <div class="dh">${TOUCH ? 'STICK FLY · DRAG TURN · JUMP UP · SWING DOWN · ACT LAND' : 'WASD FLY · DRAG / Q R TURN · SPACE / K UP · SHIFT / J DOWN · E / V / ESC LAND'}</div>`;
+  dhud.innerHTML = `<div class="dt">DRONE<small></small></div><div class="dap">AUTOPILOT · ${TOUCH ? 'TOUCH' : 'MOVE / DRAG'} TO FLY</div><div class="dret"></div><button class="dauto" type="button" aria-label="Resume the autopilot tour">&#9654; AUTO</button><button class="dx" type="button" aria-label="Land the drone">✕</button>
+    <div class="dh">${TOUCH ? 'STICK FLY · DRAG LOOK · TURN ◀▶ · JUMP UP · SWING DOWN · ACT LAND' : 'WASD FLY · DRAG LOOK / Q R TURN · SPACE / K UP · SHIFT / J DOWN · E / V / ESC LAND'}</div>`;
   document.body.appendChild(dhud);
   const q = (s) => root.querySelector(s);
   const D = { tl: q('.ftl'), say: q('.fsay'), card: q('.fcard'), cred: q('.fcred'), roll: q('.froll'), skip: q('.fskip'), tap: q('.ftap'), alt: dhud.querySelector('.dt small') };
   for (const ev of ['pointerdown', 'touchstart']) D.skip.addEventListener(ev, (e) => e.stopPropagation(), { passive: true });
-  D.skip.addEventListener('click', (e) => { e.stopPropagation(); if (F.on && F.t > 1) { F.log.push('skip:all'); finish(); } });
+  D.skip.addEventListener('click', (e) => { e.stopPropagation(); if (F.on && F.t > 1) { F.log.push('skip:all'); finish(); } else if (F.cred) credEnd('skip'); });
   drBtn.addEventListener('pointerdown', (e) => { e.preventDefault(); e.stopPropagation(); audioInit(); droneToggle('chip'); });
   dhud.querySelector('.dx').addEventListener('pointerdown', (e) => { e.preventDefault(); e.stopPropagation(); droneExit('x'); });
-  canvas.addEventListener('pointerdown', () => { if (F.on && !F.leaving) tapSkip('tap'); });
+  dhud.querySelector('.dauto').addEventListener('pointerdown', (e) => { e.preventDefault(); e.stopPropagation(); if (DR.on && !AP.on) apStart('chip'); });
+  canvas.addEventListener('pointerdown', () => { if (F.on && !F.leaving) tapSkip('tap'); else if (DR.on && AP.on && performance.now() - DR.w0 > 250) apStop('touch'); });
   function layout() { const h = VH() + 'px'; root.style.height = h; dhud.style.height = h; }
   addEventListener('resize', () => { if (F.on || DR.on) { layout(); resizeCam(); } });
   function chips() {
@@ -281,20 +295,28 @@
   }
   function tapSkip(how) {
     if (!F.on || F.leaving || F.t < 1) return;
-    if (F.phase === 'dock' || F.phase === 'card') { F.log.push('skip:' + F.phase + ':' + how); toCredits(true); }
-    else if (F.phase === 'cred' && F.pt > 1) { F.log.push('skip:cred:' + how); finish(); }
+    if (F.phase === 'dock' || F.phase === 'card') { F.log.push('skip:' + F.phase + ':' + how); toFly({ credits: true }); }
   }
   function toCard() { F.phase = 'card'; F.pt = 0; F.log.push('card'); showCard(); for (let i = 0; i < 6; i++) setTimeout(() => F.on && launch(pickA(KINDS), 1.3), i * 140); }
   function showCard() { F.cardShown = true; F.cardT = AUTO ? 2 : 3.6; D.card.classList.add('on'); D.say.classList.remove('on'); D.tl.classList.remove('on'); fanfare(); F.log.push('drone:unlocked'); }
-  function toCredits(skipped) {
-    F.phase = 'cred'; F.pt = 0; F.log.push('credits'); if (!F.cardShown) showCard(); else if (!skipped) D.card.classList.remove('on');
-    D.cred.classList.add('on'); D.tap.classList.remove('on'); D.say.classList.remove('on'); D.tl.classList.remove('on'); F.rollH = D.roll.offsetHeight || 1200;
-  }
+  // finale-crowd: the credits now roll over the autopilot FLYOVER (lower part of the screen), not over the dock
+  function credStart() { F.log.push('credits'); document.body.classList.add('fincred'); D.cred.classList.add('on'); D.skip.classList.add('on'); F.cred = { t: 0 }; F.phase = 'fly'; F.rollH = D.roll.offsetHeight || 1200; }
+  function credTick(rdt) { const c = F.cred; if (!c) return; c.t += AUTO ? rdt * 2.5 : rdt; const h = D.cred.clientHeight || VH() * 0.4, k = clamp(c.t / TL.cred, 0, 1);
+    D.roll.style.transform = `translateY(${(h - (h + F.rollH) * k).toFixed(1)}px)`; if (c.t >= TL.cred + 0.3) credEnd('done'); }
+  function credEnd(how) { if (!F.cred) return; F.cred = null; F.phase = 'off'; F.log.push('credits:end:' + how); document.body.classList.remove('fincred'); D.cred.classList.remove('on'); D.skip.classList.remove('on'); }
   function buildCredits() {
     const esc = (s) => String(s || '').replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
     let bosses = [];
     try { bosses = window.__brewmaster && __brewmaster.gate ? __brewmaster.gate.others() : []; } catch (e) {}
     if (!bosses.length) bosses = LANDMARKS.filter((l) => l.boss && l.id !== 'brewery');
+    // R-062: bosses that are not landmark bosses (no LANDMARKS entry, so the brewery gate never lists them) still get credited.
+    // Dragon Boat Duchess = the boat-ride ambush on the harbor (06h RIDES -> DUELS kind 'duchess', 09bd); credited right after Harborplace.
+    bosses = bosses.slice();
+    const EXTRA = [{ after: 'harborplace', name: 'HARBORPLACE WATERS', boss: { name: 'Dragon Boat Duchess' } }];
+    for (const x of EXTRA) {
+      if (bosses.some((l) => l.boss && String(l.boss.name).toLowerCase() === x.boss.name.toLowerCase())) continue;
+      const i = bosses.findIndex((l) => l.id === x.after); bosses.splice(i < 0 ? bosses.length : i + 1, 0, x);
+    }
     const fin = LANDMARKS.find((l) => l.id === 'brewery');
     let tracks = [];
     try { const T = window.__radio && __radio.TRACKS; if (T) tracks = [...new Set(Object.values(T).flat())].filter(Boolean); } catch (e) {}
@@ -308,8 +330,10 @@
     h += '<p class="end">THE CITY IS SAVED<br><br>Thanks for playing, hon.</p>';
     D.roll.innerHTML = h; F.credits = { bosses: bosses.length, bossNames: bosses.map((l) => l.boss.name), final: fin && fin.boss ? fin.boss.name : null, tracks: tracks.length };
   }
-  function finish() {
-    if (!F.on || F.leaving) return; F.leaving = true; F.log.push('finish'); blk.style.transition = 'opacity .35s'; blk.style.opacity = '1';
+  function finish() { toFly({ credits: false }); }
+  function toFly(opt = {}) {
+    if (!F.on || F.leaving) return; F.leaving = true; F.log.push('finish'); if (!F.cardShown) { F.cardShown = true; F.log.push('drone:unlocked'); }
+    blk.style.transition = 'opacity .35s'; blk.style.opacity = '1';
     setTimeout(() => {
       F.on = false; F.leaving = false; F.phase = 'off'; MODE.duel = null; FX.clear();
       document.body.classList.remove('finale'); D.card.classList.remove('on'); D.cred.classList.remove('on'); D.say.classList.remove('on'); D.tl.classList.remove('on'); D.skip.classList.remove('on'); D.tap.classList.remove('on');
@@ -319,10 +343,10 @@
       const x = -40, z = -33; hero.pos.set(x, groundY(x, z), z); hero.vel.set(0, 0); hero.yaw = 0; try { hero.set('move'); } catch (e) {}
       partner.pos.set(x + 1.1, groundY(x + 1.1, z - 0.6), z - 0.6); partner.vel.set(0, 0); CAM.yaw = Math.PI; snapCam(); IN.dragX = IN.dragY = 0;
       citySaved(); chips(); banner('CITY SAVED!', 4); F.log.push('city:saved:' + BOSS_CLEAR.cityCrime());
-      setTimeout(() => { if (!F.on && !DR.on) banner(TOUCH ? 'DRONE READY · TAP ACT' : 'DRONE READY · PRESS V', 3.2); }, 4200);
       KEYS.clear(); PRESS.clear(); last = performance.now(); F.done = true;
+      // finale-crowd: the DRONE FLYOVER starts on its own (autopilot, night, fireworks, the cheering city); any input takes over, the credits roll over it
+      F.log.push('flyover'); if (!droneEnter('finale')) F.log.push('flyover:fail'); else if (opt.credits) credStart();
       requestAnimationFrame(() => { blk.style.transition = 'opacity .7s'; blk.style.opacity = '0'; });
-      if (AUTO) autoDrone();
     }, 380);
   }
   function resizeCam() { if (CAM2) { const a = VW() / VH(); CAM2.aspect = a; CAM2.fov = a < 0.75 ? 70 : a < 1.1 ? 60 : 50; CAM2.updateProjectionMatrix(); } if (DR.on) { camera.aspect = VW() / VH(); camera.updateProjectionMatrix(); } }
@@ -357,8 +381,7 @@
     if (F.phase === 'dock') { const u = F.pt / TL.dock;
       const sayAt = [0.2, 0.42, 0.66, 0.84]; if (F.saidI < 4 && u >= sayAt[F.saidI]) say(F.saidI++);
       if (u >= 1) toCard(); }
-    else if (F.phase === 'card' && F.pt >= TL.card) toCredits(false);
-    else if (F.phase === 'cred') { const h = VH(), k = clamp(F.pt / TL.cred, 0, 1); D.roll.style.transform = `translateY(${(h - (h + F.rollH) * k).toFixed(1)}px)`; if (F.pt >= TL.cred + 0.3) finish(); }
+    else if (F.phase === 'card' && F.pt >= TL.card) toFly({ credits: true });
     // fireworks: steady in the dock scene, a barrage under the card, gentler under the credits
     fireT -= rdt; if (fireT <= 0) { const rate = F.phase === 'card' ? 0.22 : F.phase === 'cred' ? 1.1 : 0.55; fireT = rate * rnd(0.6, 1.4); launch(); if (F.phase !== 'cred' && Math.random() < 0.3) launch(); }
     FX.step(rdt, F.t);
@@ -381,25 +404,69 @@
     draw(SC, CAM2);
   } };
 
-  // ================= DRONE: free-fly camera over the city =================
-  const DR = { on: false, pos: new THREE.Vector3(), yaw: 0, pitch: -0.35, vel: new THREE.Vector3(), t: 0, bank: 0, auto: null, fogFar: 0 };
+  // ================= DRONE: autopilot flyover (default) + free-fly camera over the city =================
+  // finale-crowd: every launch starts on AUTOPILOT, a closed ~52 s Catmull-Rom tour at low altitude (eased look, gentle bank) over the harbor and the landmarks:
+  // Harborplace -> USS Constellation -> Federal Hill -> the Domino Sugars sign -> across to Fells Point (low over the stoops) -> back along the north shore past the
+  // Power Plant + the Aquarium -> up round the Washington Monument -> home. ANY stick / drag / turn / up / down / key / pad input hands control to the player at
+  // the exact pose (free-fly as before); the ▶ AUTO chip (key P) blends back onto the path. ACT / V / Esc / ✕ land as before. After CITY SAVED the cheering city
+  // (09z_finale_crowd.js, window.__crowd) is on while the drone flies; the finale's own flyover pins night.
+  const DR = { on: false, pos: new THREE.Vector3(), yaw: 0, pitch: -0.35, vel: new THREE.Vector3(), t: 0, bank: 0, auto: null, fogFar: 0, calls: 0, ft: 0, fts: [],
+    thr: 0, cd: 0, ch: 0, fx: 0, spdN: 0, prox: 0, streak: 0, fl: { yaw: 0, pitch: 0, idle: 9 }, rig: null, wind: null };
+  const TOUR = [ // [x, y, z,  look x, y, z]
+    [-46, 10, -44, -31, 7, -18], [-46, 11, -13, -31, 9, -19], [-24, 8, -2, -6, 10, 44], [-8, 19, 36, -3, 11, 62], [28, 15, 32, 82, 30, 52],
+    [68, 24, 30, 84, 30, 50], [108, 15, 8, 150, 6, -50], [152, 13, -36, 165, 3, -70], [166, 10, -75, 150, 2, -92], [176, 14, -96, 120, 6, -60],
+    [128, 15, -40, 56, 12, -18], [62, 12, -38, 19, 11, -18], [14, 11, -38, -12, 26, -80], [-8, 30, -72, -20, 32, -92], [-38, 33, -100, -20, 26, -92], [-60, 28, -70, -40, 6, -33],
+  ];
+  const AP = { on: false, u: 0, dur: AUTO ? 40 : 54, blend: 1, fromP: new THREE.Vector3(), fromQ: new THREE.Quaternion(), q: new THREE.Quaternion(), path: null, look: null, bank: 0, yaw0: null, log: [] };
+  const _m4 = new THREE.Matrix4(), _qa = new THREE.Quaternion(), _qr = new THREE.Quaternion(), _Z = new THREE.Vector3(0, 0, 1), _UP = new THREE.Vector3(0, 1, 0), _pp = new THREE.Vector3(), _pl = new THREE.Vector3();
+  function apBuild() { AP.path = new THREE.CatmullRomCurve3(TOUR.map((k) => new THREE.Vector3(k[0], k[1], k[2])), true, 'centripetal');
+    AP.look = new THREE.CatmullRomCurve3(TOUR.map((k) => new THREE.Vector3(k[3], k[4], k[5])), true, 'centripetal'); }
+  function apNearest(p) { let best = 0, bd = 1e9; for (let i = 0; i < 200; i++) { AP.path.getPoint(i / 200, _pp); const d = _pp.distanceToSquared(p); if (d < bd) { bd = d; best = i / 200; } } return best; }
+  function apPose(u, outP, outQ, rdt) { // position + orientation on the tour at u (0..1), with a bank from the turn rate
+    AP.path.getPoint(u, outP); AP.look.getPoint(u, _pl);
+    const gy = groundY(clamp(outP.x, WB.x0, WB.x1), clamp(outP.z, WB.z0, WB.z1)); outP.y = Math.max(outP.y, gy + 2.5);
+    for (const b of BLD) if (outP.x > b.x0 - 2 && outP.x < b.x1 + 2 && outP.z > b.z0 - 2 && outP.z < b.z1 + 2 && outP.y < b.h + 3) outP.y = b.h + 3;
+    const yaw = Math.atan2(_pl.x - outP.x, _pl.z - outP.z);
+    if (rdt) { if (AP.yaw0 !== null) { let dy = yaw - AP.yaw0; dy = Math.atan2(Math.sin(dy), Math.cos(dy)); AP.bank = damp(AP.bank, clamp(-dy / Math.max(rdt, 1e-3) * 0.12, -0.18, 0.18), 1.6, rdt); } AP.yaw0 = yaw; }
+    _m4.lookAt(outP, _pl, _UP); outQ.setFromRotationMatrix(_m4); _qr.setFromAxisAngle(_Z, AP.bank); outQ.multiply(_qr);
+  }
+  function apStart(how, u) {
+    if (!AP.path) apBuild(); AP.on = true; AP.u = u !== undefined ? u : (how === 'finale' || how === 'param' ? 0 : apNearest(camera.position)); AP.blend = 0; AP.yaw0 = null;
+    AP.fromP.copy(camera.position); AP.fromQ.copy(camera.quaternion); if (how === 'finale') AP.blend = 1; dhud.classList.add('ap'); F.log.push('drone:autopilot:' + how);
+  }
+  function apStop(how) {
+    if (!AP.on) return; AP.on = false; dhud.classList.remove('ap'); F.log.push('drone:takeover:' + how);
+    _e.setFromQuaternion(camera.quaternion, 'YXZ'); DR.pitch = clamp(_e.x, -1.35, 0.5); DR.yaw = _e.y; DR.bank = _e.z; DR.pos.copy(camera.position);
+    DR.cd = 0; DR.ch = 0; DR.thr = 0; DR.fl.yaw = DR.fl.pitch = 0; DR.fl.idle = 9;
+    AP.path.getTangent(AP.u, V2); DR.vel.copy(V2).multiplyScalar(AP.path.getLength() / AP.dur * 0.6); // keep a little of the tour's momentum
+    if (F.cred) credEnd('takeover');
+  }
   function droneEnter(how) {
     if (DR.on || F.on || !save.drone || MODE.duel || FORT.on || DERBY.on || VIC.on || RB.mode || FMAP.F.open) return false;
-    DR.on = true; DR.t = 0; DR.how = how; DR.yaw = CAM.yaw; DR.pitch = -0.32; DR.vel.set(0, 0, 0); DR.bank = 0;
-    DR.pos.copy(camera.position); DR.pos.y = Math.max(DR.pos.y, hero.pos.y + 6);
+    DR.on = true; DR.t = 0; DR.w0 = performance.now(); DR.how = how; DR.yaw = CAM.yaw; DR.pitch = -0.32; DR.vel.set(0, 0, 0); DR.bank = 0;
+    DR.pos.copy(camera.position); DR.pos.y = Math.max(DR.pos.y, hero.pos.y + 6); DR.cd = 0; DR.ch = 0; DR.thr = 0; DR.fx = 0; DR.fl.yaw = DR.fl.pitch = 0; DR.fl.idle = 9;
     save.flights++; save.lastOn = true; persist(); F.log.push('drone:on:' + how);
     document.body.classList.add('drone'); layout(); MODE.duel = DRONE; labels({ a: 'DOWN', b: 'UP', c: 'LAND', l: '&#9664; TURN', r: 'TURN &#9654;' }); if (APANEL) APANEL.setAct({ kind: 'drone', label: 'LAND' }, 1);
-    hero.vel.set(0, 0); KEYS.clear(); PRESS.clear(); IN.mx = IN.my = 0; return true;
+    hero.vel.set(0, 0); KEYS.clear(); PRESS.clear(); IN.mx = IN.my = 0; IN.dragX = IN.dragY = 0;
+    DR.pinned = how === 'finale' || Q.has('flyover'); if (DR.pinned) { DR.pin0 = CYC.pin; CYC.pin = 0.5; }
+    if (save.saved && window.__crowd) { try { __crowd.on(camera); } catch (e) { F.log.push('crowd:err:' + e.message); } }
+    if (!DR.noAP) apStart(how, Q.has('apu') && how !== 'act' ? clamp(+Q.get('apu'), 0, 1) : undefined);
+    return true;
   }
   function droneExit(how) {
     if (!DR.on) return; DR.on = false; DR.auto = null; MODE.duel = null; save.lastOn = false; persist(); F.log.push('drone:off:' + how);
-    document.body.classList.remove('drone'); labels(null); if (APANEL) APANEL.setAct({ label: 'ACT', kind: 'reset' }, 1);
+    if (AP.on) { AP.on = false; dhud.classList.remove('ap'); } if (F.cred) credEnd('land');
+    if (window.__crowd) __crowd.off(); if (DR.pinned) { CYC.pin = DR.pin0 === undefined ? null : DR.pin0; DR.pinned = false; }
+    document.body.classList.remove('drone'); droneRigOff(); labels(null); if (APANEL) APANEL.setAct({ label: 'ACT', kind: 'reset' }, 1);
     camera.rotation.set(0, 0, 0); camera.fov = CAM.fov || 58; camera.updateProjectionMatrix(); snapCam(); IN.dragX = IN.dragY = 0; KEYS.clear(); PRESS.clear(); last = performance.now();
   }
   function droneToggle(how) { if (DR.on) droneExit(how); else droneEnter(how); }
+  const LANDK = new Set(['v', 'e', 'escape', 'p', 'tab', 'm', 'h', 'f']);
   addEventListener('keydown', (e) => { const k = e.key.toLowerCase(); if (e.repeat) return;
     if (k === 'v' && !F.on) { if (DR.on) droneExit('v'); else if (!CINE.intro) droneEnter('v'); }
-    else if (k === 'escape' && DR.on) { e.preventDefault(); droneExit('esc'); } });
+    else if (k === 'escape' && DR.on) { e.preventDefault(); droneExit('esc'); }
+    else if (k === 'p' && DR.on && !AP.on) apStart('key');
+    else if (DR.on && AP.on && performance.now() - DR.w0 > 250 && !LANDK.has(k)) apStop('key:' + k); });
   // ACT = DRONE whenever nothing else wants ACT (no action in reach, no fight, not riding): an always-in-range entry that steps aside for every other action
   const DACT = { kind: 'drone', label: 'DRONE', r: 0.5, y: 2.2, get x() { return hero.pos.x; }, get z() { return hero.pos.z; },
     ok: () => { if (!save.drone || BOT || F.on || DR.on || hero.roof || inFight()) return false;
@@ -407,27 +474,105 @@
     go: () => droneEnter('act') };
   ACTIONS.push(DACT);
   const _e = new THREE.Euler(0, 0, 0, 'YXZ');
+
+  // ---- DRONE CAM (Brad's 2026-10-12 spec): a visible little quadcopter, the camera sits above + behind it and moves with speed. Slow/hover: drops level
+  // with the drone (just under) and tilts UP so the skyline fills the screen. Fast: rises, pulls back, widens the FOV and adds motion streaks. Speed is felt
+  // from closeness: flying low (skimming the promenade / stoop windows) adds ground-proximity streaks + wind. Holding full forward ramps a throttle boost.
+  // Free-look: drag / right stick swings the view around the drone without changing heading and springs back. Everything is procedural. ----
+  function buildDroneRig() { // hook: buildDroneRig() returns a THREE.Group with .userData.rotors (spinning blades) + .userData.blink
+    const g = new THREE.Group(), B = (c) => new THREE.MeshBasicMaterial({ color: c });
+    const add = (geo, mat, x, y, z, ry) => { const m = new THREE.Mesh(geo, mat); m.position.set(x, y, z); if (ry) m.rotation.y = ry; g.add(m); return m; };
+    add(new THREE.BoxGeometry(0.62, 0.2, 0.86), B('#2a2e3a'), 0, 0, 0); add(new THREE.BoxGeometry(0.4, 0.16, 0.36), B('#6bffd8'), 0, 0.14, -0.18);
+    add(new THREE.BoxGeometry(1.9, 0.07, 0.1), B('#1b1e27'), 0, 0.02, 0, Math.PI / 4); add(new THREE.BoxGeometry(1.9, 0.07, 0.1), B('#1b1e27'), 0, 0.02, 0, -Math.PI / 4);
+    const rotors = [], disc = new THREE.MeshBasicMaterial({ color: '#dfe8ff', transparent: true, opacity: 0.28, depthWrite: false, side: THREE.DoubleSide });
+    const bladeM = B('#c7d0e8'), bladeG = new THREE.BoxGeometry(0.86, 0.015, 0.07), discG = new THREE.CircleGeometry(0.44, 14);
+    for (const [x, z] of [[0.67, 0.67], [-0.67, 0.67], [0.67, -0.67], [-0.67, -0.67]]) { add(new THREE.CylinderGeometry(0.06, 0.06, 0.16, 6), B('#111'), x, 0.1, z);
+      const d = add(discG, disc, x, 0.2, z); d.rotation.x = -Math.PI / 2; rotors.push(add(bladeG, bladeM, x, 0.2, z)); }
+    add(new THREE.SphereGeometry(0.07, 6, 4), B('#ff3b3b'), -0.34, 0.0, 0.42); add(new THREE.SphereGeometry(0.07, 6, 4), B('#38ff7a'), 0.34, 0.0, 0.42);
+    const blink = add(new THREE.SphereGeometry(0.08, 6, 4), new THREE.MeshBasicMaterial({ color: '#ffffff' }), 0, 0.12, 0.46);
+    g.userData.rotors = rotors; g.userData.blink = blink; g.scale.setScalar(1.5); g.visible = false; return g;
+  }
+  function droneRigOn() { if (!DR.rig) { DR.rig = buildDroneRig(); scene.add(DR.rig); } }
+  function droneRigOff() { if (DR.rig) DR.rig.visible = false; if (DR.wind) { try { DR.wind.src.stop(); } catch (e) {} DR.wind = null; } if (DR.sk) { DR.sk.style.display = 'none'; } }
+  function windTick(amt, prox, rdt) { // wind rush: band-passed noise from the shared AudioContext, louder + brighter with speed and closeness to the ground
+    try {
+      if (!AC || AC.state !== 'running' || !NOISE) return;
+      if (!DR.wind) { const src = AC.createBufferSource(); src.buffer = NOISE; src.loop = true; const f = AC.createBiquadFilter(); f.type = 'bandpass'; f.Q.value = 0.7; const gn = AC.createGain(); gn.gain.value = 0;
+        src.connect(f); f.connect(gn); gn.connect(SFXBUS || AC.destination); src.start(); DR.wind = { src, f, gn }; }
+      const w = DR.wind, v = clamp(amt * (0.45 + 0.55 * prox) + prox * amt * 0.5, 0, 1);
+      w.gn.gain.setTargetAtTime(0.005 + 0.11 * v, AC.currentTime, 0.12); w.f.frequency.setTargetAtTime(380 + 2100 * v, AC.currentTime, 0.12);
+    } catch (e) {}
+  }
+  function streakTick(amt, prox, rdt) { // motion streaks: radial speed lines (more with speed) + low horizontal rush lines near the ground
+    if (!DR.sk) { const c = document.createElement('canvas'); c.id = 'fstreak'; c.style.cssText = 'position:fixed;left:0;top:0;width:100vw;height:100vh;z-index:43;pointer-events:none;display:none'; document.body.appendChild(c); DR.sk = c; DR.skc = c.getContext('2d'); }
+    const c = DR.sk, g = DR.skc; if (amt < 0.04) { if (DR.skOn) { g.clearRect(0, 0, c.width, c.height); DR.skOn = false; } return; }
+    const W = Math.max(2, (innerWidth / 3) | 0), H = Math.max(2, (innerHeight / 3) | 0); if (c.width !== W || c.height !== H) { c.width = W; c.height = H; }
+    c.style.display = 'block'; DR.skOn = true; g.clearRect(0, 0, W, H); const cx = W / 2, cy = H * 0.46, R = Math.hypot(W, H) / 2;
+    const n = Math.round(10 + 34 * amt); g.lineCap = 'round';
+    for (let i = 0; i < n; i++) { const a = Math.random() * 6.2832, r0 = R * (0.38 + Math.random() * 0.4), len = R * (0.05 + 0.2 * amt) * (0.5 + Math.random());
+      g.strokeStyle = 'rgba(255,255,255,' + (0.1 + 0.35 * amt * Math.random()).toFixed(2) + ')'; g.lineWidth = 1 + Math.random() * 1.2;
+      g.beginPath(); g.moveTo(cx + Math.cos(a) * r0, cy + Math.sin(a) * r0 * 0.9); g.lineTo(cx + Math.cos(a) * (r0 + len), cy + Math.sin(a) * (r0 + len) * 0.9); g.stroke(); }
+    if (prox > 0.15) { const m = Math.round(8 + 22 * prox * amt); for (let i = 0; i < m; i++) { const side = Math.random() < 0.5 ? -1 : 1, y = H * (0.66 + Math.random() * 0.3), x0 = cx + side * W * (0.12 + Math.random() * 0.36), len = W * (0.06 + 0.22 * amt) * Math.random();
+      g.strokeStyle = 'rgba(255,240,220,' + (0.08 + 0.3 * prox * Math.random()).toFixed(2) + ')'; g.lineWidth = 1 + Math.random(); g.beginPath(); g.moveTo(x0, y); g.lineTo(x0 + side * len, y + (y - cy) * 0.12); g.stroke(); } }
+  }
   const DRONE = { frame(rdt) {
     DR.t += rdt; readInput();
     let mx = IN.mx, my = IN.my, up = 0, look = IN.look;
     if (KEYS.has(' ') || KEYS.has('k') || TOUCHS.btn.b) up += 1; if (KEYS.has('shift') || KEYS.has('j') || KEYS.has('c') || TOUCHS.btn.a) up -= 1;
-    for (const gp of (navigator.getGamepads ? navigator.getGamepads() : [])) { if (!gp) continue; if (gp.buttons[0] && gp.buttons[0].pressed) up += 1; if ((gp.buttons[2] && gp.buttons[2].pressed) || (gp.buttons[6] && gp.buttons[6].pressed)) up -= 1; }
+    let padAny = false;
+    for (const gp of (navigator.getGamepads ? navigator.getGamepads() : [])) { if (!gp) continue; if (gp.buttons[0] && gp.buttons[0].pressed) up += 1; if ((gp.buttons[2] && gp.buttons[2].pressed) || (gp.buttons[6] && gp.buttons[6].pressed)) up -= 1;
+      if (gp.buttons.some((b, i) => b.pressed && i !== 3 && i !== 9)) padAny = true; }
     if (DR.auto) { const a = DR.auto; a.t += rdt; mx = 0.15; my = 1; up = a.t < 1.4 ? 1 : 0; look = 0.25; if (a.t >= a.dur) { const d = a.done; DR.auto = null; droneExit('auto'); d && d(); return; } }
     const exitP = PRESS.has('e') && DR.t > 0.3; PRESS.clear(); if (exitP) { droneExit('act'); return; }
-    DR.yaw -= look * rdt * 1.8 + IN.dragX * 0.005; DR.pitch = clamp(DR.pitch - IN.dragY * 0.004 - IN.lookY * rdt * 1.2, -1.35, 0.5); IN.dragX = IN.dragY = 0;
-    const sp = 24, fx = -Math.sin(DR.yaw), fz = -Math.cos(DR.yaw), rx = -fz, rz = fx;
-    V.set(fx * my + rx * mx, up * 0.8, fz * my + rz * mx).multiplyScalar(sp);
-    DR.vel.x = damp(DR.vel.x, V.x, 3, rdt); DR.vel.y = damp(DR.vel.y, V.y, 3, rdt); DR.vel.z = damp(DR.vel.z, V.z, 3, rdt);
-    DR.pos.addScaledVector(DR.vel, rdt);
-    DR.pos.x = clamp(DR.pos.x, WB.x0 - 30, WB.x1 + 40); DR.pos.z = clamp(DR.pos.z, WB.z0 - 30, WB.z1 + 30);
-    const gy = groundY(clamp(DR.pos.x, WB.x0, WB.x1), clamp(DR.pos.z, WB.z0, WB.z1)); DR.pos.y = clamp(DR.pos.y, gy + 1.6, 110);
-    DR.bank = damp(DR.bank, -mx * 0.18, 4, rdt);
-    camera.position.copy(DR.pos); camera.position.y += Math.sin(DR.t * 2.1) * 0.06; _e.set(DR.pitch, DR.yaw, DR.bank); camera.quaternion.setFromEuler(_e);
-    const a = VW() / VH(), fov = a < 0.75 ? 72 : 62; if (camera.fov !== fov || camera.aspect !== a) { camera.fov = fov; camera.aspect = a; camera.updateProjectionMatrix(); }
+    // autopilot: any input takes over at once
+    if (AP.on && performance.now() - DR.w0 > 250 && (Math.abs(mx) + Math.abs(my) + Math.abs(look) + Math.abs(IN.lookY) > 0.05 || up !== 0 || IN.dragX || IN.dragY || padAny))
+      apStop(IN.dragX || IN.dragY ? 'drag' : up !== 0 ? 'button' : padAny ? 'pad' : 'stick');
+    let gy;
+    if (AP.on) {
+      AP.u = (AP.u + rdt / AP.dur) % 1; apPose(AP.u, _pp, AP.q, rdt);
+      if (AP.blend < 1) { AP.blend = Math.min(1, AP.blend + rdt / 2.2); const k = ease2(AP.blend); camera.position.lerpVectors(AP.fromP, _pp, k); camera.quaternion.slerpQuaternions(AP.fromQ, AP.q, k); }
+      else { camera.position.copy(_pp); camera.quaternion.slerp(AP.q, 1 - Math.exp(-6 * rdt)); }
+      if (DR.rig) DR.rig.visible = false; DR.fx = damp(DR.fx, 0, 3, rdt); streakTick(0, 0, rdt); windTick(0, 0, rdt);
+      DR.pos.copy(camera.position); IN.dragX = IN.dragY = 0; gy = groundY(clamp(DR.pos.x, WB.x0, WB.x1), clamp(DR.pos.z, WB.z0, WB.z1));
+    } else {
+      // free-look: drag / right stick (pad axis 2 + 3) swings the VIEW around the drone, heading untouched; springs back when released
+      let ax2 = 0; for (const gp of (navigator.getGamepads ? navigator.getGamepads() : [])) { if (gp && Math.abs(gp.axes[2] || 0) > 0.2) ax2 += gp.axes[2]; } look -= ax2; const FL = DR.fl;
+      const flIn = IN.dragX || IN.dragY || ax2 || Math.abs(IN.lookY) > 0.05;
+      FL.yaw = clamp(FL.yaw - IN.dragX * 0.006 - ax2 * rdt * 2.2, -2.5, 2.5); FL.pitch = clamp(FL.pitch - IN.dragY * 0.004 - IN.lookY * rdt * 1.2, -0.6, 0.7);
+      if (flIn) FL.idle = 0; else { FL.idle += rdt; if (FL.idle > 0.9) { FL.yaw = damp(FL.yaw, 0, 2.2, rdt); FL.pitch = damp(FL.pitch, 0, 2.2, rdt); } }
+      IN.dragX = IN.dragY = 0; DR.yaw -= look * rdt * 1.8;
+      // throttle boost: holding full forward ramps the cruise from 24 to 40
+      DR.thr = damp(DR.thr, my > 0.9 ? 1 : 0, my > 0.9 ? 0.55 : 2.5, rdt);
+      const sp = 24 + 16 * DR.thr, fx = -Math.sin(DR.yaw), fz = -Math.cos(DR.yaw), rx = -fz, rz = fx;
+      V.set(fx * my + rx * mx, up * 0.8, fz * my + rz * mx).multiplyScalar(sp);
+      DR.vel.x = damp(DR.vel.x, V.x, 3, rdt); DR.vel.y = damp(DR.vel.y, V.y, 3, rdt); DR.vel.z = damp(DR.vel.z, V.z, 3, rdt);
+      DR.pos.addScaledVector(DR.vel, rdt);
+      DR.pos.x = clamp(DR.pos.x, WB.x0 - 30, WB.x1 + 40); DR.pos.z = clamp(DR.pos.z, WB.z0 - 30, WB.z1 + 30);
+      gy = groundY(clamp(DR.pos.x, WB.x0, WB.x1), clamp(DR.pos.z, WB.z0, WB.z1)); DR.pos.y = clamp(DR.pos.y, gy + 1.6, 110);
+      DR.bank = damp(DR.bank, -mx * 0.18, 4, rdt);
+      // speed feel: s = 0 hovering .. 1 flat out; prox = 1 skimming the ground .. 0 above ~14 m
+      const spd = Math.hypot(DR.vel.x, DR.vel.z), s = clamp((spd - 3) / 33, 0, 1); DR.spdN = damp(DR.spdN, s, 4, rdt); const S1 = DR.spdN;
+      DR.prox = clamp(1 - (DR.pos.y - gy - 1.6) / 12, 0, 1);
+      const cdT = 3.2 + 4.6 * S1, chT = -0.25 + 2.1 * S1 + 0.5 * clamp(up, 0, 1), tiltT = 0.16 - 0.4 * S1 - 0.12 * up; // sightseeing: level/under + tilted up when slow
+      DR.cd = damp(DR.cd, cdT, 2.4, rdt); DR.ch = damp(DR.ch, chT, 2.4, rdt); DR.pitch = damp(DR.pitch, tiltT, 2.2, rdt); DR.fx = damp(DR.fx, 18 * S1 + 6 * DR.thr, 2.5, rdt);
+      const yv = DR.yaw + FL.yaw, pv = clamp(DR.pitch + FL.pitch, -1.35, 0.9);
+      camera.position.set(DR.pos.x + Math.sin(yv) * DR.cd, DR.pos.y + DR.ch + Math.sin(DR.t * 2.1) * 0.05, DR.pos.z + Math.cos(yv) * DR.cd);
+      for (const b of BLD) if (camera.position.x > b.x0 - 0.5 && camera.position.x < b.x1 + 0.5 && camera.position.z > b.z0 - 0.5 && camera.position.z < b.z1 + 0.5 && camera.position.y < b.h + 0.8) { camera.position.set(DR.pos.x + Math.sin(yv) * 0.7, Math.max(DR.pos.y + DR.ch, DR.pos.y + 0.4), DR.pos.z + Math.cos(yv) * 0.7); break; }
+      camera.position.y = Math.max(camera.position.y, groundY(clamp(camera.position.x, WB.x0, WB.x1), clamp(camera.position.z, WB.z0, WB.z1)) + 0.9);
+      _e.set(pv, yv, DR.bank * 0.4); camera.quaternion.setFromEuler(_e);
+      droneRigOn(); const rg = DR.rig; rg.visible = DR.cd > 1.2; rg.position.copy(DR.pos); rg.rotation.set(-my * 0.24 - clamp(up, -1, 1) * 0.04, DR.yaw, DR.bank * 1.6, 'YXZ');
+      for (const r of rg.userData.rotors) r.rotation.y += rdt * 70; rg.userData.blink.visible = ((DR.t * 1.6) % 1) < 0.2;
+      streakTick(clamp(S1 * 0.85 + S1 * DR.prox * 0.6, 0, 1), DR.prox, rdt); DR.streak = DR.skOn ? 1 : 0; windTick(S1, DR.prox, rdt);
+    }
+    const a = VW() / VH(), fov = (a < 0.75 ? 72 : 62) + DR.fx; if (Math.abs(camera.fov - fov) > 0.01 || camera.aspect !== a) { camera.fov = fov; camera.aspect = a; camera.updateProjectionMatrix(); } DR.fovNow = camera.fov;
     window.__sky.position.copy(camera.position);
     updateCycle(rdt); scene.fog.near = Math.max(scene.fog.near, 60); scene.fog.far = Math.max(scene.fog.far, 230); OUT_U.fogN.value = scene.fog.near; OUT_U.fogF.value = scene.fog.far;
     DR.fr = (DR.fr || 0) + rdt; if (DR.fr > 0.25) { DR.fr = 0; NIGHTFX.near(DR.pos.x, DR.pos.z); D.alt.textContent = 'ALT ' + Math.round(DR.pos.y - gy) + ' m · ' + (CITY.lmk ? CITY.lmk.name : nearLm()); }
-    draw();
+    if (F.cred) credTick(rdt);
+    camera.updateMatrixWorld(); if (window.__crowd) __crowd.frame(rdt, camera);
+    // perf: draw calls of this frame (scene + post) and a rolling frame time
+    const I = renderer.info; I.autoReset = false; I.reset(); draw(); DR.calls = I.render.calls; DR.tris = I.render.triangles; I.autoReset = true;
+    const now = performance.now(); if (DR.lastNow) { DR.fts.push(now - DR.lastNow); if (DR.fts.length > 90) DR.fts.shift(); } DR.lastNow = now;
   } };
   function nearLm() { let best = null, bd = 1e9; for (const L of LANDMARKS) { const d = Math.hypot(L.x - DR.pos.x, L.z - DR.pos.z); if (d < bd) { bd = d; best = L; } } return best ? best.name : 'TOAD CITY'; }
   function autoDrone() { setTimeout(() => { F.log.push('drone:auto:start'); if (!droneEnter('auto')) { F.log.push('drone:auto:fail'); return; } DR.auto = { t: 0, dur: 3.5, done: () => F.log.push('drone:auto:done') }; }, 1500); }
@@ -437,9 +582,10 @@
   let n = 0;
   MODE.ticks.push(() => {
     n++;
-    if (n === 3 && Q.has('finale') && !F.on && !DUELS.cur) { if (CINE.intro) CINE.intro.skip = true; start('param'); return; }
+    if (n === 3 && (Q.has('finale') || Q.has('flyover')) && !F.on && !DUELS.cur) { if (CINE.intro) CINE.intro.skip = true; start('param'); if (Q.has('flyover')) { F.log.push('flyover:param'); toFly({ credits: false }); } return; }
     if (F.pending && !F.on && !DUELS.cur && !MODE.duel && !FORT.on) start('brewmaster');
     if (n % 30 === 0) chips();
   });
-  window.__finale = { F, DR, start, finish, skip: tapSkip, drone: droneToggle, get save() { return save; }, get phase() { return F.phase; } };
+  window.__finale = { F, DR, AP, start, finish, toFly, skip: tapSkip, drone: droneToggle, apStart, apStop, autoHop: autoDrone, get save() { return save; }, get phase() { return F.phase; },
+    perf: () => { const a = DR.fts.slice().sort((x, y) => x - y); return { calls: DR.calls, tris: DR.tris, ftAvg: a.length ? +(a.reduce((s, v) => s + v, 0) / a.length).toFixed(1) : 0, ftP90: a.length ? +a[Math.floor(a.length * 0.9)].toFixed(1) : 0, n: a.length, low: LOW.w + 'x' + LOW.h }; } };
 })();

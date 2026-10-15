@@ -63,7 +63,7 @@ function camStep(dt, rdt) {
 if (!Q.has('nointro') && !POSE) { CINE.intro = { t: 0, dur: 5.2 }; $('title').classList.add('on'); $('hint').style.opacity = '0'; }
 function resize() { // low-res target: LINES (240) on the short side, the long side follows the screen's aspect (portrait keeps its aspect too)
   const w = VW(), h = VH(), a = w / h; let lw, lh;
-  if (QUAL.hd) { const dpr = Math.min(devicePixelRatio || 1, TOUCH ? 1.5 : 1.25); lw = Math.round(w * dpr); lh = Math.round(h * dpr); }
+  if (QUAL.hd) { const dpr = Math.min(devicePixelRatio || 1, TOUCH ? 1.5 : 1.25) * COOP.resK(); lw = Math.round(w * dpr); lh = Math.round(h * dpr); }
   else if (a >= 1) { lh = LINES; lw = Math.round(LINES * a); } else { lw = LINES; lh = Math.round(LINES / a); }
   LOW.w = lw; LOW.h = lh; renderer.setSize(lw, lh, false); RT.setSize(lw, lh); POST.uniforms.uRes.value.set(lw, lh); SNAP.value.set(lw / 2, lh / 2);
   camera.aspect = a; camera.updateProjectionMatrix();
@@ -136,6 +136,7 @@ function cityHud(rdt) {
   if (APANEL) { const c = actContext(); APANEL.setAct(c, c && c.kind === 'power' ? 1 - POWER.cd / POWER.CD : 1); }
   if (CITY.lmkT > 0) { CITY.lmkT -= rdt; if (CITY.lmkT <= 0) { $('lmk').classList.remove('on'); BARK.lmBlurb(null); } }
   if (MAP) { CITY.mapT -= rdt; if (CITY.mapT <= 0) { CITY.mapT = 0.1; const { g, bg, X, Z } = MAP; g.drawImage(bg, 0, 0);
+    for (const L of LANDMARKS) if (BOSS_CLEAR.cleared.has(L.id)) { g.fillStyle = '#7dff6b'; g.strokeStyle = '#000'; g.lineWidth = 1.5; g.beginPath(); g.arc(X(L.x), Z(L.z), 3.6, 0, TAU); g.fill(); g.stroke(); } // beaten districts go green
     g.fillStyle = '#ff3d6e'; for (const e of enemies) if (e.alive && e.state !== 'dying' && Math.hypot(e.pos.x - hero.pos.x, e.pos.z - hero.pos.z) < 60) g.fillRect(X(e.pos.x) - 2, Z(e.pos.z) - 2, 4, 4);
     g.fillStyle = '#ff9ad0'; g.beginPath(); g.arc(X(partner.pos.x), Z(partner.pos.z), 3, 0, TAU); g.fill();
     const hx = X(hero.pos.x), hz = Z(hero.pos.z), a = hero.yaw; g.fillStyle = '#9dff6b'; g.strokeStyle = '#000'; g.lineWidth = 2; g.beginPath();
@@ -150,12 +151,13 @@ function frame(now) {
   try {
     let rdt = Math.min(0.05, (now - last) / 1000); last = now; frames++;
     FPS.n++; FPS.t += rdt; if (FPS.t > 1) { FPS.v = Math.round(FPS.n / FPS.t); FPS.n = 0; FPS.t = 0; }
+    if (COOP.on && COOP.pre(rdt)) return; // co-op (06cc): mode tracking for turn rotation; true while the P2'S TURN card holds the city
     if (DERBY.on) { DERBY.frame(rdt); return; } // Bird Brain Bobby's home run derby: its own scene + camera, the city sim is paused
     if (VIC.on) { VIC.frame(rdt); return; } // Voltage Vic's rhythm battle: its own stage + lanes (the city is paused)
     if (FMAP.F.open) { FMAP.frame(rdt); return; } // full-screen map open: the game is paused (no sim, no 3D draw; the canvas keeps its last frame)
     if (FORT.on) { FORT.frame(rdt); return; } // Fort McHenry set piece: its own scene + loop (src/09_fort.js)
     FORT.world();
-    if (window.__cel && __cel.pause) { draw(); return; }
+    if (window.__cel && __cel.pause) { if (COOP.on && COOP.split()) COOP.draw(); else draw(); return; }
     if (MODE.duel) { MODE.duel.frame(rdt); return; } // a boss duel owns input, sim and the draw
     if (RB.mode) { RB.frame(rdt); return; } // racer bosses (src/06h_racers.js): Al's chase / the Duchess's arena (own scenes) or a harbour boat ride
     if (BOT) botThink(rdt);
@@ -171,15 +173,17 @@ function frame(now) {
       S.time += dt;
       countAttackers();
       POWER.cd = Math.max(0, POWER.cd - dt);
+      if (COOP.on) COOP.preStep(dt);
       updateHero(dt);
-      updatePartner(dt);
+      if (COOP.on) COOP.updateP2(dt); else updatePartner(dt); // co-op: Player 2 drives Mavis
+      if (COOP.on) COOP.step(dt); // co-op: edge hold, intentional split timer, merge
       for (const e of enemies) { // thugs far from the heroes sleep (hidden, not simulated) to keep draw calls + CPU down on phones
-        const d2 = (e.pos.x - hero.pos.x) ** 2 + (e.pos.z - hero.pos.z) ** 2;
+        let d2 = (e.pos.x - hero.pos.x) ** 2 + (e.pos.z - hero.pos.z) ** 2; if (COOP.on) d2 = Math.min(d2, (e.pos.x - partner.pos.x) ** 2 + (e.pos.z - partner.pos.z) ** 2);
         if (d2 > 48 * 48 && (e.state === 'idle' || e.state === 'return')) { e.root.visible = false; e.hpS.visible = false; continue; }
         if (!e.root.visible && e.state !== 'dead') e.root.visible = true;
         updateEnemy(e, dt); }
       separate();
-      if (k < steps - 1) { updateSprites(rdt); updateSlashes(rdt); PRESS.clear(); camStep(dt, rdt); }
+      if (k < steps - 1) { updateSprites(rdt); updateSlashes(rdt); PRESS.clear(); if (COOP.on) COOP.cam(dt, rdt); else camStep(dt, rdt); }
     }
     const dt = rdt;
     // soft lock target (for the ring + camera framing)
@@ -189,7 +193,7 @@ function frame(now) {
     lockT = CINE_ST.has(hero.state) || hero.roof ? null : cand && cand.state !== 'idle' && cand.state !== 'return' ? cand : (lockT && lockT.alive && lockT.state !== 'dying' && Math.hypot(lockT.pos.x - hero.pos.x, lockT.pos.z - hero.pos.z) < 8 && lockT.state !== 'return' ? lockT : null);
     lockRing.visible = !!lockT;
     if (lockT) { lockRing.position.set(lockT.pos.x, lockT.pos.y + 0.03, lockT.pos.z); lockRing.scale.setScalar(lockT.scale); lockRing.userData.b.rotation.z += rdt * 3; }
-    camStep(dt, rdt);
+    if (COOP.on) COOP.cam(dt, rdt); else camStep(dt, rdt);
     // sun + shadow camera follow the hero (snapped to shadow texels to stop shimmering)
     const tx = SHR * 2 / SHM, sx = Math.round(hero.pos.x / tx) * tx, sz = Math.round(hero.pos.z / tx) * tx;
     sun.target.position.set(sx, 0, sz); sun.position.set(sx + SUN_DIR.x * 70, SUN_DIR.y * 70, sz + SUN_DIR.z * 70);
@@ -199,11 +203,12 @@ function frame(now) {
     cineUpdate(rdt);
     updateCycle(SIM ? rdt * SIM : rdt);
     cityHud(rdt);
+    if (COOP.on) COOP.post(rdt); // co-op: split-view draw distance, HUD, edge ring
     BARK.tick(rdt);
     if (DERBY.marker) DERBY.marker.tick(S.time);
     for (const f of MODE.ticks) f(rdt);
     PRESS.clear();
-    draw();
+    if (COOP.on && COOP.split()) COOP.draw(); else draw();
   } catch (err) { __celErr.n++; __celErr.last = String(err && err.stack || err); if (__celErr.n < 4) console.error(err); }
 }
 if (Q.has('derby')) { const m = Q.get('derby'); setTimeout(() => DERBY.start(m === 'perfect' || m === 'miss' ? m : undefined), 300); } // ?derby=1 jumps straight in (?derby=perfect / miss: scripted test runs)
