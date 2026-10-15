@@ -70,10 +70,10 @@ const THUGX = (function () {
   const PICK = []; const PK_KIND = {};
   const cakeGeo = new THREE.CylinderGeometry(0.22, 0.25, 0.14, 12), cakeMat = new THREE.MeshLambertMaterial({ color: '#d89a48', emissive: '#4a2a08' });
   PK_KIND.cake = { mesh: () => new THREE.Mesh(cakeGeo, cakeMat), take: (f) => { if (f.hp >= f.maxHp) return false; f.hp = Math.min(f.maxHp, f.hp + 35); pop(TX.cake, f, 0.8, 0.8); sfx('ko'); return true; } };
-  function drop(kind, x, z, o = {}) { const K = PK_KIND[kind]; if (!K) return null; const m = K.mesh(o); scene.add(m); const p = { kind, x, z, m, t: 0, o, life: o.life || 45 }; m.position.set(x, groundY(x, z) + 0.45, z); PICK.push(p); return p; }
+  function drop(kind, x, z, o = {}) { const K = PK_KIND[kind]; if (!K) return null; const m = K.mesh(o); scene.add(m); const p = { kind, x, z, m, t: 0, o, life: o.life || 45 }; m.position.set(x, (o.y != null ? o.y : groundY(x, z)) + 0.45, z); PICK.push(p); return p; }
   function tickPicks(dt) {
-    for (const p of PICK) { p.t += dt; p.m.position.y = groundY(p.x, p.z) + 0.45 + Math.sin(p.t * 3) * 0.08; p.m.rotation.y += dt * 1.8;
-      for (const f of turtles()) { if (f.hp <= 0 || f.y > 1.2 || (f === partner && !COOP.on && p.kind !== 'cake')) continue; if (Math.hypot(f.pos.x - p.x, f.pos.z - p.z) < 1.15 && PK_KIND[p.kind].take(f, p)) { p.dead = true; p.by = f === hero ? 'p1' : 'p2'; log('pick:' + p.kind + ':' + p.by); break; } }
+    for (const p of PICK) { p.t += dt; const by = p.o.y != null ? p.o.y : groundY(p.x, p.z); p.m.position.y = by + 0.45 + Math.sin(p.t * 3) * 0.08; p.m.rotation.y += dt * 1.8;
+      for (const f of turtles()) { if (f.hp <= 0 || Math.abs(f.pos.y + f.y - by) > 1.4 || (f === partner && !COOP.on && p.kind !== 'cake')) continue; if (Math.hypot(f.pos.x - p.x, f.pos.z - p.z) < 1.15 && PK_KIND[p.kind].take(f, p)) { p.dead = true; p.by = f === hero ? 'p1' : 'p2'; log('pick:' + p.kind + ':' + p.by); break; } }
       if (p.t > p.life) p.dead = true; if (p.dead) scene.remove(p.m); }
     for (let i = PICK.length - 1; i >= 0; i--) if (PICK[i].dead) PICK.splice(i, 1);
   }
