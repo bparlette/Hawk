@@ -557,6 +557,7 @@ const FORT = (function () {
     const pads = navigator.getGamepads ? navigator.getGamepads() : [];
     for (const gp of pads) { if (!gp) continue; const dz = (v) => (Math.abs(v) < 0.18 ? 0 : v); mx += dz(gp.axes[0] || 0) + dz(gp.axes[2] || 0); my -= dz(gp.axes[1] || 0) + dz(gp.axes[3] || 0);
       const b = (i) => !!(gp.buttons[i] && gp.buttons[i].pressed), prev = PADP[gp.index] || [];
+      if (b(14)) mx -= 1; if (b(15)) mx += 1; if (b(12)) my += 1; if (b(13)) my -= 1; // D-pad aims too
       if ((b(0) && !prev[0]) || (b(7) && !prev[7]) || (b(2) && !prev[2]) || (b(5) && !prev[5])) fireP = true; if (b(8) && !prev[8]) exitP = true; if (b(9) && !prev[9] && (F.phase === 'lose' || F.phase === 'done')) { if (F.phase === 'lose') retry(); else leave(true); }
       PADP[gp.index] = gp.buttons.map((x) => x.pressed); DEV = 'pad'; }
     PRESS.clear();
