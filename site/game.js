@@ -22491,7 +22491,7 @@ const THUGX = (function () {
       if (dMin > 95 || (!alive.length && !P.aggro)) endParty(P, 'faded');
     }
     if (EV.ambush) { const A = EV.ambush, live = A.members.filter((e) => e.alive && e.ev === A); A.t += dt;
-      if (!A.sprung) for (const f of players()) for (const e of live) if (f.hp > 0 && dist(f, e.pos.x, e.pos.z) < 5.2) { springAmbush(A, f); break; }
+      if (!A.sprung) for (const f of players()) for (const e of live) if (!A.sprung && f.hp > 0 && dist(f, e.pos.x, e.pos.z) < 5.2) { springAmbush(A, f); break; }
       const dMin = Math.min(...players().map((f) => dist(f, A.x, A.z)));
       if (!live.length) { if (A.sprung) { cred(12); rewardDrop(A.x, A.z); log('ambush:cleared'); } EV.ambush = null; }
       else if (dMin > 80) { live.forEach(sleep); EV.ambush = null; } }

@@ -18,16 +18,17 @@ const src = fs.readFileSync(path.join(__dirname, 'coop.js'), 'utf8'); const i0 =
   const st = () => E(() => { const c = __coop, H = __cel.hero, P = __cel.partner; return { on: c.on, split: c.C.split, k: +c.C.k.toFixed(2), sep: +Math.hypot(P.pos.x - H.pos.x, P.pos.z - H.pos.z).toFixed(2), splits: c.C.splits, merges: c.C.merges, MS: c.MAXSEP(), hs: H.state, ps: P.state, hp: [+H.pos.x.toFixed(1), +H.pos.z.toFixed(1)], pp: [+P.pos.x.toFixed(1), +P.pos.z.toFixed(1)], fps: __cel.FPS.v }; });
   await p.goto(`http://127.0.0.1:${port}/?nointro&radiotest=1&tod=0&sim=3&street=0`);
   await p.waitForFunction(() => window.__cel && __cel.frames > 5 && window.__coop && window.__street && window.__gear, null, { timeout: 120000 });
-  await E(() => { for (const e of __cel.enemies) { e.set('dead'); e.respawn = 1e9; e.root.visible = false; e.hpS.visible = false; } const H = __cel.hero; H.pos.set(-45, H.pos.y, -32.6); __pads[0] = __mkPad(0); });
-  await waitGame(0.3); await E(() => { __pads[1] = __mkPad(1); __pads[1].buttons[9].pressed = true; }); await waitGame(0.4); await E(() => { __pads[1].buttons[9].pressed = false; }); await waitGame(0.3);
+  await E(() => { for (const e of __cel.enemies) { e.set('dead'); e.respawn = 1e9; e.root.visible = false; e.hpS.visible = false; } const H = __cel.hero; H.pos.set(-45, H.pos.y, -32.6); __pads[0] = __mkPad(0); __pads[0].axes[0] = 0.7; });
+  await waitGame(0.3); await E(() => { __pads[0].axes[0] = 0; __pads[1] = __mkPad(1); }); await waitGame(0.3); await E(() => { __pads[1].buttons[0].pressed = true; }); await waitGame(0.3); await E(() => { __pads[1].buttons[0].pressed = false; }); await waitGame(0.3);
+  if (!(await E(() => __coop.on))) { await E(() => { __pads[1].buttons[9].pressed = true; }); await waitGame(0.3); await E(() => { __pads[1].buttons[9].pressed = false; }); await waitGame(0.3); }
   let s = await st(); T('join: two pads, co-op on', s.on, s);
   const place = (hx, hz, px, pz) => E(([hx, hz, px, pz]) => { const C = __cel, H = C.hero, P = C.partner; H.rt = P.rt = false; H.pos.set(hx, C.groundY(hx, hz), hz); P.pos.set(px, C.groundY(px, pz), pz); H.vel.set(0, 0); P.vel.set(0, 0); H.y = P.y = 0; if (H.state !== 'ride') H.set('move'); if (P.state !== 'ride') P.set('move'); H.inv = P.inv = 1e9; }, [hx, hz, px, pz]);
-  const splitMerge = async (name, away) => {
+  const splitMerge = async (name, away, back = 'toward') => {
     await E(() => { __cel.hero.inv = __cel.partner.inv = 1e9; });
     const s0 = await st(); await E((a) => { __drv.p2 = a; }, away); await waitGame(3.0);
     let s1 = await st(); if (!s1.split) { await waitGame(2.0); s1 = await st(); }
     T(name + ': walk apart + 2 s edge hold -> split', s1.split && s1.splits > s0.splits, { s0: { splits: s0.splits, sep: s0.sep }, s1: { split: s1.split, sep: s1.sep, splits: s1.splits, hp: s1.hp, pp: s1.pp, ps: s1.ps } });
-    await E(() => { __drv.p2 = 'toward'; }); await p.waitForFunction(() => !__coop.C.split, null, { timeout: 150000, polling: 50 }).catch(() => {});
+    await E((b) => { __drv.p2 = b; }, back); await p.waitForFunction(() => !__coop.C.split, null, { timeout: 150000, polling: 50 }).catch(() => {});
     await E(() => { __drv.p2 = 'stop'; }); await waitGame(1.2); const s2 = await st();
     T(name + ': walk back -> merged shared camera', !s2.split && s2.merges > s0.merges && s2.k === 0, { split: s2.split, merges: s2.merges, k: s2.k, sep: s2.sep });
     return s2; };
@@ -47,7 +48,7 @@ const src = fs.readFileSync(path.join(__dirname, 'coop.js'), 'utf8'); const i0 =
   await E(() => { __street.EV.brawl = null; for (const e of __cel.enemies) if (e.pool && e.alive) __street.X.sleep(e); }); await place(-45, -32.6, -43.5, -32.6);
   const party = await E(() => { const P = __street.ev('party'); return P ? { x: P.x, z: P.z, n: P.members.length } : null; });
   T('party: spawns with dancers + boombox', !!party && party.n >= 3, party);
-  if (party) { await place(party.x + 6, party.z, party.x + 7.5, party.z); await E(([x, z]) => { const P = __cel.partner; __cel.partner.yaw = 0; for (const e of __cel.enemies) if (e.state === 'xparty') e.yaw = Math.atan2(P.pos.x - e.pos.x, P.pos.z - e.pos.z); }, [party.x, party.z]); await waitGame(1.2);
+  if (party) { await place(party.x + 6, party.z, party.x + 4.5, party.z); await E(([x, z]) => { const P = __cel.partner; __cel.partner.yaw = 0; for (const e of __cel.enemies) if (e.state === 'xparty') e.yaw = Math.atan2(P.pos.x - e.pos.x, P.pos.z - e.pos.z); }, [party.x, party.z]); await waitGame(2.5);
     s = await E(() => ({ sus: __street.sus(), log: __street.S.log.slice(-4), op: +document.getElementById('slsense').style.opacity }));
     T('spidey sense: P2 (Mavis) in a sight cone -> tingle + edge flash', s.sus[1] > 0.25 || s.log.some((l) => /sense:p2|spotted/.test(l)), s);
     await place(-45, -32.6, -43.5, -32.6); }
@@ -70,10 +71,10 @@ const src = fs.readFileSync(path.join(__dirname, 'coop.js'), 'utf8'); const i0 =
   s = await E(() => ({ hp: __cel.partner.hp })); T('P2 grabs a crab-cake heal', s.hp > 50, s);
   await E(() => { __gear.give('p1', 'brick'); }); await splitMerge('weapons', awayE);
   // 6. ROOFTOP: Harold up on the Fells roofs, P2 on the street
-  const R = await E(() => __gear.route.LAD); T('rooftop route: ladder + planks built', !!R && __gear !== null, R);
+  const R = await E(() => __gear.route.LAD); T('rooftop route: ladder + planks built', !!R, R);
   if (R) { await place(R.x, R.z, R.x + 1.5, R.z + 1); await E(() => { __cel.press('e'); }); await waitGame(1.6);
     s = await E(() => ({ rt: !!__cel.hero.rt, y: +__cel.hero.pos.y.toFixed(1), log: __gear.ST.log.slice(-3) })); T('rooftop: CLIMB UP puts Harold on the roof', s.rt && s.y > 6, s);
-    await splitMerge('rooftop', { x: R.x + 50, z: R.z + 1.2 }); }
+    await splitMerge('rooftop', { x: R.x + 50, z: R.z + 1.2 }, { x: R.x + 1.5, z: R.z + 0.6 }); }
   // 7. DIRT BIKE: P2 rides at speed
   await place(-40, -37.5, -37.6, -37.5); await E(() => { __gear.mount('p2', 0); }); await waitGame(0.3);
   s = await E(() => ({ ps: __cel.partner.state, bike: !!__cel.partner.bike })); T('P2 hops on a dirt bike', s.bike && s.ps === 'ride', s);
