@@ -9,6 +9,9 @@ const A = 46, GROW = +(new URLSearchParams(location.search).get('grow') || 1); /
 const ground = new THREE.Mesh(new THREE.PlaneGeometry(A * 2.6, A * 2.6), toon(0xffffff, { map: groundTex('grass', 50) })); ground.rotation.x = -Math.PI / 2; st.scene.add(ground);
 for (let i = -3; i <= 3; i++) for (const [w, h] of [[2.4, A * 2.6], [A * 2.6, 2.4]]) { const r = new THREE.Mesh(new THREE.PlaneGeometry(w, h), toon(0x4a4f5c)); r.rotation.x = -Math.PI / 2; r.position.set(w < 3 ? i * 15 : 0, .02, w < 3 ? 0 : i * 15); st.scene.add(r); }
 const hole = new THREE.Mesh(new THREE.CircleGeometry(1, 40), new THREE.MeshBasicMaterial({ color: 0x000000 })); hole.rotation.x = -Math.PI / 2; hole.position.y = .06; st.scene.add(hole);
+const aura = new THREE.Mesh(new THREE.RingGeometry(1.12, 1.7, 40), new THREE.MeshBasicMaterial({ color: 0x7b4bff, transparent: true, opacity: .3, side: THREE.DoubleSide, depthWrite: false })); aura.rotation.x = -Math.PI / 2; aura.position.y = .065; st.scene.add(aura);
+const CG = f => { try { window.CrazyGames?.SDK?.game?.[f]?.(); } catch (e) {} };
+let best = 0, tleft = 90, over = false, endT = 0; try { best = +localStorage.getItem('bh-best') || 0; } catch (e) {}
 const ring = new THREE.Mesh(new THREE.RingGeometry(1, 1.12, 40), new THREE.MeshBasicMaterial({ color: 0x7b4bff, side: THREE.DoubleSide })); ring.rotation.x = -Math.PI / 2; ring.position.y = .07; st.scene.add(ring);
 // prop types: [geometry, size (footprint radius), height, volume score, count, colors]
 const TYPES = [
@@ -29,10 +32,14 @@ for (const T of TYPES) { const im = instances(T.g, T.win ? toon(0xffffff, { map:
     const it = { x, z, s: 1, fall: 0, gone: false, rot: rand(0, 6) }; T.items.push(it); im.color(i, T.col[i % T.col.length]); } }
 const PN = 120, PED = Array.from({ length: PN }, (_, i) => ({ zom: i % 2 === 0, x: rand(-A, A), z: rand(-A, A), a: rand(0, 6), fall: 0, gone: false }));
 const ZB = crowd(st.scene, zombieGeo(), PN / 2), CT = crowd(st.scene, catGeo(), PN / 2); for (let i = 0; i < PN / 2; i++) { ZB.color(i, 0x8fcf7a); CT.color(i, [0xff9a3c, 0xf4efe4, 0x9aa0aa][i % 3]); }
-let screamCd = 0;
+let screamCd = 0; const AUTOP = new URLSearchParams(location.search).has('auto');
 let hx = 0, hz = 0, size = 1.4, eaten = 0, shown = 0, lvl = 0; const LV = ['COINS', 'BENCHES', 'TREES', 'CARS', 'HOUSES', 'SKYSCRAPERS'];
 const ray = new THREE.Raycaster(), plane = new THREE.Plane(new THREE.Vector3(0, 1, 0), 0), tmp = new THREE.Vector3();
+function reset() { for (const T of TYPES) for (const it of T.items) { it.fall = 0; it.gone = false; it.s = 1; } for (const p of PED) { p.fall = 0; p.gone = false; } hx = hz = 0; eaten = 0; lvl = 0; tleft = 90; over = false; endT = 0; st.hud.banner('GO!', .8); CG('gameplayStart'); }
+CG('gameplayStart');
 function update(dt) {
+  if (over) { endT += dt; if (!AUTOP && endT > 1.2 && (st.keys.r || st.keys.enter || st.ptr.down)) reset(); fx.update(dt); st.hud.hint(endT > 1.2 ? 'TAP or R to play again' : ''); return; }
+  tleft -= dt;
   const k = st.keys; let mx = (k.d || k.arrowright ? 1 : 0) - (k.a || k.arrowleft ? 1 : 0), mz = (k.s || k.arrowdown ? 1 : 0) - (k.w || k.arrowup ? 1 : 0);
   if (st.ptr.down) { ray.setFromCamera({ x: st.ptr.x, y: -st.ptr.y }, st.camera); if (ray.ray.intersectPlane(plane, tmp)) { const dx = tmp.x - hx, dz = tmp.z - hz, d = Math.hypot(dx, dz); if (d > .3) { mx = dx / d; mz = dz / d; } } }
   const l = Math.hypot(mx, mz) || 1, sp = 7 + size * 1.4; hx = clamp(hx + mx / l * sp * dt, -A, A); hz = clamp(hz + mz / l * sp * dt, -A, A);
@@ -46,14 +53,15 @@ function update(dt) {
   fx.update(dt);
   size = 1.4 + Math.sqrt(eaten) * .5; const nl = TYPES.findIndex(T => T.r >= size * .78); const cl = nl < 0 ? TYPES.length : nl; if (cl > lvl && lvl < LV.length) { lvl = cl; if (lvl < TYPES.length) { st.hud.banner('NOW EATING ' + LV[lvl].toString(), 1.6); sfx('win'); } else st.hud.banner('EAT THE CITY', 2); }
   const total = TYPES.reduce((a, T) => a + T.items.filter(i => !i.gone).length, 0);
-  st.hud.left(`SIZE<br><span style="color:#ffd34d;font-size:8vmin">${size.toFixed(1)}m</span>`); st.hud.right(`EATEN ${Math.round(eaten)}<br>LEFT ${total}`); st.hud.hint('WASD / drag to move the hole');
+  st.hud.left(`SIZE<br><span style="color:#ffd34d;font-size:8vmin">${size.toFixed(1)}m</span>`); st.hud.right(`EATEN ${Math.round(eaten)}<br>LEFT ${total}<br>${Math.ceil(Math.max(0, tleft))}s · BEST ${best}`); st.hud.hint('WASD / drag to move the hole');
+  if (tleft <= 0 || total === 0) { over = true; endT = 0; CG('gameplayStop'); const sc = Math.round(eaten); if (sc > best) { best = sc; try { localStorage.setItem('bh-best', sc); } catch (e) {} } st.hud.banner(total === 0 ? 'CITY EATEN!' : 'TIME UP: ' + sc, 3); sfx('win'); }
   window.__game = { size: +size.toFixed(2), eaten: Math.round(eaten), left: total };
 }
 const camP = new THREE.Vector3(0, 12, 12), look = new THREE.Vector3();
 function pre() {
   for (const T of TYPES) { T.items.forEach((it, i) => T.im.set(i, it.x, it.gone ? -50 : T.h / 2 * it.s - (it.fall > 0 ? it.fall * T.h * .6 : 0), it.z, it.s, it.s, it.s, 0, it.rot, 0)); T.im.done(); }
   { let zi = 0, ci = 0; for (const p of PED) { const s = p.gone ? 0 : (1 - p.fall) * .75, y = p.fall ? -p.fall * 1.2 : Math.abs(Math.sin(st.t * 11 + p.a * 3)) * .15; (p.zom ? ZB : CT).set(p.zom ? zi++ : ci++, p.x, y, p.z, s, p.fall ? st.t * 8 : -p.a + Math.PI / 2, 0, p.fall ? .5 : 0); } ZB.done(zi); CT.done(ci); }
-  hole.scale.setScalar(size); ring.scale.setScalar(size); hole.position.x = ring.position.x = hx; hole.position.z = ring.position.z = hz;
+  hole.scale.setScalar(size); ring.scale.setScalar(size); aura.scale.setScalar(size); aura.rotation.z = st.t * 2; aura.position.x = hx; aura.position.z = hz; hole.position.x = ring.position.x = hx; hole.position.z = ring.position.z = hz;
   const h = 10 + size * 4.2, z = 9 + size * 3.2; camP.set(hx, h, hz + z * 1.0); st.camera.position.lerp(camP, .08); look.set(hx, 0, hz - 1); st.camera.lookAt(look);
 }
 st.camera.position.set(0, 14, 14); st.run(update, pre);

@@ -15,10 +15,14 @@ const gates = []; for (let i = 0; i < 6; i++) { const z = 22 + i * 24, a = OPS[(
 const castle = hero(catGeo(), 0xff9a3c, .025); castle.scale.setScalar(10); castle.rotation.y = Math.PI; castle.position.set(0, 0, TRACK + 2); st.scene.add(castle);
 const men = crowd(st.scene, zombieGeo(), MAXDRAW), foes = crowd(st.scene, catGeo(), 120), fx = particles(st.scene, 300);
 for (let i = 0; i < MAXDRAW; i++) men.color(i, [0x7fbf6a, 0x8fcf7a, 0x6aa85a][i % 3]); for (let i = 0; i < 120; i++) foes.color(i, [0xff9a3c, 0x9aa0aa, 0xf4efe4][i % 3]);
-const AUTO0 = 0;
 const AUTO = new URLSearchParams(location.search).has('auto');
 let n = 5, cx = 0, cz = 0, bossHP = 900, bossMax = 900, fight = false, won = false, lost = false, parts = [], foeN = 0, fallT = 0;
-st.onPointerDown = () => {};
+const CG = f => { try { window.CrazyGames?.SDK?.game?.[f]?.(); } catch (e) {} };
+let best = 0, endT = 0; try { best = +localStorage.getItem('zh-best') || 0; } catch (e) {}
+// gate frames: two posts and a glowing bar make each gate read as a real obstacle
+for (const g of gates) { const c = g.ops[0][2] && g.ops[1][2] ? 0x2ea0ff : 0xffb020; for (const x of [-5, 0, 5]) { const m = new THREE.Mesh(new THREE.BoxGeometry(.35, 3.8, .35), toon(0xdddddd)); m.position.set(x, 1.9, g.z); st.scene.add(m); } const b = new THREE.Mesh(new THREE.BoxGeometry(10.2, .35, .35), new THREE.MeshBasicMaterial({ color: c })); b.position.set(0, 3.8, g.z); st.scene.add(b); }
+function reset() { n = 5; cx = 0; cz = 0; bossHP = bossMax; fight = won = lost = false; fallT = 0; foeN = 0; parts = []; endT = 0; gates.forEach(g => g.used = false); castle.rotation.z = 0; castle.position.y = 0; st.hud.banner('GO!', .8); CG('gameplayStart'); }
+CG('gameplayStart');
 function update(dt) {
   if (!fight && !won && !lost) {
     const k = st.keys, mv = (k.d || k.arrowright ? 1 : 0) - (k.a || k.arrowleft ? 1 : 0); if (AUTO) { const g = gates.find(g => !g.used && g.z - cz < 14), want = g ? (g.ops[1][1](n) > g.ops[0][1](n) ? 2.4 : -2.4) : 0; cx += clamp(want - cx, -7 * dt, 7 * dt); } else if (mv) cx += mv * 7 * dt; else if (st.ptr.down) cx += (st.ptr.x * 3.8 - cx) * Math.min(1, dt * 9); cx = clamp(cx, -3.6, 3.6); cz += (9 + Math.min(4, n / 80)) * dt;
@@ -31,8 +35,9 @@ function update(dt) {
     else if (n <= 0) { n = 0; fight = false; lost = true; st.hud.banner('CRUSHED', 3); }
   }
   if (won) { fallT += dt; castle.rotation.z = Math.min(1.45, fallT * 1.1); castle.position.y = -fallT * .5; if (fallT < 1.5 && Math.random() < .5) fx.burst(3, { x: rand(-4, 4), y: 1, z: TRACK, size: .5, life: .8, color: 0xe8dcc0, g: 2 }, 4); }
+  if (won || lost) { if (!endT) { CG('gameplayStop'); if (n > best) { best = Math.round(n); try { localStorage.setItem('zh-best', best); } catch (e) {} } } endT += dt; if (!AUTO && endT > 1.2 && (st.keys.r || st.keys.enter || st.ptr.down)) reset(); }
   fx.update(dt); for (const p of parts) { p.vy -= 14 * dt; p.x += p.vx * dt; p.y = Math.max(.1, p.y + p.vy * dt); p.z += p.vz * dt; }
-  st.hud.left(`CROWD<br><span style="color:#ffd34d;font-size:8vmin">${Math.max(0, Math.round(n)).toLocaleString()}</span>`); st.hud.right(fight || won ? `BOSS<br>${Math.max(0, Math.round(bossHP))}` : `GATES ${gates.filter(g => g.used).length}/${gates.length}`); st.hud.hint('A/D or drag: steer');
+  st.hud.left(`CROWD<br><span style="color:#ffd34d;font-size:8vmin">${Math.max(0, Math.round(n)).toLocaleString()}</span>`); st.hud.right(fight || won ? `BOSS<br>${Math.max(0, Math.round(bossHP))}<br>BEST ${best}` : `GATES ${gates.filter(g => g.used).length}/${gates.length}`); st.hud.hint(won || lost ? (endT > 1.2 ? 'TAP or R to play again' : '') : 'A/D or drag: steer');
   window.__game = { crowd: Math.round(n), boss: Math.round(bossHP), z: Math.round(cz), won, lost };
 }
 function pre() {
