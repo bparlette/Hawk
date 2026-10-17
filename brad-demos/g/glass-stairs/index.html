@@ -3,13 +3,13 @@
 // Glass Stairs: a ball drops through 20 rows of two glass panes. One of each pair holds, the other shatters. Which one? SPACE or tap drops the next ball.
 // Panes are MeshPhysicalMaterial (transmission .95, roughness .05): no textures. Each ball gets a fresh random layout.
 import { createStage, instances, sfx, rand, clamp, THREE } from '../_vendor/gp3d.js';
-const st = createStage({ bg: 0x0b0f1a, fitWidth: 7.5, fov: 55 }); st.light();
+const st = createStage({ bg: 0x1d2b4a, fitWidth: 7.5, fov: 55 }); st.light();
 const ROWS = 20, GAP = 3, PW = 2.2, COLX = [-1.3, 1.3], BR = .5;
 st.scene.add(new THREE.PointLight(0xff5a2a, 60, 90)); st.scene.children.at(-1).position.set(0, -ROWS * GAP - 6, 4);
 const lava = new THREE.Mesh(new THREE.PlaneGeometry(60, 60), new THREE.MeshBasicMaterial({ color: 0xff4a1a })); lava.rotation.x = -Math.PI / 2; lava.position.y = -ROWS * GAP - 8; st.scene.add(lava);
-const pillars = []; for (let i = 0; i < 40; i++) { const m = new THREE.Mesh(new THREE.BoxGeometry(rand(.6, 1.6), rand(10, 40), rand(.6, 1.6)), new THREE.MeshStandardMaterial({ color: 0x1c2740 })); m.position.set(rand(-9, 9), -rand(0, ROWS * GAP), -rand(3, 14)); if (Math.abs(m.position.x) < 2.5) m.position.x += 4; st.scene.add(m); }
-const glass = new THREE.MeshPhysicalMaterial({ color: 0xcfeaff, transmission: .95, roughness: .05, thickness: .5, ior: 1.45, transparent: true });
-const panes = []; for (let r = 0; r < ROWS; r++) for (let c = 0; c < 2; c++) { const m = new THREE.Mesh(new THREE.BoxGeometry(PW, .14, PW), glass); m.position.set(COLX[c], -r * GAP, 0); st.scene.add(m); panes.push({ r, c, m, weak: false, broken: false, y: -r * GAP }); }
+const pillars = []; for (let i = 0; i < 40; i++) { const m = new THREE.Mesh(new THREE.BoxGeometry(rand(.6, 1.6), rand(10, 40), rand(.6, 1.6)), new THREE.MeshStandardMaterial({ color: 0x3a4d7a })); m.position.set(rand(-9, 9), -rand(0, ROWS * GAP), -rand(3, 14)); if (Math.abs(m.position.x) < 2.5) m.position.x += 4; st.scene.add(m); }
+const glass = new THREE.MeshPhysicalMaterial({ color: 0x9fdcff, transmission: .95, roughness: .05, thickness: .5, ior: 1.45, transparent: true, opacity: .75 });
+const panes = []; for (let r = 0; r < ROWS; r++) for (let c = 0; c < 2; c++) { const m = new THREE.Mesh(new THREE.BoxGeometry(PW, .14, PW), glass); m.position.set(COLX[c], -r * GAP, 0); m.add(new THREE.LineSegments(new THREE.EdgesGeometry(m.geometry), new THREE.LineBasicMaterial({ color: 0xbfeaff }))); st.scene.add(m); panes.push({ r, c, m, weak: false, broken: false, y: -r * GAP }); }
 const frame = new THREE.Mesh(new THREE.BoxGeometry(.12, ROWS * GAP + 6, .12), new THREE.MeshStandardMaterial({ color: 0x8aa0c8 })); for (const x of [-2.6, 0, 2.6]) { const f = frame.clone(); f.position.set(x, -ROWS * GAP / 2 + 1.5, -1.3); st.scene.add(f); }
 const ball = new THREE.Mesh(new THREE.SphereGeometry(BR, 24, 16), new THREE.MeshStandardMaterial({ roughness: .25, metalness: .3 })); st.scene.add(ball);
 const shardI = instances(new THREE.BoxGeometry(.28, .06, .28), glass, 900); st.scene.add(shardI.mesh); const shards = [];

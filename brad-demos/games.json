@@ -6,7 +6,8 @@
   "Other games",
   "Retro Arcade",
   "Originals",
-  "Sticker Series"
+  "Sticker Series",
+  "Viral Demos"
  ],
  "games": [
   {
@@ -1976,6 +1977,214 @@
    "autostart": [],
    "orientation": "any",
    "path": "g/big-bumpin-3d/index.html"
+  },
+  {
+   "id": "tiny-kaiju",
+   "title": "Tiny Kaiju",
+   "category": "Viral Demos",
+   "keys": {
+    "left": "KeyA",
+    "right": "KeyD",
+    "attack": "Space",
+    "jump": "KeyZ",
+    "special": "KeyX"
+   },
+   "labels": {
+    "attack": "STOMP",
+    "jump": "TAIL",
+    "special": "FIRE"
+   },
+   "autostart": [],
+   "orientation": "any",
+   "path": "g/tiny-kaiju/index.html",
+   "note": "One-screen viral demo. Source: brad-demos/g/tiny-kaiju",
+   "thumb": "thumbs/tiny-kaiju.webp?v=1792220459"
+  },
+  {
+   "id": "gravity-janitor",
+   "title": "Gravity Janitor",
+   "category": "Viral Demos",
+   "keys": {
+    "left": "KeyA",
+    "right": "KeyD",
+    "attack": "Space"
+   },
+   "labels": {
+    "attack": "MOP"
+   },
+   "autostart": [],
+   "orientation": "any",
+   "path": "g/gravity-janitor/index.html",
+   "note": "One-screen viral demo. Source: brad-demos/g/gravity-janitor",
+   "thumb": "thumbs/gravity-janitor.webp?v=1792220459"
+  },
+  {
+   "id": "ball-avalanche",
+   "title": "Ball Avalanche",
+   "category": "Viral Demos",
+   "keys": {
+    "left": "KeyA",
+    "right": "KeyD"
+   },
+   "labels": {},
+   "autostart": [],
+   "orientation": "any",
+   "path": "g/ball-avalanche/index.html",
+   "note": "One-screen viral demo. Source: brad-demos/g/ball-avalanche",
+   "thumb": "thumbs/ball-avalanche.webp?v=1792220460"
+  },
+  {
+   "id": "ragdoll-launch",
+   "title": "Ragdoll Launch",
+   "category": "Viral Demos",
+   "keys": {
+    "up": "KeyW",
+    "down": "KeyS",
+    "attack": "Space"
+   },
+   "labels": {
+    "attack": "CHARGE / FIRE"
+   },
+   "autostart": [],
+   "orientation": "any",
+   "path": "g/ragdoll-launch/index.html",
+   "note": "One-screen viral demo. Source: brad-demos/g/ragdoll-launch",
+   "thumb": "thumbs/ragdoll-launch.webp?v=1792220460"
+  },
+  {
+   "id": "voxel-demolition",
+   "title": "Voxel Demolition",
+   "category": "Viral Demos",
+   "keys": {
+    "up": "ArrowUp",
+    "down": "ArrowDown",
+    "left": "ArrowLeft",
+    "right": "ArrowRight",
+    "attack": "Space",
+    "jump": "KeyA",
+    "special": "KeyD"
+   },
+   "labels": {
+    "attack": "FIRE",
+    "jump": "ORBIT L",
+    "special": "ORBIT R"
+   },
+   "autostart": [],
+   "orientation": "any",
+   "path": "g/voxel-demolition/index.html",
+   "note": "One-screen viral demo. Source: brad-demos/g/voxel-demolition",
+   "thumb": "thumbs/voxel-demolition.webp?v=1792220461"
+  },
+  {
+   "id": "marble-elimination",
+   "title": "Marble Elimination",
+   "category": "Viral Demos",
+   "keys": {},
+   "labels": {},
+   "autostart": [],
+   "orientation": "any",
+   "path": "g/marble-elimination/index.html",
+   "note": "One-screen viral demo. Source: brad-demos/g/marble-elimination",
+   "thumb": "thumbs/marble-elimination.webp?v=1792220461"
+  },
+  {
+   "id": "glass-stairs",
+   "title": "Glass Stairs",
+   "category": "Viral Demos",
+   "keys": {
+    "attack": "Space"
+   },
+   "labels": {
+    "attack": "DROP"
+   },
+   "autostart": [],
+   "orientation": "any",
+   "path": "g/glass-stairs/index.html",
+   "note": "One-screen viral demo. Source: brad-demos/g/glass-stairs",
+   "thumb": "thumbs/glass-stairs.webp?v=1792220461"
+  },
+  {
+   "id": "black-hole",
+   "title": "Black Hole City",
+   "category": "Viral Demos",
+   "keys": {
+    "up": "KeyW",
+    "down": "KeyS",
+    "left": "KeyA",
+    "right": "KeyD"
+   },
+   "labels": {},
+   "autostart": [],
+   "orientation": "any",
+   "path": "g/black-hole/index.html",
+   "note": "One-screen viral demo. Source: brad-demos/g/black-hole",
+   "thumb": "thumbs/black-hole.webp?v=1792220462"
+  },
+  {
+   "id": "speed-ramp",
+   "title": "Speed Ramp",
+   "category": "Viral Demos",
+   "keys": {
+    "attack": "Space",
+    "up": "KeyW",
+    "down": "KeyS",
+    "left": "KeyA",
+    "right": "KeyD"
+   },
+   "labels": {
+    "attack": "NITRO"
+   },
+   "autostart": [],
+   "orientation": "any",
+   "path": "g/speed-ramp/index.html",
+   "note": "One-screen viral demo. Source: brad-demos/g/speed-ramp",
+   "thumb": "thumbs/speed-ramp.webp?v=1792220462"
+  },
+  {
+   "id": "rope-bridge",
+   "title": "Rope Bridge",
+   "category": "Viral Demos",
+   "keys": {
+    "attack": "Space"
+   },
+   "labels": {
+    "attack": "SEND"
+   },
+   "autostart": [],
+   "orientation": "any",
+   "path": "g/rope-bridge/index.html",
+   "note": "One-screen viral demo. Source: brad-demos/g/rope-bridge",
+   "thumb": "thumbs/rope-bridge.webp?v=1792220463"
+  },
+  {
+   "id": "crowd-multiplier",
+   "title": "Crowd Multiplier",
+   "category": "Viral Demos",
+   "keys": {
+    "left": "KeyA",
+    "right": "KeyD"
+   },
+   "labels": {},
+   "autostart": [],
+   "orientation": "any",
+   "path": "g/crowd-multiplier/index.html",
+   "note": "One-screen viral demo. Source: brad-demos/g/crowd-multiplier",
+   "thumb": "thumbs/crowd-multiplier.webp?v=1792220463"
+  },
+  {
+   "id": "bulldozer-wedge",
+   "title": "The Unstoppable Wedge",
+   "category": "Viral Demos",
+   "keys": {
+    "left": "KeyA",
+    "right": "KeyD"
+   },
+   "labels": {},
+   "autostart": [],
+   "orientation": "any",
+   "path": "g/bulldozer-wedge/index.html",
+   "note": "One-screen viral demo. Source: brad-demos/g/bulldozer-wedge",
+   "thumb": "thumbs/bulldozer-wedge.webp?v=1792220464"
   }
  ]
 }

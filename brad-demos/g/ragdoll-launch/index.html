@@ -3,7 +3,7 @@
 // Ragdoll Launch: shoot a crash dummy into brick towers, pinball bumpers, glass and TNT. W/S aim, hold SPACE to charge, release to fire
 // (touch: drag from the cannon, release). The ragdoll is a 12-point Verlet skeleton; bricks sleep until hit, then wake their column.
 import { createStage, instances, sfx, rand, clamp, THREE } from '../_vendor/gp3d.js';
-const st = createStage({ bg: 0x7fc8f8, fitWidth: 15, fog: [60, 140] }); st.light();
+const st = createStage({ bg: 0x7fc8f8, fitWidth: 11, fog: [60, 140] }); st.light();
 const ground = new THREE.Mesh(new THREE.PlaneGeometry(400, 120), new THREE.MeshStandardMaterial({ color: 0x5fbf5a })); ground.rotation.x = -Math.PI / 2; ground.position.set(100, 0, 0); st.scene.add(ground);
 const M = c => new THREE.MeshStandardMaterial({ color: c, roughness: .6 });
 // ---- cannon

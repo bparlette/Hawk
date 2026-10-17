@@ -21,9 +21,9 @@ function update(dt) {
   wz += 3.6 * SPEED * dt; rebuild(); hit = 0;
   const moving = [];
   for (let k2 = 0; k2 < N; k2++) { if (FALL[k2]) continue; const dz = wz - Z[k2]; // dz > 0: peg is behind the apex
-    if (dz > -.2 && dz < 4.5) { const half = (dz + .2) * .75 + .1; if (Math.abs(X[k2] - wx) < half + R) { const side = Math.sign(X[k2] - wx) || (k2 % 2 ? 1 : -1); VX[k2] = side * rand(4, 7) * SPEED; VZ[k2] = rand(2, 6) * SPEED; hit++; Z[k2] = Math.max(Z[k2], wz + .0); } } }
+    if (dz > -.2 && dz < 4.5) { const half = (dz + .2) * .75 + .1; if (Math.abs(X[k2] - wx) < half + R) { const side = Math.sign(X[k2] - wx) || (k2 % 2 ? 1 : -1); VX[k2] = side * rand(11, 18) * SPEED; VZ[k2] = rand(3, 9) * SPEED; hit++; Z[k2] = Math.max(Z[k2], wz + .0); } } }
   for (let k2 = 0; k2 < N; k2++) { if (FALL[k2]) { Y[k2] -= 18 * dt; if (Y[k2] < -40) { X[k2] = 0; Z[k2] = -999; } continue; } if (Math.abs(VX[k2]) + Math.abs(VZ[k2]) < .05) continue; moving.push(k2); }
-  for (const a of moving) { X[a] += VX[a] * dt; Z[a] += VZ[a] * dt; VX[a] *= .985; VZ[a] *= .985; const cx0 = Math.floor((X[a] + HALF) / CS) + 3, cz0 = Math.floor(Z[a] / CS) + 3;
+  for (const a of moving) { X[a] += VX[a] * dt; Z[a] += VZ[a] * dt; VX[a] *= .996; VZ[a] *= .996; const cx0 = Math.floor((X[a] + HALF) / CS) + 3, cz0 = Math.floor(Z[a] / CS) + 3;
     for (let ix = cx0 - 1; ix <= cx0 + 1; ix++) for (let iz = cz0 - 1; iz <= cz0 + 1; iz++) { const list = cells.get(ix * 400 + iz); if (!list) continue; for (const b of list) { if (b === a || FALL[b]) continue; const dx = X[b] - X[a], dz = Z[b] - Z[a], d2 = dx * dx + dz * dz; if (d2 < 4 * R * R && d2 > 1e-8) { const d = Math.sqrt(d2), nx = dx / d, nz = dz / d, rel = (VX[a] - VX[b]) * nx + (VZ[a] - VZ[b]) * nz; if (rel > 0) { VX[b] += nx * rel * .8; VZ[b] += nz * rel * .8; VX[a] -= nx * rel * .4; VZ[a] -= nz * rel * .4; } } } }
     if (Math.abs(X[a]) > HALF + .3 || Z[a] > FRONT + 8) { if (!FALL[a]) { FALL[a] = 1; fallen++; if (fallen % 150 === 1) sfx('tick', .3); } } }
   st.shake(Math.min(3, hit / 150)); if (hit > 60 && Math.random() < .08) sfx('whoosh', .25);
