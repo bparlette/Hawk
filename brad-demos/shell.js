@@ -178,41 +178,68 @@
   }
 
   // ---------------------------------------------------------------- picker
+  // Scales to hundreds of games: search box, collapsible categories (only expanded ones create cards), 60 cards per page,
+  // thumbnails are lazy. Games load from one games.json; for thousands, shard it (see docs in gamepress/docs/HOSTING.md).
+  var PAGE = 60, query = "", openCats = {};
+  function makeCard(g) {
+    var b = document.createElement("button"); b.type = "button"; b.className = "card"; b.dataset.id = g.id;
+    var im = document.createElement("img"); im.className = "th"; im.alt = ""; im.loading = "lazy"; im.decoding = "async";
+    im.width = 320; im.height = 200;
+    if (g.thumb) im.src = g.thumb;
+    var nm = document.createElement("span"); nm.className = "nm"; nm.textContent = g.title;
+    b.appendChild(im); b.appendChild(nm);
+    var sh = document.createElement("span"); sh.className = "share"; sh.textContent = "⤴"; sh.title = "Copy share link";
+    sh.addEventListener("click", function (e) {
+      e.stopPropagation();
+      var url = location.origin + location.pathname + "#" + g.id;
+      function done(ok) {
+        sh.textContent = ok ? "✓" : "✕";
+        setTimeout(function () { sh.textContent = "⤴"; }, 1200);
+      }
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(url).then(function () { done(true); }, function () { done(false); });
+      } else {
+        var ta = document.createElement("textarea"); ta.value = url; document.body.appendChild(ta);
+        ta.select(); try { done(document.execCommand("copy")); } catch (_) { done(false); }
+        document.body.removeChild(ta);
+      }
+    });
+    b.appendChild(sh);
+    b.addEventListener("click", function () { start(g.id); });
+    return b;
+  }
+  function fillGrid(grid, list, shown) {
+    grid.textContent = "";
+    list.slice(0, shown).forEach(function (g) { grid.appendChild(makeCard(g)); });
+    if (list.length > shown) {
+      var more = document.createElement("button"); more.type = "button"; more.className = "more"; more.textContent = "Show more (" + (list.length - shown) + ")";
+      more.addEventListener("click", function () { fillGrid(grid, list, shown + PAGE); });
+      grid.appendChild(more);
+    }
+  }
   function buildPicker() {
     pickBody.textContent = "";
-    CATS.forEach(function (cat) {
-      var list = GAMES.filter(function (g) { return g.category === cat; });
-      if (!list.length) return;
-      var h = document.createElement("div"); h.className = "cat"; h.textContent = cat + " · " + list.length; pickBody.appendChild(h);
-      var grid = document.createElement("div"); grid.className = "grid"; pickBody.appendChild(grid);
-      list.forEach(function (g) {
-        var b = document.createElement("button"); b.type = "button"; b.className = "card"; b.dataset.id = g.id;
-        var im = document.createElement("img"); im.className = "th"; im.alt = ""; im.loading = "lazy"; im.decoding = "async";
-        im.width = 320; im.height = 200;
-        if (g.thumb) im.src = g.thumb;
-        var nm = document.createElement("span"); nm.className = "nm"; nm.textContent = g.title;
-        b.appendChild(im); b.appendChild(nm);
-        var sh = document.createElement("span"); sh.className = "share"; sh.textContent = "⤴"; sh.title = "Copy share link";
-        sh.addEventListener("click", function (e) {
-          e.stopPropagation();
-          var url = location.origin + location.pathname + "#" + g.id;
-          function done(ok) {
-            sh.textContent = ok ? "✓" : "✕";
-            setTimeout(function () { sh.textContent = "⤴"; }, 1200);
-          }
-          if (navigator.clipboard && navigator.clipboard.writeText) {
-            navigator.clipboard.writeText(url).then(function () { done(true); }, function () { done(false); });
-          } else {
-            var ta = document.createElement("textarea"); ta.value = url; document.body.appendChild(ta);
-            ta.select(); try { done(document.execCommand("copy")); } catch (_) { done(false); }
-            document.body.removeChild(ta);
-          }
-        });
-        b.appendChild(sh);
-        b.addEventListener("click", function () { start(g.id); });
-        grid.appendChild(b);
+    var q = document.createElement("input"); q.type = "search"; q.placeholder = "Search " + GAMES.length + " games"; q.value = query; q.className = "psearch"; q.setAttribute("aria-label", "Search games");
+    q.addEventListener("input", function () { query = q.value.trim().toLowerCase(); clearTimeout(q._t); q._t = setTimeout(function () { buildPicker(); var n = pickBody.querySelector(".psearch"); if (n) { n.focus(); n.setSelectionRange(n.value.length, n.value.length); } }, 150); });
+    pickBody.appendChild(q);
+    if (query) {
+      var hits = GAMES.filter(function (g) { return (g.title + " " + g.category + " " + (g.tags || []).join(" ")).toLowerCase().indexOf(query) >= 0; });
+      var h0 = document.createElement("div"); h0.className = "cat"; h0.textContent = hits.length + " result" + (hits.length === 1 ? "" : "s"); pickBody.appendChild(h0);
+      var g0 = document.createElement("div"); g0.className = "grid"; pickBody.appendChild(g0); fillGrid(g0, hits, PAGE);
+    } else {
+      var many = GAMES.length > 60, shownCats = 0;
+      CATS.forEach(function (cat) {
+        var list = GAMES.filter(function (g) { return g.category === cat; });
+        if (!list.length) return;
+        if (openCats[cat] === undefined) openCats[cat] = !many || shownCats < 2;
+        shownCats++;
+        var h = document.createElement("button"); h.type = "button"; h.className = "cat catbtn"; h.setAttribute("aria-expanded", String(openCats[cat]));
+        h.textContent = (openCats[cat] ? "\u25BE " : "\u25B8 ") + cat + " \u00B7 " + list.length; pickBody.appendChild(h);
+        var grid = document.createElement("div"); grid.className = "grid"; grid.hidden = !openCats[cat]; pickBody.appendChild(grid);
+        if (openCats[cat]) fillGrid(grid, list, PAGE);
+        h.addEventListener("click", function () { openCats[cat] = !openCats[cat]; if (openCats[cat] && !grid.childNodes.length) fillGrid(grid, list, PAGE); grid.hidden = !openCats[cat]; h.setAttribute("aria-expanded", String(openCats[cat])); h.textContent = (openCats[cat] ? "\u25BE " : "\u25B8 ") + cat + " \u00B7 " + list.length; });
       });
-    });
+    }
     var f = document.createElement("div"); f.className = "foot";
     f.textContent = GAMES.length + " games. Only the game you're playing runs; the last one stays paused for a quick switch back.";
     pickBody.appendChild(f);

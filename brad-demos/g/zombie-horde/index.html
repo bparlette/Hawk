@@ -1,22 +1,21 @@
-<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no"><title>Crowd Multiplier</title></head><body>
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no"><title>Zombie Horde</title></head><body>
 <script type="module">
-// Crowd Multiplier: steer a mob of stickmen (A/D or drag) through math gates, then overwhelm the castle boss. One instanced body + one instanced head;
-// only the first 450 are drawn, the counter shows the real number. Gate side is chosen by where the crowd centre is when it crosses.
+// Zombie Horde: steer a growing zombie mob (A/D or drag) through math gates, then overwhelm the GIANT CAT boss. One instanced zombie mesh;
+// only the first 700 are drawn, the counter shows the real number. Gate side is chosen by where the crowd centre is when it crosses.
 import { createStage, instances, sfx, rand, clamp, THREE } from '../_vendor/gp3d.js';
-const st = createStage({ bg: 0x8fd3ff, fitWidth: 9.5, fov: 55, fog: [40, 110] }); st.light();
-const TRACK = 190, MAXDRAW = 450;
-const road = new THREE.Mesh(new THREE.PlaneGeometry(10, TRACK + 60), new THREE.MeshStandardMaterial({ color: 0x4a4f63 })); road.rotation.x = -Math.PI / 2; road.position.z = TRACK / 2; st.scene.add(road);
-const grass = new THREE.Mesh(new THREE.PlaneGeometry(200, TRACK + 200), new THREE.MeshStandardMaterial({ color: 0x6cc45a })); grass.rotation.x = -Math.PI / 2; grass.position.set(0, -.02, TRACK / 2); st.scene.add(grass);
+import { toon, zombieGeo, catGeo, crowd, hero, particles, sky, groundTex } from '../_vendor/gpkit.js';
+const st = createStage({ bg: 0x8fd3ff, fitWidth: 9.5, fov: 55, fog: [40, 110] }); st.light(); sky(st.scene, 0x3f8cff, 0xffe7b8, [50, 150]);
+const TRACK = 190, MAXDRAW = 700;
+const road = new THREE.Mesh(new THREE.PlaneGeometry(10, TRACK + 60), toon(0xffffff, { map: groundTex('asphalt', 10) })); road.rotation.x = -Math.PI / 2; road.position.z = TRACK / 2; st.scene.add(road);
+const grass = new THREE.Mesh(new THREE.PlaneGeometry(200, TRACK + 200), toon(0xffffff, { map: groundTex('grass', 60) })); grass.rotation.x = -Math.PI / 2; grass.position.set(0, -.02, TRACK / 2); st.scene.add(grass);
 const OPS = [['+20', n => n + 20, 1], ['×2', n => n * 2, 1], ['-15', n => Math.max(1, n - 15), 0], ['×3', n => n * 3, 1], ['+50', n => n + 50, 1], ['×2', n => n * 2, 1], ['-30', n => Math.max(1, n - 30), 0], ['×4', n => n * 4, 1]];
 const lab = (t, good) => { const cv = document.createElement('canvas'); cv.width = 256; cv.height = 192; const g = cv.getContext('2d'); g.fillStyle = good ? 'rgba(46,160,255,.7)' : 'rgba(255,70,70,.7)'; g.fillRect(0, 0, 256, 192); g.font = '900 120px Impact,Arial Black'; g.textAlign = 'center'; g.fillStyle = '#fff'; g.strokeStyle = '#000'; g.lineWidth = 10; g.strokeText(t, 128, 140); g.fillText(t, 128, 140); return new THREE.MeshBasicMaterial({ map: new THREE.CanvasTexture(cv), transparent: true, side: THREE.DoubleSide }); };
 const gates = []; for (let i = 0; i < 6; i++) { const z = 22 + i * 24, a = OPS[(i * 2) % 8], b = OPS[(i * 2 + 1) % 8], pair = [a, b]; if (i % 2) pair.reverse();
   pair.forEach((op, s) => { const m = new THREE.Mesh(new THREE.PlaneGeometry(4.6, 3.4), lab(op[0], op[2])); m.position.set(s ? 2.5 : -2.5, 1.9, z); m.rotation.y = Math.PI; st.scene.add(m); }); gates.push({ z, ops: pair, used: false }); }
-const castle = new THREE.Group(), cm = new THREE.MeshStandardMaterial({ color: 0xcfc2a8 });
-const keep = new THREE.Mesh(new THREE.BoxGeometry(8, 10, 5), cm); keep.position.y = 5; castle.add(keep); for (const x of [-4.4, 4.4]) { const t = new THREE.Mesh(new THREE.CylinderGeometry(1.6, 1.8, 13, 12), cm); t.position.set(x, 6.5, 0); castle.add(t); const r = new THREE.Mesh(new THREE.ConeGeometry(2.1, 3.4, 12), new THREE.MeshStandardMaterial({ color: 0xc0392b })); r.position.set(x, 14.7, 0); castle.add(r); }
-const flag = new THREE.Mesh(new THREE.BoxGeometry(2.2, 1.3, .1), new THREE.MeshBasicMaterial({ color: 0xff3b30 })); flag.position.set(0, 11.5, 0); castle.add(flag);
-castle.position.set(0, 0, TRACK); st.scene.add(castle);
-const men = instances(new THREE.CapsuleGeometry(.14, .32, 3, 6), new THREE.MeshStandardMaterial({ color: 0x2f9bff }), MAXDRAW), heads = instances(new THREE.SphereGeometry(.15, 8, 6), new THREE.MeshStandardMaterial({ color: 0xffe0b0 }), MAXDRAW); st.scene.add(men.mesh, heads.mesh);
-const foes = instances(new THREE.CapsuleGeometry(.14, .32, 3, 6), new THREE.MeshStandardMaterial({ color: 0xff3b3b }), 120); st.scene.add(foes.mesh);
+const castle = hero(catGeo(), 0xff9a3c, .025); castle.scale.setScalar(10); castle.rotation.y = Math.PI; castle.position.set(0, 0, TRACK + 2); st.scene.add(castle);
+const men = crowd(st.scene, zombieGeo(), MAXDRAW), foes = crowd(st.scene, catGeo(), 120), fx = particles(st.scene, 300);
+for (let i = 0; i < MAXDRAW; i++) men.color(i, [0x7fbf6a, 0x8fcf7a, 0x6aa85a][i % 3]); for (let i = 0; i < 120; i++) foes.color(i, [0xff9a3c, 0x9aa0aa, 0xf4efe4][i % 3]);
+const AUTO0 = 0;
 const AUTO = new URLSearchParams(location.search).has('auto');
 let n = 5, cx = 0, cz = 0, bossHP = 900, bossMax = 900, fight = false, won = false, lost = false, parts = [], foeN = 0, fallT = 0;
 st.onPointerDown = () => {};
@@ -31,16 +30,16 @@ function update(dt) {
     if (bossHP <= 0) { fight = false; won = true; st.hud.banner('CASTLE DOWN!', 3); sfx('boom'); st.shake(14); sfx('win'); for (let i = 0; i < 60; i++) parts.push({ x: rand(-4, 4), y: rand(1, 12), z: TRACK + rand(-2, 2), vx: rand(-4, 4), vy: rand(2, 9), vz: rand(-3, 6) }); }
     else if (n <= 0) { n = 0; fight = false; lost = true; st.hud.banner('CRUSHED', 3); }
   }
-  if (won) { fallT += dt; castle.rotation.x = Math.min(1.3, fallT * .9) * -1; castle.position.y = -fallT * .8; }
-  for (const p of parts) { p.vy -= 14 * dt; p.x += p.vx * dt; p.y = Math.max(.1, p.y + p.vy * dt); p.z += p.vz * dt; }
+  if (won) { fallT += dt; castle.rotation.z = Math.min(1.45, fallT * 1.1); castle.position.y = -fallT * .5; if (fallT < 1.5 && Math.random() < .5) fx.burst(3, { x: rand(-4, 4), y: 1, z: TRACK, size: .5, life: .8, color: 0xe8dcc0, g: 2 }, 4); }
+  fx.update(dt); for (const p of parts) { p.vy -= 14 * dt; p.x += p.vx * dt; p.y = Math.max(.1, p.y + p.vy * dt); p.z += p.vz * dt; }
   st.hud.left(`CROWD<br><span style="color:#ffd34d;font-size:8vmin">${Math.max(0, Math.round(n)).toLocaleString()}</span>`); st.hud.right(fight || won ? `BOSS<br>${Math.max(0, Math.round(bossHP))}` : `GATES ${gates.filter(g => g.used).length}/${gates.length}`); st.hud.hint('A/D or drag: steer');
   window.__game = { crowd: Math.round(n), boss: Math.round(bossHP), z: Math.round(cz), won, lost };
 }
 function pre() {
   const cnt = Math.min(MAXDRAW, Math.max(0, Math.round(n))); const sp = 0.3, t = st.t;
-  for (let i = 0; i < cnt; i++) { const r = sp * Math.sqrt(i + .5), a = i * 2.39996, bob = Math.abs(Math.sin(t * 10 + i * 1.7)) * .12 * (won || lost ? 0 : 1); const x = cx + Math.cos(a) * r, z = cz + Math.sin(a) * r;
-    men.set(i, x, .36 + bob, z, 1); heads.set(i, x, .86 + bob, z, 1); } men.mesh.count = heads.mesh.count = cnt; men.done(); heads.done();
-  for (let i = 0; i < foeN; i++) { const a = i * 2.39996, r = .3 * Math.sqrt(i + .5); foes.set(i, Math.cos(a) * r * 1.3, .36 + Math.abs(Math.sin(t * 9 + i)) * .1, TRACK - 4 + Math.sin(a) * r); } foes.mesh.count = foeN; foes.done();
+  for (let i = 0; i < cnt; i++) { const r = sp * 1.5 * Math.sqrt(i + .5), a = i * 2.39996, bob = Math.abs(Math.sin(t * 9 + i * 1.7)) * .14 * (won || lost ? 0 : 1); men.set(i, cx + Math.cos(a) * r, bob, cz + Math.sin(a) * r, .5, Math.sin(t * 3 + i) * .15, .12); }
+  men.done(cnt);
+  for (let i = 0; i < foeN; i++) { const a = i * 2.39996, r = .45 * Math.sqrt(i + .5); foes.set(i, Math.cos(a) * r * 1.6, Math.abs(Math.sin(t * 8 + i)) * .2, TRACK - 4 + Math.sin(a) * r, .55, Math.PI); } foes.done(foeN);
   const R = Math.max(5, Math.sqrt(cnt) * .26); st.camera.position.set(cx * .3, 6.5 + R * .6, cz - 9.5 - R * .8); st.camera.lookAt(cx * .3, 1.4, cz + 7);
 }
 st.run(update, pre);

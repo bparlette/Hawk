@@ -15,7 +15,7 @@ export function sfx(type, vol = 1) {
     ac = ac || new (window.AudioContext || window.webkitAudioContext)();
     const t = ac.currentTime, o = ac.createOscillator(), g = ac.createGain(); o.connect(g); g.connect(ac.destination);
     const P = { boom: ['sawtooth', 100, 28, .45, .5], pop: ['sine', 500, 900, .06, .12], ding: ['sine', 1320, 1320, .35, .15], crash: ['square', 240, 60, .25, .2], whoosh: ['triangle', 320, 90, .2, .15],
-      splat: ['sine', 200, 60, .16, .25], snap: ['sawtooth', 900, 120, .12, .3], tick: ['square', 700, 700, .03, .05], win: ['triangle', 520, 1040, .4, .25] }[type] || ['sine', 440, 440, .1, .1];
+      splat: ['sine', 200, 60, .16, .25], snap: ['sawtooth', 900, 120, .12, .3], tick: ['square', 700, 700, .03, .05], win: ['triangle', 520, 1040, .4, .25], meow: ['sawtooth', 900, 420, .3, .12], groan: ['sawtooth', 120, 60, .5, .2], goo: ['sine', 160, 50, .2, .3], zoom: ['sawtooth', 80, 240, .4, .15] }[type] || ['sine', 440, 440, .1, .1];
     o.type = P[0]; o.frequency.setValueAtTime(P[1], t); o.frequency.exponentialRampToValueAtTime(P[2], t + P[3]);
     g.gain.setValueAtTime(P[4] * vol, t); g.gain.exponentialRampToValueAtTime(.001, t + P[3] + .02); o.start(t); o.stop(t + P[3] + .05);
   } catch {}
@@ -24,9 +24,10 @@ export function sfx(type, vol = 1) {
 export function createStage({ bg = 0x101820, fov = 50, fitWidth = 10, fog } = {}) {
   const renderer = new THREE.WebGLRenderer({ antialias: true, powerPreference: 'high-performance' });
   const dpr = Math.min(devicePixelRatio || 1, +(new URLSearchParams(location.search).get('dpr') || 2));
-  renderer.setPixelRatio(dpr); renderer.shadowMap.enabled = false;
+  renderer.setPixelRatio(dpr); renderer.toneMapping = THREE.ACESFilmicToneMapping; renderer.toneMappingExposure = 1.1;
   document.body.style.cssText = 'margin:0;overflow:hidden;background:#000;touch-action:none;font-family:Impact,"Arial Black",system-ui,sans-serif';
-  document.body.appendChild(renderer.domElement); renderer.domElement.style.cssText = 'display:block;width:100vw;height:100vh';
+  document.body.appendChild(renderer.domElement); renderer.domElement.style.cssText = 'display:block;width:100vw;height:100vh;filter:saturate(1.25) contrast(1.07)';
+  const vig = document.createElement('div'); vig.style.cssText = 'position:fixed;inset:0;pointer-events:none;background:radial-gradient(ellipse at 50% 45%,transparent 55%,rgba(0,0,0,.42) 100%)'; document.body.appendChild(vig);
   const scene = new THREE.Scene(); scene.background = new THREE.Color(bg); if (fog) scene.fog = new THREE.Fog(bg, fog[0], fog[1]);
   const camera = new THREE.PerspectiveCamera(fov, 1, 0.1, 500);
   const st = { THREE, renderer, scene, camera, fitWidth, shakeAmt: 0, keys: {}, ptr: { x: 0, y: 0, down: false }, t: 0 };

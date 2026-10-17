@@ -1,0 +1,55 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no"><title>Zombie Plow</title></head><body>
+<script type="module">
+// Zombie Plow: a spiked plow truck at constant speed into 4,900 zombies. A/D or drag steers. Hit zombies are launched, tumble and shove
+// their neighbours (spatial hash, only for moving ones); anything pushed off the road falls into the abyss. ?speed=2 doubles the plow.
+import { createStage, sfx, rand, clamp, THREE } from '../_vendor/gp3d.js';
+import { toon, zombieGeo, crowd, particles, sky, groundTex, hero, blobs } from '../_vendor/gpkit.js';
+const st = createStage({ bg: 0x2a1238, fitWidth: 20, fov: 50 }); st.light(); sky(st.scene, 0x6a3aa0, 0xffb066, [60, 200]);
+const SPEED = +(new URLSearchParams(location.search).get('speed') || 1), GX = 70, GZ = 70, SP = .85, R = .32, HALF = GX * SP / 2, FRONT = GZ * SP + 2;
+const N = GX * GZ, X = new Float32Array(N), Y = new Float32Array(N), Z = new Float32Array(N), VX = new Float32Array(N), VY = new Float32Array(N), VZ = new Float32Array(N), PIT = new Float32Array(N), YAW = new Float32Array(N), PH = new Float32Array(N), ST = new Uint8Array(N); // ST: 0 stand, 1 tumbling/lying, 2 falling
+for (let i = 0; i < GX; i++) for (let j = 0; j < GZ; j++) { const k = i * GZ + j; X[k] = (i - GX / 2 + .5) * SP + rand(-.15, .15); Z[k] = 4 + j * SP + rand(-.15, .15); YAW[k] = Math.PI + rand(-.5, .5); PH[k] = rand(0, 6); }
+const road = new THREE.Mesh(new THREE.BoxGeometry(HALF * 2 + 2, 1.5, FRONT + 40), toon(0xffffff, { map: groundTex('asphalt', 14) })); road.position.set(0, -.76, FRONT / 2 - 12); st.scene.add(road);
+for (let i = -6; i <= 6; i++) { const l = new THREE.Mesh(new THREE.BoxGeometry(.16, .02, 3), new THREE.MeshBasicMaterial({ color: 0xffd34d })); for (let z = -10; z < FRONT + 20; z += 8) { const c = l.clone(); c.position.set(i * 5, .01, z); st.scene.add(c); } }
+const ZC = crowd(st.scene, zombieGeo(), N); const fx = particles(st.scene, 700); const SH = blobs(st.scene, N);
+const SKIN = [0x9be07f, 0xb2ee95, 0x86cf6c, 0xc4f5a8];
+for (let k = 0; k < N; k++) ZC.color(k, SKIN[k % 4]);
+const truck = new THREE.Group(), wm = toon(0xffa51f);
+const tri = new THREE.Shape(); tri.moveTo(0, 0); tri.lineTo(-3.2, -4); tri.lineTo(3.2, -4); tri.lineTo(0, 0);
+const wedge = new THREE.Mesh(new THREE.ExtrudeGeometry(tri, { depth: 1.5, bevelEnabled: true, bevelSize: .12, bevelThickness: .1, bevelSegments: 1 }), wm); wedge.rotation.x = Math.PI / 2; wedge.position.y = 1.5; truck.add(wedge);
+const edge = new THREE.Mesh(wedge.geometry, new THREE.MeshBasicMaterial({ color: 0x111, side: THREE.BackSide })); edge.scale.setScalar(1.04); wedge.add(edge);
+for (let i = -3; i <= 3; i++) { const sp = new THREE.Mesh(new THREE.ConeGeometry(.16, .9, 6), toon(0xd8d8e0)); sp.rotation.x = Math.PI / 2; sp.position.set(i * .8, 1.2, -3.9 + Math.abs(i) * -.0 + (3 - Math.abs(i)) * .85); truck.add(sp); }
+const cab = new THREE.Mesh(new THREE.BoxGeometry(2.6, 1.8, 2.4), toon(0x7a1f1f)); cab.position.set(0, 2.1, -4.6); truck.add(cab); const win = new THREE.Mesh(new THREE.BoxGeometry(2.2, .7, .1), new THREE.MeshBasicMaterial({ color: 0xffd34d })); win.position.set(0, 2.4, -3.38); truck.add(win);
+for (const x of [-1.5, 1.5]) for (const z of [-5.2, -3.6]) { const w = new THREE.Mesh(new THREE.CylinderGeometry(.7, .7, .6, 12), toon(0x1a1a1a)); w.rotation.z = Math.PI / 2; w.position.set(x, .7, z); truck.add(w); }
+st.scene.add(truck);
+let wx = 0, wz = -9, fallen = 0, hit = 0, plowed = 0, combo = 0; const CS = .9; let cells = new Map();
+const cell = (x, z) => (Math.floor((x + HALF) / CS) + 4) * 500 + Math.floor(z / CS) + 4;
+function update(dt) {
+  if (st.t < .05) sfx('zoom', .4);
+  fx.update(dt); const k = st.keys, mv = (k.d || k.arrowright ? 1 : 0) - (k.a || k.arrowleft ? 1 : 0);
+  if (mv) wx += mv * 6 * dt; else if (st.ptr.down) wx += (st.ptr.x * 16 - wx) * Math.min(1, dt * 4); wx = clamp(wx, -HALF + 4, HALF - 4); wz += 4 * SPEED * dt;
+  cells.clear(); for (let i = 0; i < N; i++) if (ST[i] !== 2) { const c = cell(X[i], Z[i]); (cells.get(c) || cells.set(c, []).get(c)).push(i); }
+  hit = 0; const moving = [];
+  for (let i = 0; i < N; i++) { if (ST[i] === 2) continue; const dz = wz - Z[i];
+    if (ST[i] === 0 && dz > -.3 && dz < 4.2) { const half = (dz + .3) * .8 + .2; if (Math.abs(X[i] - wx) < half + R) { ST[i] = 1; const side = Math.sign(X[i] - wx) || (i % 2 ? 1 : -1); VX[i] = side * rand(7, 15) * SPEED; VZ[i] = rand(3, 9) * SPEED; VY[i] = rand(5, 11); PIT[i] = 0; hit++; plowed++; if (Math.random() < .35) fx.burst(4, { x: X[i], y: 1, z: Z[i], size: .22, life: .6, color: 0x8bff4a, g: 12 }, 4); } }
+    if (ST[i] === 1) moving.push(i); }
+  for (const a of moving) { VY[a] -= 24 * dt; X[a] += VX[a] * dt; Z[a] += VZ[a] * dt; Y[a] = Math.max(0, Y[a] + VY[a] * dt); PIT[a] = Math.min(Math.PI / 2, PIT[a] + dt * (Y[a] > 0 ? 7 : 0));
+    if (Y[a] === 0) { VY[a] = Math.abs(VY[a]) > 3 ? -VY[a] * .3 : 0; VX[a] *= .9; VZ[a] *= .9; }
+    const sp = Math.abs(VX[a]) + Math.abs(VZ[a]);
+    if (sp > 1.5) { const cx0 = Math.floor((X[a] + HALF) / CS) + 4, cz0 = Math.floor(Z[a] / CS) + 4;
+      for (let ix = cx0 - 1; ix <= cx0 + 1; ix++) for (let iz = cz0 - 1; iz <= cz0 + 1; iz++) { const list = cells.get(ix * 500 + iz); if (!list) continue; for (const b of list) { if (b === a) continue; const dx = X[b] - X[a], dz = Z[b] - Z[a], d2 = dx * dx + dz * dz; if (d2 < 4 * R * R && d2 > 1e-8) { const d = Math.sqrt(d2), nx = dx / d, nz = dz / d, rel = (VX[a] - VX[b]) * nx + (VZ[a] - VZ[b]) * nz; if (rel > 0) { if (ST[b] === 0) { ST[b] = 1; VY[b] = rand(2, 6); plowed++; } VX[b] += nx * rel * .9; VZ[b] += nz * rel * .9; VX[a] -= nx * rel * .3; VZ[a] -= nz * rel * .3; } } } } }
+    if (Math.abs(X[a]) > HALF + .5 || Z[a] > FRONT + 6) { ST[a] = 2; fallen++; if (fallen % 90 === 1) sfx('groan', .25); } }
+  for (let i = 0; i < N; i++) if (ST[i] === 2) { VY[i] -= 20 * dt; Y[i] += VY[i] * dt; X[i] += VX[i] * dt * .3; PIT[i] += dt * 4; if (Y[i] < -60) { Z[i] = -999; ST[i] = 3; } }
+  st.shake(Math.min(3.5, hit / 100)); if (hit > 40 && Math.random() < .1) sfx('goo', .3);
+  const left = N - fallen; st.hud.left(`PLOWED<br><span style="color:#8bff4a;font-size:8vmin">${plowed.toLocaleString()}</span>`); st.hud.right(`ZOMBIES LEFT<br>${left.toLocaleString()}`); st.hud.hint('A/D or drag: steer. It does not stop.');
+  if (wz > FRONT + 4 && !st.done) { st.done = true; st.hud.banner(`${Math.round(100 * plowed / N)}% PLOWED`, 99); sfx('win'); }
+  window.__game = { plowed, fallen, left, z: Math.round(wz) };
+}
+function pre() { let b = 0;
+  for (let i = 0; i < N; i++) { if (ST[i] === 3) { ZC.set(i, 0, -500, 0, 0); continue; } const sway = ST[i] === 0 ? Math.sin(st.t * 3 + PH[i]) * .06 : 0;
+    ZC.set(i, X[i], Y[i], Z[i], .95, YAW[i] + (ST[i] ? VX[i] * .02 : 0), (ST[i] ? -PIT[i] : sway) , ST[i] ? PIT[i] * .3 : 0); if (ST[i] !== 2 && Y[i] < 1) SH.set(b++, X[i], Z[i], .8); }
+  ZC.done(N); SH.done(b);
+  truck.position.set(wx, 0, wz); truck.rotation.y = Math.sin(st.t * 14) * .006;
+  fx.emit({ x: wx + rand(-1, 1), y: 2.2, z: wz - 6, vx: 0, vy: 3, vz: -2, size: .5, life: .5, color: 0xff7a1a, g: -4 });
+  st.camera.position.set(wx * .6 + 7, 9, wz - 15); st.camera.lookAt(wx * .6, 1, wz + 7); }
+st.run(update, pre);
+</script></body></html>
