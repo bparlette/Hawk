@@ -37,7 +37,7 @@ function update(dt0) {
 }
 let spl; function pre() {
   car.position.copy(pos); car.rotation.set(phase === 'ramp' ? TH : -pitch, 0, 0); car.rotation.order = 'YXZ'; if (phase === 'air') car.rotation.x = -pitch - Math.atan2(vel.y, vel.z) * .0 + Math.atan2(-vel.y, vel.z) * .0 - (pitch > 0 ? 0 : 0);
-  const back = new THREE.Vector3(0, 4.5 + (phase === 'air' ? 1 : 0), -11 - Math.min(8, v * .06)); const tgt = pos.clone().add(back); camPos.lerp(tgt, phase === 'ramp' ? .25 : .12); st.camera.position.copy(camPos);
+  const back = new THREE.Vector3(0, phase === 'ramp' ? 4.5 + 13 * (RAMP_H / RAMP_L) : 5.5, -13 - Math.min(8, v * .06)); const tgt = pos.clone().add(back); camPos.lerp(tgt, phase === 'ramp' ? .25 : .12); st.camera.position.copy(camPos);
   st.camera.lookAt(pos.x * .5, pos.y - 1.5, pos.z + 16); st.camera.fov = 62 + clamp((v - 20) * .5, 0, 26); st.camera.updateProjectionMatrix();
 }
 camPos.set(0, RAMP_H + 6, -12); reset(); st.run(update, pre);
