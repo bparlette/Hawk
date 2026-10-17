@@ -4,9 +4,12 @@ import { THREE as T, rand } from './gp3d.js';
 
 const grad = new T.DataTexture(new Uint8Array([90, 90, 90, 255, 175, 175, 175, 255, 255, 255, 255, 255]), 3, 1); grad.needsUpdate = true; grad.minFilter = grad.magFilter = T.NearestFilter;
 /** 3-step cel material. Pass vertexColors:true for merged geometry (instance colour tints the white parts). */
-export const toon = (color = 0xffffff, o = {}) => new T.MeshToonMaterial({ color, gradientMap: grad, ...o });
+const style = () => window.__style || 'toon', boxy = () => ['roblox', 'pixel16', 'pixel8'].includes(style());
+/** Cel material. In roblox style: smooth plastic (Lambert) instead of toon steps. */
+export const toon = (color = 0xffffff, o = {}) => (style() === 'roblox' ? new T.MeshLambertMaterial({ color, ...o }) : new T.MeshToonMaterial({ color, gradientMap: grad, ...o }));
 
-const SHAPES = { box: () => new T.BoxGeometry(1, 1, 1), sphere: () => new T.SphereGeometry(.5, 9, 7), cone: () => new T.ConeGeometry(.5, 1, 7), cyl: () => new T.CylinderGeometry(.5, .5, 1, 8) };
+/** boxy styles (roblox, pixel16, pixel8) turn spheres and cylinders into blocks so characters read as blocky figures */
+const SHAPES = { box: () => new T.BoxGeometry(1, 1, 1), sphere: () => (boxy() ? new T.BoxGeometry(.9, .9, .9) : new T.SphereGeometry(.5, 9, 7)), cone: () => new T.ConeGeometry(.5, 1, boxy() ? 4 : 7), cyl: () => (boxy() ? new T.BoxGeometry(.85, 1, .85) : new T.CylinderGeometry(.5, .5, 1, 8)) };
 /** Merge [{g,s,p,r,c}] (shape, scale, position, euler rotation, hex colour) into one vertex-coloured geometry. White parts take the instance colour. */
 export function build(parts) {
   const pos = [], nor = [], col = [], m = new T.Matrix4(), q = new T.Quaternion(), e = new T.Euler(), c = new T.Color();
