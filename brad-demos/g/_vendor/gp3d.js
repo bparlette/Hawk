@@ -23,17 +23,43 @@ export function sfx(type, vol = 1) {
   } catch {}
 }
 
-export function createStage({ bg = 0x101820, fov = 50, fitWidth = 10, fog } = {}) {
+/** Render styles: toon (default) | roblox | comic | painted | pixel16 | pixel8. Pick with createStage({style}) or ?style= (the URL wins, so any game can be previewed in any style). */
+export const STYLES = ['toon', 'roblox', 'comic', 'painted', 'pixel16', 'pixel8'];
+const POST_FRAG = `uniform sampler2D t; uniform vec2 res; uniform int mode; uniform float time; varying vec2 vUv;
+float lum(vec3 c){ return dot(c, vec3(.299,.587,.114)); }
+float hash(vec2 p){ return fract(sin(dot(p, vec2(12.9898,78.233))) * 43758.5453); }
+float ign(vec2 p){ return fract(52.9829189 * fract(dot(p, vec2(.06711056,.00583715)))); }
+vec3 S(vec2 uv){ return pow(max(texture2D(t, uv).rgb, 0.), vec3(1./2.2)); }
+vec3 sat(vec3 c, float k){ return mix(vec3(lum(c)), c, k); }
+float edge(vec2 uv, float px){ vec2 o = px / res; float a=lum(S(uv+vec2(-o.x,-o.y))),b=lum(S(uv+vec2(0,-o.y))),c=lum(S(uv+vec2(o.x,-o.y))),d=lum(S(uv+vec2(-o.x,0))),f=lum(S(uv+vec2(o.x,0))),g=lum(S(uv+vec2(-o.x,o.y))),h=lum(S(uv+vec2(0,o.y))),i=lum(S(uv+vec2(o.x,o.y)));
+  float gx=-a-2.*d-g+c+2.*f+i, gy=-a-2.*b-c+g+2.*h+i; return sqrt(gx*gx+gy*gy); }
+void main(){ vec2 uv = vUv; vec3 c = S(uv); vec2 px = gl_FragCoord.xy;
+  if (mode == 1) { vec3 L = vec3(7.,7.,3.); c = sat(c, 1.25); c = floor(c * L + ign(floor(uv * res)) ) / L; }
+  else if (mode == 2) { vec3 L = vec3(15.); c = sat(c, 1.15); c = floor(c * L + .35 + .3 * ign(floor(uv * res))) / L; }
+  else if (mode == 3) { float e = edge(uv, 1.4); float line = smoothstep(.10, .26, e); c = sat(c, 1.45); c = floor(c * 5. + .5) / 5.; float l = lum(c);
+    vec2 q = mat2(.707,-.707,.707,.707) * (px / (res.y / 120.)); float dd = length(fract(q) - .5); c *= 1. - .45 * step(dd, (1. - l) * .62) * step(l, .62); c = mix(c, vec3(.05,.04,.06), line * .92); }
+  else if (mode == 4) { vec2 n = (vec2(hash(floor(px/3.)), hash(floor(px/3.)+7.)) - .5) * 2.2 / res; vec3 b = vec3(0.); for (int k = 0; k < 8; k++) { float a = float(k) * .785398; b += S(uv + n + vec2(cos(a), sin(a)) * 2.4 / res); } b /= 8.; c = mix(b, c, .3); c = floor(c * 9. + .5) / 9.; c = sat(c, .92) * vec3(1.05, 1., .93);
+    c -= smoothstep(.15, .5, edge(uv, 1.6)) * .22; c *= .94 + .06 * hash(floor(px / 2.)); }
+  gl_FragColor = vec4(clamp(c, 0., 1.), 1.); }`;
+
+export function createStage({ bg = 0x101820, fov = 50, fitWidth = 10, fog, style = 'toon' } = {}) {
+  const STYLE = STYLES.includes(new URLSearchParams(location.search).get('style')) ? new URLSearchParams(location.search).get('style') : (STYLES.includes(style) ? style : 'toon'); window.__style = STYLE;
+  const POST = { pixel8: 1, pixel16: 2, comic: 3, painted: 4 }[STYLE] || 0; let rt, postScene, postCam, postMat;
   const renderer = new THREE.WebGLRenderer({ antialias: true, powerPreference: 'high-performance' });
   const dpr = Math.min(devicePixelRatio || 1, +(new URLSearchParams(location.search).get('dpr') || 2));
   renderer.setPixelRatio(dpr); renderer.toneMapping = THREE.ACESFilmicToneMapping; renderer.toneMappingExposure = 1.1;
   document.body.style.cssText = 'margin:0;overflow:hidden;background:#000;touch-action:none;font-family:Impact,"Arial Black",system-ui,sans-serif';
   document.body.appendChild(renderer.domElement); renderer.domElement.style.cssText = 'display:block;width:100vw;height:100vh;filter:saturate(1.25) contrast(1.07)';
   const vig = document.createElement('div'); vig.style.cssText = 'position:fixed;inset:0;pointer-events:none;background:radial-gradient(ellipse at 50% 45%,transparent 55%,rgba(0,0,0,.42) 100%)'; document.body.appendChild(vig);
-  const scene = new THREE.Scene(); scene.background = new THREE.Color(bg); if (fog) scene.fog = new THREE.Fog(bg, fog[0], fog[1]);
+  let st_render; const scene = new THREE.Scene(); scene.background = new THREE.Color(bg); if (fog) scene.fog = new THREE.Fog(bg, fog[0], fog[1]);
   const camera = new THREE.PerspectiveCamera(fov, 1, 0.1, 500);
-  const st = { THREE, renderer, scene, camera, fitWidth, shakeAmt: 0, keys: {}, ptr: { x: 0, y: 0, down: false }, t: 0 };
-  const resize = () => { renderer.setSize(innerWidth, innerHeight, false); camera.aspect = innerWidth / innerHeight; camera.updateProjectionMatrix();
+  const st = { THREE, style: STYLE, renderer, scene, camera, fitWidth, shakeAmt: 0, keys: {}, ptr: { x: 0, y: 0, down: false }, t: 0 };
+  if (POST) { postMat = new THREE.ShaderMaterial({ uniforms: { t: { value: null }, res: { value: new THREE.Vector2(1, 1) }, mode: { value: POST }, time: { value: 0 } }, vertexShader: 'varying vec2 vUv; void main(){ vUv = uv; gl_Position = vec4(position.xy, 0., 1.); }', fragmentShader: POST_FRAG, depthTest: false, depthWrite: false, toneMapped: false });
+    postScene = new THREE.Scene(); postScene.add(new THREE.Mesh(new THREE.PlaneGeometry(2, 2), postMat)); postCam = new THREE.OrthographicCamera(-1, 1, 1, -1, 0, 1); }
+  const sizeRT = () => { if (!POST) return; const d = renderer.getPixelRatio(); let w = Math.round(innerWidth * d), h = Math.round(innerHeight * d); if (POST < 3) { h = POST === 1 ? 144 : 288; w = Math.max(8, Math.round(h * innerWidth / innerHeight)); }
+    rt?.dispose(); const f = POST < 3 ? THREE.NearestFilter : THREE.LinearFilter; rt = new THREE.WebGLRenderTarget(w, h, { minFilter: f, magFilter: f, samples: POST < 3 ? 0 : 4 }); postMat.uniforms.t.value = rt.texture; postMat.uniforms.res.value.set(w, h); };
+  st_render = () => { if (!POST) return renderer.render(scene, camera); renderer.setRenderTarget(rt); renderer.render(scene, camera); renderer.setRenderTarget(null); postMat.uniforms.time.value = performance.now() / 1000; renderer.render(postScene, postCam); };
+  const resize = () => { renderer.setSize(innerWidth, innerHeight, false); sizeRT(); camera.aspect = innerWidth / innerHeight; camera.updateProjectionMatrix();
     st.dist = (st.fitWidth / 2) / (Math.tan(THREE.MathUtils.degToRad(fov / 2)) * camera.aspect); };
   addEventListener('resize', resize); resize(); st.resize = resize;
   addEventListener('keydown', e => { st.keys[e.key.toLowerCase()] = true; if (e.key === ' ' || e.key.startsWith('Arrow')) e.preventDefault(); });
@@ -100,7 +126,7 @@ export function createStage({ bg = 0x101820, fov = 50, fitWidth = 10, fog } = {}
         camera.position.x += a.p[0] + (b.p[0] - a.p[0]) * e; camera.position.y += a.p[1] + (b.p[1] - a.p[1]) * e; camera.position.z += a.p[2] + (b.p[2] - a.p[2]) * e; }
       const fv = baseFov + st.kickFov + (st.cineKeys ? 0 : 0); if (camera.fov !== fv) { camera.fov = fv; camera.updateProjectionMatrix(); }
       if (st.shakeAmt > 0) { camera.position.x += rand(-1, 1) * st.shakeAmt * .02; camera.position.y += rand(-1, 1) * st.shakeAmt * .02; }
-      renderer.render(scene, camera);
+      st_render();
       flashEl.style.background = flashC; flashEl.style.opacity = flashA > .01 ? flashA : 0;
       for (const p of pops) { const v = new THREE.Vector3(p.p.x, p.p.y, p.p.z).project(camera); p.el.style.left = (v.x * .5 + .5) * innerWidth + 'px'; p.el.style.top = (-v.y * .5 + .5) * innerHeight + 'px'; p.el.style.opacity = String(1 - p.t / .9); }
       requestAnimationFrame(frame);
