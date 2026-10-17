@@ -1,0 +1,95 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no"><title>Ragdoll Launch</title></head><body>
+<script type="module">
+// Ragdoll Launch: shoot a crash dummy into brick towers, pinball bumpers, glass and TNT. W/S aim, hold SPACE to charge, release to fire
+// (touch: drag from the cannon, release). The ragdoll is a 12-point Verlet skeleton; bricks sleep until hit, then wake their column.
+import { createStage, instances, sfx, rand, clamp, THREE } from '../_vendor/gp3d.js';
+const st = createStage({ bg: 0x7fc8f8, fitWidth: 15, fog: [60, 140] }); st.light();
+const ground = new THREE.Mesh(new THREE.PlaneGeometry(400, 120), new THREE.MeshStandardMaterial({ color: 0x5fbf5a })); ground.rotation.x = -Math.PI / 2; ground.position.set(100, 0, 0); st.scene.add(ground);
+const M = c => new THREE.MeshStandardMaterial({ color: c, roughness: .6 });
+// ---- cannon
+const cannon = new THREE.Group(), barrel = new THREE.Mesh(new THREE.CylinderGeometry(.55, .7, 3, 14), M(0x333a46)); barrel.rotation.z = -Math.PI / 2; barrel.position.x = 1.5; cannon.add(barrel);
+const wheel = new THREE.Mesh(new THREE.CylinderGeometry(.9, .9, .5, 16), M(0x6b4a2e)); wheel.rotation.x = Math.PI / 2; wheel.position.set(0, -.2, 0); st.scene.add(wheel);
+cannon.position.set(0, 1.1, 0); st.scene.add(cannon);
+// ---- ragdoll: 12 points, verlet sticks
+const P = [], S = [];
+const pt = (x, y) => (P.push({ x, y, px: x, py: y }), P.length - 1), link = (a, b) => S.push({ a, b, l: Math.hypot(P[a].x - P[b].x, P[a].y - P[b].y) });
+let head, neck, hip, elL, elR, haL, haR, knL, knR, ftL, ftR;
+function buildDummy(x, y) {
+  P.length = 0; S.length = 0; head = pt(x, y + 1.6); neck = pt(x, y + 1.2); hip = pt(x, y + .2); elL = pt(x - .5, y + 1); elR = pt(x + .5, y + 1); haL = pt(x - .8, y + .7); haR = pt(x + .8, y + .7);
+  knL = pt(x - .25, y - .4); knR = pt(x + .25, y - .4); ftL = pt(x - .3, y - 1); ftR = pt(x + .3, y - 1);
+  link(head, neck); link(neck, hip); link(neck, elL); link(neck, elR); link(elL, haL); link(elR, haR); link(hip, knL); link(hip, knR); link(knL, ftL); link(knR, ftR); link(head, hip); link(elL, elR); link(knL, knR);
+}
+buildDummy(0, 1.1);
+const jointI = instances(new THREE.SphereGeometry(.2, 10, 8), M(0xffe14d), 12), boneI = instances(new THREE.CylinderGeometry(.1, .1, 1, 6), M(0xe8453c), 13); st.scene.add(jointI.mesh, boneI.mesh);
+const headMesh = new THREE.Mesh(new THREE.SphereGeometry(.42, 14, 10), M(0xffe14d)); st.scene.add(headMesh);
+// ---- world: brick towers, glass, bumpers, TNT
+const bricks = [], glass = [], bumpers = [], tnt = [];
+const tower = (x0, cols, rows, col) => { for (let r = 0; r < rows; r++) for (let c = 0; c < cols; c++) bricks.push({ x: x0 + c * .75, y: .22 + r * .45, w: .7, h: .4, vx: 0, vy: 0, rot: 0, vr: 0, free: false, col: r % 2 ? col : col + 0x101010, wake: 0, colI: c, row: r, tower: x0 }); };
+tower(20, 3, 9, 0xb5533c); tower(34, 4, 7, 0xc28a3a); tower(52, 3, 11, 0x8a5ac2); tower(66, 5, 6, 0x4a9ac2);
+for (const [x, y] of [[13, 7], [27, 9], [44, 6], [58, 13], [72, 8]]) bumpers.push({ x, y, r: 1.1, glow: 0 });
+for (const x of [16, 30, 48, 62]) for (let r = 0; r < 3; r++) glass.push({ x, y: 6 + r * 2.4, h: 2.2, broke: false });
+for (const x of [24.4, 38.5, 56.4]) tnt.push({ x, y: 4.2 + (x > 50 ? 4.5 : 0), boom: false });
+const brickI = instances(new THREE.BoxGeometry(1, 1, 1.4), new THREE.MeshStandardMaterial({ roughness: .7 }), bricks.length); brickI.mesh.count = bricks.length; st.scene.add(brickI.mesh);
+bricks.forEach((b, i) => brickI.color(i, b.col));
+const bumpMesh = bumpers.map(b => { const m = new THREE.Mesh(new THREE.CylinderGeometry(b.r, b.r, 1.6, 20), new THREE.MeshStandardMaterial({ color: 0xff4fa3, emissive: 0x330011 })); m.rotation.x = Math.PI / 2; m.position.set(b.x, b.y, 0); st.scene.add(m); return m; });
+const glassMat = new THREE.MeshPhysicalMaterial({ color: 0xbfeaff, transmission: .9, roughness: .05, thickness: .2, transparent: true, opacity: .55 });
+const glassMesh = glass.map(g => { const m = new THREE.Mesh(new THREE.BoxGeometry(.18, g.h, 3), glassMat); m.position.set(g.x, g.y, 0); st.scene.add(m); return m; });
+const tntMesh = tnt.map(t => { const m = new THREE.Mesh(new THREE.BoxGeometry(1.2, 1.2, 1.2), M(0xd0261f)); m.position.set(t.x, t.y, 0); st.scene.add(m); return m; });
+for (const t of tnt) { const pl = new THREE.Mesh(new THREE.BoxGeometry(2.4, .3, 2), M(0x6b6b6b)); pl.position.set(t.x, t.y - .75, 0); st.scene.add(pl); }
+const shards = [], shardI = instances(new THREE.BoxGeometry(.3, .3, .05), glassMat, 600); shardI.mesh.count = 0; st.scene.add(shardI.mesh);
+
+let aim = .75, charge = 0, charging = false, flying = false, shots = 0, score = 0, best = 0, camX = 6, shotsMax = 5, restT = 0, flash = 0;
+const fire = () => { const p = .35 + charge * .65, v = 18 * p + 6, a = aim; buildDummy(2.6 * Math.cos(a), 1.1 + 2.6 * Math.sin(a)); for (const q of P) { q.px = q.x - Math.cos(a) * v / 60; q.py = q.y - Math.sin(a) * v / 60; }
+  flying = true; shots++; restT = 0; sfx('boom'); st.shake(6); };
+st.onPointerUp = () => { if (charging) { charging = false; if (!flying && shots < shotsMax) fire(); charge = 0; } };
+st.onPointerDown = () => { if (!flying && shots < shotsMax) charging = true; };
+const wake = (b, vx, vy) => { if (b.free) return; b.free = true; b.vx = vx + rand(-1, 1); b.vy = vy + rand(0, 3); b.vr = rand(-4, 4); score += 10; if (Math.random() < .3) sfx('crash', .5); };
+function explode(x, y) { sfx('boom'); st.shake(12); flash = .25; score += 150; for (const b of bricks) { const dx = b.x - x, dy = b.y - y, d = Math.hypot(dx, dy); if (d < 6) { b.free = true; b.vx = dx / (d + .5) * 14; b.vy = dy / (d + .5) * 12 + 5; b.vr = rand(-6, 6); score += 5; } }
+  for (const q of P) { const dx = q.x - x, dy = q.y - y, d = Math.hypot(dx, dy); if (d < 7) { q.px = q.x - dx / (d + .5) * .25; q.py = q.y - dy / (d + .5) * .25 - .1; } } }
+function update(dt) {
+  if (!flying && shots < shotsMax) {
+    aim = clamp(aim + ((st.keys.w || st.keys.arrowup ? 1 : 0) - (st.keys.s || st.keys.arrowdown ? 1 : 0)) * .9 * dt, .15, 1.35);
+    if (st.keys[' ']) { charging = true; } if (!st.keys[' '] && charging && !st.ptr.down) { charging = false; fire(); charge = 0; }
+    if (charging) charge = Math.min(1, charge + dt / 1.1);
+    if (st.ptr.down && charging) aim = clamp(Math.atan2(-(st.ptr.y - .55), 1.2 + st.ptr.x * .5) + .5, .15, 1.35);
+  }
+  if (flying) {
+    restT += dt; let spd = 0;
+    for (const q of P) { const vx = q.x - q.px, vy = q.y - q.py; q.px = q.x; q.py = q.y; q.x += vx * .9995; q.y += vy * .9995 - 18 * dt * dt; spd = Math.max(spd, Math.hypot(vx, vy) * 60);
+      if (q.y < .2) { q.y = .2; q.px = q.x - vx * .55; q.py = q.y + Math.abs(vy) * .25; } }
+    for (let it = 0; it < 6; it++) for (const s of S) { const a = P[s.a], b = P[s.b], dx = b.x - a.x, dy = b.y - a.y, d = Math.hypot(dx, dy) || 1e-4, f = (d - s.l) / d * .5; a.x += dx * f; a.y += dy * f; b.x -= dx * f; b.y -= dy * f; }
+    for (const q of P) { const vx = (q.x - q.px) * 60, vy = (q.y - q.py) * 60, sp = Math.hypot(vx, vy);
+      for (const b of bricks) { if (b.free && Math.hypot(b.vx, b.vy) < 1) { } const dx = q.x - b.x, dy = q.y - b.y; if (Math.abs(dx) < b.w / 2 + .22 && Math.abs(dy) < b.h / 2 + .22) {
+        if (!b.free && sp > 5) { wake(b, vx * .5, vy * .5); q.px = q.x - (q.x - q.px) * .6; q.py = q.y - (q.y - q.py) * .6; } else if (!b.free) { q.x -= (q.x - q.px) * 1.2; q.y = Math.max(q.y, b.y + b.h / 2 + .22); q.py = q.y; } } }
+      for (const bu of bumpers) { const dx = q.x - bu.x, dy = q.y - bu.y, d = Math.hypot(dx, dy); if (d < bu.r + .25) { const nx = dx / d, ny = dy / d, v = Math.max(sp, 14) * 1.15 / 60; q.x = bu.x + nx * (bu.r + .26); q.y = bu.y + ny * (bu.r + .26); q.px = q.x - nx * v; q.py = q.y - ny * v; bu.glow = .4; score += 50; sfx('ding'); st.shake(3); } }
+      glass.forEach((g, i) => { if (!g.broke && Math.abs(q.x - g.x) < .35 && q.y > g.y - g.h / 2 && q.y < g.y + g.h / 2 && sp > 6) { g.broke = true; glassMesh[i].visible = false; score += 40; sfx('crash'); st.shake(4);
+        for (let k = 0; k < 24; k++) shards.push({ x: g.x, y: g.y + rand(-g.h / 2, g.h / 2), z: rand(-1, 1), vx: vx * .2 + rand(-3, 6), vy: rand(-2, 6), vz: rand(-3, 3), r: rand(0, 6) }); } });
+      tnt.forEach((t, i) => { if (!t.boom && Math.hypot(q.x - t.x, q.y - t.y) < 1) { t.boom = true; tntMesh[i].visible = false; explode(t.x, t.y); } }); }
+    const hx = P[head].x; best = Math.max(best, hx);
+    if (restT > 2.5 && spd < 1.2 || restT > 9) { flying = false; if (shots >= shotsMax) st.hud.banner('SCORE ' + Math.round(score + best * 5), 3); }
+  }
+  for (const b of bricks) {
+    if (b.free) { b.vy -= 22 * dt; b.x += b.vx * dt; b.y += b.vy * dt; b.rot += b.vr * dt; if (b.y < b.h / 2) { b.y = b.h / 2; b.vy *= -.25; b.vx *= .8; b.vr *= .7; } }
+    else { const lower = bricks.find(o => o.tower === b.tower && o.colI === b.colI && o.row === b.row - 1); if (lower && lower.free) { b.wake += dt; if (b.wake > .05) wake(b, lower.vx * .6, 0); } }
+  }
+  for (const s of shards) { s.vy -= 16 * dt; s.x += s.vx * dt; s.y += s.vy * dt; s.z += s.vz * dt; s.r += dt * 5; if (s.y < .1) { s.y = .1; s.vy *= -.3; s.vx *= .6; } }
+  for (const b of bumpers) b.glow = Math.max(0, b.glow - dt); flash = Math.max(0, flash - dt);
+  st.hud.left(`SCORE<br><span style="color:#ffd34d;font-size:8vmin">${Math.round(score + best * 5).toLocaleString()}</span>`); st.hud.right(`DUMMY ${Math.min(shots + (flying ? 0 : 1), shotsMax)}/${shotsMax}<br>${Math.round(best)}m`);
+  st.hud.hint(flying ? '' : shots >= shotsMax ? 'R to restart' : 'W/S aim  ·  hold SPACE to charge, release to fire');
+  window.__game = { score: Math.round(score + best * 5), shots, distance: Math.round(best), flying, aim: +aim.toFixed(2) };
+}
+const q = new THREE.Quaternion(), up = new THREE.Vector3(0, 1, 0), o = new THREE.Object3D();
+function pre() {
+  cannon.rotation.z = aim; const colr = barrel.material.color; colr.setHex(charging ? 0xff5a2a : 0x333a46);
+  P.forEach((p, i) => { if (i === head) return; jointI.set(i, p.x, p.y, 0, 1); }); jointI.set(head, 0, -50, 0, .01); jointI.done(); jointI.mesh.count = 11 + 1;
+  S.forEach((s, i) => { const a = P[s.a], b = P[s.b], dx = b.x - a.x, dy = b.y - a.y, d = Math.hypot(dx, dy) || 1e-4; o.position.set((a.x + b.x) / 2, (a.y + b.y) / 2, 0); q.setFromUnitVectors(up, new THREE.Vector3(dx / d, dy / d, 0)); o.quaternion.copy(q); o.scale.set(1, d, 1); o.updateMatrix(); boneI.mesh.setMatrixAt(i, o.matrix); }); boneI.mesh.instanceMatrix.needsUpdate = true;
+  headMesh.position.set(P[head].x, P[head].y, 0);
+  bricks.forEach((b, i) => brickI.set(i, b.x, b.y, 0, b.w, b.h, 1, 0, 0, b.rot)); brickI.done();
+  bumpers.forEach((b, i) => { bumpMesh[i].scale.setScalar(1 + b.glow * .6); bumpMesh[i].material.emissive.setHex(b.glow > 0 ? 0xff80c0 : 0x330011); });
+  shards.forEach((s, i) => i < 600 && shardI.set(i, s.x, s.y, s.z, 1, 1, 1, s.r, s.r * .7, 0)); shardI.mesh.count = Math.min(600, shards.length); shardI.done();
+  const tx = flying || shots ? Math.max(6, P[head].x) : 6; camX += (tx + 3 - camX) * .08;
+  st.camera.position.set(camX, 5 + (flying ? Math.min(4, P[head].y * .25) : 0), st.dist * .95 + 2); st.camera.lookAt(camX, 3.5, 0);
+}
+addEventListener('keydown', e => { if (e.key.toLowerCase() === 'r' && !flying) { shots = 0; score = 0; best = 0; bricks.forEach(b => Object.assign(b, { free: false, vx: 0, vy: 0, rot: 0, wake: 0 })); } });
+st.run(update, pre);
+</script></body></html>

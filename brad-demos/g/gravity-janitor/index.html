@@ -1,0 +1,129 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
+<title>Gravity Janitor</title>
+<style>html,body{margin:0;height:100%;background:#070a14;overflow:hidden;touch-action:none;font-family:system-ui,sans-serif}canvas{display:block;width:100vw;height:100vh}</style>
+</head><body><canvas id="c"></canvas>
+<script>
+// Gravity Janitor: mop the space station while gravity flips every few seconds. One screen, plain canvas.
+// Keys: A/D or arrows walk, SPACE (hold) mop. Touch: left/right zones, hold the bottom strip to mop.
+// State is exposed on window.__gj and sfx on window.__events so capture scripts can read them.
+const cv = document.getElementById('c'), g = cv.getContext('2d');
+const WW = 400, WH = 720, FLOORY = 640, CEILY = 80, ROUND = 40, FLIP = 5, MAXMESS = 9;
+let S = 1, OX = 0, OY = 0;
+function fit() { const dpr = Math.min(devicePixelRatio || 1, 2); cv.width = innerWidth * dpr; cv.height = innerHeight * dpr;
+  S = Math.min(cv.width / WW, cv.height / WH); OX = (cv.width - WW * S) / 2; OY = (cv.height - WH * S) / 2; }
+addEventListener('resize', fit); fit();
+const rnd = (a, b) => a + Math.random() * (b - a), pick = a => a[Math.floor(Math.random() * a.length)];
+const keys = {}; addEventListener('keydown', e => { keys[e.key.toLowerCase()] = true; if (e.key === ' ') e.preventDefault(); if (e.key.toLowerCase() === 'r' && over) reset(); });
+addEventListener('keyup', e => { keys[e.key.toLowerCase()] = false; });
+window.__events = [];
+let ac; function sfx(type) { window.__events.push({ t: +(performance.now() / 1000).toFixed(2), type }); try {
+  ac = ac || new (window.AudioContext || window.webkitAudioContext)(); const t = ac.currentTime, o = ac.createOscillator(), gn = ac.createGain(); o.connect(gn); gn.connect(ac.destination);
+  if (type === 'flip') { o.type = 'sawtooth'; o.frequency.setValueAtTime(90, t); o.frequency.exponentialRampToValueAtTime(400, t + .35); gn.gain.setValueAtTime(.3, t); gn.gain.exponentialRampToValueAtTime(.001, t + .5); }
+  else if (type === 'alarm') { o.type = 'square'; o.frequency.setValueAtTime(660, t); o.frequency.setValueAtTime(440, t + .1); gn.gain.setValueAtTime(.12, t); gn.gain.exponentialRampToValueAtTime(.001, t + .22); }
+  else if (type === 'splat') { o.type = 'sine'; o.frequency.setValueAtTime(200, t); o.frequency.exponentialRampToValueAtTime(60, t + .15); gn.gain.setValueAtTime(.3, t); gn.gain.exponentialRampToValueAtTime(.001, t + .18); }
+  else { o.type = 'triangle'; o.frequency.setValueAtTime(rnd(500, 800), t); gn.gain.setValueAtTime(.06, t); gn.gain.exponentialRampToValueAtTime(.001, t + .06); }
+  o.start(t); o.stop(t + .6); } catch (e) {} }
+
+let grav, flipT, spills, bodies, drops, parts, J, score, time, over, shake, flash, banner, started, pipes, tick;
+function reset() {
+  grav = 1; flipT = FLIP; spills = []; bodies = []; drops = []; parts = []; score = 0; time = ROUND; over = false; shake = 0; flash = 0; banner = null; started = false; tick = 0;
+  pipes = [70, 170, 280, 340].map(x => ({ x, cd: rnd(1, 3) }));
+  J = { x: 120, y: FLOORY, vy: 0, dir: 1, side: 1, spin: 0, falling: false, mop: false, walk: 0 };
+  for (let i = 0; i < 3; i++) addSpill(rnd(40, 360), 1, 14);
+}
+function surfY(side) { return side > 0 ? FLOORY : CEILY; }
+function addSpill(x, side, size) { const m = spills.find(s => s.side === side && Math.abs(s.x - x) < 22); if (m) { m.size = Math.min(40, m.size + size * .7); return; } spills.push({ x, side, size, c: pick(['#58e06b', '#c75cf2', '#4fb6ff']) }); sfx('splat'); }
+function body(kind, x, y, vx) { bodies.push({ kind, x, y, vx: vx ?? rnd(-60, 60), vy: 0, rot: 0, vr: rnd(-5, 5), r: kind === 'crate' ? 15 : 9, rest: false }); }
+function setGravity(ng) {
+  grav = ng; shake = 16; flash = .35; banner = { text: 'GRAVITY ' + (ng > 0 ? 'DOWN' : 'UP') + '!', t: 1.1 }; sfx('flip');
+  for (const s of spills) { // spills peel off the old surface and rain onto the new one
+    for (let i = 0; i < Math.ceil(s.size / 7); i++) drops.push({ x: s.x + rnd(-14, 14), y: surfY(s.side) - s.side * 4, vx: rnd(-30, 30), vy: 0, c: s.c, r: rnd(2.5, 5) }); }
+  spills = []; J.side = ng; J.falling = true; J.vy = 0; J.spin = rnd(-8, 8);
+  for (const b of bodies) { b.rest = false; b.vy = 0; b.vx += rnd(-40, 40); }
+  for (let i = 0; i < 3; i++) body(pick(['crate', 'mug', 'mug', 'crate']), rnd(40, 360), surfY(-ng) + (-ng) * -30 * 0, rnd(-50, 50));
+}
+function step(dt) {
+  if (!over) {
+    started = started || keys.a || keys.d || keys.arrowleft || keys.arrowright || keys[' '] || keys.L || keys.R || keys.M;
+    time -= dt; flipT -= dt; tick += dt;
+    if (flipT < 2.4 && Math.floor(flipT * 3) !== Math.floor((flipT + dt) * 3) && flipT > 0) sfx('alarm');
+    if (flipT <= 0) { setGravity(-grav); flipT = FLIP; }
+    const mv = (keys.d || keys.arrowright || keys.R ? 1 : 0) - (keys.a || keys.arrowleft || keys.L ? 1 : 0);
+    if (!J.falling) { if (mv) { J.dir = mv; J.x = Math.max(24, Math.min(WW - 24, J.x + mv * 105 * dt)); J.walk += dt * 10; } }
+    J.mop = !!(keys[' '] || keys.M) && !J.falling;
+    for (const p of pipes) { p.cd -= dt; if (p.cd <= 0) { p.cd = rnd(1.4, 3.2); drops.push({ x: p.x, y: surfY(-grav) - -grav * 0, vx: 0, vy: 0, c: pick(['#58e06b', '#c75cf2', '#4fb6ff']), r: 5, fat: 1 }); } }
+    if (time <= 0 || spills.reduce((a, s) => a + s.size, 0) > MAXMESS * 40) { over = true; sfx('flip'); }
+  }
+  // janitor: falls to the new surface when gravity flips, otherwise stands on it
+  if (J.falling) { J.vy += grav * 1700 * dt; J.y += J.vy * dt; J.spin *= .985; J.rotA = (J.rotA || 0) + J.spin * dt;
+    if ((grav > 0 && J.y >= FLOORY) || (grav < 0 && J.y <= CEILY)) { J.y = surfY(grav); J.falling = false; J.vy = 0; J.rotA = 0; shake = Math.max(shake, 10); sfx('splat'); for (let i = 0; i < 10; i++) parts.push({ x: J.x, y: J.y, vx: rnd(-120, 120), vy: -grav * rnd(40, 160), life: .5, c: '#9fb0d0', r: 3 }); } }
+  else J.y = surfY(grav);
+  if (J.mop) for (const s of spills) if (s.side === grav && Math.abs(s.x - (J.x + J.dir * 22)) < 38) { s.size -= 38 * dt; score += 38 * dt * 0.5; if (Math.random() < .3) parts.push({ x: s.x + rnd(-10, 10), y: surfY(grav) - grav * 3, vx: rnd(-40, 40), vy: -grav * rnd(30, 90), life: .4, c: s.c, r: 2.5 }); }
+  spills = spills.filter(s => s.size > 1.5);
+  // loose objects
+  for (const b of bodies) { if (b.rest) continue; b.vy += grav * 1100 * dt; b.x += b.vx * dt; b.y += b.vy * dt; b.rot += b.vr * dt;
+    if (b.x < 20 || b.x > WW - 20) { b.vx *= -.6; b.x = Math.max(20, Math.min(WW - 20, b.x)); }
+    const sy = surfY(grav), hit = grav > 0 ? b.y + b.r >= sy : b.y - b.r <= sy;
+    if (hit) { b.y = sy - grav * b.r; if (Math.abs(b.vy) > 140) { addSpill(b.x, grav, b.kind === 'crate' ? 18 : 12); shake = Math.max(shake, 5); sfx('splat'); } b.vy *= -.35; b.vx *= .7; b.vr *= .5; if (Math.abs(b.vy) < 60) { b.vy = 0; b.rest = true; } } }
+  // droplets
+  for (const d of drops) { d.vy += grav * 900 * dt; d.x += d.vx * dt; d.y += d.vy * dt; const sy = surfY(grav);
+    if ((grav > 0 && d.y >= sy) || (grav < 0 && d.y <= sy)) { d.dead = true; addSpill(d.x, grav, d.fat ? 14 : 5); } }
+  drops = drops.filter(d => !d.dead);
+  for (const q of parts) { q.life -= dt; q.x += q.vx * dt; q.y += q.vy * dt; q.vy += grav * 300 * dt; } parts = parts.filter(q => q.life > 0);
+  shake = Math.max(0, shake - 40 * dt); flash = Math.max(0, flash - dt); if (banner) { banner.t -= dt; if (banner.t <= 0) banner = null; }
+  window.__gj = { score: Math.round(score), time: +time.toFixed(2), gravity: grav, mess: Math.round(spills.reduce((a, s) => a + s.size, 0)), over };
+}
+
+function drawJanitor() {
+  g.save(); g.translate(J.x, J.y); if (grav < 0 && !J.falling) g.scale(1, -1); if (J.falling) g.rotate(J.rotA || 0); g.scale(J.dir, 1);
+  const bob = J.mop ? Math.sin(tick * 18) * 6 : Math.sin(J.walk) * 2;
+  g.fillStyle = '#2d4a86'; g.fillRect(-9, -26, 7, 26); g.fillRect(2, -26, 7, 26);
+  g.fillStyle = '#ffb02a'; g.fillRect(-12, -54, 24, 30);
+  g.fillStyle = '#f2c9a0'; g.beginPath(); g.arc(0, -63, 10, 0, 7); g.fill(); g.fillStyle = '#ffb02a'; g.fillRect(-10, -74, 20, 6);
+  g.fillStyle = '#111'; g.fillRect(4, -66, 3, 3);
+  g.strokeStyle = '#8a6a3a'; g.lineWidth = 3; g.beginPath(); g.moveTo(6, -44); g.lineTo(34 + bob, -6); g.stroke();
+  g.fillStyle = '#e8e0c8'; g.fillRect(24 + bob, -10, 24, 9);
+  g.restore();
+}
+function draw() {
+  g.setTransform(1, 0, 0, 1, 0, 0); g.fillStyle = '#070a14'; g.fillRect(0, 0, cv.width, cv.height);
+  g.save(); g.translate(OX + (Math.random() - .5) * shake * S * .5, OY + (Math.random() - .5) * shake * S * .5); g.scale(S, S);
+  // station interior: panels, window to space, floor/ceiling plates, pipes
+  g.fillStyle = '#1a2340'; g.fillRect(0, CEILY, WW, FLOORY - CEILY);
+  for (let i = 0; i < 8; i++) { g.fillStyle = i % 2 ? '#1e2849' : '#18203b'; g.fillRect(i * 50, CEILY, 50, FLOORY - CEILY); }
+  g.fillStyle = '#04060f'; g.fillRect(110, 250, 180, 150); g.fillStyle = '#fff'; for (let i = 0; i < 26; i++) g.fillRect((i * 67 % 170) + 115, 255 + (i * 41 % 140), 1.6, 1.6);
+  g.fillStyle = '#2f6fb5'; g.beginPath(); g.arc(240, 330, 26, 0, 7); g.fill(); g.strokeStyle = '#5b6a8c'; g.lineWidth = 6; g.strokeRect(110, 250, 180, 150);
+  g.fillStyle = '#3a4468'; g.fillRect(0, FLOORY, WW, WH - FLOORY); g.fillRect(0, 0, WW, CEILY);
+  g.fillStyle = grav > 0 ? '#ffd34d' : '#4a5580'; g.fillRect(0, FLOORY, WW, 5); g.fillStyle = grav < 0 ? '#ffd34d' : '#4a5580'; g.fillRect(0, CEILY - 5, WW, 5);
+  for (const p of pipes) { g.fillStyle = '#6b7aa6'; g.fillRect(p.x - 7, CEILY - 5, 14, 16 * (-grav < 0 ? 0 : 1)); g.fillRect(p.x - 7, FLOORY - 11, 14, 16 * (-grav > 0 ? 0 : 1)); g.fillStyle = '#4a5580'; g.fillRect(p.x - 7, grav > 0 ? CEILY : FLOORY - 12, 14, 12); }
+  // spills
+  for (const s of spills) { const y = surfY(s.side); g.fillStyle = s.c; g.beginPath(); g.ellipse(s.x, y - s.side * 2, s.size, Math.max(3, s.size * .22), 0, 0, 7); g.fill(); g.fillStyle = 'rgba(255,255,255,.35)'; g.beginPath(); g.ellipse(s.x - s.size * .3, y - s.side * 3, s.size * .3, 1.5, 0, 0, 7); g.fill(); }
+  for (const b of bodies) { g.save(); g.translate(b.x, b.y); g.rotate(b.rot);
+    if (b.kind === 'crate') { g.fillStyle = '#b8803a'; g.fillRect(-15, -15, 30, 30); g.strokeStyle = '#6b4518'; g.lineWidth = 2; g.strokeRect(-15, -15, 30, 30); g.beginPath(); g.moveTo(-15, -15); g.lineTo(15, 15); g.stroke(); }
+    else { g.fillStyle = '#f1f1f1'; g.fillRect(-8, -9, 16, 18); g.strokeStyle = '#f1f1f1'; g.lineWidth = 3; g.beginPath(); g.arc(10, 0, 5, -1.5, 1.5); g.stroke(); g.fillStyle = '#6b3b1d'; g.fillRect(-6, -7, 12, 4); }
+    g.restore(); }
+  for (const d of drops) { g.fillStyle = d.c; g.beginPath(); g.arc(d.x, d.y, d.r, 0, 7); g.fill(); }
+  drawJanitor();
+  for (const q of parts) { g.globalAlpha = Math.min(1, q.life * 2.5); g.fillStyle = q.c; g.fillRect(q.x, q.y, q.r, q.r); } g.globalAlpha = 1;
+  if (flipT < 2.4 && !over) { g.fillStyle = `rgba(255,40,40,${.08 + .1 * Math.abs(Math.sin(tick * 10))})`; g.fillRect(0, 0, WW, WH); }
+  if (flash > 0) { g.fillStyle = `rgba(255,255,255,${flash * 1.6})`; g.fillRect(0, 0, WW, WH); }
+  g.restore();
+  // HUD
+  g.save(); g.translate(OX, OY); g.scale(S, S); g.textAlign = 'center';
+  g.font = '900 22px system-ui'; g.fillStyle = '#9fb0d0'; g.fillText('MOPPED', 70, 28); g.font = '900 34px system-ui'; g.fillStyle = '#58e06b'; g.fillText(String(Math.round(score)), 70, 60);
+  g.font = '900 22px system-ui'; g.fillStyle = '#9fb0d0'; g.fillText('TIME', 340, 28); g.font = '900 34px system-ui'; g.fillStyle = time < 8 ? '#ff5a4a' : '#fff'; g.fillText(String(Math.ceil(time)), 340, 60);
+  g.fillStyle = '#9fb0d0'; g.font = '800 12px system-ui'; g.fillText('GRAVITY ' + (grav > 0 ? '↓' : '↑') + '  FLIP IN ' + Math.max(0, Math.ceil(flipT)), 200, 22);
+  const mess = spills.reduce((a, s) => a + s.size, 0) / (MAXMESS * 40); g.fillStyle = '#10162a'; g.fillRect(120, 32, 160, 12); g.fillStyle = mess > .7 ? '#ff5a4a' : '#c75cf2'; g.fillRect(120, 32, 160 * Math.min(1, mess), 12); g.strokeStyle = '#5b6a8c'; g.strokeRect(120, 32, 160, 12);
+  g.font = '800 10px system-ui'; g.fillStyle = '#fff'; g.fillText('BIOHAZARD', 200, 42);
+  if (banner) { g.globalAlpha = Math.min(1, banner.t * 3); g.font = '900 44px system-ui'; g.fillStyle = '#000'; g.fillText(banner.text, 203, 363); g.fillStyle = '#ffd34d'; g.fillText(banner.text, 200, 360); g.globalAlpha = 1; }
+  if (!started) { g.fillStyle = 'rgba(0,0,0,.65)'; g.fillRect(40, 560, 320, 60); g.fillStyle = '#fff'; g.font = '800 18px system-ui'; g.fillText('A/D walk   hold SPACE to mop', 200, 586); g.fillText('gravity flips. keep it clean.', 200, 608); }
+  if (over) { g.fillStyle = 'rgba(0,0,0,.7)'; g.fillRect(0, 260, WW, 190); g.font = '900 36px system-ui'; const bio = time > 0; g.fillStyle = bio ? '#ff5a4a' : '#58e06b'; g.fillText(bio ? 'BIOHAZARD!' : 'SHIFT OVER', 200, 320); g.fillStyle = '#fff'; g.font = '800 20px system-ui'; g.fillText(Math.round(score) + ' mopped', 200, 358); g.fillText('tap or press R for another shift', 200, 402); }
+  g.restore();
+}
+addEventListener('pointerdown', e => { if (over) { reset(); return; } const x = e.clientX / innerWidth, y = e.clientY / innerHeight; if (y > .86) keys.M = true; else if (x < .5) keys.L = true; else keys.R = true; });
+addEventListener('pointerup', () => { keys.L = keys.R = keys.M = false; });
+reset();
+let last = 0; function frame(ts) { const dt = Math.min(0.05, (ts - last) / 1000 || 0.016); last = ts; step(dt); draw(); requestAnimationFrame(frame); } requestAnimationFrame(frame);
+</script></body></html>

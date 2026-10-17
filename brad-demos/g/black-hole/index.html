@@ -1,0 +1,49 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no"><title>Black Hole City</title></head><body>
+<script type="module">
+// Black Hole City: steer a hole that swallows coins, benches, trees, cars, houses, then skyscrapers. WASD / arrows / drag.
+// Anything smaller than the hole falls in (shrinks toward the centre); everything is one InstancedMesh per prop type.
+import { createStage, instances, sfx, rand, clamp, THREE } from '../_vendor/gp3d.js';
+const st = createStage({ bg: 0x9fd8ff, fitWidth: 16, fov: 50 }); st.light();
+const A = 46, GROW = +(new URLSearchParams(location.search).get('grow') || 1); // half-size of the map
+const ground = new THREE.Mesh(new THREE.PlaneGeometry(A * 2.6, A * 2.6), new THREE.MeshStandardMaterial({ color: 0x7ec86a })); ground.rotation.x = -Math.PI / 2; st.scene.add(ground);
+for (let i = -3; i <= 3; i++) for (const [w, h] of [[2.4, A * 2.6], [A * 2.6, 2.4]]) { const r = new THREE.Mesh(new THREE.PlaneGeometry(w, h), new THREE.MeshStandardMaterial({ color: 0x4a4f5c })); r.rotation.x = -Math.PI / 2; r.position.set(w < 3 ? i * 15 : 0, .02, w < 3 ? 0 : i * 15); st.scene.add(r); }
+const hole = new THREE.Mesh(new THREE.CircleGeometry(1, 40), new THREE.MeshBasicMaterial({ color: 0x000000 })); hole.rotation.x = -Math.PI / 2; hole.position.y = .06; st.scene.add(hole);
+const ring = new THREE.Mesh(new THREE.RingGeometry(1, 1.12, 40), new THREE.MeshBasicMaterial({ color: 0x7b4bff, side: THREE.DoubleSide })); ring.rotation.x = -Math.PI / 2; ring.position.y = .07; st.scene.add(ring);
+// prop types: [geometry, size (footprint radius), height, volume score, count, colors]
+const TYPES = [
+  { n: 'coin', g: new THREE.CylinderGeometry(.35, .35, .08, 12), r: .35, h: .08, vol: .3, count: 110, col: [0xffd34d] },
+  { n: 'bench', g: new THREE.BoxGeometry(1.4, .5, .5), r: .8, h: .5, vol: 1.2, count: 40, col: [0x8a5a2e] },
+  { n: 'tree', g: new THREE.ConeGeometry(.9, 2.6, 8), r: .9, h: 2.6, vol: 2.5, count: 50, col: [0x2f8f4a, 0x3aa65a] },
+  { n: 'car', g: new THREE.BoxGeometry(2.4, 1.1, 1.2), r: 1.4, h: 1.1, vol: 4, count: 44, col: [0xe63946, 0x457b9d, 0xf1c453, 0xeeeeee] },
+  { n: 'house', g: new THREE.BoxGeometry(4, 3, 4), r: 2.8, h: 3, vol: 14, count: 32, col: [0xf4a261, 0xe9c46a, 0xd8b4a0, 0xb8c0ff] },
+  { n: 'tower', g: new THREE.BoxGeometry(5, 14, 5), r: 3.6, h: 14, vol: 40, count: 20, col: [0x6c7a96, 0x5a6785, 0x8892b0] },
+];
+const free = []; // placed positions to avoid roads
+const onRoad = (x, z) => [-45, -30, -15, 0, 15, 30, 45].some(c => Math.abs(x - c) < 2 || Math.abs(z - c) < 2);
+const props = [];
+for (const T of TYPES) { const im = instances(T.g, new THREE.MeshStandardMaterial({ roughness: .7 }), T.count, { dynamic: true }); st.scene.add(im.mesh); T.im = im; T.items = [];
+  for (let i = 0; i < T.count; i++) { let x, z, tries = 0; do { x = rand(-A, A); z = rand(-A, A); tries++; } while (((T.n === 'coin' || T.n === 'car') ? !onRoad(x, z) : onRoad(x, z) || Math.hypot(x, z) < 6) && tries < 40);
+    if (T.n === 'tower') { x = (Math.floor(rand(-3, 3)) + .5) * 15 + rand(-3, 3); z = (Math.floor(rand(-3, 3)) + .5) * 15 + rand(-3, 3); }
+    const it = { x, z, s: 1, fall: 0, gone: false, rot: rand(0, 6) }; T.items.push(it); im.color(i, T.col[i % T.col.length]); } }
+let hx = 0, hz = 0, size = 1.4, eaten = 0, shown = 0, lvl = 0; const LV = ['COINS', 'BENCHES', 'TREES', 'CARS', 'HOUSES', 'SKYSCRAPERS'];
+const ray = new THREE.Raycaster(), plane = new THREE.Plane(new THREE.Vector3(0, 1, 0), 0), tmp = new THREE.Vector3();
+function update(dt) {
+  const k = st.keys; let mx = (k.d || k.arrowright ? 1 : 0) - (k.a || k.arrowleft ? 1 : 0), mz = (k.s || k.arrowdown ? 1 : 0) - (k.w || k.arrowup ? 1 : 0);
+  if (st.ptr.down) { ray.setFromCamera({ x: st.ptr.x, y: -st.ptr.y }, st.camera); if (ray.ray.intersectPlane(plane, tmp)) { const dx = tmp.x - hx, dz = tmp.z - hz, d = Math.hypot(dx, dz); if (d > .3) { mx = dx / d; mz = dz / d; } } }
+  const l = Math.hypot(mx, mz) || 1, sp = 7 + size * 1.4; hx = clamp(hx + mx / l * sp * dt, -A, A); hz = clamp(hz + mz / l * sp * dt, -A, A);
+  for (const T of TYPES) for (const it of T.items) { if (it.gone) continue; const d = Math.hypot(it.x - hx, it.z - hz);
+    if (it.fall === 0 && d < size * .92 && T.r < size * .78) { it.fall = 1e-3; }
+    if (it.fall > 0) { it.fall += dt * 1.6; it.x += (hx - it.x) * Math.min(1, dt * 8); it.z += (hz - it.z) * Math.min(1, dt * 8); it.s = Math.max(0, 1 - it.fall); if (it.fall >= 1) { it.gone = true; eaten += T.vol * GROW; if (T.n !== 'coin') { sfx('pop', .4); st.shake(T.vol > 10 ? 3 : 1); } else if (Math.random() < .3) sfx('tick', .3); } } }
+  size = 1.4 + Math.sqrt(eaten) * .5; const nl = TYPES.findIndex(T => T.r >= size * .78); const cl = nl < 0 ? TYPES.length : nl; if (cl > lvl && lvl < LV.length) { lvl = cl; if (lvl < TYPES.length) { st.hud.banner('NOW EATING ' + LV[lvl].toString(), 1.6); sfx('win'); } else st.hud.banner('EAT THE CITY', 2); }
+  const total = TYPES.reduce((a, T) => a + T.items.filter(i => !i.gone).length, 0);
+  st.hud.left(`SIZE<br><span style="color:#ffd34d;font-size:8vmin">${size.toFixed(1)}m</span>`); st.hud.right(`EATEN ${Math.round(eaten)}<br>LEFT ${total}`); st.hud.hint('WASD / drag to move the hole');
+  window.__game = { size: +size.toFixed(2), eaten: Math.round(eaten), left: total };
+}
+const camP = new THREE.Vector3(0, 12, 12), look = new THREE.Vector3();
+function pre() {
+  for (const T of TYPES) { T.items.forEach((it, i) => T.im.set(i, it.x, it.gone ? -50 : T.h / 2 * it.s - (it.fall > 0 ? it.fall * T.h * .6 : 0), it.z, it.s, it.s, it.s, 0, it.rot, 0)); T.im.done(); }
+  hole.scale.setScalar(size); ring.scale.setScalar(size); hole.position.x = ring.position.x = hx; hole.position.z = ring.position.z = hz;
+  const h = 10 + size * 4.2, z = 9 + size * 3.2; camP.set(hx, h, hz + z * 1.0); st.camera.position.lerp(camP, .08); look.set(hx, 0, hz - 1); st.camera.lookAt(look);
+}
+st.camera.position.set(0, 14, 14); st.run(update, pre);
+</script></body></html>

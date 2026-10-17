@@ -1,0 +1,44 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no"><title>Rope Bridge</title></head><body>
+<script type="module">
+// Rope Bridge: stack heavier and heavier vehicles on a wood-and-rope bridge until the ropes snap. SPACE (or tap) sends the next vehicle.
+// The bridge is a Verlet chain of 17 points; vehicles add load to the two nearest points; a link snaps when stretched past 1.45x.
+import { createStage, instances, sfx, rand, clamp, THREE } from '../_vendor/gp3d.js';
+const st = createStage({ bg: 0xa9d6ff, fitWidth: 30, fov: 45, fog: [70, 160] }); st.light();
+const M = c => new THREE.MeshStandardMaterial({ color: c, roughness: .7 });
+const AX = 12, NPT = 17, L0 = (AX * 2) / (NPT - 1) * 1.04;
+for (const s of [-1, 1]) { const cl = new THREE.Mesh(new THREE.BoxGeometry(14, 30, 12), M(0x8c6a4a)); cl.position.set(s * (AX + 7), -15, 0); st.scene.add(cl); const gr = new THREE.Mesh(new THREE.BoxGeometry(14.2, 1, 12.2), M(0x5fae4a)); gr.position.set(s * (AX + 7), .1, 0); st.scene.add(gr); }
+const river = new THREE.Mesh(new THREE.PlaneGeometry(200, 60), M(0x2a7bbf)); river.rotation.x = -Math.PI / 2; river.position.y = -28; st.scene.add(river);
+const P = [], C = [];
+for (let i = 0; i < NPT; i++) { const x = -AX + i * (AX * 2 / (NPT - 1)), y = -Math.sin(i / (NPT - 1) * Math.PI) * 1.2; P.push({ x, y, px: x, py: y, fixed: i === 0 || i === NPT - 1 }); if (i) C.push({ a: i - 1, b: i, on: true }); }
+const plankI = instances(new THREE.BoxGeometry(1, .22, 3.2), M(0xb98a52), NPT - 1); st.scene.add(plankI.mesh);
+const ropeMat = new THREE.LineBasicMaterial({ color: 0xf2e2b0 }), ropeGeo = [0, 1].map(() => new THREE.BufferGeometry().setAttribute('position', new THREE.BufferAttribute(new Float32Array(NPT * 3), 3)));
+const ropes = ropeGeo.map((g, i) => { const l = new THREE.Line(g, ropeMat); st.scene.add(l); return l; });
+const KINDS = [{ n: 'SEDAN', m: 1, c: 0x4aa8ff, w: 3.4, h: 1.1 }, { n: 'VAN', m: 2, c: 0xf4d35e, w: 4, h: 1.6 }, { n: 'TRUCK', m: 4, c: 0xe36d3a, w: 5, h: 2 }, { n: 'BUS', m: 7, c: 0x7bd88f, w: 6, h: 2.2 }, { n: 'SEMI', m: 12, c: 0xdddddd, w: 7, h: 2.6 }, { n: 'TANK', m: 22, c: 0x5b6b3a, w: 6, h: 1.9 }];
+let maxStretch = 0; const SNAP = +(new URLSearchParams(location.search).get('snap') || 1.07); const veh = []; let next = 0, snapped = false, tons = 0, falls = 0, score = 0;
+function spawn() { if (next >= KINDS.length) return; const k = KINDS[next++]; const mesh = new THREE.Mesh(new THREE.BoxGeometry(k.w, k.h, 2.4), M(k.c)); mesh.position.set(-AX - 3, k.h / 2 + .2, 0); st.scene.add(mesh);
+  if (k.n === 'TANK') { const g = new THREE.Mesh(new THREE.CylinderGeometry(.25, .25, 3.6, 8), M(0x333)); g.rotation.z = Math.PI / 2; g.position.set(2.8, .7, 0); mesh.add(g); }
+  veh.push({ ...k, mesh, x: -AX - 3, vy: 0, fall: false, y: 0, speed: 2.4 }); sfx('pop'); st.hud.banner(k.n + ' ' + k.m + 't', 1); }
+st.onPointerDown = () => spawn();
+addEventListener('keydown', e => { if (e.key === ' ') spawn(); });
+const yAt = x => { const f = (x + AX) / (AX * 2) * (NPT - 1), i = clamp(Math.floor(f), 0, NPT - 2), t = f - i; return P[i].y * (1 - t) + P[i + 1].y * t; };
+function update(dt) {
+  tons = veh.filter(v => !v.fall).reduce((a, v) => a + v.m, 0);
+  for (const p of P) if (!p.fixed) { const vx = (p.x - p.px) * .995, vy = (p.y - p.py) * .995; p.px = p.x; p.py = p.y; p.x += vx; p.y += vy - 16 * dt * dt; }
+  for (const v of veh) if (!v.fall && v.x > -AX && v.x < AX) { const f = (v.x + AX) / (AX * 2) * (NPT - 1), i = clamp(Math.floor(f), 0, NPT - 2), t = f - i; const d = 16 * dt * dt * v.m * .2; P[i].y -= d * (1 - t) * (P[i].fixed ? 0 : 1); P[i + 1].y -= d * t * (P[i + 1].fixed ? 0 : 1); }
+  for (let it = 0; it < 18; it++) for (const c of C) { if (!c.on) continue; const a = P[c.a], b = P[c.b], dx = b.x - a.x, dy = b.y - a.y, d = Math.hypot(dx, dy) || 1e-4, f = (d - L0) / d * .5;
+    if (it === 0) maxStretch = Math.max(maxStretch, d / L0); if (it === 0 && d > L0 * SNAP && !c.snap) { c.on = false; c.snap = true; sfx('snap'); st.shake(10); if (!snapped) { snapped = true; st.hud.banner('SNAP!', 2); } continue; }
+    if (!a.fixed) { a.x += dx * f; a.y += dy * f; } if (!b.fixed) { b.x -= dx * f; b.y -= dy * f; } }
+  for (const v of veh) { if (!v.fall) { v.x += v.speed * dt; const gx = clamp(v.x, -AX, AX), broken = C.some((c, i) => !c.on && P[c.a].x <= v.x + v.w / 2 && P[c.b].x >= v.x - v.w / 2);
+      v.y = (v.x < -AX || v.x > AX ? 0 : yAt(gx)) + v.h / 2 + .25; if (broken && v.x > -AX + 1 && v.x < AX - 1) { v.fall = true; v.vy = 0; sfx('crash'); falls++; }
+      if (v.x > AX + 9) { v.speed = 0; } } else { v.vy -= 20 * dt; v.y += v.vy * dt; v.x += dt * .8; v.mesh.rotation.z += dt * .9; if (v.y < -26 && !v.sunk) { v.sunk = true; sfx('splat'); st.shake(6); score += v.m * 100; } }
+    v.mesh.position.set(v.x, v.y, 0); }
+  st.hud.left(`LOAD<br><span style="color:${snapped ? '#ff6a4a' : '#ffd34d'};font-size:8vmin">${tons}t</span>`); st.hud.right(`CROSSED ${veh.filter(v => !v.fall && v.x > AX).length}<br>LOST ${falls}`); st.hud.hint(next >= KINDS.length ? 'all vehicles sent' : `SPACE: send ${KINDS[next].n} (${KINDS[next].m}t)`);
+  window.__game = { stretch: +maxStretch.toFixed(3), tons, next, snapped, falls, links: C.filter(c => c.on).length };
+}
+function pre() {
+  for (let i = 0; i < NPT - 1; i++) { const a = P[i], b = P[i + 1], dx = b.x - a.x, dy = b.y - a.y; const on = C[i].on; plankI.set(i, (a.x + b.x) / 2, (a.y + b.y) / 2, 0, on ? Math.hypot(dx, dy) * .96 : .001, 1, 1, 0, 0, Math.atan2(dy, dx)); } plankI.done();
+  ropes.forEach((r, k) => { const arr = r.geometry.attributes.position.array; P.forEach((p, i) => { arr[i * 3] = p.x; arr[i * 3 + 1] = p.y + 1.4; arr[i * 3 + 2] = k ? 1.5 : -1.5; }); r.geometry.attributes.position.needsUpdate = true; });
+  st.camera.position.set(0, 2, st.dist * 1.0 + 6); st.camera.lookAt(0, -2, 0);
+}
+st.run(update, pre);
+</script></body></html>
