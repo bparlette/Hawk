@@ -28,6 +28,40 @@ export const catGeo = () => build([
 export const zombieGeo = () => build([
   { g: 'box', s: [.62, .8, .36], p: [0, 1.15, 0], c: 0x5b7a99 }, { g: 'sphere', s: [.5, .5, .5], p: [0, 1.78, .04] }, { g: 'box', s: [.1, .1, .05], p: [-.12, 1.82, .3], c: 0xd22 }, { g: 'box', s: [.1, .1, .05], p: [.12, 1.82, .3], c: 0xd22 }, { g: 'box', s: [.22, .06, .05], p: [0, 1.66, .3], c: D },
   { g: 'box', s: [.16, .16, .75], p: [-.42, 1.4, .4] }, { g: 'box', s: [.16, .16, .75], p: [.42, 1.4, .4] }, { g: 'box', s: [.22, .7, .24], p: [-.15, .38, 0], c: 0x3d3d52 }, { g: 'box', s: [.22, .7, .24], p: [.15, .38, 0], c: 0x3d3d52 }, { g: 'box', s: [.64, .14, .38], p: [0, .78, 0], c: 0x2c2c3c }]);
+
+/** Dog, ~1 tall, facing +z: longer snout, floppy ears, tail up. White parts take the instance colour. */
+export const dogGeo = () => build([
+  { g: 'sphere', s: [.62, .55, 1.1], p: [0, .46, 0] }, { g: 'sphere', s: [.5, .46, .5], p: [0, .86, .55] }, { g: 'box', s: [.28, .22, .34], p: [0, .78, .86], c: 0xf3e6d0 }, { g: 'sphere', s: [.1, .08, .08], p: [0, .84, 1.04], c: D },
+  { g: 'box', s: [.14, .34, .2], p: [-.3, .86, .5], r: [0, 0, .5], c: 0x6b4a2e }, { g: 'box', s: [.14, .34, .2], p: [.3, .86, .5], r: [0, 0, -.5], c: 0x6b4a2e },
+  { g: 'sphere', s: [.08, .1, .05], p: [-.13, .95, .78], c: D }, { g: 'sphere', s: [.08, .1, .05], p: [.13, .95, .78], c: D },
+  { g: 'cyl', s: [.1, .5, .1], p: [0, .78, -.62], r: [-.5, 0, 0] }, { g: 'cyl', s: [.15, .4, .15], p: [-.2, .2, .35] }, { g: 'cyl', s: [.15, .4, .15], p: [.2, .2, .35] }, { g: 'cyl', s: [.15, .4, .15], p: [-.2, .2, -.35] }, { g: 'cyl', s: [.15, .4, .15], p: [.2, .2, -.35] }]);
+/** Person, 1.8 tall, facing +z. White shirt takes the colour; skin, hair, trousers fixed. */
+const person = (ox = 0, oz = 0, skin = 0xf1c27d) => [
+  { g: 'box', s: [.5, .7, .3], p: [ox, 1.15, oz] }, { g: 'sphere', s: [.38, .38, .38], p: [ox, 1.68, oz], c: skin }, { g: 'sphere', s: [.4, .24, .4], p: [ox, 1.82, oz - .02], c: 0x3a2a1a },
+  { g: 'cyl', s: [.12, .65, .12], p: [ox - .31, 1.1, oz], c: skin }, { g: 'cyl', s: [.12, .65, .12], p: [ox + .31, 1.1, oz], c: skin }, { g: 'box', s: [.2, .75, .22], p: [ox - .13, .38, oz], c: 0x2c3e66 }, { g: 'box', s: [.2, .75, .22], p: [ox + .13, .38, oz], c: 0x2c3e66 }];
+export const personGeo = () => build(person());
+/** A group of 4 people close together (one eatable object). */
+export const crowdGeo = () => build([person(-.55, -.3), person(.5, -.2, 0xc68642), person(-.1, .5, 0xffdbac), person(.15, -.6, 0x8d5524)].flat());
+/** Tree: kind 'pine' (stacked cones) or 'round' (blob canopy). 3 tall, white canopy takes the colour. */
+export const treeGeo = (kind = 'round') => build([{ g: 'cyl', s: [.3, 1.1, .3], p: [0, .55, 0], c: 0x7a4e2a },
+  ...(kind === 'pine' ? [{ g: 'cone', s: [1.5, 1.2, 1.5], p: [0, 1.3, 0] }, { g: 'cone', s: [1.2, 1.1, 1.2], p: [0, 2, 0] }, { g: 'cone', s: [.8, 1, .8], p: [0, 2.7, 0] }]
+    : [{ g: 'sphere', s: [1.7, 1.5, 1.7], p: [0, 1.9, 0] }, { g: 'sphere', s: [1.1, 1, 1.1], p: [.5, 2.5, .2] }, { g: 'sphere', s: [1.1, 1, 1.1], p: [-.5, 2.4, -.2] }])]);
+/** House ~4x3x4 with roof, door, windows, chimney. White walls take the colour. */
+export const houseGeo = () => build([{ g: 'box', s: [4, 2.4, 4], p: [0, 1.2, 0] }, { g: 'cone', s: [6.2, 1.8, 6.2], p: [0, 3.3, 0], r: [0, Math.PI / 4, 0], c: 0xc0392b }, { g: 'box', s: [.8, 1.5, .1], p: [0, .75, 2.02], c: 0x5a3a22 },
+  { g: 'box', s: [.8, .8, .1], p: [-1.2, 1.5, 2.02], c: 0x9fd8ff }, { g: 'box', s: [.8, .8, .1], p: [1.2, 1.5, 2.02], c: 0x9fd8ff }, { g: 'box', s: [.8, .8, .1], p: [2.02, 1.5, 0], c: 0x9fd8ff }, { g: 'box', s: [.8, 1.2, .8], p: [1.2, 3.9, -.8], c: 0x8a5a44 }]);
+/** Tall building with window grid on all four sides. w x h x w. */
+export const towerGeo = (w = 5, h = 14) => { const parts = [{ g: 'box', s: [w, h, w], p: [0, h / 2, 0] }, { g: 'box', s: [w + .3, .5, w + .3], p: [0, h + .25, 0], c: 0x333a4a }];
+  for (let y = 1.5; y < h - .5; y += 1.8) for (let u = -w / 2 + .9; u < w / 2 - .5; u += 1.3) { const c = (y * 7 + u * 13) % 3 > 1 ? 0xffe9a0 : 0x2c3a58;
+    parts.push({ g: 'box', s: [.7, .9, .1], p: [u, y, w / 2 + .02], c }, { g: 'box', s: [.7, .9, .1], p: [u, y, -w / 2 - .02], c }, { g: 'box', s: [.1, .9, .7], p: [w / 2 + .02, y, u], c }, { g: 'box', s: [.1, .9, .7], p: [-w / 2 - .02, y, u], c }); } return build(parts); };
+/** City bus, 2.6 wide x 8 long, facing +z. */
+export const busGeo = () => build([{ g: 'box', s: [2.6, 2.4, 8], p: [0, 1.6, 0] }, { g: 'box', s: [2.65, .9, 7.2], p: [0, 2, 0], c: 0x9fd8ff }, { g: 'box', s: [2.65, .15, 8.05], p: [0, 1.05, 0], c: 0xffffff },
+  ...[[-1, 2.6], [1, 2.6], [-1, -2.6], [1, -2.6]].map(([x, z]) => ({ g: 'cyl', s: [1, .5, 1], p: [x * 1.3, .5, z], r: [0, 0, Math.PI / 2], c: 0x141414 }))]);
+/** Coin: flat gold disc. */
+export const coinGeo = () => build([{ g: 'cyl', s: [.9, .1, .9], p: [0, .05, 0] }, { g: 'cyl', s: [.6, .13, .6], p: [0, .06, 0], c: 0xffe89a }]);
+/** Explosive barrel: red drum with a hazard band. */
+export const barrelGeo = () => build([{ g: 'cyl', s: [.8, 1.1, .8], p: [0, .55, 0] }, { g: 'cyl', s: [.84, .22, .84], p: [0, .55, 0], c: 0xffd23c }, { g: 'cyl', s: [.5, .08, .5], p: [0, 1.12, 0], c: 0x333333 }]);
+/** Park bench. */
+export const benchGeo = () => build([{ g: 'box', s: [1.6, .12, .55], p: [0, .5, 0] }, { g: 'box', s: [1.6, .5, .1], p: [0, .85, -.25] }, { g: 'box', s: [.1, .5, .5], p: [-.7, .25, 0], c: 0x333 }, { g: 'box', s: [.1, .5, .5], p: [.7, .25, 0], c: 0x333 }]);
 /** Cartoon car, 2 wide, 4.2 long, facing +z. White body takes the colour. */
 export const carGeo = () => build([
   { g: 'box', s: [2, .7, 4.2], p: [0, .75, 0] }, { g: 'box', s: [1.6, .55, 2], p: [0, 1.3, -.2], c: 0x20242e }, { g: 'box', s: [1.7, .1, .5], p: [0, 1.2, -1.8], c: 0x222 }, { g: 'box', s: [.5, .25, .08], p: [-.6, .85, 2.1], c: 0xfff3a0 }, { g: 'box', s: [.5, .25, .08], p: [.6, .85, 2.1], c: 0xfff3a0 },
