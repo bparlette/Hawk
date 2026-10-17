@@ -34,8 +34,19 @@ export const carGeo = () => build([
   ...[[-1, 1.3], [1, 1.3], [-1, -1.3], [1, -1.3]].map(([x, z]) => ({ g: 'cyl', s: [.8, .4, .8], p: [x * 1.02, .4, z], r: [0, 0, Math.PI / 2], c: 0x141414 }))]);
 
 /** Instanced character set: returns {mesh, set(i,x,y,z,scale,yaw,pitch,roll), color(i,hex)} using vertex-coloured toon material. */
-export function crowd(scene, geo, count, tint = true) {
-  const mesh = new T.InstancedMesh(geo, toon(0xffffff, { vertexColors: true }), count); mesh.instanceMatrix.setUsage(T.DynamicDrawUsage); mesh.frustumCulled = false; scene.add(mesh);
+/** Shared walk clock: set walkClock.value = st.t each update; crowds created with {legs} swing their legs from it. */
+export const walkClock = { value: 0 };
+/** Vertex-shader walk cycle: vertices below `legH` swing front/back (opposite per side), arms bob. Phase is per instance so a crowd never marches in step. */
+function walkMat(mat, legH, speed) {
+  mat.onBeforeCompile = sh => { sh.uniforms.uWalk = walkClock; sh.vertexShader = 'uniform float uWalk;\n' + sh.vertexShader.replace('#include <begin_vertex>',
+    `#include <begin_vertex>
+     float lg = clamp(1.0 - position.y / ${legH.toFixed(2)}, 0.0, 1.0); float ph = uWalk * ${speed.toFixed(1)} + instanceMatrix[3].x * 3.1 + instanceMatrix[3].z * 2.3;
+     transformed.z += sin(ph + sign(position.x) * 1.57) * 0.30 * lg * lg; transformed.y += abs(sin(ph)) * 0.05 * (1.0 - lg);`); };
+  return mat;
+}
+export function crowd(scene, geo, count, tint = true, legs = 0) {
+  const mat = toon(0xffffff, { vertexColors: true }); if (legs) walkMat(mat, legs, 11);
+  const mesh = new T.InstancedMesh(geo, mat, count); mesh.instanceMatrix.setUsage(T.DynamicDrawUsage); mesh.frustumCulled = false; scene.add(mesh);
   const o = new T.Object3D(), c = new T.Color(); o.rotation.order = 'YXZ';
   return { mesh, set(i, x, y, z, s = 1, yaw = 0, pitch = 0, roll = 0) { o.position.set(x, y, z); o.scale.setScalar(s); o.rotation.set(pitch, yaw, roll); o.updateMatrix(); mesh.setMatrixAt(i, o.matrix); },
     color(i, hex) { c.setHex(hex); mesh.setColorAt(i, c); }, hsl(i, h, s, l) { c.setHSL(h, s, l); mesh.setColorAt(i, c); }, done(n) { if (n !== undefined) mesh.count = n; mesh.instanceMatrix.needsUpdate = true; if (mesh.instanceColor) mesh.instanceColor.needsUpdate = true; } };
