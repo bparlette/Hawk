@@ -1,0 +1,37 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no"><title>Unstoppable Wedge</title></head><body>
+<script type="module">
+// The Unstoppable Wedge: a plow at constant speed into 10,000 colored pegs. A/D (or drag) steers a little. Moving pegs shove their neighbours via a spatial hash;
+// pegs pushed off the platform fall into the abyss. ?speed=2 doubles the plow.
+import { createStage, instances, sfx, rand, clamp, THREE } from '../_vendor/gp3d.js';
+const st = createStage({ bg: 0x1a1030, fitWidth: 20, fov: 48, fog: [60, 150] }); st.light();
+const SPEED = +(new URLSearchParams(location.search).get('speed') || 1), GX = 100, GZ = 100, SP = .6, R = .22, HALF = GX * SP / 2, FRONT = GZ * SP;
+const N = GX * GZ; const X = new Float32Array(N), Z = new Float32Array(N), VX = new Float32Array(N), VZ = new Float32Array(N), Y = new Float32Array(N), FALL = new Uint8Array(N), HEIGHT = new Float32Array(N).fill(.5);
+for (let i = 0; i < GX; i++) for (let j = 0; j < GZ; j++) { const k = i * GZ + j; X[k] = (i - GX / 2 + .5) * SP; Z[k] = 2 + j * SP; Y[k] = 0; }
+const plat = new THREE.Mesh(new THREE.BoxGeometry(HALF * 2 + 1, 1, FRONT + 24), new THREE.MeshStandardMaterial({ color: 0x2a2150 })); plat.position.set(0, -.5, FRONT / 2 - 6); st.scene.add(plat);
+const pegs = instances(new THREE.CylinderGeometry(R, R, .5, 8), new THREE.MeshStandardMaterial({ roughness: .5 }), N); st.scene.add(pegs.mesh);
+for (let k = 0; k < N; k++) pegs.hsl(k, (X[k] / HALF * .5 + Z[k] / FRONT * .7 + 2) % 1, .85, .58);
+const W = new THREE.Group(), wm = new THREE.MeshStandardMaterial({ color: 0xffb02a, metalness: .6, roughness: .35 });
+const tri = new THREE.Shape(); tri.moveTo(0, 0); tri.lineTo(-3, -4); tri.lineTo(3, -4); tri.lineTo(0, 0); const wedge = new THREE.Mesh(new THREE.ExtrudeGeometry(tri, { depth: 1.2, bevelEnabled: false }), wm); wedge.rotation.x = Math.PI / 2; wedge.position.y = 1.2; W.add(wedge); st.scene.add(W);
+const cab = new THREE.Mesh(new THREE.BoxGeometry(2, 1.5, 2), new THREE.MeshStandardMaterial({ color: 0x222833 })); cab.position.set(0, 1.9, -3); W.add(cab);
+let wx = 0, wz = -8, fallen = 0, hit = 0, cellsDirty = true; const CS = .7, CN = Math.ceil(HALF * 2 / CS) + 6; let cells = new Map();
+const cell = (x, z) => ((Math.floor((x + HALF) / CS) + 3) * 400 + Math.floor(z / CS) + 3);
+function rebuild() { cells.clear(); for (let k = 0; k < N; k++) { if (FALL[k]) continue; const c = cell(X[k], Z[k]); (cells.get(c) || cells.set(c, []).get(c)).push(k); } }
+function update(dt) {
+  const k = st.keys, mv = (k.d || k.arrowright ? 1 : 0) - (k.a || k.arrowleft ? 1 : 0); if (mv) wx += mv * 6 * dt; else if (st.ptr.down) wx += (st.ptr.x * 16 - wx) * Math.min(1, dt * 4); wx = clamp(wx, -HALF + 4, HALF - 4);
+  wz += 3.6 * SPEED * dt; rebuild(); hit = 0;
+  const moving = [];
+  for (let k2 = 0; k2 < N; k2++) { if (FALL[k2]) continue; const dz = wz - Z[k2]; // dz > 0: peg is behind the apex
+    if (dz > -.2 && dz < 4.5) { const half = (dz + .2) * .75 + .1; if (Math.abs(X[k2] - wx) < half + R) { const side = Math.sign(X[k2] - wx) || (k2 % 2 ? 1 : -1); VX[k2] = side * rand(4, 7) * SPEED; VZ[k2] = rand(2, 6) * SPEED; hit++; Z[k2] = Math.max(Z[k2], wz + .0); } } }
+  for (let k2 = 0; k2 < N; k2++) { if (FALL[k2]) { Y[k2] -= 18 * dt; if (Y[k2] < -40) { X[k2] = 0; Z[k2] = -999; } continue; } if (Math.abs(VX[k2]) + Math.abs(VZ[k2]) < .05) continue; moving.push(k2); }
+  for (const a of moving) { X[a] += VX[a] * dt; Z[a] += VZ[a] * dt; VX[a] *= .985; VZ[a] *= .985; const cx0 = Math.floor((X[a] + HALF) / CS) + 3, cz0 = Math.floor(Z[a] / CS) + 3;
+    for (let ix = cx0 - 1; ix <= cx0 + 1; ix++) for (let iz = cz0 - 1; iz <= cz0 + 1; iz++) { const list = cells.get(ix * 400 + iz); if (!list) continue; for (const b of list) { if (b === a || FALL[b]) continue; const dx = X[b] - X[a], dz = Z[b] - Z[a], d2 = dx * dx + dz * dz; if (d2 < 4 * R * R && d2 > 1e-8) { const d = Math.sqrt(d2), nx = dx / d, nz = dz / d, rel = (VX[a] - VX[b]) * nx + (VZ[a] - VZ[b]) * nz; if (rel > 0) { VX[b] += nx * rel * .8; VZ[b] += nz * rel * .8; VX[a] -= nx * rel * .4; VZ[a] -= nz * rel * .4; } } } }
+    if (Math.abs(X[a]) > HALF + .3 || Z[a] > FRONT + 8) { if (!FALL[a]) { FALL[a] = 1; fallen++; if (fallen % 150 === 1) sfx('tick', .3); } } }
+  st.shake(Math.min(3, hit / 150)); if (hit > 60 && Math.random() < .08) sfx('whoosh', .25);
+  const left = N - fallen; st.hud.left(`SWEPT<br><span style="color:#ffd34d;font-size:8vmin">${fallen.toLocaleString()}</span>`); st.hud.right(`LEFT ${left.toLocaleString()}<br>${Math.round(wz)}m`); st.hud.hint('A/D or drag: steer. It does not stop.');
+  if (wz > FRONT + 6 && !st.done) { st.done = true; st.hud.banner(`${Math.round(100 * fallen / N)}% SWEPT`, 99); sfx('win'); }
+  window.__game = { swept: fallen, left, z: Math.round(wz) };
+}
+function pre() { for (let k = 0; k < N; k++) pegs.set(k, X[k], Y[k] + .25, Z[k], 1, 1, 1, FALL[k] ? Y[k] * .3 : 0, 0, FALL[k] ? Y[k] * .2 : 0); pegs.done();
+  W.position.set(wx, 0, wz); st.camera.position.set(wx * .5 + 6, 12, wz - 17); st.camera.lookAt(wx * .6, 0, wz + 7); }
+st.run(update, pre);
+</script></body></html>

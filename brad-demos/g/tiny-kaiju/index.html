@@ -1,0 +1,194 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
+<title>Tiny Kaiju</title>
+<style>html,body{margin:0;height:100%;background:#1b1410;overflow:hidden;touch-action:none;font-family:system-ui,sans-serif}canvas{display:block;width:100vw;height:100vh}</style>
+</head><body><canvas id="c"></canvas>
+<script>
+// Tiny Kaiju: a 2-inch monster against a dollhouse. One screen, plain canvas, no dependencies.
+// Keys: A/D or arrows move, SPACE stomp, Z tail swipe, X fire breath. Touch: left/right zones + 3 buttons.
+// State is exposed on window.__kaiju so capture scripts can read score/time (see gamepress docs).
+const cv = document.getElementById('c'), g = cv.getContext('2d');
+const WW = 400, WH = 720, GROUND = 640, ROUND = 30;
+let S = 1, OX = 0, OY = 0;
+function fit() { const dpr = Math.min(devicePixelRatio || 1, 2); cv.width = innerWidth * dpr; cv.height = innerHeight * dpr;
+  S = Math.min(cv.width / WW, cv.height / WH); OX = (cv.width - WW * S) / 2; OY = (cv.height - WH * S) / 2; }
+addEventListener('resize', fit); fit();
+
+const rnd = (a, b) => a + Math.random() * (b - a);
+const pick = a => a[Math.floor(Math.random() * a.length)];
+const keys = {}; addEventListener('keydown', e => { keys[e.key.toLowerCase()] = true; if (e.key === ' ' ) e.preventDefault(); });
+addEventListener('keyup', e => { keys[e.key.toLowerCase()] = false; });
+
+// ---- the dollhouse: floors are tiles, furniture stands on a tile, residents stand on furniture
+const HX = 150, HW = 230, FLOOR_H = 86, TILE = 5, WALL = 10;
+let pieces, dolls, parts, pops, K, T, score, shake, hitstop, flash, over, started;
+function mk(x, y, w, h, color, o = {}) { const p = { x, y, w, h, color, hp: o.hp ?? 1, free: false, vx: 0, vy: 0, rot: 0, vr: 0, fire: 0, val: o.val ?? 5, kind: o.kind || 'furn', sup: o.sup ?? -1, crack: 0 }; pieces.push(p); return pieces.length - 1; }
+function build() {
+  pieces = []; dolls = []; parts = []; pops = [];
+  const tw = HW / TILE, ids = [];
+  mk(HX - 8, GROUND - 14, HW + 16, 14, '#6b4a2e', { hp: 99, kind: 'base' });
+  for (let f = 0; f < 3; f++) {
+    const top = GROUND - 14 - (f + 1) * FLOOR_H; ids[f] = [];
+    for (let i = 0; i < TILE; i++) ids[f].push(mk(HX + i * tw, top + FLOOR_H - 8, tw, 8, f % 2 ? '#c9a26b' : '#b98d54', { hp: 3, kind: 'floor', val: 20 }));
+    mk(HX, top, WALL, FLOOR_H - 8, '#e7c8a0', { hp: 2, kind: 'wall', val: 15 }); mk(HX + HW - WALL, top, WALL, FLOOR_H - 8, '#e7c8a0', { hp: 2, kind: 'wall', val: 15 });
+    // wallpaper back panel (decor, drops with its floor)
+    mk(HX + WALL, top, HW - 2 * WALL, FLOOR_H - 8, ['#f4d9d0', '#d9e6f0', '#e8f0d4'][f], { hp: 3, kind: 'back', val: 10, sup: ids[f][2] });
+  }
+  for (let i = 0; i < 4; i++) mk(HX - 6 + i * (HW / 3.4), GROUND - 14 - 3 * FLOOR_H - 34 + Math.abs(i - 1.5) * 12, 70, 30, '#a33a2f', { hp: 2, kind: 'roof', val: 25 });
+  const furn = [[0, 0, 36, 30, '#6e8fb5', 'SOFA'], [0, 1, 26, 40, '#d8d8d0', 'FRIDGE'], [0, 3, 40, 24, '#8a5a3a', 'PIANO'],
+    [1, 0, 46, 22, '#c0504d', 'BED'], [1, 2, 22, 34, '#d4c25c', 'LAMP'], [1, 4, 30, 26, '#555', 'TV'],
+    [2, 1, 30, 22, '#7a9a5a', 'TUB'], [2, 3, 36, 28, '#9a7ab5', 'DESK']];
+  for (const [f, t, w, h, c, name] of furn) {
+    const top = GROUND - 14 - (f + 1) * FLOOR_H, id = ids[f][t];
+    const fid = mk(HX + t * tw + (tw - w) / 2, top + FLOOR_H - 8 - h, w, h, c, { hp: 1, val: 40, sup: id }); pieces[fid].name = name;
+    if (t % 2 === 0 || f === 1) dolls.push({ x: HX + t * tw + tw / 2, y: top + FLOOR_H - 8 - h - 10, sup: fid, vx: 0, vy: 0, free: false, say: 0, c: pick(['#e85d75', '#4d9de0', '#e1bc29', '#3bb273']) });
+  }
+}
+
+K = { x: 70, y: GROUND, dir: 1, w: 92, h: 112, walk: 0, act: '', t: 0, cd: 0, bounce: 0 };
+function reset() { build(); T = ROUND; score = 0; shake = 0; hitstop = 0; flash = 0; over = false; K.x = 70; K.act = ''; K.cd = 0; }
+reset();
+
+// ---- attacks: each frees pieces inside a zone and hands them an impulse
+function hit(p, fx, fy, power) {
+  if (p.kind === 'base') return;
+  p.hp -= power; p.crack = 1;
+  if (p.hp > 0) { p.fire = Math.max(p.fire, 0); return; }
+  if (!p.free) { p.free = true; p.vx = fx + rnd(-30, 30); p.vy = fy + rnd(-60, 20); p.vr = rnd(-6, 6); score += p.val; pop(p.x + p.w / 2, p.y, '$' + p.val * 10, '#ffd34d'); burst(p.x + p.w / 2, p.y + p.h / 2, p.color, 8); }
+}
+function act(kind) {
+  if (K.cd > 0 || over) return; K.act = kind; K.t = 0;
+  K.cd = kind === 'stomp' ? 0.55 : kind === 'tail' ? 0.45 : 0.9;
+  if (kind === 'stomp') hitstop = 0.06;
+}
+function resolveAct(dt) {
+  K.t += dt; K.cd -= dt;
+  const cx = K.x + K.dir * 30;
+  if (K.act === 'stomp' && K.t > 0.16 && !K.did) {
+    K.did = true; shake = Math.max(shake, 14); sfx('boom'); flash = 0.12;
+    for (const p of pieces) { const d = Math.abs(p.x + p.w / 2 - K.x), hgt = (GROUND - p.y) / 200;
+      if (d < 150 && p.y > GROUND - 120 - 60) hit(p, Math.sign(p.x - K.x || 1) * (120 - d * .4), -(240 - hgt * 90), d < 70 ? 1.5 : 1); else if (d < 190) hit(p, 0, -140, 0.5); }
+    for (const dl of dolls) if (Math.abs(dl.x - K.x) < 190) { dl.free = true; dl.vy = -200; }
+    for (let i = 0; i < 16; i++) parts.push({ x: K.x + rnd(-40, 40), y: GROUND, vx: rnd(-150, 150), vy: rnd(-90, -10), life: 0.5, c: '#d9c9a8', r: 3 });
+  }
+  if (K.act === 'tail' && K.t > 0.14 && !K.did) {
+    K.did = true; shake = Math.max(shake, 9); sfx('whoosh');
+    for (const p of pieces) { const dx = p.x + p.w / 2 - K.x; if (dx * K.dir > 0 && Math.abs(dx) < 175 && p.y > GROUND - 14 - 2 * FLOOR_H - 20) hit(p, K.dir * 320, -130, 2); }
+  }
+  if (K.act === 'fire' && K.t > 0.1) {
+    K.did2 = (K.did2 || 0) + dt; shake = Math.max(shake, 3);
+    // beam from the mouth, rising at 38 degrees
+    const mx = K.x + K.dir * 36, my = K.y - K.h + 24;
+    for (let i = 0; i < 4; i++) parts.push({ x: mx + K.dir * i * 14, y: my - i * 11, vx: K.dir * rnd(120, 260), vy: rnd(-200, -90), life: 0.45, c: pick(['#ffcf3a', '#ff8a2a', '#ff4b1f']), r: rnd(3, 6) });
+    for (const p of pieces) { const dx = (p.x + p.w / 2 - mx) * K.dir; const dy = my - (p.y + p.h / 2); if (dx > 0 && dx < 230 && Math.abs(dy - dx * 0.78) < 40) { p.fire = 1.6; hit(p, K.dir * 40, -60, dt * 4); } }
+  }
+  const lim = K.act === 'stomp' ? 0.4 : K.act === 'tail' ? 0.35 : 0.8;
+  if (K.act && K.t > lim) { K.act = ''; K.did = false; K.did2 = 0; }
+}
+
+// ---- audio: tiny synth, silent until first input
+let ac; function sfx(type) { try {
+  ac = ac || new (window.AudioContext || window.webkitAudioContext)(); const t = ac.currentTime, o = ac.createOscillator(), gn = ac.createGain();
+  o.connect(gn); gn.connect(ac.destination);
+  if (type === 'boom') { o.type = 'sawtooth'; o.frequency.setValueAtTime(110, t); o.frequency.exponentialRampToValueAtTime(28, t + .4); gn.gain.setValueAtTime(.5, t); gn.gain.exponentialRampToValueAtTime(.001, t + .45); }
+  else if (type === 'whoosh') { o.type = 'triangle'; o.frequency.setValueAtTime(300, t); o.frequency.exponentialRampToValueAtTime(90, t + .2); gn.gain.setValueAtTime(.25, t); gn.gain.exponentialRampToValueAtTime(.001, t + .22); }
+  else { o.type = 'square'; o.frequency.setValueAtTime(rnd(160, 320), t); gn.gain.setValueAtTime(.12, t); gn.gain.exponentialRampToValueAtTime(.001, t + .08); }
+  o.start(t); o.stop(t + .5); window.__events.push({ t: +(performance.now() / 1000).toFixed(2), type }); } catch (e) {} }
+window.__events = [];
+function pop(x, y, text, c) { pops.push({ x, y, text, c, life: 0.9 }); }
+function burst(x, y, c, n) { for (let i = 0; i < n; i++) parts.push({ x, y, vx: rnd(-140, 140), vy: rnd(-200, 0), life: rnd(.4, .9), c, r: rnd(2, 4) }); if (Math.random() < .5) sfx('crunch'); }
+
+// ---- simulation
+function step(dt) {
+  if (hitstop > 0) { hitstop -= dt; dt *= 0.15; }
+  if (!over) {
+    if (!K.act) { const mv = (keys.d || keys.arrowright || keys.R ? 1 : 0) - (keys.a || keys.arrowleft || keys.L ? 1 : 0);
+      if (mv) { K.dir = mv; K.x = Math.max(40, Math.min(WW - 40, K.x + mv * 120 * dt)); K.walk += dt * 9; } }
+    if (!K.act) { if (keys[' '] || keys.B1) act('stomp'); else if (keys.z || keys.B2) act('tail'); else if (keys.x || keys.B3) act('fire'); }
+    started = true; T -= dt;
+    if (T <= 0) { T = 0; over = true; }
+  }
+  resolveAct(dt);
+  for (const p of pieces) {
+    if (p.sup >= 0 && !p.free && pieces[p.sup].free) { p.free = true; p.vx = rnd(-40, 40); p.vr = rnd(-3, 3); score += p.val; pop(p.x + p.w / 2, p.y, '$' + p.val * 10, '#ffd34d'); }
+    if (p.fire > 0) { p.fire -= dt; if (Math.random() < dt * 14) parts.push({ x: p.x + rnd(0, p.w), y: p.y + rnd(0, p.h), vx: 0, vy: -50, life: .5, c: '#ff8a2a', r: 3 }); }
+    if (!p.free) continue;
+    p.vy += 900 * dt; p.x += p.vx * dt; p.y += p.vy * dt; p.rot += p.vr * dt;
+    if (p.y + p.h > GROUND - (p.kind === 'base' ? 0 : 0)) { p.y = GROUND - p.h; if (Math.abs(p.vy) > 80) burst(p.x + p.w / 2, GROUND, p.color, 3); p.vy *= -0.3; p.vx *= 0.7; p.vr *= 0.6; if (Math.abs(p.vy) < 30) p.vy = 0; }
+    if (p.x < -60 || p.x > WW + 60) { p.vx *= -0.5; p.x = Math.max(-60, Math.min(WW + 60, p.x)); }
+  }
+  for (const d of dolls) {
+    const s = pieces[d.sup]; if (!d.free && s.free) { d.free = true; d.say = 1.1; d.txt = pick(['AAAH!', 'MY HOUSE!', 'NOT THE PIANO', 'KAREN!!', 'WE HAD A HOA!']); }
+    if (d.free) { d.vy += 900 * dt; d.x += d.vx * dt; d.y += d.vy * dt; if (d.y > GROUND - 8) { d.y = GROUND - 8; d.vy = 0; d.vx = d.x < K.x ? -60 : 60; } d.say -= dt; }
+  }
+  for (const q of parts) { q.life -= dt; q.x += q.vx * dt; q.y += q.vy * dt; q.vy += 350 * dt; }
+  parts = parts.filter(q => q.life > 0);
+  for (const q of pops) { q.life -= dt; q.y -= 28 * dt; } pops = pops.filter(q => q.life > 0);
+  shake = Math.max(0, shake - 40 * dt); flash = Math.max(0, flash - dt);
+  window.__kaiju = { score: Math.round(score), time: +T.toFixed(2), over, destroyed: Math.round(100 * pieces.filter(p => p.free).length / pieces.filter(p => p.kind !== 'base').length) };
+}
+
+// ---- drawing
+function rect(x, y, w, h, c) { g.fillStyle = c; g.fillRect(x, y, w, h); }
+function drawKaiju() {
+  const bob = Math.sin(K.walk) * 2, x = K.x, y = K.y + (K.act === 'stomp' ? -Math.sin(Math.min(K.t / .16, 1) * Math.PI) * 26 : 0);
+  g.save(); g.translate(x, y); g.scale(K.dir, 1);
+  const tailSwing = K.act === 'tail' ? Math.min(K.t / .14, 1) * -70 : Math.sin(K.walk * .6) * 8;
+  g.strokeStyle = '#2f7d3a'; g.lineWidth = 16; g.lineCap = 'round'; g.beginPath(); g.moveTo(-26, -34); g.quadraticCurveTo(-60, -20 + tailSwing * .3, -78 + (K.act === 'tail' ? 150 * Math.min(K.t / .14, 1) * -1 + 0 : 0), -30 + tailSwing * .4); g.stroke();
+  rect(-22, -30, 18, 30 + bob, '#2a6e34'); rect(6, -30, 18, 30 - bob, '#2a6e34');
+  g.fillStyle = '#3aa04a'; g.beginPath(); g.ellipse(0, -62 + bob, 34, 40, 0, 0, 7); g.fill();
+  g.fillStyle = '#8fd694'; g.beginPath(); g.ellipse(6, -52 + bob, 20, 26, 0, 0, 7); g.fill();
+  for (let i = 0; i < 4; i++) { g.fillStyle = '#e8c53a'; g.beginPath(); g.moveTo(-14 + i * 10, -98 + bob + i * 2); g.lineTo(-8 + i * 10, -114 + bob + i * 2); g.lineTo(-2 + i * 10, -98 + bob + i * 2); g.fill(); }
+  g.fillStyle = '#3aa04a'; g.beginPath(); g.ellipse(18, -96 + bob, 22, 17, 0, 0, 7); g.fill();
+  g.fillStyle = K.act === 'fire' ? '#ffb02a' : '#fff'; g.beginPath(); g.ellipse(26, -92 + bob, K.act === 'fire' ? 11 : 6, K.act === 'fire' ? 9 : 4, 0, 0, 7); g.fill();
+  g.fillStyle = '#111'; g.beginPath(); g.arc(20, -102 + bob, 3.4, 0, 7); g.fill();
+  g.fillStyle = '#d33'; g.fillRect(-4, -86 + bob, 0, 0);
+  g.restore();
+}
+function draw() {
+  g.setTransform(1, 0, 0, 1, 0, 0);
+  const sky = g.createLinearGradient(0, 0, 0, cv.height); sky.addColorStop(0, '#f7d8a8'); sky.addColorStop(1, '#e6a76b'); g.fillStyle = sky; g.fillRect(0, 0, cv.width, cv.height);
+  g.save(); g.translate(OX + (Math.random() - .5) * shake * S * .6, OY + (Math.random() - .5) * shake * S * .6); g.scale(S, S);
+  // room backdrop: wall + table with an inch ruler for scale
+  rect(-300, -300, WW + 600, GROUND + 300, '#b78a5e');
+  for (let i = 0; i < 9; i++) rect(-300, 40 + i * 70, WW + 600, 2, 'rgba(0,0,0,.06)');
+  rect(-300, GROUND, WW + 600, 400, '#6a4528');
+  rect(-300, GROUND, WW + 600, 16, '#e6d7a8'); g.fillStyle = '#6b5a2a'; g.font = '700 9px system-ui'; for (let i = -6; i < 24; i++) { rect(i * 20, GROUND, 1.5, i % 2 ? 6 : 11, '#6b5a2a'); if (!(i % 2) && i >= 0) g.fillText(String(i / 2), i * 20 + 3, GROUND + 14); } g.fillText('INCHES', 8, GROUND + 30);
+  for (const p of pieces) {
+    g.save(); g.translate(p.x + p.w / 2, p.y + p.h / 2); g.rotate(p.rot);
+    g.fillStyle = p.color; g.fillRect(-p.w / 2, -p.h / 2, p.w, p.h);
+    if (p.kind !== 'back') { g.strokeStyle = 'rgba(0,0,0,.45)'; g.lineWidth = 1.5; g.strokeRect(-p.w / 2, -p.h / 2, p.w, p.h); }
+    if (p.crack && p.hp > 0) { g.strokeStyle = '#2b1c10'; g.beginPath(); g.moveTo(-p.w / 4, -p.h / 2); g.lineTo(0, 0); g.lineTo(p.w / 5, p.h / 2); g.stroke(); }
+    if (p.name) { g.fillStyle = 'rgba(255,255,255,.75)'; g.font = '700 8px system-ui'; g.textAlign = 'center'; g.fillText(p.name, 0, 3); }
+    if (p.fire > 0) { g.fillStyle = 'rgba(255,120,30,.55)'; g.fillRect(-p.w / 2, -p.h / 2, p.w, p.h); }
+    g.restore();
+  }
+  for (const d of dolls) { g.fillStyle = d.c; g.fillRect(d.x - 4, d.y, 8, 12); g.fillStyle = '#f2c9a0'; g.beginPath(); g.arc(d.x, d.y - 3, 4.5, 0, 7); g.fill();
+    if (d.free && d.say > 0) { g.font = '800 11px system-ui'; g.textAlign = 'center'; g.fillStyle = '#fff'; const w = g.measureText(d.txt).width + 10; g.fillRect(d.x - w / 2, d.y - 28, w, 15); g.fillStyle = '#111'; g.fillText(d.txt, d.x, d.y - 17); } }
+  drawKaiju();
+  for (const q of parts) { g.globalAlpha = Math.min(1, q.life * 2); g.fillStyle = q.c; g.fillRect(q.x, q.y, q.r, q.r); } g.globalAlpha = 1;
+  g.textAlign = 'center'; for (const q of pops) { g.globalAlpha = Math.min(1, q.life * 2); g.font = '900 14px system-ui'; g.fillStyle = '#2a1a00'; g.fillText(q.text, q.x + 1, q.y + 1); g.fillStyle = q.c; g.fillText(q.text, q.x, q.y); } g.globalAlpha = 1;
+  if (flash > 0) { g.fillStyle = `rgba(255,255,255,${flash * 3})`; g.fillRect(-300, -300, WW + 600, WH + 600); }
+  g.restore();
+  // HUD (screen space)
+  g.save(); g.translate(OX, OY); g.scale(S, S); g.textAlign = 'left';
+  g.font = '900 26px system-ui'; g.fillStyle = '#2a1a00'; g.fillText('DAMAGE', 15, 38); g.fillStyle = '#fff'; g.fillText('DAMAGE', 14, 37);
+  g.font = '900 40px system-ui'; g.fillStyle = '#2a1a00'; g.fillText('$' + (score * 10).toLocaleString(), 15, 80); g.fillStyle = '#ffd34d'; g.fillText('$' + (score * 10).toLocaleString(), 14, 79);
+  g.textAlign = 'right'; g.font = '900 34px system-ui'; g.fillStyle = '#2a1a00'; g.fillText(Math.ceil(T) + 's', WW - 13, 41); g.fillStyle = T < 6 ? '#ff5a4a' : '#fff'; g.fillText(Math.ceil(T) + 's', WW - 14, 40);
+  g.textAlign = 'center';
+  if (!started) { g.font = '900 20px system-ui'; g.fillStyle = 'rgba(0,0,0,.65)'; g.fillRect(40, 300, 320, 70); g.fillStyle = '#fff'; g.fillText('A/D move  SPACE stomp', 200, 328); g.fillText('Z tail   X fire breath', 200, 356); }
+  if (over) { g.fillStyle = 'rgba(0,0,0,.6)'; g.fillRect(0, 250, WW, 190); g.fillStyle = '#ffd34d'; g.font = '900 38px system-ui'; g.fillText(window.__kaiju.destroyed + '% DESTROYED', 200, 320); g.fillStyle = '#fff'; g.font = '800 20px system-ui'; g.fillText('$' + (score * 10).toLocaleString() + ' in damage', 200, 356); g.fillText('tap or press R to stomp again', 200, 400); }
+  g.restore();
+}
+
+// ---- touch: left/right thirds move, three buttons at the bottom
+addEventListener('pointerdown', e => { if (over) { reset(); return; } const x = e.clientX / innerWidth, y = e.clientY / innerHeight;
+  if (y > .86) keys[x < .5 ? 'B1' : x < .75 ? 'B2' : 'B3'] = true; else if (x < .5) keys.L = true; else keys.R = true; });
+addEventListener('pointerup', () => { keys.L = keys.R = keys.B1 = keys.B2 = keys.B3 = false; });
+addEventListener('keydown', e => { if (e.key.toLowerCase() === 'r' && over) reset(); });
+
+let last = 0;
+function frame(ts) { const dt = Math.min(0.05, (ts - last) / 1000 || 0.016); last = ts; step(dt); draw(); requestAnimationFrame(frame); }
+requestAnimationFrame(frame);
+</script></body></html>

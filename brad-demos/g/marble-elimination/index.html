@@ -1,0 +1,57 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no"><title>Marble Elimination</title></head><body>
+<script type="module">
+// Marble Elimination: 36 named marbles race down a course of ramps, spinners and a funnel. The last 30% across the line are out. No input.
+// Hardcoded physics (circle vs segment, circle vs circle) so it is deterministic and engine-free. ?speed=2 doubles the sim. Space skips ahead.
+import { createStage, instances, sfx, rand, clamp, THREE } from '../_vendor/gp3d.js';
+const st = createStage({ bg: 0x14102b, fitWidth: 12.5 }); st.light();
+const SPEED = +(new URLSearchParams(location.search).get('speed') || 1), R = 0.24, W = 5.2, H = 66, N0 = 36;
+const NAMES = 'Mango Turbo Pickle Biscuit Waffle Nova Pixel Rocket Gizmo Bandit Nacho Zippy Clover Pogo Tango Mochi Blaze Ziggy Pretzel Comet Bongo Fudge Jazzy Koko Maple Noodle Otter Peanut Quokka Rascal Sprout Tofu Waldo Yeti Zesty Banjo'.split(' ');
+// ---- course: ramps alternate direction; each gap holds a spinner
+const segs = [], bars = [];
+const seg = (x1, y1, x2, y2) => { segs.push({ x1, y1, x2, y2 }); const l = Math.hypot(x2 - x1, y2 - y1), m = new THREE.Mesh(new THREE.BoxGeometry(l, .22, 1.2), new THREE.MeshStandardMaterial({ color: 0x5a4bd1 })); m.position.set((x1 + x2) / 2, (y1 + y2) / 2, 0); m.rotation.z = Math.atan2(y2 - y1, x2 - x1); st.scene.add(m); };
+seg(-W, 4, -W, -H); seg(W, 4, W, -H);
+for (let i = 0, y = -4; y > -H + 14; i++, y -= 6) { if (i % 2 === 0) seg(-W, y, 2.4, y - 1.8); else seg(W, y, -2.4, y - 1.8); const bx = i % 2 ? 2.6 : -2.6; if (i % 3 === 1) bars.push({ x: bx * .4, y: y - 3.2, l: 1.7, a: rand(0, 6), w: (i % 2 ? 1 : -1) * 2.2 }); }
+seg(-W, -H + 12, -.55, -H + 5); seg(W, -H + 12, .55, -H + 5); seg(-.55, -H + 5, -.55, -H + 1); seg(.55, -H + 5, .55, -H + 1);
+for (const b of bars) { const m = new THREE.Mesh(new THREE.BoxGeometry(b.l * 2, .28, .9), new THREE.MeshStandardMaterial({ color: 0xff5a8a })); b.mesh = m; st.scene.add(m); }
+const finish = new THREE.Mesh(new THREE.PlaneGeometry(1.2, .3), new THREE.MeshBasicMaterial({ color: 0xffffff })); finish.position.set(0, -H, 0); st.scene.add(finish);
+const wall = new THREE.Mesh(new THREE.PlaneGeometry(W * 2, H + 20), new THREE.MeshStandardMaterial({ color: 0x1f1a44 })); wall.position.set(0, -H / 2 + 2, -.7); st.scene.add(wall);
+// ---- marbles
+const label = t => { const cv = document.createElement('canvas'); cv.width = 256; cv.height = 96; const g = cv.getContext('2d'); g.font = '900 64px system-ui,sans-serif'; g.textAlign = 'center'; g.lineWidth = 10; g.strokeStyle = '#000'; g.strokeText(t, 128, 70); g.fillStyle = '#fff'; g.fillText(t, 128, 70); const s = new THREE.Sprite(new THREE.SpriteMaterial({ map: new THREE.CanvasTexture(cv), depthTest: false, transparent: true })); s.scale.set(1.5, .56, 1); s.renderOrder = 5; return s; };
+let marbles = NAMES.slice(0, N0).map((n, i) => ({ n, hue: i / N0, x: 0, y: 0, vx: 0, vy: 0, out: false, done: false, rank: 0, sprite: label(n) }));
+marbles.forEach(m => st.scene.add(m.sprite));
+const mm = instances(new THREE.SphereGeometry(R, 14, 10), new THREE.MeshStandardMaterial({ roughness: .15, metalness: .25 }), N0); st.scene.add(mm.mesh);
+let round = 0, finished = 0, camY = 0, phase = 'race', hold = 0, winner = null, outNow = [], elim = 0;
+function startRound() { round++; finished = 0; phase = 'race'; const live = marbles.filter(m => !m.out); elim = live.length <= 3 ? live.length - 1 : Math.max(2, Math.round(live.length * .3));
+  live.forEach((m, i) => { m.done = false; m.rank = 0; m.x = ((i % 8) - 3.5) * .55; m.y = 3 - Math.floor(i / 8) * .55; m.vx = rand(-.5, .5); m.vy = 0; }); st.hud.banner(live.length === 2 ? 'FINAL' : `ROUND ${round}`, 1.6); }
+function collideSeg(m, s, r) { const dx = s.x2 - s.x1, dy = s.y2 - s.y1, l2 = dx * dx + dy * dy; let t = clamp(((m.x - s.x1) * dx + (m.y - s.y1) * dy) / l2, 0, 1); const px = s.x1 + t * dx, py = s.y1 + t * dy, ex = m.x - px, ey = m.y - py, d = Math.hypot(ex, ey);
+  if (d < r && d > 1e-6) { const nx = ex / d, ny = ey / d; m.x = px + nx * r; m.y = py + ny * r; const vn = m.vx * nx + m.vy * ny; if (vn < 0) { m.vx -= 1.45 * vn * nx; m.vy -= 1.45 * vn * ny; } return { nx, ny, px, py }; } }
+function update(dt0) {
+  const steps = 3 * SPEED, dt = dt0 / 3;
+  for (let s = 0; s < steps; s++) {
+    if (phase === 'race') {
+      for (const b of bars) { b.a += b.w * dt; b.mesh.position.set(b.x, b.y, 0); b.mesh.rotation.z = b.a; }
+      const live = marbles.filter(m => !m.out && !m.done);
+      for (const m of live) { m.vy -= 15 * dt; m.x += m.vx * dt; m.y += m.vy * dt; m.vx *= .9995;
+        for (const sg of segs) collideSeg(m, sg, R + .11);
+        for (const b of bars) { const ca = Math.cos(b.a), sa = Math.sin(b.a); collideSeg(m, { x1: b.x - ca * b.l, y1: b.y - sa * b.l, x2: b.x + ca * b.l, y2: b.y + sa * b.l }, R + .14); } }
+      for (let i = 0; i < live.length; i++) for (let j = i + 1; j < live.length; j++) { const a = live[i], b = live[j], dx = b.x - a.x, dy = b.y - a.y, d2 = dx * dx + dy * dy; if (d2 < 4 * R * R && d2 > 1e-8) { const d = Math.sqrt(d2), nx = dx / d, ny = dy / d, o = (2 * R - d) / 2; a.x -= nx * o; a.y -= ny * o; b.x += nx * o; b.y += ny * o; const vn = (b.vx - a.vx) * nx + (b.vy - a.vy) * ny; if (vn < 0) { a.vx += vn * nx * .5; a.vy += vn * ny * .5; b.vx -= vn * nx * .5; b.vy -= vn * ny * .5; } } }
+      const total = marbles.filter(m => !m.out).length;
+      for (const m of live) { if (m.y < -H) { m.done = true; m.rank = ++finished; sfx('tick', .6); } }
+      if (finished >= total - elim || (live.length && finished >= total - 1)) { // round over: everyone still racing is out
+        for (const m of marbles) if (!m.out && !m.done) { m.out = true; outNow.push(m.n); sfx('pop'); st.shake(3); }
+        st.hud.banner(outNow.length ? `OUT: ${outNow.slice(-3).join(' · ')}` : 'ROUND OVER', 2.2); outNow = []; phase = 'hold'; hold = 2.4;
+        const left = marbles.filter(m => !m.out); if (left.length <= 1) { winner = left[0]; phase = 'end'; st.hud.banner((winner?.n || '?') + ' WINS!', 99); sfx('win'); } }
+    } else if (phase === 'hold') { hold -= dt; if (hold <= 0) startRound(); }
+  }
+  const live = marbles.filter(m => !m.out), alive = live.length, racing = live.filter(m => !m.done);
+  st.hud.left(`ROUND ${round}<br><span style="color:#ffd34d;font-size:8vmin">${alive}</span> left`); st.hud.right(`FINISHED ${finished}<br>OUT ${marbles.length - alive}`);
+  const ys = racing.map(m => m.y).sort((a, b) => b - a), lead = ys.length ? ys[Math.min(2, ys.length - 1)] : -H; camY += (lead - 3 - camY) * Math.min(1, dt0 * 3);
+  window.__game = { round, alive, finished, winner: winner?.n || null, phase };
+}
+function pre() {
+  let i = 0; for (const m of marbles) { const vis = !m.out && (!m.done || phase !== 'hold'); m.sprite.visible = !m.out && !m.done; if (!m.out) { mm.set(i, m.x, m.y, 0, 1); mm.hsl(i, m.hue, .8, .55); i++; m.sprite.position.set(m.x, m.y + .55, .6); } }
+  mm.mesh.count = i; mm.done();
+  st.camera.position.set(0, camY, st.dist * 1.0 + 1); st.camera.lookAt(0, camY, 0);
+}
+startRound(); st.run(update, pre);
+</script></body></html>
