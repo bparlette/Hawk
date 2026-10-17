@@ -66,14 +66,14 @@ function step(dt) {
   for (const b of bodies) { if (b.rest) continue; b.vy += grav * 1100 * dt; b.x += b.vx * dt; b.y += b.vy * dt; b.rot += b.vr * dt;
     if (b.x < 20 || b.x > WW - 20) { b.vx *= -.6; b.x = Math.max(20, Math.min(WW - 20, b.x)); }
     const sy = surfY(grav), hit = grav > 0 ? b.y + b.r >= sy : b.y - b.r <= sy;
-    if (hit) { b.y = sy - grav * b.r; if (Math.abs(b.vy) > 140) { addSpill(b.x, grav, b.kind === 'crate' ? 18 : 12); shake = Math.max(shake, 5); sfx('splat'); } b.vy *= -.35; b.vx *= .7; b.vr *= .5; if (Math.abs(b.vy) < 60) { b.vy = 0; b.rest = true; } } }
+    if (hit) { b.y = sy - grav * b.r; if (Math.abs(b.vy) > 140) { addSpill(b.x, grav, b.kind === 'crate' ? 18 : 14); shake = Math.max(shake, 5); sfx('splat'); } b.vy *= -.35; b.vx *= .7; b.vr *= .5; if (Math.abs(b.vy) < 60) { b.vy = 0; b.rest = true; } } }
   // droplets
   for (const d of drops) { d.vy += grav * 900 * dt; d.x += d.vx * dt; d.y += d.vy * dt; const sy = surfY(grav);
     if ((grav > 0 && d.y >= sy) || (grav < 0 && d.y <= sy)) { d.dead = true; addSpill(d.x, grav, d.fat ? 14 : 5); } }
   drops = drops.filter(d => !d.dead);
   for (const q of parts) { q.life -= dt; q.x += q.vx * dt; q.y += q.vy * dt; q.vy += grav * 300 * dt; } parts = parts.filter(q => q.life > 0);
   shake = Math.max(0, shake - 40 * dt); flash = Math.max(0, flash - dt); if (banner) { banner.t -= dt; if (banner.t <= 0) banner = null; }
-  window.__gj = { score: Math.round(score), time: +time.toFixed(2), gravity: grav, mess: Math.round(spills.reduce((a, s) => a + s.size, 0)), over };
+  window.__game = window.__gj = { score: Math.round(score), time: +time.toFixed(2), gravity: grav, mess: Math.round(spills.reduce((a, s) => a + s.size, 0)), over };
 }
 
 function drawJanitor() {
@@ -102,7 +102,7 @@ function draw() {
   for (const s of spills) { const y = surfY(s.side); g.fillStyle = s.c; g.beginPath(); g.ellipse(s.x, y - s.side * 2, s.size, Math.max(3, s.size * .22), 0, 0, 7); g.fill(); g.fillStyle = 'rgba(255,255,255,.35)'; g.beginPath(); g.ellipse(s.x - s.size * .3, y - s.side * 3, s.size * .3, 1.5, 0, 0, 7); g.fill(); }
   for (const b of bodies) { g.save(); g.translate(b.x, b.y); g.rotate(b.rot);
     if (b.kind === 'crate') { g.fillStyle = '#b8803a'; g.fillRect(-15, -15, 30, 30); g.strokeStyle = '#6b4518'; g.lineWidth = 2; g.strokeRect(-15, -15, 30, 30); g.beginPath(); g.moveTo(-15, -15); g.lineTo(15, 15); g.stroke(); }
-    else { g.fillStyle = '#f1f1f1'; g.fillRect(-8, -9, 16, 18); g.strokeStyle = '#f1f1f1'; g.lineWidth = 3; g.beginPath(); g.arc(10, 0, 5, -1.5, 1.5); g.stroke(); g.fillStyle = '#6b3b1d'; g.fillRect(-6, -7, 12, 4); }
+    else { g.fillStyle = '#ff9a3c'; g.strokeStyle = '#111'; g.lineWidth = 1.5; g.beginPath(); g.ellipse(0, 3, 11, 8, 0, 0, 7); g.fill(); g.stroke(); g.beginPath(); g.arc(8, -3, 7, 0, 7); g.fill(); g.stroke(); g.beginPath(); g.moveTo(3, -8); g.lineTo(4, -15); g.lineTo(8, -9); g.moveTo(9, -9); g.lineTo(13, -15); g.lineTo(14, -6); g.fill(); g.stroke(); g.fillStyle = '#111'; g.fillRect(6, -4, 2, 3); g.fillRect(10, -4, 2, 3); g.strokeStyle = '#ff9a3c'; g.lineWidth = 3; g.beginPath(); g.moveTo(-10, 3); g.quadraticCurveTo(-18, -4, -12, -10); g.stroke(); }
     g.restore(); }
   for (const d of drops) { g.fillStyle = d.c; g.beginPath(); g.arc(d.x, d.y, d.r, 0, 7); g.fill(); }
   drawJanitor();

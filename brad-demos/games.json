@@ -1997,8 +1997,8 @@
    "autostart": [],
    "orientation": "any",
    "path": "g/tiny-kaiju/index.html",
-   "note": "One-screen viral demo. Source: brad-demos/g/tiny-kaiju",
-   "thumb": "thumbs/tiny-kaiju.webp?v=1792220459"
+   "note": "He is 2 inches tall and he hates this dollhouse",
+   "thumb": "thumbs/tiny-kaiju.webp?v=1792246231"
   },
   {
    "id": "gravity-janitor",
@@ -2015,41 +2015,8 @@
    "autostart": [],
    "orientation": "any",
    "path": "g/gravity-janitor/index.html",
-   "note": "One-screen viral demo. Source: brad-demos/g/gravity-janitor",
-   "thumb": "thumbs/gravity-janitor.webp?v=1792220459"
-  },
-  {
-   "id": "ball-avalanche",
-   "title": "Ball Avalanche",
-   "category": "Viral Demos",
-   "keys": {
-    "left": "KeyA",
-    "right": "KeyD"
-   },
-   "labels": {},
-   "autostart": [],
-   "orientation": "any",
-   "path": "g/ball-avalanche/index.html",
-   "note": "One-screen viral demo. Source: brad-demos/g/ball-avalanche",
-   "thumb": "thumbs/ball-avalanche.webp?v=1792220460"
-  },
-  {
-   "id": "ragdoll-launch",
-   "title": "Ragdoll Launch",
-   "category": "Viral Demos",
-   "keys": {
-    "up": "KeyW",
-    "down": "KeyS",
-    "attack": "Space"
-   },
-   "labels": {
-    "attack": "CHARGE / FIRE"
-   },
-   "autostart": [],
-   "orientation": "any",
-   "path": "g/ragdoll-launch/index.html",
-   "note": "One-screen viral demo. Source: brad-demos/g/ragdoll-launch",
-   "thumb": "thumbs/ragdoll-launch.webp?v=1792220460"
+   "note": "I made a janitor game where gravity flips every 5 seconds",
+   "thumb": "thumbs/gravity-janitor.webp?v=1792246231"
   },
   {
    "id": "voxel-demolition",
@@ -2072,24 +2039,12 @@
    "autostart": [],
    "orientation": "any",
    "path": "g/voxel-demolition/index.html",
-   "note": "One-screen viral demo. Source: brad-demos/g/voxel-demolition",
-   "thumb": "thumbs/voxel-demolition.webp?v=1792220461"
-  },
-  {
-   "id": "marble-elimination",
-   "title": "Marble Elimination",
-   "category": "Viral Demos",
-   "keys": {},
-   "labels": {},
-   "autostart": [],
-   "orientation": "any",
-   "path": "g/marble-elimination/index.html",
-   "note": "One-screen viral demo. Source: brad-demos/g/marble-elimination",
-   "thumb": "thumbs/marble-elimination.webp?v=1792220461"
+   "note": "9,000 voxels vs 12 shells",
+   "thumb": "thumbs/voxel-demolition.webp?v=1792246231"
   },
   {
    "id": "glass-stairs",
-   "title": "Glass Stairs",
+   "title": "Cat Glass Stairs",
    "category": "Viral Demos",
    "keys": {
     "attack": "Space"
@@ -2100,8 +2055,8 @@
    "autostart": [],
    "orientation": "any",
    "path": "g/glass-stairs/index.html",
-   "note": "One-screen viral demo. Source: brad-demos/g/glass-stairs",
-   "thumb": "thumbs/glass-stairs.webp?v=1792220461"
+   "note": "Will the cat survive the glass stairs?",
+   "thumb": "thumbs/glass-stairs.webp?v=1792246232"
   },
   {
    "id": "black-hole",
@@ -2117,8 +2072,8 @@
    "autostart": [],
    "orientation": "any",
    "path": "g/black-hole/index.html",
-   "note": "One-screen viral demo. Source: brad-demos/g/black-hole",
-   "thumb": "thumbs/black-hole.webp?v=1792220462"
+   "note": "It starts by eating coins",
+   "thumb": "thumbs/black-hole.webp?v=1792246232"
   },
   {
    "id": "speed-ramp",
@@ -2137,8 +2092,8 @@
    "autostart": [],
    "orientation": "any",
    "path": "g/speed-ramp/index.html",
-   "note": "One-screen viral demo. Source: brad-demos/g/speed-ramp",
-   "thumb": "thumbs/speed-ramp.webp?v=1792220462"
+   "note": "This ramp is too steep",
+   "thumb": "thumbs/speed-ramp.webp?v=1792246232"
   },
   {
    "id": "rope-bridge",
@@ -2153,12 +2108,12 @@
    "autostart": [],
    "orientation": "any",
    "path": "g/rope-bridge/index.html",
-   "note": "One-screen viral demo. Source: brad-demos/g/rope-bridge",
-   "thumb": "thumbs/rope-bridge.webp?v=1792220463"
+   "note": "How much can this bridge hold?",
+   "thumb": "thumbs/rope-bridge.webp?v=1792246232"
   },
   {
-   "id": "crowd-multiplier",
-   "title": "Crowd Multiplier",
+   "id": "cat-avalanche",
+   "title": "Cat Avalanche",
    "category": "Viral Demos",
    "keys": {
     "left": "KeyA",
@@ -2167,13 +2122,43 @@
    "labels": {},
    "autostart": [],
    "orientation": "any",
-   "path": "g/crowd-multiplier/index.html",
-   "note": "One-screen viral demo. Source: brad-demos/g/crowd-multiplier",
-   "thumb": "thumbs/crowd-multiplier.webp?v=1792220463"
+   "path": "g/cat-avalanche/index.html",
+   "note": "5 cats turned into 4,000",
+   "thumb": "thumbs/cat-avalanche.webp?v=1792246231"
   },
   {
-   "id": "bulldozer-wedge",
-   "title": "The Unstoppable Wedge",
+   "id": "zombie-launch",
+   "title": "Zombie Launch",
+   "category": "Viral Demos",
+   "keys": {
+    "up": "KeyW",
+    "down": "KeyS",
+    "attack": "Space"
+   },
+   "labels": {
+    "attack": "CHARGE / FIRE"
+   },
+   "autostart": [],
+   "orientation": "any",
+   "path": "g/zombie-launch/index.html",
+   "note": "Cannon. Zombie. Zero brain cells.",
+   "thumb": "thumbs/zombie-launch.webp?v=1792246231"
+  },
+  {
+   "id": "cat-derby",
+   "title": "Cat Derby",
+   "category": "Viral Demos",
+   "keys": {},
+   "labels": {},
+   "autostart": [],
+   "orientation": "any",
+   "path": "g/cat-derby/index.html",
+   "note": "36 cats in bubbles. Last 11 are out. Pick yours",
+   "thumb": "thumbs/cat-derby.webp?v=1792246232"
+  },
+  {
+   "id": "zombie-horde",
+   "title": "Zombie Horde",
    "category": "Viral Demos",
    "keys": {
     "left": "KeyA",
@@ -2182,9 +2167,24 @@
    "labels": {},
    "autostart": [],
    "orientation": "any",
-   "path": "g/bulldozer-wedge/index.html",
-   "note": "One-screen viral demo. Source: brad-demos/g/bulldozer-wedge",
-   "thumb": "thumbs/bulldozer-wedge.webp?v=1792220464"
+   "path": "g/zombie-horde/index.html",
+   "note": "5 zombies vs a giant cat",
+   "thumb": "thumbs/zombie-horde.webp?v=1792246232"
+  },
+  {
+   "id": "zombie-plow",
+   "title": "Zombie Plow",
+   "category": "Viral Demos",
+   "keys": {
+    "left": "KeyA",
+    "right": "KeyD"
+   },
+   "labels": {},
+   "autostart": [],
+   "orientation": "any",
+   "path": "g/zombie-plow/index.html",
+   "note": "4,900 zombies. One plow.",
+   "thumb": "thumbs/zombie-plow.webp?v=1792246232"
   }
  ]
 }

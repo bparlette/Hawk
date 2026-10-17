@@ -103,3 +103,7 @@ button { font: inherit; color: inherit; }
 .foot { margin: 22px 4px 0; font-size: 11px; color: #6c7286; line-height: 1.5; }
 .card .share { position: absolute; top: 6px; right: 6px; width: 28px; height: 28px; border-radius: 8px; background: rgba(7,8,12,.75); color: #fff; font-size: 15px; line-height: 28px; text-align: center; cursor: pointer; border: 1px solid #2a2d38; }
 .card .share:hover { background: #ffd23c; color: #14101f; border-color: #ffd23c; }
+
+.psearch { width: 100%; box-sizing: border-box; margin: 6px 0 4px; padding: 11px 14px; border-radius: 10px; border: 1px solid #2a2d38; background: #12141b; color: #fff; font: 700 15px system-ui; }
+.catbtn { background: none; border: 0; width: 100%; text-align: left; cursor: pointer; font-family: inherit; }
+.more { grid-column: 1 / -1; padding: 12px; border-radius: 10px; border: 1px solid #2a2d38; background: #1a1d27; color: #ffd23c; font: 900 13px system-ui; cursor: pointer; }

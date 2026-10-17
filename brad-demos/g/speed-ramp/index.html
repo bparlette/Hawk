@@ -3,21 +3,24 @@
 // Speed Ramp: a low-poly supercar down an impossibly steep ramp, over a gap, onto tiny moving barges. Hold SPACE for nitro on the ramp,
 // W/S pitch in the air, A/D drift, R retry. Landing flat on a barge scores; the radial speed-lines are CSS, the FOV kick is the camera.
 import { createStage, sfx, rand, clamp, THREE } from '../_vendor/gp3d.js';
-const st = createStage({ bg: 0x7cc3ff, fitWidth: 9, fov: 62, fog: [80, 330] }); st.light();
+import { toon, carGeo, zombieGeo, crowd, hero, particles, sky } from '../_vendor/gpkit.js';
+const st = createStage({ bg: 0x7cc3ff, fitWidth: 9, fov: 62, fog: [80, 330] }); st.light(); sky(st.scene, 0x2f7bff, 0xffd9a8, [120, 420]); const fx = particles(st.scene, 500);
 const RAMP_H = 46, RAMP_L = 62, TH = Math.atan2(RAMP_H, RAMP_L), G = 22, LAUNCH = .30, WATER = -2;
 const water = new THREE.Mesh(new THREE.PlaneGeometry(900, 900), new THREE.MeshStandardMaterial({ color: 0x1b6fa8, roughness: .2, metalness: .3 })); water.rotation.x = -Math.PI / 2; water.position.y = WATER; st.scene.add(water);
-const ramp = new THREE.Mesh(new THREE.BoxGeometry(14, 1.2, Math.hypot(RAMP_H, RAMP_L)), new THREE.MeshStandardMaterial({ color: 0xe8e8ef })); ramp.position.set(0, RAMP_H / 2, RAMP_L / 2); ramp.rotation.x = TH; ramp.position.y -= .6; st.scene.add(ramp);
+const ramp = new THREE.Mesh(new THREE.BoxGeometry(14, 1.2, Math.hypot(RAMP_H, RAMP_L)), toon(0xe8e8ef)); ramp.position.set(0, RAMP_H / 2, RAMP_L / 2); ramp.rotation.x = TH; ramp.position.y -= .6; st.scene.add(ramp);
 for (let i = 0; i < 14; i++) { const t = (i + .5) / 14, m = new THREE.Mesh(new THREE.BoxGeometry(.4, .05, 2.6), new THREE.MeshBasicMaterial({ color: 0xffd34d })); m.position.set(0, RAMP_H * (1 - t) + .02, RAMP_L * t); m.rotation.x = TH; st.scene.add(m); }
 const tower = new THREE.Mesh(new THREE.BoxGeometry(18, RAMP_H, 18), new THREE.MeshStandardMaterial({ color: 0x5b6784 })); tower.position.set(0, RAMP_H / 2 - 1.4, -9); 
-const kick = new THREE.Mesh(new THREE.BoxGeometry(14, 1, 8), new THREE.MeshStandardMaterial({ color: 0xe8e8ef })); kick.position.set(0, 1, RAMP_L + 3); kick.rotation.x = -LAUNCH * .6; st.scene.add(kick);
-const barges = [[RAMP_L + 48, 2.2, 9], [RAMP_L + 78, -3, 8], [RAMP_L + 112, 4, 7]].map(([z, ph, w], i) => { const g = new THREE.Group(), deck = new THREE.Mesh(new THREE.BoxGeometry(w, .8, 22), new THREE.MeshStandardMaterial({ color: 0xd9534f })); const target = new THREE.Mesh(new THREE.RingGeometry(.8, 2.2, 24), new THREE.MeshBasicMaterial({ color: 0xffffff, side: THREE.DoubleSide })); target.rotation.x = -Math.PI / 2; target.position.y = .45; g.add(deck, target); g.position.set(0, WATER + .4, z); st.scene.add(g); return { g, z, w, len: 22, ph, x: 0, i }; });
+const kick = new THREE.Mesh(new THREE.BoxGeometry(14, 1, 8), toon(0xe8e8ef)); kick.position.set(0, 1, RAMP_L + 3); kick.rotation.x = -LAUNCH * .6; st.scene.add(kick);
+const barges = [[RAMP_L + 48, 2.2, 9], [RAMP_L + 78, -3, 8], [RAMP_L + 112, 4, 7]].map(([z, ph, w], i) => { const g = new THREE.Group(), deck = new THREE.Mesh(new THREE.BoxGeometry(w, .8, 22), toon(0xd9534f)); const target = new THREE.Mesh(new THREE.RingGeometry(.8, 2.2, 24), new THREE.MeshBasicMaterial({ color: 0xffffff, side: THREE.DoubleSide })); target.rotation.x = -Math.PI / 2; target.position.y = .45; g.add(deck, target); g.position.set(0, WATER + .4, z); st.scene.add(g); return { g, z, w, len: 22, ph, x: 0, i }; });
 // car
-const car = new THREE.Group(), body = new THREE.Mesh(new THREE.BoxGeometry(2, .6, 4.2), new THREE.MeshStandardMaterial({ color: 0xff2d55, metalness: .5, roughness: .3 })); body.position.y = .55; const cab = new THREE.Mesh(new THREE.BoxGeometry(1.6, .5, 1.8), new THREE.MeshStandardMaterial({ color: 0x1b1f2a })); cab.position.set(0, 1, -.2); car.add(body, cab);
-for (const [x, z] of [[-1, 1.3], [1, 1.3], [-1, -1.3], [1, -1.3]]) { const w = new THREE.Mesh(new THREE.CylinderGeometry(.42, .42, .35, 12), new THREE.MeshStandardMaterial({ color: 0x111 })); w.rotation.z = Math.PI / 2; w.position.set(x, .4, z); car.add(w); } st.scene.add(car);
+const car = new THREE.Group(), carBody = hero(carGeo(), 0xff2d55, .03); carBody.position.y = -.85; car.add(carBody); st.scene.add(car);
+const ZC = crowd(st.scene, zombieGeo(), 36); for (let i = 0; i < 36; i++) ZC.color(i, [0x7fbf6a, 0x8fcf7a][i % 2]);
+const sky2 = new THREE.InstancedMesh(new THREE.BoxGeometry(1, 1, 1), toon(0xffffff), 40); { const o = new THREE.Object3D(); for (let i = 0; i < 40; i++) { const h = rand(25, 90); o.position.set(-240 + i * 12 + rand(-4, 4), h / 2 - 2, 330 + rand(0, 30)); o.scale.set(rand(8, 12), h, rand(8, 12)); o.updateMatrix(); sky2.setMatrixAt(i, o.matrix); sky2.setColorAt(i, new THREE.Color().setHSL(.6 + rand(-.05, .05), .3, rand(.35, .55))); } st.scene.add(sky2); }
 const lines = document.createElement('div'); lines.style.cssText = 'position:fixed;inset:0;pointer-events:none;opacity:0;background:repeating-conic-gradient(from 0deg at 50% 52%,rgba(255,255,255,.0) 0 5deg,rgba(255,255,255,.22) 5deg 5.6deg);-webkit-mask:radial-gradient(circle at 50% 52%,transparent 28%,#000 75%);mask:radial-gradient(circle at 50% 52%,transparent 28%,#000 75%)'; document.body.appendChild(lines);
 let s, v, phase, pos, vel, pitch, lat, best = 0, tries = 0, score = 0, result = '', rest = 0, nitro = 0, slow = 1, camPos = new THREE.Vector3(), splashes = [];
 function reset() { tries++; phase = 'ramp'; s = 0; v = 6; pitch = -TH; lat = 0; pos = new THREE.Vector3(0, RAMP_H + 1, 0); vel = new THREE.Vector3(); result = ''; rest = 0; nitro = 100; st.hud.banner('GO', .8); }
 function update(dt0) {
+  fx.update(dt0); if (phase === 'ramp' && v > 12) fx.emit({ x: pos.x + rand(-.6, .6), y: pos.y - .6, z: pos.z - 1.5, vx: rand(-1, 1), vy: rand(1, 3), vz: -3, size: .3, life: .45, color: Math.random() < .5 ? 0xffd34d : 0xff7a1a, g: 6 });
   slow += (1 - slow) * Math.min(1, dt0 * 1.5); const dt = dt0 * slow; const k = st.keys;
   for (const b of barges) { b.x = Math.sin(st.t * .5 + b.ph) * 5; b.g.position.x = b.x; }
   if (phase === 'ramp') { const boost = (k[' '] || st.ptr.down) && nitro > 0 ? 26 : 0; nitro = clamp(nitro - (boost ? 28 : -5) * dt, 0, 100);
@@ -25,8 +28,8 @@ function update(dt0) {
     pos.set(0, RAMP_H * (1 - t) + 1, RAMP_L * t); pitch = -TH; if (t >= 1) { phase = 'air'; const a = LAUNCH; vel.set(0, Math.sin(a) * v, Math.cos(a) * v); pitch = a * .4; sfx('whoosh'); st.shake(4); } }
   else if (phase === 'air') {
     pitch += ((k.w ? 1 : 0) - (k.s ? 1 : 0)) * 1.4 * dt; lat += ((k.d ? 1 : 0) - (k.a ? 1 : 0)) * 6 * dt; vel.y -= G * dt; pos.addScaledVector(vel, dt); pos.x = clamp(pos.x + lat * dt, -12, 12);
-    for (const b of barges) { if (pos.y <= WATER + 1.3 && Math.abs(pos.z - b.z) < b.len / 2 && Math.abs(pos.x - b.x) < b.w / 2 + .6) { const flat = Math.abs(pitch + (vel.y / Math.max(5, vel.z)) * 1.0) ; const dx = Math.abs(pos.x - b.x); const pts = Math.round((b.i + 1) * 100 * (flat < .35 ? 1.6 : 1) * (1 - dx / (b.w))); score += pts; result = flat < .35 ? `PERFECT +${pts}` : `LANDED +${pts}`; phase = 'done'; slow = .2; sfx('win'); st.shake(10); st.hud.banner(result, 2); rest = 2.4; vel.set(0, 0, 0); pos.y = WATER + 1.3; break; } }
-    if (phase === 'air' && pos.y < WATER + .2) { phase = 'done'; result = 'SPLASH'; for (let i = 0; i < 30; i++) splashes.push({ p: pos.clone(), v: new THREE.Vector3(rand(-4, 4), rand(4, 12), rand(-3, 6)), l: 1 }); sfx('splat'); st.shake(8); st.hud.banner('SPLASH', 1.5); rest = 2; slow = .3; }
+    for (const b of barges) { if (pos.y <= WATER + 1.3 && Math.abs(pos.z - b.z) < b.len / 2 && Math.abs(pos.x - b.x) < b.w / 2 + .6) { const flat = Math.abs(pitch + (vel.y / Math.max(5, vel.z)) * 1.0) ; const dx = Math.abs(pos.x - b.x); const pts = Math.round((b.i + 1) * 100 * (flat < .35 ? 1.6 : 1) * (1 - dx / (b.w))); score += pts; result = flat < .35 ? `PERFECT +${pts}` : `LANDED +${pts}`; phase = 'done'; slow = .2; sfx('win'); st.shake(10); fx.burst(40, { x: pos.x, y: WATER + 1.5, z: pos.z, size: .35, life: 1, color: 0xffd34d, g: 8 }, 6); st.hud.banner(result, 2); rest = 2.4; vel.set(0, 0, 0); pos.y = WATER + 1.3; break; } }
+    if (phase === 'air' && pos.y < WATER + .2) { phase = 'done'; result = 'SPLASH'; fx.burst(50, { x: pos.x, y: WATER, z: pos.z, size: .5, life: 1.2, color: 0xcfeaff, g: 14 }, 8); sfx('splat'); st.shake(8); st.hud.banner('SPLASH', 1.5); rest = 2; slow = .3; }
     pitch = clamp(pitch, -1.2, 1.2); }
   else { rest -= dt0; if (rest <= 0 || k.r) reset(); }
   for (const p of splashes) { p.v.y -= 20 * dt0; p.p.addScaledVector(p.v, dt0); p.l -= dt0; } splashes = splashes.filter(p => p.l > 0);
@@ -36,6 +39,7 @@ function update(dt0) {
   window.__game = { phase, score, speed: Math.round(v), tries, y: Math.round(pos.y), z: Math.round(pos.z), result };
 }
 let spl; function pre() {
+  { let i = 0; for (const b of barges) for (let k = 0; k < 12; k++) { const row = k % 4, col = (k / 4) | 0; ZC.set(i++, b.x + (col - 1) * (b.w / 4), WATER + .85 + Math.abs(Math.sin(st.t * 6 + k)) * .25, b.z - 7 + row * 4.5, .8, Math.PI + Math.sin(st.t + k) * .3, 0, 0); } ZC.done(i); }
   car.position.copy(pos); car.rotation.set(phase === 'ramp' ? TH : -pitch, 0, 0); car.rotation.order = 'YXZ'; if (phase === 'air') car.rotation.x = -pitch - Math.atan2(vel.y, vel.z) * .0 + Math.atan2(-vel.y, vel.z) * .0 - (pitch > 0 ? 0 : 0);
   const back = new THREE.Vector3(0, phase === 'ramp' ? 4.5 + 13 * (RAMP_H / RAMP_L) : 5.5, -13 - Math.min(8, v * .06)); const tgt = pos.clone().add(back); camPos.lerp(tgt, phase === 'ramp' ? .25 : .12); st.camera.position.copy(camPos);
   st.camera.lookAt(pos.x * .5, pos.y - 1.5, pos.z + 16); st.camera.fov = 62 + clamp((v - 20) * .5, 0, 26); st.camera.updateProjectionMatrix();

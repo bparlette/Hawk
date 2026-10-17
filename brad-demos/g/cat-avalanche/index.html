@@ -1,0 +1,68 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no"><title>Cat Avalanche</title></head><body>
+<script type="module">
+// Cat Avalanche: drop 5 cats into multiplier gates until the board floods with up to 6,000 of them. A/D or drag aims the dropper.
+// Cats are one InstancedMesh of a merged low-poly cat; pegs are a lattice, so collision is O(1) per cat (no physics engine).
+import { createStage, sfx, rand, clamp, THREE } from '../_vendor/gp3d.js';
+import { toon, catGeo, crowd, particles } from '../_vendor/gpkit.js';
+const st = createStage({ bg: 0x120a2a, fitWidth: 11.4 }); st.light();
+const CAP = 4000, W = 5.4, BR = 0.26, PR = 0.14, DX = 1.05, DY = 1.15, Y0 = 3, BOARD = 46, G = 22, SC = .56;
+const X = new Float32Array(CAP), Y = new Float32Array(CAP), VX = new Float32Array(CAP), VY = new Float32Array(CAP), HUE = new Float32Array(CAP), ROT = new Float32Array(CAP), SPIN = new Float32Array(CAP);
+let n = 0, saved = 0, lx = 0, emitAcc = 0, camY = 0, popCd = 0, mile = 0;
+const GATES = [
+  { y: -8, ops: [['x2', -W, 0], ['+50', 0, W]] }, { y: -14, ops: [['x3', -W, -1.8], ['x2', -1.8, 1.8], ['x3', 1.8, W]] },
+  { y: -20, ops: [['+100', -W, -1.8], ['x5', -1.8, 1.8], ['+100', 1.8, W]] }, { y: -26, ops: [['x2', -W, -W / 3], ['x4', -W / 3, W / 3], ['x2', W / 3, W]] },
+  { y: -32, ops: [['x10', -1.2, 1.2], ['x3', -W, -1.2], ['x3', 1.2, W]] }, { y: -38, ops: [['x2', -W, 0], ['x2', 0, W]] },
+];
+const lab = (t, c) => { const cv = document.createElement('canvas'); cv.width = 256; cv.height = 128; const g = cv.getContext('2d'); g.font = '900 96px Impact,Arial Black,sans-serif'; g.textAlign = 'center'; g.lineWidth = 14; g.strokeStyle = '#000'; g.strokeText(t, 128, 98); g.fillStyle = c; g.fillText(t, 128, 98); return new THREE.MeshBasicMaterial({ map: new THREE.CanvasTexture(cv), transparent: true }); };
+for (const gt of GATES) for (const [t, a, b] of gt.ops) {
+  const good = t[0] === 'x' ? +t.slice(1) >= 3 : +t.slice(1) >= 100, col = good ? 0x39ff9a : 0x4aa8ff;
+  const box = new THREE.Mesh(new THREE.BoxGeometry(b - a - 0.08, 0.5, 0.6), new THREE.MeshBasicMaterial({ color: col, transparent: true, opacity: 0.3 })); box.position.set((a + b) / 2, gt.y, 0); st.scene.add(box);
+  for (const dy of [-.28, .28]) { const e = new THREE.Mesh(new THREE.BoxGeometry(b - a - 0.08, .06, .7), new THREE.MeshBasicMaterial({ color: col })); e.position.set((a + b) / 2, gt.y + dy, 0); st.scene.add(e); }
+  const tag = new THREE.Mesh(new THREE.PlaneGeometry(1.7, .85), lab(t.replace('x', '×'), good ? '#9bffc8' : '#bfe0ff')); tag.position.set((a + b) / 2, gt.y + .75, .6); st.scene.add(tag);
+}
+const wall = toon(0x2a1f5c);
+for (const s of [-1, 1]) { const w = new THREE.Mesh(new THREE.BoxGeometry(.5, BOARD + 10, 1.6), wall); w.position.set(s * (W + .25), -BOARD / 2 + 4, 0); st.scene.add(w); const g = new THREE.Mesh(new THREE.BoxGeometry(.08, BOARD + 10, .1), new THREE.MeshBasicMaterial({ color: 0xff4fd8 })); g.position.set(s * (W - .05), -BOARD / 2 + 4, .85); st.scene.add(g); }
+const bc = document.createElement('canvas'); bc.width = bc.height = 128; const bg = bc.getContext('2d'); bg.fillStyle = '#1a1140'; bg.fillRect(0, 0, 128, 128); bg.strokeStyle = '#3a2a8a'; bg.lineWidth = 2; bg.strokeRect(0, 0, 128, 128); const bt = new THREE.CanvasTexture(bc); bt.wrapS = bt.wrapT = THREE.RepeatWrapping; bt.repeat.set(10, 45);
+const back = new THREE.Mesh(new THREE.PlaneGeometry(W * 2 + .4, BOARD + 10), new THREE.MeshBasicMaterial({ map: bt })); back.position.set(0, -BOARD / 2 + 4, -.8); st.scene.add(back);
+const pegRows = Math.floor(BOARD / DY), pegPos = [];
+const isGateRow = y => GATES.some(g => Math.abs(g.y - y) < 0.95);
+for (let r = 0; r < pegRows; r++) { const py = -(Y0 + r * DY); if (isGateRow(py)) continue; const off = r & 1 ? .5 : 0; for (let k = -6; k <= 6; k++) { const px = (k + off) * DX; if (Math.abs(px) < W - .1) pegPos.push([px, py]); } }
+const pegs = new THREE.InstancedMesh(new THREE.CylinderGeometry(PR, PR, .35, 10), new THREE.MeshBasicMaterial({ color: 0x66f0ff }), pegPos.length), o = new THREE.Object3D();
+pegPos.forEach(([x, y], i) => { o.position.set(x, y, 0); o.rotation.x = Math.PI / 2; o.updateMatrix(); pegs.setMatrixAt(i, o.matrix); }); st.scene.add(pegs);
+const cats = crowd(st.scene, catGeo(), CAP); const fx = particles(st.scene, 400);
+const dropper = new THREE.Mesh(new THREE.CylinderGeometry(.5, .8, 1, 12), toon(0xffd34d)); st.scene.add(dropper);
+
+function spawn(x, y, vx, vy, h) { if (n >= CAP) return; X[n] = x; Y[n] = y; VX[n] = vx; VY[n] = vy; HUE[n] = h; ROT[n] = rand(0, 6); SPIN[n] = rand(-4, 4); n++; }
+function applyGate(i, gt, op) {
+  const k = op[0] === 'x' ? +op.slice(1) - 1 : +op.slice(1);
+  for (let c = 0; c < k && n < CAP; c++) spawn(X[i] + rand(-.12, .12), gt.y - .1, VX[i] + rand(-.8, .8), VY[i] * rand(.5, 1), (HUE[i] + rand(-.05, .05) + 1) % 1);
+  if (popCd <= 0) { sfx(Math.random() < .35 ? 'meow' : 'pop', .5); popCd = .09; fx.burst(6, { x: X[i], y: gt.y, z: 1, size: .12, life: .5, color: 0xffe14d, g: 6 }, 3); } st.shake(Math.min(5, Math.log10(n + 10)));
+}
+function update(dt) {
+  popCd -= dt; fx.update(dt);
+  const mv = (st.keys.d || st.keys.arrowright ? 1 : 0) - (st.keys.a || st.keys.arrowleft ? 1 : 0);
+  if (mv) lx = clamp(lx + mv * 6 * dt, -W + .5, W - .5); else if (st.ptr.down) lx = clamp(st.ptr.x * (W + 1), -W + .5, W - .5);
+  emitAcc += dt * 5; while (emitAcc >= 1) { emitAcc -= 1; spawn(lx + rand(-.15, .15), 1, rand(-.4, .4), 0, rand()); }
+  for (let i = 0; i < n; i++) {
+    const py = Y[i]; VY[i] -= G * dt; X[i] += VX[i] * dt; Y[i] += VY[i] * dt; ROT[i] += SPIN[i] * dt;
+    if (X[i] < -W + BR) { X[i] = -W + BR; VX[i] = Math.abs(VX[i]) * .6; } else if (X[i] > W - BR) { X[i] = W - BR; VX[i] = -Math.abs(VX[i]) * .6; }
+    const r = Math.round((-Y[i] - Y0) / DY);
+    for (let rr = r - 1; rr <= r + 1; rr++) { if (rr < 0 || rr >= pegRows) continue; const cy = -(Y0 + rr * DY); if (isGateRow(cy)) continue; const off = rr & 1 ? .5 : 0, k0 = Math.floor(X[i] / DX - off);
+      for (let k = k0; k <= k0 + 1; k++) { const cx = (k + off) * DX; if (Math.abs(cx) >= W - .1) continue; const dx = X[i] - cx, dy = Y[i] - cy, d2 = dx * dx + dy * dy, R = PR + BR;
+        if (d2 < R * R && d2 > 1e-6) { const d = Math.sqrt(d2), nx = dx / d, ny = dy / d, vn = VX[i] * nx + VY[i] * ny; X[i] = cx + nx * R; Y[i] = cy + ny * R; if (vn < 0) { VX[i] -= 1.55 * vn * nx; VY[i] -= 1.55 * vn * ny; VX[i] += rand(-.15, .15); SPIN[i] = rand(-7, 7); } } } }
+    for (const gt of GATES) if (py > gt.y && Y[i] <= gt.y) for (const [t, a, b] of gt.ops) if (X[i] >= a && X[i] < b) { applyGate(i, gt, t); break; }
+    if (Y[i] < -BOARD - 2) { saved++; n--; X[i] = X[n]; Y[i] = Y[n]; VX[i] = VX[n]; VY[i] = VY[n]; HUE[i] = HUE[n]; ROT[i] = ROT[n]; SPIN[i] = SPIN[n]; i--; }
+  }
+  const marks = [300, 1000, 2500, 4000]; while (mile < marks.length && n >= marks[mile]) { st.hud.banner(marks[mile].toLocaleString() + ' CATS!'); sfx('boom'); st.shake(9); fx.burst(60, { x: 0, y: camY, z: 2, size: .25, life: 1.4, color: 0xff6ad5, g: 3 }, 7); mile++; }
+  st.hud.left(`CATS<br><span style="color:#ffd34d;font-size:8vmin">${n.toLocaleString()}</span>`); st.hud.right(`SAVED<br>${saved.toLocaleString()}`);
+  let sy = 0, c = 0; for (let i = 0; i < n; i += 23) { sy += Y[i]; c++; } const target = c ? Math.max(-BOARD + 8, sy / c + 2) : 0; camY += (Math.min(0, target) - camY) * Math.min(1, dt * 2.5);
+  window.__game = { cats: n, saved, total: n + saved };
+}
+const PAL = [0xff9a3c, 0x9aa0aa, 0xf4efe4, 0x3b3b44, 0xd9a066, 0xffc7d0];
+function pre() {
+  for (let i = 0; i < n; i++) { cats.set(i, X[i], Y[i], (i % 7) * .09 - .25, SC, ROT[i] * .3, 0, ROT[i]); cats.color(i, PAL[(HUE[i] * 6) | 0]); }
+  cats.done(n); dropper.position.set(lx, 1.6, 0);
+  st.camera.position.set(0, camY - 1, st.dist + 1.5); st.camera.lookAt(0, camY - 1, 0);
+}
+st.hud.hint('A/D or drag to aim the dropper'); st.run(update, pre);
+</script></body></html>
