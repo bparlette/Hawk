@@ -2595,7 +2595,7 @@
    "orientation": "portrait",
    "path": "g/action-demo/index.html",
    "note": "Free 5-game taster",
-   "thumb": "thumbs/action-demo.webp?v=1792307509"
+   "thumb": "thumbs/action-demo.webp?v=1792343452"
   },
   {
    "id": "brains-demo",
@@ -2607,7 +2607,7 @@
    "orientation": "portrait",
    "path": "g/brains-demo/index.html",
    "note": "Free 5-game taster",
-   "thumb": "thumbs/brains-demo.webp?v=1792307509"
+   "thumb": "thumbs/brains-demo.webp?v=1792343452"
   },
   {
    "id": "action15",
@@ -2619,7 +2619,7 @@
    "orientation": "portrait",
    "path": "g/action15/index.html",
    "note": "15 games, one level each, $4.99",
-   "thumb": "thumbs/action15.webp?v=1792307509"
+   "thumb": "thumbs/action15.webp?v=1792343452"
   },
   {
    "id": "brains15",
@@ -2631,7 +2631,7 @@
    "orientation": "portrait",
    "path": "g/brains15/index.html",
    "note": "15 games, one level each, $4.99",
-   "thumb": "thumbs/brains15.webp?v=1792307509"
+   "thumb": "thumbs/brains15.webp?v=1792343452"
   },
   {
    "id": "arcade-demo",
@@ -2643,7 +2643,19 @@
    "orientation": "portrait",
    "path": "g/arcade-demo/index.html",
    "note": "Free 5-game taster",
-   "thumb": "thumbs/arcade-demo.webp?v=1792334959"
+   "thumb": "thumbs/arcade-demo.webp?v=1792343453"
+  },
+  {
+   "id": "arcade",
+   "title": "CAT ARCADE HUB",
+   "category": "Arcade Hub",
+   "keys": {},
+   "labels": {},
+   "autostart": [],
+   "orientation": "portrait",
+   "path": "g/arcade/index.html",
+   "note": "30 games, one level each",
+   "thumb": "thumbs/arcade.webp?v=1792343453"
   }
  ]
 }
