@@ -9,7 +9,8 @@
   "Sticker Series",
   "Viral Demos",
   "Classic Homebrew",
-  "Cat Arcade"
+  "Cat Arcade",
+  "Arcade Hub"
  ],
  "games": [
   {
@@ -2204,8 +2205,8 @@
    "orientation": "any",
    "path": "g/one-tap-reflex/index.html",
    "note": "One tap. One cat. Impossible?",
-   "thumb": "thumbs/one-tap-reflex.webp?v=1792296822",
-   "video": "videos/one-tap-reflex-hook.mp4?v=1792296823"
+   "thumb": "thumbs/one-tap-reflex.webp?v=1792327491",
+   "video": "videos/one-tap-reflex-hook.mp4?v=1792327492"
   },
   {
    "id": "daily-deduction",
@@ -2256,8 +2257,8 @@
    "orientation": "any",
    "path": "g/bullet-heaven/index.html",
    "note": "10,000 zombies vs one cat",
-   "thumb": "thumbs/bullet-heaven.webp?v=1792297575",
-   "video": "videos/bullet-heaven-hook.mp4?v=1792297576"
+   "thumb": "thumbs/bullet-heaven.webp?v=1792328250",
+   "video": "videos/bullet-heaven-hook.mp4?v=1792328251"
   },
   {
    "id": "obby-gauntlet",
@@ -2282,8 +2283,8 @@
    "orientation": "any",
    "path": "g/rail-runner/index.html",
    "note": "Run from the zombie king",
-   "thumb": "thumbs/rail-runner.webp?v=1792298148",
-   "video": "videos/rail-runner-hook.mp4?v=1792298149"
+   "thumb": "thumbs/rail-runner.webp?v=1792327792",
+   "video": "videos/rail-runner-hook.mp4?v=1792327793"
   },
   {
    "id": "ballistic-bouncer",
@@ -2373,8 +2374,8 @@
    "orientation": "any",
    "path": "g/run-and-gun/index.html",
    "note": "Run. Jump. Shoot.",
-   "thumb": "thumbs/run-and-gun.webp?v=1792299929",
-   "video": "videos/run-and-gun-hook.mp4?v=1792299929"
+   "thumb": "thumbs/run-and-gun.webp?v=1792328907",
+   "video": "videos/run-and-gun-hook.mp4?v=1792328908"
   },
   {
    "id": "mini-metroidvania",
@@ -2581,8 +2582,8 @@
    "orientation": "any",
    "path": "g/kart-racer/index.html",
    "note": "Win by a whisker",
-   "thumb": "thumbs/kart-racer.webp?v=1792300722",
-   "video": "videos/kart-racer-hook.mp4?v=1792300723"
+   "thumb": "thumbs/kart-racer.webp?v=1792328607",
+   "video": "videos/kart-racer-hook.mp4?v=1792328608"
   },
   {
    "id": "action-demo",
@@ -2631,6 +2632,18 @@
    "path": "g/brains15/index.html",
    "note": "15 games, one level each, $4.99",
    "thumb": "thumbs/brains15.webp?v=1792307509"
+  },
+  {
+   "id": "arcade-demo",
+   "title": "CAT ARCADE HUB (FREE DEMO)",
+   "category": "Arcade Hub",
+   "keys": {},
+   "labels": {},
+   "autostart": [],
+   "orientation": "portrait",
+   "path": "g/arcade-demo/index.html",
+   "note": "Free 5-game taster",
+   "thumb": "thumbs/arcade-demo.webp?v=1792328913"
   }
  ]
 }
