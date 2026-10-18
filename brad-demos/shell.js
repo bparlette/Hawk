@@ -88,6 +88,20 @@
     try { active.frame.contentWindow.focus(); } catch (_) {}
   }
 
+  var vidModal = null;
+  function openVideo(g) {
+    closeVideo();
+    vidModal = document.createElement("div"); vidModal.className = "vidmodal";
+    var v = document.createElement("video"); v.controls = true; v.autoplay = true; v.playsInline = true; v.src = g.video;
+    var x = document.createElement("button"); x.className = "vclose"; x.textContent = "\u2715"; x.title = "Close";
+    x.addEventListener("click", closeVideo);
+    vidModal.appendChild(v); vidModal.appendChild(x);
+    vidModal.addEventListener("click", function (e) { if (e.target === vidModal) closeVideo(); });
+    document.body.appendChild(vidModal);
+    document.addEventListener("keydown", escVideo);
+  }
+  function escVideo(e) { if (e.key === "Escape") closeVideo(); }
+  function closeVideo() { if (vidModal && vidModal.parentNode) vidModal.parentNode.removeChild(vidModal); vidModal = null; document.removeEventListener("keydown", escVideo); }
   function start(id) {
     var g = BY_ID[id]; if (!g) return;
     closePicker(true);
@@ -188,6 +202,20 @@
     if (g.thumb) im.src = g.thumb;
     var nm = document.createElement("span"); nm.className = "nm"; nm.textContent = g.title;
     b.appendChild(im); b.appendChild(nm);
+    if (g.video) {
+      var pv = null, canHover = window.matchMedia && window.matchMedia("(hover:hover)").matches;
+      if (canHover) {
+        b.addEventListener("mouseenter", function () {
+          if (!pv) { pv = document.createElement("video"); pv.className = "pv"; pv.muted = true; pv.loop = true; pv.playsInline = true; pv.preload = "none"; pv.src = g.video; }
+          if (pv.parentNode !== b) { b.insertBefore(pv, im); im.style.display = "none"; }
+          if (pv.paused) pv.play().catch(function () {});
+        });
+        b.addEventListener("mouseleave", function () { if (pv && pv.parentNode === b) { pv.pause(); b.removeChild(pv); im.style.display = ""; } });
+      }
+      var pl = document.createElement("span"); pl.className = "play"; pl.textContent = "\u25B6"; pl.title = "Watch hook video";
+      pl.addEventListener("click", function (e) { e.stopPropagation(); openVideo(g); });
+      b.appendChild(pl);
+    }
     var sh = document.createElement("span"); sh.className = "share"; sh.textContent = "⤴"; sh.title = "Copy share link";
     sh.addEventListener("click", function (e) {
       e.stopPropagation();
