@@ -8,7 +8,8 @@
   "Originals",
   "Sticker Series",
   "Viral Demos",
-  "Classic Homebrew"
+  "Classic Homebrew",
+  "Cat Arcade"
  ],
  "games": [
   {
@@ -2203,7 +2204,8 @@
    "orientation": "any",
    "path": "g/one-tap-reflex/index.html",
    "note": "One tap. One cat. Impossible?",
-   "thumb": "thumbs/one-tap-reflex.webp?v=1792275282"
+   "thumb": "thumbs/one-tap-reflex.webp?v=1792296822",
+   "video": "videos/one-tap-reflex-hook.mp4?v=1792296823"
   },
   {
    "id": "daily-deduction",
@@ -2215,7 +2217,8 @@
    "orientation": "any",
    "path": "g/daily-deduction/index.html",
    "note": "Can you solve it in 6?",
-   "thumb": "thumbs/daily-deduction.webp?v=1792275282"
+   "thumb": "thumbs/daily-deduction.webp?v=1792301929",
+   "video": "videos/daily-deduction-hook.mp4?v=1792301930"
   },
   {
    "id": "precision-platformer",
@@ -2227,7 +2230,8 @@
    "orientation": "any",
    "path": "g/precision-platformer/index.html",
    "note": "Don't fall. Don't blink.",
-   "thumb": "thumbs/precision-platformer.webp?v=1792275282"
+   "thumb": "thumbs/precision-platformer.webp?v=1792297112",
+   "video": "videos/precision-platformer-hook.mp4?v=1792297113"
   },
   {
    "id": "cozy-farm",
@@ -2239,7 +2243,8 @@
    "orientation": "any",
    "path": "g/cozy-farm/index.html",
    "note": "Tiny farm, huge dopamine",
-   "thumb": "thumbs/cozy-farm.webp?v=1792275507"
+   "thumb": "thumbs/cozy-farm.webp?v=1792302380",
+   "video": "videos/cozy-farm-hook.mp4?v=1792302381"
   },
   {
    "id": "bullet-heaven",
@@ -2251,7 +2256,8 @@
    "orientation": "any",
    "path": "g/bullet-heaven/index.html",
    "note": "10,000 zombies vs one cat",
-   "thumb": "thumbs/bullet-heaven.webp?v=1792275741"
+   "thumb": "thumbs/bullet-heaven.webp?v=1792297575",
+   "video": "videos/bullet-heaven-hook.mp4?v=1792297576"
   },
   {
    "id": "obby-gauntlet",
@@ -2263,7 +2269,8 @@
    "orientation": "any",
    "path": "g/obby-gauntlet/index.html",
    "note": "Beat the obby or rage quit",
-   "thumb": "thumbs/obby-gauntlet.webp?v=1792275885"
+   "thumb": "thumbs/obby-gauntlet.webp?v=1792297845",
+   "video": "videos/obby-gauntlet-hook.mp4?v=1792297846"
   },
   {
    "id": "rail-runner",
@@ -2275,31 +2282,34 @@
    "orientation": "any",
    "path": "g/rail-runner/index.html",
    "note": "Run from the zombie king",
-   "thumb": "thumbs/rail-runner.webp?v=1792276040"
+   "thumb": "thumbs/rail-runner.webp?v=1792298148",
+   "video": "videos/rail-runner-hook.mp4?v=1792298149"
   },
   {
    "id": "ballistic-bouncer",
    "title": "CAT PEGGLE",
-   "category": "Classic Homebrew",
+   "category": "Viral Demos",
    "keys": {},
    "labels": {},
    "autostart": [],
    "orientation": "any",
    "path": "g/ballistic-bouncer/index.html",
    "note": "One shot. 50 pegs.",
-   "thumb": "thumbs/ballistic-bouncer.webp?v=1792293836"
+   "thumb": "thumbs/ballistic-bouncer.webp?v=1792293836",
+   "video": "videos/ballistic-bouncer-hook.mp4?v=1792302851"
   },
   {
    "id": "grid-chaser",
    "title": "PAC CAT",
-   "category": "Classic Homebrew",
+   "category": "Viral Demos",
    "keys": {},
    "labels": {},
    "autostart": [],
    "orientation": "any",
    "path": "g/grid-chaser/index.html",
    "note": "Eat everything. Avoid the zombies.",
-   "thumb": "thumbs/grid-chaser.webp?v=1792293836"
+   "thumb": "thumbs/grid-chaser.webp?v=1792293836",
+   "video": "videos/grid-chaser-hook.mp4?v=1792298718"
   },
   {
    "id": "falling-blocks",
@@ -2311,7 +2321,8 @@
    "orientation": "any",
    "path": "g/falling-blocks/index.html",
    "note": "Stack it or lose it",
-   "thumb": "thumbs/falling-blocks.webp?v=1792276856"
+   "thumb": "thumbs/falling-blocks.webp?v=1792303169",
+   "video": "videos/falling-blocks-hook.mp4?v=1792303170"
   },
   {
    "id": "merge-sandbox",
@@ -2323,7 +2334,8 @@
    "orientation": "any",
    "path": "g/merge-sandbox/index.html",
    "note": "Merge to a MEGA cat",
-   "thumb": "thumbs/merge-sandbox.webp?v=1792277119"
+   "thumb": "thumbs/merge-sandbox.webp?v=1792304106",
+   "video": "videos/merge-sandbox-hook.mp4?v=1792304107"
   },
   {
    "id": "arena-brawler",
@@ -2335,7 +2347,8 @@
    "orientation": "any",
    "path": "g/arena-brawler/index.html",
    "note": "1 cat vs the whole street",
-   "thumb": "thumbs/arena-brawler.webp?v=1792277352"
+   "thumb": "thumbs/arena-brawler.webp?v=1792299183",
+   "video": "videos/arena-brawler-hook.mp4?v=1792299184"
   },
   {
    "id": "scrolling-shmup",
@@ -2347,7 +2360,8 @@
    "orientation": "any",
    "path": "g/scrolling-shmup/index.html",
    "note": "Dodge the bullet hell",
-   "thumb": "thumbs/scrolling-shmup.webp?v=1792277578"
+   "thumb": "thumbs/scrolling-shmup.webp?v=1792299623",
+   "video": "videos/scrolling-shmup-hook.mp4?v=1792299624"
   },
   {
    "id": "run-and-gun",
@@ -2359,7 +2373,8 @@
    "orientation": "any",
    "path": "g/run-and-gun/index.html",
    "note": "Run. Jump. Shoot.",
-   "thumb": "thumbs/run-and-gun.webp?v=1792277727"
+   "thumb": "thumbs/run-and-gun.webp?v=1792299929",
+   "video": "videos/run-and-gun-hook.mp4?v=1792299929"
   },
   {
    "id": "mini-metroidvania",
@@ -2371,7 +2386,8 @@
    "orientation": "any",
    "path": "g/mini-metroidvania/index.html",
    "note": "Find the double jump",
-   "thumb": "thumbs/mini-metroidvania.webp?v=1792277840"
+   "thumb": "thumbs/mini-metroidvania.webp?v=1792300156",
+   "video": "videos/mini-metroidvania-hook.mp4?v=1792300156"
   },
   {
    "id": "footsies-duel",
@@ -2383,7 +2399,8 @@
    "orientation": "any",
    "path": "g/footsies-duel/index.html",
    "note": "First to push wins",
-   "thumb": "thumbs/footsies-duel.webp?v=1792277944"
+   "thumb": "thumbs/footsies-duel.webp?v=1792300375",
+   "video": "videos/footsies-duel-hook.mp4?v=1792300375"
   },
   {
    "id": "mini-zelda",
@@ -2395,7 +2412,8 @@
    "orientation": "any",
    "path": "g/mini-zelda/index.html",
    "note": "Get the key. Open the door.",
-   "thumb": "thumbs/mini-zelda.webp?v=1792278099"
+   "thumb": "thumbs/mini-zelda.webp?v=1792304422",
+   "video": "videos/mini-zelda-hook.mp4?v=1792304423"
   },
   {
    "id": "turn-based-3v3",
@@ -2407,7 +2425,8 @@
    "orientation": "any",
    "path": "g/turn-based-3v3/index.html",
    "note": "3 cats vs 3 zombies",
-   "thumb": "thumbs/turn-based-3v3.webp?v=1792278309"
+   "thumb": "thumbs/turn-based-3v3.webp?v=1792304838",
+   "video": "videos/turn-based-3v3-hook.mp4?v=1792304839"
   },
   {
    "id": "micro-tower-defense",
@@ -2419,7 +2438,8 @@
    "orientation": "any",
    "path": "g/micro-tower-defense/index.html",
    "note": "Don't let the zombies through",
-   "thumb": "thumbs/micro-tower-defense.webp?v=1792278564"
+   "thumb": "thumbs/micro-tower-defense.webp?v=1792305349",
+   "video": "videos/micro-tower-defense-hook.mp4?v=1792305350"
   },
   {
    "id": "card-roguelite",
@@ -2431,7 +2451,8 @@
    "orientation": "any",
    "path": "g/card-roguelite/index.html",
    "note": "Beat the blind with 5 cards",
-   "thumb": "thumbs/card-roguelite.webp?v=1792278872"
+   "thumb": "thumbs/card-roguelite.webp?v=1792305658",
+   "video": "videos/card-roguelite-hook.mp4?v=1792305659"
   },
   {
    "id": "idle-tycoon",
@@ -2443,7 +2464,8 @@
    "orientation": "any",
    "path": "g/idle-tycoon/index.html",
    "note": "Make 1,000,000 fish",
-   "thumb": "thumbs/idle-tycoon.webp?v=1792279084"
+   "thumb": "thumbs/idle-tycoon.webp?v=1792306087",
+   "video": "videos/idle-tycoon-hook.mp4?v=1792306088"
   },
   {
    "id": "hide-and-seek",
@@ -2455,7 +2477,8 @@
    "orientation": "any",
    "path": "g/hide-and-seek/index.html",
    "note": "Don't move when it looks",
-   "thumb": "thumbs/hide-and-seek.webp?v=1792279244"
+   "thumb": "thumbs/hide-and-seek.webp?v=1792306387",
+   "video": "videos/hide-and-seek-hook.mp4?v=1792306388"
   },
   {
    "id": "trajectory-artillery",
@@ -2467,7 +2490,8 @@
    "orientation": "any",
    "path": "g/trajectory-artillery/index.html",
    "note": "Aim. Fire. Dig a crater.",
-   "thumb": "thumbs/trajectory-artillery.webp?v=1792279366"
+   "thumb": "thumbs/trajectory-artillery.webp?v=1792306632",
+   "video": "videos/trajectory-artillery-hook.mp4?v=1792306632"
   },
   {
    "id": "slice-swipe",
@@ -2479,7 +2503,8 @@
    "orientation": "any",
    "path": "g/slice-swipe/index.html",
    "note": "Slice everything. Do not touch the bomb.",
-   "thumb": "thumbs/slice-swipe.webp?v=1792279488"
+   "thumb": "thumbs/slice-swipe.webp?v=1792300963",
+   "video": "videos/slice-swipe-hook.mp4?v=1792300963"
   },
   {
    "id": "stack-timing",
@@ -2491,7 +2516,8 @@
    "orientation": "any",
    "path": "g/stack-timing/index.html",
    "note": "One mistimed tap and it shrinks",
-   "thumb": "thumbs/stack-timing.webp?v=1792279615"
+   "thumb": "thumbs/stack-timing.webp?v=1792301220",
+   "video": "videos/stack-timing-hook.mp4?v=1792301221"
   },
   {
    "id": "plinko-drop",
@@ -2503,7 +2529,8 @@
    "orientation": "any",
    "path": "g/plinko-drop/index.html",
    "note": "Drop it. Win big.",
-   "thumb": "thumbs/plinko-drop.webp?v=1792279809"
+   "thumb": "thumbs/plinko-drop.webp?v=1792307021",
+   "video": "videos/plinko-drop-hook.mp4?v=1792307021"
   },
   {
    "id": "ragdoll-launch",
@@ -2515,7 +2542,8 @@
    "orientation": "any",
    "path": "g/ragdoll-launch/index.html",
    "note": "How far can a cat fly?",
-   "thumb": "thumbs/ragdoll-launch.webp?v=1792279965"
+   "thumb": "thumbs/ragdoll-launch.webp?v=1792301524",
+   "video": "videos/ragdoll-launch-hook.mp4?v=1792301525"
   },
   {
    "id": "sort-puzzle",
@@ -2527,7 +2555,8 @@
    "orientation": "any",
    "path": "g/sort-puzzle/index.html",
    "note": "Satisfying? Try the last tube.",
-   "thumb": "thumbs/sort-puzzle.webp?v=1792280114"
+   "thumb": "thumbs/sort-puzzle.webp?v=1792307322",
+   "video": "videos/sort-puzzle-hook.mp4?v=1792307322"
   },
   {
    "id": "rope-cut",
@@ -2539,7 +2568,8 @@
    "orientation": "any",
    "path": "g/rope-cut/index.html",
    "note": "Feed the cat. Cut at the right time.",
-   "thumb": "thumbs/rope-cut.webp?v=1792280204"
+   "thumb": "thumbs/rope-cut.webp?v=1792307507",
+   "video": "videos/rope-cut-hook.mp4?v=1792307507"
   },
   {
    "id": "kart-racer",
@@ -2551,7 +2581,56 @@
    "orientation": "any",
    "path": "g/kart-racer/index.html",
    "note": "Win by a whisker",
-   "thumb": "thumbs/kart-racer.webp?v=1792280392"
+   "thumb": "thumbs/kart-racer.webp?v=1792300722",
+   "video": "videos/kart-racer-hook.mp4?v=1792300723"
+  },
+  {
+   "id": "action-demo",
+   "title": "CAT ARCADE: ACTION (FREE 5)",
+   "category": "Cat Arcade",
+   "keys": {},
+   "labels": {},
+   "autostart": [],
+   "orientation": "portrait",
+   "path": "g/action-demo/index.html",
+   "note": "Free 5-game taster",
+   "thumb": "thumbs/action-demo.webp?v=1792307509"
+  },
+  {
+   "id": "brains-demo",
+   "title": "CAT ARCADE: BRAINS (FREE 5)",
+   "category": "Cat Arcade",
+   "keys": {},
+   "labels": {},
+   "autostart": [],
+   "orientation": "portrait",
+   "path": "g/brains-demo/index.html",
+   "note": "Free 5-game taster",
+   "thumb": "thumbs/brains-demo.webp?v=1792307509"
+  },
+  {
+   "id": "action15",
+   "title": "CAT ARCADE: ACTION 15",
+   "category": "Cat Arcade",
+   "keys": {},
+   "labels": {},
+   "autostart": [],
+   "orientation": "portrait",
+   "path": "g/action15/index.html",
+   "note": "15 games, one level each, $4.99",
+   "thumb": "thumbs/action15.webp?v=1792307509"
+  },
+  {
+   "id": "brains15",
+   "title": "CAT ARCADE: BRAINS 15",
+   "category": "Cat Arcade",
+   "keys": {},
+   "labels": {},
+   "autostart": [],
+   "orientation": "portrait",
+   "path": "g/brains15/index.html",
+   "note": "15 games, one level each, $4.99",
+   "thumb": "thumbs/brains15.webp?v=1792307509"
   }
  ]
 }
