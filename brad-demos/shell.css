@@ -107,3 +107,10 @@ button { font: inherit; color: inherit; }
 .psearch { width: 100%; box-sizing: border-box; margin: 6px 0 4px; padding: 11px 14px; border-radius: 10px; border: 1px solid #2a2d38; background: #12141b; color: #fff; font: 700 15px system-ui; }
 .catbtn { background: none; border: 0; width: 100%; text-align: left; cursor: pointer; font-family: inherit; }
 .more { grid-column: 1 / -1; padding: 12px; border-radius: 10px; border: 1px solid #2a2d38; background: #1a1d27; color: #ffd23c; font: 900 13px system-ui; cursor: pointer; }
+
+.card .play { position: absolute; right: 6px; bottom: 40px; width: 34px; height: 34px; border-radius: 50%; background: rgba(7,8,12,.78); color: #fff; font-size: 13px; line-height: 32px; text-align: center; border: 1px solid #3a3f4d; cursor: pointer; }
+.card .play:hover { background: #ffd23c; color: #14101f; border-color: #ffd23c; }
+.card video.pv { display: block; width: 100%; aspect-ratio: 16 / 10; object-fit: cover; background: #1b1e27; }
+.vidmodal { position: fixed; inset: 0; z-index: 200; background: rgba(0,0,0,.88); display: flex; align-items: center; justify-content: center; padding: 18px; }
+.vidmodal video { max-width: 94vw; max-height: 82vh; border-radius: 10px; background: #000; }
+.vidmodal .vclose { position: absolute; top: 14px; right: 16px; width: 40px; height: 40px; border-radius: 12px; border: 1px solid #3a3f4d; background: #1c1f28; color: #fff; font-size: 18px; cursor: pointer; }

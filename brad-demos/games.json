@@ -1206,7 +1206,8 @@
    },
    "autostart": [],
    "orientation": "any",
-   "path": "https://notebook-arcade.surge.sh/sticker-stomp/"
+   "path": "https://notebook-arcade.surge.sh/sticker-stomp/",
+   "thumb": "thumbs/sticker-sticker-stomp.webp?v=1792293836"
   },
   {
    "id": "sticker-paintball-office",
@@ -1223,7 +1224,8 @@
    },
    "autostart": [],
    "orientation": "any",
-   "path": "https://notebook-arcade.surge.sh/paintball-office/"
+   "path": "https://notebook-arcade.surge.sh/paintball-office/",
+   "thumb": "thumbs/sticker-paintball-office.webp?v=1792293836"
   },
   {
    "id": "sticker-sticker-swing",
@@ -1451,7 +1453,8 @@
    },
    "autostart": [],
    "orientation": "any",
-   "path": "g/moth-runner/index.html"
+   "path": "g/moth-runner/index.html",
+   "thumb": "thumbs/moth-runner.webp?v=1792293836"
   },
   {
    "id": "beach-catch",
@@ -1884,7 +1887,8 @@
    "autostart": [],
    "orientation": "any",
    "note": "Pasted by Brad 2026-10-13: the other AI's official remake after reading Hark's instructions. Added as-is with no fixes.",
-   "path": "g/drift-survivors-after-hark/index.html"
+   "path": "g/drift-survivors-after-hark/index.html",
+   "thumb": "thumbs/drift-survivors-after-hark.webp?v=1792293836"
   },
   {
    "id": "outrun-remaster",
@@ -1964,7 +1968,8 @@
    },
    "autostart": [],
    "orientation": "any",
-   "path": "g/pocket-arena.html"
+   "path": "g/pocket-arena.html",
+   "thumb": "thumbs/pocket-arena.webp?v=1792293836"
   },
   {
    "id": "big-bumpin-3d",
@@ -1977,7 +1982,8 @@
    },
    "autostart": [],
    "orientation": "any",
-   "path": "g/big-bumpin-3d/index.html"
+   "path": "g/big-bumpin-3d/index.html",
+   "thumb": "thumbs/big-bumpin-3d.webp?v=1792293836"
   },
   {
    "id": "tiny-kaiju",
@@ -2281,7 +2287,7 @@
    "orientation": "any",
    "path": "g/ballistic-bouncer/index.html",
    "note": "One shot. 50 pegs.",
-   "thumb": "thumbs/ballistic-bouncer.webp?v=1792276404"
+   "thumb": "thumbs/ballistic-bouncer.webp?v=1792293836"
   },
   {
    "id": "grid-chaser",
@@ -2293,7 +2299,7 @@
    "orientation": "any",
    "path": "g/grid-chaser/index.html",
    "note": "Eat everything. Avoid the zombies.",
-   "thumb": "thumbs/grid-chaser.webp?v=1792276694"
+   "thumb": "thumbs/grid-chaser.webp?v=1792293836"
   },
   {
    "id": "falling-blocks",
