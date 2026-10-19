@@ -459,7 +459,7 @@ function update(dt) {
   // --- bot (lose first, then win: attempt 0 swings when the aim is far from the pile)
   if ((AUTO || SPECTATE) && G.phase === 'idle' && G.t - G.lastSwing > 0.34) {
     const ax = Math.abs(aimX());
-    if (AUTO && st.dumb()) { if (ax > 2.6) slam(); }
+    if (AUTO && st.dumb()) { if (ax > 2.05) slam(); }   // dumb bot: hammers the far edge of the lawn, never the pile
     else if (ax < 1.05) slam();
   }
 
