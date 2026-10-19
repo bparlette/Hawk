@@ -5,8 +5,8 @@ import { makeGame, sfx, music, comboPitch, clamp, lerp, rnd, chance, R, TAU, rr,
 
 const W = 540, H = 960, GROUND = 800;
 const g = makeGame({
-  id: 'roadster-flip-v2', title: 'ROADSTER FLIP v2',
-  sub: 'HOLD TO CHARGE · TAP TO FLIP · 3 LIVES',
+  id: 'roadster-flip-v2', title: 'ROADSTER FLIP',
+  sub: 'v2 · HOLD TO CHARGE · TAP TO FLIP · 3 LIVES',
   hook: 'nail the flip · clear the lineup',
   w: W, h: H, bg: '#070a18', style: 'toon',
   bloom: .7, ca: .4, vig: 1, scan: .22,
@@ -89,6 +89,9 @@ function resetWorld() {
   };
   g.score = 0; g.combo.reset(); g.fx.clear(); g.hud.hint = '';
   g.state = { score: 0, lives: 3, round: 1, phase: 'climb' };
+  // park the car at the ramp start so the title screen shows it
+  const tr = trackAt(0);
+  S.x = tr.x + Math.sin(tr.ang) * 16; S.y = tr.y - Math.cos(tr.ang) * 16; S.ang = tr.ang;
 }
 g.onReset = resetWorld;
 g.onStart = () => { music('chase'); };
@@ -359,7 +362,7 @@ function drawLineup(ctx) {
   };
   CFG.lineupX.forEach((x, i) => {
     drawTesla(x, i);
-    g.text(CFG.lineupNames[i], x, GROUND + 20, { size: 11, color: 'rgba(150,180,220,.5)', align: 'center' });
+    g.text(CFG.lineupNames[i], x, GROUND + (i % 2 ? 34 : 20), { size: 11, color: 'rgba(150,180,220,.5)', align: 'center' });
   });
 }
 
