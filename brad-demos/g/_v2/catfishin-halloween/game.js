@@ -86,6 +86,9 @@ function doCast() {
   S.bob = { x: DOCK_X, y: DOCK_Y - 60, vx: (tx - DOCK_X) / 45, vy: -9, t: 0, tx, ty, landed: false };
   S.phase = 'flying'; S.t = 0;
   sfx('whoosh', { pitch: 1.2, vol: .4 });
+  g.punch(.05); g.hitstop(.03);
+  g.popup('CAST!', DOCK_X + 30, DOCK_Y - 90, '#cfe3ff', 24);
+  g.fx.burst(DOCK_X + 84, DOCK_Y - 126, 12, { kind: 'spark', color: ['#cfe3ff', '#fff'], speed: 220, life: .45 });
 }
 function doStrike(q) {
   S.quality = q;
@@ -94,8 +97,12 @@ function doStrike(q) {
   const label = q === 2 ? 'PERFECT!' : 'GOOD!';
   g.combo.hit(S.bob.x, S.bob.y - 40, label);
   sfx('pop', { pitch: q === 2 ? 1.3 : 1.0, vol: .6 });
-  g.fx.burst(S.bob.x, S.bob.y, q === 2 ? 22 : 12, { kind: 'spark', color: '#bfe9ff', speed: 240 });
-  if (q === 2) { g.punch(.08); }
+  g.fx.burst(S.bob.x, S.bob.y, q === 2 ? 22 : 12, { kind: 'spark', color: q === 2 ? '#ffd94d' : '#bfe9ff', speed: 240 });
+  g.hitstop(q === 2 ? .10 : .045);
+  g.flash(q === 2 ? '#fff6c2' : '#bfe9ff', q === 2 ? .32 : .16);
+  g.shake(q === 2 ? 10 : 5);
+  g.popup(q === 2 ? 'PERFECT!' : 'HOOKED!', S.bob.x, S.bob.y - 76, q === 2 ? '#ffd94d' : '#bfe9ff', q === 2 ? 34 : 26);
+  if (q === 2) { g.punch(.10); }
 }
 function doCatch() {
   const f = S.fish, r = RAR[f.rar];
@@ -107,24 +114,39 @@ function doCatch() {
   // fanfare by rarity
   const cx = W / 2, cy = H * .4;
   if (f.rar === 'legendary') {
-    g.impact(cx, cy, { punch: .3, shake: 26, flash: '#ffe27a', flashA: .75, stop: .22, sfx: 'win' });
-    g.fx.burst(cx, cy, 90, { kind: 'debris', color: ['#ffd94d', '#fff', '#ff9ad5', '#7dff9a'], speed: 520, life: 1.4 });
+    g.impact(cx, cy, { punch: .34, shake: 28, flash: '#ffe27a', flashA: .8, stop: .26, sfx: 'win' });
+    g.popup('LEGENDARY!!', cx, cy - 120, '#ffd94d', 46);
+    g.fx.burst(cx, cy, 90, { kind: 'debris', color: ['#ffd94d', '#ff7518', '#fff', '#c07dff'], speed: 520, life: 1.4 });
     g.fx.burst(cx, cy, 40, { kind: 'spark', color: '#fff3b0', speed: 380, life: 1 });
+    g.slowmo(.35, .35);
   } else if (f.rar === 'epic') {
-    g.impact(cx, cy, { punch: .2, shake: 16, flash: '#c07dff', flashA: .5, stop: .12, sfx: 'win' });
-    g.fx.burst(cx, cy, 55, { kind: 'spark', color: ['#c07dff', '#fff', '#ffb3ff'], speed: 420, life: 1 });
+    g.impact(cx, cy, { punch: .22, shake: 18, flash: '#c07dff', flashA: .55, stop: .15, sfx: 'win' });
+    g.popup('EPIC!', cx, cy - 110, '#c07dff', 40);
+    g.fx.burst(cx, cy, 55, { kind: 'spark', color: ['#c07dff', '#ff7518', '#fff', '#ffb3ff'], speed: 420, life: 1 });
   } else if (f.rar === 'rare') {
-    g.impact(cx, cy, { punch: .12, shake: 8, flash: '#6db7ff', flashA: .35, sfx: 'chime' });
-    g.fx.burst(cx, cy, 34, { kind: 'spark', color: ['#6db7ff', '#dff3ff'], speed: 340, life: .8 });
+    g.impact(cx, cy, { punch: .14, shake: 10, flash: '#6db7ff', flashA: .4, stop: .07, sfx: 'chime' });
+    g.popup('RARE!', cx, cy - 105, '#ffb347', 34);
+    g.fx.burst(cx, cy, 34, { kind: 'spark', color: ['#ffb347', '#6db7ff', '#dff3ff'], speed: 340, life: .8 });
   } else {
     sfx('pop', { pitch: 1.1 + R() * .2, vol: .5 });
+    g.hitstop(.05); g.shake(6);
+    g.popup('CAUGHT!', cx, cy - 100, '#bfe9ff', 30);
     g.fx.burst(cx, cy, 16, { kind: 'spark', color: '#bfe9ff', speed: 260, life: .5 });
+    g.fx.ring(cx, cy, { r: 170, life: .45, color: '#bfe9ff', wide: 4 });
   }
 }
 function doEscape(msg) {
   S.casts++;
   g.combo.hit(S.bob ? S.bob.x : W / 2, POND_TOP + 60, msg || 'ESCAPED!');
   sfx('lose', { pitch: .8, vol: .4 });
+  g.hitstop(.07); g.shake(12); g.flash('#ff3b30', .24);
+  g.popup(msg || 'ESCAPED!', S.bob ? S.bob.x : W / 2, (S.bob ? S.bob.y : POND_TOP + 60) - 56, '#ff6b5c', 32);
+  if (S.bob) {
+    g.fx.burst(S.bob.x, S.bob.y, 20, { kind: 'debris', color: ['#ff6b5c', '#ff7518', '#6b4a9e'], speed: 300, life: .7 });
+    g.fx.ring(S.bob.x, S.bob.y, { r: 90, life: .4, color: '#ff6b5c', wide: 4 });
+    S.ripples.push({ x: S.bob.x, y: S.bob.y, t: 0 });
+  }
+  g.combo.reset();
   endTripOrNextCast();
 }
 
@@ -135,7 +157,8 @@ function endTripOrNextCast() {
     const win = S.caught > 0;
     g.impact(W / 2, H * .4, { punch: .3, shake: 16, flash: win ? '#ffe27a' : '#8fd3ff', flashA: .5, stop: .2, sfx: win ? 'win' : 'lose' });
     g.popup(win ? 'TRIP COMPLETE!' : 'SKUNKED!', W / 2, H * .34, win ? '#ffd94d' : '#8fd3ff', 40);
-    g.fx.burst(W / 2, H * .4, win ? 60 : 24, { kind: 'spark', color: win ? ['#ffd94d', '#fff', '#bfe9ff'] : '#8fd3ff', speed: 420, life: 1 });
+    g.fx.burst(W / 2, H * .4, win ? 60 : 24, { kind: 'spark', color: win ? ['#ffd94d', '#ff7518', '#fff', '#c07dff'] : '#8fd3ff', speed: 420, life: 1 });
+    if (win) { g.slowmo(.3, .4); g.showBanner('SPOOKY HAUL!'); }
     g.end({ win, score: Math.round(g.score), label: 'SCORE', progress: Math.min(100, Math.round(S.caught / TRIP_CASTS * 100)) });
     return;
   }
