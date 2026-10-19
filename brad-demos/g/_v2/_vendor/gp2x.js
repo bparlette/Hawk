@@ -403,7 +403,6 @@ export function makeGame(o = {}) {
         const d = raw * (g.mode === 'pause' || g.freeze > 0 ? 0 : 1) * (g.mode === 'over' ? .6 : 1) * g.timeScale;
         // juice keeps animating through hitstop / slowmo / game-over, unlike the fixed simulation step
         g.fx.update(d); g.combo.update(d); if (d > 0) camStep(d);
-        if (post) { if ((syncTick++ & 15) === 0 || !g._synced) { syncPost(); g._synced = true; } post.render(cv); }
         ctx.save();
         camApply(ctx);
         draw(ctx);
@@ -411,6 +410,9 @@ export function makeGame(o = {}) {
         g.fx.draw(ctx);
         hud?.(ctx);
         g.combo.draw(ctx);
+        // post must sample the canvas AFTER the frame is fully drawn —
+        // rendering before draw() composites only the cleared background.
+        if (post) { if ((syncTick++ & 15) === 0 || !g._synced) { syncPost(); g._synced = true; } post.render(cv); }
       }
     );
   };
