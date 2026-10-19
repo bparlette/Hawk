@@ -62,7 +62,10 @@ function grabTreat(h, hi) {
   const tx = h.x + rnd(-24, 24), ty = h.y + h.h / 2 + 26;
   g.combo.hit(tx, ty - 30, `+1 TREAT`);
   sfx('coin', { pitch: comboPitch(g.combo.n % 12) });
-  g.fx.burst(tx, ty, 8, { kind: 'spark', colors: ['#ffd34d', '#fff2b0'] });
+  g.fx.burst(tx, ty, 10, { kind: 'spark', colors: ['#ffd34d', '#fff2b0'] });
+  g.fx.emit('ring', tx, ty, { life: .3, size: 26, color: '#ffd34d', add: true });
+  g.hitstop(.025); g.punch(.03);
+  if (S.carried === 5) g.popup('FULL POUCH!', S.px, S.py - 70, '#ffd34d', 30);
   g.state.carried = S.carried;
 }
 
@@ -70,7 +73,10 @@ function triggerAlarm(hi) {
   if (S.alarm) return;
   S.alarm = true; S.alarmT = 0; S.chaser = hi; S.giveUpT = 0; S.grazeT = 0;
   g.showBanner('SPOTTED!', .9);
-  g.flash('#ff3b5c', .3); g.shake(10);
+  g.flash('#ff3b5c', .34); g.shake(16); g.hitstop(.12); g.punch(.12);
+  g.popup('RUN!', S.px, S.py - 78, '#ff3b5c', 40);
+  g.fx.burst(HOUSES[hi].owner.x, HOUSES[hi].owner.y - 10, 18, { kind: 'spark', colors: ['#ff3b5c', '#ffffff'], speed: 260 });
+  g.fx.emit('ring', HOUSES[hi].owner.x, HOUSES[hi].owner.y - 10, { life: .45, size: 90, color: '#ff3b5c', add: true });
   sfx('meow', { pitch: 1.3 }); sfx('charge', { pitch: .7 });
   music('chase');
   navigator.vibrate?.([40, 40, 40]);
@@ -84,7 +90,9 @@ function bankTreats() {
   sfx('win', { pitch: 1.15, vol: .6 });
   g.fx.burst(HOME.x, HOME.y - 60, 22, { kind: 'confetti', colors: ['#ffd34d', '#7df9ff', '#ffffff'] });
   g.fx.emit('ring', HOME.x, HOME.y - 40, { life: .5, size: 70, color: '#ffd34d', add: true });
-  g.punch(.05);
+  g.punch(.09); g.hitstop(.08); g.shake(10); g.flash('#ffd34d', .2);
+  g.popup(`+${pts}`, HOME.x, HOME.y - 150, '#ffd34d', 44);
+  if (S.alarm) { g.popup('ESCAPED!', HOME.x, HOME.y - 200, '#7df9ff', 32); }
   S.carried = 0; g.state.carried = 0; g.state.score = Math.round(g.score);
   if (S.alarm) { S.alarm = false; S.chaser = -1; music('action'); }
 }
@@ -98,6 +106,7 @@ function caught() {
   g.impact(S.px, S.py, { punch: .12, shake: 24, stop: .14, flash: '#ff3b5c', flashA: .4, rip: 2, sfx: 'boom' });
   g.fx.burst(S.px, S.py, 20, { kind: 'debris', colors: ['#3a3f5c', '#ff3b5c', '#ffffff'] });
   g.showBanner(S.lives > 0 ? 'CAUGHT!' : 'BUSTED!', 1.1);
+  g.popup(S.lives > 0 ? '-1 LIFE' : 'GAME OVER', HOME.x, HOME.y - 160, '#ff3b5c', 36);
   sfx('thud'); sfx('lose', { vol: .5 });
   navigator.vibrate?.([30, 50, 40]);
   music('action');
@@ -109,11 +118,16 @@ function buyTrap() {
   g.score -= CFG.trapCost; S.trapT = CFG.trapTime;
   g.showBanner('TRAP SET!', .7); sfx('powerup', { pitch: 1.2 });
   g.fx.burst(S.px, S.py - 30, 14, { kind: 'spark', colors: ['#7df9ff', '#ffffff'] });
+  g.fx.emit('ring', S.px, S.py - 20, { life: .5, size: 80, color: '#7df9ff', add: true });
+  g.flash('#7df9ff', .18); g.punch(.05);
+  g.popup('SLOWED!', S.px, S.py - 66, '#7df9ff', 28);
 }
 function buyDoor() {
   if (g.score < CFG.doorCost) { sfx('click', { pitch: .7 }); return; }
   g.score -= CFG.doorCost; S.doors++;
   g.showBanner('LOCKED DOORS!', .7); sfx('unlock', { pitch: 1.1 });
+  g.flash('#9d7bff', .16); g.shake(6);
+  g.popup('BLINDER!', S.px, S.py - 66, '#9d7bff', 28);
 }
 
 function dash(dx, dy) {
@@ -122,7 +136,10 @@ function dash(dx, dy) {
   S.dashT = CFG.dashTime; S.dashCDT = CFG.dashCD;
   S.dashVX = dx / m * CFG.dashSpeed; S.dashVY = dy / m * CFG.dashSpeed;
   sfx('whoosh', { pitch: 1.2 });
-  g.fx.burst(S.px, S.py - 20, 8, { kind: 'smoke', color: 'rgba(200,220,255,.5)' });
+  g.fx.burst(S.px, S.py - 20, 10, { kind: 'smoke', color: 'rgba(200,220,255,.5)' });
+  g.punch(.07); g.hitstop(.04);
+  g.popup('DASH!', S.px, S.py - 62, '#8ef6ff', 26);
+  g.fx.emit('ring', S.px, S.py - 20, { life: .28, size: 50, color: '#8ef6ff', add: true });
 }
 
 /* ================= bot (filmable auto-play) ================= */
@@ -228,9 +245,20 @@ function update(dt) {
           g.score += CFG.grazePts;
           g.combo.hit(S.px, S.py - 50, `CLOSE! +${CFG.grazePts}`);
           sfx('pop', { pitch: 1.3 });
-          g.impact(S.px, S.py - 20, { punch: .04, shake: 5, stop: .05, flash: '#7df9ff', flashA: .15 });
+          g.popup('GRAZE!', S.px, S.py - 96, '#7df9ff', 30);
+          g.impact(S.px, S.py - 20, { punch: .06, shake: 9, stop: .06, flash: '#7df9ff', flashA: .2 });
         }
       }
+      // heartbeat tension when the chaser is breathing down your neck
+      if (d < 118 && S.invuln <= 0) {
+        S.heartT = (S.heartT || 0) + dt;
+        if (S.heartT > .45) {
+          S.heartT = 0;
+          sfx('tick', { pitch: 1.5, vol: .35 });
+          g.shake(6); g.punch(.02);
+          g.fx.emit('glow', S.px + rnd(-14, 14), S.py - 20, { life: .3, size: 8, color: '#ff3b5c', add: true });
+        }
+      } else S.heartT = 0;
       // give up?
       if (d > CFG.giveUpR) { S.giveUpT += dt; if (S.giveUpT > CFG.giveUpT) { S.alarm = false; S.chaser = -1; music('action'); } }
       else S.giveUpT = 0;
@@ -255,7 +283,10 @@ function update(dt) {
   if (Math.hypot(HOME.x - S.px, (HOME.y - 40) - S.py) < 70) bankTreats();
 
   /* --- respawn treats slowly so the demo never stalls --- */
-  for (const h of HOUSES) if (h.treats < h.maxTreats && chance(dt * .05)) h.treats++;
+  for (const h of HOUSES) if (h.treats < h.maxTreats && chance(dt * .05)) {
+    h.treats++;
+    g.fx.emit('ring', h.x, h.y + 44, { life: .35, size: 30, color: '#ffd34d', add: true });
+  }
 
   g.state.score = Math.round(g.score);
   g.hud.hint = S.carried > 0 ? 'dash home to bank!' : '';

@@ -65,6 +65,13 @@ g.onStart = () => music('cozy');
 /* ------------------------------------------------------------------ juice */
 const MILESTONE_COL = ['#ffd34d', '#7dff7d', '#ff7ad0', '#9ff8ff'];
 
+function juice(x, y, o = {}) {
+  const k = o.s ?? 1, c = o.c || '#ffd34d';
+  g.burst(x, y, 5 + k * 8, { color: [c, '#ffffff'], speed: 130 + k * 140, life: .35 + k * .3, size: 4 + k * 3 });
+  g.fx.emit('ring', x, y, { size: 10 + k * 14, life: .26, color: c, add: true, wide: 3 });
+  if (k > .7) { g.shake(1.5 + k * 3); g.punch(.018 + .012 * k); }
+  if (o.f) g.flash(c, .08 + .04 * k);
+}
 function floatCoins(x, y, n) {
   // coins arc from the customer to the counter meter — the "money" reads as physical
   const k = Math.min(9, 3 + Math.floor(n / 4));
@@ -93,6 +100,7 @@ function serve() {
     g.fx.burst(cx, cy - 26, 10, { kind: 'star', color: ['#ffd34d', '#fff', '#ff9a3c'], speed: 200, life: .5, size: 7, g: 380 });
     g.fx.ring(cx, cy - 26, { r: 54, life: .3, color: '#ffd34d', wide: 5, ripple: .5 });
     g.impact(cx, cy - 26, { punch: .035, shake: 4, stop: .02 });
+    juice(cx, cy - 26, { s: .5 + Math.min(1, serveCombo * .1), c: '#ffd34d' });
   } else {
     sfx('tick', { pitch: 1 + Math.min(.4, serveCombo * .03), vol: .35 });
     g.fx.burst(cx, cy, 4, { kind: 'spark', color: ['#ffd34d', '#fff'], speed: 130, life: .3, size: 4 });
@@ -117,6 +125,7 @@ function buy(i) {
   sfx('powerup', { pitch }); sfx('powerup', { pitch: pitch * 1.1, vol: .55 });
   sfx('chime', { pitch: pitch * 1.05, vol: .5 });
   g.impact(x, y, { punch: .075, shake: 9, stop: .05, rip: 1.1, flash: s.col, flashA: .1 });
+  juice(x, y, { s: 1.6, c: s.col, f: 1 });
   g.fx.burst(x, y, 22, { kind: 'spark', color: [s.col, '#fff', s.col2], speed: 330, life: .5, size: 5.5, drag: 2 });
   g.fx.burst(x, y, 8, { kind: 'star', color: [s.col, '#fff'], speed: 170, life: .7, size: 9, g: 300 });
   g.fx.ring(x, y, { r: 96, life: .36, color: s.col, wide: 6, ripple: .9 });
@@ -132,6 +141,7 @@ function useRush() {
   sfx('win', { pitch: 1.1 }); sfx('powerup', { pitch: 1.3 });
   g.punch(.11); g.shake(10);
   g.flash('#ffd34d', .28);
+  juice(270, 300, { s: 2.2, c: '#ffd34d' });
   g.showBanner('RUSH HOUR ×2!', 1.1);
   g.fx.burst(452, 140, 26, { kind: 'star', color: ['#ffd34d', '#fff', '#ff9a3c'], speed: 300, life: .8, size: 9, g: 260 });
   g.fx.ring(452, 140, { r: 120, life: .4, color: '#ffd34d', wide: 8, ripple: 1.2 });
@@ -150,6 +160,7 @@ function spawnCustomer() {
     hop: Math.random() * TAU, mood: 1, happy: 0, leaving: 0, lt: 0,
   });
   sfx('step', { pitch: 1.3, vol: .2 });
+  juice(430 + slot * 6, 560 - slot * 4, { s: .3, c: '#9ff8ff' });
 }
 
 /* ------------------------------------------------------------------ update */
@@ -201,6 +212,7 @@ function update(dt) {
       g.showBanner(['1,000 COINS!', '5,000 COINS!', '10,000 COINS!'][mi], 1.2);
       sfx('win', { pitch: 1 + mi * .12 });
       g.flash(MILESTONE_COL[mi], .2); g.punch(.1); g.shake(9);
+      juice(W / 2, 300, { s: 2.6, c: MILESTONE_COL[mi], f: 1, p: '+' + [1000, 5000, 10000][mi] });
       g.fx.burst(270, 420, 30, { kind: 'star', color: [MILESTONE_COL[mi], '#fff', '#ffd34d'], speed: 340, life: .9, size: 10, g: 300 });
     }
   }

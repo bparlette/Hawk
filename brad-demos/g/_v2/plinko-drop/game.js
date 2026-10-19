@@ -137,12 +137,21 @@ function fire() {
   sfx('shoot', { pitch: .82 + charge * .5 });
   g.shake(3 + charge * 4);
   g.punch(4 + charge * 7);
+  g.fx.dust(270, 934, 6 + charge * 10, { speed: 150, up: 60, size: 10, color: 'rgba(160,220,255,.3)' });
   g.fx.ring(chip.x, chip.y, { r: 22 + charge * 22, color: '#ffd34d', life: .3 });
   g.fx.burst(chip.x, chip.y, 10 + Math.round(charge * 8), { kind: 'spark', color: ['#ffd34d', '#ff9a3c', '#ffffff'], speed: 240 + charge * 320, life: .3, size: 3.2, ang: Math.atan2(chip.vy, chip.vx), spread: .9 });
   g.combo.n = 0; g.combo.mult = 1;
   sync();
 }
 
+function spark(x, y, o = {}) {
+  const k = o.s ?? 1, c = o.c || '#bffcff';
+  g.burst(x, y, 3 + k * 8, { color: [c, '#ffffff'], speed: 120 + k * 170, life: .4 + k * .2, size: 3 + k * 3 });
+  g.fx.emit(k > 1.2 ? 'ring' : 'spark', x, y, { size: 8 + k * 12, life: .28, color: c, add: true, wide: 3 });
+  if (k > .9) { g.shake(1.5 + k * 3); g.punch(.02 + .01 * k); }
+  if (o.p) g.popup(o.p, x, y - 34, c, 26 + k * 8);
+  if (o.f) g.flash(c, .07 + .04 * k);
+}
 function pegHit(p, x, y) {
   hits++;
   coins += 2;
@@ -151,6 +160,7 @@ function pegHit(p, x, y) {
   sfx('blip', { pitch });
   g.fx.burst(x, y, 4, { kind: 'spark', color: ['#bffcff', '#8b7dff', '#ffffff'], speed: 200 + hits * 8, life: .24, size: 2.6 });
   if (hits === 4) sfx('coin', { pitch: 1.05 });
+  spark(x, y, { s: 1.1 - Math.min(.6, hits * .05), c: '#8ef6ff' });
   if (hits === 8) sfx('coinchain', { pitch: 1.18 });
   g.punch(1.2);
 }
@@ -172,10 +182,12 @@ function land(idx) {
     sfx('perfect'); sfx('coinchain', { pitch: 1.2 }); sfx('unlock');
     g.flash('#ffd34d', .34); g.shake(14); g.punch(14); g.slowmo(.5, .34);
     g.popup('x5  +' + pay, cx, cy - 30, '#ffd34d', 46);
+    spark(cx, cy, { s: 2.6, p: 'x5!', c: '#ffd34d', f: 1 });
     for (let i = 0; i < 34; i++) g.fx.burst(cx, cy, 1, { kind: 'confetti', color: ['#ffd34d', '#fff3b0', '#ff9a3c', '#ffffff'], speed: rnd(200, 560), life: 1.4, size: 5.5, ang: rnd(-Math.PI, 0), spread: .9 });
   } else {
     sfx(m >= 2 ? 'coin' : 'pop', { pitch: m >= 2 ? 1.1 : .8 });
     g.popup('x' + m + '  +' + pay, cx, cy - 26, m >= 2 ? '#bffcff' : '#8f8fa8', 34);
+    spark(cx, cy, { s: m >= 2 ? 1.4 : .6, p: '+' + pay, c: m >= 2 ? '#bffcff' : '#8f8fa8' });
     g.shake(5);
     g.fx.burst(cx, cy, 8, { kind: 'spark', color: ['#8b7dff', '#bffcff'], speed: 260, life: .3, size: 3 });
   }
@@ -196,12 +208,15 @@ function nextDrop() {
 function win() {
   sfx('fanfare'); sfx('win'); sfx('meow', { pitch: 1.1 });
   g.flash('#ffd34d', .4); g.shake(16); g.slowmo(.4, .8);
+  spark(270, 300, { s: 3, p: '+' + Math.round(g.score), c: '#ffd34d', f: 1 });
+  g.burst(270, 320, 30, { color: ['#ffd34d', '#8ef6ff', '#ff4ad8', '#fff'], speed: 420, life: 1.2, size: 5 });
   for (let i = 0; i < 40; i++) g.fx.burst(rnd(40, W - 40), rnd(200, 700), 1, { kind: 'confetti', color: ['#ffd34d', '#bffcff', '#ff5fd2', '#8bffb0'], speed: rnd(200, 560), life: 1.5, size: 5, ang: rnd(-Math.PI, 0), spread: .9 });
   g.end({ win: true, score: Math.round(coins), label: 'COINS', progress: 1 });
 }
 function lose() {
   sfx('lose'); sfx('meow', { pitch: .68 });
   g.flash('#ff2d55', .3); g.shake(12); g.slowmo(.3, .7);
+  spark(270, 620, { s: 2.2, p: 'MISSED', c: '#ff2d55', f: 1 });
   g.end({ win: false, score: Math.round(coins), label: 'COINS', progress: clamp(bestM / 5, 0, 1) });
 }
 

@@ -133,6 +133,15 @@ function segCross(ax, ay, bx, by, cx, cy, dx, dy) {
 }
 
 /** the one code path every blade stroke takes — swipes, taps and the bot all come here */
+function juice(x, y, o = {}) {
+  const k = o.s ?? 1, c = o.c || '#ffe9a8';
+  g.burst(x, y, 5 + k * 9, { color: [c, '#ffffff'], speed: 150 + k * 160, life: .4 + k * .3, size: 4 + k * 3 });
+  g.fx.emit(k > 1.6 ? 'ring' : 'spark', x, y, { size: 12 + k * 16, life: .3, color: c, add: true, wide: 4 });
+  if (k > .6) { g.shake(1.5 + k * 4); g.punch(.02 + .012 * k); }
+  if (o.h) g.hitstop(.02 + .02 * k);
+  if (o.p) g.popup(o.p, x, y - 34 - k * 10, c, 22 + k * 8);
+  if (o.f) g.flash(c, .08 + .04 * k);
+}
 function slash(x1, y1, x2, y2, strong) {
   if (status !== 'play') return;
   let hitAny = false;
@@ -171,6 +180,7 @@ function sever(r, u, cx, cy, ang, strong) {
   sfx('slice', { pitch: 1.05 + (combo % 6) * .05 });
   sfx('snap', { pitch: .92 + (combo % 5) * .07, vol: .55 });
   g.punch(.03);
+  juice(cx, cy, { s: strong ? 1.5 : 1, c: strong ? '#ffe9a8' : '#bffcff', h: strong ? 1 : 0, p: strong ? 'SLICE!' : '' });
 
   if (r.bomb) { bombGoesOff(r); return; }
 
@@ -214,6 +224,7 @@ function catchSnack(f) {
   if (f.gold) { sfx('perfect', { pitch: 1.3 }); g.showBanner('GOLDEN!', .6); }
 
   g.impact(cat.x, CATCH_Y, { punch: .06, shake: 6, stop: .028, rip: 1 });
+  juice(cat.x + cat.dir * 30, CATCH_Y - 40, { s: f.gold ? 2 : 1.1, c: f.gold ? '#ffd34d' : '#ffe9a8', f: f.gold, p: f.gold ? 'GOLDEN!' : '' });
   const cols = f.gold ? ['#ffe98a', '#ffd34d', '#fff'] : [TREAT_COL[f.kind].body, TREAT_COL[f.kind].light, '#fff'];
   g.fx.burst(cat.x + cat.dir * 26, CATCH_Y, f.gold ? 26 : 16, { kind: 'spark', color: cols, speed: 340, life: .5, size: 7, g: 700 });
   g.fx.burst(cat.x + cat.dir * 26, CATCH_Y, 4, { kind: 'heart', color: '#ff8fb0', speed: 150, life: .8, size: 11, g: -140 });
@@ -235,6 +246,7 @@ function missSnack(f) {
   g.combo.miss();
   lvlT -= MISS_COST;
   g.popup(`MISS -${MISS_COST.toFixed(1)}s`, clamp(f.x, 70, 470), FLOOR_Y - 40, '#ff9a6a', 30);
+  juice(clamp(f.x, 70, 470), FLOOR_Y - 40, { s: 1.2, c: '#ff9a6a', f: 1 });
   g.fx.dust(f.x, FLOOR_Y, 7, { color: 'rgba(255,220,190,.5)', size: 15, speed: 120 });
   g.fx.burst(f.x, FLOOR_Y, 8, { kind: 'dot', color: TREAT_COL[f.kind].body, speed: 200, life: .5, size: 6, g: 800 });
   sfx('thud', { pitch: .8 });
@@ -254,6 +266,7 @@ function levelClear() {
   g.showBanner(`LEVEL ${lvl + 1} CLEAR`, 1);
   g.slowmo(.5, .6);
   g.impact(cat.x, CATCH_Y - 20, { punch: .12, shake: 10, flash: '#ffe9a8', flashA: .22 });
+  juice(W / 2, CATCH_Y - 60, { s: 2, c: '#ffe9a8', p: `LEVEL ${lvl + 1} CLEAR`, f: 1 });
   for (let k = 0; k < 4; k++) {
     g.fx.burst(90 + k * 120, 320 + (k % 2) * 90, 18, { kind: 'confetti', color: ['#ffd34d', '#ff7a3c', '#7dff9b', '#7df9ff', '#ff8fb0'], speed: 300, life: 1.4, size: 8, g: 430 });
   }
@@ -277,6 +290,7 @@ function lose() {
   g.combo.miss();
   g.fx.burst(cat.x, CATCH_Y, 12, { kind: 'smoke', color: 'rgba(120,140,180,.5)', speed: 80, life: 1, size: 22, g: -20 });
   sfx('groan', { pitch: .8 });
+  g.shake(18); g.flash('#ff6b6b', .3); juice(cat.x, CATCH_Y, { s: 2.6, c: '#ff6b6b', f: 1, p: 'GAME OVER' });
   const prog = clamp((lvl + clamp(caught / needs, 0, 1)) / LEVELS.length, 0, .99);
   g.end({ win: false, score: Math.round(score), label: 'SCORE', progress: prog });
 }

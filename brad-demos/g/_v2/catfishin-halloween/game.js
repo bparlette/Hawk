@@ -125,6 +125,20 @@ function doEscape(msg) {
   S.casts++;
   g.combo.hit(S.bob ? S.bob.x : W / 2, POND_TOP + 60, msg || 'ESCAPED!');
   sfx('lose', { pitch: .8, vol: .4 });
+  endTripOrNextCast();
+}
+
+/* A demo trip is short so the round can resolve (harness + video contract). */
+const TRIP_CASTS = 3;
+function endTripOrNextCast() {
+  if (S.casts >= TRIP_CASTS) {
+    const win = S.caught > 0;
+    g.impact(W / 2, H * .4, { punch: .3, shake: 16, flash: win ? '#ffe27a' : '#8fd3ff', flashA: .5, stop: .2, sfx: win ? 'win' : 'lose' });
+    g.popup(win ? 'TRIP COMPLETE!' : 'SKUNKED!', W / 2, H * .34, win ? '#ffd94d' : '#8fd3ff', 40);
+    g.fx.burst(W / 2, H * .4, win ? 60 : 24, { kind: 'spark', color: win ? ['#ffd94d', '#fff', '#bfe9ff'] : '#8fd3ff', speed: 420, life: 1 });
+    g.end({ win, score: Math.round(g.score), label: 'SCORE', progress: Math.min(100, Math.round(S.caught / TRIP_CASTS * 100)) });
+    return;
+  }
   S.phase = 'cast'; S.t = 0; S.bob = null;
 }
 
@@ -148,7 +162,7 @@ function tap(x, y) {
     sfx('click', { pitch: .9 + S.progress / 200, vol: .35 });
     if (S.bob) g.fx.burst(S.bob.x, S.bob.y, 3, { kind: 'spark', color: '#bfe9ff', speed: 120, life: .3 });
   }
-  else if (S.phase === 'reveal' && S.revealT > .9) { S.phase = 'cast'; S.t = 0; S.bob = null; }
+  else if (S.phase === 'reveal' && S.revealT > .9) { endTripOrNextCast(); }
 }
 
 /* ---------------------------------------------------------------- bot */
