@@ -162,7 +162,7 @@ function paintScores() {
 
 // ---------------------------------------------------------------- rotation engine (same as templates/packs/pack.html)
 let games = CFG.games, N = games.length;
-const CAP = 45000, GAP = 1300, a = Math.floor(Math.random() * 1e6);
+const CAP = 90000, GAP = 1300, a = Math.floor(Math.random() * 1e6);
 let idx = -1, loop = 0, cur = 0, timer = 0, locked = true, results = [];
 const frames = [document.createElement('iframe'), document.createElement('iframe')];
 frames.forEach(f => { f.className = 'off'; f.allow = 'autoplay; fullscreen; gamepad'; document.body.prepend(f); });

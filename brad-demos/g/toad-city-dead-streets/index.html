@@ -46,6 +46,23 @@
   #pops { position: fixed; inset: 0; pointer-events: none; z-index: 12; overflow: hidden; }
   .pop { position: absolute; left: 0; top: 0; font-size: 16px; color: #fff; white-space: nowrap; text-shadow: 2px 2px 0 #14101f, -2px -2px 0 #14101f, 2px -2px 0 #14101f, -2px 2px 0 #14101f; }
   .pop.gold { color: #ffd23c; font-size: 19px; } .pop.bad { color: #ff5f7a; }
+  .pop.headshot { color: #ff3d6e; font-size: 21px; font-weight: 900; letter-spacing: 1px; text-shadow: 2px 2px 0 #14101f, -2px -2px 0 #14101f, 0 0 8px rgba(255,61,110,.85); }
+  #crosshair { position: fixed; left: 50%; top: 50%; width: 36px; height: 36px; transform: translate(-50%, -50%); pointer-events: none; z-index: 15; display: none; }
+  body.tenderloin.playing #crosshair, body.fps.playing #crosshair { display: block; }
+  body.tenderloin #gl, body.fps #gl { cursor: default; }
+  .ch-dot { position: absolute; left: 50%; top: 50%; width: 4px; height: 4px; background: #c8f070; border-radius: 50%; transform: translate(-50%, -50%); box-shadow: 0 0 2px #000; }
+  .ch-l { position: absolute; background: rgba(255, 255, 255, 0.92); box-shadow: 0 0 2px #14101f; border-radius: 1px; }
+  .ch-t { left: 50%; top: 0; width: 2px; height: 7px; transform: translate(-50%, calc(-1 * var(--ch-spread, 5px))); }
+  .ch-b { left: 50%; bottom: 0; width: 2px; height: 7px; transform: translate(-50%, var(--ch-spread, 5px)); }
+  .ch-left { left: 0; top: 50%; width: 7px; height: 2px; transform: translate(calc(-1 * var(--ch-spread, 5px)), -50%); }
+  .ch-r { right: 0; top: 50%; width: 7px; height: 2px; transform: translate(var(--ch-spread, 5px), -50%); }
+  #hitmarker { position: absolute; left: 50%; top: 50%; width: 22px; height: 22px; transform: translate(-50%, -50%) rotate(45deg) scale(0.7); opacity: 0; pointer-events: none; transition: opacity .04s, transform .05s; }
+  #hitmarker.on { opacity: 1; transform: translate(-50%, -50%) rotate(45deg) scale(1.15); }
+  #hitmarker.on.headshot { opacity: 1; transform: translate(-50%, -50%) rotate(45deg) scale(1.45); }
+  .hm-x { position: absolute; background: #ff3355; box-shadow: 0 0 4px #ff1a40, 0 0 2px #000; border-radius: 1px; }
+  .hm-1 { left: 50%; top: 0; bottom: 0; width: 2.5px; transform: translateX(-50%); }
+  .hm-2 { top: 50%; left: 0; right: 0; height: 2.5px; transform: translateY(-50%); }
+  #hitmarker.headshot .hm-x { background: #ff113a; box-shadow: 0 0 7px #ff0033, 0 0 3px #000; }
   #ban { position: fixed; left: 50%; top: 34%; transform: translate(-50%,-50%) rotate(-4deg) scale(.7); font-size: 42px; color: #c8f070; text-align: center; line-height: 1.05; opacity: 0; transition: opacity .15s, transform .15s; z-index: 13; pointer-events: none; white-space: nowrap;
     text-shadow: 3px 3px 0 #14101f, -2px -2px 0 #14101f, 2px -2px 0 #14101f, -2px 2px 0 #14101f, 6px 7px 0 #5a2a6a; }
   #ban.on { opacity: 1; transform: translate(-50%,-50%) rotate(-4deg) scale(1); }
@@ -104,6 +121,17 @@
 <body>
 <canvas id="gl"></canvas>
 <div id="vign"></div>
+<div id="crosshair">
+  <div class="ch-l ch-t"></div>
+  <div class="ch-l ch-b"></div>
+  <div class="ch-l ch-left"></div>
+  <div class="ch-l ch-r"></div>
+  <div class="ch-dot"></div>
+  <div id="hitmarker">
+    <div class="hm-x hm-1"></div>
+    <div class="hm-x hm-2"></div>
+  </div>
+</div>
 <div id="hud" class="ink">
   <div class="row"><div id="hp"><div id="hpF"></div><span id="hpT">100</span></div><div class="chip k" id="kills">0</div><div class="chip h" id="horde">0</div><div class="chip" id="score">0</div></div>
   <div class="row" id="objrow"><div class="chip" id="obj">Fight east</div><div class="chip" id="objT"></div></div>
@@ -116,8 +144,8 @@
 <div id="pops"></div>
 <div id="ban"></div>
 <div id="say"></div>
-<div id="ctlbar"><button type="button" id="pauseB">PAUSE</button><button type="button" id="muteB">SOUND ON</button></div>
-<div id="keys"><b>WASD</b> move · <b>mouse</b> aim/fire (or <b>arrows</b>)<br><b>F</b> build · <b>G</b> bomb · <b>V</b> shove · <b>Q/E 1-4</b> guns · <b>R</b> reload · <b>P</b> pause · <b>M</b> sound</div>
+<div id="ctlbar"><button type="button" id="viewB">VIEW: TOP</button><button type="button" id="pauseB">PAUSE</button><button type="button" id="muteB">SOUND ON</button></div>
+<div id="keys"><b>WASD</b> move · <b>mouse</b> aim/fire (or <b>arrows</b>)<br><b>V</b> street cam · <b>Shift</b> shove · <b>F</b> build · <b>G</b> bomb · <b>Q/E 1-4</b> guns · <b>R</b> reload · <b>P</b> pause · <b>M</b> sound</div>
 <div id="joyL"><div id="knobL"></div></div>
 <div id="joyR"><div id="knobR"></div></div>
 <div class="tb" id="bBuild">BUILD</div><div class="tb" id="bBomb">BOMB</div><div class="tb" id="bShove">SHOVE</div><div class="tb" id="bSwap">SWAP</div>
@@ -125,7 +153,7 @@
 <div id="title">
   <h1>TOAD CITY<span>DEAD STREETS</span></h1>
   <div class="sub">The Inner Harbor's gone rotten. Harold and Mavis have one way out: the water taxi at Broadway Pier.</div>
-  <div class="ctl"><span class="kb"><b>WASD</b> move · <b>mouse</b> aim + fire · <b>F</b> barricade · <b>G</b> bomb</span><span class="tc">Left stick: move · Right stick: aim + fire</span><br>Hold the line at Pratt &amp; Light and President St · Survive the Harbor Hulk</div>
+  <div class="ctl"><span class="kb"><b>WASD</b> move · <b>mouse</b> aim + fire · <b>V</b> street cam · <b>Shift</b> shove · <b>F</b> barricade · <b>G</b> bomb</span><span class="tc">Left stick: move · Right stick: aim + fire</span><br>Hold the line at Pratt &amp; Light and President St · Survive the Harbor Hulk</div>
   <button type="button" class="btn" id="startB">START THE RUN ▶</button>
   <div id="best" class="ink"></div>
 </div>
