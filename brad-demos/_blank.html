@@ -1,0 +1,3 @@
+<!doctype html><html><body style="margin:0;background:#000"><canvas id=c width=540 height=960></canvas>
+<script>const c=document.getElementById('c'),x=c.getContext('2d');let n=0;
+function f(){n++;x.fillStyle='#123';x.fillRect(0,0,540,960);x.fillStyle='#fff';for(let i=0;i<200;i++)x.fillRect(Math.random()*540,Math.random()*960,8,8);requestAnimationFrame(f)}f();</script></body></html>

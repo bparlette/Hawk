@@ -187,6 +187,11 @@ export class FX {
       });
     }
   }
+  /** a single expanding ring — the cheapest, punchiest "something happened here" */
+  ring(x, y, o = {}) {
+    this.emit('ring', x, y, { size: o.r ?? o.size ?? 40, life: o.life ?? .32, color: o.color || '#fff', add: true, wide: o.wide ?? 5 });
+    if (this.g.post && o.ripple !== false) this.g.post.ripple(x / this.g.W, y / this.g.H, o.ripple ?? .6);
+  }
   /** ring + sparks + smoke + flash: the all-purpose "something exploded" */
   blast(x, y, o = {}) {
     const r = o.r ?? 70, col = o.color || '#ffd34d';
@@ -416,6 +421,18 @@ export function makeGame(o = {}) {
       }
     );
   };
+
+  /* --- forgiving boot ---------------------------------------------------------
+     Three authoring styles showed up across the suite: g.run(update, draw),
+     g.update/g.draw + g.start(), and (accidentally) just assigning g.draw.
+     All three now run: g.start() boots with whatever handlers are assigned, and a
+     microtask after the module body boots the loop if nothing else did — a missing
+     g.run() used to leave the game as a frozen first frame. */
+  let loopStarted = false;
+  const __run = g.run;
+  g.run = (u, d, h) => { loopStarted = true; __run(u, d, h); };
+  g.start = (u, d, h) => { if (loopStarted) return; g.run(u || g.update, d || g.draw, h); };
+  queueMicrotask(() => { if (!loopStarted && (g.update || g.draw)) g.start(); });
 
   /* --- frame pacing watchdog (reads rAF timing, independent of the fixed step) --- */
   if (post) {
