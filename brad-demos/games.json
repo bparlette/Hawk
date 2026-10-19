@@ -10,20 +10,21 @@
   "Viral Demos",
   "Classic Homebrew",
   "Cat Arcade",
+  "Cat Arcade v2",
   "Arcade Hub"
  ],
  "games": [
   {
    "id": "roadster-flip",
-   "title": "ROADSTER // FLIP \u2014 Starbase Run",
+   "title": "ROADSTER // FLIP — Starbase Run",
    "category": "Originals",
    "keys": {
     "attack": "KeyJ",
     "jump": "KeyK"
    },
    "labels": {
-    "attack": "FAN \u00b7 HOLD",
-    "jump": "THRUST \u00b7 TAP"
+    "attack": "FAN · HOLD",
+    "jump": "THRUST · TAP"
    },
    "extras": [
     {
@@ -33,7 +34,7 @@
    ],
    "autostart": [],
    "orientation": "portrait",
-   "note": "Tesla Roadster 2.0 fan game: the car drives itself, you get two buttons \u2014 hold the fan for sonic loops, tap thrusters to kickflip over Teslas crossing the 4-way at Starbase. Built with gamepress.",
+   "note": "Tesla Roadster 2.0 fan game: the car drives itself, you get two buttons — hold the fan for sonic loops, tap thrusters to kickflip over Teslas crossing the 4-way at Starbase. Built with gamepress.",
    "path": "g/roadster-flip/index.html",
    "thumb": "thumbs/roadster-flip.webp?v=1792369872"
   },
@@ -144,9 +145,9 @@
     "start": "Enter"
    },
    "labels": {
-    "attack": "B \u00b7 ATTACK",
-    "jump": "C \u00b7 JUMP",
-    "special": "A \u00b7 SPECIAL"
+    "attack": "B · ATTACK",
+    "jump": "C · JUMP",
+    "special": "A · SPECIAL"
    },
    "autostart": [
     [
@@ -217,7 +218,7 @@
   },
   {
    "id": "bakeoff-a-free",
-   "title": "A \u00b7 Free City",
+   "title": "A · Free City",
    "category": "Bake-off",
    "keys": {
     "attack": "KeyJ",
@@ -228,11 +229,11 @@
    },
    "extras": [
     {
-     "label": "CAM \u25c0",
+     "label": "CAM ◀",
      "key": "KeyQ"
     },
     {
-     "label": "CAM \u25b6",
+     "label": "CAM ▶",
      "key": "KeyE"
     }
    ],
@@ -260,7 +261,7 @@
   },
   {
    "id": "bakeoff-b-paper",
-   "title": "B \u00b7 Paper City",
+   "title": "B · Paper City",
    "category": "Bake-off",
    "keys": {
     "attack": "KeyJ",
@@ -271,11 +272,11 @@
    },
    "extras": [
     {
-     "label": "CAM \u25c0",
+     "label": "CAM ◀",
      "key": "KeyQ"
     },
     {
-     "label": "CAM \u25b6",
+     "label": "CAM ▶",
      "key": "KeyE"
     }
    ],
@@ -303,7 +304,7 @@
   },
   {
    "id": "bakeoff-c-gta",
-   "title": "C \u00b7 GTA City",
+   "title": "C · GTA City",
    "category": "Bake-off",
    "keys": {
     "attack": "KeyJ",
@@ -314,11 +315,11 @@
    },
    "extras": [
     {
-     "label": "CAM \u25c0",
+     "label": "CAM ◀",
      "key": "KeyQ"
     },
     {
-     "label": "CAM \u25b6",
+     "label": "CAM ▶",
      "key": "KeyE"
     }
    ],
@@ -346,7 +347,7 @@
   },
   {
    "id": "bakeoff-d-skyline",
-   "title": "D \u00b7 Skyline City",
+   "title": "D · Skyline City",
    "category": "Bake-off",
    "keys": {
     "attack": "KeyJ",
@@ -357,11 +358,11 @@
    },
    "extras": [
     {
-     "label": "CAM \u25c0",
+     "label": "CAM ◀",
      "key": "KeyQ"
     },
     {
-     "label": "CAM \u25b6",
+     "label": "CAM ▶",
      "key": "KeyE"
     }
    ],
@@ -389,7 +390,7 @@
   },
   {
    "id": "bakeoff-e-gta32",
-   "title": "E \u00b7 GTA 32",
+   "title": "E · GTA 32",
    "category": "Bake-off",
    "keys": {
     "attack": "KeyJ",
@@ -400,11 +401,11 @@
    },
    "extras": [
     {
-     "label": "CAM \u25c0",
+     "label": "CAM ◀",
      "key": "KeyQ"
     },
     {
-     "label": "CAM \u25b6",
+     "label": "CAM ▶",
      "key": "KeyE"
     }
    ],
@@ -432,7 +433,7 @@
   },
   {
    "id": "bakeoff-f-free16",
-   "title": "F \u00b7 Free 16",
+   "title": "F · Free 16",
    "category": "Bake-off",
    "keys": {
     "attack": "KeyJ",
@@ -443,11 +444,11 @@
    },
    "extras": [
     {
-     "label": "CAM \u25c0",
+     "label": "CAM ◀",
      "key": "KeyQ"
     },
     {
-     "label": "CAM \u25b6",
+     "label": "CAM ▶",
      "key": "KeyE"
     }
    ],
@@ -475,7 +476,7 @@
   },
   {
    "id": "bakeoff-g-hd2d",
-   "title": "G \u00b7 HD-2D",
+   "title": "G · HD-2D",
    "category": "Bake-off",
    "keys": {
     "attack": "KeyJ",
@@ -486,11 +487,11 @@
    },
    "extras": [
     {
-     "label": "CAM \u25c0",
+     "label": "CAM ◀",
      "key": "KeyQ"
     },
     {
-     "label": "CAM \u25b6",
+     "label": "CAM ▶",
      "key": "KeyE"
     }
    ],
@@ -518,7 +519,7 @@
   },
   {
    "id": "bakeoff-h-iso",
-   "title": "H \u00b7 Iso City",
+   "title": "H · Iso City",
    "category": "Bake-off",
    "keys": {
     "attack": "KeyJ",
@@ -529,11 +530,11 @@
    },
    "extras": [
     {
-     "label": "CAM \u25c0",
+     "label": "CAM ◀",
      "key": "KeyQ"
     },
     {
-     "label": "CAM \u25b6",
+     "label": "CAM ▶",
      "key": "KeyE"
     }
    ],
@@ -561,7 +562,7 @@
   },
   {
    "id": "bakeoff-i-cel",
-   "title": "I \u00b7 Cel City",
+   "title": "I · Cel City",
    "category": "Bake-off",
    "keys": {
     "attack": "KeyJ",
@@ -573,11 +574,11 @@
    },
    "extras": [
     {
-     "label": "CAM \u25c0",
+     "label": "CAM ◀",
      "key": "KeyQ"
     },
     {
-     "label": "CAM \u25b6",
+     "label": "CAM ▶",
      "key": "KeyE"
     }
    ],
@@ -588,7 +589,7 @@
   },
   {
    "id": "survivors-plus",
-   "title": "\u2605 Vampire Survivors Remake \u2014 Hark Edition (fan remake)",
+   "title": "★ Vampire Survivors Remake — Hark Edition (fan remake)",
    "category": "Other games",
    "keys": {
     "up": "ArrowUp",
@@ -659,7 +660,7 @@
    },
    "extras": [
     {
-     "label": "\u2605 STAR",
+     "label": "★ STAR",
      "key": "Enter"
     },
     {
@@ -734,7 +735,7 @@
     "start": "Enter"
    },
    "labels": {
-    "attack": "A \u00b7 JUMP",
+    "attack": "A · JUMP",
     "jump": "B",
     "start": "PAUSE"
    },
@@ -764,7 +765,7 @@
     "start": "Enter"
    },
    "labels": {
-    "attack": "A \u00b7 JUMP",
+    "attack": "A · JUMP",
     "jump": "B",
     "start": "PAUSE"
    },
@@ -794,7 +795,7 @@
     "start": "Enter"
    },
    "labels": {
-    "attack": "A \u00b7 JUMP",
+    "attack": "A · JUMP",
     "jump": "B",
     "start": "PAUSE"
    },
@@ -824,7 +825,7 @@
     "start": "Enter"
    },
    "labels": {
-    "attack": "A \u00b7 ROTATE",
+    "attack": "A · ROTATE",
     "jump": "B",
     "start": "PAUSE"
    },
@@ -854,7 +855,7 @@
     "start": "Enter"
    },
    "labels": {
-    "attack": "A \u00b7 FLAP",
+    "attack": "A · FLAP",
     "jump": "B",
     "start": "PAUSE"
    },
@@ -884,8 +885,8 @@
     "start": "Enter"
    },
    "labels": {
-    "attack": "A \u00b7 GAS",
-    "jump": "B \u00b7 BRAKE",
+    "attack": "A · GAS",
+    "jump": "B · BRAKE",
     "start": "PAUSE"
    },
    "extras": [
@@ -914,7 +915,7 @@
     "start": "Enter"
    },
    "labels": {
-    "attack": "A \u00b7 FIRE",
+    "attack": "A · FIRE",
     "jump": "B",
     "start": "PAUSE"
    },
@@ -951,7 +952,7 @@
   },
   {
    "id": "cinema-city",
-   "title": "J \u00b7 Cinema City",
+   "title": "J · Cinema City",
    "category": "Bake-off",
    "keys": {
     "attack": "KeyJ",
@@ -966,7 +967,7 @@
   },
   {
    "id": "wasteland-van",
-   "title": "\u2605 ROADKILL RIG \u2014 Hark Original",
+   "title": "★ ROADKILL RIG — Hark Original",
    "category": "Originals",
    "keys": {
     "up": "KeyW",
@@ -1019,7 +1020,7 @@
   },
   {
    "id": "toad-street-32",
-   "title": "K \u00b7 Toad Street 32",
+   "title": "K · Toad Street 32",
    "category": "Bake-off",
    "keys": {
     "attack": "KeyJ",
@@ -1045,7 +1046,7 @@
     "start": "Enter"
    },
    "labels": {
-    "attack": "J \u00b7 THROW"
+    "attack": "J · THROW"
    },
    "extras": [
     {
@@ -1078,9 +1079,9 @@
     "start": "Enter"
    },
    "labels": {
-    "attack": "J \u00b7 FIRE",
-    "jump": "F \u00b7 BUILD",
-    "special": "G \u00b7 BOMB"
+    "attack": "J · FIRE",
+    "jump": "F · BUILD",
+    "special": "G · BOMB"
    },
    "extras": [
     {
@@ -1121,9 +1122,9 @@
     "start": "Enter"
    },
    "labels": {
-    "attack": "SHIFT \u00b7 BOOST",
-    "jump": "SPACE \u00b7 CLIMB",
-    "special": "V \u00b7 CAM"
+    "attack": "SHIFT · BOOST",
+    "jump": "SPACE · CLIMB",
+    "special": "V · CAM"
    },
    "extras": [
     {
@@ -1157,9 +1158,9 @@
     "select": "KeyP"
    },
    "labels": {
-    "attack": "J \u00b7 FLIP",
+    "attack": "J · FLIP",
     "jump": "OLLIE",
-    "special": "L \u00b7 GRIND",
+    "special": "L · GRIND",
     "start": "SKATE",
     "select": "PAUSE"
    },
@@ -1199,9 +1200,9 @@
     "select": "KeyP"
    },
    "labels": {
-    "attack": "SHIFT \u00b7 SLIDE",
-    "jump": "SPACE \u00b7 JUMP",
-    "special": "E \u00b7 CAM",
+    "attack": "SHIFT · SLIDE",
+    "jump": "SPACE · JUMP",
+    "special": "E · CAM",
     "start": "START",
     "select": "PAUSE"
    },
@@ -1327,7 +1328,7 @@
   },
   {
    "id": "sticker-excitebike",
-   "title": "Excitebike \u2014 Track 1",
+   "title": "Excitebike — Track 1",
    "category": "Sticker Series",
    "keys": {
     "up": "ArrowUp",
@@ -1345,7 +1346,7 @@
   },
   {
    "id": "sticker-punch-out",
-   "title": "Punch-Out \u2014 Minor Circuit",
+   "title": "Punch-Out — Minor Circuit",
    "category": "Sticker Series",
    "keys": {
     "up": "ArrowUp",
@@ -1363,7 +1364,7 @@
   },
   {
    "id": "sticker-kung-fu-master",
-   "title": "Kung Fu Master \u2014 Level 1",
+   "title": "Kung Fu Master — Level 1",
    "category": "Sticker Series",
    "keys": {
     "up": "ArrowUp",
@@ -1381,7 +1382,7 @@
   },
   {
    "id": "sticker-bad-dudes",
-   "title": "Bad Dudes \u2014 Stage 2",
+   "title": "Bad Dudes — Stage 2",
    "category": "Sticker Series",
    "keys": {
     "up": "ArrowUp",
@@ -1502,7 +1503,7 @@
   },
   {
    "id": "re-requiem",
-   "title": "Resident Evil: Requiem \u00b7 FINAL",
+   "title": "Resident Evil: Requiem · FINAL",
    "category": "Resident Evil: Requiem",
    "keys": {
     "up": "KeyW",
@@ -1515,9 +1516,9 @@
     "start": "Enter"
    },
    "labels": {
-    "attack": "J \u00b7 FIRE",
-    "jump": "E \u00b7 USE / HIDE",
-    "special": "K \u00b7 LASER AIM"
+    "attack": "J · FIRE",
+    "jump": "E · USE / HIDE",
+    "special": "K · LASER AIM"
    },
    "extras": [
     {
@@ -1546,7 +1547,7 @@
   },
   {
    "id": "re-requiem-v1",
-   "title": "Requiem v1 \u00b7 Spencer Estate Wing",
+   "title": "Requiem v1 · Spencer Estate Wing",
    "category": "Resident Evil: Requiem",
    "keys": {
     "up": "KeyW",
@@ -1559,9 +1560,9 @@
     "start": "Enter"
    },
    "labels": {
-    "attack": "E \u00b7 USE",
+    "attack": "E · USE",
     "jump": "SPACE",
-    "special": "F \u00b7 LIGHT"
+    "special": "F · LIGHT"
    },
    "autostart": [],
    "orientation": "landscape",
@@ -1571,7 +1572,7 @@
   },
   {
    "id": "re-requiem-v2",
-   "title": "Requiem v2 \u00b7 RE Engine WebGL Edition",
+   "title": "Requiem v2 · RE Engine WebGL Edition",
    "category": "Resident Evil: Requiem",
    "keys": {
     "up": "KeyW",
@@ -1584,9 +1585,9 @@
     "start": "Enter"
    },
    "labels": {
-    "attack": "E \u00b7 USE",
+    "attack": "E · USE",
     "jump": "SPACE",
-    "special": "F \u00b7 LIGHT"
+    "special": "F · LIGHT"
    },
    "autostart": [],
    "orientation": "landscape",
@@ -1596,7 +1597,7 @@
   },
   {
    "id": "re-requiem-v3",
-   "title": "Requiem v3 \u00b7 Director's Cut",
+   "title": "Requiem v3 · Director's Cut",
    "category": "Resident Evil: Requiem",
    "keys": {
     "up": "KeyW",
@@ -1609,9 +1610,9 @@
     "start": "Enter"
    },
    "labels": {
-    "attack": "E \u00b7 USE",
+    "attack": "E · USE",
     "jump": "SPACE",
-    "special": "F \u00b7 LIGHT"
+    "special": "F · LIGHT"
    },
    "autostart": [],
    "orientation": "landscape",
@@ -1621,7 +1622,7 @@
   },
   {
    "id": "blox-dough-raid-plus",
-   "title": "\u2605 Blox Fruits: Dough Raid \u2014 Turtles Edition",
+   "title": "★ Blox Fruits: Dough Raid — Turtles Edition",
    "category": "Other games",
    "keys": {
     "up": "KeyW",
@@ -1661,7 +1662,7 @@
   },
   {
    "id": "polytrack-plus",
-   "title": "\u2605 PolyTrack Remake \u2014 Hark Edition (fan remake)",
+   "title": "★ PolyTrack Remake — Hark Edition (fan remake)",
    "category": "Other games",
    "keys": {
     "up": "ArrowUp",
@@ -1676,7 +1677,7 @@
    "labels": {
     "attack": "GAS",
     "jump": "BRAKE",
-    "special": "\u2691 CHECKPOINT",
+    "special": "⚑ CHECKPOINT",
     "start": "RESTART"
    },
    "extras": [
@@ -1736,7 +1737,7 @@
   },
   {
    "id": "socal-summer-games-plus",
-   "title": "\u2605 California Games Remastered \u2014 Hark Edition (fan remake)",
+   "title": "★ California Games Remastered — Hark Edition (fan remake)",
    "category": "Originals",
    "keys": {
     "up": "ArrowUp",
@@ -1818,9 +1819,9 @@
     "start": "Enter"
    },
    "labels": {
-    "attack": "SPACE \u00b7 GRAPPLE",
-    "jump": "E \u00b7 NITRO",
-    "special": "1 \u00b7 MODE"
+    "attack": "SPACE · GRAPPLE",
+    "jump": "E · NITRO",
+    "special": "1 · MODE"
    },
    "extras": [
     {
@@ -1857,9 +1858,9 @@
     "start": "Enter"
    },
    "labels": {
-    "attack": "SPACE \u00b7 GRAPPLE",
-    "jump": "E \u00b7 NITRO",
-    "special": "1 \u00b7 MODE"
+    "attack": "SPACE · GRAPPLE",
+    "jump": "E · NITRO",
+    "special": "1 · MODE"
    },
    "extras": [
     {
@@ -1883,7 +1884,7 @@
   },
   {
    "id": "drift-survivors-after-hark",
-   "title": "DRIFT SURVIVORS \u2014 Toon 3D Fan Game - after harkinstructions",
+   "title": "DRIFT SURVIVORS — Toon 3D Fan Game - after harkinstructions",
    "category": "Originals",
    "keys": {
     "up": "KeyW",
@@ -1896,9 +1897,9 @@
     "start": "Enter"
    },
    "labels": {
-    "attack": "SPACE \u00b7 DODGE",
-    "jump": "F \u00b7 HOOK",
-    "special": "E \u00b7 EMP"
+    "attack": "SPACE · DODGE",
+    "jump": "F · HOOK",
+    "special": "E · EMP"
    },
    "extras": [
     {
@@ -1928,8 +1929,8 @@
     "start": "Enter"
    },
    "labels": {
-    "left": "\u25c0 STEER",
-    "right": "STEER \u25b6",
+    "left": "◀ STEER",
+    "right": "STEER ▶",
     "up": "GAS",
     "down": "BRK",
     "start": "START"
@@ -1962,8 +1963,8 @@
     "start": "Enter"
    },
    "labels": {
-    "left": "\u25c0 STEER",
-    "right": "STEER \u25b6",
+    "left": "◀ STEER",
+    "right": "STEER ▶",
     "up": "GAS",
     "down": "BRK",
     "start": "START"
@@ -2680,6 +2681,60 @@
    "path": "g/arcade/index.html",
    "note": "30 games, one level each",
    "thumb": "thumbs/arcade.webp?v=1792343453"
+  },
+  {
+   "id": "one-tap-reflex",
+   "title": "FLAP CAT — one tap to fly (v2)",
+   "category": "Cat Arcade v2",
+   "keys": {},
+   "labels": {
+    "jump": "TAP · FLAP"
+   },
+   "autostart": [],
+   "orientation": "portrait",
+   "path": "g/_v2/one-tap-reflex/index.html",
+   "thumb": "thumbs/one-tap-reflex-v2.webp?v=1792415463",
+   "note": "Cat Arcade v2 rebuild: one tap to flap, three lives, endless neon city. New engine — bloom, impact ripples, particle feathers, combo meter, layered synth score. Original v1 build kept at g/_v1/one-tap-reflex/."
+  },
+  {
+   "id": "cat-runner",
+   "title": "CAT RUNNER — rooftop dash (v2)",
+   "category": "Cat Arcade v2",
+   "keys": {},
+   "labels": {
+    "jump": "TAP · JUMP"
+   },
+   "autostart": [],
+   "orientation": "portrait",
+   "path": "g/_v2/cat-runner/index.html",
+   "thumb": "thumbs/cat-runner-v2.webp?v=1792415463",
+   "note": "Cat Arcade v2 original: tap to jump, tap again to double-jump, hold to slide. Rooftop speed run through a sunset city with drones, crates and coin arcs. Speed ramps to 800 px/s."
+  },
+  {
+   "id": "stack-timing",
+   "title": "TOWER PERFECT — stack it dead centre (v2)",
+   "category": "Cat Arcade v2",
+   "keys": {},
+   "labels": {
+    "jump": "TAP · DROP"
+   },
+   "autostart": [],
+   "orientation": "portrait",
+   "path": "g/_v2/stack-timing/index.html",
+   "thumb": "thumbs/stack-timing-v2.webp?v=1792415463",
+   "note": "Cat Arcade v2 rebuild of stack-timing: tap to drop the slab, land it dead centre for a PERFECT chain that never shrinks the tower. Original v1 build kept at g/_v1/stack-timing/."
+  },
+  {
+   "id": "cat-arcade-v2",
+   "title": "CAT ARCADE V2 — v1 vs v2 comparison",
+   "category": "Cat Arcade v2",
+   "keys": {},
+   "labels": {},
+   "autostart": [],
+   "orientation": "portrait",
+   "path": "g/_v2/index.html",
+   "thumb": "thumbs/one-tap-reflex-v2.webp?v=1792415463",
+   "note": "Hub for the Cat Arcade v2 rebuild. Every card links to the rebuilt game and to the untouched original v1 build in g/_v1/ so you can A/B them."
   }
  ]
 }
