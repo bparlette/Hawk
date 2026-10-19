@@ -14,6 +14,28 @@
   "Arcade Hub"
  ],
  "games": [
+ {
+  "id": "hoa-sledge",
+  "title": "HOA SLEDGE — Code Violation #1",
+  "category": "Originals",
+  "keys": {
+   "attack": "KeyJ"
+  },
+  "labels": {
+   "attack": "SLAM · TAP"
+  },
+  "extras": [
+   {
+    "label": "MUTE",
+    "key": "KeyM"
+   }
+  ],
+  "autostart": [],
+  "orientation": "portrait",
+  "note": "The HOA fined you for gnomes on the lawn. You have the sledgehammer. Real rigid-body physics (Rapier): every flamingo, chair and yard gnome tumbles, stacks and flies. Built with gamepress.",
+  "path": "g/hoa-sledge/index.html",
+  "thumb": "thumbs/hoa-sledge.webp?v=1792421389"
+ },
   {
    "id": "roadster-flip",
    "title": "ROADSTER // FLIP — Starbase Run",
@@ -2693,7 +2715,7 @@
    "autostart": [],
    "orientation": "portrait",
    "path": "g/_v2/one-tap-reflex/index.html",
-   "thumb": "thumbs/one-tap-reflex-v2.webp?v=1792415463",
+   "thumb": "thumbs/one-tap-reflex-v2.webp?v=1792419564",
    "note": "Cat Arcade v2 rebuild: one tap to flap, three lives, endless neon city. New engine — bloom, impact ripples, particle feathers, combo meter, layered synth score. Original v1 build kept at g/_v1/one-tap-reflex/."
   },
   {
@@ -2707,7 +2729,7 @@
    "autostart": [],
    "orientation": "portrait",
    "path": "g/_v2/cat-runner/index.html",
-   "thumb": "thumbs/cat-runner-v2.webp?v=1792415463",
+   "thumb": "thumbs/cat-runner-v2.webp?v=1792419574",
    "note": "Cat Arcade v2 original: tap to jump, tap again to double-jump, hold to slide. Rooftop speed run through a sunset city with drones, crates and coin arcs. Speed ramps to 800 px/s."
   },
   {
@@ -2721,7 +2743,7 @@
    "autostart": [],
    "orientation": "portrait",
    "path": "g/_v2/stack-timing/index.html",
-   "thumb": "thumbs/stack-timing-v2.webp?v=1792415463",
+   "thumb": "thumbs/stack-timing-v2.webp?v=1792419569",
    "note": "Cat Arcade v2 rebuild of stack-timing: tap to drop the slab, land it dead centre for a PERFECT chain that never shrinks the tower. Original v1 build kept at g/_v1/stack-timing/."
   },
   {
@@ -2733,7 +2755,7 @@
    "autostart": [],
    "orientation": "portrait",
    "path": "g/_v2/index.html",
-   "thumb": "thumbs/one-tap-reflex-v2.webp?v=1792415463",
+   "thumb": "thumbs/one-tap-reflex-v2.webp?v=1792419564",
    "note": "Hub for the Cat Arcade v2 rebuild. Every card links to the rebuilt game and to the untouched original v1 build in g/_v1/ so you can A/B them."
   }
  ]
