@@ -14,6 +14,30 @@
  ],
  "games": [
   {
+   "id": "roadster-flip",
+   "title": "ROADSTER // FLIP \u2014 Starbase Run",
+   "category": "Originals",
+   "keys": {
+    "attack": "KeyJ",
+    "jump": "KeyK"
+   },
+   "labels": {
+    "attack": "FAN \u00b7 HOLD",
+    "jump": "THRUST \u00b7 TAP"
+   },
+   "extras": [
+    {
+     "label": "MUTE",
+     "key": "KeyM"
+    }
+   ],
+   "autostart": [],
+   "orientation": "portrait",
+   "note": "Tesla Roadster 2.0 fan game: the car drives itself, you get two buttons \u2014 hold the fan for sonic loops, tap thrusters to kickflip over Teslas crossing the 4-way at Starbase. Built with gamepress.",
+   "path": "g/roadster-flip/index.html",
+   "thumb": "thumbs/roadster-flip.webp?v=1792369872"
+  },
+  {
    "id": "shell-shock-live",
    "title": "Shell Shock Live",
    "category": "Shell Shock",
