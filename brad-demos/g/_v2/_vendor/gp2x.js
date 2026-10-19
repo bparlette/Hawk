@@ -431,7 +431,11 @@ export function makeGame(o = {}) {
   let loopStarted = false;
   const __run = g.run;
   g.run = (u, d, h) => { loopStarted = true; __run(u, d, h); };
-  g.start = (u, d, h) => { if (loopStarted) return; g.run(u || g.update, d || g.draw, h); };
+  const __titleStart = g.start.bind(g);
+  g.start = (u, d, h) => {
+    if (u || d || h) { if (loopStarted) return; g.run(u || g.update, d || g.draw, h); }
+    else __titleStart();
+  };
   queueMicrotask(() => { if (!loopStarted && (g.update || g.draw)) g.start(); });
 
   /* --- frame pacing watchdog (reads rAF timing, independent of the fixed step) --- */
