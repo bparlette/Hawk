@@ -431,10 +431,9 @@ export function makeGame(o = {}) {
   let loopStarted = false;
   const __run = g.run;
   g.run = (u, d, h) => { loopStarted = true; __run(u, d, h); };
-  const __titleStart = g.start.bind(g);
   g.start = (u, d, h) => {
     if (u || d || h) { if (loopStarted) return; g.run(u || g.update, d || g.draw, h); }
-    else __titleStart();
+    else if (g.mode === 'title') { g.mode = 'play'; g.onStart?.(); }
   };
   queueMicrotask(() => { if (!loopStarted && (g.update || g.draw)) g.start(); });
 
