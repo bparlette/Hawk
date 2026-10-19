@@ -6,7 +6,7 @@ import { createStage, sfx, rand, clamp, THREE } from '../_vendor/gp3d.js';
 import { toon, catGeo, dogGeo, zombieGeo, hero, particles, sky, groundTex, build } from '../_vendor/gpkit.js';
 import { urlHero, urlHeroColor, buildHero } from '../_vendor/gphero3d.js';
 import { TouchController, isTouchDevice } from '../_vendor/gptouch.js';
-const S = { title: 'CAT KART', sub: 'Hold left or right. Grab the pads.', hook: 'Win by a whisker', bg: 0x8fd3ff, skyTop: 0x3f8cff, skyBottom: 0xffe7b8, road: 0x474b57, catColor: 0xff9a3c, hero: 'cat', laps: 2, style: 'toon', /*SPEC*/ ...{"hook":"Win by a whisker"} /*END*/ };
+const S = { title: 'CAT KART', sub: 'Hold left or right. Grab the pads.', hook: 'Win by a whisker', bg: 0x8fd3ff, skyTop: 0x3f8cff, skyBottom: 0xffe7b8, road: 0x474b57, catColor: 0xff9a3c, hero: 'cat', laps: 4, style: 'toon', /*SPEC*/ ...{"hook":"Win by a whisker"} /*END*/ };
 const P = new URLSearchParams(location.search), AUTO = P.has('auto'), FAILFIRST = P.get('failfirst') !== '0';
 const st = createStage({ style: S.style, bg: S.bg, fitWidth: 9, fov: 60, fog: [60, 220] }); st.light(); sky(st.scene, S.skyTop, S.skyBottom, [120, 320]); const fx = particles(st.scene, 300);
 const TC = isTouchDevice() ? new TouchController({ buttons: [{ id: 'a', label: 'DRIFT', size: 84 }] }) : null; /* TOUCH: left-half stick steers, hold DRIFT for sharper turns (docs/TOUCH.md) */
