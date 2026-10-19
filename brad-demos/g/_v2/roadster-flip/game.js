@@ -98,6 +98,15 @@ g.onStart = () => { music('chase'); };
 resetWorld();
 
 /* ================= actions ================= */
+function spark(x, y, o = {}) {
+  const s = o.s ?? 1, c = o.c || '#8ef6ff';
+  g.shake(2 + s * 4);
+  g.punch(.02 + .01 * s);
+  g.burst(x, y, 6 + s * 5, { color: [c, '#ffffff'], speed: 190 + s * 95, life: .45, size: 5 });
+  g.fx.emit('ring', x, y, { size: 14 + s * 10, life: .3, color: c, add: true, wide: 4 });
+  if (o.p) g.popup(o.p, x, y - 48 - s * 10, c, 24 + s * 7);
+  if (o.f) g.flash(c, .08 + .04 * s);
+}
 function fireThrusters() {
   const err = S.tAir - S.apexT;
   const win = perfectWin();
@@ -119,6 +128,7 @@ function fireThrusters() {
   if (q === 'PERFECT') {
     g.hitstop(0.12); g.slowmo(0.35, 0.35); g.flash('#ffd34d', 0.25);
     g.showBanner('PERFECT', 0.7);
+    spark(S.x, S.y - 40, { s: 2, p: 'PERFECT!', c: '#ffd34d', f: 1 });
     sfx('perfect', { pitch: 1 });
   } else {
     sfx('jump', { pitch: q === 'GOOD' ? 1.1 : 0.8 });
@@ -135,6 +145,7 @@ function feverCheck() {
   if (g.combo.n >= 8 && S.fever <= 0) {
     S.fever = 4.5;
     g.showBanner('OVERDRIVE', 1);
+    spark(S.x, S.y - 40, { s: 2.5, p: 'OVERDRIVE', c: '#ff4ad8', f: 1 });
     sfx('powerup', { pitch: 1.25 });
     g.fx.burst(S.x, S.y - 40, 30, { kind: 'confetti', colors: ['#ffd34d', '#ff3b8d', '#7df9ff', '#b6ff7d'] });
   }
@@ -178,6 +189,7 @@ function crash(reason) {
   g.fx.burst(S.x, S.y, 24, { kind: 'debris', colors: ['#ffffff', '#ffb3c1', '#5a6b8c', '#ff3b5c'] });
   g.fx.burst(S.x, S.y, 18, { kind: 'smoke', color: 'rgba(200,200,210,.55)' });
   g.showBanner(reason, 1.1);
+  g.popup('CRASH', S.x, S.y - 90, '#ff3b5c', 34); g.shake(8);
   navigator.vibrate?.([30, 50, 40]);
 }
 
@@ -193,6 +205,7 @@ function touchdown() {
     const v = S.fever > 0 ? 50 : 25;
     g.score += v;
     g.combo.hit(S.x, S.y - 50, `CLOSE! +${v}`);
+    spark(S.x, S.y - 20, { s: .8, c: '#7df9ff' });
     sfx('coin', { pitch: comboPitch(g.combo.n % 12) });
     g.impact(S.x, S.y - 30, { punch: .04, shake: 5, stop: .05, flash: '#7df9ff', flashA: .15 });
     feverCheck();
@@ -205,6 +218,7 @@ function touchdown() {
   if (!rough) {
     g.combo.hit(S.x, S.y - 60, `STUCK +${landPts}`);
     sfx('win', { pitch: 1.2, vol: .5 });
+    spark(S.x, S.y - 30, { s: 1.4, p: `STUCK +${landPts}`, c: '#7df9ff' });
     g.fx.burst(S.x, S.y - 20, 22, { kind: 'confetti', colors: ['#ffd34d', '#7df9ff', '#ffffff'] });
     g.fx.emit('ring', S.x, S.y - 10, { life: .5, size: 60, color: '#ffd34d', add: true });
     g.punch(.05);
@@ -228,6 +242,7 @@ function update(dt) {
   if (g.mode !== 'play') return;
   S.phaseT += dt;
   if (S.fever > 0) { S.fever -= dt; if (S.fever <= 0) g.showBanner('OVERDRIVE END', .8); }
+      g.popup('END', S.x, S.y - 80, '#8ef6ff', 26);
 
   const tap = g.taps.length > 0 || g.pressed['Space'];
   if (isAuto) botThink();

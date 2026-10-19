@@ -93,11 +93,20 @@ g.onStart = () => music('chase');
 resetWorld();
 
 /* ------------------------------------------------------------------ feedback */
+function juice(x, y, o = {}) {
+  const k = o.s ?? 1, c = o.c || '#7df9ff';
+  g.burst(x, y, 4 + k * 8, { color: [c, '#ffffff'], speed: 140 + k * 150, life: .35 + k * .25, size: 4 + k * 3 });
+  g.fx.emit('ring', x, y, { size: 10 + k * 14, life: .26, color: c, add: true, wide: 3 });
+  if (k > .7) { g.shake(1.5 + k * 3); g.punch(.02 + .012 * k); }
+  if (o.p) g.popup(o.p, x, y - 40 - k * 8, c, 22 + k * 7);
+}
 function puff(n, col) { g.fx.dust(pl.x + PW / 2, pl.y + PH, n, { color: col || 'rgba(150,220,255,.42)', size: 13, speed: 120, up: 40 }); }
 function die() {
   if (dead || won) return;
   dead = 1e-6; pl.hurt = 1; lives--;
   sfx('splat'); g.hitstop(.08); g.punch(.18); g.shake(24); g.flash('#ff2e63', .38);
+  g.popup('OUCH', pl.x + PW / 2, pl.y - 40, '#ff2e63', 34);
+  juice(pl.x + PW / 2, pl.y + PH, { s: 2.4, c: '#ff2e63' });
   g.fx.blast(pl.x + PW / 2, pl.y + PH / 2, { r: 74, color: '#ff2e63', colors: ['#ff2e63', '#fff', '#ffd34d'], n: 26, speed: 330 });
   g.slowmo(.26, .55); g.combo.miss();
   g.pops.length > 22 && g.pops.shift();
@@ -116,6 +125,8 @@ function win() {
   sfx('fanfare'); g.punch(.2); g.shake(10); g.flash('#ffd34d', .5);
   for (let i = 0; i < 4; i++) g.fx.burst(FLAG_X + rnd(-60, 60), GROUND - 120 - i * 40, 22, { kind: 'confetti', color: ['#ffd34d', '#7df9ff', '#ff2e63', '#fff'], speed: 360, life: 1.4, g: 500 });
   g.popup('+' + bonus, FLAG_X, GROUND - 220, '#ffd34d', 40);
+  g.burst(FLAG_X, GROUND - 200, 34, { color: ['#ffd34d', '#7df9ff', '#ff4ad8', '#fff'], speed: 400, life: 1.1, size: 5 });
+  juice(FLAG_X, GROUND - 200, { s: 2.6, c: '#ffd34d' });
   g.end({ win: true, score: Math.round(score), label: 'SCORE', progress: 1 });
 }
 
@@ -153,6 +164,7 @@ function jump() {
   pl.vy = -JUMP_V; pl.ground = 0; pl.coy = 0; pl.buf = 0; pl.plat = null;
   pl.stretch = 1; pl.juice = -.35;
   sfx('jump', { pitch: 1 + (g.combo.n % 5) * .04 });
+  juice(pl.x + PW / 2, pl.y + PH, { s: .5, c: '#7df9ff' });
   g.fx.emit('ring', pl.x + PW / 2, pl.y + PH, { size: 30, life: .32, color: '#7df9ff', add: true, wide: 4 });
   puff(5);
 }
@@ -208,6 +220,7 @@ function physics(dt) {
       p.juice = .18 + hard * .55; p.stretch = 0; p.airDash = 1;
       sfx('thud', { pitch: 1.25 - hard * .35, vol: .5 + hard * .4 });
       g.punch(.04 + hard * .1); if (hard > .45) g.shake(4 + hard * 10);
+      juice(pl.x + PW / 2, pl.y + PH, { s: .4 + hard, c: '#bffcff', p: hard > .6 ? 'THUD' : '' });
       puff(4 + Math.round(hard * 8));
       if (hard > .35) g.fx.emit('ring', p.x + PW / 2, p.y + PH, { size: 26 + hard * 40, life: .3, color: '#bff5ff', add: true, wide: 4 });
     }
@@ -228,6 +241,7 @@ function physics(dt) {
     if (Math.abs(c.x - (p.x + PW / 2)) < 34 && Math.abs(c.y - (p.y + PH * .5)) < 40) {
       c.got = 1; coins++; score += 10 * g.combo.mult;
       g.combo.hit(c.x, c.y, '+' + (10 * g.combo.mult), );
+      juice(c.x, c.y, { s: .7, c: '#ffd34d' });
       sfx('ding', { pitch: comboPitch(coins % 12), vol: .35 });
       g.fx.burst(c.x, c.y, 9, { kind: 'star', color: ['#ffd34d', '#fff6b0'], speed: 150, life: .5, g: 260 });
     }

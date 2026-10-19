@@ -60,11 +60,21 @@ function nextWave() {
   sfx(wave === WAVES.length - 1 ? 'boom' : 'groan', { pitch: 1.06 - wave * .07, vol: .6 });
   g.showBanner(NAMES[wave] || 'WAVE', 1.1);
   if (wave === WAVES.length - 1) { g.shake(10); g.flash('#8fef7a', .16); }
+  g.punch(g, 'k', 1.05, .2); g.popup(NAMES[wave] || 'WAVE', W / 2, 300, '#8fef7a', 42);
 }
 
 function aliveCount() { let n = 0; for (const e of EN) if (e.hp > 0) n++; return n; }
 
 /* ================================================================= combat */
+function ju(x, y, o = {}) {
+  const s = o.s ?? 1, c = o.c || '#ffd34d';
+  g.shake(2 + s * 3);
+  g.punch(g, 'k', 1 + .006 * s, .12);
+  g.impact(x, y, .35 + s * .25);
+  g.hitstop(.03 + .02 * s);
+  if (o.p) g.popup(o.p, x, y - 46 - s * 10, c, 22 + s * 6);
+  if (o.f) g.flash(c, .1 + .04 * s);
+}
 function punch() {
   if (P.cd > 0 || g.mode !== 'play') return;
   P.cd = .28; P.atk = .2; P.leap = 1; punchFx = 1;
@@ -80,6 +90,7 @@ function punch() {
       e.hp--; e.fl = .2; e.wind = 0; e.kb = .2; e.vx = P.d * (e.boss ? 180 : 310); e.d = P.d > 0 ? 1 : -1;
       const sc = depth(e.y), px = e.x, py = e.y - 60 * sc;
       g.combo.hit(px, py - 40, e.hp <= 0 ? 'KO!' : 'POW');
+      ju(px, py, { s: 1, p: '+' + (14 * g.combo.mult), c: '#ffd34d' });
       g.score += 14 * g.combo.mult;
       sfx('hit', { pitch: comboPitch(g.combo.n % 12), vol: .9 });
       g.impact(px, py, { punch: .09, shake: 8, stop: .045, rip: 1 });
@@ -96,6 +107,7 @@ function kill(e) {
   const sc = depth(e.y), py = e.y - 58 * sc;
   kills++;
   g.score += (e.boss ? 420 : 90) * g.combo.mult;
+  ju(e.x, py, { s: e.boss ? 2.4 : 1.2, p: '+' + Math.round((e.boss ? 420 : 90) * g.combo.mult), c: e.boss ? '#ff4ad8' : '#ffffff', f: e.boss });
   sfx('boom', { vol: e.boss ? 1 : .5, pitch: e.boss ? .78 : 1.25 });
   g.fx.blast(e.x, py, {
     r: e.boss ? 150 : 80, color: '#8fef7a', colors: ['#8fef7a', '#d9ffcf', '#ffd34d'],
@@ -115,6 +127,7 @@ function hurt() {
   g.combo.miss();
   g.fx.burst(P.x, P.y - 58, 14, { color: ['#ff3b5c', '#fff', '#ffb347'], speed: 300, life: .6, size: 7 });
   g.popup('-1', P.x, P.y - 132, '#ff5c78', 40);
+  ju(P.x, P.y - 60, { s: 2, p: 'OUCH', c: '#ff5c78', f: 1 });
   if (P.hp <= 0) lose();
 }
 
@@ -126,6 +139,8 @@ function lose() {
 
 function win() {
   g.showBanner('STREET CLEARED!', 1.6);
+  ju(W / 2, 430, { s: 3, p: '+' + Math.round(g.score), c: '#ffd34d', f: 1 });
+  g.punch(g, 'k', .92, .3);
   g.fx.burst(W / 2, 380, 80, { kind: 'confetti', color: ['#ffd34d', '#7df9ff', '#ff4ad8', '#7dff7d', '#fff'], speed: 560, life: 1.7, g: 380, size: 7 });
   g.fx.blast(W / 2, 420, { r: 210, color: '#ffd34d', colors: ['#ffd34d', '#fff', '#ffb347'], n: 50, speed: 520, shake: 14, punch: .14, flashA: .35 });
   g.score += 500;
@@ -275,6 +290,7 @@ function update(dt) {
         P.hp++; sfx('coin', { pitch: 1.4, vol: .7 });
         g.fx.burst(P.x, P.y - 90, 10, { kind: 'heart', color: '#ff4d6d', speed: 130, life: .8, g: -140 });
         g.popup('+1', P.x, P.y - 140, '#7dff7d', 42);
+        ju(P.x, P.y - 70, { s: .6, c: '#7dff7d', f: 1, p: 'HEAL' });
       }
       nextWave();
     }
