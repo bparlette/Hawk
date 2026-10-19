@@ -5,12 +5,12 @@
 import { createGame, sfx, comboPitch, R, rnd, clamp, dist } from '../_vendor/gp2d.js';
 import { drawChar, heart, heroKind, heroColor } from '../_vendor/gpsprites.js';
 import { Terrain } from '../_vendor/gpphys.js';
-const S = { title: 'CAT ARTILLERY', sub: 'Drag back to aim, release to fire', hook: 'Aim. Fire. Dig a crater.', hero: 'cat', foe: 'zombie', bg: '#8fd8ff', heroColor: '#ff9a3c', hp: 4, style: 'toon', /*SPEC*/ ...{"hook":"Aim. Fire. Dig a crater."} /*END*/ };
+const S = { title: 'CAT ARTILLERY', sub: 'Drag back to aim, release to fire', hook: 'Aim. Fire. Dig a crater.', hero: 'cat', foe: 'zombie', bg: '#8fd8ff', heroColor: '#ff9a3c', hp: 6, style: 'toon', /*SPEC*/ ...{"hook":"Aim. Fire. Dig a crater."} /*END*/ };
 const g = createGame({ id: S.title.toLowerCase().replace(/\W+/g, '-'), title: S.title, sub: S.sub, hook: S.hook, bg: S.bg, style: S.style });
 const G = 900;
 let lastD, ter, a, b, shot, turn, wind, drag, botT, phaseT, foeErr, flights;
 const height = x => 650 + Math.sin(x * .012) * 40 + Math.sin(x * .031 + 1) * 24;
-function init() { ter = Terrain({ w: 540, h: 960, height }); a = { x: 90, hp: g.dumb() ? 1 : S.hp, t: 0 }; b = { x: 450, hp: 2, t: 0 }; shot = null; turn = 0; wind = rnd(-60, 60); drag = null; botT = .8; phaseT = 0; foeErr = g.dumb() ? 6 : 140; flights = 0; g.score = 0; }
+function init() { ter = Terrain({ w: 540, h: 960, height }); a = { x: 90, hp: g.dumb() ? 1 : S.hp, t: 0 }; b = { x: 450, hp: 4, t: 0 }; shot = null; turn = 0; wind = rnd(-60, 60); drag = null; botT = .8; phaseT = 0; foeErr = g.dumb() ? 6 : 140; flights = 0; g.score = 0; }
 g.onReset = init; init();
 const gy = x => ter.y(x);
 function fire(who, vx, vy) {  shot = { x: (who ? b.x : a.x), y: gy(who ? b.x : a.x) - 60, vx, vy, who, t: 0, trail: [] }; sfx('shoot', { pitch: .6 }); g.shake(4); g.burst(shot.x, shot.y, 8, { color: ['#fff', '#ffd34d'], speed: 180 }); flights++; }
