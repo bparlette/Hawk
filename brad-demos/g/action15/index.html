@@ -21,7 +21,7 @@ iframe.off{display:none}
 <div id="bar"><span id="name"></span><div id="dots"></div><a id="buy" href="#" target="_blank" rel="noopener">GET THE FULL PACK</a></div>
 <div id="toast"></div>
 <div class="ov show" id="start"><h1>CAT ARCADE: ACTION 15</h1><p>15 fast cat games, one level each, nonstop.</p><button id="go">TAP TO PLAY</button></div>
-<div class="ov" id="upsell"><h1>LOVED IT?</h1><p>That was 5 of 15. Get the full pack to play them all.</p><a id="buy2" href="#" target="_blank" rel="noopener">GET THE FULL PACK </a><button class="alt" id="again">PLAY THE FREE 5 AGAIN</button></div>
+<div class="ov" id="upsell"><h1>LOVED IT?</h1><p>That was 5 of 15. Get the full pack to play them all.</p><a id="buy2" href="#" target="_blank" rel="noopener">GET THE FULL PACK </a><button class="alt" id="share">📋 SHARE SCORECARD</button><button class="alt" id="again">PLAY THE FREE 5 AGAIN</button></div>
 <script>
 const CFG = {"id":"action15","games":["one-tap-reflex","precision-platformer","bullet-heaven","obby-gauntlet","rail-runner","grid-chaser","arena-brawler","scrolling-shmup","run-and-gun","mini-metroidvania","footsies-duel","kart-racer","slice-swipe","stack-timing","ragdoll-launch"],"names":{"one-tap-reflex":"FLAP CAT","daily-deduction":"WORD CAT","precision-platformer":"CAT DASH","cozy-farm":"COZY CAT FARM","bullet-heaven":"ZOMBIE SURVIVORS","obby-gauntlet":"CAT OBBY","rail-runner":"SUBWAY CAT","ballistic-bouncer":"CAT PEGGLE","grid-chaser":"PAC CAT","falling-blocks":"BLOCK CATS","merge-sandbox":"MERGE PETS","arena-brawler":"ZOMBIE BRAWL","scrolling-shmup":"CAT FIGHTER","run-and-gun":"CONTRA CAT","mini-metroidvania":"CAT CAVE","footsies-duel":"CAT DUEL","mini-zelda":"CAT DUNGEON","turn-based-3v3":"PET BATTLE","micro-tower-defense":"CAT DEFENSE","kart-racer":"CAT KART","card-roguelite":"CARD CATS","idle-tycoon":"CAT FACTORY","hide-and-seek":"PROP CAT","trajectory-artillery":"CAT ARTILLERY","slice-swipe":"CAT NINJA","stack-timing":"CAT STACK","plinko-drop":"CAT PLINKO","ragdoll-launch":"CAT CANNON","sort-puzzle":"CAT SORT","rope-cut":"CAT ROPE","hole-eater":"HOLE EATER","crowd-runner":"CROWD RUNNER","glass-drop":"GLASS DROP","demolition":"VOXEL DEMOLITION"},"base":"../","demo":false,"buyUrl":""};
 const $ = id => document.getElementById(id);
@@ -55,6 +55,19 @@ function next(win, score) {
 addEventListener('message', e => { if (e.source !== frames[cur].contentWindow || !e.data) return; if (e.data.gp === 'started') waitStart?.(); else if (e.data.gp === 'end') next(!!e.data.win, e.data.score); });
 $('go').onclick = () => { $('start').classList.remove('show'); try { const ac = new (window.AudioContext || window.webkitAudioContext)(); ac.resume(); } catch {} show(0); };
 $('again').onclick = () => { $('upsell').classList.remove('show'); show(0); };
+function copyScoreCard() {
+  const icons = results.map(r => r === true ? '🟩' : r === false ? '🟥' : '⬜');
+  let rows = []; for (let i = 0; i < icons.length; i += 5) rows.push(icons.slice(i, i + 5).join(''));
+  const wins = results.filter(r => r === true).length;
+  const text = `🐱 CAT ARCADE: ${document.title}\n${rows.join('\n')}\n🏆 ${wins}/${results.length} Wins\n👉 https://bparlette.github.io/Hawk/brad-demos/g/arcade/index.html`;
+  if (navigator.clipboard?.writeText) {
+    navigator.clipboard.writeText(text).then(() => {
+      const t = $('toast'); t.textContent = 'COPIED!'; t.style.color = '#7dff7d'; t.classList.add('show');
+      setTimeout(() => t.classList.remove('show'), 1200);
+    }).catch(() => prompt('Scorecard:', text));
+  } else prompt('Scorecard:', text);
+}
+$('share').onclick = copyScoreCard;
 addEventListener('keydown', e => { if (e.key === 'n' || e.key === 'N') next(null); });
 frames.forEach(f => f.addEventListener('load', () => { try { if (f === frames[cur]) f.contentWindow.focus(); } catch {} }));
 window.__pack = { get idx() { return idx; }, get loop() { return loop; }, next: w => next(w), games };
