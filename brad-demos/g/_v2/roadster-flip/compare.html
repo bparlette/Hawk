@@ -1,0 +1,52 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#07060f">
+<title>Roadster Flip — v1 vs v2</title>
+<meta name="description" content="Roadster Flip side by side: the original 3D build next to the v2 juice rebuild.">
+<style>
+  :root{--ink:#eaf2ff;--dim:#8fa3c8;--line:rgba(140,190,255,.16);--cyan:#7df9ff;--gold:#ffd34d}
+  *{box-sizing:border-box}
+  html,body{margin:0;background:#07060f;color:var(--ink);
+    font-family:ui-rounded,"SF Pro Display",system-ui,-apple-system,"Segoe UI",sans-serif}
+  .wrap{max-width:1100px;margin:0 auto;padding:28px 16px 60px}
+  h1{margin:0;font-size:clamp(26px,6vw,44px);letter-spacing:-.02em}
+  h1 small{display:block;font-size:.36em;letter-spacing:.3em;color:var(--dim);margin-bottom:6px}
+  .lede{color:var(--dim);max-width:60ch;line-height:1.5;font-size:14px}
+  .vs{display:flex;gap:14px;margin-top:20px}
+  .pane{flex:1;border:1px solid var(--line);border-radius:18px;overflow:hidden;background:#0a0d1d;min-width:0}
+  .pane .bar{display:flex;align-items:center;justify-content:space-between;padding:10px 14px;border-bottom:1px solid var(--line)}
+  .tag{font-size:11px;letter-spacing:.14em;font-weight:800}
+  .tag.v1{color:var(--gold)} .tag.v2{color:var(--cyan)}
+  .pane a{font-size:12px;color:#9fd8ff;text-decoration:none}
+  .frame{position:relative;aspect-ratio:9/16;max-height:78vh;margin:0 auto;background:#000}
+  .frame iframe{position:absolute;inset:0;width:100%;height:100%;border:0}
+  .note{margin-top:18px;color:var(--dim);font-size:13px;line-height:1.6}
+  .note code{color:#cfe0ff}
+  @media (max-width:700px){.vs{flex-direction:column}.frame{max-height:70vh}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1><small>ROADSTER FLIP</small>v1 vs v2 · side by side</h1>
+  <p class="lede">The same fantasy twice: the Tesla flying Roadster's McGregor kickflip.
+    <b>V1</b> is the original 3D build (Three.js, procedural Roadster and Starship).
+    <b>V2</b> is the juice rebuild on the gp2x engine — bloom, particles, camera punch,
+    combo meter and layered synth audio. Tap either game to play it.</p>
+  <div class="vs">
+    <div class="pane">
+      <div class="bar"><span class="tag v1">V1 · 3D ORIGINAL</span><a href="../../roadster-flip/index.html">open full →</a></div>
+      <div class="frame"><iframe src="../../roadster-flip/index.html" title="Roadster Flip v1" loading="lazy"></iframe></div>
+    </div>
+    <div class="pane">
+      <div class="bar"><span class="tag v2">V2 · JUICE REBUILD</span><a href="./index.html">open full →</a></div>
+      <div class="frame"><iframe src="./index.html?auto=1" title="Roadster Flip v2" loading="lazy"></iframe></div>
+    </div>
+  </div>
+  <p class="note">V2 runs its bot in the frame above (<code>?auto=1</code>) so you can watch it play itself.
+    V1: <code>g/roadster-flip/</code> · V2: <code>g/_v2/roadster-flip/</code> · both ship <code>?spectate=1&amp;autostart=1</code>.</p>
+</div>
+</body>
+</html>
