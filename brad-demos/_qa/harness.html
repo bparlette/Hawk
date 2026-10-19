@@ -1,0 +1,25 @@
+<!doctype html>
+<html><head><meta charset="utf-8"><title>rotation harness</title>
+<style>html,body{margin:0;height:100%;background:#000;overflow:hidden}iframe{position:fixed;inset:0;width:100%;height:100%;border:0}</style>
+</head><body>
+<script>
+// Mimics the real pack runner: loads a game with ?pack=1&hold=1 and records its lifecycle messages.
+const P = new URLSearchParams(location.search);
+const id = P.get('id') || 'one-tap-reflex';
+const base = P.get('base') || 'g/_v2';
+const extra = P.get('extra') || '';
+window.__msgs = [];
+window.__t0 = performance.now();
+const f = document.createElement('iframe');
+f.id = 'f';
+f.allow = 'autoplay; fullscreen';
+f.src = `../${base}/${id}/index.html?pack=1&hold=1&dpr=1${extra ? '&' + extra : ''}`;
+document.body.appendChild(f);
+addEventListener('message', e => {
+  if (!e.data || !e.data.gp) return;
+  window.__msgs.push({ gp: e.data.gp, win: e.data.win, score: e.data.score, id: e.data.id, at: Math.round(performance.now() - window.__t0) });
+});
+window.__start = () => f.contentWindow.postMessage({ gp: 'start' }, '*');
+window.__frame = () => f;
+</script>
+</body></html>

@@ -1,0 +1,9 @@
+{
+  "model": "qwen2.5-coder:7b",
+  "promptTokens": 251,
+  "completionTokens": 559,
+  "totalTokens": 810,
+  "elapsedSeconds": 44.63,
+  "codeBytes": 1658,
+  "linesOfCode": 77
+}

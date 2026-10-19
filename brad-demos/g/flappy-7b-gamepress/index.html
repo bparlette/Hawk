@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>FLAPPY 7B</title>
+    <style>
+        body { margin: 0; overflow: hidden; }
+        canvas { display: block; background: #4ec0ca; }
+    </style>
+</head>
+<body>
+<canvas id="flappy-7b-gp"></canvas>
+<script type="module">
+import { createGame, sfx, comboPitch, clamp, rnd } from '../_vendor/gp2d.js';
+
+const g = createGame({ id: 'flappy-7b-gp', title: 'FLAPPY 7B', bg: '#4ec0ca' });
+
+let bird = { x: 100, y: 300, vy: 0 };
+let pipes = [{ x: 450, top: 160, bottom: 360 }, { x: 720, top: 220, bottom: 420 }];
+
+g.run(update, draw);
+
+function update(dt) {
+    if (g.mode !== 'play') return;
+
+    // Input
+    if (g.pressed.Space || g.taps.length > 0) flap();
+
+    // Physics
+    bird.vy += 1300 * dt;
+    bird.y += bird.vy * dt;
+
+    // Collisions
+    if (bird.y < 0 || bird.y > g.H - 90 || hitPipe()) {
+        sfx('hit');
+        g.end({ win: false, score: g.score });
+    }
+}
+
+function draw(c) {
+    c.clearRect(0, 0, g.W, g.H);
+
+    // Draw sky
+    c.fillStyle = '#87CEEB';
+    c.fillRect(0, 0, g.W, g.H / 2);
+
+    // Draw pipes
+    for (let pipe of pipes) {
+        c.fillStyle = '#3cb371';
+        c.fillRect(pipe.x, 0, 50, pipe.top);
+        c.fillRect(pipe.x, pipe.bottom, 50, g.H - pipe.bottom);
+    }
+
+    // Draw bird
+    c.fillStyle = '#FFD700';
+    c.beginPath();
+    c.arc(bird.x, bird.y, 24, 0, Math.PI * 2);
+    c.fill();
+
+    // Draw score
+    g.text(String(g.score), g.W / 2, 120);
+}
+
+function flap() {
+    bird.vy = -350;
+    sfx('flap');
+}
+
+function hitPipe() {
+    for (let pipe of pipes) {
+        if (bird.x > pipe.x && bird.x < pipe.x + 50 &&
+            (bird.y < pipe.top || bird.y > pipe.bottom)) {
+            return true;
+        }
+    }
+    return false;
+}
+</script>
+</body>
+</html>
