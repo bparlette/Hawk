@@ -114,7 +114,18 @@
       "orientation": "portrait",
       "note": "Tesla Roadster 2.0 fan game: the car drives itself, you get two buttons — hold the fan for sonic loops, tap thrusters to kickflip over Teslas crossing the 4-way at Starbase. Built with gamepress.",
       "path": "g/roadster-flip/index.html",
-      "thumb": "thumbs/roadster-flip.webp?v=1792369872"
+      "thumb": "thumbs/roadster-flip.webp?v=1792369872",
+      "video": "g/roadster-flip/ROADSTER-FLIP-short-9x16.mp4"
+    },
+    {
+      "id": "roadster-flip-showcase",
+      "title": "ROADSTER // FLIP — 30s Short & Showcase",
+      "category": "Originals",
+      "orientation": "portrait",
+      "note": "Watch the 30-second continuous 9:16 gameplay short, download the 4K design board, and view creator post copy.",
+      "path": "player.html",
+      "thumb": "thumbs/roadster-flip.webp?v=1792369872",
+      "video": "g/roadster-flip/ROADSTER-FLIP-short-9x16.mp4"
     },
     {
       "id": "shell-shock-live",
