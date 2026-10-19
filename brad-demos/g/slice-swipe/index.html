@@ -4,7 +4,7 @@
   DON'T BUILD: blades or skins, more than 3 fruit kinds, modes, menus. Edit the SPEC JSON (gamepress make).*/
 import { createGame, sfx, comboPitch, R, rnd, pick, clamp } from '../_vendor/gp2d.js';
 import { face, heart, heroKind, heroColor } from '../_vendor/gpsprites.js';
-const S = { title: 'CAT NINJA', sub: 'Swipe to slice. Avoid bombs.', hook: 'Slice everything. Do not touch the bomb.', hero: 'cat', skin: '', bg: '#2a6e5a', goal: 14, lives: 3, style: 'toon', /*SPEC*/ ...{"hook":"Slice everything. Do not touch the bomb."} /*END*/ };
+const S = { title: 'CAT NINJA', sub: 'Swipe to slice. Avoid bombs.', hook: 'Slice everything. Do not touch the bomb.', hero: 'cat', skin: '', bg: '#2a6e5a', goal: 28, lives: 5, style: 'toon', /*SPEC*/ ...{"hook":"Slice everything. Do not touch the bomb."} /*END*/ };
 const g = createGame({ id: S.title.toLowerCase().replace(/\W+/g, '-'), title: S.title, sub: S.sub, hook: S.hook, bg: S.bg, style: S.style });
 let objs, halves, trail, lives, sliced, combo, comboT, spawnT, wave, last, botQ;
 function init() { objs = []; halves = []; trail = []; lives = S.lives; sliced = 0; combo = 0; comboT = 0; spawnT = .6; wave = 0; last = null; botQ = []; g.score = 0; }
