@@ -1,4 +1,5 @@
 import * as THREE from 'three';
+import { buildToadStreet } from './toad-street.js';
 
 // SKYDIVE: HOOTERS RUN — toad-city chunky 32-bit skydive demo.
 // ?clean=1 skips title. ?auto=1 bot flies the whole run.
@@ -75,6 +76,7 @@ const buildings = [];
 const bGeo = new THREE.BoxGeometry(1, 1, 1);
 for (let i = 0; i < 70; i++) {
   const bx = (rnd() - 0.5) * 300, bz = -60 - rnd() * 360;
+  if (Math.abs(bx - 26) < 26 && bz < -365) continue; // keep Toad Street corridor clear
   const bw = 10 + rnd() * 16, bd = 10 + rnd() * 16;
   const bh = 14 + rnd() * rnd() * 70; // a few towers
   const m = new THREE.Mesh(bGeo, new THREE.MeshLambertMaterial({ map: windowTex }));
@@ -103,7 +105,10 @@ for (let i = 0; i < 14; i++) {
   scene.add(s); clouds.push(s);
 }
 
-// HOOTERS — orange roof, sign, beacon column
+// TOAD STREET — the authentic landing district (shops, signs, hydrants)
+buildToadStreet(scene, 26, -380, -460);
+
+// HOOTERS — orange roof, sign, beacon column, at the end of Toad Street
 // (placed where the flight path touches down: phase1 z 20->-324 @26u/s, phase2 -324->-444 @8u/s)
 const HX = 26, HZ = -440;
 const hoot = new THREE.Group();
@@ -119,11 +124,11 @@ sign.position.set(0, 10, 11.2); hoot.add(sign);
 const beacon = new THREE.Mesh(new THREE.CylinderGeometry(3, 5, 220, 8, 1, true),
   new THREE.MeshBasicMaterial({ color: 0xffa030, transparent: true, opacity: 0.28, side: THREE.DoubleSide, depthWrite: false }));
 beacon.position.y = 110; hoot.add(beacon);
-hoot.position.set(HX, 0, HZ); scene.add(hoot);
-// landing pad marker on the roof
+hoot.position.set(HX, 0, -475); scene.add(hoot); // caps the end of Toad Street
+// landing pad marker painted on Toad Street, in front of Hooters
 const pad = new THREE.Mesh(new THREE.RingGeometry(4, 6, 16),
   new THREE.MeshBasicMaterial({ color: 0xffe08a, side: THREE.DoubleSide }));
-pad.rotation.x = -Math.PI / 2; pad.position.set(HX, 14.2, HZ); scene.add(pad);
+pad.rotation.x = -Math.PI / 2; pad.position.set(HX, 0.6, HZ); scene.add(pad);
 
 // ---------- rings ----------
 const rings = [];
