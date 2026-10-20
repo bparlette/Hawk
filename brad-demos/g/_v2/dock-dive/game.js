@@ -1,4 +1,5 @@
 import * as THREE from 'three';
+import { buildToadStreet } from './toad-street.js';
 
 // DOCK DIVE: HARBOR RUN — toad-city chunky 32-bit dock-run demo.
 // Baltimore-harbor flavor: pier, boats, skyline, dive at the end.
@@ -118,6 +119,9 @@ for (let i = 0; i < 40; i++) {
   m.position.set((rnd() - 0.5) * 420, bh / 2 - 3, -280 - rnd() * 100);
   m.scale.set(bw, bh, bd); scene.add(m);
 }
+// Toad Street waterfront — the city's shop-lined street runs parallel to the pier
+buildToadStreet(scene, -34, -20, -180);
+
 // a lighthouse-ish tower on the right
 const tower = new THREE.Mesh(new THREE.CylinderGeometry(4, 5, 40, 8),
   new THREE.MeshLambertMaterial({ color: 0xd84a3a }));
