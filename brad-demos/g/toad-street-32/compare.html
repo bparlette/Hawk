@@ -537,10 +537,17 @@ function frame(now) {
   draw();
 }
 requestAnimationFrame(frame);
-// ?shot=1: capture the canvas and upload to tmpfiles.org, print the URL
+// ?shot=1: capture at 3x resolution and upload to tmpfiles.org, print the URL
 if (new URLSearchParams(location.search).has('shot')) {
   setTimeout(async () => {
     try {
+      // boost render resolution 3x for a bigger, clearer screenshot
+      const w = innerWidth, h = innerHeight, a = w / h;
+      const lh = 720, lw = Math.round(720 * a);
+      renderer.setSize(lw, lh, false);
+      RT.setSize(lw, lh); POST.uniforms.uRes.value.set(lw, lh); SNAP.value.set(lw / 2, lh / 2);
+      camera.aspect = a; camera.updateProjectionMatrix();
+      draw(); // render one frame at high res
       const dataUrl = canvas.toDataURL('image/png');
       const blob = await (await fetch(dataUrl)).blob();
       const fd = new FormData(); fd.append('file', blob, 'compare.png');
