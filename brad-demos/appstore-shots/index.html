@@ -43,7 +43,7 @@
 
   <!-- Metrics Bar -->
   <div class="metrics-bar">
-    <span id="matchCount">Showing 26 applications · 85 native iPhone captures (up to 4 per app)</span>
+    <span id="matchCount">Showing 27 applications · 86 native iPhone captures (up to 4 per app)</span>
     <span>Swipe or click arrows on any card to scroll photos</span>
   </div>
 
@@ -1639,6 +1639,47 @@
     </div>
   </article>
   
+
+  <article class="card" 
+    data-index="26"
+    data-id="27-ZenTiles"
+    data-name="ZenTiles"
+    data-category="Games &amp; Sim"
+    data-search="zentiles zentiles — minimalist mahjong solitaire minimalist mahjong solitaire games &amp; sim mahjongsolitaireengine.swift">
+    
+    <div class="card-header">
+      <img class="app-icon" src="27-ZenTiles/icon.png" alt="ZenTiles Icon" loading="lazy">
+      <div class="card-info">
+        <div class="card-title-row">
+          <h3 class="card-name">ZenTiles</h3>
+          <span class="pill price">$2.99</span>
+        </div>
+        <p class="card-subtitle">Minimalist Mahjong Solitaire</p>
+        <div class="card-badges">
+          <span class="pill category">Games &amp; Sim</span>
+          <span class="pill">1 shot</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="device-container">
+      <div class="phone-bezel">
+        <div class="dynamic-island"></div>
+        <div class="screen-track" data-track-idx="26">
+          
+            <img class="phone-screen" src="27-ZenTiles/shot-1.jpg" alt="ZenTiles screen 1" loading="eager">
+          
+        </div>
+        
+      </div>
+    </div>
+
+    <div class="card-footer">
+      <code>MahjongSolitaireEngine.swift</code>
+      <span>Inspect Details &rarr;</span>
+    </div>
+  </article>
+  
   </main>
 
   <!-- Lightbox Modal -->
@@ -1647,14 +1688,23 @@
       <button class="lightbox-close" id="lightboxClose" aria-label="Close viewer">&times;</button>
       
       <div class="lightbox-viewer">
-        <button class="lightbox-nav-btn prev" id="btnPrevShot" aria-label="Previous screenshot">&larr;</button>
+        <div class="view-mode-toggle" id="modalModeToggle" style="display:none;">
+          <button class="mode-btn active" id="btnModalShots">📸 Screenshots</button>
+          <button class="mode-btn" id="btnModalVideo">🎬 20s App Preview</button>
+        </div>
+
         <div class="lightbox-phone">
           <div class="dynamic-island"></div>
-          <img id="lightboxImg" src="" alt="Active Screenshot">
+          <div class="screen-track" id="modalTrack"></div>
+          <video class="phone-screen phone-video" id="modalVideo" playsinline loop muted style="display:none;"></video>
+          <button class="card-nav prev" id="modalPrev" aria-label="Previous photo">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"/></svg>
+          </button>
+          <button class="card-nav next" id="modalNext" aria-label="Next photo">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"/></svg>
+          </button>
+          <div class="card-dots" id="modalDots"></div>
         </div>
-        <button class="lightbox-nav-btn next" id="btnNextShot" aria-label="Next screenshot">&rarr;</button>
-
-        <div class="thumbnail-ribbon" id="thumbRibbon"></div>
       </div>
 
       <aside class="lightbox-sidebar">
@@ -1712,7 +1762,7 @@
   </div>
 
   <script>
-    const APPS = [{"id":"01-JustTheRecipe","name":"JustTheRecipe","title":"Just The Recipe — Ad-Free Cooking Vault","subtitle":"Just Ingredients and Steps","category":"Utilities","price":"$2.99","bundleId":"com.apppress.justtherecipe","coreEngine":"RecipeScraperEngine.swift","permissions":"100% On-Device","hasIcon":true,"shots":["shot-1.jpg","shot-2.jpg","shot-3.jpg"],"bullets":[]},{"id":"02-NagMe","name":"NagMe","title":"NagMe — Persistent Interval Task Cascade","subtitle":"Reminders That Actually Work","category":"Productivity","price":"$1.99","bundleId":"com.apppress.nagme","coreEngine":"NagCascadeScheduler.swift","permissions":"100% On-Device","hasIcon":true,"shots":["shot-1.jpg","shot-2.jpg","shot-3.jpg"],"bullets":[]},{"id":"03-ScanLocal","name":"ScanLocal","title":"ScanLocal — 100% On-Device OCR Scanner","subtitle":"On-Device OCR, Zero Cloud","category":"Business & Pro","price":"$4.99","bundleId":"com.apppress.scanlocal","coreEngine":"VisionOCRPipeline.swift","permissions":"camera, photo","hasIcon":true,"shots":["shot-1.jpg","shot-2.jpg","shot-3.jpg"],"bullets":[]},{"id":"04-StreakGrid","name":"StreakGrid","title":"StreakGrid — GitHub-Style Habit Matrix","subtitle":"Never Break the Chain","category":"Health & Medical","price":"$2.99","bundleId":"com.apppress.streakgrid","coreEngine":"StreakAnalyticsEngine.swift","permissions":"healthKit","hasIcon":true,"shots":["shot-1.jpg","shot-2.jpg","shot-3.jpg","shot-4.jpg"],"bullets":[]},{"id":"05-GeoStamp","name":"GeoStamp","title":"GeoStamp — Tactical Field Photo Stamping","subtitle":"UTM, Compass & Altitude HUD","category":"Business & Pro","price":"$8.99","bundleId":"com.apppress.geostamp","coreEngine":"MetadataBurnInEngine.swift","permissions":"camera, photo, location","hasIcon":true,"shots":["shot-1.jpg","shot-2.jpg","shot-3.jpg","shot-4.jpg"],"bullets":[]},{"id":"06-GutSafe","name":"GutSafe","title":"GutSafe — Clinical FODMAP Stacking & GI Tracker","subtitle":"Know Your Safe Foods","category":"Health & Medical","price":"$3.99","bundleId":"com.apppress.gutsafe","coreEngine":"FODMAPEngine.swift","permissions":"100% On-Device","hasIcon":true,"shots":["shot-1.jpg","shot-2.jpg","shot-3.jpg"],"bullets":[]},{"id":"07-PunchListPDF","name":"PunchListPDF","title":"PunchListPDF — Vector Site Audit & Defect Report","subtitle":"Contractor Photo Pin Auditor","category":"Business & Pro","price":"$14.99","bundleId":"com.apppress.punchlistpdf","coreEngine":"PunchListEngine.swift","permissions":"camera, photo","hasIcon":true,"shots":["shot-1.jpg","shot-2.jpg","shot-3.jpg"],"bullets":[]},{"id":"08-DeckMasterFSRS","name":"DeckMasterFSRS","title":"DeckMasterFSRS — Spaced Repetition Engine","subtitle":"FSRS Spaced Repetition","category":"Utilities","price":"$4.99","bundleId":"com.apppress.deckmaster","coreEngine":"FSRSEngine.swift","permissions":"100% On-Device","hasIcon":true,"shots":["shot-1.jpg","shot-2.jpg","shot-3.jpg","shot-4.jpg"],"bullets":[]},{"id":"09-SurgeCalm","name":"SurgeCalm","title":"SurgeCalm — 5-1-1 Labor Contraction Pacemaker","subtitle":"Guided Anxiety Relief Tools","category":"Health & Medical","price":"$3.99","bundleId":"com.apppress.surgecalm","coreEngine":"Contraction511Engine.swift","permissions":"100% On-Device","hasIcon":true,"shots":["shot-1.jpg","shot-2.jpg","shot-3.jpg","shot-4.jpg"],"bullets":[]},{"id":"10-HydroTap","name":"HydroTap","title":"HydroTap — Beverage Hydration Index Calculator","subtitle":"Track Intake, Stay Hydrated","category":"Health & Medical","price":"$1.99","bundleId":"com.apppress.hydrotap","coreEngine":"HydrationEngine.swift","permissions":"healthKit","hasIcon":true,"shots":["shot-1.jpg","shot-2.jpg","shot-3.jpg"],"bullets":[]},{"id":"11-PulseFloor","name":"PulseFloor","title":"PulseFloor — Haptic Pelvic Floor Choreographer","subtitle":"Train in the Right HR Zone","category":"Health & Medical","price":"$3.99","bundleId":"com.apppress.pulsefloor","coreEngine":"PelvicFloorEngine.swift","permissions":"100% On-Device","hasIcon":true,"shots":["shot-1.jpg","shot-2.jpg","shot-3.jpg","shot-4.jpg"],"bullets":[]},{"id":"12-FirstBites","name":"FirstBites","title":"FirstBites — Infant Allergen & BLW Protocol","subtitle":"Track First Foods & Allergies","category":"Health & Medical","price":"$4.99","bundleId":"com.apppress.firstbites","coreEngine":"AllergenProtocolEngine.swift","permissions":"100% On-Device","hasIcon":true,"shots":["shot-1.jpg","shot-2.jpg","shot-3.jpg"],"bullets":[]},{"id":"13-CrownSwipe","name":"CrownSwipe","title":"CrownSwipe — Royal Succession Simulator","subtitle":"Classic Crown Card Solitaire","category":"Games & Sim","price":"$2.99","bundleId":"com.apppress.crownswipe","coreEngine":"DynastyDecisionEngine.swift","permissions":"100% On-Device","hasIcon":true,"shots":["shot-1.jpg","shot-2.jpg","shot-3.jpg"],"bullets":[]},{"id":"14-JokerHands","name":"JokerHands","title":"JokerHands — Multiplier Cascade Card Arena","subtitle":"Master Every Poker Hand","category":"Games & Sim","price":"$3.99","bundleId":"com.apppress.jokerhands","coreEngine":"CascadeScoringEngine.swift","permissions":"100% On-Device","hasIcon":true,"shots":["shot-1.jpg"],"bullets":[]},{"id":"15-BorderStamp","name":"BorderStamp","title":"BorderStamp — Checkpoint Inspection Simulator","subtitle":"Travel Borders & Captions","category":"Games & Sim","price":"$2.99","bundleId":"com.apppress.borderstamp","coreEngine":"BorderInspectionEngine.swift","permissions":"100% On-Device","hasIcon":true,"shots":["shot-1.jpg","shot-2.jpg","shot-3.jpg","shot-4.jpg"],"bullets":[]},{"id":"16-DiceDungeon","name":"DiceDungeon","title":"DiceDungeon — Tactical Turn-Based Dice Roguelike","subtitle":"Roll Dice, Crawl Dungeons","category":"Games & Sim","price":"$3.99","bundleId":"com.apppress.dicedungeon","coreEngine":"DiceCombatEngine.swift","permissions":"100% On-Device","hasIcon":true,"shots":["shot-1.jpg","shot-2.jpg","shot-3.jpg","shot-4.jpg"],"bullets":[]},{"id":"17-SpireCrawl","name":"SpireCrawl","title":"SpireCrawl — Procedural DAG Map Deckbuilder","subtitle":"Climb. Die. Climb Again.","category":"Games & Sim","price":"$3.99","bundleId":"com.apppress.spirecrawl","coreEngine":"SpireEngine.swift","permissions":"100% On-Device","hasIcon":true,"shots":["shot-1.jpg","shot-2.jpg","shot-3.jpg","shot-4.jpg"],"bullets":[]},{"id":"18-FocusGrove","name":"FocusGrove","title":"FocusGrove — Procedural Botanical Focus Timer","subtitle":"Grow Trees, Stay Focused","category":"Productivity","price":"$1.99","bundleId":"com.apppress.focusgrove","coreEngine":"BotanicalLSystemEngine.swift","permissions":"100% On-Device","hasIcon":true,"shots":["shot-1.jpg","shot-2.jpg","shot-3.jpg"],"bullets":[]},{"id":"19-NextActionGTD","name":"NextActionGTD","title":"NextActionGTD — Natural Language Task Manager","subtitle":"Capture, Clarify, Do Next","category":"Productivity","price":"$4.99","bundleId":"com.apppress.nextaction","coreEngine":"GTDParserAndEngine.swift","permissions":"100% On-Device","hasIcon":true,"shots":["shot-1.jpg","shot-2.jpg","shot-3.jpg","shot-4.jpg"],"bullets":[]},{"id":"20-CalcPadLive","name":"CalcPadLive","title":"CalcPadLive — Reactive Math & Unit Scratchpad","subtitle":"Live Tape & History","category":"Business & Pro","price":"$2.99","bundleId":"com.apppress.calcpad","coreEngine":"LiveMathSheetEngine.swift","permissions":"100% On-Device","hasIcon":true,"shots":["shot-1.jpg"],"bullets":[]},{"id":"21-MetroFlow","name":"MetroFlow","title":"MetroFlow — Planar Transit Network Simulator","subtitle":"Offline Subway Maps & Routes","category":"Games & Sim","price":"$4.99","bundleId":"com.apppress.metroflow","coreEngine":"PlanarTransitFlowEngine.swift","permissions":"100% On-Device","hasIcon":true,"shots":["shot-1.jpg","shot-2.jpg","shot-3.jpg"],"bullets":[]},{"id":"22-GridAgent","name":"GridAgent","title":"GridAgent — Turn-Based Isometric Stealth","subtitle":"Outsmart the AI Opponent","category":"Games & Sim","price":"$3.99","bundleId":"com.apppress.gridagent","coreEngine":"TurnBasedStealthBoardEngine.swift","permissions":"100% On-Device","hasIcon":true,"shots":["shot-1.jpg","shot-2.jpg","shot-3.jpg"],"bullets":[]},{"id":"23-LogicMachineVM","name":"LogicMachineVM","title":"LogicMachineVM — Assembly Register Puzzle Suite","subtitle":"Build Digital Circuits","category":"Games & Sim","price":"$4.99","bundleId":"com.apppress.logicmachine","coreEngine":"AssemblyRegisterVMEngine.swift","permissions":"100% On-Device","hasIcon":true,"shots":["shot-1.jpg","shot-2.jpg","shot-3.jpg","shot-4.jpg"],"bullets":[]},{"id":"24-IllusionValley","name":"IllusionValley","title":"IllusionValley — Non-Euclidean Isometric Puzzles","subtitle":"Optical Illusion Gallery","category":"Games & Sim","price":"$4.99","bundleId":"com.apppress.illusionvalley","coreEngine":"NonEuclideanIsometricEngine.swift","permissions":"100% On-Device","hasIcon":true,"shots":["shot-1.jpg","shot-2.jpg","shot-3.jpg","shot-4.jpg"],"bullets":[]},{"id":"25-MarginMarkPDF","name":"MarginMarkPDF","title":"MarginMarkPDF — Precision Vector PDF Margin Notes","subtitle":"Margin Notes for PDFs","category":"Productivity","price":"$9.99","bundleId":"com.apppress.marginmarkpdf","coreEngine":"PencilVectorPDFMatrixEngine.swift","permissions":"photo","hasIcon":true,"shots":["shot-1.jpg","shot-2.jpg","shot-3.jpg"],"bullets":[]},{"id":"26-OutbreakSEIR","name":"OutbreakSEIR","title":"OutbreakSEIR — Global Epidemic Simulation Engine","subtitle":"SEIR Model Simulator","category":"Games & Sim","price":"$3.99","bundleId":"com.apppress.outbreakseir","coreEngine":"StochasticSEIREpidemicEngine.swift","permissions":"100% On-Device","hasIcon":true,"shots":["shot-1.jpg","shot-2.jpg","shot-3.jpg"],"bullets":[]}];
+    const APPS = [{"id":"01-JustTheRecipe","name":"JustTheRecipe","title":"Just The Recipe — Ad-Free Cooking Vault","subtitle":"Just Ingredients and Steps","category":"Utilities","price":"$2.99","bundleId":"com.apppress.justtherecipe","coreEngine":"RecipeScraperEngine.swift","permissions":"100% On-Device","hasIcon":true,"hasVideo":true,"shots":["shot-1.jpg","shot-2.jpg","shot-3.jpg"],"bullets":[]},{"id":"02-NagMe","name":"NagMe","title":"NagMe — Persistent Interval Task Cascade","subtitle":"Reminders That Actually Work","category":"Productivity","price":"$1.99","bundleId":"com.apppress.nagme","coreEngine":"NagCascadeScheduler.swift","permissions":"100% On-Device","hasIcon":true,"hasVideo":false,"shots":["shot-1.jpg","shot-2.jpg","shot-3.jpg"],"bullets":[]},{"id":"03-ScanLocal","name":"ScanLocal","title":"ScanLocal — 100% On-Device OCR Scanner","subtitle":"On-Device OCR, Zero Cloud","category":"Business & Pro","price":"$4.99","bundleId":"com.apppress.scanlocal","coreEngine":"VisionOCRPipeline.swift","permissions":"camera, photo","hasIcon":true,"hasVideo":false,"shots":["shot-1.jpg","shot-2.jpg","shot-3.jpg"],"bullets":[]},{"id":"04-StreakGrid","name":"StreakGrid","title":"StreakGrid — GitHub-Style Habit Matrix","subtitle":"Never Break the Chain","category":"Health & Medical","price":"$2.99","bundleId":"com.apppress.streakgrid","coreEngine":"StreakAnalyticsEngine.swift","permissions":"healthKit","hasIcon":true,"hasVideo":false,"shots":["shot-1.jpg","shot-2.jpg","shot-3.jpg","shot-4.jpg"],"bullets":[]},{"id":"05-GeoStamp","name":"GeoStamp","title":"GeoStamp — Tactical Field Photo Stamping","subtitle":"UTM, Compass & Altitude HUD","category":"Business & Pro","price":"$8.99","bundleId":"com.apppress.geostamp","coreEngine":"MetadataBurnInEngine.swift","permissions":"camera, photo, location","hasIcon":true,"hasVideo":false,"shots":["shot-1.jpg","shot-2.jpg","shot-3.jpg","shot-4.jpg"],"bullets":[]},{"id":"06-GutSafe","name":"GutSafe","title":"GutSafe — Clinical FODMAP Stacking & GI Tracker","subtitle":"Know Your Safe Foods","category":"Health & Medical","price":"$3.99","bundleId":"com.apppress.gutsafe","coreEngine":"FODMAPEngine.swift","permissions":"100% On-Device","hasIcon":true,"hasVideo":false,"shots":["shot-1.jpg","shot-2.jpg","shot-3.jpg"],"bullets":[]},{"id":"07-PunchListPDF","name":"PunchListPDF","title":"PunchListPDF — Vector Site Audit & Defect Report","subtitle":"Contractor Photo Pin Auditor","category":"Business & Pro","price":"$14.99","bundleId":"com.apppress.punchlistpdf","coreEngine":"PunchListEngine.swift","permissions":"camera, photo","hasIcon":true,"hasVideo":false,"shots":["shot-1.jpg","shot-2.jpg","shot-3.jpg"],"bullets":[]},{"id":"08-DeckMasterFSRS","name":"DeckMasterFSRS","title":"DeckMasterFSRS — Spaced Repetition Engine","subtitle":"FSRS Spaced Repetition","category":"Utilities","price":"$4.99","bundleId":"com.apppress.deckmaster","coreEngine":"FSRSEngine.swift","permissions":"100% On-Device","hasIcon":true,"hasVideo":false,"shots":["shot-1.jpg","shot-2.jpg","shot-3.jpg","shot-4.jpg"],"bullets":[]},{"id":"09-SurgeCalm","name":"SurgeCalm","title":"SurgeCalm — 5-1-1 Labor Contraction Pacemaker","subtitle":"Guided Anxiety Relief Tools","category":"Health & Medical","price":"$3.99","bundleId":"com.apppress.surgecalm","coreEngine":"Contraction511Engine.swift","permissions":"100% On-Device","hasIcon":true,"hasVideo":false,"shots":["shot-1.jpg","shot-2.jpg","shot-3.jpg","shot-4.jpg"],"bullets":[]},{"id":"10-HydroTap","name":"HydroTap","title":"HydroTap — Beverage Hydration Index Calculator","subtitle":"Track Intake, Stay Hydrated","category":"Health & Medical","price":"$1.99","bundleId":"com.apppress.hydrotap","coreEngine":"HydrationEngine.swift","permissions":"healthKit","hasIcon":true,"hasVideo":false,"shots":["shot-1.jpg","shot-2.jpg","shot-3.jpg"],"bullets":[]},{"id":"11-PulseFloor","name":"PulseFloor","title":"PulseFloor — Haptic Pelvic Floor Choreographer","subtitle":"Train in the Right HR Zone","category":"Health & Medical","price":"$3.99","bundleId":"com.apppress.pulsefloor","coreEngine":"PelvicFloorEngine.swift","permissions":"100% On-Device","hasIcon":true,"hasVideo":false,"shots":["shot-1.jpg","shot-2.jpg","shot-3.jpg","shot-4.jpg"],"bullets":[]},{"id":"12-FirstBites","name":"FirstBites","title":"FirstBites — Infant Allergen & BLW Protocol","subtitle":"Track First Foods & Allergies","category":"Health & Medical","price":"$4.99","bundleId":"com.apppress.firstbites","coreEngine":"AllergenProtocolEngine.swift","permissions":"100% On-Device","hasIcon":true,"hasVideo":false,"shots":["shot-1.jpg","shot-2.jpg","shot-3.jpg"],"bullets":[]},{"id":"13-CrownSwipe","name":"CrownSwipe","title":"CrownSwipe — Royal Succession Simulator","subtitle":"Classic Crown Card Solitaire","category":"Games & Sim","price":"$2.99","bundleId":"com.apppress.crownswipe","coreEngine":"DynastyDecisionEngine.swift","permissions":"100% On-Device","hasIcon":true,"hasVideo":false,"shots":["shot-1.jpg","shot-2.jpg","shot-3.jpg"],"bullets":[]},{"id":"14-JokerHands","name":"JokerHands","title":"JokerHands — Multiplier Cascade Card Arena","subtitle":"Master Every Poker Hand","category":"Games & Sim","price":"$3.99","bundleId":"com.apppress.jokerhands","coreEngine":"CascadeScoringEngine.swift","permissions":"100% On-Device","hasIcon":true,"hasVideo":false,"shots":["shot-1.jpg"],"bullets":[]},{"id":"15-BorderStamp","name":"BorderStamp","title":"BorderStamp — Checkpoint Inspection Simulator","subtitle":"Travel Borders & Captions","category":"Games & Sim","price":"$2.99","bundleId":"com.apppress.borderstamp","coreEngine":"BorderInspectionEngine.swift","permissions":"100% On-Device","hasIcon":true,"hasVideo":false,"shots":["shot-1.jpg","shot-2.jpg","shot-3.jpg","shot-4.jpg"],"bullets":[]},{"id":"16-DiceDungeon","name":"DiceDungeon","title":"DiceDungeon — Tactical Turn-Based Dice Roguelike","subtitle":"Roll Dice, Crawl Dungeons","category":"Games & Sim","price":"$3.99","bundleId":"com.apppress.dicedungeon","coreEngine":"DiceCombatEngine.swift","permissions":"100% On-Device","hasIcon":true,"hasVideo":false,"shots":["shot-1.jpg","shot-2.jpg","shot-3.jpg","shot-4.jpg"],"bullets":[]},{"id":"17-SpireCrawl","name":"SpireCrawl","title":"SpireCrawl — Procedural DAG Map Deckbuilder","subtitle":"Climb. Die. Climb Again.","category":"Games & Sim","price":"$3.99","bundleId":"com.apppress.spirecrawl","coreEngine":"SpireEngine.swift","permissions":"100% On-Device","hasIcon":true,"hasVideo":false,"shots":["shot-1.jpg","shot-2.jpg","shot-3.jpg","shot-4.jpg"],"bullets":[]},{"id":"18-FocusGrove","name":"FocusGrove","title":"FocusGrove — Procedural Botanical Focus Timer","subtitle":"Grow Trees, Stay Focused","category":"Productivity","price":"$1.99","bundleId":"com.apppress.focusgrove","coreEngine":"BotanicalLSystemEngine.swift","permissions":"100% On-Device","hasIcon":true,"hasVideo":false,"shots":["shot-1.jpg","shot-2.jpg","shot-3.jpg"],"bullets":[]},{"id":"19-NextActionGTD","name":"NextActionGTD","title":"NextActionGTD — Natural Language Task Manager","subtitle":"Capture, Clarify, Do Next","category":"Productivity","price":"$4.99","bundleId":"com.apppress.nextaction","coreEngine":"GTDParserAndEngine.swift","permissions":"100% On-Device","hasIcon":true,"hasVideo":false,"shots":["shot-1.jpg","shot-2.jpg","shot-3.jpg","shot-4.jpg"],"bullets":[]},{"id":"20-CalcPadLive","name":"CalcPadLive","title":"CalcPadLive — Reactive Math & Unit Scratchpad","subtitle":"Live Tape & History","category":"Business & Pro","price":"$2.99","bundleId":"com.apppress.calcpad","coreEngine":"LiveMathSheetEngine.swift","permissions":"100% On-Device","hasIcon":true,"hasVideo":false,"shots":["shot-1.jpg"],"bullets":[]},{"id":"21-MetroFlow","name":"MetroFlow","title":"MetroFlow — Planar Transit Network Simulator","subtitle":"Offline Subway Maps & Routes","category":"Games & Sim","price":"$4.99","bundleId":"com.apppress.metroflow","coreEngine":"PlanarTransitFlowEngine.swift","permissions":"100% On-Device","hasIcon":true,"hasVideo":false,"shots":["shot-1.jpg","shot-2.jpg","shot-3.jpg"],"bullets":[]},{"id":"22-GridAgent","name":"GridAgent","title":"GridAgent — Turn-Based Isometric Stealth","subtitle":"Outsmart the AI Opponent","category":"Games & Sim","price":"$3.99","bundleId":"com.apppress.gridagent","coreEngine":"TurnBasedStealthBoardEngine.swift","permissions":"100% On-Device","hasIcon":true,"hasVideo":false,"shots":["shot-1.jpg","shot-2.jpg","shot-3.jpg"],"bullets":[]},{"id":"23-LogicMachineVM","name":"LogicMachineVM","title":"LogicMachineVM — Assembly Register Puzzle Suite","subtitle":"Build Digital Circuits","category":"Games & Sim","price":"$4.99","bundleId":"com.apppress.logicmachine","coreEngine":"AssemblyRegisterVMEngine.swift","permissions":"100% On-Device","hasIcon":true,"hasVideo":false,"shots":["shot-1.jpg","shot-2.jpg","shot-3.jpg","shot-4.jpg"],"bullets":[]},{"id":"24-IllusionValley","name":"IllusionValley","title":"IllusionValley — Non-Euclidean Isometric Puzzles","subtitle":"Optical Illusion Gallery","category":"Games & Sim","price":"$4.99","bundleId":"com.apppress.illusionvalley","coreEngine":"NonEuclideanIsometricEngine.swift","permissions":"100% On-Device","hasIcon":true,"hasVideo":false,"shots":["shot-1.jpg","shot-2.jpg","shot-3.jpg","shot-4.jpg"],"bullets":[]},{"id":"25-MarginMarkPDF","name":"MarginMarkPDF","title":"MarginMarkPDF — Precision Vector PDF Margin Notes","subtitle":"Margin Notes for PDFs","category":"Productivity","price":"$9.99","bundleId":"com.apppress.marginmarkpdf","coreEngine":"PencilVectorPDFMatrixEngine.swift","permissions":"photo","hasIcon":true,"hasVideo":false,"shots":["shot-1.jpg","shot-2.jpg","shot-3.jpg"],"bullets":[]},{"id":"26-OutbreakSEIR","name":"OutbreakSEIR","title":"OutbreakSEIR — Global Epidemic Simulation Engine","subtitle":"SEIR Model Simulator","category":"Games & Sim","price":"$3.99","bundleId":"com.apppress.outbreakseir","coreEngine":"StochasticSEIREpidemicEngine.swift","permissions":"100% On-Device","hasIcon":true,"hasVideo":false,"shots":["shot-1.jpg","shot-2.jpg","shot-3.jpg"],"bullets":[]},{"id":"27-ZenTiles","name":"ZenTiles","title":"ZenTiles — Minimalist Mahjong Solitaire","subtitle":"Minimalist Mahjong Solitaire","category":"Games & Sim","price":"$2.99","bundleId":"com.apppress.zentiles","coreEngine":"MahjongSolitaireEngine.swift","permissions":"100% On-Device","hasIcon":true,"hasVideo":true,"shots":["shot-1.jpg"],"bullets":[]}];
     let currentAppIndex = 0;
     let currentShotIndex = 0;
 
@@ -1724,10 +1774,14 @@
 
     const lightbox = document.getElementById('lightbox');
     const lightboxClose = document.getElementById('lightboxClose');
-    const lightboxImg = document.getElementById('lightboxImg');
-    const thumbRibbon = document.getElementById('thumbRibbon');
-    const btnPrevShot = document.getElementById('btnPrevShot');
-    const btnNextShot = document.getElementById('btnNextShot');
+    const modalTrack = document.getElementById('modalTrack');
+    const modalDots = document.getElementById('modalDots');
+    const modalPrev = document.getElementById('modalPrev');
+    const modalNext = document.getElementById('modalNext');
+    const modalVideo = document.getElementById('modalVideo');
+    const modalModeToggle = document.getElementById('modalModeToggle');
+    const btnModalShots = document.getElementById('btnModalShots');
+    const btnModalVideo = document.getElementById('btnModalVideo');
 
     const sideIcon = document.getElementById('sideIcon');
     const sideTitle = document.getElementById('sideTitle');
@@ -1816,8 +1870,7 @@
       const app = APPS[currentAppIndex];
       if (!app) return;
 
-      lightboxImg.src = `${app.id}/${app.shots[currentShotIndex]}`;
-      sideIcon.src = app.hasIcon ? `${app.id}/icon.png` : '';
+      sideIcon.src = app.hasIcon ? app.id + '/icon.png' : '';
       sideIcon.style.display = app.hasIcon ? 'block' : 'none';
       sideTitle.textContent = app.name;
       sideCategory.textContent = app.category;
@@ -1826,40 +1879,103 @@
       sideBundle.textContent = app.bundleId;
       sideEngine.textContent = app.coreEngine;
       sidePerms.textContent = app.permissions;
-      sideDirectLink.href = `${app.id}/index.html`;
+      sideDirectLink.href = app.id + '/index.html';
 
       if (app.bullets && app.bullets.length > 0) {
         sideBulletsSection.style.display = 'block';
-        sideBullets.innerHTML = app.bullets.map(b => `<li>${b}</li>`).join('');
+        sideBullets.innerHTML = app.bullets.map(b => '<li>' + b + '</li>').join('');
       } else {
         sideBulletsSection.style.display = 'none';
       }
 
-      // Render thumbnail ribbon
-      thumbRibbon.innerHTML = app.shots.map((_, i) => `
-        <div class="thumb-pip ${i === currentShotIndex ? 'active' : ''}" data-idx="${i}"></div>
-      `).join('');
+      // Populate screenshots in modal track (EXACT same swipe markup as first page)
+      modalTrack.innerHTML = app.shots.map((s, i) =>
+        '<img class="phone-screen" src="' + app.id + '/' + s + '" alt="' + app.name + ' screen ' + (i + 1) + '" loading="' + (i === 0 ? 'eager' : 'lazy') + '">'
+      ).join('');
 
-      Array.from(thumbRibbon.children).forEach(pip => {
-        pip.addEventListener('click', () => {
-          currentShotIndex = Number(pip.dataset.idx);
-          updateLightboxContent();
+      // Populate dots
+      modalDots.innerHTML = app.shots.map((_, i) =>
+        '<button class="card-dot ' + (i === currentShotIndex ? 'active' : '') + '" data-shot-idx="' + i + '" aria-label="Go to screen ' + (i + 1) + '"></button>'
+      ).join('');
+
+      Array.from(modalDots.children).forEach(dot => {
+        dot.addEventListener('click', () => {
+          const idx = Number(dot.dataset.shotIdx);
+          currentShotIndex = idx;
+          modalTrack.scrollTo({ left: idx * modalTrack.clientWidth, behavior: 'smooth' });
         });
       });
+
+      // Video preview mode setup
+      if (app.hasVideo) {
+        modalModeToggle.style.display = 'inline-flex';
+        modalVideo.src = app.id + '/preview.mp4';
+      } else {
+        modalModeToggle.style.display = 'none';
+        modalVideo.src = '';
+      }
+      setModalMode('shots');
+
+      // Scroll to currentShotIndex after paint
+      requestAnimationFrame(() => {
+        const w = modalTrack.clientWidth || 1;
+        modalTrack.scrollTo({ left: currentShotIndex * w, behavior: 'auto' });
+      });
     }
+
+    modalTrack.addEventListener('scroll', () => {
+      const w = modalTrack.clientWidth || 1;
+      const activeIdx = Math.round(modalTrack.scrollLeft / w);
+      currentShotIndex = activeIdx;
+      Array.from(modalDots.children).forEach((d, i) => {
+        d.classList.toggle('active', i === activeIdx);
+      });
+    }, { passive: true });
+
+    modalPrev.addEventListener('click', () => {
+      modalTrack.scrollBy({ left: -modalTrack.clientWidth, behavior: 'smooth' });
+    });
+    modalNext.addEventListener('click', () => {
+      modalTrack.scrollBy({ left: modalTrack.clientWidth, behavior: 'smooth' });
+    });
+
+    function setModalMode(mode) {
+      if (mode === 'video' && modalVideo.src) {
+        btnModalShots.classList.remove('active');
+        btnModalVideo.classList.add('active');
+        modalTrack.style.display = 'none';
+        modalPrev.style.display = 'none';
+        modalNext.style.display = 'none';
+        modalDots.style.display = 'none';
+        modalVideo.style.display = 'block';
+        modalVideo.play().catch(() => {});
+      } else {
+        btnModalVideo.classList.remove('active');
+        btnModalShots.classList.add('active');
+        modalVideo.pause();
+        modalVideo.style.display = 'none';
+        modalTrack.style.display = 'flex';
+        modalPrev.style.display = 'flex';
+        modalNext.style.display = 'flex';
+        modalDots.style.display = 'flex';
+      }
+    }
+
+    btnModalShots.addEventListener('click', () => setModalMode('shots'));
+    btnModalVideo.addEventListener('click', () => setModalMode('video'));
 
     function nextShot() {
       const app = APPS[currentAppIndex];
       if (!app) return;
       currentShotIndex = (currentShotIndex + 1) % app.shots.length;
-      updateLightboxContent();
+      modalTrack.scrollTo({ left: currentShotIndex * modalTrack.clientWidth, behavior: 'smooth' });
     }
 
     function prevShot() {
       const app = APPS[currentAppIndex];
       if (!app) return;
       currentShotIndex = (currentShotIndex - 1 + app.shots.length) % app.shots.length;
-      updateLightboxContent();
+      modalTrack.scrollTo({ left: currentShotIndex * modalTrack.clientWidth, behavior: 'smooth' });
     }
 
     function nextApp() {
@@ -1874,8 +1990,6 @@
       updateLightboxContent();
     }
 
-    btnNextShot.addEventListener('click', nextShot);
-    btnPrevShot.addEventListener('click', prevShot);
     sideNextApp.addEventListener('click', nextApp);
 
     // In-card photo scrolling & controls
