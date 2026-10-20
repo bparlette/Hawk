@@ -120,11 +120,11 @@ for (let i = 0; i < 40; i++) {
   m.scale.set(bw, bh, bd); scene.add(m);
 }
 // TOAD STREET — the REAL world from Toad Street 32 (extracted verbatim).
-// Waterfront district alongside the pier, left side, visible during the run.
+// Waterfront district on the left, close enough to be in frame during the run.
 {
   const world = getToadWorld();
-  world.scale.setScalar(1.5);
-  world.position.set(-28, 0, -70);
+  world.scale.setScalar(1.0);
+  world.position.set(-18, 0, -50);
   scene.add(world);
 }
 
