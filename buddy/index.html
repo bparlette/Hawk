@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Claude Autonomy Loop — Setup</title>
+<style>
+  body { font-family: -apple-system, system-ui, sans-serif; max-width: 720px; margin: 0 auto; padding: 20px; line-height: 1.55; color: #1a1a1a; }
+  h1 { font-size: 1.5em; }
+  h2 { font-size: 1.15em; margin-top: 1.8em; }
+  .step { background: #f4f4f5; border-radius: 10px; padding: 16px; margin: 16px 0; }
+  pre { background: #1e1e1e; color: #e8e8e8; padding: 14px; border-radius: 8px; overflow-x: auto; font-size: 13px; white-space: pre-wrap; word-break: break-word; }
+  button.copy { margin-top: 8px; padding: 8px 16px; font-size: 14px; border: none; border-radius: 8px; background: #007aff; color: #fff; cursor: pointer; }
+  button.copy:active { background: #005fc4; }
+  .done { color: #0a7d2c; font-weight: bold; }
+</style>
+</head>
+<body>
+<h1>Make Claude finish the job without babysitting</h1>
+<p>Three steps. Total setup: about 6 minutes. After that, walk away.</p>
+
+<div class="step">
+<h2>Step 1 — One-time setup (5 min)</h2>
+<p>Open Claude Code in your project folder and paste this as your first message. Put your goal statement where indicated:</p>
+<pre id="prompt1">=== MY GOAL (do not change this) ===
+&lt;your goal statement goes here&gt;
+
+=== OPERATING RULES (how to pursue the goal above without me babysitting you) ===
+1. PROGRESS.md is your memory. Create it in the project root now. After every step, append: timestamp, what you did, what happened, test results, and the single next step. On every start — including after any resume or restart — read PROGRESS.md first and pick up exactly where you left off. Never redo verified work.
+2. Do not stop to ask me questions. Make your best technical call and keep moving. The ONLY acceptable reason to stop is a hard blocker (a file you can't access, a tool that won't run). If blocked, write "BLOCKED: &lt;exactly what you need&gt;" at the top of PROGRESS.md and stop.
+3. Work in small loops: diagnose → change ONE thing → test → log. Finish one piece completely before starting the next.
+4. If your context gets long, write a compact summary into PROGRESS.md before continuing.
+5. Before fixing, write down what "done" means as checkable boxes in PROGRESS.md. Test each one yourself. Claim done only when every box passes.
+
+START: If PROGRESS.md already exists, read it and continue. If not, spend ~30 minutes diagnosing first: reproduce the current broken behavior and document EXACTLY what is wrong in PROGRESS.md. Do not fix anything until the diagnosis is written down. Then fix the highest-impact issue first.
+FINISH: When the goal is fully met, write "DONE" at the top of PROGRESS.md with a summary of what was wrong and what you changed.
+ON RESUME: Do not ask what to do — read PROGRESS.md and continue.</pre>
+<button class="copy" onclick="copy('prompt1', this)">Copy prompt</button>
+<p>Let it run until it creates PROGRESS.md and finishes the diagnosis. Then close it.</p>
+</div>
+
+<div class="step">
+<h2>Step 2 — Start the loop (1 min)</h2>
+<p>Paste this into your terminal, in the project folder, and hit enter:</p>
+<pre id="loop">while true; do
+  grep -q "^DONE" PROGRESS.md 2>/dev/null && { echo "Finished!"; break; }
+  grep -q "^BLOCKED" PROGRESS.md 2>/dev/null && { echo "Claude is blocked — read PROGRESS.md"; break; }
+  claude --dangerously-skip-permissions -p "Read PROGRESS.md and continue. Stop only when DONE or BLOCKED."
+  sleep 30
+done</pre>
+<button class="copy" onclick="copy('loop', this)">Copy loop</button>
+</div>
+
+<div class="step">
+<h2>Step 3 — Walk away</h2>
+<p>The loop re-runs Claude automatically every time it stops — your resume button, pressed for you. Each run reads PROGRESS.md, does one chunk of work, saves, and exits. It stops itself when it prints <span class="done">Finished!</span> or <span class="done">blocked</span>.</p>
+</div>
+
+<div class="step">
+<h2>If it says blocked</h2>
+<p>Open PROGRESS.md, read the BLOCKED line at the top, fix whatever it needs (a file, a tool, a decision), delete the BLOCKED line, and re-run the loop from Step 2.</p>
+</div>
+
+<script>
+function copy(id, btn) {
+  const text = document.getElementById(id).innerText;
+  navigator.clipboard.writeText(text).then(() => {
+    const old = btn.innerText;
+    btn.innerText = 'Copied!';
+    setTimeout(() => btn.innerText = old, 1500);
+  });
+}
+</script>
+</body>
+</html>
