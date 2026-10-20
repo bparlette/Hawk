@@ -806,3 +806,303 @@ body.detail-page {
   backdrop-filter: blur(8px);
   padding: 4px;
 }
+
+/* ==========================================================================
+   Responsive Lightbox Modal & Detail View (Mobile Portrait & Landscape)
+   ========================================================================== */
+
+/* Mobile & Tablet Portrait (max-width: 860px) */
+@media (max-width: 860px) {
+  .lightbox {
+    padding: 8px;
+    align-items: center;
+  }
+
+  .lightbox-content {
+    width: 100%;
+    height: 94vh;
+    max-height: 94vh;
+    flex-direction: column;
+    border-radius: 20px;
+    overflow-y: auto;
+    overflow-x: hidden;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .lightbox-close {
+    position: sticky;
+    top: 12px;
+    margin-left: auto;
+    margin-right: 12px;
+    margin-bottom: -44px;
+    width: 38px;
+    height: 38px;
+    background: rgba(14, 16, 24, 0.88);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border: 1px solid rgba(255, 255, 255, 0.22);
+    z-index: 100;
+  }
+
+  .lightbox-viewer {
+    flex: none;
+    width: 100%;
+    padding: 24px 14px 16px;
+    background: #030406;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .lightbox-phone {
+    height: 52vh;
+    max-height: 460px;
+    width: auto;
+    aspect-ratio: 1320 / 2868;
+    border-radius: 36px;
+    border-width: 4px;
+  }
+
+  .lightbox-phone img {
+    border-radius: 31px;
+  }
+
+  .lightbox-nav-btn {
+    width: 36px;
+    height: 36px;
+  }
+  .lightbox-nav-btn.prev { left: 8px; }
+  .lightbox-nav-btn.next { right: 8px; }
+
+  .thumbnail-ribbon {
+    margin-top: 10px;
+    gap: 8px;
+  }
+  .thumb-pip {
+    width: 24px;
+    height: 4px;
+  }
+  .thumb-pip.active {
+    width: 36px;
+  }
+
+  .lightbox-sidebar {
+    flex: none;
+    width: 100%;
+    padding: 20px 18px 36px;
+    border-left: none;
+    overflow-y: visible;
+    background: rgba(14, 16, 22, 0.95);
+  }
+
+  .sidebar-header {
+    gap: 14px;
+    margin-bottom: 14px;
+  }
+  .sidebar-icon {
+    width: 52px;
+    height: 52px;
+  }
+  .sidebar-title h2 {
+    font-size: 19px;
+  }
+
+  .lightbox-footer {
+    margin-top: 20px;
+    flex-direction: column;
+    gap: 10px;
+  }
+  .action-btn {
+    width: 100%;
+    padding: 12px 16px;
+    font-size: 13.5px;
+  }
+
+  /* Standalone detail page portrait */
+  body.detail-page {
+    padding: 16px;
+  }
+  .sub-nav {
+    margin-bottom: 20px;
+  }
+  .detail-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 14px;
+    margin-bottom: 24px;
+  }
+  .detail-app-icon {
+    width: 64px;
+    height: 64px;
+  }
+  .detail-header h1 {
+    font-size: 24px;
+  }
+  .meta-row {
+    flex-wrap: wrap;
+    gap: 6px;
+  }
+  .screens-row {
+    gap: 16px;
+    padding-bottom: 16px;
+  }
+  .mockup-frame {
+    width: 78vw;
+    max-width: 280px;
+    border-radius: 36px;
+    border-width: 4px;
+  }
+  .mockup-frame img {
+    border-radius: 31px;
+  }
+}
+
+/* Mobile Landscape (max-height: 560px and orientation: landscape) */
+@media (max-height: 560px) and (orientation: landscape) {
+  .lightbox {
+    padding: 6px 10px;
+    align-items: center;
+  }
+
+  .lightbox-content {
+    width: 100%;
+    height: 98vh;
+    max-height: 98vh;
+    flex-direction: row;
+    border-radius: 16px;
+    overflow: hidden;
+  }
+
+  .lightbox-close {
+    position: absolute;
+    top: 8px;
+    right: 8px;
+    width: 30px;
+    height: 30px;
+    font-size: 16px;
+    margin: 0;
+    z-index: 100;
+  }
+
+  .lightbox-viewer {
+    flex: 1.1;
+    padding: 8px 12px;
+  }
+
+  .lightbox-phone {
+    height: calc(98vh - 44px);
+    max-height: calc(98vh - 44px);
+    width: auto;
+    aspect-ratio: 1320 / 2868;
+    border-radius: 26px;
+    border-width: 3px;
+  }
+
+  .lightbox-phone img {
+    border-radius: 22px;
+  }
+
+  .thumbnail-ribbon {
+    margin-top: 6px;
+    gap: 6px;
+  }
+  .thumb-pip {
+    width: 20px;
+    height: 3px;
+  }
+  .thumb-pip.active {
+    width: 28px;
+  }
+
+  .lightbox-nav-btn {
+    width: 28px;
+    height: 28px;
+  }
+  .lightbox-nav-btn.prev { left: 6px; }
+  .lightbox-nav-btn.next { right: 6px; }
+
+  .lightbox-sidebar {
+    flex: 1.35;
+    padding: 14px 18px;
+    overflow-y: auto;
+    border-left: 1px solid var(--border);
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .sidebar-header {
+    margin-bottom: 8px;
+    gap: 10px;
+  }
+  .sidebar-icon {
+    width: 44px;
+    height: 44px;
+  }
+  .sidebar-title h2 {
+    font-size: 16px;
+    margin: 0 0 2px;
+  }
+  .tagline {
+    font-size: 12.5px !important;
+    margin-bottom: 8px !important;
+  }
+  .sidebar-section {
+    margin: 8px 0;
+  }
+  .sidebar-section h4 {
+    margin-bottom: 4px;
+    font-size: 10px;
+  }
+  .spec-item {
+    padding: 3px 0;
+    font-size: 11.5px;
+  }
+  .spec-item span:last-child {
+    font-size: 11px;
+  }
+  .feature-bullets {
+    font-size: 11.5px;
+    line-height: 1.4;
+    padding-left: 14px;
+  }
+  .lightbox-footer {
+    margin-top: 12px;
+    gap: 8px;
+  }
+  .action-btn {
+    padding: 8px 12px;
+    font-size: 12px;
+  }
+
+  /* Standalone detail page landscape */
+  body.detail-page {
+    padding: 12px 16px;
+  }
+  .sub-nav {
+    margin-bottom: 12px;
+  }
+  .detail-header {
+    margin-bottom: 14px;
+    gap: 12px;
+  }
+  .detail-app-icon {
+    width: 44px;
+    height: 44px;
+  }
+  .detail-header h1 {
+    font-size: 20px;
+  }
+  .screens-row {
+    gap: 12px;
+    padding-bottom: 8px;
+  }
+  .mockup-frame {
+    height: calc(100vh - 130px);
+    max-height: 360px;
+    width: auto;
+    aspect-ratio: 1320 / 2868;
+    border-radius: 26px;
+    border-width: 3px;
+  }
+  .mockup-frame img {
+    border-radius: 22px;
+  }
+}
+
