@@ -26,7 +26,6 @@ addEventListener('error', (e) => { __celErr.n++; __celErr.last = String(e.messag
 // ---------------- renderer: the scene renders into a ~240-line target, a post pass dithers it to 15-bit colour into a same-size canvas,
 // and CSS upscales the canvas with nearest-neighbour (image-rendering: pixelated) ----------------
 const canvas = $('gl');
-}
 
 const scene = new THREE.Group(); // world container (add to your scene)
 const FOGC = new THREE.Color('#b9c6cf');
@@ -634,7 +633,5 @@ const groundMesh = GB.build(CITY_MAT); groundMesh.receiveShadow = true; groundMe
 const decalMesh = DB.build(DECAL_MAT); decalMesh.receiveShadow = true; decalMesh.frustumCulled = false; scene.add(decalMesh);
 const cityOutline = OL.build(OUT_CITY); scene.add(cityOutline);
 
-// sky dome (inside the short draw distance): gradient + stars at night, a sun / moon disc, a few low-res clouds; recoloured by the cycle
-const SKY = (function sky() {
 export function getToadWorld() { return scene; }
 export const WORLD_BOUNDS = { x0: -11, x1: 11, z0: 3.6, z1: 46.4 };
