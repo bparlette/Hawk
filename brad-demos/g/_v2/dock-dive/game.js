@@ -62,8 +62,8 @@ const water = new THREE.Mesh(new THREE.PlaneGeometry(800, 800),
   new THREE.MeshLambertMaterial({ map: waterTex }));
 water.rotation.x = -Math.PI / 2; water.position.y = -3; scene.add(water);
 
-// the pier — long wooden dock into the harbor
-const PIER_LEN = 300, PIER_W = 16;
+// the pier — wooden dock into the harbor (tuned so run+dive+score fits a 30s short)
+const PIER_LEN = 200, PIER_W = 16;
 const pier = new THREE.Mesh(new THREE.BoxGeometry(PIER_W, 2, PIER_LEN),
   new THREE.MeshLambertMaterial({ map: woodTex }));
 pier.position.set(0, 0, -PIER_LEN / 2 + 10); scene.add(pier);
@@ -107,24 +107,24 @@ function makeBoat(bx, bz, hullColor) {
   scene.add(g); return g;
 }
 const boats = [
-  makeBoat(-22, -60, 0xc23a2a), makeBoat(24, -110, 0x2a6ac2),
-  makeBoat(-24, -170, 0xe8e4da), makeBoat(23, -225, 0x2a8a4a),
+  makeBoat(-22, -55, 0xc23a2a), makeBoat(24, -100, 0x2a6ac2),
+  makeBoat(-24, -150, 0xe8e4da),
 ];
 // distant skyline backdrop
 const bGeo = new THREE.BoxGeometry(1, 1, 1);
 for (let i = 0; i < 40; i++) {
   const bw = 12 + rnd() * 18, bh = 18 + rnd() * rnd() * 80, bd = 12 + rnd() * 18;
   const m = new THREE.Mesh(bGeo, new THREE.MeshLambertMaterial({ map: windowTex }));
-  m.position.set((rnd() - 0.5) * 420, bh / 2 - 3, -360 - rnd() * 120);
+  m.position.set((rnd() - 0.5) * 420, bh / 2 - 3, -280 - rnd() * 100);
   m.scale.set(bw, bh, bd); scene.add(m);
 }
 // a lighthouse-ish tower on the right
 const tower = new THREE.Mesh(new THREE.CylinderGeometry(4, 5, 40, 8),
   new THREE.MeshLambertMaterial({ color: 0xd84a3a }));
-tower.position.set(60, 17, -260); scene.add(tower);
+tower.position.set(60, 17, -200); scene.add(tower);
 const lampM = new THREE.MeshBasicMaterial({ color: 0xffe08a });
 const lamp = new THREE.Mesh(new THREE.SphereGeometry(2.2, 8, 8), lampM);
-lamp.position.set(60, 39, -260); scene.add(lamp);
+lamp.position.set(60, 39, -200); scene.add(lamp);
 
 // seagulls
 const gulls = [];
@@ -150,15 +150,15 @@ const boostTex = canvasTex(32, 32, (x) => {
   x.moveTo(16, 4); x.lineTo(26, 18); x.lineTo(18, 18); x.lineTo(18, 28);
   x.lineTo(14, 28); x.lineTo(14, 18); x.lineTo(6, 18); x.closePath(); x.fill();
 });
-for (let i = 0; i < 10; i++) {
-  const oz = -30 - i * 24 - rnd() * 8;
+for (let i = 0; i < 8; i++) {
+  const oz = -25 - i * 18 - rnd() * 6;
   const ox = (rnd() - 0.5) * 10;
   const c = new THREE.Mesh(crateGeo, crateMat);
   c.position.set(ox, 2.5, oz); c.rotation.y = rnd();
   scene.add(c); obstacles.push({ m: c, hit: false });
 }
-for (let i = 0; i < 7; i++) {
-  const bz = -45 - i * 34;
+for (let i = 0; i < 6; i++) {
+  const bz = -35 - i * 26;
   const bx = (rnd() - 0.5) * 10;
   const b = new THREE.Mesh(boostGeo, new THREE.MeshBasicMaterial({ map: boostTex, transparent: true, side: THREE.DoubleSide }));
   b.rotation.x = -Math.PI / 2; b.position.set(bx, 1.15, bz);
@@ -171,7 +171,7 @@ const splashGeo = new THREE.BufferGeometry();
 const splashPos = new Float32Array(splashN * 3);
 const splashVel = [];
 splashGeo.setAttribute('position', new THREE.BufferAttribute(splashPos, 3));
-const splash = new THREE.Points(splashGeo, new THREE.PointsMaterial({ color: 0xdff4ff, size: 1.6 }));
+const splash = new THREE.Points(splashGeo, new THREE.PointsMaterial({ color: 0xdff4ff, size: 2.4 }));
 splash.visible = false; scene.add(splash);
 const ripple = new THREE.Mesh(new THREE.RingGeometry(2, 3.4, 20),
   new THREE.MeshBasicMaterial({ color: 0xffffff, transparent: true, opacity: 0.8, side: THREE.DoubleSide }));
