@@ -15,7 +15,7 @@ import {
   rr, ease, damp, starPath, heartPath,
 } from '../_vendor/gp2x.js';
 import { drawChar } from '../_vendor/gpsprites.js';
-import { getSticker, initStickerUI } from './sticker.js';
+import { getSticker, initStickerUI, isCalm } from './sticker.js';
 
 const W = 540, H = 960;
 const BLOOM = .72;
@@ -24,6 +24,24 @@ const g = makeGame({
   hook: 'one bad tap and it is over', w: W, h: H, bg: '#060912', style: 'toon',
   bloom: BLOOM, ca: .42, vig: 1, scan: .22,
 });
+
+/* CALM MODE — kills the crazy bounce/ripple/shake (toggle in the sticker panel).
+   Patches the engine juice calls to no-ops; post-FX gets zeroed once it exists. */
+const CALM = isCalm();
+if (CALM) {
+  for (const m of ['punch', 'shake', 'hitstop', 'slowmo', 'flash']) {
+    try { if (typeof g[m] === 'function') g[m] = () => {}; } catch (e) {}
+  }
+  try { g.impact = () => {}; } catch (e) {}
+}
+function calmPost() {
+  if (CALM && g.post && !g.post._calmed) {
+    g.post._calmed = true;
+    for (const k of ['bloom', 'ca', 'ripple', 'ripples', 'chromatic']) {
+      try { if (k in g.post) g.post[k] = 0; } catch (e) {}
+    }
+  }
+}
 
 /* ------------------------------------------------------------------ tuning (rules) */
 const CFG = {
@@ -300,6 +318,7 @@ function die() {
 
 /* ================================================================== update */
 function update(dt) {
+  calmPost(); // zero post-FX once the engine builds it (calm mode)
   if (g.mode === 'over') { overT += dt; for (const p of pipes) p.x -= 40 * dt; return; }
 
   if (ui.scorePop > 0) ui.scorePop = Math.max(0, ui.scorePop - dt * 3.4);
@@ -668,11 +687,30 @@ function catDraw(ctx) {
   const sl = 16 + fl * 10;
   ctx.beginPath(); ctx.moveTo(-2, -62); ctx.quadraticCurveTo(-40, -58 + Math.sin(g.t * 18) * 6, -46 - sl, -40 + Math.cos(g.t * 15) * 8);
   ctx.strokeStyle = '#ff3b5c'; ctx.lineWidth = 10; ctx.lineCap = 'round'; ctx.stroke();
-  /* STICKER SAMPLE: uploaded sticker replaces the drawn cat (same spot, same squash/stretch) */
+  /* STICKER SAMPLE: uploaded sticker replaces the drawn cat.
+     Depth tricks so it doesn't read as a flat pasted-on object:
+     soft drop shadow, idle bob, banks into vertical motion, pops on flap.
+     (The ctx already carries the body's squash/stretch + rotation.) */
   const __sticker = getSticker();
   if (__sticker) {
     const __s = 96;
-    ctx.drawImage(__sticker, -__s / 2, 30 - __s / 2, __s, __s);
+    const __bob = Math.sin(g.t * 3.2) * 3;
+    const __pop = 1 + fl * .10;
+    // soft drop shadow — grounds it in the scene
+    ctx.save();
+    ctx.globalAlpha = .32;
+    ctx.fillStyle = '#000';
+    ctx.beginPath();
+    ctx.ellipse(7, 30 + __s * .42 + __bob * .25, __s * .36, __s * .11, 0, 0, TAU);
+    ctx.fill();
+    ctx.restore();
+    // the sticker itself: bob + bank into motion + flap pop
+    ctx.save();
+    ctx.translate(0, 30 + __bob);
+    ctx.rotate(clamp(cat.vy / 2400, -.22, .22));
+    ctx.scale(__pop, __pop);
+    ctx.drawImage(__sticker, -__s / 2, -__s / 2, __s, __s);
+    ctx.restore();
   } else {
     drawChar('cat', ctx, 0, 30, 88, { dir: 1, t: g.t, color: '#ff9a3c', anim: fl > .1 ? 'walk' : undefined, hurt: cat.dead || (cat.inv > 0 && cat.inv < .5) });
   }

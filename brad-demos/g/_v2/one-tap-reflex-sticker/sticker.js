@@ -141,16 +141,70 @@ function addStickerBorder(srcCanvas, borderPx = 10) {
   return out;
 }
 
+/* ---------- Apple-style subject cutout (ML) ---------- */
+let bgModule = null;
+function setCutoutStatus(msg) {
+  const el = document.getElementById('stk-cutout');
+  if (el) { el.textContent = msg || ''; el.style.display = msg ? 'block' : 'none'; }
+}
+async function mlCutout(img) {
+  // lazy-load: ~82KB wrapper, model (~40MB) downloads once then caches
+  if (!bgModule) {
+    bgModule = await import('https://cdn.jsdelivr.net/npm/@imgly/background-removal@1.7.0/+esm');
+  }
+  const blob = await bgModule.removeBackground(img, {
+    progress: (key, current, total) => {
+      const pct = total ? Math.round((current / total) * 100) : 0;
+      setCutoutStatus('✨ Cutting out subject… ' + pct + '%');
+    },
+  });
+  return new Promise((res, rej) => {
+    const url = URL.createObjectURL(blob);
+    const out = new Image();
+    out.onload = () => { URL.revokeObjectURL(url); res(out); };
+    out.onerror = rej;
+    out.src = url;
+  });
+}
+
 export async function processUpload(file, { removeBg = true } = {}) {
   const img = await loadImageFile(file);
-  let c = drawToCanvas(img, 512);
-  if (removeBg) c = removeBackground(c);
+  let c;
+  if (removeBg) {
+    try {
+      setCutoutStatus('✨ Cutting out subject…');
+      const cut = await mlCutout(img);          // Apple-style ML subject lift
+      c = drawToCanvas(cut, 512);
+    } catch (e) {
+      c = drawToCanvas(img, 512);               // fallback: flood-fill
+      c = removeBackground(c);
+    } finally {
+      setCutoutStatus('');
+    }
+  } else {
+    c = drawToCanvas(img, 512);
+  }
   c = cropToContent(c);
   c = addStickerBorder(c);
   stickerCanvas = c;
   try { localStorage.setItem(LS_KEY, c.toDataURL('image/png')); } catch (e) {}
   refreshPreview();
   return c;
+}
+
+/* ---------- calm mode (kill the crazy bounce/ripple/shake) ---------- */
+const CALM_KEY = 'flapcat-calm';
+export function isCalm() {
+  try {
+    return new URLSearchParams(location.search).has('calm') || localStorage.getItem(CALM_KEY) === '1';
+  } catch (e) { return false; }
+}
+export function setCalm(on) {
+  try {
+    if (on) localStorage.setItem(CALM_KEY, '1');
+    else localStorage.removeItem(CALM_KEY);
+  } catch (e) {}
+  location.reload(); // cleanest: re-init the engine without juice
 }
 
 /* ---------- UI ---------- */
@@ -201,12 +255,16 @@ export function initStickerUI(g) {
     <h3>📷 Your sticker, your cat</h3>
     <p>Upload any photo or sticker — background gets cut out,<br>shrunk to size, sticker border added.</p>
     <img id="stk-preview" alt="sticker preview">
+    <div id="stk-cutout" style="display:none;font-size:12px;color:#7df9ff;margin:6px 0"></div>
     <div class="stk-row">
       <label class="stk-act stk-pick" for="stk-file">Choose image</label>
       <button class="stk-act stk-play" id="stk-done">Play!</button>
     </div>
     <div class="stk-row">
       <button class="stk-act stk-clear" id="stk-clear">Use normal cat</button>
+    </div>
+    <div class="stk-row">
+      <button class="stk-act stk-clear" id="stk-calm">🧘 Calm mode: OFF</button>
     </div>
     <input type="file" id="stk-file" accept="image/*">
     <div class="stk-note">Saved on this device. Works with drag &amp; drop too.</div>`;
@@ -229,6 +287,10 @@ export function initStickerUI(g) {
     btnEl.textContent = '📷 Play as YOUR sticker';
     panelEl.style.display = 'none';
   };
+  const calmBtn = panelEl.querySelector('#stk-calm');
+  const paintCalm = () => { calmBtn.textContent = isCalm() ? '🧘 Calm mode: ON' : '🧘 Calm mode: OFF'; };
+  paintCalm();
+  calmBtn.onclick = () => setCalm(!isCalm());
   // drag & drop anywhere
   ['dragover', 'drop'].forEach(ev => document.addEventListener(ev, e => e.preventDefault()));
   document.addEventListener('drop', async (e) => {
