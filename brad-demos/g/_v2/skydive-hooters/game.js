@@ -1,5 +1,5 @@
 import * as THREE from 'three';
-import { buildToadStreet } from './toad-street.js';
+import { getToadWorld } from './toad-world.js';
 
 // SKYDIVE: HOOTERS RUN — toad-city chunky 32-bit skydive demo.
 // ?clean=1 skips title. ?auto=1 bot flies the whole run.
@@ -105,8 +105,14 @@ for (let i = 0; i < 14; i++) {
   scene.add(s); clouds.push(s);
 }
 
-// TOAD STREET — the authentic landing district (shops, signs, hydrants)
-buildToadStreet(scene, 26, -380, -460);
+// TOAD STREET — the REAL world from Toad Street 32 (extracted verbatim).
+// Scaled 2.5x and placed so the landing zone (26, -440) is mid-street.
+{
+  const world = getToadWorld();
+  world.scale.setScalar(2.5);
+  world.position.set(26, 0, -480);
+  scene.add(world);
+}
 
 // HOOTERS — orange roof, sign, beacon column, at the end of Toad Street
 // (placed where the flight path touches down: phase1 z 20->-324 @26u/s, phase2 -324->-444 @8u/s)
