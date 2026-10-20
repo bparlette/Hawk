@@ -538,13 +538,83 @@ header.site-header {
   box-shadow: 0 20px 50px rgba(0, 0, 0, 0.7);
   overflow: hidden;
   position: relative;
+  display: flex;
 }
 
-.lightbox-phone img {
+.lightbox-phone .screen-track {
+  display: flex;
+  width: 100%;
+  height: 100%;
+  overflow-x: auto;
+  overflow-y: hidden;
+  scroll-snap-type: x mandatory;
+  scroll-behavior: smooth;
+  scrollbar-width: none;
+  -webkit-overflow-scrolling: touch;
+  border-radius: 40px;
+}
+.lightbox-phone .screen-track::-webkit-scrollbar { display: none; }
+
+.lightbox-phone .phone-screen {
+  flex: 0 0 100%;
   width: 100%;
   height: 100%;
   object-fit: cover;
   border-radius: 40px;
+  scroll-snap-align: start;
+  scroll-snap-stop: always;
+  user-select: none;
+  -webkit-user-drag: none;
+}
+
+.phone-video {
+  flex: 0 0 100%;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: 40px;
+  background: #000;
+}
+
+.view-mode-toggle {
+  display: inline-flex;
+  gap: 6px;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid var(--border);
+  padding: 4px;
+  border-radius: 999px;
+  margin-bottom: 14px;
+  z-index: 5;
+}
+
+.mode-btn {
+  background: transparent;
+  border: none;
+  color: var(--text-secondary);
+  font-size: 12px;
+  font-weight: 500;
+  padding: 5px 14px;
+  border-radius: 999px;
+  cursor: pointer;
+  transition: var(--trans);
+}
+
+.mode-btn:hover { color: #fff; }
+.mode-btn.active {
+  background: var(--accent);
+  color: #fff;
+  box-shadow: 0 2px 8px rgba(79, 140, 255, 0.4);
+}
+
+.standalone-detail-wrap {
+  max-width: 1120px;
+  margin: 0 auto;
+  padding: 0 20px 60px;
+}
+
+.lightbox-content.standalone-card {
+  height: auto;
+  min-height: 75vh;
 }
 
 .lightbox-nav-btn {

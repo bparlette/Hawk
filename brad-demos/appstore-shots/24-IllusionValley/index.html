@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>IllusionValley — AppStore Portfolio</title>
+<title>IllusionValley — AppStore Showcase</title>
 <link rel="stylesheet" href="../gallery.css">
 </head>
 <body class="detail-page">
@@ -18,52 +18,151 @@
     </div>
   </nav>
 
-  <main class="detail-hero">
-    <div class="detail-header">
-      <img class="detail-app-icon" src="icon.png" alt="IllusionValley Icon">
-      <div>
-        <h1>IllusionValley</h1>
-        <p class="tagline">Optical Illusion Gallery</p>
-        <div class="meta-row">
-          <code>com.apppress.illusionvalley</code>
-          <span class="dot">·</span>
-          <code>NonEuclideanIsometricEngine.swift</code>
-          <span class="dot">·</span>
-          <span class="perm-badge">100% On-Device</span>
+  <main class="standalone-detail-wrap">
+    <div class="lightbox-content standalone-card">
+      <div class="lightbox-viewer">
+        
+
+        <div class="lightbox-phone">
+          <div class="dynamic-island"></div>
+          <div class="screen-track" id="standaloneTrack">
+            
+              <img class="phone-screen" src="shot-1.jpg" alt="IllusionValley screen 1" loading="eager">
+            
+              <img class="phone-screen" src="shot-2.jpg" alt="IllusionValley screen 2" loading="lazy">
+            
+              <img class="phone-screen" src="shot-3.jpg" alt="IllusionValley screen 3" loading="lazy">
+            
+              <img class="phone-screen" src="shot-4.jpg" alt="IllusionValley screen 4" loading="lazy">
+            
+          </div>
+          
+          
+            <button class="card-nav prev" id="standalonePrev" aria-label="Previous photo">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"/></svg>
+            </button>
+            <button class="card-nav next" id="standaloneNext" aria-label="Next photo">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"/></svg>
+            </button>
+            <div class="card-dots" id="standaloneDots">
+              <button class="card-dot active" data-shot-idx="0" aria-label="Go to photo 1"></button><button class="card-dot " data-shot-idx="1" aria-label="Go to photo 2"></button><button class="card-dot " data-shot-idx="2" aria-label="Go to photo 3"></button><button class="card-dot " data-shot-idx="3" aria-label="Go to photo 4"></button>
+            </div>
+          
         </div>
       </div>
-    </div>
 
-    <div class="screens-row">
-      
-    <div class="mockup-frame">
-      <div class="notch"><span class="lens"></span></div>
-      <img src="shot-1.jpg" alt="IllusionValley screen 1" loading="lazy">
-      <div class="frame-label">Screen 1 of 4</div>
-    </div>
-  
+      <aside class="lightbox-sidebar">
+        <div>
+          <div class="sidebar-header">
+            <img class="sidebar-icon" src="icon.png" alt="IllusionValley Icon">
+            <div class="sidebar-title">
+              <h2>IllusionValley</h2>
+              <div class="sidebar-pills">
+                <span class="pill category">Games &amp; Sim</span>
+                <span class="pill price">$4.99</span>
+              </div>
+            </div>
+          </div>
 
-    <div class="mockup-frame">
-      <div class="notch"><span class="lens"></span></div>
-      <img src="shot-2.jpg" alt="IllusionValley screen 2" loading="lazy">
-      <div class="frame-label">Screen 2 of 4</div>
-    </div>
-  
+          <p class="tagline" style="font-size: 14px; margin-bottom: 20px;">Optical Illusion Gallery</p>
 
-    <div class="mockup-frame">
-      <div class="notch"><span class="lens"></span></div>
-      <img src="shot-3.jpg" alt="IllusionValley screen 3" loading="lazy">
-      <div class="frame-label">Screen 3 of 4</div>
-    </div>
-  
+          <div class="sidebar-section">
+            <h4>Architecture & Specs</h4>
+            <div class="spec-list">
+              <div class="spec-item">
+                <span>Bundle ID</span>
+                <span>com.apppress.illusionvalley</span>
+              </div>
+              <div class="spec-item">
+                <span>Core Engine</span>
+                <span>NonEuclideanIsometricEngine.swift</span>
+              </div>
+              <div class="spec-item">
+                <span>Permissions</span>
+                <span>100% On-Device</span>
+              </div>
+              <div class="spec-item">
+                <span>Frameworks</span>
+                <span>SwiftUI · Swift 6</span>
+              </div>
+            </div>
+          </div>
 
-    <div class="mockup-frame">
-      <div class="notch"><span class="lens"></span></div>
-      <img src="shot-4.jpg" alt="IllusionValley screen 4" loading="lazy">
-      <div class="frame-label">Screen 4 of 4</div>
-    </div>
-  
+          
+        </div>
+
+        <div class="lightbox-footer">
+          <a class="action-btn secondary" href="../index.html">
+            &larr; Back to Portfolio
+          </a>
+        </div>
+      </aside>
     </div>
   </main>
+
+  <script>
+    const track = document.getElementById('standaloneTrack');
+    const dots = Array.from(document.querySelectorAll('#standaloneDots .card-dot'));
+    const prevBtn = document.getElementById('standalonePrev');
+    const nextBtn = document.getElementById('standaloneNext');
+    const video = document.getElementById('standaloneVideo');
+    const modeBtns = Array.from(document.querySelectorAll('.mode-btn'));
+
+    if (track) {
+      let scrollTimeout;
+      track.addEventListener('scroll', () => {
+        clearTimeout(scrollTimeout);
+        scrollTimeout = setTimeout(() => {
+          const w = track.clientWidth || 1;
+          const activeIdx = Math.round(track.scrollLeft / w);
+          dots.forEach((d, i) => d.classList.toggle('active', i === activeIdx));
+        }, 30);
+      }, { passive: true });
+
+      if (prevBtn) {
+        prevBtn.addEventListener('click', () => {
+          track.scrollBy({ left: -track.clientWidth, behavior: 'smooth' });
+        });
+      }
+      if (nextBtn) {
+        nextBtn.addEventListener('click', () => {
+          track.scrollBy({ left: track.clientWidth, behavior: 'smooth' });
+        });
+      }
+      dots.forEach(d => {
+        d.addEventListener('click', () => {
+          const idx = Number(d.dataset.shotIdx);
+          track.scrollTo({ left: idx * track.clientWidth, behavior: 'smooth' });
+        });
+      });
+    }
+
+    modeBtns.forEach(btn => {
+      btn.addEventListener('click', () => {
+        modeBtns.forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        const mode = btn.dataset.mode;
+        if (mode === 'video' && video && track) {
+          track.style.display = 'none';
+          if (prevBtn) prevBtn.style.display = 'none';
+          if (nextBtn) nextBtn.style.display = 'none';
+          const dotsBar = document.getElementById('standaloneDots');
+          if (dotsBar) dotsBar.style.display = 'none';
+          video.style.display = 'block';
+          video.play().catch(() => {});
+        } else if (track) {
+          if (video) {
+            video.pause();
+            video.style.display = 'none';
+          }
+          track.style.display = 'flex';
+          if (prevBtn) prevBtn.style.display = 'flex';
+          if (nextBtn) nextBtn.style.display = 'flex';
+          const dotsBar = document.getElementById('standaloneDots');
+          if (dotsBar) dotsBar.style.display = 'flex';
+        }
+      });
+    });
+  </script>
 </body>
 </html>
