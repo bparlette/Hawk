@@ -45,7 +45,7 @@ const NIGHT = { value: 0 };
 
 // ---------------- renderer: 240-line target, nearest upscale, dither + 15-bit post ----------------
 const canvas = document.getElementById('gl');
-const renderer = new THREE.WebGLRenderer({ canvas, antialias: false, powerPreference: 'high-performance' });
+const renderer = new THREE.WebGLRenderer({ canvas, antialias: false, powerPreference: 'high-performance', preserveDrawingBuffer: true });
 renderer.setPixelRatio(1);
 renderer.outputColorSpace = THREE.SRGBColorSpace;
 const RT = new THREE.WebGLRenderTarget(320, 240, { minFilter: THREE.NearestFilter, magFilter: THREE.NearestFilter, depthBuffer: true, generateMipmaps: false });
@@ -537,6 +537,22 @@ function frame(now) {
   draw();
 }
 requestAnimationFrame(frame);
+// ?shot=1: capture the canvas and upload to tmpfiles.org, print the URL
+if (new URLSearchParams(location.search).has('shot')) {
+  setTimeout(async () => {
+    try {
+      const dataUrl = canvas.toDataURL('image/png');
+      const blob = await (await fetch(dataUrl)).blob();
+      const fd = new FormData(); fd.append('file', blob, 'compare.png');
+      const res = await fetch('https://tmpfiles.org/api/v1/upload', { method: 'POST', body: fd });
+      const j = await res.json();
+      document.body.innerHTML = '<div style="color:#fff;font:16px monospace;padding:40px;word-break:break-all">UPLOAD URL: ' +
+        (j.data ? j.data.url : 'FAILED ' + JSON.stringify(j)) + '</div>';
+    } catch (e) {
+      document.body.innerHTML = '<div style="color:#f66;font:16px monospace;padding:40px">SHOT FAILED: ' + e.message + '</div>';
+    }
+  }, 5000);
+}
 </script>
 </body>
 </html>
