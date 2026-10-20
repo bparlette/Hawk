@@ -23,7 +23,7 @@
       <div class="lightbox-viewer">
         
           <div class="view-mode-toggle">
-            <button class="mode-btn active" data-mode="shots">📸 Screenshots (1)</button>
+            <button class="mode-btn active" data-mode="shots">📸 Screenshots (4)</button>
             <button class="mode-btn" data-mode="video">🎬 20s App Preview</button>
           </div>
         
@@ -34,10 +34,26 @@
             
               <img class="phone-screen" src="shot-1.jpg" alt="ZenTiles screen 1" loading="eager">
             
+              <img class="phone-screen" src="shot-2.jpg" alt="ZenTiles screen 2" loading="lazy">
+            
+              <img class="phone-screen" src="shot-3.jpg" alt="ZenTiles screen 3" loading="lazy">
+            
+              <img class="phone-screen" src="shot-4.jpg" alt="ZenTiles screen 4" loading="lazy">
+            
           </div>
           
             <video class="phone-screen phone-video" id="standaloneVideo" src="preview.mp4" playsinline loop muted style="display:none;"></video>
           
+          
+            <button class="card-nav prev" id="standalonePrev" aria-label="Previous photo">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"/></svg>
+            </button>
+            <button class="card-nav next" id="standaloneNext" aria-label="Next photo">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"/></svg>
+            </button>
+            <div class="card-dots" id="standaloneDots">
+              <button class="card-dot active" data-shot-idx="0" aria-label="Go to photo 1"></button><button class="card-dot " data-shot-idx="1" aria-label="Go to photo 2"></button><button class="card-dot " data-shot-idx="2" aria-label="Go to photo 3"></button><button class="card-dot " data-shot-idx="3" aria-label="Go to photo 4"></button>
+            </div>
           
         </div>
       </div>
