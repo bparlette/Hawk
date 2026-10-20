@@ -192,6 +192,11 @@ function botThink(dt) {
     else S.botT = .1;
   }
   else if (S.phase === 'reveal' && S.revealT > 1.4) { tap(W / 2, H / 2); S.botT = .3; }
+  else if (S.phase === 'wait') { 
+    // Safety: if wait exceeds tugAt by 2s, force strike (auto-transition may have failed)
+    if (S.waitT > (S.tugAt || 4) + 2) { S.phase = 'strike'; S.t = 0; S.strikeT = 0; S.ring = 110; S.ringDir = -1; }
+    S.botT = .3; 
+  }
 }
 
 /* ---------------------------------------------------------------- update */
