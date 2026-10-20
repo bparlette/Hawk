@@ -66,15 +66,15 @@ const water = new THREE.Mesh(new THREE.PlaneGeometry(900, 900),
   new THREE.MeshLambertMaterial({ map: waterTex }));
 water.rotation.x = -Math.PI / 2; water.position.y = -2; scene.add(water);
 
-const island = new THREE.Mesh(new THREE.PlaneGeometry(420, 460),
+const island = new THREE.Mesh(new THREE.PlaneGeometry(420, 560),
   new THREE.MeshLambertMaterial({ map: sandTex }));
-island.rotation.x = -Math.PI / 2; island.position.set(0, -0.5, -180); scene.add(island);
+island.rotation.x = -Math.PI / 2; island.position.set(0, -0.5, -230); scene.add(island);
 
 // downtown cluster of buildings
 const buildings = [];
 const bGeo = new THREE.BoxGeometry(1, 1, 1);
 for (let i = 0; i < 70; i++) {
-  const bx = (rnd() - 0.5) * 300, bz = -60 - rnd() * 320;
+  const bx = (rnd() - 0.5) * 300, bz = -60 - rnd() * 360;
   const bw = 10 + rnd() * 16, bd = 10 + rnd() * 16;
   const bh = 14 + rnd() * rnd() * 70; // a few towers
   const m = new THREE.Mesh(bGeo, new THREE.MeshLambertMaterial({ map: windowTex }));
@@ -104,7 +104,8 @@ for (let i = 0; i < 14; i++) {
 }
 
 // HOOTERS — orange roof, sign, beacon column
-const HX = 26, HZ = -360;
+// (placed where the flight path touches down: phase1 z 20->-324 @26u/s, phase2 -324->-444 @8u/s)
+const HX = 26, HZ = -440;
 const hoot = new THREE.Group();
 const hb = new THREE.Mesh(new THREE.BoxGeometry(26, 12, 22),
   new THREE.MeshLambertMaterial({ map: windowTex }));
@@ -187,7 +188,7 @@ const P = {
   deployY: 108,                  // auto-deploy altitude
   landX: 0, result: ''
 };
-const FALL1 = 14.5, FALL2 = 7.2, ZSPD = 26;
+const FALL1 = 14.5, FALL2 = 7.2;
 
 function reset() {
   P.state = 'play'; P.t = 0; P.x = 0; P.y = 300; P.z = 20; P.vx = 0;
@@ -264,7 +265,7 @@ function update(dt) {
 
   const fall = P.phase === 'freefall' ? FALL1 : FALL2;
   P.y -= fall * dt;
-  P.z -= ZSPD * dt * (P.phase === 'freefall' ? 1 : 0.55);
+  P.z -= (P.phase === 'freefall' ? 26 : 8) * dt;
 
   // auto-deploy
   if (P.phase === 'freefall' && P.y <= P.deployY) deploy();
