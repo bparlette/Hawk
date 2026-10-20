@@ -32,29 +32,18 @@ export function rimOutlineMat(width = 0.0075, color = '#ffd9a0') {
   });
 }
 
-// enhanceRig(J): turn the ink-outline hulls on (the game hides them outside HD)
-// and add a rim-glow shell behind each one. Safe to call once per rig.
+// enhanceRig(J): turn the ink-outline hulls on (the game hides them outside HD).
+// No rim glow — Cherie rejected the yellow highlight. Ink + juice only.
 export function enhanceRig(J, opts = {}) {
   if (J.userData && J.userData.enhanced) return J;
-  const rimMat = opts.rimMat || rimOutlineMat(opts.rimWidth, opts.rimColor);
-  const hulls = [];
   J.root.traverse((o) => {
-    if (!o.isMesh || !o.material || o.material === rimMat) return;
+    if (!o.isMesh || !o.material) return;
     const m = o.material;
     const isHull =
       m.isShaderMaterial && m.side === THREE.BackSide &&
       m.uniforms && m.uniforms.uW !== undefined;
-    if (isHull) {
-      o.visible = true; // ink outlines on, even in the 32-bit look
-      hulls.push(o);
-    }
+    if (isHull) o.visible = true; // ink outlines on, even in the 32-bit look
   });
-  for (const h of hulls) {
-    const rim = new THREE.Mesh(h.geometry, rimMat); // shares geometry (+odir)
-    rim.castShadow = false;
-    rim.frustumCulled = false;
-    h.parent.add(rim);
-  }
   J.userData = J.userData || {};
   J.userData.enhanced = true;
   return J;
