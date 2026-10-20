@@ -43,8 +43,8 @@
 
   <!-- Metrics Bar -->
   <div class="metrics-bar">
-    <span id="matchCount">Showing 26 applications · 98 native iPhone captures</span>
-    <span>Press <kbd style="background:rgba(255,255,255,0.06);padding:2px 6px;border-radius:4px;border:1px solid var(--border);">Esc</kbd> to close viewer</span>
+    <span id="matchCount">Showing 26 applications · 85 native iPhone captures (up to 4 per app)</span>
+    <span>Swipe or click arrows on any card to scroll photos</span>
   </div>
 
   <!-- Cards Grid -->
@@ -75,13 +75,38 @@
     <div class="device-container">
       <div class="phone-bezel">
         <div class="dynamic-island"></div>
-        <img class="phone-screen" src="01-JustTheRecipe/shot-1.jpg" alt="JustTheRecipe Hero Screen" loading="lazy">
+        <div class="screen-track" data-track-idx="0">
+          
+            <img class="phone-screen" src="01-JustTheRecipe/shot-1.jpg" alt="JustTheRecipe screen 1" loading="eager">
+          
+            <img class="phone-screen" src="01-JustTheRecipe/shot-2.jpg" alt="JustTheRecipe screen 2" loading="lazy">
+          
+            <img class="phone-screen" src="01-JustTheRecipe/shot-3.jpg" alt="JustTheRecipe screen 3" loading="lazy">
+          
+        </div>
+        
+          <button class="card-nav prev" aria-label="Previous screenshot" data-card-idx="0" data-dir="-1" title="Previous photo">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"/></svg>
+          </button>
+          <button class="card-nav next" aria-label="Next screenshot" data-card-idx="0" data-dir="1" title="Next photo">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"/></svg>
+          </button>
+          <div class="card-dots" data-card-idx="0">
+            
+              <button class="card-dot active" data-card-idx="0" data-shot-idx="0" aria-label="Go to photo 1"></button>
+            
+              <button class="card-dot " data-card-idx="0" data-shot-idx="1" aria-label="Go to photo 2"></button>
+            
+              <button class="card-dot " data-card-idx="0" data-shot-idx="2" aria-label="Go to photo 3"></button>
+            
+          </div>
+        
       </div>
     </div>
 
     <div class="card-footer">
       <code>RecipeScraperEngine.swift</code>
-      <span>Inspect Set &rarr;</span>
+      <span>Inspect Details &rarr;</span>
     </div>
   </article>
   
@@ -111,13 +136,38 @@
     <div class="device-container">
       <div class="phone-bezel">
         <div class="dynamic-island"></div>
-        <img class="phone-screen" src="02-NagMe/shot-1.jpg" alt="NagMe Hero Screen" loading="lazy">
+        <div class="screen-track" data-track-idx="1">
+          
+            <img class="phone-screen" src="02-NagMe/shot-1.jpg" alt="NagMe screen 1" loading="eager">
+          
+            <img class="phone-screen" src="02-NagMe/shot-2.jpg" alt="NagMe screen 2" loading="lazy">
+          
+            <img class="phone-screen" src="02-NagMe/shot-3.jpg" alt="NagMe screen 3" loading="lazy">
+          
+        </div>
+        
+          <button class="card-nav prev" aria-label="Previous screenshot" data-card-idx="1" data-dir="-1" title="Previous photo">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"/></svg>
+          </button>
+          <button class="card-nav next" aria-label="Next screenshot" data-card-idx="1" data-dir="1" title="Next photo">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"/></svg>
+          </button>
+          <div class="card-dots" data-card-idx="1">
+            
+              <button class="card-dot active" data-card-idx="1" data-shot-idx="0" aria-label="Go to photo 1"></button>
+            
+              <button class="card-dot " data-card-idx="1" data-shot-idx="1" aria-label="Go to photo 2"></button>
+            
+              <button class="card-dot " data-card-idx="1" data-shot-idx="2" aria-label="Go to photo 3"></button>
+            
+          </div>
+        
       </div>
     </div>
 
     <div class="card-footer">
       <code>NagCascadeScheduler.swift</code>
-      <span>Inspect Set &rarr;</span>
+      <span>Inspect Details &rarr;</span>
     </div>
   </article>
   
@@ -147,13 +197,38 @@
     <div class="device-container">
       <div class="phone-bezel">
         <div class="dynamic-island"></div>
-        <img class="phone-screen" src="03-ScanLocal/shot-1.jpg" alt="ScanLocal Hero Screen" loading="lazy">
+        <div class="screen-track" data-track-idx="2">
+          
+            <img class="phone-screen" src="03-ScanLocal/shot-1.jpg" alt="ScanLocal screen 1" loading="eager">
+          
+            <img class="phone-screen" src="03-ScanLocal/shot-2.jpg" alt="ScanLocal screen 2" loading="lazy">
+          
+            <img class="phone-screen" src="03-ScanLocal/shot-3.jpg" alt="ScanLocal screen 3" loading="lazy">
+          
+        </div>
+        
+          <button class="card-nav prev" aria-label="Previous screenshot" data-card-idx="2" data-dir="-1" title="Previous photo">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"/></svg>
+          </button>
+          <button class="card-nav next" aria-label="Next screenshot" data-card-idx="2" data-dir="1" title="Next photo">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"/></svg>
+          </button>
+          <div class="card-dots" data-card-idx="2">
+            
+              <button class="card-dot active" data-card-idx="2" data-shot-idx="0" aria-label="Go to photo 1"></button>
+            
+              <button class="card-dot " data-card-idx="2" data-shot-idx="1" aria-label="Go to photo 2"></button>
+            
+              <button class="card-dot " data-card-idx="2" data-shot-idx="2" aria-label="Go to photo 3"></button>
+            
+          </div>
+        
       </div>
     </div>
 
     <div class="card-footer">
       <code>VisionOCRPipeline.swift</code>
-      <span>Inspect Set &rarr;</span>
+      <span>Inspect Details &rarr;</span>
     </div>
   </article>
   
@@ -183,13 +258,42 @@
     <div class="device-container">
       <div class="phone-bezel">
         <div class="dynamic-island"></div>
-        <img class="phone-screen" src="04-StreakGrid/shot-1.jpg" alt="StreakGrid Hero Screen" loading="lazy">
+        <div class="screen-track" data-track-idx="3">
+          
+            <img class="phone-screen" src="04-StreakGrid/shot-1.jpg" alt="StreakGrid screen 1" loading="eager">
+          
+            <img class="phone-screen" src="04-StreakGrid/shot-2.jpg" alt="StreakGrid screen 2" loading="lazy">
+          
+            <img class="phone-screen" src="04-StreakGrid/shot-3.jpg" alt="StreakGrid screen 3" loading="lazy">
+          
+            <img class="phone-screen" src="04-StreakGrid/shot-4.jpg" alt="StreakGrid screen 4" loading="lazy">
+          
+        </div>
+        
+          <button class="card-nav prev" aria-label="Previous screenshot" data-card-idx="3" data-dir="-1" title="Previous photo">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"/></svg>
+          </button>
+          <button class="card-nav next" aria-label="Next screenshot" data-card-idx="3" data-dir="1" title="Next photo">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"/></svg>
+          </button>
+          <div class="card-dots" data-card-idx="3">
+            
+              <button class="card-dot active" data-card-idx="3" data-shot-idx="0" aria-label="Go to photo 1"></button>
+            
+              <button class="card-dot " data-card-idx="3" data-shot-idx="1" aria-label="Go to photo 2"></button>
+            
+              <button class="card-dot " data-card-idx="3" data-shot-idx="2" aria-label="Go to photo 3"></button>
+            
+              <button class="card-dot " data-card-idx="3" data-shot-idx="3" aria-label="Go to photo 4"></button>
+            
+          </div>
+        
       </div>
     </div>
 
     <div class="card-footer">
       <code>StreakAnalyticsEngine.swift</code>
-      <span>Inspect Set &rarr;</span>
+      <span>Inspect Details &rarr;</span>
     </div>
   </article>
   
@@ -211,7 +315,7 @@
         <p class="card-subtitle">UTM, Compass &amp; Altitude HUD</p>
         <div class="card-badges">
           <span class="pill category">Business &amp; Pro</span>
-          <span class="pill">5 shots</span>
+          <span class="pill">4 shots</span>
         </div>
       </div>
     </div>
@@ -219,13 +323,42 @@
     <div class="device-container">
       <div class="phone-bezel">
         <div class="dynamic-island"></div>
-        <img class="phone-screen" src="05-GeoStamp/shot-1.jpg" alt="GeoStamp Hero Screen" loading="lazy">
+        <div class="screen-track" data-track-idx="4">
+          
+            <img class="phone-screen" src="05-GeoStamp/shot-1.jpg" alt="GeoStamp screen 1" loading="eager">
+          
+            <img class="phone-screen" src="05-GeoStamp/shot-2.jpg" alt="GeoStamp screen 2" loading="lazy">
+          
+            <img class="phone-screen" src="05-GeoStamp/shot-3.jpg" alt="GeoStamp screen 3" loading="lazy">
+          
+            <img class="phone-screen" src="05-GeoStamp/shot-4.jpg" alt="GeoStamp screen 4" loading="lazy">
+          
+        </div>
+        
+          <button class="card-nav prev" aria-label="Previous screenshot" data-card-idx="4" data-dir="-1" title="Previous photo">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"/></svg>
+          </button>
+          <button class="card-nav next" aria-label="Next screenshot" data-card-idx="4" data-dir="1" title="Next photo">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"/></svg>
+          </button>
+          <div class="card-dots" data-card-idx="4">
+            
+              <button class="card-dot active" data-card-idx="4" data-shot-idx="0" aria-label="Go to photo 1"></button>
+            
+              <button class="card-dot " data-card-idx="4" data-shot-idx="1" aria-label="Go to photo 2"></button>
+            
+              <button class="card-dot " data-card-idx="4" data-shot-idx="2" aria-label="Go to photo 3"></button>
+            
+              <button class="card-dot " data-card-idx="4" data-shot-idx="3" aria-label="Go to photo 4"></button>
+            
+          </div>
+        
       </div>
     </div>
 
     <div class="card-footer">
       <code>MetadataBurnInEngine.swift</code>
-      <span>Inspect Set &rarr;</span>
+      <span>Inspect Details &rarr;</span>
     </div>
   </article>
   
@@ -255,13 +388,38 @@
     <div class="device-container">
       <div class="phone-bezel">
         <div class="dynamic-island"></div>
-        <img class="phone-screen" src="06-GutSafe/shot-1.jpg" alt="GutSafe Hero Screen" loading="lazy">
+        <div class="screen-track" data-track-idx="5">
+          
+            <img class="phone-screen" src="06-GutSafe/shot-1.jpg" alt="GutSafe screen 1" loading="eager">
+          
+            <img class="phone-screen" src="06-GutSafe/shot-2.jpg" alt="GutSafe screen 2" loading="lazy">
+          
+            <img class="phone-screen" src="06-GutSafe/shot-3.jpg" alt="GutSafe screen 3" loading="lazy">
+          
+        </div>
+        
+          <button class="card-nav prev" aria-label="Previous screenshot" data-card-idx="5" data-dir="-1" title="Previous photo">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"/></svg>
+          </button>
+          <button class="card-nav next" aria-label="Next screenshot" data-card-idx="5" data-dir="1" title="Next photo">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"/></svg>
+          </button>
+          <div class="card-dots" data-card-idx="5">
+            
+              <button class="card-dot active" data-card-idx="5" data-shot-idx="0" aria-label="Go to photo 1"></button>
+            
+              <button class="card-dot " data-card-idx="5" data-shot-idx="1" aria-label="Go to photo 2"></button>
+            
+              <button class="card-dot " data-card-idx="5" data-shot-idx="2" aria-label="Go to photo 3"></button>
+            
+          </div>
+        
       </div>
     </div>
 
     <div class="card-footer">
       <code>FODMAPEngine.swift</code>
-      <span>Inspect Set &rarr;</span>
+      <span>Inspect Details &rarr;</span>
     </div>
   </article>
   
@@ -291,13 +449,38 @@
     <div class="device-container">
       <div class="phone-bezel">
         <div class="dynamic-island"></div>
-        <img class="phone-screen" src="07-PunchListPDF/shot-1.jpg" alt="PunchListPDF Hero Screen" loading="lazy">
+        <div class="screen-track" data-track-idx="6">
+          
+            <img class="phone-screen" src="07-PunchListPDF/shot-1.jpg" alt="PunchListPDF screen 1" loading="eager">
+          
+            <img class="phone-screen" src="07-PunchListPDF/shot-2.jpg" alt="PunchListPDF screen 2" loading="lazy">
+          
+            <img class="phone-screen" src="07-PunchListPDF/shot-3.jpg" alt="PunchListPDF screen 3" loading="lazy">
+          
+        </div>
+        
+          <button class="card-nav prev" aria-label="Previous screenshot" data-card-idx="6" data-dir="-1" title="Previous photo">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"/></svg>
+          </button>
+          <button class="card-nav next" aria-label="Next screenshot" data-card-idx="6" data-dir="1" title="Next photo">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"/></svg>
+          </button>
+          <div class="card-dots" data-card-idx="6">
+            
+              <button class="card-dot active" data-card-idx="6" data-shot-idx="0" aria-label="Go to photo 1"></button>
+            
+              <button class="card-dot " data-card-idx="6" data-shot-idx="1" aria-label="Go to photo 2"></button>
+            
+              <button class="card-dot " data-card-idx="6" data-shot-idx="2" aria-label="Go to photo 3"></button>
+            
+          </div>
+        
       </div>
     </div>
 
     <div class="card-footer">
       <code>PunchListEngine.swift</code>
-      <span>Inspect Set &rarr;</span>
+      <span>Inspect Details &rarr;</span>
     </div>
   </article>
   
@@ -327,13 +510,42 @@
     <div class="device-container">
       <div class="phone-bezel">
         <div class="dynamic-island"></div>
-        <img class="phone-screen" src="08-DeckMasterFSRS/shot-1.jpg" alt="DeckMasterFSRS Hero Screen" loading="lazy">
+        <div class="screen-track" data-track-idx="7">
+          
+            <img class="phone-screen" src="08-DeckMasterFSRS/shot-1.jpg" alt="DeckMasterFSRS screen 1" loading="eager">
+          
+            <img class="phone-screen" src="08-DeckMasterFSRS/shot-2.jpg" alt="DeckMasterFSRS screen 2" loading="lazy">
+          
+            <img class="phone-screen" src="08-DeckMasterFSRS/shot-3.jpg" alt="DeckMasterFSRS screen 3" loading="lazy">
+          
+            <img class="phone-screen" src="08-DeckMasterFSRS/shot-4.jpg" alt="DeckMasterFSRS screen 4" loading="lazy">
+          
+        </div>
+        
+          <button class="card-nav prev" aria-label="Previous screenshot" data-card-idx="7" data-dir="-1" title="Previous photo">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"/></svg>
+          </button>
+          <button class="card-nav next" aria-label="Next screenshot" data-card-idx="7" data-dir="1" title="Next photo">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"/></svg>
+          </button>
+          <div class="card-dots" data-card-idx="7">
+            
+              <button class="card-dot active" data-card-idx="7" data-shot-idx="0" aria-label="Go to photo 1"></button>
+            
+              <button class="card-dot " data-card-idx="7" data-shot-idx="1" aria-label="Go to photo 2"></button>
+            
+              <button class="card-dot " data-card-idx="7" data-shot-idx="2" aria-label="Go to photo 3"></button>
+            
+              <button class="card-dot " data-card-idx="7" data-shot-idx="3" aria-label="Go to photo 4"></button>
+            
+          </div>
+        
       </div>
     </div>
 
     <div class="card-footer">
       <code>FSRSEngine.swift</code>
-      <span>Inspect Set &rarr;</span>
+      <span>Inspect Details &rarr;</span>
     </div>
   </article>
   
@@ -355,7 +567,7 @@
         <p class="card-subtitle">Guided Anxiety Relief Tools</p>
         <div class="card-badges">
           <span class="pill category">Health &amp; Medical</span>
-          <span class="pill">5 shots</span>
+          <span class="pill">4 shots</span>
         </div>
       </div>
     </div>
@@ -363,13 +575,42 @@
     <div class="device-container">
       <div class="phone-bezel">
         <div class="dynamic-island"></div>
-        <img class="phone-screen" src="09-SurgeCalm/shot-1.jpg" alt="SurgeCalm Hero Screen" loading="lazy">
+        <div class="screen-track" data-track-idx="8">
+          
+            <img class="phone-screen" src="09-SurgeCalm/shot-1.jpg" alt="SurgeCalm screen 1" loading="eager">
+          
+            <img class="phone-screen" src="09-SurgeCalm/shot-2.jpg" alt="SurgeCalm screen 2" loading="lazy">
+          
+            <img class="phone-screen" src="09-SurgeCalm/shot-3.jpg" alt="SurgeCalm screen 3" loading="lazy">
+          
+            <img class="phone-screen" src="09-SurgeCalm/shot-4.jpg" alt="SurgeCalm screen 4" loading="lazy">
+          
+        </div>
+        
+          <button class="card-nav prev" aria-label="Previous screenshot" data-card-idx="8" data-dir="-1" title="Previous photo">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"/></svg>
+          </button>
+          <button class="card-nav next" aria-label="Next screenshot" data-card-idx="8" data-dir="1" title="Next photo">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"/></svg>
+          </button>
+          <div class="card-dots" data-card-idx="8">
+            
+              <button class="card-dot active" data-card-idx="8" data-shot-idx="0" aria-label="Go to photo 1"></button>
+            
+              <button class="card-dot " data-card-idx="8" data-shot-idx="1" aria-label="Go to photo 2"></button>
+            
+              <button class="card-dot " data-card-idx="8" data-shot-idx="2" aria-label="Go to photo 3"></button>
+            
+              <button class="card-dot " data-card-idx="8" data-shot-idx="3" aria-label="Go to photo 4"></button>
+            
+          </div>
+        
       </div>
     </div>
 
     <div class="card-footer">
       <code>Contraction511Engine.swift</code>
-      <span>Inspect Set &rarr;</span>
+      <span>Inspect Details &rarr;</span>
     </div>
   </article>
   
@@ -399,13 +640,38 @@
     <div class="device-container">
       <div class="phone-bezel">
         <div class="dynamic-island"></div>
-        <img class="phone-screen" src="10-HydroTap/shot-1.jpg" alt="HydroTap Hero Screen" loading="lazy">
+        <div class="screen-track" data-track-idx="9">
+          
+            <img class="phone-screen" src="10-HydroTap/shot-1.jpg" alt="HydroTap screen 1" loading="eager">
+          
+            <img class="phone-screen" src="10-HydroTap/shot-2.jpg" alt="HydroTap screen 2" loading="lazy">
+          
+            <img class="phone-screen" src="10-HydroTap/shot-3.jpg" alt="HydroTap screen 3" loading="lazy">
+          
+        </div>
+        
+          <button class="card-nav prev" aria-label="Previous screenshot" data-card-idx="9" data-dir="-1" title="Previous photo">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"/></svg>
+          </button>
+          <button class="card-nav next" aria-label="Next screenshot" data-card-idx="9" data-dir="1" title="Next photo">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"/></svg>
+          </button>
+          <div class="card-dots" data-card-idx="9">
+            
+              <button class="card-dot active" data-card-idx="9" data-shot-idx="0" aria-label="Go to photo 1"></button>
+            
+              <button class="card-dot " data-card-idx="9" data-shot-idx="1" aria-label="Go to photo 2"></button>
+            
+              <button class="card-dot " data-card-idx="9" data-shot-idx="2" aria-label="Go to photo 3"></button>
+            
+          </div>
+        
       </div>
     </div>
 
     <div class="card-footer">
       <code>HydrationEngine.swift</code>
-      <span>Inspect Set &rarr;</span>
+      <span>Inspect Details &rarr;</span>
     </div>
   </article>
   
@@ -435,13 +701,42 @@
     <div class="device-container">
       <div class="phone-bezel">
         <div class="dynamic-island"></div>
-        <img class="phone-screen" src="11-PulseFloor/shot-1.jpg" alt="PulseFloor Hero Screen" loading="lazy">
+        <div class="screen-track" data-track-idx="10">
+          
+            <img class="phone-screen" src="11-PulseFloor/shot-1.jpg" alt="PulseFloor screen 1" loading="eager">
+          
+            <img class="phone-screen" src="11-PulseFloor/shot-2.jpg" alt="PulseFloor screen 2" loading="lazy">
+          
+            <img class="phone-screen" src="11-PulseFloor/shot-3.jpg" alt="PulseFloor screen 3" loading="lazy">
+          
+            <img class="phone-screen" src="11-PulseFloor/shot-4.jpg" alt="PulseFloor screen 4" loading="lazy">
+          
+        </div>
+        
+          <button class="card-nav prev" aria-label="Previous screenshot" data-card-idx="10" data-dir="-1" title="Previous photo">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"/></svg>
+          </button>
+          <button class="card-nav next" aria-label="Next screenshot" data-card-idx="10" data-dir="1" title="Next photo">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"/></svg>
+          </button>
+          <div class="card-dots" data-card-idx="10">
+            
+              <button class="card-dot active" data-card-idx="10" data-shot-idx="0" aria-label="Go to photo 1"></button>
+            
+              <button class="card-dot " data-card-idx="10" data-shot-idx="1" aria-label="Go to photo 2"></button>
+            
+              <button class="card-dot " data-card-idx="10" data-shot-idx="2" aria-label="Go to photo 3"></button>
+            
+              <button class="card-dot " data-card-idx="10" data-shot-idx="3" aria-label="Go to photo 4"></button>
+            
+          </div>
+        
       </div>
     </div>
 
     <div class="card-footer">
       <code>PelvicFloorEngine.swift</code>
-      <span>Inspect Set &rarr;</span>
+      <span>Inspect Details &rarr;</span>
     </div>
   </article>
   
@@ -471,13 +766,38 @@
     <div class="device-container">
       <div class="phone-bezel">
         <div class="dynamic-island"></div>
-        <img class="phone-screen" src="12-FirstBites/shot-1.jpg" alt="FirstBites Hero Screen" loading="lazy">
+        <div class="screen-track" data-track-idx="11">
+          
+            <img class="phone-screen" src="12-FirstBites/shot-1.jpg" alt="FirstBites screen 1" loading="eager">
+          
+            <img class="phone-screen" src="12-FirstBites/shot-2.jpg" alt="FirstBites screen 2" loading="lazy">
+          
+            <img class="phone-screen" src="12-FirstBites/shot-3.jpg" alt="FirstBites screen 3" loading="lazy">
+          
+        </div>
+        
+          <button class="card-nav prev" aria-label="Previous screenshot" data-card-idx="11" data-dir="-1" title="Previous photo">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"/></svg>
+          </button>
+          <button class="card-nav next" aria-label="Next screenshot" data-card-idx="11" data-dir="1" title="Next photo">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"/></svg>
+          </button>
+          <div class="card-dots" data-card-idx="11">
+            
+              <button class="card-dot active" data-card-idx="11" data-shot-idx="0" aria-label="Go to photo 1"></button>
+            
+              <button class="card-dot " data-card-idx="11" data-shot-idx="1" aria-label="Go to photo 2"></button>
+            
+              <button class="card-dot " data-card-idx="11" data-shot-idx="2" aria-label="Go to photo 3"></button>
+            
+          </div>
+        
       </div>
     </div>
 
     <div class="card-footer">
       <code>AllergenProtocolEngine.swift</code>
-      <span>Inspect Set &rarr;</span>
+      <span>Inspect Details &rarr;</span>
     </div>
   </article>
   
@@ -507,13 +827,38 @@
     <div class="device-container">
       <div class="phone-bezel">
         <div class="dynamic-island"></div>
-        <img class="phone-screen" src="13-CrownSwipe/shot-1.jpg" alt="CrownSwipe Hero Screen" loading="lazy">
+        <div class="screen-track" data-track-idx="12">
+          
+            <img class="phone-screen" src="13-CrownSwipe/shot-1.jpg" alt="CrownSwipe screen 1" loading="eager">
+          
+            <img class="phone-screen" src="13-CrownSwipe/shot-2.jpg" alt="CrownSwipe screen 2" loading="lazy">
+          
+            <img class="phone-screen" src="13-CrownSwipe/shot-3.jpg" alt="CrownSwipe screen 3" loading="lazy">
+          
+        </div>
+        
+          <button class="card-nav prev" aria-label="Previous screenshot" data-card-idx="12" data-dir="-1" title="Previous photo">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"/></svg>
+          </button>
+          <button class="card-nav next" aria-label="Next screenshot" data-card-idx="12" data-dir="1" title="Next photo">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"/></svg>
+          </button>
+          <div class="card-dots" data-card-idx="12">
+            
+              <button class="card-dot active" data-card-idx="12" data-shot-idx="0" aria-label="Go to photo 1"></button>
+            
+              <button class="card-dot " data-card-idx="12" data-shot-idx="1" aria-label="Go to photo 2"></button>
+            
+              <button class="card-dot " data-card-idx="12" data-shot-idx="2" aria-label="Go to photo 3"></button>
+            
+          </div>
+        
       </div>
     </div>
 
     <div class="card-footer">
       <code>DynastyDecisionEngine.swift</code>
-      <span>Inspect Set &rarr;</span>
+      <span>Inspect Details &rarr;</span>
     </div>
   </article>
   
@@ -535,7 +880,7 @@
         <p class="card-subtitle">Master Every Poker Hand</p>
         <div class="card-badges">
           <span class="pill category">Games &amp; Sim</span>
-          <span class="pill">1 shots</span>
+          <span class="pill">1 shot</span>
         </div>
       </div>
     </div>
@@ -543,13 +888,18 @@
     <div class="device-container">
       <div class="phone-bezel">
         <div class="dynamic-island"></div>
-        <img class="phone-screen" src="14-JokerHands/shot-1.jpg" alt="JokerHands Hero Screen" loading="lazy">
+        <div class="screen-track" data-track-idx="13">
+          
+            <img class="phone-screen" src="14-JokerHands/shot-1.jpg" alt="JokerHands screen 1" loading="eager">
+          
+        </div>
+        
       </div>
     </div>
 
     <div class="card-footer">
       <code>CascadeScoringEngine.swift</code>
-      <span>Inspect Set &rarr;</span>
+      <span>Inspect Details &rarr;</span>
     </div>
   </article>
   
@@ -579,13 +929,42 @@
     <div class="device-container">
       <div class="phone-bezel">
         <div class="dynamic-island"></div>
-        <img class="phone-screen" src="15-BorderStamp/shot-1.jpg" alt="BorderStamp Hero Screen" loading="lazy">
+        <div class="screen-track" data-track-idx="14">
+          
+            <img class="phone-screen" src="15-BorderStamp/shot-1.jpg" alt="BorderStamp screen 1" loading="eager">
+          
+            <img class="phone-screen" src="15-BorderStamp/shot-2.jpg" alt="BorderStamp screen 2" loading="lazy">
+          
+            <img class="phone-screen" src="15-BorderStamp/shot-3.jpg" alt="BorderStamp screen 3" loading="lazy">
+          
+            <img class="phone-screen" src="15-BorderStamp/shot-4.jpg" alt="BorderStamp screen 4" loading="lazy">
+          
+        </div>
+        
+          <button class="card-nav prev" aria-label="Previous screenshot" data-card-idx="14" data-dir="-1" title="Previous photo">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"/></svg>
+          </button>
+          <button class="card-nav next" aria-label="Next screenshot" data-card-idx="14" data-dir="1" title="Next photo">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"/></svg>
+          </button>
+          <div class="card-dots" data-card-idx="14">
+            
+              <button class="card-dot active" data-card-idx="14" data-shot-idx="0" aria-label="Go to photo 1"></button>
+            
+              <button class="card-dot " data-card-idx="14" data-shot-idx="1" aria-label="Go to photo 2"></button>
+            
+              <button class="card-dot " data-card-idx="14" data-shot-idx="2" aria-label="Go to photo 3"></button>
+            
+              <button class="card-dot " data-card-idx="14" data-shot-idx="3" aria-label="Go to photo 4"></button>
+            
+          </div>
+        
       </div>
     </div>
 
     <div class="card-footer">
       <code>BorderInspectionEngine.swift</code>
-      <span>Inspect Set &rarr;</span>
+      <span>Inspect Details &rarr;</span>
     </div>
   </article>
   
@@ -607,7 +986,7 @@
         <p class="card-subtitle">Roll Dice, Crawl Dungeons</p>
         <div class="card-badges">
           <span class="pill category">Games &amp; Sim</span>
-          <span class="pill">5 shots</span>
+          <span class="pill">4 shots</span>
         </div>
       </div>
     </div>
@@ -615,13 +994,42 @@
     <div class="device-container">
       <div class="phone-bezel">
         <div class="dynamic-island"></div>
-        <img class="phone-screen" src="16-DiceDungeon/shot-1.jpg" alt="DiceDungeon Hero Screen" loading="lazy">
+        <div class="screen-track" data-track-idx="15">
+          
+            <img class="phone-screen" src="16-DiceDungeon/shot-1.jpg" alt="DiceDungeon screen 1" loading="eager">
+          
+            <img class="phone-screen" src="16-DiceDungeon/shot-2.jpg" alt="DiceDungeon screen 2" loading="lazy">
+          
+            <img class="phone-screen" src="16-DiceDungeon/shot-3.jpg" alt="DiceDungeon screen 3" loading="lazy">
+          
+            <img class="phone-screen" src="16-DiceDungeon/shot-4.jpg" alt="DiceDungeon screen 4" loading="lazy">
+          
+        </div>
+        
+          <button class="card-nav prev" aria-label="Previous screenshot" data-card-idx="15" data-dir="-1" title="Previous photo">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"/></svg>
+          </button>
+          <button class="card-nav next" aria-label="Next screenshot" data-card-idx="15" data-dir="1" title="Next photo">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"/></svg>
+          </button>
+          <div class="card-dots" data-card-idx="15">
+            
+              <button class="card-dot active" data-card-idx="15" data-shot-idx="0" aria-label="Go to photo 1"></button>
+            
+              <button class="card-dot " data-card-idx="15" data-shot-idx="1" aria-label="Go to photo 2"></button>
+            
+              <button class="card-dot " data-card-idx="15" data-shot-idx="2" aria-label="Go to photo 3"></button>
+            
+              <button class="card-dot " data-card-idx="15" data-shot-idx="3" aria-label="Go to photo 4"></button>
+            
+          </div>
+        
       </div>
     </div>
 
     <div class="card-footer">
       <code>DiceCombatEngine.swift</code>
-      <span>Inspect Set &rarr;</span>
+      <span>Inspect Details &rarr;</span>
     </div>
   </article>
   
@@ -651,13 +1059,42 @@
     <div class="device-container">
       <div class="phone-bezel">
         <div class="dynamic-island"></div>
-        <img class="phone-screen" src="17-SpireCrawl/shot-1.jpg" alt="SpireCrawl Hero Screen" loading="lazy">
+        <div class="screen-track" data-track-idx="16">
+          
+            <img class="phone-screen" src="17-SpireCrawl/shot-1.jpg" alt="SpireCrawl screen 1" loading="eager">
+          
+            <img class="phone-screen" src="17-SpireCrawl/shot-2.jpg" alt="SpireCrawl screen 2" loading="lazy">
+          
+            <img class="phone-screen" src="17-SpireCrawl/shot-3.jpg" alt="SpireCrawl screen 3" loading="lazy">
+          
+            <img class="phone-screen" src="17-SpireCrawl/shot-4.jpg" alt="SpireCrawl screen 4" loading="lazy">
+          
+        </div>
+        
+          <button class="card-nav prev" aria-label="Previous screenshot" data-card-idx="16" data-dir="-1" title="Previous photo">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"/></svg>
+          </button>
+          <button class="card-nav next" aria-label="Next screenshot" data-card-idx="16" data-dir="1" title="Next photo">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"/></svg>
+          </button>
+          <div class="card-dots" data-card-idx="16">
+            
+              <button class="card-dot active" data-card-idx="16" data-shot-idx="0" aria-label="Go to photo 1"></button>
+            
+              <button class="card-dot " data-card-idx="16" data-shot-idx="1" aria-label="Go to photo 2"></button>
+            
+              <button class="card-dot " data-card-idx="16" data-shot-idx="2" aria-label="Go to photo 3"></button>
+            
+              <button class="card-dot " data-card-idx="16" data-shot-idx="3" aria-label="Go to photo 4"></button>
+            
+          </div>
+        
       </div>
     </div>
 
     <div class="card-footer">
       <code>SpireEngine.swift</code>
-      <span>Inspect Set &rarr;</span>
+      <span>Inspect Details &rarr;</span>
     </div>
   </article>
   
@@ -687,13 +1124,38 @@
     <div class="device-container">
       <div class="phone-bezel">
         <div class="dynamic-island"></div>
-        <img class="phone-screen" src="18-FocusGrove/shot-1.jpg" alt="FocusGrove Hero Screen" loading="lazy">
+        <div class="screen-track" data-track-idx="17">
+          
+            <img class="phone-screen" src="18-FocusGrove/shot-1.jpg" alt="FocusGrove screen 1" loading="eager">
+          
+            <img class="phone-screen" src="18-FocusGrove/shot-2.jpg" alt="FocusGrove screen 2" loading="lazy">
+          
+            <img class="phone-screen" src="18-FocusGrove/shot-3.jpg" alt="FocusGrove screen 3" loading="lazy">
+          
+        </div>
+        
+          <button class="card-nav prev" aria-label="Previous screenshot" data-card-idx="17" data-dir="-1" title="Previous photo">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"/></svg>
+          </button>
+          <button class="card-nav next" aria-label="Next screenshot" data-card-idx="17" data-dir="1" title="Next photo">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"/></svg>
+          </button>
+          <div class="card-dots" data-card-idx="17">
+            
+              <button class="card-dot active" data-card-idx="17" data-shot-idx="0" aria-label="Go to photo 1"></button>
+            
+              <button class="card-dot " data-card-idx="17" data-shot-idx="1" aria-label="Go to photo 2"></button>
+            
+              <button class="card-dot " data-card-idx="17" data-shot-idx="2" aria-label="Go to photo 3"></button>
+            
+          </div>
+        
       </div>
     </div>
 
     <div class="card-footer">
       <code>BotanicalLSystemEngine.swift</code>
-      <span>Inspect Set &rarr;</span>
+      <span>Inspect Details &rarr;</span>
     </div>
   </article>
   
@@ -715,7 +1177,7 @@
         <p class="card-subtitle">Capture, Clarify, Do Next</p>
         <div class="card-badges">
           <span class="pill category">Productivity</span>
-          <span class="pill">5 shots</span>
+          <span class="pill">4 shots</span>
         </div>
       </div>
     </div>
@@ -723,13 +1185,42 @@
     <div class="device-container">
       <div class="phone-bezel">
         <div class="dynamic-island"></div>
-        <img class="phone-screen" src="19-NextActionGTD/shot-1.jpg" alt="NextActionGTD Hero Screen" loading="lazy">
+        <div class="screen-track" data-track-idx="18">
+          
+            <img class="phone-screen" src="19-NextActionGTD/shot-1.jpg" alt="NextActionGTD screen 1" loading="eager">
+          
+            <img class="phone-screen" src="19-NextActionGTD/shot-2.jpg" alt="NextActionGTD screen 2" loading="lazy">
+          
+            <img class="phone-screen" src="19-NextActionGTD/shot-3.jpg" alt="NextActionGTD screen 3" loading="lazy">
+          
+            <img class="phone-screen" src="19-NextActionGTD/shot-4.jpg" alt="NextActionGTD screen 4" loading="lazy">
+          
+        </div>
+        
+          <button class="card-nav prev" aria-label="Previous screenshot" data-card-idx="18" data-dir="-1" title="Previous photo">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"/></svg>
+          </button>
+          <button class="card-nav next" aria-label="Next screenshot" data-card-idx="18" data-dir="1" title="Next photo">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"/></svg>
+          </button>
+          <div class="card-dots" data-card-idx="18">
+            
+              <button class="card-dot active" data-card-idx="18" data-shot-idx="0" aria-label="Go to photo 1"></button>
+            
+              <button class="card-dot " data-card-idx="18" data-shot-idx="1" aria-label="Go to photo 2"></button>
+            
+              <button class="card-dot " data-card-idx="18" data-shot-idx="2" aria-label="Go to photo 3"></button>
+            
+              <button class="card-dot " data-card-idx="18" data-shot-idx="3" aria-label="Go to photo 4"></button>
+            
+          </div>
+        
       </div>
     </div>
 
     <div class="card-footer">
       <code>GTDParserAndEngine.swift</code>
-      <span>Inspect Set &rarr;</span>
+      <span>Inspect Details &rarr;</span>
     </div>
   </article>
   
@@ -751,7 +1242,7 @@
         <p class="card-subtitle">Live Tape &amp; History</p>
         <div class="card-badges">
           <span class="pill category">Business &amp; Pro</span>
-          <span class="pill">1 shots</span>
+          <span class="pill">1 shot</span>
         </div>
       </div>
     </div>
@@ -759,13 +1250,18 @@
     <div class="device-container">
       <div class="phone-bezel">
         <div class="dynamic-island"></div>
-        <img class="phone-screen" src="20-CalcPadLive/shot-1.jpg" alt="CalcPadLive Hero Screen" loading="lazy">
+        <div class="screen-track" data-track-idx="19">
+          
+            <img class="phone-screen" src="20-CalcPadLive/shot-1.jpg" alt="CalcPadLive screen 1" loading="eager">
+          
+        </div>
+        
       </div>
     </div>
 
     <div class="card-footer">
       <code>LiveMathSheetEngine.swift</code>
-      <span>Inspect Set &rarr;</span>
+      <span>Inspect Details &rarr;</span>
     </div>
   </article>
   
@@ -795,13 +1291,38 @@
     <div class="device-container">
       <div class="phone-bezel">
         <div class="dynamic-island"></div>
-        <img class="phone-screen" src="21-MetroFlow/shot-1.jpg" alt="MetroFlow Hero Screen" loading="lazy">
+        <div class="screen-track" data-track-idx="20">
+          
+            <img class="phone-screen" src="21-MetroFlow/shot-1.jpg" alt="MetroFlow screen 1" loading="eager">
+          
+            <img class="phone-screen" src="21-MetroFlow/shot-2.jpg" alt="MetroFlow screen 2" loading="lazy">
+          
+            <img class="phone-screen" src="21-MetroFlow/shot-3.jpg" alt="MetroFlow screen 3" loading="lazy">
+          
+        </div>
+        
+          <button class="card-nav prev" aria-label="Previous screenshot" data-card-idx="20" data-dir="-1" title="Previous photo">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"/></svg>
+          </button>
+          <button class="card-nav next" aria-label="Next screenshot" data-card-idx="20" data-dir="1" title="Next photo">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"/></svg>
+          </button>
+          <div class="card-dots" data-card-idx="20">
+            
+              <button class="card-dot active" data-card-idx="20" data-shot-idx="0" aria-label="Go to photo 1"></button>
+            
+              <button class="card-dot " data-card-idx="20" data-shot-idx="1" aria-label="Go to photo 2"></button>
+            
+              <button class="card-dot " data-card-idx="20" data-shot-idx="2" aria-label="Go to photo 3"></button>
+            
+          </div>
+        
       </div>
     </div>
 
     <div class="card-footer">
       <code>PlanarTransitFlowEngine.swift</code>
-      <span>Inspect Set &rarr;</span>
+      <span>Inspect Details &rarr;</span>
     </div>
   </article>
   
@@ -831,13 +1352,38 @@
     <div class="device-container">
       <div class="phone-bezel">
         <div class="dynamic-island"></div>
-        <img class="phone-screen" src="22-GridAgent/shot-1.jpg" alt="GridAgent Hero Screen" loading="lazy">
+        <div class="screen-track" data-track-idx="21">
+          
+            <img class="phone-screen" src="22-GridAgent/shot-1.jpg" alt="GridAgent screen 1" loading="eager">
+          
+            <img class="phone-screen" src="22-GridAgent/shot-2.jpg" alt="GridAgent screen 2" loading="lazy">
+          
+            <img class="phone-screen" src="22-GridAgent/shot-3.jpg" alt="GridAgent screen 3" loading="lazy">
+          
+        </div>
+        
+          <button class="card-nav prev" aria-label="Previous screenshot" data-card-idx="21" data-dir="-1" title="Previous photo">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"/></svg>
+          </button>
+          <button class="card-nav next" aria-label="Next screenshot" data-card-idx="21" data-dir="1" title="Next photo">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"/></svg>
+          </button>
+          <div class="card-dots" data-card-idx="21">
+            
+              <button class="card-dot active" data-card-idx="21" data-shot-idx="0" aria-label="Go to photo 1"></button>
+            
+              <button class="card-dot " data-card-idx="21" data-shot-idx="1" aria-label="Go to photo 2"></button>
+            
+              <button class="card-dot " data-card-idx="21" data-shot-idx="2" aria-label="Go to photo 3"></button>
+            
+          </div>
+        
       </div>
     </div>
 
     <div class="card-footer">
       <code>TurnBasedStealthBoardEngine.swift</code>
-      <span>Inspect Set &rarr;</span>
+      <span>Inspect Details &rarr;</span>
     </div>
   </article>
   
@@ -859,7 +1405,7 @@
         <p class="card-subtitle">Build Digital Circuits</p>
         <div class="card-badges">
           <span class="pill category">Games &amp; Sim</span>
-          <span class="pill">5 shots</span>
+          <span class="pill">4 shots</span>
         </div>
       </div>
     </div>
@@ -867,13 +1413,42 @@
     <div class="device-container">
       <div class="phone-bezel">
         <div class="dynamic-island"></div>
-        <img class="phone-screen" src="23-LogicMachineVM/shot-1.jpg" alt="LogicMachineVM Hero Screen" loading="lazy">
+        <div class="screen-track" data-track-idx="22">
+          
+            <img class="phone-screen" src="23-LogicMachineVM/shot-1.jpg" alt="LogicMachineVM screen 1" loading="eager">
+          
+            <img class="phone-screen" src="23-LogicMachineVM/shot-2.jpg" alt="LogicMachineVM screen 2" loading="lazy">
+          
+            <img class="phone-screen" src="23-LogicMachineVM/shot-3.jpg" alt="LogicMachineVM screen 3" loading="lazy">
+          
+            <img class="phone-screen" src="23-LogicMachineVM/shot-4.jpg" alt="LogicMachineVM screen 4" loading="lazy">
+          
+        </div>
+        
+          <button class="card-nav prev" aria-label="Previous screenshot" data-card-idx="22" data-dir="-1" title="Previous photo">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"/></svg>
+          </button>
+          <button class="card-nav next" aria-label="Next screenshot" data-card-idx="22" data-dir="1" title="Next photo">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"/></svg>
+          </button>
+          <div class="card-dots" data-card-idx="22">
+            
+              <button class="card-dot active" data-card-idx="22" data-shot-idx="0" aria-label="Go to photo 1"></button>
+            
+              <button class="card-dot " data-card-idx="22" data-shot-idx="1" aria-label="Go to photo 2"></button>
+            
+              <button class="card-dot " data-card-idx="22" data-shot-idx="2" aria-label="Go to photo 3"></button>
+            
+              <button class="card-dot " data-card-idx="22" data-shot-idx="3" aria-label="Go to photo 4"></button>
+            
+          </div>
+        
       </div>
     </div>
 
     <div class="card-footer">
       <code>AssemblyRegisterVMEngine.swift</code>
-      <span>Inspect Set &rarr;</span>
+      <span>Inspect Details &rarr;</span>
     </div>
   </article>
   
@@ -895,7 +1470,7 @@
         <p class="card-subtitle">Optical Illusion Gallery</p>
         <div class="card-badges">
           <span class="pill category">Games &amp; Sim</span>
-          <span class="pill">5 shots</span>
+          <span class="pill">4 shots</span>
         </div>
       </div>
     </div>
@@ -903,13 +1478,42 @@
     <div class="device-container">
       <div class="phone-bezel">
         <div class="dynamic-island"></div>
-        <img class="phone-screen" src="24-IllusionValley/shot-1.jpg" alt="IllusionValley Hero Screen" loading="lazy">
+        <div class="screen-track" data-track-idx="23">
+          
+            <img class="phone-screen" src="24-IllusionValley/shot-1.jpg" alt="IllusionValley screen 1" loading="eager">
+          
+            <img class="phone-screen" src="24-IllusionValley/shot-2.jpg" alt="IllusionValley screen 2" loading="lazy">
+          
+            <img class="phone-screen" src="24-IllusionValley/shot-3.jpg" alt="IllusionValley screen 3" loading="lazy">
+          
+            <img class="phone-screen" src="24-IllusionValley/shot-4.jpg" alt="IllusionValley screen 4" loading="lazy">
+          
+        </div>
+        
+          <button class="card-nav prev" aria-label="Previous screenshot" data-card-idx="23" data-dir="-1" title="Previous photo">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"/></svg>
+          </button>
+          <button class="card-nav next" aria-label="Next screenshot" data-card-idx="23" data-dir="1" title="Next photo">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"/></svg>
+          </button>
+          <div class="card-dots" data-card-idx="23">
+            
+              <button class="card-dot active" data-card-idx="23" data-shot-idx="0" aria-label="Go to photo 1"></button>
+            
+              <button class="card-dot " data-card-idx="23" data-shot-idx="1" aria-label="Go to photo 2"></button>
+            
+              <button class="card-dot " data-card-idx="23" data-shot-idx="2" aria-label="Go to photo 3"></button>
+            
+              <button class="card-dot " data-card-idx="23" data-shot-idx="3" aria-label="Go to photo 4"></button>
+            
+          </div>
+        
       </div>
     </div>
 
     <div class="card-footer">
       <code>NonEuclideanIsometricEngine.swift</code>
-      <span>Inspect Set &rarr;</span>
+      <span>Inspect Details &rarr;</span>
     </div>
   </article>
   
@@ -939,13 +1543,38 @@
     <div class="device-container">
       <div class="phone-bezel">
         <div class="dynamic-island"></div>
-        <img class="phone-screen" src="25-MarginMarkPDF/shot-1.jpg" alt="MarginMarkPDF Hero Screen" loading="lazy">
+        <div class="screen-track" data-track-idx="24">
+          
+            <img class="phone-screen" src="25-MarginMarkPDF/shot-1.jpg" alt="MarginMarkPDF screen 1" loading="eager">
+          
+            <img class="phone-screen" src="25-MarginMarkPDF/shot-2.jpg" alt="MarginMarkPDF screen 2" loading="lazy">
+          
+            <img class="phone-screen" src="25-MarginMarkPDF/shot-3.jpg" alt="MarginMarkPDF screen 3" loading="lazy">
+          
+        </div>
+        
+          <button class="card-nav prev" aria-label="Previous screenshot" data-card-idx="24" data-dir="-1" title="Previous photo">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"/></svg>
+          </button>
+          <button class="card-nav next" aria-label="Next screenshot" data-card-idx="24" data-dir="1" title="Next photo">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"/></svg>
+          </button>
+          <div class="card-dots" data-card-idx="24">
+            
+              <button class="card-dot active" data-card-idx="24" data-shot-idx="0" aria-label="Go to photo 1"></button>
+            
+              <button class="card-dot " data-card-idx="24" data-shot-idx="1" aria-label="Go to photo 2"></button>
+            
+              <button class="card-dot " data-card-idx="24" data-shot-idx="2" aria-label="Go to photo 3"></button>
+            
+          </div>
+        
       </div>
     </div>
 
     <div class="card-footer">
       <code>PencilVectorPDFMatrixEngine.swift</code>
-      <span>Inspect Set &rarr;</span>
+      <span>Inspect Details &rarr;</span>
     </div>
   </article>
   
@@ -975,13 +1604,38 @@
     <div class="device-container">
       <div class="phone-bezel">
         <div class="dynamic-island"></div>
-        <img class="phone-screen" src="26-OutbreakSEIR/shot-1.jpg" alt="OutbreakSEIR Hero Screen" loading="lazy">
+        <div class="screen-track" data-track-idx="25">
+          
+            <img class="phone-screen" src="26-OutbreakSEIR/shot-1.jpg" alt="OutbreakSEIR screen 1" loading="eager">
+          
+            <img class="phone-screen" src="26-OutbreakSEIR/shot-2.jpg" alt="OutbreakSEIR screen 2" loading="lazy">
+          
+            <img class="phone-screen" src="26-OutbreakSEIR/shot-3.jpg" alt="OutbreakSEIR screen 3" loading="lazy">
+          
+        </div>
+        
+          <button class="card-nav prev" aria-label="Previous screenshot" data-card-idx="25" data-dir="-1" title="Previous photo">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"/></svg>
+          </button>
+          <button class="card-nav next" aria-label="Next screenshot" data-card-idx="25" data-dir="1" title="Next photo">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"/></svg>
+          </button>
+          <div class="card-dots" data-card-idx="25">
+            
+              <button class="card-dot active" data-card-idx="25" data-shot-idx="0" aria-label="Go to photo 1"></button>
+            
+              <button class="card-dot " data-card-idx="25" data-shot-idx="1" aria-label="Go to photo 2"></button>
+            
+              <button class="card-dot " data-card-idx="25" data-shot-idx="2" aria-label="Go to photo 3"></button>
+            
+          </div>
+        
       </div>
     </div>
 
     <div class="card-footer">
       <code>StochasticSEIREpidemicEngine.swift</code>
-      <span>Inspect Set &rarr;</span>
+      <span>Inspect Details &rarr;</span>
     </div>
   </article>
   
@@ -1058,7 +1712,7 @@
   </div>
 
   <script>
-    const APPS = [{"id":"01-JustTheRecipe","name":"JustTheRecipe","title":"Just The Recipe — Ad-Free Cooking Vault","subtitle":"Just Ingredients and Steps","category":"Utilities","price":"$2.99","bundleId":"com.apppress.justtherecipe","coreEngine":"RecipeScraperEngine.swift","permissions":"100% On-Device","hasIcon":true,"shots":["shot-1.jpg","shot-2.jpg","shot-3.jpg"],"bullets":[]},{"id":"02-NagMe","name":"NagMe","title":"NagMe — Persistent Interval Task Cascade","subtitle":"Reminders That Actually Work","category":"Productivity","price":"$1.99","bundleId":"com.apppress.nagme","coreEngine":"NagCascadeScheduler.swift","permissions":"100% On-Device","hasIcon":true,"shots":["shot-1.jpg","shot-2.jpg","shot-3.jpg"],"bullets":[]},{"id":"03-ScanLocal","name":"ScanLocal","title":"ScanLocal — 100% On-Device OCR Scanner","subtitle":"On-Device OCR, Zero Cloud","category":"Business & Pro","price":"$4.99","bundleId":"com.apppress.scanlocal","coreEngine":"VisionOCRPipeline.swift","permissions":"camera, photo","hasIcon":true,"shots":["shot-1.jpg","shot-2.jpg","shot-3.jpg"],"bullets":[]},{"id":"04-StreakGrid","name":"StreakGrid","title":"StreakGrid — GitHub-Style Habit Matrix","subtitle":"Never Break the Chain","category":"Health & Medical","price":"$2.99","bundleId":"com.apppress.streakgrid","coreEngine":"StreakAnalyticsEngine.swift","permissions":"healthKit","hasIcon":true,"shots":["shot-1.jpg","shot-2.jpg","shot-3.jpg","shot-4.jpg"],"bullets":[]},{"id":"05-GeoStamp","name":"GeoStamp","title":"GeoStamp — Tactical Field Photo Stamping","subtitle":"UTM, Compass & Altitude HUD","category":"Business & Pro","price":"$8.99","bundleId":"com.apppress.geostamp","coreEngine":"MetadataBurnInEngine.swift","permissions":"camera, photo, location","hasIcon":true,"shots":["shot-1.jpg","shot-2.jpg","shot-3.jpg","shot-4.jpg","shot-5.jpg"],"bullets":[]},{"id":"06-GutSafe","name":"GutSafe","title":"GutSafe — Clinical FODMAP Stacking & GI Tracker","subtitle":"Know Your Safe Foods","category":"Health & Medical","price":"$3.99","bundleId":"com.apppress.gutsafe","coreEngine":"FODMAPEngine.swift","permissions":"100% On-Device","hasIcon":true,"shots":["shot-1.jpg","shot-2.jpg","shot-3.jpg"],"bullets":[]},{"id":"07-PunchListPDF","name":"PunchListPDF","title":"PunchListPDF — Vector Site Audit & Defect Report","subtitle":"Contractor Photo Pin Auditor","category":"Business & Pro","price":"$14.99","bundleId":"com.apppress.punchlistpdf","coreEngine":"PunchListEngine.swift","permissions":"camera, photo","hasIcon":true,"shots":["shot-1.jpg","shot-2.jpg","shot-3.jpg"],"bullets":[]},{"id":"08-DeckMasterFSRS","name":"DeckMasterFSRS","title":"DeckMasterFSRS — Spaced Repetition Engine","subtitle":"FSRS Spaced Repetition","category":"Utilities","price":"$4.99","bundleId":"com.apppress.deckmaster","coreEngine":"FSRSEngine.swift","permissions":"100% On-Device","hasIcon":true,"shots":["shot-1.jpg","shot-2.jpg","shot-3.jpg","shot-4.jpg"],"bullets":[]},{"id":"09-SurgeCalm","name":"SurgeCalm","title":"SurgeCalm — 5-1-1 Labor Contraction Pacemaker","subtitle":"Guided Anxiety Relief Tools","category":"Health & Medical","price":"$3.99","bundleId":"com.apppress.surgecalm","coreEngine":"Contraction511Engine.swift","permissions":"100% On-Device","hasIcon":true,"shots":["shot-1.jpg","shot-2.jpg","shot-3.jpg","shot-4.jpg","shot-5.jpg"],"bullets":[]},{"id":"10-HydroTap","name":"HydroTap","title":"HydroTap — Beverage Hydration Index Calculator","subtitle":"Track Intake, Stay Hydrated","category":"Health & Medical","price":"$1.99","bundleId":"com.apppress.hydrotap","coreEngine":"HydrationEngine.swift","permissions":"healthKit","hasIcon":true,"shots":["shot-1.jpg","shot-2.jpg","shot-3.jpg"],"bullets":[]},{"id":"11-PulseFloor","name":"PulseFloor","title":"PulseFloor — Haptic Pelvic Floor Choreographer","subtitle":"Train in the Right HR Zone","category":"Health & Medical","price":"$3.99","bundleId":"com.apppress.pulsefloor","coreEngine":"PelvicFloorEngine.swift","permissions":"100% On-Device","hasIcon":true,"shots":["shot-1.jpg","shot-2.jpg","shot-3.jpg","shot-4.jpg"],"bullets":[]},{"id":"12-FirstBites","name":"FirstBites","title":"FirstBites — Infant Allergen & BLW Protocol","subtitle":"Track First Foods & Allergies","category":"Health & Medical","price":"$4.99","bundleId":"com.apppress.firstbites","coreEngine":"AllergenProtocolEngine.swift","permissions":"100% On-Device","hasIcon":true,"shots":["shot-1.jpg","shot-2.jpg","shot-3.jpg"],"bullets":[]},{"id":"13-CrownSwipe","name":"CrownSwipe","title":"CrownSwipe — Royal Succession Simulator","subtitle":"Classic Crown Card Solitaire","category":"Games & Sim","price":"$2.99","bundleId":"com.apppress.crownswipe","coreEngine":"DynastyDecisionEngine.swift","permissions":"100% On-Device","hasIcon":true,"shots":["shot-1.jpg","shot-2.jpg","shot-3.jpg"],"bullets":[]},{"id":"14-JokerHands","name":"JokerHands","title":"JokerHands — Multiplier Cascade Card Arena","subtitle":"Master Every Poker Hand","category":"Games & Sim","price":"$3.99","bundleId":"com.apppress.jokerhands","coreEngine":"CascadeScoringEngine.swift","permissions":"100% On-Device","hasIcon":true,"shots":["shot-1.jpg"],"bullets":[]},{"id":"15-BorderStamp","name":"BorderStamp","title":"BorderStamp — Checkpoint Inspection Simulator","subtitle":"Travel Borders & Captions","category":"Games & Sim","price":"$2.99","bundleId":"com.apppress.borderstamp","coreEngine":"BorderInspectionEngine.swift","permissions":"100% On-Device","hasIcon":true,"shots":["shot-1.jpg","shot-2.jpg","shot-3.jpg","shot-4.jpg"],"bullets":[]},{"id":"16-DiceDungeon","name":"DiceDungeon","title":"DiceDungeon — Tactical Turn-Based Dice Roguelike","subtitle":"Roll Dice, Crawl Dungeons","category":"Games & Sim","price":"$3.99","bundleId":"com.apppress.dicedungeon","coreEngine":"DiceCombatEngine.swift","permissions":"100% On-Device","hasIcon":true,"shots":["shot-1.jpg","shot-2.jpg","shot-3.jpg","shot-4.jpg","shot-5.jpg"],"bullets":[]},{"id":"17-SpireCrawl","name":"SpireCrawl","title":"SpireCrawl — Procedural DAG Map Deckbuilder","subtitle":"Climb. Die. Climb Again.","category":"Games & Sim","price":"$3.99","bundleId":"com.apppress.spirecrawl","coreEngine":"SpireEngine.swift","permissions":"100% On-Device","hasIcon":true,"shots":["shot-1.jpg","shot-2.jpg","shot-3.jpg","shot-4.jpg"],"bullets":[]},{"id":"18-FocusGrove","name":"FocusGrove","title":"FocusGrove — Procedural Botanical Focus Timer","subtitle":"Grow Trees, Stay Focused","category":"Productivity","price":"$1.99","bundleId":"com.apppress.focusgrove","coreEngine":"BotanicalLSystemEngine.swift","permissions":"100% On-Device","hasIcon":true,"shots":["shot-1.jpg","shot-2.jpg","shot-3.jpg"],"bullets":[]},{"id":"19-NextActionGTD","name":"NextActionGTD","title":"NextActionGTD — Natural Language Task Manager","subtitle":"Capture, Clarify, Do Next","category":"Productivity","price":"$4.99","bundleId":"com.apppress.nextaction","coreEngine":"GTDParserAndEngine.swift","permissions":"100% On-Device","hasIcon":true,"shots":["shot-1.jpg","shot-2.jpg","shot-3.jpg","shot-4.jpg","shot-5.jpg"],"bullets":[]},{"id":"20-CalcPadLive","name":"CalcPadLive","title":"CalcPadLive — Reactive Math & Unit Scratchpad","subtitle":"Live Tape & History","category":"Business & Pro","price":"$2.99","bundleId":"com.apppress.calcpad","coreEngine":"LiveMathSheetEngine.swift","permissions":"100% On-Device","hasIcon":true,"shots":["shot-1.jpg"],"bullets":[]},{"id":"21-MetroFlow","name":"MetroFlow","title":"MetroFlow — Planar Transit Network Simulator","subtitle":"Offline Subway Maps & Routes","category":"Games & Sim","price":"$4.99","bundleId":"com.apppress.metroflow","coreEngine":"PlanarTransitFlowEngine.swift","permissions":"100% On-Device","hasIcon":true,"shots":["shot-1.jpg","shot-2.jpg","shot-3.jpg"],"bullets":[]},{"id":"22-GridAgent","name":"GridAgent","title":"GridAgent — Turn-Based Isometric Stealth","subtitle":"Outsmart the AI Opponent","category":"Games & Sim","price":"$3.99","bundleId":"com.apppress.gridagent","coreEngine":"TurnBasedStealthBoardEngine.swift","permissions":"100% On-Device","hasIcon":true,"shots":["shot-1.jpg","shot-2.jpg","shot-3.jpg"],"bullets":[]},{"id":"23-LogicMachineVM","name":"LogicMachineVM","title":"LogicMachineVM — Assembly Register Puzzle Suite","subtitle":"Build Digital Circuits","category":"Games & Sim","price":"$4.99","bundleId":"com.apppress.logicmachine","coreEngine":"AssemblyRegisterVMEngine.swift","permissions":"100% On-Device","hasIcon":true,"shots":["shot-1.jpg","shot-2.jpg","shot-3.jpg","shot-4.jpg","shot-5.jpg"],"bullets":[]},{"id":"24-IllusionValley","name":"IllusionValley","title":"IllusionValley — Non-Euclidean Isometric Puzzles","subtitle":"Optical Illusion Gallery","category":"Games & Sim","price":"$4.99","bundleId":"com.apppress.illusionvalley","coreEngine":"NonEuclideanIsometricEngine.swift","permissions":"100% On-Device","hasIcon":true,"shots":["shot-1.jpg","shot-2.jpg","shot-3.jpg","shot-4.jpg","shot-5.jpg"],"bullets":[]},{"id":"25-MarginMarkPDF","name":"MarginMarkPDF","title":"MarginMarkPDF — Precision Vector PDF Margin Notes","subtitle":"Margin Notes for PDFs","category":"Productivity","price":"$9.99","bundleId":"com.apppress.marginmarkpdf","coreEngine":"PencilVectorPDFMatrixEngine.swift","permissions":"photo","hasIcon":true,"shots":["shot-1.jpg","shot-2.jpg","shot-3.jpg"],"bullets":[]},{"id":"26-OutbreakSEIR","name":"OutbreakSEIR","title":"OutbreakSEIR — Global Epidemic Simulation Engine","subtitle":"SEIR Model Simulator","category":"Games & Sim","price":"$3.99","bundleId":"com.apppress.outbreakseir","coreEngine":"StochasticSEIREpidemicEngine.swift","permissions":"100% On-Device","hasIcon":true,"shots":["shot-1.jpg","shot-2.jpg","shot-3.jpg"],"bullets":[]}];
+    const APPS = [{"id":"01-JustTheRecipe","name":"JustTheRecipe","title":"Just The Recipe — Ad-Free Cooking Vault","subtitle":"Just Ingredients and Steps","category":"Utilities","price":"$2.99","bundleId":"com.apppress.justtherecipe","coreEngine":"RecipeScraperEngine.swift","permissions":"100% On-Device","hasIcon":true,"shots":["shot-1.jpg","shot-2.jpg","shot-3.jpg"],"bullets":[]},{"id":"02-NagMe","name":"NagMe","title":"NagMe — Persistent Interval Task Cascade","subtitle":"Reminders That Actually Work","category":"Productivity","price":"$1.99","bundleId":"com.apppress.nagme","coreEngine":"NagCascadeScheduler.swift","permissions":"100% On-Device","hasIcon":true,"shots":["shot-1.jpg","shot-2.jpg","shot-3.jpg"],"bullets":[]},{"id":"03-ScanLocal","name":"ScanLocal","title":"ScanLocal — 100% On-Device OCR Scanner","subtitle":"On-Device OCR, Zero Cloud","category":"Business & Pro","price":"$4.99","bundleId":"com.apppress.scanlocal","coreEngine":"VisionOCRPipeline.swift","permissions":"camera, photo","hasIcon":true,"shots":["shot-1.jpg","shot-2.jpg","shot-3.jpg"],"bullets":[]},{"id":"04-StreakGrid","name":"StreakGrid","title":"StreakGrid — GitHub-Style Habit Matrix","subtitle":"Never Break the Chain","category":"Health & Medical","price":"$2.99","bundleId":"com.apppress.streakgrid","coreEngine":"StreakAnalyticsEngine.swift","permissions":"healthKit","hasIcon":true,"shots":["shot-1.jpg","shot-2.jpg","shot-3.jpg","shot-4.jpg"],"bullets":[]},{"id":"05-GeoStamp","name":"GeoStamp","title":"GeoStamp — Tactical Field Photo Stamping","subtitle":"UTM, Compass & Altitude HUD","category":"Business & Pro","price":"$8.99","bundleId":"com.apppress.geostamp","coreEngine":"MetadataBurnInEngine.swift","permissions":"camera, photo, location","hasIcon":true,"shots":["shot-1.jpg","shot-2.jpg","shot-3.jpg","shot-4.jpg"],"bullets":[]},{"id":"06-GutSafe","name":"GutSafe","title":"GutSafe — Clinical FODMAP Stacking & GI Tracker","subtitle":"Know Your Safe Foods","category":"Health & Medical","price":"$3.99","bundleId":"com.apppress.gutsafe","coreEngine":"FODMAPEngine.swift","permissions":"100% On-Device","hasIcon":true,"shots":["shot-1.jpg","shot-2.jpg","shot-3.jpg"],"bullets":[]},{"id":"07-PunchListPDF","name":"PunchListPDF","title":"PunchListPDF — Vector Site Audit & Defect Report","subtitle":"Contractor Photo Pin Auditor","category":"Business & Pro","price":"$14.99","bundleId":"com.apppress.punchlistpdf","coreEngine":"PunchListEngine.swift","permissions":"camera, photo","hasIcon":true,"shots":["shot-1.jpg","shot-2.jpg","shot-3.jpg"],"bullets":[]},{"id":"08-DeckMasterFSRS","name":"DeckMasterFSRS","title":"DeckMasterFSRS — Spaced Repetition Engine","subtitle":"FSRS Spaced Repetition","category":"Utilities","price":"$4.99","bundleId":"com.apppress.deckmaster","coreEngine":"FSRSEngine.swift","permissions":"100% On-Device","hasIcon":true,"shots":["shot-1.jpg","shot-2.jpg","shot-3.jpg","shot-4.jpg"],"bullets":[]},{"id":"09-SurgeCalm","name":"SurgeCalm","title":"SurgeCalm — 5-1-1 Labor Contraction Pacemaker","subtitle":"Guided Anxiety Relief Tools","category":"Health & Medical","price":"$3.99","bundleId":"com.apppress.surgecalm","coreEngine":"Contraction511Engine.swift","permissions":"100% On-Device","hasIcon":true,"shots":["shot-1.jpg","shot-2.jpg","shot-3.jpg","shot-4.jpg"],"bullets":[]},{"id":"10-HydroTap","name":"HydroTap","title":"HydroTap — Beverage Hydration Index Calculator","subtitle":"Track Intake, Stay Hydrated","category":"Health & Medical","price":"$1.99","bundleId":"com.apppress.hydrotap","coreEngine":"HydrationEngine.swift","permissions":"healthKit","hasIcon":true,"shots":["shot-1.jpg","shot-2.jpg","shot-3.jpg"],"bullets":[]},{"id":"11-PulseFloor","name":"PulseFloor","title":"PulseFloor — Haptic Pelvic Floor Choreographer","subtitle":"Train in the Right HR Zone","category":"Health & Medical","price":"$3.99","bundleId":"com.apppress.pulsefloor","coreEngine":"PelvicFloorEngine.swift","permissions":"100% On-Device","hasIcon":true,"shots":["shot-1.jpg","shot-2.jpg","shot-3.jpg","shot-4.jpg"],"bullets":[]},{"id":"12-FirstBites","name":"FirstBites","title":"FirstBites — Infant Allergen & BLW Protocol","subtitle":"Track First Foods & Allergies","category":"Health & Medical","price":"$4.99","bundleId":"com.apppress.firstbites","coreEngine":"AllergenProtocolEngine.swift","permissions":"100% On-Device","hasIcon":true,"shots":["shot-1.jpg","shot-2.jpg","shot-3.jpg"],"bullets":[]},{"id":"13-CrownSwipe","name":"CrownSwipe","title":"CrownSwipe — Royal Succession Simulator","subtitle":"Classic Crown Card Solitaire","category":"Games & Sim","price":"$2.99","bundleId":"com.apppress.crownswipe","coreEngine":"DynastyDecisionEngine.swift","permissions":"100% On-Device","hasIcon":true,"shots":["shot-1.jpg","shot-2.jpg","shot-3.jpg"],"bullets":[]},{"id":"14-JokerHands","name":"JokerHands","title":"JokerHands — Multiplier Cascade Card Arena","subtitle":"Master Every Poker Hand","category":"Games & Sim","price":"$3.99","bundleId":"com.apppress.jokerhands","coreEngine":"CascadeScoringEngine.swift","permissions":"100% On-Device","hasIcon":true,"shots":["shot-1.jpg"],"bullets":[]},{"id":"15-BorderStamp","name":"BorderStamp","title":"BorderStamp — Checkpoint Inspection Simulator","subtitle":"Travel Borders & Captions","category":"Games & Sim","price":"$2.99","bundleId":"com.apppress.borderstamp","coreEngine":"BorderInspectionEngine.swift","permissions":"100% On-Device","hasIcon":true,"shots":["shot-1.jpg","shot-2.jpg","shot-3.jpg","shot-4.jpg"],"bullets":[]},{"id":"16-DiceDungeon","name":"DiceDungeon","title":"DiceDungeon — Tactical Turn-Based Dice Roguelike","subtitle":"Roll Dice, Crawl Dungeons","category":"Games & Sim","price":"$3.99","bundleId":"com.apppress.dicedungeon","coreEngine":"DiceCombatEngine.swift","permissions":"100% On-Device","hasIcon":true,"shots":["shot-1.jpg","shot-2.jpg","shot-3.jpg","shot-4.jpg"],"bullets":[]},{"id":"17-SpireCrawl","name":"SpireCrawl","title":"SpireCrawl — Procedural DAG Map Deckbuilder","subtitle":"Climb. Die. Climb Again.","category":"Games & Sim","price":"$3.99","bundleId":"com.apppress.spirecrawl","coreEngine":"SpireEngine.swift","permissions":"100% On-Device","hasIcon":true,"shots":["shot-1.jpg","shot-2.jpg","shot-3.jpg","shot-4.jpg"],"bullets":[]},{"id":"18-FocusGrove","name":"FocusGrove","title":"FocusGrove — Procedural Botanical Focus Timer","subtitle":"Grow Trees, Stay Focused","category":"Productivity","price":"$1.99","bundleId":"com.apppress.focusgrove","coreEngine":"BotanicalLSystemEngine.swift","permissions":"100% On-Device","hasIcon":true,"shots":["shot-1.jpg","shot-2.jpg","shot-3.jpg"],"bullets":[]},{"id":"19-NextActionGTD","name":"NextActionGTD","title":"NextActionGTD — Natural Language Task Manager","subtitle":"Capture, Clarify, Do Next","category":"Productivity","price":"$4.99","bundleId":"com.apppress.nextaction","coreEngine":"GTDParserAndEngine.swift","permissions":"100% On-Device","hasIcon":true,"shots":["shot-1.jpg","shot-2.jpg","shot-3.jpg","shot-4.jpg"],"bullets":[]},{"id":"20-CalcPadLive","name":"CalcPadLive","title":"CalcPadLive — Reactive Math & Unit Scratchpad","subtitle":"Live Tape & History","category":"Business & Pro","price":"$2.99","bundleId":"com.apppress.calcpad","coreEngine":"LiveMathSheetEngine.swift","permissions":"100% On-Device","hasIcon":true,"shots":["shot-1.jpg"],"bullets":[]},{"id":"21-MetroFlow","name":"MetroFlow","title":"MetroFlow — Planar Transit Network Simulator","subtitle":"Offline Subway Maps & Routes","category":"Games & Sim","price":"$4.99","bundleId":"com.apppress.metroflow","coreEngine":"PlanarTransitFlowEngine.swift","permissions":"100% On-Device","hasIcon":true,"shots":["shot-1.jpg","shot-2.jpg","shot-3.jpg"],"bullets":[]},{"id":"22-GridAgent","name":"GridAgent","title":"GridAgent — Turn-Based Isometric Stealth","subtitle":"Outsmart the AI Opponent","category":"Games & Sim","price":"$3.99","bundleId":"com.apppress.gridagent","coreEngine":"TurnBasedStealthBoardEngine.swift","permissions":"100% On-Device","hasIcon":true,"shots":["shot-1.jpg","shot-2.jpg","shot-3.jpg"],"bullets":[]},{"id":"23-LogicMachineVM","name":"LogicMachineVM","title":"LogicMachineVM — Assembly Register Puzzle Suite","subtitle":"Build Digital Circuits","category":"Games & Sim","price":"$4.99","bundleId":"com.apppress.logicmachine","coreEngine":"AssemblyRegisterVMEngine.swift","permissions":"100% On-Device","hasIcon":true,"shots":["shot-1.jpg","shot-2.jpg","shot-3.jpg","shot-4.jpg"],"bullets":[]},{"id":"24-IllusionValley","name":"IllusionValley","title":"IllusionValley — Non-Euclidean Isometric Puzzles","subtitle":"Optical Illusion Gallery","category":"Games & Sim","price":"$4.99","bundleId":"com.apppress.illusionvalley","coreEngine":"NonEuclideanIsometricEngine.swift","permissions":"100% On-Device","hasIcon":true,"shots":["shot-1.jpg","shot-2.jpg","shot-3.jpg","shot-4.jpg"],"bullets":[]},{"id":"25-MarginMarkPDF","name":"MarginMarkPDF","title":"MarginMarkPDF — Precision Vector PDF Margin Notes","subtitle":"Margin Notes for PDFs","category":"Productivity","price":"$9.99","bundleId":"com.apppress.marginmarkpdf","coreEngine":"PencilVectorPDFMatrixEngine.swift","permissions":"photo","hasIcon":true,"shots":["shot-1.jpg","shot-2.jpg","shot-3.jpg"],"bullets":[]},{"id":"26-OutbreakSEIR","name":"OutbreakSEIR","title":"OutbreakSEIR — Global Epidemic Simulation Engine","subtitle":"SEIR Model Simulator","category":"Games & Sim","price":"$3.99","bundleId":"com.apppress.outbreakseir","coreEngine":"StochasticSEIREpidemicEngine.swift","permissions":"100% On-Device","hasIcon":true,"shots":["shot-1.jpg","shot-2.jpg","shot-3.jpg"],"bullets":[]}];
     let currentAppIndex = 0;
     let currentShotIndex = 0;
 
@@ -1224,10 +1878,107 @@
     btnPrevShot.addEventListener('click', prevShot);
     sideNextApp.addEventListener('click', nextApp);
 
+    // In-card photo scrolling & controls
+    const tracks = Array.from(document.querySelectorAll('.screen-track'));
+
+    tracks.forEach(track => {
+      const cardIdx = track.dataset.trackIdx;
+      const dotsContainer = document.querySelector('.card-dots[data-card-idx="' + cardIdx + '"]');
+      const dots = dotsContainer ? Array.from(dotsContainer.querySelectorAll('.card-dot')) : [];
+
+      // Update active dot on scroll
+      let scrollTimeout;
+      track.addEventListener('scroll', () => {
+        clearTimeout(scrollTimeout);
+        scrollTimeout = setTimeout(() => {
+          const w = track.clientWidth || 1;
+          const activeIdx = Math.round(track.scrollLeft / w);
+          dots.forEach((d, i) => {
+            d.classList.toggle('active', i === activeIdx);
+          });
+        }, 30);
+      }, { passive: true });
+
+      // Smooth pointer drag for desktop mouse users
+      let isDown = false;
+      let startX = 0;
+      let scrollLeft = 0;
+      let moved = false;
+
+      track.addEventListener('mousedown', e => {
+        if (e.button !== 0) return;
+        isDown = true;
+        moved = false;
+        startX = e.pageX - track.offsetLeft;
+        scrollLeft = track.scrollLeft;
+        track.style.scrollBehavior = 'auto';
+      });
+
+      window.addEventListener('mouseup', () => {
+        if (!isDown) return;
+        isDown = false;
+        track.style.scrollBehavior = 'smooth';
+        const w = track.clientWidth || 1;
+        const target = Math.round(track.scrollLeft / w) * w;
+        track.scrollTo({ left: target, behavior: 'smooth' });
+      });
+
+      track.addEventListener('mousemove', e => {
+        if (!isDown) return;
+        const x = e.pageX - track.offsetLeft;
+        const walk = x - startX;
+        if (Math.abs(walk) > 4) moved = true;
+        track.scrollLeft = scrollLeft - walk;
+      });
+
+      track.addEventListener('click', e => {
+        if (moved) {
+          e.stopPropagation();
+          moved = false;
+        }
+      }, true);
+    });
+
+    // Arrow navigation on cards
+    document.querySelectorAll('.card-nav').forEach(btn => {
+      btn.addEventListener('click', e => {
+        e.stopPropagation();
+        e.preventDefault();
+        const cardIdx = btn.dataset.cardIdx;
+        const dir = Number(btn.dataset.dir || 1);
+        const track = document.querySelector('.screen-track[data-track-idx="' + cardIdx + '"]');
+        if (!track) return;
+        const w = track.clientWidth;
+        track.scrollBy({ left: dir * w, behavior: 'smooth' });
+      });
+    });
+
+    // Dot navigation on cards
+    document.querySelectorAll('.card-dot').forEach(dot => {
+      dot.addEventListener('click', e => {
+        e.stopPropagation();
+        e.preventDefault();
+        const cardIdx = dot.dataset.cardIdx;
+        const shotIdx = Number(dot.dataset.shotIdx);
+        const track = document.querySelector('.screen-track[data-track-idx="' + cardIdx + '"]');
+        if (!track) return;
+        const w = track.clientWidth;
+        track.scrollTo({ left: shotIdx * w, behavior: 'smooth' });
+      });
+    });
+
+    // Clicking card opens lightbox at current visible screenshot
     cards.forEach(card => {
-      card.addEventListener('click', () => {
+      card.addEventListener('click', e => {
+        if (e.target.closest('.card-nav') || e.target.closest('.card-dot')) return;
         const idx = Number(card.dataset.index);
-        openLightbox(idx, 0);
+        const track = card.querySelector('.screen-track');
+        let shotIdx = 0;
+        if (track) {
+          const w = track.clientWidth || 1;
+          shotIdx = Math.round(track.scrollLeft / w);
+        }
+        openLightbox(idx, shotIdx);
       });
     });
   </script>
