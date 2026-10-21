@@ -6,7 +6,7 @@ import * as THREE from 'https://cdn.jsdelivr.net/gh/bparlette/Hawk@main/brad-dem
 const $ = (id) => document.getElementById(id);
 const Q = new URLSearchParams(location.search);
 const TOUCH = matchMedia('(pointer: coarse)').matches || (navigator.maxTouchPoints > 0 && !matchMedia('(hover: hover)').matches);
-const BOT = Q.has('bot');
+const BOT = Q.has('bot') || Q.has('auto');
 const ALLEY = true; // ALLEY FIGHT variant: night alley brawl, all 5 thugs at once
 const TAU = Math.PI * 2;
 const clamp = (v, a, b) => (v < a ? a : v > b ? b : v);
