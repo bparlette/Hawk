@@ -19,53 +19,67 @@
   </nav>
 
   <main class="standalone-detail-wrap">
-    <div class="lightbox-content standalone-card">
-      <div class="lightbox-viewer">
-        
-
-        <div class="lightbox-phone">
-          <div class="dynamic-island"></div>
-          <div class="screen-track" id="standaloneTrack">
+    <div class="showcase-content">
+      <div class="showcase-columns">
+        <!-- Column 1: 20s App Preview Video -->
+        <div class="showcase-col video-col">
+          <div class="col-header">
+            <span class="col-pill">🎬 20s App Preview</span>
+            <span class="col-sub">Poster Frame</span>
+          </div>
+          <div class="showcase-phone">
+            <div class="dynamic-island"></div>
             
-              <img class="phone-screen" src="shot-1.jpg" alt="OutbreakSEIR screen 1" loading="eager">
-            
-              <img class="phone-screen" src="shot-2.jpg" alt="OutbreakSEIR screen 2" loading="lazy">
-            
-              <img class="phone-screen" src="shot-3.jpg" alt="OutbreakSEIR screen 3" loading="lazy">
+              <img class="phone-screen" src="shot-1.jpg" alt="OutbreakSEIR poster">
             
           </div>
-          
-          
-            <button class="card-nav prev" id="standalonePrev" aria-label="Previous photo">
-              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"/></svg>
-            </button>
-            <button class="card-nav next" id="standaloneNext" aria-label="Next photo">
-              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"/></svg>
-            </button>
-            <div class="card-dots" id="standaloneDots">
-              <button class="card-dot active" data-shot-idx="0" aria-label="Go to photo 1"></button><button class="card-dot " data-shot-idx="1" aria-label="Go to photo 2"></button><button class="card-dot " data-shot-idx="2" aria-label="Go to photo 3"></button>
+        </div>
+
+        <!-- Column 2: In-App Screenshots (Same swipe as first page) -->
+        <div class="showcase-col shots-col">
+          <div class="col-header">
+            <span class="col-pill">📸 In-App Screenshots</span>
+            <span class="col-sub">Swipe to browse (3)</span>
+          </div>
+          <div class="showcase-phone">
+            <div class="dynamic-island"></div>
+            <div class="screen-track" id="standaloneTrack">
+              
+                <img class="phone-screen" src="shot-1.jpg" alt="OutbreakSEIR screen 1" loading="eager">
+              
+                <img class="phone-screen" src="shot-2.jpg" alt="OutbreakSEIR screen 2" loading="lazy">
+              
+                <img class="phone-screen" src="shot-3.jpg" alt="OutbreakSEIR screen 3" loading="lazy">
+              
             </div>
-          
+            
+              <div class="card-dots" id="standaloneDots">
+                <button class="card-dot active" data-shot-idx="0" aria-label="Go to photo 1"></button><button class="card-dot " data-shot-idx="1" aria-label="Go to photo 2"></button><button class="card-dot " data-shot-idx="2" aria-label="Go to photo 3"></button>
+              </div>
+            
+          </div>
         </div>
       </div>
 
-      <aside class="lightbox-sidebar">
-        <div>
-          <div class="sidebar-header">
-            <img class="sidebar-icon" src="icon.png" alt="OutbreakSEIR Icon">
-            <div class="sidebar-title">
+      <!-- Last entry in the layout: Architecture & Specs + Key Capabilities Details Card -->
+      <section class="showcase-details-card">
+        <div class="details-top">
+          <div class="details-brand">
+            <img class="details-icon" src="icon.png" alt="OutbreakSEIR Icon">
+            <div class="details-titles">
               <h2>OutbreakSEIR</h2>
-              <div class="sidebar-pills">
+              <p class="tagline">SEIR Model Simulator</p>
+              <div class="details-pills">
                 <span class="pill category">Games &amp; Sim</span>
                 <span class="pill price">$3.99</span>
               </div>
             </div>
           </div>
+        </div>
 
-          <p class="tagline" style="font-size: 14px; margin-bottom: 20px;">SEIR Model Simulator</p>
-
-          <div class="sidebar-section">
-            <h4>Architecture & Specs</h4>
+        <div class="details-grid">
+          <div class="details-block">
+            <h4>Architecture & Specifications</h4>
             <div class="spec-list">
               <div class="spec-item">
                 <span>Bundle ID</span>
@@ -86,47 +100,32 @@
             </div>
           </div>
 
-          
+          <div class="details-block">
+            <h4>Key Capabilities</h4>
+            
+          </div>
         </div>
 
-        <div class="lightbox-footer">
+        <div class="details-footer">
           <a class="action-btn secondary" href="../index.html">
             &larr; Back to Portfolio
           </a>
         </div>
-      </aside>
+      </section>
     </div>
   </main>
 
   <script>
     const track = document.getElementById('standaloneTrack');
     const dots = Array.from(document.querySelectorAll('#standaloneDots .card-dot'));
-    const prevBtn = document.getElementById('standalonePrev');
-    const nextBtn = document.getElementById('standaloneNext');
-    const video = document.getElementById('standaloneVideo');
-    const modeBtns = Array.from(document.querySelectorAll('.mode-btn'));
 
     if (track) {
-      let scrollTimeout;
       track.addEventListener('scroll', () => {
-        clearTimeout(scrollTimeout);
-        scrollTimeout = setTimeout(() => {
-          const w = track.clientWidth || 1;
-          const activeIdx = Math.round(track.scrollLeft / w);
-          dots.forEach((d, i) => d.classList.toggle('active', i === activeIdx));
-        }, 30);
+        const w = track.clientWidth || 1;
+        const activeIdx = Math.round(track.scrollLeft / w);
+        dots.forEach((d, i) => d.classList.toggle('active', i === activeIdx));
       }, { passive: true });
 
-      if (prevBtn) {
-        prevBtn.addEventListener('click', () => {
-          track.scrollBy({ left: -track.clientWidth, behavior: 'smooth' });
-        });
-      }
-      if (nextBtn) {
-        nextBtn.addEventListener('click', () => {
-          track.scrollBy({ left: track.clientWidth, behavior: 'smooth' });
-        });
-      }
       dots.forEach(d => {
         d.addEventListener('click', () => {
           const idx = Number(d.dataset.shotIdx);
@@ -134,33 +133,6 @@
         });
       });
     }
-
-    modeBtns.forEach(btn => {
-      btn.addEventListener('click', () => {
-        modeBtns.forEach(b => b.classList.remove('active'));
-        btn.classList.add('active');
-        const mode = btn.dataset.mode;
-        if (mode === 'video' && video && track) {
-          track.style.display = 'none';
-          if (prevBtn) prevBtn.style.display = 'none';
-          if (nextBtn) nextBtn.style.display = 'none';
-          const dotsBar = document.getElementById('standaloneDots');
-          if (dotsBar) dotsBar.style.display = 'none';
-          video.style.display = 'block';
-          video.play().catch(() => {});
-        } else if (track) {
-          if (video) {
-            video.pause();
-            video.style.display = 'none';
-          }
-          track.style.display = 'flex';
-          if (prevBtn) prevBtn.style.display = 'flex';
-          if (nextBtn) nextBtn.style.display = 'flex';
-          const dotsBar = document.getElementById('standaloneDots');
-          if (dotsBar) dotsBar.style.display = 'flex';
-        }
-      });
-    });
   </script>
 </body>
 </html>
