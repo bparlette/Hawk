@@ -9,12 +9,13 @@
 <script>
 const params = new URLSearchParams(location.search);
 const slug = params.get('game');
+const customUrl = params.get('url');
 const secs = parseInt(params.get('secs') || '35', 10);
 const statusEl = document.getElementById('status');
 const urlEl = document.getElementById('url');
-if (!slug) { statusEl.textContent = 'Missing ?game=slug param'; throw 0; }
+if (!slug && !customUrl) { statusEl.textContent = 'Missing ?game=slug or ?url= param'; throw 0; }
 const frame = document.getElementById('game');
-frame.src = `https://bparlette.github.io/Hawk/brad-demos/g/_v2/${slug}/index.html?auto=1&autostart=1`;
+frame.src = customUrl || `https://bparlette.github.io/Hawk/brad-demos/g/_v2/${slug}/index.html?auto=1&autostart=1`;
 frame.onload = async () => {
   statusEl.textContent = 'Game loaded. Waiting 4s for bot to start, then recording ' + secs + 's…';
   await new Promise(r => setTimeout(r, 4000));
@@ -34,7 +35,7 @@ frame.onload = async () => {
   const blob = new Blob(chunks, {type: 'video/webm'});
   statusEl.textContent = 'Recorded ' + (blob.size/1024/1024).toFixed(1) + 'MB. Uploading…';
   const fd = new FormData();
-  fd.append('file', blob, slug + '-capture.webm');
+  fd.append('file', blob, (slug || 'custom') + '-capture.webm');
   try {
     const resp = await fetch('https://tmpfiles.org/api/v1/upload', {method: 'POST', body: fd});
     const j = await resp.json();
