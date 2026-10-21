@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Build Your Own Rompress — ROM Conversion Toolkit</title>
+<style>
+  body { font-family: -apple-system, system-ui, sans-serif; max-width: 760px; margin: 0 auto; padding: 20px; line-height: 1.55; color: #1a1a1a; }
+  h1 { font-size: 1.5em; }
+  h2 { font-size: 1.15em; margin-top: 1.8em; border-bottom: 1px solid #e4e4e7; padding-bottom: 6px; }
+  .step { background: #f4f4f5; border-radius: 10px; padding: 16px; margin: 16px 0; }
+  pre { background: #1e1e1e; color: #e8e8e8; padding: 14px; border-radius: 8px; overflow-x: auto; font-size: 13px; white-space: pre-wrap; word-break: break-word; }
+  button.copy { margin-top: 8px; padding: 8px 16px; font-size: 14px; border: none; border-radius: 8px; background: #007aff; color: #fff; cursor: pointer; }
+  button.copy:active { background: #005fc4; }
+  table { border-collapse: collapse; width: 100%; font-size: 14px; margin: 12px 0; }
+  th, td { border: 1px solid #d4d4d8; padding: 8px 10px; text-align: left; }
+  th { background: #f4f4f5; }
+  a { color: #007aff; }
+  .note { font-size: 13px; color: #52525b; }
+</style>
+</head>
+<body>
+
+<h1>Build Your Own Rompress</h1>
+<p>Turn everything your AI learned doing a ROM conversion into a reusable toolkit — so the next conversion starts from a template, not from zero.</p>
+
+<div class="step">
+<h2>The prompt — paste this into your AI first</h2>
+<p>Fill in the brackets, then paste the whole thing as your first message:</p>
+<pre id="rompress-prompt">Read this page to learn the ROM port pattern: https://bparlette.github.io/Hawk/buddy/rompress.html
+
+Then write your own original "rompress" toolkit for MY conversion — reimplement from scratch for my specific source and target, and never paste the page back into chat.
+
+My conversion:
+- Source game: [GAME NAME, e.g. Mortal Kombat 3]
+- Source platform: [e.g. Arcade / CPS2 / NES]
+- Target platform: [e.g. CPS2 / Virtual Boy / SNES]
+- Scope: [e.g. 2 characters working properly / full game]
+
+Build me these four files:
+1. PROMPT-TEMPLATE.md — a parameterized master prompt for this conversion type. Every game-specific detail becomes a [BRACKETED FIELD]. Next conversion = fill in the fields, paste, go.
+2. extract.sh (or .py) — the automated asset-extraction script for MY source platform: ROM checksum assert, graphics decode, sprite tables, palettes, collision/enemy tables. Must refuse to run if the checksum fails.
+3. ACCEPTANCE.md — checkable "done" boxes for MY conversion: data asserts, visual comparisons, emulator playthrough gates, and what "working properly" means for each character/feature in my scope.
+4. LESSONS.md — started from what you already learned on my project so far: commands that worked, dead ends, gotchas. Append to it after every work session.
+
+Rules for everything you write:
+- I supply my own ROM dump of a game I own. Your tools never contain a ROM, extracted assets, or generated ROMs.
+- Gameplay logic is reimplemented from the disassembly's behavior, never translated line-for-line.
+- Extracted tiles, sprites, and sound data stay private — never published or shared.
+- Work in small loops: diagnose → change ONE thing → test → log to PROGRESS.md. Never ask me questions unless hard-blocked.</pre>
+<button class="copy" onclick="copy('rompress-prompt', this)">Copy prompt</button>
+</div>
+
+<h2>The ROM port pattern (from gamepress)</h2>
+<p class="note">Summary of gamepress's port track. Full docs: <a href="https://github.com/bparlette/gamepress/blob/main/docs/tracks/port.md">docs/tracks/port.md</a></p>
+
+<div class="step">
+<h2>The two-part model</h2>
+<p>Every port splits into two parts with different automation profiles — don't conflate them.</p>
+<p><strong>Part A — automated asset extraction</strong> (mechanical, generalizable). Scripts read your ROM and produce target-format assets: tiles, maps, sprite frames, collision grids, enemy tables, palettes. Tool it once per source platform.</p>
+<p><strong>Part B — manual logic reimplementation</strong> (game-specific, not mechanical). All gameplay — physics, enemy state machines, weapons, bosses — rewritten in the target's language from the annotated disassembly. This is the bulk of the work. Budget for it honestly.</p>
+<p><strong>Sound exception:</strong> write a minimal CPU interpreter for the source platform, run the game's own sound driver offline at build time, record audio-register writes per frame, convert to the target's format.</p>
+</div>
+
+<div class="step">
+<h2>Workflow</h2>
+<p>1. <strong>Obtain and assert.</strong> Checksum (MD5) the ROM before any tool touches it. Record the disassembly commit used as reference.<br>
+2. <strong>Extract (Part A).</strong> Graphics decoder, sprite tables → atlases, collision grids, enemy placement. Check preview images by eye.<br>
+3. <strong>Reimplement (Part B).</strong> Routine by routine from the disassembly. Prototype feel on web first if useful, then commit to the target's integer math.<br>
+4. <strong>Convert sound.</strong> Interpreter + offline capture + register log → target format.<br>
+5. <strong>Adapt the screen.</strong> Retune spawns and view windows for the target's resolution.<br>
+6. <strong>Budget memory.</strong> Count worst-case resident tiles/sprites before adding actors.<br>
+7. <strong>Climb the verification ladder</strong> (below).</p>
+</div>
+
+<div class="step">
+<h2>Verification ladder — a port is done when it passes all four, in order</h2>
+<p>1. <strong>Data assertions (automated).</strong> Checksum assert, tables asserted against disassembly, round-trip checks.<br>
+2. <strong>Visual comparison (manual).</strong> Rendered levels and collision overlays checked against the source.<br>
+3. <strong>Emulator bots (automated).</strong> Scripted playthroughs reaching every level/room/boss.<br>
+4. <strong>Hardware playthrough (manual).</strong> Flash cart, real console, played by a human. Emulators are not trusted alone.</p>
+</div>
+
+<div class="step">
+<h2>Frame-rate conversion</h2>
+<p>Source and target rarely share a refresh rate (e.g. NES 60.1 Hz vs Virtual Boy ~50 Hz). Velocities × K, accelerations × K², where K = source_hz / target_hz. Convert durations proportionally. Don't model lag frames or sprite flicker.</p>
+</div>
+
+<div class="step">
+<h2>Toolchain map</h2>
+<table>
+<tr><th>Target</th><th>SDK</th></tr>
+<tr><td>SNES (65816)</td><td><a href="https://github.com/alekmaul/pvsneslib">PVSnesLib</a></td></tr>
+<tr><td>Game Boy / GBC</td><td><a href="https://github.com/gbdk-2020/gbdk-2020">GBDK-2020</a></td></tr>
+<tr><td>NES (6502)</td><td><a href="https://cc65.github.io/">cc65</a></td></tr>
+<tr><td>Genesis (68000)</td><td><a href="https://github.com/Stephane-D/SGDK">SGDK</a></td></tr>
+<tr><td>Virtual Boy</td><td><a href="https://github.com/VUEngine/VUEngine">VUEngine</a></td></tr>
+</table>
+<p class="note">Emulators for testing: Mesen (NES), bsnes-hd / Snes9x (SNES), mGBA (GB/GBC/GBA), mednafen / beetle-vb-libretro (Virtual Boy).</p>
+</div>
+
+<div class="step">
+<h2>What gamepress provides for ROM work</h2>
+<p><strong>nesextract</strong> (<a href="https://github.com/bparlette/gamepress/blob/main/lib/nesextract.mjs">lib/nesextract.mjs</a>) — generic NES ROM asset extraction: iNES header parse, MD5 assert, CHR tile decode, OAM sprite parse, palette handling, tile-sheet PNG previews.<br>
+<strong>gbfixed.js</strong> (<a href="https://github.com/bparlette/gamepress/blob/main/kit/gbfixed.js">kit/gbfixed.js</a>) — 8.8 fixed-point math for ROM targets, plus frame-rate conversion helpers.<br>
+<strong>Decomp mechanics</strong> (<a href="https://github.com/bparlette/gamepress/blob/main/docs/DECOMP-REFERENCE.md">docs/DECOMP-REFERENCE.md</a>) — extracted gameplay numbers/formulas from SM64DS, Melee, Galaxy, Pikmin 2 decomps.</p>
+</div>
+
+<div class="step">
+<h2>Legal — hard rules</h2>
+<p><strong>You supply the ROM.</strong> Tools never contain a ROM, extracted assets, or generated ROMs.<br>
+<strong>Extracted assets stay private.</strong> Tiles, maps, sprites, sound data are the copyright holder's material.<br>
+<strong>Reimplement, don't copy.</strong> Gameplay rewritten from disassembly behavior, not translated.<br>
+<strong>No asset redistribution.</strong> Sprites, tiles, music, SFX from the original game are never published or shared.</p>
+</div>
+
+<script>
+function copy(id, btn) {
+  const text = document.getElementById(id).innerText;
+  navigator.clipboard.writeText(text).then(() => {
+    const old = btn.innerText;
+    btn.innerText = 'Copied!';
+    setTimeout(() => btn.innerText = old, 1500);
+  });
+}
+</script>
+</body>
+</html>
