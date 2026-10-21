@@ -572,4 +572,5 @@ g.onTap = (x, y) => {
   sfx('blip', { pitch: 1.2, vol: 0.25 });
 };
 
+resetWorld();
 g.run(update, draw, hud);
