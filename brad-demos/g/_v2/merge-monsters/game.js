@@ -15,7 +15,7 @@ import { face } from '../_vendor/gpsprites.js';
 const W = 540, H = 960;
 const g = makeGame({
   id: 'merge-monsters', title: 'MERGE MONSTERS', sub: 'DROP · MERGE · SUMMON DRACULA',
-  hook: 'merge the monsters all the way to Dracula', w: W, h: H, bg: '#0d0618', style: 'neon',
+  hook: 'merge the monsters all the way to Dracula', w: W, h: H, bg: '#2e1e4a', style: 'neon',
   bloom: .85, ca: .34, vig: .98, scan: .2,
 });
 
@@ -438,25 +438,123 @@ function monsterFace(c, tier, x, y, fr) {
   c.restore();
 }
 
-/* ------------------------------------------------------------------ ball sprites (baked once, drawn cheap) */
+/* ------------------------------------------------------------------ monster sprites (REAL SHAPES, not balls) */
 const SPR = {};
 const SS = 2;
 function ballSprite(tier) {
   if (SPR[tier]) return SPR[tier];
-  const T = TIER[tier], r = T.r, pad = 8, S = Math.ceil((r + pad) * 2 * SS);
+  const T = TIER[tier], r = T.r, pad = 14, S = Math.ceil((r + pad) * 2 * SS);
   const cv = document.createElement('canvas'); cv.width = cv.height = S;
   const c = cv.getContext('2d');
   c.translate(S / 2, S / 2); c.scale(SS, SS);
-  const gr = c.createRadialGradient(-r * .3, -r * .35, r * .1, 0, 0, r);
-  gr.addColorStop(0, '#ffffff'); gr.addColorStop(.35, T.col); gr.addColorStop(1, T.col2);
-  c.fillStyle = gr; circle(c, 0, 0, r); c.fill();
-  c.strokeStyle = 'rgba(0,0,0,.45)'; c.lineWidth = Math.max(2, r * .08); c.stroke();
-  c.save();
-  c.globalCompositeOperation = 'lighter'; c.globalAlpha = .5; c.fillStyle = 'rgba(255,255,255,.9)';
-  c.beginPath(); c.ellipse(-r * .34, -r * .4, r * .3, r * .18, -.6, 0, TAU); c.fill();
-  c.restore();
+  // Draw the actual monster BODY SHAPE (not a ball)
+  monsterBody(c, tier, r, T);
+  // Face details on top
   monsterFace(c, tier, 0, r * .1, r * .62);
   return (SPR[tier] = { cv, S: S / SS });
+}
+
+/* Draw distinct monster body shapes - each tier is recognizable */
+function monsterBody(c, tier, r, T) {
+  const u = r / 20;
+  c.lineWidth = Math.max(2, r * .07);
+  c.strokeStyle = 'rgba(0,0,0,.5)';
+  
+  const bodyGrad = (col1, col2) => {
+    const gr = c.createRadialGradient(-r*.3, -r*.35, r*.1, 0, 0, r*1.2);
+    gr.addColorStop(0, '#ffffff'); gr.addColorStop(.35, col1); gr.addColorStop(1, col2);
+    return gr;
+  };
+  
+  if (tier === 0) {
+    // BAT: body with spread wings
+    c.fillStyle = bodyGrad(T.col, T.col2);
+    // Wings (left and right triangles)
+    c.beginPath(); c.moveTo(-r*.3, 0); c.lineTo(-r*1.3, -r*.6); c.lineTo(-r*.9, r*.3); c.lineTo(-r*.5, r*.1); c.closePath(); c.fill(); c.stroke();
+    c.beginPath(); c.moveTo(r*.3, 0); c.lineTo(r*1.3, -r*.6); c.lineTo(r*.9, r*.3); c.lineTo(r*.5, r*.1); c.closePath(); c.fill(); c.stroke();
+    // Body (oval)
+    c.beginPath(); c.ellipse(0, 0, r*.55, r*.75, 0, 0, TAU); c.fill(); c.stroke();
+  } else if (tier === 1) {
+    // SPIDER: round body with 8 legs
+    c.strokeStyle = '#0d0d0d'; c.lineWidth = r*.09;
+    for (let i = 0; i < 4; i++) {
+      const a = (i / 4) * Math.PI - Math.PI/2;
+      const a2 = a + 0.5;
+      // Left legs
+      c.beginPath(); c.moveTo(-r*.4, 0); c.lineTo(-r*.9, Math.sin(a)*r*.7); c.lineTo(-r*1.2, Math.sin(a2)*r*.9); c.stroke();
+      // Right legs  
+      c.beginPath(); c.moveTo(r*.4, 0); c.lineTo(r*.9, Math.sin(a)*r*.7); c.lineTo(r*1.2, Math.sin(a2)*r*.9); c.stroke();
+    }
+    c.fillStyle = bodyGrad(T.col, T.col2);
+    c.beginPath(); c.ellipse(0, 0, r*.7, r*.65, 0, 0, TAU); c.fill();
+    c.strokeStyle = 'rgba(0,0,0,.5)'; c.lineWidth = Math.max(2, r*.07); c.stroke();
+  } else if (tier === 2) {
+    // GHOST: sheet with wavy bottom
+    c.fillStyle = bodyGrad(T.col, T.col2);
+    c.beginPath();
+    c.moveTo(-r*.7, r*.7);
+    c.lineTo(-r*.7, -r*.2);
+    c.quadraticCurveTo(-r*.7, -r*.8, 0, -r*.8);
+    c.quadraticCurveTo(r*.7, -r*.8, r*.7, -r*.2);
+    c.lineTo(r*.7, r*.7);
+    // Wavy bottom (3 waves)
+    for (let i = 0; i < 3; i++) {
+      const x = r*.7 - (i+.5)*(r*1.4/3);
+      c.quadraticCurveTo(x, r*.45, x - r*1.4/6, r*.7);
+    }
+    c.closePath(); c.fill(); c.stroke();
+  } else if (tier === 3) {
+    // VAMPIRE: body with cape
+    // Cape (behind)
+    c.fillStyle = T.col2;
+    c.beginPath(); c.moveTo(-r*.8, -r*.5); c.lineTo(-r*1.1, r*.8); c.lineTo(r*1.1, r*.8); c.lineTo(r*.8, -r*.5); c.closePath(); c.fill(); c.stroke();
+    // Body
+    c.fillStyle = bodyGrad(T.col, '#1a0a12');
+    c.beginPath(); c.ellipse(0, 0, r*.55, r*.7, 0, 0, TAU); c.fill(); c.stroke();
+  } else if (tier === 4) {
+    // WEREWOLF: bulky body with fur tufts
+    c.fillStyle = bodyGrad(T.col, T.col2);
+    // Fur tufts (triangles around)
+    for (let i = 0; i < 8; i++) {
+      const a = (i / 8) * TAU;
+      const x1 = Math.cos(a)*r*.75, y1 = Math.sin(a)*r*.75;
+      const x2 = Math.cos(a+.2)*r*1.05, y2 = Math.sin(a+.2)*r*1.05;
+      const x3 = Math.cos(a+.4)*r*.75, y3 = Math.sin(a+.4)*r*.75;
+      c.beginPath(); c.moveTo(x1, y1); c.lineTo(x2, y2); c.lineTo(x3, y3); c.closePath(); c.fill();
+    }
+    // Body
+    c.beginPath(); c.ellipse(0, 0, r*.75, r*.7, 0, 0, TAU); c.fill(); c.stroke();
+  } else if (tier === 5) {
+    // FRANKENSTEIN: square head/body
+    c.fillStyle = bodyGrad(T.col, T.col2);
+    // Square body
+    const s = r*1.3;
+    c.beginPath(); c.roundRect(-s/2, -s/2, s, s, r*.15); c.fill(); c.stroke();
+    // Neck bolts (sides)
+    c.fillStyle = '#9aa0a8';
+    c.fillRect(-s/2 - r*.12, -r*.1, r*.14, r*.2);
+    c.fillRect(s/2 - r*.02, -r*.1, r*.14, r*.2);
+  } else if (tier === 6) {
+    // MUMMY: wrapped oval body
+    c.fillStyle = bodyGrad(T.col, T.col2);
+    c.beginPath(); c.ellipse(0, 0, r*.65, r*.85, 0, 0, TAU); c.fill(); c.stroke();
+    // Bandage wraps (diagonal lines)
+    c.strokeStyle = 'rgba(90,74,46,.6)'; c.lineWidth = r*.08;
+    for (let i = -2; i <= 2; i++) {
+      c.beginPath(); c.moveTo(-r*.6, i*r*.35); c.lineTo(r*.6, i*r*.35 + r*.2); c.stroke();
+    }
+  } else {
+    // DRACULA: caped figure with high collar
+    // High collar (behind head)
+    c.fillStyle = '#0d0204';
+    c.beginPath(); c.moveTo(-r*.9, -r*.3); c.lineTo(-r*.6, -r*1.1); c.lineTo(-r*.2, -r*.4); c.closePath(); c.fill();
+    c.beginPath(); c.moveTo(r*.9, -r*.3); c.lineTo(r*.6, -r*1.1); c.lineTo(r*.2, -r*.4); c.closePath(); c.fill();
+    // Cape
+    c.beginPath(); c.moveTo(-r*.7, -r*.2); c.lineTo(-r*1.0, r*.9); c.lineTo(r*1.0, r*.9); c.lineTo(r*.7, -r*.2); c.closePath(); c.fill(); c.stroke();
+    // Body
+    c.fillStyle = bodyGrad(T.col, T.col2);
+    c.beginPath(); c.ellipse(0, 0, r*.6, r*.75, 0, 0, TAU); c.fill(); c.stroke();
+  }
 }
 
 /* ------------------------------------------------------------------ draw */
@@ -468,8 +566,8 @@ function skyFor(bucket) {
   const hueA = 284 - f * 34, hueB = 26 + f * 18;   // haunted purple -> pumpkin orange
   const ctx = g.ctx;
   const sk = ctx.createLinearGradient(0, 0, 0, H);
-  sk.addColorStop(0, `hsl(${hueA},64%,${9 + f * 5}%)`);
-  sk.addColorStop(.45, `hsl(${hueB},58%,${13 + f * 8}%)`);
+  sk.addColorStop(0, `hsl(${hueA},64%,${22 + f * 8}%)`);
+  sk.addColorStop(.45, `hsl(${hueB},58%,${28 + f * 10}%)`);
   sk.addColorStop(1, `hsl(${hueA + 16},62%,5%)`);
   const glow = ctx.createRadialGradient(W / 2, BOX.y + BOX.h * .55, 20, W / 2, BOX.y + BOX.h * .55, 430);
   glow.addColorStop(0, `hsla(${hueB},95%,62%,${.10 + f * .16})`);

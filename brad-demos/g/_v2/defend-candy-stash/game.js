@@ -11,7 +11,7 @@ const AUTO = new URLSearchParams(location.search).has('auto');
 const g = makeGame({
   id: 'defend-candy-stash', title: 'DEFEND THE CANDY STASH', sub: 'TAP TOWER · TAP PLOT · SAVE HALLOWEEN',
   hook: 'the trick-or-treaters are coming for your candy',
-  w: W, h: H, bg: '#080512', style: 'toon', bloom: .95, ca: 0, vig: 1, scan: .14, grain: .05,  /* ca:0 — Cherie vetoed chromatic aberration */
+  w: W, h: H, bg: '#2a1e4a', style: 'toon', bloom: .95, ca: 0, vig: 1, scan: .14, grain: .05,  /* ca:0 — Cherie vetoed chromatic aberration */
 });
 /* one-call particle spray: g.burst(x, y, { n, color, colors, speed, size, life, add, kind }) */
 g.burst = (x, y, o = {}) => g.fx.burst(x, y, o.n ?? 12, o);
@@ -122,7 +122,7 @@ const GROUND = document.createElement('canvas'); GROUND.width = W; GROUND.height
 (function bakeSky() {
   const c = BACK.getContext('2d');
   const sky = c.createLinearGradient(0, 0, 0, H);
-  sky.addColorStop(0, '#070413'); sky.addColorStop(.32, '#150b33'); sky.addColorStop(.6, '#251045'); sky.addColorStop(1, '#0c0620');
+  sky.addColorStop(0, '#2a1e4a'); sky.addColorStop(.32, '#3a2a5e'); sky.addColorStop(.6, '#4a356e'); sky.addColorStop(1, '#2e2148');
   c.fillStyle = sky; c.fillRect(0, 0, W, H);
   const gl = c.createRadialGradient(270, 430, 10, 270, 430, 470);
   gl.addColorStop(0, 'rgba(120,80,255,.26)'); gl.addColorStop(1, 'rgba(0,0,0,0)');
@@ -162,7 +162,7 @@ const GROUND = document.createElement('canvas'); GROUND.width = W; GROUND.height
 })();
 (function bakeGround() {
   const c = GROUND.getContext('2d');
-  rr(c, 30, 152, 480, 660, 26); c.fillStyle = 'rgba(9,7,24,.78)'; c.fill();
+  rr(c, 30, 152, 480, 660, 26); c.fillStyle = 'rgba(42,32,72,.78)'; c.fill();
   c.strokeStyle = 'rgba(150,120,255,.22)'; c.lineWidth = 2; c.stroke();
   for (let r = 0; r < ROWS; r++) for (let cc = 0; cc < COLS; cc++) {
     if (isPath(cc, r)) continue;

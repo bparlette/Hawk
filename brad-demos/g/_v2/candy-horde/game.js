@@ -8,7 +8,7 @@ import { drawChar } from '../_vendor/gpsprites.js';
 const W = 540, H = 960;
 const g = makeGame({
   id: 'candy-horde', title: 'CANDY HORDE', sub: 'TRICK OR TREAT  ·  AUTO-FIRE',
-  hook: 'one kid versus the whole haunted block', w: W, h: H, bg: '#150a24',
+  hook: 'one kid versus the whole haunted block', w: W, h: H, bg: '#3a2456',
   bloom: 1, ca: 0, vig: 1.05, scan: .16,
 });
 const ctx0 = g.ctx;
@@ -369,8 +369,8 @@ for (let i = 0; i < 26; i++) TUFTS.push({ x: rnd(-30, W + 30), y: rnd(F.y0 - 20,
 for (let i = 0; i < 22; i++) MOTES.push({ x: rnd(0, W), y: rnd(F.y0, H), s: rnd(.8, 2.6), v: rnd(6, 22), ph: rnd(0, TAU) });
 
 const skyG = ctx0.createLinearGradient(0, 0, 0, H);
-skyG.addColorStop(0, '#150a24'); skyG.addColorStop(.28, '#1e0f33');
-skyG.addColorStop(.62, '#12081f'); skyG.addColorStop(1, '#0a0512');
+skyG.addColorStop(0, '#3a2456'); skyG.addColorStop(.28, '#4a2f6a');
+skyG.addColorStop(.62, '#2e1b4a'); skyG.addColorStop(1, '#1e1232');
 
 const moonG = ctx0.createRadialGradient(410, 96, 4, 410, 96, 340);
 moonG.addColorStop(0, 'rgba(255,170,80,.30)'); moonG.addColorStop(.35, 'rgba(255,130,40,.12)'); moonG.addColorStop(1, 'rgba(0,0,0,0)');
@@ -383,7 +383,7 @@ floorCv.width = W; floorCv.height = H;
 (function bakeFloor() {
   const c = floorCv.getContext('2d');
   const gd = c.createLinearGradient(0, 0, 0, H);
-  gd.addColorStop(0, '#1a0f2e'); gd.addColorStop(.45, '#241540'); gd.addColorStop(1, '#120a20');
+  gd.addColorStop(0, '#3d2a5e'); gd.addColorStop(.45, '#4e366e'); gd.addColorStop(1, '#2e1f4a');
   c.fillStyle = gd; c.fillRect(0, 0, W, H);
   for (let i = 0; i < 80; i++) {
     const x = rnd(0, W), y = rnd(0, H), r = rnd(18, 90);
