@@ -16,6 +16,7 @@ const CW = (COLS - 1) >> 1, CH = (ROWS - 1) >> 1;      // 7 x 10 cells
 const GOAL = 7, NPOW = 3;
 const BW = COLS * TS, BH = ROWS * TS;
 const isAuto = new URLSearchParams(location.search).has('auto');
+const isDumb = new URLSearchParams(location.search).has('dumb'); // ?dumb=1: bot plays badly on purpose (quick test deaths)
 const DIRS = [[1, 0], [-1, 0], [0, 1], [0, -1]];
 const PAL = {
   dot: '#ff9f1c', pow: '#c77dff', cat: '#ff8c42',
@@ -483,7 +484,7 @@ function botThink(dt) {
   const sx = moving ? pl.nx : pl.tx, sy = moving ? pl.ny : pl.ty;
   const gm = ghostMap();
   let step;
-  if (g.dumb()) {
+  if (isDumb) {
     /* a bad player: walks straight at the nearest ghost, so the run ends in a few seconds */
     botNote = 'dumb';
     step = tRun > .5 ? (bestMove(sx, sy, gm, null, true) || [0, 1]) : [0, 1];
