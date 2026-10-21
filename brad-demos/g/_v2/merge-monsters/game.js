@@ -46,7 +46,7 @@ let shakeLine, flashTier, botT, botTarget, dropped, merged, bestTier;
 let fill, bloomKick, landSfxT, buzzT, lastMergeAt, mergeWarm;
 
 /* tweened UI bits (the shell walks these with g.tween, so they ease even during hit-stop) */
-const UI = { recoil: 0, hudPop: 0, scorePop: 0, recordPop: 0, framePop: 0, dangerPop: 0, comboPop: 0 };
+const UI = { recoil: 0, hudPop: 0, scorePop: 0, recordPop: 0, framePop: 0, dangerPop: 0, comboPop: 0, bannerPop: 0 };
 
 const isDumb = () => dumb();
 const spawnTier = () => {
@@ -127,7 +127,7 @@ function land(b, sp, x, y) {
   g.fx.emit('smoke', x + rnd(-9, 9), y, { vx: rnd(-80, 80) * k, vy: -rnd(10, 70) * k, g: 70, life: .38 + k * .3, size: 8 + k * 15, color: hexA(T.col, .42) });
   g.fx.emit('smoke', x + rnd(-11, 11), y, { vx: rnd(-60, 60) * k, vy: -rnd(20, 100) * k, g: 40, life: .3 + k * .26, size: 6 + k * 11, color: 'rgba(255,255,255,.34)' });
   g.fx.emit('spark', x, y - 2, { vx: rnd(-130, 130) * k, vy: -rnd(60, 220) * k, g: 700, life: .28, size: 2.6, color: T.col });
-  if (k > .5) { g.punch(.008 + k * .02); g.shake(1 + k * 3); if (k > .8) g.hitstop(.012); }
+  if (k > .5) { g.punch(.008 + k * .02); if (k > .8) g.hitstop(.012); }
 }
 
 /* two heavy balls collide mid-air: a small grit puff so contact never feels dead */
@@ -151,16 +151,15 @@ function merge(a, b) {
   UI.framePop = 1; g.tween(UI, 'framePop', 0, .34);
 
   /* 1 · the merge = the moment. tier drives every dial. */
-  g.hitstop(.016 + tier * .013);                 // hit-stop proportional to tier
+  g.hitstop(.03 + tier * .012);                  // hit-stop proportional to tier (2-7 frames)
   g.punch(.02 + tier * .014);                    // camera punch scaled by tier
-  g.shake(3 + tier * 2.2);
   /* 2 · ring + burst, all in the new ball's own colour */
   g.fx.emit('ring', nx, ny, { size: T.r * 2.2, life: .34, color: col, wide: 5 + tier, add: true });
   g.fx.emit('ring', nx, ny, { size: T.r * 3.6, life: .5, color: hexA(col, .65), wide: 2 + tier * .4, add: true });
   g.fx.emit('glow', nx, ny, { size: T.r * 1.25, life: .3, color: hexA(col, .8), add: true });
   g.fx.burst(nx, ny, 10 + tier * 4, { kind: 'spark', color: [col, '#ffffff', T.col2], speed: 205 + tier * 45, life: .5, size: 4.5 + tier, drag: 1.7 });
   g.fx.burst(nx, ny, 4 + tier * 2, { kind: 'star', color: [col, '#ffffff'], speed: 130 + tier * 22, life: .6 + tier * .06, size: 7 + tier * 1.6, g: 300 });
-  g.impact(nx, ny, { punch: .01 + tier * .007, shake: 2 + tier * 1.1, stop: .006 + tier * .003, rip: .6 + tier * .12, flash: col, flashA: .03 + tier * .012 });
+  if (big) g.fx.burst(nx, ny, 12 + tier * 3, { kind: 'spark', color: ['#ffd34d', '#ffffff', col], speed: 300 + tier * 60, life: .7, size: 5 + tier, drag: 1.4 });
   /* 3 · sfx: merge pitched by tier, plus a chain voice and a big-merge body */
   const pitch = comboPitch(tier + chain - 1);    // rising pitch per chained merge
   sfx('merge', { pitch: pitch * (1 + tier * .03), vol: .58 });
@@ -177,15 +176,16 @@ function merge(a, b) {
   g.popup('+' + sc, nx, ny - T.r - 4, col, 24 + Math.min(20, tier * 3));
   if (chain > 1) {
     g.popup('×' + chain, nx, ny - T.r - 36, '#9ff8ff', 20 + Math.min(16, chain * 3));
-    UI.comboPop = 1; g.tween(UI, 'comboPop', 0, .3);
+    UI.comboPop = 1; g.tween(UI, 'comboPop', 0, .42);
   }
   g.combo.hit(nx, ny - 22, chain > 1 ? '×' + chain : null);
 
   /* 5 · big tiers announce themselves */
   if (huge) {
     g.showBanner(TIER[tier].name + '!', 1.15);
+    UI.bannerPop = 1; g.tween(UI, 'bannerPop', 0, .4);
     g.slowmo(.42, .26);                          // big merge reads as a beat, not a stutter
-    g.punch(.05); g.shake(9);
+    g.punch(.05);
     g.fx.emit('ring', nx, ny, { size: T.r * 5.2, life: .7, color: hexA(col, .5), wide: 4, add: true });
     g.fx.emit('confetti', nx, ny - 10, { vx: rnd(-160, 160), vy: rnd(-260, -80), g: 520, life: 1.1, size: rnd(5, 9), color: col, rot: rnd(0, TAU), vr: rnd(-12, 12) });
   } else if (big) {
@@ -193,11 +193,10 @@ function merge(a, b) {
     g.flash(col, .1);
   } else if (chain > 2) {
     g.showBanner('CHAIN ×' + chain + '!', .8);
-    g.shake(4);
   }
 
   /* 6 · the newborn: pop-in scale tween (tweens keep running through hit-stop) */
-  const nb = { x: nx, y: ny, vx: (a.vx + b.vx) * .5, vy: (a.vy + b.vy) * .5 - 85, r: T.r, tier, rot: 0, pop: .22, dead: 0, sq: 0, glow: 1 };
+  const nb = { x: nx, y: ny, vx: (a.vx + b.vx) * .5, vy: (a.vy + b.vy) * .5 - 85, r: T.r, tier, rot: 0, pop: .22, dead: 0, sq: .8, glow: 1 };
   g.tween(nb, 'pop', 1, .32, ease.outBack);
   balls.push(nb);
   g.fx.emit('glow', nx, ny, { size: T.r * .9, life: .34, color: hexA('#ffffff', .5), add: true });
@@ -209,7 +208,7 @@ function merge(a, b) {
     UI.recordPop = 1; g.tween(UI, 'recordPop', 0, .4);
     if (tier >= 3) {
       sfx('powerup', { pitch: 1 + tier * .09, vol: .45 });   // milestone jingle
-      g.flash('#ffd34d', .1); g.punch(.045); g.shake(6);
+      g.flash('#ffd34d', .1); g.punch(.045);
       g.popup('NEW MONSTER!', W / 2, BOX.y - 42, '#ff9a3c', 30);
     }
   }
@@ -223,7 +222,7 @@ function maxTier(nx, ny) {
   g.slowmo(.3, .9);
   g.hitstop(.14);
   g.flash('#ffd34d', .55);
-  g.shake(20); g.punch(.085);
+  g.punch(.085);
   g.showBanner('DRACULA!', 1.6);
   g.popup('DRACULA RISES!', W / 2, BOX.y + 130, '#ff2a2a', 42);
   sfx('fanfare', { vol: .8 });
@@ -257,7 +256,7 @@ function dropBall() {
 /* an input the game will not honour — say so, quietly */
 function refuse(x, y) {
   sfx('tick', { pitch: .72, vol: .5 });
-  g.shake(1.6); g.punch(.008);
+  g.punch(.008);
   g.fx.emit('smoke', x, y, { vx: rnd(-30, 30), vy: -30, g: 40, life: .26, size: 12, color: 'rgba(255,120,120,.3)' });
   g.popup('NO DROP', x, y - 18, '#ff8a7a', 18);
 }
@@ -328,6 +327,7 @@ function update(dt) {
     const b = balls[i];
     if (b.dead) { balls.splice(i, 1); continue; }
     if (b.sq > 0) b.sq = Math.max(0, b.sq - dt * 4);
+    b.st = clamp(Math.abs(b.vy) / 1400, 0, .35);   // stretch while falling fast
     if (b.glow > 0) b.glow = Math.max(0, b.glow - dt * 2.2);
     if (Math.abs(b.vy) < 16) b.vy = 0;
     if (Math.abs(b.vx) < 6) b.vx = 0;
@@ -350,7 +350,7 @@ function update(dt) {
       buzzT = t;
       g.showBanner('BOX FULL!', .6);
       sfx('groan', { pitch: .78 + stackT * .35, vol: .45 });      // board-full alarm
-      g.shake(2.2); g.flash('#ff3b3b', .06);
+      g.flash('#ff3b3b', .06); g.punch(.02);
       UI.dangerPop = 1; g.tween(UI, 'dangerPop', 0, .3);
       g.popup('OVERFLOW!', W / 2, DANGER_Y - 34, '#ff5a4d', 24);
     }
@@ -360,7 +360,7 @@ function update(dt) {
 
   if (dead) {
     dead = 0;
-    g.flash('#ff3b3b', .45); g.shake(14); g.punch(.06); g.hitstop(.08);
+    g.flash('#ff3b3b', .45); g.punch(.06); g.hitstop(.08);
     g.showBanner('BOX FULL', 1.2);
     sfx('boom', { pitch: .62, vol: .6 });
     g.fx.emit('ring', W / 2, DANGER_Y, { size: 200, life: .6, color: '#ff3b3b', wide: 9, add: true });
@@ -547,6 +547,7 @@ function drawBall(ctx, b) {
   const r = b.r * pop;
   ctx.save();
   ctx.translate(b.x, b.y);
+  if (b.st > 0) ctx.scale(1 - b.st * .5, 1 + b.st);   // stretch: taller + narrower when falling
   if (b.sq > 0) ctx.scale(1 + b.sq * .1, 1 - b.sq * .1);
   shadow(ctx, 0, r * .92, r * .88, r * .26, .28);
   ctx.rotate(b.rot);
