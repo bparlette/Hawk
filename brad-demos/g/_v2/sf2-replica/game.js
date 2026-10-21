@@ -18,7 +18,7 @@ const SY = 330;                    // stage top Y in frame
 const FLOOR = SY + SH - 42;        // ground line
 
 /* ── tuning ── */
-const WALK_SPD = 130;
+const WALK_SPD = 170;
 const PUNCH_DMG = 7, KICK_DMG = 11, HADOUKEN_DMG = 14;
 const ROUND_TIME = 99;
 
@@ -74,17 +74,17 @@ function startFight() {
 function doAttack(f, type) {
   if (f.state !== 'idle' && f.state !== 'walk') return;
   f.state = 'attack'; f.stateT = 0; f.atkType = type;
-  f.atkT = type === 'hadouken' ? 0.55 : type === 'kick' ? 0.38 : 0.28;
-  if (type === 'hadouken') { f.charging = 0.3; sfx('charge', { pitch: .8, vol: .4 }); }
-  else sfx(type === 'kick' ? 'whoosh' : 'swish', { pitch: 1 + R() * .2, vol: .35 });
+  f.atkT = type === 'hadouken' ? 0.45 : type === 'kick' ? 0.32 : 0.24;
+  if (type === 'hadouken') { f.charging = 0.25; sfx('charge', { pitch: .9, vol: .5 }); }
+  else sfx(type === 'kick' ? 'whoosh' : 'swish', { pitch: 1.1 + R() * .2, vol: .45 });
 }
 
 function spawnHadouken(f) {
   projectiles.push({
-    x: f.x + f.facing * 40, y: f.y - 95, vx: f.facing * 380,
+    x: f.x + f.facing * 40, y: f.y - 95, vx: f.facing * 420,
     t: 0, life: 2.2, owner: f, dmg: HADOUKEN_DMG,
   });
-  sfx('hadouken', { pitch: 1, vol: .5 });
+  sfx('hadouken', { pitch: 1.1, vol: .6 });
 }
 
 function spawnSpark(x, y, big) {
@@ -109,8 +109,8 @@ function damage(victim, dmg, hx) {
   }
   victim.hp = Math.max(0, victim.hp - dmg);
   victim.state = 'hit'; victim.stateT = 0; victim.hitT = 0.32;
-  victim.vx = (victim.x < hx ? -1 : 1) * 160;
-  sfx('hit', { pitch: .9 + R() * .3, vol: .5 });
+  victim.vx = (victim.x < hx ? -1 : 1) * 180;
+  sfx('hit', { pitch: .85 + R() * .25, vol: .65 });
   spawnSpark(hx, victim.y - 95, dmg >= 12);
   g.combo.n++; g.combo.t = 1.2;
   if (victim.hp <= 0) {
@@ -146,10 +146,10 @@ function botAI(me, op) {
   } else {
     me.state = 'idle'; me.vx = 0;
     const r = R();
-    if (r < 0.035) doAttack(me, 'punch');
-    else if (r < 0.06) doAttack(me, 'kick');
-    else if (r < 0.068 && dist > 110) doAttack(me, 'hadouken');
-    else if (r < 0.09) { me.blockT = 0.5; }
+    if (r < 0.055) doAttack(me, 'punch');
+    else if (r < 0.095) doAttack(me, 'kick');
+    else if (r < 0.11 && dist > 110) doAttack(me, 'hadouken');
+    else if (r < 0.13) { me.blockT = 0.5; }
   }
   me.x = clamp(me.x + me.vx * (1/60), 50, SW - 50);
   if (me.state === 'walk' && (dist <= 130 || R() < 0.05)) { me.state = 'idle'; me.vx = 0; }

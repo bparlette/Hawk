@@ -8,8 +8,8 @@ import { drawChar } from '../_vendor/gpsprites.js';
 const W = 540, H = 960;
 const g = makeGame({
   id: 'candy-horde', title: 'CANDY HORDE', sub: 'TRICK OR TREAT  ·  AUTO-FIRE',
-  hook: 'one kid versus the whole haunted block', w: W, h: H, bg: '#3a2456',
-  bloom: 1, ca: 0, vig: 1.05, scan: .16,
+  hook: 'one kid versus the whole haunted block', w: W, h: H, bg: '#150a24',
+  bloom: 1, ca: .4, vig: 1.05, scan: .16,
 });
 const ctx0 = g.ctx;
 const isAuto = new URLSearchParams(location.search).has('auto');
@@ -37,7 +37,6 @@ const MILESTONES = [
 /* ───────────────────────────────────────────────────────── state */
 let p, en, bl, gems, trail, pops;
 let t, frame, spawnT, fireT, novaP, killN, msIdx, upT, upName, upCol, upSub, autoT, steerX, steerY, steerT, cheer, camT;
-let killPop, novaPop, squashT;   // element-pop juice timers (no screen shake/ripple per Cherie)
 
 function resetWorld() {
   p = { x: W / 2, y: (F.y0 + F.y1) / 2 + 60, hp: 3, max: 3, inv: 0, t: 0, dir: 1,
@@ -46,31 +45,12 @@ function resetWorld() {
   t = 0; frame = 0; spawnT = .75; fireT = .3; novaP = 0; killN = 0; msIdx = 0;
   upT = 0; upName = ''; upCol = '#fff'; upSub = ''; autoT = 0; cheer = 0;
   steerX = 0; steerY = 0; steerT = 0; camT = 0; g.cam.scale = 1;
-  killPop = 0; novaPop = 0; squashT = 0;
   g.score = 0; g.combo.reset(); g.fx.clear();
   for (let i = 0; i < 4; i++) spawnAt(true);
   g.state = { kills: 0, hp: 3, goal: GOAL, enemies: en.length };
   music('action');
 }
 g.onReset = resetWorld;
-
-/* ── juice helpers: element-level only (Cherie vetoed screen shake, CA, pond-ripple) ── */
-function hitJuice(x, y, o = {}) {
-  // g.impact minus the vetoed parts: camera punch + hitstop + flash + sfx, no shake, no ripple
-  g.punch(o.punch ?? .045);
-  g.hitstop(o.stop ?? .05);
-  if (o.flash) g.flash(o.flash, o.flashA ?? .2);
-  if (o.sfx) sfx(o.sfx, { pitch: o.pitch || 1 });
-}
-function boomFx(x, y, o = {}) {
-  // g.fx.blast minus the vetoed parts: ring + burst + smoke + flash + punch, no shake, no ripple
-  const r = o.r ?? 70, col = o.color || '#ffd34d';
-  g.fx.emit('ring', x, y, { size: r, life: o.life ?? .38, color: col, add: true, wide: o.wide ?? 7 });
-  g.fx.burst(x, y, o.n ?? 18, { color: o.colors || [col, '#fff', '#ff7a3c'], speed: o.speed ?? r * 5, size: o.size ?? 7, life: .5, kind: 'spark' });
-  if (o.smoke !== false) for (let i = 0; i < 6; i++) g.fx.emit('smoke', x + (Math.random() - .5) * r * .5, y + (Math.random() - .5) * r * .5, { vx: (Math.random() - .5) * 90, vy: -30 - Math.random() * 70, g: -20, life: .9 + Math.random() * .5, size: r * (.35 + Math.random() * .4), color: '#2a2f3a', drag: .6 });
-  g.flash(o.flashC || '#fff', o.flashA ?? .25);
-  g.punch(o.punch ?? .05);
-}
 
 /* ───────────────────────────────────────────────────────── enemies */
 function spawnAt(instant) {
@@ -91,22 +71,21 @@ function spawnAt(instant) {
   if (!instant) {
     g.fx.emit('ring', x, y - 8, { size: 44, color: '#ff2b5c', life: .42, add: true, wide: 4 });
     g.fx.burst(x, y - 8, 5, { kind: 'smoke', color: 'rgba(140,255,170,.45)', speed: 90, life: .45, g: -30, size: 7 });
-    if (key === 'brute') { g.cam.scale = .93; camT = .75; }
-    sfx('blip', { pitch: .7, vol: .3 });
+    if (key === 'brute') { g.cam.scale = .93; camT = .75; g.shake(4); }
+    sfx('blip', { pitch: .7, vol: .6 });
   }
 }
 
 function hurt() {
   if (p.inv > 0 || g.mode !== 'play') return;
   p.hp--; p.inv = 1.05; p.hurtT = 1;
-  hitJuice(p.x, p.y - 34, { punch: .22, stop: .1, flash: '#ff2b4a', flashA: .5, sfx: 'hit', pitch: .8 });
-  squashT = .35;
+  g.impact(p.x, p.y - 34, { punch: .22, shake: 26, stop: .1, flash: '#ff2b4a', flashA: .5, sfx: 'hit', pitch: .8 });
   g.fx.burst(p.x, p.y - 34, 16, { kind: 'spark', color: ['#ff3b5c', '#fff', '#ffd34d'], speed: 360, life: .6 });
   g.fx.emit('ring', p.x, p.y - 34, { size: 86, color: '#ff2b4a', life: .4, add: true, wide: 8 });
   g.combo.reset();
   if (p.hp <= 0) {
     p.hp = 0;
-    boomFx(p.x, p.y - 34, { r: 150, color: '#ff3b5c', colors: ['#ff3b5c', '#fff', '#ffd34d', '#8fcf7a'], n: 34, speed: 620, punch: .3 });
+    g.fx.blast(p.x, p.y - 34, { r: 150, colors: ['#ff3b5c', '#fff', '#ffd34d', '#8fcf7a'], n: 34, speed: 620, punch: .3, shake: 34 });
     g.fx.burst(p.x, p.y - 34, 22, { kind: 'debris', color: ['#ff9a3c', '#151515', '#fff'], speed: 460, life: 1.1, size: 8 });
     g.showBanner('OUT OF CANDY', 1.6);
     g.end({ win: false, score: Math.round(g.score), label: 'SCORE', progress: killN / GOAL });
@@ -121,10 +100,8 @@ function killEnemy(e, quiet) {
   g.fx.burst(e.x, e.y - e.s.h * .3, 13, { kind: 'debris', color: [e.s.col, '#dfffe4', '#ff3b5c'], speed: 330, life: .75, size: 9 });
   g.fx.burst(e.x, e.y - e.s.h * .3, 7, { kind: 'smoke', color: 'rgba(150,255,180,.4)', speed: 150, life: .55, g: -40, size: 10 });
   g.fx.emit('ring', e.x, e.y - e.s.h * .3, { size: 52, color: e.s.col, life: .32, add: true, wide: 6 });
-  if (!quiet) g.hitstop(e.s.hp >= 4 ? .09 : e.s.hp >= 2 ? .06 : .04);  // 3-6 frozen frames, scaled by enemy bulk
-  g.punch(.01);
-  killPop = .25;
-  if (!quiet) sfx('splat', { pitch: comboPitch(g.combo.n % 9) * .9, vol: .55 });
+  g.shake(1.6 + e.s.h * .05 * (quiet ? .4 : 1)); g.punch(.01);
+  if (!quiet) sfx('splat', { pitch: comboPitch(g.combo.n % 9) * .9, vol: .8 });
   if (!quiet && g.combo.n === 8) { g.showBanner('🍬 8 STREAK', .8); g.flash('#ffd34d', .18); g.punch(.05); }
   if (!quiet && g.combo.n === 16) { g.showBanner('🎃 RAMPAGE x16', .9); g.flash('#7dffb0', .22); g.punch(.06); }
   const n = e.s.hp >= 4 ? 3 : e.key === 'reaper' ? 2 : 1;
@@ -140,7 +117,7 @@ function levelUp() {
   upT = 1.5; upName = m.name; upCol = m.col; upSub = m.sub;
   g.showBanner(m.name, 1.1);
   g.flash(m.col, .3);
-  hitJuice(p.x, p.y - 40, { punch: .16, stop: .06, sfx: 'powerup' });
+  g.impact(p.x, p.y - 40, { punch: .16, shake: 12, stop: .06, sfx: 'powerup' });
   g.fx.burst(p.x, p.y - 40, 26, { kind: 'spark', color: [m.col, '#fff'], speed: 420, life: .8 });
   g.fx.emit('ring', p.x, p.y - 40, { size: 165, color: m.col, life: .6, add: true, wide: 10 });
   g.popup(p.x, p.y - 96, m.name, m.col, 26);
@@ -155,7 +132,7 @@ function winGame() {
       kind: 'confetti', color: pick(['#ff9a3c', '#b04dff', '#1a1a1a', '#ffd34d', '#fff']),
       speed: 520, life: 1.4, g: 460, size: 7 });
   }
-  boomFx(p.x, p.y - 40, { r: 240, color: '#7dff7d', colors: ['#7dff7d', '#ffd34d', '#fff'], n: 40, speed: 800, punch: .26 });
+  g.fx.blast(p.x, p.y - 40, { r: 240, colors: ['#7dff7d', '#ffd34d', '#fff'], n: 40, speed: 800, punch: .26, shake: 26 });
   g.showBanner('FULL CANDY BAG!', 2);
   sfx('fanfare');
   g.end({ win: true, score: Math.round(g.score), label: 'SCORE', progress: 1 });
@@ -165,8 +142,7 @@ function winGame() {
 function tryNova() {
   if (novaP < 1 || g.mode !== 'play') return;
   novaP = 0;
-  boomFx(p.x, p.y - 36, { r: 250, color: '#ff4ad8', colors: ['#ff4ad8', '#fff', '#ffd34d'], n: 46, speed: 980, punch: .28 });
-  novaPop = .4;
+  g.fx.blast(p.x, p.y - 36, { r: 250, colors: ['#ff4ad8', '#fff', '#ffd34d'], n: 46, speed: 980, punch: .28, shake: 30 });
   g.fx.emit('ring', p.x, p.y - 36, { size: 290, color: '#fff', life: .55, add: true, wide: 16 });
   g.fx.emit('ring', p.x, p.y - 36, { size: 240, color: '#ff4ad8', life: .7, add: true, wide: 8 });
   g.flash('#ff4ad8', .5); g.hitstop(.11);
@@ -218,7 +194,6 @@ function update(dt) {
   t += dt; autoT += dt;
   if (camT > 0) { camT -= dt; if (camT <= 0) g.cam.scale = 1; }
   p.t += dt; p.inv = Math.max(0, p.inv - dt); p.hurtT = Math.max(0, p.hurtT - dt * 2.6);
-  killPop = Math.max(0, killPop - dt); novaPop = Math.max(0, novaPop - dt); squashT = Math.max(0, squashT - dt);
   cheer = Math.max(0, cheer - dt);
   upT = Math.max(0, upT - dt);
   if (novaP < 1) novaP = Math.min(1, novaP + dt / NOVA_MAX);
@@ -284,7 +259,8 @@ function update(dt) {
       g.fx.burst(p.x + Math.cos(base) * 24, p.y - 34 + Math.sin(base) * 24, 2,
         { kind: 'spark', color: ['#fff', '#ffd34d'], speed: 240, life: .18, size: 5 });
       g.punch(p.multi > 2 ? .012 : .008);
-      sfx('shoot', { pitch: rnd(.96, 1.08), vol: .34 });
+      if (p.multi > 2) g.shake(1.2);
+      sfx('shoot', { pitch: rnd(.96, 1.08), vol: .6 });
     }
   }
 
@@ -300,7 +276,7 @@ function update(dt) {
         e.hp -= p.dmg; e.flash = 1; hit = true;
         e.kx -= b.vx * .055; e.ky -= b.vy * .055;
         g.fx.burst(b.x, b.y, 5, { kind: 'spark', color: ['#fff', '#ffd34d', e.s.col], speed: 250, life: .28, size: 5 });
-        sfx('pop', { pitch: rnd(1.1, 1.4), vol: .3 });
+        sfx('pop', { pitch: rnd(1.1, 1.4), vol: .55 });
         if (e.hp <= 0) killEnemy(e);
         break;
       }
@@ -348,9 +324,8 @@ function update(dt) {
     if (d < 26 || gm.dead > 9) {
       if (d < 26) {
         g.score += 6 * g.combo.n;
-        g.fx.burst(gm.x, gm.y, 6, { kind: 'spark', color: ['#ff8c1a', '#ffd34d', '#fff'], speed: 240, life: .35, size: 6 });
-        g.fx.emit('glow', gm.x, gm.y, { life: .28, size: 30, color: '#ffd34d', add: true });
-        sfx('coin', { pitch: comboPitch(Math.min(11, g.combo.n % 11)), vol: .24 });
+        g.fx.burst(gm.x, gm.y, 4, { kind: 'spark', color: ['#ff8c1a', '#ffd34d', '#fff'], speed: 200, life: .3, size: 5 });
+        sfx('coin', { pitch: comboPitch(Math.min(11, g.combo.n % 11)), vol: .5 });
       }
       gems.splice(i, 1);
     }
@@ -369,8 +344,8 @@ for (let i = 0; i < 26; i++) TUFTS.push({ x: rnd(-30, W + 30), y: rnd(F.y0 - 20,
 for (let i = 0; i < 22; i++) MOTES.push({ x: rnd(0, W), y: rnd(F.y0, H), s: rnd(.8, 2.6), v: rnd(6, 22), ph: rnd(0, TAU) });
 
 const skyG = ctx0.createLinearGradient(0, 0, 0, H);
-skyG.addColorStop(0, '#3a2456'); skyG.addColorStop(.28, '#4a2f6a');
-skyG.addColorStop(.62, '#2e1b4a'); skyG.addColorStop(1, '#1e1232');
+skyG.addColorStop(0, '#150a24'); skyG.addColorStop(.28, '#1e0f33');
+skyG.addColorStop(.62, '#12081f'); skyG.addColorStop(1, '#0a0512');
 
 const moonG = ctx0.createRadialGradient(410, 96, 4, 410, 96, 340);
 moonG.addColorStop(0, 'rgba(255,170,80,.30)'); moonG.addColorStop(.35, 'rgba(255,130,40,.12)'); moonG.addColorStop(1, 'rgba(0,0,0,0)');
@@ -383,7 +358,7 @@ floorCv.width = W; floorCv.height = H;
 (function bakeFloor() {
   const c = floorCv.getContext('2d');
   const gd = c.createLinearGradient(0, 0, 0, H);
-  gd.addColorStop(0, '#3d2a5e'); gd.addColorStop(.45, '#4e366e'); gd.addColorStop(1, '#2e1f4a');
+  gd.addColorStop(0, '#1a0f2e'); gd.addColorStop(.45, '#241540'); gd.addColorStop(1, '#120a20');
   c.fillStyle = gd; c.fillRect(0, 0, W, H);
   for (let i = 0; i < 80; i++) {
     const x = rnd(0, W), y = rnd(0, H), r = rnd(18, 90);
@@ -425,11 +400,6 @@ function draw(ctx) {
   ctx.fillStyle = skyG; ctx.fillRect(0, 0, W, H);
   ctx.globalCompositeOperation = 'lighter';
   ctx.fillStyle = moonG; ctx.fillRect(0, 0, W, H);
-  // moon disc with soft bloom halo
-  ctx.shadowColor = 'rgba(255,200,120,.9)'; ctx.shadowBlur = 50;
-  ctx.fillStyle = 'rgba(255,224,170,.9)';
-  ctx.beginPath(); ctx.arc(410, 96, 30, 0, 7); ctx.fill();
-  ctx.shadowBlur = 0;
   ctx.globalCompositeOperation = 'source-over';
 
   // far: drifting moon mist
@@ -544,20 +514,16 @@ function draw(ctx) {
   ctx.beginPath(); ctx.ellipse(p.x, p.y + 3, 27, 9, 0, 0, 7); ctx.fill();
   const blink = p.inv > 0 && Math.floor(p.inv * 14) % 2 === 0;
   if (!blink) {
-    // squash-and-stretch on hit: squash wide then spring back
-    const sq = squashT > 0 ? Math.sin((squashT / .35) * Math.PI) : 0;
     ctx.save();
-    ctx.translate(p.x, p.y); ctx.scale(1 + sq * .28, 1 - sq * .24); ctx.translate(-p.x, -p.y);
     ctx.globalCompositeOperation = 'lighter';
     ctx.globalAlpha = .2 + cheer * .5 + (g.combo.n > 4 ? .16 : 0);
     ctx.fillStyle = '#ffb347';
     ctx.beginPath(); ctx.ellipse(p.x, p.y - 34, 44, 48, 0, 0, 7); ctx.fill();
-    ctx.globalCompositeOperation = 'source-over'; ctx.globalAlpha = 1;
+    ctx.restore();
     drawChar('person', ctx, p.x, p.y, 80, {
       dir: p.dir, t: p.t, anim: Math.hypot(p.vx, p.vy) > 40 ? 'walk' : 'idle',
       color: p.inv > 0 ? '#ff9a9a' : '#ff9a3c', hurt: p.hurtT > .5,
     });
-    ctx.restore();
   }
   // aim tick
   if (p.mouse) {
@@ -606,19 +572,6 @@ function draw(ctx) {
   }
   ctx.restore();
 
-  // screen-edge candy glow pulse when the bomb is ready (element glow, not full-screen FX)
-  if (novaP >= 1 && g.mode === 'play') {
-    const ea = .10 + Math.sin(t * 6) * .06;
-    ctx.save(); ctx.globalCompositeOperation = 'lighter';
-    let eg = ctx.createLinearGradient(0, 0, 0, 46);
-    eg.addColorStop(0, `rgba(255,74,216,${ea})`); eg.addColorStop(1, 'rgba(255,74,216,0)');
-    ctx.fillStyle = eg; ctx.fillRect(0, 0, W, 46);
-    eg = ctx.createLinearGradient(0, H - 46, 0, H);
-    eg.addColorStop(0, 'rgba(255,74,216,0)'); eg.addColorStop(1, `rgba(255,74,216,${ea})`);
-    ctx.fillStyle = eg; ctx.fillRect(0, H - 46, W, 46);
-    ctx.restore();
-  }
-
   drawHUD(ctx);
 }
 
@@ -657,18 +610,13 @@ function drawHUD(ctx) {
   g.text(sc, W - 30, 68, { size: 30, color: '#e9fff2', align: 'right' });
   ctx.restore();
 
-  // kill goal (punches on every kill)
+  // kill goal
   g.text('KILLS', 30, 92, { size: 15, color: 'rgba(220,255,235,.55)' });
   const kt = String(killN);
-  const kp = killPop > 0 ? 1 + Math.sin((killPop / .25) * Math.PI) * .38 : 1;
-  ctx.save(); ctx.translate(30, 146); ctx.scale(kp, kp); ctx.translate(-30, -146);
-  if (killPop > 0) { ctx.shadowColor = '#ffd34d'; ctx.shadowBlur = 16; }
   g.text(kt, 30, 146, { size: 56, color: '#fff', stroke: '#05140c' });
-  ctx.shadowBlur = 0;
   ctx.font = '900 56px Impact,"Arial Black",system-ui,sans-serif';
   const kw = ctx.measureText(kt).width;
   g.text('/' + GOAL, 30 + kw + 6, 146, { size: 30, color: 'rgba(220,255,235,.5)' });
-  ctx.restore();
 
   // progress
   const bx = 28, by = 156, bw = W - 56, bh = 12;
@@ -689,18 +637,14 @@ function drawHUD(ctx) {
   // combo (engine) — sits right under the score
   g.combo.draw(ctx);
 
-  // nova button (pops when the bomb fires)
+  // nova button
   const ready = novaP >= 1;
   const bx2 = 168, by2 = 862, bw2 = 204, bh2 = 74;
-  const np = novaPop > 0 ? 1 + Math.sin((novaPop / .4) * Math.PI) * .22 : 1;
   ctx.save();
-  ctx.translate(W / 2, by2 + bh2 / 2); ctx.scale(np, np); ctx.translate(-W / 2, -(by2 + bh2 / 2));
   ctx.fillStyle = ready ? 'rgba(255,74,216,.20)' : 'rgba(255,255,255,.05)';
   rr(ctx, bx2, by2, bw2, bh2, 20); ctx.fill();
   ctx.strokeStyle = ready ? `rgba(255,74,216,${.65 + Math.sin(t * 8) * .3})` : 'rgba(255,255,255,.14)';
-  if (ready) { ctx.shadowColor = '#ff4ad8'; ctx.shadowBlur = 18; }
   ctx.lineWidth = 3; rr(ctx, bx2, by2, bw2, bh2, 20); ctx.stroke();
-  ctx.shadowBlur = 0;
   if (!ready) {
     ctx.fillStyle = 'rgba(255,74,216,.45)';
     rr(ctx, bx2 + 8, by2 + bh2 - 18, (bw2 - 16) * novaP, 8, 4); ctx.fill();
@@ -722,10 +666,7 @@ function drawHUD(ctx) {
     ctx.translate(W / 2, yy);
     ctx.scale(1 + (1 - k) * .12, 1 + (1 - k) * .12);
     ctx.fillStyle = 'rgba(4,10,14,.86)'; rr(ctx, -190, -40, 380, 80, 18); ctx.fill();
-    ctx.strokeStyle = upCol; ctx.lineWidth = 3;
-    ctx.shadowColor = upCol; ctx.shadowBlur = 20;
-    rr(ctx, -190, -40, 380, 80, 18); ctx.stroke();
-    ctx.shadowBlur = 0;
+    ctx.strokeStyle = upCol; ctx.lineWidth = 3; rr(ctx, -190, -40, 380, 80, 18); ctx.stroke();
     g.text(upName, 0, -4, { size: 30, color: upCol, align: 'center' });
     g.text(upSub, 0, 24, { size: 15, color: 'rgba(255,255,255,.6)', align: 'center' });
     ctx.restore();
