@@ -132,7 +132,8 @@ const GROUND = document.createElement('canvas'); GROUND.width = W; GROUND.height
   mg.addColorStop(0, 'rgba(255,170,60,.55)'); mg.addColorStop(1, 'rgba(255,140,40,0)');
   c.fillStyle = mg; c.beginPath(); c.arc(430, 132, 110, 0, TAU); c.fill();
   c.restore();
-  c.fillStyle = 'rgba(255,190,90,.95)'; c.beginPath(); c.arc(452, 128, 34, 0, TAU); c.fill();
+  c.save(); c.shadowBlur = 26; c.shadowColor = 'rgba(255,170,70,.85)'; /* bloom: moon halo */
+  c.fillStyle = 'rgba(255,190,90,.95)'; c.beginPath(); c.arc(452, 128, 34, 0, TAU); c.fill(); c.restore();
   c.fillStyle = 'rgba(230,150,60,.9)'; c.beginPath(); c.arc(442, 120, 30, 0, TAU); c.fill();
   // haunted house silhouette on the hill
   c.fillStyle = 'rgba(30,16,50,.9)';
@@ -774,9 +775,11 @@ function drawTower(ctx, tw) {
     ctx.beginPath(); ctx.ellipse(2, -2, 12, 9, 0, 0, TAU); ctx.fill();
     ctx.fillStyle = '#2a6a2a'; ctx.fillRect(0, -17, 5, 7); // stem
     const glow = .6 + .4 * Math.sin(t * 6 + tw.x);
+    ctx.shadowBlur = 10; ctx.shadowColor = 'rgba(255,200,90,.9)'; /* bloom: pumpkin face */
     ctx.fillStyle = `rgba(255,230,120,${glow})`; // glowing face
     ctx.beginPath(); ctx.moveTo(12, -6); ctx.lineTo(17, -1); ctx.lineTo(12, 2); ctx.closePath(); ctx.fill();
     ctx.beginPath(); ctx.moveTo(12, 3); ctx.lineTo(20, 3); ctx.lineTo(16, 8); ctx.lineTo(12, 5); ctx.closePath(); ctx.fill();
+    ctx.shadowBlur = 0; /* reset bloom */
   } else if (tw.kind === 'bomb') {
     // GARGOYLE: stone head mortar
     ctx.fillStyle = '#6a6a80';
@@ -810,6 +813,7 @@ function drawTower(ctx, tw) {
 
   if (rec > .05) {
     ctx.save(); ctx.globalCompositeOperation = 'lighter';
+    ctx.shadowBlur = 18 * rec; ctx.shadowColor = d.col; /* bloom: muzzle halo */
     const mx = tw.x + Math.cos(tw.ang) * 24, my = tw.y - 2 + Math.sin(tw.ang) * 24;
     const R2 = 26 * rec + 6;
     const gr = ctx.createRadialGradient(mx, my, 1, mx, my, R2);
@@ -1006,12 +1010,14 @@ function drawHud(ctx) {
   { /* danger pulse: the meter throbs as trick-or-treaters close in (element-level) */
     const dz = stashDanger, zp = 1 + dz * .22 * (0.6 + 0.4 * Math.sin(t * 14));
     ctx.save(); ctx.translate(bx + bw / 2, by + 34); ctx.scale(zp, zp);
+    if (dz > .1) { ctx.shadowBlur = 12 * dz; ctx.shadowColor = dz > .45 ? 'rgba(255,80,80,.9)' : 'rgba(255,170,90,.8)'; } /* bloom */
     g.text('SAVE THE CANDY', 0, 0, { size: 13, color: dz > .45 ? '#ff6b6b' : dz > .15 ? '#ffb36b' : '#8f9ac0', align: 'center' });
     ctx.restore();
   }
 
   const gp = 1 + gpop;
   ctx.save(); ctx.translate(GOLDI.x - 48, GOLDI.y); ctx.scale(gp, gp);
+  ctx.shadowBlur = 10; ctx.shadowColor = 'rgba(255,200,70,.8)'; /* bloom: gold coin */
   ctx.fillStyle = '#ffd34d'; ctx.beginPath(); ctx.arc(0, 0, 15, 0, TAU); ctx.fill();
   ctx.fillStyle = '#c98a00'; ctx.beginPath(); ctx.arc(0, 0, 10, 0, TAU); ctx.fill();
   ctx.fillStyle = '#fff6b0'; ctx.beginPath(); ctx.arc(-4, -4, 3.4, 0, TAU); ctx.fill();
