@@ -6,7 +6,7 @@ import { drawChar } from '../_vendor/gpsprites.js';
 const W = 540, H = 960;
 const g = makeGame({
   id: 'trick-or-treat', title: 'TRICK OR TREAT', sub: 'SWIPE OR ARROWS TO TURN',
-  hook: 'grab every candy before the ghosts grab you', w: W, h: H, bg: '#0d0618',
+  hook: 'grab every candy before the ghosts grab you', w: W, h: H, bg: '#2a2a5a',
   bloom: .8, ca: .38, vig: 1, scan: .2,
 });
 
@@ -139,9 +139,9 @@ function buildMazeArt() {
 /* ---------------------------------------------------------------- entities */
 function mkEnt(tx, ty, spd) { return { tx, ty, nx: tx, ny: ty, prog: 0, dx: 0, dy: 0, spd, want: [0, 0] }; }
 const GHOST_DEF = [
-  { kind: 0, color: PAL.chaser, home: [1, 1] },
-  { kind: 1, color: PAL.ambush, home: [13, 1] },
-  { kind: 2, color: PAL.flank, home: [7, 11] },
+  { kind: 0, color: PAL.chaser, home: [1, 1], name: 'WITCH' },    // Chaser: witch on broom
+  { kind: 1, color: PAL.ambush, home: [13, 1], name: 'BAT' },     // Ambusher: vampire bat
+  { kind: 2, color: PAL.flank, home: [7, 11], name: 'SPIDER' },   // Flanker: giant spider
 ];
 
 function spawnEntities() {
@@ -363,7 +363,20 @@ function turn(dx, dy) {
   applyWant();
 }
 function readInput() {
-  /* taps: swipe-free — turn toward wherever the finger landed */
+  /* DRAG-TO-MOVE: hold finger down, kid steers toward it (direct + intuitive) */
+  /* Falls back to tap-to-turn for quick taps */
+  const active = g.touches && g.touches.length ? g.touches[0] : null;
+  if (active) {
+    const dx = active.x - px(pl), dy = active.y - py(pl);
+    const d = Math.hypot(dx, dy);
+    if (d > 24) {
+      // Steer toward finger: pick the grid direction closest to the drag vector
+      if (Math.abs(dx) > Math.abs(dy)) turn(Math.sign(dx), 0);
+      else turn(0, Math.sign(dy));
+      // Also allow diagonal intent: queue the secondary axis
+      pl.dragX = dx; pl.dragY = dy;
+    }
+  }
   for (const p of g.taps) {
     const dx = p.x - px(pl), dy = p.y - py(pl);
     if (Math.abs(dx) < 12 && Math.abs(dy) < 12) continue;
@@ -592,25 +605,81 @@ function update(dt) {
 }
 
 /* ---------------------------------------------------------------- draw helpers */
-function ghostShape(ctx, x, y, h, col, wob, look, eyeGlow) {
+function ghostShape(ctx, x, y, h, col, wob, look, eyeGlow, kind) {
   const hw = h * .46, top = y - h;
   ctx.save();
   ctx.globalAlpha = .28; ctx.fillStyle = '#000';
   ctx.beginPath(); ctx.ellipse(x, y + 2, hw * .82, h * .1, 0, 0, TAU); ctx.fill();
   ctx.globalAlpha = 1;
-  ctx.beginPath();
-  ctx.moveTo(x - hw, top + h * .34);
-  ctx.arc(x, top + h * .40, hw, Math.PI, 0);
-  ctx.lineTo(x + hw, y - h * .16);
-  const n = 4, seg = (hw * 2) / n;
-  for (let i = 0; i < n; i++) {
-    const x0 = x + hw - i * seg, x1 = x0 - seg;
-    const yy = y - h * .16 + (i % 2 ? -1 : 1) * h * .07 + wob;
-    ctx.quadraticCurveTo((x0 + x1) / 2, yy + h * .13, x1, yy - wob * .4);
+  
+  if (kind === 0) {
+    // WITCH: pointy hat, dress, broom
+    // Dress (triangle)
+    ctx.beginPath();
+    ctx.moveTo(x - hw, y);
+    ctx.lineTo(x, top + h*.2);
+    ctx.lineTo(x + hw, y);
+    ctx.closePath();
+    ctx.fillStyle = col; ctx.fill();
+    ctx.lineWidth = 2.6; ctx.strokeStyle = 'rgba(8,6,22,.9)'; ctx.stroke();
+    // Head
+    ctx.fillStyle = '#e8b88a';
+    ctx.beginPath(); ctx.arc(x, top + h*.28, h*.16, 0, TAU); ctx.fill(); ctx.stroke();
+    // Pointy hat
+    ctx.fillStyle = '#1a1a2e';
+    ctx.beginPath();
+    ctx.moveTo(x - h*.22, top + h*.22);
+    ctx.lineTo(x + h*.22, top + h*.22);
+    ctx.lineTo(x + h*.05, top - h*.25);
+    ctx.closePath(); ctx.fill(); ctx.stroke();
+    // Hat brim
+    ctx.fillRect(x - h*.28, top + h*.18, h*.56, h*.08);
+    // Broom (diagonal)
+    ctx.strokeStyle = '#8a5a2a'; ctx.lineWidth = h*.07;
+    ctx.beginPath(); ctx.moveTo(x - hw*1.2, y - h*.1); ctx.lineTo(x + hw*1.2, y - h*.3); ctx.stroke();
+  } else if (kind === 1) {
+    // VAMPIRE BAT: wings, body, fangs
+    const flap = Math.sin(wob * 8) * h * .12;
+    // Wings
+    ctx.fillStyle = col;
+    ctx.beginPath();
+    ctx.moveTo(x - h*.1, top + h*.5);
+    ctx.quadraticCurveTo(x - hw*1.4, top + h*.3 + flap, x - hw*1.2, top + h*.9);
+    ctx.quadraticCurveTo(x - hw*.6, top + h*.7, x - h*.1, top + h*.7);
+    ctx.closePath(); ctx.fill();
+    ctx.lineWidth = 2.6; ctx.strokeStyle = 'rgba(8,6,22,.9)'; ctx.stroke();
+    ctx.beginPath();
+    ctx.moveTo(x + h*.1, top + h*.5);
+    ctx.quadraticCurveTo(x + hw*1.4, top + h*.3 + flap, x + hw*1.2, top + h*.9);
+    ctx.quadraticCurveTo(x + hw*.6, top + h*.7, x + h*.1, top + h*.7);
+    ctx.closePath(); ctx.fill(); ctx.stroke();
+    // Body
+    ctx.beginPath(); ctx.ellipse(x, top + h*.55, h*.18, h*.28, 0, 0, TAU);
+    ctx.fillStyle = col; ctx.fill(); ctx.stroke();
+    // Ears
+    ctx.fillStyle = col;
+    ctx.beginPath(); ctx.moveTo(x - h*.14, top + h*.32); ctx.lineTo(x - h*.2, top + h*.12); ctx.lineTo(x - h*.06, top + h*.28); ctx.closePath(); ctx.fill();
+    ctx.beginPath(); ctx.moveTo(x + h*.14, top + h*.32); ctx.lineTo(x + h*.2, top + h*.12); ctx.lineTo(x + h*.06, top + h*.28); ctx.closePath(); ctx.fill();
+  } else {
+    // SPIDER: 8 legs, round body
+    ctx.strokeStyle = '#1a1a1a'; ctx.lineWidth = h*.06;
+    for (let i = 0; i < 4; i++) {
+      const a = (i / 4) * Math.PI;
+      const yOff = top + h*.5 + (i-1.5)*h*.14;
+      // Left legs
+      ctx.beginPath(); ctx.moveTo(x - h*.12, yOff); 
+      ctx.lineTo(x - hw*1.1, yOff - h*.18); 
+      ctx.lineTo(x - hw*1.3, yOff + h*.08); ctx.stroke();
+      // Right legs
+      ctx.beginPath(); ctx.moveTo(x + h*.12, yOff); 
+      ctx.lineTo(x + hw*1.1, yOff - h*.18); 
+      ctx.lineTo(x + hw*1.3, yOff + h*.08); ctx.stroke();
+    }
+    // Body
+    ctx.beginPath(); ctx.ellipse(x, top + h*.55, h*.22, h*.2, 0, 0, TAU);
+    ctx.fillStyle = col; ctx.fill();
+    ctx.lineWidth = 2.6; ctx.strokeStyle = 'rgba(8,6,22,.9)'; ctx.stroke();
   }
-  ctx.closePath();
-  ctx.fillStyle = col; ctx.fill();
-  ctx.lineWidth = 2.6; ctx.strokeStyle = 'rgba(8,6,22,.9)'; ctx.stroke();
   // body sheen
   ctx.globalAlpha = .22; ctx.fillStyle = '#fff';
   ctx.beginPath(); ctx.ellipse(x - hw * .34, top + h * .3, hw * .3, h * .17, -.4, 0, TAU); ctx.fill();
@@ -778,7 +847,7 @@ function draw() {
     let col = q.color;
     if (scared > 0) col = scared < 2 && Math.floor(t * 8) % 2 ? '#f2f6ff' : PAL.fear;
     /* BLOOM: ghost eyes glow blue when scared */
-    ghostShape(ctx, x, y + wob, 30, col, wob * .6, look, scared > 0 ? '#4a6bff' : null);
+    ghostShape(ctx, x, y + wob, 30, col, wob * .6, look, scared > 0 ? '#4a6bff' : null, q.kind);
     if (!scared) {
       ctx.globalAlpha = .55; ctx.fillStyle = q.color;
       ctx.beginPath(); ctx.arc(x, y - 34 + wob, 2.4, 0, TAU); ctx.fill();

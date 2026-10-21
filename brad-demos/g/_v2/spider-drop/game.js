@@ -9,7 +9,7 @@ import {
 const W = 540, H = 960;
 const g = makeGame({
   id: 'spider-drop', title: 'SPIDER DROP', sub: 'CUT THE WEBS · FILL THE BUCKET',
-  hook: 'five levels, one bottomless bucket', w: W, h: H, bg: '#120a24',
+  hook: 'five levels, one bottomless bucket', w: W, h: H, bg: '#2e2a4a',
   bloom: .8, ca: .3, vig: 1, scan: .12,
 });
 
@@ -54,6 +54,7 @@ const lanterns = [];
 
 let lvl = 0, lvlT = 0, caught = 0, needs = 3, spawnLeft = 0, score = 0, misses = 0;
 let combo = 0, comboT = 0, status = 'play', trans = 0, hintT = 0, frame = 0, shakeT = 0;
+let wind = 0, windT = 0;  // wind gusts push falling candy
 let botT = 0, autoT = 0, dumbCut = 0, hudPop = 0;
 
 const cat = { x: 270, dir: 1, mouth: 0, chomp: 0, hurt: 0, bob: 0, lean: 0, gloat: 0, sq: 0 };
@@ -390,6 +391,17 @@ function update(dt) {
     lvlT -= dt;
     if (lvlT <= 0) { lvlT = 0; lose(); return; }
     if (comboT > 0) { comboT -= dt; if (comboT <= 0) combo = 0; }
+    /* WIND GUSTS: push falling candy left/right (more gameplay) */
+    windT -= dt;
+    if (windT <= 0) {
+      windT = rnd(3, 6);
+      wind = rnd(-160, 160);
+      if (Math.abs(wind) > 40) {
+        g.showBanner(wind > 0 ? 'WIND →' : '← WIND', 0.8);
+        sfx('whoosh', { pitch: 0.7, vol: 0.3 });
+      }
+    }
+    wind = damp(wind, 0, 0.8, dt);  // wind dies down
   }
 
   /* ---------- pendulums ---------- */
@@ -417,6 +429,7 @@ function update(dt) {
     f.t += dt;
     f.vy += GRAV * dt;
     f.vx *= 1 - 0.5 * dt;
+    f.vx += wind * dt * 0.6;  // wind pushes falling candy
     f.x += f.vx * dt; f.y += f.vy * dt;
     f.rot += f.vr * dt;
     if (f.rope > 0) f.rope = Math.max(0, f.rope - dt * 90);

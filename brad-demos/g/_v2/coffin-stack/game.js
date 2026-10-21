@@ -6,7 +6,7 @@ import { drawChar } from '../_vendor/gpsprites.js';
 const W = 540, H = 960;
 const g = makeGame({
   id: 'coffin-stack', title: 'COFFIN STACK', sub: 'HOW HIGH CAN YOU STACK THEM?',
-  hook: 'one slip and the crypt comes down', w: W, h: H, bg: '#0d0714', style: 'neon',
+  hook: 'one slip and the crypt comes down', w: W, h: H, bg: '#3a2a5a', style: 'neon',
   bloom: .92, ca: .38, vig: 1, scan: .18,
 });
 
@@ -19,7 +19,14 @@ let tower, cur, camY, camT, t, autoT, host, bonus;
 const isAuto = new URLSearchParams(location.search).has('auto');
 
 const hueOf = i => (196 + i * 11) % 360;
-const slabW = i => Math.max(46, BASE - i * 2);
+const slabW = i => {
+  // VARIETY: not just linear - random widths, sometimes wide, sometimes narrow
+  const base = Math.max(46, BASE - i * 2);
+  const variance = rnd(-18, 14);  // random variation
+  // Every 5th is a "challenge" slab (much narrower)
+  const challenge = (i > 0 && i % 5 === 0) ? rnd(-28, -18) : 0;
+  return Math.max(38, base + variance + challenge);
+};
 
 /* ------------------------------------------------------------------ feel state
    every one of these is a plain scalar: no per-frame allocation anywhere. */
@@ -77,8 +84,13 @@ function camTarget(n) { return -H * .23 + (n + 1) * BH; }         // keep the wo
 function spawnSlab() {
   const i = tower.length, base = slabW(i);
   const dir = chance(.5) ? 1 : -1;
-  const spd = 200 + Math.min(210, i * 15);
-  cur = { w: base, x: dir > 0 ? -base : W, spd, dir, i, hue: hueOf(i) };
+  // VARIETY: speed varies more, plus wind gusts
+  const spd = 200 + Math.min(210, i * 15) + rnd(-40, 60);
+  const wind = (i > 3 && chance(.35)) ? rnd(-90, 90) : 0;  // wind pushes the slab
+  // VARIETY: random coffin material (affects look)
+  const materials = ['wood', 'stone', 'metal', 'wood', 'wood'];  // wood most common
+  const material = pick(materials);
+  cur = { w: base, x: dir > 0 ? -base : W, spd, dir, i, hue: hueOf(i), wind, material };
   // bot drama: ~1 in 5 auto drops aims slightly off-centre (still lands, wobbles)
   cur.botErr = (isAuto && chance(.2)) ? rnd(-1, 1) * Math.min(24, base * .1) : 0;
   spawnPop = 0;
@@ -245,7 +257,7 @@ function botThink() {
 function update(dt) {
   t += dt;
   if (cur) {
-    cur.x += cur.spd * cur.dir * dt;
+    cur.x += (cur.spd * cur.dir + (cur.wind || 0)) * dt;
     if (cur.x < -cur.w) { cur.x = W; }
     if (cur.x > W) { cur.x = -cur.w; }
   }
