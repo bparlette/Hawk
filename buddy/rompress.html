@@ -114,6 +114,16 @@ Rules for everything you write:
 <strong>No asset redistribution.</strong> Sprites, tiles, music, SFX from the original game are never published or shared.</p>
 </div>
 
+<div class="step">
+<h2>Real example: Contra (NES) → Virtual Boy port spec</h2>
+<p class="note">Produced by an AI following the prompt above. The full spec is long — <a href="https://github.com/alchemy27/Contra_VB">repo: github.com/alchemy27/Contra_VB</a>. Key excerpts:</p>
+<p><strong>What it actually is:</strong> Not a ROM converter. Two parts: (1) automated asset extraction — Python scripts read the ROM, produce VB-format tiles/maps/sprites/collision/sound; (2) manual logic reimplementation — all gameplay rewritten in C (~6,000 lines from Python generator templates) from the annotated disassembly. The only NES code that runs is the sound engine: a 6502 interpreter executes Contra's sound driver offline at build time, records APU register writes, converts to VUEngine sound data.</p>
+<p><strong>Pipeline (13 stages):</strong> 0. Obtain inputs (ROM MD5: 7bdad8b4a7a56a634c9649d20bd3011b, disassembly, empty VUEngine Studio project) → 1. Background graphics + depth layers → 2. Sprites → 3. Animations → 4. Collision + enemy placement → 5. BG objects + level stats → 6. Depth classification (FAR +4px / MID +2px / NEAR 0 per-eye parallax) → 7. Generate VUEngine Studio project → 8. Game logic generators (8a–8g: player, enemies, tunnel, screens, rooms, boss) → 9. Studio's converted C files → 10. Sound (6502 → APU capture → VSU) → 11. Build → 12. Pad ROM to 2MB for flash cart → 13. Test (emulator bots + real hardware).</p>
+<p><strong>What broke (28 fixes):</strong> Studio not writing Converted files → byte-exact clone script; public engine newer than Studio's → pin vuengine-core 1e0be9a0; FlashBoy won't boot → mirror ROM to 2MB; pool exhaustion → cut actors, never enlarge pool; char memory ~550 practical limit (not 2048); in-place stage swap froze real hardware but passed emulator → use VUEngine::changeState; NULL StageSpec list reads as live framebuffer on hardware.</p>
+<p><strong>Definition of done:</strong> automated data assertions pass → emulator bot reaches every checkpoint → memory/sprite/pool under budget with margin → human playthrough on real hardware passes.</p>
+<p><strong>Will never work:</strong> arbitrary NES ROMs (every game needs its own disassembly + rewrite); cycle-exact behavior (50 vs 60.1 Hz); raster effects; color fidelity (54 colors → 3 shades); DMC samples; full NES sound + SFX simultaneously.</p>
+</div>
+
 <script>
 function copy(id, btn) {
   const text = document.getElementById(id).innerText;
