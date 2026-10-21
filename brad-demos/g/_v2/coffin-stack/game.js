@@ -101,6 +101,7 @@ function perfectJuice(x, y, w) {
   g.fx.burst(x, y, 12, { kind: 'star', color: ['#ffd34d', '#ff9f1c'], speed: 200, life: .75, size: 10, g: 260 });
   g.fx.burst(x, y + 4, 8, { kind: 'ember', color: ['#ff9f1c', '#ff5c1c', '#c9a0ff'], speed: 140, life: .9, size: 5, g: -60 });
   g.fx.emit('ring', x, y, { size: Math.max(70, w * .9), life: .34, color: '#ffd34d', add: true, wide: 7 });
+  g.fx.emit('ring', x, y, { size: Math.max(120, w * 1.5), life: .55, color: 'rgba(255,190,90,.45)', add: true, wide: 3 });
   landDust(x, y + 10, 5, 'rgba(255,180,90,.5)');
   settle += .55; settleV = -1.2;
   camKV -= 26;
@@ -353,13 +354,16 @@ function drawSky(ctx) {
   }
   ctx.globalAlpha = 1;
 
-  /* the full moon, fixed high in the frame */
+  /* the full moon, fixed high in the frame — soft halo bloom (Cherie-approved, subtle) */
   const mx = W * .78, my = H * .16, mr = 64;
   const mg = ctx.createRadialGradient(mx, my, mr * .4, mx, my, mr * 2.4);
   mg.addColorStop(0, 'rgba(255,244,214,.5)'); mg.addColorStop(1, 'rgba(255,244,214,0)');
   ctx.fillStyle = mg; ctx.fillRect(mx - mr * 2.4, my - mr * 2.4, mr * 4.8, mr * 4.8);
+  ctx.save();
+  ctx.shadowColor = 'rgba(255,244,214,.85)'; ctx.shadowBlur = 42;
   ctx.fillStyle = '#fdf3d0';
   ctx.beginPath(); ctx.arc(mx, my, mr, 0, TAU); ctx.fill();
+  ctx.restore();
   ctx.fillStyle = 'rgba(210,190,150,.5)';
   ctx.beginPath(); ctx.arc(mx - 18, my - 10, 12, 0, TAU); ctx.fill();
   ctx.beginPath(); ctx.arc(mx + 14, my + 16, 9, 0, TAU); ctx.fill();
@@ -404,13 +408,16 @@ function mansion(ctx, x, base, s) {
   ctx.beginPath();                                                      // crooked roof
   ctx.moveTo(x - 10 * s, base - 150 * s); ctx.lineTo(x + 95 * s, base - 200 * s); ctx.lineTo(x + 200 * s, base - 150 * s);
   ctx.closePath(); ctx.fill();
-  // jack-o-lantern windows
+  // jack-o-lantern windows — warm glow bloom
+  ctx.save();
+  ctx.shadowColor = '#ff9f1c'; ctx.shadowBlur = 14;
   ctx.fillStyle = '#ff9f1c';
   for (const [wx, wy] of [[30, 90], [90, 90], [145, 170], [60, 60]]) {
     const flick = .6 + .4 * Math.sin(t * 3 + wx);
     ctx.globalAlpha = flick;
     ctx.fillRect(x + wx * s, base - wy * s, 16 * s, 22 * s);
   }
+  ctx.restore();
   ctx.globalAlpha = 1;
 }
 function drawBackdrop(ctx) {
@@ -485,6 +492,8 @@ let moteAcc = 0;
 function drawMotes(ctx) {
   moteAcc += 1 / 60;
   const drift = Math.sin(t * .7) * 10;
+  ctx.save();
+  ctx.shadowColor = '#ff9f3c'; ctx.shadowBlur = 9;
   for (let i = 0; i < MOTES.length; i++) {
     const m = MOTES[i];
     m.y -= m.v / 60;
@@ -493,6 +502,7 @@ function drawMotes(ctx) {
     ctx.fillStyle = '#ff9f3c';
     ctx.fillRect(m.x + drift * (m.r * .3), m.y, m.r, m.r);
   }
+  ctx.restore();
   ctx.globalAlpha = 1;
 }
 
@@ -616,10 +626,26 @@ function draw() {
 
   drawMotes(ctx);
   drawHUD(ctx);
-  if (nearGlow > .02) {
-    /* screen-level finish: a whisper of chromatic rip when you're dead centre */
-    ctx.save(); ctx.globalCompositeOperation = 'lighter';
-    ctx.globalAlpha = nearGlow * .07; ctx.fillStyle = '#9ff8ff'; ctx.fillRect(0, 0, W, H);
+  /* banner bloom: soft radial halo behind the banner text (element-level, not screen FX) */
+  if (bannerPunch > .02) {
+    ctx.save();
+    ctx.globalAlpha = bannerPunch * .8;
+    const bg = ctx.createRadialGradient(W / 2, H * .3, 20, W / 2, H * .3, 190);
+    bg.addColorStop(0, 'rgba(255,200,80,.32)');
+    bg.addColorStop(1, 'rgba(255,200,80,0)');
+    ctx.fillStyle = bg;
+    ctx.beginPath(); ctx.arc(W / 2, H * .3, 190, 0, TAU); ctx.fill();
+    ctx.restore();
+  }
+  if (nearGlow > .02 && cur) {
+    /* alignment tell: warm glow on the slab edges (element-level, was full-screen wash) */
+    const y = slabY(tower.length);
+    ctx.save();
+    ctx.globalCompositeOperation = 'lighter';
+    ctx.globalAlpha = nearGlow * .35;
+    ctx.shadowColor = '#ffd34d'; ctx.shadowBlur = 22;
+    ctx.strokeStyle = '#ffd34d'; ctx.lineWidth = 3;
+    ctx.strokeRect(cur.x, y, cur.w, BH);
     ctx.restore();
   }
 }
