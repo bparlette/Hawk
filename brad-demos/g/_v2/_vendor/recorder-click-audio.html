@@ -1,0 +1,154 @@
+<!doctype html>
+<html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Game Recorder with Audio - Click to Start</title>
+<style>
+body{font-family:system-ui;margin:0;background:#111;color:#eee;display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:100vh}
+iframe{width:540px;height:960px;border:0;background:#000}
+#status{margin:16px;font-size:18px;max-width:600px;text-align:center}
+#url{word-break:break-all;color:#7fd}
+#startBtn{font-size:24px;padding:20px 40px;margin:20px;background:#2a7; color:#fff;border:none;border-radius:12px;cursor:pointer}
+#startBtn:hover{background:#3b8}
+</style>
+</head><body>
+<div id="status">Loading game…</div>
+<iframe id="game" allow="autoplay"></iframe>
+<button id="startBtn" style="display:none">🔴 CLICK TO START RECORDING WITH AUDIO</button>
+<div id="url"></div>
+<script>
+const params = new URLSearchParams(location.search);
+const slug = params.get('game');
+const customUrl = params.get('url');
+const secs = parseInt(params.get('secs') || '40', 10);
+const statusEl = document.getElementById('status');
+const urlEl = document.getElementById('url');
+const startBtn = document.getElementById('startBtn');
+if (!slug && !customUrl) { statusEl.textContent = 'Missing ?game=slug or ?url= param'; throw 0; }
+const frame = document.getElementById('game');
+frame.src = customUrl || `https://bparlette.github.io/Hawk/brad-demos/g/_v2/${slug}/index.html?auto=1&autostart=1`;
+
+frame.onload = async () => {
+  await new Promise(r => setTimeout(r, 3000));
+  statusEl.textContent = 'Game loaded. Click the button below to start recording with audio.';
+  startBtn.style.display = 'block';
+};
+
+startBtn.onclick = async () => {
+  startBtn.style.display = 'none';
+  statusEl.textContent = 'Starting… tapping game to unlock audio';
+
+  // Real user gesture is now active - try to unlock iframe audio
+  try {
+    const idoc = frame.contentDocument;
+    const iwin = frame.contentWindow;
+    const canvas = idoc.querySelector('canvas');
+
+    // Resume any AudioContext in the iframe
+    if (iwin.Tone) {
+      try {
+        const tctx = iwin.Tone.getContext ? iwin.Tone.getContext() : null;
+        if (tctx) {
+          const raw = tctx.rawContext || tctx;
+          if (raw && raw.state === 'suspended') await raw.resume();
+        }
+        if (iwin.Tone.start) await iwin.Tone.start();
+      } catch(e) { console.log('tone resume', e); }
+    }
+
+    // Click the canvas for real (this click event propagates as user activation)
+    if (canvas) {
+      canvas.click();
+      canvas.dispatchEvent(new PointerEvent('pointerdown', {bubbles:true}));
+      canvas.dispatchEvent(new PointerEvent('pointerup', {bubbles:true}));
+    }
+  } catch(e) { console.log('unlock failed', e); }
+
+  await new Promise(r => setTimeout(r, 1500));
+
+  let canvas;
+  try { canvas = frame.contentDocument.querySelector('canvas'); } catch(e) {}
+  if (!canvas) { statusEl.textContent = 'ERROR: no canvas found'; return; }
+
+  const videoStream = canvas.captureStream(30);
+  let audioTrack = null;
+
+  try {
+    const iwin = frame.contentWindow;
+    let actx = null;
+    if (iwin.Tone) {
+      try {
+        const tctx = iwin.Tone.getContext ? iwin.Tone.getContext() : (iwin.Tone.context || null);
+        if (tctx) actx = tctx.rawContext || tctx;
+      } catch(e) {}
+    }
+    if (actx) {
+      console.log('AudioContext state:', actx.state);
+      const dest = actx.createMediaStreamDestination();
+      try {
+        if (iwin.Tone) {
+          const toneDest = iwin.Tone.getDestination ? iwin.Tone.getDestination() : null;
+          if (toneDest) {
+            toneDest.connect(dest);
+            console.log('Connected Tone destination');
+          }
+        }
+      } catch(e) { console.log('tone connect', e); }
+      const tracks = dest.stream.getAudioTracks();
+      if (tracks.length > 0) {
+        audioTrack = tracks[0];
+        statusEl.textContent = 'Audio track captured! State: ' + actx.state;
+      } else {
+        statusEl.textContent = 'No audio tracks from destination. State: ' + actx.state;
+      }
+    } else {
+      statusEl.textContent = 'No AudioContext found';
+    }
+  } catch(e) {
+    statusEl.textContent = 'Audio capture error: ' + e.message;
+  }
+
+  await new Promise(r => setTimeout(r, 1000));
+
+  const combined = new MediaStream();
+  videoStream.getVideoTracks().forEach(t => combined.addTrack(t));
+  if (audioTrack) combined.addTrack(audioTrack);
+
+  const mimeType = audioTrack ? 'video/webm;codecs=vp9,opus' : 'video/webm;codecs=vp9';
+  let rec;
+  try {
+    rec = new MediaRecorder(combined, { mimeType, videoBitsPerSecond: 8000000 });
+  } catch(e) {
+    rec = new MediaRecorder(combined, { videoBitsPerSecond: 8000000 });
+  }
+
+  const chunks = [];
+  rec.ondataavailable = e => { if (e.data && e.data.size) chunks.push(e.data); };
+  const done = new Promise(r => rec.onstop = r);
+  rec.start(1000);
+  statusEl.textContent = '🔴 RECORDING' + (audioTrack ? ' WITH AUDIO' : ' (video only)') + '… ' + secs + 's';
+  await new Promise(r => setTimeout(r, secs * 1000));
+  rec.stop();
+  await done;
+  const blob = new Blob(chunks, {type: 'video/webm'});
+  const mb = (blob.size/1024/1024).toFixed(1);
+  statusEl.textContent = 'Recorded ' + mb + 'MB. Uploading…';
+
+  if (blob.size < 10000) {
+    statusEl.textContent = 'ERROR: Recording is empty (' + blob.size + ' bytes). Audio capture failed.';
+    return;
+  }
+
+  const fd = new FormData();
+  fd.append('file', blob, (slug || 'custom') + '-capture.webm');
+  try {
+    const resp = await fetch('https://tmpfiles.org/api/v1/upload', {method: 'POST', body: fd});
+    const j = await resp.json();
+    const url = j.data.url;
+    statusEl.textContent = 'DONE' + (audioTrack ? ' (with audio)' : ' (video only)') + ' - ' + mb + 'MB';
+    urlEl.textContent = 'UPLOAD URL: ' + url;
+    document.title = 'DONE ' + url;
+  } catch(e) {
+    statusEl.textContent = 'UPLOAD FAILED: ' + e.message;
+  }
+};
+</script>
+</body></html>
