@@ -736,7 +736,6 @@ const ALLEY_X = 5; // fighters stay inside |x| < 5
   const blade = new THREE.Mesh(new THREE.BoxGeometry(1.3, 5.2, 0.3), basicSnap({ map: ft, color: new THREE.Color(0.4, 0.4, 0.4) }));
   blade.position.set(-5.3, GF + 3.4, 33); scene.add(blade);
   const nl = new THREE.PointLight('#ff3d2e', 10, 12, 1.3); nl.position.set(-4.2, GF + 3.0, 33); scene.add(nl);
-  NIGHTFX.neon = { mat: blade.material, light: nl };
 })();
 
 // ---------------- night lights: lamp glow pools + halos, point lights, and the BINGO neon blade sign ----------------
