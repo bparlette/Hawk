@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>Game Demos</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+  body {
+    background: #141420;
+    color: #f0f0f5;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    padding: 16px;
+    padding-bottom: 48px;
+  }
+  h1 {
+    font-size: 28px;
+    text-align: center;
+    margin: 12px 0 4px;
+    letter-spacing: 1px;
+  }
+  .sub {
+    text-align: center;
+    color: #9a9ab0;
+    font-size: 14px;
+    margin-bottom: 20px;
+  }
+  .section {
+    font-size: 13px;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    color: #8a8aa0;
+    margin: 24px 4px 10px;
+  }
+  .card {
+    background: #1f1f2e;
+    border: 1px solid #2c2c40;
+    border-radius: 14px;
+    padding: 16px;
+    margin-bottom: 12px;
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    text-decoration: none;
+    color: inherit;
+    min-height: 88px;
+  }
+  .card:active { background: #2a2a3e; }
+  .emoji {
+    font-size: 40px;
+    flex-shrink: 0;
+    width: 56px;
+    text-align: center;
+  }
+  .info { flex: 1; min-width: 0; }
+  .name { font-size: 17px; font-weight: 700; margin-bottom: 4px; }
+  .desc { font-size: 13px; color: #a5a5bf; line-height: 1.4; }
+  .play {
+    flex-shrink: 0;
+    background: #4a5cff;
+    color: #fff;
+    font-weight: 700;
+    font-size: 15px;
+    border: none;
+    border-radius: 10px;
+    padding: 12px 18px;
+  }
+  .play:active { background: #3a4ce0; }
+</style>
+</head>
+<body>
+  <h1>🎮 Game Demos</h1>
+  <p class="sub">Tap a game to play</p>
+
+  <div class="section">Latest</div>
+  <a class="card" href="https://bparlette.github.io/Hawk/brad-demos/g/_v2/sumo-cat/">
+    <div class="emoji">🐱</div>
+    <div class="info"><div class="name">Sumo Cat</div><div class="desc">8-bit knockback arena brawler — 4 cats, last one on the ring wins</div></div>
+    <button class="play">Play</button>
+  </a>
+  <a class="card" href="https://bparlette.github.io/Hawk/brad-demos/g/_v2/mega-robo/">
+    <div class="emoji">🤖</div>
+    <div class="info"><div class="name">Mega Robo</div><div class="desc">8-bit run-and-gun platformer — 1 level, robot factory</div></div>
+    <button class="play">Play</button>
+  </a>
+  <a class="card" href="https://bparlette.github.io/Hawk/brad-demos/g/_v2/pickleball-smash/">
+    <div class="emoji">🏓</div>
+    <div class="info"><div class="name">Retro Pickleball Smash</div><div class="desc">NES-style pickleball — Spike vs Ace, real rules</div></div>
+    <button class="play">Play</button>
+  </a>
+  <a class="card" href="https://bparlette.github.io/Hawk/brad-demos/g/_v2/sf2-replica/">
+    <div class="emoji">🥊</div>
+    <div class="info"><div class="name">Street Fighter II Replica</div><div class="desc">Ryu vs Guile + Sauvage vs Dan, 2 rounds</div></div>
+    <button class="play">Play</button>
+  </a>
+  <a class="card" href="https://bparlette.github.io/Hawk/brad-demos/g/_v2/robot-car-destroyer/">
+    <div class="emoji">🚗</div>
+    <div class="info"><div class="name">Kung Fu Robot: Car Destroyer</div><div class="desc">16-bit bonus stage — destroy the car</div></div>
+    <button class="play">Play</button>
+  </a>
+  <a class="card" href="https://bparlette.github.io/Hawk/brad-demos/g/_v2/night-city-glitch/">
+    <div class="emoji">🌃</div>
+    <div class="info"><div class="name">Night City Glitch</div><div class="desc">Cyberpunk 2077 endless dodger</div></div>
+    <button class="play">Play</button>
+  </a>
+  <a class="card" href="https://bparlette.github.io/Hawk/brad-demos/g/_v2/toad-alley-fight/">
+    <div class="emoji">🐸</div>
+    <div class="info"><div class="name">Toad Alley Fight</div><div class="desc">Street Fighter parody with grandpa toad</div></div>
+    <button class="play">Play</button>
+  </a>
+  <a class="card" href="https://bparlette.github.io/hoa-warfare/web/fine-from-above/">
+    <div class="emoji">🚁</div>
+    <div class="info"><div class="name">Fine From Above</div><div class="desc">AC-130 thermal gun-cam parody — HOA edition</div></div>
+    <button class="play">Play</button>
+  </a>
+  <a class="card" href="https://bparlette.github.io/Hawk/brad-demos/g/_v2/dig-down/">
+    <div class="emoji">⛏️</div>
+    <div class="info"><div class="name">DIG DOWN!</div><div class="desc">Dig to the treasure, avoid hazards</div></div>
+    <button class="play">Play</button>
+  </a>
+
+  <div class="section">🎃 Halloween</div>
+  <a class="card" href="https://bparlette.github.io/Hawk/brad-demos/g/_v2/candy-horde/">
+    <div class="emoji">🍬</div>
+    <div class="info"><div class="name">Candy Horde</div><div class="desc">Trick-or-treating, but the neighborhood is monsters</div></div>
+    <button class="play">Play</button>
+  </a>
+  <a class="card" href="https://bparlette.github.io/Hawk/brad-demos/g/_v2/merge-monsters/">
+    <div class="emoji">🧛</div>
+    <div class="info"><div class="name">Merge Monsters</div><div class="desc">Merging monsters until DRACULA appears</div></div>
+    <button class="play">Play</button>
+  </a>
+  <a class="card" href="https://bparlette.github.io/Hawk/brad-demos/g/_v2/trick-or-treat/">
+    <div class="emoji">👻</div>
+    <div class="info"><div class="name">Trick or Treat</div><div class="desc">The ghosts are trick-or-treating YOU</div></div>
+    <button class="play">Play</button>
+  </a>
+  <a class="card" href="https://bparlette.github.io/Hawk/brad-demos/g/_v2/coffin-stack/">
+    <div class="emoji">⚰️</div>
+    <div class="info"><div class="name">Coffin Stack</div><div class="desc">Stacking coffins until the crypt collapses</div></div>
+    <button class="play">Play</button>
+  </a>
+  <a class="card" href="https://bparlette.github.io/Hawk/brad-demos/g/_v2/spider-drop/">
+    <div class="emoji">🕷️</div>
+    <div class="info"><div class="name">Spider Drop</div><div class="desc">Don't cut the spider</div></div>
+    <button class="play">Play</button>
+  </a>
+  <a class="card" href="https://bparlette.github.io/Hawk/brad-demos/g/_v2/defend-candy-stash/">
+    <div class="emoji">🍭</div>
+    <div class="info"><div class="name">Defend the Candy Stash</div><div class="desc">You're the last house with candy on Halloween</div></div>
+    <button class="play">Play</button>
+  </a>
+</body>
+</html>
