@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<title>SUMO CAT!</title>
+<style>
+  html,body{margin:0;padding:0;background:#0a0a12;height:100%;overflow:hidden;touch-action:none;
+    -webkit-user-select:none;user-select:none;font-family:monospace;}
+  #wrap{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;}
+  canvas{image-rendering:pixelated;image-rendering:crisp-edges;background:#0a0a12;
+    width:100vw;height:100vh;object-fit:contain;touch-action:none;}
+  #touch-ui{position:fixed;inset:0;pointer-events:none;display:none;z-index:10;}
+  .tbtn{position:absolute;border-radius:50%;pointer-events:auto;display:flex;align-items:center;
+    justify-content:center;color:#fff;font-weight:bold;font-family:monospace;
+    background:rgba(255,255,255,.14);border:3px solid rgba(255,255,255,.45);}
+  .tbtn.on{background:rgba(255,200,60,.45);border-color:#ffd23e;transform:scale(.92);}
+  #stick-base{position:absolute;border-radius:50%;width:110px;height:110px;display:none;
+    background:rgba(255,255,255,.10);border:3px solid rgba(255,255,255,.35);pointer-events:none;}
+  #stick-knob{position:absolute;border-radius:50%;width:52px;height:52px;display:none;
+    background:rgba(255,255,255,.35);pointer-events:none;}
+</style>
+</head>
+<body>
+<div id="wrap"><canvas id="cv" width="480" height="270"></canvas></div>
+<div id="touch-ui">
+  <div id="stick-base"></div><div id="stick-knob"></div>
+  <div class="tbtn" id="btn-a" style="width:88px;height:88px;right:18px;bottom:96px;font-size:30px;">👋</div>
+  <div class="tbtn" id="btn-b" style="width:68px;height:68px;right:116px;bottom:36px;font-size:24px;">🌀</div>
+</div>
+<script src="game.js"></script>
+</body>
+</html>
