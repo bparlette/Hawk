@@ -11,10 +11,18 @@ const AUTO = new URLSearchParams(location.search).has('auto');
 const g = makeGame({
   id: 'defend-candy-stash', title: 'DEFEND THE CANDY STASH', sub: 'TAP TOWER · TAP PLOT · SAVE HALLOWEEN',
   hook: 'the trick-or-treaters are coming for your candy',
-  w: W, h: H, bg: '#080512', style: 'toon', bloom: .95, ca: .34, vig: 1, scan: .14, grain: .05,
+  w: W, h: H, bg: '#080512', style: 'toon', bloom: .95, ca: 0, vig: 1, scan: .14, grain: .05,  /* ca:0 — Cherie vetoed chromatic aberration */
 });
 /* one-call particle spray: g.burst(x, y, { n, color, colors, speed, size, life, add, kind }) */
 g.burst = (x, y, o = {}) => g.fx.burst(x, y, o.n ?? 12, o);
+/* wave-banner punch: element-level pop at the banner (no screen shake/ripple) */
+const _showBanner = g.showBanner.bind(g);
+g.showBanner = (txt, dur = 1.2) => {
+  _showBanner(txt, dur);
+  g.hitstop(.05);
+  g.burst(W / 2, H * .36, { n: 26, color: '#ffd34d', colors: ['#ffd34d', '#fff', '#ff9a3c'], speed: 320, size: 5, life: .6, add: true });
+  g.fx.emit('ring', W / 2, H * .36, { size: 220, life: .5, color: '#ffd34d', add: true, wide: 6 });
+};
 g.state = { wave: 1, lives: 6, gold: 0, left: 0, kills: 0 };
 
 /* ================================================================ geometry */
@@ -97,13 +105,13 @@ const SPEED = 380;
 /* ================================================================ runtime */
 let towers, enemies, shots, coins, spawnQ, wave, waveT, waveIdx, lives, gold, kills,
   t, sel, arm, score, phase, phaseT, boss, hurtT, gpop, cleared, botT, started,
-  deadEnded, rsT, shakeLives, hudGold;
+  deadEnded, rsT, shakeLives, hudGold, stashDanger;
 
 function resetWorld() {
   towers = []; enemies = []; shots = []; coins = []; spawnQ = [];
   wave = 0; waveT = 0; waveIdx = 0; lives = 6; gold = 175; hudGold = { v: 175 }; kills = 0; t = 0;
   sel = null; arm = null; score = 0; phase = 'ready'; phaseT = 0; boss = null;
-  hurtT = 0; gpop = 0; cleared = 0; botT = 0; deadEnded = false; rsT = 0; shakeLives = 0;
+  hurtT = 0; gpop = 0; cleared = 0; botT = 0; deadEnded = false; rsT = 0; shakeLives = 0; stashDanger = 0;
   botTaps.length = 0;
   syncState();
 }
@@ -218,7 +226,7 @@ function placeTower(plot, kind) {
   plot.tw = tw; towers.push(tw);
   score += 5;
   sfx('powerup', { pitch: kind === 'bomb' ? .9 : kind === 'frost' ? 1.18 : 1 });
-  g.punch(.035); g.shake(4);
+  tw.pop = 1.6; /* placement spring-in (element-level, no screen shake) */
   g.burst(plot.x, plot.y, { n: 16, color: d.col, speed: 210, size: 4, life: .5, add: true });
   g.fx.emit('ring', plot.x, plot.y, { size: 96, life: .36, color: d.col, add: true, wide: 5 });
   arm = null; sel = tw;
@@ -230,11 +238,10 @@ function upgradeTower(tw) {
   if (gold < cost) { sfx('click'); return; }
   gold -= cost; tw.invested += cost; tw.lvl++; tw.pop = 1.4; score += 15;
   sfx('ding', { pitch: 1 + .1 * tw.lvl }); sfx('powerup', { pitch: 1.2 });
-  g.punch(.05); g.shake(7); g.hitstop(.04);
+  g.hitstop(.04);
   g.burst(tw.x, tw.y, { n: 22, color: '#ffd34d', colors: ['#ffd34d', '#fff', TDEF.find(q => q.id === tw.kind).col], speed: 260, size: 5, life: .6, add: true });
   g.fx.emit('ring', tw.x, tw.y, { size: 120, life: .45, color: '#ffd34d', add: true, wide: 7 });
   g.popup('LV' + tw.lvl, tw.x, tw.y - 46, '#ffd34d', 30);
-  g.flash('#ffd34d', .1);
   syncState();
 }
 function sellTower(tw) {
@@ -263,7 +270,7 @@ function spawnEnemy(type) {
   enemies.push(e);
   if (type === 'boss') {
     boss = e; g.showBanner('BOSS!', 1.1); music('boss');
-    g.flash('#ff5a4d', .22); g.shake(12); sfx('boom', { pitch: .6 });
+    sfx('boom', { pitch: .6 });
     g.fx.emit('ring', e.x, e.y, { size: 260, life: .6, color: '#ff5a4d', add: true, wide: 12 });
   }
   return e;
@@ -277,17 +284,17 @@ function damage(e, amt, o = {}) {
   if (e.hp <= 0) kill(e);
 }
 function kill(e) {
-  e.dead = .001;
+  e.dead = .001; e.fl = 1; /* death pop: sprite flashes white as it bursts */
   const dx = e.x, dy = e.y - 10, def = ET[e.type];
   const gain = def.gold;                     // NB: e.d is path progress, the payout lives in ET[type]
   gold += gain; kills++;
   score += Math.round(gain * 4 + (e.type === 'boss' ? 400 : 0));
   g.combo.hit(dx, dy - 20, '+' + gain);
-  g.impact(dx, dy, { punch: .06, shake: e.type === 'boss' ? 26 : 9, stop: e.type === 'boss' ? .14 : .06 });
+  g.hitstop(e.type === 'boss' ? .14 : .06); /* hit-stop only — no punch/shake/ripple (Cherie veto) */
   g.burst(dx, dy, { n: e.type === 'boss' ? 60 : 22, color: def.col, colors: [def.col, def.col2, '#fff'], speed: 330, size: 5, life: .7, add: true });
   g.fx.emit('shard', dx, dy, { n: e.type === 'boss' ? 18 : 8, color: def.col2, speed: 260, size: 7, life: .7, g: 700 });
   g.fx.emit('ring', dx, dy, { size: e.type === 'boss' ? 220 : 90, life: .4, color: def.col, add: true, wide: e.type === 'boss' ? 12 : 6 });
-  if (e.type === 'boss') { g.flash('#ffd34d', .34); g.slowmo(.5, .35); music('action'); }
+  if (e.type === 'boss') { g.slowmo(.5, .35); music('action'); }
   sfx('boom', { pitch: e.type === 'boss' ? .5 : 1.3 - def.hp / 400, vol: .8 });
   for (let i = 0; i < 3; i++) coins.push({ x: dx, y: dy, t: -i * .05, d: .42 + i * .04, jx: rnd(-22, 22), jy: rnd(-26, 2) });
   syncState();
@@ -295,7 +302,7 @@ function kill(e) {
 function leak(e) {
   lives--; shakeLives = 1; hurtT = 1;
   e.dead = -1; e.gone = true;
-  g.shake(16); g.flash('#ff2b5e', .26); g.hitstop(.07); g.punch(.06);
+  g.hitstop(.07);
   g.burst(e.x, e.y - 14, { n: 26, color: '#ff2b5e', speed: 300, size: 5, life: .6, add: true });
   g.popup('-1', e.x, e.y - 40, '#ff2b5e', 40);
   sfx('lose', { pitch: 1.4, vol: .5 }); sfx('thud');
@@ -321,8 +328,7 @@ function fire(tw, target, st) {
   if (st.kind === 'bolt') sfx('shoot', { pitch: 1.25, vol: .32 });
   else if (st.kind === 'lob') sfx('whoosh', { pitch: .75, vol: .4 });
   else sfx('laser', { pitch: 1.5, vol: .26 });
-  g.burst(barrelX, barrelY, { n: 4, color: st.col, speed: 150, size: 3, life: .16, add: true });
-  g.punch(.014);
+  g.burst(barrelX, barrelY, { n: 6, color: st.col, colors: [st.col, '#fff'], speed: 170, size: 4, life: .18, add: true });
   tw.kills++;
 }
 function impact(s) {
@@ -332,10 +338,11 @@ function impact(s) {
       const dd = Math.hypot(e.x - s.tx, e.y - 12 - s.ty);
       if (dd < s.splash) damage(e, s.dmg * (1 - dd / s.splash * .45), { col: s.col, n: 6 });
     }
-    g.fx.blast(s.tx, s.ty, { r: s.splash, color: s.col, colors: [s.col, '#ffd34d', '#fff'], n: 20, punch: .06, shake: 11, smoke: true });
+    g.burst(s.tx, s.ty, { n: 20, color: s.col, colors: [s.col, '#ffd34d', '#fff'], speed: s.splash * 5, size: 7, life: .5, kind: 'spark' });
+    for (let i = 0; i < 6; i++) g.fx.emit('smoke', s.tx + (R() - .5) * s.splash * .5, s.ty + (R() - .5) * s.splash * .5, { vx: (R() - .5) * 90, vy: -30 - R() * 70, g: -20, life: .9 + R() * .5, size: s.splash * (.35 + R() * .4), color: '#2a2f3a', drag: .6 });
     g.fx.emit('ring', s.tx, s.ty, { size: s.splash * 1.7, life: .38, color: '#ffd34d', add: true, wide: 8 });
     sfx('boom', { pitch: 1.1, vol: .7 });
-    g.shake(9); g.hitstop(.035); g.punch(.05);
+    g.hitstop(.035);
   } else {
     const e = s.target;
     if (e && !e.dead && !e.gone) damage(e, s.dmg, { col: s.col, slow: s.slow, slowT: s.slowT, n: 7 });
@@ -343,7 +350,6 @@ function impact(s) {
     g.fx.emit('ring', s.tx, s.ty, { size: 44, life: .2, color: s.col, add: true, wide: 4 });
     sfx('hit', { pitch: 1.5 + R() * .3, vol: .38 });
     if (s.slow) sfx('laser', { pitch: 1.8, vol: .2 });
-    g.punch(.02); g.shake(3);
   }
 }
 
@@ -355,17 +361,17 @@ function startWave() {
   phase = 'wave'; phaseT = 0;
   g.showBanner('WAVE ' + wave, .95);
   sfx('powerup', { pitch: .9 + wave * .05 });
-  if (wave === 5) { music('boss'); g.flash('#ff5a4d', .16); }
+  if (wave === 5) { music('boss'); }
   syncState();
 }
 function waveClear() {
   cleared = wave;
-  gold += 30; score += 220;
+  gold += 30; score += 220; gpop = 1;
   g.fx.emit('ring', 270, 480, { size: 420, life: .7, color: '#7dff7a', add: true, wide: 10 });
   if (wave >= WAVES.length) {
     phase = 'win'; phaseT = 0;
     g.showBanner('LANE HELD!', 1.6);
-    g.flash('#ffd34d', .4); g.slowmo(.8, .5); sfx('win'); music('epic');
+    g.slowmo(.8, .5); sfx('win'); music('epic');
     g.burst(W / 2, 330, { n: 90, color: '#ffd34d', colors: ['#ffd34d', '#7dff7a', '#7df9ff', '#fff'], speed: 480, size: 7, life: 1.7, kind: 'confetti', g: 380 });
     g.burst(W / 2, 420, { n: 60, color: '#ffd34d', colors: ['#ffd34d', '#7df9ff', '#fff'], speed: 420, size: 6, life: 1.4, add: true });
     syncState();
@@ -407,7 +413,6 @@ function readInput() {
       for (let i = 0; i < 3; i++) if (inRect(p, CARD(i))) {
         arm = arm === TDEF[i].id ? null : TDEF[i].id;
         sfx('click', { pitch: 1 + i * .1 });
-        g.punch(.02);
         hit = true; break;
       }
       if (hit) continue;
@@ -502,6 +507,11 @@ function update(dt) {
   g.combo.update(dt);
   hurtT = Math.max(0, hurtT - dt * 1.6);
   gpop = Math.max(0, gpop - dt * 4);
+  /* SAVE THE CANDY danger pulse: nearest live enemy's distance to the stash */
+  let nearest = 1e9;
+  for (const e of enemies) if (!e.dead && !e.gone) nearest = Math.min(nearest, TLEN - e.d);
+  const wantDanger = nearest < 340 ? 1 - nearest / 340 : 0;
+  stashDanger = Math.max(wantDanger, stashDanger - dt * 1.4);
   rsT = Math.max(0, rsT - dt * 1.8);
   shakeLives = Math.max(0, shakeLives - dt * 2.2);
   hudGold.v = gold;
@@ -993,7 +1003,12 @@ function drawHud(ctx) {
     ctx.fillStyle = pg; ctx.fill();
   }
   g.text(phase === 'wave' ? (spawnQ.length - waveIdx) + ' LEFT' : 'NEXT WAVE', bx + bw / 2, by + 11, { size: 15, color: '#cfd8f5', align: 'center' });
-  g.text('SAVE THE CANDY', bx + bw / 2, by + 34, { size: 13, color: '#8f9ac0', align: 'center' });
+  { /* danger pulse: the meter throbs as trick-or-treaters close in (element-level) */
+    const dz = stashDanger, zp = 1 + dz * .22 * (0.6 + 0.4 * Math.sin(t * 14));
+    ctx.save(); ctx.translate(bx + bw / 2, by + 34); ctx.scale(zp, zp);
+    g.text('SAVE THE CANDY', 0, 0, { size: 13, color: dz > .45 ? '#ff6b6b' : dz > .15 ? '#ffb36b' : '#8f9ac0', align: 'center' });
+    ctx.restore();
+  }
 
   const gp = 1 + gpop;
   ctx.save(); ctx.translate(GOLDI.x - 48, GOLDI.y); ctx.scale(gp, gp);
