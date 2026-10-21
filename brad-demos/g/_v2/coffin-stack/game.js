@@ -28,6 +28,26 @@ let camK = 0, camKV = 0;          // camera overshoot kick (weight, not drunk)
 let spawnPop = 1;                 // a new slab scales in instead of teleporting
 let scoreShown = 0, scorePop = 1; // the HUD counter eases + punches
 let tickCd = 0, nearGlow = 0;     // proximity "you're aligned" glow + tick
+let bannerPunch = 0;              // REST IN PEACE! scale pop (Cherie-safe: elements only, no screen FX)
+
+/* ------------------------------------------------------------------ Cherie-safe impact
+   FULL-QUALITY juice per 2026-10-21 rule, but respecting her Oct 20 vetoes:
+   punch (zoom kick) + hitstop ONLY. NO shake, NO ripple, NO flash. */
+function coffinImpact(punch, stop) {
+  g.punch(punch ?? .05);
+  g.hitstop(stop ?? .05);
+}
+
+/* wrap showBanner: every banner gets a scale pop + ember burst at the tower top */
+const _showBanner = g.showBanner.bind(g);
+g.showBanner = (text, dur) => {
+  _showBanner(text, dur);
+  bannerPunch = 1;
+  const topSlab = tower[tower.length - 1];
+  const bx = topSlab ? topSlab.x + topSlab.w / 2 : W / 2;
+  const by = topSlab ? slabY(tower.length - 1) : H * .4;
+  g.fx.burst(bx, by, 16, { kind: 'spark', color: ['#ff9f1c', '#ffd34d', '#ff5c1c'], speed: 320, life: .5, size: 6, drag: 2 });
+};
 let chainPulse = 0;               // multiplier badge punch
 let floorTold = 0;                // highest milestone already announced
 const GH = { t: 1, x: 0, w: 0, y: 0, hue: 200 };   // landing squash ghost
@@ -71,16 +91,17 @@ function landDust(x, y, n, col) {
   g.fx.dust(x, y, n, { color: col || 'rgba(190,228,255,.42)', size: 17, speed: 150, up: 80, spread: 40 });
 }
 
-/** PERFECT: sharp, fast, additive sparks + white core + bloom hit */
+/** PERFECT: hit-stop + punch + ember burst. NO shake/ripple/flash (Cherie vetoes). */
 function perfectJuice(x, y, w) {
   const pitch = comboPitch(g.combo.n);
   sfx('perfect', { pitch });
   sfx('coinchain', { pitch: pitch * 1.12, vol: .45 });
-  g.impact(x, y, { punch: .105, shake: 11, stop: .05, rip: 1.3, flash: '#c9a0ff', flashA: .26 });
-  g.fx.burst(x, y, 24, { kind: 'spark', color: ['#fff', '#c9a0ff', '#ff9f1c'], speed: 430, life: .42, size: 5.5, drag: 2.2, ang: -Math.PI / 2, spread: 2.6 });
-  g.fx.burst(x, y, 10, { kind: 'star', color: ['#fff', '#ff9f1c'], speed: 190, life: .7, size: 9, g: 260 });
-  g.fx.emit('ring', x, y, { size: Math.max(70, w * .9), life: .34, color: '#c9a0ff', add: true, wide: 7 });
-  landDust(x, y + 10, 5, 'rgba(150,240,255,.42)');
+  coffinImpact(.105, .06);
+  g.fx.burst(x, y, 28, { kind: 'spark', color: ['#fff', '#ffd34d', '#ff9f1c', '#ff5c1c'], speed: 460, life: .45, size: 6, drag: 2.2, ang: -Math.PI / 2, spread: 2.6 });
+  g.fx.burst(x, y, 12, { kind: 'star', color: ['#ffd34d', '#ff9f1c'], speed: 200, life: .75, size: 10, g: 260 });
+  g.fx.burst(x, y + 4, 8, { kind: 'ember', color: ['#ff9f1c', '#ff5c1c', '#c9a0ff'], speed: 140, life: .9, size: 5, g: -60 });
+  g.fx.emit('ring', x, y, { size: Math.max(70, w * .9), life: .34, color: '#ffd34d', add: true, wide: 7 });
+  landDust(x, y + 10, 5, 'rgba(255,180,90,.5)');
   settle += .55; settleV = -1.2;
   camKV -= 26;
   g.tween(HUD, 's', 1, .34, ease.outCubic); HUD.s = 1.22;
@@ -88,11 +109,11 @@ function perfectJuice(x, y, w) {
   sfx('pop', { pitch: 1.5 + Math.min(.8, g.combo.n * .06), vol: .35 });
 }
 
-/** solid but not centred: dust + a couple of chips + a modest punch */
+/** solid but not centred: dust + a couple of chips + a modest punch. NO shake/ripple/flash. */
 function goodJuice(x, y, w, off) {
   const pitch = comboPitch(g.combo.n);
   sfx('snap', { pitch });
-  g.impact(x, y, { punch: .07, shake: 7, stop: .04, rip: .8, flash: '#ffb37a', flashA: .12 });
+  coffinImpact(.07, .04);
   g.fx.burst(x, y, 12, { kind: 'spark', color: ['#ffd9a0', '#ff9f3c'], speed: 260, life: .36, size: 4.5, drag: 1.8 });
   g.fx.burst(x, y + 6, 5, { kind: 'debris', color: '#8a5a2e', speed: 150, life: .55, size: 6, g: 1200 });
   landDust(x, y + 12, 7);
@@ -100,10 +121,10 @@ function goodJuice(x, y, w, off) {
   g.tween(HUD, 's', 1, .3, ease.outCubic); HUD.s = 1.1;
 }
 
-/** sloppy: heavier dust, dull thud, no bright flash — it should feel *wrong* */
+/** sloppy: heavier dust, dull thud, no bright flash — it should feel *wrong*. NO shake. */
 function sloppyJuice(x, y, w) {
   sfx('thud', { pitch: .82 + Math.min(.3, g.combo.n * .02) });
-  g.punch(.055); g.shake(9);
+  g.punch(.055);
   g.hitstop(.03);
   g.fx.burst(x, y + 6, 14, { kind: 'debris', color: ['#4a2c17', '#2a180c', '#8a5a2e'], speed: 190, life: .7, size: 8, g: 1500, ang: -Math.PI / 2, spread: 2.4 });
   landDust(x, y + 12, 11, 'rgba(160,150,190,.4)');
@@ -122,9 +143,9 @@ function drop() {
   const hue = cur.hue, cw = cur.w;
 
   if (ov <= 4) {
-    /* total miss — the slab tumbles into the void */
+    /* total miss — the slab tumbles into the void. Cherie-safe: punch + hitstop, NO shake/ripple/flash */
     g.slowmo(.36, .5);
-    g.impact(cxMid, cy0, { punch: .24, shake: 26, stop: .07, rip: 1.6, flash: '#ff3b5c', flashA: .45 });
+    coffinImpact(.24, .07);
     g.fx.emit('ring', cxMid, cy0, { size: 210, life: .5, color: '#ff3b5c', add: true, wide: 10 });
     g.fx.burst(cxMid, cy0, 30, { kind: 'debris', color: ['#ff3b5c', '#4a2c17', '#2a180c', '#fff'], speed: 360, life: 1.05, size: 11, g: 1600 });
     g.fx.burst(cxMid, cy0, 20, { kind: 'spark', color: ['#fff', '#ff8a9c'], speed: 480, life: .5, size: 6 });
@@ -146,7 +167,14 @@ function drop() {
     bonus += 10 * g.combo.mult;
     g.combo.hit(cxMid, cy0 + 10, 'PERFECT');
     perfectJuice(cxMid, cy0 + 4, ov);
-    if (g.combo.n % 5 === 0) g.showBanner('REST IN PEACE!', .9);
+    if (g.combo.n % 5 === 0) {
+      g.showBanner('REST IN PEACE!', .9);
+      /* extra punch for the milestone: bigger hitstop + ember fountain + combo pop */
+      g.hitstop(.09);
+      g.fx.burst(cxMid, cy0 - 30, 20, { kind: 'ember', color: ['#ffd34d', '#ff9f1c', '#ff5c1c'], speed: 280, life: .8, size: 6, g: -120 });
+      g.tween(MUL, 's', 1, .45, ease.outBack); MUL.s = 1.8;
+      sfx('powerup', { pitch: comboPitch(g.combo.n) * 1.25, vol: .5 });
+    }
     if (g.combo.mult >= 3) { g.showBanner(`${g.combo.mult}× CHAIN`, .8); sfx('powerup', { pitch: comboPitch(g.combo.n), vol: .45 }); }
   } else if (off < cw * .34) {
     bonus += 4;
@@ -175,10 +203,11 @@ function drop() {
     if (cutW > 40) { sfx('glass', { vol: .22, pitch: 1.25 }); g.fx.burst(cutX + cutW / 2, cy0 + BH / 2, 4, { kind: 'spark', color: '#c9c9d9', speed: 200, life: .3, size: 4 }); }
   }
 
-  /* the cat hops onto the new floor */
+  /* the cat hops onto the new floor — squash + dust + ember accent */
   host.hop = 1; host.squash = .68;
   camT = camTarget(tower.length);
   g.fx.dust(host.x, slabY(tower.length) + BH, 8, { color: 'rgba(255,170,90,.5)', size: 14, speed: 110, up: 70 });
+  g.fx.burst(host.x, slabY(tower.length) + BH - 10, 6, { kind: 'spark', color: ['#ffd34d', '#ff9f1c'], speed: 180, life: .4, size: 4, drag: 2 });
   sfx('step', { vol: .3, pitch: 1.3 + rnd(0, .1) });
   cur = null;
 
@@ -188,9 +217,10 @@ function drop() {
 
   if (fl >= WIN) {
     g.slowmo(.5, .9);
-    g.flash('#fff', .5); g.shake(16);
+    coffinImpact(.12, .08);
     g.fx.burst(W / 2, H * .42, 90, { kind: 'confetti', color: ['#ff9f1c', '#c9a0ff', '#ffd34d', '#ff5c78', '#fff'], speed: 560, life: 2, g: 400, size: 7 });
-    g.fx.blast(W / 2, H * .46, { r: 220, color: '#c9a0ff', colors: ['#c9a0ff', '#fff', '#ff9f1c'], n: 40, speed: 520, shake: 12, punch: .12, flashA: .28 });
+    g.fx.emit('ring', W / 2, H * .46, { size: 220, life: .5, color: '#ffd34d', add: true, wide: 10 });
+    g.fx.burst(W / 2, H * .46, 40, { kind: 'spark', color: ['#ffd34d', '#fff', '#ff9f1c'], speed: 520, life: .6, size: 7 });
     sfx('fanfare', { vol: .9 });
     g.showBanner('MAUSOLEUM COMPLETE', 1.6);
     g.end({ win: true, score: Math.round(g.score), label: 'SCORE', progress: 100 });
@@ -242,6 +272,7 @@ function update(dt) {
   scorePop = damp(scorePop, 1, 8, dt);
   HUD.s = damp(HUD.s, 1, 9, dt);
   chainPulse = Math.max(0, chainPulse - dt * 2.4);
+  bannerPunch = Math.max(0, bannerPunch - dt * 3);
 
   /* proximity glow + tick: the "you're aligned" tell */
   if (cur) {
