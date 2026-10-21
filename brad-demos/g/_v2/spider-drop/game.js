@@ -506,7 +506,10 @@ function drawSky(c) {
   const halo = c.createRadialGradient(mx, my, 6, mx, my, 130);
   halo.addColorStop(0, 'rgba(255,236,200,.5)'); halo.addColorStop(.4, 'rgba(255,190,150,.14)'); halo.addColorStop(1, 'rgba(255,160,120,0)');
   c.fillStyle = halo; c.fillRect(mx - 130, my - 130, 260, 260);
+  c.save();
+  c.shadowBlur = 36; c.shadowColor = 'rgba(255,236,200,.85)';
   c.beginPath(); c.arc(mx, my, 34, 0, TAU); c.fillStyle = '#fff2d8'; c.fill();
+  c.restore();
   c.globalAlpha = .18; c.fillStyle = '#d9a078';
   c.beginPath(); c.arc(mx - 9, my - 7, 8, 0, TAU); c.fill();
   c.beginPath(); c.arc(mx + 11, my + 9, 5, 0, TAU); c.fill();
@@ -603,6 +606,7 @@ function drawTreat(c, x, y, r, kind, gold, rot) {
   const T = TREAT_COL[kind] || TREAT_COL.wrap;
   const body = gold ? '#ffd34d' : T.body, dark = gold ? '#b4770c' : T.dark, light = gold ? '#fff3b0' : T.light;
   c.save(); c.translate(x, y); c.rotate(rot || 0);
+  if (gold) { c.shadowBlur = 18; c.shadowColor = 'rgba(255,210,80,.85)'; }
   if (gold) {
     const gl = c.createRadialGradient(0, 0, 2, 0, 0, r * 2.2);
     gl.addColorStop(0, 'rgba(255,230,140,.55)'); gl.addColorStop(1, 'rgba(255,200,60,0)');
@@ -681,9 +685,12 @@ function drawBomb(c, x, y, r) { /* HALLOWEEN: a black-widow spider — mechanics
   c.fillStyle = `rgba(255,45,70,${.7 + pulse * .3})`;
   c.beginPath(); c.moveTo(0, r * .05); c.lineTo(r * .2, r * .32); c.lineTo(-r * .2, r * .32); c.closePath(); c.fill();
   c.beginPath(); c.moveTo(0, r * .62); c.lineTo(r * .2, r * .35); c.lineTo(-r * .2, r * .35); c.closePath(); c.fill();
-  /* eyes */
+  /* eyes — subtle red glow */
+  c.save();
+  c.shadowBlur = 12; c.shadowColor = 'rgba(255,60,80,.9)';
   c.fillStyle = '#ff5b6e';
   for (const s of [-1, 1]) { c.beginPath(); c.arc(s * r * .14, -r * .62, r * .07, 0, TAU); c.fill(); }
+  c.restore();
   c.restore();
 }
 
@@ -780,8 +787,11 @@ function draw() {
     c.lineCap = 'round';
     c.strokeStyle = 'rgba(150,240,255,.45)'; c.lineWidth = q.w * 2.2 * u;
     c.beginPath(); c.moveTo(q.x1, q.y1); c.lineTo(q.x2, q.y2); c.stroke();
+    c.save();
+    c.shadowBlur = 16; c.shadowColor = 'rgba(180,240,255,.9)';
     c.strokeStyle = '#ffffff'; c.lineWidth = q.w * .55 * u + 1;
     c.beginPath(); c.moveTo(q.x1, q.y1); c.lineTo(q.x2, q.y2); c.stroke();
+    c.restore();
     c.restore();
   }
 
@@ -835,6 +845,9 @@ function draw() {
     fg.addColorStop(0, `rgba(255,220,120,${.5 * Math.min(1, faceGlow) * pulse})`); fg.addColorStop(1, 'rgba(255,200,80,0)');
     c.fillStyle = fg; c.beginPath(); c.ellipse(pbx, pby + 6, 70 * pulse, 56 * pulse, 0, 0, TAU); c.fill();
   }
+  /* jack-o'-lantern face glows when lit */
+  c.save();
+  if (lit) { c.shadowBlur = 22; c.shadowColor = 'rgba(255,220,120,.9)'; }
   c.fillStyle = lit ? '#ffe98a' : '#2a1408';
   for (const s of [-1, 1]) { // triangle eyes
     c.beginPath(); c.moveTo(pbx + s * 38 - 11, pby - 2); c.lineTo(pbx + s * 38 + 11, pby - 2); c.lineTo(pbx + s * 38, pby - 20); c.closePath(); c.fill();
@@ -843,6 +856,7 @@ function draw() {
   c.moveTo(pbx - 36, pby + 26);
   for (let k = 0; k < 6; k++) c.lineTo(pbx - 36 + (k + .5) * 12, pby + 26 + (k % 2 ? 11 : 0));
   c.lineTo(pbx + 36, pby + 26); c.closePath(); c.fill();
+  c.restore();
   c.restore();
 
   /* keyboard blade cursor */
