@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Retro Pickleball Smash</title>
+<style>
+  html, body { margin:0; padding:0; background:#0a0a18; height:100%; overflow:hidden;
+    display:flex; align-items:center; justify-content:center;
+    font-family:'Courier New',monospace; touch-action:none; }
+  #wrap { position:relative; width:100vw; max-width:960px; }
+  canvas { width:100%; display:block; image-rendering:pixelated; image-rendering:crisp-edges;
+    background:#0a0a18; }
+  #hint { color:#556; text-align:center; font-size:11px; padding:6px; }
+</style>
+</head>
+<body>
+<div id="wrap">
+  <canvas id="game" width="480" height="270"></canvas>
+  <div id="hint">ARROWS/WASD move &nbsp; Z/J swing &nbsp; X/K jump &nbsp; DOWN+swing = dink &nbsp; double-tap = dash</div>
+</div>
+<script src="game.js"></script>
+</body>
+</html>
