@@ -592,7 +592,7 @@ function update(dt) {
 }
 
 /* ---------------------------------------------------------------- draw helpers */
-function ghostShape(ctx, x, y, h, col, wob, look) {
+function ghostShape(ctx, x, y, h, col, wob, look, eyeGlow) {
   const hw = h * .46, top = y - h;
   ctx.save();
   ctx.globalAlpha = .28; ctx.fillStyle = '#000';
@@ -615,10 +615,12 @@ function ghostShape(ctx, x, y, h, col, wob, look) {
   ctx.globalAlpha = .22; ctx.fillStyle = '#fff';
   ctx.beginPath(); ctx.ellipse(x - hw * .34, top + h * .3, hw * .3, h * .17, -.4, 0, TAU); ctx.fill();
   ctx.globalAlpha = 1;
-  // eyes
+  // eyes (with blue bloom when scared)
   const ew = h * .19, eh = h * .22, ey = top + h * .44;
+  if (eyeGlow) { ctx.save(); ctx.shadowColor = eyeGlow; ctx.shadowBlur = 10; }
   ctx.fillStyle = '#fff';
   for (const s of [-1, 1]) { ctx.beginPath(); ctx.ellipse(x + s * h * .17, ey, ew, eh, 0, 0, TAU); ctx.fill(); }
+  if (eyeGlow) ctx.restore();
   ctx.fillStyle = '#10102a';
   for (const s of [-1, 1]) { ctx.beginPath(); ctx.arc(x + s * h * .17 + look[0] * ew * .45, ey + look[1] * eh * .4, eh * .46, 0, TAU); ctx.fill(); }
   ctx.restore();
@@ -676,7 +678,11 @@ function draw() {
   const mg2 = ctx.createRadialGradient(W - 92, 96, 8, W - 92, 96, 64);
   mg2.addColorStop(0, 'rgba(255,244,214,1)'); mg2.addColorStop(.45, 'rgba(255,236,180,.85)'); mg2.addColorStop(1, 'rgba(255,236,180,0)');
   ctx.fillStyle = mg2; ctx.beginPath(); ctx.arc(W - 92, 96, 64, 0, TAU); ctx.fill();
+  /* BLOOM: soft halo on the moon disc */
+  ctx.save();
+  ctx.shadowColor = '#fff3d0'; ctx.shadowBlur = 24;
   ctx.fillStyle = '#fdf3d0'; ctx.beginPath(); ctx.arc(W - 92, 96, 30, 0, TAU); ctx.fill();
+  ctx.restore();
   ctx.fillStyle = 'rgba(210,190,150,.5)';
   ctx.beginPath(); ctx.arc(W - 102, 88, 6, 0, TAU); ctx.fill();
   ctx.beginPath(); ctx.arc(W - 82, 104, 4.4, 0, TAU); ctx.fill();
@@ -728,9 +734,12 @@ function draw() {
       ctx.globalAlpha = .28 * p; ctx.fillStyle = PAL.dot;
       ctx.beginPath(); ctx.arc(cxp, cyp, 9, 0, TAU); ctx.fill();
       ctx.globalAlpha = 1;
-      // wrapped candy: center + twisted wrapper ends
+      // wrapped candy: center + twisted wrapper ends (subtle warm bloom)
+      ctx.save();
+      ctx.shadowColor = '#ff9f1c'; ctx.shadowBlur = 8;
       ctx.fillStyle = '#ffe3b3';
       ctx.beginPath(); ctx.arc(cxp, cyp, 4.2, 0, TAU); ctx.fill();
+      ctx.restore();
       ctx.fillStyle = PAL.dot;
       for (const s of [-1, 1]) {
         ctx.beginPath(); ctx.moveTo(cxp + s * 3.6, cyp - 2.6); ctx.lineTo(cxp + s * 8.4, cyp); ctx.lineTo(cxp + s * 3.6, cyp + 2.6);
@@ -741,7 +750,11 @@ function draw() {
       ctx.globalAlpha = .3 + .3 * p; ctx.fillStyle = PAL.pow;
       ctx.beginPath(); ctx.arc(cxp, cyp, 16 + p * 5, 0, TAU); ctx.fill();
       ctx.globalAlpha = 1;
+      /* BLOOM: soft purple halo on the costume pickup core (subtle, not screen-warping) */
+      ctx.save();
+      ctx.shadowColor = '#c77dff'; ctx.shadowBlur = 14 + p * 8;
       ctx.beginPath(); ctx.arc(cxp, cyp, 7.5 + p, 0, TAU); ctx.fillStyle = '#f3e8ff'; ctx.fill();
+      ctx.restore();
       ctx.beginPath(); ctx.arc(cxp, cyp, 4.2, 0, TAU); ctx.fillStyle = PAL.pow; ctx.fill();
       // star sparkle on the costume pickup
       ctx.fillStyle = '#fff';
@@ -764,7 +777,8 @@ function draw() {
     const look = [clamp((pl.tx - q.tx) * .2, -1, 1), clamp((pl.ty - q.ty) * .2, -1, 1)];
     let col = q.color;
     if (scared > 0) col = scared < 2 && Math.floor(t * 8) % 2 ? '#f2f6ff' : PAL.fear;
-    ghostShape(ctx, x, y + wob, 30, col, wob * .6, look);
+    /* BLOOM: ghost eyes glow blue when scared */
+    ghostShape(ctx, x, y + wob, 30, col, wob * .6, look, scared > 0 ? '#4a6bff' : null);
     if (!scared) {
       ctx.globalAlpha = .55; ctx.fillStyle = q.color;
       ctx.beginPath(); ctx.arc(x, y - 34 + wob, 2.4, 0, TAU); ctx.fill();
