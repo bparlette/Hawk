@@ -1,7 +1,7 @@
 // Bake-off K: "Toad Street 32" - one block of one street, an elderly toad couple vs. five thugs, rendered like a 32-bit (PS1-era) game:
 // low-res target + nearest upscale, vertex snapping, affine-ish texture wobble, ordered dither + 15-bit colour, short fogged draw distance,
 // and a 2-minute day/night cycle. Fork of J (Cinema City), standalone three.js r160, procedural everything.
-import * as THREE from 'https://cdn.jsdelivr.net/gh/bparlette/Hawk@main/brad-demos/g/toad-street-32/three.module.min.js';
+import * as THREE from './three.module.min.js';
 
 const $ = (id) => document.getElementById(id);
 const Q = new URLSearchParams(location.search);
