@@ -1,0 +1,210 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<script src="../../demo-embed.js"></script>
+<style id="demo-embed-css">
+html.demo-embed body{background:#000!important}
+html.demo-embed #cab{background:none!important}
+html.demo-embed #cab>.x-stick,html.demo-embed #cab>.x-cap,html.demo-embed #cab>.x-ring,html.demo-embed #cab>.x-fx,html.demo-embed #fsbtn,html.demo-embed #trailerbtn,html.demo-embed #proto{display:none!important}
+html.demo-embed #screen{position:fixed!important;left:0!important;top:0!important;width:100vw!important;height:100vh!important;border-radius:0!important;z-index:20!important}
+html.demo-embed #screen::after{border-radius:0!important}
+
+</style>
+
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,maximum-scale=1,minimum-scale=1,user-scalable=no">
+<meta name="theme-color" content="#0b0f17">
+<title>TOAD STREET 32: ALLEY FIGHT — K Â· Toad Street 32</title>
+<style>
+  @font-face { font-family: 'PX'; src: url(https://cdn.jsdelivr.net/gh/bparlette/Hawk@main/brad-demos/g/toad-street-32/pressstart2p.woff2) format('woff2'); font-display: block; }
+  html, body { margin: 0; height: 100%; overflow: hidden; background: #0b0f17; max-width: 100vw; touch-action: none; overscroll-behavior: none; position: fixed; width: 100%; -webkit-user-select: none; user-select: none; -webkit-touch-callout: none; }
+  body { font-family: 'PX', 'Courier New', monospace; color: #fff; -webkit-font-smoothing: none; font-smooth: never; }
+  #gl { position: fixed; left: 0; top: 0; width: 100vw; height: 100vh; height: 100dvh; display: block; outline: none; image-rendering: pixelated; image-rendering: crisp-edges; }
+  .ui { position: fixed; z-index: 10; pointer-events: none; }
+
+  /* prototype label + links */
+  #proto { position: fixed; z-index: 60; left: calc(env(safe-area-inset-left, 0px) + 6px); top: calc(env(safe-area-inset-top, 0px) + 6px); width: 130px; box-sizing: border-box;
+    font: 800 10px/1 system-ui, -apple-system, "Segoe UI", sans-serif; letter-spacing: .4px; }
+  #protoT { all: unset; box-sizing: border-box; display: flex; justify-content: space-between; align-items: center; width: 100%; cursor: pointer; padding: 6px 8px; border-radius: 8px; background: #ffd23c; color: #14101f;
+    border: 2px solid #14101f; box-shadow: 3px 3px 0 #14101f; font: 900 11px/1 system-ui, -apple-system, sans-serif; white-space: nowrap; }
+  #protoT span { font-size: 9px; transition: transform .15s; }
+  #proto.open #protoT span { transform: rotate(180deg); }
+  #protoL { display: none; flex-direction: column; gap: 3px; margin-top: 5px; padding: 4px; border-radius: 8px; background: rgba(20,16,31,.86); border: 2px solid #14101f; }
+  #proto.open #protoL { display: flex; }
+  #protoL a { color: #e9e4ff; text-decoration: none; padding: 4px 5px; border-radius: 5px; text-align: center; border: 1px solid rgba(255,255,255,.22); white-space: nowrap; touch-action: manipulation; }
+  #protoL a:hover { border-color: #ffd23c; }
+  #protoL a.on { color: #14101f; background: #ffd23c; border-color: #ffd23c; }
+
+  /* health */
+  #hpbox { right: calc(env(safe-area-inset-right, 0px) + 10px); top: calc(env(safe-area-inset-top, 0px) + 8px); display: flex; align-items: center; gap: 8px; }
+  #face { width: 46px; height: 46px; border-radius: 50%; background: #5ccf3a; border: 3px solid #14101f; box-shadow: 3px 3px 0 #14101f; position: relative; overflow: hidden; flex: none; }
+  #face::before { content: ""; position: absolute; left: -4px; right: -4px; top: 13px; height: 13px; background: #1f7bff; border-top: 2px solid #14101f; border-bottom: 2px solid #14101f; }
+  #face::after { content: ""; position: absolute; left: 10px; top: 16px; width: 9px; height: 6px; background: #fff; border-radius: 50%; box-shadow: 15px 0 0 #fff; }
+  #hpcol { display: flex; flex-direction: column; gap: 3px; align-items: flex-end; }
+  #hpname { font-size: 17px; letter-spacing: 1px; color: #ffd23c; -webkit-text-stroke: 1px #14101f; text-shadow: 2px 2px 0 #14101f; font-style: italic; line-height: 1; }
+  #hpbar { width: 150px; height: 14px; transform: skewX(-14deg); background: #14101f; border: 2px solid #14101f; box-shadow: 3px 3px 0 #14101f; position: relative; }
+  #hpfill, #hplag { position: absolute; left: 0; top: 0; bottom: 0; }
+  #hplag { background: #ff3d6e; width: 100%; transition: width .5s .15s; }
+  #hpfill { background: linear-gradient(#9dff6b, #3fd13a); width: 100%; transition: width .08s; }
+  /* partner (AI) pip */
+  #p2 { display: flex; align-items: center; gap: 5px; margin-top: 1px; }
+  #p2f { width: 15px; height: 15px; border-radius: 50%; background: #43c47e; border: 2px solid #14101f; position: relative; overflow: hidden; flex: none; box-sizing: border-box; }
+  #p2f::before { content: ""; position: absolute; left: -2px; right: -2px; top: 3px; height: 4px; background: #e0379b; }
+  #p2n { font-size: 12px; letter-spacing: 1px; color: #ff8ad8; -webkit-text-stroke: .6px #14101f; text-shadow: 1px 1px 0 #14101f; font-style: italic; line-height: 1; }
+  #p2bar { width: 78px; height: 8px; transform: skewX(-14deg); background: #14101f; border: 2px solid #14101f; box-shadow: 2px 2px 0 #14101f; position: relative; }
+  #p2fill { position: absolute; left: 0; top: 0; bottom: 0; width: 100%; background: linear-gradient(#ff9be6, #e0379b); transition: width .15s; }
+  #p2.dn #p2n { color: #ff3d6e; } #p2.dn #p2bar { animation: dnb .5s infinite alternate; } #p2.dn #p2n::after { content: " DOWN"; }
+  @keyframes dnb { from { border-color: #14101f; } to { border-color: #ff3d6e; } }
+  #ko { font-size: 15px; color: #fff; -webkit-text-stroke: 1px #14101f; text-shadow: 2px 2px 0 #14101f; font-style: italic; line-height: 1; }
+  #ko b { color: #ff5fa2; }
+
+  #combo { right: 14px; top: 34%; text-align: right; font-style: italic; opacity: 0; transform: scale(.6) rotate(-6deg); transition: opacity .2s, transform .12s; }
+  #combo.on { opacity: 1; transform: scale(1) rotate(-6deg); }
+  #combo .n { font-size: 54px; line-height: .9; color: #ffd23c; -webkit-text-stroke: 2px #14101f; text-shadow: 4px 4px 0 #14101f; }
+  #combo .w { font-size: 20px; color: #fff; -webkit-text-stroke: 1px #14101f; text-shadow: 3px 3px 0 #14101f; }
+  #hint { left: 50%; bottom: calc(env(safe-area-inset-bottom, 0px) + 14px); transform: translateX(-50%); padding: 7px 14px; border-radius: 20px; background: rgba(20,16,31,.8); border: 2px solid #14101f;
+    font: 700 12px/1.3 system-ui, -apple-system, sans-serif; color: #fff; white-space: nowrap; transition: opacity 1s; max-width: calc(100vw - 30px); overflow: hidden; text-overflow: ellipsis; }
+  #hint b { color: #ffd23c; }
+  #banner { left: 50%; top: 40%; transform: translate(-50%, -50%) rotate(-5deg); font-size: 46px; font-style: italic; color: #ff5fa2; -webkit-text-stroke: 2px #14101f; text-shadow: 5px 5px 0 #14101f; opacity: 0; transition: opacity .25s; white-space: nowrap; }
+  #banner.on { opacity: 1; }
+
+
+  /* cinema: letterbox bars, cut flash, title card, contextual prompt */
+  .lb { position: fixed; left: 0; right: 0; height: 0; background: #07050d; z-index: 8; pointer-events: none; }
+  #lbT { top: 0; } #lbB { bottom: 0; }
+  #cut { position: fixed; inset: 0; background: #fff; opacity: 0; z-index: 7; pointer-events: none; }
+  #title { left: 50%; bottom: 17%; transform: translateX(-50%); text-align: center; opacity: 0; transition: opacity .6s; z-index: 30; white-space: nowrap; }
+  #title.on { opacity: 1; }
+  #title .s { font: 800 12px/1 system-ui, -apple-system, sans-serif; letter-spacing: 6px; color: #ffd23c; }
+  #title .t { font-size: 58px; font-style: italic; letter-spacing: 2px; color: #fff; -webkit-text-stroke: 2px #14101f; text-shadow: 5px 5px 0 #ff3d6e; line-height: 1.05; }
+  #title .k { font: 700 11px/1 system-ui, -apple-system, sans-serif; color: rgba(255,255,255,.7); margin-top: 6px; letter-spacing: 1px; }
+  #prompt { position: fixed; left: 0; top: 0; z-index: 25; pointer-events: none; display: none; align-items: center; gap: 7px; will-change: transform; }
+  #prompt.on { display: flex; }
+  #prompt .pk { position: relative; width: 42px; height: 42px; flex: none; }
+  #prompt svg.r { position: absolute; inset: 0; transform: rotate(-90deg); }
+  #prompt svg.r circle { fill: none; stroke-width: 4; }
+  #prompt svg.r .bg { stroke: rgba(20,16,31,.55); } #prompt svg.r .fg { stroke: #ffd23c; stroke-dasharray: 113; stroke-dashoffset: 0; }
+  #pkey { position: absolute; left: 6px; top: 6px; width: 30px; height: 30px; border-radius: 50%; background: #fff; color: #14101f; border: 2px solid #14101f; box-sizing: border-box;
+    display: flex; align-items: center; justify-content: center; font: 900 15px/1 system-ui, -apple-system, sans-serif; box-shadow: 2px 2px 0 #14101f; }
+  #prompt.tch #pkey { font-size: 9px; }
+  #prompt .pl { display: flex; align-items: center; gap: 5px; padding: 5px 9px 5px 7px; border-radius: 6px; background: rgba(20,16,31,.85); border: 2px solid #14101f;
+    font: 900 13px/1 system-ui, -apple-system, sans-serif; letter-spacing: 1px; color: #fff; }
+  #pico { width: 18px; height: 18px; fill: none; stroke: #ffd23c; stroke-width: 2.2; stroke-linecap: round; stroke-linejoin: round; }
+  #prompt.fin #pkey { background: #ff3d6e; color: #fff; animation: qp .35s infinite alternate; }
+  #prompt.fin .pl { background: #ff3d6e; } #prompt.fin #pico { stroke: #fff; fill: #ffd23c; }
+  #prompt.fin svg.r .fg { stroke: #fff; }
+  #prompt.revive .pl { background: #e0379b; } #prompt.revive svg.r .fg { stroke: #9dff6b; } #prompt.revive #pico { stroke: #fff; }
+  #prompt.boost #pico { stroke: #2fd3ff; }
+  #prompt.nokey #pkey { visibility: hidden; }
+  #prompt.far { opacity: .6; } #prompt.far #pkey { animation: none; }
+  @keyframes qp { from { transform: scale(1); } to { transform: scale(1.18); } }
+  #bC { width: 62px; height: 62px; right: calc(env(safe-area-inset-right, 0px) + 124px); bottom: calc(env(safe-area-inset-bottom, 0px) + 92px); background: #fff; font-size: 14px; }
+  #bC.hot { background: #ffd23c; animation: qp .4s infinite alternate; }
+
+  /* touch */
+  #touch { display: none; }
+  body.touch #touch { display: block; }
+  body.touch #hint { display: none; }
+  #touch { transition: opacity .3s; } body.cine #touch { opacity: .2; }
+  #stick { position: fixed; z-index: 20; width: 124px; height: 124px; margin: -62px 0 0 -62px; left: 90px; top: calc(100% - 110px); border-radius: 50%; background: rgba(20,16,31,.35); border: 3px solid rgba(255,255,255,.55); pointer-events: none; transition: opacity .2s; opacity: .55; }
+  #stick.act { opacity: 1; }
+  #knob { position: absolute; left: 50%; top: 50%; width: 54px; height: 54px; margin: -27px 0 0 -27px; border-radius: 50%; background: #ffd23c; border: 3px solid #14101f; box-shadow: 2px 2px 0 #14101f; }
+  .tb { position: fixed; z-index: 20; border-radius: 50%; border: 3px solid #14101f; box-shadow: 3px 3px 0 #14101f; font: 900 15px/1 Impact, "Arial Black", system-ui, sans-serif; color: #14101f; display: flex; align-items: center; justify-content: center; touch-action: none; letter-spacing: .5px; }
+  .tb.down { transform: translate(2px, 2px); box-shadow: 1px 1px 0 #14101f; filter: brightness(1.15); }
+  #bA { width: 82px; height: 82px; right: calc(env(safe-area-inset-right, 0px) + 22px); bottom: calc(env(safe-area-inset-bottom, 0px) + 34px); background: #ff5fa2; font-size: 17px; }
+  #bB { width: 60px; height: 60px; right: calc(env(safe-area-inset-right, 0px) + 118px); bottom: calc(env(safe-area-inset-bottom, 0px) + 22px); background: #2fd3ff; }
+  #cL, #cR { width: 40px; height: 40px; bottom: calc(env(safe-area-inset-bottom, 0px) + 128px); background: rgba(255,255,255,.85); font-size: 16px; }
+  #cR { right: calc(env(safe-area-inset-right, 0px) + 22px); }
+  #cL { right: calc(env(safe-area-inset-right, 0px) + 70px); }
+  @media (max-width: 480px) {
+    #hpbar { width: 112px; } #hpname { font-size: 14px; } #face { width: 38px; height: 38px; }
+    #face::before { top: 10px; height: 11px; } #face::after { left: 7px; top: 13px; width: 8px; height: 5px; box-shadow: 13px 0 0 #fff; }
+    #combo .n { font-size: 42px; } #banner { font-size: 34px; } #title .t { font-size: 40px; }
+  }
+
+  /* ---- K: chunky 32-bit HUD (pixel font, square boxes, hard 2px shadows, segmented bars) ---- */
+  #hpname, #p2n, #ko, #combo .n, #combo .w, #banner, #title .t, #prompt .pl, #pkey, .tb, #protoT, #hint { font-family: 'PX', 'Courier New', monospace !important; font-style: normal !important; -webkit-text-stroke: 0 !important; }
+  #hpname { font-size: 13px; color: #ffe08a; text-shadow: 2px 2px 0 #000, -1px -1px 0 #000, 1px -1px 0 #000, -1px 1px 0 #000; letter-spacing: 0; }
+  #face { border-radius: 0; background: #6f7f34; border: 3px solid #000; box-shadow: 3px 3px 0 #000; image-rendering: pixelated; }
+  #face::before { left: 6px; right: 6px; top: 14px; height: 8px; background: transparent; border: 0; box-shadow: none;
+    background-image: linear-gradient(#000, #000), linear-gradient(#000, #000); background-size: 14px 3px, 14px 3px; background-position: 0 0, 100% 0; background-repeat: no-repeat; }
+  #face::after { left: 9px; top: 15px; width: 8px; height: 6px; border-radius: 0; background: #e8d888; box-shadow: 14px 0 0 #e8d888, 0 13px 0 -1px #2a1a14, 7px 13px 0 -1px #2a1a14, 14px 13px 0 -1px #2a1a14; }
+  #hpbar, #p2bar { transform: none; border: 2px solid #000; box-shadow: 2px 2px 0 #000; background: #1a1010; }
+  #hpbar { height: 12px; }
+  #hpfill { background: repeating-linear-gradient(90deg, #9dd84a 0 6px, #6aa82a 6px 8px); }
+  #hplag { background: #c83a2a; }
+  #p2fill { background: repeating-linear-gradient(90deg, #d8a0c8 0 5px, #a0607e 5px 7px); }
+  #p2f { border-radius: 0; background: #9c9a96; border: 2px solid #000; } #p2f::before { left: 2px; right: 2px; top: 5px; height: 6px; background: #7f8f3e; }
+  #p2n { font-size: 9px; color: #f0b0d8; text-shadow: 1px 1px 0 #000; letter-spacing: 0; }
+  #ko { font-size: 10px; text-shadow: 2px 2px 0 #000; } #ko b { color: #ffe08a; }
+  #combo .n { font-size: 34px; color: #ffe08a; text-shadow: 3px 3px 0 #000; } #combo .w { font-size: 12px; text-shadow: 2px 2px 0 #000; }
+  #banner { font-size: 26px; color: #f0b0d8; text-shadow: 3px 3px 0 #000; transform: translate(-50%, -50%); }
+  #title .s { font-family: 'PX', monospace; font-size: 10px; letter-spacing: 2px; color: #ffe08a; text-shadow: 2px 2px 0 #000; }
+  #title .t { font-size: 34px; letter-spacing: 0; color: #fff; text-shadow: 3px 3px 0 #a02a2a, 6px 6px 0 #000; line-height: 1.3; }
+  #title .k { font-family: 'PX', monospace; font-size: 8px; text-shadow: 1px 1px 0 #000; margin-top: 10px; }
+  #prompt .pl { border-radius: 0; border: 2px solid #000; box-shadow: 2px 2px 0 #000; font-size: 10px; letter-spacing: 0; background: rgba(10,10,20,.9); }
+  #pkey { border-radius: 0; font-size: 11px; border: 2px solid #000; } #prompt svg.r { display: none; }
+  #prompt .pk::after { content: ""; position: absolute; left: 4px; right: 4px; bottom: 0; height: 4px; background: #000; }
+  #prompt.fin .pl { background: #a02a2a; }
+  #hint { border-radius: 0; font-size: 8px; line-height: 1.6; border: 2px solid #000; background: rgba(0,0,0,.75); }
+  #hint b { color: #ffe08a; }
+  .tb { border-radius: 0 !important; border: 3px solid #000; box-shadow: 3px 3px 0 #000; font-size: 9px !important; }
+  #bA { background: #c87a3a; } #bB { background: #6a9ac8; } #bC { background: #e8e0c8; } #bC.hot { background: #ffe08a; }
+  #stick { border-radius: 0; } #knob { border-radius: 0; background: #ffe08a; border: 3px solid #000; }
+  #proto { width: auto; min-width: 130px; } #protoT { border-radius: 0; font-size: 8px; gap: 8px; background: #ffe08a; border: 2px solid #000; box-shadow: 2px 2px 0 #000; }
+  #protoL { border-radius: 0; font: 8px/1.2 'PX', monospace; } #protoL a { border-radius: 0; }
+  #qbtn { position: fixed; z-index: 60; pointer-events: auto; cursor: pointer; right: calc(env(safe-area-inset-right, 0px) + 10px); top: calc(env(safe-area-inset-top, 0px) + 112px); font: 8px/1 'PX', monospace; color: #000; background: #ffe08a; border: 2px solid #000; box-shadow: 2px 2px 0 #000; padding: 5px 6px; touch-action: manipulation; }
+  body.hd #qbtn { background: #9fe0c8; }
+  body.hd #gl { image-rendering: auto; }
+  #clock { right: calc(env(safe-area-inset-right, 0px) + 10px); top: calc(env(safe-area-inset-top, 0px) + 96px); font-size: 8px; color: #fff; text-shadow: 1px 1px 0 #000; }
+  @media (max-width: 480px) { #hpname { font-size: 10px; } #hpbar { width: 104px; } #title .t { font-size: 22px; } #banner { font-size: 18px; } #combo .n { font-size: 26px; } }
+</style>
+<script>
+/* block iOS/Android pinch, double-tap zoom, pull-to-refresh and page scroll */
+(function(){
+  var last=0, o={passive:false};
+  ['gesturestart','gesturechange','gestureend'].forEach(function(e){document.addEventListener(e,function(ev){ev.preventDefault();},o);});
+  document.addEventListener('touchstart',function(e){ if(e.touches.length>1) e.preventDefault(); },o);
+  document.addEventListener('touchmove',function(e){ if(e.touches.length>1 || !(e.target.closest && e.target.closest('a,input,select,textarea'))) e.preventDefault(); },o);
+  document.addEventListener('touchend',function(e){ var n=Date.now(); if(n-last<350 && !(e.target.closest && e.target.closest('a,input,select,textarea'))) e.preventDefault(); last=n; },o);
+  document.addEventListener('dblclick',function(e){e.preventDefault();},o);
+  document.addEventListener('wheel',function(e){ if(e.ctrlKey) e.preventDefault(); },o);
+  window.addEventListener('scroll',function(){ if(window.scrollX||window.scrollY) window.scrollTo(0,0); });
+})();
+</script>
+</head>
+<body>
+<canvas id="gl" tabindex="0"></canvas>
+<div id="hpbox" class="ui"><div id="hpcol"><div id="hpname">HAROLD</div><div id="hpbar"><div id="hplag"></div><div id="hpfill"></div></div><div id="p2"><i id="p2f"></i><span id="p2n">MAVIS</span><div id="p2bar"><div id="p2fill"></div></div></div><div id="ko">KO <b id="kon">0</b></div></div><div id="face"></div></div>
+<div id="clock" class="ui"></div><button id="qbtn" type="button" title="H: toggle 32-bit / HD">32-BIT</button>
+<div id="combo" class="ui"><div class="n" id="comboN">0</div><div class="w">HITS!</div></div>
+<div id="banner" class="ui">BACK ON YOUR FEET!</div>
+<div id="hint" class="ui"><b>WASD</b> move Â· <b>J</b> cane Â· <b>K</b> jump Â· <b>E</b> action / finisher (hold: revive) Â· <b>H</b> 32-bit/HD Â· <b>Q/R</b> or drag: camera</div>
+<div id="lbT" class="lb"></div><div id="lbB" class="lb"></div><div id="cut"></div>
+<div id="title" class="ui"><div class="s">TOAD STREET 32</div><div class="t">ALLEY FIGHT</div><div class="k">press any key or tap to skip</div></div>
+<div id="prompt"><div class="pk"><svg class="r" viewBox="0 0 42 42"><circle class="bg" cx="21" cy="21" r="18"/><circle class="fg" id="pring" cx="21" cy="21" r="18"/></svg><div id="pkey">E</div></div><div class="pl"><svg id="pico" viewBox="0 0 24 24"></svg><span id="plab">KICK OPEN</span></div></div>
+<nav id="proto"><button id="protoT" type="button">K Â· Toad St 32 <span>â¼</span></button><div id="protoL">
+  <a href="https://shellshock-free-city.surge.sh/">A Â· Free</a>
+  <a href="https://shellshock-paper-city.surge.sh/">B Â· Paper</a>
+  <a href="https://shellshock-gta-city.surge.sh/">C Â· GTA</a>
+  <a href="https://shellshock-skyline-city.surge.sh/">D Â· Skyline</a>
+  <a href="https://shellshock-gta32-city.surge.sh/">E Â· GTA 32</a>
+  <a href="https://shellshock-free16-city.surge.sh/">F Â· Free 16</a>
+  <a href="https://shellshock-hd2d-city.surge.sh/">G Â· HD-2D</a>
+  <a href="https://shellshock-iso-city.surge.sh/">H Â· Iso</a>
+  <a href="https://shellshock-cel-city.surge.sh/">I Â· Cel</a>
+  <a href="https://shellshock-cinema-city.surge.sh/">J Â· Cinema</a>
+  <a href="https://toad-street-32.surge.sh/" class="on">K Â· Toad 32</a>
+</div></nav>
+<div id="touch">
+  <div id="stick"><div id="knob"></div></div>
+  <div class="tb" id="bA">SWING</div>
+  <div class="tb" id="bB">JUMP</div>
+  <div class="tb" id="bC">ACT</div>
+  <div class="tb" id="cL">â</div>
+  <div class="tb" id="cR">â¶</div>
+</div>
+<script type="module" src="game.js"></script>
+<script type="module" src="voice.js"></script>
+</body>
+</html>
