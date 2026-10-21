@@ -30,6 +30,8 @@ let pl, ghosts = [], mazeCv = null, botWant = [0, 0], botNote = '';
 let trail = [];                                  // pixel history -> the snake body behind the head
 const sqz = { v: 0 };                            // turn-anticipation squash (tweened)
 let eatChain = 0, eatT = 9, tailT = 0, lastDx = 0, lastDy = 0;
+const scorePop = { v: 0 };   // score counter punch (tweened, 1 = full pop)
+const candyPop = { v: 0 };   // CANDY counter pop (tweened, 1 = full pop)
 
 /* ---------------------------------------------------------------- maze */
 const free = (x, y) => x >= 0 && y >= 0 && x < COLS && y < ROWS && !wall[y][x];
@@ -162,6 +164,7 @@ function resetWorld() {
   pl = mkEnt(7, 19, 10.4);
   hearts = 3; scared = 0; invuln = 1.2; tRun = 0; autoT = 0; botT = 0; chain = 0; noEatT = 0;
   trail.length = 0; hist.length = 0; eatChain = 0; eatT = 9; tailT = 0; lastDx = 0; lastDy = 0; sqz.v = 0;
+  scorePop.v = 0; candyPop.v = 0;
   spawnEntities();
   placePellets();
   g.score = 0;
@@ -285,26 +288,37 @@ function eatAt(tx, ty) {
     g.burst(x, y, 3, { color: ['#ffe066', '#fff6c0'], speed: 150, up: 30, life: .32, size: 4, gravity: 280 });
     g.fx.emit('glow', x, y, { life: .22, size: 26 + eatChain * 2, color: '#ffd94a', add: true });
     g.punch(.02 + Math.min(.1, eatChain * .008));
+    /* FULL-QUALITY: hit-stop on every candy grab — the single most impactful juice (3-6 frozen frames) */
+    g.hitstop(.03 + Math.min(.03, eatChain * .004));
+    /* score counter punch + CANDY counter pop */
+    scorePop.v = 1; g.tween(scorePop, 'v', 0, .28, e => 1 - (1 - e) ** 2);
+    candyPop.v = 1; g.tween(candyPop, 'v', 0, .32, e => 1 - (1 - e) ** 2);
     if (g.post) g.tween(g.post, 'bloom', Math.min(1.7, .8 + eatChain * .07), .4);
     if (eatChain >= 4) {
       g.popup('×' + eatChain, x + 16, y - 14, '#ffe98a', 20);
-      if (eatChain % 4 === 0) { g.combo.hit(x, y - 30, '×' + eatChain); g.flash('#ffd94a', .1); g.shake(4); }
+      if (eatChain % 4 === 0) { g.combo.hit(x, y - 30, '×' + eatChain); g.flash('#ffd94a', .1); }
     }
   } else {
     g.score += 50; scared = 7.4; chain = 0; eatChain = 0; eatT = 0;
     sfx('powerup'); sfx('zap', { pitch: 1.1, vol: .5 }); sfx('charge', { pitch: 1.2, vol: .4 });
     g.showBanner('FEAR FLIP!', .8);
-    g.impact(x, y, { punch: .22, shake: 18, stop: .07, flash: '#6fe6ff', flashA: .4, rip: 1.2 });
-    g.hitstop(.07); g.slowmo(.5, .18); g.punch(.2);
-    g.fx.blast(x, y, { r: 96, color: '#8ce8ff', n: 26 });
+    /* FULL-QUALITY, veto-safe: hit-stop + punch + flash, NO shake, NO ripple (Cherie veto Oct 20) */
+    g.hitstop(.07); g.slowmo(.5, .18); g.punch(.22); g.flash('#6fe6ff', .4);
+    g.fx.ring(x, y, { r: 96, color: '#8ce8ff', life: .38, wide: 7, ripple: false });
+    g.fx.burst(x, y, 26, { color: ['#8ce8ff', '#fff', '#6fe6ff'], speed: 480, size: 7, life: .5, kind: 'spark' });
     g.fx.burst(x, y, 18, { kind: 'ring', color: '#8ce8ff', speed: 300, life: .5 });
-    g.fx.ring(x, y, { r: 140, color: '#8ce8ff', life: .5, wide: 5 });
+    g.fx.ring(x, y, { r: 140, color: '#8ce8ff', life: .5, wide: 5, ripple: false });
     g.burst(x, y, 10, { color: ['#8ce8ff', '#eaffff'], speed: 320, life: .5, size: 6, gravity: 200 });
     g.popup('FEAR!', x, y - 26, '#8ce8ff', 26);
+    scorePop.v = 1; g.tween(scorePop, 'v', 0, .28, e => 1 - (1 - e) ** 2);
+    candyPop.v = 1; g.tween(candyPop, 'v', 0, .32, e => 1 - (1 - e) ** 2);
   }
   syncState();
   if (pelLeft <= 0) {
-    g.impact(px(pl), py(pl) - 20, { punch: .2, shake: 10, flash: '#ffe066', flashA: .4, rip: 1.4 });
+    /* veto-safe win burst: NO shake, NO ripple */
+    g.hitstop(.06); g.punch(.2); g.flash('#ffe066', .4);
+    g.fx.ring(px(pl), py(pl) - 20, { r: 100, color: '#ffe066', life: .5, wide: 6, ripple: false });
+    g.fx.burst(px(pl), py(pl) - 20, 24, { color: ['#ffe066', '#fff', '#ffb347'], speed: 350, size: 7, life: .6, kind: 'spark' });
     g.end({ win: true, score: g.score, label: 'MAZE CLEARED' });
   }
 }
@@ -314,21 +328,24 @@ function catchPlayer() {
   hearts--; chain = 0; eatChain = 0;
   g.combo.miss();
   const x = px(pl), y = py(pl) - 16;
-  /* death is an event: hit-stop, slow-mo, white-out, debris, the lens kicks */
-  g.impact(x, y, { punch: .34, shake: 30, stop: .13, flash: '#ff3b5c', flashA: .55, rip: 1.8, sfx: 'boom' });
-  g.hitstop(.13); g.slowmo(.22, .55); g.flash('#ff3b5c', .55); g.shake(30); g.punch(.3);
+  /* death is an event: hit-stop, slow-mo, white-out, debris, the lens kicks — NO shake, NO ripple (Cherie veto) */
+  g.hitstop(.13); g.slowmo(.22, .55); g.flash('#ff3b5c', .55); g.punch(.34);
   sfx('boom'); sfx('groan', { pitch: .9, vol: .8 }); sfx('glass', { vol: .5 });
-  g.fx.blast(x, y, { r: 78, color: '#ff3b5c', colors: ['#ff3b5c', '#fff', '#ffb347'], n: 30 });
+  g.fx.ring(x, y, { r: 78, color: '#ff3b5c', life: .38, wide: 7, ripple: false });
+  g.fx.burst(x, y, 30, { color: ['#ff3b5c', '#fff', '#ffb347'], speed: 390, size: 7, life: .5, kind: 'spark' });
   g.fx.burst(x, y, 20, { kind: 'debris', color: ['#ff4258', '#ffb347', '#1a1030'], speed: 420, life: .85, size: 9 });
   g.fx.burst(x, y, 12, { kind: 'ring', color: '#ff4258', speed: 320, life: .5 });
   g.burst(x, y, 16, { color: ['#ff4258', '#fff', '#ffd94a'], speed: 380, up: 90, life: .7, size: 7 });
-  g.fx.ring(x, y, { r: 130, color: '#ff4258', life: .5, wide: 6 });
+  g.fx.ring(x, y, { r: 130, color: '#ff4258', life: .5, wide: 6, ripple: false });
   g.popup('-1 LIFE', x, y - 22, '#ff6b85', 26);
   trail.length = 0;
   syncState();
   if (hearts <= 0) {
     g.slowmo(.2, 1.2); g.showBanner('CAUGHT!', 1.2);
-    g.fx.blast(x, y, { r: 190, color: '#ff3b5c', n: 40, smoke: true });
+    /* veto-safe: ring + sparks + smoke, NO shake, NO ripple */
+    g.fx.ring(x, y, { r: 190, color: '#ff3b5c', life: .5, wide: 8, ripple: false });
+    g.fx.burst(x, y, 40, { color: ['#ff3b5c', '#fff', '#ffb347'], speed: 450, size: 8, life: .6, kind: 'spark' });
+    for (let i = 0; i < 6; i++) g.fx.emit('smoke', x + (Math.random() - .5) * 95, y + (Math.random() - .5) * 95, { vx: (Math.random() - .5) * 90, vy: -30 - Math.random() * 70, g: -20, life: .9 + Math.random() * .5, size: 66 * (.35 + Math.random() * .4), color: '#2a2f3a', drag: .6 });
     g.end({ win: false, score: g.score, label: 'CAUGHT' }); return;
   }
   pl.tx = 7; pl.ty = 19; pl.nx = 7; pl.ny = 19; pl.prog = 0; pl.dx = 0; pl.dy = 0;
@@ -558,9 +575,10 @@ function update(dt) {
       g.combo.hit(px(q), py(q) - 20, '+' + val);
       sfx('hit', { pitch: comboPitch(chain + 2) }); sfx('ding', { pitch: comboPitch(chain + 4) });
       if (chain >= 2) sfx('perfect', { pitch: comboPitch(chain + 5), vol: .6 });
-      g.impact(px(q), py(q) - 16, { punch: .2, shake: 16, stop: .07, flash: '#8ce8ff', flashA: .36 });
-      g.hitstop(.07); g.slowmo(.55, .22); g.punch(.18); g.shake(14);
-      g.fx.blast(px(q), py(q) - 16, { r: 54 + chain * 8, color: '#8ce8ff', n: 18 + chain * 3 });
+      /* FULL-QUALITY, veto-safe: hit-stop + punch + flash, NO shake, NO ripple */
+      g.hitstop(.07); g.slowmo(.55, .22); g.punch(.2); g.flash('#8ce8ff', .36);
+      g.fx.ring(px(q), py(q) - 16, { r: 54 + chain * 8, color: '#8ce8ff', life: .38, wide: 7, ripple: false });
+      g.fx.burst(px(q), py(q) - 16, 18 + chain * 3, { color: ['#8ce8ff', '#fff', '#ffd94a'], speed: 300, size: 7, life: .5, kind: 'spark' });
       g.fx.burst(px(q), py(q) - 16, 14, { kind: 'star', color: ['#8ce8ff', '#fff', '#ffd94a'], speed: 300, life: .6 });
       g.burst(px(q), py(q) - 16, 10, { color: ['#8ce8ff', '#eaffff'], speed: 300, life: .55, size: 6 });
       if (chain >= 2) g.popup('COMBO ×' + chain, px(q) + 10, py(q) - 44, '#8ce8ff', 22);
@@ -741,7 +759,8 @@ function draw() {
   // ghosts
   for (const q of ghosts) {
     const x = px(q), y = py(q) + 12;
-    const wob = Math.sin(t * 7 + q.i * 2) * 2.2;
+    /* FULL-QUALITY: ghosts wobble faster + wider when scared (fear reads in the body) */
+    const wob = Math.sin(t * (scared > 0 ? 13 : 7) + q.i * 2) * (scared > 0 ? 4.2 : 2.2);
     const look = [clamp((pl.tx - q.tx) * .2, -1, 1), clamp((pl.ty - q.ty) * .2, -1, 1)];
     let col = q.color;
     if (scared > 0) col = scared < 2 && Math.floor(t * 8) % 2 ? '#f2f6ff' : PAL.fear;
@@ -818,10 +837,18 @@ function draw() {
   // 7. HUD
   panel(ctx, 14, 16, 512, 96, { r: 22, alpha: .55, color: '#100b28', stroke: '#3b4bd8' });
   g.text('SCORE', 36, 46, { size: 19, color: '#7fa4ff', stroke: 3 });
-  g.text(String(g.score).padStart(5, '0'), 36, 92, { size: 42, color: '#eef8ff', ink: 4 });
+  /* FULL-QUALITY: score counter punch — scales up on every grab */
+  const sc = 1 + scorePop.v * .35;
+  ctx.save(); ctx.translate(36, 92); ctx.scale(sc, sc);
+  g.text(String(g.score).padStart(5, '0'), 0, 0, { size: 42, color: '#eef8ff', ink: 4 });
+  ctx.restore();
   const left = pelLeft;
   g.text('CANDY', 508, 46, { size: 19, color: '#ff9f1c', align: 'right', stroke: 3 });
-  g.text(String(left), 508, 92, { size: 40, color: '#ffcf7a', align: 'right', ink: 4 });
+  /* FULL-QUALITY: CANDY counter pop — scales up on every grab */
+  const cc = 1 + candyPop.v * .4;
+  ctx.save(); ctx.translate(508, 92); ctx.scale(cc, cc);
+  g.text(String(left), 0, 0, { size: 40, color: '#ffcf7a', align: 'right', ink: 4 });
+  ctx.restore();
   // hearts
   for (let i = 0; i < 3; i++) heartShape(ctx, 300 + i * 30, 44, 20, i < hearts ? '#ff4d6d' : 'rgba(255,77,109,.18)');
   // progress
