@@ -76,6 +76,84 @@ addEventListener('keyup', e => { keys[e.code] = false; });
 const AUTO = new URLSearchParams(location.search).get('auto') === '1';
 function pressed(code) { return !!(keys[code]); }
 
+// ---------- touch controls (mobile) ----------
+// Per gamepress docs/TOUCH.md: floating stick on left half, circular A/B
+// buttons bottom-right, PointerEvent API with distinct pointerIds.
+// Self-contained (zero deps): DOM overlay, no canvas drawing, no imports.
+const TOUCH_ON = (typeof window !== 'undefined' && 'ontouchstart' in window) &&
+  new URLSearchParams(location.search).get('touch') !== '0';
+const T = { x: 0, y: 0, a: false, b: false }; // live touch state: stick vector -1..1, A=shoot, B=jump
+const _t = { stickId: null, ax: 0, ay: 0 };
+const STICK_R = 56, TDEAD = 0.18;
+if (typeof document !== 'undefined' && canvas && canvas.style) canvas.style.touchAction = 'none';
+if (TOUCH_ON && typeof document !== 'undefined' && document.createElement) buildTouchUI();
+function buildTouchUI() {
+  const ui = document.createElement('div');
+  ui.id = 'tui';
+  ui.style.cssText = 'position:fixed;inset:0;z-index:30;pointer-events:none;touch-action:none;-webkit-user-select:none;user-select:none;-webkit-tap-highlight-color:transparent;';
+  // stick zone: left 50% — touch anywhere, stick anchors under thumb
+  const zone = document.createElement('div');
+  zone.style.cssText = 'position:absolute;left:0;top:0;width:50%;height:100%;pointer-events:auto;touch-action:none;';
+  ui.appendChild(zone);
+  const base = document.createElement('div');
+  base.style.cssText = 'position:absolute;width:110px;height:110px;border-radius:50%;border:2px solid rgba(255,255,255,.45);background:rgba(255,255,255,.08);display:none;pointer-events:none;transform:translate(-50%,-50%);';
+  const knob = document.createElement('div');
+  knob.style.cssText = 'position:absolute;width:48px;height:48px;border-radius:50%;background:rgba(255,255,255,.5);display:none;pointer-events:none;transform:translate(-50%,-50%);';
+  ui.appendChild(base); ui.appendChild(knob);
+  zone.addEventListener('pointerdown', e => {
+    if (_t.stickId !== null) return;
+    e.preventDefault(); audio();
+    _t.stickId = e.pointerId; _t.ax = e.clientX; _t.ay = e.clientY;
+    try { zone.setPointerCapture(e.pointerId); } catch (_) {}
+    base.style.display = knob.style.display = 'block';
+    base.style.left = _t.ax + 'px'; base.style.top = _t.ay + 'px';
+    knob.style.left = _t.ax + 'px'; knob.style.top = _t.ay + 'px';
+    T.x = 0; T.y = 0;
+  });
+  zone.addEventListener('pointermove', e => {
+    if (e.pointerId !== _t.stickId) return;
+    let dx = e.clientX - _t.ax, dy = e.clientY - _t.ay;
+    const d = Math.hypot(dx, dy);
+    if (d > STICK_R) { dx = dx / d * STICK_R; dy = dy / d * STICK_R; }
+    knob.style.left = (_t.ax + dx) + 'px'; knob.style.top = (_t.ay + dy) + 'px';
+    let nx = dx / STICK_R, ny = dy / STICK_R;
+    if (Math.hypot(nx, ny) < TDEAD) { nx = 0; ny = 0; }
+    T.x = nx; T.y = ny;
+  });
+  const stickUp = e => {
+    if (e.pointerId !== _t.stickId) return;
+    _t.stickId = null; T.x = 0; T.y = 0;
+    base.style.display = knob.style.display = 'none';
+  };
+  zone.addEventListener('pointerup', stickUp);
+  zone.addEventListener('pointercancel', stickUp);
+  // action buttons: A = shoot (primary, biggest, bottom-most), B = jump
+  function mkBtn(id, label, sub, size, right, bottom) {
+    const b = document.createElement('div');
+    b.style.cssText = 'position:absolute;right:' + right + 'px;bottom:' + bottom + 'px;width:' + size + 'px;height:' + size + 'px;border-radius:50%;pointer-events:auto;touch-action:none;background:rgba(255,255,255,.12);border:2px solid rgba(255,255,255,.5);color:#fff;font-family:monospace;display:flex;flex-direction:column;align-items:center;justify-content:center;';
+    b.innerHTML = '<span style="font-size:' + Math.round(size * 0.34) + 'px;font-weight:bold;line-height:1">' + label + '</span><span style="font-size:9px;opacity:.75">' + sub + '</span>';
+    b._ids = new Set();
+    b.addEventListener('pointerdown', e => {
+      e.preventDefault(); audio();
+      b._ids.add(e.pointerId);
+      try { b.setPointerCapture(e.pointerId); } catch (_) {}
+      T[id] = true;
+      b.style.transform = 'scale(.92)'; b.style.background = 'rgba(255,255,255,.30)';
+    });
+    const off = e => {
+      b._ids.delete(e.pointerId);
+      if (!b._ids.size) { T[id] = false; b.style.transform = ''; b.style.background = 'rgba(255,255,255,.12)'; }
+    };
+    b.addEventListener('pointerup', off);
+    b.addEventListener('pointercancel', off);
+    ui.appendChild(b);
+  }
+  mkBtn('a', 'A', 'FIRE', 88, 22, 26);
+  mkBtn('b', 'B', 'JUMP', 68, 104, 108);
+  ui.addEventListener('contextmenu', e => e.preventDefault());
+  document.body.appendChild(ui);
+}
+
 // ---------- level ----------
 const LEVEL_W = 1440;
 const GROUND_Y = 230;
@@ -197,18 +275,19 @@ function update() {
   }
 
   // --- hero physics ---
-  const L = pressed('ArrowLeft')||pressed('KeyA'), R = pressed('ArrowRight')||pressed('KeyD');
+  const tL = T.x < -0.35, tR = T.x > 0.35, tU = T.y < -0.35, tD = T.y > 0.35, tA = T.a, tB = T.b;
+  const L = pressed('ArrowLeft')||pressed('KeyA')||tL, R = pressed('ArrowRight')||pressed('KeyD')||tR;
   const ACC = 0.5, MAXV = 2.2;
   if (R && !L) { h.vx = Math.min(h.vx + ACC, MAXV); h.face = 1; }
   else if (L && !R) { h.vx = Math.max(h.vx - ACC, -MAXV); h.face = -1; }
   else { h.vx *= 0.8; if (Math.abs(h.vx) < 0.05) h.vx = 0; }
 
-  const J = pressed('ArrowUp')||pressed('KeyW')||pressed('KeyX')||pressed('KeyK');
+  const J = pressed('ArrowUp')||pressed('KeyW')||pressed('KeyX')||pressed('KeyK')||tB;
   if (J && !h._jheld) { h.jumpBuf = 6; h._jheld = true; }
   if (!J) h._jheld = false;
   if (h.jumpBuf > 0) h.jumpBuf--;
   if (h.coyote > 0) h.coyote--;
-  const wantSlide = (pressed('ArrowDown')||pressed('KeyS')) && h.onGround && Math.abs(h.vx) > 1.2;
+  const wantSlide = (pressed('ArrowDown')||pressed('KeyS')||tD) && h.onGround && Math.abs(h.vx) > 1.2;
   if (wantSlide && h.sliding <= 0) { h.sliding = 18; SFX.jump(); }
   if (h.sliding > 0) { h.sliding--; h.vx = h.face * 3.2; }
 
@@ -240,12 +319,12 @@ function update() {
   else h.state = 'idle';
 
   // --- shooting ---
-  const SH = pressed('KeyZ')||pressed('KeyJ');
+  const SH = pressed('KeyZ')||pressed('KeyJ')||tA;
   if (h.shootCd > 0) h.shootCd--;
-  if ((SH && !h._sh) || botShoot) {
+  if ((SH && !h._sh) || (tA && h.shootCd <= 0) || botShoot) { // touch A held = rapid fire
     if (h.shootCd <= 0) {
       h.shootCd = 14;
-      const up = pressed('ArrowUp')||pressed('KeyW');
+      const up = pressed('ArrowUp')||pressed('KeyW')||tU;
       shots.push({x: h.x + h.w/2 + h.face*14, y: h.y + 18 + (up ? -14 : 0), vx: h.face*6, vy: up ? -2.5 : 0, t: 60});
       if (up) shots[shots.length-1].vy = -2.5;
       parts.push({x: h.x + h.w/2 + h.face*16, y: h.y + 18, vx: h.face*1, vy: 0, t: 5, c: '#ffe060', s: 4});
@@ -420,7 +499,7 @@ function render() {
     ctx.fillStyle = '#ffe060'; ctx.font = '28px monospace'; ctx.textAlign = 'center';
     ctx.fillText('READY', W/2, H/2 - 10);
     ctx.fillStyle = '#e8e8e8'; ctx.font = '10px monospace';
-    ctx.fillText('ARROWS MOVE · Z SHOOT · X JUMP · DOWN+JUMP SLIDE', W/2, H/2 + 16);
+    ctx.fillText(TOUCH_ON ? 'LEFT STICK MOVE · A FIRE · B JUMP · DOWN+B SLIDE' : 'ARROWS MOVE · Z SHOOT · X JUMP · DOWN+JUMP SLIDE', W/2, H/2 + 16);
     ctx.textAlign = 'left';
   } else if (phase === 'over') {
     ctx.fillStyle = 'rgba(0,0,0,0.7)'; ctx.fillRect(0, 0, W, H);
