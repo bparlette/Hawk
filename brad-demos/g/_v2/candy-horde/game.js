@@ -425,6 +425,11 @@ function draw(ctx) {
   ctx.fillStyle = skyG; ctx.fillRect(0, 0, W, H);
   ctx.globalCompositeOperation = 'lighter';
   ctx.fillStyle = moonG; ctx.fillRect(0, 0, W, H);
+  // moon disc with soft bloom halo
+  ctx.shadowColor = 'rgba(255,200,120,.9)'; ctx.shadowBlur = 50;
+  ctx.fillStyle = 'rgba(255,224,170,.9)';
+  ctx.beginPath(); ctx.arc(410, 96, 30, 0, 7); ctx.fill();
+  ctx.shadowBlur = 0;
   ctx.globalCompositeOperation = 'source-over';
 
   // far: drifting moon mist
@@ -657,7 +662,9 @@ function drawHUD(ctx) {
   const kt = String(killN);
   const kp = killPop > 0 ? 1 + Math.sin((killPop / .25) * Math.PI) * .38 : 1;
   ctx.save(); ctx.translate(30, 146); ctx.scale(kp, kp); ctx.translate(-30, -146);
+  if (killPop > 0) { ctx.shadowColor = '#ffd34d'; ctx.shadowBlur = 16; }
   g.text(kt, 30, 146, { size: 56, color: '#fff', stroke: '#05140c' });
+  ctx.shadowBlur = 0;
   ctx.font = '900 56px Impact,"Arial Black",system-ui,sans-serif';
   const kw = ctx.measureText(kt).width;
   g.text('/' + GOAL, 30 + kw + 6, 146, { size: 30, color: 'rgba(220,255,235,.5)' });
@@ -691,7 +698,9 @@ function drawHUD(ctx) {
   ctx.fillStyle = ready ? 'rgba(255,74,216,.20)' : 'rgba(255,255,255,.05)';
   rr(ctx, bx2, by2, bw2, bh2, 20); ctx.fill();
   ctx.strokeStyle = ready ? `rgba(255,74,216,${.65 + Math.sin(t * 8) * .3})` : 'rgba(255,255,255,.14)';
+  if (ready) { ctx.shadowColor = '#ff4ad8'; ctx.shadowBlur = 18; }
   ctx.lineWidth = 3; rr(ctx, bx2, by2, bw2, bh2, 20); ctx.stroke();
+  ctx.shadowBlur = 0;
   if (!ready) {
     ctx.fillStyle = 'rgba(255,74,216,.45)';
     rr(ctx, bx2 + 8, by2 + bh2 - 18, (bw2 - 16) * novaP, 8, 4); ctx.fill();
@@ -713,7 +722,10 @@ function drawHUD(ctx) {
     ctx.translate(W / 2, yy);
     ctx.scale(1 + (1 - k) * .12, 1 + (1 - k) * .12);
     ctx.fillStyle = 'rgba(4,10,14,.86)'; rr(ctx, -190, -40, 380, 80, 18); ctx.fill();
-    ctx.strokeStyle = upCol; ctx.lineWidth = 3; rr(ctx, -190, -40, 380, 80, 18); ctx.stroke();
+    ctx.strokeStyle = upCol; ctx.lineWidth = 3;
+    ctx.shadowColor = upCol; ctx.shadowBlur = 20;
+    rr(ctx, -190, -40, 380, 80, 18); ctx.stroke();
+    ctx.shadowBlur = 0;
     g.text(upName, 0, -4, { size: 30, color: upCol, align: 'center' });
     g.text(upSub, 0, 24, { size: 15, color: 'rgba(255,255,255,.6)', align: 'center' });
     ctx.restore();
