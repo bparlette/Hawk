@@ -157,6 +157,7 @@ function merge(a, b) {
   g.fx.emit('ring', nx, ny, { size: T.r * 2.2, life: .34, color: col, wide: 5 + tier, add: true });
   g.fx.emit('ring', nx, ny, { size: T.r * 3.6, life: .5, color: hexA(col, .65), wide: 2 + tier * .4, add: true });
   g.fx.emit('glow', nx, ny, { size: T.r * 1.25, life: .3, color: hexA(col, .8), add: true });
+  if (big) g.fx.emit('glow', nx, ny, { size: T.r * 2.1, life: .5, color: hexA('#ffd34d', .5), add: true });
   g.fx.burst(nx, ny, 10 + tier * 4, { kind: 'spark', color: [col, '#ffffff', T.col2], speed: 205 + tier * 45, life: .5, size: 4.5 + tier, drag: 1.7 });
   g.fx.burst(nx, ny, 4 + tier * 2, { kind: 'star', color: [col, '#ffffff'], speed: 130 + tier * 22, life: .6 + tier * .06, size: 7 + tier * 1.6, g: 300 });
   if (big) g.fx.burst(nx, ny, 12 + tier * 3, { kind: 'spark', color: ['#ffd34d', '#ffffff', col], speed: 300 + tier * 60, life: .7, size: 5 + tier, drag: 1.4 });
@@ -210,6 +211,7 @@ function merge(a, b) {
       sfx('powerup', { pitch: 1 + tier * .09, vol: .45 });   // milestone jingle
       g.flash('#ffd34d', .1); g.punch(.045);
       g.popup('NEW MONSTER!', W / 2, BOX.y - 42, '#ff9a3c', 30);
+      g.fx.emit('glow', W / 2, BOX.y - 42, { size: 90, life: .6, color: hexA('#ff9a3c', .45), add: true });
     }
   }
 
@@ -227,6 +229,8 @@ function maxTier(nx, ny) {
   g.popup('DRACULA RISES!', W / 2, BOX.y + 130, '#ff2a2a', 42);
   sfx('fanfare', { vol: .8 });
   sfx('win', { pitch: 1.12, vol: .8 });
+  g.fx.emit('glow', nx, ny, { size: 320, life: 1.2, color: hexA('#ff2a2a', .35), add: true });
+  g.fx.emit('glow', nx, ny, { size: 200, life: 1.0, color: hexA('#ffd34d', .4), add: true });
   g.fx.emit('ring', nx, ny, { size: 240, life: .9, color: '#ffffff', wide: 11, add: true });
   g.fx.emit('ring', nx, ny, { size: 120, life: .7, color: '#ffd34d', wide: 7, add: true });
   g.fx.burst(nx, ny, 58, { kind: 'star', color: ['#ffd34d', '#ffffff', '#ff9a3c', '#ff7ad0'], speed: 520, life: 1.1, size: 11, g: 260 });
@@ -385,20 +389,23 @@ function monsterFace(c, tier, x, y, fr) {
   const pup = (ex, ey, er) => { dot(ex, ey, er, '#fff'); dot(ex, ey, er * .45, '#180a0a'); };
   const fang = (fx, fw, fl) => { c.fillStyle = '#fff'; c.beginPath(); c.moveTo((fx - fw) * u, 6 * u); c.lineTo((fx + fw) * u, 6 * u); c.lineTo(fx * u, (6 + fl) * u); c.closePath(); c.fill(); };
   const tri = (x1, y1, x2, y2, x3, y3, col) => { c.fillStyle = col; c.beginPath(); c.moveTo(x1 * u, y1 * u); c.lineTo(x2 * u, y2 * u); c.lineTo(x3 * u, y3 * u); c.closePath(); c.fill(); };
-  if (tier === 0) {            // BAT: ears, red eyes, fangs
+  if (tier === 0) {            // BAT: ears, glowing red eyes, fangs
     tri(-14, -8, -9, -22, -3, -10, '#1a1a2e'); tri(14, -8, 9, -22, 3, -10, '#1a1a2e');
-    dot(-6, -2, 2.6, '#ff3b3b'); dot(6, -2, 2.6, '#ff3b3b');
+    c.save(); c.shadowColor = '#ff3b3b'; c.shadowBlur = 6 * u;
+    dot(-6, -2, 2.6, '#ff3b3b'); dot(6, -2, 2.6, '#ff3b3b'); c.restore();
     fang(-3.5, 2, 4.5); fang(3.5, 2, 4.5);
-  } else if (tier === 1) {     // SPIDER: six red eyes
+  } else if (tier === 1) {     // SPIDER: six glowing red eyes
+    c.save(); c.shadowColor = '#ff3b3b'; c.shadowBlur = 5 * u;
     dot(-9, -6, 2.4, '#ff3b3b'); dot(0, -7, 2.8, '#ff3b3b'); dot(9, -6, 2.4, '#ff3b3b');
-    dot(-6, 1, 3.2, '#ff3b3b'); dot(6, 1, 3.2, '#ff3b3b'); dot(0, 6, 2.2, '#ff3b3b');
+    dot(-6, 1, 3.2, '#ff3b3b'); dot(6, 1, 3.2, '#ff3b3b'); dot(0, 6, 2.2, '#ff3b3b'); c.restore();
   } else if (tier === 2) {     // GHOST: spooky o-face
     c.fillStyle = '#1a1030'; c.beginPath(); c.ellipse(-6 * u, -3 * u, 3.4 * u, 4.6 * u, 0, 0, TAU); c.fill();
     c.beginPath(); c.ellipse(6 * u, -3 * u, 3.4 * u, 4.6 * u, 0, 0, TAU); c.fill();
     c.beginPath(); c.ellipse(0, 8 * u, 4 * u, 5.4 * u, 0, 0, TAU); c.fill();
   } else if (tier === 3) {     // VAMPIRE: widow's peak, red eyes, fangs
     c.fillStyle = '#100a12'; c.beginPath(); c.moveTo(-16 * u, -6 * u); c.lineTo(0, -19 * u); c.lineTo(16 * u, -6 * u); c.lineTo(16 * u, -13 * u); c.lineTo(-16 * u, -13 * u); c.closePath(); c.fill();
-    dot(-6, -1, 3, '#ff4d4d'); dot(6, -1, 3, '#ff4d4d');
+    c.save(); c.shadowColor = '#ff4d4d'; c.shadowBlur = 6 * u;
+    dot(-6, -1, 3, '#ff4d4d'); dot(6, -1, 3, '#ff4d4d'); c.restore();
     dot(-6, -1, 1.3, '#2a0a0a'); dot(6, -1, 1.3, '#2a0a0a');
     fang(-4, 2.4, 5.5); fang(4, 2.4, 5.5);
   } else if (tier === 4) {     // WEREWOLF: ears, muzzle, fangs
