@@ -54,9 +54,9 @@ const lanterns = [];
 
 let lvl = 0, lvlT = 0, caught = 0, needs = 3, spawnLeft = 0, score = 0, misses = 0;
 let combo = 0, comboT = 0, status = 'play', trans = 0, hintT = 0, frame = 0, shakeT = 0;
-let botT = 0, autoT = 0, dumbCut = 0;
+let botT = 0, autoT = 0, dumbCut = 0, hudPop = 0;
 
-const cat = { x: 270, dir: 1, mouth: 0, chomp: 0, hurt: 0, bob: 0, lean: 0, gloat: 0 };
+const cat = { x: 270, dir: 1, mouth: 0, chomp: 0, hurt: 0, bob: 0, lean: 0, gloat: 0, sq: 0 };
 let px = null, py = null;     // previous swipe point
 const cursor = { x: 270, y: 470 };   // keyboard blade
 
@@ -73,7 +73,8 @@ for (let i = 0; i < 26; i++) motes.push({ x: R() * W, y: 220 + R() * 700, s: .8 
 /* ------------------------------------------------------------------ reset */
 function resetWorld() {
   ropes.length = 0; fall.length = 0; stubs.length = 0; cuts.length = 0;
-  cat.x = 270; cat.dir = 1; cat.mouth = 0; cat.chomp = 0; cat.hurt = 0; cat.bob = 0; cat.gloat = 0;
+  cat.x = 270; cat.dir = 1; cat.mouth = 0; cat.chomp = 0; cat.hurt = 0; cat.bob = 0; cat.gloat = 0; cat.sq = 0;
+  hudPop = 0;
   px = null; py = null; botT = 0; autoT = 0; dumbCut = 0; hintT = 0; frame = 0;
   g.score = 0; score = 0;
   g.combo.reset(); g.fx.clear();
@@ -139,10 +140,10 @@ function juice(x, y, o = {}) {
   const k = o.s ?? 1, c = o.c || '#ffe9a8';
   g.burst(x, y, 5 + k * 9, { color: [c, '#ffffff'], speed: 150 + k * 160, life: .4 + k * .3, size: 4 + k * 3 });
   g.fx.emit(k > 1.6 ? 'ring' : 'spark', x, y, { size: 12 + k * 16, life: .3, color: c, add: true, wide: 4 });
-  if (k > .6) { g.shake(1.5 + k * 4); g.punch(.02 + .012 * k); }
+  if (k > .6) { g.punch(.02 + .012 * k); }  /* CHERIE VETO: no g.shake — juice the elements, not the screen */
   if (o.h) g.hitstop(.02 + .02 * k);
   if (o.p) g.popup(o.p, x, y - 34 - k * 10, c, 22 + k * 8);
-  if (o.f) g.flash(c, .08 + .04 * k);
+  /* CHERIE VETO: no g.flash here — full-screen flash removed from generic juice */
 }
 function slash(x1, y1, x2, y2, strong) {
   if (status !== 'play') return;
@@ -176,6 +177,8 @@ function sever(r, u, cx, cy, ang, strong) {
   g.fx.burst(cx, cy, 14, { kind: 'spark', color: ['#ffffff', '#bff4ff', r.bomb ? '#ffb06a' : '#ffe9a8'], speed: 330, life: .34, size: 6, g: 320 });
   g.fx.emit('ring', cx, cy, { size: 52, color: '#dff6ff', life: .26, add: true, wide: 4 });
   g.fx.burst(cx, cy, 5, { kind: 'dot', color: '#7a5a3a', speed: 130, life: .5, size: 5, g: 900 });
+  /* web snap: fine silvery strand bits flying off the severed web */
+  g.fx.burst(cx, cy, 6, { kind: 'dot', color: '#eef4fa', speed: 240, life: .38, size: 3, g: 520 });
 
   /* the severed end stays hanging and twangs */
   stubs.push({ ax: r.ax, ay: r.ay, len: r.len * u, ang: r.ang, av: r.av * .9 - Math.sign(r.av || 1) * .6, t: 0 });
@@ -198,10 +201,13 @@ function sever(r, u, cx, cy, ang, strong) {
 }
 
 function bombGoesOff(r) {
-  g.fx.blast(r.tx, r.ty, { r: 150, color: '#ff7a3c', colors: ['#ffd34d', '#ff6b3c', '#fff'], n: 34, punch: .18, shake: 24, flashC: '#ff5a2c', flashA: .45, life: .55 });
+  /* manual explosion — g.fx.blast forces shake+ripple, both vetoed by Cherie */
+  g.fx.emit('ring', r.tx, r.ty, { size: 150, life: .38, color: '#ff7a3c', add: true, wide: 7 });
+  g.fx.burst(r.tx, r.ty, 34, { color: ['#ffd34d', '#ff6b3c', '#fff'], speed: 750, size: 7, life: .5, kind: 'spark' });
+  g.punch(.18);
+  g.hitstop(.1);
   sfx('boom', { pitch: .88 });
   sfx('explode', { pitch: 1.1, vol: .5 });
-  g.hitstop(.1);
   g.combo.miss();
   combo = 0;
   cat.hurt = 1;
@@ -217,6 +223,8 @@ function catchSnack(f) {
   f.dead = true;
   caught++;
   cat.chomp = 1; cat.mouth = 1; cat.gloat = 1;
+  cat.sq = 1;    /* bucket squash-and-stretch */
+  hudPop = 1;    /* candy counter pop */
   cat.dir = f.x < cat.x ? -1 : 1;
 
   const val = Math.round((f.gold ? 300 : 100) * g.combo.mult);
@@ -225,8 +233,10 @@ function catchSnack(f) {
   g.combo.hit(cat.x + cat.dir * 30, CATCH_Y - 40, `+${val}`);
   if (f.gold) { sfx('perfect', { pitch: 1.3 }); g.showBanner('GOLDEN!', .6); }
 
-  g.impact(cat.x, CATCH_Y, { punch: .06, shake: 6, stop: .028, rip: 1 });
-  juice(cat.x + cat.dir * 30, CATCH_Y - 40, { s: f.gold ? 2 : 1.1, c: f.gold ? '#ffd34d' : '#ffe9a8', f: f.gold, p: f.gold ? 'GOLDEN!' : '' });
+  /* JUICE: hit-stop (3-4 frozen frames) + camera punch. NO shake, NO ripple — Cherie veto. */
+  g.punch(.06);
+  g.hitstop(f.gold ? .06 : .045);
+  juice(cat.x + cat.dir * 30, CATCH_Y - 40, { s: f.gold ? 2 : 1.1, c: f.gold ? '#ffd34d' : '#ffe9a8', p: f.gold ? 'GOLDEN!' : '' });
   const cols = f.gold ? ['#ffe98a', '#ffd34d', '#fff'] : [TREAT_COL[f.kind].body, TREAT_COL[f.kind].light, '#fff'];
   g.fx.burst(cat.x + cat.dir * 26, CATCH_Y, f.gold ? 26 : 16, { kind: 'spark', color: cols, speed: 340, life: .5, size: 7, g: 700 });
   g.fx.burst(cat.x + cat.dir * 26, CATCH_Y, 4, { kind: 'heart', color: '#ff8fb0', speed: 150, life: .8, size: 11, g: -140 });
@@ -253,7 +263,7 @@ function missSnack(f) {
   g.fx.burst(f.x, FLOOR_Y, 8, { kind: 'dot', color: TREAT_COL[f.kind].body, speed: 200, life: .5, size: 6, g: 800 });
   sfx('thud', { pitch: .8 });
   sfx('groan', { pitch: 1.3, vol: .3 });
-  g.shake(7);
+  /* CHERIE VETO: g.shake removed */
   cat.hurt = .8;
   if (lvlT <= 0) lose();
 }
@@ -267,7 +277,9 @@ function levelClear() {
   sfx('win', { pitch: 1.1, vol: .4 });
   g.showBanner(`LEVEL ${lvl + 1} CLEAR`, 1);
   g.slowmo(.5, .6);
-  g.impact(cat.x, CATCH_Y - 20, { punch: .12, shake: 10, flash: '#ffe9a8', flashA: .22 });
+  g.punch(.12);
+  g.hitstop(.05);
+  /* CHERIE VETO: g.impact removed (had shake + ripple) */
   juice(W / 2, CATCH_Y - 60, { s: 2, c: '#ffe9a8', p: `LEVEL ${lvl + 1} CLEAR`, f: 1 });
   for (let k = 0; k < 4; k++) {
     g.fx.burst(90 + k * 120, 320 + (k % 2) * 90, 18, { kind: 'confetti', color: ['#ffd34d', '#ff7a3c', '#7dff9b', '#7df9ff', '#ff8fb0'], speed: 300, life: 1.4, size: 8, g: 430 });
@@ -292,7 +304,8 @@ function lose() {
   g.combo.miss();
   g.fx.burst(cat.x, CATCH_Y, 12, { kind: 'smoke', color: 'rgba(120,140,180,.5)', speed: 80, life: 1, size: 22, g: -20 });
   sfx('groan', { pitch: .8 });
-  g.shake(18); g.flash('#ff6b6b', .3); juice(cat.x, CATCH_Y, { s: 2.6, c: '#ff6b6b', f: 1, p: 'GAME OVER' });
+  /* CHERIE VETO: g.shake(18) removed */
+  g.flash('#ff6b6b', .3); juice(cat.x, CATCH_Y, { s: 2.6, c: '#ff6b6b', p: 'GAME OVER' });
   const prog = clamp((lvl + clamp(caught / needs, 0, 1)) / LEVELS.length, 0, .99);
   g.end({ win: false, score: Math.round(score), label: 'SCORE', progress: prog });
 }
@@ -435,6 +448,8 @@ function update(dt) {
   cat.chomp = Math.max(0, cat.chomp - dt * 2.6);
   cat.hurt = Math.max(0, cat.hurt - dt * 2.2);
   cat.gloat = Math.max(0, cat.gloat - dt * .8);
+  cat.sq = Math.max(0, cat.sq - dt * 3.5);   /* bucket squash spring-back */
+  hudPop = Math.max(0, hudPop - dt * 4);     /* counter pop decay */
   cat.bob = Math.sin(g.t * 2.6) * 2.2;
 
   /* ---------- level flow ---------- */
@@ -746,7 +761,14 @@ function draw() {
       gl.addColorStop(0, 'rgba(255,235,150,.55)'); gl.addColorStop(1, 'rgba(255,200,60,0)');
       c.fillStyle = gl; c.beginPath(); c.arc(f.x, f.y, f.r * 2.4, 0, TAU); c.fill();
     }
+    /* squash-and-stretch: candy elongates along its fall velocity */
+    const stretch = clamp(Math.abs(f.vy) / 2400, 0, .28);
+    c.save();
+    c.translate(f.x, f.y);
+    c.scale(1 - stretch * .45, 1 + stretch);
+    c.translate(-f.x, -f.y);
     drawTreat(c, f.x, f.y, f.r, f.kind, f.gold, f.rot);
+    c.restore();
   }
 
   /* ---------- cut lines: bright, fading, with a hot core ---------- */
@@ -770,7 +792,14 @@ function draw() {
   const bobY = cat.bob * .3, lean = cat.lean * .35;
   const faceGlow = cat.gloat > 0 ? cat.gloat : cat.chomp * .6;
   c.save();
-  c.translate(cx, cy + bobY); c.rotate(lean); c.translate(-cx, -cy);
+  c.translate(cx, cy + bobY); c.rotate(lean);
+  /* bucket squash-and-stretch: compresses on catch, springs back */
+  if (cat.sq > 0) {
+    c.translate(cx, cy);
+    c.scale(1 + cat.sq * .14, 1 - cat.sq * .16);
+    c.translate(-cx, -cy);
+  }
+  c.translate(-cx, -cy);
   /* ground glow */
   const pg = c.createRadialGradient(cx, 906, 4, cx, 906, 100);
   pg.addColorStop(0, 'rgba(255,150,40,.25)'); pg.addColorStop(1, 'rgba(255,150,40,0)');
@@ -800,9 +829,11 @@ function draw() {
   /* jack-o-lantern face — lights up on a catch */
   const lit = faceGlow > .08;
   if (lit) {
-    const fg = c.createRadialGradient(pbx, pby + 6, 4, pbx, pby + 6, 70);
-    fg.addColorStop(0, `rgba(255,220,120,${.5 * Math.min(1, faceGlow)})`); fg.addColorStop(1, 'rgba(255,200,80,0)');
-    c.fillStyle = fg; c.beginPath(); c.ellipse(pbx, pby + 6, 70, 56, 0, 0, TAU); c.fill();
+    /* jack-o'-lantern glow PULSE on catch */
+    const pulse = 1 + Math.sin(g.t * 16) * .18 * Math.min(1, faceGlow);
+    const fg = c.createRadialGradient(pbx, pby + 6, 4, pbx, pby + 6, 70 * pulse);
+    fg.addColorStop(0, `rgba(255,220,120,${.5 * Math.min(1, faceGlow) * pulse})`); fg.addColorStop(1, 'rgba(255,200,80,0)');
+    c.fillStyle = fg; c.beginPath(); c.ellipse(pbx, pby + 6, 70 * pulse, 56 * pulse, 0, 0, TAU); c.fill();
   }
   c.fillStyle = lit ? '#ffe98a' : '#2a1408';
   for (const s of [-1, 1]) { // triangle eyes
@@ -851,10 +882,14 @@ function drawHUD(c) {
   c.restore();
   g.text(lvlT.toFixed(1), rx, ry + 9, { size: 22, align: 'center', color: frac < .32 ? '#ff9a8a' : '#eafff0', ink: '#04101c', stroke: 4 });
 
-  /* snack counter pill */
+  /* snack counter pill — pops on catch */
   const label = `${caught}/${needs} CANDY`;
   panel(c, 12, 100, 196, 46, { alpha: .5, color: '#140a24', r: 14 });
+  const pop = 1 + hudPop * .38;
+  c.save();
+  c.translate(110, 123); c.scale(pop, pop); c.translate(-110, -123);
   g.text(label, 110, 130, { size: 24, align: 'center', color: caught >= needs ? '#7dff9b' : '#fff2d0', ink: '#12061c', stroke: 4 });
+  c.restore();
   /* need progress bar */
   const bx = 22, by = 138, bw = 176;
   c.fillStyle = 'rgba(0,0,0,.45)'; rr(c, bx, by, bw, 7, 4); c.fill();
