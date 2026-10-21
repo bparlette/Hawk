@@ -21,7 +21,7 @@ const g = makeGame({
 
 const P = new URLSearchParams(location.search);
 const isAuto = P.has('auto');
-const dumb = () => isAuto && g.dumb();
+const dumb = () => isAuto && P.has('dumb');   // ?dumb=1 -> random drops; default auto-bot aims for merges
 
 /* ------------------------------------------------------------------ tiers */
 const TIER = [
