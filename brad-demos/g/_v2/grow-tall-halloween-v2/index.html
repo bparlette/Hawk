@@ -1,0 +1,532 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<title>GROW TALL! Halloween 👻</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html, body {
+    width: 100%; height: 100%; overflow: hidden;
+    background: #0d0d1a;
+    touch-action: none; -webkit-user-select: none; user-select: none;
+    font-family: 'Courier New', monospace;
+  }
+  #game { display: block; width: 100vw; height: 100vh; }
+  #hud {
+    position: fixed; top: 0; left: 0; right: 0;
+    padding: max(8px, env(safe-area-inset-top)) 12px 8px;
+    display: flex; justify-content: space-between; align-items: flex-start;
+    pointer-events: none; z-index: 10;
+  }
+  .hud-box {
+    background: rgba(0,0,0,0.55); border: 2px solid #ff8c00; border-radius: 8px;
+    padding: 6px 10px; color: #fff; font-weight: bold; font-size: 14px;
+    text-shadow: 2px 2px 0 #000;
+  }
+  #sizeLabel { color: #ffb300; font-size: 18px; }
+  #hint {
+    position: fixed; bottom: max(20px, env(safe-area-inset-bottom)); left: 0; right: 0;
+    text-align: center; color: #fff; font-size: 14px; font-weight: bold;
+    text-shadow: 2px 2px 0 #000; pointer-events: none; z-index: 10;
+    opacity: 1; transition: opacity 1s;
+  }
+</style>
+</head>
+<body>
+<canvas id="game"></canvas>
+<div id="hud">
+  <div class="hud-box">SIZE<br><span id="sizeLabel">0</span></div>
+  <div class="hud-box">MAX<br><span id="maxLabel">0</span></div>
+  <div class="hud-box">🍬<br><span id="candyLabel">0</span></div>
+</div>
+<div id="hint">DRAG UP / DOWN — eat candy, dodge poison!</div>
+<script>
+'use strict';
+/* ============================================================
+   GROW TALL! Halloween — side-scrolling endless grow/shrink runner
+   - Player ghost fixed at left-center, world scrolls right-to-left
+   - Steer up/down to pick CANDY gates (grow) vs POISON gates (shrink)
+   - 8 size tiers. NO win/lose, NO boss — pure growing/shrinking fun.
+   - SAFETY: sprite drawn height HARD-CAPPED at 60% of viewport height.
+     It is IMPOSSIBLE for the sprite to clip off-screen.
+   ============================================================ */
+
+const canvas = document.getElementById('game');
+const ctx = canvas.getContext('2d');
+let W = 0, H = 0, DPR = 1;
+
+// === SAFETY CONSTANTS — the sprite can NEVER exceed these ===
+const MAX_DRAW_FRAC = 0.60;   // sprite height hard cap: 60% of viewport height
+const PLAYER_X_FRAC = 0.28;   // player fixed x position
+const PLAYER_Y_FRAC = 0.55;   // player base y position (steerable ±)
+
+function resize() {
+  DPR = Math.min(window.devicePixelRatio || 1, 2);
+  W = window.innerWidth; H = window.innerHeight;
+  canvas.width = W * DPR; canvas.height = H * DPR;
+  canvas.style.width = W + 'px'; canvas.style.height = H + 'px';
+  ctx.setTransform(DPR, 0, 0, DPR, 0, 0);
+  ctx.imageSmoothingEnabled = false; // crisp pixel art
+}
+window.addEventListener('resize', resize);
+resize();
+
+// === Sprite loading ===
+const SPRITES = {};
+const SPRITE_FILES = {
+  ghost_stand: 'sprites/ghost_stand.png',
+  ghost_run1: 'sprites/ghost_run1.png',
+  ghost_run2: 'sprites/ghost_run2.png',
+  ghost_run3: 'sprites/ghost_run3.png',
+  ghost_run4: 'sprites/ghost_run4.png',
+  ghost_jump: 'sprites/ghost_jump.png',
+  ghost_large: 'sprites/ghost_large.png',
+  ghost_small: 'sprites/ghost_small.png',
+  gate_candy: 'sprites/gate_candy.png',
+  gate_poison: 'sprites/gate_poison.png',
+  pickup_candycorn: 'sprites/pickup_candycorn.png',
+  pickup_choc: 'sprites/pickup_choc.png',
+  pickup_ghost: 'sprites/pickup_ghost.png',
+  pickup_pumpkin: 'sprites/pickup_pumpkin.png',
+  pickup_bat: 'sprites/pickup_bat.png',
+  pickup_lollipop: 'sprites/pickup_lollipop.png',
+};
+let spritesLoaded = 0, spritesTotal = Object.keys(SPRITE_FILES).length;
+for (const [key, src] of Object.entries(SPRITE_FILES)) {
+  const img = new Image();
+  img.onload = () => { spritesLoaded++; };
+  img.onerror = () => { spritesLoaded++; }; // don't hang on missing
+  img.src = src;
+  SPRITES[key] = img;
+}
+
+// === 8 SIZE TIERS — each visibly bigger than the last ===
+const TIERS = [
+  { sprite: 'ghost_small', scale: 0.55, name: 'TINY' },
+  { sprite: 'ghost_small', scale: 0.85, name: 'SMALL' },
+  { sprite: 'ghost_stand', scale: 1.00, name: 'NORMAL' },
+  { sprite: 'ghost_stand', scale: 1.30, name: 'BIG' },
+  { sprite: 'ghost_large', scale: 1.00, name: 'BIGGER' },
+  { sprite: 'ghost_large', scale: 1.25, name: 'HUGE' },
+  { sprite: 'ghost_large', scale: 1.50, name: 'MASSIVE' },
+  { sprite: 'ghost_large', scale: 1.80, name: 'MAXIMUM' },
+];
+// Base scale tuned so tier 7 sits just under the 60% cap on a phone.
+// The HARD CAP in drawPlayer() enforces it absolutely regardless.
+const BASE_SCALE = 0.0032;
+
+// === Game state ===
+const G = {
+  running: false,
+  size: 2.0,          // continuous size value 0..7
+  maxSize: 2,
+  candies: 0,
+  distance: 0,
+  speed: 0,           // px/sec, ramps up
+  time: 0,
+  // player
+  px: 0, py: 0, targetY: 0,
+  runFrame: 0, runTimer: 0,
+  squashX: 1, squashY: 1, squashT: 0, // squash-and-stretch
+  // entities
+  gates: [], pickups: [], particles: [],
+  spawnTimer: 0, pickupTimer: 0,
+  flash: 0, flashColor: '255,255,255',
+  vignette: 0,
+  started: false,
+};
+
+function tierIndex() { return Math.max(0, Math.min(7, Math.round(G.size))); }
+
+// === Audio (all synthesized, no assets) ===
+let AC = null;
+function audio() {
+  if (!AC) { try { AC = new (window.AudioContext || window.webkitAudioContext)(); } catch(e) {} }
+  if (AC && AC.state === 'suspended') AC.resume();
+  return AC;
+}
+function beep(freq, dur, type, vol, slideTo) {
+  const ac = audio(); if (!ac) return;
+  const o = ac.createOscillator(), g = ac.createGain();
+  o.type = type || 'square'; o.frequency.value = freq;
+  if (slideTo) o.frequency.exponentialRampToValueAtTime(slideTo, ac.currentTime + dur);
+  g.gain.value = vol || 0.12;
+  g.gain.exponentialRampToValueAtTime(0.001, ac.currentTime + dur);
+  o.connect(g); g.connect(ac.destination);
+  o.start(); o.stop(ac.currentTime + dur);
+}
+function sfxGrow() {
+  const t = tierIndex();
+  beep(300 + t*80, 0.12, 'square', 0.10, 600 + t*120);
+  setTimeout(() => beep(450 + t*80, 0.15, 'square', 0.10, 900 + t*120), 80);
+}
+function sfxShrink() {
+  beep(500, 0.2, 'sawtooth', 0.10, 150);
+}
+function sfxPickup() { beep(880, 0.08, 'square', 0.08, 1320); }
+function sfxBad() { beep(220, 0.25, 'sawtooth', 0.12, 90); }
+
+// === Spawning ===
+function spawnGatePair() {
+  // Two gates: one high, one low. One candy, one poison (random which).
+  const candyHigh = Math.random() < 0.5;
+  const x = W + 60;
+  const highY = H * 0.28, lowY = H * 0.78;
+  const gateH = H * 0.22;
+  G.gates.push({ x, y: highY, h: gateH, type: candyHigh ? 'candy' : 'poison', hit: false });
+  G.gates.push({ x, y: lowY, h: gateH, type: candyHigh ? 'poison' : 'candy', hit: false });
+}
+function spawnPickup() {
+  const kinds = [
+    { key: 'pickup_candycorn', effect: +0.6, good: true },
+    { key: 'pickup_candycorn', effect: +0.6, good: true },
+    { key: 'pickup_choc', effect: +1.0, good: true },
+    { key: 'pickup_pumpkin', effect: +1.2, good: true },
+    { key: 'pickup_lollipop', effect: +1.8, good: true },
+    { key: 'pickup_bat', effect: -1.0, good: false },
+    { key: 'pickup_ghost', effect: -0.8, good: false },
+  ];
+  const k = kinds[(Math.random() * kinds.length) | 0];
+  G.pickups.push({
+    x: W + 40, y: H * (0.15 + Math.random() * 0.7),
+    key: k.key, effect: k.effect, good: k.good,
+    bob: Math.random() * 6.28, taken: false,
+  });
+}
+
+// === Particles ===
+function burst(x, y, color, n, speed) {
+  for (let i = 0; i < n; i++) {
+    const a = Math.random() * 6.28, s = (0.3 + Math.random() * 0.7) * (speed || 220);
+    G.particles.push({
+      x, y, vx: Math.cos(a)*s, vy: Math.sin(a)*s - 60,
+      life: 0.6 + Math.random()*0.5, age: 0, color,
+      size: 3 + Math.random()*5,
+    });
+  }
+}
+
+// === Size change — the CORE fun ===
+function changeSize(delta) {
+  const old = tierIndex();
+  G.size = Math.max(0, Math.min(7, G.size + delta));
+  const now = tierIndex();
+  if (now > old) {
+    // GROW — squash then pop!
+    G.squashT = 0.28; G.squashX = 1.35; G.squashY = 0.65;
+    burst(G.px, G.py, '#ffdd44', 14, 260);
+    burst(G.px, G.py, '#ff8800', 8, 200);
+    G.flash = 0.25; G.flashColor = '255,220,100';
+    sfxGrow();
+    G.candies++;
+  } else if (now < old) {
+    // SHRINK — stretch then deflate
+    G.squashT = 0.28; G.squashX = 0.7; G.squashY = 1.35;
+    burst(G.px, G.py, '#88ff88', 10, 200);
+    burst(G.px, G.py, '#44aa44', 6, 160);
+    G.vignette = 0.5;
+    sfxShrink();
+  }
+  if (G.size > G.maxSize) {
+    G.maxSize = Math.floor(G.size);
+    if (now >= 7) { burst(G.px, G.py, '#ffffff', 20, 320); }
+  }
+  updateHUD();
+}
+function updateHUD() {
+  document.getElementById('sizeLabel').textContent = tierIndex() + ' ' + TIERS[tierIndex()].name;
+  document.getElementById('maxLabel').textContent = Math.floor(G.maxSize);
+  document.getElementById('candyLabel').textContent = G.candies;
+}
+
+// === Input: drag up/down ===
+let dragging = false;
+function onDown(y) { dragging = true; G.targetY = y; hideHint(); }
+function onMove(y) { if (dragging) G.targetY = y; }
+function onUp() { dragging = false; }
+function hideHint() { document.getElementById('hint').style.opacity = '0'; }
+
+canvas.addEventListener('pointerdown', e => { audio(); onDown(e.clientY); startGame(); });
+window.addEventListener('pointermove', e => onMove(e.clientY));
+window.addEventListener('pointerup', onUp);
+window.addEventListener('pointercancel', onUp);
+window.addEventListener('keydown', e => {
+  audio(); startGame(); hideHint();
+  if (e.key === 'ArrowUp' || e.key === 'w') G.targetY -= 60;
+  if (e.key === 'ArrowDown' || e.key === 's') G.targetY += 60;
+});
+function startGame() {
+  if (!G.started) {
+    G.started = true; G.running = true;
+    G.px = W * PLAYER_X_FRAC; G.py = H * PLAYER_Y_FRAC; G.targetY = G.py;
+    setTimeout(hideHint, 4000);
+  }
+}
+
+// === Background: scrolling Halloween night ===
+const stars = [], houses = [];
+for (let i = 0; i < 60; i++) stars.push({ x: Math.random(), y: Math.random()*0.6, s: Math.random()*2+0.5, tw: Math.random()*6.28 });
+for (let i = 0; i < 8; i++) houses.push({ x: Math.random(), w: 0.12 + Math.random()*0.1, h: 0.10 + Math.random()*0.12 });
+
+let scrollX = 0;
+function drawBackground(dt) {
+  // Sky gradient
+  const g = ctx.createLinearGradient(0, 0, 0, H);
+  g.addColorStop(0, '#0d0d24'); g.addColorStop(0.55, '#1a1033'); g.addColorStop(0.8, '#2d1a0e'); g.addColorStop(1, '#0d0d1a');
+  ctx.fillStyle = g; ctx.fillRect(0, 0, W, H);
+
+  // Moon
+  const mx = W*0.78, my = H*0.14, mr = Math.min(W,H)*0.09;
+  ctx.fillStyle = '#f5f0d0'; ctx.beginPath(); ctx.arc(mx, my, mr, 0, 6.29); ctx.fill();
+  ctx.fillStyle = '#e0d8a8';
+  ctx.beginPath(); ctx.arc(mx-mr*0.3, my-mr*0.2, mr*0.18, 0, 6.29); ctx.fill();
+  ctx.beginPath(); ctx.arc(mx+mr*0.25, my+mr*0.3, mr*0.12, 0, 6.29); ctx.fill();
+
+  // Stars
+  for (const s of stars) {
+    const tw = 0.4 + 0.6 * Math.abs(Math.sin(G.time*2 + s.tw));
+    ctx.fillStyle = `rgba(255,255,255,${0.7*tw})`;
+    ctx.fillRect(s.x*W, s.y*H, s.s, s.s);
+  }
+
+  // Far houses (parallax 0.3)
+  ctx.fillStyle = '#120e1e';
+  const off1 = (scrollX * 0.3) % (W * 1.5);
+  for (const hs of houses) {
+    const hx = ((hs.x * W * 1.5 - off1) % (W*1.5) + W*1.5) % (W*1.5) - W*0.25;
+    const hw = hs.w * W, hh = hs.h * H, hy = H*0.82 - hh;
+    ctx.fillRect(hx, hy, hw, hh);
+    // roof
+    ctx.beginPath(); ctx.moveTo(hx-6, hy); ctx.lineTo(hx+hw/2, hy-hh*0.5); ctx.lineTo(hx+hw+6, hy); ctx.fill();
+    // glowing windows
+    ctx.fillStyle = '#ffaa22';
+    ctx.fillRect(hx+hw*0.2, hy+hh*0.3, 8, 10); ctx.fillRect(hx+hw*0.6, hy+hh*0.3, 8, 10);
+    ctx.fillStyle = '#120e1e';
+  }
+
+  // Fence (parallax 0.6)
+  ctx.fillStyle = '#1e1626';
+  const off2 = (scrollX * 0.6) % 80;
+  for (let x = -off2; x < W + 80; x += 80) {
+    ctx.fillRect(x, H*0.86, 10, H*0.06);
+    ctx.fillRect(x+40, H*0.86, 10, H*0.06);
+  }
+  ctx.fillRect(0, H*0.875, W, 6); ctx.fillRect(0, H*0.895, W, 6);
+
+  // Ground
+  const gg = ctx.createLinearGradient(0, H*0.92, 0, H);
+  gg.addColorStop(0, '#1a2b12'); gg.addColorStop(1, '#0d150a');
+  ctx.fillStyle = gg; ctx.fillRect(0, H*0.92, W, H*0.08);
+}
+
+// === THE PLAYER — with ABSOLUTE anti-clip guarantee ===
+function drawPlayer(dt) {
+  const t = tierIndex();
+  const tier = TIERS[t];
+  // Run animation: cycle run frames, jump sprite when moving up fast
+  G.runTimer += dt;
+  if (G.runTimer > 0.12) { G.runTimer = 0; G.runFrame = (G.runFrame + 1) % 4; }
+  const vy = G.targetY - G.py;
+  let spr = SPRITES[['ghost_run1','ghost_run2','ghost_run3','ghost_run4'][G.runFrame]];
+  if (Math.abs(vy) > 120) spr = SPRITES.ghost_jump;
+  if (t <= 1) spr = SPRITES.ghost_small;
+  else if (t >= 4) spr = SPRITES.ghost_large;
+  else spr = SPRITES[['ghost_run1','ghost_run2','ghost_run3','ghost_run4'][G.runFrame]];
+
+  // Squash-and-stretch recovery
+  if (G.squashT > 0) {
+    G.squashT -= dt;
+    const k = Math.max(0, G.squashT / 0.28);
+    G.squashX += (1 - G.squashX) * dt * 10;
+    G.squashY += (1 - G.squashY) * dt * 10;
+  } else { G.squashX = 1; G.squashY = 1; }
+
+  if (!spr || !spr.complete || !spr.naturalWidth) return;
+
+  // === HARD CAP: drawn height can NEVER exceed 60% of viewport ===
+  const maxDrawH = H * MAX_DRAW_FRAC;
+  let drawH = spr.naturalHeight * tier.scale * BASE_SCALE * H;
+  // Belt-and-suspenders: absolute clamp. This line makes clipping IMPOSSIBLE.
+  drawH = Math.min(drawH, maxDrawH);
+  const drawW = drawH * (spr.naturalWidth / spr.naturalHeight);
+
+  const w = drawW * G.squashX, h = drawH * G.squashY;
+  // Draw centered at player pos — with the cap, top/bottom always have margin.
+  ctx.drawImage(spr, G.px - w/2, G.py - h/2, w, h);
+
+  // Shadow
+  ctx.fillStyle = 'rgba(0,0,0,0.35)';
+  ctx.beginPath();
+  ctx.ellipse(G.px, H*0.93, drawW*0.35, 8, 0, 0, 6.29);
+  ctx.fill();
+}
+
+// === Gates ===
+function drawGates(dt) {
+  for (const gt of G.gates) {
+    const spr = SPRITES[gt.type === 'candy' ? 'gate_candy' : 'gate_poison'];
+    if (!spr || !spr.complete || !spr.naturalWidth) continue;
+    const gh = gt.h, gw = gh * (spr.naturalWidth / spr.naturalHeight);
+    ctx.drawImage(spr, gt.x - gw/2, gt.y - gh/2, gw, gh);
+    // Label
+    ctx.font = 'bold 13px Courier New'; ctx.textAlign = 'center';
+    ctx.fillStyle = gt.type === 'candy' ? '#7dff7d' : '#ff6666';
+    ctx.fillText(gt.type === 'candy' ? '+GROW' : '-SHRINK', gt.x, gt.y - gh/2 - 8);
+  }
+}
+
+// === Pickups ===
+function drawPickups(dt) {
+  for (const p of G.pickups) {
+    const spr = SPRITES[p.key];
+    if (!spr || !spr.complete || !spr.naturalWidth) continue;
+    p.bob += dt * 4;
+    const s = Math.min(W, H) * 0.075;
+    const w = s * (spr.naturalWidth / spr.naturalHeight);
+    const by = p.y + Math.sin(p.bob) * 8;
+    ctx.drawImage(spr, p.x - w/2, by - s/2, w, s);
+  }
+}
+
+// === Particles ===
+function drawParticles(dt) {
+  for (let i = G.particles.length - 1; i >= 0; i--) {
+    const p = G.particles[i];
+    p.age += dt;
+    if (p.age >= p.life) { G.particles.splice(i, 1); continue; }
+    p.x += p.vx * dt; p.y += p.vy * dt; p.vy += 500 * dt;
+    const a = 1 - p.age / p.life;
+    ctx.globalAlpha = a; ctx.fillStyle = p.color;
+    ctx.fillRect(p.x - p.size/2, p.y - p.size/2, p.size, p.size);
+    ctx.globalAlpha = 1;
+  }
+}
+
+// === Update ===
+function update(dt) {
+  G.time += dt;
+  G.speed = Math.min(420, 220 + G.distance * 0.008);
+  const dx = G.speed * dt;
+  G.distance += dx;
+  scrollX += dx;
+
+  // Player follows target Y with smoothing
+  G.targetY = Math.max(H*0.12, Math.min(H*0.88, G.targetY));
+  G.py += (G.targetY - G.py) * Math.min(1, dt * 8);
+  G.px = W * PLAYER_X_FRAC;
+
+  // Spawn gates
+  G.spawnTimer -= dt;
+  if (G.spawnTimer <= 0) { spawnGatePair(); G.spawnTimer = 1.6 + Math.random()*0.8; }
+  G.pickupTimer -= dt;
+  if (G.pickupTimer <= 0) { spawnPickup(); G.pickupTimer = 0.7 + Math.random()*0.7; }
+
+  // Move + collide gates
+  const pr = H * 0.03; // player collision radius factor
+  for (let i = G.gates.length - 1; i >= 0; i--) {
+    const gt = G.gates[i];
+    gt.x -= dx;
+    if (gt.x < -100) { G.gates.splice(i, 1); continue; }
+    if (!gt.hit && Math.abs(gt.x - G.px) < 40) {
+      const t = tierIndex();
+      const tier = TIERS[t];
+      const sprH = (SPRITES[tier.sprite]?.naturalHeight || 100) * tier.scale * BASE_SCALE * H;
+      const ph = Math.min(sprH, H * MAX_DRAW_FRAC) / 2;
+      if (Math.abs(G.py - gt.y) < gt.h/2 + ph*0.5) {
+        gt.hit = true;
+        if (gt.type === 'candy') { changeSize(+1.2); }
+        else { changeSize(-1.8); burst(G.px, G.py, '#ff4444', 12, 240); }
+      }
+    }
+  }
+
+  // Move + collect pickups
+  for (let i = G.pickups.length - 1; i >= 0; i--) {
+    const p = G.pickups[i];
+    p.x -= dx * 1.1;
+    if (p.x < -60) { G.pickups.splice(i, 1); continue; }
+    if (!p.taken) {
+      const d = Math.hypot(p.x - G.px, p.y - G.py);
+      const collectR = Math.min(H * MAX_DRAW_FRAC, 200) * 0.5 + 30;
+      if (d < collectR) {
+        p.taken = true; G.pickups.splice(i, 1);
+        changeSize(p.effect);
+        burst(p.x, p.y, p.good ? '#ffdd44' : '#aa44ff', 8, 180);
+        if (p.good) sfxPickup(); else sfxBad();
+      }
+    }
+  }
+
+  // Flash/vignette decay
+  if (G.flash > 0) G.flash -= dt;
+  if (G.vignette > 0) G.vignette -= dt * 1.5;
+}
+
+// === Render ===
+function render(dt) {
+  drawBackground(dt);
+  drawGates(dt);
+  drawPickups(dt);
+  if (G.started) drawPlayer(dt);
+  else {
+    // Title screen: show a mid-size ghost bobbing (below the title text)
+    const spr = SPRITES.ghost_stand;
+    if (spr && spr.complete && spr.naturalWidth) {
+      const h = Math.min(spr.naturalHeight * BASE_SCALE * H * 0.7, H * 0.35);
+      const w = h * (spr.naturalWidth / spr.naturalHeight);
+      const by = H*0.58 + Math.sin(G.time*2)*12;
+      ctx.drawImage(spr, W/2 - w/2, by - h/2, w, h);
+    }
+    ctx.font = 'bold 28px Courier New'; ctx.textAlign = 'center';
+    ctx.fillStyle = '#ff8c00'; ctx.fillText('GROW TALL!', W/2, H*0.18);
+    ctx.font = 'bold 16px Courier New'; ctx.fillStyle = '#fff';
+    ctx.fillText('👻 HALLOWEEN 👻', W/2, H*0.23);
+    ctx.font = '14px Courier New';
+    ctx.fillText('TAP TO START', W/2, H*0.82);
+  }
+  drawParticles(dt);
+
+  // Flash
+  if (G.flash > 0) {
+    ctx.fillStyle = `rgba(${G.flashColor},${Math.min(0.5, G.flash)})`;
+    ctx.fillRect(0, 0, W, H);
+  }
+  // Vignette on shrink
+  if (G.vignette > 0) {
+    const vg = ctx.createRadialGradient(W/2, H/2, Math.min(W,H)*0.3, W/2, H/2, Math.max(W,H)*0.7);
+    vg.addColorStop(0, 'rgba(180,0,0,0)'); vg.addColorStop(1, `rgba(180,0,0,${G.vignette*0.5})`);
+    ctx.fillStyle = vg; ctx.fillRect(0, 0, W, H);
+  }
+}
+
+// === Main loop ===
+let last = performance.now();
+function loop(now) {
+  let dt = Math.min(0.05, (now - last) / 1000); last = now;
+  if (G.running) update(dt);
+  else G.time += dt;
+  render(dt);
+  requestAnimationFrame(loop);
+}
+
+// === Test hooks (for automated recording) ===
+window.__growtall = {
+  state: G, TIERS, MAX_DRAW_FRAC,
+  setSize(v) { G.size = v; updateHUD(); },
+  start() { startGame(); },
+  // Returns the ACTUAL drawn sprite height — for anti-clip verification
+  drawnHeight() {
+    const t = tierIndex(), tier = TIERS[t];
+    const spr = SPRITES[tier.sprite];
+    if (!spr || !spr.naturalWidth) return 0;
+    return Math.min(spr.naturalHeight * tier.scale * BASE_SCALE * H, H * MAX_DRAW_FRAC);
+  }
+};
+
+updateHUD();
+requestAnimationFrame(loop);
+</script>
+</body>
+</html>
