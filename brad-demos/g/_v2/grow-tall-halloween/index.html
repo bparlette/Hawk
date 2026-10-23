@@ -366,16 +366,22 @@ function drawPlayer(c,dt){
   // scale: phase 0 tiny ... phase 23 screen-filling
   const baseH = 46 + ph*13.5;           // 46 .. ~356 px tall
   const baseW = baseH*(im.width/im.height);
-  const dw=baseW*sx, dh=baseH*sy2;
+  let dw=baseW*sx, dh=baseH*sy2;
+  // safety cap: never draw taller than 85% of the viewport (no clipping)
+  const maxH=H*0.85;
+  if(dh>maxH){ const k=maxH/dh; dw*=k; dh=maxH; }
   const tilt=Math.sin(Game.bob*0.5)*0.04;
-  // shadow
+  // center-anchor at 62% of viewport height; clamp so the sprite is always fully visible
+  const cy=clamp(H*0.62, dh/2, H-dh/2);
+  const feetY=cy+dh/2;
+  // shadow tracks the feet under the new anchoring
   c.fillStyle='rgba(0,0,0,0.35)';
   const shw=dw*0.5;
-  c.beginPath(); c.ellipse(Game.px, H-168, shw, 10, 0, 0, Math.PI*2); c.fill();
+  c.beginPath(); c.ellipse(Game.px, feetY+8, shw, 10, 0, 0, Math.PI*2); c.fill();
   c.save();
-  c.translate(Game.px, H-170-bobY);
+  c.translate(Game.px, cy-bobY);
   c.rotate(tilt);
-  c.drawImage(im, -dw/2, -dh, dw, dh);
+  c.drawImage(im, -dw/2, -dh/2, dw, dh);
   c.restore();
   return {ph, dh};
 }
