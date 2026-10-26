@@ -50,6 +50,10 @@ let cat, seeker, phase, phaseT, clock, spot, hbT, hbPulse, stepT, musicOn, autoT
 let dustT, seekDustT, seekStep, safeTick, seenK, dangerK, beat, torchT, sparkT, toldT, mugT, lanternT;
 const isAutoBot = () => isAuto && !g.dumb();
 
+/* ---- masked jump scares: the seeker wears one mask per round ---- */
+const MASKS = ['clown', 'hockey', 'pale'];
+let mask = MASKS[0], scareT = 0, pendingEnd = null;
+
 function resetRound() {
   cat = { x: 268, y: 496, vx: 0, vy: 0, sq: 1, anim: 0, moving: 0, t: 0 };
   seeker = { x: 110, y: 296, ang: Math.PI / 2, sweep: 0, leg: 0, legT: 0, waitT: .6, hear: 0, hearAng: 0, chase: 0, spd: 74, walk: 0 };
@@ -57,6 +61,8 @@ function resetRound() {
   hbT = 1; hbPulse = 0; stepT = 0; musicOn = false; autoT = 0; hinted = 0; botT = 0; botGoal = 0; shakeT = 0;
   dustT = 0; seekDustT = 0; seekStep = 0; safeTick = 4; seenK = 0; dangerK = 0; beat = 0;
   torchT = 0; sparkT = 0; toldT = 0; mugT = 0; lanternT = 0;
+  mask = MASKS[Math.floor(rnd(0, MASKS.length))];
+  scareT = 0; pendingEnd = null;
   g.combo.win = 4.6;                 // the stealth streak window: one safe tick per 4s
   g.combo.reset();
   g.cam.scale = 1.05;                // ease out of a slow push-in during the intro
@@ -284,6 +290,12 @@ function update(dt) {
   phaseT += dt;
   if (isAuto) autoT += dt;
 
+  /* ---- jump scare: the catch holds on the mask before the end card lands ---- */
+  if (phase === 'caught') {
+    scareT += dt;
+    if (scareT > 1.05 && pendingEnd) { const e = pendingEnd; pendingEnd = null; g.end(e); }
+  }
+
   /* ---- the seeker ---- */
   const s = seeker;
   const hunting = phase === 'hunt';
@@ -416,6 +428,7 @@ function update(dt) {
     if (clock > 20 && toldT < 20) {
       toldT = 20;
       g.showBanner('20s  ·  ALMOST THERE', .9); sfx('tick', { pitch: 1.55, vol: .55 });
+      sfx('charge', { pitch: .7, vol: .6 });   // fake-out beat: the lights die for a blink (drawn in draw)
       g.flash('#ffd34d', .16); g.punch(.06); g.hitstop(.04);
       g.fx.emit('ring', W / 2, 470, { size: 190, life: .5, color: '#ffd34d', add: true, wide: 7 });
     }
@@ -443,6 +456,10 @@ function caught() {
   sfx('groan', { vol: .9, pitch: 1.25 });
   sfx('boom', { vol: .5, pitch: .9 });
   sfx('glass', { vol: .35, pitch: .8 });
+  /* the jump-scare sting, layered on top of the catch impact */
+  sfx('groan', { pitch: 2.4, vol: 1 });
+  sfx('glass', { pitch: .6, vol: .5 });
+  sfx('boom', { pitch: 1.4, vol: .6 });
   g.impact(cat.x, cat.y - 40, { punch: .26, shake: 28, stop: .17, rip: 1.6, flash: '#ff2b4e', flashA: .5 });
   g.slowmo(.28, 1.25);
   g.cam.scale = 1.1;                                     // he lunges in
@@ -454,7 +471,9 @@ function caught() {
   g.combo.miss();
   g.popup('CAUGHT!', cat.x, cat.y - 130, '#ff5c78', 44);
   g.showBanner('SPOTTED!', 1.6);
-  g.end({ win: false, score: Math.round(g.score), label: 'SCORE', progress: Math.round(clamp(clock / SURVIVE * 100, 0, 100)) });
+  /* defer the end card: update() fires it once the scare has played out */
+  pendingEnd = { win: false, score: Math.round(g.score), label: 'SCORE', progress: Math.round(clamp(clock / SURVIVE * 100, 0, 100)) };
+  scareT = 0;
 }
 
 function win() {
@@ -581,6 +600,69 @@ function drawFurn(f, alpha) {
   ctx.restore();
 }
 
+/* the seeker's mask — flat canvas shapes, reads at head size and at scare size */
+function drawMask(c, type, x, y, rx, ry) {
+  c.save();
+  c.translate(x, y);
+  const lw = Math.max(1.5, rx * .07);
+  if (type === 'clown') {
+    /* hair tufts first so the face overlaps their roots */
+    c.fillStyle = '#e8542e';
+    c.beginPath(); c.arc(-rx * .96, -ry * .28, rx * .4, 0, TAU); c.fill();
+    c.beginPath(); c.arc(rx * .96, -ry * .28, rx * .4, 0, TAU); c.fill();
+    c.fillStyle = '#f4f1ea';
+    c.beginPath(); c.ellipse(0, 0, rx, ry, 0, 0, TAU); c.fill();
+    c.strokeStyle = 'rgba(12,6,18,.6)'; c.lineWidth = lw;
+    c.beginPath(); c.ellipse(0, 0, rx, ry, 0, 0, TAU); c.stroke();
+    /* eye diamonds: one red, one blue */
+    c.fillStyle = '#c22424';
+    c.beginPath(); c.moveTo(-rx * .38, -ry * .5); c.lineTo(-rx * .16, -ry * .22); c.lineTo(-rx * .38, ry * .04); c.lineTo(-rx * .6, -ry * .22); c.closePath(); c.fill();
+    c.fillStyle = '#2456c2';
+    c.beginPath(); c.moveTo(rx * .38, -ry * .5); c.lineTo(rx * .6, -ry * .22); c.lineTo(rx * .38, ry * .04); c.lineTo(rx * .16, -ry * .22); c.closePath(); c.fill();
+    /* round nose + wide grin */
+    c.fillStyle = '#d92b2b';
+    c.beginPath(); c.arc(0, ry * .1, rx * .23, 0, TAU); c.fill();
+    c.strokeStyle = '#c22424'; c.lineWidth = Math.max(2, rx * .15); c.lineCap = 'round';
+    c.beginPath(); c.arc(0, ry * .16, rx * .6, Math.PI * .18, Math.PI * .82); c.stroke();
+  } else if (type === 'hockey') {
+    c.fillStyle = '#e8e2d2';
+    c.beginPath(); c.ellipse(0, 0, rx, ry, 0, 0, TAU); c.fill();
+    c.strokeStyle = 'rgba(40,32,24,.55)'; c.lineWidth = lw;
+    c.beginPath(); c.ellipse(0, 0, rx, ry, 0, 0, TAU); c.stroke();
+    /* strap line */
+    c.strokeStyle = 'rgba(70,58,44,.65)'; c.lineWidth = Math.max(1.5, rx * .09);
+    c.beginPath(); c.moveTo(-rx * .92, -ry * .52); c.lineTo(rx * .92, -ry * .52); c.stroke();
+    /* eye holes */
+    c.fillStyle = '#14100c';
+    c.beginPath(); c.ellipse(-rx * .36, -ry * .16, rx * .17, ry * .2, 0, 0, TAU); c.fill();
+    c.beginPath(); c.ellipse(rx * .36, -ry * .16, rx * .17, ry * .2, 0, 0, TAU); c.fill();
+    /* vent holes: a grid over the lower half */
+    c.fillStyle = 'rgba(20,16,12,.82)';
+    for (let row = 0; row < 3; row++) {
+      for (let col = 0; col < 4; col++) {
+        c.beginPath(); c.arc((col - 1.5) * rx * .3, ry * (.24 + row * .24), Math.max(1.2, rx * .07), 0, TAU); c.fill();
+      }
+    }
+  } else { /* pale */
+    const ey2 = ry * 1.18;
+    c.fillStyle = '#e9e4da';
+    c.beginPath(); c.ellipse(0, 0, rx, ey2, 0, 0, TAU); c.fill();
+    c.strokeStyle = 'rgba(30,26,24,.5)'; c.lineWidth = lw;
+    c.beginPath(); c.ellipse(0, 0, rx, ey2, 0, 0, TAU); c.stroke();
+    /* hollow black eyes */
+    c.fillStyle = '#060505';
+    c.beginPath(); c.ellipse(-rx * .34, -ey2 * .18, rx * .17, ey2 * .26, 0, 0, TAU); c.fill();
+    c.beginPath(); c.ellipse(rx * .34, -ey2 * .18, rx * .17, ey2 * .26, 0, 0, TAU); c.fill();
+    /* thin mouth slit */
+    c.strokeStyle = '#1a1512'; c.lineWidth = Math.max(1.5, rx * .07); c.lineCap = 'round';
+    c.beginPath(); c.moveTo(-rx * .3, ey2 * .46); c.lineTo(rx * .3, ey2 * .46); c.stroke();
+    /* a faint crack down from the crown */
+    c.strokeStyle = 'rgba(40,36,32,.55)'; c.lineWidth = Math.max(1, rx * .045);
+    c.beginPath(); c.moveTo(rx * .24, -ey2 * .88); c.lineTo(rx * .1, -ey2 * .55); c.lineTo(rx * .22, -ey2 * .3); c.lineTo(rx * .06, -ey2 * .02); c.stroke();
+  }
+  c.restore();
+}
+
 function drawSeeker() {
   const s = seeker;
   ctx.save();
@@ -594,6 +676,8 @@ function drawSeeker() {
   ctx.translate(s.x, s.y + bob);
   drawChar('human', ctx, 0, 0, h, { dir: 1, anim: s.walk > 0 ? 'walk' : 'idle', t: s.walk, color: '#3a4a63', hurt: spot > .7 });
   ctx.restore();
+  /* the mask he wears this round, flat over the face */
+  drawMask(ctx, mask, s.x + 5, s.y - 121 + bob, 17, 21);
   /* torch in hand */
   const ex = s.x, ey = s.y - EYE + bob;
   ctx.save();
@@ -727,6 +811,16 @@ function draw() {
   }
   ctx.restore();
 
+  /* fake-out at the 20s milestone: the lights die for a blink */
+  if (phase === 'hunt' && clock >= 20 && clock < 20.45) {
+    ctx.save();
+    ctx.setTransform(base, 0, 0, base, 0, 0);
+    ctx.globalAlpha = .88;
+    ctx.fillStyle = '#000';
+    ctx.fillRect(0, 0, W, H);
+    ctx.restore();
+  }
+
   /* ---------------- HUD (screen space: no camera wobble on the readouts) ---------------- */
   ctx.save();
   ctx.setTransform(base, 0, 0, base, 0, 0);
@@ -766,9 +860,29 @@ function draw() {
   ctx.globalAlpha = .45;
   g.text('DRAG ANYWHERE TO SNEAK', W / 2, 924, { size: 17, align: 'center', color: '#fff', ink: '#0a0418' });
   ctx.restore();
+
+  /* ---------------- jump scare: the mask fills the screen ---------------- */
+  if (phase === 'caught' && scareT < 1.0) {
+    ctx.save();
+    ctx.setTransform(base, 0, 0, base, 0, 0);
+    const fade = scareT > .8 ? clamp(1 - (scareT - .8) / .2, 0, 1) : 1;
+    ctx.globalAlpha = Math.min(1, scareT / .07) * .96 * fade;
+    ctx.fillStyle = '#020104';
+    ctx.fillRect(0, 0, W, H);
+    if (scareT < .18) {   // a red flash as it hits
+      ctx.globalAlpha = (1 - scareT / .18) * .5 * fade;
+      ctx.fillStyle = '#c00d24';
+      ctx.fillRect(0, 0, W, H);
+    }
+    const k = Math.min(1, scareT / .35);
+    const sw = lerp(60, 200, k);
+    ctx.globalAlpha = fade;
+    drawMask(ctx, mask, W / 2 + rnd(-5, 5), H / 2 + rnd(-5, 5), sw, sw * 1.24);
+    ctx.restore();
+  }
 }
 
 g.run(update, draw);
 resetMatch();
 window.__g = g;
-window.__dbg = () => ({ phase, clock: Math.round(clock * 10) / 10, spot: Math.round(spot * 100) / 100, cat: [Math.round(cat.x), Math.round(cat.y)], seeker: [Math.round(seeker.x), Math.round(seeker.y)], leg: seeker.leg });
+window.__dbg = () => ({ phase, clock: Math.round(clock * 10) / 10, spot: Math.round(spot * 100) / 100, cat: [Math.round(cat.x), Math.round(cat.y)], seeker: [Math.round(seeker.x), Math.round(seeker.y)], leg: seeker.leg, mask, scareT: Math.round(scareT * 100) / 100 });
