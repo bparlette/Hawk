@@ -57,6 +57,7 @@ body.touch #touch{display:block}
 const Q = new URLSearchParams(location.search);
 const CAPTURE = Q.has('capture');            // fixed-step, offline audio, driven by window.__rq.frame()
 const DEMO = Q.get('demo') || '';            // scripted sequences for video capture
+const MASKQ = Q.get('mask') || '';           // force a stalker mask: clown | hockey | pale
 const FIXW = +Q.get('w') || 0, FIXH = +Q.get('h') || 0;
 const IS_TOUCH = ('ontouchstart' in window) || navigator.maxTouchPoints > 0;
 if (IS_TOUCH) document.body.classList.add('touch');
@@ -393,6 +394,59 @@ const stalker = (() => {
     x: 0, z: 0, yaw: 0, phase: 0, speed: 0, state: 'patrol', stun: 0, crit: 0, path: [], repath: 0, target: null, roar: 0, twitch: 0, lastSeen: null, alert: 0, step: 0, scream: 0, peek: null, hidden: false, kneel: 0 };
 })();
 
+// ============================================================ stalker masks (procedural: same geometry/material idiom as the face itself)
+// One mask per run, re-rolled on scripted spawns; ?mask=clown|hockey|pale forces one. Built AFTER
+// hitHead/hitBody were collected, so masks never block shots — headshots still land on the skull.
+const MASKNAMES = ['clown', 'hockey', 'pale'];
+const masks = (() => {
+  const H = stalker.head, glowM = stalker.eyes[0].material;
+  const holeM = new THREE.MeshBasicMaterial({ color: 0x000000 });
+  const strapM = new THREE.MeshStandardMaterial({ color: 0x17120c, roughness: .9 });
+  const mk = (geo, m, p, x = 0, y = 0, z = 0) => { const o = new THREE.Mesh(geo, m); o.position.set(x, y, z); o.castShadow = true; p.add(o); return o; };
+  // z of the mask shell (ellipsoid hugging the skull: centre y .14, radii sx*r / sy*r / r) at head-local x,y
+  const surfZ = (x, y, sx = .9, sy = 1.25, r = .24) => { const dx = x / (sx * r), dy = (y - .14) / (sy * r), q = 1 - dx * dx - dy * dy; return q > 0 ? r * Math.sqrt(q) : 0; };
+  const shell = (p, color, rough, sx = .9, sy = 1.25) => { const m = new THREE.MeshStandardMaterial({ color, roughness: rough, side: THREE.DoubleSide });
+    const o = mk(new THREE.SphereGeometry(.24, 22, 16, 0, Math.PI, .48, 2.05), m, p, 0, .14, .004); o.scale.set(sx, sy, 1); return o; };
+  const eyeHole = (p, x, y, w, h, glow, sx = .9, sy = 1.25) => { const z = surfZ(x, y, sx, sy); const e = mk(new THREE.SphereGeometry(.05, 10, 8), holeM, p, x, y, z + .002); e.scale.set(w, h, .3);
+    if (glow) mk(new THREE.SphereGeometry(.016, 8, 8), glowM, p, x, y, z + .014).scale.set(1, 1, .6); }; // the stalker's own red glow, seen in the hole
+  const vent = (p, x, y, sx, sy) => { const o = mk(new THREE.CylinderGeometry(.01, .01, .012, 6), holeM, p, x, y, surfZ(x, y, sx, sy) + .002); o.rotation.x = Math.PI / 2; };
+  // ---- clown: white face, red nose, painted grin, red/blue eye diamonds, orange tufts
+  const clown = new THREE.Group(); H.add(clown); shell(clown, 0xc9bda6, .55);
+  const diaM = [0xb01a1a, 0x1a3aa0].map(c => new THREE.MeshStandardMaterial({ color: c, roughness: .5 }));
+  const dia = (x, y, m) => { const d = mk(new THREE.BoxGeometry(.085, .125, .012), m, clown, x, y, surfZ(x, y) + .002); d.rotation.z = Math.PI / 4; };
+  dia(-.072, .215, diaM[0]); dia(.072, -.02, diaM[1]);
+  eyeHole(clown, -.072, .09, 1.15, 1.5, true); eyeHole(clown, .072, .09, 1.15, 1.5, true);
+  mk(new THREE.SphereGeometry(.048, 10, 8), new THREE.MeshStandardMaterial({ color: 0xb01818, roughness: .35 }), clown, 0, .015, surfZ(0, .015) + .012); // nose
+  const grinM = new THREE.MeshStandardMaterial({ color: 0x5f0a08, roughness: .5 });
+  for (let i = 0; i < 5; i++) { const gx = -.084 + i * .042, gy = -.078 + Math.pow(Math.abs(gx) / .084, 2) * .052; const b = mk(new THREE.BoxGeometry(.034, .016, .008), grinM, clown, gx, gy, surfZ(gx, gy) + .003); b.rotation.z = gx * 1.5; }
+  for (const s of [-1, 1]) { const t = mk(new THREE.BoxGeometry(.009, .034, .008), grinM, clown, s * .093, -.012, surfZ(s * .093, -.012) + .002); t.rotation.z = s * .35; // grin corner cuts
+    const ch = mk(new THREE.SphereGeometry(.036, 8, 6), new THREE.MeshStandardMaterial({ color: 0xb03430, roughness: .6 }), clown, s * .118, -.012, surfZ(s * .118, -.012) + .002); ch.scale.set(1, 1, .3); // cheeks
+    const tu = mk(new THREE.SphereGeometry(.062, 8, 8), new THREE.MeshStandardMaterial({ color: 0xc85a14, roughness: .95 }), clown, s * .185, .25, -.01); tu.scale.set(1, 1.2, .85); } // hair tufts
+  // ---- hockey: off-white oval, dark eye holes, vent grid, straps
+  const hockey = new THREE.Group(); H.add(hockey); shell(hockey, 0xbfb49a, .65, .92, 1.28);
+  eyeHole(hockey, -.072, .09, 1.5, .85, true, .92, 1.28); eyeHole(hockey, .072, .09, 1.5, .85, true, .92, 1.28);
+  for (const vx of [-.03, 0, .03]) vent(hockey, vx, .245, .92, 1.28); // forehead vents
+  vent(hockey, -.018, .005, .92, 1.28); vent(hockey, .018, .005, .92, 1.28); // nose vents
+  for (let i = 0; i < 4; i++) vent(hockey, -.045 + i * .03, -.03, .92, 1.28);
+  for (let i = 0; i < 5; i++) vent(hockey, -.056 + i * .028, -.06, .92, 1.28);
+  for (let i = 0; i < 4; i++) vent(hockey, -.042 + i * .028, -.09, .92, 1.28);
+  for (const s of [-1, 1]) mk(new THREE.BoxGeometry(.014, .055, .32), strapM, hockey, s * .228, .14, 0); // side straps
+  // ---- pale: elongated bone-white, hollow black eyes, thin mouth slit, cracked forehead
+  const pale = new THREE.Group(); H.add(pale); shell(pale, 0xc4bba6, .7, .84, 1.42);
+  eyeHole(pale, -.068, .1, 1, 1.45, false, .84, 1.42); eyeHole(pale, .068, .1, 1, 1.45, false, .84, 1.42); // hollow: no glow
+  mk(new THREE.SphereGeometry(.009, 6, 6), holeM, pale, -.016, -.005, surfZ(-.016, -.005, .84, 1.42) + .002);
+  mk(new THREE.SphereGeometry(.009, 6, 6), holeM, pale, .016, -.005, surfZ(.016, -.005, .84, 1.42) + .002);
+  mk(new THREE.BoxGeometry(.075, .009, .01), holeM, pale, 0, -.095, surfZ(0, -.095, .84, 1.42) + .002); // mouth slit
+  const crackM = new THREE.MeshStandardMaterial({ color: 0x2a251c, roughness: .9 });
+  const crack = (x, y, rz) => { const c = mk(new THREE.BoxGeometry(.006, .05, .006), crackM, pale, x, y, surfZ(x, y, .84, 1.42) + .002); c.rotation.z = rz; };
+  crack(.032, .28, .3); crack(.047, .232, -.25); crack(.02, .325, .12);
+  return { clown, hockey, pale };
+})();
+stalker.masks = masks;
+function setMask(name) { for (const k of MASKNAMES) masks[k].visible = k === name; stalker.mask = name; }
+function pickMask() { setMask(MASKQ || MASKNAMES[Math.floor(Math.random() * MASKNAMES.length)]); }
+pickMask();
+
 // ============================================================ audio (shared synth for live + offline render)
 const SR = 44100;
 const noiseCache = new WeakMap();
@@ -455,6 +509,7 @@ function resetGame() {
   gate.lift = 0; gate.slots.forEach(s => s.material.emissive.setHex(0));
   doors.forEach(d => { if (d.hinge.parent !== d.g) { d.hinge.parent && d.hinge.parent.remove(d.hinge); d.g.add(d.hinge); } d.burst = false; d.vel = null; d.hinge.position.set(-.55, 0, 0); d.hinge.rotation.set(0, 0, 0); d.open = 0; d.hinge.visible = true; });
   Object.assign(stalker, { x: cx(S0[0]), z: cz(S0[1]), yaw: 0, state: 'patrol', stun: 0, crit: 0, path: [], target: null, lastSeen: null, alert: 0, peek: null, scream: 0, kneel: 0 });
+  pickMask(); // a fresh mask every run
   G.mode = 'play';
 }
 
@@ -552,7 +607,7 @@ function spawnBlood(p, n) { for (let i = 0; i < n; i++) { const m = new THREE.Me
 // ============================================================ scripted scares
 function lightningStrike(strength = 1) { G.flash = 1; G.flashLeft = .55; audio.play('thunder', { v: strength }); portraits.forEach(m => m.emissive.setHex(0x221111)); }
 function hallReveal() { // lightning reveals the stalker standing at the far window end of the hall
-  G.scripted.hallReveal = true;
+  G.scripted.hallReveal = true; pickMask();
   const spot = [1, 6]; stalker.x = cx(spot[0]) + .6; stalker.z = cz(spot[1]); stalker.state = 'reveal'; stalker.revealT = 1.4; stalker.yaw = Math.atan2(G.x - stalker.x, G.z - stalker.z);
   lightningStrike(1.3); setTimeout2(() => { audio.play('stinger', { k: 1 }); G.scare = 1; }, .08); setTimeout2(() => audio.play('scream', { v: .8 }), .5);
   toast('...', 1);
@@ -563,7 +618,7 @@ function doorBurst() { if (G.scripted.doorBurst || G.mode !== 'play') return;
   if (!best) return; G.scripted.doorBurst = true; burstDoor(best, true); }
 function burstDoor(d, placeStalker) {
   const dx = d.ns ? 1 : 0, dz = d.ns ? 0 : 1; const side = ((G.x - cx(d.c)) * dx + (G.z - cz(d.r)) * dz) > 0 ? -1 : 1; // far side from the player
-  if (placeStalker) { stalker.x = cx(d.c) + dx * side * 2.2; stalker.z = cz(d.r) + dz * side * 2.2; stalker.yaw = Math.atan2(-dx * side, -dz * side); }
+  if (placeStalker) { stalker.x = cx(d.c) + dx * side * 2.2; stalker.z = cz(d.r) + dz * side * 2.2; stalker.yaw = Math.atan2(-dx * side, -dz * side); pickMask(); }
   d.burst = true; d.open = 0; d.vel = new THREE.Vector3(-dx * side * 7, 2.5, -dz * side * 7); d.spin = (Math.random() - .5) * 8;
   // detach the panel to world space so it flies
   const wp = new THREE.Vector3(); d.hinge.getWorldPosition(wp); const wq = new THREE.Quaternion(); d.hinge.getWorldQuaternion(wq);
@@ -572,7 +627,8 @@ function burstDoor(d, placeStalker) {
   stalker.state = 'chase'; stalker.roar = .9; stalker.lastSeen = { x: G.x, z: G.z };
 }
 function caught() { // close-face death scare
-  if (G.mode !== 'play') return; G.mode = 'caught'; G.faceT = 0; if (G.hiding) G.hiding.wdoors.visible = true; G.hiding = null; audio.play('stinger', { k: .9 }); audio.play('scream', { v: 1.2 }); G.scare = 1; G.shake = 1; stalker.state = 'grab'; }
+  if (G.mode !== 'play') return; G.mode = 'caught'; G.faceT = 0; if (G.hiding) G.hiding.wdoors.visible = true; G.hiding = null; audio.play('stinger', { k: .9 }); audio.play('scream', { v: 1.2 }); G.scare = 1; G.shake = 1; stalker.state = 'grab';
+  setTimeout2(() => audio.play('stinger', { k: 1.25 }), .38); } // second hit as the masked face fills the view
 function hurtPlayer() { if (G.invuln > 0 || G.mode !== 'play') return; G.hp--; if (G.hp <= 0) { caught(); return; }
   G.invuln = 2.0; G.hurt = 1; G.shake = .7; audio.play('stinger', { k: 1.3 }); audio.play('gasp', { f: 900 }); big('DANGER', 1.2);
   const a = Math.atan2(G.x - stalker.x, G.z - stalker.z); moveCircle(G, Math.sin(a) * 1.4, Math.cos(a) * 1.4, .35); stalker.stun = .9; stalker.state = 'stunned'; }
@@ -644,7 +700,7 @@ function updateStalker(dt) {
   const dP = Math.hypot(G.x - S.x, G.z - S.z);
   const seesPlayer = !G.hiding && dP < 22 && los(S.x, S.z, G.x, G.z);
   let speed = 0, tgt = null;
-  if (G.mode === 'caught') { S.yaw = Math.atan2(G.x - S.x, G.z - S.z); S.scream = 1; animStalker(dt, 0); return; }
+  if (G.mode === 'caught') { S.yaw = Math.atan2(G.x - S.x, G.z - S.z); S.scream = 1; S.head.position.z = Math.min(.24, G.faceT * 1.5); animStalker(dt, 0); return; } // the masked face lunges at the camera
   if (S.stun > 0) { S.stun -= dt; if (S.crit > 0) { S.crit -= dt; S.kneel = Math.min(1, S.kneel + dt * 5); } if (S.stun <= 0) { S.state = 'chase'; S.lastSeen = { x: G.x, z: G.z }; S.roar = .8; audio.play('scream', { v: .7 }); } animStalker(dt, 0); return; }
   S.kneel = Math.max(0, S.kneel - dt * 2);
   if (S.state === 'reveal') { S.revealT -= dt; S.yaw = Math.atan2(G.x - S.x, G.z - S.z); if (S.revealT <= 0) { S.state = 'chase'; S.lastSeen = { x: G.x, z: G.z }; } animStalker(dt, 0); return; }
@@ -677,6 +733,7 @@ function updateStalker(dt) {
 function startPeek(w) { w.peeked = true; const S = stalker; S.state = 'peek'; S.peek = w; S.peekDur = S.peekT = 4.2; S.notice = 0; audio.play('stinger', { k: .85 }); G.scare = .8; audio.play('creak'); }
 function animStalker(dt, speed) {
   const S = stalker; S.phase += dt * (1.1 + speed * 1.35);
+  if (G.mode !== 'caught') S.head.position.z = Math.max(0, S.head.position.z - dt * .9); // caught-lunge relaxes
   S.root.position.set(S.x, 0, S.z); S.root.rotation.y = S.yaw;
   const sw = Math.sin(S.phase) * Math.min(1, speed / 2.5);
   S.legs[0].up.rotation.x = sw * .7; S.legs[1].up.rotation.x = -sw * .7; S.legs[0].kn.rotation.x = Math.max(0, -Math.cos(S.phase)) * .9 * Math.min(1, speed / 2); S.legs[1].kn.rotation.x = Math.max(0, Math.cos(S.phase)) * .9 * Math.min(1, speed / 2);
@@ -828,12 +885,12 @@ function setupDemo(name) {
   }
   if (name === 'tour') { G.x = cx(7); G.z = cz(9); G.yaw = Math.PI; put(13, 11); S.state = 'scripted'; runScript([(el) => { autoWalk({ x: cx(7), z: cz(5) }); return el > 3; }, wait(99)]); }
 }
-function hallRevealAt(c, r) { const S = stalker; S.x = cx(c) + .7; S.z = cz(r); S.state = 'reveal'; S.revealT = 1.4; S.yaw = Math.atan2(G.x - S.x, G.z - S.z); lightningStrike(1.3); setTimeout2(() => { audio.play('stinger', { k: 1 }); G.scare = 1; }, .06); setTimeout2(() => audio.play('scream', { v: .8 }), .45); }
+function hallRevealAt(c, r) { pickMask(); const S = stalker; S.x = cx(c) + .7; S.z = cz(r); S.state = 'reveal'; S.revealT = 1.4; S.yaw = Math.atan2(G.x - S.x, G.z - S.z); lightningStrike(1.3); setTimeout2(() => { audio.play('stinger', { k: 1 }); G.scare = 1; }, .06); setTimeout2(() => audio.play('scream', { v: .8 }), .45); }
 
 // ============================================================ loop + capture API
 let last = performance.now();
 function loop(now) { const dt = Math.min(.05, (now - last) / 1000); last = now; update(dt); render(); requestAnimationFrame(loop); }
-window.__rq = { G, stalker, doors, wardrobes, crests, setupDemo, resetGame, update, render, renderAudioWav, audio, fire, interact, burstDoor, caption,
+window.__rq = { G, stalker, doors, wardrobes, crests, setupDemo, resetGame, update, render, renderAudioWav, audio, fire, interact, burstDoor, caption, setMask, pickMask,
   frame(n = 1) { for (let i = 0; i < n; i++) update(1 / 30); render(); },
   capStart() { audio.t0 = G.time; audio.events = []; } };
 if (CAPTURE) { titleEl.style.display = 'none'; if (DEMO) setupDemo(DEMO); else resetGame(); render(); window.__rqReady = true; }
