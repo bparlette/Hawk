@@ -1,0 +1,1945 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
+<meta name="theme-color" content="#0d1434">
+<title>Trick or Treat Toss — Cat Arcade</title>
+<style>
+  html,body{margin:0;height:100%;background:#05060f;overflow:hidden;touch-action:none}
+  body{display:flex;align-items:center;justify-content:center}
+  canvas{image-rendering:pixelated;image-rendering:crisp-edges;background:#0d1434;
+         box-shadow:0 0 0 4px #1c2440,0 0 44px rgba(20,30,80,.55);cursor:crosshair}
+</style>
+</head>
+<body>
+<canvas id="cv" width="256" height="240"></canvas>
+<script type="application/json" id="spritedata">{
+ "palette": {
+  ".": null,
+  "K": [
+   20,
+   20,
+   30
+  ],
+  "W": [
+   248,
+   248,
+   248
+  ],
+  "w": [
+   188,
+   188,
+   204
+  ],
+  "S": [
+   240,
+   184,
+   120
+  ],
+  "s": [
+   198,
+   138,
+   82
+  ],
+  "O": [
+   248,
+   120,
+   0
+  ],
+  "o": [
+   200,
+   76,
+   12
+  ],
+  "Y": [
+   255,
+   210,
+   63
+  ],
+  "R": [
+   216,
+   40,
+   0
+  ],
+  "r": [
+   255,
+   64,
+   64
+  ],
+  "G": [
+   0,
+   168,
+   68
+  ],
+  "g": [
+   108,
+   200,
+   96
+  ],
+  "P": [
+   124,
+   60,
+   220
+  ],
+  "p": [
+   255,
+   158,
+   203
+  ],
+  "B": [
+   36,
+   84,
+   220
+  ],
+  "b": [
+   88,
+   156,
+   255
+  ],
+  "N": [
+   26,
+   36,
+   84
+  ],
+  "H": [
+   140,
+   92,
+   44
+  ],
+  "h": [
+   196,
+   140,
+   60
+  ],
+  "F": [
+   255,
+   96,
+   0
+  ],
+  "f": [
+   255,
+   176,
+   0
+  ],
+  "C": [
+   120,
+   200,
+   255
+  ],
+  "M": [
+   150,
+   150,
+   170
+  ],
+  "E": [
+   90,
+   60,
+   140
+  ]
+ },
+ "sprites": {
+  "kid_ghost_walk_a": [
+   "........................",
+   "......WWWWWWWWWW........",
+   "....WWWWWWWWWWWWWW......",
+   "...WWWWWWWWWWWWWWWW.....",
+   "...WWWWWWWWWWWWWWWW.....",
+   "...WWKKWWWWWWWWKKWW.....",
+   "...WWKKWWWWWWWWKKWW.....",
+   "...WWWWWWKKWWWWWWW......",
+   "....WWWWWWWWWWWWWW......",
+   "..WWWWWWWWWWWWWWWWWW....",
+   "..WWWWWWWWWWWWWWWWWW....",
+   ".WWWWWWWWWWWWWWWWWWWW...",
+   ".WWWWWWWWWWWWWWWWWWWW...",
+   ".WWWWWWWWWWWWWWWWWWWW...",
+   ".WWWWWWWWWWWWWWWWWWWW...",
+   ".WWWWWWWWWWWWWWWWWWWW...",
+   ".WWWWWWWWWWWWWWWWWWwW...",
+   ".WWWWWWKWWWWWWKWWWWwW...",
+   ".WWWWWKOKWWWWKOKWWWwW...",
+   ".WWWWOOOOOOOOOOOOWWwW...",
+   "..WWOOOOOOOOOOOOOOWw....",
+   "..WWOOKOOOOOOOKOOOWw....",
+   "...WOOOOOOOOOOOOOOw.....",
+   "...WOOOOKKKKOOOOOOw.....",
+   "...WOOOOOOOOOOOOOOw.....",
+   "....WOOOOOOOOOOOww......",
+   "....WWooooooooWWww......",
+   "....WWWWWWWWWWWWww......",
+   "....WW.WWWW.WWWWww......",
+   "....WW.WWWW.WWWWww......",
+   "........................",
+   "........................"
+  ],
+  "kid_ghost_walk_b": [
+   "........................",
+   "......WWWWWWWWWW........",
+   "....WWWWWWWWWWWWWW......",
+   "...WWWWWWWWWWWWWWWW.....",
+   "...WWWWWWWWWWWWWWWW.....",
+   "...WWKKWWWWWWWWKKWW.....",
+   "...WWKKWWWWWWWWKKWW.....",
+   "...WWWWWWKKWWWWWWW......",
+   "....WWWWWWWWWWWWWW......",
+   "..WWWWWWWWWWWWWWWWWW....",
+   "..WWWWWWWWWWWWWWWWWW....",
+   ".WWWWWWWWWWWWWWWWWWWW...",
+   ".WWWWWWWWWWWWWWWWWWWW...",
+   ".WWWWWWWWWWWWWWWWWWWW...",
+   ".WWWWWWWWWWWWWWWWWWWW...",
+   ".WWWWWWWWWWWWWWWWWWWW...",
+   ".WWWWWWWWWWWWWWWWWWwW...",
+   ".WWWWWWKWWWWWWKWWWWwW...",
+   ".WWWWWKOKWWWWKOKWWWwW...",
+   ".WWWWOOOOOOOOOOOOWWwW...",
+   "..WWOOOOOOOOOOOOOOWw....",
+   "..WWOOKOOOOOOOKOOOWw....",
+   "...WOOOOOOOOOOOOOOw.....",
+   "...WOOOOKKKKOOOOOOw.....",
+   "...WOOOOOOOOOOOOOOw.....",
+   "....WOOOOOOOOOOOww......",
+   "....WWooooooooWWww......",
+   "....WWWWWWWWWWWWww......",
+   "....WWWWWWWWWWWWww......",
+   "....WW.WWWW.WWWWww......",
+   "........................",
+   "........................"
+  ],
+  "kid_ghost_happy": [
+   "........................",
+   "......WWWWWWWWWW........",
+   "....WWWWWWWWWWWWWW......",
+   "...WWWWWWWWWWWWWWWW.....",
+   "...WWWWWWWWWWWWWWWW.....",
+   "...WWKWWWWWWWWKWWWW.....",
+   "...WWWWWWWWWWWWWWWW.....",
+   "...WWWWWWKKKKWWWWW......",
+   "....WWWWWWWWWWWWWW......",
+   "..WWWWWWWWWWWWWWWWWW....",
+   "..WWWWWWWWWWWWWWWWWW....",
+   ".WWWWWWWWWWWWWWWWWWWW...",
+   ".WWWWWWWWWWWWWWWWWWWW...",
+   ".WWWWWWWWWWWWWWWWWWWW...",
+   ".WWWWWWWWWWWWWWWWWWWW...",
+   ".WWWWWWWWWWWWWWWWWWWW...",
+   ".WWWWWWWWWWWWWWWWWWwW...",
+   ".WWWWWWKWWWWWWKWWWWwW...",
+   ".WWWWWKOKWWWWKOKWWWwW...",
+   ".WWWWOOOOOOOOOOOOWWwW...",
+   "..WWOOOOOOOOOOOOOOWw....",
+   "..WWOOKOOOOOOOKOOOWw....",
+   "...WOOOOOOOOOOOOOOw.....",
+   "...WOOOOKKKKOOOOOOw.....",
+   "...WOOOOOOOOOOOOOOw.....",
+   "....WOOOOOOOOOOOww......",
+   "....WWooooooooWWww......",
+   "....WWWWWWWWWWWWww......",
+   "....WW.WWWW.WWWWww......",
+   "....WW.WWWW.WWWWww......",
+   "........................",
+   "........................"
+  ],
+  "kid_ghost_dizzy": [
+   "....Y..........Y........",
+   "......WWWWWWWWWW...Y....",
+   "....WWWWWWWWWWWWWW......",
+   "...WWWWWWWWWWWWWWWW.....",
+   "...WWKWKWWWWWWKWKWW.....",
+   "...WWWKWWWWWWWWKWWW.....",
+   "...WWKWKWWWWWWKWKWW.....",
+   "...WWWWWWKWWKWWWWW......",
+   "....WWWWWWWWWWWWWW......",
+   "..WWWWWWWWWWWWWWWWWW....",
+   "..WWWWWWWWWWWWWWWWWW....",
+   ".WWWWWWWWWWWWWWWWWWWW...",
+   ".WWWWWWWWWWWWWWWWWWWW...",
+   ".WWWWWWWWWWWWWWWWWWWW...",
+   ".WWWWWWWWWWWWWWWWWWWW...",
+   ".WWWWWWWWWWWWWWWWWWWW...",
+   ".WWWWWWWWWWWWWWWWWWwW...",
+   ".WWWWWWKWWWWWWKWWWWwW...",
+   ".WWWWWKOKWWWWKOKWWWwW...",
+   ".WWWWOOOOOOOOOOOOWWwW...",
+   "..WWOOOOOOOOOOOOOOWw....",
+   "..WWOOKOOOOOOOKOOOWw....",
+   "...WOOOOOOOOOOOOOOw.....",
+   "...WOOOOKKKKOOOOOOw.....",
+   "...WOOOOOOOOOOOOOOw.....",
+   "....WOOOOOOOOOOOww......",
+   "....WWooooooooWWww......",
+   "....WWWWWWWWWWWWww......",
+   "....WW.WWWW.WWWWww......",
+   "....WW.WWWW.WWWWww......",
+   "........................",
+   "........................"
+  ],
+  "kid_vampire_walk_a": [
+   "........................",
+   ".....KKKKKKKKKKKK.......",
+   "....KKMMKKKKKKKKKK......",
+   "....KKKwwwKKwwwKKK......",
+   "....KKwwwwwwwwwwKK......",
+   ".....wwwwwwwwwwww.......",
+   ".....wKKwwwwKKwww.......",
+   ".....wwwwwwwwwwww.......",
+   ".....wwwWwwwwWwww.......",
+   "......wwwwwwwwww........",
+   "....KKKKKKKKKKKKKK......",
+   "...KrKKKKrKrKKKKrK......",
+   "...KrKKKrWWWWrKKrK......",
+   "..SKrKKrWWWWWWrKKrKS....",
+   "..SKKKKrWWWWWWWWrKKKS...",
+   "...KKKrWWWWWWWWWWrKK....",
+   "...KKKrWWWYYWWWWrKK.....",
+   "...SKKKKKKrKKKKKKKS.....",
+   "....KKKOKKKKKKOK........",
+   "....NOOOOOOOOOOOO.......",
+   "....OOOOOOOOOOOOOO......",
+   "....OOKOOOOOOOKOOO......",
+   "....OOOOOOOOOOOOOO......",
+   "....OOOOKKKKOOOOOO......",
+   "....OOOOOOOOOOOOOO......",
+   "....NOOOOOOOOOOONN......",
+   "....NNoooooooo...NN.....",
+   "...NN.............NN....",
+   "...NN..............N....",
+   "..NNN...............K...",
+   "..KKK...................",
+   ".KKKK..................."
+  ],
+  "kid_vampire_walk_b": [
+   "........................",
+   ".....KKKKKKKKKKKK.......",
+   "....KKMMKKKKKKKKKK......",
+   "....KKKwwwKKwwwKKK......",
+   "....KKwwwwwwwwwwKK......",
+   ".....wwwwwwwwwwww.......",
+   ".....wKKwwwwKKwww.......",
+   ".....wwwwwwwwwwww.......",
+   ".....wwwWwwwwWwww.......",
+   "......wwwwwwwwww........",
+   "....KKKKKKKKKKKKKK......",
+   "...KrKKKKrKrKKKKrK......",
+   "...KrKKKrWWWWrKKrK......",
+   "..SKrKKrWWWWWWrKKrKS....",
+   "..SKKKKrWWWWWWWWrKKKS...",
+   "...KKKrWWWWWWWWWWrKK....",
+   "...KKKrWWWYYWWWWrKK.....",
+   "...SKKKKKKrKKKKKKKS.....",
+   "....KKKOKKKKKKOK........",
+   "....NOOOOOOOOOOOO.......",
+   "....OOOOOOOOOOOOOO......",
+   "....OOKOOOOOOOKOOO......",
+   "....OOOOOOOOOOOOOO......",
+   "....OOOOKKKKOOOOOO......",
+   "....OOOOOOOOOOOOOO......",
+   ".....OOOOOOOOOOO........",
+   ".....Noooooooo.NN.......",
+   ".....NN.........NN......",
+   "....NN...........NN.....",
+   "....NN............K.....",
+   "...KKK..................",
+   "..................KKKK.."
+  ],
+  "kid_vampire_happy": [
+   "........................",
+   ".....KKKKKKKKKKKK.......",
+   "....KKMMKKKKKKKKKK......",
+   "....KKKwwwKKwwwKKK......",
+   "....KKwwwwwwwwwwKK......",
+   ".....wwwwwwwwwwww.......",
+   ".....wKKwwwwKKwww.......",
+   ".....wwwwwwwwwwww.......",
+   ".....wwWKKKKWwwww.......",
+   "......wwwwwwwwww........",
+   "....KKKKKKKKKKKKKK......",
+   "...KrKKKKrKrKKKKrK......",
+   "...KrKKKrWWWWrKKrK......",
+   "..SKrKKrWWWWWWrKKrKS....",
+   "..SKKKKrWWWWWWWWrKKKS...",
+   "...KKKrWWWWWWWWWWrKK....",
+   "...KKKrWWWYYWWWWrKK.....",
+   "...SKKKKKKrKKKKKKKS.....",
+   "....KKKOKKKKKKOK........",
+   "....NOOOOOOOOOOOO.......",
+   "....OOOOOOOOOOOOOO......",
+   "....OOKOOOOOOOKOOO......",
+   "....OOOOOOOOOOOOOO......",
+   "....OOOOKKKKOOOOOO......",
+   "....OOOOOOOOOOOOOO......",
+   ".....OOOOOOOOOOON.......",
+   ".....Noooooooo.NN.......",
+   ".....NN........NN.......",
+   ".....NN........NN.......",
+   ".....NN........NN.......",
+   "....KKK........KKK......",
+   "....KKK........KKK......"
+  ],
+  "kid_vampire_dizzy": [
+   "...Y....KKKKKK......Y...",
+   ".....KKKKKKKKKKKK.......",
+   "....KKMMKKKKKKKKKK......",
+   "....KKKwwwKKwwwKKK......",
+   "....KKwwwwwwwwwwKK......",
+   ".....wwwwwwwwwwww.......",
+   ".....wKWwwwwWKwww.......",
+   ".....wwwwwwwwwwww.......",
+   ".....wwwwKWWKwwww.......",
+   "......wwwwwwwwww........",
+   "....KKKKKKKKKKKKKK......",
+   "...KrKKKKrKrKKKKrK......",
+   "...KrKKKrWWWWrKKrK......",
+   "..SKrKKrWWWWWWrKKrKS....",
+   "..SKKKKrWWWWWWWWrKKKS...",
+   "...KKKrWWWWWWWWWWrKK....",
+   "...KKKrWWWYYWWWWrKK.....",
+   "...SKKKKKKrKKKKKKKS.....",
+   "....KKKOKKKKKKOK........",
+   "....NOOOOOOOOOOOO.......",
+   "....OOOOOOOOOOOOOO......",
+   "....OOKOOOOOOOKOOO......",
+   "....OOOOOOOOOOOOOO......",
+   "....OOOOKKKKOOOOOO......",
+   "....OOOOOOOOOOOOOO......",
+   "....NOOOOOOOOOOONN......",
+   "....NNoooooooo...NN.....",
+   "...NN.............NN....",
+   "...NN..............N....",
+   "..NNN...............K...",
+   "..KKK...................",
+   ".KKKK..................."
+  ],
+  "kid_witch_walk_a": [
+   "..........PP............",
+   ".........PPPP...........",
+   ".........PPPP...........",
+   "........PPPPPP..........",
+   ".......PPPPPPPP.........",
+   "......PPPPPPPPPP........",
+   ".....PPPPPPPPPPPP.......",
+   "....KKKKKKKKKKKKKK......",
+   "....KKKKKKKKKKKKKK......",
+   ".....hhhhhhhhhhhh.......",
+   ".....hggggggggggh.......",
+   ".....ggKggggKgggh.......",
+   ".....gggggggggggh.......",
+   ".....gggKKKKggggh.......",
+   "......ggggggggg.........",
+   "....PPPPPPPPPPPPP.......",
+   "...PPPPEPPPPPPPPP.......",
+   "...SPEEKPPPPPPKPP.......",
+   "...SSPKOKPPPPKOKP.......",
+   "....POOOOOOOOOOOO.......",
+   "....OOOOOOOOOOOOOO......",
+   "....OOKOOOOOOOKOOO......",
+   "....OOOOOOOOOOOOOO......",
+   "....OOOOKKKKOOOOOO......",
+   "....OOOOOOOOOOOOOO......",
+   "....GOOOOOOOOOOOGG......",
+   "....GGoooooooo...GG.....",
+   "...GG.............GG....",
+   "...GG..............G....",
+   "..GGG...............K...",
+   "..KKK...................",
+   ".KKKK..................."
+  ],
+  "kid_witch_walk_b": [
+   "..........PP............",
+   ".........PPPP...........",
+   ".........PPPP...........",
+   "........PPPPPP..........",
+   ".......PPPPPPPP.........",
+   "......PPPPPPPPPP........",
+   ".....PPPPPPPPPPPP.......",
+   "....KKKKKKKKKKKKKK......",
+   "....KKKKKKKKKKKKKK......",
+   ".....hhhhhhhhhhhh.......",
+   ".....hggggggggggh.......",
+   ".....ggKggggKgggh.......",
+   ".....gggggggggggh.......",
+   ".....gggKKKKggggh.......",
+   "......ggggggggg.........",
+   "....PPPPPPPPPPPPP.......",
+   "...PPPPEPPPPPPPPP.......",
+   "...SPEEKPPPPPPKPP.......",
+   "...SSPKOKPPPPKOKP.......",
+   "....POOOOOOOOOOOO.......",
+   "....OOOOOOOOOOOOOO......",
+   "....OOKOOOOOOOKOOO......",
+   "....OOOOOOOOOOOOOO......",
+   "....OOOOKKKKOOOOOO......",
+   "....OOOOOOOOOOOOOO......",
+   ".....OOOOOOOOOOO........",
+   ".....Goooooooo.GG.......",
+   ".....GG.........GG......",
+   "....GG...........GG.....",
+   "....GG............K.....",
+   "...KKK..................",
+   "..................KKKK.."
+  ],
+  "kid_witch_happy": [
+   "..........PP............",
+   ".........PPPP...........",
+   ".........PPPP...........",
+   "........PPPPPP..........",
+   ".......PPPPPPPP.........",
+   "......PPPPPPPPPP........",
+   ".....PPPPPPPPPPPP.......",
+   "....KKKKKKKKKKKKKK......",
+   "....KKKKKKKKKKKKKK......",
+   ".....hhhhhhhhhhhh.......",
+   ".....hggggggggggh.......",
+   ".....ggWggggWgggh.......",
+   ".....gggggggggggh.......",
+   ".....gggKWWKggggh.......",
+   "......ggggggggg.........",
+   "....PPPPPPPPPPPPP.......",
+   "...PPPPEPPPPPPPPP.......",
+   "...SPEEKPPPPPPKPP.......",
+   "...SSPKOKPPPPKOKP.......",
+   "....POOOOOOOOOOOO.......",
+   "....OOOOOOOOOOOOOO......",
+   "....OOKOOOOOOOKOOO......",
+   "....OOOOOOOOOOOOOO......",
+   "....OOOOKKKKOOOOOO......",
+   "....OOOOOOOOOOOOOO......",
+   ".....OOOOOOOOOOOG.......",
+   ".....Goooooooo.GG.......",
+   ".....GG........GG.......",
+   ".....GG........GG.......",
+   ".....GG........GG.......",
+   "....KKK........KKK......",
+   "....KKK........KKK......"
+  ],
+  "kid_witch_dizzy": [
+   "....Y.....PP.......Y....",
+   ".........PPPP...........",
+   ".........PPPP...........",
+   "........PPPPPP..........",
+   ".......PPPPPPPP.........",
+   "......PPPPPPPPPP........",
+   ".....PPPPPPPPPPPP.......",
+   "....KKKKKKKKKKKKKK......",
+   "....KKKKKKKKKKKKKK......",
+   ".....hhhhhhhhhhhh.......",
+   ".....hggggggggggh.......",
+   ".....ggKWggWKgggh.......",
+   ".....gggggggggggh.......",
+   ".....gggKWKWggggh.......",
+   "......ggggggggg.........",
+   "....PPPPPPPPPPPPP.......",
+   "...PPPPEPPPPPPPPP.......",
+   "...SPEEKPPPPPPKPP.......",
+   "...SSPKOKPPPPKOKP.......",
+   "....POOOOOOOOOOOO.......",
+   "....OOOOOOOOOOOOOO......",
+   "....OOKOOOOOOOKOOO......",
+   "....OOOOOOOOOOOOOO......",
+   "....OOOOKKKKOOOOOO......",
+   "....OOOOOOOOOOOOOO......",
+   "....GOOOOOOOOOOOGG......",
+   "....GGoooooooo...GG.....",
+   "...GG.............GG....",
+   "...GG..............G....",
+   "..GGG...............K...",
+   "..KKK...................",
+   ".KKKK..................."
+  ],
+  "kid_skeleton_walk_a": [
+   "........................",
+   ".....WWWWWWWWWWWW.......",
+   "....WWWWWWWWWWWWWW......",
+   "....WWWWWWWWWWWWWW......",
+   "....WWKKKWWWWKKKWW......",
+   "....WWKKKWWWWKKKWW......",
+   "....WWWWWWKKWWWWWW......",
+   ".....WWWWWWWWWWWW.......",
+   ".....WWKWKWKWKWWW.......",
+   "......WWWWWWWWWW........",
+   "....KKKKKKKKKKKKKK......",
+   "...WWKKWKKKKKKWKKWW.....",
+   "...WWKKKKKKKKKKKKWW.....",
+   "....KKWKKKKKKWKKK.......",
+   "....KKKKKKKKKKKKK.......",
+   "....KKWKKKKKKWKKK.......",
+   "....KKKKKKKKKKKKK.......",
+   "...WWKKKKKKKKKKKWW......",
+   "....KKKOKKKKKKOK........",
+   "....KOOOOOOOOOOOO.......",
+   "....OOOOOOOOOOOOOO......",
+   "....OOKOOOOOOOKOOO......",
+   "....OOOOOOOOOOOOOO......",
+   "....OOOOKKKKOOOOOO......",
+   "....OOOOOOOOOOOOOO......",
+   "....KOOOOOOOOOOOKK......",
+   "....KKoooooooo...KK.....",
+   "...KK.............KK....",
+   "...KK..............K....",
+   "..KKK...............W...",
+   "..WWW...................",
+   ".WWWW..................."
+  ],
+  "kid_skeleton_walk_b": [
+   "........................",
+   ".....WWWWWWWWWWWW.......",
+   "....WWWWWWWWWWWWWW......",
+   "....WWWWWWWWWWWWWW......",
+   "....WWKKKWWWWKKKWW......",
+   "....WWKKKWWWWKKKWW......",
+   "....WWWWWWKKWWWWWW......",
+   ".....WWWWWWWWWWWW.......",
+   ".....WWKWKWKWKWWW.......",
+   "......WWWWWWWWWW........",
+   "....KKKKKKKKKKKKKK......",
+   "...WWKKWKKKKKKWKKWW.....",
+   "...WWKKKKKKKKKKKKWW.....",
+   "....KKWKKKKKKWKKK.......",
+   "....KKKKKKKKKKKKK.......",
+   "....KKWKKKKKKWKKK.......",
+   "....KKKKKKKKKKKKK.......",
+   "...WWKKKKKKKKKKKWW......",
+   "....KKKOKKKKKKOK........",
+   "....KOOOOOOOOOOOO.......",
+   "....OOOOOOOOOOOOOO......",
+   "....OOKOOOOOOOKOOO......",
+   "....OOOOOOOOOOOOOO......",
+   "....OOOOKKKKOOOOOO......",
+   "....OOOOOOOOOOOOOO......",
+   ".....OOOOOOOOOOO........",
+   ".....Koooooooo.KK.......",
+   ".....KK.........KK......",
+   "....KK...........KK.....",
+   "....KK............W.....",
+   "...WWW..................",
+   "..................WWWW.."
+  ],
+  "kid_skeleton_happy": [
+   "........................",
+   ".....WWWWWWWWWWWW.......",
+   "....WWWWWWWWWWWWWW......",
+   "....WWWWWWWWWWWWWW......",
+   "....WWKWWWWWWKWWWW......",
+   "....WWWWWWWWWWWWWW......",
+   "....WWWWWWKKWWWWWW......",
+   ".....WWWWWWWWWWWW.......",
+   ".....WWKWKWKWKWWW.......",
+   "......WWWWWWWWWW........",
+   "....KKKKKKKKKKKKKK......",
+   "...WWKKWKKKKKKWKKWW.....",
+   "...WWKKKKKKKKKKKKWW.....",
+   "....KKWKKKKKKWKKK.......",
+   "....KKKKKKKKKKKKK.......",
+   "....KKWKKKKKKWKKK.......",
+   "....KKKKKKKKKKKKK.......",
+   "...WWKKKKKKKKKKKWW......",
+   "....KKKOKKKKKKOK........",
+   "....KOOOOOOOOOOOO.......",
+   "....OOOOOOOOOOOOOO......",
+   "....OOKOOOOOOOKOOO......",
+   "....OOOOOOOOOOOOOO......",
+   "....OOOOKKKKOOOOOO......",
+   "....OOOOOOOOOOOOOO......",
+   ".....OOOOOOOOOOOK.......",
+   ".....Koooooooo.KK.......",
+   ".....KK........KK.......",
+   ".....KK........KK.......",
+   ".....KK........KK.......",
+   "....WWW........WWW......",
+   "....WWW........WWW......"
+  ],
+  "kid_skeleton_dizzy": [
+   "...Y................Y...",
+   ".....WWWWWWWWWWWW.......",
+   "....WWWWWWWWWWWWWW......",
+   "....WWWWWWWWWWWWWW......",
+   "....WWKWKWWWWKWKWW......",
+   "....WWWKWWWWWWKWWW......",
+   "....WWKWKWWKKKWKWW......",
+   ".....WWWWWWWWWWWW.......",
+   ".....WWKWKWKWKWWW.......",
+   "......WWWWWWWWWW........",
+   "....KKKKKKKKKKKKKK......",
+   "...WWKKWKKKKKKWKKWW.....",
+   "...WWKKKKKKKKKKKKWW.....",
+   "....KKWKKKKKKWKKK.......",
+   "....KKKKKKKKKKKKK.......",
+   "....KKWKKKKKKWKKK.......",
+   "....KKKKKKKKKKKKK.......",
+   "...WWKKKKKKKKKKKWW......",
+   "....KKKOKKKKKKOK........",
+   "....KOOOOOOOOOOOO.......",
+   "....OOOOOOOOOOOOOO......",
+   "....OOKOOOOOOOKOOO......",
+   "....OOOOOOOOOOOOOO......",
+   "....OOOOKKKKOOOOOO......",
+   "....OOOOOOOOOOOOOO......",
+   "....KOOOOOOOOOOOKK......",
+   "....KKoooooooo...KK.....",
+   "...KK.............KK....",
+   "...KK..............K....",
+   "..KKK...............W...",
+   "..WWW...................",
+   ".WWWW..................."
+  ],
+  "kid_hero_walk_a": [
+   "........................",
+   "......SSSSSSSSSS........",
+   ".....SSSSSSSSSSSS.......",
+   ".....SHHHHHHHHHHS.......",
+   ".....SRRRRRRRRRRS.......",
+   ".....SRKRRRRKRRRS.......",
+   ".....SSSSSSSSSSSS.......",
+   "......SSSSSSSSSS........",
+   "......SSSKKSSSS.........",
+   "...RRRBBBBBBBBBBRRR.....",
+   "..SRRRBBYBBBBYBBRRRS....",
+   "..SRRRBBBBBBBBBBRRRS....",
+   "...RRRBBYYYYBBBBRRR.....",
+   "....RRBBBBBBBBBBRR......",
+   "....RRBBBBBBBBBBRR......",
+   ".....BBBBBBBBBB.........",
+   ".....BBBBBBBBBB.........",
+   "....SBBKBBBBBBKS........",
+   ".....YKOKYYYYKOK........",
+   ".....OOOOOOOOOOOO.......",
+   "....OOOOOOOOOOOOOO......",
+   "....OOKOOOOOOOKOOO......",
+   "....OOOOOOOOOOOOOO......",
+   "....OOOOKKKKOOOOOO......",
+   "....OOOOOOOOOOOOOO......",
+   "....BOOOOOOOOOOOBB......",
+   "....BBoooooooo...BB.....",
+   "...BB.............BB....",
+   "...BB..............B....",
+   "..BBB...............R...",
+   "..RRR...................",
+   ".RRRR..................."
+  ],
+  "kid_hero_walk_b": [
+   "........................",
+   "......SSSSSSSSSS........",
+   ".....SSSSSSSSSSSS.......",
+   ".....SHHHHHHHHHHS.......",
+   ".....SRRRRRRRRRRS.......",
+   ".....SRKRRRRKRRRS.......",
+   ".....SSSSSSSSSSSS.......",
+   "......SSSSSSSSSS........",
+   "......SSSKKSSSS.........",
+   "...RRRBBBBBBBBBBRRR.....",
+   "..SRRRBBYBBBBYBBRRRS....",
+   "..SRRRBBBBBBBBBBRRRS....",
+   "...RRRBBYYYYBBBBRRR.....",
+   "....RRBBBBBBBBBBRR......",
+   "....RRBBBBBBBBBBRR......",
+   ".....BBBBBBBBBB.........",
+   ".....BBBBBBBBBB.........",
+   "....SBBKBBBBBBKS........",
+   ".....YKOKYYYYKOK........",
+   ".....OOOOOOOOOOOO.......",
+   "....OOOOOOOOOOOOOO......",
+   "....OOKOOOOOOOKOOO......",
+   "....OOOOOOOOOOOOOO......",
+   "....OOOOKKKKOOOOOO......",
+   "....OOOOOOOOOOOOOO......",
+   ".....OOOOOOOOOOO........",
+   ".....Boooooooo.BB.......",
+   ".....BB.........BB......",
+   "....BB...........BB.....",
+   "....BB............R.....",
+   "...RRR..................",
+   "..................RRRR.."
+  ],
+  "kid_hero_happy": [
+   "........................",
+   "......SSSSSSSSSS........",
+   ".....SSSSSSSSSSSS.......",
+   ".....SHHHHHHHHHHS.......",
+   ".....SRRRRRRRRRRS.......",
+   ".....SRWRRRRWRRS........",
+   ".....SSSSSSSSSSSS.......",
+   "......SSSKKKSSS.........",
+   "......SSSSSSSSSS........",
+   "......SSSKKSSSS.........",
+   "..SRRRBBYBBBBYBBRRRS....",
+   "..SRRRBBBBBBBBBBRRRS....",
+   "...RRRBBYYYYBBBBRRR.....",
+   "....RRBBBBBBBBBBRR......",
+   "....RRBBBBBBBBBBRR......",
+   ".....BBBBBBBBBB.........",
+   ".....BBBBBBBBBB.........",
+   "....SBBKBBBBBBKS........",
+   ".....YKOKYYYYKOK........",
+   ".....OOOOOOOOOOOO.......",
+   "....OOOOOOOOOOOOOO......",
+   "....OOKOOOOOOOKOOO......",
+   "....OOOOOOOOOOOOOO......",
+   "....OOOOKKKKOOOOOO......",
+   "....OOOOOOOOOOOOOO......",
+   ".....OOOOOOOOOOOB.......",
+   ".....Boooooooo.BB.......",
+   ".....BB........BB.......",
+   ".....BB........BB.......",
+   ".....BB........BB.......",
+   "....RRR........RRR......",
+   "....RRR........RRR......"
+  ],
+  "kid_hero_dizzy": [
+   "..Y.................Y...",
+   "......SSSSSSSSSS........",
+   ".....SSSSSSSSSSSS.......",
+   ".....SHHHHHHHHHHS.......",
+   ".....SRRRRRRRRRRS.......",
+   ".....SRKWRRWKRRRS.......",
+   ".....SSSSSSSSSSSS.......",
+   "......SSSSSSSSSS........",
+   "......SSSKKSSSS.........",
+   "......SSSKKSSSS.........",
+   "..SRRRBBYBBBBYBBRRRS....",
+   "..SRRRBBBBBBBBBBRRRS....",
+   "...RRRBBYYYYBBBBRRR.....",
+   "....RRBBBBBBBBBBRR......",
+   "....RRBBBBBBBBBBRR......",
+   ".....BBBBBBBBBB.........",
+   ".....BBBBBBBBBB.........",
+   "....SBBKBBBBBBKS........",
+   ".....YKOKYYYYKOK........",
+   ".....OOOOOOOOOOOO.......",
+   "....OOOOOOOOOOOOOO......",
+   "....OOKOOOOOOOKOOO......",
+   "....OOOOOOOOOOOOOO......",
+   "....OOOOKKKKOOOOOO......",
+   "....OOOOOOOOOOOOOO......",
+   "....BOOOOOOOOOOOBB......",
+   "....BBoooooooo...BB.....",
+   "...BB.............BB....",
+   "...BB..............B....",
+   "..BBB...............R...",
+   "..RRR...................",
+   ".RRRR..................."
+  ],
+  "kid_pumpkin_walk_a": [
+   "........................",
+   ".........GG.............",
+   "....OOOOOOOOOOOOOO......",
+   "...OOOOOOOOOOOOOOOO.....",
+   "...OOOOKOOOOOKOOOOO.....",
+   "...OOOOKOOOOOKOOOOO.....",
+   "...OOOOOOKKKOOOOOO......",
+   "...OOOOKOOOOOKOOOO......",
+   "...OOOOKOOOOOKOOOO......",
+   "....OOOOKKKKKOOOO.......",
+   "....OOOOOOOOOOOO........",
+   ".....hhhhhhhhhh.........",
+   "...GGGGGGGGGGGGGG.......",
+   "..SGGGGGGGGGGGGGGS......",
+   "..SGGGGGGGGGGGGGGS......",
+   "...GGGGGGGGGGGGGG.......",
+   "...GGGGGGGGGGGGGG.......",
+   "...SGGGKGGGGGGKS........",
+   "....GGKOKGGGGKOK........",
+   "....HOOOOOOOOOOOO.......",
+   "....OOOOOOOOOOOOOO......",
+   "....OOKOOOOOOOKOOO......",
+   "....OOOOOOOOOOOOOO......",
+   "....OOOOKKKKOOOOOO......",
+   "....OOOOOOOOOOOOOO......",
+   "....HOOOOOOOOOOOHH......",
+   "....HHoooooooo...HH.....",
+   "...HH.............HH....",
+   "...HH..............H....",
+   "..HHH...............K...",
+   "..KKK...................",
+   ".KKKK..................."
+  ],
+  "kid_pumpkin_walk_b": [
+   "........................",
+   ".........GG.............",
+   "....OOOOOOOOOOOOOO......",
+   "...OOOOOOOOOOOOOOOO.....",
+   "...OOOOKOOOOOKOOOOO.....",
+   "...OOOOKOOOOOKOOOOO.....",
+   "...OOOOOOKKKOOOOOO......",
+   "...OOOOKOOOOOKOOOO......",
+   "...OOOOKOOOOOKOOOO......",
+   "....OOOOKKKKKOOOO.......",
+   "....OOOOOOOOOOOO........",
+   ".....hhhhhhhhhh.........",
+   "...GGGGGGGGGGGGGG.......",
+   "..SGGGGGGGGGGGGGGS......",
+   "..SGGGGGGGGGGGGGGS......",
+   "...GGGGGGGGGGGGGG.......",
+   "...GGGGGGGGGGGGGG.......",
+   "...SGGGKGGGGGGKS........",
+   "....GGKOKGGGGKOK........",
+   "....HOOOOOOOOOOOO.......",
+   "....OOOOOOOOOOOOOO......",
+   "....OOKOOOOOOOKOOO......",
+   "....OOOOOOOOOOOOOO......",
+   "....OOOOKKKKOOOOOO......",
+   "....OOOOOOOOOOOOOO......",
+   ".....OOOOOOOOOOO........",
+   ".....Hoooooooo.HH.......",
+   ".....HH.........HH......",
+   "....HH...........HH.....",
+   "....HH............K.....",
+   "...KKK..................",
+   "..................KKKK.."
+  ],
+  "kid_pumpkin_happy": [
+   "........................",
+   ".........GG.............",
+   "....OOOOOOOOOOOOOO......",
+   "...OOOOOOOOOOOOOOOO.....",
+   "...OOOOKOOOOOKOOOOO.....",
+   "...OOOOWOOOWOOOOOO......",
+   "...OOOOOOKKKOOOOOO......",
+   "...OOOOKOOOOOKOOOO......",
+   "...OOOOKOOOOOKOOOO......",
+   "....OOOOKKKKKOOOO.......",
+   "....OOOOOOOOOOOO........",
+   ".....hhhhhhhhhh.........",
+   "...GGGGGGGGGGGGGG.......",
+   "..SGGGGGGGGGGGGGGS......",
+   "..SGGGGGGGGGGGGGGS......",
+   "...GGGGGGGGGGGGGG.......",
+   "...GGGGGGGGGGGGGG.......",
+   "...SGGGKGGGGGGKS........",
+   "....GGKOKGGGGKOK........",
+   "....HOOOOOOOOOOOO.......",
+   "....OOOOOOOOOOOOOO......",
+   "....OOKOOOOOOOKOOO......",
+   "....OOOOOOOOOOOOOO......",
+   "....OOOOKKKKOOOOOO......",
+   "....OOOOOOOOOOOOOO......",
+   ".....OOOOOOOOOOOH.......",
+   ".....Hoooooooo.HH.......",
+   ".....HH........HH.......",
+   ".....HH........HH.......",
+   ".....HH........HH.......",
+   "....KKK........KKK......",
+   "....KKK........KKK......"
+  ],
+  "kid_pumpkin_dizzy": [
+   "..Y......GG........Y....",
+   "....OOOOOOOOOOOOOO......",
+   "...OOOOOOOOOOOOOOOO.....",
+   "...OOOOKWKOWKWOOOOO.....",
+   "...OOOOWKOKWKOOOOOO.....",
+   "...OOOOKWKOWKWOOOOO.....",
+   "...OOOOOOKKKOOOOOO......",
+   "...OOOOKOOOOOKOOOO......",
+   "...OOOOKOOOOOKOOOO......",
+   "....OOOOKKKKKOOOO.......",
+   "....OOOOOOOOOOOO........",
+   ".....hhhhhhhhhh.........",
+   "...GGGGGGGGGGGGGG.......",
+   "..SGGGGGGGGGGGGGGS......",
+   "..SGGGGGGGGGGGGGGS......",
+   "...GGGGGGGGGGGGGG.......",
+   "...GGGGGGGGGGGGGG.......",
+   "...SGGGKGGGGGGKS........",
+   "....GGKOKGGGGKOK........",
+   "....HOOOOOOOOOOOO.......",
+   "....OOOOOOOOOOOOOO......",
+   "....OOKOOOOOOOKOOO......",
+   "....OOOOOOOOOOOOOO......",
+   "....OOOOKKKKOOOOOO......",
+   "....OOOOOOOOOOOOOO......",
+   "....HOOOOOOOOOOOHH......",
+   "....HHoooooooo...HH.....",
+   "...HH.............HH....",
+   "...HH..............H....",
+   "..HHH...............K...",
+   "..KKK...................",
+   ".KKKK..................."
+  ],
+  "candy_red": [
+   "............",
+   "............",
+   ".p..RRRR..p.",
+   "..pRRRWRRp..",
+   "..RRRRRRRR..",
+   "..pRRRRRRp..",
+   ".p..RRRR..p.",
+   "............"
+  ],
+  "candy_green": [
+   "............",
+   "............",
+   ".Y..GGGG..Y.",
+   "..YGGGWGGY..",
+   "..GGGGGGGG..",
+   "..YGGGGGGY..",
+   ".Y..GGGG..Y.",
+   "............"
+  ],
+  "candy_purple": [
+   "............",
+   "............",
+   ".b..PPPP..b.",
+   "..bPPPWPPb..",
+   "..PPPPPPPP..",
+   "..bPPPPPPb..",
+   ".b..PPPP..b.",
+   "............"
+  ],
+  "candy_pink": [
+   "............",
+   "............",
+   ".W..pppp..W.",
+   "..WpppWppW..",
+   "..pppppppp..",
+   "..WppppppW..",
+   ".W..pppp..W.",
+   "............"
+  ],
+  "candy_fire": [
+   ".F..ff..F...",
+   "FfF.RRRR.fF.",
+   "fF.RRSRRR.Ff",
+   "...RRRRRR...",
+   "..RRRRRRRR..",
+   "...RRRRRR...",
+   "Ff.RRRRRR.fF",
+   ".F..ff..F..."
+  ]
+ },
+ "porch_sitter": [
+  "..............................",
+  ".........OOOOOOO..............",
+  "........OOOOOOOOO.............",
+  "........KKKKKKKKK.............",
+  ".........SSSSSSS..............",
+  ".........SKSSKSS..............",
+  ".........SSSSSSS..............",
+  "..........SSSSS...............",
+  ".....RRRRRRRRRRRRR............",
+  "....RRRRRRRRRRRRRRR..SSSS.....",
+  "....RRRRRRRRRRRRRRRRRRRR......",
+  "....RRRRRRRRRRRRRR............",
+  "....RRRRRRRRRRRRRR............",
+  "....RRRRRRRRRRRRRR............",
+  ".....RRRRRRRRRRRR.............",
+  "......BBBBBBBBBB..............",
+  ".....BBBBBBBBBBBB.............",
+  ".....BBBBBBBBBBBB.............",
+  "......BBBBBBBBBB..............",
+  ".......BB....BB...............",
+  ".......BB....BB...............",
+  "......KKK....KKK..............",
+  "....HHHHHHHHHHHHHH............",
+  "...HHHHHHHHHHHHHHHH...........",
+  "...HH..HH....HH..HH...........",
+  "...HH..HH....HH..HH...........",
+  "....HHHHHHHHHHHHHH............",
+  "..............................",
+  "..............................",
+  "..............................",
+  "..............................",
+  "..............................",
+  "..............................",
+  ".............................."
+ ],
+ "candy_bowl": [
+  "................................",
+  ".....R....G....Y....P....R......",
+  "....RRR..GGG..YYY..PPP..RRR.....",
+  "...MMMMMMMMMMMMMMMMMMMMMMMM.....",
+  "..MMMMMMMMMMMMMMMMMMMMMMMMMM....",
+  "..MMWWMMMMMMMMMMMMMMMMMMMMM.....",
+  "...MMMMMMMMMMMMMMMMMMMMMM.......",
+  "....MMMMMMMMMMMMMMMMMMMM........",
+  ".....MMMMMMMMMMMMMMMM...........",
+  "......KKKKKKKKKKKKKK............",
+  "................................",
+  "................................"
+ ]
+}</script>
+<script>
+'use strict';
+/* ================================================================
+   TRICK OR TREAT TOSS — 8-bit Halloween candy-throwing arcade
+   Porch-sitter vs an endless stream of trick-or-treaters.
+   Angry Birds drag-aim · Paperboy stream · Skee-Ball distance tiers
+   (near bucket +10, far bucket +50) · NBA Jam ON FIRE streaks x2 ·
+   head bonks -15 · every miss piles up on the street until the
+   candy floods the screen. Art: trick-or-treat-toss/art/sprites.json
+   (approved pixel maps, drawn from the same data as scene.png).
+   ================================================================ */
+const W = 256, H = 240;
+const cv = document.getElementById('cv');
+const ctx = cv.getContext('2d');
+ctx.imageSmoothingEnabled = false;
+
+const Q = new URLSearchParams(location.search);
+const isAuto = Q.has('auto');
+
+/* ---------------- sprite data (approved art) ---------------- */
+const SPR = JSON.parse(document.getElementById('spritedata').textContent);
+const PAL = {};
+for (const k in SPR.palette) {
+  const v = SPR.palette[k];
+  PAL[k] = v ? `rgb(${v[0]},${v[1]},${v[2]})` : null;
+}
+function makeSprite(rows) {
+  const c = document.createElement('canvas');
+  c.width = rows[0].length; c.height = rows.length;
+  const g = c.getContext('2d');
+  for (let y = 0; y < rows.length; y++) {
+    const row = rows[y];
+    for (let x = 0; x < row.length; x++) {
+      const col = PAL[row[x]];
+      if (col) { g.fillStyle = col; g.fillRect(x, y, 1, 1); }
+    }
+  }
+  return c;
+}
+function scaledSprite(src, w, h) {
+  const c = document.createElement('canvas');
+  c.width = w; c.height = h;
+  const g = c.getContext('2d');
+  g.imageSmoothingEnabled = false;
+  g.drawImage(src, 0, 0, w, h);
+  return c;
+}
+const IMG = {};        // full-size sprite canvases
+for (const name in SPR.sprites) IMG[name] = makeSprite(SPR.sprites[name]);
+const SITTER = makeSprite(SPR.porch_sitter);            // 30x34
+const SITTER_BIG = scaledSprite(SITTER, 42, 47);        // scene scale
+const BOWL = makeSprite(SPR.candy_bowl);                // 32x12
+const FARIMG = {};                                      // 0.62-scale kids
+for (const name in SPR.sprites) {
+  if (name.startsWith('kid_')) FARIMG[name] = scaledSprite(IMG[name], 15, 20);
+}
+const COSTUMES = ['ghost', 'vampire', 'witch', 'skeleton', 'hero', 'pumpkin'];
+const CANDY_KINDS = ['candy_red', 'candy_green', 'candy_purple', 'candy_pink'];
+
+/* ---------------- tiny 3x5 pixel font ---------------- */
+const FONT = {
+  '0':['###','#.#','#.#','#.#','###'],'1':['.#.','##.','.#.','.#.','###'],
+  '2':['##.','..#','.#.','#..','###'],'3':['##.','..#','.#.','..#','##.'],
+  '4':['#.#','#.#','###','..#','..#'],'5':['###','#..','##.','..#','##.'],
+  '6':['.##','#..','##.','#.#','.#.'],'7':['###','..#','.#.','.#.','.#.'],
+  '8':['.#.','#.#','.#.','#.#','.#.'],'9':['.#.','#.#','.##','..#','##.'],
+  'A':['.#.','#.#','###','#.#','#.#'],'B':['##.','#.#','##.','#.#','##.'],
+  'C':['.##','#..','#..','#..','.##'],'D':['##.','#.#','#.#','#.#','##.'],
+  'E':['###','#..','##.','#..','###'],'F':['###','#..','##.','#..','#..'],
+  'G':['.##','#..','#.#','#.#','.##'],'H':['#.#','#.#','###','#.#','#.#'],
+  'I':['###','.#.','.#.','.#.','###'],'J':['..#','..#','..#','#.#','.#.'],
+  'K':['#.#','#.#','##.','#.#','#.#'],'L':['#..','#..','#..','#..','###'],
+  'M':['#.#','###','#.#','#.#','#.#'],'N':['#.#','###','###','#.#','#.#'],
+  'O':['.#.','#.#','#.#','#.#','.#.'],'P':['##.','#.#','##.','#..','#..'],
+  'Q':['.#.','#.#','#.#','##.','.##'],'R':['##.','#.#','##.','#.#','#.#'],
+  'S':['.##','#..','.#.','..#','##.'],'T':['###','.#.','.#.','.#.','.#.'],
+  'U':['#.#','#.#','#.#','#.#','###'],'V':['#.#','#.#','#.#','#.#','.#.'],
+  'W':['#.#','#.#','#.#','###','###'],'X':['#.#','#.#','.#.','#.#','#.#'],
+  'Y':['#.#','#.#','.#.','.#.','.#.'],'Z':['###','..#','.#.','#..','###'],
+  '+':['...','.#.','###','.#.','...'],'-':['...','...','###','...','...'],
+  '!':['.#.','.#.','.#.','...','.#.'],'.':['...','...','...','...','.#.'],
+  ':':['...','.#.','...','.#.','...'],'/':['..#','..#','.#.','#..','#..'],
+  "'":['.#.','.#.','...','...','...'],'%':['#.#','..#','.#.','#..','#.#'],
+  ' ':['...','...','...','...','...']
+};
+function textW(s, sc) { return s.length * 4 * sc - sc; }
+function drawText(s, x, y, sc, color, align) {
+  sc = sc || 1; color = color || '#f8f8f8'; align = align || 'left';
+  let w = textW(s, sc);
+  if (align === 'center') x -= w / 2;
+  if (align === 'right') x -= w;
+  ctx.fillStyle = color;
+  for (let i = 0; i < s.length; i++) {
+    const gl = FONT[s[i]] || FONT[' '];
+    for (let r = 0; r < 5; r++) for (let c = 0; c < 3; c++) {
+      if (gl[r][c] === '#') ctx.fillRect(x + i * 4 * sc + c * sc, y + r * sc, sc, sc);
+    }
+  }
+  return w;
+}
+function drawTextShadow(s, x, y, sc, color, align) {
+  drawText(s, x + sc, y + sc, sc, '#10101c', align);
+  return drawText(s, x, y, sc, color, align);
+}
+
+/* ---------------- helpers ---------------- */
+function mulberry32(a) {
+  return function () {
+    a |= 0; a = a + 0x6D2B79F5 | 0;
+    let t = Math.imul(a ^ a >>> 15, 1 | a);
+    t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t;
+    return ((t ^ t >>> 14) >>> 0) / 4294967296;
+  };
+}
+const vrng = mulberry32(1337);            // visual scatter only
+const clamp = (v, a, b) => v < a ? a : v > b ? b : v;
+const rand = (a, b) => a + Math.random() * (b - a);
+const pick = arr => arr[Math.floor(Math.random() * arr.length)];
+
+/* ---------------- audio: tiny 8-bit synth ---------------- */
+let AC = null;
+function audio() {
+  if (!AC) { try { AC = new (window.AudioContext || window.webkitAudioContext)(); } catch (e) { AC = null; } }
+  if (AC && AC.state === 'suspended') AC.resume();
+  return AC;
+}
+function tone(f0, f1, dur, type, vol, delay) {
+  const ac = audio(); if (!ac) return;
+  const t0 = ac.currentTime + (delay || 0);
+  const o = ac.createOscillator(), g = ac.createGain();
+  o.type = type || 'square';
+  o.frequency.setValueAtTime(Math.max(30, f0), t0);
+  o.frequency.exponentialRampToValueAtTime(Math.max(30, f1), t0 + dur);
+  g.gain.setValueAtTime(vol || 0.12, t0);
+  g.gain.exponentialRampToValueAtTime(0.001, t0 + dur);
+  o.connect(g); g.connect(ac.destination);
+  o.start(t0); o.stop(t0 + dur + 0.02);
+}
+function noiseBurst(dur, fFrom, fTo, vol, delay) {
+  const ac = audio(); if (!ac) return;
+  const t0 = ac.currentTime + (delay || 0);
+  const len = Math.max(1, (dur * ac.sampleRate) | 0);
+  const buf = ac.createBuffer(1, len, ac.sampleRate);
+  const d = buf.getChannelData(0);
+  for (let i = 0; i < len; i++) d[i] = Math.random() * 2 - 1;
+  const src = ac.createBufferSource(); src.buffer = buf;
+  const f = ac.createBiquadFilter(); f.type = 'bandpass'; f.Q.value = 1.1;
+  f.frequency.setValueAtTime(fFrom, t0);
+  f.frequency.exponentialRampToValueAtTime(Math.max(40, fTo), t0 + dur);
+  const g = ac.createGain();
+  g.gain.setValueAtTime(vol || 0.1, t0);
+  g.gain.exponentialRampToValueAtTime(0.001, t0 + dur);
+  src.connect(f); f.connect(g); g.connect(ac.destination);
+  src.start(t0); src.stop(t0 + dur + 0.02);
+}
+const sfx = {
+  throwC: () => noiseBurst(0.16, 1700, 320, 0.10),
+  ding: () => { [880, 1174, 1568].forEach((f, i) => tone(f, f, 0.09, 'square', 0.11, i * 0.05)); },
+  bonk: () => { tone(300, 55, 0.30, 'sine', 0.22); tone(150, 45, 0.32, 'square', 0.07, 0.02); },
+  thud: () => tone(95, 45, 0.09, 'triangle', 0.12),
+  fire: () => { [523, 659, 784, 1046, 1318, 1568].forEach((f, i) => tone(f, f, 0.08, 'square', 0.11, i * 0.045)); },
+  flood: () => { tone(720, 48, 1.15, 'sawtooth', 0.15); noiseBurst(1.05, 900, 110, 0.09, 0.05); },
+  start: () => { [392, 523, 659].forEach((f, i) => tone(f, f, 0.09, 'square', 0.10, i * 0.06)); }
+};
+
+/* ---------------- background (scene.png composition) ---------------- */
+function pxCircle(g, cx, cy, r, col) {
+  g.fillStyle = col;
+  for (let y = -r; y <= r; y++) for (let x = -r; x <= r; x++) {
+    if (x * x + y * y <= r * r) g.fillRect(cx + x, cy + y, 1, 1);
+  }
+}
+function pxLine(g, x0, y0, x1, y1, col) {
+  g.fillStyle = col;
+  const dx = Math.abs(x1 - x0), dy = -Math.abs(y1 - y0);
+  const sx = x0 < x1 ? 1 : -1, sy = y0 < y1 ? 1 : -1;
+  let err = dx + dy, x = x0, y = y0;
+  for (let i = 0; i < 300; i++) {
+    g.fillRect(x, y, 1, 1);
+    if (x === x1 && y === y1) break;
+    const e2 = 2 * err;
+    if (e2 >= dy) { err += dy; x += sx; }
+    if (e2 <= dx) { err += dx; y += sy; }
+  }
+}
+function buildBG() {
+  const c = document.createElement('canvas');
+  c.width = W; c.height = H;
+  const g = c.getContext('2d');
+  // sky gradient bands
+  for (let y = 0; y < 110; y++) {
+    const t = y / 110;
+    g.fillStyle = `rgb(${13 + 14 * t | 0},${20 + 16 * t | 0},${52 + 30 * t | 0})`;
+    g.fillRect(0, y, W, 1);
+  }
+  g.fillStyle = 'rgb(27,36,82)'; g.fillRect(0, 110, W, 42);
+  // stars (visual rng, fixed seed)
+  const sr = mulberry32(7);
+  g.fillStyle = 'rgb(240,240,210)';
+  for (let i = 0; i < 46; i++) g.fillRect((sr() * W) | 0, (sr() * 78) | 0, 1, 1);
+  // moon + craters
+  pxCircle(g, 223, 25, 17, 'rgb(248,230,160)');
+  pxCircle(g, 218, 20, 4, 'rgb(232,208,132)');
+  pxCircle(g, 230, 30, 3, 'rgb(232,208,132)');
+  // bats
+  for (const [bx, by] of [[60, 22], [96, 14], [150, 30]]) {
+    pxLine(g, bx, by, bx + 3, by - 2, 'rgb(10,10,16)');
+    pxLine(g, bx + 3, by - 2, bx + 6, by, 'rgb(10,10,16)');
+    pxLine(g, bx + 6, by, bx + 9, by - 2, 'rgb(10,10,16)');
+    pxLine(g, bx + 9, by - 2, bx + 12, by, 'rgb(10,10,16)');
+  }
+  // houses
+  const houses = [
+    [58, 96, 44, 'rgb(52,40,84)'], [108, 90, 52, 'rgb(64,44,60)'],
+    [166, 100, 46, 'rgb(44,52,88)'], [216, 94, 40, 'rgb(56,44,76)']
+  ];
+  for (const [hx, hy, hw, col] of houses) {
+    g.fillStyle = col; g.fillRect(hx, hy, hw, 152 - hy);
+    // roof
+    g.fillStyle = 'rgb(28,22,44)';
+    for (let i = 0; i < 12; i++) {
+      const inset = Math.round(i * (hw / 2 - 8) / 12);
+      g.fillRect(hx - 3 + inset, hy - i, hw + 6 - inset * 2, 1);
+    }
+    // lit windows with cross divider
+    for (const wy of [hy + 8, hy + 26]) for (const wx of [hx + 6, hx + hw - 14]) {
+      g.fillStyle = 'rgb(255,196,64)'; g.fillRect(wx, wy, 7, 9);
+      g.fillStyle = 'rgb(28,22,44)'; g.fillRect(wx + 3, wy, 1, 9);
+    }
+    // door + jack-o'-lantern
+    g.fillStyle = 'rgb(30,20,36)'; g.fillRect(hx + hw / 2 - 4, 132, 8, 20);
+    const jx = hx + hw / 2 + 8;
+    g.fillStyle = 'rgb(248,120,0)'; g.fillRect(jx, 146, 6, 6);
+    g.fillStyle = 'rgb(20,20,30)';
+    g.fillRect(jx + 1, 148, 1, 1); g.fillRect(jx + 4, 148, 1, 1); g.fillRect(jx + 1, 150, 4, 1);
+  }
+  // sidewalk + street
+  g.fillStyle = 'rgb(104,104,122)'; g.fillRect(0, 152, W, 20);
+  g.fillStyle = 'rgb(140,140,158)'; g.fillRect(0, 152, W, 1);
+  g.fillStyle = 'rgb(38,38,50)'; g.fillRect(0, 172, W, H - 172);
+  g.fillStyle = 'rgb(16,16,24)'; g.fillRect(0, 172, W, 1);
+  g.fillStyle = 'rgb(90,90,104)';
+  for (let x = 8; x < W; x += 32) g.fillRect(x, 206, 14, 1);
+  /* ---- porch ---- */
+  g.fillStyle = 'rgb(74,50,74)'; g.fillRect(0, 40, 46, 200);                 // wall
+  g.fillStyle = 'rgb(64,44,66)';
+  for (let x = 0; x < 46; x += 6) g.fillRect(x, 66, 1, 148);                 // siding
+  g.fillStyle = 'rgb(255,196,64)'; g.fillRect(8, 84, 18, 20);                // lit window
+  g.fillStyle = 'rgb(40,28,48)';
+  g.fillRect(17, 84, 1, 20); g.fillRect(8, 94, 18, 1);
+  // roof overhang + shingle ticks
+  g.fillStyle = 'rgb(34,26,48)';
+  for (let y = 42; y < 62; y++) {
+    const inset = (y - 42) * 0.4;
+    g.fillRect(0, y, 86 - inset, 1);
+  }
+  g.fillStyle = 'rgb(46,36,62)';
+  for (let x = 2; x < 76; x += 8) g.fillRect(x, 46, 1, 12);
+  g.fillStyle = 'rgb(18,14,30)'; g.fillRect(0, 62, 78, 1);
+  // string lights under the eave
+  const lightCols = ['rgb(248,120,0)', 'rgb(255,176,0)', 'rgb(255,210,63)'];
+  for (let i = 0, x = 4; x < 74; x += 6, i++) pxCircle(g, x + 1, 65, 2, lightCols[i % 3]);
+  // hanging ghost
+  g.fillStyle = 'rgb(200,200,210)'; g.fillRect(52, 62, 1, 6);
+  g.fillStyle = 'rgb(248,248,248)';
+  pxCircle(g, 52, 74, 6, 'rgb(248,248,248)');
+  g.fillRect(46, 74, 13, 9);
+  for (const gx of [47, 51, 55]) g.fillRect(gx, 83, 2, 2);
+  g.fillStyle = 'rgb(20,20,30)';
+  g.fillRect(49, 74, 1, 1); g.fillRect(54, 74, 1, 1); g.fillRect(51, 78, 1, 1);
+  // front post
+  g.fillStyle = 'rgb(52,36,40)'; g.fillRect(68, 62, 6, 152);
+  g.fillStyle = 'rgb(110,78,48)'; g.fillRect(68, 62, 1, 152);
+  // floor + planks
+  g.fillStyle = 'rgb(96,64,40)'; g.fillRect(0, 214, 84, 26);
+  g.fillStyle = 'rgb(76,50,30)';
+  for (let y = 220; y < 240; y += 7) g.fillRect(0, y, 84, 1);
+  g.fillStyle = 'rgb(126,88,52)'; g.fillRect(0, 214, 84, 1);
+  // step + jack-o'-lantern on it
+  g.fillStyle = 'rgb(84,56,36)'; g.fillRect(84, 226, 12, 14);
+  g.fillStyle = 'rgb(112,78,48)'; g.fillRect(84, 226, 12, 1);
+  g.fillStyle = 'rgb(248,120,0)'; g.fillRect(86, 214, 11, 12);
+  g.fillStyle = 'rgb(0,168,68)'; g.fillRect(90, 211, 3, 3);
+  g.fillStyle = 'rgb(20,20,30)';
+  g.fillRect(88, 218, 1, 1); g.fillRect(94, 218, 1, 1); g.fillRect(88, 222, 7, 1);
+  // sitter (scene pose) + candy bowl
+  g.drawImage(SITTER_BIG, 0, 190);
+  g.drawImage(BOWL, 44, 226);
+  return c;
+}
+const BG = buildBG();
+
+/* ---------------- game state ---------------- */
+const GRAV = 430;
+const HAND = { x: 36, y: 204 };
+const MAX_PILE = 46;                 // street misses that trigger the flood
+const NEAR_FEET = 236, FAR_FEET = 170;
+let state = 'title';                 // title | play | flood | over
+let score = 0, best = 0, streak = 0, onFire = false;
+let misses = 0, streetPieces = 0, elapsed = 0, stateT = 0;
+let kids = [], candies = [], pieces = [], pops = [], rain = [];
+let pileCols = new Array(32).fill(0);
+let cooldown = 0, shake = 0, throwCount = 0;
+let aiming = false, drag = null;
+let ann = null;                      // center announcement {txt,color,t,life}
+let floodCells = [];
+let lastCostume = { near: '', far: '' };
+let spawnT = { near: 0.4, far: 1.3 };
+try { best = parseInt(localStorage.getItem('ttt_best') || '0', 10) || 0; } catch (e) { best = 0; }
+window.__events = [];
+function logEv(kind, extra) {
+  window.__events.push(Object.assign({ t: Math.round(elapsed * 100) / 100, kind }, extra || {}));
+}
+
+function resetGame() {
+  score = 0; streak = 0; onFire = false;
+  misses = 0; streetPieces = 0; elapsed = 0;
+  kids = []; candies = []; pieces = []; pops = []; rain = [];
+  pileCols = new Array(32).fill(0);
+  cooldown = 0; shake = 0; throwCount = 0;
+  aiming = false; drag = null; ann = null;
+  spawnT = { near: 0.3, far: 1.1 };
+}
+function startGame() {
+  resetGame();
+  state = 'play'; stateT = 0;
+  sfx.start();
+  logEv('start');
+}
+
+/* ---------------- kids ---------------- */
+function spawnKid(row, costume, x) {
+  const s = row === 'far' ? 0.62 : 1;
+  const t = elapsed;
+  const base = row === 'near' ? 23 + Math.min(20, t * 0.22) : 17 + Math.min(15, t * 0.17);
+  const kid = {
+    row, costume: costume || pick(COSTUMES), s,
+    x: x !== undefined ? x : 262 + rand(0, 14),
+    feetY: row === 'near' ? NEAR_FEET : FAR_FEET,
+    spd: base * rand(0.9, 1.15),
+    animT: rand(0, 0.4), mode: 'walk', t: 0, done: false
+  };
+  if (kid.costume === lastCostume[row]) kid.costume = pick(COSTUMES.filter(c => c !== kid.costume));
+  lastCostume[row] = kid.costume;
+  kids.push(kid);
+  return kid;
+}
+function kidTop(k) { return k.feetY - 32 * k.s; }
+function kidMouth(k) {
+  return { cx: k.x + 12 * k.s, cy: kidTop(k) + 18.5 * k.s, rx: 9 * k.s, ry: 4 * k.s };
+}
+function kidHead(k) {
+  return { cx: k.x + 12 * k.s, cy: kidTop(k) + 7 * k.s, r: 5.5 * k.s };
+}
+function spawner(dt) {
+  for (const row of ['near', 'far']) {
+    spawnT[row] -= dt;
+    const count = kids.filter(k => k.row === row).length;
+    if (spawnT[row] <= 0 && count < 4) {
+      spawnKid(row);
+      const iv = clamp(2.4 - elapsed * 0.014, 1.05, 2.4) * rand(0.75, 1.25);
+      spawnT[row] = iv;
+    }
+  }
+}
+
+/* ---------------- throwing ---------------- */
+function throwCandy(vx, vy, force) {
+  if (state !== 'play') return false;
+  if (cooldown > 0 && !force) return false;
+  candies.push({
+    x: HAND.x, y: HAND.y, vx, vy, rot: rand(0, 6.28), spin: rand(-7, 7),
+    spr: onFire ? 'candy_fire' : pick(CANDY_KINDS), fire: onFire
+  });
+  cooldown = onFire ? 0.20 : 0.42;
+  throwCount++;
+  sfx.throwC();
+  logEv('throw', { fire: onFire });
+  return true;
+}
+/* Aim model: RELATIVE drag (Angry Birds). The player presses anywhere and
+   pulls; launch velocity = -pull * POWER, so a full 78px pull throws ~360px/s
+   — enough to reach the far sidewalk. `drag` stores the clamped pull vector. */
+const POWER = 4.6, MAXPULL = 78;
+function aimVelocity() {
+  if (!drag) return null;
+  if (Math.hypot(drag.x, drag.y) < 7) return null;
+  let vx = -drag.x * POWER, vy = -drag.y * POWER;
+  const sp = Math.hypot(vx, vy), MAXV = 380;
+  if (sp > MAXV) { vx *= MAXV / sp; vy *= MAXV / sp; }
+  return { vx, vy };
+}
+function releaseThrow() {
+  const v = aimVelocity();
+  aiming = false; drag = null;
+  if (v) throwCandy(v.vx, v.vy);
+}
+
+/* ---------------- scoring events ---------------- */
+function addPop(x, y, txt, color) {
+  pops.push({ x, y, txt, color: color || '#f8f8f8', t: 0, life: 1.2 });
+}
+function announce(txt, color) { ann = { txt, color: color || '#ffb000', t: 0, life: 1.15 }; }
+function bucketHit(k) {
+  const m = kidMouth(k);
+  const pts = (k.row === 'near' ? 10 : 50) * (onFire ? 2 : 1);
+  score += pts;
+  streak++;
+  k.mode = 'happy'; k.t = 0; k.done = true;
+  addPop(m.cx, m.cy - 12, '+' + pts, onFire ? '#ffb000' : '#7dff6a');
+  sfx.ding();
+  logEv('bucket', { row: k.row, pts, streak });
+  if (streak >= 3 && !onFire) {
+    onFire = true;
+    announce('ON FIRE!');
+    sfx.fire();
+    logEv('fire');
+  }
+}
+function bonk(k) {
+  const h = kidHead(k);
+  score = Math.max(0, score - 15);
+  streak = 0; onFire = false; misses++;
+  k.mode = 'dizzy'; k.t = 0; k.done = true;
+  addPop(h.cx, h.cy - 27, 'OW! -15', '#ff4040');
+  shake = 0.16;
+  sfx.bonk();
+  logEv('bonk', { row: k.row });
+}
+function groundYAt(x) {
+  if (x < 84) return 216;
+  if (x < 98) return 230;
+  const col = clamp(((x - 98) / 5) | 0, 0, 31);
+  return 236 - pileCols[col] * 3.5;
+}
+function landCandy(cd) {
+  misses++;
+  streak = 0;
+  if (onFire) { onFire = false; addPop(cd.x, cd.y - 14, 'FIRE OUT', '#ff8040'); }
+  sfx.thud();
+  logEv('miss', { x: Math.round(cd.x) });
+  if (cd.x >= 98) {
+    const col = clamp(((cd.x - 98) / 5) | 0, 0, 31);
+    pileCols[col]++;
+    streetPieces++;
+    pieces.push({ x: cd.x - 6 + rand(-1.5, 1.5), y: groundYAt(cd.x) - 5, spr: cd.spr === 'candy_fire' ? pick(CANDY_KINDS) : cd.spr, flip: Math.random() < 0.5, street: true });
+    if (streetPieces >= MAX_PILE) startFlood();
+  } else {
+    pieces.push({ x: cd.x - 6, y: groundYAt(cd.x) - 5, spr: cd.spr === 'candy_fire' ? pick(CANDY_KINDS) : cd.spr, flip: false, street: false });
+  }
+}
+function startFlood() {
+  if (state !== 'play') return;
+  state = 'flood'; stateT = 0;
+  floodCells = [];
+  const sr = mulberry32(42);
+  for (let r = 0; r < 34; r++) {
+    const rowCells = [];
+    for (let c = 0; c < 24; c++) rowCells.push({ spr: CANDY_KINDS[(sr() * 4) | 0], flip: sr() < 0.5, jx: (sr() * 5) | 0, jy: (sr() * 3) | 0 });
+    floodCells.push(rowCells);
+  }
+  rain = [];
+  sfx.flood();
+  logEv('flood', { score });
+}
+function finishFlood() {
+  state = 'over'; stateT = 0;
+  if (score > best) {
+    best = score;
+    try { localStorage.setItem('ttt_best', String(best)); } catch (e) {}
+  }
+  logEv('over', { score, best });
+}
+
+/* ---------------- update ---------------- */
+function updateKid(k, dt) {
+  k.x -= k.spd * dt;
+  k.animT += dt;
+  if (k.mode === 'happy') {
+    k.t += dt;
+    if (k.t > 0.55) { k.mode = 'walk'; k.t = 0; }
+  } else if (k.mode === 'dizzy') {
+    k.t += dt;
+    if (k.t > 1.15) { k.mode = 'walk'; k.t = 0; }
+  }
+}
+function candyStep(cd, dt) {
+  cd.vy += GRAV * dt;
+  cd.x += cd.vx * dt;
+  cd.y += cd.vy * dt;
+  cd.rot += cd.spin * dt;
+  // collisions: bucket funnel checked for ALL kids before any head check —
+  // a candy dropping into the bucket passes within a few px of the head, and
+  // the bucket must win that race. (No torso zone: the bucket hangs in front
+  // of the chest in the sprite, so chest-height center hits ARE bucket hits.)
+  if (state === 'play') {
+    if (cd.vy > 0) {
+      for (const k of kids) {
+        if (k.done) continue;
+        const m = kidMouth(k);
+        const ex = (cd.x - m.cx) / (m.rx * 1.05), ey = (cd.y - m.cy) / (m.ry * 1.5);
+        if (ex * ex + ey * ey <= 1) { bucketHit(k); return 'gone'; }
+      }
+    }
+    for (const k of kids) {
+      if (k.done) continue;
+      const hd = kidHead(k);
+      const dx = cd.x - hd.cx, dy = cd.y - hd.cy;
+      if (dx * dx + dy * dy <= hd.r * hd.r) { bonk(k); return 'gone'; }
+    }
+  }
+  // street / porch landing
+  const gy = groundYAt(cd.x);
+  if (cd.vy > 0 && cd.y + 4 >= gy) {
+    if (state === 'play') landCandy(cd);
+    return 'gone';
+  }
+  if (cd.x > 268 || cd.x < -24 || cd.y < -48) {
+    if (state === 'play') {
+      misses++; streak = 0;
+      if (onFire) onFire = false;
+      logEv('miss', { offscreen: true });
+    }
+    return 'gone';
+  }
+  return null;
+}
+function update(dt) {
+  stateT += dt;
+  if (shake > 0) shake -= dt;
+  if (cooldown > 0) cooldown -= dt;
+  if (ann) { ann.t += dt; if (ann.t > ann.life) ann = null; }
+  for (let i = pops.length - 1; i >= 0; i--) {
+    const p = pops[i];
+    p.t += dt; p.y -= 15 * dt;
+    if (p.t > p.life) pops.splice(i, 1);
+  }
+  if (state === 'title') {
+    for (const k of kids) updateKid(k, dt);
+    kids = kids.filter(k => k.x > -34);
+    spawner(dt);
+    return;
+  }
+  if (state === 'play') {
+    elapsed += dt;
+    spawner(dt);
+    for (const k of kids) updateKid(k, dt);
+    kids = kids.filter(k => k.x > -34);
+    const SUB = 3, sdt = dt / SUB;
+    for (let i = candies.length - 1; i >= 0; i--) {
+      const cd = candies[i];
+      let gone = false;
+      for (let s = 0; s < SUB && !gone; s++) gone = candyStep(cd, sdt) === 'gone';
+      if (gone) candies.splice(i, 1);
+      if (state !== 'play') break;      // flood may have started mid-flight
+    }
+    if (isAuto) botUpdate(dt);
+    return;
+  }
+  if (state === 'flood') {
+    for (let i = 0; i < 5; i++) {
+      rain.push({ x: rand(0, W - 12), y: rand(-26, -6), vy: rand(55, 110), spr: pick(CANDY_KINDS), flip: Math.random() < 0.5 });
+    }
+    for (let i = rain.length - 1; i >= 0; i--) {
+      const r = rain[i];
+      r.y += r.vy * dt;
+      if (r.y > H) rain.splice(i, 1);
+    }
+    if (stateT > 1.5) finishFlood();
+    return;
+  }
+  if (state === 'over' && isAuto && stateT > 3) startGame();
+}
+
+/* ---------------- bot (?auto=1) ---------------- */
+let botAim = null, botHold = 0, botWait = 0.3;
+function solveThrow(tx, ty, targetVx) {
+  const T = clamp(Math.hypot(tx - HAND.x, ty - HAND.y) / 175, 0.5, 1.3);
+  const px = tx + (targetVx || 0) * T, py = ty;
+  return { vx: (px - HAND.x) / T, vy: (py - HAND.y - 0.5 * GRAV * T * T) / T };
+}
+function botSolveFor(aim) {
+  // Recomputed EVERY frame of the aim hold: the kid keeps walking while the
+  // bot "aims", so a solution frozen at decision time lands ~10px behind.
+  const k = aim.kid;
+  if (!k || k.done || !kids.includes(k)) return null;
+  const m = kidMouth(k), hd = kidHead(k);
+  if (aim.mode === 'head') return solveThrow(hd.cx, hd.cy, -k.spd);
+  if (aim.mode === 'street') return solveThrow(aim.tx, 234, 0);
+  return solveThrow(m.cx + aim.err, m.cy, -k.spd);
+}
+function botUpdate(dt) {
+  if (botAim) {
+    const v = botSolveFor(botAim);
+    if (!v) { botAim = null; aiming = false; drag = null; botWait = 0.2; return; }
+    aiming = true;
+    drag = { x: -v.vx / POWER, y: -v.vy / POWER };
+    botHold -= dt;
+    if (botHold <= 0) { botAim = null; releaseThrow(); botWait = rand(0.25, 0.6); }
+    return;
+  }
+  aiming = false; drag = null;
+  botWait -= dt;
+  if (botWait > 0 || cooldown > 0 || candies.length >= 2) return;
+  const targets = kids.filter(k => !k.done && kidMouth(k).cx > 105 && kidMouth(k).cx < 254);
+  if (!targets.length) return;
+  targets.sort((a, b) => kidMouth(a).cx - kidMouth(b).cx);
+  const k = targets[0];
+  const n = throwCount;
+  if (n % 9 === 4) botAim = { kid: k, mode: 'head', err: 0 };                    // scripted bonk
+  else if (n % 9 === 6) botAim = { kid: k, mode: 'street', err: 0, tx: kidMouth(k).cx + rand(16, 30) }; // scripted miss
+  else botAim = { kid: k, mode: 'mouth', err: n < 3 ? 0 : rand(-1.4, 1.4) };    // bucket attempt
+  botHold = 0.42;
+}
+
+/* ---------------- input ---------------- */
+function toLogical(e) {
+  const r = cv.getBoundingClientRect();
+  return {
+    x: (e.clientX - r.left) * W / r.width,
+    y: (e.clientY - r.top) * H / r.height
+  };
+}
+let aimStart = null;
+function pullFrom(p) {
+  let dx = p.x - aimStart.x, dy = p.y - aimStart.y;
+  const d = Math.hypot(dx, dy);
+  if (d > MAXPULL) { dx *= MAXPULL / d; dy *= MAXPULL / d; }
+  return { x: dx, y: dy };
+}
+cv.addEventListener('pointerdown', e => {
+  e.preventDefault();
+  audio();
+  const p = toLogical(e);
+  if (state === 'title') { startGame(); return; }
+  if (state === 'over') { if (stateT > 0.8) startGame(); return; }
+  if (state !== 'play' || isAuto) return;
+  aiming = true;
+  aimStart = p;
+  drag = { x: 0, y: 0 };
+  try { cv.setPointerCapture(e.pointerId); } catch (err) {}
+});
+cv.addEventListener('pointermove', e => {
+  if (!aiming || isAuto || !aimStart) return;
+  drag = pullFrom(toLogical(e));
+});
+function endPointer(e) {
+  if (!aiming || isAuto) return;
+  aimStart = null;
+  releaseThrow();
+}
+cv.addEventListener('pointerup', endPointer);
+cv.addEventListener('pointercancel', endPointer);
+
+/* ---------------- drawing ---------------- */
+function drawKid(k) {
+  const set = k.row === 'far' ? FARIMG : IMG;
+  let name = 'kid_' + k.costume + '_walk_' + (Math.floor(k.animT / 0.24) % 2 ? 'b' : 'a');
+  if (k.mode === 'happy') name = 'kid_' + k.costume + '_happy';
+  if (k.mode === 'dizzy') name = 'kid_' + k.costume + '_dizzy';
+  const img = set[name];
+  let dy = 0, dx = 0;
+  if (k.mode === 'happy') dy = -Math.sin(Math.PI * clamp(k.t / 0.55, 0, 1)) * 4 * k.s;
+  if (k.mode === 'dizzy') dx = Math.sin(k.t * 26) * 1.2;
+  ctx.drawImage(img, Math.round(k.x + dx), Math.round(kidTop(k) + dy));
+  if (k.mode === 'dizzy') {
+    // circling stars over the head
+    const hx = k.x + 12 * k.s, hy = kidTop(k) - 3;
+    ctx.fillStyle = '#ffd23f';
+    for (let i = 0; i < 3; i++) {
+      const a = k.t * 7 + i * 2.09;
+      const sx = hx + Math.cos(a) * 8 * k.s, sy = hy + Math.sin(a) * 2.5 * k.s;
+      ctx.fillRect(sx - 1, sy, 3, 1); ctx.fillRect(sx, sy - 1, 1, 3);
+    }
+    // OW! bubble
+    const bw = 24, bh = 11, bx = clamp(hx - bw / 2, 2, W - bw - 2), by = hy - 15;
+    ctx.fillStyle = '#f8f8f8'; ctx.fillRect(bx, by, bw, bh);
+    ctx.fillStyle = '#14141e'; ctx.fillRect(bx, by, bw, 1); ctx.fillRect(bx, by + bh - 1, bw, 1);
+    ctx.fillRect(bx, by, 1, bh); ctx.fillRect(bx + bw - 1, by, 1, bh);
+    ctx.fillStyle = '#f8f8f8'; ctx.fillRect(bx + 10, by + bh, 4, 3);
+    drawText('OW!', bx + 4, by + 3, 1, '#d82800');
+  }
+}
+function drawCandy(cd) {
+  const img = IMG[cd.spr];
+  if (cd.fire) {  // soft axis-aligned glow behind the tumbling fire candy
+    ctx.fillStyle = 'rgba(255,120,0,0.16)';
+    ctx.fillRect(cd.x - 7, cd.y - 7, 14, 14);
+    ctx.fillStyle = 'rgba(255,170,0,0.22)';
+    ctx.fillRect(cd.x - 4, cd.y - 4, 8, 8);
+  }
+  ctx.save();
+  ctx.translate(cd.x, cd.y);
+  ctx.rotate(cd.rot);
+  ctx.drawImage(img, -6, -4);
+  ctx.restore();
+}
+function drawArc() {
+  const v = aimVelocity();
+  if (!v) return;
+  // slingshot band (HAND -> pulled position, clamped on-screen) + candy in hand
+  const bx = clamp(HAND.x + drag.x, 1, W - 1), by = clamp(HAND.y + drag.y, 1, H - 1);
+  ctx.strokeStyle = 'rgba(248,248,248,0.5)';
+  ctx.lineWidth = 1;
+  ctx.beginPath(); ctx.moveTo(HAND.x, HAND.y); ctx.lineTo(bx, by); ctx.stroke();
+  ctx.fillStyle = '#f8f8f8';
+  let x = HAND.x, y = HAND.y, vx = v.vx, vy = v.vy;
+  const dt = 0.032;
+  for (let i = 0; i < 40; i++) {
+    vy += GRAV * dt; x += vx * dt; y += vy * dt;
+    if (y > 238 || x > 258) break;
+    ctx.fillRect(x - 1, y - 1, 2, 2);
+  }
+  ctx.drawImage(IMG[onFire ? 'candy_fire' : 'candy_red'], HAND.x - 6, HAND.y - 4);
+}
+function drawHUD() {
+  ctx.fillStyle = 'rgba(5,6,18,0.55)';
+  ctx.fillRect(0, 0, W, 15);
+  drawText('SCORE ' + String(score).padStart(4, '0'), 4, 5, 1, '#f8f8f8');
+  // pile meter (top center)
+  drawText('PILE', 92, 5, 1, '#ffd23f');
+  const pct = streetPieces / MAX_PILE;
+  ctx.fillStyle = '#14141e'; ctx.fillRect(118, 4, 62, 7);
+  ctx.fillStyle = pct < 0.5 ? '#40c040' : pct < 0.8 ? '#f8b000' : (Math.floor(elapsed * 6) % 2 ? '#ff4040' : '#a01808');
+  ctx.fillRect(119, 5, Math.round(60 * clamp(pct, 0, 1)), 5);
+  ctx.strokeStyle = '#f8f8f8'; ctx.lineWidth = 1; ctx.strokeRect(118.5, 4.5, 62, 7);
+  // streak / fire (top right)
+  if (onFire) {
+    ctx.drawImage(IMG['candy_fire'], 184, 1);
+    if (Math.floor(elapsed * 5) % 2 === 0) drawText('ON FIRE!', 200, 5, 1, '#ffb000');
+    else drawText('ON FIRE!', 200, 5, 1, '#ff6000');
+  } else {
+    drawText('STREAK', 186, 5, 1, '#b8c4e8');
+    for (let i = 0; i < 3; i++) {
+      ctx.fillStyle = i < streak ? '#ffb000' : '#2a3352';
+      ctx.fillRect(226 + i * 9, 5, 6, 6);
+    }
+  }
+}
+function drawPops() {
+  for (const p of pops) {
+    const a = p.t < 0.15 ? p.t / 0.15 : 1 - Math.max(0, (p.t - 0.6) / (p.life - 0.6)) * 0.7;
+    ctx.globalAlpha = clamp(a, 0, 1);
+    drawTextShadow(p.txt, p.x, p.y, 1, p.color, 'center');
+    ctx.globalAlpha = 1;
+  }
+}
+function panel(w, h, alpha) {
+  const x = (W - w) / 2, y = (H - h) / 2;
+  ctx.fillStyle = 'rgba(8,8,22,' + (alpha == null ? 0.88 : alpha) + ')'; ctx.fillRect(x, y, w, h);
+  ctx.strokeStyle = '#f87800'; ctx.lineWidth = 2; ctx.strokeRect(x + 1, y + 1, w - 2, h - 2);
+  ctx.strokeStyle = '#f8f8f8'; ctx.lineWidth = 1; ctx.strokeRect(x + 4.5, y + 4.5, w - 9, h - 9);
+  return { x, y };
+}
+function drawTitle() {
+  ctx.fillStyle = 'rgba(4,4,14,0.45)'; ctx.fillRect(0, 0, W, H);
+  const { x, y } = panel(216, 148);
+  drawTextShadow('TRICK OR TREAT', W / 2, y + 16, 2, '#f8f8f8', 'center');
+  drawTextShadow('TOSS', W / 2, y + 34, 3, '#f87800', 'center');
+  const lines = [
+    ['DRAG + RELEASE TO THROW', '#f8f8f8'],
+    ['NEAR BUCKET +10  FAR +50', '#7dff6a'],
+    ['3 IN A ROW: ON FIRE X2', '#ffb000'],
+    ['BONK A HEAD: -15', '#ff6060'],
+    ['MISSES PILE UP...', '#f8f8f8'],
+    ['DO NOT LET CANDY FLOOD!', '#ffd23f']
+  ];
+  lines.forEach((L, i) => drawText(L[0], W / 2, y + 66 + i * 11, 1, L[1], 'center'));
+  if (Math.floor(performance.now() / 450) % 2 === 0) {
+    drawText('TAP TO START', W / 2, y + 136, 1, '#f8f8f8', 'center');
+  }
+}
+function drawFlood() {
+  const p = clamp(stateT / 1.5, 0, 1);
+  const seaTop = H - (1 - Math.pow(1 - p, 3)) * 208;
+  for (let r = 0; r < floodCells.length; r++) {
+    const y = H - (r + 1) * 7;
+    if (y + 7 < seaTop) continue;
+    for (let c = 0; c < 24; c++) {
+      const cell = floodCells[r][c];
+      const img = IMG[cell.spr];
+      ctx.save();
+      ctx.translate(c * 11 + (r % 2 ? 5 : 0) + 6 + cell.jx - 2, y + 4 + cell.jy - 1);
+      if (cell.flip) ctx.scale(-1, 1);
+      ctx.drawImage(img, -6, -4);
+      ctx.restore();
+    }
+  }
+  for (const r of rain) ctx.drawImage(IMG[r.spr], r.x, r.y);
+  drawTextShadow('CANDY FLOOD!', W / 2, 26, 2, '#ff4040', 'center');
+}
+function drawOver() {
+  // the flood stays as the backdrop
+  stateT = Math.max(stateT, 1.5);
+  drawFlood();
+  const { y } = panel(196, 104, 0.97);
+  drawTextShadow('GAME OVER', W / 2, y + 14, 2, '#ff4040', 'center');
+  drawText('THE CANDY WON!', W / 2, y + 36, 1, '#ffd23f', 'center');
+  drawText('SCORE ' + String(score).padStart(4, '0'), W / 2, y + 54, 1, '#f8f8f8', 'center');
+  drawText('BEST  ' + String(best).padStart(4, '0'), W / 2, y + 67, 1, '#b8c4e8', 'center');
+  if (Math.floor(performance.now() / 450) % 2 === 0) {
+    drawText('TAP TO PLAY AGAIN', W / 2, y + 88, 1, '#7dff6a', 'center');
+  }
+}
+function draw() {
+  ctx.save();
+  if (shake > 0) ctx.translate(Math.round(rand(-2, 2)), Math.round(rand(-2, 2)));
+  ctx.drawImage(BG, 0, 0);
+  for (const k of kids) if (k.row === 'far') drawKid(k);
+  for (const p of pieces) {
+    const img = IMG[p.spr];
+    if (p.flip) {
+      ctx.save(); ctx.translate(p.x + 6, p.y + 4); ctx.scale(-1, 1); ctx.drawImage(img, -6, -4); ctx.restore();
+    } else ctx.drawImage(img, p.x, p.y);
+  }
+  for (const k of kids) if (k.row === 'near') drawKid(k);
+  if (aiming && state === 'play') drawArc();
+  for (const cd of candies) drawCandy(cd);
+  drawPops();
+  if (ann) {
+    const sc = ann.t < 0.16 ? 2 + ann.t / 0.16 : 3;
+    const a = ann.t > ann.life - 0.25 ? (ann.life - ann.t) / 0.25 : 1;
+    ctx.globalAlpha = clamp(a, 0, 1);
+    drawTextShadow(ann.txt, W / 2, 92, Math.round(sc), ann.color, 'center');
+    ctx.globalAlpha = 1;
+  }
+  if (state === 'play' || state === 'flood') drawHUD();
+  if (state === 'flood') drawFlood();
+  if (state === 'title') drawTitle();
+  if (state === 'over') drawOver();
+  ctx.restore();
+}
+
+/* ---------------- main loop ---------------- */
+let lastT = performance.now();
+function frame(now) {
+  let dt = (now - lastT) / 1000;
+  lastT = now;
+  dt = clamp(dt, 0, 0.033);
+  update(dt);
+  draw();
+  requestAnimationFrame(frame);
+}
+function fit() {
+  const s = Math.min(innerWidth / W, innerHeight / H);
+  const si = s >= 2 ? Math.floor(s) : Math.max(1, s);
+  cv.style.width = (W * si) + 'px';
+  cv.style.height = (H * si) + 'px';
+}
+addEventListener('resize', fit);
+fit();
+requestAnimationFrame(frame);
+// attract-mode kids on the title screen
+spawnKid('far', 'ghost', 190); spawnKid('near', 'witch', 150); spawnKid('far', 'hero', 110); spawnKid('near', 'skeleton', 225);
+if (isAuto) setTimeout(() => { if (state === 'title') startGame(); }, 600);
+
+/* ---------------- debug / video hooks (house pattern) ---------------- */
+window.__dbg = () => ({
+  score, streak, onFire, misses,
+  pilePct: Math.round((streetPieces / MAX_PILE) * 100) / 100,
+  kidsOnScreen: kids.length,
+  state
+});
+window.__hook = {
+  start: () => startGame(),
+  throw: (vx, vy) => throwCandy(vx, vy, true),
+  spawn: (row, costume, x) => spawnKid(row, costume, x),
+  aim: (px, py) => { aiming = true; drag = { x: px, y: py }; },   // pull vector, e.g. aim(-60, 55) = full pull down-left
+  release: () => releaseThrow(),
+  setFire: () => { streak = 3; if (!onFire) { onFire = true; announce('ON FIRE!'); } },
+  addPile: (n) => {
+    for (let i = 0; i < n; i++) {
+      const x = rand(104, 246);
+      const col = clamp(((x - 98) / 5) | 0, 0, 31);
+      pileCols[col]++; streetPieces++;
+      pieces.push({ x: x - 6, y: groundYAt(x) - 5, spr: pick(CANDY_KINDS), flip: Math.random() < 0.5, street: true });
+    }
+  },
+  flood: () => startFlood(),
+  kids: () => kids,
+  candies: () => candies,
+  state: () => state
+};
+</script>
+</body>
+</html>
