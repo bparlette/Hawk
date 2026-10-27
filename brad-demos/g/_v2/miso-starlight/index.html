@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<title>MISO: Starlight Adventure — World 1-1</title>
+<style>
+  html, body { margin:0; padding:0; background:#0d1430; height:100%; overflow:hidden; }
+  body { display:flex; align-items:center; justify-content:center; font-family:'Trebuchet MS',sans-serif; }
+  #wrap { position:relative; width:min(100vw, 177.78vh); }
+  canvas { width:100%; display:block; background:#3a9bd8; image-rendering:pixelated; border-radius:6px; box-shadow:0 18px 60px rgba(0,0,0,.55); touch-action:none; }
+  p { color:#8fa8cc; text-align:center; font-size:13px; margin:8px 0 0; }
+  b { color:#eaf2ff; }
+</style>
+</head>
+<body>
+<div id="wrap">
+  <canvas id="cv" width="960" height="540"></canvas>
+  <p><b>MISO: Starlight Adventure</b> — one world, homebrew style. Move ←→ · Jump Space (hold = higher) · Run Shift. Stomp grumps, grab stars, ring the golden bell.</p>
+</div>
+<script src="assets-sprites.js"></script>
+<script src="assets-bg.js"></script>
+<script type="module" src="game.js"></script>
+</body>
+</html>
