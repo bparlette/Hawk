@@ -1,4 +1,5 @@
-// HOOP JAM — 5v5 arcade basketball in the broadcast-view mold.
+// HOOP JAM — 2-on-2 arcade basketball, NBA Jam rules: turbo meter, shoves,
+// turbo dunks & alley-oops, 3-pointers, On Fire (3 straight makes).
 // Clean-room engine: real-court feet, fake-perspective side camera, hold-release
 // shot meter, turbo dunks & alley-oops, man-to-man AI, On Fire, special meter.
 import { TouchController, isTouchDevice } from './gptouch.js';
@@ -87,7 +88,11 @@ function intent(p) {
 }
 
 // ---------- state ----------
-let phase = 'pick', pickIdx = 0;
+let phase = 'pick', pickIdx = 0, pickStep = 0, pickA = -1; // 2-on-2: pick a starter, then a partner
+function confirmPick(i) {
+  if (pickStep === 0) { pickA = i; pickStep = 1; pickIdx = (i + 1) % ROSTER.length; }
+  else if (i !== pickA) startGame(pickA, i);
+}
 let players = [], ball = null, score = [0, 0], quarter = 1, qClock = 75, shotClock = 24, lastTouchTeam = 1;
 let pops = [], banner = null, feed = [], camShake = 0, lastTs = 0, charge = null, prevShoot = false, overtime = false;
 let ctrl = null; // human-controlled player
@@ -107,15 +112,15 @@ function teamOf(p) { return players.filter(q => q.team === p.team); }
 function carrier() { return players.find(q => q.has); }
 function spd(p) { let s = 10.5 + p.r.spd * 0.105; if (p.frozenT > 0) s *= 0.6; if (p.surgeT > 0) s *= 1.4; return s; }
 
-function buildTeams(youIdx) {
-  // one starter per position per team; the pick locks his slot, the best
-  // remaining player at each open position fills in (works for 2-4 per pos)
-  const mine = [youIdx], theirs = [], used = new Set([youIdx]);
-  ['PG', 'SG', 'SF', 'PF', 'C'].forEach(pos => {
-    const cand = () => ROSTER.map((r, i) => i).filter(i => !used.has(i) && ROSTER[i].pos === pos).sort((a, b) => ovr(ROSTER[b]) - ovr(ROSTER[a]));
-    if (!mine.some(i => ROSTER[i].pos === pos)) { const c = cand(); if (c.length) { mine.push(c[0]); used.add(c[0]); } }
-    if (!theirs.some(i => ROSTER[i].pos === pos)) { const c = cand(); if (c.length) { theirs.push(c[0]); used.add(c[0]); } }
-  });
+const roleOf = r => (r.pos === 'PF' || r.pos === 'C') ? 'B' : 'G'; // B = big, G = guard/wing
+function buildTeams(youIdx, partnerIdx) {
+  // 2-on-2: your two picks vs the best remaining big + best remaining guard
+  const mine = [youIdx, partnerIdx], used = new Set(mine), theirs = [];
+  const best = role => ROSTER.map((r, i) => i).filter(i => !used.has(i) && roleOf(ROSTER[i]) === role).sort((a, b) => ovr(ROSTER[b]) - ovr(ROSTER[a]))[0];
+  const b = best('B'), g = best('G');
+  if (b !== undefined) { theirs.push(b); used.add(b); }
+  if (g !== undefined) { theirs.push(g); used.add(g); }
+  while (theirs.length < 2) { const rest = ROSTER.map((r, i) => i).filter(i => !used.has(i)).sort((a, b2) => ovr(ROSTER[b2]) - ovr(ROSTER[a])); theirs.push(rest[0]); used.add(rest[0]); }
   players = [];
   mine.forEach(i => players.push(mkPlayer(ROSTER[i], 0)));
   theirs.forEach(i => players.push(mkPlayer(ROSTER[i], 1)));
@@ -140,15 +145,17 @@ function giveBall(p, quiet) {
   if (p.team === 0 && !AUTO) ctrl = p;
   if (!quiet) ev('possession', { team: p.team, by: p.r.name });
 }
-function startGame(youIdx) {
-  buildTeams(youIdx);
+function startGame(youIdx, partnerIdx) {
+  buildTeams(youIdx, partnerIdx);
+  pickStep = 0; pickA = -1;
   score = [0, 0]; quarter = 1; qClock = 75; shotClock = 24; feed = [];
   ball = { wx: 47, wy: 25, z: 6, vx: 0, vy: 0, vz: 0, mode: 'tip', owner: null };
   resetPositions(0, true);
   phase = 'play';
   banner = { text: 'TIP OFF!', t: 1.3, color: '#ffc400' };
-  // jump ball: leaping (blk/reb/size) + noise decides the tip
-  const c0 = players.find(p => p.team === 0 && p.r.pos === 'C'), c1 = players.find(p => p.team === 1 && p.r.pos === 'C');
+  // jump ball: the tallest on each team jumps; leaping (blk/reb/size) + noise decides
+  const tallest = t => players.filter(p => p.team === t).sort((a, b) => heightFt(b) - heightFt(a))[0];
+  const c0 = tallest(0), c1 = tallest(1);
   const leap = p => (p.r.blk + p.r.reb) * 0.35 + p.r.size * 30 + Math.random() * 22;
   setTimeout(() => { if (phase === 'play' && ball.mode === 'tip') { giveBall(leap(c0) >= leap(c1) ? c0 : c1); feedSay('Tip won — play ball!'); } }, 700);
   ev('tipoff', {});
@@ -156,7 +163,7 @@ function startGame(youIdx) {
 function inbound(team) {
   resetPositions(team);
   const rim = ownRim(team);
-  const pg = players.find(p => p.team === team && p.r.pos === 'PG') || teamOf({ team })[0];
+  const pg = players.find(p => p.team === team && roleOf(p.r) === 'G') || players.find(p => p.team === team);
   pg.wx = rim.wx + (team === 0 ? 4 : -4); pg.wy = 25;
   giveBall(pg, true);
   shotClock = 24;
@@ -234,7 +241,8 @@ function resolveShot(q, p) {
     addMeter(p, 20);
     const mates = teamOf(p); mates.forEach(m => { if (m !== p && ball.lastPasser === m) addMeter(m, 12); });
     if (p.streak === 2) pop(p.wx, p.wy - 4, 'HEATING UP', '#ffb03a', true);
-    if (p.streak >= 3 && !p.fire) { p.fire = 1; pop(p.wx, p.wy - 4, 'ON FIRE!', '#ff7a2f', true); feedSay(p.r.name + ' is ON FIRE!'); }
+    if (p.streak >= 3 && !p.fire) { p.fire = 1; pop(p.wx, p.wy - 4, 'ON FIRE!', '#ff7a2f', true); feedSay(p.r.name + ' is ON FIRE!'); banner = { text: "HE'S ON FIRE!", t: 1.6, color: '#ff7a2f' }; }
+    else if (q.pts === 3) banner = { text: 'FROM DOWNTOWN!', t: 1.2, color: '#ffd94a' };
     players.forEach(o => { if (o.team !== p.team) { o.streak = 0; o.fire = 0; } });
     pop(q.rim.wx, q.rim.wy, '+' + q.pts, '#ffc400', true);
     feedSay(p.r.name + (q.pts === 3 ? ' from downtown! +' : ' scores! +') + q.pts);
@@ -267,6 +275,7 @@ function tryDunk(p) {
       if (p.streak >= 3 && !p.fire) { p.fire = 1; pop(p.wx, p.wy - 4, 'ON FIRE!', '#ff7a2f', true); }
       players.forEach(o => { if (o.team !== p.team) { o.streak = 0; o.fire = 0; } });
       pop(rim.wx, rim.wy, 'DUNK! +2', '#ffc400', true);
+      banner = { text: 'BOOMSHAKALAKA!', t: 1.4, color: '#ffc400' };
       feedSay(p.r.name + ' throws it DOWN!');
       ev('dunk', { by: p.r.name });
       ball.mode = 'dead'; ball.deadT = 0.75;
@@ -292,7 +301,7 @@ function doPass(p, alley) {
   ball.lastPasser = p;
   const dur = clamp(Math.hypot(to.wx - p.wx, to.wy - p.wy) / 38, 0.16, 0.7);
   flyBallTo(p, to.wx, to.wy, 5.5, dur, () => {
-    if (alley && Math.hypot(to.wx - rim.wx, to.wy - rim.wy) < 8) { to.z = 4; giveBall(to, true); tryDunk(to); }
+    if (alley && Math.hypot(to.wx - rim.wx, to.wy - rim.wy) < 8) { to.z = 4; pop(to.wx, to.wy - 4, 'ALLEY-OOP!', '#7CFC9A', true); giveBall(to, true); tryDunk(to); }
     else giveBall(to);
   });
   SFX.bounce(); ev('pass', { from: p.r.name, to: to.r.name, alley: !!alley });
@@ -312,6 +321,20 @@ function trySteal(p) {
     }
   }
   p.stunT = 0.3;
+}
+function tryShove(p) {
+  // NBA Jam shove: turbo + steal up close — carrier hits the floor, ball pops loose. No fouls here.
+  const c = carrier(); if (!c || c.team === p.team || p.lungeT > 0) return;
+  p.lungeT = 0.55;
+  if (dist2(p, c) < 4.1 && c.phaseT <= 0) {
+    c.downT = 1.3; addMeter(p, 10);
+    pop(c.wx, c.wy - 3, 'SHOVED DOWN!', '#ff6b6b', true); SFX.dunk();
+    feedSay(p.r.name + ' shoves ' + c.r.name + ' to the floor!');
+    ev('shove', { by: p.r.name, on: c.r.name });
+    looseFrom(c.wx + (Math.random() * 3 - 1.5), c.wy + (Math.random() * 3 - 1.5), 2.5);
+    return;
+  }
+  trySteal(p);
 }
 function fireSpecial(p) {
   if (p.meter < 100) return;
@@ -371,9 +394,9 @@ function aiIntent(p, dt, now) {
     }
     if (p.meter >= 100 && Math.random() < 0.3) it.spec = true;
     if (p.plan === 'dunk') { moveTo(rim.wx, rim.wy, true); if (d < 5.2) { it.shoot = true; it.dunk = true; } }
-    else if (p.plan === 'drive') { moveTo(rim.wx + (rim.wx < 47 ? 3 : -3), rim.wy + (Math.random() * 6 - 3), true); if (d < 9 && Math.random() < 0.02) p.plan = 'shoot'; }
+    else if (p.plan === 'drive') { moveTo(rim.wx + (rim.wx < 47 ? 3 : -3), rim.wy + (Math.random() * 6 - 3), true); if (d < 9 && Math.random() < 0.02) p.plan = 'shoot'; if (d < 5.2 && Math.random() < 0.55) { it.shoot = true; it.dunk = true; } }
     else if (p.plan === 'shoot') { if (p.z === 0) { it.shoot = true; } }
-    else if (p.plan === 'pass') { it.pass = Math.random() < 0.5; if (!it.pass) moveTo(rim.wx, rim.wy, false); else p.plan = 'drive'; }
+    else if (p.plan === 'pass') { it.pass = Math.random() < 0.5; if (!it.pass) moveTo(rim.wx, rim.wy, false); else { p.plan = 'drive'; const mate = teamOf(p).find(q => q !== p); if (mate && Math.hypot(mate.wx - rim.wx, mate.wy - rim.wy) < 11) it.turbo = true; } }
     else moveTo(rim.wx, rim.wy, false);
     return it;
   }
@@ -384,12 +407,14 @@ function aiIntent(p, dt, now) {
     moveTo(tx, ty, false);
     return it;
   }
-  // defense: man-to-man by position matchup
-  const man = players.find(q => q.team !== p.team && q.r.pos === p.r.pos) || c;
+  // defense: man-to-man by team slot (2v2 — your opposite number)
+  const mySlot = teamOf(p).indexOf(p);
+  const opps = players.filter(q => q.team !== p.team);
+  const man = opps[Math.min(mySlot, opps.length - 1)] || c;
   const target = (man === c) ? c : man;
   const gx = target.wx + (orim.wx - target.wx) * 0.16, gy = target.wy + (orim.wy - target.wy) * 0.16;
   moveTo(gx, gy, Math.hypot(gx - p.wx, gy - p.wy) > 10);
-  if (target === c && Math.hypot(p.wx - c.wx, p.wy - c.wy) < 3.2 && p.aiT <= 0) { it.steal = true; p.aiT = 1.1 + Math.random() * 1.4; }
+  if (target === c && Math.hypot(p.wx - c.wx, p.wy - c.wy) < 3.6 && p.aiT <= 0) { it.steal = true; if (p.turbo > 0.45 && Math.random() < 0.5) it.turbo = true; p.aiT = 1.1 + Math.random() * 1.4; }
   if (target === c && c.z > 1 && Math.hypot(p.wx - c.wx, p.wy - c.wy) < 3 && p.z === 0 && Math.random() < 0.5) it.jump = true;
   return it;
 }
@@ -426,7 +451,7 @@ function applyIntent(p, it, dt, human) {
     if (it.pass) doPass(p, it.turbo);
     if (it.spec) fireSpecial(p);
   } else {
-    if (it.steal) trySteal(p);
+    if (it.steal) { if (it.turbo) tryShove(p); else trySteal(p); }
     if (it.pass && human) switchCtrl();
     if (it.spec && human) { /* specials fire from the carrier only */ }
   }
@@ -465,7 +490,7 @@ function update(dt) {
       applyIntent(p, { x: it.x, y: it.y, turbo: it.turbo, shootH: it.shootH, pass: it.passP, steal: it.stealP, spec: it.specP, jump: false }, dt, true);
     } else {
       const ai = aiIntent(p, dt, now);
-      applyIntent(p, { x: ai.x, y: ai.y, turbo: ai.turbo, shootH: ai.shoot, pass: ai.pass, steal: ai.steal, spec: ai.spec, jump: ai.jump }, dt, false);
+      applyIntent(p, { x: ai.x, y: ai.y, turbo: ai.turbo, shootH: ai.shoot, pass: ai.pass, steal: ai.steal, spec: ai.spec, jump: ai.jump, dunk: ai.dunk }, dt, false);
     }
     if (p.has && charge && charge.p !== p) charge = null;
   });
@@ -504,7 +529,7 @@ function drawCourt() {
   ctx.fillText('H O O P   J A M', W / 2, 17);
   // LED strip
   ctx.fillStyle = '#1d3a17'; ctx.fillRect(0, 134, W, 12);
-  ctx.fillStyle = '#9fe870'; ctx.font = '700 10px monospace'; ctx.fillText('★ ARCADE HOOPS ★ 5v5 ★ ON FIRE MODE ★', W / 2, 143);
+  ctx.fillStyle = '#9fe870'; ctx.font = '700 10px monospace'; ctx.fillText('★ 2 ON 2 ★ TURBO DUNKS ★ ALLEY-OOPS ★ ON FIRE ★ NO FOULS ★', W / 2, 143);
   // floor trapezoid
   const p00 = proj(0, 0), p10 = proj(94, 0), p11 = proj(94, 50), p01 = proj(0, 50);
   ctx.beginPath(); ctx.moveTo(p00.x, p00.y); ctx.lineTo(p10.x, p10.y); ctx.lineTo(p11.x, p11.y); ctx.lineTo(p01.x, p01.y); ctx.closePath();
@@ -584,6 +609,13 @@ function drawHUD() {
   ctx.fillStyle = '#fff'; ctx.font = '900 18px Trebuchet MS';
   ctx.fillText((overtime ? 'OT' : 'Q' + quarter) + ' ' + fmtClock(qClock), 232, H - 32);
   ctx.fillStyle = shotClock <= 5 ? '#ff6b6b' : '#ffd94a'; ctx.fillText('⏱ ' + Math.max(0, Math.ceil(shotClock)), 316, H - 32);
+  // turbo meter for your controlled player (Jam rules: drains sprinting, free while on fire)
+  if (ctrl && ctrl.team === 0) {
+    rr(14, H - 108, 212, 30, 8); ctx.fillStyle = 'rgba(8,12,28,.86)'; ctx.fill();
+    ctx.font = '900 11px Trebuchet MS'; ctx.textAlign = 'left'; ctx.fillStyle = '#ffb03a'; ctx.fillText(ctrl.fire ? '🔥 TURBO — ON FIRE' : 'TURBO', 24, H - 88);
+    rr(96, H - 100, 118, 9, 4); ctx.fillStyle = 'rgba(255,255,255,.16)'; ctx.fill();
+    rr(96, H - 100, Math.max(6, 118 * (ctrl.fire ? 1 : ctrl.turbo)), 9, 4); ctx.fillStyle = ctrl.fire ? '#ff7a2f' : '#ffb03a'; ctx.fill();
+  }
   // event feed (battle-text box), bottom-right
   if (feed.length) {
     rr(W - 330, H - 64, 316, 50, 10); ctx.fillStyle = 'rgba(8,12,28,.78)'; ctx.fill();
@@ -615,7 +647,7 @@ function drawHUD() {
 function drawPick() {
   ctx.fillStyle = '#0d1430'; ctx.fillRect(0, 0, W, H);
   ctx.font = '900 46px Trebuchet MS'; ctx.textAlign = 'center'; ctx.fillStyle = '#ffd94a'; ctx.fillText('HOOP JAM', W / 2, 72);
-  ctx.font = '700 18px Trebuchet MS'; ctx.fillStyle = '#cfe2ff'; ctx.fillText('Pick your player — full 5v5, 4 quarters, shot clock, specials', W / 2, 102);
+  ctx.font = '700 18px Trebuchet MS'; ctx.fillStyle = '#cfe2ff'; ctx.fillText(pickStep === 0 ? '2 ON 2 — pick your STARTER' : 'Now pick your PARTNER', W / 2, 102);
   ROSTER.forEach((r, i) => {
     const col = i % 7, row = (i / 7) | 0, cx = 66 + col * 138, cy = 124 + row * 252, w = 126, h = 234;
     rr(cx - w / 2, cy, w, h, 14); ctx.fillStyle = i === pickIdx ? 'rgba(255,196,0,.22)' : 'rgba(255,255,255,.06)'; ctx.fill();
@@ -626,10 +658,11 @@ function drawPick() {
     ctx.font = '700 11px Trebuchet MS'; ctx.fillStyle = '#9fb8dd';
     ctx.fillText('SHT ' + r.sht + ' SPD ' + r.spd + ' DEF ' + r.def, cx, cy + 178);
     ctx.fillText('BLK ' + r.blk + ' REB ' + r.reb + ' · ' + r.spec, cx, cy + 196);
-    if (r.hFt) { ctx.fillStyle = '#ffd94a'; ctx.fillText('★ LEGEND', cx, cy + 216); }
+    if (pickStep === 1 && i === pickA) { ctx.fillStyle = '#7CFC9A'; ctx.fillText('★ YOUR STARTER', cx, cy + 216); }
+    else if (r.hFt) { ctx.fillStyle = '#ffd94a'; ctx.fillText('★ LEGEND', cx, cy + 216); }
   });
   ctx.font = '700 15px Trebuchet MS'; ctx.fillStyle = '#8fa8cc';
-  ctx.fillText('Move WASD/arrows · SHOOT hold Space · PASS K · STEAL L · TURBO Shift · SPECIAL E', W / 2, 622);
+  ctx.fillText('SHOOT hold Space · PASS K (turbo = alley-oop) · STEAL L (turbo = SHOVE) · TURBO Shift · SPECIAL E', W / 2, 622);
 }
 function draw() {
   ctx.save();
@@ -652,17 +685,17 @@ addEventListener('keydown', e => {
     if (e.code === 'ArrowLeft' || e.code === 'KeyA') pickIdx = Math.max(0, pickIdx - 1);
     if (e.code === 'ArrowDown' || e.code === 'KeyS') pickIdx = Math.min(ROSTER.length - 1, pickIdx + 7);
     if (e.code === 'ArrowUp' || e.code === 'KeyW') pickIdx = Math.max(0, pickIdx - 7);
-    if (e.code === 'Enter' || e.code === 'Space') { audio(); startGame(pickIdx); }
-  } else if (phase === 'over' && (e.code === 'Enter' || e.code === 'Space')) phase = 'pick';
+    if (e.code === 'Enter' || e.code === 'Space') { audio(); confirmPick(pickIdx); }
+  } else if (phase === 'over' && (e.code === 'Enter' || e.code === 'Space')) { phase = 'pick'; pickStep = 0; pickA = -1; }
 });
 addEventListener('pointerdown', e => {
   audio();
   if (phase !== 'pick' && phase !== 'over') return;
   const rect = cv.getBoundingClientRect(), sx = (e.clientX - rect.left) * W / rect.width, sy = (e.clientY - rect.top) * H / rect.height;
   if (phase === 'pick') {
-    ROSTER.forEach((r, i) => { const col = i % 7, row = (i / 7) | 0, cx = 66 + col * 138, cy = 124 + row * 252; if (Math.abs(sx - cx) < 66 && sy > cy && sy < cy + 238) { pickIdx = i; startGame(i); } });
-  } else phase = 'pick';
+    ROSTER.forEach((r, i) => { const col = i % 7, row = (i / 7) | 0, cx = 66 + col * 138, cy = 124 + row * 252; if (Math.abs(sx - cx) < 66 && sy > cy && sy < cy + 238) { pickIdx = i; confirmPick(i); } });
+  } else { phase = 'pick'; pickStep = 0; pickA = -1; }
 }, true);
-if (AUTO) { const iv = setInterval(() => { if (IMG.rex && IMG.rex.complete) { startGame(0); clearInterval(iv); } }, 150); }
+if (AUTO) { const iv = setInterval(() => { if (IMG.rex && IMG.rex.complete) { startGame(0, 4); clearInterval(iv); } }, 150); }
 window.__dbg = { phase };
 requestAnimationFrame(loop);
