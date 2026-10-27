@@ -1,4 +1,4 @@
-// FLOP, DIG & FLING — Round 1 build (Matter.js physics, 16-bit parts art)
+// DIG FLOP FLING RACE — Round 1 build (Matter.js physics, 16-bit parts art)
 // Sim core + tuning constants reused from the proven locomotion spike
 // (~/workspace/floppy-dig-race/spike/spike.js): driveForce steering blend,
 // spring-limb composites, scripted bumper launches, stall insurance.
