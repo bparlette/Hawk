@@ -61,8 +61,8 @@ function startGame(youIdx) {
   mine.forEach((ri, k) => players.push(mkPlayer(ROSTER[ri], 0, 300 + k * 90)));
   theirs.forEach((ri, k) => players.push(mkPlayer(ROSTER[ri], 1, 660 - k * 90)));
   players[0].you = true;
-  ball = { mode: 'held', owner: players[5], x: 660, y: 470, z: 60, vx: 0, vy: 0, vz: 0 };
-  players[5].has = true;
+  ball = { mode: 'held', owner: null, x: 660, y: 470, z: 60, vx: 0, vy: 0, vz: 0 };
+  giveBall(players[5]);
   score = [0, 0]; clock = 180; golden = false; over = false; phase = 'play';
   banner = { text: 'TIP OFF!', t: 1.4, color: '#ffc400' };
   ev('tipoff', {});
@@ -70,7 +70,7 @@ function startGame(youIdx) {
 function giveBall(p) {
   players.forEach(q => q.has = false);
   ball.mode = 'held'; ball.owner = p; p.has = true; p.charge = 0;
-  if (p.ai) { p.think.shootAt = performance.now() / 1000 + 1.2 + Math.random() * 2.6; p.think.passAt = performance.now() / 1000 + 0.8 + Math.random() * 2; }
+  if (!p.you) { p.think.shootAt = performance.now() / 1000 + 1.2 + Math.random() * 2.6; p.think.passAt = performance.now() / 1000 + 0.8 + Math.random() * 2; }
 }
 function inbound(team) {
   const rim = team === 0 ? RIM.L : RIM.R;
@@ -325,13 +325,16 @@ addEventListener('keydown', e => {
     if (e.code === 'Enter' || e.code === 'Space') { audio(); startGame(pickIdx); }
   } else if (phase === 'over' && (e.code === 'Enter' || e.code === 'Space')) { phase = 'pick'; }
 });
-cv.addEventListener('pointerdown', e => {
+// NOTE: window + capture phase — the gptouch overlay covers the full screen
+// on touch devices and would otherwise swallow taps meant for the pick screen.
+addEventListener('pointerdown', e => {
   audio();
+  if (phase !== 'pick' && phase !== 'over') return;
   const rect = cv.getBoundingClientRect(), sx = (e.clientX - rect.left) * W / rect.width, sy = (e.clientY - rect.top) * H / rect.height;
   if (phase === 'pick') {
     ROSTER.forEach((r, i) => { const col = i % 5, row = (i / 5) | 0, cx = 108 + col * 186, cy = 150 + row * 218; if (Math.abs(sx - cx) < 82 && sy > cy && sy < cy + 200) { pickIdx = i; startGame(i); } });
   } else if (phase === 'over') phase = 'pick';
-});
+}, true);
 if (AUTO) { const iv = setInterval(() => { if (IMG.court && IMG.court.complete) { startGame(3); clearInterval(iv); } }, 120); }
 window.__dbg = { phase };
 requestAnimationFrame(loop);
