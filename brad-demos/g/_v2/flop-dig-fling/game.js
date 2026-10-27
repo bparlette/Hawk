@@ -132,8 +132,15 @@ function d2r(d) { return d * Math.PI / 180; }
 
 // ---------------- tuning (from the spike, verbatim where noted) ----------------
 var TUNE = {
-  cruiseSpeed: 3.05, driveForce: 0.0035,
-  torsoFrictionAir: 0.052, headFrictionAir: 0.09, limbFrictionAir: 0.16,
+  // Round 2: with the centreline fixed (lap 4231px -> 2168px) the spike's
+  // 3.05 cruise finished 2 laps in ~1650 steps (~27s); 1.15 in ~4500-5100;
+  // 0.68 put player finishes at 7427-7747 with leaders at ~5700-6000.
+  // 0.60 put finishes at ~6300-6700 steps; 0.52 at ~6300-7000 with one
+  // boing-chained outlier at 4510. 0.50 + torsoFrictionAir 0.072 (boing
+  // glide decays ~40% sooner; cruise is force-maintained so unaffected)
+  // compresses that variance into the 2-3 minute window. Final: 0.485.
+  cruiseSpeed: 0.485, driveForce: 0.0035,
+  torsoFrictionAir: 0.072, headFrictionAir: 0.09, limbFrictionAir: 0.16,
   springStiff: 0.14, springDamp: 0.12, headSpringStiff: 0.32,
   steerGain: 0.42, steerMax: 0.115, steerBlend: 0.38,
   wobbleAmp: 0.013, legSwingForce: 0.0011, armSwingForce: 0.0007,
@@ -169,19 +176,34 @@ var BARKS = {
   win: ['CHAMPION FLOPS!', 'TOO EASY!', 'GOLDEN GOOSE!']
 };
 
+// Centripetal Catmull-Rom (Barry–Goldman). The uniform CR used in round 1
+// overshot wildly on this unevenly-spaced control polygon: the spline
+// bulged to y=728 (off-canvas), doubled back into R≈12px cusps, and made
+// the lap ~4200px instead of the intended ~2150px. Centripetal CR cannot
+// cusp or loop inside a segment and stays inside the control bounds.
 function catmullRom(p0, p1, p2, p3, t) {
-  var t2 = t * t, t3 = t2 * t;
-  return [
-    0.5 * ((2 * p1[0]) + (-p0[0] + p2[0]) * t + (2 * p0[0] - 5 * p1[0] + 4 * p2[0] - p3[0]) * t2 + (-p0[0] + 3 * p1[0] - 3 * p2[0] + p3[0]) * t3),
-    0.5 * ((2 * p1[1]) + (-p0[1] + p2[1]) * t + (2 * p0[1] - 5 * p1[1] + 4 * p2[1] - p3[1]) * t2 + (-p0[1] + 3 * p1[1] - 3 * p2[1] + p3[0]) * t3)
-  ];
+  function tj(ti, a, b) {
+    var d = Math.hypot(b[0] - a[0], b[1] - a[1]);
+    return ti + Math.max(Math.sqrt(d), 1e-4);
+  }
+  var t0 = 0, t1 = tj(t0, p0, p1), t2 = tj(t1, p1, p2), t3 = tj(t2, p2, p3);
+  var tt = t1 + (t2 - t1) * t;
+  function L(a, b, ta, tb) {
+    return [
+      ((tb - tt) * a[0] + (tt - ta) * b[0]) / (tb - ta),
+      ((tb - tt) * a[1] + (tt - ta) * b[1]) / (tb - ta)
+    ];
+  }
+  var A1 = L(p0, p1, t0, t1), A2 = L(p1, p2, t1, t2), A3 = L(p2, p3, t2, t3);
+  var B1 = L(A1, A2, t0, t2), B2 = L(A2, A3, t1, t3);
+  return L(B1, B2, t1, t2);
 }
 function buildCenterline() {
   var pts = [], n = CONTROL.length;
   for (var i = 0; i < n; i++) {
     var p0 = CONTROL[(i + n - 1) % n], p1 = CONTROL[i],
         p2 = CONTROL[(i + 1) % n], p3 = CONTROL[(i + 2) % n];
-    for (var j = 0; j < 14; j++) pts.push(catmullRom(p0, p1, p2, p3, j / 14));
+    for (var j = 0; j < 24; j++) pts.push(catmullRom(p0, p1, p2, p3, j / 24));
   }
   var out = [pts[0]], acc = 0;
   for (var k = 1; k <= pts.length; k++) {
@@ -215,6 +237,55 @@ var FRAMES = (function () {
 })();
 function frameAt(i) {
   return FRAMES[((i % NC) + NC) % NC];
+}
+// Effective wall/edge offset per sample and side. On the concave side of a
+// corner whose radius R < TRACK_HALF, a full 62px offset passes the centre
+// of curvature and the offset polyline folds back on itself — that fold
+// was the "webbed" scribble in the round-1 track art AND a source of
+// cross-walls narrowing the corridor at hairpins. Clamp the concave side
+// to 0.88R (min-filtered over neighbouring samples, floored at 30) so offsets
+// stay simple curves; the convex side always gets the full TRACK_HALF.
+// Walls, painted edges and the dirt ribbon all consume OFFD via offPoint,
+// so what you see is exactly what you collide with.
+var OFFD = (function () {
+  var raw = { '1': [], '-1': [] };
+  for (var i = 0; i < NC; i++) {
+    var a = center[(i + NC - 1) % NC], b = center[i], c = center[(i + 1) % NC];
+    var d1 = 2 * (a[0] * (b[1] - c[1]) + b[0] * (c[1] - a[1]) + c[0] * (a[1] - b[1]));
+    var R = 400, side = 0;
+    if (Math.abs(d1) > 1e-6) {
+      var a2 = a[0] * a[0] + a[1] * a[1], b2 = b[0] * b[0] + b[1] * b[1], c2 = c[0] * c[0] + c[1] * c[1];
+      var ux = (a2 * (b[1] - c[1]) + b2 * (c[1] - a[1]) + c2 * (a[1] - b[1])) / d1;
+      var uy = (a2 * (c[0] - b[0]) + b2 * (a[0] - c[0]) + c2 * (b[0] - a[0])) / d1;
+      R = Math.min(400, Math.hypot(b[0] - ux, b[1] - uy));
+      var f = FRAMES[i];
+      side = ((ux - b[0]) * f.n[0] + (uy - b[1]) * f.n[1]) > 0 ? 1 : -1; // which side the centre sits on
+    }
+    raw['1'].push(side === 1 ? Math.min(TRACK_HALF, Math.max(30, R * 0.88)) : TRACK_HALF);
+    raw['-1'].push(side === -1 ? Math.min(TRACK_HALF, Math.max(30, R * 0.88)) : TRACK_HALF);
+  }
+  // Min-filter (±4 samples) so the clamp holds across whole segments, not
+  // just at sample points, then a light smoothing capped by the raw clamp.
+  // Verified offline: 0 folded offset segments (round 1 had 35+).
+  var out = { '1': [], '-1': [] };
+  ['1', '-1'].forEach(function (k) {
+    var minf = [];
+    for (var j = 0; j < NC; j++) {
+      var mn = 1e18;
+      for (var m = -4; m <= 4; m++) mn = Math.min(mn, raw[k][(j + m + NC * 2) % NC]);
+      minf.push(mn);
+    }
+    for (var j2 = 0; j2 < NC; j2++) {
+      var s = (minf[(j2 + NC - 1) % NC] + 2 * minf[j2] + minf[(j2 + 1) % NC]) / 4;
+      out[k].push(Math.min(s, raw[k][j2]));
+    }
+  });
+  return out;
+})();
+function offPoint(i, sgn, extra) {
+  var f = frameAt(i);
+  var d = OFFD[String(sgn)][((i % NC) + NC) % NC] + (extra || 0);
+  return [f.p[0] + f.n[0] * d * sgn, f.p[1] + f.n[1] * d * sgn];
 }
 var waypoints = [];
 for (var wi = 0; wi < NC; wi += 3) waypoints.push(center[wi]);
@@ -250,9 +321,7 @@ var world = engine.world;
   var walls = [];
   [1, -1].forEach(function (sideSign) {
     for (var i = 0; i < NC; i++) {
-      var f0 = frameAt(i), f1 = frameAt((i + 1) % NC);
-      var a = [f0.p[0] + f0.n[0] * TRACK_HALF * sideSign, f0.p[1] + f0.n[1] * TRACK_HALF * sideSign];
-      var b = [f1.p[0] + f1.n[0] * TRACK_HALF * sideSign, f1.p[1] + f1.n[1] * TRACK_HALF * sideSign];
+      var a = offPoint(i, sideSign), b = offPoint((i + 1) % NC, sideSign);
       var mx = (a[0] + b[0]) / 2, my = (a[1] + b[1]) / 2;
       var len = Math.hypot(b[0] - a[0], b[1] - a[1]) + 7;
       walls.push(Bodies.rectangle(mx, my, len, 10, {
@@ -320,7 +389,20 @@ function ev(type, data) {
   if (G.events.length > 3000) G.events.splice(0, 500);
 }
 function popup(x, y, text, color, big) {
-  G.popups.push({ x: x, y: y, text: text, color: color || '#fff', until: G.step + 80, big: !!big });
+  // Round 2: simultaneous popups near one anchor (GROW!/BOING!/bark all in
+  // the same tick) used to overprint into an unreadable stack. Resolve the
+  // spawn height upward past any live popup in the same screen region so
+  // bursts form a readable column instead.
+  var yy = y, moved = true, guard = 0;
+  while (moved && guard++ < 6) {
+    moved = false;
+    for (var i = 0; i < G.popups.length; i++) {
+      var p = G.popups[i];
+      if (p.until <= G.step) continue;
+      if (Math.abs(p.x - x) < 84 && Math.abs(p.y - yy) < 21) { yy = p.y - 21; moved = true; }
+    }
+  }
+  G.popups.push({ x: x, y: yy, text: text, color: color || '#fff', until: G.step + 80, big: !!big });
 }
 function burst(x, y, n, colors, spd, life, size, grav) {
   for (var i = 0; i < n; i++) {
@@ -1099,7 +1181,7 @@ function updateRacer(rn) {
       break;
     case 'racing': {
       if (rn.goStep && G.step < rn.goStep) { dampRunner(rn, 0.9); break; } // staggered start
-      var band = rn.finishStep >= 0 ? 0.55 : (1 + (rn.place - 3.5) * 0.022);
+      var band = rn.finishStep >= 0 ? 0.55 : (1 + (rn.place - 3.5) * 0.032);
       var cruise = TUNE.cruiseSpeed * band * rn.cruiseMul;
       if (rn.carrying && G.step >= rn.carrying.carryUntilStep) flingCarried(rn);
       driveRunner(rn, cruise);
@@ -1457,21 +1539,24 @@ function buildTrackCanvas() {
     g.closePath(); g.stroke();
   }
   g.lineJoin = 'round'; g.lineCap = 'round';
-  g.strokeStyle = '#b98d5a'; g.lineWidth = TRACK_HALF * 2 + 8; strokePath(center);
-  g.strokeStyle = '#cfa46c'; g.lineWidth = TRACK_HALF * 2 - 4; strokePath(center);
-  // loam patches clipped to the track polygon
-  var outer = [], inner = [];
-  for (var i = 0; i < NC; i++) {
-    var fo = frameAt(i);
-    outer.push([fo.p[0] + fo.n[0] * (TRACK_HALF + 4), fo.p[1] + fo.n[1] * (TRACK_HALF + 4)]);
+  // Dirt as a filled RIBBON built from offPoint — the same clamped offset
+  // loops the physics walls use. Round 1 stroked raw ±TRACK_HALF offset
+  // polylines for the edges; wherever the centreline's radius dropped
+  // below TRACK_HALF those polylines folded through the centre of
+  // curvature and scribbled "4"/"A" loops across the corners. OFFD never
+  // folds, so the ribbon and its edge lines are clean by construction.
+  function ribbonPath(extra) {
+    var pts = [];
+    for (var i = 0; i < NC; i++) pts.push(offPoint(i, 1, extra));
+    for (var j = NC - 1; j >= 0; j--) pts.push(offPoint(j, -1, extra));
+    pathFrom(pts);
   }
-  for (var j = NC - 1; j >= 0; j--) {
-    var fi = frameAt(j);
-    inner.push([fi.p[0] - fi.n[0] * (TRACK_HALF + 4), fi.p[1] - fi.n[1] * (TRACK_HALF + 4)]);
-  }
+  ribbonPath(6); g.fillStyle = '#b98d5a'; g.fill('evenodd');
+  ribbonPath(0); g.fillStyle = '#cfa46c'; g.fill('evenodd');
+  // loam patches clipped to the track ribbon
   g.save();
-  pathFrom(outer.concat(inner));
-  g.clip();
+  ribbonPath(4);
+  g.clip('evenodd');
   LOAM.forEach(function (b) {
     var grd = g.createRadialGradient(b.x, b.y, 8, b.x, b.y, b.r);
     grd.addColorStop(0, 'rgba(146,104,58,0.85)');
@@ -1490,12 +1575,10 @@ function buildTrackCanvas() {
     }
   });
   g.restore();
-  // edge lines
+  // edge lines: stroke the exact offset loops the walls follow
   [-1, 1].forEach(function (sgn) {
-    var pts = center.map(function (p, i2) {
-      var f = frameAt(i2);
-      return [p[0] + f.n[0] * TRACK_HALF * sgn, p[1] + f.n[1] * TRACK_HALF * sgn];
-    });
+    var pts = [];
+    for (var i2 = 0; i2 < NC; i2++) pts.push(offPoint(i2, sgn, 0));
     g.strokeStyle = 'rgba(255,255,255,0.75)'; g.lineWidth = 3;
     strokePath(pts);
   });
@@ -1546,7 +1629,11 @@ function poseFor(rn) {
 }
 function drawRacer(rn) {
   var tp = rn.torso.position, ta = rn.torso.angle;
-  var lift = rn.state === 'carried' ? -18 : 0;
+  // Round 2: a carried rival is pinned by constraint at the carrier's
+  // centre, so at the old -18 the sprite still overlapped the carrier and
+  // the grab didn't read. Hoist the whole sprite clear above the carrier's
+  // head with a slight struggling bob; the shadow stays on the ground.
+  var lift = rn.state === 'carried' ? -38 + Math.sin(G.step * 0.22 + rn.ri * 2.1) * 2.5 : 0;
   var airborne = G.step < rn.airUntil && rn.state === 'racing';
   if (airborne) lift -= 7;
   var sink = rn.state === 'inpit' ? 0.8 : 1;
@@ -1556,7 +1643,7 @@ function drawRacer(rn) {
   var pose = poseFor(rn);
   var c = rn.costume;
   // shadow
-  ctx.fillStyle = 'rgba(0,0,0,0.25)';
+  ctx.fillStyle = rn.state === 'carried' ? 'rgba(0,0,0,0.14)' : 'rgba(0,0,0,0.25)';
   ctx.beginPath();
   ctx.ellipse(tp.x, tp.y + 6, 30 * ds, 12 * ds, 0, 0, 6.29);
   ctx.fill();
@@ -1642,10 +1729,19 @@ function drawWorld() {
   var sf = frameAt(2);
   var bn = SPR.prop_banner;
   ctx.drawImage(bn, sf.p[0] - 66, sf.p[1] - 60, 132, 53);
-  // mounds
+  // mounds (round 2: ground shadow + dome shading so they read as RAMPS,
+  // not the flat "brown loaves" of round 1)
   G.mounds.forEach(function (md) {
     var img = SPR.prop_mound;
+    ctx.fillStyle = 'rgba(30,18,6,0.28)';
+    ctx.beginPath(); ctx.ellipse(md.x + 2, md.y + 13, 26, 7, 0, 0, 6.29); ctx.fill();
     ctx.drawImage(img, md.x - 27, md.y - 15, 54, 34);
+    var grd = ctx.createRadialGradient(md.x - 8, md.y - 9, 2, md.x - 3, md.y - 3, 31);
+    grd.addColorStop(0, 'rgba(255,240,200,0.36)');
+    grd.addColorStop(0.55, 'rgba(255,240,200,0)');
+    grd.addColorStop(1, 'rgba(40,22,8,0.22)');
+    ctx.fillStyle = grd;
+    ctx.beginPath(); ctx.ellipse(md.x, md.y - 1, 26, 15, 0, 0, 6.29); ctx.fill();
   });
   // pits
   G.pits.forEach(function (pit) {
