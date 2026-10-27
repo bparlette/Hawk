@@ -2239,6 +2239,7 @@ ev('boot', { auto: !!Q.get('auto') });
 var TS = parseFloat(Q.get('ts') || '1'); // time-scale for capture runs
 var acc = 0, last = performance.now();
 function frame(nowMs) {
+  window.__phase = G.phase; // read by gptouch-glue.js to gate the touch pad
   acc += Math.min(120, nowMs - last) * TS; last = nowMs;
   var n = 0;
   while (acc >= 1000 / 60 && n < 6) { stepGame(); acc -= 1000 / 60; n++; }
