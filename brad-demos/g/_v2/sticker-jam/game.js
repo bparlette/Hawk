@@ -39,6 +39,11 @@ const ROSTER = [
   { id: 'kofi',  name: 'KOFI',  pos: 'SF', sht: 76, spd: 74, def: 72, blk: 55, reb: 62, size: 0.55, spec: 'Surge' },
   { id: 'kenji', name: 'KENJI', pos: 'PF', sht: 72, spd: 64, def: 68, blk: 66, reb: 74, size: 0.70, spec: 'Lock-In' },
   { id: 'roxy',  name: 'ROXY',  pos: 'C',  sht: 70, spd: 52, def: 76, blk: 82, reb: 88, size: 0.95, spec: 'Blaze' },
+  // ---- legends: extreme builds, same five positions ----
+  { id: 'pip',     name: 'PIP',     pos: 'PG', sht: 82, spd: 92, def: 60, blk: 22, reb: 30, size: 0.10, hFt: 5.1, spec: 'Phase' },
+  { id: 'dash',    name: 'DASH',    pos: 'SG', sht: 76, spd: 99, def: 58, blk: 28, reb: 34, size: 0.35, hFt: 5.9, spec: 'Surge' },
+  { id: 'reach',   name: 'REACH',   pos: 'PF', sht: 72, spd: 62, def: 84, blk: 88, reb: 80, size: 0.75, hFt: 7.0, spec: 'Lock-In' },
+  { id: 'goliath', name: 'GOLIATH', pos: 'C',  sht: 62, spd: 40, def: 82, blk: 94, reb: 96, size: 1.00, hFt: 7.6, spec: 'Quake' },
 ];
 const IMG = {};
 ROSTER.forEach(r => { const i = new Image(); i.src = window.HJ_ASSETS[r.id]; IMG[r.id] = i; });
@@ -95,7 +100,7 @@ function mkPlayer(r, team) {
            meter: 0, lockIn: false, phaseT: 0, surgeT: 0, frozenT: 0, downT: 0, stunT: 0, lungeT: 0,
            aiT: 0, plan: null, planT: 0, spot: null, turbo: 1, you: false, jumpCD: 0 };
 }
-function heightFt(p) { return 5.5 + p.r.size * 1.3; }
+function heightFt(p) { return p.r.hFt || (5.5 + p.r.size * 1.3); }
 function atkRim(team) { return RIMS[1 - team]; }        // rim a team attacks
 function ownRim(team) { return RIMS[team]; }
 function teamOf(p) { return players.filter(q => q.team === p.team); }
@@ -103,12 +108,13 @@ function carrier() { return players.find(q => q.has); }
 function spd(p) { let s = 10.5 + p.r.spd * 0.105; if (p.frozenT > 0) s *= 0.6; if (p.surgeT > 0) s *= 1.4; return s; }
 
 function buildTeams(youIdx) {
-  const byPos = {}; ROSTER.forEach((r, i) => { (byPos[r.pos] = byPos[r.pos] || []).push(i); });
-  const mine = [youIdx], theirs = [];
-  Object.keys(byPos).forEach(pos => {
-    const pair = byPos[pos];
-    if (pair.includes(youIdx)) theirs.push(pair.find(i => i !== youIdx));
-    else { const s = pair.slice().sort((a, b) => ovr(ROSTER[b]) - ovr(ROSTER[a])); mine.push(s[0]); theirs.push(s[1]); }
+  // one starter per position per team; the pick locks his slot, the best
+  // remaining player at each open position fills in (works for 2-4 per pos)
+  const mine = [youIdx], theirs = [], used = new Set([youIdx]);
+  ['PG', 'SG', 'SF', 'PF', 'C'].forEach(pos => {
+    const cand = () => ROSTER.map((r, i) => i).filter(i => !used.has(i) && ROSTER[i].pos === pos).sort((a, b) => ovr(ROSTER[b]) - ovr(ROSTER[a]));
+    if (!mine.some(i => ROSTER[i].pos === pos)) { const c = cand(); if (c.length) { mine.push(c[0]); used.add(c[0]); } }
+    if (!theirs.some(i => ROSTER[i].pos === pos)) { const c = cand(); if (c.length) { theirs.push(c[0]); used.add(c[0]); } }
   });
   players = [];
   mine.forEach(i => players.push(mkPlayer(ROSTER[i], 0)));
@@ -611,15 +617,16 @@ function drawPick() {
   ctx.font = '900 46px Trebuchet MS'; ctx.textAlign = 'center'; ctx.fillStyle = '#ffd94a'; ctx.fillText('HOOP JAM', W / 2, 72);
   ctx.font = '700 18px Trebuchet MS'; ctx.fillStyle = '#cfe2ff'; ctx.fillText('Pick your player — full 5v5, 4 quarters, shot clock, specials', W / 2, 102);
   ROSTER.forEach((r, i) => {
-    const col = i % 5, row = (i / 5) | 0, cx = 108 + col * 186, cy = 138 + row * 224, w = 160, h = 204;
+    const col = i % 7, row = (i / 7) | 0, cx = 66 + col * 138, cy = 124 + row * 252, w = 126, h = 234;
     rr(cx - w / 2, cy, w, h, 14); ctx.fillStyle = i === pickIdx ? 'rgba(255,196,0,.22)' : 'rgba(255,255,255,.06)'; ctx.fill();
     ctx.lineWidth = i === pickIdx ? 4 : 2; ctx.strokeStyle = i === pickIdx ? '#ffc400' : 'rgba(255,255,255,.22)'; ctx.stroke();
     const img = IMG[r.id];
-    if (img && img.complete && img.naturalWidth) { const ih = 108, iw = ih * img.naturalWidth / img.naturalHeight; ctx.drawImage(img, cx - iw / 2, cy + 6, iw, ih); }
-    ctx.font = '900 16px Trebuchet MS'; ctx.fillStyle = '#fff'; ctx.fillText(r.name + ' · ' + r.pos, cx, cy + 136);
-    ctx.font = '700 11.5px Trebuchet MS'; ctx.fillStyle = '#9fb8dd';
-    ctx.fillText('SHT ' + r.sht + ' SPD ' + r.spd + ' DEF ' + r.def, cx, cy + 158);
-    ctx.fillText('BLK ' + r.blk + ' REB ' + r.reb + ' · ' + r.spec, cx, cy + 176);
+    if (img && img.complete && img.naturalWidth) { const ih = 124, iw = ih * img.naturalWidth / img.naturalHeight; ctx.save(); rr(cx - w / 2 + 3, cy + 3, w - 6, 140, 12); ctx.clip(); ctx.drawImage(img, cx - iw / 2, cy + 6, iw, ih); ctx.restore(); }
+    ctx.font = '900 14.5px Trebuchet MS'; ctx.fillStyle = '#fff'; ctx.fillText(r.name + ' · ' + r.pos, cx, cy + 156);
+    ctx.font = '700 11px Trebuchet MS'; ctx.fillStyle = '#9fb8dd';
+    ctx.fillText('SHT ' + r.sht + ' SPD ' + r.spd + ' DEF ' + r.def, cx, cy + 178);
+    ctx.fillText('BLK ' + r.blk + ' REB ' + r.reb + ' · ' + r.spec, cx, cy + 196);
+    if (r.hFt) { ctx.fillStyle = '#ffd94a'; ctx.fillText('★ LEGEND', cx, cy + 216); }
   });
   ctx.font = '700 15px Trebuchet MS'; ctx.fillStyle = '#8fa8cc';
   ctx.fillText('Move WASD/arrows · SHOOT hold Space · PASS K · STEAL L · TURBO Shift · SPECIAL E', W / 2, 622);
@@ -641,10 +648,10 @@ function loop(ts) {
 }
 addEventListener('keydown', e => {
   if (phase === 'pick') {
-    if (e.code === 'ArrowRight' || e.code === 'KeyD') pickIdx = Math.min(9, pickIdx + 1);
+    if (e.code === 'ArrowRight' || e.code === 'KeyD') pickIdx = Math.min(ROSTER.length - 1, pickIdx + 1);
     if (e.code === 'ArrowLeft' || e.code === 'KeyA') pickIdx = Math.max(0, pickIdx - 1);
-    if (e.code === 'ArrowDown' || e.code === 'KeyS') pickIdx = Math.min(9, pickIdx + 5);
-    if (e.code === 'ArrowUp' || e.code === 'KeyW') pickIdx = Math.max(0, pickIdx - 5);
+    if (e.code === 'ArrowDown' || e.code === 'KeyS') pickIdx = Math.min(ROSTER.length - 1, pickIdx + 7);
+    if (e.code === 'ArrowUp' || e.code === 'KeyW') pickIdx = Math.max(0, pickIdx - 7);
     if (e.code === 'Enter' || e.code === 'Space') { audio(); startGame(pickIdx); }
   } else if (phase === 'over' && (e.code === 'Enter' || e.code === 'Space')) phase = 'pick';
 });
@@ -653,7 +660,7 @@ addEventListener('pointerdown', e => {
   if (phase !== 'pick' && phase !== 'over') return;
   const rect = cv.getBoundingClientRect(), sx = (e.clientX - rect.left) * W / rect.width, sy = (e.clientY - rect.top) * H / rect.height;
   if (phase === 'pick') {
-    ROSTER.forEach((r, i) => { const col = i % 5, row = (i / 5) | 0, cx = 108 + col * 186, cy = 138 + row * 224; if (Math.abs(sx - cx) < 84 && sy > cy && sy < cy + 208) { pickIdx = i; startGame(i); } });
+    ROSTER.forEach((r, i) => { const col = i % 7, row = (i / 7) | 0, cx = 66 + col * 138, cy = 124 + row * 252; if (Math.abs(sx - cx) < 66 && sy > cy && sy < cy + 238) { pickIdx = i; startGame(i); } });
   } else phase = 'pick';
 }, true);
 if (AUTO) { const iv = setInterval(() => { if (IMG.rex && IMG.rex.complete) { startGame(0); clearInterval(iv); } }, 150); }
