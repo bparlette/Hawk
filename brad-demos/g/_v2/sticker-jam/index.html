@@ -3,22 +3,19 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
-<title>Sticker Jam — Big-Head Arcade Hoops</title>
+<title>Hoop Jam — 5v5 Arcade Hoops</title>
 <style>
-  html,body{margin:0;padding:0;background:#10182e;height:100%;overflow:hidden;font-family:'Trebuchet MS','Segoe UI',system-ui,sans-serif;-webkit-user-select:none;user-select:none;-webkit-tap-highlight-color:transparent;touch-action:none}
-  #wrap{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;background:radial-gradient(120% 100% at 50% 0%,#1d2c52 0%,#10182e 70%)}
-  #stage{position:relative}
+  html,body{margin:0;padding:0;background:#0d1430;height:100%;overflow:hidden;font-family:'Trebuchet MS','Segoe UI',system-ui,sans-serif;-webkit-user-select:none;user-select:none;-webkit-tap-highlight-color:transparent;touch-action:none}
+  #wrap{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;background:radial-gradient(120% 100% at 50% 0%,#1a2650 0%,#0d1430 70%)}
   canvas{display:block;border-radius:10px;box-shadow:0 18px 60px rgba(0,0,0,.55);touch-action:none;max-width:100vw;max-height:100vh}
 </style>
 </head>
 <body>
-<div id="wrap"><div id="stage">
+<div id="wrap">
   <canvas id="cv" width="960" height="640"></canvas>
-</div></div>
-<script src="assets-sprites-a.js"></script>
-<script src="assets-sprites-b.js"></script>
-<script src="assets-court-a.js"></script>
-<script src="assets-court-b.js"></script>
+</div>
+<script src="assets-players-a.js"></script>
+<script src="assets-players-b.js"></script>
 <script type="module" src="game.js"></script>
 </body>
 </html>
