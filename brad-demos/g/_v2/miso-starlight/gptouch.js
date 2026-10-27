@@ -181,6 +181,7 @@ export class TouchController {
     const { overlay, base, knob } = this._els;
 
     this._onDown = (e) => {
+      if (e.cancelable) e.preventDefault(); // every pointer on the overlay is game input, never a browser gesture
       // Buttons win over the stick no matter which half they're on.
       const b = this._hitButton(e.clientX, e.clientY);
       if (b && b.pointerId === null) {
@@ -236,6 +237,16 @@ export class TouchController {
     overlay.addEventListener('pointermove', this._onMove);
     overlay.addEventListener('pointerup', this._onUp);
     overlay.addEventListener('pointercancel', this._onUp);
+    // Browser-gesture kill switch: iOS Safari pinch-zoom ignores
+    // touch-action alone, so swallow touchstart/touchmove outright and
+    // block Safari's proprietary gesture events. Without this, a second
+    // finger landing off-button starts a pinch and zooms the page.
+    this._onTouch = (e) => { if (e.cancelable) e.preventDefault(); };
+    overlay.addEventListener('touchstart', this._onTouch, { passive: false });
+    overlay.addEventListener('touchmove', this._onTouch, { passive: false });
+    this._onGesture = (e) => { e.preventDefault(); };
+    document.addEventListener('gesturestart', this._onGesture, { passive: false });
+    document.addEventListener('gesturechange', this._onGesture, { passive: false });
   }
 
   /**
@@ -265,6 +276,8 @@ export class TouchController {
     overlay.removeEventListener('pointermove', this._onMove);
     overlay.removeEventListener('pointerup', this._onUp);
     overlay.removeEventListener('pointercancel', this._onUp);
+    if (this._onTouch) { overlay.removeEventListener('touchstart', this._onTouch); overlay.removeEventListener('touchmove', this._onTouch); }
+    if (this._onGesture) { document.removeEventListener('gesturestart', this._onGesture); document.removeEventListener('gesturechange', this._onGesture); }
     overlay.remove();
     this._els = null;
     this.enabled = false;
