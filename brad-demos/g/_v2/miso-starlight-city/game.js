@@ -606,10 +606,58 @@ function drawBgStrip(scroll) {
 // — ALIVE WORLD: the painted backdrop breathes — drifting painted clouds, a low
 // mist band, cloud shadows sweeping the ground, floating pollen, a butterfly,
 // and swaying foreground grass. All timed off playT; pure decoration, no physics.
+// — SEGMENT BACKDROP: the street is a sequence of painted segments (frontal
+// streets, a painted CORNER TURN, a cross-street alley) crossfaded at the
+// seams, so a pure side-scroller reads as navigating a real city — the same
+// trick as the reference video, where the turns live in the backdrop geometry.
+// Parallax 0.45 (the street is close). Segment A is IMG.bg (the v2 plate).
+const CITY_SEGS = [];
+function citySegList() {
+  if (CITY_SEGS.length) return CITY_SEGS;
+  const A = IMG.bg, C = IMG.segC, B = IMG.segB, L = IMG.segAl;
+  for (const im of [A, C, B, L]) if (!im || !im.complete || !im.naturalWidth) return CITY_SEGS;
+  CITY_SEGS.push([A, 0], [C, 0], [B, 0], [L, 0], [B, 0], [C, 1], [A, 0]);
+  return CITY_SEGS;
+}
+const segMaskCache = {};
+function segMasked(img, flip) {
+  const key = img.src.slice(-28) + (flip ? 'f' : '');
+  if (segMaskCache[key]) return segMaskCache[key];
+  const c = document.createElement('canvas'); c.width = 1080; c.height = 540;
+  const g = c.getContext('2d');
+  if (flip) { g.translate(1080, 0); g.scale(-1, 1); }
+  g.drawImage(img, 0, 0, 1080, 540);
+  g.globalCompositeOperation = 'destination-out';
+  const gr = g.createLinearGradient(0, 0, 90, 0);
+  gr.addColorStop(0, 'rgba(0,0,0,1)'); gr.addColorStop(1, 'rgba(0,0,0,0)');
+  g.fillStyle = gr; g.fillRect(0, 0, 90, 540);
+  segMaskCache[key] = c; return c;
+}
+function drawCityStrip(camXv) {
+  const segs = citySegList();
+  if (!segs.length) { drawBgStrip(camXv * 0.18); return; }
+  const STRIDE = 1000, W2 = 1080, total = segs.length * STRIDE;
+  let s = (camXv * 0.45) % total; if (s < 0) s += total;
+  const i0 = Math.floor(s / STRIDE), off = s - i0 * STRIDE;
+  for (let k = 0; k < 3; k++) {
+    const seg = segs[(i0 + k) % segs.length];
+    const x = k * STRIDE - off;
+    if (x > VW) break;
+    if (k === 0) {
+      ctx.save();
+      if (seg[1]) { ctx.translate(x + W2 / 2, 0); ctx.scale(-1, 1); ctx.drawImage(seg[0], -W2 / 2, 0, W2, VH); }
+      else ctx.drawImage(seg[0], x, 0, W2, VH);
+      ctx.restore();
+    } else {
+      ctx.drawImage(segMasked(seg[0], seg[1]), x, 0, W2, VH);
+    }
+  }
+}
+
 // — CITY WEATHER: neon pools glowing on the mirror street, low fog, character
 // reflections on the wet ground, and two depths of rain. Decoration only.
 function drawCityBack() {
-  const t = playT, scroll = camX * 0.18;
+  const t = playT, scroll = camX * 0.45;
   ctx.save(); ctx.globalCompositeOperation = 'screen';
   const pools = [[70, '34,211,238', 0.10], [300, '236,72,153', 0.09], [560, '74,222,128', 0.07], [830, '255,170,60', 0.08], [1000, '192,132,252', 0.06]];
   for (const [o, c, a0] of pools) {
@@ -767,7 +815,7 @@ function drawAliveFront() {
   ctx.restore();
 }
 function drawWorld() {
-  drawBgStrip(camX * 0.18);
+  drawCityStrip(camX);
   drawCityBack();
   // night deepening toward the wet street
   { const g = ctx.createLinearGradient(0, VH * 0.62, 0, VH); g.addColorStop(0, 'rgba(8,10,24,0)'); g.addColorStop(1, 'rgba(8,10,24,.38)'); ctx.fillStyle = g; ctx.fillRect(0, VH * 0.62, VW, VH * 0.38); }
@@ -893,7 +941,7 @@ function bigText(text, y, size, color, sub) {
 function draw() {
   ctx.setTransform(2, 0, 0, 2, 0, 0);
   if (phase === 'title') {
-    drawBgStrip(performance.now() / 90);
+    drawCityStrip(performance.now() / 55);
     ctx.fillStyle = 'rgba(8,10,28,.34)'; ctx.fillRect(0, 0, VW, VH);
     bigText('MISO', 96, 64, '#ffd94a');
     bigText('★ STARLIGHT ADVENTURE ★', 122, 15, '#fff');
