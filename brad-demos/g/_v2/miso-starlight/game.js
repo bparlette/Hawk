@@ -10,6 +10,7 @@ ctx.imageSmoothingEnabled = false;
 const $ = id => document.getElementById(id);
 const clamp = (v, a, b) => v < a ? a : v > b ? b : v;
 const AUTO = new URLSearchParams(location.search).get('auto') === '1';
+const SHORT = new URLSearchParams(location.search).get('short') === '1';
 window.__events = [];
 function ev(name, data) { window.__events.push(Object.assign({ t: performance.now() | 0, name }, data || {})); }
 
@@ -18,7 +19,7 @@ const IMG = {};
 Object.keys(window.MS_ASSETS || {}).forEach(k => { const im = new Image(); im.src = window.MS_ASSETS[k]; IMG[k] = im; });
 
 // ---------- audio: NES-style synth ----------
-let AC = null;
+let AC = null, recDest = null;
 function audio() {
   // iOS: WebAudio is silenced by the mute switch unless the session is 'playback'
   try { if (navigator.audioSession) navigator.audioSession.type = 'playback'; } catch (e) {}
@@ -28,6 +29,7 @@ function audio() {
       // classic iOS unlock: play a 1-sample silent buffer inside the gesture
       const b = AC.createBuffer(1, 1, AC.sampleRate), s = AC.createBufferSource();
       s.buffer = b; s.connect(AC.destination); s.start(0);
+      try { recDest = AC.createMediaStreamDestination(); } catch (err) {}
       AC.onstatechange = () => { if (AC && AC.state !== 'running') AC.resume(); };
     } catch (e) {}
   }
@@ -39,7 +41,9 @@ function tone(freq, dur, type, vol, slideTo, delay) {
   o.type = type || 'square'; o.frequency.setValueAtTime(freq, t0);
   if (slideTo) o.frequency.exponentialRampToValueAtTime(Math.max(30, slideTo), t0 + dur);
   g.gain.setValueAtTime(vol || 0.12, t0); g.gain.exponentialRampToValueAtTime(0.001, t0 + dur);
-  o.connect(g); g.connect(AC.destination); o.start(t0); o.stop(t0 + dur + 0.02);
+  o.connect(g); g.connect(AC.destination);
+  if (recDest) { try { g.connect(recDest); } catch(e){} }
+  o.start(t0); o.stop(t0 + dur + 0.02);
 }
 function noiseBurst(dur, vol, delay) {
   if (!AC) return; const t0 = AC.currentTime + (delay || 0);
@@ -48,7 +52,9 @@ function noiseBurst(dur, vol, delay) {
   const s = AC.createBufferSource(); s.buffer = buf;
   const g = AC.createGain(); g.gain.value = vol || 0.15;
   const f = AC.createBiquadFilter(); f.type = 'highpass'; f.frequency.value = 900;
-  s.connect(f); f.connect(g); g.connect(AC.destination); s.start(t0);
+  s.connect(f); f.connect(g); g.connect(AC.destination);
+  if (recDest) { try { g.connect(recDest); } catch(e){} }
+  s.start(t0);
 }
 const SFX = {
   // the classics, built from NES APU envelopes (gamepress gpfeel archetypes)
@@ -195,7 +201,7 @@ function moveBox(e, dt) {
   if (e.vy > 0) { const ty = Math.floor((e.y + e.h) / TILE); for (let tx = Math.floor(e.x / TILE); tx <= Math.floor((e.x + e.w - 1) / TILE); tx++) if (G(tx, ty) > 0) { e.y = ty * TILE - e.h - 0.01; e.vy = 0; e.ground = true; e.landTy = ty; break; } }
   else if (e.vy < 0) { const ty = Math.floor(e.y / TILE); for (let tx = Math.floor(e.x / TILE); tx <= Math.floor((e.x + e.w - 1) / TILE); tx++) { const t = G(tx, ty); if (t > 0) { e.y = (ty + 1) * TILE + 0.01; e.vy = 0; e.bumpTy = ty; e.bumpTx = tx; break; } } }
 }
-function pop(x, y, text, color) { pops.push({ x, y, text, color: color || '#fff', t: 1.0 }); }
+function pop(x, y, text, color, big) { pops.push({ x, y, text, color: color || '#fff', big: !!big, t: big ? 1.6 : 1.0 }); }
 function addScore(n, x, y) { score += n; if (x !== undefined) pop(x, y, '' + n, '#ffd94a'); }
 
 // ---------- input ----------
@@ -225,16 +231,113 @@ function readInput() {
   return it;
 }
 function botInput() {
-  // autoplay: run right, jump walls/gaps/enemies — for capture + testing
   const it = { x: 1, jumpH: false, jumpP: false, yarnP: false };
-  const p = player, feetY = p.y + p.h;
+  const p = player;
+  if (!p) return it;
+
+  // 1. HOP ON KILL (First beetle at 13 * TILE = 390)
+  const b1 = enemies.find(e => e.k === 'beetle' && Math.abs(e.x - 390) < 140);
+  if (b1 && !b1.dead) {
+    if (p.x >= 285 && p.x <= 315 && p.ground) {
+      it.jumpP = true;
+      it.jumpH = true;
+    }
+    if (!p.ground && p.vy < 0) it.jumpH = true;
+  }
+
+  // 2. PIT 1 (570..720)
+  if (p.x >= 510 && p.x <= 545 && p.ground) {
+    it.jumpP = true;
+    it.jumpH = true;
+  }
+
+  // 3. COOL YARN KILL ON GROUND WHILE JUMPING (Slime at 27*TILE = 810)
+  const sl1 = enemies.find(e => e.k === 'slime' && Math.abs(e.x - 810) < 120);
+  if (sl1 && !sl1.dead) {
+    if (p.x >= 735 && p.x <= 765 && p.ground) {
+      it.jumpP = true;
+      it.jumpH = true;
+    }
+    // Mid-air throw
+    if (!p.ground && p.x >= 755 && p.x <= 810 && !yarn) {
+      it.yarnP = true;
+    }
+  }
+
+  // Platform at 29..31 (870..930):
+  if (p.x >= 840 && p.x <= 865 && p.ground) { it.jumpP = true; it.jumpH = true; }
+  // Beetle at 990:
+  if (p.x >= 950 && p.x <= 975 && p.ground) { it.jumpP = true; it.jumpH = true; }
+
+  // Step climbs at 1110..1230:
+  if (p.x >= 1085 && p.x <= 1110 && p.ground) { it.jumpP = true; it.jumpH = true; }
+  if (p.x >= 1120 && p.x <= 1140 && p.ground) { it.jumpP = true; it.jumpH = true; }
+  if (p.x >= 1150 && p.x <= 1170 && p.ground) { it.jumpP = true; it.jumpH = true; }
+
+  // High shelf leap over Pit 2 and Bat (1230..1380):
+  if (p.x >= 1200 && p.x <= 1225 && p.ground) { it.jumpP = true; it.jumpH = true; }
+
+  // 4. DOUBLE YARN KILL (Checkpoint 1 at 1500; Beetles at 1590 & 1680)
+  const bPair = enemies.filter(e => e.k === 'beetle' && e.x > 1540 && e.x < 1720);
+  if (bPair.length > 0 && bPair.some(e => !e.dead)) {
+    if (p.x >= 1505 && p.x <= 1530 && !yarn) {
+      it.yarnP = true;
+    }
+    if (yarn && yarn.mode === 'out' && (yarn.x > 1700 || bPair.every(e => e.dead))) {
+      it.yarnP = true;
+    }
+  }
+
+  // 5. Long Pit platforms (tiles 58..63 = 1740..1920)
+  if (p.x >= 1690 && p.x <= 1715 && p.ground) { it.jumpP = true; it.jumpH = true; }
+  if (p.x >= 1760 && p.x <= 1785 && p.ground) { it.jumpP = true; it.jumpH = true; }
+  if (p.x >= 1825 && p.x <= 1850 && p.ground) { it.jumpP = true; it.jumpH = true; }
+  if (p.x >= 1885 && p.x <= 1910 && p.ground) { it.jumpP = true; it.jumpH = true; }
+
+  // Slime flats & Star block (2010..2130)
+  if (p.x >= 1990 && p.x <= 2015 && p.ground) { it.jumpP = true; it.jumpH = true; }
+  if (p.x >= 2100 && p.x <= 2125 && p.ground) { it.jumpP = true; it.jumpH = true; }
+
+  // Staircase at 2220..2280
+  if (p.x >= 2200 && p.x <= 2220 && p.ground) { it.jumpP = true; it.jumpH = true; }
+  if (p.x >= 2230 && p.x <= 2250 && p.ground) { it.jumpP = true; it.jumpH = true; }
+  if (p.x >= 2260 && p.x <= 2280 && p.ground) { it.jumpP = true; it.jumpH = true; }
+
+  // High shelf leap over Pit 3 (2460)
+  if (p.x >= 2435 && p.x <= 2465 && p.ground) { it.jumpP = true; it.jumpH = true; }
+
+  // Bridge at 3060..3270
+  if (p.x >= 3020 && p.x <= 3045 && p.ground) { it.jumpP = true; it.jumpH = true; }
+
+  // Pit at 3300: jump to mid-platform at 3360
+  if (p.x >= 3270 && p.x <= 3295 && p.ground) { it.jumpP = true; it.jumpH = true; }
+  // Mid-platform (3360) to 3480
+  if (p.x >= 3385 && p.x <= 3415 && p.ground) { it.jumpP = true; it.jumpH = true; }
+
+  // Home stretch enemies
+  if (p.x >= 3540 && p.x <= 3570 && p.ground) { it.jumpP = true; it.jumpH = true; }
+  if (p.x >= 3710 && p.x <= 3740 && p.ground) { it.jumpP = true; it.jumpH = true; }
+
+  // Victory stairs at 4140..4170
+  if (p.x >= 4120 && p.x <= 4140 && p.ground) { it.jumpP = true; it.jumpH = true; }
+  if (p.x >= 4150 && p.x <= 4170 && p.ground) { it.jumpP = true; it.jumpH = true; }
+
+  // Victory Bell leap (4180 -> Bell at 4320)
+  if (p.x >= 4180 && p.x <= 4210 && p.ground) {
+    it.jumpP = true;
+    it.jumpH = true;
+  }
+
+  // Dynamic fallback for walls and gaps
   const aheadX = p.x + p.w + 6;
+  const feetY = p.y + p.h;
   const wallAhead = solidAt(aheadX, p.y + 6) || solidAt(aheadX, feetY - 6);
   const groundAhead = solidAt(p.x + p.w + 14, feetY + 10) || solidAt(p.x + p.w / 2, feetY + 10);
   let enemyAhead = false;
   enemies.forEach(e => { if (!e.dead && e.x > p.x && e.x - p.x < 44 && Math.abs(e.y - p.y) < 30) enemyAhead = true; });
   if (p.ground && (wallAhead || !groundAhead || enemyAhead)) { it.jumpP = true; it.jumpH = true; }
   if (!p.ground && p.vy < 0) it.jumpH = true;
+
   return it;
 }
 
@@ -262,14 +365,31 @@ function updateParts(dt) {
 }
 
 // ---------- enemy deaths: flip, launch, fall (no more flat pancakes) ----------
+let lastYarnKillT = -999;
 function killEnemy(e, how) {
   if (e.dying >= 0 || e.gone) return;
   e.dead = true; e.dying = 0; e.dx = e.x; e.dy = e.y; e.dvy = -335; e.spin = (Math.random() < 0.5 ? -1 : 1) * 2.4;
   const col = e.k === 'slime' ? '#2fd4c4' : e.k === 'bat' ? '#4a6fc4' : '#8b5cf6';
   burst(e.x + e.w / 2, e.y + e.h / 2, col, e.k === 'slime' ? 12 : 8, e.k === 'slime');
   addScore(200, e.x + e.w / 2, e.y - 6);
-  if (how === 'stomp') { hitstop = 0.055; SFX.stomp(); ev('stomp', { k: e.k }); }
-  else { SFX.yarnHit(); ev('yarn_kill', { k: e.k }); }
+  if (how === 'stomp') {
+    hitstop = 0.055;
+    SFX.stomp();
+    pop(player.x, player.y - 28, '💥 HOP-ON STOMP!', '#ffd94a', true);
+    ev('stomp', { k: e.k });
+  } else {
+    SFX.yarnHit();
+    const now = performance.now() / 1000;
+    if (now - lastYarnKillT < 1.3) {
+      pop(player.x, player.y - 34, '🧶 DOUBLE YARN KILL! 🔥', '#7CFC9A', true);
+      ev('double_yarn_kill', { k: e.k });
+    } else if (player && !player.ground) {
+      pop(player.x, player.y - 30, '🎯 MID-AIR YARN SNIPE!', '#ff5a76', true);
+      ev('air_yarn_kill', { k: e.k });
+    }
+    lastYarnKillT = now;
+    ev('yarn_kill', { k: e.k });
+  }
 }
 
 // ---------- the yarn ball: rolls out on the ground, string pulls it back ----------
@@ -317,7 +437,7 @@ function updateYarn(dt) {
 function updatePlay(dt) {
   playT += dt; timeAcc += dt;
   if (timeAcc >= 1) { timeAcc -= 1; timeLeft--; if (timeLeft === 30) SFX.timeWarn(); if (timeLeft <= 0) { timeLeft = 0; killPlayer(); } }
-  const it = AUTO ? botInput() : readInput();
+  const it = (AUTO || SHORT) ? botInput() : readInput();
   const p = player;
   if (it.yarnP) { if (yarn) recallYarn(); else throwYarn(); }
   if (p.dead) {
@@ -420,7 +540,7 @@ function updatePlay(dt) {
   camX += (target - camX) * Math.min(1, dt * 7);
   pops.forEach(o => o.t -= dt); pops = pops.filter(o => o.t > 0);
 }
-function readInputHold() { return AUTO ? true : readInput().jumpH; }
+function readInputHold() { return (AUTO || SHORT) ? true : readInput().jumpH; }
 
 // ---------- rendering ----------
 function hash2(x, y) { let h = (x * 374761393 + y * 668265263) ^ 0x5bf03635; h = (h ^ (h >> 13)) * 1274126177; return ((h ^ (h >> 16)) >>> 0) / 4294967295; }
@@ -663,6 +783,36 @@ addEventListener('keydown', e => {
 addEventListener('pointerdown', () => { audio(); if (phase !== 'play' && phase !== 'card') advance(); }, true);
 addEventListener('touchend', () => audio(), true);
 document.addEventListener('visibilitychange', () => { if (!document.hidden) audio(); });
+function setupShortRecorder() {
+  audio();
+  try {
+    const stream = cv.captureStream(60);
+    if (recDest && recDest.stream) {
+      const audioTrack = recDest.stream.getAudioTracks()[0];
+      if (audioTrack) stream.addTrack(audioTrack);
+    }
+    const mime = (typeof MediaRecorder !== 'undefined' && MediaRecorder.isTypeSupported?.('video/webm;codecs=vp9,opus')) ? 'video/webm;codecs=vp9,opus' : 'video/webm';
+    const rec = new MediaRecorder(stream, { mimeType: mime, videoBitsPerSecond: 10000000 });
+    const chunks = [];
+    rec.ondataavailable = e => { if (e.data && e.data.size > 0) chunks.push(e.data); };
+    rec.onstop = async () => {
+      const blob = new Blob(chunks, { type: mime });
+      const buf = await blob.arrayBuffer();
+      try {
+        await fetch('/api/save_clip', { method: 'POST', body: buf });
+        console.log('__SHORT_RECORDING_DONE__');
+        window.__RECORDING_DONE = true;
+      } catch (err) {
+        console.error('Error posting recorded clip:', err);
+      }
+    };
+    rec.start();
+    window.__RECORDER = rec;
+  } catch (err) {
+    console.error('Recorder setup error:', err);
+  }
+}
+
 let lastTs = 0;
 function loop(ts) {
   const rdt = Math.min(0.033, (ts - lastTs) / 1000 || 0.016); lastTs = ts;
@@ -670,12 +820,21 @@ function loop(ts) {
   const dt = rdt;
   if (phase === 'card') { cardT -= dt; if (cardT <= 0) { phase = 'play'; SFX.levelStart(); musicOn = true; if (AC) musicNext = AC.currentTime + 0.5; musicStep = 0; ev('play_start', {}); } }
   else if (phase === 'play') updatePlay(dt);
-  else if (phase === 'clear') clearT += dt;
+  else if (phase === 'clear') {
+    clearT += dt;
+    if (clearT > 3.8 && window.__RECORDER && window.__RECORDER.state === 'recording') {
+      window.__RECORDER.stop();
+    }
+  }
   musicUpdate();
   window.__dbg = { phase, x: player ? Math.round(player.x) : 0, hearts, lives, stars: starsGot, score, time: timeLeft, camX: Math.round(camX), yarn: yarn ? yarn.mode : null, ac: AC ? AC.state : 'none', mus: musicOn };
   draw();
   requestAnimationFrame(loop);
 }
 buildLevel(); spawnEnemies(); player = newPlayer(2 * TILE); hearts = 3; lives = 3; starsGot = 0; score = 0; timeLeft = 300;
-if (AUTO) startRun();
+if (AUTO || SHORT) {
+  audio();
+  startRun();
+  if (SHORT) setupShortRecorder();
+}
 requestAnimationFrame(loop);
