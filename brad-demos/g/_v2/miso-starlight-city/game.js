@@ -560,27 +560,32 @@ function drawTile(tx, ty, t) {
     ctx.fillStyle = 'rgba(0,0,0,.28)'; ctx.fillRect(x + 2, y + 4, TILE, TILE);
   }
   if (t === 1 || t === 2) {
-    // the city street itself: dark wet asphalt, warm light — no blue slabs
-    ctx.fillStyle = t === 1 ? '#211e22' : '#1a171e'; ctx.fillRect(x, y, TILE, TILE);
-    ctx.fillStyle = 'rgba(255,255,255,.028)';
-    if (hash2(tx, ty) > 0.4) ctx.fillRect(x + 5 + hash2(tx + 9, ty) * 18, y + 12 + hash2(tx, ty + 7) * 12, 4, 3);
-    ctx.fillStyle = 'rgba(0,0,0,.25)'; ctx.fillRect(x + ((tx * 37) % 23), y + 5, 1, TILE - 7);
-    // wet glints shimmering like the plates' mirror street
-    const h1 = hash2(tx * 3 + 1, ty);
-    if (h1 > 0.45) {
-      const gx = x + 3 + hash2(tx + 5, ty * 2) * 20, gw = 2 + hash2(tx, ty + 3) * 3;
-      const shim = 0.05 + 0.04 * Math.sin(playT * 2 + tx * 1.7);
-      ctx.fillStyle = h1 > 0.72 ? `rgba(255,190,110,${shim + 0.05})` : `rgba(160,195,235,${shim})`;
-      ctx.fillRect(gx, y + 6, gw, TILE - 10);
+    // the street plane — no wall, no curb, no slab face
+    if (t === 2) {
+      // below the surface: the road stretching dark toward the viewer
+      const g2 = ctx.createLinearGradient(0, y, 0, y + TILE);
+      g2.addColorStop(0, '#17141a'); g2.addColorStop(1, '#0f0c12');
+      ctx.fillStyle = g2; ctx.fillRect(x, y, TILE, TILE);
+    } else {
+      ctx.fillStyle = '#1d1a20'; ctx.fillRect(x, y, TILE, TILE);
+      // light lying on wet asphalt at the running line
+      ctx.fillStyle = 'rgba(255,205,150,.14)'; ctx.fillRect(x, y, TILE, 2);
+      ctx.fillStyle = 'rgba(160,190,230,.06)'; ctx.fillRect(x, y + 2, TILE, 3);
+      // reflection glints
+      const h1 = hash2(tx * 3 + 1, ty);
+      if (h1 > 0.4) {
+        const gx = x + 3 + hash2(tx + 5, ty * 2) * 20, gw = 2 + hash2(tx, ty + 3) * 3;
+        const shim = 0.06 + 0.045 * Math.sin(playT * 2 + tx * 1.7);
+        ctx.fillStyle = h1 > 0.7 ? `rgba(255,190,110,${shim + 0.05})` : `rgba(160,195,235,${shim})`;
+        ctx.fillRect(gx, y + 4, gw, TILE - 7);
+      }
+      ctx.fillStyle = 'rgba(255,255,255,.03)';
+      if (hash2(tx, ty) > 0.4) ctx.fillRect(x + 5 + hash2(tx + 9, ty) * 18, y + 14 + hash2(tx, ty + 7) * 10, 4, 3);
+      if (ty > 0 && G(tx, ty - 1) > 0) { ctx.fillStyle = 'rgba(0,0,0,.20)'; ctx.fillRect(x, y + 3, TILE, 5); }
     }
-    ctx.fillStyle = 'rgba(0,0,0,.28)'; ctx.fillRect(x, y + TILE - 3, TILE, 3);
-    if (t === 1) {
-      // curb edge catching the market light
-      ctx.fillStyle = '#4c4238'; ctx.fillRect(x, y, TILE, 6);
-      if (ty > 0 && grid[ty - 1] && solid(grid[ty - 1][tx])) { ctx.fillStyle = 'rgba(0,0,0,.22)'; ctx.fillRect(x, y + 6, TILE, 5); }
-      ctx.fillStyle = 'rgba(255,214,150,.5)'; ctx.fillRect(x, y, TILE, 2);
-      ctx.fillStyle = 'rgba(255,180,100,.10)'; ctx.fillRect(x, y + 2, TILE, 3);
-    }
+    // a gap beside this tile = a dark break in the street, not a cliff edge
+    if (G(tx - 1, ty) <= 0) { const gl = ctx.createLinearGradient(x, 0, x + 12, 0); gl.addColorStop(0, 'rgba(0,0,0,.55)'); gl.addColorStop(1, 'rgba(0,0,0,0)'); ctx.fillStyle = gl; ctx.fillRect(x, y, 12, TILE); }
+    if (G(tx + 1, ty) <= 0) { const gr2 = ctx.createLinearGradient(x + TILE, 0, x + TILE - 12, 0); gr2.addColorStop(0, 'rgba(0,0,0,.55)'); gr2.addColorStop(1, 'rgba(0,0,0,0)'); ctx.fillStyle = gr2; ctx.fillRect(x + TILE - 12, y, 12, TILE); }
   } else if (t === 3) {
     // market goods crate — varied wood, some topped with produce
     const hv = hash2(tx * 7 + 2, ty * 3 + 1);
@@ -594,7 +599,7 @@ function drawTile(tx, ty, t) {
     } else { // rope strap
       ctx.fillStyle = 'rgba(216,186,130,.4)'; ctx.fillRect(x + 13, y + 2, 3, TILE - 4);
     }
-    if (ty > 0 && !(grid[ty - 1] && solid(grid[ty - 1][tx]))) {
+    if (ty > 0 && G(tx, ty - 1) <= 0) {
       // nothing above: this crate carries produce
       const pv = hash2(tx + 31, ty + 7);
       if (pv > 0.35) {
@@ -631,14 +636,17 @@ function drawTile(tx, ty, t) {
       ctx.strokeStyle = '#38322e'; ctx.lineWidth = 2; ctx.strokeRect(x + 1, y + 1, TILE - 2, TILE - 2);
     }
   } else if (t === 5) {
-    // stall awning you can stand on: canvas top, plank underside
-    ctx.fillStyle = '#46311d'; ctx.fillRect(x, y + 7, TILE, TILE - 7);
-    ctx.fillStyle = '#38260f'; ctx.fillRect(x, y + 16, TILE, 2); ctx.fillRect(x, y + 24, TILE, 2);
+    // stall awning you can stand on: a THIN canvas sheet — scalloped valance,
+    // soft shadow on the shop behind it, nothing under that. No slab.
     const ac = ((tx % 2) + 2) % 2 === 0 ? '#8a3436' : '#2b5a60';
-    ctx.fillStyle = ac; ctx.fillRect(x, y, TILE, 8);
+    ctx.fillStyle = ac; ctx.fillRect(x, y, TILE, 9);
     ctx.fillStyle = 'rgba(255,235,200,.22)'; ctx.fillRect(x, y, TILE, 2);
+    ctx.fillStyle = 'rgba(0,0,0,.30)'; ctx.fillRect(x, y + 7, TILE, 2);
     ctx.fillStyle = ac;
-    for (let i = 0; i < 4; i++) { ctx.beginPath(); ctx.arc(x + 4 + i * 8, y + 8, 3.6, 0, Math.PI); ctx.fill(); }
+    for (let i = 0; i < 4; i++) { ctx.beginPath(); ctx.arc(x + 4 + i * 8, y + 9, 3.8, 0, Math.PI); ctx.fill(); }
+    const gsh = ctx.createLinearGradient(0, y + 13, 0, y + 24);
+    gsh.addColorStop(0, 'rgba(0,0,0,.20)'); gsh.addColorStop(1, 'rgba(0,0,0,0)');
+    ctx.fillStyle = gsh; ctx.fillRect(x, y + 13, TILE, 11);
   }
 }
 function drawStarShape(x, y, r, color) {
