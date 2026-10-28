@@ -603,8 +603,88 @@ function drawBgStrip(scroll) {
     else { ctx.save(); ctx.translate(x + bw / 2, 0); ctx.scale(-1, 1); ctx.drawImage(bg, -bw / 2, 0, bw, VH); ctx.restore(); }
   }
 }
+// — ALIVE WORLD: the painted backdrop breathes — drifting painted clouds, a low
+// mist band, cloud shadows sweeping the ground, floating pollen, a butterfly,
+// and swaying foreground grass. All timed off playT; pure decoration, no physics.
+function drawAliveBack() {
+  const t = playT;
+  ctx.save(); ctx.globalCompositeOperation = 'screen';
+  for (let i = 0; i < 6; i++) {
+    const img = IMG['cloud' + (i % 5)]; if (!img || !img.complete || !img.naturalWidth) continue;
+    const depth = i % 2 === 0 ? 0.05 : 0.11, sp = 3 + (i % 3) * 2.4;
+    const w = 180 + (i * 53) % 140, h = w * img.naturalHeight / img.naturalWidth;
+    const span = VW + 380;
+    const x = (((i * 331 + t * sp - camX * depth) % span) + span) % span - 190;
+    const y = 8 + (i * 43) % 92 + Math.sin(t * 0.23 + i * 1.7) * 3;
+    ctx.globalAlpha = 0.42 + (i % 3) * 0.15;
+    ctx.drawImage(img, x, y, w, h);
+  }
+  const mist = IMG.cloud1;
+  if (mist && mist.complete && mist.naturalWidth) {
+    for (let i = 0; i < 2; i++) {
+      const span = VW + 1000, sp = i === 0 ? 5 : -3.4;
+      const x = (((i * 700 + t * sp - camX * 0.07) % span) + span) % span - 500;
+      ctx.globalAlpha = 0.10;
+      ctx.drawImage(mist, x, VH * 0.50, 1000, 120);
+    }
+  }
+  ctx.restore(); ctx.globalAlpha = 1;
+}
+function drawAliveFront() {
+  const t = playT;
+  // cloud shadows sweeping the meadow
+  ctx.save(); ctx.globalCompositeOperation = 'multiply';
+  for (let i = 0; i < 3; i++) {
+    const span = VW + 560, sp = 12 + i * 5;
+    const x = (((i * 431 + t * sp - camX * 0.92) % span) + span) % span - 280;
+    const y = VH * 0.68 + (i * 57) % 100, rx = 200 + i * 46, ry = 36 + i * 8;
+    ctx.save(); ctx.translate(x, y); ctx.scale(1, ry / rx);
+    const g = ctx.createRadialGradient(0, 0, 0, 0, 0, rx);
+    g.addColorStop(0, 'rgba(88,100,128,0.42)'); g.addColorStop(1, 'rgba(88,100,128,0)');
+    ctx.fillStyle = g; ctx.beginPath(); ctx.arc(0, 0, rx, 0, 7); ctx.fill(); ctx.restore();
+  }
+  ctx.restore();
+  // drifting pollen motes in the light
+  ctx.save(); ctx.globalCompositeOperation = 'lighter';
+  for (let i = 0; i < 26; i++) {
+    const px = (((i * 173 + t * (6 + (i % 4) * 2) - camX * 0.55) % (VW + 40)) + VW + 40) % (VW + 40) - 20;
+    const py = 84 + ((i * 97) % 310) + Math.sin(t * 0.9 + i * 2.1) * 12;
+    const r = 1.2 + (i % 3) * 0.7, a = Math.max(0, 0.15 + 0.13 * Math.sin(t * 1.7 + i * 1.3));
+    const g = ctx.createRadialGradient(px, py, 0, px, py, r * 3);
+    g.addColorStop(0, 'rgba(255,240,190,' + a.toFixed(3) + ')'); g.addColorStop(1, 'rgba(255,240,190,0)');
+    ctx.fillStyle = g; ctx.beginPath(); ctx.arc(px, py, r * 3, 0, 7); ctx.fill();
+  }
+  ctx.restore();
+  // a butterfly keeping the cat company
+  const p = player;
+  if (p) {
+    const img = ((t * 9) | 0) % 2 === 0 ? IMG.bf0 : IMG.bf1;
+    if (img && img.complete && img.naturalWidth) {
+      const bx = p.x + 128 + Math.sin(t * 0.33) * 84 - camX;
+      const by = p.y - 44 + Math.sin(t * 1.25) * 15 + Math.sin(t * 7) * 2;
+      if (bx > -30 && bx < VW + 30) {
+        const w = 24, h = w * img.naturalHeight / img.naturalWidth;
+        ctx.save(); ctx.translate(bx, by); ctx.rotate(Math.sin(t * 0.9) * 0.18);
+        ctx.drawImage(img, -w / 2, -h / 2, w, h); ctx.restore();
+      }
+    }
+  }
+  // swaying foreground grass (front parallax fringe)
+  ctx.save(); ctx.lineCap = 'round';
+  for (let sx = -12; sx < VW + 12; sx += 13) {
+    const wx = sx + camX * 1.3;
+    const seed = ((wx * 7919) % 100 + 100) % 100;
+    const hgt = 16 + seed * 0.22, sway = Math.sin(t * 1.8 + wx * 0.11) * 4.5;
+    ctx.strokeStyle = 'rgba(22,70,32,0.50)'; ctx.lineWidth = 3;
+    ctx.beginPath(); ctx.moveTo(sx, VH + 3); ctx.quadraticCurveTo(sx + sway * 0.4, VH - hgt * 0.6, sx + sway, VH - hgt); ctx.stroke();
+    ctx.strokeStyle = 'rgba(38,102,44,0.42)'; ctx.lineWidth = 2;
+    ctx.beginPath(); ctx.moveTo(sx + 6, VH + 3); ctx.quadraticCurveTo(sx + 6 - sway * 0.3, VH - hgt * 0.45, sx + 6 - sway * 0.7, VH - hgt * 0.72); ctx.stroke();
+  }
+  ctx.restore();
+}
 function drawWorld() {
   drawBgStrip(camX * 0.18);
+  drawAliveBack();
   // mid hills silhouette
   ctx.fillStyle = 'rgba(38,120,52,.55)';
   ctx.beginPath(); ctx.moveTo(0, VH);
@@ -708,6 +788,7 @@ function drawWorld() {
   // pops
   ctx.textAlign = 'center'; ctx.font = '900 9px Trebuchet MS';
   pops.forEach(o => { ctx.globalAlpha = Math.min(1, o.t * 1.6); ctx.fillStyle = o.color; ctx.strokeStyle = 'rgba(0,0,0,.55)'; ctx.lineWidth = 3; const yy = o.y - (1 - o.t) * 22; ctx.strokeText(o.text, o.x - camX, yy); ctx.fillText(o.text, o.x - camX, yy); ctx.globalAlpha = 1; });
+  drawAliveFront();
 }
 function drawHUD() {
   ctx.fillStyle = 'rgba(10,14,30,.72)'; ctx.fillRect(0, 0, VW, 22);
