@@ -19,7 +19,20 @@ Object.keys(window.MS_ASSETS || {}).forEach(k => { const im = new Image(); im.sr
 
 // ---------- audio: NES-style synth ----------
 let AC = null;
-function audio() { if (!AC) { try { AC = new (window.AudioContext || window.webkitAudioContext)(); } catch (e) {} } if (AC && AC.state === 'suspended') AC.resume(); }
+function audio() {
+  // iOS: WebAudio is silenced by the mute switch unless the session is 'playback'
+  try { if (navigator.audioSession) navigator.audioSession.type = 'playback'; } catch (e) {}
+  if (!AC) {
+    try {
+      AC = new (window.AudioContext || window.webkitAudioContext)();
+      // classic iOS unlock: play a 1-sample silent buffer inside the gesture
+      const b = AC.createBuffer(1, 1, AC.sampleRate), s = AC.createBufferSource();
+      s.buffer = b; s.connect(AC.destination); s.start(0);
+      AC.onstatechange = () => { if (AC && AC.state !== 'running') AC.resume(); };
+    } catch (e) {}
+  }
+  if (AC && AC.state !== 'running') AC.resume();
+}
 function tone(freq, dur, type, vol, slideTo, delay) {
   if (!AC) return; const t0 = AC.currentTime + (delay || 0);
   const o = AC.createOscillator(), g = AC.createGain();
@@ -647,7 +660,9 @@ addEventListener('keydown', e => {
   if (phase === 'play') { phase = 'pause'; musicOn = false; SFX.pause(); }
   else if (phase === 'pause') { phase = 'play'; musicOn = true; if (AC) musicNext = AC.currentTime + 0.06; SFX.pause(); }
 });
-addEventListener('pointerdown', () => { if (phase !== 'play' && phase !== 'card') advance(); }, true);
+addEventListener('pointerdown', () => { audio(); if (phase !== 'play' && phase !== 'card') advance(); }, true);
+addEventListener('touchend', () => audio(), true);
+document.addEventListener('visibilitychange', () => { if (!document.hidden) audio(); });
 let lastTs = 0;
 function loop(ts) {
   const rdt = Math.min(0.033, (ts - lastTs) / 1000 || 0.016); lastTs = ts;
@@ -657,7 +672,7 @@ function loop(ts) {
   else if (phase === 'play') updatePlay(dt);
   else if (phase === 'clear') clearT += dt;
   musicUpdate();
-  window.__dbg = { phase, x: player ? Math.round(player.x) : 0, hearts, lives, stars: starsGot, score, time: timeLeft, camX: Math.round(camX), yarn: yarn ? yarn.mode : null };
+  window.__dbg = { phase, x: player ? Math.round(player.x) : 0, hearts, lives, stars: starsGot, score, time: timeLeft, camX: Math.round(camX), yarn: yarn ? yarn.mode : null, ac: AC ? AC.state : 'none', mus: musicOn };
   draw();
   requestAnimationFrame(loop);
 }
