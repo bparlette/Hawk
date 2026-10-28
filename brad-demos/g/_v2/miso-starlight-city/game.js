@@ -560,32 +560,9 @@ function drawTile(tx, ty, t) {
     ctx.fillStyle = 'rgba(0,0,0,.28)'; ctx.fillRect(x + 2, y + 4, TILE, TILE);
   }
   if (t === 1 || t === 2) {
-    // the street plane — no wall, no curb, no slab face
-    if (t === 2) {
-      // below the surface: the road stretching dark toward the viewer
-      const g2 = ctx.createLinearGradient(0, y, 0, y + TILE);
-      g2.addColorStop(0, '#17141a'); g2.addColorStop(1, '#0f0c12');
-      ctx.fillStyle = g2; ctx.fillRect(x, y, TILE, TILE);
-    } else {
-      ctx.fillStyle = '#1d1a20'; ctx.fillRect(x, y, TILE, TILE);
-      // light lying on wet asphalt at the running line
-      ctx.fillStyle = 'rgba(255,205,150,.14)'; ctx.fillRect(x, y, TILE, 2);
-      ctx.fillStyle = 'rgba(160,190,230,.06)'; ctx.fillRect(x, y + 2, TILE, 3);
-      // reflection glints
-      const h1 = hash2(tx * 3 + 1, ty);
-      if (h1 > 0.4) {
-        const gx = x + 3 + hash2(tx + 5, ty * 2) * 20, gw = 2 + hash2(tx, ty + 3) * 3;
-        const shim = 0.06 + 0.045 * Math.sin(playT * 2 + tx * 1.7);
-        ctx.fillStyle = h1 > 0.7 ? `rgba(255,190,110,${shim + 0.05})` : `rgba(160,195,235,${shim})`;
-        ctx.fillRect(gx, y + 4, gw, TILE - 7);
-      }
-      ctx.fillStyle = 'rgba(255,255,255,.03)';
-      if (hash2(tx, ty) > 0.4) ctx.fillRect(x + 5 + hash2(tx + 9, ty) * 18, y + 14 + hash2(tx, ty + 7) * 10, 4, 3);
-      if (ty > 0 && G(tx, ty - 1) > 0) { ctx.fillStyle = 'rgba(0,0,0,.20)'; ctx.fillRect(x, y + 3, TILE, 5); }
-    }
-    // a gap beside this tile = a dark break in the street, not a cliff edge
-    if (G(tx - 1, ty) <= 0) { const gl = ctx.createLinearGradient(x, 0, x + 12, 0); gl.addColorStop(0, 'rgba(0,0,0,.55)'); gl.addColorStop(1, 'rgba(0,0,0,0)'); ctx.fillStyle = gl; ctx.fillRect(x, y, 12, TILE); }
-    if (G(tx + 1, ty) <= 0) { const gr2 = ctx.createLinearGradient(x + TILE, 0, x + TILE - 12, 0); gr2.addColorStop(0, 'rgba(0,0,0,.55)'); gr2.addColorStop(1, 'rgba(0,0,0,0)'); ctx.fillStyle = gr2; ctx.fillRect(x + TILE - 12, y, 12, TILE); }
+    // NO drawn floor at all: the painted city street IS the ground (the tile
+    // still collides; it just isn't painted). Pits get a dark break below.
+    return;
   } else if (t === 3) {
     // market goods crate — varied wood, some topped with produce
     const hv = hash2(tx * 7 + 2, ty * 3 + 1);
@@ -905,6 +882,23 @@ function drawWorld() {
   // tiles
   const x0 = Math.max(0, Math.floor(camX / TILE)), x1 = Math.min(COLS - 1, x0 + 17);
   for (let ty = 0; ty < ROWS; ty++) for (let tx = x0; tx <= x1; tx++) { const t = G(tx, ty); if (t) drawTile(tx, ty, t); }
+  // dark breaks in the street where the ground drops away (pits)
+  {
+    let run = -1;
+    for (let tx = x0; tx <= x1 + 1; tx++) {
+      const empty = tx <= x1 && G(tx, 7) === 0 && G(tx, 8) === 0;
+      if (empty && run < 0) run = tx;
+      if (!empty && run >= 0) {
+        const bx = run * TILE - camX, bw = (tx - run) * TILE;
+        const g = ctx.createLinearGradient(0, OY + 202, 0, OY + 270);
+        g.addColorStop(0, 'rgba(2,2,6,0)'); g.addColorStop(0.35, 'rgba(2,2,6,.52)'); g.addColorStop(1, 'rgba(2,2,6,.74)');
+        ctx.fillStyle = g; ctx.fillRect(bx, OY + 202, bw, 68);
+        ctx.fillStyle = 'rgba(0,0,0,.45)';
+        ctx.beginPath(); ctx.ellipse(bx + bw / 2, OY + 211, bw / 2, 5.5, 0, 0, 7); ctx.fill();
+        run = -1;
+      }
+    }
+  }
   drawCityReflections();
   // checkpoint flags
   CHECKPOINTS.forEach(cx0 => {
