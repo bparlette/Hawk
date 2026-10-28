@@ -336,6 +336,11 @@ let skyGrad = null;
 function draw() {
   const ctx = g.ctx, S = spd();
 
+  /* 0. painterly backdrop plate (falls back to the code-drawn sky below) */
+  if (!draw.bgImg && window.CAT_BG) { const im = new Image(); im.src = window.CAT_BG; draw.bgImg = im; }
+  const painted = !!(draw.bgImg && draw.bgImg.complete && draw.bgImg.naturalWidth);
+  if (painted) ctx.drawImage(draw.bgImg, 0, 0, W, H);
+  if (!painted) {
   /* 1. sky */
   if (!skyGrad) {
     skyGrad = ctx.createLinearGradient(0, 0, 0, H);
@@ -366,6 +371,7 @@ function draw() {
 
   /* 3-4. the two skylines */
   for (const L of parallax) skyline(L.L, L.baseY, L.col, L.win, L.par);
+  }
 
   /* rooftop */
   ctx.fillStyle = '#07040f'; ctx.fillRect(0, GY, W, H - GY);
