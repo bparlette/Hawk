@@ -133,7 +133,7 @@ function buildLevel() {
   const ground = (x0, x1) => { for (let x = x0; x <= x1; x++) { SET(x, 7, 1); SET(x, 8, 2); } };
   const star = (x, y) => pickups.push({ x: x * TILE + 15, y: y * TILE + 15, got: false, ph: Math.random() * 6 });
   const starRow = (x0, x1, y) => { for (let x = x0; x <= x1; x++) star(x, y); };
-  ground(0, 19); ground(24, 41); ground(46, 57); ground(64, 83); ground(88, 110); ground(116, 155);
+  ground(0, 155); // one unbroken street, start to goal — a straight runner, no drops
   // intro: stars + first beetle
   starRow(6, 8, 6); spawns.push({ k: 'beetle', x: 13 * TILE, y: 6 * TILE });
   // star blocks row
