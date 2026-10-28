@@ -696,16 +696,30 @@ function drawCityBack() {
   }
   ctx.restore(); ctx.globalAlpha = 1;
 }
+const reflCanvas = document.createElement('canvas');
+const reflCtx = reflCanvas.getContext('2d');
 function reflectSprite(img, cx, feet, w, h, flip) {
-  if (!img || !img.complete || !img.naturalWidth || h <= 0) return;
-  ctx.save();
-  ctx.globalAlpha = 0.34;
-  ctx.translate(cx + Math.sin(playT * 2.6 + feet * 0.05) * 1.5, feet); ctx.scale(flip ? -1 : 1, -0.48);
-  ctx.drawImage(img, -w / 2, -h, w, h);
-  ctx.restore();
-  const g = ctx.createLinearGradient(0, feet, 0, feet + h * 0.48);
-  g.addColorStop(0, 'rgba(10,12,26,0.06)'); g.addColorStop(1, 'rgba(10,12,26,0.92)');
-  ctx.fillStyle = g; ctx.fillRect(cx - w / 2 - 2, feet, w + 4, h * 0.48);
+  if (!img || !img.complete || !img.naturalWidth || w < 2 || h < 2) return;
+  const W = Math.ceil(w) + 4, H = Math.ceil(h);
+  if (reflCanvas.width !== W) reflCanvas.width = W;
+  if (reflCanvas.height !== H) reflCanvas.height = H;
+  const g2 = reflCtx;
+  g2.clearRect(0, 0, W, H);
+  g2.save();
+  g2.translate(W / 2, H); g2.scale(flip ? -1 : 1, -1);
+  g2.globalAlpha = 0.30;
+  g2.drawImage(img, -w / 2, 0, w, h);
+  g2.restore();
+  g2.globalAlpha = 1;
+  // fade with distance from the feet (canvas top = the feet line)
+  g2.globalCompositeOperation = 'destination-out';
+  const gr = g2.createLinearGradient(0, 0, 0, H * 0.55);
+  gr.addColorStop(0, 'rgba(0,0,0,0.12)'); gr.addColorStop(1, 'rgba(0,0,0,1)');
+  g2.fillStyle = gr; g2.fillRect(0, 0, W, H);
+  g2.globalCompositeOperation = 'source-over';
+  const H2 = Math.ceil(h * 0.5);
+  const sx = cx + Math.sin(playT * 2.6 + feet * 0.05) * 1.5;
+  ctx.drawImage(reflCanvas, 0, 0, W, H2, sx - W / 2, feet, W, H2);
 }
 function drawCityReflections() {
   enemies.forEach(e => {
