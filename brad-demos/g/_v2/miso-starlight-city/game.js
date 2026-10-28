@@ -4,8 +4,18 @@
 // stomp bounce, hit-stop freeze on stomps. Tile world built from segments.
 'use strict';
 import { TouchController, isTouchDevice } from './gptouch.js';
-const VW = 480, VH = 270, TILE = 30;
+let VW = 480, VH = 270, OY = 0;
+const TILE = 30;
 const cv = document.getElementById('cv'), ctx = cv.getContext('2d');
+// Portrait phones get a TALL viewport: same world, anchored to the bottom,
+// city towering above it. Landscape stays 480x270.
+function applyLayout() {
+  if (window.innerHeight > window.innerWidth) { VW = 270; VH = 480; } else { VW = 480; VH = 270; }
+  OY = VH - 270;
+  cv.width = VW * 2; cv.height = VH * 2;
+}
+applyLayout();
+window.addEventListener('resize', applyLayout);
 ctx.imageSmoothingEnabled = false;
 const $ = id => document.getElementById(id);
 const clamp = (v, a, b) => v < a ? a : v > b ? b : v;
@@ -545,7 +555,7 @@ function readInputHold() { return (AUTO || SHORT) ? true : readInput().jumpH; }
 // ---------- rendering ----------
 function hash2(x, y) { let h = (x * 374761393 + y * 668265263) ^ 0x5bf03635; h = (h ^ (h >> 13)) * 1274126177; return ((h ^ (h >> 16)) >>> 0) / 4294967295; }
 function drawTile(tx, ty, t) {
-  const x = tx * TILE - camX, y = ty * TILE;
+  const x = tx * TILE - camX, y = ty * TILE + OY;
   if (t === 3 || t === 4 || t === 5 || t === 6) {
     ctx.fillStyle = 'rgba(0,0,0,.28)'; ctx.fillRect(x + 2, y + 4, TILE, TILE);
   }
@@ -763,9 +773,9 @@ function drawCityReflections() {
     const x = e.x - camX;
     if (e.k === 'beetle') {
       const img = ((e.t * 6) | 0) % 2 === 0 ? IMG.beetle : IMG.beetle2;
-      if (img && img.naturalHeight) { const h = 27, w = h * img.naturalWidth / img.naturalHeight; reflectSprite(img, x + e.w / 2, e.y + e.h + 2, w, h, e.vx > 0); }
+      if (img && img.naturalHeight) { const h = 27, w = h * img.naturalWidth / img.naturalHeight; reflectSprite(img, x + e.w / 2, e.y + OY + e.h + 2, w, h, e.vx > 0); }
     } else if (e.k === 'slime' && e.ground) {
-      reflectSprite(IMG.slime, x + e.w / 2, e.y + e.h + 6, 32, 30, false);
+      reflectSprite(IMG.slime, x + e.w / 2, e.y + OY + e.h + 6, 32, 30, false);
     }
   });
   const p = player;
@@ -773,7 +783,7 @@ function drawCityReflections() {
     let img = IMG.miso_stand, th = 34;
     if (p.throwT > 0) { img = IMG.miso_throw; th = 32; }
     else if (Math.abs(p.vx) > 12) { img = [IMG.miso_run, IMG.miso_tuck, IMG.miso_run2, IMG.miso_tuck][((p.animDist / 34) | 0) % 4]; th = 31; }
-    if (img && img.naturalHeight) { const tw = th * img.naturalWidth / img.naturalHeight; reflectSprite(img, p.x - camX + p.w / 2, p.y + p.h + 2, tw, th, p.face < 0); }
+    if (img && img.naturalHeight) { const tw = th * img.naturalWidth / img.naturalHeight; reflectSprite(img, p.x - camX + p.w / 2, p.y + OY + p.h + 2, tw, th, p.face < 0); }
   }
 }
 function drawCityFront() {
@@ -892,27 +902,27 @@ function drawWorld() {
   CHECKPOINTS.forEach(cx0 => {
     const x = cx0 - camX; if (x < -20 || x > VW + 20) return;
     const on = respawnX >= cx0;
-    ctx.fillStyle = '#cfd8dc'; ctx.fillRect(x, 6 * TILE - 34, 3, 64);
+    ctx.fillStyle = '#cfd8dc'; ctx.fillRect(x, OY + 6 * TILE - 34, 3, 64);
     ctx.fillStyle = on ? '#ffb347' : '#5a6474';
-    ctx.beginPath(); ctx.moveTo(x + 3, 6 * TILE - 34); ctx.lineTo(x + 19, 6 * TILE - 27); ctx.lineTo(x + 3, 6 * TILE - 20); ctx.closePath(); ctx.fill();
+    ctx.beginPath(); ctx.moveTo(x + 3, OY + 6 * TILE - 34); ctx.lineTo(x + 19, OY + 6 * TILE - 27); ctx.lineTo(x + 3, OY + 6 * TILE - 20); ctx.closePath(); ctx.fill();
   });
   // goal bell
   {
     const x = goalX - camX;
     if (x > -60 && x < VW + 60) {
-      ctx.fillStyle = '#4a3220'; ctx.fillRect(x + 12, 4 * TILE, 6, 3 * TILE);
-      ctx.fillStyle = '#5e3a17'; ctx.fillRect(x - 6, 4 * TILE - 8, 42, 7);
+      ctx.fillStyle = '#4a3220'; ctx.fillRect(x + 12, OY + 4 * TILE, 6, 3 * TILE);
+      ctx.fillStyle = '#5e3a17'; ctx.fillRect(x - 6, OY + 4 * TILE - 8, 42, 7);
       const sw = phase === 'clear' ? Math.sin(clearT * 9) * 6 : Math.sin(playT * 1.6) * 2;
-      ctx.save(); ctx.translate(x + 15, 4 * TILE); ctx.rotate(sw * Math.PI / 180);
+      ctx.save(); ctx.translate(x + 15, OY + 4 * TILE); ctx.rotate(sw * Math.PI / 180);
       ctx.fillStyle = '#ffcf3f'; ctx.beginPath(); ctx.arc(0, 12, 11, Math.PI, 0); ctx.fill(); ctx.fillRect(-11, 12, 22, 4);
       ctx.fillStyle = '#e8930c'; ctx.beginPath(); ctx.arc(0, 19, 3.4, 0, 7); ctx.fill(); ctx.restore();
-      if (phase !== 'clear') drawStarShape(x + 15, 3 * TILE - 4 + Math.sin(playT * 3) * 2, 5, 'rgba(255,233,150,.9)');
+      if (phase !== 'clear') drawStarShape(x + 15, OY + 3 * TILE - 4 + Math.sin(playT * 3) * 2, 5, 'rgba(255,233,150,.9)');
     }
   }
   // pickups
   pickups.forEach(s => {
     if (s.got) return; const x = s.x - camX; if (x < -20 || x > VW + 20) return;
-    const yy = s.y + Math.sin(playT * 3 + s.ph) * 3;
+    const yy = s.y + OY + Math.sin(playT * 3 + s.ph) * 3;
     const g = ctx.createRadialGradient(x, yy, 1, x, yy, 15);
     g.addColorStop(0, 'rgba(255,214,110,.5)'); g.addColorStop(1, 'rgba(255,214,110,0)');
     ctx.fillStyle = g; ctx.beginPath(); ctx.arc(x, yy, 15, 0, 7); ctx.fill();
@@ -929,7 +939,7 @@ function drawWorld() {
       const h = 28, w = h * img.naturalWidth / img.naturalHeight;
       ctx.save();
       ctx.globalAlpha = e.dying > 0.38 ? Math.max(0, 1 - (e.dying - 0.38) * 4) : 1;
-      ctx.translate(e.dx + e.w / 2 - camX, e.dy + e.h / 2);
+      ctx.translate(e.dx + e.w / 2 - camX, e.dy + OY + e.h / 2);
       ctx.rotate(e.spin * e.dying);
       ctx.scale(1, -1); // belly-up
       ctx.drawImage(img, -w / 2, -h / 2, w, h);
@@ -938,17 +948,17 @@ function drawWorld() {
     }
     if (e.x < camX - 60 || e.x > camX + VW + 60) return;
     const x = e.x - camX;
-    if (e.k === 'bat') { const img = Math.sin(e.t * 11) > 0 ? IMG.bat : IMG.bat2; drawSprite(img, x - 5, e.y - 4, 40, 26, false); }
+    if (e.k === 'bat') { const img = Math.sin(e.t * 11) > 0 ? IMG.bat : IMG.bat2; drawSprite(img, x - 5, e.y + OY - 4, 40, 26, false); }
     else if (e.k === 'slime') {
-      if (!e.ground && IMG.slime2) drawSprite(IMG.slime2, x - 1, e.y + e.h - 38, 22, 38, false); // stretched mid-hop
-      else { const sq = 1 + Math.sin(e.t * 10) * 0.05; drawSprite(IMG.slime, x - 4, e.y + e.h - 30 * sq + 6, 32, 30 * sq, false); }
+      if (!e.ground && IMG.slime2) drawSprite(IMG.slime2, x - 1, e.y + OY + e.h - 38, 22, 38, false); // stretched mid-hop
+      else { const sq = 1 + Math.sin(e.t * 10) * 0.05; drawSprite(IMG.slime, x - 4, e.y + OY + e.h - 30 * sq + 6, 32, 30 * sq, false); }
     }
-    else { const img = ((e.t * 6) | 0) % 2 === 0 ? IMG.beetle : IMG.beetle2; const h = 27, w = img && img.naturalHeight ? h * img.naturalWidth / img.naturalHeight : 30; drawSprite(img, x + e.w / 2 - w / 2, e.y + e.h - h + 2, w, h, e.vx > 0); }
+    else { const img = ((e.t * 6) | 0) % 2 === 0 ? IMG.beetle : IMG.beetle2; const h = 27, w = img && img.naturalHeight ? h * img.naturalWidth / img.naturalHeight : 30; drawSprite(img, x + e.w / 2 - w / 2, e.y + OY + e.h - h + 2, w, h, e.vx > 0); }
   });
   ctx.filter = 'none';
   // yarn ball + string (behind the cat, over the world)
   if (yarn && player) {
-    const h = handPt(), hx = h.x - camX, hy = h.y, bx = yarn.x - camX, by = yarn.y;
+    const h = handPt(), hx = h.x - camX, hy = h.y + OY, bx = yarn.x - camX, by = yarn.y + OY;
     const d = Math.hypot(bx - hx, by - hy), sag = Math.min(24, d * 0.16) * (yarn.mode === 'out' ? 1 : 0.3);
     ctx.strokeStyle = '#f2e7d5'; ctx.lineWidth = 2; ctx.beginPath();
     ctx.moveTo(hx, hy); ctx.quadraticCurveTo((hx + bx) / 2, Math.max(hy, by) + sag, bx, by); ctx.stroke();
@@ -962,7 +972,7 @@ function drawWorld() {
     ctx.fillStyle = 'rgba(255,255,255,.75)'; ctx.beginPath(); ctx.arc(bx - 2.4, by - 2.6, 1.7, 0, 7); ctx.fill();
   }
   // particles
-  parts.forEach(o => { ctx.globalAlpha = Math.max(0, 1 - o.t / o.life); ctx.fillStyle = o.color; ctx.fillRect(o.x - camX - o.s / 2, o.y - o.s / 2, o.s, o.s); });
+  parts.forEach(o => { ctx.globalAlpha = Math.max(0, 1 - o.t / o.life); ctx.fillStyle = o.color; ctx.fillRect(o.x - camX - o.s / 2, o.y + OY - o.s / 2, o.s, o.s); });
   ctx.globalAlpha = 1;
   // player
   const p = player; if (p) {
@@ -980,8 +990,8 @@ function drawWorld() {
     else if (p.squashT > 0) { const q = p.squashT / 0.13; sy = 1 - 0.20 * q; sx = 1 + 0.16 * q; }
     ctx.save();
     ctx.filter = 'brightness(0.95) saturate(0.94)';
-    if (p.dead) { ctx.translate(x + p.w / 2, p.y + p.h / 2); ctx.rotate(Math.min(1.4, p.deadT * 2)); ctx.translate(0, p.h / 2 + 2); }
-    else ctx.translate(x + p.w / 2, p.y + p.h + 2);
+    if (p.dead) { ctx.translate(x + p.w / 2, p.y + OY + p.h / 2); ctx.rotate(Math.min(1.4, p.deadT * 2)); ctx.translate(0, p.h / 2 + 2); }
+    else ctx.translate(x + p.w / 2, p.y + OY + p.h + 2);
     ctx.scale(p.face * sx, sy);
     ctx.globalAlpha = alpha;
     if (img && img.complete && img.naturalWidth) ctx.drawImage(img, -tw / 2, -th, tw, th);
@@ -990,20 +1000,31 @@ function drawWorld() {
   }
   // pops
   ctx.textAlign = 'center'; ctx.font = '900 9px Trebuchet MS';
-  pops.forEach(o => { ctx.globalAlpha = Math.min(1, o.t * 1.6); ctx.fillStyle = o.color; ctx.strokeStyle = 'rgba(0,0,0,.55)'; ctx.lineWidth = 3; const yy = o.y - (1 - o.t) * 22; ctx.strokeText(o.text, o.x - camX, yy); ctx.fillText(o.text, o.x - camX, yy); ctx.globalAlpha = 1; });
+  pops.forEach(o => { ctx.globalAlpha = Math.min(1, o.t * 1.6); ctx.fillStyle = o.color; ctx.strokeStyle = 'rgba(0,0,0,.55)'; ctx.lineWidth = 3; const yy = o.y + OY - (1 - o.t) * 22; ctx.strokeText(o.text, o.x - camX, yy); ctx.fillText(o.text, o.x - camX, yy); ctx.globalAlpha = 1; });
   drawCityFront();
 }
 function drawHUD() {
-  { const g = ctx.createLinearGradient(0, 0, 0, 30); g.addColorStop(0, 'rgba(8,10,22,.80)'); g.addColorStop(1, 'rgba(8,10,22,.18)'); ctx.fillStyle = g; ctx.fillRect(0, 0, VW, 30); }
+  const tall = VW < 400;
+  { const g = ctx.createLinearGradient(0, 0, 0, tall ? 44 : 30); g.addColorStop(0, 'rgba(8,10,22,.80)'); g.addColorStop(1, 'rgba(8,10,22,.18)'); ctx.fillStyle = g; ctx.fillRect(0, 0, VW, tall ? 44 : 30); }
   ctx.font = '900 11px Trebuchet MS'; ctx.textAlign = 'left'; ctx.fillStyle = '#fff';
   ctx.fillText('SCORE ' + String(score).padStart(6, '0'), 8, 15);
-  ctx.fillStyle = '#ffd94a'; drawStarShape(150, 11, 6, '#ffd94a');
-  ctx.fillStyle = '#fff'; ctx.fillText('× ' + starsGot, 160, 15);
-  ctx.fillText('WORLD 1-1', 226, 15);
-  ctx.fillStyle = timeLeft <= 30 ? '#ff6b6b' : '#fff'; ctx.fillText('TIME ' + timeLeft, 316, 15);
+  if (tall) {
+    ctx.fillStyle = '#ffd94a'; drawStarShape(150, 11, 6, '#ffd94a');
+    ctx.fillStyle = '#fff'; ctx.fillText('× ' + starsGot, 160, 15);
+    for (let i = 0; i < 3; i++) { ctx.font = '13px Trebuchet MS'; ctx.fillStyle = i < hearts ? '#ff5a76' : 'rgba(255,255,255,.25)'; ctx.fillText('♥', 214 + i * 13, 16); }
+    ctx.font = '900 11px Trebuchet MS'; ctx.fillStyle = '#bfe0ff'; ctx.fillText('×' + Math.max(0, lives), 250, 15);
+    ctx.fillStyle = '#fff'; ctx.fillText('WORLD 1-1', 8, 30);
+    ctx.fillStyle = timeLeft <= 30 ? '#ff6b6b' : '#fff'; ctx.fillText('TIME ' + timeLeft, 120, 30);
+    return;
+  }
+  const HX = v => v * VW / 480;
+  ctx.fillStyle = '#ffd94a'; drawStarShape(HX(150), 11, 6, '#ffd94a');
+  ctx.fillStyle = '#fff'; ctx.fillText('× ' + starsGot, HX(160), 15);
+  ctx.fillText('WORLD 1-1', HX(226), 15);
+  ctx.fillStyle = timeLeft <= 30 ? '#ff6b6b' : '#fff'; ctx.fillText('TIME ' + timeLeft, HX(316), 15);
   // hearts + lives
-  for (let i = 0; i < 3; i++) { ctx.font = '13px Trebuchet MS'; ctx.fillStyle = i < hearts ? '#ff5a76' : 'rgba(255,255,255,.25)'; ctx.fillText('♥', 396 + i * 16, 16); }
-  ctx.font = '900 11px Trebuchet MS'; ctx.fillStyle = '#bfe0ff'; ctx.fillText('×' + Math.max(0, lives), 452, 15);
+  for (let i = 0; i < 3; i++) { ctx.font = '13px Trebuchet MS'; ctx.fillStyle = i < hearts ? '#ff5a76' : 'rgba(255,255,255,.25)'; ctx.fillText('♥', (396 + i * 16) * VW / 480, 16); }
+  ctx.font = '900 11px Trebuchet MS'; ctx.fillStyle = '#bfe0ff'; ctx.fillText('×' + Math.max(0, lives), 452 * VW / 480, 15);
 }
 function bigText(text, y, size, color, sub) {
   ctx.font = '900 ' + size + 'px Trebuchet MS'; ctx.textAlign = 'center';
@@ -1016,38 +1037,44 @@ function draw() {
   if (phase === 'title') {
     drawCityStrip(performance.now() / 55);
     ctx.fillStyle = 'rgba(8,10,28,.34)'; ctx.fillRect(0, 0, VW, VH);
-    bigText('MISO', 96, 64, '#ffd94a');
-    bigText('★ STARLIGHT ADVENTURE ★', 122, 15, '#fff');
-    drawSprite(IMG.miso_stand, VW / 2 - 26, 138, 52, 60, false);
-    if (((performance.now() / 480) | 0) % 2 === 0) bigText('PRESS START', 232, 14, '#7CFC9A');
+    bigText('MISO', 96 + OY * 0.35, 64, '#ffd94a');
+    bigText('★ STARLIGHT ADVENTURE ★', 122 + OY * 0.35, 15, '#fff');
+    drawSprite(IMG.miso_stand, VW / 2 - 26, 138 + OY * 1.2, 52, 60, false);
+    if (((performance.now() / 480) | 0) % 2 === 0) bigText('PRESS START', 232 + OY * 0.55, 14, '#7CFC9A');
     ctx.font = '700 10px Trebuchet MS'; ctx.textAlign = 'center'; ctx.fillStyle = '#cfe2ff';
-    ctx.fillText('© 2026 HOMEBREW WORKS  ·  HI-SCORE ' + String(hiScore).padStart(6, '0'), VW / 2, 256);
-    ctx.fillText('ARROWS MOVE · SPACE JUMP · X = YARN BALL — STOMP THE GRUMPS, RING THE BELL!', VW / 2, 244);
+    if (OY > 0) {
+      ctx.fillText('ARROWS MOVE · SPACE JUMP · X = YARN BALL', VW / 2, 244 + OY * 0.92);
+      ctx.fillText('STOMP THE GRUMPS, RING THE BELL!', VW / 2, 256 + OY * 0.92);
+      ctx.fillText('© 2026 HOMEBREW WORKS  ·  HI-SCORE ' + String(hiScore).padStart(6, '0'), VW / 2, 268 + OY * 0.92);
+    } else {
+      ctx.fillText('© 2026 HOMEBREW WORKS  ·  HI-SCORE ' + String(hiScore).padStart(6, '0'), VW / 2, 256);
+      ctx.fillText('ARROWS MOVE · SPACE JUMP · X = YARN BALL — STOMP THE GRUMPS, RING THE BELL!', VW / 2, 244);
+    }
     return;
   }
   drawWorld();
   if (phase === 'play' || phase === 'clear' || phase === 'card' || phase === 'pause') drawHUD();
-  if (phase === 'pause') { ctx.fillStyle = 'rgba(5,6,16,.55)'; ctx.fillRect(0, 0, VW, VH); bigText('PAUSED', 140, 26, '#fff'); }
+  if (phase === 'pause') { ctx.fillStyle = 'rgba(5,6,16,.55)'; ctx.fillRect(0, 0, VW, VH); bigText('PAUSED', 140 + OY * 0.5, 26, '#fff'); }
   if (phase === 'card') {
     ctx.fillStyle = 'rgba(5,6,16,.82)'; ctx.fillRect(0, 0, VW, VH);
-    bigText('WORLD 1-1', 118, 30, '#ffd94a', 'SUNHILL MEADOW');
-    drawSprite(IMG.miso_stand, VW / 2 - 42, 150, 26, 30, false);
-    ctx.font = '900 14px Trebuchet MS'; ctx.textAlign = 'left'; ctx.fillStyle = '#fff'; ctx.fillText('× ' + Math.max(0, lives), VW / 2 - 6, 172);
+    bigText('WORLD 1-1', 118 + OY * 0.4, 30, '#ffd94a', 'RAINY MARKET');
+    drawSprite(IMG.miso_stand, VW / 2 - 42, 150 + OY * 0.8, 26, 30, false);
+    ctx.font = '900 14px Trebuchet MS'; ctx.textAlign = 'left'; ctx.fillStyle = '#fff'; ctx.fillText('× ' + Math.max(0, lives), VW / 2 - 6, 172 + OY * 0.8);
   }
   if (phase === 'clear') {
     ctx.fillStyle = 'rgba(5,6,16,.45)'; ctx.fillRect(0, 0, VW, VH);
-    bigText('COURSE CLEAR!', 92, 34, '#7CFC9A');
+    bigText('COURSE CLEAR!', 92 + OY * 0.45, 34, '#7CFC9A');
     ctx.font = '700 14px Trebuchet MS'; ctx.textAlign = 'center'; ctx.fillStyle = '#fff';
-    ctx.fillText('TIME BONUS  ' + clearInfo.timeBonus, VW / 2, 138);
-    ctx.fillText('STAR BONUS  ' + clearInfo.starBonus, VW / 2, 160);
+    ctx.fillText('TIME BONUS  ' + clearInfo.timeBonus, VW / 2, 138 + OY * 0.45);
+    ctx.fillText('STAR BONUS  ' + clearInfo.starBonus, VW / 2, 160 + OY * 0.45);
     ctx.font = '900 17px Trebuchet MS'; ctx.fillStyle = '#ffd94a';
-    ctx.fillText('SCORE  ' + String(score).padStart(6, '0'), VW / 2, 190);
-    if (clearT > 2.2 && ((performance.now() / 480) | 0) % 2 === 0) bigText('THANK YOU FOR PLAYING!', 226, 13, '#bfe0ff');
+    ctx.fillText('SCORE  ' + String(score).padStart(6, '0'), VW / 2, 190 + OY * 0.45);
+    if (clearT > 2.2 && ((performance.now() / 480) | 0) % 2 === 0) bigText('THANK YOU FOR PLAYING!', 226 + OY * 0.45, 13, '#bfe0ff');
   }
   if (phase === 'over') {
     ctx.fillStyle = 'rgba(20,4,8,.78)'; ctx.fillRect(0, 0, VW, VH);
-    bigText('GAME OVER', 128, 36, '#ff6b6b', 'SCORE ' + String(score).padStart(6, '0'));
-    if (((performance.now() / 480) | 0) % 2 === 0) bigText('PRESS START', 200, 13, '#7CFC9A');
+    bigText('GAME OVER', 128 + OY * 0.45, 36, '#ff6b6b', 'SCORE ' + String(score).padStart(6, '0'));
+    if (((performance.now() / 480) | 0) % 2 === 0) bigText('PRESS START', 200 + OY * 0.7, 13, '#7CFC9A');
   }
 }
 
