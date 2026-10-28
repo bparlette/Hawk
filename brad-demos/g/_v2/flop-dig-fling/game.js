@@ -29,14 +29,51 @@ function wrapAngle(a) { while (a > Math.PI) a -= Math.PI * 2; while (a < -Math.P
 function dist(x1, y1, x2, y2) { return Math.hypot(x2 - x1, y2 - y1); }
 
 // ---------------- audio (tiny WebAudio synth) ----------------
-var AC = null, masterGain = null;
+var AC = null, masterGain = null, recDest = null;
 function audioInit() {
+  try { if (navigator.audioSession) navigator.audioSession.type = 'playback'; } catch (e) {}
   if (AC) { if (AC.state === 'suspended') AC.resume(); return; }
   try {
     AC = new (window.AudioContext || window.webkitAudioContext)();
     masterGain = AC.createGain(); masterGain.gain.value = 0.42;
     masterGain.connect(AC.destination);
+    // capture tap (gamepress docs/SHORT-PIPELINE.md): inert unless ?short=1 records it
+    try { recDest = AC.createMediaStreamDestination(); masterGain.connect(recDest); } catch (e) {}
   } catch (e) { AC = null; }
+}
+
+// ---------------- short capture (?short=1; gamepress docs/SHORT-PIPELINE.md) ----------------
+var SHORT = Q.get('short') === '1';
+var recStopStep = -1;
+function setupShortRecorder() {
+  audioInit();
+  try {
+    var stream = canvas.captureStream(60);
+    if (recDest && recDest.stream) {
+      var audioTrack = recDest.stream.getAudioTracks()[0];
+      if (audioTrack) stream.addTrack(audioTrack);
+    }
+    var mime = (typeof MediaRecorder !== 'undefined' && MediaRecorder.isTypeSupported && MediaRecorder.isTypeSupported('video/webm;codecs=vp9,opus')) ? 'video/webm;codecs=vp9,opus' : 'video/webm';
+    var rec = new MediaRecorder(stream, { mimeType: mime, videoBitsPerSecond: 10000000 });
+    var chunks = [];
+    rec.ondataavailable = function (e) { if (e.data && e.data.size > 0) chunks.push(e.data); };
+    rec.onstop = async function () {
+      var blob = new Blob(chunks, { type: mime });
+      try {
+        var buf = await blob.arrayBuffer();
+        await fetch('/api/save_clip', { method: 'POST', body: buf });
+        window.__RECORDING_DONE = true;
+      } catch (err) {}
+    };
+    rec.start();
+    window.__RECORDER = rec;
+  } catch (err) {}
+}
+function shortRecTick() {
+  if (!SHORT || !window.__RECORDER) return;
+  if (recStopStep < 0) recStopStep = G.step + 60 * 180; // 3-min failsafe
+  var done = (G.phase === 'finish' && G.step - G.phaseStep > 200) || G.step > recStopStep;
+  if (done) { var r = window.__RECORDER; window.__RECORDER = null; try { r.stop(); } catch (e) {} }
 }
 function tone(f0, f1, dur, type, vol, delay) {
   if (!AC) return;
@@ -643,6 +680,14 @@ function updatePlaces() {
 // ---------------- driving (spike locomotion core) ----------------
 function driveRunner(rn, cruise) {
   var torso = rn.torso;
+  // Touch stick (gptouch-glue publishes window.__stickX every frame): drive
+  // the player's steer bias directly and proportionally. The pad previously
+  // reached the game only through synthetic arrow-key events, which did not
+  // steer reliably on mobile — the pad must feel exactly like a drag, which
+  // writes this same bias.
+  if (rn === player && typeof window.__stickX === 'number') {
+    rn.steerBias = clamp(window.__stickX, -1, 1) * 0.55;
+  }
   var wp = waypoints[rn.wp];
   var wpNext = waypoints[(rn.wp + 1) % WPN];
   var dx = wpNext[0] - wp[0], dy = wpNext[1] - wp[1];
@@ -880,6 +925,7 @@ function checkHazards(rn) {
     if (G.step < pit.spentUntil) continue; // filled-in hole is harmless for now
     var trig = PIT_R[pit.cls] * 0.66 + 6;
     if (dist(p.x, p.y, pit.x, pit.y) > trig) continue;
+    if (pit.immuneRi === rn.ri && G.step < pit.immuneUntil) continue; // digger's grace on their fresh hole
     if (pit.owner === rn.ri) {
       if (speed > 2.2) {
         if (!pit.passedBy['hop' + rn.ri]) {
@@ -1141,7 +1187,12 @@ function finishMidDig(rn, cls) {
     G.pits.forEach(function (q) { if (dist(p.x, p.y, q.x, q.y) < 30) clash2 = true; });
     G.mounds.forEach(function (q) { if (dist(p.x, p.y, q.x, q.y) < 30) clash2 = true; });
     if (!clash2) {
-      placePit(p.x, p.y, cls, rn.ri, false, rn.lap >= 1);
+      var newPit = placePit(p.x, p.y, cls, rn.ri, false, rn.lap >= 1);
+      // Fresh-pit immunity: the digger is standing on the spot at ~0 speed
+      // when the hole opens, so the own-pit hop rule (speed > 2.2) can't save
+      // them — without a grace window they fall into their own hole the same
+      // step it appears. 150 steps to run clear; rivals are unaffected.
+      if (newPit) { newPit.immuneRi = rn.ri; newPit.immuneUntil = G.step + 150; }
       rn.balls = Math.min(9, rn.balls + 2);
     }
   } else {
@@ -1443,12 +1494,13 @@ window.addEventListener('keydown', function (e) {
     if (e.code === 'ArrowRight' || e.code === 'KeyD') player.steerBias = 0.55;
     if (e.code === 'Space') {
       e.preventDefault();
-      if (player.state === 'inpit') { player.mash++; }
-      else if (player.carrying) flingCarried(player);
+      if (player.carrying) flingCarried(player);
       else if (player.state === 'racing') { if (!tryGrab(player)) throwBall(player); }
     }
-    if ((e.code === 'KeyS' || e.code === 'ArrowDown') && player.state === 'racing' && G.step > player.digCdUntil) {
-      startMidDig(player, 1);
+    if (e.code === 'KeyS' || e.code === 'ArrowDown') {
+      // DIG is also the mash-out button: you dig yourself out of a pit.
+      if (player.state === 'inpit') { player.mash++; if (player.mash % 2 === 0) SFX.squeak(); }
+      else if (player.state === 'racing' && G.step > player.digCdUntil) startMidDig(player, 1);
     }
   }
 });
@@ -1642,17 +1694,30 @@ function drawRacer(rn) {
   var ds = rn.sizeScale * sink * pop;
   var pose = poseFor(rn);
   var c = rn.costume;
+  // Upright correction: physics heading is a locomotion direction in a
+  // zero-gravity plane, but the costume sprites are front-facing standing
+  // figures. Un-rotate the whole puppet around the torso so the head stays
+  // screen-up in normal play; tumble states (spin/flung/downed/boing) keep
+  // the true physics rotation so falls still read as falls.
+  var tumblePose = rn.state === 'spin' || rn.state === 'flung' || rn.state === 'downed' || G.step <= rn.boingFlashUntil;
+  var va = tumblePose ? 0 : wrapAngle(-Math.PI / 2 - ta);
+  function vpos(p) {
+    if (!va) return p;
+    var dx = p.x - tp.x, dy = p.y - tp.y, cv = Math.cos(va), sv = Math.sin(va);
+    return { x: tp.x + dx * cv - dy * sv, y: tp.y + dx * sv + dy * cv };
+  }
   // shadow
   ctx.fillStyle = rn.state === 'carried' ? 'rgba(0,0,0,0.14)' : 'rgba(0,0,0,0.25)';
   ctx.beginPath();
   ctx.ellipse(tp.x, tp.y + 6, 30 * ds, 12 * ds, 0, 0, 6.29);
   ctx.fill();
-  var hx = Math.cos(ta), hy = Math.sin(ta);
+  var hx = Math.cos(ta + va), hy = Math.sin(ta + va);
   function limbDraw(body, upperName, foreName, poseU, poseF, cycle) {
-    var ba = body.angle;
+    var ba = body.angle + va;
     var bdir = { x: Math.cos(ba), y: Math.sin(ba) };
     var halfLen = (body === rn.armL || body === rn.armR ? 7.5 : 8) * rn.sizeScale;
-    var jx = body.position.x - bdir.x * halfLen, jy = body.position.y - bdir.y * halfLen + lift;
+    var bp = vpos(body.position);
+    var jx = bp.x - bdir.x * halfLen, jy = bp.y - bdir.y * halfLen + lift;
     var sc = ds * 0.72;
     var rotU = ba - Math.PI / 2 + d2r(poseU) * 0.45;
     var upImg = SPR[c + '_' + upperName];
@@ -1671,10 +1736,10 @@ function drawRacer(rn) {
   limbDraw(rn.armR, 'arm_upper', 'arm_fore', pose.armR_u, pose.armR_f, windmill);
   // torso: neck pivot at front of body
   var torsoImg = SPR[c + '_torso'];
-  drawPart(torsoImg, tp.x + hx * 12 * ds, tp.y + hy * 12 * ds + lift, ta + Math.PI / 2 + d2r(pose.torso) * 0.4,
+  drawPart(torsoImg, tp.x + hx * 12 * ds, tp.y + hy * 12 * ds + lift, ta + va + Math.PI / 2 + d2r(pose.torso) * 0.4,
     PIV.torso[0], PIV.torso[1], ds);
   // head
-  var hp2 = rn.head.position, ha = rn.head.angle;
+  var hp2 = vpos(rn.head.position), ha = rn.head.angle + va;
   drawPart(SPR[c + '_head'], hp2.x - Math.cos(ha) * 2 * ds, hp2.y - Math.sin(ha) * 2 * ds + lift,
     ha + Math.PI / 2 + d2r(pose.head) * 0.4, PIV.head[0], PIV.head[1], ds * 0.88);
   limbDraw(rn.armL, 'arm_upper', 'arm_fore', pose.armL_u, pose.armL_f, -windmill);
@@ -1695,7 +1760,7 @@ function drawRacer(rn) {
     if (rn.ri === 0 && G.step % 40 < 22) {
       ctx.font = 'bold 15px system-ui, sans-serif'; ctx.textAlign = 'center';
       ctx.fillStyle = '#ffe14d';
-      ctx.fillText('MASH!', pit.x, pit.y - PIT_R[pit.cls] - 16);
+      ctx.fillText('MASH DIG!', pit.x, pit.y - PIT_R[pit.cls] - 16);
     }
   }
   // name tag
@@ -2230,16 +2295,26 @@ window.__hook = {
     player.lap = 2;
     onFinish(player);
   },
-  playerPos: function () { return { x: player.torso.position.x, y: player.torso.position.y }; }
+  playerPos: function () { return { x: player.torso.position.x, y: player.torso.position.y }; },
+  playerRef: function () { return player; },
+  runnersRef: function () { return runners; },
+  loamAt: function (i) { var L = LOAM[i || 0]; return Array.isArray(L) ? { x: L[0], y: L[1] } : { x: L.x, y: L.y }; },
+  teleportPlayerTo: function (x, y) { teleportRacer(player, x, y, player.torso.angle, 0); resetRunnerWp(player); },
+  midDigNow: function (cls) { startMidDig(player, cls == null ? 1 : cls); finishMidDig(player, cls == null ? 1 : cls); },
+  lastPit: function () { return G.pits.length ? G.pits[G.pits.length - 1] : null; },
+  pitFallPlayer: function (pit) { if (pit) pitFall(player, pit); },
+  sprite: function (name) { return SPR[name] || null; }
 };
 
 // ---------------- boot + main loop ----------------
 aiDigSets();
 ev('boot', { auto: !!Q.get('auto') });
+if (SHORT) setupShortRecorder();
 var TS = parseFloat(Q.get('ts') || '1'); // time-scale for capture runs
 var acc = 0, last = performance.now();
 function frame(nowMs) {
   window.__phase = G.phase; // read by gptouch-glue.js to gate the touch pad
+  shortRecTick();
   acc += Math.min(120, nowMs - last) * TS; last = nowMs;
   var n = 0;
   while (acc >= 1000 / 60 && n < 6) { stepGame(); acc -= 1000 / 60; n++; }
