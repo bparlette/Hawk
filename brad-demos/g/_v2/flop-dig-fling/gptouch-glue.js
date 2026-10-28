@@ -17,12 +17,16 @@ if (isTouchDevice()) {
   function poll() {
     const racing = window.__phase === 'race' || window.__phase === 'countdown';
     if (racing && !TC) {
-      TC = new TouchController({ buttons: [ { id: 'a', label: 'ACT', size: 84 }, { id: 'b', label: 'DIG', size: 66 } ], maxRadius: 56, deadzone: 0.18 });
+      TC = new TouchController({ buttons: [ { id: 'a', label: 'THROW', size: 84 }, { id: 'b', label: 'DIG', size: 66 } ], maxRadius: 56, deadzone: 0.18 });
     } else if (!racing && TC) {
       releaseAll(); TC.destroy(); TC = null;
+      window.__stickX = 0;
     }
     if (TC && TC.enabled) {
       const ti = TC.getInput();
+      // The game reads the stick directly every frame (driveRunner) —
+      // proportional steering, no dependence on synthetic key events.
+      window.__stickX = ti.x;
       set('ArrowLeft', ti.x < -0.35);
       set('ArrowRight', ti.x > 0.35);
       set('ArrowDown', ti.y > 0.55);
