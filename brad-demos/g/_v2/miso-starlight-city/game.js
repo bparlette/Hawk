@@ -546,28 +546,59 @@ function readInputHold() { return (AUTO || SHORT) ? true : readInput().jumpH; }
 function hash2(x, y) { let h = (x * 374761393 + y * 668265263) ^ 0x5bf03635; h = (h ^ (h >> 13)) * 1274126177; return ((h ^ (h >> 16)) >>> 0) / 4294967295; }
 function drawTile(tx, ty, t) {
   const x = tx * TILE - camX, y = ty * TILE;
+  if (t === 3 || t === 4 || t === 5 || t === 6) {
+    ctx.fillStyle = 'rgba(0,0,0,.28)'; ctx.fillRect(x + 2, y + 4, TILE, TILE);
+  }
   if (t === 1 || t === 2) {
-    // wet stone pavement — the street itself, not a platform
-    ctx.fillStyle = t === 1 ? '#2f3145' : '#262838'; ctx.fillRect(x, y, TILE, TILE);
-    ctx.fillStyle = 'rgba(255,255,255,.05)';
+    // the city street itself: dark wet asphalt, warm light — no blue slabs
+    ctx.fillStyle = t === 1 ? '#211e22' : '#1a171e'; ctx.fillRect(x, y, TILE, TILE);
+    ctx.fillStyle = 'rgba(255,255,255,.028)';
     if (hash2(tx, ty) > 0.4) ctx.fillRect(x + 5 + hash2(tx + 9, ty) * 18, y + 12 + hash2(tx, ty + 7) * 12, 4, 3);
-    if (hash2(tx + 3, ty + 1) > 0.5) ctx.fillRect(x + 16, y + 20, 5, 3);
-    ctx.fillStyle = 'rgba(0,0,0,.20)'; ctx.fillRect(x + ((tx * 37) % 23), y + 4, 1.5, TILE - 6);
-    ctx.fillStyle = 'rgba(0,0,0,.16)'; ctx.fillRect(x, y + TILE - 4, TILE, 4);
+    ctx.fillStyle = 'rgba(0,0,0,.25)'; ctx.fillRect(x + ((tx * 37) % 23), y + 5, 1, TILE - 7);
+    // wet glints shimmering like the plates' mirror street
+    const h1 = hash2(tx * 3 + 1, ty);
+    if (h1 > 0.45) {
+      const gx = x + 3 + hash2(tx + 5, ty * 2) * 20, gw = 2 + hash2(tx, ty + 3) * 3;
+      const shim = 0.05 + 0.04 * Math.sin(playT * 2 + tx * 1.7);
+      ctx.fillStyle = h1 > 0.72 ? `rgba(255,190,110,${shim + 0.05})` : `rgba(160,195,235,${shim})`;
+      ctx.fillRect(gx, y + 6, gw, TILE - 10);
+    }
+    ctx.fillStyle = 'rgba(0,0,0,.28)'; ctx.fillRect(x, y + TILE - 3, TILE, 3);
     if (t === 1) {
-      ctx.fillStyle = '#4d5871'; ctx.fillRect(x, y, TILE, 9);
-      ctx.fillStyle = 'rgba(190,214,245,.85)'; ctx.fillRect(x, y, TILE, 3);
-      ctx.fillStyle = 'rgba(140,170,220,.20)'; ctx.fillRect(x, y + 3, TILE, 3);
+      // curb edge catching the market light
+      ctx.fillStyle = '#4c4238'; ctx.fillRect(x, y, TILE, 6);
+      if (ty > 0 && grid[ty - 1] && solid(grid[ty - 1][tx])) { ctx.fillStyle = 'rgba(0,0,0,.22)'; ctx.fillRect(x, y + 6, TILE, 5); }
+      ctx.fillStyle = 'rgba(255,214,150,.5)'; ctx.fillRect(x, y, TILE, 2);
+      ctx.fillStyle = 'rgba(255,180,100,.10)'; ctx.fillRect(x, y + 2, TILE, 3);
     }
   } else if (t === 3) {
-    // wooden market crate
-    ctx.fillStyle = '#5a4026'; ctx.fillRect(x, y, TILE, TILE);
-    ctx.strokeStyle = '#3a2712'; ctx.lineWidth = 2; ctx.strokeRect(x + 1, y + 1, TILE - 2, TILE - 2);
-    ctx.fillStyle = 'rgba(255,226,170,.15)'; ctx.fillRect(x + 3, y + 3, TILE - 6, 3);
-    ctx.strokeStyle = 'rgba(46,29,12,.55)'; ctx.lineWidth = 1; ctx.beginPath(); ctx.moveTo(x, y + 15); ctx.lineTo(x + TILE, y + 15); ctx.moveTo(x + 15, y); ctx.lineTo(x + 15, y + 15); ctx.moveTo(x + 8, y + 15); ctx.lineTo(x + 8, y + TILE); ctx.moveTo(x + 22, y + 15); ctx.lineTo(x + 22, y + TILE); ctx.stroke();
+    // market goods crate — varied wood, some topped with produce
+    const hv = hash2(tx * 7 + 2, ty * 3 + 1);
+    ctx.fillStyle = hv > 0.66 ? '#644628' : hv > 0.33 ? '#5a4026' : '#503820';
+    ctx.fillRect(x, y, TILE, TILE);
+    ctx.strokeStyle = '#38240f'; ctx.lineWidth = 2; ctx.strokeRect(x + 1, y + 1, TILE - 2, TILE - 2);
+    ctx.fillStyle = 'rgba(255,226,170,.13)'; ctx.fillRect(x + 3, y + 3, TILE - 6, 3);
+    ctx.strokeStyle = 'rgba(46,29,12,.5)'; ctx.lineWidth = 1; ctx.beginPath(); ctx.moveTo(x, y + 15); ctx.lineTo(x + TILE, y + 15); ctx.stroke();
+    if (hv > 0.45) { // stencil mark
+      ctx.fillStyle = 'rgba(20,12,4,.28)'; ctx.fillRect(x + 17, y + 19, 9, 7);
+    } else { // rope strap
+      ctx.fillStyle = 'rgba(216,186,130,.4)'; ctx.fillRect(x + 13, y + 2, 3, TILE - 4);
+    }
+    if (ty > 0 && !(grid[ty - 1] && solid(grid[ty - 1][tx]))) {
+      // nothing above: this crate carries produce
+      const pv = hash2(tx + 31, ty + 7);
+      if (pv > 0.35) {
+        ctx.fillStyle = pv > 0.7 ? '#5f8438' : pv > 0.52 ? '#c97a2e' : '#a8433a';
+        [[6, -2], [13, -3], [20, -2], [10, -4], [17, -4]].forEach(([dx, dy]) => { ctx.beginPath(); ctx.arc(x + dx, y + dy + 4, 3, 0, 7); ctx.fill(); });
+      }
+    }
+    ctx.fillStyle = 'rgba(0,0,0,.22)'; ctx.fillRect(x, y + TILE - 3, TILE, 3);
   } else if (t === 4 || t === 6) {
     if (t === 4) {
-      // glowing paper-lantern block with a star emblem
+      // glowing paper-lantern block with a star emblem — hung on a cord,
+      // spilling warm light below like the stalls' lanterns
+      ctx.fillStyle = 'rgba(12,10,8,.9)'; ctx.fillRect(x + 14, y - 6, 2, 6);
+      ctx.fillStyle = 'rgba(255,180,90,.07)'; ctx.fillRect(x - 4, y + TILE, TILE + 8, 12);
       const s = 1 + Math.sin(playT * 5 + tx) * 0.08;
       const g = ctx.createRadialGradient(x + 15, y + 15, 2, x + 15, y + 15, 26);
       g.addColorStop(0, 'rgba(255,176,84,.34)'); g.addColorStop(1, 'rgba(255,176,84,0)');
@@ -580,10 +611,14 @@ function drawTile(tx, ty, t) {
       ctx.save(); ctx.translate(x + 15, y + 15); ctx.scale(s, s); ctx.fillStyle = '#fff3c4';
       ctx.beginPath(); for (let i = 0; i < 5; i++) { const a = -Math.PI / 2 + i * (Math.PI * 4 / 5); ctx.lineTo(Math.cos(a) * 7.4, Math.sin(a) * 7.4); } ctx.closePath(); ctx.fill(); ctx.restore();
     } else {
-      ctx.fillStyle = '#4a3826'; ctx.fillRect(x, y, TILE, TILE);
-      ctx.strokeStyle = '#33241a'; ctx.lineWidth = 2; ctx.strokeRect(x + 1, y + 1, TILE - 2, TILE - 2);
-      ctx.fillStyle = 'rgba(0,0,0,.25)';
-      [[4, 4], [24, 4], [4, 24], [24, 24]].forEach(([dx, dy]) => ctx.fillRect(x + dx, y + dy, 3, 3));
+      // closed corrugated shop shutter
+      ctx.fillStyle = '#57504c'; ctx.fillRect(x, y, TILE, TILE);
+      ctx.fillStyle = 'rgba(0,0,0,.20)';
+      for (let sy = 4; sy < TILE - 4; sy += 5) ctx.fillRect(x + 2, y + sy, TILE - 4, 1.6);
+      ctx.fillStyle = 'rgba(255,235,210,.10)'; ctx.fillRect(x + 2, y + 2, TILE - 4, 2);
+      ctx.fillStyle = '#3b3532'; ctx.fillRect(x, y + TILE - 5, TILE, 5);
+      ctx.fillStyle = '#2c2724'; ctx.fillRect(x + 12, y + TILE - 4, 6, 3);
+      ctx.strokeStyle = '#38322e'; ctx.lineWidth = 2; ctx.strokeRect(x + 1, y + 1, TILE - 2, TILE - 2);
     }
   } else if (t === 5) {
     // stall awning you can stand on: canvas top, plank underside
