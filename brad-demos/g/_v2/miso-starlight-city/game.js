@@ -547,37 +547,53 @@ function hash2(x, y) { let h = (x * 374761393 + y * 668265263) ^ 0x5bf03635; h =
 function drawTile(tx, ty, t) {
   const x = tx * TILE - camX, y = ty * TILE;
   if (t === 1 || t === 2) {
-    ctx.fillStyle = '#3d3f52'; ctx.fillRect(x, y, TILE, TILE);
-    ctx.fillStyle = '#2b2d40';
+    // wet stone pavement — the street itself, not a platform
+    ctx.fillStyle = t === 1 ? '#2f3145' : '#262838'; ctx.fillRect(x, y, TILE, TILE);
+    ctx.fillStyle = 'rgba(255,255,255,.05)';
     if (hash2(tx, ty) > 0.4) ctx.fillRect(x + 5 + hash2(tx + 9, ty) * 18, y + 12 + hash2(tx, ty + 7) * 12, 4, 3);
     if (hash2(tx + 3, ty + 1) > 0.5) ctx.fillRect(x + 16, y + 20, 5, 3);
-    ctx.fillStyle = 'rgba(0,0,0,.14)'; ctx.fillRect(x, y + TILE - 4, TILE, 4);
+    ctx.fillStyle = 'rgba(0,0,0,.20)'; ctx.fillRect(x + ((tx * 37) % 23), y + 4, 1.5, TILE - 6);
+    ctx.fillStyle = 'rgba(0,0,0,.16)'; ctx.fillRect(x, y + TILE - 4, TILE, 4);
     if (t === 1) {
-      ctx.fillStyle = '#59637c'; ctx.fillRect(x, y, TILE, 10);
-      ctx.fillStyle = '#9fb2cc'; ctx.fillRect(x, y, TILE, 5);
-      ctx.fillStyle = '#454e68';
-      for (let i = 0; i < 3; i++) ctx.fillRect(x + 3 + i * 11 + hash2(tx, i) * 4, y + 9, 3, 4);
+      ctx.fillStyle = '#4d5871'; ctx.fillRect(x, y, TILE, 9);
+      ctx.fillStyle = 'rgba(190,214,245,.85)'; ctx.fillRect(x, y, TILE, 3);
+      ctx.fillStyle = 'rgba(140,170,220,.20)'; ctx.fillRect(x, y + 3, TILE, 3);
     }
   } else if (t === 3) {
-    ctx.fillStyle = '#6b4a2c'; ctx.fillRect(x, y, TILE, TILE);
-    ctx.strokeStyle = '#3f2712'; ctx.lineWidth = 2; ctx.strokeRect(x + 1, y + 1, TILE - 2, TILE - 2);
-    ctx.fillStyle = 'rgba(255,255,255,.16)'; ctx.fillRect(x + 3, y + 3, TILE - 6, 4);
-    ctx.strokeStyle = 'rgba(40,24,10,.65)'; ctx.lineWidth = 1; ctx.beginPath(); ctx.moveTo(x, y + 15); ctx.lineTo(x + TILE, y + 15); ctx.moveTo(x + 15, y); ctx.lineTo(x + 15, y + 15); ctx.moveTo(x + 8, y + 15); ctx.lineTo(x + 8, y + TILE); ctx.moveTo(x + 22, y + 15); ctx.lineTo(x + 22, y + TILE); ctx.stroke();
+    // wooden market crate
+    ctx.fillStyle = '#5a4026'; ctx.fillRect(x, y, TILE, TILE);
+    ctx.strokeStyle = '#3a2712'; ctx.lineWidth = 2; ctx.strokeRect(x + 1, y + 1, TILE - 2, TILE - 2);
+    ctx.fillStyle = 'rgba(255,226,170,.15)'; ctx.fillRect(x + 3, y + 3, TILE - 6, 3);
+    ctx.strokeStyle = 'rgba(46,29,12,.55)'; ctx.lineWidth = 1; ctx.beginPath(); ctx.moveTo(x, y + 15); ctx.lineTo(x + TILE, y + 15); ctx.moveTo(x + 15, y); ctx.lineTo(x + 15, y + 15); ctx.moveTo(x + 8, y + 15); ctx.lineTo(x + 8, y + TILE); ctx.moveTo(x + 22, y + 15); ctx.lineTo(x + 22, y + TILE); ctx.stroke();
   } else if (t === 4 || t === 6) {
-    ctx.fillStyle = t === 4 ? '#e8930c' : '#55483a'; ctx.fillRect(x, y, TILE, TILE);
-    ctx.strokeStyle = t === 4 ? '#ffd94a' : '#38302a'; ctx.lineWidth = 2; ctx.strokeRect(x + 1, y + 1, TILE - 2, TILE - 2);
-    ctx.fillStyle = 'rgba(0,0,0,.25)';
-    [[4, 4], [24, 4], [4, 24], [24, 24]].forEach(([dx, dy]) => ctx.fillRect(x + dx, y + dy, 3, 3));
     if (t === 4) {
+      // glowing paper-lantern block with a star emblem
       const s = 1 + Math.sin(playT * 5 + tx) * 0.08;
+      const g = ctx.createRadialGradient(x + 15, y + 15, 2, x + 15, y + 15, 26);
+      g.addColorStop(0, 'rgba(255,176,84,.34)'); g.addColorStop(1, 'rgba(255,176,84,0)');
+      ctx.fillStyle = g; ctx.fillRect(x - 11, y - 11, TILE + 22, TILE + 22);
+      ctx.fillStyle = '#c97a24'; ctx.fillRect(x, y, TILE, TILE);
+      ctx.fillStyle = '#e09a3a'; ctx.fillRect(x + 3, y + 2, TILE - 6, TILE - 4);
+      ctx.strokeStyle = 'rgba(122,62,10,.65)'; ctx.lineWidth = 1;
+      ctx.beginPath(); ctx.moveTo(x + 10, y + 1); ctx.lineTo(x + 10, y + TILE - 1); ctx.moveTo(x + 20, y + 1); ctx.lineTo(x + 20, y + TILE - 1); ctx.stroke();
+      ctx.strokeStyle = '#8a4d10'; ctx.lineWidth = 2; ctx.strokeRect(x + 1, y + 1, TILE - 2, TILE - 2);
       ctx.save(); ctx.translate(x + 15, y + 15); ctx.scale(s, s); ctx.fillStyle = '#fff3c4';
-      ctx.beginPath(); for (let i = 0; i < 5; i++) { const a = -Math.PI / 2 + i * (Math.PI * 4 / 5); ctx.lineTo(Math.cos(a) * 8, Math.sin(a) * 8); } ctx.closePath(); ctx.fill(); ctx.restore();
+      ctx.beginPath(); for (let i = 0; i < 5; i++) { const a = -Math.PI / 2 + i * (Math.PI * 4 / 5); ctx.lineTo(Math.cos(a) * 7.4, Math.sin(a) * 7.4); } ctx.closePath(); ctx.fill(); ctx.restore();
+    } else {
+      ctx.fillStyle = '#4a3826'; ctx.fillRect(x, y, TILE, TILE);
+      ctx.strokeStyle = '#33241a'; ctx.lineWidth = 2; ctx.strokeRect(x + 1, y + 1, TILE - 2, TILE - 2);
+      ctx.fillStyle = 'rgba(0,0,0,.25)';
+      [[4, 4], [24, 4], [4, 24], [24, 24]].forEach(([dx, dy]) => ctx.fillRect(x + dx, y + dy, 3, 3));
     }
   } else if (t === 5) {
-    ctx.fillStyle = '#5d4630'; ctx.fillRect(x, y + 6, TILE, TILE - 6);
-    ctx.fillStyle = '#3f2d1c'; ctx.fillRect(x, y + 15, TILE, 3); ctx.fillRect(x, y + 24, TILE, 3);
-    ctx.fillStyle = '#20606b'; ctx.fillRect(x, y, TILE, 7);
-    ctx.fillStyle = '#9fb2cc'; ctx.fillRect(x, y, TILE, 3);
+    // stall awning you can stand on: canvas top, plank underside
+    ctx.fillStyle = '#46311d'; ctx.fillRect(x, y + 7, TILE, TILE - 7);
+    ctx.fillStyle = '#38260f'; ctx.fillRect(x, y + 16, TILE, 2); ctx.fillRect(x, y + 24, TILE, 2);
+    const ac = ((tx % 2) + 2) % 2 === 0 ? '#8a3436' : '#2b5a60';
+    ctx.fillStyle = ac; ctx.fillRect(x, y, TILE, 8);
+    ctx.fillStyle = 'rgba(255,235,200,.22)'; ctx.fillRect(x, y, TILE, 2);
+    ctx.fillStyle = ac;
+    for (let i = 0; i < 4; i++) { ctx.beginPath(); ctx.arc(x + 4 + i * 8, y + 8, 3.6, 0, Math.PI); ctx.fill(); }
   }
 }
 function drawStarShape(x, y, r, color) {
@@ -683,13 +699,13 @@ function drawCityBack() {
 function reflectSprite(img, cx, feet, w, h, flip) {
   if (!img || !img.complete || !img.naturalWidth || h <= 0) return;
   ctx.save();
-  ctx.globalAlpha = 0.5;
-  ctx.translate(cx, feet); ctx.scale(flip ? -1 : 1, -0.55);
+  ctx.globalAlpha = 0.34;
+  ctx.translate(cx + Math.sin(playT * 2.6 + feet * 0.05) * 1.5, feet); ctx.scale(flip ? -1 : 1, -0.48);
   ctx.drawImage(img, -w / 2, -h, w, h);
   ctx.restore();
-  const g = ctx.createLinearGradient(0, feet, 0, feet + h * 0.55);
-  g.addColorStop(0, 'rgba(10,12,26,0.10)'); g.addColorStop(1, 'rgba(10,12,26,0.88)');
-  ctx.fillStyle = g; ctx.fillRect(cx - w / 2 - 2, feet, w + 4, h * 0.55);
+  const g = ctx.createLinearGradient(0, feet, 0, feet + h * 0.48);
+  g.addColorStop(0, 'rgba(10,12,26,0.06)'); g.addColorStop(1, 'rgba(10,12,26,0.92)');
+  ctx.fillStyle = g; ctx.fillRect(cx - w / 2 - 2, feet, w + 4, h * 0.48);
 }
 function drawCityReflections() {
   enemies.forEach(e => {
@@ -828,14 +844,14 @@ function drawWorld() {
     const x = cx0 - camX; if (x < -20 || x > VW + 20) return;
     const on = respawnX >= cx0;
     ctx.fillStyle = '#cfd8dc'; ctx.fillRect(x, 6 * TILE - 34, 3, 64);
-    ctx.fillStyle = on ? '#37d67a' : '#90a4ae';
+    ctx.fillStyle = on ? '#ffb347' : '#5a6474';
     ctx.beginPath(); ctx.moveTo(x + 3, 6 * TILE - 34); ctx.lineTo(x + 19, 6 * TILE - 27); ctx.lineTo(x + 3, 6 * TILE - 20); ctx.closePath(); ctx.fill();
   });
   // goal bell
   {
     const x = goalX - camX;
     if (x > -60 && x < VW + 60) {
-      ctx.fillStyle = '#7a4a21'; ctx.fillRect(x + 12, 4 * TILE, 6, 3 * TILE);
+      ctx.fillStyle = '#4a3220'; ctx.fillRect(x + 12, 4 * TILE, 6, 3 * TILE);
       ctx.fillStyle = '#5e3a17'; ctx.fillRect(x - 6, 4 * TILE - 8, 42, 7);
       const sw = phase === 'clear' ? Math.sin(clearT * 9) * 6 : Math.sin(playT * 1.6) * 2;
       ctx.save(); ctx.translate(x + 15, 4 * TILE); ctx.rotate(sw * Math.PI / 180);
@@ -847,10 +863,16 @@ function drawWorld() {
   // pickups
   pickups.forEach(s => {
     if (s.got) return; const x = s.x - camX; if (x < -20 || x > VW + 20) return;
-    drawStarShape(x, s.y + Math.sin(playT * 3 + s.ph) * 3, 8, '#ffd94a');
-    drawStarShape(x, s.y + Math.sin(playT * 3 + s.ph) * 3, 4.6, '#fff3c4');
+    const yy = s.y + Math.sin(playT * 3 + s.ph) * 3;
+    const g = ctx.createRadialGradient(x, yy, 1, x, yy, 15);
+    g.addColorStop(0, 'rgba(255,214,110,.5)'); g.addColorStop(1, 'rgba(255,214,110,0)');
+    ctx.fillStyle = g; ctx.beginPath(); ctx.arc(x, yy, 15, 0, 7); ctx.fill();
+    ctx.save(); ctx.translate(x, yy); ctx.rotate(Math.PI / 4); ctx.fillStyle = '#ffe9a8';
+    ctx.fillRect(-1.6, -6.4, 3.2, 12.8); ctx.fillRect(-6.4, -1.6, 12.8, 3.2); ctx.restore();
+    ctx.fillStyle = '#fff7dd'; ctx.beginPath(); ctx.arc(x, yy, 1.9, 0, 7); ctx.fill();
   });
   // enemies
+  ctx.filter = 'brightness(0.94) saturate(0.92)';
   enemies.forEach(e => {
     if (e.gone) return;
     if (e.dying >= 0) { // flipped, launched, falling through the world
@@ -874,6 +896,7 @@ function drawWorld() {
     }
     else { const img = ((e.t * 6) | 0) % 2 === 0 ? IMG.beetle : IMG.beetle2; const h = 27, w = img && img.naturalHeight ? h * img.naturalWidth / img.naturalHeight : 30; drawSprite(img, x + e.w / 2 - w / 2, e.y + e.h - h + 2, w, h, e.vx > 0); }
   });
+  ctx.filter = 'none';
   // yarn ball + string (behind the cat, over the world)
   if (yarn && player) {
     const h = handPt(), hx = h.x - camX, hy = h.y, bx = yarn.x - camX, by = yarn.y;
@@ -907,6 +930,7 @@ function drawWorld() {
     if (!p.ground && !p.dead) { const st = clamp(Math.abs(p.vy) / 950, 0, 0.20); sy = 1 + st; sx = 1 - st * 0.55; }
     else if (p.squashT > 0) { const q = p.squashT / 0.13; sy = 1 - 0.20 * q; sx = 1 + 0.16 * q; }
     ctx.save();
+    ctx.filter = 'brightness(0.95) saturate(0.94)';
     if (p.dead) { ctx.translate(x + p.w / 2, p.y + p.h / 2); ctx.rotate(Math.min(1.4, p.deadT * 2)); ctx.translate(0, p.h / 2 + 2); }
     else ctx.translate(x + p.w / 2, p.y + p.h + 2);
     ctx.scale(p.face * sx, sy);
@@ -921,7 +945,7 @@ function drawWorld() {
   drawCityFront();
 }
 function drawHUD() {
-  ctx.fillStyle = 'rgba(10,14,30,.72)'; ctx.fillRect(0, 0, VW, 22);
+  { const g = ctx.createLinearGradient(0, 0, 0, 30); g.addColorStop(0, 'rgba(8,10,22,.80)'); g.addColorStop(1, 'rgba(8,10,22,.18)'); ctx.fillStyle = g; ctx.fillRect(0, 0, VW, 30); }
   ctx.font = '900 11px Trebuchet MS'; ctx.textAlign = 'left'; ctx.fillStyle = '#fff';
   ctx.fillText('SCORE ' + String(score).padStart(6, '0'), 8, 15);
   ctx.fillStyle = '#ffd94a'; drawStarShape(150, 11, 6, '#ffd94a');
