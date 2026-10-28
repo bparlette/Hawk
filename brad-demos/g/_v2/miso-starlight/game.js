@@ -38,31 +38,55 @@ function noiseBurst(dur, vol, delay) {
   s.connect(f); f.connect(g); g.connect(AC.destination); s.start(t0);
 }
 const SFX = {
-  jump() { tone(280, 0.16, 'square', 0.10, 660); },
-  stomp() { noiseBurst(0.09, 0.20); tone(220, 0.10, 'square', 0.12, 55); },
-  star() { [880, 1174, 1568].forEach((f, i) => tone(f, 0.09, 'square', 0.09, null, i * 0.055)); },
+  // the classics, built from NES APU envelopes (gamepress gpfeel archetypes)
+  jump() { tone(270, 0.19, 'square', 0.115, 990); },
+  star() { tone(988, 0.07, 'square', 0.105); tone(1319, 0.34, 'square', 0.105, null, 0.07); }, // the two-tone chime
+  starBlock() { tone(988, 0.07, 'square', 0.10); tone(1319, 0.10, 'square', 0.10, null, 0.07); tone(1568, 0.22, 'square', 0.09, null, 0.14); },
+  stomp() { noiseBurst(0.10, 0.17); tone(340, 0.13, 'sine', 0.22, 52); tone(170, 0.15, 'triangle', 0.09, 660, 0.02); }, // crunch + thump + sproing
   bump() { tone(140, 0.07, 'square', 0.10, 90); },
-  hurt() { tone(320, 0.28, 'sawtooth', 0.10, 70); },
+  hurt() { tone(320, 0.28, 'sawtooth', 0.10, 70); noiseBurst(0.08, 0.06); },
   pop() { tone(520, 0.06, 'square', 0.08, 900); },
-  check() { [523, 659, 784].forEach((f, i) => tone(f, 0.10, 'triangle', 0.14, null, i * 0.07)); },
+  check() { [523, 659, 784, 1046].forEach((f, i) => tone(f, 0.11, 'triangle', 0.15, null, i * 0.07)); },
+  oneUp() { [659, 784, 1319, 1046, 1175, 1319].forEach((f, i) => tone(f, 0.11, 'square', 0.09, null, i * 0.085)); },
+  levelStart() { [523, 659, 784, 1046].forEach((f, i) => tone(f, 0.12, 'square', 0.10, null, i * 0.09)); tone(1319, 0.3, 'square', 0.08, null, 0.38); },
+  timeWarn() { [880, 880, 880].forEach((f, i) => tone(f, 0.09, 'square', 0.11, null, i * 0.13)); },
+  pause() { tone(880, 0.07, 'square', 0.09); tone(880, 0.12, 'square', 0.09, null, 0.09); },
   bell() { [1568, 1568, 2093].forEach((f, i) => tone(f, 0.30, 'sine', 0.16, null, i * 0.16)); tone(784, 0.5, 'triangle', 0.08, null, 0); },
-  fanfare() { [523, 523, 523, 659, 784, 1046, 784, 1046].forEach((f, i) => tone(f, 0.16, 'square', 0.11, null, i * 0.13)); },
-  die() { tone(520, 0.6, 'square', 0.10, 60); },
+  fanfare() { [523, 523, 523, 659, 784, 1046, 784, 1046].forEach((f, i) => tone(f, 0.16, 'square', 0.11, null, i * 0.13)); [131, 165, 196, 262].forEach((f, i) => tone(f, 0.2, 'triangle', 0.12, null, i * 0.26)); tone(1319, 0.4, 'square', 0.09, null, 1.1); },
+  die() { tone(620, 0.55, 'square', 0.10, 58); },
+  yarn() { noiseBurst(0.07, 0.10); tone(760, 0.13, 'square', 0.07, 300); },
+  yarnHit() { noiseBurst(0.06, 0.13); tone(420, 0.10, 'triangle', 0.11, 940); },
 };
-// cheerful original chiptune loop: 8 bars, square lead + triangle bass
-const LEAD = [523,0,659,0, 784,0,659,0, 880,0,784,659, 784,0,0,0, 523,0,659,0, 784,0,880,0, 1046,0,880,784, 880,0,0,0,
-              659,0,784,0, 880,0,784,0, 988,0,880,784, 880,0,0,0, 784,0,659,0, 587,0,659,0, 784,0,0,0, 0,0,0,0];
-const BASS = [131,0,196,0, 165,0,196,0, 175,0,196,0, 196,0,262,0, 131,0,196,0, 165,0,196,0, 175,0,220,0, 262,0,196,0,
-              165,0,196,0, 175,0,196,0, 220,0,196,0, 247,0,196,0, 196,0,175,0, 147,0,175,0, 196,0,0,0, 0,0,0,0];
+// Original soundtrack: 16-bar sunny loop — pulse lead (+2-step echo), bouncy
+// triangle bass off chord roots, and a 3-piece noise/sine drum kit. 8th = 0.15s.
+const LEAD = [
+  659,784,1046,784, 880,784,659,0,   587,659,784,0, 659,587,523,0,     // C  C
+  698,880,1046,880, 784,698,659,0,   587,784,988,784, 880,988,1175,0,   // F  G
+  1046,784,659,784, 880,784,659,0,   880,659,880,1046, 988,880,784,0,   // C  Am
+  698,880,698,880, 784,988,784,988,  1046,0,0,0, 784,659,587,0,        // F-G C
+  659,880,1046,880, 1319,1046,880,0, 784,880,784,659, 587,659,0,0,      // Am Am
+  698,880,1046,1397, 1319,1046,880,0, 988,1175,988,784, 880,784,698,0,  // F  G
+  659,784,1046,784, 880,1046,1319,0, 1175,1046,880,698, 880,1046,0,0,   // C  F
+  784,659,587,659, 784,880,988,0,   1046,0,1319,0, 1046,0,0,0,         // C-G C
+];
+const BAR_ROOTS = [131,131,175,196, 131,110,175,165, 110,110,175,196, 131,175,131,131];
 let musicOn = false, musicStep = 0, musicNext = 0;
 function musicUpdate() {
   if (!AC || !musicOn) return;
-  const spb = 0.135; // seconds per 8th note
-  while (musicNext < AC.currentTime + 0.18) {
+  const spb = 0.15;
+  while (musicNext < AC.currentTime + 0.2) {
     const i = musicStep % LEAD.length, dl = Math.max(0, musicNext - AC.currentTime);
-    if (LEAD[i]) tone(LEAD[i], 0.12, 'square', 0.055, null, dl);
-    if (BASS[i]) tone(BASS[i], 0.13, 'triangle', 0.10, null, dl);
-    if (i % 2 === 0) noiseBurst(0.02, 0.018, dl);
+    const s = i % 8, bar = (i / 8) | 0;
+    if (LEAD[i]) {
+      tone(LEAD[i], 0.13, 'square', 0.052, null, dl);
+      tone(LEAD[i], 0.10, 'square', 0.020, null, dl + spb * 2); // echo, 2 steps later
+    }
+    const R = BAR_ROOTS[bar];
+    const bassNote = s === 0 ? R : s === 2 ? R * 2 : s === 4 ? R : s === 6 ? R * 1.5 : 0;
+    if (bassNote) tone(bassNote, 0.13, 'triangle', 0.115, null, dl);
+    if (s === 0 || s === 4) tone(115, 0.09, 'sine', 0.20, 38, dl);            // kick
+    if (s === 2 || s === 6) { noiseBurst(0.055, 0.085, dl); tone(190, 0.04, 'square', 0.045, null, dl); } // snare
+    if (s % 2 === 1) noiseBurst(0.014, 0.011, dl);                             // hat
     musicStep++; musicNext += spb;
   }
 }
@@ -130,10 +154,10 @@ let phase = 'title'; // title -> card -> play -> clear / over
 let player, enemies, camX = 0, score, lives, hearts, starsGot, timeLeft, cardT = 0, clearT = 0, hitstop = 0, clearInfo = null;
 let respawnX = 2 * TILE, timeAcc = 0, hiScore = 0, playT = 0;
 function newPlayer(x) {
-  return { x, y: 6 * TILE, w: 20, h: 26, vx: 0, vy: 0, face: 1, ground: false, coyote: 0, jbuf: 0, ifr: 0, animT: 0, dead: false, deadT: 0, squash: 0 };
+  return { x, y: 6 * TILE, w: 20, h: 26, vx: 0, vy: 0, face: 1, ground: false, coyote: 0, jbuf: 0, ifr: 0, animT: 0, animDist: 0, dead: false, deadT: 0, squashT: 0, throwT: 0, dustT: 0 };
 }
 function spawnEnemies() {
-  enemies = spawns.map(s => ({ k: s.k, x: s.x, y: s.y, w: s.k === 'bat' ? 30 : 24, h: s.k === 'bat' ? 20 : 22, vx: s.k === 'beetle' ? -22 : 0, vy: 0, dir: -1, t: Math.random() * 2, dead: false, squash: 0, ax: s.x, ay: s.y, active: false }));
+  enemies = spawns.map(s => ({ k: s.k, x: s.x, y: s.y, w: s.k === 'bat' ? 30 : 24, h: s.k === 'bat' ? 20 : 22, vx: s.k === 'beetle' ? -22 : 0, vy: 0, dir: -1, t: Math.random() * 2, dead: false, dying: -1, gone: false, dx: 0, dy: 0, dvy: 0, spin: 1, ax: s.x, ay: s.y, active: false }));
 }
 function startRun() {
   buildLevel(); spawnEnemies();
@@ -167,27 +191,29 @@ let jumpBufKey = false;
 addEventListener('keydown', e => { keys[e.code] = true; audio(); if (['ArrowLeft','ArrowRight','ArrowUp','ArrowDown','Space'].includes(e.code)) e.preventDefault(); if (e.code === 'Space' || e.code === 'KeyK' || e.code === 'KeyJ') jumpBufKey = true; });
 addEventListener('keyup', e => { keys[e.code] = false; });
 let TC = null;
-try { if (isTouchDevice()) TC = new TouchController({ buttons: [{ id: 'a', label: 'JUMP', size: 86 }, { id: 'b', label: 'RUN', size: 66 }], maxRadius: 56, deadzone: 0.18 }); } catch (e) {}
-let tiPrevA = false;
+try { if (isTouchDevice()) TC = new TouchController({ buttons: [{ id: 'a', label: 'JUMP', size: 86 }, { id: 'b', label: 'YARN', size: 66 }], maxRadius: 56, deadzone: 0.18 }); } catch (e) {}
+let tiPrevA = false, yarnBufKey = false;
+addEventListener('keydown', e => { if (e.code === 'KeyX' || e.code === 'KeyL') yarnBufKey = true; });
 function readInput() {
-  const it = { x: 0, jumpH: false, jumpP: false, run: false };
+  const it = { x: 0, jumpH: false, jumpP: false, yarnP: false };
   if (keys.ArrowLeft || keys.KeyA) it.x -= 1;
   if (keys.ArrowRight || keys.KeyD) it.x += 1;
   it.jumpH = !!(keys.Space || keys.KeyK || keys.KeyJ);
-  it.run = !!(keys.ShiftLeft || keys.ShiftRight || keys.KeyX);
   if (TC) {
     const t = TC.getInput();
     if (Math.abs(t.x) > 0.3) it.x = Math.sign(t.x);
-    it.jumpH = it.jumpH || !!t.a; it.run = it.run || !!t.b;
+    it.jumpH = it.jumpH || !!t.a;
+    it.yarnP = !!t.bPressed;
     if (t.a && !tiPrevA) it.jumpP = true;
     tiPrevA = !!t.a;
   }
   if (jumpBufKey) { it.jumpP = true; jumpBufKey = false; }
+  if (yarnBufKey) { it.yarnP = true; yarnBufKey = false; }
   return it;
 }
 function botInput() {
   // autoplay: run right, jump walls/gaps/enemies — for capture + testing
-  const it = { x: 1, jumpH: false, jumpP: false, run: true };
+  const it = { x: 1, jumpH: false, jumpP: false, yarnP: false };
   const p = player, feetY = p.y + p.h;
   const aheadX = p.x + p.w + 6;
   const wallAhead = solidAt(aheadX, p.y + 6) || solidAt(aheadX, feetY - 6);
@@ -210,18 +236,84 @@ function killPlayer() {
   if (player.dead) return;
   player.dead = true; player.deadT = 0; player.vy = -420; SFX.die(); musicOn = false; ev('death', { lives });
 }
+
+// ---------- particles ----------
+let parts = [];
+function burst(x, y, color, n, big) {
+  for (let i = 0; i < n; i++) parts.push({ x, y, vx: (Math.random() - 0.5) * 190, vy: -Math.random() * 200 - 26, g: 640, t: 0, life: 0.4 + Math.random() * 0.3, color, s: (big ? 3 : 2) + Math.random() * 2.4 });
+}
+function puff(x, y, color) { parts.push({ x, y, vx: (Math.random() - 0.5) * 26, vy: -12 - Math.random() * 16, g: -30, t: 0, life: 0.32, color: color || '#e8dcc0', s: 2.4 + Math.random() * 2 }); }
+function updateParts(dt) {
+  parts.forEach(o => { o.t += dt; o.vy += o.g * dt; o.x += o.vx * dt; o.y += o.vy * dt; });
+  parts = parts.filter(o => o.t < o.life);
+}
+
+// ---------- enemy deaths: flip, launch, fall (no more flat pancakes) ----------
+function killEnemy(e, how) {
+  if (e.dying >= 0 || e.gone) return;
+  e.dead = true; e.dying = 0; e.dx = e.x; e.dy = e.y; e.dvy = -335; e.spin = (Math.random() < 0.5 ? -1 : 1) * 2.4;
+  const col = e.k === 'slime' ? '#2fd4c4' : e.k === 'bat' ? '#4a6fc4' : '#8b5cf6';
+  burst(e.x + e.w / 2, e.y + e.h / 2, col, e.k === 'slime' ? 12 : 8, e.k === 'slime');
+  addScore(200, e.x + e.w / 2, e.y - 6);
+  if (how === 'stomp') { hitstop = 0.055; SFX.stomp(); ev('stomp', { k: e.k }); }
+  else { SFX.yarnHit(); ev('yarn_kill', { k: e.k }); }
+}
+
+// ---------- the yarn ball: rolls out on the ground, string pulls it back ----------
+let yarn = null;
+const handPt = () => ({ x: player.x + player.w / 2 + player.face * 9, y: player.y + 13 });
+function throwYarn() {
+  if (yarn || player.dead || phase !== 'play') return;
+  const h = handPt();
+  yarn = { x: h.x, y: h.y, vx: player.face * 238, vy: -30, mode: 'out', t: 0, rot: 0 };
+  player.throwT = 0.3; SFX.yarn(); ev('yarn_throw', {});
+}
+function recallYarn() { if (yarn && yarn.mode === 'out') yarn.mode = 'back'; }
+function updateYarn(dt) {
+  if (!yarn) return;
+  const h = handPt();
+  yarn.t += dt;
+  if (yarn.mode === 'out') {
+    yarn.vy = Math.min(520, yarn.vy + 1500 * dt);
+    let nx = yarn.x + yarn.vx * dt;
+    if (solidAt(nx + Math.sign(yarn.vx) * 7, yarn.y)) { yarn.mode = 'back'; }
+    else yarn.x = nx;
+    yarn.y += yarn.vy * dt;
+    if (solidAt(yarn.x, yarn.y + 7) && yarn.vy > 0) { // ground contact: roll
+      while (solidAt(yarn.x, yarn.y + 7)) yarn.y -= 1;
+      yarn.vy = yarn.vy > 170 ? -yarn.vy * 0.32 : 0;
+      yarn.vx *= (1 - 0.35 * dt);
+      yarn.rot += yarn.vx * dt / 7;
+      if (Math.random() < 0.3) puff(yarn.x, yarn.y + 6, '#f3c6cf');
+    }
+    if (Math.hypot(yarn.x - h.x, yarn.y - h.y) > 168 || yarn.y > VH + 70 || yarn.t > 2.6) yarn.mode = 'back';
+  } else {
+    // string reels it home: steer straight at the hand, terrain be damned
+    const dx = h.x - yarn.x, dy = h.y - yarn.y, d = Math.hypot(dx, dy) || 1;
+    const sp = 470;
+    yarn.x += dx / d * sp * dt; yarn.y += dy / d * sp * dt;
+    yarn.rot += 14 * dt;
+    if (d < 15) { yarn = null; SFX.pop(); burst(h.x, h.y, '#ffb3c2', 4); return; }
+  }
+  // it kills in both directions
+  enemies.forEach(e => {
+    if (e.dying >= 0 || e.gone || !e.active) return;
+    if (Math.abs(yarn.x - (e.x + e.w / 2)) < 17 && Math.abs(yarn.y - (e.y + e.h / 2)) < 17) killEnemy(e, 'yarn');
+  });
+}
 function updatePlay(dt) {
   playT += dt; timeAcc += dt;
-  if (timeAcc >= 1) { timeAcc -= 1; timeLeft--; if (timeLeft <= 0) { timeLeft = 0; killPlayer(); } }
+  if (timeAcc >= 1) { timeAcc -= 1; timeLeft--; if (timeLeft === 30) SFX.timeWarn(); if (timeLeft <= 0) { timeLeft = 0; killPlayer(); } }
   const it = AUTO ? botInput() : readInput();
   const p = player;
+  if (it.yarnP) { if (yarn) recallYarn(); else throwYarn(); }
   if (p.dead) {
     p.deadT += dt; p.vy += 1500 * dt; p.y += p.vy * dt;
     if (p.deadT > 1.15) { lives--; if (lives < 0) { phase = 'over'; ev('gameover', { score }); } else respawn(); }
     return;
   }
   // --- movement: diminishing-returns accel (gpfeel) ---
-  const maxSp = it.run ? 215 : 168;
+  const maxSp = 192;
   if (it.x !== 0) {
     p.vx += it.x * (1.9 - Math.abs(p.vx) / 120) * 640 * dt * 0.16;
     if (Math.abs(p.vx) > maxSp) p.vx = Math.sign(p.vx) * Math.max(maxSp, Math.abs(p.vx) - 900 * dt);
@@ -240,26 +332,31 @@ function updatePlay(dt) {
   if (!it.jumpH && p.vy < -180) p.vy = -180; // variable jump: release cut
   p.vy = Math.min(760, p.vy + 1500 * dt);
   p.hitWall = false; p.bumpTy = -1;
+  const fallV = p.vy, wasG = p.ground;
   moveBox(p, dt);
+  if (!wasG && p.ground && fallV > 300) { p.squashT = 0.13; for (let i = 0; i < 4; i++) puff(p.x + p.w / 2 + (Math.random() - 0.5) * 16, p.y + p.h - 2); }
+  if (p.ground && Math.abs(p.vx) > 150) { p.dustT -= dt; if (p.dustT <= 0) { p.dustT = 0.15; puff(p.x + p.w / 2 - p.face * 8, p.y + p.h - 2); } }
   // star block bump
   if (p.bumpTy >= 0) {
     const t = G(p.bumpTx, p.bumpTy);
     if (t === 4) {
-      SET(p.bumpTx, p.bumpTy, 6); SFX.star(); starsGot++; addScore(100, p.bumpTx * TILE + 15, p.bumpTy * TILE - 6);
+      SET(p.bumpTx, p.bumpTy, 6); SFX.starBlock(); starsGot++; addScore(100, p.bumpTx * TILE + 15, p.bumpTy * TILE - 6);
       pop(p.bumpTx * TILE + 15, p.bumpTy * TILE - 18, '★', '#ffd94a'); ev('star_block', { stars: starsGot });
-      if (starsGot % 30 === 0) { lives++; pop(p.x + 10, p.y - 14, '1UP!', '#7CFC9A'); }
+      if (starsGot % 30 === 0) { lives++; SFX.oneUp(); pop(p.x + 10, p.y - 14, '1UP!', '#7CFC9A'); }
     } else if (t === 3 || t === 1) SFX.bump();
   }
   if (p.x < 0) p.x = 0;
   if (p.y > VH + 80) { hearts = 0; killPlayer(); p.deadT = 0.6; }
   p.animT += Math.abs(p.vx) * dt * 0.06;
+  p.animDist += Math.abs(p.vx) * dt;
   if (p.ifr > 0) p.ifr -= dt;
-  if (p.squash > 0) p.squash -= dt;
+  if (p.squashT > 0) p.squashT -= dt;
+  if (p.throwT > 0) p.throwT -= dt;
   // checkpoints
   CHECKPOINTS.forEach(cx0 => { if (respawnX < cx0 && p.x >= cx0) { respawnX = cx0; addScore(500); SFX.check(); pop(cx0, 6 * TILE, 'CHECKPOINT!', '#7CFC9A'); ev('checkpoint', { x: cx0 }); } });
   // goal
   if (p.x + p.w >= goalX) {
-    phase = 'clear'; clearT = 0; musicOn = false; SFX.bell();
+    phase = 'clear'; clearT = 0; musicOn = false; SFX.bell(); setTimeout(() => SFX.fanfare(), 480);
     const timeBonus = timeLeft * 10, starBonus = starsGot * 50;
     clearInfo = { timeBonus, starBonus, total: score + timeBonus + starBonus };
     score = clearInfo.total; hiScore = Math.max(hiScore, score);
@@ -271,13 +368,14 @@ function updatePlay(dt) {
     if (s.got) return;
     const bobY = s.y + Math.sin(playT * 3 + s.ph) * 3;
     if (Math.abs(p.x + p.w / 2 - s.x) < 22 && Math.abs(p.y + p.h / 2 - bobY) < 26) {
-      s.got = true; starsGot++; addScore(100, s.x, s.y - 8); SFX.pop(); ev('star', { stars: starsGot });
-      if (starsGot % 30 === 0) { lives++; pop(p.x + 10, p.y - 14, '1UP!', '#7CFC9A'); }
+      s.got = true; starsGot++; addScore(100, s.x, s.y - 8); SFX.star(); ev('star', { stars: starsGot });
+      if (starsGot % 30 === 0) { lives++; SFX.oneUp(); pop(p.x + 10, p.y - 14, '1UP!', '#7CFC9A'); }
     }
   });
   // enemies
   enemies.forEach(e => {
-    if (e.dead) { if (e.squash < 0.5) e.squash += dt; return; }
+    if (e.gone) return;
+    if (e.dying >= 0) { e.dying += dt; e.dy += e.dvy * dt; e.dvy += 1350 * dt; if (e.dying > 0.6) e.gone = true; return; }
     if (!e.active) { if (e.x < camX + VW + 60) e.active = true; else return; }
     e.t += dt;
     if (e.k === 'beetle') {
@@ -298,13 +396,12 @@ function updatePlay(dt) {
     // player contact
     if (Math.abs(p.x + p.w / 2 - (e.x + e.w / 2)) < (p.w + e.w) / 2 - 3 && Math.abs(p.y + p.h / 2 - (e.y + e.h / 2)) < (p.h + e.h) / 2 - 2) {
       const stomp = p.vy > 70 && (p.y + p.h) - e.y < 15;
-      if (stomp) {
-        e.dead = true; e.squash = 0; hitstop = 0.055; SFX.stomp();
-        addScore(200, e.x + e.w / 2, e.y - 6); ev('stomp', { k: e.k });
-        p.vy = readInputHold() ? -540 : -310; p.y = e.y - p.h - 1;
-      } else hurtPlayer(e.x + e.w / 2);
+      if (stomp) { killEnemy(e, 'stomp'); p.vy = readInputHold() ? -540 : -310; p.y = e.y - p.h - 1; }
+      else hurtPlayer(e.x + e.w / 2);
     }
   });
+  updateYarn(dt);
+  updateParts(dt);
   // camera: follow with lookahead
   const target = clamp(p.x + p.w / 2 - VW / 2 + p.face * 26, 0, COLS * TILE - VW);
   camX += (target - camX) * Math.min(1, dt * 7);
@@ -412,26 +509,68 @@ function drawWorld() {
   });
   // enemies
   enemies.forEach(e => {
-    if (e.x < camX - 60 || e.x > camX + VW + 60) return;
-    const x = e.x - camX;
-    if (e.dead) { // squashed flat
-      const img = IMG[e.k]; if (img) { ctx.save(); ctx.globalAlpha = Math.max(0, 1 - e.squash * 1.4); ctx.drawImage(img, x - 3, e.y + e.h - 7, e.w + 6, 7); ctx.restore(); }
+    if (e.gone) return;
+    if (e.dying >= 0) { // flipped, launched, falling through the world
+      const img = IMG[e.k]; if (!img || !img.complete) return;
+      const h = 28, w = h * img.naturalWidth / img.naturalHeight;
+      ctx.save();
+      ctx.globalAlpha = e.dying > 0.38 ? Math.max(0, 1 - (e.dying - 0.38) * 4) : 1;
+      ctx.translate(e.dx + e.w / 2 - camX, e.dy + e.h / 2);
+      ctx.rotate(e.spin * e.dying);
+      ctx.scale(1, -1); // belly-up
+      ctx.drawImage(img, -w / 2, -h / 2, w, h);
+      ctx.restore();
       return;
     }
-    const img = IMG[e.k];
-    if (e.k === 'bat') drawSprite(img, x - 5, e.y - 4, 40, 26, false);
-    else if (e.k === 'slime') { const sq = 1 + Math.sin(e.t * 10) * 0.05; drawSprite(img, x - 4, e.y + e.h - 30 * sq + 6, 32, 30 * sq, false); }
-    else drawSprite(img, x - 4, e.y - 6, 32, 30, e.vx > 0);
+    if (e.x < camX - 60 || e.x > camX + VW + 60) return;
+    const x = e.x - camX;
+    if (e.k === 'bat') { const img = Math.sin(e.t * 11) > 0 ? IMG.bat : IMG.bat2; drawSprite(img, x - 5, e.y - 4, 40, 26, false); }
+    else if (e.k === 'slime') {
+      if (!e.ground && IMG.slime2) drawSprite(IMG.slime2, x - 1, e.y + e.h - 38, 22, 38, false); // stretched mid-hop
+      else { const sq = 1 + Math.sin(e.t * 10) * 0.05; drawSprite(IMG.slime, x - 4, e.y + e.h - 30 * sq + 6, 32, 30 * sq, false); }
+    }
+    else { const img = ((e.t * 6) | 0) % 2 === 0 ? IMG.beetle : IMG.beetle2; const h = 27, w = img && img.naturalHeight ? h * img.naturalWidth / img.naturalHeight : 30; drawSprite(img, x + e.w / 2 - w / 2, e.y + e.h - h + 2, w, h, e.vx > 0); }
   });
+  // yarn ball + string (behind the cat, over the world)
+  if (yarn && player) {
+    const h = handPt(), hx = h.x - camX, hy = h.y, bx = yarn.x - camX, by = yarn.y;
+    const d = Math.hypot(bx - hx, by - hy), sag = Math.min(24, d * 0.16) * (yarn.mode === 'out' ? 1 : 0.3);
+    ctx.strokeStyle = '#f2e7d5'; ctx.lineWidth = 2; ctx.beginPath();
+    ctx.moveTo(hx, hy); ctx.quadraticCurveTo((hx + bx) / 2, Math.max(hy, by) + sag, bx, by); ctx.stroke();
+    ctx.save(); ctx.translate(bx, by); ctx.rotate(yarn.rot);
+    ctx.fillStyle = '#ff5a76'; ctx.beginPath(); ctx.arc(0, 0, 7.5, 0, 7); ctx.fill();
+    ctx.strokeStyle = '#c22e4a'; ctx.lineWidth = 1.6;
+    ctx.beginPath(); ctx.arc(0, 0, 5.4, 0.4, 2.6); ctx.stroke();
+    ctx.beginPath(); ctx.arc(0, 0, 5.4, 3.4, 5.6); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(-7, 2); ctx.lineTo(7, -2); ctx.stroke();
+    ctx.restore();
+    ctx.fillStyle = 'rgba(255,255,255,.75)'; ctx.beginPath(); ctx.arc(bx - 2.4, by - 2.6, 1.7, 0, 7); ctx.fill();
+  }
+  // particles
+  parts.forEach(o => { ctx.globalAlpha = Math.max(0, 1 - o.t / o.life); ctx.fillStyle = o.color; ctx.fillRect(o.x - camX - o.s / 2, o.y - o.s / 2, o.s, o.s); });
+  ctx.globalAlpha = 1;
   // player
   const p = player; if (p) {
     const x = p.x - camX, blink = p.ifr > 0 && ((playT * 14) | 0) % 2 === 0;
     const alpha = blink ? 0.35 : 1;
-    let img = IMG.miso_stand, w = 30, h = 34;
-    if (!p.ground && !p.dead) { img = IMG.miso_jump; w = 30; h = 36; }
-    else if (Math.abs(p.vx) > 12) { img = ((p.animT | 0) % 2 === 0) ? IMG.miso_run : IMG.miso_stand; w = 32; h = 32; }
-    if (p.dead) { ctx.save(); ctx.translate(x + p.w / 2, p.y + p.h / 2); ctx.rotate(Math.min(1.4, p.deadT * 2)); drawSprite(img, -15, -17, 30, 34, p.face < 0, alpha); ctx.restore(); }
-    else drawSprite(img, x + p.w / 2 - w / 2, p.y + p.h - h + 2, w, h, p.face < 0, alpha);
+    let img = IMG.miso_stand, th = 34;
+    if (p.dead) img = IMG.miso_jump;
+    else if (!p.ground) { img = IMG.miso_jump; th = 36; }
+    else if (p.throwT > 0) { img = IMG.miso_throw; th = 32; }
+    else if (Math.abs(p.vx) > 12) { img = [IMG.miso_run, IMG.miso_tuck, IMG.miso_run2, IMG.miso_tuck][((p.animDist / 34) | 0) % 4]; th = 31; }
+    const tw = img && img.naturalHeight ? th * img.naturalWidth / img.naturalHeight : th;
+    // squash & stretch: stretch in the air by speed, squash on landing
+    let sx = 1, sy = 1;
+    if (!p.ground && !p.dead) { const st = clamp(Math.abs(p.vy) / 950, 0, 0.20); sy = 1 + st; sx = 1 - st * 0.55; }
+    else if (p.squashT > 0) { const q = p.squashT / 0.13; sy = 1 - 0.20 * q; sx = 1 + 0.16 * q; }
+    ctx.save();
+    if (p.dead) { ctx.translate(x + p.w / 2, p.y + p.h / 2); ctx.rotate(Math.min(1.4, p.deadT * 2)); ctx.translate(0, p.h / 2 + 2); }
+    else ctx.translate(x + p.w / 2, p.y + p.h + 2);
+    ctx.scale(p.face * sx, sy);
+    ctx.globalAlpha = alpha;
+    if (img && img.complete && img.naturalWidth) ctx.drawImage(img, -tw / 2, -th, tw, th);
+    ctx.restore();
+    ctx.globalAlpha = 1;
   }
   // pops
   ctx.textAlign = 'center'; ctx.font = '900 9px Trebuchet MS';
@@ -466,11 +605,12 @@ function draw() {
     if (((performance.now() / 480) | 0) % 2 === 0) bigText('PRESS START', 232, 14, '#7CFC9A');
     ctx.font = '700 10px Trebuchet MS'; ctx.textAlign = 'center'; ctx.fillStyle = '#cfe2ff';
     ctx.fillText('© 2026 HOMEBREW WORKS  ·  HI-SCORE ' + String(hiScore).padStart(6, '0'), VW / 2, 256);
-    ctx.fillText('ARROWS MOVE · SPACE JUMP · SHIFT RUN — STOMP THE GRUMPS, RING THE BELL!', VW / 2, 244);
+    ctx.fillText('ARROWS MOVE · SPACE JUMP · X = YARN BALL — STOMP THE GRUMPS, RING THE BELL!', VW / 2, 244);
     return;
   }
   drawWorld();
-  if (phase === 'play' || phase === 'clear' || phase === 'card') drawHUD();
+  if (phase === 'play' || phase === 'clear' || phase === 'card' || phase === 'pause') drawHUD();
+  if (phase === 'pause') { ctx.fillStyle = 'rgba(5,6,16,.55)'; ctx.fillRect(0, 0, VW, VH); bigText('PAUSED', 140, 26, '#fff'); }
   if (phase === 'card') {
     ctx.fillStyle = 'rgba(5,6,16,.82)'; ctx.fillRect(0, 0, VW, VH);
     bigText('WORLD 1-1', 118, 30, '#ffd94a', 'SUNHILL MEADOW');
@@ -502,17 +642,22 @@ function advance() {
   else if (phase === 'clear' && clearT > 2.2) phase = 'title';
 }
 addEventListener('keydown', e => { if (phase !== 'play' && phase !== 'card' && (e.code === 'Enter' || e.code === 'Space')) advance(); });
+addEventListener('keydown', e => {
+  if (e.code !== 'KeyP' && e.code !== 'Escape') return;
+  if (phase === 'play') { phase = 'pause'; musicOn = false; SFX.pause(); }
+  else if (phase === 'pause') { phase = 'play'; musicOn = true; if (AC) musicNext = AC.currentTime + 0.06; SFX.pause(); }
+});
 addEventListener('pointerdown', () => { if (phase !== 'play' && phase !== 'card') advance(); }, true);
 let lastTs = 0;
 function loop(ts) {
   const rdt = Math.min(0.033, (ts - lastTs) / 1000 || 0.016); lastTs = ts;
   if (hitstop > 0) { hitstop -= rdt; draw(); requestAnimationFrame(loop); return; }
   const dt = rdt;
-  if (phase === 'card') { cardT -= dt; if (cardT <= 0) { phase = 'play'; musicOn = true; if (AC) musicNext = AC.currentTime + 0.05; ev('play_start', {}); } }
+  if (phase === 'card') { cardT -= dt; if (cardT <= 0) { phase = 'play'; SFX.levelStart(); musicOn = true; if (AC) musicNext = AC.currentTime + 0.5; musicStep = 0; ev('play_start', {}); } }
   else if (phase === 'play') updatePlay(dt);
   else if (phase === 'clear') clearT += dt;
   musicUpdate();
-  window.__dbg = { phase, x: player ? Math.round(player.x) : 0, hearts, lives, stars: starsGot, score, time: timeLeft, camX: Math.round(camX) };
+  window.__dbg = { phase, x: player ? Math.round(player.x) : 0, hearts, lives, stars: starsGot, score, time: timeLeft, camX: Math.round(camX), yarn: yarn ? yarn.mode : null };
   draw();
   requestAnimationFrame(loop);
 }
