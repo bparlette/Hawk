@@ -178,7 +178,7 @@ var TUNE = {
   // compresses that variance into the 2-3 minute window. Final: 0.485.
   cruiseSpeed: 0.485, driveForce: 0.0035,
   torsoFrictionAir: 0.072, headFrictionAir: 0.09, limbFrictionAir: 0.16,
-  springStiff: 0.14, springDamp: 0.12, headSpringStiff: 0.32,
+  springStiff: 0.5, springDamp: 0.16, headSpringStiff: 0.65,
   steerGain: 0.42, steerMax: 0.115, steerBlend: 0.38,
   wobbleAmp: 0.013, legSwingForce: 0.0011, armSwingForce: 0.0007,
   maxSpeed: 8.6, boingMinOut: 6.4, boingCooldownSteps: 55,
@@ -350,7 +350,7 @@ function isLoam(x, y) {
 }
 
 // ---------------- world ----------------
-var engine = Engine.create({ enableSleeping: false });
+var engine = Engine.create({ enableSleeping: false, positionIterations: 10, constraintIterations: 6, velocityIterations: 6 });
 engine.gravity.x = 0; engine.gravity.y = 0;
 var world = engine.world;
 
@@ -546,8 +546,8 @@ function makeRunner(ri, sizeCls, spawn) {
     spring(armR, 7, -9, -6, 0, TUNE.springStiff),
     spring(legL, -13, 6, 6, 0, TUNE.springStiff),
     spring(legR, -13, -6, 6, 0, TUNE.springStiff),
-    spring(armL, -8, 8, 6, 0, 0.03), spring(armR, -8, -8, 6, 0, 0.03),
-    spring(legL, 2, 7, -6, 0, 0.03), spring(legR, 2, -7, -6, 0, 0.03)
+    spring(armL, -8, 8, 6, 0, 0.22), spring(armR, -8, -8, 6, 0, 0.22),
+    spring(legL, 2, 7, -6, 0, 0.22), spring(legR, 2, -7, -6, 0, 0.22)
   ];
   var comp = Composite.create();
   Composite.add(comp, parts.concat(cons));
@@ -680,13 +680,19 @@ function updatePlaces() {
 // ---------------- driving (spike locomotion core) ----------------
 function driveRunner(rn, cruise) {
   var torso = rn.torso;
-  // Touch stick (gptouch-glue publishes window.__stickX every frame): drive
-  // the player's steer bias directly and proportionally. The pad previously
-  // reached the game only through synthetic arrow-key events, which did not
-  // steer reliably on mobile — the pad must feel exactly like a drag, which
-  // writes this same bias.
-  if (rn === player && typeof window.__stickX === 'number') {
-    rn.steerBias = clamp(window.__stickX, -1, 1) * 0.55;
+  // Touch stick (gptouch-glue publishes window.__stickX every frame): the
+  // stick shifts the player's TARGET LANE across the track, plus a heading
+  // assist. Lane control is the readable kind — push right, the racer runs
+  // right. (v1 wrote steerBias only; the autopilot's turn clamp swallowed
+  // the bias exactly when the player was off-line and wanted control most.)
+  if (rn === player) {
+    if (typeof window.__stickX === 'number') {
+      var sxv = clamp(window.__stickX, -1, 1);
+      rn.laneStick = lerp(rn.laneStick || 0, sxv * 36, 0.20);
+      rn.steerBias = sxv * 0.35;
+    } else if (rn.laneStick) {
+      rn.laneStick = lerp(rn.laneStick, 0, 0.1);
+    }
   }
   var wp = waypoints[rn.wp];
   var wpNext = waypoints[(rn.wp + 1) % WPN];
@@ -694,7 +700,7 @@ function driveRunner(rn, cruise) {
   var dl = Math.hypot(dx, dy) || 1;
   var nx = -dy / dl, ny = dx / dl;
   if ((wp[0] - centroid[0]) * nx + (wp[1] - centroid[1]) * ny < 0) { nx = -nx; ny = -ny; }
-  var lane = rn.lane + (rn.pickupLaneBias || 0);
+  var lane = clamp(rn.lane + (rn.laneStick || 0), -42, 42) + (rn.pickupLaneBias || 0);
   var txp = wp[0] + nx * lane, typ = wp[1] + ny * lane;
   var toX = txp - torso.position.x, toY = typ - torso.position.y;
   var distW = Math.hypot(toX, toY);
@@ -712,9 +718,11 @@ function driveRunner(rn, cruise) {
   }
   var desired = Math.atan2(toY, toX);
   var err = wrapAngle(desired - torso.angle) + (rn.steerBias || 0);
-  var targetAv = clamp(err * TUNE.steerGain, -TUNE.steerMax, TUNE.steerMax);
+  var smax = TUNE.steerMax, sblend = TUNE.steerBlend;
+  if (rn === player) { smax = 0.17; sblend = 0.55; } // the human turns sharper than the autopilot allows AI
+  var targetAv = clamp(err * TUNE.steerGain, -smax, smax);
   targetAv += Math.sin(G.step * 0.10 + rn.ri * 1.93) * TUNE.wobbleAmp;
-  Body.setAngularVelocity(torso, torso.angularVelocity * (1 - TUNE.steerBlend) + targetAv * TUNE.steerBlend);
+  Body.setAngularVelocity(torso, torso.angularVelocity * (1 - sblend) + targetAv * sblend);
 
   var hx = Math.cos(torso.angle), hy = Math.sin(torso.angle);
   var v = torso.velocity;
@@ -1370,6 +1378,7 @@ function startRace() {
     rn.goStep = G.step + rn.ri * 22; // staggered start: string the pack out
     // opening-seconds truce: let the pack spread before the brawling starts
     if (rn.ai) rn.ai.nextThrowStep = G.step + ri(240, 520);
+    rn.grabImmuneUntil = G.step + 150; // no start-line grabs: the race starts as a RUN, then the slapstick
   });
   bot.nextAct = G.step + 240;
   SFX.go();
