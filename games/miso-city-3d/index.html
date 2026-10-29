@@ -185,10 +185,60 @@ const segTex = {
   N: artTex('art/seg-N.webp'), P: artTex('art/seg-P.webp'),
   F: artTex('art/seg-F.webp')
 };
+/* Plates are drawn SEG_OV wider on each side (the extra band shows the
+   plate's own edge, mirrored) and the left 2*SEG_OV of every plate fades
+   in over its neighbour, so joins dissolve instead of cutting. */
+const SEG_OV = 7, SEG_XW = SEG_W + 2 * SEG_OV;
 const texCflip = segTex.C.clone();
-texCflip.wrapS = THREE.RepeatWrapping;
-texCflip.repeat.x = -1;
+for (const t of Object.values(segTex)) {
+  t.wrapS = THREE.MirroredRepeatWrapping;
+  t.repeat.x = SEG_XW / SEG_W;
+  t.offset.x = -SEG_OV / SEG_W;
+}
+texCflip.wrapS = THREE.MirroredRepeatWrapping;
+texCflip.repeat.x = -SEG_XW / SEG_W;
+texCflip.offset.x = 1 + SEG_OV / SEG_W;
 texCflip.needsUpdate = true;
+const segRampTex = canvasTex(256, 4, (ctx, W, H) => {
+  const g = ctx.createLinearGradient(0, 0, W, 0);
+  const k = (2 * SEG_OV) / SEG_XW;
+  g.addColorStop(0, '#000'); g.addColorStop(k, '#fff'); g.addColorStop(1, '#fff');
+  ctx.fillStyle = g; ctx.fillRect(0, 0, W, H);
+});
+/* per-plate grade: nudge each plate halfway toward its district's mean
+   colour so adjacent plates agree across a join (computed at load) */
+const segGain = {};
+{
+  const keys = { A: 'A', B: 'B', C: 'C', Cf: 'C', L: 'L', N: 'N', P: 'P', F: 'F' };
+  const mean = {};
+  const regrade = () => {
+    const zones = {};
+    for (const k of Object.keys(mean)) {
+      const z = ZONE_OF[k]; (zones[z] = zones[z] || []).push(mean[k]);
+    }
+    for (const k of Object.keys(ZONE_OF)) {
+      const m = mean[keys[k]]; if (!m) continue;
+      const zs = zones[ZONE_OF[k]];
+      const avg = [0, 1, 2].map(c => zs.reduce((a, v) => a + v[c], 0) / zs.length);
+      const gain = new THREE.Color();
+      gain.setRGB(...[0, 1, 2].map(c => THREE.MathUtils.clamp(Math.pow(avg[c] / Math.max(0.02, m[c]), 0.5), 0.88, 1.14)));
+      segGain[k] = gain;
+    }
+  };
+  for (const key of new Set(Object.values(keys))) {
+    const img = new Image();
+    img.onload = () => {
+      const c = document.createElement('canvas'); c.width = 32; c.height = 16;
+      const g = c.getContext('2d'); g.drawImage(img, 0, 0, 32, 16);
+      const d = g.getImageData(0, 0, 32, 16).data; let r = 0, gg = 0, b = 0;
+      for (let i = 0; i < d.length; i += 4) { r += d[i]; gg += d[i + 1]; b += d[i + 2]; }
+      const n = d.length / 4 * 255;
+      mean[key] = [r / n, gg / n, b / n];
+      regrade();
+    };
+    img.src = `art/seg-${key}.webp`;
+  }
+}
 const ZONE_OF = { N: 'amber', B: 'amber', C: 'teal', Cf: 'teal', P: 'teal', L: 'teal', A: 'pink', F: 'pink' };
 const ZONE_STYLE = {
   amber: { tint: new THREE.Color(1.08, 1.00, 0.88), fog: new THREE.Color(0x16100a), music: 0.55 },
@@ -200,9 +250,10 @@ const segTexByKey = { A: segTex.A, B: segTex.B, C: segTex.C, Cf: texCflip, L: se
 const segMeshes = [];
 for (let j = 0; j < 5; j++) {
   const m = new THREE.Mesh(
-    new THREE.PlaneGeometry(SEG_W, SEG_H),
-    new THREE.MeshBasicMaterial({ fog: true })
+    new THREE.PlaneGeometry(SEG_XW, SEG_H),
+    new THREE.MeshBasicMaterial({ fog: true, transparent: true, alphaMap: segRampTex, depthWrite: false })
   );
+  m.renderOrder = -10 + j;
   m.position.set(0, SEG_Y, SEG_Z);
   m.userData.streamIdx = -1;
   glow(m, -15, -4.6, 0.8, 4.0, 0xffa245, 0.30);
@@ -270,6 +321,41 @@ const nearTracks = [
   { mesh: cart,  period: 210, phase: 105.6 },
   { mesh: stall, period: 267, phase: 84.1 }
 ];
+/* continuous midground: one tiling band of lantern strings behind the
+   play plane. Its period (MID_TILE) is not a
+   divisor of the 54-wide plates, so it crosses every plate join at a
+   different phase and keeps the street reading as one place. */
+const MID_TILE = 38, MID_W = 140;
+const midTex = canvasTex(1520, 320, (ctx, W, H) => {
+  const px = W / MID_TILE;
+  /* two sagging cords per tile, lanterns hung along them */
+  const cords = [[0, 0.5, 40], [0.5, 1, 70]];
+  for (const [u0, u1, sag] of cords) {
+    const x0 = u0 * W, x1 = u1 * W, y0 = 36, ym = y0 + sag;
+    ctx.strokeStyle = 'rgba(6,5,8,0.75)'; ctx.lineWidth = 2.5;
+    ctx.beginPath(); ctx.moveTo(x0, y0); ctx.quadraticCurveTo((x0 + x1) / 2, ym + sag, x1, y0); ctx.stroke();
+    for (let i = 1; i < 5; i++) {
+      const t = i / 5, lx = x0 + (x1 - x0) * t;
+      const ly = y0 + 2 * t * (1 - t) * 2 * sag * 0.5 + 8;
+      ctx.strokeStyle = 'rgba(6,5,8,0.8)'; ctx.lineWidth = 2;
+      ctx.beginPath(); ctx.moveTo(lx, ly); ctx.lineTo(lx, ly + 22); ctx.stroke();
+      ctx.fillStyle = 'rgba(40,12,8,0.92)';
+      ctx.beginPath(); ctx.ellipse(lx, ly + 44, 15, 21, 0, 0, 7); ctx.fill();
+      const core = ctx.createRadialGradient(lx, ly + 44, 0, lx, ly + 44, 30);
+      core.addColorStop(0, 'rgba(255,176,84,0.9)'); core.addColorStop(0.4, 'rgba(255,140,60,0.35)'); core.addColorStop(1, 'rgba(255,120,40,0)');
+      ctx.fillStyle = core; ctx.beginPath(); ctx.arc(lx, ly + 44, 30, 0, 7); ctx.fill();
+    }
+  }
+});
+midTex.wrapS = THREE.RepeatWrapping;
+midTex.repeat.x = MID_W / MID_TILE;
+const midStrip = new THREE.Mesh(
+  new THREE.PlaneGeometry(MID_W, 3.6),
+  new THREE.MeshBasicMaterial({ map: midTex, transparent: true, depthWrite: false, fog: true })
+);
+midStrip.position.set(0, 7.4, -11);
+midStrip.renderOrder = -5;
+scene.add(midStrip);
 /* foreground awning + hanging sign (close depth layers) */
 const awningTex = canvasTex(1024, 256, (ctx, W, H) => {
   ctx.fillStyle = 'rgba(4,6,11,0.97)';
@@ -2769,6 +2855,8 @@ function animate() {
       m.material.needsUpdate = true;
       m.userData.streamIdx = idx;
     }
+    const gn = segGain[segStream[idx]];
+    if (gn) m.material.color.copy(gn);
   }
   /* district grade */
   const lk = 1 - Math.exp(-dt * 1.1);
@@ -2784,6 +2872,7 @@ function animate() {
     const u = (((p.userData.base - farScroll) % FAR_SPAN) + FAR_SPAN) % FAR_SPAN;
     p.position.x = u - FAR_SPAN / 2 + FAR_W / 2;
   }
+  midTex.offset.x = (scrollDist * 0.92) / MID_TILE;
   for (const tr of nearTracks) {
     const u = (scrollDist + tr.phase) % tr.period;
     tr.mesh.position.x = 95 - u;
