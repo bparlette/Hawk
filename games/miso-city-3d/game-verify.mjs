@@ -337,10 +337,12 @@ async function waitMode(page, mode, timeout = 8000) {
     const seam = window.__debug.occluderState().filter(o => o.seam);
     return { seam, expected: seam.map(o => window.__debug.seamWorldX(o.x)) };
   });
+  const allOcc = await page.evaluate(() => window.__debug.occluderState());
   const occOk = occ.seam.length === 2 &&
-    occ.seam.every((o, i) => o.worldZ > -1.6 && Math.abs(o.worldX - occ.expected[i]) < 0.6) &&
-    occ.seam[0].visible;
-  check('D3 seam occluders render in front, tracking the street', occOk, JSON.stringify(occ));
+    occ.seam.every((o, i) => o.worldZ < -1.6 && Math.abs(o.worldX - occ.expected[i]) < 0.6) &&
+    occ.seam[0].visible &&
+    allOcc.every(o => o.worldZ < -1.6);
+  check('D3 seam occluders render BEHIND the play plane (background, never blocking fighters), tracking the street', occOk, JSON.stringify(occ));
 
   const cart0 = await page.evaluate(() => window.__debug.cartState());
   await page.waitForTimeout(3000);
