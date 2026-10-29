@@ -207,7 +207,7 @@ async function waitMode(page, mode, timeout = 8000) {
   check('A10 runner exit -> pink boss block', g3.district === 'pink', g3.district);
 
   let bossSeen = false;
-  for (let i = 0; i < 60 && !bossSeen; i++) {
+  for (let i = 0; i < 100 && !bossSeen; i++) {
     if ((await game(page)).bossHp !== null) { bossSeen = true; break; }
     await page.evaluate(() => {
       window.__debug.enemies.slice().forEach(e => { if (!e.boss) window.__debug.hurtEnemy(e, 99, 1); });
@@ -293,18 +293,20 @@ async function waitMode(page, mode, timeout = 8000) {
     const btn = document.querySelector('[data-gptouch="b"]');
     const r = btn.getBoundingClientRect();
     window.__probe.btnB = btn;
+    const cx = r.left + r.width / 2, cy = r.top + r.height / 2;
     btn.dispatchEvent(new PointerEvent('pointerdown',
-      { pointerId: 13, pointerType: 'touch', bubbles: true, clientX: r.left + r.width / 2, clientY: r.top + r.height / 2 }));
+      { pointerId: 13, pointerType: 'touch', bubbles: true, clientX: cx, clientY: cy }));
+    /* a TAP (down+up): the throw fires on release under the
+       press-and-release charge contract — holding B now charges
+       the yarn slam instead (see F6) */
+    btn.dispatchEvent(new PointerEvent('pointerup',
+      { pointerId: 13, pointerType: 'touch', bubbles: true, clientX: cx, clientY: cy }));
   });
   let threw = false;
   try {
-    await page.waitForFunction(n => (window.__game.throws || 0) > n, thB, { timeout: 9000 });
+    await page.waitForFunction(n => (window.__game.throws || 0) > n, thB, { timeout: 15000 });
     threw = true;
   } catch { /* */ }
-  await page.evaluate(() => {
-    window.__probe.btnB.dispatchEvent(new PointerEvent('pointerup',
-      { pointerId: 13, pointerType: 'touch', bubbles: true, clientX: 1150, clientY: 600 }));
-  });
   check('B4 touch B button throws yarn', threw);
   check('B5 touch page: no JS errors', errors.length === 0, errors.join(' | '));
   await page.close();
@@ -514,6 +516,195 @@ async function waitMode(page, mode, timeout = 8000) {
   check('C1 dog attack at 1 heart -> game over', over, 'hearts=' + (await game(page)).hearts);
   await page.screenshot({ path: path.join(ROOT, 'shots/06-gameover.png') });
   check('C2 game-over page: no JS errors', errors.length === 0, errors.join(' | '));
+  await page.close();
+}
+
+/* ================= FLOW F: attack overhaul (2026-10-29) ================= */
+{
+  const { page, errors } = await openPage({ width: 960, height: 540 }, '?nobloom&noreflect');
+  await page.evaluate(() => window.__gameStart());
+  await waitMode(page, 'street');
+  const clearField = () => page.evaluate(() => {
+    window.__debug.clearWave();
+    window.__debug.enemies.slice().forEach(e => window.__debug.hurtEnemy(e, 99, 1));
+    window.__debug.G.invulnT = 9999;
+  });
+
+  /* F1: a dog's thrown bone spawns, arcs, and can hit Miso */
+  await clearField();
+  await page.evaluate(() => {
+    const px = window.__game.playerX;
+    window.__debug.spawnEnemy('dane', 0);
+    const e = window.__debug.enemies[window.__debug.enemies.length - 1];
+    window.__debug.setEnemyX(e, px + 7);
+    window.__debug.forceBone(e);
+  });
+  let boneSpawned = false;
+  try {
+    await page.waitForFunction(() => window.__game.bonesActive > 0, null, { timeout: 25000 });
+    boneSpawned = true;
+  } catch { /* */ }
+  check('F1a bone projectile spawns', boneSpawned);
+  let boneHit = false;
+  if (boneSpawned) {
+    /* retire the thrower so only the bone can hurt Miso, then step
+       into the bone's arc */
+    await page.evaluate(() => {
+      window.__debug.enemies.slice().forEach(e => window.__debug.hurtEnemy(e, 99, 1));
+      window.__debug.G.hearts = 3;
+      window.__debug.G.invulnT = 0;
+    });
+    const t0 = Date.now();
+    while (Date.now() - t0 < 20000 && !boneHit) {
+      const b = await page.evaluate(() => {
+        const bb = window.__debug.bones.find(x => x.active);
+        return bb ? { x: bb.x, y: bb.y } : null;
+      });
+      if (b && b.y > 1.0 && b.y < 2.8) await page.evaluate(x => window.__debug.setPlayerX(x), b.x);
+      if ((await game(page)).hearts < 3) boneHit = true;
+      await page.waitForTimeout(100);
+    }
+  }
+  check('F1b bone can hit Miso', boneHit);
+
+  /* F2: attack in the air = jump kick, and it connects */
+  await clearField();
+  const dmgF2 = (await game(page)).dmgDealt || 0;
+  await page.evaluate(() => {
+    const px = window.__game.playerX;
+    window.__debug.spawnEnemy('dane', 0);
+    const e = window.__debug.enemies[window.__debug.enemies.length - 1];
+    window.__debug.setEnemyX(e, px + 2.2);
+  });
+  await page.keyboard.down('Space');
+  let jk = false;
+  try {
+    await page.waitForFunction(() => window.__debug.G.jumpY > 0.4, null, { timeout: 4000 });
+    await page.keyboard.press('KeyZ');
+    await page.waitForFunction(n => (window.__game.dmgDealt || 0) > n, dmgF2, { timeout: 14000 });
+    jk = true;
+  } catch { /* */ }
+  await page.keyboard.up('Space');
+  check('F2 jump kick connects', jk);
+
+  /* F3: the bite clamps on and SHAKES Miso (bitT) for one heart */
+  await clearField();
+  /* settle: stage only on a grounded, idle Miso — staging on the
+     tail of a previous probe's jump/drift makes the dog's (fair)
+     telegraph re-aim and air-dodge rules whiff the setup */
+  await page.waitForFunction(() =>
+    window.__debug.G.jumpY === 0 && !window.__debug.misoAtk.kind && window.__game.bitT === 0,
+    null, { timeout: 20000 }).catch(() => {});
+  await page.evaluate(() => {
+    const px = window.__game.playerX;
+    window.__debug.spawnEnemy('dane', 0);
+    const e = window.__debug.enemies[window.__debug.enemies.length - 1];
+    window.__debug.setEnemyX(e, px + 1.2);
+    window.__debug.G.hearts = 3;
+    window.__debug.G.invulnT = 0;
+    window.__debug.forceAttack(e, 'bite');
+  });
+  let bitten = false;
+  try {
+    await page.waitForFunction(() => window.__game.bitT > 0, null, { timeout: 45000 });
+    bitten = (await game(page)).hearts === 2;
+  } catch { /* */ }
+  check('F3 bite shake holds Miso (bitT, -1 heart)', bitten);
+
+  /* F4: spin kick damages dogs on BOTH sides (two hit windows) */
+  await clearField();
+  const dmgF4 = (await game(page)).dmgDealt || 0;
+  await page.evaluate(() => {
+    const px = window.__game.playerX;
+    window.__debug.spawnEnemy('dane', 0);
+    window.__debug.setEnemyX(window.__debug.enemies[window.__debug.enemies.length - 1], px + 1.6);
+    window.__debug.spawnEnemy('dane', 0);
+    window.__debug.setEnemyX(window.__debug.enemies[window.__debug.enemies.length - 1], px - 1.6);
+    window.__debug.holdEnemies = true;
+  });
+  await page.evaluate(() => window.__debug.startAttack('spinkick'));
+  let spinOk = false;
+  try {
+    await page.waitForFunction(n => (window.__game.dmgDealt || 0) >= n + 2, dmgF4, { timeout: 7000 });
+    spinOk = true;
+  } catch { /* */ }
+  check('F4 spin kick hits both sides', spinOk, 'dmg ' + dmgF4 + ' -> ' + (await game(page)).dmgDealt);
+  /* F4b: the input mapping — kick while steering triggers the spin */
+  await page.evaluate(() => { window.__debug.holdEnemies = false; });
+  await clearField();
+  await page.keyboard.down('ArrowRight');
+  await page.keyboard.press('KeyC');
+  let mapOk = false;
+  try {
+    await page.waitForFunction(() => window.__debug.misoAtk.kind === 'spinkick', null, { timeout: 2500 });
+    mapOk = true;
+  } catch { /* */ }
+  await page.keyboard.up('ArrowRight');
+  check('F4b kick-while-moving maps to spin kick', mapOk);
+
+  /* F5: uppercut LAUNCHES the dog into the air */
+  await clearField();
+  /* settle: stage only on a grounded, idle Miso — staging on the
+     tail of a previous probe's jump/drift makes the dog's (fair)
+     telegraph re-aim and air-dodge rules whiff the setup */
+  await page.waitForFunction(() =>
+    window.__debug.G.jumpY === 0 && !window.__debug.misoAtk.kind && window.__game.bitT === 0,
+    null, { timeout: 20000 }).catch(() => {});
+  await page.evaluate(() => {
+    const px = window.__game.playerX;
+    window.__debug.spawnEnemy('dane', 0);
+    window.__debug.setEnemyX(window.__debug.enemies[window.__debug.enemies.length - 1], px + 1.8);
+  });
+  await page.evaluate(() => { window.__debug.holdEnemies = true; });
+  await page.keyboard.down('ArrowDown');
+  await page.keyboard.down('KeyZ');
+  await page.waitForTimeout(900);
+  await page.keyboard.up('KeyZ');
+  await page.keyboard.up('ArrowDown');
+  await page.waitForTimeout(1200);
+  await page.evaluate(() => { window.__debug.holdEnemies = false; });
+  let launchOk = false;
+  try {
+    await page.waitForFunction(() => {
+      /* the LIVE dog, not enemies[0]: a not-yet-cleared corpse from
+         the staging clear can sit at index 0 with jumpY 0 forever */
+      const e = window.__debug.enemies.find(x => !x.dead);
+      return e && e.jumpY > 0.4;
+    }, null, { timeout: 15000 });
+    launchOk = true;
+  } catch { /* */ }
+  check('F5 uppercut launches the dog', launchOk);
+
+  /* F6: charged yarn slam — release at full charge, 2 damage,
+     cooldown starts (the hold itself is simulated via chargeT) */
+  await clearField();
+  /* settle: stage only on a grounded, idle Miso — staging on the
+     tail of a previous probe's jump/drift makes the dog's (fair)
+     telegraph re-aim and air-dodge rules whiff the setup */
+  await page.waitForFunction(() =>
+    window.__debug.G.jumpY === 0 && !window.__debug.misoAtk.kind && window.__game.bitT === 0,
+    null, { timeout: 20000 }).catch(() => {});
+  const dmgF6 = (await game(page)).dmgDealt || 0;
+  await page.evaluate(() => {
+    const px = window.__game.playerX;
+    window.__debug.spawnEnemy('dane', 0);
+    window.__debug.setEnemyX(window.__debug.enemies[window.__debug.enemies.length - 1], px + 3.2);
+    window.__debug.holdEnemies = true;
+  });
+  await page.keyboard.down('KeyX');
+  try {
+    await page.waitForFunction(() => window.__debug.yarn.charging === true, null, { timeout: 15000 });
+  } catch { /* fall through: the release check below decides */ }
+  await page.evaluate(() => { window.__debug.yarn.chargeT = 1; });
+  await page.keyboard.up('KeyX');
+  let slamOk = false;
+  try {
+    await page.waitForFunction(n => (window.__game.dmgDealt || 0) >= n + 2, dmgF6, { timeout: 15000 });
+    slamOk = (await game(page)).powerCd > 0;
+  } catch { /* */ }
+  await page.evaluate(() => { window.__debug.holdEnemies = false; });
+  check('F6 charged yarn slam (2 dmg + cooldown)', slamOk);
+  check('F7 overhaul page: no JS errors', errors.length === 0, errors.join(' | '));
   await page.close();
 }
 

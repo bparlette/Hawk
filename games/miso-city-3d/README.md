@@ -34,6 +34,23 @@ Teal district exists in the district framework and is teased as
 - **Keyboard:** ←/→ or A/D move · ↑/W/Space jump · ↓/S duck (runner) ·
   X/J yarn throw · Z/K punch · C/V kick · ↑ at the glowing entrance =
   enter alley
+- **Miso's move set (street fighter):** the punch input chains a combo —
+  **punch → punch → kick finisher** (the finisher lunges further and
+  knocks dogs back hard). **↓ + attack** = rising **uppercut** that
+  launches the dog into the air. **Attack while steering** (kick input,
+  or touch A while holding a direction) = **360 spin kick** that hits
+  dogs on BOTH sides. **Attack in the air** = flying **jump kick**.
+  **Hold X/J (or touch B)** to charge the yarn ball — release at full
+  charge for the **yarn slam** power move (2 damage in an arc in front,
+  ~2.6 s cooldown); a quick tap still throws/hooks as before.
+- **Dog attack set:** every dog fights with the full kit, picked by
+  range — close: **bite** (jaws open wide, clamp on, and SHAKE Miso
+  side to side before tossing him) or a rising-paw **uppercut** that
+  pops Miso into the air (the boss adds his ground **slam**); mid:
+  two-hit **swipe combo**; far: leaping **jump kick** or a **thrown
+  bone** (arc — jump it, dodge it, or swat it back with any attack:
+  a deflected bone hurts dogs; the boss throws a big bone + a
+  follow-up). Every move has a readable wind-up first.
 - **Yarn swing (street + boss block):** stand by a lamp pole with a yarn
   ring (it flares when you're in range) and press **X/J** — the yarn
   hooks the pole instead of throwing, and Miso swings. Hold ←/→ to pump
@@ -45,9 +62,12 @@ Teal district exists in the district framework and is teased as
   drop, no extra damage beyond the hit itself).
 - **Touch (gamepress gptouch standard):** floating joystick anchors under
   your thumb anywhere on the left half; round buttons bottom-right —
-  **A** (👊) = attack on the street (alternates punch/kick as a combo;
-  while swinging it is the swing kick), **B** (🧶) = yarn throw / hook /
-  release. Stick steers and pumps the swing. Stick up = jump, stick
+  **A** (👊) = the whole move set: standing still it runs the punch →
+  punch → kick-finisher combo; while steering it is the spin kick;
+  with the stick held down it is the uppercut; in the air it is the
+  jump kick; while swinging it is the swing kick. **B** (🧶) = yarn:
+  tap = throw / hook / release; **hold B** = charge, release = yarn
+  slam. Stick steers and pumps the swing. Stick up = jump, stick
   down = duck in the alley.
 
 ## Characters (all real 3D GLBs, no placeholders)
@@ -58,8 +78,11 @@ Teal district exists in the district framework and is teased as
 - `assets/dog-dane.glb` — Great Dane: fast, 2 HP, long reach.
 - `assets/dog-beagle.glb` — Beagle: slow, 5 HP tank, belly bump.
 - `assets/dog-bulldog.glb` — American Bulldog boss: 16 HP, jump slam.
-  All dogs: 20-bone bipeds with Walk/Attack/Hit/Down clips; per-district
-  stat scaling is the difficulty lever.
+  All dogs: 21-bone bipeds (the 21st bone is a working JAW — bites
+  genuinely open, clamp, and shake) with Walk / Attack (bite) /
+  Swipe / JumpKick / Uppercut / Hit / Down clips; per-district stat
+  scaling is the difficulty lever. The boss plays every clip at
+  0.85× speed (bigger, slower) plus his slam and double bone throw.
 
 Characters render unlit (MeshBasicMaterial — **must stay a single material
 per mesh**: an array material on a groupless geometry draws nothing in

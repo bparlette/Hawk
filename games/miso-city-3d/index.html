@@ -1236,14 +1236,22 @@ function spawnImpactBurst(x, y, z, scale = 1, tint = 0xffffff) {
 }
 const POP_WORDS = {
   punch: ['POW!', 'BAM!', 'WHAM!', 'BONK!'],
+  punch2: ['BAM!', 'WHAM!', 'POW!', 'BONK!'],
   kick: ['THWACK!', 'BOOT!', 'WHAM!', 'KAPOW!'],
+  kickfin: ['KAPOW!', 'THWACK!', 'WHAM!', 'BOOT!'],
+  jumpkick: ['THWACK!', 'KAPOW!', 'BOOT!', 'WHAM!'],
+  spinkick: ['WHAM!', 'KAPOW!', 'THWACK!'],
+  uppercut: ['BAM!', 'WHAM!', 'POW!'],
   yarn: ['BONK!', 'POP!', 'BOING!'],
+  bone: ['BONK!', 'CLONK!', 'THUNK!'],
+  slam: ['SMASH!', 'CRASH!', 'KAPOW!'],
   hurt: ['OUCH!', 'YOWCH!']
 };
 const POP_COLORS = {
   'POW!': '#ffcf3f', 'BAM!': '#ff5a4e', 'WHAM!': '#ff8a3d', 'BONK!': '#ffe95e',
   'THWACK!': '#7ee0ff', 'BOOT!': '#b28dff', 'KAPOW!': '#ffcf3f', 'POP!': '#a0e8ff',
-  'BOING!': '#9dff70', 'OUCH!': '#ff6b81', 'YOWCH!': '#ff6b81'
+  'BOING!': '#9dff70', 'OUCH!': '#ff6b81', 'YOWCH!': '#ff6b81',
+  'CLONK!': '#ffe95e', 'THUNK!': '#ffd9a0', 'SMASH!': '#ff5a4e', 'CRASH!': '#ff8a3d'
 };
 const popTexCache = {};
 function popTexture(word) {
@@ -1276,9 +1284,10 @@ for (let i = 0; i < 5; i++) {
   scene.add(s);
   popups.push({ s, life: 99, dur: 0.48, base: 1, y0: 0 });
 }
-const popIdx = { punch: 0, kick: 0, yarn: 0, hurt: 0 };
+const popIdx = { punch: 0, punch2: 0, kick: 0, kickfin: 0, jumpkick: 0, spinkick: 0, uppercut: 0, yarn: 0, bone: 0, slam: 0, hurt: 0 };
 function spawnPopup(kind, x, y, z, scale = 1) {
   const words = POP_WORDS[kind] || POP_WORDS.punch;
+  if (popIdx[kind] === undefined) popIdx[kind] = 0;
   const word = words[popIdx[kind]++ % words.length];
   const p = popups.find(p => p.life >= p.dur) || popups[0];
   p.life = 0; p.base = scale; p.y0 = y;
@@ -1655,7 +1664,8 @@ const yarnString = new THREE.Line(stringGeo, new THREE.LineBasicMaterial({ color
 yarnString.visible = false;
 yarnString.frustumCulled = false;
 scene.add(yarnString);
-const yarn = { active: false, phase: 'out', dist: 0, dir: 1, x: 0, y: 1.2, z: STREET_Z, cool: 0 };
+const yarn = { active: false, phase: 'out', dist: 0, dir: 1, x: 0, y: 1.2, z: STREET_Z, cool: 0,
+               charging: false, chargeT: 0 };
 /* ------------------------- yarn swing (grapple) -------------------------
    Pressing yarn near a hookable lamp pole (yarn ring at ANCHOR_Y)
    HOOKS instead of throwing — unless a dog is right in front of
@@ -1750,7 +1760,9 @@ const G = {
   mode: 'title', hearts: 3, score: 0, elapsed: 0,
   sectionIdx: 0, playerX: 8, facing: 1, vy: 0, jumpY: 0,
   invulnT: 0, shakeT: 0, stepAcc: 0, time: 0, throws: 0,
-  punches: 0, kicks: 0, dmgDealt: 0
+  punches: 0, kicks: 0, dmgDealt: 0,
+  /* bitten: seconds left held in a dog's jaws (shaken, then tossed) */
+  bitT: 0, bitDog: null
 };
 let enemies = [];
 let pickups = [];
@@ -1811,6 +1823,7 @@ function readInput() {
     duck: !!(keys.ArrowDown || keys.KeyS) || (!!ti && ti.y > 0.55),
     duckEdge: !!(pressed.ArrowDown || pressed.KeyS) || stickDownEdge,
     throw: !!(pressed.KeyX || pressed.KeyJ) || (!!ti && !!ti.bPressed),
+    throwHeld: !!(keys.KeyX || keys.KeyJ) || (!!ti && !!ti.b),
     punch: !!(pressed.KeyZ || pressed.KeyK) || (G.mode === 'street' && !!ti && !!ti.aPressed),
     punchTouch: G.mode === 'street' && !!ti && !!ti.aPressed && !(pressed.KeyZ || pressed.KeyK),
     kick: !!(pressed.KeyC || pressed.KeyV)
@@ -1858,12 +1871,22 @@ function spawnEnemy(type) {
     x: Math.min(G.playerX + 17, section().len - 4),
     zoff: (Math.random() - 0.5) * 0.5,
     state: 'chase', t: 0, facing: -1, kb: 0, flashT: 0, char: null, dead: false,
-    strikeHitDone: false, vy: 0, jumpY: 0, freezeT: 0, squashT: 0
+    strikeHitDone: false, vy: 0, jumpY: 0, freezeT: 0, squashT: 0,
+    /* attack-set state (2026-10-29 overhaul): the current move, its
+       telegraph length, per-move cooldowns, swipe hit bookkeeping,
+       and the bone prop shown in the paw while winding up a throw */
+    move: 'bite', teleDur: 0.35, swipHit: 0, boneProp: null,
+    boneCd: 2 + Math.random() * 2, jumpCd: 1 + Math.random(), upperCd: 0
   };
   enemies.push(e);
   getDogVisual(type).then(v => {
     e.char = instantiate(v);
     e.pose = e.char ? (e.char.pose || null) : null;
+    if (e.char && !e.char.placeholder) {
+      e.boneProp = makeBoneMesh(0.95);
+      e.boneProp.visible = false;
+      e.char.wrap.add(e.boneProp);
+    }
     /* boss presence: Bruno reads ~18% larger on his block (visual only —
        hit logic is x-distance based and never reads the wrap scale) */
     if (e.char && e.boss) e.char.wrap.scale.multiplyScalar(1.18);
@@ -1879,10 +1902,12 @@ function hurtEnemy(e, dmg, dir, kind) {
   e.flashT = 0.16;
   e.squashT = 0.22;
   e.kb += dir * (e.boss ? 0.7 : 2.4);
-  AudioPack.sfx(kind === 'punch' ? 'punchhit' : kind === 'kick' ? 'kickhit' : 'hit');
+  AudioPack.sfx((kind === 'punch' || kind === 'punch2' || kind === 'uppercut') ? 'punchhit'
+    : (kind === 'kick' || kind === 'kickfin' || kind === 'jumpkick' || kind === 'spinkick') ? 'kickhit' : 'hit');
   /* impact language: hit-stop freezes both fighters on melee connects;
      the yarn gets a shorter enemy-only stop so throws stay snappy */
-  if (kind === 'punch' || kind === 'kick') {
+  if (kind === 'punch' || kind === 'punch2' || kind === 'kick' || kind === 'kickfin'
+      || kind === 'jumpkick' || kind === 'spinkick' || kind === 'uppercut' || kind === 'slam') {
     e.freezeT = Math.max(e.freezeT || 0, 0.085);
     misoFreezeT = Math.max(misoFreezeT, 0.085);
     G.shakeT = Math.max(G.shakeT, 0.07); // tiny impact kick, not a screen shake
@@ -1942,9 +1967,78 @@ function hurtPlayer(srcX) {
     misoFreezeT = Math.max(misoFreezeT, 0.06);
     spawnImpactBurst(ANCHOR_X, 1.5, STREET_Z + 1.1, 0.95, 0xff7a5e);
     spawnPopup('hurt', ANCHOR_X + 0.2, 2.7, STREET_Z + 1.3, 0.95);
-    G.playerX = THREE.MathUtils.clamp(G.playerX + (G.playerX < srcX ? -1.7 : 1.7), 2, section().len - 2);
+    /* a connecting bite sets bitT BEFORE calling hurtPlayer: while
+       bitten, the jaws own Miso's position (no knockback pop) */
+    if (!(G.bitT > 0))
+      G.playerX = THREE.MathUtils.clamp(G.playerX + (G.playerX < srcX ? -1.7 : 1.7), 2, section().len - 2);
   }
   if (G.hearts <= 0) gameOver();
+}
+
+/* ---------------------- dog attack set (2026-10-29) ----------------------
+   Telegraph end: dispatch to the move the chase AI picked. The
+   jaw-rig clips carry the motion; the boss plays every clip at
+   0.85x (bigger, slower) — state timers run in clip seconds. */
+function startDogAttack(e) {
+  e.t = 0; e.strikeHitDone = false;
+  const ts = e.boss ? 0.85 : 1;
+  const playClip = name => {
+    if (!e.char) return;
+    if (e.char.actions && e.char.actions[name]) e.char.actions[name].timeScale = ts;
+    charPlay(e.char, name, false);
+  };
+  if (e.move === 'slam') {
+    e.state = 'strike';
+    if (e.char) charPlay(e.char, 'Attack', false);
+    e.vy = 7.5; e.jumpY = 0.001;
+  } else if (e.move === 'swipe') { e.state = 'swipe'; playClip('Swipe'); }
+  else if (e.move === 'jumpkick') { e.state = 'jumpkick'; playClip('JumpKick'); }
+  else if (e.move === 'uppercut') { e.state = 'uppercut'; playClip('Uppercut'); }
+  else if (e.move === 'bonethrow') { e.state = 'throwing'; throwBone(e); }
+  else { e.state = 'strike'; playClip('Attack'); } /* bite */
+  if (e.move !== 'bonethrow') {
+    AudioPack.sfx('lunge');
+    spawnSwoosh(ANCHOR_X + (e.x - G.playerX) + e.facing * 0.9, 1.5,
+      STREET_Z + e.zoff + 1.0, e.boss ? 1.8 : 1.35, e.facing, 1.0, -1.2, 0xff9a7a);
+  }
+}
+function throwBone(e) {
+  const dir = e.facing || 1;
+  const adx = Math.abs(G.playerX - e.x);
+  const y0 = DOG_STATS[e.type].height * 0.62;
+  if (e.boss) {
+    /* boss power throw: a big bone AND a follow-up, on a line */
+    spawnBone(e.x + dir * 0.7, e.zoff, dir,
+      { y: y0, speed: Math.max(5.5, adx * 1.18), vy: 6.4, big: true });
+    spawnBone(e.x + dir * 0.7, e.zoff, dir,
+      { y: y0, speed: Math.max(5, adx * 1.02), vy: 5.4 });
+    e.boneCd = 2.4;
+  } else {
+    spawnBone(e.x + dir * 0.7, e.zoff, dir,
+      { y: y0, speed: THREE.MathUtils.clamp(adx * 1.22, 5.5, 10.5), vy: 5.6 });
+    e.boneCd = 3.4 + Math.random() * 1.6;
+  }
+  AudioPack.sfx('throw');
+}
+
+/* Miso's power move: the charged yarn slam (see the throw input) */
+let powerCd = 0, yarnSlamFx = null;
+const CHARGE_NEED = 0.38;
+function yarnSlam() {
+  powerCd = 2.6;
+  AudioPack.sfx('smash');
+  const ix = G.playerX + G.facing * 3.1;
+  yarnSlamFx = { x: ix, t: 0 };
+  for (const e of enemies) {
+    if (!e.dead && Math.abs(e.x - ix) < 1.7) {
+      hurtEnemy(e, 2, G.facing, 'slam');
+      e.kb += G.facing * 2.0;
+    }
+  }
+  const wx = ANCHOR_X + (ix - G.playerX);
+  spawnImpactBurst(wx, 1.1, STREET_Z + 1.1, 1.7, 0xffa050);
+  spawnPopup('slam', wx, 2.9, STREET_Z + 1.3, 1.25);
+  G.shakeT = Math.max(G.shakeT, 0.16);
 }
 
 /* --------------------------- street update --------------------------- */
@@ -1965,20 +2059,36 @@ let flashT = 0;
    Miso's mixer + attack timeline freeze (misoFreezeT / misoFrozen),
    each enemy freezes its own logic + mixer (e.freezeT). */
 const ATK_DEF = {
-  punch: { dur: 0.36, hitAt: 0.145, range: 2.35, sfxWhoosh: 'whoosh' },
-  kick:  { dur: 0.48, hitAt: 0.215, range: 2.55, sfxWhoosh: 'kickwhoosh' }
+  punch:    { dur: 0.36, hitAt: 0.145, range: 2.35, sfxWhoosh: 'whoosh' },
+  punch2:   { dur: 0.32, hitAt: 0.12,  range: 2.45, sfxWhoosh: 'whoosh' },
+  kick:     { dur: 0.48, hitAt: 0.215, range: 2.55, sfxWhoosh: 'kickwhoosh' },
+  kickfin:  { dur: 0.52, hitAt: 0.23,  range: 2.8,  sfxWhoosh: 'kickwhoosh', kb: 2.6, lungeMul: 1.4 },
+  jumpkick: { dur: 0.42, hitAt: 0.19,  range: 2.6,  sfxWhoosh: 'kickwhoosh' },
+  spinkick: { dur: 0.55, hits: [0.17, 0.37], range: 2.5, sfxWhoosh: 'kickwhoosh' },
+  uppercut: { dur: 0.50, hitAt: 0.24,  range: 2.2,  sfxWhoosh: 'whoosh', launch: true }
 };
-const misoAtk = { kind: null, t: 0, dur: 0, hitAt: 0, hitDone: false, whooshDone: false, dir: 1 };
-let misoFreezeT = 0, misoFrozen = false, atkCoolT = 0, comboAlt = false;
+const misoAtk = { kind: null, t: 0, dur: 0, hitAt: 0, hitStage: 0, whooshDone: false, dir: 1, def: null };
+let misoFreezeT = 0, misoFrozen = false, atkCoolT = 0;
+let comboStep = 0, comboT = 0, atkBuf = null;
 function startMisoAttack(kind) {
   const def = ATK_DEF[kind];
-  misoAtk.kind = kind; misoAtk.t = 0; misoAtk.dur = def.dur; misoAtk.hitAt = def.hitAt;
-  misoAtk.hitDone = false; misoAtk.whooshDone = false; misoAtk.dir = G.facing;
-  if (kind === 'punch') G.punches++; else G.kicks++;
+  if (!def) return;
+  misoAtk.kind = kind; misoAtk.t = 0; misoAtk.dur = def.dur; misoAtk.hitAt = def.hitAt || 0;
+  misoAtk.hitStage = 0; misoAtk.whooshDone = false; misoAtk.dir = G.facing; misoAtk.def = def;
+  if (kind === 'punch' || kind === 'punch2' || kind === 'uppercut') G.punches++; else G.kicks++;
+}
+/* the punch chain: presses inside the combo window escalate
+   punch -> punch -> kick FINISHER (longer lunge, heavy knockback) */
+function advanceCombo() {
+  if (comboT <= 0) comboStep = 0;
+  if (comboStep === 0) { startMisoAttack('punch'); comboStep = 1; }
+  else if (comboStep === 1) { startMisoAttack('punch2'); comboStep = 2; }
+  else { startMisoAttack('kickfin'); comboStep = 0; }
+  comboT = 0.95;
 }
 function spawnAttackSwoosh(kind, dir) {
   const baseY = swing.on ? swing.py : G.jumpY;
-  if (kind === 'punch')
+  if (kind === 'punch' || kind === 'punch2' || kind === 'uppercut')
     spawnSwoosh(ANCHOR_X + dir * 1.3, 1.6 + baseY, STREET_Z + 1.0, 1.2, dir, 0.95, -1.15, 0xbfe8ff);
   else
     spawnSwoosh(ANCHOR_X + dir * 1.35, 1.05 + baseY, STREET_Z + 1.0, 1.55, dir, 1.25, -0.75, 0xffd9a0);
@@ -2014,13 +2124,66 @@ const KICK_S = {
   forearmR: [0, 0, 0.4], forearmL: [0, 0, 0.4], thighL: [0, 0, 0.2],
   fist: 1, innerDX: 0.32, innerDY: 0.13, hipsDY: -0.02
 };
+/* combo second punch: same read, bigger fist + deeper lunge */
+const PUNCH2_S = { ...PUNCH_S, fist: 2.05, innerDX: 0.55 };
+/* jump kick: chambered knee in the air -> flying side kick, trailing
+   leg tucked, body leaned hard into the strike */
+const JK_W = {
+  thighR: [0, 0, 0.7], shinR: [0, 0, 1.5], thighL: [0, 0, 0.3],
+  upperarmR: [0, 0, 0.4], upperarmL: [0, 0, 0.4], chest: [0, 0, 0.06],
+  fist: 1, innerDX: -0.08, innerDY: 0, hipsDY: -0.12
+};
+const JK_S = {
+  thighR: [0, 0, -1.85], shinR: [0, 0, 0.03], footR: [0, 0, -0.5],
+  thighL: [0, 0, 0.55], shinL: [0, 0, 0.7],
+  chest: [0, 0, -0.34], spine: [0, 0, -0.18], head: [0, 0, -0.12],
+  upperarmR: [0, 0, 0.85], upperarmL: [0, 0, -0.5],
+  forearmR: [0, 0, 0.3], forearmL: [0, 0, 0.2],
+  fist: 1, innerDX: 0.4, innerDY: 0.1, hipsDY: 0
+};
+/* spin kick: coiled chamber -> leg whipped out horizontal, arms
+   flung wide for the turn (the 360 body spin itself is applied to
+   misoG in renderMisoStreet) */
+const SPIN_W = {
+  thighR: [0, 0, -0.5], shinR: [0, 0, 1.3],
+  upperarmR: [0, 0, 0.5], upperarmL: [0, 0, -0.4], chest: [0, -0.2, 0],
+  fist: 1, innerDX: -0.05, innerDY: 0, hipsDY: -0.12
+};
+const SPIN_S = {
+  thighR: [0, 0, -1.8], shinR: [0, 0, 0.05], footR: [0, 0, -0.45],
+  thighL: [0, 0, 0.25],
+  chest: [0, 0, -0.2], spine: [0, 0, -0.1],
+  upperarmR: [0, 0, 1.1], upperarmL: [0, 0, 1.1],
+  forearmR: [0, 0, 0.2], forearmL: [0, 0, 0.2],
+  fist: 1, innerDX: 0.15, innerDY: 0.16, hipsDY: -0.02
+};
+/* uppercut: deep crouch chamber, fist cocked at the hip -> rising
+   fist with the whole body uncoiling upward (innerDY lifts him) */
+const UPPER_W = {
+  upperarmR: [0.5, 0, 0.9], forearmR: [-1.9, 0, -0.6],
+  upperarmL: [-0.4, 0, -0.3], forearmL: [-0.7, 0, -0.3],
+  chest: [0, 0, 0.14], spine: [0, 0, 0.08],
+  fist: 1, innerDX: -0.05, innerDY: 0, hipsDY: -0.3
+};
+const UPPER_S = {
+  upperarmR: [-3.0, 0, -0.35], forearmR: [-0.3, 0, -0.1],
+  upperarmL: [0.9, 0, 0.5], forearmL: [0.4, 0, 0.2],
+  chest: [0, 0, -0.22], spine: [0, 0, -0.12], head: [0, 0, -0.14],
+  thighL: [0, 0, -0.1], thighR: [0, 0, 0.12],
+  fist: 2.1, innerDX: 0.18, innerDY: 0.3, hipsDY: 0.06
+};
+const POSE_SETS = {
+  punch: [PUNCH_W, PUNCH_S], punch2: [PUNCH_W, PUNCH2_S],
+  kick: [KICK_W, KICK_S], kickfin: [KICK_W, KICK_S],
+  jumpkick: [JK_W, JK_S], spinkick: [SPIN_W, SPIN_S],
+  uppercut: [UPPER_W, UPPER_S]
+};
 function applyMisoPose() {
   const a = miso.char && miso.char.pose;
   if (!a) return;
   poseSave(a);
   if (!misoAtk.kind) return;
-  const W = misoAtk.kind === 'punch' ? PUNCH_W : KICK_W;
-  const S = misoAtk.kind === 'punch' ? PUNCH_S : KICK_S;
+  const [W, S] = POSE_SETS[misoAtk.kind] || [PUNCH_W, PUNCH_S];
   const u = Math.min(1, misoAtk.t / misoAtk.dur);
   let kw = 0, ks = 0;
   if (u < 0.22) { const k = u / 0.22; kw = k * k; }
@@ -2031,32 +2194,67 @@ function applyMisoPose() {
   for (const n of names) {
     if (n === 'fist' || n === 'innerDX' || n === 'innerDY' || n === 'hipsDY') continue;
     const w = W[n] || [0, 0, 0], s = S[n] || [0, 0, 0];
-    const arm = misoAtk.kind === 'punch' && /^(upperarm|forearm)/.test(n);
+    const arm = (misoAtk.kind === 'punch' || misoAtk.kind === 'punch2') && /^(upperarm|forearm)/.test(n);
     (arm ? pRotLocal : pRot)(a, n, w[0] * kw + s[0] * ks, w[1] * kw + s[1] * ks, w[2] * kw + s[2] * ks);
   }
   pScale(a, 'handR', 1 + ((W.fist || 1) - 1) * kw + ((S.fist || 1) - 1) * ks);
-  innerOff(a, (W.innerDX || 0) * kw + (S.innerDX || 0) * ks,
-              (W.innerDY || 0) * kw + (S.innerDY || 0) * ks, 0);
+  const lm = (misoAtk.def && misoAtk.def.lungeMul) || 1;
+  innerOff(a, ((W.innerDX || 0) * kw + (S.innerDX || 0) * ks) * lm,
+              ((W.innerDY || 0) * kw + (S.innerDY || 0) * ks) * lm, 0);
   pOff(a, 'hips', 0, (W.hipsDY || 0) * kw + (S.hipsDY || 0) * ks, 0);
 }
-/* dog fight poses: telegraph = rear back with paws up; strike = the
-   Attack clip plus a forward-pitch overshoot that decays */
+/* dog fight poses: per-move telegraphs (each move reads before it
+   fires); the strike dressing is now a whisper — the jaw-rig clips
+   carry the motion (see rig_dog.py's attack set) */
 function applyDogPose(e) {
   const a = e.pose;
   if (!a) return;
   const big = e.boss ? 1.35 : 1;
   if (e.state === 'telegraph') {
-    const w = Math.min(1, e.t / 0.26), k = w * w;
-    pRot(a, 'chest', 0, 0, -0.24 * big * k);
-    pRot(a, 'spine', 0, 0, -0.13 * big * k);
-    pRot(a, 'head', 0, 0, -0.12 * k);
-    pRot(a, 'upperarmR', 0, 0, -1.05 * k);
-    pRot(a, 'upperarmL', 0, 0, -1.05 * k);
-    pRot(a, 'forearmR', 0, 0, 0.35 * k);
-    pRot(a, 'forearmL', 0, 0, 0.35 * k);
-    pOff(a, 'hips', 0, (e.boss ? 0.09 : -0.055) * k, 0);
-  } else if (e.state === 'strike') {
-    const s = Math.max(0, 1 - e.t / 0.4);
+    const w = Math.min(1, e.t / Math.max(0.1, (e.teleDur || 0.35) * 0.8)), k = w * w;
+    if (e.move === 'swipe') {
+      /* twist chamber: shoulders wind away from the coming slash */
+      pRot(a, 'chest', 0, 0.5 * k, -0.08 * k);
+      pRot(a, 'spine', 0, 0.22 * k, 0);
+      pRot(a, 'upperarmR', 0, 0, 0.55 * k);
+      pRot(a, 'forearmR', 0, 0, 0.4 * k);
+      pRot(a, 'head', 0, 0.2 * k, 0);
+    } else if (e.move === 'uppercut') {
+      /* sinks low, striking paw cocked at the hip */
+      pOff(a, 'hips', 0, -0.17 * k, 0);
+      pRot(a, 'chest', 0, 0, 0.3 * k);
+      pRot(a, 'spine', 0, 0, 0.14 * k);
+      pRot(a, 'upperarmR', 0, 0, 0.3 * k);
+      pRot(a, 'forearmR', 0, 0, 0.9 * k);
+    } else if (e.move === 'jumpkick') {
+      /* deep crouch coil */
+      pOff(a, 'hips', 0, -0.2 * k, 0);
+      pRot(a, 'chest', 0, 0, 0.22 * k);
+      pRot(a, 'upperarmR', 0, 0, 0.45 * k);
+      pRot(a, 'upperarmL', 0, 0, 0.45 * k);
+    } else if (e.move === 'bonethrow') {
+      /* paw up high with the bone on show — the readable tell */
+      pRot(a, 'upperarmR', 0, 0, -1.95 * k);
+      pRot(a, 'forearmR', 0, 0, 0.5 * k);
+      pRot(a, 'chest', 0, 0, -0.12 * k);
+      pRot(a, 'head', 0, 0, -0.16 * k);
+    } else {
+      /* bite / slam: rear back with paws up */
+      pRot(a, 'chest', 0, 0, -0.24 * big * k);
+      pRot(a, 'spine', 0, 0, -0.13 * big * k);
+      pRot(a, 'head', 0, 0, -0.12 * k);
+      pRot(a, 'upperarmR', 0, 0, -1.05 * k);
+      pRot(a, 'upperarmL', 0, 0, -1.05 * k);
+      pRot(a, 'forearmR', 0, 0, 0.35 * k);
+      pRot(a, 'forearmL', 0, 0, 0.35 * k);
+      pOff(a, 'hips', 0, (e.boss ? 0.09 : -0.055) * k, 0);
+    }
+  } else if (e.state === 'strike' && e.move !== 'slam') {
+    /* bite: the old forward-pitch overshoot (0.3 chest) used to BE
+       the attack read when the clip was a bow; the jaw clip now
+       supplies lunge + pitch + shake, so the dressing is cut to
+       30% — stacked at full strength it doubled the motion */
+    const s = Math.max(0, 1 - e.t / 0.4) * 0.3;
     pRot(a, 'chest', 0, 0, 0.3 * big * s);
     pRot(a, 'spine', 0, 0, 0.14 * s);
     pRot(a, 'head', 0, 0, 0.16 * s);
@@ -2073,7 +2271,26 @@ function updateStreet(dt, inp) {
   /* movement */
   const mv = (inp.right ? 1 : 0) - (inp.left ? 1 : 0);
   let moving = mv !== 0;
-  if (swing.on) {
+  /* if the biting dog died mid-grab (a deflected bone, a scripted
+     kill), the hold must release — otherwise bitT never counts
+     down and Miso's melee stays locked for the whole run */
+  if (G.bitT > 0 && (!G.bitDog || G.bitDog.dead || G.bitDog.state === 'down')) {
+    G.bitT = 0; G.bitDog = null;
+  }
+  if (G.bitT > 0 && G.bitDog && !G.bitDog.dead && !swing.on) {
+    /* held in the dog's jaws: shaken side to side with its head,
+       then tossed clear. Input is locked out until the toss. */
+    const d = G.bitDog;
+    G.bitT -= dt;
+    G.playerX = THREE.MathUtils.clamp(
+      d.x + d.facing * 1.02 + Math.sin(G.time * 34) * 0.16, 2, sec.len - 2);
+    G.facing = -d.facing;
+    moving = true;
+    if (G.bitT <= 0) {
+      G.playerX = THREE.MathUtils.clamp(G.playerX + d.facing * 0.9, 2, sec.len - 2);
+      G.bitDog = null;
+    }
+  } else if (swing.on) {
     /* pendulum: gravity + pump (hold a direction to build swing in
        that direction), light damping, hard clamps so the arc can
        never reach the ground or wrap the pole */
@@ -2115,8 +2332,14 @@ function updateStreet(dt, inp) {
     if (inp.jump && G.jumpY === 0) { G.vy = 9.8; G.jumpY = 0.001; AudioPack.sfx('jump'); }
     if (G.jumpY > 0 || G.vy !== 0) {
       G.jumpY += G.vy * dt; G.vy -= 24 * dt;
-      if (G.jumpY <= 0) { G.jumpY = 0; G.vy = 0; }
+      if (G.jumpY <= 0) {
+        G.jumpY = 0; G.vy = 0;
+        if (misoAtk.kind === 'jumpkick') { misoAtk.kind = null; atkCoolT = 0.05; }
+      }
     }
+    /* the jump kick carries Miso forward while the leg is out */
+    if (misoAtk.kind === 'jumpkick' && misoAtk.t < 0.32)
+      G.playerX = THREE.MathUtils.clamp(G.playerX + misoAtk.dir * 5.4 * dt, 2, sec.len - 2);
   }
   /* wave spawning */
   if (waveQueue.length && enemies.filter(e => !e.dead).length < 2) {
@@ -2127,15 +2350,34 @@ function updateStreet(dt, inp) {
      pole instead of throwing (a dog right in front keeps the throw);
      yarn again while swinging releases */
   yarn.cool -= dt;
+  powerCd = Math.max(0, powerCd - dt);
+  updateBones(dt);
+  /* throw input is press-and-release now: a TAP throws (or hooks,
+     as before); HOLDING charges the yarn ball — release at full
+     charge fires the overhead YARN SLAM power move. While swinging,
+     the press still releases instantly (unchanged). */
   if (inp.throw && !yarn.active) {
     if (swing.on) releaseSwing();
-    else if (yarn.cool <= 0 && tryHook()) { /* hooked — no throw */ }
-    else if (yarn.cool <= 0) {
-      yarn.active = true; yarn.phase = 'out'; yarn.dist = 0;
-      yarn.dir = G.facing; yarn.x = G.playerX; yarn.z = STREET_Z;
-      G.throws++;
-      AudioPack.sfx('throw');
+    else if (yarn.cool <= 0 && !yarn.charging) { yarn.charging = true; yarn.chargeT = 0; }
+  }
+  if (yarn.charging) {
+    if (inp.throwHeld) yarn.chargeT += dt;
+    else {
+      const charged = yarn.chargeT >= CHARGE_NEED && powerCd <= 0;
+      yarn.charging = false; yarn.chargeT = 0;
+      if (charged) yarnSlam();
+      else if (yarn.cool <= 0 && tryHook()) { /* hooked — no throw */ }
+      else if (yarn.cool <= 0) {
+        yarn.active = true; yarn.phase = 'out'; yarn.dist = 0;
+        yarn.dir = G.facing; yarn.x = G.playerX; yarn.z = STREET_Z;
+        G.throws++;
+        AudioPack.sfx('throw');
+      }
     }
+  }
+  if (yarnSlamFx) {
+    yarnSlamFx.t += dt;
+    if (yarnSlamFx.t > 0.34) yarnSlamFx = null;
   }
   if (yarn.active) {
     if (yarn.phase === 'out') {
@@ -2154,20 +2396,45 @@ function updateStreet(dt, inp) {
       if (yarn.dist <= 0) { yarn.active = false; yarn.cool = 0.32; }
     }
   }
-  /* melee: punch (Z) / kick (C) / touch-A combo. One hit check per
-     swing at hitAt; the pose itself is applied in renderMisoStreet. */
+  /* melee move map (street): the punch input chains a 3-hit combo
+     (punch -> punch -> kick finisher); duck + attack = uppercut
+     (launches the dog); attack while steering with the kick input —
+     or touch A while steering — = spin kick (hits BOTH sides); any
+     attack in the air = jump kick. While swinging, attacks are the
+     swing kick (handled in the swing block above). */
   atkCoolT -= dt;
-  if (!swing.on && !misoAtk.kind && G.jumpY === 0 && atkCoolT <= 0) {
-    if (inp.punch) {
-      /* touch A alternates punch/kick as a combo; keyboard Z is
-         always a punch and C is always a kick */
-      if (inp.punchTouch && comboAlt) startMisoAttack('kick');
-      else startMisoAttack('punch');
-      if (inp.punchTouch) comboAlt = !comboAlt;
-    } else if (inp.kick) startMisoAttack('kick');
+  comboT = Math.max(0, comboT - dt);
+  /* 0.15 s input buffer: a press that lands during the cooldown or
+     the tail of the previous move still comes out when the gate
+     opens — standard fighting-game forgiveness; without it a press
+     on a slow frame is silently eaten */
+  if ((inp.punch || inp.kick) && !swing.on && (misoAtk.kind || atkCoolT > 0)) {
+    atkBuf = { punch: !!inp.punch, kick: !!inp.kick && !inp.punch,
+               duck: !!inp.duck, left: !!inp.left, right: !!inp.right,
+               punchTouch: !!inp.punchTouch, t: 0.15 };
+  }
+  if (atkBuf) { atkBuf.t -= dt; if (atkBuf.t <= 0) atkBuf = null; }
+  const pin = (atkBuf && !inp.punch && !inp.kick)
+    ? { ...inp, punch: atkBuf.punch, kick: atkBuf.kick, duck: atkBuf.duck,
+        left: atkBuf.left, right: atkBuf.right, punchTouch: atkBuf.punchTouch }
+    : inp;
+  if (!swing.on && !misoAtk.kind && atkCoolT <= 0 && !(G.bitT > 0)) {
+    if (G.jumpY > 0.02) {
+      if (pin.punch || pin.kick) { startMisoAttack('jumpkick'); atkBuf = null; }
+    } else if (pin.punch) {
+      atkBuf = null;
+      if (pin.duck) startMisoAttack('uppercut');
+      else if (pin.punchTouch && (pin.left || pin.right)) startMisoAttack('spinkick');
+      else advanceCombo();
+    } else if (pin.kick) {
+      atkBuf = null;
+      if (pin.duck) startMisoAttack('uppercut');
+      else if (pin.left || pin.right) startMisoAttack('spinkick');
+      else startMisoAttack('kick');
+    }
   }
   if (misoAtk.kind) {
-    const def = ATK_DEF[misoAtk.kind];
+    const def = misoAtk.def || ATK_DEF[misoAtk.kind];
     if (!misoFrozen && !(window.__debug && window.__debug.atkHold)) misoAtk.t += dt;
     const u = misoAtk.t / misoAtk.dur;
     if (!misoAtk.whooshDone && u >= 0.22) {
@@ -2175,14 +2442,23 @@ function updateStreet(dt, inp) {
       AudioPack.sfx(def.sfxWhoosh);
       spawnAttackSwoosh(misoAtk.kind, misoAtk.dir);
     }
-    if (!misoAtk.hitDone && misoAtk.t >= misoAtk.hitAt) {
-      misoAtk.hitDone = true;
-      /* while swinging, hits are handled by the swing-kick window
-         (continuous pass check + strong knockback), not this one */
+    /* hit windows: one per move, two for the spin kick — the second
+       strike faces BACKWARD as the leg comes around behind him.
+       While swinging, hits are handled by the swing-kick window
+       (continuous pass check + strong knockback), not this one. */
+    const windows = def.hits || [def.hitAt];
+    while (misoAtk.hitStage < windows.length && misoAtk.t >= windows[misoAtk.hitStage]) {
+      const dirW = (misoAtk.kind === 'spinkick' && misoAtk.hitStage === 1)
+        ? -misoAtk.dir : misoAtk.dir;
+      misoAtk.hitStage++;
       if (!swing.on) {
         for (const e of enemies) {
-          const d = (e.x - G.playerX) * misoAtk.dir;
-          if (!e.dead && d > 0.05 && d < def.range) hurtEnemy(e, 1, misoAtk.dir, misoAtk.kind);
+          const d = (e.x - G.playerX) * dirW;
+          if (!e.dead && d > 0.05 && d < def.range) {
+            hurtEnemy(e, 1, dirW, misoAtk.kind);
+            if (def.kb) e.kb += dirW * def.kb;
+            if (def.launch) { e.vy = 8.4; e.jumpY = Math.max(e.jumpY || 0, 0.02); }
+          }
         }
       }
     }
@@ -2205,19 +2481,82 @@ function updateStreet(dt, inp) {
       if (e.char && e.t > 0.9) e.char.wrap.position.y = -Math.min(1.1, (e.t - 0.9) * 1.6);
       continue;
     }
+    /* launched airborne (Miso's uppercut): gravity arc. The boss
+       ground-slam integrates its own jumpY inside its state — the
+       generic arc skips it while it is mid-slam. */
+    if ((e.jumpY > 0 || e.vy !== 0) && !(e.boss && e.state === 'strike' && e.move === 'slam')) {
+      e.jumpY += e.vy * edt; e.vy -= 26 * edt;
+      if (e.jumpY <= 0) { e.jumpY = 0; e.vy = 0; }
+    }
+    e.boneCd = Math.max(0, (e.boneCd || 0) - edt);
+    e.jumpCd = Math.max(0, (e.jumpCd || 0) - edt);
+    e.upperCd = Math.max(0, (e.upperCd || 0) - edt);
     const dx = G.playerX - e.x, adx = Math.abs(dx);
     if (e.state === 'hitstun') {
-      if (e.t > 0.3) { e.state = 'chase'; e.t = 0; }
+      if (e.t > 0.3 && e.jumpY === 0) { e.state = 'chase'; e.t = 0; }
     } else if (e.state === 'telegraph') {
       e.facing = Math.sign(dx) || 1;
-      if (e.t >= 0.35) {
-        e.state = 'strike'; e.t = 0; e.strikeHitDone = false;
-        if (e.char) charPlay(e.char, 'Attack', false);
-        AudioPack.sfx('lunge');
-        spawnSwoosh(ANCHOR_X + (e.x - G.playerX) + e.facing * 0.9, 1.5,
-          STREET_Z + e.zoff + 1.0, e.boss ? 1.8 : 1.35, e.facing, 1.0, -1.2, 0xff9a7a);
-        if (e.boss) { e.vy = 7.5; e.jumpY = 0.001; }
+      if (e.t >= (e.teleDur || 0.35)) startDogAttack(e);
+    } else if (e.state === 'strike' && e.move !== 'slam') {
+      /* BITE: clip-timed (1.50 s; boss plays it at 0.85x). A short
+         closing drive early — the clip adds its own root travel —
+         then the jaws CLAMP at clip t=0.46 s: on connect Miso is
+         HELD (bitT) and shaken in the jaws, then tossed by the
+         clip's release beat. Damage lands once, at the clamp. */
+      const ts = e.boss ? 0.85 : 1, ct = e.t * ts;
+      if (ct < 0.36) e.x += e.facing * e.speed * 2.1 * edt;
+      /* the clamp is checked across the whole pass (ct 0.30-0.62),
+         not at one instant: the lunge carries the dog THROUGH
+         Miso's position, and the jaws grab him as they cross */
+      if (!e.strikeHitDone && ct >= 0.30 && ct <= 0.62) {
+        if (Math.abs(G.playerX - e.x) < 1.55 && G.jumpY < 1.15) {
+          e.strikeHitDone = true;
+          G.bitT = 0.52 * (e.boss ? 1.35 : 1); G.bitDog = e;
+          hurtPlayer(e.x);
+          AudioPack.sfx('snap');
+          if (G.hearts <= 0) { G.bitT = 0; G.bitDog = null; }
+        }
       }
+      if (e.t > 1.5 / ts) { e.state = 'chase'; e.t = 0; }
+    } else if (e.state === 'swipe') {
+      /* two-hit paw combo: clip windows at 0.30 s and 0.56 s.
+         Player invulnerability between hits means at most one
+         heart per combo — the second swipe threatens position */
+      const ts = e.boss ? 0.85 : 1, ct = e.t * ts;
+      if (ct < 0.3) e.x += e.facing * e.speed * 1.1 * edt;
+      if (!(e.swipHit & 1) && ct > 0.30) {
+        e.swipHit |= 1;
+        if (ct < 0.52 && Math.abs(G.playerX - e.x) < 1.65 && G.jumpY < 1.15) hurtPlayer(e.x);
+      }
+      if (!(e.swipHit & 2) && ct > 0.56) {
+        e.swipHit |= 2;
+        if (ct < 0.78 && Math.abs(G.playerX - e.x) < 1.65 && G.jumpY < 1.15) hurtPlayer(e.x);
+      }
+      if (e.t > 0.92 / ts) { e.state = 'chase'; e.t = 0; }
+    } else if (e.state === 'jumpkick') {
+      /* leap-in kick: the clip leaves the ground (root travel is
+         internal); the game drives the approach during the arc */
+      const ts = e.boss ? 0.85 : 1, ct = e.t * ts;
+      if (ct > 0.22 && ct < 0.66) e.x += e.facing * e.speed * 3.1 * edt;
+      if (!e.strikeHitDone && ct > 0.40) {
+        e.strikeHitDone = true;
+        if (Math.abs(G.playerX - e.x) < 1.35 && G.jumpY < 1.7) hurtPlayer(e.x);
+      }
+      if (e.t > 1.0 / ts) { e.state = 'chase'; e.t = 0; e.jumpCd = 2.6; }
+    } else if (e.state === 'uppercut') {
+      /* rising paw at clip t=0.375 s — connects, Miso gets POPPED
+         into the air (the launch is the read) */
+      const ts = e.boss ? 0.85 : 1, ct = e.t * ts;
+      if (!e.strikeHitDone && ct > 0.36) {
+        e.strikeHitDone = true;
+        if (Math.abs(G.playerX - e.x) < 1.4 && G.jumpY < 1.2) {
+          hurtPlayer(e.x);
+          if (G.hearts > 0) { G.vy = 8.6; G.jumpY = Math.max(G.jumpY, 0.02); }
+        }
+      }
+      if (e.t > 0.83 / ts) { e.state = 'chase'; e.t = 0; e.upperCd = 3.2; }
+    } else if (e.state === 'throwing') {
+      if (e.t > 0.5) { e.state = 'chase'; e.t = 0; }
     } else if (e.state === 'strike') {
       if (e.boss) {
         /* ground slam: rises, falls, shockwave on landing */
@@ -2235,25 +2574,29 @@ function updateStreet(dt, inp) {
           }
         }
         if (e.t > 0.85) { e.state = 'chase'; e.t = 0; }
-      } else {
-        /* committed lunge: faster drive, hit checked across the
-           whole pass-through window instead of one instant */
-        e.x += e.facing * e.speed * 3.4 * edt;
-        if (!e.strikeHitDone && e.t > 0.05) {
-          if (Math.abs(G.playerX - e.x) < 1.05 && G.jumpY < 1.15) {
-            e.strikeHitDone = true;
-            hurtPlayer(e.x);
-          } else if (e.t > 0.32) e.strikeHitDone = true;
-        }
-        if (e.t > 0.45) { e.state = 'chase'; e.t = 0; }
       }
-    } else { /* chase */
+    } else { /* chase: approach, and pick an attack by range band —
+       close: bite / uppercut (boss adds his slam), mid: swipe,
+       far: jump kick or a thrown bone */
       if (adx > e.reach * 0.82) {
         e.facing = Math.sign(dx) || 1;
         e.x += e.facing * e.speed * edt;
-      } else if (G.jumpY < 1.2) {
-        e.state = 'telegraph'; e.t = 0;
-        AudioPack.sfx('bark');
+      }
+      if (G.jumpY < 1.2 || adx > 3.4) {
+        let move = null, tele = 0.35;
+        if (adx <= e.reach * 0.82) {
+          const r = Math.random();
+          if (e.boss && r < 0.30) { move = 'slam'; tele = 0.42; }
+          else if (e.upperCd <= 0 && r < 0.45) { move = 'uppercut'; tele = 0.32; }
+          else { move = 'bite'; tele = e.boss ? 0.42 : 0.35; }
+        } else if (adx <= 3.1) { move = 'swipe'; tele = 0.3; }
+        else if (adx <= 5.4 && e.jumpCd <= 0 && Math.random() < 0.5) { move = 'jumpkick'; tele = 0.38; }
+        else if (adx > 4.6 && adx <= 10.5 && e.boneCd <= 0) { move = 'bonethrow'; tele = 0.45; }
+        if (move) {
+          e.move = move; e.teleDur = tele * (e.boss ? 1.15 : 1);
+          e.state = 'telegraph'; e.t = 0; e.swipHit = 0;
+          AudioPack.sfx('bark');
+        }
       }
     }
     /* separation so dogs don't stack */
@@ -2279,6 +2622,15 @@ function updateStreet(dt, inp) {
           const p = 1 - e.squashT / 0.22;
           const sq = Math.sin(p * Math.PI);
           innerScale(e.pose, 1 + 0.17 * sq, 1 - 0.14 * sq, 1);
+        }
+      }
+      /* bone prop: shown only while winding up a throw */
+      if (e.boneProp) {
+        const show = e.state === 'telegraph' && e.move === 'bonethrow';
+        e.boneProp.visible = show;
+        if (show) {
+          e.boneProp.position.set(0.5, DOG_STATS[e.type].height * 0.6, 0.42);
+          e.boneProp.rotation.z = Math.sin(G.time * 6) * 0.45;
         }
       }
       /* white emissive flash on the hit enemy */
@@ -2329,13 +2681,21 @@ function updateStreet(dt, inp) {
 function renderMisoStreet(dt, moving) {
   const breathe = Math.sin(G.time * 2.1) * 0.03;
   misoG.position.set(ANCHOR_X, swing.on ? swing.py : G.jumpY + (moving ? 0 : breathe), STREET_Z);
-  /* lean into the swing arc */
-  misoG.rotation.z = swing.on ? -swing.th * 0.42 : 0;
+  /* lean into the swing arc; bitten = shaken ragdoll wiggle */
+  misoG.rotation.z = (G.bitT > 0) ? Math.sin(G.time * 34) * 0.15
+    : swing.on ? -swing.th * 0.42 : 0;
   const targetRot = G.facing > 0 ? 0 : Math.PI;
-  let d = targetRot - misoG.rotation.y;
-  while (d > Math.PI) d -= Math.PI * 2;
-  while (d < -Math.PI) d += Math.PI * 2;
-  misoG.rotation.y += d * Math.min(1, dt * 14);
+  if (misoAtk.kind === 'spinkick') {
+    /* full 360: a complete turn lands back on the same facing, so
+       the normal facing lerp below resumes seamlessly afterwards */
+    const u = Math.min(1, misoAtk.t / misoAtk.dur);
+    misoG.rotation.y = targetRot - u * Math.PI * 2 * G.facing;
+  } else {
+    let d = targetRot - misoG.rotation.y;
+    while (d > Math.PI) d -= Math.PI * 2;
+    while (d < -Math.PI) d += Math.PI * 2;
+    misoG.rotation.y += d * Math.min(1, dt * 14);
+  }
   if (miso.char && miso.char.mixer) {
     /* pose overrides: undo last frame's deltas, let the mixer write
        the base pose (frozen during hit-stop), then layer the attack */
@@ -2362,13 +2722,36 @@ function renderMisoStreet(dt, moving) {
       spawnPawRipple(ANCHOR_X + (Math.random() - 0.5) * 0.4, STREET_Z + 0.9);
     }
   }
-  /* yarn ball + string render: a throw in flight, or the taut
-     swing line from Miso's paw up to the anchor ring */
-  const showYarn = yarn.active || swing.on;
+  /* yarn ball + string render: a throw in flight, the taut swing
+     line to the anchor ring, a charging ball swelling at the paw,
+     or the slam ball arcing down onto the impact point */
+  const showYarn = yarn.active || swing.on || yarn.charging || !!yarnSlamFx;
   yarnBall.visible = showYarn;
-  yarnString.visible = showYarn;
-  if (swing.on && !yarn.active) {
+  yarnString.visible = showYarn && !yarn.charging;
+  if (yarnSlamFx) {
+    const k = Math.min(1, yarnSlamFx.t / 0.3);
+    const bx = ANCHOR_X + (yarnSlamFx.x - G.playerX);
+    const by = 3.1 - k * k * 2.7;
+    yarnBall.scale.setScalar(1.6);
+    yarnBall.position.set(bx, by, STREET_Z);
+    const pos = stringGeo.attributes.position.array;
+    const px = ANCHOR_X + G.facing * 0.4, py = 1.6 + G.jumpY;
+    for (let i = 0; i < STRING_PTS; i++) {
+      const kk = i / (STRING_PTS - 1);
+      pos[i * 3] = px + (bx - px) * kk;
+      pos[i * 3 + 1] = py + (by - py) * kk + Math.sin(kk * Math.PI) * 0.3;
+      pos[i * 3 + 2] = STREET_Z;
+    }
+    stringGeo.attributes.position.needsUpdate = true;
+  } else if (yarn.charging) {
+    /* held at the paw, swelling as it charges; pulses when READY */
+    const full = Math.min(1, yarn.chargeT / CHARGE_NEED);
+    const ready = yarn.chargeT >= CHARGE_NEED && powerCd <= 0;
+    yarnBall.scale.setScalar(1 + full * 0.9 + (ready ? Math.sin(G.time * 24) * 0.12 : 0));
+    yarnBall.position.set(ANCHOR_X + G.facing * 0.55, 1.45 + G.jumpY, STREET_Z);
+  } else if (swing.on && !yarn.active) {
     const ax = ANCHOR_X + (swing.ax - G.playerX), ay = ANCHOR_Y;
+    yarnBall.scale.setScalar(1);
     yarnBall.position.set(ax, ay, STREET_Z);
     const pos = stringGeo.attributes.position.array;
     const px = ANCHOR_X + G.facing * 0.35, py = swing.py + 1.3;
@@ -2380,6 +2763,7 @@ function renderMisoStreet(dt, moving) {
     }
     stringGeo.attributes.position.needsUpdate = true;
   } else if (showYarn) {
+    yarnBall.scale.setScalar(1);
     const bx = ANCHOR_X + yarn.dir * yarn.dist;
     const by = 1.3 + Math.sin(Math.min(yarn.dist / 7.5, 1) * Math.PI) * 0.45 + G.jumpY;
     yarnBall.position.set(bx, by, STREET_Z);
@@ -2632,6 +3016,88 @@ function updateRunner(dt, inp) {
   if (R.t >= R.dur) exitRunner();
 }
 
+/* ---------------------- dog bone projectiles ----------------------
+   Symmetry with Miso's yarn: dogs THROW BONES. The wind-up tell is
+   the telegraph pose + the bone prop in the raised paw; the throw
+   arcs with gravity. Miso can jump or dodge it — or SWAT it back
+   with any melee swing: a deflected bone hurts dogs. */
+function makeBoneMesh(scale = 1) {
+  const g = new THREE.Group();
+  const m = new THREE.MeshBasicMaterial({ color: 0xf3ead8 });
+  const shaft = new THREE.Mesh(new THREE.CylinderGeometry(0.09, 0.09, 0.62, 8), m);
+  shaft.rotation.z = Math.PI / 2;
+  g.add(shaft);
+  for (const sx of [-0.31, 0.31]) for (const sy of [-0.11, 0.11]) {
+    const s = new THREE.Mesh(new THREE.SphereGeometry(0.15, 10, 8), m);
+    s.position.set(sx, sy, 0);
+    g.add(s);
+  }
+  g.scale.setScalar(scale);
+  return g;
+}
+const bones = [];
+function spawnBone(x, zoff, dir, opts = {}) {
+  let b = bones.find(bb => !bb.active);
+  if (!b) {
+    if (bones.length >= 6) return;
+    b = { mesh: makeBoneMesh(1), active: false, x: 0, y: 0, zoff: 0,
+          vx: 0, vy: 0, spin: 0, t: 0, deflected: false };
+    scene.add(b.mesh);
+    bones.push(b);
+  }
+  b.mesh.scale.setScalar(opts.big ? 1.55 : 1);
+  b.active = true; b.deflected = false;
+  b.x = x; b.y = opts.y || 1.9; b.zoff = zoff;
+  b.vx = dir * (opts.speed || 7); b.vy = opts.vy || 5.6;
+  b.spin = dir * 9; b.t = 0;
+  b.mesh.visible = true;
+}
+function updateBones(dt) {
+  for (const b of bones) {
+    if (!b.active) continue;
+    b.t += dt;
+    b.vy -= 17 * dt;
+    b.x += b.vx * dt;
+    b.y += b.vy * dt;
+    b.mesh.rotation.z += b.spin * dt;
+    b.mesh.position.set(ANCHOR_X + (b.x - G.playerX), b.y, STREET_Z + b.zoff + 0.55);
+    const misoCY = 1.05 + G.jumpY;
+    /* deflect: an active melee swing in the bone's path swats it
+       back toward the dogs */
+    if (!b.deflected && misoAtk.kind && misoAtk.t >= (misoAtk.hitAt || 0) * 0.6) {
+      const d = (b.x - G.playerX) * G.facing;
+      if (d > 0 && d < 2.4 && Math.abs(b.y - misoCY) < 1.35) {
+        b.deflected = true;
+        b.vx = -b.vx * 1.15;
+        b.vy = 6.5;
+        AudioPack.sfx('kickhit');
+        spawnPopup('kick', ANCHOR_X + (b.x - G.playerX), b.y + 0.8, STREET_Z + b.zoff + 0.9, 0.8);
+        continue;
+      }
+    }
+    if (b.deflected) {
+      let hitDog = false;
+      for (const e of enemies) {
+        if (!e.dead && Math.abs(e.x - b.x) < 0.85 && Math.abs(b.y - 1.2) < 1.35) {
+          hurtEnemy(e, 1, Math.sign(b.vx) || 1, 'kick');
+          hitDog = true;
+          break;
+        }
+      }
+      if (hitDog) { b.active = false; b.mesh.visible = false; continue; }
+    } else if (Math.abs(b.x - G.playerX) < 0.72 && Math.abs(b.y - misoCY) < 1.0) {
+      hurtPlayer(b.x);
+      spawnPopup('bone', ANCHOR_X, 2.6, STREET_Z + 1.3, 0.95);
+      b.active = false; b.mesh.visible = false;
+      continue;
+    }
+    if (b.y <= 0.22 || b.t > 4) {
+      spawnImpactBurst(ANCHOR_X + (b.x - G.playerX), 0.5, STREET_Z + b.zoff + 0.6, 0.5, 0xd8cdb4);
+      b.active = false; b.mesh.visible = false;
+    }
+  }
+}
+
 /* ---------------------------- game flow ---------------------------- */
 const zoneCur = { tint: new THREE.Color(1, 1, 1), fog: scene.fog.color.clone(), music: 0.3 };
 let zoneTarget = { name: 'amber', tint: ZONE_STYLE.amber.tint, fog: ZONE_STYLE.amber.fog, music: ZONE_STYLE.amber.music };
@@ -2684,7 +3150,7 @@ function startGame() {
   G.sectionIdx = 0;
   setupSection();
   showPrompt(section().label + '<small>clear the street!</small>', 2.8);
-  hintEl.textContent = '←/→ move • ↑ jump • Z punch • C kick • X yarn — by a lamp pole: X hooks it, swing + Z kick!';
+  hintEl.textContent = '←/→ move • ↑ jump • Z punch (×3 = combo) • C kick • move+C spin • ↓+Z uppercut • hold X = yarn slam — by a lamp pole: X hooks it, swing + Z kick!';
   setTimeout(() => { if (G.mode === 'street') hintEl.textContent = ''; }, 10000);
 }
 function resetGame() {
@@ -2693,7 +3159,7 @@ function resetGame() {
   updateHearts(); updateScore();
   setupSection();
   showPrompt(section().label + '<small>clear the street!</small>', 2.8);
-  hintEl.textContent = '←/→ move • ↑ jump • Z punch • C kick • X yarn — by a lamp pole: X hooks it, swing + Z kick!';
+  hintEl.textContent = '←/→ move • ↑ jump • Z punch (×3 = combo) • C kick • move+C spin • ↓+Z uppercut • hold X = yarn slam — by a lamp pole: X hooks it, swing + Z kick!';
 }
 function fmtTime(s) {
   const m = Math.floor(s / 60), ss = Math.floor(s % 60);
@@ -2753,6 +3219,16 @@ window.__debug = {
   swing,
   forceHook: () => tryHook(true),
   releaseSwing: () => { if (swing.on) releaseSwing(); },
+  /* attack-overhaul hooks (Flow F probes + attack stills) */
+  yarn,
+  bones,
+  get powerCd() { return powerCd; },
+  forceAttack: (e, move) => {
+    e.move = move;
+    e.teleDur = move === 'bonethrow' ? 0.45 : move === 'bite' ? 0.35 : 0.3;
+    e.state = 'telegraph'; e.t = 0; e.swipHit = 0;
+  },
+  forceBone: e => { e.move = 'bonethrow'; e.teleDur = 0.45; e.state = 'telegraph'; e.t = 0; },
   setEnemyX: (e, x) => { e.x = x; },
   occluderState: () => fgProps.map(p => ({
     x: p.def.x, kind: p.def.kind, seam: !!p.def.seam, hook: !!p.def.hook,
@@ -2995,6 +3471,11 @@ function animate() {
   wg.kicks = G.kicks;
   wg.enemies = enemies.map(e => ({ type: e.type, hp: e.hp, x: Math.round(e.x * 10) / 10, state: e.state }));
   wg.swinging = swing.on;
+  wg.bitT = Math.round(G.bitT * 100) / 100;
+  wg.bonesActive = bones.filter(b => b.active).length;
+  wg.combo = comboStep;
+  wg.powerCd = Math.round(powerCd * 100) / 100;
+  wg.chargeT = Math.round(yarn.chargeT * 100) / 100;
   wg.swingLine = swing.on;
   wg.anchorX = swing.on ? swing.ax : (nearAnchor ? nearAnchor.x : null);
 }
