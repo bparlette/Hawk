@@ -14,7 +14,12 @@
  *
  * ?auto=1 runs a kiting bot (spectate / filming mode). window.__dbg
  * exposes live state for verification.
+ *
+ * Mobile controls follow the gamepress touch standard (docs/TOUCH.md):
+ * kit gptouch.js — floating stick on the left half, A/B buttons
+ * bottom-right, merged with the keyboard below.
  */
+import { TouchController, isTouchDevice } from './gptouch.js';
 
 // ---------------------------------------------------------------- utils
 const TAU = Math.PI * 2;
@@ -339,6 +344,27 @@ function gainXp(v) {
   while (xp >= xpNeed(level)) { xp -= xpNeed(level); level++; pendingDrafts++; }
 }
 
+// ---------------------------------------------------------------- touch (gamepress standard)
+// Floating stick anchors under the thumb anywhere on the LEFT half;
+// circular A/B buttons bottom-right; PointerEvent pointerId isolation;
+// getInput() merged with the keyboard in readInput() (keyboard OR touch).
+// Weapons auto-fire and this game has no dash/pause action, so the A/B
+// buttons are present per the standard but intentionally unwired.
+// The touch overlay exists only while state==='play': splash, draft and
+// game-over are DOM overlays whose own taps (INSERT COIN, upgrade cards,
+// RUN IT BACK) the full-screen touch layer would otherwise swallow.
+let TC = null;
+function syncTouch() {
+  const want = state === 'play' && !AUTO && isTouchDevice();
+  if (want && !TC) {
+    TC = new TouchController({
+      buttons: [ { id: 'a', label: '⚔' }, { id: 'b', label: '🛡' } ],
+      maxRadius: 56,   // stick throw, px
+      deadzone: 0.18,  // stick deadzone 0..1
+    });
+  } else if (!want && TC) { TC.destroy(); TC = null; }
+}
+
 // ---------------------------------------------------------------- input & bot
 const keys = {};
 addEventListener('keydown', e => {
@@ -359,8 +385,13 @@ function readInput() {
   if (keys.KeyD || keys.ArrowRight) x += 1;
   if (keys.KeyW || keys.ArrowUp) y -= 1;
   if (keys.KeyS || keys.ArrowDown) y += 1;
+  // touch stick merged with the keyboard: whichever is active drives.
+  // Keyboard keeps its exact unit-vector behavior; the stick stays
+  // analog; combined input is clamped to unit length.
+  const ti = TC ? TC.getInput() : null;
+  if (ti) { x += ti.x; y += ti.y; }
   const l = Math.hypot(x, y);
-  return l > 0 ? { x: x / l, y: y / l } : { x: 0, y: 0 };
+  return l > 1 ? { x: x / l, y: y / l } : { x, y };
 }
 function botInput() {
   // kite: weighted push away from every nearby enemy; drift to gems when safe;
@@ -668,6 +699,7 @@ function drawHUD() {
 let lastTs = 0, acc = 0;
 function loop(ts) {
   requestAnimationFrame(loop);
+  syncTouch();
   const frameDt = Math.min(0.1, (ts - lastTs) / 1000 || 0.016); lastTs = ts;
   if (frameDt > 0) fpsEMA += ((1 / frameDt) - fpsEMA) * 0.05;
   if (hitstop > 0) { hitstop -= frameDt; draw(); return; }   // kill freeze-frame
@@ -681,6 +713,7 @@ function loop(ts) {
   const typeTally = { drone: 0, flanker: 0, tank: 0 };
   enemies.each(e => { typeTally[e.type]++; });
   window.__dbg = {
+    x: Math.round(player.x), y: Math.round(player.y),
     hp: Math.ceil(player.hp), maxHp: player.maxHp, level, wave: director.wave,
     kills, enemies: enemies.count(), types: typeTally, xp, state, fps: Math.round(fpsEMA),
     time: Math.round(totalTime), gems: gems.count(), audio: Snd.state(),
