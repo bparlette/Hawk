@@ -7,12 +7,15 @@
 // B throws) and the game-over path.
 // Real JS errors fail the run; external resource failures (fonts CDN is
 // blocked by the sandbox proxy) are noted only.
-import { chromium } from '/home/hatch/workspace/hoa-warfare/node_modules/playwright/index.mjs';
+import { createRequire } from 'node:module';
+import { fileURLToPath } from 'node:url';
+const _req = createRequire(process.env.PW_DIR ? process.env.PW_DIR + '/' : import.meta.url);
+const { chromium } = _req(process.env.PW_PKG || 'playwright');
 import fs from 'node:fs';
 import path from 'node:path';
 import crypto from 'node:crypto';
 
-const ROOT = '/home/hatch/workspace/miso-city-game';
+const ROOT = process.env.GAME_ROOT || path.dirname(fileURLToPath(import.meta.url));
 const MIME = {
   '.html': 'text/html', '.js': 'text/javascript', '.webp': 'image/webp',
   '.png': 'image/png', '.json': 'application/json', '.css': 'text/css',
@@ -21,13 +24,15 @@ const MIME = {
 /* headless Chromium refuses WebGL without the Hatch domain policy:
    hand it the installed policy file plus its sha256, per the runtime */
 const POLICY = '/var/lib/hatch-browser/rootfs-base/usr/share/hatch/chromium/webgl-allowed-domains.txt';
-const policySha = crypto.createHash('sha256').update(fs.readFileSync(POLICY)).digest('hex');
+const hatch = fs.existsSync(POLICY);
+const policyArgs = hatch ? [
+  '--hatch-webgl-allowed-domains-file=' + POLICY,
+  '--hatch-webgl-allowed-domains-sha256=' +
+    crypto.createHash('sha256').update(fs.readFileSync(POLICY)).digest('hex')] : [];
 const browser = await chromium.launch({
-  executablePath: '/opt/meta-chromium/chrome',
+  executablePath: process.env.CHROME_PATH || (hatch ? '/opt/meta-chromium/chrome' : undefined),
   args: ['--no-sandbox', '--use-gl=angle', '--use-angle=swiftshader',
-         '--enable-unsafe-swiftshader', '--disable-gpu-sandbox',
-         '--hatch-webgl-allowed-domains-file=' + POLICY,
-         '--hatch-webgl-allowed-domains-sha256=' + policySha]
+         '--enable-unsafe-swiftshader', '--disable-gpu-sandbox', ...policyArgs]
 });
 const results = [];
 function check(name, ok, detail = '') {
