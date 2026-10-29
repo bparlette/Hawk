@@ -1,0 +1,2905 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<title>Miso City — Ninja Cat vs the Dog Gang</title>
+<style>
+  html, body { margin:0; padding:0; height:100%; background:#05090f; overflow:hidden; touch-action:none; }
+  #app { position:fixed; inset:0; }
+  canvas { display:block; }
+  /* ------------------------------ game HUD ------------------------------ */
+  #hud { position:fixed; inset:0; pointer-events:none; z-index:60;
+         font-family:"Jost","Avenir Next","Segoe UI",sans-serif; color:#f4ecdc; }
+  #hud .row { position:absolute; top:14px; left:16px; right:16px;
+              display:flex; justify-content:space-between; align-items:flex-start; }
+  #hearts { font-size:30px; letter-spacing:3px; text-shadow:0 2px 10px rgba(0,0,0,.75); }
+  #hearts .off { opacity:.22; filter:grayscale(1); }
+  #districtLabel { font-family:"Cinzel",serif; font-size:19px; font-weight:600;
+                   letter-spacing:4px; text-transform:uppercase; text-align:center;
+                   text-shadow:0 2px 12px rgba(0,0,0,.85); padding-top:4px; }
+  #districtSub { display:block; font-family:"Jost",sans-serif; font-size:11px; font-weight:400;
+                 letter-spacing:3px; opacity:.75; margin-top:2px; }
+  #scoreBox { font-size:21px; letter-spacing:1px; text-shadow:0 2px 10px rgba(0,0,0,.75); text-align:right; }
+  #scoreBox .star { color:#ffd75e; }
+  #bossWrap { position:absolute; left:50%; bottom:26px; transform:translateX(-50%);
+              width:min(520px,72vw); display:none; }
+  #bossName { font-family:"Cinzel",serif; font-size:13px; letter-spacing:3px; text-align:center;
+              margin-bottom:5px; text-shadow:0 2px 8px rgba(0,0,0,.9); }
+  #bossBarOuter { height:11px; border:1px solid rgba(244,236,220,.65); border-radius:6px;
+                  background:rgba(4,6,10,.62); overflow:hidden; }
+  #bossBar { height:100%; width:100%; background:linear-gradient(90deg,#c93b4a,#ef6a5a);
+             transition:width .25s ease; }
+  #prompt { position:absolute; left:50%; top:24%; transform:translateX(-50%);
+            font-family:"Cinzel",serif; font-size:clamp(19px,3.4vw,31px); font-weight:600;
+            letter-spacing:3px; text-align:center; white-space:nowrap;
+            text-shadow:0 3px 16px rgba(0,0,0,.92); opacity:0; transition:opacity .35s ease; }
+  #prompt small { display:block; font-family:"Jost",sans-serif; font-size:13px; font-weight:400;
+                  letter-spacing:2px; opacity:.85; margin-top:7px; }
+  #hint { position:absolute; left:50%; bottom:20px; transform:translateX(-50%);
+          font-size:13.5px; letter-spacing:1.6px; opacity:.72; text-align:center; white-space:nowrap;
+          text-shadow:0 2px 8px rgba(0,0,0,.9); }
+  #panel { position:absolute; inset:0; display:none; align-items:center; justify-content:center;
+           flex-direction:column; background:rgba(3,5,9,.55); pointer-events:auto; text-align:center; }
+  #panel h1 { font-family:"Cinzel",serif; font-size:clamp(34px,6.5vw,60px); margin:0 0 8px;
+              letter-spacing:5px; text-shadow:0 4px 22px rgba(0,0,0,.9); }
+  #panel p { font-size:18px; letter-spacing:1.5px; margin:4px 0 22px; opacity:.92; }
+  #panel button { pointer-events:auto; cursor:pointer; font-family:"Cinzel",serif; font-size:18px;
+                  letter-spacing:3px; color:#0b0f16; background:#f0a13a; border:0; border-radius:9px;
+                  padding:13px 36px; box-shadow:0 6px 22px rgba(0,0,0,.55); }
+  #panel button:active { transform:scale(.96); }
+  #fade { position:fixed; inset:0; background:#000; opacity:0; pointer-events:none;
+          transition:opacity .28s ease; z-index:70; }
+  #dmgFlash { position:fixed; inset:0; pointer-events:none; z-index:55; opacity:0;
+          background:radial-gradient(ellipse at center, transparent 52%, rgba(190,30,40,.5) 100%); }
+</style>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link data-miso-fonts rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;600&family=Jost:ital,wght@0,300;0,400;1,300&display=swap">
+<link rel="stylesheet" href="shell/shell.css">
+<script type="importmap">
+{
+  "imports": {
+    "three": "./node_modules/three/build/three.module.js",
+    "three/addons/": "./node_modules/three/examples/jsm/"
+  }
+}
+</script>
+</head>
+<body>
+<div id="app" data-miso-stage></div>
+<div id="hud">
+  <div class="row">
+    <div id="hearts"></div>
+    <div id="districtLabel">MISO CITY<span id="districtSub">ninja cat vs the dog gang</span></div>
+    <div id="scoreBox"><span class="star">★</span> <span id="scoreVal">0</span></div>
+  </div>
+  <div id="bossWrap"><div id="bossName">BIG BRUNO — AMERICAN BULLDOG</div>
+    <div id="bossBarOuter"><div id="bossBar"></div></div></div>
+  <div id="prompt"></div>
+  <div id="hint"></div>
+  <div id="panel"><h1 id="panelTitle"></h1><p id="panelText"></p><button id="panelBtn">PLAY AGAIN</button></div>
+</div>
+<div id="dmgFlash"></div>
+<div id="fade"></div>
+
+<script type="module">
+import * as THREE from 'three';
+import { Reflector } from 'three/addons/objects/Reflector.js';
+import { EffectComposer } from 'three/addons/postprocessing/EffectComposer.js';
+import { RenderPass } from 'three/addons/postprocessing/RenderPass.js';
+import { UnrealBloomPass } from 'three/addons/postprocessing/UnrealBloomPass.js';
+import { OutputPass } from 'three/addons/postprocessing/OutputPass.js';
+import { ShaderPass } from 'three/addons/postprocessing/ShaderPass.js';
+import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
+import { clone as SkeletonClone } from 'three/addons/utils/SkeletonUtils.js';
+import * as AudioPack from './audio/audio.js';
+import { TouchController, isTouchDevice } from './gptouch.js';
+
+/* adaptive audio: graph built suspended; unlock happens on the start tap */
+AudioPack.init();
+if (window.Shell) {
+  window.Shell.onSoundTap = async () => { await AudioPack.unlock(); };
+}
+
+const FLAGS = new URLSearchParams(location.search);
+const app = document.getElementById('app');
+const renderer = new THREE.WebGLRenderer({ antialias: false, powerPreference: 'high-performance' });
+renderer.setPixelRatio(Math.min(window.devicePixelRatio, 1.5));
+renderer.setSize(window.innerWidth, window.innerHeight);
+renderer.toneMapping = THREE.ACESFilmicToneMapping;
+renderer.toneMappingExposure = 1.06;
+app.appendChild(renderer.domElement);
+
+const scene = new THREE.Scene();
+scene.background = new THREE.Color(0x060b14);
+scene.fog = new THREE.FogExp2(0x0a141f, 0.0072);
+
+const camera = new THREE.PerspectiveCamera(27, window.innerWidth / window.innerHeight, 0.1, 600);
+function camDistance() {
+  const a = window.innerWidth / window.innerHeight;
+  if (a >= 1.25) return 33;
+  if (a >= 0.9)  return 42;
+  return 54;
+}
+/* Street + boss framing sits ~12% closer than the title/walk framing —
+   playtests said the fighters read small. Mode 'street' covers both
+   fighter sections (the boss block is a street section); title/win/over
+   keep the wide framing and the runner has its own camera entirely.
+   Visual only: no world position, hitbox or scale changes. */
+const STREET_CAM_TIGHTEN = 0.88;
+function camZ() {
+  return camDistance() * (G.mode === 'street' ? STREET_CAM_TIGHTEN : 1);
+}
+
+/* ---------------------------------- art ---------------------------------- */
+const loadManager = new THREE.LoadingManager();
+window.__artLoaded = false;
+loadManager.onLoad = () => { window.__artLoaded = true; };
+loadManager.onProgress = (url, done, total) => {
+  if (window.Shell && total > 0) window.Shell.setProgress(done / total);
+};
+const texLoader = new THREE.TextureLoader(loadManager);
+function artTex(path, srgb = true) {
+  const t = texLoader.load(path);
+  if (srgb) t.colorSpace = THREE.SRGBColorSpace;
+  t.anisotropy = 4;
+  return t;
+}
+function glowTexture() {
+  const c = document.createElement('canvas'); c.width = c.height = 128;
+  const g = c.getContext('2d');
+  const grad = g.createRadialGradient(64, 64, 2, 64, 64, 64);
+  grad.addColorStop(0, 'rgba(255,255,255,1)');
+  grad.addColorStop(0.25, 'rgba(255,255,255,0.45)');
+  grad.addColorStop(1, 'rgba(255,255,255,0)');
+  g.fillStyle = grad; g.fillRect(0, 0, 128, 128);
+  return new THREE.CanvasTexture(c);
+}
+const glowTex = glowTexture();
+const glows = [];
+function glow(parent, x, y, z, scale, color, opacity = 0.5) {
+  const s = new THREE.Sprite(new THREE.SpriteMaterial({
+    map: glowTex, color, transparent: true, opacity,
+    blending: THREE.AdditiveBlending, depthWrite: false, fog: false
+  }));
+  s.userData.baseOpacity = opacity;
+  s.position.set(x, y, z); s.scale.setScalar(scale);
+  parent.add(s); glows.push(s); return s;
+}
+function canvasTex(w, h, draw) {
+  const c = document.createElement('canvas'); c.width = w; c.height = h;
+  draw(c.getContext('2d'), w, h);
+  return new THREE.CanvasTexture(c);
+}
+
+/* --------------------------- district street strip ---------------------------
+   Segments are 54-unit paintings. LEVEL 1 course (stream order):
+   idx 0-2 AMBER street, idx 3-5 TEAL (framework only in L1 — Level 2),
+   idx 6-8 PINK boss block, then pink padding. Zones are contiguous per
+   district by construction. */
+const SEG_W = 54, SEG_H = 23.5, SEG_Y = 11.45, SEG_Z = -19;
+const segTex = {
+  A: artTex('art/seg-A.webp'), B: artTex('art/seg-B.webp'),
+  C: artTex('art/seg-C.webp'), L: artTex('art/seg-L.webp'),
+  N: artTex('art/seg-N.webp'), P: artTex('art/seg-P.webp'),
+  F: artTex('art/seg-F.webp')
+};
+const texCflip = segTex.C.clone();
+texCflip.wrapS = THREE.RepeatWrapping;
+texCflip.repeat.x = -1;
+texCflip.needsUpdate = true;
+const ZONE_OF = { N: 'amber', B: 'amber', C: 'teal', Cf: 'teal', P: 'teal', L: 'teal', A: 'pink', F: 'pink' };
+const ZONE_STYLE = {
+  amber: { tint: new THREE.Color(1.08, 1.00, 0.88), fog: new THREE.Color(0x16100a), music: 0.55 },
+  teal:  { tint: new THREE.Color(0.90, 1.03, 1.06), fog: new THREE.Color(0x08161a), music: 0.25 },
+  pink:  { tint: new THREE.Color(1.07, 0.94, 1.02), fog: new THREE.Color(0x170f1d), music: 1.00 }
+};
+const segStream = ['N','B','N', 'C','P','L', 'A','F','A', 'F','A','F','A'];
+const segTexByKey = { A: segTex.A, B: segTex.B, C: segTex.C, Cf: texCflip, L: segTex.L, N: segTex.N, P: segTex.P, F: segTex.F };
+const segMeshes = [];
+for (let j = 0; j < 5; j++) {
+  const m = new THREE.Mesh(
+    new THREE.PlaneGeometry(SEG_W, SEG_H),
+    new THREE.MeshBasicMaterial({ fog: true })
+  );
+  m.position.set(0, SEG_Y, SEG_Z);
+  m.userData.streamIdx = -1;
+  glow(m, -15, -4.6, 0.8, 4.0, 0xffa245, 0.30);
+  glow(m,   3, -4.2, 0.8, 3.5, 0xffb056, 0.27);
+  glow(m,  18, -5.0, 0.8, 4.3, 0xff6fa5, 0.22);
+  const cone = glow(m, -6, -3.2, 0.9, 1.0, 0xffa245, 0.05);
+  cone.scale.set(5.5, 11.5, 1);
+  cone.material.rotation = 0.42;
+  scene.add(m);
+  segMeshes.push(m);
+}
+/* far skyline band, 0.38x parallax, two mirror tiles */
+const FAR_W = 78, FAR_SPAN = FAR_W * 2;
+const farTexA = artTex('art/far-skyline.webp');
+const farTexB = farTexA.clone();
+farTexB.wrapS = THREE.RepeatWrapping;
+farTexB.repeat.x = -1;
+farTexB.needsUpdate = true;
+const farPlanes = [0, 1].map(k => {
+  const m = new THREE.Mesh(
+    new THREE.PlaneGeometry(FAR_W, 13.4),
+    new THREE.MeshBasicMaterial({ map: k ? farTexB : farTexA, fog: true })
+  );
+  m.material.color.set(0x77879c);
+  m.position.set(0, 14.6, -38);
+  m.userData.base = k * FAR_W;
+  scene.add(m);
+  return m;
+});
+function bottomFade(frac = 0.16) {
+  const c = document.createElement('canvas'); c.width = 256; c.height = 256;
+  const g = c.getContext('2d');
+  const grad = g.createLinearGradient(0, 0, 0, 256);
+  grad.addColorStop(0, '#ffffff');
+  grad.addColorStop(1 - frac, '#ffffff');
+  grad.addColorStop(1, '#000000');
+  g.fillStyle = grad; g.fillRect(0, 0, 256, 256);
+  g.globalCompositeOperation = 'destination-in';
+  const side = g.createLinearGradient(0, 0, 256, 0);
+  side.addColorStop(0, '#000000');
+  side.addColorStop(0.26, '#ffffff');
+  side.addColorStop(0.74, '#ffffff');
+  side.addColorStop(1, '#000000');
+  g.fillStyle = side; g.fillRect(0, 0, 256, 256);
+  return new THREE.CanvasTexture(c);
+}
+const fadeTex = bottomFade();
+function paintedPlane(path, w, h, opts = {}) {
+  return new THREE.Mesh(
+    new THREE.PlaneGeometry(w, h),
+    new THREE.MeshBasicMaterial({ map: artTex(path), fog: true, ...opts })
+  );
+}
+const cart = paintedPlane('art/near-noodle.webp', 10.5, 4.18, { transparent: true, alphaMap: fadeTex });
+cart.position.set(-10.6, 2.09, -7);
+cart.rotation.y = 0.10;
+glow(cart, 0.2, 1.0, 0.6, 2.8, 0xffa245, 0.36);
+scene.add(cart);
+const stall = paintedPlane('art/near-stall2.webp', 9, 5.38, { transparent: true, alphaMap: fadeTex });
+stall.position.set(10.9, 2.69, -8);
+stall.rotation.y = -0.13;
+glow(stall, 0, 0.7, 0.6, 3.0, 0xff8f4d, 0.32);
+scene.add(stall);
+const nearTracks = [
+  { mesh: cart,  period: 210, phase: 105.6 },
+  { mesh: stall, period: 267, phase: 84.1 }
+];
+/* foreground awning + hanging sign (close depth layers) */
+const awningTex = canvasTex(1024, 256, (ctx, W, H) => {
+  ctx.fillStyle = 'rgba(4,6,11,0.97)';
+  ctx.fillRect(0, 0, W, 132);
+  for (let x = 32; x < W; x += 64) { ctx.beginPath(); ctx.arc(x, 132, 32, 0, 7); ctx.fill(); }
+  const shade = ctx.createLinearGradient(0, 0, 0, 170);
+  shade.addColorStop(0, 'rgba(16,24,36,0.55)'); shade.addColorStop(1, 'rgba(0,0,0,0)');
+  ctx.fillStyle = shade; ctx.fillRect(0, 0, W, 170);
+  ctx.strokeStyle = 'rgba(0,0,0,0.85)'; ctx.lineWidth = 3;
+  ctx.beginPath(); ctx.moveTo(0, 36); ctx.quadraticCurveTo(W / 2, 116, W, 26); ctx.stroke();
+  ctx.beginPath(); ctx.moveTo(0, 92); ctx.quadraticCurveTo(W / 2, 158, W, 78); ctx.stroke();
+  for (const lx of [150, 420, 690, 920]) {
+    ctx.strokeStyle = 'rgba(0,0,0,0.9)'; ctx.lineWidth = 2;
+    ctx.beginPath(); ctx.moveTo(lx, 150); ctx.lineTo(lx, 178); ctx.stroke();
+    ctx.fillStyle = 'rgba(2,3,6,0.98)';
+    ctx.beginPath(); ctx.ellipse(lx, 198, 15, 21, 0, 0, 7); ctx.fill();
+    const core = ctx.createRadialGradient(lx, 198, 0, lx, 198, 10);
+    core.addColorStop(0, 'rgba(255,176,84,0.95)'); core.addColorStop(1, 'rgba(255,176,84,0)');
+    ctx.fillStyle = core;
+    ctx.beginPath(); ctx.arc(lx, 198, 10, 0, 7); ctx.fill();
+  }
+});
+const awning = new THREE.Mesh(
+  new THREE.PlaneGeometry(46, 11.5),
+  new THREE.MeshBasicMaterial({ map: awningTex, transparent: true, depthWrite: false, fog: false })
+);
+awning.position.set(0, 12.4, 4.5);
+awning.renderOrder = 8;
+scene.add(awning);
+const fgSignTex = canvasTex(256, 512, (ctx, W, H) => {
+  ctx.fillStyle = 'rgba(4,7,12,0.96)';
+  ctx.beginPath(); ctx.roundRect(14, 14, W - 28, H - 28, 18); ctx.fill();
+  ctx.strokeStyle = 'rgba(130,170,190,0.35)'; ctx.lineWidth = 3;
+  ctx.beginPath(); ctx.roundRect(26, 26, W - 52, H - 52, 12); ctx.stroke();
+  ctx.strokeStyle = 'rgba(94,234,212,0.55)'; ctx.lineWidth = 7; ctx.lineCap = 'round';
+  for (let r = 0; r < 3; r++) {
+    const y = 110 + r * 120;
+    ctx.beginPath();
+    ctx.moveTo(70, y); ctx.lineTo(186, y);
+    ctx.moveTo(128, y - 34); ctx.lineTo(128, y + 40);
+    ctx.moveTo(84, y + 44); ctx.lineTo(172, y + 44);
+    ctx.stroke();
+  }
+});
+const fgSign = new THREE.Mesh(
+  new THREE.PlaneGeometry(3.4, 6.8),
+  new THREE.MeshBasicMaterial({ map: fgSignTex, transparent: true, depthWrite: false, fog: false })
+);
+fgSign.position.set(13.5, 6.3, 3);
+fgSign.rotation.y = -0.15;
+fgSign.renderOrder = 8;
+scene.add(fgSign);
+/* mist bands */
+const mistTex = canvasTex(256, 64, (ctx, W, H) => {
+  const v = ctx.createLinearGradient(0, 0, 0, H);
+  v.addColorStop(0, 'rgba(255,255,255,0)'); v.addColorStop(0.5, 'rgba(255,255,255,0.85)'); v.addColorStop(1, 'rgba(255,255,255,0)');
+  ctx.fillStyle = v; ctx.fillRect(0, 0, W, H);
+  ctx.globalCompositeOperation = 'destination-in';
+  const hz = ctx.createLinearGradient(0, 0, W, 0);
+  hz.addColorStop(0, 'rgba(255,255,255,0)'); hz.addColorStop(0.25, 'rgba(255,255,255,1)');
+  hz.addColorStop(0.75, 'rgba(255,255,255,1)'); hz.addColorStop(1, 'rgba(255,255,255,0)');
+  ctx.fillStyle = hz; ctx.fillRect(0, 0, W, H);
+});
+const mistBands = [];
+for (const [w, h, y, z, op] of [[100, 8, 9, -27, 0.10], [110, 6, 3.2, -11, 0.07], [130, 5, 1.1, -3.5, 0.05]]) {
+  const m = new THREE.Mesh(
+    new THREE.PlaneGeometry(w, h),
+    new THREE.MeshBasicMaterial({ map: mistTex, color: 0x8fa8bc, transparent: true, opacity: op, depthWrite: false })
+  );
+  m.position.set(0, y, z);
+  m.renderOrder = 3;
+  m.userData = { baseX: 0, ph: Math.random() * 9, op };
+  scene.add(m);
+  mistBands.push(m);
+}
+/* steam puffs */
+const steamPuffs = [];
+const tmpV = new THREE.Vector3();
+function addSteam(parent, x, y, z, s) {
+  const mat = new THREE.SpriteMaterial({ map: glowTex, color: 0xafc4d4, transparent: true, opacity: 0, depthWrite: false });
+  mat.rotation = Math.random() * 6.28;
+  const sp = new THREE.Sprite(mat);
+  sp.position.set(x, y, z);
+  sp.scale.setScalar(s);
+  sp.renderOrder = 4;
+  parent.add(sp);
+  steamPuffs.push({ sp, bx: x, by: y, s, ph: Math.random(), dur: 3.1 + Math.random() * 1.5 });
+}
+segMeshes.forEach((m, i) => addSteam(m, -7.5 - (i % 3) * 3.5, -3.3, 1.2, 1.0));
+addSteam(stall, 0.8, 0.5, 0.6, 0.85);
+addSteam(stall, -1.3, 0.2, 0.6, 0.65);
+addSteam(cart, -1.6, 0.55, 0.6, 0.75);
+addSteam(cart, 1.8, 0.3, 0.6, 0.55);
+/* rain splash rings (instanced shader) */
+const SPLASH_N = 30;
+const splashGeo = new THREE.InstancedBufferGeometry();
+{
+  const quad = new THREE.PlaneGeometry(0.6, 0.6);
+  quad.rotateX(-Math.PI / 2);
+  splashGeo.index = quad.index;
+  splashGeo.setAttribute('position', quad.getAttribute('position'));
+  splashGeo.setAttribute('uv', quad.getAttribute('uv'));
+  const offs = new Float32Array(SPLASH_N * 3), data = new Float32Array(SPLASH_N * 3);
+  for (let i = 0; i < SPLASH_N; i++) {
+    offs[i * 3] = -17 + Math.random() * 34;
+    offs[i * 3 + 1] = 0.04;
+    offs[i * 3 + 2] = -3 + Math.random() * 18;
+    data[i * 3] = Math.random();
+    data[i * 3 + 1] = 1.5 + Math.random() * 1.9;
+    data[i * 3 + 2] = 0.6 + Math.random() * 0.9;
+  }
+  splashGeo.setAttribute('aOffset', new THREE.InstancedBufferAttribute(offs, 3));
+  splashGeo.setAttribute('aData', new THREE.InstancedBufferAttribute(data, 3));
+  splashGeo.instanceCount = SPLASH_N;
+}
+const splashMat = new THREE.ShaderMaterial({
+  transparent: true, depthWrite: false,
+  uniforms: { uTime: { value: 0 } },
+  vertexShader: `
+    attribute vec3 aOffset;
+    attribute vec3 aData;
+    uniform float uTime;
+    varying vec2 vUv;
+    varying float vT;
+    void main() {
+      vUv = uv;
+      float t = fract( uTime * aData.y + aData.x );
+      vT = t;
+      vec3 p = position * aData.z * ( 0.5 + t );
+      gl_Position = projectionMatrix * modelViewMatrix * vec4( aOffset + p, 1.0 );
+    }`,
+  fragmentShader: `
+    varying vec2 vUv;
+    varying float vT;
+    void main() {
+      float d = length( vUv - 0.5 ) * 2.0;
+      float ring = smoothstep( 0.20, 0.0, abs( d - vT * 0.85 ) );
+      float a = ring * ( 1.0 - vT ) * 0.5;
+      if ( a < 0.004 ) discard;
+      gl_FragColor = vec4( vec3( 0.62, 0.76, 0.90 ), a );
+    }`
+});
+const splashes = new THREE.Mesh(splashGeo, splashMat);
+splashes.frustumCulled = false;
+splashes.renderOrder = 5;
+scene.add(splashes);
+/* paw ripple pool */
+const ringTex = canvasTex(128, 128, (ctx) => {
+  const g = ctx.createRadialGradient(64, 64, 0, 64, 64, 64);
+  g.addColorStop(0, 'rgba(255,255,255,0)');
+  g.addColorStop(0.60, 'rgba(255,255,255,0)');
+  g.addColorStop(0.78, 'rgba(255,255,255,0.9)');
+  g.addColorStop(1, 'rgba(255,255,255,0)');
+  ctx.fillStyle = g; ctx.fillRect(0, 0, 128, 128);
+});
+const pawRipples = [];
+for (let i = 0; i < 6; i++) {
+  const m = new THREE.Mesh(
+    new THREE.PlaneGeometry(1, 1),
+    new THREE.MeshBasicMaterial({ map: ringTex, color: 0x9fc4de, transparent: true, opacity: 0, depthWrite: false })
+  );
+  m.rotation.x = -Math.PI / 2;
+  m.position.y = 0.045;
+  m.renderOrder = 5;
+  m.visible = false;
+  scene.add(m);
+  pawRipples.push({ mesh: m, life: 99 });
+}
+let pawIdx = 0;
+function spawnPawRipple(x, z) {
+  const r = pawRipples[pawIdx++ % pawRipples.length];
+  r.life = 0;
+  r.mesh.visible = true;
+  r.mesh.position.x = x;
+  r.mesh.position.z = z;
+}
+/* passerby silhouette */
+const passerbyTex = canvasTex(128, 256, (ctx) => {
+  ctx.fillStyle = 'rgba(5,7,11,1)';
+  ctx.beginPath(); ctx.ellipse(64, 52, 30, 12, 0, Math.PI, 0); ctx.fill();
+  ctx.fillRect(62, 30, 3, 26);
+  ctx.beginPath(); ctx.arc(64, 74, 13, 0, 7); ctx.fill();
+  ctx.beginPath(); ctx.roundRect(46, 88, 36, 96, 14); ctx.fill();
+  ctx.fillRect(50, 182, 10, 62); ctx.fillRect(68, 182, 10, 62);
+});
+const passerby = new THREE.Mesh(
+  new THREE.PlaneGeometry(1.6, 3.3),
+  new THREE.MeshBasicMaterial({ map: passerbyTex, transparent: true, opacity: 0, depthWrite: false })
+);
+passerby.position.set(30, 1.68, -17.5);
+passerby.renderOrder = 1;
+scene.add(passerby);
+
+/* ------------------------- live reflective street ------------------------ */
+function makePuddleMask() {
+  const S = 512, c = document.createElement('canvas'); c.width = c.height = S;
+  const ctx = c.getContext('2d');
+  ctx.fillStyle = 'rgb(96,96,96)'; ctx.fillRect(0, 0, S, S);
+  const off = document.createElement('canvas'); off.width = off.height = 128;
+  const octx = off.getContext('2d');
+  octx.fillStyle = 'rgb(96,96,96)'; octx.fillRect(0, 0, 128, 128);
+  for (let i = 0; i < 52; i++) {
+    const x = Math.random() * 128, y = Math.random() * 128, r = 9 + Math.random() * 30;
+    const v = 36 + Math.floor(Math.random() * 200);
+    const g = octx.createRadialGradient(x, y, 0, x, y, r);
+    g.addColorStop(0, `rgba(${v},${v},${v},0.85)`);
+    g.addColorStop(1, `rgba(${v},${v},${v},0)`);
+    octx.fillStyle = g;
+    octx.beginPath(); octx.arc(x, y, r, 0, 7); octx.fill();
+  }
+  ctx.imageSmoothingEnabled = true;
+  ctx.drawImage(off, 0, 0, S, S);
+  for (let i = 0; i < 90; i++) {
+    const x = Math.random() * S, y = Math.random() * S, r = 5 + Math.random() * 22;
+    const v = 40 + Math.floor(Math.random() * 190);
+    const g = ctx.createRadialGradient(x, y, 0, x, y, r);
+    g.addColorStop(0, `rgba(${v},${v},${v},0.30)`);
+    g.addColorStop(1, `rgba(${v},${v},${v},0)`);
+    ctx.fillStyle = g;
+    ctx.beginPath(); ctx.arc(x, y, r, 0, 7); ctx.fill();
+  }
+  const tex = new THREE.CanvasTexture(c);
+  tex.wrapS = tex.wrapT = THREE.RepeatWrapping;
+  return tex;
+}
+function makeValueNoise() {
+  const S = 256, G = 24;
+  const gridR = new Float32Array(G * G), gridG = new Float32Array(G * G);
+  for (let i = 0; i < G * G; i++) { gridR[i] = Math.random(); gridG[i] = Math.random(); }
+  const c = document.createElement('canvas'); c.width = c.height = S;
+  const ctx = c.getContext('2d');
+  const img = ctx.createImageData(S, S);
+  const sample = (grid, u, v) => {
+    const x = (u * G) % G, y = (v * G) % G;
+    const x0 = Math.floor(x), y0 = Math.floor(y), fx = x - x0, fy = y - y0;
+    const sx = fx * fx * (3 - 2 * fx), sy = fy * fy * (3 - 2 * fy);
+    const a = grid[y0 * G + x0], b = grid[y0 * G + (x0 + 1) % G];
+    const d = grid[((y0 + 1) % G) * G + x0], e = grid[((y0 + 1) % G) * G + (x0 + 1) % G];
+    const top = a + (b - a) * sx, bot = d + (e - d) * sx;
+    return top + (bot - top) * sy;
+  };
+  for (let y = 0; y < S; y++) for (let x = 0; x < S; x++) {
+    const k = (y * S + x) * 4, u = x / S, v = y / S;
+    img.data[k] = sample(gridR, u, v) * 255;
+    img.data[k + 1] = sample(gridG, u, v) * 255;
+    img.data[k + 3] = 255;
+  }
+  ctx.putImageData(img, 0, 0);
+  const tex = new THREE.CanvasTexture(c);
+  tex.wrapS = tex.wrapT = THREE.RepeatWrapping;
+  return tex;
+}
+const StreetShader = {
+  name: 'MisoWetStreet',
+  uniforms: {
+    color: { value: null },
+    tDiffuse: { value: null },
+    textureMatrix: { value: null },
+    tMask: { value: null },
+    tNoise: { value: null },
+    uTime: { value: 0 },
+    uFogColor: { value: new THREE.Color(0x0a141f) },
+    uFogDensity: { value: 0.0072 }
+  },
+  vertexShader: `
+    uniform mat4 textureMatrix;
+    varying vec4 vUv;
+    varying vec3 vWorld;
+    #include <common>
+    #include <logdepthbuf_pars_vertex>
+    void main() {
+      vUv = textureMatrix * vec4( position, 1.0 );
+      vec4 wp = modelMatrix * vec4( position, 1.0 );
+      vWorld = wp.xyz;
+      gl_Position = projectionMatrix * modelViewMatrix * vec4( position, 1.0 );
+      #include <logdepthbuf_vertex>
+    }`,
+  fragmentShader: `
+    uniform vec3 color;
+    uniform sampler2D tDiffuse;
+    uniform sampler2D tMask;
+    uniform sampler2D tNoise;
+    uniform float uTime;
+    uniform vec3 uFogColor;
+    uniform float uFogDensity;
+    varying vec4 vUv;
+    varying vec3 vWorld;
+    #include <logdepthbuf_pars_fragment>
+    vec3 proj( vec4 uvp ) { return texture2DProj( tDiffuse, uvp ).rgb; }
+    void main() {
+      #include <logdepthbuf_fragment>
+      float m1 = texture2D( tMask, vWorld.xz * 0.045 ).r;
+      float m2 = texture2D( tMask, vWorld.xz * 0.013 + vec2( 0.37, 0.61 ) ).r;
+      float rough = clamp( m1 * 0.62 + m2 * 0.38, 0.0, 1.0 );
+      vec2 ripA = texture2D( tNoise, vWorld.xz * 0.10 + vec2( uTime * 0.011, uTime * 0.017 ) ).rg - 0.5;
+      vec2 ripB = texture2D( tNoise, vWorld.xz * 0.037 - vec2( uTime * 0.006, uTime * 0.004 ) ).rg - 0.5;
+      float ripAmt = mix( 0.030, 0.010, rough );
+      vec4 uvp = vUv;
+      uvp.xy += ( ripA * 0.7 + ripB * 0.3 ) * ripAmt * uvp.w;
+      float rad = mix( 0.0042, 0.0007, rough ) * uvp.w;
+      vec3 refl = proj( uvp ) * 0.24;
+      refl += proj( uvp + vec4(  rad, 0.0, 0.0, 0.0 ) ) * 0.095;
+      refl += proj( uvp + vec4( -rad, 0.0, 0.0, 0.0 ) ) * 0.095;
+      refl += proj( uvp + vec4( 0.0,  rad, 0.0, 0.0 ) ) * 0.095;
+      refl += proj( uvp + vec4( 0.0, -rad, 0.0, 0.0 ) ) * 0.095;
+      refl += proj( uvp + vec4(  rad * 0.7,  rad * 0.7, 0.0, 0.0 ) ) * 0.095;
+      refl += proj( uvp + vec4( -rad * 0.7,  rad * 0.7, 0.0, 0.0 ) ) * 0.095;
+      refl += proj( uvp + vec4(  rad * 0.7, -rad * 0.7, 0.0, 0.0 ) ) * 0.095;
+      refl += proj( uvp + vec4( -rad * 0.7, -rad * 0.7, 0.0, 0.0 ) ) * 0.095;
+      float lum = dot( refl, vec3( 0.299, 0.587, 0.114 ) );
+      refl = mix( vec3( lum ), refl, 0.62 ) * vec3( 0.80, 0.90, 1.08 ) * color;
+      vec3 asphalt = mix( vec3( 0.010, 0.016, 0.026 ), vec3( 0.028, 0.038, 0.052 ), m2 );
+      float camd = distance( cameraPosition, vWorld );
+      float dfade = exp( -max( camd - 20.0, 0.0 ) * 0.022 );
+      asphalt += vec3( 0.010, 0.012, 0.016 ) * ( 1.0 - dfade );
+      float strength = mix( 0.10, 0.42, rough ) * ( 0.50 + 0.50 * dfade );
+      vec3 colr = asphalt + refl * strength;
+      float f = 1.0 - exp( -uFogDensity * uFogDensity * camd * camd );
+      colr = mix( colr, uFogColor, clamp( f, 0.0, 1.0 ) );
+      gl_FragColor = vec4( colr, 1.0 );
+      #include <tonemapping_fragment>
+      #include <colorspace_fragment>
+    }`
+};
+const street = new Reflector(new THREE.PlaneGeometry(130, 50), {
+  clipBias: 0.003,
+  textureWidth: 1024,
+  textureHeight: 1024,
+  color: 0xffffff,
+  shader: StreetShader
+});
+street.rotation.x = -Math.PI / 2;
+street.position.set(0, 0, 6);
+street.material.uniforms.tMask.value = makePuddleMask();
+street.material.uniforms.tNoise.value = makeValueNoise();
+street.material.uniforms.uFogColor.value = scene.fog.color;
+if (FLAGS.has('noreflect')) street.visible = false;
+scene.add(street);
+const tintPlane = new THREE.Mesh(
+  new THREE.PlaneGeometry(130, 50),
+  new THREE.MeshBasicMaterial({ color: 0x0c1420, transparent: true, opacity: 0.94, depthWrite: false, fog: true })
+);
+tintPlane.rotation.x = -Math.PI / 2;
+tintPlane.position.set(0, 0.02, 6);
+tintPlane.renderOrder = 2;
+tintPlane.visible = FLAGS.has('noreflect');
+scene.add(tintPlane);
+scene.add(new THREE.AmbientLight(0x3a4c66, 1.1));
+const warm = new THREE.PointLight(0xff9a3c, 90, 34, 2); warm.position.set(-5.5, 3.4, -4.5); scene.add(warm);
+const pinkLight = new THREE.PointLight(0xff5f9e, 55, 30, 2); pinkLight.position.set(6.5, 4.6, -6.5); scene.add(pinkLight);
+/* character lighting: the GLB cast uses lit (standard) materials, unlike
+   the unlit art plates. A hemisphere + directional key keep them rich in
+   BOTH the street and the alley — both lights are direction-based, so
+   they work at the alley's z offset where the street point lights can't
+   reach. Only the characters respond to these; the plates are basic. */
+scene.add(new THREE.HemisphereLight(0xbdd3e8, 0x2e2119, 0.8));
+const charKey = new THREE.DirectionalLight(0xffe7c4, 1.6);
+charKey.position.set(6, 10, 8);
+scene.add(charKey);
+const charFill = new THREE.DirectionalLight(0x8fb0e8, 0.45);
+charFill.position.set(-7, 4, 3);
+scene.add(charFill);
+
+/* contact shadow + lantern light pool + halo (follow Miso in both modes) */
+function shadowTexture() {
+  const c = document.createElement('canvas'); c.width = 128; c.height = 64;
+  const g = c.getContext('2d');
+  const grad = g.createRadialGradient(64, 32, 2, 64, 32, 62);
+  grad.addColorStop(0, 'rgba(0,0,0,0.85)');
+  grad.addColorStop(1, 'rgba(0,0,0,0)');
+  g.fillStyle = grad;
+  g.save(); g.translate(64, 32); g.scale(1, 0.5); g.translate(-64, -32);
+  g.fillRect(0, -32, 128, 128); g.restore();
+  return new THREE.CanvasTexture(c);
+}
+const contactShadow = new THREE.Mesh(
+  new THREE.PlaneGeometry(3.9, 1.85),
+  new THREE.MeshBasicMaterial({ map: shadowTexture(), transparent: true, opacity: 0.6, depthWrite: false, fog: true })
+);
+contactShadow.rotation.x = -Math.PI / 2;
+contactShadow.renderOrder = 4;
+scene.add(contactShadow);
+const lightPool = new THREE.Mesh(
+  new THREE.PlaneGeometry(6.0, 4.4),
+  new THREE.MeshBasicMaterial({
+    map: glowTex, color: 0xff9a3c, transparent: true, opacity: 0.38,
+    blending: THREE.AdditiveBlending, depthWrite: false, fog: false
+  })
+);
+lightPool.rotation.x = -Math.PI / 2;
+lightPool.renderOrder = 3;
+scene.add(lightPool);
+const halo = glow(scene, -0.6, 1.35, -1.85, 5.0, 0xffa245, 0.2);
+
+/* rain */
+function streakTexture() {
+  const c = document.createElement('canvas'); c.width = 16; c.height = 64;
+  const g = c.getContext('2d');
+  const grad = g.createLinearGradient(0, 0, 0, 64);
+  grad.addColorStop(0, 'rgba(255,255,255,0)');
+  grad.addColorStop(0.5, 'rgba(255,255,255,0.9)');
+  grad.addColorStop(1, 'rgba(255,255,255,0)');
+  g.fillStyle = grad; g.fillRect(7, 0, 2, 64);
+  return new THREE.CanvasTexture(c);
+}
+const RAIN = 1100;
+const rainPos = new Float32Array(RAIN * 3);
+for (let i = 0; i < RAIN; i++) {
+  rainPos[i * 3] = -28 + Math.random() * 56;
+  rainPos[i * 3 + 1] = Math.random() * 20;
+  rainPos[i * 3 + 2] = -17 + Math.random() * 30;
+}
+const rainGeo = new THREE.BufferGeometry();
+rainGeo.setAttribute('position', new THREE.BufferAttribute(rainPos, 3));
+const rain = new THREE.Points(rainGeo, new THREE.PointsMaterial({
+  size: 0.5, map: streakTexture(), transparent: true, opacity: 0.32,
+  color: 0xaec6e2, depthWrite: false, sizeAttenuation: true
+}));
+scene.add(rain);
+
+/* post chain */
+const composer = new EffectComposer(renderer);
+composer.addPass(new RenderPass(scene, camera));
+const bloom = new UnrealBloomPass(new THREE.Vector2(window.innerWidth / 2, window.innerHeight / 2), 0.38, 0.55, 0.82);
+composer.addPass(bloom);
+composer.addPass(new OutputPass());
+const GradeShader = {
+  uniforms: { tDiffuse: { value: null }, uTint: { value: new THREE.Color(1, 1, 1) } },
+  vertexShader: `
+    varying vec2 vUv;
+    void main() { vUv = uv; gl_Position = projectionMatrix * modelViewMatrix * vec4( position, 1.0 ); }`,
+  fragmentShader: `
+    uniform sampler2D tDiffuse;
+    uniform vec3 uTint;
+    varying vec2 vUv;
+    void main() {
+      vec4 c = texture2D( tDiffuse, vUv );
+      vec3 col = c.rgb * uTint;
+      vec3 sc = col * col * ( 3.0 - 2.0 * col );
+      col = mix( col, sc, 0.22 );
+      float d = distance( vUv, vec2( 0.5, 0.46 ) );
+      col *= 0.70 + 0.30 * smoothstep( 0.95, 0.38, d );
+      gl_FragColor = vec4( col, c.a );
+    }`
+};
+const gradePass = new ShaderPass(GradeShader);
+composer.addPass(gradePass);
+
+/* =============================== THE ALLEY ===============================
+   Runner environment, parked far down +Z (centre z = ALLEY_Z) so the
+   street rig never sees it. Walls/floor scroll by texture offset; props
+   and obstacles stream toward the camera. */
+const ALLEY_Z = 400;
+const alley = new THREE.Group();
+scene.add(alley);
+const alleyFloorTex = makePuddleMask();
+alleyFloorTex.repeat.set(3, 14);
+const alleyFloor = new THREE.Mesh(
+  new THREE.PlaneGeometry(15, 190),
+  new THREE.MeshBasicMaterial({ color: 0x39424e, map: alleyFloorTex, fog: true })
+);
+alleyFloor.rotation.x = -Math.PI / 2;
+alleyFloor.position.set(0, 0, ALLEY_Z - 45);
+alley.add(alleyFloor);
+function alleyWall(side) {
+  const t = artTex('art/seg-C.webp');
+  t.wrapS = t.wrapT = THREE.RepeatWrapping;
+  t.repeat.set(7, 1);
+  const m = new THREE.Mesh(
+    new THREE.PlaneGeometry(190, 13),
+    new THREE.MeshBasicMaterial({ map: t, fog: true })
+  );
+  m.material.color.set(0x5d6d7d);
+  m.rotation.y = side < 0 ? Math.PI / 2 : -Math.PI / 2;
+  m.position.set(side * 6.4, 6.5, ALLEY_Z - 45);
+  alley.add(m);
+  return m;
+}
+const alleyWallL = alleyWall(-1), alleyWallR = alleyWall(1);
+/* hanging lantern glows streaming past in the alley */
+const alleyLanterns = [];
+for (let i = 0; i < 8; i++) {
+  const s = glow(alley, (i % 2 ? 4.6 : -4.6), 5.6, ALLEY_Z - 8 - i * 17, 3.4, i % 3 ? 0xffa245 : 0xff6fa5, 0.4);
+  alleyLanterns.push(s);
+}
+/* the lit exit gate at the far end of the alley */
+const exitGate = glow(alley, 0, 3.2, ALLEY_Z - 88, 13, 0xffe9b0, 0.0);
+/* runner foreground: lamp poles at the lane edges + overhead banner
+   bars streaming past the camera — the same "something crosses in
+   front of you" depth the street occluders give the fighter */
+const runnerFg = [];
+{
+  const dark = new THREE.MeshBasicMaterial({ color: 0x11151c, fog: true });
+  for (let i = 0; i < 8; i++) {
+    const g = new THREE.Group();
+    const side = i % 2 ? 1 : -1;
+    const pole = new THREE.Mesh(new THREE.CylinderGeometry(0.11, 0.15, 7.6, 8), dark);
+    pole.position.set(side * 3.9, 3.8, 0);
+    g.add(pole);
+    const head = new THREE.Mesh(new THREE.SphereGeometry(0.2, 10, 8),
+      new THREE.MeshBasicMaterial({ color: 0xffc06a, fog: false }));
+    head.position.set(side * 3.9, 7.3, 0);
+    g.add(head);
+    glow(g, side * 3.9, 7.3, 0, 3.0, 0xffa245, 0.45);
+    if (i % 3 === 2) { /* small board on some poles */
+      const board = new THREE.Mesh(new THREE.PlaneGeometry(1.9, 1.2),
+        new THREE.MeshBasicMaterial({ color: 0x274b52, fog: true }));
+      board.position.set(side * 3.55, 5.2, 0);
+      board.rotation.y = side > 0 ? -0.5 : 0.5;
+      g.add(board);
+    }
+    g.position.z = ALLEY_Z - 6 - i * 16;
+    alley.add(g);
+    runnerFg.push({ mesh: g, span: 8 * 16 });
+  }
+  for (let i = 0; i < 2; i++) {
+    const g = new THREE.Group();
+    const bar = new THREE.Mesh(new THREE.CylinderGeometry(0.09, 0.09, 8.6, 8), dark);
+    bar.rotation.z = Math.PI / 2;
+    bar.position.set(0, 5.6, 0);
+    g.add(bar);
+    const board = new THREE.Mesh(new THREE.PlaneGeometry(2.6, 1.3),
+      new THREE.MeshBasicMaterial({ color: 0x51304a, fog: true }));
+    board.position.set(2.2, 4.75, 0);
+    g.add(board);
+    glow(g, -2.6, 5.4, 0, 2.4, 0xff6fa5, 0.4);
+    g.position.z = ALLEY_Z - 34 - i * 52;
+    alley.add(g);
+    runnerFg.push({ mesh: g, span: 2 * 52 });
+  }
+}
+
+/* ============================ characters ============================ */
+const gltf = new GLTFLoader(loadManager);
+function prepareCharacterMaterials(root) {
+  /* Keep the GLBs' own lit MeshStandardMaterials. Structure check (r170):
+     GLTFLoader splits each GLB mesh into ONE single-material SkinnedMesh
+     per primitive — no groups, no material arrays — so the exported
+     materials render as-is. The pale/flat look came from color space:
+     these procedural GLBs store their palette as raw sRGB numbers in
+     baseColorFactor, which three reads as linear; the renderer's sRGB
+     output then expands them into pastels. Convert each material color
+     sRGB -> linear working space so the output matches the Blender
+     stills. Materials are shared with SkeletonUtils clones, so the
+     conversion is flagged and applied exactly once per material. */
+  root.traverse(o => {
+    if (o.isMesh || o.isSkinnedMesh) {
+      const mats = Array.isArray(o.material) ? o.material : [o.material];
+      for (const m of mats) {
+        if (m && m.color && !m.userData.misoSrgbFixed) {
+          m.userData.misoSrgbFixed = true;
+          m.color.convertSRGBToLinear();
+        }
+      }
+      o.frustumCulled = false;
+    }
+  });
+}
+function loadCharacter(path, targetHeight) {
+  return new Promise(resolve => {
+    gltf.load(path, g => {
+      const group = g.scene;
+      prepareCharacterMaterials(group);
+      const box = new THREE.Box3().setFromObject(group);
+      const size = new THREE.Vector3(); box.getSize(size);
+      const s = targetHeight / Math.max(size.y, 0.001);
+      group.scale.setScalar(s);
+      group.position.y = -box.min.y * s;
+      const wrap = new THREE.Group();
+      wrap.add(group);
+      wrap.userData.inner = group;
+      const mixer = new THREE.AnimationMixer(group);
+      const actions = {};
+      const clips = {};
+      for (const clip of g.animations || []) { actions[clip.name] = mixer.clipAction(clip); clips[clip.name] = clip; }
+      resolve({ wrap, inner: group, mixer, actions, clips, placeholder: false });
+    }, undefined, () => resolve(null));
+  });
+}
+/* per-instance copy of a loaded character (dogs repeat per wave, so the
+   cached source is never added to the scene directly) */
+function instantiate(src) {
+  if (!src) return null;
+  if (src.placeholder) return { wrap: src.wrap.clone(), mixer: null, actions: {}, placeholder: true };
+  const inner = SkeletonClone(src.inner);
+  const wrap = new THREE.Group();
+  wrap.add(inner);
+  const mixer = new THREE.AnimationMixer(inner);
+  const actions = {};
+  for (const [name, clip] of Object.entries(src.clips || {})) actions[name] = mixer.clipAction(clip);
+  const inst = { wrap, inner, mixer, actions, placeholder: false };
+  prepInstanceVisual(inst, true);
+  return inst;
+}
+
+/* ================= runtime pose overrides =================
+   Big readable fight poses are driven at runtime on top of the clips:
+   each frame the mixer writes the base pose, then poseSave() snapshots
+   it and pose deltas are premultiplied in PARENT space (so they read
+   the same in character-local terms whatever the wrap facing is).
+   poseRestore() at the start of the next frame undoes last frame's
+   deltas exactly, so nothing compounds even when the mixer idles.
+   Parent-space sign table (measured on this rig, both cat and dogs):
+   limb forward swing = -rz, limb back swing / chamber fold = +rz,
+   torso lean forward = +rz, torso lean back = -rz, R-shoulder-forward
+   twist = -ry. Bone names lose their dots in three ('upperarmR'). */
+const POSE_BONES = ['hips', 'spine', 'chest', 'neck', 'head',
+  'upperarmL', 'forearmL', 'handL', 'upperarmR', 'forearmR', 'handR',
+  'thighL', 'shinL', 'footL', 'thighR', 'shinR', 'footR'];
+function makePoseActor(char) {
+  if (!char || !char.inner || char.placeholder) return null;
+  const bones = {};
+  for (const n of POSE_BONES) {
+    const b = char.inner.getObjectByName(n);
+    if (b) bones[n] = b;
+  }
+  if (!bones.upperarmR && !bones.thighR) return null;
+  return { char, bones, saved: new Map(), innerP: null, innerS: null };
+}
+function poseRestore(a) {
+  if (!a) return;
+  for (const [b, s] of a.saved) {
+    b.quaternion.copy(s.q); b.position.copy(s.p); b.scale.copy(s.s);
+  }
+  if (a.innerP) {
+    a.char.inner.position.copy(a.innerP);
+    a.char.inner.scale.copy(a.innerS);
+  }
+}
+function poseSave(a) {
+  if (!a) return;
+  a.saved.clear();
+  for (const n in a.bones) {
+    const b = a.bones[n];
+    a.saved.set(b, { q: b.quaternion.clone(), p: b.position.clone(), s: b.scale.clone() });
+  }
+  a.innerP = a.char.inner.position.clone();
+  a.innerS = a.char.inner.scale.clone();
+}
+const _pq = new THREE.Quaternion(), _pe = new THREE.Euler();
+function pRot(a, name, rx, ry, rz) {
+  const b = a && a.bones[name];
+  if (!b) return;
+  b.quaternion.premultiply(_pq.setFromEuler(_pe.set(rx, ry, rz)));
+}
+function pOff(a, name, dx, dy, dz) {
+  const b = a && a.bones[name];
+  if (!b) return;
+  const s = a.saved.get(b);
+  if (!s) return;
+  b.position.set(s.p.x + dx, s.p.y + dy, s.p.z + dz);
+}
+function pScale(a, name, k) {
+  const b = a && a.bones[name];
+  if (b) b.scale.setScalar(k);
+}
+function innerOff(a, dx, dy, dz) {
+  if (a && a.innerP) a.char.inner.position.set(a.innerP.x + dx, a.innerP.y + dy, a.innerP.z + dz);
+}
+function innerScale(a, sx, sy, sz) {
+  if (a && a.innerS) a.char.inner.scale.set(a.innerS.x * sx, a.innerS.y * sy, a.innerS.z * sz);
+}
+/* per-instance visuals: dogs share materials through SkeletonUtils
+   clones, so clone them per instance before collecting the list that
+   the emissive hit-flash drives. Colors on the clones are already
+   sRGB-corrected (the source was fixed in prepareCharacterMaterials). */
+function prepInstanceVisual(char, cloneMats) {
+  if (!char || !char.inner) return;
+  const mats = new Set();
+  char.inner.traverse(o => {
+    if (o.isMesh || o.isSkinnedMesh) {
+      if (cloneMats) o.material = o.material.clone();
+      mats.add(o.material);
+    }
+  });
+  char.mats = [...mats];
+  char.pose = makePoseActor(char);
+}
+function setEmissive(char, r, g, b) {
+  if (!char || !char.mats) return;
+  for (const m of char.mats) if (m.emissive) m.emissive.setRGB(r, g, b);
+}
+function labelSprite(text, color = '#ffb3ba') {
+  const t = canvasTex(512, 128, (ctx, W, H) => {
+    ctx.font = 'bold 54px sans-serif';
+    ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+    ctx.fillStyle = color;
+    ctx.fillText(text, W / 2, H / 2);
+  });
+  const s = new THREE.Sprite(new THREE.SpriteMaterial({ map: t, transparent: true, depthWrite: false }));
+  s.scale.set(3.4, 0.85, 1);
+  return s;
+}
+function box(w, h, d, color, x = 0, y = 0, z = 0) {
+  const m = new THREE.Mesh(new THREE.BoxGeometry(w, h, d), new THREE.MeshBasicMaterial({ color }));
+  m.position.set(x, y, z);
+  return m;
+}
+/* DEV SCAFFOLD ONLY: box-built stand-ins, clearly labelled in-world.
+   Used per-slot only while that slot's real GLB is missing. */
+function makePlaceholderDog(type) {
+  const P = {
+    dane:    { body: 0x9aa3ad, belly: 0xd8dde2, w: 0.62, h: 1.55, leg: 0.95, head: 0.52 },
+    beagle:  { body: 0x8a5a33, belly: 0xe8dcc8, w: 1.25, h: 0.95, leg: 0.38, head: 0.55 },
+    bulldog: { body: 0x6e6259, belly: 0xcfc4b4, w: 1.30, h: 1.30, leg: 0.55, head: 0.72 }
+  }[type];
+  const g = new THREE.Group();
+  const body = box(P.w, P.h, P.w * 0.8, P.body, 0, P.leg + P.h / 2, 0);
+  const belly = box(P.w * 1.04, P.h * 0.55, P.w * 0.84, P.belly, 0, P.leg + P.h * 0.38, 0);
+  const head = box(P.head, P.head * 0.9, P.head * 0.9, P.body, 0, P.leg + P.h + P.head * 0.42, 0);
+  const snout = box(P.head * 0.55, P.head * 0.38, P.head * 0.5, P.belly, -P.head * 0.55, P.leg + P.h + P.head * 0.3, 0);
+  const earL = box(0.12, P.head * 0.55, 0.06, P.body, 0.1, P.leg + P.h + P.head * 0.95, -P.head * 0.3);
+  const earR = box(0.12, P.head * 0.55, 0.06, P.body, 0.1, P.leg + P.h + P.head * 0.95, P.head * 0.3);
+  const legFL = box(0.16, P.leg, 0.16, P.body, -0.2, P.leg / 2, -P.w * 0.28);
+  const legFR = box(0.16, P.leg, 0.16, P.body, -0.2, P.leg / 2, P.w * 0.28);
+  const legBL = box(0.16, P.leg, 0.16, P.body, 0.22, P.leg / 2, -P.w * 0.28);
+  const legBR = box(0.16, P.leg, 0.16, P.body, 0.22, P.leg / 2, P.w * 0.28);
+  const tail = box(0.5, 0.1, 0.1, P.body, P.w * 0.55, P.leg + P.h * 0.85, 0);
+  tail.rotation.z = 0.6;
+  const label = labelSprite('PLACEHOLDER ' + type.toUpperCase());
+  label.position.y = P.leg + P.h + P.head + 0.75;
+  g.add(body, belly, head, snout, earL, earR, legFL, legFR, legBL, legBR, tail, label);
+  const totalH = P.leg + P.h + P.head * 0.9;
+  return { group: g, totalH };
+}
+function makePlaceholderCat() {
+  const g = new THREE.Group();
+  const body = box(0.8, 1.0, 0.6, 0xe8892b, 0, 0.85, 0);
+  const head = box(0.95, 0.85, 0.8, 0xe8892b, 0, 1.95, 0);
+  const scarf = box(1.0, 0.28, 0.85, 0x3fa34d, 0, 1.48, 0);
+  const earL = box(0.16, 0.4, 0.08, 0xe8892b, 0, 2.55, -0.3);
+  const earR = box(0.16, 0.4, 0.08, 0xe8892b, 0, 2.55, 0.3);
+  const label = labelSprite('PLACEHOLDER MISO', '#ffd75e');
+  label.position.y = 3.2;
+  g.add(body, head, scarf, earL, earR, label);
+  return g;
+}
+/* ---- Miso ---- */
+const MISO_H = 2.35, STREET_Z = -1.6, ANCHOR_X = -0.6;
+const misoG = new THREE.Group();
+scene.add(misoG);
+const miso = { char: null, ready: false, usingPlaceholder: false };
+loadCharacter('assets/miso.glb', MISO_H).then(c => {
+  if (c) { prepInstanceVisual(c, false); miso.char = c; misoG.add(c.wrap); }
+  else {
+    miso.char = { wrap: makePlaceholderCat(), mixer: null, actions: {}, placeholder: true };
+    miso.usingPlaceholder = true;
+    misoG.add(miso.char.wrap);
+  }
+  miso.ready = true;
+});
+function charPlay(c, name, loop = true) {
+  if (!c || !c.actions) return false;
+  const a = c.actions[name];
+  if (!a) return false;
+  if (c._cur === a) { if (loop && !a.isRunning()) a.play(); return true; }
+  if (c._cur) c._cur.fadeOut(0.12);
+  a.reset(); a.enabled = true;
+  a.setLoop(loop ? THREE.LoopRepeat : THREE.LoopOnce, loop ? Infinity : 1);
+  a.clampWhenFinished = !loop;
+  a.fadeIn(0.12); a.play();
+  c._cur = a;
+  return true;
+}
+function charStop(c) {
+  if (c && c._cur) { c._cur.fadeOut(0.15); c._cur = null; }
+}
+/* ---- dogs ---- */
+const DOG_STATS = {
+  dane:    { hp: [2, 3, 3],    speed: [3.6, 4.2, 4.8], reach: 1.65, lunge: 2.7, score: 50,  height: 3.0 },
+  beagle:  { hp: [5, 7, 9],    speed: [1.8, 2.0, 2.2], reach: 1.2,  lunge: 1.7, score: 80,  height: 1.95 },
+  bulldog: { hp: [16, 16, 16], speed: [2.3, 2.3, 2.3], reach: 1.8,  lunge: 2.3, score: 500, height: 3.35, boss: true }
+};
+const dogVisuals = {};   // type -> char | 'placeholder'
+async function getDogVisual(type) {
+  if (dogVisuals[type]) return dogVisuals[type];
+  const c = await loadCharacter('assets/dog-' + type + '.glb', DOG_STATS[type].height);
+  if (c) { dogVisuals[type] = c; return c; }
+  const ph = makePlaceholderDog(type);
+  const s = DOG_STATS[type].height / ph.totalH;
+  ph.group.scale.setScalar(s);
+  dogVisuals[type] = { wrap: ph.group, mixer: null, actions: {}, placeholder: true };
+  return dogVisuals[type];
+}
+/* star bursts (defeat / collect sparkle) */
+const bursts = [];
+for (let i = 0; i < 10; i++) {
+  const parts = [];
+  const grp = new THREE.Group();
+  for (let j = 0; j < 8; j++) {
+    const s = new THREE.Sprite(new THREE.SpriteMaterial({
+      map: glowTex, color: 0xffd75e, transparent: true, opacity: 0,
+      blending: THREE.AdditiveBlending, depthWrite: false
+    }));
+    s.scale.setScalar(0.55);
+    grp.add(s);
+    parts.push({ s, vx: 0, vy: 0, vz: 0 });
+  }
+  grp.visible = false;
+  scene.add(grp);
+  bursts.push({ grp, parts, life: 99 });
+}
+function spawnBurst(x, y, z, color = 0xffd75e) {
+  const b = bursts.find(b => b.life >= 1) || bursts[0];
+  b.life = 0; b.grp.visible = true; b.grp.position.set(x, y, z);
+  for (const p of b.parts) {
+    p.s.material.color.set(color);
+    const a = Math.random() * Math.PI * 2, r = 1.6 + Math.random() * 2.2;
+    p.vx = Math.cos(a) * r; p.vy = 1.5 + Math.random() * 2.6; p.vz = Math.sin(a) * r * 0.4;
+    p.s.position.set(0, 0, 0);
+  }
+}
+function updateBursts(dt) {
+  for (const b of bursts) {
+    if (b.life >= 1) { b.grp.visible = false; continue; }
+    b.life += dt / 0.7;
+    for (const p of b.parts) {
+      p.vy -= 5.5 * dt;
+      p.s.position.x += p.vx * dt;
+      p.s.position.y += p.vy * dt;
+      p.s.position.z += p.vz * dt;
+      p.s.material.opacity = Math.max(0, 1 - b.life);
+    }
+  }
+}
+
+/* ================= comic-book impact FX =================
+   Anime/comic readability layer: jagged starburst sprite at the
+   contact point, onomatopoeia popup (canvas lettering, black outline,
+   scale-pop with overshoot), and a swoosh arc along the swing path.
+   All textures are generated in-code; pools are pre-allocated. */
+const burstTex = canvasTex(256, 256, (ctx, W, H) => {
+  const cx = W / 2, cy = H / 2, spikes = 12;
+  const grad = ctx.createRadialGradient(cx, cy, 8, cx, cy, 122);
+  grad.addColorStop(0, '#ffffff');
+  grad.addColorStop(0.45, '#ffd23e');
+  grad.addColorStop(1, '#ff9a1f');
+  ctx.beginPath();
+  for (let i = 0; i < spikes * 2; i++) {
+    const r = i % 2 === 0 ? 120 : 56 + (i % 3) * 7;
+    const a = (i / (spikes * 2)) * Math.PI * 2 - Math.PI / 2;
+    const x = cx + Math.cos(a) * r, y = cy + Math.sin(a) * r;
+    if (i === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
+  }
+  ctx.closePath();
+  ctx.fillStyle = grad;
+  ctx.lineJoin = 'round';
+  ctx.strokeStyle = '#14100a';
+  ctx.lineWidth = 13;
+  ctx.stroke();
+  ctx.fill();
+});
+const impactBursts = [];
+for (let i = 0; i < 6; i++) {
+  const s = new THREE.Sprite(new THREE.SpriteMaterial({
+    map: burstTex, transparent: true, opacity: 0, depthWrite: false
+  }));
+  s.visible = false; s.renderOrder = 60;
+  scene.add(s);
+  impactBursts.push({ s, life: 99, dur: 0.17, base: 1 });
+}
+function spawnImpactBurst(x, y, z, scale = 1, tint = 0xffffff) {
+  const b = impactBursts.find(b => b.life >= b.dur) || impactBursts[0];
+  b.life = 0; b.base = scale;
+  b.s.visible = true;
+  b.s.position.set(x, y, z);
+  b.s.material.color.set(tint);
+  b.s.material.rotation = Math.random() * Math.PI * 2;
+  b.s.scale.setScalar(0.5 * scale);
+}
+const POP_WORDS = {
+  punch: ['POW!', 'BAM!', 'WHAM!', 'BONK!'],
+  kick: ['THWACK!', 'BOOT!', 'WHAM!', 'KAPOW!'],
+  yarn: ['BONK!', 'POP!', 'BOING!'],
+  hurt: ['OUCH!', 'YOWCH!']
+};
+const POP_COLORS = {
+  'POW!': '#ffcf3f', 'BAM!': '#ff5a4e', 'WHAM!': '#ff8a3d', 'BONK!': '#ffe95e',
+  'THWACK!': '#7ee0ff', 'BOOT!': '#b28dff', 'KAPOW!': '#ffcf3f', 'POP!': '#a0e8ff',
+  'BOING!': '#9dff70', 'OUCH!': '#ff6b81', 'YOWCH!': '#ff6b81'
+};
+const popTexCache = {};
+function popTexture(word) {
+  if (popTexCache[word]) return popTexCache[word];
+  const t = canvasTex(512, 256, (ctx, W, H) => {
+    ctx.translate(W / 2, H / 2);
+    ctx.rotate(-0.045);
+    ctx.font = '900 118px "Arial Black", "Segoe UI", Arial, sans-serif';
+    ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+    ctx.lineJoin = 'round';
+    ctx.strokeStyle = '#14100a';
+    ctx.lineWidth = 30;
+    ctx.strokeText(word, 0, 6);
+    ctx.fillStyle = POP_COLORS[word] || '#ffcf3f';
+    ctx.fillText(word, 0, 6);
+    ctx.font = '900 118px "Arial Black", "Segoe UI", Arial, sans-serif';
+    ctx.fillStyle = 'rgba(255,255,255,0.35)';
+    ctx.fillText(word, 0, -4);
+  });
+  t.colorSpace = THREE.SRGBColorSpace;
+  popTexCache[word] = t;
+  return t;
+}
+const popups = [];
+for (let i = 0; i < 5; i++) {
+  const s = new THREE.Sprite(new THREE.SpriteMaterial({
+    transparent: true, opacity: 0, depthWrite: false
+  }));
+  s.visible = false; s.renderOrder = 61;
+  scene.add(s);
+  popups.push({ s, life: 99, dur: 0.48, base: 1, y0: 0 });
+}
+const popIdx = { punch: 0, kick: 0, yarn: 0, hurt: 0 };
+function spawnPopup(kind, x, y, z, scale = 1) {
+  const words = POP_WORDS[kind] || POP_WORDS.punch;
+  const word = words[popIdx[kind]++ % words.length];
+  const p = popups.find(p => p.life >= p.dur) || popups[0];
+  p.life = 0; p.base = scale; p.y0 = y;
+  p.s.visible = true;
+  p.s.material.map = popTexture(word);
+  p.s.material.rotation = (Math.random() - 0.5) * 0.22;
+  p.s.material.opacity = 1;
+  p.s.position.set(x, y, z);
+  p.s.scale.set(2.5 * scale, 1.25 * scale, 1);
+}
+const swooshes = [];
+{
+  const geo = new THREE.TorusGeometry(1, 0.075, 8, 24, 2.3);
+  for (let i = 0; i < 4; i++) {
+    const m = new THREE.Mesh(geo, new THREE.MeshBasicMaterial({
+      color: 0xbfe8ff, transparent: true, opacity: 0,
+      blending: THREE.AdditiveBlending, depthWrite: false, fog: false
+    }));
+    m.visible = false; m.renderOrder = 59;
+    scene.add(m);
+    swooshes.push({ m, life: 99, dur: 0.14, a0: 0, a1: 0 });
+  }
+}
+function spawnSwoosh(x, y, z, radius, facing, a0, a1, color) {
+  const w = swooshes.find(w => w.life >= w.dur) || swooshes[0];
+  w.life = 0; w.a0 = a0; w.a1 = a1;
+  w.m.visible = true;
+  w.m.position.set(x, y, z);
+  w.m.scale.setScalar(radius);
+  w.m.rotation.set(0, facing > 0 ? 0 : Math.PI, a0);
+  w.m.material.color.set(color);
+  w.m.material.opacity = 0.85;
+}
+function easeOutBackF(k) {
+  const c1 = 1.70158, c3 = c1 + 1;
+  return 1 + c3 * Math.pow(k - 1, 3) + c1 * Math.pow(k - 1, 2);
+}
+function updateComicFx(dt) {
+  for (const b of impactBursts) {
+    if (b.life >= b.dur) { b.s.visible = false; continue; }
+    b.life += dt;
+    const k = Math.min(1, b.life / b.dur);
+    const pop = 0.5 + 1.05 * (1 - Math.pow(1 - k, 3));
+    b.s.scale.setScalar(pop * b.base * 1.6);
+    b.s.material.opacity = k > 0.55 ? 1 - (k - 0.55) / 0.45 : 1;
+  }
+  for (const p of popups) {
+    if (p.life >= p.dur) { p.s.visible = false; continue; }
+    p.life += dt;
+    const k = Math.min(1, p.life / p.dur);
+    const popK = Math.min(1, p.life / 0.15);
+    const sc = (0.55 + 0.45 * easeOutBackF(popK)) * p.base;
+    p.s.scale.set(2.5 * sc, 1.25 * sc, 1);
+    p.s.position.y = p.y0 + p.life * 0.55;
+    p.s.material.opacity = k > 0.68 ? 1 - (k - 0.68) / 0.32 : 1;
+  }
+  for (const w of swooshes) {
+    if (w.life >= w.dur) { w.m.visible = false; continue; }
+    w.life += dt;
+    const k = Math.min(1, w.life / w.dur);
+    const e = 1 - Math.pow(1 - k, 2);
+    w.m.rotation.z = w.a0 + (w.a1 - w.a0) * e;
+    w.m.material.opacity = 0.85 * (1 - k);
+  }
+}
+/* pickups: stars (+score) and fish (+heart) */
+function makeStar() {
+  const g = new THREE.Group();
+  const core = new THREE.Mesh(
+    new THREE.OctahedronGeometry(0.24),
+    new THREE.MeshBasicMaterial({ color: 0xffd75e })
+  );
+  const haloS = glow(g, 0, 0, 0, 1.5, 0xffd75e, 0.5);
+  haloS.material.fog = false;
+  g.add(core);
+  g.userData.core = core;
+  return g;
+}
+function makeFish() {
+  const g = new THREE.Group();
+  const bodyM = new THREE.Mesh(new THREE.SphereGeometry(0.3, 10, 8), new THREE.MeshBasicMaterial({ color: 0xff8c4a }));
+  bodyM.scale.set(1.5, 0.8, 0.55);
+  const tailM = new THREE.Mesh(new THREE.ConeGeometry(0.22, 0.4, 8), new THREE.MeshBasicMaterial({ color: 0xff7043 }));
+  tailM.rotation.z = Math.PI / 2;
+  tailM.position.x = -0.55;
+  g.add(bodyM, tailM);
+  glow(g, 0, 0, 0, 1.6, 0xff8c4a, 0.4);
+  return g;
+}
+/* ------------- foreground occluders + grapple anchors -------------
+   The background plates read as "two pictures next to each other"
+   because nothing ever crosses the joins. These props live BETWEEN
+   the camera and the play plane (z = FG_Z, play plane is STREET_Z)
+   and scroll with the street, so poles and signs pass IN FRONT of
+   the fighters — and two lamp poles stand exactly ON the plate
+   seams (section-local 54 and 108, the joins between the three
+   54-wide plates of every section). Lamp poles double as yarn
+   grapple anchors: an arm reaches back over the play plane and the
+   hook point (yarn ring + ball) hangs over the street at ANCHOR_Y. */
+const FG_Z = 2.6, ANCHOR_Y = 5.9;
+const SEAM_XS = [54, 108];
+const signBoardTex = canvasTex(256, 160, (ctx, W, H) => {
+  ctx.fillStyle = 'rgba(5,7,12,0.97)';
+  ctx.beginPath(); ctx.roundRect(4, 4, W - 8, H - 8, 12); ctx.fill();
+  ctx.strokeStyle = 'rgba(255,150,80,0.65)'; ctx.lineWidth = 4;
+  ctx.beginPath(); ctx.roundRect(12, 12, W - 24, H - 24, 9); ctx.stroke();
+  ctx.strokeStyle = 'rgba(125,249,232,0.8)'; ctx.lineWidth = 8; ctx.lineCap = 'round';
+  ctx.beginPath();
+  ctx.moveTo(48, 62); ctx.lineTo(150, 62);
+  ctx.moveTo(99, 34); ctx.lineTo(99, 96);
+  ctx.moveTo(66, 108); ctx.lineTo(132, 108);
+  ctx.stroke();
+  ctx.strokeStyle = 'rgba(255,111,165,0.75)';
+  ctx.beginPath(); ctx.arc(196, 76, 26, 0, 7); ctx.stroke();
+  ctx.beginPath(); ctx.moveTo(196, 58); ctx.lineTo(196, 94); ctx.stroke();
+});
+/* varied + irregular on purpose (Cherie's steer): a real street,
+   not a metronome — lantern strings, awning edges, laundry lines,
+   banners and sign posts mixed between the lamp poles, uneven
+   spacing, and the two seams covered by DIFFERENT elements
+   (54 = banner, 108 = lamp pole). Laundry lines sit inside the
+   scene (z just in front of the play plane); everything else is
+   camera-side foreground. A pushcart (below) rolls across the
+   street itself on its own path. */
+const FG_PROPS = [
+  { x: 5,   kind: 'lantern' },
+  { x: 13,  kind: 'pole', hook: true },
+  { x: 24,  kind: 'sign' },
+  { x: 33,  kind: 'awning' },
+  { x: 47,  kind: 'laundry' },
+  { x: 54,  kind: 'banner', seam: true },
+  { x: 66,  kind: 'pole', hook: true },
+  { x: 78,  kind: 'sign' },
+  { x: 88,  kind: 'lantern' },
+  { x: 99,  kind: 'awning' },
+  { x: 108, kind: 'pole', hook: true, seam: true },
+  { x: 119, kind: 'sign' },
+  { x: 130, kind: 'laundry' },
+  { x: 141, kind: 'pole', hook: true },
+  { x: 152, kind: 'banner' }
+];
+const FG_ANCHORS = FG_PROPS.filter(p => p.hook);
+function makeLampPole(def) {
+  const g = new THREE.Group();
+  const dark = new THREE.MeshBasicMaterial({ color: 0x11151c, fog: true });
+  const shaft = new THREE.Mesh(new THREE.CylinderGeometry(0.13, 0.18, 7.4, 8), dark);
+  shaft.position.set(0, 3.7, 0);
+  g.add(shaft);
+  /* arm reaches back over the play plane: local z 0 -> STREET_Z-FG_Z */
+  const arm = new THREE.Mesh(new THREE.BoxGeometry(0.16, 0.16, 4.5), dark);
+  arm.position.set(0, ANCHOR_Y + 0.28, -2.15);
+  g.add(arm);
+  const head = new THREE.Mesh(new THREE.SphereGeometry(0.21, 10, 8),
+    new THREE.MeshBasicMaterial({ color: 0xffc06a, fog: false }));
+  head.position.set(0, ANCHOR_Y + 0.02, STREET_Z - FG_Z);
+  g.add(head);
+  glow(g, 0, ANCHOR_Y, STREET_Z - FG_Z, 3.4, 0xffa245, 0.5);
+  let ring = null;
+  if (def.hook) {
+    ring = new THREE.Mesh(new THREE.TorusGeometry(0.34, 0.055, 8, 20),
+      new THREE.MeshBasicMaterial({ color: 0xff7a26, fog: false, transparent: true, opacity: 0.95 }));
+    ring.position.set(0, ANCHOR_Y, STREET_Z - FG_Z);
+    g.add(ring);
+    const ball = new THREE.Mesh(new THREE.SphereGeometry(0.15, 10, 8),
+      new THREE.MeshBasicMaterial({ color: 0xff7a26, fog: false }));
+    ball.position.copy(ring.position);
+    g.add(ball);
+    glow(g, 0, ANCHOR_Y, STREET_Z - FG_Z, 1.7, 0xff7a26, 0.5);
+  }
+  g.position.set(0, 0, FG_Z);
+  scene.add(g);
+  return { def, mesh: g, ring };
+}
+function makeSignPost(def) {
+  const g = new THREE.Group();
+  const dark = new THREE.MeshBasicMaterial({ color: 0x11151c, fog: true });
+  const post = new THREE.Mesh(new THREE.CylinderGeometry(0.11, 0.15, 5.8, 8), dark);
+  post.position.set(-1.55, 2.9, 0);
+  g.add(post);
+  const tints = [0xffffff, 0xffd9c2, 0xc2f2e8, 0xf5c8dd];
+  const board = new THREE.Mesh(new THREE.PlaneGeometry(3.1, 1.95),
+    new THREE.MeshBasicMaterial({ map: signBoardTex, color: tints[FG_PROPS.indexOf(def) % tints.length], fog: true }));
+  board.position.set(0.1, 4.35, 0);
+  g.add(board);
+  const board2 = new THREE.Mesh(new THREE.PlaneGeometry(2.2, 1.4),
+    new THREE.MeshBasicMaterial({ map: signBoardTex, color: 0xd8e6ff, fog: true }));
+  board2.position.set(0.35, 2.35, 0.12);
+  board2.rotation.y = 0.35;
+  g.add(board2);
+  g.position.set(0, 0, FG_Z);
+  scene.add(g);
+  return { def, mesh: g, ring: null };
+}
+function makeLanternString(def) {
+  const g = new THREE.Group();
+  const dark = new THREE.MeshBasicMaterial({ color: 0x0d1016, fog: true });
+  for (const sx of [-3.6, 3.6]) {
+    const post = new THREE.Mesh(new THREE.CylinderGeometry(0.09, 0.12, 8.8, 8), dark);
+    post.position.set(sx, 4.4, 0);
+    g.add(post);
+  }
+  const pts = [];
+  for (let i = 0; i <= 14; i++) {
+    const k = i / 14;
+    pts.push(new THREE.Vector3(-3.6 + 7.2 * k, 8.55 - Math.sin(k * Math.PI) * 0.85, 0));
+  }
+  g.add(new THREE.Line(new THREE.BufferGeometry().setFromPoints(pts),
+    new THREE.LineBasicMaterial({ color: 0x05070a })));
+  const cols = [0xffb45e, 0xff8fab, 0xffb45e, 0x7df9e8, 0xffb45e, 0xff8fab];
+  for (let i = 0; i < 6; i++) {
+    const k = (i + 0.5) / 6;
+    const x = -3.6 + 7.2 * k, y = 8.55 - Math.sin(k * Math.PI) * 0.85;
+    const stem = new THREE.Mesh(new THREE.CylinderGeometry(0.03, 0.03, 0.5, 6), dark);
+    stem.position.set(x, y - 0.25, 0);
+    g.add(stem);
+    const lamp = new THREE.Mesh(new THREE.SphereGeometry(0.3, 10, 8),
+      new THREE.MeshBasicMaterial({ color: cols[i], fog: false }));
+    lamp.scale.y = 1.25;
+    lamp.position.set(x, y - 0.85, 0);
+    g.add(lamp);
+  }
+  glow(g, 0, 7.4, 0.3, 4.2, 0xffa245, 0.18);
+  g.position.set(0, 0, FG_Z);
+  scene.add(g);
+  return { def, mesh: g, ring: null };
+}
+const bannerTex = canvasTex(512, 224, (ctx, W, H) => {
+  ctx.fillStyle = 'rgba(88,22,32,0.98)'; ctx.fillRect(0, 0, W, H);
+  ctx.fillStyle = 'rgba(64,14,24,0.9)';
+  for (let x = 0; x < W; x += 64) ctx.fillRect(x, 0, 30, H);
+  ctx.strokeStyle = 'rgba(232,184,96,0.85)'; ctx.lineWidth = 6;
+  ctx.strokeRect(12, 12, W - 24, H - 24);
+  ctx.strokeStyle = 'rgba(255,220,150,0.9)'; ctx.lineWidth = 10; ctx.lineCap = 'round';
+  ctx.beginPath();
+  ctx.moveTo(120, 80); ctx.lineTo(250, 80);
+  ctx.moveTo(185, 45); ctx.lineTo(185, 150);
+  ctx.moveTo(145, 168); ctx.lineTo(225, 168);
+  ctx.stroke();
+  ctx.beginPath(); ctx.arc(360, 105, 42, 0, 7); ctx.stroke();
+  ctx.beginPath(); ctx.moveTo(360, 78); ctx.lineTo(360, 132); ctx.stroke();
+});
+function makeBanner(def) {
+  const g = new THREE.Group();
+  const dark = new THREE.MeshBasicMaterial({ color: 0x11151c, fog: true });
+  const post = new THREE.Mesh(new THREE.CylinderGeometry(0.11, 0.15, 8.2, 8), dark);
+  post.position.set(-2.7, 4.1, 0);
+  g.add(post);
+  const bar = new THREE.Mesh(new THREE.BoxGeometry(5.6, 0.14, 0.14), dark);
+  bar.position.set(0, 7.9, 0);
+  g.add(bar);
+  const cloth = new THREE.Mesh(new THREE.PlaneGeometry(4.3, 1.9),
+    new THREE.MeshBasicMaterial({ map: bannerTex, fog: true, side: THREE.DoubleSide }));
+  cloth.position.set(0.15, 6.85, 0);
+  g.add(cloth);
+  const small = new THREE.Mesh(new THREE.PlaneGeometry(1.3, 1.0),
+    new THREE.MeshBasicMaterial({ map: signBoardTex, fog: true }));
+  small.position.set(1.15, 5.55, 0.06);
+  g.add(small);
+  g.position.set(0, 0, FG_Z);
+  scene.add(g);
+  return { def, mesh: g, ring: null };
+}
+const awningEdgeTex = canvasTex(512, 160, (ctx, W, H) => {
+  for (let x = 0; x < W; x += 64) {
+    ctx.fillStyle = (x / 64) % 2 ? 'rgba(70,20,26,0.98)' : 'rgba(24,42,48,0.98)';
+    ctx.fillRect(x, 0, 64, H);
+  }
+  ctx.fillStyle = 'rgba(232,184,96,0.75)';
+  ctx.fillRect(0, H - 40, W, 5);
+  ctx.globalCompositeOperation = 'destination-out';
+  for (let x = 32; x < W; x += 64) {
+    ctx.beginPath(); ctx.arc(x, H + 6, 30, 0, 7); ctx.fill();
+  }
+});
+function makeAwningEdge(def) {
+  const g = new THREE.Group();
+  const dark = new THREE.MeshBasicMaterial({ color: 0x11151c, fog: true });
+  const bar = new THREE.Mesh(new THREE.BoxGeometry(7.6, 0.12, 0.12), dark);
+  bar.position.set(0, 10.05, 0);
+  g.add(bar);
+  for (const sx of [-3.5, 3.5]) {
+    const rod = new THREE.Mesh(new THREE.CylinderGeometry(0.05, 0.05, 2.6, 6), dark);
+    rod.position.set(sx, 9.0, -0.5);
+    rod.rotation.x = 0.5;
+    g.add(rod);
+  }
+  const cloth = new THREE.Mesh(new THREE.PlaneGeometry(7.6, 2.7),
+    new THREE.MeshBasicMaterial({ map: awningEdgeTex, transparent: true, fog: true, side: THREE.DoubleSide }));
+  cloth.position.set(0, 8.85, 0);
+  cloth.rotation.x = -0.3;
+  g.add(cloth);
+  g.position.set(0, 0, FG_Z);
+  scene.add(g);
+  return { def, mesh: g, ring: null };
+}
+function makeLaundry(def) {
+  const g = new THREE.Group();
+  const dark = new THREE.MeshBasicMaterial({ color: 0x14181f, fog: true });
+  for (const sx of [-2.9, 2.9]) {
+    const post = new THREE.Mesh(new THREE.CylinderGeometry(0.08, 0.11, 5.4, 8), dark);
+    post.position.set(sx, 2.7, 0);
+    g.add(post);
+  }
+  const lineY = k => 5.15 - Math.sin(k * Math.PI) * 0.4;
+  const pts = [];
+  for (let i = 0; i <= 12; i++) {
+    const k = i / 12;
+    pts.push(new THREE.Vector3(-2.9 + 5.8 * k, lineY(k), 0));
+  }
+  g.add(new THREE.Line(new THREE.BufferGeometry().setFromPoints(pts),
+    new THREE.LineBasicMaterial({ color: 0x0a0c10 })));
+  const cols = [0xd8cfc0, 0x9fb4c0, 0xc79a8a, 0xa8b8a0];
+  [0.16, 0.4, 0.64, 0.87].forEach((k, i) => {
+    const cloth = new THREE.Mesh(new THREE.PlaneGeometry(0.9, 1.15),
+      new THREE.MeshBasicMaterial({ color: cols[i], fog: true, side: THREE.DoubleSide }));
+    cloth.position.set(-2.9 + 5.8 * k, lineY(k) - 0.62, 0);
+    cloth.rotation.z = (i % 2 ? -1 : 1) * 0.05;
+    g.add(cloth);
+  });
+  /* inside the scene: just in front of the play plane, behind the
+     camera-side foreground */
+  g.position.set(0, 0, STREET_Z + 1.2);
+  scene.add(g);
+  return { def, mesh: g, ring: null };
+}
+const fgProps = FG_PROPS.map(d =>
+  d.kind === 'pole' ? makeLampPole(d) :
+  d.kind === 'sign' ? makeSignPost(d) :
+  d.kind === 'lantern' ? makeLanternString(d) :
+  d.kind === 'banner' ? makeBanner(d) :
+  d.kind === 'awning' ? makeAwningEdge(d) :
+  makeLaundry(d));
+/* the pushcart: crosses THE STREET itself (in-scene, just in front
+   of the play plane) on its own slow path, wrapping the section —
+   when it passes Miso is pure timing, which is what makes it feel
+   like a street and not a pattern. Visual only, no collision. */
+const streetCart = (() => {
+  const g = new THREE.Group();
+  const dark = new THREE.MeshBasicMaterial({ color: 0x171208, fog: true });
+  g.add(box(2.4, 1.05, 1.25, 0x171208, 0, 1.25, 0));
+  g.add(box(2.7, 0.14, 1.5, 0x241a10, 0, 2.4, 0));
+  g.add(box(0.1, 0.65, 0.1, 0x171208, -1.2, 2.0, 0.6));
+  g.add(box(0.1, 0.65, 0.1, 0x171208, 1.2, 2.0, 0.6));
+  for (const wx of [-0.85, 0.85]) {
+    const wheel = new THREE.Mesh(new THREE.CylinderGeometry(0.44, 0.44, 0.12, 14), dark);
+    wheel.rotation.x = Math.PI / 2;
+    wheel.position.set(wx, 0.44, 0.66);
+    g.add(wheel);
+  }
+  for (const [gx, gc] of [[-0.6, 0x8a6a30], [0.1, 0x74553a], [0.7, 0x5d6d3d]]) {
+    const goods = new THREE.Mesh(new THREE.SphereGeometry(0.3, 8, 7),
+      new THREE.MeshBasicMaterial({ color: gc, fog: true }));
+    goods.position.set(gx, 1.95, 0);
+    g.add(goods);
+  }
+  glow(g, 1.25, 1.9, 0.8, 1.6, 0xffa245, 0.3);
+  g.position.set(0, 0, STREET_Z + 0.9);
+  scene.add(g);
+  return { mesh: g, x: 120 };
+})();
+
+/* yarn ball + string */
+const yarnBall = new THREE.Mesh(new THREE.SphereGeometry(0.17, 12, 10), new THREE.MeshBasicMaterial({ color: 0xff7a26 }));
+yarnBall.visible = false;
+scene.add(yarnBall);
+glow(yarnBall, 0, 0, 0, 0.85, 0xff7a26, 0.35);
+const STRING_PTS = 9;
+const stringGeo = new THREE.BufferGeometry();
+stringGeo.setAttribute('position', new THREE.BufferAttribute(new Float32Array(STRING_PTS * 3), 3));
+const yarnString = new THREE.Line(stringGeo, new THREE.LineBasicMaterial({ color: 0xffa050, transparent: true, opacity: 0.9 }));
+yarnString.visible = false;
+yarnString.frustumCulled = false;
+scene.add(yarnString);
+const yarn = { active: false, phase: 'out', dist: 0, dir: 1, x: 0, y: 1.2, z: STREET_Z, cool: 0 };
+/* ------------------------- yarn swing (grapple) -------------------------
+   Pressing yarn near a hookable lamp pole (yarn ring at ANCHOR_Y)
+   HOOKS instead of throwing — unless a dog is right in front of
+   Miso, in which case the throw keeps priority (the throw is the
+   ranged attack; the hook is for travel + swing kicks). Pendulum:
+   th from straight-down, w = angular velocity; the camera follows
+   because G.playerX tracks the swing position. Hold ←/→ to pump.
+   Attack while swinging = swing kick (continuous hit window, extra
+   knockback). Jump or yarn again releases with swing velocity. */
+const swing = { on: false, ax: 0, L: 0, th: 0, w: 0, px: 0, py: 0, kickT: 0, kickDir: 1, kickHit: new Set() };
+let swingDrift = 0;
+function anchorInRange(force) {
+  let best = null, bestD = 1e9;
+  for (const a of FG_ANCHORS) {
+    const dx = a.x - G.playerX;
+    if (!force && (dx < -0.6 || dx > 2.8)) continue;
+    if (Math.abs(dx) < bestD) { bestD = Math.abs(dx); best = a; }
+  }
+  return best;
+}
+function tryHook(force = false) {
+  const a = anchorInRange(force);
+  if (!a) return false;
+  if (!force) {
+    /* a dog right in front keeps the throw's priority */
+    for (const e of enemies) {
+      if (e.dead) continue;
+      const d = (e.x - G.playerX) * G.facing;
+      if (d > 0 && d < 7.5) return false;
+    }
+  }
+  const dx = G.playerX - a.x, dy = ANCHOR_Y - G.jumpY;
+  swing.on = true; swing.ax = a.x;
+  swing.L = Math.hypot(dx, dy);
+  swing.th = Math.atan2(dx, dy);
+  swing.w = 0; swing.kickT = 0; swing.kickHit = new Set();
+  swing.px = G.playerX; swing.py = G.jumpY;
+  if (dx !== 0) G.facing = dx > 0 ? 1 : -1;
+  yarn.cool = 0.25;
+  AudioPack.sfx('throw');
+  return true;
+}
+function swingPoint() {
+  swing.px = swing.ax + swing.L * Math.sin(swing.th);
+  swing.py = Math.max(0.12, ANCHOR_Y - swing.L * Math.cos(swing.th));
+}
+function releaseSwing() {
+  swingPoint();
+  const vx = swing.L * swing.w * Math.cos(swing.th);
+  const vy = swing.L * swing.w * Math.sin(swing.th);
+  G.playerX = THREE.MathUtils.clamp(swing.px, 2, section().len - 2);
+  G.jumpY = swing.py; G.vy = vy;
+  swingDrift = vx;
+  if (Math.abs(vx) > 0.6) G.facing = vx > 0 ? 1 : -1;
+  swing.on = false; swing.kickT = 0;
+  yarn.cool = 0.25;
+}
+function dropSwing() {
+  /* hurt / section change: detach straight down, no momentum */
+  swingPoint();
+  G.playerX = THREE.MathUtils.clamp(swing.px, 2, section().len - 2);
+  G.jumpY = swing.py; G.vy = 0; swingDrift = 0;
+  swing.on = false; swing.kickT = 0;
+}
+function startSwingKick() {
+  startMisoAttack('kick');
+  swing.kickT = 0.4;
+  swing.kickHit = new Set();
+  const vx = swing.L * swing.w * Math.cos(swing.th);
+  swing.kickDir = Math.sign(vx) || G.facing;
+  G.facing = swing.kickDir;
+}
+/* (the old paw-swipe arc was removed in the combat overhaul — swings
+   now use the pooled comic swooshes in the impact FX section) */
+
+/* ============================ game state ============================ */
+const SECTIONS = [
+  { district: 'amber', label: 'AMBER MARKET', sub: 'LEVEL 1 — THE STREET', base: 0, len: 162, tier: 0,
+    waves: ['dane', 'dane', 'beagle', 'dane'], alley: true },
+  { district: 'pink', label: 'NEON PINK PLAZA', sub: 'LEVEL 1 — BOSS BLOCK', base: 6 * SEG_W, len: 162, tier: 2,
+    waves: ['dane', 'beagle', 'dane', 'bulldog'], alley: false }
+];
+/* teal exists in the district system (stream idx 3-5, ZONE_STYLE, stats
+   tiers) but is framework-only in Level 1 — it is Level 2 content. */
+const G = {
+  mode: 'title', hearts: 3, score: 0, elapsed: 0,
+  sectionIdx: 0, playerX: 8, facing: 1, vy: 0, jumpY: 0,
+  invulnT: 0, shakeT: 0, stepAcc: 0, time: 0, throws: 0,
+  punches: 0, kicks: 0, dmgDealt: 0
+};
+let enemies = [];
+let pickups = [];
+let waveQueue = [];
+let spawnT = 0;
+let alleyOpen = false;
+let bossRef = null;
+const section = () => SECTIONS[G.sectionIdx];
+
+/* alley entrance marker (glowing arch at the end of a cleared street) */
+const alleySign = new THREE.Group();
+{
+  const sign = paintedPlane('art/near-stall.webp', 5.2, 6.4, { transparent: true, alphaMap: fadeTex });
+  sign.position.y = 3.2;
+  alleySign.add(sign);
+  glow(alleySign, 0, 3.4, 0.5, 6.5, 0x7df9e8, 0.0);
+  glow(alleySign, 0, 5.6, 0.5, 3.2, 0xffa245, 0.0);
+  alleySign.position.set(0, 0, -6.5);
+  scene.add(alleySign);
+}
+const ENTRANCE_LOCAL = 148;
+function entranceWorldX() { return ANCHOR_X + (ENTRANCE_LOCAL - G.playerX); }
+
+/* ------------------------------- input ------------------------------- */
+const keys = {};
+let pressed = {};
+window.addEventListener('keydown', e => {
+  if (!e.repeat) pressed[e.code] = true;
+  keys[e.code] = true;
+  if (['ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown', 'Space'].includes(e.code)) e.preventDefault();
+});
+window.addEventListener('keyup', e => { keys[e.code] = false; });
+const wantTouch = isTouchDevice() || FLAGS.has('touch');
+const TC = wantTouch ? new TouchController({
+  buttons: [
+    { id: 'a', label: '👊' },
+    { id: 'b', label: '🧶' }
+  ],
+  maxRadius: 56,
+  deadzone: 0.18,
+  force: FLAGS.has('touch')
+}) : null;
+let prevStickY = 0, prevStickX = 0;
+function readInput() {
+  const ti = TC ? TC.getInput() : null;
+  const stickUpEdge = !!ti && prevStickY > -0.6 && ti.y <= -0.6;
+  const stickDownEdge = !!ti && prevStickY < 0.6 && ti.y >= 0.6;
+  const stickLeftEdge = !!ti && prevStickX > -0.5 && ti.x <= -0.5;
+  const stickRightEdge = !!ti && prevStickX < 0.5 && ti.x >= 0.5;
+  if (ti) { prevStickY = ti.y; prevStickX = ti.x; }
+  const inp = {
+    left: !!(keys.ArrowLeft || keys.KeyA) || (!!ti && ti.x < -0.35),
+    right: !!(keys.ArrowRight || keys.KeyD) || (!!ti && ti.x > 0.35),
+    leftEdge: !!(pressed.ArrowLeft || pressed.KeyA) || stickLeftEdge,
+    rightEdge: !!(pressed.ArrowRight || pressed.KeyD) || stickRightEdge,
+    jump: !!(pressed.Space || pressed.ArrowUp || pressed.KeyW) || stickUpEdge,
+    up: !!(pressed.ArrowUp || pressed.KeyW) || stickUpEdge,
+    duck: !!(keys.ArrowDown || keys.KeyS) || (!!ti && ti.y > 0.55),
+    duckEdge: !!(pressed.ArrowDown || pressed.KeyS) || stickDownEdge,
+    throw: !!(pressed.KeyX || pressed.KeyJ) || (!!ti && !!ti.bPressed),
+    punch: !!(pressed.KeyZ || pressed.KeyK) || (G.mode === 'street' && !!ti && !!ti.aPressed),
+    punchTouch: G.mode === 'street' && !!ti && !!ti.aPressed && !(pressed.KeyZ || pressed.KeyK),
+    kick: !!(pressed.KeyC || pressed.KeyV)
+  };
+  if (window.__autoInput) {
+    const a = window.__autoInput;
+    inp.left = inp.left || a.left; inp.right = inp.right || a.right;
+    inp.jump = inp.jump || a.jump; inp.up = inp.up || a.up;
+    inp.duck = inp.duck || a.duck; inp.duckEdge = inp.duckEdge || a.duck;
+    inp.throw = inp.throw || a.throw; inp.punch = inp.punch || a.punch || a.swipe; inp.kick = inp.kick || a.kick;
+    inp.leftEdge = inp.leftEdge || a.left; inp.rightEdge = inp.rightEdge || a.right;
+  }
+  return inp;
+}
+
+/* -------------------------------- HUD -------------------------------- */
+const el = id => document.getElementById(id);
+const heartsEl = el('hearts'), scoreEl = el('scoreVal'), distEl = el('districtLabel');
+const promptEl = el('prompt'), hintEl = el('hint');
+const bossWrap = el('bossWrap'), bossBar = el('bossBar');
+let promptUntil = 0;
+function updateHearts() {
+  heartsEl.innerHTML = [0, 1, 2].map(i =>
+    `<span class="${i < G.hearts ? '' : 'off'}">🐾</span>`).join('');
+}
+function updateScore() { scoreEl.textContent = G.score; }
+function showPrompt(html, secs = 2.6) {
+  promptEl.innerHTML = html;
+  promptEl.style.opacity = 1;
+  promptUntil = G.time + secs;
+}
+function setDistrictLabel() {
+  const s = section();
+  distEl.innerHTML = `${s.label}<span id="districtSub">${s.sub}</span>`;
+}
+let dmgFlashV = 0;
+
+/* ------------------------------ enemies ------------------------------ */
+function spawnEnemy(type) {
+  const st = DOG_STATS[type];
+  const tier = section().tier;
+  const e = {
+    type, hp: st.hp[tier], maxHp: st.hp[tier],
+    speed: st.speed[tier], reach: st.reach, score: st.score, boss: !!st.boss,
+    x: Math.min(G.playerX + 17, section().len - 4),
+    zoff: (Math.random() - 0.5) * 0.5,
+    state: 'chase', t: 0, facing: -1, kb: 0, flashT: 0, char: null, dead: false,
+    strikeHitDone: false, vy: 0, jumpY: 0, freezeT: 0, squashT: 0
+  };
+  enemies.push(e);
+  getDogVisual(type).then(v => {
+    e.char = instantiate(v);
+    e.pose = e.char ? (e.char.pose || null) : null;
+    /* boss presence: Bruno reads ~18% larger on his block (visual only —
+       hit logic is x-distance based and never reads the wrap scale) */
+    if (e.char && e.boss) e.char.wrap.scale.multiplyScalar(1.18);
+    if (e.char && !e.dead) scene.add(e.char.wrap);
+  });
+  if (e.boss) { bossRef = e; bossWrap.style.display = 'block'; bossBar.style.width = '100%'; }
+  return e;
+}
+function hurtEnemy(e, dmg, dir, kind) {
+  if (e.dead || e.state === 'down') return;
+  e.hp -= dmg;
+  G.dmgDealt += dmg;
+  e.flashT = 0.16;
+  e.squashT = 0.22;
+  e.kb += dir * (e.boss ? 0.7 : 2.4);
+  AudioPack.sfx(kind === 'punch' ? 'punchhit' : kind === 'kick' ? 'kickhit' : 'hit');
+  /* impact language: hit-stop freezes both fighters on melee connects;
+     the yarn gets a shorter enemy-only stop so throws stay snappy */
+  if (kind === 'punch' || kind === 'kick') {
+    e.freezeT = Math.max(e.freezeT || 0, 0.085);
+    misoFreezeT = Math.max(misoFreezeT, 0.085);
+    G.shakeT = Math.max(G.shakeT, 0.07); // tiny impact kick, not a screen shake
+  } else if (kind === 'yarn') {
+    e.freezeT = Math.max(e.freezeT || 0, 0.05);
+  }
+  if (kind && kind !== 'debug') {
+    const wx = ANCHOR_X + (e.x - G.playerX);
+    spawnImpactBurst(wx, 1.55, STREET_Z + e.zoff + 1.1, kind === 'yarn' ? 0.8 : 1.15);
+    spawnPopup(kind, wx + dir * 0.3, 2.65, STREET_Z + e.zoff + 1.3, kind === 'yarn' ? 0.8 : 1);
+  }
+  if (e.hp <= 0) {
+    e.state = 'down'; e.t = 0; e.dead = true;
+    G.score += e.score; updateScore();
+    AudioPack.sfx('yip');
+    const wx = ANCHOR_X + (e.x - G.playerX);
+    spawnBurst(wx, 1.6, STREET_Z + e.zoff);
+    if (e.char) charPlay(e.char, 'Down', false);
+    if (Math.random() < 0.25 && G.hearts < 3) dropFish(e.x);
+    if (e.boss) { bossRef = null; bossWrap.style.display = 'none'; }
+  } else {
+    e.state = 'hitstun'; e.t = 0;
+    if (e.char) charPlay(e.char, 'Hit', false);
+  }
+  if (e.boss) bossBar.style.width = Math.max(0, e.hp / e.maxHp * 100) + '%';
+}
+function dropFish(x) {
+  const m = makeFish();
+  m.position.set(ANCHOR_X + (x - G.playerX), 1.0, STREET_Z);
+  scene.add(m);
+  pickups.push({ kind: 'fish', x, mesh: m, t: 0 });
+}
+function placeStreetStars() {
+  for (const p of pickups) if (p.kind === 'star') scene.remove(p.mesh);
+  pickups = pickups.filter(p => p.kind !== 'star');
+  for (const lx of [30, 55, 80, 105, 128]) {
+    const m = makeStar();
+    scene.add(m);
+    pickups.push({ kind: 'star', x: lx, mesh: m, t: Math.random() * 6 });
+  }
+}
+let misoFlashT = 0;
+function hurtPlayer(srcX) {
+  if (G.invulnT > 0 || (G.mode !== 'street' && G.mode !== 'runner')) return;
+  G.hearts--;
+  updateHearts();
+  AudioPack.sfx('hurt');
+  dmgFlashV = 1;
+  G.invulnT = 1.4;
+  if (G.mode === 'street') {
+    /* getting hit knocks Miso off the yarn — he drops straight to
+       the street (safe landing), then the usual hurt treatment */
+    if (swing.on) dropSwing();
+    /* same comic language, pointed at Miso: red burst + OUCH popup +
+       red emissive flash + a beat of hit-stop */
+    misoFlashT = 0.18;
+    misoFreezeT = Math.max(misoFreezeT, 0.06);
+    spawnImpactBurst(ANCHOR_X, 1.5, STREET_Z + 1.1, 0.95, 0xff7a5e);
+    spawnPopup('hurt', ANCHOR_X + 0.2, 2.7, STREET_Z + 1.3, 0.95);
+    G.playerX = THREE.MathUtils.clamp(G.playerX + (G.playerX < srcX ? -1.7 : 1.7), 2, section().len - 2);
+  }
+  if (G.hearts <= 0) gameOver();
+}
+
+/* --------------------------- street update --------------------------- */
+const flashSprite = new THREE.Sprite(new THREE.SpriteMaterial({
+  map: glowTex, color: 0xffffff, transparent: true, opacity: 0,
+  blending: THREE.AdditiveBlending, depthWrite: false
+}));
+flashSprite.scale.setScalar(3.2);
+scene.add(flashSprite);
+let flashT = 0;
+
+/* ---------------- Miso melee: punch & kick ----------------
+   Attacks are runtime pose overrides (see the pose section): a
+   wind-up pose blends into a strike pose with easeOutBack overshoot,
+   holds, then recovers. Hit registration happens once per swing at
+   hitAt, with a hitbox generous enough that a punch that LOOKS like
+   it lands does land. Per-actor hit-stop runs through freeze timers:
+   Miso's mixer + attack timeline freeze (misoFreezeT / misoFrozen),
+   each enemy freezes its own logic + mixer (e.freezeT). */
+const ATK_DEF = {
+  punch: { dur: 0.36, hitAt: 0.145, range: 2.35, sfxWhoosh: 'whoosh' },
+  kick:  { dur: 0.48, hitAt: 0.215, range: 2.55, sfxWhoosh: 'kickwhoosh' }
+};
+const misoAtk = { kind: null, t: 0, dur: 0, hitAt: 0, hitDone: false, whooshDone: false, dir: 1 };
+let misoFreezeT = 0, misoFrozen = false, atkCoolT = 0, comboAlt = false;
+function startMisoAttack(kind) {
+  const def = ATK_DEF[kind];
+  misoAtk.kind = kind; misoAtk.t = 0; misoAtk.dur = def.dur; misoAtk.hitAt = def.hitAt;
+  misoAtk.hitDone = false; misoAtk.whooshDone = false; misoAtk.dir = G.facing;
+  if (kind === 'punch') G.punches++; else G.kicks++;
+}
+function spawnAttackSwoosh(kind, dir) {
+  const baseY = swing.on ? swing.py : G.jumpY;
+  if (kind === 'punch')
+    spawnSwoosh(ANCHOR_X + dir * 1.3, 1.6 + baseY, STREET_Z + 1.0, 1.2, dir, 0.95, -1.15, 0xbfe8ff);
+  else
+    spawnSwoosh(ANCHOR_X + dir * 1.35, 1.05 + baseY, STREET_Z + 1.0, 1.55, dir, 1.25, -0.75, 0xffd9a0);
+}
+/* pose keyframes: W = wind-up (anticipation), S = strike (full
+   extension). Scalars: fist (hand scale), innerDX/innerDY (lunge /
+   hop on the model root), hipsDY (crouch dip). */
+/* arm-chain axes on this rig are rolled ~90° vs the hips: a forward
+   arm swing is rx/rz MIXED (measured on the standalone rig — pure rz
+   punches at the camera; rx -2.4 / rz -1.1 gives a full horizontal
+   extension along the facing axis) */
+const PUNCH_W = {
+  upperarmR: [0.55, 0, 0.3], forearmR: [-1.6, 0, -0.8],
+  upperarmL: [-0.5, 0, -0.25], forearmL: [-0.9, 0, -0.45],
+  chest: [0, -0.28, 0.05], spine: [0, -0.12, 0.03],
+  fist: 1, innerDX: -0.1, innerDY: 0, hipsDY: -0.07
+};
+const PUNCH_S = {
+  upperarmR: [-2.4, 0, -0.85], forearmR: [-0.2, 0, -0.1],
+  upperarmL: [1.3, 0, 0.6], forearmL: [0.5, 0, 0.25],
+  chest: [0, -0.25, 0.17], spine: [0, -0.12, 0.08], head: [0, -0.14, 0],
+  thighL: [0, 0, -0.25], thighR: [0, 0, 0.3],
+  fist: 1.85, innerDX: 0.45, innerDY: -0.03, hipsDY: -0.09
+};
+const KICK_W = {
+  thighR: [0, 0, -0.55], shinR: [0, 0, 1.35],
+  upperarmR: [0, 0, 0.3], upperarmL: [0, 0, 0.3], chest: [0, 0, -0.06],
+  fist: 1, innerDX: -0.06, innerDY: 0, hipsDY: -0.1
+};
+const KICK_S = {
+  thighR: [0, 0, -1.78], shinR: [0, 0, 0.06], footR: [0, 0, -0.45],
+  chest: [0, 0, -0.3], spine: [0, 0, -0.15], head: [0, 0, -0.1],
+  upperarmR: [0, 0, 0.7], upperarmL: [0, 0, 0.7],
+  forearmR: [0, 0, 0.4], forearmL: [0, 0, 0.4], thighL: [0, 0, 0.2],
+  fist: 1, innerDX: 0.32, innerDY: 0.13, hipsDY: -0.02
+};
+function applyMisoPose() {
+  const a = miso.char && miso.char.pose;
+  if (!a) return;
+  poseSave(a);
+  if (!misoAtk.kind) return;
+  const W = misoAtk.kind === 'punch' ? PUNCH_W : KICK_W;
+  const S = misoAtk.kind === 'punch' ? PUNCH_S : KICK_S;
+  const u = Math.min(1, misoAtk.t / misoAtk.dur);
+  let kw = 0, ks = 0;
+  if (u < 0.22) { const k = u / 0.22; kw = k * k; }
+  else if (u < 0.45) { const k = (u - 0.22) / 0.23; kw = 1 - k; ks = easeOutBackF(k); }
+  else if (u < 0.62) { ks = 1; }
+  else { const k = (u - 0.62) / 0.38; ks = 1 - k * k * (3 - 2 * k); }
+  const names = new Set([...Object.keys(W), ...Object.keys(S)]);
+  for (const n of names) {
+    if (n === 'fist' || n === 'innerDX' || n === 'innerDY' || n === 'hipsDY') continue;
+    const w = W[n] || [0, 0, 0], s = S[n] || [0, 0, 0];
+    pRot(a, n, w[0] * kw + s[0] * ks, w[1] * kw + s[1] * ks, w[2] * kw + s[2] * ks);
+  }
+  pScale(a, 'handR', 1 + ((W.fist || 1) - 1) * kw + ((S.fist || 1) - 1) * ks);
+  innerOff(a, (W.innerDX || 0) * kw + (S.innerDX || 0) * ks,
+              (W.innerDY || 0) * kw + (S.innerDY || 0) * ks, 0);
+  pOff(a, 'hips', 0, (W.hipsDY || 0) * kw + (S.hipsDY || 0) * ks, 0);
+}
+/* dog fight poses: telegraph = rear back with paws up; strike = the
+   Attack clip plus a forward-pitch overshoot that decays */
+function applyDogPose(e) {
+  const a = e.pose;
+  if (!a) return;
+  const big = e.boss ? 1.35 : 1;
+  if (e.state === 'telegraph') {
+    const w = Math.min(1, e.t / 0.26), k = w * w;
+    pRot(a, 'chest', 0, 0, -0.24 * big * k);
+    pRot(a, 'spine', 0, 0, -0.13 * big * k);
+    pRot(a, 'head', 0, 0, -0.12 * k);
+    pRot(a, 'upperarmR', 0, 0, -1.05 * k);
+    pRot(a, 'upperarmL', 0, 0, -1.05 * k);
+    pRot(a, 'forearmR', 0, 0, 0.35 * k);
+    pRot(a, 'forearmL', 0, 0, 0.35 * k);
+    pOff(a, 'hips', 0, (e.boss ? 0.09 : -0.055) * k, 0);
+  } else if (e.state === 'strike') {
+    const s = Math.max(0, 1 - e.t / 0.4);
+    pRot(a, 'chest', 0, 0, 0.3 * big * s);
+    pRot(a, 'spine', 0, 0, 0.14 * s);
+    pRot(a, 'head', 0, 0, 0.16 * s);
+    pRot(a, 'upperarmR', 0, 0, -0.55 * s);
+    pRot(a, 'upperarmL', 0, 0, -0.3 * s);
+  }
+}
+function updateStreet(dt, inp) {
+  const sec = section();
+  /* hit-stop bookkeeping: this frame's freeze state for Miso's
+     animation + attack timeline (positions/input stay live) */
+  misoFrozen = misoFreezeT > 0;
+  misoFreezeT = Math.max(0, misoFreezeT - dt);
+  /* movement */
+  const mv = (inp.right ? 1 : 0) - (inp.left ? 1 : 0);
+  let moving = mv !== 0;
+  if (swing.on) {
+    /* pendulum: gravity + pump (hold a direction to build swing in
+       that direction), light damping, hard clamps so the arc can
+       never reach the ground or wrap the pole */
+    const edtS = misoFrozen ? 0 : dt;
+    if (mv !== 0) swing.w += mv * 2.3 * edtS;
+    swing.w += -(26 / swing.L) * Math.sin(swing.th) * edtS;
+    swing.w *= Math.exp(-0.10 * edtS);
+    swing.w = THREE.MathUtils.clamp(swing.w, -2.9, 2.9);
+    swing.th = THREE.MathUtils.clamp(swing.th + swing.w * edtS, -1.2, 1.2);
+    swingPoint();
+    G.playerX = THREE.MathUtils.clamp(swing.px, 2, sec.len - 2);
+    moving = Math.abs(swing.w) > 0.25;
+    /* swing kick: continuous hit window while the kick pose is out —
+       connecting mid-pass deals kick damage + strong knockback */
+    swing.kickT = Math.max(0, swing.kickT - dt);
+    if ((inp.punch || inp.kick) && swing.kickT <= 0 && !misoAtk.kind) startSwingKick();
+    if (swing.kickT > 0) {
+      for (const e of enemies) {
+        if (e.dead || swing.kickHit.has(e)) continue;
+        if (Math.abs(e.x - G.playerX) < 2.05 && (e.jumpY || 0) < 1.6) {
+          swing.kickHit.add(e);
+          hurtEnemy(e, 1, swing.kickDir, 'kick');
+          e.kb += swing.kickDir * 3.4;
+        }
+      }
+    }
+    if (inp.jump) releaseSwing();
+  } else {
+    if (mv !== 0) G.facing = mv;
+    /* release drift: leftover swing momentum, decays fast */
+    if (swingDrift !== 0) {
+      G.playerX += swingDrift * dt;
+      swingDrift *= Math.exp(-2.6 * dt);
+      if (Math.abs(swingDrift) < 0.05) swingDrift = 0;
+    }
+    G.playerX = THREE.MathUtils.clamp(G.playerX + mv * 7.4 * dt, 2, sec.len - 2);
+    /* jump */
+    if (inp.jump && G.jumpY === 0) { G.vy = 9.8; G.jumpY = 0.001; AudioPack.sfx('jump'); }
+    if (G.jumpY > 0 || G.vy !== 0) {
+      G.jumpY += G.vy * dt; G.vy -= 24 * dt;
+      if (G.jumpY <= 0) { G.jumpY = 0; G.vy = 0; }
+    }
+  }
+  /* wave spawning */
+  if (waveQueue.length && enemies.filter(e => !e.dead).length < 2) {
+    spawnT -= dt;
+    if (spawnT <= 0) { spawnEnemy(waveQueue.shift()); spawnT = 0.9; }
+  }
+  /* throw / hook / release: yarn near a lamp-pole anchor hooks the
+     pole instead of throwing (a dog right in front keeps the throw);
+     yarn again while swinging releases */
+  yarn.cool -= dt;
+  if (inp.throw && !yarn.active) {
+    if (swing.on) releaseSwing();
+    else if (yarn.cool <= 0 && tryHook()) { /* hooked — no throw */ }
+    else if (yarn.cool <= 0) {
+      yarn.active = true; yarn.phase = 'out'; yarn.dist = 0;
+      yarn.dir = G.facing; yarn.x = G.playerX; yarn.z = STREET_Z;
+      G.throws++;
+      AudioPack.sfx('throw');
+    }
+  }
+  if (yarn.active) {
+    if (yarn.phase === 'out') {
+      yarn.dist += 17 * dt;
+      const bx = G.playerX + yarn.dir * yarn.dist;
+      for (const e of enemies) {
+        if (!e.dead && Math.abs(e.x - bx) < 0.9 && G.jumpY < 2.2) {
+          hurtEnemy(e, 1, yarn.dir, 'yarn');
+          yarn.phase = 'back';
+          break;
+        }
+      }
+      if (yarn.dist >= 7.5) yarn.phase = 'back';
+    } else {
+      yarn.dist -= 26 * dt;
+      if (yarn.dist <= 0) { yarn.active = false; yarn.cool = 0.32; }
+    }
+  }
+  /* melee: punch (Z) / kick (C) / touch-A combo. One hit check per
+     swing at hitAt; the pose itself is applied in renderMisoStreet. */
+  atkCoolT -= dt;
+  if (!swing.on && !misoAtk.kind && G.jumpY === 0 && atkCoolT <= 0) {
+    if (inp.punch) {
+      /* touch A alternates punch/kick as a combo; keyboard Z is
+         always a punch and C is always a kick */
+      if (inp.punchTouch && comboAlt) startMisoAttack('kick');
+      else startMisoAttack('punch');
+      if (inp.punchTouch) comboAlt = !comboAlt;
+    } else if (inp.kick) startMisoAttack('kick');
+  }
+  if (misoAtk.kind) {
+    const def = ATK_DEF[misoAtk.kind];
+    if (!misoFrozen && !(window.__debug && window.__debug.atkHold)) misoAtk.t += dt;
+    const u = misoAtk.t / misoAtk.dur;
+    if (!misoAtk.whooshDone && u >= 0.22) {
+      misoAtk.whooshDone = true;
+      AudioPack.sfx(def.sfxWhoosh);
+      spawnAttackSwoosh(misoAtk.kind, misoAtk.dir);
+    }
+    if (!misoAtk.hitDone && misoAtk.t >= misoAtk.hitAt) {
+      misoAtk.hitDone = true;
+      /* while swinging, hits are handled by the swing-kick window
+         (continuous pass check + strong knockback), not this one */
+      if (!swing.on) {
+        for (const e of enemies) {
+          const d = (e.x - G.playerX) * misoAtk.dir;
+          if (!e.dead && d > 0.05 && d < def.range) hurtEnemy(e, 1, misoAtk.dir, misoAtk.kind);
+        }
+      }
+    }
+    if (misoAtk.t >= misoAtk.dur) { misoAtk.kind = null; atkCoolT = 0.07; }
+  }
+  /* enemies */
+  for (const e of enemies) {
+    /* per-actor hit-stop: a frozen enemy's timers, movement and
+       mixer all hold for the freeze window */
+    let edt = dt;
+    if (e.freezeT > 0) { e.freezeT -= dt; edt = 0; }
+    if (window.__debug && window.__debug.holdEnemies) edt = 0;
+    e.t += edt;
+    e.flashT = Math.max(0, e.flashT - dt);
+    e.squashT = Math.max(0, (e.squashT || 0) - dt);
+    e.x += e.kb * edt;
+    e.kb *= Math.exp(-7 * edt);
+    e.x = THREE.MathUtils.clamp(e.x, 1, sec.len - 1);
+    if (e.state === 'down') {
+      if (e.char && e.t > 0.9) e.char.wrap.position.y = -Math.min(1.1, (e.t - 0.9) * 1.6);
+      continue;
+    }
+    const dx = G.playerX - e.x, adx = Math.abs(dx);
+    if (e.state === 'hitstun') {
+      if (e.t > 0.3) { e.state = 'chase'; e.t = 0; }
+    } else if (e.state === 'telegraph') {
+      e.facing = Math.sign(dx) || 1;
+      if (e.t >= 0.35) {
+        e.state = 'strike'; e.t = 0; e.strikeHitDone = false;
+        if (e.char) charPlay(e.char, 'Attack', false);
+        AudioPack.sfx('lunge');
+        spawnSwoosh(ANCHOR_X + (e.x - G.playerX) + e.facing * 0.9, 1.5,
+          STREET_Z + e.zoff + 1.0, e.boss ? 1.8 : 1.35, e.facing, 1.0, -1.2, 0xff9a7a);
+        if (e.boss) { e.vy = 7.5; e.jumpY = 0.001; }
+      }
+    } else if (e.state === 'strike') {
+      if (e.boss) {
+        /* ground slam: rises, falls, shockwave on landing */
+        if (e.jumpY > 0 || e.vy !== 0) {
+          e.jumpY += e.vy * edt; e.vy -= 26 * edt;
+          e.x += e.facing * 1.4 * edt;
+          if (e.jumpY <= 0) {
+            e.jumpY = 0; e.vy = 0;
+            G.shakeT = 0.35;
+            AudioPack.sfx('crash');
+            const wxB = ANCHOR_X + (e.x - G.playerX);
+            spawnBurst(wxB, 0.7, STREET_Z + e.zoff);
+            spawnImpactBurst(wxB, 0.9, STREET_Z + e.zoff + 1.0, 1.25, 0xffd9a0);
+            if (adx < 2.0 && G.jumpY === 0) hurtPlayer(e.x);
+          }
+        }
+        if (e.t > 0.85) { e.state = 'chase'; e.t = 0; }
+      } else {
+        /* committed lunge: faster drive, hit checked across the
+           whole pass-through window instead of one instant */
+        e.x += e.facing * e.speed * 3.4 * edt;
+        if (!e.strikeHitDone && e.t > 0.05) {
+          if (Math.abs(G.playerX - e.x) < 1.05 && G.jumpY < 1.15) {
+            e.strikeHitDone = true;
+            hurtPlayer(e.x);
+          } else if (e.t > 0.32) e.strikeHitDone = true;
+        }
+        if (e.t > 0.45) { e.state = 'chase'; e.t = 0; }
+      }
+    } else { /* chase */
+      if (adx > e.reach * 0.82) {
+        e.facing = Math.sign(dx) || 1;
+        e.x += e.facing * e.speed * edt;
+      } else if (G.jumpY < 1.2) {
+        e.state = 'telegraph'; e.t = 0;
+        AudioPack.sfx('bark');
+      }
+    }
+    /* separation so dogs don't stack */
+    for (const o of enemies) {
+      if (o !== e && !o.dead && Math.abs(o.x - e.x) < 0.85) e.x += Math.sign(e.x - o.x) * 1.4 * edt;
+    }
+    /* render */
+    if (e.char) {
+      const wx = ANCHOR_X + (e.x - G.playerX);
+      const bobA = (e.state === 'chase') ? Math.abs(Math.sin(G.time * 7 + e.x)) * 0.07 : 0;
+      e.char.wrap.position.set(wx, (e.jumpY || 0) + bobA, STREET_Z + e.zoff);
+      e.char.wrap.rotation.y = e.facing > 0 ? 0 : Math.PI;
+      if (e.pose) poseRestore(e.pose);
+      if (e.char.mixer) {
+        if (e.state === 'chase' && adx > e.reach) charPlay(e.char, 'Walk');
+        e.char.mixer.update(edt);
+      }
+      if (e.pose) {
+        poseSave(e.pose);
+        applyDogPose(e);
+        /* squash-and-stretch on the victim, recovering over ~0.22s */
+        if (e.squashT > 0) {
+          const p = 1 - e.squashT / 0.22;
+          const sq = Math.sin(p * Math.PI);
+          innerScale(e.pose, 1 + 0.17 * sq, 1 - 0.14 * sq, 1);
+        }
+      }
+      /* white emissive flash on the hit enemy */
+      const fk = e.flashT > 0 ? e.flashT / 0.16 : 0;
+      setEmissive(e.char, fk * 1.15, fk * 1.15, fk * 1.15);
+      if (e.flashT > 0) {
+        flashSprite.position.set(wx, 1.5, STREET_Z + e.zoff + 0.4);
+        flashT = Math.max(flashT, 0.1);
+      }
+    }
+  }
+  for (const e of enemies) if (e.state === 'down' && e.t > 1.5 && e.char) scene.remove(e.char.wrap);
+  enemies = enemies.filter(e => !(e.state === 'down' && e.t > 1.5));
+  /* pickups */
+  for (const p of pickups) {
+    p.t += dt;
+    if (p.kind === 'star') {
+      p.mesh.position.set(ANCHOR_X + (p.x - G.playerX), 1.15 + Math.sin(p.t * 2.4) * 0.14, STREET_Z);
+      p.mesh.rotation.y += dt * 2.4;
+      if (Math.abs(p.x - G.playerX) < 0.95 && G.jumpY < 1.2) {
+        p.got = true; G.score += 10; updateScore();
+        AudioPack.sfx('collect');
+        spawnBurst(ANCHOR_X, 1.4, STREET_Z, 0xffd75e);
+      }
+    } else {
+      p.mesh.position.set(ANCHOR_X + (p.x - G.playerX), 0.95 + Math.sin(p.t * 3) * 0.1, STREET_Z);
+      if (Math.abs(p.x - G.playerX) < 1.0 && G.jumpY < 1.2) {
+        p.got = true; G.hearts = Math.min(3, G.hearts + 1); updateHearts();
+        AudioPack.sfx('collect');
+      }
+    }
+  }
+  pickups = pickups.filter(p => !p.got);
+  /* district clear? */
+  const alive = enemies.some(e => !e.dead);
+  if (!waveQueue.length && !alive && G.mode === 'street') {
+    if (sec.alley && !alleyOpen) {
+      alleyOpen = true;
+      showPrompt('DISTRICT CLEAR!<small>reach the glowing alley and press ↑</small>', 3.4);
+    } else if (!sec.alley) {
+      winGame();
+    }
+  }
+  if (alleyOpen && Math.abs(G.playerX - ENTRANCE_LOCAL) < 2.2 && inp.up) startRunner();
+  /* Miso render + footsteps */
+  renderMisoStreet(dt, moving);
+}
+function renderMisoStreet(dt, moving) {
+  const breathe = Math.sin(G.time * 2.1) * 0.03;
+  misoG.position.set(ANCHOR_X, swing.on ? swing.py : G.jumpY + (moving ? 0 : breathe), STREET_Z);
+  /* lean into the swing arc */
+  misoG.rotation.z = swing.on ? -swing.th * 0.42 : 0;
+  const targetRot = G.facing > 0 ? 0 : Math.PI;
+  let d = targetRot - misoG.rotation.y;
+  while (d > Math.PI) d -= Math.PI * 2;
+  while (d < -Math.PI) d += Math.PI * 2;
+  misoG.rotation.y += d * Math.min(1, dt * 14);
+  if (miso.char && miso.char.mixer) {
+    /* pose overrides: undo last frame's deltas, let the mixer write
+       the base pose (frozen during hit-stop), then layer the attack */
+    if (miso.char.pose) poseRestore(miso.char.pose);
+    const mdt = misoFrozen ? 0 : dt;
+    if (moving || G.jumpY > 0) {
+      charPlay(miso.char, 'Walk');
+      miso.char.mixer.update(mdt * (moving ? 1.15 : 0.6));
+    } else {
+      charStop(miso.char);
+      miso.char.mixer.update(mdt);
+    }
+    applyMisoPose();
+    /* red emissive flash while Miso is freshly hurt */
+    misoFlashT = Math.max(0, misoFlashT - dt);
+    const mk = misoFlashT / 0.18;
+    if (misoFlashT > 0 || mk === 0) setEmissive(miso.char, mk * 1.2, mk * 0.25, mk * 0.25);
+  }
+  if (moving && G.jumpY === 0) {
+    G.stepAcc += 7.4 * dt;
+    if (G.stepAcc > 2.3) {
+      G.stepAcc = 0;
+      AudioPack.footstep(Math.random());
+      spawnPawRipple(ANCHOR_X + (Math.random() - 0.5) * 0.4, STREET_Z + 0.9);
+    }
+  }
+  /* yarn ball + string render: a throw in flight, or the taut
+     swing line from Miso's paw up to the anchor ring */
+  const showYarn = yarn.active || swing.on;
+  yarnBall.visible = showYarn;
+  yarnString.visible = showYarn;
+  if (swing.on && !yarn.active) {
+    const ax = ANCHOR_X + (swing.ax - G.playerX), ay = ANCHOR_Y;
+    yarnBall.position.set(ax, ay, STREET_Z);
+    const pos = stringGeo.attributes.position.array;
+    const px = ANCHOR_X + G.facing * 0.35, py = swing.py + 1.3;
+    for (let i = 0; i < STRING_PTS; i++) {
+      const k = i / (STRING_PTS - 1);
+      pos[i * 3] = px + (ax - px) * k;
+      pos[i * 3 + 1] = py + (ay - py) * k - Math.sin(k * Math.PI) * 0.1;
+      pos[i * 3 + 2] = STREET_Z;
+    }
+    stringGeo.attributes.position.needsUpdate = true;
+  } else if (showYarn) {
+    const bx = ANCHOR_X + yarn.dir * yarn.dist;
+    const by = 1.3 + Math.sin(Math.min(yarn.dist / 7.5, 1) * Math.PI) * 0.45 + G.jumpY;
+    yarnBall.position.set(bx, by, STREET_Z);
+    const pos = stringGeo.attributes.position.array;
+    const px = ANCHOR_X + G.facing * 0.4, py = 1.35 + G.jumpY;
+    for (let i = 0; i < STRING_PTS; i++) {
+      const k = i / (STRING_PTS - 1);
+      pos[i * 3] = px + (bx - px) * k;
+      pos[i * 3 + 1] = py + (by - py) * k - Math.sin(k * Math.PI) * 0.22;
+      pos[i * 3 + 2] = STREET_Z;
+    }
+    stringGeo.attributes.position.needsUpdate = true;
+  }
+  /* alley sign render */
+  const pulse = alleyOpen ? 0.55 + Math.sin(G.time * 5) * 0.3 : 0.13;
+  alleySign.position.x = entranceWorldX();
+  alleySign.children.forEach((c, i) => { if (c.isSprite) c.material.opacity = pulse; });
+  /* shadow + pool follow */
+  contactShadow.position.set(ANCHOR_X, 0.04, STREET_Z + 0.1);
+  const shScale = 1 - G.jumpY * 0.12;
+  contactShadow.scale.set(Math.max(0.5, shScale), Math.max(0.5, shScale), 1);
+  lightPool.position.set(ANCHOR_X, 0.06, STREET_Z + 0.3);
+  halo.position.set(ANCHOR_X, 1.35, STREET_Z - 0.3);
+}
+
+/* ---------------------------- runner mode ---------------------------- */
+const R = { t: 0, dur: 52, dist: 0, speed: 9, lane: 0, laneX: 0, vy: 0, jumpY: 0, duckT: 0, nextEv: 1.2, slowmo: 0 };
+let obstacles = [];
+function makeCrate() {
+  const g = new THREE.Group();
+  const b = box(1.7, 1.7, 1.7, 0x8a6a42, 0, 0.85, 0);
+  const lid = box(1.85, 0.18, 1.85, 0x6e5233, 0, 1.72, 0);
+  g.add(b, lid);
+  return g;
+}
+function makePuddle() {
+  const m = new THREE.Mesh(new THREE.CircleGeometry(1.25, 20),
+    new THREE.MeshBasicMaterial({ color: 0x51748f, transparent: true, opacity: 0.85, map: ringTex }));
+  m.rotation.x = -Math.PI / 2;
+  m.position.y = 0.03;
+  const g = new THREE.Group(); g.add(m);
+  return g;
+}
+function makeHangSign() {
+  const g = new THREE.Group();
+  const p = paintedPlane('art/near-stall2.webp', 3.1, 1.9, { transparent: true, alphaMap: fadeTex });
+  p.position.y = 3.6;
+  const bar = box(3.4, 0.14, 0.14, 0x2a2f36, 0, 4.62, 0);
+  g.add(p, bar);
+  return g;
+}
+const OB_POOL = { crate: [], puddle: [], sign: [], star: [], dog: [] };
+function getOb(kind) {
+  const pool = OB_POOL[kind];
+  let o = pool.find(o => !o.active);
+  if (!o) {
+    let mesh;
+    if (kind === 'crate') mesh = makeCrate();
+    else if (kind === 'puddle') mesh = makePuddle();
+    else if (kind === 'sign') mesh = makeHangSign();
+    else if (kind === 'star') mesh = makeStar();
+    else mesh = new THREE.Group();  // dog standee filled async below
+    o = { kind, mesh, active: false, lane: 0, z: 0, cleared: false, crossed: false, char: null };
+    alley.add(mesh);
+    pool.push(o);
+    if (kind === 'dog') {
+      const type = Math.random() < 0.5 ? 'dane' : 'beagle';
+      getDogVisual(type).then(v => {
+        const inst = instantiate(v);
+        o.char = inst;
+        if (inst) { mesh.add(inst.wrap); inst.wrap.rotation.y = -Math.PI / 2; }
+      });
+    }
+  }
+  o.active = true; o.cleared = false; o.crossed = false;
+  o.mesh.visible = true;
+  return o;
+}
+function spawnRunnerEvent() {
+  const lanes = [-1, 0, 1];
+  const freeLane = lanes[Math.floor(Math.random() * 3)];
+  const roll = Math.random();
+  if (roll < 0.30) {           // star line in one lane
+    const lane = lanes[Math.floor(Math.random() * 3)];
+    for (let i = 0; i < 5; i++) {
+      const o = getOb('star');
+      o.lane = lane; o.z = ALLEY_Z - 78 - i * 3.2;
+      o.mesh.position.set(lane * 2.2, 1.15, o.z);
+    }
+    return;
+  }
+  if (roll < 0.42) {           // dog standing in a lane
+    const o = getOb('dog');
+    o.lane = freeLane; o.z = ALLEY_Z - 78;
+    o.mesh.position.set(o.lane * 2.2, 0, o.z);
+    return;
+  }
+  /* obstacle row: block two lanes (or one), always leave freeLane open */
+  for (const lane of lanes) {
+    if (lane === freeLane) continue;
+    if (Math.random() < 0.22) continue;
+    const kind = ['crate', 'puddle', 'sign'][Math.floor(Math.random() * 3)];
+    const o = getOb(kind);
+    o.lane = lane; o.z = ALLEY_Z - 78;
+    o.mesh.position.set(lane * 2.2, 0, o.z);
+  }
+}
+function startRunner() {
+  fadeTransition(() => {
+    G.mode = 'runner';
+    camera.position.set(0, 4.1, ALLEY_Z + 10.0);
+    camera.lookAt(0, 1.15, ALLEY_Z - 10);
+    R.t = 0; R.dist = 0; R.speed = 9; R.lane = 0; R.laneX = 0;
+    R.vy = 0; R.jumpY = 0; R.duckT = 0; R.nextEv = 1.4; R.slowmo = 0;
+    for (const o of obstacles) { o.active = false; o.mesh.visible = false; }
+    obstacles = [];
+    showPrompt('THE ALLEY<small>dodge • jump • duck • yarn the dogs!</small>', 2.8);
+    hintEl.textContent = '←/→ lanes • ↑ jump • ↓ duck • X yarn throw';
+  });
+}
+function exitRunner() {
+  fadeTransition(() => {
+    camera.position.set(0, 4.6, camDistance() * STREET_CAM_TIGHTEN);
+    G.sectionIdx++;
+    setupSection();
+    showPrompt(section().label + '<small>boss block — clear the street!</small>', 3);
+  });
+}
+function updateRunner(dt, inp) {
+  if (R.slowmo > 0) { R.slowmo -= dt; dt *= 0.35; }
+  R.t += dt;
+  R.speed = 9 + Math.min(6, R.t * 0.13);
+  R.dist += R.speed * dt;
+  /* lanes */
+  if (inp.leftEdge) R.lane = Math.max(-1, R.lane - 1);
+  if (inp.rightEdge) R.lane = Math.min(1, R.lane + 1);
+  R.laneX += (R.lane * 2.2 - R.laneX) * Math.min(1, dt * 11);
+  /* jump / duck */
+  if (inp.jump && R.jumpY === 0 && R.duckT <= 0) { R.vy = 9.6; R.jumpY = 0.001; AudioPack.sfx('jump'); }
+  if (R.jumpY > 0 || R.vy !== 0) {
+    R.jumpY += R.vy * dt; R.vy -= 23 * dt;
+    if (R.jumpY <= 0) { R.jumpY = 0; R.vy = 0; }
+  }
+  R.duckT = inp.duck && R.jumpY === 0 ? 0.2 : Math.max(0, R.duckT - dt);
+  /* throw (clears a dog standee ahead in this lane) */
+  yarn.cool -= dt;
+  if (inp.throw && yarn.cool <= 0 && !yarn.active) {
+    yarn.active = true; yarn.phase = 'out'; yarn.dist = 0; yarn.dir = 1;
+    G.throws++;
+    AudioPack.sfx('throw');
+  }
+  if (yarn.active) {
+    const ballZ = ALLEY_Z - 1 - yarn.dist;
+    if (yarn.phase === 'out') {
+      yarn.dist += 20 * dt;
+      for (const o of obstacles) {
+        if (o.kind === 'dog' && o.active && !o.cleared && o.lane === R.lane && Math.abs(o.z - ballZ) < 1.2) {
+          o.cleared = true;
+          G.score += 60; updateScore();
+          AudioPack.sfx('yip');
+          spawnBurst(R.laneX, 1.6, o.z);
+          if (o.char) o.mesh.rotation.x = -0.5;
+          yarn.phase = 'back';
+        }
+      }
+      if (yarn.dist >= 13) yarn.phase = 'back';
+    } else {
+      yarn.dist -= 30 * dt;
+      if (yarn.dist <= 0) { yarn.active = false; yarn.cool = 0.3; }
+    }
+    yarnBall.visible = true; yarnString.visible = true;
+    const bz = ALLEY_Z - 1 - yarn.dist;
+    yarnBall.position.set(R.laneX, 1.3 + R.jumpY, bz);
+    const pos = stringGeo.attributes.position.array;
+    for (let i = 0; i < STRING_PTS; i++) {
+      const k = i / (STRING_PTS - 1);
+      pos[i * 3] = R.laneX;
+      pos[i * 3 + 1] = 1.3 + R.jumpY - Math.sin(k * Math.PI) * 0.2;
+      pos[i * 3 + 2] = ALLEY_Z - 1 - yarn.dist * k;
+    }
+    stringGeo.attributes.position.needsUpdate = true;
+  } else { yarnBall.visible = false; yarnString.visible = false; }
+  /* spawn + stream obstacles */
+  R.nextEv -= dt;
+  if (R.nextEv <= 0 && R.t < R.dur - 6) { spawnRunnerEvent(); R.nextEv = Math.max(0.8, 1.35 - R.t * 0.008) * (11 / R.speed); }
+  for (const o of obstacles) {
+    if (!o.active) continue;
+    o.z += R.speed * dt;
+    o.mesh.position.z = o.z;
+    if (o.kind === 'star') {
+      o.mesh.position.y = 1.15 + Math.sin(G.time * 3 + o.z) * 0.1;
+      o.mesh.rotation.y += dt * 2.4;
+    }
+    if (o.kind === 'dog' && o.char && o.char.mixer) {
+      charPlay(o.char, 'Walk');
+      o.char.mixer.update(dt);
+    }
+    if (!o.crossed && o.z >= ALLEY_Z - 0.6) {
+      o.crossed = true;
+      const sameLane = o.lane === R.lane;
+      if (o.kind === 'star') {
+        if (sameLane && R.jumpY < 1.3) {
+          o.active = false; o.mesh.visible = false;
+          G.score += 10; updateScore(); AudioPack.sfx('collect');
+        }
+      } else if (sameLane && !o.cleared) {
+        let crash = false;
+        if (o.kind === 'crate' || o.kind === 'puddle') crash = R.jumpY < 1.05;
+        else if (o.kind === 'sign') crash = R.duckT <= 0 && R.jumpY < 0.4;
+        else if (o.kind === 'dog') crash = true;
+        if (crash) {
+          o.cleared = true;
+          AudioPack.sfx('crash');
+          R.slowmo = 0.9;
+          hurtPlayer(G.playerX + 1);
+        }
+      }
+    }
+    if (o.z > ALLEY_Z + 9) { o.active = false; o.mesh.visible = false; }
+  }
+  obstacles = obstacles.filter(o => o.active);
+  for (const pool of Object.values(OB_POOL)) for (const o of pool) if (o.active && !obstacles.includes(o)) obstacles.push(o);
+  /* Miso render (behind view) */
+  const duckScale = R.duckT > 0 ? 0.62 : 1;
+  misoG.position.set(R.laneX, R.jumpY, ALLEY_Z);
+  misoG.rotation.y = Math.PI / 2;
+  misoG.scale.set(1, duckScale, 1);
+  if (miso.char && miso.char.mixer) {
+    if (miso.char.pose) poseRestore(miso.char.pose);
+    charPlay(miso.char, 'Walk');
+    miso.char.mixer.update(dt * 1.5);
+  }
+  contactShadow.position.set(R.laneX, 0.04, ALLEY_Z + 0.2);
+  lightPool.position.set(R.laneX, 0.06, ALLEY_Z + 0.4);
+  halo.position.set(R.laneX, 1.4, ALLEY_Z + 0.5);
+  /* alley texture scroll */
+  const off = (R.dist * 0.055) % 1;
+  alleyFloorTex.offset.set(0, off);
+  alleyWallL.material.map.offset.set(-off * 2.6, 0);
+  alleyWallR.material.map.offset.set(-off * 2.6, 0);
+  for (const l of alleyLanterns) {
+    l.position.z += R.speed * dt;
+    if (l.position.z > ALLEY_Z + 6) l.position.z -= 8 * 17;
+  }
+  for (const p of runnerFg) {
+    p.mesh.position.z += R.speed * dt;
+    if (p.mesh.position.z > ALLEY_Z + 8) p.mesh.position.z -= p.span;
+  }
+  exitGate.material.opacity = Math.min(0.5, Math.max(0, (R.t - (R.dur - 8)) / 8) * 0.55);
+  if (R.t >= R.dur) exitRunner();
+}
+
+/* ---------------------------- game flow ---------------------------- */
+const zoneCur = { tint: new THREE.Color(1, 1, 1), fog: scene.fog.color.clone(), music: 0.3 };
+let zoneTarget = { name: 'amber', tint: ZONE_STYLE.amber.tint, fog: ZONE_STYLE.amber.fog, music: ZONE_STYLE.amber.music };
+window.__zone = 'amber';
+window.__music = 0.55;
+function setDistrict(name) {
+  zoneTarget = { name, tint: ZONE_STYLE[name].tint, fog: ZONE_STYLE[name].fog, music: ZONE_STYLE[name].music };
+  window.__zone = name;
+  AudioPack.setZone(name);
+  if (window.Shell) window.Shell.setZone(name);
+}
+let fading = false;
+const fadeEl = el('fade'), dmgEl = el('dmgFlash'), panelEl = el('panel');
+function fadeTransition(cb) {
+  if (fading) { cb(); return; }
+  fading = true;
+  fadeEl.style.opacity = 1;
+  setTimeout(() => {
+    cb();
+    fadeEl.style.opacity = 0;
+    setTimeout(() => { fading = false; }, 300);
+  }, 300);
+}
+function setupSection() {
+  for (const e of enemies) if (e.char) scene.remove(e.char.wrap);
+  enemies = [];
+  for (const p of pickups) scene.remove(p.mesh);
+  pickups = [];
+  waveQueue = [...section().waves];
+  spawnT = 0.6;
+  alleyOpen = false;
+  bossRef = null;
+  bossWrap.style.display = 'none';
+  G.playerX = 8; G.jumpY = 0; G.vy = 0; G.facing = 1;
+  swing.on = false; swing.kickT = 0; swingDrift = 0;
+  misoG.rotation.z = 0;
+  misoAtk.kind = null; misoAtk.t = 0; misoFreezeT = 0; misoFrozen = false; atkCoolT = 0;
+  yarn.active = false; yarnBall.visible = false; yarnString.visible = false;
+  misoG.scale.set(1, 1, 1);
+  misoG.rotation.y = 0;
+  placeStreetStars();
+  setDistrict(section().district);
+  setDistrictLabel();
+  G.mode = 'street';
+}
+function startGame() {
+  if (G.mode !== 'title') return;
+  AudioPack.unlock();
+  if (window.Shell) window.Shell.startWalk();
+  G.sectionIdx = 0;
+  setupSection();
+  showPrompt(section().label + '<small>clear the street!</small>', 2.8);
+  hintEl.textContent = '←/→ move • ↑ jump • Z punch • C kick • X yarn — by a lamp pole: X hooks it, swing + Z kick!';
+  setTimeout(() => { if (G.mode === 'street') hintEl.textContent = ''; }, 10000);
+}
+function resetGame() {
+  panelEl.style.display = 'none';
+  G.hearts = 3; G.score = 0; G.elapsed = 0; G.sectionIdx = 0; G.invulnT = 0;
+  updateHearts(); updateScore();
+  setupSection();
+  showPrompt(section().label + '<small>clear the street!</small>', 2.8);
+  hintEl.textContent = '←/→ move • ↑ jump • Z punch • C kick • X yarn — by a lamp pole: X hooks it, swing + Z kick!';
+}
+function fmtTime(s) {
+  const m = Math.floor(s / 60), ss = Math.floor(s % 60);
+  return m + ':' + String(ss).padStart(2, '0');
+}
+function winGame() {
+  if (G.mode === 'win') return;
+  G.mode = 'win';
+  AudioPack.sfx('win');
+  el('panelTitle').textContent = 'LEVEL 1 CLEAR!';
+  el('panelText').innerHTML = `Miso beat the Dog Gang!<br>Score ${G.score} • Time ${fmtTime(G.elapsed)}<br><br>Next: LEVEL 2 — Teal Alley (coming soon)`;
+  el('panelBtn').textContent = 'PLAY AGAIN';
+  panelEl.style.display = 'flex';
+}
+function gameOver() {
+  if (G.mode === 'over') return;
+  G.mode = 'over';
+  AudioPack.sfx('lose');
+  el('panelTitle').textContent = 'GAME OVER';
+  el('panelText').innerHTML = `The Dog Gang got the yarn this time.<br>Score ${G.score}`;
+  el('panelBtn').textContent = 'TRY AGAIN';
+  panelEl.style.display = 'flex';
+}
+el('panelBtn').addEventListener('click', resetGame);
+window.addEventListener('pointerdown', () => {
+  if (G.mode === 'title' && window.__ready) startGame();
+});
+window.__gameStart = () => startGame();
+window.__game = { mode: 'title', hearts: 3, score: 0, district: 'amber', playerX: 8, enemiesAlive: 0, bossHp: null, projectile: false,
+  swinging: false, swingLine: false, anchorX: null, seams: [...SEAM_XS],
+  anchors: FG_ANCHORS.map(a => a.x),
+  occluders: FG_PROPS.map(p => ({ x: p.x, kind: p.kind, seam: !!p.seam, hook: !!p.hook })) };
+window.__debug = {
+  G, R, get enemies() { return enemies; },
+  spawnEnemy, hurtEnemy,
+  setPlayerX: v => { G.playerX = v; },
+  clearWave: () => { waveQueue = []; },
+  /* fight-still staging hooks (used by fight-shots.mjs) */
+  misoAtk,
+  get atkCoolT() { return atkCoolT; },
+  atkHold: false, fxHold: false, holdEnemies: false,
+  ageFx: s => updateComicFx(s),
+  spawnSwoosh,
+  startAttack: kind => { G.facing = 1; misoG.rotation.y = 0; startMisoAttack(kind); },
+  setEnemyState: (e, state, t = 0) => {
+    e.state = state; e.t = t;
+    if (state === 'strike') { e.strikeHitDone = true; if (e.char) charPlay(e.char, 'Attack', false); }
+  },
+  enemyAction: (e, name, time) => {
+    if (!e.char || !e.char.actions[name]) return;
+    const act = e.char.actions[name];
+    act.reset(); act.play(); act.time = time;
+    e.char.active = name;
+    e.char.mixer.update(0);
+  },
+  /* swing + occluder hooks (swing/occluder probes) */
+  swing,
+  forceHook: () => tryHook(true),
+  releaseSwing: () => { if (swing.on) releaseSwing(); },
+  setEnemyX: (e, x) => { e.x = x; },
+  occluderState: () => fgProps.map(p => ({
+    x: p.def.x, kind: p.def.kind, seam: !!p.def.seam, hook: !!p.def.hook,
+    worldX: Math.round(p.mesh.position.x * 100) / 100,
+    worldZ: p.mesh.position.z, visible: p.mesh.visible
+  })),
+  seamWorldX: sx => ANCHOR_X + (sx - G.playerX),
+  cartState: () => ({ x: Math.round(streetCart.x * 10) / 10,
+    worldX: Math.round(streetCart.mesh.position.x * 100) / 100,
+    worldZ: streetCart.mesh.position.z, visible: streetCart.mesh.visible }),
+  setCartX: v => { streetCart.x = v; }
+};
+window.__debugScene = () => ({ scene, camera, misoG, miso, renderer });
+/* attract mode (?auto=1): simple AI inputs for later video capture */
+let autoThrowT = 0, autoPulseT = 0;
+function computeAuto(dt) {
+  const a = { left: false, right: false, jump: false, up: false, duck: false, throw: false, punch: false, kick: false };
+  autoPulseT -= dt;
+  if (G.mode === 'title' && window.__ready) startGame();
+  if (G.mode === 'street') {
+    const e = enemies.find(e => !e.dead);
+    if (e) {
+      const d = e.x - G.playerX;
+      if (d > 3.2) a.right = true;
+      else if (d < -3.2) a.left = true;
+      else if (Math.abs(d) < 2.1) { autoThrowT -= dt; if (autoThrowT <= 0) { a.punch = true; autoThrowT = 0.55; } }
+      else { autoThrowT -= dt; if (autoThrowT <= 0) { a.throw = true; autoThrowT = 0.55; } }
+    } else if (alleyOpen) {
+      if (G.playerX < ENTRANCE_LOCAL - 1.5) a.right = true;
+      else a.up = true;
+    } else a.right = true;
+  } else if (G.mode === 'runner') {
+    let danger = null, dangerDz = 1e9;
+    for (const o of obstacles) {
+      if (!o.active || o.cleared || o.kind === 'star' || o.lane !== R.lane) continue;
+      const dz = (ALLEY_Z - 0.6) - o.z;
+      if (dz > 0 && dz < dangerDz) { danger = o; dangerDz = dz; }
+    }
+    if (danger) {
+      if ((danger.kind === 'crate' || danger.kind === 'puddle') && dangerDz < 7.5) a.jump = true;
+      else if (danger.kind === 'sign' && dangerDz < 8) a.duck = true;
+      else if (danger.kind === 'dog') {
+        if (dangerDz < 13) { autoThrowT -= dt; if (autoThrowT <= 0) { a.throw = true; autoThrowT = 0.5; } }
+        if (dangerDz < 4.5 && autoPulseT <= 0) { if (R.lane === 0) a.right = true; else a.left = true; autoPulseT = 0.45; }
+      }
+    }
+  }
+  window.__autoInput = a;
+}
+
+/* --------------------------------- loop --------------------------------- */
+const clock = new THREE.Clock();
+let frames = 0, fpsTime = 0, readyFrames = 0;
+window.__fps = 0;
+window.__ready = false;
+let pointerX = 0, pointerY = 0, tx = 0, ty = 0;
+window.addEventListener('pointermove', e => {
+  tx = (e.clientX / window.innerWidth - 0.5) * 2;
+  ty = (e.clientY / window.innerHeight - 0.5) * 2;
+});
+let gamePaused = false;
+document.addEventListener('visibilitychange', () => { gamePaused = document.hidden; });
+updateHearts(); updateScore(); setDistrictLabel();
+
+function animate() {
+  requestAnimationFrame(animate);
+  const dtReal = Math.min(clock.getDelta(), 0.05);
+  const dt = dtReal;
+  const t = clock.elapsedTime;
+  G.time += dtReal;
+  if (FLAGS.has('auto')) computeAuto(dtReal);
+  const inp = readInput();
+  pressed = {};
+  if (!gamePaused && !fading) {
+    if (G.mode === 'street') { G.elapsed += dt; updateStreet(dt, inp); }
+    else if (G.mode === 'runner') { G.elapsed += dt; updateRunner(dt, inp); }
+    else if (G.mode === 'title') { renderMisoStreet(dt, false); }
+  }
+  G.invulnT = Math.max(0, G.invulnT - dt);
+  misoG.visible = !(G.invulnT > 0 && (G.mode === 'street' || G.mode === 'runner') && (G.time * 16) % 2 > 1.3);
+  G.shakeT = Math.max(0, G.shakeT - dt);
+  flashT = Math.max(0, flashT - dt);
+  flashSprite.material.opacity = flashT * 5;
+  dmgFlashV = Math.max(0, dmgFlashV - dt * 1.8);
+  dmgEl.style.opacity = dmgFlashV * 0.9;
+  if (G.time > promptUntil) promptEl.style.opacity = 0;
+
+  pointerX += (tx - pointerX) * 0.04;
+  pointerY += (ty - pointerY) * 0.04;
+  /* scroll for the street strip: follows the course in street modes */
+  const scrollDist = section().base + G.playerX;
+  const scrollSegs = scrollDist / SEG_W;
+  const i0 = Math.floor(scrollSegs), frac = scrollSegs - i0;
+  for (let j = 0; j < segMeshes.length; j++) {
+    const m = segMeshes[j];
+    m.position.x = (j - 1 - frac) * SEG_W;
+    const idx = THREE.MathUtils.clamp(i0 + j, 0, segStream.length - 1);
+    if (m.userData.streamIdx !== idx) {
+      m.material.map = segTexByKey[segStream[idx]];
+      m.material.needsUpdate = true;
+      m.userData.streamIdx = idx;
+    }
+  }
+  /* district grade */
+  const lk = 1 - Math.exp(-dt * 1.1);
+  zoneCur.tint.lerp(zoneTarget.tint, lk);
+  zoneCur.fog.lerp(zoneTarget.fog, lk);
+  zoneCur.music += (zoneTarget.music - zoneCur.music) * lk;
+  scene.fog.color.copy(zoneCur.fog);
+  gradePass.uniforms.uTint.value.copy(zoneCur.tint);
+  window.__music = Math.round(zoneCur.music * 100) / 100;
+  /* far band + near stalls */
+  const farScroll = scrollDist * 0.38;
+  for (const p of farPlanes) {
+    const u = (((p.userData.base - farScroll) % FAR_SPAN) + FAR_SPAN) % FAR_SPAN;
+    p.position.x = u - FAR_SPAN / 2 + FAR_W / 2;
+  }
+  for (const tr of nearTracks) {
+    const u = (scrollDist + tr.phase) % tr.period;
+    tr.mesh.position.x = 95 - u;
+  }
+  /* camera */
+  if (G.mode === 'runner') {
+    const target = new THREE.Vector3(R.laneX * 0.55, 4.1, ALLEY_Z + 10.0);
+    camera.position.lerp(target, 1 - Math.exp(-dt * 4));
+    camera.lookAt(R.laneX * 0.7, 1.15, ALLEY_Z - 10);
+  } else {
+    const swayX = Math.sin(t * 0.10) * 1.7;
+    const swayY = Math.sin(t * 0.073) * 0.30;
+    const shX = G.shakeT > 0 ? (Math.random() - 0.5) * G.shakeT * 1.4 : 0;
+    const shY = G.shakeT > 0 ? (Math.random() - 0.5) * G.shakeT * 1.1 : 0;
+    const target = new THREE.Vector3(
+      swayX + pointerX * 1.1 + shX,
+      4.6 + swayY - pointerY * 0.55 + shY,
+      camZ() + Math.sin(t * 0.05) * 0.7
+    );
+    camera.position.lerp(target, G.mode === 'title' ? 1 : 1 - Math.exp(-dt * 4));
+    camera.lookAt(swayX * 0.35, 4.05, -14);
+  }
+  /* ambience */
+  const fl = 0.92 + Math.sin(t * 11.3) * 0.04 + Math.sin(t * 23.7) * 0.03;
+  warm.intensity = 90 * fl;
+  lightPool.material.opacity = 0.38 * fl;
+  glows.forEach((g, i) => { g.material.opacity = g.userData.baseOpacity * (0.9 + 0.1 * Math.sin(t * 9 + i * 1.7)); });
+  const rp = rainGeo.attributes.position.array;
+  const rainCx = G.mode === 'runner' ? 0 : 0, rainCz = G.mode === 'runner' ? ALLEY_Z - 10 : 0;
+  for (let i = 0; i < RAIN; i++) {
+    rp[i * 3 + 1] -= 15.5 * dt;
+    rp[i * 3] -= 1.3 * dt;
+    if (rp[i * 3 + 1] < 0) { rp[i * 3 + 1] = 20; rp[i * 3] = rainCx - 28 + Math.random() * 56; rp[i * 3 + 2] = rainCz - 17 + Math.random() * 30; }
+    if (rp[i * 3] < rainCx - 28) rp[i * 3] = rainCx + 28;
+  }
+  rainGeo.attributes.position.needsUpdate = true;
+  street.material.uniforms.uTime.value = t;
+  awning.position.x = 40 - ((scrollDist * 1.5) % 190);
+  fgSign.position.x = 60 - ((scrollDist * 1.5 + 95) % 260);
+  /* foreground occluders scroll with the street (section-local
+     layout, same in both street sections); hidden in the runner,
+     which has its own streaming foreground. Anchor rings flare
+     when Miso is close enough to hook them. */
+  const nearAnchor = (G.mode === 'street' && !swing.on) ? anchorInRange(false) : null;
+  for (const p of fgProps) {
+    const sx = ANCHOR_X + (p.def.x - G.playerX);
+    p.mesh.position.x = sx;
+    p.mesh.visible = G.mode !== 'runner' && Math.abs(sx) < 46;
+    if (p.ring) {
+      const hot = nearAnchor === p.def;
+      const s = hot ? 1.25 + Math.sin(t * 10) * 0.15 : 1;
+      p.ring.scale.set(s, s, 1);
+      p.ring.material.opacity = hot ? 1 : 0.75;
+    }
+  }
+  /* pushcart rolls across the street on its own path (street modes
+     only; wraps the whole course so its crossings land irregularly) */
+  if (G.mode === 'street' || G.mode === 'title') streetCart.x -= dt * 3.0;
+  if (streetCart.x < -6) streetCart.x = 168;
+  streetCart.mesh.position.x = ANCHOR_X + (streetCart.x - G.playerX);
+  streetCart.mesh.visible = G.mode !== 'runner' && Math.abs(streetCart.mesh.position.x) < 44;
+  fgSign.rotation.z = Math.sin(t * 0.6) * 0.02;
+  for (const m of mistBands) {
+    m.position.x = Math.sin(t * 0.05 + m.userData.ph) * 7;
+    m.material.opacity = m.userData.op * (0.8 + 0.2 * Math.sin(t * 0.11 + m.userData.ph));
+  }
+  for (const p of steamPuffs) {
+    const life = (t / p.dur + p.ph) % 1;
+    p.sp.getWorldPosition(tmpV);
+    const near = Math.max(0, 1 - Math.abs(tmpV.x + 0.6) / 3);
+    const part = near * Math.sign(tmpV.x + 0.6 || 1) * life * 1.3;
+    p.sp.position.x = p.bx + life * 0.5 + part;
+    p.sp.position.y = p.by + life * 2.3;
+    const sc = p.s * (1.1 + life * 2.6);
+    p.sp.scale.set(sc, sc, 1);
+    p.sp.material.opacity = Math.sin(Math.PI * life) * 0.15 * (1 - near * 0.3);
+  }
+  splashMat.uniforms.uTime.value = t;
+  for (const r of pawRipples) {
+    if (r.life > 1) { r.mesh.visible = false; continue; }
+    r.life += dt / 0.8;
+    const s = 0.5 + r.life * 1.6;
+    r.mesh.scale.set(s, s, 1);
+    r.mesh.material.opacity = Math.max(0, 1 - r.life) * 0.5;
+  }
+  updateBursts(dt);
+  if (!(window.__debug && window.__debug.fxHold)) updateComicFx(dt);
+  const cyc = t % 47;
+  if (cyc < 8 && G.mode !== 'runner') {
+    const k = cyc / 8;
+    passerby.position.x = 30 - k * 60;
+    passerby.material.opacity = 0.55 * Math.sin(Math.PI * Math.min(k * 1.12, 1));
+  } else passerby.material.opacity = 0;
+
+  if (FLAGS.has('nobloom')) renderer.render(scene, camera); else composer.render();
+
+  frames++; fpsTime += dtReal;
+  if (fpsTime >= 1) { window.__fps = Math.round(frames / fpsTime); frames = 0; fpsTime = 0; }
+  readyFrames++;
+  if (!window.__ready && readyFrames >= 5 && window.__artLoaded && miso.ready) {
+    window.__ready = true;
+    if (window.Shell) {
+      window.Shell.ready();
+      if (FLAGS.has('veil')) setTimeout(() => startGame(), 400);
+    }
+  }
+  /* live test hooks */
+  const wg = window.__game;
+  wg.mode = G.mode;
+  wg.hearts = G.hearts;
+  wg.score = G.score;
+  wg.district = section().district;
+  wg.playerX = G.mode === 'runner' ? Math.round(R.dist * 10) / 10 : Math.round(G.playerX * 10) / 10;
+  wg.enemiesAlive = enemies.filter(e => !e.dead).length;
+  wg.bossHp = bossRef ? bossRef.hp : null;
+  wg.projectile = yarn.active;
+  wg.throws = G.throws;
+  wg.dmgDealt = G.dmgDealt;
+  wg.punches = G.punches;
+  wg.kicks = G.kicks;
+  wg.enemies = enemies.map(e => ({ type: e.type, hp: e.hp, x: Math.round(e.x * 10) / 10, state: e.state }));
+  wg.swinging = swing.on;
+  wg.swingLine = swing.on;
+  wg.anchorX = swing.on ? swing.ax : (nearAnchor ? nearAnchor.x : null);
+}
+animate();
+
+window.addEventListener('resize', () => {
+  camera.aspect = window.innerWidth / window.innerHeight;
+  camera.updateProjectionMatrix();
+  renderer.setSize(window.innerWidth, window.innerHeight);
+  composer.setSize(window.innerWidth, window.innerHeight);
+});
+</script>
+<script src="shell/shell.js"></script>
+</body>
+</html>

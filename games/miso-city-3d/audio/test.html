@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Miso City — Adaptive Audio Test</title>
+<style>
+  body { background:#10131c; color:#e8e4da; font-family: Georgia, serif; margin:2rem; }
+  h1 { font-weight:normal; letter-spacing:.04em; }
+  button { background:#1d2434; color:#e8e4da; border:1px solid #3a4358;
+           padding:.6rem 1.1rem; margin:.25rem; border-radius:6px; cursor:pointer; font-size:1rem; }
+  button.active { background:#7a4b16; border-color:#c98a2d; }
+  #meter { width:320px; height:14px; background:#05070b; border:1px solid #3a4358; margin-top:1rem; }
+  #fill { height:100%; width:0%; background:#7ec98a; }
+  #state { opacity:.75; font-size:.9rem; margin-top:.6rem; }
+</style>
+</head>
+<body>
+<h1>Miso City — adaptive audio test</h1>
+<p>
+  <button id="enable">🔊 Enable sound</button>
+</p>
+<p>
+  Zones:
+  <button data-zone="amber" class="zone active">Amber — market heart</button>
+  <button data-zone="teal" class="zone">Teal — alley</button>
+  <button data-zone="pink" class="zone">Pink — neon plaza</button>
+</p>
+<p>
+  <button id="steps">👣 Footsteps ×8</button>
+  <button id="step1">One step</button>
+</p>
+<div id="meter"><div id="fill"></div></div>
+<div id="state">not started</div>
+
+<script type="module">
+  import * as A from './audio.js';
+  window.__audio = A;              // exposed for the verification harness
+  A.init();
+
+  const stateEl = document.getElementById('state');
+  const show = () => stateEl.textContent = JSON.stringify(A.getState());
+  show();
+
+  document.getElementById('enable').addEventListener('click', async () => {
+    await A.unlock();
+    show();
+  });
+
+  document.querySelectorAll('.zone').forEach(b => {
+    b.addEventListener('click', () => {
+      document.querySelectorAll('.zone').forEach(x => x.classList.remove('active'));
+      b.classList.add('active');
+      A.setZone(b.dataset.zone);
+      show();
+    });
+  });
+
+  document.getElementById('step1').addEventListener('click', () => A.footstep());
+  document.getElementById('steps').addEventListener('click', () => {
+    let i = 0;
+    const iv = setInterval(() => {
+      A.footstep(i % 2 === 0 ? 0.25 : 0.75);
+      if (++i >= 8) clearInterval(iv);
+    }, 380);
+  });
+
+  // Meter from the module's own analyser.
+  const an = A.getAnalyser();
+  const buf = new Float32Array(an.fftSize);
+  const fill = document.getElementById('fill');
+  (function loop() {
+    requestAnimationFrame(loop);
+    an.getFloatTimeDomainData(buf);
+    let peak = 0;
+    for (let i = 0; i < buf.length; i++) peak = Math.max(peak, Math.abs(buf[i]));
+    fill.style.width = Math.min(100, peak * 140) + '%';
+  })();
+</script>
+</body>
+</html>

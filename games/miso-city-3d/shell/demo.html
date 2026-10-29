@@ -1,0 +1,158 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Miso City — premium shell demo</title>
+<!-- Recommended font loading (see INTEGRATION.md): preconnect + one css2 link.
+     shell.js injects the same link as a fallback if it is missing. -->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link data-miso-fonts rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;600&family=Jost:ital,wght@0,300;0,400;1,300&display=swap">
+<link rel="stylesheet" href="shell.css">
+<style>
+  html, body { margin: 0; height: 100%; background: #02040a; overflow: hidden; }
+  body { font-family: "Jost", sans-serif; }
+
+  /* ---- placeholder "scene": layered gradients standing in for the 3D frame ---- */
+  #stage { position: absolute; inset: 0; overflow: hidden; background: #05080f; }
+  .scene-sky {
+    position: absolute; inset: 0;
+    background:
+      radial-gradient(58% 44% at 82% 30%, rgb(53 196 181 / 0.20), transparent 62%),
+      radial-gradient(46% 38% at 12% 66%, rgb(240 161 58 / 0.24), transparent 60%),
+      radial-gradient(30% 26% at 64% 58%, rgb(240 107 168 / 0.12), transparent 65%),
+      linear-gradient(180deg, #0a1322 0%, #060b16 46%, #04060d 100%);
+  }
+  .scene-world { position: absolute; inset: 0; will-change: transform; }
+  #stage.walking .scene-world { animation: scene-drift 26s linear infinite; }
+  @keyframes scene-drift { from { transform: translateX(0); } to { transform: translateX(-3.2%); } }
+  .scene-silhouette { position: absolute; left: -4%; right: -4%; bottom: 24%; height: 62%; width: 108%; }
+  .scene-street {
+    position: absolute; left: 0; right: 0; bottom: 0; height: 25%;
+    background:
+      radial-gradient(38% 90% at 24% 12%, rgb(240 161 58 / 0.20), transparent 60%),
+      radial-gradient(30% 80% at 80% 8%, rgb(53 196 181 / 0.13), transparent 60%),
+      linear-gradient(180deg, #0a1220 0%, #060a13 30%, #03050a 100%);
+    border-top: 1px solid rgb(160 190 235 / 0.08);
+  }
+  .scene-street::after { /* wet sheen streaks */
+    content: ""; position: absolute; inset: 0;
+    background: repeating-linear-gradient(93deg, transparent 0 74px, rgb(170 200 240 / 0.045) 74px 76px, transparent 76px 168px);
+  }
+  .scene-pool { /* her lantern light pool */
+    position: absolute; left: 50%; bottom: 9.5%; width: 190px; height: 34px;
+    transform: translateX(-50%);
+    background: radial-gradient(50% 50% at 50% 50%, rgb(255 170 70 / 0.30), transparent 70%);
+    filter: blur(2px);
+  }
+  #stage.walking .scene-pool { animation: pool-bob 0.9s ease-in-out infinite alternate; }
+  @keyframes pool-bob { from { transform: translateX(-50%) translateY(0); } to { transform: translateX(-50%) translateY(-3px); } }
+  .scene-cat { /* simple silhouette stand-in for Miso */
+    position: absolute; left: 50%; bottom: 12.5%; width: 54px; height: 40px;
+    transform: translateX(-50%);
+    background: radial-gradient(58% 62% at 50% 62%, #e8842c 0 52%, #c96a1e 78%, transparent 79%);
+    border-radius: 48% 52% 55% 45% / 62% 66% 36% 38%;
+    filter: blur(0.6px);
+    opacity: 0.92;
+  }
+  .scene-cat::before { /* ear hints */
+    content: ""; position: absolute; left: 8px; right: 8px; top: -7px; height: 12px;
+    background: linear-gradient(90deg, transparent 0 8%, #e8842c 8% 26%, transparent 26% 74%, #e8842c 74% 92%, transparent 92%);
+    clip-path: polygon(0 100%, 12% 0, 26% 100%, 74% 100%, 88% 0, 100% 100%);
+  }
+  .scene-cat::after { /* scarf */
+    content: ""; position: absolute; right: -13px; top: 12px; width: 17px; height: 6px;
+    background: #3f9e58; border-radius: 3px; transform: rotate(14deg);
+  }
+
+  /* ---- demo-only control bar (NOT part of the shell) ---- */
+  #demo-bar {
+    position: fixed; top: 10px; left: 50%; transform: translateX(-50%);
+    z-index: 999; display: flex; align-items: center; gap: 6px; flex-wrap: wrap; justify-content: center;
+    max-width: 96vw; padding: 6px 8px; border-radius: 999px;
+    background: rgb(4 7 12 / 0.82); border: 1px solid rgb(244 236 220 / 0.14);
+    backdrop-filter: blur(8px);
+  }
+  #demo-bar button {
+    appearance: none; border: 1px solid rgb(244 236 220 / 0.18); background: rgb(16 24 38 / 0.85);
+    color: #e8e2d2; font: 400 11px/1 "Jost", sans-serif; letter-spacing: 0.14em; text-transform: uppercase;
+    padding: 7px 12px; border-radius: 999px; cursor: pointer;
+  }
+  #demo-bar button:hover { border-color: rgb(240 161 58 / 0.75); }
+  #demo-bar button:disabled { opacity: 0.35; cursor: default; }
+  #demo-status {
+    font: 400 11px/1.4 "Jost", sans-serif; letter-spacing: 0.08em; color: #93a3b5;
+    padding: 0 8px 0 4px; white-space: nowrap;
+  }
+  @media (max-width: 640px) { #demo-status { display: none; } }
+</style>
+</head>
+<body>
+
+<div id="stage" data-miso-stage>
+  <div class="scene-sky"></div>
+  <div class="scene-world">
+    <svg class="scene-silhouette" viewBox="0 0 1200 500" preserveAspectRatio="none" aria-hidden="true">
+      <!-- rooftops, stalls, hanging signs: one near-black market skyline -->
+      <path fill="#030509" d="M0,500 L0,150 L90,150 L90,110 L150,110 L150,190 L205,190 L205,90 L300,90 L300,150 L352,150 L352,205 L430,205 L430,120 L520,120 L520,170 L575,170 L575,80 L690,80 L690,160 L748,160 L748,215 L830,215 L830,105 L925,105 L925,165 L982,165 L982,130 L1075,130 L1075,195 L1130,195 L1130,145 L1200,145 L1200,500 Z"/>
+      <path fill="#02040a" d="M0,500 L0,330 L130,330 L175,282 L320,282 L368,330 L560,330 L612,276 L790,276 L838,330 L1010,330 L1058,286 L1200,286 L1200,500 Z"/>
+      <g fill="#05080f">
+        <rect x="238" y="196" width="30" height="52" rx="2"/><rect x="618" y="176" width="26" height="48" rx="2"/>
+        <rect x="884" y="222" width="34" height="56" rx="2"/><rect x="452" y="222" width="24" height="42" rx="2"/>
+      </g>
+      <g fill="#f0a13a" opacity="0.85">
+        <circle cx="253" cy="252" r="3.4"/><circle cx="631" cy="228" r="3.2"/><circle cx="901" cy="282" r="3.4"/><circle cx="464" cy="268" r="3"/>
+      </g>
+      <g fill="#35c4b5" opacity="0.55"><circle cx="700" cy="120" r="2.6"/><circle cx="180" cy="140" r="2.4"/></g>
+    </svg>
+    <div class="scene-street"></div>
+    <div class="scene-pool"></div>
+    <div class="scene-cat"></div>
+  </div>
+</div>
+
+<div id="demo-bar" role="group" aria-label="Shell demo controls">
+  <button id="btn-ready" type="button">Scene ready</button>
+  <button id="btn-walk" type="button" disabled>Start walking</button>
+  <button id="btn-zone" type="button">Zone: amber</button>
+  <button id="btn-reset" type="button">Reset</button>
+  <span id="demo-status">veil up — waiting for scene</span>
+</div>
+
+<script src="shell.js"></script>
+<script>
+  // Demo wiring only — none of this ships with the shell itself.
+  var statusEl = document.getElementById('demo-status');
+  var stage = document.getElementById('stage');
+  var zones = ['amber', 'teal', 'pink'];
+  var zoneIdx = 0;
+
+  window.__soundFired = false;
+  Shell.onSoundTap = function () {
+    window.__soundFired = true;
+    statusEl.textContent = 'sound unlocked (onSoundTap fired)';
+  };
+
+  document.getElementById('btn-ready').addEventListener('click', function () {
+    Shell.ready();
+    this.disabled = true;
+    document.getElementById('btn-walk').disabled = false;
+    statusEl.textContent = 'veil lifting — title moment';
+  });
+  document.getElementById('btn-walk').addEventListener('click', function () {
+    Shell.startWalk();
+    stage.classList.add('walking');
+    this.disabled = true;
+    statusEl.textContent = 'walking — title released, caption stays';
+  });
+  document.getElementById('btn-zone').addEventListener('click', function () {
+    zoneIdx = (zoneIdx + 1) % zones.length;
+    Shell.setZone(zones[zoneIdx]);
+    this.textContent = 'Zone: ' + zones[zoneIdx];
+    statusEl.textContent = 'accent retinted — ' + zones[zoneIdx];
+  });
+  document.getElementById('btn-reset').addEventListener('click', function () { location.reload(); });
+</script>
+</body>
+</html>
