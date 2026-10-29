@@ -404,7 +404,7 @@ const fgSign = new THREE.Mesh(
   new THREE.PlaneGeometry(3.4, 6.8),
   new THREE.MeshBasicMaterial({ map: fgSignTex, transparent: true, depthWrite: false, fog: false })
 );
-fgSign.position.set(13.5, 6.3, 3);
+fgSign.position.set(13.5, 6.3, -5); /* background since 2026-10-29 eve: Cherie — foreground props blocked the characters */
 fgSign.rotation.y = -0.15;
 fgSign.renderOrder = 8;
 scene.add(fgSign);
@@ -1377,17 +1377,21 @@ function makeFish() {
   glow(g, 0, 0, 0, 1.6, 0xff8c4a, 0.4);
   return g;
 }
-/* ------------- foreground occluders + grapple anchors -------------
+/* ------------- background street props + grapple anchors -------------
    The background plates read as "two pictures next to each other"
-   because nothing ever crosses the joins. These props live BETWEEN
-   the camera and the play plane (z = FG_Z, play plane is STREET_Z)
-   and scroll with the street, so poles and signs pass IN FRONT of
-   the fighters — and two lamp poles stand exactly ON the plate
-   seams (section-local 54 and 108, the joins between the three
-   54-wide plates of every section). Lamp poles double as yarn
-   grapple anchors: an arm reaches back over the play plane and the
-   hook point (yarn ring + ball) hangs over the street at ANCHOR_Y. */
-const FG_Z = 2.6, ANCHOR_Y = 7.4;
+   because nothing ever crosses the joins, so street props stand ON
+   and around the joins to break them up. They originally lived in
+   the foreground (z = +2.6, between camera and play plane) passing
+   IN FRONT of the fighters — Cherie's play verdict 2026-10-29 eve:
+   "Remove the poles that block the characters. They should be in
+   the background not foreground." So every prop now sits BEHIND the
+   play plane (z = PROP_Z, play plane is STREET_Z, plates at -19):
+   poles, signs, banners and laundry still cover the plate seams at
+   the same x positions, but a character is never hidden behind one.
+   Lamp poles double as yarn grapple anchors: an arm reaches FORWARD
+   over the play plane and the hook point (yarn ring + ball) hangs
+   over the street at ANCHOR_Y. */
+const PROP_Z = -5, ANCHOR_Y = 7.4;
 /* swing tether: shorter than the anchor height so the pendulum's low
    point clears the street by SWING_CLEAR, and a hook launches Miso */
 const SWING_CLEAR = 1.55, SWING_LAUNCH = 1.9, SWING_LIFT_T = 0.22;
@@ -1411,10 +1415,9 @@ const signBoardTex = canvasTex(256, 160, (ctx, W, H) => {
    not a metronome — lantern strings, awning edges, laundry lines,
    banners and sign posts mixed between the lamp poles, uneven
    spacing, and the two seams covered by DIFFERENT elements
-   (54 = banner, 108 = lamp pole). Laundry lines sit inside the
-   scene (z just in front of the play plane); everything else is
-   camera-side foreground. A pushcart (below) rolls across the
-   street itself on its own path. */
+   (54 = banner, 108 = lamp pole). Everything sits at PROP_Z in
+   the background. A pushcart (below) rolls across the street
+   itself on its own path. */
 const FG_PROPS = [
   { x: 5,   kind: 'lantern' },
   { x: 13,  kind: 'pole', hook: true },
@@ -1439,28 +1442,28 @@ function makeLampPole(def) {
   const shaft = new THREE.Mesh(new THREE.CylinderGeometry(0.13, 0.18, ANCHOR_Y + 1.5, 8), dark);
   shaft.position.set(0, (ANCHOR_Y + 1.5) / 2, 0);
   g.add(shaft);
-  /* arm reaches back over the play plane: local z 0 -> STREET_Z-FG_Z */
+  /* arm reaches forward over the play plane: local z 0 -> STREET_Z-PROP_Z */
   const arm = new THREE.Mesh(new THREE.BoxGeometry(0.16, 0.16, 4.5), dark);
-  arm.position.set(0, ANCHOR_Y + 0.28, -2.15);
+  arm.position.set(0, ANCHOR_Y + 0.28, (STREET_Z - PROP_Z) / 2);
   g.add(arm);
   const head = new THREE.Mesh(new THREE.SphereGeometry(0.21, 10, 8),
     new THREE.MeshBasicMaterial({ color: 0xffc06a, fog: false }));
-  head.position.set(0, ANCHOR_Y + 0.02, STREET_Z - FG_Z);
+  head.position.set(0, ANCHOR_Y + 0.02, STREET_Z - PROP_Z);
   g.add(head);
-  glow(g, 0, ANCHOR_Y, STREET_Z - FG_Z, 3.4, 0xffa245, 0.5);
+  glow(g, 0, ANCHOR_Y, STREET_Z - PROP_Z, 3.4, 0xffa245, 0.5);
   let ring = null;
   if (def.hook) {
     ring = new THREE.Mesh(new THREE.TorusGeometry(0.34, 0.055, 8, 20),
       new THREE.MeshBasicMaterial({ color: 0xff7a26, fog: false, transparent: true, opacity: 0.95 }));
-    ring.position.set(0, ANCHOR_Y, STREET_Z - FG_Z);
+    ring.position.set(0, ANCHOR_Y, STREET_Z - PROP_Z);
     g.add(ring);
     const ball = new THREE.Mesh(new THREE.SphereGeometry(0.15, 10, 8),
       new THREE.MeshBasicMaterial({ color: 0xff7a26, fog: false }));
     ball.position.copy(ring.position);
     g.add(ball);
-    glow(g, 0, ANCHOR_Y, STREET_Z - FG_Z, 1.7, 0xff7a26, 0.5);
+    glow(g, 0, ANCHOR_Y, STREET_Z - PROP_Z, 1.7, 0xff7a26, 0.5);
   }
-  g.position.set(0, 0, FG_Z);
+  g.position.set(0, 0, PROP_Z);
   scene.add(g);
   return { def, mesh: g, ring };
 }
@@ -1480,7 +1483,7 @@ function makeSignPost(def) {
   board2.position.set(0.35, 2.35, 0.12);
   board2.rotation.y = 0.35;
   g.add(board2);
-  g.position.set(0, 0, FG_Z);
+  g.position.set(0, 0, PROP_Z);
   scene.add(g);
   return { def, mesh: g, ring: null };
 }
@@ -1513,7 +1516,7 @@ function makeLanternString(def) {
     g.add(lamp);
   }
   glow(g, 0, 7.4, 0.3, 4.2, 0xffa245, 0.18);
-  g.position.set(0, 0, FG_Z);
+  g.position.set(0, 0, PROP_Z);
   scene.add(g);
   return { def, mesh: g, ring: null };
 }
@@ -1549,7 +1552,7 @@ function makeBanner(def) {
     new THREE.MeshBasicMaterial({ map: signBoardTex, fog: true }));
   small.position.set(1.15, 5.55, 0.06);
   g.add(small);
-  g.position.set(0, 0, FG_Z);
+  g.position.set(0, 0, PROP_Z);
   scene.add(g);
   return { def, mesh: g, ring: null };
 }
@@ -1582,7 +1585,7 @@ function makeAwningEdge(def) {
   cloth.position.set(0, 8.85, 0);
   cloth.rotation.x = -0.3;
   g.add(cloth);
-  g.position.set(0, 0, FG_Z);
+  g.position.set(0, 0, PROP_Z);
   scene.add(g);
   return { def, mesh: g, ring: null };
 }
@@ -1610,9 +1613,9 @@ function makeLaundry(def) {
     cloth.rotation.z = (i % 2 ? -1 : 1) * 0.05;
     g.add(cloth);
   });
-  /* inside the scene: just in front of the play plane, behind the
-     camera-side foreground */
-  g.position.set(0, 0, STREET_Z + 1.2);
+  /* background with the rest of the street props (was in front of
+     the play plane until 2026-10-29 eve) */
+  g.position.set(0, 0, PROP_Z);
   scene.add(g);
   return { def, mesh: g, ring: null };
 }
@@ -3388,9 +3391,9 @@ function animate() {
   street.material.uniforms.uTime.value = t;
   awning.position.x = 40 - ((scrollDist * 1.5) % 190);
   fgSign.position.x = 60 - ((scrollDist * 1.5 + 95) % 260);
-  /* foreground occluders scroll with the street (section-local
+  /* background street props scroll with the street (section-local
      layout, same in both street sections); hidden in the runner,
-     which has its own streaming foreground. Anchor rings flare
+     which has its own streaming roadside poles. Anchor rings flare
      when Miso is close enough to hook them. */
   const nearAnchor = (G.mode === 'street' && !swing.on) ? anchorInRange(false) : null;
   for (const p of fgProps) {
