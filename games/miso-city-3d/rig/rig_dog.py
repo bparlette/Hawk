@@ -302,8 +302,15 @@ def new_action(name):
     reset_pose()
     return act
 
+def _fcurves(act):
+    # Blender <=4.x: act.fcurves; 5.x layered actions: layers/strips/channelbags
+    if hasattr(act, "fcurves"):
+        return act.fcurves
+    return [fc for l in act.layers for st in l.strips
+            for cb in st.channelbags for fc in cb.fcurves]
+
 def bezier(act):
-    for fc in act.fcurves:
+    for fc in _fcurves(act):
         for kp in fc.keyframe_points:
             kp.interpolation = "BEZIER"
 
@@ -345,51 +352,31 @@ for f in range(1, 26):
     key_rot("tail.02", f, x=RAD(12) * math.sin(w - 1.2))
 bezier(act_walk)
 
-# ---- Attack: crouch, lunge forward, both paws swipe (12 fr, ~0.45 s) -
+# ---- Attack: coil back, snap-lunge forward, head bites down (12 fr) --
+# 1 neutral -> 3 coil (weight back, head cocked up, paws drawn in)
+# -> 5 STRIKE (body shoots forward, head + neck thrust down-forward
+# into the bite, front paw reaches) -> 7 hold/chomp shake -> 10 -> 12.
 act_atk = new_action("Attack")
 scene.frame_start, scene.frame_end = 1, 12
-for sfx in ("L", "R"):
-    key_rot(f"upperarm.{sfx}", 1, z=0.0)
-    key_rot(f"forearm.{sfx}", 1, z=RAD(8))
-    key_rot(f"thigh.{sfx}", 1, z=0.0)
-    key_rot(f"shin.{sfx}", 1, z=0.0)
-key_rot("spine", 1, z=0.0); key_rot("chest", 1, z=0.0)
-key_rot("head", 1, z=0.0); key_loc_world("root", 1, (0, 0, 0))
-# wind-up crouch (frame 4)
-key_loc_world("root", 4, (0, 0, -0.035 * H))
-key_rot("spine", 4, z=RAD(7)); key_rot("chest", 4, z=RAD(6))
-key_rot("head", 4, z=RAD(4))
-for sfx in ("L", "R"):
-    key_rot(f"upperarm.{sfx}", 4, z=-RAD(14))
-    key_rot(f"forearm.{sfx}", 4, z=RAD(16))
-    key_rot(f"thigh.{sfx}", 4, z=-RAD(8))
-    key_rot(f"shin.{sfx}", 4, z=-RAD(14))
-# strike (frame 7): root lunges forward, spine/chest pitch in, paws swipe
-key_loc_world("root", 7, (0.10 * H, 0, -0.01 * H))
-key_rot("spine", 7, z=RAD(15)); key_rot("chest", 7, z=RAD(14))
-key_rot("neck", 7, z=RAD(5)); key_rot("head", 7, z=RAD(7))
-for sfx in ("L", "R"):
-    key_rot(f"upperarm.{sfx}", 7, z=RAD(52))
-    key_rot(f"forearm.{sfx}", 7, z=RAD(22))
-    key_rot(f"hand.{sfx}", 7, z=RAD(10))
-    key_rot(f"thigh.{sfx}", 7, z=RAD(10))
-    key_rot(f"shin.{sfx}", 7, z=-RAD(6))
-key_rot("tail.01", 7, x=RAD(10)); key_rot("tail.02", 7, x=RAD(14))
-# recover (frames 10, 12 -> neutral)
-key_loc_world("root", 10, (0.05 * H, 0, -0.005 * H))
-key_rot("spine", 10, z=RAD(7)); key_rot("chest", 10, z=RAD(6))
-key_rot("head", 10, z=RAD(3))
-for sfx in ("L", "R"):
-    key_rot(f"upperarm.{sfx}", 10, z=RAD(24))
-    key_rot(f"forearm.{sfx}", 10, z=RAD(14))
-key_loc_world("root", 12, (0, 0, 0))
-key_rot("spine", 12, z=0.0); key_rot("chest", 12, z=0.0)
-key_rot("head", 12, z=0.0)
-for sfx in ("L", "R"):
-    key_rot(f"upperarm.{sfx}", 12, z=0.0)
-    key_rot(f"forearm.{sfx}", 12, z=RAD(8))
-    key_rot(f"thigh.{sfx}", 12, z=0.0)
-    key_rot(f"shin.{sfx}", 12, z=0.0)
+_ALL = ("spine", "chest", "neck", "head")
+def atk_pose(f, root, spine, chest, neck, head, uarm, farm, hand,
+             thL, thR, shL, shR, tail1, tail2):
+    key_loc_world("root", f, root)
+    key_rot("spine", f, z=RAD(spine)); key_rot("chest", f, z=RAD(chest))
+    key_rot("neck", f, z=RAD(neck)); key_rot("head", f, z=RAD(head))
+    for sfx, ua, th, sh in (("L", uarm, thL, shL), ("R", uarm * 0.8, thR, shR)):
+        key_rot(f"upperarm.{sfx}", f, z=RAD(ua))
+        key_rot(f"forearm.{sfx}", f, z=RAD(farm))
+        key_rot(f"hand.{sfx}", f, z=RAD(hand))
+        key_rot(f"thigh.{sfx}", f, z=RAD(th))
+        key_rot(f"shin.{sfx}", f, z=RAD(sh))
+    key_rot("tail.01", f, x=RAD(tail1)); key_rot("tail.02", f, x=RAD(tail2))
+atk_pose(1,  (0, 0, 0),                  0,  0,  0,   0,   0,  8,  0,   0,   0,  0,  0,   0,  0)
+atk_pose(3,  (-0.06*H, 0, -0.03*H),     -9, -8, -10, -14,  30, 34, -8,  10, -14, -12, 16,  -8, -10)
+atk_pose(5,  (0.17*H, 0, -0.03*H),      14, 10,  4,  -6, -70, 8,  -10, 30, -20, -10, 22,  14, 18)
+atk_pose(7,  (0.15*H, 0, -0.035*H),     16, 12,  8,   2, -72, 10, -8,  28, -18, -10, 20,  16, 20)
+atk_pose(10, (0.05*H, 0, -0.01*H),      6,  4,  3,   2,  -28, 12, 0,   10, -6,  -4,  6,   6,  8)
+atk_pose(12, (0, 0, 0),                  0,  0,  0,   0,   0,  8,  0,   0,   0,  0,  0,   0,  0)
 bezier(act_atk)
 
 # ---- Hit: flinch backward, head snap (7 fr, ~0.25 s) -----------------
@@ -480,7 +467,7 @@ _ev.to_mesh_clear()
 print(f"Down end residual before grounding: {_resid:+.3f}")
 if abs(_resid) > 0.005:
     _lift_local = _RB_INV @ Vector((0, 0, _resid))
-    for fc in act_down.fcurves:
+    for fc in _fcurves(act_down):
         if fc.data_path == 'pose.bones["root"].location':
             for kp in fc.keyframe_points:
                 wgt = {1: 0.0, 5: 0.3, 9: 0.7}.get(int(kp.co.x), 1.0)
