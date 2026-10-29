@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<title>NEON SWARM — 90s Arcade Arena Survivor</title>
+<style>
+  :root{
+    --neon:#2ee6ff; --pink:#ff3d7f; --gold:#ffd94a; --bg:#070812;
+  }
+  *{ margin:0; padding:0; box-sizing:border-box; }
+  html,body{ width:100%; height:100%; background:var(--bg); overflow:hidden;
+    font-family:"Trebuchet MS","Segoe UI",Verdana,sans-serif; color:#dfe9ff;
+    touch-action:none; -webkit-user-select:none; user-select:none; }
+  #game{ display:block; width:100vw; height:100vh; }
+
+  /* ---------- shared overlay shell ---------- */
+  .overlay{ position:fixed; inset:0; display:none; align-items:center; justify-content:center;
+    flex-direction:column; background:rgba(4,5,14,.72); z-index:10; text-align:center; padding:16px; }
+  .overlay.show{ display:flex; }
+  .overlay h1{ font-size:clamp(26px,5vw,44px); letter-spacing:3px; color:var(--gold);
+    text-shadow:0 0 18px rgba(255,217,74,.55), 0 0 3px #fff3; margin-bottom:6px; }
+  .overlay h2{ font-size:clamp(13px,2vw,16px); letter-spacing:2px; color:var(--neon);
+    font-weight:600; margin-bottom:22px; text-transform:uppercase; }
+  .overlay p.sub{ color:#9fb4d8; font-size:14px; margin-bottom:18px; }
+
+  /* ---------- draft cards ---------- */
+  #cards{ display:flex; gap:14px; flex-wrap:wrap; justify-content:center; max-width:860px; }
+  .card{ width:230px; min-height:170px; padding:16px 14px 14px; cursor:pointer;
+    background:linear-gradient(160deg,#10142b,#0a0d20); border:2px solid #2a3566; border-radius:12px;
+    transition:transform .08s ease, border-color .08s ease, box-shadow .08s ease; position:relative; }
+  .card:hover{ transform:translateY(-4px) scale(1.02); border-color:var(--neon);
+    box-shadow:0 0 22px rgba(46,230,255,.35); }
+  .card .icon{ font-size:38px; line-height:1; margin-bottom:8px; }
+  .card .name{ font-size:17px; font-weight:700; letter-spacing:1px; color:#fff; margin-bottom:6px; }
+  .card .desc{ font-size:13px; line-height:1.45; color:#aebfe2; min-height:56px; }
+  .card .tier{ font-size:11px; letter-spacing:1px; color:var(--gold); text-transform:uppercase; }
+  .card .key{ position:absolute; top:8px; right:10px; font-size:11px; color:#7f93bb;
+    border:1px solid #33406e; border-radius:4px; padding:1px 6px; }
+
+  /* ---------- buttons / stats ---------- */
+  .btn{ margin-top:20px; padding:12px 34px; font-size:17px; font-weight:700; letter-spacing:2px;
+    color:#06121a; background:var(--neon); border:none; border-radius:8px; cursor:pointer;
+    box-shadow:0 0 18px rgba(46,230,255,.45); }
+  .btn:hover{ background:#7df0ff; }
+  #overStats{ display:grid; grid-template-columns:auto auto; gap:4px 22px; font-size:16px;
+    color:#c9d8f5; text-align:left; }
+  #overStats b{ color:#fff; text-align:right; }
+
+  /* ---------- start splash ---------- */
+  #splash h1{ color:var(--neon); text-shadow:0 0 22px rgba(46,230,255,.6); }
+  #splash .keys{ color:#9fb4d8; font-size:14px; line-height:1.9; }
+  #splash .keys b{ color:#fff; background:#1a2142; border:1px solid #33406e; border-radius:4px;
+    padding:0 7px; font-weight:600; }
+
+  #hint{ position:fixed; left:0; right:0; bottom:6px; text-align:center; font-size:12px;
+    letter-spacing:1px; color:#5f7099; z-index:5; pointer-events:none; }
+</style>
+</head>
+<body>
+<canvas id="game"></canvas>
+
+<div id="draft" class="overlay">
+  <h1>LEVEL UP!</h1>
+  <h2>Choose an upgrade</h2>
+  <div id="cards"></div>
+</div>
+
+<div id="over" class="overlay">
+  <h1>GAME OVER</h1>
+  <h2>The swarm wins this time</h2>
+  <div id="overStats"></div>
+  <button class="btn" id="restartBtn">▶ &nbsp;RUN IT BACK</button>
+  <p class="sub" style="margin-top:12px">or press R</p>
+</div>
+
+<div id="splash" class="overlay">
+  <h1>NEON SWARM</h1>
+  <h2>90s Arcade Arena Survivor</h2>
+  <p class="keys">
+    <b>W A S D</b> / <b>←↑↓→</b> move &nbsp;·&nbsp; weapons fire on their own<br>
+    Survive the horde · grab XP gems · draft upgrades · don't get touched
+  </p>
+  <button class="btn" id="startBtn">▶ &nbsp;INSERT COIN</button>
+</div>
+
+<div id="hint">NEON SWARM — WASD MOVE · WEAPONS AUTO-FIRE · SURVIVE</div>
+
+<script src="audio.js"></script>
+<script src="game.js"></script>
+</body>
+</html>
