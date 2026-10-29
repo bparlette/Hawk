@@ -438,6 +438,16 @@ export function sfx(name) {
     case 'lunge':  // dog strike: short low whoosh
       noiseSweep(t, 0.11, 800, 240, 0.10);
       break;
+    case 'snap':   // bite clamp: hard jaw snap + chomp thud
+      noiseHit(t, 0.22, 2400, 0.9, 0.002, 0.05, 1.4);
+      tone('sine', 210, 60, t, 0.30, 0.003, 0.11);
+      tone('square', 480, 130, t + 0.015, 0.10, 0.002, 0.05);
+      break;
+    case 'smash':  // charged yarn slam: big overhead crash-down
+      noiseSweep(t, 0.20, 1600, 200, 0.16);
+      tone('sine', 150, 34, t + 0.10, 0.42, 0.004, 0.24);
+      noiseHit(t + 0.10, 0.24, 500, 0.7, 0.003, 0.16, 1.0);
+      break;
     case 'collect': // star chime: two bright pings
       tone('triangle', 1318, 1318, t, 0.12, 0.005, 0.18);
       tone('triangle', 1760, 1760, t + 0.07, 0.10, 0.005, 0.24);

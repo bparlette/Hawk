@@ -150,6 +150,15 @@ def build_dane():
     sphere("Snout", (0.155, 0, 0.862), (0.095, 0.058, 0.052), PALE,
            seg=32, rings=24)
     sphere("Jaw", (0.140, 0, 0.812), (0.075, 0.050, 0.030), PALE)
+    # dark mouth interior (head-weighted): hidden while the jaw is
+    # shut, revealed as the dark gap when the jaw bone opens it
+    MOUTH = mat("MouthDark", (0.10, 0.04, 0.05))
+    sphere("Mouth", (0.155, 0, 0.850), (0.072, 0.048, 0.020), MOUTH)
+    # upper fangs on the head, tips poking just below the snout
+    FANG = mat("Fang", (0.97, 0.95, 0.90))
+    for sd, tag in SDS:
+        cone(f"FangUp.{tag}", (0.20, sd * 0.030, 0.825), 0.011, 0.0,
+             0.050, FANG, tilt_x=math.pi, seg=10)
     sphere("Nose", (0.238, 0, 0.878), (0.030, 0.036, 0.024), NOSE,
            seg=20, rings=14)
     for sd, tag in SDS:
@@ -222,6 +231,16 @@ def build_beagle():
            seg=24, rings=18)
     sphere("Muzzle", (0.130, 0, 0.765), (0.085, 0.095, 0.062), WHITE,
            seg=32, rings=24)
+    # real lower jaw (kept as the separate JawMesh object; the jaw
+    # bone in rig_dog.py opens it) + dark mouth interior + fangs
+    sphere("Jaw", (0.122, 0, 0.700), (0.066, 0.080, 0.026), WHITE,
+           seg=32, rings=22)
+    MOUTH = mat("MouthDark", (0.10, 0.04, 0.05))
+    sphere("Mouth", (0.128, 0, 0.738), (0.066, 0.074, 0.018), MOUTH)
+    FANG = mat("Fang", (0.97, 0.95, 0.90))
+    for sd, tag in SDS:
+        cone(f"FangUp.{tag}", (0.17, sd * 0.032, 0.70), 0.010, 0.0,
+             0.042, FANG, tilt_x=math.pi, seg=10)
     sphere("Nose", (0.205, 0, 0.80), (0.030, 0.037, 0.024), NOSE,
            seg=20, rings=14)
     for sd, tag in SDS:
@@ -283,6 +302,9 @@ def build_bulldog():
            seg=36, rings=26)
     sphere("Jaw", (0.155, 0, 0.715), (0.070, 0.090, 0.032), WHITE,
            seg=32, rings=22)
+    # dark mouth interior (head-weighted), revealed when the jaw opens
+    MOUTH = mat("MouthDark", (0.10, 0.04, 0.05))
+    sphere("Mouth", (0.138, 0, 0.752), (0.068, 0.082, 0.018), MOUTH)
     for sd, tag in SDS:
         cone(f"Fang.{tag}", (0.190, sd * 0.045, 0.748), 0.009, 0.0, 0.028,
              FANG, seg=10)
@@ -312,11 +334,34 @@ BUILDERS = {"dane": build_dane, "beagle": build_beagle,
             "bulldog": build_bulldog}
 active_name = BUILDERS[DOG]()
 
-bpy.ops.object.select_all(action="SELECT")
+# The jaw (+ the bulldog's underbite fangs, which sit ON the jaw) is
+# kept as its OWN object "JawMesh" so rig_dog.py can weight those
+# exact vertices to the jaw bone. Upper fangs (FangUp.*) stay in the
+# main mesh with the head.
+jaw_parts = [o for o in bpy.data.objects
+             if o.name == "Jaw" or o.name.startswith("Fang.")]
+jaw_mesh = None
+if jaw_parts:
+    jaw_main = next(o for o in jaw_parts if o.name == "Jaw")
+    bpy.ops.object.select_all(action="DESELECT")
+    for o in jaw_parts:
+        o.select_set(True)
+    bpy.context.view_layer.objects.active = jaw_main
+    if len(jaw_parts) > 1:
+        bpy.ops.object.join()
+    jaw_mesh = bpy.context.view_layer.objects.active
+    jaw_mesh.name = "JawMesh"
+
+bpy.ops.object.select_all(action="DESELECT")
+for o in bpy.data.objects:
+    if o is not jaw_mesh:
+        o.select_set(True)
 bpy.context.view_layer.objects.active = bpy.data.objects[active_name]
 bpy.ops.object.join()
 dog = bpy.context.view_layer.objects.active
 dog.name = f"Dog-{DOG}"
+print("jaw mesh:", jaw_mesh.name if jaw_mesh else None,
+      len(jaw_mesh.data.vertices) if jaw_mesh else 0, "verts")
 print(f"DOG {DOG} verts:", len(dog.data.vertices), "materials:",
       [m.name if m else None for m in dog.data.materials])
 
