@@ -3190,6 +3190,30 @@
    "note": "2D juice rebuild of the Tesla flying-Roadster flip game: hold to charge the upside-down ramp climb, tap at the apex ring for the 180-degree kickflip over the Tesla lineup. Bloom, particles, camera punch, combo meter, synth audio. Compare with v1: g/_v2/roadster-flip/compare.html",
    "path": "g/_v2/roadster-flip/index.html",
    "thumb": "thumbs/roadster-flip.webp?v=1792369872"
+  },
+  {
+   "id": "miso-city-3d",
+   "title": "Miso City 3D — Level 1",
+   "category": "Originals",
+   "keys": {
+    "left": "ArrowLeft",
+    "right": "ArrowRight",
+    "up": "ArrowUp",
+    "down": "ArrowDown",
+    "attack": "KeyZ",
+    "jump": "Space",
+    "special": "KeyX",
+    "start": "Enter"
+   },
+   "labels": {
+    "attack": "Z · FIGHT",
+    "special": "X · YARN / SWING"
+   },
+   "autostart": [],
+   "orientation": "landscape",
+   "note": "Three.js 3D brawler-runner: ninja cat Miso fights dog gangs through Amber Market, dashes the alley runner, and faces Big Bruno the Bulldog. Exaggerated comic combat (hit-stop, POW!/THWACK! popups), foreground crossings, and a yarn swing off the lamp poles. Full source in games/miso-city-3d/.",
+   "path": "../games/miso-city-3d/index.html",
+   "thumb": "thumbs/miso-city-3d.webp"
   }
  ]
 }
