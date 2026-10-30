@@ -17,7 +17,7 @@
  "games": [
   {
    "id": "flappy-showdown",
-   "title": "FLAPPY BIRD — 4-Way AI Showdown",
+   "title": "FLAPPY BIRD \u2014 4-Way AI Showdown",
    "category": "AI Bake-Off",
    "keys": {
     "jump": "Space"
@@ -92,13 +92,13 @@
   },
   {
    "id": "hoa-sledge",
-   "title": "HOA SLEDGE — Code Violation #1",
+   "title": "HOA SLEDGE \u2014 Code Violation #1",
    "category": "Originals",
    "keys": {
     "attack": "KeyJ"
    },
    "labels": {
-    "attack": "SLAM · TAP"
+    "attack": "SLAM \u00b7 TAP"
    },
    "extras": [
     {
@@ -114,15 +114,15 @@
   },
   {
    "id": "roadster-flip",
-   "title": "ROADSTER // FLIP — Starbase Run",
+   "title": "ROADSTER // FLIP \u2014 Starbase Run",
    "category": "Originals",
    "keys": {
     "attack": "KeyJ",
     "jump": "KeyK"
    },
    "labels": {
-    "attack": "FAN · HOLD",
-    "jump": "THRUST · TAP"
+    "attack": "FAN \u00b7 HOLD",
+    "jump": "THRUST \u00b7 TAP"
    },
    "extras": [
     {
@@ -132,14 +132,14 @@
    ],
    "autostart": [],
    "orientation": "portrait",
-   "note": "Tesla Roadster 2.0 fan game: the car drives itself, you get two buttons — hold the fan for sonic loops, tap thrusters to kickflip over Teslas crossing the 4-way at Starbase. Built with gamepress.",
+   "note": "Tesla Roadster 2.0 fan game: the car drives itself, you get two buttons \u2014 hold the fan for sonic loops, tap thrusters to kickflip over Teslas crossing the 4-way at Starbase. Built with gamepress.",
    "path": "g/roadster-flip/index.html",
    "thumb": "thumbs/roadster-flip.webp?v=1792369872",
    "video": "g/roadster-flip/ROADSTER-FLIP-short-9x16.mp4"
   },
   {
    "id": "roadster-flip-showcase",
-   "title": "ROADSTER // FLIP — 30s Short & Showcase",
+   "title": "ROADSTER // FLIP \u2014 30s Short & Showcase",
    "category": "Originals",
    "orientation": "portrait",
    "note": "Watch the 30-second continuous 9:16 gameplay short, download the 4K design board, and view creator post copy.",
@@ -254,9 +254,9 @@
     "start": "Enter"
    },
    "labels": {
-    "attack": "B · ATTACK",
-    "jump": "C · JUMP",
-    "special": "A · SPECIAL"
+    "attack": "B \u00b7 ATTACK",
+    "jump": "C \u00b7 JUMP",
+    "special": "A \u00b7 SPECIAL"
    },
    "autostart": [
     [
@@ -327,7 +327,7 @@
   },
   {
    "id": "bakeoff-a-free",
-   "title": "A · Free City",
+   "title": "A \u00b7 Free City",
    "category": "Bake-off",
    "keys": {
     "attack": "KeyJ",
@@ -338,11 +338,11 @@
    },
    "extras": [
     {
-     "label": "CAM ◀",
+     "label": "CAM \u25c0",
      "key": "KeyQ"
     },
     {
-     "label": "CAM ▶",
+     "label": "CAM \u25b6",
      "key": "KeyE"
     }
    ],
@@ -370,7 +370,7 @@
   },
   {
    "id": "bakeoff-b-paper",
-   "title": "B · Paper City",
+   "title": "B \u00b7 Paper City",
    "category": "Bake-off",
    "keys": {
     "attack": "KeyJ",
@@ -381,11 +381,11 @@
    },
    "extras": [
     {
-     "label": "CAM ◀",
+     "label": "CAM \u25c0",
      "key": "KeyQ"
     },
     {
-     "label": "CAM ▶",
+     "label": "CAM \u25b6",
      "key": "KeyE"
     }
    ],
@@ -413,7 +413,7 @@
   },
   {
    "id": "bakeoff-c-gta",
-   "title": "C · GTA City",
+   "title": "C \u00b7 GTA City",
    "category": "Bake-off",
    "keys": {
     "attack": "KeyJ",
@@ -424,11 +424,11 @@
    },
    "extras": [
     {
-     "label": "CAM ◀",
+     "label": "CAM \u25c0",
      "key": "KeyQ"
     },
     {
-     "label": "CAM ▶",
+     "label": "CAM \u25b6",
      "key": "KeyE"
     }
    ],
@@ -456,7 +456,7 @@
   },
   {
    "id": "bakeoff-d-skyline",
-   "title": "D · Skyline City",
+   "title": "D \u00b7 Skyline City",
    "category": "Bake-off",
    "keys": {
     "attack": "KeyJ",
@@ -467,11 +467,11 @@
    },
    "extras": [
     {
-     "label": "CAM ◀",
+     "label": "CAM \u25c0",
      "key": "KeyQ"
     },
     {
-     "label": "CAM ▶",
+     "label": "CAM \u25b6",
      "key": "KeyE"
     }
    ],
@@ -499,7 +499,7 @@
   },
   {
    "id": "bakeoff-e-gta32",
-   "title": "E · GTA 32",
+   "title": "E \u00b7 GTA 32",
    "category": "Bake-off",
    "keys": {
     "attack": "KeyJ",
@@ -510,11 +510,11 @@
    },
    "extras": [
     {
-     "label": "CAM ◀",
+     "label": "CAM \u25c0",
      "key": "KeyQ"
     },
     {
-     "label": "CAM ▶",
+     "label": "CAM \u25b6",
      "key": "KeyE"
     }
    ],
@@ -542,7 +542,7 @@
   },
   {
    "id": "bakeoff-f-free16",
-   "title": "F · Free 16",
+   "title": "F \u00b7 Free 16",
    "category": "Bake-off",
    "keys": {
     "attack": "KeyJ",
@@ -553,11 +553,11 @@
    },
    "extras": [
     {
-     "label": "CAM ◀",
+     "label": "CAM \u25c0",
      "key": "KeyQ"
     },
     {
-     "label": "CAM ▶",
+     "label": "CAM \u25b6",
      "key": "KeyE"
     }
    ],
@@ -585,7 +585,7 @@
   },
   {
    "id": "bakeoff-g-hd2d",
-   "title": "G · HD-2D",
+   "title": "G \u00b7 HD-2D",
    "category": "Bake-off",
    "keys": {
     "attack": "KeyJ",
@@ -596,11 +596,11 @@
    },
    "extras": [
     {
-     "label": "CAM ◀",
+     "label": "CAM \u25c0",
      "key": "KeyQ"
     },
     {
-     "label": "CAM ▶",
+     "label": "CAM \u25b6",
      "key": "KeyE"
     }
    ],
@@ -628,7 +628,7 @@
   },
   {
    "id": "bakeoff-h-iso",
-   "title": "H · Iso City",
+   "title": "H \u00b7 Iso City",
    "category": "Bake-off",
    "keys": {
     "attack": "KeyJ",
@@ -639,11 +639,11 @@
    },
    "extras": [
     {
-     "label": "CAM ◀",
+     "label": "CAM \u25c0",
      "key": "KeyQ"
     },
     {
-     "label": "CAM ▶",
+     "label": "CAM \u25b6",
      "key": "KeyE"
     }
    ],
@@ -671,7 +671,7 @@
   },
   {
    "id": "bakeoff-i-cel",
-   "title": "I · Cel City",
+   "title": "I \u00b7 Cel City",
    "category": "Bake-off",
    "keys": {
     "attack": "KeyJ",
@@ -683,11 +683,11 @@
    },
    "extras": [
     {
-     "label": "CAM ◀",
+     "label": "CAM \u25c0",
      "key": "KeyQ"
     },
     {
-     "label": "CAM ▶",
+     "label": "CAM \u25b6",
      "key": "KeyE"
     }
    ],
@@ -698,7 +698,7 @@
   },
   {
    "id": "survivors-plus",
-   "title": "★ Vampire Survivors Remake — Hark Edition (fan remake)",
+   "title": "\u2605 Vampire Survivors Remake \u2014 Hark Edition (fan remake)",
    "category": "Other games",
    "keys": {
     "up": "ArrowUp",
@@ -769,7 +769,7 @@
    },
    "extras": [
     {
-     "label": "★ STAR",
+     "label": "\u2605 STAR",
      "key": "Enter"
     },
     {
@@ -844,7 +844,7 @@
     "start": "Enter"
    },
    "labels": {
-    "attack": "A · JUMP",
+    "attack": "A \u00b7 JUMP",
     "jump": "B",
     "start": "PAUSE"
    },
@@ -874,7 +874,7 @@
     "start": "Enter"
    },
    "labels": {
-    "attack": "A · JUMP",
+    "attack": "A \u00b7 JUMP",
     "jump": "B",
     "start": "PAUSE"
    },
@@ -904,7 +904,7 @@
     "start": "Enter"
    },
    "labels": {
-    "attack": "A · JUMP",
+    "attack": "A \u00b7 JUMP",
     "jump": "B",
     "start": "PAUSE"
    },
@@ -934,7 +934,7 @@
     "start": "Enter"
    },
    "labels": {
-    "attack": "A · ROTATE",
+    "attack": "A \u00b7 ROTATE",
     "jump": "B",
     "start": "PAUSE"
    },
@@ -964,7 +964,7 @@
     "start": "Enter"
    },
    "labels": {
-    "attack": "A · FLAP",
+    "attack": "A \u00b7 FLAP",
     "jump": "B",
     "start": "PAUSE"
    },
@@ -994,8 +994,8 @@
     "start": "Enter"
    },
    "labels": {
-    "attack": "A · GAS",
-    "jump": "B · BRAKE",
+    "attack": "A \u00b7 GAS",
+    "jump": "B \u00b7 BRAKE",
     "start": "PAUSE"
    },
    "extras": [
@@ -1024,7 +1024,7 @@
     "start": "Enter"
    },
    "labels": {
-    "attack": "A · FIRE",
+    "attack": "A \u00b7 FIRE",
     "jump": "B",
     "start": "PAUSE"
    },
@@ -1061,7 +1061,7 @@
   },
   {
    "id": "cinema-city",
-   "title": "J · Cinema City",
+   "title": "J \u00b7 Cinema City",
    "category": "Bake-off",
    "keys": {
     "attack": "KeyJ",
@@ -1076,7 +1076,7 @@
   },
   {
    "id": "wasteland-van",
-   "title": "★ ROADKILL RIG — Hark Original",
+   "title": "\u2605 ROADKILL RIG \u2014 Hark Original",
    "category": "Originals",
    "keys": {
     "up": "KeyW",
@@ -1129,7 +1129,7 @@
   },
   {
    "id": "toad-street-32",
-   "title": "K · Toad Street 32",
+   "title": "K \u00b7 Toad Street 32",
    "category": "Bake-off",
    "keys": {
     "attack": "KeyJ",
@@ -1155,7 +1155,7 @@
     "start": "Enter"
    },
    "labels": {
-    "attack": "J · THROW"
+    "attack": "J \u00b7 THROW"
    },
    "extras": [
     {
@@ -1188,9 +1188,9 @@
     "start": "Enter"
    },
    "labels": {
-    "attack": "J · FIRE",
-    "jump": "F · BUILD",
-    "special": "G · BOMB"
+    "attack": "J \u00b7 FIRE",
+    "jump": "F \u00b7 BUILD",
+    "special": "G \u00b7 BOMB"
    },
    "extras": [
     {
@@ -1231,9 +1231,9 @@
     "start": "Enter"
    },
    "labels": {
-    "attack": "SHIFT · BOOST",
-    "jump": "SPACE · CLIMB",
-    "special": "V · CAM"
+    "attack": "SHIFT \u00b7 BOOST",
+    "jump": "SPACE \u00b7 CLIMB",
+    "special": "V \u00b7 CAM"
    },
    "extras": [
     {
@@ -1267,9 +1267,9 @@
     "select": "KeyP"
    },
    "labels": {
-    "attack": "J · FLIP",
+    "attack": "J \u00b7 FLIP",
     "jump": "OLLIE",
-    "special": "L · GRIND",
+    "special": "L \u00b7 GRIND",
     "start": "SKATE",
     "select": "PAUSE"
    },
@@ -1309,9 +1309,9 @@
     "select": "KeyP"
    },
    "labels": {
-    "attack": "SHIFT · SLIDE",
-    "jump": "SPACE · JUMP",
-    "special": "E · CAM",
+    "attack": "SHIFT \u00b7 SLIDE",
+    "jump": "SPACE \u00b7 JUMP",
+    "special": "E \u00b7 CAM",
     "start": "START",
     "select": "PAUSE"
    },
@@ -1437,7 +1437,7 @@
   },
   {
    "id": "sticker-excitebike",
-   "title": "Excitebike — Track 1",
+   "title": "Excitebike \u2014 Track 1",
    "category": "Sticker Series",
    "keys": {
     "up": "ArrowUp",
@@ -1455,7 +1455,7 @@
   },
   {
    "id": "sticker-punch-out",
-   "title": "Punch-Out — Minor Circuit",
+   "title": "Punch-Out \u2014 Minor Circuit",
    "category": "Sticker Series",
    "keys": {
     "up": "ArrowUp",
@@ -1473,7 +1473,7 @@
   },
   {
    "id": "sticker-kung-fu-master",
-   "title": "Kung Fu Master — Level 1",
+   "title": "Kung Fu Master \u2014 Level 1",
    "category": "Sticker Series",
    "keys": {
     "up": "ArrowUp",
@@ -1491,7 +1491,7 @@
   },
   {
    "id": "sticker-bad-dudes",
-   "title": "Bad Dudes — Stage 2",
+   "title": "Bad Dudes \u2014 Stage 2",
    "category": "Sticker Series",
    "keys": {
     "up": "ArrowUp",
@@ -1612,7 +1612,7 @@
   },
   {
    "id": "re-requiem",
-   "title": "Resident Evil: Requiem · FINAL",
+   "title": "Resident Evil: Requiem \u00b7 FINAL",
    "category": "Resident Evil: Requiem",
    "keys": {
     "up": "KeyW",
@@ -1625,9 +1625,9 @@
     "start": "Enter"
    },
    "labels": {
-    "attack": "J · FIRE",
-    "jump": "E · USE / HIDE",
-    "special": "K · LASER AIM"
+    "attack": "J \u00b7 FIRE",
+    "jump": "E \u00b7 USE / HIDE",
+    "special": "K \u00b7 LASER AIM"
    },
    "extras": [
     {
@@ -1656,7 +1656,7 @@
   },
   {
    "id": "re-requiem-v1",
-   "title": "Requiem v1 · Spencer Estate Wing",
+   "title": "Requiem v1 \u00b7 Spencer Estate Wing",
    "category": "Resident Evil: Requiem",
    "keys": {
     "up": "KeyW",
@@ -1669,9 +1669,9 @@
     "start": "Enter"
    },
    "labels": {
-    "attack": "E · USE",
+    "attack": "E \u00b7 USE",
     "jump": "SPACE",
-    "special": "F · LIGHT"
+    "special": "F \u00b7 LIGHT"
    },
    "autostart": [],
    "orientation": "landscape",
@@ -1681,7 +1681,7 @@
   },
   {
    "id": "re-requiem-v2",
-   "title": "Requiem v2 · RE Engine WebGL Edition",
+   "title": "Requiem v2 \u00b7 RE Engine WebGL Edition",
    "category": "Resident Evil: Requiem",
    "keys": {
     "up": "KeyW",
@@ -1694,9 +1694,9 @@
     "start": "Enter"
    },
    "labels": {
-    "attack": "E · USE",
+    "attack": "E \u00b7 USE",
     "jump": "SPACE",
-    "special": "F · LIGHT"
+    "special": "F \u00b7 LIGHT"
    },
    "autostart": [],
    "orientation": "landscape",
@@ -1706,7 +1706,7 @@
   },
   {
    "id": "re-requiem-v3",
-   "title": "Requiem v3 · Director's Cut",
+   "title": "Requiem v3 \u00b7 Director's Cut",
    "category": "Resident Evil: Requiem",
    "keys": {
     "up": "KeyW",
@@ -1719,9 +1719,9 @@
     "start": "Enter"
    },
    "labels": {
-    "attack": "E · USE",
+    "attack": "E \u00b7 USE",
     "jump": "SPACE",
-    "special": "F · LIGHT"
+    "special": "F \u00b7 LIGHT"
    },
    "autostart": [],
    "orientation": "landscape",
@@ -1731,7 +1731,7 @@
   },
   {
    "id": "blox-dough-raid-plus",
-   "title": "★ Blox Fruits: Dough Raid — Turtles Edition",
+   "title": "\u2605 Blox Fruits: Dough Raid \u2014 Turtles Edition",
    "category": "Other games",
    "keys": {
     "up": "KeyW",
@@ -1771,7 +1771,7 @@
   },
   {
    "id": "polytrack-plus",
-   "title": "★ PolyTrack Remake — Hark Edition (fan remake)",
+   "title": "\u2605 PolyTrack Remake \u2014 Hark Edition (fan remake)",
    "category": "Other games",
    "keys": {
     "up": "ArrowUp",
@@ -1786,7 +1786,7 @@
    "labels": {
     "attack": "GAS",
     "jump": "BRAKE",
-    "special": "⚑ CHECKPOINT",
+    "special": "\u2691 CHECKPOINT",
     "start": "RESTART"
    },
    "extras": [
@@ -1846,7 +1846,7 @@
   },
   {
    "id": "socal-summer-games-plus",
-   "title": "★ California Games Remastered — Hark Edition (fan remake)",
+   "title": "\u2605 California Games Remastered \u2014 Hark Edition (fan remake)",
    "category": "Originals",
    "keys": {
     "up": "ArrowUp",
@@ -1928,9 +1928,9 @@
     "start": "Enter"
    },
    "labels": {
-    "attack": "SPACE · GRAPPLE",
-    "jump": "E · NITRO",
-    "special": "1 · MODE"
+    "attack": "SPACE \u00b7 GRAPPLE",
+    "jump": "E \u00b7 NITRO",
+    "special": "1 \u00b7 MODE"
    },
    "extras": [
     {
@@ -1967,9 +1967,9 @@
     "start": "Enter"
    },
    "labels": {
-    "attack": "SPACE · GRAPPLE",
-    "jump": "E · NITRO",
-    "special": "1 · MODE"
+    "attack": "SPACE \u00b7 GRAPPLE",
+    "jump": "E \u00b7 NITRO",
+    "special": "1 \u00b7 MODE"
    },
    "extras": [
     {
@@ -1993,7 +1993,7 @@
   },
   {
    "id": "drift-survivors-after-hark",
-   "title": "DRIFT SURVIVORS — Toon 3D Fan Game - after harkinstructions",
+   "title": "DRIFT SURVIVORS \u2014 Toon 3D Fan Game - after harkinstructions",
    "category": "Originals",
    "keys": {
     "up": "KeyW",
@@ -2006,9 +2006,9 @@
     "start": "Enter"
    },
    "labels": {
-    "attack": "SPACE · DODGE",
-    "jump": "F · HOOK",
-    "special": "E · EMP"
+    "attack": "SPACE \u00b7 DODGE",
+    "jump": "F \u00b7 HOOK",
+    "special": "E \u00b7 EMP"
    },
    "extras": [
     {
@@ -2038,8 +2038,8 @@
     "start": "Enter"
    },
    "labels": {
-    "left": "◀ STEER",
-    "right": "STEER ▶",
+    "left": "\u25c0 STEER",
+    "right": "STEER \u25b6",
     "up": "GAS",
     "down": "BRK",
     "start": "START"
@@ -2072,8 +2072,8 @@
     "start": "Enter"
    },
    "labels": {
-    "left": "◀ STEER",
-    "right": "STEER ▶",
+    "left": "\u25c0 STEER",
+    "right": "STEER \u25b6",
     "up": "GAS",
     "down": "BRK",
     "start": "START"
@@ -2793,7 +2793,7 @@
   },
   {
    "id": "cat-arcade-v2",
-   "title": "CAT ARCADE V2 — v1 vs v2 comparison",
+   "title": "CAT ARCADE V2 \u2014 v1 vs v2 comparison",
    "category": "Cat Arcade v2",
    "keys": {},
    "labels": {},
@@ -2801,11 +2801,11 @@
    "orientation": "portrait",
    "path": "g/_v2/index.html",
    "thumb": "thumbs/one-tap-reflex-v2.webp?v=1792424065",
-   "note": "Hub for the Cat Arcade v2 rebuild — 31 games on one shared runtime. Every card links to the rebuilt game and to the untouched original in g/_v1/ so you can A/B them."
+   "note": "Hub for the Cat Arcade v2 rebuild \u2014 31 games on one shared runtime. Every card links to the rebuilt game and to the untouched original in g/_v1/ so you can A/B them."
   },
   {
    "id": "one-tap-reflex",
-   "title": "FLAP CAT — tap to flap  ·  3 lives (v2)",
+   "title": "FLAP CAT \u2014 tap to flap  \u00b7  3 lives (v2)",
    "category": "Cat Arcade v2",
    "keys": {},
    "labels": {},
@@ -2813,11 +2813,11 @@
    "orientation": "portrait",
    "path": "g/_v2/one-tap-reflex/index.html",
    "thumb": "thumbs/one-tap-reflex-v2.webp?v=1792424065",
-   "note": "Cat Arcade v2 rebuild: one bad tap and it is over. New engine — bloom, impact ripples, particle debris, camera punch, combo meter, layered synth audio. The untouched original is kept at g/_v1/one-tap-reflex/."
+   "note": "Cat Arcade v2 rebuild: one bad tap and it is over. New engine \u2014 bloom, impact ripples, particle debris, camera punch, combo meter, layered synth audio. The untouched original is kept at g/_v1/one-tap-reflex/."
   },
   {
    "id": "stack-timing",
-   "title": "TOWER PERFECT — tap to drop  ·  centre it (v2)",
+   "title": "TOWER PERFECT \u2014 tap to drop  \u00b7  centre it (v2)",
    "category": "Cat Arcade v2",
    "keys": {},
    "labels": {},
@@ -2825,11 +2825,11 @@
    "orientation": "portrait",
    "path": "g/_v2/stack-timing/index.html",
    "thumb": "thumbs/stack-timing-v2.webp?v=1792424101",
-   "note": "Cat Arcade v2 rebuild: one pixel off and the tower falls. New engine — bloom, impact ripples, particle debris, camera punch, combo meter, layered synth audio. The untouched original is kept at g/_v1/stack-timing/."
+   "note": "Cat Arcade v2 rebuild: one pixel off and the tower falls. New engine \u2014 bloom, impact ripples, particle debris, camera punch, combo meter, layered synth audio. The untouched original is kept at g/_v1/stack-timing/."
   },
   {
    "id": "bullet-heaven",
-   "title": "HORDE CAT — drag to run  ·  auto-fire (v2)",
+   "title": "HORDE CAT \u2014 drag to run  \u00b7  auto-fire (v2)",
    "category": "Cat Arcade v2",
    "keys": {},
    "labels": {},
@@ -2837,11 +2837,11 @@
    "orientation": "portrait",
    "path": "g/_v2/bullet-heaven/index.html",
    "thumb": "thumbs/bullet-heaven-v2.webp?v=1792424010",
-   "note": "Cat Arcade v2 rebuild: one cat versus the whole graveyard. New engine — bloom, impact ripples, particle debris, camera punch, combo meter, layered synth audio. The untouched original is kept at g/_v1/bullet-heaven/."
+   "note": "Cat Arcade v2 rebuild: one cat versus the whole graveyard. New engine \u2014 bloom, impact ripples, particle debris, camera punch, combo meter, layered synth audio. The untouched original is kept at g/_v1/bullet-heaven/."
   },
   {
    "id": "card-roguelite",
-   "title": "CARD CATS — draw · play · survive (v2)",
+   "title": "CARD CATS \u2014 draw \u00b7 play \u00b7 survive (v2)",
    "category": "Cat Arcade v2",
    "keys": {},
    "labels": {},
@@ -2849,11 +2849,11 @@
    "orientation": "portrait",
    "path": "g/_v2/card-roguelite/index.html",
    "thumb": "thumbs/card-roguelite-v2.webp?v=1792424015",
-   "note": "Cat Arcade v2 rebuild: five waves, one deck, no mercy. New engine — bloom, impact ripples, particle debris, camera punch, combo meter, layered synth audio. The untouched original is kept at g/_v1/card-roguelite/."
+   "note": "Cat Arcade v2 rebuild: five waves, one deck, no mercy. New engine \u2014 bloom, impact ripples, particle debris, camera punch, combo meter, layered synth audio. The untouched original is kept at g/_v1/card-roguelite/."
   },
   {
    "id": "grid-chaser",
-   "title": "GRID CHASER — swipe or arrows to turn (v2)",
+   "title": "GRID CHASER \u2014 swipe or arrows to turn (v2)",
    "category": "Cat Arcade v2",
    "keys": {},
    "labels": {},
@@ -2861,11 +2861,11 @@
    "orientation": "portrait",
    "path": "g/_v2/grid-chaser/index.html",
    "thumb": "thumbs/grid-chaser-v2.webp?v=1792424035",
-   "note": "Cat Arcade v2 rebuild: eat every dot before they eat you. New engine — bloom, impact ripples, particle debris, camera punch, combo meter, layered synth audio. The untouched original is kept at g/_v1/grid-chaser/."
+   "note": "Cat Arcade v2 rebuild: eat every dot before they eat you. New engine \u2014 bloom, impact ripples, particle debris, camera punch, combo meter, layered synth audio. The untouched original is kept at g/_v1/grid-chaser/."
   },
   {
    "id": "hide-and-seek",
-   "title": "HIDE & SEEK — drag to sneak · stay out of the light (v2)",
+   "title": "HIDE & SEEK \u2014 drag to sneak \u00b7 stay out of the light (v2)",
    "category": "Cat Arcade v2",
    "keys": {},
    "labels": {},
@@ -2873,11 +2873,11 @@
    "orientation": "portrait",
    "path": "g/_v2/hide-and-seek/index.html",
    "thumb": "thumbs/hide-and-seek-v2.webp?v=1792424040",
-   "note": "Cat Arcade v2 rebuild: he is one sweep away. New engine — bloom, impact ripples, particle debris, camera punch, combo meter, layered synth audio. The untouched original is kept at g/_v1/hide-and-seek/."
+   "note": "Cat Arcade v2 rebuild: he is one sweep away. New engine \u2014 bloom, impact ripples, particle debris, camera punch, combo meter, layered synth audio. The untouched original is kept at g/_v1/hide-and-seek/."
   },
   {
    "id": "falling-blocks",
-   "title": "BLOCK DROP — clear 20 lines (v2)",
+   "title": "BLOCK DROP \u2014 clear 20 lines (v2)",
    "category": "Cat Arcade v2",
    "keys": {},
    "labels": {},
@@ -2885,11 +2885,11 @@
    "orientation": "portrait",
    "path": "g/_v2/falling-blocks/index.html",
    "thumb": "thumbs/falling-blocks-v2.webp?v=1792429882",
-   "note": "Cat Arcade v2 rebuild: the well never stops filling. New engine — bloom, impact ripples, particle debris, camera punch, combo meter, layered synth audio. The untouched original is kept at g/_v1/falling-blocks/."
+   "note": "Cat Arcade v2 rebuild: the well never stops filling. New engine \u2014 bloom, impact ripples, particle debris, camera punch, combo meter, layered synth audio. The untouched original is kept at g/_v1/falling-blocks/."
   },
   {
    "id": "ballistic-bouncer",
-   "title": "BALLISTIC BOUNCER — tap to slam · keep it alive (v2)",
+   "title": "BALLISTIC BOUNCER \u2014 tap to slam \u00b7 keep it alive (v2)",
    "category": "Cat Arcade v2",
    "keys": {},
    "labels": {},
@@ -2897,11 +2897,11 @@
    "orientation": "portrait",
    "path": "g/_v2/ballistic-bouncer/index.html",
    "thumb": "thumbs/ballistic-bouncer-v2.webp?v=1792424004",
-   "note": "Cat Arcade v2 rebuild: one ball, three lives, zero chill. New engine — bloom, impact ripples, particle debris, camera punch, combo meter, layered synth audio. The untouched original is kept at g/_v1/ballistic-bouncer/."
+   "note": "Cat Arcade v2 rebuild: one ball, three lives, zero chill. New engine \u2014 bloom, impact ripples, particle debris, camera punch, combo meter, layered synth audio. The untouched original is kept at g/_v1/ballistic-bouncer/."
   },
   {
    "id": "arena-brawler",
-   "title": "ZOMBIE BRAWL — drag to move  ·  mash to punch (v2)",
+   "title": "ZOMBIE BRAWL \u2014 drag to move  \u00b7  mash to punch (v2)",
    "category": "Cat Arcade v2",
    "keys": {},
    "labels": {},
@@ -2909,11 +2909,11 @@
    "orientation": "portrait",
    "path": "g/_v2/arena-brawler/index.html",
    "thumb": "thumbs/arena-brawler-v2.webp?v=1792423999",
-   "note": "Cat Arcade v2 rebuild: 1 cat vs the whole street. New engine — bloom, impact ripples, particle debris, camera punch, combo meter, layered synth audio. The untouched original is kept at g/_v1/arena-brawler/."
+   "note": "Cat Arcade v2 rebuild: 1 cat vs the whole street. New engine \u2014 bloom, impact ripples, particle debris, camera punch, combo meter, layered synth audio. The untouched original is kept at g/_v1/arena-brawler/."
   },
   {
    "id": "footsies-duel",
-   "title": "FOOTSIES DUEL — tap sides to step · tap middle to poke · hold to block (v2)",
+   "title": "FOOTSIES DUEL \u2014 tap sides to step \u00b7 tap middle to poke \u00b7 hold to block (v2)",
    "category": "Cat Arcade v2",
    "keys": {},
    "labels": {},
@@ -2921,11 +2921,11 @@
    "orientation": "portrait",
    "path": "g/_v2/footsies-duel/index.html",
    "thumb": "thumbs/footsies-duel-v2.webp?v=1792424030",
-   "note": "Cat Arcade v2 rebuild: one whiff and you eat 34. New engine — bloom, impact ripples, particle debris, camera punch, combo meter, layered synth audio. The untouched original is kept at g/_v1/footsies-duel/."
+   "note": "Cat Arcade v2 rebuild: one whiff and you eat 34. New engine \u2014 bloom, impact ripples, particle debris, camera punch, combo meter, layered synth audio. The untouched original is kept at g/_v1/footsies-duel/."
   },
   {
    "id": "slice-swipe",
-   "title": "CAT NINJA — swipe to slice · don\\ (v2)",
+   "title": "CAT NINJA \u2014 swipe to slice \u00b7 don\\ (v2)",
    "category": "Cat Arcade v2",
    "keys": {},
    "labels": {},
@@ -2933,11 +2933,11 @@
    "orientation": "portrait",
    "path": "g/_v2/slice-swipe/index.html",
    "thumb": "thumbs/slice-swipe-v2.webp?v=1792424096",
-   "note": "Cat Arcade v2 rebuild: the garden only needs 30 slices. New engine — bloom, impact ripples, particle debris, camera punch, combo meter, layered synth audio. The untouched original is kept at g/_v1/slice-swipe/."
+   "note": "Cat Arcade v2 rebuild: the garden only needs 30 slices. New engine \u2014 bloom, impact ripples, particle debris, camera punch, combo meter, layered synth audio. The untouched original is kept at g/_v1/slice-swipe/."
   },
   {
    "id": "run-and-gun",
-   "title": "COMMANDO CAT — hold ▶ to run · fire to shoot (v2)",
+   "title": "COMMANDO CAT \u2014 hold \u25b6 to run \u00b7 fire to shoot (v2)",
    "category": "Cat Arcade v2",
    "keys": {},
    "labels": {},
@@ -2945,11 +2945,11 @@
    "orientation": "portrait",
    "path": "g/_v2/run-and-gun/index.html",
    "thumb": "thumbs/run-and-gun-v2.webp?v=1792424085",
-   "note": "Cat Arcade v2 rebuild: the sludge wall never stops. New engine — bloom, impact ripples, particle debris, camera punch, combo meter, layered synth audio. The untouched original is kept at g/_v1/run-and-gun/."
+   "note": "Cat Arcade v2 rebuild: the sludge wall never stops. New engine \u2014 bloom, impact ripples, particle debris, camera punch, combo meter, layered synth audio. The untouched original is kept at g/_v1/run-and-gun/."
   },
   {
    "id": "scrolling-shmup",
-   "title": "VOID CAT — drag to fly · guns are auto (v2)",
+   "title": "VOID CAT \u2014 drag to fly \u00b7 guns are auto (v2)",
    "category": "Cat Arcade v2",
    "keys": {},
    "labels": {},
@@ -2957,11 +2957,11 @@
    "orientation": "portrait",
    "path": "g/_v2/scrolling-shmup/index.html",
    "thumb": "thumbs/scrolling-shmup-v2.webp?v=1792424090",
-   "note": "Cat Arcade v2 rebuild: the mothership is coming. New engine — bloom, impact ripples, particle debris, camera punch, combo meter, layered synth audio. The untouched original is kept at g/_v1/scrolling-shmup/."
+   "note": "Cat Arcade v2 rebuild: the mothership is coming. New engine \u2014 bloom, impact ripples, particle debris, camera punch, combo meter, layered synth audio. The untouched original is kept at g/_v1/scrolling-shmup/."
   },
   {
    "id": "precision-platformer",
-   "title": "CAT DASH — run · jump · outrun the void (v2)",
+   "title": "CAT DASH \u2014 run \u00b7 jump \u00b7 outrun the void (v2)",
    "category": "Cat Arcade v2",
    "keys": {},
    "labels": {},
@@ -2969,11 +2969,11 @@
    "orientation": "portrait",
    "path": "g/_v2/precision-platformer/index.html",
    "thumb": "thumbs/precision-platformer-v2.webp?v=1792424075",
-   "note": "Cat Arcade v2 rebuild: one late jump and the void eats you. New engine — bloom, impact ripples, particle debris, camera punch, combo meter, layered synth audio. The untouched original is kept at g/_v1/precision-platformer/."
+   "note": "Cat Arcade v2 rebuild: one late jump and the void eats you. New engine \u2014 bloom, impact ripples, particle debris, camera punch, combo meter, layered synth audio. The untouched original is kept at g/_v1/precision-platformer/."
   },
   {
    "id": "mini-metroidvania",
-   "title": "CAT CAVE — dash · double jump · escape (v2)",
+   "title": "CAT CAVE \u2014 dash \u00b7 double jump \u00b7 escape (v2)",
    "category": "Cat Arcade v2",
    "keys": {},
    "labels": {},
@@ -2981,11 +2981,11 @@
    "orientation": "portrait",
    "path": "g/_v2/mini-metroidvania/index.html",
    "thumb": "thumbs/mini-metroidvania-v2.webp?v=1792424050",
-   "note": "Cat Arcade v2 rebuild: three chambers, one relic, zero seconds. New engine — bloom, impact ripples, particle debris, camera punch, combo meter, layered synth audio. The untouched original is kept at g/_v1/mini-metroidvania/."
+   "note": "Cat Arcade v2 rebuild: three chambers, one relic, zero seconds. New engine \u2014 bloom, impact ripples, particle debris, camera punch, combo meter, layered synth audio. The untouched original is kept at g/_v1/mini-metroidvania/."
   },
   {
    "id": "mini-zelda",
-   "title": "CAT DUNGEON — slash · loot · escape (v2)",
+   "title": "CAT DUNGEON \u2014 slash \u00b7 loot \u00b7 escape (v2)",
    "category": "Cat Arcade v2",
    "keys": {},
    "labels": {},
@@ -2993,11 +2993,11 @@
    "orientation": "portrait",
    "path": "g/_v2/mini-zelda/index.html",
    "thumb": "thumbs/mini-zelda-v2.webp?v=1792424055",
-   "note": "Cat Arcade v2 rebuild: clear the room, take the key, climb the stairs. New engine — bloom, impact ripples, particle debris, camera punch, combo meter, layered synth audio. The untouched original is kept at g/_v1/mini-zelda/."
+   "note": "Cat Arcade v2 rebuild: clear the room, take the key, climb the stairs. New engine \u2014 bloom, impact ripples, particle debris, camera punch, combo meter, layered synth audio. The untouched original is kept at g/_v1/mini-zelda/."
   },
   {
    "id": "trajectory-artillery",
-   "title": "CAT-A-PULT — drag to aim  ·  release to fire (v2)",
+   "title": "CAT-A-PULT \u2014 drag to aim  \u00b7  release to fire (v2)",
    "category": "Cat Arcade v2",
    "keys": {},
    "labels": {},
@@ -3005,11 +3005,11 @@
    "orientation": "portrait",
    "path": "g/_v2/trajectory-artillery/index.html",
    "thumb": "thumbs/trajectory-artillery-v2.webp?v=1792424106",
-   "note": "Cat Arcade v2 rebuild: one fish, one zombie, one very big crater. New engine — bloom, impact ripples, particle debris, camera punch, combo meter, layered synth audio. The untouched original is kept at g/_v1/trajectory-artillery/."
+   "note": "Cat Arcade v2 rebuild: one fish, one zombie, one very big crater. New engine \u2014 bloom, impact ripples, particle debris, camera punch, combo meter, layered synth audio. The untouched original is kept at g/_v1/trajectory-artillery/."
   },
   {
    "id": "turn-based-3v3",
-   "title": "TURN ORDER — pick your target  ·  land the combo (v2)",
+   "title": "TURN ORDER \u2014 pick your target  \u00b7  land the combo (v2)",
    "category": "Cat Arcade v2",
    "keys": {},
    "labels": {},
@@ -3017,11 +3017,11 @@
    "orientation": "portrait",
    "path": "g/_v2/turn-based-3v3/index.html",
    "thumb": "thumbs/turn-based-3v3-v2.webp?v=1792429918",
-   "note": "Cat Arcade v2 rebuild: three cats, three beasts, one ribbon of turns. New engine — bloom, impact ripples, particle debris, camera punch, combo meter, layered synth audio. The untouched original is kept at g/_v1/turn-based-3v3/."
+   "note": "Cat Arcade v2 rebuild: three cats, three beasts, one ribbon of turns. New engine \u2014 bloom, impact ripples, particle debris, camera punch, combo meter, layered synth audio. The untouched original is kept at g/_v1/turn-based-3v3/."
   },
   {
    "id": "micro-tower-defense",
-   "title": "MICRO TOWER DEFENSE — tap tower · tap plot · hold the lane (v2)",
+   "title": "MICRO TOWER DEFENSE \u2014 tap tower \u00b7 tap plot \u00b7 hold the lane (v2)",
    "category": "Cat Arcade v2",
    "keys": {},
    "labels": {},
@@ -3029,11 +3029,11 @@
    "orientation": "portrait",
    "path": "g/_v2/micro-tower-defense/index.html",
    "thumb": "thumbs/micro-tower-defense-v2.webp?v=1792429897",
-   "note": "Cat Arcade v2 rebuild: five waves, one lane, no mercy. New engine — bloom, impact ripples, particle debris, camera punch, combo meter, layered synth audio. The untouched original is kept at g/_v1/micro-tower-defense/."
+   "note": "Cat Arcade v2 rebuild: five waves, one lane, no mercy. New engine \u2014 bloom, impact ripples, particle debris, camera punch, combo meter, layered synth audio. The untouched original is kept at g/_v1/micro-tower-defense/."
   },
   {
    "id": "merge-sandbox",
-   "title": "MERGE SANDBOX — drop · match · level up (v2)",
+   "title": "MERGE SANDBOX \u2014 drop \u00b7 match \u00b7 level up (v2)",
    "category": "Cat Arcade v2",
    "keys": {},
    "labels": {},
@@ -3041,11 +3041,11 @@
    "orientation": "portrait",
    "path": "g/_v2/merge-sandbox/index.html",
    "thumb": "thumbs/merge-sandbox-v2.webp?v=1792429892",
-   "note": "Cat Arcade v2 rebuild: two cats touch and turn into something bigger. New engine — bloom, impact ripples, particle debris, camera punch, combo meter, layered synth audio. The untouched original is kept at g/_v1/merge-sandbox/."
+   "note": "Cat Arcade v2 rebuild: two cats touch and turn into something bigger. New engine \u2014 bloom, impact ripples, particle debris, camera punch, combo meter, layered synth audio. The untouched original is kept at g/_v1/merge-sandbox/."
   },
   {
    "id": "plinko-drop",
-   "title": "PLINKO DROP — aim · hold to charge · release (v2)",
+   "title": "PLINKO DROP \u2014 aim \u00b7 hold to charge \u00b7 release (v2)",
    "category": "Cat Arcade v2",
    "keys": {},
    "labels": {},
@@ -3053,11 +3053,11 @@
    "orientation": "portrait",
    "path": "g/_v2/plinko-drop/index.html",
    "thumb": "thumbs/plinko-drop-v2.webp?v=1792424070",
-   "note": "Cat Arcade v2 rebuild: three chips to find the x5. New engine — bloom, impact ripples, particle debris, camera punch, combo meter, layered synth audio. The untouched original is kept at g/_v1/plinko-drop/."
+   "note": "Cat Arcade v2 rebuild: three chips to find the x5. New engine \u2014 bloom, impact ripples, particle debris, camera punch, combo meter, layered synth audio. The untouched original is kept at g/_v1/plinko-drop/."
   },
   {
    "id": "ragdoll-launch",
-   "title": "RAGDOLL LAUNCH — drag back  ·  let the cat fly (v2)",
+   "title": "RAGDOLL LAUNCH \u2014 drag back  \u00b7  let the cat fly (v2)",
    "category": "Cat Arcade v2",
    "keys": {},
    "labels": {},
@@ -3065,11 +3065,11 @@
    "orientation": "portrait",
    "path": "g/_v2/ragdoll-launch/index.html",
    "thumb": "thumbs/ragdoll-launch-v2.webp?v=1792429902",
-   "note": "Cat Arcade v2 rebuild: one cat, one sling, zero dignity. New engine — bloom, impact ripples, particle debris, camera punch, combo meter, layered synth audio. The untouched original is kept at g/_v1/ragdoll-launch/."
+   "note": "Cat Arcade v2 rebuild: one cat, one sling, zero dignity. New engine \u2014 bloom, impact ripples, particle debris, camera punch, combo meter, layered synth audio. The untouched original is kept at g/_v1/ragdoll-launch/."
   },
   {
    "id": "rope-cut",
-   "title": "ROPE CUT — slice the ropes · feed the cat (v2)",
+   "title": "ROPE CUT \u2014 slice the ropes \u00b7 feed the cat (v2)",
    "category": "Cat Arcade v2",
    "keys": {},
    "labels": {},
@@ -3077,11 +3077,11 @@
    "orientation": "portrait",
    "path": "g/_v2/rope-cut/index.html",
    "thumb": "thumbs/rope-cut-v2.webp?v=1792429908",
-   "note": "Cat Arcade v2 rebuild: five levels, one bottomless cat. New engine — bloom, impact ripples, particle debris, camera punch, combo meter, layered synth audio. The untouched original is kept at g/_v1/rope-cut/."
+   "note": "Cat Arcade v2 rebuild: five levels, one bottomless cat. New engine \u2014 bloom, impact ripples, particle debris, camera punch, combo meter, layered synth audio. The untouched original is kept at g/_v1/rope-cut/."
   },
   {
    "id": "obby-gauntlet",
-   "title": "CAT OBBY — tap = jump  ·  drag = steer (v2)",
+   "title": "CAT OBBY \u2014 tap = jump  \u00b7  drag = steer (v2)",
    "category": "Cat Arcade v2",
    "keys": {},
    "labels": {},
@@ -3089,11 +3089,11 @@
    "orientation": "portrait",
    "path": "g/_v2/obby-gauntlet/index.html",
    "thumb": "thumbs/obby-gauntlet-v2.webp?v=1792424060",
-   "note": "Cat Arcade v2 rebuild: one slip and the cat is gone. New engine — bloom, impact ripples, particle debris, camera punch, combo meter, layered synth audio. The untouched original is kept at g/_v1/obby-gauntlet/."
+   "note": "Cat Arcade v2 rebuild: one slip and the cat is gone. New engine \u2014 bloom, impact ripples, particle debris, camera punch, combo meter, layered synth audio. The untouched original is kept at g/_v1/obby-gauntlet/."
   },
   {
    "id": "kart-racer",
-   "title": "NEON RUSH — hold left / right  ·  pass all 3 (v2)",
+   "title": "NEON RUSH \u2014 hold left / right  \u00b7  pass all 3 (v2)",
    "category": "Cat Arcade v2",
    "keys": {},
    "labels": {},
@@ -3101,11 +3101,11 @@
    "orientation": "portrait",
    "path": "g/_v2/kart-racer/index.html",
    "thumb": "thumbs/kart-racer-v2.webp?v=1792424045",
-   "note": "Cat Arcade v2 rebuild: one lap. three rivals. no brakes.. New engine — bloom, impact ripples, particle debris, camera punch, combo meter, layered synth audio. The untouched original is kept at g/_v1/kart-racer/."
+   "note": "Cat Arcade v2 rebuild: one lap. three rivals. no brakes.. New engine \u2014 bloom, impact ripples, particle debris, camera punch, combo meter, layered synth audio. The untouched original is kept at g/_v1/kart-racer/."
   },
   {
    "id": "rail-runner",
-   "title": "NEON GRIND — ▲▼ switch track  ·  tap / space jump (v2)",
+   "title": "NEON GRIND \u2014 \u25b2\u25bc switch track  \u00b7  tap / space jump (v2)",
    "category": "Cat Arcade v2",
    "keys": {},
    "labels": {},
@@ -3113,11 +3113,11 @@
    "orientation": "portrait",
    "path": "g/_v2/rail-runner/index.html",
    "thumb": "thumbs/rail-runner-v2.webp?v=1792424080",
-   "note": "Cat Arcade v2 rebuild: one missed junction and the cat eats rail. New engine — bloom, impact ripples, particle debris, camera punch, combo meter, layered synth audio. The untouched original is kept at g/_v1/rail-runner/."
+   "note": "Cat Arcade v2 rebuild: one missed junction and the cat eats rail. New engine \u2014 bloom, impact ripples, particle debris, camera punch, combo meter, layered synth audio. The untouched original is kept at g/_v1/rail-runner/."
   },
   {
    "id": "sort-puzzle",
-   "title": "SLUG SORT — sort every tube (v2)",
+   "title": "SLUG SORT \u2014 sort every tube (v2)",
    "category": "Cat Arcade v2",
    "keys": {},
    "labels": {},
@@ -3125,11 +3125,11 @@
    "orientation": "portrait",
    "path": "g/_v2/sort-puzzle/index.html",
    "thumb": "thumbs/sort-puzzle-v2.webp?v=1792429913",
-   "note": "Cat Arcade v2 rebuild: one colour per tube. New engine — bloom, impact ripples, particle debris, camera punch, combo meter, layered synth audio. The untouched original is kept at g/_v1/sort-puzzle/."
+   "note": "Cat Arcade v2 rebuild: one colour per tube. New engine \u2014 bloom, impact ripples, particle debris, camera punch, combo meter, layered synth audio. The untouched original is kept at g/_v1/sort-puzzle/."
   },
   {
    "id": "idle-tycoon",
-   "title": "CAT CAFÉ — tap to serve  ·  build the café (v2)",
+   "title": "CAT CAF\u00c9 \u2014 tap to serve  \u00b7  build the caf\u00e9 (v2)",
    "category": "Cat Arcade v2",
    "keys": {},
    "labels": {},
@@ -3137,11 +3137,11 @@
    "orientation": "portrait",
    "path": "g/_v2/idle-tycoon/index.html",
    "thumb": "thumbs/idle-tycoon-v2.webp?v=1792429887",
-   "note": "Cat Arcade v2 rebuild: the café builds itself while you tap. New engine — bloom, impact ripples, particle debris, camera punch, combo meter, layered synth audio. The untouched original is kept at g/_v1/idle-tycoon/."
+   "note": "Cat Arcade v2 rebuild: the caf\u00e9 builds itself while you tap. New engine \u2014 bloom, impact ripples, particle debris, camera punch, combo meter, layered synth audio. The untouched original is kept at g/_v1/idle-tycoon/."
   },
   {
    "id": "cozy-farm",
-   "title": "COZY CAT FARM — tap · till · plant · harvest (v2)",
+   "title": "COZY CAT FARM \u2014 tap \u00b7 till \u00b7 plant \u00b7 harvest (v2)",
    "category": "Cat Arcade v2",
    "keys": {},
    "labels": {},
@@ -3149,11 +3149,11 @@
    "orientation": "portrait",
    "path": "g/_v2/cozy-farm/index.html",
    "thumb": "thumbs/cozy-farm-v2.webp?v=1792424025",
-   "note": "Cat Arcade v2 rebuild: one tiny farm, one setting sun. New engine — bloom, impact ripples, particle debris, camera punch, combo meter, layered synth audio. The untouched original is kept at g/_v1/cozy-farm/."
+   "note": "Cat Arcade v2 rebuild: one tiny farm, one setting sun. New engine \u2014 bloom, impact ripples, particle debris, camera punch, combo meter, layered synth audio. The untouched original is kept at g/_v1/cozy-farm/."
   },
   {
    "id": "daily-deduction",
-   "title": "WHODUNNIT — read the clues  ·  name the culprit (v2)",
+   "title": "WHODUNNIT \u2014 read the clues  \u00b7  name the culprit (v2)",
    "category": "Cat Arcade v2",
    "keys": {},
    "labels": {},
@@ -3161,11 +3161,11 @@
    "orientation": "portrait",
    "path": "g/_v2/daily-deduction/index.html",
    "thumb": "thumbs/daily-deduction-v2.webp?v=1792429877",
-   "note": "Cat Arcade v2 rebuild: three clues, four cats, one thief. New engine — bloom, impact ripples, particle debris, camera punch, combo meter, layered synth audio. The untouched original is kept at g/_v1/daily-deduction/."
+   "note": "Cat Arcade v2 rebuild: three clues, four cats, one thief. New engine \u2014 bloom, impact ripples, particle debris, camera punch, combo meter, layered synth audio. The untouched original is kept at g/_v1/daily-deduction/."
   },
   {
    "id": "cat-runner",
-   "title": "CAT RUNNER — tap = jump  ·  hold = slide (v2)",
+   "title": "CAT RUNNER \u2014 tap = jump  \u00b7  hold = slide (v2)",
    "category": "Cat Arcade v2",
    "keys": {},
    "labels": {},
@@ -3173,7 +3173,7 @@
    "orientation": "portrait",
    "path": "g/_v2/cat-runner/index.html",
    "thumb": "thumbs/cat-runner-v2.webp?v=1792424020",
-   "note": "Cat Arcade v2 original: the city is chasing you. New engine — bloom, impact ripples, particle debris, camera punch, combo meter, layered synth audio."
+   "note": "Cat Arcade v2 original: the city is chasing you. New engine \u2014 bloom, impact ripples, particle debris, camera punch, combo meter, layered synth audio."
   },
   {
    "id": "roadster-flip-v2",
@@ -3183,7 +3183,7 @@
     "jump": "Space"
    },
    "labels": {
-    "jump": "HOLD fan · TAP thrust"
+    "jump": "HOLD fan \u00b7 TAP thrust"
    },
    "autostart": [],
    "orientation": "portrait",
@@ -3193,7 +3193,7 @@
   },
   {
    "id": "miso-city-3d",
-   "title": "Miso City 3D — Level 1",
+   "title": "Miso City 3D \u2014 Level 1",
    "category": "Originals",
    "keys": {
     "left": "ArrowLeft",
@@ -3206,8 +3206,8 @@
     "start": "Enter"
    },
    "labels": {
-    "attack": "Z · FIGHT",
-    "special": "X · YARN / SWING"
+    "attack": "Z \u00b7 FIGHT",
+    "special": "X \u00b7 YARN / SWING"
    },
    "autostart": [],
    "orientation": "landscape",
@@ -3232,9 +3232,212 @@
    },
    "autostart": [],
    "orientation": "portrait",
-   "note": "8-bit top-down downhill BMX racer: bomb a winding city street against rival DEX — launch the ramp, grind the bars, drop the stairs, thread the barricade chicane and crate slalom, slash grass for points, and take the bridge finish. Full source in games/bmx-downhill-jam/.",
+   "note": "8-bit top-down downhill BMX racer: bomb a winding city street against rival DEX \u2014 launch the ramp, grind the bars, drop the stairs, thread the barricade chicane and crate slalom, slash grass for points, and take the bridge finish. Full source in games/bmx-downhill-jam/.",
    "path": "../games/bmx-downhill-jam/index.html",
    "thumb": "thumbs/bmx-downhill-jam.webp"
+  },
+  {
+   "id": "block-commando",
+   "title": "Block Commando",
+   "category": "Retro Arcade",
+   "keys": {
+    "left": "ArrowLeft",
+    "right": "ArrowRight",
+    "up": "ArrowUp",
+    "down": "ArrowDown",
+    "attack": "KeyZ",
+    "jump": "KeyX",
+    "start": "Enter"
+   },
+   "labels": {
+    "attack": "Z \u00b7 JUMP",
+    "jump": "X \u00b7 FIRE"
+   },
+   "extras": [
+    {
+     "label": "MUTE",
+     "key": "KeyM"
+    }
+   ],
+   "autostart": [],
+   "orientation": "portrait",
+   "note": "Contra x Tetris: run-and-gun on falling-block terrain. Shoot blocks to break them, clear rows to delete the floor, and do not get crushed.",
+   "path": "../games/block-commando/index.html",
+   "thumb": "thumbs/block-commando.webp"
+  },
+  {
+   "id": "disc-fighters",
+   "title": "Disc Fighters",
+   "category": "Retro Arcade",
+   "keys": {
+    "left": "ArrowLeft",
+    "right": "ArrowRight",
+    "up": "ArrowUp",
+    "down": "ArrowDown",
+    "attack": "KeyZ",
+    "jump": "KeyX",
+    "start": "Enter"
+   },
+   "labels": {
+    "attack": "Z \u00b7 THROW",
+    "jump": "X \u00b7 LOB"
+   },
+   "extras": [
+    {
+     "label": "MUTE",
+     "key": "KeyM"
+    }
+   ],
+   "autostart": [],
+   "orientation": "portrait",
+   "note": "Windjammers x Street Fighter II: disc duels with throws and lobs, a fireball super (down, forward, A) when the meter is full, and parries.",
+   "path": "../games/disc-fighters/index.html",
+   "thumb": "thumbs/disc-fighters.webp"
+  },
+  {
+   "id": "paper-rash",
+   "title": "Paper Rash",
+   "category": "Retro Arcade",
+   "keys": {
+    "left": "ArrowLeft",
+    "right": "ArrowRight",
+    "up": "ArrowUp",
+    "down": "ArrowDown",
+    "attack": "KeyZ",
+    "jump": "KeyX",
+    "start": "Enter"
+   },
+   "labels": {
+    "attack": "Z \u00b7 THROW",
+    "jump": "X \u00b7 PUNCH"
+   },
+   "extras": [
+    {
+     "label": "MUTE",
+     "key": "KeyM"
+    }
+   ],
+   "autostart": [],
+   "orientation": "portrait",
+   "note": "Paperboy x Road Rash: delivery courier combat racing. Throw papers into mailboxes, punch adjacent rivals, dodge the cars.",
+   "path": "../games/paper-rash/index.html",
+   "thumb": "thumbs/paper-rash.webp"
+  },
+  {
+   "id": "boom-balloons",
+   "title": "Boom Balloons",
+   "category": "Retro Arcade",
+   "keys": {
+    "left": "ArrowLeft",
+    "right": "ArrowRight",
+    "up": "ArrowUp",
+    "down": "ArrowDown",
+    "attack": "KeyZ",
+    "jump": "KeyX",
+    "start": "Enter"
+   },
+   "labels": {
+    "attack": "Z \u00b7 FLAP",
+    "jump": "X \u00b7 BOMB"
+   },
+   "extras": [
+    {
+     "label": "MUTE",
+     "key": "KeyM"
+    }
+   ],
+   "autostart": [],
+   "orientation": "portrait",
+   "note": "Balloon Fight x Bomberman: flap-physics aerial combat with timed bombs. Pop every enemy balloon and keep clear of the blast.",
+   "path": "../games/boom-balloons/index.html",
+   "thumb": "thumbs/boom-balloons.webp"
+  },
+  {
+   "id": "grapple-ninja",
+   "title": "Grapple Ninja",
+   "category": "Retro Arcade",
+   "keys": {
+    "left": "ArrowLeft",
+    "right": "ArrowRight",
+    "up": "ArrowUp",
+    "down": "ArrowDown",
+    "attack": "KeyZ",
+    "jump": "KeyX",
+    "start": "Enter"
+   },
+   "labels": {
+    "attack": "Z \u00b7 GRAPPLE",
+    "jump": "X \u00b7 SLASH"
+   },
+   "extras": [
+    {
+     "label": "MUTE",
+     "key": "KeyM"
+    }
+   ],
+   "autostart": [],
+   "orientation": "portrait",
+   "note": "Bionic Commando x Ninja Gaiden: hold Z to fire the grapple at rings and swing, release to launch, slash with X.",
+   "path": "../games/grapple-ninja/index.html",
+   "thumb": "thumbs/grapple-ninja.webp"
+  },
+  {
+   "id": "kung-fu-knockout",
+   "title": "Kung Fu Knockout",
+   "category": "Retro Arcade",
+   "keys": {
+    "left": "ArrowLeft",
+    "right": "ArrowRight",
+    "up": "ArrowUp",
+    "down": "ArrowDown",
+    "attack": "KeyZ",
+    "jump": "KeyX",
+    "start": "Enter"
+   },
+   "labels": {
+    "attack": "Z \u00b7 PUNCH",
+    "jump": "X \u00b7 KICK"
+   },
+   "extras": [
+    {
+     "label": "MUTE",
+     "key": "KeyM"
+    }
+   ],
+   "autostart": [],
+   "orientation": "portrait",
+   "note": "Kung-Fu Master x Punch-Out!!: side-scroll grunts, then a 1-on-1 counter-boxing boss. Dodge, block, and jab when he is stunned.",
+   "path": "../games/kung-fu-knockout/index.html",
+   "thumb": "thumbs/kung-fu-knockout.webp"
+  },
+  {
+   "id": "bmx-downhill-rush",
+   "title": "BMX Downhill Rush",
+   "category": "Retro Arcade",
+   "keys": {
+    "left": "ArrowLeft",
+    "right": "ArrowRight",
+    "up": "ArrowUp",
+    "down": "ArrowDown",
+    "attack": "KeyZ",
+    "jump": "KeyX",
+    "start": "Enter"
+   },
+   "labels": {
+    "attack": "Z \u00b7 HOP",
+    "jump": "X \u00b7 TURBO"
+   },
+   "extras": [
+    {
+     "label": "MUTE",
+     "key": "KeyM"
+    }
+   ],
+   "autostart": [],
+   "orientation": "portrait",
+   "note": "Excitebike x Skate or Die: 4-rider dirt downhill with heat-managed turbo and ramp air tricks (tabletop, bar spin, 360). Place, time and trick scoring with a persistent high score.",
+   "path": "../games/bmx-downhill-rush/index.html",
+   "thumb": "thumbs/bmx-downhill-rush.webp"
   }
  ]
 }
