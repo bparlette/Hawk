@@ -3438,6 +3438,64 @@
    "note": "Excitebike x Skate or Die: 4-rider dirt downhill with heat-managed turbo and ramp air tricks (tabletop, bar spin, 360). Place, time and trick scoring with a persistent high score.",
    "path": "../games/bmx-downhill-rush/index.html",
    "thumb": "thumbs/bmx-downhill-rush.webp"
+  },
+  {
+   "id": "maze-wrecker",
+   "title": "Maze Wrecker",
+   "category": "Arcade",
+   "keys": {
+    "left": "ArrowLeft",
+    "right": "ArrowRight",
+    "up": "ArrowUp",
+    "down": "ArrowDown",
+    "attack": "KeyZ",
+    "jump": "KeyX",
+    "start": "Enter"
+   },
+   "labels": {
+    "attack": "Z \u00b7 SMASH",
+    "jump": "X \u00b7 DASH"
+   },
+   "extras": [
+    {
+     "label": "MUTE",
+     "key": "KeyM"
+    }
+   ],
+   "autostart": [],
+   "orientation": "portrait",
+   "note": "Pac-Man x Wrecking Crew: eat every pellet before the maze seals in 150 seconds \u2014 smash brick walls with the hammer to open shortcuts and reroute three ghosts (chaser, ambusher, roamer). Power pellets turn the tables. Moth build: 28px painted art, floating touch stick, spectate attract mode.",
+   "path": "../games/maze-wrecker/index.html",
+   "thumb": "thumbs/maze-wrecker.webp"
+  },
+  {
+   "id": "maze-wrecker-cabinet",
+   "title": "Maze Wrecker (Cabinet)",
+   "category": "Retro Arcade",
+   "keys": {
+    "left": "ArrowLeft",
+    "right": "ArrowRight",
+    "up": "ArrowUp",
+    "down": "ArrowDown",
+    "attack": "KeyZ",
+    "jump": "KeyX",
+    "start": "Enter"
+   },
+   "labels": {
+    "attack": "Z \u00b7 SMASH",
+    "jump": "X \u00b7 DASH"
+   },
+   "extras": [
+    {
+     "label": "MUTE",
+     "key": "KeyM"
+    }
+   ],
+   "autostart": [],
+   "orientation": "portrait",
+   "note": "Pac-Man x Wrecking Crew in the gameboy cabinet form: same maze, same rules, built on the frozen NES cabinet shell (256x224, string-map sprites, GAME contract, attract bot, ?seed= deterministic runs). The head-to-head twin of Maze Wrecker.",
+   "path": "../games/maze-wrecker-cabinet/index.html",
+   "thumb": "thumbs/maze-wrecker-cabinet.webp"
   }
  ]
 }
