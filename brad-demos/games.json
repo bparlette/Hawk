@@ -3214,6 +3214,27 @@
    "note": "Three.js 3D brawler-runner: ninja cat Miso fights dog gangs through Amber Market, dashes the alley runner, and faces Big Bruno the Bulldog. Exaggerated comic combat (hit-stop, POW!/THWACK! popups), foreground crossings, and a yarn swing off the lamp poles. Full source in games/miso-city-3d/.",
    "path": "../games/miso-city-3d/index.html",
    "thumb": "thumbs/miso-city-3d.webp"
+  },
+  {
+   "id": "bmx-downhill-jam",
+   "title": "BMX Downhill Jam",
+   "category": "Originals",
+   "keys": {
+    "left": "ArrowLeft",
+    "right": "ArrowRight",
+    "up": "ArrowUp",
+    "down": "ArrowDown",
+    "start": "Enter"
+   },
+   "labels": {
+    "up": "PEDAL",
+    "down": "BRAKE"
+   },
+   "autostart": [],
+   "orientation": "portrait",
+   "note": "8-bit top-down downhill BMX racer: bomb a winding city street against rival DEX — launch the ramp, grind the bars, drop the stairs, thread the barricade chicane and crate slalom, slash grass for points, and take the bridge finish. Full source in games/bmx-downhill-jam/.",
+   "path": "../games/bmx-downhill-jam/index.html",
+   "thumb": "thumbs/bmx-downhill-jam.webp"
   }
  ]
 }
