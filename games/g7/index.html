@@ -1,0 +1,627 @@
+<title>Maze Wrecker</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
+<style>
+/* One arcade cabinet column: 256x224 pixel screen on top, NES-style pad below, built for a phone held upright. */
+:root{
+  --bg:#0d0e13;
+  --frame:#c9c5b7;
+  --face:#26262a;
+  --ink:#17171a;
+  --red:#d1261b;
+  --text:#e9e6da;
+  --muted:#8d8a80;
+  --pixel:'Press Start 2P', ui-monospace, 'Courier New', monospace;
+  --util:ui-monospace, 'SF Mono', Menlo, Consolas, monospace;
+  color-scheme:dark;
+}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;background:var(--bg);color:var(--text)}
+body{
+  min-height:100%;
+  padding-block:12px 20px;
+  padding-left:max(16px, env(safe-area-inset-left, 0px));
+  padding-right:max(16px, env(safe-area-inset-right, 0px));
+  display:flex;justify-content:center;
+  font-family:var(--util);
+  user-select:none;-webkit-user-select:none;touch-action:manipulation;
+}
+.cab{width:100%;max-width:512px;display:flex;flex-direction:column;gap:14px;min-width:0}
+.screen-wrap{background:#000;border:3px solid var(--frame);border-radius:10px;overflow:hidden;line-height:0}
+canvas{display:block;width:100%;height:auto;aspect-ratio:256/224;image-rendering:pixelated;image-rendering:crisp-edges;touch-action:none}
+.pad{
+  display:grid;grid-template-columns:auto 1fr;grid-template-areas:"dpad ab" "mid mid";
+  gap:14px 10px;align-items:center;
+  background:var(--frame);border-radius:14px;padding:16px 14px 14px;
+  touch-action:none;
+}
+.dpad{grid-area:dpad;position:relative;width:148px;height:148px;touch-action:none;justify-self:start}
+.bar{position:absolute;background:var(--ink);border-radius:6px;box-shadow:inset 0 0 0 2px #2d2d33}
+.bar.h{left:0;right:0;top:calc(50% - 25px);height:50px}
+.bar.v{top:0;bottom:0;left:calc(50% - 25px);width:50px}
+.hub{position:absolute;left:calc(50% - 14px);top:calc(50% - 14px);width:28px;height:28px;border-radius:50%;background:#101013}
+.ar{position:absolute;background:#55555c}
+.ar.u{top:9px;left:calc(50% - 8px);width:16px;height:14px;clip-path:polygon(50% 0,100% 100%,0 100%)}
+.ar.d{bottom:9px;left:calc(50% - 8px);width:16px;height:14px;clip-path:polygon(0 0,100% 0,50% 100%)}
+.ar.l{left:9px;top:calc(50% - 8px);width:14px;height:16px;clip-path:polygon(100% 0,100% 100%,0 50%)}
+.ar.r{right:9px;top:calc(50% - 8px);width:14px;height:16px;clip-path:polygon(0 0,100% 50%,0 100%)}
+.dpad.on-l .ar.l,.dpad.on-r .ar.r,.dpad.on-d .ar.d,.dpad.on-u .ar.u{background:var(--text)}
+.ab{grid-area:ab;display:flex;justify-content:center;align-items:flex-start;gap:16px;background:var(--face);border-radius:12px;padding:16px 10px 10px}
+.ab div{display:flex;flex-direction:column;align-items:center;gap:8px}
+.round{
+  width:64px;height:64px;border-radius:50%;border:0;background:var(--red);color:#fff;
+  font:400 16px var(--pixel);box-shadow:inset 0 -5px 0 rgba(0,0,0,.28);touch-action:none;cursor:pointer;
+}
+.round.on{transform:translateY(2px);box-shadow:inset 0 2px 0 rgba(0,0,0,.35);filter:brightness(.88)}
+.ab span{font:400 9px var(--pixel);color:#c9c5b7;letter-spacing:.02em;white-space:nowrap}
+.mid{grid-area:mid;display:flex;justify-content:center;gap:22px}
+.mid button{
+  border:0;background:var(--ink);color:#c9c5b7;font:400 10px var(--pixel);
+  padding:10px 14px;border-radius:999px;cursor:pointer;touch-action:none;min-width:96px;
+}
+.mid button.on{filter:brightness(1.6)}
+button:focus-visible{outline:2px solid #fff;outline-offset:2px}
+.keys{margin:0;color:var(--muted);font-size:12px;line-height:1.6;text-align:center;text-wrap:balance}
+.keys b{color:var(--text);font-weight:500}
+</style>
+
+<main class="cab">
+  <div class="screen-wrap"><canvas id="screen" width="256" height="224" role="img" aria-label="Maze Wrecker game screen"></canvas></div>
+  <section class="pad" aria-label="Controller">
+    <div class="dpad" id="dpad"><i class="bar h"></i><i class="bar v"></i><i class="hub"></i><b class="ar u"></b><b class="ar d"></b><b class="ar l"></b><b class="ar r"></b></div>
+    <div class="ab">
+      <div><button type="button" class="round" data-k="b" aria-label="B, DASH">B</button><span>DASH</span></div>
+      <div><button type="button" class="round" data-k="a" aria-label="A, SMASH">A</button><span>SMASH</span></div>
+    </div>
+    <div class="mid">
+      <button type="button" data-k="select" id="snd">SOUND ON</button>
+      <button type="button" data-k="start">START</button>
+    </div>
+  </section>
+  <p class="keys"><b>Keys:</b> arrows move, Z or Space swings the hammer (smash the wall in front of you or stun a patrol bot), X dashes, Enter starts, M mutes. Wrecked walls reveal dots; collect 20 before the timer seals the maze. Walls grow back.</p>
+</main>
+
+<script>
+(() => {
+'use strict';
+/* ---------- shared NES core: pixel buffer, palette, text, audio, input ---------- */
+const VW = 256, VH = 224;
+const cv = document.getElementById('screen');
+const ctx = cv.getContext('2d');
+ctx.imageSmoothingEnabled = false;
+const img = ctx.createImageData(VW, VH);
+const px32 = new Uint32Array(img.data.buffer);
+const buf = new Uint8Array(VW * VH);
+const HEX = ['#000000','#fcfcfc','#bcbcbc','#7c7c7c','#18a838','#006800','#d82800','#f8b800','#0038d8','#000088','#fca044','#a85800','#503000','#b800b8','#f87858','#3cbcfc','#58d854','#f8f8b8','#f8a4c0','#5c94fc','#383838','#c84c0c'];
+const K=0,W=1,L=2,D=3,GR=4,F=5,R=6,Y=7,B=8,N=9,S=10,T=11,M=12,PU=13,O=14,CY=15,E=16,V=17,PK=18,SKY=19,DG=20,BRK=21;
+const CH = { K,W,L,D,G:GR,F,R,Y,B,N,S,T,M,P:PU,O,C:CY,E,V,Q:PK,U:SKY,Z:DG,H:BRK };
+const PAL32 = HEX.map(h => {
+  const r = parseInt(h.slice(1,3),16), g = parseInt(h.slice(3,5),16), b = parseInt(h.slice(5,7),16);
+  return (0xFF000000 | (b << 16) | (g << 8) | r) >>> 0;
+});
+const clamp = (v,a,b) => v < a ? a : v > b ? b : v;
+const rad = Math.PI / 180;
+function hash(x, y) {
+  let n = (x * 374761393 + y * 668265263) | 0;
+  n = Math.imul(n ^ (n >>> 13), 1274126177);
+  return ((n ^ (n >>> 16)) >>> 0) / 4294967296;
+}
+function mkRng(seed) { let a = seed >>> 0; return () => { a = (a + 0x6D2B79F5) >>> 0; let t = a; t = Math.imul(t ^ (t >>> 15), t | 1); t ^= t + Math.imul(t ^ (t >>> 7), t | 61); return ((t ^ (t >>> 14)) >>> 0) / 4294967296; }; }
+/* ?seed=N (or any string) makes every run reproducible. Without it: attract mode uses its fixed seed, real play a per-run seed.
+   runSeed(fixed, off) is the ONLY way a game should seed its RNG; the active seed is exposed as window.__shell.seed. */
+const SEED_Q = (() => { try {
+  const v = new URLSearchParams(location.search).get('seed'); if (v == null || v === '') return null;
+  if (Number.isFinite(Number(v))) return Number(v) >>> 0;
+  let h = 2166136261; for (let i = 0; i < v.length; i++) h = Math.imul(h ^ v.charCodeAt(i), 16777619); return h >>> 0;
+} catch (_) { return null; } })();
+let activeSeed = null, vrngS = null;
+function runSeed(fixed, off) {
+  off = off || 0;
+  activeSeed = SEED_Q != null ? (SEED_Q + off) >>> 0 : fixed != null ? fixed : ((Date.now() & 0xffff) + off) >>> 0;
+  vrngS = mkRng(activeSeed ^ 0x9e3779b9);
+  return activeSeed;
+}
+const vr = () => (vrngS || (vrngS = mkRng(1)))();   /* visual-only randomness (particles, popups): seeded, never gameplay */
+function px(x, y, c) { x = Math.round(x); y = Math.round(y); if (x < 0 || x >= VW || y < 0 || y >= VH) return; buf[y * VW + x] = c; }
+function rect(x, y, w, h, c) {
+  x = Math.round(x); y = Math.round(y); w = Math.round(w); h = Math.round(h);
+  const x0 = Math.max(0, x), x1 = Math.min(VW, x + w), y0 = Math.max(0, y), y1 = Math.min(VH, y + h);
+  if (x1 <= x0) return;
+  for (let j = y0; j < y1; j++) buf.fill(c, j * VW + x0, j * VW + x1);
+}
+function clear(c) { buf.fill(c); }
+function spr(rows, x, y, flip, pal) {
+  x = Math.round(x); y = Math.round(y);
+  for (let r = 0; r < rows.length; r++) {
+    const row = rows[r], w = row.length;
+    for (let c = 0; c < w; c++) {
+      const ch = row[c];
+      if (ch === '.') continue;
+      const col = pal && pal[ch] !== undefined ? pal[ch] : CH[ch];
+      px(flip ? x + w - 1 - c : x + c, y + r, col);
+    }
+  }
+}
+function fillCircle(cx, cy, r, c) {
+  for (let j = -r; j <= r; j++) for (let i = -r; i <= r; i++) if (i * i + j * j <= r * r + r * 0.5) px(cx + i, cy + j, c);
+}
+
+/* text drawn on the 2d context after the pixel buffer is blitted */
+const FONT = s => `${s}px "Press Start 2P", ui-monospace, monospace`;
+function txt(s, x, y, col, size, align, shadow) {
+  size = size || 8;
+  ctx.font = FONT(size); ctx.textBaseline = 'top'; ctx.textAlign = align || 'left';
+  if (shadow !== false) { ctx.fillStyle = '#000'; const o = size >= 16 ? 2 : 1; ctx.fillText(s, x + o, y + o); }
+  ctx.fillStyle = typeof col === 'number' ? HEX[col] : col; ctx.fillText(s, x, y);
+}
+function panel(x, y, w, h, bg) {
+  ctx.fillStyle = HEX[bg === undefined ? N : bg]; ctx.fillRect(x, y, w, h);
+  ctx.fillStyle = HEX[W]; ctx.fillRect(x, y, w, 2); ctx.fillRect(x, y + h - 2, w, 2); ctx.fillRect(x, y, 2, h); ctx.fillRect(x + w - 2, y, 2, h);
+}
+const pad5 = n => String(Math.max(0, Math.round(n))).padStart(5, '0');
+const fmt = t => `${Math.floor(t / 60)}:${(t % 60).toFixed(1).padStart(4, '0')}`;
+
+/* ---------- audio (square-wave chip tune) ---------- */
+let AC = null, master = null, muted = false, step16 = 0, nextT = 0;
+/* iOS: the silent switch mutes Web Audio unless the page's audio session is 'playback'; contexts also start 'suspended'/'interrupted'
+   until a real gesture (touchend/click/keydown; pointerdown alone does not count on Safari). */
+function iosAudioFix() { try { if (navigator.audioSession) navigator.audioSession.type = 'playback'; } catch (_) {} }
+function audioInit() {
+  iosAudioFix();
+  if (AC) { if (AC.state !== 'running') { try { AC.resume(); } catch (_) {} } return; }
+  try {
+    AC = new (window.AudioContext || window.webkitAudioContext)();
+    master = AC.createGain(); master.gain.value = muted ? 0 : 0.16; master.connect(AC.destination);
+    try { const sb = AC.createBuffer(1, 1, 22050), ss = AC.createBufferSource(); ss.buffer = sb; ss.connect(AC.destination); ss.start(0); } catch (_) {}
+    nextT = AC.currentTime + 0.1;
+    setInterval(scheduleMusic, 30);
+  } catch (e) { AC = null; }
+}
+['touchend', 'click', 'keydown', 'pointerup'].forEach(ev => window.addEventListener(ev, audioInit, { passive: true }));
+document.addEventListener('visibilitychange', () => { if (!document.hidden && AC && AC.state !== 'running') { try { AC.resume(); } catch (_) {} } });
+function tone(freq, dur, type, vol, slide, delay) {
+  if (window.__log) { window.__log.push({ k:'tone', t:window.__now, freq, dur, type:type || 'square', vol:vol == null ? 0.5 : vol, slide:slide || 0, delay:delay || 0 }); return; }
+  if (!AC || muted) return;
+  const t = AC.currentTime + (delay || 0);
+  const o = AC.createOscillator(), g = AC.createGain();
+  o.type = type || 'square';
+  o.frequency.setValueAtTime(freq, t);
+  if (slide) o.frequency.exponentialRampToValueAtTime(Math.max(30, freq + slide), t + dur);
+  g.gain.setValueAtTime(vol == null ? 0.5 : vol, t);
+  g.gain.exponentialRampToValueAtTime(0.001, t + dur);
+  o.connect(g); g.connect(master); o.start(t); o.stop(t + dur + 0.03);
+}
+function noise(dur, vol, when) {
+  if (window.__log) { window.__log.push({ k:'noise', t:window.__now, dur, vol, delay:when || 0 }); return; }
+  if (!AC || muted) return;
+  const t = AC.currentTime + (when || 0);
+  const len = Math.max(1, Math.floor(AC.sampleRate * dur));
+  const b = AC.createBuffer(1, len, AC.sampleRate), d = b.getChannelData(0);
+  for (let i = 0; i < len; i++) d[i] = (Math.random() * 2 - 1) * (1 - i / len);
+  const s = AC.createBufferSource(), g = AC.createGain();
+  s.buffer = b; g.gain.setValueAtTime(vol, t); s.connect(g); g.connect(master); s.start(t);
+}
+const hz = s => 440 * Math.pow(2, s / 12);
+function scheduleMusic() {
+  const m = GAME.music;
+  if (!AC || AC.state !== 'running' || !m) return;
+  const sixteenth = 60 / m.bpm / 4;
+  while (nextT < AC.currentTime + 0.14) {
+    const ch = m.chords[Math.floor(step16 / 16) % m.chords.length], s = step16 % 16;
+    const delay = Math.max(0, nextT - AC.currentTime);
+    if (!muted) {
+      const a = m.arp[s];
+      if (a >= 0) tone(hz(ch.tones[a % ch.tones.length] + (a >= ch.tones.length ? 12 : 0) + 12), sixteenth * 1.7, m.lead || 'square', 0.15, 0, delay);
+      if (m.bass.includes(s)) tone(hz(ch.root + ((s % 8 === 6) ? 12 : 0)), sixteenth * 1.8, 'triangle', 0.5, 0, delay);
+      if (m.snare.includes(s)) noise(0.07, 0.3, delay);
+      if (s % 2 === 1 && m.hat) noise(0.02, 0.06, delay);
+      if (m.kick.includes(s)) tone(90, 0.09, 'sine', 0.7, -50, delay);
+    }
+    nextT += sixteenth; step16++;
+  }
+}
+const SFX = {
+  jump:  () => tone(260, 0.14, 'square', 0.25, 420),
+  shoot: () => tone(900, 0.06, 'square', 0.18, -500),
+  hit:   () => { noise(0.08, 0.3); tone(220, 0.08, 'square', 0.2, -100); },
+  boom:  () => { noise(0.35, 0.6); tone(120, 0.4, 'sawtooth', 0.3, -80); },
+  coin:  () => { tone(988, 0.06, 'square', 0.22); tone(1319, 0.14, 'square', 0.22, 0, 0.06); },
+  hurt:  () => tone(330, 0.3, 'sawtooth', 0.28, -260),
+  die:   () => [392, 330, 262, 196].forEach((f, i) => tone(f, 0.14, 'square', 0.28, 0, i * 0.12)),
+  power: () => tone(300, 0.4, 'square', 0.25, 900),
+  beep:  () => tone(520, 0.12, 'square', 0.3),
+  go:    () => tone(1040, 0.35, 'square', 0.3),
+  win:   () => [523, 659, 784, 1046, 784, 1046].forEach((f, i) => tone(f, 0.16, 'square', 0.28, 0, i * 0.13)),
+  land:  () => { tone(120, 0.1, 'triangle', 0.5, -60); noise(0.06, 0.2); },
+  throw: () => tone(500, 0.12, 'square', 0.2, 400),
+  catch: () => { tone(700, 0.05, 'square', 0.25); tone(500, 0.08, 'square', 0.2, 0, 0.05); },
+  super: () => { tone(200, 0.5, 'sawtooth', 0.3, 1200); noise(0.4, 0.4); },
+  flap:  () => tone(420, 0.07, 'triangle', 0.4, 240),
+  pop:   () => { noise(0.1, 0.4); tone(700, 0.1, 'square', 0.2, -500); },
+  tick:  () => tone(1400, 0.03, 'square', 0.15),
+  swing: () => tone(300, 0.18, 'sawtooth', 0.12, 300),
+  punch: () => { noise(0.07, 0.4); tone(160, 0.1, 'square', 0.3, -80); },
+  clear: () => [523, 659, 784].forEach((f, i) => tone(f, 0.08, 'square', 0.25, 0, i * 0.06)),
+  over:  () => [330, 262, 196, 165].forEach((f, i) => tone(f, 0.22, 'triangle', 0.5, 0, i * 0.18)),
+};
+function sfx(n) { if (SFX[n]) SFX[n](); }
+
+/* ---------- input ---------- */
+const kd = { l:false, r:false, u:false, d:false, b:false, a:false };
+const td = { l:false, r:false, u:false, d:false, b:false, a:false };
+let aEdge = false, bEdge = false, startEdge = false;
+const KEYMAP = { ArrowLeft:'l', KeyA:'l', ArrowRight:'r', KeyD:'r', ArrowDown:'d', KeyS:'d', ArrowUp:'u', KeyW:'u',
+  KeyZ:'a', Space:'a', KeyK:'a', KeyX:'b', ShiftLeft:'b', ShiftRight:'b', KeyJ:'b' };
+addEventListener('keydown', e => {
+  const k = KEYMAP[e.code];
+  if (k) { if (!kd[k] && k === 'a') aEdge = true; if (!kd[k] && k === 'b') bEdge = true; kd[k] = true; e.preventDefault(); audioInit(); return; }
+  if (e.code === 'Enter') { startEdge = true; e.preventDefault(); audioInit(); }
+  else if (e.code === 'KeyM') toggleSound();
+});
+addEventListener('keyup', e => { const k = KEYMAP[e.code]; if (k) { kd[k] = false; e.preventDefault(); } });
+addEventListener('blur', () => { for (const k in kd) kd[k] = false; for (const k in td) td[k] = false; });
+
+const dpad = document.getElementById('dpad');
+function dpadUpdate(e, on) {
+  td.l = td.r = td.u = td.d = false;
+  if (on) {
+    const r = dpad.getBoundingClientRect();
+    const nx = (e.clientX - (r.left + r.width / 2)) / (r.width / 2);
+    const ny = (e.clientY - (r.top + r.height / 2)) / (r.height / 2);
+    if (nx < -0.2) td.l = true; if (nx > 0.2) td.r = true;
+    if (ny < -0.2) td.u = true; if (ny > 0.2) td.d = true;
+    if (Math.max(Math.abs(nx), Math.abs(ny)) < 0.16) td.l = td.r = td.u = td.d = false;
+  }
+  dpad.classList.toggle('on-l', td.l); dpad.classList.toggle('on-r', td.r);
+  dpad.classList.toggle('on-u', td.u); dpad.classList.toggle('on-d', td.d);
+}
+dpad.addEventListener('pointerdown', e => { e.preventDefault(); audioInit(); try { dpad.setPointerCapture(e.pointerId); } catch (_) {} dpadUpdate(e, true); });
+dpad.addEventListener('pointermove', e => { if (e.buttons || e.pressure > 0) dpadUpdate(e, true); });
+['pointerup', 'pointercancel'].forEach(n => dpad.addEventListener(n, e => dpadUpdate(e, false)));
+dpad.addEventListener('contextmenu', e => e.preventDefault());
+document.querySelectorAll('[data-k]').forEach(btn => {
+  const k = btn.dataset.k;
+  btn.addEventListener('pointerdown', e => {
+    e.preventDefault(); audioInit();
+    try { btn.setPointerCapture(e.pointerId); } catch (_) {}
+    btn.classList.add('on');
+    if (k === 'a') { aEdge = true; td.a = true; }
+    else if (k === 'b') { bEdge = true; td.b = true; }
+    else if (k === 'start') startEdge = true;
+    else if (k === 'select') toggleSound();
+  });
+  const up = () => { btn.classList.remove('on'); if (k === 'a') td.a = false; if (k === 'b') td.b = false; };
+  ['pointerup', 'pointercancel', 'lostpointercapture'].forEach(n => btn.addEventListener(n, up));
+  btn.addEventListener('contextmenu', e => e.preventDefault());
+});
+cv.addEventListener('pointerdown', () => { audioInit(); startEdge = true; });
+const sndBtn = document.getElementById('snd');
+function toggleSound() {
+  muted = !muted;
+  if (master) master.gain.value = muted ? 0 : 0.16;
+  sndBtn.textContent = muted ? 'SOUND OFF' : 'SOUND ON';
+}
+const BLANK = Object.freeze({ l:0, r:0, u:0, d:0, a:0, b:0, pa:0, pb:0, start:0 });
+function readInput() {
+  const i = { l:kd.l || td.l, r:kd.r || td.r, u:kd.u || td.u, d:kd.d || td.d, a:kd.a || td.a, b:kd.b || td.b, pa:aEdge, pb:bEdge, start:startEdge };
+  aEdge = false; bEdge = false; startEdge = false;
+  return i;
+}
+
+/* ===== MAZE WRECKER: Pac-Man x Wrecking Crew. Smash the maze walls to reroute the patrol bots hunting you,
+   grab the dots your wrecking reveals, and finish before the maze seals. Walls are both weapon and escape route. ===== */
+const MW = 16, MH = 12, OY7 = 16, GOAL7 = 26, TIME7 = 80, LIVES7 = 3;
+const DIRS7 = [[1, 0], [-1, 0], [0, 1], [0, -1]];
+let grid, pel, hid, regrow7, pl7, gh7, parts7, pops7, score7, pel7, tleft7, lives7, att7, rng7, T7, shake7, hint7;
+
+const free7 = (x, y) => x >= 0 && y >= 0 && x < MW && y < MH && grid[y][x] === '.';
+function popup7(s, x, y, col) { pops7.push({ s, x, y, col, t:0 }); if (pops7.length > 4) pops7.shift(); }
+function burst7(x, y, col, n) { for (let i = 0; i < n; i++) parts7.push({ x, y, vx:(vr() - 0.5) * 110, vy:-vr() * 80, t:0, col }); }
+
+function mkEnt(x, y) { return { x, y, tx:x, ty:y, mv:false, dx:0, dy:0 }; }
+function setup7(isAtt) {
+  att7 = !!isAtt;
+  rng7 = mkRng(runSeed(isAtt ? 41 : null, 13));
+  grid = []; pel = []; hid = []; regrow7 = [];
+  const keep = new Set(['1,10', '1,9', '2,9', '3,10', '14,1', '13,1', '12,1', '13,2']);
+  for (let y = 0; y < MH; y++) {
+    const gr = [], pr = [], hr = [];
+    for (let x = 0; x < MW; x++) {
+      let c = '.';
+      if (x === 0 || y === 0 || x === MW - 1 || y === MH - 1) c = 'X';
+      else if (x % 2 === 0 && y % 2 === 0) c = 'X';
+      else if (!keep.has(x + ',' + y) && rng7() < 0.45) c = '#';
+      gr.push(c); pr.push(false); hr.push(c === '#' && rng7() < 0.5);
+    }
+    grid.push(gr); pel.push(pr); hid.push(hr);
+  }
+  let total = 0; for (let y = 0; y < MH; y++) for (let x = 0; x < MW; x++) if (hid[y][x]) total++;
+  let guard = 0;
+  while (total < GOAL7 + 8 && guard++ < 400) { const x = 1 + Math.floor(rng7() * 14), y = 1 + Math.floor(rng7() * 10); if (grid[y][x] === '#' && !hid[y][x]) { hid[y][x] = true; total++; } }
+  for (let k = 0, n = 0; n < 6 && k < 300; k++) { const x = 1 + Math.floor(rng7() * 14), y = 1 + Math.floor(rng7() * 10); if (grid[y][x] === '.' && !pel[y][x] && !keep.has(x + ',' + y) && x + y > 6) { pel[y][x] = true; n++; } }
+  pl7 = Object.assign(mkEnt(1, 10), { fx:1, fy:0, swing:0, scd:0, dash:0, dcd:0, inv:1.5, want:null });
+  gh7 = [{ k:'r', col:R }, { k:'p', col:PK }, { k:'c', col:CY }].map((o, i) => Object.assign(mkEnt(14 - i, 1), o, { stun:1.2, wander:0, face:-1 }));
+  parts7 = []; pops7 = []; score7 = 0; pel7 = 0; tleft7 = TIME7; lives7 = LIVES7; T7 = 0; shake7 = 0; hint7 = 0;
+}
+function respawn7() {
+  Object.assign(pl7, mkEnt(1, 10), { inv:2.2, swing:0 });
+  gh7.forEach((g, i) => Object.assign(g, mkEnt(14 - i, 1), { stun:1.6 }));
+}
+function loseLife7(msg) {
+  lives7--; sfx(lives7 < 0 ? 'die' : 'hurt'); shake7 = 0.3; burst7(pl7.x * 16 + 8, OY7 + pl7.y * 16 + 8, R, 10);
+  if (lives7 <= 0) { if (att7) setup7(true); else endGame(score7, msg || 'CAUGHT!'); return; }
+  respawn7();
+}
+function moveEnt(e, dt, sp, choose) {
+  let rem = sp * dt, guard = 0;
+  while (rem > 1e-6 && guard++ < 6) {
+    if (!e.mv) {
+      const d = choose(e); if (!d) break;
+      e.dx = d[0]; e.dy = d[1]; e.tx = Math.round(e.x) + d[0]; e.ty = Math.round(e.y) + d[1]; e.mv = true;
+    }
+    const ddx = e.tx - e.x, ddy = e.ty - e.y, dist = Math.abs(ddx) + Math.abs(ddy);
+    if (rem >= dist) { e.x = e.tx; e.y = e.ty; e.mv = false; rem -= dist; }
+    else { e.x += Math.sign(ddx) * rem; e.y += Math.sign(ddy) * rem; rem = 0; }
+  }
+}
+function bfs7(tx, ty) {
+  const d = new Int16Array(MW * MH).fill(-1), q = [[tx, ty]]; d[ty * MW + tx] = 0;
+  for (let h = 0; h < q.length; h++) {
+    const [x, y] = q[h];
+    for (const [dx, dy] of DIRS7) { const nx = x + dx, ny = y + dy; if (free7(nx, ny) && d[ny * MW + nx] < 0) { d[ny * MW + nx] = d[y * MW + x] + 1; q.push([nx, ny]); } }
+  }
+  return d;
+}
+function ghostChoose(g) {
+  if (g.stun > 0) return null;
+  const gx = Math.round(g.x), gy = Math.round(g.y), px = Math.round(pl7.x), py = Math.round(pl7.y);
+  let tx = px, ty = py;
+  if (g.k === 'p') { for (let n = 3; n > 0; n--) { const ax = px + pl7.fx * n, ay = py + pl7.fy * n; if (free7(ax, ay)) { tx = ax; ty = ay; break; } } }
+  let opts = DIRS7.filter(d => free7(gx + d[0], gy + d[1]) && !(d[0] === -g.dx && d[1] === -g.dy));
+  if (!opts.length) opts = DIRS7.filter(d => free7(gx + d[0], gy + d[1]));
+  if (!opts.length) return null;
+  if (g.k === 'c') { g.wander -= 0; }
+  if (g.k === 'c' && (Math.floor(T7 / 5) & 1) === 0) return opts[Math.floor(rng7() * opts.length)];
+  const dist = bfs7(tx, ty); let best = null, bd = 1e9;
+  for (const d of opts) { const v = dist[(gy + d[1]) * MW + gx + d[0]]; if (v >= 0 && v < bd) { bd = v; best = d; } }
+  return best || opts[Math.floor(rng7() * opts.length)];
+}
+function plChoose(p) {
+  const w = p.want; if (!w) return null;
+  const x = Math.round(p.x), y = Math.round(p.y);
+  return free7(x + w[0], y + w[1]) ? w : null;
+}
+function breakWall(x, y) {
+  grid[y][x] = '.'; pel[y][x] = hid[y][x]; hid[y][x] = false;
+  regrow7.push({ x, y, t:tleft7 > 30 ? 10 : 5 });
+  score7 += 5; sfx('punch'); burst7(x * 16 + 8, OY7 + y * 16 + 8, BRK, 7); shake7 = Math.max(shake7, 0.08);
+  if (pel[y][x]) popup7('DOT!', x * 16 + 8, OY7 + y * 16, Y);
+}
+function smash() {
+  const p = pl7; p.swing = 0.2; p.scd = 0.3; sfx('swing');
+  for (const g of gh7) {
+    const dx = g.x - p.x, dy = g.y - p.y, along = dx * p.fx + dy * p.fy, perp = Math.abs(dx * p.fy - dy * p.fx);
+    if (along > -0.2 && along < 1.25 && perp < 0.65 && g.stun < 2) { g.stun = 3; score7 += 200; sfx('power'); popup7('STUN +200', g.x * 16 + 8, OY7 + g.y * 16 - 4, CY); burst7(g.x * 16 + 8, OY7 + g.y * 16 + 8, Y, 8); return; }
+  }
+  if (p.mv) return;
+  const x = Math.round(p.x) + p.fx, y = Math.round(p.y) + p.fy;
+  if (x >= 0 && y >= 0 && x < MW && y < MH) {
+    if (grid[y][x] === '#') breakWall(x, y);
+    else if (grid[y][x] === 'X') { sfx('tick'); shake7 = Math.max(shake7, 0.05); }
+  }
+}
+
+const GAME = {
+  id:'g7', t1:'MAZE', t2:'WRECKER', sub:'SMASH WALLS. FIND DOTS. ESCAPE.',
+  music:{ bpm:152, lead:'square', chords:[{ root:-24, tones:[0, 3, 7] }, { root:-22, tones:[0, 3, 7] }, { root:-27, tones:[0, 4, 7] }, { root:-26, tones:[0, 3, 8] }],
+          arp:[0, -1, 1, -1, 2, -1, 1, -1, 0, -1, 1, 2, 1, -1, 2, -1], bass:[0, 3, 6, 8, 11, 14], snare:[4, 12], kick:[0, 6, 8, 10], hat:true },
+  init(isAtt) { setup7(isAtt); },
+  update(dt, inp, mode) {
+    att7 = mode === 'title'; T7 += dt; if (shake7 > 0) shake7 -= dt;
+    if (att7 && T7 > 80) { setup7(true); return; }
+    const p = pl7;
+    for (let i = parts7.length - 1; i >= 0; i--) { const q = parts7[i]; q.t += dt; q.vy += 300 * dt; q.x += q.vx * dt; q.y += q.vy * dt; if (q.t > 0.6) parts7.splice(i, 1); }
+    for (let i = pops7.length - 1; i >= 0; i--) { pops7[i].t += dt; if (pops7[i].t > 1.2) pops7.splice(i, 1); }
+    p.inv = Math.max(0, p.inv - dt); p.swing = Math.max(0, p.swing - dt); p.scd = Math.max(0, p.scd - dt); p.dash = Math.max(0, p.dash - dt); p.dcd = Math.max(0, p.dcd - dt);
+    /* input to wanted direction */
+    const ix = (inp.r ? 1 : 0) - (inp.l ? 1 : 0), iy = (inp.d ? 1 : 0) - (inp.u ? 1 : 0);
+    let want = null;
+    if (ix && iy) {
+      const horizMove = p.mv ? p.dx !== 0 : true;
+      want = horizMove ? [0, iy] : [ix, 0];
+      if (!free7(Math.round(p.x) + want[0], Math.round(p.y) + want[1])) want = horizMove ? [ix, 0] : [0, iy];
+    } else if (ix) want = [ix, 0]; else if (iy) want = [0, iy];
+    p.want = want;
+    if (want) { p.fx = want[0]; p.fy = want[1]; if (p.mv && want[0] === -p.dx && want[1] === -p.dy) { p.tx -= p.dx; p.ty -= p.dy; p.dx = -p.dx; p.dy = -p.dy; } }
+    if (inp.pb && p.dcd <= 0) { p.dash = 0.3; p.dcd = 1.6; sfx('swing'); }
+    if (inp.pa && p.scd <= 0) smash();
+    moveEnt(p, dt, p.dash > 0 ? 7 : 4.1, plChoose);
+    /* dots */
+    const cx = Math.round(p.x), cy = Math.round(p.y);
+    if (Math.hypot(p.x - cx, p.y - cy) < 0.45 && pel[cy][cx]) { pel[cy][cx] = false; pel7++; score7 += 10; sfx('coin'); popup7('+10', cx * 16 + 8, OY7 + cy * 16 - 2, W); }
+    /* walls regrow */
+    for (let i = regrow7.length - 1; i >= 0; i--) {
+      const r = regrow7[i]; r.t -= dt; if (r.t > 0) continue;
+      const busy = pel[r.y][r.x] || gh7.some(g => Math.hypot(g.x - r.x, g.y - r.y) < 1) || Math.hypot(p.x - r.x, p.y - r.y) < 1;
+      if (busy) { r.t = 0.5; continue; }
+      grid[r.y][r.x] = '#'; regrow7.splice(i, 1);
+    }
+    /* patrol bots */
+    const gsp = 3.4 + 0.09 * pel7 + (tleft7 < 30 ? 0.4 : 0);
+    for (const g of gh7) {
+      g.stun = Math.max(0, g.stun - dt);
+      moveEnt(g, dt, gsp, ghostChoose);
+      if (g.dx) g.face = g.dx;
+      if (g.stun <= 0 && p.inv <= 0 && Math.hypot(g.x - p.x, g.y - p.y) * 16 < 9) { loseLife7('CAUGHT!'); if (mode === 'play' && lives7 <= 0) return; break; }
+    }
+    tleft7 -= dt;
+    if (pel7 >= GOAL7) { score7 += Math.round(Math.max(0, tleft7)) * 10 + lives7 * 300; if (att7) setup7(true); else endGame(score7, 'MAZE CLEAR'); return; }
+    if (tleft7 <= 0) { tleft7 = 0; if (att7) setup7(true); else endGame(score7, 'SEALED IN'); return; }
+    if (mode === 'play') hint7 += dt;
+  },
+  render() {
+    clear(K);
+    const blink = Math.floor(T7 * 2.2) & 1;
+    for (let y = 0; y < MH; y++) for (let x = 0; x < MW; x++) {
+      const sx = x * 16, sy = OY7 + y * 16, c = grid[y][x];
+      if (c === '.') { if ((x + y) & 1) rect(sx, sy, 16, 16, N); px(sx + 8, sy + 8, M); }
+      else if (c === 'X') { rect(sx, sy, 16, 16, D); rect(sx, sy, 16, 2, L); rect(sx, sy, 2, 16, L); rect(sx + 14, sy, 2, 16, K); rect(sx, sy + 14, 16, 2, K); rect(sx + 7, sy + 7, 2, 2, K); }
+      else {
+        rect(sx, sy, 16, 16, BRK); for (let r = 5; r < 16; r += 5) rect(sx, sy + r, 16, 1, M);
+        for (let r = 0; r < 3; r++) rect(sx + ((r & 1) ? 4 : 10), sy + r * 5, 1, 5, M);
+        rect(sx, sy, 16, 1, O); rect(sx, sy + 15, 16, 1, M);
+        if (hid[y][x] && blink) { px(sx + 12, sy + 3, Y); px(sx + 11, sy + 4, Y); px(sx + 13, sy + 4, Y); px(sx + 12, sy + 5, Y); }
+      }
+      if (pel[y][x]) rect(sx + 6, sy + 6, 4, 4, Y);
+    }
+    for (const r of regrow7) if (r.t < 1.2 && (Math.floor(T7 * 14) & 1)) { rect(r.x * 16 + 2, OY7 + r.y * 16 + 2, 12, 12, BRK); }
+    for (const g of gh7) drawBot(g);
+    drawHero();
+    for (const q of parts7) px(q.x, q.y, q.col);
+    rect(0, 0, VW, OY7, N); rect(0, OY7 - 1, VW, 1, W); rect(0, 208, VW, 16, N); rect(0, 208, VW, 1, W);
+    for (let i = 0; i < Math.max(0, lives7); i++) { const x = 6 + i * 12; rect(x, 213, 8, 3, O); rect(x - 1, 216, 10, 2, O); rect(x + 1, 218, 6, 3, S); }
+    rect(188, 213, 56, 6, DG); rect(188, 213, Math.round(56 * (pl7.dcd <= 0 ? 1 : 1 - pl7.dcd / 1.6)), 6, pl7.dcd <= 0 ? E : Y);
+    rect(60, 213, 100, 6, DG); rect(60, 213, Math.round(100 * tleft7 / TIME7), 6, tleft7 > 30 ? CY : (Math.floor(T7 * 6) & 1) ? R : O);
+    if (shake7 > 0) for (let y = OY7; y < 208; y += 6) if (hash(y, Math.floor(T7 * 40)) > 0.6) { const o = Math.round((hash(y, 8) - 0.5) * 4); const row = buf.slice(y * VW, (y + 1) * VW); buf.set(row.subarray(Math.max(0, -o), VW - Math.max(0, o)), y * VW + Math.max(0, o)); }
+  },
+  hud(mode) {
+    txt('SCORE ' + pad5(score7), 4, 4, W, 8); txt('DOTS ' + String(pel7).padStart(2, '0') + '/' + GOAL7, 252, 4, Y, 8, 'right');
+    txt(String(Math.ceil(tleft7)), 128, 4, tleft7 < 20 ? R : W, 8, 'center');
+    if (mode === 'play' && hint7 < 6) txt('SMASH WALLS!', 128, 100, W, 8, 'center');
+    for (const p of pops7) txt(p.s, clamp(Math.round(p.x), 24, 232), Math.round(p.y - p.t * 12), p.col, 8, 'center');
+  },
+  info() { return { score:score7, dots:pel7, lives:lives7, time:Math.round(tleft7), x:+pl7.x.toFixed(1), y:+pl7.y.toFixed(1), stunned:gh7.filter(g => g.stun > 0).length }; },
+  bot() {
+    const i = { l:0, r:0, u:0, d:0, a:0, b:0, pa:0, pb:0, start:0 }, p = pl7;
+    const px0 = Math.round(p.x), py0 = Math.round(p.y);
+    const act = gh7.filter(g => g.stun <= 0);
+    for (const g of gh7) {
+      const dx = g.x - p.x, dy = g.y - p.y, along = dx * p.fx + dy * p.fy, perp = Math.abs(dx * p.fy - dy * p.fx);
+      if (g.stun < 1 && along > -0.2 && along < 1.15 && perp < 0.6 && p.scd <= 0) { i.pa = 1; return i; }
+    }
+    if (act.some(g => Math.hypot(g.x - p.x, g.y - p.y) < 2.2) && p.dcd <= 0) i.pb = 1;
+    const cost = new Float32Array(MW * MH).fill(1e9), par = new Int16Array(MW * MH).fill(-1), done = new Uint8Array(MW * MH);
+    const tc = (x, y) => {
+      let c = grid[y][x] === '#' ? 3 : 1;
+      for (const g of act) { const m = Math.abs(Math.round(g.x) - x) + Math.abs(Math.round(g.y) - y); if (m <= 3) c += (4 - m) * 7; }
+      return c;
+    };
+    cost[py0 * MW + px0] = 0;
+    for (;;) {
+      let bi = -1, bc = 1e9; for (let k = 0; k < MW * MH; k++) if (!done[k] && cost[k] < bc) { bc = cost[k]; bi = k; }
+      if (bi < 0) break; done[bi] = 1;
+      const x = bi % MW, y = (bi / MW) | 0;
+      for (const [dx, dy] of DIRS7) { const nx = x + dx, ny = y + dy; if (nx < 0 || ny < 0 || nx >= MW || ny >= MH || grid[ny][nx] === 'X') continue; const nk = ny * MW + nx, nc = bc + tc(nx, ny); if (nc < cost[nk]) { cost[nk] = nc; par[nk] = bi; } }
+    }
+    let tgt = -1, tb = 1e9;
+    for (let y = 0; y < MH; y++) for (let x = 0; x < MW; x++) { if (!(pel[y][x] || hid[y][x])) continue; const c = cost[y * MW + x] + (hid[y][x] ? 2 : 0); if (c < tb) { tb = c; tgt = y * MW + x; } }
+    if (tgt < 0 || tgt === py0 * MW + px0) return i;
+    let k = tgt, guard = 0; while (par[k] !== py0 * MW + px0 && par[k] >= 0 && guard++ < 300) k = par[k];
+    const nx = k % MW, ny = (k / MW) | 0, dx = nx - px0, dy = ny - py0;
+    if (dx > 0) i.r = 1; else if (dx < 0) i.l = 1; else if (dy > 0) i.d = 1; else if (dy < 0) i.u = 1;
+    if (grid[ny][nx] === '#' && !p.mv && p.scd <= 0) i.pa = 1;
+    return i;
+  },
+};
+function drawHero() {
+  const p = pl7; if (p.inv > 0 && (Math.floor(T7 * 16) & 1)) return;
+  const cx = Math.round(p.x * 16 + 8), cy = Math.round(OY7 + p.y * 16 + 8), st = p.mv ? (Math.floor(T7 * 12) & 1) : 0;
+  rect(cx - 5, cy + 6, 10, 2, M);
+  rect(cx - 4, cy + 3, 3, 4, B); rect(cx + 1, cy + 3, 3, 4, B); rect(cx - 4 - st, cy + 6, 4, 2, K); rect(cx + 1 + st, cy + 6, 4, 2, K);
+  rect(cx - 4, cy - 2, 8, 6, B); rect(cx - 3, cy - 2, 2, 3, Y); rect(cx + 1, cy - 2, 2, 3, Y);
+  rect(cx - 5, cy - 2, 1, 4, S); rect(cx + 4, cy - 2, 1, 4, S);
+  rect(cx - 4, cy - 6, 8, 5, S); rect(cx - 3, cy - 4, 1, 1, K); rect(cx + 2, cy - 4, 1, 1, K);
+  rect(cx - 5, cy - 9, 10, 4, O); rect(cx - 6, cy - 6, 12, 1, O); rect(cx - 1, cy - 10, 2, 2, Y);
+  if (p.swing > 0) {
+    const u = 1 - p.swing / 0.2, hx = cx + p.fx * (6 + Math.round(u * 6)), hy = cy + p.fy * (6 + Math.round(u * 6));
+    rect(cx + p.fx * 3 - 1, cy + p.fy * 3 - 1, 3, 3, T); rect(hx - 3, hy - 3, 7, 7, L); rect(hx - 3, hy + 3, 7, 1, D);
+  } else { rect(cx + 5, cy - 8, 2, 9, T); rect(cx + 3, cy - 11, 6, 4, L); rect(cx + 3, cy - 8, 6, 1, D); }
+}
+function drawBot(g) {
+  const cx = Math.round(g.x * 16 + 8), cy = Math.round(OY7 + g.y * 16 + 8), st = g.stun > 0, fl = st && (g.stun < 0.9 ? (Math.floor(T7 * 12) & 1) : 0);
+  const col = st ? (fl ? W : B) : g.col;
+  rect(cx - 6, cy + 6, 12, 2, M);
+  rect(cx - 6, cy - 5, 12, 10, col); rect(cx - 5, cy - 7, 10, 2, col); rect(cx - 6, cy + 4, 12, 1, D);
+  rect(cx - 7, cy + 5, 14, 3, D); if (!st && g.mv && (Math.floor(T7 * 14) & 1)) rect(cx - 5, cy + 6, 2, 1, L), rect(cx + 3, cy + 6, 2, 1, L);
+  rect(cx - 1, cy - 11, 2, 4, D); rect(cx - 2, cy - 12, 4, 2, st ? Y : ((Math.floor(T7 * 10) & 1) ? R : W));
+  if (st) { rect(cx - 4, cy - 3, 3, 1, K); rect(cx - 3, cy - 4, 1, 3, K); rect(cx + 2, cy - 3, 3, 1, K); rect(cx + 3, cy - 4, 1, 3, K);
+    for (let k = 0; k < 3; k++) { const a = T7 * 5 + k * 2.1; px(cx + Math.cos(a) * 8, cy - 13 + Math.sin(a) * 2, Y); } }
+  else { rect(cx - 5, cy - 3, 4, 4, W); rect(cx + 1, cy - 3, 4, 4, W); const ox = g.face > 0 ? 1 : 0; rect(cx - 5 + ox + 1, cy - 2, 2, 2, K); rect(cx + 1 + ox + 1, cy - 2, 2, 2, K); rect(cx - 5, cy - 4, 4, 1, K); rect(cx + 1, cy - 4, 4, 1, K); }
+}
+
+/* ---------- shell: title / play / over flow, loop, test hooks ---------- */
+let mode = 'title', overT = 0, result = null, hi = 0, blink = 0, botOn = false, tms = 0;
+const HIK = 'nes6-hi-' + GAME.id;
+try { hi = parseInt(localStorage.getItem(HIK) || '0', 10) || 0; } catch (_) {}
+function endGame(score, msg) {
+  if (mode !== 'play') return;
+  mode = 'over'; overT = 0;
+  const isBest = score > hi;
+  if (isBest) { hi = score; try { localStorage.setItem(HIK, String(hi)); } catch (_) {} }
+  result = { score, msg, isBest };
+  sfx(msg && /CLEAR|WIN|KO!|FINISH/.test(msg) ? 'win' : 'over');
+}
+GAME.init(true);
+function begin() { tms = 0; blink = 0; GAME.init(false); mode = 'play'; result = null; }
+function step(dt) {
+  blink += dt; tms += dt;
+  const raw = readInput();
+  if (mode === 'title') {
+    if (raw.start) { begin(); sfx('beep'); }
+    else GAME.update(dt, GAME.bot ? GAME.bot() : BLANK, 'title');
+  } else if (mode === 'play') {
+    GAME.update(dt, botOn && GAME.bot ? GAME.bot() : raw, 'play');
+  } else {
+    overT += dt;
+    if (raw.start && overT > 1.5) { begin(); sfx('beep'); }
+  }
+}
+function render() {
+  GAME.render(mode);
+  for (let i = 0; i < buf.length; i++) px32[i] = PAL32[buf[i]];
+  ctx.putImageData(img, 0, 0);
+  GAME.hud(mode);
+  const WH = HEX[W], YE = HEX[Y];
+  if (mode === 'title') {
+    panel(16, 12, 224, 96);
+    const s1 = GAME.t1.length <= 6 ? 32 : 24;
+    txt(GAME.t1, 128, s1 === 32 ? 22 : 28, YE, s1, 'center');
+    txt(GAME.t2, 128, 62, WH, GAME.t2.length > 8 ? 16 : 24, 'center');
+    txt(GAME.sub, 128, 90, HEX[CY], 8, 'center');
+    if (Math.floor(blink * 2) & 1) txt('PRESS START', 128, 120, WH, 8, 'center');
+    txt('HI ' + pad5(hi), 128, 134, YE, 8, 'center');
+  } else if (mode === 'over' && result) {
+    panel(32, 52, 192, 100);
+    txt(result.msg || 'GAME OVER', 128, 64, YE, 16, 'center');
+    txt('SCORE ' + pad5(result.score), 128, 94, WH, 8, 'center');
+    if (result.isBest) { if (Math.floor(blink * 3) & 1) txt('NEW BEST!', 128, 110, HEX[E], 8, 'center'); }
+    else txt('BEST ' + pad5(hi), 128, 110, WH, 8, 'center');
+    if (overT > 1.5 && (Math.floor(blink * 2) & 1)) txt('PRESS START', 128, 130, WH, 8, 'center');
+  }
+}
+let last = 0, acc = 0;
+function frame(ts) {
+  if (!last) last = ts;
+  acc += Math.min(0.1, (ts - last) / 1000); last = ts;
+  while (acc >= 1 / 60) { step(1 / 60); acc -= 1 / 60; }
+  render();
+  requestAnimationFrame(frame);
+}
+if (!window.__norun) requestAnimationFrame(frame);
+if (document.fonts && document.fonts.load) document.fonts.load('8px "Press Start 2P"').catch(() => {});
+window.__shell = {
+  start: () => begin(),
+  bot: on => { botOn = !!on; },
+  ff: n => { for (let i = 0; i < n; i++) step(1 / 60); },
+  render,
+  step: () => { window.__now = (window.__now || 0) + 1 / 60; step(1 / 60); },
+  info: () => Object.assign({ mode, result, hi }, GAME.info ? GAME.info() : {}),
+  go: () => { startEdge = true; },
+  mode: () => mode, music: () => GAME.music,
+  get seed() { return activeSeed; }, get seedFromUrl() { return SEED_Q; },
+};
+
+})();
+</script>
