@@ -109,6 +109,21 @@ function hash(x, y) {
   return ((n ^ (n >>> 16)) >>> 0) / 4294967296;
 }
 function mkRng(seed) { let a = seed >>> 0; return () => { a = (a + 0x6D2B79F5) >>> 0; let t = a; t = Math.imul(t ^ (t >>> 15), t | 1); t ^= t + Math.imul(t ^ (t >>> 7), t | 61); return ((t ^ (t >>> 14)) >>> 0) / 4294967296; }; }
+/* ?seed=N (or any string) makes every run reproducible. Without it: attract mode uses its fixed seed, real play a per-run seed.
+   runSeed(fixed, off) is the ONLY way a game should seed its RNG; the active seed is exposed as window.__shell.seed. */
+const SEED_Q = (() => { try {
+  const v = new URLSearchParams(location.search).get('seed'); if (v == null || v === '') return null;
+  if (Number.isFinite(Number(v))) return Number(v) >>> 0;
+  let h = 2166136261; for (let i = 0; i < v.length; i++) h = Math.imul(h ^ v.charCodeAt(i), 16777619); return h >>> 0;
+} catch (_) { return null; } })();
+let activeSeed = null, vrngS = null;
+function runSeed(fixed, off) {
+  off = off || 0;
+  activeSeed = SEED_Q != null ? (SEED_Q + off) >>> 0 : fixed != null ? fixed : ((Date.now() & 0xffff) + off) >>> 0;
+  vrngS = mkRng(activeSeed ^ 0x9e3779b9);
+  return activeSeed;
+}
+const vr = () => (vrngS || (vrngS = mkRng(1)))();   /* visual-only randomness (particles, popups): seeded, never gameplay */
 function px(x, y, c) { x = Math.round(x); y = Math.round(y); if (x < 0 || x >= VW || y < 0 || y >= VH) return; buf[y * VW + x] = c; }
 function rect(x, y, w, h, c) {
   x = Math.round(x); y = Math.round(y); w = Math.round(w); h = Math.round(h);
@@ -150,15 +165,22 @@ const fmt = t => `${Math.floor(t / 60)}:${(t % 60).toFixed(1).padStart(4, '0')}`
 
 /* ---------- audio (square-wave chip tune) ---------- */
 let AC = null, master = null, muted = false, step16 = 0, nextT = 0;
+/* iOS: the silent switch mutes Web Audio unless the page's audio session is 'playback'; contexts also start 'suspended'/'interrupted'
+   until a real gesture (touchend/click/keydown; pointerdown alone does not count on Safari). */
+function iosAudioFix() { try { if (navigator.audioSession) navigator.audioSession.type = 'playback'; } catch (_) {} }
 function audioInit() {
-  if (AC) { if (AC.state === 'suspended') AC.resume(); return; }
+  iosAudioFix();
+  if (AC) { if (AC.state !== 'running') { try { AC.resume(); } catch (_) {} } return; }
   try {
     AC = new (window.AudioContext || window.webkitAudioContext)();
     master = AC.createGain(); master.gain.value = muted ? 0 : 0.16; master.connect(AC.destination);
+    try { const sb = AC.createBuffer(1, 1, 22050), ss = AC.createBufferSource(); ss.buffer = sb; ss.connect(AC.destination); ss.start(0); } catch (_) {}
     nextT = AC.currentTime + 0.1;
     setInterval(scheduleMusic, 30);
   } catch (e) { AC = null; }
 }
+['touchend', 'click', 'keydown', 'pointerup'].forEach(ev => window.addEventListener(ev, audioInit, { passive: true }));
+document.addEventListener('visibilitychange', () => { if (!document.hidden && AC && AC.state !== 'running') { try { AC.resume(); } catch (_) {} } });
 function tone(freq, dur, type, vol, slide, delay) {
   if (window.__log) { window.__log.push({ k:'tone', t:window.__now, freq, dur, type:type || 'square', vol:vol == null ? 0.5 : vol, slide:slide || 0, delay:delay || 0 }); return; }
   if (!AC || muted) return;
@@ -293,7 +315,7 @@ const LEND = 3300, GRAV5 = 470, RMAX = 138;
 let plats, rings, foes, shur, parts, popups, P, cam, score, lives, kills, elapsed, cps, att, T5, goalX, shake;
 
 function buildLevel() {
-  const r = mkRng(55);
+  const r = mkRng(runSeed(55, 0));
   plats = [{ x:-64, y:176, w:254 }]; rings = []; foes = []; cps = [{ x:40, y:176 }];
   let x = 190, y = 176, cpNext = 700;
   while (x < LEND) {
@@ -314,7 +336,7 @@ function buildLevel() {
   plats.push({ x, y:176, w:260 }); goalX = x + 150;
 }
 function popup(s, x, y, col) { popups.push({ s, x, y, col, t:0 }); if (popups.length > 4) popups.shift(); }
-function burst(x, y, col, n) { for (let i = 0; i < n; i++) parts.push({ x, y, vx:(Math.random() - 0.5) * 130, vy:-Math.random() * 100, t:0, col }); }
+function burst(x, y, col, n) { for (let i = 0; i < n; i++) parts.push({ x, y, vx:(vr() - 0.5) * 130, vy:-vr() * 100, t:0, col }); }
 function solid(x, y) { for (const p of plats) if (x >= p.x && x < p.x + p.w && y >= p.y) return true; return false; }
 function boxHits(x, y, w, h) { return solid(x, y) || solid(x + w - 1, y) || solid(x, y + h - 1) || solid(x + w - 1, y + h - 1); }
 function tryMove(e, dx, dy) {
@@ -355,7 +377,7 @@ function findRing() {
 }
 function setup(isAtt) {
   buildLevel();
-  parts = []; popups = []; shur = []; score = 0; lives = 3; kills = 0; elapsed = 0; T5 = 0; shake = 0;
+  parts = []; popups = []; shur = []; score = 0; lives = 3; kills = 0; elapsed = 0; T5 = 0; GAME._tg = 0; shake = 0;
   P = { x:40, y:160, vx:0, vy:0, w:8, h:14, face:1, ground:false, att:null, slash:0, scd:0, inv:1, dead:false, reel:0, whiff:0, run:0 };
   cam = 0;
 }
@@ -560,7 +582,7 @@ function endGame(score, msg) {
   sfx(msg && /CLEAR|WIN|KO!|FINISH/.test(msg) ? 'win' : 'over');
 }
 GAME.init(true);
-function begin() { GAME.init(false); mode = 'play'; result = null; }
+function begin() { tms = 0; blink = 0; GAME.init(false); mode = 'play'; result = null; }
 function step(dt) {
   blink += dt; tms += dt;
   const raw = readInput();
@@ -616,6 +638,7 @@ window.__shell = {
   info: () => Object.assign({ mode, result, hi }, GAME.info ? GAME.info() : {}),
   go: () => { startEdge = true; },
   mode: () => mode, music: () => GAME.music,
+  get seed() { return activeSeed; }, get seedFromUrl() { return SEED_Q; },
 };
 
 })();

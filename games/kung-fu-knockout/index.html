@@ -109,6 +109,21 @@ function hash(x, y) {
   return ((n ^ (n >>> 16)) >>> 0) / 4294967296;
 }
 function mkRng(seed) { let a = seed >>> 0; return () => { a = (a + 0x6D2B79F5) >>> 0; let t = a; t = Math.imul(t ^ (t >>> 15), t | 1); t ^= t + Math.imul(t ^ (t >>> 7), t | 61); return ((t ^ (t >>> 14)) >>> 0) / 4294967296; }; }
+/* ?seed=N (or any string) makes every run reproducible. Without it: attract mode uses its fixed seed, real play a per-run seed.
+   runSeed(fixed, off) is the ONLY way a game should seed its RNG; the active seed is exposed as window.__shell.seed. */
+const SEED_Q = (() => { try {
+  const v = new URLSearchParams(location.search).get('seed'); if (v == null || v === '') return null;
+  if (Number.isFinite(Number(v))) return Number(v) >>> 0;
+  let h = 2166136261; for (let i = 0; i < v.length; i++) h = Math.imul(h ^ v.charCodeAt(i), 16777619); return h >>> 0;
+} catch (_) { return null; } })();
+let activeSeed = null, vrngS = null;
+function runSeed(fixed, off) {
+  off = off || 0;
+  activeSeed = SEED_Q != null ? (SEED_Q + off) >>> 0 : fixed != null ? fixed : ((Date.now() & 0xffff) + off) >>> 0;
+  vrngS = mkRng(activeSeed ^ 0x9e3779b9);
+  return activeSeed;
+}
+const vr = () => (vrngS || (vrngS = mkRng(1)))();   /* visual-only randomness (particles, popups): seeded, never gameplay */
 function px(x, y, c) { x = Math.round(x); y = Math.round(y); if (x < 0 || x >= VW || y < 0 || y >= VH) return; buf[y * VW + x] = c; }
 function rect(x, y, w, h, c) {
   x = Math.round(x); y = Math.round(y); w = Math.round(w); h = Math.round(h);
@@ -150,15 +165,22 @@ const fmt = t => `${Math.floor(t / 60)}:${(t % 60).toFixed(1).padStart(4, '0')}`
 
 /* ---------- audio (square-wave chip tune) ---------- */
 let AC = null, master = null, muted = false, step16 = 0, nextT = 0;
+/* iOS: the silent switch mutes Web Audio unless the page's audio session is 'playback'; contexts also start 'suspended'/'interrupted'
+   until a real gesture (touchend/click/keydown; pointerdown alone does not count on Safari). */
+function iosAudioFix() { try { if (navigator.audioSession) navigator.audioSession.type = 'playback'; } catch (_) {} }
 function audioInit() {
-  if (AC) { if (AC.state === 'suspended') AC.resume(); return; }
+  iosAudioFix();
+  if (AC) { if (AC.state !== 'running') { try { AC.resume(); } catch (_) {} } return; }
   try {
     AC = new (window.AudioContext || window.webkitAudioContext)();
     master = AC.createGain(); master.gain.value = muted ? 0 : 0.16; master.connect(AC.destination);
+    try { const sb = AC.createBuffer(1, 1, 22050), ss = AC.createBufferSource(); ss.buffer = sb; ss.connect(AC.destination); ss.start(0); } catch (_) {}
     nextT = AC.currentTime + 0.1;
     setInterval(scheduleMusic, 30);
   } catch (e) { AC = null; }
 }
+['touchend', 'click', 'keydown', 'pointerup'].forEach(ev => window.addEventListener(ev, audioInit, { passive: true }));
+document.addEventListener('visibilitychange', () => { if (!document.hidden && AC && AC.state !== 'running') { try { AC.resume(); } catch (_) {} } });
 function tone(freq, dur, type, vol, slide, delay) {
   if (window.__log) { window.__log.push({ k:'tone', t:window.__now, freq, dur, type:type || 'square', vol:vol == null ? 0.5 : vol, slide:slide || 0, delay:delay || 0 }); return; }
   if (!AC || muted) return;
@@ -293,9 +315,9 @@ const FLOOR = 178, END6 = 1500, GOAL = 8;
 let phase, trans, cam6, P6, foes6, knives, parts6, pops6, score6, lives6, kills6, spawnT6, T6, att6, rng6, boss, B2, doorMsg, shake6, hintN;
 
 function popup6(s, x, y, col) { pops6.push({ s, x, y, col, t:0 }); if (pops6.length > 4) pops6.shift(); }
-function burst6(x, y, col, n) { for (let i = 0; i < n; i++) parts6.push({ x, y, vx:(Math.random() - 0.5) * 120, vy:-Math.random() * 90, t:0, col }); }
+function burst6(x, y, col, n) { for (let i = 0; i < n; i++) parts6.push({ x, y, vx:(vr() - 0.5) * 120, vy:-vr() * 90, t:0, col }); }
 function setup6(isAtt) {
-  rng6 = mkRng(isAtt ? 5 : (Date.now() & 0xffff) + 11);
+  rng6 = mkRng(runSeed(isAtt ? 5 : null, 11));
   phase = 1; trans = 0; cam6 = 0; score6 = 0; lives6 = 3; kills6 = 0; spawnT6 = 1.2; T6 = 0; shake6 = 0; hintN = 0;
   P6 = { x:40, y:0, vy:0, dir:1, hp:10, st:'walk', st_t:0, duck:false, inv:1, jump:false, hurt:0, cd:0 };
   foes6 = []; knives = []; parts6 = []; pops6 = []; doorMsg = 0;
@@ -519,7 +541,7 @@ function phase2(dt, inp) {
 function landPunch(dmg) {
   const b = boss;
   if (b.st === 'recover' || b.st === 'stun') {
-    b.hp -= dmg; b.hitT = 0.25; score6 += 120 * dmg; sfx('punch'); shake6 = 0.12; popup6(dmg > 1 ? 'HOOK! -' + dmg : 'JAB!', 128 + (Math.random() - 0.5) * 60, 40, dmg > 1 ? O : W);
+    b.hp -= dmg; b.hitT = 0.25; score6 += 120 * dmg; sfx('punch'); shake6 = 0.12; popup6(dmg > 1 ? 'HOOK! -' + dmg : 'JAB!', 128 + (vr() - 0.5) * 60, 40, dmg > 1 ? O : W);
     if (b.st === 'recover') b.t = Math.max(0, b.t - 0.15);
     if (b.hp <= 0) { b.hp = 0; b.st = 'ko'; b.t = 0; sfx('boom'); popup6('KNOCKOUT!', 128, 90, Y); }
   } else { sfx('tick'); }
@@ -610,7 +632,7 @@ function endGame(score, msg) {
   sfx(msg && /CLEAR|WIN|KO!|FINISH/.test(msg) ? 'win' : 'over');
 }
 GAME.init(true);
-function begin() { GAME.init(false); mode = 'play'; result = null; }
+function begin() { tms = 0; blink = 0; GAME.init(false); mode = 'play'; result = null; }
 function step(dt) {
   blink += dt; tms += dt;
   const raw = readInput();
@@ -666,6 +688,7 @@ window.__shell = {
   info: () => Object.assign({ mode, result, hi }, GAME.info ? GAME.info() : {}),
   go: () => { startEdge = true; },
   mode: () => mode, music: () => GAME.music,
+  get seed() { return activeSeed; }, get seedFromUrl() { return SEED_Q; },
 };
 
 })();
