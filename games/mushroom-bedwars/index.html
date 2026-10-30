@@ -1,0 +1,545 @@
+<title>Mushroom BedWars</title>
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
+<style>
+/* One arcade cabinet column: 256x224 pixel screen on top, NES-style pad below, built for a phone held upright. */
+:root{
+  --bg:#07070c;
+  --deck:#17171d;
+  --face:#26262c;
+  --ink:#0c0c10;
+  --red:#d1261b;
+  --text:#e9e6da;
+  --muted:#8d8a80;
+  --pixel:'Press Start 2P', ui-monospace, 'Courier New', monospace;
+  --util:ui-monospace, 'SF Mono', Menlo, Consolas, monospace;
+  color-scheme:dark;
+}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;height:100%;background:var(--bg);color:var(--text)}
+body{
+  display:flex;justify-content:center;
+  font-family:var(--util);
+  user-select:none;-webkit-user-select:none;touch-action:manipulation;
+  overflow:hidden;
+}
+/* Fullscreen stage (Cherie 2026-10-30): the GAME fills the screen; only the
+   controls are visible besides it. No cabinet furniture. The stage flexes to
+   every leftover pixel and the canvas scales with object-fit:contain —
+   as large as the phone allows, never cropped, never distorted. */
+.cab{
+  position:relative;
+  width:100%;height:100dvh;
+  min-width:0;
+}
+.screen-wrap{position:absolute;inset:0;background:#000;line-height:0}
+canvas{display:block;width:100%;height:100%;object-fit:contain;object-position:50% 38%;image-rendering:pixelated;image-rendering:crisp-edges;touch-action:none}
+.pad{
+  position:absolute;left:0;right:0;bottom:0;
+  background:linear-gradient(to bottom, rgba(5,5,8,0), rgba(5,5,8,.78) 32%);
+  display:grid;grid-template-columns:auto 1fr;grid-template-areas:"dpad ab" "mid mid";
+  gap:10px;align-items:center;
+  padding:26px 14px calc(10px + env(safe-area-inset-bottom, 0px));
+  padding-left:max(14px, env(safe-area-inset-left, 0px));
+  padding-right:max(14px, env(safe-area-inset-right, 0px));
+  touch-action:none;
+}
+.dpad{grid-area:dpad;position:relative;width:clamp(132px, 36vw, 168px);height:clamp(132px, 36vw, 168px);touch-action:none;justify-self:start}
+.bar{position:absolute;background:var(--face);border-radius:6px;box-shadow:inset 0 0 0 2px #33333c}
+.bar.h{left:0;right:0;top:calc(50% - 22px);height:44px}
+.bar.v{top:0;bottom:0;left:calc(50% - 22px);width:44px}
+.hub{position:absolute;left:calc(50% - 13px);top:calc(50% - 13px);width:26px;height:26px;border-radius:50%;background:#101014}
+.ar{position:absolute;background:#6a6a75}
+.ar.u{top:8px;left:calc(50% - 8px);width:16px;height:14px;clip-path:polygon(50% 0,100% 100%,0 100%)}
+.ar.d{bottom:8px;left:calc(50% - 8px);width:16px;height:14px;clip-path:polygon(0 0,100% 0,50% 100%)}
+.ar.l{left:8px;top:calc(50% - 8px);width:14px;height:16px;clip-path:polygon(100% 0,100% 100%,0 50%)}
+.ar.r{right:8px;top:calc(50% - 8px);width:14px;height:16px;clip-path:polygon(0 0,100% 50%,0 100%)}
+.dpad.on-l .ar.l,.dpad.on-r .ar.r,.dpad.on-d .ar.d,.dpad.on-u .ar.u{background:var(--text)}
+.ab{grid-area:ab;display:flex;justify-content:center;align-items:center;gap:16px;padding:6px 4px}
+.ab div{display:flex;flex-direction:column;align-items:center;gap:7px}
+.round{
+  width:clamp(60px, 16.5vw, 78px);height:clamp(60px, 16.5vw, 78px);border-radius:50%;border:0;background:var(--red);color:#fff;
+  font:400 16px var(--pixel);box-shadow:inset 0 -5px 0 rgba(0,0,0,.28);touch-action:none;cursor:pointer;
+}
+.round.on{transform:translateY(2px);box-shadow:inset 0 2px 0 rgba(0,0,0,.35);filter:brightness(.88)}
+.ab span{font:400 9px var(--pixel);color:#a5a5b0;letter-spacing:.02em;white-space:nowrap}
+.mid{grid-area:mid;display:flex;justify-content:center;gap:22px}
+.mid button{
+  border:0;background:var(--face);color:#c9c9d2;font:400 10px var(--pixel);
+  padding:9px 14px;border-radius:999px;cursor:pointer;touch-action:none;min-width:96px;
+}
+.mid button.on{filter:brightness(1.6)}
+button:focus-visible{outline:2px solid #fff;outline-offset:2px}
+.keys{position:absolute;top:8px;left:0;right:0;margin:0;padding:0 14px;color:var(--muted);font-size:11px;line-height:1.55;text-align:center;text-wrap:balance;pointer-events:none}
+.keys b{color:var(--text);font-weight:500}
+@media (pointer:coarse){ .keys{display:none} }
+</style>
+
+<main class="cab">
+  <div class="screen-wrap"><canvas id="screen" width="256" height="224" role="img" aria-label="Mushroom BedWars game screen"></canvas></div>
+  <section class="pad" aria-label="Controller">
+    <div class="dpad" id="dpad"><i class="bar h"></i><i class="bar v"></i><i class="hub"></i><b class="ar u"></b><b class="ar d"></b><b class="ar l"></b><b class="ar r"></b></div>
+    <div class="ab">
+      <div><button type="button" class="round" data-k="b" aria-label="B, SWING">B</button><span>SWING</span></div>
+      <div><button type="button" class="round" data-k="a" aria-label="A, BUILD">A</button><span>BUILD</span></div>
+    </div>
+    <div class="mid">
+      <button type="button" data-k="select" id="snd">SOUND ON</button>
+      <button type="button" data-k="start">START</button>
+    </div>
+  </section>
+  <p class="keys"><b>Keys:</b> Left/Right move, Up jump (hold in air to glide once bought), Z/Space place block ahead, X swing, Down+X drop bomb. Touch the ? shop to buy. Enter starts, M mutes.</p>
+</main>
+
+<script>
+(() => {
+'use strict';
+/* ---------- shared NES core: pixel buffer, palette, text, audio, input ---------- */
+const VW = 256, VH = 224;
+const cv = document.getElementById('screen');
+const ctx = cv.getContext('2d');
+ctx.imageSmoothingEnabled = false;
+const img = ctx.createImageData(VW, VH);
+const px32 = new Uint32Array(img.data.buffer);
+const buf = new Uint8Array(VW * VH);
+const HEX = ['#000000','#fcfcfc','#bcbcbc','#7c7c7c','#18a838','#006800','#d82800','#f8b800','#0038d8','#000088','#fca044','#a85800','#503000','#b800b8','#f87858','#3cbcfc','#58d854','#f8f8b8','#f8a4c0','#5c94fc','#383838','#c84c0c'];
+const K=0,W=1,L=2,D=3,GR=4,F=5,R=6,Y=7,B=8,N=9,S=10,T=11,M=12,PU=13,O=14,CY=15,E=16,V=17,PK=18,SKY=19,DG=20,BRK=21;
+const CH = { K,W,L,D,G:GR,F,R,Y,B,N,S,T,M,P:PU,O,C:CY,E,V,Q:PK,U:SKY,Z:DG,H:BRK };
+const PAL32 = HEX.map(h => {
+  const r = parseInt(h.slice(1,3),16), g = parseInt(h.slice(3,5),16), b = parseInt(h.slice(5,7),16);
+  return (0xFF000000 | (b << 16) | (g << 8) | r) >>> 0;
+});
+const clamp = (v,a,b) => v < a ? a : v > b ? b : v;
+const rad = Math.PI / 180;
+function hash(x, y) {
+  let n = (x * 374761393 + y * 668265263) | 0;
+  n = Math.imul(n ^ (n >>> 13), 1274126177);
+  return ((n ^ (n >>> 16)) >>> 0) / 4294967296;
+}
+function mkRng(seed) { let a = seed >>> 0; return () => { a = (a + 0x6D2B79F5) >>> 0; let t = a; t = Math.imul(t ^ (t >>> 15), t | 1); t ^= t + Math.imul(t ^ (t >>> 7), t | 61); return ((t ^ (t >>> 14)) >>> 0) / 4294967296; }; }
+/* ?seed=N (or any string) makes every run reproducible. Without it: attract mode uses its fixed seed, real play a per-run seed.
+   runSeed(fixed, off) is the ONLY way a game should seed its RNG; the active seed is exposed as window.__shell.seed. */
+const SEED_Q = (() => { try {
+  const v = new URLSearchParams(location.search).get('seed'); if (v == null || v === '') return null;
+  if (Number.isFinite(Number(v))) return Number(v) >>> 0;
+  let h = 2166136261; for (let i = 0; i < v.length; i++) h = Math.imul(h ^ v.charCodeAt(i), 16777619); return h >>> 0;
+} catch (_) { return null; } })();
+let activeSeed = null, vrngS = null;
+function runSeed(fixed, off) {
+  off = off || 0;
+  activeSeed = SEED_Q != null ? (SEED_Q + off) >>> 0 : fixed != null ? fixed : ((Date.now() & 0xffff) + off) >>> 0;
+  vrngS = mkRng(activeSeed ^ 0x9e3779b9);
+  return activeSeed;
+}
+const vr = () => (vrngS || (vrngS = mkRng(1)))();   /* visual-only randomness (particles, popups): seeded, never gameplay */
+function px(x, y, c) { x = Math.round(x); y = Math.round(y); if (x < 0 || x >= VW || y < 0 || y >= VH) return; buf[y * VW + x] = c; }
+function rect(x, y, w, h, c) {
+  x = Math.round(x); y = Math.round(y); w = Math.round(w); h = Math.round(h);
+  const x0 = Math.max(0, x), x1 = Math.min(VW, x + w), y0 = Math.max(0, y), y1 = Math.min(VH, y + h);
+  if (x1 <= x0) return;
+  for (let j = y0; j < y1; j++) buf.fill(c, j * VW + x0, j * VW + x1);
+}
+function clear(c) { buf.fill(c); }
+function spr(rows, x, y, flip, pal) {
+  x = Math.round(x); y = Math.round(y);
+  for (let r = 0; r < rows.length; r++) {
+    const row = rows[r], w = row.length;
+    for (let c = 0; c < w; c++) {
+      const ch = row[c];
+      if (ch === '.') continue;
+      const col = pal && pal[ch] !== undefined ? pal[ch] : CH[ch];
+      px(flip ? x + w - 1 - c : x + c, y + r, col);
+    }
+  }
+}
+function fillCircle(cx, cy, r, c) {
+  for (let j = -r; j <= r; j++) for (let i = -r; i <= r; i++) if (i * i + j * j <= r * r + r * 0.5) px(cx + i, cy + j, c);
+}
+
+/* text drawn on the 2d context after the pixel buffer is blitted */
+const FONT = s => `${s}px "Press Start 2P", ui-monospace, monospace`;
+function txt(s, x, y, col, size, align, shadow) {
+  size = size || 8;
+  ctx.font = FONT(size); ctx.textBaseline = 'top'; ctx.textAlign = align || 'left';
+  if (shadow !== false) { ctx.fillStyle = '#000'; const o = size >= 16 ? 2 : 1; ctx.fillText(s, x + o, y + o); }
+  ctx.fillStyle = typeof col === 'number' ? HEX[col] : col; ctx.fillText(s, x, y);
+}
+function panel(x, y, w, h, bg) {
+  ctx.fillStyle = HEX[bg === undefined ? N : bg]; ctx.fillRect(x, y, w, h);
+  ctx.fillStyle = HEX[W]; ctx.fillRect(x, y, w, 2); ctx.fillRect(x, y + h - 2, w, 2); ctx.fillRect(x, y, 2, h); ctx.fillRect(x + w - 2, y, 2, h);
+}
+const pad5 = n => String(Math.max(0, Math.round(n))).padStart(5, '0');
+const fmt = t => `${Math.floor(t / 60)}:${(t % 60).toFixed(1).padStart(4, '0')}`;
+
+/* ---------- audio (square-wave chip tune) ---------- */
+let AC = null, master = null, muted = false, step16 = 0, nextT = 0;
+/* iOS: the silent switch mutes Web Audio unless the page's audio session is 'playback'; contexts also start 'suspended'/'interrupted'
+   until a real gesture (touchend/click/keydown; pointerdown alone does not count on Safari). */
+function iosAudioFix() { try { if (navigator.audioSession) navigator.audioSession.type = 'playback'; } catch (_) {} }
+function audioInit() {
+  iosAudioFix();
+  if (AC) { if (AC.state !== 'running') { try { AC.resume(); } catch (_) {} } return; }
+  try {
+    AC = new (window.AudioContext || window.webkitAudioContext)();
+    master = AC.createGain(); master.gain.value = muted ? 0 : 0.16; master.connect(AC.destination);
+    try { const sb = AC.createBuffer(1, 1, 22050), ss = AC.createBufferSource(); ss.buffer = sb; ss.connect(AC.destination); ss.start(0); } catch (_) {}
+    nextT = AC.currentTime + 0.1;
+    setInterval(scheduleMusic, 30);
+  } catch (e) { AC = null; }
+}
+['touchend', 'click', 'keydown', 'pointerup'].forEach(ev => window.addEventListener(ev, audioInit, { passive: true }));
+document.addEventListener('visibilitychange', () => { if (!document.hidden && AC && AC.state !== 'running') { try { AC.resume(); } catch (_) {} } });
+function tone(freq, dur, type, vol, slide, delay) {
+  if (window.__log) { window.__log.push({ k:'tone', t:window.__now, freq, dur, type:type || 'square', vol:vol == null ? 0.5 : vol, slide:slide || 0, delay:delay || 0 }); return; }
+  if (!AC || muted) return;
+  const t = AC.currentTime + (delay || 0);
+  const o = AC.createOscillator(), g = AC.createGain();
+  o.type = type || 'square';
+  o.frequency.setValueAtTime(freq, t);
+  if (slide) o.frequency.exponentialRampToValueAtTime(Math.max(30, freq + slide), t + dur);
+  g.gain.setValueAtTime(vol == null ? 0.5 : vol, t);
+  g.gain.exponentialRampToValueAtTime(0.001, t + dur);
+  o.connect(g); g.connect(master); o.start(t); o.stop(t + dur + 0.03);
+}
+function noise(dur, vol, when) {
+  if (window.__log) { window.__log.push({ k:'noise', t:window.__now, dur, vol, delay:when || 0 }); return; }
+  if (!AC || muted) return;
+  const t = AC.currentTime + (when || 0);
+  const len = Math.max(1, Math.floor(AC.sampleRate * dur));
+  const b = AC.createBuffer(1, len, AC.sampleRate), d = b.getChannelData(0);
+  for (let i = 0; i < len; i++) d[i] = (Math.random() * 2 - 1) * (1 - i / len);
+  const s = AC.createBufferSource(), g = AC.createGain();
+  s.buffer = b; g.gain.setValueAtTime(vol, t); s.connect(g); g.connect(master); s.start(t);
+}
+const hz = s => 440 * Math.pow(2, s / 12);
+function scheduleMusic() {
+  const m = GAME.music;
+  if (!AC || AC.state !== 'running' || !m) return;
+  const sixteenth = 60 / m.bpm / 4;
+  while (nextT < AC.currentTime + 0.14) {
+    const ch = m.chords[Math.floor(step16 / 16) % m.chords.length], s = step16 % 16;
+    const delay = Math.max(0, nextT - AC.currentTime);
+    if (!muted) {
+      const a = m.arp[s];
+      if (a >= 0) tone(hz(ch.tones[a % ch.tones.length] + (a >= ch.tones.length ? 12 : 0) + 12), sixteenth * 1.7, m.lead || 'square', 0.15, 0, delay);
+      if (m.bass.includes(s)) tone(hz(ch.root + ((s % 8 === 6) ? 12 : 0)), sixteenth * 1.8, 'triangle', 0.5, 0, delay);
+      if (m.snare.includes(s)) noise(0.07, 0.3, delay);
+      if (s % 2 === 1 && m.hat) noise(0.02, 0.06, delay);
+      if (m.kick.includes(s)) tone(90, 0.09, 'sine', 0.7, -50, delay);
+    }
+    nextT += sixteenth; step16++;
+  }
+}
+const SFX = {
+  jump:  () => tone(260, 0.14, 'square', 0.25, 420),
+  shoot: () => tone(900, 0.06, 'square', 0.18, -500),
+  hit:   () => { noise(0.08, 0.3); tone(220, 0.08, 'square', 0.2, -100); },
+  boom:  () => { noise(0.35, 0.6); tone(120, 0.4, 'sawtooth', 0.3, -80); },
+  coin:  () => { tone(988, 0.06, 'square', 0.22); tone(1319, 0.14, 'square', 0.22, 0, 0.06); },
+  hurt:  () => tone(330, 0.3, 'sawtooth', 0.28, -260),
+  die:   () => [392, 330, 262, 196].forEach((f, i) => tone(f, 0.14, 'square', 0.28, 0, i * 0.12)),
+  power: () => tone(300, 0.4, 'square', 0.25, 900),
+  beep:  () => tone(520, 0.12, 'square', 0.3),
+  go:    () => tone(1040, 0.35, 'square', 0.3),
+  win:   () => [523, 659, 784, 1046, 784, 1046].forEach((f, i) => tone(f, 0.16, 'square', 0.28, 0, i * 0.13)),
+  land:  () => { tone(120, 0.1, 'triangle', 0.5, -60); noise(0.06, 0.2); },
+  throw: () => tone(500, 0.12, 'square', 0.2, 400),
+  catch: () => { tone(700, 0.05, 'square', 0.25); tone(500, 0.08, 'square', 0.2, 0, 0.05); },
+  super: () => { tone(200, 0.5, 'sawtooth', 0.3, 1200); noise(0.4, 0.4); },
+  flap:  () => tone(420, 0.07, 'triangle', 0.4, 240),
+  pop:   () => { noise(0.1, 0.4); tone(700, 0.1, 'square', 0.2, -500); },
+  tick:  () => tone(1400, 0.03, 'square', 0.15),
+  swing: () => tone(300, 0.18, 'sawtooth', 0.12, 300),
+  punch: () => { noise(0.07, 0.4); tone(160, 0.1, 'square', 0.3, -80); },
+  clear: () => [523, 659, 784].forEach((f, i) => tone(f, 0.08, 'square', 0.25, 0, i * 0.06)),
+  over:  () => [330, 262, 196, 165].forEach((f, i) => tone(f, 0.22, 'triangle', 0.5, 0, i * 0.18)),
+};
+function sfx(n) { if (SFX[n]) SFX[n](); }
+
+/* ---------- input ---------- */
+const kd = { l:false, r:false, u:false, d:false, b:false, a:false };
+const td = { l:false, r:false, u:false, d:false, b:false, a:false };
+let aEdge = false, bEdge = false, startEdge = false;
+const KEYMAP = { ArrowLeft:'l', KeyA:'l', ArrowRight:'r', KeyD:'r', ArrowDown:'d', KeyS:'d', ArrowUp:'u', KeyW:'u',
+  KeyZ:'a', Space:'a', KeyK:'a', KeyX:'b', ShiftLeft:'b', ShiftRight:'b', KeyJ:'b' };
+addEventListener('keydown', e => {
+  const k = KEYMAP[e.code];
+  if (k) { if (!kd[k] && k === 'a') aEdge = true; if (!kd[k] && k === 'b') bEdge = true; kd[k] = true; e.preventDefault(); audioInit(); return; }
+  if (e.code === 'Enter') { startEdge = true; e.preventDefault(); audioInit(); }
+  else if (e.code === 'KeyM') toggleSound();
+});
+addEventListener('keyup', e => { const k = KEYMAP[e.code]; if (k) { kd[k] = false; e.preventDefault(); } });
+addEventListener('blur', () => { for (const k in kd) kd[k] = false; for (const k in td) td[k] = false; });
+
+const dpad = document.getElementById('dpad');
+function dpadUpdate(e, on) {
+  td.l = td.r = td.u = td.d = false;
+  if (on) {
+    const r = dpad.getBoundingClientRect();
+    const nx = (e.clientX - (r.left + r.width / 2)) / (r.width / 2);
+    const ny = (e.clientY - (r.top + r.height / 2)) / (r.height / 2);
+    if (nx < -0.2) td.l = true; if (nx > 0.2) td.r = true;
+    if (ny < -0.2) td.u = true; if (ny > 0.2) td.d = true;
+    if (Math.max(Math.abs(nx), Math.abs(ny)) < 0.16) td.l = td.r = td.u = td.d = false;
+  }
+  dpad.classList.toggle('on-l', td.l); dpad.classList.toggle('on-r', td.r);
+  dpad.classList.toggle('on-u', td.u); dpad.classList.toggle('on-d', td.d);
+}
+dpad.addEventListener('pointerdown', e => { e.preventDefault(); audioInit(); try { dpad.setPointerCapture(e.pointerId); } catch (_) {} dpadUpdate(e, true); });
+dpad.addEventListener('pointermove', e => { if (e.buttons || e.pressure > 0) dpadUpdate(e, true); });
+['pointerup', 'pointercancel'].forEach(n => dpad.addEventListener(n, e => dpadUpdate(e, false)));
+dpad.addEventListener('contextmenu', e => e.preventDefault());
+document.querySelectorAll('[data-k]').forEach(btn => {
+  const k = btn.dataset.k;
+  btn.addEventListener('pointerdown', e => {
+    e.preventDefault(); audioInit();
+    try { btn.setPointerCapture(e.pointerId); } catch (_) {}
+    btn.classList.add('on');
+    if (k === 'a') { aEdge = true; td.a = true; }
+    else if (k === 'b') { bEdge = true; td.b = true; }
+    else if (k === 'start') startEdge = true;
+    else if (k === 'select') toggleSound();
+  });
+  const up = () => { btn.classList.remove('on'); if (k === 'a') td.a = false; if (k === 'b') td.b = false; };
+  ['pointerup', 'pointercancel', 'lostpointercapture'].forEach(n => btn.addEventListener(n, up));
+  btn.addEventListener('contextmenu', e => e.preventDefault());
+});
+cv.addEventListener('pointerdown', () => { audioInit(); startEdge = true; });
+const sndBtn = document.getElementById('snd');
+function toggleSound() {
+  muted = !muted;
+  if (master) master.gain.value = muted ? 0 : 0.16;
+  sndBtn.textContent = muted ? 'SOUND OFF' : 'SOUND ON';
+}
+const BLANK = Object.freeze({ l:0, r:0, u:0, d:0, a:0, b:0, pa:0, pb:0, start:0 });
+function readInput() {
+  const i = { l:kd.l || td.l, r:kd.r || td.r, u:kd.u || td.u, d:kd.d || td.d, a:kd.a || td.a, b:kd.b || td.b, pa:aEdge, pb:bEdge, start:startEdge };
+  aEdge = false; bEdge = false; startEdge = false;
+  return i;
+}
+/* gamekit.js: shared helpers so a game file is only its rules. Appended after core.js.
+   GAME = kit({id,t1,t2,sub,music,secs,seed,setup(S,att),step(S,dt,inp,att),draw(S),hud(S,mode),bot(S),info(S)})
+   S is the per-run state object (made fresh by setup, so nothing leaks). S.rng = seeded rng, S.T = seconds, S.pops, S.score. */
+const NI = () => ({ l:0, r:0, u:0, d:0, a:0, b:0, pa:0, pb:0, start:0 });
+const MUS = (bpm, root, minor) => ({ bpm, lead:'square', chords:[{ root, tones:minor ? [0, 3, 7] : [0, 4, 7] }, { root:root + 3, tones:[0, 4, 7] }, { root:root + 5, tones:minor ? [0, 3, 7] : [0, 4, 7] }, { root:root - 2, tones:[0, 4, 7] }],
+  arp:[0, 1, 2, 1, 0, 2, 1, 2, 0, 1, 2, 3, 2, 1, 0, 1], bass:[0, 4, 8, 12], snare:[4, 12], kick:[0, 8], hat:true });
+function popup(S, s, x, y, col) { S.pops.push({ s, x, y, col: col || Y, t:0 }); if (S.pops.length > 4) S.pops.shift(); }
+function drawPops(S) { for (const p of S.pops) txt(p.s, clamp(Math.round(p.x), 24, 232), Math.round(p.y - p.t * 12), p.col, 8, 'center'); }
+const hit = (a, b) => a.x < b.x + b.w && b.x < a.x + a.w && a.y < b.y + b.h && b.y < a.y + a.h;
+const dist = (a, b) => Math.hypot(a.x - b.x, a.y - b.y);
+const rint = (S, n) => Math.floor(S.rng() * n);
+const pick = (S, arr) => arr[rint(S, arr.length)];
+/* grid BFS: pass(x,y)->bool, goal(x,y)->bool. returns {dx,dy,d} first step toward nearest goal, or null */
+function bfs(w, h, pass, sx, sy, goal) {
+  const seen = new Uint8Array(w * h), q = [[sx, sy, 0, 0, 0]]; seen[sy * w + sx] = 1;
+  for (let i = 0; i < q.length; i++) {
+    const [x, y, d, fx, fy] = q[i];
+    if (d > 0 && goal(x, y)) return { dx:fx, dy:fy, d };
+    for (const [a, b] of [[1, 0], [-1, 0], [0, 1], [0, -1]]) {
+      const nx = x + a, ny = y + b;
+      if (nx < 0 || ny < 0 || nx >= w || ny >= h || seen[ny * w + nx] || !pass(nx, ny)) continue;
+      seen[ny * w + nx] = 1; q.push([nx, ny, d + 1, d ? fx : a, d ? fy : b]);
+    }
+  }
+  return null;
+}
+/* bot input from a direction vector (dx,dy) */
+function dirInp(i, dx, dy) { if (dx > 0) i.r = 1; if (dx < 0) i.l = 1; if (dy > 0) i.d = 1; if (dy < 0) i.u = 1; return i; }
+/* edge-detect helper: S.edge(inp,'a') true only on the frame a button goes down */
+function mkEdge() { const p = {}; return (inp, k) => { const v = !!inp[k], r = v && !p[k]; p[k] = v; return r; }; }
+function kit(c) {
+  let S = null;
+  const fresh = att => { S = { att:!!att, T:0, score:0, pops:[], rng:mkRng(runSeed(att ? c.seed : null, c.off || 7)), edge:mkEdge() }; c.setup(S, !!att); };
+  return {
+    id:c.id, t1:c.t1, t2:c.t2, sub:c.sub, music:c.music,
+    init(att) { fresh(att); },
+    update(dt, inp, mode) {
+      S.att = mode === 'title'; S.T += dt;
+      if (S.att && S.T > (c.secs || 60)) { fresh(true); return; }
+      for (let i = S.pops.length - 1; i >= 0; i--) { S.pops[i].t += dt; if (S.pops[i].t > 1.1) S.pops.splice(i, 1); }
+      if (S.inv > 0) S.inv -= dt;
+      if (S.parts) for (let i = S.parts.length - 1; i >= 0; i--) { const p = S.parts[i]; p.t -= dt; p.x += p.vx * dt; p.y += p.vy * dt; p.vy += 120 * dt; if (p.t <= 0) S.parts.splice(i, 1); }
+      if (c.step(S, dt, inp, S.att) === 'reset') fresh(true);
+    },
+    render() { c.draw(S); drawParts(S); },
+    hud(mode) { c.hud && c.hud(S, mode); drawPops(S); },
+    info() { return Object.assign({ score:Math.round(S.score), t:+S.T.toFixed(1) }, c.info ? c.info(S) : {}); },
+    bot() { return c.bot(S, NI()) || NI(); },
+  };
+}
+/* finish helper: attract loops, real play ends. */
+function finish(S, msg, bonus) { if (S.att) return 'reset'; endGame(S.score + (bonus || 0), msg); }
+/* ---- added after the 20-game batch: the things most games re-wrote ---- */
+const lerp = (a, b, t) => a + (b - a) * t;
+function bar(x, y, w, h, v, max, col, bg) { rect(x, y, w, h, bg || DG); rect(x, y, Math.round(w * clamp(v / max, 0, 1)), h, col); }
+/* timed on-screen hint: hint(S,'JUMP OVER GAPS',8) in hud(); shows only while S.T < secs in real play */
+function hintS(S, s, secs, y) { if (!S.att && S.T < (secs || 8)) txt(s, 128, y || 214, W, 8, 'center'); }
+/* particles: burst(S,x,y,col,n) in step; drawParts(S) at end of draw(); updated automatically by kit() */
+function burst(S, x, y, col, n) { S.parts = S.parts || []; for (let k = 0; k < (n || 8); k++) { const a = S.rng() * 6.283, v = 20 + S.rng() * 50; S.parts.push({ x, y, vx:Math.cos(a) * v, vy:Math.sin(a) * v - 20, t:0.5 + S.rng() * 0.4, col }); } }
+function drawParts(S) { for (const p of S.parts || []) rect(Math.round(p.x), Math.round(p.y), 2, 2, p.col); }
+/* damage with invulnerability: hurtS(S,1) -> true if it landed. Needs S.hp; uses S.inv (seconds). */
+function hurtS(S, n, fx) { if (S.inv > 0) return false; S.hp -= n || 1; S.inv = 1.2; sfx('hurt'); if (fx) burst(S, fx[0], fx[1], R, 8); return true; }
+
+// KEYS: Left/Right move, Up jump (hold in air to glide once bought), Z/Space place block ahead, X swing, Down+X drop bomb. Touch the ? shop to buy.
+/* ===== MUSHROOM BEDWARS: sky islands, coin spawner, shop block, bridge the void, bomb the rival's bed. ===== */
+const GY19 = 150, SHOP19 = 72, BEDX19 = 232, COST19 = [4, 6, 10];
+const GAME = kit({ id:'g19', t1:'MUSHROOM', t2:'BEDWARS', sub:'BRIDGE. BOMB THE BED. WIN.', seed:191, off:19, secs:50,
+  music:MUS(138, -17, false),
+  setup(S) {
+    S.tile = []; for (let c = 0; c < 16; c++) S.tile.push(c < 6 || c > 11 ? 1 : 0);
+    S.p = { x:36, y:GY19, vx:0, vy:0, g:1, f:1, hp:3, inv:0, bl:0, co:0, gl:0, bomb:0, sw:0 };
+    S.bought = 0; S.coins = []; S.cT = 0.4; S.ham = []; S.bombs = []; S.win = 0; S.flee = 0; S.ba = 0; S.bedOK = 1; S.homeOK = 1; S.dn = 0;
+    S.en = [0, 1, 2].map(i => ({ x:204 + i * 20, d:-1, cd:2 + S.rng() * 2, dead:0, rs:0 }));
+  },
+  step(S, dt, inp, att) {
+    const p = S.p, a = S.edge(inp, 'a'), b = S.edge(inp, 'b');
+    if (S.win) { S.win -= dt; if (S.win <= 0) { sfx('win'); return finish(S, 'BED BLOWN! CLEAR', 400 + p.hp * 50); } }
+    p.inv = Math.max(0, p.inv - dt); p.sw = Math.max(0, p.sw - dt); S.flee = Math.max(0, S.flee - dt);
+    const dir = (inp.r ? 1 : 0) - (inp.l ? 1 : 0); if (dir) p.f = dir;
+    p.vx += (dir * 62 - p.vx) * Math.min(1, 12 * dt);
+    if (inp.u && p.g) { p.vy = -215; p.g = 0; sfx('flap'); }
+    p.vy += 600 * dt; if (p.gl && inp.u && p.vy > 40 && !p.g) p.vy = 40;
+    p.x = clamp(p.x + p.vx * dt, 4, 252); const oy = p.y; p.y += p.vy * dt; p.g = 0;
+    if (p.vy >= 0 && oy <= GY19 + 1 && p.y >= GY19 && S.tile[Math.floor(p.x / 16)]) { p.y = GY19; p.vy = 0; p.g = 1; }
+    if (p.y > 235) { p.x = 36; p.y = 90; p.vy = 0; p.vx = 0; sfx('hurt'); popup(S, 'FELL!', 60, 90, R); }
+    if (a && p.bl > 0) { const c = Math.floor(p.x / 16) + (p.f > 0 ? 1 : -1); if (c >= 0 && c < 16 && !S.tile[c]) { S.tile[c] = 1; p.bl--; sfx('land'); } }
+    if (b) { if (inp.d && p.bomb) { p.bomb = 0; S.bombs.push({ x:p.x, y:p.y - 4, t:1.3 }); sfx('beep'); } else { p.sw = 0.2; sfx('swing'); for (const e of S.en) if (!e.dead && Math.abs(e.x - p.x - p.f * 10) < 14 && Math.abs(p.y - GY19) < 12) { e.dead = 1; e.rs = 3.5; sfx('pop'); } } }
+    /* shop + coins */
+    S.cT -= dt; if (S.cT <= 0) { S.cT = 0.7 + S.rng() * 0.4; S.coins.push({ x:36 + rint(S, 3) * 6, y:100, vy:0 }); }
+    for (const c of S.coins) { c.vy += 400 * dt; c.y = Math.min(GY19 - 3, c.y + c.vy * dt); if (Math.abs(c.x - p.x) < 9 && Math.abs(c.y - p.y) < 14) { c.got = 1; p.co++; S.score += 10; sfx('coin'); } }
+    S.coins = S.coins.filter(c => !c.got && S.coins.length < 14);
+    if (S.bought < 3 && Math.abs(p.x - SHOP19) < 12 && p.co >= COST19[S.bought]) { p.co -= COST19[S.bought]; if (S.bought === 0) p.gl = 1; else if (S.bought === 1) p.bl = 8; else p.bomb = 1; popup(S, ['TAIL GLIDE!', 'WOOD x8', 'BOB-OMB!'][S.bought], SHOP19, 120, Y); S.bought++; sfx('power'); }
+    /* rival koopa-folk */
+    for (const e of S.en) {
+      if (e.dead) { if (S.bedOK && (e.rs -= dt) <= 0) { e.dead = 0; e.x = 230; } continue; }
+      const raider = e === S.en[0] && S.T > 20 && S.tile.slice(6, 12).every(Boolean);
+      e.x += (raider ? -26 : e.d * 14) * dt; if (!raider && (e.x < 198 || e.x > 248)) e.d = -e.d;
+      if (e.x < 14 && S.homeOK) { S.homeOK = 0; sfx('boom'); return finish(S, 'BED BROKEN', 0); }
+      e.cd -= dt; if (e.cd <= 0 && Math.abs(e.x - p.x) < 130 && e.x > p.x - 20) { e.cd = 1.8 + S.rng() * 1.2; S.ham.push({ x:e.x, y:GY19 - 14, vx:-(30 + S.rng() * 40), vy:-130 }); sfx('throw'); }
+      if (Math.abs(e.x - p.x) < 8 && Math.abs(p.y - GY19) < 12 && !p.inv) hurt19(S);
+    }
+    for (const h of S.ham) { h.x += h.vx * dt; h.vy += 400 * dt; h.y += h.vy * dt; if (Math.abs(h.x - p.x) < 7 && Math.abs(h.y - (p.y - 8)) < 9 && !p.inv) { h.y = 999; hurt19(S); } }
+    S.ham = S.ham.filter(h => h.y < 240 && h.x > -10);
+    for (const bm of S.bombs) { bm.t -= dt; bm.y = Math.min(GY19 - 3, bm.y + 60 * dt); if (bm.t <= 0) {
+      sfx('boom'); S.fx = { x:bm.x, y:bm.y, t:0.5 }; for (const e of S.en) if (Math.abs(e.x - bm.x) < 40) { e.dead = 1; e.rs = 99; }
+      if (Math.abs(bm.x - BEDX19) < 28 && S.bedOK) { S.bedOK = 0; S.win = 1.4; popup(S, 'BED DESTROYED!', 128, 70, R); for (const e of S.en) e.rs = 99; }
+      if (Math.abs(bm.x - p.x) < 28 && Math.abs(bm.y - p.y) < 20) hurt19(S, 1); } }
+    S.bombs = S.bombs.filter(x => x.t > 0);
+    if (S.fx) { S.fx.t -= dt; if (S.fx.t <= 0) S.fx = null; }
+  },
+  draw(S) {
+    clear(SKY);
+    for (let i = 0; i < 5; i++) { const x = (i * 71 + Math.floor(S.T * 4)) % 300 - 20, y = 24 + i * 22; rect(x, y, 30, 8, W); rect(x + 6, y - 4, 18, 6, W); }
+    for (let c = 0; c < 16; c++) if (S.tile[c]) { const x = c * 16, edge = c < 6 || c > 11; rect(x, GY19, 16, 5, GR); rect(x, GY19 + 5, 16, edge ? 24 : 16, edge ? BRK : M); rect(x, GY19 + 5, 1, edge ? 24 : 16, T); rect(x, GY19 + 5, 16, 1, T); if (!edge) rect(x + 7, GY19 + 8, 2, 8, T); }
+    rect(32, GY19 - 12, 16, 12, GR); rect(30, GY19 - 14, 20, 4, F);
+    rect(SHOP19 - 8, GY19 - 32, 16, 16, Y); rect(SHOP19 - 8, GY19 - 32, 16, 2, W); txt('?', SHOP19, GY19 - 30, R, 8, 'center');
+    const bed = (x, c, ok) => { if (ok) { rect(x - 7, GY19 - 4, 15, 4, W); fillCircle(x, GY19 - 5, 7, c); rect(x - 7, GY19 - 5, 15, 3, c); px(x - 3, GY19 - 8, W); px(x + 2, GY19 - 7, W); } else rect(x - 6, GY19 - 2, 12, 2, M); };
+    bed(12, R, S.homeOK); bed(BEDX19, PU, S.bedOK); if (S.bedOK && (Math.floor(S.T * 2) & 1)) txt('Z', BEDX19 + 6, GY19 - 24, W, 8);
+    for (const c of S.coins) rect(c.x - 2, c.y - 3, 4, 5, Y);
+    for (const e of S.en) if (!e.dead) { const x = Math.round(e.x); rect(x - 5, GY19 - 12, 10, 8, GR); rect(x - 4, GY19 - 14, 8, 3, F); px(x - 2, GY19 - 15, Y); px(x + 2, GY19 - 15, Y); rect(x - 4, GY19 - 5, 8, 5, L); rect(x - 3, GY19 - 9, 2, 2, K); rect(x + 1, GY19 - 9, 2, 2, K); rect(x - 7, GY19 - 12, 3, 5, W); }
+    for (const h of S.ham) { rect(h.x - 3, h.y - 2, 6, 4, L); rect(h.x - 1, h.y - 5, 2, 8, T); }
+    for (const bm of S.bombs) { fillCircle(bm.x, bm.y - 3, 4, K); if (Math.floor(S.T * 10) & 1) px(bm.x + 2, bm.y - 8, Y); }
+    if (S.fx) fillCircle(S.fx.x, S.fx.y - 4, Math.round(30 * (1 - S.fx.t * 1.6)), S.fx.t > 0.25 ? Y : O);
+    const p = S.p, x = Math.round(p.x), y = Math.round(p.y);
+    if (!(p.inv > 0 && (Math.floor(S.T * 20) & 1))) { rect(x - 4, y - 9, 8, 9, W); rect(x - 4, y - 5, 8, 4, B); fillCircle(x, y - 12, 6, R); rect(x - 6, y - 12, 13, 3, R); px(x - 3, y - 15, W); px(x + 2, y - 14, W); px(x, y - 17, W); rect(x + (p.f > 0 ? 1 : -3), y - 8, 3, 2, K);
+      if (p.gl) rect(x - p.f * 6, y - 4, 3, 2, O); if (p.sw > 0) rect(x + p.f * 5 - (p.f < 0 ? 8 : 0), y - 6, 8, 3, Y); if (p.bl) rect(x - 2, y - 2, 4, 2, BRK); }
+  },
+  hud(S, mode) {
+    const p = S.p; txt('COINS ' + p.co, 4, 4, Y, 8); txt('WOOD ' + p.bl, 4, 14, BRK, 8); txt('HP ' + p.hp, 252, 4, R, 8, 'right'); txt(p.bomb ? 'BOMB READY' : '', 252, 14, W, 8, 'right');
+    if (S.bought < 3) txt('NEXT: ' + ['TAIL', 'WOOD', 'BOMB'][S.bought] + ' ' + COST19[S.bought] + 'c', 128, 4, W, 8, 'center');
+    if (mode === 'play' && S.T < 9) txt('UP JUMP  Z BUILD  X SWING  DN+X BOMB', 128, 208, W, 8, 'center');
+  },
+  bot(S, i) {
+    const p = S.p, sx = Math.floor(S.T * 8) & 1;
+    const go = tx => { if (tx > p.x + 3) i.r = 1; else if (tx < p.x - 3) i.l = 1; };
+    for (const h of S.ham) if (h.x > p.x - 6 && h.x < p.x + 46 && p.g && h.y > GY19 - 30) i.u = 1;
+    if (S.flee > 0) { i.l = 1; if (p.g) i.u = 1; return i; }
+    if (S.bought < 3) { if (p.co >= COST19[S.bought]) go(SHOP19); else { const c = S.coins.find(c => c.y > 100) || { x:44 }; go(c.x); } return i; }
+    const cl = Math.floor(p.x / 16), e = S.en.find(e => !e.dead && Math.abs(e.x - p.x) < 20);
+    if (e) { p.f = e.x > p.x ? 1 : -1; if (e.x > p.x) i.r = 1; else i.l = 1; if (Math.abs(e.x - p.x - p.f * 10) < 14) i.b = sx; return i; }
+    if (!S.tile[cl + 1] && cl < 15 && p.bl) { i.a = sx; i.r = 1; return i; }
+    if (p.bomb && Math.abs(p.x - BEDX19) < 16 && p.g) { i.d = 1; i.b = 1; S.flee = 1.6; return i; }
+    go(p.bomb ? BEDX19 - 8 : 36);
+    return i;
+  },
+  info: S => ({ bought:S.bought, co:S.p.co, hp:S.p.hp, x:Math.round(S.p.x), bed:S.bedOK, win:S.win, en:S.en.filter(e => !e.dead).length }),
+});
+function hurt19(S, f) { const p = S.p; p.inv = 1; p.hp--; sfx('hurt'); p.vy = -120; if (p.hp <= 0) { p.hp = 3; p.x = 36; p.y = 90; p.vx = 0; popup(S, 'RESPAWN', 60, 90, R); } }
+
+/* ---------- shell: title / play / over flow, loop, test hooks ---------- */
+let mode = 'title', overT = 0, result = null, hi = 0, blink = 0, botOn = false, tms = 0;
+const HIK = 'nes6-hi-' + GAME.id;
+try { hi = parseInt(localStorage.getItem(HIK) || '0', 10) || 0; } catch (_) {}
+function endGame(score, msg) {
+  if (mode !== 'play') return;
+  mode = 'over'; overT = 0;
+  const isBest = score > hi;
+  if (isBest) { hi = score; try { localStorage.setItem(HIK, String(hi)); } catch (_) {} }
+  result = { score, msg, isBest };
+  sfx(msg && /CLEAR|WIN|KO!|FINISH/.test(msg) ? 'win' : 'over');
+}
+GAME.init(true);
+function begin() { tms = 0; blink = 0; GAME.init(false); mode = 'play'; result = null; }
+function step(dt) {
+  blink += dt; tms += dt;
+  const raw = readInput();
+  if (mode === 'title') {
+    if (raw.start) { begin(); sfx('beep'); }
+    else GAME.update(dt, GAME.bot ? GAME.bot() : BLANK, 'title');
+  } else if (mode === 'play') {
+    GAME.update(dt, botOn && GAME.bot ? GAME.bot() : raw, 'play');
+  } else {
+    overT += dt;
+    if (raw.start && overT > 1.5) { begin(); sfx('beep'); }
+  }
+}
+function render() {
+  GAME.render(mode);
+  for (let i = 0; i < buf.length; i++) px32[i] = PAL32[buf[i]];
+  ctx.putImageData(img, 0, 0);
+  GAME.hud(mode);
+  const WH = HEX[W], YE = HEX[Y];
+  if (mode === 'title') {
+    panel(16, 12, 224, 96);
+    const s1 = GAME.t1.length <= 6 ? 32 : 24;
+    txt(GAME.t1, 128, s1 === 32 ? 22 : 28, YE, s1, 'center');
+    txt(GAME.t2, 128, 62, WH, GAME.t2.length > 8 ? 16 : 24, 'center');
+    txt(GAME.sub, 128, 90, HEX[CY], 8, 'center');
+    if (Math.floor(blink * 2) & 1) txt('PRESS START', 128, 120, WH, 8, 'center');
+    txt('HI ' + pad5(hi), 128, 134, YE, 8, 'center');
+  } else if (mode === 'over' && result) {
+    panel(32, 52, 192, 100);
+    txt(result.msg || 'GAME OVER', 128, 64, YE, 16, 'center');
+    txt('SCORE ' + pad5(result.score), 128, 94, WH, 8, 'center');
+    if (result.isBest) { if (Math.floor(blink * 3) & 1) txt('NEW BEST!', 128, 110, HEX[E], 8, 'center'); }
+    else txt('BEST ' + pad5(hi), 128, 110, WH, 8, 'center');
+    if (overT > 1.5 && (Math.floor(blink * 2) & 1)) txt('PRESS START', 128, 130, WH, 8, 'center');
+  }
+}
+let last = 0, acc = 0;
+function frame(ts) {
+  if (!last) last = ts;
+  acc += Math.min(0.1, (ts - last) / 1000); last = ts;
+  while (acc >= 1 / 60) { step(1 / 60); acc -= 1 / 60; }
+  render();
+  requestAnimationFrame(frame);
+}
+if (!window.__norun) requestAnimationFrame(frame);
+if (document.fonts && document.fonts.load) document.fonts.load('8px "Press Start 2P"').catch(() => {});
+window.__shell = {
+  start: () => begin(),
+  bot: on => { botOn = !!on; },
+  ff: n => { for (let i = 0; i < n; i++) step(1 / 60); },
+  render,
+  step: () => { window.__now = (window.__now || 0) + 1 / 60; step(1 / 60); },
+  info: () => Object.assign({ mode, result, hi }, GAME.info ? GAME.info() : {}),
+  go: () => { startEdge = true; },
+  mode: () => mode, music: () => GAME.music,
+  get seed() { return activeSeed; }, get seedFromUrl() { return SEED_Q; },
+};
+
+})();
+</script>

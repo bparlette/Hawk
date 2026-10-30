@@ -3554,6 +3554,702 @@
    "note": "Moth's third Maze Wrecker, built on the other AI's shared gamekit (Cherie 2026-10-30): the cabinet lattice maze at night \u2014 same pellets, bricks and three foreman ghosts, but the hammer is a weapon now: swing at a ghost to STUN him for 3 seconds (+50). Tighter 135-second seal. Bot-verified clear, stun probe-verified.",
    "path": "../games/maze-wrecker-night/index.html",
    "thumb": "thumbs/maze-wrecker-night.webp"
+  },
+  {
+   "id": "morph-climb",
+   "title": "Morph Climb",
+   "category": "Retro Arcade",
+   "keys": {
+    "left": "ArrowLeft",
+    "right": "ArrowRight",
+    "up": "ArrowUp",
+    "down": "ArrowDown",
+    "attack": "KeyZ",
+    "jump": "KeyX",
+    "start": "Enter"
+   },
+   "labels": {
+    "attack": "Z \u00b7 JUMP",
+    "jump": "X \u00b7 FIRE"
+   },
+   "extras": [
+    {
+     "label": "MUTE",
+     "key": "KeyM"
+    }
+   ],
+   "autostart": [],
+   "orientation": "portrait",
+   "note": "Metroid x Kid Icarus: grab the form each floor needs \u2014 ball, wings, beam \u2014 and climb before the lava rises. From the five-agent cabinet batch (gamepress gameboy kit), merged to main 2026-10-30.",
+   "path": "../games/morph-climb/index.html",
+   "thumb": "thumbs/morph-climb.webp"
+  },
+  {
+   "id": "dig-up",
+   "title": "Dig Up",
+   "category": "Retro Arcade",
+   "keys": {
+    "left": "ArrowLeft",
+    "right": "ArrowRight",
+    "up": "ArrowUp",
+    "down": "ArrowDown",
+    "attack": "KeyZ",
+    "jump": "KeyX",
+    "start": "Enter"
+   },
+   "labels": {
+    "attack": "Z \u00b7 DIG",
+    "jump": "X \u00b7 PUMP"
+   },
+   "extras": [
+    {
+     "label": "MUTE",
+     "key": "KeyM"
+    }
+   ],
+   "autostart": [],
+   "orientation": "portrait",
+   "note": "Dig Dug x Ice Climber: dig a staircase up the dirt, drop dirt on the critters, keep climbing. From the five-agent cabinet batch (gamepress gameboy kit), merged to main 2026-10-30.",
+   "path": "../games/dig-up/index.html",
+   "thumb": "thumbs/dig-up.webp"
+  },
+  {
+   "id": "gridlock-grand-prix",
+   "title": "Gridlock Grand Prix",
+   "category": "Retro Arcade",
+   "keys": {
+    "left": "ArrowLeft",
+    "right": "ArrowRight",
+    "up": "ArrowUp",
+    "down": "ArrowDown",
+    "attack": "KeyZ",
+    "jump": "KeyX",
+    "start": "Enter"
+   },
+   "labels": {
+    "attack": "Z \u00b7 LANE",
+    "jump": "X \u00b7 NITRO"
+   },
+   "extras": [
+    {
+     "label": "MUTE",
+     "key": "KeyM"
+    }
+   ],
+   "autostart": [],
+   "orientation": "portrait",
+   "note": "Pole Position x Frogger: weave through traffic, chain near misses \u2014 one crash ends the run. From the five-agent cabinet batch (gamepress gameboy kit), merged to main 2026-10-30.",
+   "path": "../games/gridlock-grand-prix/index.html",
+   "thumb": "thumbs/gridlock-grand-prix.webp"
+  },
+  {
+   "id": "hop-fight",
+   "title": "Hop Fight",
+   "category": "Retro Arcade",
+   "keys": {
+    "left": "ArrowLeft",
+    "right": "ArrowRight",
+    "up": "ArrowUp",
+    "down": "ArrowDown",
+    "attack": "KeyZ",
+    "jump": "KeyX",
+    "start": "Enter"
+   },
+   "labels": {
+    "attack": "Z \u00b7 UP-L",
+    "jump": "X \u00b7 UP-R"
+   },
+   "extras": [
+    {
+     "label": "MUTE",
+     "key": "KeyM"
+    }
+   ],
+   "autostart": [],
+   "orientation": "portrait",
+   "note": "Q*bert x Joust: land on cubes to flip them, knock riders off their mounts. From the five-agent cabinet batch (gamepress gameboy kit), merged to main 2026-10-30.",
+   "path": "../games/hop-fight/index.html",
+   "thumb": "thumbs/hop-fight.webp"
+  },
+  {
+   "id": "blade-punch",
+   "title": "Blade Punch",
+   "category": "Retro Arcade",
+   "keys": {
+    "left": "ArrowLeft",
+    "right": "ArrowRight",
+    "up": "ArrowUp",
+    "down": "ArrowDown",
+    "attack": "KeyZ",
+    "jump": "KeyX",
+    "start": "Enter"
+   },
+   "labels": {
+    "attack": "Z \u00b7 JAB",
+    "jump": "X \u00b7 DODGE"
+   },
+   "extras": [
+    {
+     "label": "MUTE",
+     "key": "KeyM"
+    }
+   ],
+   "autostart": [],
+   "orientation": "portrait",
+   "note": "Punch-Out!! x Blade Ball: deflect the blade ball and be the last boxer standing. From the five-agent cabinet batch (gamepress gameboy kit), merged to main 2026-10-30.",
+   "path": "../games/blade-punch/index.html",
+   "thumb": "thumbs/blade-punch.webp"
+  },
+  {
+   "id": "balatro-grand-prix",
+   "title": "Balatro Grand Prix",
+   "category": "Retro Arcade",
+   "keys": {
+    "left": "ArrowLeft",
+    "right": "ArrowRight",
+    "up": "ArrowUp",
+    "down": "ArrowDown",
+    "attack": "KeyZ",
+    "jump": "KeyX",
+    "start": "Enter"
+   },
+   "labels": {
+    "attack": "Z \u00b7 DRIFT",
+    "jump": "X \u00b7 PLAY CARD"
+   },
+   "extras": [
+    {
+     "label": "MUTE",
+     "key": "KeyM"
+    }
+   ],
+   "autostart": [],
+   "orientation": "portrait",
+   "note": "Mario Kart x Balatro: collect cards at speed, play poker hands to boost. From the five-agent cabinet batch (gamepress gameboy kit), merged to main 2026-10-30.",
+   "path": "../games/balatro-grand-prix/index.html",
+   "thumb": "thumbs/balatro-grand-prix.webp"
+  },
+  {
+   "id": "buckshot-saloon",
+   "title": "Buckshot Saloon",
+   "category": "Retro Arcade",
+   "keys": {
+    "left": "ArrowLeft",
+    "right": "ArrowRight",
+    "up": "ArrowUp",
+    "down": "ArrowDown",
+    "attack": "KeyZ",
+    "jump": "KeyX",
+    "start": "Enter"
+   },
+   "labels": {
+    "attack": "Z \u00b7 SHOOT",
+    "jump": "X \u00b7 SELF"
+   },
+   "extras": [
+    {
+     "label": "MUTE",
+     "key": "KeyM"
+    }
+   ],
+   "autostart": [],
+   "orientation": "portrait",
+   "note": "Sunset Riders x Buckshot Roulette: one gun, one table \u2014 out-draw the saloon. From the five-agent cabinet batch (gamepress gameboy kit), merged to main 2026-10-30.",
+   "path": "../games/buckshot-saloon/index.html",
+   "thumb": "thumbs/buckshot-saloon.webp"
+  },
+  {
+   "id": "kong-calamity",
+   "title": "Kong Calamity",
+   "category": "Retro Arcade",
+   "keys": {
+    "left": "ArrowLeft",
+    "right": "ArrowRight",
+    "up": "ArrowUp",
+    "down": "ArrowDown",
+    "attack": "KeyZ",
+    "jump": "KeyX",
+    "start": "Enter"
+   },
+   "labels": {
+    "attack": "Z \u00b7 JUMP",
+    "jump": "X \u00b7 ROLL"
+   },
+   "extras": [
+    {
+     "label": "MUTE",
+     "key": "KeyM"
+    }
+   ],
+   "autostart": [],
+   "orientation": "portrait",
+   "note": "Donkey Kong Country x Natural Disaster Survival: climb, roll, and cling to the post when disaster hits. From the five-agent cabinet batch (gamepress gameboy kit), merged to main 2026-10-30.",
+   "path": "../games/kong-calamity/index.html",
+   "thumb": "thumbs/kong-calamity.webp"
+  },
+  {
+   "id": "lethal-castlevania",
+   "title": "Lethal Castlevania",
+   "category": "Retro Arcade",
+   "keys": {
+    "left": "ArrowLeft",
+    "right": "ArrowRight",
+    "up": "ArrowUp",
+    "down": "ArrowDown",
+    "attack": "KeyZ",
+    "jump": "KeyX",
+    "start": "Enter"
+   },
+   "labels": {
+    "attack": "Z \u00b7 WHIP",
+    "jump": "X \u00b7 SCAN"
+   },
+   "extras": [
+    {
+     "label": "MUTE",
+     "key": "KeyM"
+    }
+   ],
+   "autostart": [],
+   "orientation": "portrait",
+   "note": "Castlevania: Symphony of the Night x Lethal Company: grab relics in the dark, fear what hunts the halls. From the five-agent cabinet batch (gamepress gameboy kit), merged to main 2026-10-30.",
+   "path": "../games/lethal-castlevania/index.html",
+   "thumb": "thumbs/lethal-castlevania.webp"
+  },
+  {
+   "id": "vampire-metroid",
+   "title": "Vampire Metroid",
+   "category": "Retro Arcade",
+   "keys": {
+    "left": "ArrowLeft",
+    "right": "ArrowRight",
+    "up": "ArrowUp",
+    "down": "ArrowDown",
+    "attack": "KeyZ",
+    "jump": "KeyX",
+    "start": "Enter"
+   },
+   "labels": {
+    "attack": "Z \u00b7 JUMP",
+    "jump": "X \u00b7 DASH"
+   },
+   "extras": [
+    {
+     "label": "MUTE",
+     "key": "KeyM"
+    }
+   ],
+   "autostart": [],
+   "orientation": "portrait",
+   "note": "Super Metroid x Vampire Survivors: survive the swarm, level up, melt the hive. From the five-agent cabinet batch (gamepress gameboy kit), merged to main 2026-10-30.",
+   "path": "../games/vampire-metroid/index.html",
+   "thumb": "thumbs/vampire-metroid.webp"
+  },
+  {
+   "id": "tower-of-yoshi",
+   "title": "Tower of Yoshi",
+   "category": "Retro Arcade",
+   "keys": {
+    "left": "ArrowLeft",
+    "right": "ArrowRight",
+    "up": "ArrowUp",
+    "down": "ArrowDown",
+    "attack": "KeyZ",
+    "jump": "KeyX",
+    "start": "Enter"
+   },
+   "labels": {
+    "attack": "Z \u00b7 JUMP",
+    "jump": "X \u00b7 TONGUE"
+   },
+   "extras": [
+    {
+     "label": "MUTE",
+     "key": "KeyM"
+    }
+   ],
+   "autostart": [],
+   "orientation": "portrait",
+   "note": "Super Mario World x Tower of Hell: climb the tower, flutter the gaps, dodge the rising lava. From the five-agent cabinet batch (gamepress gameboy kit), merged to main 2026-10-30.",
+   "path": "../games/tower-of-yoshi/index.html",
+   "thumb": "thumbs/tower-of-yoshi.webp"
+  },
+  {
+   "id": "mushroom-bedwars",
+   "title": "Mushroom BedWars",
+   "category": "Retro Arcade",
+   "keys": {
+    "left": "ArrowLeft",
+    "right": "ArrowRight",
+    "up": "ArrowUp",
+    "down": "ArrowDown",
+    "attack": "KeyZ",
+    "jump": "KeyX",
+    "start": "Enter"
+   },
+   "labels": {
+    "attack": "Z \u00b7 BUILD",
+    "jump": "X \u00b7 SWING"
+   },
+   "extras": [
+    {
+     "label": "MUTE",
+     "key": "KeyM"
+    }
+   ],
+   "autostart": [],
+   "orientation": "portrait",
+   "note": "Super Mario Bros 3 x BedWars: bridge out, bomb their bed, win the war. From the five-agent cabinet batch (gamepress gameboy kit), merged to main 2026-10-30.",
+   "path": "../games/mushroom-bedwars/index.html",
+   "thumb": "thumbs/mushroom-bedwars.webp"
+  },
+  {
+   "id": "contra-helldivers",
+   "title": "Contra Helldivers",
+   "category": "Retro Arcade",
+   "keys": {
+    "left": "ArrowLeft",
+    "right": "ArrowRight",
+    "up": "ArrowUp",
+    "down": "ArrowDown",
+    "attack": "KeyZ",
+    "jump": "KeyX",
+    "start": "Enter"
+   },
+   "labels": {
+    "attack": "Z \u00b7 FIRE",
+    "jump": "X \u00b7 STRATAGEM"
+   },
+   "extras": [
+    {
+     "label": "MUTE",
+     "key": "KeyM"
+    }
+   ],
+   "autostart": [],
+   "orientation": "portrait",
+   "note": "Contra x Helldivers 2: call in the bomb with stratagems, kill the hive. From the five-agent cabinet batch (gamepress gameboy kit), merged to main 2026-10-30.",
+   "path": "../games/contra-helldivers/index.html",
+   "thumb": "thumbs/contra-helldivers.webp"
+  },
+  {
+   "id": "hyrule-doors",
+   "title": "Hyrule DOORS",
+   "category": "Retro Arcade",
+   "keys": {
+    "left": "ArrowLeft",
+    "right": "ArrowRight",
+    "up": "ArrowUp",
+    "down": "ArrowDown",
+    "attack": "KeyZ",
+    "jump": "KeyX",
+    "start": "Enter"
+   },
+   "labels": {
+    "attack": "Z \u00b7 OPEN",
+    "jump": "X \u00b7 HIDE"
+   },
+   "extras": [
+    {
+     "label": "MUTE",
+     "key": "KeyM"
+    }
+   ],
+   "autostart": [],
+   "orientation": "portrait",
+   "note": "A Link to the Past x DOORS: open the doors, hide when the Rush comes. From the five-agent cabinet batch (gamepress gameboy kit), merged to main 2026-10-30.",
+   "path": "../games/hyrule-doors/index.html",
+   "thumb": "thumbs/hyrule-doors.webp"
+  },
+  {
+   "id": "onett-mart-sim",
+   "title": "Onett Mart Sim",
+   "category": "Retro Arcade",
+   "keys": {
+    "left": "ArrowLeft",
+    "right": "ArrowRight",
+    "up": "ArrowUp",
+    "down": "ArrowDown",
+    "attack": "KeyZ",
+    "jump": "KeyX",
+    "start": "Enter"
+   },
+   "labels": {
+    "attack": "Z \u00b7 STOCK",
+    "jump": "X \u00b7 SCAN"
+   },
+   "extras": [
+    {
+     "label": "MUTE",
+     "key": "KeyM"
+    }
+   ],
+   "autostart": [],
+   "orientation": "portrait",
+   "note": "EarthBound x Supermarket Simulator: stock shelves, scan shoppers, bat the thieves. From the five-agent cabinet batch (gamepress gameboy kit), merged to main 2026-10-30.",
+   "path": "../games/onett-mart-sim/index.html",
+   "thumb": "thumbs/onett-mart-sim.webp"
+  },
+  {
+   "id": "fisch-of-mana",
+   "title": "Fisch of Mana",
+   "category": "Retro Arcade",
+   "keys": {
+    "left": "ArrowLeft",
+    "right": "ArrowRight",
+    "up": "ArrowUp",
+    "down": "ArrowDown",
+    "attack": "KeyZ",
+    "jump": "KeyX",
+    "start": "Enter"
+   },
+   "labels": {
+    "attack": "Z \u00b7 CAST",
+    "jump": "X \u00b7 SLASH"
+   },
+   "extras": [
+    {
+     "label": "MUTE",
+     "key": "KeyM"
+    }
+   ],
+   "autostart": [],
+   "orientation": "portrait",
+   "note": "Secret of Mana x FISCH: cast, reel, and land the kraken. From the five-agent cabinet batch (gamepress gameboy kit), merged to main 2026-10-30.",
+   "path": "../games/fisch-of-mana/index.html",
+   "thumb": "thumbs/fisch-of-mana.webp"
+  },
+  {
+   "id": "liars-tavern",
+   "title": "Liars Tavern",
+   "category": "Retro Arcade",
+   "keys": {
+    "left": "ArrowLeft",
+    "right": "ArrowRight",
+    "up": "ArrowUp",
+    "down": "ArrowDown",
+    "attack": "KeyZ",
+    "jump": "KeyX",
+    "start": "Enter"
+   },
+   "labels": {
+    "attack": "Z \u00b7 CALL",
+    "jump": "X \u00b7 LIAR"
+   },
+   "extras": [
+    {
+     "label": "MUTE",
+     "key": "KeyM"
+    }
+   ],
+   "autostart": [],
+   "orientation": "portrait",
+   "note": "Chrono Trigger x Liars Bar: bluff, call liar, drink up. From the five-agent cabinet batch (gamepress gameboy kit), merged to main 2026-10-30.",
+   "path": "../games/liars-tavern/index.html",
+   "thumb": "thumbs/liars-tavern.webp"
+  },
+  {
+   "id": "spooksnap-64",
+   "title": "SpookSnap 64",
+   "category": "Retro Arcade",
+   "keys": {
+    "left": "ArrowLeft",
+    "right": "ArrowRight",
+    "up": "ArrowUp",
+    "down": "ArrowDown",
+    "attack": "KeyZ",
+    "jump": "KeyX",
+    "start": "Enter"
+   },
+   "labels": {
+    "attack": "Z \u00b7 SNAP",
+    "jump": "X \u00b7 FLASH"
+   },
+   "extras": [
+    {
+     "label": "MUTE",
+     "key": "KeyM"
+    }
+   ],
+   "autostart": [],
+   "orientation": "portrait",
+   "note": "Pokemon Snap x Content Warning: film the frights, go viral. From the five-agent cabinet batch (gamepress gameboy kit), merged to main 2026-10-30.",
+   "path": "../games/spooksnap-64/index.html",
+   "thumb": "thumbs/spooksnap-64.webp"
+  },
+  {
+   "id": "pet-quest-99",
+   "title": "Pet Quest 99",
+   "category": "Retro Arcade",
+   "keys": {
+    "left": "ArrowLeft",
+    "right": "ArrowRight",
+    "up": "ArrowUp",
+    "down": "ArrowDown",
+    "attack": "KeyZ",
+    "jump": "KeyX",
+    "start": "Enter"
+   },
+   "labels": {
+    "attack": "Z \u00b7 HATCH",
+    "jump": "X \u00b7 FIGHT"
+   },
+   "extras": [
+    {
+     "label": "MUTE",
+     "key": "KeyM"
+    }
+   ],
+   "autostart": [],
+   "orientation": "portrait",
+   "note": "Dragon Quest x Pet Simulator 99: hatch pets, break rocks, go huge. From the five-agent cabinet batch (gamepress gameboy kit), merged to main 2026-10-30.",
+   "path": "../games/pet-quest-99/index.html",
+   "thumb": "thumbs/pet-quest-99.webp"
+  },
+  {
+   "id": "deep-rock-dig-dug",
+   "title": "Deep Rock Dig Dug",
+   "category": "Retro Arcade",
+   "keys": {
+    "left": "ArrowLeft",
+    "right": "ArrowRight",
+    "up": "ArrowUp",
+    "down": "ArrowDown",
+    "attack": "KeyZ",
+    "jump": "KeyX",
+    "start": "Enter"
+   },
+   "labels": {
+    "attack": "Z \u00b7 DIG",
+    "jump": "X \u00b7 BLAST"
+   },
+   "extras": [
+    {
+     "label": "MUTE",
+     "key": "KeyM"
+    }
+   ],
+   "autostart": [],
+   "orientation": "portrait",
+   "note": "Dig Dug x Deep Rock Galactic: mine gold, blast the swarm, survive. From the five-agent cabinet batch (gamepress gameboy kit), merged to main 2026-10-30.",
+   "path": "../games/deep-rock-dig-dug/index.html",
+   "thumb": "thumbs/deep-rock-dig-dug.webp"
+  },
+  {
+   "id": "four-swords-murder",
+   "title": "Four Swords Murder",
+   "category": "Retro Arcade",
+   "keys": {
+    "left": "ArrowLeft",
+    "right": "ArrowRight",
+    "up": "ArrowUp",
+    "down": "ArrowDown",
+    "attack": "KeyZ",
+    "jump": "KeyX",
+    "start": "Enter"
+   },
+   "labels": {
+    "attack": "Z \u00b7 STAB",
+    "jump": "X \u00b7 DASH"
+   },
+   "extras": [
+    {
+     "label": "MUTE",
+     "key": "KeyM"
+    }
+   ],
+   "autostart": [],
+   "orientation": "portrait",
+   "note": "Four Swords x Murder Mystery 2: one arrow, one killer \u2014 find them first. From the five-agent cabinet batch (gamepress gameboy kit), merged to main 2026-10-30.",
+   "path": "../games/four-swords-murder/index.html",
+   "thumb": "thumbs/four-swords-murder.webp"
+  },
+  {
+   "id": "dress-to-quest",
+   "title": "Dress to Quest",
+   "category": "Retro Arcade",
+   "keys": {
+    "left": "ArrowLeft",
+    "right": "ArrowRight",
+    "up": "ArrowUp",
+    "down": "ArrowDown",
+    "attack": "KeyZ",
+    "jump": "KeyX",
+    "start": "Enter"
+   },
+   "labels": {
+    "attack": "Z \u00b7 PICK",
+    "jump": "X \u00b7 STRUT"
+   },
+   "extras": [
+    {
+     "label": "MUTE",
+     "key": "KeyM"
+    }
+   ],
+   "autostart": [],
+   "orientation": "portrait",
+   "note": "Final Fantasy VI x Dress to Impress: pick the look, wow the judges. From the five-agent cabinet batch (gamepress gameboy kit), merged to main 2026-10-30.",
+   "path": "../games/dress-to-quest/index.html",
+   "thumb": "thumbs/dress-to-quest.webp"
+  },
+  {
+   "id": "river-city-cartel",
+   "title": "River City Cartel",
+   "category": "Retro Arcade",
+   "keys": {
+    "left": "ArrowLeft",
+    "right": "ArrowRight",
+    "up": "ArrowUp",
+    "down": "ArrowDown",
+    "attack": "KeyZ",
+    "jump": "KeyX",
+    "start": "Enter"
+   },
+   "labels": {
+    "attack": "Z \u00b7 PUNCH",
+    "jump": "X \u00b7 DEAL"
+   },
+   "extras": [
+    {
+     "label": "MUTE",
+     "key": "KeyM"
+    }
+   ],
+   "autostart": [],
+   "orientation": "portrait",
+   "note": "River City Ransom x crime sim: brew, deal, brawl your way up. From the five-agent cabinet batch (gamepress gameboy kit), merged to main 2026-10-30.",
+   "path": "../games/river-city-cartel/index.html",
+   "thumb": "thumbs/river-city-cartel.webp"
+  },
+  {
+   "id": "pal-harvest",
+   "title": "Pal Harvest",
+   "category": "Retro Arcade",
+   "keys": {
+    "left": "ArrowLeft",
+    "right": "ArrowRight",
+    "up": "ArrowUp",
+    "down": "ArrowDown",
+    "attack": "KeyZ",
+    "jump": "KeyX",
+    "start": "Enter"
+   },
+   "labels": {
+    "attack": "Z \u00b7 TEND",
+    "jump": "X \u00b7 THROW"
+   },
+   "extras": [
+    {
+     "label": "MUTE",
+     "key": "KeyM"
+    }
+   ],
+   "autostart": [],
+   "orientation": "portrait",
+   "note": "Harvest Moon x Palworld: catch pals, farm, craft. From the five-agent cabinet batch (gamepress gameboy kit), merged to main 2026-10-30.",
+   "path": "../games/pal-harvest/index.html",
+   "thumb": "thumbs/pal-harvest.webp"
   }
  ]
 }
