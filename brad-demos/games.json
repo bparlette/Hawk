@@ -4250,6 +4250,209 @@
    "note": "Harvest Moon x Palworld: catch pals, farm, craft. From the five-agent cabinet batch (gamepress gameboy kit), merged to main 2026-10-30.",
    "path": "../games/pal-harvest/index.html",
    "thumb": "thumbs/pal-harvest.webp"
+  },
+  {
+   "id": "vampire-metroid-hd",
+   "title": "Vampire Metroid HD",
+   "category": "Retro Arcade",
+   "keys": {
+    "left": "ArrowLeft",
+    "right": "ArrowRight",
+    "up": "ArrowUp",
+    "down": "ArrowDown",
+    "attack": "KeyZ",
+    "jump": "KeyX",
+    "start": "Enter"
+   },
+   "labels": {
+    "attack": "Z \u00b7 JUMP",
+    "jump": "X \u00b7 DASH"
+   },
+   "extras": [
+    {
+     "label": "MUTE",
+     "key": "KeyM"
+    }
+   ],
+   "autostart": [],
+   "orientation": "portrait",
+   "note": "Painted HD edition of the hive shooter: same rules and bot, painted sprites, baked room and a real lighting pass. Tier 2 of the Vampire Metroid editions (gamepress tier system, merged to main 2026-10-30).",
+   "path": "../games/g17-hd/index.html",
+   "thumb": "thumbs/vampire-metroid-hd.webp"
+  },
+  {
+   "id": "vampire-metroid-hd-plus",
+   "title": "Vampire Metroid HD+",
+   "category": "Retro Arcade",
+   "keys": {
+    "left": "ArrowLeft",
+    "right": "ArrowRight",
+    "up": "ArrowUp",
+    "down": "ArrowDown",
+    "attack": "KeyZ",
+    "jump": "KeyX",
+    "start": "Enter"
+   },
+   "labels": {
+    "attack": "Z \u00b7 JUMP",
+    "jump": "X \u00b7 DASH"
+   },
+   "extras": [
+    {
+     "label": "MUTE",
+     "key": "KeyM"
+    }
+   ],
+   "autostart": [],
+   "orientation": "portrait",
+   "note": "HD+ game-feel edition: hit flash, squash, knockback, floating damage numbers, camera lean and a boss-death push-in. Same rules as the pixel edition \u2014 parity-checked.",
+   "path": "../games/g17b-hd/index.html",
+   "thumb": "thumbs/vampire-metroid-hd-plus.webp"
+  },
+  {
+   "id": "vampire-metroid-hd-art",
+   "title": "Vampire Metroid HD Art",
+   "category": "Retro Arcade",
+   "keys": {
+    "left": "ArrowLeft",
+    "right": "ArrowRight",
+    "up": "ArrowUp",
+    "down": "ArrowDown",
+    "attack": "KeyZ",
+    "jump": "KeyX",
+    "start": "Enter"
+   },
+   "labels": {
+    "attack": "Z \u00b7 JUMP",
+    "jump": "X \u00b7 DASH"
+   },
+   "extras": [
+    {
+     "label": "MUTE",
+     "key": "KeyM"
+    }
+   ],
+   "autostart": [],
+   "orientation": "portrait",
+   "note": "HD Art edition: hand-drawn SVG characters on a skeletal rig, WebGL bloom and grade pass. Same rules \u2014 parity-checked.",
+   "path": "../games/g17c-art/index.html",
+   "thumb": "thumbs/vampire-metroid-hd-art.webp"
+  },
+  {
+   "id": "vampire-metroid-hd-lux",
+   "title": "Vampire Metroid HD Lux",
+   "category": "Retro Arcade",
+   "keys": {
+    "left": "ArrowLeft",
+    "right": "ArrowRight",
+    "up": "ArrowUp",
+    "down": "ArrowDown",
+    "attack": "KeyZ",
+    "jump": "KeyX",
+    "start": "Enter"
+   },
+   "labels": {
+    "attack": "Z \u00b7 JUMP",
+    "jump": "X \u00b7 DASH"
+   },
+   "extras": [
+    {
+     "label": "MUTE",
+     "key": "KeyM"
+    }
+   ],
+   "autostart": [],
+   "orientation": "portrait",
+   "note": "HD Lux edition: SVG environment, shader lights, haze and embers over the HD Art rig. Same rules \u2014 parity-checked.",
+   "path": "../games/g17d-lux/index.html",
+   "thumb": "thumbs/vampire-metroid-hd-lux.webp"
+  },
+  {
+   "id": "vampire-metroid-hd-close",
+   "title": "Vampire Metroid HD Close",
+   "category": "Retro Arcade",
+   "keys": {
+    "left": "ArrowLeft",
+    "right": "ArrowRight",
+    "up": "ArrowUp",
+    "down": "ArrowDown",
+    "attack": "KeyZ",
+    "jump": "KeyX",
+    "start": "Enter"
+   },
+   "labels": {
+    "attack": "Z \u00b7 JUMP",
+    "jump": "X \u00b7 DASH"
+   },
+   "extras": [
+    {
+     "label": "MUTE",
+     "key": "KeyM"
+    }
+   ],
+   "autostart": [],
+   "orientation": "portrait",
+   "note": "HD Close edition: tall full-screen layout, follow camera, bigger characters and a 360-degree analog touch pad. Intentionally differs: no pause, analog movement.",
+   "path": "../games/g17e-close/index.html",
+   "thumb": "thumbs/vampire-metroid-hd-close.webp"
+  },
+  {
+   "id": "vampire-metroid-hd-world",
+   "title": "Vampire Metroid HD World",
+   "category": "Retro Arcade",
+   "keys": {
+    "left": "ArrowLeft",
+    "right": "ArrowRight",
+    "up": "ArrowUp",
+    "down": "ArrowDown",
+    "attack": "KeyZ",
+    "jump": "KeyX",
+    "start": "Enter"
+   },
+   "labels": {
+    "attack": "Z \u00b7 JUMP",
+    "jump": "X \u00b7 DASH"
+   },
+   "extras": [
+    {
+     "label": "MUTE",
+     "key": "KeyM"
+    }
+   ],
+   "autostart": [],
+   "orientation": "portrait",
+   "note": "HD World edition: painted-style SVG rig characters (hero, three zombie types, elite, queen boss) in a dressed lab world. Same rules \u2014 parity-checked. Painted raster art drops in via the gamepress painted-art brief.",
+   "path": "../games/g17f-world/index.html",
+   "thumb": "thumbs/vampire-metroid-hd-world.webp"
+  },
+  {
+   "id": "vampire-metroid-3d",
+   "title": "Vampire Metroid 3D",
+   "category": "Retro Arcade",
+   "keys": {
+    "left": "ArrowLeft",
+    "right": "ArrowRight",
+    "up": "ArrowUp",
+    "down": "ArrowDown",
+    "attack": "KeyZ",
+    "jump": "KeyX",
+    "start": "Enter"
+   },
+   "labels": {
+    "attack": "Z \u00b7 JUMP",
+    "jump": "X \u00b7 DASH"
+   },
+   "extras": [
+    {
+     "label": "MUTE",
+     "key": "KeyM"
+    }
+   ],
+   "autostart": [],
+   "orientation": "portrait",
+   "note": "3D spike: the same Vampire Metroid sim rendered in Three.js. Experimental tier from the gamepress tier system.",
+   "path": "../games/g17g-3d/index.html",
+   "thumb": "thumbs/vampire-metroid-3d.webp"
   }
  ]
 }
