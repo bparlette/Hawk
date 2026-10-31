@@ -4509,6 +4509,258 @@
    "orientation": "portrait",
    "note": "Street Fighter II: Ryu vs Guile, one round, full SF2 move lists on the PRIG per-frame 8-bit rig \u2014 Hadoken, Shoryuken, Tatsumaki; Guile's Sonic Boom and Flash Kick (add ?char=guile to play as Guile). Six-button layout on keyboard (U I O punches, J K L kicks); Z/X are the medium punch/kick shortcuts and the touch buttons. Move test 48/48. From the other AI's cabinet batch (gamepress g37), landed to main 2026-10-31.",
    "path": "../games/ryu-vs-guile/index.html"
+  },
+  {
+   "id": "ryu-vs-guile-16bit",
+   "title": "Ryu vs Guile 16-bit",
+   "category": "Retro Arcade",
+   "keys": {
+    "left": "ArrowLeft",
+    "right": "ArrowRight",
+    "up": "ArrowUp",
+    "down": "ArrowDown",
+    "attack": "KeyZ",
+    "jump": "KeyX",
+    "start": "Enter"
+   },
+   "labels": {
+    "attack": "Z \u00b7 PUNCH",
+    "jump": "X \u00b7 KICK"
+   },
+   "extras": [
+    {
+     "label": "MUTE",
+     "key": "KeyM"
+    }
+   ],
+   "autostart": [],
+   "orientation": "portrait",
+   "note": "Street Fighter II in 16-bit dress: Ryu vs Guile with HD vector fighters and PIXPASS lighting, same full SF2 move lists as the 8-bit edition \u2014 Hadoken, Shoryuken, Tatsumaki; Sonic Boom and Flash Kick (add ?char=guile to play as Guile). Six-button layout on keyboard (U I O punches, J K L kicks); Z/X are the medium punch/kick shortcuts and the touch buttons. From the other AI's cabinet batch (gamepress g37p), landed to main 2026-10-31.",
+   "path": "../games/ryu-vs-guile-16bit/index.html"
+  },
+  {
+   "id": "floppy-race",
+   "title": "Floppy Race",
+   "category": "Retro Arcade",
+   "keys": {
+    "left": "ArrowLeft",
+    "right": "ArrowRight",
+    "up": "ArrowUp",
+    "down": "ArrowDown",
+    "attack": "KeyZ",
+    "jump": "KeyX",
+    "start": "Enter"
+   },
+   "labels": {
+    "attack": "Z \u00b7 TAP A",
+    "jump": "X \u00b7 TAP B"
+   },
+   "extras": [
+    {
+     "label": "MUTE",
+     "key": "KeyM"
+    }
+   ],
+   "autostart": [],
+   "orientation": "portrait",
+   "note": "Four-lane ragdoll sprint with the Ryu/Guile rigs: tap Z then X alternately to run, Up jumps hurdles and mud \u2014 trip and you flop face-first. Beat three CPU runners over 100 m. From the other AI's cabinet batch (gamepress g38), landed to main 2026-10-31.",
+   "path": "../games/floppy-race/index.html"
+  },
+  {
+   "id": "training-dojo",
+   "title": "Training Dojo",
+   "category": "Retro Arcade",
+   "keys": {
+    "left": "ArrowLeft",
+    "right": "ArrowRight",
+    "up": "ArrowUp",
+    "down": "ArrowDown",
+    "attack": "KeyZ",
+    "jump": "KeyX",
+    "start": "Enter"
+   },
+   "labels": {
+    "attack": "Z \u00b7 PUNCH",
+    "jump": "X \u00b7 KICK"
+   },
+   "extras": [
+    {
+     "label": "MUTE",
+     "key": "KeyM"
+    }
+   ],
+   "autostart": [],
+   "orientation": "portrait",
+   "note": "Fighter training room: land 15 hits on a standing dummy with the full Ryu move list \u2014 fireball 236+P, dragon punch 623+P, hurricane kick 214+K. Same moves as Ryu vs Guile. From the other AI's cabinet batch (gamepress g39), landed to main 2026-10-31.",
+   "path": "../games/training-dojo/index.html"
+  },
+  {
+   "id": "tournament-ladder",
+   "title": "Tournament Ladder",
+   "category": "Retro Arcade",
+   "keys": {
+    "left": "ArrowLeft",
+    "right": "ArrowRight",
+    "up": "ArrowUp",
+    "down": "ArrowDown",
+    "attack": "KeyZ",
+    "jump": "KeyX",
+    "start": "Enter"
+   },
+   "labels": {
+    "attack": "Z \u00b7 PUNCH",
+    "jump": "X \u00b7 KICK"
+   },
+   "extras": [
+    {
+     "label": "MUTE",
+     "key": "KeyM"
+    }
+   ],
+   "autostart": [],
+   "orientation": "portrait",
+   "note": "Three fights in a row against stronger CPUs with the full Ryu move list \u2014 and health does not refill between fights. From the other AI's cabinet batch (gamepress g40), landed to main 2026-10-31.",
+   "path": "../games/tournament-ladder/index.html"
+  },
+  {
+   "id": "boss-rush",
+   "title": "Boss Rush",
+   "category": "Retro Arcade",
+   "keys": {
+    "left": "ArrowLeft",
+    "right": "ArrowRight",
+    "up": "ArrowUp",
+    "down": "ArrowDown",
+    "attack": "KeyZ",
+    "jump": "KeyX",
+    "start": "Enter"
+   },
+   "labels": {
+    "attack": "Z \u00b7 PUNCH",
+    "jump": "X \u00b7 KICK"
+   },
+   "extras": [
+    {
+     "label": "MUTE",
+     "key": "KeyM"
+    }
+   ],
+   "autostart": [],
+   "orientation": "portrait",
+   "note": "One armoured boss who takes only 45% damage \u2014 and his AI gets harder when he is hurt. Full Ryu move list. From the other AI's cabinet batch (gamepress g41), landed to main 2026-10-31.",
+   "path": "../games/boss-rush/index.html"
+  },
+  {
+   "id": "street-brawl",
+   "title": "Street Brawl",
+   "category": "Retro Arcade",
+   "keys": {
+    "left": "ArrowLeft",
+    "right": "ArrowRight",
+    "up": "ArrowUp",
+    "down": "ArrowDown",
+    "attack": "KeyZ",
+    "jump": "KeyX",
+    "start": "Enter"
+   },
+   "labels": {
+    "attack": "Z \u00b7 PUNCH",
+    "jump": "X \u00b7 KICK"
+   },
+   "extras": [
+    {
+     "label": "MUTE",
+     "key": "KeyM"
+    }
+   ],
+   "autostart": [],
+   "orientation": "portrait",
+   "note": "Four-direction beat-'em-up on the fighter rig: arrows walk, Z punches, X kicks. Clear three waves and the boss. From the other AI's cabinet batch (gamepress g42), landed to main 2026-10-31.",
+   "path": "../games/street-brawl/index.html"
+  },
+  {
+   "id": "sumo-shove",
+   "title": "Sumo Shove",
+   "category": "Retro Arcade",
+   "keys": {
+    "left": "ArrowLeft",
+    "right": "ArrowRight",
+    "up": "ArrowUp",
+    "down": "ArrowDown",
+    "attack": "KeyZ",
+    "jump": "KeyX",
+    "start": "Enter"
+   },
+   "labels": {
+    "attack": "Z \u00b7 TAP A",
+    "jump": "X \u00b7 TAP B"
+   },
+   "extras": [
+    {
+     "label": "MUTE",
+     "key": "KeyM"
+    }
+   ],
+   "autostart": [],
+   "orientation": "portrait",
+   "note": "Sumo on the fighter rig: tap Z then X alternately to shove \u2014 first one out of the ring loses. From the other AI's cabinet batch (gamepress g43), landed to main 2026-10-31.",
+   "path": "../games/sumo-shove/index.html"
+  },
+  {
+   "id": "fireball-dodgeball",
+   "title": "Fireball Dodgeball",
+   "category": "Retro Arcade",
+   "keys": {
+    "left": "ArrowLeft",
+    "right": "ArrowRight",
+    "up": "ArrowUp",
+    "down": "ArrowDown",
+    "attack": "KeyZ",
+    "jump": "KeyX",
+    "start": "Enter"
+   },
+   "labels": {
+    "attack": "Z \u00b7 LOW",
+    "jump": "X \u00b7 HIGH"
+   },
+   "extras": [
+    {
+     "label": "MUTE",
+     "key": "KeyM"
+    }
+   ],
+   "autostart": [],
+   "orientation": "portrait",
+   "note": "Dodgeball with fireballs: Z throws low, X throws high; jump to dodge low balls, duck to dodge high ones. Five hearts each. From the other AI's cabinet batch (gamepress g44), landed to main 2026-10-31.",
+   "path": "../games/fireball-dodgeball/index.html"
+  },
+  {
+   "id": "grapple-duel",
+   "title": "Grapple Duel",
+   "category": "Retro Arcade",
+   "keys": {
+    "left": "ArrowLeft",
+    "right": "ArrowRight",
+    "up": "ArrowUp",
+    "down": "ArrowDown",
+    "attack": "KeyZ",
+    "jump": "KeyX",
+    "start": "Enter"
+   },
+   "labels": {
+    "attack": "Z \u00b7 STRIKE",
+    "jump": "X \u00b7 GUARD"
+   },
+   "extras": [
+    {
+     "label": "MUTE",
+     "key": "KeyM"
+    }
+   ],
+   "autostart": [],
+   "orientation": "portrait",
+   "note": "Rock-paper-scissors grappling: Z strike, X guard, Up throw. Strike beats throw, throw beats guard, guard beats strike \u2014 and the CPU repeats itself half the time, so read it. From the other AI's cabinet batch (gamepress g45), landed to main 2026-10-31.",
+   "path": "../games/grapple-duel/index.html"
   }
  ]
 }
