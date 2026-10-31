@@ -4453,6 +4453,62 @@
    "note": "3D spike: the same Vampire Metroid sim rendered in Three.js. Experimental tier from the gamepress tier system.",
    "path": "../games/g17g-3d/index.html",
    "thumb": "thumbs/vampire-metroid-3d.webp"
+  },
+  {
+   "id": "street-round",
+   "title": "Street Round",
+   "category": "Retro Arcade",
+   "keys": {
+    "left": "ArrowLeft",
+    "right": "ArrowRight",
+    "up": "ArrowUp",
+    "down": "ArrowDown",
+    "attack": "KeyZ",
+    "jump": "KeyX",
+    "start": "Enter"
+   },
+   "labels": {
+    "attack": "Z \u00b7 PUNCH",
+    "jump": "X \u00b7 KICK"
+   },
+   "extras": [
+    {
+     "label": "MUTE",
+     "key": "KeyM"
+    }
+   ],
+   "autostart": [],
+   "orientation": "portrait",
+   "note": "Street Fighter x one round: arcade 1v1 on the PRIG per-frame native 8-bit rig \u2014 left/right move, down blocks, up jumps, Z punches, X kicks. KO the CPU or lead on health at 45 seconds. From the other AI's cabinet batch (gamepress g36), landed to main 2026-10-31.",
+   "path": "../games/street-round/index.html"
+  },
+  {
+   "id": "ryu-vs-guile",
+   "title": "Ryu vs Guile",
+   "category": "Retro Arcade",
+   "keys": {
+    "left": "ArrowLeft",
+    "right": "ArrowRight",
+    "up": "ArrowUp",
+    "down": "ArrowDown",
+    "attack": "KeyZ",
+    "jump": "KeyX",
+    "start": "Enter"
+   },
+   "labels": {
+    "attack": "Z \u00b7 PUNCH",
+    "jump": "X \u00b7 KICK"
+   },
+   "extras": [
+    {
+     "label": "MUTE",
+     "key": "KeyM"
+    }
+   ],
+   "autostart": [],
+   "orientation": "portrait",
+   "note": "Street Fighter II: Ryu vs Guile, one round, full SF2 move lists on the PRIG per-frame 8-bit rig \u2014 Hadoken, Shoryuken, Tatsumaki; Guile's Sonic Boom and Flash Kick (add ?char=guile to play as Guile). Six-button layout on keyboard (U I O punches, J K L kicks); Z/X are the medium punch/kick shortcuts and the touch buttons. Move test 48/48. From the other AI's cabinet batch (gamepress g37), landed to main 2026-10-31.",
+   "path": "../games/ryu-vs-guile/index.html"
   }
  ]
 }
