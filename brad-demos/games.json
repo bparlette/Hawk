@@ -4479,8 +4479,9 @@
    ],
    "autostart": [],
    "orientation": "portrait",
-   "note": "Street Fighter x one round: arcade 1v1 on the PRIG per-frame native 8-bit rig \u2014 left/right move, down blocks, up jumps, Z punches, X kicks. KO the CPU or lead on health at 45 seconds. From the other AI's cabinet batch (gamepress g36), landed to main 2026-10-31.",
-   "path": "../games/street-round/index.html"
+   "note": "One-round arcade 1v1 on the cabinet's native per-frame 8-bit rig \u2014 left/right move, down blocks, up jumps, Z punches, X kicks. KO the CPU or lead on health at 45 seconds.",
+   "path": "../games/street-round/index.html",
+   "thumb": "thumbs/street-round.webp"
   },
   {
    "id": "ryu-vs-guile",
@@ -4507,8 +4508,9 @@
    ],
    "autostart": [],
    "orientation": "portrait",
-   "note": "Street Fighter II: Ryu vs Guile, one round, full SF2 move lists on the PRIG per-frame 8-bit rig \u2014 Hadoken, Shoryuken, Tatsumaki; Guile's Sonic Boom and Flash Kick (add ?char=guile to play as Guile). Six-button layout on keyboard (U I O punches, J K L kicks); Z/X are the medium punch/kick shortcuts and the touch buttons. Move test 48/48. From the other AI's cabinet batch (gamepress g37), landed to main 2026-10-31.",
-   "path": "../games/ryu-vs-guile/index.html"
+   "note": "One-round arcade fight with a full special-move list on the native 8-bit rig: fireball (236+P), rising punch (623+P), spin kick (214+K), plus the second fighter's charge moves (hold back, then forward + P; hold down, then up + K). Add ?char=guile to play the other fighter. Six-button keyboard layout (U I O punches, J K L kicks); Z/X are the medium punch/kick shortcuts and the touch buttons. Move test 48/48.",
+   "path": "../games/ryu-vs-guile/index.html",
+   "thumb": "thumbs/ryu-vs-guile.webp"
   },
   {
    "id": "ryu-vs-guile-16bit",
@@ -4535,8 +4537,9 @@
    ],
    "autostart": [],
    "orientation": "portrait",
-   "note": "Street Fighter II in 16-bit dress: Ryu vs Guile with HD vector fighters and PIXPASS lighting, same full SF2 move lists as the 8-bit edition \u2014 Hadoken, Shoryuken, Tatsumaki; Sonic Boom and Flash Kick (add ?char=guile to play as Guile). Six-button layout on keyboard (U I O punches, J K L kicks); Z/X are the medium punch/kick shortcuts and the touch buttons. From the other AI's cabinet batch (gamepress g37p), landed to main 2026-10-31.",
-   "path": "../games/ryu-vs-guile-16bit/index.html"
+   "note": "The same fight in a 16-bit look: vector-drawn fighters with shaded limbs, then a posterised 256x224 pixel pass. Same moves and controls as the 8-bit edition (add ?char=guile to play the other fighter). Six-button keyboard layout (U I O punches, J K L kicks); Z/X are the medium punch/kick shortcuts and the touch buttons.",
+   "path": "../games/ryu-vs-guile-16bit/index.html",
+   "thumb": "thumbs/ryu-vs-guile-16bit.webp"
   },
   {
    "id": "floppy-race",
@@ -4563,8 +4566,9 @@
    ],
    "autostart": [],
    "orientation": "portrait",
-   "note": "Four-lane ragdoll sprint with the Ryu/Guile rigs: tap Z then X alternately to run, Up jumps hurdles and mud \u2014 trip and you flop face-first. Beat three CPU runners over 100 m. From the other AI's cabinet batch (gamepress g38), landed to main 2026-10-31.",
-   "path": "../games/floppy-race/index.html"
+   "note": "Four-lane ragdoll sprint: tap Z then X alternately to run, Up jumps hurdles and mud \u2014 trip and you flop face-first. Beat three CPU runners over 100 m.",
+   "path": "../games/floppy-race/index.html",
+   "thumb": "thumbs/floppy-race.webp"
   },
   {
    "id": "training-dojo",
@@ -4591,8 +4595,9 @@
    ],
    "autostart": [],
    "orientation": "portrait",
-   "note": "Fighter training room: land 15 hits on a standing dummy with the full Ryu move list \u2014 fireball 236+P, dragon punch 623+P, hurricane kick 214+K. Same moves as Ryu vs Guile. From the other AI's cabinet batch (gamepress g39), landed to main 2026-10-31.",
-   "path": "../games/training-dojo/index.html"
+   "note": "Fighter training room: deal 150 damage to a standing dummy within 40 seconds using the full move list \u2014 fireball 236+P, rising punch 623+P, spin kick 214+K. Same moves as the main fight.",
+   "path": "../games/training-dojo/index.html",
+   "thumb": "thumbs/training-dojo.webp"
   },
   {
    "id": "tournament-ladder",
@@ -4619,8 +4624,9 @@
    ],
    "autostart": [],
    "orientation": "portrait",
-   "note": "Three fights in a row against stronger CPUs with the full Ryu move list \u2014 and health does not refill between fights. From the other AI's cabinet batch (gamepress g40), landed to main 2026-10-31.",
-   "path": "../games/tournament-ladder/index.html"
+   "note": "Three fights in a row against stronger CPUs, and health does not refill between fights.",
+   "path": "../games/tournament-ladder/index.html",
+   "thumb": "thumbs/tournament-ladder.webp"
   },
   {
    "id": "boss-rush",
@@ -4647,8 +4653,9 @@
    ],
    "autostart": [],
    "orientation": "portrait",
-   "note": "One armoured boss who takes only 45% damage \u2014 and his AI gets harder when he is hurt. Full Ryu move list. From the other AI's cabinet batch (gamepress g41), landed to main 2026-10-31.",
-   "path": "../games/boss-rush/index.html"
+   "note": "One armoured boss who takes 75% damage \u2014 and his AI gets harder when he is hurt. Full move list.",
+   "path": "../games/boss-rush/index.html",
+   "thumb": "thumbs/boss-rush.webp"
   },
   {
    "id": "street-brawl",
@@ -4675,8 +4682,9 @@
    ],
    "autostart": [],
    "orientation": "portrait",
-   "note": "Four-direction beat-'em-up on the fighter rig: arrows walk, Z punches, X kicks. Clear three waves and the boss. From the other AI's cabinet batch (gamepress g42), landed to main 2026-10-31.",
-   "path": "../games/street-brawl/index.html"
+   "note": "Four-direction beat-'em-up on the fighter rig: arrows walk, Z punches, X kicks. Clear three waves and the boss.",
+   "path": "../games/street-brawl/index.html",
+   "thumb": "thumbs/street-brawl.webp"
   },
   {
    "id": "sumo-shove",
@@ -4703,8 +4711,9 @@
    ],
    "autostart": [],
    "orientation": "portrait",
-   "note": "Sumo on the fighter rig: tap Z then X alternately to shove \u2014 first one out of the ring loses. From the other AI's cabinet batch (gamepress g43), landed to main 2026-10-31.",
-   "path": "../games/sumo-shove/index.html"
+   "note": "Sumo on the fighter rig: tap Z then X alternately to shove \u2014 first one out of the ring loses.",
+   "path": "../games/sumo-shove/index.html",
+   "thumb": "thumbs/sumo-shove.webp"
   },
   {
    "id": "fireball-dodgeball",
@@ -4731,8 +4740,9 @@
    ],
    "autostart": [],
    "orientation": "portrait",
-   "note": "Dodgeball with fireballs: Z throws low, X throws high; jump to dodge low balls, duck to dodge high ones. Five hearts each. From the other AI's cabinet batch (gamepress g44), landed to main 2026-10-31.",
-   "path": "../games/fireball-dodgeball/index.html"
+   "note": "Dodgeball with fireballs: Z throws low, X throws high; jump to dodge low balls, duck to dodge high ones. Five hearts each.",
+   "path": "../games/fireball-dodgeball/index.html",
+   "thumb": "thumbs/fireball-dodgeball.webp"
   },
   {
    "id": "grapple-duel",
@@ -4759,8 +4769,38 @@
    ],
    "autostart": [],
    "orientation": "portrait",
-   "note": "Rock-paper-scissors grappling: Z strike, X guard, Up throw. Strike beats throw, throw beats guard, guard beats strike \u2014 and the CPU repeats itself half the time, so read it. From the other AI's cabinet batch (gamepress g45), landed to main 2026-10-31.",
-   "path": "../games/grapple-duel/index.html"
+   "note": "Rock-paper-scissors grappling: Z strike, X guard, Up throw. Strike beats throw, throw beats guard, guard beats strike \u2014 and the CPU repeats itself half the time, so read it.",
+   "path": "../games/grapple-duel/index.html",
+   "thumb": "thumbs/grapple-duel.webp"
+  },
+  {
+   "id": "locker-room-last-stand",
+   "title": "Locker Room Last Stand",
+   "category": "Retro Arcade",
+   "keys": {
+    "left": "ArrowLeft",
+    "right": "ArrowRight",
+    "up": "ArrowUp",
+    "down": "ArrowDown",
+    "attack": "KeyZ",
+    "jump": "KeyX",
+    "start": "Enter"
+   },
+   "labels": {
+    "attack": "Z \u00b7 FIRE",
+    "jump": "X \u00b7 FIRE"
+   },
+   "extras": [
+    {
+     "label": "MUTE",
+     "key": "KeyM"
+    }
+   ],
+   "autostart": [],
+   "orientation": "portrait",
+   "note": "Hold the locker room against the dead for 45 seconds. Left/right move, Z or X fires. Every frame is drawn live by the cabinet's native 8-bit rig \u2014 no sprite assets.",
+   "path": "../games/locker-room-last-stand/index.html",
+   "thumb": "thumbs/locker-room-last-stand.webp"
   }
  ]
 }
