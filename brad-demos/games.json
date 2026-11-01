@@ -4859,6 +4859,64 @@
    "note": "Pick the plane, tank or archer at the start (left/right, then Z); the computer plays the other two. Loop-the-loop dodges (plane: press Z and X together), shoot red waves for POW, and beat the boss bomber.",
    "path": "../games/skyfire-42/index.html",
    "thumb": "thumbs/skyfire-42.webp"
+  },
+  {
+   "id": "skyfire-42-hi8",
+   "title": "Skyfire 42: High-End 8-Bit",
+   "category": "Retro Arcade",
+   "keys": {
+    "left": "ArrowLeft",
+    "right": "ArrowRight",
+    "up": "ArrowUp",
+    "down": "ArrowDown",
+    "attack": "KeyZ",
+    "jump": "KeyX",
+    "start": "Enter"
+   },
+   "labels": {
+    "attack": "Z \u00b7 FIRE",
+    "jump": "X \u00b7 ALT FIRE"
+   },
+   "extras": [
+    {
+     "label": "MUTE",
+     "key": "KeyM"
+    }
+   ],
+   "autostart": [],
+   "orientation": "portrait",
+   "note": "The same Skyfire 42 mission with high-end shaded 8-bit sprites: pick plane, tank or archer (left/right, then Z) and the computer plays the other two. Plane: Z+X together loops. Beat the boss bomber.",
+   "path": "../games/skyfire-42-hi8/index.html",
+   "thumb": "thumbs/skyfire-42-hi8.webp"
+  },
+  {
+   "id": "skyfire-42-painted",
+   "title": "Skyfire 42: Painted",
+   "category": "Retro Arcade",
+   "keys": {
+    "left": "ArrowLeft",
+    "right": "ArrowRight",
+    "up": "ArrowUp",
+    "down": "ArrowDown",
+    "attack": "KeyZ",
+    "jump": "KeyX",
+    "start": "Enter"
+   },
+   "labels": {
+    "attack": "Z \u00b7 FIRE",
+    "jump": "X \u00b7 ALT FIRE"
+   },
+   "extras": [
+    {
+     "label": "MUTE",
+     "key": "KeyM"
+    }
+   ],
+   "autostart": [],
+   "orientation": "portrait",
+   "note": "The same Skyfire 42 mission as a painted HD world: sea, islands, harbours, clouds and lit explosions. Pick plane, tank or archer (left/right, then Z); the computer plays the other two. Plane: Z+X together loops.",
+   "path": "../games/skyfire-42-painted/index.html",
+   "thumb": "thumbs/skyfire-42-painted.webp"
   }
  ]
 }
