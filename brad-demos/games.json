@@ -5034,6 +5034,22 @@
    "orientation": "any",
    "note": "Sand and polish the steel wedge until it is a mirror.",
    "path": "../games/mirror-wedge/index.html"
+  },
+  {
+   "id": "run-the-atlas",
+   "title": "Run the Atlas",
+   "category": "Originals",
+   "keys": {
+    "jump": "Space",
+    "start": "Enter"
+   },
+   "labels": {
+    "jump": "JUMP"
+   },
+   "autostart": [],
+   "orientation": "landscape",
+   "note": "One-button auto-runner through five legendary level maps \u2014 Mario 1-1, Green Hill, Cut Man, Castlevania, DuckTales' Moon. Run right, jump the gaps, grab each world's relic, warp to the next map. Full source in games/run-the-atlas/.",
+   "path": "../games/run-the-atlas/index.html"
   }
  ]
 }
