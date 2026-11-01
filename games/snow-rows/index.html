@@ -1,0 +1,863 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<title>Snow Rows — a quiet snow-blowing moment</title>
+<style>
+  * { margin:0; padding:0; box-sizing:border-box; }
+  html, body {
+    width:100%; height:100%; overflow:hidden; background:#0a1028;
+    font-family: Georgia, 'Times New Roman', serif;
+    -webkit-user-select:none; user-select:none;
+    -webkit-tap-highlight-color: transparent;
+    touch-action:none; overscroll-behavior:none;
+  }
+  #game { position:fixed; inset:0; display:block; touch-action:none; }
+
+  /* ---------- top HUD ---------- */
+  #hud {
+    position:fixed; top:0; left:0; right:0; z-index:5;
+    display:flex; align-items:flex-start; justify-content:space-between;
+    padding: calc(10px + env(safe-area-inset-top)) 14px 0 14px;
+    pointer-events:none;
+  }
+  #meterBox {
+    background: rgba(8, 12, 34, 0.45);
+    border:1px solid rgba(180, 200, 255, 0.18);
+    border-radius: 12px;
+    padding: 8px 12px 9px 12px;
+    backdrop-filter: blur(3px);
+    min-width: 168px;
+  }
+  #meterLabel {
+    color:#dfe9ff; font-size:13px; letter-spacing:0.22em;
+    text-transform:uppercase; opacity:0.95;
+    display:flex; justify-content:space-between; gap:14px;
+  }
+  #meterPct { color:#ffd9a0; font-weight:bold; letter-spacing:0.08em; }
+  #meterTrack {
+    margin-top:6px; height:6px; border-radius:3px;
+    background: rgba(200, 215, 255, 0.16);
+    overflow:hidden;
+  }
+  #meterFill {
+    height:100%; width:0%;
+    background: linear-gradient(90deg, #9fc2ff, #ffd9a0);
+    border-radius:3px;
+    transition: width 0.35s ease;
+    box-shadow: 0 0 8px rgba(255, 217, 160, 0.55);
+  }
+  #muteBtn {
+    pointer-events:auto; cursor:pointer;
+    width:44px; height:44px; border-radius:50%;
+    border:1px solid rgba(180, 200, 255, 0.25);
+    background: rgba(8, 12, 34, 0.5);
+    color:#eaf1ff; font-size:20px; line-height:1;
+    display:flex; align-items:center; justify-content:center;
+    backdrop-filter: blur(3px);
+  }
+  #muteBtn:active { transform: scale(0.94); }
+
+  /* ---------- overlays ---------- */
+  .overlay {
+    position:fixed; inset:0; z-index:10;
+    display:flex; flex-direction:column; align-items:center; justify-content:center;
+    text-align:center; padding:24px;
+    background: radial-gradient(ellipse at 50% 42%, rgba(10, 16, 44, 0.18) 0%, rgba(6, 9, 28, 0.62) 78%);
+    transition: opacity 0.9s ease;
+  }
+  .overlay.hidden { opacity:0; pointer-events:none; }
+  .overlay h1 {
+    color:#f2f6ff; font-weight:normal;
+    font-size: clamp(42px, 9vw, 76px);
+    letter-spacing: 0.14em;
+    text-shadow: 0 0 26px rgba(150, 180, 255, 0.65), 0 2px 14px rgba(0,0,0,0.6);
+  }
+  .overlay .sub {
+    margin-top:10px; color:#ffd9a0; font-style:italic;
+    font-size: clamp(15px, 3.4vw, 20px); letter-spacing:0.04em;
+    text-shadow: 0 1px 8px rgba(0,0,0,0.8);
+  }
+  .overlay .how {
+    margin-top:26px; color:#cfe0ff;
+    font-size: clamp(15px, 3.6vw, 19px); letter-spacing:0.06em;
+    background: rgba(8, 12, 34, 0.55);
+    border:1px solid rgba(180, 200, 255, 0.22);
+    padding: 10px 20px; border-radius: 999px;
+  }
+  .overlay .tap {
+    margin-top:34px; color:#9fb6e8; font-size:13px;
+    letter-spacing:0.3em; text-transform:uppercase;
+    animation: breathe 2.6s ease-in-out infinite;
+  }
+  @keyframes breathe { 0%,100% { opacity:0.45; } 50% { opacity:1; } }
+  #doneOverlay h1 { color:#ffe9c4; text-shadow: 0 0 30px rgba(255, 190, 110, 0.8), 0 2px 14px rgba(0,0,0,0.6); }
+  #replayBtn {
+    margin-top:30px; pointer-events:auto; cursor:pointer;
+    font-family: Georgia, serif; font-size:17px; letter-spacing:0.14em;
+    color:#0d1430; background: linear-gradient(180deg, #ffe2b0, #ffc98a);
+    border:none; border-radius:999px; padding: 13px 34px;
+    box-shadow: 0 4px 22px rgba(255, 190, 110, 0.4);
+  }
+  #replayBtn:active { transform: scale(0.96); }
+</style>
+</head>
+<body>
+<canvas id="game"></canvas>
+
+<div id="hud">
+  <div id="meterBox">
+    <div id="meterLabel"><span>Driveway cleared</span><span id="meterPct">0%</span></div>
+    <div id="meterTrack"><div id="meterFill"></div></div>
+  </div>
+  <button id="muteBtn" aria-label="Toggle sound">🔊</button>
+</div>
+
+<div class="overlay" id="titleOverlay">
+  <h1>SNOW ROWS</h1>
+  <div class="sub">a quiet driveway, just before dawn</div>
+  <div class="how">Drag to steer the blower</div>
+  <div class="tap">Tap to begin</div>
+</div>
+
+<div class="overlay hidden" id="doneOverlay">
+  <h1>ALL CLEAR</h1>
+  <div class="sub">the path is open — coffee's on</div>
+  <button id="replayBtn">↻ &nbsp;Snow it again</button>
+</div>
+
+<script>
+'use strict';
+/* ============================================================
+   SNOW ROWS — ASMR snow blowing at blue hour.
+   One finger drags, the blower follows, rows of dark wet
+   asphalt appear under the lights. Snow keeps falling, and
+   cleared ground slowly re-dusts — but cleared is cleared.
+   All graphics canvas-drawn, all sound synthesized.
+   ============================================================ */
+
+const canvas = document.getElementById('game');
+const ctx = canvas.getContext('2d');
+const meterFill = document.getElementById('meterFill');
+const meterPct  = document.getElementById('meterPct');
+const titleOverlay = document.getElementById('titleOverlay');
+const doneOverlay  = document.getElementById('doneOverlay');
+const muteBtn = document.getElementById('muteBtn');
+
+let W = 0, H = 0, DPR = 1;
+
+/* ---------------- layout (recomputed on resize) ---------------- */
+const L = {
+  skyH: 0, houseY: 0, houseH: 0,
+  dwX: 0, dwY: 0, dwW: 0, dwH: 0,   // driveway rect
+  streetY: 0,
+  porchX: 0, porchY: 0,             // porch light position
+  lampX: 0, lampY: 0                // streetlight position
+};
+function computeLayout() {
+  L.skyH = Math.round(H * 0.085);
+  L.houseY = L.skyH;
+  L.houseH = Math.round(H * 0.155);
+  const top = L.houseY + L.houseH;
+  L.streetY = Math.round(H * 0.885);
+  const dwTop = top + Math.round(H * 0.012);
+  const dwBot = L.streetY - Math.round(H * 0.006);
+  L.dwY = dwTop; L.dwH = dwBot - dwTop;
+  if (W < H) {           // portrait phone
+    L.dwX = Math.round(W * 0.155); L.dwW = Math.round(W * 0.70);
+  } else {               // landscape / desktop
+    L.dwX = Math.round(W * 0.315); L.dwW = Math.round(W * 0.385);
+  }
+  L.porchX = L.dwX + L.dwW + Math.round(W * 0.045);
+  L.porchY = L.houseY + Math.round(L.houseH * 0.42);
+  L.lampX = Math.round(W * 0.085);
+  L.lampY = L.streetY + Math.round(H * 0.035);
+}
+
+/* ---------------- snow coverage grid ---------------- */
+const CELL = 8;
+let cols = 0, rows = 0;
+let cover = null;      // Float32Array 0..1 (visual snow depth)
+let scored = null;     // Uint8Array — cleared once = counts forever
+let cellShade = null;  // per-cell brightness variation
+let scoredList = [];   // indices of scored cells (for re-dusting)
+let scoredCount = 0, totalCells = 0;
+let gridCanvas = null, gridCtx = null, gridImg = null;
+
+function initGrid() {
+  cols = Math.max(8, Math.ceil(L.dwW / CELL));
+  rows = Math.max(8, Math.ceil(L.dwH / CELL));
+  cover = new Float32Array(cols * rows).fill(1);
+  scored = new Uint8Array(cols * rows);
+  cellShade = new Float32Array(cols * rows);
+  for (let gy = 0; gy < rows; gy++) {
+    for (let gx = 0; gx < cols; gx++) {
+      // gentle low-frequency drift + a whisper of grain — smooth snow, not static
+      cellShade[gy * cols + gx] =
+        0.965 + Math.random() * 0.045 +
+        0.02 * Math.sin(gx * 0.33) * Math.cos(gy * 0.27) -
+        0.035 * (gy / rows);
+    }
+  }
+  scoredList = []; scoredCount = 0; totalCells = cols * rows;
+  gridCanvas = document.createElement('canvas');
+  gridCanvas.width = cols; gridCanvas.height = rows;
+  gridCtx = gridCanvas.getContext('2d');
+  gridImg = gridCtx.createImageData(cols, rows);
+}
+function updateGridImage() {
+  const d = gridImg.data;
+  for (let i = 0, n = cols * rows; i < n; i++) {
+    const c = cover[i], s = cellShade[i];
+    const o = i * 4;
+    // slushy blue-white; thins toward transparent as it clears
+    d[o]     = (196 + 26 * c) * s;
+    d[o + 1] = (210 + 24 * c) * s;
+    d[o + 2] = (238 + 14 * c) * s;
+    d[o + 3] = Math.pow(c, 0.78) * 255;
+  }
+  gridCtx.putImageData(gridImg, 0, 0);
+}
+function cellAt(wx, wy) {
+  const cx = Math.floor((wx - L.dwX) / CELL);
+  const cy = Math.floor((wy - L.dwY) / CELL);
+  if (cx < 0 || cy < 0 || cx >= cols || cy >= rows) return -1;
+  return cy * cols + cx;
+}
+
+/* ---------------- static scenery (redrawn on resize) ---------------- */
+let decor = null;
+function buildDecor() {
+  decor = document.createElement('canvas');
+  decor.width = Math.max(2, Math.round(W * DPR));
+  decor.height = Math.max(2, Math.round(H * DPR));
+  const g = decor.getContext('2d');
+  g.scale(DPR, DPR);
+
+  // lawn / yard snow base — deep blue shadowed snow
+  const yard = g.createLinearGradient(0, L.houseY, 0, H);
+  yard.addColorStop(0, '#26355f');
+  yard.addColorStop(0.5, '#2b3d68');
+  yard.addColorStop(1, '#31456f');
+  g.fillStyle = yard;
+  g.fillRect(0, L.houseY, W, H - L.houseY);
+
+  // lawn sparkle dusting
+  g.fillStyle = 'rgba(220,232,255,0.20)';
+  for (let i = 0; i < 340; i++) {
+    const x = Math.random() * W, y = L.houseY + Math.random() * (H - L.houseY);
+    if (x > L.dwX - 6 && x < L.dwX + L.dwW + 6 && y > L.dwY - 4 && y < L.dwY + L.dwH + 4) continue;
+    g.fillRect(x, y, 1.4, 1.4);
+  }
+  // soft drifts against the driveway edges
+  g.fillStyle = 'rgba(190,205,240,0.16)';
+  g.fillRect(L.dwX - 9, L.dwY, 9, L.dwH);
+  g.fillRect(L.dwX + L.dwW, L.dwY, 9, L.dwH);
+
+  // ---- driveway: dark wet asphalt (revealed as snow clears) ----
+  const asph = g.createLinearGradient(0, L.dwY, 0, L.dwY + L.dwH);
+  asph.addColorStop(0, '#232936');
+  asph.addColorStop(0.5, '#272e3d');
+  asph.addColorStop(1, '#20242f');
+  g.fillStyle = asph;
+  g.fillRect(L.dwX, L.dwY, L.dwW, L.dwH);
+  // asphalt speckle
+  for (let i = 0; i < 900; i++) {
+    const x = L.dwX + Math.random() * L.dwW, y = L.dwY + Math.random() * L.dwH;
+    g.fillStyle = Math.random() < 0.5 ? 'rgba(255,255,255,0.045)' : 'rgba(0,0,0,0.20)';
+    g.fillRect(x, y, 1.6, 1.6);
+  }
+  // expansion seams
+  g.strokeStyle = 'rgba(0,0,0,0.35)'; g.lineWidth = 2;
+  const seams = 4;
+  for (let i = 1; i < seams; i++) {
+    const y = L.dwY + (L.dwH / seams) * i;
+    g.beginPath(); g.moveTo(L.dwX, y); g.lineTo(L.dwX + L.dwW, y); g.stroke();
+  }
+  g.beginPath(); g.moveTo(L.dwX + L.dwW / 2, L.dwY); g.lineTo(L.dwX + L.dwW / 2, L.dwY + L.dwH); g.stroke();
+  // driveway border
+  g.strokeStyle = 'rgba(160,180,220,0.20)'; g.lineWidth = 2;
+  g.strokeRect(L.dwX, L.dwY, L.dwW, L.dwH);
+
+  // ---- street at the bottom ----
+  const st = g.createLinearGradient(0, L.streetY, 0, H);
+  st.addColorStop(0, '#1d2230'); st.addColorStop(1, '#171b26');
+  g.fillStyle = st;
+  g.fillRect(0, L.streetY, W, H - L.streetY);
+  g.fillStyle = 'rgba(200,214,245,0.5)';
+  g.fillRect(0, L.streetY, W, 3); // snowy curb line
+  g.strokeStyle = 'rgba(240,220,150,0.16)'; g.lineWidth = 3; g.setLineDash([26, 30]);
+  g.beginPath(); g.moveTo(0, L.streetY + (H - L.streetY) * 0.62); g.lineTo(W, L.streetY + (H - L.streetY) * 0.62); g.stroke();
+  g.setLineDash([]);
+
+  // ---- house silhouette across the top ----
+  g.fillStyle = '#131a30';
+  g.fillRect(0, L.houseY, W, L.houseH);
+  // roofline against the sky
+  g.fillStyle = '#0d1327';
+  g.beginPath();
+  g.moveTo(0, L.houseY + 6); g.lineTo(W * 0.5, L.houseY - Math.round(H * 0.022)); g.lineTo(W, L.houseY + 6);
+  g.lineTo(W, L.houseY + 12); g.lineTo(0, L.houseY + 12); g.closePath(); g.fill();
+  // snow on the roof edge
+  g.fillStyle = 'rgba(205,220,250,0.75)';
+  g.beginPath();
+  g.moveTo(0, L.houseY + 4); g.lineTo(W * 0.5, L.houseY - Math.round(H * 0.022)); g.lineTo(W, L.houseY + 4);
+  g.lineTo(W, L.houseY + 7); g.lineTo(W * 0.5, L.houseY - Math.round(H * 0.022) + 3); g.lineTo(0, L.houseY + 7);
+  g.closePath(); g.fill();
+  // garage door (behind the driveway)
+  const gdW = L.dwW * 0.94, gdX = L.dwX + (L.dwW - gdW) / 2;
+  const gdY = L.houseY + L.houseH * 0.16, gdH = L.houseH * 0.84;
+  g.fillStyle = '#1b2440';
+  g.fillRect(gdX, gdY, gdW, gdH);
+  g.strokeStyle = 'rgba(150,170,220,0.20)'; g.lineWidth = 2;
+  g.strokeRect(gdX, gdY, gdW, gdH);
+  g.beginPath();
+  for (let i = 1; i < 4; i++) {
+    const y = gdY + (gdH / 4) * i;
+    g.moveTo(gdX, y); g.lineTo(gdX + gdW, y);
+  }
+  g.stroke();
+  // warm windows
+  const winW = Math.max(26, W * 0.055), winH = L.houseH * 0.42;
+  const winY = L.houseY + L.houseH * 0.3;
+  const winXs = [W * 0.07, W * 0.845];
+  for (const wx of winXs) {
+    const wg = g.createRadialGradient(wx + winW / 2, winY + winH / 2, 2, wx + winW / 2, winY + winH / 2, winW * 1.15);
+    wg.addColorStop(0, 'rgba(255,196,110,0.55)'); wg.addColorStop(1, 'rgba(255,196,110,0)');
+    g.fillStyle = wg;
+    g.fillRect(wx - winW, winY - winH, winW * 3, winH * 3);
+    g.fillStyle = '#ffca7d';
+    g.fillRect(wx, winY, winW, winH);
+    g.fillStyle = 'rgba(120,70,20,0.65)';
+    g.fillRect(wx + winW / 2 - 1, winY, 2, winH);
+    g.fillRect(wx, winY + winH / 2 - 1, winW, 2);
+    g.strokeStyle = 'rgba(0,0,0,0.45)'; g.lineWidth = 2;
+    g.strokeRect(wx, winY, winW, winH);
+  }
+  // porch fixture dot
+  g.fillStyle = '#ffd9a0';
+  g.beginPath(); g.arc(L.porchX, L.porchY, 4, 0, Math.PI * 2); g.fill();
+  // snowy bushes flanking the house
+  g.fillStyle = '#22335c';
+  for (const bx of [W * 0.035, W * 0.155, W * 0.80, W * 0.915]) {
+    const br = 14 + (bx % 17);
+    g.beginPath(); g.arc(bx, L.houseY + L.houseH - 2, br, 0, Math.PI * 2); g.fill();
+    g.fillStyle = 'rgba(205,220,250,0.5)';
+    g.beginPath(); g.arc(bx - br * 0.2, L.houseY + L.houseH - 2 - br * 0.45, br * 0.62, 0, Math.PI * 2); g.fill();
+    g.fillStyle = '#22335c';
+  }
+  // mailbox by the street
+  const mbX = L.dwX + L.dwW + Math.round(W * 0.03), mbY = L.streetY - 6;
+  g.fillStyle = '#39415a';
+  g.fillRect(mbX - 2, mbY - 26, 4, 26);
+  g.fillStyle = '#4a5578';
+  g.beginPath(); g.arc(mbX, mbY - 26, 10, Math.PI, 0); g.fill();
+  g.fillRect(mbX - 10, mbY - 26, 20, 9);
+  g.fillStyle = 'rgba(215,228,252,0.85)';
+  g.beginPath(); g.arc(mbX, mbY - 27, 10, Math.PI, 0); g.fill();
+  g.fillRect(mbX - 10, mbY - 27, 20, 3);
+  // streetlight pole
+  g.fillStyle = '#2a3350';
+  g.fillRect(L.lampX - 2, L.lampY - H * 0.13, 4, H * 0.13);
+  g.fillRect(L.lampX - 2, L.lampY - H * 0.13, 26, 4);
+  g.fillStyle = '#ffe6b8';
+  g.beginPath(); g.arc(L.lampX + 26, L.lampY - H * 0.13 + 3, 4.5, 0, Math.PI * 2); g.fill();
+  L.lampGlowX = L.lampX + 26; L.lampGlowY = L.lampY - H * 0.13 + 3;
+}
+
+/* ---------------- sparkles (pre-placed glints) ---------------- */
+let snowGlints = [], asphGlints = [];
+function initGlints() {
+  snowGlints = []; asphGlints = [];
+  for (let i = 0; i < 110; i++) {
+    snowGlints.push({ x: Math.random() * W, y: L.houseY + Math.random() * (H - L.houseY), ph: Math.random() * Math.PI * 2, sp: 0.6 + Math.random() * 1.6 });
+  }
+  for (let i = 0; i < 70; i++) {
+    asphGlints.push({ x: L.dwX + Math.random() * L.dwW, y: L.dwY + Math.random() * L.dwH, ph: Math.random() * Math.PI * 2, sp: 0.8 + Math.random() * 2.0 });
+  }
+}
+
+/* ---------------- the snowblower ---------------- */
+const blower = {
+  x: 0, y: 0, angle: -Math.PI / 2, speed: 0,
+  width: 30, clearR: 26, moving: false, clearingNow: 0
+};
+function resetBlower() {
+  blower.x = L.dwX + L.dwW / 2;
+  blower.y = L.dwY + L.dwH - 34;
+  blower.angle = -Math.PI / 2;
+  blower.speed = 0; blower.moving = false;
+}
+
+/* ---------------- particles ---------------- */
+const MAXPLUME = 260;
+let plume = [];
+let flakes = [];
+function initFlakes() {
+  flakes = [];
+  const n = Math.round(Math.min(170, Math.max(80, W * H / 14000)));
+  for (let i = 0; i < n; i++) {
+    flakes.push({
+      x: Math.random() * W, y: Math.random() * H,
+      r: 0.8 + Math.random() * 1.9,
+      vy: 16 + Math.random() * 30,
+      ph: Math.random() * Math.PI * 2,
+      sway: 6 + Math.random() * 16
+    });
+  }
+}
+function spawnPlume(dt) {
+  // chute sits on the blower's right side; snow arcs out and lands
+  const sideA = blower.angle + Math.PI / 2;         // right-hand side
+  const tipX = blower.x + Math.cos(blower.angle) * 8 + Math.cos(sideA) * 13;
+  const tipY = blower.y + Math.sin(blower.angle) * 8 + Math.sin(sideA) * 13;
+  let count = Math.round(240 * dt * blower.clearingNow);
+  while (count-- > 0 && plume.length < MAXPLUME) {
+    const sp = 90 + Math.random() * 130;
+    plume.push({
+      x: tipX, y: tipY, z: 6,
+      vx: Math.cos(sideA) * sp + Math.cos(blower.angle) * 34 + (Math.random() - 0.5) * 26,
+      vy: Math.sin(sideA) * sp + Math.sin(blower.angle) * 34 + (Math.random() - 0.5) * 26,
+      vz: 120 + Math.random() * 130,
+      r: 1.1 + Math.random() * 2.3,
+      life: 1
+    });
+  }
+}
+function updatePlume(dt) {
+  for (let i = plume.length - 1; i >= 0; i--) {
+    const p = plume[i];
+    p.vz -= 430 * dt;
+    p.x += p.vx * dt; p.y += p.vy * dt; p.z += p.vz * dt;
+    if (p.z <= 0) { p.z = 0; p.vx *= 0.6; p.vy *= 0.6; p.life -= dt * 2.4; }
+    if (p.life <= 0) { plume.splice(i, 1); }
+  }
+}
+
+/* ---------------- audio (all synthesized) ---------------- */
+let AC = null, master = null, engGain = null, engOsc1 = null, engOsc2 = null,
+    engLFO = null, sprayGain = null, muted = false;
+function initAudio() {
+  if (AC) { if (AC.state === 'suspended') AC.resume(); return; }
+  try {
+    AC = new (window.AudioContext || window.webkitAudioContext)();
+    master = AC.createGain(); master.gain.value = muted ? 0 : 0.9;
+    master.connect(AC.destination);
+
+    // shared noise buffer
+    const len = AC.sampleRate * 2;
+    const buf = AC.createBuffer(1, len, AC.sampleRate);
+    const ch = buf.getChannelData(0);
+    let last = 0;
+    for (let i = 0; i < len; i++) { // slightly pinked noise
+      const white = Math.random() * 2 - 1;
+      last = last * 0.72 + white * 0.28;
+      ch[i] = last * 2.4;
+    }
+    function noiseSrc() { const s = AC.createBufferSource(); s.buffer = buf; s.loop = true; return s; }
+
+    // winter hush — very soft low wind under everything
+    const hush = noiseSrc();
+    const hushF = AC.createBiquadFilter(); hushF.type = 'lowpass'; hushF.frequency.value = 320;
+    const hushG = AC.createGain(); hushG.gain.value = 0.035;
+    hush.connect(hushF); hushF.connect(hushG); hushG.connect(master); hush.start();
+
+    // engine putter — two detuned oscillators, amplitude wobbled
+    engOsc1 = AC.createOscillator(); engOsc1.type = 'sawtooth'; engOsc1.frequency.value = 57;
+    engOsc2 = AC.createOscillator(); engOsc2.type = 'square';   engOsc2.frequency.value = 28.5;
+    const engF = AC.createBiquadFilter(); engF.type = 'lowpass'; engF.frequency.value = 260; engF.Q.value = 1.2;
+    engGain = AC.createGain(); engGain.gain.value = 0.0;
+    const lfoG = AC.createGain(); lfoG.gain.value = 0.012;
+    engLFO = AC.createOscillator(); engLFO.type = 'sine'; engLFO.frequency.value = 11.5;
+    engLFO.connect(lfoG); lfoG.connect(engGain.gain);
+    engOsc1.connect(engF); engOsc2.connect(engF); engF.connect(engGain); engGain.connect(master);
+    engOsc1.start(); engOsc2.start(); engLFO.start();
+
+    // spray hiss — band-passed noise, follows clearing
+    const spray = noiseSrc();
+    const sprayF = AC.createBiquadFilter(); sprayF.type = 'bandpass'; sprayF.frequency.value = 2100; sprayF.Q.value = 0.55;
+    sprayGain = AC.createGain(); sprayGain.gain.value = 0;
+    spray.connect(sprayF); sprayF.connect(sprayGain); sprayGain.connect(master); spray.start();
+  } catch (e) { AC = null; }
+}
+function updateAudio() {
+  if (!AC || !engGain) return;
+  const t = AC.currentTime;
+  const target = started ? (0.018 + (blower.speed / 170) * 0.05) : 0.0;
+  engGain.gain.setTargetAtTime(target, t, 0.12);
+  if (engOsc1) engOsc1.frequency.setTargetAtTime(55 + blower.speed * 0.16, t, 0.1);
+  if (engOsc2) engOsc2.frequency.setTargetAtTime(27.5 + blower.speed * 0.08, t, 0.1);
+  if (sprayGain) sprayGain.gain.setTargetAtTime(blower.clearingNow * 0.11, t, 0.06);
+}
+muteBtn.addEventListener('click', (e) => {
+  e.stopPropagation();
+  muted = !muted;
+  muteBtn.textContent = muted ? '🔇' : '🔊';
+  if (master && AC) master.gain.setTargetAtTime(muted ? 0 : 0.9, AC.currentTime, 0.03);
+});
+
+/* ---------------- input: drag to steer ---------------- */
+let started = false, done = false;
+let dragging = false, pointerX = 0, pointerY = 0;
+function setPointer(e) {
+  const r = canvas.getBoundingClientRect();
+  pointerX = e.clientX - r.left; pointerY = e.clientY - r.top;
+}
+canvas.addEventListener('pointerdown', (e) => {
+  initAudio();
+  setPointer(e); dragging = true;
+  try { canvas.setPointerCapture(e.pointerId); } catch (err) { /* synthetic / already-released pointer — drag still works */ }
+});
+canvas.addEventListener('pointermove', (e) => { if (dragging) setPointer(e); });
+function endDrag() { dragging = false; }
+canvas.addEventListener('pointerup', endDrag);
+canvas.addEventListener('pointercancel', endDrag);
+canvas.addEventListener('contextmenu', (e) => e.preventDefault());
+
+titleOverlay.addEventListener('pointerdown', () => {
+  initAudio();
+  started = true;
+  titleOverlay.classList.add('hidden');
+});
+document.getElementById('replayBtn').addEventListener('click', () => {
+  initGrid(); resetBlower(); plume = [];
+  done = false; started = true;
+  doneOverlay.classList.add('hidden');
+  setMeter(0);
+});
+
+/* ---------------- game logic ---------------- */
+let progress = 0;
+function setMeter(p) {
+  const pct = Math.round(p * 100);
+  meterFill.style.width = pct + '%';
+  meterPct.textContent = pct + '%';
+}
+function clearAt(wx, wy, amount) {
+  const cx = Math.floor((wx - L.dwX) / CELL);
+  const cy = Math.floor((wy - L.dwY) / CELL);
+  const rad = Math.ceil(blower.clearR / CELL);
+  for (let gy = cy - rad; gy <= cy + rad; gy++) {
+    if (gy < 0 || gy >= rows) continue;
+    for (let gx = cx - rad; gx <= cx + rad; gx++) {
+      if (gx < 0 || gx >= cols) continue;
+      const ccx = L.dwX + (gx + 0.5) * CELL, ccy = L.dwY + (gy + 0.5) * CELL;
+      const dx = ccx - wx, dy = ccy - wy;
+      const dist = Math.sqrt(dx * dx + dy * dy);
+      if (dist > blower.clearR) continue;
+      const idx = gy * cols + gx;
+      const fall = 1 - (dist / blower.clearR) * 0.35;
+      cover[idx] = Math.max(0, cover[idx] - amount * fall);
+      if (!scored[idx] && cover[idx] < 0.38) {
+        scored[idx] = 1; scoredList.push(idx); scoredCount++;
+      }
+    }
+  }
+}
+function update(dt) {
+  // --- steering: the blower follows your finger ---
+  let targetSpeed = 0;
+  if (started && !done && dragging) {
+    const dx = pointerX - blower.x, dy = pointerY - blower.y;
+    const dist = Math.sqrt(dx * dx + dy * dy);
+    if (dist > 12) {
+      const want = Math.atan2(dy, dx);
+      let diff = want - blower.angle;
+      while (diff > Math.PI) diff -= Math.PI * 2;
+      while (diff < -Math.PI) diff += Math.PI * 2;
+      const turn = 4.8 * dt;
+      blower.angle += Math.max(-turn, Math.min(turn, diff));
+      targetSpeed = Math.min(192, 55 + dist * 1.1);
+    }
+  }
+  const accel = targetSpeed > blower.speed ? 260 : 340;
+  blower.speed += Math.max(-accel * dt, Math.min(accel * dt, targetSpeed - blower.speed));
+  blower.moving = blower.speed > 6;
+  const ox = blower.x, oy = blower.y;
+  if (blower.moving) {
+    blower.x += Math.cos(blower.angle) * blower.speed * dt;
+    blower.y += Math.sin(blower.angle) * blower.speed * dt;
+    blower.x = Math.max(14, Math.min(W - 14, blower.x));
+    blower.y = Math.max(L.houseY + 10, Math.min(H - 12, blower.y));
+  }
+  // --- clearing along the swept path ---
+  blower.clearingNow = 0;
+  if (blower.moving) {
+    const steps = Math.max(1, Math.ceil(blower.speed * dt / 5));
+    let touched = 0, samples = 0;
+    for (let s = 0; s <= steps; s++) {
+      const px = ox + (blower.x - ox) * (s / steps);
+      const py = oy + (blower.y - oy) * (s / steps);
+      const idx = cellAt(px, py);
+      if (idx >= 0) { samples++; if (cover[idx] > 0.05) touched++; }
+      clearAt(px, py, 0.2);
+    }
+    if (samples > 0) blower.clearingNow = touched / samples;
+    if (blower.clearingNow > 0.03) spawnPlume(dt);
+  }
+  // --- the world breathes: cleared ground slowly re-dusts ---
+  if (done) {
+    // the finished moment stays pristine — leftover dust melts away
+    for (let i = 0; i < scoredList.length; i++) {
+      const idx = scoredList[i];
+      if (cover[idx] > 0.12) cover[idx] = Math.max(0.12, cover[idx] - 0.12 * dt);
+    }
+  } else {
+    const dust = 0.0032 * dt; // gentle frosting — minutes, not seconds
+    for (let i = 0; i < scoredList.length; i++) {
+      const idx = scoredList[i];
+      if (cover[idx] < 0.38) cover[idx] = Math.min(0.38, cover[idx] + dust);
+    }
+  }
+  // --- progress ---
+  progress = totalCells ? scoredCount / totalCells : 0;
+  setMeter(progress);
+  if (started && !done && progress >= 0.995) {
+    done = true;
+    setMeter(1);
+    setTimeout(() => doneOverlay.classList.remove('hidden'), 650);
+  }
+  // --- weather ---
+  const wind = Math.sin(perfNow * 0.00013) * 9;
+  for (const f of flakes) {
+    f.y += f.vy * dt;
+    f.x += (Math.sin(perfNow * 0.001 * f.sp + f.ph) * 7 + wind) * dt;
+    if (f.y > H + 4) { f.y = -4; f.x = Math.random() * W; }
+    if (f.x > W + 4) f.x = -4; if (f.x < -4) f.x = W + 4;
+  }
+  updatePlume(dt);
+  updateAudio();
+}
+
+/* ---------------- rendering ---------------- */
+function lerp(a, b, t) { return a + (b - a) * t; }
+function mixc(c1, c2, t) {
+  return 'rgb(' + Math.round(lerp(c1[0], c2[0], t)) + ',' + Math.round(lerp(c1[1], c2[1], t)) + ',' + Math.round(lerp(c1[2], c2[2], t)) + ')';
+}
+let perfNow = 0;
+function render() {
+  const warm = done ? 1 : progress; // sunrise warmth follows progress
+  // --- sky: deep pre-dawn blue warming toward sunrise ---
+  const sky = ctx.createLinearGradient(0, 0, 0, L.houseY + 4);
+  sky.addColorStop(0, mixc([7, 11, 34], [16, 22, 52], warm));
+  sky.addColorStop(0.75, mixc([16, 26, 62], [38, 44, 84], warm));
+  sky.addColorStop(1, mixc([38, 52, 102], [146, 96, 84], warm));
+  ctx.fillStyle = sky;
+  ctx.fillRect(0, 0, W, L.houseY + 4);
+  // horizon glow
+  const hg = ctx.createRadialGradient(W * 0.72, L.houseY, 4, W * 0.72, L.houseY, W * 0.5);
+  hg.addColorStop(0, 'rgba(255,' + Math.round(lerp(150, 186, warm)) + ',110,' + (0.05 + warm * 0.30).toFixed(3) + ')');
+  hg.addColorStop(1, 'rgba(255,160,100,0)');
+  ctx.fillStyle = hg;
+  ctx.fillRect(0, 0, W, L.houseY + H * 0.2);
+  // a few faint stars, fading as dawn comes
+  ctx.fillStyle = 'rgba(220,230,255,' + (0.5 * (1 - warm)).toFixed(3) + ')';
+  for (let i = 0; i < 26; i++) {
+    const sx = ((i * 173.3) % W), sy = ((i * 57.7) % Math.max(10, L.skyH - 8));
+    ctx.fillRect(sx, sy, 1.4, 1.4);
+  }
+
+  // --- static scenery ---
+  ctx.drawImage(decor, 0, 0, W, H);
+
+  // --- wet reflections on the asphalt (hidden until snow clears) ---
+  ctx.save();
+  ctx.globalCompositeOperation = 'lighter';
+  // porch light streak running down the driveway
+  let streak = ctx.createRadialGradient(L.porchX - L.dwW * 0.32, L.dwY + 6, 4, L.porchX - L.dwW * 0.32, L.dwY + L.dwH * 0.55, L.dwH * 0.55);
+  streak.addColorStop(0, 'rgba(255,178,96,0.20)'); streak.addColorStop(1, 'rgba(255,178,96,0)');
+  ctx.fillStyle = streak;
+  ctx.fillRect(L.dwX, L.dwY, L.dwW, L.dwH);
+  // streetlight streak at the apron
+  streak = ctx.createRadialGradient(L.dwX + L.dwW * 0.2, L.dwY + L.dwH, 4, L.dwX + L.dwW * 0.2, L.dwY + L.dwH, L.dwH * 0.4);
+  streak.addColorStop(0, 'rgba(255,220,160,0.13)'); streak.addColorStop(1, 'rgba(255,220,160,0)');
+  ctx.fillStyle = streak;
+  ctx.fillRect(L.dwX, L.dwY, L.dwW, L.dwH);
+  ctx.restore();
+
+  // --- the snow itself (driveway coverage grid) ---
+  updateGridImage();
+  ctx.imageSmoothingEnabled = true;
+  ctx.drawImage(gridCanvas, 0, 0, cols, rows, L.dwX, L.dwY, L.dwW, L.dwH);
+
+  // --- sparkle glints ---
+  for (const gl of snowGlints) {
+    const idx = cellAt(gl.x, gl.y);
+    let base = 0.55; // lawn snow
+    if (idx >= 0) base = cover[idx];
+    const tw = Math.pow(Math.max(0, Math.sin(perfNow * 0.001 * gl.sp + gl.ph)), 6);
+    if (tw > 0.25 && base > 0.35) {
+      ctx.fillStyle = 'rgba(240,248,255,' + (tw * 0.75).toFixed(3) + ')';
+      ctx.fillRect(gl.x, gl.y, 1.8, 1.8);
+    }
+  }
+  for (const gl of asphGlints) {
+    const idx = cellAt(gl.x, gl.y);
+    if (idx < 0) continue;
+    const tw = Math.pow(Math.max(0, Math.sin(perfNow * 0.0013 * gl.sp + gl.ph)), 8);
+    if (tw > 0.3 && cover[idx] < 0.25) {
+      ctx.fillStyle = 'rgba(200,220,255,' + (tw * 0.6).toFixed(3) + ')';
+      ctx.fillRect(gl.x, gl.y, 1.6, 1.6);
+    }
+  }
+
+  // --- light pools (additive) ---
+  ctx.save();
+  ctx.globalCompositeOperation = 'lighter';
+  // porch light — warm pool spilling onto the yard & driveway corner
+  let pool = ctx.createRadialGradient(L.porchX, L.porchY, 6, L.porchX, L.porchY, W * 0.30);
+  pool.addColorStop(0, 'rgba(255,186,105,0.34)');
+  pool.addColorStop(0.5, 'rgba(255,170,90,0.13)');
+  pool.addColorStop(1, 'rgba(255,160,80,0)');
+  ctx.fillStyle = pool;
+  ctx.fillRect(L.porchX - W * 0.3, L.porchY - W * 0.3, W * 0.6, W * 0.6);
+  // streetlight — cooler, wider pool on the street
+  pool = ctx.createRadialGradient(L.lampGlowX, L.lampGlowY, 6, L.lampGlowX, L.lampGlowY, W * 0.27);
+  pool.addColorStop(0, 'rgba(255,224,168,0.30)');
+  pool.addColorStop(0.55, 'rgba(230,205,160,0.10)');
+  pool.addColorStop(1, 'rgba(230,205,160,0)');
+  ctx.fillStyle = pool;
+  ctx.fillRect(L.lampGlowX - W * 0.27, L.lampGlowY - W * 0.27, W * 0.54, W * 0.54);
+
+  // --- headlight cone cutting the dark ---
+  const hx = blower.x + Math.cos(blower.angle) * 16;
+  const hy = blower.y + Math.sin(blower.angle) * 16;
+  const coneLen = 128, coneSpread = 0.46;
+  const cone = ctx.createLinearGradient(hx, hy, hx + Math.cos(blower.angle) * coneLen, hy + Math.sin(blower.angle) * coneLen);
+  cone.addColorStop(0, 'rgba(255,242,205,0.40)');
+  cone.addColorStop(0.6, 'rgba(255,238,195,0.14)');
+  cone.addColorStop(1, 'rgba(255,238,195,0)');
+  ctx.fillStyle = cone;
+  ctx.beginPath();
+  ctx.moveTo(hx, hy);
+  ctx.lineTo(hx + Math.cos(blower.angle - coneSpread) * coneLen, hy + Math.sin(blower.angle - coneSpread) * coneLen);
+  ctx.lineTo(hx + Math.cos(blower.angle + coneSpread) * coneLen, hy + Math.sin(blower.angle + coneSpread) * coneLen);
+  ctx.closePath(); ctx.fill();
+  ctx.restore();
+
+  // --- snow plume particles ---
+  for (const p of plume) {
+    const a = Math.max(0, Math.min(1, p.life));
+    ctx.fillStyle = 'rgba(232,240,255,' + (0.85 * a).toFixed(3) + ')';
+    ctx.beginPath();
+    ctx.arc(p.x, p.y - p.z * 0.55, p.r * (1 + p.z * 0.004), 0, Math.PI * 2);
+    ctx.fill();
+  }
+
+  // --- the blower ---
+  drawBlower();
+
+  // --- falling snow, over everything ---
+  ctx.fillStyle = 'rgba(238,244,255,0.9)';
+  for (const f of flakes) {
+    ctx.globalAlpha = 0.35 + 0.4 * Math.abs(Math.sin(f.ph + perfNow * 0.0006));
+    ctx.beginPath(); ctx.arc(f.x, f.y, f.r, 0, Math.PI * 2); ctx.fill();
+  }
+  ctx.globalAlpha = 1;
+
+  // --- vignette for mood ---
+  const vg = ctx.createRadialGradient(W / 2, H * 0.46, Math.min(W, H) * 0.42, W / 2, H * 0.5, Math.max(W, H) * 0.78);
+  vg.addColorStop(0, 'rgba(4,7,24,0)');
+  vg.addColorStop(1, 'rgba(4,7,24,0.38)');
+  ctx.fillStyle = vg;
+  ctx.fillRect(0, 0, W, H);
+}
+function drawBlower() {
+  ctx.save();
+  ctx.translate(blower.x, blower.y);
+  // soft shadow
+  ctx.fillStyle = 'rgba(4,8,24,0.35)';
+  ctx.beginPath(); ctx.ellipse(2, 5, 24, 15, 0, 0, Math.PI * 2); ctx.fill();
+  ctx.rotate(blower.angle);
+  // headlight glow dot (front)
+  ctx.fillStyle = '#fff3cf';
+  ctx.beginPath(); ctx.arc(17, 0, 3.4, 0, Math.PI * 2); ctx.fill();
+  // auger housing (front scoop)
+  ctx.fillStyle = '#8f1d23';
+  roundRect(-2, -16, 20, 32, 5); ctx.fill();
+  ctx.fillStyle = 'rgba(255,255,255,0.18)';
+  roundRect(12, -16, 5, 32, 3); ctx.fill();
+  // main body
+  const bg = ctx.createLinearGradient(0, -13, 0, 13);
+  bg.addColorStop(0, '#d8353d'); bg.addColorStop(0.5, '#b3242c'); bg.addColorStop(1, '#8e1e24');
+  ctx.fillStyle = bg;
+  roundRect(-16, -12, 22, 24, 5); ctx.fill();
+  // engine block
+  ctx.fillStyle = '#3a3f4c';
+  roundRect(-13, -7, 12, 14, 3); ctx.fill();
+  ctx.fillStyle = '#565e70';
+  roundRect(-11, -5, 8, 4, 2); ctx.fill();
+  // discharge chute (right side, tilted back)
+  ctx.save();
+  ctx.translate(4, 11); ctx.rotate(0.5);
+  ctx.fillStyle = '#7d1a20';
+  roundRect(-3.4, 0, 6.8, 13, 3); ctx.fill();
+  ctx.fillStyle = '#5d1216';
+  roundRect(-3.4, 10, 6.8, 4.5, 2); ctx.fill();
+  ctx.restore();
+  // wheels
+  ctx.fillStyle = '#15181f';
+  ctx.beginPath(); ctx.arc(-9, -13, 5, 0, Math.PI * 2); ctx.fill();
+  ctx.beginPath(); ctx.arc(-9, 13, 5, 0, Math.PI * 2); ctx.fill();
+  ctx.fillStyle = '#6b7280';
+  ctx.beginPath(); ctx.arc(-9, -13, 2, 0, Math.PI * 2); ctx.fill();
+  ctx.beginPath(); ctx.arc(-9, 13, 2, 0, Math.PI * 2); ctx.fill();
+  // handle bars trailing behind
+  ctx.strokeStyle = '#22262f'; ctx.lineWidth = 3; ctx.lineCap = 'round';
+  ctx.beginPath(); ctx.moveTo(-15, -8); ctx.lineTo(-27, -13); ctx.stroke();
+  ctx.beginPath(); ctx.moveTo(-15, 8); ctx.lineTo(-27, 13); ctx.stroke();
+  ctx.beginPath(); ctx.moveTo(-27, -13); ctx.lineTo(-27, 13); ctx.stroke();
+  ctx.restore();
+}
+function roundRect(x, y, w, h, r) {
+  ctx.beginPath();
+  ctx.moveTo(x + r, y);
+  ctx.lineTo(x + w - r, y); ctx.arcTo(x + w, y, x + w, y + r, r);
+  ctx.lineTo(x + w, y + h - r); ctx.arcTo(x + w, y + h, x + w - r, y + h, r);
+  ctx.lineTo(x + r, y + h); ctx.arcTo(x, y + h, x, y + h - r, r);
+  ctx.lineTo(x, y + r); ctx.arcTo(x, y, x + r, y, r);
+  ctx.closePath();
+}
+
+/* ---------------- boot / resize / loop ---------------- */
+function resize() {
+  DPR = Math.min(2, window.devicePixelRatio || 1);
+  W = window.innerWidth; H = window.innerHeight;
+  canvas.width = Math.round(W * DPR);
+  canvas.height = Math.round(H * DPR);
+  canvas.style.width = W + 'px';
+  canvas.style.height = H + 'px';
+  ctx.setTransform(DPR, 0, 0, DPR, 0, 0);
+  const p = progress;
+  computeLayout();
+  buildDecor();
+  initGrid();
+  initGlints();
+  initFlakes();
+  resetBlower();
+  // resizes restart the driveway — progress is a per-visit thing
+  progress = 0; scoredCount = 0; done = false;
+  setMeter(0);
+  if (started) doneOverlay.classList.add('hidden');
+}
+let resizeTimer = null;
+window.addEventListener('resize', () => {
+  clearTimeout(resizeTimer);
+  resizeTimer = setTimeout(resize, 180);
+});
+
+let lastT = 0;
+function frame(t) {
+  perfNow = t;
+  const dt = Math.min(0.033, lastT ? (t - lastT) / 1000 : 0.016);
+  lastT = t;
+  update(dt);
+  render();
+  requestAnimationFrame(frame);
+}
+resize();
+requestAnimationFrame(frame);
+</script>
+</body>
+</html>
