@@ -19,24 +19,24 @@
   .tools button { background: #23233a; color: #f0f0f5; border: 1px solid #34344c; border-radius: 10px; padding: 9px 14px; font-size: 14px; font-weight: 600; cursor: pointer; }
   .tools button:active { background: #2e2e4a; }
   .section { font-size: 13px; text-transform: uppercase; letter-spacing: 2px; color: #8a8aa0; margin: 24px 4px 10px; }
-  .card { background: #1f1f2e; border: 1px solid #2c2c40; border-left: 5px solid #2c2c40; border-radius: 14px; padding: 12px 14px; margin-bottom: 10px; display: flex; align-items: center; gap: 12px; }
+  .card { background: #1f1f2e; border: 1px solid #2c2c40; border-left: 5px solid #2c2c40; border-radius: 14px; padding: 12px 14px; margin-bottom: 10px; }
   .card.r-up { border-left-color: #46d17a; }
   .card.r-mid { border-left-color: #ffb02e; }
   .card.r-down { border-left-color: #ff5252; }
-  .thumb { width: 64px; height: 40px; object-fit: cover; border-radius: 8px; flex-shrink: 0; background: #2a2a3e; }
-  .tile { width: 64px; height: 40px; border-radius: 8px; flex-shrink: 0; background: #2a2a3e; color: #8a8aff; display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 15px; }
+  .top { display: flex; align-items: center; gap: 12px; }
+  .thumb { width: 76px; height: 46px; object-fit: cover; border-radius: 8px; flex-shrink: 0; background: #2a2a3e; }
+  .tile { width: 76px; height: 46px; border-radius: 8px; flex-shrink: 0; background: #2a2a3e; color: #8a8aff; display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 16px; }
   .info { flex: 1; min-width: 0; }
-  .name { font-size: 16px; font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-  .desc { font-size: 12.5px; color: #a5a5bf; line-height: 1.35; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+  .name { font-size: 16.5px; font-weight: 700; line-height: 1.25; }
+  .desc { font-size: 12.5px; color: #a5a5bf; line-height: 1.35; margin-top: 2px; }
   .play { flex-shrink: 0; background: #4a5cff; color: #fff; font-weight: 700; font-size: 14px; border-radius: 10px; padding: 10px 14px; text-decoration: none; }
-  .rate { display: flex; gap: 6px; flex-shrink: 0; }
-  .rb { width: 42px; height: 42px; border-radius: 50%; border: 1px solid #34344c; background: #23233a; font-size: 19px; cursor: pointer; display: flex; align-items: center; justify-content: center; padding: 0; }
-  .rb span { display: inline-block; line-height: 1; }
-  .rb[data-r="mid"] span { transform: rotate(-90deg); }
-  .rb[data-r="down"] span { transform: rotate(180deg); }
-  .rb.on[data-r="up"] { background: #1d6b3c; border-color: #46d17a; }
-  .rb.on[data-r="mid"] { background: #7a5310; border-color: #ffb02e; }
-  .rb.on[data-r="down"] { background: #7c2222; border-color: #ff5252; }
+  .rate { display: flex; gap: 8px; margin-top: 10px; }
+  .rb { flex: 1; height: 52px; border-radius: 12px; border: 1px solid #34344c; background: #23233a; cursor: pointer; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 1px; padding: 0; color: #cfcfe0; }
+  .rb .g { font-size: 20px; line-height: 1.1; }
+  .rb small { font-size: 10.5px; font-weight: 700; letter-spacing: 1px; text-transform: uppercase; }
+  .rb.on[data-r="up"] { background: #1d6b3c; border-color: #46d17a; color: #eafff1; }
+  .rb.on[data-r="mid"] { background: #7a5310; border-color: #ffb02e; color: #fff6e0; }
+  .rb.on[data-r="down"] { background: #7c2222; border-color: #ff5252; color: #ffecec; }
   .empty { text-align: center; color: #8a8aa0; padding: 30px 0; font-size: 15px; }
   #exportBox { width: 100%; min-height: 120px; background: #0c0c16; color: #cfcfe0; border: 1px solid #34344c; border-radius: 10px; padding: 10px; font: 12px/1.5 ui-monospace, Menlo, monospace; margin-top: 10px; }
   .hidden { display: none; }
@@ -45,7 +45,7 @@
 <body>
 <header>
   <h1>👍 Rate the Games 👎</h1>
-  <p class="sub">Thumbs up, sideways, or down on every game. Your ratings save on this device automatically.</p>
+  <p class="sub">Thumbs up, sideways, or down on every game. Your ratings save on this device automatically — and they'll pick the seed games for the platform.</p>
   <div class="chips" id="chips"></div>
   <div class="tools">
     <input id="q" type="search" placeholder="Search games…" autocomplete="off">
@@ -115,27 +115,37 @@
     });
   }
 
+  function initials(t) {
+    return (t || "?").split(/\s+/).slice(0, 2).map(function (w) { return w.charAt(0); }).join("").toUpperCase();
+  }
+
   function card(g) {
     var r = rateOf(g);
     var el = document.createElement("div");
     el.className = "card" + (r ? " r-" + r : "");
     var media;
     if (g.thumb) {
-      media = '<img class="thumb" loading="lazy" alt="" src="' + g.thumb + '" onerror="this.outerHTML=\'<div class=&quot;tile&quot;>' + initials(g.title) + '</div>\'">';
+      media = '<img class="thumb" loading="lazy" alt="" src="' + g.thumb + '">';
     } else {
       media = '<div class="tile">' + initials(g.title) + "</div>";
     }
-    el.innerHTML = media +
+    el.innerHTML =
+      '<div class="top">' + media +
       '<div class="info"><div class="name"></div><div class="desc"></div></div>' +
+      '<a class="play" target="_blank" rel="noopener">Play</a></div>' +
       '<div class="rate">' +
-      '<button class="rb' + (r === "up" ? " on" : "") + '" data-r="up" aria-label="Thumbs up"><span>👍</span></button>' +
-      '<button class="rb' + (r === "mid" ? " on" : "") + '" data-r="mid" aria-label="Thumbs sideways"><span>👍</span></button>' +
-      '<button class="rb' + (r === "down" ? " on" : "") + '" data-r="down" aria-label="Thumbs down"><span>👍</span></button>' +
-      "</div>" +
-      '<a class="play" target="_blank" rel="noopener">Play</a>';
+      '<button class="rb' + (r === "up" ? " on" : "") + '" data-r="up"><span class="g">👍</span><small>Love it</small></button>' +
+      '<button class="rb' + (r === "mid" ? " on" : "") + '" data-r="mid"><span class="g">👉</span><small>Sideways</small></button>' +
+      '<button class="rb' + (r === "down" ? " on" : "") + '" data-r="down"><span class="g">👎</span><small>Nope</small></button>' +
+      "</div>";
     el.querySelector(".name").textContent = g.title || g.id;
     el.querySelector(".desc").textContent = g.note || "";
     el.querySelector(".play").href = g.path || "#";
+    var img = el.querySelector("img.thumb");
+    if (img) img.addEventListener("error", function () {
+      var t = document.createElement("div"); t.className = "tile"; t.textContent = initials(g.title);
+      img.replaceWith(t);
+    });
     el.querySelectorAll(".rb").forEach(function (b) {
       b.addEventListener("click", function () {
         var v = b.getAttribute("data-r"), k = keyOf(g);
@@ -144,10 +154,6 @@
       });
     });
     return el;
-  }
-
-  function initials(t) {
-    return (t || "?").split(/\s+/).slice(0, 2).map(function (w) { return w.charAt(0); }).join("").toUpperCase();
   }
 
   document.getElementById("q").addEventListener("input", function (e) {
