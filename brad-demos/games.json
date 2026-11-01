@@ -4801,6 +4801,64 @@
    "note": "Hold the locker room against the dead for 45 seconds. Left/right move, Z or X fires. Every frame is drawn live by the cabinet's native 8-bit rig \u2014 no sprite assets.",
    "path": "../games/locker-room-last-stand/index.html",
    "thumb": "thumbs/locker-room-last-stand.webp"
+  },
+  {
+   "id": "crypt-gauntlet",
+   "title": "Crypt Gauntlet",
+   "category": "Retro Arcade",
+   "keys": {
+    "left": "ArrowLeft",
+    "right": "ArrowRight",
+    "up": "ArrowUp",
+    "down": "ArrowDown",
+    "attack": "KeyZ",
+    "jump": "KeyX",
+    "start": "Enter"
+   },
+   "labels": {
+    "attack": "Z \u00b7 FIRE",
+    "jump": "X \u00b7 AXE"
+   },
+   "extras": [
+    {
+     "label": "MUTE",
+     "key": "KeyM"
+    }
+   ],
+   "autostart": [],
+   "orientation": "portrait",
+   "note": "Fight through three dungeon rooms. Arrows move, hold Z or X to throw axes (auto-aims). Keys open doors, bone piles spawn monsters, food refills your draining health.",
+   "path": "../games/crypt-gauntlet/index.html",
+   "thumb": "thumbs/crypt-gauntlet.webp"
+  },
+  {
+   "id": "skyfire-42",
+   "title": "Skyfire 42",
+   "category": "Retro Arcade",
+   "keys": {
+    "left": "ArrowLeft",
+    "right": "ArrowRight",
+    "up": "ArrowUp",
+    "down": "ArrowDown",
+    "attack": "KeyZ",
+    "jump": "KeyX",
+    "start": "Enter"
+   },
+   "labels": {
+    "attack": "Z \u00b7 FIRE",
+    "jump": "X \u00b7 ALT FIRE"
+   },
+   "extras": [
+    {
+     "label": "MUTE",
+     "key": "KeyM"
+    }
+   ],
+   "autostart": [],
+   "orientation": "portrait",
+   "note": "Pick the plane (Z) or the tank (X) at the start; the computer drives the other as your wingman. Loop-the-loop dodges (plane: press Z and X together), shoot red waves for POW, and beat the boss bomber.",
+   "path": "../games/skyfire-42/index.html",
+   "thumb": "thumbs/skyfire-42.webp"
   }
  ]
 }
