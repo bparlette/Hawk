@@ -4917,6 +4917,123 @@
    "note": "The same Skyfire 42 mission as a painted HD world: sea, islands, harbours, clouds and lit explosions. Pick plane, tank or archer (left/right, then Z); the computer plays the other two. Plane: Z+X together loops.",
    "path": "../games/skyfire-42-painted/index.html",
    "thumb": "thumbs/skyfire-42-painted.webp"
+  },
+  {
+   "id": "zamboni",
+   "title": "Zamboni",
+   "category": "ASMR",
+   "keys": {
+    "start": "Enter"
+   },
+   "labels": {},
+   "autostart": [],
+   "orientation": "any",
+   "note": "Drag to drive. Scuffed ice in, glass out.",
+   "path": "../games/zamboni/index.html"
+  },
+  {
+   "id": "frost-scraper",
+   "title": "Frost Scraper",
+   "category": "ASMR",
+   "keys": {
+    "start": "Enter"
+   },
+   "labels": {},
+   "autostart": [],
+   "orientation": "any",
+   "note": "Scrape the frozen windshield into a golden dawn.",
+   "path": "../games/frost-scraper/index.html"
+  },
+  {
+   "id": "sticker-peel",
+   "title": "Sticker Peel",
+   "category": "ASMR",
+   "keys": {
+    "start": "Enter"
+   },
+   "labels": {},
+   "autostart": [],
+   "orientation": "any",
+   "note": "One slow peel. No tears. Perfect.",
+   "path": "../games/sticker-peel/index.html"
+  },
+  {
+   "id": "chalkboard",
+   "title": "Chalkboard",
+   "category": "ASMR",
+   "keys": {
+    "start": "Enter"
+   },
+   "labels": {},
+   "autostart": [],
+   "orientation": "any",
+   "note": "Erase the chalk chaos down to a clean slate.",
+   "path": "../games/chalkboard/index.html"
+  },
+  {
+   "id": "pixel-plinko",
+   "title": "Pixel Plinko",
+   "category": "ASMR",
+   "keys": {
+    "start": "Enter"
+   },
+   "labels": {},
+   "autostart": [],
+   "orientation": "any",
+   "note": "Every chip paints one column of the hidden picture.",
+   "path": "../games/pixel-plinko/index.html"
+  },
+  {
+   "id": "seed-plinko",
+   "title": "Seed Plinko",
+   "category": "ASMR",
+   "keys": {
+    "start": "Enter"
+   },
+   "labels": {},
+   "autostart": [],
+   "orientation": "any",
+   "note": "Drop seeds through the pegs and watch the garden bloom.",
+   "path": "../games/seed-plinko/index.html"
+  },
+  {
+   "id": "kinetic-sand",
+   "title": "Kinetic Sand Slice",
+   "category": "ASMR",
+   "keys": {
+    "start": "Enter"
+   },
+   "labels": {},
+   "autostart": [],
+   "orientation": "any",
+   "note": "Drag the knife through the sand. Hear the crumble.",
+   "path": "../games/kinetic-sand/index.html"
+  },
+  {
+   "id": "snow-rows",
+   "title": "Snow Rows",
+   "category": "ASMR",
+   "keys": {
+    "start": "Enter"
+   },
+   "labels": {},
+   "autostart": [],
+   "orientation": "any",
+   "note": "Blow the driveway clear under a blue-hour sky \u2014 while snow still falls.",
+   "path": "../games/snow-rows/index.html"
+  },
+  {
+   "id": "mirror-wedge",
+   "title": "Mirror Wedge",
+   "category": "ASMR",
+   "keys": {
+    "start": "Enter"
+   },
+   "labels": {},
+   "autostart": [],
+   "orientation": "any",
+   "note": "Sand and polish the steel wedge until it is a mirror.",
+   "path": "../games/mirror-wedge/index.html"
   }
  ]
 }
