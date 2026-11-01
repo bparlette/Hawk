@@ -1,0 +1,906 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<title>Kinetic Sand Slice</title>
+<style>
+  * { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
+  html, body { width:100%; height:100%; overflow:hidden; background:#2b1d16; }
+  body { font-family:-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; }
+  #game { position:fixed; inset:0; display:block; touch-action:none; cursor:crosshair; }
+
+  /* ---------- top bar ---------- */
+  #topbar {
+    position:fixed; top:0; left:0; right:0; z-index:5;
+    display:flex; align-items:center; gap:10px;
+    padding:calc(8px + env(safe-area-inset-top)) 12px 8px 12px;
+    pointer-events:none;
+  }
+  #title {
+    color:#ffe9c9; font-weight:800; font-size:17px; letter-spacing:.4px;
+    text-shadow:0 2px 6px rgba(0,0,0,.55); white-space:nowrap;
+  }
+  #title small { display:block; font-weight:600; font-size:10.5px; color:#f3cf9e; letter-spacing:.8px; text-transform:uppercase; }
+  #meterWrap {
+    flex:1 1 auto; max-width:420px; margin:0 auto;
+    background:rgba(20,12,8,.55); border:1px solid rgba(255,220,170,.35);
+    border-radius:999px; padding:4px; position:relative; height:26px;
+    box-shadow:0 2px 10px rgba(0,0,0,.35) inset, 0 1px 0 rgba(255,255,255,.08);
+  }
+  #meterFill {
+    height:100%; width:0%; border-radius:999px;
+    background:linear-gradient(90deg,#ffb347,#ff7eb6,#b388ff,#6ee7a0,#ffd93d);
+    background-size:200% 100%;
+    transition:width .45s cubic-bezier(.2,.9,.25,1.2);
+    box-shadow:0 0 10px rgba(255,190,90,.55);
+  }
+  #meterLabel {
+    position:absolute; inset:0; display:flex; align-items:center; justify-content:center;
+    color:#fff7ea; font-size:11.5px; font-weight:800; letter-spacing:1.2px; text-transform:uppercase;
+    text-shadow:0 1px 3px rgba(0,0,0,.7);
+  }
+  .tbtn {
+    pointer-events:auto; border:1px solid rgba(255,220,170,.4); cursor:pointer;
+    background:rgba(30,19,12,.72); color:#ffe9c9; font-weight:700; font-size:14px;
+    border-radius:999px; padding:8px 13px; line-height:1; white-space:nowrap;
+    box-shadow:0 2px 8px rgba(0,0,0,.4); backdrop-filter:blur(3px);
+  }
+  .tbtn:active { transform:scale(.94); }
+
+  /* ---------- overlays ---------- */
+  .overlay {
+    position:fixed; inset:0; z-index:10; display:flex; flex-direction:column;
+    align-items:center; justify-content:center; text-align:center; padding:24px;
+    background:radial-gradient(ellipse at 50% 42%, rgba(43,26,16,.42), rgba(20,11,6,.78));
+    transition:opacity .5s ease;
+    pointer-events:none; /* taps pass through to the canvas — first drag dismisses + slices */
+  }
+  .overlay .bigbtn { pointer-events:auto; }
+  .overlay.hidden { opacity:0; pointer-events:none; }
+  .overlay h1 {
+    color:#fff3dd; font-size:clamp(34px, 8vw, 58px); font-weight:900; letter-spacing:.5px;
+    text-shadow:0 4px 0 rgba(146,84,32,.55), 0 10px 28px rgba(0,0,0,.6);
+  }
+  .overlay h1 .rainbow {
+    background:linear-gradient(90deg,#ff6b6b,#ffb347,#ffd93d,#6ee7a0,#4fc3f7,#b388ff);
+    -webkit-background-clip:text; background-clip:text; -webkit-text-fill-color:transparent;
+    filter:drop-shadow(0 3px 0 rgba(0,0,0,.25));
+  }
+  .overlay p { color:#f7ddba; font-size:clamp(15px,3.6vw,19px); font-weight:600; margin-top:12px; text-shadow:0 2px 6px rgba(0,0,0,.6); }
+  .overlay .sub { color:#d9b98c; font-size:13.5px; font-weight:500; margin-top:6px; }
+  .bigbtn {
+    margin-top:26px; border:none; cursor:pointer; pointer-events:auto;
+    background:linear-gradient(180deg,#ffb347,#ff8a3d); color:#3a1c05;
+    font-size:18px; font-weight:900; letter-spacing:.4px;
+    padding:15px 34px; border-radius:999px;
+    box-shadow:0 6px 0 #b25f1d, 0 14px 28px rgba(0,0,0,.5);
+  }
+  .bigbtn:active { transform:translateY(4px); box-shadow:0 2px 0 #b25f1d, 0 8px 18px rgba(0,0,0,.5); }
+  #zenOverlay h1 { font-size:clamp(40px, 10vw, 72px); }
+  .crown { font-size:clamp(44px,11vw,76px); filter:drop-shadow(0 6px 14px rgba(0,0,0,.5)); }
+  @media (max-width:560px){ #title small{ display:none; } #title{ font-size:15px; } .tbtn{ padding:8px 10px; font-size:13px; } }
+</style>
+</head>
+<body>
+<canvas id="game"></canvas>
+
+<div id="topbar">
+  <div id="title">Kinetic Sand Slice<small>ASMR sand cutting</small></div>
+  <div id="meterWrap"><div id="meterFill"></div><div id="meterLabel">Satisfaction</div></div>
+  <button class="tbtn" id="muteBtn" aria-label="Toggle sound">🔊</button>
+  <button class="tbtn" id="newBtn">↻ New Blocks</button>
+</div>
+
+<div class="overlay" id="titleOverlay">
+  <h1>Kinetic Sand <span class="rainbow">Slice</span></h1>
+  <p>Drag the knife through the sand</p>
+  <p class="sub">Cut all the way across a block — watch it crumble, tip &amp; settle.<br>Fill the Satisfaction meter to become a Zen Master.</p>
+  <button class="bigbtn" id="startBtn">Start Slicing</button>
+</div>
+
+<div class="overlay hidden" id="zenOverlay">
+  <div class="crown">👑</div>
+  <h1><span class="rainbow">ZEN MASTER</span></h1>
+  <p>Perfectly sliced. Perfectly calm.</p>
+  <button class="bigbtn" id="freshBtn">Fresh Set of Blocks</button>
+</div>
+
+<script>
+'use strict';
+/* =========================================================
+   KINETIC SAND SLICE — a tiny ASMR sand-cutting toy
+   All graphics canvas-drawn, all sound synthesized (WebAudio).
+   ========================================================= */
+
+const canvas = document.getElementById('game');
+const ctx = canvas.getContext('2d');
+
+let W = 0, H = 0, DPR = 1, floorY = 0;
+let bgCanvas = null;
+
+/* ---------------- utils ---------------- */
+const clamp = (v, a, b) => v < a ? a : v > b ? b : v;
+const lerp = (a, b, t) => a + (b - a) * t;
+function hash(n) { // deterministic pseudo-random from an integer seed
+  let x = Math.sin(n * 127.1 + 311.7) * 43758.5453;
+  return x - Math.floor(x);
+}
+function mulberry(seed) {
+  let t = seed >>> 0;
+  return function () {
+    t += 0x6D2B79F5;
+    let r = Math.imul(t ^ (t >>> 15), 1 | t);
+    r ^= r + Math.imul(r ^ (r >>> 7), 61 | r);
+    return ((r ^ (r >>> 14)) >>> 0) / 4294967296;
+  };
+}
+const easeOutCubic = t => 1 - Math.pow(1 - t, 3);
+const easeInQuad = t => t * t;
+
+/* ---------------- palettes (strata) ---------------- */
+const PALETTES = [
+  ['#ff5d5d', '#ff9f43', '#ffd93d', '#7bed6a', '#4fc3f7', '#b388ff'],          // rainbow
+  ['#ff7e5f', '#feb47b', '#ffe29f', '#f6d365', '#ee9ca7', '#ffdde1'],          // sunset
+  ['#0f4c81', '#16697a', '#489fb5', '#82d8d8', '#c8f4f0', '#ffa62b'],          // ocean
+  ['#ff4d8d', '#ff7eb6', '#ffc2d4', '#c9184a', '#ff8fa3', '#ffb3c6'],          // berry
+  ['#5a189a', '#7b2cbf', '#9d4edd', '#c77dff', '#e0aaff', '#48cae4'],          // grape soda
+  ['#2d6a4f', '#40916c', '#52b788', '#74c69d', '#b7e4c7', '#f4a261'],          // forest
+];
+
+/* ---------------- audio (all synthesized) ---------------- */
+let AC = null, masterGain = null, dragGain = null, dragFilter = null, muted = false;
+function initAudio() {
+  if (AC) { if (AC.state === 'suspended') AC.resume(); return; }
+  try {
+    AC = new (window.AudioContext || window.webkitAudioContext)();
+    masterGain = AC.createGain();
+    masterGain.gain.value = muted ? 0 : 0.9;
+    masterGain.connect(AC.destination);
+    // looping white-noise buffer used by every granular sound
+    const len = AC.sampleRate * 2;
+    const buf = AC.createBuffer(1, len, AC.sampleRate);
+    const data = buf.getChannelData(0);
+    for (let i = 0; i < len; i++) data[i] = Math.random() * 2 - 1;
+    AC._noiseBuf = buf;
+    // continuous "knife in sand" noise, gain driven by drag speed
+    const src = AC.createBufferSource();
+    src.buffer = buf; src.loop = true;
+    dragFilter = AC.createBiquadFilter();
+    dragFilter.type = 'bandpass'; dragFilter.frequency.value = 1500; dragFilter.Q.value = 0.6;
+    const dragLP = AC.createBiquadFilter();
+    dragLP.type = 'lowpass'; dragLP.frequency.value = 5200;
+    dragGain = AC.createGain(); dragGain.gain.value = 0;
+    src.connect(dragFilter); dragFilter.connect(dragLP); dragLP.connect(dragGain); dragGain.connect(masterGain);
+    src.start();
+  } catch (e) { AC = null; }
+}
+function noiseBurst(t0, dur, freq, gain, q) {
+  if (!AC || muted) return;
+  const src = AC.createBufferSource();
+  src.buffer = AC._noiseBuf;
+  src.playbackRate.value = 0.7 + Math.random() * 0.7;
+  const f = AC.createBiquadFilter();
+  f.type = 'bandpass'; f.frequency.value = freq; f.Q.value = q || 0.8;
+  const g = AC.createGain();
+  g.gain.setValueAtTime(0, t0);
+  g.gain.linearRampToValueAtTime(gain, t0 + 0.008);
+  g.gain.exponentialRampToValueAtTime(0.0008, t0 + dur);
+  src.connect(f); f.connect(g); g.connect(masterGain);
+  src.start(t0, Math.random() * 1.2);
+  src.stop(t0 + dur + 0.05);
+}
+function playCrunch(big) {
+  if (!AC || muted) return;
+  const t = AC.currentTime;
+  const n = big ? 16 : 11;
+  for (let i = 0; i < n; i++) {
+    noiseBurst(t + Math.random() * 0.16, 0.03 + Math.random() * 0.06,
+      700 + Math.random() * 2800, 0.10 + Math.random() * 0.16, 0.9);
+  }
+  noiseBurst(t, 0.28, 420, 0.16, 0.5); // low body of the crumble
+}
+function playThump() {
+  if (!AC || muted) return;
+  const t = AC.currentTime;
+  const o = AC.createOscillator(), g = AC.createGain();
+  o.type = 'sine';
+  o.frequency.setValueAtTime(120, t);
+  o.frequency.exponentialRampToValueAtTime(44, t + 0.16);
+  g.gain.setValueAtTime(0.55, t);
+  g.gain.exponentialRampToValueAtTime(0.001, t + 0.2);
+  o.connect(g); g.connect(masterGain);
+  o.start(t); o.stop(t + 0.22);
+  noiseBurst(t, 0.09, 300, 0.12, 0.6);
+}
+let lastPatter = 0;
+function playPatter() {
+  if (!AC || muted) return;
+  const now = performance.now();
+  if (now - lastPatter < 70) return;
+  lastPatter = now;
+  noiseBurst(AC.currentTime, 0.025, 3200 + Math.random() * 2200, 0.045, 1.4);
+}
+
+/* ---------------- geometry ---------------- */
+function polyArea(pts) {
+  let a = 0;
+  for (let i = 0; i < pts.length; i++) {
+    const p = pts[i], q = pts[(i + 1) % pts.length];
+    a += p.x * q.y - q.x * p.y;
+  }
+  return a / 2;
+}
+function polyCentroid(pts) {
+  let x = 0, y = 0;
+  for (const p of pts) { x += p.x; y += p.y; }
+  return { x: x / pts.length, y: y / pts.length };
+}
+function pointInPoly(p, pts) {
+  let inside = false;
+  for (let i = 0, j = pts.length - 1; i < pts.length; j = i++) {
+    const a = pts[i], b = pts[j];
+    if ((a.y > p.y) !== (b.y > p.y) &&
+        p.x < (b.x - a.x) * (p.y - a.y) / (b.y - a.y) + a.x) inside = !inside;
+  }
+  return inside;
+}
+function segSegT(p1, p2, p3, p4) {
+  const d1x = p2.x - p1.x, d1y = p2.y - p1.y;
+  const d2x = p4.x - p3.x, d2y = p4.y - p3.y;
+  const den = d1x * d2y - d1y * d2x;
+  if (Math.abs(den) < 1e-9) return null;
+  const t = ((p3.x - p1.x) * d2y - (p3.y - p1.y) * d2x) / den;
+  const u = ((p3.x - p1.x) * d1y - (p3.y - p1.y) * d1x) / den;
+  return (t >= 0 && t <= 1 && u >= 0 && u <= 1) ? t : null;
+}
+function splitPoly(pts, A, B) {
+  // split pts by the infinite line through A and B -> [neg side, pos side]
+  const dx = B.x - A.x, dy = B.y - A.y;
+  const len = Math.hypot(dx, dy) || 1;
+  const nx = -dy / len, ny = dx / len;
+  const dist = p => (p.x - A.x) * nx + (p.y - A.y) * ny;
+  function clip(keepPos) {
+    const out = [];
+    const n = pts.length;
+    for (let i = 0; i < n; i++) {
+      const cur = pts[i], nxt = pts[(i + 1) % n];
+      const dc = dist(cur), dn = dist(nxt);
+      const cin = keepPos ? dc >= -0.001 : dc <= 0.001;
+      const nin = keepPos ? dn >= -0.001 : dn <= 0.001;
+      if (cin) out.push(cur);
+      if (cin !== nin) {
+        const t = dc / (dc - dn);
+        out.push({ x: cur.x + (nxt.x - cur.x) * t, y: cur.y + (nxt.y - cur.y) * t });
+      }
+    }
+    return out;
+  }
+  return [clip(false), clip(true)];
+}
+function rotPt(p, a) {
+  const c = Math.cos(a), s = Math.sin(a);
+  return { x: p.x * c - p.y * s, y: p.x * s + p.y * c };
+}
+
+/* ---------------- sand pieces ---------------- */
+let pieces = [];
+let pieceSeq = 1;
+let seedCounter = 7;
+
+function makeBands(seed, minY, maxY, palette) {
+  const rng = mulberry(seed * 7919 + 13);
+  const bands = [];
+  let y = minY, i = 0;
+  while (y < maxY - 2) {
+    const h = 8 + rng() * 6;
+    bands.push({ y0: y, y1: Math.min(y + h, maxY), color: palette[i % palette.length], jitter: rng() });
+    y += h; i++;
+  }
+  if (!bands.length) bands.push({ y0: minY, y1: maxY, color: palette[0], jitter: 0.5 });
+  return bands;
+}
+function createPiece(localPts, cx, cy, angle, palette, seed) {
+  let minY = Infinity, maxY = -Infinity, minX = Infinity, maxX = -Infinity;
+  for (const p of localPts) {
+    minY = Math.min(minY, p.y); maxY = Math.max(maxY, p.y);
+    minX = Math.min(minX, p.x); maxX = Math.max(maxX, p.x);
+  }
+  return {
+    id: pieceSeq++,
+    pts: localPts, cx, cy, angle,
+    palette, seed,
+    minX, maxX, minY, maxY,
+    area: Math.abs(polyArea(localPts)),
+    bands: makeBands(seed, minY, maxY, palette),
+    grooves: [],
+    fall: null,
+  };
+}
+function worldPts(piece) {
+  return piece.pts.map(p => {
+    const r = rotPt(p, piece.angle);
+    return { x: r.x + piece.cx, y: r.y + piece.cy };
+  });
+}
+function toLocal(piece, wx, wy) {
+  return rotPt({ x: wx - piece.cx, y: wy - piece.cy }, -piece.angle);
+}
+
+/* block shapes (local coords, origin at bottom-center, y up-negative) */
+function shapeCube(w, h) {
+  const b = Math.min(7, w * 0.08);
+  return [
+    { x: -w / 2 + b, y: -h }, { x: w / 2 - b, y: -h }, { x: w / 2, y: -h + b },
+    { x: w / 2, y: 0 }, { x: -w / 2, y: 0 }, { x: -w / 2, y: -h + b },
+  ];
+}
+function shapeLoaf(w, h) {
+  const pts = [{ x: -w / 2, y: 0 }, { x: w / 2, y: 0 }, { x: w / 2, y: -h * 0.45 }];
+  const steps = 7;
+  for (let i = 1; i < steps; i++) {
+    const t = i / steps, a = Math.PI * t;
+    pts.push({ x: Math.cos(a) * (w / 2), y: -h * 0.45 - Math.sin(a) * (h * 0.55) });
+  }
+  pts.push({ x: -w / 2, y: -h * 0.45 });
+  return pts;
+}
+function shapeCylinder(w, h) {
+  const steps = 9, rx = w / 2, ry = Math.min(16, h * 0.16);
+  const out = [{ x: -w / 2, y: 0 }, { x: w / 2, y: 0 }, { x: w / 2, y: -h + ry }];
+  for (let i = 1; i < steps; i++) {
+    const a = Math.PI * (i / steps);
+    out.push({ x: Math.cos(a) * rx, y: -h + ry - Math.sin(a) * ry });
+  }
+  out.push({ x: -w / 2, y: -h + ry });
+  return out;
+}
+
+function spawnBlocks() {
+  pieces = [];
+  particles.length = 0;
+  const s = clamp(Math.min(W, H) / 640, 0.55, 1.2);
+  const defs = [
+    { shape: 'cube',     pal: 0, fx: 0.16, w: 128, h: 118 },
+    { shape: 'cylinder', pal: 2, fx: 0.40, w: 104, h: 150 },
+    { shape: 'loaf',     pal: 1, fx: 0.64, w: 156, h: 104 },
+    { shape: 'cube',     pal: 3, fx: 0.86, w: 96,  h: 92  },
+  ];
+  if (W < 560) defs.splice(1, 1); // small screens: 3 blocks
+  for (const d of defs) {
+    const w = d.w * s, h = d.h * s;
+    const pts = d.shape === 'cube' ? shapeCube(w, h) : d.shape === 'loaf' ? shapeLoaf(w, h) : shapeCylinder(w, h);
+    const c = polyCentroid(pts);
+    const local = pts.map(p => ({ x: p.x - c.x, y: p.y - c.y }));
+    // cy chosen so the shape's bottom edge (max local y) rests exactly on the floor
+    const pc = createPiece(local, W * d.fx, floorY - maxLocalY(local), 0, PALETTES[d.pal], seedCounter++);
+    pieces.push(pc);
+  }
+}
+function maxLocalY(local) { let m = -Infinity; for (const p of local) m = Math.max(m, p.y); return m; }
+
+/* ---------------- sand piles & particles ---------------- */
+let pileHeights = new Float32Array(0);
+const PILE_STEP = 6;
+function pileAt(x) {
+  const i = clamp(Math.floor(x / PILE_STEP), 0, pileHeights.length - 1);
+  return pileHeights[i] || 0;
+}
+function addToPile(x, amount) {
+  const i = clamp(Math.floor(x / PILE_STEP), 0, pileHeights.length - 1);
+  for (let k = -2; k <= 2; k++) {
+    const j = i + k;
+    if (j < 0 || j >= pileHeights.length) continue;
+    pileHeights[j] = Math.min(pileHeights[j] + amount * (1 - Math.abs(k) * 0.28), 46);
+  }
+}
+const particles = [];
+function spawnCrumble(x, y, palette, count, spread) {
+  for (let i = 0; i < count; i++) {
+    if (particles.length > 900) break;
+    const a = Math.random() * Math.PI * 2, sp = Math.random() * (spread || 60);
+    particles.push({
+      x: x + (Math.random() - 0.5) * 26, y: y + (Math.random() - 0.5) * 10,
+      vx: Math.cos(a) * sp, vy: -Math.random() * 90 - 10,
+      r: 1 + Math.random() * 2.2,
+      color: palette[Math.floor(Math.random() * palette.length)],
+      settled: false,
+    });
+  }
+}
+function updateParticles(dt) {
+  for (let i = particles.length - 1; i >= 0; i--) {
+    const p = particles[i];
+    p.vy += 620 * dt;
+    p.x += p.vx * dt; p.y += p.vy * dt;
+    p.vx *= (1 - 1.6 * dt);
+    const ground = floorY - pileAt(p.x) + 1;
+    if (p.y >= ground) {
+      addToPile(p.x, p.r * 0.085);
+      playPatter();
+      particles.splice(i, 1);
+    } else if (p.x < -20 || p.x > W + 20 || p.y > H + 30) {
+      particles.splice(i, 1);
+    }
+  }
+}
+
+/* ---------------- satisfaction ---------------- */
+let satisfaction = 0, zenShown = false;
+const meterFill = document.getElementById('meterFill');
+function addSatisfaction(n) {
+  if (zenShown) return;
+  satisfaction = clamp(satisfaction + n, 0, 100);
+  meterFill.style.width = satisfaction + '%';
+  if (satisfaction >= 100) {
+    zenShown = true;
+    document.getElementById('zenOverlay').classList.remove('hidden');
+    // celebratory sand burst
+    for (const pc of pieces) spawnCrumble(pc.cx, pc.cy - 30, pc.palette, 26, 160);
+    playCrunch(true); setTimeout(playThump, 120);
+  }
+}
+
+/* ---------------- cutting ---------------- */
+function performCut(piece, entryW, exitW) {
+  const wpts = worldPts(piece);
+  const [neg, pos] = splitPoly(wpts, entryW, exitW);
+  const idx = pieces.indexOf(piece);
+  if (idx < 0) return;
+  const totalArea = Math.abs(polyArea(wpts));
+  const aNeg = Math.abs(polyArea(neg)), aPos = Math.abs(polyArea(pos));
+  const small = Math.min(aNeg, aPos);
+  pieces.splice(idx, 1);
+  dragStates.delete(piece);
+
+  const midX = (entryW.x + exitW.x) / 2, midY = (entryW.y + exitW.y) / 2;
+
+  // tiny sliver -> pure crumble, deeply satisfying
+  if (small < totalArea * 0.03 || small < 60) {
+    const rest = aNeg > aPos ? neg : pos;
+    const c = polyCentroid(rest);
+    const child = createPiece(rest.map(p => ({ x: p.x - c.x, y: p.y - c.y })), c.x, c.y, 0, piece.palette, piece.seed + 31);
+    pieces.push(child);
+    spawnCrumble(midX, midY, piece.palette, 34, 90);
+    playCrunch(false);
+    addSatisfaction(5);
+    capPieces();
+    return;
+  }
+
+  const mkChild = pts => {
+    const c = polyCentroid(pts);
+    return createPiece(pts.map(p => ({ x: p.x - c.x, y: p.y - c.y })), c.x, c.y, 0, piece.palette, piece.seed + 17 + Math.floor(Math.random() * 40));
+  };
+  const childA = mkChild(neg), childB = mkChild(pos);
+
+  // which piece tips over? the one NOT holding the original's lowest point,
+  // otherwise the smaller one.
+  const lowest = wpts.reduce((m, p) => (p.y > m.y ? p : m), wpts[0]);
+  const aHasLow = pointInPoly(lowest, neg) || neg.some(p => Math.hypot(p.x - lowest.x, p.y - lowest.y) < 2);
+  const bHasLow = pointInPoly(lowest, pos) || pos.some(p => Math.hypot(p.x - lowest.x, p.y - lowest.y) < 2);
+  let faller, stayer;
+  if (aHasLow !== bHasLow) { faller = aHasLow ? childB : childA; stayer = aHasLow ? childA : childB; }
+  else if (childA.area <= childB.area) { faller = childA; stayer = childB; }
+  else { faller = childB; stayer = childA; }
+
+  pieces.push(stayer, faller);
+  startFall(faller, stayer);
+
+  spawnCrumble(midX, midY, piece.palette, 30, 80);
+  playCrunch(true);
+  const rel = small / totalArea;
+  addSatisfaction(7 + Math.round(rel * 14));
+  capPieces();
+}
+function startFall(piece, other) {
+  const dirSign = Math.sign(piece.cx - other.cx) || (hash(piece.seed) < 0.5 ? -1 : 1);
+  const targetAng = piece.angle + dirSign * (0.16 + hash(piece.seed * 3) * 0.22);
+  // lowest point of the piece after rotating to targetAng
+  let maxLy = -Infinity;
+  for (const p of piece.pts) { const r = rotPt(p, targetAng); if (r.y > maxLy) maxLy = r.y; }
+  const width = piece.maxX - piece.minX;
+  const toCx = clamp(piece.cx + dirSign * (width * 0.38 + 14), 30, W - 30);
+  let toCy = floorY - maxLy - pileAt(toCx) * 0.4;
+  if (toCy < piece.cy) toCy = piece.cy + 2; // never float upward
+  piece.fall = {
+    t: 0, dur: 0.68,
+    fromCx: piece.cx, fromCy: piece.cy, fromAng: piece.angle,
+    toCx, toCy, toAng: targetAng,
+  };
+}
+function updateFalls(dt) {
+  for (const pc of pieces) {
+    if (!pc.fall) continue;
+    const f = pc.fall;
+    f.t += dt / f.dur;
+    const t = clamp(f.t, 0, 1);
+    pc.cx = lerp(f.fromCx, f.toCx, easeOutCubic(t));
+    pc.angle = lerp(f.fromAng, f.toAng, easeOutCubic(t));
+    // gentle drop with a soft settle at the end
+    const drop = easeInQuad(t);
+    pc.cy = lerp(f.fromCy, f.toCy, drop) + Math.sin(t * Math.PI) * 1.5;
+    if (t >= 1) {
+      pc.cx = f.toCx; pc.cy = f.toCy; pc.angle = f.toAng;
+      pc.fall = null;
+      playThump();
+      // crumble where it landed
+      let lowY = -Infinity, lowX = pc.cx;
+      for (const p of pc.pts) { const r = rotPt(p, pc.angle); if (r.y > lowY) { lowY = r.y; lowX = r.x + pc.cx; } }
+      spawnCrumble(lowX, pc.cy + lowY - 2, pc.palette, 16, 55);
+      addSatisfaction(1.5);
+    }
+  }
+}
+function capPieces() {
+  // keep things tidy: if slabs pile up, oldest fallen slab dissolves into sand
+  while (pieces.length > 26) {
+    const old = pieces.find(p => !p.fall);
+    if (!old) break;
+    spawnCrumble(old.cx, old.cy, old.palette, 22, 70);
+    pieces.splice(pieces.indexOf(old), 1);
+  }
+}
+
+/* ---------------- pointer / knife ---------------- */
+const pointer = { down: false, x: -100, y: -100, lastX: -100, lastY: -100, speed: 0, angle: 0, seen: false };
+const dragStates = new Map(); // piece -> {inside, entry}
+let dragPath = [];
+
+function canvasPos(e) {
+  const r = canvas.getBoundingClientRect();
+  return { x: e.clientX - r.left, y: e.clientY - r.top };
+}
+canvas.addEventListener('pointerdown', e => {
+  initAudio();
+  const p = canvasPos(e);
+  pointer.down = true; pointer.seen = true;
+  pointer.x = pointer.lastX = p.x; pointer.y = pointer.lastY = p.y;
+  dragPath = [p];
+  dragStates.clear();
+  canvas.setPointerCapture && canvas.setPointerCapture(e.pointerId);
+  hideTitle();
+  e.preventDefault();
+});
+canvas.addEventListener('pointermove', e => {
+  const p = canvasPos(e);
+  pointer.seen = true;
+  const prev = { x: pointer.x, y: pointer.y };
+  pointer.x = p.x; pointer.y = p.y;
+  const dx = p.x - prev.x, dy = p.y - prev.y;
+  const d = Math.hypot(dx, dy);
+  if (d > 0.5) pointer.angle = Math.atan2(dy, dx);
+  pointer.speed = d;
+  if (!pointer.down) return;
+  dragPath.push(p);
+  if (dragPath.length > 60) dragPath.shift();
+  processDragSegment(prev, p);
+  pointer.lastX = p.x; pointer.lastY = p.y;
+});
+function endDrag() {
+  if (!pointer.down) return;
+  pointer.down = false;
+  // partial drag through a block = a groove that fades
+  for (const [piece, st] of dragStates) {
+    if (st.inside && st.entry && pieces.includes(piece)) {
+      const a = toLocal(piece, st.entry.x, st.entry.y);
+      const b = toLocal(piece, pointer.x, pointer.y);
+      if (Math.hypot(b.x - a.x, b.y - a.y) > 14) {
+        piece.grooves.push({ a, b, alpha: 1 });
+        noiseBurst(AC ? AC.currentTime : 0, 0.08, 900, 0.05, 0.7);
+      }
+    }
+  }
+  dragStates.clear();
+  dragPath = [];
+}
+canvas.addEventListener('pointerup', endDrag);
+canvas.addEventListener('pointercancel', endDrag);
+
+function processDragSegment(p0, p1) {
+  // snapshot: performCut mutates `pieces`
+  const snapshot = pieces.slice();
+  for (const piece of snapshot) {
+    if (!pieces.includes(piece)) continue;
+    const wpts = worldPts(piece);
+    let st = dragStates.get(piece);
+    if (!st) {
+      st = { inside: pointInPoly(p0, wpts), entry: null };
+      dragStates.set(piece, st);
+    }
+    // gather boundary crossings of this segment, in order
+    const hits = [];
+    for (let i = 0; i < wpts.length; i++) {
+      const a = wpts[i], b = wpts[(i + 1) % wpts.length];
+      const t = segSegT(p0, p1, a, b);
+      if (t !== null) hits.push({ t, x: p0.x + (p1.x - p0.x) * t, y: p0.y + (p1.y - p0.y) * t });
+    }
+    hits.sort((m, n) => m.t - n.t);
+    for (const h of hits) {
+      if (!st.inside) {
+        st.inside = true; st.entry = { x: h.x, y: h.y };
+      } else {
+        st.inside = false;
+        if (st.entry) {
+          const chord = Math.hypot(h.x - st.entry.x, h.y - st.entry.y);
+          if (chord > 12) {
+            performCut(piece, st.entry, { x: h.x, y: h.y });
+            st.entry = null;
+            break; // piece is gone; stop processing it
+          }
+          st.entry = null;
+        }
+      }
+    }
+  }
+}
+
+/* ---------------- drawing ---------------- */
+function buildBackground() {
+  bgCanvas = document.createElement('canvas');
+  bgCanvas.width = Math.max(2, W * DPR); bgCanvas.height = Math.max(2, H * DPR);
+  const b = bgCanvas.getContext('2d');
+  b.scale(DPR, DPR);
+  // wall: warm dusk gradient
+  const wall = b.createLinearGradient(0, 0, 0, floorY);
+  wall.addColorStop(0, '#4a2f22');
+  wall.addColorStop(0.6, '#6b4230');
+  wall.addColorStop(1, '#7d4e35');
+  b.fillStyle = wall; b.fillRect(0, 0, W, floorY + 2);
+  // soft bokeh glows
+  const rng = mulberry(42);
+  for (let i = 0; i < 14; i++) {
+    const x = rng() * W, y = rng() * floorY * 0.8, r = 20 + rng() * 60;
+    const g = b.createRadialGradient(x, y, 0, x, y, r);
+    g.addColorStop(0, 'rgba(255,190,120,' + (0.05 + rng() * 0.06) + ')');
+    g.addColorStop(1, 'rgba(255,190,120,0)');
+    b.fillStyle = g;
+    b.beginPath(); b.arc(x, y, r, 0, 7); b.fill();
+  }
+  // table top (the board)
+  const wood = b.createLinearGradient(0, floorY, 0, H);
+  wood.addColorStop(0, '#a06a3b');
+  wood.addColorStop(0.12, '#96602f');
+  wood.addColorStop(1, '#6f4520');
+  b.fillStyle = wood; b.fillRect(0, floorY, W, H - floorY);
+  // board slab highlight + front edge
+  b.fillStyle = 'rgba(255,220,160,0.20)'; b.fillRect(0, floorY, W, 3);
+  b.fillStyle = 'rgba(0,0,0,0.25)'; b.fillRect(0, floorY + 3, W, 4);
+  // wood grain
+  b.strokeStyle = 'rgba(70,40,15,0.16)'; b.lineWidth = 1.4;
+  for (let i = 0; i < 26; i++) {
+    const y = floorY + 6 + rng() * (H - floorY - 10);
+    b.beginPath();
+    b.moveTo(0, y);
+    for (let x = 0; x <= W; x += 40) b.lineTo(x, y + Math.sin(x * 0.02 + i) * 1.6);
+    b.stroke();
+  }
+  // plank seams
+  b.strokeStyle = 'rgba(50,28,10,0.35)'; b.lineWidth = 2;
+  for (let x = W / 4; x < W; x += W / 4) {
+    b.beginPath(); b.moveTo(x, floorY + 3); b.lineTo(x, H); b.stroke();
+  }
+}
+function drawPiles() {
+  if (pileHeights.length < 2) return;
+  ctx.beginPath();
+  ctx.moveTo(0, floorY + 2);
+  for (let i = 0; i < pileHeights.length; i++) {
+    const x = i * PILE_STEP, y = floorY - pileHeights[i];
+    ctx.lineTo(x, y);
+  }
+  ctx.lineTo(W, floorY + 2);
+  ctx.closePath();
+  const g = ctx.createLinearGradient(0, floorY - 46, 0, floorY);
+  g.addColorStop(0, '#e8c88f');
+  g.addColorStop(1, '#c49a5e');
+  ctx.fillStyle = g;
+  ctx.fill();
+  ctx.fillStyle = 'rgba(120,80,30,0.18)';
+  for (let i = 0; i < pileHeights.length; i += 3) {
+    if (pileHeights[i] > 4) ctx.fillRect(i * PILE_STEP, floorY - pileHeights[i] + 2, 2, 2);
+  }
+}
+function drawPiece(pc) {
+  ctx.save();
+  ctx.translate(pc.cx, pc.cy);
+  ctx.rotate(pc.angle);
+  ctx.beginPath();
+  pc.pts.forEach((p, i) => i ? ctx.lineTo(p.x, p.y) : ctx.moveTo(p.x, p.y));
+  ctx.closePath();
+  // strata (clipped)
+  ctx.save();
+  ctx.clip();
+  for (const band of pc.bands) {
+    ctx.fillStyle = band.color;
+    ctx.fillRect(pc.minX - 2, band.y0, (pc.maxX - pc.minX) + 4, band.y1 - band.y0 + 0.6);
+    // soft band shading
+    ctx.fillStyle = 'rgba(255,255,255,' + (0.05 + band.jitter * 0.05) + ')';
+    ctx.fillRect(pc.minX - 2, band.y0, (pc.maxX - pc.minX) + 4, 2);
+    ctx.fillStyle = 'rgba(0,0,0,0.07)';
+    ctx.fillRect(pc.minX - 2, band.y1 - 2, (pc.maxX - pc.minX) + 4, 2);
+  }
+  // grain speckles — deterministic per piece so they never shimmer
+  const rng = mulberry(pc.seed * 131 + 7);
+  const area = (pc.maxX - pc.minX) * (pc.maxY - pc.minY);
+  const dots = Math.min(320, Math.floor(area / 55));
+  for (let i = 0; i < dots; i++) {
+    const x = pc.minX + rng() * (pc.maxX - pc.minX);
+    const y = pc.minY + rng() * (pc.maxY - pc.minY);
+    ctx.fillStyle = rng() < 0.55 ? 'rgba(60,30,10,0.13)' : 'rgba(255,255,255,0.13)';
+    ctx.fillRect(x, y, 1.6, 1.6);
+  }
+  // gentle top light
+  const lg = ctx.createLinearGradient(0, pc.minY, 0, pc.maxY);
+  lg.addColorStop(0, 'rgba(255,255,255,0.14)');
+  lg.addColorStop(0.35, 'rgba(255,255,255,0)');
+  lg.addColorStop(1, 'rgba(0,0,0,0.10)');
+  ctx.fillStyle = lg;
+  ctx.fillRect(pc.minX - 2, pc.minY - 2, (pc.maxX - pc.minX) + 4, (pc.maxY - pc.minY) + 4);
+  ctx.restore();
+  // grooves (partial cuts that fade)
+  for (const g of pc.grooves) {
+    ctx.strokeStyle = 'rgba(50,25,10,' + (0.5 * g.alpha) + ')';
+    ctx.lineWidth = 2.4; ctx.lineCap = 'round';
+    ctx.beginPath(); ctx.moveTo(g.a.x, g.a.y); ctx.lineTo(g.b.x, g.b.y); ctx.stroke();
+    ctx.strokeStyle = 'rgba(255,255,255,' + (0.25 * g.alpha) + ')';
+    ctx.lineWidth = 1;
+    ctx.beginPath(); ctx.moveTo(g.a.x, g.a.y + 2); ctx.lineTo(g.b.x, g.b.y + 2); ctx.stroke();
+  }
+  // outline
+  ctx.beginPath();
+  pc.pts.forEach((p, i) => i ? ctx.lineTo(p.x, p.y) : ctx.moveTo(p.x, p.y));
+  ctx.closePath();
+  ctx.strokeStyle = 'rgba(40,20,8,0.35)';
+  ctx.lineWidth = 1.6;
+  ctx.stroke();
+  ctx.restore();
+  // soft shadow under resting pieces
+  if (!pc.fall) {
+    ctx.save();
+    ctx.fillStyle = 'rgba(30,15,5,0.20)';
+    ctx.beginPath();
+    ctx.ellipse(pc.cx, floorY + 3, (pc.maxX - pc.minX) * 0.52, 5, 0, 0, 7);
+    ctx.fill();
+    ctx.restore();
+  }
+}
+function drawKnife() {
+  if (!pointer.seen) return;
+  ctx.save();
+  ctx.translate(pointer.x, pointer.y);
+  ctx.rotate(pointer.angle);
+  ctx.globalAlpha = pointer.down ? 1 : 0.85;
+  // shadow
+  ctx.fillStyle = 'rgba(0,0,0,0.18)';
+  ctx.beginPath(); ctx.ellipse(3, 9, 44, 5, 0, 0, 7); ctx.fill();
+  // blade (tip at pointer, trailing back along -x)
+  const blade = ctx.createLinearGradient(0, -5, 0, 5);
+  blade.addColorStop(0, '#f4f7fa'); blade.addColorStop(0.5, '#c3ccd4'); blade.addColorStop(1, '#8f9aa5');
+  ctx.fillStyle = blade;
+  ctx.beginPath();
+  ctx.moveTo(10, 0);
+  ctx.quadraticCurveTo(-6, -5.5, -34, -4.6);
+  ctx.lineTo(-44, -3.4);
+  ctx.lineTo(-44, 3.4);
+  ctx.lineTo(-34, 4.6);
+  ctx.quadraticCurveTo(-6, 5.5, 10, 0);
+  ctx.closePath(); ctx.fill();
+  ctx.strokeStyle = 'rgba(70,80,90,0.6)'; ctx.lineWidth = 0.8; ctx.stroke();
+  // handle
+  const hg = ctx.createLinearGradient(0, -6, 0, 6);
+  hg.addColorStop(0, '#b57e45'); hg.addColorStop(1, '#7c4f24');
+  ctx.fillStyle = hg;
+  ctx.beginPath();
+  const hx = -86, hw = 42;
+  ctx.moveTo(hx, -5); ctx.lineTo(hx + hw, -4.2); ctx.lineTo(hx + hw, 4.2); ctx.lineTo(hx, 5);
+  ctx.quadraticCurveTo(hx - 5, 0, hx, -5);
+  ctx.closePath(); ctx.fill();
+  ctx.fillStyle = 'rgba(255,235,200,0.5)';
+  ctx.beginPath(); ctx.arc(hx + 9, 0, 2.1, 0, 7); ctx.arc(hx + hw - 9, 0, 2.1, 0, 7); ctx.fill();
+  ctx.restore();
+}
+function drawDragTrail() {
+  if (!pointer.down || dragPath.length < 2) return;
+  ctx.save();
+  ctx.strokeStyle = 'rgba(255,250,235,0.35)';
+  ctx.lineWidth = 2; ctx.lineCap = 'round'; ctx.lineJoin = 'round';
+  ctx.beginPath();
+  dragPath.forEach((p, i) => i ? ctx.lineTo(p.x, p.y) : ctx.moveTo(p.x, p.y));
+  ctx.stroke();
+  ctx.restore();
+}
+
+/* ---------------- main loop ---------------- */
+let lastTime = performance.now();
+function frame(now) {
+  const dt = Math.min(0.05, (now - lastTime) / 1000);
+  lastTime = now;
+
+  updateFalls(dt);
+  updateParticles(dt);
+  for (const pc of pieces) {
+    for (let i = pc.grooves.length - 1; i >= 0; i--) {
+      pc.grooves[i].alpha -= dt / 3.2;
+      if (pc.grooves[i].alpha <= 0) pc.grooves.splice(i, 1);
+    }
+  }
+  // knife-in-sand sound follows drag speed while inside sand
+  if (AC && dragGain) {
+    let inSand = false;
+    if (pointer.down) {
+      for (const pc of pieces) {
+        if (pointInPoly({ x: pointer.x, y: pointer.y }, worldPts(pc))) { inSand = true; break; }
+      }
+    }
+    const target = inSand ? clamp(pointer.speed * 0.012, 0.02, 0.4) : 0;
+    dragGain.gain.setTargetAtTime(target, AC.currentTime, 0.045);
+    if (dragFilter) dragFilter.frequency.setTargetAtTime(1100 + pointer.speed * 26, AC.currentTime, 0.05);
+    pointer.speed *= 0.82;
+  }
+
+  ctx.clearRect(0, 0, W, H);
+  if (bgCanvas) ctx.drawImage(bgCanvas, 0, 0, W, H);
+  drawPiles();
+  for (const pc of pieces) drawPiece(pc);
+  // particles
+  for (const p of particles) {
+    ctx.fillStyle = p.color;
+    ctx.fillRect(p.x - p.r / 2, p.y - p.r / 2, p.r, p.r);
+  }
+  drawDragTrail();
+  drawKnife();
+  requestAnimationFrame(frame);
+}
+
+/* ---------------- layout ---------------- */
+function resize() {
+  DPR = Math.min(2, window.devicePixelRatio || 1);
+  W = window.innerWidth; H = window.innerHeight;
+  canvas.width = Math.round(W * DPR); canvas.height = Math.round(H * DPR);
+  canvas.style.width = W + 'px'; canvas.style.height = H + 'px';
+  ctx.setTransform(DPR, 0, 0, DPR, 0, 0);
+  floorY = Math.round(H * 0.84);
+  pileHeights = new Float32Array(Math.ceil(W / PILE_STEP) + 2);
+  buildBackground();
+  if (!pieces.length) spawnBlocks();
+  else {
+    for (const pc of pieces) pc.cy = Math.min(pc.cy, floorY); // keep on board
+  }
+}
+let resizeTimer = null;
+window.addEventListener('resize', () => {
+  clearTimeout(resizeTimer);
+  resizeTimer = setTimeout(resize, 120);
+});
+
+/* ---------------- UI wiring ---------------- */
+const titleOverlay = document.getElementById('titleOverlay');
+let titleHidden = false;
+function hideTitle() {
+  if (titleHidden) return;
+  titleHidden = true;
+  titleOverlay.classList.add('hidden');
+}
+document.getElementById('startBtn').addEventListener('click', () => { initAudio(); hideTitle(); });
+document.getElementById('muteBtn').addEventListener('click', function () {
+  muted = !muted;
+  this.textContent = muted ? '🔇' : '🔊';
+  if (masterGain) masterGain.gain.value = muted ? 0 : 0.9;
+  if (!muted) initAudio();
+});
+function freshSet() {
+  satisfaction = 0; zenShown = false;
+  meterFill.style.width = '0%';
+  document.getElementById('zenOverlay').classList.add('hidden');
+  spawnBlocks();
+}
+document.getElementById('newBtn').addEventListener('click', freshSet);
+document.getElementById('freshBtn').addEventListener('click', freshSet);
+
+/* ---------------- go ---------------- */
+resize();
+requestAnimationFrame(frame);
+</script>
+</body>
+</html>

@@ -1,0 +1,883 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<title>Zamboni — an ASMR resurfacing</title>
+<style>
+  * { margin:0; padding:0; box-sizing:border-box; }
+  html, body {
+    width:100%; height:100%; overflow:hidden;
+    background:#0b141f;
+    font-family: ui-rounded, "SF Pro Rounded", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+    color:#eaf4fb;
+    -webkit-user-select:none; user-select:none;
+    -webkit-tap-highlight-color: transparent;
+    touch-action:none;
+  }
+  #game { position:fixed; inset:0; display:block; touch-action:none; }
+
+  /* ---------- HUD ---------- */
+  #hud {
+    position:fixed; top:0; left:0; right:0;
+    display:flex; align-items:flex-start; justify-content:space-between;
+    padding: calc(env(safe-area-inset-top, 0px) + 12px) 14px 0 14px;
+    pointer-events:none; z-index:5;
+  }
+  #brand {
+    font-weight:800; letter-spacing:.22em; font-size:13px; opacity:.85;
+    text-shadow:0 1px 8px rgba(0,0,0,.5); padding-top:7px;
+  }
+  #brand small { display:block; letter-spacing:.08em; font-weight:600; font-size:10px; opacity:.6; margin-top:2px; }
+  #meter {
+    flex:0 1 340px; margin:0 12px;
+    background:rgba(10,22,36,.55); border:1px solid rgba(180,220,255,.18);
+    border-radius:999px; padding:7px 14px 9px;
+    backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px);
+    box-shadow:0 4px 18px rgba(0,0,0,.35);
+  }
+  #meter .row { display:flex; justify-content:space-between; align-items:baseline; }
+  #meter .lbl { font-size:10px; font-weight:700; letter-spacing:.18em; opacity:.75; }
+  #pct { font-size:15px; font-weight:800; font-variant-numeric:tabular-nums; }
+  #bar { height:6px; border-radius:99px; background:rgba(255,255,255,.14); margin-top:5px; overflow:hidden; }
+  #fill {
+    height:100%; width:0%; border-radius:99px;
+    background:linear-gradient(90deg,#7fd4ff,#c9f2ff 60%,#ffffff);
+    box-shadow:0 0 10px rgba(160,220,255,.8);
+    transition:width .35s ease;
+  }
+  .hbtn {
+    pointer-events:auto; cursor:pointer; border:1px solid rgba(180,220,255,.22);
+    background:rgba(10,22,36,.55); color:#eaf4fb;
+    width:42px; height:42px; border-radius:50%; font-size:19px; line-height:1;
+    display:flex; align-items:center; justify-content:center;
+    backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px);
+    box-shadow:0 4px 18px rgba(0,0,0,.35);
+  }
+  .hbtn:active { transform:scale(.93); }
+
+  /* ---------- Overlays ---------- */
+  .overlay {
+    position:fixed; inset:0; z-index:10;
+    display:flex; flex-direction:column; align-items:center; justify-content:center;
+    text-align:center; padding:24px;
+    background:radial-gradient(ellipse at 50% 42%, rgba(16,34,54,.42), rgba(5,10,17,.78));
+    backdrop-filter: blur(3px); -webkit-backdrop-filter: blur(3px);
+    transition:opacity .6s ease, visibility 0s;
+  }
+  .overlay.hidden {
+    opacity:0; visibility:hidden; pointer-events:none;
+    transition:opacity .6s ease, visibility 0s linear .6s;
+  }
+  .overlay.hidden .bigbtn { pointer-events:none; }
+  .kicker { font-size:11px; font-weight:700; letter-spacing:.34em; opacity:.65; margin-bottom:14px; }
+  h1.title {
+    font-size:clamp(46px, 11vw, 92px); font-weight:900; letter-spacing:.14em; line-height:1;
+    background:linear-gradient(180deg,#ffffff 20%,#a9dcff 75%,#6db9ec);
+    -webkit-background-clip:text; background-clip:text; -webkit-text-fill-color:transparent;
+    filter:drop-shadow(0 6px 26px rgba(110,190,255,.35));
+  }
+  .sub { margin-top:14px; font-size:clamp(14px,2.6vw,18px); font-weight:600; opacity:.85; }
+  .howto {
+    margin-top:26px; display:flex; gap:10px; flex-wrap:wrap; justify-content:center;
+    font-size:13px; font-weight:600;
+  }
+  .howto span {
+    background:rgba(160,215,255,.10); border:1px solid rgba(180,220,255,.20);
+    padding:8px 14px; border-radius:999px;
+  }
+  .bigbtn {
+    margin-top:34px; pointer-events:auto; cursor:pointer;
+    font:inherit; font-size:16px; font-weight:800; letter-spacing:.06em;
+    color:#08283f; background:linear-gradient(180deg,#ffffff,#bfe9ff);
+    border:none; border-radius:999px; padding:15px 36px;
+    box-shadow:0 10px 30px rgba(120,200,255,.35), inset 0 1px 0 #fff;
+  }
+  .bigbtn:active { transform:scale(.96); }
+  #glassWord {
+    font-size:clamp(58px, 14vw, 120px); font-weight:900; letter-spacing:.18em;
+    color:#fff; text-shadow:0 0 34px rgba(170,225,255,.95), 0 0 90px rgba(120,190,255,.6);
+  }
+  #doneStats { margin-top:10px; font-size:15px; font-weight:600; opacity:.85; }
+  .tiny { margin-top:22px; font-size:11px; letter-spacing:.14em; opacity:.45; font-weight:600; }
+</style>
+</head>
+<body>
+<canvas id="game"></canvas>
+
+<div id="hud">
+  <div id="brand">ZAMBONI<small>ASMR RESURFACING</small></div>
+  <div id="meter">
+    <div class="row"><span class="lbl">ICE RESURFACED</span><span id="pct">0%</span></div>
+    <div id="bar"><div id="fill"></div></div>
+  </div>
+  <button id="muteBtn" class="hbtn" aria-label="Toggle sound">🔊</button>
+</div>
+
+<div id="titleOverlay" class="overlay">
+  <div class="kicker">A QUIET LITTLE GAME</div>
+  <h1 class="title">ZAMBONI</h1>
+  <div class="sub">The scuffed ice is waiting. Lay it back down as glass.</div>
+  <div class="howto">
+    <span>🖐️ Drag to drive</span>
+    <span>🧊 Cover every scuff</span>
+    <span>✨ 100% = glass</span>
+  </div>
+  <button id="startBtn" class="bigbtn">Start resurfacing</button>
+  <div class="tiny">SOUND ON FOR THE FULL ASMR · HEADPHONES LOVELY</div>
+</div>
+
+<div id="doneOverlay" class="overlay hidden">
+  <div id="glassWord">GLASS.</div>
+  <div id="doneStats">100% resurfaced · not a scuff left</div>
+  <button id="replayBtn" class="bigbtn">Resurface again</button>
+  <div class="tiny">NEW SCUFFS, FRESH ICE, SAME QUIET</div>
+</div>
+
+<script>
+'use strict';
+/* ============================================================
+   ZAMBONI — an ASMR ice-resurfacing toy
+   Drag to drive. Wet sheen freezes into glass. That's all.
+   All graphics canvas-drawn, all sound synthesized (WebAudio).
+   ============================================================ */
+
+// ---------- constants ----------
+const RW = 1000, RH = 560;          // rink size in local units
+const RINK_R = 92;                  // rink corner radius
+const BOARD = 36;                   // boards band width (local units)
+const TRAIL_W = 47;                 // resurfacing width of the machine
+const MAX_SPEED = 300;              // local units / second
+const WET_FADE_S = 3.2;             // seconds for wet sheen to freeze
+
+// ---------- dom ----------
+const canvas = document.getElementById('game');
+const ctx = canvas.getContext('2d');
+const pctEl = document.getElementById('pct');
+const fillEl = document.getElementById('fill');
+const titleOverlay = document.getElementById('titleOverlay');
+const doneOverlay = document.getElementById('doneOverlay');
+const muteBtn = document.getElementById('muteBtn');
+
+// ---------- helpers ----------
+function rr(c, x, y, w, h, r) {
+  r = Math.min(r, w / 2, h / 2);
+  c.beginPath();
+  c.moveTo(x + r, y);
+  c.arcTo(x + w, y, x + w, y + h, r);
+  c.arcTo(x + w, y + h, x, y + h, r);
+  c.arcTo(x, y + h, x, y, r);
+  c.arcTo(x, y, x + w, y, r);
+  c.closePath();
+}
+function rinkPath(c) { rr(c, 0, 0, RW, RH, RINK_R);
+}
+function mkCanvas(w, h) {
+  const c = document.createElement('canvas'); c.width = w; c.height = h;
+  return c;
+}
+function clamp(v, a, b) { return v < a ? a : (v > b ? b : v); }
+function lerp(a, b, t) { return a + (b - a) * t; }
+function angLerp(a, b, t) {
+  let d = (b - a) % (Math.PI * 2);
+  if (d > Math.PI) d -= Math.PI * 2;
+  if (d < -Math.PI) d += Math.PI * 2;
+  return a + d * t;
+}
+const rand = (a, b) => a + Math.random() * (b - a);
+
+// ---------- offscreen layers (rink-local space) ----------
+const cleanCanvas = mkCanvas(RW, RH);   // pristine ice + markings + baked light
+const scuffCanvas = mkCanvas(RW, RH);   // the same ice, beaten up
+const cleanMask   = mkCanvas(RW, RH);   // where we've resurfaced (permanent)
+const wetMask     = mkCanvas(RW, RH);   // fresh wet sheen (fades as it freezes)
+const fxCanvas    = mkCanvas(RW, RH);   // per-frame composite scratch
+const cleanCtx = cleanCanvas.getContext('2d');
+const scuffCtx = scuffCanvas.getContext('2d');
+const maskCtx  = cleanMask.getContext('2d');
+const wetCtx   = wetMask.getContext('2d');
+const fxCtx    = fxCanvas.getContext('2d');
+maskCtx.strokeStyle = '#fff'; maskCtx.lineCap = 'round'; maskCtx.lineJoin = 'round';
+wetCtx.strokeStyle = '#fff';  wetCtx.lineCap = 'round';  wetCtx.lineJoin = 'round';
+
+// tiny coverage sampler
+const TINY_W = 100, TINY_H = 56;
+const tinyCanvas = mkCanvas(TINY_W, TINY_H);
+const tinyCtx = tinyCanvas.getContext('2d');
+const shapeCanvas = mkCanvas(TINY_W, TINY_H);
+let shapeTotal = 0, tinyData = null;
+(function buildShape() {
+  const c = shapeCanvas.getContext('2d');
+  c.fillStyle = '#fff';
+  c.save(); c.scale(TINY_W / RW, TINY_H / RH); rinkPath(c); c.fill(); c.restore();
+  const d = c.getImageData(0, 0, TINY_W, TINY_H).data;
+  for (let i = 3; i < d.length; i += 4) if (d[i] > 100) shapeTotal++;
+})();
+
+// ---------- draw the pristine rink ----------
+function drawMarkings(c) {
+  // ice base
+  const g = c.createLinearGradient(0, 0, RW * 0.3, RH);
+  g.addColorStop(0, '#eef7fd'); g.addColorStop(0.5, '#e2f0f9'); g.addColorStop(1, '#d8ebf7');
+  c.fillStyle = g; rinkPath(c); c.fill();
+
+  c.save(); rinkPath(c); c.clip();
+  // faint frosty mottling
+  for (let i = 0; i < 260; i++) {
+    c.fillStyle = 'rgba(255,255,255,' + rand(0.02, 0.06) + ')';
+    c.beginPath(); c.ellipse(rand(0, RW), rand(0, RH), rand(14, 60), rand(8, 30), rand(0, 3), 0, 7); c.fill();
+  }
+  // markings (drawn under a sheen later, keep them slightly soft)
+  const line = (x, y, w, h, col) => { c.fillStyle = col; c.fillRect(x, y, w, h); };
+  // blue lines
+  line(RW * 0.30 - 13, 0, 26, RH, 'rgba(46,102,196,0.60)');
+  line(RW * 0.70 - 13, 0, 26, RH, 'rgba(46,102,196,0.60)');
+  // goal lines
+  line(RW * 0.075 - 3, 0, 6, RH, 'rgba(206,64,64,0.55)');
+  line(RW * 0.925 - 3, 0, 6, RH, 'rgba(206,64,64,0.55)');
+  // center red line
+  line(RW / 2 - 6, 0, 12, RH, 'rgba(206,64,64,0.72)');
+  // center circle + dot
+  c.strokeStyle = 'rgba(46,102,196,0.75)'; c.lineWidth = 4;
+  c.beginPath(); c.arc(RW / 2, RH / 2, 74, 0, 7); c.stroke();
+  c.fillStyle = 'rgba(46,102,196,0.8)';
+  c.beginPath(); c.arc(RW / 2, RH / 2, 11, 0, 7); c.fill();
+  // faceoff circles
+  const fo = [[0.225, 0.26], [0.225, 0.74], [0.775, 0.26], [0.775, 0.74]];
+  for (const [fx, fy] of fo) {
+    const x = fx * RW, y = fy * RH;
+    c.strokeStyle = 'rgba(206,64,64,0.65)'; c.lineWidth = 3.5;
+    c.beginPath(); c.arc(x, y, 54, 0, 7); c.stroke();
+    c.fillStyle = 'rgba(206,64,64,0.75)';
+    c.beginPath(); c.arc(x, y, 9, 0, 7); c.fill();
+    // hash marks
+    c.strokeStyle = 'rgba(206,64,64,0.6)'; c.lineWidth = 4;
+    for (const s of [-1, 1]) {
+      c.beginPath(); c.moveTo(x + s * 62, y - 16); c.lineTo(x + s * 62, y - 4); c.stroke();
+      c.beginPath(); c.moveTo(x + s * 62, y + 4);  c.lineTo(x + s * 62, y + 16); c.stroke();
+    }
+  }
+  // creases
+  for (const s of [0, 1]) {
+    const x = s ? RW * 0.925 : RW * 0.075;
+    c.fillStyle = 'rgba(120,180,235,0.5)';
+    c.beginPath(); c.arc(x, RH / 2, 34, s ? Math.PI / 2 : -Math.PI / 2, s ? Math.PI * 1.5 : Math.PI / 2, s === 0); c.fill();
+    c.strokeStyle = 'rgba(206,64,64,0.6)'; c.lineWidth = 3;
+    c.beginPath(); c.arc(x, RH / 2, 34, s ? Math.PI / 2 : -Math.PI / 2, s ? Math.PI * 1.5 : Math.PI / 2, s === 0); c.stroke();
+  }
+  // soft top light so the ice never looks flat
+  const sheen = c.createLinearGradient(0, 0, 0, RH);
+  sheen.addColorStop(0, 'rgba(255,255,255,0.20)');
+  sheen.addColorStop(0.45, 'rgba(255,255,255,0)');
+  sheen.addColorStop(1, 'rgba(140,180,220,0.13)');
+  c.fillStyle = sheen; c.fillRect(0, 0, RW, RH);
+  c.restore();
+
+  // hairline inner edge
+  rinkPath(c); c.strokeStyle = 'rgba(120,160,200,0.35)'; c.lineWidth = 2; c.stroke();
+}
+
+// baked soft light pools (drawn again live, masked to clean ice, each frame)
+function drawLightPools(c, shimmer) {
+  const pools = [[0.24, 0.30], [0.50, 0.62], [0.76, 0.30], [0.36, 0.80], [0.64, 0.86]];
+  for (let i = 0; i < pools.length; i++) {
+    const [px, py] = pools[i];
+    const wob = 1 + Math.sin(shimmer * 0.7 + i * 1.7) * 0.03;
+    const x = px * RW, y = py * RH, rx = 175 * wob, ry = 56 * wob;
+    const g = c.createRadialGradient(x, y, 4, x, y, rx);
+    g.addColorStop(0, 'rgba(255,255,255,0.34)');
+    g.addColorStop(0.55, 'rgba(230,246,255,0.13)');
+    g.addColorStop(1, 'rgba(230,246,255,0)');
+    c.save(); c.translate(x, y); c.scale(1, ry / rx); c.translate(-x, -y);
+    c.fillStyle = g; c.beginPath(); c.arc(x, y, rx, 0, 7); c.fill(); c.restore();
+    // a crisp little core reflection of the lamp itself
+    c.fillStyle = 'rgba(255,255,255,0.20)';
+    c.beginPath(); c.ellipse(x, y, 30 * wob, 7, 0, 0, 7); c.fill();
+  }
+}
+
+// ---------- scuff the ice up ----------
+function scuffIce() {
+  const c = scuffCtx;
+  c.clearRect(0, 0, RW, RH);
+  c.drawImage(cleanCanvas, 0, 0);
+  c.save(); rinkPath(c); c.clip();
+  // dull grey film over everything
+  c.fillStyle = 'rgba(158,175,192,0.42)'; c.fillRect(0, 0, RW, RH);
+  c.fillStyle = 'rgba(126,142,160,0.16)'; c.fillRect(0, 0, RW, RH);
+  // grey smudge patches
+  for (let i = 0; i < 110; i++) {
+    c.fillStyle = 'rgba(105,120,138,' + rand(0.04, 0.11) + ')';
+    c.beginPath(); c.ellipse(rand(0, RW), rand(0, RH), rand(20, 95), rand(10, 42), rand(0, 3), 0, 7); c.fill();
+  }
+  // skate arcs — hundreds of little crescents
+  for (let i = 0; i < 620; i++) {
+    const x = rand(0, RW), y = rand(0, RH), r = rand(8, 70);
+    const a0 = rand(0, Math.PI * 2), a1 = a0 + rand(0.3, 1.6);
+    c.strokeStyle = Math.random() < 0.72
+      ? 'rgba(240,248,255,' + rand(0.08, 0.30) + ')'
+      : 'rgba(88,102,120,' + rand(0.08, 0.22) + ')';
+    c.lineWidth = rand(0.7, 2.1);
+    c.beginPath(); c.arc(x, y, r, a0, a1); c.stroke();
+  }
+  // straight blade cuts
+  for (let i = 0; i < 170; i++) {
+    const x = rand(0, RW), y = rand(0, RH), a = rand(0, Math.PI * 2), l = rand(18, 130);
+    c.strokeStyle = 'rgba(235,245,252,' + rand(0.10, 0.30) + ')';
+    c.lineWidth = rand(0.7, 1.6);
+    c.beginPath(); c.moveTo(x, y); c.lineTo(x + Math.cos(a) * l, y + Math.sin(a) * l); c.stroke();
+  }
+  // skate-shaving snow piles, mostly near the boards and center
+  for (let i = 0; i < 2400; i++) {
+    let x, y;
+    if (Math.random() < 0.55) { // near edges
+      const edge = Math.floor(rand(0, 4));
+      if (edge === 0) { x = rand(0, RW); y = rand(0, 46); }
+      else if (edge === 1) { x = rand(0, RW); y = rand(RH - 46, RH); }
+      else if (edge === 2) { x = rand(0, 46); y = rand(0, RH); }
+      else { x = rand(RW - 46, RW); y = rand(0, RH); }
+    } else { x = rand(0, RW); y = rand(0, RH); }
+    c.fillStyle = 'rgba(250,253,255,' + rand(0.15, 0.5) + ')';
+    c.beginPath(); c.arc(x, y, rand(0.6, 2.2), 0, 7); c.fill();
+  }
+  // a couple of skate-stopping spray fans
+  for (let i = 0; i < 26; i++) {
+    const x = rand(40, RW - 40), y = rand(40, RH - 40), a = rand(0, Math.PI * 2);
+    for (let j = 0; j < 22; j++) {
+      const t = j / 22, px = x + Math.cos(a + rand(-0.4, 0.4)) * t * rand(20, 52);
+      const py = y + Math.sin(a + rand(-0.4, 0.4)) * t * rand(20, 52);
+      c.fillStyle = 'rgba(250,253,255,' + (0.35 * (1 - t)) + ')';
+      c.beginPath(); c.arc(px, py, rand(0.8, 2.4), 0, 7); c.fill();
+    }
+  }
+  c.restore();
+}
+
+// ---------- coverage ----------
+let percent = 0;
+function sampleCoverage() {
+  tinyCtx.clearRect(0, 0, TINY_W, TINY_H);
+  tinyCtx.drawImage(cleanMask, 0, 0, TINY_W, TINY_H);
+  const d = tinyCtx.getImageData(0, 0, TINY_W, TINY_H);
+  tinyData = d.data;
+  const sc = shapeCanvas.getContext('2d').getImageData(0, 0, TINY_W, TINY_H).data;
+  let covered = 0;
+  for (let i = 3; i < d.data.length; i += 4) {
+    if (sc[i] > 100 && d.data[i] > 110) covered++;
+  }
+  percent = shapeTotal ? (covered / shapeTotal) * 100 : 0;
+  return percent;
+}
+function tinyCoveredAt(lx, ly) {
+  if (!tinyData) return false;
+  const tx = clamp(Math.floor(lx / RW * TINY_W), 0, TINY_W - 1);
+  const ty = clamp(Math.floor(ly / RH * TINY_H), 0, TINY_H - 1);
+  return tinyData[(ty * TINY_W + tx) * 4 + 3] > 110;
+}
+
+// ---------- game state ----------
+let state = 'title'; // title | play | sweep | done
+const zam = { x: RW / 2, y: RH / 2, heading: -Math.PI / 2, speed: 0, px: RW / 2, py: RH / 2 };
+const pointer = { down: false, x: 0, y: 0, sx: 0, sy: 0 };
+let sparkles = [];   // glass twinkles
+let spray = [];      // blade snow spray
+let sweepT = -1;     // shine-sweep progress 0..1 while 'sweep'
+let layingNew = false;
+let driveTime = 0;
+
+function resetGame() {
+  scuffIce();
+  maskCtx.clearRect(0, 0, RW, RH);
+  wetCtx.clearRect(0, 0, RW, RH);
+  // start with a clean patch under the machine so it never sits on scuff
+  maskCtx.beginPath(); maskCtx.arc(zam.x, zam.y, TRAIL_W * 0.9, 0, 7); maskCtx.fillStyle = '#fff'; maskCtx.fill();
+  sparkles = []; spray = []; sweepT = -1; driveTime = 0;
+  zam.x = RW / 2; zam.y = RH / 2; zam.px = zam.x; zam.py = zam.y; zam.speed = 0; zam.heading = -Math.PI / 2;
+  sampleCoverage();
+  updateMeter(true);
+}
+
+// ---------- view transform ----------
+const view = { s: 1, cx: 0, cy: 0, rot: 0, portrait: false };
+function resize() {
+  const dpr = Math.min(window.devicePixelRatio || 1, 2);
+  const w = window.innerWidth, h = window.innerHeight;
+  canvas.width = Math.round(w * dpr); canvas.height = Math.round(h * dpr);
+  canvas.style.width = w + 'px'; canvas.style.height = h + 'px';
+  view.portrait = h > w;
+  view.rot = view.portrait ? -Math.PI / 2 : 0;
+  const dispW = view.portrait ? RH : RW;
+  const dispH = view.portrait ? RW : RH;
+  const m = 16;
+  view.s = Math.min((w - m * 2) / (dispW + BOARD * 2), (h - m * 2) / (dispH + BOARD * 2));
+  view.cx = w / 2; view.cy = h / 2;
+  canvas.dataset.dpr = dpr;
+}
+window.addEventListener('resize', resize);
+
+function screenToLocal(sx, sy) {
+  const dx = sx - view.cx, dy = sy - view.cy;
+  const c = Math.cos(-view.rot), s = Math.sin(-view.rot);
+  const rx = dx * c - dy * s, ry = dx * s + dy * c;
+  return { x: rx / view.s + RW / 2, y: ry / view.s + RH / 2 };
+}
+
+// ---------- pointer ----------
+function setPointer(e) {
+  const p = screenToLocal(e.clientX, e.clientY);
+  pointer.x = p.x; pointer.y = p.y; pointer.sx = e.clientX; pointer.sy = e.clientY;
+}
+canvas.addEventListener('pointerdown', (e) => {
+  e.preventDefault();
+  canvas.setPointerCapture(e.pointerId);
+  pointer.down = true; setPointer(e);
+  initAudio();
+  if (audio.ctx && audio.ctx.state === 'suspended') audio.ctx.resume();
+});
+canvas.addEventListener('pointermove', (e) => { if (pointer.down) setPointer(e); });
+function endPointer(e) { pointer.down = false; }
+canvas.addEventListener('pointerup', endPointer);
+canvas.addEventListener('pointercancel', endPointer);
+
+// ---------- audio (all synthesized) ----------
+const audio = { ctx: null, master: null, muted: false, hum: null, humGain: null, scrapeGain: null, waterGain: null };
+function makeNoiseBuffer(c) {
+  const len = c.sampleRate * 2;
+  const buf = c.createBuffer(1, len, c.sampleRate);
+  const d = buf.getChannelData(0);
+  for (let i = 0; i < len; i++) d[i] = Math.random() * 2 - 1;
+  return buf;
+}
+function initAudio() {
+  if (audio.ctx) return;
+  const AC = window.AudioContext || window.webkitAudioContext;
+  if (!AC) return;
+  const c = new AC();
+  audio.ctx = c;
+  audio.master = c.createGain();
+  audio.master.gain.value = audio.muted ? 0 : 0.9;
+  audio.master.connect(c.destination);
+
+  // --- machine hum: low saw + sub sine through a soft lowpass
+  const humGain = c.createGain(); humGain.gain.value = 0.0;
+  const humFilter = c.createBiquadFilter(); humFilter.type = 'lowpass'; humFilter.frequency.value = 210; humFilter.Q.value = 0.6;
+  const o1 = c.createOscillator(); o1.type = 'sawtooth'; o1.frequency.value = 46;
+  const o2 = c.createOscillator(); o2.type = 'sine'; o2.frequency.value = 92;
+  const o2g = c.createGain(); o2g.gain.value = 0.5;
+  o1.connect(humFilter); o2.connect(o2g); o2g.connect(humFilter);
+  humFilter.connect(humGain); humGain.connect(audio.master);
+  o1.start(); o2.start();
+  audio.hum = { o1, o2, filter: humFilter };
+  audio.humGain = humGain;
+
+  // --- blade scrape: band-passed noise
+  const noise = makeNoiseBuffer(c);
+  const scrapeSrc = c.createBufferSource(); scrapeSrc.buffer = noise; scrapeSrc.loop = true;
+  const scrapeFilter = c.createBiquadFilter(); scrapeFilter.type = 'bandpass'; scrapeFilter.frequency.value = 2500; scrapeFilter.Q.value = 0.7;
+  const scrapeGain = c.createGain(); scrapeGain.gain.value = 0;
+  scrapeSrc.connect(scrapeFilter); scrapeFilter.connect(scrapeGain); scrapeGain.connect(audio.master);
+  scrapeSrc.start();
+  audio.scrapeGain = scrapeGain;
+  audio.scrapeFilter = scrapeFilter;
+
+  // --- water shimmer: high airy noise, slowly breathing
+  const waterSrc = c.createBufferSource(); waterSrc.buffer = noise; waterSrc.loop = true; waterSrc.playbackRate.value = 0.7;
+  const waterFilter = c.createBiquadFilter(); waterFilter.type = 'highpass'; waterFilter.frequency.value = 6200;
+  const waterGain = c.createGain(); waterGain.gain.value = 0.0;
+  waterSrc.connect(waterFilter); waterFilter.connect(waterGain); waterGain.connect(audio.master);
+  waterSrc.start();
+  const lfo = c.createOscillator(); lfo.frequency.value = 0.13;
+  const lfoGain = c.createGain(); lfoGain.gain.value = 0.0035;
+  lfo.connect(lfoGain); lfoGain.connect(waterGain.gain); lfo.start();
+  audio.waterGain = waterGain;
+}
+function updateAudio(dt) {
+  if (!audio.ctx) return;
+  const c = audio.ctx, t = c.currentTime;
+  const sn = clamp(zam.speed / MAX_SPEED, 0, 1);
+  const moving = state === 'play' ? sn : 0;
+  // hum follows speed
+  const humTarget = 0.006 + moving * 0.045;
+  audio.humGain.gain.setTargetAtTime(audio.muted ? 0 : humTarget, t, 0.12);
+  const f = 44 + moving * 30;
+  audio.hum.o1.frequency.setTargetAtTime(f, t, 0.15);
+  audio.hum.o2.frequency.setTargetAtTime(f * 2, t, 0.15);
+  audio.hum.filter.frequency.setTargetAtTime(190 + moving * 160, t, 0.2);
+  // scrape only while the blade is actually travelling
+  audio.scrapeGain.gain.setTargetAtTime(moving * 0.030, t, 0.09);
+  audio.scrapeFilter.frequency.setTargetAtTime(2300 + moving * 700, t, 0.2);
+  // water shimmers loudest over fresh, un-resurfaced ice
+  const wTarget = (layingNew && moving > 0.05) ? 0.011 : (moving > 0.05 ? 0.004 : 0.0);
+  audio.waterGain.gain.setTargetAtTime(wTarget, t, 0.25);
+}
+function playChime() {
+  if (!audio.ctx || audio.muted) return;
+  const c = audio.ctx, t0 = c.currentTime + 0.05;
+  // gentle feedback delay for a little arena air
+  const delay = c.createDelay(0.6); delay.delayTime.value = 0.27;
+  const fb = c.createGain(); fb.gain.value = 0.22;
+  const wet = c.createGain(); wet.gain.value = 0.18;
+  delay.connect(fb); fb.connect(delay); delay.connect(wet); wet.connect(audio.master);
+  const notes = [523.25, 659.25, 783.99, 1046.50];
+  notes.forEach((fq, i) => {
+    const o = c.createOscillator(); o.type = 'sine'; o.frequency.value = fq;
+    const o2 = c.createOscillator(); o2.type = 'sine'; o2.frequency.value = fq * 2;
+    const g = c.createGain(); const g2 = c.createGain(); g2.gain.value = 0.18;
+    const t = t0 + i * 0.13;
+    g.gain.setValueAtTime(0, t);
+    g.gain.linearRampToValueAtTime(0.14, t + 0.02);
+    g.gain.exponentialRampToValueAtTime(0.0001, t + 1.5);
+    o.connect(g); o2.connect(g2); g2.connect(g); g.connect(audio.master); g.connect(delay);
+    o.start(t); o2.start(t); o.stop(t + 1.6); o2.stop(t + 1.6);
+  });
+}
+muteBtn.addEventListener('click', () => {
+  audio.muted = !audio.muted;
+  muteBtn.textContent = audio.muted ? '🔇' : '🔊';
+  if (audio.master && audio.ctx) {
+    audio.master.gain.setTargetAtTime(audio.muted ? 0 : 0.9, audio.ctx.currentTime, 0.03);
+  }
+});
+
+// ---------- simulation ----------
+function step(dt, now) {
+  if (state === 'play') {
+    // steering: chase the pointer like it's on a soft leash
+    let targetSpeed = 0;
+    if (pointer.down) {
+      const dx = pointer.x - zam.x, dy = pointer.y - zam.y;
+      const dist = Math.hypot(dx, dy);
+      if (dist > 4) {
+        const want = Math.atan2(dy, dx);
+        zam.heading = angLerp(zam.heading, want, clamp(dt * 5.2, 0, 1));
+        targetSpeed = MAX_SPEED * clamp(dist / 150, 0.12, 1);
+      }
+    }
+    const accel = targetSpeed > zam.speed ? 340 : 520;
+    zam.speed += clamp(targetSpeed - zam.speed, -accel * dt, accel * dt);
+    if (zam.speed > 0.1) {
+      zam.px = zam.x; zam.py = zam.y;
+      zam.x += Math.cos(zam.heading) * zam.speed * dt;
+      zam.y += Math.sin(zam.heading) * zam.speed * dt;
+      // stay on the ice
+      zam.x = clamp(zam.x, 30, RW - 30);
+      zam.y = clamp(zam.y, 30, RH - 30);
+      driveTime += dt;
+      // lay ice
+      const moved = Math.hypot(zam.x - zam.px, zam.y - zam.py);
+      if (moved > 0.4) {
+        layingNew = !tinyCoveredAt(zam.x - Math.cos(zam.heading) * 20, zam.y - Math.sin(zam.heading) * 20);
+        for (const mc of [maskCtx, wetCtx]) {
+          mc.lineWidth = TRAIL_W;
+          mc.beginPath(); mc.moveTo(zam.px, zam.py); mc.lineTo(zam.x, zam.y); mc.stroke();
+        }
+        // blade spray
+        if (zam.speed > 90 && Math.random() < 0.6) {
+          const bx = zam.x - Math.cos(zam.heading) * 34, by = zam.y - Math.sin(zam.heading) * 34;
+          const side = Math.random() < 0.5 ? 1 : -1;
+          const sx = bx + Math.cos(zam.heading + Math.PI / 2) * side * TRAIL_W * 0.5;
+          const sy = by + Math.sin(zam.heading + Math.PI / 2) * side * TRAIL_W * 0.5;
+          spray.push({ x: sx, y: sy, vx: -Math.cos(zam.heading) * rand(14, 44) + rand(-16, 16), vy: -Math.sin(zam.heading) * rand(14, 44) + rand(-16, 16), t: 0, life: rand(0.35, 0.7), r: rand(1.2, 3.2) });
+        }
+      } else layingNew = false;
+    } else layingNew = false;
+  }
+
+  // wet sheen freezes away
+  if (state === 'play' || state === 'sweep') {
+    wetCtx.save();
+    wetCtx.globalCompositeOperation = 'destination-out';
+    wetCtx.fillStyle = 'rgba(0,0,0,' + clamp(dt / WET_FADE_S, 0, 1) + ')';
+    wetCtx.fillRect(0, 0, RW, RH);
+    wetCtx.restore();
+  }
+
+  // sparkles waking up on finished glass
+  if ((state === 'play' || state === 'sweep' || state === 'done') && Math.random() < 0.35) {
+    const x = rand(20, RW - 20), y = rand(20, RH - 20);
+    if (tinyCoveredAt(x, y)) sparkles.push({ x, y, t: 0, life: rand(0.7, 1.5), s: rand(3, 7) });
+  }
+  for (let i = sparkles.length - 1; i >= 0; i--) { sparkles[i].t += dt; if (sparkles[i].t > sparkles[i].life) sparkles.splice(i, 1); }
+  for (let i = spray.length - 1; i >= 0; i--) {
+    const p = spray[i]; p.t += dt; p.x += p.vx * dt; p.y += p.vy * dt;
+    if (p.t > p.life) spray.splice(i, 1);
+  }
+
+  // shine sweep
+  if (state === 'sweep') {
+    sweepT += dt / 2.6;
+    if (Math.random() < 0.8) {
+      const t = clamp(sweepT, 0, 1);
+      const x = lerp(-80, RW + 80, t) + rand(-30, 30);
+      sparkles.push({ x, y: rand(20, RH - 20), t: 0, life: rand(0.6, 1.2), s: rand(4, 9) });
+    }
+    if (sweepT >= 1.15) {
+      state = 'done';
+      doneOverlay.classList.remove('hidden');
+    }
+  }
+}
+
+// ---------- hud ----------
+function updateMeter(force) {
+  const p = Math.round(percent);
+  pctEl.textContent = p + '%';
+  fillEl.style.width = p + '%';
+}
+let sampleTimer = 0;
+function maybeSample(dt) {
+  sampleTimer += dt;
+  if (sampleTimer > 0.25) {
+    sampleTimer = 0;
+    const before = percent;
+    sampleCoverage();
+    updateMeter();
+    if (state === 'play' && percent >= 99.3) {
+      percent = 100; updateMeter();
+      state = 'sweep'; sweepT = 0;
+      playChime();
+    } else if (percent !== before) { /* meter already updated */ }
+  }
+}
+
+// ---------- drawing ----------
+function drawBoards(c) {
+  c.save();
+  // drop shadow
+  c.fillStyle = 'rgba(0,0,0,0.45)';
+  rr(c, -BOARD + 4, -BOARD + 10, RW + BOARD * 2, RH + BOARD * 2, RINK_R + BOARD); c.fill();
+  // boards band
+  const g = c.createLinearGradient(0, -BOARD, 0, RH + BOARD);
+  g.addColorStop(0, '#f7fafc'); g.addColorStop(0.5, '#e8eef4'); g.addColorStop(1, '#dbe4ec');
+  c.fillStyle = g;
+  rr(c, -BOARD, -BOARD, RW + BOARD * 2, RH + BOARD * 2, RINK_R + BOARD); c.fill();
+  // muted ad panels along the boards
+  const ads = ['#bcd7ea', '#f2d8a7', '#cfe6cf', '#f3c6c6', '#d9d2ec', '#f6e3bb'];
+  const seg = RW / 6;
+  c.save();
+  rr(c, -BOARD, -BOARD, RW + BOARD * 2, RH + BOARD * 2, RINK_R + BOARD); c.clip();
+  for (let i = 0; i < 6; i++) {
+    c.fillStyle = ads[i];
+    c.fillRect(i * seg + 8, -BOARD + 7, seg - 16, 15);
+    c.fillRect(i * seg + 8, RH + BOARD - 22, seg - 16, 15);
+  }
+  for (let i = 0; i < 3; i++) {
+    c.fillStyle = ads[(i * 2 + 1) % ads.length];
+    c.fillRect(-BOARD + 7, i * (RH / 3) + 8, 15, RH / 3 - 16);
+    c.fillRect(RW + BOARD - 22, i * (RH / 3) + 8, 15, RH / 3 - 16);
+  }
+  c.restore();
+  // yellow kick stripe just inside the boards
+  c.strokeStyle = '#f5c542'; c.lineWidth = 5;
+  rr(c, -3.5, -3.5, RW + 7, RH + 7, RINK_R + 3); c.stroke();
+  // glass glint above boards
+  c.strokeStyle = 'rgba(190,225,250,0.5)'; c.lineWidth = 2;
+  rr(c, -BOARD + 3, -BOARD + 3, RW + (BOARD - 3) * 2, RH + (BOARD - 3) * 2, RINK_R + BOARD - 3); c.stroke();
+  c.restore();
+}
+
+function drawZamboni(c, now) {
+  c.save();
+  c.translate(zam.x, zam.y);
+  c.rotate(zam.heading);
+  // shadow
+  c.fillStyle = 'rgba(16,36,58,0.28)';
+  c.beginPath(); c.ellipse(3, 6, 42, 27, 0, 0, 7); c.fill();
+  // rear squeegee blade
+  c.fillStyle = '#31404f';
+  rr(c, -41, -TRAIL_W / 2, 8, TRAIL_W, 3); c.fill();
+  c.fillStyle = 'rgba(200,225,245,0.7)';
+  rr(c, -41.5, -TRAIL_W / 2, 2.5, TRAIL_W, 1); c.fill();
+  // wheels peeking out
+  c.fillStyle = '#18222d';
+  for (const [wx, wy] of [[-24, -25], [22, -25], [-24, 25], [22, 25]]) {
+    c.beginPath(); c.arc(wx, wy, 7, 0, 7); c.fill();
+    c.fillStyle = '#5a6c7e'; c.beginPath(); c.arc(wx, wy, 2.6, 0, 7); c.fill(); c.fillStyle = '#18222d';
+  }
+  // body
+  const bg = c.createLinearGradient(0, -24, 0, 24);
+  bg.addColorStop(0, '#e2574e'); bg.addColorStop(0.5, '#cf4036'); bg.addColorStop(1, '#b03228');
+  c.fillStyle = bg;
+  rr(c, -36, -24, 74, 48, 11); c.fill();
+  c.strokeStyle = 'rgba(90,18,12,0.55)'; c.lineWidth = 2; c.stroke();
+  // snow tank (the big top box)
+  const tg = c.createLinearGradient(0, -18, 0, 18);
+  tg.addColorStop(0, '#f4f8fb'); tg.addColorStop(1, '#ccd8e2');
+  c.fillStyle = tg;
+  rr(c, -32, -18, 42, 36, 8); c.fill();
+  c.strokeStyle = 'rgba(90,110,130,0.4)'; c.lineWidth = 1.5; c.stroke();
+  c.fillStyle = 'rgba(120,150,180,0.35)';
+  rr(c, -32, -3, 42, 3, 1.5); c.fill();
+  // cab glass at the front
+  const cg = c.createLinearGradient(-10, 0, 34, 0);
+  cg.addColorStop(0, '#3d5a74'); cg.addColorStop(0.6, '#22374c'); cg.addColorStop(1, '#2c4a66');
+  c.fillStyle = cg;
+  rr(c, 14, -16, 21, 32, 6); c.fill();
+  c.fillStyle = 'rgba(210,240,255,0.35)';
+  c.beginPath(); c.moveTo(17, -13); c.lineTo(26, -13); c.lineTo(20, 10); c.lineTo(15, 10); c.closePath(); c.fill();
+  // beacon
+  const pulse = 0.55 + Math.sin(now * 4.2) * 0.45;
+  c.fillStyle = 'rgba(255,166,48,' + pulse + ')';
+  c.beginPath(); c.arc(24, 0, 3.4, 0, 7); c.fill();
+  c.fillStyle = 'rgba(255,190,90,' + pulse * 0.3 + ')';
+  c.beginPath(); c.arc(24, 0, 7.5, 0, 7); c.fill();
+  // top highlight + front board
+  c.fillStyle = 'rgba(255,255,255,0.20)';
+  rr(c, -34, -22, 70, 7, 3.5); c.fill();
+  c.fillStyle = '#31404f';
+  rr(c, 36, -20, 5, 40, 2); c.fill();
+  c.restore();
+
+  // gentle pointer guide ring while dragging
+  if (state === 'play' && pointer.down) {
+    c.save();
+    c.strokeStyle = 'rgba(255,255,255,0.35)'; c.lineWidth = 1.6;
+    const pr = 10 + Math.sin(now * 5) * 1.6;
+    c.beginPath(); c.arc(pointer.x, pointer.y, pr, 0, 7); c.stroke();
+    c.fillStyle = 'rgba(255,255,255,0.5)';
+    c.beginPath(); c.arc(pointer.x, pointer.y, 2, 0, 7); c.fill();
+    c.restore();
+  }
+}
+
+function draw(now) {
+  const dpr = Math.min(window.devicePixelRatio || 1, 2);
+  const w = window.innerWidth, h = window.innerHeight;
+  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  // arena floor
+  const bg = ctx.createRadialGradient(w / 2, h / 2, 60, w / 2, h / 2, Math.max(w, h) * 0.75);
+  bg.addColorStop(0, '#16283d'); bg.addColorStop(0.6, '#0e1c2d'); bg.addColorStop(1, '#070f18');
+  ctx.fillStyle = bg; ctx.fillRect(0, 0, w, h);
+
+  ctx.translate(view.cx, view.cy);
+  ctx.rotate(view.rot);
+  ctx.scale(view.s, view.s);
+  ctx.translate(-RW / 2, -RH / 2);
+
+  drawBoards(ctx);
+
+  // --- ice, clipped to the rink ---
+  ctx.save();
+  rinkPath(ctx); ctx.clip();
+  ctx.drawImage(scuffCanvas, 0, 0);
+
+  // finished glass: clean ice + live light pools, masked by where we've been
+  fxCtx.clearRect(0, 0, RW, RH);
+  fxCtx.globalCompositeOperation = 'source-over';
+  fxCtx.globalAlpha = 1;
+  fxCtx.drawImage(cleanCanvas, 0, 0);
+  fxCtx.globalCompositeOperation = 'lighter';
+  drawLightPools(fxCtx, now);
+  fxCtx.globalCompositeOperation = 'destination-in';
+  fxCtx.drawImage(cleanMask, 0, 0);
+  fxCtx.globalCompositeOperation = 'source-over';
+  ctx.drawImage(fxCanvas, 0, 0);
+
+  // wet sheen, still freezing
+  fxCtx.clearRect(0, 0, RW, RH);
+  const wg = fxCtx.createLinearGradient(0, 0, RW, RH);
+  wg.addColorStop(0, '#4d84b8'); wg.addColorStop(0.5, '#3a6ea6'); wg.addColorStop(1, '#4d84b8');
+  fxCtx.fillStyle = wg; fxCtx.fillRect(0, 0, RW, RH);
+  fxCtx.globalCompositeOperation = 'destination-in';
+  fxCtx.drawImage(wetMask, 0, 0);
+  fxCtx.globalCompositeOperation = 'source-over';
+  ctx.globalAlpha = 0.42;
+  ctx.drawImage(fxCanvas, 0, 0);
+  ctx.globalAlpha = 1;
+  // water sparkle streaks inside the wet band
+  ctx.save();
+  ctx.globalAlpha = 0.16;
+  ctx.strokeStyle = '#dff2ff'; ctx.lineWidth = 1.4;
+  for (let i = 0; i < 5; i++) {
+    const yy = ((now * 22 + i * 137) % (RH + 60)) - 30;
+    ctx.beginPath(); ctx.moveTo(0, yy); ctx.lineTo(RW, yy - 60); ctx.stroke();
+  }
+  ctx.restore();
+
+  // blade spray
+  for (const p of spray) {
+    const a = 1 - p.t / p.life;
+    ctx.fillStyle = 'rgba(250,253,255,' + (a * 0.75) + ')';
+    ctx.beginPath(); ctx.arc(p.x, p.y, p.r * (0.6 + p.t), 0, 7); ctx.fill();
+  }
+  // glass sparkles
+  for (const s of sparkles) {
+    const ph = s.t / s.life;
+    const a = Math.sin(ph * Math.PI);
+    const r = s.s * (0.5 + ph * 0.7);
+    ctx.save();
+    ctx.translate(s.x, s.y);
+    ctx.strokeStyle = 'rgba(255,255,255,' + (a * 0.9) + ')';
+    ctx.lineWidth = 1.3;
+    ctx.beginPath();
+    ctx.moveTo(-r, 0); ctx.lineTo(r, 0);
+    ctx.moveTo(0, -r); ctx.lineTo(0, r);
+    ctx.stroke();
+    ctx.fillStyle = 'rgba(255,255,255,' + (a * 0.9) + ')';
+    ctx.beginPath(); ctx.arc(0, 0, 1.4, 0, 7); ctx.fill();
+    ctx.restore();
+  }
+
+  drawZamboni(ctx, now);
+
+  // completion shine sweep
+  if (state === 'sweep' && sweepT >= 0) {
+    const t = clamp(sweepT, 0, 1);
+    const cxp = lerp(-260, RW + 260, t);
+    const g = ctx.createLinearGradient(cxp - 190, 0, cxp + 190, 0);
+    g.addColorStop(0, 'rgba(255,255,255,0)');
+    g.addColorStop(0.42, 'rgba(220,245,255,0.13)');
+    g.addColorStop(0.5, 'rgba(255,255,255,0.55)');
+    g.addColorStop(0.58, 'rgba(220,245,255,0.13)');
+    g.addColorStop(1, 'rgba(255,255,255,0)');
+    ctx.save();
+    ctx.translate(cxp, RH / 2); ctx.rotate(0.32); ctx.translate(-cxp, -RH / 2);
+    ctx.fillStyle = g; ctx.fillRect(cxp - 200, -160, 400, RH + 320);
+    ctx.restore();
+  }
+  ctx.restore(); // unclip rink
+
+  // soft vignette
+  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  const vg = ctx.createRadialGradient(w / 2, h / 2, Math.min(w, h) * 0.42, w / 2, h / 2, Math.max(w, h) * 0.78);
+  vg.addColorStop(0, 'rgba(0,0,0,0)');
+  vg.addColorStop(1, 'rgba(0,0,0,0.34)');
+  ctx.fillStyle = vg; ctx.fillRect(0, 0, w, h);
+}
+
+// ---------- main loop ----------
+let lastT = performance.now();
+function frame(nowMs) {
+  const now = nowMs / 1000;
+  let dt = Math.min(now - lastT / 1000, 0.05);
+  lastT = nowMs;
+  if (dt < 0) dt = 0;
+  step(dt, now);
+  maybeSample(dt);
+  updateAudio(dt);
+  draw(now);
+  requestAnimationFrame(frame);
+}
+
+// ---------- wiring ----------
+document.getElementById('startBtn').addEventListener('click', () => {
+  initAudio();
+  if (audio.ctx && audio.ctx.state === 'suspended') audio.ctx.resume();
+  titleOverlay.classList.add('hidden');
+  state = 'play';
+});
+document.getElementById('replayBtn').addEventListener('click', () => {
+  doneOverlay.classList.add('hidden');
+  resetGame();
+  state = 'play';
+});
+
+// ---------- go ----------
+drawMarkings(cleanCtx);
+resize();
+resetGame();
+state = 'title';
+requestAnimationFrame(frame);
+</script>
+</body>
+</html>

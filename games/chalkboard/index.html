@@ -1,0 +1,874 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<title>Chalkboard — ASMR Erasing</title>
+<style>
+  * { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
+  html, body { width:100%; height:100%; overflow:hidden; background:#17130f; }
+  body {
+    font-family: "Segoe UI", "Comic Sans MS", "Chalkboard SE", system-ui, sans-serif;
+    color:#f3ead8; user-select:none; -webkit-user-select:none; touch-action:none;
+  }
+  #wrap { position:fixed; inset:0; }
+  canvas.layer { position:absolute; inset:0; display:block; }
+  #dustCv { pointer-events:none; }
+  /* ---------- HUD ---------- */
+  #hud {
+    position:absolute; left:0; right:0; top:0; z-index:5;
+    display:flex; align-items:center; gap:12px;
+    padding: calc(8px + env(safe-area-inset-top)) 14px 8px 14px;
+    pointer-events:none;
+  }
+  #title { font-weight:700; letter-spacing:.5px; font-size:clamp(15px,3.4vw,22px);
+    color:#f6efdd; text-shadow:0 2px 8px rgba(0,0,0,.6); white-space:nowrap; }
+  #meterBox { flex:1; display:flex; align-items:center; gap:10px; min-width:0; }
+  #meterTrack { flex:1; height:12px; border-radius:7px; background:rgba(0,0,0,.45);
+    border:1px solid rgba(255,255,255,.22); overflow:hidden;
+    box-shadow: inset 0 1px 3px rgba(0,0,0,.6); }
+  #meterFill { height:100%; width:0%; border-radius:7px;
+    background:linear-gradient(90deg,#9fd8a8,#e9f7df);
+    box-shadow:0 0 10px rgba(200,255,205,.35);
+    transition:width .35s ease; }
+  #pct { font-variant-numeric:tabular-nums; font-weight:700; font-size:clamp(14px,3vw,19px);
+    color:#eef7e6; text-shadow:0 2px 6px rgba(0,0,0,.6); min-width:52px; text-align:right; }
+  #pct small { display:block; font-size:9px; font-weight:600; letter-spacing:1.4px; color:#cfd8c2; }
+  .hbtn { pointer-events:auto; cursor:pointer; border:1px solid rgba(255,255,255,.25);
+    background:rgba(20,16,12,.55); color:#f3ead8; border-radius:10px;
+    width:42px; height:42px; font-size:20px; line-height:1; display:flex;
+    align-items:center; justify-content:center; backdrop-filter:blur(3px); }
+  .hbtn:active { transform:scale(.94); }
+  /* ---------- Title overlay ---------- */
+  #overlay { position:absolute; inset:0; z-index:10; display:flex; flex-direction:column;
+    align-items:center; justify-content:center; text-align:center; padding:24px;
+    background:radial-gradient(ellipse at 50% 42%, rgba(10,14,10,.28), rgba(5,6,5,.78));
+    transition:opacity .6s ease; }
+  #overlay.gone { opacity:0; pointer-events:none; }
+  #overlay h1 { font-size:clamp(40px,10vw,74px); letter-spacing:2px; color:#fbf6e9;
+    text-shadow:0 0 22px rgba(255,255,255,.18), 0 4px 14px rgba(0,0,0,.7); font-weight:800; }
+  #overlay p { margin-top:10px; font-size:clamp(15px,4vw,21px); color:#d9e4cf; }
+  #overlay .sub { margin-top:6px; font-size:clamp(12px,3vw,15px); color:#aebba4; }
+  #startBtn { margin-top:30px; pointer-events:auto; cursor:pointer;
+    font:inherit; font-size:clamp(17px,4.4vw,21px); font-weight:700; color:#23291f;
+    background:linear-gradient(180deg,#fdfdf6,#dcebd2); border:none; border-radius:999px;
+    padding:14px 38px; box-shadow:0 8px 24px rgba(0,0,0,.5), inset 0 1px 0 #fff; }
+  #startBtn:active { transform:scale(.96); }
+  /* ---------- Done overlay ---------- */
+  #done { position:absolute; inset:0; z-index:9; display:flex; flex-direction:column;
+    align-items:center; justify-content:flex-end; text-align:center; padding:0 20px 12vh;
+    pointer-events:none; opacity:0; transition:opacity .8s ease; }
+  #done.show { opacity:1; }
+  #done .big { font-size:clamp(24px,6.5vw,38px); font-weight:800; color:#fdfaf0;
+    text-shadow:0 3px 14px rgba(0,0,0,.75); }
+  #done .small { margin-top:6px; font-size:clamp(13px,3.4vw,17px); color:#dbe7d2;
+    text-shadow:0 2px 8px rgba(0,0,0,.8); }
+  #againBtn { margin-top:20px; pointer-events:auto; cursor:pointer; font:inherit;
+    font-size:clamp(15px,4vw,19px); font-weight:700; color:#f6efdd;
+    background:rgba(24,30,22,.72); border:1.5px solid rgba(255,255,255,.5); border-radius:999px;
+    padding:12px 30px; backdrop-filter:blur(3px); }
+  #againBtn:active { transform:scale(.96); }
+  #hint { position:absolute; left:0; right:0; bottom:calc(10px + env(safe-area-inset-bottom));
+    z-index:4; text-align:center; font-size:clamp(12px,3vw,15px); color:rgba(240,244,230,.75);
+    text-shadow:0 2px 6px rgba(0,0,0,.7); pointer-events:none; transition:opacity 1s ease; }
+  #hint.gone { opacity:0; }
+</style>
+</head>
+<body>
+<div id="wrap">
+  <canvas id="bgCv" class="layer"></canvas>
+  <canvas id="chalkCv" class="layer"></canvas>
+  <canvas id="dustCv" class="layer"></canvas>
+
+  <div id="hud">
+    <div id="title">🧽 Chalkboard</div>
+    <div id="meterBox">
+      <div id="meterTrack"><div id="meterFill"></div></div>
+      <div id="pct">0%<small>CLEAN</small></div>
+    </div>
+    <button class="hbtn" id="muteBtn" aria-label="Mute">🔊</button>
+  </div>
+
+  <div id="hint">Drag the eraser — thick chalk takes two passes</div>
+
+  <div id="done">
+    <div class="big">A perfect clean slate ✨</div>
+    <div class="small">silent board, soft dust, nothing left to say</div>
+    <button id="againBtn">Mess it up again</button>
+  </div>
+
+  <div id="overlay">
+    <h1>Chalkboard</h1>
+    <p>🧽 Drag the eraser</p>
+    <p class="sub">Wipe the whole board clean. Thick chalk needs two passes.</p>
+    <button id="startBtn">Start erasing</button>
+  </div>
+</div>
+
+<script>
+'use strict';
+/* ============================================================
+   CHALKBOARD — ASMR erasing
+   Layers: bg (board+frame) / chalk (scribbles) / dust (particles+eraser)
+   Density mask drives two-pass ghosting + true-clean %.
+   All sound synthesized with WebAudio. No external assets.
+   ============================================================ */
+
+// ---------- seeded RNG (deterministic board, regens vary by seed) ----------
+let _seed = 1234567;
+function srand(s){ _seed = s >>> 0; }
+function rnd(){ _seed = (_seed * 1664525 + 1013904223) >>> 0; return _seed / 4294967296; }
+function rr(a,b){ return a + rnd() * (b - a); }
+function ri(a,b){ return Math.floor(rr(a, b + 1)); }
+function pick(arr){ return arr[Math.floor(rnd() * arr.length)]; }
+
+// ---------- canvases ----------
+const bgCv = document.getElementById('bgCv');
+const chalkCv = document.getElementById('chalkCv');
+const dustCv = document.getElementById('dustCv');
+const bg = bgCv.getContext('2d');
+const ck = chalkCv.getContext('2d');
+const dx = dustCv.getContext('2d');
+const maskCv = document.createElement('canvas');   // density mask (offscreen)
+const mk = maskCv.getContext('2d', { willReadFrequently: true });
+
+let W = 0, H = 0, DPR = 1;
+// board rect (inside frame) in CSS px
+let board = { x:0, y:0, w:0, h:0 };
+
+function layout(){
+  DPR = Math.min(window.devicePixelRatio || 1, 2);
+  W = window.innerWidth; H = window.innerHeight;
+  for (const cv of [bgCv, chalkCv, dustCv]){
+    cv.width = Math.round(W * DPR); cv.height = Math.round(H * DPR);
+    cv.style.width = W + 'px'; cv.style.height = H + 'px';
+  }
+  maskCv.width = Math.max(2, Math.round(W * DPR));
+  maskCv.height = Math.max(2, Math.round(H * DPR));
+  // frame geometry: generous wood frame, tray at bottom
+  const mX = Math.max(10, W * 0.025);
+  const top = Math.max(52, H * 0.085);
+  const bot = Math.max(64, H * 0.115);           // room for tray
+  board.x = mX + 14; board.y = top + 14;
+  board.w = W - (mX + 14) * 2; board.h = H - top - bot - 28;
+  board.w = Math.max(200, board.w); board.h = Math.max(200, board.h);
+  drawBackground();
+  scribbleBoard(currentSeed, true);   // redraw (keeps progress state on plain resize? no — fresh)
+}
+
+// ---------- background: wall, wood frame, board surface, tray ----------
+function drawBackground(){
+  bg.setTransform(DPR,0,0,DPR,0,0);
+  // dim classroom wall
+  const wg = bg.createRadialGradient(W/2, H*0.38, 80, W/2, H*0.5, Math.max(W,H)*0.85);
+  wg.addColorStop(0, '#3a332a'); wg.addColorStop(0.55, '#2a241d'); wg.addColorStop(1, '#171310');
+  bg.fillStyle = wg; bg.fillRect(0,0,W,H);
+  // faint wall vignette noise
+  bg.globalAlpha = 0.05; bg.fillStyle = '#000';
+  for (let i=0;i<260;i++) bg.fillRect(rnd()*W, rnd()*H, rr(1,3), rr(1,3));
+  bg.globalAlpha = 1;
+
+  const fx = board.x - 14, fy = board.y - 14, fw = board.w + 28, fh = board.h + 28;
+  // wood frame
+  const wood = bg.createLinearGradient(fx, fy, fx + fw, fy + fh);
+  wood.addColorStop(0, '#8a6844'); wood.addColorStop(0.25, '#6f5133');
+  wood.addColorStop(0.5, '#7d5c39'); wood.addColorStop(0.75, '#5f4429');
+  wood.addColorStop(1, '#77582f');
+  bg.fillStyle = wood;
+  roundRect(bg, fx, fy, fw, fh, 10); bg.fill();
+  // wood grain streaks
+  bg.save(); bg.beginPath(); roundRect(bg, fx, fy, fw, fh, 10); bg.clip();
+  bg.globalAlpha = 0.16; bg.strokeStyle = '#3d2a15';
+  for (let i=0;i<46;i++){
+    bg.lineWidth = rr(0.6, 2);
+    bg.beginPath();
+    const yy = fy + rnd()*fh;
+    bg.moveTo(fx, yy);
+    bg.bezierCurveTo(fx+fw*0.3, yy+rr(-4,4), fx+fw*0.7, yy+rr(-4,4), fx+fw, yy+rr(-6,6));
+    bg.stroke();
+  }
+  bg.globalAlpha = 0.12; bg.strokeStyle = '#c9a06a';
+  for (let i=0;i<22;i++){
+    bg.lineWidth = rr(0.5, 1.2);
+    bg.beginPath();
+    const yy = fy + rnd()*fh;
+    bg.moveTo(fx, yy); bg.lineTo(fx+fw, yy+rr(-8,8)); bg.stroke();
+  }
+  bg.restore(); bg.globalAlpha = 1;
+  // inner bezel shadow
+  bg.strokeStyle = 'rgba(0,0,0,0.5)'; bg.lineWidth = 3;
+  roundRect(bg, board.x - 3, board.y - 3, board.w + 6, board.h + 6, 4); bg.stroke();
+  bg.strokeStyle = 'rgba(255,235,190,0.18)'; bg.lineWidth = 1;
+  roundRect(bg, fx + 1.5, fy + 1.5, fw - 3, fh - 3, 9); bg.stroke();
+
+  // board surface: deep green-black with mottling
+  const sg = bg.createLinearGradient(board.x, board.y, board.x + board.w, board.y + board.h);
+  sg.addColorStop(0, '#233028'); sg.addColorStop(0.45, '#1d2921');
+  sg.addColorStop(1, '#182219');
+  bg.fillStyle = sg; bg.fillRect(board.x, board.y, board.w, board.h);
+  for (let i=0;i<900;i++){
+    bg.globalAlpha = rr(0.012, 0.05);
+    bg.fillStyle = rnd() > 0.5 ? '#31463a' : '#10160f';
+    const r = rr(4, 26);
+    bg.beginPath(); bg.ellipse(board.x + rnd()*board.w, board.y + rnd()*board.h, r, r*rr(0.4,1), rnd()*3, 0, 7); bg.fill();
+  }
+  bg.globalAlpha = 1;
+  // soft light sheen from upper left
+  const sheen = bg.createRadialGradient(board.x + board.w*0.3, board.y + board.h*0.16, 30,
+                                        board.x + board.w*0.3, board.y + board.h*0.16, board.w*0.9);
+  sheen.addColorStop(0, 'rgba(255,255,240,0.07)'); sheen.addColorStop(1, 'rgba(255,255,240,0)');
+  bg.fillStyle = sheen; bg.fillRect(board.x, board.y, board.w, board.h);
+
+  drawTrayAndChalk(fx, fy + fh, fw);
+}
+
+function drawTrayAndChalk(fx, fyBottom, fw){
+  const trayY = fyBottom + 8, trayH = 16;
+  // tray ledge
+  const tg = bg.createLinearGradient(0, trayY, 0, trayY + trayH);
+  tg.addColorStop(0, '#93714a'); tg.addColorStop(0.35, '#77592f'); tg.addColorStop(1, '#543d20');
+  bg.fillStyle = tg;
+  roundRect(bg, fx + 8, trayY, fw - 16, trayH, 5); bg.fill();
+  bg.fillStyle = 'rgba(0,0,0,0.35)';
+  bg.fillRect(fx + 8, trayY + trayH - 3, fw - 16, 3);
+  bg.fillStyle = 'rgba(255,240,200,0.22)';
+  bg.fillRect(fx + 10, trayY + 1, fw - 20, 2);
+  // chalk dust line on tray
+  bg.globalAlpha = 0.35; bg.fillStyle = '#e8e8da';
+  for (let i=0;i<120;i++) bg.fillRect(fx + 14 + rnd()*(fw-28), trayY + rr(1,5), rr(1,4), 1);
+  bg.globalAlpha = 1;
+  // chalk sticks resting on tray
+  const sticks = [ {c:'#f5f5ec', l:52}, {c:'#f7d774', l:40}, {c:'#a8d8f0', l:46} ];
+  let sx = fx + 30;
+  for (const s of sticks){
+    bg.save();
+    bg.translate(sx, trayY + 3); bg.rotate(rr(-0.03, 0.03));
+    bg.fillStyle = 'rgba(0,0,0,0.3)';
+    roundRect(bg, 1, 5, s.l, 7, 3.5); bg.fill();
+    bg.fillStyle = s.c;
+    roundRect(bg, 0, 0, s.l, 7, 3.5); bg.fill();
+    bg.fillStyle = 'rgba(255,255,255,0.5)';
+    roundRect(bg, 2, 1, s.l - 8, 2, 1); bg.fill();
+    bg.restore();
+    sx += s.l + rr(16, 30);
+  }
+  // a spare eraser sitting at the right end of the tray
+  const ex = fx + fw - 108, ey = trayY - 6;
+  bg.save();
+  bg.shadowColor = 'rgba(0,0,0,0.5)'; bg.shadowBlur = 6; bg.shadowOffsetY = 3;
+  bg.fillStyle = '#7a5a36'; roundRect(bg, ex, ey, 74, 12, 3); bg.fill();
+  bg.shadowColor = 'transparent';
+  bg.fillStyle = '#d8d5cc'; roundRect(bg, ex + 2, ey + 10, 70, 6, 2); bg.fill();
+  bg.restore();
+}
+
+function roundRect(c, x, y, w, h, r){
+  c.beginPath();
+  c.moveTo(x + r, y);
+  c.arcTo(x + w, y, x + w, y + h, r);
+  c.arcTo(x + w, y + h, x, y + h, r);
+  c.arcTo(x, y + h, x, y, r);
+  c.arcTo(x, y, x + w, y, r);
+  c.closePath();
+}
+
+// ---------- chalk scribbles ----------
+// Chalk is drawn on chalkCv AND mirrored to the density mask:
+// light strokes -> mask 80 (one pass), heavy strokes -> mask 170 (two passes).
+const INK = 80, HEAVY = 170;
+let currentSeed = 20261031;
+let totalInkPixels = 1;
+
+function chalkStyle(c, alpha){
+  c.strokeStyle = 'rgba(243,243,232,' + alpha + ')';
+  c.fillStyle = 'rgba(243,243,232,' + alpha + ')';
+  c.lineCap = 'round'; c.lineJoin = 'round';
+}
+function maskStyle(c, v){
+  // density lives in the ALPHA channel (0 = clean slate, 255 = max chalk)
+  const g = 'rgba(255,255,255,' + (v/255).toFixed(3) + ')';
+  c.strokeStyle = g; c.fillStyle = g; c.lineCap = 'round'; c.lineJoin = 'round';
+}
+function both(fn){
+  fn(ck); fn(mk);
+}
+
+function scribbleBoard(seed, keepClean){
+  srand(seed);
+  ck.setTransform(DPR,0,0,DPR,0,0);
+  mk.setTransform(DPR,0,0,DPR,0,0);
+  ck.clearRect(0,0,W,H);
+  mk.clearRect(0,0,W,H);   // transparent = zero density everywhere
+  const bx = board.x, by = board.y, bw = board.w, bh = board.h;
+  const pad = Math.min(26, bw * 0.05);
+  const X0 = bx + pad, X1 = bx + bw - pad, Y0 = by + pad, Y1 = by + bh - pad;
+  const lw = Math.max(1.6, Math.min(3.2, bw / 240));   // chalk line width scales with board
+
+  // --- faint construction ghosts: grids & erased leftovers under everything
+  for (let i=0;i<7;i++){
+    const y = rr(Y0, Y1);
+    both(c => { if(c===mk)maskStyle(c,26); else chalkStyle(c,0.05);
+      c.lineWidth = lw*rr(2,4); c.beginPath(); c.moveTo(X0, y); c.lineTo(X1, y + rr(-8,8)); c.stroke(); });
+  }
+
+  // --- crooked alphabet, two rows, slightly drunk baseline
+  const rows = 2;
+  const letters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz';
+  for (let rI=0;rI<rows;rI++){
+    const ry = Y0 + bh*0.10 + rI * bh*0.115;
+    let cx = X0 + rr(0, 14);
+    const fs = Math.min(30, bh*0.062) * rr(0.9, 1.05);
+    both(c => { c.font = '700 ' + fs + 'px "Comic Sans MS","Segoe Print",cursive'; });
+    for (let i=0;i<letters.length && cx < X1 - fs*0.7;i++){
+      const ch = letters[i];
+      const wob = rr(-fs*0.14, fs*0.14), rot = rr(-0.09, 0.09);
+      for (const c of [ck, mk]){
+        c.save(); c.translate(cx, ry + wob); c.rotate(rot);
+        if (c===mk) maskStyle(c, INK); else chalkStyle(c, rr(0.5,0.8));
+        c.globalAlpha = c===mk ? 1 : rr(0.55,0.85);
+        c.fillText(ch, 0, 0); c.restore(); c.globalAlpha = 1;
+      }
+      cx += fs * rr(0.42, 0.6);
+    }
+  }
+
+  // --- math block, left side: sums, long division, fractions
+  const mathX = X0 + bw*0.02, mathY = Y0 + bh*0.34;
+  const fsM = Math.min(24, bh*0.05);
+  const sums = ['7 + 5 = 12','13 - 8 = ?','9 × 4 = 36','6 × 7 = 42','81 ÷ 9 = 9','3² + 4² = 5²','x + 7 = 15','½ + ¼ = ¾','100 - 37 =','24 ÷ 6 = 4','5 × 5 = 25','a² + b² = c²'];
+  let my = mathY;
+  for (const s of sums.slice(0, ri(7, sums.length))){
+    for (const c of [ck, mk]){
+      c.save(); c.translate(mathX + rr(-3,9), my); c.rotate(rr(-0.02,0.02));
+      c.font = '600 ' + fsM*rr(0.9,1.1) + 'px "Comic Sans MS","Segoe Print",cursive';
+      if (c===mk) maskStyle(c, INK); else chalkStyle(c, rr(0.6,0.9));
+      c.fillText(s, 0, 0); c.restore();
+    }
+    my += fsM * rr(1.35, 1.6);
+    if (my > Y1 - bh*0.22) break;
+  }
+  // long division house
+  const dvx = mathX + bw*0.05, dvy = my + fsM*0.6;
+  both(c => { if(c===mk)maskStyle(c,INK); else chalkStyle(c,0.75); c.lineWidth = lw;
+    c.beginPath(); c.moveTo(dvx, dvy - fsM); c.lineTo(dvx, dvy + 4); c.lineTo(dvx + fsM*2.1, dvy + 4); c.stroke();
+    c.font = '600 ' + fsM + 'px "Comic Sans MS",cursive'; c.fillText('144', dvx + fsM*0.45, dvy - 2); });
+  // underline squiggles under some sums
+  both(c => { if(c===mk)maskStyle(c,INK); else chalkStyle(c,0.5); c.lineWidth = lw*0.8;
+    for (let i=0;i<4;i++){ const uy = mathY + i*fsM*1.45 + 5, ux = mathX + rr(0,30);
+      c.beginPath(); c.moveTo(ux, uy);
+      for (let x=0;x<fsM*4.4;x+=6) c.lineTo(ux+x, uy + Math.sin(x*0.24)*2.2);
+      c.stroke(); } });
+
+  // --- heavy practice sentence (TWO passes) — "I will not…" lines
+  const repX = X0 + bw*0.42, repY = Y0 + bh*0.33;
+  const fsR = Math.min(21, bh*0.043);
+  const lines = Math.min(5, Math.floor((Y1 - repY - bh*0.2) / (fsR*1.5)));
+  for (let i=0;i<lines;i++){
+    const ly = repY + i * fsR * 1.5;
+    const phrase = pick(['I will not doodle in class','I will do my homework','I will not pass notes','I will listen quietly']);
+    // shrink-to-fit so the sentence never spills past the board's right edge
+    ck.font = '600 ' + fsR + 'px "Comic Sans MS","Segoe Print",cursive';
+    const pw = ck.measureText(phrase).width, maxW = X1 - repX;
+    const fsUse = pw > maxW ? Math.max(fsR * 0.55, fsR * maxW / pw) : fsR;
+    for (let pass=0; pass<2; pass++){
+      for (const c of [ck, mk]){
+        c.save(); c.translate(repX + rr(-1.5,1.5), ly + rr(-1,1)); c.rotate(rr(-0.008,0.008));
+        c.font = '600 ' + fsUse + 'px "Comic Sans MS","Segoe Print",cursive';
+        if (c===mk) maskStyle(c, pass===0?HEAVY:HEAVY); else chalkStyle(c, pass===0?0.5:0.42);
+        if (c===mk && pass===1) c.globalAlpha = 1;
+        c.fillText(phrase, 0, 0); c.restore();
+      }
+    }
+    // heavy under-stroke to guarantee two-pass feel even where glyphs are thin
+    both(c => { if(c===mk){maskStyle(c,HEAVY); c.lineWidth = fsR*0.62;} else {chalkStyle(c,0.10); c.lineWidth = fsR*0.62;}
+      c.beginPath(); c.moveTo(repX, ly - fsR*0.3); c.lineTo(repX + bw*0.30, ly - fsR*0.3); c.stroke(); });
+  }
+
+  // --- big wavy lines sweeping the whole board
+  for (let i=0;i<5;i++){
+    const wy = rr(Y0 + bh*0.06, Y1 - bh*0.04);
+    const amp = rr(6, 22), per = rr(140, 300), ph = rr(0, 6);
+    both(c => { if(c===mk)maskStyle(c,INK); else chalkStyle(c, rr(0.35,0.6)); c.lineWidth = lw*rr(0.8,1.3);
+      c.beginPath();
+      for (let x=0;x<=bw - pad*2; x+=8){ const px = X0 + x, py = wy + Math.sin(x/per*6.28 + ph)*amp;
+        x===0 ? c.moveTo(px,py) : c.lineTo(px,py); }
+      c.stroke(); });
+  }
+
+  // --- doodles: stars, spiral, sun, house, tic-tac-toe, hearts, arrows
+  doodleStar(X0 + bw*rr(0.62,0.8), Y0 + bh*rr(0.55,0.68), Math.min(34, bw*0.045), lw, INK);
+  doodleSpiral(X0 + bw*rr(0.8,0.9), Y0 + bh*rr(0.3,0.42), Math.min(30, bw*0.04), lw);
+  doodleSun(X1 - bw*0.09, Y0 + bh*0.13, Math.min(24, bw*0.032), lw);
+  doodleHouse(X0 + bw*rr(0.55,0.66), Y1 - bh*0.2, Math.min(58, bw*0.075), lw);
+  ticTacToe(X0 + bw*rr(0.3,0.4), Y1 - bh*0.24, Math.min(64, bw*0.085), lw);
+  doodleHeart(X0 + bw*rr(0.86,0.93), Y1 - bh*0.17, Math.min(30, bw*0.04), lw, INK);
+  // arrows + circled words
+  for (let i=0;i<4;i++){
+    const ax = rr(X0 + bw*0.1, X1 - bw*0.2), ay = rr(Y0 + bh*0.2, Y1 - bh*0.15);
+    both(c => { if(c===mk)maskStyle(c,INK); else chalkStyle(c,0.6); c.lineWidth = lw;
+      c.beginPath(); c.moveTo(ax, ay); c.lineTo(ax + bw*0.07, ay + rr(-14,14));
+      c.lineTo(ax + bw*0.07 - 8, ay + rr(-14,14) - 6); c.moveTo(ax + bw*0.07, ay + rr(-10,10));
+      c.lineTo(ax + bw*0.07 - 8, ay + 8); c.stroke(); });
+  }
+  // random circles & scribble knots
+  for (let i=0;i<10;i++){
+    const cx = rr(X0, X1), cy = rr(Y0, Y1), r = rr(8, 30);
+    both(c => { if(c===mk)maskStyle(c,INK); else chalkStyle(c, rr(0.3,0.6)); c.lineWidth = lw*rr(0.7,1.1);
+      c.beginPath(); c.arc(cx, cy, r, rr(0,3), rr(3.5,6.3)); c.stroke(); });
+  }
+  for (let i=0;i<7;i++){
+    const cx = rr(X0, X1), cy = rr(Y0, Y1);
+    both(c => { if(c===mk)maskStyle(c,INK); else chalkStyle(c, rr(0.35,0.6)); c.lineWidth = lw*0.9;
+      c.beginPath(); c.moveTo(cx, cy);
+      for (let k=0;k<6;k++) c.quadraticCurveTo(cx + rr(-30,30), cy + rr(-22,22), cx + rr(-34,34), cy + rr(-24,24));
+      c.stroke(); });
+  }
+  // chalk smudge fingerprints — soft blobs that read as old smears
+  for (let i=0;i<26;i++){
+    const cx = rr(X0, X1), cy = rr(Y0, Y1), r = rr(14, 44);
+    for (const c of [ck, mk]){
+      const g = c.createRadialGradient(cx, cy, 0, cx, cy, r);
+      if (c===mk){ g.addColorStop(0,'rgba(255,255,255,0.18)'); g.addColorStop(1,'rgba(255,255,255,0)'); }
+      else { g.addColorStop(0,'rgba(240,240,228,0.10)'); g.addColorStop(1,'rgba(240,240,228,0)'); }
+      c.fillStyle = g; c.beginPath(); c.arc(cx, cy, r, 0, 7); c.fill();
+    }
+  }
+
+  // compute ink baseline for % (count mask samples above threshold)
+  computeClean(true);
+  updateMeter();
+}
+
+function star(c, cx, cy, r, rot){
+  c.beginPath();
+  for (let i=0;i<10;i++){
+    const rad = i % 2 === 0 ? r : r * 0.45;
+    const a = rot + i * Math.PI / 5 - Math.PI/2;
+    const px = cx + Math.cos(a)*rad, py = cy + Math.sin(a)*rad;
+    i===0 ? c.moveTo(px,py) : c.lineTo(px,py);
+  }
+  c.closePath();
+}
+function doodleStar(cx, cy, r, lw, ink){
+  both(c => { if(c===mk)maskStyle(c,ink); else chalkStyle(c,0.7); c.lineWidth = lw;
+    star(c, cx, cy, r, rr(-0.2,0.2)); c.stroke(); });
+}
+function doodleSpiral(cx, cy, r, lw){
+  both(c => { if(c===mk)maskStyle(c,INK); else chalkStyle(c,0.6); c.lineWidth = lw;
+    c.beginPath();
+    for (let a=0;a<12.5;a+=0.22){ const rad = r * a/12.5;
+      const px = cx + Math.cos(a)*rad, py = cy + Math.sin(a)*rad*0.82;
+      a===0 ? c.moveTo(px,py) : c.lineTo(px,py); }
+    c.stroke(); });
+}
+function doodleSun(cx, cy, r, lw){
+  both(c => { if(c===mk)maskStyle(c,INK); else chalkStyle(c,0.65); c.lineWidth = lw;
+    c.beginPath(); c.arc(cx, cy, r, 0, 7); c.stroke();
+    for (let i=0;i<8;i++){ const a = i*Math.PI/4 + 0.2;
+      c.beginPath(); c.moveTo(cx + Math.cos(a)*r*1.25, cy + Math.sin(a)*r*1.25);
+      c.lineTo(cx + Math.cos(a)*r*1.7, cy + Math.sin(a)*r*1.7); c.stroke(); } });
+}
+function doodleHouse(cx, cy, s, lw){
+  both(c => { if(c===mk)maskStyle(c,INK); else chalkStyle(c,0.6); c.lineWidth = lw;
+    c.strokeRect(cx, cy, s, s*0.8);
+    c.beginPath(); c.moveTo(cx - s*0.12, cy); c.lineTo(cx + s*0.5, cy - s*0.5); c.lineTo(cx + s*1.12, cy); c.stroke();
+    c.strokeRect(cx + s*0.38, cy + s*0.38, s*0.24, s*0.42);
+    c.beginPath(); c.arc(cx + s*0.72, cy + s*0.28, s*0.09, 0, 7); c.stroke(); });
+}
+function ticTacToe(cx, cy, s, lw){
+  both(c => { if(c===mk)maskStyle(c,INK); else chalkStyle(c,0.6); c.lineWidth = lw;
+    c.beginPath();
+    c.moveTo(cx + s/3, cy); c.lineTo(cx + s/3 + rr(-2,2), cy + s);
+    c.moveTo(cx + 2*s/3, cy); c.lineTo(cx + 2*s/3 + rr(-2,2), cy + s);
+    c.moveTo(cx, cy + s/3); c.lineTo(cx + s, cy + s/3 + rr(-2,2));
+    c.moveTo(cx, cy + 2*s/3); c.lineTo(cx + s, cy + 2*s/3 + rr(-2,2));
+    c.stroke();
+    // X and O marks
+    const cells = [[0,0,'x'],[1,1,'o'],[2,0,'o'],[0,2,'o'],[2,2,'x'],[1,0,'x']];
+    for (const [gx, gy, t] of cells){
+      const px = cx + gx*s/3 + s/6, py = cy + gy*s/3 + s/6, r = s*0.11;
+      if (t==='x'){ c.beginPath(); c.moveTo(px-r,py-r); c.lineTo(px+r,py+r); c.moveTo(px+r,py-r); c.lineTo(px-r,py+r); c.stroke(); }
+      else { c.beginPath(); c.arc(px, py, r, 0, 7); c.stroke(); }
+    } });
+}
+function doodleHeart(cx, cy, s, lw, ink){
+  both(c => { if(c===mk)maskStyle(c,ink); else chalkStyle(c,0.65); c.lineWidth = lw;
+    c.beginPath();
+    c.moveTo(cx, cy + s*0.85);
+    c.bezierCurveTo(cx - s*1.25, cy, cx - s*0.62, cy - s*0.95, cx, cy - s*0.32);
+    c.bezierCurveTo(cx + s*0.62, cy - s*0.95, cx + s*1.25, cy, cx, cy + s*0.85);
+    c.stroke(); });
+}
+
+// ---------- clean % from mask (sampled) ----------
+const SW = 120, SH = 90;
+const sampleCv = document.createElement('canvas'); sampleCv.width = SW; sampleCv.height = SH;
+const sx2 = sampleCv.getContext('2d', { willReadFrequently: true });
+let inkBaseline = 1, cleanPct = 0;
+
+function computeClean(isBaseline){
+  sx2.clearRect(0,0,SW,SH);
+  sx2.drawImage(maskCv, board.x*DPR, board.y*DPR, board.w*DPR, board.h*DPR, 0, 0, SW, SH);
+  const d = sx2.getImageData(0,0,SW,SH).data;
+  let ink = 0;
+  const total = SW * SH;
+  for (let i=0;i<d.length;i+=4){
+    if (d[i+3] > 14) ink++;        // density (alpha) above a whisper counts as not-truly-clean
+  }
+  if (isBaseline){ inkBaseline = Math.max(ink, 1); cleanPct = 0; }
+  else cleanPct = Math.max(0, Math.min(100, (1 - ink / inkBaseline) * 100));
+  return cleanPct;
+}
+const pctEl = document.getElementById('pct');
+const fillEl = document.getElementById('meterFill');
+let shownPct = -1;
+function updateMeter(){
+  const p = Math.floor(cleanPct);
+  if (p !== shownPct){
+    shownPct = p;
+    pctEl.childNodes[0].nodeValue = p + '%';
+    fillEl.style.width = p + '%';
+  }
+}
+
+// ---------- audio (all synthesized) ----------
+let AC = null, swishGain = null, swishFilter = null, noiseSrc = null;
+let muted = false;
+function initAudio(){
+  if (AC) { if (AC.state === 'suspended') AC.resume(); return; }
+  try {
+    AC = new (window.AudioContext || window.webkitAudioContext)();
+    // looping noise buffer -> bandpass -> gain (the felt swish)
+    const len = AC.sampleRate * 2;
+    const buf = AC.createBuffer(1, len, AC.sampleRate);
+    const ch = buf.getChannelData(0);
+    let last = 0;
+    for (let i=0;i<len;i++){ const w = Math.random()*2 - 1; last = (last + 0.04*w)/1.04; ch[i] = (w*0.35 + last*1.6) * 0.6; }
+    noiseSrc = AC.createBufferSource(); noiseSrc.buffer = buf; noiseSrc.loop = true;
+    swishFilter = AC.createBiquadFilter(); swishFilter.type = 'bandpass'; swishFilter.frequency.value = 700; swishFilter.Q.value = 0.55;
+    swishGain = AC.createGain(); swishGain.gain.value = 0;
+    noiseSrc.connect(swishFilter); swishFilter.connect(swishGain); swishGain.connect(AC.destination);
+    noiseSrc.start();
+  } catch(e){ AC = null; }
+}
+function hush(intensity){ // dust puff: short soft noise breath
+  if (!AC || muted) return;
+  const t = AC.currentTime;
+  const src = AC.createBufferSource();
+  const b = AC.createBuffer(1, AC.sampleRate * 0.16, AC.sampleRate);
+  const d = b.getChannelData(0);
+  for (let i=0;i<d.length;i++) d[i] = (Math.random()*2-1) * (1 - i/d.length);
+  src.buffer = b;
+  const f = AC.createBiquadFilter(); f.type = 'lowpass'; f.frequency.value = 900;
+  const g = AC.createGain(); g.gain.setValueAtTime(0.11 * intensity, t);
+  g.gain.exponentialRampToValueAtTime(0.001, t + 0.16);
+  src.connect(f); f.connect(g); g.connect(AC.destination); src.start();
+}
+function squeak(){
+  if (!AC || muted) return;
+  const t = AC.currentTime;
+  const o = AC.createOscillator(); o.type = 'sine';
+  const f0 = 1500 + Math.random()*700;
+  o.frequency.setValueAtTime(f0, t);
+  o.frequency.exponentialRampToValueAtTime(f0 * (0.55 + Math.random()*0.25), t + 0.09);
+  const g = AC.createGain();
+  g.gain.setValueAtTime(0.0001, t);
+  g.gain.exponentialRampToValueAtTime(0.028, t + 0.018);
+  g.gain.exponentialRampToValueAtTime(0.0001, t + 0.1);
+  o.connect(g); g.connect(AC.destination); o.start(t); o.stop(t + 0.12);
+}
+function chime(){ // soft completion note-pair
+  if (!AC || muted) return;
+  const t = AC.currentTime;
+  [523.25, 783.99].forEach((fr, i) => {
+    const o = AC.createOscillator(); o.type = 'sine'; o.frequency.value = fr;
+    const g = AC.createGain();
+    g.gain.setValueAtTime(0.0001, t + i*0.14);
+    g.gain.exponentialRampToValueAtTime(0.05, t + i*0.14 + 0.03);
+    g.gain.exponentialRampToValueAtTime(0.0001, t + i*0.14 + 0.7);
+    o.connect(g); g.connect(AC.destination); o.start(t + i*0.14); o.stop(t + i*0.14 + 0.75);
+  });
+}
+const muteBtn = document.getElementById('muteBtn');
+muteBtn.addEventListener('click', () => {
+  muted = !muted;
+  muteBtn.textContent = muted ? '🔇' : '🔊';
+  if (swishGain) swishGain.gain.value = 0;
+});
+
+// ---------- erasing ----------
+const ER = 46;                       // eraser half-width (CSS px)
+const ERH = 26;                      // eraser half-height
+let dragging = false, started = false, finished = false;
+let px = -200, py = -200, lastX = -200, lastY = -200, lastT = 0;
+let lastDir = 0, speedSmooth = 0, squeakCooldown = 0, hushCooldown = 0;
+const particles = [];
+
+function eraseAt(x, y, strength){
+  // mask: destination-out multiplies density (alpha) down — same rate as the
+  // visual chalk fade, so the % meter and the eye agree.
+  const R = ER * 1.15;
+  mk.setTransform(DPR,0,0,DPR,0,0);
+  const g = mk.createRadialGradient(x, y, R*0.15, x, y, R);
+  const a = 0.19 * strength;
+  g.addColorStop(0, 'rgba(0,0,0,' + a + ')');
+  g.addColorStop(0.7, 'rgba(0,0,0,' + (a*0.55) + ')');
+  g.addColorStop(1, 'rgba(0,0,0,0)');
+  mk.globalCompositeOperation = 'destination-out';
+  mk.fillStyle = g;
+  mk.beginPath(); mk.arc(x, y, R, 0, 7); mk.fill();
+  mk.globalCompositeOperation = 'source-over';
+}
+const probeCv = document.createElement('canvas'); probeCv.width = 24; probeCv.height = 24;
+const probeCtx = probeCv.getContext('2d', { willReadFrequently: true });
+function maskLevelAt(x, y){
+  probeCtx.clearRect(0,0,24,24);
+  probeCtx.drawImage(maskCv, (x-ER*0.7)*DPR, (y-ER*0.7)*DPR, ER*1.4*DPR, ER*1.4*DPR, 0, 0, 24, 24);
+  const d = probeCtx.getImageData(0,0,24,24).data;
+  let sum = 0, n = 0;
+  for (let i=0;i<d.length;i+=16){ sum += d[i+3]; n++; }   // alpha channel = density
+  return (sum / Math.max(n,1)) / 255;
+}
+function fadeChalk(x, y, beforeLevel){
+  // One traverse melts light chalk away; heavy (double-drawn) chalk keeps a
+  // visible ghost after one pass and needs a second — same rate as the mask.
+  const fade = 0.17 + 0.06 * (1 - beforeLevel);
+  const R = ER * 1.18;
+  ck.setTransform(DPR,0,0,DPR,0,0);
+  const g = ck.createRadialGradient(x, y, R*0.1, x, y, R);
+  g.addColorStop(0, 'rgba(0,0,0,' + fade + ')');
+  g.addColorStop(0.7, 'rgba(0,0,0,' + (fade*0.5) + ')');
+  g.addColorStop(1, 'rgba(0,0,0,0)');
+  ck.globalCompositeOperation = 'destination-out';
+  ck.fillStyle = g;
+  ck.beginPath(); ck.arc(x, y, R, 0, 7); ck.fill();
+  ck.globalCompositeOperation = 'source-over';
+}
+function spawnDust(x, y, amount){
+  const n = Math.min(7, Math.floor(amount));
+  for (let i=0;i<n;i++){
+    if (particles.length > 240) break;
+    particles.push({
+      x: x + rr(-ER*0.8, ER*0.8), y: y + rr(-ER*0.4, ER*0.4),
+      vx: rr(-9, 9), vy: rr(3, 16),
+      r: rr(3, 10), life: 1, decay: rr(0.35, 0.7), wob: rr(0, 6.28)
+    });
+  }
+}
+
+// pointer handling on the chalk canvas (top interactive layer under dust overlay visual)
+const surf = chalkCv;
+function toLocal(e){ return { x: e.clientX, y: e.clientY }; }
+surf.addEventListener('pointerdown', e => {
+  initAudio();
+  if (!started || finished) return;
+  const p = toLocal(e); px = lastX = p.x; py = lastY = p.y; lastT = performance.now();
+  dragging = true; lastDir = 0;
+  try { surf.setPointerCapture(e.pointerId); } catch(err){}
+  eraseStep(p.x, p.y, 0, true);
+});
+surf.addEventListener('pointermove', e => {
+  const p = toLocal(e);
+  px = p.x; py = p.y;
+  if (!dragging || !started || finished) return;
+  const now = performance.now();
+  const dt = Math.max(1, now - lastT);
+  const dist = Math.hypot(p.x - lastX, p.y - lastY);
+  // interpolate stamps along the stroke so fast drags stay continuous
+  const steps = Math.min(16, Math.max(1, Math.floor(dist / 11)));
+  for (let i=1;i<=steps;i++){
+    eraseStep(lastX + (p.x-lastX)*i/steps, lastY + (p.y-lastY)*i/steps, dist/dt, false);
+  }
+  // direction-change squeak
+  if (dist > 4){
+    const dir = Math.atan2(p.y - lastY, p.x - lastX);
+    if (lastDir !== 0){
+      let d = Math.abs(dir - lastDir); if (d > Math.PI) d = 2*Math.PI - d;
+      if (d > 1.85 && dist/dt > 0.25 && performance.now() > squeakCooldown){
+        squeak(); squeakCooldown = performance.now() + rr(500, 1100);
+      }
+    }
+    lastDir = dir;
+  }
+  speedSmooth = speedSmooth * 0.7 + (dist/dt) * 0.3;
+  lastX = p.x; lastY = p.y; lastT = now;
+});
+function endDrag(){
+  dragging = false; speedSmooth = 0;
+  if (swishGain && AC) swishGain.gain.setTargetAtTime(0, AC.currentTime, 0.05);
+  computeClean(false); updateMeter(); checkDone();
+}
+surf.addEventListener('pointerup', endDrag);
+surf.addEventListener('pointercancel', endDrag);
+
+function eraseStep(x, y, speed, isTap){
+  if (x < board.x - 10 || x > board.x + board.w + 10 || y < board.y - 10 || y > board.y + board.h + 10){
+    return; // eraser works on the board only (little margin is fine)
+  }
+  const before = maskLevelAt(x, y);
+  const strength = isTap ? 0.9 : Math.min(1.15, 0.55 + speed * 0.55);
+  eraseAt(x, y, strength);
+  fadeChalk(x, y, before);
+  if (before > 0.04){
+    spawnDust(x, y, 2 + before * 7);
+    if (performance.now() > hushCooldown){ hush(0.4 + before * 0.6); hushCooldown = performance.now() + 130; }
+  }
+}
+
+// ---------- completion: heart/star doodle draws itself ----------
+let doneAnim = null;
+function checkDone(){
+  if (finished) return;
+  if (cleanPct >= 99.6){
+    finished = true;
+    // final polish: fully clear chalk + mask so slate is truly pristine
+    ck.setTransform(DPR,0,0,DPR,0,0);
+    ck.clearRect(0, 0, W, H);
+    mk.setTransform(1,0,0,1,0,0); mk.clearRect(0,0,maskCv.width, maskCv.height);
+    cleanPct = 100; updateMeter();
+    chime();
+    const hx = board.x + board.w - Math.min(64, board.w*0.1);
+    const hy = board.y + board.h - Math.min(58, board.h*0.11);
+    doneAnim = { t: 0, x: hx, y: hy, s: Math.min(26, board.w*0.035), kind: Math.random() > 0.5 ? 'heart' : 'star' };
+  }
+}
+function drawDoneDoodle(dt){
+  if (!doneAnim) return;
+  doneAnim.t += dt / 1.15;                      // ~1.15 s draw-in
+  const p = Math.min(1, doneAnim.t);
+  const { x, y, s, kind } = doneAnim;
+  ck.setTransform(DPR,0,0,DPR,0,0);
+  // redraw only the partial path each frame: clear its small area first via stored snapshot trick —
+  // simpler: draw cumulative segments proportional to p on a fresh patch each frame.
+  if (!doneAnim.patch){
+    doneAnim.patch = document.createElement('canvas');
+    doneAnim.patch.width = Math.ceil(s*3.4*DPR); doneAnim.patch.height = Math.ceil(s*3.4*DPR);
+  }
+  const pc = doneAnim.patch.getContext('2d');
+  pc.setTransform(DPR,0,0,DPR,0,0);
+  pc.clearRect(0,0,s*3.4,s*3.4);
+  pc.strokeStyle = 'rgba(245,245,235,0.92)'; pc.lineWidth = Math.max(2, s*0.11);
+  pc.lineCap = 'round'; pc.lineJoin = 'round';
+  const cx = s*1.7, cy = s*1.7;
+  pc.beginPath();
+  if (kind === 'heart'){
+    const N = 60, upto = Math.floor(N * p);
+    for (let i=0;i<=upto;i++){
+      const t = i/N * Math.PI * 2;
+      const hx2 = 16*Math.pow(Math.sin(t),3);
+      const hy2 = 13*Math.cos(t) - 5*Math.cos(2*t) - 2*Math.cos(3*t) - Math.cos(4*t);
+      const X = cx + hx2 * s/17, Y = cy - hy2 * s/17;
+      i===0 ? pc.moveTo(X,Y) : pc.lineTo(X,Y);
+    }
+  } else {
+    const N = 10, upto = Math.max(1, Math.floor(N * p));
+    for (let i=0;i<=upto;i++){
+      const rad = i % 2 === 0 ? s : s*0.45;
+      const a = i * Math.PI/5 - Math.PI/2;
+      const X = cx + Math.cos(a)*rad, Y = cy + Math.sin(a)*rad;
+      i===0 ? pc.moveTo(X,Y) : pc.lineTo(X,Y);
+    }
+    if (p >= 1) pc.closePath();
+  }
+  pc.stroke();
+  ck.clearRect(x - s*1.75, y - s*1.75, s*3.5, s*3.5);
+  ck.drawImage(doneAnim.patch, 0, 0, doneAnim.patch.width, doneAnim.patch.height,
+               x - s*1.7, y - s*1.7, s*3.4, s*3.4);
+  if (p >= 1 && !doneAnim.sparkled){
+    doneAnim.sparkled = true;
+    for (let i=0;i<14;i++) particles.push({ x: x + rr(-s, s), y: y + rr(-s, s), vx: rr(-14,14), vy: rr(-16,2), r: rr(1.5,4), life: 1, decay: rr(0.5,0.9), wob: rr(0,6.28) });
+    document.getElementById('done').classList.add('show');
+  }
+}
+
+// ---------- eraser rendering (on dust layer, follows pointer) ----------
+function drawEraser(dt){
+  dx.setTransform(DPR,0,0,DPR,0,0);
+  dx.clearRect(0,0,W,H);
+  // particles
+  for (let i=particles.length-1;i>=0;i--){
+    const q = particles[i];
+    q.life -= q.decay * dt;
+    if (q.life <= 0){ particles.splice(i,1); continue; }
+    q.wob += dt * 1.7;
+    q.x += (q.vx + Math.sin(q.wob)*5) * dt;
+    q.y += q.vy * dt; q.vy += 4.5 * dt;               // gentle settle downward
+    const g = dx.createRadialGradient(q.x, q.y, 0, q.x, q.y, q.r);
+    g.addColorStop(0, 'rgba(238,238,226,' + (0.13 * q.life) + ')');
+    g.addColorStop(1, 'rgba(238,238,226,0)');
+    dx.fillStyle = g;
+    dx.beginPath(); dx.arc(q.x, q.y, q.r, 0, 7); dx.fill();
+  }
+  if (!started || finished) return;
+  // eraser body: wood top + felt bottom, slight tilt toward motion
+  const tilt = Math.max(-0.14, Math.min(0.14, (px - lastX) * 0.012));
+  dx.save();
+  dx.translate(px, py); dx.rotate(dragging ? tilt : 0);
+  dx.shadowColor = 'rgba(0,0,0,0.55)'; dx.shadowBlur = dragging ? 7 : 13; dx.shadowOffsetY = dragging ? 3 : 7;
+  const w = ER*2, hTop = ERH*0.92, hFelt = ERH*0.72;
+  const wg = dx.createLinearGradient(0, -hTop, 0, 0);
+  wg.addColorStop(0, '#a07a4b'); wg.addColorStop(0.5, '#86633a'); wg.addColorStop(1, '#6f4f2c');
+  dx.fillStyle = wg; roundRect(dx, -w/2, -hTop, w, hTop, 5); dx.fill();
+  dx.shadowColor = 'transparent';
+  dx.fillStyle = 'rgba(255,240,205,0.25)'; roundRect(dx, -w/2 + 4, -hTop + 3, w - 8, 4, 2); dx.fill();
+  const fg = dx.createLinearGradient(0, 0, 0, hFelt);
+  fg.addColorStop(0, '#cfccc2'); fg.addColorStop(1, '#a9a69c');
+  dx.fillStyle = fg; roundRect(dx, -w/2 + 1.5, 0, w - 3, hFelt, 4); dx.fill();
+  // felt chalk dust tint
+  dx.fillStyle = 'rgba(255,255,255,0.20)'; roundRect(dx, -w/2 + 6, hFelt - 5, w - 12, 3, 1.5); dx.fill();
+  dx.restore();
+}
+
+// ---------- main loop ----------
+let prevT = performance.now(), meterTimer = 0;
+function frame(now){
+  const dt = Math.min(0.05, (now - prevT) / 1000); prevT = now;
+  // swish follows drag speed
+  if (AC && swishGain && !muted){
+    const target = dragging ? Math.min(0.16, 0.02 + speedSmooth * 0.14) : 0;
+    swishGain.gain.setTargetAtTime(target, AC.currentTime, 0.06);
+    if (swishFilter) swishFilter.frequency.setTargetAtTime(520 + speedSmooth * 650, AC.currentTime, 0.08);
+  }
+  speedSmooth *= Math.pow(0.12, dt); // decay when not moving
+  if (dragging && started && !finished){
+    meterTimer += dt;
+    if (meterTimer > 0.45){ meterTimer = 0; computeClean(false); updateMeter(); if (cleanPct >= 99.6) checkDone(); }
+  }
+  drawDoneDoodle(dt);
+  drawEraser(dt);
+  requestAnimationFrame(frame);
+}
+
+// ---------- flow ----------
+const overlay = document.getElementById('overlay');
+const hint = document.getElementById('hint');
+document.getElementById('startBtn').addEventListener('click', () => {
+  initAudio();
+  started = true;
+  overlay.classList.add('gone');
+  setTimeout(() => hint.classList.add('gone'), 6000);
+});
+document.getElementById('againBtn').addEventListener('click', () => {
+  initAudio();
+  document.getElementById('done').classList.remove('show');
+  finished = false; doneAnim = null; particles.length = 0;
+  currentSeed = (Math.random() * 1e9) >>> 0;
+  scribbleBoard(currentSeed, false);
+  shownPct = -1; updateMeter();
+  hint.classList.remove('gone');
+  setTimeout(() => hint.classList.add('gone'), 3500);
+});
+
+// idle eraser rests bottom-center of board before start
+px = window.innerWidth / 2; py = window.innerHeight * 0.62;
+
+let resizeTO = null;
+window.addEventListener('resize', () => {
+  clearTimeout(resizeTO);
+  resizeTO = setTimeout(() => { finished = false; doneAnim = null; document.getElementById('done').classList.remove('show'); layout(); }, 180);
+});
+layout();
+requestAnimationFrame(frame);
+</script>
+</body>
+</html>
