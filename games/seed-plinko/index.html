@@ -190,13 +190,13 @@
 <div class="overlay" id="titleScreen">
   <h1>Planko</h1>
   <p>A seed, a pegboard, and a garden that remembers.</p>
-  <p class="sub">Drag to aim, let go to drop. Where a seed settles, something beautiful grows.<br>Collect all 20 hero species in your journal. ✿</p>
+  <p class="sub">Drag to aim, let go to drop. Where a seed settles, something beautiful grows.<br>Collect all 24 blooms in your journal. ✿</p>
   <button class="bigBtn" id="startBtn">Start planting</button>
 </div>
 
 <div id="journal" class="hidden">
   <h2>Garden Journal</h2>
-  <div class="jsub" id="journalSub">0 of 20 species discovered</div>
+  <div class="jsub" id="journalSub">0 of 24 species discovered</div>
   <div id="journalGrid"></div>
   <button class="bigBtn" id="journalClose">Back to the garden</button>
 </div>
@@ -983,9 +983,11 @@ SPECIES.forEach(function (s) { SPECIES_BY_ID[s.id] = s; });
    but leave the picker, the random rotation and the journal grid:
    quality over quantity, every plant gets room to be beautiful. */
 const HERO_IDS = ['rosered', 'sunflower', 'lotus', 'sakura', 'wisteria',
-  'glowshroom', 'tulipred', 'peony', 'iris', 'lavender', 'daisy',
+  'tulipred', 'peony', 'iris', 'lavender', 'daisy',
   'hydrangeapink', 'orchid', 'lily', 'dahlia', 'poppy', 'bluebell',
-  'fern', 'moonflower', 'aurorarose']; // v9 — Cherie's locked 20-hero roster restored
+  'moonflower', 'aurorarose',
+  // v8 — all blooms, no mushrooms or ferns: six more flowering species join the garden
+  'rosepink', 'tulippink', 'hydrangeablue', 'cornflower', 'anemone', 'firelily'];
 const ACTIVE_SPECIES = SPECIES.filter(function (s) { return HERO_IDS.indexOf(s.id) !== -1; });
 /* v3 — nothing is locked: every species is available from a fresh save.
    (Older saves may carry an `unlocked` list; it is simply ignored now.) */
