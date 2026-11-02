@@ -211,7 +211,8 @@
    ================================================================ */
 
 const canvas = document.getElementById('game');
-const ctx = canvas.getContext('2d');
+let ctx = canvas.getContext('2d');
+const mainCtx = ctx; // v8 — ctx is swapped to an offscreen band context while each depth band paints
 
 /* v3 — endless play: no satchel limit, no rounds, no end screen.
    The seed supply is infinite and every species is unlocked. */
@@ -279,7 +280,7 @@ let nextId = null;      // species queued for the next drop (random mode)
 let harvested = 0;      // plants chopped this session (lifetime total lives in save.harvested)
 let falling = [];       // chopped plants mid-tip-over
 const keysDown = {};    // held movement keys for the gardener
-const gardener = { x: 0, dir: 1, moving: false, walkPhase: 0, swingT: 1, swingCd: 0, targetX: null };
+const gardener = { x: 0, dir: 1, moving: false, walkPhase: 0, swingT: 1, swingCd: 0, targetX: null, lane: 4, tLane: 4 }; // v8 — lane = depth band (0 far … 4 near)
 
 /* layout */
 let L = null;
@@ -984,7 +985,7 @@ SPECIES.forEach(function (s) { SPECIES_BY_ID[s.id] = s; });
 const HERO_IDS = ['rosered', 'sunflower', 'lotus', 'sakura', 'wisteria',
   'glowshroom', 'tulipred', 'peony', 'iris', 'lavender', 'daisy',
   'hydrangeapink', 'orchid', 'lily', 'dahlia', 'poppy', 'bluebell',
-  'fern', 'moonflower', 'aurorarose'];
+  'fern', 'moonflower', 'aurorarose']; // v9 — Cherie's locked 20-hero roster restored
 const ACTIVE_SPECIES = SPECIES.filter(function (s) { return HERO_IDS.indexOf(s.id) !== -1; });
 /* v3 — nothing is locked: every species is available from a fresh save.
    (Older saves may carry an `unlocked` list; it is simply ignored now.) */
@@ -997,19 +998,56 @@ if (!SPECIES_BY_ID[selectedId] || ACTIVE_SPECIES.indexOf(SPECIES_BY_ID[selectedI
    time: tall things stand at the back, small things always in front,
    so nothing short ever gets hidden behind something tall.
    ================================================================ */
-const FORM_ROW = { plume: 0, branch: 0, rosette: 2, bell: 2, cap: 2, blade: 2 };
-function rowFor(sp) {
-  let r = (FORM_ROW[sp.form] !== undefined) ? FORM_ROW[sp.form] : 1;
-  if (sp.h >= 0.9) r = 0;                    // sunflower towers at the back
-  else if (sp.h <= 0.55 && r === 1) r = 2;   // buttercup & clover stay low, up front
-  return r;
+/* v8 — A DEEP GARDEN. Five depth bands instead of three, spread over a
+   ground plane roughly twice as deep. Each band has its own baseline,
+   its own perspective scale and its own breath of atmospheric haze, and
+   is painted into its own offscreen layer so haze, sidelight and depth-
+   of-field apply to the band as a whole. Tall species stand toward the
+   back and rise far taller than before; short ones fill the front. */
+const FORM_BAND = { plume: [0, 1], branch: [0, 1], rosette: [2, 4], bell: [2, 4], cap: [3, 4], blade: [2, 4] };
+const BAND_N = 5;
+const BAND_T     = [0.03, 0.24, 0.46, 0.68, 0.88]; // depth: fraction of the ground depth below the soil line
+const BAND_SCALE = [0.60, 0.72, 0.85, 1.00, 1.18]; // perspective scale (far is smaller)
+const BAND_HAZE  = [0.36, 0.25, 0.15, 0.07, 0.0];  // atmospheric perspective per band
+const BAND_GUIDE = [3, 4, 4, 4, 5];                // standing-plant guide per band (v9 — sums to the locked cap of 20)
+function bandRange(sp) {
+  if (sp.h >= 0.9) return [0, 1];                  // sunflower & wisteria tower at the back
+  if (FORM_BAND[sp.form]) return FORM_BAND[sp.form];
+  if (sp.h >= 0.74) return [0, 2];
+  if (sp.h >= 0.62) return [1, 3];
+  return [2, 4];
 }
-const ROW_BASE  = [-5, 6, 17];        // baseline offset (px) below the soil surface line, per row
-const ROW_SCALE = [0.84, 0.93, 1.0];  // perspective scale per row (back is smaller)
-function plantRow(p) { return (p.row == null) ? 1 : p.row; }
-function plantBaseY(p) { return soilYAt(p.x) + ROW_BASE[plantRow(p)] + (p.yOff || 0); }
+/* pick the least-crowded band this species may stand in — fills the depth evenly */
+function chooseBand(sp) {
+  const rg = bandRange(sp);
+  const counts = [0, 0, 0, 0, 0];
+  for (let i = 0; i < plants.length; i++) { if (plants[i].retire == null) counts[plantRow(plants[i])]++; }
+  let best = rg[0], bestScore = 1e9;
+  for (let b = rg[0]; b <= rg[1]; b++) {
+    const score = counts[b] / BAND_GUIDE[b] + Math.random() * 0.35;
+    if (score < bestScore) { bestScore = score; best = b; }
+  }
+  return best;
+}
+function plantRow(p) { return (p.row == null) ? 3 : p.row; }
+/* lane maths take a fractional band so the gardener can glide between lanes */
+function laneOffset(f) {
+  f = clamp(f, 0, BAND_N - 1); const i = Math.min(BAND_N - 2, Math.floor(f)); const k = f - i;
+  return L.groundDepth * lerp(BAND_T[i], BAND_T[i + 1], k);
+}
+function laneScale(f) {
+  f = clamp(f, 0, BAND_N - 1); const i = Math.min(BAND_N - 2, Math.floor(f)); const k = f - i;
+  return lerp(BAND_SCALE[i], BAND_SCALE[i + 1], k);
+}
+function plantBaseY(p) { return soilYAt(p.x) + laneOffset(plantRow(p)) + (p.yOff || 0); }
 const HERO_SCALE = 1.28; // v5 — with only ~20 plants standing, each one is bigger
-function plantScaleOf(p) { return L.plantScale * HERO_SCALE * ROW_SCALE[plantRow(p)] * (p.scale || 1); }
+function plantScaleOf(p) { return L.plantScale * HERO_SCALE * BAND_SCALE[plantRow(p)] * (p.scale || 1); }
+/* stem height: tall species are exaggerated (h^2.2) so the garden has real
+   vertical drama; thumbnails and the art-checkpoint sheet keep the old
+   linear height via p.flatH */
+function plantHGT(p, S) {
+  return p.flatH ? 175 * S * p.sp.h : 175 * S * L.heightK * Math.pow(p.sp.h, 2.2);
+}
 
 /* ================================================================
    RANDOM SEEDS (v2) — "Surprise me" is the default packet.
@@ -1037,9 +1075,12 @@ rollNext();
    ================================================================ */
 function computeLayout() {
   const u = Math.min(W, H);
+  const plantScale = clamp(u / 640, 0.62, 1.25);
   const pickerH = started ? clamp(H * 0.155, 104, 128) : 0;
   const hudH = Math.max(58, H * 0.075);
-  const soilBase = H - pickerH - clamp(H * 0.115, 64, 104); // meadow floor line
+  // v8 — the ground plane is ~2x deeper: five receding planting bands live on it
+  const groundDepth = clamp(H * 0.235, 120, 230);
+  const soilBase = H - pickerH - groundDepth; // far edge of the garden bed
   const meadowTop = soilBase - clamp(H * 0.06, 34, 58);
   const boardTop = hudH + 52;
   const boardBot = meadowTop - 10;
@@ -1066,12 +1107,14 @@ function computeLayout() {
   return {
     u: u, hudH: hudH, pickerH: pickerH,
     boardTop: boardTop, boardBot: boardBot, binTop: binTop,
-    meadowTop: meadowTop, soilBase: soilBase,
+    meadowTop: meadowTop, soilBase: soilBase, groundDepth: groundDepth,
     pegs: pegs, dividers: dividers,
     pegR: clamp(u * 0.0075, 3.2, 5.2),
     seedR: clamp(u * 0.0135, 6, 10),
     dropY: hudH + 22,
-    plantScale: clamp(u / 640, 0.62, 1.25)
+    plantScale: plantScale,
+    // tallest plant (h=1, back band) may rise ~26% of the screen; capped so big screens stay in proportion
+    heightK: Math.min(2.3, (0.26 * H) / (175 * plantScale * HERO_SCALE * BAND_SCALE[0]))
   };
 }
 function soilYAt(x) {
@@ -1236,7 +1279,7 @@ for (let i = 0; i < 110; i++) {
 }
 const ripples = [];
 const LANTERN_X = [0.10, 0.29, 0.50, 0.71, 0.90];
-const LANTERN_ROW = [2, 1, 2, 1, 2];
+const LANTERN_ROW = [4, 2, 3, 1, 4]; // v8 — which depth band each lantern glow sits in
 
 function updateSky(dt) {
   clockH = (clockH + dt * (24 / DAY_LEN)) % 24;
@@ -1386,7 +1429,7 @@ function drawNightLights(now) {
   }
   for (let i = 0; i < LANTERN_X.length; i++) {
     const x = LANTERN_X[i] * W;
-    const y = soilYAt(x) + ROW_BASE[LANTERN_ROW[i]] - 2;
+    const y = soilYAt(x) + laneOffset(LANTERN_ROW[i]) - 2;
     const fl = 0.85 + 0.15 * Math.sin(now * 7 + i * 2.3) * Math.sin(now * 3.1 + i);
     const R = 30;
     const g = ctx.createRadialGradient(x, y - 8, 1, x, y - 8, R);
@@ -1403,7 +1446,7 @@ function drawNightLights(now) {
     const bk = clamp((p.t - 0.76) / 0.24, 0, 1);
     if (bk <= 0) continue;
     const S = plantScaleOf(p);
-    const HGT = 175 * S * p.sp.h;
+    const HGT = plantHGT(p, S);
     const stemK = easeOutCubic(smooth(0, 0.55, p.t));
     const hy = plantBaseY(p) - (p.sp.form === 'cap' ? HGT * 0.72 * stemK + 6 * S : HGT * stemK + 5 * S);
     const R = 32 * S * (0.6 + 0.5 * bk);
@@ -1515,6 +1558,8 @@ function drawBackground(now) {
   }
   ctx.lineTo(W, L.meadowTop); ctx.closePath(); ctx.fill();
 
+  drawTreeline(); // v8 — layered trees and tall spires on the horizon
+
   // meadow slope — greens warmed at golden hour, deepened after dark
   const mg = ctx.createLinearGradient(0, L.meadowTop - 14, 0, L.soilBase + 30);
   mg.addColorStop(0, triCol([168, 191, 98], [188, 171, 94], [46, 74, 60], P.warm, P.night, 1));
@@ -1527,6 +1572,8 @@ function drawBackground(now) {
     ctx.lineTo(x, L.meadowTop - 10 - Math.sin(x * 0.008 + 0.4) * 10);
   }
   ctx.lineTo(W, L.soilBase + 34); ctx.closePath(); ctx.fill();
+
+  drawHedge(); // v8 — a hedge closes the back of the bed
 
   // drifting pollen motes in the light (they go to bed at night)
   const moteA = 0.5 * (1 - P.night * 0.8);
@@ -1557,18 +1604,35 @@ function drawBoard(now) {
     ctx.beginPath(); ctx.ellipse(W - 10, y + 9, 5.5, 2.8, -0.5, 0, Math.PI * 2); ctx.fill();
   }
 
-  // reed dividers
+  // flowering dividers (v8) — tall delphinium / lupin spikes in place of cattail reeds
+  const SPIKE_COLS = [['#b79cf0', '#e4d6ff'], ['#f2a0c4', '#ffd9e8'], ['#8fb0ff', '#d3e1ff'], ['#ffffff', '#fff4d6'], ['#ffd77a', '#fff0b8'], ['#d58cf0', '#f4d4ff']];
   for (let i = 0; i < L.dividers.length; i++) {
     const d = L.dividers[i];
     const bend = Math.sin(now * 1.1 + d.sway) * 2.6;
+    const col = SPIKE_COLS[Math.floor(hashStr('sp' + i) * SPIKE_COLS.length)];
     ctx.strokeStyle = '#5d8440';
-    ctx.lineWidth = 3.4; ctx.lineCap = 'round';
+    ctx.lineWidth = 2.8; ctx.lineCap = 'round';
     ctx.beginPath();
     ctx.moveTo(d.x, d.y1);
     ctx.quadraticCurveTo(d.x + bend * 0.4, (d.y0 + d.y1) / 2, d.x + bend, d.y0);
     ctx.stroke();
-    ctx.fillStyle = '#7a5c33';
-    ctx.beginPath(); ctx.ellipse(d.x + bend, d.y0 - 3, 3.2, 5.2, bend * 0.05, 0, Math.PI * 2); ctx.fill();
+    // a pair of leaves low on the stem
+    leafShape(ctx, d.x, d.y1 - 6, 15, 4.2, -2.6, '#6fa04c', '#4d7c3a');
+    leafShape(ctx, d.x, d.y1 - 12, 13, 3.8, -0.55, '#4d7c3a', '#6fa04c');
+    // the spike: florets crowd up the top third of the stem, smaller toward the tip
+    const spikeLen = (d.y1 - d.y0) * 0.42, nF = 11;
+    for (let f = 0; f < nF; f++) {
+      const t = f / (nF - 1);                          // 0 = tip, 1 = base of the spike
+      const yy = d.y0 + t * spikeLen;
+      const xx = d.x + bend * (1 - t * 0.55);
+      const rr = 1.9 + t * 2.6;
+      const side = (f % 2 ? 1 : -1) * (1.2 + t * 2.2);
+      ctx.fillStyle = col[0];
+      ctx.beginPath(); ctx.arc(xx + side, yy, rr, 0, Math.PI * 2); ctx.fill();
+      ctx.beginPath(); ctx.arc(xx - side * 0.6, yy + rr * 0.7, rr * 0.88, 0, Math.PI * 2); ctx.fill();
+      ctx.fillStyle = col[1];
+      ctx.beginPath(); ctx.arc(xx + side - rr * 0.25, yy - rr * 0.25, rr * 0.38, 0, Math.PI * 2); ctx.fill();
+    }
   }
 
   // pegs — dew drops, river stones, and a few fireflies
@@ -1615,75 +1679,34 @@ function drawBoard(now) {
   }
 }
 
-function drawMeadow() {
-  // soil band
-  const nk = palNow.night;
-  const st = ctx.createLinearGradient(0, L.soilBase - 8, 0, H);
-  st.addColorStop(0, mixHex('#77562f', '#3a2c40', nk));
-  st.addColorStop(0.25, mixHex('#63452a', '#2e2136', nk));
-  st.addColorStop(1, mixHex('#453019', '#1a1424', nk));
-  ctx.fillStyle = st;
-  ctx.fillRect(0, L.soilBase - 6, W, H - L.soilBase + 6);
-  // soft mounded top edge
-  ctx.fillStyle = mixHex('#86643a', '#4c3a58', nk);
-  ctx.beginPath();
-  ctx.moveTo(0, L.soilBase + 4);
-  for (let x = 0; x <= W; x += 10) ctx.lineTo(x, soilYAt(x) - 3.5);
-  ctx.lineTo(W, L.soilBase + 5); ctx.closePath(); ctx.fill();
-  // depth terraces (v2) — a soft ridge of light at each garden row's baseline,
-  // with a shading trough beneath, so the three rows read as ground receding
-  for (let ri = 0; ri < 3; ri++) {
-    ctx.beginPath();
-    for (let x = 0; x <= W; x += 12) {
-      const y = soilYAt(x) + ROW_BASE[ri] + 5;
-      if (x === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
-    }
-    ctx.strokeStyle = ri === 2 ? 'rgba(255,232,170,.14)' : 'rgba(43,26,8,.15)';
-    ctx.lineWidth = ri === 2 ? 2.4 : 3.4;
-    ctx.stroke();
-    ctx.beginPath();
-    for (let x = 0; x <= W; x += 12) {
-      const y = soilYAt(x) + ROW_BASE[ri] + 11;
-      if (x === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
-    }
-    ctx.strokeStyle = 'rgba(30,17,4,.10)';
-    ctx.lineWidth = 5;
-    ctx.stroke();
-  }
-  // warm atmospheric wash over the back of the bed
-  const wash = ctx.createLinearGradient(0, L.soilBase - 10, 0, L.soilBase + 30);
-  wash.addColorStop(0, 'rgba(' + hazeRGB() + ',' + (0.10 * (1 - nk * 0.4)) + ')');
-  wash.addColorStop(1, 'rgba(' + hazeRGB() + ',0)');
-  ctx.fillStyle = wash;
-  ctx.fillRect(0, L.soilBase - 10, W, 40);
-  // speckles
-  ctx.fillStyle = 'rgba(255,225,170,.10)';
-  for (let i = 0; i < 46; i++) {
-    const x = ((i * 97.3) % Math.max(10, W - 12)) + 6;
-    const y = L.soilBase + 4 + ((i * 53.7) % Math.max(10, (H - L.pickerH) - L.soilBase - 8));
-    ctx.fillRect(x, y, 2.2, 1.4);
-  }
-  ctx.fillStyle = 'rgba(0,0,0,.16)';
-  for (let i = 0; i < 30; i++) {
-    const x = ((i * 131.7) % Math.max(10, W - 12)) + 6;
-    const y = L.soilBase + 6 + ((i * 71.3) % Math.max(10, (H - L.pickerH) - L.soilBase - 10));
-    ctx.fillRect(x, y, 2.6, 1.6);
-  }
-}
-
 function drawForegroundGrass(now) {
-  const baseY = H - L.pickerH + 2;
-  ctx.fillStyle = 'rgba(46,74,28,.75)';
-  for (let i = 0; i < 44; i++) {
-    const x = ((i * 89.7) % Math.max(10, W - 8)) + 4;
-    const hgt = 12 + (i % 5) * 4.5;
-    const sway = Math.sin(now * 1.3 + i * 1.7) * 2.4;
-    ctx.beginPath();
-    ctx.moveTo(x - 1.8, baseY);
-    ctx.quadraticCurveTo(x + sway * 0.4, baseY - hgt * 0.6, x + sway, baseY - hgt);
-    ctx.quadraticCurveTo(x + sway * 0.4 + 1.2, baseY - hgt * 0.6, x + 1.8, baseY);
-    ctx.closePath(); ctx.fill();
+  const o = ensureScenery(), nk = palNow.night;
+  const y = Math.round(H - L.pickerH + 5 - o.fgH);
+  ctx.drawImage(o.fg[0].cv, 0, y, W, o.fgH);
+  if (nk > 0.02) { ctx.globalAlpha = nk; ctx.drawImage(o.fg[1].cv, 0, y, W, o.fgH); ctx.globalAlpha = 1; }
+}
+function paintForeground(night, o) {
+  const ly = makeLayer(W, o.fgH), c = ly.c, hh = o.fgH, r = rng32(5150), sc = o.sc;
+  const cols = night ? ['#8a6c86', '#9a9ab4', '#7a6aa8', '#a89a60', '#5a76a8', '#a05a7e']
+                     : ['#ffb3d1', '#ffffff', '#c9b0ff', '#ffe27a', '#9fc2ff', '#ff86b4'];
+  const greens = night ? ['#1b3128', '#223a2e', '#2b4636'] : ['#3d6a33', '#4f8240', '#6aa04c'];
+  for (let x = -20; x < W + 20; x += (20 + r() * 26) * sc) {
+    const w = (22 + r() * 30) * sc, h = (14 + r() * 20) * sc, base = hh + 2;
+    for (let k = 0; k < 14; k++) {            // dome of overlapping leaves
+      c.fillStyle = greens[k % 3];
+      const lx = x + (r() - 0.5) * w * 1.5, ly = base - r() * h * 0.7;
+      c.beginPath(); c.ellipse(lx, ly, w * (0.14 + r() * 0.12), h * (0.16 + r() * 0.1), (r() - 0.5) * 1.2, 0, Math.PI * 2); c.fill();
+    }
+    const cc = cols[Math.floor(r() * cols.length)], cd = cols[Math.floor(r() * cols.length)];
+    const nb = 9 + Math.floor(r() * 9);
+    for (let k = 0; k < nb; k++) {            // five-petal blossoms, soft-focused by size
+      const bx = x + (r() - 0.5) * w * 1.5, by = base - h * (0.25 + r() * 0.75), br = (2.2 + r() * 2.4) * sc;
+      c.fillStyle = r() < 0.75 ? cc : cd;
+      for (let q = 0; q < 5; q++) { const a = q * 1.2566 + r() * 0.2; dot(c, bx + Math.cos(a) * br * 0.72, by + Math.sin(a) * br * 0.72, br * 0.55); }
+      c.fillStyle = night ? 'rgba(220,205,150,0.7)' : '#ffd86a'; dot(c, bx, by, br * 0.38);
+    }
   }
+  return ly;
 }
 
 /* dew ripples (v6) — a hit dew peg rings outward and sheds droplets.
@@ -2048,7 +2071,7 @@ function paintSpike(c, p, now, S, K) {
     const h = K.HGT * K.stemK * (0.8 + 0.2 * Math.sin(i * 2.7 + p.phase));
     if (h < 4) continue;
     const topX = fx + Math.sin(K.sway * 3 + i) * h * 0.14;
-    stemPath(c, fx * 0.4, topX, h, 1.9 * S, pal.s, mixHex(pal.s, '#000000', 0.2));
+    stemPath(c, fx * 0.4, topX, h, 1.9 * S * K.fat, pal.s, mixHex(pal.s, '#000000', 0.2));
     if (K.budK > 0.03) {
       const buds = 6;
       for (let b = 0; b < buds; b++) {
@@ -2111,7 +2134,7 @@ function paintPlume(c, p, now, S, K) {
   const sp = p.sp, pal = sp.pal;
   const h = K.HGT * K.stemK;
   if (h < 4) return;
-  stemPath(c, 0, K.sway * h * 0.4, h, 3.6 * S, '#6d5136', '#4c3a22');
+  stemPath(c, 0, K.sway * h * 0.4, h, 3.6 * S * K.fat, '#6d5136', '#4c3a22');
   const topX = K.sway * h * 0.4;
   c.strokeStyle = '#5e4630'; c.lineWidth = 2.6 * S; c.lineCap = 'round';
   c.beginPath(); c.moveTo(topX - 15 * S, -h); c.quadraticCurveTo(topX, -h - 4 * S, topX + 16 * S, -h + 1 * S); c.stroke();
@@ -2121,12 +2144,12 @@ function paintPlume(c, p, now, S, K) {
   const grow = smooth(0.3, 1, p.t);
   for (let i = 0; i < racemes; i++) {
     const rx = topX + (i - (racemes - 1) / 2) * 9.5 * S;
-    const len = K.HGT * (0.30 + 0.13 * hashStr(sp.id + 'r' + i)) * grow;
+    const len = K.HGT / (0.55 + 0.45 * K.fat) * (0.30 + 0.13 * hashStr(sp.id + 'r' + i)) * grow;
     if (len < 3) continue;
     const dots = Math.floor(len / (5.2 * S));
     for (let d = 0; d < dots; d++) {
       const dt2 = d / Math.max(1, dots - 1);
-      const rr = (4.6 * S) * (1 - dt2 * 0.75) * (0.4 + 0.6 * K.budK);
+      const rr = (4.6 * S * K.fat * 0.9) * (1 - dt2 * 0.75) * (0.4 + 0.6 * K.budK);
       const yy = -h + 2 * S + dt2 * len;
       const xx = rx + Math.sin(dt2 * 4 + p.phase + i) * 1.4 * S;
       c.fillStyle = mixHex(pal.p[0], pal.p[1], dt2 * 0.75);
@@ -2190,12 +2213,13 @@ function paintBranch(c, p, now, S, K) {
   if (h < 4) return;
   const ex = h * 0.72, ey = -h * 0.82;
   c.strokeStyle = '#5e4630'; c.lineCap = 'round';
-  c.lineWidth = 4.6 * S;
+  c.lineWidth = 4.6 * S * K.fat;
   c.beginPath(); c.moveTo(0, 0); c.quadraticCurveTo(h * 0.2, -h * 0.5, ex, ey); c.stroke();
-  c.lineWidth = 2.2 * S;
+  c.lineWidth = 2.2 * S * K.fat;
   c.beginPath(); c.moveTo(h * 0.3, -h * 0.44); c.quadraticCurveTo(h * 0.42, -h * 0.62, h * 0.34, -h * 0.78); c.stroke();
   c.beginPath(); c.moveTo(h * 0.48, -h * 0.6); c.quadraticCurveTo(h * 0.62, -h * 0.66, h * 0.78, -h * 0.62); c.stroke();
-  const clusters = [[0.25, -0.36], [0.36, -0.72], [0.52, -0.55], [0.72, -0.8], [0.8, -0.6], [0.62, -0.68]];
+  const clusters = [[0.25, -0.36], [0.36, -0.72], [0.52, -0.55], [0.72, -0.8], [0.8, -0.6], [0.62, -0.68],
+    [0.14, -0.2], [0.33, -0.5], [0.45, -0.7], [0.58, -0.82], [0.66, -0.5], [0.86, -0.72]]; // v8 — a fuller crown for the taller tree
   for (let i = 0; i < clusters.length; i++) {
     const cxp = clusters[i][0] * h, cyp = clusters[i][1] * h;
     const stagger = hashStr(sp.id + 'cl' + i);
@@ -2207,10 +2231,10 @@ function paintBranch(c, p, now, S, K) {
       }
       continue;
     }
-    for (let b = 0; b < 3; b++) {
+    for (let b = 0; b < 4; b++) {
       const bx = cxp + (hashStr(sp.id + 'bx' + i + '' + b) - 0.5) * 13 * S;
       const by = cyp + (hashStr(sp.id + 'by' + i + '' + b) - 0.5) * 10 * S;
-      const br = 6.4 * S * bk;
+      const br = 6.4 * S * bk * K.fat * 0.95;
       for (let q = 0; q < 5; q++) {
         petalRound(c, bx, by, br * 1.15, br * 0.62, (q / 5) * Math.PI * 2 + 0.3, mixHex(pal.p[0], pal.p[1], 0.45));
       }
@@ -2326,7 +2350,8 @@ function paintSpray(c, p, now, S, K) {
 function drawPlantShape(c, p, now, S) {
   const sp = p.sp, g = p.t;
   const K = {
-    HGT: 175 * S * sp.h,
+    HGT: plantHGT(p, S),
+    fat: p.flatH ? 1 : clamp(Math.sqrt(plantHGT(p, S) / (175 * S * sp.h)), 1, 1.9), // v8 — taller plants get thicker stems, fuller leaves, bigger blooms
     R: 24 * S,
     stemK: easeOutCubic(smooth(0, 0.55, g)),
     leafK: smooth(0.26, 0.68, g),
@@ -2380,12 +2405,26 @@ function drawPlantShape(c, p, now, S) {
     return;
   }
   const topX = K.sway * h * 0.6;
-  stemPath(c, 0, topX, h, 3.4 * S, pal.s, mixHex(pal.s, '#000000', 0.18));
+  stemPath(c, 0, topX, h, 3.4 * S * K.fat, pal.s, mixHex(pal.s, '#000000', 0.18));
   // leaves unfurl one by one as the stem climbs
   const lk1 = smooth(0.22, 0.5, g), lk2 = smooth(0.36, 0.64, g), lk3 = smooth(0.5, 0.78, g);
-  if (lk1 > 0.02) { const l1 = stemPoint(topX, h, 0.4);  leafShape(c, l1[0], l1[1], 16 * S * lk1, 5.2 * S, 2.8 + K.sway, pal.l, pal.s); }
-  if (lk2 > 0.02) { const l2 = stemPoint(topX, h, 0.6);  leafShape(c, l2[0], l2[1], 13.5 * S * lk2, 4.8 * S, 0.35 + K.sway, pal.s, pal.l); }
-  if (lk3 > 0.02) { const l3 = stemPoint(topX, h, 0.78); leafShape(c, l3[0], l3[1], 10 * S * lk3, 4 * S, 2.95 + K.sway, pal.l, mixHex(pal.s, pal.l, 0.5)); }
+  const lf = 0.9 + 0.32 * K.fat;
+  // v8 — a basal rosette of broad leaves at the soil, and lower stem leaves, so tall stems stay lush
+  const lk0 = smooth(0.08, 0.40, g);
+  if (lk0 > 0.02 && K.fat > 1.05) {
+    for (let bi = 0; bi < 5; bi++) {
+      const ba = Math.PI + 0.35 + bi * ((Math.PI - 0.7) / 4) * (bi % 2 ? 1 : 1);
+      const bl = (15 + 9 * hashStr(p.sp.id + 'b' + bi)) * S * lk0 * lf;
+      leafShape(c, 0, -1.5 * S, bl, 4.6 * S * lf, bi < 3 ? Math.PI + 0.25 + bi * 0.5 + K.sway * 0.4 : (bi - 3) * -0.55 - 0.15 + K.sway * 0.4, bi % 2 ? pal.l : pal.s, bi % 2 ? pal.s : pal.l);
+    }
+    const ll = smooth(0.14, 0.44, g);
+    const l0 = stemPoint(topX, h, 0.2), l0b = stemPoint(topX, h, 0.3);
+    leafShape(c, l0[0], l0[1], 17 * S * ll * lf, 5.2 * S, 0.5 + K.sway, pal.s, pal.l);
+    leafShape(c, l0b[0], l0b[1], 15 * S * ll * lf, 4.8 * S, 2.65 + K.sway, pal.l, pal.s);
+  }
+  if (lk1 > 0.02) { const l1 = stemPoint(topX, h, 0.4);  leafShape(c, l1[0], l1[1], 16 * S * lk1 * lf, 5.2 * S, 2.8 + K.sway, pal.l, pal.s); }
+  if (lk2 > 0.02) { const l2 = stemPoint(topX, h, 0.6);  leafShape(c, l2[0], l2[1], 13.5 * S * lk2 * lf, 4.8 * S, 0.35 + K.sway, pal.s, pal.l); }
+  if (lk3 > 0.02) { const l3 = stemPoint(topX, h, 0.78); leafShape(c, l3[0], l3[1], 10 * S * lk3 * lf, 4 * S, 2.95 + K.sway, pal.l, mixHex(pal.s, pal.l, 0.5)); }
   if (sp.glow && K.bloomK > 0) {
     c.save();
     c.shadowColor = sp.glow; c.shadowBlur = 18 * S * K.bloomK;
@@ -2430,7 +2469,7 @@ function makeThumb(sp) {
   const cv = document.createElement('canvas');
   cv.width = 96; cv.height = 96;
   const c = cv.getContext('2d');
-  const fake = { sp: sp, t: 1, variant: 0.42, phase: 1.7, x: 0, yOff: 0, scale: 1 };
+  const fake = { sp: sp, t: 1, variant: 0.42, phase: 1.7, x: 0, yOff: 0, scale: 1, flatH: true };
   c.translate(48, 90);
   drawPlantShape(c, fake, 1.2, 0.44);
   const url = cv.toDataURL();
@@ -2609,14 +2648,15 @@ function stepSeed(s, dt) {
 
 
 function makePlant(sp, x, growMult) {
-  const row = rowFor(sp);
+  const row = chooseBand(sp);
   let px = clamp(x, 16, W - 16);
-  // portrait spacing: never stack two plants of a row on the same spot
+  // spacing: never stack two plants of a band on the same spot (tighter in the distance)
+  const gap = 34 * BAND_SCALE[row];
   for (let i = 0; i < plants.length; i++) {
     const q = plants[i];
     if (plantRow(q) !== row || q.retire != null) continue;
     const dx = px - q.x;
-    if (Math.abs(dx) < 30) px = clamp(q.x + (dx >= 0 ? 30 : -30), 16, W - 16);
+    if (Math.abs(dx) < gap) px = clamp(q.x + (dx >= 0 ? gap : -gap), 16, W - 16);
   }
   return {
     sp: sp, x: px, row: row, yOff: rand(0, 4),
@@ -2641,18 +2681,62 @@ function plantSeed(s) {
       if (Math.abs(dx) < 90) q.lean = (q.lean || 0) + (dx >= 0 ? 1 : -1) * 0.11 * (1 - Math.abs(dx) / 90);
     }
   }
-  sndPock(s.x);
-  sndShimmer(p.dur * 0.85);
-  const sy = plantBaseY(p);
-  for (let i = 0; i < pCount(9); i++) {
-    if (particles.length >= PARTICLE_MAX) break; // v8 — global ceiling
-    particles.push({
-      kind: 'soil', x: s.x, y: sy - 2,
-      vx: rand(-55, 55), vy: rand(-95, -25),
-      life: rand(0.35, 0.7), age: 0, r: rand(1.6, 3.6)
+  // v8 — the seed lands on the far edge of the bed, then hops forward along
+  // the ground to the depth band its plant will stand in
+  const by = plantBaseY(p) - s.r * 0.35;
+  const dist = by - s.y;
+  if (dist < 18) { landPlant(p, p.x, 0); }
+  else {
+    p.hopping = true;
+    if (!REDUCED_MOTION) sndRustle(s.x);
+    hops.push({
+      p: p, sp: s.sp, r: s.r, x0: s.x, y0: s.y, x1: p.x, y1: by,
+      t: 0, dur: clamp(0.20 + dist * 0.0016, 0.26, 0.55),
+      rot: s.rot || 0, spin: rand(-7, 7), arc: 12 + dist * 0.11, dist: dist
     });
   }
   updateHUD();
+}
+
+/* the moment a seed settles into its band: the pock, the shimmer, the soil puff */
+function landPlant(p, x, hopDist) {
+  p.hopping = false;
+  sndPock(x);
+  sndShimmer(p.dur * 0.85);
+  const sy = plantBaseY(p);
+  for (let i = 0; i < pCount(9); i++) {
+    if (particles.length >= PARTICLE_MAX) break; // v9 — global ceiling (the shipped v8 trim, adapted to landPlant)
+    particles.push({
+      kind: 'soil', x: x, y: sy - 2,
+      vx: rand(-55, 55), vy: rand(-95, -25),
+      life: rand(0.35, 0.7), age: 0, r: rand(1.6, 3.6) * (0.55 + 0.45 * BAND_SCALE[plantRow(p)])
+    });
+  }
+}
+
+const hops = [];
+function updateHops(dt) {
+  for (let i = hops.length - 1; i >= 0; i--) {
+    const h = hops[i];
+    h.t += dt / h.dur;
+    h.rot += h.spin * dt;
+    if (h.t >= 1) { landPlant(h.p, h.x1, h.dist); hops.splice(i, 1); }
+  }
+}
+/* drawn over the bands (a seed in flight is always visible); it grows a little
+   as it comes toward the viewer and keeps a shadow on the ground beneath it */
+function drawHops() {
+  for (let i = 0; i < hops.length; i++) {
+    const h = hops[i];
+    const e = easeOutCubic(clamp(h.t, 0, 1));
+    const x = lerp(h.x0, h.x1, e);
+    const gy = lerp(h.y0, h.y1, e);
+    const y = gy - Math.sin(Math.PI * clamp(h.t, 0, 1)) * h.arc;
+    const sc = lerp(1, 0.55 + 0.5 * BAND_SCALE[plantRow(h.p)], e);
+    ctx.fillStyle = 'rgba(40,26,8,.22)';
+    ctx.beginPath(); ctx.ellipse(x, gy + h.r * 0.5, h.r * sc * 0.95, h.r * sc * 0.32, 0, 0, Math.PI * 2); ctx.fill();
+    drawSeedShape(x, y, h.r * sc, h.sp, { rot: h.rot, vx: 0, vy: 1, squash: 0 });
+  }
 }
 
 /* ================================================================
@@ -2662,16 +2746,15 @@ function plantSeed(s) {
    while its ghost bakes into the silhouette layer. Never a pop-out,
    never a stop screen; dropping stays infinite.
    ================================================================ */
-const GARDEN_CAP = 20;
-const ROW_GUIDE = [5, 7, 8];
+const GARDEN_CAP = 20; // v9 — Cherie's locked portrait cap restored (the other AI's build raised it to 30)
 function enforceCap() {
   const standing = plants.filter(function (p) { return p.retire == null && !p.frozen; });
   if (standing.length <= GARDEN_CAP) return;
-  const counts = [0, 0, 0];
+  const counts = [0, 0, 0, 0, 0];
   standing.forEach(function (p) { counts[plantRow(p)]++; });
   let row = 0, worst = -1;
-  for (let r = 0; r < 3; r++) {
-    const ratio = counts[r] / ROW_GUIDE[r];
+  for (let r = 0; r < BAND_N; r++) {
+    const ratio = counts[r] / BAND_GUIDE[r];
     if (ratio > worst) { worst = ratio; row = r; }
   }
   const inRow = standing.filter(function (p) { return plantRow(p) === row; })
@@ -2686,7 +2769,7 @@ function updatePlant(p, dt) {
     p.retire += dt / 2.6;
     if (p.retire >= 1 && !p.gone) { bakePlant(p); p.gone = true; }
   }
-  if (p.frozen || p.t >= 1) return;
+  if (p.frozen || p.t >= 1 || p.hopping) return; // v8 — growth waits for the seed to settle
   const prevT = p.t;
   p.t = Math.min(1, p.t + dt / p.dur);
   // v6 — each leaf unfurls with a tiny rustle tick (stages match the painters)
@@ -2710,7 +2793,7 @@ function updatePlant(p, dt) {
     if (totalBlooms > (save.best || 0)) save.best = totalBlooms;
     persist();
     sndChime(p.sp.tier === 2);
-    const topY = plantBaseY(p) - 155 * plantScaleOf(p) * p.sp.h;
+    const topY = plantBaseY(p) - 0.9 * plantHGT(p, plantScaleOf(p));
     floaters.push({ x: p.x, y: topY, text: '+' + earned + ' ❀', age: 0, life: 1.5 });
     for (let i = 0; i < pCount(p.sp.tier === 2 ? 15 : 8); i++) {
       if (particles.length >= PARTICLE_MAX) break; // v8 — global ceiling
@@ -2744,8 +2827,17 @@ function aimTo(clientX) {
   dropperX = clamp(clientX, L.seedR + 10, W - L.seedR - 10);
 }
 function inMeadowBand(y) { return started && L && y >= L.meadowTop - 6; }
+/* v8 — a touch in the garden also picks a depth lane: the band whose baseline is nearest */
+function laneAtY(y) {
+  let best = 0, bd = 1e9;
+  for (let b = 0; b < BAND_N; b++) {
+    const d = Math.abs(L.soilBase + laneOffset(b) - y);
+    if (d < bd) { bd = d; best = b; }
+  }
+  return best;
+}
 canvas.addEventListener('pointermove', function (e) {
-  if (ptrMode === 'walk' && ptrDownAt) gardener.targetX = e.clientX;
+  if (ptrMode === 'walk' && ptrDownAt) { gardener.targetX = e.clientX; gardener.tLane = laneAtY(e.clientY); }
   else aimTo(e.clientX);
 });
 canvas.addEventListener('pointerdown', function (e) {
@@ -2754,6 +2846,7 @@ canvas.addEventListener('pointerdown', function (e) {
   if (inMeadowBand(e.clientY)) {
     ptrMode = 'walk';
     gardener.targetX = e.clientX;
+    gardener.tLane = laneAtY(e.clientY);
   } else {
     ptrMode = 'aim';
     aimTo(e.clientX);
@@ -2775,6 +2868,8 @@ window.addEventListener('keydown', function (e) {
   keysDown[e.code] = true;
   if (e.code === 'ArrowLeft') { e.preventDefault(); dropperX = clamp(dropperX - 18, L.seedR + 10, W - L.seedR - 10); }
   if (e.code === 'ArrowRight') { e.preventDefault(); dropperX = clamp(dropperX + 18, L.seedR + 10, W - L.seedR - 10); }
+  if (e.code === 'ArrowUp' || e.code === 'KeyW') { e.preventDefault(); keysDown['_laneStep'] = -1; }
+  if (e.code === 'ArrowDown' || e.code === 'KeyS') { e.preventDefault(); keysDown['_laneStep'] = 1; }
   if (e.code === 'Space') { e.preventDefault(); initAudio(); dropSeed(); }
   if (e.key === 'm' || e.key === 'M') toggleMute();
 });
@@ -2920,13 +3015,436 @@ document.getElementById('startBtn').addEventListener('click', function () { init
 /* ================================================================
    DEPTH HAZE (v2) — a breath of golden air between the rows
    ================================================================ */
-function drawDepthHaze(strength) {
-  const y0 = L.soilBase - 14, y1 = H - L.pickerH;
-  const g = ctx.createLinearGradient(0, y0, 0, y1);
-  g.addColorStop(0, 'rgba(' + hazeRGB() + ',' + strength + ')');
-  g.addColorStop(1, 'rgba(' + hazeRGB() + ',0)');
-  ctx.fillStyle = g;
-  ctx.fillRect(0, y0, W, y1 - y0);
+/* ================================================================
+   V8 DEPTH RENDERING
+   - the light: one shared sun/moon state per frame (side-light + shadows)
+   - cast shadows: long, soft, stretched toward the viewer by a low sun
+   - five depth bands, each painted into an offscreen layer so that haze
+     (atmospheric perspective), side-light, contact shade and a touch of
+     depth-of-field apply to the band as a whole
+   - cached scenery: a deep perspective ground, a far treeline with tall
+     spires, and a hedge closing the back of the bed
+   ================================================================ */
+function rng32(seed) {
+  let a = seed | 0;
+  return function () {
+    a = (a + 0x6D2B79F5) | 0;
+    let t = Math.imul(a ^ (a >>> 15), 1 | a);
+    t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+  };
+}
+function makeLayer(w, h) {
+  const cv = document.createElement('canvas');
+  cv.width = Math.max(2, Math.round(w * DPR)); cv.height = Math.max(2, Math.round(h * DPR));
+  const c = cv.getContext('2d');
+  c.setTransform(DPR, 0, 0, DPR, 0, 0);
+  return { cv: cv, c: c, w: w, h: h };
+}
+const CAN_FILTER = ('filter' in mainCtx);
+let fxLevel = 1;              // 1 = full (depth-of-field blur on); 0 = lean — set by the frame-time watchdog
+let fxSlow = 0;               // seconds spent over budget
+
+/* ---- the light ---- */
+const light = { x: 0, k: 0, rgb: '255,214,150', elev: 0.5, on: false };
+function updateLight() {
+  const cel = celestial();
+  const nk = palNow.night;
+  light.on = false; light.k = 0;
+  if (cel.sun && cel.sun.a > 0.02) {
+    light.on = true; light.x = cel.sun.x; light.elev = cel.sun.elev; light.rgb = '255,214,150';
+    // low sun rakes across the garden harder than a high one
+    light.k = cel.sun.a * (1 - cloudCover * 0.7) * (1 - nk * 0.9) * (0.55 + 0.45 * (1 - cel.sun.elev)) * (1 - rainAmt * 0.8);
+  } else if (cel.moon && cel.moon.a > 0.02) {
+    light.on = true; light.x = cel.moon.x; light.elev = 0.25 + cel.moon.elev * 0.6; light.rgb = '160,184,255';
+    light.k = cel.moon.a * 0.30 * (1 - cloudCover * 0.6);
+  }
+}
+
+/* ---- cast shadows (on the ground, before any plant is painted) ---- */
+function drawPlantShadows() {
+  if (!light.on || light.k < 0.02) return;
+  const groundBot = H - L.pickerH - 8;
+  ctx.save();
+  ctx.lineCap = 'round';
+  for (let i = 0; i < plants.length; i++) {
+    const p = plants[i];
+    if (p.hopping || p.t < 0.08) continue;
+    const S = plantScaleOf(p), by = plantBaseY(p);
+    const stemK = easeOutCubic(smooth(0, 0.55, p.t));
+    const hgt = plantHGT(p, S) * stemK * (p.sp.form === 'cap' ? 0.7 : 0.95);
+    const dirx = clamp((p.x - light.x) / (W * 0.55), -1, 1);   // away from the light
+    const len = hgt * (0.18 + 0.62 * (1 - light.elev));         // low light → long shadows
+    const ex = p.x + dirx * len * 0.85;
+    const ey = Math.min(groundBot, by + len * 0.30 + 3);        // runs toward the viewer, foreshortened
+    const fade = (p.retire != null ? 1 - clamp(p.retire, 0, 1) : 1);
+    const a = light.k * 0.22 * fade;
+    const g = ctx.createLinearGradient(p.x, by, ex, ey);
+    g.addColorStop(0, 'rgba(26,16,6,' + a + ')');
+    g.addColorStop(1, 'rgba(26,16,6,' + (a * 0.45) + ')');
+    ctx.strokeStyle = g;
+    ctx.lineWidth = Math.max(1.6, 3.2 * S);
+    ctx.beginPath(); ctx.moveTo(p.x, by + 1); ctx.lineTo(ex, ey); ctx.stroke();
+    ctx.fillStyle = 'rgba(26,16,6,' + (a * 0.85) + ')';          // the bloom's shadow
+    ctx.beginPath(); ctx.ellipse(ex, ey, 22 * S, 7 * S, dirx * 0.35, 0, Math.PI * 2); ctx.fill();
+  }
+  ctx.restore();
+}
+
+/* ---- per-plant side-light and contact shade (runs inside a band layer) ---- */
+function lightPlant(c, p) {
+  if (p.t < 0.12 || p.hopping) return;
+  const S = plantScaleOf(p), by = plantBaseY(p);
+  const hgt = plantHGT(p, S) * easeOutCubic(smooth(0, 0.55, p.t));
+  const R = 40 * S, x0 = p.x - R, w = R * 2;
+  const yt = by - hgt - 28 * S, hh = by - yt + 3;
+  c.save();
+  c.globalCompositeOperation = 'source-atop';
+  if (light.on && light.k > 0.01) {
+    const right = light.x >= p.x;
+    const g = c.createLinearGradient(right ? x0 + w : x0, 0, right ? x0 : x0 + w, 0);
+    g.addColorStop(0, 'rgba(' + light.rgb + ',' + (0.34 * light.k) + ')');
+    g.addColorStop(0.45, 'rgba(' + light.rgb + ',0)');
+    g.addColorStop(1, 'rgba(24,18,44,' + (0.20 * light.k + 0.03) + ')');
+    c.fillStyle = g; c.fillRect(x0, yt, w, hh);
+  }
+  const ao = c.createLinearGradient(0, by, 0, by - 50 * S);   // stems darken toward the soil
+  ao.addColorStop(0, 'rgba(14,22,6,0.36)');
+  ao.addColorStop(1, 'rgba(14,22,6,0)');
+  c.fillStyle = ao; c.fillRect(x0, by - 50 * S, w, 50 * S + 3);
+  c.restore();
+}
+
+/* ---- grass tufts: each band has its own, rooted at its own baseline, drawn
+        in front of the stems so plants grow out of the turf ---- */
+function buildTufts() {
+  L.tufts = [];
+  for (let b = 0; b < BAND_N; b++) {
+    const r = rng32(900 + b * 131);
+    const n = Math.round(W / (30 - b * 2.4));
+    const arr = [];
+    for (let i = 0; i < n; i++) {
+      const c0 = Math.floor(r() * GC_COLORS.length), c1 = Math.floor(r() * GC_COLORS.length);
+      const cl = { x: r() * (W + 24) - 12, dy: r() * 7 - 1, s: 0.75 + r() * 0.7, ph: r() * 6.28, lv: [], bl: [] };
+      for (let k = 0; k < 7; k++) {         // a low dome of small rounded leaves
+        const a = Math.PI * (0.08 + 0.84 * (k / 6)) + (r() - 0.5) * 0.3;
+        cl.lv.push({ ox: -Math.cos(a) * (4 + r() * 6), oy: -Math.sin(a) * (2 + r() * 4.5), rx: 3.2 + r() * 2.2, ry: 2.0 + r() * 1.4, t: k & 1 });
+      }
+      const nb = 8 + Math.floor(r() * 9);
+      for (let k = 0; k < nb; k++) {        // a drift of tiny blossoms over the dome
+        const a = Math.PI * (0.05 + 0.9 * r());
+        const rad = (2 + r() * 8.5);
+        cl.bl.push({ ox: -Math.cos(a) * rad * 1.15, oy: -Math.sin(a) * rad * 0.62 - 1.5, r: 0.9 + r() * 1.15, ci: r() < 0.72 ? c0 : c1 });
+      }
+      arr.push(cl);
+    }
+    L.tufts.push(arr);
+  }
+}
+const GC_COLORS = ['#ffc6dc', '#ffffff', '#cdb8ff', '#ffe27a', '#9fc2ff', '#ff94bd', '#ffd0a8'];
+const GC_COLORS_NIGHT = ['#8a6c86', '#9a9ab4', '#7a6aa8', '#a89a60', '#5a76a8', '#a05a7e', '#a08068'];
+function drawBandGrass(c, b, now) {
+  if (!L.tufts) buildTufts();
+  const P = palNow, nk = P.night;
+  const sc = L.plantScale * BAND_SCALE[b] * 1.25;
+  const leafA = triCol([74, 128, 58], [96, 126, 54], [24, 42, 38], P.warm, nk, 0.98);
+  const leafB = triCol([108, 160, 76], [132, 158, 70], [34, 58, 50], P.warm, nk, 0.98);
+  const arr = L.tufts[b];
+  const sw0 = Math.sin(now * (1.1 + windV * 1.1)) * (0.7 + windV * 1.8) * sc;
+  // leaves — two greens, batched
+  for (let tone = 0; tone < 2; tone++) {
+    c.fillStyle = tone ? leafB : leafA;
+    c.beginPath();
+    for (let i = 0; i < arr.length; i++) {
+      const t = arr[i], by = soilYAt(t.x) + laneOffset(b) + t.dy;
+      const sw = sw0 * (0.6 + 0.4 * Math.sin(t.ph)) * 0.3;
+      for (let k = 0; k < t.lv.length; k++) {
+        const l = t.lv[k]; if (l.t !== tone) continue;
+        const lx = t.x + l.ox * sc * t.s + sw, ly = by + l.oy * sc * t.s;
+        c.moveTo(lx + l.rx * sc * t.s, ly);
+        c.ellipse(lx, ly, l.rx * sc * t.s, l.ry * sc * t.s, 0, 0, Math.PI * 2);
+      }
+    }
+    c.fill();
+  }
+  // blossoms — one batched path per colour, with a soft pale centre
+  for (let ci = 0; ci < GC_COLORS.length; ci++) {
+    c.fillStyle = nk > 0.5 ? GC_COLORS_NIGHT[ci] : GC_COLORS[ci];
+    c.beginPath();
+    for (let i = 0; i < arr.length; i++) {
+      const t = arr[i], by = soilYAt(t.x) + laneOffset(b) + t.dy;
+      const sw = sw0 * (0.6 + 0.4 * Math.sin(t.ph));
+      for (let k = 0; k < t.bl.length; k++) {
+        const q = t.bl[k]; if (q.ci !== ci) continue;
+        const bx = t.x + q.ox * sc * t.s + sw * (-q.oy / 9), byy = by + q.oy * sc * t.s, rr = q.r * sc * t.s;
+        c.moveTo(bx + rr, byy);
+        c.arc(bx, byy, rr, 0, Math.PI * 2);
+      }
+    }
+    c.fill();
+  }
+  c.fillStyle = nk > 0.5 ? 'rgba(200,190,140,0.55)' : 'rgba(255,214,110,0.8)';
+  c.beginPath();
+  for (let i = 0; i < arr.length; i++) {
+    const t = arr[i], by = soilYAt(t.x) + laneOffset(b) + t.dy;
+    const sw = sw0 * (0.6 + 0.4 * Math.sin(t.ph));
+    for (let k = 0; k < t.bl.length; k += 2) {
+      const q = t.bl[k], bx = t.x + q.ox * sc * t.s + sw * (-q.oy / 9), byy = by + q.oy * sc * t.s, rr = q.r * sc * t.s * 0.38;
+      c.moveTo(bx + rr, byy); c.arc(bx, byy, rr, 0, Math.PI * 2);
+    }
+  }
+  c.fill();
+}
+
+/* ---- the band renderer ---- */
+let bandLayer = null;
+function bandBox(b) {
+  const S = L.plantScale * HERO_SCALE * BAND_SCALE[b];
+  const base = L.soilBase + L.groundDepth * BAND_T[b];
+  const maxH = 175 * S * L.heightK + 64 * S + 34;
+  return { y0: Math.max(0, Math.floor(base - maxH - 16)), y1: Math.min(H, Math.ceil(base + 26)) };
+}
+function renderBands(now) {
+  if (!bandLayer || bandLayer.w !== W || bandLayer.h !== H || bandLayer.cv.width !== Math.round(W * DPR)) bandLayer = makeLayer(W, H);
+  const bc = bandLayer.c;
+  const hor = hexRgb(palNow.hor);
+  const fogK = 1 + fogAmt * 1.1 + cloudCover * 0.15;
+  const gOn = started && !SAMPLE_MODE;
+  for (let b = 0; b < BAND_N; b++) {
+    const list = [];
+    for (let i = 0; i < plants.length; i++) { if (plantRow(plants[i]) === b && !plants[i].hopping) list.push(plants[i]); }
+    const fl = [];
+    for (let i = 0; i < falling.length; i++) { if (plantRow(falling[i]) === b) fl.push(falling[i]); }
+    const gHere = gOn && Math.round(gardener.lane) === b;
+    if (!list.length && !fl.length && !gHere) continue;
+    if (!fxLevel && b >= 3) {      // lean path on slow devices: the two nearest bands skip their own layer
+      list.sort(function (a, z) { return plantBaseY(a) - plantBaseY(z); });
+      for (let i = 0; i < list.length; i++) drawPlant(list[i], now);
+      for (let i = 0; i < fl.length; i++) drawFallingPlant(fl[i]);
+      drawBandGrass(mainCtx, b, now);
+      if (gHere) drawGardener(now);
+      continue;
+    }
+    const box = bandBox(b), bh = box.y1 - box.y0;
+    bc.setTransform(DPR, 0, 0, DPR, 0, 0);
+    bc.clearRect(0, box.y0, W, bh);
+    list.sort(function (a, z) { return plantBaseY(a) - plantBaseY(z); });
+    ctx = bc;
+    for (let i = 0; i < list.length; i++) { drawPlant(list[i], now); lightPlant(bc, list[i]); }
+    for (let i = 0; i < fl.length; i++) drawFallingPlant(fl[i]);
+    drawBandGrass(bc, b, now);
+    if (gHere) drawGardener(now);
+    ctx = mainCtx;
+    const hz = Math.min(0.85, BAND_HAZE[b] * fogK);       // atmospheric perspective
+    if (hz > 0.005) {
+      bc.save(); bc.globalCompositeOperation = 'source-atop';
+      bc.fillStyle = 'rgba(' + hor[0] + ',' + hor[1] + ',' + hor[2] + ',' + hz + ')';
+      bc.fillRect(0, box.y0, W, bh);
+      bc.restore();
+    }
+    if (CAN_FILTER && fxLevel && b < 2) mainCtx.filter = 'blur(' + (b === 0 ? 0.9 : 0.45) + 'px)'; // soft focus in the distance
+    mainCtx.drawImage(bandLayer.cv, 0, box.y0 * DPR, W * DPR, bh * DPR, 0, box.y0, W, bh);
+    if (CAN_FILTER) mainCtx.filter = 'none';
+  }
+}
+
+/* ---- scenery cache: ground, treeline, hedge — day and night variants,
+        cross-faded by the hour, rebuilt only when the viewport changes ---- */
+let sceneryCache = null;
+function ensureScenery() {
+  const key = [Math.round(W), Math.round(H), Math.round(L.meadowTop), Math.round(L.soilBase), Math.round(L.pickerH), DPR].join('|');
+  if (sceneryCache && sceneryCache.key === key) return sceneryCache;
+  const sc = clamp(H / 844, 0.8, 1.3);
+  const out = { key: key, sc: sc };
+  out.trH = Math.round(Math.min(240, H * 0.28));
+  out.hdH = Math.round(78 * sc);
+  out.gTop = Math.floor(L.soilBase - 10);
+  out.gH = Math.ceil(H - out.gTop);
+  out.trees = [paintTrees(false, out), paintTrees(true, out)];
+  out.hedge = [paintHedge(false, out), paintHedge(true, out)];
+  out.ground = [paintGround(false, out), paintGround(true, out)];
+  out.fgH = Math.round(54 * sc);
+  out.fg = [paintForeground(false, out), paintForeground(true, out)];
+  sceneryCache = out;
+  return out;
+}
+function dot(c, x, y, r) { c.beginPath(); c.arc(x, y, r, 0, Math.PI * 2); c.fill(); }
+
+function paintCanopy(c, x, baseY, h, col, rnd) {
+  c.fillStyle = col.trunk;
+  c.fillRect(x - h * 0.022, baseY - h * 0.44, h * 0.044, h * 0.44);
+  const cy = baseY - h * 0.68, R = h * 0.30;
+  for (let pass = 0; pass < 3; pass++) {
+    const n = pass === 0 ? 8 : (pass === 1 ? 7 : 6);
+    c.fillStyle = pass === 0 ? col.dark : (pass === 1 ? col.mid : col.light);
+    for (let i = 0; i < n; i++) {
+      const a = rnd() * 6.283, d = rnd() * R * 0.78;
+      const r = R * (pass === 0 ? 0.6 + rnd() * 0.4 : (pass === 1 ? 0.42 + rnd() * 0.3 : 0.2 + rnd() * 0.2));
+      const ox = pass === 0 ? 0 : -R * 0.14 * pass, oy = pass === 0 ? 0 : -R * 0.16 * pass;
+      dot(c, x + Math.cos(a) * d + ox, cy + Math.sin(a) * d * 0.72 + oy, r);
+    }
+  }
+}
+function paintSpire(c, x, baseY, h, col) {
+  c.fillStyle = col.dark;
+  c.beginPath(); c.ellipse(x, baseY - h * 0.5, h * 0.085, h * 0.5, 0, 0, Math.PI * 2); c.fill();
+  c.fillStyle = col.mid;
+  c.beginPath(); c.ellipse(x - h * 0.02, baseY - h * 0.52, h * 0.05, h * 0.42, 0, 0, Math.PI * 2); c.fill();
+  c.fillStyle = col.light;
+  c.beginPath(); c.ellipse(x - h * 0.035, baseY - h * 0.6, h * 0.022, h * 0.3, 0, 0, Math.PI * 2); c.fill();
+}
+function paintTrees(night, o) {
+  const ly = makeLayer(W, o.trH), c = ly.c, sc = o.sc, base = o.trH - 8;
+  const far = night ? { trunk: '#0e1620', dark: '#16242e', mid: '#1c2e3a', light: '#27414c' }
+                    : { trunk: '#4a4a3a', dark: '#5d7c52', mid: '#6f9059', light: '#89ab6a' };
+  const near = night ? { trunk: '#0a1118', dark: '#10202a', mid: '#172a35', light: '#21394a' }
+                     : { trunk: '#3e3626', dark: '#476a3c', mid: '#5a8049', light: '#78a05a' };
+  let r = rng32(4242);
+  for (let x = -12; x < W + 12; x += 16 + r() * 16) paintCanopy(c, x, base, (34 + r() * 36) * sc, far, r);
+  r = rng32(777);
+  for (let x = 8; x < W; x += 52 + r() * 46) {
+    if (r() < 0.34) paintSpire(c, x, base + 2, (78 + r() * 46) * sc, near);
+    else paintCanopy(c, x, base + 4, (58 + r() * 46) * sc, near, r);
+  }
+  return ly;
+}
+function paintHedge(night, o) {
+  const ly = makeLayer(W, o.hdH), c = ly.c, sc = o.sc, hh = o.hdH;
+  const col = night ? ['#0f1d19', '#16291f', '#20382a'] : ['#2f5428', '#3f6c32', '#5f9040'];
+  const r = rng32(31337);
+  for (let pass = 0; pass < 3; pass++) {
+    c.fillStyle = col[pass];
+    for (let x = -10; x < W + 14; x += (15 - pass * 2.5) * sc * (0.7 + r() * 0.6)) {
+      const rad = (pass === 0 ? 17 : (pass === 1 ? 13 : 8)) * sc * (0.75 + r() * 0.5);
+      const y = hh - 4 - rad * 0.55 - (pass === 0 ? 0 : pass * 5 * sc * (0.4 + r())) - r() * 6 * sc;
+      dot(c, x, y, rad);
+    }
+  }
+  // leaf stipple + the odd flower worked into the hedge
+  const lit = night ? 'rgba(60,96,80,0.35)' : 'rgba(150,196,96,0.5)';
+  c.fillStyle = lit;
+  for (let i = 0; i < W * 0.9; i++) dot(c, r() * W, hh * (0.18 + r() * 0.68), 0.8 + r() * 1.1);
+  const flowers = night ? ['#6a5a78', '#7a7aa0', '#8a8aa8'] : ['#ffd6e4', '#fff1a0', '#ffffff', '#dcc8ff', '#ffb3c6'];
+  for (let i = 0; i < W / 7; i++) { c.fillStyle = flowers[i % flowers.length]; dot(c, r() * W, hh * (0.2 + r() * 0.55), 1.1 + r() * 1.5); }
+  const sh = c.createLinearGradient(0, hh - 22 * sc, 0, hh);     // shade where the hedge meets the soil
+  sh.addColorStop(0, 'rgba(8,16,4,0)'); sh.addColorStop(1, 'rgba(8,16,4,0.45)');
+  c.fillStyle = sh; c.fillRect(0, hh - 22 * sc, W, 22 * sc);
+  return ly;
+}
+function paintGround(night, o) {
+  const ly = makeLayer(W, o.gH), c = ly.c, G = L.groundDepth, sb = L.soilBase;
+  c.translate(0, -o.gTop);                       // paint in absolute screen coordinates
+  const stops = night ? ['#2d2f3d', '#282539', '#1f1b2c', '#161222', '#0d0a14']
+                      : ['#8c7c45', '#765b31', '#573c20', '#3d2814', '#2a1b0d'];
+  const gr = c.createLinearGradient(0, sb - 6, 0, H);
+  const gy = [0, 0.18, 0.5, 0.82, 1];
+  const span = H - (sb - 6);
+  [0, G * 0.25, G * 0.62, G * 1.0, span].forEach(function (d, i) { gr.addColorStop(clamp(d / span, 0, 1), stops[i]); });
+  c.fillStyle = gr;
+  c.beginPath(); c.moveTo(0, H);
+  for (let x = 0; x <= W; x += 6) c.lineTo(x, soilYAt(x) - 3);
+  c.lineTo(W, H); c.closePath(); c.fill();
+  // tilled rows converging toward the horizon — the strongest depth cue on a flat plane
+  const vpx = W / 2, vpy = sb - 1.1 * G, yb = sb + G * 1.08, yt = sb + 2;
+  for (let i = -7; i <= 7; i++) {
+    const xb = vpx + i * (W / 6.4);
+    const xt = vpx + (xb - vpx) * (yt - vpy) / (yb - vpy);
+    const wb = 7.5, wt = 1.3;
+    c.fillStyle = night ? 'rgba(6,4,14,0.28)' : 'rgba(24,12,3,0.20)';
+    c.beginPath(); c.moveTo(xt - wt, yt); c.lineTo(xt + wt, yt); c.lineTo(xb + wb, yb); c.lineTo(xb - wb, yb); c.closePath(); c.fill();
+    c.fillStyle = night ? 'rgba(120,120,170,0.05)' : 'rgba(255,226,170,0.08)';
+    c.beginPath(); c.moveTo(xt + wt, yt); c.lineTo(xt + wt + 1.6, yt); c.lineTo(xb + wb + 5, yb); c.lineTo(xb + wb, yb); c.closePath(); c.fill();
+  }
+  const r = rng32(2024);
+  // clods and crumbs, smaller with distance
+  for (let i = 0; i < 230; i++) {
+    const t = Math.pow(r(), 0.8), y = sb + 2 + t * G * 1.1, x = r() * W, w = lerp(1.4, 7.5, t);
+    c.fillStyle = (i & 1) ? (night ? 'rgba(130,130,180,0.07)' : 'rgba(255,226,170,0.09)') : (night ? 'rgba(0,0,0,0.20)' : 'rgba(20,10,2,0.17)');
+    c.beginPath(); c.ellipse(x, y, w, w * 0.42, 0, 0, Math.PI * 2); c.fill();
+  }
+  // pebbles
+  for (let i = 0; i < 52; i++) {
+    const t = Math.pow(r(), 0.9), y = sb + 6 + t * G * 1.05, x = r() * W, w = lerp(1.6, 6.2, t);
+    c.fillStyle = 'rgba(20,12,4,0.28)'; c.beginPath(); c.ellipse(x + w * 0.2, y + w * 0.35, w * 1.1, w * 0.45, 0, 0, Math.PI * 2); c.fill();
+    c.fillStyle = night ? '#4b4c62' : (i % 3 ? '#9a9188' : '#b3a994'); c.beginPath(); c.ellipse(x, y, w, w * 0.62, 0, 0, Math.PI * 2); c.fill();
+    c.fillStyle = night ? 'rgba(200,210,255,0.18)' : 'rgba(255,255,255,0.35)'; c.beginPath(); c.ellipse(x - w * 0.3, y - w * 0.2, w * 0.4, w * 0.2, -0.4, 0, Math.PI * 2); c.fill();
+  }
+  // fallen petals
+  const petalCols = night ? ['#6a5a7a', '#7a7aa0'] : ['#ffc2d9', '#ffffff', '#ffe08a', '#f2a9c4'];
+  for (let i = 0; i < 34; i++) {
+    const t = r(), y = sb + 10 + t * G * 1.0, x = r() * W, w = lerp(1.2, 3.6, t);
+    c.fillStyle = petalCols[i % petalCols.length]; c.globalAlpha = night ? 0.45 : 0.6;
+    c.beginPath(); c.ellipse(x, y, w, w * 0.5, r() * 3, 0, Math.PI * 2); c.fill();
+  }
+  c.globalAlpha = 1;
+  // flowering ground cover (v8): drifts of creeping phlox, thyme and violets across the bed,
+  // tiny at the far edge and larger toward the viewer
+  const drift = night ? ['#8a6c86', '#9a9ab4', '#7a6aa8', '#a89a60'] : ['#ff9ec4', '#ffffff', '#c3a8ff', '#ffe27a', '#8fb4ff'];
+  for (let m = 0; m < 22; m++) {
+    const t = Math.pow(r(), 0.85), cy = sb + 8 + t * G * 1.0, cx = r() * W;
+    const sz = lerp(8, 30, t), col = drift[m % drift.length];
+    c.fillStyle = night ? 'rgba(26,48,40,0.85)' : 'rgba(70,118,52,0.85)';
+    for (let k = 0; k < 9; k++) { c.beginPath(); c.ellipse(cx + (r() - 0.5) * sz * 1.7, cy + (r() - 0.5) * sz * 0.42, sz * (0.35 + r() * 0.3), sz * 0.2, 0, 0, Math.PI * 2); c.fill(); }
+    for (let k = 0; k < 26; k++) {
+      const bx = cx + (r() - 0.5) * sz * 1.9, by = cy + (r() - 0.5) * sz * 0.5 - sz * 0.05, br = lerp(0.9, 2.4, t) * (0.7 + r() * 0.7);
+      c.fillStyle = col; dot(c, bx, by, br);
+      c.fillStyle = night ? 'rgba(220,210,160,0.5)' : 'rgba(255,240,170,0.85)'; dot(c, bx, by, br * 0.34);
+    }
+  }
+  // the far edge is edged with low cushions of blossom rather than blades
+  for (let x = -2; x < W + 2; x += 5) {
+    const by = soilYAt(x) - 1, rad = 3.2 + r() * 2.6;
+    c.fillStyle = night ? '#1f3a2c' : '#4b7d36'; dot(c, x, by - rad * 0.4, rad);
+    c.fillStyle = night ? '#2b4a38' : '#6a9c46'; dot(c, x - rad * 0.2, by - rad * 0.7, rad * 0.66);
+    if (r() < 0.62) { c.fillStyle = drift[Math.floor(r() * drift.length)]; dot(c, x + (r() - 0.5) * rad, by - rad * (0.6 + r() * 0.6), 1 + r() * 1.3); }
+  }
+  // the near edge falls into shadow, pulling the eye back into the garden
+  const ne = c.createLinearGradient(0, sb + G * 0.7, 0, H);
+  ne.addColorStop(0, 'rgba(8,4,0,0)'); ne.addColorStop(1, 'rgba(8,4,0,0.42)');
+  c.fillStyle = ne; c.fillRect(0, sb + G * 0.7, W, H - (sb + G * 0.7));
+  return ly;
+}
+
+function drawTreeline() {
+  const o = ensureScenery(), nk = palNow.night;
+  const y = Math.round(L.meadowTop + 8 - o.trH);
+  ctx.drawImage(o.trees[0].cv, 0, y, W, o.trH);
+  if (nk > 0.02) { ctx.globalAlpha = nk; ctx.drawImage(o.trees[1].cv, 0, y, W, o.trH); ctx.globalAlpha = 1; }
+  const hz = hexRgb(palNow.hor);                 // the far trees dissolve into the horizon colour
+  const g = ctx.createLinearGradient(0, y, 0, L.meadowTop + 8);
+  g.addColorStop(0, 'rgba(' + hz[0] + ',' + hz[1] + ',' + hz[2] + ',0)');
+  g.addColorStop(0.55, 'rgba(' + hz[0] + ',' + hz[1] + ',' + hz[2] + ',0.20)');
+  g.addColorStop(1, 'rgba(' + hz[0] + ',' + hz[1] + ',' + hz[2] + ',0.46)');
+  ctx.fillStyle = g; ctx.fillRect(0, y, W, o.trH);
+}
+function drawHedge() {
+  const o = ensureScenery(), nk = palNow.night;
+  const y = Math.round(L.soilBase + 4 - o.hdH);
+  ctx.drawImage(o.hedge[0].cv, 0, y, W, o.hdH);
+  if (nk > 0.02) { ctx.globalAlpha = nk; ctx.drawImage(o.hedge[1].cv, 0, y, W, o.hdH); ctx.globalAlpha = 1; }
+}
+function drawMeadow(now) {
+  const o = ensureScenery(), nk = palNow.night;
+  ctx.drawImage(o.ground[0].cv, 0, o.gTop, W, o.gH);
+  if (nk > 0.02) { ctx.globalAlpha = nk; ctx.drawImage(o.ground[1].cv, 0, o.gTop, W, o.gH); ctx.globalAlpha = 1; }
+  // golden light pooled on the soil toward the sun
+  if (light.on && light.k > 0.02) {
+    ctx.save();
+    ctx.translate(light.x, L.soilBase + L.groundDepth * 0.42);
+    ctx.scale(1, 0.34);
+    const R = W * 0.8;
+    const g = ctx.createRadialGradient(0, 0, 4, 0, 0, R);
+    g.addColorStop(0, 'rgba(' + light.rgb + ',' + (0.26 * light.k) + ')');
+    g.addColorStop(1, 'rgba(' + light.rgb + ',0)');
+    ctx.fillStyle = g; ctx.fillRect(-R, -R, R * 2, R * 2);
+    ctx.restore();
+  }
+  // haze on the far soil (atmospheric perspective on the ground itself)
+  const hz = hexRgb(palNow.hor);
+  const hg = ctx.createLinearGradient(0, L.soilBase - 8, 0, L.soilBase + L.groundDepth * 0.55);
+  hg.addColorStop(0, 'rgba(' + hz[0] + ',' + hz[1] + ',' + hz[2] + ',0.30)');
+  hg.addColorStop(1, 'rgba(' + hz[0] + ',' + hz[1] + ',' + hz[2] + ',0)');
+  ctx.fillStyle = hg; ctx.fillRect(0, L.soilBase - 8, W, L.groundDepth * 0.55 + 8);
 }
 
 function drawFallingPlant(p) {
@@ -2992,10 +3510,16 @@ function updateGardener(dt) {
     if (Math.abs(dx) > 5) move = dx > 0 ? 1 : -1;
     else gardener.targetX = null;
   }
-  gardener.moving = move !== 0;
-  if (move !== 0) {
-    gardener.dir = move;
-    gardener.x = clamp(gardener.x + move * 185 * dt, 26, W - 26);
+  // v8 — glide between depth lanes (W/S or ↑/↓, or a drag higher/lower in the meadow)
+  if (keysDown['_laneStep']) { gardener.tLane = clamp(Math.round(gardener.tLane) + keysDown['_laneStep'], 0, BAND_N - 1); keysDown['_laneStep'] = 0; }
+  const laneD = gardener.tLane - gardener.lane;
+  const laneMoving = Math.abs(laneD) > 0.03;
+  if (laneMoving) gardener.lane += clamp(laneD, -1, 1) * Math.min(1, dt * 5.5) * Math.max(0.35, Math.abs(laneD));
+  else gardener.lane = gardener.tLane;
+  gardener.moving = move !== 0 || laneMoving;
+  if (move !== 0) gardener.dir = move;
+  if (gardener.moving) {
+    if (move !== 0) gardener.x = clamp(gardener.x + move * 185 * dt, 26, W - 26);
     gardener.walkPhase += dt * 11;
   }
   if (gardener.swingT < 1) gardener.swingT = Math.min(1, gardener.swingT + dt / 0.24);
@@ -3004,7 +3528,8 @@ function updateGardener(dt) {
     const reach = CHOP_REACH * L.plantScale + 8;
     for (let i = 0; i < plants.length; i++) {
       const p = plants[i];
-      if (p.t >= CHOP_MIN_T && Math.abs(p.x - gardener.x) <= reach) { chopPlant(i); break; }
+      // v8 — he only reaches plants in the depth lane he is standing in
+      if (p.t >= CHOP_MIN_T && Math.abs(p.x - gardener.x) <= reach && Math.abs(plantRow(p) - gardener.lane) < 0.7) { chopPlant(i); break; }
     }
   }
   for (let i = falling.length - 1; i >= 0; i--) {
@@ -3018,8 +3543,8 @@ function updateGardener(dt) {
 function drawGardener(now) {
   if (!started || SAMPLE_MODE) return;
   const g = gardener;
-  const S = L.plantScale;
-  const baseY = soilYAt(g.x) + ROW_BASE[2] + 7;
+  const S = L.plantScale * 1.1 * laneScale(g.lane);
+  const baseY = soilYAt(g.x) + laneOffset(g.lane) + 5;
   const bob = g.moving ? Math.abs(Math.sin(g.walkPhase)) * 2.4 : Math.sin(now * 1.6) * 0.6;
   const lp = g.moving ? Math.sin(g.walkPhase) * 4.6 : 0; // leg shuffle
   ctx.save();
@@ -3148,11 +3673,17 @@ function frame(ts) {
   perfTrack(ts);   // v8 — adaptive DPR watches the raw frame intervals
   addDrawn = 0;    // v8 — the per-frame additive budget resets
   const now = ts / 1000;
-  let dt = Math.min(0.033, now - (lastTs || now));
+  const rawDt = now - (lastTs || now);
+  let dt = Math.min(0.033, rawDt);
   lastTs = now;
   if (dt <= 0) dt = 0.016;
+  // v8 — frame-time watchdog: if the deeper garden runs slow on this device for a
+  // few seconds, drop the depth-of-field blur (the rest of the depth stays)
+  if (rawDt > 0.034 && rawDt < 0.5) fxSlow += rawDt; else fxSlow = Math.max(0, fxSlow - rawDt * 0.5);
+  if (fxSlow > 2.5 && fxLevel) fxLevel = 0;
 
   updateSky(dt);
+  updateLight();
   updateWind(dt);
   updateAmbience(now);
 
@@ -3180,19 +3711,14 @@ function frame(ts) {
   drawBackground(now);
   drawBoard(now);
   drawDewRipples(dt);
-  drawMeadow();
+  drawMeadow(now);
   if (bakedGarden) ctx.drawImage(bakedGarden, 0, 0, W, H);
-  // depth rows (v2): strictly back → mid → front, with a haze of golden
-  // air between rows — a short plant in front can never be hidden
-  for (let rI = 0; rI < 3; rI++) {
-    const rowPlants = plants.filter(function (p) { return plantRow(p) === rI; })
-      .sort(function (a, b) { return (a.yOff || 0) - (b.yOff || 0); });
-    for (let i = 0; i < rowPlants.length; i++) drawPlant(rowPlants[i], now);
-    for (let i = 0; i < falling.length; i++) if (plantRow(falling[i]) === rI) drawFallingPlant(falling[i]);
-    if (rI === 0) drawDepthHaze(0.13);
-    else if (rI === 1) drawDepthHaze(0.06);
-  }
-  drawGardener(now);
+  // v8 — the garden in depth: cast shadows on the ground, then five bands far → near,
+  // each painted into its own layer with haze, side-light and (in the distance) soft focus
+  drawPlantShadows();
+  renderBands(now);
+  updateHops(dt);
+  drawHops();
   for (let i = 0; i < seeds.length; i++) drawSeed(seeds[i]); // v6 — shadow + spin + squash
   drawParticles(dt);
   drawDropper(now);
@@ -3217,7 +3743,7 @@ const SAMPLE_Q = new URLSearchParams(location.search);
 const SAMPLE_MODE = SAMPLE_Q.get('sample');
 function samplePlant(sp, x, t, scale) {
   const p = makePlant(sp, x, 1);
-  p.t = t; p.frozen = true; p.scale = scale; p.yOff = 4;
+  p.t = t; p.frozen = true; p.scale = scale; p.yOff = 4; p.row = 3; p.flatH = true;
   p.bloomed = t >= 1; p.popped = true;
   plants.push(p);
   return p;
@@ -3323,7 +3849,11 @@ window.__planko = {
   get particleCount() { return particles.length; }, // v8 — global-ceiling proof
   get reducedMotion() { return REDUCED_MOTION; },
   get wind() { return Math.round(windV * 100) / 100; },
-  get layoutY() { return L ? { soilBase: Math.round(L.soilBase), meadowTop: Math.round(L.meadowTop), pickerH: Math.round(L.pickerH), H: H, W: W } : null; },
+  get layoutY() { return L ? { soilBase: Math.round(L.soilBase), meadowTop: Math.round(L.meadowTop), pickerH: Math.round(L.pickerH), groundDepth: Math.round(L.groundDepth), heightK: Math.round(L.heightK * 100) / 100, H: H, W: W } : null; },
+  bandCounts: function () { const c = [0, 0, 0, 0, 0]; plants.forEach(function (p) { c[plantRow(p)]++; }); return c; },
+  gardenerLane: function () { return { lane: Math.round(gardener.lane * 100) / 100, target: gardener.tLane }; },
+  setLane: function (b) { gardener.tLane = clamp(b, 0, BAND_N - 1); },
+  get fx() { return { level: fxLevel, filter: CAN_FILTER, hops: hops.length }; },
   get grown() { return totalBlooms; },
   speciesTotal: ACTIVE_SPECIES.length,
   grownSpecies: function () { return Object.keys(sessionSpecies); },
