@@ -525,6 +525,56 @@ function sndRustle(x) {
    lower gain, and everything through one gentle lowpass. The wooden
    knock transient is gone. Same pentatonic ladder, same callers. */
 const PENTA = [523.25, 587.33, 659.25, 783.99, 880.00, 1046.50]; // C major pentatonic
+
+/* ================================================================
+   CHORD DRIFT (v7 merge, Nov 2) -- the A/B variant merged into the
+   main game at Cherie's word: ONE Planko with all the upgrades.
+   The plink ladder keeps its shape (peg row -> scale degree) but
+   its ROOT drifts through a I-vi-IV-V progression across the 24h
+   cycle -- 00-06 C, 06-12 A (minor pentatonic colour), 12-18 F,
+   18-24 G. The root crossfades over ~2 game-hours centred on each
+   boundary (log-frequency space; minor-ness crossfades with it),
+   and every seed snapshots the drift at drop time, so a flight
+   never changes key mid-bounce -- only NEW plinks hear the new
+   root. The multiplier feeds sndPlink's pitch computation ahead of
+   the v6 per-kind voices, so dew/stone/firefly all drift together;
+   detune and brightness logic are untouched. Every degree stays
+   inside the C-major pitch family: the A segment re-roots the same
+   pitch set (A C D E G); F and G are plain ladder transpositions.
+   The PENTA constant remains as the reference (C-segment) ladder.
+   ================================================================ */
+const PENTA_SEMI = [0, 2, 4, 7, 9, 12];      // major pentatonic degrees (semitones)
+const PENTA_SEMI_MIN = [0, 3, 5, 7, 10, 12]; // minor pentatonic degrees
+const DRIFT_SEGS = [
+  { name: 'C', root: 523.25, minor: 0 },
+  { name: 'A', root: 440.00, minor: 1 },
+  { name: 'F', root: 698.46, minor: 0 },
+  { name: 'G', root: 783.99, minor: 0 }
+];
+function smooth01(x) { x = clamp(x, 0, 1); return x * x * (3 - 2 * x); }
+function driftAt(h) {
+  const i = Math.floor(h / 6) % 4;
+  const u = h - Math.floor(h / 6) * 6;
+  let a = DRIFT_SEGS[i], b = DRIFT_SEGS[i], p = 1;
+  if (u < 1) { a = DRIFT_SEGS[(i + 3) % 4]; b = DRIFT_SEGS[i]; p = 0.5 + u / 2; }
+  else if (u > 5) { a = DRIFT_SEGS[i]; b = DRIFT_SEGS[(i + 1) % 4]; p = (u - 5) / 2; }
+  const s = smooth01(p);
+  return {
+    rootHz: Math.pow(2, Math.log2(a.root) * (1 - s) + Math.log2(b.root) * s),
+    minor: a.minor * (1 - s) + b.minor * s,
+    name: a.name === b.name ? a.name : a.name + '\u2192' + b.name,
+    blend: Math.round(s * 100) / 100
+  };
+}
+function driftLadder(lad) {
+  const out = [];
+  for (let d = 0; d < PENTA_SEMI.length; d++) {
+    const semi = PENTA_SEMI[d] * (1 - lad.minor) + PENTA_SEMI_MIN[d] * lad.minor;
+    out.push(lad.rootHz * Math.pow(2, semi / 12));
+  }
+  return out;
+}
+let lastPlinkInfo = null; // debug readout: the most recent plink actually voiced
 let plinkBus = null;
 function getPlinkBus() {
   if (!plinkBus) {
@@ -546,15 +596,19 @@ function buzz(ms) { // haptics — strong hits only; Android in practice; never 
   } catch (e) {}
 }
 /* per-peg voices (v6) — each peg material sounds like itself. Pitch is
-   still the v4 pentatonic ladder by row (it does not drift); brightness
+   the pentatonic ladder by row, root drifting with the day (v7);
+   brightness
    follows impact speed; every hit is detuned ±6 cents so repeats never
    sound machine-identical. All voices keep the v4 softness brief. */
-function sndPlink(rowFrac, strength, kind, x) {
+function sndPlink(rowFrac, strength, kind, x, lad) {
   if (!AC || muted) return;
   const bus = getPlinkBus();
   const t = AC.currentTime;
-  const idx = clamp(Math.floor(rowFrac * PENTA.length * 1.6), 0, PENTA.length - 1);
-  const f = PENTA[PENTA.length - 1 - idx]; // high→low as it falls
+  const ladNow = lad || driftAt(clockH);
+  const LAD = driftLadder(ladNow);
+  const idx = clamp(Math.floor(rowFrac * LAD.length * 1.6), 0, LAD.length - 1);
+  const f = LAD[LAD.length - 1 - idx]; // high→low as it falls
+  lastPlinkInfo = { f: Math.round(f * 100) / 100, rootHz: Math.round(ladNow.rootHz * 100) / 100, root: ladNow.name, minor: Math.round(ladNow.minor * 100) / 100 };
   const s = clamp(strength, 0, 1);
   const vol = 0.034 + 0.042 * s;
   const det = Math.pow(2, rand(-6, 6) / 1200); // ±6 cents
@@ -2364,7 +2418,8 @@ function dropSeed() {
     vx: rand(-14, 14), vy: 30,
     r: L.seedR, sp: sp,
     born: now, lastClickAt: 0,
-    spin: 0, rot: rand(0, 6.28), squash: 0, stallT: 0, trailT: 0 // v6 physics state
+    spin: 0, rot: rand(0, 6.28), squash: 0, stallT: 0, trailT: 0, // v6 physics state
+    lad: driftAt(clockH) // v7 chord-drift snapshot -- this flight keeps this root
   });
   if (randomMode) rollNext(); // queue the next surprise the moment this seed leaves
   updateHUD();
@@ -2437,7 +2492,7 @@ function stepSeed(s, dt) {
           const now = performance.now();
           if (now - s.lastClickAt > 45) {
             s.lastClickAt = now;
-            sndPlink((p.y - L.boardTop) / Math.max(1, L.binTop - L.boardTop), Math.min(1, Math.abs(vn) / 420), p.kind, p.x);
+            sndPlink((p.y - L.boardTop) / Math.max(1, L.binTop - L.boardTop), Math.min(1, Math.abs(vn) / 420), p.kind, p.x, s.lad);
           }
         }
       }
@@ -2453,7 +2508,7 @@ function stepSeed(s, dt) {
             s.x = dv.x + side * (s.r + 2.5);
             s.vx = side * Math.abs(s.vx) * 0.4 + side * 12;
             const now = performance.now();
-            if (now - s.lastClickAt > 60) { s.lastClickAt = now; sndPlink(0.9, 0.2, 'stone', s.x); }
+            if (now - s.lastClickAt > 60) { s.lastClickAt = now; sndPlink(0.9, 0.2, 'stone', s.x, s.lad); }
           }
         }
       }
@@ -3144,6 +3199,10 @@ window.__planko = {
     weather: function () { return wxState; },
     audio: function () { return ambLabel(); },
     setHour: function (h) { clockH = ((h % 24) + 24) % 24; palNow = paletteAt(clockH); },
+    root: function () { return driftAt(clockH).name; },
+    rootHz: function () { return Math.round(driftAt(clockH).rootHz * 100) / 100; },
+    ladder: function () { return driftLadder(driftAt(clockH)).map(function (f) { return Math.round(f * 100) / 100; }); },
+    lastPlink: function () { return lastPlinkInfo; },
     setWeather: function (w) { setWx(w, true); }
   },
   audioGraph: function () { // v6 — proves the room exists at runtime
