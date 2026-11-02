@@ -5066,6 +5066,695 @@
    "orientation": "landscape",
    "note": "Endless runner that starts on the Bad City backdrop from Super Bonk (SNES), then tours all 100 screens from the art page \u2014 every backdrop lazy-loaded as you reach it. Auto-run, jump the street furniture, chase the distance. Full source in games/bad-city-run/.",
    "path": "../games/bad-city-run/index.html"
+  },
+  {
+   "id": "bmx",
+   "title": "BMX Downhill Rush",
+   "category": "Originals",
+   "keys": {
+    "start": "Enter"
+   },
+   "labels": {},
+   "autostart": [],
+   "orientation": "landscape",
+   "note": "BMX downhill racing game.",
+   "path": "../games/bmx/index.html"
+  },
+  {
+   "id": "g1",
+   "title": "Block Commando",
+   "category": "Retro Arcade",
+   "keys": {
+    "start": "Enter"
+   },
+   "labels": {},
+   "autostart": [],
+   "orientation": "landscape",
+   "note": "Cabinet game line, build g1: Block Commando.",
+   "path": "../games/g1/index.html"
+  },
+  {
+   "id": "g2",
+   "title": "Disc Fighters",
+   "category": "Retro Arcade",
+   "keys": {
+    "start": "Enter"
+   },
+   "labels": {},
+   "autostart": [],
+   "orientation": "landscape",
+   "note": "Cabinet game line, build g2: Disc Fighters.",
+   "path": "../games/g2/index.html"
+  },
+  {
+   "id": "g3",
+   "title": "Paper Rash",
+   "category": "Retro Arcade",
+   "keys": {
+    "start": "Enter"
+   },
+   "labels": {},
+   "autostart": [],
+   "orientation": "landscape",
+   "note": "Cabinet game line, build g3: Paper Rash.",
+   "path": "../games/g3/index.html"
+  },
+  {
+   "id": "g4",
+   "title": "Boom Balloons",
+   "category": "Retro Arcade",
+   "keys": {
+    "start": "Enter"
+   },
+   "labels": {},
+   "autostart": [],
+   "orientation": "landscape",
+   "note": "Cabinet game line, build g4: Boom Balloons.",
+   "path": "../games/g4/index.html"
+  },
+  {
+   "id": "g5",
+   "title": "Grapple Ninja",
+   "category": "Retro Arcade",
+   "keys": {
+    "start": "Enter"
+   },
+   "labels": {},
+   "autostart": [],
+   "orientation": "landscape",
+   "note": "Cabinet game line, build g5: Grapple Ninja.",
+   "path": "../games/g5/index.html"
+  },
+  {
+   "id": "g6",
+   "title": "Kung Fu Knockout",
+   "category": "Retro Arcade",
+   "keys": {
+    "start": "Enter"
+   },
+   "labels": {},
+   "autostart": [],
+   "orientation": "landscape",
+   "note": "Cabinet game line, build g6: Kung Fu Knockout.",
+   "path": "../games/g6/index.html"
+  },
+  {
+   "id": "g7",
+   "title": "Maze Wrecker",
+   "category": "Retro Arcade",
+   "keys": {
+    "start": "Enter"
+   },
+   "labels": {},
+   "autostart": [],
+   "orientation": "landscape",
+   "note": "The cabinet original of Maze Wrecker (build g7).",
+   "path": "../games/g7/index.html"
+  },
+  {
+   "id": "g8",
+   "title": "Morph Climb",
+   "category": "Retro Arcade",
+   "keys": {
+    "start": "Enter"
+   },
+   "labels": {},
+   "autostart": [],
+   "orientation": "landscape",
+   "note": "Cabinet game line, build g8: Morph Climb.",
+   "path": "../games/g8/index.html"
+  },
+  {
+   "id": "g9",
+   "title": "Dig Up",
+   "category": "Retro Arcade",
+   "keys": {
+    "start": "Enter"
+   },
+   "labels": {},
+   "autostart": [],
+   "orientation": "landscape",
+   "note": "Cabinet game line, build g9: Dig Up.",
+   "path": "../games/g9/index.html"
+  },
+  {
+   "id": "g10",
+   "title": "Gridlock Grand Prix",
+   "category": "Retro Arcade",
+   "keys": {
+    "start": "Enter"
+   },
+   "labels": {},
+   "autostart": [],
+   "orientation": "landscape",
+   "note": "Cabinet game line, build g10: Gridlock Grand Prix.",
+   "path": "../games/g10/index.html"
+  },
+  {
+   "id": "g11",
+   "title": "Hop Fight",
+   "category": "Retro Arcade",
+   "keys": {
+    "start": "Enter"
+   },
+   "labels": {},
+   "autostart": [],
+   "orientation": "landscape",
+   "note": "Cabinet game line, build g11: Hop Fight.",
+   "path": "../games/g11/index.html"
+  },
+  {
+   "id": "g12",
+   "title": "Blade Punch",
+   "category": "Retro Arcade",
+   "keys": {
+    "start": "Enter"
+   },
+   "labels": {},
+   "autostart": [],
+   "orientation": "landscape",
+   "note": "Cabinet game line, build g12: Blade Punch.",
+   "path": "../games/g12/index.html"
+  },
+  {
+   "id": "g13",
+   "title": "Balatro Grand Prix",
+   "category": "Retro Arcade",
+   "keys": {
+    "start": "Enter"
+   },
+   "labels": {},
+   "autostart": [],
+   "orientation": "landscape",
+   "note": "Cabinet game line, build g13: Balatro Grand Prix.",
+   "path": "../games/g13/index.html"
+  },
+  {
+   "id": "g14",
+   "title": "Buckshot Saloon",
+   "category": "Retro Arcade",
+   "keys": {
+    "start": "Enter"
+   },
+   "labels": {},
+   "autostart": [],
+   "orientation": "landscape",
+   "note": "Cabinet game line, build g14: Buckshot Saloon.",
+   "path": "../games/g14/index.html"
+  },
+  {
+   "id": "g15",
+   "title": "Kong Calamity",
+   "category": "Retro Arcade",
+   "keys": {
+    "start": "Enter"
+   },
+   "labels": {},
+   "autostart": [],
+   "orientation": "landscape",
+   "note": "Cabinet game line, build g15: Kong Calamity.",
+   "path": "../games/g15/index.html"
+  },
+  {
+   "id": "g16",
+   "title": "Lethal Castlevania",
+   "category": "Retro Arcade",
+   "keys": {
+    "start": "Enter"
+   },
+   "labels": {},
+   "autostart": [],
+   "orientation": "landscape",
+   "note": "Cabinet game line, build g16: Lethal Castlevania.",
+   "path": "../games/g16/index.html"
+  },
+  {
+   "id": "g17",
+   "title": "Vampire Metroid",
+   "category": "Retro Arcade",
+   "keys": {
+    "start": "Enter"
+   },
+   "labels": {},
+   "autostart": [],
+   "orientation": "landscape",
+   "note": "Cabinet game line, build g17: Vampire Metroid.",
+   "path": "../games/g17/index.html"
+  },
+  {
+   "id": "g18",
+   "title": "Tower of Yoshi",
+   "category": "Retro Arcade",
+   "keys": {
+    "start": "Enter"
+   },
+   "labels": {},
+   "autostart": [],
+   "orientation": "landscape",
+   "note": "Cabinet game line, build g18: Tower of Yoshi.",
+   "path": "../games/g18/index.html"
+  },
+  {
+   "id": "g19",
+   "title": "Mushroom BedWars",
+   "category": "Retro Arcade",
+   "keys": {
+    "start": "Enter"
+   },
+   "labels": {},
+   "autostart": [],
+   "orientation": "landscape",
+   "note": "Cabinet game line, build g19: Mushroom BedWars.",
+   "path": "../games/g19/index.html"
+  },
+  {
+   "id": "g20",
+   "title": "Contra Helldivers",
+   "category": "Retro Arcade",
+   "keys": {
+    "start": "Enter"
+   },
+   "labels": {},
+   "autostart": [],
+   "orientation": "landscape",
+   "note": "Cabinet game line, build g20: Contra Helldivers.",
+   "path": "../games/g20/index.html"
+  },
+  {
+   "id": "g21",
+   "title": "Hyrule DOORS",
+   "category": "Retro Arcade",
+   "keys": {
+    "start": "Enter"
+   },
+   "labels": {},
+   "autostart": [],
+   "orientation": "landscape",
+   "note": "Cabinet game line, build g21: Hyrule DOORS.",
+   "path": "../games/g21/index.html"
+  },
+  {
+   "id": "g22",
+   "title": "Onett Mart Sim",
+   "category": "Retro Arcade",
+   "keys": {
+    "start": "Enter"
+   },
+   "labels": {},
+   "autostart": [],
+   "orientation": "landscape",
+   "note": "Cabinet game line, build g22: Onett Mart Sim.",
+   "path": "../games/g22/index.html"
+  },
+  {
+   "id": "g23",
+   "title": "Fisch of Mana",
+   "category": "Retro Arcade",
+   "keys": {
+    "start": "Enter"
+   },
+   "labels": {},
+   "autostart": [],
+   "orientation": "landscape",
+   "note": "Cabinet game line, build g23: Fisch of Mana.",
+   "path": "../games/g23/index.html"
+  },
+  {
+   "id": "g24",
+   "title": "Liars Tavern",
+   "category": "Retro Arcade",
+   "keys": {
+    "start": "Enter"
+   },
+   "labels": {},
+   "autostart": [],
+   "orientation": "landscape",
+   "note": "Cabinet game line, build g24: Liars Tavern.",
+   "path": "../games/g24/index.html"
+  },
+  {
+   "id": "g25",
+   "title": "SpookSnap 64",
+   "category": "Retro Arcade",
+   "keys": {
+    "start": "Enter"
+   },
+   "labels": {},
+   "autostart": [],
+   "orientation": "landscape",
+   "note": "Cabinet game line, build g25: SpookSnap 64.",
+   "path": "../games/g25/index.html"
+  },
+  {
+   "id": "g26",
+   "title": "Pet Quest 99",
+   "category": "Retro Arcade",
+   "keys": {
+    "start": "Enter"
+   },
+   "labels": {},
+   "autostart": [],
+   "orientation": "landscape",
+   "note": "Cabinet game line, build g26: Pet Quest 99.",
+   "path": "../games/g26/index.html"
+  },
+  {
+   "id": "g27",
+   "title": "Deep Rock Dig Dug",
+   "category": "Retro Arcade",
+   "keys": {
+    "start": "Enter"
+   },
+   "labels": {},
+   "autostart": [],
+   "orientation": "landscape",
+   "note": "Cabinet game line, build g27: Deep Rock Dig Dug.",
+   "path": "../games/g27/index.html"
+  },
+  {
+   "id": "g28",
+   "title": "Four Swords Murder",
+   "category": "Retro Arcade",
+   "keys": {
+    "start": "Enter"
+   },
+   "labels": {},
+   "autostart": [],
+   "orientation": "landscape",
+   "note": "Cabinet game line, build g28: Four Swords Murder.",
+   "path": "../games/g28/index.html"
+  },
+  {
+   "id": "g29",
+   "title": "Dress to Quest",
+   "category": "Retro Arcade",
+   "keys": {
+    "start": "Enter"
+   },
+   "labels": {},
+   "autostart": [],
+   "orientation": "landscape",
+   "note": "Cabinet game line, build g29: Dress to Quest.",
+   "path": "../games/g29/index.html"
+  },
+  {
+   "id": "g30",
+   "title": "River City Cartel",
+   "category": "Retro Arcade",
+   "keys": {
+    "start": "Enter"
+   },
+   "labels": {},
+   "autostart": [],
+   "orientation": "landscape",
+   "note": "Cabinet game line, build g30: River City Cartel.",
+   "path": "../games/g30/index.html"
+  },
+  {
+   "id": "g31",
+   "title": "Pal Harvest",
+   "category": "Retro Arcade",
+   "keys": {
+    "start": "Enter"
+   },
+   "labels": {},
+   "autostart": [],
+   "orientation": "landscape",
+   "note": "Cabinet game line, build g31: Pal Harvest.",
+   "path": "../games/g31/index.html"
+  },
+  {
+   "id": "jungle-fury",
+   "title": "Jungle Fury",
+   "category": "Originals",
+   "keys": {
+    "start": "Enter"
+   },
+   "labels": {},
+   "autostart": [],
+   "orientation": "landscape",
+   "note": "Jungle action game.",
+   "path": "../games/jungle-fury/index.html"
+  },
+  {
+   "id": "painted-preview",
+   "title": "Vampire Metroid HD World",
+   "category": "Retro Arcade",
+   "keys": {
+    "start": "Enter"
+   },
+   "labels": {},
+   "autostart": [],
+   "orientation": "landscape",
+   "note": "Painted-art interactive build of the Vampire Metroid HD world.",
+   "path": "../games/painted-preview/index.html"
+  },
+  {
+   "id": "pumpkin-patch-panic",
+   "title": "Pumpkin Patch Panic",
+   "category": "Originals",
+   "keys": {
+    "start": "Enter"
+   },
+   "labels": {},
+   "autostart": [],
+   "orientation": "landscape",
+   "note": "Halloween pumpkin-patch arcade game.",
+   "path": "../games/pumpkin-patch-panic/index.html"
+  },
+  {
+   "id": "retro-throwback-arcade",
+   "title": "Retro Throwback Arcade",
+   "category": "Originals",
+   "keys": {
+    "start": "Enter"
+   },
+   "labels": {},
+   "autostart": [],
+   "orientation": "landscape",
+   "note": "Retro-style arcade game.",
+   "path": "../games/retro-throwback-arcade/index.html"
+  },
+  {
+   "id": "sf-world-brawl",
+   "title": "STREET FIGHTER: WORLD BRAWL (fan game)",
+   "category": "Originals",
+   "keys": {
+    "start": "Enter"
+   },
+   "labels": {},
+   "autostart": [],
+   "orientation": "landscape",
+   "note": "Street Fighter fan-game brawler.",
+   "path": "../games/sf-world-brawl/index.html"
+  },
+  {
+   "id": "shell-shock-16-speedrun",
+   "title": "Shell Shock 16 \u2014 Speed Run",
+   "category": "Shell Shock",
+   "keys": {
+    "start": "Enter"
+   },
+   "labels": {},
+   "autostart": [],
+   "orientation": "landscape",
+   "note": "Shell Shock 16 variant built for speed runs.",
+   "path": "../games/shell-shock-16-speedrun/index.html"
+  },
+  {
+   "id": "shell-shock-level-1",
+   "title": "Shell Shock Level 1",
+   "category": "Shell Shock",
+   "keys": {
+    "start": "Enter"
+   },
+   "labels": {},
+   "autostart": [],
+   "orientation": "landscape",
+   "note": "Shell Shock, Level 1 build.",
+   "path": "../games/shell-shock-level-1/index.html"
+  },
+  {
+   "id": "toad-city",
+   "title": "Toad City Baltimore",
+   "category": "Originals",
+   "keys": {
+    "start": "Enter"
+   },
+   "labels": {},
+   "autostart": [],
+   "orientation": "landscape",
+   "note": "The full open-world Toad City Baltimore game.",
+   "path": "../games/toad-city/index.html"
+  },
+  {
+   "id": "tobers-nightmare",
+   "title": "Tobers Nightmare",
+   "category": "Originals",
+   "keys": {
+    "start": "Enter"
+   },
+   "labels": {},
+   "autostart": [],
+   "orientation": "landscape",
+   "note": "Nightmare-themed arcade game.",
+   "path": "../games/tobers-nightmare/index.html"
+  },
+  {
+   "id": "action12",
+   "title": "CAT ARCADE: ACTION 12",
+   "category": "Cat Arcade",
+   "keys": {
+    "start": "Enter"
+   },
+   "labels": {},
+   "autostart": [],
+   "orientation": "landscape",
+   "note": "Cat Arcade action set, pack 12.",
+   "path": "g/action12/index.html"
+  },
+  {
+   "id": "brains12",
+   "title": "CAT ARCADE: BRAINS 12",
+   "category": "Cat Arcade",
+   "keys": {
+    "start": "Enter"
+   },
+   "labels": {},
+   "autostart": [],
+   "orientation": "landscape",
+   "note": "Cat Arcade brains set, pack 12.",
+   "path": "g/brains12/index.html"
+  },
+  {
+   "id": "karen-arcade-demo",
+   "title": "KAREN ARCADE (FREE DEMO)",
+   "category": "Originals",
+   "keys": {
+    "start": "Enter"
+   },
+   "labels": {},
+   "autostart": [],
+   "orientation": "landscape",
+   "note": "Free demo of the Karen arcade games (Call of Karen: HOA Warfare).",
+   "path": "g/karen-arcade-demo/index.html"
+  },
+  {
+   "id": "karen-ballistic-bouncer",
+   "title": "LAWN BOUNCER",
+   "category": "Originals",
+   "keys": {
+    "start": "Enter"
+   },
+   "labels": {},
+   "autostart": [],
+   "orientation": "landscape",
+   "note": "Karen / HOA Warfare mini-game: lawn bouncer.",
+   "path": "g/karen-ballistic-bouncer/index.html"
+  },
+  {
+   "id": "karen-bullet-heaven",
+   "title": "KAREN SURVIVORS",
+   "category": "Originals",
+   "keys": {
+    "start": "Enter"
+   },
+   "labels": {},
+   "autostart": [],
+   "orientation": "landscape",
+   "note": "Karen survivors-style bullet-heaven game.",
+   "path": "g/karen-bullet-heaven/index.html"
+  },
+  {
+   "id": "karen-kart-racer",
+   "title": "KAREN KART",
+   "category": "Originals",
+   "keys": {
+    "start": "Enter"
+   },
+   "labels": {},
+   "autostart": [],
+   "orientation": "landscape",
+   "note": "Karen kart racer.",
+   "path": "g/karen-kart-racer/index.html"
+  },
+  {
+   "id": "karen-one-tap-reflex",
+   "title": "FLAP KAREN",
+   "category": "Originals",
+   "keys": {
+    "start": "Enter"
+   },
+   "labels": {},
+   "autostart": [],
+   "orientation": "landscape",
+   "note": "One-tap flap-style Karen reflex game.",
+   "path": "g/karen-one-tap-reflex/index.html"
+  },
+  {
+   "id": "karen-slice-swipe",
+   "title": "COUPON SLICER",
+   "category": "Originals",
+   "keys": {
+    "start": "Enter"
+   },
+   "labels": {},
+   "autostart": [],
+   "orientation": "landscape",
+   "note": "Karen slice-and-swipe game: coupon slicer.",
+   "path": "g/karen-slice-swipe/index.html"
+  },
+  {
+   "id": "back-roms-rendered-game",
+   "title": "Back Roms \u2014 The Rendered 100 Game",
+   "category": "Originals",
+   "keys": {
+    "start": "Enter"
+   },
+   "labels": {},
+   "autostart": [],
+   "orientation": "landscape",
+   "note": "The Rendered 100 as a game: 68 walkable worlds on a four-wall grid, a relic in every world, and the Glitch haunting every few rooms.",
+   "path": "https://bparlette.github.io/worlds/art/game/play.html"
+  },
+  {
+   "id": "back-rooms-fragments",
+   "title": "The Back Rooms: Fragments",
+   "category": "Originals",
+   "keys": {
+    "start": "Enter"
+   },
+   "labels": {},
+   "autostart": [],
+   "orientation": "landscape",
+   "note": "Brown Back Rooms halls where pieces of the Rendered 100 worlds leak through the walls and floor.",
+   "path": "https://bparlette.github.io/worlds/art/backrooms-parts.html"
+  },
+  {
+   "id": "back-rooms-walker",
+   "title": "The Back Rooms \u2014 Painting Walker",
+   "category": "Originals",
+   "keys": {
+    "start": "Enter"
+   },
+   "labels": {},
+   "autostart": [],
+   "orientation": "landscape",
+   "note": "First-person Back Rooms gallery: 100 framed Rendered 100 paintings across ten halls.",
+   "path": "https://bparlette.github.io/worlds/art/rendered-walk.html"
+  },
+  {
+   "id": "back-roms-world-walker",
+   "title": "Back Roms \u2014 World Walker",
+   "category": "Originals",
+   "keys": {
+    "start": "Enter"
+   },
+   "labels": {},
+   "autostart": [],
+   "orientation": "landscape",
+   "note": "The original Back Roms walker through the 1,000-world catalog: a relic in every world, the Glitch in every few rooms.",
+   "path": "https://bparlette.github.io/worlds/walk/walker.html"
   }
  ]
 }
