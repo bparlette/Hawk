@@ -5050,6 +5050,22 @@
    "orientation": "landscape",
    "note": "One-button auto-runner through five legendary level maps \u2014 Mario 1-1, Green Hill, Cut Man, Castlevania, DuckTales' Moon. Run right, jump the gaps, grab each world's relic, warp to the next map. Full source in games/run-the-atlas/.",
    "path": "../games/run-the-atlas/index.html"
+  },
+  {
+   "id": "bad-city-run",
+   "title": "Bad City Run",
+   "category": "Originals",
+   "keys": {
+    "jump": "Space",
+    "start": "Space"
+   },
+   "labels": {
+    "jump": "JUMP"
+   },
+   "autostart": [],
+   "orientation": "landscape",
+   "note": "Endless runner on the Bad City backdrop from Super Bonk (SNES) \u2014 the flat in front of the Diet building, exactly as the player sees it. Auto-run, jump the street furniture, chase the distance. Full source in games/bad-city-run/.",
+   "path": "../games/bad-city-run/index.html"
   }
  ]
 }
