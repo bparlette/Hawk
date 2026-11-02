@@ -275,10 +275,23 @@ const gardener = { x: 0, dir: 1, moving: false, walkPhase: 0, swingT: 1, swingCd
 /* layout */
 let L = null;
 
+/* v6 — reduced motion + one shared wind value: it drives plant sway,
+   cloud drift and fog drift together, and strengthens with the weather */
+const REDUCED_MOTION = !!(window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches);
+let windV = 0.25, windPhase = 0; // 0 calm … 1 gusty
+function pCount(n) { return REDUCED_MOTION ? Math.ceil(n / 2) : n; }
+function updateWind(dt) {
+  windPhase += dt;
+  const gust = 0.5 + 0.5 * Math.sin(windPhase * 0.23) * Math.sin(windPhase * 0.071 + 1.7);
+  const wxBoost = cloudCover * 0.35 + rainAmt * 0.3 + fogAmt * 0.15;
+  const target = clamp(0.18 + gust * 0.4 + wxBoost, 0, 1) * (REDUCED_MOTION ? 0.5 : 1);
+  windV += (target - windV) * (1 - Math.exp(-dt / 2.5));
+}
+
 /* ================================================================
    AUDIO — all synthesized, soft by design (ASMR brief)
    ================================================================ */
-let AC = null, masterGain = null, padNodes = null;
+let AC = null, masterGain = null, padNodes = null, ambGain = null;
 let muted = !!save.muted;
 
 function initAudio() {
@@ -289,11 +302,14 @@ function initAudio() {
   try {
     AC = new (window.AudioContext || window.webkitAudioContext)();
     const comp = AC.createDynamicsCompressor();
-    comp.threshold.value = -20; comp.knee.value = 22; comp.ratio.value = 8;
+    comp.threshold.value = -16; comp.knee.value = 26; comp.ratio.value = 3; // v6 — gentle glue, not a wall
+    comp.attack.value = 0.008; comp.release.value = 0.28;
     comp.connect(AC.destination);
     masterGain = AC.createGain();
     masterGain.gain.value = muted ? 0 : 0.85;
     masterGain.connect(comp);
+    ambGain = AC.createGain(); ambGain.gain.value = 1; // v6 — ambience bus (ducked under bloom chimes)
+    ambGain.connect(masterGain);
     startPad();
     startAmbience();
   } catch (e) { AC = null; }
@@ -313,7 +329,7 @@ function startPad() {
   const lfoG = AC.createGain(); lfoG.gain.value = 130;
   lfo.connect(lfoG); lfoG.connect(lp.frequency);
   o1.connect(lp); o2.connect(lp); o3.connect(g3); g3.connect(lp);
-  lp.connect(g); g.connect(masterGain);
+  lp.connect(g); g.connect(ambGain || masterGain);
   o1.start(); o2.start(); o3.start(); lfo.start();
   padNodes = { g: g };
 }
@@ -335,7 +351,7 @@ function startAmbience() {
     const src = AC.createBufferSource(); src.buffer = noiseBuffer(2.7); src.loop = true;
     const flt = AC.createBiquadFilter(); flt.type = type; flt.frequency.value = freq; flt.Q.value = q;
     const g = AC.createGain(); g.gain.value = 0;
-    src.connect(flt); flt.connect(g); g.connect(masterGain);
+    src.connect(flt); flt.connect(g); g.connect(ambGain || masterGain);
     src.start();
     return { src: src, flt: flt, g: g };
   };
@@ -411,6 +427,98 @@ function noiseBuffer(dur) {
   return buf;
 }
 
+/* ================================================================
+   FX BUS (v6) — give the sound a room. One generated convolution
+   reverb (soft outdoor-garden tail, no files), a faint ping-pong
+   delay fed by plinks only, per-voice stereo pan + wet sends.
+   Voice route: gain → pan → dry destination (the v4 lowpass for
+   plinks), with a wet tap → convolver → master and an optional
+   echo tap → ping-pong → master.
+   ================================================================ */
+let fx = null, lastPanValue = null;
+function makeImpulse(dur, decay) {
+  const rate = AC.sampleRate, len = Math.floor(rate * dur);
+  const buf = AC.createBuffer(2, len, rate);
+  for (let ch = 0; ch < 2; ch++) {
+    const d = buf.getChannelData(ch);
+    for (let i = 0; i < len; i++) {
+      const t = i / len;
+      d[i] = (Math.random() * 2 - 1) * Math.pow(1 - t, decay) * (ch === 0 ? 1 : 0.92);
+    }
+  }
+  return buf;
+}
+function ensureFx() {
+  if (fx || !AC) return fx;
+  const conv = AC.createConvolver();
+  conv.buffer = makeImpulse(1.4, 2.6);
+  const wetIn = AC.createGain(); wetIn.gain.value = 1;
+  wetIn.connect(conv); conv.connect(masterGain);
+  // ping-pong delay — two crossed delays, filtered, quiet
+  const dIn = AC.createGain(); dIn.gain.value = 1;
+  const dFlt = AC.createBiquadFilter(); dFlt.type = 'lowpass'; dFlt.frequency.value = 1800;
+  const dL = AC.createDelay(1); dL.delayTime.value = 0.27;
+  const dR = AC.createDelay(1); dR.delayTime.value = 0.41;
+  const fbL = AC.createGain(); fbL.gain.value = 0.22;
+  const fbR = AC.createGain(); fbR.gain.value = 0.22;
+  const panL = AC.createStereoPanner(); panL.pan.value = -0.3;
+  const panR = AC.createStereoPanner(); panR.pan.value = 0.3;
+  const mixG = AC.createGain(); mixG.gain.value = 0.5;
+  dIn.connect(dFlt); dFlt.connect(dL);
+  dL.connect(fbL); fbL.connect(dR);
+  dR.connect(fbR); fbR.connect(dL);
+  dL.connect(panL); panL.connect(mixG);
+  dR.connect(panR); panR.connect(mixG);
+  mixG.connect(masterGain);
+  fx = { conv: conv, wetIn: wetIn, dIn: dIn, dL: dL, dR: dR };
+  return fx;
+}
+/* route a finished voice gain: dry to dest, wet tap to the reverb,
+   optional echo tap to the ping-pong. x pans the voice in the field. */
+function voiceOut(g, dest, x, wet, echoAmt) {
+  const destNode = dest || masterGain;
+  let head = g;
+  if (x != null && AC.createStereoPanner) {
+    const pan = AC.createStereoPanner();
+    pan.pan.value = clamp((x / Math.max(1, W)) * 1.4 - 0.7, -0.75, 0.75);
+    lastPanValue = pan.pan.value;
+    g.connect(pan); pan.connect(destNode);
+    head = pan;
+  } else {
+    g.connect(destNode);
+  }
+  if (wet > 0 && ensureFx()) {
+    const wg = AC.createGain(); wg.gain.value = wet;
+    head.connect(wg); wg.connect(fx.wetIn);
+  }
+  if (echoAmt > 0 && ensureFx()) {
+    const eg = AC.createGain(); eg.gain.value = echoAmt;
+    head.connect(eg); eg.connect(fx.dIn);
+  }
+}
+/* bloom chimes sit on top: the garden beds dip ~4 dB for a breath */
+function duckAmbience() {
+  if (!ambGain || !AC) return;
+  const t = AC.currentTime;
+  ambGain.gain.cancelScheduledValues(t);
+  ambGain.gain.setTargetAtTime(0.6, t, 0.05);
+  ambGain.gain.setTargetAtTime(1, t + 0.75, 0.35);
+}
+/* tiny soft rustle tick — a leaf unfurling, a petal opening (v6) */
+function sndRustle(x) {
+  if (!AC || muted) return;
+  const t = AC.currentTime;
+  const src = AC.createBufferSource(); src.buffer = noiseBuffer(0.07);
+  const bp = AC.createBiquadFilter(); bp.type = 'bandpass'; bp.frequency.value = rand(1500, 2300); bp.Q.value = 0.9;
+  const g = AC.createGain();
+  g.gain.setValueAtTime(0.0001, t);
+  g.gain.exponentialRampToValueAtTime(0.016, t + 0.015);
+  g.gain.exponentialRampToValueAtTime(0.0008, t + 0.07);
+  src.connect(bp); bp.connect(g);
+  voiceOut(g, null, x == null ? null : x, 0.2, 0);
+  src.start(t); src.stop(t + 0.09);
+}
+
 /* felt-kalimba plink (v4) — the peg hit, re-voiced round and soothing:
    a sine core with a breath of triangle at the SAME pitch (no bright 2x
    partial), a soft 14 ms attack instead of a click, a long felt decay,
@@ -418,45 +526,122 @@ function noiseBuffer(dur) {
    knock transient is gone. Same pentatonic ladder, same callers. */
 const PENTA = [523.25, 587.33, 659.25, 783.99, 880.00, 1046.50]; // C major pentatonic
 let plinkBus = null;
-function sndPlink(rowFrac, strength) {
-  if (!AC || muted) return;
+function getPlinkBus() {
   if (!plinkBus) {
     plinkBus = AC.createBiquadFilter();
     plinkBus.type = 'lowpass'; plinkBus.frequency.value = 2300; plinkBus.Q.value = 0.3;
     plinkBus.connect(masterGain);
   }
+  return plinkBus;
+}
+const voiceHits = { dew: 0, stone: 0, firefly: 0 }; // v6 — per-kind voice counters (test hook reads these)
+let lastBuzzAt = 0;
+function buzz(ms) { // haptics — strong hits only; Android in practice; never under reduced motion
+  if (REDUCED_MOTION) return;
+  try {
+    if (navigator.vibrate) {
+      const now = performance.now();
+      if (now - lastBuzzAt > 90) { lastBuzzAt = now; navigator.vibrate(ms); }
+    }
+  } catch (e) {}
+}
+/* per-peg voices (v6) — each peg material sounds like itself. Pitch is
+   still the v4 pentatonic ladder by row (it does not drift); brightness
+   follows impact speed; every hit is detuned ±6 cents so repeats never
+   sound machine-identical. All voices keep the v4 softness brief. */
+function sndPlink(rowFrac, strength, kind, x) {
+  if (!AC || muted) return;
+  const bus = getPlinkBus();
   const t = AC.currentTime;
   const idx = clamp(Math.floor(rowFrac * PENTA.length * 1.6), 0, PENTA.length - 1);
   const f = PENTA[PENTA.length - 1 - idx]; // high→low as it falls
-  const vol = 0.034 + 0.042 * clamp(strength, 0, 1);
-  // sine core
-  const o = AC.createOscillator(); o.type = 'sine'; o.frequency.value = f;
-  const g = AC.createGain();
-  g.gain.setValueAtTime(0.0001, t);
-  g.gain.exponentialRampToValueAtTime(vol, t + 0.014);
-  g.gain.exponentialRampToValueAtTime(0.0008, t + 0.52);
-  o.connect(g); g.connect(plinkBus);
-  o.start(t); o.stop(t + 0.55);
-  // felt body — triangle at pitch, quieter, slightly shorter
-  const o2 = AC.createOscillator(); o2.type = 'triangle'; o2.frequency.value = f;
-  const g2 = AC.createGain();
-  g2.gain.setValueAtTime(0.0001, t);
-  g2.gain.exponentialRampToValueAtTime(vol * 0.22, t + 0.012);
-  g2.gain.exponentialRampToValueAtTime(0.0008, t + 0.30);
-  o2.connect(g2); g2.connect(plinkBus);
-  o2.start(t); o2.stop(t + 0.32);
-  // a whisper of octave shimmer, barely there
-  const o3 = AC.createOscillator(); o3.type = 'sine'; o3.frequency.value = f * 2;
-  const g3 = AC.createGain();
-  g3.gain.setValueAtTime(0.0001, t);
-  g3.gain.exponentialRampToValueAtTime(vol * 0.07, t + 0.010);
-  g3.gain.exponentialRampToValueAtTime(0.0008, t + 0.18);
-  o3.connect(g3); g3.connect(plinkBus);
-  o3.start(t); o3.stop(t + 0.20);
+  const s = clamp(strength, 0, 1);
+  const vol = 0.034 + 0.042 * s;
+  const det = Math.pow(2, rand(-6, 6) / 1200); // ±6 cents
+  const bright = 0.55 + 0.75 * s;              // soft hits rounder, hard hits brighter
+  kind = kind || 'stone';
+  if (voiceHits[kind] != null) voiceHits[kind]++;
+  if (s > 0.72) buzz(8);
+  if (kind === 'dew') {
+    // glassy water-drop: fast downward pitch glide + quiet inharmonic partials
+    const o = AC.createOscillator(); o.type = 'sine';
+    o.frequency.setValueAtTime(f * 1.6 * det, t);
+    o.frequency.exponentialRampToValueAtTime(f * det, t + 0.09);
+    const g = AC.createGain();
+    g.gain.setValueAtTime(0.0001, t);
+    g.gain.exponentialRampToValueAtTime(vol * 0.95, t + 0.012);
+    g.gain.exponentialRampToValueAtTime(0.0008, t + 0.30);
+    o.connect(g); voiceOut(g, bus, x, 0.30, 0.10);
+    o.start(t); o.stop(t + 0.32);
+    const parts = [[2.76, 0.10], [4.21, 0.05]];
+    for (let i = 0; i < parts.length; i++) {
+      const op = AC.createOscillator(); op.type = 'sine';
+      op.frequency.setValueAtTime(f * parts[i][0] * det, t);
+      op.frequency.exponentialRampToValueAtTime(f * parts[i][0] * det * 0.94, t + 0.08);
+      const gp = AC.createGain();
+      gp.gain.setValueAtTime(0.0001, t);
+      gp.gain.exponentialRampToValueAtTime(vol * parts[i][1] * bright, t + 0.008);
+      gp.gain.exponentialRampToValueAtTime(0.0008, t + 0.12);
+      op.connect(gp); voiceOut(gp, bus, x, 0.30, 0.05);
+      op.start(t); op.stop(t + 0.14);
+    }
+  } else if (kind === 'firefly') {
+    // bell: sine + a high partial, slow tremolo shimmer, longer tail
+    const o = AC.createOscillator(); o.type = 'sine'; o.frequency.value = f * det;
+    const g = AC.createGain();
+    g.gain.setValueAtTime(0.0001, t);
+    g.gain.exponentialRampToValueAtTime(vol * 0.9, t + 0.016);
+    g.gain.exponentialRampToValueAtTime(0.0008, t + 0.85);
+    o.connect(g); voiceOut(g, bus, x, 0.45, 0.14);
+    o.start(t); o.stop(t + 0.9);
+    const trem = AC.createOscillator(); trem.type = 'sine'; trem.frequency.value = 5.2;
+    const tremG = AC.createGain(); tremG.gain.value = vol * 0.16;
+    trem.connect(tremG); tremG.connect(g.gain);
+    trem.start(t); trem.stop(t + 0.85);
+    const o2 = AC.createOscillator(); o2.type = 'sine'; o2.frequency.value = f * 3.9 * det;
+    const g2 = AC.createGain();
+    g2.gain.setValueAtTime(0.0001, t);
+    g2.gain.exponentialRampToValueAtTime(vol * 0.13 * bright, t + 0.010);
+    g2.gain.exponentialRampToValueAtTime(0.0008, t + 0.5);
+    o2.connect(g2); voiceOut(g2, bus, x, 0.45, 0.10);
+    o2.start(t); o2.stop(t + 0.55);
+  } else {
+    // stone: the v4 felt-marimba — sine core, triangle body, octave whisper
+    const o = AC.createOscillator(); o.type = 'sine'; o.frequency.value = f * det;
+    const g = AC.createGain();
+    g.gain.setValueAtTime(0.0001, t);
+    g.gain.exponentialRampToValueAtTime(vol, t + 0.014);
+    g.gain.exponentialRampToValueAtTime(0.0008, t + 0.52);
+    o.connect(g); voiceOut(g, bus, x, 0.35, 0.12);
+    o.start(t); o.stop(t + 0.55);
+    const o2 = AC.createOscillator(); o2.type = 'triangle'; o2.frequency.value = f * det;
+    const g2 = AC.createGain();
+    g2.gain.setValueAtTime(0.0001, t);
+    g2.gain.exponentialRampToValueAtTime(vol * 0.22, t + 0.012);
+    g2.gain.exponentialRampToValueAtTime(0.0008, t + 0.30);
+    o2.connect(g2); voiceOut(g2, bus, x, 0.35, 0.08);
+    o2.start(t); o2.stop(t + 0.32);
+    const o3 = AC.createOscillator(); o3.type = 'sine'; o3.frequency.value = f * 2 * det;
+    const g3 = AC.createGain();
+    g3.gain.setValueAtTime(0.0001, t);
+    g3.gain.exponentialRampToValueAtTime(vol * 0.07 * bright, t + 0.010);
+    g3.gain.exponentialRampToValueAtTime(0.0008, t + 0.18);
+    o3.connect(g3); voiceOut(g3, bus, x, 0.30, 0.06);
+    o3.start(t); o3.stop(t + 0.20);
+    // a whisper of noise tick — felt, not wood (kept very low)
+    const src = AC.createBufferSource(); src.buffer = noiseBuffer(0.03);
+    const bp = AC.createBiquadFilter(); bp.type = 'bandpass'; bp.frequency.value = 1400 * bright; bp.Q.value = 0.8;
+    const ng = AC.createGain();
+    ng.gain.setValueAtTime(vol * 0.10, t);
+    ng.gain.exponentialRampToValueAtTime(0.0008, t + 0.03);
+    src.connect(bp); bp.connect(ng); voiceOut(ng, bus, x, 0.2, 0);
+    src.start(t); src.stop(t + 0.04);
+  }
 }
 
-/* soft "pock" — seed nestling into soil */
-function sndPock() {
+/* soft "pock" — seed nestling into soil; v6 layers a low thump and a
+   short granular burst under the original softened sine + hush */
+function sndPock(x) {
   if (!AC || muted) return;
   const t = AC.currentTime;
   const o = AC.createOscillator(); o.type = 'sine';
@@ -465,15 +650,32 @@ function sndPock() {
   const g = AC.createGain();
   g.gain.setValueAtTime(0.20, t);
   g.gain.exponentialRampToValueAtTime(0.0008, t + 0.16);
-  o.connect(g); g.connect(masterGain);
+  o.connect(g); voiceOut(g, null, x == null ? null : x, 0.15, 0);
   o.start(t); o.stop(t + 0.18);
   const src = AC.createBufferSource(); src.buffer = noiseBuffer(0.09);
   const lp = AC.createBiquadFilter(); lp.type = 'lowpass'; lp.frequency.value = 620;
   const ng = AC.createGain();
   ng.gain.setValueAtTime(0.055, t);
   ng.gain.exponentialRampToValueAtTime(0.0008, t + 0.09);
-  src.connect(lp); lp.connect(ng); ng.connect(masterGain);
+  src.connect(lp); lp.connect(ng); voiceOut(ng, null, x == null ? null : x, 0.1, 0);
   src.start(t); src.stop(t + 0.1);
+  // low thump — the body of the landing (sine pitch drop 90→50 Hz)
+  const th = AC.createOscillator(); th.type = 'sine';
+  th.frequency.setValueAtTime(92, t);
+  th.frequency.exponentialRampToValueAtTime(50, t + 0.11);
+  const tg = AC.createGain();
+  tg.gain.setValueAtTime(0.16, t);
+  tg.gain.exponentialRampToValueAtTime(0.0008, t + 0.13);
+  th.connect(tg); voiceOut(tg, null, x == null ? null : x, 0.1, 0);
+  th.start(t); th.stop(t + 0.15);
+  // granular burst — soil grains scattering (bandpass ~600 Hz)
+  const gs = AC.createBufferSource(); gs.buffer = noiseBuffer(0.06);
+  const gb = AC.createBiquadFilter(); gb.type = 'bandpass'; gb.frequency.value = 600; gb.Q.value = 0.7;
+  const gg = AC.createGain();
+  gg.gain.setValueAtTime(0.05, t);
+  gg.gain.exponentialRampToValueAtTime(0.0008, t + 0.06);
+  gs.connect(gb); gb.connect(gg); voiceOut(gg, null, x == null ? null : x, 0.1, 0);
+  gs.start(t); gs.stop(t + 0.07);
 }
 
 /* water-shimmer swell while a plant grows */
@@ -488,7 +690,7 @@ function sndShimmer(dur) {
   g.gain.setValueAtTime(0.0001, t);
   g.gain.exponentialRampToValueAtTime(0.028, t + dur * 0.4);
   g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
-  src.connect(bp); bp.connect(g); g.connect(masterGain);
+  src.connect(bp); bp.connect(g); voiceOut(g, null, null, 0.25, 0);
   src.start(t); src.stop(t + dur + 0.05);
   // a soft rising gliss under it
   const o = AC.createOscillator(); o.type = 'sine';
@@ -498,13 +700,14 @@ function sndShimmer(dur) {
   og.gain.setValueAtTime(0.0001, t);
   og.gain.exponentialRampToValueAtTime(0.016, t + dur * 0.5);
   og.gain.exponentialRampToValueAtTime(0.0001, t + dur);
-  o.connect(og); og.connect(masterGain);
+  o.connect(og); voiceOut(og, null, null, 0.2, 0);
   o.start(t); o.stop(t + dur + 0.05);
 }
 
 /* warm bloom chime — bell arpeggio; luminous blooms get extra sparkle */
 function sndChime(luminous) {
   if (!AC || muted) return;
+  duckAmbience();
   const t = AC.currentTime;
   const base = luminous ? 659.25 : 523.25;
   const notes = [1, 1.25, 1.5];
@@ -521,8 +724,8 @@ function sndChime(luminous) {
     g2.gain.setValueAtTime(0.0001, t0);
     g2.gain.exponentialRampToValueAtTime(0.020, t0 + 0.015);
     g2.gain.exponentialRampToValueAtTime(0.0001, t0 + 0.4);
-    o.connect(g); g.connect(masterGain);
-    o2.connect(g2); g2.connect(masterGain);
+    o.connect(g); voiceOut(g, null, null, 0.6, 0.06);
+    o2.connect(g2); voiceOut(g2, null, null, 0.5, 0);
     o.start(t0); o.stop(t0 + 1.4);
     o2.start(t0); o2.stop(t0 + 0.45);
   });
@@ -726,6 +929,7 @@ function computeLayout() {
       pegs.push({ x: x, y: y, row: row, kind: hsh < 0.62 ? 'dew' : (hsh < 0.9 ? 'stone' : 'firefly'), seed: hsh, flash: 0 });
     }
   }
+  lastRowY = pegs.length ? pegs[pegs.length - 1].y : 0;
   // reed dividers guiding seeds into the meadow
   const dividers = [];
   const nDiv = Math.max(6, Math.round(W / 92));
@@ -923,7 +1127,7 @@ function updateSky(dt) {
   fogAmt += (tg.fog - fogAmt) * (1 - Math.exp(-dt / 6));
   for (let i = 0; i < cloudObjs.length; i++) {
     const c = cloudObjs[i];
-    c.fx += dt * c.sp * (0.5 + cloudCover * 0.9);
+    c.fx += dt * c.sp * (0.5 + cloudCover * 0.9) * (0.6 + windV * 1.1); // v6 — shared wind drives the drift
     if (c.fx > 1.3) c.fx = -0.3;
   }
   if (rainAmt > 0.02 && L) {
@@ -1002,7 +1206,7 @@ function drawFog(now) {
   ctx.fillStyle = g;
   ctx.fillRect(0, yTop, W, yBot - yTop);
   for (let i = 0; i < 5; i++) {
-    const bx = (((now * 0.006 * (1 + i * 0.23)) + i * 0.27) % 1.3 - 0.15) * W;
+    const bx = (((now * 0.006 * (0.7 + windV * 0.8) * (1 + i * 0.23)) + i * 0.27) % 1.3 - 0.15) * W; // v6 — fog rides the same wind
     const by = L.meadowTop - 6 + i * 13 + Math.sin(now * 0.3 + i * 2.1) * 4;
     const bw = W * (0.34 + (i % 3) * 0.09);
     const bg = ctx.createRadialGradient(bx, by, 2, bx, by, bw * 0.5);
@@ -1243,40 +1447,43 @@ function drawBoard(now) {
   // pegs — dew drops, river stones, and a few fireflies
   for (let i = 0; i < L.pegs.length; i++) {
     const p = L.pegs[i], r = L.pegR;
+    const wobA = (p.wob || 0) * 1.6;
+    const px = p.x + Math.cos(p.wobPh || 0) * wobA * Math.sin((p.wob || 0) * 12);
+    const py = p.y + Math.sin(p.wobPh || 0) * wobA * Math.sin((p.wob || 0) * 12);
     ctx.fillStyle = 'rgba(60,40,16,.25)';
-    ctx.beginPath(); ctx.ellipse(p.x, p.y + r * 0.9, r * 1.15, r * 0.5, 0, 0, Math.PI * 2); ctx.fill();
+    ctx.beginPath(); ctx.ellipse(px, py + r * 0.9, r * 1.15, r * 0.5, 0, 0, Math.PI * 2); ctx.fill();
     if (p.kind === 'dew') {
-      const g = ctx.createRadialGradient(p.x - r * 0.35, p.y - r * 0.4, r * 0.15, p.x, p.y, r * 1.25);
+      const g = ctx.createRadialGradient(px - r * 0.35, py - r * 0.4, r * 0.15, px, py, r * 1.25);
       g.addColorStop(0, 'rgba(255,255,255,.98)');
       g.addColorStop(0.45, 'rgba(197,226,244,.88)');
       g.addColorStop(1, 'rgba(127,176,214,.82)');
       ctx.fillStyle = g;
-      ctx.beginPath(); ctx.arc(p.x, p.y, r * 1.12, 0, Math.PI * 2); ctx.fill();
+      ctx.beginPath(); ctx.arc(px, py, r * 1.12, 0, Math.PI * 2); ctx.fill();
       ctx.fillStyle = 'rgba(255,255,255,.95)';
-      ctx.beginPath(); ctx.arc(p.x - r * 0.38, p.y - r * 0.42, r * 0.30, 0, Math.PI * 2); ctx.fill();
+      ctx.beginPath(); ctx.arc(px - r * 0.38, py - r * 0.42, r * 0.30, 0, Math.PI * 2); ctx.fill();
     } else if (p.kind === 'stone') {
-      const g = ctx.createLinearGradient(p.x, p.y - r, p.x, p.y + r);
+      const g = ctx.createLinearGradient(px, py - r, px, py + r);
       g.addColorStop(0, '#a9a9b8'); g.addColorStop(1, '#74748a');
       ctx.fillStyle = g;
-      ctx.beginPath(); ctx.ellipse(p.x, p.y, r * 1.5, r * 1.05, 0, 0, Math.PI * 2); ctx.fill();
+      ctx.beginPath(); ctx.ellipse(px, py, r * 1.5, r * 1.05, 0, 0, Math.PI * 2); ctx.fill();
       ctx.fillStyle = 'rgba(255,255,255,.35)';
-      ctx.beginPath(); ctx.ellipse(p.x - r * 0.4, p.y - r * 0.35, r * 0.55, r * 0.28, -0.4, 0, Math.PI * 2); ctx.fill();
+      ctx.beginPath(); ctx.ellipse(px - r * 0.4, py - r * 0.35, r * 0.55, r * 0.28, -0.4, 0, Math.PI * 2); ctx.fill();
     } else { // firefly stone
       const pulse = 0.55 + 0.45 * Math.sin(now * 2.1 + p.seed * 40);
-      const g = ctx.createRadialGradient(p.x, p.y, 0.5, p.x, p.y, r * 3.4);
+      const g = ctx.createRadialGradient(px, py, 0.5, px, py, r * 3.4);
       g.addColorStop(0, 'rgba(255,232,138,' + (0.75 * pulse) + ')');
       g.addColorStop(1, 'rgba(255,232,138,0)');
       ctx.fillStyle = g;
-      ctx.beginPath(); ctx.arc(p.x, p.y, r * 3.4, 0, Math.PI * 2); ctx.fill();
+      ctx.beginPath(); ctx.arc(px, py, r * 3.4, 0, Math.PI * 2); ctx.fill();
       ctx.fillStyle = '#8a8574';
-      ctx.beginPath(); ctx.ellipse(p.x, p.y, r * 1.25, r * 0.9, 0, 0, Math.PI * 2); ctx.fill();
+      ctx.beginPath(); ctx.ellipse(px, py, r * 1.25, r * 0.9, 0, 0, Math.PI * 2); ctx.fill();
       ctx.fillStyle = '#ffedb0';
-      ctx.beginPath(); ctx.arc(p.x, p.y - r * 0.3, r * 0.5, 0, Math.PI * 2); ctx.fill();
+      ctx.beginPath(); ctx.arc(px, py - r * 0.3, r * 0.5, 0, Math.PI * 2); ctx.fill();
     }
     if (p.flash > 0.01) {
       ctx.strokeStyle = 'rgba(255,246,200,' + (p.flash * 0.8) + ')';
       ctx.lineWidth = 1.6;
-      ctx.beginPath(); ctx.arc(p.x, p.y, r * (1.6 + (1 - p.flash) * 1.6), 0, Math.PI * 2); ctx.stroke();
+      ctx.beginPath(); ctx.arc(px, py, r * (1.6 + (1 - p.flash) * 1.6), 0, Math.PI * 2); ctx.stroke();
     }
   }
 }
@@ -1352,31 +1559,95 @@ function drawForegroundGrass(now) {
   }
 }
 
+/* dew ripples (v6) — a hit dew peg rings outward and sheds droplets.
+   Pool: at most 10 live rings; droplets join the shared particle pool. */
+const dewRipples = [];
+function spawnDewRipple(p) {
+  if (dewRipples.length < 10) dewRipples.push({ x: p.x, y: p.y, age: 0, r: L.pegR });
+  const n = REDUCED_MOTION ? 2 : 4;
+  for (let i = 0; i < n; i++) {
+    if (particles.length >= 280) break;
+    particles.push({
+      kind: 'droplet', x: p.x, y: p.y,
+      vx: rand(-46, 46), vy: rand(-70, -12),
+      life: rand(0.28, 0.5), age: 0, r: rand(0.9, 1.7)
+    });
+  }
+}
+function drawDewRipples(dt) {
+  for (let i = dewRipples.length - 1; i >= 0; i--) {
+    const rp = dewRipples[i];
+    rp.age += dt;
+    const k = rp.age / 0.45;
+    if (k >= 1) { dewRipples.splice(i, 1); continue; }
+    ctx.save();
+    ctx.globalCompositeOperation = 'lighter';
+    ctx.strokeStyle = 'rgba(190,225,250,' + (0.55 * (1 - k)) + ')';
+    ctx.lineWidth = 1.4;
+    ctx.beginPath(); ctx.arc(rp.x, rp.y, rp.r * (1.2 + k * 2.6), 0, Math.PI * 2); ctx.stroke();
+    ctx.restore();
+  }
+}
+
+/* vignette (v6) — one pre-rendered radial overlay, a single drawImage
+   per frame; rebuilt only when the viewport changes size */
+let vignetteCv = null;
+function drawVignette() {
+  if (!vignetteCv || vignetteCv.width !== Math.round(W) || vignetteCv.height !== Math.round(H)) {
+    vignetteCv = document.createElement('canvas');
+    vignetteCv.width = Math.max(2, Math.round(W)); vignetteCv.height = Math.max(2, Math.round(H));
+    const vc = vignetteCv.getContext('2d');
+    const g = vc.createRadialGradient(W / 2, H * 0.46, Math.min(W, H) * 0.42, W / 2, H * 0.52, Math.max(W, H) * 0.78);
+    g.addColorStop(0, 'rgba(20,12,4,0)');
+    g.addColorStop(1, 'rgba(20,12,4,0.20)');
+    vc.fillStyle = g; vc.fillRect(0, 0, W, H);
+  }
+  ctx.drawImage(vignetteCv, 0, 0, W, H);
+}
+
 function drawParticles(dt) {
+  // pass 1 — soil stays flat (matter, not light)
   for (let i = particles.length - 1; i >= 0; i--) {
     const p = particles[i];
+    if (p.kind !== 'soil') continue;
     p.age += dt;
     if (p.age >= p.life) { particles.splice(i, 1); continue; }
     const k = 1 - p.age / p.life;
     p.x += p.vx * dt; p.y += p.vy * dt;
-    if (p.kind === 'soil') {
-      p.vy += 330 * dt;
-      ctx.fillStyle = 'rgba(101,70,40,' + (0.85 * k) + ')';
-      ctx.beginPath(); ctx.arc(p.x, p.y, p.r * k + 0.4, 0, Math.PI * 2); ctx.fill();
-    } else if (p.kind === 'spark') {
+    p.vy += 330 * dt;
+    ctx.fillStyle = 'rgba(101,70,40,' + (0.85 * k) + ')';
+    ctx.beginPath(); ctx.arc(p.x, p.y, p.r * k + 0.4, 0, Math.PI * 2); ctx.fill();
+  }
+  // pass 2 — light particles under additive blending (v6): sparks, glow
+  // motes, pollen, seed-trail flecks and dew droplets all read as light
+  ctx.save();
+  ctx.globalCompositeOperation = 'lighter';
+  for (let i = particles.length - 1; i >= 0; i--) {
+    const p = particles[i];
+    if (p.kind === 'soil') continue;
+    p.age += dt;
+    if (p.age >= p.life) { particles.splice(i, 1); continue; }
+    const k = 1 - p.age / p.life;
+    p.x += p.vx * dt; p.y += p.vy * dt;
+    if (p.kind === 'spark') {
       p.vy -= 24 * dt;
       ctx.fillStyle = 'rgba(255,220,110,' + (0.95 * k) + ')';
-      ctx.beginPath(); ctx.arc(p.x, p.y, p.r * k + 0.3, 0, Math.PI * 2); ctx.fill();
     } else if (p.kind === 'glowmote') {
       p.vy -= 10 * dt; p.vx += Math.sin(p.age * 4 + p.r) * 7 * dt;
       ctx.fillStyle = rgba(p.col || '#ffe9a3', 0.8 * k);
-      ctx.beginPath(); ctx.arc(p.x, p.y, p.r * k + 0.3, 0, Math.PI * 2); ctx.fill();
+    } else if (p.kind === 'trail') {
+      p.vy += 14 * dt;
+      ctx.fillStyle = 'rgba(255,240,190,' + (0.5 * k) + ')';
+    } else if (p.kind === 'droplet') {
+      p.vy += 420 * dt;
+      ctx.fillStyle = 'rgba(190,225,250,' + (0.85 * k) + ')';
     } else { // pollen
       p.vy -= 7 * dt; p.vx += Math.sin(p.age * 5 + p.r) * 6 * dt;
       ctx.fillStyle = 'rgba(255,246,200,' + (0.75 * k) + ')';
-      ctx.beginPath(); ctx.arc(p.x, p.y, p.r * k + 0.3, 0, Math.PI * 2); ctx.fill();
     }
+    ctx.beginPath(); ctx.arc(p.x, p.y, p.r * k + 0.3, 0, Math.PI * 2); ctx.fill();
   }
+  ctx.restore();
   // pollen floaters ("+5 ❀")
   ctx.textAlign = 'center';
   for (let i = floaters.length - 1; i >= 0; i--) {
@@ -1860,7 +2131,7 @@ function paintBlade(c, p, now, S, K) {
     const ang = -Math.PI / 2 + (fi - 0.5) * 1.25;
     const len = K.HGT * (0.62 + 0.38 * Math.sin(fi * Math.PI)) * K.stemK * (0.75 + 0.25 * hashStr(sp.id + 'fr' + i));
     if (len < 4) continue;
-    const bend = Math.sin(now * 1.1 + p.phase + i) * 2 * S;
+    const bend = Math.sin(now * (1.0 + windV * 0.6) + p.phase + i) * 2 * S * (0.6 + windV) + (p.lean || 0) * 22 * S; // v6 — fronds ride the same wind
     const cxp = Math.cos(ang) * len * 0.5 + bend, cyp = Math.sin(ang) * len * 0.55;
     const ex = Math.cos(ang) * len + bend * 1.6, ey = Math.sin(ang) * len + len * 0.14;
     c.strokeStyle = mixHex(pal.p[0], pal.p[1], 0.25); c.lineWidth = 1.7 * S; c.lineCap = 'round';
@@ -1927,7 +2198,7 @@ function drawPlantShape(c, p, now, S) {
     budK: smooth(0.5, 0.8, g),
     bloomK: g > 0.76 ? clamp(easeOutBack((g - 0.76) / 0.24), 0, 1.12) : 0,
     matureK: smooth(0.8, 1, g),
-    sway: Math.sin(now * 1.15 + p.phase) * 0.06 * (0.3 + 0.7 * smooth(0, 0.55, g))
+    sway: (Math.sin(now * (0.9 + windV * 0.9) + p.phase + windV * 2.2) * (0.028 + windV * 0.05) + (p.lean || 0)) * (0.3 + 0.7 * smooth(0, 0.55, g)) // v6 — one shared wind, plus landing lean
   };
   // soft ground shadow
   c.fillStyle = 'rgba(40,26,8,.18)';
@@ -2039,17 +2310,46 @@ let ROUND = 0;
 let totalBlooms = 0;
 const sessionSpecies = {};
 
-function drawSeedShape(x, y, r, sp) {
+function drawSeedShape(x, y, r, sp, s) {
   ctx.save();
   ctx.translate(x, y);
-  ctx.rotate(-0.35 + Math.sin(performance.now() * 0.004 + x) * 0.08);
+  // v6 — a falling seed rotates by its real spin; the dropper's seed
+  // keeps the old gentle cosmetic rock
+  const rot = s ? (s.rot || 0) : (-0.35 + Math.sin(performance.now() * 0.004 + x) * 0.08);
+  ctx.rotate(rot);
+  const sq = s ? (s.squash || 0) : 0;
+  if (sq > 0.01) {
+    // squash along the velocity vector: flatten across the motion
+    const va = Math.atan2(s.vy, s.vx) - rot;
+    ctx.rotate(va);
+    ctx.scale(1 + sq * 0.22, 1 - sq * 0.22);
+    ctx.rotate(-va);
+  }
   ctx.fillStyle = sp.seed[0];
   ctx.beginPath(); ctx.ellipse(0, 0, r * 0.82, r, 0, 0, Math.PI * 2); ctx.fill();
   ctx.fillStyle = sp.seed[1];
   ctx.beginPath(); ctx.ellipse(-r * 0.22, -r * 0.3, r * 0.34, r * 0.42, 0, 0, Math.PI * 2); ctx.fill();
+  // specular highlight (v6)
+  ctx.fillStyle = 'rgba(255,255,255,.55)';
+  ctx.beginPath(); ctx.arc(r * 0.24, -r * 0.3, r * 0.13, 0, Math.PI * 2); ctx.fill();
   ctx.fillStyle = 'rgba(255,255,255,.28)';
   ctx.beginPath(); ctx.arc(r * 0.2, r * 0.25, r * 0.13, 0, Math.PI * 2); ctx.fill();
   ctx.restore();
+}
+
+/* a falling seed, with its soft contact shadow on the soil below —
+   the shadow firms up and shrinks as the seed nears the ground */
+function drawSeed(s) {
+  const gy = soilYAt(s.x);
+  const hgt = gy - s.y;
+  if (hgt < 340) {
+    const k = clamp(1 - hgt / 340, 0, 1);
+    ctx.fillStyle = 'rgba(40,26,8,' + (0.05 + 0.20 * k) + ')';
+    ctx.beginPath();
+    ctx.ellipse(s.x, gy + 3, s.r * (1.5 - 0.5 * k), s.r * 0.42, 0, 0, Math.PI * 2);
+    ctx.fill();
+  }
+  drawSeedShape(s.x, s.y, s.r, s.sp, s);
 }
 
 const DROP_DEBOUNCE_MS = 100; // v3 — just enough to stop one click becoming two drops
@@ -2063,69 +2363,105 @@ function dropSeed() {
     x: dropperX, y: L.dropY + L.seedR + 2,
     vx: rand(-14, 14), vy: 30,
     r: L.seedR, sp: sp,
-    born: now, lastClickAt: 0
+    born: now, lastClickAt: 0,
+    spin: 0, rot: rand(0, 6.28), squash: 0, stallT: 0, trailT: 0 // v6 physics state
   });
   if (randomMode) rollNext(); // queue the next surprise the moment this seed leaves
   updateHUD();
 }
 
+const PEG_REST = { dew: 0.58, stone: 0.44, firefly: 0.52 }; // per-kind bounce (v6)
+let lastRowY = 0; // set by computeLayout — the last-row slow-mo watches for it
 function stepSeed(s, dt) {
   const GRAV = 1500;
-  s.vy += GRAV * dt;
-  const speed = Math.hypot(s.vx, s.vy);
-  if (speed < 42 && s.y < L.binTop) s.vy += 900 * dt;
-  if (performance.now() - s.born > 6000) s.vy = Math.max(s.vy, 260);
+  // last-row anticipation: time eases to 0.85× across the final row
+  if (!REDUCED_MOTION && lastRowY > 0 && s.y > lastRowY - 4 && s.y < L.binTop) dt *= 0.85;
+  // fixed 4-substep integration — the old random velocity jitter is gone
+  const SUBS = 4, sdt = dt / SUBS;
+  for (let q = 0; q < SUBS; q++) {
+    s.vy += GRAV * sdt;
+    // deterministic anti-stall: a seed that nearly stops while still on
+    // the board gets a gentle downward bias; if it persists past 0.8 s
+    // the bias strengthens. The 6 s failsafe below still backstops all.
+    const sp0 = Math.hypot(s.vx, s.vy);
+    if (sp0 < 42 && s.y < L.binTop) { s.vy += 900 * sdt; s.stallT = (s.stallT || 0) + sdt; }
+    else s.stallT = 0;
+    if (s.stallT > 0.8) s.vy += 1400 * sdt;
+    if (performance.now() - s.born > 6000) s.vy = Math.max(s.vy, 260);
 
-  s.x += s.vx * dt;
-  s.y += s.vy * dt;
+    s.x += s.vx * sdt;
+    s.y += s.vy * sdt;
+    s.spin = (s.spin || 0) * Math.pow(0.35, sdt); // spin decays in flight
 
-  const rail = 8;
-  if (s.x < rail + s.r) { s.x = rail + s.r; s.vx = Math.abs(s.vx) * 0.55; }
-  if (s.x > W - rail - s.r) { s.x = W - rail - s.r; s.vx = -Math.abs(s.vx) * 0.55; }
+    // pollen trail — pooled additive flecks shed while falling
+    s.trailT = (s.trailT || 0) + sdt;
+    if (s.trailT > (REDUCED_MOTION ? 0.09 : 0.045) && particles.length < 260) {
+      s.trailT = 0;
+      particles.push({
+        kind: 'trail', x: s.x + rand(-2, 2), y: s.y + rand(-2, 2),
+        vx: -s.vx * 0.06 + rand(-6, 6), vy: -s.vy * 0.06 + rand(-4, 8),
+        life: rand(0.3, 0.55), age: 0, r: rand(1.1, 2.2)
+      });
+    }
 
-  const pr = L.pegR + s.r;
-  for (let i = 0; i < L.pegs.length; i++) {
-    const p = L.pegs[i];
-    const dx = s.x - p.x, dy = s.y - p.y;
-    const d2 = dx * dx + dy * dy;
-    if (d2 < pr * pr && d2 > 0.0001) {
-      const d = Math.sqrt(d2);
-      const nx = dx / d, ny = dy / d;
-      s.x = p.x + nx * pr;
-      s.y = p.y + ny * pr;
-      const vn = s.vx * nx + s.vy * ny;
-      if (vn < 0) {
-        const rest = 0.52;
-        s.vx -= (1 + rest) * vn * nx;
-        s.vy -= (1 + rest) * vn * ny;
-        const tx = -ny, ty = nx;
-        const j = rand(-26, 26);
-        s.vx += tx * j; s.vy += ty * j * 0.3;
-        const now = performance.now();
-        if (now - s.lastClickAt > 45) {
-          s.lastClickAt = now;
+    const rail = 8;
+    if (s.x < rail + s.r) { s.x = rail + s.r; s.vx = Math.abs(s.vx) * 0.55; }
+    if (s.x > W - rail - s.r) { s.x = W - rail - s.r; s.vx = -Math.abs(s.vx) * 0.55; }
+
+    const pr = L.pegR + s.r;
+    for (let i = 0; i < L.pegs.length; i++) {
+      const p = L.pegs[i];
+      const dx = s.x - p.x, dy = s.y - p.y;
+      const d2 = dx * dx + dy * dy;
+      if (d2 < pr * pr && d2 > 0.0001) {
+        const d = Math.sqrt(d2);
+        const nx = dx / d, ny = dy / d;
+        s.x = p.x + nx * pr;
+        s.y = p.y + ny * pr;
+        const vn = s.vx * nx + s.vy * ny;
+        if (vn < 0) {
+          const rest = PEG_REST[p.kind] || 0.52;
+          const tx = -ny, ty = nx;
+          let vt = s.vx * tx + s.vy * ty;
+          // tangential friction: slide and spin trade through the contact
+          const rollV = (s.spin || 0) * s.r;
+          vt = vt + (rollV - vt) * 0.35;
+          s.spin = (vt / s.r) * 0.55;
+          const nvn = -vn * rest;
+          s.vx = nx * nvn + tx * vt;
+          s.vy = ny * nvn + ty * vt;
+          s.squash = Math.min(1, Math.abs(vn) / 380);
           p.flash = 1;
-          sndPlink((p.y - L.boardTop) / Math.max(1, L.binTop - L.boardTop), Math.min(1, Math.abs(vn) / 420));
+          p.wob = 1; p.wobPh = Math.atan2(ny, nx); // spring-wobble (visual only)
+          if (p.kind === 'dew') spawnDewRipple(p);
+          const now = performance.now();
+          if (now - s.lastClickAt > 45) {
+            s.lastClickAt = now;
+            sndPlink((p.y - L.boardTop) / Math.max(1, L.binTop - L.boardTop), Math.min(1, Math.abs(vn) / 420), p.kind, p.x);
+          }
+        }
+      }
+    }
+
+    if (s.y > L.binTop - s.r && s.y < L.soilBase + 6) {
+      for (let i = 0; i < L.dividers.length; i++) {
+        const dv = L.dividers[i];
+        if (s.y > dv.y0 - s.r && s.y < dv.y1 + s.r) {
+          const dx = s.x - dv.x;
+          if (Math.abs(dx) < s.r + 2.5 && dx !== 0) {
+            const side = dx > 0 ? 1 : -1;
+            s.x = dv.x + side * (s.r + 2.5);
+            s.vx = side * Math.abs(s.vx) * 0.4 + side * 12;
+            const now = performance.now();
+            if (now - s.lastClickAt > 60) { s.lastClickAt = now; sndPlink(0.9, 0.2, 'stone', s.x); }
+          }
         }
       }
     }
   }
 
-  if (s.y > L.binTop - s.r && s.y < L.soilBase + 6) {
-    for (let i = 0; i < L.dividers.length; i++) {
-      const dv = L.dividers[i];
-      if (s.y > dv.y0 - s.r && s.y < dv.y1 + s.r) {
-        const dx = s.x - dv.x;
-        if (Math.abs(dx) < s.r + 2.5 && dx !== 0) {
-          const side = dx > 0 ? 1 : -1;
-          s.x = dv.x + side * (s.r + 2.5);
-          s.vx = side * Math.abs(s.vx) * 0.4 + side * 12;
-          const now = performance.now();
-          if (now - s.lastClickAt > 60) { s.lastClickAt = now; sndPlink(0.9, 0.2); }
-        }
-      }
-    }
-  }
+  s.squash = Math.max(0, (s.squash || 0) - dt * 7); // springs back in ~140 ms
+  s.rot = (s.rot || 0) + (s.spin || 0) * dt;
 
   const sy = soilYAt(s.x);
   if (s.y + s.r >= sy && s.vy > -40) {
@@ -2134,6 +2470,7 @@ function stepSeed(s, dt) {
   }
   return true;
 }
+
 
 function makePlant(sp, x, growMult) {
   const row = rowFor(sp);
@@ -2159,10 +2496,19 @@ function plantSeed(s) {
   const p = makePlant(s.sp, s.x, growBoost);
   growBoost = 1;
   plants.push(p);
-  sndPock();
+  // v6 — a landing seed makes its neighbours lean away, briefly
+  if (!REDUCED_MOTION) {
+    for (let i = 0; i < plants.length; i++) {
+      const q = plants[i];
+      if (q === p) continue;
+      const dx = q.x - s.x;
+      if (Math.abs(dx) < 90) q.lean = (q.lean || 0) + (dx >= 0 ? 1 : -1) * 0.11 * (1 - Math.abs(dx) / 90);
+    }
+  }
+  sndPock(s.x);
   sndShimmer(p.dur * 0.85);
   const sy = plantBaseY(p);
-  for (let i = 0; i < 9; i++) {
+  for (let i = 0; i < pCount(9); i++) {
     particles.push({
       kind: 'soil', x: s.x, y: sy - 2,
       vx: rand(-55, 55), vy: rand(-95, -25),
@@ -2198,14 +2544,23 @@ function enforceCap() {
 }
 
 function updatePlant(p, dt) {
+  if (p.lean) p.lean *= Math.pow(0.32, dt); // landing lean relaxes over ~0.6 s
   if (p.retire != null && !p.frozen) {
     p.retire += dt / 2.6;
     if (p.retire >= 1 && !p.gone) { bakePlant(p); p.gone = true; }
   }
   if (p.frozen || p.t >= 1) return;
+  const prevT = p.t;
   p.t = Math.min(1, p.t + dt / p.dur);
+  // v6 — each leaf unfurls with a tiny rustle tick (stages match the painters)
+  if (!REDUCED_MOTION) {
+    const stages = [0.36, 0.5, 0.64];
+    for (let li = 0; li < 3; li++) {
+      if (prevT < stages[li] && p.t >= stages[li]) sndRustle(p.x);
+    }
+  }
   if (p.t > 0.8 && !p.popped && p.sp.form !== 'blade') {
-    p.popped = true; sndPop();
+    p.popped = true; sndPop(); sndRustle(p.x); // v6 — the petal-open tick
   }
   if (p.t >= 1 && !p.bloomed) {
     p.bloomed = true;
@@ -2220,7 +2575,7 @@ function updatePlant(p, dt) {
     sndChime(p.sp.tier === 2);
     const topY = plantBaseY(p) - 155 * plantScaleOf(p) * p.sp.h;
     floaters.push({ x: p.x, y: topY, text: '+' + earned + ' ❀', age: 0, life: 1.5 });
-    for (let i = 0; i < (p.sp.tier === 2 ? 15 : 8); i++) {
+    for (let i = 0; i < pCount(p.sp.tier === 2 ? 15 : 8); i++) {
       particles.push({
         kind: p.sp.glow ? 'glowmote' : 'pollen', col: p.sp.glow,
         x: p.x + rand(-9, 9), y: plantBaseY(p) - 60 * plantScaleOf(p),
@@ -2656,19 +3011,20 @@ function frame(ts) {
   if (dt <= 0) dt = 0.016;
 
   updateSky(dt);
+  updateWind(dt);
   updateAmbience(now);
 
-  const SUB = 2, sdt = dt / SUB;
   for (let sIdx = seeds.length - 1; sIdx >= 0; sIdx--) {
-    let alive = true;
-    for (let k = 0; k < SUB && alive; k++) alive = stepSeed(seeds[sIdx], sdt);
-    if (!alive) seeds.splice(sIdx, 1);
+    if (!stepSeed(seeds[sIdx], dt)) seeds.splice(sIdx, 1); // v6 — substeps live inside stepSeed now
   }
   for (let i = 0; i < plants.length; i++) updatePlant(plants[i], dt);
   enforceCap();
   if (plants.some(function (p) { return p.gone; })) plants = plants.filter(function (p) { return !p.gone; });
   updateGardener(dt);
-  for (let i = 0; i < L.pegs.length; i++) { if (L.pegs[i].flash > 0) L.pegs[i].flash = Math.max(0, L.pegs[i].flash - dt * 3.2); }
+  for (let i = 0; i < L.pegs.length; i++) {
+    if (L.pegs[i].flash > 0) L.pegs[i].flash = Math.max(0, L.pegs[i].flash - dt * 3.2);
+    if (L.pegs[i].wob > 0) L.pegs[i].wob = Math.max(0, L.pegs[i].wob - dt * 4.5);
+  }
 
   if (started && !muted && AC && now > nextChirpAt) {
     if (ambLabel() === 'birds') sndChirp();
@@ -2681,6 +3037,7 @@ function frame(ts) {
   ctx.clearRect(0, 0, W, H);
   drawBackground(now);
   drawBoard(now);
+  drawDewRipples(dt);
   drawMeadow();
   if (bakedGarden) ctx.drawImage(bakedGarden, 0, 0, W, H);
   // depth rows (v2): strictly back → mid → front, with a haze of golden
@@ -2694,13 +3051,14 @@ function frame(ts) {
     else if (rI === 1) drawDepthHaze(0.06);
   }
   drawGardener(now);
-  for (let i = 0; i < seeds.length; i++) drawSeedShape(seeds[i].x, seeds[i].y, seeds[i].r, seeds[i].sp);
+  for (let i = 0; i < seeds.length; i++) drawSeed(seeds[i]); // v6 — shadow + spin + squash
   drawParticles(dt);
   drawDropper(now);
   drawForegroundGrass(now)
   drawRain(now);
   drawFog(now);
   drawNightLights(now);
+  drawVignette();
   const chipTxt = fmtClock(clockH) + ' ' + condIcon();
   if (chipTxt !== lastChip) { lastChip = chipTxt; if (el.sky) el.sky.textContent = chipTxt; }
   if (SAMPLE_MODE === 'sheet') drawSampleLabels();
@@ -2788,6 +3146,25 @@ window.__planko = {
     setHour: function (h) { clockH = ((h % 24) + 24) % 24; palNow = paletteAt(clockH); },
     setWeather: function (w) { setWx(w, true); }
   },
+  audioGraph: function () { // v6 — proves the room exists at runtime
+    if (!AC) return null;
+    ensureFx();
+    return {
+      convolver: fx.conv.constructor.name,
+      delay: fx.dL.constructor.name,
+      delayR: fx.dR.constructor.name,
+      lastPan: lastPanValue,
+      state: AC.state
+    };
+  },
+  voiceHits: function () { return { dew: voiceHits.dew, stone: voiceHits.stone, firefly: voiceHits.firefly }; },
+  hitPeg: function (kind, x) { // v6 — fire one peg voice of a kind at a screen x (tests)
+    if (!AC) return false;
+    sndPlink(0.5, 0.85, kind || 'stone', x == null ? W / 2 : x);
+    return true;
+  },
+  get reducedMotion() { return REDUCED_MOTION; },
+  get wind() { return Math.round(windV * 100) / 100; },
   get layoutY() { return L ? { soilBase: Math.round(L.soilBase), meadowTop: Math.round(L.meadowTop), pickerH: Math.round(L.pickerH), H: H, W: W } : null; },
   get grown() { return totalBlooms; },
   speciesTotal: ACTIVE_SPECIES.length,
