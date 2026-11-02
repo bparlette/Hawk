@@ -4993,7 +4993,7 @@
    "labels": {},
    "autostart": [],
    "orientation": "any",
-   "note": "Planko — Seed Garden (beauty rebuild of Seed Plinko): painted ASMR plinko garden, 38 procedurally-grown species in 16 forms (common/rare/luminous), dew/stone/firefly peg board at golden hour, synthesized marimba-plink + shimmer + bloom-chime audio, seed-packet picker with pollen unlocks, garden journal, persistent session garden v2: random seeds by default (Surprise Me packet, next seed shown at the aimer), a three-row garden with the small plants always in front, and a little scythe gardener who harvests plants as you walk him through.",
+   "note": "Planko — Seed Garden (beauty rebuild of Seed Plinko): painted ASMR plinko garden, 38 procedurally-grown species in 16 forms (common/rare/luminous), dew/stone/firefly peg board at golden hour, synthesized marimba-plink + shimmer + bloom-chime audio, seed-packet picker with pollen unlocks, garden journal, persistent session garden v3: endless seeds with no stop screens, nothing locked (all 38 species from the start), rapid-fire seed placement, double-speed growth — on top of v2's random seeds, three-row garden (small in front), and scythe gardener.",
    "path": "../games/seed-plinko/index.html"
   },
   {
