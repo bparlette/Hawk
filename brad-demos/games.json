@@ -5064,7 +5064,7 @@
    },
    "autostart": [],
    "orientation": "landscape",
-   "note": "Endless runner on the Bad City backdrop from Super Bonk (SNES) \u2014 the flat in front of the Diet building, exactly as the player sees it. Auto-run, jump the street furniture, chase the distance. Full source in games/bad-city-run/.",
+   "note": "Endless runner that starts on the Bad City backdrop from Super Bonk (SNES), then tours all 100 screens from the art page \u2014 every backdrop lazy-loaded as you reach it. Auto-run, jump the street furniture, chase the distance. Full source in games/bad-city-run/.",
    "path": "../games/bad-city-run/index.html"
   }
  ]
