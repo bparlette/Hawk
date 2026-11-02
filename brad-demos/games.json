@@ -4985,7 +4985,7 @@
   },
   {
    "id": "seed-plinko",
-   "title": "Seed Plinko",
+   "title": "Planko — Seed Garden",
    "category": "ASMR",
    "keys": {
     "start": "Enter"
@@ -4993,7 +4993,7 @@
    "labels": {},
    "autostart": [],
    "orientation": "any",
-   "note": "Drop seeds through the pegs and watch the garden bloom.",
+   "note": "Planko — Seed Garden (beauty rebuild of Seed Plinko): painted ASMR plinko garden, 38 procedurally-grown species in 16 forms (common/rare/luminous), dew/stone/firefly peg board at golden hour, synthesized marimba-plink + shimmer + bloom-chime audio, seed-packet picker with pollen unlocks, garden journal, persistent session garden",
    "path": "../games/seed-plinko/index.html"
   },
   {
