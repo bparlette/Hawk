@@ -5768,6 +5768,45 @@
    "orientation": "landscape",
    "note": "WarioWare for the cabinet: twelve cabinet games dealt a few seconds at a time, faster every round, three coins. The embedded cabinet reports its own win or loss.",
    "path": "../games/one-coin-gauntlet/index.html"
+  },
+  {
+     "autostart": [],
+     "category": "Arcade",
+     "id": "graft-maze-boom",
+     "keys": {
+        "start": "Enter"
+     },
+     "labels": {},
+     "note": "Cabinet graft: Maze Wrecker (g7) x Boom Balloons (g4). The maze, patrol bots and hidden dots, but B drops balloon bombs — blasts break walls, stun bots, chain other bombs, and bomb you if you linger.",
+     "orientation": "landscape",
+     "path": "../games/graft-maze-boom/index.html",
+     "title": "Maze Boom"
+  },
+  {
+     "autostart": [],
+     "category": "Arcade",
+     "id": "graft-maze-fu",
+     "keys": {
+        "start": "Enter"
+     },
+     "labels": {},
+     "note": "Cabinet graft: Maze Wrecker (g7) x Kung Fu Knockout (g6). No hammer — A punches (two crack a wall), B kicks (longer reach, breaks in one), and chained stuns build a combo multiplier.",
+     "orientation": "landscape",
+     "path": "../games/graft-maze-fu/index.html",
+     "title": "Maze Fu"
+  },
+  {
+     "autostart": [],
+     "category": "Arcade",
+     "id": "graft-paper-boom",
+     "keys": {
+        "start": "Enter"
+     },
+     "labels": {},
+     "note": "Cabinet graft: Paper Rash (g3) x Boom Balloons (g4). The paper route, plus Down+B drops a balloon bomb behind you: trailing rivals get KO'd, cars stall dead, and bombs chain.",
+     "orientation": "landscape",
+     "path": "../games/graft-paper-boom/index.html",
+     "title": "Paper Boom"
   }
  ]
 }
