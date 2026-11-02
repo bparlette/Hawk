@@ -1,0 +1,259 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<title>The One-Coin Gauntlet — every cabinet game, six seconds at a time</title>
+<style>
+  html, body { margin: 0; padding: 0; background: #0b0e14; min-height: 100%;
+    font-family: 'Trebuchet MS', Verdana, sans-serif; color: #f3ead2; }
+  #wrap { min-height: 100%; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 10px; padding: 14px 8px; box-sizing: border-box; }
+  h1 { font-size: 21px; margin: 0; letter-spacing: 2px; color: #ffd97c; text-shadow: 0 2px 0 #7a4a12; text-align: center; }
+  #sub { font-size: 12.5px; color: #b9c4c9; margin: 0; text-align: center; max-width: 720px; line-height: 1.45; }
+  #hud { display: flex; gap: 18px; flex-wrap: wrap; justify-content: center; align-items: baseline;
+    font-size: clamp(13px, 2.4vw, 17px); font-weight: bold; letter-spacing: 1px; color: #fff; text-shadow: 0 2px 3px rgba(0,0,0,.7); }
+  #hud .lab { color: #8fa3ad; font-size: .68em; font-weight: normal; letter-spacing: 2px; }
+  #lives { color: #ff5d5d; letter-spacing: 3px; }
+  #stage { position: relative; width: min(96vw, 880px); aspect-ratio: 256 / 224; background: #000;
+    border-radius: 10px; box-shadow: 0 10px 34px rgba(0,0,0,.55); overflow: hidden; }
+  #frame { width: 100%; height: 100%; border: 0; display: block; background: #000; }
+  #bar { width: min(96vw, 880px); height: 10px; background: #232a33; border-radius: 6px; overflow: hidden; }
+  #barfill { height: 100%; width: 100%; background: linear-gradient(90deg, #ffd97c, #f08a1d); transition: width .12s linear; }
+  #barfill.low { background: linear-gradient(90deg, #ff5d5d, #c22); }
+  .panel { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center;
+    justify-content: center; text-align: center; gap: 9px; background: rgba(8, 10, 14, .82); padding: 10px; box-sizing: border-box; }
+  .panel h2 { margin: 0; font-size: clamp(22px, 4.6vw, 40px); letter-spacing: 3px; color: #ffd97c; text-shadow: 0 3px 0 #7a4a12; }
+  .panel p { margin: 0 16px; font-size: clamp(13px, 2.4vw, 16px); color: #f3ead2; line-height: 1.5; }
+  .panel .go { margin-top: 6px; border: 1px solid #a8894a; color: #ffe9ad; padding: 9px 24px;
+    border-radius: 8px; font-size: 16px; letter-spacing: 2px; background: rgba(107, 90, 51, .5); cursor: pointer; font-family: inherit; }
+  #verdict { position: absolute; inset: 0; display: none; align-items: center; justify-content: center; pointer-events: none; }
+  #verdict span { font-size: clamp(30px, 7vw, 64px); font-weight: bold; letter-spacing: 4px; color: #ffd97c;
+    text-shadow: 0 4px 0 #7a4a12, 0 6px 24px rgba(0,0,0,.8); }
+  #verdict.bad span { color: #ff5d5d; text-shadow: 0 4px 0 #5d1212, 0 6px 24px rgba(0,0,0,.8); }
+  #nextup { font-size: clamp(15px, 3vw, 22px); color: #fff; }
+  #nextsub { font-size: 12.5px; color: #b9c4c9; }
+  #hint { font-size: 12px; color: #8fa3ad; text-align: center; }
+</style>
+</head>
+<body>
+<div id="wrap">
+  <h1>🪙 THE ONE-COIN GAUNTLET</h1>
+  <p id="sub">Every cabinet game in the arcade, six seconds at a time. Clear it or just survive the slice —
+     the cabinet itself reports the verdict. Die and you lose a coin. Three coins, how far can you get?</p>
+  <div id="hud">
+    <span><span class="lab">SCORE</span> <span id="points">0</span></span>
+    <span><span class="lab">CLEARED</span> <span id="cleared">0</span></span>
+    <span><span class="lab">COINS</span> <span id="lives">♥♥♥</span></span>
+    <span><span class="lab">SPEED</span> <span id="speed">LV 1</span></span>
+    <span><span class="lab">NOW</span> <span id="now">—</span></span>
+  </div>
+  <div id="stage">
+    <iframe id="frame" title="cabinet game stage"></iframe>
+    <div id="verdict"><span id="verdictTxt"></span></div>
+    <div class="panel" id="titlePanel">
+      <h2>ONE COIN. EVERY GAME.</h2>
+      <p>The gauntlet deals you a cabinet game. You get <b>one short slice</b> — clear the game or outlive the timer.
+         Each round the slice gets shorter. The embedded cabinet is the referee: it reports its own win or loss.</p>
+      <button class="go" id="startBtn">▶ INSERT COIN</button>
+      <p style="font-size:12px; color:#cfd8dc">Click the game once so your keys reach it — arrows / WASD move · Z or Space = A · X = B</p>
+    </div>
+    <div class="panel" id="interPanel" style="display:none">
+      <p id="nextup">NEXT</p>
+      <p id="nextsub"></p>
+    </div>
+    <div class="panel" id="overPanel" style="display:none">
+      <h2>GAME OVER</h2>
+      <p id="overText"></p>
+      <button class="go" id="againBtn">↻ ONE MORE COIN</button>
+    </div>
+  </div>
+  <div id="bar"><div id="barfill"></div></div>
+  <p id="hint">The stage runs the real cabinet builds — their own <i>__shell</i> contract (<i>start()</i> / <i>info()</i>) is the referee.</p>
+</div>
+
+<script>
+'use strict';
+// ---------------------------------------------------------------- rotation
+// Twelve snappiest cabinet games (titles from the demo registry). Fixed order:
+// deterministic, like the cabinet kit's seeds — the gauntlet is choreographable.
+const ROTATION = [
+  { id: 'g10', title: 'Gridlock Grand Prix' },
+  { id: 'g1',  title: 'Block Commando' },
+  { id: 'g7',  title: 'Maze Wrecker' },
+  { id: 'g4',  title: 'Boom Balloons' },
+  { id: 'g6',  title: 'Kung Fu Knockout' },
+  { id: 'g3',  title: 'Paper Rash' },
+  { id: 'g11', title: 'Hop Fight' },
+  { id: 'g9',  title: 'Dig Up' },
+  { id: 'g8',  title: 'Morph Climb' },
+  { id: 'g2',  title: 'Disc Fighters' },
+  { id: 'g15', title: 'Kong Calamity' },
+  { id: 'g12', title: 'Blade Punch' },
+];
+const SLICE_START = 6000, SLICE_STEP = 350, SLICE_MIN = 3000;   // speed rises: the slice shrinks every round
+
+// ---------------------------------------------------------------- shell sound (iOS-safe pattern: ctx on first gesture, audioSession playback, silent unlock)
+let AC = null;
+function audioInit() {
+  try {
+    if (navigator.audioSession) navigator.audioSession.type = 'playback';
+    if (!AC) AC = new (window.AudioContext || window.webkitAudioContext)();
+    if (AC.state !== 'running') AC.resume();
+    const b = AC.createBuffer(1, 1, AC.sampleRate), s = AC.createSource();
+    s.buffer = b; s.connect(AC.destination); s.start();
+  } catch (e) {}
+}
+['pointerdown', 'keydown', 'touchend', 'click'].forEach(ev => addEventListener(ev, audioInit, { passive: true }));
+document.addEventListener('visibilitychange', () => { if (!document.hidden) audioInit(); });
+function blip(freq, dur, type, gain, when) {
+  if (!AC || AC.state !== 'running') return;
+  const t0 = AC.currentTime + (when || 0);
+  const o = AC.createOscillator(), g = AC.createGain();
+  o.type = type || 'square'; o.frequency.value = freq;
+  g.gain.setValueAtTime(gain || 0.05, t0);
+  g.gain.exponentialRampToValueAtTime(0.0001, t0 + dur);
+  o.connect(g); g.connect(AC.destination); o.start(t0); o.stop(t0 + dur + 0.02);
+}
+const sndTick  = () => blip(1180, 0.06, 'square', 0.035);
+const sndClear = () => { blip(660, 0.09, 'square', 0.05); blip(990, 0.14, 'square', 0.05, 0.09); };
+const sndDie   = () => { blip(220, 0.16, 'sawtooth', 0.05); blip(140, 0.24, 'sawtooth', 0.05, 0.13); };
+const sndOver  = () => { blip(392, 0.14, 'square', 0.05); blip(330, 0.14, 'square', 0.05, 0.15); blip(262, 0.3, 'square', 0.05, 0.3); };
+
+// ---------------------------------------------------------------- state
+const $ = id => document.getElementById(id);
+const frame = $('frame'), barfill = $('barfill');
+let phase = 'title';              // title | inter | slice | verdict | over
+let idx = -1, round = 0, lives = 3, cleared = 0, points = 0, hi = 0;
+let sliceMs = SLICE_START, sliceT0 = 0, pollTimer = 0, phaseTimer = 0, ticked = false, shellWait = 0, startRetried = false, sliceLive = false;
+try { hi = +localStorage.getItem('one-coin-gauntlet-hi') || 0; } catch (e) {}
+const sliceFor = r => Math.max(SLICE_MIN, SLICE_START - SLICE_STEP * r);
+const cur = () => ROTATION[((idx % ROTATION.length) + ROTATION.length) % ROTATION.length];
+
+function hud() {
+  $('points').textContent = points;
+  $('cleared').textContent = cleared;
+  $('lives').textContent = '♥'.repeat(Math.max(lives, 0)) || '—';
+  $('speed').textContent = 'LV ' + (round + 1);
+  $('now').textContent = phase === 'slice' || phase === 'verdict' ? cur().title : '—';
+}
+function show(panel) {
+  for (const p of ['titlePanel', 'interPanel', 'overPanel']) $(p).style.display = p === panel ? 'flex' : 'none';
+}
+function verdict(text, bad) {
+  $('verdictTxt').textContent = text;
+  $('verdict').className = bad ? 'bad' : '';
+  $('verdict').style.display = 'flex';
+  clearTimeout(phaseTimer);
+  phaseTimer = setTimeout(() => { $('verdict').style.display = 'none'; }, 750);
+}
+
+// ---------------------------------------------------------------- the referee: the cabinet's own __shell contract
+function gameWin() { try { return frame.contentWindow; } catch (e) { return null; } }
+function gameInfo() {
+  const w = gameWin();
+  if (!w || !w.__shell || !w.__shell.info) return null;
+  try { return w.__shell.info(); } catch (e) { return null; }
+}
+function gameStart() {
+  const w = gameWin();
+  if (!w || !w.__shell || !w.__shell.start) return false;
+  try { w.__shell.start(); return true; } catch (e) { return false; }
+}
+
+// ---------------------------------------------------------------- flow
+function startRun() {
+  idx = -1; round = 0; lives = 3; cleared = 0; points = 0;
+  show(null); hud();
+  nextSlice();
+}
+function nextSlice() {
+  idx++; round = idx;
+  sliceMs = sliceFor(round); ticked = false; startRetried = false; shellWait = 0;
+  phase = 'inter'; hud();
+  $('nextup').textContent = 'NEXT: ' + cur().title.toUpperCase();
+  $('nextsub').textContent = 'game ' + (idx + 1) + ' · survive ' + (sliceMs / 1000).toFixed(1) + 's · speed LV ' + (round + 1);
+  show('interPanel');
+  frame.src = 'about:blank';
+  clearTimeout(phaseTimer);
+  phaseTimer = setTimeout(beginSlice, 900);
+}
+function beginSlice() {
+  phase = 'slice'; show(null); sliceLive = false;
+  frame.src = '../' + cur().id + '/index.html';
+  sliceT0 = performance.now();
+  clearInterval(pollTimer);
+  pollTimer = setInterval(poll, 200);
+  poll();
+}
+function endSlice(kind, gameScore) {
+  clearInterval(pollTimer);
+  frame.src = 'about:blank';                       // silence the cabinet before the next one loads
+  points += Math.max(0, gameScore | 0);
+  if (kind === 'clear')       { cleared++; verdict('CLEAR!', false); sndClear(); }
+  else if (kind === 'survive'){ cleared++; verdict('SURVIVED!', false); sndClear(); }
+  else if (kind === 'die')    { lives--; verdict('WRECKED!', true); sndDie(); }
+  else                        { verdict('NO-SHOW', true); }
+  phase = 'verdict'; hud();
+  clearTimeout(phaseTimer);
+  phaseTimer = setTimeout(() => {
+    if (lives <= 0) return gameOver();
+    nextSlice();
+  }, 800);
+}
+function poll() {
+  if (phase !== 'slice') return;
+  const info = gameInfo();
+  if (!sliceLive) {                                // clock starts only when the cabinet is actually playing
+    barfill.style.width = '100%';
+    if (!info) { if (++shellWait > 30) return endSlice('skip', 0); return; }
+    if (info.mode === 'title') {
+      if (!startRetried) {                         // loaded but not started: press its start for it
+        startRetried = true;
+        if (gameStart()) { try { frame.contentWindow.focus(); } catch (e) {} }
+      } else if (++shellWait > 30) return endSlice('skip', 0);
+      return;
+    }
+    if (info.mode !== 'play') return;
+    sliceLive = true; sliceT0 = performance.now();
+  }
+  const left = sliceMs - (performance.now() - sliceT0);
+  barfill.style.width = Math.max(0, left / sliceMs * 100) + '%';
+  barfill.className = left < 1100 ? 'low' : '';
+  if (left < 1100 && !ticked && left > 0) { ticked = true; sndTick(); }
+  if (info.mode === 'over' && info.result) {       // the cabinet has spoken. Newer kit builds export
+    // result.win directly; the deployed builds export {score, msg} only, so fall back to the kit's own
+    // documented win rule (RECIPE: a message matching /CLEAR|WIN|KO!|FINISH/ is a win).
+    const win = typeof info.result.win === 'boolean' ? info.result.win
+      : /CLEAR|WIN|KO!|FINISH/.test(info.result.msg || '');
+    return endSlice(win ? 'clear' : 'die', info.result.score || 0);
+  }
+  if (left <= 0) {                                 // outlived the slice — the kit's own first win condition
+    const s = typeof info.score === 'number' ? info.score : 0;
+    return endSlice('survive', s);
+  }
+}
+function gameOver() {
+  phase = 'over'; show('overPanel'); sndOver();
+  if (points > hi) { hi = points; try { localStorage.setItem('one-coin-gauntlet-hi', hi); } catch (e) {} }
+  $('overText').textContent = 'You cleared ' + cleared + ' cabinet' + (cleared === 1 ? '' : 's') +
+    ' and scored ' + points + ' points.' + (hi ? ' Gauntlet best: ' + hi + '.' : '');
+  hud();
+}
+
+$('startBtn').addEventListener('click', () => { audioInit(); startRun(); });
+$('againBtn').addEventListener('click', () => { audioInit(); startRun(); });
+$('stage').addEventListener('pointerdown', () => { try { frame.contentWindow.focus(); } catch (e) {} });
+addEventListener('keydown', e => {
+  if ((phase === 'title' || phase === 'over') && (e.code === 'Enter' || e.code === 'Space')) { e.preventDefault(); startRun(); }
+});
+hud();
+
+// test hook
+window.__gauntlet = {
+  state: () => ({ phase, idx, round, lives, cleared, points, curId: idx >= 0 ? cur().id : null, sliceMs }),
+  forceSlice: ms => { sliceMs = Math.max(400, ms | 0); },   // test accelerator: shrink the current slice clock
+  start: startRun,
+};
+</script>
+</body>
+</html>

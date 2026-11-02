@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
-<title>Bad City Run — a Super Bonk backdrop runner (prototype)</title>
+<title>Bad City Run: Atlas Gauntlet</title>
 <style>
   html, body { margin: 0; padding: 0; background: #101418; height: 100%;
     font-family: 'Trebuchet MS', Verdana, sans-serif; color: #f3ead2; }
@@ -26,23 +26,28 @@
   #hud small { display: block; font-size: .62em; color: #ffe9ad; font-weight: normal; }
   #where { position: absolute; left: 10px; bottom: 8px; pointer-events: none; font-size: 12px;
     color: #ffe9ad; background: rgba(10,14,16,.55); padding: 3px 9px; border-radius: 20px; letter-spacing: .4px; }
+  #gateflash { position: absolute; top: 52px; left: 0; right: 0; text-align: center; pointer-events: none;
+    font-size: clamp(20px, 4.2vw, 34px); font-weight: bold; letter-spacing: 4px; color: #ffd97c;
+    text-shadow: 0 2px 0 #7a4a12, 0 4px 14px rgba(0,0,0,.6); opacity: 0; transition: opacity .25s; }
   #err { display: none; background: #3a1414; border: 1px solid #a33; color: #fdd;
     padding: 8px 14px; border-radius: 8px; font-size: 13px; }
 </style>
 </head>
 <body>
 <div id="wrap">
-  <h1>BAD CITY RUN</h1>
+  <h1>BAD CITY RUN: ATLAS GAUNTLET</h1>
   <p id="sub">Prototype endless runner. It starts on the Bad City backdrop from <i>Super Bonk</i> (SNES),
-     then tours all 100 screens from the art page — every image lazy-loaded as you reach it.
+     then tours all 100 screens from the art page — the worlds stitched together with feathered seams
+     and glitch-warp crossings, every image lazy-loaded as you reach it, a checkpoint gate every 10 worlds.
      <b>Space / ↑ / tap</b> to jump. Don't trip on the street furniture.</p>
   <div id="stage">
     <canvas id="cv" width="960" height="540"></canvas>
     <div id="hud"><span id="dist">0 m</span><small id="best"></small></div>
     <div id="where">Super Bonk — Bad City</div>
+    <div id="gateflash"></div>
     <div class="panel" id="titlePanel">
-      <h2>BAD CITY RUN</h2>
-      <p>An endless sprint across the Bad City. Jump the cones, crates and barriers.</p>
+      <h2>BAD CITY RUN: ATLAS GAUNTLET</h2>
+      <p>An endless sprint through 100 stitched-together game worlds. Jump the cones, crates and barriers — and clear the gate every 10 worlds.</p>
       <button class="go" id="startBtn">▶ START</button>
       <p style="font-size:12px; color:#cfd8dc">Space / ↑ / W / click / tap — jump &nbsp;·&nbsp; hold for a higher jump</p>
     </div>
@@ -96,6 +101,32 @@ function nextStop(from) {
 }
 ensure(0);
 
+// ------------------------------------------------------------ atlas gauntlet state
+// STITCHED SEAMS: in the last BLEND_M metres before a switch, the next world is
+// composited over the current one inside a feathered band that sweeps in from
+// the right; at the switch the new world is already fully revealed, so the
+// join is never a hard cut. GLITCH-WARP: for WARP_S seconds after each switch
+// the backdrop is blitted in jittered horizontal slices with bright tear bars.
+// CHECKPOINT GATES: every 10th stop spawns a banner gate obstacle.
+const BLEND_M = 16;                                // metres of feathered seam before each switch
+const BAND_W = 260;                                // feather width of the seam, px
+const WARP_S = 0.45;                               // glitch-warp duration after a switch, seconds
+let blendP = 0, blendNext = -1;                    // seam progress 0..1 and the incoming frame index
+let warpT = 0, warpBars = [];                      // warp time remaining + tear-bar layout
+let stopsVisited = 1, gatesSpawned = 0, gatesCleared = 0;
+let gateFlashUntil = 0;
+const gateEl = document.getElementById('gateflash');
+function startWarp() {
+  warpT = WARP_S;
+  warpBars = [];
+  const cols = ['#ff2e88', '#22e6ff', '#ffffff'];
+  for (let i = 0; i < 3; i++) warpBars.push({ y: 20 + Math.random() * (H - 80), h: 2 + Math.random() * 4, c: cols[i] });
+}
+function showGateFlash(txt) {
+  gateEl.textContent = txt;
+  gateFlashUntil = performance.now() + 1600;
+}
+
 // ---------------------------------------------------------------- state
 let state = 'title';                            // title | run | over
 let dist = 0, speed = 0, best = 0, t = 0;
@@ -105,6 +136,8 @@ let obstacles = [], spawnIn = 0, dust = [];
 
 function reset() {
   dist = 0; speed = 335; t = 0; switchAt = STOP_M;
+  stopsVisited = 1; gatesSpawned = 0; gatesCleared = 0;
+  warpT = 0; blendP = 0; blendNext = -1; gateFlashUntil = 0;
   P.y = GROUND_Y; P.vy = 0; P.onGround = true;
   obstacles = []; dust = [];
   spawnIn = 520;
@@ -124,6 +157,7 @@ function startGame() {
 }
 function gameOver() {
   state = 'over';
+  blendP = 0; blendNext = -1;
   if (dist / 50 > best) {
     best = Math.floor(dist / 50);
     try { localStorage.setItem('badcity-best', best); } catch (e) {}
@@ -164,6 +198,15 @@ function spawnObstacle() {
   // next gap: enough room to react + land, scaled with speed
   spawnIn = 300 + Math.random() * 260 + speed * (0.55 + Math.random() * 0.5);
 }
+function spawnGate() {
+  // scripted spawn at a gate-stop boundary: a taller double-barrier cluster
+  // (this is the collision body) with a banner above it naming the NEXT world.
+  const nx = nextStop(cur);
+  const name = nx > 0 ? frames[nx].label.replace(/^#\d+ /, '') : 'THE UNKNOWN';
+  obstacles.push({ kind: 'gate', w: 118, h: 92, x: W + 240, gateNum: stopsVisited, name, awarded: false });
+  gatesSpawned++;
+  spawnIn = 780; // keep the gate's approach clear of random obstacles
+}
 function drawObstacle(o) {
   const x = o.x, yb = GROUND_Y, top = yb - o.h;
   ctx.save();
@@ -183,6 +226,24 @@ function drawObstacle(o) {
     ctx.strokeStyle = '#6f4a20'; ctx.lineWidth = 4; ctx.strokeRect(x + 2, top + 2, o.w - 4, o.h - 4);
     ctx.beginPath(); ctx.moveTo(x + 3, top + 3); ctx.lineTo(x + o.w - 3, top + o.h - 3);
     ctx.moveTo(x + o.w - 3, top + 3); ctx.lineTo(x + 3, top + o.h - 3); ctx.stroke();
+  } else if (o.kind === 'gate') {
+    // double barrier: two striped blocks side by side (the collision body)
+    const half = o.w / 2;
+    for (const px of [x, x + half]) {
+      ctx.fillStyle = '#e8e4da'; ctx.fillRect(px, top, half - 2, 14);
+      ctx.fillStyle = '#e8641e';
+      for (let i = 0; i < 3; i++) ctx.fillRect(px + 4 + i * (half - 12) / 2.4, top + 2, 9, 10);
+      ctx.fillStyle = '#5a5a5a'; ctx.fillRect(px + 5, top + 14, 6, o.h - 14); ctx.fillRect(px + half - 13, top + 14, 6, o.h - 14);
+    }
+    // poles + banner naming the next world (visual only, above the body)
+    ctx.fillStyle = '#3d3428'; ctx.fillRect(x + 3, top - 66, 5, 66); ctx.fillRect(x + o.w - 8, top - 66, 5, 66);
+    const bw = Math.max(130, Math.min(320, o.name.length * 7.2 + 26));
+    const bx = x + o.w / 2 - bw / 2, by = top - 98;
+    ctx.fillStyle = '#7a1f3d'; ctx.fillRect(bx, by, bw, 30);
+    ctx.strokeStyle = '#ffd97c'; ctx.lineWidth = 2; ctx.strokeRect(bx + 1, by + 1, bw - 2, 28);
+    ctx.fillStyle = '#ffe9ad'; ctx.font = 'bold 13px Trebuchet MS, Verdana, sans-serif'; ctx.textAlign = 'center';
+    ctx.fillText('NEXT: ' + o.name.toUpperCase(), x + o.w / 2, by + 20, bw - 14);
+    ctx.textAlign = 'left';
   } else { // barrier
     ctx.fillStyle = '#e8e4da'; ctx.fillRect(x, top, o.w, 14);
     ctx.fillStyle = '#e8641e';
@@ -233,30 +294,71 @@ function drawRunner() {
 }
 
 // ---------------------------------------------------------------- background
+// The backdrop is composed into an offscreen canvas (bgCv) each frame: current
+// world, then — during a seam — the next world feathered over it, then the
+// road strip on top. blitBackground() puts bgCv on screen, sliced and jittered
+// while a glitch-warp is running.
+const bgCv = document.createElement('canvas'); bgCv.width = W; bgCv.height = H;
+const bgx = bgCv.getContext('2d');
+const nxCv = document.createElement('canvas'); nxCv.width = W; nxCv.height = H;
+const nxx = nxCv.getContext('2d');
+function drawFrameInto(c, im) {
+  const sc = Math.max(W / im.naturalWidth, H / im.naturalHeight);
+  const dw = im.naturalWidth * sc, dh = im.naturalHeight * sc, y0 = H - dh;
+  const period = dw * 2;
+  const off = (dist * 0.5) % period;
+  for (let base = -off; base < W; base += period) {
+    c.drawImage(im, base, y0, dw, dh);                                     // normal
+    c.save(); c.translate(base + period, y0); c.scale(-1, 1);
+    c.drawImage(im, 0, 0, dw, dh); c.restore();                            // mirrored twin — seamless wrap
+  }
+}
 function drawBackground() {
   // sky fallback
-  ctx.fillStyle = '#2e7ea6'; ctx.fillRect(0, 0, W, H);
-  const im = frames[cur].img;
-  if (im) {
-    const sc = Math.max(W / im.naturalWidth, H / im.naturalHeight);
-    const dw = im.naturalWidth * sc, dh = im.naturalHeight * sc, y0 = H - dh;
-    const period = dw * 2;
-    const off = (dist * 0.5) % period;
-    for (let base = -off; base < W; base += period) {
-      ctx.drawImage(im, base, y0, dw, dh);                                   // normal
-      ctx.save(); ctx.translate(base + period, y0); ctx.scale(-1, 1);
-      ctx.drawImage(im, 0, 0, dw, dh); ctx.restore();                       // mirrored twin — seamless wrap
-    }
+  bgx.fillStyle = '#2e7ea6'; bgx.fillRect(0, 0, W, H);
+  if (frames[cur].img) drawFrameInto(bgx, frames[cur].img);
+  // stitched seam: feather the incoming world over the current one
+  if (blendNext > 0 && frames[blendNext].img && blendP > 0) {
+    nxx.clearRect(0, 0, W, H);
+    drawFrameInto(nxx, frames[blendNext].img);   // same dist => same scroll offset as the post-switch world
+    const edge = (W + BAND_W) * (1 - blendP) - BAND_W / 2;   // band centre sweeps right -> left
+    const a = Math.max(0, (edge - BAND_W / 2) / W), b = Math.min(1, (edge + BAND_W / 2) / W);
+    const g = nxx.createLinearGradient(0, 0, W, 0);
+    g.addColorStop(0, 'rgba(0,0,0,0)');
+    g.addColorStop(Math.min(a, b), 'rgba(0,0,0,0)');
+    g.addColorStop(b, 'rgba(0,0,0,1)');
+    g.addColorStop(1, 'rgba(0,0,0,1)');
+    nxx.globalCompositeOperation = 'destination-in';
+    nxx.fillStyle = g; nxx.fillRect(0, 0, W, H);
+    nxx.globalCompositeOperation = 'source-over';
+    bgx.drawImage(nxCv, 0, 0);
   }
   // foreground road strip: scrolling dashes + speckle so the ground speed reads at full rate
-  ctx.fillStyle = 'rgba(60,32,8,.55)';
-  ctx.fillRect(0, GROUND_Y + 1, W, 3);
-  ctx.fillStyle = '#e8dcc0';
+  bgx.fillStyle = 'rgba(60,32,8,.55)';
+  bgx.fillRect(0, GROUND_Y + 1, W, 3);
+  bgx.fillStyle = '#e8dcc0';
   const dashOff = dist % 64;
-  for (let x = -dashOff; x < W; x += 64) ctx.fillRect(x, GROUND_Y + 22, 30, 5);
-  ctx.fillStyle = 'rgba(40,20,4,.5)';
+  for (let x = -dashOff; x < W; x += 64) bgx.fillRect(x, GROUND_Y + 22, 30, 5);
+  bgx.fillStyle = 'rgba(40,20,4,.5)';
   const spOff = dist % 47;
-  for (let x = -spOff; x < W; x += 47) ctx.fillRect(x, GROUND_Y + 40, 7, 3);
+  for (let x = -spOff; x < W; x += 47) bgx.fillRect(x, GROUND_Y + 40, 7, 3);
+}
+function blitBackground() {
+  if (warpT > 0) {
+    // glitch-warp: horizontal slices with small random x-offsets + tear bars
+    const slices = 14, sh = Math.ceil(H / slices);
+    for (let i = 0; i < slices; i++) {
+      const y = i * sh, ox = Math.round(Math.random() * 16 - 8);
+      ctx.drawImage(bgCv, 0, y, W, sh, ox, y, W, sh);
+    }
+    for (const b of warpBars) {
+      ctx.fillStyle = b.c; ctx.globalAlpha = 0.75;
+      ctx.fillRect(0, b.y + (Math.random() * 4 - 2), W, b.h);
+    }
+    ctx.globalAlpha = 1;
+  } else {
+    ctx.drawImage(bgCv, 0, 0);
+  }
 }
 
 // ---------------------------------------------------------------- loop
@@ -277,7 +379,14 @@ function frame(now) {
     // obstacles
     spawnIn -= speed * dt;
     if (spawnIn <= 0) spawnObstacle();
-    for (const o of obstacles) o.x -= speed * dt;
+    for (const o of obstacles) {
+      o.x -= speed * dt;
+      // a gate is cleared once its whole body has passed the runner
+      if (o.kind === 'gate' && !o.awarded && o.x + o.w < P.x - P.w / 2) {
+        o.awarded = true; gatesCleared++;
+        showGateFlash('GATE ' + o.gateNum + ' ✓');
+      }
+    }
     obstacles = obstacles.filter(o => o.x + o.w > -80);
     // dust
     dustTimer -= dt;
@@ -292,11 +401,19 @@ function frame(now) {
     }
     // backdrop tour: prefetch the next two stops; switch when due AND ready
     ensure(cur + 1); ensure(cur + 2);
+    if (warpT > 0) warpT = Math.max(0, warpT - dt);
+    // stitched seam: open the feathered blend for the last BLEND_M metres of a stop
+    const n = nextStop(cur), remain = switchAt - dist / 50;
+    blendNext = (n > 0 && frames[n].img && remain > 0 && remain <= BLEND_M) ? n : -1;
+    blendP = blendNext > 0 ? 1 - remain / BLEND_M : 0;
     if (dist / 50 >= switchAt) {
-      const n = nextStop(cur);
       if (n > 0 && frames[n].img) {
         cur = n; switchAt = dist / 50 + STOP_M;
         whereEl.textContent = frames[cur].label;
+        blendP = 0; blendNext = -1;
+        startWarp();                                   // glitch-warp at the crossing
+        stopsVisited++;
+        if (stopsVisited % 10 === 0) spawnGate();      // checkpoint gate every 10th stop
       } else if (n > 0) { ensure(n); }
       else { switchAt = dist / 50 + STOP_M; }
     }
@@ -305,6 +422,8 @@ function frame(now) {
   }
   // ------------------------------------------------------------ render
   drawBackground();
+  blitBackground();
+  gateEl.style.opacity = (performance.now() < gateFlashUntil) ? '1' : '0';
   for (const d of dust) {
     ctx.fillStyle = 'rgba(232,220,192,' + Math.max(d.life, 0).toFixed(2) + ')';
     ctx.beginPath(); ctx.arc(d.x, d.y, d.r, 0, Math.PI * 2); ctx.fill();
@@ -318,7 +437,10 @@ requestAnimationFrame(frame);
 // test hook
 window.__runner = { get state() { return state; }, get dist() { return dist; },
   get playerY() { return P.y; }, get obstacles() { return obstacles.length; }, start: startGame, jump,
-  tour: () => ({ cur, label: frames[cur].label, loaded: frames.filter(f => f.img).length, failed: frames.filter(f => f.failed).length }),
+  tour: () => ({ cur, label: frames[cur].label, loaded: frames.filter(f => f.img).length, failed: frames.filter(f => f.failed).length,
+    stops: stopsVisited, blendP, warpT }),
+  gates: () => ({ spawned: gatesSpawned, cleared: gatesCleared }),
+  forceGate: () => { stopsVisited = 9; switchAt = 0; },
   skip: () => { switchAt = 0; } };
 </script>
 </body>

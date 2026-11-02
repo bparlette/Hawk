@@ -5064,7 +5064,7 @@
    },
    "autostart": [],
    "orientation": "landscape",
-   "note": "Endless runner that starts on the Bad City backdrop from Super Bonk (SNES), then tours all 100 screens from the art page \u2014 every backdrop lazy-loaded as you reach it. Auto-run, jump the street furniture, chase the distance. Full source in games/bad-city-run/.",
+   "note": "Endless runner that starts on the Bad City backdrop from Super Bonk (SNES), then tours all 100 screens from the art page — the worlds stitched together with feathered seams and glitch-warp crossings, every backdrop lazy-loaded as you reach it, and a checkpoint gate every 10 worlds. Auto-run, jump the street furniture, chase the distance. Full source in games/bad-city-run/.",
    "path": "../games/bad-city-run/index.html"
   },
   {
@@ -5755,6 +5755,19 @@
    "orientation": "landscape",
    "note": "The original Back Roms walker through the 1,000-world catalog: a relic in every world, the Glitch in every few rooms.",
    "path": "https://bparlette.github.io/worlds/walk/walker.html"
+  },
+  {
+   "id": "one-coin-gauntlet",
+   "title": "The One-Coin Gauntlet",
+   "category": "Arcade",
+   "keys": {
+    "start": "Enter"
+   },
+   "labels": {},
+   "autostart": [],
+   "orientation": "landscape",
+   "note": "WarioWare for the cabinet: twelve cabinet games dealt a few seconds at a time, faster every round, three coins. The embedded cabinet reports its own win or loss.",
+   "path": "../games/one-coin-gauntlet/index.html"
   }
  ]
 }
