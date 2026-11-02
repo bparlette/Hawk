@@ -254,6 +254,15 @@ let seeds = [];        // in flight — several can be airborne at once (v3)
 let plants = [];       // planted & growing (and standing garden)
 let particles = [];    // soil puffs, sparkles, pollen, floaters
 let floaters = [];     // "+5 ❀" pollen text particles
+/* v8 — perf trim (audit §6): one shared live-particle ceiling across
+   every system feeding this array (soil / pollen / trail / droplet /
+   spark / glowmote), and a per-frame cap on additive-glow draws —
+   sprites past the additive cap draw FLAT, never skipped, so nothing
+   pops out of existence mid-flight. */
+const PARTICLE_MAX = 200;
+const ADDITIVE_MAX = 120;
+let addDrawn = 0;      // additive sprites drawn this frame (reset in frame())
+let addPeak = 0;       // high-water mark of addDrawn (perf hook reads it)
 let blooms = 0;        // blooms this session
 let sessionPollen = 0; // pollen earned this session
 let dropperX = 0;
@@ -280,6 +289,56 @@ let L = null;
 const REDUCED_MOTION = !!(window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches);
 let windV = 0.25, windPhase = 0; // 0 calm … 1 gusty
 function pCount(n) { return REDUCED_MOTION ? Math.ceil(n / 2) : n; }
+/* ================================================================
+   ADAPTIVE DPR (v8 — audit §6: resolution is the binding cost, the
+   one ~2x lever). resize() renders at min(devicePixelRatio, dprCap).
+   The frame loop watches RAW rAF intervals: after a 3 s warmup it
+   scores ~2 s windows by their p95; two consecutive windows with
+   p95 > 20 ms step the cap down the ladder 2 -> 1.75 -> 1.5 ->
+   1.25, but only while the effective render DPR is above 1.25.
+   It never steps up mid-session (no oscillation). Reduced motion
+   starts one rung lower. ?noadapt=1 in the URL (or the perf hook's
+   disable()) freezes the ladder for A/B measurement.
+   ================================================================ */
+const DPR_LADDER = [1.25, 1.5, 1.75, 2];
+let dprCap = REDUCED_MOTION ? 1.75 : 2;
+let adaptiveDpr = !(new URLSearchParams(location.search)).has('noadapt');
+const perfSteps = [];
+let perfLastP95 = 0;
+let perfLastTsMs = 0, perfWarmMs = 0, perfBucket = [], perfBucketMs = 0, perfSlowStreak = 0;
+function perfStepDown() {
+  if (DPR <= 1.25) return;
+  let next = 0;
+  for (let i = 0; i < DPR_LADDER.length; i++) if (DPR_LADDER[i] < dprCap - 0.001) next = DPR_LADDER[i];
+  if (!next) return;
+  const capFrom = dprCap, dprFrom = DPR;
+  dprCap = next;
+  if (Math.min(window.devicePixelRatio || 1, dprCap) < dprFrom - 0.001) {
+    resize(); // resizes main canvas + baked-garden canvas at the new DPR
+    perfSteps.push({ capFrom: capFrom, capTo: dprCap, dprFrom: dprFrom, dprTo: DPR, at: Math.round(performance.now()) / 1000 });
+  }
+}
+function perfTrack(ts) {
+  if (perfLastTsMs) {
+    const iv = ts - perfLastTsMs;
+    if (iv > 0 && iv < 1000) {
+      if (perfWarmMs < 3000) { perfWarmMs += iv; }
+      else {
+        perfBucket.push(iv); perfBucketMs += iv;
+        if (perfBucketMs >= 2000) {
+          const sorted = perfBucket.slice().sort(function (a, b) { return a - b; });
+          perfLastP95 = sorted[Math.min(sorted.length - 1, Math.ceil(0.95 * sorted.length) - 1)];
+          if (adaptiveDpr && perfLastP95 > 20) {
+            perfSlowStreak++;
+            if (perfSlowStreak >= 2) { perfSlowStreak = 0; perfStepDown(); }
+          } else perfSlowStreak = 0;
+          perfBucket = []; perfBucketMs = 0;
+        }
+      }
+    }
+  }
+  perfLastTsMs = ts;
+}
 function updateWind(dt) {
   windPhase += dt;
   const gust = 0.5 + 0.5 * Math.sin(windPhase * 0.23) * Math.sin(windPhase * 0.071 + 1.7);
@@ -451,7 +510,7 @@ function makeImpulse(dur, decay) {
 function ensureFx() {
   if (fx || !AC) return fx;
   const conv = AC.createConvolver();
-  conv.buffer = makeImpulse(1.4, 2.6);
+  conv.buffer = makeImpulse(1.2, 2.6); // v8 — IR trimmed to the audit's ≤ 1.2 s
   const wetIn = AC.createGain(); wetIn.gain.value = 1;
   wetIn.connect(conv); conv.connect(masterGain);
   // ping-pong delay — two crossed delays, filtered, quiet
@@ -585,6 +644,13 @@ function getPlinkBus() {
   return plinkBus;
 }
 const voiceHits = { dew: 0, stone: 0, firefly: 0 }; // v6 — per-kind voice counters (test hook reads these)
+/* v8 — plink voice cap (audit §6): at most 12 concurrent plink
+   voices. A hit past the cap drops its NEW voice (no stealing, so
+   no clicks); the hit itself still registers — readouts above and
+   the peg flash/wobble in stepSeed are untouched. Bloom chimes,
+   pocks, rustles and ambience are not plinks and are never capped. */
+const PLINK_CAP = 12;
+let plinkLive = 0, plinkPeak = 0, plinkDropped = 0;
 let lastBuzzAt = 0;
 function buzz(ms) { // haptics — strong hits only; Android in practice; never under reduced motion
   if (REDUCED_MOTION) return;
@@ -615,6 +681,10 @@ function sndPlink(rowFrac, strength, kind, x, lad) {
   const bright = 0.55 + 0.75 * s;              // soft hits rounder, hard hits brighter
   kind = kind || 'stone';
   if (voiceHits[kind] != null) voiceHits[kind]++;
+  if (plinkLive >= PLINK_CAP) { plinkDropped++; return; }
+  plinkLive++; if (plinkLive > plinkPeak) plinkPeak = plinkLive;
+  let plinkEnded = false;
+  const endPlink = function () { if (!plinkEnded) { plinkEnded = true; plinkLive--; } };
   if (s > 0.72) buzz(8);
   if (kind === 'dew') {
     // glassy water-drop: fast downward pitch glide + quiet inharmonic partials
@@ -627,6 +697,7 @@ function sndPlink(rowFrac, strength, kind, x, lad) {
     g.gain.exponentialRampToValueAtTime(0.0008, t + 0.30);
     o.connect(g); voiceOut(g, bus, x, 0.30, 0.10);
     o.start(t); o.stop(t + 0.32);
+    o.onended = endPlink; setTimeout(endPlink, 750); // v8 — release the voice slot (timer is a no-leak backstop)
     const parts = [[2.76, 0.10], [4.21, 0.05]];
     for (let i = 0; i < parts.length; i++) {
       const op = AC.createOscillator(); op.type = 'sine';
@@ -648,6 +719,7 @@ function sndPlink(rowFrac, strength, kind, x, lad) {
     g.gain.exponentialRampToValueAtTime(0.0008, t + 0.85);
     o.connect(g); voiceOut(g, bus, x, 0.45, 0.14);
     o.start(t); o.stop(t + 0.9);
+    o.onended = endPlink; setTimeout(endPlink, 1350); // v8 — release the voice slot
     const trem = AC.createOscillator(); trem.type = 'sine'; trem.frequency.value = 5.2;
     const tremG = AC.createGain(); tremG.gain.value = vol * 0.16;
     trem.connect(tremG); tremG.connect(g.gain);
@@ -668,6 +740,7 @@ function sndPlink(rowFrac, strength, kind, x, lad) {
     g.gain.exponentialRampToValueAtTime(0.0008, t + 0.52);
     o.connect(g); voiceOut(g, bus, x, 0.35, 0.12);
     o.start(t); o.stop(t + 0.55);
+    o.onended = endPlink; setTimeout(endPlink, 1000); // v8 — release the voice slot
     const o2 = AC.createOscillator(); o2.type = 'triangle'; o2.frequency.value = f * det;
     const g2 = AC.createGain();
     g2.gain.setValueAtTime(0.0001, t);
@@ -1006,7 +1079,7 @@ function soilYAt(x) {
 }
 
 function resize() {
-  DPR = Math.min(window.devicePixelRatio || 1, 2);
+  DPR = Math.min(window.devicePixelRatio || 1, dprCap); // v8 — adaptive cap (was a flat 2)
   W = window.innerWidth; H = window.innerHeight;
   canvas.width = Math.round(W * DPR);
   canvas.height = Math.round(H * DPR);
@@ -1620,7 +1693,7 @@ function spawnDewRipple(p) {
   if (dewRipples.length < 10) dewRipples.push({ x: p.x, y: p.y, age: 0, r: L.pegR });
   const n = REDUCED_MOTION ? 2 : 4;
   for (let i = 0; i < n; i++) {
-    if (particles.length >= 280) break;
+    if (particles.length >= PARTICLE_MAX) break; // v8 — global ceiling (was 280)
     particles.push({
       kind: 'droplet', x: p.x, y: p.y,
       vx: rand(-46, 46), vy: rand(-70, -12),
@@ -1635,7 +1708,9 @@ function drawDewRipples(dt) {
     const k = rp.age / 0.45;
     if (k >= 1) { dewRipples.splice(i, 1); continue; }
     ctx.save();
-    ctx.globalCompositeOperation = 'lighter';
+    // v8 — ripples spend from the same per-frame additive budget;
+    // past it the ring draws flat (source-over) instead of adding
+    if (addDrawn < ADDITIVE_MAX) { ctx.globalCompositeOperation = 'lighter'; addDrawn++; }
     ctx.strokeStyle = 'rgba(190,225,250,' + (0.55 * (1 - k)) + ')';
     ctx.lineWidth = 1.4;
     ctx.beginPath(); ctx.arc(rp.x, rp.y, rp.r * (1.2 + k * 2.6), 0, Math.PI * 2); ctx.stroke();
@@ -1676,6 +1751,7 @@ function drawParticles(dt) {
   // motes, pollen, seed-trail flecks and dew droplets all read as light
   ctx.save();
   ctx.globalCompositeOperation = 'lighter';
+  let flatMode = false; // v8 — flips once the frame's additive budget is spent
   for (let i = particles.length - 1; i >= 0; i--) {
     const p = particles[i];
     if (p.kind === 'soil') continue;
@@ -1699,8 +1775,13 @@ function drawParticles(dt) {
       p.vy -= 7 * dt; p.vx += Math.sin(p.age * 5 + p.r) * 6 * dt;
       ctx.fillStyle = 'rgba(255,246,200,' + (0.75 * k) + ')';
     }
+    // v8 — additive budget: the first ADDITIVE_MAX light sprites each
+    // frame blend additively; the rest draw flat (never skipped)
+    if (addDrawn < ADDITIVE_MAX) { addDrawn++; }
+    else if (!flatMode) { ctx.globalCompositeOperation = 'source-over'; flatMode = true; }
     ctx.beginPath(); ctx.arc(p.x, p.y, p.r * k + 0.3, 0, Math.PI * 2); ctx.fill();
   }
+  if (addDrawn > addPeak) addPeak = addDrawn;
   ctx.restore();
   // pollen floaters ("+5 ❀")
   ctx.textAlign = 'center';
@@ -2450,7 +2531,7 @@ function stepSeed(s, dt) {
 
     // pollen trail — pooled additive flecks shed while falling
     s.trailT = (s.trailT || 0) + sdt;
-    if (s.trailT > (REDUCED_MOTION ? 0.09 : 0.045) && particles.length < 260) {
+    if (s.trailT > (REDUCED_MOTION ? 0.09 : 0.045) && particles.length < PARTICLE_MAX) { // v8 — global ceiling (was 260)
       s.trailT = 0;
       particles.push({
         kind: 'trail', x: s.x + rand(-2, 2), y: s.y + rand(-2, 2),
@@ -2564,6 +2645,7 @@ function plantSeed(s) {
   sndShimmer(p.dur * 0.85);
   const sy = plantBaseY(p);
   for (let i = 0; i < pCount(9); i++) {
+    if (particles.length >= PARTICLE_MAX) break; // v8 — global ceiling
     particles.push({
       kind: 'soil', x: s.x, y: sy - 2,
       vx: rand(-55, 55), vy: rand(-95, -25),
@@ -2631,6 +2713,7 @@ function updatePlant(p, dt) {
     const topY = plantBaseY(p) - 155 * plantScaleOf(p) * p.sp.h;
     floaters.push({ x: p.x, y: topY, text: '+' + earned + ' ❀', age: 0, life: 1.5 });
     for (let i = 0; i < pCount(p.sp.tier === 2 ? 15 : 8); i++) {
+      if (particles.length >= PARTICLE_MAX) break; // v8 — global ceiling
       particles.push({
         kind: p.sp.glow ? 'glowmote' : 'pollen', col: p.sp.glow,
         x: p.x + rand(-9, 9), y: plantBaseY(p) - 60 * plantScaleOf(p),
@@ -2642,7 +2725,7 @@ function updatePlant(p, dt) {
     updateHUD();
   }
   // cherry blossom sheds the odd petal once in bloom
-  if (p.bloomed && p.sp.id === 'sakura' && Math.random() < dt * 0.8) {
+  if (p.bloomed && p.sp.id === 'sakura' && Math.random() < dt * 0.8 && particles.length < PARTICLE_MAX) { // v8 — global ceiling
     particles.push({
       kind: 'glowmote', col: '#f2a9c4',
       x: p.x + rand(-26, 26), y: plantBaseY(p) - rand(60, 120) * plantScaleOf(p),
@@ -2880,6 +2963,7 @@ function chopPlant(idx) {
   sndSnick();
   const by = plantBaseY(p);
   for (let i = 0; i < 7; i++) {
+    if (particles.length >= PARTICLE_MAX) break; // v8 — global ceiling
     particles.push({
       kind: 'glowmote', col: p.sp.pal.p[1],
       x: p.x + rand(-8, 8), y: by - rand(8, 46) * plantScaleOf(p),
@@ -2888,6 +2972,7 @@ function chopPlant(idx) {
     });
   }
   for (let i = 0; i < 4; i++) {
+    if (particles.length >= PARTICLE_MAX) break; // v8 — global ceiling
     particles.push({
       kind: 'soil', x: p.x + rand(-5, 5), y: by - 2,
       vx: rand(-45, 45), vy: rand(-70, -20),
@@ -3060,6 +3145,8 @@ function drawDropper(now) {
 let lastTs = 0;
 function frame(ts) {
   requestAnimationFrame(frame);
+  perfTrack(ts);   // v8 — adaptive DPR watches the raw frame intervals
+  addDrawn = 0;    // v8 — the per-frame additive budget resets
   const now = ts / 1000;
   let dt = Math.min(0.033, now - (lastTs || now));
   lastTs = now;
@@ -3210,6 +3297,7 @@ window.__planko = {
     ensureFx();
     return {
       convolver: fx.conv.constructor.name,
+      irSec: Math.round(fx.conv.buffer.duration * 100) / 100, // v8 — audit cap is ≤ 1.2 s
       delay: fx.dL.constructor.name,
       delayR: fx.dR.constructor.name,
       lastPan: lastPanValue,
@@ -3217,11 +3305,22 @@ window.__planko = {
     };
   },
   voiceHits: function () { return { dew: voiceHits.dew, stone: voiceHits.stone, firefly: voiceHits.firefly }; },
+  voiceStats: function () { return { live: plinkLive, peak: plinkPeak, dropped: plinkDropped, cap: PLINK_CAP }; }, // v8
+  perf: { // v8 — adaptive-DPR readouts (audit §6 acceptance hooks)
+    dpr: function () { return DPR; },
+    cap: function () { return dprCap; },
+    steps: function () { return perfSteps.slice(); },
+    p95: function () { return Math.round(perfLastP95 * 10) / 10; },
+    addPeak: function () { return addPeak; },
+    disable: function () { adaptiveDpr = false; },
+    get disabled() { return !adaptiveDpr; }
+  },
   hitPeg: function (kind, x) { // v6 — fire one peg voice of a kind at a screen x (tests)
     if (!AC) return false;
     sndPlink(0.5, 0.85, kind || 'stone', x == null ? W / 2 : x);
     return true;
   },
+  get particleCount() { return particles.length; }, // v8 — global-ceiling proof
   get reducedMotion() { return REDUCED_MOTION; },
   get wind() { return Math.round(windV * 100) / 100; },
   get layoutY() { return L ? { soilBase: Math.round(L.soilBase), meadowTop: Math.round(L.meadowTop), pickerH: Math.round(L.pickerH), H: H, W: W } : null; },
