@@ -4993,7 +4993,7 @@
    "labels": {},
    "autostart": [],
    "orientation": "any",
-   "note": "Planko — Seed Garden (beauty rebuild of Seed Plinko): painted ASMR plinko garden, 38 procedurally-grown species in 16 forms (common/rare/luminous), dew/stone/firefly peg board at golden hour, synthesized marimba-plink + shimmer + bloom-chime audio, seed-packet picker with pollen unlocks, garden journal, persistent session garden",
+   "note": "Planko — Seed Garden (beauty rebuild of Seed Plinko): painted ASMR plinko garden, 38 procedurally-grown species in 16 forms (common/rare/luminous), dew/stone/firefly peg board at golden hour, synthesized marimba-plink + shimmer + bloom-chime audio, seed-packet picker with pollen unlocks, garden journal, persistent session garden v2: random seeds by default (Surprise Me packet, next seed shown at the aimer), a three-row garden with the small plants always in front, and a little scythe gardener who harvests plants as you walk him through.",
    "path": "../games/seed-plinko/index.html"
   },
   {
@@ -5807,6 +5807,32 @@
      "orientation": "landscape",
      "path": "../games/graft-paper-boom/index.html",
      "title": "Paper Boom"
+  },
+  {
+     "autostart": [],
+     "category": "Originals",
+     "id": "worlds-collide",
+     "keys": {
+        "start": "Enter"
+     },
+     "labels": {},
+     "note": "Two Rendered-100 worlds mashed into every room, split at a glowing seam — 34 rooms, a relic in each, four-wall travel, the Glitch on patrol.",
+     "orientation": "landscape",
+     "path": "https://bparlette.github.io/worlds/art/game/collide.html",
+     "title": "Worlds Collide"
+  },
+  {
+     "autostart": [],
+     "category": "Originals",
+     "id": "the-prop-100",
+     "keys": {
+        "start": "Enter"
+     },
+     "labels": {},
+     "note": "The Prop Smith sourcing gallery: the 100 best single-object 3D props on Sketchfab — gnome, treasure chest, kart, chair — eyeball-verified, with the CC-licensed downloadable ones flagged as the Qwen conversion queue.",
+     "orientation": "landscape",
+     "path": "https://bparlette.github.io/worlds/art/props.html",
+     "title": "The Prop 100"
   }
  ]
 }

@@ -86,6 +86,11 @@
     transition: transform .12s ease, border-color .12s ease, box-shadow .12s ease;
   }
   .packet img { width:40px; height:40px; display:block; margin:0 auto 2px; pointer-events:none; }
+  .packet .dice {
+    width:40px; height:40px; display:flex; align-items:center; justify-content:center;
+    margin:0 auto 2px; font-size:27px; line-height:1; pointer-events:none;
+    filter: drop-shadow(0 2px 3px rgba(0,0,0,.45));
+  }
   .packet .pname {
     font-size:9.5px; line-height:1.15; font-weight:700; color:#f7ecd0;
     text-shadow:0 1px 2px rgba(0,0,0,.6); pointer-events:none;
@@ -254,7 +259,7 @@ function hashStr(s) { let h = 2166136261; for (let i = 0; i < s.length; i++) { h
 
 /* ---------------- save ---------------- */
 const SAVE_KEY = 'planko-save-v1';
-let save = { pollen: 0, unlocked: [], journal: {}, muted: false, best: 0 };
+let save = { pollen: 0, unlocked: [], journal: {}, muted: false, best: 0, sel: 'random', harvested: 0 };
 try {
   const raw = localStorage.getItem(SAVE_KEY);
   if (raw) { const p = JSON.parse(raw); if (p && typeof p === 'object') save = Object.assign(save, p); }
@@ -278,6 +283,14 @@ let nextChirpAt = 0;
 let bakedGarden = null; // offscreen canvas of retired plants (silhouette layer)
 let selectedId = 'daisy';
 let growBoost = 1;      // cinematic slow-grow multiplier for the next plant (test/video use)
+/* v2 — random seeds by default */
+let randomMode = true;  // "Surprise me" packet is the default selection
+let nextId = null;      // species queued for the next drop (random mode)
+/* v2 — the gardener */
+let harvested = 0;      // plants chopped this session (lifetime total lives in save.harvested)
+let falling = [];       // chopped plants mid-tip-over
+const keysDown = {};    // held movement keys for the gardener
+const gardener = { x: 0, dir: 1, moving: false, walkPhase: 0, swingT: 1, swingCd: 0, targetX: null };
 
 /* layout */
 let L = null;
@@ -452,6 +465,22 @@ function sndPop() {
   o.start(t); o.stop(t + 0.12);
 }
 
+/* soft scythe snick — a quiet filtered-noise swish, for the gardener's chop */
+function sndSnick() {
+  if (!AC || muted) return;
+  const t = AC.currentTime;
+  const src = AC.createBufferSource(); src.buffer = noiseBuffer(0.16);
+  const bp = AC.createBiquadFilter(); bp.type = 'bandpass'; bp.Q.value = 1.4;
+  bp.frequency.setValueAtTime(3400, t);
+  bp.frequency.exponentialRampToValueAtTime(900, t + 0.13);
+  const g = AC.createGain();
+  g.gain.setValueAtTime(0.0001, t);
+  g.gain.exponentialRampToValueAtTime(0.11, t + 0.03);
+  g.gain.exponentialRampToValueAtTime(0.0008, t + 0.15);
+  src.connect(bp); bp.connect(g); g.connect(masterGain);
+  src.start(t); src.stop(t + 0.17);
+}
+
 /* very soft bird chirp accent */
 function sndChirp() {
   if (!AC || muted) return;
@@ -545,6 +574,45 @@ function isUnlocked(sp) { return sp.tier === 0 || save.unlocked.indexOf(sp.id) >
 if (!SPECIES_BY_ID[selectedId] || !isUnlocked(SPECIES_BY_ID[selectedId])) selectedId = 'daisy';
 
 /* ================================================================
+   GARDEN DEPTH ROWS (v2) — 0 back · 1 mid · 2 front.
+   A species' row comes from its form and mature height at planting
+   time: tall things stand at the back, small things always in front,
+   so nothing short ever gets hidden behind something tall.
+   ================================================================ */
+const FORM_ROW = { plume: 0, branch: 0, rosette: 2, bell: 2, cap: 2, blade: 2 };
+function rowFor(sp) {
+  let r = (FORM_ROW[sp.form] !== undefined) ? FORM_ROW[sp.form] : 1;
+  if (sp.h >= 0.9) r = 0;                    // sunflower towers at the back
+  else if (sp.h <= 0.55 && r === 1) r = 2;   // buttercup & clover stay low, up front
+  return r;
+}
+const ROW_BASE  = [-5, 6, 17];        // baseline offset (px) below the soil surface line, per row
+const ROW_SCALE = [0.84, 0.93, 1.0];  // perspective scale per row (back is smaller)
+function plantRow(p) { return (p.row == null) ? 1 : p.row; }
+function plantBaseY(p) { return soilYAt(p.x) + ROW_BASE[plantRow(p)] + (p.yOff || 0); }
+function plantScaleOf(p) { return L.plantScale * ROW_SCALE[plantRow(p)] * (p.scale || 1); }
+
+/* ================================================================
+   RANDOM SEEDS (v2) — "Surprise me" is the default packet.
+   In random mode the next species is rolled from the UNLOCKED pool
+   the moment the previous seed drops, and shown at the aimer.
+   ================================================================ */
+function unlockedPool() { return SPECIES.filter(isUnlocked); }
+function rollNext() {
+  const pool = unlockedPool();
+  if (pool.length) nextId = pool[Math.floor(Math.random() * pool.length)].id;
+}
+function dropSpecies() { return SPECIES_BY_ID[randomMode ? (nextId || selectedId) : selectedId]; }
+/* restore the player's packet choice from the save */
+if (save.sel && save.sel !== 'random' && SPECIES_BY_ID[save.sel] && isUnlocked(SPECIES_BY_ID[save.sel])) {
+  randomMode = false;
+  selectedId = save.sel;
+} else {
+  randomMode = true;
+}
+rollNext();
+
+/* ================================================================
    LAYOUT — golden-hour board above a meadow strip
    ================================================================ */
 function computeLayout() {
@@ -606,6 +674,7 @@ function resize() {
     bctx.drawImage(oldBaked, 0, 0, W, H);
   }
   dropperX = clamp(dropperX || W / 2, L.seedR + 10, W - L.seedR - 10);
+  gardener.x = gardener.x ? clamp(gardener.x, 26, W - 26) : W / 2;
 }
 window.addEventListener('resize', resize);
 
@@ -790,6 +859,32 @@ function drawMeadow() {
   ctx.moveTo(0, L.soilBase + 4);
   for (let x = 0; x <= W; x += 10) ctx.lineTo(x, soilYAt(x) - 3.5);
   ctx.lineTo(W, L.soilBase + 5); ctx.closePath(); ctx.fill();
+  // depth terraces (v2) — a soft ridge of light at each garden row's baseline,
+  // with a shading trough beneath, so the three rows read as ground receding
+  for (let ri = 0; ri < 3; ri++) {
+    ctx.beginPath();
+    for (let x = 0; x <= W; x += 12) {
+      const y = soilYAt(x) + ROW_BASE[ri] + 5;
+      if (x === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
+    }
+    ctx.strokeStyle = ri === 2 ? 'rgba(255,232,170,.14)' : 'rgba(43,26,8,.15)';
+    ctx.lineWidth = ri === 2 ? 2.4 : 3.4;
+    ctx.stroke();
+    ctx.beginPath();
+    for (let x = 0; x <= W; x += 12) {
+      const y = soilYAt(x) + ROW_BASE[ri] + 11;
+      if (x === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
+    }
+    ctx.strokeStyle = 'rgba(30,17,4,.10)';
+    ctx.lineWidth = 5;
+    ctx.stroke();
+  }
+  // warm atmospheric wash over the back of the bed
+  const wash = ctx.createLinearGradient(0, L.soilBase - 10, 0, L.soilBase + 30);
+  wash.addColorStop(0, 'rgba(255,205,140,.10)');
+  wash.addColorStop(1, 'rgba(255,205,140,0)');
+  ctx.fillStyle = wash;
+  ctx.fillRect(0, L.soilBase - 10, W, 40);
   // speckles
   ctx.fillStyle = 'rgba(255,225,170,.10)';
   for (let i = 0; i < 46; i++) {
@@ -1455,10 +1550,9 @@ function drawPlantShape(c, p, now, S) {
 }
 
 function drawPlant(p, now) {
-  const y = soilYAt(p.x) + (p.yOff || 0);
   ctx.save();
-  ctx.translate(p.x, y);
-  drawPlantShape(ctx, p, now, L.plantScale * (p.scale || 1));
+  ctx.translate(p.x, plantBaseY(p));
+  drawPlantShape(ctx, p, now, plantScaleOf(p));
   ctx.restore();
 }
 
@@ -1468,8 +1562,8 @@ function bakePlant(p) {
   bctx.setTransform(DPR, 0, 0, DPR, 0, 0);
   bctx.save();
   bctx.globalAlpha = 0.5;
-  bctx.translate(p.x, soilYAt(p.x) + (p.yOff || 0));
-  drawPlantShape(bctx, p, 1.0, L.plantScale * (p.scale || 1));
+  bctx.translate(p.x, plantBaseY(p));
+  drawPlantShape(bctx, p, 1.0, plantScaleOf(p));
   bctx.restore();
 }
 
@@ -1515,13 +1609,14 @@ function dropSeed() {
   if (seedsLeft <= 0 || now - lastDropAt < 240) return;
   lastDropAt = now;
   seedsLeft--;
-  const sp = SPECIES_BY_ID[selectedId];
+  const sp = dropSpecies();
   seeds.push({
     x: dropperX, y: L.dropY + L.seedR + 2,
     vx: rand(-14, 14), vy: 30,
     r: L.seedR, sp: sp,
     born: now, lastClickAt: 0
   });
+  if (randomMode) rollNext(); // queue the next surprise the moment this seed leaves
   updateHUD();
 }
 
@@ -1593,7 +1688,7 @@ function stepSeed(s, dt) {
 
 function makePlant(sp, x, growMult) {
   return {
-    sp: sp, x: clamp(x, 16, W - 16), yOff: rand(0, 13),
+    sp: sp, x: clamp(x, 16, W - 16), row: rowFor(sp), yOff: rand(0, 4),
     t: 0, dur: rand(2.5, 3.1) * (growMult || 1),
     phase: rand(0, Math.PI * 2), variant: Math.random(),
     bloomed: false, popped: false, frozen: false, round: ROUND, scale: 1
@@ -1607,7 +1702,7 @@ function plantSeed(s) {
   plantedThisRound++;
   sndPock();
   sndShimmer(p.dur * 0.85);
-  const sy = soilYAt(s.x);
+  const sy = plantBaseY(p);
   for (let i = 0; i < 9; i++) {
     particles.push({
       kind: 'soil', x: s.x, y: sy - 2,
@@ -1635,12 +1730,12 @@ function updatePlant(p, dt) {
     if (totalBlooms > (save.best || 0)) save.best = totalBlooms;
     persist();
     sndChime(p.sp.tier === 2);
-    const topY = soilYAt(p.x) - 150 * L.plantScale * p.sp.h;
+    const topY = plantBaseY(p) - 155 * plantScaleOf(p) * p.sp.h;
     floaters.push({ x: p.x, y: topY, text: '+' + earned + ' ❀', age: 0, life: 1.5 });
     for (let i = 0; i < (p.sp.tier === 2 ? 15 : 8); i++) {
       particles.push({
         kind: p.sp.glow ? 'glowmote' : 'pollen', col: p.sp.glow,
-        x: p.x + rand(-9, 9), y: soilYAt(p.x) - 60 * L.plantScale,
+        x: p.x + rand(-9, 9), y: plantBaseY(p) - 60 * plantScaleOf(p),
         vx: rand(-24, 24), vy: rand(-48, -8),
         life: rand(0.7, 1.6), age: 0, r: rand(1.2, 2.6)
       });
@@ -1657,7 +1752,7 @@ function updatePlant(p, dt) {
   if (p.bloomed && p.sp.id === 'sakura' && Math.random() < dt * 0.8) {
     particles.push({
       kind: 'glowmote', col: '#f2a9c4',
-      x: p.x + rand(-26, 26), y: soilYAt(p.x) - rand(60, 120) * L.plantScale,
+      x: p.x + rand(-26, 26), y: plantBaseY(p) - rand(60, 120) * plantScaleOf(p),
       vx: rand(-9, 4), vy: rand(7, 16),
       life: rand(1.4, 2.4), age: 0, r: rand(1.8, 3)
     });
@@ -1668,28 +1763,46 @@ function updatePlant(p, dt) {
    INPUT — drag to aim, release to drop (touch-native)
    ================================================================ */
 let ptrDownAt = 0;
+let ptrMode = 'aim'; // 'aim' = drop gesture · 'walk' = meadow-band drag steering the gardener
 function aimTo(clientX) {
   dropperX = clamp(clientX, L.seedR + 10, W - L.seedR - 10);
 }
-canvas.addEventListener('pointermove', function (e) { aimTo(e.clientX); });
+function inMeadowBand(y) { return started && !roundDone && L && y >= L.meadowTop - 6; }
+canvas.addEventListener('pointermove', function (e) {
+  if (ptrMode === 'walk' && ptrDownAt) gardener.targetX = e.clientX;
+  else aimTo(e.clientX);
+});
 canvas.addEventListener('pointerdown', function (e) {
   initAudio();
-  aimTo(e.clientX);
   ptrDownAt = performance.now();
+  if (inMeadowBand(e.clientY)) {
+    ptrMode = 'walk';
+    gardener.targetX = e.clientX;
+  } else {
+    ptrMode = 'aim';
+    aimTo(e.clientX);
+  }
   try { canvas.setPointerCapture(e.pointerId); } catch (err) {}
 });
 canvas.addEventListener('pointerup', function (e) {
-  aimTo(e.clientX);
-  if (ptrDownAt) dropSeed();
+  if (ptrMode === 'walk') {
+    gardener.targetX = null;
+  } else {
+    aimTo(e.clientX);
+    if (ptrDownAt) dropSeed();
+  }
   ptrDownAt = 0;
+  ptrMode = 'aim';
 });
-canvas.addEventListener('pointercancel', function () { ptrDownAt = 0; });
+canvas.addEventListener('pointercancel', function () { ptrDownAt = 0; ptrMode = 'aim'; gardener.targetX = null; });
 window.addEventListener('keydown', function (e) {
-  if (e.code === 'ArrowLeft') { dropperX = clamp(dropperX - 18, L.seedR + 10, W - L.seedR - 10); }
-  if (e.code === 'ArrowRight') { dropperX = clamp(dropperX + 18, L.seedR + 10, W - L.seedR - 10); }
+  keysDown[e.code] = true;
+  if (e.code === 'ArrowLeft') { e.preventDefault(); dropperX = clamp(dropperX - 18, L.seedR + 10, W - L.seedR - 10); }
+  if (e.code === 'ArrowRight') { e.preventDefault(); dropperX = clamp(dropperX + 18, L.seedR + 10, W - L.seedR - 10); }
   if (e.code === 'Space') { e.preventDefault(); initAudio(); dropSeed(); }
   if (e.key === 'm' || e.key === 'M') toggleMute();
 });
+window.addEventListener('keyup', function (e) { keysDown[e.code] = false; });
 
 /* ================================================================
    UI — HUD, seed packets, journal
@@ -1737,6 +1850,18 @@ el.mute.textContent = muted ? '🔇' : '🔊';
 el.mute.addEventListener('click', function (e) { e.stopPropagation(); initAudio(); toggleMute(); });
 el.mute.addEventListener('pointerdown', function (e) { e.stopPropagation(); });
 
+function selectRandom() {
+  randomMode = true;
+  if (save.sel !== 'random') { save.sel = 'random'; persist(); }
+  rollNext();
+  const kids = el.packets.children;
+  for (let i = 0; i < kids.length; i++) {
+    kids[i].classList.toggle('sel', kids[i].getAttribute('data-id') === 'random');
+  }
+  const sel = el.packets.querySelector('.packet.sel');
+  if (sel) sel.scrollIntoView({ block: 'nearest', inline: 'nearest', behavior: 'smooth' });
+}
+
 function selectSpecies(id, silent) {
   const sp = SPECIES_BY_ID[id];
   if (!sp) return;
@@ -1752,7 +1877,9 @@ function selectSpecies(id, silent) {
       return; // can't afford it yet — packet stays locked
     }
   }
+  randomMode = false;
   selectedId = id;
+  if (save.sel !== id) { save.sel = id; persist(); }
   const kids = el.packets.children;
   for (let i = 0; i < kids.length; i++) {
     kids[i].classList.toggle('sel', kids[i].getAttribute('data-id') === id);
@@ -1765,10 +1892,18 @@ function selectSpecies(id, silent) {
 
 function buildPackets(justUnlockedId) {
   el.packets.innerHTML = '';
+  // "Surprise me" — the default packet: a fresh random unlocked species every drop
+  const rd = document.createElement('div');
+  rd.className = 'packet random' + (randomMode ? ' sel' : '');
+  rd.setAttribute('data-id', 'random');
+  rd.innerHTML = '<div class="dice">🎲</div><span class="pname">Surprise Me</span><span class="pcost">✦ random seed</span>';
+  rd.addEventListener('pointerdown', function (e) { e.stopPropagation(); initAudio(); });
+  rd.addEventListener('click', function () { selectRandom(); });
+  el.packets.appendChild(rd);
   SPECIES.forEach(function (sp) {
     const d = document.createElement('div');
     const unlocked = isUnlocked(sp);
-    d.className = 'packet' + (sp.id === selectedId ? ' sel' : '') + (unlocked ? '' : ' locked') + (sp.id === justUnlockedId ? ' justUnlocked' : '');
+    d.className = 'packet' + (!randomMode && sp.id === selectedId ? ' sel' : '') + (unlocked ? '' : ' locked') + (sp.id === justUnlockedId ? ' justUnlocked' : '');
     d.setAttribute('data-id', sp.id);
     let inner = '<img alt="" src="' + makeThumb(sp) + '"><span class="pname">' + sp.name + '</span>';
     if (!unlocked) inner += '<span class="lock">🔒</span><span class="pcost">❀ ' + sp.cost + '</span>';
@@ -1779,6 +1914,7 @@ function buildPackets(justUnlockedId) {
     d.addEventListener('click', function () { selectSpecies(sp.id); });
     el.packets.appendChild(d);
   });
+  if (randomMode) rollNext(); // the pool may have just grown — queue a fresh surprise
 }
 
 function buildJournal() {
@@ -1832,11 +1968,194 @@ function finishRound() {
 }
 
 /* ================================================================
+   DEPTH HAZE (v2) — a breath of golden air between the rows
+   ================================================================ */
+function drawDepthHaze(strength) {
+  const y0 = L.soilBase - 14, y1 = H - L.pickerH;
+  const g = ctx.createLinearGradient(0, y0, 0, y1);
+  g.addColorStop(0, 'rgba(255,205,140,' + strength + ')');
+  g.addColorStop(1, 'rgba(255,205,140,0)');
+  ctx.fillStyle = g;
+  ctx.fillRect(0, y0, W, y1 - y0);
+}
+
+function drawFallingPlant(p) {
+  const k = clamp((p.fallAge || 0) / 0.75, 0, 1);
+  const ang = (p.fallDir || 1) * (Math.PI / 2.15) * k * k; // tips slowly, then goes
+  ctx.save();
+  ctx.translate(p.x, plantBaseY(p));
+  ctx.rotate(ang);
+  if (k > 0.7) ctx.globalAlpha = 1 - (k - 0.7) / 0.3 * 0.7;
+  drawPlantShape(ctx, p, 1.0, plantScaleOf(p));
+  ctx.restore();
+}
+
+/* ================================================================
+   THE GARDENER (v2) — a little hooded keeper with a scythe.
+   Walks the meadow (arrows / A,D, or a meadow-band drag), and any
+   established plant he passes gets snicked down: +1 ❀, a falling
+   plant, a puff of petals. Sprouts below the bud stage are spared.
+   ================================================================ */
+const CHOP_REACH = 36, CHOP_MIN_T = 0.8, SWING_CD = 0.26;
+
+function chopPlant(idx) {
+  const p = plants[idx];
+  plants.splice(idx, 1); // the slot is freed — chopped plants are never baked
+  p.fallAge = 0;
+  p.fallDir = (p.x >= gardener.x) ? 1 : -1; // tips away from him
+  falling.push(p);
+  gardener.swingT = 0;
+  gardener.swingCd = SWING_CD;
+  harvested++;
+  save.harvested = (save.harvested || 0) + 1;
+  save.pollen += 1;
+  persist();
+  sndSnick();
+  const by = plantBaseY(p);
+  for (let i = 0; i < 7; i++) {
+    particles.push({
+      kind: 'glowmote', col: p.sp.pal.p[1],
+      x: p.x + rand(-8, 8), y: by - rand(8, 46) * plantScaleOf(p),
+      vx: rand(-40, 40), vy: rand(-26, 30),
+      life: rand(0.5, 1.0), age: 0, r: rand(1.4, 3)
+    });
+  }
+  for (let i = 0; i < 4; i++) {
+    particles.push({
+      kind: 'soil', x: p.x + rand(-5, 5), y: by - 2,
+      vx: rand(-45, 45), vy: rand(-70, -20),
+      life: rand(0.3, 0.55), age: 0, r: rand(1.4, 3)
+    });
+  }
+  updateHUD();
+}
+
+function updateGardener(dt) {
+  if (!started || SAMPLE_MODE) return;
+  let move = 0;
+  if (keysDown['ArrowLeft'] || keysDown['KeyA']) move = -1;
+  else if (keysDown['ArrowRight'] || keysDown['KeyD']) move = 1;
+  else if (gardener.targetX != null) {
+    const dx = gardener.targetX - gardener.x;
+    if (Math.abs(dx) > 5) move = dx > 0 ? 1 : -1;
+    else gardener.targetX = null;
+  }
+  gardener.moving = move !== 0;
+  if (move !== 0) {
+    gardener.dir = move;
+    gardener.x = clamp(gardener.x + move * 185 * dt, 26, W - 26);
+    gardener.walkPhase += dt * 11;
+  }
+  if (gardener.swingT < 1) gardener.swingT = Math.min(1, gardener.swingT + dt / 0.24);
+  gardener.swingCd -= dt;
+  if (gardener.swingCd <= 0) {
+    const reach = CHOP_REACH * L.plantScale + 8;
+    for (let i = 0; i < plants.length; i++) {
+      const p = plants[i];
+      if (p.t >= CHOP_MIN_T && Math.abs(p.x - gardener.x) <= reach) { chopPlant(i); break; }
+    }
+  }
+  for (let i = falling.length - 1; i >= 0; i--) {
+    falling[i].fallAge += dt;
+    if (falling[i].fallAge > 0.75) falling.splice(i, 1);
+  }
+}
+
+/* the gardener, code-drawn in the game's own painted shapes.
+   Unit space: feet at y=0, faces +x (flipped by gardener.dir). */
+function drawGardener(now) {
+  if (!started || SAMPLE_MODE) return;
+  const g = gardener;
+  const S = L.plantScale;
+  const baseY = soilYAt(g.x) + ROW_BASE[2] + 7;
+  const bob = g.moving ? Math.abs(Math.sin(g.walkPhase)) * 2.4 : Math.sin(now * 1.6) * 0.6;
+  const lp = g.moving ? Math.sin(g.walkPhase) * 4.6 : 0; // leg shuffle
+  ctx.save();
+  ctx.translate(g.x, baseY);
+  // soft ground shadow (stays on the ground while he bobs)
+  ctx.fillStyle = 'rgba(40,26,8,.22)';
+  ctx.beginPath(); ctx.ellipse(0, 3, 13 * S, 3.6 * S, 0, 0, Math.PI * 2); ctx.fill();
+  ctx.translate(0, -bob * S);
+  ctx.scale(g.dir * S, S);
+
+  // legs + boots
+  ctx.strokeStyle = '#5e4630'; ctx.lineWidth = 3.4; ctx.lineCap = 'round';
+  ctx.beginPath(); ctx.moveTo(-2.5, -13); ctx.lineTo(-3.5 + lp, -2.5); ctx.stroke();
+  ctx.beginPath(); ctx.moveTo(2.5, -13); ctx.lineTo(3.5 - lp, -2.5); ctx.stroke();
+  ctx.fillStyle = '#3c2a18';
+  ctx.beginPath(); ctx.ellipse(-3.5 + lp, -1.6, 3.6, 2.1, 0, 0, Math.PI * 2); ctx.fill();
+  ctx.beginPath(); ctx.ellipse(3.5 - lp, -1.6, 3.6, 2.1, 0, 0, Math.PI * 2); ctx.fill();
+
+  // tunic — a russet trapezoid with a belt
+  const tg = ctx.createLinearGradient(0, -32, 0, -10);
+  tg.addColorStop(0, '#c07a42'); tg.addColorStop(1, '#8a4f28');
+  ctx.fillStyle = tg;
+  ctx.beginPath();
+  ctx.moveTo(-7.5, -31); ctx.lineTo(7.5, -31);
+  ctx.quadraticCurveTo(10.5, -18, 10, -11.5);
+  ctx.lineTo(-10, -11.5);
+  ctx.quadraticCurveTo(-10.5, -18, -7.5, -31);
+  ctx.closePath(); ctx.fill();
+  ctx.fillStyle = '#5e3a1e';
+  ctx.fillRect(-9.6, -17.5, 19.2, 2.8);
+  ctx.fillStyle = '#ffd968';
+  ctx.fillRect(1.5, -17.5, 3.4, 2.8);
+
+  // the scythe arm + scythe (swings around the hands when he chops)
+  const swing = g.swingT < 1 ? -Math.sin(g.swingT * Math.PI) * 1.55 : 0;
+  ctx.save();
+  ctx.translate(5, -23);
+  ctx.rotate(-0.42 + swing + Math.sin(now * 1.6) * 0.03);
+  // arm to the snath
+  ctx.strokeStyle = '#b06a3a'; ctx.lineWidth = 3.6;
+  ctx.beginPath(); ctx.moveTo(-3, 2); ctx.lineTo(4, -3); ctx.stroke();
+  // snath (the long curved handle)
+  ctx.strokeStyle = '#7a5c33'; ctx.lineWidth = 2.8;
+  ctx.beginPath(); ctx.moveTo(-7, 9); ctx.quadraticCurveTo(4, -4, 15, -17); ctx.stroke();
+  // blade — a silver crescent at the top
+  const bg = ctx.createLinearGradient(13, -22, 34, -12);
+  bg.addColorStop(0, '#e8eef4'); bg.addColorStop(1, '#93a3b1');
+  ctx.strokeStyle = bg; ctx.lineWidth = 3.1;
+  ctx.beginPath(); ctx.moveTo(14.5, -18.5); ctx.quadraticCurveTo(26, -24.5, 35, -16.5); ctx.stroke();
+  ctx.strokeStyle = 'rgba(255,255,255,.75)'; ctx.lineWidth = 1.1;
+  ctx.beginPath(); ctx.moveTo(15.5, -17.6); ctx.quadraticCurveTo(26, -23.2, 33.8, -15.9); ctx.stroke();
+  ctx.restore();
+
+  // head — a warm face in the hood's shadow
+  ctx.fillStyle = '#f2c894';
+  ctx.beginPath(); ctx.arc(1.5, -36.5, 6.4, 0, Math.PI * 2); ctx.fill();
+  ctx.fillStyle = 'rgba(90,50,20,.28)';
+  ctx.beginPath(); ctx.arc(-0.5, -38.5, 6.2, 0, -2.6, -0.4); ctx.lineTo(-0.5, -38.5); ctx.fill();
+  ctx.fillStyle = '#2e2118';
+  ctx.beginPath(); ctx.arc(5.2, -36.5, 0.95, 0, Math.PI * 2); ctx.fill();
+
+  // hood — deep green, with a little leaf sprig tucked in
+  const hg = ctx.createLinearGradient(0, -48, 0, -28);
+  hg.addColorStop(0, '#5d8a63'); hg.addColorStop(1, '#33543c');
+  ctx.fillStyle = hg;
+  ctx.beginPath();
+  ctx.moveTo(-8.5, -29.5);
+  ctx.quadraticCurveTo(-11.5, -45, 0.5, -47.5);
+  ctx.quadraticCurveTo(12, -45.5, 9.5, -30.5);
+  ctx.quadraticCurveTo(3, -35.5, -1.5, -34.5);
+  ctx.quadraticCurveTo(-6.5, -33.5, -8.5, -29.5);
+  ctx.closePath(); ctx.fill();
+  ctx.strokeStyle = 'rgba(255,240,200,.30)'; ctx.lineWidth = 1.2;
+  ctx.beginPath();
+  ctx.moveTo(-8.5, -29.5);
+  ctx.quadraticCurveTo(-11.5, -45, 0.5, -47.5);
+  ctx.quadraticCurveTo(12, -45.5, 9.5, -30.5);
+  ctx.stroke();
+  leafShape(ctx, -7.5, -43, 7.5, 2.8, 2.55, '#7fae5a', '#4d7c3a');
+  ctx.restore();
+}
+
+/* ================================================================
    DROPPER + MAIN LOOP
    ================================================================ */
 function drawDropper(now) {
   if (!started || roundDone || seedsLeft <= 0) return;
-  const sp = SPECIES_BY_ID[selectedId];
+  const sp = dropSpecies();
   const x = dropperX, y = L.dropY;
   ctx.fillStyle = 'rgba(255,250,220,.4)';
   for (let i = 0; i < 3; i++) {
@@ -1856,6 +2175,19 @@ function drawDropper(now) {
   ctx.quadraticCurveTo(x, y - 6, x - 17, y - 13);
   ctx.fill();
   drawSeedShape(x, y, L.seedR, sp);
+  // name tag — in random mode this is the rolled surprise, shown before you drop it
+  const label = (randomMode ? '🎲 ' : '') + sp.name;
+  ctx.font = '600 12px Georgia, serif';
+  ctx.textAlign = 'center';
+  const lw = ctx.measureText(label).width + 18;
+  const ly = y + L.seedR + 16;
+  ctx.fillStyle = 'rgba(43,30,14,.74)';
+  ctx.beginPath();
+  if (ctx.roundRect) ctx.roundRect(x - lw / 2, ly - 10, lw, 19, 9); else ctx.rect(x - lw / 2, ly - 10, lw, 19);
+  ctx.fill();
+  ctx.fillStyle = '#ffe9b0';
+  ctx.fillText(label, x, ly + 3.5);
+  ctx.textAlign = 'left';
 }
 
 let lastTs = 0;
@@ -1873,6 +2205,7 @@ function frame(ts) {
     if (!alive) seeds.splice(sIdx, 1);
   }
   for (let i = 0; i < plants.length; i++) updatePlant(plants[i], dt);
+  updateGardener(dt);
   for (let i = 0; i < L.pegs.length; i++) { if (L.pegs[i].flash > 0) L.pegs[i].flash = Math.max(0, L.pegs[i].flash - dt * 3.2); }
 
   if (started && !muted && AC && now > nextChirpAt) {
@@ -1892,8 +2225,17 @@ function frame(ts) {
   drawBoard(now);
   drawMeadow();
   if (bakedGarden) ctx.drawImage(bakedGarden, 0, 0, W, H);
-  const sorted = plants.slice().sort(function (a, b) { return (a.yOff || 0) - (b.yOff || 0); });
-  for (let i = 0; i < sorted.length; i++) drawPlant(sorted[i], now);
+  // depth rows (v2): strictly back → mid → front, with a haze of golden
+  // air between rows — a short plant in front can never be hidden
+  for (let rI = 0; rI < 3; rI++) {
+    const rowPlants = plants.filter(function (p) { return plantRow(p) === rI; })
+      .sort(function (a, b) { return (a.yOff || 0) - (b.yOff || 0); });
+    for (let i = 0; i < rowPlants.length; i++) drawPlant(rowPlants[i], now);
+    for (let i = 0; i < falling.length; i++) if (plantRow(falling[i]) === rI) drawFallingPlant(falling[i]);
+    if (rI === 0) drawDepthHaze(0.13);
+    else if (rI === 1) drawDepthHaze(0.06);
+  }
+  drawGardener(now);
   for (let i = 0; i < seeds.length; i++) drawSeedShape(seeds[i].x, seeds[i].y, seeds[i].r, seeds[i].sp);
   drawParticles(dt);
   drawDropper(now);
@@ -1924,7 +2266,7 @@ function drawSampleLabels() {
     const label = p.sp.name;
     ctx.font = '600 13.5px Georgia, serif';
     const wdt = ctx.measureText(label).width + 20;
-    const ly = soilYAt(p.x) + 30;
+    const ly = plantBaseY(p) + 28;
     ctx.fillStyle = 'rgba(43,30,14,.78)';
     ctx.beginPath();
     if (ctx.roundRect) ctx.roundRect(p.x - wdt / 2, ly - 13, wdt, 21, 10); else ctx.rect(p.x - wdt / 2, ly - 13, wdt, 21);
@@ -1960,7 +2302,7 @@ window.__planko = {
   drop: function () { dropSeed(); },
   aim: function (x) { aimTo(x); },
   start: function () { if (!started) startRound(); },
-  select: function (id) { selectSpecies(id, true); },
+  select: function (id) { if (id === 'random') selectRandom(); else selectSpecies(id, true); },
   plantNow: function (id, x, growMult) {
     const sp = SPECIES_BY_ID[id];
     if (!sp || !started) return false;
@@ -1969,6 +2311,14 @@ window.__planko = {
     return true;
   },
   setCineGrow: function (m) { growBoost = m || 1; },
+  walkTo: function (x) { gardener.targetX = x; },
+  gardener: function () {
+    return { x: Math.round(gardener.x), dir: gardener.dir, moving: gardener.moving, swinging: gardener.swingT < 1 };
+  },
+  plantRows: function () {
+    return plants.map(function (p) { return { id: p.sp.id, row: plantRow(p), x: Math.round(p.x), t: Math.round(p.t * 100) / 100 }; });
+  },
+  get layoutY() { return L ? { soilBase: Math.round(L.soilBase), meadowTop: Math.round(L.meadowTop), pickerH: Math.round(L.pickerH), H: H, W: W } : null; },
   get grown() { return totalBlooms; },
   speciesTotal: SPECIES.length,
   grownSpecies: function () { return Object.keys(sessionSpecies); },
@@ -1977,7 +2327,8 @@ window.__planko = {
       started: started, roundDone: roundDone, seedsLeft: seedsLeft,
       inFlight: seeds.length, plants: plants.length, blooms: blooms,
       totalBlooms: totalBlooms, pollen: save.pollen,
-      selected: selectedId, journal: Object.keys(save.journal).length
+      selected: selectedId, mode: randomMode ? 'random' : 'chosen', next: nextId,
+      harvested: harvested, journal: Object.keys(save.journal).length
     };
   }
 };
