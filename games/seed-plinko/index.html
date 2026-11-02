@@ -101,18 +101,6 @@
     border-color:#ffd968; transform: translateY(-4px);
     box-shadow:0 8px 18px rgba(20,10,0,.5), 0 0 0 2px rgba(255,217,104,.35), inset 0 1px 0 rgba(255,240,200,.25);
   }
-  .packet.locked { filter: saturate(.35) brightness(.72); }
-  .packet.locked .pname { color:#cbbd97; }
-  .packet .lock {
-    position:absolute; top:3px; right:5px; font-size:11px; pointer-events:none;
-    text-shadow:0 1px 3px rgba(0,0,0,.8);
-  }
-  .packet.justUnlocked { animation: unlockPop .8s ease; }
-  @keyframes unlockPop {
-    0% { transform: scale(1); } 35% { transform: scale(1.14) translateY(-6px); }
-    100% { transform: scale(1); }
-  }
-
   /* ---------- Overlays ---------- */
   .overlay {
     position:fixed; inset:0; z-index:10;
@@ -153,7 +141,6 @@
     border-radius:999px; padding:10px 26px;
   }
   .hidden { display:none !important; }
-  #finalScore { font-size: clamp(18px, 5vw, 25px); color:#ffd968; font-weight:700; margin-top:10px; }
 
   /* ---------- Journal ---------- */
   #journal {
@@ -187,7 +174,7 @@
 <canvas id="game"></canvas>
 
 <div id="hud" class="hidden">
-  <div class="pill" id="seedPill">🌱 30</div>
+  <div class="pill" id="seedPill">🌱 ∞</div>
   <div id="meterWrap"><div id="meterFill"></div><div id="meterLabel">GARDEN 0%</div></div>
   <div class="pill" id="pollenPill">❀ 0</div>
   <button class="roundBtn" id="journalBtn" aria-label="Garden journal">📖</button>
@@ -204,14 +191,6 @@
   <p>A seed, a pegboard, and a garden that remembers.</p>
   <p class="sub">Drag to aim, let go to drop. Where a seed settles, something beautiful grows.<br>Collect all 38 species in your journal. ✿</p>
   <button class="bigBtn" id="startBtn">Start planting</button>
-</div>
-
-<div class="overlay hidden" id="endScreen">
-  <h2>The satchel is empty</h2>
-  <p>Every seed you dropped is busy becoming a garden.</p>
-  <div id="finalScore">✿ 0 blooms</div>
-  <button class="bigBtn" id="againBtn">Refill the satchel</button>
-  <button class="ghostBtn" id="endJournalBtn">Open the journal</button>
 </div>
 
 <div id="journal" class="hidden">
@@ -233,7 +212,8 @@
 const canvas = document.getElementById('game');
 const ctx = canvas.getContext('2d');
 
-const TOTAL_SEEDS = 30;
+/* v3 — endless play: no satchel limit, no rounds, no end screen.
+   The seed supply is infinite and every species is unlocked. */
 
 /* ---------------- utils ---------------- */
 function rand(a, b) { return a + Math.random() * (b - a); }
@@ -269,14 +249,12 @@ function persist() { try { localStorage.setItem(SAVE_KEY, JSON.stringify(save));
 /* ---------------- state ---------------- */
 let W = 0, H = 0, DPR = 1;
 let started = false;
-let seedsLeft = TOTAL_SEEDS;
-let seeds = [];        // in flight
+let seeds = [];        // in flight — several can be airborne at once (v3)
 let plants = [];       // planted & growing (and standing garden)
 let particles = [];    // soil puffs, sparkles, pollen, floaters
 let floaters = [];     // "+5 ❀" pollen text particles
-let blooms = 0;        // blooms this round
-let sessionPollen = 0; // pollen earned this round
-let roundDone = false;
+let blooms = 0;        // blooms this session
+let sessionPollen = 0; // pollen earned this session
 let dropperX = 0;
 let lastDropAt = -999;
 let nextChirpAt = 0;
@@ -570,7 +548,9 @@ const SPECIES = [
 ];
 const SPECIES_BY_ID = {};
 SPECIES.forEach(function (s) { SPECIES_BY_ID[s.id] = s; });
-function isUnlocked(sp) { return sp.tier === 0 || save.unlocked.indexOf(sp.id) >= 0; }
+/* v3 — nothing is locked: every species is available from a fresh save.
+   (Older saves may carry an `unlocked` list; it is simply ignored now.) */
+function isUnlocked(sp) { return true; }
 if (!SPECIES_BY_ID[selectedId] || !isUnlocked(SPECIES_BY_ID[selectedId])) selectedId = 'daisy';
 
 /* ================================================================
@@ -594,8 +574,9 @@ function plantScaleOf(p) { return L.plantScale * ROW_SCALE[plantRow(p)] * (p.sca
 
 /* ================================================================
    RANDOM SEEDS (v2) — "Surprise me" is the default packet.
-   In random mode the next species is rolled from the UNLOCKED pool
-   the moment the previous seed drops, and shown at the aimer.
+   In random mode the next species is rolled from the full pool
+   (v3: all 38 species, nothing locked) the moment the previous
+   seed drops, and shown at the aimer.
    ================================================================ */
 function unlockedPool() { return SPECIES.filter(isUnlocked); }
 function rollNext() {
@@ -1586,7 +1567,6 @@ function makeThumb(sp) {
    SEEDS — drop, bounce, plant (physics adapted from Seed Plinko)
    ================================================================ */
 let ROUND = 0;
-let plantedThisRound = 0;
 let totalBlooms = 0;
 const sessionSpecies = {};
 
@@ -1603,12 +1583,12 @@ function drawSeedShape(x, y, r, sp) {
   ctx.restore();
 }
 
+const DROP_DEBOUNCE_MS = 100; // v3 — just enough to stop one click becoming two drops
 function dropSeed() {
-  if (!started || roundDone) return;
+  if (!started) return;
   const now = performance.now();
-  if (seedsLeft <= 0 || now - lastDropAt < 240) return;
+  if (now - lastDropAt < DROP_DEBOUNCE_MS) return;
   lastDropAt = now;
-  seedsLeft--;
   const sp = dropSpecies();
   seeds.push({
     x: dropperX, y: L.dropY + L.seedR + 2,
@@ -1689,7 +1669,8 @@ function stepSeed(s, dt) {
 function makePlant(sp, x, growMult) {
   return {
     sp: sp, x: clamp(x, 16, W - 16), row: rowFor(sp), yOff: rand(0, 4),
-    t: 0, dur: rand(2.5, 3.1) * (growMult || 1),
+    t: 0, dur: rand(1.25, 1.55) * (growMult || 1), // v3 — growth at half the v2 duration
+    bornAt: performance.now(),
     phase: rand(0, Math.PI * 2), variant: Math.random(),
     bloomed: false, popped: false, frozen: false, round: ROUND, scale: 1
   };
@@ -1699,7 +1680,6 @@ function plantSeed(s) {
   const p = makePlant(s.sp, s.x, growBoost);
   growBoost = 1;
   plants.push(p);
-  plantedThisRound++;
   sndPock();
   sndShimmer(p.dur * 0.85);
   const sy = plantBaseY(p);
@@ -1767,7 +1747,7 @@ let ptrMode = 'aim'; // 'aim' = drop gesture · 'walk' = meadow-band drag steeri
 function aimTo(clientX) {
   dropperX = clamp(clientX, L.seedR + 10, W - L.seedR - 10);
 }
-function inMeadowBand(y) { return started && !roundDone && L && y >= L.meadowTop - 6; }
+function inMeadowBand(y) { return started && L && y >= L.meadowTop - 6; }
 canvas.addEventListener('pointermove', function (e) {
   if (ptrMode === 'walk' && ptrDownAt) gardener.targetX = e.clientX;
   else aimTo(e.clientX);
@@ -1814,8 +1794,6 @@ const el = {
   fill: document.getElementById('meterFill'),
   meterLabel: document.getElementById('meterLabel'),
   title: document.getElementById('titleScreen'),
-  end: document.getElementById('endScreen'),
-  finalScore: document.getElementById('finalScore'),
   mute: document.getElementById('muteBtn'),
   picker: document.getElementById('picker'),
   packets: document.getElementById('packets'),
@@ -1825,15 +1803,15 @@ const el = {
 };
 
 function gardenPct() {
-  if (!TOTAL_SEEDS) return 0;
-  let sum = 0, n = 0;
-  for (let i = 0; i < plants.length; i++) {
-    if (plants[i].round === ROUND) { sum += plants[i].t; n++; }
-  }
-  return clamp(Math.round(100 * sum / TOTAL_SEEDS), 0, 100);
+  // v3 — endless garden: the meter reads how fully grown the standing
+  // garden is (mean growth across every plant currently in the soil).
+  if (!plants.length) return 0;
+  let sum = 0;
+  for (let i = 0; i < plants.length; i++) sum += plants[i].t;
+  return clamp(Math.round(100 * sum / plants.length), 0, 100);
 }
 function updateHUD() {
-  el.seeds.textContent = '🌱 ' + seedsLeft;
+  el.seeds.textContent = '🌱 ∞';
   el.pollen.textContent = '❀ ' + save.pollen;
   const pct = gardenPct();
   el.fill.style.width = pct + '%';
@@ -1865,18 +1843,7 @@ function selectRandom() {
 function selectSpecies(id, silent) {
   const sp = SPECIES_BY_ID[id];
   if (!sp) return;
-  if (!isUnlocked(sp)) {
-    if (save.pollen >= sp.cost) {
-      save.pollen -= sp.cost;
-      save.unlocked.push(sp.id);
-      persist();
-      sndUnlock();
-      buildPackets(sp.id);
-      updateHUD();
-    } else {
-      return; // can't afford it yet — packet stays locked
-    }
-  }
+  // v3 — nothing locked, nothing to buy: selecting a packet just selects it
   randomMode = false;
   selectedId = id;
   if (save.sel !== id) { save.sel = id; persist(); }
@@ -1890,9 +1857,9 @@ function selectSpecies(id, silent) {
   }
 }
 
-function buildPackets(justUnlockedId) {
+function buildPackets() {
   el.packets.innerHTML = '';
-  // "Surprise me" — the default packet: a fresh random unlocked species every drop
+  // "Surprise me" — the default packet: a fresh random species every drop
   const rd = document.createElement('div');
   rd.className = 'packet random' + (randomMode ? ' sel' : '');
   rd.setAttribute('data-id', 'random');
@@ -1902,19 +1869,17 @@ function buildPackets(justUnlockedId) {
   el.packets.appendChild(rd);
   SPECIES.forEach(function (sp) {
     const d = document.createElement('div');
-    const unlocked = isUnlocked(sp);
-    d.className = 'packet' + (!randomMode && sp.id === selectedId ? ' sel' : '') + (unlocked ? '' : ' locked') + (sp.id === justUnlockedId ? ' justUnlocked' : '');
+    d.className = 'packet' + (!randomMode && sp.id === selectedId ? ' sel' : '');
     d.setAttribute('data-id', sp.id);
     let inner = '<img alt="" src="' + makeThumb(sp) + '"><span class="pname">' + sp.name + '</span>';
-    if (!unlocked) inner += '<span class="lock">🔒</span><span class="pcost">❀ ' + sp.cost + '</span>';
-    else if (sp.tier === 2) inner += '<span class="pcost">✦ luminous</span>';
+    if (sp.tier === 2) inner += '<span class="pcost">✦ luminous</span>';
     else if (sp.tier === 1) inner += '<span class="pcost">✿ rare</span>';
     d.innerHTML = inner;
     d.addEventListener('pointerdown', function (e) { e.stopPropagation(); initAudio(); });
     d.addEventListener('click', function () { selectSpecies(sp.id); });
     el.packets.appendChild(d);
   });
-  if (randomMode) rollNext(); // the pool may have just grown — queue a fresh surprise
+  if (randomMode) rollNext(); // queue a fresh surprise
 }
 
 function buildJournal() {
@@ -1936,20 +1901,16 @@ function openJournal() { buildJournal(); el.journal.classList.remove('hidden'); 
 function closeJournal() { el.journal.classList.add('hidden'); }
 document.getElementById('journalBtn').addEventListener('click', function (e) { e.stopPropagation(); initAudio(); openJournal(); });
 document.getElementById('journalBtn').addEventListener('pointerdown', function (e) { e.stopPropagation(); });
-document.getElementById('endJournalBtn').addEventListener('click', function () { el.end.classList.add('hidden'); openJournal(); });
 document.getElementById('journalClose').addEventListener('click', closeJournal);
 
 /* ================================================================
-   ROUND FLOW
+   SESSION FLOW (v3) — one endless session: it starts, and it never
+   stops. No rounds, no satchel, no end screen.
    ================================================================ */
 function startRound() {
   ROUND++;
-  seedsLeft = TOTAL_SEEDS;
-  blooms = 0; sessionPollen = 0; plantedThisRound = 0;
-  roundDone = false;
   started = true;
   el.title.classList.add('hidden');
-  el.end.classList.add('hidden');
   el.hud.classList.remove('hidden');
   el.picker.classList.remove('hidden');
   buildPackets();
@@ -1958,14 +1919,6 @@ function startRound() {
   updateHUD();
 }
 document.getElementById('startBtn').addEventListener('click', function () { initAudio(); startRound(); });
-document.getElementById('againBtn').addEventListener('click', function () { initAudio(); startRound(); });
-
-function finishRound() {
-  roundDone = true;
-  const discovered = Object.keys(save.journal).length;
-  el.finalScore.textContent = '✿ ' + blooms + ' blooms · ❀ ' + sessionPollen + ' pollen earned · ' + discovered + '/' + SPECIES.length + ' species in the journal';
-  setTimeout(function () { if (roundDone) el.end.classList.remove('hidden'); }, 700);
-}
 
 /* ================================================================
    DEPTH HAZE (v2) — a breath of golden air between the rows
@@ -2154,7 +2107,7 @@ function drawGardener(now) {
    DROPPER + MAIN LOOP
    ================================================================ */
 function drawDropper(now) {
-  if (!started || roundDone || seedsLeft <= 0) return;
+  if (!started) return;
   const sp = dropSpecies();
   const x = dropperX, y = L.dropY;
   ctx.fillStyle = 'rgba(255,250,220,.4)';
@@ -2212,14 +2165,6 @@ function frame(ts) {
     sndChirp();
     nextChirpAt = now + rand(8, 18);
   }
-  if (started && !roundDone && seedsLeft === 0 && seeds.length === 0 && plantedThisRound === TOTAL_SEEDS) {
-    let allDone = true;
-    for (let i = 0; i < plants.length; i++) {
-      if (plants[i].round === ROUND && plants[i].t < 1) { allDone = false; break; }
-    }
-    if (allDone) finishRound();
-  }
-
   ctx.clearRect(0, 0, W, H);
   drawBackground(now);
   drawBoard(now);
@@ -2316,7 +2261,7 @@ window.__planko = {
     return { x: Math.round(gardener.x), dir: gardener.dir, moving: gardener.moving, swinging: gardener.swingT < 1 };
   },
   plantRows: function () {
-    return plants.map(function (p) { return { id: p.sp.id, row: plantRow(p), x: Math.round(p.x), t: Math.round(p.t * 100) / 100 }; });
+    return plants.map(function (p) { return { id: p.sp.id, row: plantRow(p), x: Math.round(p.x), t: Math.round(p.t * 100) / 100, dur: Math.round(p.dur * 100) / 100, bornAt: Math.round(p.bornAt || 0) }; });
   },
   get layoutY() { return L ? { soilBase: Math.round(L.soilBase), meadowTop: Math.round(L.meadowTop), pickerH: Math.round(L.pickerH), H: H, W: W } : null; },
   get grown() { return totalBlooms; },
@@ -2324,7 +2269,7 @@ window.__planko = {
   grownSpecies: function () { return Object.keys(sessionSpecies); },
   get state() {
     return {
-      started: started, roundDone: roundDone, seedsLeft: seedsLeft,
+      started: started, endless: true,
       inFlight: seeds.length, plants: plants.length, blooms: blooms,
       totalBlooms: totalBlooms, pollen: save.pollen,
       selected: selectedId, mode: randomMode ? 'random' : 'chosen', next: nextId,
