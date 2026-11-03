@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, user-scalable=no">
+<meta name="theme-color" content="#14102a">
+<title>Mashup Games — Five in One</title>
+<style>
+  * { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
+  html, body { height:100%; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    background:
+      radial-gradient(120% 60% at 50% 0%, rgba(88,60,220,.45) 0%, rgba(88,60,220,0) 60%),
+      radial-gradient(100% 50% at 85% 100%, rgba(255,120,180,.22) 0%, rgba(255,120,180,0) 55%),
+      radial-gradient(100% 50% at 10% 100%, rgba(40,200,220,.18) 0%, rgba(40,200,220,0) 55%),
+      linear-gradient(180deg, #1b1436 0%, #14102a 55%, #0e0b20 100%);
+    color:#f2eefc;
+    height:100dvh; width:100vw;
+    display:flex; flex-direction:column;
+    overflow:hidden;
+    overscroll-behavior:none;
+  }
+  /* ---------- top bar ---------- */
+  #bar {
+    flex:0 0 auto;
+    display:flex; align-items:center; gap:10px;
+    padding: calc(env(safe-area-inset-top, 0px) + 8px) 12px 8px;
+    background: rgba(10,8,24,.55);
+    backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px);
+    border-bottom: 1px solid rgba(255,255,255,.09);
+    z-index:5;
+  }
+  #bar .logo { font-size:19px; line-height:1; }
+  #bar .brand { font-weight:800; letter-spacing:.06em; font-size:13px; color:#cfc6f5; white-space:nowrap; }
+  #bar .brand b { color:#ffd75e; }
+  #pickerWrap { flex:1 1 auto; position:relative; }
+  #picker {
+    width:100%; appearance:none; -webkit-appearance:none;
+    background: linear-gradient(180deg, #2c2350, #211a3e);
+    color:#fff; font-size:16px; font-weight:700;
+    border:1px solid rgba(255,255,255,.22); border-radius:12px;
+    padding:10px 38px 10px 14px;
+    outline:none;
+  }
+  #pickerWrap::after {
+    content:"▾"; position:absolute; right:14px; top:50%; transform:translateY(-50%);
+    color:#ffd75e; font-size:16px; pointer-events:none;
+  }
+  /* ---------- menu ---------- */
+  #menu {
+    flex:1 1 auto; overflow-y:auto; -webkit-overflow-scrolling:touch;
+    padding:18px 16px calc(env(safe-area-inset-bottom, 0px) + 22px);
+  }
+  #menu h1 { font-size:26px; font-weight:900; letter-spacing:.01em; margin:4px 2px 4px; }
+  #menu p.sub { color:#b9b0e0; font-size:14px; margin:0 2px 16px; line-height:1.45; }
+  .card {
+    display:flex; align-items:center; gap:14px; width:100%;
+    text-align:left; cursor:pointer;
+    background: linear-gradient(180deg, rgba(255,255,255,.09), rgba(255,255,255,.045));
+    border:1px solid rgba(255,255,255,.13); border-radius:18px;
+    padding:15px 16px; margin-bottom:12px; color:#fff;
+    box-shadow: 0 6px 18px rgba(0,0,0,.28);
+  }
+  .card:active { transform:scale(.985); }
+  .card .ico {
+    flex:0 0 auto; width:52px; height:52px; border-radius:14px;
+    display:flex; align-items:center; justify-content:center; font-size:27px;
+    background: rgba(0,0,0,.28); border:1px solid rgba(255,255,255,.14);
+  }
+  .card .t { font-size:17px; font-weight:800; letter-spacing:.02em; }
+  .card .d { font-size:13px; color:#c9c1ea; margin-top:2px; line-height:1.35; }
+  .card .go { margin-left:auto; color:#ffd75e; font-size:20px; font-weight:900; }
+  /* ---------- game frame ---------- */
+  #stage { flex:1 1 auto; display:none; position:relative; background:#000; }
+  #stage.on { display:block; }
+  #gameFrame { position:absolute; inset:0; width:100%; height:100%; border:0; display:block; background:#000; }
+</style>
+</head>
+<body>
+
+<div id="bar">
+  <div class="logo">🕹️</div>
+  <div class="brand">MASHUP <b>5-IN-1</b></div>
+  <div id="pickerWrap">
+    <select id="picker" aria-label="Choose a game">
+      <option value="">☰ All games (menu)</option>
+      <option value="counter-punch.html">🥊 Counterpunch!</option>
+      <option value="ghost-gunner.html">👾 Ghost Gunner</option>
+      <option value="letterfall.html">🔤 Letterfall</option>
+      <option value="letter-crush.html">🍬 Letter Crush</option>
+      <option value="wordle-latro.html">🃏 Wordle-Latro</option>
+    </select>
+  </div>
+</div>
+
+<div id="menu">
+  <h1>Five mashups, one screen</h1>
+  <p class="sub">Pick a game below, or use the dropdown up top to jump between them anytime. Each one fills your whole screen.</p>
+
+  <button class="card" data-game="counter-punch.html">
+    <div class="ico">🥊</div>
+    <div><div class="t">Counterpunch!</div><div class="d">Punch-Out × Breakout — your fists are the paddle. Shatter the champ's armor before the 99 seconds run out.</div></div>
+    <div class="go">›</div>
+  </button>
+
+  <button class="card" data-game="ghost-gunner.html">
+    <div class="ico">👾</div>
+    <div><div class="t">Ghost Gunner</div><div class="d">Pac-Man × Contra — pellets are ammo. Stun the bots, grab a Hyper Cell, and blast them for 200… 400… 800… 1600!</div></div>
+    <div class="go">›</div>
+  </button>
+
+  <button class="card" data-game="letterfall.html">
+    <div class="ico">🔤</div>
+    <div><div class="t">Letterfall</div><div class="d">Tetris × Wordle — steer falling letters so rows and columns spell 5-letter words and burst.</div></div>
+    <div class="go">›</div>
+  </button>
+
+  <button class="card" data-game="letter-crush.html">
+    <div class="ico">🍬</div>
+    <div><div class="t">Letter Crush</div><div class="d">Candy Crush × spelling — swap letter tiles to spell words, watch the board cascade and chain.</div></div>
+    <div class="go">›</div>
+  </button>
+
+  <button class="card" data-game="wordle-latro.html">
+    <div class="ico">🃏</div>
+    <div><div class="t">Wordle-Latro</div><div class="d">Wordle × Balatro — every guess scores chips × mult. Beat the blinds, buy Etymology Cards, break the game.</div></div>
+    <div class="go">›</div>
+  </button>
+</div>
+
+<div id="stage"><iframe id="gameFrame" title="Game" allow="autoplay; fullscreen"></iframe></div>
+
+<script>
+  var picker = document.getElementById('picker');
+  var menu = document.getElementById('menu');
+  var stage = document.getElementById('stage');
+  var frame = document.getElementById('gameFrame');
+  var current = '';
+
+  function show(file) {
+    if (file === current) { menu.style.display = 'none'; stage.classList.add('on'); return; }
+    current = file;
+    if (!file) {
+      frame.removeAttribute('src');
+      stage.classList.remove('on');
+      menu.style.display = 'block';
+      return;
+    }
+    frame.src = file;
+    menu.style.display = 'none';
+    stage.classList.add('on');
+  }
+  picker.addEventListener('change', function () { show(picker.value); });
+  Array.prototype.forEach.call(document.querySelectorAll('.card'), function (c) {
+    c.addEventListener('click', function () {
+      picker.value = c.getAttribute('data-game');
+      show(picker.value);
+    });
+  });
+  window.__hub = { show: show, get current() { return current; } };
+</script>
+</body>
+</html>
