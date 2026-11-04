@@ -5,10 +5,10 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<title>Wordle-Latro — Lexical Roguelike</title>
+<title>Wordle-Latro — Guess the Hidden Word</title>
 <style>
   html,body{margin:0;padding:0;width:100%;height:100%;overflow:hidden;background:#12081f;}
-  body{position:fixed;inset:0;height:100dvh;width:100vw;touch-action:none;-webkit-user-select:none;user-select:none;-webkit-tap-highlight-color:transparent;overscroll-behavior:none;}
+  body{position:fixed;inset:0;height:100dvh;width:100vw;touch-action:none;-webkit-user-select:none;user-select:none;-webkit-tap-highlight-color:transparent;overflow:hidden;}
   canvas{display:block;width:100vw;height:100dvh;}
 </style>
 </head>
@@ -72,16 +72,10 @@ function tone(freq, dur, type, vol, when, slideTo){
 const sfx = {
   key(){ tone(660, 0.045, 'triangle', 0.06); },
   flip(i){ tone(420 + i * 60, 0.06, 'square', 0.05); },
-  tick(n){ tone(500 + Math.min(n, 40) * 22, 0.035, 'sine', 0.07); },
-  multStep(){ tone(1180, 0.07, 'sine', 0.12); tone(1770, 0.1, 'sine', 0.1, 0.05); },
-  proc(){ [880, 1108, 1318].forEach((f, i) => tone(f, 0.12, 'triangle', 0.1, i * 0.05)); },
-  slam(){ tone(196, 0.18, 'sine', 0.22); tone(98, 0.22, 'sine', 0.18, 0.01); },
-  buy(){ tone(1568, 0.09, 'square', 0.08); tone(2093, 0.16, 'square', 0.08, 0.07); },
   invalid(){ tone(140, 0.16, 'sawtooth', 0.1, 0, 90); },
-  alarm(){ [0, 0.16, 0.32].forEach(d => tone(620, 0.14, 'sawtooth', 0.1, d, 440)); },
   solve(){ [523, 659, 784, 1046].forEach((f, i) => tone(f, 0.14, 'triangle', 0.11, i * 0.07)); },
   victory(){ [523, 659, 784, 1046, 1318, 1568].forEach((f, i) => tone(f, 0.2, 'triangle', 0.11, i * 0.09)); },
-  defeat(){ [392, 330, 262, 196].forEach((f, i) => tone(f, 0.2, 'sine', 0.11, i * 0.11)); },
+  defeat(){ [392, 330, 262, 196].forEach((f, i) => tone(f, 0.2, 'sine', 0.09, i * 0.11)); },
   click(){ tone(520, 0.05, 'triangle', 0.08); }
 };
 document.addEventListener('pointerdown', audioInit, {passive:true});
@@ -94,68 +88,67 @@ document.addEventListener('visibilitychange', () => { if (!document.hidden) audi
 const CHIPS = {E:10,A:10,O:10,S:10,I:12,R:12,T:12,L:12,N:12,U:15,
   C:25,D:25,H:25,M:30,P:30,B:30,G:35,F:35,W:35,Y:35,
   K:50,V:50,J:100,X:100,Q:110,Z:110};
-const RARE_SET = new Set(['J','Q','X','Z','K','V']);
-const VOWELS = new Set(['A','E','I','O','U']);
-const BLIND_TARGETS = [300, 800, 2000, 4500, 9000, 18000, 35000, 70000];
-const BOSS_BY_BLIND = {3:'MUTE', 6:'COLORBLIND', 8:'NOREPEAT'};
-const BOSS_INFO = {
-  MUTE:      {name:'THE MUTE',     desc:'Your guesses may not contain E or A.'},
-  COLORBLIND:{name:'COLORBLIND',   desc:'Yellow tiles score as if they were Gray.'},
-  NOREPEAT:  {name:'NO REPEATS',   desc:'Words with a repeated letter score HALF.'}
-};
-const CARD_POOL = [
-  {id:'GREEN_THUMB',      name:'GREEN THUMB',      icon:'🌱', cost:5, desc:'+2 Mult for every Green tile.'},
-  {id:'STRICT_GRAMMARIAN',name:'STRICT GRAMMARIAN',icon:'📏', cost:6, desc:'Every Green tile permanently adds +0.5 base Mult for the run.'},
-  {id:'ANAGRAMIST',       name:'THE ANAGRAMIST',   icon:'🔀', cost:6, desc:'Guess shares 4+ letters with your previous guess: ×3 score.'},
-  {id:'CONSONANT_CRUSH',  name:'CONSONANT CRUSH',  icon:'🪨', cost:4, desc:'+100 Chips if the word has no vowels.'},
-  {id:'VOWEL_SURGE',      name:'VOWEL SURGE',      icon:'🌊', cost:4, desc:'+40 Chips for every vowel in the word.'},
-  {id:'RARE_AIR',         name:'RARE AIR',         icon:'🏔️', cost:5, desc:'Rare letters (J Q X Z K V) score double Chips.'},
-  {id:'ECHO_CHAMBER',     name:'ECHO CHAMBER',     icon:'🔔', cost:4, desc:'+25 Chips for every Yellow tile.'},
-  {id:'DOUBLE_DOWN',      name:'DOUBLE DOWN',      icon:'🎲', cost:5, desc:'Word starts and ends with the same letter: ×2 score.'},
-  {id:'HIGH_ROLLER',      name:'HIGH ROLLER',      icon:'🎰', cost:5, desc:'+1 Mult for each guess you still have after this one.'},
-  {id:'PALINDROME_PAYDAY',name:'PALINDROME PAYDAY',icon:'🪞', cost:5, desc:'Palindromes score ×4.'},
-  {id:'STREAK',           name:'HOT STREAK',       icon:'🔥', cost:4, desc:'Solving a word: +3 coins, and next blind\'s first guess gets +200 Chips.'},
-  {id:'BIG_OPENER',       name:'BIG OPENER',       icon:'🚪', cost:4, desc:'The first guess of each blind scores ×1.5.'}
+const MAX_GUESSES = 6;
+const TOTAL_ROUNDS = 10;
+const SOLVE_BONUS_PER_UNUSED = 200;
+const HOWTO = 'Guess the hidden word in 6 tries — the colors are your clues.';
+const LEGEND = [
+  { state: 2, text: 'Right letter, right spot' },
+  { state: 1, text: 'In the word, wrong spot' },
+  { state: 0, text: 'Not in the word' }
 ];
-const CARD_BY_ID = {}; CARD_POOL.forEach(c => CARD_BY_ID[c.id] = c);
-function hasCard(id){ return run && run.cards.indexOf(id) >= 0; }
 
 /* ================= STATE ================= */
-let screen = 'title'; // title | intro | play | shop | victory | gameover
+let screen = 'title'; // title | play | final
 let run = null;       // per-run state
-let B = null;         // per-blind state
-let anim = null;      // scoring animation state
+let R = null;         // per-round state
+let anim = null;      // tile-flip animation state
 let msg = '', msgUntil = 0;
 let shakeUntil = 0, shakeSeed = 0;
-let procFlash = {};   // cardId -> timestamp
-let shopItems = [], shopSeed = 1;
 let layoutDirty = true;
 let L = {};           // layout rects
+let hot = [];         // clickable zones, rebuilt every draw
 
 function setMsg(t, dur){ msg = t; msgUntil = performance.now() + (dur || 1800); }
+function doShake(){ shakeUntil = performance.now() + 380; shakeSeed = Math.random() * 100; }
 
 function newRun(){
-  run = { blindIdx: 0, coins: 6, cards: [], baseMult: 0, blindsBeaten: 0,
-          bestGuess: 0, solvedCount: 0, pendingChips: 0, totalScore: 0 };
-  startBlind();
-  screen = 'intro';
+  run = { score: 0, dispScore: 0, solvedCount: 0, streak: 0, bestStreak: 0,
+          bestGuess: { word: '', points: 0 }, usedTargets: new Set() };
+  startRound(1);
+  screen = 'play';
 }
-function bossFor(blindNum){ return BOSS_BY_BLIND[blindNum] || null; }
-function startBlind(){
-  const prevWord = B ? B.word : null;
+function startRound(n){
   let w = ANSWERS[(Math.random() * ANSWERS.length) | 0];
   let guard = 0;
-  while (w === prevWord && guard++ < 20) w = ANSWERS[(Math.random() * ANSWERS.length) | 0];
-  const n = run.blindIdx + 1;
-  B = { word: w, target: BLIND_TARGETS[run.blindIdx], boss: bossFor(n),
-        guesses: [], input: '', score: 0, dispScore: 0,
-        keyState: {}, phase: 'input', solvedBlind: false };
+  while (run.usedTargets.has(w) && guard++ < 30) w = ANSWERS[(Math.random() * ANSWERS.length) | 0];
+  run.usedTargets.add(w);
+  R = { round: n, target: w.toUpperCase(), guesses: [], input: '',
+        keyState: {}, phase: 'input', solved: false, roundScore: 0,
+        lastLine: '', phaseUntil: 0 };
   anim = null;
 }
-function blindNum(){ return run ? run.blindIdx + 1 : 0; }
+function nextRound(){
+  if (R.round >= TOTAL_ROUNDS){
+    screen = 'final';
+    if (run.solvedCount >= 5) sfx.victory(); else sfx.defeat();
+  } else {
+    startRound(R.round + 1);
+    screen = 'play';
+  }
+}
+function gradeFor(solved){
+  if (solved >= 10) return '🏆 Lexicon Legend';
+  if (solved >= 9)  return 'Word Master';
+  if (solved >= 7)  return 'Word Wizard';
+  if (solved >= 5)  return 'Word Sharp';
+  if (solved >= 3)  return 'Word Explorer';
+  return 'Word Rookie';
+}
 
-
-/* ================= WORDLE FEEDBACK ================= */
+/* ================= WORDLE FEEDBACK =================
+   Exactly Wordle-correct: greens first, then yellows capped
+   by the remaining (unmatched) letter counts in the target. */
 function feedback(guess, target){
   const fb = [0,0,0,0,0], used = [false,false,false,false,false];
   for (let i = 0; i < 5; i++) if (guess[i] === target[i]){ fb[i] = 2; used[i] = true; }
@@ -168,155 +161,110 @@ function feedback(guess, target){
   return fb; // 0 gray, 1 yellow, 2 green
 }
 
-/* ================= SCORING =================
-   Pipeline (documented order):
-   1. Tile chips: letter value; Gray tiles count half (floor). RARE AIR doubles rare-letter chips first.
-   2. Chip add-ons: CONSONANT CRUSH +100, VOWEL SURGE +40/vowel, ECHO CHAMBER +25/yellow, HOT STREAK carry +chips.
-   3. Mult = 1 + run base Mult + 1/green (+2 more with GREEN THUMB) + 1/yellow + HIGH ROLLER bonus.
-      COLORBLIND boss: yellows score as gray (half chips, no mult).
-   4. Points = chips × mult, then score multipliers: ANAGRAMIST ×3, DOUBLE DOWN ×2,
-      PALINDROME PAYDAY ×4, BIG OPENER ×1.5, NO REPEATS boss ×0.5.
-   5. STRICT GRAMMARIAN: greens permanently raise run base Mult by +0.5 each (applies from next guess).
-*/
+/* ================= SCORING (the whole scoring layer) =================
+   points = chips × mult
+   chips  = sum of letter chips; a gray tile's chips count half (floored),
+            green/yellow tiles count full.
+   mult   = 1 + (#green tiles) + (#yellow tiles)
+   Solving also pays +200 per unused guess. That is the entire scoring layer. */
 function scoreGuess(word, fb){
-  const colorblind = (B.boss === 'COLORBLIND');
-  const sFb = fb.map(v => (colorblind && v === 1) ? 0 : v);
-  const procs = [];
-  const tileChips = [];
   let chips = 0;
   for (let i = 0; i < 5; i++){
     let c = CHIPS[word[i]] || 10;
-    if (hasCard('RARE_AIR') && RARE_SET.has(word[i])) c *= 2;
-    if (sFb[i] === 0) c = Math.floor(c / 2);
-    tileChips.push(c); chips += c;
+    if (fb[i] === 0) c = Math.floor(c / 2);
+    chips += c;
   }
-  if (hasCard('RARE_AIR') && word.split('').some(ch => RARE_SET.has(ch))) procs.push('RARE_AIR');
-  const vowelCount = word.split('').filter(ch => VOWELS.has(ch)).length;
-  if (hasCard('CONSONANT_CRUSH') && vowelCount === 0){ chips += 100; procs.push('CONSONANT_CRUSH'); }
-  if (hasCard('VOWEL_SURGE') && vowelCount > 0){ chips += 40 * vowelCount; procs.push('VOWEL_SURGE'); }
-  const yellows = sFb.filter(v => v === 1).length;
-  const greens  = sFb.filter(v => v === 2).length;
-  if (hasCard('ECHO_CHAMBER') && yellows > 0){ chips += 25 * yellows; procs.push('ECHO_CHAMBER'); }
-  if (run.pendingChips > 0 && B.guesses.length === 0){ chips += run.pendingChips; procs.push('STREAK'); run.pendingChips = 0; }
-
-  let mult = 1 + run.baseMult + greens + yellows;
-  if (hasCard('GREEN_THUMB') && greens > 0){ mult += 2 * greens; procs.push('GREEN_THUMB'); }
-  if (hasCard('HIGH_ROLLER')){ const rem = 4 - (B.guesses.length + 1); if (rem > 0){ mult += rem; procs.push('HIGH_ROLLER'); } }
-
-  let multX = 1; const xNotes = [];
-  if (hasCard('ANAGRAMIST') && B.guesses.length > 0){
-    const prev = new Set(B.guesses[B.guesses.length - 1].word);
-    const shared = new Set(word.split('').filter(ch => prev.has(ch))).size;
-    if (shared >= 4){ multX *= 3; procs.push('ANAGRAMIST'); xNotes.push('Anagram ×3'); }
-  }
-  if (hasCard('DOUBLE_DOWN') && word[0] === word[4]){ multX *= 2; procs.push('DOUBLE_DOWN'); xNotes.push('Double ×2'); }
-  if (hasCard('PALINDROME_PAYDAY') && word === word.split('').reverse().join('')){ multX *= 4; procs.push('PALINDROME_PAYDAY'); xNotes.push('Palindrome ×4'); }
-  if (hasCard('BIG_OPENER') && B.guesses.length === 0){ multX *= 1.5; procs.push('BIG_OPENER'); xNotes.push('Opener ×1.5'); }
-  let bossHalf = false;
-  if (B.boss === 'NOREPEAT' && new Set(word).size < 5){ multX *= 0.5; bossHalf = true; xNotes.push('No-Repeats ×½'); }
-
-  const points = Math.round(chips * mult * multX);
-  return { tileChips, chips, mult, multX, xNotes, points, procs, greens, yellows, bossHalf };
+  const greens = fb.filter(v => v === 2).length;
+  const yellows = fb.filter(v => v === 1).length;
+  const mult = 1 + greens + yellows;
+  return { chips, mult, points: chips * mult, greens, yellows };
 }
 
 /* ================= GUESS FLOW ================= */
 function submitGuess(){
-  if (!B || B.phase !== 'input') return;
-  const word = B.input;
+  if (!R || R.phase !== 'input') return;
+  const word = R.input;
   if (word.length < 5){ doShake(); setMsg('Too short — 5 letters!'); sfx.invalid(); return; }
-  if (B.boss === 'MUTE' && (word.indexOf('E') >= 0 || word.indexOf('A') >= 0)){
-    doShake(); setMsg('THE MUTE forbids E and A!'); sfx.invalid(); return;
-  }
   if (!VALID.has(word.toLowerCase())){ doShake(); setMsg('Not in the word list'); sfx.invalid(); return; }
-  const fb = feedback(word, B.word.toUpperCase());
+  const fb = feedback(word, R.target);
   const sc = scoreGuess(word, fb);
-  const solved = (word === B.word.toUpperCase());
-  let solveBonus = 0, coinGain = 0;
-  const entry = { word, fb, sc, solved, solveBonus: 0 };
-  B.guesses.push(entry);
-  // update keyboard knowledge (best state wins)
-  for (let i = 0; i < 5; i++){
-    const ch = word[i], cur = B.keyState[ch] || 0;
-    if (fb[i] + 1 > cur) B.keyState[ch] = fb[i] + 1; // store 1 gray / 2 yellow / 3 green
-  }
-  B.input = '';
-  B.phase = 'anim';
-  anim = { entry, t0: performance.now(), stage: 0, tickCount: 0, tallyChips: 0, tallyMult: 1, shownTotal: 0, solved };
-  if (solved){
-    solveBonus = 500 * blindNum();
-    entry.solveBonus = solveBonus;
-    entry.sc.points += 0; // bonus is added on top at bar stage
-    coinGain = 2;
-    if (hasCard('STREAK')){ coinGain += 3; run.pendingChips = 200; entry.sc.procs.push('STREAK'); }
-    entry.coinGain = coinGain;
-  }
-  if (hasCard('STRICT_GRAMMARIAN') && sc.greens > 0){
-    run.baseMult += 0.5 * sc.greens;
-    if (entry.sc.procs.indexOf('STRICT_GRAMMARIAN') < 0) entry.sc.procs.push('STRICT_GRAMMARIAN');
-  }
+  const solved = (word === R.target);
+  const entry = { word, fb, points: sc.points, chips: sc.chips, mult: sc.mult, solved };
+  R.guesses.push(entry);
+  R.input = '';
+  R.phase = 'anim';
+  anim = { t0: performance.now(), entry, tickCount: -1, skip: false };
 }
-function finishGuessAnim(){
-  const e = anim.entry, sc = e.sc;
-  B.score += sc.points + (e.solveBonus || 0);
-  run.totalScore += sc.points + (e.solveBonus || 0);
-  if (sc.points > run.bestGuess) run.bestGuess = sc.points;
+function finishFlip(){
+  const e = anim.entry;
   anim = null;
+  // keyboard takes each letter's best-known state
+  for (let i = 0; i < 5; i++){
+    const ch = e.word[i], st = e.fb[i] + 1; // 1 gray, 2 yellow, 3 green
+    if (st > (R.keyState[ch] || 0)) R.keyState[ch] = st;
+  }
+  R.roundScore += e.points;
+  run.score += e.points;
+  if (e.points > run.bestGuess.points) run.bestGuess = { word: e.word, points: e.points };
+  R.lastLine = e.word + ' — ' + fmt(e.points) + ' pts';
+  const now = performance.now();
   if (e.solved){
+    R.solved = true;
+    const unused = MAX_GUESSES - R.guesses.length;
+    const bonus = unused * SOLVE_BONUS_PER_UNUSED;
+    if (bonus > 0){
+      R.roundScore += bonus;
+      run.score += bonus;
+      R.lastLine += '  ·  solved! +' + fmt(bonus) + ' bonus';
+    } else {
+      R.lastLine += '  ·  solved!';
+    }
     run.solvedCount++;
+    run.streak++;
+    if (run.streak > run.bestStreak) run.bestStreak = run.streak;
     sfx.solve();
-    beatBlind(e.coinGain || 0);
-    return;
+    R.phase = 'celebrate';
+    R.phaseUntil = now + 700;
+  } else if (R.guesses.length >= MAX_GUESSES){
+    run.streak = 0;
+    R.phase = 'pause';
+    R.phaseUntil = now + 350;
+  } else {
+    R.phase = 'input';
   }
-  if (B.score >= B.target){ beatBlind(0); return; }
-  if (B.guesses.length >= 4){
-    screen = 'gameover'; sfx.defeat(); return;
+}
+function updatePhases(now){
+  if (!R) return;
+  if ((R.phase === 'celebrate' || R.phase === 'pause') && now >= R.phaseUntil){
+    R.phase = 'roundEnd';
   }
-  B.phase = 'input';
 }
-function beatBlind(extraCoins){
-  B.solvedBlind = true;
-  run.blindsBeaten++;
-  const unused = 4 - B.guesses.length;
-  const coins = 4 + unused + (extraCoins || 0);
-  run.coins += coins;
-  B.lastCoinGain = coins;
-  if (blindNum() >= 8){ screen = 'victory'; sfx.victory(); return; }
-  genShop();
-  screen = 'shop';
-}
-function nextBlind(){
-  run.blindIdx++;
-  startBlind();
-  screen = 'intro';
-  if (B.boss) sfx.alarm();
-}
-function genShop(){
-  const unowned = CARD_POOL.filter(c => !hasCard(c.id));
-  // deterministic-ish shuffle
-  for (let i = unowned.length - 1; i > 0; i--){
-    const j = (Math.random() * (i + 1)) | 0;
-    const t = unowned[i]; unowned[i] = unowned[j]; unowned[j] = t;
-  }
-  shopItems = unowned.slice(0, 3).map(c => ({ card: c, sold: false }));
-}
-function doShake(){ shakeUntil = performance.now() + 380; shakeSeed = Math.random() * 100; }
 
+/* ================= ANIMATION UPDATE ================= */
+const FLIP_STAGGER = 110, FLIP_DUR = 260;
+const FLIP_TOTAL = 4 * FLIP_STAGGER + FLIP_DUR; // 700ms
+function updateAnim(now){
+  if (!anim) return;
+  const el = now - anim.t0;
+  const idx = Math.floor(el / FLIP_STAGGER);
+  if (idx !== anim.tickCount && idx < 5 && !anim.skip){ anim.tickCount = idx; sfx.flip(idx); }
+  if (anim.skip || el >= FLIP_TOTAL) finishFlip();
+}
 
 /* ================= LAYOUT ================= */
-let hot = []; // clickable zones, rebuilt every draw
 function computeLayout(){
   const pad = 14;
   L.pad = pad;
-  L.header = { x: pad, y: 8, w: W - 2 * pad, h: 30 };
-  L.bar = { x: pad, y: 44, w: W - 2 * pad, h: 46 };
-  const gridTop = 102;
-  const gap = 9;
-  const s = Math.min((W - 2 * pad - 4 * gap) / 5, 60);
-  L.grid = { x: (W - (5 * s + 4 * gap)) / 2, y: gridTop, s, gap, h: 4 * s + 3 * gap };
-  L.cards = { x: pad, y: gridTop + L.grid.h + 12, w: W - 2 * pad, h: 76 };
-  L.tally = { x: pad, y: L.cards.y + L.cards.h + 8, w: W - 2 * pad, h: 108 };
+  L.header = { x: pad, y: 10, w: W - 2 * pad, h: 30 };
   const kbH = Math.min(196, Math.max(150, H * 0.235));
-  L.kb = { x: pad, y: H - kbH - 8, w: W - 2 * pad, h: kbH };
+  L.kb = { x: pad, y: H - kbH - 10, w: W - 2 * pad, h: kbH };
+  L.strip = { x: pad, y: L.kb.y - 46, w: W - 2 * pad, h: 34 };
+  const gridTop = 56;
+  const gap = 8;
+  const availH = L.strip.y - 76 - gridTop; // leave room for the legend under the grid
+  const s = Math.min((W - 2 * pad - 4 * gap) / 5, (availH - 5 * gap) / 6, 64);
+  L.grid = { x: (W - (5 * s + 4 * gap)) / 2, y: gridTop, s, gap, h: 6 * s + 5 * gap };
+  L.legend = { x: pad, y: gridTop + L.grid.h + 14, w: W - 2 * pad };
   // keyboard rects
   L.keys = {};
   const rows = ['QWERTYUIOP', 'ASDFGHJKL', 'ZXCVBNM'];
@@ -380,41 +328,17 @@ function drawBG(t){
 }
 function drawButton(x, y, w, h, label, action, opts){
   opts = opts || {};
-  const dis = !!opts.disabled;
   const grad = ctx.createLinearGradient(0, y, 0, y + h);
-  if (dis){ grad.addColorStop(0, '#3c3c4c'); grad.addColorStop(1, '#2a2a38'); }
-  else if (opts.gold){ grad.addColorStop(0, '#ffd76a'); grad.addColorStop(1, '#e79b1e'); }
-  else if (opts.red){ grad.addColorStop(0, '#e05252'); grad.addColorStop(1, '#b02a2a'); }
+  if (opts.gold){ grad.addColorStop(0, '#ffd76a'); grad.addColorStop(1, '#e79b1e'); }
   else { grad.addColorStop(0, '#7c3aed'); grad.addColorStop(1, '#5b21b6'); }
   rr(x, y, w, h, 14); ctx.fillStyle = grad; ctx.fill();
   ctx.strokeStyle = 'rgba(255,255,255,0.25)'; ctx.lineWidth = 1.5; ctx.stroke();
-  txt(label, x + w / 2, y + h / 2 + 1, opts.size || 17, dis ? '#8a8a9a' : (opts.gold ? '#4a2c00' : '#fff'), 'center', 800);
-  if (!dis) hot.push({ x, y, w, h, action });
+  txt(label, x + w / 2, y + h / 2 + 1, opts.size || 17, opts.gold ? '#4a2c00' : '#fff', 'center', 800);
+  hot.push({ x, y, w, h, action });
 }
 const TILE_COLORS = ['#4a4a5e', '#d9a82e', '#3fae5a']; // gray yellow green
 
-/* ================= PLAY SCREEN PIECES ================= */
-function drawHeader(){
-  txt('🪙 ' + fmt(run.coins), L.header.x + 2, L.header.y + 15, 17, '#ffd76a', 'left', 800);
-  txt('BLIND ' + blindNum() + ' / 8', W / 2, L.header.y + 15, 16, '#e8e4ff', 'center', 800);
-  txt('BEST ' + fmt(run.bestGuess), L.header.x + L.header.w, L.header.y + 15, 13, '#9a92c9', 'right', 700);
-}
-function drawTargetBar(){
-  const b = L.bar;
-  const frac = Math.max(0, Math.min(1, B.dispScore / B.target));
-  txt('TARGET ' + fmt(B.target), b.x + 2, b.y + 10, 12, '#cbbffa', 'left', 800);
-  if (B.boss) txt('⚠ ' + BOSS_INFO[B.boss].name, W / 2, b.y + 10, 12, '#ff7b7b', 'center', 800);
-  txt(fmt(B.dispScore) + ' pts', b.x + b.w - 2, b.y + 10, 12, '#cbbffa', 'right', 800);
-  rr(b.x, b.y + 20, b.w, 16, 8); ctx.fillStyle = 'rgba(255,255,255,0.10)'; ctx.fill();
-  if (frac > 0){
-    const fg = ctx.createLinearGradient(b.x, 0, b.x + b.w, 0);
-    fg.addColorStop(0, '#f5b041'); fg.addColorStop(1, '#ffd76a');
-    rr(b.x, b.y + 20, Math.max(16, b.w * frac), 16, 8); ctx.fillStyle = fg; ctx.fill();
-  }
-  if (run.baseMult > 0) txt('Base Mult +' + run.baseMult.toFixed(1).replace(/\.0$/, ''), b.x + 118, b.y + 10, 11, '#8be89b', 'left', 700);
-}
-function tileFace(x, y, s, letter, state, flipP){
-  // flipP: null = settled; 0..1 flipping (first half back, second half front w/ state color)
+function tileFace(x, y, s, letter, state, flipP, yOff){
   let sx = 1, showFront = true, st = state;
   if (flipP !== null && flipP !== undefined){
     const p = Math.max(0, Math.min(1, flipP));
@@ -423,7 +347,7 @@ function tileFace(x, y, s, letter, state, flipP){
     if (!showFront) st = -1;
   }
   ctx.save();
-  ctx.translate(x + s / 2, y + s / 2); ctx.scale(Math.max(0.06, sx), 1); ctx.translate(-s / 2, -s / 2);
+  ctx.translate(x + s / 2, y + (yOff || 0) + s / 2); ctx.scale(Math.max(0.06, sx), 1); ctx.translate(-s / 2, -s / 2);
   if (st === -1){ rr(0, 0, s, s, 10); ctx.fillStyle = '#2c2c44'; ctx.fill(); ctx.strokeStyle = '#565670'; ctx.lineWidth = 2; ctx.stroke(); }
   else if (st === null || st === undefined){
     rr(0, 0, s, s, 10); ctx.fillStyle = letter ? 'rgba(255,255,255,0.13)' : 'rgba(255,255,255,0.05)'; ctx.fill();
@@ -436,56 +360,140 @@ function tileFace(x, y, s, letter, state, flipP){
     txt(letter, s / 2, s / 2 + 2, s * 0.52, '#fff', 'center', 800);
   ctx.restore();
 }
+
+/* ================= LEGEND ================= */
+function drawLegendFull(x, y, tileS, fontSize){
+  // three rows: colored tile + words. Returns total height used.
+  for (let i = 0; i < 3; i++){
+    const ly = y + i * (tileS + 8);
+    tileFace(x, ly, tileS, 'A', LEGEND[i].state, null, 0);
+    txt(LEGEND[i].text, x + tileS + 10, ly + tileS / 2 + 1, fontSize, '#e8e4ff', 'left', 600);
+  }
+  return 3 * tileS + 2 * 8;
+}
+function drawLegendCompact(y){
+  // one glanceable line: three mini tiles with short labels
+  const items = [ [2, 'right spot'], [1, 'in word'], [0, 'not in word'] ];
+  const ts = 15, gapT = 6, gapI = 16;
+  ctx.font = '600 12px system-ui, -apple-system, "Segoe UI", Roboto, sans-serif';
+  let total = 0;
+  for (const it of items) total += ts + gapT + ctx.measureText(it[1]).width + gapI;
+  total -= gapI;
+  let x = (W - total) / 2;
+  for (const it of items){
+    tileFace(x, y, ts, '', it[0], null, 0);
+    txt(it[1], x + ts + gapT, y + ts / 2 + 1, 12, '#b9b2dd', 'left', 600);
+    x += ts + gapT + ctx.measureText(it[1]).width + gapI;
+  }
+}
+
+/* ================= SCREENS ================= */
+function drawTitle(t){
+  txt('WORDLE', W / 2, H * 0.15, 47, '#fff', 'center', 800);
+  txt('-LATRO', W / 2, H * 0.15 + 50, 47, '#ffd76a', 'center', 800);
+  // how-to, word-wrapped to fit the screen width
+  ctx.font = '600 14.5px system-ui, -apple-system, "Segoe UI", Roboto, sans-serif';
+  const words = HOWTO.split(' '); const lines = []; let cur = '';
+  for (const w of words){
+    const trial = cur ? cur + ' ' + w : w;
+    if (ctx.measureText(trial).width > W - 28 && cur){ lines.push(cur); cur = w; }
+    else cur = trial;
+  }
+  if (cur) lines.push(cur);
+  lines.forEach((s, i) => txt(s, W / 2, H * 0.15 + 102 + i * 21, 14.5, '#e8e4ff', 'center', 600));
+  // legend, left block centered as a group
+  const tileS = 30, blockW = 250;
+  drawLegendFull((W - blockW) / 2, H * 0.36, tileS, 15);
+  drawButton(W / 2 - 110, H * 0.60, 220, 58, '▶  START', 'start', { gold: true, size: 19 });
+  txt('10 words · 6 tries each · every guess scores points', W / 2, H * 0.60 + 86, 12.5, '#9a92c9', 'center', 600);
+  txt('Solving pays +200 for every guess you don\'t use', W / 2, H * 0.60 + 108, 12.5, '#9a92c9', 'center', 600);
+}
+function drawHeader(){
+  txt('WORD ' + R.round + ' / ' + TOTAL_ROUNDS, L.header.x + 2, L.header.y + 15, 15, '#e8e4ff', 'left', 800);
+  if (run.streak > 0) txt('🔥 ' + run.streak, W / 2, L.header.y + 15, 15, '#ffb35c', 'center', 800);
+  txt('SCORE ' + fmt(run.dispScore), L.header.x + L.header.w - 2, L.header.y + 15, 15, '#ffd76a', 'right', 800);
+}
 function drawGrid(now){
   const g = L.grid;
   let shX = 0;
   if (now < shakeUntil) shX = Math.sin((now - shakeSeed) * 0.09) * 6 * (1 - (shakeUntil - now) / 380);
-  for (let r = 0; r < 4; r++){
+  for (let r = 0; r < MAX_GUESSES; r++){
     for (let c = 0; c < 5; c++){
       const x = g.x + c * (g.s + g.gap) + shX, y = g.y + r * (g.s + g.gap);
-      const guess = B.guesses[r];
+      const guess = R.guesses[r];
+      let yOff = 0;
+      if (R.phase === 'celebrate' && r === R.guesses.length - 1){
+        const p = Math.max(0, Math.min(1, (now - (R.phaseUntil - 700) - c * 70) / 350));
+        yOff = -Math.sin(p * Math.PI) * 11;
+      }
       if (guess){
         let flipP = null;
-        if (anim && r === B.guesses.length - 1){
-          const start = anim.t0 + c * 130;
-          flipP = (now - start) / 300;
+        if (anim && r === R.guesses.length - 1){
+          flipP = (now - anim.t0 - c * FLIP_STAGGER) / FLIP_DUR;
           if (flipP >= 1) flipP = null;
           else if (flipP < 0) flipP = 0;
         }
-        tileFace(x, y, g.s, guess.word[c], guess.fb[c], flipP);
-      } else if (r === B.guesses.length && screen === 'play'){
-        const ch = B.input[c] || '';
-        tileFace(x, y, g.s, ch, null, null);
+        tileFace(x, y, g.s, guess.word[c], guess.fb[c], flipP, yOff);
+      } else if (r === R.guesses.length){
+        tileFace(x, y, g.s, R.input[c] || '', null, null, 0);
       } else {
-        tileFace(x, y, g.s, '', null, null);
+        tileFace(x, y, g.s, '', null, null, 0);
       }
     }
   }
 }
-function drawCardsRow(now){
-  const a = L.cards;
-  txt('YOUR CARDS', a.x + 2, a.y + 8, 11, '#9a92c9', 'left', 800);
-  if (!run.cards.length){
-    txt('None yet — beat a blind to visit the shop', a.x + 2, a.y + 40, 13, '#6f6a94', 'left', 600);
+function drawScoreStrip(now){
+  const a = L.strip;
+  if (now < msgUntil && msg){
+    const w = Math.min(W - 40, msg.length * 8.4 + 30);
+    rr((W - w) / 2, a.y, w, 34, 17); ctx.fillStyle = 'rgba(10,6,24,0.88)'; ctx.fill();
+    ctx.strokeStyle = '#7c5cd6'; ctx.lineWidth = 1.5; ctx.stroke();
+    txt(msg, W / 2, a.y + 18, 14.5, '#fff', 'center', 700);
     return;
   }
-  const cw = Math.min(64, (a.w - 4 * 6) / 5), chh = 56;
-  run.cards.forEach((id, i) => {
-    const card = CARD_BY_ID[id];
-    const x = a.x + i * (cw + 6), y = a.y + 18;
-    let scale = 1;
-    if (procFlash[id] && now - procFlash[id] < 600) scale = 1 + 0.16 * Math.sin((now - procFlash[id]) / 600 * Math.PI);
-    ctx.save(); ctx.translate(x + cw / 2, y + chh / 2); ctx.scale(scale, scale); ctx.translate(-cw / 2, -chh / 2);
-    const grad = ctx.createLinearGradient(0, 0, 0, chh);
-    grad.addColorStop(0, '#3d2a6e'); grad.addColorStop(1, '#241547');
-    rr(0, 0, cw, chh, 9); ctx.fillStyle = grad; ctx.fill();
-    ctx.strokeStyle = (procFlash[id] && now - procFlash[id] < 600) ? '#ffd76a' : '#7c5cd6'; ctx.lineWidth = 2; ctx.stroke();
-    txt(card.icon, cw / 2, 16, 19, '#fff');
-    // short name: first word(s) trimmed
-    const nm = card.name.length > 12 ? card.name.split(' ').slice(0, 2).join(' ') : card.name;
-    txt(nm, cw / 2, 38, 8.5, '#e8e4ff', 'center', 800);
-    ctx.restore();
+  if (R.lastLine) txt(R.lastLine, W / 2, a.y + 17, 15, '#cbbffa', 'center', 700);
+  else if (R.guesses.length === 0) txt('Type a word, hit ENTER — colors are your clues', W / 2, a.y + 17, 12.5, '#8a84b5', 'center', 600);
+}
+function drawRoundEnd(now){
+  const pw = W - 56, ph = 218, x = 28, y = H * 0.30;
+  ctx.fillStyle = 'rgba(6,3,16,0.55)'; ctx.fillRect(0, 0, W, H);
+  const grad = ctx.createLinearGradient(0, y, 0, y + ph);
+  grad.addColorStop(0, '#34245f'); grad.addColorStop(1, '#1e1238');
+  rr(x, y, pw, ph, 16); ctx.fillStyle = grad; ctx.fill();
+  ctx.strokeStyle = R.solved ? '#ffd76a' : '#7c5cd6'; ctx.lineWidth = 2; ctx.stroke();
+  if (R.solved){
+    txt('🎉 Solved in ' + R.guesses.length + (R.guesses.length === 1 ? ' guess!' : ' guesses!'), W / 2, y + 36, 21, '#ffd76a', 'center', 800);
+  } else {
+    txt('Out of guesses', W / 2, y + 36, 21, '#ff9b9b', 'center', 800);
+    txt('The word was ' + R.target, W / 2, y + 68, 16.5, '#fff', 'center', 700);
+  }
+  txt('Round points: ' + fmt(R.roundScore), W / 2, y + (R.solved ? 72 : 102), 15.5, '#e8e4ff', 'center', 700);
+  txt('Total: ' + fmt(run.score) + '   ·   Solved: ' + run.solvedCount + ' / ' + R.round, W / 2, y + (R.solved ? 98 : 128), 13.5, '#9a92c9', 'center', 600);
+  drawButton(W / 2 - 100, y + ph - 62, 200, 46, R.round >= TOTAL_ROUNDS ? 'SEE RESULTS ▶' : 'NEXT WORD ▶', 'next', { gold: true, size: 16 });
+}
+function drawPlay(now){
+  drawHeader();
+  drawGrid(now);
+  if (R.round <= 2) drawLegendFull(L.legend.x + 26, L.legend.y, 20, 12.5);
+  else drawLegendCompact(L.legend.y + 4);
+  drawScoreStrip(now);
+  drawKeyboard();
+  if (R.phase === 'roundEnd') drawRoundEnd(now);
+}
+function drawFinal(){
+  txt('🏁 RUN COMPLETE', W / 2, H * 0.16, 30, '#fff', 'center', 800);
+  txt(gradeFor(run.solvedCount), W / 2, H * 0.16 + 52, 25, '#ffd76a', 'center', 800);
+  const stats = [
+    ['Words solved', run.solvedCount + ' / ' + TOTAL_ROUNDS],
+    ['Total score', fmt(run.score) + ' pts'],
+    ['Best guess', run.bestGuess.word ? run.bestGuess.word + ' — ' + fmt(run.bestGuess.points) + ' pts' : '—'],
+    ['Best solve streak', '' + run.bestStreak]
+  ];
+  stats.forEach((s, i) => {
+    txt(s[0], W / 2 - 14, H * 0.36 + i * 36, 15, '#9a92c9', 'right', 600);
+    txt(s[1], W / 2 + 14, H * 0.36 + i * 36, 16, '#fff', 'left', 800);
   });
+  drawButton(W / 2 - 110, H * 0.68, 220, 58, '↻ PLAY AGAIN', 'again', { gold: true, size: 18 });
 }
 function drawKeyboard(){
   for (const ch in L.keys){
@@ -496,198 +504,26 @@ function drawKeyboard(){
       hot.push({ x: k.x, y: k.y, w: k.w, h: k.h, action: 'key:' + ch });
       continue;
     }
-    const muted = (B && B.boss === 'MUTE' && (ch === 'E' || ch === 'A'));
-    const st = B ? (B.keyState[ch] || 0) : 0;
+    const st = R ? (R.keyState[ch] || 0) : 0;
     let fill = '#6b6390';
     if (st === 3) fill = TILE_COLORS[2]; else if (st === 2) fill = TILE_COLORS[1]; else if (st === 1) fill = '#3d3d52';
-    if (muted) fill = '#33272e';
     rr(k.x, k.y, k.w, k.h, 9); ctx.fillStyle = fill; ctx.fill();
     ctx.strokeStyle = 'rgba(255,255,255,0.14)'; ctx.lineWidth = 1; ctx.stroke();
-    txt(ch, k.x + k.w / 2, k.y + k.h / 2 + 1, 17, muted ? '#a05555' : '#fff', 'center', 800);
-    if (muted){ ctx.strokeStyle = '#e05252'; ctx.lineWidth = 2.5; ctx.beginPath(); ctx.moveTo(k.x + 5, k.y + k.h - 6); ctx.lineTo(k.x + k.w - 5, k.y + 6); ctx.stroke(); }
+    txt(ch, k.x + k.w / 2, k.y + k.h / 2 + 1, 17, '#fff', 'center', 800);
     hot.push({ x: k.x, y: k.y, w: k.w, h: k.h, action: 'key:' + ch });
-  }
-}
-
-
-/* ================= TALLY PANEL ================= */
-function drawTally(now){
-  if (!anim) return;
-  const a = L.tally, sc = anim.entry.sc;
-  rr(a.x, a.y, a.w, a.h, 14); ctx.fillStyle = 'rgba(16,8,36,0.82)'; ctx.fill();
-  ctx.strokeStyle = 'rgba(255,215,106,0.35)'; ctx.lineWidth = 1.5; ctx.stroke();
-  const cx = a.x + a.w / 2;
-  txt('CHIPS  ' + fmt(anim.tallyChips), cx, a.y + 22, 19, '#ffd76a', 'center', 800);
-  if (anim.stage >= 2){
-    let mline = '× MULT ' + (Math.round(anim.tallyMult * 10) / 10);
-    txt(mline, cx, a.y + 48, 19, '#8be89b', 'center', 800);
-  }
-  if (anim.stage >= 3){
-    let tot = fmt(anim.shownTotal);
-    if (anim.entry.solveBonus) tot += '  (solve +' + fmt(anim.entry.solveBonus) + ')';
-    txt(tot + ' PTS', cx, a.y + 78, 24, '#ffffff', 'center', 800);
-    const notes = [];
-    if (sc.xNotes.length) notes.push(sc.xNotes.join('  ·  '));
-    if (sc.procs.length) notes.push(sc.procs.map(id => CARD_BY_ID[id].name).join('  ·  '));
-    if (notes.length) txt(notes.join('   '), cx, a.y + 99, 11, '#cbbffa', 'center', 700);
-  }
-}
-function drawMsg(now){
-  if (now < msgUntil && msg){
-    const w = Math.min(W - 40, msg.length * 8.4 + 30);
-    rr((W - w) / 2, L.tally.y + 4, w, 34, 17); ctx.fillStyle = 'rgba(10,6,24,0.88)'; ctx.fill();
-    ctx.strokeStyle = '#7c5cd6'; ctx.lineWidth = 1.5; ctx.stroke();
-    txt(msg, W / 2, L.tally.y + 22, 14.5, '#fff', 'center', 700);
-  }
-}
-
-/* ================= SCREENS ================= */
-function drawTitle(t){
-  txt('WORDLE', W / 2, H * 0.20, 47, '#fff', 'center', 800);
-  txt('-LATRO', W / 2, H * 0.20 + 50, 47, '#ffd76a', 'center', 800);
-  txt('THE LEXICAL ROGUELIKE', W / 2, H * 0.20 + 92, 14, '#cbbffa', 'center', 700);
-  const lines = [
-    'Every guess scores. Beat the Blind\'s target in 4 guesses.',
-    'Greens & Yellows raise Mult. Rare letters pay big.',
-    'Win Blinds, earn 🪙, buy Etymology Cards, break the game.',
-    'Every 3rd Blind is a BOSS with a nasty rule.',
-    'Clear all 8 Blinds to win the run!'
-  ];
-  lines.forEach((s, i) => txt(s, W / 2, H * 0.42 + i * 27, 13.5, '#e8e4ff', 'center', 600));
-  drawButton(W / 2 - 110, H * 0.66, 220, 58, '▶  START RUN', 'start', { gold: true, size: 19 });
-  txt('Tap letters or use your keyboard', W / 2, H * 0.66 + 84, 12.5, '#9a92c9', 'center', 600);
-}
-function drawIntro(){
-  txt(B.boss ? '⚠ BOSS BLIND ⚠' : 'BLIND ' + blindNum(), W / 2, H * 0.17, B.boss ? 30 : 40, B.boss ? '#ff7b7b' : '#fff', 'center', 800);
-  if (B.boss){
-    txt('BLIND ' + blindNum() + ' — ' + BOSS_INFO[B.boss].name, W / 2, H * 0.17 + 44, 19, '#ffb0b0', 'center', 800);
-    txt(BOSS_INFO[B.boss].desc, W / 2, H * 0.17 + 76, 14.5, '#e8e4ff', 'center', 600);
-  }
-  txt('TARGET', W / 2, H * 0.36, 14, '#9a92c9', 'center', 800);
-  txt(fmt(B.target) + ' PTS', W / 2, H * 0.36 + 36, 40, '#ffd76a', 'center', 800);
-  txt('4 guesses · every guess scores', W / 2, H * 0.36 + 74, 14.5, '#e8e4ff', 'center', 600);
-  txt('🪙 ' + fmt(run.coins) + '    Cards: ' + run.cards.length + ' / 5' + (run.baseMult ? '    Base Mult +' + run.baseMult : ''), W / 2, H * 0.52, 15, '#cbbffa', 'center', 700);
-  drawButton(W / 2 - 100, H * 0.62, 200, 56, 'BEGIN', 'begin', { gold: true, size: 19 });
-}
-function drawPlay(now){
-  drawHeader(); drawTargetBar(); drawGrid(now); drawCardsRow(now);
-  drawTally(now); drawMsg(now);
-  if (!anim && B && B.phase === 'input' && performance.now() >= msgUntil){
-    txt('Guesses left: ' + (4 - B.guesses.length), W / 2, L.tally.y + 20, 13, '#9a92c9', 'center', 700);
-  }
-  drawKeyboard();
-}
-function drawShop(){
-  txt('🛠 ETYMOLOGY SHOP', W / 2, 52, 24, '#fff', 'center', 800);
-  txt('Blind ' + blindNum() + ' beaten!  🪙 ' + fmt(run.coins) + '   ·   Cards ' + run.cards.length + '/5', W / 2, 82, 14.5, '#cbbffa', 'center', 700);
-  const cw = W - 56, chh = 118, x0 = 28; let y = 108;
-  shopItems.forEach((it, i) => {
-    const grad = ctx.createLinearGradient(0, y, 0, y + chh);
-    grad.addColorStop(0, '#34245f'); grad.addColorStop(1, '#1e1238');
-    rr(x0, y, cw, chh, 14); ctx.fillStyle = grad; ctx.fill();
-    ctx.strokeStyle = it.sold ? '#3d3d52' : '#7c5cd6'; ctx.lineWidth = 2; ctx.stroke();
-    txt(it.card.icon, x0 + 34, y + 36, 32, '#fff');
-    txt(it.card.name, x0 + 62, y + 26, 16, it.sold ? '#777' : '#ffd76a', 'left', 800);
-    // desc wrapped to 2 lines
-    const words = it.card.desc.split(' '); let l1 = '', l2 = '';
-    for (const w of words){
-      if (!l2 && (l1 ? l1 + ' ' + w : w).length <= 30) l1 = l1 ? l1 + ' ' + w : w;
-      else l2 = l2 ? l2 + ' ' + w : w;
-    }
-    txt(l1, x0 + 62, y + 50, 12, it.sold ? '#666' : '#e8e4ff', 'left', 600);
-    txt(l2, x0 + 62, y + 66, 12, it.sold ? '#666' : '#e8e4ff', 'left', 600);
-    if (it.sold) txt('OWNED ✓', x0 + cw - 52, y + 92, 14, '#8be89b', 'center', 800);
-    else if (run.cards.length >= 5) txt('HAND FULL', x0 + cw - 52, y + 92, 13, '#ff9b9b', 'center', 800);
-    else drawButton(x0 + cw - 104, y + 76, 88, 34, 'BUY 🪙' + it.card.cost, 'buy:' + i, { gold: run.coins >= it.card.cost, size: 14, disabled: run.coins < it.card.cost });
-    y += chh + 12;
-  });
-  drawButton(28, y + 2, 120, 46, '↻ REROLL 🪙1', 'reroll', { size: 13.5, disabled: run.coins < 1 });
-  drawButton(W - 28 - 170, y + 2, 170, 46, 'NEXT BLIND ▶', 'next', { gold: true, size: 15.5 });
-  if (run.cards.length){
-    txt('Owned: ' + run.cards.map(id => CARD_BY_ID[id].icon + ' ' + CARD_BY_ID[id].name).join('  ·  '), W / 2, y + 70, 10.5, '#9a92c9', 'center', 600);
-  }
-}
-function drawEnd(win){
-  txt(win ? '🏆 RUN WON!' : '💀 RUN OVER', W / 2, H * 0.18, 36, win ? '#ffd76a' : '#ff7b7b', 'center', 800);
-  if (!win) txt('Blind ' + blindNum() + ' — scored ' + fmt(B.score) + ' / ' + fmt(B.target), W / 2, H * 0.18 + 46, 15.5, '#e8e4ff', 'center', 700);
-  const stats = [
-    ['Blinds beaten', run.blindsBeaten],
-    ['Words solved', run.solvedCount],
-    ['Best single guess', fmt(run.bestGuess) + ' pts'],
-    ['Total score', fmt(run.totalScore) + ' pts'],
-    ['Cards collected', run.cards.length]
-  ];
-  stats.forEach((s, i) => {
-    txt(s[0], W / 2 - 14, H * 0.36 + i * 34, 15, '#9a92c9', 'right', 600);
-    txt('' + s[1], W / 2 + 14, H * 0.36 + i * 34, 16, '#fff', 'left', 800);
-  });
-  if (run.cards.length) txt(run.cards.map(id => CARD_BY_ID[id].icon).join(' '), W / 2, H * 0.36 + 5 * 34 + 8, 22, '#fff', 'center');
-  drawButton(W / 2 - 110, H * 0.72, 220, 58, '↻ PLAY AGAIN', 'again', { gold: true, size: 18 });
-}
-
-/* ================= ANIMATION UPDATE ================= */
-const FLIP_STAGGER = 130, FLIP_DUR = 300;
-const FLIP_TOTAL = 4 * FLIP_STAGGER + FLIP_DUR; // 820ms
-function updateAnim(now){
-  if (!anim) return;
-  const el = now - anim.t0, sc = anim.entry.sc;
-  if (anim.skip){
-    anim.stage = 3; anim.tallyChips = sc.chips; anim.tallyMult = sc.mult; anim.shownTotal = sc.points;
-    finishGuessAnim(); return;
-  }
-  const prevStage = anim.stage;
-  if (el < FLIP_TOTAL){
-    anim.stage = 0;
-    const idx = Math.floor(el / FLIP_STAGGER);
-    if (idx !== anim.tickCount && idx < 5){ anim.tickCount = idx; sfx.flip(idx); }
-  } else if (el < FLIP_TOTAL + 550){
-    anim.stage = 1;
-    const p = (el - FLIP_TOTAL) / 550;
-    anim.tallyChips = Math.round(sc.chips * p);
-    const tc = Math.floor(p * 12);
-    if (tc !== anim.tickCount){ anim.tickCount = tc; sfx.tick(tc); }
-  } else if (el < FLIP_TOTAL + 950){
-    anim.stage = 2;
-    const p = (el - FLIP_TOTAL - 550) / 400;
-    anim.tallyMult = 1 + (sc.mult - 1) * p;
-    if (prevStage < 2){ sfx.multStep(); if (sc.procs.length){ sc.procs.forEach(id => procFlash[id] = now); sfx.proc(); } }
-  } else if (el < FLIP_TOTAL + 1500){
-    anim.stage = 3;
-    const p = (el - FLIP_TOTAL - 950) / 300;
-    anim.shownTotal = Math.round(sc.points * Math.min(1, p));
-    if (prevStage < 3) sfx.slam();
-  } else {
-    finishGuessAnim();
   }
 }
 
 /* ================= INPUT ================= */
 function handleKey(k){
-  if (screen !== 'play' || !B || B.phase !== 'input' || anim) return;
+  if (screen !== 'play' || !R || R.phase !== 'input' || anim) return;
   if (k === 'ENTER'){ submitGuess(); return; }
-  if (k === 'BK'){ if (B.input.length){ B.input = B.input.slice(0, -1); sfx.key(); } return; }
-  if (/^[A-Z]$/.test(k)){
-    if (B.boss === 'MUTE' && (k === 'E' || k === 'A')){ doShake(); setMsg('THE MUTE forbids E and A!'); sfx.invalid(); return; }
-    if (B.input.length < 5){ B.input += k; sfx.key(); }
-  }
+  if (k === 'BK'){ if (R.input.length){ R.input = R.input.slice(0, -1); sfx.key(); } return; }
+  if (/^[A-Z]$/.test(k) && R.input.length < 5){ R.input += k; sfx.key(); }
 }
 function doAction(a){
-  sfx.click();
-  if (a === 'start' || a === 'again'){ newRun(); return; }
-  if (a === 'begin'){ screen = 'play'; return; }
-  if (a === 'next'){ nextBlind(); return; }
-  if (a === 'reroll'){
-    if (run.coins >= 1){ run.coins -= 1; genShop(); }
-    return;
-  }
-  if (a.indexOf('buy:') === 0){
-    const it = shopItems[parseInt(a.slice(4), 10)];
-    if (it && !it.sold && run.cards.length < 5 && run.coins >= it.card.cost){
-      run.coins -= it.card.cost; run.cards.push(it.card.id); it.sold = true; sfx.buy();
-      procFlash[it.card.id] = performance.now();
-    }
-    return;
-  }
+  if (a === 'start' || a === 'again'){ sfx.click(); newRun(); return; }
+  if (a === 'next'){ sfx.click(); nextRound(); return; }
   if (a.indexOf('key:') === 0){ handleKey(a.slice(4)); return; }
 }
 cv.addEventListener('pointerdown', e => {
@@ -700,17 +536,15 @@ cv.addEventListener('pointerdown', e => {
   }
 });
 document.addEventListener('keydown', e => {
-  if (e.repeat && e.key !== 'Backspace') { /* allow */ }
   if (screen === 'play'){
     if (anim){ anim.skip = true; return; }
+    if (R && R.phase === 'roundEnd' && e.key === 'Enter'){ doAction('next'); return; }
     if (e.key === 'Enter') handleKey('ENTER');
     else if (e.key === 'Backspace'){ handleKey('BK'); e.preventDefault(); }
     else if (/^[a-zA-Z]$/.test(e.key)) handleKey(e.key.toUpperCase());
   } else if (e.key === 'Enter'){
     if (screen === 'title') doAction('start');
-    else if (screen === 'intro') doAction('begin');
-    else if (screen === 'shop') doAction('next');
-    else if (screen === 'victory' || screen === 'gameover') doAction('again');
+    else if (screen === 'final') doAction('again');
   }
 });
 document.addEventListener('touchmove', e => { e.preventDefault(); }, { passive: false });
@@ -720,16 +554,16 @@ function loop(){
   const now = performance.now();
   computeLayout();
   updateAnim(now);
-  if (B) B.dispScore += (B.score - B.dispScore) * 0.18;
-  if (B && Math.abs(B.score - B.dispScore) < 1) B.dispScore = B.score;
+  updatePhases(now);
+  if (run){
+    run.dispScore += (run.score - run.dispScore) * 0.22;
+    if (Math.abs(run.score - run.dispScore) < 1) run.dispScore = run.score;
+  }
   hot = [];
   drawBG(now);
   if (screen === 'title') drawTitle(now);
-  else if (screen === 'intro') drawIntro();
   else if (screen === 'play') drawPlay(now);
-  else if (screen === 'shop') drawShop();
-  else if (screen === 'victory') drawEnd(true);
-  else if (screen === 'gameover') drawEnd(false);
+  else if (screen === 'final') drawFinal();
   requestAnimationFrame(loop);
 }
 resize();
@@ -738,24 +572,29 @@ requestAnimationFrame(loop);
 /* ================= DEBUG HANDLE ================= */
 window.__dbg = {
   get screen(){ return screen; },
-  get blind(){ return run ? run.blindIdx + 1 : 0; },
-  get target(){ return B ? B.target : 0; },
-  get score(){ return B ? B.score : 0; },
-  get coins(){ return run ? run.coins : 0; },
-  get cards(){ return run ? run.cards.slice() : []; },
-  get guessesUsed(){ return B ? B.guesses.length : 0; },
-  get phase(){ return B ? B.phase : null; },
-  targetWord(){ return B ? B.word : null; },
-  setCoins(n){ if (run) run.coins = n; },
-  forceShop(){ if (run){ genShop(); screen = 'shop'; } },
+  get round(){ return R ? R.round : 0; },
+  get score(){ return run ? run.score : 0; },
+  get solved(){ return run ? run.solvedCount : 0; },
+  get streak(){ return run ? run.streak : 0; },
+  get phase(){ return R ? R.phase : null; },
+  get guesses(){ return R ? R.guesses.map(g => ({ word: g.word, fb: g.fb.slice(), points: g.points })) : []; },
+  get howto(){ return HOWTO; },
+  get legend(){ return LEGEND.map(l => l.text); },
+  targetWord(){ return R ? R.target : null; },
   startRun(){ newRun(); },
+  nextRound(){ if (R && R.phase === 'roundEnd') nextRound(); },
+  submitGuess(word){
+    if (!R || R.phase !== 'input') return false;
+    R.input = ('' + word).toUpperCase().slice(0, 5);
+    submitGuess();
+    return R.phase === 'anim';
+  },
   skipAnim(){ if (anim) anim.skip = true; },
   keyRect(ch){
     const k = L.keys[ch]; if (!k) return null;
     return { x: k.x + k.w / 2, y: k.y + k.h / 2, w: k.w, h: k.h };
   }
 };
-
 </script>
 </body>
 </html>
