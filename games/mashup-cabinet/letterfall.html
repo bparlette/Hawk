@@ -33,8 +33,12 @@
   .hudbox .lab { font-size:10px; letter-spacing:.14em; text-transform:uppercase; color:#9fb2cc; }
   .hudbox .val { font-size:20px; font-weight:700; line-height:1.15; }
   #nextTile {
-    width:34px; height:34px; margin:2px auto 0; border-radius:9px; display:flex; align-items:center; justify-content:center;
+    min-height:36px; margin:2px auto 0; display:flex; gap:2px; align-items:center; justify-content:center;
     font-size:19px; font-weight:800; color:#fff; text-shadow:0 1px 2px rgba(0,0,0,.35);
+  }
+  #nextTile span {
+    display:flex; align-items:center; justify-content:center; border-radius:5px;
+    box-shadow: inset 0 -2px 4px rgba(0,0,0,.18), inset 0 2px 3px rgba(255,255,255,.25);
   }
   #stage {
     position:relative; line-height:0; flex:1 1 auto; width:100%; min-height:0;
@@ -97,8 +101,8 @@
     <canvas id="cv"></canvas>
     <div class="overlay" id="titleScr">
       <h1><span class="a">LETTER</span><span class="b">FALL</span></h1>
-      <p>Letter tiles rain into the well. Stack them so any 5 in a row — across or down — spell a word, and they burst.</p>
-      <p style="margin-top:8px">◀ ▶ move &nbsp;·&nbsp; ▼ soft drop &nbsp;·&nbsp; SPACE hard drop</p>
+      <p>Chunks of real words rain into the well — blocks of 1–3 letters. Stack them so any 5 in a row — across or down — spell a word, and they burst.</p>
+      <p style="margin-top:8px">◀ ▶ move &nbsp;·&nbsp; ⟳ rotate &nbsp;·&nbsp; ▼ soft drop &nbsp;·&nbsp; SPACE hard drop</p>
       <button class="playbtn" id="btnPlay">▶ Play</button>
     </div>
     <div class="overlay hidden" id="overScr">
@@ -116,11 +120,12 @@
       <button class="tbtn" id="tRight" aria-label="Move right">▶</button>
     </div>
     <div class="tgroup">
+      <button class="tbtn" id="tRot" aria-label="Rotate">⟳</button>
       <button class="tbtn" id="tDown" aria-label="Soft drop">▼</button>
       <button class="tbtn" id="tHard" aria-label="Hard drop">⤓</button>
     </div>
   </div>
-  <div id="hint">Chain bursts multiply your score. Vertical words pay ×1.5. Glowing tiles are one letter from a word.</div>
+  <div id="hint">Falling blocks are fragments of real words — rebuild them. Chain bursts multiply your score. Vertical words pay ×1.5. Glowing tiles are one letter from a word.</div>
 </div>
 
 <script>
@@ -138,14 +143,25 @@ for (const w of WORD_LIST) {
 
 /* ============================== CONFIG ============================== */
 const COLS = 8, ROWS = 14;
-const BAG = 'EEEEEEEEEEEEAAAAAAAAAIIIIIIIIOOOOOOOONNNNNNRRRRRRTTTTTTLLLLSSSSUUUUDDDDGGGBBCCMMPPFFHHVVWWYYKJXQZ';
 const VOWELS = new Set(['A','E','I','O','U']);
+/* Classic high-frequency fragments, seeded into the spawn stream as-is */
+const CLASSIC_FRAGS = ['TH','HE','IN','ER','AN','EN','AT','ON','ND','OU','EA','TI','ED','ES','ST','ING','ION','ENT','STR','EST'];
+/* Ways to split a 5-letter word into 1–3 letter fragments (weighted).
+   Resulting chunk mix ≈ 17% singles / 52% doubles / 31% triples, before the
+   classic-fragment seeding (which only adds 2–3 letter chunks). */
+const SPLITS = [[3,2],[3,2],[3,2],[3,2],[3,2],[3,2],[2,3],[2,3],[2,3],[2,3],[2,3],[2,3],[2,2,1],[2,2,1],[1,2,2],[1,2,2],[2,1,2],[1,1,3]];
+function splitWord(w){
+  const pat = SPLITS[(Math.random() * SPLITS.length) | 0];
+  const out = []; let i = 0;
+  for (const n of pat) { out.push(w.slice(i, i + n)); i += n; }
+  return out;
+}
 const PENTA = [523.25, 587.33, 659.25, 783.99, 880.0, 1046.5, 1174.7, 1318.5];
 
 /* ============================== STATE ============================== */
 let board;            // ROWS x COLS, null | letter
-let cur = null;       // {letter, x, y(float), lockT}
-let queue = [];
+let cur = null;       // {letters, horiz, x, y(float), lockT} — a falling word-fragment chunk
+let queue = [];       // upcoming chunks: {letters, horiz}
 let state = 'title';  // 'title' | 'playing' | 'over'
 let score = 0, level = 1, wordsMade = [];
 let tints = new Set(); // "r,c" cells one letter from a word
@@ -156,8 +172,34 @@ let moveRepeat = { t:0, dir:0 };
 let lastTime = 0;
 
 function emptyBoard(){ return Array.from({length: ROWS}, () => Array(COLS).fill(null)); }
-function genLetter(){ return BAG[(Math.random() * BAG.length) | 0]; }
-function refillQueue(){ while (queue.length < 8) queue.push(genLetter()); }
+function refillQueue(){
+  while (queue.length < 10) {
+    if (Math.random() < 0.12) {
+      const f = CLASSIC_FRAGS[(Math.random() * CLASSIC_FRAGS.length) | 0];
+      queue.push({ letters: f, horiz: Math.random() < 0.7 });
+    } else {
+      // fragments of one real word, in order — the stream is word after word
+      const w = WORD_LIST[(Math.random() * WORD_LIST.length) | 0];
+      for (const f of splitWord(w)) queue.push({ letters: f, horiz: Math.random() < 0.7 });
+    }
+  }
+}
+/* Cells occupied by a chunk anchored at (col,row). Letters run left→right
+   (horizontal) or top→bottom (vertical), letter order preserved. */
+function cellsAt(letters, horiz, col, row){
+  const out = [];
+  for (let i = 0; i < letters.length; i++)
+    out.push({ c: col + (horiz ? i : 0), r: row + (horiz ? 0 : i), ch: letters[i] });
+  return out;
+}
+function cellsCollide(cells){
+  for (let i = 0; i < cells.length; i++) {
+    const { c, r } = cells[i];
+    if (c < 0 || c >= COLS || r >= ROWS) return true;
+    if (r >= 0 && board[r][c]) return true;
+  }
+  return false;
+}
 function fallSpeed(){ return 1.05 + (level - 1) * 0.5; }  // cells per second
 
 /* ============================== AUDIO ============================== */
@@ -200,6 +242,7 @@ function noiseBurst(dur, freq, gain){
 const sfx = {
   clack(){ tone(150, 62, 0.075, 'triangle', 0.20); noiseBurst(0.045, 1900, 0.10); },
   move(){ noiseBurst(0.02, 2600, 0.03); },
+  flip(){ tone(280, 540, 0.08, 'sine', 0.09); },
   pop(){ tone(480, 940, 0.11, 'sine', 0.16); noiseBurst(0.06, 3200, 0.07); },
   chime(chain){
     const idx = Math.min(PENTA.length - 1, chain - 1);
@@ -245,9 +288,9 @@ function startGame(){
 }
 function spawn(){
   refillQueue();
-  const letter = queue.shift(); refillQueue();
-  cur = { letter, x: 3, y: 0, lockT: 0 };
-  if (board[0][cur.x]) { gameOver(); }
+  const nx = queue.shift(); refillQueue();
+  cur = { letters: nx.letters, horiz: nx.horiz, x: 3, y: 0, lockT: 0 };
+  if (cellsCollide(cellsAt(cur.letters, cur.horiz, cur.x, 0))) { gameOver(); return; }
   updateHUD();
 }
 function gameOver(){
@@ -261,12 +304,13 @@ function gameOver(){
   document.getElementById('overScr').classList.remove('hidden');
   updateHUD();
 }
-function blockedBelow(x, ry){ return ry + 1 >= ROWS || !!board[ry + 1][x]; }
-function lockTile(){
-  const ry = Math.floor(cur.y);
-  board[ry][cur.x] = cur.letter;
+function lockChunk(){
+  const cells = cellsAt(cur.letters, cur.horiz, cur.x, Math.floor(cur.y));
+  for (const { c, r, ch } of cells) {
+    board[r][c] = ch;
+    spawnParticles(c, r, tileColor(ch), 4, 0.4);
+  }
   sfx.clack();
-  spawnParticles(cur.x, ry, tileColor(cur.letter), 4, 0.4);
   cur = null;
   resolveClears();
   if (state !== 'playing') return;
@@ -276,10 +320,26 @@ function lockTile(){
 }
 function hardDrop(){
   if (!cur || state !== 'playing') return;
-  let ry = Math.floor(cur.y);
-  while (!blockedBelow(cur.x, ry)) ry++;
-  cur.y = ry;
-  lockTile();
+  let r = Math.floor(cur.y);
+  while (!cellsCollide(cellsAt(cur.letters, cur.horiz, cur.x, r + 1))) r++;
+  cur.y = r;
+  lockChunk();
+}
+function rotate(){
+  if (!cur || state !== 'playing' || cur.letters.length < 2) return;
+  const nh = !cur.horiz, ry = Math.floor(cur.y);
+  for (const dy of [0, -1]) {
+    for (const dx of [0, -1, 1, -2, 2]) {
+      const nx = cur.x + dx;
+      if (nx < 0) continue;
+      if (!cellsCollide(cellsAt(cur.letters, nh, nx, ry + dy))) {
+        cur.horiz = nh; cur.x = nx;
+        if (dy !== 0) cur.y = ry + dy;
+        cur.lockT = 0; sfx.flip();
+        return;
+      }
+    }
+  }
 }
 
 /* ============================== WORD LOGIC ============================== */
@@ -368,9 +428,7 @@ function spawnParticles(cx, ry, color, n, power){
 function tryMove(dir){
   if (!cur) return;
   const nx = cur.x + dir;
-  const ry = Math.floor(cur.y);
-  if (nx < 0 || nx >= COLS) return;
-  if (board[ry][nx]) return;
+  if (cellsCollide(cellsAt(cur.letters, cur.horiz, nx, Math.floor(cur.y)))) return;
   cur.x = nx; sfx.move();
 }
 function update(dt){
@@ -393,16 +451,19 @@ function update(dt){
   } else moveRepeat.dir = 0;
 
   const spd = fallSpeed() * (keys.down ? 9 : 1);
-  let ry = Math.floor(cur.y);
-  if (blockedBelow(cur.x, ry) && cur.y <= ry + 0.001) {
+  const ry = Math.floor(cur.y);
+  const supported = cellsCollide(cellsAt(cur.letters, cur.horiz, cur.x, ry + 1));
+  if (supported && cur.y <= ry + 0.001) {
     cur.lockT += dt;
-    if (cur.lockT >= 0.26) { lockTile(); return; }
+    if (cur.lockT >= 0.26) { lockChunk(); return; }
   } else {
     cur.lockT = 0;
     cur.y += spd * dt;
-    ry = Math.floor(cur.y);
-    if (blockedBelow(cur.x, ry)) cur.y = ry; // rest exactly on the stack
-    if (cur.y > ROWS - 1) cur.y = ROWS - 1;
+    // safety: never end a frame inside the stack (large dt / fast soft drop)
+    while (cur.y > 0 && cellsCollide(cellsAt(cur.letters, cur.horiz, cur.x, Math.floor(cur.y))))
+      cur.y = Math.floor(cur.y) - 0.001;
+    const nry = Math.floor(cur.y);
+    if (cellsCollide(cellsAt(cur.letters, cur.horiz, cur.x, nry + 1))) cur.y = nry; // rest exactly on the stack
   }
 }
 
@@ -415,7 +476,7 @@ function tileColor(letter){
 }
 function drawTile(x, y, letter, opts){
   opts = opts || {};
-  const pad = Math.max(1.5, CELL * 0.055);
+  const pad = Math.max(1, CELL * 0.055 * (opts.padMul || 1));
   const px = x * CELL + pad, py = y * CELL + pad, s = CELL - pad * 2;
   const rad = s * 0.24;
   ctx.save();
@@ -437,6 +498,24 @@ function drawTile(x, y, letter, opts){
   ctx.shadowColor = 'rgba(0,0,0,.3)'; ctx.shadowBlur = 2; ctx.shadowOffsetY = 1;
   ctx.fillText(letter, px + s / 2, py + s / 2 + s * 0.03);
   ctx.restore();
+}
+/* A falling chunk is drawn as one joined piece: a shared backing bar under
+   near-touching tiles, so CRA reads as a fragment, not three loose letters. */
+function drawChunk(ch, yPos, ghost){
+  const len = ch.letters.length;
+  const bx = ch.x * CELL, by = yPos * CELL;
+  const bw = (ch.horiz ? len : 1) * CELL, bh = (ch.horiz ? 1 : len) * CELL;
+  ctx.save();
+  ctx.fillStyle = ghost ? 'rgba(170,205,255,.05)' : 'rgba(170,205,255,.14)';
+  ctx.strokeStyle = ghost ? 'rgba(255,255,255,.16)' : 'rgba(255,255,255,.45)';
+  ctx.lineWidth = 1.5;
+  ctx.beginPath(); ctx.roundRect(bx + 1, by + 1, bw - 2, bh - 2, Math.min(10, CELL * 0.24)); ctx.fill(); ctx.stroke();
+  ctx.restore();
+  for (let i = 0; i < len; i++) {
+    const cx = ch.x + (ch.horiz ? i : 0);
+    const cy = yPos + (ch.horiz ? 0 : i);
+    drawTile(cx, cy, ch.letters[i], ghost ? { ghost: true } : { padMul: 0.42 });
+  }
 }
 function draw(){
   ctx.setTransform(DPR, 0, 0, DPR, 0, 0);
@@ -462,11 +541,11 @@ function draw(){
         if (board[r][c]) drawTile(c, r, board[r][c], { tint: tints.has(r + ',' + c) });
   }
   if (cur && state === 'playing') {
-    // ghost landing spot
-    let gy = Math.floor(cur.y);
-    while (!blockedBelow(cur.x, gy)) gy++;
-    if (gy !== Math.floor(cur.y)) drawTile(cur.x, gy, cur.letter, { ghost: true });
-    drawTile(cur.x, cur.y, cur.letter, {});
+    // ghost landing footprint (the whole chunk)
+    let lr = Math.floor(cur.y);
+    while (!cellsCollide(cellsAt(cur.letters, cur.horiz, cur.x, lr + 1))) lr++;
+    if (lr !== Math.floor(cur.y)) drawChunk(cur, lr, true);
+    drawChunk(cur, cur.y, false);
   }
   // particles
   for (const p of particles) {
@@ -493,9 +572,19 @@ function updateHUD(){
   el('hudLevel').textContent = level;
   el('hudWords').textContent = wordsMade.length;
   const n = el('nextTile');
-  const nx = queue[0] || '?';
-  n.textContent = nx;
-  n.style.background = tileColor(nx === '?' ? null : nx);
+  const nx = queue[0];
+  n.innerHTML = '';
+  if (!nx) { n.textContent = '?'; return; }
+  n.style.flexDirection = nx.horiz ? 'row' : 'column';
+  const sz = nx.horiz ? 21 : 18;
+  for (const ch of nx.letters) {
+    const s = document.createElement('span');
+    s.textContent = ch;
+    s.style.width = sz + 'px'; s.style.height = sz + 'px';
+    s.style.fontSize = (sz * 0.58) + 'px';
+    s.style.background = tileColor(ch);
+    n.appendChild(s);
+  }
 }
 
 /* ============================== INPUT ============================== */
@@ -514,7 +603,8 @@ window.addEventListener('keydown', (e) => {
     case 'ArrowLeft': case 'KeyA': if (!keys.left) { keys.left = true; } break;
     case 'ArrowRight': case 'KeyD': if (!keys.right) { keys.right = true; } break;
     case 'ArrowDown': case 'KeyS': keys.down = true; break;
-    case 'ArrowUp': case 'KeyW': case 'Space': if (!e.repeat) hardDrop(); break;
+    case 'ArrowUp': case 'KeyW': if (!e.repeat) rotate(); break;
+    case 'Space': if (!e.repeat) hardDrop(); break;
   }
 });
 window.addEventListener('keyup', (e) => {
@@ -536,6 +626,7 @@ function bindHold(id, on, off){
 }
 bindHold('tLeft',  () => { keys.left = true; },  () => { keys.left = false; });
 bindHold('tRight', () => { keys.right = true; }, () => { keys.right = false; });
+bindHold('tRot',   () => { if (state === 'playing') rotate(); else startGame(); });
 bindHold('tDown',  () => { keys.down = true; },  () => { keys.down = false; });
 bindHold('tHard',  () => { if (state === 'playing') hardDrop(); else startGame(); });
 ['pointerdown','touchend'].forEach(ev => window.addEventListener(ev, ensureAudio, { passive: true }));
@@ -549,18 +640,70 @@ window.__dbg = {
   get words(){ return wordsMade.slice(); },
   get wordCount(){ return wordsMade.length; },
   board(){ return board ? board.map(r => r.map(c => c || '.').join('')) : []; },
-  current(){ return cur ? { letter: cur.letter, x: cur.x, y: cur.y } : null; },
-  next(){ return queue.slice(0, 4); },
+  current(){ return cur ? { letters: cur.letters, horizontal: cur.horiz, x: cur.x, y: cur.y } : null; },
+  next(){ return queue.slice(0, 4).map(q => ({ letters: q.letters, horizontal: q.horiz })); },
   start(){ startGame(); },
+  /* Queue a word at the front of the spawn stream as chunks: fixed split 3+2,
+     both horizontal — dropWord('CRANE') queues CRA then NE. Deal the two
+     chunks side by side on the bottom row and the word clears (100 pts)
+     through the normal pipeline. */
   dropWord(w){
     w = String(w).toUpperCase();
     if (!/^[A-Z]{5}$/.test(w)) throw new Error('dropWord needs exactly 5 letters A-Z');
-    queue = w.split('').concat(queue);
+    queue = [{ letters: w.slice(0, 3), horiz: true }, { letters: w.slice(3), horiz: true }].concat(queue);
     updateHUD();
-    return queue.slice(0, 6);
+    return this.next();
   },
   hardDrop(){ hardDrop(); },
-  move(dir){ tryMove(dir); }
+  move(dir){ tryMove(dir); },
+  rotate(){ rotate(); },
+  /* Test helpers: simulate() evaluates a hypothetical placement of the
+     current chunk on a board clone (landing row, words it would form,
+     resulting stack heights); setChunk() teleports the falling chunk to a
+     column/orientation when the target cells are free; plan() picks the
+     greedy best placement (most words, then lowest stack). */
+  simulate(col, horiz){
+    if (!cur || state !== 'playing') return null;
+    const letters = cur.letters;
+    if (col < 0 || col + (horiz ? letters.length : 1) > COLS) return null;
+    if (cellsCollide(cellsAt(letters, horiz, col, 0))) return null;
+    let r = 0;
+    while (!cellsCollide(cellsAt(letters, horiz, col, r + 1))) r++;
+    const save = board;
+    const clone = save.map(row => row.slice());
+    for (const { c, r: rr, ch } of cellsAt(letters, horiz, col, r)) clone[rr][c] = ch;
+    board = clone;
+    const formed = findWords().length;
+    board = save;
+    let agg = 0, mx = 0;
+    for (let c = 0; c < COLS; c++) {
+      let h = 0;
+      for (let rr = 0; rr < ROWS; rr++) if (clone[rr][c]) { h = ROWS - rr; break; }
+      agg += h; if (h > mx) mx = h;
+    }
+    return { row: r, words: formed, agg, max: mx };
+  },
+  setChunk(col, horiz){
+    if (!cur || state !== 'playing') return false;
+    if (cellsCollide(cellsAt(cur.letters, horiz, col, Math.floor(cur.y)))) return false;
+    cur.horiz = horiz; cur.x = col;
+    return true;
+  },
+  plan(){
+    if (!cur || state !== 'playing') return null;
+    let best = null;
+    const oris = cur.letters.length > 1 ? [true, false] : [true];
+    for (const h of oris) {
+      const maxCol = h ? COLS - cur.letters.length : COLS - 1;
+      for (let col = 0; col <= maxCol; col++) {
+        const s = this.simulate(col, h);
+        if (!s) continue;
+        const key = s.words * 10000 - s.agg * 10 - s.max;
+        if (!best || key > best.key) best = { col, horiz: h, words: s.words, agg: s.agg, max: s.max, key };
+      }
+    }
+    return best;
+  }
 };
 
 /* ============================== BOOT ============================== */
