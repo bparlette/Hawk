@@ -5842,10 +5842,10 @@
     "start": "Enter"
    },
    "labels": {},
-   "note": "Five mashup games on one screen with a dropdown picker, each a full-screen iPhone browser game: Counterpunch! (Punch-Out x Breakout \u2014 fists as the paddle vs the champ's armor), Ghost Gunner (Pac-Man x Contra \u2014 pellets are ammo, stun and blast four robot pursuers), Letterfall (Tetris x Wordle \u2014 steer falling letters, 5-letter words burst), Letter Crush (Candy Crush x spelling \u2014 swap tiles to spell words and chain cascades), Wordle-Latro (Wordle x Balatro \u2014 guesses score chips x mult vs escalating blinds, shop for Etymology Cards, boss blinds).",
+   "note": "Three word mashups on one screen with a dropdown picker, each a full-screen iPhone browser game: Letterfall (Tetris x Wordle \u2014 word-fragment blocks of 1-3 letters fall and stack into 5-letter words), Letter Crush (Candy Crush x spelling \u2014 boards planted from real words, one swap from spelling; swap tiles to finish words and chain cascades), Wordle-Latro (Wordle, simplified \u2014 guess the hidden word in 6 tries, color clues, every guess scores points; 10 rounds and a grade).",
    "orientation": "portrait",
    "path": "../games/mashup-cabinet/index.html",
-   "title": "Mashup 5-in-1"
+   "title": "Mashup 3-in-1"
   }
  ]
 }
