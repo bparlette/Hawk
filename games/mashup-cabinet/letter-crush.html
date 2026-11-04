@@ -34,6 +34,26 @@ const BAG = "EEEEEEEEEEEEAAAAAAAAAIIIIIIIIOOOOOOOONNNNNNRRRRRRTTTTTTLLLLSSSSUUUU
 const VOWELS = new Set(['A','E','I','O','U']);
 const RARE = new Set(['Q','Z','X','J','K']);
 
+/* ---------- v2 word indexes ----------
+   NEAR1: pattern (a word with one letter masked to '.') -> Set of letters
+   that appear at the masked position in some real word. Used by the
+   refill bias to find the letters the board is "asking for". */
+const NEAR1 = new Map();
+for (const [set, len] of [[WORDS4, 4], [WORDS5, 5]]) {
+  for (const w of set) {
+    for (let i = 0; i < len; i++) {
+      const key = w.substr(0, i) + '.' + w.substr(i + 1);
+      let s = NEAR1.get(key);
+      if (!s) { s = new Set(); NEAR1.set(key, s); }
+      s.add(w[i]);
+    }
+  }
+}
+/* Words worth planting: real words minus the Q/Z/X oddballs, so planted
+   fragments read as everyday language. */
+const PLANT_POOL = [...WORDS4, ...WORDS5].filter(w => !/[QZX]/.test(w));
+function shuffleArr(a) { for (let i = a.length - 1; i > 0; i--) { const j = (Math.random() * (i + 1)) | 0; const t = a[i]; a[i] = a[j]; a[j] = t; } return a; }
+
 const canvas = document.getElementById('game');
 const ctx = canvas.getContext('2d');
 
@@ -210,7 +230,7 @@ function formsWordAt(L, r, c) {
   return false;
 }
 
-function generateLetters() {
+function generateLettersV1() {
   for (let attempt = 0; attempt < 80; attempt++) {
     const L = Array.from({ length: N }, () => Array(N).fill(' '));
     let bad = false;
@@ -264,6 +284,264 @@ function plantBoard() {
   const L = Array.from({ length: N }, () => Array(N).fill(' '));
   for (let r = 0; r < N; r++) for (let c = 0; c < N; c++) L[r][c] = drawLetter();
   return L;
+}
+
+/* ---------- v2 board generation: plant words, then bend them ----------
+   The board is built out of real words laid crossword-style, the gaps are
+   filled from those words' own letters, and then every planted word is
+   minimally broken (a swap with a neighbour, or one same-class letter
+   swapped out) so nothing starts already-spelled — but every word sits
+   one move away from spelling itself again. */
+function spanKey(cells) { return cells.map(([r, c]) => r + ',' + c).sort().join('|'); }
+function boardWordsArePlanted(L, spans) {
+  // true iff every complete word on the board is exactly one of the planted
+  // spans, still spelling its planted word (no accidental extras)
+  const byKey = new Map(spans.map(s => [spanKey(s.cells), s.word]));
+  for (const fw of scanWords(L).words) {
+    if (byKey.get(spanKey(fw.cells)) !== fw.word) return false;
+  }
+  return true;
+}
+function bendWord(L, s, spans) {
+  // break span s minimally; board must never gain an un-planted word.
+  // Among all valid swap-bends, keep the one that leaves the most
+  // near-word windows around the two touched cells.
+  const inSpan = (rr, cc) => s.cells.some(([sr, sc]) => sr === rr && sc === cc);
+  let best = null; // {r, c, rr, cc, score}
+  for (let i = 0; i < s.cells.length; i++) {
+    const [r, c] = s.cells[i];
+    for (const [rr, cc] of [[r - 1, c], [r + 1, c], [r, c - 1], [r, c + 1]]) {
+      if (rr < 0 || rr >= N || cc < 0 || cc >= N || inSpan(rr, cc)) continue;
+      const a = L[r][c], b = L[rr][cc];
+      if (!b || b === ' ' || a === b) continue;
+      L[r][c] = b; L[rr][cc] = a;
+      if (boardWordsArePlanted(L, spans)) {
+        const score = localNearCount(L, r, c) + localNearCount(L, rr, cc);
+        if (!best || score > best.score) best = { r, c, rr, cc, score };
+      }
+      L[r][c] = a; L[rr][cc] = b;
+    }
+  }
+  if (best) {
+    const a = L[best.r][best.c], b = L[best.rr][best.cc];
+    L[best.r][best.c] = b; L[best.rr][best.cc] = a;
+    return true;
+  }
+  // fallback: replace one letter with a plausible same-class letter
+  const order = shuffleArr(s.cells.map((_, i) => i));
+  for (const i of order) {
+    const [r, c] = s.cells[i];
+    const orig = L[r][c];
+    const alts = shuffleArr((VOWELS.has(orig) ? 'AEIOU' : 'BCDFGHLMNPRSTW').split('').filter(x => x !== orig));
+    for (const ch of alts) {
+      L[r][c] = ch;
+      if (boardWordsArePlanted(L, spans)) return true;
+    }
+    L[r][c] = orig;
+  }
+  return false;
+}
+function generateLettersV2() {
+  for (let attempt = 0; attempt < 40; attempt++) {
+    const L = Array.from({ length: N }, () => Array(N).fill(' '));
+    const spans = [];
+    const covered = new Set();
+    // plant words crossword-style until the board is mostly word-stuff:
+    // >= 12 words or >= 48 of 64 cells covered
+    for (let round = 0; round < 26 && (spans.length < 12 || covered.size < 48); round++) {
+      for (let t = 0; t < 40; t++) {
+        const word = PLANT_POOL[(Math.random() * PLANT_POOL.length) | 0];
+        const len = word.length, horiz = Math.random() < 0.5;
+        const r = (Math.random() * N) | 0, c = (Math.random() * N) | 0;
+        const cells = [];
+        let ok = true;
+        for (let k = 0; k < len; k++) {
+          const rr = horiz ? r : r + k, cc = horiz ? c + k : c;
+          if (rr >= N || cc >= N) { ok = false; break; }
+          if (L[rr][cc] !== ' ' && L[rr][cc] !== word[k]) { ok = false; break; }
+          cells.push([rr, cc]);
+        }
+        if (!ok) continue;
+        if (spans.some(s => spanKey(s.cells) === spanKey(cells))) continue;
+        const saved = cells.map(([rr, cc]) => L[rr][cc]);
+        cells.forEach(([rr, cc], k) => { L[rr][cc] = word[k]; });
+        if (!boardWordsArePlanted(L, [...spans, { cells, word }])) {
+          cells.forEach(([rr, cc], k) => { L[rr][cc] = saved[k]; });
+          continue;
+        }
+        spans.push({ cells, word });
+        for (const [rr, cc] of cells) covered.add(rr + ',' + cc);
+        break;
+      }
+    }
+    if (spans.length < 8) continue;
+    // bend every planted word BEFORE filling, so the fill can adapt to
+    // the bent fragments (and bends never swap with a blank)
+    let bendBad = false;
+    for (const s of spans) {
+      if (s.cells.map(([r, c]) => L[r][c]).join('') !== s.word) continue; // an earlier bend already broke it
+      if (!bendWord(L, s, spans)) { bendBad = true; break; }
+    }
+    if (bendBad) continue;
+    if (scanWords(L).words.length) continue;
+    // greedy fill: each remaining cell takes the pool letter that leaves
+    // the most one-swap-near windows around it (and never completes one)
+    const pool = [];
+    for (const s of spans) for (const ch of s.word) pool.push(ch, ch);
+    for (const ch of 'ETAOINSHRDLUETAOINSHRDLUCMF') pool.push(ch);
+    let fillBad = false;
+    for (let r = 0; r < N && !fillBad; r++) for (let c = 0; c < N; c++) {
+      if (L[r][c] !== ' ') continue;
+      let best = null, bestScore = -1;
+      for (let t = 0; t < 12; t++) {
+        const ch = pool[(Math.random() * pool.length) | 0];
+        L[r][c] = ch;
+        if (formsWordAt(L, r, c)) { L[r][c] = ' '; continue; }
+        const sc = localNearCount(L, r, c);
+        if (sc > bestScore) { bestScore = sc; best = ch; }
+        L[r][c] = ' ';
+      }
+      if (best) { L[r][c] = best; continue; }
+      for (const ch of 'ETAOINSHRDLU') { L[r][c] = ch; if (!formsWordAt(L, r, c)) { best = ch; break; } L[r][c] = ' '; }
+      if (!best) fillBad = true;
+    }
+    if (fillBad) continue;
+    if (scanWords(L).words.length) continue;   // nothing may start spelled
+    if (movesIn(L) < 3) continue;               // hard guarantee: >= 3 moves
+    return L;
+  }
+  return null;
+}
+function generateLetters() {
+  return generateLettersV2() || generateLettersV1();
+}
+
+/* ---------- word density ----------
+   Fraction of all filled 4/5-windows (horizontal + vertical) that are
+   ONE SWAP away from spelling a word: the window already spells one, one
+   adjacent transposition inside it does, or swapping one of its letters
+   with an orthogonally adjacent tile does. This is the gameplay-true
+   measure of "the board reads as near-words". (A looser proxy — one
+   substitution OR anagram-with-one-change, regardless of where the
+   needed letter sits — saturates: even random soup scores ~0.91 on it,
+   because 4/5-letter space is that dense. Measured and rejected.) */
+const DIRS4 = [[-1, 0], [1, 0], [0, -1], [0, 1]];
+function windowOneSwap(L, cells, s) {
+  const set = s.length === 5 ? WORDS5 : WORDS4;
+  if (set.has(s)) return true;
+  for (let i = 0; i + 1 < s.length; i++) {
+    if (s[i] === s[i + 1]) continue;
+    if (set.has(s.substr(0, i) + s[i + 1] + s[i] + s.substr(i + 2))) return true;
+  }
+  const inWin = new Set(cells.map(([r, c]) => r + ',' + c));
+  for (let i = 0; i < cells.length; i++) {
+    const [r, c] = cells[i];
+    for (const [dr, dc] of DIRS4) {
+      const nr = r + dr, nc = c + dc;
+      if (nr < 0 || nr >= N || nc < 0 || nc >= N || inWin.has(nr + ',' + nc)) continue;
+      const ch = L[nr][nc];
+      if (!ch || ch === ' ' || ch === s[i]) continue;
+      if (set.has(s.substr(0, i) + ch + s.substr(i + 1))) return true;
+    }
+  }
+  return false;
+}
+function windowsThrough(L, r, c, fn) {
+  // call fn(cells, string) for every completely filled 4/5-window through (r,c)
+  for (const [dr, dc] of [[0, 1], [1, 0]]) for (const len of [4, 5]) {
+    for (let off = 0; off < len; off++) {
+      const sr = r - dr * off, sc = c - dc * off;
+      const er = sr + dr * (len - 1), ec = sc + dc * (len - 1);
+      if (sr < 0 || sc < 0 || er >= N || ec >= N) continue;
+      const cells = [];
+      let s = '', filled = true;
+      for (let k = 0; k < len; k++) {
+        const rr = sr + dr * k, cc = sc + dc * k, ch = L[rr][cc];
+        if (!ch || ch === ' ') { filled = false; break; }
+        cells.push([rr, cc]); s += ch;
+      }
+      if (filled) fn(cells, s);
+    }
+  }
+}
+function localNearCount(L, r, c) {
+  let n = 0;
+  windowsThrough(L, r, c, (cells, s) => { if (windowOneSwap(L, cells, s)) n++; });
+  return n;
+}
+function wordDensity(L) {
+  let total = 0, near = 0;
+  function line(cellsOf) {
+    for (const len of [4, 5]) for (let i = 0; i + len <= N; i++) {
+      const cells = cellsOf(i, len);
+      let s = '';
+      for (const [r, c] of cells) s += L[r][c];
+      if (s.includes(' ')) continue;
+      total++;
+      if (windowOneSwap(L, cells, s)) near++;
+    }
+  }
+  for (let r = 0; r < N; r++) line((i, len) => Array.from({ length: len }, (_, k) => [r, i + k]));
+  for (let c = 0; c < N; c++) line((i, len) => Array.from({ length: len }, (_, k) => [i + k, c]));
+  return total ? near / total : 0;
+}
+
+/* ---------- refill bias ----------
+   After a clear, new tiles are drawn mostly from the letters the board
+   is "asking for": letters that complete one-blank windows, letters one
+   substitution away from finishing a filled window, and letters from
+   recently cleared words — blended ~60/40 with plain weighted draws.
+   A drawn letter that would itself complete a word is always redrawn:
+   words may only be completed by a player swap. */
+function refillPool(L) {
+  const out = [];
+  function line(get) {
+    let s = '';
+    for (let i = 0; i < N; i++) s += get(i);
+    for (const len of [4, 5]) for (let i = 0; i + len <= N; i++) {
+      const w = s.substr(i, len);
+      const blank = w.indexOf(' ');
+      if (blank >= 0) {
+        if (w.indexOf(' ', blank + 1) >= 0) continue; // more than one blank
+        const set = NEAR1.get(w.substr(0, blank) + '.' + w.substr(blank + 1));
+        if (set) for (const ch of set) out.push(ch);
+      } else {
+        if ((len === 5 ? WORDS5 : WORDS4).has(w)) continue;
+        for (let k = 0; k < len; k++) {
+          const set = NEAR1.get(w.substr(0, k) + '.' + w.substr(k + 1));
+          if (set) for (const ch of set) if (ch !== w[k]) out.push(ch);
+        }
+      }
+    }
+  }
+  for (let r = 0; r < N; r++) line(i => L[r][i]);
+  for (let c = 0; c < N; c++) line(i => L[i][c]);
+  for (const wm of wordsMade.slice(-6)) for (const ch of wm.word) out.push(ch);
+  return out;
+}
+function drawRefillLetter(L, r, c, pool) {
+  // Sample from the ~60/40 biased blend and keep the candidate that
+  // leaves the most one-swap-near windows around this cell — but never
+  // one that completes a word itself: words are finished by swaps only.
+  let best = null, bestScore = -1;
+  for (let t = 0; t < 12; t++) {
+    let ch;
+    if (pool.length && t < 9 && Math.random() < 0.62) ch = pool[(Math.random() * pool.length) | 0];
+    else ch = drawLetter();
+    L[r][c] = ch;
+    if (formsWordAt(L, r, c)) { L[r][c] = ' '; continue; }
+    const sc = localNearCount(L, r, c);
+    L[r][c] = ' ';
+    if (sc > bestScore) { bestScore = sc; best = ch; }
+  }
+  if (best) return best;
+  for (const ch of 'ETAOINSHRDLUCMWFGYPBVKJXQZ') {
+    L[r][c] = ch;
+    const bad = formsWordAt(L, r, c);
+    L[r][c] = ' ';
+    if (!bad) return ch;
+  }
+  return 'E';
 }
 
 /* ---------- game state ---------- */
@@ -343,6 +621,8 @@ function burst(t) {
 function catOf(ch) { return VOWELS.has(ch) ? 'vowel' : (RARE.has(ch) ? 'rare' : 'cons'); }
 
 function applyGravityAndRefill() {
+  // pass 1: gravity — survivors slide down within their column
+  const writes = [];
   for (let c = 0; c < N; c++) {
     let write = N - 1;
     for (let r = N - 1; r >= 0; r--) {
@@ -352,8 +632,17 @@ function applyGravityAndRefill() {
         write--;
       } else tiles[r][c] = null;
     }
+    writes.push(write);
+  }
+  // bias pool from the settled survivors, then refill the column tops
+  const L = lettersOf();
+  const pool = refillPool(L);
+  for (let c = 0; c < N; c++) {
+    const write = writes[c];
     for (let r = write; r >= 0; r--) {
-      const t = mkTile(drawLetter(), r, c, 1);
+      const ch = drawRefillLetter(L, r, c, pool);
+      L[r][c] = ch;
+      const t = mkTile(ch, r, c, 1);
       t.y = cellY(r) - (write - r + 1) * TILE; // stack spawns above the board
       t.vy = 0; t.falling = true;
       tiles[r][c] = t;
@@ -717,7 +1006,11 @@ window.__dbg = {
   get wordCount() { return wordsMade.length; },
   gridLetters() { return lettersOf(); },
   findMoves() { return findMoves(); },
-  newGame() { newGame(); }
+  newGame() { newGame(); },
+  boardStats() { return { density: wordDensity(lettersOf()), moves: findMoves().length }; },
+  _genV1() { return generateLettersV1(); },
+  _genV2() { return generateLettersV2() || generateLettersV1(); },
+  _densityOf(L) { return wordDensity(L); }
 };
 </script>
 </body>
