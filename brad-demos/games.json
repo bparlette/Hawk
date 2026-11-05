@@ -28,7 +28,7 @@
    "orientation": "landscape",
    "path": "flappy-showdown.html",
    "thumb": "thumbs/one-tap-reflex-v2.webp",
-   "title": "FLAPPY BIRD \u2014 4-Way AI Showdown"
+   "title": "FLAPPY BIRD — 4-Way AI Showdown"
   },
   {
    "category": "AI Bake-Off",
@@ -104,13 +104,13 @@
     "attack": "KeyJ"
    },
    "labels": {
-    "attack": "SLAM \u00b7 TAP"
+    "attack": "SLAM · TAP"
    },
    "note": "The HOA fined you for gnomes on the lawn. You have the sledgehammer. Real rigid-body physics (Rapier): every flamingo, chair and yard gnome tumbles, stacks and flies. Built with gamepress.",
    "orientation": "portrait",
    "path": "g/hoa-sledge/index.html",
    "thumb": "thumbs/hoa-sledge.webp?v=1792421389",
-   "title": "HOA SLEDGE \u2014 Code Violation #1"
+   "title": "HOA SLEDGE — Code Violation #1"
   },
   {
    "autostart": [],
@@ -127,14 +127,14 @@
     "jump": "KeyK"
    },
    "labels": {
-    "attack": "FAN \u00b7 HOLD",
-    "jump": "THRUST \u00b7 TAP"
+    "attack": "FAN · HOLD",
+    "jump": "THRUST · TAP"
    },
-   "note": "Tesla Roadster 2.0 fan game: the car drives itself, you get two buttons \u2014 hold the fan for sonic loops, tap thrusters to kickflip over Teslas crossing the 4-way at Starbase. Built with gamepress.",
+   "note": "Tesla Roadster 2.0 fan game: the car drives itself, you get two buttons — hold the fan for sonic loops, tap thrusters to kickflip over Teslas crossing the 4-way at Starbase. Built with gamepress.",
    "orientation": "portrait",
    "path": "g/roadster-flip/index.html",
    "thumb": "thumbs/roadster-flip.webp?v=1792369872",
-   "title": "ROADSTER // FLIP \u2014 Starbase Run",
+   "title": "ROADSTER // FLIP — Starbase Run",
    "video": "g/roadster-flip/ROADSTER-FLIP-short-9x16.mp4"
   },
   {
@@ -144,7 +144,7 @@
    "orientation": "portrait",
    "path": "player.html",
    "thumb": "thumbs/roadster-flip.webp?v=1792369872",
-   "title": "ROADSTER // FLIP \u2014 30s Short & Showcase",
+   "title": "ROADSTER // FLIP — 30s Short & Showcase",
    "video": "g/roadster-flip/ROADSTER-FLIP-short-9x16.mp4"
   },
   {
@@ -271,9 +271,9 @@
     "start": "Enter"
    },
    "labels": {
-    "attack": "B \u00b7 ATTACK",
-    "jump": "C \u00b7 JUMP",
-    "special": "A \u00b7 SPECIAL"
+    "attack": "B · ATTACK",
+    "jump": "C · JUMP",
+    "special": "A · SPECIAL"
    },
    "note": "surge: shellshock16.surge.sh. Real ROM in a GPGX wasm player.",
    "orientation": "landscape",
@@ -348,11 +348,11 @@
    "extras": [
     {
      "key": "KeyQ",
-     "label": "CAM \u25c0"
+     "label": "CAM ◀"
     },
     {
      "key": "KeyE",
-     "label": "CAM \u25b6"
+     "label": "CAM ▶"
     }
    ],
    "id": "bakeoff-a-free",
@@ -366,7 +366,7 @@
    "orientation": "any",
    "path": "g/bakeoff-a-free/index.html?nosw&noboot",
    "thumb": "thumbs/bakeoff-a-free.webp?v=1791639767",
-   "title": "A \u00b7 Free City"
+   "title": "A · Free City"
   },
   {
    "autostart": [
@@ -391,11 +391,11 @@
    "extras": [
     {
      "key": "KeyQ",
-     "label": "CAM \u25c0"
+     "label": "CAM ◀"
     },
     {
      "key": "KeyE",
-     "label": "CAM \u25b6"
+     "label": "CAM ▶"
     }
    ],
    "id": "bakeoff-b-paper",
@@ -409,7 +409,7 @@
    "orientation": "any",
    "path": "g/bakeoff-b-paper/index.html?nosw&noboot",
    "thumb": "thumbs/bakeoff-b-paper.webp?v=1791639790",
-   "title": "B \u00b7 Paper City"
+   "title": "B · Paper City"
   },
   {
    "autostart": [
@@ -434,11 +434,11 @@
    "extras": [
     {
      "key": "KeyQ",
-     "label": "CAM \u25c0"
+     "label": "CAM ◀"
     },
     {
      "key": "KeyE",
-     "label": "CAM \u25b6"
+     "label": "CAM ▶"
     }
    ],
    "id": "bakeoff-c-gta",
@@ -452,7 +452,7 @@
    "orientation": "any",
    "path": "g/bakeoff-c-gta/index.html?nosw&noboot",
    "thumb": "thumbs/bakeoff-c-gta.webp?v=1791639840",
-   "title": "C \u00b7 GTA City"
+   "title": "C · GTA City"
   },
   {
    "autostart": [
@@ -477,11 +477,11 @@
    "extras": [
     {
      "key": "KeyQ",
-     "label": "CAM \u25c0"
+     "label": "CAM ◀"
     },
     {
      "key": "KeyE",
-     "label": "CAM \u25b6"
+     "label": "CAM ▶"
     }
    ],
    "id": "bakeoff-d-skyline",
@@ -495,7 +495,7 @@
    "orientation": "any",
    "path": "g/bakeoff-d-skyline/index.html?nosw&noboot",
    "thumb": "thumbs/bakeoff-d-skyline.webp?v=1791639909",
-   "title": "D \u00b7 Skyline City"
+   "title": "D · Skyline City"
   },
   {
    "autostart": [
@@ -520,11 +520,11 @@
    "extras": [
     {
      "key": "KeyQ",
-     "label": "CAM \u25c0"
+     "label": "CAM ◀"
     },
     {
      "key": "KeyE",
-     "label": "CAM \u25b6"
+     "label": "CAM ▶"
     }
    ],
    "id": "bakeoff-e-gta32",
@@ -538,7 +538,7 @@
    "orientation": "any",
    "path": "g/bakeoff-e-gta32/index.html?nosw&noboot",
    "thumb": "thumbs/bakeoff-e-gta32.webp?v=1791639960",
-   "title": "E \u00b7 GTA 32"
+   "title": "E · GTA 32"
   },
   {
    "autostart": [
@@ -563,11 +563,11 @@
    "extras": [
     {
      "key": "KeyQ",
-     "label": "CAM \u25c0"
+     "label": "CAM ◀"
     },
     {
      "key": "KeyE",
-     "label": "CAM \u25b6"
+     "label": "CAM ▶"
     }
    ],
    "id": "bakeoff-f-free16",
@@ -581,7 +581,7 @@
    "orientation": "any",
    "path": "g/bakeoff-f-free16/index.html?nosw&noboot",
    "thumb": "thumbs/bakeoff-f-free16.webp?v=1791639996",
-   "title": "F \u00b7 Free 16"
+   "title": "F · Free 16"
   },
   {
    "autostart": [
@@ -606,11 +606,11 @@
    "extras": [
     {
      "key": "KeyQ",
-     "label": "CAM \u25c0"
+     "label": "CAM ◀"
     },
     {
      "key": "KeyE",
-     "label": "CAM \u25b6"
+     "label": "CAM ▶"
     }
    ],
    "id": "bakeoff-g-hd2d",
@@ -624,7 +624,7 @@
    "orientation": "any",
    "path": "g/bakeoff-g-hd2d/index.html?nosw&noboot",
    "thumb": "thumbs/bakeoff-g-hd2d.webp?v=1791640060",
-   "title": "G \u00b7 HD-2D"
+   "title": "G · HD-2D"
   },
   {
    "autostart": [
@@ -649,11 +649,11 @@
    "extras": [
     {
      "key": "KeyQ",
-     "label": "CAM \u25c0"
+     "label": "CAM ◀"
     },
     {
      "key": "KeyE",
-     "label": "CAM \u25b6"
+     "label": "CAM ▶"
     }
    ],
    "id": "bakeoff-h-iso",
@@ -667,7 +667,7 @@
    "orientation": "any",
    "path": "g/bakeoff-h-iso/index.html?nosw&noboot",
    "thumb": "thumbs/bakeoff-h-iso.webp?v=1791640144",
-   "title": "H \u00b7 Iso City"
+   "title": "H · Iso City"
   },
   {
    "autostart": [],
@@ -675,11 +675,11 @@
    "extras": [
     {
      "key": "KeyQ",
-     "label": "CAM \u25c0"
+     "label": "CAM ◀"
     },
     {
      "key": "KeyE",
-     "label": "CAM \u25b6"
+     "label": "CAM ▶"
     }
    ],
    "id": "bakeoff-i-cel",
@@ -694,7 +694,7 @@
    "orientation": "any",
    "path": "g/bakeoff-i-cel/index.html",
    "thumb": "thumbs/bakeoff-i-cel.webp?v=1791640173",
-   "title": "I \u00b7 Cel City"
+   "title": "I · Cel City"
   },
   {
    "autostart": [],
@@ -728,7 +728,7 @@
    "orientation": "any",
    "path": "g/survivors-plus/index.html",
    "thumb": "thumbs/survivors-plus.webp?v=1791962719",
-   "title": "\u2605 Vampire Survivors Remake \u2014 Hark Edition (fan remake)"
+   "title": "★ Vampire Survivors Remake — Hark Edition (fan remake)"
   },
   {
    "autostart": [],
@@ -768,7 +768,7 @@
    "extras": [
     {
      "key": "Enter",
-     "label": "\u2605 STAR"
+     "label": "★ STAR"
     },
     {
      "key": "KeyM",
@@ -855,7 +855,7 @@
     "start": "Enter"
    },
    "labels": {
-    "attack": "A \u00b7 JUMP",
+    "attack": "A · JUMP",
     "jump": "B",
     "start": "PAUSE"
    },
@@ -885,7 +885,7 @@
     "start": "Enter"
    },
    "labels": {
-    "attack": "A \u00b7 JUMP",
+    "attack": "A · JUMP",
     "jump": "B",
     "start": "PAUSE"
    },
@@ -915,7 +915,7 @@
     "start": "Enter"
    },
    "labels": {
-    "attack": "A \u00b7 JUMP",
+    "attack": "A · JUMP",
     "jump": "B",
     "start": "PAUSE"
    },
@@ -945,7 +945,7 @@
     "start": "Enter"
    },
    "labels": {
-    "attack": "A \u00b7 ROTATE",
+    "attack": "A · ROTATE",
     "jump": "B",
     "start": "PAUSE"
    },
@@ -975,7 +975,7 @@
     "start": "Enter"
    },
    "labels": {
-    "attack": "A \u00b7 FLAP",
+    "attack": "A · FLAP",
     "jump": "B",
     "start": "PAUSE"
    },
@@ -1005,8 +1005,8 @@
     "start": "Enter"
    },
    "labels": {
-    "attack": "A \u00b7 GAS",
-    "jump": "B \u00b7 BRAKE",
+    "attack": "A · GAS",
+    "jump": "B · BRAKE",
     "start": "PAUSE"
    },
    "orientation": "portrait",
@@ -1035,7 +1035,7 @@
     "start": "Enter"
    },
    "labels": {
-    "attack": "A \u00b7 FIRE",
+    "attack": "A · FIRE",
     "jump": "B",
     "start": "PAUSE"
    },
@@ -1072,7 +1072,7 @@
    "orientation": "any",
    "path": "g/cinema-city/index.html",
    "thumb": "thumbs/cinema-city.webp?v=1791654906",
-   "title": "J \u00b7 Cinema City"
+   "title": "J · Cinema City"
   },
   {
    "autostart": [],
@@ -1110,7 +1110,7 @@
    "orientation": "any",
    "path": "g/wasteland-van/index.html",
    "thumb": "thumbs/wasteland-van.webp?v=1791952931",
-   "title": "\u2605 ROADKILL RIG \u2014 Hark Original"
+   "title": "★ ROADKILL RIG — Hark Original"
   },
   {
    "autostart": [],
@@ -1140,7 +1140,7 @@
    "orientation": "any",
    "path": "g/toad-street-32/index.html",
    "thumb": "thumbs/toad-street-32.webp?v=1791683427",
-   "title": "K \u00b7 Toad Street 32"
+   "title": "K · Toad Street 32"
   },
   {
    "autostart": [],
@@ -1165,7 +1165,7 @@
     "up": "KeyW"
    },
    "labels": {
-    "attack": "J \u00b7 THROW"
+    "attack": "J · THROW"
    },
    "note": "Paperboy-style route on the Toad City Baltimore engine (same rowhouse kit, props, cars, Harold/Mavis rigs, Fells Point + WTC landmarks, toon/ink shading). Source /workspace/work/bmore-paperboy.",
    "orientation": "any",
@@ -1206,9 +1206,9 @@
     "up": "KeyW"
    },
    "labels": {
-    "attack": "J \u00b7 FIRE",
-    "jump": "F \u00b7 BUILD",
-    "special": "G \u00b7 BOMB"
+    "attack": "J · FIRE",
+    "jump": "F · BUILD",
+    "special": "G · BOMB"
    },
    "note": "Twin-stick zombie horde run on the Toad City Baltimore engine (same city kit, real-name signs, Harold/Mavis rigs, Fells Point + WTC landmarks, toon/ink/halftone shading). W Pratt St to the Broadway Pier water taxi: 2 barricade holds, 4 weapons, specials, the Harbor Hulk boss. Source /workspace/work/bmore-zombies.",
    "orientation": "any",
@@ -1241,9 +1241,9 @@
     "up": "KeyW"
    },
    "labels": {
-    "attack": "SHIFT \u00b7 BOOST",
-    "jump": "SPACE \u00b7 CLIMB",
-    "special": "V \u00b7 CAM"
+    "attack": "SHIFT · BOOST",
+    "jump": "SPACE · CLIMB",
+    "special": "V · CAM"
    },
    "note": "FPV drone race around the Inner Harbor on the Toad City Baltimore engine (same city kit, HD landmarks, toon/ink shading). Source /workspace/work/bmore-drone.",
    "orientation": "any",
@@ -1281,10 +1281,10 @@
     "up": "ArrowUp"
    },
    "labels": {
-    "attack": "J \u00b7 FLIP",
+    "attack": "J · FLIP",
     "jump": "OLLIE",
     "select": "PAUSE",
-    "special": "L \u00b7 GRIND",
+    "special": "L · GRIND",
     "start": "SKATE"
    },
    "note": "Tony Hawk-style 2-minute skate runs on the Toad City Baltimore code + city (same Inner Harbor, rowhouses, landmarks with real signage, toon/ink shading, rig system). Ollies, flips, grabs, spins, stoop-rail grinds, manuals, special meter, 5 goals (score, combo, S-K-A-T-E, secret tape, Harbor Gap). Source /workspace/work/bmore-skate.",
@@ -1315,10 +1315,10 @@
     "up": "KeyW"
    },
    "labels": {
-    "attack": "SHIFT \u00b7 SLIDE",
-    "jump": "SPACE \u00b7 JUMP",
+    "attack": "SHIFT · SLIDE",
+    "jump": "SPACE · JUMP",
     "select": "PAUSE",
-    "special": "E \u00b7 CAM",
+    "special": "E · CAM",
     "start": "START"
    },
    "note": "Rooftop parkour on the Toad City Baltimore engine (same city kit, rowhouse roofs, HD landmarks with real signage, toon/ink shading): 3 courses, FOXTROT police drone chaser, medals. Source /workspace/work/bmore-parkour.",
@@ -1451,7 +1451,7 @@
    "orientation": "any",
    "path": "https://notebook-arcade.surge.sh/excitebike/",
    "thumb": "https://notebook-arcade.surge.sh/excitebike/og.jpg",
-   "title": "Excitebike \u2014 Track 1"
+   "title": "Excitebike — Track 1"
   },
   {
    "autostart": [],
@@ -1469,7 +1469,7 @@
    "orientation": "any",
    "path": "https://notebook-arcade.surge.sh/punch-out/",
    "thumb": "https://notebook-arcade.surge.sh/punch-out/og.jpg",
-   "title": "Punch-Out \u2014 Minor Circuit"
+   "title": "Punch-Out — Minor Circuit"
   },
   {
    "autostart": [],
@@ -1487,7 +1487,7 @@
    "orientation": "any",
    "path": "https://notebook-arcade.surge.sh/kung-fu-master/",
    "thumb": "https://notebook-arcade.surge.sh/kung-fu-master/og.jpg",
-   "title": "Kung Fu Master \u2014 Level 1"
+   "title": "Kung Fu Master — Level 1"
   },
   {
    "autostart": [],
@@ -1505,7 +1505,7 @@
    "orientation": "any",
    "path": "https://notebook-arcade.surge.sh/bad-dudes/",
    "thumb": "https://notebook-arcade.surge.sh/bad-dudes/og.jpg",
-   "title": "Bad Dudes \u2014 Stage 2"
+   "title": "Bad Dudes — Stage 2"
   },
   {
    "autostart": [],
@@ -1644,15 +1644,15 @@
     "up": "KeyW"
    },
    "labels": {
-    "attack": "J \u00b7 FIRE",
-    "jump": "E \u00b7 USE / HIDE",
-    "special": "K \u00b7 LASER AIM"
+    "attack": "J · FIRE",
+    "jump": "E · USE / HIDE",
+    "special": "K · LASER AIM"
    },
    "note": "Hark's featured fan build (2026-10-13), single file, procedural. Source: /workspace/work/re-requiem/game/index.html",
    "orientation": "any",
    "path": "g/re-requiem/index.html",
    "thumb": "thumbs/re-requiem.webp?v=1791938512",
-   "title": "Resident Evil: Requiem \u00b7 FINAL"
+   "title": "Resident Evil: Requiem · FINAL"
   },
   {
    "autostart": [],
@@ -1669,15 +1669,15 @@
     "up": "KeyW"
    },
    "labels": {
-    "attack": "E \u00b7 USE",
+    "attack": "E · USE",
     "jump": "SPACE",
-    "special": "F \u00b7 LIGHT"
+    "special": "F · LIGHT"
    },
    "note": "Earlier build v1 of Brad's Requiem fan game, pasted 2026-10-13, added as-is with no fixes. Mouse to look.",
    "orientation": "landscape",
    "path": "g/re-requiem-v1/index.html",
    "thumb": "thumbs/re-requiem-v1.webp?v=1791939086",
-   "title": "Requiem v1 \u00b7 Spencer Estate Wing"
+   "title": "Requiem v1 · Spencer Estate Wing"
   },
   {
    "autostart": [],
@@ -1694,15 +1694,15 @@
     "up": "KeyW"
    },
    "labels": {
-    "attack": "E \u00b7 USE",
+    "attack": "E · USE",
     "jump": "SPACE",
-    "special": "F \u00b7 LIGHT"
+    "special": "F · LIGHT"
    },
    "note": "Earlier build v2 of Brad's Requiem fan game, pasted 2026-10-13, added as-is with no fixes. Mouse to look.",
    "orientation": "landscape",
    "path": "g/re-requiem-v2/index.html",
    "thumb": "thumbs/re-requiem-v2.webp?v=1791939086",
-   "title": "Requiem v2 \u00b7 RE Engine WebGL Edition"
+   "title": "Requiem v2 · RE Engine WebGL Edition"
   },
   {
    "autostart": [],
@@ -1719,15 +1719,15 @@
     "up": "KeyW"
    },
    "labels": {
-    "attack": "E \u00b7 USE",
+    "attack": "E · USE",
     "jump": "SPACE",
-    "special": "F \u00b7 LIGHT"
+    "special": "F · LIGHT"
    },
    "note": "Earlier build v3 of Brad's Requiem fan game, pasted 2026-10-13, added as-is with no fixes. Mouse to look.",
    "orientation": "landscape",
    "path": "g/re-requiem-v3/index.html",
    "thumb": "thumbs/re-requiem-v3.webp?v=1791939086",
-   "title": "Requiem v3 \u00b7 Director's Cut"
+   "title": "Requiem v3 · Director's Cut"
   },
   {
    "autostart": [],
@@ -1767,7 +1767,7 @@
    "orientation": "any",
    "path": "g/blox-dough-raid-plus/index.html",
    "thumb": "thumbs/blox-dough-raid-plus.webp?v=1791933461",
-   "title": "\u2605 Blox Fruits: Dough Raid \u2014 Turtles Edition"
+   "title": "★ Blox Fruits: Dough Raid — Turtles Edition"
   },
   {
    "autostart": [],
@@ -1800,14 +1800,14 @@
    "labels": {
     "attack": "GAS",
     "jump": "BRAKE",
-    "special": "\u2691 CHECKPOINT",
+    "special": "⚑ CHECKPOINT",
     "start": "RESTART"
    },
    "note": "Hark fan remake of PolyTrack (Kodub), 2026-10-13. three.js r160 local, raycast-suspension physics, loop/jumps/banked turns, medals, localStorage ghost, track builder. Boots in an autopilot attract lap; any key/tap = race. Source: /workspace/work/polytrack-plus/game",
    "orientation": "any",
    "path": "g/polytrack-plus/index.html",
    "thumb": "thumbs/polytrack-plus.webp?v=1791950094",
-   "title": "\u2605 PolyTrack Remake \u2014 Hark Edition (fan remake)"
+   "title": "★ PolyTrack Remake — Hark Edition (fan remake)"
   },
   {
    "autostart": [],
@@ -1880,7 +1880,7 @@
    "orientation": "any",
    "path": "g/socal-summer-games-plus/index.html",
    "thumb": "thumbs/socal-summer-games-plus.webp?v=1791954332",
-   "title": "\u2605 California Games Remastered \u2014 Hark Edition (fan remake)"
+   "title": "★ California Games Remastered — Hark Edition (fan remake)"
   },
   {
    "autostart": [],
@@ -1942,9 +1942,9 @@
     "up": "KeyW"
    },
    "labels": {
-    "attack": "SPACE \u00b7 GRAPPLE",
-    "jump": "E \u00b7 NITRO",
-    "special": "1 \u00b7 MODE"
+    "attack": "SPACE · GRAPPLE",
+    "jump": "E · NITRO",
+    "special": "1 · MODE"
    },
    "note": "Pasted by Brad 2026-10-13, added as-is with no fixes. Arrows also work. Space grapple/vortex, E nitro/slots, 1/2/3 switch mode, H 16-bit.",
    "orientation": "any",
@@ -1981,9 +1981,9 @@
     "up": "KeyW"
    },
    "labels": {
-    "attack": "SPACE \u00b7 GRAPPLE",
-    "jump": "E \u00b7 NITRO",
-    "special": "1 \u00b7 MODE"
+    "attack": "SPACE · GRAPPLE",
+    "jump": "E · NITRO",
+    "special": "1 · MODE"
    },
    "note": "Pasted by Brad 2026-10-13 (second attempt by the other AI), added as-is with no fixes.",
    "orientation": "any",
@@ -2016,15 +2016,15 @@
     "up": "KeyW"
    },
    "labels": {
-    "attack": "SPACE \u00b7 DODGE",
-    "jump": "F \u00b7 HOOK",
-    "special": "E \u00b7 EMP"
+    "attack": "SPACE · DODGE",
+    "jump": "F · HOOK",
+    "special": "E · EMP"
    },
    "note": "Pasted by Brad 2026-10-13: the other AI's official remake after reading Hark's instructions. Added as-is with no fixes.",
    "orientation": "any",
    "path": "g/drift-survivors-after-hark/index.html",
    "thumb": "thumbs/drift-survivors-after-hark.webp?v=1792293836",
-   "title": "DRIFT SURVIVORS \u2014 Toon 3D Fan Game - after harkinstructions"
+   "title": "DRIFT SURVIVORS — Toon 3D Fan Game - after harkinstructions"
   },
   {
    "autostart": [
@@ -2050,8 +2050,8 @@
    },
    "labels": {
     "down": "BRK",
-    "left": "\u25c0 STEER",
-    "right": "STEER \u25b6",
+    "left": "◀ STEER",
+    "right": "STEER ▶",
     "start": "START",
     "up": "GAS"
    },
@@ -2084,8 +2084,8 @@
    },
    "labels": {
     "down": "BRK",
-    "left": "\u25c0 STEER",
-    "right": "STEER \u25b6",
+    "left": "◀ STEER",
+    "right": "STEER ▶",
     "start": "START",
     "up": "GAS"
    },
@@ -2797,11 +2797,11 @@
    "id": "cat-arcade-v2",
    "keys": {},
    "labels": {},
-   "note": "Hub for the Cat Arcade v2 rebuild \u2014 31 games on one shared runtime. Every card links to the rebuilt game and to the untouched original in g/_v1/ so you can A/B them.",
+   "note": "Hub for the Cat Arcade v2 rebuild — 31 games on one shared runtime. Every card links to the rebuilt game and to the untouched original in g/_v1/ so you can A/B them.",
    "orientation": "portrait",
    "path": "g/_v2/index.html",
    "thumb": "thumbs/one-tap-reflex-v2.webp?v=1792424065",
-   "title": "CAT ARCADE V2 \u2014 v1 vs v2 comparison"
+   "title": "CAT ARCADE V2 — v1 vs v2 comparison"
   },
   {
    "autostart": [],
@@ -2809,11 +2809,11 @@
    "id": "one-tap-reflex",
    "keys": {},
    "labels": {},
-   "note": "Cat Arcade v2 rebuild: one bad tap and it is over. New engine \u2014 bloom, impact ripples, particle debris, camera punch, combo meter, layered synth audio. The untouched original is kept at g/_v1/one-tap-reflex/.",
+   "note": "Cat Arcade v2 rebuild: one bad tap and it is over. New engine — bloom, impact ripples, particle debris, camera punch, combo meter, layered synth audio. The untouched original is kept at g/_v1/one-tap-reflex/.",
    "orientation": "portrait",
    "path": "g/_v2/one-tap-reflex/index.html",
    "thumb": "thumbs/one-tap-reflex-v2.webp?v=1792424065",
-   "title": "FLAP CAT \u2014 tap to flap  \u00b7  3 lives (v2)"
+   "title": "FLAP CAT — tap to flap  ·  3 lives (v2)"
   },
   {
    "autostart": [],
@@ -2821,11 +2821,11 @@
    "id": "stack-timing",
    "keys": {},
    "labels": {},
-   "note": "Cat Arcade v2 rebuild: one pixel off and the tower falls. New engine \u2014 bloom, impact ripples, particle debris, camera punch, combo meter, layered synth audio. The untouched original is kept at g/_v1/stack-timing/.",
+   "note": "Cat Arcade v2 rebuild: one pixel off and the tower falls. New engine — bloom, impact ripples, particle debris, camera punch, combo meter, layered synth audio. The untouched original is kept at g/_v1/stack-timing/.",
    "orientation": "portrait",
    "path": "g/_v2/stack-timing/index.html",
    "thumb": "thumbs/stack-timing-v2.webp?v=1792424101",
-   "title": "TOWER PERFECT \u2014 tap to drop  \u00b7  centre it (v2)"
+   "title": "TOWER PERFECT — tap to drop  ·  centre it (v2)"
   },
   {
    "autostart": [],
@@ -2833,11 +2833,11 @@
    "id": "bullet-heaven",
    "keys": {},
    "labels": {},
-   "note": "Cat Arcade v2 rebuild: one cat versus the whole graveyard. New engine \u2014 bloom, impact ripples, particle debris, camera punch, combo meter, layered synth audio. The untouched original is kept at g/_v1/bullet-heaven/.",
+   "note": "Cat Arcade v2 rebuild: one cat versus the whole graveyard. New engine — bloom, impact ripples, particle debris, camera punch, combo meter, layered synth audio. The untouched original is kept at g/_v1/bullet-heaven/.",
    "orientation": "portrait",
    "path": "g/_v2/bullet-heaven/index.html",
    "thumb": "thumbs/bullet-heaven-v2.webp?v=1792424010",
-   "title": "HORDE CAT \u2014 drag to run  \u00b7  auto-fire (v2)"
+   "title": "HORDE CAT — drag to run  ·  auto-fire (v2)"
   },
   {
    "autostart": [],
@@ -2845,11 +2845,11 @@
    "id": "card-roguelite",
    "keys": {},
    "labels": {},
-   "note": "Cat Arcade v2 rebuild: five waves, one deck, no mercy. New engine \u2014 bloom, impact ripples, particle debris, camera punch, combo meter, layered synth audio. The untouched original is kept at g/_v1/card-roguelite/.",
+   "note": "Cat Arcade v2 rebuild: five waves, one deck, no mercy. New engine — bloom, impact ripples, particle debris, camera punch, combo meter, layered synth audio. The untouched original is kept at g/_v1/card-roguelite/.",
    "orientation": "portrait",
    "path": "g/_v2/card-roguelite/index.html",
    "thumb": "thumbs/card-roguelite-v2.webp?v=1792424015",
-   "title": "CARD CATS \u2014 draw \u00b7 play \u00b7 survive (v2)"
+   "title": "CARD CATS — draw · play · survive (v2)"
   },
   {
    "autostart": [],
@@ -2857,11 +2857,11 @@
    "id": "grid-chaser",
    "keys": {},
    "labels": {},
-   "note": "Cat Arcade v2 rebuild: eat every dot before they eat you. New engine \u2014 bloom, impact ripples, particle debris, camera punch, combo meter, layered synth audio. The untouched original is kept at g/_v1/grid-chaser/.",
+   "note": "Cat Arcade v2 rebuild: eat every dot before they eat you. New engine — bloom, impact ripples, particle debris, camera punch, combo meter, layered synth audio. The untouched original is kept at g/_v1/grid-chaser/.",
    "orientation": "portrait",
    "path": "g/_v2/grid-chaser/index.html",
    "thumb": "thumbs/grid-chaser-v2.webp?v=1792424035",
-   "title": "GRID CHASER \u2014 swipe or arrows to turn (v2)"
+   "title": "GRID CHASER — swipe or arrows to turn (v2)"
   },
   {
    "autostart": [],
@@ -2869,11 +2869,11 @@
    "id": "hide-and-seek",
    "keys": {},
    "labels": {},
-   "note": "Cat Arcade v2 rebuild: he is one sweep away. New engine \u2014 bloom, impact ripples, particle debris, camera punch, combo meter, layered synth audio. The untouched original is kept at g/_v1/hide-and-seek/.",
+   "note": "Cat Arcade v2 rebuild: he is one sweep away. New engine — bloom, impact ripples, particle debris, camera punch, combo meter, layered synth audio. The untouched original is kept at g/_v1/hide-and-seek/.",
    "orientation": "portrait",
    "path": "g/_v2/hide-and-seek/index.html",
    "thumb": "thumbs/hide-and-seek-v2.webp?v=1792424040",
-   "title": "HIDE & SEEK \u2014 drag to sneak \u00b7 stay out of the light (v2)"
+   "title": "HIDE & SEEK — drag to sneak · stay out of the light (v2)"
   },
   {
    "autostart": [],
@@ -2881,11 +2881,11 @@
    "id": "falling-blocks",
    "keys": {},
    "labels": {},
-   "note": "Cat Arcade v2 rebuild: the well never stops filling. New engine \u2014 bloom, impact ripples, particle debris, camera punch, combo meter, layered synth audio. The untouched original is kept at g/_v1/falling-blocks/.",
+   "note": "Cat Arcade v2 rebuild: the well never stops filling. New engine — bloom, impact ripples, particle debris, camera punch, combo meter, layered synth audio. The untouched original is kept at g/_v1/falling-blocks/.",
    "orientation": "portrait",
    "path": "g/_v2/falling-blocks/index.html",
    "thumb": "thumbs/falling-blocks-v2.webp?v=1792429882",
-   "title": "BLOCK DROP \u2014 clear 20 lines (v2)"
+   "title": "BLOCK DROP — clear 20 lines (v2)"
   },
   {
    "autostart": [],
@@ -2893,11 +2893,11 @@
    "id": "ballistic-bouncer",
    "keys": {},
    "labels": {},
-   "note": "Cat Arcade v2 rebuild: one ball, three lives, zero chill. New engine \u2014 bloom, impact ripples, particle debris, camera punch, combo meter, layered synth audio. The untouched original is kept at g/_v1/ballistic-bouncer/.",
+   "note": "Cat Arcade v2 rebuild: one ball, three lives, zero chill. New engine — bloom, impact ripples, particle debris, camera punch, combo meter, layered synth audio. The untouched original is kept at g/_v1/ballistic-bouncer/.",
    "orientation": "portrait",
    "path": "g/_v2/ballistic-bouncer/index.html",
    "thumb": "thumbs/ballistic-bouncer-v2.webp?v=1792424004",
-   "title": "BALLISTIC BOUNCER \u2014 tap to slam \u00b7 keep it alive (v2)"
+   "title": "BALLISTIC BOUNCER — tap to slam · keep it alive (v2)"
   },
   {
    "autostart": [],
@@ -2905,11 +2905,11 @@
    "id": "arena-brawler",
    "keys": {},
    "labels": {},
-   "note": "Cat Arcade v2 rebuild: 1 cat vs the whole street. New engine \u2014 bloom, impact ripples, particle debris, camera punch, combo meter, layered synth audio. The untouched original is kept at g/_v1/arena-brawler/.",
+   "note": "Cat Arcade v2 rebuild: 1 cat vs the whole street. New engine — bloom, impact ripples, particle debris, camera punch, combo meter, layered synth audio. The untouched original is kept at g/_v1/arena-brawler/.",
    "orientation": "portrait",
    "path": "g/_v2/arena-brawler/index.html",
    "thumb": "thumbs/arena-brawler-v2.webp?v=1792423999",
-   "title": "ZOMBIE BRAWL \u2014 drag to move  \u00b7  mash to punch (v2)"
+   "title": "ZOMBIE BRAWL — drag to move  ·  mash to punch (v2)"
   },
   {
    "autostart": [],
@@ -2917,11 +2917,11 @@
    "id": "footsies-duel",
    "keys": {},
    "labels": {},
-   "note": "Cat Arcade v2 rebuild: one whiff and you eat 34. New engine \u2014 bloom, impact ripples, particle debris, camera punch, combo meter, layered synth audio. The untouched original is kept at g/_v1/footsies-duel/.",
+   "note": "Cat Arcade v2 rebuild: one whiff and you eat 34. New engine — bloom, impact ripples, particle debris, camera punch, combo meter, layered synth audio. The untouched original is kept at g/_v1/footsies-duel/.",
    "orientation": "portrait",
    "path": "g/_v2/footsies-duel/index.html",
    "thumb": "thumbs/footsies-duel-v2.webp?v=1792424030",
-   "title": "FOOTSIES DUEL \u2014 tap sides to step \u00b7 tap middle to poke \u00b7 hold to block (v2)"
+   "title": "FOOTSIES DUEL — tap sides to step · tap middle to poke · hold to block (v2)"
   },
   {
    "autostart": [],
@@ -2929,11 +2929,11 @@
    "id": "slice-swipe",
    "keys": {},
    "labels": {},
-   "note": "Cat Arcade v2 rebuild: the garden only needs 30 slices. New engine \u2014 bloom, impact ripples, particle debris, camera punch, combo meter, layered synth audio. The untouched original is kept at g/_v1/slice-swipe/.",
+   "note": "Cat Arcade v2 rebuild: the garden only needs 30 slices. New engine — bloom, impact ripples, particle debris, camera punch, combo meter, layered synth audio. The untouched original is kept at g/_v1/slice-swipe/.",
    "orientation": "portrait",
    "path": "g/_v2/slice-swipe/index.html",
    "thumb": "thumbs/slice-swipe-v2.webp?v=1792424096",
-   "title": "CAT NINJA \u2014 swipe to slice \u00b7 don\\ (v2)"
+   "title": "CAT NINJA — swipe to slice · don\\ (v2)"
   },
   {
    "autostart": [],
@@ -2941,11 +2941,11 @@
    "id": "run-and-gun",
    "keys": {},
    "labels": {},
-   "note": "Cat Arcade v2 rebuild: the sludge wall never stops. New engine \u2014 bloom, impact ripples, particle debris, camera punch, combo meter, layered synth audio. The untouched original is kept at g/_v1/run-and-gun/.",
+   "note": "Cat Arcade v2 rebuild: the sludge wall never stops. New engine — bloom, impact ripples, particle debris, camera punch, combo meter, layered synth audio. The untouched original is kept at g/_v1/run-and-gun/.",
    "orientation": "portrait",
    "path": "g/_v2/run-and-gun/index.html",
    "thumb": "thumbs/run-and-gun-v2.webp?v=1792424085",
-   "title": "COMMANDO CAT \u2014 hold \u25b6 to run \u00b7 fire to shoot (v2)"
+   "title": "COMMANDO CAT — hold ▶ to run · fire to shoot (v2)"
   },
   {
    "autostart": [],
@@ -2953,11 +2953,11 @@
    "id": "scrolling-shmup",
    "keys": {},
    "labels": {},
-   "note": "Cat Arcade v2 rebuild: the mothership is coming. New engine \u2014 bloom, impact ripples, particle debris, camera punch, combo meter, layered synth audio. The untouched original is kept at g/_v1/scrolling-shmup/.",
+   "note": "Cat Arcade v2 rebuild: the mothership is coming. New engine — bloom, impact ripples, particle debris, camera punch, combo meter, layered synth audio. The untouched original is kept at g/_v1/scrolling-shmup/.",
    "orientation": "portrait",
    "path": "g/_v2/scrolling-shmup/index.html",
    "thumb": "thumbs/scrolling-shmup-v2.webp?v=1792424090",
-   "title": "VOID CAT \u2014 drag to fly \u00b7 guns are auto (v2)"
+   "title": "VOID CAT — drag to fly · guns are auto (v2)"
   },
   {
    "autostart": [],
@@ -2965,11 +2965,11 @@
    "id": "precision-platformer",
    "keys": {},
    "labels": {},
-   "note": "Cat Arcade v2 rebuild: one late jump and the void eats you. New engine \u2014 bloom, impact ripples, particle debris, camera punch, combo meter, layered synth audio. The untouched original is kept at g/_v1/precision-platformer/.",
+   "note": "Cat Arcade v2 rebuild: one late jump and the void eats you. New engine — bloom, impact ripples, particle debris, camera punch, combo meter, layered synth audio. The untouched original is kept at g/_v1/precision-platformer/.",
    "orientation": "portrait",
    "path": "g/_v2/precision-platformer/index.html",
    "thumb": "thumbs/precision-platformer-v2.webp?v=1792424075",
-   "title": "CAT DASH \u2014 run \u00b7 jump \u00b7 outrun the void (v2)"
+   "title": "CAT DASH — run · jump · outrun the void (v2)"
   },
   {
    "autostart": [],
@@ -2977,11 +2977,11 @@
    "id": "mini-metroidvania",
    "keys": {},
    "labels": {},
-   "note": "Cat Arcade v2 rebuild: three chambers, one relic, zero seconds. New engine \u2014 bloom, impact ripples, particle debris, camera punch, combo meter, layered synth audio. The untouched original is kept at g/_v1/mini-metroidvania/.",
+   "note": "Cat Arcade v2 rebuild: three chambers, one relic, zero seconds. New engine — bloom, impact ripples, particle debris, camera punch, combo meter, layered synth audio. The untouched original is kept at g/_v1/mini-metroidvania/.",
    "orientation": "portrait",
    "path": "g/_v2/mini-metroidvania/index.html",
    "thumb": "thumbs/mini-metroidvania-v2.webp?v=1792424050",
-   "title": "CAT CAVE \u2014 dash \u00b7 double jump \u00b7 escape (v2)"
+   "title": "CAT CAVE — dash · double jump · escape (v2)"
   },
   {
    "autostart": [],
@@ -2989,11 +2989,11 @@
    "id": "mini-zelda",
    "keys": {},
    "labels": {},
-   "note": "Cat Arcade v2 rebuild: clear the room, take the key, climb the stairs. New engine \u2014 bloom, impact ripples, particle debris, camera punch, combo meter, layered synth audio. The untouched original is kept at g/_v1/mini-zelda/.",
+   "note": "Cat Arcade v2 rebuild: clear the room, take the key, climb the stairs. New engine — bloom, impact ripples, particle debris, camera punch, combo meter, layered synth audio. The untouched original is kept at g/_v1/mini-zelda/.",
    "orientation": "portrait",
    "path": "g/_v2/mini-zelda/index.html",
    "thumb": "thumbs/mini-zelda-v2.webp?v=1792424055",
-   "title": "CAT DUNGEON \u2014 slash \u00b7 loot \u00b7 escape (v2)"
+   "title": "CAT DUNGEON — slash · loot · escape (v2)"
   },
   {
    "autostart": [],
@@ -3001,11 +3001,11 @@
    "id": "trajectory-artillery",
    "keys": {},
    "labels": {},
-   "note": "Cat Arcade v2 rebuild: one fish, one zombie, one very big crater. New engine \u2014 bloom, impact ripples, particle debris, camera punch, combo meter, layered synth audio. The untouched original is kept at g/_v1/trajectory-artillery/.",
+   "note": "Cat Arcade v2 rebuild: one fish, one zombie, one very big crater. New engine — bloom, impact ripples, particle debris, camera punch, combo meter, layered synth audio. The untouched original is kept at g/_v1/trajectory-artillery/.",
    "orientation": "portrait",
    "path": "g/_v2/trajectory-artillery/index.html",
    "thumb": "thumbs/trajectory-artillery-v2.webp?v=1792424106",
-   "title": "CAT-A-PULT \u2014 drag to aim  \u00b7  release to fire (v2)"
+   "title": "CAT-A-PULT — drag to aim  ·  release to fire (v2)"
   },
   {
    "autostart": [],
@@ -3013,11 +3013,11 @@
    "id": "turn-based-3v3",
    "keys": {},
    "labels": {},
-   "note": "Cat Arcade v2 rebuild: three cats, three beasts, one ribbon of turns. New engine \u2014 bloom, impact ripples, particle debris, camera punch, combo meter, layered synth audio. The untouched original is kept at g/_v1/turn-based-3v3/.",
+   "note": "Cat Arcade v2 rebuild: three cats, three beasts, one ribbon of turns. New engine — bloom, impact ripples, particle debris, camera punch, combo meter, layered synth audio. The untouched original is kept at g/_v1/turn-based-3v3/.",
    "orientation": "portrait",
    "path": "g/_v2/turn-based-3v3/index.html",
    "thumb": "thumbs/turn-based-3v3-v2.webp?v=1792429918",
-   "title": "TURN ORDER \u2014 pick your target  \u00b7  land the combo (v2)"
+   "title": "TURN ORDER — pick your target  ·  land the combo (v2)"
   },
   {
    "autostart": [],
@@ -3025,11 +3025,11 @@
    "id": "micro-tower-defense",
    "keys": {},
    "labels": {},
-   "note": "Cat Arcade v2 rebuild: five waves, one lane, no mercy. New engine \u2014 bloom, impact ripples, particle debris, camera punch, combo meter, layered synth audio. The untouched original is kept at g/_v1/micro-tower-defense/.",
+   "note": "Cat Arcade v2 rebuild: five waves, one lane, no mercy. New engine — bloom, impact ripples, particle debris, camera punch, combo meter, layered synth audio. The untouched original is kept at g/_v1/micro-tower-defense/.",
    "orientation": "portrait",
    "path": "g/_v2/micro-tower-defense/index.html",
    "thumb": "thumbs/micro-tower-defense-v2.webp?v=1792429897",
-   "title": "MICRO TOWER DEFENSE \u2014 tap tower \u00b7 tap plot \u00b7 hold the lane (v2)"
+   "title": "MICRO TOWER DEFENSE — tap tower · tap plot · hold the lane (v2)"
   },
   {
    "autostart": [],
@@ -3037,11 +3037,11 @@
    "id": "merge-sandbox",
    "keys": {},
    "labels": {},
-   "note": "Cat Arcade v2 rebuild: two cats touch and turn into something bigger. New engine \u2014 bloom, impact ripples, particle debris, camera punch, combo meter, layered synth audio. The untouched original is kept at g/_v1/merge-sandbox/.",
+   "note": "Cat Arcade v2 rebuild: two cats touch and turn into something bigger. New engine — bloom, impact ripples, particle debris, camera punch, combo meter, layered synth audio. The untouched original is kept at g/_v1/merge-sandbox/.",
    "orientation": "portrait",
    "path": "g/_v2/merge-sandbox/index.html",
    "thumb": "thumbs/merge-sandbox-v2.webp?v=1792429892",
-   "title": "MERGE SANDBOX \u2014 drop \u00b7 match \u00b7 level up (v2)"
+   "title": "MERGE SANDBOX — drop · match · level up (v2)"
   },
   {
    "autostart": [],
@@ -3049,11 +3049,11 @@
    "id": "plinko-drop",
    "keys": {},
    "labels": {},
-   "note": "Cat Arcade v2 rebuild: three chips to find the x5. New engine \u2014 bloom, impact ripples, particle debris, camera punch, combo meter, layered synth audio. The untouched original is kept at g/_v1/plinko-drop/.",
+   "note": "Cat Arcade v2 rebuild: three chips to find the x5. New engine — bloom, impact ripples, particle debris, camera punch, combo meter, layered synth audio. The untouched original is kept at g/_v1/plinko-drop/.",
    "orientation": "portrait",
    "path": "g/_v2/plinko-drop/index.html",
    "thumb": "thumbs/plinko-drop-v2.webp?v=1792424070",
-   "title": "PLINKO DROP \u2014 aim \u00b7 hold to charge \u00b7 release (v2)"
+   "title": "PLINKO DROP — aim · hold to charge · release (v2)"
   },
   {
    "autostart": [],
@@ -3061,11 +3061,11 @@
    "id": "ragdoll-launch",
    "keys": {},
    "labels": {},
-   "note": "Cat Arcade v2 rebuild: one cat, one sling, zero dignity. New engine \u2014 bloom, impact ripples, particle debris, camera punch, combo meter, layered synth audio. The untouched original is kept at g/_v1/ragdoll-launch/.",
+   "note": "Cat Arcade v2 rebuild: one cat, one sling, zero dignity. New engine — bloom, impact ripples, particle debris, camera punch, combo meter, layered synth audio. The untouched original is kept at g/_v1/ragdoll-launch/.",
    "orientation": "portrait",
    "path": "g/_v2/ragdoll-launch/index.html",
    "thumb": "thumbs/ragdoll-launch-v2.webp?v=1792429902",
-   "title": "RAGDOLL LAUNCH \u2014 drag back  \u00b7  let the cat fly (v2)"
+   "title": "RAGDOLL LAUNCH — drag back  ·  let the cat fly (v2)"
   },
   {
    "autostart": [],
@@ -3073,11 +3073,11 @@
    "id": "rope-cut",
    "keys": {},
    "labels": {},
-   "note": "Cat Arcade v2 rebuild: five levels, one bottomless cat. New engine \u2014 bloom, impact ripples, particle debris, camera punch, combo meter, layered synth audio. The untouched original is kept at g/_v1/rope-cut/.",
+   "note": "Cat Arcade v2 rebuild: five levels, one bottomless cat. New engine — bloom, impact ripples, particle debris, camera punch, combo meter, layered synth audio. The untouched original is kept at g/_v1/rope-cut/.",
    "orientation": "portrait",
    "path": "g/_v2/rope-cut/index.html",
    "thumb": "thumbs/rope-cut-v2.webp?v=1792429908",
-   "title": "ROPE CUT \u2014 slice the ropes \u00b7 feed the cat (v2)"
+   "title": "ROPE CUT — slice the ropes · feed the cat (v2)"
   },
   {
    "autostart": [],
@@ -3085,11 +3085,11 @@
    "id": "obby-gauntlet",
    "keys": {},
    "labels": {},
-   "note": "Cat Arcade v2 rebuild: one slip and the cat is gone. New engine \u2014 bloom, impact ripples, particle debris, camera punch, combo meter, layered synth audio. The untouched original is kept at g/_v1/obby-gauntlet/.",
+   "note": "Cat Arcade v2 rebuild: one slip and the cat is gone. New engine — bloom, impact ripples, particle debris, camera punch, combo meter, layered synth audio. The untouched original is kept at g/_v1/obby-gauntlet/.",
    "orientation": "portrait",
    "path": "g/_v2/obby-gauntlet/index.html",
    "thumb": "thumbs/obby-gauntlet-v2.webp?v=1792424060",
-   "title": "CAT OBBY \u2014 tap = jump  \u00b7  drag = steer (v2)"
+   "title": "CAT OBBY — tap = jump  ·  drag = steer (v2)"
   },
   {
    "autostart": [],
@@ -3097,11 +3097,11 @@
    "id": "kart-racer",
    "keys": {},
    "labels": {},
-   "note": "Cat Arcade v2 rebuild: one lap. three rivals. no brakes.. New engine \u2014 bloom, impact ripples, particle debris, camera punch, combo meter, layered synth audio. The untouched original is kept at g/_v1/kart-racer/.",
+   "note": "Cat Arcade v2 rebuild: one lap. three rivals. no brakes.. New engine — bloom, impact ripples, particle debris, camera punch, combo meter, layered synth audio. The untouched original is kept at g/_v1/kart-racer/.",
    "orientation": "portrait",
    "path": "g/_v2/kart-racer/index.html",
    "thumb": "thumbs/kart-racer-v2.webp?v=1792424045",
-   "title": "NEON RUSH \u2014 hold left / right  \u00b7  pass all 3 (v2)"
+   "title": "NEON RUSH — hold left / right  ·  pass all 3 (v2)"
   },
   {
    "autostart": [],
@@ -3109,11 +3109,11 @@
    "id": "rail-runner",
    "keys": {},
    "labels": {},
-   "note": "Cat Arcade v2 rebuild: one missed junction and the cat eats rail. New engine \u2014 bloom, impact ripples, particle debris, camera punch, combo meter, layered synth audio. The untouched original is kept at g/_v1/rail-runner/.",
+   "note": "Cat Arcade v2 rebuild: one missed junction and the cat eats rail. New engine — bloom, impact ripples, particle debris, camera punch, combo meter, layered synth audio. The untouched original is kept at g/_v1/rail-runner/.",
    "orientation": "portrait",
    "path": "g/_v2/rail-runner/index.html",
    "thumb": "thumbs/rail-runner-v2.webp?v=1792424080",
-   "title": "NEON GRIND \u2014 \u25b2\u25bc switch track  \u00b7  tap / space jump (v2)"
+   "title": "NEON GRIND — ▲▼ switch track  ·  tap / space jump (v2)"
   },
   {
    "autostart": [],
@@ -3121,11 +3121,11 @@
    "id": "sort-puzzle",
    "keys": {},
    "labels": {},
-   "note": "Cat Arcade v2 rebuild: one colour per tube. New engine \u2014 bloom, impact ripples, particle debris, camera punch, combo meter, layered synth audio. The untouched original is kept at g/_v1/sort-puzzle/.",
+   "note": "Cat Arcade v2 rebuild: one colour per tube. New engine — bloom, impact ripples, particle debris, camera punch, combo meter, layered synth audio. The untouched original is kept at g/_v1/sort-puzzle/.",
    "orientation": "portrait",
    "path": "g/_v2/sort-puzzle/index.html",
    "thumb": "thumbs/sort-puzzle-v2.webp?v=1792429913",
-   "title": "SLUG SORT \u2014 sort every tube (v2)"
+   "title": "SLUG SORT — sort every tube (v2)"
   },
   {
    "autostart": [],
@@ -3133,11 +3133,11 @@
    "id": "idle-tycoon",
    "keys": {},
    "labels": {},
-   "note": "Cat Arcade v2 rebuild: the caf\u00e9 builds itself while you tap. New engine \u2014 bloom, impact ripples, particle debris, camera punch, combo meter, layered synth audio. The untouched original is kept at g/_v1/idle-tycoon/.",
+   "note": "Cat Arcade v2 rebuild: the café builds itself while you tap. New engine — bloom, impact ripples, particle debris, camera punch, combo meter, layered synth audio. The untouched original is kept at g/_v1/idle-tycoon/.",
    "orientation": "portrait",
    "path": "g/_v2/idle-tycoon/index.html",
    "thumb": "thumbs/idle-tycoon-v2.webp?v=1792429887",
-   "title": "CAT CAF\u00c9 \u2014 tap to serve  \u00b7  build the caf\u00e9 (v2)"
+   "title": "CAT CAFÉ — tap to serve  ·  build the café (v2)"
   },
   {
    "autostart": [],
@@ -3145,11 +3145,11 @@
    "id": "cozy-farm",
    "keys": {},
    "labels": {},
-   "note": "Cat Arcade v2 rebuild: one tiny farm, one setting sun. New engine \u2014 bloom, impact ripples, particle debris, camera punch, combo meter, layered synth audio. The untouched original is kept at g/_v1/cozy-farm/.",
+   "note": "Cat Arcade v2 rebuild: one tiny farm, one setting sun. New engine — bloom, impact ripples, particle debris, camera punch, combo meter, layered synth audio. The untouched original is kept at g/_v1/cozy-farm/.",
    "orientation": "portrait",
    "path": "g/_v2/cozy-farm/index.html",
    "thumb": "thumbs/cozy-farm-v2.webp?v=1792424025",
-   "title": "COZY CAT FARM \u2014 tap \u00b7 till \u00b7 plant \u00b7 harvest (v2)"
+   "title": "COZY CAT FARM — tap · till · plant · harvest (v2)"
   },
   {
    "autostart": [],
@@ -3157,11 +3157,11 @@
    "id": "daily-deduction",
    "keys": {},
    "labels": {},
-   "note": "Cat Arcade v2 rebuild: three clues, four cats, one thief. New engine \u2014 bloom, impact ripples, particle debris, camera punch, combo meter, layered synth audio. The untouched original is kept at g/_v1/daily-deduction/.",
+   "note": "Cat Arcade v2 rebuild: three clues, four cats, one thief. New engine — bloom, impact ripples, particle debris, camera punch, combo meter, layered synth audio. The untouched original is kept at g/_v1/daily-deduction/.",
    "orientation": "portrait",
    "path": "g/_v2/daily-deduction/index.html",
    "thumb": "thumbs/daily-deduction-v2.webp?v=1792429877",
-   "title": "WHODUNNIT \u2014 read the clues  \u00b7  name the culprit (v2)"
+   "title": "WHODUNNIT — read the clues  ·  name the culprit (v2)"
   },
   {
    "autostart": [],
@@ -3169,11 +3169,11 @@
    "id": "cat-runner",
    "keys": {},
    "labels": {},
-   "note": "Cat Arcade v2 original: the city is chasing you. New engine \u2014 bloom, impact ripples, particle debris, camera punch, combo meter, layered synth audio.",
+   "note": "Cat Arcade v2 original: the city is chasing you. New engine — bloom, impact ripples, particle debris, camera punch, combo meter, layered synth audio.",
    "orientation": "portrait",
    "path": "g/_v2/cat-runner/index.html",
    "thumb": "thumbs/cat-runner-v2.webp?v=1792424020",
-   "title": "CAT RUNNER \u2014 tap = jump  \u00b7  hold = slide (v2)"
+   "title": "CAT RUNNER — tap = jump  ·  hold = slide (v2)"
   },
   {
    "autostart": [],
@@ -3183,7 +3183,7 @@
     "jump": "Space"
    },
    "labels": {
-    "jump": "HOLD fan \u00b7 TAP thrust"
+    "jump": "HOLD fan · TAP thrust"
    },
    "note": "2D juice rebuild of the Tesla flying-Roadster flip game: hold to charge the upside-down ramp climb, tap at the apex ring for the 180-degree kickflip over the Tesla lineup. Bloom, particles, camera punch, combo meter, synth audio. Compare with v1: g/_v2/roadster-flip/compare.html",
    "orientation": "portrait",
@@ -3206,14 +3206,14 @@
     "up": "ArrowUp"
    },
    "labels": {
-    "attack": "Z \u00b7 FIGHT",
-    "special": "X \u00b7 YARN / SWING"
+    "attack": "Z · FIGHT",
+    "special": "X · YARN / SWING"
    },
    "note": "Three.js 3D brawler-runner: ninja cat Miso fights dog gangs through Amber Market, dashes the alley runner, and faces Big Bruno the Bulldog. Exaggerated comic combat (hit-stop, POW!/THWACK! popups), foreground crossings, and a yarn swing off the lamp poles. Full source in games/miso-city-3d/.",
    "orientation": "landscape",
    "path": "../games/miso-city-3d/index.html",
    "thumb": "thumbs/miso-city-3d.webp",
-   "title": "Miso City 3D \u2014 Level 1"
+   "title": "Miso City 3D — Level 1"
   },
   {
    "autostart": [],
@@ -3230,7 +3230,7 @@
     "down": "BRAKE",
     "up": "PEDAL"
    },
-   "note": "8-bit top-down downhill BMX racer: bomb a winding city street against rival DEX \u2014 launch the ramp, grind the bars, drop the stairs, thread the barricade chicane and crate slalom, slash grass for points, and take the bridge finish. Full source in games/bmx-downhill-jam/.",
+   "note": "8-bit top-down downhill BMX racer: bomb a winding city street against rival DEX — launch the ramp, grind the bars, drop the stairs, thread the barricade chicane and crate slalom, slash grass for points, and take the bridge finish. Full source in games/bmx-downhill-jam/.",
    "orientation": "portrait",
    "path": "../games/bmx-downhill-jam/index.html",
    "thumb": "thumbs/bmx-downhill-jam.webp",
@@ -3256,8 +3256,8 @@
     "up": "ArrowUp"
    },
    "labels": {
-    "attack": "Z \u00b7 JUMP",
-    "jump": "X \u00b7 FIRE"
+    "attack": "Z · JUMP",
+    "jump": "X · FIRE"
    },
    "note": "Contra x Tetris: run-and-gun on falling-block terrain. Shoot blocks to break them, clear rows to delete the floor, and do not get crushed.",
    "orientation": "portrait",
@@ -3285,8 +3285,8 @@
     "up": "ArrowUp"
    },
    "labels": {
-    "attack": "Z \u00b7 THROW",
-    "jump": "X \u00b7 LOB"
+    "attack": "Z · THROW",
+    "jump": "X · LOB"
    },
    "note": "Windjammers x Street Fighter II: disc duels with throws and lobs, a fireball super (down, forward, A) when the meter is full, and parries.",
    "orientation": "portrait",
@@ -3314,8 +3314,8 @@
     "up": "ArrowUp"
    },
    "labels": {
-    "attack": "Z \u00b7 THROW",
-    "jump": "X \u00b7 PUNCH"
+    "attack": "Z · THROW",
+    "jump": "X · PUNCH"
    },
    "note": "Paperboy x Road Rash: delivery courier combat racing. Throw papers into mailboxes, punch adjacent rivals, dodge the cars.",
    "orientation": "portrait",
@@ -3343,8 +3343,8 @@
     "up": "ArrowUp"
    },
    "labels": {
-    "attack": "Z \u00b7 FLAP",
-    "jump": "X \u00b7 BOMB"
+    "attack": "Z · FLAP",
+    "jump": "X · BOMB"
    },
    "note": "Balloon Fight x Bomberman: flap-physics aerial combat with timed bombs. Pop every enemy balloon and keep clear of the blast.",
    "orientation": "portrait",
@@ -3372,8 +3372,8 @@
     "up": "ArrowUp"
    },
    "labels": {
-    "attack": "Z \u00b7 GRAPPLE",
-    "jump": "X \u00b7 SLASH"
+    "attack": "Z · GRAPPLE",
+    "jump": "X · SLASH"
    },
    "note": "Bionic Commando x Ninja Gaiden: hold Z to fire the grapple at rings and swing, release to launch, slash with X.",
    "orientation": "portrait",
@@ -3401,8 +3401,8 @@
     "up": "ArrowUp"
    },
    "labels": {
-    "attack": "Z \u00b7 PUNCH",
-    "jump": "X \u00b7 KICK"
+    "attack": "Z · PUNCH",
+    "jump": "X · KICK"
    },
    "note": "Kung-Fu Master x Punch-Out!!: side-scroll grunts, then a 1-on-1 counter-boxing boss. Dodge, block, and jab when he is stunned.",
    "orientation": "portrait",
@@ -3430,8 +3430,8 @@
     "up": "ArrowUp"
    },
    "labels": {
-    "attack": "Z \u00b7 HOP",
-    "jump": "X \u00b7 TURBO"
+    "attack": "Z · HOP",
+    "jump": "X · TURBO"
    },
    "note": "Excitebike x Skate or Die: 4-rider dirt downhill with heat-managed turbo and ramp air tricks (tabletop, bar spin, 360). Place, time and trick scoring with a persistent high score.",
    "orientation": "portrait",
@@ -3459,10 +3459,10 @@
     "up": "ArrowUp"
    },
    "labels": {
-    "attack": "Z \u00b7 SMASH",
-    "jump": "X \u00b7 DASH"
+    "attack": "Z · SMASH",
+    "jump": "X · DASH"
    },
-   "note": "Pac-Man x Wrecking Crew: eat every pellet before the maze seals in 150 seconds \u2014 smash brick walls with the hammer to open shortcuts and reroute three ghosts (chaser, ambusher, roamer). Power pellets turn the tables. Moth build: 28px painted art, floating touch stick, spectate attract mode.",
+   "note": "Pac-Man x Wrecking Crew: eat every pellet before the maze seals in 150 seconds — smash brick walls with the hammer to open shortcuts and reroute three ghosts (chaser, ambusher, roamer). Power pellets turn the tables. Moth build: 28px painted art, floating touch stick, spectate attract mode.",
    "orientation": "portrait",
    "path": "../games/maze-wrecker/index.html",
    "thumb": "thumbs/maze-wrecker.webp",
@@ -3488,8 +3488,8 @@
     "up": "ArrowUp"
    },
    "labels": {
-    "attack": "Z \u00b7 SMASH",
-    "jump": "X \u00b7 DASH"
+    "attack": "Z · SMASH",
+    "jump": "X · DASH"
    },
    "note": "Pac-Man x Wrecking Crew in the gameboy cabinet form: same maze, same rules, built on the frozen NES cabinet shell (256x224, string-map sprites, GAME contract, attract bot, ?seed= deterministic runs). The head-to-head twin of Maze Wrecker.",
    "orientation": "portrait",
@@ -3517,10 +3517,10 @@
     "up": "ArrowUp"
    },
    "labels": {
-    "attack": "Z \u00b7 SMASH",
-    "jump": "X \u00b7 DASH"
+    "attack": "Z · SMASH",
+    "jump": "X · DASH"
    },
-   "note": "The other AI's Maze Wrecker, kept as a second cabinet game (Cherie 2026-10-30): a riveted steel-plate maze where the dots hide inside smashable bricks \u2014 wreck walls to reveal all 26, dodge the patrol bots, beat the 80-second seal while walls grow back.",
+   "note": "The other AI's Maze Wrecker, kept as a second cabinet game (Cherie 2026-10-30): a riveted steel-plate maze where the dots hide inside smashable bricks — wreck walls to reveal all 26, dodge the patrol bots, beat the 80-second seal while walls grow back.",
    "orientation": "portrait",
    "path": "../games/maze-wrecker-steel/index.html",
    "thumb": "thumbs/maze-wrecker-steel.webp",
@@ -3546,10 +3546,10 @@
     "up": "ArrowUp"
    },
    "labels": {
-    "attack": "Z \u00b7 SMASH",
-    "jump": "X \u00b7 DASH"
+    "attack": "Z · SMASH",
+    "jump": "X · DASH"
    },
-   "note": "Moth's third Maze Wrecker, built on the other AI's shared gamekit (Cherie 2026-10-30): the cabinet lattice maze at night \u2014 same pellets, bricks and three foreman ghosts, but the hammer is a weapon now: swing at a ghost to STUN him for 3 seconds (+50). Tighter 135-second seal. Bot-verified clear, stun probe-verified.",
+   "note": "Moth's third Maze Wrecker, built on the other AI's shared gamekit (Cherie 2026-10-30): the cabinet lattice maze at night — same pellets, bricks and three foreman ghosts, but the hammer is a weapon now: swing at a ghost to STUN him for 3 seconds (+50). Tighter 135-second seal. Bot-verified clear, stun probe-verified.",
    "orientation": "portrait",
    "path": "../games/maze-wrecker-night/index.html",
    "thumb": "thumbs/maze-wrecker-night.webp",
@@ -3575,10 +3575,10 @@
     "up": "ArrowUp"
    },
    "labels": {
-    "attack": "Z \u00b7 JUMP",
-    "jump": "X \u00b7 FIRE"
+    "attack": "Z · JUMP",
+    "jump": "X · FIRE"
    },
-   "note": "Metroid x Kid Icarus: grab the form each floor needs \u2014 ball, wings, beam \u2014 and climb before the lava rises. From the five-agent cabinet batch (gamepress gameboy kit), merged to main 2026-10-30.",
+   "note": "Metroid x Kid Icarus: grab the form each floor needs — ball, wings, beam — and climb before the lava rises. From the five-agent cabinet batch (gamepress gameboy kit), merged to main 2026-10-30.",
    "orientation": "portrait",
    "path": "../games/morph-climb/index.html",
    "thumb": "thumbs/morph-climb.webp",
@@ -3604,8 +3604,8 @@
     "up": "ArrowUp"
    },
    "labels": {
-    "attack": "Z \u00b7 DIG",
-    "jump": "X \u00b7 PUMP"
+    "attack": "Z · DIG",
+    "jump": "X · PUMP"
    },
    "note": "Dig Dug x Ice Climber: dig a staircase up the dirt, drop dirt on the critters, keep climbing. From the five-agent cabinet batch (gamepress gameboy kit), merged to main 2026-10-30.",
    "orientation": "portrait",
@@ -3633,10 +3633,10 @@
     "up": "ArrowUp"
    },
    "labels": {
-    "attack": "Z \u00b7 LANE",
-    "jump": "X \u00b7 NITRO"
+    "attack": "Z · LANE",
+    "jump": "X · NITRO"
    },
-   "note": "Pole Position x Frogger: weave through traffic, chain near misses \u2014 one crash ends the run. From the five-agent cabinet batch (gamepress gameboy kit), merged to main 2026-10-30.",
+   "note": "Pole Position x Frogger: weave through traffic, chain near misses — one crash ends the run. From the five-agent cabinet batch (gamepress gameboy kit), merged to main 2026-10-30.",
    "orientation": "portrait",
    "path": "../games/gridlock-grand-prix/index.html",
    "thumb": "thumbs/gridlock-grand-prix.webp",
@@ -3662,8 +3662,8 @@
     "up": "ArrowUp"
    },
    "labels": {
-    "attack": "Z \u00b7 UP-L",
-    "jump": "X \u00b7 UP-R"
+    "attack": "Z · UP-L",
+    "jump": "X · UP-R"
    },
    "note": "Q*bert x Joust: land on cubes to flip them, knock riders off their mounts. From the five-agent cabinet batch (gamepress gameboy kit), merged to main 2026-10-30.",
    "orientation": "portrait",
@@ -3691,8 +3691,8 @@
     "up": "ArrowUp"
    },
    "labels": {
-    "attack": "Z \u00b7 JAB",
-    "jump": "X \u00b7 DODGE"
+    "attack": "Z · JAB",
+    "jump": "X · DODGE"
    },
    "note": "Punch-Out!! x Blade Ball: deflect the blade ball and be the last boxer standing. From the five-agent cabinet batch (gamepress gameboy kit), merged to main 2026-10-30.",
    "orientation": "portrait",
@@ -3720,8 +3720,8 @@
     "up": "ArrowUp"
    },
    "labels": {
-    "attack": "Z \u00b7 DRIFT",
-    "jump": "X \u00b7 PLAY CARD"
+    "attack": "Z · DRIFT",
+    "jump": "X · PLAY CARD"
    },
    "note": "Mario Kart x Balatro: collect cards at speed, play poker hands to boost. From the five-agent cabinet batch (gamepress gameboy kit), merged to main 2026-10-30.",
    "orientation": "portrait",
@@ -3749,10 +3749,10 @@
     "up": "ArrowUp"
    },
    "labels": {
-    "attack": "Z \u00b7 SHOOT",
-    "jump": "X \u00b7 SELF"
+    "attack": "Z · SHOOT",
+    "jump": "X · SELF"
    },
-   "note": "Sunset Riders x Buckshot Roulette: one gun, one table \u2014 out-draw the saloon. From the five-agent cabinet batch (gamepress gameboy kit), merged to main 2026-10-30.",
+   "note": "Sunset Riders x Buckshot Roulette: one gun, one table — out-draw the saloon. From the five-agent cabinet batch (gamepress gameboy kit), merged to main 2026-10-30.",
    "orientation": "portrait",
    "path": "../games/buckshot-saloon/index.html",
    "thumb": "thumbs/buckshot-saloon.webp",
@@ -3778,8 +3778,8 @@
     "up": "ArrowUp"
    },
    "labels": {
-    "attack": "Z \u00b7 JUMP",
-    "jump": "X \u00b7 ROLL"
+    "attack": "Z · JUMP",
+    "jump": "X · ROLL"
    },
    "note": "Donkey Kong Country x Natural Disaster Survival: climb, roll, and cling to the post when disaster hits. From the five-agent cabinet batch (gamepress gameboy kit), merged to main 2026-10-30.",
    "orientation": "portrait",
@@ -3807,8 +3807,8 @@
     "up": "ArrowUp"
    },
    "labels": {
-    "attack": "Z \u00b7 WHIP",
-    "jump": "X \u00b7 SCAN"
+    "attack": "Z · WHIP",
+    "jump": "X · SCAN"
    },
    "note": "Castlevania: Symphony of the Night x Lethal Company: grab relics in the dark, fear what hunts the halls. From the five-agent cabinet batch (gamepress gameboy kit), merged to main 2026-10-30.",
    "orientation": "portrait",
@@ -3836,8 +3836,8 @@
     "up": "ArrowUp"
    },
    "labels": {
-    "attack": "Z \u00b7 JUMP",
-    "jump": "X \u00b7 DASH"
+    "attack": "Z · JUMP",
+    "jump": "X · DASH"
    },
    "note": "Super Metroid x Vampire Survivors: survive the swarm, level up, melt the hive. From the five-agent cabinet batch (gamepress gameboy kit), merged to main 2026-10-30.",
    "orientation": "portrait",
@@ -3865,8 +3865,8 @@
     "up": "ArrowUp"
    },
    "labels": {
-    "attack": "Z \u00b7 JUMP",
-    "jump": "X \u00b7 TONGUE"
+    "attack": "Z · JUMP",
+    "jump": "X · TONGUE"
    },
    "note": "Super Mario World x Tower of Hell: climb the tower, flutter the gaps, dodge the rising lava. From the five-agent cabinet batch (gamepress gameboy kit), merged to main 2026-10-30.",
    "orientation": "portrait",
@@ -3894,8 +3894,8 @@
     "up": "ArrowUp"
    },
    "labels": {
-    "attack": "Z \u00b7 BUILD",
-    "jump": "X \u00b7 SWING"
+    "attack": "Z · BUILD",
+    "jump": "X · SWING"
    },
    "note": "Super Mario Bros 3 x BedWars: bridge out, bomb their bed, win the war. From the five-agent cabinet batch (gamepress gameboy kit), merged to main 2026-10-30.",
    "orientation": "portrait",
@@ -3923,8 +3923,8 @@
     "up": "ArrowUp"
    },
    "labels": {
-    "attack": "Z \u00b7 FIRE",
-    "jump": "X \u00b7 STRATAGEM"
+    "attack": "Z · FIRE",
+    "jump": "X · STRATAGEM"
    },
    "note": "Contra x Helldivers 2: call in the bomb with stratagems, kill the hive. From the five-agent cabinet batch (gamepress gameboy kit), merged to main 2026-10-30.",
    "orientation": "portrait",
@@ -3952,8 +3952,8 @@
     "up": "ArrowUp"
    },
    "labels": {
-    "attack": "Z \u00b7 OPEN",
-    "jump": "X \u00b7 HIDE"
+    "attack": "Z · OPEN",
+    "jump": "X · HIDE"
    },
    "note": "A Link to the Past x DOORS: open the doors, hide when the Rush comes. From the five-agent cabinet batch (gamepress gameboy kit), merged to main 2026-10-30.",
    "orientation": "portrait",
@@ -3981,8 +3981,8 @@
     "up": "ArrowUp"
    },
    "labels": {
-    "attack": "Z \u00b7 STOCK",
-    "jump": "X \u00b7 SCAN"
+    "attack": "Z · STOCK",
+    "jump": "X · SCAN"
    },
    "note": "EarthBound x Supermarket Simulator: stock shelves, scan shoppers, bat the thieves. From the five-agent cabinet batch (gamepress gameboy kit), merged to main 2026-10-30.",
    "orientation": "portrait",
@@ -4010,8 +4010,8 @@
     "up": "ArrowUp"
    },
    "labels": {
-    "attack": "Z \u00b7 CAST",
-    "jump": "X \u00b7 SLASH"
+    "attack": "Z · CAST",
+    "jump": "X · SLASH"
    },
    "note": "Secret of Mana x FISCH: cast, reel, and land the kraken. From the five-agent cabinet batch (gamepress gameboy kit), merged to main 2026-10-30.",
    "orientation": "portrait",
@@ -4039,8 +4039,8 @@
     "up": "ArrowUp"
    },
    "labels": {
-    "attack": "Z \u00b7 CALL",
-    "jump": "X \u00b7 LIAR"
+    "attack": "Z · CALL",
+    "jump": "X · LIAR"
    },
    "note": "Chrono Trigger x Liars Bar: bluff, call liar, drink up. From the five-agent cabinet batch (gamepress gameboy kit), merged to main 2026-10-30.",
    "orientation": "portrait",
@@ -4068,8 +4068,8 @@
     "up": "ArrowUp"
    },
    "labels": {
-    "attack": "Z \u00b7 SNAP",
-    "jump": "X \u00b7 FLASH"
+    "attack": "Z · SNAP",
+    "jump": "X · FLASH"
    },
    "note": "Pokemon Snap x Content Warning: film the frights, go viral. From the five-agent cabinet batch (gamepress gameboy kit), merged to main 2026-10-30.",
    "orientation": "portrait",
@@ -4097,8 +4097,8 @@
     "up": "ArrowUp"
    },
    "labels": {
-    "attack": "Z \u00b7 HATCH",
-    "jump": "X \u00b7 FIGHT"
+    "attack": "Z · HATCH",
+    "jump": "X · FIGHT"
    },
    "note": "Dragon Quest x Pet Simulator 99: hatch pets, break rocks, go huge. From the five-agent cabinet batch (gamepress gameboy kit), merged to main 2026-10-30.",
    "orientation": "portrait",
@@ -4126,8 +4126,8 @@
     "up": "ArrowUp"
    },
    "labels": {
-    "attack": "Z \u00b7 DIG",
-    "jump": "X \u00b7 BLAST"
+    "attack": "Z · DIG",
+    "jump": "X · BLAST"
    },
    "note": "Dig Dug x Deep Rock Galactic: mine gold, blast the swarm, survive. From the five-agent cabinet batch (gamepress gameboy kit), merged to main 2026-10-30.",
    "orientation": "portrait",
@@ -4155,10 +4155,10 @@
     "up": "ArrowUp"
    },
    "labels": {
-    "attack": "Z \u00b7 STAB",
-    "jump": "X \u00b7 DASH"
+    "attack": "Z · STAB",
+    "jump": "X · DASH"
    },
-   "note": "Four Swords x Murder Mystery 2: one arrow, one killer \u2014 find them first. From the five-agent cabinet batch (gamepress gameboy kit), merged to main 2026-10-30.",
+   "note": "Four Swords x Murder Mystery 2: one arrow, one killer — find them first. From the five-agent cabinet batch (gamepress gameboy kit), merged to main 2026-10-30.",
    "orientation": "portrait",
    "path": "../games/four-swords-murder/index.html",
    "thumb": "thumbs/four-swords-murder.webp",
@@ -4184,8 +4184,8 @@
     "up": "ArrowUp"
    },
    "labels": {
-    "attack": "Z \u00b7 PICK",
-    "jump": "X \u00b7 STRUT"
+    "attack": "Z · PICK",
+    "jump": "X · STRUT"
    },
    "note": "Final Fantasy VI x Dress to Impress: pick the look, wow the judges. From the five-agent cabinet batch (gamepress gameboy kit), merged to main 2026-10-30.",
    "orientation": "portrait",
@@ -4213,8 +4213,8 @@
     "up": "ArrowUp"
    },
    "labels": {
-    "attack": "Z \u00b7 PUNCH",
-    "jump": "X \u00b7 DEAL"
+    "attack": "Z · PUNCH",
+    "jump": "X · DEAL"
    },
    "note": "River City Ransom x crime sim: brew, deal, brawl your way up. From the five-agent cabinet batch (gamepress gameboy kit), merged to main 2026-10-30.",
    "orientation": "portrait",
@@ -4242,8 +4242,8 @@
     "up": "ArrowUp"
    },
    "labels": {
-    "attack": "Z \u00b7 TEND",
-    "jump": "X \u00b7 THROW"
+    "attack": "Z · TEND",
+    "jump": "X · THROW"
    },
    "note": "Harvest Moon x Palworld: catch pals, farm, craft. From the five-agent cabinet batch (gamepress gameboy kit), merged to main 2026-10-30.",
    "orientation": "portrait",
@@ -4271,8 +4271,8 @@
     "up": "ArrowUp"
    },
    "labels": {
-    "attack": "Z \u00b7 JUMP",
-    "jump": "X \u00b7 DASH"
+    "attack": "Z · JUMP",
+    "jump": "X · DASH"
    },
    "note": "Painted HD edition of the hive shooter: same rules and bot, painted sprites, baked room and a real lighting pass. Tier 2 of the Vampire Metroid editions (gamepress tier system, merged to main 2026-10-30).",
    "orientation": "portrait",
@@ -4300,10 +4300,10 @@
     "up": "ArrowUp"
    },
    "labels": {
-    "attack": "Z \u00b7 JUMP",
-    "jump": "X \u00b7 DASH"
+    "attack": "Z · JUMP",
+    "jump": "X · DASH"
    },
-   "note": "HD+ game-feel edition: hit flash, squash, knockback, floating damage numbers, camera lean and a boss-death push-in. Same rules as the pixel edition \u2014 parity-checked.",
+   "note": "HD+ game-feel edition: hit flash, squash, knockback, floating damage numbers, camera lean and a boss-death push-in. Same rules as the pixel edition — parity-checked.",
    "orientation": "portrait",
    "path": "../games/g17b-hd/index.html",
    "thumb": "thumbs/vampire-metroid-hd-plus.webp",
@@ -4329,10 +4329,10 @@
     "up": "ArrowUp"
    },
    "labels": {
-    "attack": "Z \u00b7 JUMP",
-    "jump": "X \u00b7 DASH"
+    "attack": "Z · JUMP",
+    "jump": "X · DASH"
    },
-   "note": "HD Art edition: hand-drawn SVG characters on a skeletal rig, WebGL bloom and grade pass. Same rules \u2014 parity-checked.",
+   "note": "HD Art edition: hand-drawn SVG characters on a skeletal rig, WebGL bloom and grade pass. Same rules — parity-checked.",
    "orientation": "portrait",
    "path": "../games/g17c-art/index.html",
    "thumb": "thumbs/vampire-metroid-hd-art.webp",
@@ -4358,10 +4358,10 @@
     "up": "ArrowUp"
    },
    "labels": {
-    "attack": "Z \u00b7 JUMP",
-    "jump": "X \u00b7 DASH"
+    "attack": "Z · JUMP",
+    "jump": "X · DASH"
    },
-   "note": "HD Lux edition: SVG environment, shader lights, haze and embers over the HD Art rig. Same rules \u2014 parity-checked.",
+   "note": "HD Lux edition: SVG environment, shader lights, haze and embers over the HD Art rig. Same rules — parity-checked.",
    "orientation": "portrait",
    "path": "../games/g17d-lux/index.html",
    "thumb": "thumbs/vampire-metroid-hd-lux.webp",
@@ -4387,8 +4387,8 @@
     "up": "ArrowUp"
    },
    "labels": {
-    "attack": "Z \u00b7 JUMP",
-    "jump": "X \u00b7 DASH"
+    "attack": "Z · JUMP",
+    "jump": "X · DASH"
    },
    "note": "HD Close edition: tall full-screen layout, follow camera, bigger characters and a 360-degree analog touch pad. Intentionally differs: no pause, analog movement.",
    "orientation": "portrait",
@@ -4416,10 +4416,10 @@
     "up": "ArrowUp"
    },
    "labels": {
-    "attack": "Z \u00b7 JUMP",
-    "jump": "X \u00b7 DASH"
+    "attack": "Z · JUMP",
+    "jump": "X · DASH"
    },
-   "note": "HD World edition: painted-style SVG rig characters (hero, three zombie types, elite, queen boss) in a dressed lab world. Same rules \u2014 parity-checked. Painted raster art drops in via the gamepress painted-art brief.",
+   "note": "HD World edition: painted-style SVG rig characters (hero, three zombie types, elite, queen boss) in a dressed lab world. Same rules — parity-checked. Painted raster art drops in via the gamepress painted-art brief.",
    "orientation": "portrait",
    "path": "../games/g17f-world/index.html",
    "thumb": "thumbs/vampire-metroid-hd-world.webp",
@@ -4445,8 +4445,8 @@
     "up": "ArrowUp"
    },
    "labels": {
-    "attack": "Z \u00b7 JUMP",
-    "jump": "X \u00b7 DASH"
+    "attack": "Z · JUMP",
+    "jump": "X · DASH"
    },
    "note": "3D spike: the same Vampire Metroid sim rendered in Three.js. Experimental tier from the gamepress tier system.",
    "orientation": "portrait",
@@ -4474,10 +4474,10 @@
     "up": "ArrowUp"
    },
    "labels": {
-    "attack": "Z \u00b7 PUNCH",
-    "jump": "X \u00b7 KICK"
+    "attack": "Z · PUNCH",
+    "jump": "X · KICK"
    },
-   "note": "One-round arcade 1v1 on the cabinet's native per-frame 8-bit rig \u2014 left/right move, down blocks, up jumps, Z punches, X kicks. KO the CPU or lead on health at 45 seconds.",
+   "note": "One-round arcade 1v1 on the cabinet's native per-frame 8-bit rig — left/right move, down blocks, up jumps, Z punches, X kicks. KO the CPU or lead on health at 45 seconds.",
    "orientation": "portrait",
    "path": "../games/street-round/index.html",
    "thumb": "thumbs/street-round.webp",
@@ -4503,8 +4503,8 @@
     "up": "ArrowUp"
    },
    "labels": {
-    "attack": "Z \u00b7 PUNCH",
-    "jump": "X \u00b7 KICK"
+    "attack": "Z · PUNCH",
+    "jump": "X · KICK"
    },
    "note": "One-round arcade fight with a full special-move list on the native 8-bit rig: fireball (236+P), rising punch (623+P), spin kick (214+K), plus the second fighter's charge moves (hold back, then forward + P; hold down, then up + K). Add ?char=guile to play the other fighter. Six-button keyboard layout (U I O punches, J K L kicks); Z/X are the medium punch/kick shortcuts and the touch buttons. Move test 48/48.",
    "orientation": "portrait",
@@ -4532,8 +4532,8 @@
     "up": "ArrowUp"
    },
    "labels": {
-    "attack": "Z \u00b7 PUNCH",
-    "jump": "X \u00b7 KICK"
+    "attack": "Z · PUNCH",
+    "jump": "X · KICK"
    },
    "note": "The same fight in a 16-bit look: vector-drawn fighters with shaded limbs, then a posterised 256x224 pixel pass. Same moves and controls as the 8-bit edition (add ?char=guile to play the other fighter). Six-button keyboard layout (U I O punches, J K L kicks); Z/X are the medium punch/kick shortcuts and the touch buttons.",
    "orientation": "portrait",
@@ -4561,10 +4561,10 @@
     "up": "ArrowUp"
    },
    "labels": {
-    "attack": "Z \u00b7 TAP A",
-    "jump": "X \u00b7 TAP B"
+    "attack": "Z · TAP A",
+    "jump": "X · TAP B"
    },
-   "note": "Four-lane ragdoll sprint: tap Z then X alternately to run, Up jumps hurdles and mud \u2014 trip and you flop face-first. Beat three CPU runners over 100 m.",
+   "note": "Four-lane ragdoll sprint: tap Z then X alternately to run, Up jumps hurdles and mud — trip and you flop face-first. Beat three CPU runners over 100 m.",
    "orientation": "portrait",
    "path": "../games/floppy-race/index.html",
    "thumb": "thumbs/floppy-race.webp",
@@ -4590,10 +4590,10 @@
     "up": "ArrowUp"
    },
    "labels": {
-    "attack": "Z \u00b7 PUNCH",
-    "jump": "X \u00b7 KICK"
+    "attack": "Z · PUNCH",
+    "jump": "X · KICK"
    },
-   "note": "Fighter training room: deal 150 damage to a standing dummy within 40 seconds using the full move list \u2014 fireball 236+P, rising punch 623+P, spin kick 214+K. Same moves as the main fight.",
+   "note": "Fighter training room: deal 150 damage to a standing dummy within 40 seconds using the full move list — fireball 236+P, rising punch 623+P, spin kick 214+K. Same moves as the main fight.",
    "orientation": "portrait",
    "path": "../games/training-dojo/index.html",
    "thumb": "thumbs/training-dojo.webp",
@@ -4619,8 +4619,8 @@
     "up": "ArrowUp"
    },
    "labels": {
-    "attack": "Z \u00b7 PUNCH",
-    "jump": "X \u00b7 KICK"
+    "attack": "Z · PUNCH",
+    "jump": "X · KICK"
    },
    "note": "Three fights in a row against stronger CPUs, and health does not refill between fights.",
    "orientation": "portrait",
@@ -4648,10 +4648,10 @@
     "up": "ArrowUp"
    },
    "labels": {
-    "attack": "Z \u00b7 PUNCH",
-    "jump": "X \u00b7 KICK"
+    "attack": "Z · PUNCH",
+    "jump": "X · KICK"
    },
-   "note": "One armoured boss who takes 75% damage \u2014 and his AI gets harder when he is hurt. Full move list.",
+   "note": "One armoured boss who takes 75% damage — and his AI gets harder when he is hurt. Full move list.",
    "orientation": "portrait",
    "path": "../games/boss-rush/index.html",
    "thumb": "thumbs/boss-rush.webp",
@@ -4677,8 +4677,8 @@
     "up": "ArrowUp"
    },
    "labels": {
-    "attack": "Z \u00b7 PUNCH",
-    "jump": "X \u00b7 KICK"
+    "attack": "Z · PUNCH",
+    "jump": "X · KICK"
    },
    "note": "Four-direction beat-'em-up on the fighter rig: arrows walk, Z punches, X kicks. Clear three waves and the boss.",
    "orientation": "portrait",
@@ -4706,10 +4706,10 @@
     "up": "ArrowUp"
    },
    "labels": {
-    "attack": "Z \u00b7 TAP A",
-    "jump": "X \u00b7 TAP B"
+    "attack": "Z · TAP A",
+    "jump": "X · TAP B"
    },
-   "note": "Sumo on the fighter rig: tap Z then X alternately to shove \u2014 first one out of the ring loses.",
+   "note": "Sumo on the fighter rig: tap Z then X alternately to shove — first one out of the ring loses.",
    "orientation": "portrait",
    "path": "../games/sumo-shove/index.html",
    "thumb": "thumbs/sumo-shove.webp",
@@ -4735,8 +4735,8 @@
     "up": "ArrowUp"
    },
    "labels": {
-    "attack": "Z \u00b7 LOW",
-    "jump": "X \u00b7 HIGH"
+    "attack": "Z · LOW",
+    "jump": "X · HIGH"
    },
    "note": "Dodgeball with fireballs: Z throws low, X throws high; jump to dodge low balls, duck to dodge high ones. Five hearts each.",
    "orientation": "portrait",
@@ -4764,10 +4764,10 @@
     "up": "ArrowUp"
    },
    "labels": {
-    "attack": "Z \u00b7 STRIKE",
-    "jump": "X \u00b7 GUARD"
+    "attack": "Z · STRIKE",
+    "jump": "X · GUARD"
    },
-   "note": "Rock-paper-scissors grappling: Z strike, X guard, Up throw. Strike beats throw, throw beats guard, guard beats strike \u2014 and the CPU repeats itself half the time, so read it.",
+   "note": "Rock-paper-scissors grappling: Z strike, X guard, Up throw. Strike beats throw, throw beats guard, guard beats strike — and the CPU repeats itself half the time, so read it.",
    "orientation": "portrait",
    "path": "../games/grapple-duel/index.html",
    "thumb": "thumbs/grapple-duel.webp",
@@ -4793,10 +4793,10 @@
     "up": "ArrowUp"
    },
    "labels": {
-    "attack": "Z \u00b7 FIRE",
-    "jump": "X \u00b7 FIRE"
+    "attack": "Z · FIRE",
+    "jump": "X · FIRE"
    },
-   "note": "Hold the locker room against the dead for 45 seconds. Left/right move, Z or X fires. Every frame is drawn live by the cabinet's native 8-bit rig \u2014 no sprite assets.",
+   "note": "Hold the locker room against the dead for 45 seconds. Left/right move, Z or X fires. Every frame is drawn live by the cabinet's native 8-bit rig — no sprite assets.",
    "orientation": "portrait",
    "path": "../games/locker-room-last-stand/index.html",
    "thumb": "thumbs/locker-room-last-stand.webp",
@@ -4822,8 +4822,8 @@
     "up": "ArrowUp"
    },
    "labels": {
-    "attack": "Z \u00b7 FIRE",
-    "jump": "X \u00b7 AXE"
+    "attack": "Z · FIRE",
+    "jump": "X · AXE"
    },
    "note": "Fight through three dungeon rooms. Arrows move, hold Z or X to throw axes (auto-aims). Keys open doors, bone piles spawn monsters, food refills your draining health.",
    "orientation": "portrait",
@@ -4851,8 +4851,8 @@
     "up": "ArrowUp"
    },
    "labels": {
-    "attack": "Z \u00b7 FIRE",
-    "jump": "X \u00b7 ALT FIRE"
+    "attack": "Z · FIRE",
+    "jump": "X · ALT FIRE"
    },
    "note": "Pick the plane, tank or archer at the start (left/right, then Z); the computer plays the other two. Loop-the-loop dodges (plane: press Z and X together), shoot red waves for POW, and beat the boss bomber.",
    "orientation": "portrait",
@@ -4880,8 +4880,8 @@
     "up": "ArrowUp"
    },
    "labels": {
-    "attack": "Z \u00b7 FIRE",
-    "jump": "X \u00b7 ALT FIRE"
+    "attack": "Z · FIRE",
+    "jump": "X · ALT FIRE"
    },
    "note": "The same Skyfire 42 mission with high-end shaded 8-bit sprites: pick plane, tank or archer (left/right, then Z) and the computer plays the other two. Plane: Z+X together loops. Beat the boss bomber.",
    "orientation": "portrait",
@@ -4909,8 +4909,8 @@
     "up": "ArrowUp"
    },
    "labels": {
-    "attack": "Z \u00b7 FIRE",
-    "jump": "X \u00b7 ALT FIRE"
+    "attack": "Z · FIRE",
+    "jump": "X · ALT FIRE"
    },
    "note": "The same Skyfire 42 mission as a painted HD world: sea, islands, harbours, clouds and lit explosions. Pick plane, tank or archer (left/right, then Z); the computer plays the other two. Plane: Z+X together loops.",
    "orientation": "portrait",
@@ -4991,10 +4991,10 @@
     "start": "Enter"
    },
    "labels": {},
-   "note": "Planko \u2014 Seed Garden (beauty rebuild of Seed Plinko): painted ASMR plinko garden, 38 procedurally-grown species in 16 forms (common/rare/luminous), dew/stone/firefly peg board at golden hour, synthesized marimba-plink + shimmer + bloom-chime audio, seed-packet picker with pollen unlocks, garden journal, persistent session garden v3: endless seeds with no stop screens, nothing locked (all 38 species from the start), rapid-fire seed placement, double-speed growth \u2014 on top of v2's random seeds, three-row garden (small in front), and scythe gardener.",
+   "note": "Planko — Seed Garden (beauty rebuild of Seed Plinko): painted ASMR plinko garden, 38 procedurally-grown species in 16 forms (common/rare/luminous), dew/stone/firefly peg board at golden hour, synthesized marimba-plink + shimmer + bloom-chime audio, seed-packet picker with pollen unlocks, garden journal, persistent session garden v3: endless seeds with no stop screens, nothing locked (all 38 species from the start), rapid-fire seed placement, double-speed growth — on top of v2's random seeds, three-row garden (small in front), and scythe gardener.",
    "orientation": "any",
    "path": "../games/seed-plinko/index.html",
-   "title": "Planko \u2014 Seed Garden"
+   "title": "Planko — Seed Garden"
   },
   {
    "autostart": [],
@@ -5017,7 +5017,7 @@
     "start": "Enter"
    },
    "labels": {},
-   "note": "Blow the driveway clear under a blue-hour sky \u2014 while snow still falls.",
+   "note": "Blow the driveway clear under a blue-hour sky — while snow still falls.",
    "orientation": "any",
    "path": "../games/snow-rows/index.html",
    "title": "Snow Rows"
@@ -5046,7 +5046,7 @@
    "labels": {
     "jump": "JUMP"
    },
-   "note": "One-button auto-runner through five legendary level maps \u2014 Mario 1-1, Green Hill, Cut Man, Castlevania, DuckTales' Moon. Run right, jump the gaps, grab each world's relic, warp to the next map. Full source in games/run-the-atlas/.",
+   "note": "One-button auto-runner through five legendary level maps — Mario 1-1, Green Hill, Cut Man, Castlevania, DuckTales' Moon. Run right, jump the gaps, grab each world's relic, warp to the next map. Full source in games/run-the-atlas/.",
    "orientation": "landscape",
    "path": "../games/run-the-atlas/index.html",
    "title": "Run the Atlas"
@@ -5062,7 +5062,7 @@
    "labels": {
     "jump": "JUMP"
    },
-   "note": "Endless runner that starts on the Bad City backdrop from Super Bonk (SNES), then tours all 100 screens from the art page \u2014 the worlds stitched together with feathered seams and glitch-warp crossings, every backdrop lazy-loaded as you reach it, and a checkpoint gate every 10 worlds. Auto-run, jump the street furniture, chase the distance. Full source in games/bad-city-run/.",
+   "note": "Endless runner that starts on the Bad City backdrop from Super Bonk (SNES), then tours all 100 screens from the art page — the worlds stitched together with feathered seams and glitch-warp crossings, every backdrop lazy-loaded as you reach it, and a checkpoint gate every 10 worlds. Auto-run, jump the street furniture, chase the distance. Full source in games/bad-city-run/.",
    "orientation": "landscape",
    "path": "../games/bad-city-run/index.html",
    "title": "Bad City Run"
@@ -5559,7 +5559,7 @@
    "note": "Shell Shock 16 variant built for speed runs.",
    "orientation": "landscape",
    "path": "../games/shell-shock-16-speedrun/index.html",
-   "title": "Shell Shock 16 \u2014 Speed Run"
+   "title": "Shell Shock 16 — Speed Run"
   },
   {
    "autostart": [],
@@ -5715,7 +5715,7 @@
    "note": "The Rendered 100 as a game: 68 walkable worlds on a four-wall grid, a relic in every world, and the Glitch haunting every few rooms.",
    "orientation": "landscape",
    "path": "https://bparlette.github.io/worlds/art/game/play.html",
-   "title": "Back Roms \u2014 The Rendered 100 Game"
+   "title": "Back Roms — The Rendered 100 Game"
   },
   {
    "autostart": [],
@@ -5741,7 +5741,7 @@
    "note": "First-person Back Rooms gallery: 100 framed Rendered 100 paintings across ten halls.",
    "orientation": "landscape",
    "path": "https://bparlette.github.io/worlds/art/rendered-walk.html",
-   "title": "The Back Rooms \u2014 Painting Walker"
+   "title": "The Back Rooms — Painting Walker"
   },
   {
    "autostart": [],
@@ -5754,7 +5754,7 @@
    "note": "The original Back Roms walker through the 1,000-world catalog: a relic in every world, the Glitch in every few rooms.",
    "orientation": "landscape",
    "path": "https://bparlette.github.io/worlds/walk/walker.html",
-   "title": "Back Roms \u2014 World Walker"
+   "title": "Back Roms — World Walker"
   },
   {
    "autostart": [],
@@ -5777,7 +5777,7 @@
     "start": "Enter"
    },
    "labels": {},
-   "note": "Cabinet graft: Maze Wrecker (g7) x Boom Balloons (g4). The maze, patrol bots and hidden dots, but B drops balloon bombs \u2014 blasts break walls, stun bots, chain other bombs, and bomb you if you linger.",
+   "note": "Cabinet graft: Maze Wrecker (g7) x Boom Balloons (g4). The maze, patrol bots and hidden dots, but B drops balloon bombs — blasts break walls, stun bots, chain other bombs, and bomb you if you linger.",
    "orientation": "landscape",
    "path": "../games/graft-maze-boom/index.html",
    "title": "Maze Boom"
@@ -5790,7 +5790,7 @@
     "start": "Enter"
    },
    "labels": {},
-   "note": "Cabinet graft: Maze Wrecker (g7) x Kung Fu Knockout (g6). No hammer \u2014 A punches (two crack a wall), B kicks (longer reach, breaks in one), and chained stuns build a combo multiplier.",
+   "note": "Cabinet graft: Maze Wrecker (g7) x Kung Fu Knockout (g6). No hammer — A punches (two crack a wall), B kicks (longer reach, breaks in one), and chained stuns build a combo multiplier.",
    "orientation": "landscape",
    "path": "../games/graft-maze-fu/index.html",
    "title": "Maze Fu"
@@ -5816,7 +5816,7 @@
     "start": "Enter"
    },
    "labels": {},
-   "note": "Two Rendered-100 worlds mashed into every room, split at a glowing seam \u2014 34 rooms, a relic in each, four-wall travel, the Glitch on patrol.",
+   "note": "Two Rendered-100 worlds mashed into every room, split at a glowing seam — 34 rooms, a relic in each, four-wall travel, the Glitch on patrol.",
    "orientation": "landscape",
    "path": "https://bparlette.github.io/worlds/art/game/collide.html",
    "title": "Worlds Collide"
@@ -5829,7 +5829,7 @@
     "start": "Enter"
    },
    "labels": {},
-   "note": "The Prop Smith sourcing gallery: the 100 best single-object 3D props on Sketchfab \u2014 gnome, treasure chest, kart, chair \u2014 eyeball-verified, with the CC-licensed downloadable ones flagged as the Qwen conversion queue.",
+   "note": "The Prop Smith sourcing gallery: the 100 best single-object 3D props on Sketchfab — gnome, treasure chest, kart, chair — eyeball-verified, with the CC-licensed downloadable ones flagged as the Qwen conversion queue.",
    "orientation": "landscape",
    "path": "https://bparlette.github.io/worlds/art/props.html",
    "title": "The Prop 100"
@@ -5842,10 +5842,29 @@
     "start": "Enter"
    },
    "labels": {},
-   "note": "Three word mashups on one screen with a dropdown picker, each a full-screen iPhone browser game: Letterfall (Tetris x Wordle \u2014 word-fragment blocks of 1-3 letters fall and stack into 5-letter words), Letter Crush (Candy Crush x spelling \u2014 boards planted from real words, one swap from spelling; swap tiles to finish words and chain cascades), Wordle-Latro (Wordle, simplified \u2014 guess the hidden word in 6 tries, color clues, every guess scores points; 10 rounds and a grade).",
+   "note": "Three word mashups on one screen with a dropdown picker, each a full-screen iPhone browser game: Letterfall (Tetris x Wordle — word-fragment blocks of 1-3 letters fall and stack into 5-letter words), Letter Crush (Candy Crush x spelling — boards planted from real words, one swap from spelling; swap tiles to finish words and chain cascades), Wordle-Latro (Wordle, simplified — guess the hidden word in 6 tries, color clues, every guess scores points; 10 rounds and a grade).",
    "orientation": "portrait",
    "path": "../games/mashup-cabinet/index.html",
    "title": "Mashup 3-in-1"
+  },
+  {
+   "autostart": [],
+   "category": "Originals",
+   "id": "keep-it-lit-night-watch",
+   "keys": {
+    "attack": "Space",
+    "down": "ArrowDown",
+    "left": "ArrowLeft",
+    "right": "ArrowRight",
+    "up": "ArrowUp"
+   },
+   "labels": {
+    "attack": "SWEEP"
+   },
+   "note": "The Keep It Lit! (Abyssal Mangrove) survival loop as a tiny web game, built from the Roblox game's real exported meshes: feed the brazier, haul fuel out of the dark, sweep Silt Striders back, ring in the dawn.",
+   "orientation": "any",
+   "path": "../games/keep-it-lit-night-watch/index.html",
+   "title": "Keep It Lit — Night Watch"
   }
  ]
 }
