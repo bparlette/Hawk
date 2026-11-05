@@ -1,0 +1,879 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<title>Keep It Lit — Night Watch</title>
+<style>
+  * { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
+  html, body { width:100%; height:100%; overflow:hidden; background:#08120f; font-family:-apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; }
+  #game { position:fixed; inset:0; touch-action:none; }
+  canvas { display:block; }
+
+  /* ---------- HUD (icons + numbers only, top strip) ---------- */
+  #hud { position:fixed; top:0; left:0; right:0; padding:calc(6px + env(safe-area-inset-top)) 10px 0 10px;
+         display:flex; justify-content:space-between; align-items:flex-start; pointer-events:none; z-index:5; }
+  .hudbox { background:rgba(6,16,13,.55); border:1px solid rgba(255,166,61,.25); border-radius:12px;
+            padding:5px 9px; color:#ffe9c9; font-weight:700; font-size:15px; display:flex; align-items:center; gap:6px;
+            text-shadow:0 1px 2px #000; }
+  #fuelwrap { width:118px; }
+  #fuelbarOuter { flex:1; height:9px; background:rgba(255,255,255,.14); border-radius:5px; overflow:hidden; }
+  #fuelbar { height:100%; width:70%; background:linear-gradient(90deg,#ff7a1a,#ffb03a); border-radius:5px; transition:width .25s; }
+  #moonbarOuter { width:74px; height:7px; background:rgba(255,255,255,.14); border-radius:4px; overflow:hidden; }
+  #moonbar { height:100%; width:100%; background:linear-gradient(90deg,#9fd8ff,#e8f4ff); }
+  .pip { width:11px; height:11px; border-radius:50%; background:rgba(255,255,255,.16); border:1px solid rgba(255,255,255,.35); }
+  .pip.full { background:#ffb03a; border-color:#ffd98a; box-shadow:0 0 6px #ff9a2a; }
+
+  /* ---------- touch controls ---------- */
+  #stick { position:fixed; width:104px; height:104px; border-radius:50%; border:2px solid rgba(255,255,255,.28);
+           background:rgba(255,255,255,.06); display:none; z-index:6; pointer-events:none; transform:translate(-50%,-50%); }
+  #stickKnob { position:absolute; left:50%; top:50%; width:46px; height:46px; border-radius:50%;
+               background:rgba(255,233,201,.85); transform:translate(-50%,-50%); box-shadow:0 2px 8px rgba(0,0,0,.5); }
+  #btnSweep { position:fixed; right:calc(18px + env(safe-area-inset-right)); bottom:calc(24px + env(safe-area-inset-bottom));
+              width:76px; height:76px; border-radius:50%; border:2px solid rgba(255,166,61,.55);
+              background:radial-gradient(circle at 50% 35%, rgba(255,166,61,.5), rgba(120,50,8,.55));
+              font-size:32px; display:flex; align-items:center; justify-content:center; z-index:6;
+              user-select:none; -webkit-user-select:none; touch-action:none; }
+  #btnSweep:active { transform:scale(.93); }
+  #btnSweep.cd { filter:grayscale(.7) brightness(.6); }
+
+  /* ---------- overlays ---------- */
+  .overlay { position:fixed; inset:0; display:flex; flex-direction:column; align-items:center; justify-content:center;
+             background:radial-gradient(ellipse at 50% 42%, rgba(10,26,20,.25), rgba(3,8,6,.88) 75%);
+             z-index:10; text-align:center; padding:24px; color:#ffe9c9; }
+  .overlay h1 { font-size:clamp(34px, 9vw, 58px); letter-spacing:2px; color:#ffb03a;
+                text-shadow:0 0 22px rgba(255,122,26,.65), 0 3px 0 #5c2a00, 0 6px 18px #000; margin-bottom:6px; }
+  .overlay h2 { font-size:clamp(15px, 4.4vw, 20px); font-weight:600; color:#bfe8d8; letter-spacing:3px; margin-bottom:20px; }
+  .overlay p { font-size:clamp(14px, 4vw, 17px); line-height:1.55; color:#e8f2ec; max-width:430px; margin-bottom:10px; text-shadow:0 1px 3px #000; }
+  .overlay .big { font-size:clamp(19px, 5.4vw, 24px); color:#ffd98a; font-weight:700; }
+  .playbtn { margin-top:18px; pointer-events:auto; background:linear-gradient(180deg,#ffb03a,#ff7a1a); color:#2a1500;
+             font-size:20px; font-weight:800; letter-spacing:1px; border:none; border-radius:999px;
+             padding:15px 42px; box-shadow:0 6px 22px rgba(255,122,26,.45), inset 0 2px 0 rgba(255,255,255,.5); cursor:pointer; }
+  .playbtn:active { transform:scale(.96); }
+  #overScreen { display:none; }
+  #dawnFlash { position:fixed; inset:0; background:radial-gradient(ellipse at 50% 40%, #ffe9b0, #ffb03a);
+               opacity:0; pointer-events:none; z-index:8; }
+  #loadNote { position:fixed; left:0; right:0; bottom:12px; text-align:center; color:#9fc4b4; font-size:13px; z-index:11; }
+</style>
+</head>
+<body>
+<div id="game"></div>
+
+<div id="hud" style="visibility:hidden">
+  <div class="hudbox" id="fuelwrap"><span>🔥</span><div id="fuelbarOuter"><div id="fuelbar"></div></div></div>
+  <div class="hudbox"><span>🌙</span><span id="nightNum">1</span><div id="moonbarOuter"><div id="moonbar"></div></div></div>
+  <div class="hudbox"><span>🪵</span><span class="pip" id="pip0"></span><span class="pip" id="pip1"></span><span class="pip" id="pip2"></span></div>
+</div>
+
+<div id="stick"><div id="stickKnob"></div></div>
+<div id="btnSweep" style="visibility:hidden">🔥</div>
+<div id="dawnFlash"></div>
+
+<div class="overlay" id="startScreen">
+  <h1>KEEP IT LIT</h1>
+  <h2>— NIGHT WATCH —</h2>
+  <p>The brazier is the only light in the swamp, and it is <b>always going out</b>.</p>
+  <p>Run into the dark, grab 🪵 fuel, haul it back and feed the flame.<br>
+     Silt Striders creep in to drink the fire — sweep them back with your torch.</p>
+  <p class="big">Survive until dawn. 🔔</p>
+  <button class="playbtn" id="btnStart">LIGHT IT</button>
+</div>
+
+<div class="overlay" id="overScreen">
+  <h1>THE FIRE DIED</h1>
+  <h2 id="overStats">You kept it lit for 0 nights</h2>
+  <p>The swamp is very dark, and very quiet.</p>
+  <button class="playbtn" id="btnAgain">TRY AGAIN</button>
+</div>
+
+<div id="loadNote">stoking the brazier…</div>
+
+<script type="importmap">
+{ "imports": {
+  "three": "./lib/three.module.js",
+  "three/addons/": "./lib/"
+} }
+</script>
+
+<script type="module">
+import * as THREE from 'three';
+import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
+
+/* ============================================================
+   KEEP IT LIT — Night Watch
+   A tiny survival loop built from the real Keep It Lit!
+   (Abyssal Mangrove) meshes, exported from Roblox Studio.
+   ============================================================ */
+
+const ARENA_R = 33;            // playable radius
+const NIGHT_LEN = 75;          // seconds per night
+const MAX_CARRY = 3;
+
+const params = new URLSearchParams(location.search);
+const AUTO = params.get('auto') === '1';
+const TS = Math.min(+(params.get('ts') || 1), 20); // QA timescale
+
+// ---------- renderer / scene ----------
+const renderer = new THREE.WebGLRenderer({ antialias: true, powerPreference: 'high-performance' });
+renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
+renderer.setSize(innerWidth, innerHeight);
+renderer.outputColorSpace = THREE.SRGBColorSpace;
+renderer.toneMapping = THREE.ACESFilmicToneMapping;
+renderer.toneMappingExposure = 1.28;
+document.getElementById('game').appendChild(renderer.domElement);
+
+const scene = new THREE.Scene();
+scene.background = new THREE.Color(0x0a1a16);
+scene.fog = new THREE.FogExp2(0x0a1a16, 0.019);
+
+const camera = new THREE.PerspectiveCamera(46, innerWidth / innerHeight, 0.1, 300);
+camera.position.set(0, 17, 13);
+
+const hemi = new THREE.HemisphereLight(0x446d85, 0x241a12, 0.95);
+scene.add(hemi);
+const moon = new THREE.DirectionalLight(0x8fb6d9, 0.85);
+moon.position.set(-18, 30, -12);
+scene.add(moon);
+
+// ---------- helpers ----------
+function radialTexture(inner, outer, size = 256) {
+  const c = document.createElement('canvas'); c.width = c.height = size;
+  const g = c.getContext('2d');
+  const gr = g.createRadialGradient(size/2, size/2, 0, size/2, size/2, size/2);
+  gr.addColorStop(0, inner); gr.addColorStop(1, outer);
+  g.fillStyle = gr; g.fillRect(0, 0, size, size);
+  const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace;
+  return t;
+}
+const blobTex = radialTexture('rgba(0,0,0,0.42)', 'rgba(0,0,0,0)');
+function blobShadow(r) {
+  const m = new THREE.Mesh(new THREE.PlaneGeometry(r * 2, r * 2),
+    new THREE.MeshBasicMaterial({ map: blobTex, transparent: true, depthWrite: false }));
+  m.rotation.x = -Math.PI / 2; m.position.y = 0.02; m.renderOrder = 1;
+  return m;
+}
+
+// ---------- ground ----------
+{
+  const c = document.createElement('canvas'); c.width = c.height = 512;
+  const g = c.getContext('2d');
+  const gr = g.createRadialGradient(256, 256, 20, 256, 256, 256);
+  gr.addColorStop(0.0, '#a3967a');   // pale camp sand
+  gr.addColorStop(0.22, '#8a7a5c');
+  gr.addColorStop(0.45, '#52684c');  // mossy mud
+  gr.addColorStop(0.75, '#2d4a3e');
+  gr.addColorStop(1.0, '#101f1b');   // swamp dark
+  g.fillStyle = gr; g.fillRect(0, 0, 512, 512);
+  // speckle
+  for (let i = 0; i < 2600; i++) {
+    g.fillStyle = `rgba(${20+Math.random()*60|0},${30+Math.random()*55|0},${20+Math.random()*40|0},${0.03+Math.random()*0.07})`;
+    const r = Math.random() * 3 + 1;
+    g.beginPath(); g.arc(Math.random()*512, Math.random()*512, r, 0, 7); g.fill();
+  }
+  const tex = new THREE.CanvasTexture(c); tex.colorSpace = THREE.SRGBColorSpace;
+  const ground = new THREE.Mesh(new THREE.CircleGeometry(46, 48),
+    new THREE.MeshStandardMaterial({ map: tex, roughness: 1 }));
+  ground.rotation.x = -Math.PI / 2;
+  scene.add(ground);
+  // shallow water ring sheen beyond the mud
+  const water = new THREE.Mesh(new THREE.RingGeometry(38, 90, 40),
+    new THREE.MeshStandardMaterial({ color: 0x11333a, roughness: 0.25, metalness: 0.1 }));
+  water.rotation.x = -Math.PI / 2; water.position.y = -0.06;
+  scene.add(water);
+}
+
+// ---------- materials (our own art direction; exports are grey) ----------
+const MAT = {
+  bronze:  new THREE.MeshStandardMaterial({ color: 0x8a6238, metalness: 0.65, roughness: 0.45 }),
+  verdigris: new THREE.MeshStandardMaterial({ color: 0x4f8268, metalness: 0.55, roughness: 0.5 }),
+  iron:    new THREE.MeshStandardMaterial({ color: 0x4c4f55, metalness: 0.6, roughness: 0.55 }),
+  wood:    new THREE.MeshStandardMaterial({ color: 0x513d27, roughness: 0.95 }),
+  woodPale: new THREE.MeshStandardMaterial({ color: 0x77613f, roughness: 0.95 }),
+  root:    new THREE.MeshStandardMaterial({ color: 0x3e2f22, roughness: 1 }),
+  stone:   new THREE.MeshStandardMaterial({ color: 0x71767c, roughness: 0.9 }),
+  bonePale: new THREE.MeshStandardMaterial({ color: 0xb8ab90, roughness: 0.85 }),
+  coals:   new THREE.MeshStandardMaterial({ color: 0x200d06, emissive: 0xff5a14, emissiveIntensity: 1.6, roughness: 1 }),
+  flame:   new THREE.MeshBasicMaterial({ color: 0xff8a2a, transparent: true, opacity: 0.92 }),
+  flameCore: new THREE.MeshBasicMaterial({ color: 0xffd23d, transparent: true, opacity: 0.95 }),
+  strider: new THREE.MeshStandardMaterial({ color: 0x2e3841, roughness: 0.55, metalness: 0.25 }),
+  striderLeg: new THREE.MeshStandardMaterial({ color: 0x232a30, roughness: 0.7 }),
+  eyeGlow: new THREE.MeshBasicMaterial({ color: 0xffd23d }),
+  sporeGlow: new THREE.MeshStandardMaterial({ color: 0x1d4d3a, emissive: 0x39e6b0, emissiveIntensity: 0.5, roughness: 0.8 }),
+  fungus:  new THREE.MeshStandardMaterial({ color: 0x4a3a28, emissive: 0x2bd8a0, emissiveIntensity: 0.10, roughness: 0.9 }),
+  mushroom: new THREE.MeshStandardMaterial({ color: 0x6e4a30, roughness: 0.95 }),
+  cloak:   new THREE.MeshStandardMaterial({ color: 0x22718c, roughness: 0.9 }),
+  cloakDark: new THREE.MeshStandardMaterial({ color: 0x17485c, roughness: 0.95 }),
+  skin:    new THREE.MeshStandardMaterial({ color: 0xe8b98a, roughness: 0.7 }),
+  beaconOrb: new THREE.MeshStandardMaterial({ color: 0x0d2b33, emissive: 0x54d8ff, emissiveIntensity: 0.7, roughness: 0.4 }),
+  leviathan: new THREE.MeshStandardMaterial({ color: 0x1d2b30, roughness: 0.6, metalness: 0.15 }),
+  levEye:  new THREE.MeshBasicMaterial({ color: 0x9fe8ff }),
+};
+
+// ---------- model loading ----------
+const loader = new GLTFLoader();
+const prototypes = {};
+async function loadModel(name, mat) {
+  const gltf = await loader.loadAsync(`assets/${name}.glb`);
+  const root = gltf.scene;
+  root.traverse(o => { if (o.isMesh) { o.material = mat; o.frustumCulled = true; } });
+  prototypes[name] = root;
+  return root;
+}
+// scale a clone so its bounding-box height (or given axis) hits target, base at y=0
+function place(root, target, axis = 'y') {
+  const box = new THREE.Box3().setFromObject(root);
+  const size = box.getSize(new THREE.Vector3());
+  const dim = axis === 'y' ? size.y : axis === 'x' ? size.x : size.z;
+  const s = target / dim;
+  root.scale.setScalar(s);
+  const box2 = new THREE.Box3().setFromObject(root);
+  root.position.x -= (box2.min.x + box2.max.x) / 2;
+  root.position.z -= (box2.min.z + box2.max.z) / 2;
+  root.position.y -= box2.min.y;
+  return root;
+}
+function clone(name) { return prototypes[name].clone(true); }
+
+// ---------- world ----------
+const world = { ready: false };
+let brazier, brazierLight, lightDisc, flameOuter, flameInner, coalsMesh;
+let bellGroup, beaconOrbMesh, leviathan;
+const fuelGroves = [];   // {pos, fungus, item, itemKind, hasItem, respawnT}
+const dress = new THREE.Group(); scene.add(dress);
+
+function buildWorld() {
+  // --- brazier: frame + bowl + coals + flame ---
+  brazier = new THREE.Group();
+  const frame = place(clone('brazier_frame'), 1.05);
+  frame.traverse(o => { if (o.isMesh) o.material = MAT.bronze; });
+  brazier.add(frame);
+  const bowl = place(clone('brazier_bowl'), 1.3, 'x');
+  bowl.position.y = 0.82; bowl.traverse(o => { if (o.isMesh) o.material = MAT.iron; });
+  brazier.add(bowl);
+  coalsMesh = place(clone('coal_embers'), 0.85, 'x');
+  coalsMesh.position.y = 1.06; coalsMesh.traverse(o => { if (o.isMesh) o.material = MAT.coals; });
+  brazier.add(coalsMesh);
+  flameOuter = place(clone('flame'), 1.0);
+  flameOuter.position.y = 1.10; flameOuter.userData.stretch = 1.55; flameOuter.traverse(o => { if (o.isMesh) o.material = MAT.flame; });
+  brazier.add(flameOuter);
+  flameInner = place(clone('flame'), 0.55);
+  flameInner.position.y = 1.12; flameInner.userData.stretch = 1.55; flameInner.traverse(o => { if (o.isMesh) o.material = MAT.flameCore; });
+  brazier.add(flameInner);
+  brazier.add(blobShadow(1.5));
+  scene.add(brazier);
+
+  brazierLight = new THREE.PointLight(0xff8a2a, 60, 30, 1.8);
+  brazierLight.position.set(0, 1.8, 0);
+  scene.add(brazierLight);
+
+  lightDisc = new THREE.Mesh(new THREE.CircleGeometry(1, 40),
+    new THREE.MeshBasicMaterial({ map: radialTexture('rgba(255,150,50,0.34)', 'rgba(255,120,30,0)'),
+      transparent: true, depthWrite: false, blending: THREE.AdditiveBlending }));
+  lightDisc.rotation.x = -Math.PI / 2; lightDisc.position.y = 0.03; lightDisc.renderOrder = 2;
+  scene.add(lightDisc);
+
+  // --- camp dressing ---
+  const pile = place(clone('fuel_pile'), 2.3, 'x'); pile.position.set(2.6, 0, 1.7); pile.rotation.y = 0.7;
+  pile.traverse(o => { if (o.isMesh) o.material = MAT.woodPale; }); dress.add(pile);
+  const rack = place(clone('timber_rack'), 1.9); rack.position.set(-2.7, 0, 1.4); rack.rotation.y = -0.5;
+  dress.add(rack);
+  const crate = place(clone('crate'), 1.15, 'x'); crate.position.set(2.2, 0, -2.3); crate.rotation.y = 0.4;
+  dress.add(crate);
+
+  world.obstacles = [];
+  // palisade ring with a gap facing the gate (north)
+  for (let i = 0; i < 11; i++) {
+    const a = (i / 11) * Math.PI * 2 + 0.28;
+    if (Math.abs(THREE.MathUtils.euclideanModulo(a + Math.PI, Math.PI * 2) - Math.PI) < 0.42 && a > 4.6) continue; // gap near north-west walkway
+    const seg = place(clone('palisade'), 2.5);
+    seg.position.set(Math.sin(a) * 8.2, 0, -Math.cos(a) * 8.2);
+    world.obstacles.push({ x: seg.position.x, z: seg.position.z, r: 1.15 });
+    seg.rotation.y = a + Math.PI / 2;
+    dress.add(seg);
+  }
+
+  // --- the Drowned Bell on a rootwood frame, east of camp ---
+  bellGroup = new THREE.Group();
+  const post1 = new THREE.Mesh(new THREE.CylinderGeometry(0.09, 0.12, 3.4, 7), MAT.root);
+  post1.position.set(-1.15, 1.7, 0);
+  const post2 = post1.clone(); post2.position.x = 1.15;
+  const beam = new THREE.Mesh(new THREE.CylinderGeometry(0.09, 0.09, 2.7, 7), MAT.root);
+  beam.rotation.z = Math.PI / 2; beam.position.y = 3.35;
+  bellGroup.add(post1, post2, beam);
+  const bell = place(clone('bell'), 1.9);
+  bell.traverse(o => { if (o.isMesh) o.material = MAT.verdigris; });
+  const bellPivot = new THREE.Group(); bellPivot.position.y = 3.3;
+  bell.position.y = -1.95; bellPivot.add(bell); bellGroup.add(bellPivot);
+  bellGroup.userData.pivot = bellPivot;
+  bellGroup.position.set(6.4, 0, -4.6); bellGroup.rotation.y = -0.7;
+  bellGroup.add(blobShadow(1.6));
+  scene.add(bellGroup);
+
+  // --- extraction beacon, south landmark ---
+  const beacon = place(clone('beacon'), 4.4);
+  beacon.position.set(-7.5, 0, 13.5);
+  beacon.traverse(o => { if (o.isMesh) o.material = MAT.stone; });
+  const orb = new THREE.Mesh(new THREE.SphereGeometry(0.42, 14, 12), MAT.beaconOrb);
+  orb.position.set(-7.5, 4.35, 13.5); beaconOrbMesh = orb;
+  scene.add(beacon, orb);
+
+  // --- the gate (striders come through here) ---
+  const gate = place(clone('gate_arch'), 7.2);
+  gate.position.set(0, 0, -ARENA_R - 2.5); gate.traverse(o => { if (o.isMesh) o.material = MAT.stone; });
+  scene.add(gate);
+  const rootArch = place(clone('root_arch'), 5.6);
+  rootArch.position.set(-13, 0, -11); rootArch.rotation.y = 0.8;
+  rootArch.traverse(o => { if (o.isMesh) o.material = MAT.root; });
+  scene.add(rootArch);
+
+  // --- swamp dressing: lantern trees with amber orbs ---
+  const treeSpots = [[-19, -4], [15, -16], [21, 7], [-16, 14], [6, -24], [-6, 22], [25, -9]];
+  for (const [x, z] of treeSpots) {
+    const t = place(clone('lantern_tree'), 5.4 + Math.random() * 1.6);
+    t.position.set(x, 0, z); t.rotation.y = Math.random() * 6.28;
+    t.traverse(o => { if (o.isMesh) o.material = MAT.root; });
+    scene.add(t);
+    const orbM = new THREE.Mesh(new THREE.SphereGeometry(0.14, 10, 8),
+      new THREE.MeshBasicMaterial({ color: 0xffc46b }));
+    orbM.position.set(x + 0.8, 3.4 + Math.random(), z + 0.4);
+    scene.add(orbM);
+  }
+
+  // --- fuel groves ---
+  const groveDefs = [
+    { x: 15, z: -9, kind: 'logs', big: true }, { x: -17, z: -6, kind: 'spore', big: false },
+    { x: 11, z: 15, kind: 'spore', big: false }, { x: -12, z: 17, kind: 'logs', big: false },
+    { x: 1, z: -21, kind: 'logs', big: false }, { x: 23, z: 2, kind: 'spore', big: false },
+  ];
+  for (const gd of groveDefs) {
+    const g = new THREE.Group(); g.position.set(gd.x, 0, gd.z);
+    if (gd.big) {
+      const shroom = place(clone('giant_mushroom'), 5.2);
+      shroom.traverse(o => { if (o.isMesh) o.material = MAT.mushroom; });
+      g.add(shroom);
+    } else {
+      const f = place(clone('shelf_fungus'), 1.7, 'x');
+      f.traverse(o => { if (o.isMesh) o.material = MAT.fungus; });
+      g.add(f);
+      const f2 = place(clone('shelf_fungus'), 1.1, 'x');
+      f2.position.set(1.3, 0, 0.8); f2.rotation.y = 2.1;
+      f2.traverse(o => { if (o.isMesh) o.material = MAT.fungus; });
+      g.add(f2);
+    }
+    g.add(blobShadow(1.6));
+    scene.add(g);
+    fuelGroves.push({ pos: new THREE.Vector3(gd.x, 0, gd.z), kind: gd.kind, item: null, hasItem: false, respawnT: Math.random() * 1.5 });
+  }
+
+  // --- Leviathan (cameo, hides beyond the north tree line) ---
+  leviathan = new THREE.Group();
+  const head = place(clone('leviathan_head'), 7.5, 'x');
+  head.traverse(o => { if (o.isMesh) o.material = MAT.leviathan; });
+  const crown = place(clone('leviathan_crown'), 5.4, 'x');
+  crown.position.y = 3.4; crown.traverse(o => { if (o.isMesh) o.material = MAT.root; });
+  const eyes = place(clone('leviathan_eyes'), 2.6, 'x');
+  eyes.position.set(0.5, 1.2, 2.9); eyes.traverse(o => { if (o.isMesh) o.material = MAT.levEye; });
+  leviathan.add(head, crown, eyes);
+  leviathan.position.set(4, -7.5, -44);
+  leviathan.rotation.y = Math.PI + 0.25; // snout toward camp
+  leviathan.visible = false;
+  scene.add(leviathan);
+
+  world.ready = true;
+}
+
+function makeFuelItem(kind) {
+  const g = new THREE.Group();
+  const m = kind === 'logs' ? place(clone('fuel_logs'), 0.95) : place(clone('fuel_spore'), 0.85, 'x');
+  m.traverse(o => { if (o.isMesh) o.material = kind === 'logs' ? MAT.woodPale : MAT.sporeGlow; });
+  g.add(m);
+  const glow = new THREE.Mesh(new THREE.SphereGeometry(0.42, 10, 8),
+    new THREE.MeshBasicMaterial({ map: radialTexture(kind === 'logs' ? 'rgba(255,170,70,0.22)' : 'rgba(80,255,200,0.20)', 'rgba(0,0,0,0)'),
+      transparent: true, depthWrite: false, blending: THREE.AdditiveBlending }));
+  glow.position.y = 0.5; g.add(glow);
+  return g;
+}
+
+// ---------- player: a little cloaked lantern-keeper ----------
+const player = { pos: new THREE.Vector3(3.5, 0, 5), vel: new THREE.Vector3(), face: 0, carry: 0, group: new THREE.Group(), torchLight: null, bob: 0 };
+function buildPlayer() {
+  const g = player.group;
+  const cloak = new THREE.Mesh(new THREE.ConeGeometry(0.52, 1.25, 10), MAT.cloak);
+  cloak.position.y = 0.62;
+  const hood = new THREE.Mesh(new THREE.SphereGeometry(0.30, 12, 10), MAT.cloakDark);
+  hood.position.y = 1.32;
+  const faceM = new THREE.Mesh(new THREE.SphereGeometry(0.19, 10, 8), MAT.skin);
+  faceM.position.set(0, 1.28, 0.14);
+  const torchG = new THREE.Group();
+  const torch = place(clone('torch'), 0.72);
+  torch.traverse(o => { if (o.isMesh) o.material = MAT.wood; });
+  const tflame = place(clone('flame'), 0.34);
+  tflame.position.y = 0.68; tflame.traverse(o => { if (o.isMesh) o.material = MAT.flame; });
+  torchG.add(torch, tflame);
+  torchG.position.set(0.48, 0.78, 0.18); torchG.rotation.z = -0.35;
+  torchG.userData.flame = tflame;
+  player.torchLight = new THREE.PointLight(0xffa63d, 11, 10.5, 1.9);
+  player.torchLight.position.set(0.5, 1.6, 0.2);
+  g.add(cloak, hood, faceM, torchG, player.torchLight, blobShadow(0.62));
+  g.userData.torch = torchG;
+  g.position.copy(player.pos);
+  scene.add(g);
+  player.carryGroup = new THREE.Group(); player.carryGroup.position.y = 1.78; g.add(player.carryGroup);
+}
+function refreshCarryVisual() {
+  player.carryGroup.clear();
+  for (let i = 0; i < player.carry; i++) {
+    const m = place(clone(i % 2 ? 'fuel_spore' : 'fuel_logs'), 0.5);
+    m.position.y = i * 0.24; m.rotation.y = i * 1.3;
+    m.traverse(o => { if (o.isMesh) o.material = i % 2 ? MAT.sporeGlow : MAT.woodPale; });
+    player.carryGroup.add(m);
+  }
+  for (let i = 0; i < 3; i++) document.getElementById('pip' + i).className = 'pip' + (i < player.carry ? ' full' : '');
+}
+
+// ---------- striders ----------
+const striders = [];
+function spawnStrider(speedMul) {
+  const g = new THREE.Group();
+  const body = place(clone('strider'), 1.34, 'x');
+  body.traverse(o => { if (o.isMesh) o.material = MAT.strider; });
+  body.position.y = 0.22;
+  const legs = place(clone('strider_legs'), 0.8, 'x');
+  legs.traverse(o => { if (o.isMesh) o.material = MAT.striderLeg; });
+  const e1 = new THREE.Mesh(new THREE.SphereGeometry(0.055, 8, 6), MAT.eyeGlow);
+  e1.position.set(0.28, 0.52, 0.42);
+  const e2 = e1.clone(); e2.position.x = -0.28;
+  g.add(body, legs, e1, e2, blobShadow(0.72));
+  // spawn: through the gate, or wading in from a dark edge
+  let p;
+  if (Math.random() < 0.55) p = new THREE.Vector3((Math.random() - 0.5) * 7, 0, -ARENA_R - 1.5);
+  else { const a = Math.random() * Math.PI * 2; p = new THREE.Vector3(Math.sin(a) * (ARENA_R + 2), 0, -Math.cos(a) * (ARENA_R + 2)); }
+  g.position.copy(p);
+  scene.add(g);
+  striders.push({ g, pos: p, speed: (1.05 + Math.random() * 0.5) * speedMul, state: 'hunt', stunT: 0, gulpT: 0, wob: Math.random() * 9, knock: new THREE.Vector3() });
+}
+function removeStrider(s) {
+  scene.remove(s.g);
+  striders.splice(striders.indexOf(s), 1);
+}
+
+// ---------- particles (embers + splashes) ----------
+const P_COUNT = 260;
+const pGeo = new THREE.BufferGeometry();
+const pPos = new Float32Array(P_COUNT * 3);
+const pVel = new Float32Array(P_COUNT * 3);
+const pLife = new Float32Array(P_COUNT);
+pGeo.setAttribute('position', new THREE.BufferAttribute(pPos, 3));
+const pMat = new THREE.PointsMaterial({ color: 0xffb03a, size: 0.14, transparent: true, opacity: 0.9,
+  blending: THREE.AdditiveBlending, depthWrite: false, sizeAttenuation: true });
+const points = new THREE.Points(pGeo, pMat); points.frustumCulled = false; scene.add(points);
+let pCursor = 0;
+function emit(x, y, z, n, spread, up, tint) {
+  for (let i = 0; i < n; i++) {
+    const k = pCursor; pCursor = (pCursor + 1) % P_COUNT;
+    pPos[k*3] = x; pPos[k*3+1] = y; pPos[k*3+2] = z;
+    pVel[k*3] = (Math.random() - 0.5) * spread; pVel[k*3+1] = up * (0.5 + Math.random()); pVel[k*3+2] = (Math.random() - 0.5) * spread;
+    pLife[k] = 0.7 + Math.random() * 0.8;
+  }
+  if (tint) pMat.color.set(tint);
+}
+function stepParticles(dt) {
+  for (let k = 0; k < P_COUNT; k++) {
+    if (pLife[k] <= 0) { pPos[k*3+1] = -50; continue; }
+    pLife[k] -= dt;
+    pPos[k*3] += pVel[k*3] * dt; pPos[k*3+1] += pVel[k*3+1] * dt; pPos[k*3+2] += pVel[k*3+2] * dt;
+    pVel[k*3+1] += 0.55 * dt; // embers rise
+  }
+  pGeo.attributes.position.needsUpdate = true;
+}
+
+// ---------- audio (all synthesized) ----------
+const AudioSys = {
+  ctx: null, master: null,
+  init() {
+    if (this.ctx) { this.ctx.resume(); return; }
+    try { if (navigator.audioSession) navigator.audioSession.type = 'playback'; } catch (e) {}
+    const C = window.AudioContext || window.webkitAudioContext;
+    if (!C) return;
+    this.ctx = new C();
+    this.master = this.ctx.createGain(); this.master.gain.value = 0.5;
+    this.master.connect(this.ctx.destination);
+    // fire crackle loop: filtered noise with random pops
+    const len = this.ctx.sampleRate * 2, buf = this.ctx.createBuffer(1, len, this.ctx.sampleRate);
+    const d = buf.getChannelData(0);
+    for (let i = 0; i < len; i++) d[i] = (Math.random() * 2 - 1) * (Math.random() < 0.02 ? 1 : 0.14);
+    const src = this.ctx.createBufferSource(); src.buffer = buf; src.loop = true;
+    const f = this.ctx.createBiquadFilter(); f.type = 'lowpass'; f.frequency.value = 700;
+    this.crackleGain = this.ctx.createGain(); this.crackleGain.gain.value = 0.05;
+    src.connect(f); f.connect(this.crackleGain); this.crackleGain.connect(this.master);
+    src.start();
+  },
+  blip(freq, dur, type = 'sine', vol = 0.22, slide = 0) {
+    if (!this.ctx) return;
+    const t = this.ctx.currentTime, o = this.ctx.createOscillator(), g = this.ctx.createGain();
+    o.type = type; o.frequency.setValueAtTime(freq, t);
+    if (slide) o.frequency.exponentialRampToValueAtTime(Math.max(30, freq + slide), t + dur);
+    g.gain.setValueAtTime(vol, t); g.gain.exponentialRampToValueAtTime(0.001, t + dur);
+    o.connect(g); g.connect(this.master); o.start(t); o.stop(t + dur);
+  },
+  pickup() { this.blip(660, 0.12, 'triangle', 0.2, 320); },
+  deposit(n) { for (let i = 0; i < n; i++) setTimeout(() => this.blip(520 + i * 140, 0.16, 'triangle', 0.22), i * 70); },
+  sweep() {
+    if (!this.ctx) return;
+    const t = this.ctx.currentTime, len = this.ctx.sampleRate * 0.22, buf = this.ctx.createBuffer(1, len, this.ctx.sampleRate);
+    const d = buf.getChannelData(0);
+    for (let i = 0; i < len; i++) d[i] = (Math.random() * 2 - 1) * (1 - i / len);
+    const s = this.ctx.createBufferSource(); s.buffer = buf;
+    const f = this.ctx.createBiquadFilter(); f.type = 'bandpass';
+    f.frequency.setValueAtTime(500, t); f.frequency.exponentialRampToValueAtTime(2600, t + 0.2);
+    const g = this.ctx.createGain(); g.gain.value = 0.3;
+    s.connect(f); f.connect(g); g.connect(this.master); s.start(t);
+  },
+  gulp() { this.blip(190, 0.24, 'sine', 0.3, -110); },
+  bell() {
+    if (!this.ctx) return;
+    for (const [fr, v] of [[392, 0.30], [587, 0.16], [784, 0.10], [1175, 0.05]]) this.blip(fr, 2.4, 'sine', v);
+    setTimeout(() => { for (const [fr, v] of [[392, 0.2], [587, 0.1]]) this.blip(fr, 2.0, 'sine', v); }, 650);
+  },
+  groan() { this.blip(64, 2.8, 'sawtooth', 0.10, -18); this.blip(81, 2.8, 'sawtooth', 0.07, 12); },
+  dead() { this.blip(220, 1.4, 'triangle', 0.25, -160); },
+};
+
+// ---------- input: floating joystick (gamepress pattern) + sweep button + keys ----------
+const input = { x: 0, y: 0, sweepQueued: false };
+{
+  const stick = document.getElementById('stick'), knob = document.getElementById('stickKnob');
+  let stickId = null, ox = 0, oy = 0;
+  const R = 46;
+  addEventListener('pointerdown', e => {
+    AudioSys.ctx && AudioSys.ctx.resume();
+    if (e.target.closest('#btnSweep') || e.target.closest('.overlay') || e.target.closest('button')) return;
+    if (e.clientX < innerWidth * 0.55 && stickId === null) {
+      stickId = e.pointerId; ox = e.clientX; oy = e.clientY;
+      stick.style.display = 'block'; stick.style.left = ox + 'px'; stick.style.top = oy + 'px';
+      knob.style.transform = 'translate(-50%,-50%)';
+    }
+  });
+  addEventListener('pointermove', e => {
+    if (e.pointerId !== stickId) return;
+    let dx = e.clientX - ox, dy = e.clientY - oy;
+    const len = Math.hypot(dx, dy);
+    if (len > R) { dx *= R / len; dy *= R / len; }
+    knob.style.transform = `translate(calc(-50% + ${dx}px), calc(-50% + ${dy}px))`;
+    input.x = dx / R; input.y = dy / R;
+  });
+  const endStick = e => { if (e.pointerId === stickId) { stickId = null; input.x = input.y = 0; stick.style.display = 'none'; } };
+  addEventListener('pointerup', endStick); addEventListener('pointercancel', endStick);
+
+  const btn = document.getElementById('btnSweep');
+  btn.addEventListener('pointerdown', e => { e.preventDefault(); input.sweepQueued = true; });
+
+  const keys = {};
+  addEventListener('keydown', e => { keys[e.key.toLowerCase()] = true; if (e.key === ' ') { input.sweepQueued = true; e.preventDefault(); } });
+  addEventListener('keyup', e => { keys[e.key.toLowerCase()] = false; });
+  input.keys = keys;
+}
+function readMove() {
+  let x = input.x, y = input.y;
+  const k = input.keys || {};
+  if (k['a'] || k['arrowleft']) x -= 1;
+  if (k['d'] || k['arrowright']) x += 1;
+  if (k['w'] || k['arrowup']) y -= 1;
+  if (k['s'] || k['arrowdown']) y += 1;
+  const l = Math.hypot(x, y);
+  if (l > 1) { x /= l; y /= l; }
+  return { x, y };
+}
+
+// ---------- game state ----------
+const G = {
+  state: 'loading', // loading | title | play | dawn | over
+  fuel: 70, night: 1, nightT: 0, survived: 0,
+  spawnT: 2.5, sweepCd: 0, dawnT: 0, levT: -1, levDone: false,
+  best: +(localStorage.getItem('kil_best') || 0),
+};
+const lightRadius = () => THREE.MathUtils.lerp(5.5, 15.5, Math.max(0, G.fuel) / 100);
+
+function startGame() {
+  for (const s of [...striders]) removeStrider(s);
+  for (const gv of fuelGroves) { if (gv.item) { gv.item.parent?.remove(gv.item); gv.item = null; gv.hasItem = false; } gv.respawnT = Math.random() * 1.2; }
+  G.fuel = 70; G.night = 1; G.survived = 0; G.nightT = 0; G.spawnT = 2.2; G.levDone = false; G.levT = -1;
+  player.pos.set(3.5, 0, 5); player.carry = 0; refreshCarryVisual();
+  G.state = 'play';
+  document.getElementById('startScreen').style.display = 'none';
+  document.getElementById('overScreen').style.display = 'none';
+  document.getElementById('hud').style.visibility = 'visible';
+  document.getElementById('btnSweep').style.visibility = 'visible';
+  AudioSys.init(); AudioSys.bell();
+  bellGroup.userData.swing = 1.2;
+}
+function gameOver() {
+  G.state = 'over';
+  G.best = Math.max(G.best, G.survived);
+  localStorage.setItem('kil_best', G.best);
+  document.getElementById('overStats').textContent =
+    `You kept it lit for ${G.survived} night${G.survived === 1 ? '' : 's'}${G.best > G.survived ? '' : ' — a new best!'}`;
+  document.getElementById('overScreen').style.display = 'flex';
+  document.getElementById('btnSweep').style.visibility = 'hidden';
+  AudioSys.dead();
+}
+function dawn() {
+  G.state = 'dawn'; G.dawnT = 2.6; G.survived++;
+  G.fuel = Math.min(100, G.fuel + 25);
+  AudioSys.bell(); bellGroup.userData.swing = 1.6;
+  const fl = document.getElementById('dawnFlash');
+  fl.style.transition = 'none'; fl.style.opacity = 0.38;
+  requestAnimationFrame(() => { fl.style.transition = 'opacity 2.2s'; fl.style.opacity = 0; });
+  for (const s of [...striders]) { emit(s.pos.x, 0.8, s.pos.z, 6, 1.6, 1.4, 0x9fe8ff); removeStrider(s); }
+}
+
+// ---------- autoplay bot (QA + attract) ----------
+const bot = { target: null };
+function botThink(dt) {
+  // seek nearest fuel when not full, else brazier; sweep when a strider is close
+  let mv = { x: 0, y: 0 };
+  const near = striders.find(s => s.pos.distanceTo(player.pos) < 2.4);
+  if (near) input.sweepQueued = true;
+  let dest = null;
+  if (player.carry >= MAX_CARRY) dest = new THREE.Vector3(0, 0, 0);
+  else {
+    let bd = 1e9;
+    for (const gv of fuelGroves) if (gv.hasItem) { const d = gv.pos.distanceTo(player.pos); if (d < bd) { bd = d; dest = gv.pos; } }
+    if (!dest && player.carry > 0) dest = new THREE.Vector3(0, 0, 0);
+    if (!dest) dest = new THREE.Vector3(Math.sin(performance.now() * 0.0004) * 10, 0, Math.cos(performance.now() * 0.0004) * 10);
+  }
+  if (dest) {
+    const dx = dest.x - player.pos.x, dz = dest.z - player.pos.z, l = Math.hypot(dx, dz);
+    if (l > 0.8) { mv = { x: dx / l, y: dz / l }; }
+  }
+  return mv;
+}
+
+// ---------- main loop ----------
+const clock = new THREE.Clock();
+const camTarget = new THREE.Vector3();
+let fpsEMA = 60;
+
+function tick() {
+  requestAnimationFrame(tick);
+  const dt = Math.min(clock.getDelta(), 0.05) * TS;
+  fpsEMA = fpsEMA * 0.95 + (1 / Math.max(dt, 1e-4)) * 0.05;
+  const t = clock.elapsedTime;
+
+  if (world.ready && G.state !== 'loading') {
+    // ----- brazier visuals follow fuel -----
+    const f = Math.max(0, G.fuel) / 100;
+    const flick = 0.9 + Math.sin(t * 11) * 0.05 + Math.sin(t * 23.7) * 0.05;
+    const fs = (0.35 + f * 0.95) * flick;
+    flameOuter.scale.set(fs * 0.8, fs * 1.55 * (1 + Math.sin(t * 9.3) * 0.07), fs * 0.8);
+    flameInner.scale.set(fs * 0.55, fs * 0.62 * 1.55, fs * 0.55);
+    flameOuter.visible = flameInner.visible = G.fuel > 0;
+    MAT.coals.emissiveIntensity = 0.3 + f * 1.25 + Math.sin(t * 7.7) * 0.1;
+    brazierLight.intensity = (8 + f * 65) * flick;
+    brazierLight.distance = 7 + f * 24;
+    const lr = lightRadius();
+    lightDisc.scale.set(lr, lr, 1);
+    lightDisc.material.opacity = 0.75 + Math.sin(t * 13.1) * 0.08;
+    if (AudioSys.crackleGain) AudioSys.crackleGain.gain.value = 0.015 + f * 0.06;
+    if (G.fuel > 0 && Math.random() < dt * 14) emit((Math.random() - 0.5) * 0.5, 1.5, (Math.random() - 0.5) * 0.5, 1, 0.25, 1.1);
+    if (bellGroup.userData.swing > 0.01) {
+      bellGroup.userData.swing *= Math.pow(0.35, dt);
+      bellGroup.userData.pivot.rotation.x = Math.sin(t * 3.4) * 0.38 * bellGroup.userData.swing;
+    }
+
+    // ----- leviathan cameo -----
+    if (G.state === 'play' && G.night >= 3 && !G.levDone && G.nightT > NIGHT_LEN * 0.35) { G.levT = 0; G.levDone = true; AudioSys.groan(); }
+    if (G.levT >= 0) {
+      G.levT += dt;
+      leviathan.visible = true;
+      const ph = Math.min(G.levT / 9, 1);
+      const rise = Math.sin(ph * Math.PI); // up then down
+      leviathan.position.y = -7.5 + rise * 6.4;
+      if (ph >= 1) { G.levT = -1; leviathan.visible = false; }
+    }
+
+    if (G.state === 'play') {
+      // ----- night clock & fuel burn -----
+      G.nightT += dt;
+      G.fuel -= dt * (0.52 + G.night * 0.045);
+      if (G.fuel <= 0) { G.fuel = 0; gameOver(); }
+      else if (G.nightT >= NIGHT_LEN) { G.night++; G.nightT = 0; G.levDone = false; dawn(); }
+
+      // ----- spawning -----
+      G.spawnT -= dt;
+      if (G.spawnT <= 0) {
+        G.spawnT = Math.max(1.6, 4.6 - G.night * 0.35) * (0.75 + Math.random() * 0.5);
+        if (striders.length < 4 + G.night * 2) spawnStrider(1 + G.night * 0.05);
+      }
+      // ----- groves -----
+      for (const gv of fuelGroves) {
+        if (!gv.hasItem) {
+          gv.respawnT -= dt;
+          if (gv.respawnT <= 0) { gv.item = makeFuelItem(gv.kind); gv.item.position.copy(gv.pos); scene.add(gv.item); gv.hasItem = true; }
+        } else if (gv.item) {
+          gv.item.position.y = 0.12 + Math.sin(t * 2.2 + gv.pos.x) * 0.08;
+          gv.item.rotation.y += dt * 0.8;
+          if (player.carry < MAX_CARRY && player.pos.distanceTo(gv.pos) < 1.45) {
+            scene.remove(gv.item); gv.item = null; gv.hasItem = false; gv.respawnT = 4.5;
+            player.carry++; refreshCarryVisual(); AudioSys.pickup();
+            emit(player.pos.x, 1.4, player.pos.z, 5, 1.0, 1.2, 0xffd98a);
+          }
+        }
+      }
+
+      // ----- player movement -----
+      const mv = AUTO ? botThink(dt) : readMove();
+      const SPEED = 6.4;
+      player.vel.x = mv.x * SPEED; player.vel.z = mv.y * SPEED;
+      player.pos.addScaledVector(player.vel, dt);
+      for (const ob of world.obstacles) {
+        const dx = player.pos.x - ob.x, dz = player.pos.z - ob.z, d = Math.hypot(dx, dz);
+        if (d < ob.r && d > 0.001) { player.pos.x = ob.x + dx / d * ob.r; player.pos.z = ob.z + dz / d * ob.r; }
+      }
+      { const d = Math.hypot(player.pos.x, player.pos.z); // brazier is solid
+        if (d < 1.05 && d > 0.001) { player.pos.multiplyScalar(1.05 / d); player.pos.y = 0; } }
+      const rr = Math.hypot(player.pos.x, player.pos.z);
+      if (rr > ARENA_R) { player.pos.multiplyScalar(ARENA_R / rr); player.pos.y = 0; }
+      const moving = Math.hypot(mv.x, mv.y) > 0.1;
+      if (moving) player.face = Math.atan2(mv.x, mv.y);
+      player.bob += dt * (moving ? 11 : 2);
+      player.group.position.copy(player.pos);
+      player.group.position.y = moving ? Math.abs(Math.sin(player.bob)) * 0.09 : 0;
+      player.group.rotation.y = player.face;
+      player.group.rotation.z = moving ? Math.sin(player.bob) * 0.045 : 0;
+      const tg = player.group.userData.torch;
+      tg.rotation.x = Math.sin(t * 2.1) * 0.06;
+      tg.userData.flame.scale.setScalar(0.9 + Math.sin(t * 13.7) * 0.16);
+
+      // ----- deposit -----
+      if (player.carry > 0 && player.pos.length() < 2.1) {
+        const n = player.carry; player.carry = 0; refreshCarryVisual();
+        G.fuel = Math.min(100, G.fuel + n * 15);
+        AudioSys.deposit(n);
+        emit(0, 1.6, 0, 16, 1.8, 2.2, 0xffb03a);
+      }
+
+      // ----- sweep -----
+      G.sweepCd -= dt;
+      if (input.sweepQueued) {
+        input.sweepQueued = false;
+        if (G.sweepCd <= 0) {
+          G.sweepCd = 0.55;
+          AudioSys.sweep();
+          emit(player.pos.x + Math.sin(player.face) * 0.8, 1.1, player.pos.z + Math.cos(player.face) * 0.8, 7, 1.6, 0.8, 0xffa63d);
+          for (const s of striders) {
+            const d = s.pos.distanceTo(player.pos);
+            if (d < 2.6 && s.state !== 'flee') {
+              const dir = s.pos.clone().sub(player.pos).normalize();
+              s.knock.copy(dir).multiplyScalar(6.5); s.knock.y = 0;
+              s.state = 'stunned'; s.stunT = 1.1;
+            }
+          }
+        }
+      }
+      document.getElementById('btnSweep').className = G.sweepCd > 0 ? 'cd' : '';
+
+      // ----- striders -----
+      for (const s of [...striders]) {
+        const toB = new THREE.Vector3(0, 0, 0).sub(s.pos); const distB = toB.length(); toB.normalize();
+        if (s.state === 'stunned') {
+          s.pos.addScaledVector(s.knock, dt); s.knock.multiplyScalar(Math.pow(0.02, dt));
+          s.stunT -= dt; s.g.rotation.z = Math.sin(t * 18) * 0.2;
+          if (s.stunT <= 0) { s.state = 'flee'; s.g.rotation.z = 0; }
+        } else if (s.state === 'flee') {
+          s.pos.addScaledVector(toB, -dt * 3.4);
+          if (distB > lr + 7) removeStrider(s);
+        } else if (s.state === 'gulp') {
+          s.gulpT -= dt;
+          s.g.position.y = Math.sin(t * 20) * 0.05;
+          if (s.gulpT <= 0) { s.state = 'flee'; }
+        } else { // hunt
+          // shy at the light's edge: hesitate, strafe; push in as the light shrinks
+          const edge = lr + 0.4;
+          let sp = s.speed;
+          if (distB < edge + 1.6 && distB > edge) sp *= 0.35;
+          if (distB > edge) s.pos.addScaledVector(toB, dt * sp);
+          else s.pos.addScaledVector(toB, dt * sp * 0.85); // inside the light it can still creep — the flame is why it came
+          // waddle strafe
+          s.pos.x += Math.sin(t * 3.1 + s.wob) * dt * 0.35;
+          if (distB < 1.55) {
+            s.state = 'gulp'; s.gulpT = 1.6;
+            G.fuel = Math.max(0, G.fuel - 7);
+            AudioSys.gulp();
+            emit(0, 1.3, 0, 8, 1.4, 1.0, 0x9fe8ff);
+            if (G.fuel <= 0) gameOver();
+          }
+        }
+        if (s.state !== 'stunned') s.g.rotation.z = 0;
+        s.g.position.copy(s.pos);
+        s.g.position.y = Math.abs(Math.sin(t * 6.4 + s.wob)) * 0.06;
+        s.g.lookAt(0, s.g.position.y, 0); // +Z (eyes) toward the brazier
+      }
+
+      // ----- HUD -----
+      document.getElementById('fuelbar').style.width = Math.max(0, G.fuel) + '%';
+      document.getElementById('nightNum').textContent = G.night;
+      document.getElementById('moonbar').style.width = (100 - G.nightT / NIGHT_LEN * 100) + '%';
+    }
+
+    if (G.state === 'dawn') {
+      G.dawnT -= dt;
+      beaconOrbMesh.material.emissiveIntensity = 0.7 + Math.sin(t * 6) * 0.5 + 1.2;
+      if (G.dawnT <= 0) { G.state = 'play'; beaconOrbMesh.material.emissiveIntensity = 0.7; }
+    }
+
+    stepParticles(dt);
+
+    // ----- camera follows the keeper -----
+    camTarget.set(player.pos.x * 0.82, 0, player.pos.z * 0.82);
+    camera.position.lerp(new THREE.Vector3(camTarget.x, 13.8, camTarget.z + 13.8), 1 - Math.pow(0.0015, dt));
+    camera.lookAt(camTarget.x, 0.2, camTarget.z - 2.2);
+  }
+
+  renderer.render(scene, camera);
+
+  window.__kil = G;
+  window.__spawn = spawnStrider;
+  window.__dbg = { state: G.state, fuel: Math.round(G.fuel * 10) / 10, night: G.night, nightT: Math.round(G.nightT),
+    striders: striders.length, carry: player.carry, lightR: Math.round(lightRadius() * 10) / 10,
+    fps: Math.round(fpsEMA), ac: AudioSys.ctx ? AudioSys.ctx.state : 'none', ready: world.ready };
+}
+tick();
+
+addEventListener('resize', () => {
+  camera.aspect = innerWidth / innerHeight;
+  camera.updateProjectionMatrix();
+  renderer.setSize(innerWidth, innerHeight);
+});
+addEventListener('pointerdown', () => { if (AudioSys.ctx) AudioSys.ctx.resume(); });
+document.addEventListener('visibilitychange', () => { if (!document.hidden && AudioSys.ctx) AudioSys.ctx.resume(); });
+
+// ---------- boot ----------
+(async () => {
+  try {
+    await Promise.all([
+      loadModel('brazier_frame', MAT.bronze), loadModel('brazier_bowl', MAT.iron), loadModel('coal_embers', MAT.coals),
+      loadModel('flame', MAT.flame), loadModel('torch', MAT.wood), loadModel('strider', MAT.strider),
+      loadModel('strider_legs', MAT.striderLeg), loadModel('bell', MAT.verdigris), loadModel('gate_arch', MAT.stone),
+      loadModel('root_arch', MAT.root), loadModel('giant_mushroom', MAT.mushroom), loadModel('shelf_fungus', MAT.fungus),
+      loadModel('fuel_logs', MAT.woodPale), loadModel('fuel_spore', MAT.sporeGlow), loadModel('fuel_pile', MAT.woodPale),
+      loadModel('timber_rack', MAT.wood), loadModel('palisade', MAT.wood), loadModel('beacon', MAT.stone),
+      loadModel('leviathan_head', MAT.leviathan), loadModel('leviathan_crown', MAT.root), loadModel('leviathan_eyes', MAT.levEye),
+      loadModel('lantern_tree', MAT.root), loadModel('crate', MAT.woodPale),
+    ]);
+    buildWorld();
+    buildPlayer();
+    G.state = 'title';
+    document.getElementById('loadNote').style.display = 'none';
+    if (AUTO) startGame();
+  } catch (err) {
+    document.getElementById('loadNote').textContent = 'the brazier would not light — ' + err.message;
+    console.error(err);
+  }
+})();
+
+document.getElementById('btnStart').addEventListener('click', startGame);
+document.getElementById('btnAgain').addEventListener('click', startGame);
+</script>
+</body>
+</html>
