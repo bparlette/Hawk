@@ -207,6 +207,7 @@ const MAT = {
   beaconOrb: new THREE.MeshStandardMaterial({ color: 0x0d2b33, emissive: 0x54d8ff, emissiveIntensity: 0.7, roughness: 0.4 }),
   leviathan: new THREE.MeshStandardMaterial({ color: 0x1d2b30, roughness: 0.6, metalness: 0.15 }),
   levEye:  new THREE.MeshBasicMaterial({ color: 0x9fe8ff }),
+  gloop:   new THREE.MeshStandardMaterial({ vertexColors: true, roughness: 0.32, metalness: 0.05 }),
 };
 
 // ---------- model loading ----------
@@ -316,6 +317,12 @@ function buildWorld() {
   const orb = new THREE.Mesh(new THREE.SphereGeometry(0.42, 14, 12), MAT.beaconOrb);
   orb.position.set(-7.5, 4.35, 13.5); beaconOrbMesh = orb;
   scene.add(beacon, orb);
+
+  // --- an unannounced guest, half-sunk in the south-east mud ---
+  const gloop = place(clone('king_gloop'), 2.0);
+  gloop.position.set(21.5, -1.04, 16.5); gloop.rotation.y = -2.25;
+  scene.add(gloop);
+  world.obstacles.push({ x: 21.5, z: 16.5, r: 0.95 });
 
   // --- the gate (striders come through here) ---
   const gate = place(clone('gate_arch'), 7.2);
@@ -834,6 +841,7 @@ function tick() {
 
   window.__kil = G;
   window.__spawn = spawnStrider;
+  window.__player = player;
   window.__dbg = { state: G.state, fuel: Math.round(G.fuel * 10) / 10, night: G.night, nightT: Math.round(G.nightT),
     striders: striders.length, carry: player.carry, lightR: Math.round(lightRadius() * 10) / 10,
     fps: Math.round(fpsEMA), ac: AudioSys.ctx ? AudioSys.ctx.state : 'none', ready: world.ready };
@@ -860,6 +868,7 @@ document.addEventListener('visibilitychange', () => { if (!document.hidden && Au
       loadModel('timber_rack', MAT.wood), loadModel('palisade', MAT.wood), loadModel('beacon', MAT.stone),
       loadModel('leviathan_head', MAT.leviathan), loadModel('leviathan_crown', MAT.root), loadModel('leviathan_eyes', MAT.levEye),
       loadModel('lantern_tree', MAT.root), loadModel('crate', MAT.woodPale),
+      loadModel('king_gloop', MAT.gloop),
     ]);
     buildWorld();
     buildPlayer();
