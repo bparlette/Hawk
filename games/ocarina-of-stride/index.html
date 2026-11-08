@@ -116,7 +116,7 @@ function load(name, path){ const im = new Image(); im.src = path; IMG[name] = im
 ['idle_0','walk_0','walk_1','walk_2','crouch_0',
  'jump_rise_0','jump_fall_0','hurt_0','win_0','thrust_0']
  .forEach(n => load('link_'+n, 'assets/link/'+n+'.png'));
-['ground_top','ground_dirt','qblock_0','qblock_1','qblock_2','used','brick','pipe_tl','pipe_tr','pipe_bl','pipe_br',
+['ground_top','ground_dirt','qblock_0','qblock_1','qblock_2','used','brick','pipe_top','pipe_body',
  'rupee_0','rupee_1','rupee_2','flag','mountains'].forEach(n => load(n, 'assets/tiles/'+n+'.png'));
 ['goomba_0','goomba_1','goomba_flat','koopa_0','koopa_1','shell'].forEach(n => load(n, 'assets/enemies/'+n+'.png'));
 
@@ -668,9 +668,9 @@ function render(){
     else if (c==='U') img = IMG.used;
     else if (c==='B') img = IMG.brick;
     else if (c==='X') img = IMG.used;
-    else if (c==='[') img = IMG.pipe_tl; else if (c===']') img = IMG.pipe_tr;
-    else if (c==='{') img = IMG.pipe_bl; else if (c==='}') img = IMG.pipe_br;
-    if (img) ctx.drawImage(img, dx, dy, TILE, TILE);
+    else if (c==='[') img = IMG.pipe_top;   // one fat pipe, blitted once across both tiles;
+    else if (c==='{') img = IMG.pipe_body;  // ']' and '}' cells are covered by the wide blit — skipped
+    if (img) ctx.drawImage(img, dx, dy, (c==='['||c==='{') ? TILE*2 : TILE, TILE);
   }
   // bushes
   ctx.fillStyle = '#2d9e2d';
