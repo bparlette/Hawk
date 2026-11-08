@@ -44,13 +44,22 @@
      on the TV, open this page, and place him right at the TV's floor line —
      he comes to life and steps out of the screen into your room.</p>
 
-  <!-- Apple Quick Look AR: the rel="ar" anchor wraps an image of the model.
-       On iPhone/iPad Safari, tapping it opens link-paraglider.usdz in AR Quick Look.
+  <!-- Apple Quick Look AR: each rel="ar" anchor wraps an image of the model.
+       On iPhone/iPad Safari, tapping one opens its USDZ in AR Quick Look.
        Everywhere else it is just a download link, so the note below shows. -->
   <a class="ar-card" rel="ar" href="link-paraglider.usdz">
     <img src="preview.png" alt="Link paragliding — tap to view in your room">
-    <div class="cta">Link in your room
-      <small>Tap, then line him up with the TV's floor line</small>
+    <div class="cta">🌀 Glide in a circle
+      <small>He flies a big oval around the room, riding the wind.
+        For the TV trick, line him up with the TV's floor line</small>
+    </div>
+  </a>
+
+  <a class="ar-card" rel="ar" href="link-paraglider-flight.usdz">
+    <img src="preview.png" alt="Link paragliding — tap to view in your room">
+    <div class="cta">➡️ He flies right at you!
+      <small>Place him, step back, and face him — he glides down, zooms
+        right past you, and out behind</small>
     </div>
   </a>
 
@@ -74,11 +83,11 @@
     var isIOS = /iPhone|iPad|iPod/.test(navigator.userAgent) ||
                 (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
     if (arSupported) {
-      status.textContent = 'This device supports AR — tap the card above and point your camera at the TV, then place Link at its floor line.';
+      status.textContent = 'This device supports AR — tap either card above, point your camera at the TV, and place Link at its floor line.';
     } else if (isIOS) {
-      status.textContent = 'You are on iOS — tap the card above to open Link in AR Quick Look.';
+      status.textContent = 'You are on iOS — tap either card above to open Link in AR Quick Look.';
     } else {
-      status.textContent = 'AR Quick Look only works on iPhone and iPad. Open this page on an iPhone to bring Link into your room — on this device the card just downloads the 3D model file.';
+      status.textContent = 'AR Quick Look only works on iPhone and iPad. Open this page on an iPhone to bring Link into your room — on this device the cards just download the 3D model files.';
     }
   })();
 </script>
