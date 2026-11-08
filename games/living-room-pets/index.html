@@ -112,6 +112,22 @@
   }
   #startBtn:active { transform: scale(0.96); }
   #startCard .fine { font-size: 13px; opacity: 0.65; margin-top: 14px; }
+  #motionPill {
+    position: fixed;
+    left: 50%; transform: translateX(-50%);
+    top: calc(env(safe-area-inset-top, 0px) + 58px);
+    z-index: 6;
+    font: inherit; font-size: 15px; font-weight: 800;
+    color: #fff;
+    background: rgba(24, 16, 8, 0.85);
+    border: 2px solid rgba(255, 215, 106, 0.9);
+    border-radius: 999px;
+    padding: 12px 18px;
+    box-shadow: 0 8px 22px rgba(0,0,0,0.5);
+    cursor: pointer;
+    white-space: nowrap;
+  }
+  #motionPill:active { transform: translateX(-50%) scale(0.96); }
   .hidden { display: none !important; }
 </style>
 <style id="moth-game-guard">
@@ -131,6 +147,7 @@ canvas{touch-action:none}
 
 <button id="addPet" class="hidden" type="button">＋ PET</button>
 <div id="hint">Tap the floor to toss a treat · Tap a pet to pet it</div>
+<button id="motionPill" class="hidden" type="button">📱 Enable motion look-around</button>
 
 <div id="start">
   <div id="startCard">
@@ -233,6 +250,74 @@ function resize() {
 }
 window.addEventListener('resize', resize);
 
+/* ================= AR motion: permission-in-gesture + look-around pan =================
+   iOS 13+ Safari delivers deviceorientation events only after
+   DeviceOrientationEvent.requestPermission() resolves 'granted', and the
+   call only counts inside a user-gesture handler — a call made after an
+   `await` (e.g. behind getUserMedia) is silently denied and the scene
+   never moves. So the ask happens synchronously in the START tap (and on
+   the pill, whose own tap re-asks if events still don't flow).
+   This page is 2D canvas (no three.js camera), so look-around is a wide,
+   depth-scaled pan driven by yaw/pitch relative to the pose held at
+   START: turning swings the pets across the frame, tilting down raises
+   the floor line into view, tilting up lets it leave the frame. */
+const MOTION = {
+  needPerm: (typeof DeviceOrientationEvent !== 'undefined' &&
+             typeof DeviceOrientationEvent.requestPermission === 'function'),
+  perm: 'unknown',               // 'granted' | 'denied' | 'error' | 'n/a'
+  ok: false,                     // orientation events are flowing right now
+  ever: false,                   // at least one real event has arrived
+  lastAt: -1e9,
+  recal: true,                   // capture the reference pose on the next event
+  refAlpha: null, refBeta: null,
+  yaw: 0, pitch: 0
+};
+function askMotionPermission() {
+  if (!MOTION.needPerm) { MOTION.perm = 'n/a'; return; }
+  try {
+    const p = DeviceOrientationEvent.requestPermission();
+    if (p && typeof p.then === 'function') {
+      p.then(r => {
+        MOTION.perm = (r === 'granted') ? 'granted' : 'denied';
+        if (MOTION.perm === 'granted') MOTION.recal = true;
+      }).catch(() => { MOTION.perm = 'error'; });
+    }
+  } catch (e) { MOTION.perm = 'error'; }
+}
+const motionPillEl = document.getElementById('motionPill');
+function showMotionPill() { if (motionPillEl) motionPillEl.classList.remove('hidden'); }
+function hideMotionPill() { if (motionPillEl) motionPillEl.classList.add('hidden'); }
+if (motionPillEl) motionPillEl.addEventListener('click', () => { askMotionPermission(); });
+function motionWatchdog() {
+  // ~1.5 s after starting: if iOS motion exists but no event has arrived,
+  // the in-tap ask didn't land — offer the pill (its own tap re-asks).
+  setTimeout(() => { if (MOTION.needPerm && !MOTION.ever) showMotionPill(); }, 1500);
+}
+window.addEventListener('orientationchange', () => { MOTION.recal = true; });
+function wrapDeg(d) { while (d > 180) d -= 360; while (d < -180) d += 360; return d; }
+
+/* ================= light matching (sample the camera, ease pet brightness) ================= */
+const _lsCanvas = document.createElement('canvas');
+_lsCanvas.width = 16; _lsCanvas.height = 16;
+const _lsCtx = _lsCanvas.getContext('2d', { willReadFrequently: true });
+let _lsNextAt = 0, _brightTgt = 1, _brightCur = 1;
+function updateLightMatch(t, dt) {
+  if (camOK && video && video.readyState >= 2 && t >= _lsNextAt) {
+    _lsNextAt = t + 500;
+    try {
+      _lsCtx.drawImage(video, 0, 0, 16, 16);
+      const d = _lsCtx.getImageData(0, 0, 16, 16).data;
+      let s = 0;
+      const n = d.length / 4;
+      for (let i = 0; i < d.length; i += 4) s += 0.2126 * d[i] + 0.7152 * d[i + 1] + 0.0722 * d[i + 2];
+      _brightTgt = clamp(0.78 + (s / (n * 255)) * 0.55, 0.8, 1.12);
+    } catch (e) { /* frame not sampleable yet — keep the last target */ }
+  }
+  const target = camOK ? _brightTgt : 1;
+  _brightCur += (target - _brightCur) * (1 - Math.exp(-dt * 2.5));
+  canvas.style.filter = Math.abs(_brightCur - 1) > 0.01 ? 'brightness(' + _brightCur.toFixed(3) + ')' : '';
+}
+
 /* ============================== parallax ============================== */
 let parX = 0, parY = 0;           // smoothed
 let parTX = 0, parTY = 0;         // targets from orientation
@@ -240,10 +325,21 @@ let lastOrientAt = -1e9;
 let mouseAt = -1e9, mouseTX = 0, mouseTY = 0;
 
 window.addEventListener('deviceorientation', (e) => {
-  if (e.gamma == null && e.beta == null) return;
+  if (e.gamma == null && e.beta == null && e.alpha == null) return;
   lastOrientAt = performance.now();
-  parTX = clamp((e.gamma || 0) / 26, -1, 1);
-  parTY = clamp(((e.beta || 0) - 48) / 24, -1, 1);
+  MOTION.ever = true; MOTION.ok = true; MOTION.lastAt = lastOrientAt;
+  if (MOTION.recal || MOTION.refAlpha === null) {
+    MOTION.refAlpha = e.alpha || 0;
+    MOTION.refBeta = (e.beta == null ? 48 : e.beta);
+    MOTION.recal = false;
+  }
+  MOTION.yaw = clamp(wrapDeg((e.alpha || 0) - MOTION.refAlpha), -55, 55);
+  MOTION.pitch = clamp((e.beta == null ? MOTION.refBeta : e.beta) - MOTION.refBeta, -42, 42);
+  // turning (yaw) pans the view wide; leaning (gamma) adds a little;
+  // pitch shifts the horizon — tilt down and the floor rises into view.
+  parTX = clamp(MOTION.yaw / 34 + (e.gamma || 0) / 34, -1.7, 1.7);
+  parTY = clamp(MOTION.pitch / 26, -1.4, 1.4);
+  hideMotionPill();
 }, true);
 window.addEventListener('pointermove', (e) => {
   if (e.pointerType !== 'mouse') return;
@@ -260,8 +356,8 @@ function updateParallax(t) {
   parX += (tx - parX) * 0.055;
   parY += (ty - parY) * 0.055;
 }
-const parOffX = d => parX * (12 + d * 30);
-const parOffY = d => parY * (5 + d * 13);
+const parOffX = d => parX * (16 + d * 44);
+const parOffY = d => parY * (10 + d * 16);
 
 /* ============================== depth ============================== */
 const depthOfY = y => clamp((y - floorTop) / Math.max(1, (H - 64) - floorTop), 0, 1);
@@ -434,12 +530,15 @@ function ellipse(x, y, rx, ry, rot) {
 }
 
 function drawRoom(t) {
+  // horizon lock: the room's floor line rides the pitch pan (restored below)
+  const _saveFT = floorTop;
+  floorTop = _saveFT + Math.round(parY * 10);
   // wall
   const wall = ctx.createLinearGradient(0, 0, 0, floorTop + 30);
   wall.addColorStop(0, '#f7dcba'); wall.addColorStop(1, '#eec49c');
   ctx.fillStyle = wall; ctx.fillRect(0, 0, W, floorTop + 2);
   // window with sunny sky
-  const wx = W * 0.14 + parX * -8, wy = H * 0.06, ww = W * 0.30, wh = floorTop * 0.60;
+  const wx = W * 0.14 + parX * -14, wy = H * 0.06, ww = W * 0.30, wh = floorTop * 0.60;
   ctx.fillStyle = '#bfe3f2'; rr(wx, wy, ww, wh, 8); ctx.fill();
   ctx.fillStyle = '#fff3b0'; ctx.beginPath(); ctx.arc(wx + ww * 0.72, wy + wh * 0.3, ww * 0.13, 0, Math.PI * 2); ctx.fill();
   ctx.fillStyle = '#e8f7fd'; ellipse(wx + ww * 0.3, wy + wh * 0.62, ww * 0.2, wh * 0.1); ctx.fill();
@@ -448,7 +547,7 @@ function drawRoom(t) {
   ctx.moveTo(wx + ww / 2, wy); ctx.lineTo(wx + ww / 2, wy + wh);
   ctx.moveTo(wx, wy + wh / 2); ctx.lineTo(wx + ww, wy + wh / 2); ctx.stroke();
   // picture frame with a paw print
-  const fx = W * 0.66 + parX * -8, fy = H * 0.08, fw = W * 0.21, fh = floorTop * 0.42;
+  const fx = W * 0.66 + parX * -14, fy = H * 0.08, fw = W * 0.21, fh = floorTop * 0.42;
   ctx.fillStyle = '#a9743f'; rr(fx, fy, fw, fh, 5); ctx.fill();
   ctx.fillStyle = '#ffedc9'; rr(fx + 6, fy + 6, fw - 12, fh - 12, 3); ctx.fill();
   ctx.fillStyle = '#d98a4b';
@@ -478,12 +577,12 @@ function drawRoom(t) {
   ctx.lineTo(wx + ww + 60, floorTop + 96); ctx.lineTo(wx - 24, floorTop + 96);
   ctx.closePath(); ctx.fill();
   // rug
-  const rugX = W * 0.5 + parX * -12, rugY = H * 0.815;
+  const rugX = W * 0.5 + parX * -20, rugY = H * 0.815;
   ctx.fillStyle = '#c4553b'; ellipse(rugX, rugY, W * 0.37, H * 0.088); ctx.fill();
   ctx.fillStyle = '#e8845f'; ellipse(rugX, rugY, W * 0.30, H * 0.068); ctx.fill();
   ctx.fillStyle = '#f0a35e'; ellipse(rugX, rugY, W * 0.21, H * 0.046); ctx.fill();
   // plant in the corner
-  const px = W * 0.91 + parX * -10;
+  const px = W * 0.91 + parX * -16;
   ctx.fillStyle = '#4d7c4d';
   ellipse(px, floorTop - 34, 9, 22, -0.5); ctx.fill();
   ellipse(px + 12, floorTop - 28, 9, 20, 0.5); ctx.fill();
@@ -497,6 +596,7 @@ function drawRoom(t) {
   const vg = ctx.createRadialGradient(W / 2, H / 2, Math.min(W, H) * 0.45, W / 2, H / 2, Math.max(W, H) * 0.78);
   vg.addColorStop(0, 'rgba(30,15,5,0)'); vg.addColorStop(1, 'rgba(30,15,5,0.20)');
   ctx.fillStyle = vg; ctx.fillRect(0, 0, W, H);
+  floorTop = _saveFT;
 }
 
 function drawTreat(tr, t) {
@@ -704,6 +804,7 @@ function updateHUD() {
   addPetBtn.textContent = pets.length >= MAX_PETS ? '🐾 FULL' : '＋ PET';
 }
 addPetBtn.addEventListener('click', () => {
+  askMotionPermission();   // a real tap — another chance if START's ask didn't land
   initAudio();
   const p = addPet();
   if (p) hintEl.classList.remove('show');
@@ -741,6 +842,7 @@ function frame(t) {
   const dt = Math.min(0.05, lastT ? (t - lastT) / 1000 : 0.016);
   lastT = t;
   updateParallax(t);
+  updateLightMatch(t, dt);
   ctx.clearRect(0, 0, W, H);
   if (!camOK) drawRoom(t);
   if (started) {
@@ -758,6 +860,7 @@ let startInFlight = false;
 document.getElementById('startBtn').addEventListener('click', async () => {
   if (startInFlight) return;
   startInFlight = true;
+  askMotionPermission();   // FIRST, synchronously — iOS only honors it inside the tap
   initAudio();
   // camera (rear), with a timeout so a hung prompt can't trap the game
   try {
@@ -770,13 +873,9 @@ document.getElementById('startBtn').addEventListener('click', async () => {
     await video.play().catch(() => {});
     camOK = true;
   } catch (e) { camOK = false; }
-  // motion permission (iOS requires it from a user gesture)
-  try {
-    if (typeof DeviceOrientationEvent !== 'undefined' &&
-        typeof DeviceOrientationEvent.requestPermission === 'function') {
-      await DeviceOrientationEvent.requestPermission().catch(() => {});
-    }
-  } catch (e) { /* parallax falls back to idle sway */ }
+  // motion permission: NOT asked here — the gesture window has closed by
+  // now (getUserMedia was awaited). It is asked synchronously at the top
+  // of this handler (askMotionPermission), inside the tap.
 
   video.classList.toggle('hidden', !camOK);
   camTagEl.textContent = camOK ? '📷 AR room' : '🏠 cozy room';
@@ -784,6 +883,8 @@ document.getElementById('startBtn').addEventListener('click', async () => {
   hudEl.classList.remove('hidden');
   addPetBtn.classList.remove('hidden');
   started = true;
+  MOTION.recal = true;      // "straight ahead" = how she's holding it now
+  motionWatchdog();
   if (!pets.length) { addPet('cat'); addPet('dog'); addPet('bunny'); }
   updateHUD();
   hintEl.classList.add('show');
@@ -802,6 +903,8 @@ window.__lrp = {
   get treats() { return treats; },
   get treatsFed() { return treatsFed; },
   petScreen, tossTreat, petThePet, addPet,
+  petScreenOf: (i) => pets[i] ? petScreen(pets[i]) : null,
+  motion: () => ({ ok: MOTION.ok, ever: MOTION.ever, perm: MOTION.perm, needPerm: MOTION.needPerm, parX, parY, yaw: MOTION.yaw, pitch: MOTION.pitch }),
   start: () => document.getElementById('startBtn').click()
 };
 </script>

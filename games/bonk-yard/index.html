@@ -116,6 +116,22 @@
   }
   .playBtn:active { transform: scale(0.96); }
   .card .fine { font-size: 13px; opacity: 0.65; margin-top: 14px; }
+  #motionPill {
+    position: fixed;
+    left: 50%; transform: translateX(-50%);
+    bottom: calc(env(safe-area-inset-bottom, 0px) + 24px);
+    z-index: 6;
+    font: inherit; font-size: 15px; font-weight: 800;
+    color: #fff;
+    background: rgba(24, 16, 8, 0.85);
+    border: 2px solid rgba(255, 215, 106, 0.9);
+    border-radius: 999px;
+    padding: 12px 18px;
+    box-shadow: 0 8px 22px rgba(0,0,0,0.5);
+    cursor: pointer;
+    white-space: nowrap;
+  }
+  #motionPill:active { transform: translateX(-50%) scale(0.96); }
   .hidden { display: none !important; }
 </style>
 <script type="importmap">
@@ -143,6 +159,8 @@ canvas{touch-action:none}
 </div>
 
 <div id="bigMsg"></div>
+
+<button id="motionPill" class="hidden" type="button">📱 Enable motion look-around</button>
 
 <div id="start" class="overlay">
   <div class="card">
@@ -252,14 +270,127 @@ try { best = parseInt(localStorage.getItem('bonkBest') || '0', 10) || 0; } catch
 
 const mult = () => streak >= 10 ? 3 : (streak >= 5 ? 2 : 1);
 
+/* ================= AR motion: permission-in-gesture + 3DOF look-around =================
+   iOS 13+ Safari delivers deviceorientation events only after
+   DeviceOrientationEvent.requestPermission() resolves 'granted', and the
+   call only counts inside a user-gesture handler — a call made after an
+   `await` (e.g. behind getUserMedia) is silently denied and the scene
+   never moves. So the ask happens synchronously in the START tap (and on
+   the pill, whose own tap re-asks if events still don't flow). */
+let baseCamQ = null;             // camera orientation of the default view (set in initGL)
+let hemiLight = null, dirLight = null;
+const MOTION = {
+  needPerm: (typeof DeviceOrientationEvent !== 'undefined' &&
+             typeof DeviceOrientationEvent.requestPermission === 'function'),
+  perm: 'unknown',               // 'granted' | 'denied' | 'error' | 'n/a'
+  ok: false,                     // orientation events are flowing right now
+  ever: false,                   // at least one real event has arrived
+  lastAt: -1e9,
+  recal: true,                   // capture the reference pose on the next event
+  refQ: null,                    // device quaternion at "straight ahead"
+  devQ: new THREE.Quaternion()   // latest device quaternion
+};
+function askMotionPermission() {
+  if (!MOTION.needPerm) { MOTION.perm = 'n/a'; return; }
+  try {
+    const p = DeviceOrientationEvent.requestPermission();
+    if (p && typeof p.then === 'function') {
+      p.then(r => {
+        MOTION.perm = (r === 'granted') ? 'granted' : 'denied';
+        if (MOTION.perm === 'granted') MOTION.recal = true;
+      }).catch(() => { MOTION.perm = 'error'; });
+    }
+  } catch (e) { MOTION.perm = 'error'; }
+}
+const motionPillEl = document.getElementById('motionPill');
+function showMotionPill() { if (motionPillEl) motionPillEl.classList.remove('hidden'); }
+function hideMotionPill() { if (motionPillEl) motionPillEl.classList.add('hidden'); }
+if (motionPillEl) motionPillEl.addEventListener('click', () => { askMotionPermission(); });
+function motionWatchdog() {
+  // ~1.5 s after starting: if iOS motion exists but no event has arrived,
+  // the in-tap ask didn't land — offer the pill (its own tap re-asks).
+  setTimeout(() => { if (MOTION.needPerm && !MOTION.ever) showMotionPill(); }, 1500);
+}
+window.addEventListener('orientationchange', () => { MOTION.recal = true; });
+
+/* device orientation -> world quaternion (the standard three.js recipe) */
+const _zee = new THREE.Vector3(0, 0, 1);
+const _eul = new THREE.Euler();
+const _q0 = new THREE.Quaternion();
+const _q1 = new THREE.Quaternion(-Math.sqrt(0.5), 0, 0, Math.sqrt(0.5)); // -90 deg about X
+function deviceQuat(out, alphaDeg, betaDeg, gammaDeg) {
+  const orient = (typeof window.orientation === 'number' ? window.orientation : 0) * Math.PI / 180;
+  _eul.set(THREE.MathUtils.degToRad(betaDeg), THREE.MathUtils.degToRad(alphaDeg),
+           THREE.MathUtils.degToRad(-gammaDeg), 'YXZ');
+  out.setFromEuler(_eul);
+  out.multiply(_q1);                                   // camera looks out the back of the phone
+  out.multiply(_q0.setFromAxisAngle(_zee, -orient));   // screen-orientation compensation
+  return out;
+}
+const _invRefQ = new THREE.Quaternion();
+const _targetQ = new THREE.Quaternion();
+function applyMotionCamera() {
+  // True 3DOF look-around: camera orientation = (device rotation since the
+  // reference pose) applied to the default view, eased by slerp. The yard
+  // keeps its compass direction; pitch rides the phone, so tilting down
+  // puts the ground below and tilting up lets it leave the frame.
+  if (!camera || !baseCamQ || !MOTION.refQ) return false;
+  if (performance.now() - MOTION.lastAt > 3000) { MOTION.ok = false; return false; }
+  if (!MOTION.ok) return false;
+  _invRefQ.copy(MOTION.refQ).invert();
+  _targetQ.copy(MOTION.devQ).multiply(_invRefQ).multiply(baseCamQ);
+  camera.quaternion.slerp(_targetQ, 0.16);
+  return true;
+}
+
+/* ================= light matching (sample the camera, ease the lights) ================= */
+const lightBase = { hemi: 1.2, dir: 1.6 };   // this page's tuned defaults
+const _lsCanvas = document.createElement('canvas');
+_lsCanvas.width = 16; _lsCanvas.height = 16;
+const _lsCtx = _lsCanvas.getContext('2d', { willReadFrequently: true });
+const _lightTgt = { m: 1, c: new THREE.Color(1, 1, 1) };
+let _lsNextAt = 0;
+function updateLightMatch(t, dt) {
+  if (!hemiLight || !dirLight) return;
+  if (camOK && video && video.readyState >= 2 && t >= _lsNextAt) {
+    _lsNextAt = t + 500;
+    try {
+      _lsCtx.drawImage(video, 0, 0, 16, 16);
+      const d = _lsCtx.getImageData(0, 0, 16, 16).data;
+      let r = 0, g = 0, b = 0;
+      const n = d.length / 4;
+      for (let i = 0; i < d.length; i += 4) { r += d[i]; g += d[i + 1]; b += d[i + 2]; }
+      r /= n * 255; g /= n * 255; b /= n * 255;
+      const lum = 0.2126 * r + 0.7152 * g + 0.0722 * b;
+      _lightTgt.m = clamp(0.45 + lum * 1.1, 0.45, 1.35);
+      _lightTgt.c.setRGB(lerp(1, Math.min(1, r * 1.7), 0.5),
+                         lerp(1, Math.min(1, g * 1.7), 0.5),
+                         lerp(1, Math.min(1, b * 1.7), 0.5));
+    } catch (e) { /* frame not sampleable yet — keep the last target */ }
+  }
+  if (!camOK) return;   // no camera: the cozy-room fallback keeps tuned lighting
+  const k = 1 - Math.exp(-dt * 2.5);
+  hemiLight.intensity += (lightBase.hemi * _lightTgt.m - hemiLight.intensity) * k;
+  dirLight.intensity += (lightBase.dir * _lightTgt.m - dirLight.intensity) * k;
+  hemiLight.color.lerp(_lightTgt.c, k);
+}
+
 /* ============================== parallax ============================== */
 let parX = 0, parY = 0, parTX = 0, parTY = 0;
 let lastOrientAt = -1e9, mouseAt = -1e9, mouseTX = 0, mouseTY = 0;
 window.addEventListener('deviceorientation', (e) => {
-  if (e.gamma == null && e.beta == null) return;
+  if (e.gamma == null && e.beta == null && e.alpha == null) return;
   lastOrientAt = performance.now();
   parTX = clamp((e.gamma || 0) / 26, -1, 1);
   parTY = clamp(((e.beta || 0) - 48) / 24, -1, 1);
+  // 3DOF look-around feed
+  MOTION.ever = true; MOTION.ok = true; MOTION.lastAt = lastOrientAt;
+  deviceQuat(MOTION.devQ, e.alpha || 0, e.beta || 0, e.gamma || 0);
+  if (MOTION.recal || !MOTION.refQ) {
+    MOTION.refQ = MOTION.devQ.clone();
+    MOTION.recal = false;
+  }
+  hideMotionPill();
 }, true);
 window.addEventListener('pointermove', (e) => {
   if (e.pointerType !== 'mouse') return;
@@ -334,10 +465,12 @@ function initGL() {
   camera = new THREE.PerspectiveCamera(60, window.innerWidth / Math.max(1, window.innerHeight), 0.1, 80);
   camera.position.copy(CAM_BASE);
   camera.lookAt(CAM_LOOK);
-  scene.add(new THREE.HemisphereLight(0xffffff, 0x446644, 1.2));
-  const dir = new THREE.DirectionalLight(0xfff1da, 1.6);
-  dir.position.set(2.5, 4.5, 3.0);
-  scene.add(dir);
+  baseCamQ = camera.quaternion.clone();
+  hemiLight = new THREE.HemisphereLight(0xffffff, 0x446644, 1.2);
+  scene.add(hemiLight);
+  dirLight = new THREE.DirectionalLight(0xfff1da, 1.6);
+  dirLight.position.set(2.5, 4.5, 3.0);
+  scene.add(dirLight);
   blobGeo = new THREE.PlaneGeometry(1, 1);
   blobMat = new THREE.MeshBasicMaterial({ map: makeBlobTexture(), transparent: true, depthWrite: false, opacity: 0.8 });
 }
@@ -741,8 +874,11 @@ function frame(t) {
   if (!camOK) { rctx.clearRect(0, 0, W, H); drawRoom(); }
   if (camera) {
     camera.position.set(CAM_BASE.x + parX * 0.45, CAM_BASE.y - parY * 0.22, CAM_BASE.z);
-    camera.lookAt(CAM_LOOK.x - parX * 0.25, CAM_LOOK.y, CAM_LOOK.z);
+    if (!applyMotionCamera()) {
+      camera.lookAt(CAM_LOOK.x - parX * 0.25, CAM_LOOK.y, CAM_LOOK.z);
+    }
   }
+  updateLightMatch(t, dt);
   if (phase === 'playing') updateGame(dt);
   for (const c of [...critters]) updateCritter(c, dt, t);
   updateFx(dt);
@@ -766,18 +902,17 @@ async function ensureCamera() {
     await video.play().catch(() => {});
     camOK = true;
   } catch (e) { camOK = false; }
-  try {
-    if (typeof DeviceOrientationEvent !== 'undefined' &&
-        typeof DeviceOrientationEvent.requestPermission === 'function') {
-      await DeviceOrientationEvent.requestPermission().catch(() => {});
-    }
-  } catch (e) { /* parallax falls back to idle sway */ }
+  // NOTE: motion permission is NOT asked here — by this point the tap's
+  // gesture window has closed (getUserMedia was awaited first). It is
+  // asked synchronously in the START tap handler (askMotionPermission).
   const video = document.getElementById('cam');
   video.classList.toggle('hidden', !camOK);
   roomCanvas.classList.toggle('hidden', camOK);
   camTagEl.textContent = camOK ? '📷 AR room' : '🏠 cozy room';
 }
 function beginRound() {
+  MOTION.recal = true;      // "straight ahead" = how she's holding it now
+  motionWatchdog();
   resetGame();
   startEl.classList.add('hidden');
   endEl.classList.add('hidden');
@@ -785,6 +920,7 @@ function beginRound() {
   phase = 'playing';
 }
 document.getElementById('startBtn').addEventListener('click', async () => {
+  askMotionPermission();   // FIRST, synchronously — iOS only honors it inside the tap
   initAudio();
   await ensureCamera();
   beginRound();
@@ -822,6 +958,13 @@ window.__bonk = {
     return { x: (_pv.x * 0.5 + 0.5) * W, y: (_pv.y * -0.5 + 0.5) * H };
   },
   setTimeLeft: (s) => { timeLeft = s; },
+  camQuat: () => camera ? camera.quaternion.toArray() : null,
+  project: (x, y, z) => {
+    if (!camera) return null;
+    _pv.set(x, y, z).project(camera);
+    return { x: (_pv.x * 0.5 + 0.5) * W, y: (_pv.y * -0.5 + 0.5) * H };
+  },
+  motion: () => ({ ok: MOTION.ok, ever: MOTION.ever, perm: MOTION.perm, needPerm: MOTION.needPerm, hasRef: !!MOTION.refQ }),
   start: () => document.getElementById('startBtn').click(),
   again: () => document.getElementById('againBtn').click()
 };
