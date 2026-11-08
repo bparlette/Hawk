@@ -21,3 +21,11 @@
 To QA any gang:
 1. Run `python3 -m http.server 8000`.
 2. Open `http://localhost:8000/tools/qa.html?gang=<id>`. The page loads `src/gang_<id>.js` (gang 5 runs on the ZIP kit by default; `&kit=zip|repo` picks one).
+
+---
+
+## Agent Architecture Tooling: Elephant-Goldfish Model (EGM)
+When architecting new game modes, complex entity systems, or backend networking, the **Elephant-Goldfish Model (EGM)** plugin is installed and available for all AI agents:
+- **Drafting (Elephant)**: Author feature specs with full project context using `/egm:egm-brainstorm` and `/egm:egm-draft`.
+- **Review (Goldfish)**: Stress-test specs using isolated zero-context subagents with `/egm:egm-review <spec.md>` to surface blind spots and missing assumptions before implementing.
+- Reference: [Google EGM Repository](https://github.com/google/elephant-goldfish-model) & GamePress documentation.
