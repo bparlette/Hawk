@@ -2134,6 +2134,18 @@
    "orientation": "landscape",
    "path": "../games/worldhop-action/index.html",
    "title": "WORLDHOP ACTION!"
+  },
+  {
+   "autostart": [],
+   "category": "AR",
+   "id": "bonk-yard",
+   "keys": {},
+   "labels": {},
+   "note": "Web AR whack-a-mole: code-drawn critters pop out of holes in your room over the camera view - tap to bonk them, chain combos, grab the rare golden critter for +50, and don't bonk the bomb-hat grump. 60-second rounds. Falls back to a drawn cozy room when there is no camera.",
+   "orientation": "any",
+   "path": "../games/bonk-yard/index.html",
+   "thumb": "thumbs/bonk-yard.png",
+   "title": "BONK YARD!"
   }
  ]
 }
