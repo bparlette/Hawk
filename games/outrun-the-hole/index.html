@@ -1,0 +1,738 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+<title>OUTRUN THE HOLE!</title>
+<style>
+  html,body{margin:0;padding:0;height:100%;overflow:hidden;background:#79a86b;
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    -webkit-tap-highlight-color:transparent}
+  #cv{position:fixed;inset:0;display:block;touch-action:none}
+  .chip{position:fixed;z-index:5;background:rgba(12,14,24,.72);color:#fff;border-radius:999px;
+    padding:6px 12px;font-weight:700;font-size:15px;letter-spacing:.02em;pointer-events:none;
+    box-shadow:0 2px 8px rgba(0,0,0,.35);white-space:nowrap}
+  #hudGates{top:calc(10px + env(safe-area-inset-top));left:10px}
+  #hudTime{top:calc(10px + env(safe-area-inset-top));left:50%;transform:translateX(-50%)}
+  #hudHole{top:calc(10px + env(safe-area-inset-top));right:10px;display:flex;align-items:center;gap:8px}
+  #holeBarWrap{width:64px;height:10px;background:rgba(255,255,255,.25);border-radius:99px;overflow:hidden}
+  #holeBar{height:100%;width:8%;background:linear-gradient(90deg,#8b5cf6,#e879f9);border-radius:99px;transition:width .25s}
+  #toast{position:fixed;z-index:6;top:18%;left:50%;transform:translateX(-50%) scale(.9);color:#fff;
+    font-size:30px;font-weight:900;letter-spacing:.03em;text-shadow:0 3px 0 rgba(0,0,0,.35),0 6px 18px rgba(0,0,0,.5);
+    opacity:0;pointer-events:none;transition:opacity .18s,transform .18s;text-align:center}
+  #toast.show{opacity:1;transform:translateX(-50%) scale(1)}
+  .overlay{position:fixed;inset:0;z-index:10;display:flex;flex-direction:column;align-items:center;justify-content:center;
+    background:radial-gradient(120% 100% at 50% 0%,rgba(20,16,44,.55),rgba(8,6,20,.88));color:#fff;text-align:center;padding:24px}
+  .overlay.hidden{display:none}
+  .title{font-size:44px;font-weight:900;line-height:1.02;letter-spacing:.01em;text-shadow:0 4px 0 rgba(0,0,0,.4)}
+  .title .hole-word{color:#c084fc}
+  .goal{margin-top:12px;font-size:16.5px;line-height:1.45;max-width:340px;color:#e7e4ff}
+  .btn{margin-top:16px;width:min(320px,86vw);padding:15px 18px;border:none;border-radius:16px;cursor:pointer;
+    font-size:18px;font-weight:900;letter-spacing:.02em;color:#14101f;background:#ffd93b;
+    box-shadow:0 5px 0 #c9a227,0 10px 22px rgba(0,0,0,.4)}
+  .btn:active{transform:translateY(3px);box-shadow:0 2px 0 #c9a227}
+  .btn.purple{background:#a855f7;color:#fff;box-shadow:0 5px 0 #6d28d9,0 10px 22px rgba(0,0,0,.4)}
+  .btn.purple:active{box-shadow:0 2px 0 #6d28d9}
+  .btn.ghost{background:rgba(255,255,255,.14);color:#fff;box-shadow:none;font-size:15px;padding:12px 16px}
+  .howto{margin-top:18px;font-size:13.5px;line-height:1.65;color:#cfc9ee;max-width:330px}
+  .big{font-size:40px;font-weight:900}
+  .stat{margin-top:8px;font-size:17px;color:#e7e4ff}
+  .best{margin-top:4px;font-size:14px;color:#ffd93b;font-weight:700}
+</style>
+<style id="moth-game-guard">
+html,body{touch-action:none;overscroll-behavior:none;-webkit-touch-callout:none;-webkit-user-select:none;user-select:none;-webkit-tap-highlight-color:transparent}
+canvas{touch-action:none}
+</style>
+</head>
+<body>
+<canvas id="cv"></canvas>
+
+<div class="chip" id="hudGates">🚪 0/6</div>
+<div class="chip" id="hudTime">⏱ 0:00</div>
+<div class="chip" id="hudHole">🕳️<span id="holeBarWrap"><span id="holeBar" style="display:block"></span></span></div>
+<div id="toast"></div>
+
+<div class="overlay" id="menu">
+  <div class="title">OUTRUN<br>THE <span class="hole-word">HOLE!</span></div>
+  <div class="goal">Race through <b>6 gates</b> to open the escape line — before the black hole swallows your car. 🕳️🚗</div>
+  <button class="btn" id="btn1p">🏁 1P — OUTRUN THE HOLE</button>
+  <button class="btn purple" id="btn2p">🕳️ 2P — A FRIEND DRIVES THE HOLE</button>
+  <div class="howto">🚗 <b>Car:</b> hold &amp; drag anywhere — your car chases your finger (or WASD / arrows).<br>
+  🕳️ <b>2P hole:</b> second player holds &amp; drags on the <b>right half</b> of the screen.<br>
+  ⚠️ Near the hole, its gravity drags you in. Fight it!</div>
+</div>
+
+<div class="overlay hidden" id="endcard">
+  <div class="big" id="endTitle">🎉 YOU ESCAPED!</div>
+  <div class="stat" id="endStat"></div>
+  <div class="best" id="endBest"></div>
+  <button class="btn" id="btnAgain">↻ PLAY AGAIN</button>
+  <button class="btn ghost" id="btnMenu">Change mode</button>
+</div>
+
+<script>
+"use strict";
+/* ============================================================
+   OUTRUN THE HOLE! — role-reversed Gulp City.
+   Clean-room Canvas2D remake of the ad's look (the source ad is a
+   minified MRAID/Three bundle with build-time-baked assets, so its
+   code/art could not be lifted; city + hole + swallow feel rebuilt).
+   ============================================================ */
+const cv = document.getElementById('cv'), ctx = cv.getContext('2d');
+let VW = 0, VH = 0, DPR = 1;
+function resize(){
+  DPR = Math.min(2, window.devicePixelRatio || 1);
+  VW = window.innerWidth; VH = window.innerHeight;
+  cv.width = Math.round(VW * DPR); cv.height = Math.round(VH * DPR);
+  cv.style.width = VW + 'px'; cv.style.height = VH + 'px';
+}
+window.addEventListener('resize', resize); resize();
+
+const WORLD = 2400, PITCH = 360, STREET_HALF = 52;
+const clamp = (v,a,b)=>v<a?a:v>b?b:v;
+const lerp = (a,b,t)=>a+(b-a)*t;
+const dist2 = (ax,ay,bx,by)=>{const dx=ax-bx,dy=ay-by;return dx*dx+dy*dy;};
+function angLerp(a,b,t){ let d=(b-a)%(Math.PI*2); if(d>Math.PI)d-=Math.PI*2; if(d<-Math.PI)d+=Math.PI*2; return a+d*t; }
+function mulberry(seed){ return function(){ seed|=0; seed=seed+0x6D2B79F5|0; let t=Math.imul(seed^seed>>>15,1|seed); t=t+Math.imul(t^t>>>7,61|t)^t; return ((t^t>>>14)>>>0)/4294967296; }; }
+
+/* ---------------- world generation ---------------- */
+const PASTELS = ['#f4a259','#e76f51','#e9c46a','#2a9d8f','#5b8e7d','#bc6c25','#8ecae6','#ffb703','#fb8500','#90be6d','#f9c74f','#577590','#b5838d','#6d6875','#43aa8b'];
+let blocks = [], props = [], intersections = [];
+function genWorld(seed){
+  const rnd = mulberry(seed);
+  blocks = []; props = []; intersections = [];
+  for (let i=0;i<6;i++) for (let j=0;j<6;j++){
+    const x0 = i*PITCH + STREET_HALF + 6, y0 = j*PITCH + STREET_HALF + 6;
+    const x1 = (i+1)*PITCH - STREET_HALF - 6, y1 = (j+1)*PITCH - STREET_HALF - 6;
+    const nb = 2 + Math.floor(rnd()*3), blds = [];
+    for (let k=0;k<nb;k++){
+      const bw = 60 + rnd()*90, bh = 60 + rnd()*90;
+      blds.push({ x: x0 + rnd()*Math.max(10,(x1-x0)-bw), y: y0 + rnd()*Math.max(10,(y1-y0)-bh),
+        w: bw, h: bh, c: PASTELS[Math.floor(rnd()*PASTELS.length)], ac: rnd()<0.7 });
+    }
+    blocks.push({x0,y0,x1,y1,blds,
+      grass: rnd()<0.35});
+  }
+  for (let i=0;i<=6;i++) for (let j=0;j<=6;j++)
+    intersections.push({x: clamp(i*PITCH,60,WORLD-60), y: clamp(j*PITCH,60,WORLD-60)});
+  const carCols = ['#ef476f','#118ab2','#06d6a0','#ffd166','#f78c6b','#9b5de5','#00bbf9','#f15bb5','#8ac926'];
+  function addProp(type,x,y){
+    const base = { tree:{r:15,mass:1.5}, hydrant:{r:9,mass:1}, crate:{r:13,mass:1.2},
+                   car:{r:19,mass:3}, cone:{r:9,mass:0.6} }[type];
+    props.push({type,x,y,r:base.r,mass:base.mass,ang:rnd()*Math.PI*2,
+      col:carCols[Math.floor(rnd()*carCols.length)],state:'idle',fall:0,spin:(rnd()-0.5)*4});
+  }
+  // parked cars along curbs
+  for (let n=0;n<54;n++){
+    const vert = rnd()<0.5, line = Math.floor(rnd()*7)*PITCH;
+    const along = 80 + rnd()*(WORLD-160), off = (STREET_HALF-26) * (rnd()<0.5?-1:1);
+    const x = vert ? clamp(line+off,40,WORLD-40) : along;
+    const y = vert ? along : clamp(line+off,40,WORLD-40);
+    addProp('car', x, y); props[props.length-1].ang = vert ? Math.PI/2 : 0;
+  }
+  // trees on block corners / sidewalks
+  for (let n=0;n<64;n++){
+    const b = blocks[Math.floor(rnd()*blocks.length)];
+    addProp('tree', lerp(b.x0,b.x1,rnd()<0.5?0.06:0.94), lerp(b.y0,b.y1,rnd()));
+  }
+  // hydrants, crates, cones scattered on streets
+  for (let n=0;n<70;n++){
+    const onVert = rnd()<0.5, line = Math.floor(rnd()*7)*PITCH;
+    const x = onVert ? line + (rnd()-0.5)*70 : 60+rnd()*(WORLD-120);
+    const y = onVert ? 60+rnd()*(WORLD-120) : line + (rnd()-0.5)*70;
+    addProp(['hydrant','crate','crate','cone'][Math.floor(rnd()*4)], x, y);
+  }
+}
+
+/* ---------------- audio (all synth) ---------------- */
+let AC = null, engineOsc = null, engineGain = null, engineFilter = null;
+function initAudio(){
+  if (AC) { if (AC.state==='suspended') AC.resume(); return; }
+  try{
+    if (window.navigator && navigator.audioSession) navigator.audioSession.type = 'playback';
+    AC = new (window.AudioContext || window.webkitAudioContext)();
+    const buf = AC.createBuffer(1,1,AC.sampleRate), src = AC.createBufferSource();
+    src.buffer = buf; src.connect(AC.destination); src.start();
+    engineOsc = AC.createOscillator(); engineOsc.type = 'sawtooth'; engineOsc.frequency.value = 60;
+    engineFilter = AC.createBiquadFilter(); engineFilter.type='lowpass'; engineFilter.frequency.value = 420;
+    engineGain = AC.createGain(); engineGain.gain.value = 0;
+    engineOsc.connect(engineFilter); engineFilter.connect(engineGain); engineGain.connect(AC.destination);
+    engineOsc.start();
+  }catch(e){ AC = null; }
+}
+function beep(freq, dur, type, vol, slideTo, delay){
+  if (!AC) return;
+  const t0 = AC.currentTime + (delay||0);
+  const o = AC.createOscillator(), g = AC.createGain();
+  o.type = type||'sine'; o.frequency.setValueAtTime(freq, t0);
+  if (slideTo) o.frequency.exponentialRampToValueAtTime(Math.max(20,slideTo), t0+dur);
+  g.gain.setValueAtTime(0.0001, t0);
+  g.gain.exponentialRampToValueAtTime(vol||0.15, t0+0.012);
+  g.gain.exponentialRampToValueAtTime(0.0001, t0+dur);
+  o.connect(g); g.connect(AC.destination); o.start(t0); o.stop(t0+dur+0.05);
+}
+const sfx = {
+  glup(mass){ beep(300 + clamp(260 - mass*36, 40, 260), 0.16, 'sine', 0.20, 55); },
+  chime(){ beep(880,0.12,'sine',0.16); beep(1318,0.22,'sine',0.16,null,0.09); },
+  count(){ beep(520,0.09,'square',0.10); },
+  go(){ beep(1040,0.25,'square',0.12); },
+  win(){ [523,659,784,1046].forEach((f,i)=>beep(f,0.22,'triangle',0.16,null,i*0.11)); },
+  lose(){ beep(220,0.7,'sawtooth',0.14,38); beep(110,0.8,'sine',0.18,30,0.05); },
+  escape(){ beep(660,0.1,'sine',0.14); beep(990,0.3,'sine',0.14,null,0.08); }
+};
+</script>
+<script>
+"use strict";
+/* ---------------- game state ---------------- */
+const GATES_NEEDED = 6;
+let phase = 'menu';           // menu | play | won | lost
+let mode = 1;                 // 1 = AI hole, 2 = friend drives hole
+let car, hole, gate = null, escape = null, particles = [];
+let gatesGot = 0, elapsed = 0, countdown = 0, startedAt = 0;
+let camX = 0, camY = 0, shake = 0, pullViz = 0;
+const hudGates = document.getElementById('hudGates');
+const hudTime  = document.getElementById('hudTime');
+const holeBar  = document.getElementById('holeBar');
+const toastEl  = document.getElementById('toast');
+let toastTimer = 0;
+function toast(msg, ms){
+  toastEl.textContent = msg; toastEl.classList.add('show');
+  clearTimeout(toastTimer); toastTimer = setTimeout(()=>toastEl.classList.remove('show'), ms||1100);
+}
+function fmtTime(s){ const m = Math.floor(s/60), ss = Math.floor(s%60); return m + ':' + String(ss).padStart(2,'0'); }
+
+function holeRadius(){ return 40 + Math.sqrt(hole.mass) * 3.4; }
+function holeMaxSpeed(){
+  const grow = Math.min(120, hole.mass * 1.35);
+  const ramp = Math.min(64, elapsed * 0.72);            // ~90 s ramp
+  return 128 + grow + ramp;                              // 128 -> ~312
+}
+function reset(seed){
+  genWorld(seed || (1000 + Math.floor(Math.random()*9000)));
+  car = { x: PITCH, y: PITCH, ang: Math.PI/4, speed: 0, r: 17, dead: false }; // spawn on the (360,360) intersection
+  hole = { x: WORLD-260, y: WORLD-260, ang: -Math.PI*0.75, speed: 0, mass: 0,
+           r: 40, targetX: WORLD-400, targetY: WORLD-400, retarget: 0, playerDriven: false };
+  particles = []; gatesGot = 0; elapsed = 0; gate = null; escape = null;
+  pullViz = 0; shake = 0;
+  spawnGate();
+  updateHUD();
+}
+function spawnGate(){
+  const carD = 520, holeD = 420;
+  let best = null, bestScore = -1;
+  for (let tries=0; tries<24; tries++){
+    const p = intersections[Math.floor(Math.random()*intersections.length)];
+    const dc = Math.sqrt(dist2(p.x,p.y,car.x,car.y)), dh = Math.sqrt(dist2(p.x,p.y,hole.x,hole.y));
+    if (dc > carD && dh > holeD) { gate = {x:p.x, y:p.y, pulse: Math.random()*6}; return; }
+    const score = Math.min(dc, dh); if (score > bestScore){ bestScore = score; best = p; }
+  }
+  gate = { x: best.x, y: best.y, pulse: 0 };
+}
+function openEscape(){
+  // nearest world edge from the car
+  const d = [ {side:'W', v: car.x}, {side:'E', v: WORLD-car.x}, {side:'N', v: car.y}, {side:'S', v: WORLD-car.y} ]
+    .sort((a,b)=>a.v-b.v)[0];
+  escape = { side: d.side };
+  gate = null;
+  sfx.escape();
+  toast('🏁 ESCAPE LINE OPEN — GO!', 1600);
+}
+function updateHUD(){
+  hudGates.textContent = escape ? '🏁 ESCAPE!' : ('🚪 ' + gatesGot + '/' + GATES_NEEDED);
+  holeBar.style.width = clamp(6 + hole.mass * 0.55, 6, 100) + '%';
+}
+
+/* ---------------- input ---------------- */
+const pointers = new Map();   // pointerId -> {x,y,sx,role}
+const keys = {};
+let carPointerId = null, holePointerId = null;
+function toWorld(sx, sy){ return { x: sx + camX, y: sy + camY }; }
+cv.addEventListener('pointerdown', e=>{
+  initAudio();
+  const role = (mode===2 && e.clientX >= VW*0.5 && holePointerId===null) ? 'hole'
+             : (carPointerId===null ? 'car' : null);
+  if (!role) return;
+  pointers.set(e.pointerId, { x: e.clientX, y: e.clientY, role });
+  if (role==='car') carPointerId = e.pointerId; else holePointerId = e.pointerId;
+  cv.setPointerCapture && cv.setPointerCapture(e.pointerId);
+});
+cv.addEventListener('pointermove', e=>{
+  const p = pointers.get(e.pointerId); if (p){ p.x = e.clientX; p.y = e.clientY; }
+});
+function endPointer(e){
+  const p = pointers.get(e.pointerId); if (!p) return;
+  pointers.delete(e.pointerId);
+  if (p.role==='car') carPointerId = null; else holePointerId = null;
+}
+cv.addEventListener('pointerup', endPointer);
+cv.addEventListener('pointercancel', endPointer);
+window.addEventListener('keydown', e=>{ keys[e.key.toLowerCase()] = true; initAudio(); });
+window.addEventListener('keyup',   e=>{ keys[e.key.toLowerCase()] = false; });
+document.addEventListener('pointerdown', initAudio, true);
+
+/* ---------------- particles ---------------- */
+function burst(x, y, n, col, spd){
+  for (let i=0;i<n;i++){
+    const a = Math.random()*Math.PI*2, s = (0.3+Math.random()*0.7)*(spd||120);
+    particles.push({x, y, vx: Math.cos(a)*s, vy: Math.sin(a)*s, life: 0.5+Math.random()*0.5, t:0, col, r: 2+Math.random()*3.5});
+  }
+}
+
+/* ---------------- update ---------------- */
+function update(dt){
+  if (phase !== 'play') return;
+  if (countdown > 0){
+    const before = Math.ceil(countdown);
+    countdown -= dt;
+    const after = Math.ceil(countdown);
+    if (after !== before && after > 0) sfx.count();
+    if (countdown <= 0) sfx.go();
+    return; // frozen during countdown
+  }
+  elapsed += dt;
+  hole.r = holeRadius();
+
+  /* ----- car ----- */
+  let want = null, throttle = 0;
+  const cp = carPointerId!==null ? pointers.get(carPointerId) : null;
+  if (cp){
+    const w = toWorld(cp.x, cp.y);
+    const d = Math.hypot(w.x-car.x, w.y-car.y);
+    if (d > 26){ want = Math.atan2(w.y-car.y, w.x-car.x); throttle = clamp(d/120, 0.35, 1); }
+  } else {
+    let kx = 0, ky = 0;
+    if (keys['arrowleft']||keys['a']) kx -= 1;
+    if (keys['arrowright']||keys['d']) kx += 1;
+    if (keys['arrowup']||keys['w']) ky -= 1;
+    if (keys['arrowdown']||keys['s']) ky += 1;
+    if (kx||ky){ want = Math.atan2(ky,kx); throttle = 1; }
+  }
+  const CAR_MAX = 352;
+  if (want !== null){
+    car.ang = angLerp(car.ang, want, clamp(dt*7.5, 0, 1));
+    car.speed = lerp(car.speed, CAR_MAX*throttle, clamp(dt*3.2, 0, 1));
+  } else {
+    car.speed = lerp(car.speed, 0, clamp(dt*4.5, 0, 1));
+  }
+  car.x += Math.cos(car.ang) * car.speed * dt;
+  car.y += Math.sin(car.ang) * car.speed * dt;
+
+  /* gravity pull from the hole */
+  const dhc = Math.hypot(hole.x-car.x, hole.y-car.y);
+  const pullZone = hole.r * 2.7;
+  pullViz = dhc < pullZone ? 1 - dhc/pullZone : 0;
+  if (dhc < pullZone && dhc > 1){
+    const pull = lerp(30, 300, Math.pow(1 - dhc/pullZone, 1.4));
+    car.x += (hole.x-car.x)/dhc * pull * dt;
+    car.y += (hole.y-car.y)/dhc * pull * dt;
+    if (pullViz > 0.55 && Math.random() < dt*6) burst(car.x, car.y, 1, '#c084fc', 60);
+  }
+  car.x = clamp(car.x, 22, WORLD-22); car.y = clamp(car.y, 22, WORLD-22);
+  if (dhc < hole.r * 0.82){ endGame(false); return; }
+
+  /* ----- hole ----- */
+  const hMax = holeMaxSpeed();
+  if (mode===2){
+    const hp = holePointerId!==null ? pointers.get(holePointerId) : null;
+    hole.playerDriven = !!hp;
+    if (hp){
+      const w = toWorld(hp.x, hp.y);
+      const d = Math.hypot(w.x-hole.x, w.y-hole.y);
+      if (d > 14){
+        const wantH = Math.atan2(w.y-hole.y, w.x-hole.x);
+        hole.ang = angLerp(hole.ang, wantH, clamp(dt*5.5, 0, 1));
+        hole.speed = lerp(hole.speed, hMax * clamp(d/130, 0.3, 1), clamp(dt*3, 0, 1));
+      } else hole.speed = lerp(hole.speed, 0, clamp(dt*5, 0, 1));
+    } else hole.speed = lerp(hole.speed, 0, clamp(dt*2.2, 0, 1));
+  } else {
+    hole.playerDriven = false;
+    hole.retarget -= dt;
+    if (hole.retarget <= 0){
+      hole.retarget = 0.4;
+      // densest nearby prop cluster
+      let bestP = null, bestScore = -1;
+      for (const p of props){
+        if (p.state !== 'idle') continue;
+        const d2h = dist2(p.x,p.y,hole.x,hole.y);
+        if (d2h > 760*760) continue;
+        let density = p.mass;
+        for (const q of props){
+          if (q!==p && q.state==='idle' && dist2(p.x,p.y,q.x,q.y) < 165*165) density += q.mass*0.6;
+        }
+        const score = density - Math.sqrt(d2h)*0.004;
+        if (score > bestScore){ bestScore = score; bestP = p; }
+      }
+      const bias = clamp(hole.mass/70, 0, 0.8) + (dhc < 300 ? 0.25 : 0);
+      if ((Math.random() < bias || !bestP) && hole.mass > 4){
+        hole.targetX = car.x; hole.targetY = car.y;
+      } else if (bestP){ hole.targetX = bestP.x; hole.targetY = bestP.y; }
+    }
+    const dT = Math.hypot(hole.targetX-hole.x, hole.targetY-hole.y);
+    const wantH = Math.atan2(hole.targetY-hole.y, hole.targetX-hole.x);
+    hole.ang = angLerp(hole.ang, wantH, clamp(dt*2.6, 0, 1));
+    hole.speed = lerp(hole.speed, dT > 30 ? hMax : hMax*0.3, clamp(dt*1.8, 0, 1));
+  }
+  hole.x += Math.cos(hole.ang) * hole.speed * dt;
+  hole.y += Math.sin(hole.ang) * hole.speed * dt;
+  hole.x = clamp(hole.x, hole.r*0.4, WORLD-hole.r*0.4);
+  hole.y = clamp(hole.y, hole.r*0.4, WORLD-hole.r*0.4);
+
+  /* ----- props: drag-in + swallow ----- */
+  for (const p of props){
+    if (p.state === 'gone') continue;
+    const d = Math.hypot(p.x-hole.x, p.y-hole.y);
+    if (p.state === 'idle' && d < hole.r * 1.55){
+      p.state = 'falling'; p.fall = 0;
+    }
+    if (p.state === 'falling'){
+      p.fall += dt * 1.7;
+      const a = Math.atan2(p.y-hole.y, p.x-hole.x) + dt*3.4;      // spiral in
+      const nd = Math.max(hole.r*0.12, d - dt*(130 + hole.r*1.6));
+      p.x = hole.x + Math.cos(a)*nd; p.y = hole.y + Math.sin(a)*nd;
+      if (nd <= hole.r*0.16 || p.fall > 1.4){
+        p.state = 'gone';
+        hole.mass += p.mass;
+        sfx.glup(p.mass);
+        burst(hole.x + (Math.random()-0.5)*hole.r, hole.y + (Math.random()-0.5)*hole.r, 4, '#2b2135', 90);
+        updateHUD();
+      }
+    }
+  }
+
+  /* ----- gates / escape ----- */
+  if (gate){
+    gate.pulse += dt*4;
+    if (Math.hypot(gate.x-car.x, gate.y-car.y) < 56){
+      gatesGot++; sfx.chime();
+      burst(gate.x, gate.y, 18, '#ffd93b', 170);
+      if (gatesGot >= GATES_NEEDED){ openEscape(); }
+      else { toast('🚪 GATE ' + gatesGot + '/' + GATES_NEEDED); spawnGate(); }
+      updateHUD();
+    }
+  } else if (escape){
+    const m = 30;
+    const inZone = (escape.side==='W' && car.x < m) || (escape.side==='E' && car.x > WORLD-m) ||
+                   (escape.side==='N' && car.y < m) || (escape.side==='S' && car.y > WORLD-m);
+    if (inZone){ endGame(true); return; }
+  }
+
+  /* particles */
+  for (const pt of particles){ pt.t += dt; pt.x += pt.vx*dt; pt.y += pt.vy*dt; pt.vx *= 0.92; pt.vy *= 0.92; }
+  particles = particles.filter(p=>p.t < p.life);
+
+  /* camera */
+  camX = clamp(lerp(camX, car.x - VW/2, 0.12), 0, Math.max(0, WORLD-VW));
+  camY = clamp(lerp(camY, car.y - VH/2, 0.12), 0, Math.max(0, WORLD-VH));
+  if (VW >= WORLD) camX = (WORLD-VW)/2;
+  if (VH >= WORLD) camY = (WORLD-VH)/2;
+  shake = pullViz > 0.6 ? (pullViz-0.6)*7 : 0;
+
+  hudTime.textContent = '⏱ ' + fmtTime(elapsed);
+  if (engineGain){
+    const on = phase==='play';
+    engineGain.gain.value = on ? clamp(car.speed/352, 0, 1) * 0.055 : 0;
+    engineOsc.frequency.value = 55 + car.speed * 0.42;
+  }
+}
+
+/* ---------------- end game ---------------- */
+const endcard = document.getElementById('endcard');
+function endGame(won){
+  phase = won ? 'won' : 'lost';
+  if (engineGain) engineGain.gain.value = 0;
+  const t = document.getElementById('endTitle'), s = document.getElementById('endStat'), b = document.getElementById('endBest');
+  if (won){
+    sfx.win();
+    t.textContent = '🎉 YOU ESCAPED!';
+    s.textContent = '⏱ ' + fmtTime(elapsed) + ' · ' + gatesGot + '/' + GATES_NEEDED + ' gates · hole ate ' + Math.round(hole.mass) + ' mass';
+    let best = null;
+    try{
+      best = parseFloat(localStorage.getItem('oh_best') || 'NaN');
+      if (isNaN(best) || elapsed < best){ localStorage.setItem('oh_best', String(elapsed)); best = elapsed; }
+    }catch(e){}
+    b.textContent = best ? ('🏆 Best escape: ' + fmtTime(best)) : '';
+  } else {
+    sfx.lose();
+    burst(car.x, car.y, 26, '#7c3aed', 200);
+    t.textContent = mode===2 ? '🕳️ THE HOLE WINS!' : '🕳️ SWALLOWED!';
+    s.textContent = 'Survived ' + fmtTime(elapsed) + ' · ' + gatesGot + '/' + GATES_NEEDED + ' gates · hole grew to ' + Math.round(hole.r) + ' px';
+    b.textContent = mode===2 ? 'The car almost made it…' : 'The hole ate ' + Math.round(hole.mass) + ' mass. It was relentless.';
+  }
+  setTimeout(()=>endcard.classList.remove('hidden'), won ? 350 : 650);
+}
+
+/* ---------------- render ---------------- */
+function drawProp(p){
+  if (p.state === 'gone') return;
+  const sc = p.state==='falling' ? clamp(1 - p.fall*0.55, 0.25, 1) : 1;
+  ctx.save(); ctx.translate(p.x, p.y); ctx.rotate(p.ang + (p.state==='falling' ? p.fall*p.spin : 0)); ctx.scale(sc, sc);
+  ctx.fillStyle = 'rgba(0,0,0,0.18)';
+  if (p.type==='car'){
+    ctx.fillRect(-21, -9, 44, 22);
+    ctx.fillStyle = p.col; roundRect(-23,-11,46,22,7); ctx.fill();
+    ctx.fillStyle = 'rgba(20,24,38,0.85)'; roundRect(-6,-8,13,16,3); ctx.fill();
+    ctx.fillStyle = 'rgba(255,255,255,0.75)'; ctx.fillRect(9,-8,3,4); ctx.fillRect(9,4,3,4);
+  } else if (p.type==='tree'){
+    ctx.beginPath(); ctx.arc(2,2,p.r,0,7); ctx.fill();
+    ctx.fillStyle = '#3e7d3a'; ctx.beginPath(); ctx.arc(0,0,p.r,0,7); ctx.fill();
+    ctx.fillStyle = '#57a047'; ctx.beginPath(); ctx.arc(-4,-4,p.r*0.62,0,7); ctx.fill();
+    ctx.fillStyle = '#6b4a2b'; ctx.beginPath(); ctx.arc(0,0,4,0,7); ctx.fill();
+  } else if (p.type==='hydrant'){
+    ctx.beginPath(); ctx.arc(1,1,8,0,7); ctx.fill();
+    ctx.fillStyle = '#e63946'; ctx.beginPath(); ctx.arc(0,0,8,0,7); ctx.fill();
+    ctx.fillStyle = '#ffd93b'; ctx.beginPath(); ctx.arc(0,0,3.4,0,7); ctx.fill();
+  } else if (p.type==='crate'){
+    ctx.fillRect(-12,-10,26,24);
+    ctx.fillStyle = '#c98f4e'; roundRect(-13,-12,26,24,3); ctx.fill();
+    ctx.strokeStyle = '#8a5a24'; ctx.lineWidth = 2.4; ctx.strokeRect(-13,-12,26,24);
+    ctx.beginPath(); ctx.moveTo(-13,-12); ctx.lineTo(13,12); ctx.moveTo(13,-12); ctx.lineTo(-13,12); ctx.stroke();
+  } else if (p.type==='cone'){
+    ctx.fillStyle = '#ff7b00'; ctx.beginPath();
+    ctx.moveTo(0,-11); ctx.lineTo(9,9); ctx.lineTo(-9,9); ctx.closePath(); ctx.fill();
+    ctx.fillStyle = '#fff'; ctx.fillRect(-5.5,1.5,11,3.6);
+  }
+  ctx.restore();
+}
+function roundRect(x,y,w,h,r){
+  ctx.beginPath();
+  ctx.moveTo(x+r,y); ctx.arcTo(x+w,y,x+w,y+h,r); ctx.arcTo(x+w,y+h,x,y+h,r);
+  ctx.arcTo(x,y+h,x,y,r); ctx.arcTo(x,y,x+w,y,r); ctx.closePath();
+}
+let swirl = 0;
+function render(){
+  ctx.setTransform(DPR,0,0,DPR,0,0);
+  ctx.fillStyle = '#79a86b'; ctx.fillRect(0,0,VW,VH);
+  const shx = shake ? (Math.random()-0.5)*shake : 0, shy = shake ? (Math.random()-0.5)*shake : 0;
+  ctx.save(); ctx.translate(-camX+shx, -camY+shy);
+
+  /* grass + blocks + buildings */
+  for (const b of blocks){
+    ctx.fillStyle = '#e8e3d5'; ctx.fillRect(b.x0-6, b.y0-6, (b.x1-b.x0)+12, (b.y1-b.y0)+12); // sidewalk
+    ctx.fillStyle = b.grass ? '#8fce7e' : '#d9d2c0'; ctx.fillRect(b.x0, b.y0, b.x1-b.x0, b.y1-b.y0);
+    for (const bl of b.blds){
+      ctx.fillStyle = 'rgba(0,0,0,0.20)'; ctx.fillRect(bl.x+5, bl.y+6, bl.w, bl.h);
+      ctx.fillStyle = bl.c; ctx.fillRect(bl.x, bl.y, bl.w, bl.h);
+      ctx.fillStyle = 'rgba(255,255,255,0.25)'; ctx.fillRect(bl.x+4, bl.y+4, bl.w-8, 7);
+      if (bl.ac){ ctx.fillStyle = 'rgba(60,60,70,0.55)'; ctx.fillRect(bl.x+bl.w*0.6, bl.y+bl.h*0.55, 15, 11); }
+    }
+  }
+  /* streets */
+  ctx.fillStyle = '#4a4a52';
+  for (let i=0;i<=6;i++){
+    ctx.fillRect(i*PITCH-STREET_HALF, 0, STREET_HALF*2, WORLD);
+    ctx.fillRect(0, i*PITCH-STREET_HALF, WORLD, STREET_HALF*2);
+  }
+  ctx.strokeStyle = 'rgba(255,217,59,0.6)'; ctx.lineWidth = 3; ctx.setLineDash([22,26]);
+  ctx.beginPath();
+  for (let i=0;i<=6;i++){ ctx.moveTo(i*PITCH, 0); ctx.lineTo(i*PITCH, WORLD); ctx.moveTo(0, i*PITCH); ctx.lineTo(WORLD, i*PITCH); }
+  ctx.stroke(); ctx.setLineDash([]);
+
+  /* escape line */
+  if (escape){
+    ctx.save();
+    ctx.fillStyle = 'rgba(74,222,128,0.85)';
+    const pulse = 0.65 + 0.35*Math.sin(performance.now()/160);
+    ctx.globalAlpha = pulse;
+    if (escape.side==='W') ctx.fillRect(0,0,14,WORLD);
+    if (escape.side==='E') ctx.fillRect(WORLD-14,0,14,WORLD);
+    if (escape.side==='N') ctx.fillRect(0,0,WORLD,14);
+    if (escape.side==='S') ctx.fillRect(0,WORLD-14,WORLD,14);
+    ctx.restore();
+  }
+
+  /* gate */
+  if (gate){
+    const pr = 34 + Math.sin(gate.pulse)*5;
+    ctx.save(); ctx.translate(gate.x, gate.y);
+    ctx.strokeStyle = '#ffd93b'; ctx.lineWidth = 6;
+    ctx.beginPath(); ctx.arc(0,0,pr,0,7); ctx.stroke();
+    ctx.strokeStyle = 'rgba(255,217,59,0.4)'; ctx.lineWidth = 13;
+    ctx.beginPath(); ctx.arc(0,0,pr+7,0,7); ctx.stroke();
+    ctx.fillStyle = '#fff'; ctx.font = '900 26px sans-serif'; ctx.textAlign='center'; ctx.textBaseline='middle';
+    ctx.fillText('🚪', 0, 1);
+    ctx.restore();
+  }
+
+  /* props */
+  for (const p of props) drawProp(p);
+
+  /* hole debris streaks */
+  swirl += 0.045;
+  ctx.save(); ctx.translate(hole.x, hole.y);
+  ctx.strokeStyle = 'rgba(139,92,246,0.5)'; ctx.lineWidth = 3;
+  for (let i=0;i<7;i++){
+    const a = swirl*1.7 + i*(Math.PI*2/7), rr = hole.r*(1.18 + 0.14*Math.sin(swirl*3+i));
+    ctx.beginPath(); ctx.arc(Math.cos(a)*rr, Math.sin(a)*rr, 3.2, 0, 7); ctx.stroke();
+  }
+  const grad = ctx.createRadialGradient(0,0,hole.r*0.1, 0,0,hole.r*1.12);
+  grad.addColorStop(0, '#000'); grad.addColorStop(0.78, '#05030a');
+  grad.addColorStop(0.92, '#2a1650'); grad.addColorStop(1, 'rgba(88,28,175,0.25)');
+  ctx.fillStyle = grad;
+  ctx.beginPath(); ctx.arc(0,0,hole.r*1.12,0,7); ctx.fill();
+  ctx.strokeStyle = 'rgba(192,132,252,0.85)'; ctx.lineWidth = 2.4;
+  for (let k=0;k<3;k++){
+    ctx.beginPath(); ctx.arc(0,0,hole.r*(0.42+k*0.24), swirl*(1.4+k*0.5), swirl*(1.4+k*0.5)+2.1); ctx.stroke();
+  }
+  ctx.fillStyle = '#000'; ctx.beginPath(); ctx.arc(0,0,hole.r*0.34,0,7); ctx.fill();
+  if (mode===2){
+    ctx.fillStyle = '#c084fc'; ctx.font = '900 15px sans-serif'; ctx.textAlign='center';
+    ctx.fillText('🕳️ HOLE', 0, -hole.r-14);
+  }
+  ctx.restore();
+
+  /* player car */
+  if (phase !== 'lost'){
+    ctx.save(); ctx.translate(car.x, car.y);
+    if (car.speed > 240){ // speed lines
+      ctx.strokeStyle = 'rgba(255,255,255,0.55)'; ctx.lineWidth = 2.4;
+      for (let i=-1;i<=1;i++){
+        ctx.beginPath();
+        ctx.moveTo(-Math.cos(car.ang)*30 - Math.sin(car.ang)*i*13, -Math.sin(car.ang)*30 + Math.cos(car.ang)*i*13);
+        ctx.lineTo(-Math.cos(car.ang)*52 - Math.sin(car.ang)*i*13, -Math.sin(car.ang)*52 + Math.cos(car.ang)*i*13);
+        ctx.stroke();
+      }
+    }
+    ctx.rotate(car.ang);
+    ctx.fillStyle = 'rgba(0,0,0,0.28)'; roundRect(-21,-9,46,23,8); ctx.fill();
+    ctx.fillStyle = '#e63946'; roundRect(-23,-11,46,22,8); ctx.fill();
+    ctx.fillStyle = '#ffd93b'; ctx.fillRect(-23,-2.4,46,4.8);            // racing stripe
+    ctx.fillStyle = 'rgba(18,22,36,0.92)'; roundRect(-7,-8,14,16,3); ctx.fill();  // cabin
+    ctx.fillStyle = 'rgba(255,255,255,0.9)'; ctx.fillRect(10,-8,3.4,4); ctx.fillRect(10,4,3.4,4); // headlights
+    ctx.fillStyle = '#fff'; ctx.font = '900 12px sans-serif'; ctx.textAlign='center'; ctx.textBaseline='middle';
+    ctx.fillText('YOU', -14, 0);
+    ctx.restore();
+  }
+
+  /* particles */
+  for (const pt of particles){
+    ctx.globalAlpha = 1 - pt.t/pt.life;
+    ctx.fillStyle = pt.col; ctx.beginPath(); ctx.arc(pt.x, pt.y, pt.r, 0, 7); ctx.fill();
+  }
+  ctx.globalAlpha = 1;
+  ctx.restore();
+
+  /* gravity vignette */
+  if (pullViz > 0.03 && phase==='play'){
+    const g2 = ctx.createRadialGradient(VW/2,VH/2, Math.min(VW,VH)*0.32, VW/2,VH/2, Math.max(VW,VH)*0.72);
+    g2.addColorStop(0,'rgba(88,28,175,0)'); g2.addColorStop(1,'rgba(88,28,175,'+(0.42*pullViz)+')');
+    ctx.fillStyle = g2; ctx.fillRect(0,0,VW,VH);
+    ctx.fillStyle = 'rgba(255,255,255,'+(0.55*pullViz+0.2)+')';
+    ctx.font = '900 19px sans-serif'; ctx.textAlign='center';
+    if (pullViz > 0.35) ctx.fillText('⚠️ THE HOLE IS PULLING YOU!', VW/2, 64);
+  }
+
+  /* edge arrow to gate / escape */
+  if (phase==='play'){
+    let tx = null, ty = null;
+    if (gate){ tx = gate.x; ty = gate.y; }
+    else if (escape){
+      tx = escape.side==='W' ? 0 : escape.side==='E' ? WORLD : car.x;
+      ty = escape.side==='N' ? 0 : escape.side==='S' ? WORLD : car.y;
+    }
+    if (tx !== null){
+      const sx = tx - camX, sy = ty - camY;
+      if (sx < -30 || sx > VW+30 || sy < -30 || sy > VH+30){
+        const cxp = VW/2, cyp = VH/2, a = Math.atan2(sy-cyp, sx-cxp);
+        const bx = clamp(cxp + Math.cos(a)*((Math.abs(Math.cos(a))>0.001)?(VW/2-34)/Math.abs(Math.cos(a)):1e9), 30, VW-30);
+        const by = clamp(cyp + Math.sin(a)*((Math.abs(Math.sin(a))>0.001)?(VH/2-40)/Math.abs(Math.sin(a)):1e9), 56, VH-30);
+        ctx.save(); ctx.translate(bx, by); ctx.rotate(a);
+        ctx.fillStyle = escape ? '#4ade80' : '#ffd93b';
+        ctx.beginPath(); ctx.moveTo(16,0); ctx.lineTo(-10,-11); ctx.lineTo(-4,0); ctx.lineTo(-10,11); ctx.closePath(); ctx.fill();
+        ctx.restore();
+        ctx.fillStyle = '#fff'; ctx.font = '15px sans-serif'; ctx.textAlign='center';
+        ctx.fillText(escape ? '🏁' : '🚪', bx, by - 20);
+      }
+    }
+  }
+
+  /* countdown */
+  if (phase==='play' && countdown > 0){
+    ctx.fillStyle = 'rgba(10,8,26,0.35)'; ctx.fillRect(0,0,VW,VH);
+    ctx.fillStyle = '#ffd93b'; ctx.font = '900 84px sans-serif'; ctx.textAlign='center'; ctx.textBaseline='middle';
+    ctx.fillText(String(Math.ceil(countdown)), VW/2, VH/2 - 30);
+    ctx.fillStyle = '#fff'; ctx.font = '700 19px sans-serif';
+    ctx.fillText(mode===2 ? 'Car: left side · Hole: right side' : 'Hold & drag to drive!', VW/2, VH/2 + 34);
+  }
+}
+
+/* ---------------- main loop ---------------- */
+let lastT = performance.now(), uiTick = 0;
+function frame(now){
+  const dt = Math.min(0.033, (now - lastT)/1000 || 0.016);
+  lastT = now;
+  update(dt);
+  render();
+  requestAnimationFrame(frame);
+}
+
+/* ---------------- start / buttons ---------------- */
+const menu = document.getElementById('menu');
+function startGame(m){
+  mode = m;
+  initAudio();
+  reset();
+  menu.classList.add('hidden'); endcard.classList.add('hidden');
+  phase = 'play'; countdown = 3.2;
+  camX = clamp(car.x - VW/2, 0, Math.max(0, WORLD-VW));
+  camY = clamp(car.y - VH/2, 0, Math.max(0, WORLD-VH));
+  toast(m===2 ? '🕳️ Friend drives the hole!' : '🏁 Outrun the hole!', 1300);
+  updateHUD();
+}
+document.getElementById('btn1p').addEventListener('click', ()=>startGame(1));
+document.getElementById('btn2p').addEventListener('click', ()=>startGame(2));
+document.getElementById('btnAgain').addEventListener('click', ()=>startGame(mode));
+document.getElementById('btnMenu').addEventListener('click', ()=>{
+  endcard.classList.add('hidden'); menu.classList.remove('hidden'); phase = 'menu';
+});
+document.addEventListener('visibilitychange', ()=>{
+  if (!document.hidden && AC && AC.state==='suspended') AC.resume();
+});
+['pointerdown','touchend'].forEach(n=>document.addEventListener(n, ()=>{
+  if (AC && AC.state==='suspended') AC.resume();
+}, {passive:true}));
+
+reset(20261108);
+requestAnimationFrame(frame);
+
+/* ---------------- debug hook (verification) ---------------- */
+window.__oh = {
+  state(){ return {
+    phase, mode, gates: gatesGot, elapsed: Math.round(elapsed*10)/10,
+    car: { x: Math.round(car.x), y: Math.round(car.y), speed: Math.round(car.speed) },
+    hole: { x: Math.round(hole.x), y: Math.round(hole.y), r: Math.round(hole.r*10)/10,
+            mass: Math.round(hole.mass*10)/10, playerDriven: hole.playerDriven },
+    gate: gate ? { x: gate.x, y: gate.y } : null,
+    escape: escape ? escape.side : null,
+    propsLeft: props.filter(p=>p.state!=='gone').length,
+    cam: { x: Math.round(camX), y: Math.round(camY) }, vw: VW, vh: VH
+  }; },
+  start(m){ startGame(m||1); },
+  skipCountdown(){ countdown = 0; },
+  teleportCar(x,y){ car.x = x; car.y = y; car.speed = 0; },
+  teleportHole(x,y){ hole.x = x; hole.y = y; },
+  setGate(x,y){ gate = { x, y, pulse: 0 }; escape = null; },
+  worldToScreen(x,y){ return { x: x - camX, y: y - camY }; }
+};
+</script>
+<script id="moth-game-guard-js">
+(function(){
+  var lastEnd=0;
+  function onUi(t){return t&&t.closest&&t.closest('button,a,input,select,textarea,[data-scroll]');}
+  document.addEventListener('touchend',function(e){
+    var now=Date.now();
+    if(!onUi(e.target)&&now-lastEnd<=300&&e.cancelable)e.preventDefault();
+    lastEnd=now;
+  },{passive:false});
+  ['gesturestart','gesturechange','gestureend'].forEach(function(n){
+    document.addEventListener(n,function(e){e.preventDefault();});
+  });
+  document.addEventListener('dblclick',function(e){e.preventDefault();},{passive:false});
+  document.addEventListener('contextmenu',function(e){e.preventDefault();});
+  document.addEventListener('touchmove',function(e){
+    if(e.target&&e.target.closest&&e.target.closest('[data-scroll]'))return;
+    if(e.cancelable)e.preventDefault();
+  },{passive:false});
+})();
+</script>
+</body>
+</html>
