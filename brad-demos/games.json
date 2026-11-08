@@ -5865,6 +5865,30 @@
    "orientation": "any",
    "path": "../games/keep-it-lit-night-watch/index.html",
    "title": "Keep It Lit — Night Watch"
+  },
+  {
+   "autostart": [],
+   "category": "Originals",
+   "id": "mario-x-street-fighter",
+   "keys": {
+    "attack": "KeyJ",
+    "down": "ArrowDown",
+    "jump": "Space",
+    "kick": "KeyK",
+    "left": "ArrowLeft",
+    "right": "ArrowRight",
+    "special": "KeyL",
+    "up": "ArrowUp"
+   },
+   "labels": {
+    "attack": "PUNCH",
+    "kick": "KICK",
+    "special": "HADOUKEN"
+   },
+   "note": "Ryu dropped into a full Super Mario World-style level with his whole move set: punch, kick, Hadouken, Shoryuken, air Tatsumaki. Stomp enemies or fight them, punch bricks apart, kick Koopa shells down the course, reach the flagpole.",
+   "orientation": "landscape",
+   "path": "../games/mario-fighter/index.html",
+   "title": "Mario × Street Fighter"
   }
  ]
 }
