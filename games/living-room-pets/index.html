@@ -1,0 +1,829 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+<title>Living Room Pets — pocket AR pets</title>
+<style>
+  html, body { height: 100%; }
+  body {
+    margin: 0;
+    overflow: hidden;
+    background: #17100d;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    color: #fff;
+    -webkit-user-select: none;
+    user-select: none;
+  }
+  #cam {
+    position: fixed; inset: 0;
+    width: 100%; height: 100%;
+    object-fit: cover;
+    background: #17100d;
+    z-index: 0;
+  }
+  #game {
+    position: fixed; inset: 0;
+    width: 100%; height: 100%;
+    z-index: 1;
+    display: block;
+  }
+  #hud {
+    position: fixed;
+    top: calc(env(safe-area-inset-top, 0px) + 10px);
+    left: 10px; right: 10px;
+    display: flex; gap: 8px; align-items: center;
+    z-index: 3;
+    pointer-events: none;
+  }
+  .chip {
+    background: rgba(20, 12, 8, 0.55);
+    border: 1px solid rgba(255,255,255,0.22);
+    border-radius: 999px;
+    padding: 6px 12px;
+    font-size: 15px; font-weight: 700;
+    letter-spacing: 0.02em;
+    backdrop-filter: blur(3px);
+  }
+  .chip small { font-weight: 600; opacity: 0.75; }
+  #camTag { margin-left: auto; font-size: 12px; font-weight: 700; opacity: 0.9; }
+  #addPet {
+    position: fixed;
+    right: calc(env(safe-area-inset-right, 0px) + 14px);
+    bottom: calc(env(safe-area-inset-bottom, 0px) + 18px);
+    z-index: 3;
+    font: inherit;
+    font-size: 17px; font-weight: 800;
+    color: #3a2113;
+    background: linear-gradient(180deg, #ffd98a, #ffb84d);
+    border: 2px solid rgba(120, 66, 18, 0.55);
+    border-radius: 999px;
+    padding: 13px 20px;
+    box-shadow: 0 6px 18px rgba(0,0,0,0.4);
+    cursor: pointer;
+  }
+  #addPet:active { transform: scale(0.95); }
+  #addPet.maxed { opacity: 0.45; filter: grayscale(0.6); }
+  #hint {
+    position: fixed;
+    left: 50%; transform: translateX(-50%);
+    bottom: calc(env(safe-area-inset-bottom, 0px) + 78px);
+    z-index: 3;
+    background: rgba(20, 12, 8, 0.55);
+    border: 1px solid rgba(255,255,255,0.18);
+    border-radius: 999px;
+    padding: 7px 14px;
+    font-size: 13.5px; font-weight: 600;
+    white-space: nowrap;
+    pointer-events: none;
+    opacity: 0;
+    transition: opacity 0.6s ease;
+  }
+  #hint.show { opacity: 1; }
+  #start {
+    position: fixed; inset: 0;
+    z-index: 5;
+    display: flex; align-items: center; justify-content: center;
+    background:
+      radial-gradient(120% 90% at 50% 0%, rgba(255, 196, 110, 0.35), rgba(0,0,0,0) 55%),
+      linear-gradient(180deg, rgba(38, 22, 14, 0.88), rgba(16, 9, 6, 0.94));
+    padding: 20px;
+    box-sizing: border-box;
+  }
+  #startCard { text-align: center; max-width: 420px; }
+  #startCard .big { font-size: 54px; line-height: 1.1; }
+  #startCard h1 {
+    margin: 6px 0 4px;
+    font-size: 34px; font-weight: 900; letter-spacing: 0.01em;
+    text-shadow: 0 3px 0 rgba(0,0,0,0.35);
+  }
+  #startCard p { margin: 6px 0; font-size: 16px; line-height: 1.45; opacity: 0.92; }
+  #startBtn {
+    font: inherit;
+    margin-top: 16px;
+    font-size: 20px; font-weight: 900;
+    color: #3a2113;
+    background: linear-gradient(180deg, #ffd98a, #ffb84d);
+    border: 2px solid rgba(120, 66, 18, 0.55);
+    border-radius: 999px;
+    padding: 15px 34px;
+    box-shadow: 0 8px 22px rgba(0,0,0,0.45);
+    cursor: pointer;
+  }
+  #startBtn:active { transform: scale(0.96); }
+  #startCard .fine { font-size: 13px; opacity: 0.65; margin-top: 14px; }
+  .hidden { display: none !important; }
+</style>
+<style id="moth-game-guard">
+html,body{touch-action:none;overscroll-behavior:none;-webkit-touch-callout:none;-webkit-user-select:none;user-select:none;-webkit-tap-highlight-color:transparent}
+canvas{touch-action:none}
+</style>
+</head>
+<body>
+<video id="cam" autoplay playsinline muted></video>
+<canvas id="game"></canvas>
+
+<div id="hud" class="hidden">
+  <div class="chip">🐾 <span id="petCount">0</span> <small>pets</small></div>
+  <div class="chip">🦴 <span id="treatCount">0</span> <small> treats fed</small></div>
+  <div class="chip" id="camTag">📷 AR room</div>
+</div>
+
+<button id="addPet" class="hidden" type="button">＋ PET</button>
+<div id="hint">Tap the floor to toss a treat · Tap a pet to pet it</div>
+
+<div id="start">
+  <div id="startCard">
+    <div class="big">🐶🐱🐰</div>
+    <h1>Living Room Pets</h1>
+    <p>Cute little pets move into <b>your</b> room. Toss them treats, pet them, and tilt your phone to look around them.</p>
+    <button id="startBtn" type="button">▶ START</button>
+    <p class="fine">Needs camera + motion for the full AR feel.<br>No camera? No problem — the pets get a cozy room instead.</p>
+  </div>
+</div>
+
+<script>
+'use strict';
+/* ============================== helpers ============================== */
+const clamp = (v, a, b) => v < a ? a : (v > b ? b : v);
+const lerp = (a, b, t) => a + (b - a) * t;
+const rand = (a, b) => a + Math.random() * (b - a);
+const pick = arr => arr[Math.floor(Math.random() * arr.length)];
+
+/* ============================== audio ============================== */
+let AC = null;
+function initAudio() {
+  try {
+    if ('audioSession' in navigator) { try { navigator.audioSession.type = 'playback'; } catch (e) {} }
+    if (!AC) {
+      const Ctor = window.AudioContext || window.webkitAudioContext;
+      if (Ctor) AC = new Ctor();
+    }
+    if (AC) {
+      if (AC.state === 'suspended') AC.resume();
+      // 1-sample silent buffer unlock (iOS first-gesture rule)
+      const buf = AC.createBuffer(1, 1, 22050);
+      const src = AC.createBufferSource();
+      src.buffer = buf; src.connect(AC.destination); src.start(0);
+    }
+  } catch (e) { /* audio is optional */ }
+}
+function resumeAudio() { try { if (AC && AC.state === 'suspended') AC.resume(); } catch (e) {} }
+document.addEventListener('pointerdown', resumeAudio, true);
+document.addEventListener('touchend', resumeAudio, true);
+document.addEventListener('visibilitychange', () => { if (!document.hidden) resumeAudio(); });
+
+function tone(f0, f1, dur, type, vol, delay) {
+  if (!AC) return;
+  try {
+    const t0 = AC.currentTime + (delay || 0);
+    const o = AC.createOscillator(), g = AC.createGain();
+    o.type = type || 'sine';
+    o.frequency.setValueAtTime(f0, t0);
+    o.frequency.exponentialRampToValueAtTime(Math.max(30, f1), t0 + dur);
+    g.gain.setValueAtTime(0.0001, t0);
+    g.gain.exponentialRampToValueAtTime(vol || 0.15, t0 + 0.015);
+    g.gain.exponentialRampToValueAtTime(0.0001, t0 + dur);
+    o.connect(g); g.connect(AC.destination);
+    o.start(t0); o.stop(t0 + dur + 0.05);
+  } catch (e) {}
+}
+const sndPop   = () => { tone(520, 170, 0.12, 'sine', 0.20); };
+const sndNom   = () => { tone(300, 210, 0.09, 'triangle', 0.16); tone(270, 180, 0.10, 'triangle', 0.16, 0.11); };
+const sndSpawn = () => { tone(500, 900, 0.14, 'sine', 0.12); };
+function sndHappy(type) {
+  if (type === 'cat') {           // little mew + purr chirp
+    tone(640, 880, 0.13, 'sine', 0.14); tone(880, 690, 0.16, 'sine', 0.12, 0.13);
+  } else if (type === 'dog') {    // happy yip-yip
+    tone(430, 380, 0.07, 'square', 0.07); tone(430, 380, 0.07, 'square', 0.07, 0.11);
+  } else {                        // bunny squeak
+    tone(1250, 1560, 0.06, 'sine', 0.10); tone(1250, 1560, 0.06, 'sine', 0.10, 0.09);
+  }
+}
+
+/* ============================== dom / state ============================== */
+const video = document.getElementById('cam');
+const canvas = document.getElementById('game');
+const ctx = canvas.getContext('2d');
+const hudEl = document.getElementById('hud');
+const petCountEl = document.getElementById('petCount');
+const treatCountEl = document.getElementById('treatCount');
+const camTagEl = document.getElementById('camTag');
+const addPetBtn = document.getElementById('addPet');
+const hintEl = document.getElementById('hint');
+const startEl = document.getElementById('start');
+
+let W = 0, H = 0, floorTop = 0;
+let started = false;
+let camOK = false;
+let pets = [];
+let treats = [];
+let hearts = [];
+let treatsFed = 0;
+const MAX_PETS = 8;
+
+function resize() {
+  const dpr = Math.min(window.devicePixelRatio || 1, 2);
+  W = window.innerWidth; H = window.innerHeight;
+  canvas.width = Math.round(W * dpr);
+  canvas.height = Math.round(H * dpr);
+  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  floorTop = Math.round(H * 0.34);
+  for (const p of pets) { p.x = clamp(p.x, 36, W - 36); p.y = clamp(p.y, floorTop + 26, H - 70); }
+}
+window.addEventListener('resize', resize);
+
+/* ============================== parallax ============================== */
+let parX = 0, parY = 0;           // smoothed
+let parTX = 0, parTY = 0;         // targets from orientation
+let lastOrientAt = -1e9;
+let mouseAt = -1e9, mouseTX = 0, mouseTY = 0;
+
+window.addEventListener('deviceorientation', (e) => {
+  if (e.gamma == null && e.beta == null) return;
+  lastOrientAt = performance.now();
+  parTX = clamp((e.gamma || 0) / 26, -1, 1);
+  parTY = clamp(((e.beta || 0) - 48) / 24, -1, 1);
+}, true);
+window.addEventListener('pointermove', (e) => {
+  if (e.pointerType !== 'mouse') return;
+  mouseAt = performance.now();
+  mouseTX = clamp((e.clientX / Math.max(1, W) - 0.5) * 2, -1, 1);
+  mouseTY = clamp((e.clientY / Math.max(1, H) - 0.5) * 2, -1, 1);
+}, true);
+
+function updateParallax(t) {
+  let tx, ty;
+  if (performance.now() - mouseAt < 2500) { tx = mouseTX; ty = mouseTY; }
+  else if (performance.now() - lastOrientAt < 3000) { tx = parTX; ty = parTY; }
+  else { tx = Math.sin(t * 0.00035) * 0.55; ty = Math.sin(t * 0.00027 + 1.7) * 0.30; } // gentle idle sway
+  parX += (tx - parX) * 0.055;
+  parY += (ty - parY) * 0.055;
+}
+const parOffX = d => parX * (12 + d * 30);
+const parOffY = d => parY * (5 + d * 13);
+
+/* ============================== depth ============================== */
+const depthOfY = y => clamp((y - floorTop) / Math.max(1, (H - 64) - floorTop), 0, 1);
+const scaleOfD = d => 0.55 + d * 0.75;
+
+/* ============================== pets ============================== */
+const PALETTES = {
+  cat: [
+    { body: '#f0a04b', dark: '#d97f26', belly: '#ffe3c2' },
+    { body: '#9aa3ad', dark: '#6e7885', belly: '#e8edf2' },
+    { body: '#f3e9d2', dark: '#c9b48c', belly: '#fffaf0' }
+  ],
+  dog: [
+    { body: '#b07a45', dark: '#8a5a2e', belly: '#eed9b8' },
+    { body: '#e8dcc4', dark: '#c2ab84', belly: '#fff6e3' },
+    { body: '#54555e', dark: '#37373f', belly: '#c9a06a' }
+  ],
+  bunny: [
+    { body: '#f5f2ec', dark: '#cfc8ba', belly: '#ffffff' },
+    { body: '#b9bdc7', dark: '#8f95a3', belly: '#eef0f4' },
+    { body: '#c9a186', dark: '#a37c5e', belly: '#f3e2d2' }
+  ]
+};
+const PET_TYPES = ['cat', 'dog', 'bunny'];
+const BASE_SPEED = { cat: 60, dog: 78, bunny: 68 };
+
+function makePet(type, x, y) {
+  return {
+    type, x, y, tx: x, ty: y,
+    state: 'idle', tState: rand(0.3, 1.4),
+    face: Math.random() < 0.5 ? -1 : 1,
+    phase: rand(0, Math.PI * 2),
+    blinkT: rand(1.2, 4), twitchT: rand(0.8, 3.5), twitch: 0,
+    hopPh: rand(0, 0.9), heartAcc: 0,
+    pal: pick(PALETTES[type]),
+    target: null,
+    born: performance.now()
+  };
+}
+function addPet(type) {
+  if (pets.length >= MAX_PETS) return null;
+  const p = makePet(type || pick(PET_TYPES),
+    rand(54, Math.max(60, W - 54)), rand(floorTop + 56, Math.max(floorTop + 60, H - 110)));
+  pets.push(p);
+  sndSpawn();
+  spawnHearts(p, 2, 0.7);
+  updateHUD();
+  return p;
+}
+function petScreen(p) {
+  const d = depthOfY(p.y);
+  return { x: p.x + parOffX(d), y: p.y + parOffY(d), d, s: scaleOfD(d) };
+}
+function speedOf(p) { return BASE_SPEED[p.type] * (0.72 + depthOfY(p.y) * 0.5); }
+
+function wander(p) {
+  p.tx = rand(46, Math.max(50, W - 46));
+  p.ty = rand(floorTop + 30, Math.max(floorTop + 34, H - 84));
+  p.state = 'walk';
+}
+function claimTreat(p, tr) {
+  if (p.target && p.target !== tr) p.target.claimedBy = null;
+  tr.claimedBy = p; p.target = tr; p.state = 'toTreat';
+}
+function startEat(p) {
+  p.state = 'eat'; p.tState = 0.85;
+  sndNom();
+}
+function petThePet(p) {
+  if (p.target) { p.target.claimedBy = null; p.target = null; }
+  p.state = 'happy'; p.tState = 0.95; p.heartAcc = 0;
+  spawnHearts(p, 4, 1);
+  sndHappy(p.type);
+}
+function tossTreat(wx, wy) {
+  const tr = { x: wx, y: wy, r0: 10, r: 10, claimedBy: null, born: performance.now() };
+  treats.push(tr);
+  sndPop();
+  let best = null, bd = 1e12;
+  for (const p of pets) {
+    if (p.state === 'eat' || p.state === 'happy') continue;
+    const dd = Math.hypot(p.x - wx, p.y - wy);
+    if (dd < bd) { bd = dd; best = p; }
+  }
+  if (best) claimTreat(best, tr);
+  return tr;
+}
+
+function updatePet(p, dt) {
+  p.blinkT -= dt; if (p.blinkT < -0.12) p.blinkT = rand(1.8, 4.6);
+  p.twitchT -= dt; if (p.twitchT < 0) { p.twitch = 0.3; p.twitchT = rand(1.2, 4.2); }
+  if (p.twitch > 0) p.twitch -= dt;
+
+  if (p.state === 'idle') {
+    p.tState -= dt;
+    const free = treats.find(tr => !tr.claimedBy);
+    if (free) { claimTreat(p, free); return; }
+    if (p.tState <= 0) wander(p);
+  } else if (p.state === 'walk' || p.state === 'toTreat') {
+    if (p.state === 'toTreat' && (!p.target || treats.indexOf(p.target) < 0)) {
+      p.target = null; p.state = 'idle'; p.tState = 0.4; return;
+    }
+    const gx = (p.state === 'toTreat') ? p.target.x : p.tx;
+    const gy = (p.state === 'toTreat') ? p.target.y : p.ty;
+    const dx = gx - p.x, dy = gy - p.y;
+    const dist = Math.hypot(dx, dy);
+    const sp = speedOf(p);
+    if (dist > 2) {
+      if (p.type === 'bunny') {
+        p.hopPh += dt / 0.55; if (p.hopPh >= 1) p.hopPh -= 1;
+        if (p.hopPh < 0.5) {
+          const step = Math.min(dist, sp * dt * 1.9);
+          p.x += dx / dist * step; p.y += dy / dist * step;
+        }
+      } else {
+        const step = Math.min(dist, sp * dt);
+        p.x += dx / dist * step; p.y += dy / dist * step;
+      }
+      p.face = dx >= 0 ? 1 : -1;
+    }
+    if (dist < 11) {
+      if (p.state === 'toTreat' && p.target) startEat(p);
+      else { p.state = 'idle'; p.tState = rand(0.8, 3.4); }
+    }
+  } else if (p.state === 'eat') {
+    p.tState -= dt;
+    if (p.target) p.target.r = Math.max(0, p.target.r0 * clamp(p.tState / 0.85, 0, 1));
+    if (p.tState <= 0) {
+      if (p.target) { const i = treats.indexOf(p.target); if (i >= 0) treats.splice(i, 1); p.target = null; }
+      treatsFed++; updateHUD();
+      spawnHearts(p, 3, 0.6);
+      p.state = 'happy'; p.tState = 0.55; p.heartAcc = 0;
+    }
+  } else if (p.state === 'happy') {
+    p.tState -= dt;
+    p.heartAcc += dt;
+    if (p.heartAcc > 0.17) { p.heartAcc = 0; spawnHearts(p, 1, 0.8); }
+    if (p.tState <= 0) { p.state = 'idle'; p.tState = rand(0.6, 2.4); }
+  }
+}
+
+/* ============================== hearts ============================== */
+function spawnHearts(p, n, spread) {
+  const sp = petScreen(p);
+  for (let i = 0; i < n; i++) {
+    hearts.push({
+      x: sp.x + rand(-16, 16) * sp.s * (spread || 1),
+      y: sp.y - 54 * sp.s,
+      vx: rand(-9, 9), vy: rand(-50, -32),
+      life: 0, max: rand(0.7, 1.15),
+      size: rand(7, 11) * sp.s
+    });
+  }
+}
+function updateHearts(dt) {
+  for (let i = hearts.length - 1; i >= 0; i--) {
+    const h = hearts[i];
+    h.life += dt; h.x += h.vx * dt; h.y += h.vy * dt; h.vy -= 6 * dt;
+    if (h.life >= h.max) hearts.splice(i, 1);
+  }
+}
+
+/* ============================== drawing ============================== */
+function rr(x, y, w, h, r) {
+  ctx.beginPath();
+  if (ctx.roundRect) ctx.roundRect(x, y, w, h, r); else ctx.rect(x, y, w, h);
+}
+function ellipse(x, y, rx, ry, rot) {
+  ctx.beginPath(); ctx.ellipse(x, y, rx, ry, rot || 0, 0, Math.PI * 2);
+}
+
+function drawRoom(t) {
+  // wall
+  const wall = ctx.createLinearGradient(0, 0, 0, floorTop + 30);
+  wall.addColorStop(0, '#f7dcba'); wall.addColorStop(1, '#eec49c');
+  ctx.fillStyle = wall; ctx.fillRect(0, 0, W, floorTop + 2);
+  // window with sunny sky
+  const wx = W * 0.14 + parX * -8, wy = H * 0.06, ww = W * 0.30, wh = floorTop * 0.60;
+  ctx.fillStyle = '#bfe3f2'; rr(wx, wy, ww, wh, 8); ctx.fill();
+  ctx.fillStyle = '#fff3b0'; ctx.beginPath(); ctx.arc(wx + ww * 0.72, wy + wh * 0.3, ww * 0.13, 0, Math.PI * 2); ctx.fill();
+  ctx.fillStyle = '#e8f7fd'; ellipse(wx + ww * 0.3, wy + wh * 0.62, ww * 0.2, wh * 0.1); ctx.fill();
+  ctx.strokeStyle = '#fff8ee'; ctx.lineWidth = 7; rr(wx, wy, ww, wh, 8); ctx.stroke();
+  ctx.lineWidth = 4; ctx.beginPath();
+  ctx.moveTo(wx + ww / 2, wy); ctx.lineTo(wx + ww / 2, wy + wh);
+  ctx.moveTo(wx, wy + wh / 2); ctx.lineTo(wx + ww, wy + wh / 2); ctx.stroke();
+  // picture frame with a paw print
+  const fx = W * 0.66 + parX * -8, fy = H * 0.08, fw = W * 0.21, fh = floorTop * 0.42;
+  ctx.fillStyle = '#a9743f'; rr(fx, fy, fw, fh, 5); ctx.fill();
+  ctx.fillStyle = '#ffedc9'; rr(fx + 6, fy + 6, fw - 12, fh - 12, 3); ctx.fill();
+  ctx.fillStyle = '#d98a4b';
+  ellipse(fx + fw / 2, fy + fh * 0.62, fw * 0.16, fh * 0.13); ctx.fill();
+  for (let i = -1.5; i <= 1.5; i++) { ellipse(fx + fw / 2 + i * fw * 0.13, fy + fh * 0.36, fw * 0.055, fh * 0.07); ctx.fill(); }
+  // baseboard
+  ctx.fillStyle = '#fff3e0'; ctx.fillRect(0, floorTop - 7, W, 9);
+  ctx.fillStyle = 'rgba(120,70,30,0.35)'; ctx.fillRect(0, floorTop + 2, W, 2);
+  // wooden floor
+  const fl = ctx.createLinearGradient(0, floorTop, 0, H);
+  fl.addColorStop(0, '#bb8048'); fl.addColorStop(1, '#8a5527');
+  ctx.fillStyle = fl; ctx.fillRect(0, floorTop, W, H - floorTop);
+  ctx.strokeStyle = 'rgba(60,30,5,0.20)'; ctx.lineWidth = 2;
+  for (let y = floorTop + 26; y < H; y += 30) {
+    ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(W, y); ctx.stroke();
+  }
+  ctx.strokeStyle = 'rgba(60,30,5,0.10)';
+  for (let y = floorTop + 26, row = 0; y < H; y += 30, row++) {
+    for (let x = ((row % 2) * 90) + 40; x < W; x += 190) {
+      ctx.beginPath(); ctx.moveTo(x, y - 28); ctx.lineTo(x, y); ctx.stroke();
+    }
+  }
+  // sunlight spill from the window
+  ctx.fillStyle = 'rgba(255,240,190,0.15)';
+  ctx.beginPath();
+  ctx.moveTo(wx + 6, floorTop + 4); ctx.lineTo(wx + ww - 6, floorTop + 4);
+  ctx.lineTo(wx + ww + 60, floorTop + 96); ctx.lineTo(wx - 24, floorTop + 96);
+  ctx.closePath(); ctx.fill();
+  // rug
+  const rugX = W * 0.5 + parX * -12, rugY = H * 0.815;
+  ctx.fillStyle = '#c4553b'; ellipse(rugX, rugY, W * 0.37, H * 0.088); ctx.fill();
+  ctx.fillStyle = '#e8845f'; ellipse(rugX, rugY, W * 0.30, H * 0.068); ctx.fill();
+  ctx.fillStyle = '#f0a35e'; ellipse(rugX, rugY, W * 0.21, H * 0.046); ctx.fill();
+  // plant in the corner
+  const px = W * 0.91 + parX * -10;
+  ctx.fillStyle = '#4d7c4d';
+  ellipse(px, floorTop - 34, 9, 22, -0.5); ctx.fill();
+  ellipse(px + 12, floorTop - 28, 9, 20, 0.5); ctx.fill();
+  ellipse(px + 6, floorTop - 42, 8, 20, 0.1); ctx.fill();
+  ctx.fillStyle = '#b3543a';
+  ctx.beginPath();
+  ctx.moveTo(px - 11, floorTop - 16); ctx.lineTo(px + 23, floorTop - 16);
+  ctx.lineTo(px + 18, floorTop + 2); ctx.lineTo(px - 6, floorTop + 2);
+  ctx.closePath(); ctx.fill();
+  // vignette
+  const vg = ctx.createRadialGradient(W / 2, H / 2, Math.min(W, H) * 0.45, W / 2, H / 2, Math.max(W, H) * 0.78);
+  vg.addColorStop(0, 'rgba(30,15,5,0)'); vg.addColorStop(1, 'rgba(30,15,5,0.20)');
+  ctx.fillStyle = vg; ctx.fillRect(0, 0, W, H);
+}
+
+function drawTreat(tr, t) {
+  const d = depthOfY(tr.y);
+  const sx = tr.x + parOffX(d), sy = tr.y + parOffY(d), s = scaleOfD(d);
+  const age = (performance.now() - tr.born) / 1000;
+  const popIn = clamp(age * 3, 0, 1);
+  const sc = s * (popIn * (2 - popIn)) * (tr.r / tr.r0);
+  if (sc <= 0.01) return;
+  ctx.fillStyle = 'rgba(0,0,0,0.20)';
+  ellipse(sx, sy + 3, 15 * sc, 4.5 * sc); ctx.fill();
+  ctx.save();
+  ctx.translate(sx, sy - 3 * sc + Math.sin(t * 0.004 + tr.born) * 1.2);
+  ctx.scale(sc, sc);
+  ctx.rotate(Math.sin(tr.born) * 0.5);
+  ctx.fillStyle = '#ecca8d'; ctx.strokeStyle = '#b98d4f'; ctx.lineWidth = 1.6;
+  rr(-9, -3.4, 18, 6.8, 3.4); ctx.fill(); ctx.stroke();
+  for (const [cx, cy] of [[-9, -3.6], [-9, 3.6], [9, -3.6], [9, 3.6]]) {
+    ctx.beginPath(); ctx.arc(cx, cy, 4.1, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
+  }
+  ctx.restore();
+}
+
+function drawHeart(h) {
+  const a = clamp(1 - h.life / h.max, 0, 1);
+  const s = h.size * (0.7 + 0.3 * (h.life / h.max));
+  ctx.save();
+  ctx.translate(h.x + Math.sin(h.life * 6 + h.size) * 2.5, h.y);
+  ctx.scale(s / 10, s / 10);
+  ctx.fillStyle = 'rgba(255,92,132,' + (a * 0.95) + ')';
+  ctx.beginPath();
+  ctx.moveTo(0, 8);
+  ctx.bezierCurveTo(-11, -2, -6, -11, 0, -5);
+  ctx.bezierCurveTo(6, -11, 11, -2, 0, 8);
+  ctx.fill();
+  ctx.restore();
+}
+
+/* ---- shared pet bits ---- */
+function drawLegs(p, t, moving, color) {
+  const step = moving && p.type !== 'bunny' ? Math.sin(t * 0.011 + p.phase) * 2.2 : 0;
+  ctx.fillStyle = color;
+  ellipse(-17, -3.5 + step, 4.6, 5); ctx.fill();
+  ellipse(-5, -3.5 - step, 4.6, 5); ctx.fill();
+  ellipse(9, -3.5 + step, 4.6, 5); ctx.fill();
+  ellipse(20, -3.5 - step, 4.6, 5); ctx.fill();
+}
+function drawEyes(x1, x2, y, blink) {
+  ctx.fillStyle = '#2b2320'; ctx.strokeStyle = '#2b2320';
+  if (blink) {
+    ctx.lineWidth = 1.8;
+    ctx.beginPath();
+    ctx.moveTo(x1 - 2.6, y); ctx.lineTo(x1 + 2.6, y);
+    ctx.moveTo(x2 - 2.6, y); ctx.lineTo(x2 + 2.6, y);
+    ctx.stroke();
+  } else {
+    ctx.beginPath(); ctx.arc(x1, y, 2, 0, Math.PI * 2); ctx.fill();
+    ctx.beginPath(); ctx.arc(x2, y, 2, 0, Math.PI * 2); ctx.fill();
+    ctx.fillStyle = 'rgba(255,255,255,0.85)';
+    ctx.beginPath(); ctx.arc(x1 + 0.7, y - 0.7, 0.7, 0, Math.PI * 2); ctx.fill();
+    ctx.beginPath(); ctx.arc(x2 + 0.7, y - 0.7, 0.7, 0, Math.PI * 2); ctx.fill();
+  }
+}
+
+function paintCat(p, t, moving) {
+  const pal = p.pal, blink = p.blinkT < 0;
+  const wag = Math.sin(t * 0.0032 + p.phase) * (moving ? 6 : 3.5);
+  const tw = p.twitch > 0 ? Math.sin(t * 0.07) * 0.16 : 0;
+  const dip = p.state === 'eat' ? Math.abs(Math.sin(t * 0.014)) * 4 : 0;
+  ctx.lineCap = 'round';
+  // tail
+  ctx.strokeStyle = pal.body; ctx.lineWidth = 7;
+  ctx.beginPath(); ctx.moveTo(-24, -24);
+  ctx.quadraticCurveTo(-40, -30 + wag, -35, -48 + wag); ctx.stroke();
+  ctx.strokeStyle = pal.dark; ctx.lineWidth = 7;
+  ctx.beginPath(); ctx.moveTo(-36.5, -44 + wag); ctx.lineTo(-35, -48 + wag); ctx.stroke();
+  drawLegs(p, t, moving, pal.dark);
+  // body
+  ctx.fillStyle = pal.body; ellipse(-1, -26, 27, 19); ctx.fill();
+  ctx.strokeStyle = 'rgba(0,0,0,0.10)'; ctx.lineWidth = 2;
+  for (let i = 0; i < 3; i++) {
+    ctx.beginPath(); ctx.arc(-10 + i * 9, -40, 6, Math.PI * 1.15, Math.PI * 1.6); ctx.stroke();
+  }
+  ctx.fillStyle = pal.belly; ctx.globalAlpha = 0.85; ellipse(4, -20, 14, 10.5); ctx.fill(); ctx.globalAlpha = 1;
+  // head
+  const hx = 20, hy = -45 + dip;
+  ctx.fillStyle = pal.body;
+  ctx.beginPath(); // ears
+  ctx.moveTo(hx - 13, hy - 8); ctx.lineTo(hx - 9 + tw * 6, hy - 22); ctx.lineTo(hx - 2, hy - 10); ctx.closePath(); ctx.fill();
+  ctx.beginPath();
+  ctx.moveTo(hx + 3, hy - 10); ctx.lineTo(hx + 9, hy - 22 - tw * 4); ctx.lineTo(hx + 14, hy - 7); ctx.closePath(); ctx.fill();
+  ctx.fillStyle = '#f7a8b8';
+  ctx.beginPath(); ctx.moveTo(hx - 10, hy - 10); ctx.lineTo(hx - 8, hy - 17); ctx.lineTo(hx - 5, hy - 10); ctx.closePath(); ctx.fill();
+  ctx.fillStyle = pal.body;
+  ctx.beginPath(); ctx.arc(hx, hy, 14.5, 0, Math.PI * 2); ctx.fill();
+  ctx.fillStyle = pal.belly; ellipse(hx + 7, hy + 5, 8.5, 6); ctx.fill();
+  drawEyes(hx - 4, hx + 5, hy - 2, blink);
+  ctx.fillStyle = '#e56b7f';
+  ctx.beginPath(); ctx.moveTo(hx + 11.5, hy + 1); ctx.lineTo(hx + 15, hy + 1); ctx.lineTo(hx + 13.2, hy + 3.6); ctx.closePath(); ctx.fill();
+  ctx.strokeStyle = 'rgba(43,35,32,0.45)'; ctx.lineWidth = 1;
+  for (let i = -1; i <= 1; i++) {
+    ctx.beginPath(); ctx.moveTo(hx + 10, hy + 4 + i); ctx.lineTo(hx + 21, hy + 2.5 + i * 2.4); ctx.stroke();
+  }
+}
+
+function paintDog(p, t, moving) {
+  const pal = p.pal, blink = p.blinkT < 0;
+  const wag = Math.sin(t * (moving ? 0.016 : 0.010) + p.phase) * 5;
+  const dip = p.state === 'eat' ? Math.abs(Math.sin(t * 0.014)) * 4 : 0;
+  ctx.lineCap = 'round';
+  // tail (up, wagging)
+  ctx.strokeStyle = pal.body; ctx.lineWidth = 7;
+  ctx.beginPath(); ctx.moveTo(-25, -32);
+  ctx.quadraticCurveTo(-36, -44, -30 + wag, -54); ctx.stroke();
+  drawLegs(p, t, moving, pal.dark);
+  // body
+  ctx.fillStyle = pal.body; ellipse(-1, -27, 29, 20); ctx.fill();
+  ctx.fillStyle = pal.dark; ctx.globalAlpha = 0.45; ellipse(-9, -33, 8.5, 6.5); ctx.fill(); ctx.globalAlpha = 1;
+  ctx.fillStyle = pal.belly; ctx.globalAlpha = 0.85; ellipse(5, -21, 15, 11); ctx.fill(); ctx.globalAlpha = 1;
+  // head
+  const hx = 21, hy = -44 + dip;
+  ctx.fillStyle = pal.body;
+  ctx.beginPath(); ctx.arc(hx, hy, 14, 0, Math.PI * 2); ctx.fill();
+  // floppy ear
+  ctx.save();
+  ctx.translate(hx - 8, hy - 10);
+  ctx.rotate(0.45 + (p.twitch > 0 ? Math.sin(t * 0.07) * 0.2 : 0) + (moving ? Math.sin(t * 0.011 + p.phase) * 0.08 : 0));
+  ctx.fillStyle = pal.dark; ellipse(0, 7, 6.2, 12); ctx.fill();
+  ctx.restore();
+  // snout + nose
+  ctx.fillStyle = pal.belly; ellipse(hx + 10, hy + 4, 9.5, 6.5); ctx.fill();
+  ctx.fillStyle = '#2b2320'; ellipse(hx + 17.5, hy + 1.5, 3.4, 2.8); ctx.fill();
+  drawEyes(hx - 3, hx + 6, hy - 3, blink);
+  if (p.state === 'happy') {
+    ctx.fillStyle = '#f28ba8'; rr(hx + 8, hy + 9, 6.5, 9, 3); ctx.fill();
+  }
+}
+
+function paintBunny(p, t, moving) {
+  const pal = p.pal, blink = p.blinkT < 0;
+  const tw = p.twitch > 0 ? Math.sin(t * 0.07) * 0.14 : 0;
+  const dip = p.state === 'eat' ? Math.abs(Math.sin(t * 0.014)) * 3.5 : 0;
+  // feet
+  ctx.fillStyle = pal.dark;
+  ellipse(-9, -2.5, 9.5, 4); ctx.fill();
+  ellipse(12, -2.5, 9.5, 4); ctx.fill();
+  // tail puff
+  ctx.fillStyle = pal.belly; ctx.beginPath(); ctx.arc(-19, -17, 6.5, 0, Math.PI * 2); ctx.fill();
+  // body
+  ctx.fillStyle = pal.body; ellipse(0, -19, 21, 18); ctx.fill();
+  ctx.fillStyle = pal.belly; ctx.globalAlpha = 0.9; ellipse(4, -13, 11.5, 9.5); ctx.fill(); ctx.globalAlpha = 1;
+  // head
+  const hx = 11, hy = -36 + dip;
+  // ears (long!)
+  ctx.fillStyle = pal.body;
+  ctx.save(); ctx.translate(hx - 5, hy - 9); ctx.rotate(-0.13 + tw);
+  ellipse(0, -12, 4.6, 13); ctx.fill();
+  ctx.fillStyle = '#f7a8b8'; ellipse(0, -11, 2.1, 8.5); ctx.fill(); ctx.restore();
+  ctx.fillStyle = pal.body;
+  ctx.save(); ctx.translate(hx + 4, hy - 9); ctx.rotate(0.38 - tw * 0.6);
+  ellipse(0, -11, 4.6, 12); ctx.fill();
+  ctx.fillStyle = '#f7a8b8'; ellipse(0, -10, 2.1, 7.5); ctx.fill(); ctx.restore();
+  ctx.fillStyle = pal.body;
+  ctx.beginPath(); ctx.arc(hx, hy, 12, 0, Math.PI * 2); ctx.fill();
+  drawEyes(hx - 4, hx + 4, hy - 2, blink);
+  // twitchy nose
+  const nw = 1 + (p.twitch > 0 ? Math.sin(t * 0.06) * 0.35 : 0);
+  ctx.fillStyle = '#e56b7f';
+  ctx.save(); ctx.translate(hx + 10.5, hy + 2.5); ctx.scale(nw, 1);
+  ctx.beginPath(); ctx.arc(0, 0, 2.1, 0, Math.PI * 2); ctx.fill(); ctx.restore();
+  ctx.strokeStyle = 'rgba(43,35,32,0.4)'; ctx.lineWidth = 0.9;
+  for (let i = -1; i <= 1; i++) {
+    ctx.beginPath(); ctx.moveTo(hx + 8, hy + 4 + i); ctx.lineTo(hx + 17, hy + 3 + i * 2); ctx.stroke();
+  }
+}
+
+const PAINTERS = { cat: paintCat, dog: paintDog, bunny: paintBunny };
+
+function drawPet(p, t) {
+  const sp = petScreen(p);
+  const moving = (p.state === 'walk' || p.state === 'toTreat');
+  let lift = 0;
+  if (p.type === 'bunny' && moving && p.hopPh < 0.5) lift = Math.sin((p.hopPh / 0.5) * Math.PI) * 15 * sp.s;
+  if (p.state === 'happy') lift += Math.abs(Math.sin(t * 0.010 + p.phase)) * 6 * sp.s;
+  // ground shadow
+  ctx.fillStyle = 'rgba(0,0,0,' + (0.24 - clamp(lift * 0.004, 0, 0.1)) + ')';
+  ellipse(sp.x, sp.y + 3, 30 * sp.s * (1 - lift * 0.006), 7.5 * sp.s * (1 - lift * 0.006)); ctx.fill();
+  // spawn pop-in
+  const age = (performance.now() - p.born) / 260;
+  const popIn = clamp(age, 0, 1), ease = popIn * (2 - popIn);
+  ctx.save();
+  ctx.translate(sp.x, sp.y - lift);
+  const bob = moving && p.type !== 'bunny' ? Math.sin(t * 0.011 + p.phase) * 1.7 : Math.sin(t * 0.002 + p.phase) * 0.8;
+  ctx.translate(0, bob * sp.s);
+  ctx.scale(p.face * sp.s * ease, sp.s * ease);
+  PAINTERS[p.type](p, t, moving);
+  ctx.restore();
+}
+
+/* ============================== hud ============================== */
+function updateHUD() {
+  petCountEl.textContent = pets.length;
+  treatCountEl.textContent = treatsFed;
+  addPetBtn.classList.toggle('maxed', pets.length >= MAX_PETS);
+  addPetBtn.textContent = pets.length >= MAX_PETS ? '🐾 FULL' : '＋ PET';
+}
+addPetBtn.addEventListener('click', () => {
+  initAudio();
+  const p = addPet();
+  if (p) hintEl.classList.remove('show');
+});
+
+/* ============================== input ============================== */
+canvas.addEventListener('pointerdown', (e) => {
+  if (!started) return;
+  initAudio(); resumeAudio();
+  const sx = e.clientX, sy = e.clientY;
+  // tap a pet? (front-most first)
+  const sorted = pets.slice().sort((a, b) => b.y - a.y);
+  for (const p of sorted) {
+    const sp = petScreen(p);
+    if (Math.hypot(sx - sp.x, sy - (sp.y - 30 * sp.s)) < 54 * sp.s) {
+      petThePet(p);
+      hintEl.classList.remove('show');
+      return;
+    }
+  }
+  // tap the floor? toss a treat there
+  if (sy > floorTop + 4) {
+    const d = depthOfY(sy);
+    const wx = clamp(sx - parOffX(d), 24, Math.max(25, W - 24));
+    const wy = clamp(sy - parOffY(d), floorTop + 22, Math.max(floorTop + 23, H - 56));
+    tossTreat(wx, wy);
+    hintEl.classList.remove('show');
+  }
+});
+
+/* ============================== main loop ============================== */
+let lastT = 0;
+function frame(t) {
+  requestAnimationFrame(frame);
+  const dt = Math.min(0.05, lastT ? (t - lastT) / 1000 : 0.016);
+  lastT = t;
+  updateParallax(t);
+  ctx.clearRect(0, 0, W, H);
+  if (!camOK) drawRoom(t);
+  if (started) {
+    for (const p of pets) updatePet(p, dt);
+    updateHearts(dt);
+  }
+  for (const tr of treats) drawTreat(tr, t);
+  const sorted = pets.slice().sort((a, b) => a.y - b.y);
+  for (const p of sorted) drawPet(p, t);
+  for (const h of hearts) drawHeart(h);
+}
+
+/* ============================== start flow ============================== */
+let startInFlight = false;
+document.getElementById('startBtn').addEventListener('click', async () => {
+  if (startInFlight) return;
+  startInFlight = true;
+  initAudio();
+  // camera (rear), with a timeout so a hung prompt can't trap the game
+  try {
+    if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) throw new Error('no getUserMedia');
+    const stream = await Promise.race([
+      navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' }, audio: false }),
+      new Promise((_, rej) => setTimeout(() => rej(new Error('camera timeout')), 4500))
+    ]);
+    video.srcObject = stream;
+    await video.play().catch(() => {});
+    camOK = true;
+  } catch (e) { camOK = false; }
+  // motion permission (iOS requires it from a user gesture)
+  try {
+    if (typeof DeviceOrientationEvent !== 'undefined' &&
+        typeof DeviceOrientationEvent.requestPermission === 'function') {
+      await DeviceOrientationEvent.requestPermission().catch(() => {});
+    }
+  } catch (e) { /* parallax falls back to idle sway */ }
+
+  video.classList.toggle('hidden', !camOK);
+  camTagEl.textContent = camOK ? '📷 AR room' : '🏠 cozy room';
+  startEl.classList.add('hidden');
+  hudEl.classList.remove('hidden');
+  addPetBtn.classList.remove('hidden');
+  started = true;
+  if (!pets.length) { addPet('cat'); addPet('dog'); addPet('bunny'); }
+  updateHUD();
+  hintEl.classList.add('show');
+  setTimeout(() => hintEl.classList.remove('show'), 6000);
+});
+
+/* ============================== boot + test hook ============================== */
+resize();
+updateHUD();
+requestAnimationFrame(frame);
+
+window.__lrp = {
+  get started() { return started; },
+  get camOK() { return camOK; },
+  get pets() { return pets; },
+  get treats() { return treats; },
+  get treatsFed() { return treatsFed; },
+  petScreen, tossTreat, petThePet, addPet,
+  start: () => document.getElementById('startBtn').click()
+};
+</script>
+<script id="moth-game-guard-js">
+(function(){
+  var lastEnd=0;
+  function onUi(t){return t&&t.closest&&t.closest('button,a,input,select,textarea,[data-scroll]');}
+  document.addEventListener('touchend',function(e){
+    var now=Date.now();
+    if(!onUi(e.target)&&now-lastEnd<=300&&e.cancelable)e.preventDefault();
+    lastEnd=now;
+  },{passive:false});
+  ['gesturestart','gesturechange','gestureend'].forEach(function(n){
+    document.addEventListener(n,function(e){e.preventDefault();});
+  });
+  document.addEventListener('dblclick',function(e){e.preventDefault();},{passive:false});
+  document.addEventListener('contextmenu',function(e){e.preventDefault();});
+  document.addEventListener('touchmove',function(e){
+    if(e.target&&e.target.closest&&e.target.closest('[data-scroll]'))return;
+    if(e.cancelable)e.preventDefault();
+  },{passive:false});
+})();
+</script>
+</body>
+</html>
