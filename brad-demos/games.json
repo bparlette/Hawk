@@ -6208,6 +6208,17 @@
    "orientation": "any",
    "path": "../games/side-quest-run/index.html",
    "title": "Side Quest! — 12 Worlds · Web Run"
+  },
+  {
+   "autostart": [],
+   "category": "Originals",
+   "id": "starfall-sentry",
+   "keys": {},
+   "labels": {},
+   "note": "React + Astryx proof game: survivors-style arena — steer with WASD or drag, auto-fire, grab XP, pick upgrades, survive 2:30. Canvas core, React chrome.",
+   "orientation": "any",
+   "path": "../games/starfall-sentry/index.html",
+   "title": "STARFALL SENTRY"
   }
  ]
 }
