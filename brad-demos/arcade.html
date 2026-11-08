@@ -1,0 +1,208 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover" />
+<meta name="apple-mobile-web-app-capable" content="yes" />
+<meta name="mobile-web-app-capable" content="yes" />
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+<meta name="theme-color" content="#07080c" />
+<title>The Arcade — All the Games, One Page</title>
+<meta property="og:title" content="The Arcade" />
+<meta property="og:description" content="Every game on one page. Tap one and play — you never leave the arcade." />
+<meta property="og:type" content="website" />
+<meta property="og:url" content="https://bparlette.github.io/Hawk/brad-demos/" />
+<meta property="og:image" content="https://bparlette.github.io/Hawk/brad-demos/thumbs/shell-shock-live.webp" />
+<meta name="twitter:card" content="summary_large_image" />
+<meta name="twitter:title" content="The Arcade" />
+<meta name="twitter:description" content="Every game on one page. Tap one and play — you never leave the arcade." />
+<meta name="twitter:image" content="https://bparlette.github.io/Hawk/brad-demos/thumbs/shell-shock-live.webp" />
+<link rel="stylesheet" href="shell.css" />
+<link rel="stylesheet" href="arcade.css" />
+<style id="gbp-css">
+#game-builder-prompt { margin: 30px 2px 6px; padding: 14px 12px 16px; border: 1px solid #2a2d38; border-radius: 12px; background: #12141b; }
+#game-builder-prompt h2 { margin: 0 0 6px; font: 900 19px/1.1 Impact, "Arial Black", system-ui, sans-serif; letter-spacing: 1.5px; color: #ffd23c; text-shadow: 2px 2px 0 #a3201a; }
+#game-builder-prompt .gbp-lead { margin: 0 0 12px; font-size: 13px; line-height: 1.45; color: #c9cedb; }
+#game-builder-prompt .gbp-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 10px 14px; margin-bottom: 10px; }
+#gbpCopy { min-height: 48px; padding: 0 22px; border: 0; border-radius: 10px; background: #ffd23c; color: #14101f; font: 900 16px/1 Impact, "Arial Black", system-ui, sans-serif; letter-spacing: 1px; cursor: pointer; box-shadow: 0 3px 0 #a3201a; touch-action: manipulation; }
+#gbpCopy:active { transform: translateY(2px); box-shadow: 0 1px 0 #a3201a; }
+#gbpCopy.ok { background: #46d17a; box-shadow: 0 3px 0 #1d6b3c; }
+#game-builder-prompt a { color: #ffd23c; text-decoration: underline; text-underline-offset: 2px; word-break: break-word; }
+#game-builder-prompt .gbp-dl { font-size: 13px; font-weight: 800; }
+#gbpText { margin: 0; max-height: 60vh; overflow: auto; -webkit-overflow-scrolling: touch; padding: 12px; border: 1px solid #2a2d38; border-radius: 10px; background: #07080c; color: #e9ecf4;
+  font: 12.5px/1.5 ui-monospace, SFMono-Regular, Menlo, Consolas, "Liberation Mono", monospace; white-space: pre-wrap; overflow-wrap: anywhere; word-break: break-word;
+  user-select: text; -webkit-user-select: text; -webkit-touch-callout: default; }
+#game-builder-prompt h3 { margin: 16px 0 6px; font-size: 11px; font-weight: 900; letter-spacing: 2px; color: #ffd23c; text-transform: uppercase; }
+#game-builder-prompt ul { margin: 0; padding-left: 18px; font-size: 13px; line-height: 1.6; color: #c9cedb; }
+#pickBody > #game-builder-prompt:first-child { display: none; }
+@media (max-width: 420px) { #gbpText { font-size: 12px; padding: 10px; } #game-builder-prompt { padding: 12px 10px 14px; } }
+</style>
+</head>
+<body>
+<header id="top">
+  <button id="menuBtn" type="button" aria-label="All games"><svg viewBox="0 0 24 24"><path d="M4 4h6v6H4zM14 4h6v6h-6zM4 14h6v6H4zM14 14h6v6h-6z"/></svg><span>GAMES</span></button>
+  <div id="title">Pick a game</div>
+  <div id="extras"></div>
+  <button id="restartBtn" type="button" aria-label="Restart game" hidden><svg viewBox="0 0 24 24"><path d="M20 12a8 8 0 1 1-2.34-5.66M20 4v5h-5"/></svg></button>
+</header>
+<main id="stage">
+  <div id="loading" hidden><div class="spin"></div><span>LOADING</span></div>
+  <div id="toast" hidden></div>
+</main>
+<footer id="panel" aria-label="Arcade controls">
+  <div id="deck">
+    <img id="stick" src="assets/stick.webp" alt="" draggable="false" />
+    <div class="cap" id="cap-attack"></div>
+    <div class="cap" id="cap-jump"></div>
+    <div class="cap" id="cap-special"></div>
+    <div class="cap wht" id="cap-start"></div>
+    <div class="cap wht" id="cap-select"></div>
+    <div class="lbl" id="lbl-attack"></div>
+    <div class="lbl" id="lbl-jump"></div>
+    <div class="lbl" id="lbl-special"></div>
+    <div class="lbl sm" id="lbl-start"></div>
+    <div class="lbl sm" id="lbl-select"></div>
+    <div id="ring"></div>
+  </div>
+</footer>
+<section id="picker" aria-label="Choose a game">
+  <div id="arcadeHero">
+    <div class="arcadeSign">THE ARCADE</div>
+    <div class="arcadeTag">All <span id="arcadeCount">the</span> games! Tap one and play!</div>
+    <div class="arcadeSub">Every playable lives on this one page — pick a cabinet, it starts right here. No downloads, no leaving.</div>
+  </div>
+  <div id="pickHead">
+    <div id="pickTitle"><b>THE ARCADE</b><span>Every game, one page</span></div>
+    <button id="pickClose" type="button" aria-label="Back to game" hidden>✕</button>
+  </div>
+  <div id="pickBody">
+  <section id="game-builder-prompt" aria-labelledby="gbpH">
+    <h2 id="gbpH">Build your own: Game Builder Prompt</h2>
+    <p class="gbp-lead">Describe your game at the top, paste it into any AI (Gemini, ChatGPT, Claude), then send the follow-up prompts one at a time.</p>
+    <div class="gbp-actions">
+      <button id="gbpCopy" type="button">Copy prompt</button>
+      <a class="gbp-dl" href="game-builder-prompt.txt" download="game-builder-prompt.txt">Download .txt</a>
+    </div>
+    <pre id="gbpText">MY GAME: [Describe it in 1 to 3 sentences. Name the game it's like, if any.]
+
+Build this as one self-contained index.html I can open in a browser. Make it feel like a real game someone would play for 10 minutes, not a demo.
+
+SPEND YOUR EFFORT HERE, IN THIS ORDER
+1. The fantasy. Before coding, write 3 lines: what the player does every second, what makes it exciting, and what the big moment is. Build toward that.
+2. Content. Real variety: several enemy types, weapons or moves, upgrades or levels, a boss or finale. More game beats more polish.
+3. Look. Pick one strong art style and commit (toon 3D with outlines, painted 2D, pixel art, or neon). Give the player and main enemies detailed, recognizable models made from many shapes, not single boxes or cones. The player should be the brightest thing on screen.
+4. Feel. Hits get screenshake, a flash, particles and a sound. Movement has weight.
+
+ONLY THESE RULES ARE HARD
+- Must be possible to win and to lose, with a results screen and a Retry that fully resets.
+- Works on a phone (touch controls appear automatically, portrait works) and on a keyboard.
+- No fake features: every button works, nothing claims to be something it isn't.
+- Sounds made in code with Web Audio; no downloaded assets. three.js from one CDN link is fine.
+
+Don't explain the rules back to me or write a checklist. Just output the full file, then a short list of controls.
+
+---
+FOLLOW-UP PROMPTS (send one at a time after it works)
+- "Play it in your head as a first-time player. What's boring or confusing in the first 30 seconds? Fix it."
+- "Make the player and enemy models twice as detailed and give the world more landmarks."
+- "Add more content: 3 new enemy types and 3 new upgrades. Keep everything else working."
+- "Add juice: hitstop, combo text, and a dramatic boss intro and death."
+- "It lags on my phone. Find the slowest part and fix it without removing content."</pre>
+    <h3>Example builds</h3>
+    <ul>
+      <li><a href="#re-requiem" data-play="re-requiem">Resident Evil Requiem fan game</a></li>
+      <li><a href="#blox-dough-raid-plus" data-play="blox-dough-raid-plus">Blox Fruits Dough Raid, Turtles Edition</a></li>
+    </ul>
+    <h3>Tools and references</h3>
+    <ul>
+      <li><a href="https://developer.mozilla.org/en-US/docs/Web/API/Canvas_API" target="_blank" rel="noopener">MDN Canvas API</a></li>
+      <li><a href="https://developer.mozilla.org/en-US/docs/Web/API/Web_Audio_API" target="_blank" rel="noopener">MDN Web Audio API</a></li>
+      <li><a href="https://developer.mozilla.org/en-US/docs/Web/API/Pointer_events" target="_blank" rel="noopener">MDN Pointer events</a></li>
+      <li><a href="https://developer.mozilla.org/en-US/docs/Games" target="_blank" rel="noopener">MDN Game development</a></li>
+      <li><a href="https://threejs.org/docs/" target="_blank" rel="noopener">three.js docs</a></li>
+      <li><a href="https://threejs.org/manual/" target="_blank" rel="noopener">three.js manual</a></li>
+      <li><a href="https://gafferongames.com/post/fix_your_timestep/" target="_blank" rel="noopener">Fix Your Timestep (Gaffer on Games)</a></li>
+      <li><a href="https://kenney.nl/assets" target="_blank" rel="noopener">Kenney free game assets (CC0)</a></li>
+      <li><a href="https://opengameart.org/" target="_blank" rel="noopener">OpenGameArt</a></li>
+      <li><a href="https://sfxr.me/" target="_blank" rel="noopener">jsfxr sound generator</a></li>
+      <li><a href="https://github.com/KilledByAPixel/ZzFX" target="_blank" rel="noopener">ZzFX tiny sound effects</a></li>
+      <li><a href="https://lospec.com/palette-list" target="_blank" rel="noopener">Lospec palettes for 16-bit looks</a></li>
+    </ul>
+  </section>
+  </div>
+</section>
+<script src="shell.js"></script>
+<script id="gbp-js">
+(function () {
+  // The picker rebuilds #pickBody from games.json; keep this section as its last child.
+  var body = document.getElementById("pickBody"), sec = document.getElementById("game-builder-prompt");
+  if (!body || !sec) return;
+  var jumped = false;
+  function keepLast() {
+    if (body.lastElementChild !== sec && body.querySelector(".foot")) {
+      body.appendChild(sec);
+      if (!jumped && location.hash === "#game-builder-prompt") { jumped = true; setTimeout(function () { sec.scrollIntoView(); }, 30); }
+    }
+  }
+  new MutationObserver(keepLast).observe(body, { childList: true });
+  var btn = document.getElementById("gbpCopy"), pre = document.getElementById("gbpText"), t;
+  function done(ok) {
+    btn.textContent = ok ? "Copied!" : "Select + copy manually"; btn.classList.toggle("ok", ok);
+    clearTimeout(t); t = setTimeout(function () { btn.textContent = "Copy prompt"; btn.classList.remove("ok"); }, 2000);
+  }
+  function fallback() {
+    var ta = document.createElement("textarea"); ta.value = pre.textContent; ta.setAttribute("readonly", "");
+    ta.style.cssText = "position:fixed;top:0;left:0;opacity:0;font-size:16px;user-select:text;-webkit-user-select:text";
+    document.body.appendChild(ta); ta.focus(); ta.select(); try { ta.setSelectionRange(0, ta.value.length); } catch (_) {}
+    var ok = false; try { ok = document.execCommand("copy"); } catch (_) {}
+    document.body.removeChild(ta); done(ok);
+  }
+  btn.addEventListener("click", function () {
+    if (navigator.clipboard && navigator.clipboard.writeText && window.isSecureContext) {
+      navigator.clipboard.writeText(pre.textContent).then(function () { done(true); }, fallback);
+    } else fallback();
+  });
+  [].forEach.call(sec.querySelectorAll("a[data-play]"), function (a) {
+    a.addEventListener("click", function (e) {
+      var s = window.__demoShell; if (!s) return;
+      e.preventDefault(); history.replaceState(null, "", "#" + a.dataset.play); s.start(a.dataset.play);
+    });
+  });
+})();
+</script>
+<script id="arcade-js">
+(function () {
+  fetch("games.json", { cache: "no-cache" }).then(function (r) { return r.json(); }).then(function (m) {
+    var el = document.getElementById("arcadeCount");
+    if (el && m && m.games) el.textContent = m.games.length;
+  }).catch(function () {});
+  function hue(s) { var h = 0; for (var i = 0; i < s.length; i++) h = (h * 31 + s.charCodeAt(i)) % 360; return h; }
+  function decorate() {
+    var body = document.getElementById("pickBody"); if (!body) return;
+    body.querySelectorAll(".catbtn").forEach(function (b) {
+      if (b.getAttribute("aria-expanded") !== "true") b.click();
+    });
+    body.querySelectorAll(".card").forEach(function (c) {
+      if (c.dataset.arcadeDone) return; c.dataset.arcadeDone = "1";
+      var im = c.querySelector("img.th");
+      if (im) {
+        var swap = function () {
+          if (!im.parentNode) return;
+          var h = hue(c.dataset.id || "?");
+          var fb = document.createElement("span"); fb.className = "thfb";
+          fb.style.background = "linear-gradient(150deg, hsl(" + h + " 75% 46%), hsl(" + ((h + 50) % 360) + " 80% 30%))";
+          fb.textContent = (c.querySelector(".nm") ? c.querySelector(".nm").textContent.trim().charAt(0) : "?") || "?";
+          im.replaceWith(fb);
+        };
+        if (!im.getAttribute("src")) swap();
+        else { im.addEventListener("error", swap); if (im.complete && im.naturalWidth === 0) swap(); }
+      }
+    });
+  }
+  var body = document.getElementById("pickBody");
+  if (body) { new MutationObserver(decorate).observe(body, { childList: true, subtree: true }); }
+  setTimeout(decorate, 400); setTimeout(decorate, 1500);
+})();
+</script>
+</body>
+</html>
