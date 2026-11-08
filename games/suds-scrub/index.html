@@ -171,7 +171,10 @@ function roundedPoly(c, pts, r){
 }
 let G = { x: 0, y: 0, w: 10, h: 10 };
 let R = { x: 0, y: 0, w: 10, h: 10 };
-const GLASS_FR = [ [0.012, 0.165], [0.990, 0.168], [0.932, 0.750], [0.132, 0.718] ];
+const GLASS_PTS = [
+  [0.002, 0.158], [0.515, 0.140], [0.998, 0.161], [0.996, 0.458],
+  [0.943, 0.758], [0.512, 0.752], [0.123, 0.725], [0.026, 0.457]
+];
 const MIRROR_FR = { x: 0.372, y: 0.146, w: 0.262, h: 0.094 };
 let glassPts = [];
 function roundedRectSub(c, x, y, w, h, r){
@@ -186,18 +189,28 @@ function computeGlass(){
   const iw = interiorImg.naturalWidth || 765, ih = interiorImg.naturalHeight || 1024;
   const sc = Math.min(W / iw, H / ih);
   R = { x: (W - iw * sc) / 2, y: (H - ih * sc) * 0.72, w: iw * sc, h: ih * sc };
-  glassPts = GLASS_FR.map(pt => ({ x: R.x + pt[0] * R.w, y: R.y + pt[1] * R.h }));
+  glassPts = GLASS_PTS.map(pt => ({ x: R.x + pt[0] * R.w, y: R.y + pt[1] * R.h }));
   const xs = glassPts.map(pt => pt.x), ys = glassPts.map(pt => pt.y);
   G = { x: Math.min.apply(null, xs), y: Math.min.apply(null, ys),
         w: Math.max.apply(null, xs) - Math.min.apply(null, xs),
         h: Math.max.apply(null, ys) - Math.min.apply(null, ys) };
 }
+function traceGlass(c){
+  const n = glassPts.length;
+  c.beginPath();
+  c.moveTo((glassPts[0].x + glassPts[n - 1].x) / 2, (glassPts[0].y + glassPts[n - 1].y) / 2);
+  for (let i = 0; i < n; i++) {
+    const p = glassPts[i], q = glassPts[(i + 1) % n];
+    c.quadraticCurveTo(p.x, p.y, (p.x + q.x) / 2, (p.y + q.y) / 2);
+  }
+  c.closePath();
+}
 function glassPath(c){
-  roundedPoly(c, glassPts, Math.min(G.w, G.h) * 0.045);
+  traceGlass(c);
   roundedRectSub(c, R.x + MIRROR_FR.x * R.w, R.y + MIRROR_FR.y * R.h,
                  MIRROR_FR.w * R.w, MIRROR_FR.h * R.h, Math.min(G.w, G.h) * 0.05);
 }
-function glassOutline(c){ roundedPoly(c, glassPts, Math.min(G.w, G.h) * 0.045); }
+function glassOutline(c){ traceGlass(c); }
 function glassBBox(){ return G; }
 function initSparkles(){
   sparkles = [];
@@ -547,8 +560,6 @@ function drawScene(now){
   glassPath(sctx); sctx.clip('evenodd');
   if (revealReady) {
     sctx.drawImage(revealImg, G.x - 2, G.y - 2, G.w + 4, G.h + 4);
-    const pw = Math.min(G.w, G.h * 1.5), ph = pw / 1.5;
-    sctx.drawImage(revealImg, G.x + (G.w - pw) / 2, G.y + (G.h - ph) / 2, pw, ph);
   } else {
     const g2 = sctx.createLinearGradient(0, G.y, 0, G.y + G.h);
     g2.addColorStop(0, '#7fa8cc'); g2.addColorStop(1, '#d9e8f2');
