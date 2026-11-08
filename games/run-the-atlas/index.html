@@ -1,60 +1,12 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
-<title>Run the Atlas — 5-world spike</title>
-<style>
-  html, body { margin:0; padding:0; height:100%; background:#0b0e1a; overflow:hidden;
-    font-family: ui-rounded, "Trebuchet MS", "Segoe UI", system-ui, sans-serif;
-    -webkit-user-select:none; user-select:none; touch-action:none; }
-  canvas { display:block; }
-  #hud { position:fixed; top:0; left:0; right:0; display:flex; justify-content:space-between;
-    align-items:flex-start; padding:14px 18px; pointer-events:none; z-index:5;
-    color:#fff; text-shadow:0 2px 8px rgba(0,0,0,.55); }
-  #hud .world { font-size:20px; font-weight:800; letter-spacing:.02em; }
-  #hud .world small { display:block; font-size:12px; font-weight:600; opacity:.75; letter-spacing:.14em; text-transform:uppercase; }
-  #hud .stats { font-size:17px; font-weight:800; text-align:right; }
-  #hud .stats .relic { color:#ffc400; }
-  #card { position:fixed; left:50%; top:38%; transform:translate(-50%,-50%) scale(.96);
-    text-align:center; color:#fff; z-index:6; pointer-events:none; opacity:0;
-    transition:opacity .18s ease, transform .18s ease;
-    background:rgba(8,10,24,.55); border:2px solid rgba(255,255,255,.35); border-radius:16px;
-    padding:18px 34px 14px; backdrop-filter: blur(2px); }
-  #card.on { opacity:1; transform:translate(-50%,-50%) scale(1); }
-  #card .t { font-size:34px; font-weight:900; letter-spacing:.01em; text-shadow:0 3px 10px rgba(0,0,0,.6); }
-  #card .s { font-size:14px; font-weight:700; letter-spacing:.22em; text-transform:uppercase; opacity:.8; margin-top:2px; }
-  #flash { position:fixed; inset:0; background:#fff; opacity:0; pointer-events:none; z-index:7; }
-  #fade { position:fixed; inset:0; background:#000; opacity:0; pointer-events:none; z-index:8; }
-  #start { position:fixed; inset:0; z-index:9; display:flex; flex-direction:column; gap:10px;
-    align-items:center; justify-content:center; text-align:center; color:#fff;
-    background:radial-gradient(ellipse at 50% 42%, rgba(10,12,30,.25), rgba(5,6,16,.78)); cursor:pointer; }
-  #start h1 { margin:0; font-size:52px; font-weight:900; letter-spacing:.03em;
-    color:#ffb03a; text-shadow:0 4px 0 #b3540e, 0 10px 28px rgba(0,0,0,.7); }
-  #start p { margin:0; font-size:17px; font-weight:600; opacity:.92; }
-  #start .keys { font-size:14px; opacity:.75; letter-spacing:.08em; }
-  #start .load { font-size:13px; opacity:.6; }
-</style>
+<meta http-equiv="refresh" content="0; url=https://bparlette.github.io/Hawk-Ads/games/run-the-atlas/index.html">
+<script>location.replace("https://bparlette.github.io/Hawk-Ads/games/run-the-atlas/index.html");</script>
+<title>Redirecting...</title>
 </head>
 <body>
-<canvas id="c"></canvas>
-
-<div id="hud">
-  <div class="world"><span id="hudWorld">—</span><small id="hudPlat"></small></div>
-  <div class="stats"><span class="relic">◆</span> Relics <span id="hudRelics">0/5</span> &nbsp;·&nbsp; Chain <span id="hudChain">1</span></div>
-</div>
-
-<div id="card"><div class="t" id="cardT"></div><div class="s" id="cardS"></div></div>
-<div id="flash"></div>
-<div id="fade"></div>
-
-<div id="start">
-  <h1>RUN THE ATLAS</h1>
-  <p>One runner. Five legendary maps. Run right, jump the gaps, grab the relic, warp on.</p>
-  <p class="keys">SPACE / ↑ / CLICK / TAP — jump (hold for higher)</p>
-  <p class="load" id="loadMsg">loading worlds…</p>
-</div>
-
-<script src="game.js"></script>
+<p>Moved to <a href="https://bparlette.github.io/Hawk-Ads/games/run-the-atlas/index.html">https://bparlette.github.io/Hawk-Ads/games/run-the-atlas/index.html</a></p>
 </body>
 </html>
