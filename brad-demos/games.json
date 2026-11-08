@@ -2115,6 +2115,25 @@
    "path": "../games/quicklook-zelda/index.html",
    "thumb": "thumbs/quicklook-zelda.png",
    "title": "Quick Look: Zelda Paraglider"
+  },
+  {
+   "autostart": [],
+   "category": "Originals",
+   "id": "worldhop-action",
+   "keys": {
+    "attack": "KeyJ",
+    "down": "ArrowDown",
+    "jump": "Space",
+    "left": "ArrowLeft",
+    "right": "ArrowRight",
+    "special": "KeyK",
+    "up": "ArrowUp"
+   },
+   "labels": {},
+   "note": "The LINK UNLEASHED engine on an endless 10-world run: Dinosaur Land, Green Hill Zone, Kongo Jungle, Vegetable Valley, the Palace, Metal Man's stage, Brinstar, Dracula's Castle, the Moon, the Graveyard — then they loop, faster. Full move set — sword stab and thrusts, sword beam at full hearts, fireball, charged bow, fairy glide. Three hearts; score is distance plus rupees. How far can you get?",
+   "orientation": "landscape",
+   "path": "../games/worldhop-action/index.html",
+   "title": "WORLDHOP ACTION!"
   }
  ]
 }
