@@ -1,0 +1,328 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover" />
+<meta name="apple-mobile-web-app-capable" content="yes" />
+<meta name="mobile-web-app-capable" content="yes" />
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+<meta name="theme-color" content="#07080c" />
+<title>AD MARATHON — All 24 Playable Ads, Shuffled</title>
+<meta name="description" content="All 24 playable ads back-to-back in a random order, every run. Tap Next or let the timer roll." />
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { height: 100%; }
+  body {
+    background:
+      radial-gradient(900px 420px at 50% -80px, rgba(255,210,60,.14), rgba(255,210,60,0) 60%),
+      radial-gradient(700px 500px at 8% 110%, rgba(74,92,255,.12), rgba(74,92,255,0) 60%),
+      #07080c;
+    color: #e9ecf4;
+    font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+    display: flex; flex-direction: column;
+    height: 100dvh; overflow: hidden;
+    -webkit-tap-highlight-color: transparent;
+  }
+  /* ---------- top bar ---------- */
+  header {
+    flex: none; display: flex; align-items: center; gap: 10px;
+    padding: calc(8px + env(safe-area-inset-top)) 12px 8px;
+    border-bottom: 1px solid #22242f;
+    background: rgba(10,11,16,.92);
+  }
+  .brand {
+    font: 900 clamp(19px, 5vw, 26px)/1 Impact, "Arial Black", system-ui, sans-serif;
+    letter-spacing: 2px; color: #ffd23c; white-space: nowrap;
+    text-shadow: 2px 2px 0 #a3201a, 0 0 18px rgba(255,210,60,.30);
+  }
+  .now { flex: 1 1 auto; min-width: 0; text-align: right; }
+  .now .prog { font-size: 11px; font-weight: 800; letter-spacing: 1.6px; color: #9aa0b4; text-transform: uppercase; }
+  .now .name { font-size: clamp(14px, 4vw, 18px); font-weight: 900; color: #fff; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .now .genre { font-size: 12px; color: #ffd23c; font-weight: 700; }
+  /* ---------- controls ---------- */
+  #controls {
+    flex: none; display: flex; align-items: center; gap: 8px; flex-wrap: wrap;
+    padding: 8px 12px; border-bottom: 1px solid #22242f; background: #0c0e14;
+  }
+  button {
+    font: inherit; cursor: pointer; border: 1px solid #2a2d38; border-radius: 10px;
+    background: #171a24; color: #e9ecf4; font-weight: 800;
+    padding: 9px 14px; min-height: 44px; touch-action: manipulation;
+  }
+  button:active { transform: translateY(1px); }
+  button:disabled { opacity: .38; cursor: default; transform: none; }
+  #nextBtn {
+    flex: 1 1 120px; background: #ffd23c; color: #14101f; border: 0;
+    font: 900 17px/1 Impact, "Arial Black", system-ui, sans-serif; letter-spacing: 1.5px;
+    box-shadow: 0 3px 0 #a3201a;
+  }
+  #nextBtn:active { box-shadow: 0 1px 0 #a3201a; }
+  .ctl { display: inline-flex; align-items: center; gap: 6px; font-size: 12.5px; font-weight: 700; color: #c9cedb; }
+  select {
+    font: inherit; font-size: 13px; font-weight: 800; color: #e9ecf4;
+    background: #171a24; border: 1px solid #2a2d38; border-radius: 8px; padding: 8px 6px; min-height: 40px;
+  }
+  /* toggle switch */
+  .switch { position: relative; width: 46px; height: 26px; flex: none; }
+  .switch input { position: absolute; opacity: 0; width: 100%; height: 100%; margin: 0; cursor: pointer; }
+  .switch .track { position: absolute; inset: 0; border-radius: 999px; background: #2a2d38; transition: background .15s; pointer-events: none; }
+  .switch .track::after { content: ""; position: absolute; top: 3px; left: 3px; width: 20px; height: 20px; border-radius: 50%; background: #9aa0b4; transition: all .15s; }
+  .switch input:checked + .track { background: #1d6b3c; }
+  .switch input:checked + .track::after { left: 23px; background: #46d17a; }
+  /* ---------- progress ---------- */
+  #dots { flex: none; display: flex; gap: 4px; padding: 8px 12px 2px; flex-wrap: wrap; }
+  #dots .dot { flex: 1 1 0; height: 6px; min-width: 8px; border-radius: 3px; background: #23252f; }
+  #dots .dot.done { background: #46d17a; }
+  #dots .dot.now { background: #ffd23c; box-shadow: 0 0 8px rgba(255,210,60,.6); }
+  #timerWrap { flex: none; height: 5px; background: #171a24; margin: 6px 12px 0; border-radius: 3px; overflow: hidden; }
+  #timerBar { height: 100%; width: 100%; background: linear-gradient(90deg, #ffd23c, #ff9a3c); border-radius: 3px; }
+  #timerText { flex: none; padding: 4px 12px 0; font-size: 11.5px; font-weight: 700; letter-spacing: 1px; color: #9aa0b4; text-transform: uppercase; display: flex; justify-content: space-between; }
+  /* ---------- stage ---------- */
+  #stage { flex: 1 1 auto; min-height: 0; display: flex; align-items: stretch; justify-content: center; padding: 10px 0 calc(10px + env(safe-area-inset-bottom)); }
+  #frameWrap {
+    position: relative; height: 100%; aspect-ratio: 9 / 16; max-width: 100vw;
+    border-radius: 14px; overflow: hidden; background: #000;
+    border: 1px solid #2a2d38; box-shadow: 0 10px 40px rgba(0,0,0,.55);
+  }
+  @media (max-aspect-ratio: 9/14) { #frameWrap { aspect-ratio: auto; width: 100%; border-radius: 0; border-left: 0; border-right: 0; } }
+  #gameFrame { position: absolute; inset: 0; width: 100%; height: 100%; border: 0; background: #000; }
+  #frameLoading {
+    position: absolute; inset: 0; display: flex; flex-direction: column; gap: 12px;
+    align-items: center; justify-content: center; background: #0c0e14; color: #9aa0b4;
+    font-weight: 800; letter-spacing: 2px; font-size: 13px; pointer-events: none;
+  }
+  .spin { width: 34px; height: 34px; border-radius: 50%; border: 4px solid #2a2d38; border-top-color: #ffd23c; animation: sp 0.8s linear infinite; }
+  @keyframes sp { to { transform: rotate(360deg); } }
+  /* ---------- end screen ---------- */
+  #endScreen {
+    position: fixed; inset: 0; z-index: 20; display: none;
+    align-items: center; justify-content: center; text-align: center; padding: 20px;
+    background: radial-gradient(800px 500px at 50% 20%, rgba(255,210,60,.16), rgba(7,8,12,.97) 65%), #07080c;
+  }
+  #endScreen.show { display: flex; }
+  #endScreen .big {
+    font: 900 clamp(34px, 9vw, 58px)/1.05 Impact, "Arial Black", system-ui, sans-serif;
+    letter-spacing: 3px; color: #ffd23c; text-shadow: 3px 3px 0 #a3201a, 0 0 26px rgba(255,210,60,.35);
+  }
+  #endScreen .sub { margin: 14px 0 4px; font-size: 16px; color: #fff; font-weight: 700; }
+  #endScreen .time { font-size: 14px; color: #9aa0b4; }
+  #againBtn {
+    margin-top: 24px; background: #ffd23c; color: #14101f; border: 0; min-height: 54px; padding: 0 30px;
+    font: 900 19px/1 Impact, "Arial Black", system-ui, sans-serif; letter-spacing: 1.5px; box-shadow: 0 4px 0 #a3201a;
+  }
+  .hint { margin-top: 16px; font-size: 12px; color: #6d7285; }
+</style>
+</head>
+<body>
+<header>
+  <div class="brand">AD MARATHON</div>
+  <div class="now">
+    <div class="prog" id="progText">Game 1 of 24</div>
+    <div class="name" id="gameName">Shuffling…</div>
+    <div class="genre" id="gameGenre"></div>
+  </div>
+</header>
+
+<div id="controls">
+  <button id="backBtn" type="button" aria-label="Previous game">‹ Back</button>
+  <button id="nextBtn" type="button">NEXT GAME ›</button>
+  <button id="shuffleBtn" type="button" aria-label="Reshuffle and restart">🔀 Restart</button>
+  <label class="ctl"><span class="switch"><input type="checkbox" id="autoToggle" checked /><span class="track"></span></span>Auto-next</label>
+  <label class="ctl">Every
+    <select id="speedSel" aria-label="Seconds per game">
+      <option value="30">30s</option>
+      <option value="50" selected>50s</option>
+      <option value="75">75s</option>
+    </select>
+  </label>
+</div>
+
+<div id="dots" aria-hidden="true"></div>
+<div id="timerWrap"><div id="timerBar"></div></div>
+<div id="timerText"><span id="timerLabel">Next game in 50s</span><span id="elapsedLabel">Elapsed 0:00</span></div>
+
+<main id="stage">
+  <div id="frameWrap">
+    <div id="frameLoading"><div class="spin"></div><span>LOADING</span></div>
+    <iframe id="gameFrame" title="Playable ad" allow="autoplay; fullscreen; gamepad; screen-wake-lock" allowfullscreen></iframe>
+  </div>
+</main>
+
+<div id="endScreen" role="dialog" aria-label="Marathon complete">
+  <div>
+    <div class="big">MARATHON<br />COMPLETE!</div>
+    <div class="sub">All 24 ads, back to back. 🏁</div>
+    <div class="time" id="finalTime">Total time 0:00</div>
+    <button id="againBtn" type="button">▶ PLAY AGAIN — FRESH SHUFFLE</button>
+    <div class="hint">Keys: N / → next &nbsp;·&nbsp; P / ← back &nbsp;·&nbsp; R reshuffle</div>
+  </div>
+</div>
+
+<script>
+(function () {
+  "use strict";
+  var GAMES = [
+    { slug: "tincture-tide",    name: "Tincture Tide",    genre: "Sort puzzle" },
+    { slug: "roost-shuffle",    name: "Roost Shuffle",    genre: "Sort puzzle" },
+    { slug: "scoop-yeti",       name: "Scoop Yeti",       genre: "Sort puzzle" },
+    { slug: "jiggle-jars",      name: "Jiggle Jars",      genre: "Sort puzzle" },
+    { slug: "reeflume",         name: "Reeflume",         genre: "Match-3" },
+    { slug: "lantern-lift",     name: "Lantern Lift",     genre: "Triple match" },
+    { slug: "hopsplat",         name: "Hopsplat",         genre: "Paint train" },
+    { slug: "gold-rush-rescue", name: "Gold Rush Rescue", genre: "Pin pull" },
+    { slug: "tug-tangle",       name: "Tug Tangle",       genre: "Jam puzzle" },
+    { slug: "glazeline",        name: "Glazeline",        genre: "Block puzzle" },
+    { slug: "causeway-crush",   name: "Causeway Crush",   genre: "Crowd runner 3D" },
+    { slug: "evolve-rush",      name: "Evolve Rush",      genre: "Evolution runner 3D" },
+    { slug: "embernest",        name: "Embernest",        genre: "Merge" },
+    { slug: "gulp-city",        name: "Gulp City",        genre: "Hole game 3D" },
+    { slug: "cozy-bean-cafe",   name: "Cozy Bean Cafe",   genre: "Idle arcade" },
+    { slug: "glimmerbrew",      name: "Glimmerbrew",      genre: "Idle arcade" },
+    { slug: "inkwash-vigil",    name: "Inkwash Vigil",    genre: "Survivor" },
+    { slug: "shardstorm-rookie",name: "Shardstorm Rookie",genre: "Survivor" },
+    { slug: "nutbolt-legion",   name: "Nutbolt Legion",   genre: "Lane shooter" },
+    { slug: "sky-stacker",      name: "Sky Stacker",      genre: "Timing stacker" },
+    { slug: "bounce-blaster",   name: "Bounce Blaster",   genre: "Trick shot" },
+    { slug: "sunskiff",         name: "Sunskiff",         genre: "Racing 3D" },
+    { slug: "boilerbloom",      name: "Boilerbloom",      genre: "Lane battle 3D" },
+    { slug: "reefhold",         name: "Reefhold",         genre: "Tower defense" }
+  ];
+  var N = GAMES.length, LS_KEY = "admarathon-last-order";
+
+  function shuffled() {
+    var a = GAMES.slice();
+    for (var i = a.length - 1; i > 0; i--) {
+      var j = Math.floor(Math.random() * (i + 1));
+      var t = a[i]; a[i] = a[j]; a[j] = t;
+    }
+    return a;
+  }
+  function sameOrder(a, b) {
+    if (!a || !b || a.length !== b.length) return false;
+    for (var i = 0; i < a.length; i++) if (a[i].slug !== b[i].slug) return false;
+    return true;
+  }
+  function freshOrder(prev) {
+    var o = shuffled(), guard = 0;
+    while (sameOrder(o, prev) && guard++ < 50) o = shuffled();
+    return o;
+  }
+
+  var els = {
+    prog: document.getElementById("progText"), name: document.getElementById("gameName"),
+    genre: document.getElementById("gameGenre"), frame: document.getElementById("gameFrame"),
+    loading: document.getElementById("frameLoading"), dots: document.getElementById("dots"),
+    bar: document.getElementById("timerBar"), timerLabel: document.getElementById("timerLabel"),
+    elapsed: document.getElementById("elapsedLabel"), back: document.getElementById("backBtn"),
+    next: document.getElementById("nextBtn"), shuffle: document.getElementById("shuffleBtn"),
+    auto: document.getElementById("autoToggle"), speed: document.getElementById("speedSel"),
+    end: document.getElementById("endScreen"), finalTime: document.getElementById("finalTime"),
+    again: document.getElementById("againBtn")
+  };
+
+  // Test hook: ?t=<seconds> overrides the per-game auto-advance time.
+  var testT = parseFloat(new URLSearchParams(location.search).get("t"));
+  var perGame = (!isNaN(testT) && testT > 0) ? testT : parseInt(els.speed.value, 10);
+
+  var prevOrder = null;
+  try {
+    var raw = localStorage.getItem(LS_KEY);
+    if (raw) prevOrder = JSON.parse(raw).map(function (s) { return { slug: s }; });
+  } catch (_) {}
+
+  var order = freshOrder(prevOrder), idx = 0;
+  var startedAt = Date.now(), finished = false;
+  var remain = perGame, tickId = null;
+
+  for (var d = 0; d < N; d++) { var dot = document.createElement("span"); dot.className = "dot"; els.dots.appendChild(dot); }
+
+  function fmt(sec) {
+    sec = Math.max(0, Math.floor(sec));
+    return Math.floor(sec / 60) + ":" + ("0" + (sec % 60)).slice(-2);
+  }
+  function saveOrder() { try { localStorage.setItem(LS_KEY, JSON.stringify(order.map(function (g) { return g.slug; }))); } catch (_) {} }
+
+  function renderDots() {
+    var kids = els.dots.children;
+    for (var i = 0; i < N; i++) kids[i].className = "dot" + (i < idx ? " done" : i === idx ? " now" : "");
+  }
+  function show(i) {
+    idx = Math.max(0, Math.min(N - 1, i));
+    var g = order[idx];
+    els.prog.textContent = "Game " + (idx + 1) + " of " + N;
+    els.name.textContent = g.name;
+    els.genre.textContent = g.genre;
+    els.back.disabled = idx === 0;
+    els.next.textContent = idx === N - 1 ? "FINISH ›" : "NEXT GAME ›";
+    els.loading.style.display = "flex";
+    els.frame.src = "../games/playable-ads/" + g.slug + "/index.html";
+    renderDots();
+    remain = perGame;
+    paintTimer();
+  }
+  function paintTimer() {
+    var pct = perGame > 0 ? Math.max(0, Math.min(100, (remain / perGame) * 100)) : 0;
+    els.bar.style.width = pct + "%";
+    els.timerLabel.textContent = els.auto.checked ? ("Next game in " + Math.ceil(remain) + "s") : "Auto-next off — tap NEXT when ready";
+    els.elapsed.textContent = "Elapsed " + fmt((Date.now() - startedAt) / 1000);
+  }
+  function finish() {
+    finished = true;
+    els.finalTime.textContent = "Total time " + fmt((Date.now() - startedAt) / 1000) + " · 24 games";
+    els.end.classList.add("show");
+    paintTimer();
+  }
+  function next() {
+    if (finished) return;
+    if (idx >= N - 1) { finish(); return; }
+    show(idx + 1);
+  }
+  function back() { if (!finished && idx > 0) show(idx - 1); }
+  function restart() {
+    order = freshOrder(order); saveOrder();
+    finished = false; els.end.classList.remove("show");
+    startedAt = Date.now();
+    show(0);
+    console.log("AD MARATHON ORDER: " + order.map(function (g) { return g.slug; }).join(","));
+  }
+
+  els.frame.addEventListener("load", function () { els.loading.style.display = "none"; });
+  els.next.addEventListener("click", next);
+  els.back.addEventListener("click", back);
+  els.shuffle.addEventListener("click", restart);
+  els.again.addEventListener("click", restart);
+  els.auto.addEventListener("change", paintTimer);
+  els.speed.addEventListener("change", function () {
+    if (isNaN(testT) || testT <= 0) { perGame = parseInt(els.speed.value, 10); remain = perGame; paintTimer(); }
+  });
+  document.addEventListener("keydown", function (e) {
+    if (e.metaKey || e.ctrlKey || e.altKey) return;
+    var k = e.key;
+    if (k === "n" || k === "N" || k === "ArrowRight") { e.preventDefault(); if (finished) restart(); else next(); }
+    else if (k === "p" || k === "P" || k === "ArrowLeft") { e.preventDefault(); back(); }
+    else if (k === "r" || k === "R") { e.preventDefault(); restart(); }
+  });
+
+  tickId = setInterval(function () {
+    if (!finished && els.auto.checked && !document.hidden) {
+      remain -= 0.1;
+      if (remain <= 0) { next(); return; }
+    }
+    paintTimer();
+  }, 100);
+
+  saveOrder();
+  show(0);
+  console.log("AD MARATHON ORDER: " + order.map(function (g) { return g.slug; }).join(","));
+
+  // Debug/test handle (harmless in production).
+  window.__marathon = {
+    get order() { return order.map(function (g) { return g.slug; }); },
+    get index() { return idx; },
+    get finished() { return finished; },
+    next: next, back: back, restart: restart
+  };
+})();
+</script>
+</body>
+</html>

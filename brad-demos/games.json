@@ -6219,6 +6219,25 @@
    "orientation": "any",
    "path": "../games/starfall-sentry/index.html",
    "title": "STARFALL SENTRY"
+  },
+  {
+   "autostart": [],
+   "category": "Originals",
+   "id": "link-unleashed",
+   "keys": {
+    "attack": "KeyJ",
+    "down": "ArrowDown",
+    "jump": "Space",
+    "left": "ArrowLeft",
+    "right": "ArrowRight",
+    "special": "KeyK",
+    "up": "ArrowUp"
+   },
+   "labels": {},
+   "note": "Link in Mario's world with his FULL move set — the non-button-mashing sibling of Ocarina of Stride: sword stab, low stab, upward and downward thrusts, sword beam at full hearts, fireball, charged bow & arrow, and a fairy glide. Same level, same flagpole, rupees not coins.",
+   "orientation": "landscape",
+   "path": "../games/link-unleashed/index.html",
+   "title": "LINK UNLEASHED"
   }
  ]
 }
