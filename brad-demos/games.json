@@ -2146,6 +2146,18 @@
    "path": "../games/bonk-yard/index.html",
    "thumb": "thumbs/bonk-yard.png",
    "title": "BONK YARD!"
+  },
+  {
+   "autostart": [],
+   "category": "AR",
+   "id": "draw-and-drive",
+   "keys": {},
+   "labels": {},
+   "note": "Web AR racing: draw a track on your floor with your finger - paint a loop around the coffee table, add HILL stretches that rise into ramps - then race it. Hold the left or right half of the screen to steer, BOOST past the line, chase your best lap over 3 laps. Falls back to a drawn cozy room when there is no camera.",
+   "orientation": "any",
+   "path": "../games/draw-and-drive/index.html",
+   "thumb": "thumbs/draw-and-drive.png",
+   "title": "DRAW & DRIVE!"
   }
  ]
 }
