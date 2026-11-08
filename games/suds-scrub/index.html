@@ -172,8 +172,9 @@ function roundedPoly(c, pts, r){
 let G = { x: 0, y: 0, w: 10, h: 10 };
 let R = { x: 0, y: 0, w: 10, h: 10 };
 const GLASS_PTS = [
-  [0.002, 0.158], [0.515, 0.140], [0.998, 0.161], [0.996, 0.458],
-  [0.943, 0.758], [0.512, 0.752], [0.123, 0.725], [0.026, 0.457]
+  [0.000, 0.151], [0.516, 0.133], [1.000, 0.154], [1.000, 0.345],
+  [1.000, 0.458], [0.925, 0.676], [0.954, 0.765], [0.513, 0.760],
+  [0.114, 0.731], [0.075, 0.676], [0.015, 0.457], [0.000, 0.345]
 ];
 const MIRROR_FR = { x: 0.372, y: 0.146, w: 0.262, h: 0.094 };
 let glassPts = [];
@@ -246,6 +247,10 @@ function makeFoam(){
   g.addColorStop(0.78, '#e6eff6'); g.addColorStop(1, '#dbe8f2');
   fctx.fillStyle = g;
   fctx.fillRect(0, 0, W, H);
+  /* dense foam rim right up to the glass edge */
+  fctx.strokeStyle = 'rgba(242,248,251,0.95)';
+  fctx.lineWidth = Math.min(G.w, G.h) * 0.085;
+  glassOutline(fctx); fctx.stroke();
   /* cloudy foam body — hundreds of soft overlapping blobs */
   for (let i = 0; i < 260; i++) {
     const r = rand(22, 95), x = Math.random() * W, y = Math.random() * H;
@@ -595,9 +600,12 @@ function drawFX(now, dt){
 
   /* --- glass edge shadow + sheen over the painted interior --- */
   xctx.lineJoin = 'round';
+  xctx.save();
+  glassPath(xctx); xctx.clip('evenodd');
   xctx.strokeStyle = 'rgba(24,20,14,0.20)';
   xctx.lineWidth = Math.max(10, Math.min(G.w, G.h) * 0.05);
   glassOutline(xctx); xctx.stroke();
+  xctx.restore();
   xctx.strokeStyle = 'rgba(10,10,12,0.28)';
   xctx.lineWidth = 2.5;
   glassOutline(xctx); xctx.stroke();
