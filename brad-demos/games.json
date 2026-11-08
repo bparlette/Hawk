@@ -8,7 +8,8 @@
   "Sticker Series",
   "Viral Demos",
   "Classic Homebrew",
-  "Arcade Hub"
+  "Arcade Hub",
+  "AR"
  ],
  "games": [
   {
@@ -2054,6 +2055,66 @@
    "orientation": "landscape",
    "path": "../games/link-unleashed/index.html",
    "title": "LINK UNLEASHED"
+  },
+  {
+   "autostart": [],
+   "category": "AR",
+   "id": "pokemon-room",
+   "keys": {},
+   "labels": {},
+   "note": "Web AR room filler: your camera view (or the cozy fallback room) fills with voxel Pokemon - tap SPAWN for one random Pokemon, or flip AUTO and watch the room fill to 80. 24 species, all real 3D models.",
+   "orientation": "any",
+   "path": "../games/pokemon-room/index.html",
+   "thumb": "thumbs/pokemon-room.png",
+   "title": "Pokémon Room"
+  },
+  {
+   "autostart": [],
+   "category": "AR",
+   "id": "living-room-pets",
+   "keys": {},
+   "labels": {},
+   "note": "Web AR pets: cats, a dog and a bunny wander your living room over the camera view - toss treats, tap a pet for hearts. Falls back to a drawn cozy room when there is no camera.",
+   "orientation": "any",
+   "path": "../games/living-room-pets/index.html",
+   "thumb": "thumbs/living-room-pets.png",
+   "title": "Living Room Pets"
+  },
+  {
+   "autostart": [],
+   "category": "AR",
+   "id": "quicklook-pet",
+   "keys": {},
+   "labels": {},
+   "note": "Apple Quick Look AR: open on iPhone, tap the card, and Miso the ninja cat stands in your room at real scale. USDZ model - no app needed.",
+   "orientation": "any",
+   "path": "../games/quicklook-pet/index.html",
+   "thumb": "thumbs/quicklook-pet.png",
+   "title": "Quick Look: Miso"
+  },
+  {
+   "autostart": [],
+   "category": "AR",
+   "id": "quicklook-pokemon",
+   "keys": {},
+   "labels": {},
+   "note": "Apple Quick Look AR: voxel Gengar, Pikachu and Charmander, a metre tall in your room - one cube per sprite pixel, two cubes deep.",
+   "orientation": "any",
+   "path": "../games/quicklook-pokemon/index.html",
+   "thumb": "thumbs/quicklook-pokemon.png",
+   "title": "Quick Look: Pokémon"
+  },
+  {
+   "autostart": [],
+   "category": "AR",
+   "id": "quicklook-zelda",
+   "keys": {},
+   "labels": {},
+   "note": "Apple Quick Look AR: Link paragliding, frozen mid-glide. The same model as the TV loop - play him gliding on the TV, then place him at the TV's floor line and he steps out into the room.",
+   "orientation": "any",
+   "path": "../games/quicklook-zelda/index.html",
+   "thumb": "thumbs/quicklook-zelda.png",
+   "title": "Quick Look: Zelda Paraglider"
   }
  ]
 }
