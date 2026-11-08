@@ -1,0 +1,26 @@
+/* THE ARCADE — Scenario-style single-page arcade over the shared demo shell.
+   Same shell.js / games.json / stage / panel; only the picker becomes an arcade:
+   every category is an aisle, every aisle a horizontal row of phone cabinets. */
+body { background: #07080c; }
+#picker { background:
+  radial-gradient(900px 420px at 50% -80px, rgba(255,210,60,.14), rgba(255,210,60,0) 60%),
+  radial-gradient(700px 500px at 8% 110%, rgba(74,92,255,.12), rgba(74,92,255,0) 60%),
+  #07080c; }
+#arcadeHero { flex: none; text-align: center; padding: 20px 14px 2px; }
+.arcadeSign { font: 900 clamp(38px, 9vw, 64px)/1 Impact, "Arial Black", system-ui, sans-serif; letter-spacing: 3px; color: #ffd23c; text-shadow: 3px 3px 0 #a3201a, 0 0 26px rgba(255,210,60,.35); }
+.arcadeTag { margin-top: 6px; font: 900 clamp(16px, 4.4vw, 22px)/1.15 system-ui, sans-serif; color: #fff; letter-spacing: .4px; }
+.arcadeSub { margin: 6px auto 0; max-width: 520px; font-size: 13px; line-height: 1.45; color: #9aa0b4; }
+#pickHead { padding-top: 6px; }
+#pickTitle b { color: #ffd23c; letter-spacing: 2px; }
+/* aisles: horizontal snap rows of phone cabinets */
+#pickBody .grid { display: flex; flex-wrap: nowrap; overflow-x: auto; overflow-y: hidden; gap: 10px; padding: 4px 2px 12px; scroll-snap-type: x proximity; -webkit-overflow-scrolling: touch; scrollbar-width: thin; }
+#pickBody .card { flex: 0 0 auto; width: 148px; border-radius: 18px; scroll-snap-align: start; background: #10121a; }
+#pickBody .card .th, #pickBody .card video.pv { aspect-ratio: 4 / 5; }
+#pickBody .card .nm { white-space: normal; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; min-height: 32px; font-size: 12.5px; }
+#pickBody .card .thfb { display: flex; align-items: center; justify-content: center; width: 100%; aspect-ratio: 4 / 5; font: 900 64px/1 Impact, "Arial Black", system-ui, sans-serif; color: rgba(255,255,255,.92); text-shadow: 2px 3px 0 rgba(0,0,0,.35); }
+#pickBody .more { flex: 0 0 auto; width: 110px; align-self: stretch; }
+#pickBody .cat { font-size: 13px; margin-top: 20px; }
+.psearch { position: sticky; top: 0; z-index: 3; }
+
+/* arcade polish: hero already says it; drop the duplicate picker title */
+#pickTitle { display: none; }

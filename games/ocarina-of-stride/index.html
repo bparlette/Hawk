@@ -1,0 +1,803 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>OCARINA OF STRIDE — Link in Mario's world (fan prototype, local only)</title>
+<style>
+  html,body{margin:0;padding:0;background:#10101c;height:100%;overflow:hidden;font-family:monospace;
+    -webkit-user-select:none;user-select:none;-webkit-tap-highlight-color:transparent;}
+  #cv{position:fixed;inset:0;display:block;background:#5c94fc;image-rendering:pixelated;touch-action:none;}
+  .zone{position:fixed;bottom:0;height:46%;width:50%;z-index:4;pointer-events:none;
+    display:flex;align-items:flex-end;justify-content:center;padding-bottom:18px;box-sizing:border-box;}
+  #zL{left:0;} #zR{right:0;}
+  .zone .pill{border:2px solid rgba(255,255,255,.55);border-radius:999px;color:#fff;
+    background:rgba(20,20,40,.30);font-weight:bold;font-size:15px;padding:10px 18px;letter-spacing:1px;
+    transition:background .06s,transform .06s;}
+  .zone.on .pill{background:rgba(255,255,255,.38);transform:scale(1.12);}
+  .zone.dim{opacity:.28;}
+</style>
+</head>
+<body>
+<canvas id="cv"></canvas>
+<div class="zone" id="zL"><div class="pill">&#9664; LEFT FOOT</div></div>
+<div class="zone" id="zR"><div class="pill">RIGHT FOOT &#9654;</div></div>
+<script>
+'use strict';
+// ============================================================
+// OCARINA OF STRIDE — Link (Zelda II) dropped into the Mario level,
+// rebuilt as a strict 2-button game. Alternate LEFT/RIGHT taps to
+// stride; press BOTH to crouch-charge, release to leap (quick = hop).
+// Combat is stomp-only — and a falling stomp is Link's DOWNWARD
+// THRUST. Coins are rupees here. The Hero of Time can finally jump.
+// Fan prototype, local only.
+// ============================================================
+
+// ============================== setup ==============================
+const TILE = 48, ROWS = 12, COLS = 120;
+const cv = document.getElementById('cv'), ctx = cv.getContext('2d');
+ctx.imageSmoothingEnabled = false;
+let VW = 960, VH = 576, SCALE = 1; // world-space view (recomputed on resize)
+function resize(){
+  cv.width = innerWidth; cv.height = innerHeight;
+  SCALE = cv.height / 576;
+  if (cv.width / SCALE < 520) SCALE = cv.width / 520; // widen portrait view (more sky, ground stays at bottom)
+  VW = cv.width / SCALE; VH = cv.height / SCALE;
+}
+addEventListener('resize', resize); resize();
+const DEMO = new URLSearchParams(location.search).has('demo');
+
+// ============================== audio (all synthesized) ==============================
+const AU = {
+  ctx:null, master:null,
+  ensure(){
+    try{
+      if (!this.ctx){
+        const AC = window.AudioContext || window.webkitAudioContext;
+        if (!AC) return;
+        this.ctx = new AC();
+        this.master = this.ctx.createGain(); this.master.gain.value = 0.45;
+        this.master.connect(this.ctx.destination);
+        if (navigator.audioSession) { try{ navigator.audioSession.type = 'playback'; }catch(e){} }
+        // 1-sample silent buffer inside the first gesture (iOS unlock)
+        const b = this.ctx.createBuffer(1, 1, this.ctx.sampleRate);
+        const s = this.ctx.createBufferSource(); s.buffer = b; s.connect(this.ctx.destination); s.start();
+      }
+      if (this.ctx.state === 'suspended') this.ctx.resume();
+    }catch(e){}
+  },
+  tone(freq, dur, type, vol, slideTo, delay){
+    if (!this.ctx) return;
+    try{
+      const t0 = this.ctx.currentTime + (delay||0);
+      const o = this.ctx.createOscillator(), g = this.ctx.createGain();
+      o.type = type||'square'; o.frequency.setValueAtTime(freq, t0);
+      if (slideTo) o.frequency.exponentialRampToValueAtTime(Math.max(30, slideTo), t0 + dur);
+      g.gain.setValueAtTime(vol||0.15, t0);
+      g.gain.exponentialRampToValueAtTime(0.001, t0 + dur);
+      o.connect(g); g.connect(this.master); o.start(t0); o.stop(t0 + dur + 0.02);
+    }catch(e){}
+  },
+  noise(dur, fFrom, fTo, vol, delay){
+    if (!this.ctx) return;
+    try{
+      const t0 = this.ctx.currentTime + (delay||0);
+      const len = Math.max(1, Math.floor(this.ctx.sampleRate * dur));
+      const buf = this.ctx.createBuffer(1, len, this.ctx.sampleRate);
+      const d = buf.getChannelData(0);
+      for (let i=0;i<len;i++) d[i] = Math.random()*2-1;
+      const src = this.ctx.createBufferSource(); src.buffer = buf;
+      const f = this.ctx.createBiquadFilter(); f.type='lowpass';
+      f.frequency.setValueAtTime(fFrom, t0);
+      f.frequency.exponentialRampToValueAtTime(Math.max(40,fTo), t0+dur);
+      const g = this.ctx.createGain();
+      g.gain.setValueAtTime(vol||0.2, t0);
+      g.gain.exponentialRampToValueAtTime(0.001, t0+dur);
+      src.connect(f); f.connect(g); g.connect(this.master); src.start(t0);
+    }catch(e){}
+  },
+  step(side){ this.tone(side==='L'?150:196, 0.055, 'triangle', 0.20); this.noise(0.03, 900, 300, 0.05); },
+  jump(p){ this.tone(280 + 120*p, 0.20 + 0.10*p, 'sine', 0.22, 640 + 520*p); },
+  coin(){ this.tone(988, 0.07, 'square', 0.12); this.tone(1319, 0.28, 'square', 0.12, null, 0.07); },
+  stomp(){ this.noise(0.13, 900, 160, 0.30); this.tone(320, 0.14, 'sine', 0.22, 70); },
+  bonk(){ this.tone(120, 0.09, 'square', 0.20, 70); },
+  kick(){ this.tone(480, 0.10, 'square', 0.16, 940); },
+  hurt(){ this.tone(300, 0.28, 'sawtooth', 0.18, 82); },
+  chargeFull(){ this.tone(880, 0.06, 'square', 0.08); },
+  clear(){ [523,659,784,1047,1319].forEach((f,i)=> this.tone(f, 0.22, 'triangle', 0.16, null, i*0.09)); }
+};
+addEventListener('pointerdown', ()=>AU.ensure());
+addEventListener('keydown', ()=>AU.ensure());
+document.addEventListener('visibilitychange', ()=>{ if (!document.hidden) AU.ensure(); });
+
+// ============================== assets ==============================
+const IMG = {};
+function load(name, path){ const im = new Image(); im.src = path; IMG[name] = im; }
+['idle_0','walk_0','walk_1','walk_2','crouch_0',
+ 'jump_rise_0','jump_fall_0','hurt_0','win_0','thrust_0']
+ .forEach(n => load('link_'+n, 'assets/link/'+n+'.png'));
+['ground_top','ground_dirt','qblock_0','qblock_1','qblock_2','used','brick','pipe_tl','pipe_tr','pipe_bl','pipe_br',
+ 'rupee_0','rupee_1','rupee_2','flag','mountains'].forEach(n => load(n, 'assets/tiles/'+n+'.png'));
+['goomba_0','goomba_1','goomba_flat','koopa_0','koopa_1','shell'].forEach(n => load(n, 'assets/enemies/'+n+'.png'));
+
+// ============================== level (ported from mario-fighter) ==============================
+const GY = 9; // ground top row
+const grid = [];
+for (let y=0;y<ROWS;y++){ grid.push(new Array(COLS).fill(' ')); }
+function set(x,y,c){ if(x>=0&&x<COLS&&y>=0&&y<ROWS) grid[y][x]=c; }
+function groundSpan(x0,x1){ for(let x=x0;x<=x1;x++) for(let y=GY;y<ROWS;y++) set(x,y,'#'); }
+groundSpan(0,24); groundSpan(27,47); groundSpan(51,78); groundSpan(81,119);
+function pipe(x,h){ const top = GY-h; set(x,top,'['); set(x+1,top,']'); for(let y=top+1;y<GY;y++){ set(x,y,'{'); set(x+1,y,'}'); } }
+pipe(18,2); pipe(34,3); pipe(58,2); pipe(88,3);
+function blockRow(y, list){ list.forEach(([x,c])=>set(x,y,c)); }
+blockRow(5, [[8,'?'],[11,'B'],[12,'?'],[13,'B'],[22,'?'],[30,'?'],[31,'?'],[43,'?'],[44,'B'],[45,'B'],[64,'?'],[65,'B'],[66,'?'],[93,'?']]);
+blockRow(6, [[100,'?']]);
+function platform(x0,x1,y){ for(let x=x0;x<=x1;x++) set(x,y,'#'); }
+platform(52,55,6); platform(70,73,5); platform(82,85,6);
+for (let i=0;i<8;i++){ const x=104+i, h=i+1; for(let k=0;k<h;k++) set(x, GY-1-k, 'X'); }
+set(115, GY-1, 'X'); // flag base block
+const FLAG_X = 115;
+const coinSpots = [[25,7],[26,7],[48,7],[49,7],[50,7],[33,4],[34,4],[35,4],[52,5],[53,5],[54,5],[55,5],
+ [70,4],[71,4],[72,4],[73,4],[82,5],[83,5],[84,5],[85,5],[105,7],[106,6],[107,5],[108,4],[16,6],[59,6],[60,6]];
+let coins = [];
+function resetCoins(){ coins = coinSpots.map(([tx,ty])=>({x:tx*TILE+8, y:ty*TILE+6, w:32, h:36, taken:false, ph: Math.random()*6})); }
+resetCoins();
+const SOLID = new Set(['#','B','?','U','X','[',']','{','}']);
+function tileAt(tx,ty){ if(tx<0) return 'X'; if(tx>=COLS||ty>=ROWS) return ' '; if(ty<0) return ' '; return grid[ty][tx]; }
+function solidAt(tx,ty){ return SOLID.has(tileAt(tx,ty)); }
+
+// ============================== entities ==============================
+const GRAV = 2200, MAXV = 470;
+const P = { // player
+  x: 2*TILE, y: GY*TILE-86, w: 34, h: 86, vx:0, vy:0, grounded:false,
+  state:'idle', t:0, hearts:3, coins:0, score:0, invuln:0, coyote:0,
+  safeX: 2*TILE, safeY: GY*TILE-86, dead:false, win:false,
+  stepCount:0, lastFoot:null, lastTapT:-9, charging:false, charge:0, chargeFullSnd:false,
+  deadT:0
+};
+let enemies = [];
+function findGroundY(e){
+  for (let ty=0; ty<ROWS; ty++){ if (solidAt(Math.floor((e.x+e.w/2)/TILE), ty)) return ty*TILE; }
+  return ROWS*TILE;
+}
+function spawnEnemies(){
+  enemies = [];
+  const defs = [
+    ['goomba',14],['goomba',20],['goomba',29],['goomba',39],['goomba',46],['goomba',53],
+    ['goomba',56],['goomba',67],['goomba',75],['goomba',90],['goomba',98],
+    ['koopa',36],['koopa',61],['koopa',86],['koopa',95]
+  ];
+  for (const [kind,tx] of defs){
+    const isK = kind==='koopa';
+    const e = { kind, mode:'walk', x: tx*TILE+6, y: 0, w: isK?34:36, h: isK?66:38,
+      vx: -(isK?34:40), vy:0, t: Math.random()*2, dead:false, dying:0, shellVx:0 };
+    e.y = findGroundY(e) - e.h;
+    enemies.push(e);
+  }
+}
+spawnEnemies();
+let particles = [], popups = [], coinPops = [], bumpAnims = [];
+let camX = 0, shake = 0, time = 0, levelTime = 0, flagSlide = 0, started = false;
+
+// ============================== helpers ==============================
+function aabb(a,b){ return a.x < b.x+b.w && a.x+a.w > b.x && a.y < b.y+b.h && a.y+a.h > b.y; }
+function burst(x,y,n,cols,spd,life,grav){
+  spd = spd||160; life = life||0.5; grav = grav===undefined?500:grav;
+  for(let i=0;i<n;i++){ const a=Math.random()*6.28, s=spd*(0.3+Math.random()*0.7);
+    particles.push({x,y,vx:Math.cos(a)*s,vy:Math.sin(a)*s-60,life:life*(0.5+Math.random()*0.5),t:0,
+      col:cols[i%cols.length], size:2+Math.random()*3, grav}); }
+}
+function popup(x,y,txt,col){ popups.push({x,y,txt,col:col||'#fff',t:0}); }
+function addScore(n,x,y){ P.score+=n; popup(x,y,'+'+n,'#ffe95a'); }
+function dust(x,y,n){
+  for(let i=0;i<(n||2);i++)
+    particles.push({x:x+(Math.random()*14-7), y:y-2, vx:-40-Math.random()*70, vy:-20-Math.random()*45,
+      life:0.32, t:0, col:'#e8dcbc', size:2.5+Math.random()*2.5, grav:60});
+}
+
+// ============================== input — ONE path for keys / touch / mouse / bot ==============================
+// Two buttons only: LEFT FOOT and RIGHT FOOT.
+//  - alternating taps        = stride (momentum, feet sync to taps)
+//  - both held               = crouch-charge; release = leap (hold length = power; quick = hop)
+const IN = { L:false, R:false, space:false };
+const zL = document.getElementById('zL'), zR = document.getElementById('zR');
+let anyInput = false;
+function markInput(){ if (!anyInput){ anyInput = true; started = true; zL.classList.add('dim'); zR.classList.add('dim'); } }
+function press(side){
+  AU.ensure(); markInput();
+  if (side==='L'){ if (IN.L) return; IN.L = true; zL.classList.add('on'); }
+  if (side==='R'){ if (IN.R) return; IN.R = true; zR.classList.add('on'); }
+  if (P.win){ respawn(true); return; } // tap after COURSE CLEAR = run it again
+  if (P.dead) return;
+  if (IN.L && IN.R){
+    // both feet down -> begin charge (if grounded or in coyote window)
+    if ((P.grounded || P.coyote>0) && !P.charging){
+      P.charging = true; P.charge = 0; P.chargeFullSnd = false;
+    }
+    return; // the second foot's press is the jump gesture, not a stride step
+  }
+  strideStep(side);
+}
+function release(side){
+  if (side==='L'){ IN.L = false; zL.classList.remove('on'); }
+  if (side==='R'){ IN.R = false; zR.classList.remove('on'); }
+  if (P.charging && !IN.L && !IN.R) doJump();
+}
+function pressSpace(){
+  AU.ensure(); markInput();
+  if (IN.space) return; IN.space = true;
+  if (P.dead || P.win) return;
+  if ((P.grounded || P.coyote>0) && !P.charging){
+    P.charging = true; P.charge = 0; P.chargeFullSnd = false;
+  }
+}
+function releaseSpace(){
+  IN.space = false;
+  if (P.charging && !IN.L && !IN.R) doJump();
+}
+function strideStep(side){
+  const now = time;
+  const dtTap = now - P.lastTapT;
+  let imp;
+  if (side === P.lastFoot) imp = 34;            // same foot twice: inefficient
+  else if (dtTap < 0.07) imp = 45;              // mashing too fast to plant a foot
+  else if (dtTap <= 0.48) imp = 102;            // on-beat alternation: full stride
+  else imp = 88;
+  if (P.grounded){
+    P.vx = Math.min(MAXV, P.vx + imp);
+    P.stepCount++;
+    AU.step(side);
+    dust(P.x + P.w/2 + (side==='L'?-8:8), P.y + P.h, 2);
+  } else {
+    P.vx = Math.min(MAXV, P.vx + imp*0.30);    // slight air pump
+    P.stepCount++;
+  }
+  P.lastFoot = side; P.lastTapT = now;
+}
+function doJump(){
+  const c = Math.max(0.06, P.charge);
+  P.charging = false; P.charge = 0;
+  P.vy = -(720 + 400*c);
+  P.vx = Math.max(P.vx, 250) + 130*c;           // a charged leap at stride carries distance
+  if (P.vx > MAXV + 130) P.vx = MAXV + 130;
+  P.coyote = 0;
+  AU.jump(c);
+  burst(P.x+P.w/2, P.y+P.h, 7, ['#ffffff','#d8cfb0'], 100, 0.3, 200);
+}
+// keyboard
+addEventListener('keydown', e => {
+  if (['ArrowLeft','ArrowRight','ArrowUp','ArrowDown','Space'].includes(e.code)) e.preventDefault();
+  if (e.repeat) return;
+  if (e.code==='ArrowLeft' || e.code==='KeyA') press('L');
+  else if (e.code==='ArrowRight' || e.code==='KeyD') press('R');
+  else if (e.code==='Space' || e.code==='ArrowUp' || e.code==='KeyW') pressSpace();
+});
+addEventListener('keyup', e => {
+  if (e.code==='ArrowLeft' || e.code==='KeyA') release('L');
+  else if (e.code==='ArrowRight' || e.code==='KeyD') release('R');
+  else if (e.code==='Space' || e.code==='ArrowUp' || e.code==='KeyW') releaseSpace();
+});
+// touch + mouse on the canvas: left half = LEFT FOOT, right half = RIGHT FOOT (pointerId isolated)
+const ptrSide = new Map();
+cv.addEventListener('pointerdown', e => {
+  e.preventDefault();
+  const side = e.clientX < innerWidth/2 ? 'L' : 'R';
+  ptrSide.set(e.pointerId, side);
+  press(side);
+});
+function ptrEnd(e){
+  const side = ptrSide.get(e.pointerId);
+  if (side){ ptrSide.delete(e.pointerId); release(side); }
+}
+cv.addEventListener('pointerup', ptrEnd);
+cv.addEventListener('pointercancel', ptrEnd);
+cv.addEventListener('contextmenu', e => e.preventDefault());
+
+// ============================== physics (ported) ==============================
+function moveBody(b, dt, isPlayer){
+  b.x += b.vx*dt;
+  let ty0 = Math.floor(b.y/TILE), ty1 = Math.floor((b.y+b.h-1)/TILE);
+  if (b.vx > 0){ const tx = Math.floor((b.x+b.w)/TILE);
+    for(let ty=ty0;ty<=ty1;ty++) if(solidAt(tx,ty)){ b.x = tx*TILE - b.w - 0.01; if(isPlayer) hitWall(tx,ty); b.vx = Math.min(b.vx,0); break; } }
+  else if (b.vx < 0){ const tx = Math.floor(b.x/TILE);
+    for(let ty=ty0;ty<=ty1;ty++) if(solidAt(tx,ty)){ b.x = (tx+1)*TILE + 0.01; if(isPlayer) hitWall(tx,ty); b.vx = Math.max(b.vx,0); break; } }
+  b.y += b.vy*dt;
+  let tx0 = Math.floor(b.x/TILE), tx1 = Math.floor((b.x+b.w-1)/TILE);
+  b.grounded = false;
+  if (b.vy > 0){ const ty = Math.floor((b.y+b.h)/TILE);
+    for(let tx=tx0;tx<=tx1;tx++) if(solidAt(tx,ty)){ b.y = ty*TILE - b.h - 0.01; b.vy = 0; b.grounded = true; break; } }
+  else if (b.vy < 0){ const ty = Math.floor(b.y/TILE);
+    for(let tx=tx0;tx<=tx1;tx++) if(solidAt(tx,ty)){ b.y = (ty+1)*TILE + 0.01; b.vy = 0; if(isPlayer) headBump(tx,ty); break; } }
+}
+function hitWall(){}
+function headBump(tx,ty){
+  const c = tileAt(tx,ty);
+  if (c==='?'){
+    grid[ty][tx]='U';
+    coinPops.push({x:tx*TILE+8, y:(ty-1)*TILE, t:0});
+    bumpAnims.push({tx,ty,t:0});
+    P.coins++; addScore(200, tx*TILE+8, (ty-1)*TILE);
+    AU.coin();
+  } else if (c==='B' || c==='#'){
+    bumpAnims.push({tx,ty,t:0});
+    AU.bonk();
+  }
+}
+
+// ============================== combat — stomp only ==============================
+function stompKill(e){
+  AU.stomp();
+  if (e.kind==='koopa' && e.mode==='walk'){ toShell(e); addScore(100, e.x, e.y-10); }
+  else if (e.mode==='shell'){ /* handled by caller */ }
+  else { e.mode='dying'; e.dying=0; addScore(100, e.x, e.y-12);
+    burst(e.x+e.w/2, e.y+e.h/2, 8, ['#fff','#ffd75a'], 170, 0.45); }
+}
+function killEnemy(e, pts){
+  e.mode='dying'; e.dying=0; e.vy=-300; addScore(pts, e.x, e.y-12);
+  burst(e.x+e.w/2, e.y+e.h/2, 10, ['#ffffff','#ffd75a','#c8732a'], 200, 0.5);
+}
+function toShell(e){
+  const cx = e.x + e.w/2;
+  e.mode='shell'; e.kind='shell'; e.h=30; e.w=38; e.x = cx-19; e.y += (66-30); e.vx=0; e.shellVx=0; e.t=0;
+}
+function kickShell(e, dir){
+  e.shellVx = dir*390; addScore(50, e.x, e.y-8);
+  burst(e.x+e.w/2, e.y+e.h/2, 6, ['#fff','#7ee787'], 140, 0.35);
+  AU.kick();
+}
+function hurtPlayer(fromX){
+  if (P.invuln>0 || P.win || P.dead) return;
+  P.hearts--;
+  AU.hurt();
+  burst(P.x+P.w/2, P.y+30, 10, ['#ff5a4a','#fff'], 200, 0.5);
+  shake = Math.max(shake, 6);
+  if (P.hearts<=0){ die(); return; }
+  P.state='hurt'; P.t=0; P.invuln=1.4;
+  P.vx = (fromX > P.x+P.w/2) ? -180 : 60;
+  P.vy = -260;
+}
+function die(){
+  P.dead = true; P.state='down'; P.t=0; P.deadT=0; P.charging=false;
+}
+function respawn(full){
+  P.x = full ? 2*TILE : P.safeX; P.y = full ? GY*TILE-86 : P.safeY;
+  P.vx=0; P.vy=0; P.dead=false; P.state='idle'; P.invuln=1.5; P.charging=false; P.charge=0;
+  if (full){
+    P.hearts=3; P.coins=0; P.score=0; levelTime=0; flagSlide=0;
+    // restore ? blocks used this attempt
+    for (let y=0;y<ROWS;y++) for (let x=0;x<COLS;x++) if (grid[y][x]==='U') grid[y][x]='?';
+    resetCoins(); spawnEnemies();
+  }
+  camX = Math.max(0, Math.min(P.x-300, COLS*TILE-VW));
+}
+
+// ============================== spectate bot (?demo=1) ==============================
+// Drives the SAME press()/release() path as human input. Reactive:
+// strides to a target speed, hops small step-ups / stomps, charges
+// leaps for 3-high pipes and wide pits.
+const Bot = {
+  on: DEMO, tapT:0, nextFoot:'L', mode:'run', modeT:0, stuckT:0, lastX:0,
+  pressBothFor:0, releaseAt:0,
+  topAt(tx){ // topmost solid row in a column, or -1 (pit / nothing)
+    for (let ty=0; ty<ROWS; ty++) if (solidAt(tx,ty)) return ty;
+    return -1;
+  },
+  update(dt){
+    if (!this.on || P.dead || P.win) return;
+    const now = time;
+    const frontTx = Math.floor((P.x + P.w + 4)/TILE);
+    const myTop = this.topAt(Math.floor((P.x + P.w/2)/TILE));
+    // --- scan ahead for the next hazard ---
+    let hazard = null;
+    for (let dx=0; dx<=12; dx++){
+      const tx = frontTx + dx, top = this.topAt(tx);
+      const distPx = tx*TILE - (P.x + P.w);
+      if (top === -1){ // pit column: measure its width
+        let w = 1; while (this.topAt(tx+w) === -1 && w < 8) w++;
+        hazard = { type:'pit', dist:distPx, width:w };
+        break;
+      }
+      // step up only counts if the column is a real wall (solid all the way
+      // down to just above my support) — floating ? blocks and platforms
+      // overhead are not obstacles, the runner passes under them.
+      if (myTop !== -1 && top < myTop && solidAt(tx, myTop-1)){
+        hazard = { type:'step', dist:distPx, height: myTop - top };
+        break;
+      }
+    }
+    // --- enemy awareness ---
+    let foe = null;
+    for (const e of enemies){
+      if (e.dead || e.mode==='dying') continue;
+      const d = e.x - (P.x + P.w);
+      if (d > -10 && d < 170){ foe = { e, d }; break; }
+    }
+    // stuck detection
+    if (Math.abs(P.x - this.lastX) < 2 && P.grounded) this.stuckT += dt; else this.stuckT = 0;
+    this.lastX = P.x;
+
+    if (this.mode === 'charge'){
+      // abort the charge early if a walking enemy is about to walk into us
+      let danger = false;
+      for (const e of enemies){ if (!e.dead && e.mode==='walk' && Math.abs((e.x+e.w/2)-(P.x+P.w/2)) < 58) { danger = true; break; } }
+      if (danger || now >= this.releaseAt){ release('L'); release('R'); this.mode='run'; }
+      return;
+    }
+    if (this.mode === 'hop'){
+      if (now >= this.releaseAt){ release('L'); release('R'); this.mode='run'; }
+      return;
+    }
+    // decide a jump
+    let want = null; // {charge: seconds to hold}
+    if (hazard && P.grounded){
+      const sp = Math.max(P.vx, 200);
+      if (hazard.type === 'pit'){
+        if (hazard.dist < sp*0.34 + 26)
+          want = { charge: hazard.width >= 3 ? 0.34 : (P.vx > 400 ? 0.10 : 0.22) };
+      } else if (hazard.type === 'step'){
+        if (hazard.height >= 3 && hazard.dist < sp*0.52 + 30) want = { charge: 0.36 };
+        else if (hazard.height === 2 && hazard.dist < sp*0.30 + 22) want = { charge: 0.10 };
+        else if (hazard.height === 1 && hazard.dist < sp*0.26 + 18) want = { charge: 0.08 };
+      }
+    }
+    if (!want && foe && P.grounded){
+      const e = foe.e;
+      if (e.mode === 'shell' && e.shellVx < 0 && foe.d < 120) want = { charge: 0.12 }; // hop the returning shell
+      else if (e.mode === 'walk' && foe.d < 122 && foe.d > 8) want = { charge: 0.13 }; // stomp hop — earlier + higher so the landing is on top, not beside
+    }
+    if (!want && this.stuckT > 0.9 && P.grounded) want = { charge: 0.38 }; // wedged: big leap
+    if (want){
+      press('L'); press('R');
+      this.releaseAt = now + want.charge;
+      this.mode = want.charge > 0.16 ? 'charge' : 'hop';
+      return;
+    }
+    // stride: alternate taps on a cadence that tightens when slow
+    const interval = P.vx < 300 ? 0.115 : 0.155;
+    if (now - this.tapT >= interval && P.vx < 452){
+      const f = this.nextFoot;
+      press(f); release(f);
+      this.nextFoot = f === 'L' ? 'R' : 'L';
+      this.tapT = now;
+    }
+  }
+};
+
+// ============================== update ==============================
+function update(dt){
+  time += dt;
+  Bot.update(dt);
+  P.t += dt;
+  if (P.invuln>0) P.invuln-=dt;
+  if (P.coyote>0) P.coyote-=dt;
+  if (!P.dead && !P.win && started) levelTime += dt;
+
+  if (P.dead){
+    P.deadT += dt;
+    if (P.deadT > 0.95) respawn(true);
+  }
+  // ---- charge build ----
+  if (P.charging){
+    const was = P.charge;
+    P.charge = Math.min(1, P.charge + dt/0.5);
+    if (P.charge>=1 && !P.chargeFullSnd){ P.chargeFullSnd = true; AU.chargeFull(); }
+    if (was < 1 && P.charge >= 1) { /* full-charge tick played above */ }
+    if (!P.grounded && P.coyote<=0){ P.charging=false; P.charge=0; } // slid off an edge
+  }
+  // ---- horizontal: stride momentum + friction ----
+  if (P.win || P.dead){ P.vx = 0; }
+  else if (P.charging){ P.vx *= Math.exp(-1.7*dt); if (P.vx<4) P.vx=0; }
+  else if (P.grounded){ P.vx *= Math.exp(-1.25*dt); if (P.vx<3 && time-P.lastTapT>0.25) P.vx=0; }
+  else { P.vx *= Math.exp(-0.10*dt); }
+  if (P.state==='hurt' && P.t>0.45) P.state='idle';
+
+  // ---- gravity + move ----
+  const wasGrounded = P.grounded;
+  const prevVy = P.vy;
+  P.vy += GRAV*dt; if (P.vy>1150) P.vy=1150;
+  moveBody(P, dt, true);
+  if (P.grounded){
+    P.coyote = 0.09;
+    if (!wasGrounded && prevVy>420) burst(P.x+P.w/2, P.y+P.h, 7, ['#fff','#d8cfb0'], 100, 0.3, 200);
+    const txC = Math.floor((P.x+P.w/2)/TILE);
+    if (solidAt(txC, GY) && solidAt(txC-1, GY) && solidAt(txC+1, GY)){ P.safeX = P.x; P.safeY = P.y; }
+  }
+  // state label (render picks the frame from this + motion)
+  if (!P.dead && !P.win && P.state!=='hurt'){
+    if (P.charging) P.state='crouch';
+    else if (!P.grounded) P.state='air';
+    else if (P.vx > 12) P.state='walk';
+    else P.state='idle';
+  }
+  // ---- pit fall ----
+  if (P.y > ROWS*TILE + 60 && !P.dead){
+    P.hearts--;
+    AU.hurt(); shake = Math.max(shake,5);
+    if (P.hearts<=0){ die(); }
+    else { P.x=P.safeX; P.y=P.safeY-4; P.vx=0; P.vy=0; P.invuln=1.5; P.charging=false; }
+  }
+  // ---- win ----
+  if (!P.win && P.x+P.w > FLAG_X*TILE+2){
+    P.win = true; P.state='win'; P.vx=0; P.charging=false;
+    addScore(1000, P.x, P.y-20);
+    AU.clear();
+    burst(FLAG_X*TILE+24, 3*TILE, 26, ['#ff5a4a','#ffe95a','#7ee787','#9adcff'], 260, 0.9, 300);
+  }
+  if (P.win && flagSlide<5.4) flagSlide += dt*2.4;
+  // ---- speed-line juice at full stride ----
+  if (P.grounded && P.vx > 392 && Math.random()<0.5){
+    particles.push({x:P.x-6, y:P.y+14+Math.random()*56, vx:-P.vx*0.9, vy:0,
+      life:0.22, t:0, col:'#ffffff', size:2, grav:0});
+  }
+  // ---- coins ----
+  for (const c of coins){ if(!c.taken && aabb(P, c)){ c.taken=true; P.coins++; addScore(100, c.x, c.y-6);
+    AU.coin();
+    burst(c.x+16, c.y+16, 6, ['#ffd75a','#fff3a0'], 110, 0.35, 0); } }
+  for (const cp of coinPops){ cp.t += dt; cp.y -= 150*dt; }
+  coinPops = coinPops.filter(cp=>cp.t<0.38);
+  for (const b of bumpAnims) b.t += dt;
+  bumpAnims = bumpAnims.filter(b=>b.t<0.22);
+
+  // ---- enemies (ported, stomp-only interactions) ----
+  for (const e of enemies){
+    if (e.dead) continue;
+    e.t += dt;
+    if (e.mode==='dying'){ e.dying+=dt; if (e.kind!=='goomba'){ e.vy += GRAV*dt; e.y += e.vy*dt; } if (e.dying>0.45) e.dead=true; continue; }
+    if (e.mode==='shell'){
+      if (e.shellVx!==0){
+        e.vx = e.shellVx;
+        const oldVx = e.vx;
+        e.vy += GRAV*dt;
+        moveBody(e, dt, false);
+        if (e.vx===0 && oldVx!==0) e.shellVx = -oldVx;
+        for (const o of enemies){ if (o!==e && !o.dead && o.mode==='walk' && aabb(e,o)){ killEnemy(o, 200); AU.stomp(); } }
+        if (aabb(P,e) && P.invuln<=0 && !P.dead && !P.win){
+          const stomp = P.vy>60 && (P.y+P.h) - e.y < 20;
+          if (stomp){ e.shellVx=0; P.vy=-520; AU.stomp(); }
+          else hurtPlayer(e.x+e.w/2);
+        }
+      } else {
+        e.vy += GRAV*dt; moveBody(e, dt, false);
+        if (aabb(P,e) && P.invuln<=0 && !P.dead && !P.win){
+          const stomp = P.vy>60 && (P.y+P.h) - e.y < 20;
+          if (stomp){ P.vy=-520; kickShell(e, (e.x+e.w/2 >= P.x+P.w/2) ? 1 : -1); }
+          else if (P.grounded){ kickShell(e, (e.x+e.w/2 >= P.x+P.w/2) ? 1 : -1); } // walk into a still shell = kick it
+        }
+      }
+      continue;
+    }
+    // walk mode
+    e.vy += GRAV*dt;
+    const oldVx = e.vx;
+    moveBody(e, dt, false);
+    if (e.vx===0 && oldVx!==0) e.vx = -oldVx;
+    if (e.y > ROWS*TILE+60){ e.dead=true; continue; }
+    if (aabb(P,e) && !P.dead && !P.win){
+      const stomp = P.vy>60 && (P.y+P.h) - e.y < 22;
+      if (stomp){ stompKill(e); P.vy = (IN.L&&IN.R)||IN.space ? -790 : -505; }
+      else hurtPlayer(e.x+e.w/2);
+    }
+  }
+  enemies = enemies.filter(e=>!e.dead);
+
+  // ---- particles / popups / camera ----
+  for (const pt of particles){ pt.t+=dt; pt.x+=pt.vx*dt; pt.y+=pt.vy*dt; pt.vy+=pt.grav*dt; }
+  particles = particles.filter(p=>p.t<p.life);
+  for (const pp of popups){ pp.t+=dt; pp.y -= 34*dt; }
+  popups = popups.filter(p=>p.t<0.9);
+  if (shake>0) shake = Math.max(0, shake - dt*14);
+  const target = Math.max(0, Math.min(P.x + P.w/2 - VW*0.40, COLS*TILE - VW));
+  camX += (target - camX) * Math.min(1, dt*7);
+
+  window.__dbg = { x: Math.round(P.x), y: Math.round(P.y), speed: Math.round(Math.abs(P.vx)),
+    coins: P.coins, hearts: P.hearts, finished: P.win, time: Math.round(levelTime*10)/10,
+    state: P.state, charging: P.charging, charge: Math.round(P.charge*100)/100, score: P.score };
+}
+
+// ============================== render ==============================
+function drawSprite(img, cx, feetY){
+  // Link's Zelda II frames face RIGHT natively — same direction the
+  // game runs — so NO mirror (the Ryu build had to flip its frames).
+  const S = 96/95;
+  const w = img.width*S, h = img.height*S;
+  ctx.save();
+  ctx.translate(Math.round(cx), Math.round(feetY));
+  ctx.drawImage(img, -w/2, -h, w, h);
+  ctx.restore();
+}
+function linkFrame(){
+  const st = P.state, t = P.t;
+  if (P.dead || st==='down') return IMG.link_hurt_0;
+  if (st==='win') return IMG.link_win_0;
+  if (st==='hurt') return IMG.link_hurt_0;
+  if (st==='crouch') return IMG.link_crouch_0;
+  if (st==='air'){
+    if (P.vy < 0) return IMG.link_jump_rise_0;
+    // Signature move: falling onto an enemy = DOWNWARD THRUST, sword down.
+    for (const e of enemies){
+      if (e.dead || e.mode==='dying') continue;
+      const dx = Math.abs((e.x + e.w/2) - (P.x + P.w/2));
+      const gap = e.y - (P.y + P.h); // enemy top below Link's feet
+      if (dx < 56 && gap > -12 && gap < 100) return IMG.link_thrust_0;
+    }
+    return IMG.link_jump_fall_0;
+  }
+  if (st==='walk') return IMG['link_walk_'+(P.stepCount % 3)]; // feet advance one frame per stride tap
+  return IMG.link_idle_0;
+}
+function bumpOffset(tx,ty){ for (const b of bumpAnims) if (b.tx===tx&&b.ty===ty) return -Math.sin((b.t/0.22)*Math.PI)*9; return 0; }
+
+function render(){
+  const DY = VH - 576; // extra sky when the view widens in portrait
+  const grad = ctx.createLinearGradient(0,0,0,cv.height);
+  grad.addColorStop(0,'#5c94fc'); grad.addColorStop(0.75,'#5c94fc'); grad.addColorStop(1,'#9ecbff');
+  ctx.fillStyle = grad; ctx.fillRect(0,0,cv.width,cv.height);
+  ctx.save();
+  ctx.scale(SCALE, SCALE);
+  const shX = shake ? (Math.random()-0.5)*shake : 0, shY = shake ? (Math.random()-0.5)*shake : 0;
+  ctx.translate(shX, shY + DY);
+  // clouds (parallax 0.2)
+  ctx.fillStyle = 'rgba(255,255,255,0.95)';
+  for (let i=0;i<16;i++){
+    const cx = ((i*431 + 120 - camX*0.2) % (VW + 420) + VW + 420) % (VW + 420) - 160;
+    const cy = 30 + (i%4)*36 - DY*0.4;
+    ctx.beginPath(); ctx.ellipse(cx, cy, 42, 15, 0, 0, 6.29); ctx.ellipse(cx+30, cy+3, 30, 12, 0, 0, 6.29); ctx.ellipse(cx-32, cy+4, 26, 11, 0, 0, 6.29); ctx.fill();
+  }
+  // mountains (parallax 0.35)
+  const mImg = IMG.mountains, mW = (mImg.width||510)*2.1, mH = 160*2.1;
+  if (mImg.complete && mImg.width){
+    let startX = -(camX*0.35 % mW); if (startX>0) startX -= mW;
+    for (let x=startX; x<VW; x+=mW) ctx.drawImage(mImg, x, GY*TILE - mH + 66, mW, mH);
+  }
+  // near hill silhouettes (parallax 0.55)
+  ctx.fillStyle = 'rgba(46,160,60,0.55)';
+  for (let i=0;i<12;i++){
+    const hx = ((i*733 + 300 - camX*0.55) % (VW+760) + VW+760) % (VW+760) - 380;
+    ctx.beginPath(); ctx.ellipse(hx, GY*TILE+30, 170, 52, 0, Math.PI, 0); ctx.fill();
+  }
+
+  ctx.save(); ctx.translate(-Math.round(camX), 0);
+  // tiles
+  const tx0 = Math.max(0, Math.floor(camX/TILE)-1), tx1 = Math.min(COLS-1, Math.floor((camX+VW)/TILE)+1);
+  for (let ty=0; ty<ROWS; ty++) for (let tx=tx0; tx<=tx1; tx++){
+    const c = grid[ty][tx]; if (c===' ') continue;
+    const dx = tx*TILE, dy = ty*TILE + (c==='?'||c==='B'||c==='U' ? bumpOffset(tx,ty) : 0);
+    let img = null;
+    if (c==='#') img = solidAt(tx,ty-1) ? IMG.ground_dirt : IMG.ground_top;
+    else if (c==='?') img = IMG['qblock_'+(Math.floor(time*3)%3)];
+    else if (c==='U') img = IMG.used;
+    else if (c==='B') img = IMG.brick;
+    else if (c==='X') img = IMG.used;
+    else if (c==='[') img = IMG.pipe_tl; else if (c===']') img = IMG.pipe_tr;
+    else if (c==='{') img = IMG.pipe_bl; else if (c==='}') img = IMG.pipe_br;
+    if (img) ctx.drawImage(img, dx, dy, TILE, TILE);
+  }
+  // bushes
+  ctx.fillStyle = '#2d9e2d';
+  for (const bx of [5, 27.5, 47.5, 68, 97]){
+    const sx = bx*TILE; if (sx < camX-100 || sx > camX+VW+100) continue;
+    ctx.beginPath(); ctx.ellipse(sx, GY*TILE-8, 44, 17, 0, 0, 6.29); ctx.ellipse(sx+34, GY*TILE-6, 30, 13, 0, 0, 6.29); ctx.fill();
+  }
+  // flagpole
+  const fx = FLAG_X*TILE + 22;
+  ctx.fillStyle = '#1a8c1a'; ctx.fillRect(fx-2, TILE, 4, (GY-1)*TILE - TILE);
+  ctx.fillStyle = '#0d5c0d'; ctx.beginPath(); ctx.arc(fx, TILE-6, 7, 0, 6.29); ctx.fill();
+  const flagY = TILE + 6 + flagSlide*TILE;
+  if (IMG.flag.complete) ctx.drawImage(IMG.flag, fx-46, flagY, 44, 44);
+  // coins
+  for (const c of coins){ if (c.taken) continue;
+    if (c.x < camX-60 || c.x > camX+VW+60) continue;
+    const f = Math.floor((time*7 + c.ph)%3);
+    const bob = Math.sin(time*3 + c.ph)*2;
+    ctx.drawImage(IMG['rupee_'+f], c.x+6, c.y+bob, 36, 36);
+  }
+  for (const cp of coinPops) ctx.drawImage(IMG.rupee_0, cp.x, cp.y, 32, 32);
+  // enemies
+  for (const e of enemies){
+    if (e.dead) continue;
+    if (e.x < camX-90 || e.x > camX+VW+90) continue;
+    const cx = e.x + e.w/2, feet = e.y + e.h;
+    let img;
+    if (e.mode==='dying' && e.kind==='goomba') img = IMG.goomba_flat;
+    else if (e.mode==='shell') img = IMG.shell;
+    else if (e.kind==='goomba') img = IMG['goomba_'+(Math.floor(e.t*6)%2)];
+    else img = IMG['koopa_'+(Math.floor(e.t*5)%2)];
+    const dw = e.mode==='shell' ? 42 : (e.kind==='koopa' ? 40 : 42);
+    const dh = e.mode==='shell' ? 34 : (e.kind==='koopa' ? 72 : 42);
+    ctx.save();
+    if (e.mode==='dying' && e.kind!=='goomba'){ ctx.translate(cx, feet-10); ctx.rotate(Math.PI); ctx.translate(-cx, -(feet-10));
+      ctx.globalAlpha = Math.max(0, 1 - e.dying*1.4); }
+    const flip = e.mode==='walk' && e.vx>0;
+    ctx.translate(cx, feet); if (flip) ctx.scale(-1,1);
+    ctx.drawImage(img, -dw/2, -dh, dw, dh);
+    ctx.restore();
+  }
+  // player
+  if (!(P.invuln>0 && Math.floor(time*14)%2===0) || P.dead){
+    const frame = linkFrame();
+    if (frame && frame.complete && frame.width){
+      ctx.save();
+      if (P.charging && P.charge>0.55) ctx.translate((Math.random()-0.5)*2.5, 0); // full-charge shiver
+      drawSprite(frame, P.x + P.w/2, P.y + P.h);
+      ctx.restore();
+    }
+  }
+  // charge bar above the player while crouch-charging
+  if (P.charging){
+    const bw = 54, bx = P.x + P.w/2 - bw/2, by = P.y - 20;
+    ctx.fillStyle = 'rgba(0,0,0,0.45)'; ctx.fillRect(bx-2, by-2, bw+4, 10);
+    ctx.fillStyle = P.charge>=1 ? '#ffe95a' : '#7ee787';
+    ctx.fillRect(bx, by, bw * P.charge, 6);
+  }
+  // particles
+  for (const pt of particles){ ctx.globalAlpha = Math.max(0, 1 - pt.t/pt.life); ctx.fillStyle = pt.col;
+    ctx.fillRect(pt.x-pt.size/2, pt.y-pt.size/2, pt.size, pt.size); }
+  ctx.globalAlpha = 1;
+  // popups
+  ctx.font = 'bold 17px monospace'; ctx.textAlign = 'center';
+  for (const pp of popups){ ctx.globalAlpha = Math.max(0, 1 - pp.t/0.9); ctx.fillStyle = '#3a2400';
+    ctx.fillText(pp.txt, pp.x+1, pp.y+1); ctx.fillStyle = pp.col; ctx.fillText(pp.txt, pp.x, pp.y); }
+  ctx.globalAlpha = 1; ctx.textAlign = 'left';
+  ctx.restore(); // world
+  ctx.restore(); // view
+
+  // ================= HUD (screen space, minimal) =================
+  const W = cv.width, H = cv.height;
+  ctx.fillStyle = 'rgba(0,0,0,0.25)'; ctx.fillRect(0,0,W,44);
+  ctx.font = 'bold 20px monospace'; ctx.fillStyle = '#fff';
+  ctx.fillText('SCORE ' + String(P.score).padStart(6,'0'), 16, 29);
+  const coinX = Math.min(280, W*0.30);
+  if (IMG.rupee_0.complete) ctx.drawImage(IMG.rupee_0, coinX, 8, 26, 26);
+  ctx.fillText('RUPEES × ' + String(P.coins).padStart(2,'0'), coinX+32, 29);
+  const mm = Math.floor(levelTime/60), ss = (levelTime%60);
+  ctx.fillText('TIME ' + mm + ':' + (ss<10?'0':'') + ss.toFixed(1), Math.min(520, W*0.55), 29);
+  for (let i=0;i<3;i++){
+    const hx = W-120 + i*38, hy = 12;
+    ctx.fillStyle = i < P.hearts ? '#ff4757' : 'rgba(255,255,255,0.25)';
+    ctx.beginPath();
+    ctx.moveTo(hx+11, hy+20);
+    ctx.bezierCurveTo(hx-6, hy+6, hx+2, hy-6, hx+11, hy+4);
+    ctx.bezierCurveTo(hx+20, hy-6, hx+28, hy+6, hx+11, hy+20);
+    ctx.fill();
+  }
+  // slim stride-speed bar, bottom center
+  const sbw = 170, sbx = W/2 - sbw/2, sby = H - 16;
+  ctx.fillStyle = 'rgba(0,0,0,0.35)'; ctx.fillRect(sbx-2, sby-2, sbw+4, 8);
+  ctx.fillStyle = P.vx > 392 ? '#ffe95a' : '#9adcff';
+  ctx.fillRect(sbx, sby, sbw * Math.min(1, Math.abs(P.vx)/MAXV), 4);
+  if (!started && !DEMO){
+    ctx.fillStyle = 'rgba(0,0,0,0.45)'; ctx.fillRect(W/2-330, H-110, 660, 42);
+    ctx.fillStyle = '#fff'; ctx.font = 'bold 16px monospace'; ctx.textAlign='center';
+    ctx.fillText('Link can finally jump: alternate LEFT / RIGHT taps to run — hold BOTH, release to leap', W/2, H-83);
+    ctx.textAlign='left';
+  }
+  if (P.win){
+    ctx.fillStyle = 'rgba(0,0,0,0.35)'; ctx.fillRect(0, H/2-90, W, 160);
+    ctx.fillStyle = '#ffe95a'; ctx.font = 'bold 54px monospace'; ctx.textAlign='center';
+    ctx.fillText('TRIFORCE GET!', W/2, H/2-22);
+    ctx.fillStyle = '#fff'; ctx.font = 'bold 22px monospace';
+    ctx.fillText('Time ' + mm + ':' + (ss<10?'0':'') + ss.toFixed(1) + ' · Rupees ' + P.coins + ' · Score ' + P.score, W/2, H/2+24);
+    ctx.font = 'bold 16px monospace';
+    ctx.fillText('Tap to run it again', W/2, H/2+52);
+    ctx.textAlign='left';
+  }
+  if (P.dead){
+    ctx.fillStyle = '#fff'; ctx.font = 'bold 30px monospace'; ctx.textAlign='center';
+    ctx.fillText('LINK IS DOWN!', W/2, H/2);
+    ctx.textAlign='left';
+  }
+}
+
+// ============================== loop ==============================
+let last = performance.now();
+function frame(now){
+  let dt = Math.min(0.033, (now-last)/1000); last = now;
+  update(dt);
+  render();
+  requestAnimationFrame(frame);
+}
+requestAnimationFrame(frame);
+window.__game = { P, enemies: ()=>enemies, grid, IN, press, release };
+</script>
+</body>
+</html>

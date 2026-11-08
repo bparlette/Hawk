@@ -12,7 +12,8 @@
   "Classic Homebrew",
   "Cat Arcade",
   "Cat Arcade v2",
-  "Arcade Hub"
+  "Arcade Hub",
+  "Playable Ads"
  ],
  "games": [
   {
@@ -5902,6 +5903,300 @@
    "orientation": "any",
    "path": "../games/suds-scrub/index.html",
    "title": "Suds Scrub"
+  },
+  {
+   "autostart": [],
+   "category": "Originals",
+   "id": "trail-stride",
+   "keys": {
+    "jump": "Space",
+    "left": "ArrowLeft",
+    "right": "ArrowRight"
+   },
+   "labels": {},
+   "note": "Two-button nature stride runner: alternate taps to run on the beat, double-press to hop logs, hold and release to leap creeks. Mud, a rock garden, a downhill, a rival deer, and a waterfall finish in about 60 seconds.",
+   "orientation": "landscape",
+   "path": "../games/trail-stride/index.html",
+   "title": "TRAIL STRIDE!"
+  },
+  {
+   "autostart": [],
+   "category": "Originals",
+   "id": "ocarina-of-stride",
+   "keys": {
+    "jump": "Space",
+    "left": "ArrowLeft",
+    "right": "ArrowRight"
+   },
+   "labels": {},
+   "note": "Link in Mario's world, rebuilt as a pure 2-button game for the Ocarina of Time remake: alternate taps to stride, double-press to hop, hold and release for a charged leap. Falling onto an enemy brings the Downward Thrust. Rupees, not coins.",
+   "orientation": "landscape",
+   "path": "../games/ocarina-of-stride/index.html",
+   "title": "Ocarina of Stride"
+  },
+  {
+   "autostart": [],
+   "category": "Playable Ads",
+   "id": "ad-boilerbloom",
+   "keys": {},
+   "labels": {},
+   "note": "Playable ad sample from Scenario's library (Lane battle · 3D). One self-contained file, about 35-45 seconds: Boilerbloom.",
+   "orientation": "portrait",
+   "path": "../games/playable-ads/boilerbloom/index.html",
+   "title": "Boilerbloom"
+  },
+  {
+   "autostart": [],
+   "category": "Playable Ads",
+   "id": "ad-bounce-blaster",
+   "keys": {},
+   "labels": {},
+   "note": "Playable ad sample from Scenario's library (Trick shot · 2D). One self-contained file, about 35-45 seconds: Bounce Blaster.",
+   "orientation": "portrait",
+   "path": "../games/playable-ads/bounce-blaster/index.html",
+   "title": "Bounce Blaster"
+  },
+  {
+   "autostart": [],
+   "category": "Playable Ads",
+   "id": "ad-causeway-crush",
+   "keys": {},
+   "labels": {},
+   "note": "Playable ad sample from Scenario's library (Crowd runner · 3D). One self-contained file, about 35-45 seconds: Causeway Crush.",
+   "orientation": "portrait",
+   "path": "../games/playable-ads/causeway-crush/index.html",
+   "title": "Causeway Crush"
+  },
+  {
+   "autostart": [],
+   "category": "Playable Ads",
+   "id": "ad-cozy-bean-cafe",
+   "keys": {},
+   "labels": {},
+   "note": "Playable ad sample from Scenario's library (Idle arcade · 2D). One self-contained file, about 35-45 seconds: Cozy Bean Cafe.",
+   "orientation": "portrait",
+   "path": "../games/playable-ads/cozy-bean-cafe/index.html",
+   "title": "Cozy Bean Cafe"
+  },
+  {
+   "autostart": [],
+   "category": "Playable Ads",
+   "id": "ad-embernest",
+   "keys": {},
+   "labels": {},
+   "note": "Playable ad sample from Scenario's library (Merge · 2D). One self-contained file, about 35-45 seconds: Embernest.",
+   "orientation": "portrait",
+   "path": "../games/playable-ads/embernest/index.html",
+   "title": "Embernest"
+  },
+  {
+   "autostart": [],
+   "category": "Playable Ads",
+   "id": "ad-evolve-rush",
+   "keys": {},
+   "labels": {},
+   "note": "Playable ad sample from Scenario's library (Evolution runner · 3D). One self-contained file, about 35-45 seconds: Evolve Rush.",
+   "orientation": "portrait",
+   "path": "../games/playable-ads/evolve-rush/index.html",
+   "title": "Evolve Rush"
+  },
+  {
+   "autostart": [],
+   "category": "Playable Ads",
+   "id": "ad-glazeline",
+   "keys": {},
+   "labels": {},
+   "note": "Playable ad sample from Scenario's library (Block puzzle · 2D). One self-contained file, about 35-45 seconds: Glazeline.",
+   "orientation": "portrait",
+   "path": "../games/playable-ads/glazeline/index.html",
+   "title": "Glazeline"
+  },
+  {
+   "autostart": [],
+   "category": "Playable Ads",
+   "id": "ad-glimmerbrew",
+   "keys": {},
+   "labels": {},
+   "note": "Playable ad sample from Scenario's library (Idle arcade · 2D). One self-contained file, about 35-45 seconds: Glimmerbrew.",
+   "orientation": "portrait",
+   "path": "../games/playable-ads/glimmerbrew/index.html",
+   "title": "Glimmerbrew"
+  },
+  {
+   "autostart": [],
+   "category": "Playable Ads",
+   "id": "ad-gold-rush-rescue",
+   "keys": {},
+   "labels": {},
+   "note": "Playable ad sample from Scenario's library (Pin pull · 2D). One self-contained file, about 35-45 seconds: Gold Rush Rescue.",
+   "orientation": "portrait",
+   "path": "../games/playable-ads/gold-rush-rescue/index.html",
+   "title": "Gold Rush Rescue"
+  },
+  {
+   "autostart": [],
+   "category": "Playable Ads",
+   "id": "ad-gulp-city",
+   "keys": {},
+   "labels": {},
+   "note": "Playable ad sample from Scenario's library (Hole game · 3D). One self-contained file, about 35-45 seconds: Gulp City.",
+   "orientation": "portrait",
+   "path": "../games/playable-ads/gulp-city/index.html",
+   "title": "Gulp City"
+  },
+  {
+   "autostart": [],
+   "category": "Playable Ads",
+   "id": "ad-hopsplat",
+   "keys": {},
+   "labels": {},
+   "note": "Playable ad sample from Scenario's library (Paint train · 2D). One self-contained file, about 35-45 seconds: Hopsplat.",
+   "orientation": "portrait",
+   "path": "../games/playable-ads/hopsplat/index.html",
+   "title": "Hopsplat"
+  },
+  {
+   "autostart": [],
+   "category": "Playable Ads",
+   "id": "ad-inkwash-vigil",
+   "keys": {},
+   "labels": {},
+   "note": "Playable ad sample from Scenario's library (Survivor · 2D). One self-contained file, about 35-45 seconds: Inkwash Vigil.",
+   "orientation": "portrait",
+   "path": "../games/playable-ads/inkwash-vigil/index.html",
+   "title": "Inkwash Vigil"
+  },
+  {
+   "autostart": [],
+   "category": "Playable Ads",
+   "id": "ad-jiggle-jars",
+   "keys": {},
+   "labels": {},
+   "note": "Playable ad sample from Scenario's library (Sort puzzle · 2D). One self-contained file, about 35-45 seconds: Jiggle Jars.",
+   "orientation": "portrait",
+   "path": "../games/playable-ads/jiggle-jars/index.html",
+   "title": "Jiggle Jars"
+  },
+  {
+   "autostart": [],
+   "category": "Playable Ads",
+   "id": "ad-lantern-lift",
+   "keys": {},
+   "labels": {},
+   "note": "Playable ad sample from Scenario's library (Triple match · 2D). One self-contained file, about 35-45 seconds: Lantern Lift.",
+   "orientation": "portrait",
+   "path": "../games/playable-ads/lantern-lift/index.html",
+   "title": "Lantern Lift"
+  },
+  {
+   "autostart": [],
+   "category": "Playable Ads",
+   "id": "ad-nutbolt-legion",
+   "keys": {},
+   "labels": {},
+   "note": "Playable ad sample from Scenario's library (Lane shooter · 2D). One self-contained file, about 35-45 seconds: Nutbolt Legion.",
+   "orientation": "portrait",
+   "path": "../games/playable-ads/nutbolt-legion/index.html",
+   "title": "Nutbolt Legion"
+  },
+  {
+   "autostart": [],
+   "category": "Playable Ads",
+   "id": "ad-reefhold",
+   "keys": {},
+   "labels": {},
+   "note": "Playable ad sample from Scenario's library (Tower defense · 2D). One self-contained file, about 35-45 seconds: Reefhold.",
+   "orientation": "portrait",
+   "path": "../games/playable-ads/reefhold/index.html",
+   "title": "Reefhold"
+  },
+  {
+   "autostart": [],
+   "category": "Playable Ads",
+   "id": "ad-reeflume",
+   "keys": {},
+   "labels": {},
+   "note": "Playable ad sample from Scenario's library (Match-3 · 2D). One self-contained file, about 35-45 seconds: Reeflume.",
+   "orientation": "portrait",
+   "path": "../games/playable-ads/reeflume/index.html",
+   "title": "Reeflume"
+  },
+  {
+   "autostart": [],
+   "category": "Playable Ads",
+   "id": "ad-roost-shuffle",
+   "keys": {},
+   "labels": {},
+   "note": "Playable ad sample from Scenario's library (Sort puzzle · 2D). One self-contained file, about 35-45 seconds: Roost Shuffle.",
+   "orientation": "portrait",
+   "path": "../games/playable-ads/roost-shuffle/index.html",
+   "title": "Roost Shuffle"
+  },
+  {
+   "autostart": [],
+   "category": "Playable Ads",
+   "id": "ad-scoop-yeti",
+   "keys": {},
+   "labels": {},
+   "note": "Playable ad sample from Scenario's library (Sort puzzle · 2D). One self-contained file, about 35-45 seconds: Scoop Yeti.",
+   "orientation": "portrait",
+   "path": "../games/playable-ads/scoop-yeti/index.html",
+   "title": "Scoop Yeti"
+  },
+  {
+   "autostart": [],
+   "category": "Playable Ads",
+   "id": "ad-shardstorm-rookie",
+   "keys": {},
+   "labels": {},
+   "note": "Playable ad sample from Scenario's library (Survivor · 2D). One self-contained file, about 35-45 seconds: Shardstorm Rookie.",
+   "orientation": "portrait",
+   "path": "../games/playable-ads/shardstorm-rookie/index.html",
+   "title": "Shardstorm Rookie"
+  },
+  {
+   "autostart": [],
+   "category": "Playable Ads",
+   "id": "ad-sky-stacker",
+   "keys": {},
+   "labels": {},
+   "note": "Playable ad sample from Scenario's library (Timing stacker · 2D). One self-contained file, about 35-45 seconds: Sky Stacker.",
+   "orientation": "portrait",
+   "path": "../games/playable-ads/sky-stacker/index.html",
+   "title": "Sky Stacker"
+  },
+  {
+   "autostart": [],
+   "category": "Playable Ads",
+   "id": "ad-sunskiff",
+   "keys": {},
+   "labels": {},
+   "note": "Playable ad sample from Scenario's library (Racing · 3D). One self-contained file, about 35-45 seconds: Sunskiff.",
+   "orientation": "portrait",
+   "path": "../games/playable-ads/sunskiff/index.html",
+   "title": "Sunskiff"
+  },
+  {
+   "autostart": [],
+   "category": "Playable Ads",
+   "id": "ad-tincture-tide",
+   "keys": {},
+   "labels": {},
+   "note": "Playable ad sample from Scenario's library (Sort puzzle · 2D). One self-contained file, about 35-45 seconds: Tincture Tide.",
+   "orientation": "portrait",
+   "path": "../games/playable-ads/tincture-tide/index.html",
+   "title": "Tincture Tide"
+  },
+  {
+   "autostart": [],
+   "category": "Playable Ads",
+   "id": "ad-tug-tangle",
+   "keys": {},
+   "labels": {},
+   "note": "Playable ad sample from Scenario's library (Jam puzzle · 2D). One self-contained file, about 35-45 seconds: Tug Tangle.",
+   "orientation": "portrait",
+   "path": "../games/playable-ads/tug-tangle/index.html",
+   "title": "Tug Tangle"
   }
  ]
 }

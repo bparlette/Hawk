@@ -3,6 +3,8 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<meta name="apple-mobile-web-app-capable" content="yes" />
+<meta name="mobile-web-app-capable" content="yes" />
 <meta name="color-scheme" content="light dark" />
 <link rel="icon" href="data:," />
 <title>Mario × Street Fighter Game</title>
@@ -108,6 +110,11 @@
     .cabinet{padding:8px;}
     header{padding-top:20px;}
   }
+
+/* fullscreen fallback (iPhone): fill mode + tip toast */
+body.fillmode #stageShell { position: fixed; inset: 0; width: 100dvw; height: 100dvh; z-index: 60; background: #000; margin: 0; border-radius: 0; }
+#fsToast { position: fixed; left: 50%; bottom: max(18px, env(safe-area-inset-bottom)); transform: translateX(-50%) translateY(16px); max-width: min(92vw, 430px); background: rgba(12,16,28,.94); color: #eef2ff; border: 1px solid rgba(255,255,255,.22); border-radius: 12px; padding: 10px 14px; font-size: 14px; line-height: 1.35; text-align: center; opacity: 0; pointer-events: none; transition: opacity .25s ease, transform .25s ease; z-index: 80; }
+#fsToast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
 </style>
 </head>
 <body>
@@ -195,11 +202,32 @@
 'use strict';
 /* ================= page chrome: demo mode + fullscreen ================= */
 if (new URLSearchParams(location.search).has('demo')) document.body.classList.add('demo');
-document.getElementById('fsBtn').addEventListener('click', () => {
-  const el = document.getElementById('stageShell');
-  if (document.fullscreenElement) document.exitFullscreen();
-  else if (el.requestFullscreen) el.requestFullscreen();
-});
+(function(){
+  var fsBtn = document.getElementById('fsBtn');
+  var shellEl = document.getElementById('stageShell');
+  var toast = document.createElement('div');
+  toast.id = 'fsToast';
+  toast.textContent = 'iPhone Safari has no web fullscreen — for true full screen: Share \u2192 Add to Home Screen, then launch it from there.';
+  document.body.appendChild(toast);
+  function showToast(){ toast.classList.add('show'); setTimeout(function(){ toast.classList.remove('show'); }, 4200); }
+  function fillMode(on){
+    document.body.classList.toggle('fillmode', on);
+    if (typeof fit === 'function') setTimeout(fit, 60);
+  }
+  fsBtn.addEventListener('click', function(){
+    var inFs = document.fullscreenElement || document.webkitFullscreenElement;
+    if (inFs) { (document.exitFullscreen || document.webkitExitFullscreen).call(document); return; }
+    if (document.body.classList.contains('fillmode')) { fillMode(false); return; }
+    var req = shellEl.requestFullscreen || shellEl.webkitRequestFullscreen;
+    if (req) {
+      try {
+        var p = req.call(shellEl);
+        if (p && p.catch) p.catch(function(){ fillMode(true); showToast(); });
+      } catch (e) { fillMode(true); showToast(); }
+    } else { fillMode(true); showToast(); }
+  });
+  document.addEventListener('fullscreenchange', function(){ if (typeof fit === 'function') setTimeout(fit, 60); });
+})();
 
 /* ============================== setup ============================== */
 const TILE = 48, ROWS = 12, COLS = 120;
