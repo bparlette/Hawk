@@ -1,0 +1,735 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<title>Suds Scrub — a soapy ASMR wash</title>
+<style>
+  * { margin:0; padding:0; box-sizing:border-box; }
+  html, body {
+    width:100%; height:100%; overflow:hidden; background:#101623;
+    font-family: ui-rounded, "SF Pro Rounded", system-ui, -apple-system, "Segoe UI", sans-serif;
+    -webkit-user-select:none; user-select:none;
+    -webkit-tap-highlight-color: transparent;
+    touch-action:none; overscroll-behavior:none;
+  }
+  canvas { position:absolute; inset:0; display:block; pointer-events:none; }
+  #scene { z-index:0; }
+  #frost { z-index:1; }
+  #fx    { z-index:2; }
+
+  /* ---------- HUD ---------- */
+  #hud {
+    position:absolute; top:0; left:0; right:0; z-index:5;
+    display:flex; align-items:flex-start; justify-content:space-between;
+    padding: calc(env(safe-area-inset-top, 0px) + 12px) 14px 0 14px;
+    pointer-events:none;
+  }
+  #meter {
+    background: rgba(16,24,40,.55);
+    border: 1px solid rgba(255,255,255,.18);
+    backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px);
+    border-radius: 999px; padding: 7px 14px 8px;
+    color:#eaf4ff; font-weight:700; letter-spacing:.06em;
+    font-size: 15px; display:flex; align-items:center; gap:10px;
+    box-shadow: 0 4px 18px rgba(0,0,0,.25);
+  }
+  #meter .bar {
+    width: 110px; height: 8px; border-radius: 99px;
+    background: rgba(255,255,255,.18); overflow:hidden;
+  }
+  #meter .fill {
+    height:100%; width:0%;
+    background: linear-gradient(90deg,#ffd98a,#ffb45e);
+    border-radius:99px; transition: width .25s ease;
+  }
+  #muteBtn {
+    pointer-events:auto; cursor:pointer;
+    width:44px; height:44px; border-radius:50%;
+    border: 1px solid rgba(255,255,255,.22);
+    background: rgba(16,24,40,.55);
+    backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px);
+    color:#fff; font-size:20px; line-height:1;
+    display:flex; align-items:center; justify-content:center;
+    box-shadow: 0 4px 18px rgba(0,0,0,.25);
+  }
+  #muteBtn:active { transform: scale(.93); }
+
+  /* ---------- Overlays ---------- */
+  .overlay {
+    position:absolute; inset:0; z-index:10;
+    display:flex; flex-direction:column; align-items:center; justify-content:center;
+    text-align:center; padding: 24px;
+    background: radial-gradient(ellipse at 50% 42%, rgba(20,32,54,.18), rgba(10,16,30,.55));
+    transition: opacity .6s ease;
+  }
+  .overlay.hidden { opacity:0; pointer-events:none; }
+  .overlay h1 {
+    color:#fff; font-size: clamp(38px, 9vw, 64px); font-weight:800;
+    letter-spacing:.02em; text-shadow: 0 3px 24px rgba(30,60,110,.8), 0 1px 3px rgba(0,0,0,.5);
+  }
+  .overlay h1 .flake { color:#bfe3ff; }
+  .overlay p {
+    color:#dceeff; font-size: clamp(16px, 4.4vw, 21px); margin-top:10px;
+    text-shadow: 0 1px 8px rgba(0,0,0,.6); font-weight:600;
+  }
+  .overlay .hint {
+    margin-top:26px; color:#ffe9c4; font-size: clamp(14px, 4vw, 17px); font-weight:700;
+    letter-spacing:.08em; text-transform:uppercase;
+    animation: bob 1.8s ease-in-out infinite;
+  }
+  @keyframes bob { 0%,100%{ transform: translateY(0);} 50%{ transform: translateY(6px);} }
+  #doneOverlay { background: radial-gradient(ellipse at 50% 42%, rgba(80,50,10,.10), rgba(20,14,4,.38)); }
+  #replayBtn {
+    pointer-events:auto; cursor:pointer; margin-top:28px;
+    font: inherit; font-size:19px; font-weight:800; letter-spacing:.04em;
+    color:#40260a; background: linear-gradient(180deg,#ffe3a3,#ffc46b);
+    border:none; border-radius:999px; padding: 14px 34px;
+    box-shadow: 0 8px 26px rgba(255,170,60,.45), inset 0 1px 0 rgba(255,255,255,.7);
+  }
+  #replayBtn:active { transform: scale(.95); }
+  #doneOverlay h1 { text-shadow: 0 3px 24px rgba(120,60,0,.55), 0 1px 3px rgba(0,0,0,.4); }
+</style>
+</head>
+<body>
+
+<canvas id="scene"></canvas>
+<canvas id="frost"></canvas>
+<canvas id="fx"></canvas>
+
+<div id="hud">
+  <div id="meter"><span>🫧</span><span id="pctText">0% CLEAN</span><span class="bar"><span class="fill" id="pctFill" style="display:block"></span></span></div>
+  <button id="muteBtn" aria-label="Toggle sound">🔊</button>
+</div>
+
+<div class="overlay" id="titleOverlay">
+  <h1><span class="flake">🫧</span> Suds Scrub</h1>
+  <p>Somebody soaped up the whole windshield.</p>
+  <div class="hint">Drag to scrub</div>
+</div>
+
+<div class="overlay hidden" id="doneOverlay">
+  <h1>Squeaky clean ☀️</h1>
+  <p>Now that is a view worth scrubbing for.</p>
+  <button id="replayBtn">Soap it up again</button>
+</div>
+
+<script>
+'use strict';
+/* ============================================================
+   SUDS SCRUB — an ASMR windshield-washing toy
+   Layers: scene canvas (picture) · foam canvas (erasable suds)
+           fx canvas (car interior frame, particles, scraper)
+   ============================================================ */
+
+const sceneC = document.getElementById('scene');
+const frostC = document.getElementById('frost');
+const fxC    = document.getElementById('fx');
+const sctx = sceneC.getContext('2d');
+const fctx = frostC.getContext('2d');
+const xctx = fxC.getContext('2d');
+
+const pctText = document.getElementById('pctText');
+const pctFill = document.getElementById('pctFill');
+const titleOverlay = document.getElementById('titleOverlay');
+const doneOverlay  = document.getElementById('doneOverlay');
+const muteBtn = document.getElementById('muteBtn');
+
+let W = 0, H = 0, DPR = 1;
+let brush = 52;
+let progress = 0;          // 0..1 cleared
+let started = false;
+let finished = false;
+let finishAt = 0;
+
+/* ---------------- reveal image + windshield glass ---------------- */
+let sparkles = [];
+const revealImg = new Image();
+let revealReady = false;
+revealImg.onload = () => { revealReady = true; };
+revealImg.src = 'reveal.jpg';
+window.__scrub = () => progress;
+
+function roundedPoly(c, pts, r){
+  const n = pts.length;
+  c.beginPath();
+  for (let i = 0; i < n; i++) {
+    const p0 = pts[(i + n - 1) % n], p1 = pts[i], p2 = pts[(i + 1) % n];
+    const v1x = p1.x - p0.x, v1y = p1.y - p0.y, l1 = Math.hypot(v1x, v1y) || 1;
+    const v2x = p2.x - p1.x, v2y = p2.y - p1.y, l2 = Math.hypot(v2x, v2y) || 1;
+    const ax = p1.x - v1x / l1 * r, ay = p1.y - v1y / l1 * r;
+    const bx = p1.x + v2x / l2 * r, by = p1.y + v2y / l2 * r;
+    if (i === 0) c.moveTo(ax, ay); else c.lineTo(ax, ay);
+    c.quadraticCurveTo(p1.x, p1.y, bx, by);
+  }
+  c.closePath();
+}
+function glassPath(c){
+  roundedPoly(c, [
+    { x: W * 0.092, y: H * 0.030 }, { x: W * 0.908, y: H * 0.030 },
+    { x: W * 0.966, y: H * 0.880 }, { x: W * 0.034, y: H * 0.880 }
+  ], Math.min(W, H) * 0.05);
+}
+function glassBBox(){ return { x: W * 0.028, y: H * 0.024, w: W * 0.944, h: H * 0.850 }; }
+function initSparkles(){
+  sparkles = [];
+  for (let i = 0; i < 40; i++)
+    sparkles.push({ x: Math.random() * W, y: Math.random() * H * 0.9, p: Math.random() * Math.PI * 2, s: rand(0.7, 1.6) });
+}
+
+/* ---------------- utils ---------------- */
+const rand = (a, b) => a + Math.random() * (b - a);
+const clamp = (v, a, b) => v < a ? a : (v > b ? b : v);
+const lerp = (a, b, t) => a + (b - a) * t;
+function hexRGB(h){ return [parseInt(h.slice(1,3),16), parseInt(h.slice(3,5),16), parseInt(h.slice(5,7),16)]; }
+function mix(h1, h2, t){
+  const a = hexRGB(h1), b = hexRGB(h2);
+  return 'rgb(' + Math.round(lerp(a[0],b[0],t)) + ',' + Math.round(lerp(a[1],b[1],t)) + ',' + Math.round(lerp(a[2],b[2],t)) + ')';
+}
+
+/* seeded rng so the street is composed, not random soup */
+let seed = 7;
+function srand(){ seed = (seed * 16807) % 2147483647; return (seed - 1) / 2147483646; }
+
+/* (the street scene is gone — the view behind the glass is reveal.jpg) */
+
+/* ---------------- soap foam ---------------- */
+function makeFoam(){
+  fctx.globalCompositeOperation = 'source-over';
+  fctx.clearRect(0, 0, W, H);
+  fctx.save();
+  glassPath(fctx); fctx.clip();
+  /* pearly soap base */
+  const g = fctx.createLinearGradient(0, 0, W * 0.25, H);
+  g.addColorStop(0, '#fdfefe'); g.addColorStop(0.45, '#eef4f8');
+  g.addColorStop(0.78, '#e6eff6'); g.addColorStop(1, '#dbe8f2');
+  fctx.fillStyle = g;
+  fctx.fillRect(0, 0, W, H);
+  /* cloudy foam body — hundreds of soft overlapping blobs */
+  for (let i = 0; i < 260; i++) {
+    const r = rand(22, 95), x = Math.random() * W, y = Math.random() * H;
+    const rg = fctx.createRadialGradient(x, y, 0, x, y, r);
+    rg.addColorStop(0, 'rgba(255,255,255,' + rand(0.10, 0.22) + ')');
+    rg.addColorStop(1, 'rgba(255,255,255,0)');
+    fctx.fillStyle = rg;
+    fctx.fillRect(x - r, y - r, r * 2, r * 2);
+  }
+  /* soap drips sliding from the top */
+  for (let i = 0; i < 26; i++) {
+    const x = Math.random() * W, wdt = rand(5, 15), len = rand(50, 300);
+    const dg = fctx.createLinearGradient(0, 0, 0, len);
+    dg.addColorStop(0, 'rgba(255,255,255,0.34)'); dg.addColorStop(1, 'rgba(255,255,255,0)');
+    fctx.fillStyle = dg;
+    fctx.fillRect(x, 0, wdt, len);
+    fctx.beginPath(); fctx.arc(x + wdt / 2, len, wdt * 0.55, 0, 6.2832); fctx.fill();
+  }
+  /* bubbles — rings with a highlight, a few big iridescent ones */
+  for (let i = 0; i < 850; i++) {
+    const x = Math.random() * W, y = Math.random() * H;
+    const big = Math.random() < 0.06;
+    const r = big ? rand(11, 27) : rand(1.6, 8.5);
+    fctx.fillStyle = 'rgba(255,255,255,' + rand(0.05, 0.16) + ')';
+    fctx.beginPath(); fctx.arc(x, y, r, 0, 6.2832); fctx.fill();
+    if (big) {
+      const hues = ['255,170,220', '150,225,255', '255,230,160', '190,255,205'];
+      fctx.strokeStyle = 'rgba(' + hues[Math.floor(Math.random() * hues.length)] + ',0.5)';
+      fctx.lineWidth = 1.6;
+    } else {
+      fctx.strokeStyle = 'rgba(255,255,255,' + rand(0.35, 0.8) + ')';
+      fctx.lineWidth = 1;
+    }
+    fctx.beginPath(); fctx.arc(x, y, r, 0, 6.2832); fctx.stroke();
+    fctx.fillStyle = 'rgba(255,255,255,0.9)';
+    fctx.beginPath(); fctx.arc(x - r * 0.34, y - r * 0.34, Math.max(0.8, r * 0.16), 0, 6.2832); fctx.fill();
+  }
+  /* dense foam clumps piled along the bottom edge */
+  for (let i = 0; i < 190; i++) {
+    const x = Math.random() * W, y = H * 0.885 - Math.pow(Math.random(), 2) * H * 0.11;
+    const r = rand(6, 22);
+    fctx.fillStyle = 'rgba(255,255,255,' + rand(0.35, 0.75) + ')';
+    fctx.beginPath(); fctx.arc(x, y, r, 0, 6.2832); fctx.fill();
+    fctx.strokeStyle = 'rgba(210,228,242,0.5)'; fctx.lineWidth = 1;
+    fctx.beginPath(); fctx.arc(x, y, r, 0, 6.2832); fctx.stroke();
+  }
+  fctx.restore();
+}
+
+/* ---------------- progress sampling (glass area only) ---------------- */
+const sampleC = document.createElement('canvas');
+sampleC.width = 48; sampleC.height = 27;
+const sampleCtx = sampleC.getContext('2d', { willReadFrequently: true });
+const maskC = document.createElement('canvas');
+maskC.width = 48; maskC.height = 27;
+const maskCtx = maskC.getContext('2d', { willReadFrequently: true });
+let maskData = null, glassCount = 1;
+function buildMask(){
+  maskCtx.clearRect(0, 0, 48, 27);
+  maskCtx.save();
+  maskCtx.setTransform(48 / W, 0, 0, 27 / H, 0, 0);
+  glassPath(maskCtx);
+  maskCtx.fillStyle = '#fff'; maskCtx.fill();
+  maskCtx.restore();
+  maskData = maskCtx.getImageData(0, 0, 48, 27).data;
+  glassCount = 0;
+  for (let i = 3; i < maskData.length; i += 4) if (maskData[i] > 100) glassCount++;
+  if (glassCount < 1) glassCount = 1;
+}
+let lastSample = 0;
+function sampleProgress(now){
+  if (now - lastSample < 220) return;
+  lastSample = now;
+  if (!maskData) buildMask();
+  sampleCtx.clearRect(0, 0, 48, 27);
+  sampleCtx.drawImage(frostC, 0, 0, 48, 27);
+  const d = sampleCtx.getImageData(0, 0, 48, 27).data;
+  let clear = 0;
+  for (let i = 3; i < d.length; i += 4)
+    if (maskData[i] > 100 && d[i] < 170) clear++;
+  progress = clear / glassCount;
+  const pct = Math.floor(progress * 100);
+  pctText.textContent = pct + '% CLEAN';
+  pctFill.style.width = pct + '%';
+  if (progress >= 0.90 && !finished) completeGame();
+}
+
+/* ---------------- audio (all synthesized) ---------------- */
+let AC = null, master = null, scrapeGain = null, scrapeFilter = null, muted = false;
+function initAudio(){
+  if (AC) { if (AC.state === 'suspended') AC.resume(); return; }
+  try {
+    AC = new (window.AudioContext || window.webkitAudioContext)();
+  } catch (e) { return; }
+  master = AC.createGain(); master.gain.value = muted ? 0 : 0.9; master.connect(AC.destination);
+
+  const len = AC.sampleRate * 2;
+  const buf = AC.createBuffer(1, len, AC.sampleRate);
+  const ch = buf.getChannelData(0);
+  let last = 0;
+  for (let i = 0; i < len; i++) {            // slightly softened noise
+    const white = Math.random() * 2 - 1;
+    last = (last + 0.04 * white) / 1.04;
+    ch[i] = (white * 0.6 + last * 2.2) * 0.7;
+  }
+
+  /* scrape loop — gain/freq driven by drag speed */
+  const src = AC.createBufferSource(); src.buffer = buf; src.loop = true;
+  scrapeFilter = AC.createBiquadFilter(); scrapeFilter.type = 'bandpass';
+  scrapeFilter.frequency.value = 420; scrapeFilter.Q.value = 0.9;
+  scrapeGain = AC.createGain(); scrapeGain.gain.value = 0;
+  src.connect(scrapeFilter); scrapeFilter.connect(scrapeGain); scrapeGain.connect(master);
+  src.start();
+
+  /* gentle morning hush — very low room tone */
+  const amb = AC.createBufferSource(); amb.buffer = buf; amb.loop = true; amb.playbackRate.value = 0.4;
+  const ambF = AC.createBiquadFilter(); ambF.type = 'lowpass'; ambF.frequency.value = 320;
+  const ambG = AC.createGain(); ambG.gain.value = 0.014;
+  amb.connect(ambF); ambF.connect(ambG); ambG.connect(master);
+  amb.start();
+}
+function crackle(){
+  if (!AC || muted) return;
+  if (Math.random() < 0.45) return;
+  const t = AC.currentTime;
+  const o = AC.createOscillator(); o.type = 'sine';
+  const f0 = rand(620, 1150);
+  o.frequency.setValueAtTime(f0, t);
+  o.frequency.exponentialRampToValueAtTime(f0 * 0.32, t + 0.07);
+  const g = AC.createGain();
+  g.gain.setValueAtTime(rand(0.02, 0.055), t);
+  g.gain.exponentialRampToValueAtTime(0.001, t + 0.085);
+  o.connect(g); g.connect(master);
+  o.start(t); o.stop(t + 0.09);
+}
+function setScrape(speed){
+  if (!AC || !scrapeGain) return;
+  const t = AC.currentTime;
+  const g = clamp(speed * 0.011, 0, 0.5);
+  scrapeGain.gain.setTargetAtTime(muted ? 0 : g, t, 0.085);
+  scrapeFilter.frequency.setTargetAtTime(clamp(190 + speed * 10, 190, 880), t, 0.06);
+}
+function stopScrape(){
+  if (!AC || !scrapeGain) return;
+  scrapeGain.gain.setTargetAtTime(0, AC.currentTime, 0.06);
+}
+function completionSounds(){
+  if (!AC) return;
+  const t0 = AC.currentTime;
+  /* warm pad chord */
+  [220, 277.18, 329.63].forEach((fr, i) => {
+    const o = AC.createOscillator(); o.type = 'triangle'; o.frequency.value = fr;
+    const g = AC.createGain();
+    g.gain.setValueAtTime(0, t0 + i * 0.12);
+    g.gain.linearRampToValueAtTime(0.05, t0 + i * 0.12 + 0.7);
+    g.gain.linearRampToValueAtTime(0, t0 + 3.4);
+    o.connect(g); g.connect(master); o.start(t0 + i * 0.12); o.stop(t0 + 3.5);
+  });
+  /* a little cascade of bubble pops */
+  for (let i = 0; i < 7; i++) {
+    const t = t0 + 0.7 + i * 0.13;
+    const o = AC.createOscillator(); o.type = 'sine';
+    const f0 = 500 + i * 90;
+    o.frequency.setValueAtTime(f0, t);
+    o.frequency.exponentialRampToValueAtTime(f0 * 0.4, t + 0.06);
+    const g = AC.createGain();
+    g.gain.setValueAtTime(0, t);
+    g.gain.linearRampToValueAtTime(0.05, t + 0.012);
+    g.gain.exponentialRampToValueAtTime(0.001, t + 0.09);
+    o.connect(g); g.connect(master); o.start(t); o.stop(t + 0.1);
+  }
+}
+muteBtn.addEventListener('click', (e) => {
+  e.stopPropagation();
+  muted = !muted;
+  muteBtn.textContent = muted ? '🔇' : '🔊';
+  if (master) master.gain.value = muted ? 0 : 0.9;
+});
+
+/* ---------------- scraping ---------------- */
+let pointerDown = false, px = 0, py = 0, lastMoveT = 0, scrapeAngle = -0.5, speedSmooth = 0;
+const suds = [];
+
+function eraseStroke(x0, y0, x1, y1){
+  fctx.globalCompositeOperation = 'destination-out';
+  fctx.lineCap = 'round'; fctx.lineJoin = 'round';
+  fctx.strokeStyle = 'rgba(0,0,0,0.55)';
+  fctx.lineWidth = brush;
+  fctx.beginPath(); fctx.moveTo(x0, y0); fctx.lineTo(x1, y1); fctx.stroke();
+  fctx.strokeStyle = 'rgba(0,0,0,1)';
+  fctx.lineWidth = brush * 0.58;
+  fctx.beginPath(); fctx.moveTo(x0, y0); fctx.lineTo(x1, y1); fctx.stroke();
+  /* jagged crystalline edge specks */
+  const dist = Math.hypot(x1 - x0, y1 - y0);
+  const n = Math.floor(dist / 7);
+  fctx.fillStyle = 'rgba(0,0,0,0.9)';
+  for (let i = 0; i < n; i++) {
+    const t = Math.random();
+    const cx = lerp(x0, x1, t) + rand(-brush * 0.55, brush * 0.55);
+    const cy = lerp(y0, y1, t) + rand(-brush * 0.55, brush * 0.55);
+    fctx.beginPath(); fctx.arc(cx, cy, rand(1.5, 5), 0, 6.2832); fctx.fill();
+  }
+}
+
+function spawnSuds(x, y, n, spread){
+  for (let i = 0; i < n; i++) {
+    if (suds.length > 320) return;
+    suds.push({
+      x: x + rand(-spread, spread), y: y + rand(-spread * 0.5, spread * 0.5),
+      vx: rand(-17, 17), vy: rand(-30, -4),
+      life: 1, decay: rand(0.7, 1.5), size: rand(2, 6.5),
+      ring: Math.random() < 0.62
+    });
+  }
+}
+
+window.addEventListener('pointerdown', (e) => {
+  initAudio();
+  if (!started) { started = true; titleOverlay.classList.add('hidden'); }
+  if (finished) return;
+  pointerDown = true;
+  px = e.clientX; py = e.clientY;
+  lastMoveT = performance.now();
+});
+window.addEventListener('pointermove', (e) => {
+  const nx = e.clientX, ny = e.clientY;
+  if (!pointerDown || finished) { px = nx; py = ny; return; }
+  const now = performance.now();
+  const dt = Math.max(8, now - lastMoveT);
+  const dist = Math.hypot(nx - px, ny - py);
+  const speed = dist / dt * 16.7;               // px per frame-ish
+  speedSmooth = lerp(speedSmooth, speed, 0.4);
+  if (dist > 1.5) {
+    scrapeAngle = lerp(scrapeAngle, Math.atan2(ny - py, nx - px), 0.35);
+    eraseStroke(px, py, nx, ny);
+    spawnSuds(nx, ny, clamp(Math.floor(dist / 5), 1, 8), brush * 0.45);
+    setScrape(speedSmooth);
+    if (Math.random() < 0.4) crackle();
+    if (dist > 26 && Math.random() < 0.6) crackle();
+    sampleProgress(now);
+  }
+  px = nx; py = ny; lastMoveT = now;
+});
+function endPointer(){ pointerDown = false; speedSmooth = 0; stopScrape(); }
+window.addEventListener('pointerup', endPointer);
+window.addEventListener('pointercancel', endPointer);
+window.addEventListener('blur', endPointer);
+window.addEventListener('contextmenu', (e) => e.preventDefault());
+
+/* ---------------- rinse creep (foam thins near the base) ---------------- */
+let defrostY = 0, lastDefrost = 0;
+function defroster(now){
+  if (finished) return;
+  if (now - lastDefrost < 130) return;
+  lastDefrost = now;
+  /* thin glowing strip just above the dashboard, creeping up very slowly */
+  const stripTop = H * 0.845 - defrostY;
+  const gr = fctx.createLinearGradient(0, stripTop - 6, 0, H * 0.90);
+  gr.addColorStop(0, 'rgba(0,0,0,0)');
+  gr.addColorStop(1, 'rgba(0,0,0,0.10)');
+  fctx.globalCompositeOperation = 'destination-out';
+  fctx.fillStyle = gr;
+  fctx.fillRect(0, stripTop - 6, W, H * 0.90 - stripTop + 6);
+  if (defrostY < H * 0.035) defrostY += 0.25;
+}
+
+/* ---------------- completion ---------------- */
+function completeGame(){
+  finished = true; finishAt = performance.now();
+  pointerDown = false; stopScrape();
+  completionSounds();
+  setTimeout(() => doneOverlay.classList.remove('hidden'), 1400);
+}
+document.getElementById('replayBtn').addEventListener('click', () => {
+  doneOverlay.classList.add('hidden');
+  finished = false; progress = 0; defrostY = 0;
+  pctText.textContent = '0% CLEAN'; pctFill.style.width = '0%';
+  makeFoam();
+});
+
+/* ---------------- scene rendering: the picture behind the glass ---------------- */
+function drawScene(now){
+  /* dark interior surround outside the glass */
+  sctx.fillStyle = '#090b10';
+  sctx.fillRect(0, 0, W, H);
+  sctx.save();
+  glassPath(sctx); sctx.clip();
+  const bb = glassBBox();
+  if (revealReady) {
+    const iw = revealImg.naturalWidth, ih = revealImg.naturalHeight;
+    const sc = Math.max(bb.w / iw, bb.h / ih);
+    const dw = iw * sc, dh = ih * sc;
+    sctx.drawImage(revealImg, bb.x + (bb.w - dw) / 2, bb.y + (bb.h - dh) / 2, dw, dh);
+  } else {
+    const g2 = sctx.createLinearGradient(0, bb.y, 0, bb.y + bb.h);
+    g2.addColorStop(0, '#7fa8cc'); g2.addColorStop(1, '#d9e8f2');
+    sctx.fillStyle = g2; sctx.fillRect(bb.x, bb.y, bb.w, bb.h);
+  }
+  /* full-morning glory on completion */
+  if (finished) {
+    const t = clamp((now - finishAt) / 2200, 0, 1);
+    const fg = sctx.createRadialGradient(W * 0.62, H * 0.34, 0, W * 0.62, H * 0.34, Math.max(W, H) * 0.85);
+    fg.addColorStop(0, 'rgba(255,214,130,' + (t * 0.30) + ')');
+    fg.addColorStop(1, 'rgba(255,190,100,' + (t * 0.08) + ')');
+    sctx.fillStyle = fg; sctx.fillRect(0, 0, W, H);
+  }
+  sctx.restore();
+}
+
+/* ---------------- fx layer: interior, particles, scraper ---------------- */
+function drawFX(now, dt){
+  xctx.clearRect(0, 0, W, H);
+
+  /* bubble glints still clinging to the glass */
+  if (!finished) {
+    for (const sp of sparkles) {
+      const a = 0.5 + 0.5 * Math.sin(now * 0.0022 + sp.p);
+      if (a < 0.72) continue;
+      xctx.strokeStyle = 'rgba(255,255,255,' + ((a - 0.72) * 2.2) + ')';
+      xctx.lineWidth = 1;
+      const r = 3.4 * sp.s;
+      xctx.beginPath(); xctx.arc(sp.x, sp.y, r, 0, 6.2832); xctx.stroke();
+      xctx.fillStyle = 'rgba(255,255,255,' + ((a - 0.72) * 2.6) + ')';
+      xctx.beginPath(); xctx.arc(sp.x - r * 0.35, sp.y - r * 0.35, 1.1, 0, 6.2832); xctx.fill();
+    }
+  }
+
+  /* --- car interior frame --- */
+  const dashTop = H * 0.885;
+  /* defroster glow above the dash */
+  const dg = xctx.createLinearGradient(0, dashTop - H * 0.075, 0, dashTop);
+  dg.addColorStop(0, 'rgba(255,120,50,0)');
+  dg.addColorStop(1, 'rgba(255,120,50,' + (0.10 + 0.03 * Math.sin(now * 0.002)) + ')');
+  xctx.fillStyle = dg;
+  xctx.fillRect(0, dashTop - H * 0.075, W, H * 0.075);
+
+  /* A-pillars */
+  xctx.fillStyle = '#141922';
+  xctx.beginPath();
+  xctx.moveTo(0, 0); xctx.lineTo(W * 0.085, 0); xctx.lineTo(W * 0.028, H * 0.9); xctx.lineTo(0, H * 0.96);
+  xctx.closePath(); xctx.fill();
+  xctx.beginPath();
+  xctx.moveTo(W, 0); xctx.lineTo(W * 0.915, 0); xctx.lineTo(W * 0.972, H * 0.9); xctx.lineTo(W, H * 0.96);
+  xctx.closePath(); xctx.fill();
+  /* header + rear-view mirror */
+  xctx.fillRect(0, 0, W, H * 0.028);
+  const mw = Math.min(W * 0.21, 190), mh = mw * 0.30;
+  xctx.fillStyle = '#10141c';
+  roundRect(xctx, W / 2 - mw / 2, H * 0.028, mw, mh, 9); xctx.fill();
+  xctx.fillStyle = 'rgba(190,215,240,0.35)';
+  roundRect(xctx, W / 2 - mw / 2 + 4, H * 0.028 + 4, mw - 8, mh - 8, 6); xctx.fill();
+
+  /* dashboard */
+  const dash = xctx.createLinearGradient(0, dashTop, 0, H);
+  dash.addColorStop(0, '#232a36'); dash.addColorStop(0.12, '#171d27'); dash.addColorStop(1, '#0c1017');
+  xctx.fillStyle = dash;
+  xctx.beginPath();
+  xctx.moveTo(0, H);
+  xctx.lineTo(0, dashTop + H * 0.012);
+  xctx.quadraticCurveTo(W / 2, dashTop - H * 0.018, W, dashTop + H * 0.012);
+  xctx.lineTo(W, H);
+  xctx.closePath(); xctx.fill();
+  /* defrost vents + one amber indicator */
+  xctx.strokeStyle = 'rgba(255,255,255,0.10)'; xctx.lineWidth = 3; xctx.lineCap = 'round';
+  for (let i = 0; i < 7; i++) {
+    const vx = W * 0.30 + i * W * 0.062;
+    xctx.beginPath(); xctx.moveTo(vx, dashTop + H * 0.026); xctx.lineTo(vx + W * 0.03, dashTop + H * 0.026); xctx.stroke();
+  }
+  xctx.fillStyle = 'rgba(255,150,60,' + (0.65 + 0.3 * Math.sin(now * 0.003)) + ')';
+  xctx.beginPath(); xctx.arc(W * 0.5, dashTop + H * 0.055, 3.4, 0, 6.2832); xctx.fill();
+  /* steering wheel hint, bottom-left */
+  xctx.strokeStyle = '#0a0e14'; xctx.lineWidth = Math.max(10, W * 0.016);
+  xctx.beginPath(); xctx.arc(W * 0.16, H * 1.06, Math.min(W, H) * 0.17, Math.PI * 1.15, Math.PI * 1.75); xctx.stroke();
+
+  /* --- windshield gasket, glass sheen, parked wipers --- */
+  xctx.lineJoin = 'round';
+  xctx.strokeStyle = '#0a0d12';
+  xctx.lineWidth = Math.max(9, Math.min(W, H) * 0.017);
+  glassPath(xctx); xctx.stroke();
+  xctx.strokeStyle = 'rgba(205,225,245,0.16)';
+  xctx.lineWidth = 2;
+  glassPath(xctx); xctx.stroke();
+  xctx.save();
+  glassPath(xctx); xctx.clip();
+  const sh = xctx.createLinearGradient(W * 0.05, 0, W * 0.60, 0);
+  sh.addColorStop(0, 'rgba(255,255,255,0)');
+  sh.addColorStop(0.45, 'rgba(255,255,255,0.055)');
+  sh.addColorStop(0.62, 'rgba(255,255,255,0.015)');
+  sh.addColorStop(1, 'rgba(255,255,255,0)');
+  xctx.fillStyle = sh;
+  xctx.fillRect(0, 0, W, H * 0.9);
+  xctx.restore();
+  /* wipers parked at the base of the glass */
+  xctx.fillStyle = '#10141b';
+  [[0.335, -0.13], [0.615, -0.09]].forEach(wp => {
+    xctx.save();
+    xctx.translate(W * wp[0], H * 0.876);
+    xctx.rotate(wp[1]);
+    const wl = W * 0.27;
+    roundRect(xctx, -wl * 0.08, -4.5, wl, 9, 4.5); xctx.fill();
+    xctx.fillStyle = 'rgba(255,255,255,0.10)';
+    xctx.fillRect(-wl * 0.08, -4.5, wl, 2.5);
+    xctx.fillStyle = '#10141b';
+    xctx.beginPath(); xctx.arc(0, 0, 7.5, 0, 6.2832); xctx.fill();
+    xctx.restore();
+  });
+
+  /* --- suds particles: popped bubbles & foam bits --- */
+  for (let i = suds.length - 1; i >= 0; i--) {
+    const f = suds[i];
+    f.vy += (f.ring ? -7 : 30) * dt;
+    f.x += f.vx * dt; f.y += f.vy * dt;
+    f.life -= f.decay * dt;
+    if (f.life <= 0 || f.y < -12) { suds.splice(i, 1); continue; }
+    if (f.ring) {
+      xctx.strokeStyle = 'rgba(255,255,255,' + (f.life * 0.85) + ')';
+      xctx.lineWidth = 1;
+      xctx.beginPath(); xctx.arc(f.x, f.y, f.size, 0, 6.2832); xctx.stroke();
+      xctx.fillStyle = 'rgba(255,255,255,' + (f.life * 0.9) + ')';
+      xctx.beginPath(); xctx.arc(f.x - f.size * 0.34, f.y - f.size * 0.34, 1, 0, 6.2832); xctx.fill();
+    } else {
+      xctx.fillStyle = 'rgba(255,255,255,' + (f.life * 0.8) + ')';
+      xctx.beginPath(); xctx.arc(f.x, f.y, f.size * 0.8, 0, 6.2832); xctx.fill();
+    }
+  }
+
+  /* --- the scraper in your hand --- */
+  if (started && !finished) drawSponge(now);
+}
+
+function roundRect(c, x, y, w, h, r){
+  c.beginPath();
+  c.moveTo(x + r, y);
+  c.arcTo(x + w, y, x + w, y + h, r);
+  c.arcTo(x + w, y + h, x, y + h, r);
+  c.arcTo(x, y + h, x, y, r);
+  c.arcTo(x, y, x + w, y, r);
+  c.closePath();
+}
+
+function drawSponge(now){
+  const tilt = clamp(speedSmooth * 0.010, 0, 0.4) * (Math.cos(scrapeAngle) >= 0 ? 1 : -1) * 0.5;
+  xctx.save();
+  xctx.translate(px, py);
+  xctx.rotate(-0.18 + tilt);
+  const s = clamp(Math.min(W, H) / 420, 0.8, 1.35);
+  xctx.scale(s, s * (pointerDown ? 0.84 : 1));
+  /* shadow */
+  xctx.fillStyle = 'rgba(10,16,28,0.28)';
+  xctx.beginPath(); xctx.ellipse(5, 30, 40, 9, 0, 0, 6.2832); xctx.fill();
+  /* sponge body — warm yellow, soft corners */
+  const bg = xctx.createLinearGradient(0, -24, 0, 26);
+  bg.addColorStop(0, '#ffdf5e'); bg.addColorStop(0.6, '#ffd23e'); bg.addColorStop(1, '#f0b41f');
+  xctx.fillStyle = bg;
+  roundRect(xctx, -36, -24, 72, 50, 13); xctx.fill();
+  /* pores */
+  xctx.fillStyle = 'rgba(184,128,16,0.4)';
+  const pores = [[-22,-12,5],[ -6,-16,4],[12,-11,6],[24,-15,4],[-15,2,6],[3,-1,5],[19,4,5],[-25,12,4],[-4,13,6],[14,15,4],[26,10,3],[-12,-5,3]];
+  for (const pr of pores) { xctx.beginPath(); xctx.ellipse(pr[0], pr[1], pr[2], pr[2] * 0.72, 0, 0, 6.2832); xctx.fill(); }
+  /* suds riding the top edge */
+  xctx.fillStyle = 'rgba(255,255,255,0.95)';
+  const sudsTop = [[-26,-25,7],[-12,-29,9],[3,-27,8],[17,-29,7],[28,-24,6]];
+  for (const sd of sudsTop) { xctx.beginPath(); xctx.arc(sd[0], sd[1], sd[2], 0, 6.2832); xctx.fill(); }
+  xctx.strokeStyle = 'rgba(205,228,245,0.6)'; xctx.lineWidth = 1;
+  for (const sd of sudsTop) { xctx.beginPath(); xctx.arc(sd[0], sd[1], sd[2], 0, 6.2832); xctx.stroke(); }
+  xctx.restore();
+}
+
+/* ---------------- melt-out finale ---------------- */
+function meltFinale(now){
+  if (!finished) return;
+  fctx.globalCompositeOperation = 'destination-out';
+  for (let i = 0; i < 7; i++) {
+    fctx.fillStyle = 'rgba(0,0,0,0.06)';
+    fctx.beginPath();
+    fctx.arc(Math.random() * W, Math.random() * H, rand(24, 70), 0, 6.2832);
+    fctx.fill();
+  }
+}
+
+/* ---------------- main loop ---------------- */
+let lastT = performance.now();
+function frame(now){
+  const dt = Math.min(0.05, (now - lastT) / 1000);
+  lastT = now;
+  drawScene(now);
+  defroster(now);
+  meltFinale(now);
+  if (started) sampleProgress(now);
+  drawFX(now, dt);
+  requestAnimationFrame(frame);
+}
+
+/* ---------------- resize ---------------- */
+function resize(){
+  DPR = Math.min(window.devicePixelRatio || 1, 2);
+  const newW = window.innerWidth, newH = window.innerHeight;
+  let oldFrost = null;
+  if (W > 0 && frostC.width > 0) {
+    oldFrost = document.createElement('canvas');
+    oldFrost.width = frostC.width; oldFrost.height = frostC.height;
+    oldFrost.getContext('2d').drawImage(frostC, 0, 0);
+  }
+  W = newW; H = newH;
+  brush = clamp(Math.min(W, H) * 0.118, 38, 84);
+  [sceneC, frostC, fxC].forEach(c => {
+    c.width = Math.round(W * DPR); c.height = Math.round(H * DPR);
+    c.style.width = W + 'px'; c.style.height = H + 'px';
+  });
+  [sctx, fctx, xctx].forEach(c => c.setTransform(DPR, 0, 0, DPR, 0, 0));
+  buildMask();
+  initSparkles();
+  if (oldFrost) {
+    fctx.globalCompositeOperation = 'source-over';
+    fctx.clearRect(0, 0, W, H);
+    fctx.drawImage(oldFrost, 0, 0, W, H);
+  } else {
+    makeFoam();
+  }
+}
+window.addEventListener('resize', resize);
+window.addEventListener('orientationchange', () => setTimeout(resize, 60));
+
+resize();
+requestAnimationFrame(frame);
+</script>
+</body>
+</html>
