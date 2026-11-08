@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Link Steps Out of the TV — AR Viewer</title>
+<style>
+  :root { color-scheme: light; }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; min-height: 100svh; display: flex; flex-direction: column;
+    align-items: center; justify-content: center; gap: 18px;
+    padding: 28px 18px calc(28px + env(safe-area-inset-bottom));
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    background: linear-gradient(180deg, #e8f6ff 0%, #cfeeff 55%, #fdf6da 100%);
+    color: #17301c;
+  }
+  h1 { margin: 0; font-size: 1.55rem; text-align: center; }
+  p.sub { margin: 0; text-align: center; color: #33523d; max-width: 34em; }
+  a.ar-card {
+    display: block; width: min(92vw, 430px); border-radius: 22px; overflow: hidden;
+    text-decoration: none; background: #fff;
+    box-shadow: 0 14px 34px rgba(21, 74, 41, .28);
+    border: 3px solid #2e9e5b;
+    -webkit-tap-highlight-color: transparent;
+  }
+  a.ar-card img { display: block; width: 100%; height: auto; background: #20242c; }
+  .cta {
+    padding: 14px 16px 16px; text-align: center;
+    font-weight: 700; font-size: 1.15rem; color: #1d7a43;
+  }
+  .cta small { display: block; margin-top: 4px; font-weight: 400; font-size: .85rem; color: #5d8268; }
+  #status {
+    max-width: 34em; text-align: center; font-size: .95rem; line-height: 1.45;
+    background: rgba(255,255,255,.65); border-radius: 12px; padding: 10px 14px;
+  }
+  p.glb { margin: 0; font-size: .9rem; text-align: center; }
+  footer { font-size: .78rem; color: #5d8268; text-align: center; max-width: 36em; line-height: 1.5; }
+</style>
+</head>
+<body>
+  <h1>Link Steps Out of the TV</h1>
+  <p class="sub">This is the <b>same paragliding Link model as the TV loop</b>. Play the loop
+     on the TV, open this page, and place him right at the TV's floor line —
+     he comes to life and steps out of the screen into your room.</p>
+
+  <!-- Apple Quick Look AR: the rel="ar" anchor wraps an image of the model.
+       On iPhone/iPad Safari, tapping it opens link-paraglider.usdz in AR Quick Look.
+       Everywhere else it is just a download link, so the note below shows. -->
+  <a class="ar-card" rel="ar" href="link-paraglider.usdz">
+    <img src="preview.png" alt="Link paragliding — tap to view in your room">
+    <div class="cta">Link in your room
+      <small>Tap, then line him up with the TV's floor line</small>
+    </div>
+  </a>
+
+  <div id="status">Checking whether this device can do AR…</div>
+
+  <p class="glb">Not on iPhone? The raw model is here too:
+     <a href="link-paraglider.glb">link-paraglider.glb</a></p>
+
+  <footer>
+    Model: Link (Breath of the Wild, Champion's Tunic) posed mid-glide from a rigged fan
+    port, paraglider built to match, converted to USDZ with Pixar's USD tools.
+    Local prototyping only.<br>
+    AR viewing uses Apple Quick Look and needs an iPhone or iPad (iOS 12+).
+  </footer>
+
+<script>
+  (function () {
+    var status = document.getElementById('status');
+    var probe = document.createElement('a');
+    var arSupported = !!(probe.relList && probe.relList.supports && probe.relList.supports('ar'));
+    var isIOS = /iPhone|iPad|iPod/.test(navigator.userAgent) ||
+                (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+    if (arSupported) {
+      status.textContent = 'This device supports AR — tap the card above and point your camera at the TV, then place Link at its floor line.';
+    } else if (isIOS) {
+      status.textContent = 'You are on iOS — tap the card above to open Link in AR Quick Look.';
+    } else {
+      status.textContent = 'AR Quick Look only works on iPhone and iPad. Open this page on an iPhone to bring Link into your room — on this device the card just downloads the 3D model file.';
+    }
+  })();
+</script>
+</body>
+</html>
