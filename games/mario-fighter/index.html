@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="utf-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover" />
 <meta name="apple-mobile-web-app-capable" content="yes" />
 <meta name="mobile-web-app-capable" content="yes" />
 <meta name="color-scheme" content="light dark" />
@@ -115,6 +115,10 @@
 body.fillmode #stageShell { position: fixed; inset: 0; width: 100dvw; height: 100dvh; z-index: 60; background: #000; margin: 0; border-radius: 0; }
 #fsToast { position: fixed; left: 50%; bottom: max(18px, env(safe-area-inset-bottom)); transform: translateX(-50%) translateY(16px); max-width: min(92vw, 430px); background: rgba(12,16,28,.94); color: #eef2ff; border: 1px solid rgba(255,255,255,.22); border-radius: 12px; padding: 10px 14px; font-size: 14px; line-height: 1.35; text-align: center; opacity: 0; pointer-events: none; transition: opacity .25s ease, transform .25s ease; z-index: 80; }
 #fsToast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+</style>
+<style id="moth-game-guard">
+html,body{touch-action:none;overscroll-behavior:none;-webkit-touch-callout:none;-webkit-user-select:none;user-select:none;-webkit-tap-highlight-color:transparent}
+canvas{touch-action:none}
 </style>
 </head>
 <body>
@@ -876,6 +880,26 @@ function frame(now){
 }
 requestAnimationFrame(frame);
 window.__game = { P, enemies: () => enemies, projectiles: () => projectiles, grid, attackBox, tryHit };
+</script>
+<script id="moth-game-guard-js">
+(function(){
+  var lastEnd=0;
+  function onUi(t){return t&&t.closest&&t.closest('button,a,input,select,textarea,[data-scroll]');}
+  document.addEventListener('touchend',function(e){
+    var now=Date.now();
+    if(!onUi(e.target)&&now-lastEnd<=300&&e.cancelable)e.preventDefault();
+    lastEnd=now;
+  },{passive:false});
+  ['gesturestart','gesturechange','gestureend'].forEach(function(n){
+    document.addEventListener(n,function(e){e.preventDefault();});
+  });
+  document.addEventListener('dblclick',function(e){e.preventDefault();},{passive:false});
+  document.addEventListener('contextmenu',function(e){e.preventDefault();});
+  document.addEventListener('touchmove',function(e){
+    if(e.target&&e.target.closest&&e.target.closest('[data-scroll]'))return;
+    if(e.cancelable)e.preventDefault();
+  },{passive:false});
+})();
 </script>
 </body>
 </html>
