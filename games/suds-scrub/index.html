@@ -149,6 +149,10 @@ const revealImg = new Image();
 let revealReady = false;
 revealImg.onload = () => { revealReady = true; };
 revealImg.src = 'reveal.jpg';
+const interiorImg = new Image();
+let interiorReady = false;
+interiorImg.onload = () => { interiorReady = true; if (W > 0) resize(); };
+interiorImg.src = 'interior.jpg';
 window.__scrub = () => progress;
 
 function roundedPoly(c, pts, r){
@@ -166,20 +170,34 @@ function roundedPoly(c, pts, r){
   c.closePath();
 }
 let G = { x: 0, y: 0, w: 10, h: 10 };
+let R = { x: 0, y: 0, w: 10, h: 10 };
+const GLASS_FR = [ [0.012, 0.165], [0.990, 0.168], [0.932, 0.750], [0.132, 0.718] ];
+const MIRROR_FR = { x: 0.372, y: 0.146, w: 0.262, h: 0.094 };
+let glassPts = [];
+function roundedRectSub(c, x, y, w, h, r){
+  c.moveTo(x + r, y);
+  c.arcTo(x + w, y, x + w, y + h, r);
+  c.arcTo(x + w, y + h, x, y + h, r);
+  c.arcTo(x, y + h, x, y, r);
+  c.arcTo(x, y, x + w, y, r);
+  c.closePath();
+}
 function computeGlass(){
-  /* the windshield is a wide band with the picture's exact 3:2 shape,
-     so the full image always shows — the rest of the screen is the car */
-  const sc = Math.min((W * 0.94) / 1200, (H * 0.62) / 800);
-  const gw = Math.max(80, 1200 * sc), gh = Math.max(60, 800 * sc);
-  G = { x: (W - gw) / 2, y: Math.max(10, H * 0.055), w: gw, h: gh };
+  const iw = interiorImg.naturalWidth || 765, ih = interiorImg.naturalHeight || 1024;
+  const sc = Math.min(W / iw, H / ih);
+  R = { x: (W - iw * sc) / 2, y: (H - ih * sc) * 0.72, w: iw * sc, h: ih * sc };
+  glassPts = GLASS_FR.map(pt => ({ x: R.x + pt[0] * R.w, y: R.y + pt[1] * R.h }));
+  const xs = glassPts.map(pt => pt.x), ys = glassPts.map(pt => pt.y);
+  G = { x: Math.min.apply(null, xs), y: Math.min.apply(null, ys),
+        w: Math.max.apply(null, xs) - Math.min.apply(null, xs),
+        h: Math.max.apply(null, ys) - Math.min.apply(null, ys) };
 }
 function glassPath(c){
-  const inset = G.w * 0.022;
-  roundedPoly(c, [
-    { x: G.x + inset, y: G.y }, { x: G.x + G.w - inset, y: G.y },
-    { x: G.x + G.w, y: G.y + G.h }, { x: G.x, y: G.y + G.h }
-  ], Math.min(G.w, G.h) * 0.055);
+  roundedPoly(c, glassPts, Math.min(G.w, G.h) * 0.045);
+  roundedRectSub(c, R.x + MIRROR_FR.x * R.w, R.y + MIRROR_FR.y * R.h,
+                 MIRROR_FR.w * R.w, MIRROR_FR.h * R.h, Math.min(G.w, G.h) * 0.05);
 }
+function glassOutline(c){ roundedPoly(c, glassPts, Math.min(G.w, G.h) * 0.045); }
 function glassBBox(){ return G; }
 function initSparkles(){
   sparkles = [];
@@ -208,7 +226,7 @@ function makeFoam(){
   fctx.globalCompositeOperation = 'source-over';
   fctx.clearRect(0, 0, W, H);
   fctx.save();
-  glassPath(fctx); fctx.clip();
+  glassPath(fctx); fctx.clip('evenodd');
   /* pearly soap base */
   const g = fctx.createLinearGradient(0, 0, W * 0.25, H);
   g.addColorStop(0, '#fdfefe'); g.addColorStop(0.45, '#eef4f8');
@@ -277,7 +295,7 @@ function buildMask(){
   maskCtx.save();
   maskCtx.setTransform(48 / W, 0, 0, 27 / H, 0, 0);
   glassPath(maskCtx);
-  maskCtx.fillStyle = '#fff'; maskCtx.fill();
+  maskCtx.fillStyle = '#fff'; maskCtx.fill('evenodd');
   maskCtx.restore();
   maskData = maskCtx.getImageData(0, 0, 48, 27).data;
   glassCount = 0;
@@ -496,28 +514,52 @@ document.getElementById('replayBtn').addEventListener('click', () => {
   makeFoam();
 });
 
-/* ---------------- scene rendering: the picture behind the glass ---------------- */
+/* ---------------- scene rendering: painted interior + picture in the glass ---------------- */
 function drawScene(now){
-  /* dark interior surround outside the glass */
-  sctx.fillStyle = '#090b10';
+  sctx.fillStyle = '#07090d';
   sctx.fillRect(0, 0, W, H);
-  sctx.save();
-  glassPath(sctx); sctx.clip();
-  const bb = glassBBox();
-  if (revealReady) {
-    sctx.drawImage(revealImg, bb.x, bb.y, bb.w, bb.h);
-  } else {
-    const g2 = sctx.createLinearGradient(0, bb.y, 0, bb.y + bb.h);
-    g2.addColorStop(0, '#7fa8cc'); g2.addColorStop(1, '#d9e8f2');
-    sctx.fillStyle = g2; sctx.fillRect(bb.x, bb.y, bb.w, bb.h);
+  if (!interiorReady) return;
+  const iw = interiorImg.naturalWidth, ih = interiorImg.naturalHeight;
+  /* edge-stretch fill for the bars around the contained art */
+  if (R.x > 0.5) {
+    sctx.drawImage(interiorImg, 0, 0, iw * 0.10, ih, 0, R.y, R.x + 1, R.h);
+    sctx.drawImage(interiorImg, iw * 0.90, 0, iw * 0.10, ih, R.x + R.w - 1, R.y, W - R.x - R.w + 1, R.h);
+    const side = sctx.createLinearGradient(0, 0, W, 0);
+    side.addColorStop(0, 'rgba(5,7,10,0.5)'); side.addColorStop(Math.max(0.01, R.x / W), 'rgba(5,7,10,0)');
+    side.addColorStop(Math.min(0.99, (R.x + R.w) / W), 'rgba(5,7,10,0)'); side.addColorStop(1, 'rgba(5,7,10,0.5)');
+    sctx.fillStyle = side; sctx.fillRect(0, R.y, W, R.h);
   }
-  /* full-morning glory on completion */
+  if (R.y > 0.5) {
+    sctx.drawImage(interiorImg, 0, 0, iw, ih * 0.04, R.x, 0, R.w, R.y + 1);
+    sctx.drawImage(interiorImg, 0, ih * 0.975, iw, ih * 0.025, R.x, R.y + R.h - 1, R.w, H - R.y - R.h + 1);
+    const tg = sctx.createLinearGradient(0, 0, 0, R.y);
+    tg.addColorStop(0, 'rgba(10,12,16,0.35)'); tg.addColorStop(1, 'rgba(10,12,16,0)');
+    sctx.fillStyle = tg; sctx.fillRect(R.x, 0, R.w, R.y);
+    const bg2 = sctx.createLinearGradient(0, R.y + R.h, 0, H);
+    bg2.addColorStop(0, 'rgba(4,5,8,0)'); bg2.addColorStop(1, 'rgba(4,5,8,0.5)');
+    sctx.fillStyle = bg2; sctx.fillRect(R.x, R.y + R.h, R.w, H - R.y - R.h);
+    sctx.fillStyle = '#262b33'; sctx.fillRect(0, 0, R.x, R.y + 1); sctx.fillRect(R.x + R.w, 0, W - R.x - R.w, R.y + 1);
+    sctx.fillStyle = '#0e1013'; sctx.fillRect(0, R.y + R.h - 1, R.x, H - R.y - R.h + 1); sctx.fillRect(R.x + R.w, R.y + R.h - 1, W - R.x - R.w, H - R.y - R.h + 1);
+  }
+  sctx.drawImage(interiorImg, R.x, R.y, R.w, R.h);
+  /* her picture, inside the windshield only (mirror excluded) */
+  sctx.save();
+  glassPath(sctx); sctx.clip('evenodd');
+  if (revealReady) {
+    sctx.drawImage(revealImg, G.x - 2, G.y - 2, G.w + 4, G.h + 4);
+    const pw = Math.min(G.w, G.h * 1.5), ph = pw / 1.5;
+    sctx.drawImage(revealImg, G.x + (G.w - pw) / 2, G.y + (G.h - ph) / 2, pw, ph);
+  } else {
+    const g2 = sctx.createLinearGradient(0, G.y, 0, G.y + G.h);
+    g2.addColorStop(0, '#7fa8cc'); g2.addColorStop(1, '#d9e8f2');
+    sctx.fillStyle = g2; sctx.fillRect(G.x, G.y, G.w, G.h);
+  }
   if (finished) {
     const t = clamp((now - finishAt) / 2200, 0, 1);
     const fg = sctx.createRadialGradient(G.x + G.w * 0.62, G.y + G.h * 0.42, 0, G.x + G.w * 0.62, G.y + G.h * 0.42, Math.max(G.w, G.h) * 0.95);
     fg.addColorStop(0, 'rgba(255,214,130,' + (t * 0.30) + ')');
     fg.addColorStop(1, 'rgba(255,190,100,' + (t * 0.08) + ')');
-    sctx.fillStyle = fg; sctx.fillRect(0, 0, W, H);
+    sctx.fillStyle = fg; sctx.fillRect(G.x, G.y, G.w, G.h);
   }
   sctx.restore();
 }
@@ -540,133 +582,24 @@ function drawFX(now, dt){
     }
   }
 
-  /* --- car interior: roof, pillars, mirror, dashboard, steering wheel --- */
-  const gy = G.y, gb = G.y + G.h;
-  /* roof / header above the windshield */
-  const roof = xctx.createLinearGradient(0, 0, 0, gy + 8);
-  roof.addColorStop(0, '#171e29'); roof.addColorStop(1, '#10151e');
-  xctx.fillStyle = roof;
-  xctx.fillRect(0, 0, W, gy + 8);
-  /* A-pillars — everything left and right of the glass */
-  xctx.fillStyle = '#131a24';
-  xctx.beginPath();
-  xctx.moveTo(0, 0); xctx.lineTo(G.x + G.w * 0.022, gy); xctx.lineTo(G.x, gb); xctx.lineTo(0, gb + H * 0.05);
-  xctx.closePath(); xctx.fill();
-  xctx.beginPath();
-  xctx.moveTo(W, 0); xctx.lineTo(G.x + G.w * 0.978, gy); xctx.lineTo(G.x + G.w, gb); xctx.lineTo(W, gb + H * 0.05);
-  xctx.closePath(); xctx.fill();
-  /* rear-view mirror hanging into the top of the glass */
-  const mw = Math.min(G.w * 0.30, 215), mh = mw * 0.30;
-  xctx.fillStyle = '#0d1118';
-  xctx.fillRect(W / 2 - 4, gy - 2, 8, mh * 0.4);
-  roundRect(xctx, W / 2 - mw / 2, gy + mh * 0.18, mw, mh, 9); xctx.fill();
-  xctx.fillStyle = 'rgba(170,200,230,0.30)';
-  roundRect(xctx, W / 2 - mw / 2 + 4, gy + mh * 0.18 + 4, mw - 8, mh - 8, 6); xctx.fill();
-
-  /* dashboard — the whole space below the windshield */
-  const dashTop = gb - 2;
-  const dashH = H - dashTop;
-  const dash = xctx.createLinearGradient(0, dashTop, 0, H);
-  dash.addColorStop(0, '#252d3a'); dash.addColorStop(0.10, '#171d27'); dash.addColorStop(1, '#0a0e15');
-  xctx.fillStyle = dash;
-  xctx.fillRect(0, dashTop, W, dashH);
-  xctx.fillStyle = 'rgba(255,255,255,0.07)';
-  xctx.fillRect(0, dashTop, W, 2);
-  /* warm rinse glow along the glass base */
-  const dg = xctx.createLinearGradient(0, dashTop, 0, dashTop + H * 0.05);
-  dg.addColorStop(0, 'rgba(255,150,70,' + (0.09 + 0.025 * Math.sin(now * 0.002)) + ')');
-  dg.addColorStop(1, 'rgba(255,150,70,0)');
-  xctx.fillStyle = dg;
-  xctx.fillRect(G.x, dashTop, G.w, H * 0.05);
-  /* defrost vents along the base of the glass */
-  xctx.strokeStyle = 'rgba(255,255,255,0.10)'; xctx.lineWidth = 3; xctx.lineCap = 'round';
-  const vents = Math.max(5, Math.floor(G.w / 62));
-  for (let i = 0; i < vents; i++) {
-    const vx = G.x + 14 + i * ((G.w - 28) / vents);
-    xctx.beginPath(); xctx.moveTo(vx, dashTop + H * 0.016); xctx.lineTo(vx + Math.min(30, G.w * 0.05), dashTop + H * 0.016); xctx.stroke();
-  }
-  /* instrument cluster, seen through the wheel */
-  const clX = W * 0.36, clY = dashTop + dashH * 0.20;
-  xctx.fillStyle = 'rgba(9,13,19,0.88)';
-  roundRect(xctx, clX - Math.min(W * 0.17, 150), clY - 27, Math.min(W * 0.34, 300), 60, 16); xctx.fill();
-  [-1, 1].forEach(sgn => {
-    const gx2 = clX + sgn * Math.min(W * 0.075, 66), gy2 = clY + 3;
-    xctx.strokeStyle = 'rgba(140,190,255,0.55)'; xctx.lineWidth = 2.5;
-    xctx.beginPath(); xctx.arc(gx2, gy2, 17, Math.PI * 0.75, Math.PI * 2.05); xctx.stroke();
-    xctx.strokeStyle = 'rgba(255,170,80,0.8)';
-    xctx.beginPath(); xctx.moveTo(gx2, gy2); xctx.lineTo(gx2 + 9, gy2 - 8); xctx.stroke();
-  });
-  /* centre stack — radio & climate, when the dash is tall enough */
-  if (dashH > 190) {
-    const csW = Math.min(W * 0.30, 215), csX = W * 0.70 - csW / 2, csY = dashTop + dashH * 0.15, csH = Math.min(dashH * 0.34, 150);
-    xctx.fillStyle = '#11161f';
-    roundRect(xctx, csX, csY, csW, csH, 12); xctx.fill();
-    xctx.fillStyle = 'rgba(120,255,170,0.20)';
-    roundRect(xctx, csX + 12, csY + 12, csW - 24, 24, 5); xctx.fill();
-    xctx.fillStyle = 'rgba(190,255,215,0.85)';
-    xctx.font = '700 12px system-ui, sans-serif'; xctx.textAlign = 'center';
-    xctx.fillText('FM 101.1', csX + csW / 2, csY + 29);
-    [-0.28, 0, 0.28].forEach(off => {
-      const kx = csX + csW / 2 + off * csW, ky = csY + csH - 26;
-      xctx.fillStyle = '#1d2531';
-      xctx.beginPath(); xctx.arc(kx, ky, 11, 0, 6.2832); xctx.fill();
-      xctx.fillStyle = 'rgba(255,170,80,0.8)';
-      xctx.fillRect(kx - 1, ky - 8, 2, 5);
-    });
-    xctx.strokeStyle = 'rgba(255,255,255,0.06)'; xctx.lineWidth = 2;
-    roundRect(xctx, W * 0.855, csY + 6, W * 0.12, csH * 0.8, 8); xctx.stroke();
-  }
-  /* amber indicator */
-  xctx.fillStyle = 'rgba(255,150,60,' + (0.65 + 0.3 * Math.sin(now * 0.003)) + ')';
-  xctx.beginPath(); xctx.arc(W * 0.5, dashTop + dashH * 0.07, 3.4, 0, 6.2832); xctx.fill();
-
-  /* the steering wheel — big, low, in front of the dash */
-  const wr = clamp(Math.min(W, H) * 0.30, 88, 178);
-  const wcx = W * 0.36, wcy = H - wr * 0.28;
-  xctx.strokeStyle = '#131922'; xctx.lineWidth = wr * 0.15; xctx.lineCap = 'round';
-  xctx.beginPath(); xctx.moveTo(wcx - wr * 0.88, wcy + wr * 0.05); xctx.lineTo(wcx + wr * 0.88, wcy + wr * 0.05); xctx.stroke();
-  xctx.beginPath(); xctx.moveTo(wcx, wcy); xctx.lineTo(wcx, wcy + wr * 0.9); xctx.stroke();
-  xctx.strokeStyle = '#0d1219'; xctx.lineWidth = wr * 0.17;
-  xctx.beginPath(); xctx.arc(wcx, wcy, wr, 0, 6.2832); xctx.stroke();
-  xctx.strokeStyle = 'rgba(255,255,255,0.10)'; xctx.lineWidth = 3;
-  xctx.beginPath(); xctx.arc(wcx, wcy, wr + wr * 0.088, Math.PI * 1.12, Math.PI * 1.6); xctx.stroke();
-  xctx.fillStyle = '#151b25';
-  xctx.beginPath(); xctx.arc(wcx, wcy, wr * 0.30, 0, 6.2832); xctx.fill();
-  xctx.fillStyle = 'rgba(255,190,90,0.9)';
-  xctx.beginPath(); xctx.arc(wcx, wcy, wr * 0.055, 0, 6.2832); xctx.fill();
-
-  /* --- windshield gasket, glass sheen, parked wipers --- */
+  /* --- glass edge shadow + sheen over the painted interior --- */
   xctx.lineJoin = 'round';
-  xctx.strokeStyle = '#0a0d12';
-  xctx.lineWidth = Math.max(9, Math.min(W, H) * 0.017);
-  glassPath(xctx); xctx.stroke();
-  xctx.strokeStyle = 'rgba(205,225,245,0.16)';
-  xctx.lineWidth = 2;
-  glassPath(xctx); xctx.stroke();
+  xctx.strokeStyle = 'rgba(24,20,14,0.20)';
+  xctx.lineWidth = Math.max(10, Math.min(G.w, G.h) * 0.05);
+  glassOutline(xctx); xctx.stroke();
+  xctx.strokeStyle = 'rgba(10,10,12,0.28)';
+  xctx.lineWidth = 2.5;
+  glassOutline(xctx); xctx.stroke();
   xctx.save();
-  glassPath(xctx); xctx.clip();
-  const sh = xctx.createLinearGradient(W * 0.05, 0, W * 0.60, 0);
+  glassPath(xctx); xctx.clip('evenodd');
+  const sh = xctx.createLinearGradient(G.x, 0, G.x + G.w * 0.55, 0);
   sh.addColorStop(0, 'rgba(255,255,255,0)');
-  sh.addColorStop(0.45, 'rgba(255,255,255,0.055)');
-  sh.addColorStop(0.62, 'rgba(255,255,255,0.015)');
+  sh.addColorStop(0.45, 'rgba(255,255,255,0.05)');
+  sh.addColorStop(0.62, 'rgba(255,255,255,0.012)');
   sh.addColorStop(1, 'rgba(255,255,255,0)');
   xctx.fillStyle = sh;
-  xctx.fillRect(0, 0, W, G.y + G.h);
+  xctx.fillRect(G.x, G.y, G.w, G.h);
   xctx.restore();
-  /* wipers parked at the base of the glass */
-  xctx.fillStyle = '#10141b';
-  [[0.30, -0.13], [0.57, -0.09]].forEach(wp => {
-    xctx.save();
-    xctx.translate(G.x + G.w * wp[0], G.y + G.h - 4);
-    xctx.rotate(wp[1]);
-    const wl = G.w * 0.30;
-    roundRect(xctx, -wl * 0.08, -4.5, wl, 9, 4.5); xctx.fill();
-    xctx.fillStyle = 'rgba(255,255,255,0.10)';
-    xctx.fillRect(-wl * 0.08, -4.5, wl, 2.5);
-    xctx.fillStyle = '#10141b';
-    xctx.beginPath(); xctx.arc(0, 0, 7.5, 0, 6.2832); xctx.fill();
-    xctx.restore();
-  });
 
   /* --- suds particles: popped bubbles & foam bits --- */
   for (let i = suds.length - 1; i >= 0; i--) {
