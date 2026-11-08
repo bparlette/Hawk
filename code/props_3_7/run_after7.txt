@@ -1,6 +1,0 @@
-shot belt_grinder_magnet_rollers
-shot magnet_lift
-shot crusher_warn_scrap
-shot crusher_slam
-shot outro
-errors 0

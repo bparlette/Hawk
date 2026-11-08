@@ -1,3 +1,0 @@
-shot /workspace/work/lvl15_art2/shots/el_a.png
-shot /workspace/work/lvl15_art2/shots/el_b.png
-shot /workspace/work/lvl15_art2/shots/el_c.png
