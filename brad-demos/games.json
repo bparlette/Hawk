@@ -2158,6 +2158,18 @@
    "path": "../games/draw-and-drive/index.html",
    "thumb": "thumbs/draw-and-drive.png",
    "title": "DRAW & DRIVE!"
+  },
+  {
+   "autostart": [],
+   "category": "Originals",
+   "id": "outrun-the-hole",
+   "keys": {},
+   "labels": {},
+   "note": "you're the car, the black hole is the hunter — race 6 gates and escape the city; 2P mode lets a friend drive the hole",
+   "orientation": "any",
+   "path": "../games/outrun-the-hole/index.html",
+   "thumb": "thumbs/outrun-the-hole.png",
+   "title": "OUTRUN THE HOLE!"
   }
  ]
 }
