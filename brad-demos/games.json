@@ -5889,6 +5889,19 @@
    "orientation": "landscape",
    "path": "../games/mario-fighter/index.html",
    "title": "Mario × Street Fighter"
+  },
+  {
+   "autostart": [],
+   "category": "ASMR",
+   "id": "suds-scrub",
+   "keys": {
+    "start": "Enter"
+   },
+   "labels": {},
+   "note": "Sponge the soap bubbles off the windshield and see who is outside.",
+   "orientation": "any",
+   "path": "../games/suds-scrub/index.html",
+   "title": "Suds Scrub"
   }
  ]
 }
