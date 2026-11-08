@@ -1,0 +1,850 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+<title>BONK YARD! — whack-a-mole in your room</title>
+<style>
+  html, body { height: 100%; }
+  body {
+    margin: 0;
+    overflow: hidden;
+    background: #241407;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    color: #fff;
+    -webkit-user-select: none;
+    user-select: none;
+  }
+  #cam, #room, #gl, #fx {
+    position: fixed; inset: 0;
+    width: 100%; height: 100%;
+    display: block;
+  }
+  #cam { object-fit: cover; background: #241407; z-index: 0; }
+  #room { z-index: 0; }
+  #gl { z-index: 1; }
+  #fx { z-index: 2; pointer-events: none; }
+  #hud {
+    position: fixed;
+    top: calc(env(safe-area-inset-top, 0px) + 8px);
+    left: 10px; right: 10px;
+    z-index: 3;
+    pointer-events: none;
+  }
+  #hudRow { display: flex; gap: 8px; align-items: center; }
+  .chip {
+    background: rgba(24, 14, 4, 0.58);
+    border: 1px solid rgba(255,255,255,0.22);
+    border-radius: 999px;
+    padding: 6px 12px;
+    font-size: 15px; font-weight: 700;
+    letter-spacing: 0.02em;
+    backdrop-filter: blur(3px);
+    white-space: nowrap;
+  }
+  .chip b { font-size: 17px; }
+  #comboChip { color: #ffd76a; opacity: 0; transform: scale(0.8); transition: opacity 0.15s, transform 0.15s; }
+  #comboChip.show { opacity: 1; transform: scale(1); }
+  #timeChip { margin-left: auto; }
+  #timeChip.low { color: #ff8a7a; }
+  #camTag { font-size: 11px; font-weight: 700; opacity: 0.85; margin-left: auto; }
+  #timerWrap {
+    margin-top: 6px;
+    height: 7px;
+    border-radius: 99px;
+    background: rgba(0,0,0,0.35);
+    border: 1px solid rgba(255,255,255,0.18);
+    overflow: hidden;
+  }
+  #timerBar {
+    height: 100%; width: 100%;
+    border-radius: 99px;
+    background: linear-gradient(90deg, #7be495, #ffd76a 60%, #ff8a5e);
+    background-size: 100vw 100%;
+  }
+  #bigMsg {
+    position: fixed;
+    left: 50%; top: 22%;
+    transform: translate(-50%, -50%) scale(0.7);
+    z-index: 4;
+    font-size: 40px; font-weight: 900;
+    color: #ffd76a;
+    text-shadow: 0 3px 0 rgba(90,40,0,0.55), 0 6px 18px rgba(0,0,0,0.5);
+    opacity: 0;
+    pointer-events: none;
+    white-space: nowrap;
+  }
+  #bigMsg.pop { animation: msgPop 0.9s ease-out forwards; }
+  @keyframes msgPop {
+    0% { opacity: 0; transform: translate(-50%, -50%) scale(0.6); }
+    18% { opacity: 1; transform: translate(-50%, -50%) scale(1.15); }
+    32% { transform: translate(-50%, -50%) scale(1); }
+    75% { opacity: 1; }
+    100% { opacity: 0; transform: translate(-50%, -62%) scale(1); }
+  }
+  .overlay {
+    position: fixed; inset: 0;
+    z-index: 5;
+    display: flex; align-items: center; justify-content: center;
+    background:
+      radial-gradient(120% 90% at 50% 0%, rgba(255, 196, 110, 0.32), rgba(0,0,0,0) 55%),
+      linear-gradient(180deg, rgba(46, 26, 8, 0.88), rgba(20, 10, 3, 0.94));
+    padding: 20px;
+    box-sizing: border-box;
+  }
+  .card { text-align: center; max-width: 430px; }
+  .card .big { font-size: 56px; line-height: 1.1; }
+  .card h1 {
+    margin: 6px 0 4px;
+    font-size: 38px; font-weight: 900; letter-spacing: 0.01em;
+    text-shadow: 0 3px 0 rgba(0,0,0,0.35);
+  }
+  .card p { margin: 6px 0; font-size: 16px; line-height: 1.45; opacity: 0.92; }
+  .card .scoreLine { font-size: 21px; font-weight: 800; opacity: 1; }
+  .card .scoreLine b { font-size: 30px; color: #ffd76a; }
+  .playBtn {
+    font: inherit;
+    margin-top: 16px;
+    font-size: 21px; font-weight: 900;
+    color: #3a2113;
+    background: linear-gradient(180deg, #ffd98a, #ffb84d);
+    border: 2px solid rgba(120, 66, 18, 0.55);
+    border-radius: 999px;
+    padding: 15px 36px;
+    box-shadow: 0 8px 22px rgba(0,0,0,0.45);
+    cursor: pointer;
+  }
+  .playBtn:active { transform: scale(0.96); }
+  .card .fine { font-size: 13px; opacity: 0.65; margin-top: 14px; }
+  .hidden { display: none !important; }
+</style>
+<script type="importmap">
+{ "imports": { "three": "./vendor/three.module.js" } }
+</script>
+<style id="moth-game-guard">
+html,body{touch-action:none;overscroll-behavior:none;-webkit-touch-callout:none;-webkit-user-select:none;user-select:none;-webkit-tap-highlight-color:transparent}
+canvas{touch-action:none}
+</style>
+</head>
+<body>
+<video id="cam" autoplay playsinline muted></video>
+<canvas id="room"></canvas>
+<canvas id="gl"></canvas>
+<canvas id="fx"></canvas>
+
+<div id="hud" class="hidden">
+  <div id="hudRow">
+    <div class="chip">🏆 <b><span id="score">0</span></b></div>
+    <div class="chip" id="comboChip">🔥 <span id="comboTxt">×1</span></div>
+    <div class="chip" id="timeChip">⏱ <b><span id="timeLeft">60</span></b></div>
+  </div>
+  <div id="timerWrap"><div id="timerBar"></div></div>
+  <div style="display:flex; margin-top:4px;"><div id="camTag">📷 AR room</div></div>
+</div>
+
+<div id="bigMsg"></div>
+
+<div id="start" class="overlay">
+  <div class="card">
+    <div class="big">🔨</div>
+    <h1>BONK YARD!</h1>
+    <p>Critters are invading <b>your</b> room. When one pops out of its hole — <b>TAP it to bonk it!</b></p>
+    <p>⭐ Golden critter = <b>50 pts</b> · 💣 Bomb-hat grump breaks your combo · Build streaks for <b>×2</b> and <b>×3</b>!</p>
+    <button id="startBtn" class="playBtn" type="button">▶ PLAY</button>
+    <p class="fine">Needs camera for the full AR feel.<br>No camera? No problem — they get a cozy room instead.</p>
+  </div>
+</div>
+
+<div id="end" class="overlay hidden">
+  <div class="card">
+    <div class="big">⏰</div>
+    <h1>TIME UP!</h1>
+    <p class="scoreLine">You scored <b><span id="finalScore">0</span></b></p>
+    <p>🏅 Best: <span id="bestScore">0</span> · 🔨 Bonks: <span id="bonkCount">0</span> · 🔥 Best streak: <span id="bestStreak">0</span></p>
+    <p id="newBest" class="scoreLine hidden">🎉 NEW BEST!</p>
+    <button id="againBtn" class="playBtn" type="button">↻ PLAY AGAIN</button>
+  </div>
+</div>
+
+<script type="module">
+import * as THREE from 'three';
+
+'use strict';
+/* ============================== helpers ============================== */
+const clamp = (v, a, b) => v < a ? a : (v > b ? b : v);
+const lerp = (a, b, t) => a + (b - a) * t;
+const rand = (a, b) => a + Math.random() * (b - a);
+const pick = arr => arr[Math.floor(Math.random() * arr.length)];
+const easeOutBack = t => { const c = 1.70158; const u = t - 1; return 1 + (c + 1) * u * u * u + c * u * u; };
+
+/* ============================== audio (all synth) ============================== */
+let AC = null;
+function initAudio() {
+  try {
+    if ('audioSession' in navigator) { try { navigator.audioSession.type = 'playback'; } catch (e) {} }
+    if (!AC) {
+      const Ctor = window.AudioContext || window.webkitAudioContext;
+      if (Ctor) AC = new Ctor();
+    }
+    if (AC) {
+      if (AC.state === 'suspended') AC.resume();
+      // 1-sample silent buffer unlock (iOS first-gesture rule)
+      const buf = AC.createBuffer(1, 1, 22050);
+      const src = AC.createBufferSource();
+      src.buffer = buf; src.connect(AC.destination); src.start(0);
+    }
+  } catch (e) { /* audio is optional */ }
+}
+function resumeAudio() { try { if (AC && AC.state === 'suspended') AC.resume(); } catch (e) {} }
+document.addEventListener('pointerdown', resumeAudio, true);
+document.addEventListener('touchend', resumeAudio, true);
+document.addEventListener('visibilitychange', () => { if (!document.hidden) resumeAudio(); });
+
+function tone(f0, f1, dur, type, vol, delay) {
+  if (!AC) return;
+  try {
+    const t0 = AC.currentTime + (delay || 0);
+    const o = AC.createOscillator(), g = AC.createGain();
+    o.type = type || 'sine';
+    o.frequency.setValueAtTime(Math.max(30, f0), t0);
+    o.frequency.exponentialRampToValueAtTime(Math.max(30, f1), t0 + dur);
+    g.gain.setValueAtTime(0.0001, t0);
+    g.gain.exponentialRampToValueAtTime(vol || 0.15, t0 + 0.015);
+    g.gain.exponentialRampToValueAtTime(0.0001, t0 + dur);
+    o.connect(g); g.connect(AC.destination);
+    o.start(t0); o.stop(t0 + dur + 0.05);
+  } catch (e) {}
+}
+const sndBoing = () => { tone(280, 720, 0.14, 'triangle', 0.11); };
+const sndBonk  = () => { tone(950, 1500, 0.07, 'square', 0.06); tone(170, 65, 0.13, 'sine', 0.22, 0.01); };
+const sndGold  = () => { tone(880, 880, 0.09, 'triangle', 0.13); tone(1174, 1174, 0.09, 'triangle', 0.13, 0.07); tone(1568, 1568, 0.16, 'triangle', 0.14, 0.14); };
+const sndGrump = () => { tone(150, 110, 0.28, 'sawtooth', 0.12); tone(90, 60, 0.2, 'square', 0.08, 0.05); };
+const sndDuck  = () => { tone(520, 300, 0.09, 'sine', 0.045); };
+const sndJingle = () => { [523, 659, 784, 1046].forEach((f, i) => tone(f, f, 0.16, 'triangle', 0.13, i * 0.11)); };
+
+/* ============================== dom / state ============================== */
+const video = document.getElementById('cam');
+const roomCanvas = document.getElementById('room');
+const rctx = roomCanvas.getContext('2d');
+const glCanvas = document.getElementById('gl');
+const fxCanvas = document.getElementById('fx');
+const fctx = fxCanvas.getContext('2d');
+const hudEl = document.getElementById('hud');
+const scoreEl = document.getElementById('score');
+const comboChip = document.getElementById('comboChip');
+const comboTxt = document.getElementById('comboTxt');
+const timeChip = document.getElementById('timeChip');
+const timeLeftEl = document.getElementById('timeLeft');
+const timerBar = document.getElementById('timerBar');
+const camTagEl = document.getElementById('camTag');
+const bigMsgEl = document.getElementById('bigMsg');
+const startEl = document.getElementById('start');
+const endEl = document.getElementById('end');
+
+let W = 0, H = 0, floorTop = 0;
+let camOK = false;
+let phase = 'start';           // 'start' | 'playing' | 'over'
+const ROUND_LEN = 60;
+let score = 0, streak = 0, bestStreak = 0, bonks = 0;
+let timeLeft = ROUND_LEN, elapsed = 0, spawnTimer = 0;
+let best = 0;
+try { best = parseInt(localStorage.getItem('bonkBest') || '0', 10) || 0; } catch (e) {}
+
+const mult = () => streak >= 10 ? 3 : (streak >= 5 ? 2 : 1);
+
+/* ============================== parallax ============================== */
+let parX = 0, parY = 0, parTX = 0, parTY = 0;
+let lastOrientAt = -1e9, mouseAt = -1e9, mouseTX = 0, mouseTY = 0;
+window.addEventListener('deviceorientation', (e) => {
+  if (e.gamma == null && e.beta == null) return;
+  lastOrientAt = performance.now();
+  parTX = clamp((e.gamma || 0) / 26, -1, 1);
+  parTY = clamp(((e.beta || 0) - 48) / 24, -1, 1);
+}, true);
+window.addEventListener('pointermove', (e) => {
+  if (e.pointerType !== 'mouse') return;
+  mouseAt = performance.now();
+  mouseTX = clamp((e.clientX / Math.max(1, W) - 0.5) * 2, -1, 1);
+  mouseTY = clamp((e.clientY / Math.max(1, H) - 0.5) * 2, -1, 1);
+}, true);
+function updateParallax(t) {
+  let tx, ty;
+  if (performance.now() - mouseAt < 2500) { tx = mouseTX; ty = mouseTY; }
+  else if (performance.now() - lastOrientAt < 3000) { tx = parTX; ty = parTY; }
+  else { tx = Math.sin(t * 0.00035) * 0.55; ty = Math.sin(t * 0.00027 + 1.7) * 0.30; }
+  parX += (tx - parX) * 0.055;
+  parY += (ty - parY) * 0.055;
+}
+
+/* ============================== cozy room (fallback bg) ============================== */
+function rr2(c, x, y, w, h, r) { c.beginPath(); if (c.roundRect) c.roundRect(x, y, w, h, r); else c.rect(x, y, w, h); }
+function ellipse2(c, x, y, rx, ry, rot) { c.beginPath(); c.ellipse(x, y, rx, ry, rot || 0, 0, Math.PI * 2); }
+function drawRoom() {
+  const ctx = rctx;
+  const wall = ctx.createLinearGradient(0, 0, 0, floorTop + 30);
+  wall.addColorStop(0, '#cfe8b8'); wall.addColorStop(1, '#a8d08d');
+  ctx.fillStyle = wall; ctx.fillRect(0, 0, W, floorTop + 2);
+  const wx = W * 0.16 + parX * -8, wy = H * 0.06, ww = W * 0.30, wh = floorTop * 0.58;
+  ctx.fillStyle = '#bfe3f2'; rr2(ctx, wx, wy, ww, wh, 8); ctx.fill();
+  ctx.fillStyle = '#fff3b0'; ctx.beginPath(); ctx.arc(wx + ww * 0.72, wy + wh * 0.3, ww * 0.13, 0, Math.PI * 2); ctx.fill();
+  ctx.strokeStyle = '#fff8ee'; ctx.lineWidth = 7; rr2(ctx, wx, wy, ww, wh, 8); ctx.stroke();
+  ctx.lineWidth = 4; ctx.beginPath();
+  ctx.moveTo(wx + ww / 2, wy); ctx.lineTo(wx + ww / 2, wy + wh);
+  ctx.moveTo(wx, wy + wh / 2); ctx.lineTo(wx + ww, wy + wh / 2); ctx.stroke();
+  ctx.fillStyle = '#fff3e0'; ctx.fillRect(0, floorTop - 7, W, 9);
+  const fl = ctx.createLinearGradient(0, floorTop, 0, H);
+  fl.addColorStop(0, '#79b657'); fl.addColorStop(1, '#4e8a38');
+  ctx.fillStyle = fl; ctx.fillRect(0, floorTop, W, H - floorTop);
+  ctx.fillStyle = 'rgba(255,255,220,0.10)';
+  for (let i = 0; i < 26; i++) {
+    const gx = ((i * 137) % Math.max(1, W)), gy = floorTop + 14 + ((i * 89) % Math.max(1, H - floorTop - 20));
+    ctx.fillRect(gx, gy, 3, 9);
+  }
+  const rugX = W * 0.5 + parX * -12, rugY = H * 0.83;
+  ctx.fillStyle = '#c4553b'; ellipse2(ctx, rugX, rugY, W * 0.36, H * 0.08); ctx.fill();
+  ctx.fillStyle = '#e8845f'; ellipse2(ctx, rugX, rugY, W * 0.29, H * 0.06); ctx.fill();
+  const vg = ctx.createRadialGradient(W / 2, H / 2, Math.min(W, H) * 0.45, W / 2, H / 2, Math.max(W, H) * 0.78);
+  vg.addColorStop(0, 'rgba(20,30,5,0)'); vg.addColorStop(1, 'rgba(20,30,5,0.20)');
+  ctx.fillStyle = vg; ctx.fillRect(0, 0, W, H);
+}
+
+/* ============================== three.js scene ============================== */
+let renderer = null, scene = null, camera = null;
+const CAM_BASE = new THREE.Vector3(0, 2.2, 4.2);
+const CAM_LOOK = new THREE.Vector3(0, 0.15, -2);
+
+function makeBlobTexture() {
+  const c = document.createElement('canvas'); c.width = c.height = 128;
+  const g = c.getContext('2d');
+  const grad = g.createRadialGradient(64, 64, 4, 64, 64, 62);
+  grad.addColorStop(0, 'rgba(0,0,0,0.55)');
+  grad.addColorStop(0.6, 'rgba(0,0,0,0.28)');
+  grad.addColorStop(1, 'rgba(0,0,0,0)');
+  g.fillStyle = grad; g.fillRect(0, 0, 128, 128);
+  return new THREE.CanvasTexture(c);
+}
+let blobGeo = null, blobMat = null;
+
+function initGL() {
+  renderer = new THREE.WebGLRenderer({ canvas: document.getElementById('gl'), alpha: true, antialias: true });
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
+  renderer.setSize(window.innerWidth, window.innerHeight);
+  renderer.setClearColor(0x000000, 0);
+  scene = new THREE.Scene();
+  camera = new THREE.PerspectiveCamera(60, window.innerWidth / Math.max(1, window.innerHeight), 0.1, 80);
+  camera.position.copy(CAM_BASE);
+  camera.lookAt(CAM_LOOK);
+  scene.add(new THREE.HemisphereLight(0xffffff, 0x446644, 1.2));
+  const dir = new THREE.DirectionalLight(0xfff1da, 1.6);
+  dir.position.set(2.5, 4.5, 3.0);
+  scene.add(dir);
+  blobGeo = new THREE.PlaneGeometry(1, 1);
+  blobMat = new THREE.MeshBasicMaterial({ map: makeBlobTexture(), transparent: true, depthWrite: false, opacity: 0.8 });
+}
+
+/* the yard mat — a soft grassy patch the holes sit on (reads in AR + fallback) */
+function buildYard() {
+  const mat = new THREE.Mesh(
+    new THREE.PlaneGeometry(3.6, 5.4),
+    new THREE.MeshStandardMaterial({ color: 0x5da244, roughness: 1, transparent: true, opacity: 0.92 })
+  );
+  mat.rotation.x = -Math.PI / 2;
+  mat.position.set(0, -0.01, -1.3);
+  scene.add(mat);
+  const dirt = new THREE.Mesh(
+    new THREE.PlaneGeometry(3.3, 5.1),
+    new THREE.MeshStandardMaterial({ color: 0x6d9c4e, roughness: 1, transparent: true, opacity: 0.55 })
+  );
+  dirt.rotation.x = -Math.PI / 2;
+  dirt.position.set(0, -0.005, -1.3);
+  scene.add(dirt);
+}
+
+/* ============================== critters (all code-drawn) ============================== */
+const GEO = {
+  body: new THREE.SphereGeometry(0.30, 24, 18),
+  muzzle: new THREE.SphereGeometry(0.155, 18, 12),
+  nose: new THREE.SphereGeometry(0.05, 12, 10),
+  eye: new THREE.SphereGeometry(0.047, 10, 8),
+  glint: new THREE.SphereGeometry(0.016, 8, 6),
+  ear: new THREE.ConeGeometry(0.095, 0.24, 12),
+  tooth: new THREE.BoxGeometry(0.10, 0.10, 0.025),
+  brow: new THREE.BoxGeometry(0.13, 0.03, 0.02),
+  bomb: new THREE.SphereGeometry(0.135, 16, 12),
+  fuse: new THREE.CylinderGeometry(0.016, 0.016, 0.12, 6),
+  holeDark: new THREE.CircleGeometry(0.335, 28),
+  holeInner: new THREE.CircleGeometry(0.26, 24),
+  holeRim: new THREE.TorusGeometry(0.335, 0.055, 10, 28)
+};
+const MAT = {
+  muzzle: new THREE.MeshStandardMaterial({ color: 0xf3ddba, roughness: 0.9 }),
+  nose: new THREE.MeshStandardMaterial({ color: 0x7a4030, roughness: 0.6 }),
+  eye: new THREE.MeshStandardMaterial({ color: 0x1c1410, roughness: 0.35 }),
+  glint: new THREE.MeshStandardMaterial({ color: 0xffffff, roughness: 0.2, emissive: 0x888888 }),
+  tooth: new THREE.MeshStandardMaterial({ color: 0xffffff, roughness: 0.4 }),
+  gold: new THREE.MeshStandardMaterial({ color: 0xffc93c, roughness: 0.28, metalness: 0.55, emissive: 0x664d00 }),
+  grumpBody: new THREE.MeshStandardMaterial({ color: 0x707a84, roughness: 0.95 }),
+  bomb: new THREE.MeshStandardMaterial({ color: 0x22242a, roughness: 0.35, metalness: 0.4 }),
+  fuse: new THREE.MeshStandardMaterial({ color: 0xc9a86a, roughness: 0.9 }),
+  holeDark: new THREE.MeshBasicMaterial({ color: 0x140b04 }),
+  holeInner: new THREE.MeshBasicMaterial({ color: 0x2b1a0c }),
+  rim: new THREE.MeshStandardMaterial({ color: 0x8a5a2b, roughness: 1 })
+};
+const BODY_MATS = [0xb07a45, 0x9a9a9a, 0xd8cfc0].map(c => new THREE.MeshStandardMaterial({ color: c, roughness: 0.95 }));
+const EAR_MATS = [0x8a5f33, 0x7c7c7c, 0xbfb4a2].map(c => new THREE.MeshStandardMaterial({ color: c, roughness: 0.95 }));
+
+function buildCritterMesh(kind, colorIdx) {
+  const g = new THREE.Group();
+  const bodyMat = kind === 'gold' ? MAT.gold : (kind === 'grump' ? MAT.grumpBody : BODY_MATS[colorIdx]);
+  const earMat = kind === 'gold' ? MAT.gold : (kind === 'grump' ? MAT.grumpBody : EAR_MATS[colorIdx]);
+  const body = new THREE.Mesh(GEO.body, bodyMat);
+  body.scale.set(1, 0.92, 0.95);
+  body.position.y = 0.28;
+  g.add(body);
+  const muzzle = new THREE.Mesh(GEO.muzzle, kind === 'gold' ? MAT.gold : MAT.muzzle);
+  muzzle.scale.set(1.1, 0.72, 0.8);
+  muzzle.position.set(0, 0.21, 0.21);
+  g.add(muzzle);
+  const nose = new THREE.Mesh(GEO.nose, MAT.nose);
+  nose.position.set(0, 0.27, 0.345);
+  g.add(nose);
+  for (const s of [-1, 1]) {
+    const eye = new THREE.Mesh(GEO.eye, MAT.eye);
+    eye.position.set(0.105 * s, 0.375, 0.245);
+    g.add(eye);
+    const glint = new THREE.Mesh(GEO.glint, MAT.glint);
+    glint.position.set(0.105 * s + 0.018, 0.392, 0.285);
+    g.add(glint);
+    const ear = new THREE.Mesh(GEO.ear, earMat);
+    ear.position.set(0.175 * s, 0.56, 0);
+    ear.rotation.z = -0.35 * s;
+    g.add(ear);
+  }
+  const tooth = new THREE.Mesh(GEO.tooth, MAT.tooth);
+  tooth.position.set(0, 0.115, 0.315);
+  g.add(tooth);
+  if (kind === 'grump') {
+    for (const s of [-1, 1]) {
+      const brow = new THREE.Mesh(GEO.brow, MAT.eye);
+      brow.position.set(0.105 * s, 0.445, 0.26);
+      brow.rotation.z = 0.55 * s;
+      g.add(brow);
+    }
+    const bomb = new THREE.Mesh(GEO.bomb, MAT.bomb);
+    bomb.position.set(0, 0.66, 0);
+    g.add(bomb);
+    const fuse = new THREE.Mesh(GEO.fuse, MAT.fuse);
+    fuse.position.set(0.03, 0.79, 0);
+    fuse.rotation.z = -0.5;
+    g.add(fuse);
+  }
+  g.traverse(o => { o.userData.critterRoot = g; });
+  return g;
+}
+
+/* ============================== holes ============================== */
+const HOLE_POS = [];
+for (const z of [0.4, -1.3, -3.0]) for (const x of [-0.95, 0, 0.95]) HOLE_POS.push({ x, z });
+const holes = [];
+function buildHoles() {
+  for (const pos of HOLE_POS) {
+    const grp = new THREE.Group();
+    grp.position.set(pos.x, 0, pos.z);
+    const dark = new THREE.Mesh(GEO.holeDark, MAT.holeDark);
+    dark.rotation.x = -Math.PI / 2; dark.position.y = 0.004;
+    grp.add(dark);
+    const inner = new THREE.Mesh(GEO.holeInner, MAT.holeInner);
+    inner.rotation.x = -Math.PI / 2; inner.position.y = 0.008;
+    grp.add(inner);
+    const rim = new THREE.Mesh(GEO.holeRim, MAT.rim);
+    rim.rotation.x = Math.PI / 2; rim.position.y = 0.012;
+    rim.scale.set(1, 1, 0.45);
+    grp.add(rim);
+    const shadow = new THREE.Mesh(blobGeo, blobMat);
+    shadow.rotation.x = -Math.PI / 2;
+    shadow.position.y = 0.002;
+    shadow.scale.set(0.95, 0.8, 1);
+    grp.add(shadow);
+    scene.add(grp);
+    holes.push({ x: pos.x, z: pos.z, critter: null });
+  }
+}
+
+/* ============================== critter lifecycle ============================== */
+const HIDDEN_Y = -0.66;
+const critters = [];   // every spawned critter (any state); hole.critter points at the live one
+const upCritters = () => critters.filter(c => c.state === 'rising' || c.state === 'up');
+
+function spawnCritter() {
+  const free = holes.filter(h => !h.critter);
+  if (!free.length) return null;
+  const hole = pick(free);
+  const roll = Math.random();
+  const kind = roll < 0.08 ? 'gold' : (roll < 0.20 ? 'grump' : 'normal');
+  const colorIdx = Math.floor(Math.random() * 3);
+  const mesh = buildCritterMesh(kind, colorIdx);
+  mesh.position.set(hole.x, HIDDEN_Y, hole.z);
+  scene.add(mesh);
+  const ramp = clamp(elapsed / ROUND_LEN, 0, 1);
+  const c = {
+    hole, mesh, kind,
+    state: 'rising', t: 0,
+    riseDur: 0.20,
+    upDur: rand(0.7, 1.4) * lerp(1, 0.82, ramp),
+    duckDur: 0.12,
+    wigPh: rand(0, Math.PI * 2),
+    squashed: false
+  };
+  hole.critter = c;
+  critters.push(c);
+  sndBoing();
+  return c;
+}
+
+function freeCritter(c) {
+  scene.remove(c.mesh);
+  if (c.hole.critter === c) c.hole.critter = null;
+  const i = critters.indexOf(c);
+  if (i >= 0) critters.splice(i, 1);
+}
+
+function updateCritter(c, dt, t) {
+  c.t += dt;
+  if (c.state === 'rising') {
+    const k = clamp(c.t / c.riseDur, 0, 1);
+    c.mesh.position.y = lerp(HIDDEN_Y, 0, easeOutBack(k));
+    if (k >= 1) { c.state = 'up'; c.t = 0; c.mesh.position.y = 0; }
+  } else if (c.state === 'up') {
+    c.mesh.rotation.z = Math.sin(t * 0.006 + c.wigPh) * 0.06;
+    c.mesh.rotation.y = Math.sin(t * 0.0021 + c.wigPh) * 0.35;
+    if (c.t >= c.upDur) { c.state = 'ducking'; c.t = 0; if (c.kind !== 'grump') sndDuck(); }
+  } else if (c.state === 'ducking') {
+    const k = clamp(c.t / c.duckDur, 0, 1);
+    c.mesh.position.y = lerp(0, HIDDEN_Y, k * k);
+    if (k >= 1) freeCritter(c);
+  } else if (c.state === 'bonked') {
+    // squash flat, hold, then sink away
+    const sk = clamp(c.t / 0.09, 0, 1);
+    c.mesh.scale.set(1 + 0.4 * sk, 1 - 0.75 * sk, 1 + 0.4 * sk);
+    if (c.t > 0.30) {
+      const k = clamp((c.t - 0.30) / 0.16, 0, 1);
+      c.mesh.position.y = lerp(0, HIDDEN_Y, k);
+      if (k >= 1) freeCritter(c);
+    }
+  }
+}
+
+/* ============================== fx overlay (stars, score pops, ripples) ============================== */
+const fx = [];
+function critterHeadScreen(c) {
+  _pv.set(c.hole.x, 0.62 + c.mesh.position.y, c.hole.z).project(camera);
+  return { x: (_pv.x * 0.5 + 0.5) * W, y: (_pv.y * -0.5 + 0.5) * H };
+}
+function spawnStars(sx, sy, n, gold) {
+  for (let i = 0; i < n; i++) {
+    const a = rand(0, Math.PI * 2), sp = rand(40, 150);
+    fx.push({ type: 'star', x: sx, y: sy, vx: Math.cos(a) * sp, vy: Math.sin(a) * sp - 60,
+      life: 0, max: rand(0.45, 0.75), size: rand(6, 11), rot: rand(0, 3), gold: !!gold });
+  }
+}
+function spawnScorePop(sx, sy, txt, gold) {
+  fx.push({ type: 'text', x: sx, y: sy - 8, vx: 0, vy: -68, life: 0, max: 0.8, txt, gold: !!gold });
+}
+function spawnRipple(sx, sy) {
+  fx.push({ type: 'ring', x: sx, y: sy, life: 0, max: 0.32 });
+}
+function drawStarShape(s, r) {
+  fctx.beginPath();
+  for (let i = 0; i < 10; i++) {
+    const ang = (i / 10) * Math.PI * 2 - Math.PI / 2;
+    const rad = i % 2 === 0 ? r : r * 0.45;
+    const px = Math.cos(ang) * rad, py = Math.sin(ang) * rad;
+    if (i === 0) fctx.moveTo(px, py); else fctx.lineTo(px, py);
+  }
+  fctx.closePath();
+}
+function updateFx(dt) {
+  for (let i = fx.length - 1; i >= 0; i--) {
+    const p = fx[i];
+    p.life += dt;
+    if (p.life >= p.max) { fx.splice(i, 1); continue; }
+    if (p.type === 'star') { p.x += p.vx * dt; p.y += p.vy * dt; p.vy += 260 * dt; p.rot += dt * 5; }
+    else if (p.type === 'text') { p.y += p.vy * dt; }
+  }
+}
+function drawFx() {
+  fctx.clearRect(0, 0, W, H);
+  for (const p of fx) {
+    const a = clamp(1 - p.life / p.max, 0, 1);
+    if (p.type === 'star') {
+      fctx.save();
+      fctx.translate(p.x, p.y); fctx.rotate(p.rot);
+      fctx.globalAlpha = a;
+      fctx.fillStyle = p.gold ? '#ffd83c' : '#fff3b0';
+      fctx.strokeStyle = 'rgba(150,90,0,0.8)'; fctx.lineWidth = 1.2;
+      drawStarShape(0, p.size);
+      fctx.fill(); fctx.stroke();
+      fctx.restore();
+    } else if (p.type === 'text') {
+      fctx.save();
+      fctx.globalAlpha = a;
+      fctx.font = '900 26px -apple-system, "Segoe UI", Roboto, sans-serif';
+      fctx.textAlign = 'center';
+      fctx.lineWidth = 5; fctx.strokeStyle = 'rgba(60,30,0,0.85)';
+      fctx.strokeText(p.txt, p.x, p.y);
+      fctx.fillStyle = p.gold ? '#ffd83c' : '#ffffff';
+      fctx.fillText(p.txt, p.x, p.y);
+      fctx.restore();
+    } else if (p.type === 'ring') {
+      fctx.save();
+      fctx.globalAlpha = a * 0.8;
+      fctx.strokeStyle = '#ffffff'; fctx.lineWidth = 3;
+      fctx.beginPath();
+      fctx.ellipse(p.x, p.y, 10 + p.life * 90, (10 + p.life * 90) * 0.45, 0, 0, Math.PI * 2);
+      fctx.stroke();
+      fctx.restore();
+    }
+  }
+  fctx.globalAlpha = 1;
+}
+
+/* ============================== scoring / hud ============================== */
+function updateHUD() {
+  scoreEl.textContent = score;
+  timeLeftEl.textContent = Math.max(0, Math.ceil(timeLeft));
+  timerBar.style.width = (clamp(timeLeft / ROUND_LEN, 0, 1) * 100).toFixed(1) + '%';
+  timeChip.classList.toggle('low', timeLeft <= 10.5);
+  if (streak >= 2) {
+    comboChip.classList.add('show');
+    comboTxt.textContent = 'STREAK ' + streak + (mult() > 1 ? ' · ×' + mult() : '');
+  } else comboChip.classList.remove('show');
+}
+function bigMsg(txt) {
+  bigMsgEl.textContent = txt;
+  bigMsgEl.classList.remove('pop');
+  void bigMsgEl.offsetWidth;
+  bigMsgEl.classList.add('pop');
+}
+
+function bonkCritter(c) {
+  if (c.state !== 'up' && c.state !== 'rising') return;
+  c.state = 'bonked'; c.t = 0;
+  const head = critterHeadScreen(c);
+  if (c.kind === 'grump') {
+    streak = 0;
+    sndGrump();
+    spawnStars(head.x, head.y, 7, false);
+    spawnScorePop(head.x, head.y, 'COMBO BUSTED!', false);
+    bigMsg('💣 COMBO BUSTED!');
+  } else {
+    streak += 1;
+    bestStreak = Math.max(bestStreak, streak);
+    bonks += 1;
+    const base = c.kind === 'gold' ? 50 : 10;
+    const pts = base * mult();
+    score += pts;
+    if (c.kind === 'gold') { sndGold(); bigMsg('⭐ GOLDEN! +' + pts); }
+    else sndBonk();
+    if (streak === 5) bigMsg('🔥 ×2 STREAK!');
+    if (streak === 10) bigMsg('🔥🔥 ×3 STREAK!');
+    spawnStars(head.x, head.y, c.kind === 'gold' ? 14 : 9, c.kind === 'gold');
+    spawnScorePop(head.x, head.y, '+' + pts, c.kind === 'gold');
+  }
+  updateHUD();
+}
+
+/* ============================== tap handling ============================== */
+const raycaster = new THREE.Raycaster();
+const _ndc = new THREE.Vector2();
+const _pv = new THREE.Vector3();
+glCanvas.addEventListener('pointerdown', (e) => {
+  initAudio(); resumeAudio();
+  if (phase !== 'playing') return;
+  _ndc.set((e.clientX / Math.max(1, W)) * 2 - 1, -((e.clientY / Math.max(1, H)) * 2 - 1));
+  raycaster.setFromCamera(_ndc, camera);
+  const meshes = [];
+  for (const c of critters) if (c.state === 'up' || c.state === 'rising') meshes.push(c.mesh);
+  const hits = raycaster.intersectObjects(meshes, true);
+  if (hits.length) {
+    let o = hits[0].object;
+    while (o && !o.userData.critterRoot) o = o.parent;
+    const root = o ? o.userData.critterRoot : null;
+    const c = critters.find(cc => cc.mesh === root);
+    if (c) { bonkCritter(c); return; }
+  }
+  spawnRipple(e.clientX, e.clientY);
+});
+
+/* ============================== game flow ============================== */
+function resetGame() {
+  for (const c of [...critters]) freeCritter(c);
+  score = 0; streak = 0; bestStreak = 0; bonks = 0;
+  timeLeft = ROUND_LEN; elapsed = 0; spawnTimer = 0.35;
+  fx.length = 0;
+  updateHUD();
+}
+function endGame() {
+  phase = 'over';
+  for (const c of critters) if (c.state === 'up' || c.state === 'rising') { c.state = 'ducking'; c.t = 0; }
+  const isBest = score > best;
+  if (isBest) { best = score; try { localStorage.setItem('bonkBest', String(best)); } catch (e) {} }
+  document.getElementById('finalScore').textContent = score;
+  document.getElementById('bestScore').textContent = best;
+  document.getElementById('bonkCount').textContent = bonks;
+  document.getElementById('bestStreak').textContent = bestStreak;
+  document.getElementById('newBest').classList.toggle('hidden', !isBest);
+  endEl.classList.remove('hidden');
+  sndJingle();
+  updateHUD();
+}
+function updateGame(dt) {
+  timeLeft -= dt;
+  elapsed += dt;
+  if (timeLeft <= 0) { timeLeft = 0; updateHUD(); endGame(); return; }
+  const ramp = clamp(elapsed / ROUND_LEN, 0, 1);
+  const interval = lerp(0.95, 0.45, ramp);
+  const maxUp = Math.round(lerp(3, 5, ramp));
+  spawnTimer -= dt;
+  if (spawnTimer <= 0) {
+    spawnTimer = interval * rand(0.8, 1.2);
+    if (upCritters().length < maxUp) spawnCritter();
+  }
+  updateHUD();
+}
+
+/* ============================== resize ============================== */
+function resize() {
+  const dpr = Math.min(window.devicePixelRatio || 1, 2);
+  W = window.innerWidth; H = window.innerHeight;
+  for (const c of [roomCanvas, fxCanvas]) {
+    c.width = Math.round(W * dpr);
+    c.height = Math.round(H * dpr);
+  }
+  rctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  fctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  floorTop = Math.round(H * 0.34);
+  if (renderer && camera) {
+    renderer.setSize(W, H);
+    camera.aspect = W / Math.max(1, H);
+    camera.updateProjectionMatrix();
+  }
+}
+window.addEventListener('resize', resize);
+
+/* ============================== main loop ============================== */
+let lastT = 0;
+function frame(t) {
+  requestAnimationFrame(frame);
+  const dt = Math.min(0.05, lastT ? (t - lastT) / 1000 : 0.016);
+  lastT = t;
+  updateParallax(t);
+  if (!camOK) { rctx.clearRect(0, 0, W, H); drawRoom(); }
+  if (camera) {
+    camera.position.set(CAM_BASE.x + parX * 0.45, CAM_BASE.y - parY * 0.22, CAM_BASE.z);
+    camera.lookAt(CAM_LOOK.x - parX * 0.25, CAM_LOOK.y, CAM_LOOK.z);
+  }
+  if (phase === 'playing') updateGame(dt);
+  for (const c of [...critters]) updateCritter(c, dt, t);
+  updateFx(dt);
+  if (renderer) renderer.render(scene, camera);
+  drawFx();
+}
+
+/* ============================== start flow ============================== */
+let camTried = false;
+async function ensureCamera() {
+  if (camTried) return;
+  camTried = true;
+  try {
+    if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) throw new Error('no getUserMedia');
+    const stream = await Promise.race([
+      navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' }, audio: false }),
+      new Promise((_, rej) => setTimeout(() => rej(new Error('camera timeout')), 4500))
+    ]);
+    const video = document.getElementById('cam');
+    video.srcObject = stream;
+    await video.play().catch(() => {});
+    camOK = true;
+  } catch (e) { camOK = false; }
+  try {
+    if (typeof DeviceOrientationEvent !== 'undefined' &&
+        typeof DeviceOrientationEvent.requestPermission === 'function') {
+      await DeviceOrientationEvent.requestPermission().catch(() => {});
+    }
+  } catch (e) { /* parallax falls back to idle sway */ }
+  const video = document.getElementById('cam');
+  video.classList.toggle('hidden', !camOK);
+  roomCanvas.classList.toggle('hidden', camOK);
+  camTagEl.textContent = camOK ? '📷 AR room' : '🏠 cozy room';
+}
+function beginRound() {
+  resetGame();
+  startEl.classList.add('hidden');
+  endEl.classList.add('hidden');
+  hudEl.classList.remove('hidden');
+  phase = 'playing';
+}
+document.getElementById('startBtn').addEventListener('click', async () => {
+  initAudio();
+  await ensureCamera();
+  beginRound();
+});
+document.getElementById('againBtn').addEventListener('click', () => {
+  initAudio();
+  beginRound();
+});
+
+/* ============================== boot + test hook ============================== */
+resize();
+initGL();
+buildYard();
+buildHoles();
+resize();
+updateHUD();
+requestAnimationFrame(frame);
+
+window.__bonk = {
+  get phase() { return phase; },
+  get started() { return phase !== 'start'; },
+  get camOK() { return camOK; },
+  get score() { return score; },
+  get streak() { return streak; },
+  get mult() { return mult(); },
+  get timeLeft() { return timeLeft; },
+  get upCount() { return upCritters().length; },
+  critters: () => critters.map(c => ({ kind: c.kind, state: c.state, hole: holes.indexOf(c.hole) })),
+  spawnNow: () => spawnCritter(),
+  screenOf: (i) => {
+    const ups = upCritters();
+    if (!ups[i]) return null;
+    const c = ups[i];
+    _pv.set(c.hole.x, 0.30 + c.mesh.position.y, c.hole.z).project(camera);
+    return { x: (_pv.x * 0.5 + 0.5) * W, y: (_pv.y * -0.5 + 0.5) * H };
+  },
+  setTimeLeft: (s) => { timeLeft = s; },
+  start: () => document.getElementById('startBtn').click(),
+  again: () => document.getElementById('againBtn').click()
+};
+</script>
+<script id="moth-game-guard-js">
+(function(){
+  var lastEnd=0;
+  function onUi(t){return t&&t.closest&&t.closest('button,a,input,select,textarea,[data-scroll]');}
+  document.addEventListener('touchend',function(e){
+    var now=Date.now();
+    if(!onUi(e.target)&&now-lastEnd<=300&&e.cancelable)e.preventDefault();
+    lastEnd=now;
+  },{passive:false});
+  ['gesturestart','gesturechange','gestureend'].forEach(function(n){
+    document.addEventListener(n,function(e){e.preventDefault();});
+  });
+  document.addEventListener('dblclick',function(e){e.preventDefault();},{passive:false});
+  document.addEventListener('contextmenu',function(e){e.preventDefault();});
+  document.addEventListener('touchmove',function(e){
+    if(e.target&&e.target.closest&&e.target.closest('[data-scroll]'))return;
+    if(e.cancelable)e.preventDefault();
+  },{passive:false});
+})();
+</script>
+</body>
+</html>
