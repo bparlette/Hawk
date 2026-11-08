@@ -6197,6 +6197,17 @@
    "orientation": "portrait",
    "path": "../games/playable-ads/tug-tangle/index.html",
    "title": "Tug Tangle"
+  },
+  {
+   "autostart": [],
+   "category": "Originals",
+   "id": "side-quest-run",
+   "keys": {},
+   "labels": {},
+   "note": "Side Quest! — 12 Worlds as a web game: the Roblox megaworld shrunk to one small flat circle (r=2048). Run through all 12 environments, build speed to ×3 with unbroken running, collect 216 stars. Same worlds, landmarks and rim creatures, web-drawn in three.js.",
+   "orientation": "any",
+   "path": "../games/side-quest-run/index.html",
+   "title": "Side Quest! — 12 Worlds · Web Run"
   }
  ]
 }
