@@ -2382,6 +2382,14 @@
    "thumb": "thumbs/bonk-yard.png",
    "title": "DON'T TURN AROUND!",
    "url": "../games/dont-turn-around-ar/"
+  },
+  {
+   "category": "AR",
+   "desc": "A 4.5-metre Hana standing still in your room — walk around her. Plus Quick Look USDZ.",
+   "id": "hana-chan-giant",
+   "thumb": "thumbs/bonk-yard.png",
+   "title": "GIANT HANA — 4.5m Still AR",
+   "url": "../games/hana-chan-giant/"
   }
  ]
 }
