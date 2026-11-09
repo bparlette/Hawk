@@ -8,10 +8,11 @@
 
   <!-- Warm the model files so a tap opens the world as fast as the phone allows. -->
   <link rel="prefetch" href="../hana-chan/models/hana.glb">
-  <link rel="prefetch" href="../hana-chan/hana-walk.usdz">
+  <link rel="prefetch" href="../hana-chan/explore.usdz">
   <link rel="prefetch" href="../hana-chan-giant/models/hana-giant.glb">
-  <link rel="prefetch" href="../hana-chan-giant/hana-giant.usdz">
-  <link rel="prefetch" href="../hana-mesh/hana-hy3d.usdz">
+  <link rel="prefetch" href="../hana-chan-giant/explore.usdz">
+  <link rel="prefetch" href="../hana-mesh/explore.usdz">
+  <link rel="prefetch" href="../hana-stand/explore.usdz">
 
   <style>
     :root {
@@ -133,10 +134,18 @@
       font-size: 1.16rem;
     }
     .primary:active { transform: scale(.985); }
+    .primary { gap: 11px; }
+    .primary img {
+      width: 44px;
+      height: 44px;
+      flex: 0 0 auto;
+      border-radius: 50%;
+      object-fit: cover;
+    }
     .quick {
       gap: 11px;
       margin-top: 11px;
-      padding: 8px 16px 8px 9px;
+      padding: 8px 18px;
       border: 2px solid var(--line);
       background: #fff8f6;
       color: var(--ink);
@@ -212,11 +221,13 @@
         </div>
         <div class="card-body">
           <h2 id="walking-title">🌸 Walking Hana</h2>
-          <p class="detail">0.9 m tall. She walks around your room.</p>
-          <a class="primary" href="../hana-chan/">SEE HER NOW</a>
-          <a class="quick" rel="ar" href="../hana-chan/hana-walk.usdz" aria-label="Open Walking Hana in Quick Look">
+          <p class="detail">She walks around your room.</p>
+          <a class="primary" rel="ar" href="../hana-chan/explore.usdz" aria-label="Explore Walking Hana in your room">
             <img src="img/walking-hana.jpg" alt="">
-            <span class="label">Quick Look</span>
+            <span>EXPLORE</span>
+          </a>
+          <a class="quick" href="../hana-chan/">
+            <span class="label">WALK</span>
             <span class="go" aria-hidden="true">›</span>
           </a>
         </div>
@@ -225,15 +236,17 @@
       <section class="card" aria-labelledby="giant-title">
         <div class="photo photo-giant">
           <img src="img/giant-hana.jpg" alt="Giant hand-made Hana standing" fetchpriority="high">
-          <span class="badge">Live · 4.5 m</span>
+          <span class="badge">Live</span>
         </div>
         <div class="card-body">
           <h2 id="giant-title">🐯 Giant Hana</h2>
-          <p class="detail">Hand-made. Standing still, 4.5 m tall.</p>
-          <a class="primary" href="../hana-chan-giant/">SEE HER NOW</a>
-          <a class="quick" rel="ar" href="../hana-chan-giant/hana-giant.usdz" aria-label="Open Giant Hana in Quick Look">
+          <p class="detail">Hand-made. Standing still.</p>
+          <a class="primary" rel="ar" href="../hana-chan-giant/explore.usdz" aria-label="Explore Giant Hana in your room">
             <img src="img/giant-hana.jpg" alt="">
-            <span class="label">Quick Look</span>
+            <span>EXPLORE</span>
+          </a>
+          <a class="quick" href="../hana-chan-giant/">
+            <span class="label">WALK</span>
             <span class="go" aria-hidden="true">›</span>
           </a>
         </div>
@@ -247,10 +260,12 @@
         <div class="card-body">
           <h2 id="mesh-title">📸 New Mesh Hannah</h2>
           <p class="detail">Made from your photo. Seated photo-mesh version.</p>
-          <a class="primary" href="../hana-mesh/">SEE HER NOW</a>
-          <a class="quick" rel="ar" href="../hana-mesh/hana-hy3d.usdz" aria-label="Open New Mesh Hannah in Quick Look">
+          <a class="primary" rel="ar" href="../hana-mesh/explore.usdz" aria-label="Explore New Mesh Hannah in your room">
             <img src="img/photo-mesh-hannah.jpg" alt="">
-            <span class="label">Quick Look</span>
+            <span>EXPLORE</span>
+          </a>
+          <a class="quick" href="../hana-mesh/">
+            <span class="label">WALK</span>
             <span class="go" aria-hidden="true">›</span>
           </a>
         </div>
@@ -259,22 +274,24 @@
       <section class="card" aria-labelledby="standing-title">
         <div class="photo photo-mesh">
           <img src="img/standing-hana.jpg" alt="Standing photo-mesh Hannah" fetchpriority="high">
-          <span class="badge">Live · 4.5 m</span>
+          <span class="badge">Live</span>
         </div>
         <div class="card-body">
           <h2 id="standing-title">✨ Standing Photo-Mesh Hannah</h2>
           <p class="detail">The photo-mesh Hannah, stood up. Walk around her, or rotate her.</p>
-          <a class="primary" href="../hana-stand/">SEE HER NOW</a>
-          <a class="quick" rel="ar" href="../hana-stand/hana-hy3d-stand.usdz" aria-label="Open Standing Photo-Mesh Hannah in Quick Look">
+          <a class="primary" rel="ar" href="../hana-stand/explore.usdz" aria-label="Explore Standing Photo-Mesh Hannah in your room">
             <img src="img/standing-hana.jpg" alt="">
-            <span class="label">Quick Look</span>
+            <span>EXPLORE</span>
+          </a>
+          <a class="quick" href="../hana-stand/">
+            <span class="label">WALK</span>
             <span class="go" aria-hidden="true">›</span>
           </a>
         </div>
       </section>
     </div>
 
-    <footer>For the giant: stand back so all 4.5 m fits in view.</footer>
+    <footer>For the giant: stand back so she fits in view.</footer>
   </main>
 
   <script id="moth-game-guard-js">
