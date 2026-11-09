@@ -2390,6 +2390,14 @@
    "thumb": "thumbs/bonk-yard.png",
    "title": "GIANT HANA — 4.5m Still AR",
    "url": "../games/hana-chan-giant/"
+  },
+  {
+   "category": "AR",
+   "desc": "Drag the black hole around your real floor and eat the city — grow until you can swallow the bus.",
+   "id": "snack-hole-ar",
+   "thumb": "thumbs/bonk-yard.png",
+   "title": "SNACK HOLE AR",
+   "url": "../games/snack-hole-ar/"
   }
  ]
 }
