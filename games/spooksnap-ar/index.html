@@ -1,0 +1,1448 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+<title>SPOOKSNAP AR — film the ghosts in your house</title>
+<style>
+  html, body { height: 100%; }
+  body {
+    margin: 0;
+    overflow: hidden;
+    background: #0a0614;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    color: #efeaff;
+    -webkit-user-select: none;
+    user-select: none;
+  }
+  #cam, #room, #gl, #fx {
+    position: fixed; inset: 0;
+    width: 100%; height: 100%;
+    display: block;
+  }
+  #cam { object-fit: cover; background: #0a0614; z-index: 0; }
+  #room { z-index: 0; }
+  #gl { z-index: 1; }
+  #fx { z-index: 2; pointer-events: none; }
+  #flash {
+    position: fixed; inset: 0;
+    background: #fff;
+    opacity: 0;
+    pointer-events: none;
+    z-index: 4;
+  }
+  #hud {
+    position: fixed;
+    top: calc(env(safe-area-inset-top, 0px) + 8px);
+    left: 10px; right: 10px;
+    z-index: 3;
+    pointer-events: none;
+  }
+  #hudRow { display: flex; gap: 8px; align-items: center; }
+  .chip {
+    background: rgba(16, 8, 34, 0.62);
+    border: 1px solid rgba(190, 160, 255, 0.35);
+    border-radius: 999px;
+    padding: 6px 12px;
+    font-size: 15px; font-weight: 700;
+    letter-spacing: 0.02em;
+    backdrop-filter: blur(3px);
+    white-space: nowrap;
+  }
+  .chip b { font-size: 17px; }
+  #poseChip { color: #ffb3a0; opacity: 0; transform: scale(0.8); transition: opacity 0.15s, transform 0.15s; }
+  #poseChip.show { opacity: 1; transform: scale(1); }
+  #timeChip { margin-left: auto; }
+  #timeChip.low { color: #ff8a7a; }
+  #camTag { font-size: 11px; font-weight: 700; opacity: 0.85; margin-left: auto; }
+  #timerWrap {
+    margin-top: 6px;
+    height: 7px;
+    border-radius: 99px;
+    background: rgba(0,0,0,0.4);
+    border: 1px solid rgba(190,160,255,0.25);
+    overflow: hidden;
+  }
+  #timerBar {
+    height: 100%; width: 100%;
+    border-radius: 99px;
+    background: linear-gradient(90deg, #8a5cff, #c77dff 60%, #ff7ad9);
+    background-size: 100vw 100%;
+  }
+  #vfHint {
+    position: fixed;
+    left: 50%; top: 71%;
+    transform: translateX(-50%);
+    z-index: 3;
+    font-size: 14px; font-weight: 800;
+    color: #e9defc;
+    text-shadow: 0 2px 8px rgba(0,0,0,0.8);
+    pointer-events: none;
+    white-space: nowrap;
+  }
+  #bigMsg {
+    position: fixed;
+    left: 50%; top: 24%;
+    transform: translate(-50%, -50%) scale(0.7);
+    z-index: 4;
+    font-size: 38px; font-weight: 900;
+    color: #d9b8ff;
+    text-shadow: 0 3px 0 rgba(40,0,80,0.6), 0 6px 18px rgba(0,0,0,0.6);
+    opacity: 0;
+    pointer-events: none;
+    white-space: nowrap;
+  }
+  #bigMsg.pop { animation: msgPop 0.9s ease-out forwards; }
+  @keyframes msgPop {
+    0% { opacity: 0; transform: translate(-50%, -50%) scale(0.6); }
+    18% { opacity: 1; transform: translate(-50%, -50%) scale(1.15); }
+    32% { transform: translate(-50%, -50%) scale(1); }
+    75% { opacity: 1; }
+    100% { opacity: 0; transform: translate(-50%, -62%) scale(1); }
+  }
+  /* photo strip + snap button */
+  #strip {
+    position: fixed;
+    left: 10px;
+    bottom: calc(env(safe-area-inset-bottom, 0px) + 14px);
+    z-index: 3;
+    display: flex;
+    gap: 7px;
+    max-width: 58vw;
+    overflow: hidden;
+    pointer-events: none;
+  }
+  .photo {
+    flex: 0 0 auto;
+    width: 50px;
+    background: #f6f2ff;
+    border-radius: 4px;
+    padding: 3px 3px 2px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.55);
+    animation: photoIn 0.3s ease-out;
+  }
+  .photo canvas { display: block; width: 44px; height: 44px; border-radius: 2px; }
+  .photo .plabel {
+    font-size: 9px; font-weight: 900; color: #2a1650;
+    text-align: center; line-height: 1.25; letter-spacing: 0.01em;
+  }
+  @keyframes photoIn {
+    from { transform: translateY(14px) rotate(-4deg) scale(0.7); opacity: 0; }
+    to { transform: translateY(0) rotate(-1.5deg) scale(1); opacity: 1; }
+  }
+  #snapBtn {
+    position: fixed;
+    right: 16px;
+    bottom: calc(env(safe-area-inset-bottom, 0px) + 16px);
+    z-index: 6;
+    width: 84px; height: 84px;
+    border-radius: 50%;
+    border: 4px solid rgba(230, 215, 255, 0.95);
+    background: radial-gradient(circle at 50% 38%, #a678ff, #6a2fd0 70%);
+    box-shadow: 0 8px 24px rgba(0,0,0,0.6), inset 0 0 0 5px rgba(20, 6, 44, 0.55);
+    font-size: 36px;
+    color: #fff;
+    cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+  }
+  #snapBtn:active { transform: scale(0.92); }
+  #snapBtn.cd { filter: grayscale(0.5) brightness(0.7); }
+  .overlay {
+    position: fixed; inset: 0;
+    z-index: 5;
+    display: flex; align-items: center; justify-content: center;
+    background:
+      radial-gradient(120% 90% at 50% 0%, rgba(120, 70, 220, 0.30), rgba(0,0,0,0) 55%),
+      linear-gradient(180deg, rgba(18, 8, 38, 0.90), rgba(6, 2, 16, 0.95));
+    padding: 20px;
+    box-sizing: border-box;
+  }
+  .card { text-align: center; max-width: 430px; }
+  .card .big { font-size: 56px; line-height: 1.1; }
+  .card h1 {
+    margin: 6px 0 4px;
+    font-size: 36px; font-weight: 900; letter-spacing: 0.01em;
+    text-shadow: 0 3px 0 rgba(0,0,0,0.4);
+  }
+  .card p { margin: 6px 0; font-size: 16px; line-height: 1.45; opacity: 0.92; }
+  .card .scoreLine { font-size: 21px; font-weight: 800; opacity: 1; }
+  .card .scoreLine b { font-size: 30px; color: #d9b8ff; }
+  .playBtn {
+    font: inherit;
+    margin-top: 16px;
+    font-size: 21px; font-weight: 900;
+    color: #22103f;
+    background: linear-gradient(180deg, #d9b8ff, #a678ff);
+    border: 2px solid rgba(60, 20, 120, 0.55);
+    border-radius: 999px;
+    padding: 15px 36px;
+    box-shadow: 0 8px 22px rgba(0,0,0,0.5);
+    cursor: pointer;
+  }
+  .playBtn:active { transform: scale(0.96); }
+  .card .fine { font-size: 13px; opacity: 0.65; margin-top: 14px; }
+  #motionPill {
+    position: fixed;
+    left: 50%; transform: translateX(-50%);
+    bottom: calc(env(safe-area-inset-bottom, 0px) + 118px);
+    z-index: 6;
+    font: inherit; font-size: 15px; font-weight: 800;
+    color: #fff;
+    background: rgba(20, 8, 44, 0.88);
+    border: 2px solid rgba(190, 150, 255, 0.9);
+    border-radius: 999px;
+    padding: 12px 18px;
+    box-shadow: 0 8px 22px rgba(0,0,0,0.55);
+    cursor: pointer;
+    white-space: nowrap;
+  }
+  #motionPill:active { transform: translateX(-50%) scale(0.96); }
+  .hidden { display: none !important; }
+</style>
+<script type="importmap">
+{ "imports": { "three": "./vendor/three.module.js" } }
+</script>
+<style id="moth-game-guard">
+html,body{touch-action:none;overscroll-behavior:none;-webkit-touch-callout:none;-webkit-user-select:none;user-select:none;-webkit-tap-highlight-color:transparent}
+canvas{touch-action:none}
+</style>
+</head>
+<body>
+<video id="cam" autoplay playsinline muted></video>
+<canvas id="room"></canvas>
+<canvas id="gl"></canvas>
+<canvas id="fx"></canvas>
+<div id="flash"></div>
+
+<div id="hud" class="hidden">
+  <div id="hudRow">
+    <div class="chip">🏆 <b><span id="score">0</span></b></div>
+    <div class="chip" id="poseChip">👀 POSING!</div>
+    <div class="chip">📸 <b><span id="photoCount">0</span></b></div>
+    <div class="chip" id="timeChip">⏱ <b><span id="timeLeft">90</span></b></div>
+  </div>
+  <div id="timerWrap"><div id="timerBar"></div></div>
+  <div style="display:flex; margin-top:4px;"><div id="camTag">📷 AR room</div></div>
+</div>
+
+<div id="vfHint" class="hidden">PAN TO FIND GHOSTS — TAP 📸 TO SNAP</div>
+<div id="bigMsg"></div>
+
+<div id="strip" class="hidden"></div>
+<button id="snapBtn" class="hidden" type="button" aria-label="Snap photo">📸</button>
+
+<button id="motionPill" class="hidden" type="button">📱 Enable motion look-around</button>
+
+<div id="start" class="overlay">
+  <div class="card">
+    <div class="big">👻</div>
+    <h1>SPOOKSNAP AR</h1>
+    <p>Your house is <b>haunted</b>! Pan your phone to find the ghosts drifting through your rooms — center one in the frame and <b>tap 📸</b> to film it.</p>
+    <p>👀 Glowing eyes = it's <b>posing</b> — snap then for <b>double points</b>!<br>🔴 The red one is fast… and worth <b>1,000</b>.</p>
+    <button id="startBtn" class="playBtn" type="button">▶ START FILMING</button>
+    <p class="fine">Needs camera for the full AR feel.<br>No camera? No problem — a spooky room appears instead.</p>
+  </div>
+</div>
+
+<div id="end" class="overlay hidden">
+  <div class="card">
+    <div class="big">🎞️</div>
+    <h1>THAT'S A WRAP!</h1>
+    <p class="scoreLine">You scored <b><span id="finalScore">0</span></b></p>
+    <p>📸 Photos: <span id="finalPhotos">0</span> · ⭐ Best shot: <span id="bestShotLine">—</span></p>
+    <p>🏅 Best score: <span id="bestScore">0</span></p>
+    <p id="newBest" class="scoreLine hidden">🎉 NEW BEST!</p>
+    <button id="againBtn" class="playBtn" type="button">↻ FILM AGAIN</button>
+  </div>
+</div>
+
+<script type="module">
+import * as THREE from 'three';
+
+'use strict';
+/* ============================== helpers ============================== */
+const clamp = (v, a, b) => v < a ? a : (v > b ? b : v);
+const lerp = (a, b, t) => a + (b - a) * t;
+const rand = (a, b) => a + Math.random() * (b - a);
+const pick = arr => arr[Math.floor(Math.random() * arr.length)];
+const easeOutBack = t => { const c = 1.70158; const u = t - 1; return 1 + (c + 1) * u * u * u + c * u * u; };
+
+/* ============================== audio (all synth) ============================== */
+let AC = null;
+function initAudio() {
+  try {
+    if ('audioSession' in navigator) { try { navigator.audioSession.type = 'playback'; } catch (e) {} }
+    if (!AC) {
+      const Ctor = window.AudioContext || window.webkitAudioContext;
+      if (Ctor) AC = new Ctor();
+    }
+    if (AC) {
+      if (AC.state === 'suspended') AC.resume();
+      // 1-sample silent buffer unlock (iOS first-gesture rule)
+      const buf = AC.createBuffer(1, 1, 22050);
+      const src = AC.createBufferSource();
+      src.buffer = buf; src.connect(AC.destination); src.start(0);
+    }
+  } catch (e) { /* audio is optional */ }
+}
+function resumeAudio() { try { if (AC && AC.state === 'suspended') AC.resume(); } catch (e) {} }
+document.addEventListener('pointerdown', resumeAudio, true);
+document.addEventListener('touchend', resumeAudio, true);
+document.addEventListener('visibilitychange', () => { if (!document.hidden) resumeAudio(); });
+
+function tone(f0, f1, dur, type, vol, delay) {
+  if (!AC) return;
+  try {
+    const t0 = AC.currentTime + (delay || 0);
+    const o = AC.createOscillator(), g = AC.createGain();
+    o.type = type || 'sine';
+    o.frequency.setValueAtTime(Math.max(30, f0), t0);
+    o.frequency.exponentialRampToValueAtTime(Math.max(30, f1), t0 + dur);
+    g.gain.setValueAtTime(0.0001, t0);
+    g.gain.exponentialRampToValueAtTime(vol || 0.15, t0 + 0.015);
+    g.gain.exponentialRampToValueAtTime(0.0001, t0 + dur);
+    o.connect(g); g.connect(AC.destination);
+    o.start(t0); o.stop(t0 + dur + 0.05);
+  } catch (e) {}
+}
+function noiseBurst(dur, freq, vol, delay) {
+  if (!AC) return;
+  try {
+    const t0 = AC.currentTime + (delay || 0);
+    const len = Math.max(1, Math.floor(AC.sampleRate * dur));
+    const buf = AC.createBuffer(1, len, AC.sampleRate);
+    const d = buf.getChannelData(0);
+    for (let i = 0; i < len; i++) d[i] = (Math.random() * 2 - 1) * (1 - i / len);
+    const src = AC.createBufferSource(); src.buffer = buf;
+    const f = AC.createBiquadFilter(); f.type = 'highpass'; f.frequency.value = freq || 2500;
+    const g = AC.createGain(); g.gain.value = vol || 0.2;
+    src.connect(f); f.connect(g); g.connect(AC.destination);
+    src.start(t0);
+  } catch (e) {}
+}
+const sndShutter = () => { noiseBurst(0.05, 3000, 0.25); noiseBurst(0.04, 3800, 0.2, 0.07); };
+const sndCapture = () => { tone(1318, 1318, 0.09, 'triangle', 0.10); tone(1760, 1760, 0.14, 'triangle', 0.10, 0.07); };
+const sndPerfect = () => { tone(1046, 1046, 0.08, 'triangle', 0.11); tone(1318, 1318, 0.08, 'triangle', 0.11, 0.06); tone(1568, 1568, 0.15, 'triangle', 0.12, 0.12); };
+const sndMiss = () => { tone(300, 220, 0.12, 'sine', 0.05); };
+const sndPose = () => { tone(392, 392, 0.1, 'sine', 0.05); tone(311, 311, 0.14, 'sine', 0.05, 0.09); };
+const sndJingle = () => { [523, 415, 622, 784].forEach((f, i) => tone(f, f, 0.18, 'triangle', 0.10, i * 0.12)); };
+function sndWail(vol) {
+  if (!AC) return;
+  try {
+    const t0 = AC.currentTime;
+    const o = AC.createOscillator(), g = AC.createGain();
+    o.type = 'sine';
+    o.frequency.setValueAtTime(480, t0);
+    o.frequency.exponentialRampToValueAtTime(830, t0 + 0.7);
+    o.frequency.exponentialRampToValueAtTime(390, t0 + 1.7);
+    g.gain.setValueAtTime(0.0001, t0);
+    g.gain.exponentialRampToValueAtTime(vol || 0.028, t0 + 0.5);
+    g.gain.exponentialRampToValueAtTime(0.0001, t0 + 1.8);
+    o.connect(g); g.connect(AC.destination);
+    o.start(t0); o.stop(t0 + 1.9);
+  } catch (e) {}
+}
+/* breathy whisper ambience: looped brown noise through a wandering bandpass */
+let amb = null;
+function startAmbience() {
+  if (!AC || amb) return;
+  try {
+    const master = AC.createGain(); master.gain.value = 0; master.connect(AC.destination);
+    const len = 2 * AC.sampleRate;
+    const buf = AC.createBuffer(1, len, AC.sampleRate);
+    const d = buf.getChannelData(0);
+    let v = 0;
+    for (let i = 0; i < len; i++) { v = v * 0.97 + (Math.random() * 2 - 1) * 0.16; d[i] = v * 2.4; }
+    const src = AC.createBufferSource(); src.buffer = buf; src.loop = true;
+    const bp = AC.createBiquadFilter(); bp.type = 'bandpass'; bp.frequency.value = 950; bp.Q.value = 0.7;
+    const ng = AC.createGain(); ng.gain.value = 0.55;
+    src.connect(bp); bp.connect(ng); ng.connect(master); src.start();
+    const lfo = AC.createOscillator(); lfo.frequency.value = 0.07;
+    const lg = AC.createGain(); lg.gain.value = 380;
+    lfo.connect(lg); lg.connect(bp.frequency); lfo.start();
+    const lfo2 = AC.createOscillator(); lfo2.frequency.value = 0.045;
+    const lg2 = AC.createGain(); lg2.gain.value = 0.28;
+    lfo2.connect(lg2); lg2.connect(ng.gain); lfo2.start();
+    master.gain.linearRampToValueAtTime(0.045, AC.currentTime + 2.5);
+    amb = { master, src };
+  } catch (e) { amb = null; }
+}
+function stopAmbience() {
+  if (!amb) return;
+  try {
+    const a = amb; amb = null;
+    a.master.gain.linearRampToValueAtTime(0.0001, AC.currentTime + 0.6);
+    setTimeout(() => { try { a.src.stop(); } catch (e) {} }, 900);
+  } catch (e) {}
+}
+
+/* ============================== dom / state ============================== */
+const video = document.getElementById('cam');
+const roomCanvas = document.getElementById('room');
+const rctx = roomCanvas.getContext('2d');
+const glCanvas = document.getElementById('gl');
+const fxCanvas = document.getElementById('fx');
+const fctx = fxCanvas.getContext('2d');
+const flashEl = document.getElementById('flash');
+const hudEl = document.getElementById('hud');
+const scoreEl = document.getElementById('score');
+const photoCountEl = document.getElementById('photoCount');
+const poseChip = document.getElementById('poseChip');
+const timeChip = document.getElementById('timeChip');
+const timeLeftEl = document.getElementById('timeLeft');
+const timerBar = document.getElementById('timerBar');
+const camTagEl = document.getElementById('camTag');
+const vfHintEl = document.getElementById('vfHint');
+const bigMsgEl = document.getElementById('bigMsg');
+const stripEl = document.getElementById('strip');
+const snapBtn = document.getElementById('snapBtn');
+const startEl = document.getElementById('start');
+const endEl = document.getElementById('end');
+
+let W = 0, H = 0, floorTop = 0;
+let camOK = false;
+let phase = 'start';           // 'start' | 'playing' | 'over'
+const ROUND_LEN = 90;
+let score = 0, photos = 0, bestShot = 0, bestShotType = '';
+let timeLeft = ROUND_LEN, elapsed = 0, spawnTimer = 0, snapCd = 0, wailTimer = 6;
+let flashT = 0;                // seconds of photo-flash remaining
+let best = 0;
+try { best = parseInt(localStorage.getItem('spookBest') || '0', 10) || 0; } catch (e) {}
+
+/* ================= AR motion: permission-in-gesture + 3DOF look-around =================
+   iOS 13+ Safari delivers deviceorientation events only after
+   DeviceOrientationEvent.requestPermission() resolves 'granted', and the
+   call only counts inside a user-gesture handler — a call made after an
+   `await` (e.g. behind getUserMedia) is silently denied and the scene
+   never moves. So the ask happens synchronously in the START tap (and on
+   the pill, whose own tap re-asks if events still don't flow). */
+let baseCamQ = null;             // camera orientation of the default view (set in initGL)
+let hemiLight = null, dirLight = null;
+const MOTION = {
+  needPerm: (typeof DeviceOrientationEvent !== 'undefined' &&
+             typeof DeviceOrientationEvent.requestPermission === 'function'),
+  perm: 'unknown',               // 'granted' | 'denied' | 'error' | 'n/a'
+  ok: false,                     // orientation events are flowing right now
+  ever: false,                   // at least one real event has arrived
+  lastAt: -1e9,
+  recal: true,                   // capture the reference pose on the next event
+  refQ: null,                    // device quaternion at "straight ahead"
+  devQ: new THREE.Quaternion()   // latest device quaternion
+};
+function askMotionPermission() {
+  if (!MOTION.needPerm) { MOTION.perm = 'n/a'; return; }
+  try {
+    const p = DeviceOrientationEvent.requestPermission();
+    if (p && typeof p.then === 'function') {
+      p.then(r => {
+        MOTION.perm = (r === 'granted') ? 'granted' : 'denied';
+        if (MOTION.perm === 'granted') MOTION.recal = true;
+      }).catch(() => { MOTION.perm = 'error'; });
+    }
+  } catch (e) { MOTION.perm = 'error'; }
+}
+const motionPillEl = document.getElementById('motionPill');
+function showMotionPill() { if (motionPillEl) motionPillEl.classList.remove('hidden'); }
+function hideMotionPill() { if (motionPillEl) motionPillEl.classList.add('hidden'); }
+if (motionPillEl) motionPillEl.addEventListener('click', () => { askMotionPermission(); });
+function motionWatchdog() {
+  // ~1.5 s after starting: if iOS motion exists but no event has arrived,
+  // the in-tap ask didn't land — offer the pill (its own tap re-asks).
+  setTimeout(() => { if (MOTION.needPerm && !MOTION.ever) showMotionPill(); }, 1500);
+}
+window.addEventListener('orientationchange', () => { MOTION.recal = true; });
+
+/* device orientation -> world quaternion (the standard three.js recipe) */
+const _zee = new THREE.Vector3(0, 0, 1);
+const _eul = new THREE.Euler();
+const _q0 = new THREE.Quaternion();
+const _q1 = new THREE.Quaternion(-Math.sqrt(0.5), 0, 0, Math.sqrt(0.5)); // -90 deg about X
+function deviceQuat(out, alphaDeg, betaDeg, gammaDeg) {
+  const orient = (typeof window.orientation === 'number' ? window.orientation : 0) * Math.PI / 180;
+  _eul.set(THREE.MathUtils.degToRad(betaDeg), THREE.MathUtils.degToRad(alphaDeg),
+           THREE.MathUtils.degToRad(-gammaDeg), 'YXZ');
+  out.setFromEuler(_eul);
+  out.multiply(_q1);                                   // camera looks out the back of the phone
+  out.multiply(_q0.setFromAxisAngle(_zee, -orient));   // screen-orientation compensation
+  return out;
+}
+const _invRefQ = new THREE.Quaternion();
+const _targetQ = new THREE.Quaternion();
+function applyMotionCamera() {
+  // True 3DOF look-around: camera orientation = (device rotation since the
+  // reference pose) applied to the default view, eased by slerp.
+  if (!camera || !baseCamQ || !MOTION.refQ) return false;
+  if (performance.now() - MOTION.lastAt > 3000) { MOTION.ok = false; return false; }
+  if (!MOTION.ok) return false;
+  _invRefQ.copy(MOTION.refQ).invert();
+  _targetQ.copy(MOTION.devQ).multiply(_invRefQ).multiply(baseCamQ);
+  camera.quaternion.slerp(_targetQ, 0.16);
+  return true;
+}
+
+/* ================= light matching (sample the camera, ease the lights) ================= */
+const lightBase = { hemi: 0.85, dir: 1.05 };   // dimmer, spookier defaults
+const _lsCanvas = document.createElement('canvas');
+_lsCanvas.width = 16; _lsCanvas.height = 16;
+const _lsCtx = _lsCanvas.getContext('2d', { willReadFrequently: true });
+const _lightTgt = { m: 1, c: new THREE.Color(1, 1, 1) };
+let _lsNextAt = 0;
+function updateLightMatch(t, dt) {
+  if (!hemiLight || !dirLight) return;
+  if (camOK && video && video.readyState >= 2 && t >= _lsNextAt) {
+    _lsNextAt = t + 500;
+    try {
+      _lsCtx.drawImage(video, 0, 0, 16, 16);
+      const d = _lsCtx.getImageData(0, 0, 16, 16).data;
+      let r = 0, g = 0, b = 0;
+      const n = d.length / 4;
+      for (let i = 0; i < d.length; i += 4) { r += d[i]; g += d[i + 1]; b += d[i + 2]; }
+      r /= n * 255; g /= n * 255; b /= n * 255;
+      const lum = 0.2126 * r + 0.7152 * g + 0.0722 * b;
+      _lightTgt.m = clamp(0.45 + lum * 1.1, 0.45, 1.35);
+      _lightTgt.c.setRGB(lerp(1, Math.min(1, r * 1.7), 0.5),
+                         lerp(1, Math.min(1, g * 1.7), 0.5),
+                         lerp(1, Math.min(1, b * 1.7), 0.5));
+    } catch (e) { /* frame not sampleable yet — keep the last target */ }
+  }
+  if (!camOK) return;   // no camera: the spooky-room fallback keeps tuned lighting
+  const k = 1 - Math.exp(-dt * 2.5);
+  hemiLight.intensity += (lightBase.hemi * _lightTgt.m - hemiLight.intensity) * k;
+  dirLight.intensity += (lightBase.dir * _lightTgt.m - dirLight.intensity) * k;
+  hemiLight.color.lerp(_lightTgt.c, k);
+}
+
+/* ============================== parallax ============================== */
+let parX = 0, parY = 0, parTX = 0, parTY = 0;
+let lastOrientAt = -1e9, mouseAt = -1e9, mouseTX = 0, mouseTY = 0;
+window.addEventListener('deviceorientation', (e) => {
+  if (e.gamma == null && e.beta == null && e.alpha == null) return;
+  lastOrientAt = performance.now();
+  parTX = clamp((e.gamma || 0) / 26, -1, 1);
+  parTY = clamp(((e.beta || 0) - 48) / 24, -1, 1);
+  // 3DOF look-around feed
+  MOTION.ever = true; MOTION.ok = true; MOTION.lastAt = lastOrientAt;
+  deviceQuat(MOTION.devQ, e.alpha || 0, e.beta || 0, e.gamma || 0);
+  if (MOTION.recal || !MOTION.refQ) {
+    MOTION.refQ = MOTION.devQ.clone();
+    MOTION.recal = false;
+  }
+  hideMotionPill();
+}, true);
+window.addEventListener('pointermove', (e) => {
+  if (e.pointerType !== 'mouse') return;
+  mouseAt = performance.now();
+  mouseTX = clamp((e.clientX / Math.max(1, W) - 0.5) * 2, -1, 1);
+  mouseTY = clamp((e.clientY / Math.max(1, H) - 0.5) * 2, -1, 1);
+}, true);
+function updateParallax(t) {
+  let tx, ty;
+  if (performance.now() - mouseAt < 2500) { tx = mouseTX; ty = mouseTY; }
+  else if (performance.now() - lastOrientAt < 3000) { tx = parTX; ty = parTY; }
+  else { tx = Math.sin(t * 0.00035) * 0.55; ty = Math.sin(t * 0.00027 + 1.7) * 0.30; }
+  parX += (tx - parX) * 0.055;
+  parY += (ty - parY) * 0.055;
+}
+
+/* ============================== spooky room (fallback bg) ============================== */
+function rr2(c, x, y, w, h, r) { c.beginPath(); if (c.roundRect) c.roundRect(x, y, w, h, r); else c.rect(x, y, w, h); }
+function ellipse2(c, x, y, rx, ry, rot) { c.beginPath(); c.ellipse(x, y, rx, ry, rot || 0, 0, Math.PI * 2); }
+function drawRoom(t) {
+  const ctx = rctx;
+  // candle-flicker: mostly steady, occasional dips
+  const fl = 0.96 + 0.04 * Math.sin(t * 0.013) * Math.sin(t * 0.0041 + 2);
+  const dip = (Math.sin(t * 0.00021 + 5) > 0.996) ? 0.82 : 1;
+  const wall = ctx.createLinearGradient(0, 0, 0, floorTop + 30);
+  wall.addColorStop(0, '#171130'); wall.addColorStop(1, '#241638');
+  ctx.fillStyle = wall; ctx.fillRect(0, 0, W, floorTop + 2);
+  // wainscot strip
+  ctx.fillStyle = '#120b24'; ctx.fillRect(0, floorTop - 26, W, 26);
+  ctx.fillStyle = 'rgba(200,170,255,0.14)'; ctx.fillRect(0, floorTop - 27, W, 2);
+  // --- moon window (left) ---
+  const wx = W * 0.10 + parX * -8, wy = H * 0.055, ww = W * 0.34, wh = floorTop * 0.62;
+  const moonGlow = ctx.createRadialGradient(wx + ww * 0.6, wy + wh * 0.38, 6, wx + ww * 0.6, wy + wh * 0.38, ww * 0.95);
+  moonGlow.addColorStop(0, 'rgba(170,200,255,0.30)'); moonGlow.addColorStop(1, 'rgba(170,200,255,0)');
+  ctx.fillStyle = moonGlow; ctx.fillRect(wx - ww * 0.5, wy - wh * 0.3, ww * 2, wh * 1.7);
+  ctx.fillStyle = '#0d1530'; rr2(ctx, wx, wy, ww, wh, 10); ctx.fill();
+  ctx.fillStyle = '#dfe9ff'; ctx.beginPath(); ctx.arc(wx + ww * 0.62, wy + wh * 0.36, ww * 0.17, 0, Math.PI * 2); ctx.fill();
+  ctx.fillStyle = 'rgba(160,180,220,0.5)';
+  ctx.beginPath(); ctx.arc(wx + ww * 0.56, wy + wh * 0.32, ww * 0.045, 0, Math.PI * 2); ctx.fill();
+  ctx.beginPath(); ctx.arc(wx + ww * 0.68, wy + wh * 0.44, ww * 0.035, 0, Math.PI * 2); ctx.fill();
+  // crooked bare branch across the window
+  ctx.strokeStyle = '#05030c'; ctx.lineWidth = 5; ctx.beginPath();
+  ctx.moveTo(wx - 4, wy + wh * 0.78); ctx.quadraticCurveTo(wx + ww * 0.45, wy + wh * 0.6, wx + ww + 4, wy + wh * 0.7);
+  ctx.moveTo(wx + ww * 0.4, wy + wh * 0.65); ctx.lineTo(wx + ww * 0.52, wy + wh * 0.5);
+  ctx.stroke();
+  ctx.strokeStyle = '#2c1e4d'; ctx.lineWidth = 7; rr2(ctx, wx, wy, ww, wh, 10); ctx.stroke();
+  ctx.lineWidth = 4; ctx.beginPath();
+  ctx.moveTo(wx + ww / 2, wy); ctx.lineTo(wx + ww / 2, wy + wh);
+  ctx.moveTo(wx, wy + wh / 2); ctx.lineTo(wx + ww, wy + wh / 2); ctx.stroke();
+  // moonlight spill on the floor
+  ctx.fillStyle = 'rgba(150,180,255,0.07)';
+  ctx.beginPath();
+  ctx.moveTo(wx + 6, floorTop + 4); ctx.lineTo(wx + ww - 2, floorTop + 4);
+  ctx.lineTo(wx + ww + W * 0.14, H * 0.78); ctx.lineTo(wx + W * 0.10, H * 0.78);
+  ctx.closePath(); ctx.fill();
+  // --- crooked portrait (right of window): a ghost painting with faint eyes ---
+  const px = W * 0.60 + parX * -5, py = H * 0.075, pw = W * 0.20, ph = floorTop * 0.44;
+  ctx.save();
+  ctx.translate(px + pw / 2, py + ph / 2); ctx.rotate(-0.045);
+  ctx.fillStyle = '#0a0618'; ctx.fillRect(-pw / 2, -ph / 2, pw, ph);
+  ctx.strokeStyle = '#4a3566'; ctx.lineWidth = 5; ctx.strokeRect(-pw / 2, -ph / 2, pw, ph);
+  ctx.fillStyle = 'rgba(220,225,255,0.20)';
+  ellipse2(ctx, 0, -ph * 0.08, pw * 0.24, ph * 0.26); ctx.fill();
+  ctx.beginPath(); ctx.moveTo(-pw * 0.24, ph * 0.18); ctx.lineTo(pw * 0.24, ph * 0.18);
+  ctx.lineTo(pw * 0.18, ph * 0.5); ctx.lineTo(-pw * 0.18, ph * 0.5); ctx.closePath(); ctx.fill();
+  ctx.fillStyle = '#0a0618';
+  ctx.beginPath(); ctx.arc(-pw * 0.09, -ph * 0.12, 2.6, 0, Math.PI * 2); ctx.fill();
+  ctx.beginPath(); ctx.arc(pw * 0.09, -ph * 0.12, 2.6, 0, Math.PI * 2); ctx.fill();
+  ctx.restore();
+  // --- door ajar (right edge): warm slit of light ---
+  const dx = W * 0.865 + parX * -3, dw = W * 0.16;
+  ctx.fillStyle = '#0c0716'; ctx.fillRect(dx, H * 0.03, dw, floorTop - H * 0.03 + 8);
+  ctx.fillStyle = 'rgba(255,190,110,0.75)'; ctx.fillRect(dx + dw - 5, H * 0.045, 3.5, floorTop - H * 0.045);
+  ctx.fillStyle = 'rgba(255,200,130,0.10)';
+  ctx.beginPath(); ctx.moveTo(dx + dw - 5, floorTop); ctx.lineTo(dx + dw - 5, H * 0.05);
+  ctx.lineTo(dx + dw - W * 0.16, floorTop + 26); ctx.closePath(); ctx.fill();
+  ctx.fillStyle = '#c9a86a'; ctx.beginPath(); ctx.arc(dx + dw - 12, floorTop * 0.55, 3, 0, Math.PI * 2); ctx.fill();
+  // --- cobwebs in the top corners ---
+  ctx.strokeStyle = 'rgba(220,220,255,0.20)'; ctx.lineWidth = 1.2;
+  for (const cx of [0, W]) {
+    const sgn = cx === 0 ? 1 : -1, R = W * 0.20;
+    for (let i = 0; i <= 4; i++) {
+      const a = (i / 4) * Math.PI / 2;
+      ctx.beginPath(); ctx.moveTo(cx, 0); ctx.lineTo(cx + sgn * Math.cos(a) * R, Math.sin(a) * R); ctx.stroke();
+    }
+    for (let i = 1; i <= 3; i++) {
+      ctx.beginPath(); ctx.arc(cx, 0, R * i / 3, 0.15, Math.PI / 2 - 0.15); ctx.stroke();
+      if (sgn < 0) { /* arc direction is fine mirrored by arc angles for left corner only */ }
+    }
+  }
+  // --- floor: dark planks ---
+  const fl2 = ctx.createLinearGradient(0, floorTop, 0, H);
+  fl2.addColorStop(0, '#241430'); fl2.addColorStop(1, '#12081d');
+  ctx.fillStyle = fl2; ctx.fillRect(0, floorTop, W, H - floorTop);
+  ctx.strokeStyle = 'rgba(0,0,0,0.45)'; ctx.lineWidth = 2;
+  for (let i = 1; i < 6; i++) {
+    const y = floorTop + (H - floorTop) * (i / 6) * (0.4 + i * 0.13);
+    ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(W, y); ctx.stroke();
+  }
+  ctx.strokeStyle = 'rgba(190,160,255,0.05)';
+  for (let i = 0; i < 9; i++) {
+    const x = (i / 8) * W + parX * -6;
+    ctx.beginPath(); ctx.moveTo(W / 2 + (x - W / 2) * 0.55, floorTop); ctx.lineTo(x, H); ctx.stroke();
+  }
+  // rug: deep red oval
+  const rugX = W * 0.46 + parX * -12, rugY = H * 0.84;
+  ctx.fillStyle = '#3d1226'; ellipse2(ctx, rugX, rugY, W * 0.37, H * 0.075); ctx.fill();
+  ctx.fillStyle = '#521a33'; ellipse2(ctx, rugX, rugY, W * 0.30, H * 0.058); ctx.fill();
+  // flicker dim + vignette
+  if (fl * dip < 0.995) { ctx.fillStyle = 'rgba(0,0,0,' + (1 - fl * dip).toFixed(3) + ')'; ctx.fillRect(0, 0, W, H); }
+  const vg = ctx.createRadialGradient(W / 2, H / 2, Math.min(W, H) * 0.42, W / 2, H / 2, Math.max(W, H) * 0.78);
+  vg.addColorStop(0, 'rgba(2,0,8,0)'); vg.addColorStop(1, 'rgba(2,0,8,0.5)');
+  ctx.fillStyle = vg; ctx.fillRect(0, 0, W, H);
+}
+
+/* ============================== three.js scene ============================== */
+let renderer = null, scene = null, camera = null;
+const CAM_BASE = new THREE.Vector3(0, 1.9, 4.2);
+const CAM_LOOK = new THREE.Vector3(0, 1.05, -2);
+
+function makeBlobTexture() {
+  const c = document.createElement('canvas'); c.width = c.height = 128;
+  const g = c.getContext('2d');
+  const grad = g.createRadialGradient(64, 64, 4, 64, 64, 62);
+  grad.addColorStop(0, 'rgba(0,0,0,0.55)');
+  grad.addColorStop(0.6, 'rgba(0,0,0,0.28)');
+  grad.addColorStop(1, 'rgba(0,0,0,0)');
+  g.fillStyle = grad; g.fillRect(0, 0, 128, 128);
+  return new THREE.CanvasTexture(c);
+}
+function makeGlowTexture() {
+  const c = document.createElement('canvas'); c.width = c.height = 128;
+  const g = c.getContext('2d');
+  const grad = g.createRadialGradient(64, 64, 2, 64, 64, 63);
+  grad.addColorStop(0, 'rgba(255,255,255,0.85)');
+  grad.addColorStop(0.35, 'rgba(255,255,255,0.32)');
+  grad.addColorStop(1, 'rgba(255,255,255,0)');
+  g.fillStyle = grad; g.fillRect(0, 0, 128, 128);
+  return new THREE.CanvasTexture(c);
+}
+let blobGeo = null, blobMat = null, glowTex = null;
+
+function initGL() {
+  renderer = new THREE.WebGLRenderer({ canvas: document.getElementById('gl'), alpha: true, antialias: true });
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
+  renderer.setSize(window.innerWidth, window.innerHeight);
+  renderer.setClearColor(0x000000, 0);
+  scene = new THREE.Scene();
+  camera = new THREE.PerspectiveCamera(62, window.innerWidth / Math.max(1, window.innerHeight), 0.1, 80);
+  camera.position.copy(CAM_BASE);
+  camera.lookAt(CAM_LOOK);
+  baseCamQ = camera.quaternion.clone();
+  hemiLight = new THREE.HemisphereLight(0xbfb3ff, 0x1c1030, 0.85);
+  scene.add(hemiLight);
+  dirLight = new THREE.DirectionalLight(0xdfe8ff, 1.05);
+  dirLight.position.set(-2.5, 4.5, 3.0);
+  scene.add(dirLight);
+  blobGeo = new THREE.PlaneGeometry(1, 1);
+  blobMat = new THREE.MeshBasicMaterial({ map: makeBlobTexture(), transparent: true, depthWrite: false, opacity: 0.55 });
+  glowTex = makeGlowTexture();
+}
+
+/* ============================== ghosts ==============================
+   Types echo the original SpookSnap 64 (GHOST / PUMPKIN / SLIME / BATLING),
+   plus the rare fast red one the AR brief calls for. Score = base, times
+   centeredness (PERFECT x2 / good x1.5), times pose x2 — same spirit as the
+   original's size x pose x zoom formula. */
+const TYPES = {
+  ghost:   { name: 'GHOST',   base: 100,  color: 0xf2f4ff, glow: 0xaebfff, scale: 1.0,  weight: 46 },
+  pumpkin: { name: 'PUMPKIN', base: 150,  color: 0xff9a3c, glow: 0xffb066, scale: 0.95, weight: 22 },
+  slime:   { name: 'SLIME',   base: 200,  color: 0x74e38a, glow: 0x8affa8, scale: 0.92, weight: 16 },
+  batling: { name: 'BATLING', base: 300,  color: 0xb18cff, glow: 0xc9a8ff, scale: 0.9,  weight: 10 },
+  red:     { name: 'RED ONE', base: 1000, color: 0xff5a5a, glow: 0xff8080, scale: 0.85, weight: 6 }
+};
+function pickType() {
+  let tot = 0; for (const k in TYPES) tot += TYPES[k].weight;
+  let r = Math.random() * tot;
+  for (const k in TYPES) { r -= TYPES[k].weight; if (r <= 0) return k; }
+  return 'ghost';
+}
+
+/* sheet-ghost profile, lathed, hem rippled afterwards */
+function sheetGeometry() {
+  const pts = [];
+  const prof = [
+    [0.015, 1.00], [0.13, 0.985], [0.21, 0.93], [0.255, 0.84], [0.27, 0.72],
+    [0.285, 0.58], [0.30, 0.44], [0.315, 0.30], [0.31, 0.18], [0.325, 0.09], [0.315, 0.03]
+  ];
+  for (const p of prof) pts.push(new THREE.Vector2(p[0], p[1]));
+  const geo = new THREE.LatheGeometry(pts, 26);
+  const pos = geo.attributes.position;
+  for (let i = 0; i < pos.count; i++) {
+    const x = pos.getX(i), y = pos.getY(i), z = pos.getZ(i);
+    if (y < 0.20) {
+      const ang = Math.atan2(z, x);
+      const k = 1 - y / 0.20;
+      pos.setY(i, y + Math.sin(ang * 5 + 0.6) * 0.035 * k);
+    }
+  }
+  geo.computeVertexNormals();
+  return geo;
+}
+const GEO = {
+  sheet: sheetGeometry(),
+  eye: new THREE.SphereGeometry(0.032, 10, 8),
+  mouth: new THREE.SphereGeometry(0.030, 10, 8),
+  arm: new THREE.SphereGeometry(0.16, 10, 8),
+  stem: new THREE.CylinderGeometry(0.022, 0.032, 0.09, 8),
+  wing: (() => {
+    const s = new THREE.Shape();
+    s.moveTo(0, 0); s.lineTo(0.34, 0.13); s.lineTo(0.27, 0.02); s.lineTo(0.36, -0.05);
+    s.lineTo(0.22, -0.07); s.lineTo(0.24, -0.16); s.lineTo(0.05, -0.10); s.lineTo(0, 0);
+    return new THREE.ShapeGeometry(s);
+  })(),
+  drip: new THREE.SphereGeometry(0.045, 8, 6)
+};
+
+function buildGhostMesh(type) {
+  const T = TYPES[type];
+  const g = new THREE.Group();
+  const bodyMat = new THREE.MeshStandardMaterial({
+    color: T.color, roughness: 0.9, transparent: true, opacity: 0,
+    emissive: T.color, emissiveIntensity: 0.14, side: THREE.DoubleSide, depthWrite: false
+  });
+  const body = new THREE.Mesh(GEO.sheet, bodyMat);
+  body.scale.setScalar(0.62 * T.scale);
+  if (type === 'slime') body.scale.set(0.62 * T.scale * 1.18, 0.62 * T.scale * 0.8, 0.62 * T.scale * 1.18);
+  body.renderOrder = 10;
+  g.add(body);
+  // eyes: dark, glow red while posing (per-ghost material so they can flare)
+  const eyeMat = new THREE.MeshStandardMaterial({
+    color: 0x14101e, roughness: 0.4, transparent: true, opacity: 0,
+    emissive: 0xff2418, emissiveIntensity: 0, depthWrite: false
+  });
+  const eyes = [];
+  for (const s of [-1, 1]) {
+    const eye = new THREE.Mesh(GEO.eye, eyeMat);
+    const r = 0.245 * 0.62 * T.scale;
+    eye.position.set(0.085 * s * T.scale, 0.545 * T.scale, r);
+    eye.scale.set(0.8, 1.25, 0.45);
+    eye.renderOrder = 11;
+    g.add(eye); eyes.push(eye);
+  }
+  const mouth = new THREE.Mesh(GEO.mouth, eyeMat);
+  mouth.position.set(0, 0.44 * T.scale, 0.245 * 0.62 * T.scale);
+  mouth.scale.set(0.85, 1.1, 0.4);
+  mouth.renderOrder = 11;
+  g.add(mouth);
+  // little sheet arms
+  const arms = [];
+  for (const s of [-1, 1]) {
+    const pivot = new THREE.Group();
+    pivot.position.set(0.15 * s * T.scale, 0.40 * T.scale, 0.02);
+    const arm = new THREE.Mesh(GEO.arm, bodyMat);
+    arm.scale.set(0.28, 0.55, 0.28);
+    arm.position.set(0.05 * s, -0.05, 0);
+    arm.renderOrder = 10;
+    pivot.add(arm);
+    pivot.rotation.z = 0.5 * s;
+    g.add(pivot); arms.push(pivot);
+  }
+  if (type === 'pumpkin') {
+    const stem = new THREE.Mesh(GEO.stem, new THREE.MeshStandardMaterial({ color: 0x4a7a33, roughness: 1, transparent: true, opacity: 0, depthWrite: false }));
+    stem.position.y = 0.63 * T.scale;
+    stem.rotation.z = 0.25;
+    stem.renderOrder = 10;
+    g.add(stem);
+    g.userData.extra = [stem];
+  }
+  if (type === 'slime') {
+    const drips = [];
+    for (let i = 0; i < 4; i++) {
+      const d = new THREE.Mesh(GEO.drip, bodyMat);
+      const a = (i / 4) * Math.PI * 2 + 0.5;
+      d.position.set(Math.cos(a) * 0.17, 0.035, Math.sin(a) * 0.17);
+      d.scale.set(0.8, 1.3, 0.8);
+      d.renderOrder = 10;
+      g.add(d); drips.push(d);
+    }
+    g.userData.extra = drips;
+  }
+  let wings = null;
+  if (type === 'batling') {
+    wings = [];
+    const wmat = new THREE.MeshStandardMaterial({
+      color: 0x7a4fd0, roughness: 0.8, transparent: true, opacity: 0,
+      emissive: 0x7a4fd0, emissiveIntensity: 0.25, side: THREE.DoubleSide, depthWrite: false
+    });
+    for (const s of [-1, 1]) {
+      const pivot = new THREE.Group();
+      pivot.position.set(0.13 * s, 0.52 * T.scale, -0.05);
+      const w = new THREE.Mesh(GEO.wing, wmat);
+      w.scale.setScalar(1.15 * s);
+      if (s < 0) w.rotation.y = Math.PI;
+      w.renderOrder = 9;
+      pivot.add(w);
+      g.add(pivot); wings.push(pivot);
+    }
+    g.userData.wingMat = wmat;
+  }
+  // halo glow sprite
+  const glow = new THREE.Sprite(new THREE.SpriteMaterial({
+    map: glowTex, color: T.glow, transparent: true, opacity: 0, depthWrite: false
+  }));
+  glow.scale.setScalar(1.5 * T.scale);
+  glow.position.y = 0.34 * T.scale;
+  glow.renderOrder = 9;
+  g.add(glow);
+  // ground blob shadow
+  const shadow = new THREE.Mesh(blobGeo, blobMat.clone());
+  shadow.rotation.x = -Math.PI / 2;
+  shadow.renderOrder = 1;
+  scene.add(shadow);
+  g.traverse(o => { o.userData.ghostRoot = g; });
+  return { group: g, bodyMat, eyeMat, arms, wings, glow, shadow };
+}
+
+/* ============================== ghost lifecycle ============================== */
+const ghosts = [];   // every live ghost
+let ghostSeq = 0;
+const aliveGhosts = () => ghosts.filter(g => g.state === 'in' || g.state === 'haunt');
+
+function spawnGhost(forceType, opts) {
+  opts = opts || {};
+  if (aliveGhosts().length >= 5) return null;
+  const type = forceType || pickType();
+  const T = TYPES[type];
+  const parts = buildGhostMesh(type);
+  scene.add(parts.group);
+  let mode = 'drift', theta, thetaVel = 0, r, baseH;
+  if (type === 'red') {
+    mode = 'dart';
+    theta = opts.theta !== undefined ? opts.theta : -1.15;
+    thetaVel = rand(0.55, 0.75);
+    r = rand(2.0, 2.5); baseH = rand(1.15, 1.5);
+  } else if (opts.peek || (forceType == null && Math.random() < 0.25)) {
+    mode = 'peek';
+    const side = Math.random() < 0.5 ? -1 : 1;
+    theta = opts.theta !== undefined ? opts.theta : side * rand(0.8, 1.25);
+    r = rand(2.1, 3.1); baseH = rand(0.9, 1.7);
+  } else {
+    mode = 'drift';
+    theta = opts.theta !== undefined ? opts.theta : rand(-0.55, 0.55);
+    thetaVel = rand(0.04, 0.12) * (Math.random() < 0.5 ? -1 : 1);
+    r = opts.r !== undefined ? opts.r : rand(1.6, 3.6);
+    baseH = rand(0.75, 1.85);
+  }
+  const gh = {
+    id: ++ghostSeq, type, mode, parts,
+    theta, thetaVel, r, baseH,
+    state: 'in', t: 0,
+    life: mode === 'peek' ? rand(5.5, 7.5) : (mode === 'dart' ? 99 : rand(10, 15)),
+    opacity: 0,
+    bobPh: rand(0, Math.PI * 2), bobSp: rand(1.2, 2.0),
+    swayPh: rand(0, Math.PI * 2),
+    poseAt: rand(2.5, 5.5), posing: 0,
+    caughtT: 0
+  };
+  ghosts.push(gh);
+  return gh;
+}
+
+function freeGhost(gh) {
+  scene.remove(gh.parts.group);
+  scene.remove(gh.parts.shadow);
+  const i = ghosts.indexOf(gh);
+  if (i >= 0) ghosts.splice(i, 1);
+}
+
+function ghostWorldPos(gh, out) {
+  out.set(Math.sin(gh.theta) * gh.r, gh.baseH + Math.sin(elapsed * gh.bobSp + gh.bobPh) * 0.11, -Math.cos(gh.theta) * gh.r);
+  return out;
+}
+
+function updateGhost(gh, dt, t) {
+  gh.t += dt;
+  const T = TYPES[gh.type];
+  // --- behaviour by mode ---
+  if (gh.state === 'in' || gh.state === 'haunt') {
+    if (gh.mode === 'drift') {
+      gh.theta += gh.thetaVel * dt;
+      gh.theta = clamp(gh.theta, -1.35, 1.35);
+      if (gh.theta === -1.35 || gh.theta === 1.35) gh.thetaVel *= -1;
+      gh.r += Math.sin(elapsed * 0.4 + gh.swayPh) * 0.05 * dt;
+      gh.r = clamp(gh.r, 1.5, 4.0);
+    } else if (gh.mode === 'dart') {
+      gh.theta += gh.thetaVel * dt;
+      if (gh.theta > 1.3) gh.state = 'out';
+    }
+    gh.life -= dt;
+    if (gh.life <= 0 && gh.state === 'haunt') gh.state = 'out';
+    // pose cycle: eyes glow, arms up, mouth wide — snap NOW for double
+    if (gh.state === 'haunt') {
+      gh.poseAt -= dt;
+      if (gh.posing > 0) {
+        gh.posing -= dt;
+        if (gh.posing <= 0) gh.poseAt = rand(3, 6);
+      } else if (gh.poseAt <= 0) {
+        gh.posing = 1.25;
+        if (phase === 'playing') sndPose();
+      }
+    }
+  }
+  // --- opacity by state ---
+  const baseOp = gh.mode === 'peek'
+    ? 0.34 + 0.30 * (0.5 + 0.5 * Math.sin(elapsed * 2.4 + gh.bobPh))
+    : 0.62;
+  if (gh.state === 'in') {
+    gh.opacity = Math.min(baseOp, gh.opacity + dt * 1.4);
+    if (gh.opacity >= baseOp - 0.001) gh.state = 'haunt';
+  } else if (gh.state === 'out') {
+    gh.opacity -= dt * 1.5;
+    if (gh.opacity <= 0) { freeGhost(gh); return; }
+  } else if (gh.state === 'caught') {
+    gh.caughtT += dt;
+    const k = clamp(gh.caughtT / 0.38, 0, 1);
+    gh.opacity = baseOp * (1 - k);
+    gh.parts.group.scale.setScalar(Math.max(0.05, 1 - k * 0.9));
+    gh.parts.group.rotation.y += dt * 14;
+    gh.parts.group.position.y += dt * 1.3;
+    if (k >= 1) { freeGhost(gh); return; }
+  } else {
+    gh.opacity += (baseOp - gh.opacity) * Math.min(1, dt * 4);
+  }
+  // --- place + dress the mesh ---
+  const wp = ghostWorldPos(gh, _pv2);
+  if (gh.state !== 'caught') gh.parts.group.position.copy(wp);
+  // yaw-billboard toward the camera so the face always reads
+  gh.parts.group.rotation.y = Math.atan2(camera.position.x - wp.x, camera.position.z - wp.z);
+  const posing = gh.posing > 0;
+  gh.parts.bodyMat.opacity = gh.opacity;
+  gh.parts.eyeMat.opacity = Math.min(1, gh.opacity + 0.25);
+  gh.parts.eyeMat.emissiveIntensity = posing ? 2.2 : 0;
+  if (gh.parts.wingMat) gh.parts.wingMat.opacity = gh.opacity * 0.95;
+  gh.parts.glow.material.opacity = gh.opacity * 0.34;
+  const armTgt = posing ? 2.35 : 0.5;
+  gh.parts.arms.forEach((a, i) => {
+    const s = i === 0 ? -1 : 1;
+    const wig = Math.sin(elapsed * 2.2 + gh.bobPh + i * 1.7) * 0.14;
+    a.rotation.z += ((armTgt * s + wig) - a.rotation.z) * Math.min(1, dt * 7);
+  });
+  if (gh.parts.wings) {
+    const flap = Math.sin(elapsed * 11 + gh.bobPh) * 0.55;
+    gh.parts.wings[0].rotation.z = 0.25 + flap;
+    gh.parts.wings[1].rotation.z = -0.25 - flap;
+  }
+  gh.parts.group.rotation.z = Math.sin(elapsed * 1.3 + gh.swayPh) * 0.05;
+  // shadow under the ghost, weaker the higher it floats
+  const sh = gh.parts.shadow;
+  sh.position.set(wp.x, 0.02, wp.z);
+  const hk = clamp(1.15 - wp.y * 0.32, 0.15, 0.9);
+  sh.scale.setScalar((0.9 + wp.y * 0.25) * (gh.state === 'caught' ? 0.4 : 1));
+  sh.material.opacity = 0.5 * hk * (gh.opacity / 0.62);
+}
+const _pv2 = new THREE.Vector3();
+
+/* ============================== viewfinder + snap ============================== */
+const _pv = new THREE.Vector3();
+const _camDir = new THREE.Vector3();
+function viewfinderRect() {
+  const vw = W * 0.80, vh = H * 0.56;
+  return { x: (W - vw) / 2, y: (H - vh) / 2 - H * 0.015, w: vw, h: vh, cx: W / 2, cy: (H - vh) / 2 - H * 0.015 + vh / 2 };
+}
+/* screen-space read on a ghost: center px, apparent radius px, centeredness 0..1 */
+function ghostScreen(gh) {
+  ghostWorldPos(gh, _pv);
+  _pv.y += 0.30;  // aim at the ghost's middle, not its hem
+  _pv.project(camera);
+  if (_pv.z > 1 || _pv.z < -1) return null;
+  const sx = (_pv.x * 0.5 + 0.5) * W, sy = (_pv.y * -0.5 + 0.5) * H;
+  const vf = viewfinderRect();
+  const distC = Math.hypot(sx - vf.cx, sy - vf.cy);
+  const maxD = 0.5 * Math.hypot(vf.w, vf.h);
+  const cn = clamp(1 - distC / maxD, 0, 1);
+  // apparent radius: project a point 0.34 m to the ghost's side
+  ghostWorldPos(gh, _pv2);
+  _pv2.x += 0.34;
+  _pv2.project(camera);
+  const radPx = Math.abs((_pv2.x * 0.5 + 0.5) * W - sx);
+  const inFrame = sx > vf.x - radPx * 0.4 && sx < vf.x + vf.w + radPx * 0.4 &&
+                  sy > vf.y - radPx * 0.4 && sy < vf.y + vf.h + radPx * 0.4;
+  return { x: sx, y: sy, cn, radPx, inFrame };
+}
+function bestShotInFrame() {
+  let best = null;
+  for (const gh of ghosts) {
+    if (gh.state !== 'haunt' && gh.state !== 'in') continue;
+    if (gh.opacity < 0.3) continue;
+    const s = ghostScreen(gh);
+    if (!s || !s.inFrame) continue;
+    if (!best || s.cn > best.s.cn) best = { gh, s };
+  }
+  return best;
+}
+
+function doFlash() {
+  flashT = 0.22;
+  flashEl.style.transition = 'none';
+  flashEl.style.opacity = '0.92';
+}
+function snapPhoto() {
+  if (phase !== 'playing' || snapCd > 0) return;
+  snapCd = 0.45;
+  initAudio(); resumeAudio();
+  sndShutter();
+  doFlash();
+  const best = bestShotInFrame();
+  if (!best) {
+    sndMiss();
+    spawnScorePop(W / 2, H * 0.66, 'NOTHING THERE…', false);
+    updateHUD();
+    return;
+  }
+  const gh = best.gh, cn = best.s.cn;
+  const cmult = cn >= 0.78 ? 2 : (cn >= 0.5 ? 1.5 : 1);
+  const pmult = gh.posing > 0 ? 2 : 1;
+  const pts = Math.round(TYPES[gh.type].base * cmult * pmult / 10) * 10;
+  gh.state = 'caught'; gh.caughtT = 0;
+  score += pts;
+  photos += 1;
+  if (pts > bestShot) { bestShot = pts; bestShotType = TYPES[gh.type].name; }
+  if (cmult === 2) { sndPerfect(); bigMsg('🎯 PERFECT! +' + pts); }
+  else { sndCapture(); if (pmult === 2) bigMsg('👀 POSE! +' + pts); }
+  spawnScorePop(best.s.x, best.s.y - best.s.radPx - 6,
+    (pmult === 2 ? 'POSE! ' : '') + '+' + pts, cmult === 2 || gh.type === 'red');
+  spawnStars(best.s.x, best.s.y, gh.type === 'red' ? 16 : 10, gh.type === 'red' || cmult === 2);
+  addPhotoThumb(gh.type, pts, pmult === 2);
+  updateHUD();
+}
+
+/* ---- photo strip: a little polaroid per capture, ghost drawn in 2D ---- */
+function addPhotoThumb(type, pts, wasPose) {
+  const T = TYPES[type];
+  const div = document.createElement('div');
+  div.className = 'photo';
+  const cv = document.createElement('canvas');
+  cv.width = 88; cv.height = 88;
+  const c = cv.getContext('2d');
+  const bg = c.createLinearGradient(0, 0, 0, 88);
+  bg.addColorStop(0, '#171233'); bg.addColorStop(1, '#0a0618');
+  c.fillStyle = bg; c.fillRect(0, 0, 88, 88);
+  c.fillStyle = 'rgba(200,190,255,0.5)';
+  c.beginPath(); c.arc(70, 16, 7, 0, Math.PI * 2); c.fill();
+  // sheet ghost
+  const col = '#' + T.color.toString(16).padStart(6, '0');
+  c.fillStyle = col;
+  c.globalAlpha = 0.92;
+  c.beginPath();
+  c.moveTo(44, 12);
+  c.bezierCurveTo(28, 12, 24, 26, 24, 40);
+  c.bezierCurveTo(24, 52, 25, 60, 23, 70);
+  for (let i = 0; i <= 4; i++) {
+    const x = 23 + i * 10.5;
+    c.quadraticCurveTo(x + 2.6, 64 + (i % 2 ? 5 : 0), x + 5.25, 70);
+  }
+  c.bezierCurveTo(63, 60, 64, 52, 64, 40);
+  c.bezierCurveTo(64, 26, 60, 12, 44, 12);
+  c.fill();
+  c.globalAlpha = 1;
+  c.fillStyle = wasPose ? '#ff2d1a' : '#14101e';
+  c.beginPath(); c.ellipse(37, 36, 3.6, 5, 0, 0, Math.PI * 2); c.fill();
+  c.beginPath(); c.ellipse(51, 36, 3.6, 5, 0, 0, Math.PI * 2); c.fill();
+  c.beginPath(); c.ellipse(44, 48, 3, 4.2, 0, 0, Math.PI * 2); c.fill();
+  if (type === 'pumpkin') { c.fillStyle = '#4a7a33'; c.fillRect(42, 6, 4, 7); }
+  if (type === 'batling') {
+    c.fillStyle = '#7a4fd0';
+    c.beginPath(); c.moveTo(24, 30); c.lineTo(6, 22); c.lineTo(12, 34); c.lineTo(4, 38); c.lineTo(24, 40); c.fill();
+    c.beginPath(); c.moveTo(64, 30); c.lineTo(82, 22); c.lineTo(76, 34); c.lineTo(84, 38); c.lineTo(64, 40); c.fill();
+  }
+  div.appendChild(cv);
+  const lab = document.createElement('div');
+  lab.className = 'plabel';
+  lab.textContent = (wasPose ? '👀 ' : '') + '+' + pts;
+  div.appendChild(lab);
+  stripEl.prepend(div);
+  while (stripEl.children.length > 7) stripEl.removeChild(stripEl.lastChild);
+}
+
+/* ============================== fx overlay ============================== */
+const fx = [];
+function spawnStars(sx, sy, n, gold) {
+  for (let i = 0; i < n; i++) {
+    const a = rand(0, Math.PI * 2), sp = rand(40, 150);
+    fx.push({ type: 'star', x: sx, y: sy, vx: Math.cos(a) * sp, vy: Math.sin(a) * sp - 60,
+      life: 0, max: rand(0.45, 0.75), size: rand(6, 11), rot: rand(0, 3), gold: !!gold });
+  }
+}
+function spawnScorePop(sx, sy, txt, gold) {
+  fx.push({ type: 'text', x: sx, y: sy - 8, vx: 0, vy: -68, life: 0, max: 0.9, txt, gold: !!gold });
+}
+function drawStarShape(r) {
+  fctx.beginPath();
+  for (let i = 0; i < 10; i++) {
+    const ang = (i / 10) * Math.PI * 2 - Math.PI / 2;
+    const rad = i % 2 === 0 ? r : r * 0.45;
+    const px = Math.cos(ang) * rad, py = Math.sin(ang) * rad;
+    if (i === 0) fctx.moveTo(px, py); else fctx.lineTo(px, py);
+  }
+  fctx.closePath();
+}
+function updateFx(dt) {
+  for (let i = fx.length - 1; i >= 0; i--) {
+    const p = fx[i];
+    p.life += dt;
+    if (p.life >= p.max) { fx.splice(i, 1); continue; }
+    if (p.type === 'star') { p.x += p.vx * dt; p.y += p.vy * dt; p.vy += 260 * dt; p.rot += dt * 5; }
+    else if (p.type === 'text') { p.y += p.vy * dt; }
+  }
+}
+function drawViewfinder() {
+  const vf = viewfinderRect();
+  const lock = phase === 'playing' ? bestShotInFrame() : null;
+  const locked = lock && lock.s.cn >= 0.5;
+  const col = locked ? 'rgba(123,228,149,0.95)' : 'rgba(240,235,255,0.75)';
+  fctx.save();
+  fctx.strokeStyle = col;
+  fctx.lineWidth = 3;
+  const L = 30, r = 14;
+  const corners = [
+    [vf.x, vf.y, 1, 1], [vf.x + vf.w, vf.y, -1, 1],
+    [vf.x, vf.y + vf.h, 1, -1], [vf.x + vf.w, vf.y + vf.h, -1, -1]
+  ];
+  for (const [cx, cy, sx, sy] of corners) {
+    fctx.beginPath();
+    fctx.moveTo(cx + sx * L, cy);
+    fctx.lineTo(cx + sx * r, cy);
+    fctx.quadraticCurveTo(cx, cy, cx, cy + sy * r);
+    fctx.lineTo(cx, cy + sy * L);
+    fctx.stroke();
+  }
+  // center dot + ring; ring swells when a good shot is lined up
+  fctx.beginPath();
+  fctx.arc(vf.cx, vf.cy, locked ? 9 : 5, 0, Math.PI * 2);
+  fctx.strokeStyle = col; fctx.lineWidth = 2;
+  fctx.stroke();
+  fctx.beginPath();
+  fctx.arc(vf.cx, vf.cy, 2.2, 0, Math.PI * 2);
+  fctx.fillStyle = col;
+  fctx.fill();
+  if (lock && lock.gh.posing > 0) {
+    fctx.font = '900 15px -apple-system, "Segoe UI", Roboto, sans-serif';
+    fctx.textAlign = 'center';
+    fctx.fillStyle = '#ffb3a0';
+    fctx.fillText('👀 POSING — SNAP NOW!', vf.cx, vf.y - 10);
+  }
+  fctx.restore();
+}
+function drawFx() {
+  fctx.clearRect(0, 0, W, H);
+  if (phase === 'playing') drawViewfinder();
+  for (const p of fx) {
+    const a = clamp(1 - p.life / p.max, 0, 1);
+    if (p.type === 'star') {
+      fctx.save();
+      fctx.translate(p.x, p.y); fctx.rotate(p.rot);
+      fctx.globalAlpha = a;
+      fctx.fillStyle = p.gold ? '#ffd83c' : '#e6dcff';
+      fctx.strokeStyle = 'rgba(70,30,140,0.8)'; fctx.lineWidth = 1.2;
+      drawStarShape(p.size);
+      fctx.fill(); fctx.stroke();
+      fctx.restore();
+    } else if (p.type === 'text') {
+      fctx.save();
+      fctx.globalAlpha = a;
+      fctx.font = '900 25px -apple-system, "Segoe UI", Roboto, sans-serif';
+      fctx.textAlign = 'center';
+      fctx.lineWidth = 5; fctx.strokeStyle = 'rgba(24,4,54,0.9)';
+      fctx.strokeText(p.txt, p.x, p.y);
+      fctx.fillStyle = p.gold ? '#ffd83c' : '#ffffff';
+      fctx.fillText(p.txt, p.x, p.y);
+      fctx.restore();
+    }
+  }
+  fctx.globalAlpha = 1;
+}
+
+/* ============================== scoring / hud ============================== */
+function updateHUD() {
+  scoreEl.textContent = score;
+  photoCountEl.textContent = photos;
+  timeLeftEl.textContent = Math.max(0, Math.ceil(timeLeft));
+  timerBar.style.width = (clamp(timeLeft / ROUND_LEN, 0, 1) * 100).toFixed(1) + '%';
+  timeChip.classList.toggle('low', timeLeft <= 10.5);
+  poseChip.classList.toggle('show', phase === 'playing' && ghosts.some(g => g.posing > 0 && (g.state === 'haunt' || g.state === 'in')));
+  snapBtn.classList.toggle('cd', snapCd > 0);
+}
+function bigMsg(txt) {
+  bigMsgEl.textContent = txt;
+  bigMsgEl.classList.remove('pop');
+  void bigMsgEl.offsetWidth;
+  bigMsgEl.classList.add('pop');
+}
+snapBtn.addEventListener('pointerdown', (e) => { e.preventDefault(); snapPhoto(); });
+glCanvas.addEventListener('pointerdown', () => { snapPhoto(); });
+
+/* ============================== game flow ============================== */
+function resetGame() {
+  for (const gh of [...ghosts]) freeGhost(gh);
+  score = 0; photos = 0; bestShot = 0; bestShotType = '';
+  timeLeft = ROUND_LEN; elapsed = 0; spawnTimer = 0.3; snapCd = 0; wailTimer = 5;
+  fx.length = 0;
+  stripEl.innerHTML = '';
+  updateHUD();
+}
+function endGame() {
+  phase = 'over';
+  stopAmbience();
+  for (const gh of ghosts) if (gh.state === 'in' || gh.state === 'haunt') gh.state = 'out';
+  const isBest = score > best;
+  if (isBest) { best = score; try { localStorage.setItem('spookBest', String(best)); } catch (e) {} }
+  document.getElementById('finalScore').textContent = score;
+  document.getElementById('finalPhotos').textContent = photos;
+  document.getElementById('bestShotLine').textContent = photos ? (bestShotType + ' · ' + bestShot + ' pts') : '—';
+  document.getElementById('bestScore').textContent = best;
+  document.getElementById('newBest').classList.toggle('hidden', !isBest);
+  endEl.classList.remove('hidden');
+  stripEl.classList.add('hidden');
+  snapBtn.classList.add('hidden');
+  vfHintEl.classList.add('hidden');
+  sndJingle();
+  updateHUD();
+}
+function updateGame(dt) {
+  timeLeft -= dt;
+  elapsed += dt;
+  snapCd = Math.max(0, snapCd - dt);
+  if (timeLeft <= 0) { timeLeft = 0; updateHUD(); endGame(); return; }
+  // keep 3–5 ghosts haunting; spawn a touch faster late in the round
+  spawnTimer -= dt;
+  const want = elapsed > 55 ? 5 : 4;
+  if (spawnTimer <= 0) {
+    spawnTimer = lerp(1.5, 0.95, clamp(elapsed / ROUND_LEN, 0, 1)) * rand(0.85, 1.15);
+    if (aliveGhosts().length < want) {
+      const gh = spawnGhost();
+      if (gh && gh.type === 'red') sndWail(0.05);
+    }
+  }
+  // ambient wails now and then
+  wailTimer -= dt;
+  if (wailTimer <= 0) { wailTimer = rand(7, 15); sndWail(rand(0.018, 0.034)); }
+  if (flashT > 0) {
+    flashT -= dt;
+    if (flashT <= 0) {
+      flashEl.style.transition = 'opacity 0.18s ease-out';
+      flashEl.style.opacity = '0';
+    }
+  }
+  vfHintEl.classList.toggle('hidden', elapsed > 7);
+  updateHUD();
+}
+
+/* ============================== resize ============================== */
+function resize() {
+  const dpr = Math.min(window.devicePixelRatio || 1, 2);
+  W = window.innerWidth; H = window.innerHeight;
+  for (const c of [roomCanvas, fxCanvas]) {
+    c.width = Math.round(W * dpr);
+    c.height = Math.round(H * dpr);
+  }
+  rctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  fctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  floorTop = Math.round(H * 0.62);
+  if (renderer && camera) {
+    renderer.setSize(W, H);
+    camera.aspect = W / Math.max(1, H);
+    camera.updateProjectionMatrix();
+  }
+}
+window.addEventListener('resize', resize);
+
+/* ============================== main loop ============================== */
+let qaTarget = null;   // QA hook: a ghost the camera should center on
+let lastT = 0;
+function frame(t) {
+  requestAnimationFrame(frame);
+  const dt = Math.min(0.05, lastT ? (t - lastT) / 1000 : 0.016);
+  lastT = t;
+  updateParallax(t);
+  if (!camOK) { rctx.clearRect(0, 0, W, H); drawRoom(t); }
+  if (camera) {
+    camera.position.set(CAM_BASE.x + parX * 0.45, CAM_BASE.y - parY * 0.22, CAM_BASE.z);
+    if (!applyMotionCamera()) {
+      camera.lookAt(CAM_LOOK.x - parX * 0.25, CAM_LOOK.y, CAM_LOOK.z);
+    }
+    if (qaTarget && ghosts.includes(qaTarget) && phase === 'playing') {
+      ghostWorldPos(qaTarget, _pv2);
+      _pv2.y += 0.30;
+      camera.lookAt(_pv2);
+    }
+  }
+  updateLightMatch(t, dt);
+  if (phase === 'playing') updateGame(dt);
+  for (const gh of [...ghosts]) updateGhost(gh, dt, t);
+  updateFx(dt);
+  if (renderer) renderer.render(scene, camera);
+  drawFx();
+}
+
+/* ============================== start flow ============================== */
+let camTried = false;
+async function ensureCamera() {
+  if (camTried) return;
+  camTried = true;
+  try {
+    if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) throw new Error('no getUserMedia');
+    const stream = await Promise.race([
+      navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' }, audio: false }),
+      new Promise((_, rej) => setTimeout(() => rej(new Error('camera timeout')), 4500))
+    ]);
+    const video = document.getElementById('cam');
+    video.srcObject = stream;
+    await video.play().catch(() => {});
+    camOK = true;
+  } catch (e) { camOK = false; }
+  // NOTE: motion permission is NOT asked here — by this point the tap's
+  // gesture window has closed (getUserMedia was awaited first). It is
+  // asked synchronously in the START tap handler (askMotionPermission).
+  const video = document.getElementById('cam');
+  video.classList.toggle('hidden', !camOK);
+  roomCanvas.classList.toggle('hidden', camOK);
+  camTagEl.textContent = camOK ? '📷 AR room' : '🏠 spooky room';
+}
+function beginRound() {
+  MOTION.recal = true;      // "straight ahead" = how she's holding it now
+  motionWatchdog();
+  resetGame();
+  startEl.classList.add('hidden');
+  endEl.classList.add('hidden');
+  hudEl.classList.remove('hidden');
+  stripEl.classList.remove('hidden');
+  snapBtn.classList.remove('hidden');
+  vfHintEl.classList.remove('hidden');
+  phase = 'playing';
+  startAmbience();
+  // a first ghost right away so there's something to film
+  spawnGhost('ghost', { theta: 0.15, r: 2.6 });
+  spawnGhost();
+}
+document.getElementById('startBtn').addEventListener('click', async () => {
+  askMotionPermission();   // FIRST, synchronously — iOS only honors it inside the tap
+  initAudio();
+  await ensureCamera();
+  beginRound();
+});
+document.getElementById('againBtn').addEventListener('click', () => {
+  initAudio();
+  beginRound();
+});
+
+/* ============================== boot + test hook ============================== */
+resize();
+initGL();
+resize();
+updateHUD();
+requestAnimationFrame(frame);
+
+window.__spook = {
+  get phase() { return phase; },
+  get started() { return phase !== 'start'; },
+  get camOK() { return camOK; },
+  get score() { return score; },
+  get photos() { return photos; },
+  get bestShot() { return bestShot; },
+  get snapCd() { return snapCd; },
+  get timeLeft() { return timeLeft; },
+  get flash() { return parseFloat(flashEl.style.opacity || '0'); },
+  ghosts: () => ghosts.map(gh => {
+    const s = (gh.state === 'haunt' || gh.state === 'in') ? ghostScreen(gh) : null;
+    return {
+      id: gh.id, type: gh.type, mode: gh.mode, state: gh.state,
+      posing: gh.posing > 0, opacity: +gh.opacity.toFixed(2),
+      screen: s ? { x: Math.round(s.x), y: Math.round(s.y) } : null,
+      cn: s ? +s.cn.toFixed(3) : 0, inFrame: s ? s.inFrame : false
+    };
+  }),
+  ghostCount: () => aliveGhosts().length,
+  spawnGhost: (type) => { const gh = spawnGhost(type || undefined, { theta: rand(-0.2, 0.2), r: 2.5 }); return gh ? gh.id : null; },
+  centerOn: (id) => {
+    const gh = ghosts.find(g => g.id === id) || ghosts[0];
+    qaTarget = gh || null;
+    return qaTarget ? qaTarget.id : null;
+  },
+  clearLook: () => { qaTarget = null; },
+  snap: () => snapPhoto(),
+  setTimeLeft: (s) => { timeLeft = s; },
+  camQuat: () => camera ? camera.quaternion.toArray() : null,
+  project: (x, y, z) => {
+    if (!camera) return null;
+    _pv.set(x, y, z).project(camera);
+    return { x: (_pv.x * 0.5 + 0.5) * W, y: (_pv.y * -0.5 + 0.5) * H };
+  },
+  motion: () => ({ ok: MOTION.ok, ever: MOTION.ever, perm: MOTION.perm, needPerm: MOTION.needPerm, hasRef: !!MOTION.refQ }),
+  start: () => document.getElementById('startBtn').click(),
+  again: () => document.getElementById('againBtn').click()
+};
+</script>
+<script id="moth-game-guard-js">
+(function(){
+  var lastEnd=0;
+  function onUi(t){return t&&t.closest&&t.closest('button,a,input,select,textarea,[data-scroll]');}
+  document.addEventListener('touchend',function(e){
+    var now=Date.now();
+    if(!onUi(e.target)&&now-lastEnd<=300&&e.cancelable)e.preventDefault();
+    lastEnd=now;
+  },{passive:false});
+  ['gesturestart','gesturechange','gestureend'].forEach(function(n){
+    document.addEventListener(n,function(e){e.preventDefault();});
+  });
+  document.addEventListener('dblclick',function(e){e.preventDefault();},{passive:false});
+  document.addEventListener('contextmenu',function(e){e.preventDefault();});
+  document.addEventListener('touchmove',function(e){
+    if(e.target&&e.target.closest&&e.target.closest('[data-scroll]'))return;
+    if(e.cancelable)e.preventDefault();
+  },{passive:false});
+})();
+</script>
+</body>
+</html>
