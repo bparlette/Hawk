@@ -166,7 +166,7 @@ canvas{touch-action:none}
   <div class="card">
     <div class="big">🔨</div>
     <h1>BONK YARD!</h1>
-    <p>Critters are invading <b>your</b> room. When one pops out of its hole — <b>TAP it to bonk it!</b></p>
+    <p>Critters are invading <b>your</b> room. When one bursts through your floor — <b>TAP it to bonk it!</b></p>
     <p>⭐ Golden critter = <b>50 pts</b> · 💣 Bomb-hat grump breaks your combo · Build streaks for <b>×2</b> and <b>×3</b>!</p>
     <button id="startBtn" class="playBtn" type="button">▶ PLAY</button>
     <p class="fine">Needs camera for the full AR feel.<br>No camera? No problem — they get a cozy room instead.</p>
@@ -239,6 +239,24 @@ const sndGold  = () => { tone(880, 880, 0.09, 'triangle', 0.13); tone(1174, 1174
 const sndGrump = () => { tone(150, 110, 0.28, 'sawtooth', 0.12); tone(90, 60, 0.2, 'square', 0.08, 0.05); };
 const sndDuck  = () => { tone(520, 300, 0.09, 'sine', 0.045); };
 const sndJingle = () => { [523, 659, 784, 1046].forEach((f, i) => tone(f, f, 0.16, 'triangle', 0.13, i * 0.11)); };
+let noiseBuf = null;
+function sndCrack() {
+  // short filtered-noise crunch + low thump: the floor bursting open
+  if (!AC) return;
+  try {
+    if (!noiseBuf) {
+      noiseBuf = AC.createBuffer(1, Math.floor(AC.sampleRate * 0.18), AC.sampleRate);
+      const d = noiseBuf.getChannelData(0);
+      for (let i = 0; i < d.length; i++) d[i] = (Math.random() * 2 - 1) * (1 - i / d.length);
+    }
+    const src = AC.createBufferSource(); src.buffer = noiseBuf;
+    const f = AC.createBiquadFilter(); f.type = 'bandpass'; f.frequency.value = 750; f.Q.value = 0.8;
+    const g = AC.createGain(); g.gain.value = 0.13;
+    src.connect(f); f.connect(g); g.connect(AC.destination);
+    src.start();
+  } catch (e) {}
+  tone(120, 55, 0.1, 'sine', 0.11);
+}
 
 /* ============================== dom / state ============================== */
 const video = document.getElementById('cam');
@@ -454,7 +472,7 @@ function makeBlobTexture() {
   g.fillStyle = grad; g.fillRect(0, 0, 128, 128);
   return new THREE.CanvasTexture(c);
 }
-let blobGeo = null, blobMat = null;
+let puffTex = null;
 
 function initGL() {
   renderer = new THREE.WebGLRenderer({ canvas: document.getElementById('gl'), alpha: true, antialias: true });
@@ -471,27 +489,13 @@ function initGL() {
   dirLight = new THREE.DirectionalLight(0xfff1da, 1.6);
   dirLight.position.set(2.5, 4.5, 3.0);
   scene.add(dirLight);
-  blobGeo = new THREE.PlaneGeometry(1, 1);
-  blobMat = new THREE.MeshBasicMaterial({ map: makeBlobTexture(), transparent: true, depthWrite: false, opacity: 0.8 });
+  puffTex = makeBlobTexture();
 }
 
-/* the yard mat — a soft grassy patch the holes sit on (reads in AR + fallback) */
-function buildYard() {
-  const mat = new THREE.Mesh(
-    new THREE.PlaneGeometry(3.6, 5.4),
-    new THREE.MeshStandardMaterial({ color: 0x5da244, roughness: 1, transparent: true, opacity: 0.92 })
-  );
-  mat.rotation.x = -Math.PI / 2;
-  mat.position.set(0, -0.01, -1.3);
-  scene.add(mat);
-  const dirt = new THREE.Mesh(
-    new THREE.PlaneGeometry(3.3, 5.1),
-    new THREE.MeshStandardMaterial({ color: 0x6d9c4e, roughness: 1, transparent: true, opacity: 0.55 })
-  );
-  dirt.rotation.x = -Math.PI / 2;
-  dirt.position.set(0, -0.005, -1.3);
-  scene.add(dirt);
-}
+/* MAX AR (Cherie, Nov 8): NO fake ground patch. The camera's real floor —
+   or the fallback room's drawn floor — IS the surface. Critters burst
+   through it at the spots below; there is no yard mat and there are no
+   hole meshes anywhere in this scene. */
 
 /* ============================== critters (all code-drawn) ============================== */
 const GEO = {
@@ -504,10 +508,7 @@ const GEO = {
   tooth: new THREE.BoxGeometry(0.10, 0.10, 0.025),
   brow: new THREE.BoxGeometry(0.13, 0.03, 0.02),
   bomb: new THREE.SphereGeometry(0.135, 16, 12),
-  fuse: new THREE.CylinderGeometry(0.016, 0.016, 0.12, 6),
-  holeDark: new THREE.CircleGeometry(0.335, 28),
-  holeInner: new THREE.CircleGeometry(0.26, 24),
-  holeRim: new THREE.TorusGeometry(0.335, 0.055, 10, 28)
+  fuse: new THREE.CylinderGeometry(0.016, 0.016, 0.12, 6)
 };
 const MAT = {
   muzzle: new THREE.MeshStandardMaterial({ color: 0xf3ddba, roughness: 0.9 }),
@@ -518,10 +519,7 @@ const MAT = {
   gold: new THREE.MeshStandardMaterial({ color: 0xffc93c, roughness: 0.28, metalness: 0.55, emissive: 0x664d00 }),
   grumpBody: new THREE.MeshStandardMaterial({ color: 0x707a84, roughness: 0.95 }),
   bomb: new THREE.MeshStandardMaterial({ color: 0x22242a, roughness: 0.35, metalness: 0.4 }),
-  fuse: new THREE.MeshStandardMaterial({ color: 0xc9a86a, roughness: 0.9 }),
-  holeDark: new THREE.MeshBasicMaterial({ color: 0x140b04 }),
-  holeInner: new THREE.MeshBasicMaterial({ color: 0x2b1a0c }),
-  rim: new THREE.MeshStandardMaterial({ color: 0x8a5a2b, roughness: 1 })
+  fuse: new THREE.MeshStandardMaterial({ color: 0xc9a86a, roughness: 0.9 })
 };
 const BODY_MATS = [0xb07a45, 0x9a9a9a, 0xd8cfc0].map(c => new THREE.MeshStandardMaterial({ color: c, roughness: 0.95 }));
 const EAR_MATS = [0x8a5f33, 0x7c7c7c, 0xbfb4a2].map(c => new THREE.MeshStandardMaterial({ color: c, roughness: 0.95 }));
@@ -575,78 +573,265 @@ function buildCritterMesh(kind, colorIdx) {
   return g;
 }
 
-/* ============================== holes ============================== */
-const HOLE_POS = [];
-for (const z of [0.4, -1.3, -3.0]) for (const x of [-0.95, 0, 0.95]) HOLE_POS.push({ x, z });
-const holes = [];
-function buildHoles() {
-  for (const pos of HOLE_POS) {
+/* ================== burst-through spots (cracks, debris, dust) ==================
+   Each spawn point owns ONLY transient FX: a jagged crack decal lying flat
+   on the floor plane (y≈0, transparent PNG-style canvas texture — the real
+   surface shows through everywhere else), a small pool of debris chunks,
+   and one dust-puff sprite. Nothing opaque ever covers the floor. */
+const SPOT_POS = [];
+for (const z of [0.4, -1.3, -3.0]) for (const x of [-0.95, 0, 0.95]) SPOT_POS.push({ x, z });
+const spots = [];
+
+function makeCrackTexture(seed) {
+  const c = document.createElement('canvas'); c.width = c.height = 256;
+  const g = c.getContext('2d');
+  const cx = 128, cy = 128;
+  let s = seed * 7919 + 13;
+  const rnd = () => { s = (s * 16807) % 2147483647; return s / 2147483647; };
+  // dark fractured centre the critter pushes through
+  const blot = g.createRadialGradient(cx, cy, 2, cx, cy, 50);
+  blot.addColorStop(0, 'rgba(12,7,3,0.95)');
+  blot.addColorStop(0.55, 'rgba(16,9,4,0.72)');
+  blot.addColorStop(1, 'rgba(16,9,4,0)');
+  g.fillStyle = blot;
+  g.beginPath(); g.ellipse(cx, cy, 54, 42, 0, 0, Math.PI * 2); g.fill();
+  // jagged radiating crack arms with branches, tapering as they run
+  g.lineCap = 'round';
+  g.strokeStyle = 'rgba(10,6,3,0.92)';
+  const arms = 8 + Math.floor(rnd() * 3);
+  for (let i = 0; i < arms; i++) {
+    let a = (i / arms) * Math.PI * 2 + rnd() * 0.55;
+    let x = cx, y = cy, wdt = 5.5;
+    const segs = 4 + Math.floor(rnd() * 3);
+    for (let j = 0; j < segs; j++) {
+      const len = 13 + rnd() * 22;
+      const nx = x + Math.cos(a) * len, ny = y + Math.sin(a) * len * 0.82;
+      g.lineWidth = Math.max(1, wdt);
+      g.beginPath(); g.moveTo(x, y); g.lineTo(nx, ny); g.stroke();
+      if (rnd() < 0.45) {
+        const ba = a + (rnd() < 0.5 ? 0.7 : -0.7);
+        g.lineWidth = Math.max(0.8, wdt * 0.5);
+        g.beginPath(); g.moveTo(nx, ny);
+        g.lineTo(nx + Math.cos(ba) * len * 0.55, ny + Math.sin(ba) * len * 0.45); g.stroke();
+      }
+      x = nx; y = ny; a += (rnd() - 0.5) * 0.55; wdt *= 0.68;
+    }
+  }
+  return new THREE.CanvasTexture(c);
+}
+
+const DEBRIS_GEOS = [
+  new THREE.TetrahedronGeometry(0.05),
+  new THREE.BoxGeometry(0.062, 0.046, 0.052),
+  new THREE.TetrahedronGeometry(0.034)
+];
+const DEBRIS_MATS = [0x8a5a2b, 0x6e4520, 0x9c6b35, 0x7d7d7d]
+  .map(c => new THREE.MeshStandardMaterial({ color: c, roughness: 1 }));
+
+function buildSpots() {
+  SPOT_POS.forEach((pos, idx) => {
     const grp = new THREE.Group();
     grp.position.set(pos.x, 0, pos.z);
-    const dark = new THREE.Mesh(GEO.holeDark, MAT.holeDark);
-    dark.rotation.x = -Math.PI / 2; dark.position.y = 0.004;
-    grp.add(dark);
-    const inner = new THREE.Mesh(GEO.holeInner, MAT.holeInner);
-    inner.rotation.x = -Math.PI / 2; inner.position.y = 0.008;
-    grp.add(inner);
-    const rim = new THREE.Mesh(GEO.holeRim, MAT.rim);
-    rim.rotation.x = Math.PI / 2; rim.position.y = 0.012;
-    rim.scale.set(1, 1, 0.45);
-    grp.add(rim);
-    const shadow = new THREE.Mesh(blobGeo, blobMat);
-    shadow.rotation.x = -Math.PI / 2;
-    shadow.position.y = 0.002;
-    shadow.scale.set(0.95, 0.8, 1);
-    grp.add(shadow);
+    const crack = new THREE.Mesh(
+      new THREE.PlaneGeometry(0.98, 0.98),
+      new THREE.MeshBasicMaterial({ map: makeCrackTexture(idx + 1), transparent: true, depthWrite: false, opacity: 0 })
+    );
+    crack.rotation.x = -Math.PI / 2;
+    crack.rotation.z = idx * 1.37;
+    crack.position.y = 0.006 + idx * 0.0006;   // staggered: no z-fighting between neighbours
+    crack.renderOrder = 2;
+    crack.visible = false;
+    grp.add(crack);
+    const debris = [];
+    for (let i = 0; i < 8; i++) {
+      const m = new THREE.Mesh(DEBRIS_GEOS[i % DEBRIS_GEOS.length], DEBRIS_MATS[i % DEBRIS_MATS.length]);
+      m.visible = false;
+      grp.add(m);
+      debris.push({ mesh: m, active: false, vx: 0, vy: 0, vz: 0, rx: 0, rz: 0, life: 0, max: 0.6, baseScale: 1 });
+    }
+    const puffSprite = new THREE.Sprite(new THREE.SpriteMaterial({
+      map: puffTex, color: 0xd9c9a3, transparent: true, depthWrite: false, opacity: 0
+    }));
+    puffSprite.position.set(0, 0.1, 0);
+    puffSprite.visible = false;
+    puffSprite.renderOrder = 3;
+    grp.add(puffSprite);
     scene.add(grp);
-    holes.push({ x: pos.x, z: pos.z, critter: null });
+    spots.push({
+      x: pos.x, z: pos.z, critter: null, group: grp,
+      crack: { mesh: crack, mode: 'off', t: 0, delay: 0, dur: 1, opacity: 0 },
+      debris,
+      puff: { sprite: puffSprite, active: false, life: 0, max: 0.5, big: true }
+    });
+  });
+}
+
+function crackShow(spot) {
+  const ck = spot.crack;
+  ck.mode = 'in'; ck.t = 0;
+  ck.mesh.visible = true;
+}
+function crackRelease(spot, slow) {
+  const ck = spot.crack;
+  if (ck.mode === 'off') return;
+  ck.mode = 'out'; ck.t = 0;
+  ck.delay = slow ? 0.5 : 0.05;   // bonked: linger, then fade across ~2 s total
+  ck.dur = slow ? 1.5 : 0.5;      // ducked/timeout: gone fast
+}
+function burstDebris(spot, n, power) {
+  let used = 0;
+  for (const d of spot.debris) {
+    if (d.active) continue;
+    d.active = true;
+    d.mesh.visible = true;
+    const a = rand(0, Math.PI * 2), r = rand(0.02, 0.13);
+    d.mesh.position.set(Math.cos(a) * r, 0.03, Math.sin(a) * r);
+    d.mesh.rotation.set(rand(0, 3), rand(0, 3), rand(0, 3));
+    d.baseScale = rand(0.7, 1.3);
+    d.mesh.scale.setScalar(d.baseScale);
+    d.vx = Math.cos(a) * rand(0.25, 0.7) * power;
+    d.vz = Math.sin(a) * rand(0.25, 0.7) * power;
+    d.vy = rand(1.1, 1.9) * power;
+    d.rx = rand(-9, 9); d.rz = rand(-9, 9);
+    d.life = 0; d.max = rand(0.45, 0.65);
+    if (++used >= n) break;
+  }
+}
+function puffDust(spot, big) {
+  const p = spot.puff;
+  p.active = true; p.big = big; p.life = 0; p.max = big ? 0.55 : 0.4;
+  p.sprite.visible = true;
+}
+function updateSpots(dt) {
+  for (const spot of spots) {
+    const ck = spot.crack;
+    if (ck.mode === 'in') {
+      ck.t += dt;
+      const k = clamp(ck.t / 0.14, 0, 1);
+      const s = 0.35 + 0.65 * Math.min(1.12, easeOutBack(k));
+      ck.mesh.scale.set(s, s, 1);
+      ck.opacity = k;
+      if (k >= 1) { ck.mode = 'hold'; ck.opacity = 1; ck.mesh.scale.set(1, 1, 1); }
+    } else if (ck.mode === 'hold') {
+      ck.opacity = 1;
+    } else if (ck.mode === 'out') {
+      ck.t += dt;
+      if (ck.t <= ck.delay) ck.opacity = 1;
+      else {
+        const k = clamp((ck.t - ck.delay) / ck.dur, 0, 1);
+        ck.opacity = 1 - k;
+        if (k >= 1) { ck.mode = 'off'; ck.opacity = 0; ck.mesh.visible = false; }
+      }
+    }
+    ck.mesh.material.opacity = ck.opacity;
+    for (const d of spot.debris) {
+      if (!d.active) continue;
+      d.life += dt;
+      if (d.life >= d.max) { d.active = false; d.mesh.visible = false; continue; }
+      d.vy -= 4.6 * dt;
+      d.mesh.position.x += d.vx * dt;
+      d.mesh.position.y += d.vy * dt;
+      d.mesh.position.z += d.vz * dt;
+      if (d.mesh.position.y < 0.025) {
+        d.mesh.position.y = 0.025;
+        d.vy = 0; d.vx *= 0.6; d.vz *= 0.6;
+      } else {
+        d.mesh.rotation.x += d.rx * dt;
+        d.mesh.rotation.z += d.rz * dt;
+      }
+      const tail = clamp((d.max - d.life) / 0.15, 0, 1);
+      d.mesh.scale.setScalar(Math.max(0.01, d.baseScale * tail));
+    }
+    const p = spot.puff;
+    if (p.active) {
+      p.life += dt;
+      const k = clamp(p.life / p.max, 0, 1);
+      if (k >= 1) { p.active = false; p.sprite.visible = false; }
+      else {
+        const e = 1 - Math.pow(1 - k, 2);
+        const s = lerp(0.3, p.big ? 0.9 : 0.62, e);
+        p.sprite.scale.set(s, s * 0.7, 1);
+        p.sprite.position.y = lerp(0.09, 0.24, e);
+        p.sprite.material.opacity = 0.5 * (1 - k);
+      }
+    }
   }
 }
 
 /* ============================== critter lifecycle ============================== */
 const HIDDEN_Y = -0.66;
-const critters = [];   // every spawned critter (any state); hole.critter points at the live one
+const critters = [];   // every spawned critter (any state); spot.critter points at the live one
 const upCritters = () => critters.filter(c => c.state === 'rising' || c.state === 'up');
 
 function spawnCritter() {
-  const free = holes.filter(h => !h.critter);
+  const free = spots.filter(s => !s.critter);
   if (!free.length) return null;
-  const hole = pick(free);
   const roll = Math.random();
   const kind = roll < 0.08 ? 'gold' : (roll < 0.20 ? 'grump' : 'normal');
+  return spawnCritterAt(pick(free), kind);
+}
+
+function spawnCritterAt(spot, kind) {
+  if (!spot || spot.critter) return null;
   const colorIdx = Math.floor(Math.random() * 3);
   const mesh = buildCritterMesh(kind, colorIdx);
-  mesh.position.set(hole.x, HIDDEN_Y, hole.z);
+  mesh.position.set(spot.x, HIDDEN_Y, spot.z);
+  mesh.scale.set(0.55, 0.55, 0.55);
   scene.add(mesh);
   const ramp = clamp(elapsed / ROUND_LEN, 0, 1);
   const c = {
-    hole, mesh, kind,
+    spot, mesh, kind,
     state: 'rising', t: 0,
     riseDur: 0.20,
     upDur: rand(0.7, 1.4) * lerp(1, 0.82, ramp),
     duckDur: 0.12,
     wigPh: rand(0, Math.PI * 2),
-    squashed: false
+    squashed: false,
+    exit: 'duck',
+    pinned: false
   };
-  hole.critter = c;
+  spot.critter = c;
   critters.push(c);
+  // BURST THROUGH the surface: crack pops in, debris flies, dust puffs
+  crackShow(spot);
+  burstDebris(spot, 7, 1);
+  puffDust(spot, true);
+  sndCrack();
   sndBoing();
   return c;
 }
 
+/* QA: pin a critter at an exact rise pose (k: 0 = hidden, 1 = fully up) */
+function poseCritter(c, k) {
+  if (k >= 1) {
+    c.state = 'up'; c.t = 0;
+    c.mesh.position.y = 0; c.mesh.scale.set(1, 1, 1);
+  } else {
+    c.state = 'rising'; c.t = k * c.riseDur;
+    const e = easeOutBack(k);
+    c.mesh.position.y = lerp(HIDDEN_Y, 0, e);
+    const s = 0.55 + 0.45 * Math.min(1.08, e);
+    c.mesh.scale.set(s, s, s);
+  }
+}
+
 function freeCritter(c) {
   scene.remove(c.mesh);
-  if (c.hole.critter === c) c.hole.critter = null;
+  if (c.spot.critter === c) c.spot.critter = null;
+  crackRelease(c.spot, c.exit === 'bonk');
   const i = critters.indexOf(c);
   if (i >= 0) critters.splice(i, 1);
 }
 
 function updateCritter(c, dt, t) {
+  if (c.pinned) return;
   c.t += dt;
   if (c.state === 'rising') {
     const k = clamp(c.t / c.riseDur, 0, 1);
     c.mesh.position.y = lerp(HIDDEN_Y, 0, easeOutBack(k));
-    if (k >= 1) { c.state = 'up'; c.t = 0; c.mesh.position.y = 0; }
+    const s = 0.55 + 0.45 * Math.min(1.08, easeOutBack(k));
+    c.mesh.scale.set(s, s, s);
+    if (k >= 1) { c.state = 'up'; c.t = 0; c.mesh.position.y = 0; c.mesh.scale.set(1, 1, 1); }
   } else if (c.state === 'up') {
     c.mesh.rotation.z = Math.sin(t * 0.006 + c.wigPh) * 0.06;
     c.mesh.rotation.y = Math.sin(t * 0.0021 + c.wigPh) * 0.35;
@@ -670,7 +855,7 @@ function updateCritter(c, dt, t) {
 /* ============================== fx overlay (stars, score pops, ripples) ============================== */
 const fx = [];
 function critterHeadScreen(c) {
-  _pv.set(c.hole.x, 0.62 + c.mesh.position.y, c.hole.z).project(camera);
+  _pv.set(c.spot.x, 0.62 + c.mesh.position.y, c.spot.z).project(camera);
   return { x: (_pv.x * 0.5 + 0.5) * W, y: (_pv.y * -0.5 + 0.5) * H };
 }
 function spawnStars(sx, sy, n, gold) {
@@ -762,6 +947,9 @@ function bigMsg(txt) {
 function bonkCritter(c) {
   if (c.state !== 'up' && c.state !== 'rising') return;
   c.state = 'bonked'; c.t = 0;
+  c.exit = 'bonk';
+  burstDebris(c.spot, 4, 0.7);
+  puffDust(c.spot, false);
   const head = critterHeadScreen(c);
   if (c.kind === 'grump') {
     streak = 0;
@@ -881,6 +1069,7 @@ function frame(t) {
   updateLightMatch(t, dt);
   if (phase === 'playing') updateGame(dt);
   for (const c of [...critters]) updateCritter(c, dt, t);
+  updateSpots(dt);
   updateFx(dt);
   if (renderer) renderer.render(scene, camera);
   drawFx();
@@ -933,8 +1122,7 @@ document.getElementById('againBtn').addEventListener('click', () => {
 /* ============================== boot + test hook ============================== */
 resize();
 initGL();
-buildYard();
-buildHoles();
+buildSpots();
 resize();
 updateHUD();
 requestAnimationFrame(frame);
@@ -948,13 +1136,54 @@ window.__bonk = {
   get mult() { return mult(); },
   get timeLeft() { return timeLeft; },
   get upCount() { return upCritters().length; },
-  critters: () => critters.map(c => ({ kind: c.kind, state: c.state, hole: holes.indexOf(c.hole) })),
+  critters: () => critters.map(c => ({ kind: c.kind, state: c.state, spot: spots.indexOf(c.spot) })),
+  cracks: () => spots.map(s => ({ mode: s.crack.mode, opacity: Math.round(s.crack.opacity * 100) / 100 })),
+  debrisLive: () => spots.reduce((n, s) => n + s.debris.filter(d => d.active).length, 0),
+  sceneScan: () => {
+    const out = [];
+    scene.traverse(o => {
+      if (o.isMesh) out.push({
+        geo: o.geometry ? o.geometry.type : '?',
+        color: (o.material && o.material.color) ? o.material.color.getHex() : null,
+        opacity: o.material ? o.material.opacity : null
+      });
+    });
+    return out;
+  },
+  qaSpawn: (spotIdx, k) => {
+    const spot = spots[spotIdx];
+    if (!spot || spot.critter) return null;
+    const c = spawnCritterAt(spot, 'normal');
+    if (!c) return null;
+    c.pinned = true;
+    poseCritter(c, k);
+    return { kind: c.kind, spot: spotIdx, state: c.state };
+  },
+  qaPose: (k) => {
+    const c = critters.find(cc => cc.pinned);
+    if (!c) return false;
+    poseCritter(c, k);
+    return true;
+  },
+  qaRelease: () => { for (const c of critters) c.pinned = false; },
+  snapComposite: () => {
+    // QA still: composite the game's own canvases in z-order (room < gl < fx).
+    // Synchronous render + readback in one task — no compositor needed.
+    if (renderer) renderer.render(scene, camera);
+    const c = document.createElement('canvas');
+    c.width = glCanvas.width; c.height = glCanvas.height;
+    const g = c.getContext('2d');
+    if (!roomCanvas.classList.contains('hidden')) g.drawImage(roomCanvas, 0, 0, c.width, c.height);
+    g.drawImage(glCanvas, 0, 0);
+    g.drawImage(fxCanvas, 0, 0);
+    return c.toDataURL('image/jpeg', 0.85);   // JPEG: PNG encode starves on a loaded VM
+  },
   spawnNow: () => spawnCritter(),
   screenOf: (i) => {
     const ups = upCritters();
     if (!ups[i]) return null;
     const c = ups[i];
-    _pv.set(c.hole.x, 0.30 + c.mesh.position.y, c.hole.z).project(camera);
+    _pv.set(c.spot.x, 0.30 + c.mesh.position.y, c.spot.z).project(camera);
     return { x: (_pv.x * 0.5 + 0.5) * W, y: (_pv.y * -0.5 + 0.5) * H };
   },
   setTimeLeft: (s) => { timeLeft = s; },
