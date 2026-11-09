@@ -2474,6 +2474,14 @@
    "thumb": "thumbs/bonk-yard.png",
    "title": "SPRITE STORM!",
    "url": "../games/sprite-storm/"
+  },
+  {
+   "category": "Viral Demos",
+   "desc": "Vertical rage climb on the measured SM64-feel controller — triple jump, ledge grab, long jump, dive and wall-kick to the summit. No checkpoints.",
+   "id": "the-climb",
+   "thumb": "thumbs/bonk-yard.png",
+   "title": "THE CLIMB!",
+   "url": "../games/the-climb/"
   }
  ]
 }
