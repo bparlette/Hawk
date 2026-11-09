@@ -2350,6 +2350,18 @@
    "path": "../games/hot-city-pursuit/index.html",
    "thumb": "thumbs/bonk-yard.png",
    "title": "HOT CITY PURSUIT!"
+  },
+  {
+   "autostart": [],
+   "category": "Driving",
+   "id": "canyon-drift",
+   "keys": {},
+   "labels": {},
+   "note": "Night canyon drift racing: a wet road under moonlight, handbrake drift chains that multiply your score, one rival to beat, checkpoints on the clock. Finish for an S/A/B/C rank.",
+   "orientation": "any",
+   "path": "../games/canyon-drift/index.html",
+   "thumb": "thumbs/bonk-yard.png",
+   "title": "CANYON DRIFT!"
   }
  ]
 }
