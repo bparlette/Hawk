@@ -2234,6 +2234,7 @@
   {
    "autostart": [],
    "category": "AR",
+   "desc": "Original hand-modeled Hana-chan — browser AR: she walks around your room; tap the floor and she walks there. Plus Quick Look USDZ.",
    "id": "hana-chan",
    "keys": {},
    "labels": {},
@@ -2385,7 +2386,7 @@
   },
   {
    "category": "AR",
-   "desc": "A 4.5-metre Hana standing still in your room — walk around her. Plus Quick Look USDZ.",
+   "desc": "Hana standing still in your room — walk around her. Plus Quick Look USDZ.",
    "id": "hana-chan-giant",
    "thumb": "thumbs/bonk-yard.png",
    "title": "GIANT HANA — 4.5m Still AR",
@@ -2409,7 +2410,7 @@
   },
   {
    "category": "AR",
-   "desc": "The photo-generated Hannah, stood up — 4.5m, browser AR plus Quick Look, with Walk/Rotate modes.",
+   "desc": "The photo-generated Hannah, stood up.",
    "id": "hana-stand",
    "thumb": "thumbs/bonk-yard.png",
    "title": "STANDING PHOTO-MESH HANNAH — AR",
@@ -2422,6 +2423,33 @@
    "thumb": "thumbs/bonk-yard.png",
    "title": "HANA — All Look-Arounds",
    "url": "../games/hana/"
+  },
+  {
+   "added": "2026-11-08",
+   "category": "Originals",
+   "desc": "First-person corridor shooter — shotgun, code-drawn demons, fight to the exit.",
+   "id": "demon-corridor",
+   "thumb": "thumbs/bonk-yard.png",
+   "title": "DEMON CORRIDOR!",
+   "url": "games/demon-corridor/"
+  },
+  {
+   "added": "2026-11-08",
+   "category": "AR",
+   "desc": "Demons burst up through glowing cracks in your floor — blast them and seal the rift.",
+   "id": "demon-room-ar",
+   "thumb": "thumbs/bonk-yard.png",
+   "title": "DEMON ROOM AR!",
+   "url": "games/demon-room-ar/"
+  },
+  {
+   "added": "2026-11-08",
+   "category": "AR",
+   "desc": "A tiny kaiju stomps a toy city on your floor — aim his crushes and flatten 20 buildings.",
+   "id": "tiny-kaiju-ar",
+   "thumb": "thumbs/bonk-yard.png",
+   "title": "TINY KAIJU AR!",
+   "url": "games/tiny-kaiju-ar/"
   }
  ]
 }
