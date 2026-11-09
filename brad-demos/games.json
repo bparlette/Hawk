@@ -2338,6 +2338,18 @@
    "path": "../games/pickleball-ar/index.html",
    "thumb": "thumbs/bonk-yard.png",
    "title": "PICKLEBALL AR"
+  },
+  {
+   "autostart": [],
+   "category": "Driving",
+   "id": "hot-city-pursuit",
+   "keys": {},
+   "labels": {},
+   "note": "Clean-room city mayhem: grab cash drops to raise your wanted stars, outrun the cop AI until they bust you. Endless until busted — how long can you last?",
+   "orientation": "any",
+   "path": "../games/hot-city-pursuit/index.html",
+   "thumb": "thumbs/bonk-yard.png",
+   "title": "HOT CITY PURSUIT!"
   }
  ]
 }
