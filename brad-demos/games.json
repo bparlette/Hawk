@@ -2242,6 +2242,102 @@
    "path": "../games/hana-chan/index.html",
    "thumb": "thumbs/pokemon-room.png",
    "title": "HANA-CHAN AR"
+  },
+  {
+   "autostart": [],
+   "category": "AR",
+   "id": "zombie-kill-ar",
+   "keys": {},
+   "labels": {},
+   "note": "Zombies burst up through cracks in your real floor and shamble at you — headshots drop them in one. Five waves: normals, fast ones, tanks. Survive them all.",
+   "orientation": "any",
+   "path": "../games/zombie-kill-ar/index.html",
+   "thumb": "thumbs/bonk-yard.png",
+   "title": "ZOMBIE KILL AR"
+  },
+  {
+   "autostart": [],
+   "category": "AR",
+   "id": "cat-ninja-ar",
+   "keys": {},
+   "labels": {},
+   "note": "Fruit flies at your face in your own room — slash it mid-air with fast swipes. Combos score big, bombs cost a life. 75 seconds, ranks up to Grand Master Nyaa.",
+   "orientation": "any",
+   "path": "../games/cat-ninja-ar/index.html",
+   "thumb": "thumbs/bonk-yard.png",
+   "title": "CAT NINJA AR"
+  },
+  {
+   "autostart": [],
+   "category": "AR",
+   "id": "cat-artillery-ar",
+   "keys": {},
+   "labels": {},
+   "note": "A tiny fortress on your table: drag to aim the arc, lob shells, knock down all 8 targets with 14 shells.",
+   "orientation": "any",
+   "path": "../games/cat-artillery-ar/index.html",
+   "thumb": "thumbs/bonk-yard.png",
+   "title": "CAT ARTILLERY AR"
+  },
+  {
+   "autostart": [],
+   "category": "AR",
+   "id": "spooksnap-ar",
+   "keys": {},
+   "labels": {},
+   "note": "Ghosts haunt your room — line them up in the frame and SNAP a photo. Your photo strip scores every shot. 90 seconds.",
+   "orientation": "any",
+   "path": "../games/spooksnap-ar/index.html",
+   "thumb": "thumbs/bonk-yard.png",
+   "title": "SPOOKSNAP AR"
+  },
+  {
+   "autostart": [],
+   "category": "AR",
+   "id": "duck-shoot-ar",
+   "keys": {},
+   "labels": {},
+   "note": "Your phone is the light gun: ducks streak across your room at four depths, golden ducks are worth 500. 60 seconds, combo streaks multiply.",
+   "orientation": "any",
+   "path": "../games/duck-shoot-ar/index.html",
+   "thumb": "thumbs/bonk-yard.png",
+   "title": "DUCK SHOOT AR"
+  },
+  {
+   "autostart": [],
+   "category": "AR",
+   "id": "voxel-demolition-ar",
+   "keys": {},
+   "labels": {},
+   "note": "A voxel castle on your table — 2,950 blocks, 12 shells, knock 85% of it down. Blasts wake the blocks above and chain the collapse.",
+   "orientation": "any",
+   "path": "../games/voxel-demolition-ar/index.html",
+   "thumb": "thumbs/bonk-yard.png",
+   "title": "VOXEL DEMOLITION AR"
+  },
+  {
+   "autostart": [],
+   "category": "AR",
+   "id": "cat-defense-ar",
+   "keys": {},
+   "labels": {},
+   "note": "Tower defense on a wooden board-game board on your table: place cat towers on the printed circles, stop 5 waves from crossing the track.",
+   "orientation": "any",
+   "path": "../games/cat-defense-ar/index.html",
+   "thumb": "thumbs/bonk-yard.png",
+   "title": "CAT DEFENSE AR"
+  },
+  {
+   "autostart": [],
+   "category": "AR",
+   "id": "pickleball-ar",
+   "keys": {},
+   "labels": {},
+   "note": "First-person pickleball in your room: the CPU pixel player DINK hits balls right at you — tap HIT as the timing ring closes. Green is a clean corner return. First to 7.",
+   "orientation": "any",
+   "path": "../games/pickleball-ar/index.html",
+   "thumb": "thumbs/bonk-yard.png",
+   "title": "PICKLEBALL AR"
   }
  ]
 }
