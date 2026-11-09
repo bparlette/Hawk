@@ -1,0 +1,1072 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+<title>CAT ARTILLERY AR — lob shells from your tabletop fortress</title>
+<style>
+  html, body { height: 100%; }
+  body {
+    margin: 0; overflow: hidden; background: #1a1410;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    color: #fff; -webkit-user-select: none; user-select: none;
+  }
+  #cam, #room, #gl { position: fixed; inset: 0; width: 100%; height: 100%; display: block; }
+  #cam { object-fit: cover; background: #1a1410; z-index: 0; }
+  #room { z-index: 0; }
+  #gl { z-index: 1; }
+  #hud {
+    position: fixed; top: calc(env(safe-area-inset-top, 0px) + 8px);
+    left: 10px; right: 10px; z-index: 3; pointer-events: none;
+  }
+  #hudRow { display: flex; gap: 6px; align-items: center; flex-wrap: wrap; }
+  .chip {
+    background: rgba(24, 16, 8, 0.60); border: 1px solid rgba(255,255,255,0.22);
+    border-radius: 999px; padding: 5px 10px; font-size: 13px; font-weight: 700;
+    letter-spacing: 0.02em; backdrop-filter: blur(3px); white-space: nowrap;
+  }
+  .chip b { font-size: 15px; }
+  #camTag { font-size: 11px; font-weight: 700; opacity: 0.85; margin-left: auto; }
+  #hintChip { width: 100%; text-align: center; font-size: 14px; color: #ffe9a8; }
+  #aimReadout {
+    margin-top: 6px; text-align: center; font-size: 13px; font-weight: 800;
+    color: #ffd76a; text-shadow: 0 1px 3px rgba(0,0,0,0.7);
+  }
+  #bigMsg {
+    position: fixed; left: 50%; top: 26%; transform: translate(-50%, -50%) scale(0.7);
+    z-index: 4; font-size: 36px; font-weight: 900; color: #ffd76a;
+    text-shadow: 0 3px 0 rgba(60,30,0,0.55), 0 6px 18px rgba(0,0,0,0.5);
+    opacity: 0; pointer-events: none; white-space: nowrap; text-align: center;
+  }
+  #bigMsg.pop { animation: msgPop 1.15s ease-out forwards; }
+  @keyframes msgPop {
+    0% { opacity: 0; transform: translate(-50%, -50%) scale(0.6); }
+    18% { opacity: 1; transform: translate(-50%, -50%) scale(1.12); }
+    32% { transform: translate(-50%, -50%) scale(1); }
+    78% { opacity: 1; }
+    100% { opacity: 0; transform: translate(-50%, -62%) scale(1); }
+  }
+  .overlay {
+    position: fixed; inset: 0; z-index: 5; display: flex; align-items: center; justify-content: center;
+    background: rgba(12, 8, 4, 0.45); padding: 18px; box-sizing: border-box;
+  }
+  .card {
+    background: rgba(28, 20, 12, 0.92); border: 1px solid rgba(255, 214, 106, 0.35);
+    border-radius: 20px; padding: 22px 20px; max-width: 340px; width: 100%;
+    text-align: center; box-shadow: 0 18px 50px rgba(0,0,0,0.55);
+  }
+  .card .big { font-size: 52px; line-height: 1; }
+  .card h1 { margin: 8px 0 6px; font-size: 26px; letter-spacing: 0.01em; }
+  .card p { margin: 6px 0; font-size: 14.5px; line-height: 1.45; color: #f3e6cf; }
+  .card .fine { font-size: 12px; opacity: 0.75; }
+  .card .scoreLine { font-size: 17px; color: #ffd76a; }
+  .playBtn {
+    font: inherit; font-size: 18px; font-weight: 900; color: #2a1802;
+    background: linear-gradient(180deg, #ffd76a, #ffb84d); border: 0; border-radius: 999px;
+    padding: 13px 34px; margin-top: 12px; cursor: pointer;
+    box-shadow: 0 6px 0 #a86e1c, 0 10px 22px rgba(0,0,0,0.4);
+  }
+  .playBtn:active { transform: translateY(3px); box-shadow: 0 3px 0 #a86e1c; }
+  #motionPill {
+    position: fixed; left: 50%; bottom: calc(env(safe-area-inset-bottom, 0px) + 86px);
+    transform: translateX(-50%); z-index: 4;
+    font: inherit; font-size: 13px; font-weight: 800; color: #fff;
+    background: rgba(24, 16, 8, 0.82); border: 1px solid rgba(255,255,255,0.35);
+    border-radius: 999px; padding: 9px 16px; cursor: pointer; white-space: nowrap;
+  }
+  #motionPill:active { transform: translateX(-50%) scale(0.96); }
+  .hidden { display: none !important; }
+</style>
+<script type="importmap">
+{ "imports": { "three": "./vendor/three.module.js" } }
+</script>
+<style id="moth-game-guard">
+html,body{touch-action:none;overscroll-behavior:none;-webkit-touch-callout:none;-webkit-user-select:none;user-select:none;-webkit-tap-highlight-color:transparent}
+canvas{touch-action:none}
+</style>
+</head>
+<body>
+<video id="cam" autoplay playsinline muted></video>
+<canvas id="room"></canvas>
+<canvas id="gl"></canvas>
+
+<div id="hud" class="hidden">
+  <div id="hudRow">
+    <div class="chip">🎯 <b><span id="tLeft">8</span></b></div>
+    <div class="chip">💣 <b><span id="sLeft">14</span></b></div>
+    <div class="chip">⭐ <b><span id="score">0</span></b></div>
+    <div class="chip hidden" id="comboChip">🔥 <b>×<span id="comboN">1</span></b></div>
+    <div id="camTag">📷 AR room</div>
+    <div class="chip" id="hintChip">👆 Drag to aim — the dotted arc is your shot. Release to FIRE!</div>
+  </div>
+  <div id="aimReadout"></div>
+</div>
+
+<div id="bigMsg"></div>
+
+<button id="motionPill" class="hidden" type="button">📱 Enable motion look-around</button>
+
+<div id="start" class="overlay">
+  <div class="card">
+    <div class="big">🐱💣</div>
+    <h1>CAT ARTILLERY AR</h1>
+    <p>Your <b>cat fortress</b> is set up on the floor. Enemy castles, statues and crate piles are dug in across the room!</p>
+    <p><b>Drag</b> to aim — the dotted arc shows exactly where the shell will fly — then <b>release to fire</b>. Smash all <b>8 targets</b> with <b>14 shells</b>.</p>
+    <button id="startBtn" class="playBtn" type="button">▶ START</button>
+    <p class="fine">Needs camera for the full AR feel.<br>No camera? No problem — you get a cozy room instead.</p>
+  </div>
+</div>
+
+<div id="end" class="overlay hidden">
+  <div class="card">
+    <div class="big" id="endEmoji">🏆</div>
+    <h1 id="endTitle">FORTRESS SUPREME!</h1>
+    <p class="scoreLine">⭐ Score <b><span id="finalScore">0</span></b></p>
+    <p id="endDetail">Targets smashed: 8/8</p>
+    <button id="againBtn" class="playBtn" type="button">↻ PLAY AGAIN</button>
+  </div>
+</div>
+
+<script type="module">
+import * as THREE from 'three';
+
+'use strict';
+/* ============================== helpers ============================== */
+const clamp = (v, a, b) => v < a ? a : (v > b ? b : v);
+const lerp = (a, b, t) => a + (b - a) * t;
+const rand = (a, b) => a + Math.random() * (b - a);
+
+/* ============================== audio (all synth) ============================== */
+let AC = null;
+function initAudio() {
+  try {
+    if ('audioSession' in navigator) { try { navigator.audioSession.type = 'playback'; } catch (e) {} }
+    if (!AC) {
+      const Ctor = window.AudioContext || window.webkitAudioContext;
+      if (Ctor) AC = new Ctor();
+    }
+    if (AC) {
+      if (AC.state === 'suspended') AC.resume();
+      const buf = AC.createBuffer(1, 1, 22050);
+      const src = AC.createBufferSource();
+      src.buffer = buf; src.connect(AC.destination); src.start(0);
+    }
+  } catch (e) {}
+}
+function resumeAudio() { try { if (AC && AC.state === 'suspended') AC.resume(); } catch (e) {} }
+document.addEventListener('pointerdown', resumeAudio, true);
+document.addEventListener('touchend', resumeAudio, true);
+document.addEventListener('visibilitychange', () => { if (!document.hidden) resumeAudio(); });
+
+function tone(f0, f1, dur, type, vol, delay) {
+  if (!AC) return;
+  try {
+    const t0 = AC.currentTime + (delay || 0);
+    const o = AC.createOscillator(), g = AC.createGain();
+    o.type = type || 'sine';
+    o.frequency.setValueAtTime(Math.max(30, f0), t0);
+    o.frequency.exponentialRampToValueAtTime(Math.max(30, f1), t0 + dur);
+    g.gain.setValueAtTime(0.0001, t0);
+    g.gain.exponentialRampToValueAtTime(vol || 0.15, t0 + 0.015);
+    g.gain.exponentialRampToValueAtTime(0.0001, t0 + dur);
+    o.connect(g); g.connect(AC.destination);
+    o.start(t0); o.stop(t0 + dur + 0.05);
+  } catch (e) {}
+}
+function noiseBurst(dur, freq, vol, type) {
+  if (!AC) return;
+  try {
+    const t0 = AC.currentTime;
+    const len = Math.max(1, Math.floor(AC.sampleRate * dur));
+    const buf = AC.createBuffer(1, len, AC.sampleRate);
+    const d = buf.getChannelData(0);
+    for (let i = 0; i < len; i++) d[i] = (Math.random() * 2 - 1) * (1 - i / len);
+    const src = AC.createBufferSource(); src.buffer = buf;
+    const f = AC.createBiquadFilter(); f.type = type || 'lowpass'; f.frequency.value = freq;
+    const g = AC.createGain();
+    g.gain.setValueAtTime(vol, t0);
+    g.gain.exponentialRampToValueAtTime(0.0001, t0 + dur);
+    src.connect(f); f.connect(g); g.connect(AC.destination);
+    src.start(t0);
+  } catch (e) {}
+}
+const sndLob = () => { tone(150, 60, 0.22, 'sine', 0.30); noiseBurst(0.16, 500, 0.18); };
+const sndBoom = () => { tone(110, 32, 0.5, 'sine', 0.5); noiseBurst(0.45, 900, 0.42); };
+const sndCrumble = () => { noiseBurst(0.28, 2400, 0.16, 'bandpass'); noiseBurst(0.2, 1200, 0.12, 'bandpass'); };
+const sndThud = () => { tone(90, 45, 0.18, 'sine', 0.22); noiseBurst(0.12, 400, 0.15); };
+const sndFanfare = () => { [523, 659, 784, 1046, 1318].forEach((f, i) => tone(f, f, 0.2, 'triangle', 0.13, i * 0.11)); };
+const sndMeow = () => { tone(620, 940, 0.14, 'sawtooth', 0.05); tone(940, 520, 0.2, 'sawtooth', 0.05, 0.13); };
+const sndSad = () => { [392, 330, 262].forEach((f, i) => tone(f, f * 0.94, 0.22, 'triangle', 0.12, i * 0.16)); };
+/* falling whistle: one osc whose pitch tracks the shell */
+let whistle = null;
+function whistleStart() {
+  if (!AC || whistle) return;
+  try {
+    const o = AC.createOscillator(); o.type = 'sine'; o.frequency.value = 700;
+    const g = AC.createGain(); g.gain.value = 0.0;
+    o.connect(g); g.connect(AC.destination); o.start();
+    whistle = { o, g };
+  } catch (e) { whistle = null; }
+}
+function whistleUpdate(speed, falling) {
+  if (!whistle || !AC) return;
+  try {
+    const f = clamp(520 + speed * 55 + (falling ? 160 : 0), 400, 1600);
+    whistle.o.frequency.setTargetAtTime(f, AC.currentTime, 0.05);
+    whistle.g.gain.setTargetAtTime(0.045, AC.currentTime, 0.08);
+  } catch (e) {}
+}
+function whistleStop() {
+  if (!whistle || !AC) { whistle = null; return; }
+  try {
+    const w = whistle;
+    w.g.gain.setTargetAtTime(0.0, AC.currentTime, 0.03);
+    setTimeout(() => { try { w.o.stop(); } catch (e) {} }, 200);
+  } catch (e) {}
+  whistle = null;
+}
+
+/* ============================== dom / state ============================== */
+const video = document.getElementById('cam');
+const roomCanvas = document.getElementById('room');
+const rctx = roomCanvas.getContext('2d');
+const hudEl = document.getElementById('hud');
+const hintChip = document.getElementById('hintChip');
+const tLeftEl = document.getElementById('tLeft');
+const sLeftEl = document.getElementById('sLeft');
+const scoreEl = document.getElementById('score');
+const comboChip = document.getElementById('comboChip');
+const comboNEl = document.getElementById('comboN');
+const aimReadout = document.getElementById('aimReadout');
+const camTagEl = document.getElementById('camTag');
+const bigMsgEl = document.getElementById('bigMsg');
+const startEl = document.getElementById('start');
+const endEl = document.getElementById('end');
+
+let W = 0, H = 0, floorTop = 0;
+let camOK = false;
+let phase = 'start';   // 'start' | 'aim' | 'end'
+const TOTAL_TARGETS = 8, TOTAL_SHELLS = 14;
+let shellsLeft = TOTAL_SHELLS, destroyed = 0, score = 0, combo = 0;
+let shotsFired = 0, shotsHit = 0;
+
+function bigMsg(txt) {
+  bigMsgEl.textContent = txt;
+  bigMsgEl.classList.remove('pop');
+  void bigMsgEl.offsetWidth;
+  bigMsgEl.classList.add('pop');
+}
+function updateHUD() {
+  tLeftEl.textContent = String(TOTAL_TARGETS - destroyed);
+  sLeftEl.textContent = String(shellsLeft);
+  scoreEl.textContent = String(score);
+  comboChip.classList.toggle('hidden', combo < 2);
+  comboNEl.textContent = String(combo);
+}
+
+/* ================= AR motion: permission-in-gesture + 3DOF look-around ================= */
+let baseCamQ = null;
+let hemiLight = null, dirLight = null;
+const MOTION = {
+  needPerm: (typeof DeviceOrientationEvent !== 'undefined' &&
+             typeof DeviceOrientationEvent.requestPermission === 'function'),
+  perm: 'unknown', ok: false, ever: false, lastAt: -1e9, recal: true, refQ: null, devQ: null
+};
+function askMotionPermission() {
+  if (!MOTION.needPerm) { MOTION.perm = 'n/a'; return; }
+  try {
+    const p = DeviceOrientationEvent.requestPermission();
+    if (p && typeof p.then === 'function') {
+      p.then(r => {
+        MOTION.perm = (r === 'granted') ? 'granted' : 'denied';
+        if (MOTION.perm === 'granted') MOTION.recal = true;
+      }).catch(() => { MOTION.perm = 'error'; });
+    }
+  } catch (e) { MOTION.perm = 'error'; }
+}
+const motionPillEl = document.getElementById('motionPill');
+function showMotionPill() { if (motionPillEl) motionPillEl.classList.remove('hidden'); }
+function hideMotionPill() { if (motionPillEl) motionPillEl.classList.add('hidden'); }
+if (motionPillEl) motionPillEl.addEventListener('click', () => { askMotionPermission(); });
+function motionWatchdog() {
+  setTimeout(() => { if (MOTION.needPerm && !MOTION.ever) showMotionPill(); }, 1500);
+}
+window.addEventListener('orientationchange', () => { MOTION.recal = true; });
+
+const _zee = new THREE.Vector3(0, 0, 1);
+const _eul = new THREE.Euler();
+const _q0 = new THREE.Quaternion();
+const _q1 = new THREE.Quaternion(-Math.sqrt(0.5), 0, 0, Math.sqrt(0.5));
+function deviceQuat(out, alphaDeg, betaDeg, gammaDeg) {
+  const orient = (typeof window.orientation === 'number' ? window.orientation : 0) * Math.PI / 180;
+  _eul.set(THREE.MathUtils.degToRad(betaDeg), THREE.MathUtils.degToRad(alphaDeg),
+           THREE.MathUtils.degToRad(-gammaDeg), 'YXZ');
+  out.setFromEuler(_eul);
+  out.multiply(_q1);
+  out.multiply(_q0.setFromAxisAngle(_zee, -orient));
+  return out;
+}
+const _invRefQ = new THREE.Quaternion();
+const _targetQ = new THREE.Quaternion();
+let camera = null;
+function applyMotionCamera() {
+  if (!camera || !baseCamQ || !MOTION.refQ) return false;
+  if (performance.now() - MOTION.lastAt > 3000) { MOTION.ok = false; return false; }
+  if (!MOTION.ok) return false;
+  _invRefQ.copy(MOTION.refQ).invert();
+  _targetQ.copy(MOTION.devQ).multiply(_invRefQ).multiply(baseCamQ);
+  camera.quaternion.slerp(_targetQ, 0.16);
+  return true;
+}
+
+/* ============================== light matching ============================== */
+const lightBase = { hemi: 1.15, dir: 1.5 };
+const _lsCanvas = document.createElement('canvas');
+_lsCanvas.width = 16; _lsCanvas.height = 16;
+const _lsCtx = _lsCanvas.getContext('2d', { willReadFrequently: true });
+const _lightTgt = { m: 1, c: null };
+let _lsNextAt = 0;
+function updateLightMatch(t, dt) {
+  if (!hemiLight || !dirLight) return;
+  if (!_lightTgt.c) _lightTgt.c = new THREE.Color(1, 1, 1);
+  if (camOK && video && video.readyState >= 2 && t >= _lsNextAt) {
+    _lsNextAt = t + 500;
+    try {
+      _lsCtx.drawImage(video, 0, 0, 16, 16);
+      const d = _lsCtx.getImageData(0, 0, 16, 16).data;
+      let r = 0, g = 0, b = 0;
+      const n = d.length / 4;
+      for (let i = 0; i < d.length; i += 4) { r += d[i]; g += d[i + 1]; b += d[i + 2]; }
+      r /= n * 255; g /= n * 255; b /= n * 255;
+      const lum = 0.2126 * r + 0.7152 * g + 0.0722 * b;
+      _lightTgt.m = clamp(0.45 + lum * 1.1, 0.45, 1.35);
+      _lightTgt.c.setRGB(lerp(1, Math.min(1, r * 1.7), 0.5),
+                         lerp(1, Math.min(1, g * 1.7), 0.5),
+                         lerp(1, Math.min(1, b * 1.7), 0.5));
+    } catch (e) {}
+  }
+  if (!camOK) return;
+  const k = 1 - Math.exp(-dt * 2.5);
+  hemiLight.intensity += (lightBase.hemi * _lightTgt.m - hemiLight.intensity) * k;
+  dirLight.intensity += (lightBase.dir * _lightTgt.m - dirLight.intensity) * k;
+  hemiLight.color.lerp(_lightTgt.c, k);
+}
+
+/* ============================== parallax (desktop/idle drift) ============================== */
+let parX = 0, parY = 0, parTX = 0, parTY = 0;
+let lastOrientAt = -1e9, mouseAt = -1e9, mouseTX = 0, mouseTY = 0;
+window.addEventListener('deviceorientation', (e) => {
+  if (e.gamma == null && e.beta == null && e.alpha == null) return;
+  lastOrientAt = performance.now();
+  parTX = clamp((e.gamma || 0) / 26, -1, 1);
+  parTY = clamp(((e.beta || 0) - 48) / 24, -1, 1);
+  MOTION.ever = true; MOTION.ok = true; MOTION.lastAt = lastOrientAt;
+  if (MOTION.devQ) {
+    deviceQuat(MOTION.devQ, e.alpha || 0, e.beta || 0, e.gamma || 0);
+    if (MOTION.recal || !MOTION.refQ) { MOTION.refQ = MOTION.devQ.clone(); MOTION.recal = false; }
+  }
+  hideMotionPill();
+}, true);
+window.addEventListener('pointermove', (e) => {
+  if (e.pointerType !== 'mouse') return;
+  mouseAt = performance.now();
+  mouseTX = clamp((e.clientX / Math.max(1, W) - 0.5) * 2, -1, 1);
+  mouseTY = clamp((e.clientY / Math.max(1, H) - 0.5) * 2, -1, 1);
+}, true);
+function updateParallax(t) {
+  let tx, ty;
+  if (performance.now() - mouseAt < 2500) { tx = mouseTX; ty = mouseTY; }
+  else if (performance.now() - lastOrientAt < 3000) { tx = parTX; ty = parTY; }
+  else { tx = Math.sin(t * 0.00035) * 0.55; ty = Math.sin(t * 0.00027 + 1.7) * 0.30; }
+  parX += (tx - parX) * 0.055;
+  parY += (ty - parY) * 0.055;
+}
+
+/* ============================== cozy room (fallback bg) ============================== */
+function rr2(c, x, y, w, h, r) { c.beginPath(); if (c.roundRect) c.roundRect(x, y, w, h, r); else c.rect(x, y, w, h); }
+function drawRoom() {
+  const ctx = rctx;
+  const wall = ctx.createLinearGradient(0, 0, 0, floorTop + 30);
+  wall.addColorStop(0, '#f6e3c2'); wall.addColorStop(1, '#e2c491');
+  ctx.fillStyle = wall; ctx.fillRect(0, 0, W, floorTop + 2);
+  const wx = W * 0.58 + parX * -8, wy = H * 0.05, ww = W * 0.32, wh = floorTop * 0.55;
+  ctx.fillStyle = '#bfe3f2'; rr2(ctx, wx, wy, ww, wh, 8); ctx.fill();
+  ctx.fillStyle = '#fff3b0'; ctx.beginPath(); ctx.arc(wx + ww * 0.72, wy + wh * 0.3, ww * 0.13, 0, Math.PI * 2); ctx.fill();
+  ctx.strokeStyle = '#fff8ee'; ctx.lineWidth = 7; rr2(ctx, wx, wy, ww, wh, 8); ctx.stroke();
+  ctx.lineWidth = 4; ctx.beginPath();
+  ctx.moveTo(wx + ww / 2, wy); ctx.lineTo(wx + ww / 2, wy + wh);
+  ctx.moveTo(wx, wy + wh / 2); ctx.lineTo(wx + ww, wy + wh / 2); ctx.stroke();
+  ctx.fillStyle = '#a98467'; rr2(ctx, W * 0.05, floorTop - H * 0.13, W * 0.30, H * 0.13, 8); ctx.fill();
+  ctx.fillStyle = '#c09a77'; rr2(ctx, W * 0.05, floorTop - H * 0.165, W * 0.30, H * 0.055, 8); ctx.fill();
+  ctx.fillStyle = '#fff3e0'; ctx.fillRect(0, floorTop - 7, W, 9);
+  const fl = ctx.createLinearGradient(0, floorTop, 0, H);
+  fl.addColorStop(0, '#b08954'); fl.addColorStop(1, '#7d5c31');
+  ctx.fillStyle = fl; ctx.fillRect(0, floorTop, W, H - floorTop);
+  ctx.strokeStyle = 'rgba(60,38,14,0.35)'; ctx.lineWidth = 2;
+  for (let i = 1; i < 5; i++) {
+    const ly = floorTop + (H - floorTop) * i / 5;
+    ctx.beginPath(); ctx.moveTo(0, ly); ctx.lineTo(W, ly); ctx.stroke();
+  }
+  const vg = ctx.createRadialGradient(W / 2, H / 2, Math.min(W, H) * 0.45, W / 2, H / 2, Math.max(W, H) * 0.78);
+  vg.addColorStop(0, 'rgba(30,20,5,0)'); vg.addColorStop(1, 'rgba(30,20,5,0.20)');
+  ctx.fillStyle = vg; ctx.fillRect(0, 0, W, H);
+}
+
+/* ============================== GL setup ============================== */
+const glCanvas = document.getElementById('gl');
+let renderer = null, scene = null;
+const CAM_BASE = new THREE.Vector3(0, 1.92, 4.4);
+const CAM_LOOK = new THREE.Vector3(0, 0.05, -1.05);
+let shakeT = 0;
+
+function resize() {
+  W = window.innerWidth; H = window.innerHeight;
+  floorTop = Math.round(H * 0.52);
+  roomCanvas.width = W; roomCanvas.height = H;
+  if (renderer) renderer.setSize(W, H);
+  if (camera) { camera.aspect = W / H; camera.updateProjectionMatrix(); }
+}
+window.addEventListener('resize', resize);
+
+const MATS = {};
+function mat(color, rough) {
+  const key = color + '/' + (rough || 0.85);
+  if (!MATS[key]) MATS[key] = new THREE.MeshStandardMaterial({ color, roughness: rough || 0.85, metalness: 0.02 });
+  return MATS[key];
+}
+const boxGeo = new THREE.BoxGeometry(1, 1, 1);
+function box(parent, w, h, d, x, y, z, material, ry) {
+  const m = new THREE.Mesh(boxGeo, material);
+  m.scale.set(w, h, d); m.position.set(x, y, z);
+  if (ry) m.rotation.y = ry;
+  parent.add(m); return m;
+}
+function blobShadow(parent, x, z, r, opacity) {
+  const m = new THREE.Mesh(new THREE.CircleGeometry(r, 20),
+    new THREE.MeshBasicMaterial({ color: 0x000000, transparent: true, opacity: opacity || 0.28, depthWrite: false }));
+  m.rotation.x = -Math.PI / 2; m.position.set(x, 0.012, z);
+  parent.add(m); return m;
+}
+
+/* cat figure from primitives — used for the gunner + statues */
+function buildCat(colorMain, colorBelly) {
+  const g = new THREE.Group();
+  const fur = mat(colorMain, 0.95), belly = mat(colorBelly || colorMain, 0.95);
+  const bodyGeo = new THREE.SphereGeometry(0.16, 18, 14);
+  const body = new THREE.Mesh(bodyGeo, fur);
+  body.scale.set(1, 1.12, 0.92); body.position.y = 0.17; g.add(body);
+  const chest = new THREE.Mesh(new THREE.SphereGeometry(0.105, 14, 10), belly);
+  chest.scale.set(1, 1.1, 0.6); chest.position.set(0, 0.16, 0.10); g.add(chest);
+  const head = new THREE.Mesh(new THREE.SphereGeometry(0.115, 18, 14), fur);
+  head.position.set(0, 0.40, 0.01); g.add(head);
+  const earGeo = new THREE.ConeGeometry(0.045, 0.09, 4);
+  const e1 = new THREE.Mesh(earGeo, fur); e1.position.set(-0.07, 0.50, 0.01); e1.rotation.z = 0.15; g.add(e1);
+  const e2 = new THREE.Mesh(earGeo, fur); e2.position.set(0.07, 0.50, 0.01); e2.rotation.z = -0.15; g.add(e2);
+  const nose = new THREE.Mesh(new THREE.SphereGeometry(0.02, 8, 8), mat(0xff8fa3, 0.6));
+  nose.position.set(0, 0.385, 0.115); g.add(nose);
+  const eyeGeo = new THREE.SphereGeometry(0.016, 8, 8);
+  const eyeM = mat(0x1c1c22, 0.35);
+  const ey1 = new THREE.Mesh(eyeGeo, eyeM); ey1.position.set(-0.045, 0.42, 0.10); g.add(ey1);
+  const ey2 = new THREE.Mesh(eyeGeo, eyeM); ey2.position.set(0.045, 0.42, 0.10); g.add(ey2);
+  const tail = new THREE.Mesh(new THREE.TorusGeometry(0.13, 0.028, 8, 14, Math.PI * 0.9), fur);
+  tail.position.set(0.13, 0.07, -0.10); tail.rotation.set(0.3, 0.5, -0.5); g.add(tail);
+  const pawGeo = new THREE.SphereGeometry(0.045, 10, 8);
+  const p1 = new THREE.Mesh(pawGeo, fur); p1.scale.set(1, 0.55, 1.3); p1.position.set(-0.07, 0.025, 0.12); g.add(p1);
+  const p2 = new THREE.Mesh(pawGeo, fur); p2.scale.set(1, 0.55, 1.3); p2.position.set(0.07, 0.025, 0.12); g.add(p2);
+  return g;
+}
+
+/* ============================== the field ============================== */
+const FORT_POS = new THREE.Vector3(0, 0, 1.8);
+const MUZZLE_LOCAL = new THREE.Vector3(0, 0.62, 0);
+let fortress = null, cannonYaw = null, cannonPitch = null, gunnerCat = null, flagMesh = null;
+let targets = [];   // {group, x, z, r, h, alive, kind}
+let craters = [];
+
+function buildFortress() {
+  fortress = new THREE.Group();
+  fortress.position.copy(FORT_POS);
+  const stone = mat(0x9aa3ad, 0.95), stoneD = mat(0x767f88, 0.95), wood = mat(0x8a5a33, 0.9);
+  const base = new THREE.Mesh(new THREE.CylinderGeometry(0.62, 0.72, 0.16, 8), stoneD);
+  base.position.y = 0.08; fortress.add(base);
+  box(fortress, 0.78, 0.44, 0.78, 0, 0.38, 0, stone);
+  // battlements
+  for (let i = 0; i < 4; i++) {
+    const a = i * Math.PI / 2 + Math.PI / 4;
+    box(fortress, 0.16, 0.14, 0.16, Math.sin(a) * 0.32, 0.67, Math.cos(a) * 0.32, stoneD);
+  }
+  box(fortress, 0.86, 0.07, 0.86, 0, 0.615, 0, wood); // deck
+  // cannon: yaw group -> pitch group -> barrel
+  cannonYaw = new THREE.Group(); cannonYaw.position.set(0, 0.65, 0.05); fortress.add(cannonYaw);
+  cannonPitch = new THREE.Group(); cannonYaw.add(cannonPitch);
+  const barrel = new THREE.Mesh(new THREE.CylinderGeometry(0.055, 0.075, 0.46, 12), mat(0x3c4148, 0.5));
+  barrel.rotation.x = Math.PI / 2; barrel.position.z = -0.16; cannonPitch.add(barrel);
+  const breech = new THREE.Mesh(new THREE.SphereGeometry(0.095, 12, 10), mat(0x2f3339, 0.5));
+  cannonPitch.add(breech);
+  box(cannonYaw, 0.3, 0.07, 0.3, 0, -0.06, 0.02, wood);
+  // gunner cat on the deck
+  gunnerCat = buildCat(0xf59b3c, 0xffe3c2);
+  gunnerCat.scale.setScalar(0.92);
+  gunnerCat.position.set(0.24, 0.65, 0.22);
+  gunnerCat.rotation.y = Math.PI - 0.4; // cat model faces +z; the field is -z, so turn it around
+  fortress.add(gunnerCat);
+  // flag
+  const pole = new THREE.Mesh(new THREE.CylinderGeometry(0.016, 0.016, 0.62, 8), wood);
+  pole.position.set(-0.3, 0.95, 0.28); fortress.add(pole);
+  flagMesh = box(fortress, 0.26, 0.15, 0.015, -0.17, 1.18, 0.28, mat(0xe84f6d, 0.7));
+  blobShadow(fortress, 0, 0, 0.85, 0.30);
+  scene.add(fortress);
+}
+
+const TARGET_DEFS = [
+  { kind: 'castle', x: -1.35, z: -0.10 },
+  { kind: 'statue', x:  0.20, z: -0.55 },
+  { kind: 'crates', x:  1.50, z: -0.35 },
+  { kind: 'castle', x:  0.95, z: -1.35 },
+  { kind: 'statue', x: -0.85, z: -1.50 },
+  { kind: 'crates', x: -1.70, z: -1.85 },
+  { kind: 'castle', x:  1.75, z: -2.05 },
+  { kind: 'statue', x: -0.15, z: -2.60 }
+];
+function buildTarget(def) {
+  const g = new THREE.Group();
+  g.position.set(def.x, 0, def.z);
+  const ry = rand(-0.25, 0.25);
+  g.rotation.y = ry;
+  let h = 0.7;
+  if (def.kind === 'castle') {
+    const wall = mat(0xd8cfc0, 0.95), roof = mat(0xb8452f, 0.85), dark = mat(0x4a3826, 0.9);
+    box(g, 0.56, 0.42, 0.5, 0, 0.21, 0, wall);
+    const turGeo = new THREE.CylinderGeometry(0.09, 0.10, 0.58, 10);
+    const coneGeo = new THREE.ConeGeometry(0.14, 0.2, 10);
+    [[-0.22, -0.18], [0.22, -0.18], [-0.22, 0.18], [0.22, 0.18]].forEach(([tx, tz]) => {
+      const t = new THREE.Mesh(turGeo, wall); t.position.set(tx, 0.29, tz); g.add(t);
+      const c = new THREE.Mesh(coneGeo, roof); c.position.set(tx, 0.68, tz); g.add(c);
+    });
+    box(g, 0.16, 0.26, 0.03, 0, 0.13, 0.26, dark);
+    box(g, 0.2, 0.06, 0.2, 0, 0.48, 0, roof);
+    h = 0.78;
+  } else if (def.kind === 'statue') {
+    const stoneC = mat(0xb9c0c7, 0.95);
+    box(g, 0.4, 0.22, 0.4, 0, 0.11, 0, mat(0x8d959e, 0.95));
+    const cat = buildCat(0xb9c0c7, 0xcdd4da);
+    cat.position.y = 0.22; cat.rotation.y = Math.PI; // face the fortress (+z)
+    g.add(cat);
+    h = 0.82;
+  } else { // crates
+    const wood = mat(0xb07a3f, 0.95), wood2 = mat(0x96682f, 0.95);
+    box(g, 0.34, 0.34, 0.34, -0.18, 0.17, 0, wood);
+    box(g, 0.34, 0.34, 0.34, 0.19, 0.17, 0.02, wood2);
+    box(g, 0.34, 0.34, 0.34, 0, 0.17, -0.3, wood2);
+    box(g, 0.32, 0.32, 0.32, 0, 0.50, -0.08, wood);
+    h = 0.68;
+  }
+  blobShadow(g, 0, 0, 0.5, 0.26);
+  g.scale.setScalar(0.05);
+  scene.add(g);
+  return { group: g, x: def.x, z: def.z, r: 0.44, h, alive: true, kind: def.kind, bornAt: 0, dusted: false };
+}
+/* burst-through spawn: targets erupt from the floor surface with dust */
+function updateSpawns() {
+  const now = performance.now() / 1000;
+  for (const t of targets) {
+    if (!t.alive || !t.bornAt) continue;
+    const s = clamp((now - t.bornAt) / 0.38, 0, 1);
+    if (s >= 1) { t.group.scale.setScalar(1); t.group.position.y = 0; t.bornAt = 0; continue; }
+    const e = 1 + 2.2 * Math.pow(s - 1, 3) + 1.2 * Math.pow(s - 1, 2); // easeOutBack-ish
+    t.group.scale.setScalar(Math.max(0.05, e));
+    t.group.position.y = -0.25 * (1 - s);
+    if (s > 0.45 && !t.dusted) {
+      t.dusted = true;
+      spawnDebris(t.x, 0.06, t.z, 0x9a8a70, 7, 1.0, 1.0);
+    }
+  }
+}
+function buildField() {
+  // AR-MAX RULE: no fake ground patch — the real floor (camera) or the cozy
+  // room floor (fallback) IS the ground. Targets and the fortress sit on it
+  // directly, grounded only by soft blob shadows; targets burst up through
+  // the surface when they spawn (see updateSpawns).
+}
+function clearTargets() {
+  for (const t of targets) if (t.group) scene.remove(t.group);
+  targets = [];
+  for (const c of craters) scene.remove(c);
+  craters = [];
+}
+function buildTargets() {
+  clearTargets();
+  const now = performance.now() / 1000;
+  targets = TARGET_DEFS.map((def, i) => {
+    const t = buildTarget(def);
+    t.bornAt = now + 0.15 + i * 0.09;   // staggered eruption
+    t.group.position.y = -0.25;
+    return t;
+  });
+}
+
+/* ============================== debris particles ============================== */
+const debris = [];
+const debrisGeo = new THREE.BoxGeometry(1, 1, 1);
+function spawnDebris(x, y, z, colorHex, n, spread, up) {
+  for (let i = 0; i < n; i++) {
+    if (debris.length > 130) break;
+    const s = rand(0.04, 0.11);
+    const m = new THREE.Mesh(debrisGeo, mat(colorHex, 0.95));
+    m.scale.setScalar(s);
+    m.position.set(x + rand(-0.14, 0.14), y + rand(0, 0.25), z + rand(-0.14, 0.14));
+    m.rotation.set(rand(0, 3), rand(0, 3), rand(0, 3));
+    scene.add(m);
+    debris.push({
+      m, vx: rand(-spread, spread), vy: rand(up * 0.5, up), vz: rand(-spread, spread),
+      rx: rand(-7, 7), rz: rand(-7, 7), life: rand(0.7, 1.25)
+    });
+  }
+}
+function updateDebris(dt) {
+  for (let i = debris.length - 1; i >= 0; i--) {
+    const d = debris[i];
+    d.life -= dt;
+    if (d.life <= 0) { scene.remove(d.m); debris.splice(i, 1); continue; }
+    d.vy -= 6.5 * dt;
+    d.m.position.x += d.vx * dt; d.m.position.y += d.vy * dt; d.m.position.z += d.vz * dt;
+    if (d.m.position.y < 0.03) { d.m.position.y = 0.03; d.vy *= -0.3; d.vx *= 0.7; d.vz *= 0.7; }
+    d.m.rotation.x += d.rx * dt; d.m.rotation.z += d.rz * dt;
+    const s = Math.min(1, d.life * 2.2);
+    d.m.scale.setScalar(Math.max(0.012, s * 0.09));
+  }
+}
+function addCrater(x, z) {
+  const c = new THREE.Mesh(new THREE.CircleGeometry(0.46, 18),
+    new THREE.MeshBasicMaterial({ color: 0x17110a, transparent: true, opacity: 0.55, depthWrite: false }));
+  c.rotation.x = -Math.PI / 2; c.position.set(x, 0.014 + craters.length * 0.0004, z);
+  scene.add(c); craters.push(c);
+  const rim = new THREE.Mesh(new THREE.RingGeometry(0.4, 0.55, 18),
+    new THREE.MeshBasicMaterial({ color: 0x5d4630, transparent: true, opacity: 0.5, depthWrite: false }));
+  rim.rotation.x = -Math.PI / 2; rim.position.set(x, 0.013 + craters.length * 0.0004, z);
+  scene.add(rim); craters.push(rim);
+}
+
+/* ============================== ballistics ============================== */
+const GRAV = 9.8;
+const V_MIN = 3.2, V_MAX = 10.5;
+const aim = { az: 0, el: 48, power: 0.55 };   // degrees, degrees, 0..1
+function aimVelocity() {
+  const v = V_MIN + aim.power * (V_MAX - V_MIN);
+  const azr = THREE.MathUtils.degToRad(aim.az), elr = THREE.MathUtils.degToRad(aim.el);
+  return new THREE.Vector3(
+    Math.sin(azr) * Math.cos(elr) * v,
+    Math.sin(elr) * v,
+    -Math.cos(azr) * Math.cos(elr) * v
+  );
+}
+function muzzlePos() {
+  // barrel tip: cannon pivot (fortress + 0.65) extended along the aim direction
+  const azr = THREE.MathUtils.degToRad(aim.az), elr = THREE.MathUtils.degToRad(aim.el);
+  const dir = new THREE.Vector3(Math.sin(azr) * Math.cos(elr), Math.sin(elr), -Math.cos(azr) * Math.cos(elr));
+  return FORT_POS.clone().add(new THREE.Vector3(0, 0.65, 0.05)).addScaledVector(dir, 0.34);
+}
+/* simulate a shot with the exact integrator the live shell uses;
+   returns sampled points + impact info */
+function simShot(azDeg, elDeg, power, sampleEvery) {
+  const save = { az: aim.az, el: aim.el, power: aim.power };
+  aim.az = azDeg; aim.el = elDeg; aim.power = power;
+  const p = muzzlePos();
+  const v = aimVelocity();
+  aim.az = save.az; aim.el = save.el; aim.power = save.power;
+  const pts = [p.clone()];
+  const dt = 1 / 480;
+  let impact = null;
+  for (let i = 0; i < 480 * 4; i++) {
+    v.y -= GRAV * dt;
+    p.addScaledVector(v, dt);
+    if (i % (sampleEvery || 24) === 0) pts.push(p.clone());
+    if (p.y <= 0.02) { impact = { x: p.x, z: p.z, t: i * dt }; pts.push(p.clone()); break; }
+  }
+  return { pts, impact };
+}
+/* analytic-ish solver: fixed elevation candidates, solve speed for the
+   target's base point, then verify with simShot and refine power once */
+function solveFor(tx, tz) {
+  const m = muzzlePos();
+  const dx = tx - m.x, dz = tz - m.z;
+  const d = Math.hypot(dx, dz);
+  const az = THREE.MathUtils.radToDeg(Math.atan2(dx, -dz));
+  const dy = 0.05 - m.y;
+  for (const el of [50, 38, 62, 30, 70]) {
+    const elr = THREE.MathUtils.degToRad(el);
+    const cos = Math.cos(elr);
+    const denom = 2 * cos * cos * (d * Math.tan(elr) - dy);
+    if (denom <= 0) continue;
+    const v2 = GRAV * d * d / denom;
+    const v = Math.sqrt(v2);
+    if (v < V_MIN || v > V_MAX) continue;
+    const power = (v - V_MIN) / (V_MAX - V_MIN);
+    const sim = simShot(az, el, power, 48);
+    if (sim.impact && Math.hypot(sim.impact.x - tx, sim.impact.z - tz) < 0.30) {
+      return { az, el, power };
+    }
+    // one refinement: scale power by range error
+    if (sim.impact) {
+      const got = Math.hypot(sim.impact.x - m.x, sim.impact.z - m.z);
+      const p2 = clamp(power * Math.sqrt(d / Math.max(0.3, got)), 0, 1);
+      const sim2 = simShot(az, el, p2, 48);
+      if (sim2.impact && Math.hypot(sim2.impact.x - tx, sim2.impact.z - tz) < 0.30) {
+        return { az, el, power: p2 };
+      }
+    }
+  }
+  return null;
+}
+
+/* ============================== shell + arc preview ============================== */
+let shell = null;   // {mesh, p, v, trail[]}
+const shellMeshProto = new THREE.SphereGeometry(0.075, 14, 10);
+const shellMat = mat(0x2b2e33, 0.45);
+let arcLine = null, arcDots = null;
+const ARC_N = 26;
+
+function dotTexture() {
+  const c = document.createElement('canvas'); c.width = c.height = 64;
+  const x = c.getContext('2d');
+  const g = x.createRadialGradient(32, 32, 4, 32, 32, 30);
+  g.addColorStop(0, 'rgba(255,255,255,1)');
+  g.addColorStop(0.7, 'rgba(255,255,255,0.9)');
+  g.addColorStop(1, 'rgba(255,255,255,0)');
+  x.fillStyle = g; x.fillRect(0, 0, 64, 64);
+  return new THREE.CanvasTexture(c);
+}
+function buildArc() {
+  const geo = new THREE.BufferGeometry();
+  geo.setAttribute('position', new THREE.BufferAttribute(new Float32Array(ARC_N * 3), 3));
+  arcDots = new THREE.Points(geo, new THREE.PointsMaterial({
+    color: 0xffe9a8, size: 0.085, map: dotTexture(), transparent: true, opacity: 0.95, depthWrite: false
+  }));
+  arcDots.frustumCulled = false;
+  scene.add(arcDots);
+}
+function updateArc() {
+  if (!arcDots) return;
+  if (phase !== 'aim' || shell || shellsLeft <= 0) { arcDots.visible = false; return; }
+  const sim = simShot(aim.az, aim.el, aim.power, 12);
+  const pos = arcDots.geometry.getAttribute('position');
+  const pts = sim.pts;
+  for (let i = 0; i < ARC_N; i++) {
+    const p = pts[Math.min(pts.length - 1, Math.floor(i * (pts.length - 1) / (ARC_N - 1)))];
+    pos.setXYZ(i, p.x, p.y, p.z);
+  }
+  pos.needsUpdate = true;
+  arcDots.visible = true;
+  // cannon follows aim
+  if (cannonYaw) cannonYaw.rotation.y = THREE.MathUtils.degToRad(-aim.az);
+  if (cannonPitch) cannonPitch.rotation.x = THREE.MathUtils.degToRad(aim.el);
+  aimReadout.textContent = '↖ ' + Math.round(aim.el) + '°   💥 power ' + Math.round(aim.power * 100) + '%';
+}
+const trailPool = [];
+function updateTrail(p) {
+  if (!trailPool.length) {
+    for (let i = 0; i < 12; i++) {
+      const m = new THREE.Mesh(new THREE.SphereGeometry(0.045, 8, 6),
+        new THREE.MeshBasicMaterial({ color: 0xfff2cf, transparent: true, opacity: 0 }));
+      m.visible = false; scene.add(m); trailPool.push(m);
+    }
+  }
+  let slot = trailPool.find(t => !t.visible) || trailPool[0];
+  slot.position.copy(p); slot.visible = true;
+  slot.material.opacity = 0.5; slot.userData.life = 0.3;
+}
+function stepTrail(dt) {
+  for (const t of trailPool) {
+    if (!t.visible) continue;
+    t.userData.life -= dt;
+    t.material.opacity = Math.max(0, t.userData.life * 1.6);
+    if (t.userData.life <= 0) t.visible = false;
+  }
+}
+
+function fire() {
+  if (phase !== 'aim' || shell || shellsLeft <= 0) return false;
+  shellsLeft--; shotsFired++;
+  const mesh = new THREE.Mesh(shellMeshProto, shellMat);
+  scene.add(mesh);
+  shell = { mesh, p: muzzlePos(), v: aimVelocity(), trailAcc: 0 };
+  mesh.position.copy(shell.p);
+  sndLob();
+  whistleStart();
+  updateHUD();
+  aimReadout.textContent = '';
+  hintChip.textContent = '💥 Away! …';
+  return true;
+}
+function destroyTarget(t, direct) {
+  t.alive = false; destroyed++;
+  const colors = { castle: 0xd8cfc0, statue: 0xb9c0c7, crates: 0xb07a3f };
+  spawnDebris(t.x, 0.35, t.z, colors[t.kind] || 0xcccccc, 14, 1.6, 2.6);
+  spawnDebris(t.x, 0.2, t.z, 0x6b5136, 6, 1.1, 1.6);
+  scene.remove(t.group);
+  addCrater(t.x, t.z);
+  const pts = 100 + Math.max(0, (combo - 1)) * 25 + (direct ? 50 : 0);
+  score += pts;
+  bigMsg((direct ? '🎯 DIRECT! ' : '💥 ') + '+' + pts);
+  sndCrumble();
+  updateHUD();
+}
+function impactShell(at) {
+  whistleStop();
+  sndBoom();
+  shakeT = 0.35;
+  let hitAny = false, directHit = null;
+  // direct contact check happens in flight; here: blast radius
+  for (const t of targets) {
+    if (!t.alive) continue;
+    const d = Math.hypot(t.x - at.x, t.z - at.z);
+    if (shell && shell.direct === t) { directHit = t; }
+    if (d <= 0.66 || directHit === t) { hitAny = true; }
+  }
+  spawnDebris(at.x, 0.12, at.z, 0x54432c, 10, 1.8, 2.2);
+  addCrater(at.x, at.z);
+  for (const t of targets) {
+    if (!t.alive) continue;
+    const d = Math.hypot(t.x - at.x, t.z - at.z);
+    if (d <= 0.66 || t === directHit) destroyTarget(t, t === directHit);
+  }
+  if (hitAny) { combo++; shotsHit++; } else { combo = 0; bigMsg('💨 Miss!'); sndThud(); }
+  if (shell) { scene.remove(shell.mesh); shell = null; }
+  updateHUD();
+  setTimeout(checkEnd, 650);
+}
+function stepShell(dt) {
+  if (!shell) return;
+  const sub = Math.max(1, Math.ceil(dt / (1 / 480)));
+  const sdt = dt / sub;
+  for (let i = 0; i < sub; i++) {
+    shell.v.y -= GRAV * sdt;
+    shell.p.addScaledVector(shell.v, sdt);
+    // direct contact with a target body
+    for (const t of targets) {
+      if (!t.alive) continue;
+      const dx = shell.p.x - t.x, dz = shell.p.z - t.z;
+      if (dx * dx + dz * dz < t.r * t.r && shell.p.y < t.h) {
+        shell.direct = t;
+        impactShell({ x: shell.p.x, z: shell.p.z });
+        return;
+      }
+    }
+    if (shell.p.y <= 0.03) { impactShell({ x: shell.p.x, z: shell.p.z }); return; }
+    if (shell.p.y < -1 || shell.p.length() > 30) { // safety
+      whistleStop(); scene.remove(shell.mesh); shell = null; combo = 0; setTimeout(checkEnd, 300); return;
+    }
+  }
+  shell.mesh.position.copy(shell.p);
+  shell.trailAcc += dt;
+  if (shell.trailAcc > 0.03) { shell.trailAcc = 0; updateTrail(shell.p); }
+  whistleUpdate(shell.v.length(), shell.v.y < 0);
+}
+function checkEnd() {
+  if (phase !== 'aim') return;
+  if (destroyed >= TOTAL_TARGETS) {
+    const bonus = shellsLeft * 25;
+    score += bonus;
+    updateHUD();
+    endGame(true, bonus);
+  } else if (shellsLeft <= 0 && !shell) {
+    endGame(false, 0);
+  } else {
+    hintChip.textContent = '👆 Drag to aim — release to FIRE!';
+  }
+}
+function endGame(won, bonus) {
+  phase = 'end';
+  if (arcDots) arcDots.visible = false;
+  document.getElementById('endEmoji').textContent = won ? '🏆' : '🐱';
+  document.getElementById('endTitle').textContent = won ? 'FORTRESS SUPREME!' : 'OUT OF SHELLS!';
+  document.getElementById('finalScore').textContent = String(score);
+  const acc = shotsFired ? Math.round(shotsHit / shotsFired * 100) : 0;
+  document.getElementById('endDetail').textContent = won
+    ? 'All 8 targets smashed in ' + shotsFired + ' shots (' + acc + '% accuracy)' + (bonus ? ' · unused-shell bonus +' + bonus : '')
+    : 'Targets smashed: ' + destroyed + '/8 · accuracy ' + acc + '% — the cats demand a rematch!';
+  endEl.classList.remove('hidden');
+  if (won) { sndFanfare(); sndMeow(); } else sndSad();
+}
+function resetGame() {
+  shellsLeft = TOTAL_SHELLS; destroyed = 0; score = 0; combo = 0;
+  shotsFired = 0; shotsHit = 0;
+  if (shell) { scene.remove(shell.mesh); shell = null; }
+  for (const d of debris) scene.remove(d.m);
+  debris.length = 0;
+  buildTargets();
+  aim.az = 0; aim.el = 48; aim.power = 0.55;
+  updateHUD();
+  endEl.classList.add('hidden');
+  phase = 'aim';
+  hintChip.textContent = '👆 Drag to aim — the dotted arc is your shot. Release to FIRE!';
+}
+
+/* ============================== drag aiming ============================== */
+let drag = null;
+function onDown(e) {
+  if (phase !== 'aim' || shell) return;
+  if (e.target.closest('button, .overlay')) return;
+  drag = { x0: e.clientX, y0: e.clientY, az: aim.az, el: aim.el, power: aim.power };
+}
+function onMove(e) {
+  if (!drag) return;
+  const dx = e.clientX - drag.x0, dy = e.clientY - drag.y0;
+  aim.az = clamp(drag.az + dx / 7, -38, 38);
+  aim.el = clamp(drag.el - dy / 5.5, 12, 78);
+  aim.power = clamp(0.18 + Math.hypot(dx, dy) / 300, 0.05, 1);
+  updateArc();
+}
+function onUp() {
+  if (!drag) return;
+  const moved = true;
+  drag = null;
+  if (moved) fire();
+}
+window.addEventListener('pointerdown', onDown, true);
+window.addEventListener('pointermove', onMove, true);
+window.addEventListener('pointerup', onUp, true);
+window.addEventListener('pointercancel', () => { drag = null; }, true);
+
+/* ============================== GL init + loop ============================== */
+function initGL() {
+  renderer = new THREE.WebGLRenderer({ canvas: glCanvas, alpha: true, antialias: true });
+  renderer.setPixelRatio(Math.min(2, window.devicePixelRatio || 1));
+  renderer.setSize(W, H);
+  scene = new THREE.Scene();
+  camera = new THREE.PerspectiveCamera(60, W / H, 0.05, 100);
+  camera.position.copy(CAM_BASE);
+  camera.lookAt(CAM_LOOK);
+  baseCamQ = camera.quaternion.clone();
+  MOTION.devQ = new THREE.Quaternion();
+  hemiLight = new THREE.HemisphereLight(0xfff4e0, 0x445533, lightBase.hemi);
+  scene.add(hemiLight);
+  dirLight = new THREE.DirectionalLight(0xffffff, lightBase.dir);
+  dirLight.position.set(2.5, 5, 2);
+  scene.add(dirLight);
+  buildField();
+  buildFortress();
+  buildTargets();
+  buildArc();
+  updateArc();
+}
+
+let lastT = 0;
+function frame(t) {
+  requestAnimationFrame(frame);
+  const dt = Math.min(0.05, lastT ? (t - lastT) / 1000 : 0.016);
+  lastT = t;
+  updateParallax(t);
+  if (!camOK) { rctx.clearRect(0, 0, W, H); drawRoom(); }
+  if (camera) {
+    let sx = 0, sy = 0;
+    if (shakeT > 0) { shakeT -= dt; sx = rand(-1, 1) * shakeT * 0.05; sy = rand(-1, 1) * shakeT * 0.05; }
+    camera.position.set(CAM_BASE.x + parX * 0.4 + sx, CAM_BASE.y - parY * 0.2 + sy, CAM_BASE.z);
+    if (!applyMotionCamera()) camera.lookAt(CAM_LOOK.x - parX * 0.22, CAM_LOOK.y, CAM_LOOK.z);
+    if (shakeT > 0) camera.position.y += sy;
+  }
+  if (flagMesh) flagMesh.rotation.y = Math.sin(t * 0.006) * 0.3;
+  if (gunnerCat && phase === 'aim' && !shell) gunnerCat.position.y = 0.65 + Math.sin(t * 0.003) * 0.012;
+  stepShell(dt);
+  stepTrail(dt);
+  updateSpawns();
+  updateDebris(dt);
+  if (phase === 'aim' && !drag && !shell) updateArc();
+  updateLightMatch(t, dt);
+  if (renderer) renderer.render(scene, camera);
+}
+
+/* ============================== start flow ============================== */
+let camTried = false;
+async function ensureCamera() {
+  if (camTried) return;
+  camTried = true;
+  try {
+    if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) throw new Error('no getUserMedia');
+    const stream = await Promise.race([
+      navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' }, audio: false }),
+      new Promise((_, rej) => setTimeout(() => rej(new Error('camera timeout')), 4500))
+    ]);
+    video.srcObject = stream;
+    await video.play().catch(() => {});
+    camOK = true;
+  } catch (e) { camOK = false; }
+  video.classList.toggle('hidden', !camOK);
+  roomCanvas.classList.toggle('hidden', camOK);
+  camTagEl.textContent = camOK ? '📷 AR room' : '🏠 cozy room';
+}
+function beginGame() {
+  MOTION.recal = true;
+  motionWatchdog();
+  startEl.classList.add('hidden');
+  endEl.classList.add('hidden');
+  hudEl.classList.remove('hidden');
+  resetGame();
+}
+document.getElementById('startBtn').addEventListener('click', async () => {
+  askMotionPermission();   // FIRST, synchronously — iOS only honors it inside the tap
+  initAudio();
+  await ensureCamera();
+  beginGame();
+});
+document.getElementById('againBtn').addEventListener('click', () => { initAudio(); beginGame(); });
+
+/* ============================== boot + QA hooks ============================== */
+resize();
+initGL();
+resize();
+requestAnimationFrame(frame);
+
+window.__ca = {
+  get phase() { return phase; },
+  get camOK() { return camOK; },
+  start: () => document.getElementById('startBtn').click(),
+  again: () => document.getElementById('againBtn').click(),
+  state: () => ({
+    phase, shellsLeft, destroyed, score, combo, shotsFired, shotsHit,
+    flying: !!shell,
+    aim: { az: aim.az, el: aim.el, power: aim.power },
+    targets: targets.map(t => ({ kind: t.kind, x: t.x, z: t.z, alive: t.alive })),
+    endVisible: !endEl.classList.contains('hidden'),
+    endTitle: document.getElementById('endTitle').textContent
+  }),
+  solve: (i) => {
+    const t = targets[i];
+    if (!t || !t.alive) return null;
+    return solveFor(t.x, t.z);
+  },
+  setAim: (az, el, power) => { aim.az = az; aim.el = el; aim.power = power; updateArc(); },
+  fire: (az, el, power) => {
+    if (az !== undefined) { aim.az = az; aim.el = el; aim.power = power; updateArc(); }
+    return fire();
+  },
+  project: (x, y, z) => {
+    if (!camera) return null;
+    const pv = new THREE.Vector3(x, y, z).project(camera);
+    return { x: (pv.x * 0.5 + 0.5) * W, y: (pv.y * -0.5 + 0.5) * H };
+  },
+  motion: () => ({ ok: MOTION.ok, ever: MOTION.ever, perm: MOTION.perm, needPerm: MOTION.needPerm })
+};
+</script>
+<script id="moth-game-guard-js">
+(function(){
+  var lastEnd=0;
+  function onUi(t){return t&&t.closest&&t.closest('button,a,input,select,textarea,[data-scroll]');}
+  document.addEventListener('touchend',function(e){
+    var now=Date.now();
+    if(!onUi(e.target)&&now-lastEnd<=300&&e.cancelable)e.preventDefault();
+    lastEnd=now;
+  },{passive:false});
+  ['gesturestart','gesturechange','gestureend'].forEach(function(n){
+    document.addEventListener(n,function(e){e.preventDefault();});
+  });
+  document.addEventListener('dblclick',function(e){e.preventDefault();},{passive:false});
+  document.addEventListener('contextmenu',function(e){e.preventDefault();});
+  document.addEventListener('touchmove',function(e){
+    if(e.target&&e.target.closest&&e.target.closest('[data-scroll]'))return;
+    if(e.cancelable)e.preventDefault();
+  },{passive:false});
+})();
+</script>
+</body>
+</html>
