@@ -2218,6 +2218,18 @@
    "path": "../games/zombie-plow-ar/index.html",
    "thumb": "thumbs/bonk-yard.png",
    "title": "ZOMBIE PLOW AR"
+  },
+  {
+   "autostart": [],
+   "category": "AR",
+   "id": "karen-survivors-ar",
+   "keys": {},
+   "labels": {},
+   "note": "Web AR bullet-heaven: Karen stands in a pink ring on your real floor and auto-fires at whatever you face - shoppers, Managers and a Regional Manager brute converge from every side of your room. XP gems, 3-choice upgrades (Receipt Whirl!), survive 3 minutes.",
+   "orientation": "any",
+   "path": "../games/karen-survivors-ar/index.html",
+   "thumb": "thumbs/bonk-yard.png",
+   "title": "KAREN SURVIVORS AR"
   }
  ]
 }
