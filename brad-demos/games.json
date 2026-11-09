@@ -2374,6 +2374,14 @@
    "path": "../games/the-final-blow/index.html",
    "thumb": "thumbs/bonk-yard.png",
    "title": "THE FINAL BLOW"
+  },
+  {
+   "category": "AR",
+   "desc": "Horror AR: find 5 sigils in your room — but something is behind you. Turn slowly.",
+   "id": "dont-turn-around-ar",
+   "thumb": "thumbs/bonk-yard.png",
+   "title": "DON'T TURN AROUND!",
+   "url": "../games/dont-turn-around-ar/"
   }
  ]
 }
