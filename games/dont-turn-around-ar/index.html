@@ -1,0 +1,1287 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+<title>DON'T TURN AROUND! — it is in the room with you</title>
+<style>
+  html, body { height: 100%; }
+  body {
+    margin: 0;
+    overflow: hidden;
+    background: #050508;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    color: #e8e6df;
+    -webkit-user-select: none;
+    user-select: none;
+  }
+  #cam, #room, #gl, #fx {
+    position: fixed; inset: 0;
+    width: 100%; height: 100%;
+    display: block;
+  }
+  #cam { object-fit: cover; background: #050508; z-index: 0; }
+  #room { z-index: 0; }
+  #gl { z-index: 1; }
+  #fx { z-index: 2; pointer-events: none; }
+  #hud {
+    position: fixed;
+    top: calc(env(safe-area-inset-top, 0px) + 8px);
+    left: 10px; right: 10px;
+    z-index: 3;
+    pointer-events: none;
+  }
+  #hudRow { display: flex; gap: 8px; align-items: center; }
+  .chip {
+    background: rgba(8, 8, 14, 0.62);
+    border: 1px solid rgba(200, 210, 255, 0.20);
+    border-radius: 999px;
+    padding: 6px 12px;
+    font-size: 15px; font-weight: 700;
+    letter-spacing: 0.02em;
+    backdrop-filter: blur(3px);
+    white-space: nowrap;
+  }
+  .chip b { font-size: 17px; }
+  #nerveChip { margin-left: auto; letter-spacing: 0.12em; }
+  #camTag { font-size: 11px; font-weight: 700; opacity: 0.7; margin-left: auto; }
+  #scareTxt {
+    position: fixed;
+    left: 50%; top: 30%;
+    transform: translate(-50%, -50%);
+    z-index: 4;
+    font-size: 44px; font-weight: 900;
+    letter-spacing: 0.04em;
+    color: #ff3b30;
+    text-shadow: 0 0 22px rgba(255,0,0,0.65), 0 4px 0 rgba(0,0,0,0.7);
+    opacity: 0;
+    pointer-events: none;
+    white-space: nowrap;
+  }
+  #scareTxt.show { opacity: 1; animation: scareShake 0.5s linear; }
+  @keyframes scareShake {
+    0% { transform: translate(-50%, -50%) rotate(-2deg) scale(1.25); }
+    25% { transform: translate(-53%, -48%) rotate(2deg) scale(1.1); }
+    50% { transform: translate(-47%, -52%) rotate(-1deg) scale(1.18); }
+    75% { transform: translate(-52%, -49%) rotate(1deg) scale(1.05); }
+    100% { transform: translate(-50%, -50%) rotate(0deg) scale(1); }
+  }
+  #whisperTxt {
+    position: fixed;
+    left: 50%; bottom: 18%;
+    transform: translateX(-50%);
+    z-index: 4;
+    font-size: 17px; font-style: italic; font-weight: 600;
+    color: rgba(210, 215, 235, 0.0);
+    text-shadow: 0 2px 10px rgba(0,0,0,0.8);
+    pointer-events: none;
+    white-space: nowrap;
+    transition: color 0.4s;
+  }
+  #whisperTxt.show { color: rgba(210, 215, 235, 0.75); }
+  .overlay {
+    position: fixed; inset: 0;
+    z-index: 5;
+    display: flex; align-items: center; justify-content: center;
+    background:
+      radial-gradient(120% 90% at 50% 0%, rgba(60, 10, 16, 0.35), rgba(0,0,0,0) 55%),
+      linear-gradient(180deg, rgba(6, 6, 12, 0.90), rgba(2, 2, 5, 0.96));
+    padding: 20px;
+    box-sizing: border-box;
+  }
+  .card { text-align: center; max-width: 430px; }
+  .card .big { font-size: 56px; line-height: 1.1; }
+  .card h1 {
+    margin: 6px 0 4px;
+    font-size: 36px; font-weight: 900; letter-spacing: 0.03em;
+    color: #f2f0e9;
+    text-shadow: 0 0 18px rgba(160, 20, 30, 0.55), 0 3px 0 rgba(0,0,0,0.5);
+  }
+  .card p { margin: 6px 0; font-size: 16px; line-height: 1.5; opacity: 0.92; }
+  .card .premise { font-size: 17px; }
+  .card .scoreLine { font-size: 21px; font-weight: 800; opacity: 1; }
+  .card .scoreLine b { font-size: 30px; color: #7dfce8; }
+  .playBtn {
+    font: inherit;
+    margin-top: 16px;
+    font-size: 21px; font-weight: 900;
+    color: #0c0c12;
+    background: linear-gradient(180deg, #e8e6df, #b9b4a6);
+    border: 2px solid rgba(255, 60, 50, 0.55);
+    border-radius: 999px;
+    padding: 15px 36px;
+    box-shadow: 0 0 24px rgba(255, 40, 30, 0.25), 0 8px 22px rgba(0,0,0,0.5);
+    cursor: pointer;
+  }
+  .playBtn:active { transform: scale(0.96); }
+  .card .fine { font-size: 13px; opacity: 0.6; margin-top: 14px; }
+  #motionPill {
+    position: fixed;
+    left: 50%; transform: translateX(-50%);
+    bottom: calc(env(safe-area-inset-bottom, 0px) + 24px);
+    z-index: 6;
+    font: inherit; font-size: 15px; font-weight: 800;
+    color: #fff;
+    background: rgba(10, 10, 16, 0.88);
+    border: 2px solid rgba(255, 80, 70, 0.85);
+    border-radius: 999px;
+    padding: 12px 18px;
+    box-shadow: 0 8px 22px rgba(0,0,0,0.55);
+    cursor: pointer;
+    white-space: nowrap;
+  }
+  #motionPill:active { transform: translateX(-50%) scale(0.96); }
+  .hidden { display: none !important; }
+</style>
+<script type="importmap">
+{ "imports": { "three": "./vendor/three.module.js" } }
+</script>
+<style id="moth-game-guard">
+html,body{touch-action:none;overscroll-behavior:none;-webkit-touch-callout:none;-webkit-user-select:none;user-select:none;-webkit-tap-highlight-color:transparent}
+canvas{touch-action:none}
+</style>
+</head>
+<body>
+<video id="cam" autoplay playsinline muted></video>
+<canvas id="room"></canvas>
+<canvas id="gl"></canvas>
+<canvas id="fx"></canvas>
+
+<div id="hud" class="hidden">
+  <div id="hudRow">
+    <div class="chip">🔮 <b><span id="sigilCount">0</span>/5</b></div>
+    <div class="chip" id="nerveChip"><span id="nerves">❤️❤️❤️</span></div>
+  </div>
+  <div style="display:flex; margin-top:4px;"><div id="camTag">📷 AR room</div></div>
+</div>
+
+<div id="scareTxt">IT FOUND YOU</div>
+<div id="whisperTxt"></div>
+
+<button id="motionPill" class="hidden" type="button">📱 Enable motion look-around</button>
+
+<div id="start" class="overlay">
+  <div class="card">
+    <div class="big">👁️</div>
+    <h1>DON'T TURN AROUND!</h1>
+    <p class="premise">Something is in the room with you. Find the <b>5 sigils</b>. Do <b>NOT</b> turn around fast.</p>
+    <p>🔦 Pan <b>slowly</b> to search with your flashlight. Tap a glowing sigil to collect it.<br>
+    If you feel watched… it is already behind you. Look at it <i>slowly</i> and it will blink away. Whip around, and it will be <b>in your face</b>.</p>
+    <button id="startBtn" class="playBtn" type="button">▶ ENTER THE DARK</button>
+    <p class="fine">🔊 Best with sound ON — the quiet is part of it.<br>Needs camera for the full AR feel. No camera? A dim little room instead.</p>
+  </div>
+</div>
+
+<div id="end" class="overlay hidden">
+  <div class="card">
+    <div class="big" id="endEmoji">🌅</div>
+    <h1 id="endTitle">YOU ESCAPED</h1>
+    <p class="scoreLine" id="endLine">Sigils <b>5/5</b></p>
+    <p id="endStats">⏱ 0:00 · ❤️ ×3 left</p>
+    <button id="againBtn" class="playBtn" type="button">↻ PLAY AGAIN</button>
+    <p class="fine" id="endFine">It is still in the room. It is patient.</p>
+  </div>
+</div>
+
+<script type="module">
+import * as THREE from 'three';
+
+'use strict';
+/* ============================== helpers ============================== */
+const clamp = (v, a, b) => v < a ? a : (v > b ? b : v);
+const lerp = (a, b, t) => a + (b - a) * t;
+const rand = (a, b) => a + Math.random() * (b - a);
+const pick = arr => arr[Math.floor(Math.random() * arr.length)];
+const wrapDeg = d => { while (d > 180) d -= 360; while (d < -180) d += 360; return d; };
+const fmtTime = s => Math.floor(s / 60) + ':' + String(Math.floor(s % 60)).padStart(2, '0');
+
+/* ============================== audio (all synth, capped) ==============================
+   Everything routes through master -> compressor -> destination.
+   Shriek peak is capped at ~0.5 pre-master so it startles, never hurts. */
+let AC = null, master = null, noiseBuf = null;
+const SCARE_PEAK = 0.5;               // documented cap for the jump-scare shriek
+function initAudio() {
+  try {
+    if ('audioSession' in navigator) { try { navigator.audioSession.type = 'playback'; } catch (e) {} }
+    if (!AC) {
+      const Ctor = window.AudioContext || window.webkitAudioContext;
+      if (Ctor) {
+        AC = new Ctor();
+        master = AC.createGain(); master.gain.value = 0.85;
+        const comp = AC.createDynamicsCompressor();
+        comp.threshold.value = -18; comp.knee.value = 22; comp.ratio.value = 8;
+        comp.attack.value = 0.003; comp.release.value = 0.24;
+        master.connect(comp); comp.connect(AC.destination);
+        // 2 s white-noise buffer, reused by tones/whispers/shriek
+        noiseBuf = AC.createBuffer(1, AC.sampleRate * 2, AC.sampleRate);
+        const d = noiseBuf.getChannelData(0);
+        for (let i = 0; i < d.length; i++) d[i] = Math.random() * 2 - 1;
+      }
+    }
+    if (AC) {
+      if (AC.state === 'suspended') AC.resume();
+      // 1-sample silent buffer unlock (iOS first-gesture rule)
+      const buf = AC.createBuffer(1, 1, 22050);
+      const src = AC.createBufferSource();
+      src.buffer = buf; src.connect(master); src.start(0);
+      startRoomTone();
+    }
+  } catch (e) { /* audio is optional */ }
+}
+function resumeAudio() { try { if (AC && AC.state === 'suspended') AC.resume(); } catch (e) {} }
+document.addEventListener('pointerdown', resumeAudio, true);
+document.addEventListener('touchend', resumeAudio, true);
+document.addEventListener('visibilitychange', () => { if (!document.hidden) resumeAudio(); });
+
+function tone(f0, f1, dur, type, vol, delay, dest) {
+  if (!AC || !master) return;
+  try {
+    const t0 = AC.currentTime + (delay || 0);
+    const o = AC.createOscillator(), g = AC.createGain();
+    o.type = type || 'sine';
+    o.frequency.setValueAtTime(Math.max(25, f0), t0);
+    o.frequency.exponentialRampToValueAtTime(Math.max(25, f1), t0 + dur);
+    g.gain.setValueAtTime(0.0001, t0);
+    g.gain.exponentialRampToValueAtTime(vol || 0.12, t0 + 0.02);
+    g.gain.exponentialRampToValueAtTime(0.0001, t0 + dur);
+    o.connect(g); g.connect(dest || master);
+    o.start(t0); o.stop(t0 + dur + 0.05);
+  } catch (e) {}
+}
+function noiseHit(dur, fType, f0, f1, vol, delay, q) {
+  if (!AC || !master || !noiseBuf) return;
+  try {
+    const t0 = AC.currentTime + (delay || 0);
+    const src = AC.createBufferSource(); src.buffer = noiseBuf; src.loop = true;
+    src.playbackRate.value = rand(0.85, 1.1);
+    const flt = AC.createBiquadFilter(); flt.type = fType; flt.Q.value = q || 1;
+    flt.frequency.setValueAtTime(f0, t0);
+    flt.frequency.exponentialRampToValueAtTime(Math.max(40, f1), t0 + dur);
+    const g = AC.createGain();
+    g.gain.setValueAtTime(0.0001, t0);
+    g.gain.exponentialRampToValueAtTime(vol, t0 + dur * 0.3);
+    g.gain.exponentialRampToValueAtTime(0.0001, t0 + dur);
+    src.connect(flt); flt.connect(g); g.connect(master);
+    src.start(t0, rand(0, 1.2)); src.stop(t0 + dur + 0.05);
+  } catch (e) {}
+}
+/* near-silence room tone: looped brown-ish noise, barely there */
+let roomToneOn = false;
+function startRoomTone() {
+  if (!AC || !master || !noiseBuf || roomToneOn) return;
+  roomToneOn = true;
+  try {
+    const src = AC.createBufferSource(); src.buffer = noiseBuf; src.loop = true;
+    const flt = AC.createBiquadFilter(); flt.type = 'lowpass'; flt.frequency.value = 190;
+    const g = AC.createGain(); g.gain.value = 0.016;
+    const lfo = AC.createOscillator(); lfo.frequency.value = 0.07;
+    const lfoG = AC.createGain(); lfoG.gain.value = 0.006;
+    lfo.connect(lfoG); lfoG.connect(g.gain);
+    src.connect(flt); flt.connect(g); g.connect(master);
+    src.start(); lfo.start();
+  } catch (e) {}
+}
+/* whisper: band-swept noise with a reversed swell — sounds like it is breathing words */
+let whisperCount = 0;
+function sndWhisper(vol) {
+  if (!AC || !master || !noiseBuf) return;
+  whisperCount++;
+  try {
+    const t0 = AC.currentTime;
+    const dur = rand(0.7, 1.15);
+    const src = AC.createBufferSource(); src.buffer = noiseBuf; src.loop = true;
+    src.playbackRate.value = rand(0.6, 0.85);
+    const bp = AC.createBiquadFilter(); bp.type = 'bandpass'; bp.Q.value = 6;
+    bp.frequency.setValueAtTime(rand(500, 700), t0);
+    bp.frequency.exponentialRampToValueAtTime(rand(1500, 2100), t0 + dur * 0.55);
+    bp.frequency.exponentialRampToValueAtTime(rand(600, 900), t0 + dur);
+    const g = AC.createGain();
+    const pan = AC.createStereoPanner ? AC.createStereoPanner() : null;
+    if (pan) pan.pan.value = rand(-0.8, 0.8);
+    // reversed swell: long slow attack, sudden cut — the "played backwards" feel
+    g.gain.setValueAtTime(0.0001, t0);
+    g.gain.exponentialRampToValueAtTime(vol || 0.06, t0 + dur * 0.82);
+    g.gain.exponentialRampToValueAtTime(0.0001, t0 + dur);
+    src.connect(bp); bp.connect(g);
+    if (pan) { g.connect(pan); pan.connect(master); } else g.connect(master);
+    src.start(t0, rand(0, 1.0)); src.stop(t0 + dur + 0.05);
+  } catch (e) {}
+}
+const sndAppearSting = () => {  // soft: something is here now
+  tone(622, 615, 0.85, 'sine', 0.055); tone(659, 648, 0.85, 'sine', 0.05);
+  tone(98, 92, 1.0, 'sine', 0.045);
+};
+const sndCollect = () => {
+  [784, 988, 1175, 1568].forEach((f, i) => tone(f, f, 0.22, 'triangle', 0.09, i * 0.07));
+  noiseHit(0.4, 'bandpass', 2400, 700, 0.05, 0, 3);
+};
+const sndHeartbeat = (strong) => {
+  const v = strong ? 0.26 : 0.17;
+  tone(58, 38, 0.13, 'sine', v);
+  tone(54, 36, 0.11, 'sine', v * 0.7, 0.17);
+};
+const sndWin = () => { [523, 659, 784, 1046].forEach((f, i) => tone(f, f, 0.3, 'triangle', 0.1, i * 0.13)); };
+const sndLose = () => { tone(392, 380, 0.5, 'triangle', 0.1); tone(370, 340, 0.7, 'triangle', 0.1, 0.18); tone(233, 110, 1.1, 'sine', 0.12, 0.36); };
+/* THE SHRIEK: layered detuned saws diving + swept noise + sub boom.
+   Sum of peaks is held at SCARE_PEAK (0.5) pre-master, then the master
+   (0.85) + compressor keep it startling, not painful. */
+function sndShriek() {
+  if (!AC || !master) return;
+  try {
+    const t0 = AC.currentTime;
+    const bus = AC.createGain(); bus.gain.value = 1; bus.connect(master);
+    const dur = 0.72;
+    [[1180, 1.0], [1244, 0.8], [885, 0.7]].forEach(([f, w]) => {
+      const o = AC.createOscillator(); o.type = 'sawtooth';
+      o.frequency.setValueAtTime(f, t0);
+      o.frequency.exponentialRampToValueAtTime(f * 0.26, t0 + dur);
+      const vib = AC.createOscillator(); vib.frequency.value = 29;
+      const vibG = AC.createGain(); vibG.gain.value = f * 0.05;
+      vib.connect(vibG); vibG.connect(o.frequency);
+      const g = AC.createGain();
+      g.gain.setValueAtTime(0.0001, t0);
+      g.gain.exponentialRampToValueAtTime(SCARE_PEAK * 0.36 * w, t0 + 0.03);
+      g.gain.exponentialRampToValueAtTime(0.0001, t0 + dur);
+      o.connect(g); g.connect(bus);
+      o.start(t0); o.stop(t0 + dur + 0.05); vib.start(t0); vib.stop(t0 + dur + 0.05);
+    });
+    // breath/noise layer
+    const src = AC.createBufferSource(); src.buffer = noiseBuf; src.loop = true;
+    const bp = AC.createBiquadFilter(); bp.type = 'bandpass'; bp.Q.value = 1.4;
+    bp.frequency.setValueAtTime(2600, t0);
+    bp.frequency.exponentialRampToValueAtTime(420, t0 + dur);
+    const ng = AC.createGain();
+    ng.gain.setValueAtTime(0.0001, t0);
+    ng.gain.exponentialRampToValueAtTime(SCARE_PEAK * 0.34, t0 + 0.04);
+    ng.gain.exponentialRampToValueAtTime(0.0001, t0 + dur);
+    src.connect(bp); bp.connect(ng); ng.connect(bus);
+    src.start(t0, rand(0, 1)); src.stop(t0 + dur + 0.05);
+    // sub boom underneath
+    tone(72, 32, 0.55, 'sine', SCARE_PEAK * 0.55, 0, bus);
+  } catch (e) {}
+}
+
+/* ============================== dom / state ============================== */
+const video = document.getElementById('cam');
+const roomCanvas = document.getElementById('room');
+const rctx = roomCanvas.getContext('2d');
+const glCanvas = document.getElementById('gl');
+const fxCanvas = document.getElementById('fx');
+const fctx = fxCanvas.getContext('2d');
+const hudEl = document.getElementById('hud');
+const sigilCountEl = document.getElementById('sigilCount');
+const nervesEl = document.getElementById('nerves');
+const camTagEl = document.getElementById('camTag');
+const scareTxtEl = document.getElementById('scareTxt');
+const whisperTxtEl = document.getElementById('whisperTxt');
+const startEl = document.getElementById('start');
+const endEl = document.getElementById('end');
+
+let W = 0, H = 0, floorTop = 0;
+let camOK = false;
+let phase = 'start';           // 'start' | 'playing' | 'won' | 'lost'
+const SIGIL_TOTAL = 5;
+let collected = 0, nerves = 3;
+let elapsed = 0;
+let scareT = 0;                // >0 while the jump scare is on screen
+let shakeT = 0;
+let scareCount = 0, vanishCount = 0;
+let endShownAt = 0;
+
+/* ================= AR motion: permission-in-gesture + 3DOF look-around =================
+   iOS 13+ Safari delivers deviceorientation events only after
+   DeviceOrientationEvent.requestPermission() resolves 'granted', and the
+   call only counts inside a user-gesture handler — a call made after an
+   `await` (e.g. behind getUserMedia) is silently denied and the scene
+   never moves. So the ask happens synchronously in the START tap (and on
+   the pill, whose own tap re-asks if events still don't flow). */
+let baseCamQ = null;
+let hemiLight = null, dirLight = null, spotLight = null;
+const MOTION = {
+  needPerm: (typeof DeviceOrientationEvent !== 'undefined' &&
+             typeof DeviceOrientationEvent.requestPermission === 'function'),
+  perm: 'unknown',
+  ok: false,
+  ever: false,
+  lastAt: -1e9,
+  recal: true,
+  refQ: null,
+  devQ: new THREE.Quaternion()
+};
+function askMotionPermission() {
+  if (!MOTION.needPerm) { MOTION.perm = 'n/a'; return; }
+  try {
+    const p = DeviceOrientationEvent.requestPermission();
+    if (p && typeof p.then === 'function') {
+      p.then(r => {
+        MOTION.perm = (r === 'granted') ? 'granted' : 'denied';
+        if (MOTION.perm === 'granted') MOTION.recal = true;
+      }).catch(() => { MOTION.perm = 'error'; });
+    }
+  } catch (e) { MOTION.perm = 'error'; }
+}
+const motionPillEl = document.getElementById('motionPill');
+function showMotionPill() { if (motionPillEl) motionPillEl.classList.remove('hidden'); }
+function hideMotionPill() { if (motionPillEl) motionPillEl.classList.add('hidden'); }
+if (motionPillEl) motionPillEl.addEventListener('click', () => { askMotionPermission(); });
+function motionWatchdog() {
+  setTimeout(() => { if (MOTION.needPerm && !MOTION.ever) showMotionPill(); }, 1500);
+}
+window.addEventListener('orientationchange', () => { MOTION.recal = true; });
+
+/* device orientation -> world quaternion (the standard three.js recipe) */
+const _zee = new THREE.Vector3(0, 0, 1);
+const _eul = new THREE.Euler();
+const _q0 = new THREE.Quaternion();
+const _q1 = new THREE.Quaternion(-Math.sqrt(0.5), 0, 0, Math.sqrt(0.5));
+function deviceQuat(out, alphaDeg, betaDeg, gammaDeg) {
+  const orient = (typeof window.orientation === 'number' ? window.orientation : 0) * Math.PI / 180;
+  _eul.set(THREE.MathUtils.degToRad(betaDeg), THREE.MathUtils.degToRad(alphaDeg),
+           THREE.MathUtils.degToRad(-gammaDeg), 'YXZ');
+  out.setFromEuler(_eul);
+  out.multiply(_q1);
+  out.multiply(_q0.setFromAxisAngle(_zee, -orient));
+  return out;
+}
+const _invRefQ = new THREE.Quaternion();
+const _targetQ = new THREE.Quaternion();
+function applyMotionCamera() {
+  if (!camera || !baseCamQ || !MOTION.refQ) return false;
+  if (performance.now() - MOTION.lastAt > 3000) { MOTION.ok = false; return false; }
+  if (!MOTION.ok) return false;
+  _invRefQ.copy(MOTION.refQ).invert();
+  _targetQ.copy(MOTION.devQ).multiply(_invRefQ).multiply(baseCamQ);
+  camera.quaternion.slerp(_targetQ, 0.16);
+  return true;
+}
+/* the view direction the player is TURNING TOWARD (un-eased target) —
+   used by the fast-turn scare check so a whip registers immediately */
+const _fwd = new THREE.Vector3();
+function viewDirTarget(out) {
+  if (MOTION.ok && MOTION.refQ && baseCamQ) {
+    _invRefQ.copy(MOTION.refQ).invert();
+    _targetQ.copy(MOTION.devQ).multiply(_invRefQ).multiply(baseCamQ);
+    out.set(0, 0, -1).applyQuaternion(_targetQ);
+  } else if (camera) {
+    out.set(0, 0, -1).applyQuaternion(camera.quaternion);
+  } else out.set(0, 0, -1);
+  return out;
+}
+function viewDirCam(out) {
+  if (camera) out.set(0, 0, -1).applyQuaternion(camera.quaternion);
+  else out.set(0, 0, -1);
+  return out;
+}
+/* bearing in degrees in ring space: 0 = straight ahead (-Z), + = to the right */
+function bearingOf(x, z) { return Math.atan2(x, -z) * 180 / Math.PI; }
+function dirBearing(v) { return bearingOf(v.x, v.z); }
+
+/* camera angular speed (deg/sec), measured on the real camera quaternion */
+let prevCamQ = null, angSpeed = 0, angSpeedSmooth = 0;
+function measureAngSpeed(dt) {
+  if (!camera || dt <= 0) return;
+  if (!prevCamQ) { prevCamQ = camera.quaternion.clone(); return; }
+  const dot = clamp(Math.abs(prevCamQ.dot(camera.quaternion)), 0, 1);
+  const ang = 2 * Math.acos(dot) * 180 / Math.PI;
+  angSpeed = ang / dt;
+  angSpeedSmooth = lerp(angSpeedSmooth, angSpeed, 0.5);
+  prevCamQ.copy(camera.quaternion);
+}
+
+/* ================= light matching (kept, but clamped dark) ================= */
+const lightBase = { hemi: 0.16, dir: 0.22 };
+const _lsCanvas = document.createElement('canvas');
+_lsCanvas.width = 16; _lsCanvas.height = 16;
+const _lsCtx = _lsCanvas.getContext('2d', { willReadFrequently: true });
+const _lightTgt = { m: 1 };
+let _lsNextAt = 0;
+function updateLightMatch(t, dt) {
+  if (!hemiLight || !dirLight) return;
+  if (camOK && video && video.readyState >= 2 && t >= _lsNextAt) {
+    _lsNextAt = t + 500;
+    try {
+      _lsCtx.drawImage(video, 0, 0, 16, 16);
+      const d = _lsCtx.getImageData(0, 0, 16, 16).data;
+      let r = 0, g = 0, b = 0;
+      const n = d.length / 4;
+      for (let i = 0; i < d.length; i += 4) { r += d[i]; g += d[i + 1]; b += d[i + 2]; }
+      const lum = (0.2126 * r + 0.7152 * g + 0.0722 * b) / (n * 255);
+      _lightTgt.m = clamp(0.7 + lum * 0.7, 0.7, 1.3);   // the flashlight does the real work
+    } catch (e) {}
+  }
+  if (!camOK) return;
+  const k = 1 - Math.exp(-dt * 2.5);
+  hemiLight.intensity += (lightBase.hemi * _lightTgt.m - hemiLight.intensity) * k;
+  dirLight.intensity += (lightBase.dir * _lightTgt.m - dirLight.intensity) * k;
+}
+
+/* ============================== parallax ============================== */
+let parX = 0, parY = 0, parTX = 0, parTY = 0;
+let lastOrientAt = -1e9, mouseAt = -1e9, mouseTX = 0, mouseTY = 0;
+window.addEventListener('deviceorientation', (e) => {
+  if (e.gamma == null && e.beta == null && e.alpha == null) return;
+  lastOrientAt = performance.now();
+  parTX = clamp((e.gamma || 0) / 26, -1, 1);
+  parTY = clamp(((e.beta || 0) - 48) / 24, -1, 1);
+  MOTION.ever = true; MOTION.ok = true; MOTION.lastAt = lastOrientAt;
+  deviceQuat(MOTION.devQ, e.alpha || 0, e.beta || 0, e.gamma || 0);
+  if (MOTION.recal || !MOTION.refQ) {
+    MOTION.refQ = MOTION.devQ.clone();
+    MOTION.recal = false;
+  }
+  hideMotionPill();
+}, true);
+window.addEventListener('pointermove', (e) => {
+  if (e.pointerType !== 'mouse') return;
+  mouseAt = performance.now();
+  mouseTX = clamp((e.clientX / Math.max(1, W) - 0.5) * 2, -1, 1);
+  mouseTY = clamp((e.clientY / Math.max(1, H) - 0.5) * 2, -1, 1);
+}, true);
+function updateParallax(t) {
+  let tx, ty;
+  if (performance.now() - mouseAt < 2500) { tx = mouseTX; ty = mouseTY; }
+  else if (performance.now() - lastOrientAt < 3000) { tx = parTX; ty = parTY; }
+  else { tx = Math.sin(t * 0.00035) * 0.55; ty = Math.sin(t * 0.00027 + 1.7) * 0.30; }
+  parX += (tx - parX) * 0.055;
+  parY += (ty - parY) * 0.055;
+}
+
+/* ============================== DIM room (fallback bg) ============================== */
+function rr2(c, x, y, w, h, r) { c.beginPath(); if (c.roundRect) c.roundRect(x, y, w, h, r); else c.rect(x, y, w, h); }
+function drawRoom() {
+  const ctx = rctx;
+  // walls: near-black blue-gray, faintly lighter toward the floor line
+  const wall = ctx.createLinearGradient(0, 0, 0, floorTop + 30);
+  wall.addColorStop(0, '#0a0a12'); wall.addColorStop(1, '#15151f');
+  ctx.fillStyle = wall; ctx.fillRect(0, 0, W, floorTop + 2);
+  // window with cold moonlight, left of center; parallax shivers it slightly
+  const wx = W * 0.13 + parX * -6, wy = H * 0.07, ww = W * 0.27, wh = floorTop * 0.62;
+  ctx.fillStyle = '#232c3d'; rr2(ctx, wx, wy, ww, wh, 6); ctx.fill();
+  ctx.fillStyle = '#e9edf5'; ctx.beginPath(); ctx.arc(wx + ww * 0.70, wy + wh * 0.28, ww * 0.11, 0, Math.PI * 2); ctx.fill();
+  ctx.fillStyle = 'rgba(233,237,245,0.16)'; ctx.beginPath(); ctx.arc(wx + ww * 0.60, wy + wh * 0.28, ww * 0.11, 0, Math.PI * 2); ctx.fill();
+  ctx.strokeStyle = '#05050a'; ctx.lineWidth = 8; rr2(ctx, wx, wy, ww, wh, 6); ctx.stroke();
+  ctx.lineWidth = 4; ctx.beginPath();
+  ctx.moveTo(wx + ww / 2, wy); ctx.lineTo(wx + ww / 2, wy + wh);
+  ctx.moveTo(wx, wy + wh / 2); ctx.lineTo(wx + ww, wy + wh / 2); ctx.stroke();
+  // a door, right side — closed. Probably.
+  const dx = W * 0.74 + parX * -10, dy = H * 0.05, dw = W * 0.17, dh = floorTop * 0.92;
+  ctx.fillStyle = '#0d0d15'; ctx.fillRect(dx, dy, dw, dh);
+  ctx.strokeStyle = '#262633'; ctx.lineWidth = 3; ctx.strokeRect(dx, dy, dw, dh);
+  ctx.fillStyle = '#3d3d4d'; ctx.beginPath(); ctx.arc(dx + dw * 0.82, dy + dh * 0.52, 3.5, 0, Math.PI * 2); ctx.fill();
+  // picture frame silhouette
+  const px = W * 0.47 + parX * -8, py = H * 0.10, pw = W * 0.15, ph = floorTop * 0.34;
+  ctx.fillStyle = '#0b0b13'; ctx.fillRect(px, py, pw, ph);
+  ctx.strokeStyle = '#23232f'; ctx.lineWidth = 3; ctx.strokeRect(px, py, pw, ph);
+  // baseboard + floor: dark boards
+  ctx.fillStyle = '#1a1a24'; ctx.fillRect(0, floorTop - 5, W, 7);
+  const fl = ctx.createLinearGradient(0, floorTop, 0, H);
+  fl.addColorStop(0, '#17130f'); fl.addColorStop(1, '#0a0806');
+  ctx.fillStyle = fl; ctx.fillRect(0, floorTop, W, H - floorTop);
+  ctx.strokeStyle = 'rgba(0,0,0,0.5)'; ctx.lineWidth = 2;
+  for (let i = 1; i < 5; i++) {
+    const ly = floorTop + (H - floorTop) * (i / 5);
+    ctx.beginPath(); ctx.moveTo(0, ly); ctx.lineTo(W, ly); ctx.stroke();
+  }
+  // moonlight spill on the floor from the window
+  const spill = ctx.createLinearGradient(wx, floorTop, wx + ww * 0.4, H);
+  spill.addColorStop(0, 'rgba(160,180,220,0.10)'); spill.addColorStop(1, 'rgba(160,180,220,0)');
+  ctx.fillStyle = spill;
+  ctx.beginPath();
+  ctx.moveTo(wx + 6, floorTop); ctx.lineTo(wx + ww - 2, floorTop);
+  ctx.lineTo(wx + ww * 1.5, H); ctx.lineTo(wx - ww * 0.4, H);
+  ctx.closePath(); ctx.fill();
+  // heavy vignette — the room falls off to black
+  const vg = ctx.createRadialGradient(W / 2, H / 2, Math.min(W, H) * 0.34, W / 2, H / 2, Math.max(W, H) * 0.75);
+  vg.addColorStop(0, 'rgba(0,0,0,0)'); vg.addColorStop(1, 'rgba(0,0,0,0.55)');
+  ctx.fillStyle = vg; ctx.fillRect(0, 0, W, H);
+}
+
+/* ============================== three.js scene ============================== */
+let renderer = null, scene = null, camera = null;
+const CAM_BASE = new THREE.Vector3(0, 2.2, 4.2);
+const CAM_LOOK = new THREE.Vector3(0, 0.15, -2);
+const RING_C = { x: 0, z: -1.0 };        // the room's play ring is centered here
+const RING_R = 2.7;
+
+function makeBlobTexture() {
+  const c = document.createElement('canvas'); c.width = c.height = 128;
+  const g = c.getContext('2d');
+  const grad = g.createRadialGradient(64, 64, 4, 64, 64, 62);
+  grad.addColorStop(0, 'rgba(0,0,0,0.6)');
+  grad.addColorStop(0.6, 'rgba(0,0,0,0.3)');
+  grad.addColorStop(1, 'rgba(0,0,0,0)');
+  g.fillStyle = grad; g.fillRect(0, 0, 128, 128);
+  return new THREE.CanvasTexture(c);
+}
+let blobGeo = null, blobMat = null;
+let flashFlicker = 1, flickerT = 0;
+
+function initGL() {
+  renderer = new THREE.WebGLRenderer({ canvas: document.getElementById('gl'), alpha: true, antialias: true });
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
+  renderer.setSize(window.innerWidth, window.innerHeight);
+  renderer.setClearColor(0x000000, 0);
+  scene = new THREE.Scene();
+  camera = new THREE.PerspectiveCamera(60, window.innerWidth / Math.max(1, window.innerHeight), 0.05, 80);
+  camera.position.copy(CAM_BASE);
+  camera.lookAt(CAM_LOOK);
+  baseCamQ = camera.quaternion.clone();
+  scene.add(camera);
+  hemiLight = new THREE.HemisphereLight(0x8a93b8, 0x0a0a10, 0.16);
+  scene.add(hemiLight);
+  dirLight = new THREE.DirectionalLight(0xaFC4e8, 0.22);
+  dirLight.position.set(-2.5, 4.5, 1.5);
+  scene.add(dirLight);
+  // THE FLASHLIGHT: a spot glued to the camera, aimed where she looks
+  spotLight = new THREE.SpotLight(0xfff0d0, 2.6, 14, 0.62, 0.55, 0.6);
+  spotLight.position.set(0, 0, 0.05);
+  camera.add(spotLight);
+  camera.add(spotLight.target);
+  spotLight.target.position.set(0, -0.12, -3);
+  blobGeo = new THREE.PlaneGeometry(1, 1);
+  blobMat = new THREE.MeshBasicMaterial({ map: makeBlobTexture(), transparent: true, depthWrite: false, opacity: 0.85 });
+}
+
+/* AR-MAX (Cherie 2026-11-08): NO fake ground patches in AR — no opaque
+   disc/square pretending to be a floor over the camera view. Everything
+   stands on the REAL displayed surface: sigils float and spill light,
+   the stalker stands on the floor itself with only a soft contact
+   shadow. (In the no-camera fallback the drawn dim room is the floor.) */
+function buildFloor() { /* intentionally empty — see AR-MAX note */ }
+
+/* ============================== sigils ============================== */
+function makeRuneTexture() {
+  const c = document.createElement('canvas'); c.width = c.height = 256;
+  const g = c.getContext('2d');
+  g.clearRect(0, 0, 256, 256);
+  g.strokeStyle = '#a5fff0'; g.fillStyle = '#a5fff0';
+  g.shadowColor = '#39f5d8'; g.shadowBlur = 16;
+  g.lineWidth = 7;
+  g.beginPath(); g.arc(128, 128, 104, 0, Math.PI * 2); g.stroke();
+  g.lineWidth = 3;
+  g.beginPath(); g.arc(128, 128, 88, 0, Math.PI * 2); g.stroke();
+  // inner star
+  g.lineWidth = 6; g.beginPath();
+  for (let i = 0; i < 5; i++) {
+    const a1 = -Math.PI / 2 + i * (Math.PI * 4 / 5);
+    const x = 128 + Math.cos(a1) * 66, y = 128 + Math.sin(a1) * 66;
+    if (i === 0) g.moveTo(x, y); else g.lineTo(x, y);
+  }
+  g.closePath(); g.stroke();
+  // rune ticks around the rim
+  g.lineWidth = 5;
+  for (let i = 0; i < 8; i++) {
+    const a = i * Math.PI / 4 + 0.39;
+    const x1 = 128 + Math.cos(a) * 92, y1 = 128 + Math.sin(a) * 92;
+    const x2 = 128 + Math.cos(a) * 104, y2 = 128 + Math.sin(a) * 104;
+    g.beginPath(); g.moveTo(x1, y1); g.lineTo(x2, y2); g.stroke();
+  }
+  g.beginPath(); g.arc(128, 128, 10, 0, Math.PI * 2); g.fill();
+  return new THREE.CanvasTexture(c);
+}
+function makeGlowTexture() {
+  const c = document.createElement('canvas'); c.width = c.height = 128;
+  const g = c.getContext('2d');
+  const grad = g.createRadialGradient(64, 64, 2, 64, 64, 62);
+  grad.addColorStop(0, 'rgba(125,252,232,0.55)');
+  grad.addColorStop(0.45, 'rgba(80,220,200,0.18)');
+  grad.addColorStop(1, 'rgba(80,220,200,0)');
+  g.fillStyle = grad; g.fillRect(0, 0, 128, 128);
+  return new THREE.CanvasTexture(c);
+}
+const SIGIL_ANGLES = [-140, -70, 5, 75, 150];   // degrees in ring bearing space
+const sigils = [];
+function buildSigils(runeTex, glowTex) {
+  for (let i = 0; i < SIGIL_ANGLES.length; i++) {
+    const th = SIGIL_ANGLES[i] * Math.PI / 180;
+    const x = RING_C.x + Math.sin(th) * RING_R;
+    const z = RING_C.z - Math.cos(th) * RING_R;
+    const grp = new THREE.Group();
+    grp.position.set(x, 0, z);
+    grp.lookAt(RING_C.x, 0, RING_C.z);
+    // glow pool on the floor
+    const pool = new THREE.Mesh(
+      new THREE.CircleGeometry(0.42, 24),
+      new THREE.MeshBasicMaterial({ map: glowTex, transparent: true, depthWrite: false, opacity: 0.8 })
+    );
+    pool.rotation.x = -Math.PI / 2; pool.position.y = 0.006;
+    grp.add(pool);
+    // the rune disc, floating knee-height, facing the room center
+    const disc = new THREE.Mesh(
+      new THREE.CircleGeometry(0.30, 32),
+      new THREE.MeshStandardMaterial({ map: runeTex, transparent: true, emissive: 0x9ffce9, emissiveMap: runeTex, emissiveIntensity: 1.5, color: 0x223333, side: THREE.DoubleSide, depthWrite: false })
+    );
+    disc.position.y = 0.55;
+    grp.add(disc);
+    const halo = new THREE.Mesh(
+      new THREE.PlaneGeometry(1.05, 1.05),
+      new THREE.MeshBasicMaterial({ map: glowTex, transparent: true, depthWrite: false, opacity: 0.55 })
+    );
+    halo.position.y = 0.55; halo.position.z = -0.02;
+    grp.add(halo);
+    scene.add(grp);
+    const s = { i, grp, disc, halo, pool, x, z, angle: SIGIL_ANGLES[i], taken: false, collectT: -1, bobPh: rand(0, 6) };
+    grp.traverse(o => { o.userData.sigilRef = s; });
+    sigils.push(s);
+  }
+}
+function updateSigils(dt, t) {
+  for (const s of sigils) {
+    if (s.taken) {
+      if (s.collectT >= 0) {
+        s.collectT += dt;
+        const k = s.collectT / 0.45;
+        s.disc.position.y = 0.55 + k * 0.7;
+        s.disc.rotation.z += dt * 14;
+        const sc = Math.max(0.001, 1 - k);
+        s.disc.scale.set(sc, sc, sc);
+        s.halo.material.opacity = 0.55 * sc;
+        s.pool.material.opacity = 0.8 * sc;
+        if (k >= 1) { s.collectT = -1; s.grp.visible = false; }
+      }
+      continue;
+    }
+    s.disc.position.y = 0.55 + Math.sin(t * 0.0016 + s.bobPh) * 0.035;
+    s.disc.rotation.z = Math.sin(t * 0.0009 + s.bobPh) * 0.12;
+    const pulse = 0.9 + Math.sin(t * 0.003 + s.bobPh) * 0.18;
+    s.halo.material.opacity = 0.5 * pulse;
+    s.pool.material.opacity = 0.75 * pulse;
+  }
+}
+
+/* ============================== THE STALKER ==============================
+   Tall, still, wrong. Long coat, pale oval face, dark eyes. Built only
+   from primitives — mannequin-creepy, not monster. No gore, no blood. */
+const stalker = {
+  mesh: null, present: false, frozen: false, freezeT: 0,
+  x: 0, z: 0, dist: 0, bearing: 0, lifeT: 0,
+  spawnAt: 0, lockoutUntil: 0, enabled: true, pinned: false
+};
+function buildStalker() {
+  const g = new THREE.Group();
+  const coatMat = new THREE.MeshStandardMaterial({ color: 0x0b0b10, roughness: 1 });
+  const paleMat = new THREE.MeshStandardMaterial({ color: 0xd9d5c9, roughness: 0.65, emissive: 0x35322a, emissiveIntensity: 0.5 });
+  const eyeMat = new THREE.MeshBasicMaterial({ color: 0x000000 });
+  // long coat: tall tapered cylinder, slightly hunched shoulders
+  const coat = new THREE.Mesh(new THREE.CylinderGeometry(0.155, 0.33, 1.48, 14), coatMat);
+  coat.position.y = 0.74;
+  g.add(coat);
+  const shoulders = new THREE.Mesh(new THREE.SphereGeometry(0.185, 16, 12), coatMat);
+  shoulders.scale.set(1.25, 0.62, 0.9);
+  shoulders.position.y = 1.47;
+  g.add(shoulders);
+  // long arms hanging too low
+  for (const s of [-1, 1]) {
+    const arm = new THREE.Mesh(new THREE.CylinderGeometry(0.038, 0.03, 0.98, 8), coatMat);
+    arm.position.set(0.235 * s, 1.0, 0.01);
+    arm.rotation.z = 0.05 * s;
+    g.add(arm);
+    const hand = new THREE.Mesh(new THREE.SphereGeometry(0.045, 10, 8), paleMat);
+    hand.scale.set(0.8, 1.5, 0.8);
+    hand.position.set(0.245 * s, 0.48, 0.015);
+    g.add(hand);
+  }
+  // the face: pale oval, tilted a few degrees too far
+  const headG = new THREE.Group();
+  headG.position.y = 1.76;
+  headG.rotation.z = 0.07;
+  const head = new THREE.Mesh(new THREE.SphereGeometry(0.155, 20, 16), paleMat);
+  head.scale.set(0.78, 1.22, 0.88);
+  headG.add(head);
+  for (const s of [-1, 1]) {
+    const eye = new THREE.Mesh(new THREE.SphereGeometry(0.02, 8, 8), eyeMat);
+    eye.position.set(0.052 * s, 0.03, 0.125);
+    eye.scale.set(1, 1.5, 0.6);
+    headG.add(eye);
+  }
+  // a mouth that is just a seam — a thin dark line, closed
+  const mouth = new THREE.Mesh(new THREE.BoxGeometry(0.055, 0.006, 0.01), eyeMat);
+  mouth.position.set(0, -0.075, 0.133);
+  headG.add(mouth);
+  g.add(headG);
+  const shadow = new THREE.Mesh(blobGeo, blobMat);
+  shadow.rotation.x = -Math.PI / 2;
+  shadow.position.y = 0.004;
+  shadow.scale.set(0.85, 0.7, 1);
+  g.add(shadow);
+  g.visible = false;
+  scene.add(g);
+  stalker.mesh = g;
+  stalker.headG = headG;
+}
+/* spawn distance shrinks with every sigil — it gets bolder */
+const STALKER_DISTS = [3.1, 2.85, 2.55, 2.25, 1.95, 1.7];
+function spawnStalker(forceBearing) {
+  if (!stalker.mesh) return false;
+  viewDirTarget(_fwd);
+  const viewB = dirBearing(_fwd);
+  const off = forceBearing != null ? forceBearing : (pick([-1, 1]) * rand(115, 185));
+  const b = viewB + off;
+  const th = b * Math.PI / 180;
+  const dist = STALKER_DISTS[clamp(collected, 0, 5)];
+  /* position is relative to the PLAYER, not the sigil ring: "behind you"
+     means behind where you stand, at `dist` meters from you */
+  stalker.x = camera.position.x + Math.sin(th) * dist;
+  stalker.z = camera.position.z - Math.cos(th) * dist;
+  stalker.dist = dist;
+  stalker.bearing = b;
+  stalker.mesh.position.set(stalker.x, 0, stalker.z);
+  stalker.mesh.position.y = 0;
+  stalker.mesh.scale.set(1, 1, 1);
+  stalker.mesh.lookAt(camera.position.x, 0, camera.position.z);
+  stalker.mesh.visible = true;
+  stalker.present = true;
+  stalker.frozen = false;
+  stalker.freezeT = 0;
+  stalker.lifeT = 0;
+  sndAppearSting();
+  return true;
+}
+function vanishStalker(quiet) {
+  if (!stalker.present) return;
+  stalker.present = false;
+  stalker.frozen = false;
+  if (stalker.mesh) stalker.mesh.visible = false;
+  if (!quiet) { vanishCount++; sndWhisper(0.085); showWhisper(pick(['…behind you…', '…stay…', '…so cold…', '…turn…'])); }
+  stalker.spawnAt = elapsed + rand(4.5, 8) * (1 - collected * 0.09);
+}
+let whisperHideAt = 0;
+function showWhisper(txt) {
+  whisperTxtEl.textContent = txt;
+  whisperTxtEl.classList.add('show');
+  whisperHideAt = performance.now() + 1600;
+}
+
+/* ============================== stalker director ==============================
+   Rules of the haunting:
+   - It only appears where you are NOT looking (spawn is 115–185° off-view).
+   - Look at it SLOWLY: it freezes, then blinks out with a whisper.
+   - Whip around FAST while it is near your view: it is suddenly in your face. */
+const FAST_TURN = 260;        // deg/sec — above this, a turn is a "whip"
+const SCARE_ANGLE = 80;       // deg — a whip counts if it ends/sweeps this close to it
+const VIEW_ANGLE = 34;        // deg — inside this, you are looking at it
+const FREEZE_TIME = 0.45;     // s of slow looking before it blinks out
+let nextBeatAt = 0, nextWhisperAt = 8, winPendingAt = 0;
+let redFlash = 0;
+const _toS = new THREE.Vector3();
+const _vDir = new THREE.Vector3();
+
+function stalkerAngles() {
+  if (!camera || !stalker.present) return { cam: 999, tgt: 999 };
+  _toS.set(stalker.x - camera.position.x, 0, stalker.z - camera.position.z).normalize();
+  viewDirCam(_vDir); _vDir.y = 0; _vDir.normalize();
+  const cam = Math.acos(clamp(_toS.dot(_vDir), -1, 1)) * 180 / Math.PI;
+  viewDirTarget(_vDir); _vDir.y = 0; _vDir.normalize();
+  const tgt = Math.acos(clamp(_toS.dot(_vDir), -1, 1)) * 180 / Math.PI;
+  stalker.angleDeg = cam;
+  stalker.relBearing = wrapDeg(bearingOf(_toS.x, _toS.z) - dirBearing(_vDir));
+  return { cam, tgt };
+}
+
+function triggerScare() {
+  if (phase !== 'playing' || scareT > 0 || !stalker.mesh) return false;
+  scareT = 1.25;
+  shakeT = 0.55;
+  redFlash = 0.6;
+  scareCount++;
+  nerves--;
+  updateHUD();
+  sndShriek();
+  scareTxtEl.classList.add('show');
+  // THE LUNGE: it is suddenly right in front of the camera, face at eye height
+  viewDirCam(_vDir); _vDir.y = 0; _vDir.normalize();
+  const cx = camera.position.x, cy = camera.position.y, cz = camera.position.z;
+  /* head group sits at local y 1.76; at 1.5x scale the origin must be
+     cy - 1.76*1.5 = cy - 2.64 so the FACE lands exactly at eye height */
+  stalker.mesh.position.set(cx + _vDir.x * 0.62, cy - 2.64, cz + _vDir.z * 0.62);
+  stalker.mesh.scale.set(1.5, 1.5, 1.5);
+  stalker.mesh.lookAt(cx, cy - 2.64, cz);
+  stalker.mesh.visible = true;
+  stalker.present = false;
+  stalker.frozen = false;
+  return true;
+}
+
+function updateStalker(dt, t) {
+  if (scareT > 0) return;                       // the scare owns the screen
+  if (stalker.enabled && !stalker.present && phase === 'playing' &&
+      elapsed > 2.5 && elapsed >= stalker.spawnAt && elapsed >= stalker.lockoutUntil) {
+    spawnStalker();
+  }
+  if (!stalker.present) return;
+  stalker.lifeT += dt;
+  // barely-alive stillness: a sway you feel more than see
+  if (stalker.headG) stalker.headG.rotation.z = 0.07 + Math.sin(t * 0.00055) * 0.022;
+  stalker.mesh.position.y = Math.sin(t * 0.0011) * 0.008;
+  stalker.mesh.lookAt(camera.position.x, 0, camera.position.z);
+
+  const a = stalkerAngles();
+  const minAngle = Math.min(a.cam, a.tgt);
+
+  // FAST TURN near it -> it is in your face
+  if (!stalker.pinned && angSpeedSmooth > FAST_TURN && minAngle < SCARE_ANGLE) {
+    triggerScare();
+    return;
+  }
+  // SLOW look at it -> frozen… then gone
+  if (a.cam < VIEW_ANGLE) {
+    stalker.frozen = true;
+    if (angSpeedSmooth < FAST_TURN) stalker.freezeT += dt;
+    if (stalker.freezeT >= FREEZE_TIME && !stalker.pinned) { vanishStalker(false); return; }
+  } else {
+    stalker.frozen = false;
+    stalker.freezeT = 0;
+  }
+  // unseen for too long: it quietly relocates
+  if (stalker.lifeT > 16) { vanishStalker(true); stalker.spawnAt = elapsed + 2; }
+}
+
+/* heartbeat + ambient whispers, scheduled off the frame loop */
+function updateAudio(t) {
+  if (phase !== 'playing' || !AC) return;
+  const nowP = t / 1000;
+  if (stalker.present) {
+    const close = clamp(1 - (stalker.dist - 1.5) / (3.2 - 1.5), 0, 1);
+    if (nowP >= nextBeatAt) {
+      sndHeartbeat(close > 0.45);
+      nextBeatAt = nowP + lerp(1.15, 0.5, close);
+    }
+  }
+  if (nowP >= nextWhisperAt) {
+    sndWhisper(0.045);
+    if (Math.random() < 0.4) showWhisper(pick(['…don\'t…', '…turn…', '…behind…', '…sshh…']));
+    nextWhisperAt = nowP + rand(9, 16);
+  }
+  if (performance.now() > whisperHideAt) whisperTxtEl.classList.remove('show');
+}
+
+/* ============================== fx overlay ============================== */
+const fx = [];
+function spawnSparks(sx, sy) {
+  for (let i = 0; i < 16; i++) {
+    const a = rand(0, Math.PI * 2), sp = rand(30, 130);
+    fx.push({ type: 'spark', x: sx, y: sy, vx: Math.cos(a) * sp, vy: Math.sin(a) * sp - 50,
+      life: 0, max: rand(0.4, 0.8), size: rand(2, 4.5) });
+  }
+}
+function spawnRipple(sx, sy) { fx.push({ type: 'ring', x: sx, y: sy, life: 0, max: 0.3 }); }
+function updateFx(dt) {
+  for (let i = fx.length - 1; i >= 0; i--) {
+    const p = fx[i];
+    p.life += dt;
+    if (p.life >= p.max) { fx.splice(i, 1); continue; }
+    if (p.type === 'spark') { p.x += p.vx * dt; p.y += p.vy * dt; p.vy -= 40 * dt; }
+  }
+}
+let flickerVal = 1, flickerDipUntil = 0;
+function drawFx(dt, t) {
+  fctx.clearRect(0, 0, W, H);
+  for (const p of fx) {
+    const a = clamp(1 - p.life / p.max, 0, 1);
+    if (p.type === 'spark') {
+      fctx.save();
+      fctx.globalAlpha = a;
+      fctx.fillStyle = '#a5fff0';
+      fctx.beginPath(); fctx.arc(p.x, p.y, p.size, 0, Math.PI * 2); fctx.fill();
+      fctx.restore();
+    } else if (p.type === 'ring') {
+      fctx.save();
+      fctx.globalAlpha = a * 0.5;
+      fctx.strokeStyle = '#cfd4e8'; fctx.lineWidth = 2;
+      fctx.beginPath();
+      fctx.ellipse(p.x, p.y, 8 + p.life * 70, (8 + p.life * 70) * 0.5, 0, 0, Math.PI * 2);
+      fctx.stroke();
+      fctx.restore();
+    }
+  }
+  fctx.globalAlpha = 1;
+  /* flashlight flicker: mostly steady, occasional sick dips */
+  const nowP = t / 1000;
+  if (nowP > flickerDipUntil && Math.random() < dt * 0.55) {
+    flickerDipUntil = nowP + rand(0.05, 0.13);
+    flickerVal = rand(0.5, 0.78);
+  }
+  const fTgt = nowP < flickerDipUntil ? flickerVal : 1;
+  flashFlicker = lerp(flashFlicker, fTgt, 0.55);
+  if (spotLight) spotLight.intensity = 2.6 * flashFlicker;
+  /* THE VIGNETTE: bright flashlight pool at center, room dies to black at the edges */
+  const cx = W / 2, cy = H * 0.46;
+  const r0 = Math.min(W, H) * 0.27 * (0.97 + flashFlicker * 0.05);
+  const r1 = Math.max(W, H) * 0.74;
+  const vg = fctx.createRadialGradient(cx, cy, r0, cx, cy, r1);
+  vg.addColorStop(0, 'rgba(0,0,0,0)');
+  vg.addColorStop(0.55, 'rgba(0,0,0,' + (0.30 + (1 - flashFlicker) * 0.25).toFixed(3) + ')');
+  vg.addColorStop(1, 'rgba(1,1,4,0.94)');
+  fctx.fillStyle = vg;
+  fctx.fillRect(0, 0, W, H);
+  /* scare flash */
+  if (redFlash > 0.003) {
+    fctx.fillStyle = 'rgba(140,10,5,' + (redFlash * 0.5).toFixed(3) + ')';
+    fctx.fillRect(0, 0, W, H);
+    redFlash *= Math.exp(-dt * 3.2);
+  }
+}
+
+/* ============================== hud / collect ============================== */
+function updateHUD() {
+  sigilCountEl.textContent = collected;
+  nervesEl.textContent = '❤️'.repeat(Math.max(0, nerves)) + '🖤'.repeat(Math.max(0, 3 - nerves));
+}
+const _pv = new THREE.Vector3();
+function sigilScreenPos(s) {
+  _pv.set(s.x, 0.55, s.z).project(camera);
+  return { x: (_pv.x * 0.5 + 0.5) * W, y: (_pv.y * -0.5 + 0.5) * H, behind: _pv.z > 1 };
+}
+function collectSigil(s) {
+  if (s.taken || phase !== 'playing' || scareT > 0) return;
+  s.taken = true;
+  s.collectT = 0;
+  collected++;
+  sndCollect();
+  const p = sigilScreenPos(s);
+  if (!p.behind) spawnSparks(p.x, p.y);
+  updateHUD();
+  if (collected >= SIGIL_TOTAL) winPendingAt = elapsed + 0.8;
+}
+
+/* ============================== tap handling ============================== */
+const raycaster = new THREE.Raycaster();
+const _ndc = new THREE.Vector2();
+glCanvas.addEventListener('pointerdown', (e) => {
+  initAudio(); resumeAudio();
+  if (phase !== 'playing' || scareT > 0) return;
+  _ndc.set((e.clientX / Math.max(1, W)) * 2 - 1, -((e.clientY / Math.max(1, H)) * 2 - 1));
+  raycaster.setFromCamera(_ndc, camera);
+  const discs = sigils.filter(s => !s.taken).map(s => s.disc);
+  const hits = raycaster.intersectObjects(discs, false);
+  if (hits.length) {
+    const s = hits[0].object.userData.sigilRef;
+    if (s) { collectSigil(s); return; }
+  }
+  spawnRipple(e.clientX, e.clientY);
+});
+
+/* ============================== game flow ============================== */
+function resetGame() {
+  collected = 0; nerves = 3; elapsed = 0;
+  scareT = 0; shakeT = 0; redFlash = 0;
+  scareCount = 0; vanishCount = 0; winPendingAt = 0;
+  nextBeatAt = 0; nextWhisperAt = 8;
+  for (const s of sigils) {
+    s.taken = false; s.collectT = -1;
+    s.grp.visible = true;
+    s.disc.scale.set(1, 1, 1);
+    s.disc.position.y = 0.55;
+    s.disc.rotation.z = 0;
+    s.halo.material.opacity = 0.55;
+    s.pool.material.opacity = 0.8;
+  }
+  stalker.present = false; stalker.frozen = false; stalker.pinned = false;
+  if (stalker.mesh) { stalker.mesh.visible = false; stalker.mesh.scale.set(1, 1, 1); }
+  stalker.spawnAt = 3.5;
+  stalker.lockoutUntil = 0;
+  fx.length = 0;
+  prevCamQ = null;
+  updateHUD();
+}
+function showEnd(won) {
+  document.getElementById('endEmoji').textContent = won ? '🌅' : '👁️';
+  document.getElementById('endTitle').textContent = won ? 'YOU ESCAPED' : 'IT FOUND YOU';
+  document.getElementById('endLine').innerHTML = won
+    ? 'All <b>5 sigils</b> — the room lets go of you.'
+    : 'Sigils <b>' + collected + '/5</b> — not enough. It keeps the room tonight.';
+  document.getElementById('endStats').textContent =
+    '⏱ ' + fmtTime(elapsed) + ' · ❤️ ×' + Math.max(0, nerves) + ' left · 👁️ ' + scareCount + ' scares';
+  document.getElementById('endFine').textContent = won
+    ? '(this time)'
+    : 'It is still in the room. It is patient.';
+  endEl.classList.remove('hidden');
+  endShownAt = performance.now();
+}
+function doWin() { phase = 'won'; vanishStalker(true); sndWin(); showEnd(true); }
+function doLose() { phase = 'lost'; sndLose(); showEnd(false); }
+
+function updateGame(dt, t) {
+  elapsed += dt;
+  if (winPendingAt && elapsed >= winPendingAt) { winPendingAt = 0; doWin(); return; }
+  updateStalker(dt, t);
+  /* the scare runs its course, then it is gone… for now */
+  if (scareT > 0) {
+    scareT -= dt;
+    if (scareT < 0.55) scareTxtEl.classList.remove('show');
+    if (scareT <= 0) {
+      scareT = 0;
+      if (stalker.mesh) stalker.mesh.visible = false;
+      stalker.lockoutUntil = elapsed + 2.5;
+      stalker.spawnAt = elapsed + rand(3.5, 5.5);
+      if (nerves <= 0) { doLose(); return; }
+    }
+  }
+  updateAudio(t);
+}
+
+/* ============================== resize ============================== */
+function resize() {
+  const dpr = Math.min(window.devicePixelRatio || 1, 2);
+  W = window.innerWidth; H = window.innerHeight;
+  for (const c of [roomCanvas, fxCanvas]) {
+    c.width = Math.round(W * dpr);
+    c.height = Math.round(H * dpr);
+  }
+  rctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  fctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  floorTop = Math.round(H * 0.34);
+  if (renderer && camera) {
+    renderer.setSize(W, H);
+    camera.aspect = W / Math.max(1, H);
+    camera.updateProjectionMatrix();
+  }
+}
+window.addEventListener('resize', resize);
+
+/* ============================== main loop ============================== */
+let lastT = 0, frameCount = 0;
+function frame(t) {
+  frameCount++;
+  requestAnimationFrame(frame);
+  const dt = Math.min(0.05, lastT ? (t - lastT) / 1000 : 0.016);
+  lastT = t;
+  updateParallax(t);
+  if (!camOK) { rctx.clearRect(0, 0, W, H); drawRoom(); }
+  if (camera) {
+    camera.position.set(CAM_BASE.x + parX * 0.45, CAM_BASE.y - parY * 0.22, CAM_BASE.z);
+    if (!applyMotionCamera()) {
+      camera.lookAt(CAM_LOOK.x - parX * 0.25, CAM_LOOK.y, CAM_LOOK.z);
+    }
+    if (shakeT > 0) {
+      const s = (shakeT / 0.55) * 0.055;
+      camera.position.x += rand(-s, s);
+      camera.position.y += rand(-s, s);
+      shakeT -= dt;
+    }
+  }
+  measureAngSpeed(dt);
+  updateLightMatch(t, dt);
+  if (phase === 'playing') updateGame(dt, t);
+  if (phase !== 'start') updateSigils(dt, t);
+  updateFx(dt);
+  if (renderer) renderer.render(scene, camera);
+  drawFx(dt, t);
+}
+
+/* ============================== start flow ============================== */
+let camTried = false;
+async function ensureCamera() {
+  if (camTried) return;
+  camTried = true;
+  try {
+    if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) throw new Error('no getUserMedia');
+    const stream = await Promise.race([
+      navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' }, audio: false }),
+      new Promise((_, rej) => setTimeout(() => rej(new Error('camera timeout')), 4500))
+    ]);
+    video.srcObject = stream;
+    await video.play().catch(() => {});
+    camOK = true;
+  } catch (e) { camOK = false; }
+  // NOTE: motion permission is NOT asked here — it is asked synchronously
+  // in the START tap handler (askMotionPermission), before any await.
+  video.classList.toggle('hidden', !camOK);
+  roomCanvas.classList.toggle('hidden', camOK);
+  camTagEl.textContent = camOK ? '📷 AR room' : '🏠 dim room';
+}
+function beginRound() {
+  MOTION.recal = true;
+  motionWatchdog();
+  resetGame();
+  startEl.classList.add('hidden');
+  endEl.classList.add('hidden');
+  hudEl.classList.remove('hidden');
+  phase = 'playing';
+}
+document.getElementById('startBtn').addEventListener('click', async () => {
+  askMotionPermission();   // FIRST, synchronously — iOS only honors it inside the tap
+  initAudio();
+  await ensureCamera();
+  beginRound();
+});
+document.getElementById('againBtn').addEventListener('click', () => {
+  initAudio();
+  beginRound();
+});
+
+/* ============================== boot + test hook ============================== */
+resize();
+initGL();
+buildFloor();
+buildSigils(makeRuneTexture(), makeGlowTexture());
+buildStalker();
+resize();
+updateHUD();
+requestAnimationFrame(frame);
+
+window.__dta = {
+  get phase() { return phase; },
+  get started() { return phase !== 'start'; },
+  get camOK() { return camOK; },
+  get collected() { return collected; },
+  get nerves() { return nerves; },
+  get scares() { return scareCount; },
+  get vanishes() { return vanishCount; },
+  get whispers() { return whisperCount; },
+  get angSpeed() { return Math.round(angSpeedSmooth); },
+  get scareActive() { return scareT > 0; },
+  get scarePeak() { return SCARE_PEAK; },
+  dbg: () => ({ elapsed: +elapsed.toFixed(2), winPendingAt: +winPendingAt.toFixed(2), scareT: +scareT.toFixed(2), frames: frameCount }),
+  stalker: () => ({
+    present: stalker.present, frozen: stalker.frozen, pinned: stalker.pinned,
+    dist: stalker.present ? +stalker.dist.toFixed(2) : null,
+    angleDeg: stalker.present ? Math.round(stalker.angleDeg || 999) : null,
+    camRelBearing: stalker.present ? Math.round(wrapDeg(bearingOf(stalker.x - camera.position.x, stalker.z - camera.position.z) - dirBearing(viewDirCam(_vDir)))) : null,
+    relBearing: stalker.present ? Math.round(wrapDeg(bearingOf(stalker.x - (camera ? camera.position.x : 0), stalker.z - (camera ? camera.position.z : 0)) - dirBearing(viewDirTarget(_vDir)))) : null
+  }),
+  sigils: () => sigils.map(s => ({ taken: s.taken, angle: s.angle })),
+  sigilScreen: (i) => { const s = sigils[i]; if (!s || s.taken) return null; return sigilScreenPos(s); },
+  sigilRelBearing: (i) => {
+    const s = sigils[i]; if (!s) return null;
+    const b = bearingOf(s.x - camera.position.x, s.z - camera.position.z);
+    return Math.round(wrapDeg(b - dirBearing(viewDirTarget(_vDir))));
+  },
+  sigilCamRelBearing: (i) => {
+    const s = sigils[i]; if (!s) return null;
+    const b = bearingOf(s.x - camera.position.x, s.z - camera.position.z);
+    return Math.round(wrapDeg(b - dirBearing(viewDirCam(_vDir))));
+  },
+  viewBearing: () => Math.round(dirBearing(viewDirTarget(_vDir))),
+  forceStalker: (offsetDeg) => spawnStalker(offsetDeg != null ? offsetDeg : 180),
+  pinStalker: (b) => { stalker.pinned = !!b; },
+  setStalkerEnabled: (b) => { stalker.enabled = !!b; if (!b) vanishStalker(true); },
+  scareNow: () => triggerScare(),
+  debugCollect: (i) => { const s = sigils[i]; if (s) collectSigil(s); },
+  motion: () => ({ ok: MOTION.ok, ever: MOTION.ever, perm: MOTION.perm, needPerm: MOTION.needPerm, hasRef: !!MOTION.refQ }),
+  start: () => document.getElementById('startBtn').click(),
+  again: () => document.getElementById('againBtn').click()
+};
+</script>
+<script id="moth-game-guard-js">
+(function(){
+  var lastEnd=0;
+  function onUi(t){return t&&t.closest&&t.closest('button,a,input,select,textarea,[data-scroll]');}
+  document.addEventListener('touchend',function(e){
+    var now=Date.now();
+    if(!onUi(e.target)&&now-lastEnd<=300&&e.cancelable)e.preventDefault();
+    lastEnd=now;
+  },{passive:false});
+  ['gesturestart','gesturechange','gestureend'].forEach(function(n){
+    document.addEventListener(n,function(e){e.preventDefault();});
+  });
+  document.addEventListener('dblclick',function(e){e.preventDefault();},{passive:false});
+  document.addEventListener('contextmenu',function(e){e.preventDefault();});
+  document.addEventListener('touchmove',function(e){
+    if(e.target&&e.target.closest&&e.target.closest('[data-scroll]'))return;
+    if(e.cancelable)e.preventDefault();
+  },{passive:false});
+})();
+</script>
+</body>
+</html>
