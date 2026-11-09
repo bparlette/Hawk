@@ -2466,6 +2466,14 @@
    "thumb": "thumbs/bonk-yard.png",
    "title": "LINK — Hand-Built AR",
    "url": "../games/link-blender/"
+  },
+  {
+   "category": "Viral Demos",
+   "desc": "Bullet-heaven survivor built from the best-1000 pixel sprite set — survive the storm, level up with real sprite weapons.",
+   "id": "sprite-storm",
+   "thumb": "thumbs/bonk-yard.png",
+   "title": "SPRITE STORM!",
+   "url": "../games/sprite-storm/"
   }
  ]
 }
