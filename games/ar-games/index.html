@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+<title>AR GAMES — play in your room</title>
+<style>
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body { background:#0b0e1a; color:#eef1ff; font-family:-apple-system, "Segoe UI", Roboto, sans-serif; padding:18px 14px 40px; }
+  h1 { font-size:30px; text-align:center; letter-spacing:1px; }
+  .sub { text-align:center; color:#9fb4ff; margin:6px 0 20px; font-size:15px; }
+  h2 { font-size:17px; color:#ffd76a; margin:22px 2px 10px; letter-spacing:.5px; }
+  .card { display:flex; align-items:center; gap:12px; background:#171c33; border:1px solid #2b3560; border-radius:16px; padding:14px; margin-bottom:10px; }
+  .ico { font-size:38px; width:52px; text-align:center; flex:none; }
+  .txt { flex:1; min-width:0; }
+  .name { font-size:18px; font-weight:800; }
+  .desc { font-size:13.5px; color:#b9c4ea; margin-top:2px; line-height:1.35; }
+  a.play { flex:none; background:#ffd23e; color:#231a00; font-weight:900; font-size:16px; text-decoration:none; padding:13px 16px; border-radius:12px; }
+  a.play:active { transform:scale(.96); }
+  .soon { opacity:.55; }
+  .soon .play { background:#3a4270; color:#aab; pointer-events:none; }
+  .foot { text-align:center; color:#7d8cc9; font-size:12.5px; margin-top:24px; line-height:1.5; }
+</style>
+<style id="moth-game-guard">
+html,body{touch-action:none;overscroll-behavior:none;-webkit-touch-callout:none;-webkit-user-select:none;user-select:none;-webkit-tap-highlight-color:transparent}
+canvas{touch-action:none}
+</style>
+</head>
+<body>
+<h1>🕶️ AR GAMES</h1>
+<p class="sub">Games that play <b>in your room</b> — through your camera.<br>Best on iPhone/iPad, iOS 13+. Tap START, allow motion, look around.</p>
+
+<h2>📷 CAMERA AR — YOU PLAY IN YOUR ROOM</h2>
+
+<div class="card"><div class="ico">🐾</div><div class="txt"><div class="name">Pokémon Room</div><div class="desc">Fill your room with voxel Pokémon — tap SPAWN or flip AUTO and watch it fill.</div></div><a class="play" href="../pokemon-room/">▶ PLAY</a></div>
+
+<div class="card"><div class="ico">🔨</div><div class="txt"><div class="name">BONK YARD!</div><div class="desc">Whack-a-mole in your room — critters pop out of the floor, tap to bonk, chain combos.</div></div><a class="play" href="../bonk-yard/">▶ PLAY</a></div>
+
+<div class="card"><div class="ico">🐱</div><div class="txt"><div class="name">Living Room Pets</div><div class="desc">Cats, a dog and a bunny wander your living room — toss treats, tap for hearts.</div></div><a class="play" href="../living-room-pets/">▶ PLAY</a></div>
+
+<div class="card"><div class="ico">🏎️</div><div class="txt"><div class="name">DRAW &amp; DRIVE!</div><div class="desc">Draw a race track on your floor around the coffee table — hills and all — then race it.</div></div><a class="play" href="../draw-and-drive/">▶ PLAY</a></div>
+
+<h2>👀 QUICK LOOK SCENES — TAP, PLACE, WATCH</h2>
+
+<div class="card"><div class="ico">🪂</div><div class="txt"><div class="name">Quick Look: Zelda</div><div class="desc">Link paraglides in a circle over your floor — or flies right at you and lands at your feet.</div></div><a class="play" href="../quicklook-zelda/">▶ VIEW</a></div>
+
+<div class="card"><div class="ico">👾</div><div class="txt"><div class="name">Quick Look: Pokémon</div><div class="desc">Gengar, Pikachu and Charmander, a metre tall in your room.</div></div><a class="play" href="../quicklook-pokemon/">▶ VIEW</a></div>
+
+<div class="card"><div class="ico">🥷</div><div class="txt"><div class="name">Quick Look: Miso</div><div class="desc">Miso the ninja cat stands in your room at real scale.</div></div><a class="play" href="../quicklook-pet/">▶ VIEW</a></div>
+
+<p class="foot">More AR games are being built right now — Snack Hole AR, Zombie Kill AR, a horror jump-scare and 10 more.<br>They will appear on this page as they land.</p>
+<script id="moth-game-guard-js">
+(function(){
+  var lastEnd=0;
+  function onUi(t){return t&&t.closest&&t.closest('button,a,input,select,textarea,[data-scroll]');}
+  document.addEventListener('touchend',function(e){
+    var now=Date.now();
+    if(!onUi(e.target)&&now-lastEnd<=300&&e.cancelable)e.preventDefault();
+    lastEnd=now;
+  },{passive:false});
+  ['gesturestart','gesturechange','gestureend'].forEach(function(n){
+    document.addEventListener(n,function(e){e.preventDefault();});
+  });
+  document.addEventListener('dblclick',function(e){e.preventDefault();},{passive:false});
+  document.addEventListener('contextmenu',function(e){e.preventDefault();});
+  document.addEventListener('touchmove',function(e){
+    if(e.target&&e.target.closest&&e.target.closest('[data-scroll]'))return;
+    if(e.cancelable)e.preventDefault();
+  },{passive:false});
+})();
+</script>
+</body>
+</html>
