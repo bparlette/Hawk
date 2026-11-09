@@ -1,0 +1,301 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+  <title>Hana — See Her in Your Room</title>
+  <meta name="description" content="One-tap Hana look-arounds: walking, giant hand-made, and photo-mesh Hannah.">
+
+  <!-- Warm the model files so a tap opens the world as fast as the phone allows. -->
+  <link rel="prefetch" href="../hana-chan/models/hana.glb">
+  <link rel="prefetch" href="../hana-chan/hana-walk.usdz">
+  <link rel="prefetch" href="../hana-chan-giant/models/hana-giant.glb">
+  <link rel="prefetch" href="../hana-chan-giant/hana-giant.usdz">
+  <link rel="prefetch" href="../hana-mesh/hana-hy3d.usdz">
+
+  <style>
+    :root {
+      color-scheme: light;
+      --ink: #2d1720;
+      --muted: #765965;
+      --pink: #f2557f;
+      --pink-dark: #d93663;
+      --cream: #fff7f3;
+      --card: #ffffff;
+      --line: #f2d7de;
+      --gold: #ffb63d;
+    }
+    * { box-sizing: border-box; }
+    html { background: var(--cream); }
+    body {
+      margin: 0;
+      min-height: 100%;
+      overflow-x: hidden;
+      background:
+        radial-gradient(circle at 8% -4%, rgba(255, 182, 61, .28), transparent 17rem),
+        radial-gradient(circle at 100% 12%, rgba(242, 85, 127, .16), transparent 19rem),
+        var(--cream);
+      color: var(--ink);
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      -webkit-tap-highlight-color: transparent;
+    }
+    .page {
+      width: min(100%, 680px);
+      margin: 0 auto;
+      padding: max(22px, env(safe-area-inset-top)) 16px max(34px, env(safe-area-inset-bottom));
+    }
+    header { padding: 10px 4px 20px; text-align: center; }
+    .eyebrow {
+      margin: 0 0 7px;
+      color: var(--pink-dark);
+      font-size: .78rem;
+      font-weight: 900;
+      letter-spacing: .16em;
+      text-transform: uppercase;
+    }
+    h1 {
+      margin: 0;
+      font-size: clamp(3.2rem, 17vw, 6.4rem);
+      line-height: .88;
+      letter-spacing: -.055em;
+    }
+    .sub {
+      max-width: 30rem;
+      margin: 13px auto 0;
+      color: var(--muted);
+      font-size: 1.08rem;
+      line-height: 1.35;
+      font-weight: 650;
+    }
+    .cards { display: grid; gap: 22px; }
+    .card {
+      overflow: hidden;
+      border: 2px solid rgba(242, 85, 127, .16);
+      border-radius: 32px;
+      background: var(--card);
+      box-shadow: 0 18px 46px rgba(117, 42, 66, .13);
+    }
+    .photo { position: relative; overflow: hidden; background: #ddd; }
+    .photo img {
+      display: block;
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+    .photo-walking { aspect-ratio: 4 / 3; }
+    .photo-walking img { object-position: 50% 59%; }
+    .photo-giant, .photo-mesh { aspect-ratio: 1 / 1; }
+    .photo-giant img, .photo-mesh img { object-position: 50% 42%; }
+    .badge {
+      position: absolute;
+      top: 14px;
+      left: 14px;
+      padding: 8px 11px;
+      border-radius: 999px;
+      background: rgba(255,255,255,.92);
+      color: var(--pink-dark);
+      box-shadow: 0 6px 20px rgba(80, 24, 42, .16);
+      font-size: .76rem;
+      font-weight: 950;
+      letter-spacing: .09em;
+      text-transform: uppercase;
+    }
+    .card-body { padding: 20px 20px 22px; }
+    h2 {
+      margin: 0;
+      font-size: clamp(2rem, 9vw, 3.1rem);
+      line-height: .98;
+      letter-spacing: -.04em;
+    }
+    .detail {
+      margin: 9px 0 18px;
+      color: var(--muted);
+      font-size: 1.04rem;
+      line-height: 1.35;
+      font-weight: 650;
+    }
+    .primary, .quick {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 100%;
+      min-height: 64px;
+      border-radius: 999px;
+      text-decoration: none;
+      font-weight: 950;
+      letter-spacing: .015em;
+      -webkit-tap-highlight-color: transparent;
+    }
+    .primary {
+      background: linear-gradient(180deg, #ff6b91, var(--pink-dark));
+      color: #fff;
+      box-shadow: 0 12px 26px rgba(217, 54, 99, .27);
+      font-size: 1.16rem;
+    }
+    .primary:active { transform: scale(.985); }
+    .quick {
+      gap: 11px;
+      margin-top: 11px;
+      padding: 8px 16px 8px 9px;
+      border: 2px solid var(--line);
+      background: #fff8f6;
+      color: var(--ink);
+      font-size: 1rem;
+    }
+    .quick img {
+      width: 46px;
+      height: 46px;
+      flex: 0 0 auto;
+      border-radius: 50%;
+      object-fit: cover;
+    }
+    .quick .label { flex: 1; text-align: left; }
+    .quick .go { color: var(--pink-dark); font-size: 1.55rem; line-height: 1; }
+    .coming {
+      padding: 26px 22px;
+      border-style: dashed;
+      background: rgba(255,255,255,.68);
+      box-shadow: none;
+      text-align: center;
+    }
+    .coming .soon {
+      display: inline-block;
+      margin-bottom: 10px;
+      padding: 7px 10px;
+      border-radius: 999px;
+      background: #ffe4eb;
+      color: var(--pink-dark);
+      font-size: .74rem;
+      font-weight: 950;
+      letter-spacing: .12em;
+      text-transform: uppercase;
+    }
+    .coming h2 { font-size: clamp(1.75rem, 8vw, 2.55rem); }
+    .coming p { margin: 9px auto 0; max-width: 29rem; }
+    footer {
+      padding: 22px 8px 0;
+      text-align: center;
+      color: var(--muted);
+      font-size: .92rem;
+      line-height: 1.4;
+      font-weight: 600;
+    }
+    @media (min-width: 560px) {
+      .page { padding-left: 24px; padding-right: 24px; }
+      .card-body { padding: 24px 26px 27px; }
+      .photo-walking { aspect-ratio: 16 / 9.5; }
+      .photo-giant, .photo-mesh { aspect-ratio: 1 / 1; }
+    }
+  </style>
+
+  <!-- List-page variant of the moth game guard: zoom/double-tap gestures are blocked,
+       while [data-scroll] keeps ordinary vertical page scrolling alive. -->
+  <style id="moth-game-guard">
+    html,body{touch-action:pan-y;overscroll-behavior-y:none;-webkit-touch-callout:none;-webkit-user-select:none;user-select:none;-webkit-tap-highlight-color:transparent}
+    [data-scroll]{touch-action:pan-y}
+    canvas{touch-action:none}
+  </style>
+</head>
+<body>
+  <main class="page" data-scroll>
+    <header>
+      <p class="eyebrow">One tap · She’s in your room</p>
+      <h1>HANA</h1>
+      <p class="sub">Pick a Hana. Tap once. Walk around her — or turn her around.</p>
+    </header>
+
+    <div class="cards">
+      <section class="card" aria-labelledby="walking-title">
+        <div class="photo photo-walking">
+          <img src="img/walking-hana.jpg" alt="Walking Hana in a room" fetchpriority="high">
+          <span class="badge">Live · Browser AR</span>
+        </div>
+        <div class="card-body">
+          <h2 id="walking-title">🌸 Walking Hana</h2>
+          <p class="detail">0.9 m tall. She walks around your room.</p>
+          <a class="primary" href="../hana-chan/">SEE HER NOW</a>
+          <a class="quick" rel="ar" href="../hana-chan/hana-walk.usdz" aria-label="Open Walking Hana in Quick Look">
+            <img src="img/walking-hana.jpg" alt="">
+            <span class="label">Quick Look</span>
+            <span class="go" aria-hidden="true">›</span>
+          </a>
+        </div>
+      </section>
+
+      <section class="card" aria-labelledby="giant-title">
+        <div class="photo photo-giant">
+          <img src="img/giant-hana.jpg" alt="Giant hand-made Hana standing" fetchpriority="high">
+          <span class="badge">Live · 4.5 m</span>
+        </div>
+        <div class="card-body">
+          <h2 id="giant-title">🐯 Giant Hana</h2>
+          <p class="detail">Hand-made. Standing still, 4.5 m tall.</p>
+          <a class="primary" href="../hana-chan-giant/">SEE HER NOW</a>
+          <a class="quick" rel="ar" href="../hana-chan-giant/hana-giant.usdz" aria-label="Open Giant Hana in Quick Look">
+            <img src="img/giant-hana.jpg" alt="">
+            <span class="label">Quick Look</span>
+            <span class="go" aria-hidden="true">›</span>
+          </a>
+        </div>
+      </section>
+
+      <section class="card" aria-labelledby="mesh-title">
+        <div class="photo photo-mesh">
+          <img src="img/photo-mesh-hannah.jpg" alt="Photo-mesh Hannah seated" fetchpriority="high">
+          <span class="badge">Photo mesh · HY3D</span>
+        </div>
+        <div class="card-body">
+          <h2 id="mesh-title">📸 New Mesh Hannah</h2>
+          <p class="detail">Made from your photo. Seated photo-mesh version.</p>
+          <a class="primary" href="../hana-mesh/">SEE HER NOW</a>
+          <a class="quick" rel="ar" href="../hana-mesh/hana-hy3d.usdz" aria-label="Open New Mesh Hannah in Quick Look">
+            <img src="img/photo-mesh-hannah.jpg" alt="">
+            <span class="label">Quick Look</span>
+            <span class="go" aria-hidden="true">›</span>
+          </a>
+        </div>
+      </section>
+
+      <section class="card" aria-labelledby="standing-title">
+        <div class="photo photo-mesh">
+          <img src="img/standing-hana.jpg" alt="Standing photo-mesh Hannah" fetchpriority="high">
+          <span class="badge">Live · 4.5 m</span>
+        </div>
+        <div class="card-body">
+          <h2 id="standing-title">✨ Standing Photo-Mesh Hannah</h2>
+          <p class="detail">The photo-mesh Hannah, stood up. Walk around her, or rotate her.</p>
+          <a class="primary" href="../hana-stand/">SEE HER NOW</a>
+          <a class="quick" rel="ar" href="../hana-stand/hana-hy3d-stand.usdz" aria-label="Open Standing Photo-Mesh Hannah in Quick Look">
+            <img src="img/standing-hana.jpg" alt="">
+            <span class="label">Quick Look</span>
+            <span class="go" aria-hidden="true">›</span>
+          </a>
+        </div>
+      </section>
+    </div>
+
+    <footer>For the giant: stand back so all 4.5 m fits in view.</footer>
+  </main>
+
+  <script id="moth-game-guard-js">
+  (function(){
+    var lastEnd=0;
+    function onUi(t){return t&&t.closest&&t.closest('button,a,input,select,textarea,[data-scroll]');}
+    document.addEventListener('touchend',function(e){
+      var now=Date.now();
+      if(!onUi(e.target)&&now-lastEnd<=300&&e.cancelable)e.preventDefault();
+      lastEnd=now;
+    },{passive:false});
+    ['gesturestart','gesturechange','gestureend'].forEach(function(n){
+      document.addEventListener(n,function(e){e.preventDefault();});
+    });
+    document.addEventListener('dblclick',function(e){e.preventDefault();},{passive:false});
+    document.addEventListener('contextmenu',function(e){e.preventDefault();});
+    document.addEventListener('touchmove',function(e){
+      if(e.target&&e.target.closest&&e.target.closest('[data-scroll]'))return;
+      if(e.cancelable)e.preventDefault();
+    },{passive:false});
+  })();
+  </script>
+</body>
+</html>
