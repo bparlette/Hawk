@@ -2230,6 +2230,18 @@
    "path": "../games/karen-survivors-ar/index.html",
    "thumb": "thumbs/bonk-yard.png",
    "title": "KAREN SURVIVORS AR"
+  },
+  {
+   "autostart": [],
+   "category": "AR",
+   "id": "hana-chan",
+   "keys": {},
+   "labels": {},
+   "note": "Hana-chan in your room, 3 feet tall (0.90 m): a hand-built rigged model with real walk/wave/hop animation. She toddles around your floor on her own, tap the floor and she walks there, tap her and she hops with hearts and a giggle.",
+   "orientation": "any",
+   "path": "../games/hana-chan/index.html",
+   "thumb": "thumbs/pokemon-room.png",
+   "title": "HANA-CHAN AR"
   }
  ]
 }
