@@ -2182,6 +2182,18 @@
    "path": "../games/ar-games/index.html",
    "thumb": "thumbs/pokemon-room.png",
    "title": "🕶️ ALL AR GAMES"
+  },
+  {
+   "autostart": [],
+   "category": "AR",
+   "id": "deep-rock-dig-ar",
+   "keys": {},
+   "labels": {},
+   "note": "Web AR digging: a glowing pit opens in your real floor - tap to dig, gold nuggets pop, bat-mite swarms boil up every 10 m to blast. Reach 50 m for the MOTHERLODE. The shaft renders down INTO the floor with a depth occluder.",
+   "orientation": "any",
+   "path": "../games/deep-rock-dig-ar/index.html",
+   "thumb": "thumbs/bonk-yard.png",
+   "title": "DEEP ROCK DIG AR"
   }
  ]
 }
