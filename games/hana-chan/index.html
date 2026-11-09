@@ -1,0 +1,835 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+<title>Hana-chan AR — a 3-foot tiger cub in your room</title>
+<style>
+  html, body { height: 100%; }
+  body {
+    margin: 0;
+    overflow: hidden;
+    background: #17100d;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    color: #fff;
+    -webkit-user-select: none;
+    user-select: none;
+  }
+  #cam, #room, #gl, #fx {
+    position: fixed; inset: 0;
+    width: 100%; height: 100%;
+    display: block;
+  }
+  #cam { object-fit: cover; background: #17100d; z-index: 0; }
+  #room { z-index: 0; }
+  #gl { z-index: 1; }
+  #fx { z-index: 2; pointer-events: none; }
+  #hud {
+    position: fixed;
+    top: calc(env(safe-area-inset-top, 0px) + 10px);
+    left: 10px; right: 10px;
+    display: flex; gap: 8px; align-items: center;
+    z-index: 3;
+    pointer-events: none;
+  }
+  .chip {
+    background: rgba(20, 12, 8, 0.55);
+    border: 1px solid rgba(255,255,255,0.22);
+    border-radius: 999px;
+    padding: 6px 12px;
+    font-size: 15px; font-weight: 700;
+    letter-spacing: 0.02em;
+    backdrop-filter: blur(3px);
+  }
+  .chip small { font-weight: 600; opacity: 0.75; }
+  #camTag { margin-left: auto; font-size: 12px; font-weight: 700; opacity: 0.9; }
+  #hint {
+    position: fixed;
+    left: 50%; transform: translateX(-50%);
+    bottom: calc(env(safe-area-inset-bottom, 0px) + 26px);
+    z-index: 3;
+    background: rgba(20, 12, 8, 0.55);
+    border: 1px solid rgba(255,255,255,0.18);
+    border-radius: 999px;
+    padding: 7px 14px;
+    font-size: 13.5px; font-weight: 600;
+    white-space: nowrap;
+    pointer-events: none;
+    opacity: 0;
+    transition: opacity 0.6s ease;
+  }
+  #hint.show { opacity: 1; }
+  #start {
+    position: fixed; inset: 0;
+    z-index: 5;
+    display: flex; align-items: center; justify-content: center;
+    background:
+      radial-gradient(120% 90% at 50% 0%, rgba(255, 183, 213, 0.40), rgba(0,0,0,0) 55%),
+      linear-gradient(180deg, rgba(46, 20, 34, 0.88), rgba(18, 8, 14, 0.94));
+    padding: 20px;
+    box-sizing: border-box;
+  }
+  #startCard { text-align: center; max-width: 420px; }
+  #startCard .big { font-size: 54px; line-height: 1.1; }
+  #startCard h1 {
+    margin: 6px 0 4px;
+    font-size: 34px; font-weight: 900; letter-spacing: 0.01em;
+    text-shadow: 0 3px 0 rgba(0,0,0,0.35);
+  }
+  #startCard p { margin: 6px 0; font-size: 16px; line-height: 1.45; opacity: 0.92; }
+  #startBtn {
+    font: inherit;
+    margin-top: 16px;
+    font-size: 20px; font-weight: 900;
+    color: #4a1030;
+    background: linear-gradient(180deg, #ffc2d9, #ff8fb8);
+    border: 2px solid rgba(122, 30, 74, 0.55);
+    border-radius: 999px;
+    padding: 15px 34px;
+    box-shadow: 0 8px 22px rgba(0,0,0,0.45);
+    cursor: pointer;
+  }
+  #startBtn:active { transform: scale(0.96); }
+  #startCard .fine { font-size: 13px; opacity: 0.65; margin-top: 14px; }
+  #motionPill {
+    position: fixed;
+    left: 50%; transform: translateX(-50%);
+    top: calc(env(safe-area-inset-top, 0px) + 58px);
+    z-index: 6;
+    font: inherit; font-size: 15px; font-weight: 800;
+    color: #fff;
+    background: rgba(24, 16, 8, 0.85);
+    border: 2px solid rgba(255, 215, 106, 0.9);
+    border-radius: 999px;
+    padding: 12px 18px;
+    box-shadow: 0 8px 22px rgba(0,0,0,0.5);
+    cursor: pointer;
+    white-space: nowrap;
+  }
+  #motionPill:active { transform: translateX(-50%) scale(0.96); }
+  .hidden { display: none !important; }
+</style>
+<script type="importmap">
+{ "imports": {
+    "three": "./vendor/three.module.js",
+    "three/addons/": "./vendor/addons/"
+} }
+</script>
+<style id="moth-game-guard">
+html,body{touch-action:none;overscroll-behavior:none;-webkit-touch-callout:none;-webkit-user-select:none;user-select:none;-webkit-tap-highlight-color:transparent}
+canvas{touch-action:none}
+</style>
+</head>
+<body>
+<video id="cam" autoplay playsinline muted></video>
+<canvas id="room"></canvas>
+<canvas id="gl"></canvas>
+<canvas id="fx"></canvas>
+
+<div id="hud" class="hidden">
+  <div class="chip" id="titleChip">🌸 <b>Hana-chan</b> <small>3 ft tall!</small></div>
+  <div class="chip" id="heartChip">❤️ <b><span id="heartCount">0</span></b></div>
+  <div class="chip" id="camTag">📷 AR room</div>
+</div>
+
+<div id="hint">Tap the floor — she'll toddle over · Tap Hana-chan to say hi</div>
+<button id="motionPill" class="hidden" type="button">📱 Enable motion look-around</button>
+
+<div id="start">
+  <div id="startCard">
+    <div class="big">🌸🐯</div>
+    <h1>Hana-chan AR</h1>
+    <p>Hana-chan moves into <b>your</b> room — all <b>3 feet</b> of her. She toddles around on her own, waves, and hops when she's happy.</p>
+    <p>Tap the floor and she'll walk there. Tap <b>her</b> to say hi.</p>
+    <button id="startBtn" type="button">▶ START</button>
+    <p class="fine">Needs camera + motion for the full AR feel.<br>No camera? No problem — she gets a cozy room instead.</p>
+  </div>
+</div>
+
+<script type="module">
+import * as THREE from 'three';
+import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
+
+'use strict';
+/* ============================== helpers ============================== */
+const clamp = (v, a, b) => v < a ? a : (v > b ? b : v);
+const lerp = (a, b, t) => a + (b - a) * t;
+const rand = (a, b) => a + Math.random() * (b - a);
+function angLerp(a, b, t) {
+  let d = (b - a) % (Math.PI * 2);
+  if (d > Math.PI) d -= Math.PI * 2;
+  if (d < -Math.PI) d += Math.PI * 2;
+  return a + d * t;
+}
+function angDiff(a, b) {
+  let d = (b - a) % (Math.PI * 2);
+  if (d > Math.PI) d -= Math.PI * 2;
+  if (d < -Math.PI) d += Math.PI * 2;
+  return d;
+}
+
+/* ============================== audio ============================== */
+let AC = null;
+function initAudio() {
+  try {
+    if ('audioSession' in navigator) { try { navigator.audioSession.type = 'playback'; } catch (e) {} }
+    if (!AC) {
+      const Ctor = window.AudioContext || window.webkitAudioContext;
+      if (Ctor) AC = new Ctor();
+    }
+    if (AC) {
+      if (AC.state === 'suspended') AC.resume();
+      const buf = AC.createBuffer(1, 1, 22050);
+      const src = AC.createBufferSource();
+      src.buffer = buf; src.connect(AC.destination); src.start(0);
+    }
+  } catch (e) { /* audio is optional */ }
+}
+function resumeAudio() { try { if (AC && AC.state === 'suspended') AC.resume(); } catch (e) {} }
+document.addEventListener('pointerdown', resumeAudio, true);
+document.addEventListener('touchend', resumeAudio, true);
+document.addEventListener('visibilitychange', () => { if (!document.hidden) resumeAudio(); });
+
+function tone(f0, f1, dur, type, vol, delay) {
+  if (!AC) return;
+  try {
+    const t0 = AC.currentTime + (delay || 0);
+    const o = AC.createOscillator(), g = AC.createGain();
+    o.type = type || 'sine';
+    o.frequency.setValueAtTime(f0, t0);
+    o.frequency.exponentialRampToValueAtTime(Math.max(30, f1), t0 + dur);
+    g.gain.setValueAtTime(0.0001, t0);
+    g.gain.exponentialRampToValueAtTime(vol || 0.15, t0 + 0.015);
+    g.gain.exponentialRampToValueAtTime(0.0001, t0 + dur);
+    o.connect(g); g.connect(AC.destination);
+    o.start(t0); o.stop(t0 + dur + 0.05);
+  } catch (e) {}
+}
+/* soft synth giggle-chime: two rising chirps + a sparkle (all synthesized) */
+function sndGiggle() {
+  tone(1175, 1568, 0.09, 'triangle', 0.12, 0);
+  tone(1319, 1760, 0.11, 'triangle', 0.12, 0.10);
+  tone(1568, 2093, 0.14, 'sine', 0.08, 0.21);
+}
+function sndStep() { tone(340, 240, 0.05, 'sine', 0.03); }
+function sndTap() { tone(660, 880, 0.07, 'triangle', 0.08); }
+function sndWave() {
+  tone(784, 784, 0.09, 'triangle', 0.07, 0);
+  tone(988, 988, 0.09, 'triangle', 0.07, 0.11);
+  tone(1175, 1175, 0.13, 'triangle', 0.07, 0.22);
+}
+
+/* ============================== dom / state ============================== */
+const video = document.getElementById('cam');
+const roomCanvas = document.getElementById('room');
+const rctx = roomCanvas.getContext('2d');
+const glCanvas = document.getElementById('gl');
+const fxCanvas = document.getElementById('fx');
+const fctx = fxCanvas.getContext('2d');
+const hudEl = document.getElementById('hud');
+const heartCountEl = document.getElementById('heartCount');
+const camTagEl = document.getElementById('camTag');
+const hintEl = document.getElementById('hint');
+const startEl = document.getElementById('start');
+
+let W = 0, H = 0, floorTop = 0;
+let started = false;
+let camOK = false;
+let hearts = [];
+let heartTotal = 0;
+
+/* ================= AR motion: permission-in-gesture + 3DOF look-around ================= */
+let baseCamQ = null;
+let hemiLight = null, dirLight = null;
+const MOTION = {
+  needPerm: (typeof DeviceOrientationEvent !== 'undefined' &&
+             typeof DeviceOrientationEvent.requestPermission === 'function'),
+  perm: 'unknown',
+  ok: false,
+  ever: false,
+  lastAt: -1e9,
+  recal: true,
+  refQ: null,
+  devQ: null
+};
+function askMotionPermission() {
+  if (!MOTION.needPerm) { MOTION.perm = 'n/a'; return; }
+  try {
+    const p = DeviceOrientationEvent.requestPermission();
+    if (p && typeof p.then === 'function') {
+      p.then(r => {
+        MOTION.perm = (r === 'granted') ? 'granted' : 'denied';
+        if (MOTION.perm === 'granted') MOTION.recal = true;
+      }).catch(() => { MOTION.perm = 'error'; });
+    }
+  } catch (e) { MOTION.perm = 'error'; }
+}
+const motionPillEl = document.getElementById('motionPill');
+function showMotionPill() { if (motionPillEl) motionPillEl.classList.remove('hidden'); }
+function hideMotionPill() { if (motionPillEl) motionPillEl.classList.add('hidden'); }
+if (motionPillEl) motionPillEl.addEventListener('click', () => { askMotionPermission(); });
+function motionWatchdog() {
+  setTimeout(() => { if (MOTION.needPerm && !MOTION.ever) showMotionPill(); }, 1500);
+}
+window.addEventListener('orientationchange', () => { MOTION.recal = true; });
+
+const _zee = new THREE.Vector3(0, 0, 1);
+const _eul = new THREE.Euler();
+const _q0 = new THREE.Quaternion();
+const _q1 = new THREE.Quaternion(-Math.sqrt(0.5), 0, 0, Math.sqrt(0.5));
+function deviceQuat(out, alphaDeg, betaDeg, gammaDeg) {
+  const orient = (typeof window.orientation === 'number' ? window.orientation : 0) * Math.PI / 180;
+  _eul.set(THREE.MathUtils.degToRad(betaDeg), THREE.MathUtils.degToRad(alphaDeg),
+           THREE.MathUtils.degToRad(-gammaDeg), 'YXZ');
+  out.setFromEuler(_eul);
+  out.multiply(_q1);
+  out.multiply(_q0.setFromAxisAngle(_zee, -orient));
+  return out;
+}
+const _invRefQ = new THREE.Quaternion();
+const _targetQ = new THREE.Quaternion();
+function applyMotionCamera() {
+  if (!camera || !baseCamQ || !MOTION.refQ) return false;
+  if (performance.now() - MOTION.lastAt > 3000) { MOTION.ok = false; return false; }
+  if (!MOTION.ok) return false;
+  _invRefQ.copy(MOTION.refQ).invert();
+  _targetQ.copy(MOTION.devQ).multiply(_invRefQ).multiply(baseCamQ);
+  camera.quaternion.slerp(_targetQ, 0.16);
+  return true;
+}
+
+/* ================= light matching ================= */
+const lightBase = { hemi: 1.15, dir: 1.5 };
+const _lsCanvas = document.createElement('canvas');
+_lsCanvas.width = 16; _lsCanvas.height = 16;
+const _lsCtx = _lsCanvas.getContext('2d', { willReadFrequently: true });
+const _lightTgt = { m: 1, c: new THREE.Color(1, 1, 1) };
+let _lsNextAt = 0;
+function updateLightMatch(t, dt) {
+  if (!hemiLight || !dirLight) return;
+  if (camOK && video && video.readyState >= 2 && t >= _lsNextAt) {
+    _lsNextAt = t + 500;
+    try {
+      _lsCtx.drawImage(video, 0, 0, 16, 16);
+      const d = _lsCtx.getImageData(0, 0, 16, 16).data;
+      let r = 0, g = 0, b = 0;
+      const n = d.length / 4;
+      for (let i = 0; i < d.length; i += 4) { r += d[i]; g += d[i + 1]; b += d[i + 2]; }
+      r /= n * 255; g /= n * 255; b /= n * 255;
+      const lum = 0.2126 * r + 0.7152 * g + 0.0722 * b;
+      _lightTgt.m = clamp(0.45 + lum * 1.1, 0.45, 1.35);
+      _lightTgt.c.setRGB(lerp(1, Math.min(1, r * 1.7), 0.5),
+                         lerp(1, Math.min(1, g * 1.7), 0.5),
+                         lerp(1, Math.min(1, b * 1.7), 0.5));
+    } catch (e) { /* frame not sampleable yet */ }
+  }
+  if (!camOK) return;
+  const k = 1 - Math.exp(-dt * 2.5);
+  hemiLight.intensity += (lightBase.hemi * _lightTgt.m - hemiLight.intensity) * k;
+  dirLight.intensity += (lightBase.dir * _lightTgt.m - dirLight.intensity) * k;
+  hemiLight.color.lerp(_lightTgt.c, k);
+}
+
+/* ============================== parallax ============================== */
+let parX = 0, parY = 0;
+let parTX = 0, parTY = 0;
+let lastOrientAt = -1e9;
+let mouseAt = -1e9, mouseTX = 0, mouseTY = 0;
+
+window.addEventListener('deviceorientation', (e) => {
+  if (e.gamma == null && e.beta == null && e.alpha == null) return;
+  lastOrientAt = performance.now();
+  parTX = clamp((e.gamma || 0) / 26, -1, 1);
+  parTY = clamp(((e.beta || 0) - 48) / 24, -1, 1);
+  MOTION.ever = true; MOTION.ok = true; MOTION.lastAt = lastOrientAt;
+  if (!MOTION.devQ) MOTION.devQ = new THREE.Quaternion();
+  deviceQuat(MOTION.devQ, e.alpha || 0, e.beta || 0, e.gamma || 0);
+  if (MOTION.recal || !MOTION.refQ) {
+    MOTION.refQ = MOTION.devQ.clone();
+    MOTION.recal = false;
+  }
+  hideMotionPill();
+}, true);
+window.addEventListener('pointermove', (e) => {
+  if (e.pointerType !== 'mouse') return;
+  mouseAt = performance.now();
+  mouseTX = clamp((e.clientX / Math.max(1, W) - 0.5) * 2, -1, 1);
+  mouseTY = clamp((e.clientY / Math.max(1, H) - 0.5) * 2, -1, 1);
+}, true);
+
+function updateParallax(t) {
+  let tx, ty;
+  if (performance.now() - mouseAt < 2500) { tx = mouseTX; ty = mouseTY; }
+  else if (performance.now() - lastOrientAt < 3000) { tx = parTX; ty = parTY; }
+  else { tx = Math.sin(t * 0.00035) * 0.55; ty = Math.sin(t * 0.00027 + 1.7) * 0.30; }
+  parX += (tx - parX) * 0.055;
+  parY += (ty - parY) * 0.055;
+}
+
+/* ============================== cozy room (fallback bg) ============================== */
+function rr2(c, x, y, w, h, r) {
+  c.beginPath();
+  if (c.roundRect) c.roundRect(x, y, w, h, r); else c.rect(x, y, w, h);
+}
+function ellipse2(c, x, y, rx, ry, rot) {
+  c.beginPath(); c.ellipse(x, y, rx, ry, rot || 0, 0, Math.PI * 2);
+}
+function drawRoom() {
+  const ctx = rctx;
+  const wall = ctx.createLinearGradient(0, 0, 0, floorTop + 30);
+  wall.addColorStop(0, '#fbe3ee'); wall.addColorStop(1, '#f3c6da');
+  ctx.fillStyle = wall; ctx.fillRect(0, 0, W, floorTop + 2);
+  const wx = W * 0.14 + parX * -8, wy = H * 0.06, ww = W * 0.30, wh = floorTop * 0.60;
+  ctx.fillStyle = '#bfe3f2'; rr2(ctx, wx, wy, ww, wh, 8); ctx.fill();
+  ctx.fillStyle = '#fff3b0'; ctx.beginPath(); ctx.arc(wx + ww * 0.72, wy + wh * 0.3, ww * 0.13, 0, Math.PI * 2); ctx.fill();
+  ctx.fillStyle = '#e8f7fd'; ellipse2(ctx, wx + ww * 0.3, wy + wh * 0.62, ww * 0.2, wh * 0.1); ctx.fill();
+  ctx.strokeStyle = '#fff8ee'; ctx.lineWidth = 7; rr2(ctx, wx, wy, ww, wh, 8); ctx.stroke();
+  ctx.lineWidth = 4; ctx.beginPath();
+  ctx.moveTo(wx + ww / 2, wy); ctx.lineTo(wx + ww / 2, wy + wh);
+  ctx.moveTo(wx, wy + wh / 2); ctx.lineTo(wx + ww, wy + wh / 2); ctx.stroke();
+  // framed flower picture (Hana = "small flower")
+  const fx = W * 0.68 + parX * -8, fy = H * 0.07, fw = W * 0.20, fh = floorTop * 0.44;
+  ctx.fillStyle = '#a9743f'; rr2(ctx, fx, fy, fw, fh, 5); ctx.fill();
+  ctx.fillStyle = '#fff6ec'; rr2(ctx, fx + 6, fy + 6, fw - 12, fh - 12, 3); ctx.fill();
+  ctx.fillStyle = '#ff8fb8';
+  for (let i = 0; i < 5; i++) {
+    const a = (i / 5) * Math.PI * 2;
+    ellipse2(ctx, fx + fw / 2 + Math.cos(a) * fw * 0.13, fy + fh / 2 + Math.sin(a) * fh * 0.13, fw * 0.10, fh * 0.10);
+    ctx.fill();
+  }
+  ctx.fillStyle = '#ffb84d'; ctx.beginPath(); ctx.arc(fx + fw / 2, fy + fh / 2, fw * 0.09, 0, Math.PI * 2); ctx.fill();
+  ctx.fillStyle = '#fff3e0'; ctx.fillRect(0, floorTop - 7, W, 9);
+  ctx.fillStyle = 'rgba(120,70,30,0.35)'; ctx.fillRect(0, floorTop + 2, W, 2);
+  const fl = ctx.createLinearGradient(0, floorTop, 0, H);
+  fl.addColorStop(0, '#bb8048'); fl.addColorStop(1, '#8a5527');
+  ctx.fillStyle = fl; ctx.fillRect(0, floorTop, W, H - floorTop);
+  ctx.strokeStyle = 'rgba(60,30,5,0.20)'; ctx.lineWidth = 2;
+  for (let y = floorTop + 26; y < H; y += 30) {
+    ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(W, y); ctx.stroke();
+  }
+  ctx.strokeStyle = 'rgba(60,30,5,0.10)';
+  for (let y = floorTop + 26, row = 0; y < H; y += 30, row++) {
+    for (let x = ((row % 2) * 90) + 40; x < W; x += 190) {
+      ctx.beginPath(); ctx.moveTo(x, y - 28); ctx.lineTo(x, y); ctx.stroke();
+    }
+  }
+  const rugX = W * 0.5 + parX * -12, rugY = H * 0.815;
+  ctx.fillStyle = '#e58bb0'; ellipse2(ctx, rugX, rugY, W * 0.37, H * 0.088); ctx.fill();
+  ctx.fillStyle = '#f2a9c4'; ellipse2(ctx, rugX, rugY, W * 0.30, H * 0.068); ctx.fill();
+  ctx.fillStyle = '#fad0e0'; ellipse2(ctx, rugX, rugY, W * 0.21, H * 0.046); ctx.fill();
+  const vg = ctx.createRadialGradient(W / 2, H / 2, Math.min(W, H) * 0.45, W / 2, H / 2, Math.max(W, H) * 0.78);
+  vg.addColorStop(0, 'rgba(30,15,5,0)'); vg.addColorStop(1, 'rgba(30,15,5,0.20)');
+  ctx.fillStyle = vg; ctx.fillRect(0, 0, W, H);
+}
+
+/* ============================== three.js scene ============================== */
+let renderer = null, scene = null, camera = null;
+const CAM_BASE = new THREE.Vector3(0, 1.5, 3.4);
+const CAM_LOOK = new THREE.Vector3(0, 0.55, -2);
+
+function makeBlobTexture() {
+  const c = document.createElement('canvas'); c.width = c.height = 128;
+  const g = c.getContext('2d');
+  const grad = g.createRadialGradient(64, 64, 4, 64, 64, 62);
+  grad.addColorStop(0, 'rgba(0,0,0,0.55)');
+  grad.addColorStop(0.6, 'rgba(0,0,0,0.28)');
+  grad.addColorStop(1, 'rgba(0,0,0,0)');
+  g.fillStyle = grad; g.fillRect(0, 0, 128, 128);
+  return new THREE.CanvasTexture(c);
+}
+let blobGeo = null, blobMat = null;
+
+function initGL() {
+  renderer = new THREE.WebGLRenderer({ canvas: glCanvas, alpha: true, antialias: true });
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
+  renderer.setSize(W, H);
+  renderer.setClearColor(0x000000, 0);
+  renderer.outputColorSpace = THREE.SRGBColorSpace;
+  scene = new THREE.Scene();
+  camera = new THREE.PerspectiveCamera(60, W / Math.max(1, H), 0.1, 80);
+  camera.position.copy(CAM_BASE);
+  camera.lookAt(CAM_LOOK);
+  baseCamQ = camera.quaternion.clone();
+  hemiLight = new THREE.HemisphereLight(0xffffff, 0x554433, 1.15);
+  scene.add(hemiLight);
+  dirLight = new THREE.DirectionalLight(0xfff1da, 1.5);
+  dirLight.position.set(2.5, 4.5, 3.0);
+  scene.add(dirLight);
+  blobGeo = new THREE.PlaneGeometry(1, 1);
+  blobMat = new THREE.MeshBasicMaterial({
+    map: makeBlobTexture(), transparent: true, depthWrite: false, opacity: 0.85
+  });
+}
+
+/* ============================== Hana-chan ==============================
+   Original rigged model (authored + hand-animated in Blender): GLB clips
+   Idle / Walk / Wave / Hop. She stands exactly 0.90 m (3 ft) tall — the
+   group is scaled from the measured bounding box at load. */
+const HANA_HEIGHT = 0.90;
+const WALK_SPEED = 0.34;                 // m/s, toddler toddle (matches stride)
+const TURN_RATE = 2.4;                   // rad/s
+const FLOOR = { xMin: -1.7, xMax: 1.7, zMin: -3.6, zMax: 0.55 };
+const FACING = 0;                        // model-forward offset (verified by screenshot)
+
+let HANA_TS = 1;          // time scale (test hook; 1 in normal play)
+let hana = null;          // { group, mixer, actions, shadow }
+let modelLoaded = false;
+let modelError = false;
+
+const HS = {
+  state: 'idle',          // idle | walk | wave | hop
+  x: 0, z: -1.3,
+  heading: 0,             // faces +Z (the camera) at spawn
+  tx: 0, tz: -1.3,
+  idleT: 2.5,
+  stepPh: 0,
+  action: null
+};
+
+function setAction(name, fade) {
+  if (!hana || HS.action === name) return;
+  const next = hana.actions[name];
+  if (!next) return;
+  const prev = HS.action ? hana.actions[HS.action] : null;
+  next.reset();
+  next.setLoop(THREE.LoopRepeat, Infinity);
+  if (name === 'Wave' || name === 'Hop') {
+    next.setLoop(THREE.LoopOnce, 1);
+    next.clampWhenFinished = true;
+  }
+  next.fadeIn(fade == null ? 0.22 : fade);
+  next.play();
+  if (prev && prev !== next) prev.fadeOut(fade == null ? 0.22 : fade);
+  HS.action = name;
+}
+
+function loadHana() {
+  const loader = new GLTFLoader();
+  loader.load('models/hana.glb', (gltf) => {
+    const group = new THREE.Group();
+    const inner = gltf.scene;
+    // normalize: feet at y=0, total height exactly HANA_HEIGHT
+    const bb = new THREE.Box3().setFromObject(inner);
+    const size = new THREE.Vector3(); bb.getSize(size);
+    const s = HANA_HEIGHT / size.y;
+    inner.scale.setScalar(s);
+    inner.position.y = -bb.min.y * s;
+    group.add(inner);
+    group.position.set(HS.x, 0, HS.z);
+    group.rotation.y = HS.heading + FACING;
+    scene.add(group);
+    const shadow = new THREE.Mesh(blobGeo, blobMat);
+    shadow.rotation.x = -Math.PI / 2;
+    shadow.position.set(HS.x, 0.012, HS.z);
+    shadow.scale.set(0.62, 0.56, 1);
+    scene.add(shadow);
+    const mixer = new THREE.AnimationMixer(inner);
+    const actions = {};
+    for (const clip of gltf.animations) actions[clip.name] = mixer.clipAction(clip);
+    hana = { group, inner, mixer, actions, shadow };
+    mixer.addEventListener('finished', (e) => {
+      if (HS.state === 'wave' || HS.state === 'hop') {
+        HS.state = 'idle';
+        HS.idleT = rand(1.6, 3.4);
+        setAction('Idle');
+      }
+    });
+    modelLoaded = true;
+    setAction('Idle', 0);
+  }, undefined, () => { modelError = true; });
+}
+
+function pickWanderTarget() {
+  for (let i = 0; i < 10; i++) {
+    const x = rand(FLOOR.xMin, FLOOR.xMax);
+    const z = rand(FLOOR.zMin, FLOOR.zMax);
+    if (Math.hypot(x - HS.x, z - HS.z) > 0.55) return { x, z };
+  }
+  return { x: rand(-1, 1), z: rand(-2.4, 0.2) };
+}
+
+function startWalkTo(x, z) {
+  HS.tx = clamp(x, FLOOR.xMin, FLOOR.xMax);
+  HS.tz = clamp(z, FLOOR.zMin, FLOOR.zMax);
+  HS.state = 'walk';
+  setAction('Walk');
+}
+function doWave() {
+  if (HS.state === 'wave' || HS.state === 'hop') return;
+  HS.state = 'wave';
+  setAction('Wave');
+  sndWave();
+}
+function doHop() {
+  HS.state = 'hop';
+  setAction('Hop');
+}
+
+function updateHana(dt, t) {
+  if (!hana) return;
+  hana.mixer.update(dt);
+  if (HS.state === 'idle') {
+    HS.idleT -= dt;
+    if (HS.idleT <= 0) {
+      if (Math.random() < 0.30) { doWave(); }
+      else {
+        const tg = pickWanderTarget();
+        startWalkTo(tg.x, tg.z);
+      }
+    }
+  } else if (HS.state === 'walk') {
+    const dx = HS.tx - HS.x, dz = HS.tz - HS.z;
+    const dist = Math.hypot(dx, dz);
+    if (dist < 0.07) {
+      HS.state = 'idle';
+      HS.idleT = rand(2.0, 5.0);
+      setAction('Idle');
+    } else {
+      const want = Math.atan2(dx, dz);
+      const diff = angDiff(HS.heading, want);
+      const turn = clamp(diff, -TURN_RATE * dt, TURN_RATE * dt);
+      HS.heading += turn;
+      const align = clamp(1.15 - Math.abs(diff), 0.2, 1);
+      const sp = WALK_SPEED * align;
+      HS.x += Math.sin(HS.heading) * sp * dt;
+      HS.z += Math.cos(HS.heading) * sp * dt;
+      HS.x = clamp(HS.x, FLOOR.xMin - 0.3, FLOOR.xMax + 0.3);
+      HS.z = clamp(HS.z, FLOOR.zMin - 0.3, FLOOR.zMax + 0.3);
+      // soft footstep patter synced to the 2 Hz stride
+      const ph = (t * 0.002 * Math.PI) % (Math.PI * 2);
+      if (ph < HS.stepPh) sndStep();
+      HS.stepPh = ph;
+    }
+  }
+  hana.group.position.set(HS.x, 0, HS.z);
+  hana.group.rotation.y = HS.heading + FACING;
+  hana.shadow.position.x = HS.x;
+  hana.shadow.position.z = HS.z;
+}
+
+/* ============================== hearts (fx overlay) ============================== */
+function spawnHeartsAt(sx, sy, n, s) {
+  for (let i = 0; i < n; i++) {
+    hearts.push({
+      x: sx + rand(-16, 16) * (s || 1),
+      y: sy,
+      vx: rand(-9, 9), vy: rand(-50, -32),
+      life: 0, max: rand(0.7, 1.15),
+      size: rand(7, 11) * (s || 1)
+    });
+  }
+}
+function updateHearts(dt) {
+  for (let i = hearts.length - 1; i >= 0; i--) {
+    const h = hearts[i];
+    h.life += dt; h.x += h.vx * dt; h.y += h.vy * dt; h.vy -= 6 * dt;
+    if (h.life >= h.max) hearts.splice(i, 1);
+  }
+}
+function drawHeart(h) {
+  const a = clamp(1 - h.life / h.max, 0, 1);
+  const s = h.size * (0.7 + 0.3 * (h.life / h.max));
+  fctx.save();
+  fctx.translate(h.x + Math.sin(h.life * 6 + h.size) * 2.5, h.y);
+  fctx.scale(s / 10, s / 10);
+  fctx.fillStyle = 'rgba(255,92,132,' + (a * 0.95) + ')';
+  fctx.beginPath();
+  fctx.moveTo(0, 8);
+  fctx.bezierCurveTo(-11, -2, -6, -11, 0, -5);
+  fctx.bezierCurveTo(6, -11, 11, -2, 0, 8);
+  fctx.fill();
+  fctx.restore();
+}
+
+/* target ripple rings on the floor */
+let rings = [];
+const ringGeo = new THREE.RingGeometry(0.09, 0.115, 40);
+const ringMat = new THREE.MeshBasicMaterial({ color: 0xff8fb8, transparent: true, opacity: 0.9, side: THREE.DoubleSide, depthWrite: false });
+function spawnRing(x, z) {
+  if (!scene) return;
+  const m = new THREE.Mesh(ringGeo, ringMat.clone());
+  m.rotation.x = -Math.PI / 2;
+  m.position.set(x, 0.015, z);
+  scene.add(m);
+  rings.push({ m, life: 0 });
+}
+function updateRings(dt) {
+  for (let i = rings.length - 1; i >= 0; i--) {
+    const r = rings[i];
+    r.life += dt;
+    const k = r.life / 0.9;
+    r.m.scale.setScalar(1 + k * 2.4);
+    r.m.material.opacity = 0.9 * (1 - k);
+    if (k >= 1) { scene.remove(r.m); r.m.material.dispose(); rings.splice(i, 1); }
+  }
+}
+
+/* ============================== taps ============================== */
+const raycaster = new THREE.Raycaster();
+const _ndc = new THREE.Vector2();
+const _pv = new THREE.Vector3();
+const floorPlane = new THREE.Plane(new THREE.Vector3(0, 1, 0), 0);
+const _hitP = new THREE.Vector3();
+
+function petHana() {
+  heartTotal++;
+  heartCountEl.textContent = heartTotal;
+  _pv.set(HS.x, 1.0, HS.z).project(camera);
+  const sx = (_pv.x * 0.5 + 0.5) * W;
+  const sy = (_pv.y * -0.5 + 0.5) * H;
+  spawnHeartsAt(sx, sy, 6, 1.25);
+  sndGiggle();
+  doHop();
+  hintEl.classList.remove('show');
+}
+
+glCanvas.addEventListener('pointerdown', (e) => {
+  if (!started || !hana) return;
+  initAudio(); resumeAudio();
+  _ndc.set((e.clientX / Math.max(1, W)) * 2 - 1, -((e.clientY / Math.max(1, H)) * 2 - 1));
+  raycaster.setFromCamera(_ndc, camera);
+  const hits = raycaster.intersectObject(hana.inner, true);
+  if (hits.length) { petHana(); return; }
+  if (raycaster.ray.intersectPlane(floorPlane, _hitP)) {
+    // only walk to taps in the lower (floor) part of the view
+    if (e.clientY > H * 0.30) {
+      spawnRing(_hitP.x, _hitP.z);
+      sndTap();
+      startWalkTo(_hitP.x, _hitP.z);
+      hintEl.classList.remove('show');
+    }
+  }
+});
+
+/* ============================== resize ============================== */
+function resize() {
+  const dpr = Math.min(window.devicePixelRatio || 1, 2);
+  W = window.innerWidth; H = window.innerHeight;
+  for (const c of [roomCanvas, fxCanvas]) {
+    c.width = Math.round(W * dpr);
+    c.height = Math.round(H * dpr);
+  }
+  rctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  fctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  floorTop = Math.round(H * 0.34);
+  if (renderer && camera) {
+    renderer.setSize(W, H);
+    camera.aspect = W / Math.max(1, H);
+    camera.updateProjectionMatrix();
+  }
+}
+window.addEventListener('resize', resize);
+
+/* ============================== main loop ============================== */
+let lastT = 0;
+function frame(t) {
+  requestAnimationFrame(frame);
+  const dt = Math.min(0.05, lastT ? (t - lastT) / 1000 : 0.016);
+  lastT = t;
+  updateParallax(t);
+  if (!camOK) { rctx.clearRect(0, 0, W, H); drawRoom(); }
+  if (camera) {
+    camera.position.set(CAM_BASE.x + parX * 0.45, CAM_BASE.y - parY * 0.22, CAM_BASE.z);
+    if (!applyMotionCamera()) {
+      camera.lookAt(CAM_LOOK.x - parX * 0.25, CAM_LOOK.y, CAM_LOOK.z);
+    }
+  }
+  updateLightMatch(t, dt);
+  if (started) {
+    updateHana(dt * HANA_TS, t);
+    updateRings(dt);
+    updateHearts(dt);
+  }
+  if (renderer) renderer.render(scene, camera);
+  fctx.clearRect(0, 0, W, H);
+  for (const h of hearts) drawHeart(h);
+}
+
+/* ============================== start flow ============================== */
+let startInFlight = false;
+document.getElementById('startBtn').addEventListener('click', async () => {
+  if (startInFlight) return;
+  startInFlight = true;
+  askMotionPermission();   // FIRST, synchronously — iOS only honors it inside the tap
+  initAudio();
+  try {
+    if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) throw new Error('no getUserMedia');
+    const stream = await Promise.race([
+      navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' }, audio: false }),
+      new Promise((_, rej) => setTimeout(() => rej(new Error('camera timeout')), 4500))
+    ]);
+    video.srcObject = stream;
+    await video.play().catch(() => {});
+    camOK = true;
+  } catch (e) { camOK = false; }
+  video.classList.toggle('hidden', !camOK);
+  roomCanvas.classList.toggle('hidden', camOK);
+  camTagEl.textContent = camOK ? '📷 AR room' : '🏠 cozy room';
+  startEl.classList.add('hidden');
+  hudEl.classList.remove('hidden');
+  started = true;
+  MOTION.recal = true;
+  motionWatchdog();
+  hintEl.classList.add('show');
+  setTimeout(() => hintEl.classList.remove('show'), 7000);
+});
+
+/* ============================== boot + test hook ============================== */
+resize();
+initGL();
+resize();
+loadHana();
+requestAnimationFrame(frame);
+
+window.__hana = {
+  get started() { return started; },
+  get camOK() { return camOK; },
+  get loaded() { return modelLoaded; },
+  get modelError() { return modelError; },
+  get hearts() { return heartTotal; },
+  get heartsLive() { return hearts.length; },
+  state: () => HS.state,
+  action: () => HS.action,
+  pos: () => ({ x: HS.x, z: HS.z }),
+  target: () => ({ x: HS.tx, z: HS.tz }),
+  heading: () => HS.heading,
+  walkTo: (x, z) => startWalkTo(x, z),
+  setTS: (v) => { HANA_TS = v; },
+  pet: () => { if (hana) petHana(); },
+  wave: () => doWave(),
+  screenOf: () => {
+    if (!camera) return null;
+    _pv.set(HS.x, 0.5, HS.z).project(camera);
+    return { x: (_pv.x * 0.5 + 0.5) * W, y: (_pv.y * -0.5 + 0.5) * H };
+  },
+  heightPx: () => {
+    if (!camera) return null;
+    const a = new THREE.Vector3(HS.x, 0, HS.z).project(camera);
+    const b = new THREE.Vector3(HS.x, HANA_HEIGHT, HS.z).project(camera);
+    return Math.abs((a.y - b.y) * 0.5 * H);
+  },
+  start: () => document.getElementById('startBtn').click()
+};
+</script>
+<script id="moth-game-guard-js">
+(function(){
+  var lastEnd=0;
+  function onUi(t){return t&&t.closest&&t.closest('button,a,input,select,textarea,[data-scroll]');}
+  document.addEventListener('touchend',function(e){
+    var now=Date.now();
+    if(!onUi(e.target)&&now-lastEnd<=300&&e.cancelable)e.preventDefault();
+    lastEnd=now;
+  },{passive:false});
+  ['gesturestart','gesturechange','gestureend'].forEach(function(n){
+    document.addEventListener(n,function(e){e.preventDefault();});
+  });
+  document.addEventListener('dblclick',function(e){e.preventDefault();},{passive:false});
+  document.addEventListener('contextmenu',function(e){e.preventDefault();});
+  document.addEventListener('touchmove',function(e){
+    if(e.target&&e.target.closest&&e.target.closest('[data-scroll]'))return;
+    if(e.cancelable)e.preventDefault();
+  },{passive:false});
+})();
+</script>
+</body>
+</html>
