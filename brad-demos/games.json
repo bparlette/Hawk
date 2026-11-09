@@ -2458,6 +2458,14 @@
    "thumb": "thumbs/bonk-yard.png",
    "title": "TINY KAIJU AR!",
    "url": "games/tiny-kaiju-ar/"
+  },
+  {
+   "category": "AR",
+   "desc": "Link hand-modeled in Blender — browser AR plus Quick Look.",
+   "id": "link-blender",
+   "thumb": "thumbs/bonk-yard.png",
+   "title": "LINK — Hand-Built AR",
+   "url": "../games/link-blender/"
   }
  ]
 }
