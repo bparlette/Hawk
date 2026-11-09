@@ -438,10 +438,21 @@ function drawRoom() {
   const fl = ctx.createLinearGradient(0, floorTop, 0, H);
   fl.addColorStop(0, '#3a3f4c'); fl.addColorStop(1, '#23262f');
   ctx.fillStyle = fl; ctx.fillRect(0, floorTop, W, H - floorTop);
-  ctx.strokeStyle = 'rgba(255,255,255,0.07)'; ctx.lineWidth = 2;
+  // lane stripes fade out toward the side edges, so the lot reads as
+  // ground receding rather than a hard-edged slab
+  const stripeGrad = ctx.createLinearGradient(0, 0, W, 0);
+  stripeGrad.addColorStop(0, 'rgba(255,255,255,0)');
+  stripeGrad.addColorStop(0.18, 'rgba(255,255,255,0.07)');
+  stripeGrad.addColorStop(0.82, 'rgba(255,255,255,0.07)');
+  stripeGrad.addColorStop(1, 'rgba(255,255,255,0)');
+  ctx.strokeStyle = stripeGrad; ctx.lineWidth = 2;
   for (let y = floorTop + 34; y < H; y += 46) {
     ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(W, y); ctx.stroke();
   }
+  // the lot melts into the frame at the bottom instead of ending in a line
+  const melt = ctx.createLinearGradient(0, H - (H - floorTop) * 0.22, 0, H);
+  melt.addColorStop(0, 'rgba(13,16,26,0)'); melt.addColorStop(1, 'rgba(13,16,26,0.85)');
+  ctx.fillStyle = melt; ctx.fillRect(0, H - (H - floorTop) * 0.22, W, (H - floorTop) * 0.22);
   // snow drifts along the back edge
   ctx.fillStyle = 'rgba(235,242,250,0.85)';
   ctx.beginPath();
@@ -489,7 +500,9 @@ function initGL() {
   blobGeo = new THREE.PlaneGeometry(1, 1);
   blobMat = new THREE.MeshBasicMaterial({ map: makeBlobTexture(), transparent: true, depthWrite: false, opacity: 0.8 });
   // NO fake ground patch (Cherie's rule: as much real AR as possible) —
-  // the plow, zombies, snowbanks and lamps sit directly on the real floor.
+  // in camera mode the plow, zombies and crack FX sit directly on the real
+  // floor; the snowbank/lamp dressing exists only in the fallback lot and
+  // is hidden whenever the camera is live (see frame()).
   buildSetDressing();
   buildPlow();
   buildZombiePools();
@@ -498,7 +511,16 @@ function initGL() {
   buildDebris();
 }
 
+/* Set dressing = the snowbank ring + lamp posts. Together they outline
+   the field as a SQUARE — exactly the fake-ground-patch look Cherie keeps
+   ordering removed. They belong to the FALLBACK lot only: in camera mode
+   the group is hidden (frame() syncs visibility to the camOK mode flag),
+   so the plow, zombies and crack FX sit directly on the real floor with
+   nothing drawing a square on it. Gameplay bounds (FIELD) are untouched. */
+let setDressing = null;
 function buildSetDressing() {
+  setDressing = new THREE.Group();
+  setDressing.name = 'setDressing';
   const snowMat = new THREE.MeshStandardMaterial({ color: 0xe8eef6, roughness: 1 });
   const bankGeo = new THREE.BoxGeometry(1, 1, 1);
   const banks = [
@@ -509,10 +531,11 @@ function buildSetDressing() {
   ];
   for (const b of banks) {
     const m = new THREE.Mesh(bankGeo, snowMat);
+    m.name = 'snowbank';
     m.scale.set(b.w, b.h, b.d);
     m.position.set(b.x, b.h / 2, b.z);
     m.rotation.y = rand(-0.02, 0.02);
-    scene.add(m);
+    setDressing.add(m);
   }
   const poleMat = new THREE.MeshStandardMaterial({ color: 0x2a2e38, roughness: 0.7, metalness: 0.4 });
   const lampMat = new THREE.MeshStandardMaterial({ color: 0xffd98a, emissive: 0xffb84d, emissiveIntensity: 1.6 });
@@ -520,12 +543,15 @@ function buildSetDressing() {
   const headGeo = new THREE.SphereGeometry(0.075, 10, 8);
   for (const [lx, lz] of [[-3.3, -1.2], [3.3, -3.4], [-3.3, -6.2], [3.3, -8.2]]) {
     const p = new THREE.Mesh(poleGeo, poleMat);
+    p.name = 'lampPost';
     p.position.set(lx, 0.75, lz);
-    scene.add(p);
+    setDressing.add(p);
     const hd = new THREE.Mesh(headGeo, lampMat);
+    hd.name = 'lampPost';
     hd.position.set(lx, 1.52, lz);
-    scene.add(hd);
+    setDressing.add(hd);
   }
+  scene.add(setDressing);
 }
 
 /* ================= the plow ================= */
@@ -1321,6 +1347,10 @@ function frame(t) {
   const dt = Math.min(0.05, lastT ? (t - lastT) / 1000 : 0.016);
   lastT = t;
   updateParallax(t);
+  // the snowbank ring + lamp posts draw the field's SQUARE outline — they
+  // are fallback-lot dressing only; in camera mode nothing may draw a
+  // square on the player's real floor (Cherie's standing rule).
+  if (setDressing) setDressing.visible = !camOK;
   if (!camOK) { rctx.clearRect(0, 0, W, H); drawRoom(); }
   if (camera) {
     camera.position.set(CAM_BASE.x + parX * 0.45, CAM_BASE.y - parY * 0.22, CAM_BASE.z);
@@ -1373,6 +1403,22 @@ requestAnimationFrame(frame);
 window.__zp = {
   get started() { return started; },
   get camOK() { return camOK; },
+  /* square scan: counts the field-outline dressing (snowbank ring + lamp
+     posts) and how much of it is EFFECTIVELY visible (own flag and every
+     ancestor's). With camOK true every *Visible count must be 0 — nothing
+     draws the field's square on the real floor. */
+  squareScan: () => {
+    const out = { camOK, banks: 0, banksVisible: 0, lamps: 0, lampsVisible: 0,
+                  dressingInScene: false, dressingVisible: null };
+    if (!scene) return out;
+    const effVisible = (o) => { for (let n = o; n; n = n.parent) if (!n.visible) return false; return true; };
+    scene.traverse(o => {
+      if (o === setDressing) { out.dressingInScene = true; out.dressingVisible = o.visible; }
+      if (o.name === 'snowbank') { out.banks++; if (effVisible(o)) out.banksVisible++; }
+      if (o.name === 'lampPost') { out.lamps++; if (effVisible(o)) out.lampsVisible++; }
+    });
+    return out;
+  },
   get phase() { return game.phase; },
   get timeLeft() { return game.timeLeft; },
   get count() { return game.count; },
