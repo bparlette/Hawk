@@ -2398,6 +2398,14 @@
    "thumb": "thumbs/bonk-yard.png",
    "title": "SNACK HOLE AR",
    "url": "../games/snack-hole-ar/"
+  },
+  {
+   "category": "AR",
+   "desc": "Hannah generated from a photo of the real plush (HY3D), seated — browser AR plus Quick Look.",
+   "id": "hana-mesh",
+   "thumb": "thumbs/bonk-yard.png",
+   "title": "NEW MESH HANNAH — Photo Mesh AR",
+   "url": "../games/hana-mesh/"
   }
  ]
 }
