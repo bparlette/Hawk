@@ -1,0 +1,648 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+<title>THE FINAL BLOW — an Ocarina of Time AR movie</title>
+<style>
+  html, body { height: 100%; }
+  body {
+    margin: 0; overflow: hidden; background: #060608;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    color: #fff; -webkit-user-select: none; user-select: none;
+  }
+  #cam, #bg, #gl { position: fixed; inset: 0; width: 100%; height: 100%; display: block; }
+  #cam { object-fit: cover; background: #060608; z-index: 0; }
+  #bg { z-index: 0; }
+  #gl { z-index: 1; }
+  #vig {
+    position: fixed; inset: 0; z-index: 2; pointer-events: none;
+    background: radial-gradient(ellipse 105% 90% at 50% 42%, rgba(0,0,0,0) 55%, rgba(0,0,0,0.55) 100%);
+  }
+  #flash {
+    position: fixed; inset: 0; z-index: 4; pointer-events: none;
+    background: #fff; opacity: 0;
+  }
+  #subs {
+    position: fixed; left: 0; right: 0; z-index: 5; pointer-events: none;
+    bottom: calc(env(safe-area-inset-bottom, 0px) + 86px);
+    display: flex; justify-content: center; padding: 0 18px;
+  }
+  #subCard {
+    max-width: 560px; text-align: center;
+    background: rgba(5, 5, 10, 0.62);
+    border: 1px solid rgba(255,255,255,0.16);
+    border-radius: 14px; padding: 10px 16px 12px;
+    backdrop-filter: blur(3px);
+    opacity: 0; transform: translateY(8px);
+    transition: opacity 0.25s ease, transform 0.25s ease;
+  }
+  #subCard.show { opacity: 1; transform: translateY(0); }
+  #subWho {
+    font-size: 12px; font-weight: 900; letter-spacing: 0.22em; margin-bottom: 3px;
+  }
+  #subText { font-size: 19px; font-weight: 650; line-height: 1.35; text-shadow: 0 2px 6px rgba(0,0,0,0.8); }
+  .who-NARRATOR { color: #cfd8ff; } .who-ZELDA { color: #ffd98a; }
+  .who-GANON { color: #ff9a7a; } .who-LINK { color: #a8ecb0; }
+  #titleCard {
+    position: fixed; inset: 0; z-index: 6; pointer-events: none;
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    text-align: center; padding: 24px;
+    opacity: 0; transition: opacity 1.6s ease;
+    background: radial-gradient(ellipse 90% 70% at 50% 45%, rgba(0,0,0,0.25), rgba(0,0,0,0.72));
+  }
+  #titleCard.show { opacity: 1; }
+  #titleCard .rule { width: 120px; height: 2px; background: linear-gradient(90deg, transparent, #ffd98a, transparent); margin: 14px 0; }
+  #titleCard h2 {
+    margin: 0; font-size: 40px; font-weight: 900; letter-spacing: 0.06em; line-height: 1.12;
+    color: #fff7e0; text-shadow: 0 0 24px rgba(255, 190, 80, 0.55), 0 3px 0 rgba(0,0,0,0.5);
+  }
+  #titleCard p { margin: 0; font-size: 16px; letter-spacing: 0.14em; font-weight: 700; color: #ffe9b8; opacity: 0.95; }
+  #replayBtn {
+    pointer-events: auto; font: inherit; cursor: pointer;
+    margin-top: 26px; font-size: 17px; font-weight: 900; letter-spacing: 0.08em;
+    color: #2a1a05; background: linear-gradient(180deg, #ffe9b0, #ffc95e);
+    border: 2px solid rgba(255,255,255,0.75); border-radius: 999px; padding: 13px 30px;
+    box-shadow: 0 8px 24px rgba(0,0,0,0.5);
+  }
+  #replayBtn:active { transform: scale(0.96); }
+  #start {
+    position: fixed; inset: 0; z-index: 8;
+    display: flex; align-items: center; justify-content: center;
+    background:
+      radial-gradient(120% 90% at 50% 0%, rgba(255, 196, 110, 0.20), rgba(0,0,0,0) 55%),
+      linear-gradient(180deg, rgba(10, 8, 18, 0.90), rgba(4, 3, 8, 0.96));
+    padding: 20px; box-sizing: border-box;
+  }
+  #startCard { text-align: center; max-width: 430px; }
+  #startCard .big { font-size: 46px; line-height: 1.1; }
+  #startCard h1 {
+    margin: 8px 0 4px; font-size: 31px; font-weight: 900; letter-spacing: 0.05em; line-height: 1.15;
+    color: #fff7e0; text-shadow: 0 0 18px rgba(255, 190, 80, 0.4);
+  }
+  #startCard p { margin: 6px 0; font-size: 15.5px; line-height: 1.5; opacity: 0.92; }
+  #startBtn {
+    font: inherit; margin-top: 16px; font-size: 20px; font-weight: 900; letter-spacing: 0.04em;
+    color: #2a1a05; background: linear-gradient(180deg, #ffe9b0, #ffc95e);
+    border: 2px solid rgba(255,255,255,0.75); border-radius: 999px; padding: 15px 34px;
+    box-shadow: 0 8px 22px rgba(0,0,0,0.45); cursor: pointer;
+  }
+  #startBtn:active { transform: scale(0.96); }
+  #startCard .fine { font-size: 12.5px; opacity: 0.6; margin-top: 14px; }
+  #loadTag {
+    position: fixed; left: 50%; transform: translateX(-50%);
+    bottom: calc(env(safe-area-inset-bottom, 0px) + 18px); z-index: 7;
+    font-size: 12.5px; font-weight: 700; letter-spacing: 0.06em; opacity: 0.75; pointer-events: none;
+  }
+  #motionPill {
+    position: fixed; left: 50%; transform: translateX(-50%);
+    top: calc(env(safe-area-inset-top, 0px) + 14px); z-index: 9;
+    font: inherit; font-size: 14px; font-weight: 800; color: #fff;
+    background: rgba(24, 16, 8, 0.85); border: 2px solid rgba(255, 215, 106, 0.9);
+    border-radius: 999px; padding: 11px 17px; box-shadow: 0 8px 22px rgba(0,0,0,0.5);
+    cursor: pointer; white-space: nowrap;
+  }
+  #motionPill:active { transform: translateX(-50%) scale(0.96); }
+  .hidden { display: none !important; }
+</style>
+<script type="importmap">
+{ "imports": {
+    "three": "./vendor/three.module.js",
+    "three/addons/": "./vendor/addons/"
+} }
+</script>
+<style id="moth-game-guard">
+html,body{touch-action:none;overscroll-behavior:none;-webkit-touch-callout:none;-webkit-user-select:none;user-select:none;-webkit-tap-highlight-color:transparent}
+canvas{touch-action:none}
+</style>
+</head>
+<body>
+<video id="cam" autoplay playsinline muted></video>
+<canvas id="bg"></canvas>
+<canvas id="gl"></canvas>
+<div id="vig"></div>
+<div id="flash"></div>
+
+<div id="subs"><div id="subCard"><div id="subWho"></div><div id="subText"></div></div></div>
+
+<div id="titleCard">
+  <div class="rule"></div>
+  <h2>THE FINAL BLOW</h2>
+  <div class="rule"></div>
+  <p>AN OCARINA OF TIME AR MOVIE</p>
+  <button id="replayBtn" type="button">↻ REPLAY</button>
+</div>
+
+<button id="motionPill" class="hidden" type="button">📱 Enable motion look-around</button>
+<div id="loadTag">summoning the arena…</div>
+
+<div id="start">
+  <div id="startCard">
+    <div class="big">⚔️</div>
+    <h1>THE FINAL BLOW</h1>
+    <p>An <b>Ocarina of Time</b> AR movie — the last stand of the King of Evil, staged on an arena in <b>your room</b>. One minute. Voices. The Master Sword.</p>
+    <button id="startBtn" type="button">▶ START MOVIE</button>
+    <p class="fine">Point your phone at the floor and hold still for the opening.<br>Sound on 🔊 — no camera? It still plays, in a ruined courtyard.</p>
+  </div>
+</div>
+
+<audio id="mix" src="audio/movie_mix.m4a" preload="auto"></audio>
+
+<script type="module">
+import * as THREE from 'three';
+import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
+
+'use strict';
+const clamp = (v, a, b) => v < a ? a : (v > b ? b : v);
+const lerp = (a, b, t) => a + (b - a) * t;
+const sstep = (a, b, t) => { const x = clamp((t - a) / (b - a), 0, 1); return x * x * (3 - 2 * x); };
+
+/* ============================== dom ============================== */
+const video = document.getElementById('cam');
+const bgCanvas = document.getElementById('bg');
+const glCanvas = document.getElementById('gl');
+const flashEl = document.getElementById('flash');
+const subCard = document.getElementById('subCard');
+const subWho = document.getElementById('subWho');
+const subText = document.getElementById('subText');
+const titleCard = document.getElementById('titleCard');
+const startEl = document.getElementById('start');
+const startBtn = document.getElementById('startBtn');
+const loadTag = document.getElementById('loadTag');
+const audio = document.getElementById('mix');
+let W = 0, H = 0;
+
+/* ============================== state ============================== */
+let started = false, startWall = 0, ended = false, wallDrive = false;
+let camOK = false, glReady = false;
+let errors = [];
+window.addEventListener('error', (e) => { errors.push(String(e.message || e)); });
+
+/* ================= AR motion (permission-in-gesture, 3DOF) ================= */
+let camera = null, baseCamQ = null;
+const MOTION = {
+  needPerm: (typeof DeviceOrientationEvent !== 'undefined' &&
+             typeof DeviceOrientationEvent.requestPermission === 'function'),
+  perm: 'unknown', ok: false, ever: false, lastAt: -1e9, recal: true,
+  refQ: null, devQ: null
+};
+function askMotionPermission() {
+  if (!MOTION.needPerm) { MOTION.perm = 'n/a'; return; }
+  try {
+    const p = DeviceOrientationEvent.requestPermission();
+    if (p && typeof p.then === 'function') {
+      p.then(r => { MOTION.perm = (r === 'granted') ? 'granted' : 'denied'; if (r === 'granted') MOTION.recal = true; })
+        .catch(() => { MOTION.perm = 'error'; });
+    }
+  } catch (e) { MOTION.perm = 'error'; }
+}
+const motionPillEl = document.getElementById('motionPill');
+if (motionPillEl) motionPillEl.addEventListener('click', () => { askMotionPermission(); });
+window.addEventListener('orientationchange', () => { MOTION.recal = true; });
+const _zee = new THREE.Vector3(0, 0, 1);
+const _eul = new THREE.Euler();
+const _q0 = new THREE.Quaternion();
+const _q1 = new THREE.Quaternion(-Math.sqrt(0.5), 0, 0, Math.sqrt(0.5));
+function deviceQuat(out, aD, bD, gD) {
+  const orient = (typeof window.orientation === 'number' ? window.orientation : 0) * Math.PI / 180;
+  _eul.set(THREE.MathUtils.degToRad(bD), THREE.MathUtils.degToRad(aD), THREE.MathUtils.degToRad(-gD), 'YXZ');
+  out.setFromEuler(_eul);
+  out.multiply(_q1);
+  out.multiply(_q0.setFromAxisAngle(_zee, -orient));
+  return out;
+}
+const _invRefQ = new THREE.Quaternion();
+const _targetQ = new THREE.Quaternion();
+function applyMotionCamera() {
+  if (!camera || !baseCamQ || !MOTION.refQ || !MOTION.devQ) return false;
+  if (performance.now() - MOTION.lastAt > 3000) { MOTION.ok = false; return false; }
+  if (!MOTION.ok) return false;
+  _invRefQ.copy(MOTION.refQ).invert();
+  _targetQ.copy(MOTION.devQ).multiply(_invRefQ).multiply(baseCamQ);
+  camera.quaternion.slerp(_targetQ, 0.16);
+  return true;
+}
+window.addEventListener('deviceorientation', (e) => {
+  if (e.gamma == null && e.beta == null && e.alpha == null) return;
+  MOTION.ever = true; MOTION.ok = true; MOTION.lastAt = performance.now();
+  if (!MOTION.devQ) MOTION.devQ = new THREE.Quaternion();
+  deviceQuat(MOTION.devQ, e.alpha || 0, e.beta || 0, e.gamma || 0);
+  if (MOTION.recal || !MOTION.refQ) { MOTION.refQ = MOTION.devQ.clone(); MOTION.recal = false; }
+  if (motionPillEl) motionPillEl.classList.add('hidden');
+}, true);
+
+/* ============================== fallback backdrop ============================== */
+function drawBG() {
+  const c = bgCanvas.getContext('2d');
+  bgCanvas.width = W; bgCanvas.height = H;
+  const sky = c.createLinearGradient(0, 0, 0, H);
+  sky.addColorStop(0, '#0d1126'); sky.addColorStop(0.55, '#0a0c18'); sky.addColorStop(1, '#05060a');
+  c.fillStyle = sky; c.fillRect(0, 0, W, H);
+  let seed = 42; const rnd = () => { seed = (seed * 16807) % 2147483647; return seed / 2147483647; };
+  c.fillStyle = '#dfe8ff';
+  for (let i = 0; i < 90; i++) { c.globalAlpha = 0.25 + rnd() * 0.6; c.fillRect(rnd() * W, rnd() * H * 0.5, 1.6, 1.6); }
+  c.globalAlpha = 1;
+  const mx = W * 0.78, my = H * 0.16, mr = Math.min(W, H) * 0.055;
+  const glow = c.createRadialGradient(mx, my, mr * 0.4, mx, my, mr * 4.2);
+  glow.addColorStop(0, 'rgba(210,225,255,0.5)'); glow.addColorStop(1, 'rgba(210,225,255,0)');
+  c.fillStyle = glow; c.fillRect(mx - mr * 4.2, my - mr * 4.2, mr * 8.4, mr * 8.4);
+  c.fillStyle = '#e8efff'; c.beginPath(); c.arc(mx, my, mr, 0, Math.PI * 2); c.fill();
+  c.fillStyle = 'rgba(190,205,240,0.5)'; c.beginPath(); c.arc(mx - mr * 0.35, my - mr * 0.2, mr * 0.16, 0, Math.PI * 2); c.fill();
+  const hor = H * 0.66;
+  c.fillStyle = '#07080f';
+  for (let i = 0; i < 7; i++) {
+    const px = (i / 7) * W + rnd() * 20 - 10, pw = 16 + rnd() * 26, ph = (0.1 + rnd() * 0.22) * H;
+    c.fillRect(px, hor - ph, pw, ph);
+    if (rnd() > 0.5) c.fillRect(px - 4, hor - ph - 6, pw + 8, 7);
+  }
+  c.fillStyle = '#04050a'; c.fillRect(0, hor, W, H - hor);
+  const fog = c.createLinearGradient(0, hor - 30, 0, hor + 50);
+  fog.addColorStop(0, 'rgba(140,160,220,0)'); fog.addColorStop(0.5, 'rgba(140,160,220,0.10)'); fog.addColorStop(1, 'rgba(140,160,220,0)');
+  c.fillStyle = fog; c.fillRect(0, hor - 30, W, 80);
+}
+
+/* ============================== three setup ============================== */
+let renderer, scene, hemi, moonLight, goldLight, impactLight;
+let mixers = [], bones = {}, roots = {};
+let tethers = [], shaft = null, ring = null, embers = null, dust = null, stones = [];
+const clockStart = performance.now();
+
+function makeStage() {
+  const g = new THREE.Group();
+  const stone = new THREE.MeshStandardMaterial({ color: 0x3a3733, roughness: 0.95, metalness: 0.02 });
+  const stone2 = new THREE.MeshStandardMaterial({ color: 0x4a463f, roughness: 0.9 });
+  const disc = new THREE.Mesh(new THREE.CircleGeometry(2.9, 48), new THREE.MeshStandardMaterial({ color: 0x2e2b28, roughness: 1 }));
+  disc.rotation.x = -Math.PI / 2; disc.position.set(0, 0, -0.2); disc.receiveShadow = true; g.add(disc);
+  const rim = new THREE.Mesh(new THREE.TorusGeometry(2.9, 0.022, 8, 64),
+    new THREE.MeshStandardMaterial({ color: 0x6b5a2e, emissive: 0xffbe50, emissiveIntensity: 0.35, roughness: 0.5 }));
+  rim.rotation.x = Math.PI / 2; rim.position.set(0, 0.012, -0.2); g.add(rim);
+  const ringIn = new THREE.Mesh(new THREE.TorusGeometry(1.9, 0.012, 8, 56),
+    new THREE.MeshStandardMaterial({ color: 0x54461f, emissive: 0xffbe50, emissiveIntensity: 0.18, roughness: 0.6 }));
+  ringIn.rotation.x = Math.PI / 2; ringIn.position.set(0, 0.012, -0.2); g.add(ringIn);
+  // soft AO blob under the stage
+  const ac = document.createElement('canvas'); ac.width = ac.height = 256;
+  const ax = ac.getContext('2d');
+  const ag = ax.createRadialGradient(128, 128, 30, 128, 128, 128);
+  ag.addColorStop(0, 'rgba(0,0,0,0.55)'); ag.addColorStop(1, 'rgba(0,0,0,0)');
+  ax.fillStyle = ag; ax.fillRect(0, 0, 256, 256);
+  const ao = new THREE.Mesh(new THREE.PlaneGeometry(7.6, 7.6),
+    new THREE.MeshBasicMaterial({ map: new THREE.CanvasTexture(ac), transparent: true, depthWrite: false }));
+  ao.rotation.x = -Math.PI / 2; ao.position.set(0, -0.005, -0.2); g.add(ao);
+  // broken pillars
+  let seed = 7; const rnd = () => { seed = (seed * 16807) % 2147483647; return seed / 2147483647; };
+  for (let i = 0; i < 8; i++) {
+    const a = (i / 8) * Math.PI * 2 + rnd() * 0.5;
+    const r = 2.55 + rnd() * 0.25;
+    const hgt = 0.5 + rnd() * 1.5;
+    const p = new THREE.Mesh(new THREE.CylinderGeometry(0.085, 0.115, hgt, 10), i % 2 ? stone : stone2);
+    p.position.set(Math.cos(a) * r, hgt / 2, -0.2 + Math.sin(a) * r);
+    p.rotation.set((rnd() - 0.5) * 0.09, 0, (rnd() - 0.5) * 0.09);
+    p.castShadow = true; p.receiveShadow = true; g.add(p);
+    const cap = new THREE.Mesh(new THREE.BoxGeometry(0.3, 0.07, 0.3), stone2);
+    cap.position.set(p.position.x, hgt + 0.03, p.position.z); cap.rotation.y = rnd() * 3; cap.castShadow = true; g.add(cap);
+  }
+  // rubble + bounce stones
+  for (let i = 0; i < 16; i++) {
+    const s = 0.04 + rnd() * 0.09;
+    const st = new THREE.Mesh(new THREE.BoxGeometry(s, s * 0.7, s), stone);
+    const a = rnd() * Math.PI * 2, r = 0.7 + rnd() * 2.0;
+    st.position.set(Math.cos(a) * r, s * 0.35, -0.2 + Math.sin(a) * r);
+    st.rotation.set(rnd() * 3, rnd() * 3, rnd() * 3); st.castShadow = true; g.add(st);
+    if (i < 7) stones.push({ mesh: st, home: st.position.clone(), ph: rnd() * Math.PI * 2 });
+  }
+  return g;
+}
+
+function makeBeam(color, radius) {
+  const geo = new THREE.CylinderGeometry(radius, radius, 1, 6, 1, true);
+  geo.translate(0, 0.5, 0);
+  const mat = new THREE.MeshBasicMaterial({ color, transparent: true, opacity: 0,
+    blending: THREE.AdditiveBlending, depthWrite: false, side: THREE.DoubleSide });
+  const m = new THREE.Mesh(geo, mat);
+  m.frustumCulled = false;
+  return m;
+}
+const _v1 = new THREE.Vector3(), _v2 = new THREE.Vector3(), _v3 = new THREE.Vector3();
+const _up = new THREE.Vector3(0, 1, 0);
+function aimBeam(beam, a, b) {
+  _v3.subVectors(b, a);
+  const len = _v3.length();
+  beam.position.copy(a);
+  beam.scale.set(1, len, 1);
+  beam.quaternion.setFromUnitVectors(_up, _v3.normalize());
+}
+
+function makePoints(n, color, size, spread, yMax) {
+  const pos = new Float32Array(n * 3);
+  const geo = new THREE.BufferGeometry();
+  geo.setAttribute('position', new THREE.BufferAttribute(pos, 3));
+  const mat = new THREE.PointsMaterial({ color, size, transparent: true, opacity: 0,
+    blending: THREE.AdditiveBlending, depthWrite: false, sizeAttenuation: true });
+  const pts = new THREE.Points(geo, mat);
+  pts.frustumCulled = false;
+  pts.userData = { n, pos, spread, yMax, vel: new Float32Array(n * 3), seed: new Float32Array(n) };
+  for (let i = 0; i < n; i++) pts.userData.seed[i] = Math.random() * 100;
+  return pts;
+}
+
+function initGL() {
+  const LOWFX = new URLSearchParams(location.search).has('lowfx');
+  renderer = new THREE.WebGLRenderer({ canvas: glCanvas, antialias: true, alpha: true });
+  renderer.setPixelRatio(LOWFX ? 1 : Math.min(window.devicePixelRatio || 1, 2));
+  renderer.shadowMap.enabled = !LOWFX;
+  renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+  scene = new THREE.Scene();
+  camera = new THREE.PerspectiveCamera(66, W / H, 0.05, 100);
+  camera.position.set(0, 1.75, 5.3);
+  camera.lookAt(0, 1.05, -0.2);
+  baseCamQ = camera.quaternion.clone();
+  hemi = new THREE.HemisphereLight(0x33406e, 0x191008, 0.85); scene.add(hemi);
+  moonLight = new THREE.DirectionalLight(0x93b4ff, 1.1);
+  moonLight.position.set(3.5, 6, 2.5); moonLight.castShadow = !new URLSearchParams(location.search).has('lowfx');
+  moonLight.shadow.mapSize.set(1024, 1024);
+  moonLight.shadow.camera.left = -4; moonLight.shadow.camera.right = 4;
+  moonLight.shadow.camera.top = 4; moonLight.shadow.camera.bottom = -4;
+  moonLight.shadow.camera.far = 20; moonLight.shadow.bias = -0.002;
+  scene.add(moonLight);
+  goldLight = new THREE.PointLight(0xffc860, 0, 7, 1.6); goldLight.position.set(-0.98, 1.6, 0.4); scene.add(goldLight);
+  impactLight = new THREE.PointLight(0xfff2cc, 0, 10, 1.4); impactLight.position.set(0.1, 1.3, -1.0); scene.add(impactLight);
+  scene.add(makeStage());
+  // light shaft over Zelda
+  const shaftGeo = new THREE.CylinderGeometry(0.32, 1.15, 3.6, 20, 1, true);
+  shaft = new THREE.Mesh(shaftGeo, new THREE.MeshBasicMaterial({ color: 0xffd98a, transparent: true,
+    opacity: 0, blending: THREE.AdditiveBlending, depthWrite: false, side: THREE.DoubleSide }));
+  shaft.position.set(-0.98, 1.8, 0.38); scene.add(shaft);
+  // tethers: zelda hands -> ganon hands, sky -> ganon chest
+  for (let i = 0; i < 3; i++) { const b = makeBeam(0xffcf6e, 0.028); scene.add(b); tethers.push(b); }
+  // shockwave ring
+  ring = new THREE.Mesh(new THREE.RingGeometry(0.42, 0.5, 48),
+    new THREE.MeshBasicMaterial({ color: 0xffe9b0, transparent: true, opacity: 0,
+      blending: THREE.AdditiveBlending, depthWrite: false, side: THREE.DoubleSide }));
+  ring.rotation.x = -Math.PI / 2; ring.position.set(0.1, 0.07, -1.05); scene.add(ring);
+  embers = makePoints(240, 0xffa640, 0.035, 2.6, 2.2); scene.add(embers);
+  dust = makePoints(130, 0x9a8a76, 0.05, 0.4, 0.3); scene.add(dust);
+  glReady = true;
+}
+
+const loader = new GLTFLoader();
+let loadedCount = 0;
+function findBone(root, name) {
+  const norm = (s) => s.replace(/[\[\]. ]/g, '');
+  const want = norm(name);
+  let hit = null;
+  root.traverse((o) => { if (!hit && o.name && norm(o.name) === want) hit = o; });
+  return hit;
+}
+function loadModel(url, key) {
+  loader.load(url, (gltf) => {
+    const root = gltf.scene;
+    roots[key] = root;
+    if (key === 'zelda') root.position.x = 0.27;
+    root.traverse((o) => { if (o.isMesh) { o.castShadow = true; o.frustumCulled = false; } });
+    scene.add(root);
+    const mixer = new THREE.AnimationMixer(root);
+    const clip = gltf.animations.find(a => a.name === 'movie') || gltf.animations[0];
+    if (clip) { const act = mixer.clipAction(clip); act.play(); }
+    mixers.push(mixer);
+    if (key === 'ganon') {
+      bones.ganonHandL = findBone(root, 'nodes[31]');
+      bones.ganonHandR = findBone(root, 'nodes[30]');
+      bones.ganonChest = findBone(root, 'nodes[2]');
+    } else if (key === 'zelda') {
+      bones.zeldaHandL = findBone(root, 'Wrist_L');
+      bones.zeldaHandR = findBone(root, 'Wrist_R');
+    }
+    loadedCount++;
+    loadTag.textContent = loadedCount >= 3 ? 'the arena is ready' : `summoning the arena… ${loadedCount} / 3`;
+    if (loadedCount >= 3) setTimeout(() => loadTag.classList.add('hidden'), 1200);
+  }, undefined, (err) => { errors.push('load ' + key + ': ' + err.message); loadTag.textContent = 'a model failed to load — check connection'; });
+}
+
+/* ============================== subtitles ============================== */
+const SUBS = [
+  { a: 0.8, b: 6.1, who: 'NARRATOR', text: 'Amid the ruins... the King of Evil made his final stand.' },
+  { a: 10.2, b: 15.4, who: 'ZELDA', text: "Link! My magic can't hold him for long! The Master Sword — strike now!" },
+  { a: 23.8, b: 32.3, who: 'GANON', text: 'Fools! The Triforce of Power is eternal! You die with me!' },
+  { a: 44.3, b: 45.6, who: 'ZELDA', text: 'NOW!' },
+  { a: 45.55, b: 46.5, who: 'LINK', text: 'Hyaaah!' }
+];
+let subIdx = -1;
+function updateSubs(t) {
+  let idx = -1;
+  for (let i = 0; i < SUBS.length; i++) if (t >= SUBS[i].a && t <= SUBS[i].b) { idx = i; break; }
+  if (idx !== subIdx) {
+    subIdx = idx;
+    if (idx >= 0) {
+      subWho.textContent = SUBS[idx].who;
+      subWho.className = 'who-' + SUBS[idx].who;
+      subText.textContent = SUBS[idx].text;
+      subCard.classList.add('show');
+    } else subCard.classList.remove('show');
+  }
+}
+
+/* ============================== FX timeline ============================== */
+function shakeAmp(t) {
+  let a = 0;
+  if (t > 34.9 && t < 36.2) a = Math.max(a, 0.045 * (1 - (t - 34.9) / 1.3));
+  if (t > 46.6 && t < 47.6) a = Math.max(a, 0.085 * (1 - (t - 46.6) / 1.0));
+  if (t > 6.2 && t < 7.0) a = Math.max(a, 0.02 * (1 - (t - 6.2) / 0.8));
+  return a;
+}
+function updateFX(t, dt) {
+  // gold light + shaft: rise with Zelda's spell, hold, settle
+  const hold = sstep(8.6, 10.4, t) * (1 - sstep(51.5, 55, t));
+  if (shaft) shaft.material.opacity = 0.13 * hold + (hold > 0 ? 0.02 * Math.sin(t * 23) * hold : 0);
+  goldLight.intensity = 14 * hold + (t > 46.6 && t < 47.4 ? 30 * (1 - (t - 46.6) / 0.8) : 0);
+  // tethers
+  const tOn = t >= 9.0 && t < 46.6;
+  const snap = 1 + 0.9 * Math.exp(-Math.max(0, t - 9.0) * 9);
+  const shim = 0.78 + 0.22 * Math.sin(t * 31) * Math.sin(t * 17.3);
+  const ends = [];
+  if (bones.zeldaHandL && bones.ganonHandR) ends.push([bones.zeldaHandL, bones.ganonHandR]);
+  if (bones.zeldaHandR && bones.ganonHandL) ends.push([bones.zeldaHandR, bones.ganonHandL]);
+  if (bones.ganonChest) ends.push([null, bones.ganonChest]);
+  tethers.forEach((beam, i) => {
+    const e = ends[i];
+    let vis = tOn && !!e;
+    if (i === 0 && t >= 33.6) vis = false;        // right-arm tether snaps when he breaks free
+    if (!vis) { beam.material.opacity = 0; return; }
+    if (e[0]) e[0].getWorldPosition(_v1); else _v1.set(0.7, 3.5, -1.3);
+    e[1].getWorldPosition(_v2);
+    aimBeam(beam, _v1, _v2);
+    beam.material.opacity = clamp(shim * snap, 0, 1) * (t > 45.8 ? (46.6 - t) / 0.8 : 1);
+  });
+  // flash + ring + impact light at 46.6
+  const fdt = t - 46.6;
+  flashEl.style.opacity = fdt >= 0 && fdt < 0.55 ? String(0.95 * (1 - fdt / 0.55)) : '0';
+  if (ring) {
+    if (fdt >= 0 && fdt < 1.1) {
+      const k = fdt / 1.1;
+      ring.scale.setScalar(1 + k * 8.5);
+      ring.material.opacity = 0.85 * (1 - k);
+    } else ring.material.opacity = 0;
+  }
+  impactLight.intensity = fdt >= 0 && fdt < 0.9 ? 60 * (1 - fdt / 0.9) : 0;
+  // embers: born at the strike, drift up, fade by 60
+  if (embers) {
+    const u = embers.userData;
+    const life = sstep(46.8, 48.5, t) * (1 - sstep(57.5, 60, t));
+    embers.material.opacity = 0.85 * life;
+    if (life > 0) {
+      for (let i = 0; i < u.n; i++) {
+        const s = u.seed[i];
+        const ang = s * 2.7, rad = ((s * 13.7) % 1) * u.spread;
+        const rise = ((t * (0.10 + (s % 0.13)) + s) % 1) * u.yMax;
+        u.pos[i * 3] = Math.cos(ang) * rad + Math.sin(t * 0.9 + s * 9) * 0.08;
+        u.pos[i * 3 + 1] = 0.1 + rise;
+        u.pos[i * 3 + 2] = -0.2 + Math.sin(ang) * rad;
+      }
+      embers.geometry.attributes.position.needsUpdate = true;
+    }
+  }
+  // dust burst at ground crack 35.3
+  if (dust) {
+    const u = dust.userData;
+    const ddt = t - 35.3;
+    if (ddt >= 0 && ddt < 1.3) {
+      dust.material.opacity = 0.5 * (1 - ddt / 1.3);
+      for (let i = 0; i < u.n; i++) {
+        const s = u.seed[i];
+        const ang = s * 6.28, sp = 0.4 + (s % 0.5);
+        u.pos[i * 3] = Math.cos(ang) * sp * ddt;
+        u.pos[i * 3 + 1] = 0.06 + Math.max(0, ddt * (0.7 + (s % 0.6)) - ddt * ddt * 0.8);
+        u.pos[i * 3 + 2] = -0.35 + Math.sin(ang) * sp * ddt;
+      }
+      dust.geometry.attributes.position.needsUpdate = true;
+    } else dust.material.opacity = 0;
+  }
+  // rubble bounce at the crack
+  stones.forEach((st) => {
+    const ddt = t - 35.3;
+    if (ddt >= 0 && ddt < 0.7) st.mesh.position.y = st.home.y + Math.abs(Math.sin(ddt * 9 + st.ph)) * 0.09 * (1 - ddt / 0.7);
+    else st.mesh.position.y = st.home.y;
+  });
+  // title card near the end
+  if (t >= 55.5 && started && !ended) { ended = true; titleCard.classList.add('show'); }
+  if (t < 55 && ended) { ended = false; titleCard.classList.remove('show'); }
+}
+
+/* ============================== main loop ============================== */
+function movieT() {
+  if (!started) return 0;
+  if (!wallDrive && audio && audio.readyState > 2 && !audio.paused && !audio.ended) return audio.currentTime;
+  return clamp((performance.now() - startWall) / 1000, 0, 60.2);
+}
+let lastFrame = performance.now();
+function loop() {
+  requestAnimationFrame(loop);
+  const now = performance.now();
+  const dt = Math.min(0.05, (now - lastFrame) / 1000); lastFrame = now;
+  if (!glReady) return;
+  const t = movieT();
+  for (const m of mixers) m.setTime(t);
+  updateSubs(t);
+  updateFX(t, dt);
+  // camera: base + shake, motion look-around when available
+  const sh = started ? shakeAmp(t) : 0;
+  camera.position.set((Math.random() - 0.5) * sh, 1.75 + (Math.random() - 0.5) * sh, 5.3);
+  if (!applyMotionCamera()) { camera.quaternion.copy(baseCamQ); }
+  renderer.render(scene, camera);
+}
+
+/* ============================== start / camera ============================== */
+async function startCamera() {
+  if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) return;
+  try {
+    const stream = await navigator.mediaDevices.getUserMedia({
+      video: { facingMode: 'environment', width: { ideal: 1280 }, height: { ideal: 720 } }, audio: false });
+    video.srcObject = stream;
+    await video.play().catch(() => {});
+    camOK = true;
+    bgCanvas.classList.add('hidden');
+  } catch (e) { camOK = false; }
+}
+function begin() {
+  if (started) return;
+  started = true; wallDrive = false;
+  startWall = performance.now();
+  startEl.classList.add('hidden');
+  try { audio.currentTime = 0; } catch (e) {}
+  const p = audio.play();
+  if (p && p.catch) p.catch(() => {});
+  setTimeout(() => { if (MOTION.needPerm && !MOTION.ever) motionPillEl.classList.remove('hidden'); }, 1600);
+}
+startBtn.addEventListener('click', () => {
+  askMotionPermission();          // synchronously inside the tap (iOS rule)
+  startCamera();
+  begin();
+});
+document.getElementById('replayBtn').addEventListener('click', () => {
+  titleCard.classList.remove('show'); ended = false; wallDrive = false;
+  startWall = performance.now();
+  try { audio.currentTime = 0; } catch (e) {}
+  const p = audio.play(); if (p && p.catch) p.catch(() => {});
+});
+document.addEventListener('pointerdown', () => { try { if (audio.paused && started && !ended) audio.play().catch(() => {}); } catch (e) {} }, true);
+
+/* debug / verification hooks */
+window.__seek = (s) => {
+  startEl.classList.add('hidden');
+  started = true; wallDrive = true;
+  try { audio.pause(); } catch (e) {}
+  startWall = performance.now() - s * 1000;
+};
+window.__names = (k) => { const out = []; if (roots[k]) roots[k].traverse((o) => { if (o.name) out.push(o.name); }); return out.slice(0, 80); };
+window.__grab = () => {
+  try {
+    const t = movieT();
+    for (const m of mixers) m.setTime(t);
+    updateFX(t, 0.016);
+    renderer.render(scene, camera);
+    return glCanvas.toDataURL('image/png');
+  } catch (e) { return 'ERR:' + e.message; }
+};
+window.__state = () => ({ t: movieT(), started, loaded: loadedCount, ready: glReady, errors: errors.slice(0, 5), camOK,
+  bonesFound: Object.keys(bones).filter(k => bones[k]),
+  beamOp: tethers.map(b => +b.material.opacity.toFixed(2)) });
+
+/* ============================== boot ============================== */
+function resize() {
+  W = window.innerWidth; H = window.innerHeight;
+  drawBG();
+  if (renderer) { renderer.setSize(W, H); if (camera) { camera.aspect = W / H; camera.updateProjectionMatrix(); } }
+}
+window.addEventListener('resize', resize);
+W = window.innerWidth; H = window.innerHeight;
+initGL();
+resize();
+loadModel('models/ganon.glb', 'ganon');
+loadModel('models/zelda.glb', 'zelda');
+loadModel('models/link.glb', 'link');
+if (new URLSearchParams(location.search).has('autoplay')) {
+  startEl.classList.add('hidden'); started = true; startWall = performance.now();
+}
+loop();
+</script>
+<script id="moth-game-guard-js">
+(function(){
+  var lastEnd=0;
+  function onUi(t){return t&&t.closest&&t.closest('button,a,input,select,textarea,[data-scroll]');}
+  document.addEventListener('touchend',function(e){
+    var now=Date.now();
+    if(!onUi(e.target)&&now-lastEnd<=300&&e.cancelable)e.preventDefault();
+    lastEnd=now;
+  },{passive:false});
+  ['gesturestart','gesturechange','gestureend'].forEach(function(n){
+    document.addEventListener(n,function(e){e.preventDefault();});
+  });
+  document.addEventListener('dblclick',function(e){e.preventDefault();},{passive:false});
+  document.addEventListener('contextmenu',function(e){e.preventDefault();});
+  document.addEventListener('touchmove',function(e){
+    if(e.target&&e.target.closest&&e.target.closest('[data-scroll]'))return;
+    if(e.cancelable)e.preventDefault();
+  },{passive:false});
+})();
+</script>
+</body>
+</html>
