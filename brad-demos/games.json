@@ -2206,6 +2206,18 @@
    "path": "../games/quicklook-gta/index.html",
    "thumb": "thumbs/quicklook-zelda.png",
    "title": "Quick Look: GTA Parachutes"
+  },
+  {
+   "autostart": [],
+   "category": "AR",
+   "id": "zombie-plow-ar",
+   "keys": {},
+   "labels": {},
+   "note": "Web AR zombie mowing: drag to steer a snowplow across your real floor while zombies burst up through cracks in it - chain kills for multipliers, but big zombies grab the blade if you creep. 90 seconds, one field, ~100 zombies.",
+   "orientation": "any",
+   "path": "../games/zombie-plow-ar/index.html",
+   "thumb": "thumbs/bonk-yard.png",
+   "title": "ZOMBIE PLOW AR"
   }
  ]
 }
