@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>GTA V — Parachute Scenes in Your Room</title>
+<style>
+  :root { color-scheme: dark; }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; min-height: 100svh; display: flex; flex-direction: column;
+    align-items: center; justify-content: center; gap: 18px;
+    padding: 28px 18px calc(28px + env(safe-area-inset-bottom));
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    background: linear-gradient(180deg, #0d1526 0%, #1b2b4d 55%, #3a2b12 100%);
+    color: #eef3ff;
+  }
+  h1 { margin: 0; font-size: 1.55rem; text-align: center; }
+  p.sub { margin: 0; text-align: center; color: #b9c8ea; max-width: 34em; }
+  a.ar-card {
+    display: block; width: min(92vw, 430px); border-radius: 22px; overflow: hidden;
+    text-decoration: none; background: #fff;
+    box-shadow: 0 14px 34px rgba(0, 0, 0, .5);
+    border: 3px solid #f5a623;
+    -webkit-tap-highlight-color: transparent;
+  }
+  a.ar-card img { display: block; width: 100%; height: auto; background: #20242c; }
+  .cta {
+    padding: 14px 16px 16px; text-align: center;
+    font-weight: 700; font-size: 1.15rem; color: #9a6200;
+  }
+  .cta small { display: block; margin-top: 4px; font-weight: 400; font-size: .85rem; color: #7a6a4a; }
+  #status {
+    max-width: 34em; text-align: center; font-size: .95rem; line-height: 1.45;
+    background: rgba(255,255,255,.08); border-radius: 12px; padding: 10px 14px;
+  }
+  footer { font-size: .78rem; color: #8fa3cc; text-align: center; max-width: 36em; line-height: 1.5; }
+</style>
+</head>
+<body>
+  <h1>🪂 GTA V — Parachute Scenes</h1>
+  <p class="sub">Open on iPhone or iPad, tap a card, and place the scene in your room.
+     Both loop forever — set them on the floor and walk around them.</p>
+
+  <a class="ar-card" rel="ar" href="maze-bank-jump.usdz">
+    <img src="maze-preview.png" alt="Franklin on the Maze Bank tower — tap to view in your room">
+    <div class="cta">🏢 The Maze Bank Jump
+      <small>A mini Maze Bank tower on your floor — Franklin runs the helipad,
+        leaps off, freefalls, pops his chute and drifts down to the base</small>
+    </div>
+  </a>
+
+  <a class="ar-card" rel="ar" href="michael-freefall.usdz">
+    <img src="michael-preview.png" alt="Michael freefalling — tap to view in your room">
+    <div class="cta">🪂 Michael falls right at you!
+      <small>Michael flails, settles into a spread-eagle and falls straight at you —
+        chute pops, and he lands right in front of you</small>
+    </div>
+  </a>
+
+  <div id="status">Checking whether this device can do AR…</div>
+
+  <footer>
+    Fan-made scenes from GTA V character models; towers and parachutes built to match.
+    Local prototyping only.<br>
+    AR viewing uses Apple Quick Look and needs an iPhone or iPad (iOS 12+).
+  </footer>
+
+<script>
+  (function () {
+    var status = document.getElementById('status');
+    var a = document.createElement('a');
+    if (a.relList && a.relList.supports && a.relList.supports('ar')) {
+      status.textContent = 'This device supports Quick Look AR — tap a card to place the scene.';
+    } else {
+      status.textContent = 'Quick Look AR needs Safari on iPhone or iPad. On other devices the cards download the models instead.';
+    }
+  })();
+</script>
+</body>
+</html>

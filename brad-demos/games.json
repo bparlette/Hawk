@@ -2194,6 +2194,18 @@
    "path": "../games/deep-rock-dig-ar/index.html",
    "thumb": "thumbs/bonk-yard.png",
    "title": "DEEP ROCK DIG AR"
+  },
+  {
+   "autostart": [],
+   "category": "AR",
+   "id": "quicklook-gta",
+   "keys": {},
+   "labels": {},
+   "note": "Apple Quick Look AR: two GTA V parachute scenes for your room - Franklin leaps off a mini Maze Bank tower and drifts down, and Michael freefalls right at you, chute pop and all, landing at your feet. USDZ models - no app needed.",
+   "orientation": "any",
+   "path": "../games/quicklook-gta/index.html",
+   "thumb": "thumbs/quicklook-zelda.png",
+   "title": "Quick Look: GTA Parachutes"
   }
  ]
 }
