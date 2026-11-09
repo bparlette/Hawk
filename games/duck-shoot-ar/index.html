@@ -1,0 +1,1178 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+<title>DUCK SHOOT AR — the light gun is your phone</title>
+<style>
+  html, body { height: 100%; }
+  body {
+    margin: 0;
+    overflow: hidden;
+    background: #17384a;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    color: #fff;
+    -webkit-user-select: none;
+    user-select: none;
+  }
+  #cam, #room, #gl, #fx {
+    position: fixed; inset: 0;
+    width: 100%; height: 100%;
+    display: block;
+  }
+  #cam { object-fit: cover; background: #17384a; z-index: 0; }
+  #room { z-index: 0; }
+  #gl { z-index: 1; }
+  #fx { z-index: 2; pointer-events: none; }
+  #hud {
+    position: fixed;
+    top: calc(env(safe-area-inset-top, 0px) + 8px);
+    left: 10px; right: 10px;
+    z-index: 3;
+    pointer-events: none;
+  }
+  #hudRow { display: flex; gap: 6px; align-items: center; }
+  .chip {
+    background: rgba(8, 30, 44, 0.58);
+    border: 1px solid rgba(255,255,255,0.22);
+    border-radius: 999px;
+    padding: 6px 10px;
+    font-size: 14px; font-weight: 700;
+    letter-spacing: 0.02em;
+    backdrop-filter: blur(3px);
+    white-space: nowrap;
+  }
+  .chip b { font-size: 16px; }
+  #comboChip { color: #ffd76a; opacity: 0; transform: scale(0.8); transition: opacity 0.15s, transform 0.15s; }
+  #comboChip.show { opacity: 1; transform: scale(1); }
+  #comboChip.hot { color: #ff9d5c; }
+  #timeChip { margin-left: auto; }
+  #timeChip.low { color: #ff8a7a; }
+  #camTag { font-size: 11px; font-weight: 700; opacity: 0.85; margin-left: auto; }
+  #timerWrap {
+    margin-top: 6px;
+    height: 7px;
+    border-radius: 99px;
+    background: rgba(0,0,0,0.35);
+    border: 1px solid rgba(255,255,255,0.18);
+    overflow: hidden;
+  }
+  #timerBar {
+    height: 100%; width: 100%;
+    border-radius: 99px;
+    background: linear-gradient(90deg, #7be495, #ffd76a 60%, #ff8a5e);
+    background-size: 100vw 100%;
+  }
+  /* center crosshair — the light gun's sights */
+  #cross {
+    position: fixed;
+    left: 50%; top: 50%;
+    width: 46px; height: 46px;
+    transform: translate(-50%, -50%);
+    z-index: 3;
+    pointer-events: none;
+  }
+  #cross .ring {
+    position: absolute; inset: 0;
+    border: 2.5px solid rgba(255,255,255,0.92);
+    border-radius: 50%;
+    box-shadow: 0 0 6px rgba(0,0,0,0.55), inset 0 0 6px rgba(0,0,0,0.35);
+  }
+  #cross .dot {
+    position: absolute; left: 50%; top: 50%;
+    width: 5px; height: 5px; border-radius: 50%;
+    background: #ff5a3c;
+    transform: translate(-50%, -50%);
+    box-shadow: 0 0 4px rgba(0,0,0,0.6);
+  }
+  #cross .tick { position: absolute; background: rgba(255,255,255,0.92); box-shadow: 0 0 4px rgba(0,0,0,0.5); }
+  #cross .tick.t { left: 50%; top: -8px; width: 2.5px; height: 9px; transform: translateX(-50%); }
+  #cross .tick.b { left: 50%; bottom: -8px; width: 2.5px; height: 9px; transform: translateX(-50%); }
+  #cross .tick.l { top: 50%; left: -8px; height: 2.5px; width: 9px; transform: translateY(-50%); }
+  #cross .tick.r { top: 50%; right: -8px; height: 2.5px; width: 9px; transform: translateY(-50%); }
+  #cross.hot .ring { border-color: #ffd76a; }
+  #cross.fire .ring { border-color: #ff5a3c; }
+  /* the SHOOT button — bottom-right thumb zone */
+  #shootBtn {
+    position: fixed;
+    right: calc(env(safe-area-inset-right, 0px) + 18px);
+    bottom: calc(env(safe-area-inset-bottom, 0px) + 26px);
+    z-index: 4;
+    width: 96px; height: 96px;
+    border-radius: 50%;
+    border: 3px solid rgba(120, 30, 0, 0.6);
+    background: radial-gradient(circle at 35% 30%, #ffb066, #ff7a2e 55%, #e64e12);
+    color: #fff;
+    font: inherit;
+    font-size: 30px;
+    line-height: 1;
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    gap: 2px;
+    box-shadow: 0 10px 26px rgba(0,0,0,0.5), inset 0 -6px 12px rgba(120,30,0,0.35);
+    cursor: pointer;
+    -webkit-tap-highlight-color: transparent;
+  }
+  #shootBtn span { font-size: 13px; font-weight: 900; letter-spacing: 0.14em; }
+  #shootBtn:active { transform: scale(0.93); }
+  #bigMsg {
+    position: fixed;
+    left: 50%; top: 22%;
+    transform: translate(-50%, -50%) scale(0.7);
+    z-index: 4;
+    font-size: 38px; font-weight: 900;
+    color: #ffd76a;
+    text-shadow: 0 3px 0 rgba(90,40,0,0.55), 0 6px 18px rgba(0,0,0,0.5);
+    opacity: 0;
+    pointer-events: none;
+    white-space: nowrap;
+  }
+  #bigMsg.pop { animation: msgPop 0.9s ease-out forwards; }
+  @keyframes msgPop {
+    0% { opacity: 0; transform: translate(-50%, -50%) scale(0.6); }
+    18% { opacity: 1; transform: translate(-50%, -50%) scale(1.15); }
+    32% { transform: translate(-50%, -50%) scale(1); }
+    75% { opacity: 1; }
+    100% { opacity: 0; transform: translate(-50%, -62%) scale(1); }
+  }
+  .overlay {
+    position: fixed; inset: 0;
+    z-index: 5;
+    display: flex; align-items: center; justify-content: center;
+    background:
+      radial-gradient(120% 90% at 50% 0%, rgba(120, 200, 255, 0.30), rgba(0,0,0,0) 55%),
+      linear-gradient(180deg, rgba(10, 42, 60, 0.88), rgba(4, 18, 28, 0.94));
+    padding: 20px;
+    box-sizing: border-box;
+  }
+  .card { text-align: center; max-width: 430px; }
+  .card .big { font-size: 56px; line-height: 1.1; }
+  .card h1 {
+    margin: 6px 0 4px;
+    font-size: 38px; font-weight: 900; letter-spacing: 0.01em;
+    text-shadow: 0 3px 0 rgba(0,0,0,0.35);
+  }
+  .card p { margin: 6px 0; font-size: 16px; line-height: 1.45; opacity: 0.92; }
+  .card .scoreLine { font-size: 21px; font-weight: 800; opacity: 1; }
+  .card .scoreLine b { font-size: 30px; color: #ffd76a; }
+  .playBtn {
+    font: inherit;
+    margin-top: 16px;
+    font-size: 21px; font-weight: 900;
+    color: #17384a;
+    background: linear-gradient(180deg, #aee3ff, #5cb8f0);
+    border: 2px solid rgba(10, 60, 90, 0.55);
+    border-radius: 999px;
+    padding: 15px 36px;
+    box-shadow: 0 8px 22px rgba(0,0,0,0.45);
+    cursor: pointer;
+  }
+  .playBtn:active { transform: scale(0.96); }
+  .card .fine { font-size: 13px; opacity: 0.65; margin-top: 14px; }
+  #motionPill {
+    position: fixed;
+    left: 50%; transform: translateX(-50%);
+    bottom: calc(env(safe-area-inset-bottom, 0px) + 140px);
+    z-index: 6;
+    font: inherit; font-size: 15px; font-weight: 800;
+    color: #fff;
+    background: rgba(8, 30, 44, 0.88);
+    border: 2px solid rgba(255, 215, 106, 0.9);
+    border-radius: 999px;
+    padding: 12px 18px;
+    box-shadow: 0 8px 22px rgba(0,0,0,0.5);
+    cursor: pointer;
+    white-space: nowrap;
+  }
+  #motionPill:active { transform: translateX(-50%) scale(0.96); }
+  .hidden { display: none !important; }
+</style>
+<script type="importmap">
+{ "imports": { "three": "./vendor/three.module.js" } }
+</script>
+<style id="moth-game-guard">
+html,body{touch-action:none;overscroll-behavior:none;-webkit-touch-callout:none;-webkit-user-select:none;user-select:none;-webkit-tap-highlight-color:transparent}
+canvas{touch-action:none}
+</style>
+</head>
+<body>
+<video id="cam" autoplay playsinline muted></video>
+<canvas id="room"></canvas>
+<canvas id="gl"></canvas>
+<canvas id="fx"></canvas>
+
+<div id="hud" class="hidden">
+  <div id="hudRow">
+    <div class="chip">🏆 <b><span id="score">0</span></b></div>
+    <div class="chip">🎯 <b><span id="hits">0</span></b></div>
+    <div class="chip" id="comboChip">🔥 <span id="comboTxt">×1</span></div>
+    <div class="chip" id="timeChip">⏱ <b><span id="timeLeft">60</span></b></div>
+  </div>
+  <div id="timerWrap"><div id="timerBar"></div></div>
+  <div style="display:flex; margin-top:4px;"><div id="camTag">📷 AR room</div></div>
+</div>
+
+<div id="cross" class="hidden">
+  <div class="ring"></div><div class="dot"></div>
+  <div class="tick t"></div><div class="tick b"></div><div class="tick l"></div><div class="tick r"></div>
+</div>
+
+<button id="shootBtn" class="hidden" type="button">🔫<span>SHOOT</span></button>
+
+<div id="bigMsg"></div>
+
+<button id="motionPill" class="hidden" type="button">📱 Enable motion look-around</button>
+
+<div id="start" class="overlay">
+  <div class="card">
+    <div class="big">🦆</div>
+    <h1>DUCK SHOOT AR</h1>
+    <p>Ducks are loose in <b>your</b> room! Your phone is the light gun — <b>aim with the crosshair</b> and tap <b>SHOOT</b>!</p>
+    <p>🦆 Duck = <b>100</b> · ⭐ Golden duck = <b>500</b> · Hits build your combo: <b>×2 · ×3 · ×5</b> — but a miss breaks it!</p>
+    <button id="startBtn" class="playBtn" type="button">▶ PLAY</button>
+    <p class="fine">Needs camera for the full AR feel.<br>No camera? No problem — the ducks get a cozy pond instead.</p>
+  </div>
+</div>
+
+<div id="end" class="overlay hidden">
+  <div class="card">
+    <div class="big">⏰</div>
+    <h1>TIME UP!</h1>
+    <p class="scoreLine" id="rankLine">🎯 SHARPSHOOTER!</p>
+    <p class="scoreLine">You scored <b><span id="finalScore">0</span></b></p>
+    <p>🏅 Best: <span id="bestScore">0</span> · 🎯 Hits: <span id="hitLine">0/0</span> (<span id="accLine">0%</span>) · 🔥 Best streak: <span id="bestStreak">0</span> · 💨 Escaped: <span id="escCount">0</span></p>
+    <p id="newBest" class="scoreLine hidden">🎉 NEW BEST!</p>
+    <button id="againBtn" class="playBtn" type="button">↻ PLAY AGAIN</button>
+  </div>
+</div>
+
+<script type="module">
+import * as THREE from 'three';
+
+'use strict';
+/* ============================== helpers ============================== */
+const clamp = (v, a, b) => v < a ? a : (v > b ? b : v);
+const lerp = (a, b, t) => a + (b - a) * t;
+const rand = (a, b) => a + Math.random() * (b - a);
+const pick = arr => arr[Math.floor(Math.random() * arr.length)];
+
+/* ============================== audio (all synth) ============================== */
+let AC = null;
+function initAudio() {
+  try {
+    if ('audioSession' in navigator) { try { navigator.audioSession.type = 'playback'; } catch (e) {} }
+    if (!AC) {
+      const Ctor = window.AudioContext || window.webkitAudioContext;
+      if (Ctor) AC = new Ctor();
+    }
+    if (AC) {
+      if (AC.state === 'suspended') AC.resume();
+      // 1-sample silent buffer unlock (iOS first-gesture rule)
+      const buf = AC.createBuffer(1, 1, 22050);
+      const src = AC.createBufferSource();
+      src.buffer = buf; src.connect(AC.destination); src.start(0);
+    }
+  } catch (e) { /* audio is optional */ }
+}
+function resumeAudio() { try { if (AC && AC.state === 'suspended') AC.resume(); } catch (e) {} }
+document.addEventListener('pointerdown', resumeAudio, true);
+document.addEventListener('touchend', resumeAudio, true);
+document.addEventListener('visibilitychange', () => { if (!document.hidden) resumeAudio(); });
+
+function tone(f0, f1, dur, type, vol, delay, bandHz) {
+  if (!AC) return;
+  try {
+    const t0 = AC.currentTime + (delay || 0);
+    const o = AC.createOscillator(), g = AC.createGain();
+    o.type = type || 'sine';
+    o.frequency.setValueAtTime(Math.max(30, f0), t0);
+    o.frequency.exponentialRampToValueAtTime(Math.max(30, f1), t0 + dur);
+    g.gain.setValueAtTime(0.0001, t0);
+    g.gain.exponentialRampToValueAtTime(vol || 0.15, t0 + 0.012);
+    g.gain.exponentialRampToValueAtTime(0.0001, t0 + dur);
+    if (bandHz) {
+      const bp = AC.createBiquadFilter();
+      bp.type = 'bandpass'; bp.frequency.value = bandHz; bp.Q.value = 1.1;
+      o.connect(bp); bp.connect(g);
+    } else o.connect(g);
+    g.connect(AC.destination);
+    o.start(t0); o.stop(t0 + dur + 0.05);
+  } catch (e) {}
+}
+let _noiseBuf = null;
+function noiseBurst(dur, vol, delay, lowHz) {
+  if (!AC) return;
+  try {
+    if (!_noiseBuf) {
+      _noiseBuf = AC.createBuffer(1, AC.sampleRate * 0.5, AC.sampleRate);
+      const d = _noiseBuf.getChannelData(0);
+      for (let i = 0; i < d.length; i++) d[i] = Math.random() * 2 - 1;
+    }
+    const t0 = AC.currentTime + (delay || 0);
+    const src = AC.createBufferSource(); src.buffer = _noiseBuf;
+    const lp = AC.createBiquadFilter(); lp.type = 'lowpass'; lp.frequency.value = lowHz || 3000;
+    const g = AC.createGain();
+    g.gain.setValueAtTime(vol, t0);
+    g.gain.exponentialRampToValueAtTime(0.0001, t0 + dur);
+    src.connect(lp); lp.connect(g); g.connect(AC.destination);
+    src.start(t0); src.stop(t0 + dur + 0.05);
+  } catch (e) {}
+}
+/* quack = filtered square blip, pitch drops like a cartoon duck */
+const sndQuack = (vol) => { tone(rand(360, 430), 170, 0.13, 'square', vol || 0.055, 0, 850); };
+const sndQuack2 = () => { sndQuack(0.06); tone(rand(360, 430), 170, 0.13, 'square', 0.05, 0.15, 850); };
+/* the escape laugh — descending chuckling quacks */
+const sndLaugh = () => { [540, 480, 425, 375].forEach((f, i) => tone(f, f * 0.72, 0.075, 'square', 0.06, i * 0.095, 800)); };
+const sndShot = () => { noiseBurst(0.10, 0.28, 0, 2600); tone(170, 55, 0.12, 'square', 0.14); };
+const sndEmpty = () => { tone(220, 150, 0.05, 'square', 0.05); };
+const sndHit = () => { tone(760, 170, 0.09, 'sine', 0.22); tone(1250, 900, 0.07, 'triangle', 0.12, 0.01); noiseBurst(0.06, 0.10, 0, 5000); };
+const sndGold = () => { tone(880, 880, 0.09, 'triangle', 0.13); tone(1174, 1174, 0.09, 'triangle', 0.13, 0.07); tone(1568, 1568, 0.17, 'triangle', 0.14, 0.14); };
+const sndCombo = () => { tone(660, 990, 0.09, 'triangle', 0.11); tone(990, 1320, 0.11, 'triangle', 0.11, 0.07); };
+const sndJingle = () => { [523, 659, 784, 1046].forEach((f, i) => tone(f, f, 0.16, 'triangle', 0.13, i * 0.11)); };
+
+/* ============================== dom / state ============================== */
+const video = document.getElementById('cam');
+const roomCanvas = document.getElementById('room');
+const rctx = roomCanvas.getContext('2d');
+const glCanvas = document.getElementById('gl');
+const fxCanvas = document.getElementById('fx');
+const fctx = fxCanvas.getContext('2d');
+const hudEl = document.getElementById('hud');
+const scoreEl = document.getElementById('score');
+const hitsEl = document.getElementById('hits');
+const comboChip = document.getElementById('comboChip');
+const comboTxt = document.getElementById('comboTxt');
+const timeChip = document.getElementById('timeChip');
+const timeLeftEl = document.getElementById('timeLeft');
+const timerBar = document.getElementById('timerBar');
+const camTagEl = document.getElementById('camTag');
+const bigMsgEl = document.getElementById('bigMsg');
+const startEl = document.getElementById('start');
+const endEl = document.getElementById('end');
+const crossEl = document.getElementById('cross');
+const shootBtn = document.getElementById('shootBtn');
+
+let W = 0, H = 0, floorTop = 0;
+let camOK = false;
+let phase = 'start';           // 'start' | 'playing' | 'over'
+const ROUND_LEN = 60;
+let score = 0, streak = 0, bestStreak = 0, topMult = 1;
+let shots = 0, hits = 0, escaped = 0;
+let timeLeft = ROUND_LEN, elapsed = 0, spawnTimer = 0, quackTimer = 2;
+let recoil = 0;
+let best = 0;
+try { best = parseInt(localStorage.getItem('duckARBest') || '0', 10) || 0; } catch (e) {}
+
+const mult = () => streak >= 10 ? 5 : (streak >= 6 ? 3 : (streak >= 3 ? 2 : 1));
+
+/* ================= AR motion: permission-in-gesture + 3DOF look-around =================
+   iOS 13+ Safari delivers deviceorientation events only after
+   DeviceOrientationEvent.requestPermission() resolves 'granted', and the
+   call only counts inside a user-gesture handler — a call made after an
+   `await` (e.g. behind getUserMedia) is silently denied and the scene
+   never moves. So the ask happens synchronously in the START tap (and on
+   the pill, whose own tap re-asks if events still don't flow).
+   AIMING IS THE LOOK-AROUND: the crosshair is screen-center, so wherever
+   she points the phone is where the shot goes. */
+let baseCamQ = null;             // camera orientation of the default view (set in initGL)
+let hemiLight = null, dirLight = null;
+const MOTION = {
+  needPerm: (typeof DeviceOrientationEvent !== 'undefined' &&
+             typeof DeviceOrientationEvent.requestPermission === 'function'),
+  perm: 'unknown',               // 'granted' | 'denied' | 'error' | 'n/a'
+  ok: false,                     // orientation events are flowing right now
+  ever: false,                   // at least one real event has arrived
+  lastAt: -1e9,
+  recal: true,                   // capture the reference pose on the next event
+  refQ: null,                    // device quaternion at "straight ahead"
+  devQ: new THREE.Quaternion()   // latest device quaternion
+};
+function askMotionPermission() {
+  if (!MOTION.needPerm) { MOTION.perm = 'n/a'; return; }
+  try {
+    const p = DeviceOrientationEvent.requestPermission();
+    if (p && typeof p.then === 'function') {
+      p.then(r => {
+        MOTION.perm = (r === 'granted') ? 'granted' : 'denied';
+        if (MOTION.perm === 'granted') MOTION.recal = true;
+      }).catch(() => { MOTION.perm = 'error'; });
+    }
+  } catch (e) { MOTION.perm = 'error'; }
+}
+const motionPillEl = document.getElementById('motionPill');
+function showMotionPill() { if (motionPillEl) motionPillEl.classList.remove('hidden'); }
+function hideMotionPill() { if (motionPillEl) motionPillEl.classList.add('hidden'); }
+if (motionPillEl) motionPillEl.addEventListener('click', () => { askMotionPermission(); });
+function motionWatchdog() {
+  // ~1.5 s after starting: if iOS motion exists but no event has arrived,
+  // the in-tap ask didn't land — offer the pill (its own tap re-asks).
+  setTimeout(() => { if (MOTION.needPerm && !MOTION.ever) showMotionPill(); }, 1500);
+}
+window.addEventListener('orientationchange', () => { MOTION.recal = true; });
+
+/* device orientation -> world quaternion (the standard three.js recipe) */
+const _zee = new THREE.Vector3(0, 0, 1);
+const _eul = new THREE.Euler();
+const _q0 = new THREE.Quaternion();
+const _q1 = new THREE.Quaternion(-Math.sqrt(0.5), 0, 0, Math.sqrt(0.5)); // -90 deg about X
+function deviceQuat(out, alphaDeg, betaDeg, gammaDeg) {
+  const orient = (typeof window.orientation === 'number' ? window.orientation : 0) * Math.PI / 180;
+  _eul.set(THREE.MathUtils.degToRad(betaDeg), THREE.MathUtils.degToRad(alphaDeg),
+           THREE.MathUtils.degToRad(-gammaDeg), 'YXZ');
+  out.setFromEuler(_eul);
+  out.multiply(_q1);                                   // camera looks out the back of the phone
+  out.multiply(_q0.setFromAxisAngle(_zee, -orient));   // screen-orientation compensation
+  return out;
+}
+const _invRefQ = new THREE.Quaternion();
+const _targetQ = new THREE.Quaternion();
+function applyMotionCamera() {
+  // True 3DOF look-around: camera orientation = (device rotation since the
+  // reference pose) applied to the default view, eased by slerp.
+  if (!camera || !baseCamQ || !MOTION.refQ) return false;
+  if (performance.now() - MOTION.lastAt > 3000) { MOTION.ok = false; return false; }
+  if (!MOTION.ok) return false;
+  _invRefQ.copy(MOTION.refQ).invert();
+  _targetQ.copy(MOTION.devQ).multiply(_invRefQ).multiply(baseCamQ);
+  camera.quaternion.slerp(_targetQ, 0.16);
+  return true;
+}
+
+/* ================= light matching (sample the camera, ease the lights) ================= */
+const lightBase = { hemi: 1.25, dir: 1.7 };   // this page's tuned defaults
+const _lsCanvas = document.createElement('canvas');
+_lsCanvas.width = 16; _lsCanvas.height = 16;
+const _lsCtx = _lsCanvas.getContext('2d', { willReadFrequently: true });
+const _lightTgt = { m: 1, c: new THREE.Color(1, 1, 1) };
+let _lsNextAt = 0;
+function updateLightMatch(t, dt) {
+  if (!hemiLight || !dirLight) return;
+  if (camOK && video && video.readyState >= 2 && t >= _lsNextAt) {
+    _lsNextAt = t + 500;
+    try {
+      _lsCtx.drawImage(video, 0, 0, 16, 16);
+      const d = _lsCtx.getImageData(0, 0, 16, 16).data;
+      let r = 0, g = 0, b = 0;
+      const n = d.length / 4;
+      for (let i = 0; i < d.length; i += 4) { r += d[i]; g += d[i + 1]; b += d[i + 2]; }
+      r /= n * 255; g /= n * 255; b /= n * 255;
+      const lum = 0.2126 * r + 0.7152 * g + 0.0722 * b;
+      _lightTgt.m = clamp(0.45 + lum * 1.1, 0.45, 1.35);
+      _lightTgt.c.setRGB(lerp(1, Math.min(1, r * 1.7), 0.5),
+                         lerp(1, Math.min(1, g * 1.7), 0.5),
+                         lerp(1, Math.min(1, b * 1.7), 0.5));
+    } catch (e) { /* frame not sampleable yet — keep the last target */ }
+  }
+  if (!camOK) return;   // no camera: the cozy-pond fallback keeps tuned lighting
+  const k = 1 - Math.exp(-dt * 2.5);
+  hemiLight.intensity += (lightBase.hemi * _lightTgt.m - hemiLight.intensity) * k;
+  dirLight.intensity += (lightBase.dir * _lightTgt.m - dirLight.intensity) * k;
+  hemiLight.color.lerp(_lightTgt.c, k);
+}
+
+/* ============================== parallax ============================== */
+let parX = 0, parY = 0, parTX = 0, parTY = 0;
+let lastOrientAt = -1e9, mouseAt = -1e9, mouseTX = 0, mouseTY = 0;
+window.addEventListener('deviceorientation', (e) => {
+  if (e.gamma == null && e.beta == null && e.alpha == null) return;
+  lastOrientAt = performance.now();
+  parTX = clamp((e.gamma || 0) / 26, -1, 1);
+  parTY = clamp(((e.beta || 0) - 48) / 24, -1, 1);
+  // 3DOF look-around feed
+  MOTION.ever = true; MOTION.ok = true; MOTION.lastAt = lastOrientAt;
+  deviceQuat(MOTION.devQ, e.alpha || 0, e.beta || 0, e.gamma || 0);
+  if (MOTION.recal || !MOTION.refQ) {
+    MOTION.refQ = MOTION.devQ.clone();
+    MOTION.recal = false;
+  }
+  hideMotionPill();
+}, true);
+window.addEventListener('pointermove', (e) => {
+  if (e.pointerType !== 'mouse') return;
+  mouseAt = performance.now();
+  mouseTX = clamp((e.clientX / Math.max(1, W) - 0.5) * 2, -1, 1);
+  mouseTY = clamp((e.clientY / Math.max(1, H) - 0.5) * 2, -1, 1);
+}, true);
+function updateParallax(t) {
+  let tx, ty;
+  if (performance.now() - mouseAt < 2500) { tx = mouseTX; ty = mouseTY; }
+  else if (performance.now() - lastOrientAt < 3000) { tx = parTX; ty = parTY; }
+  else { tx = Math.sin(t * 0.00035) * 0.55; ty = Math.sin(t * 0.00027 + 1.7) * 0.30; }
+  parX += (tx - parX) * 0.055;
+  parY += (ty - parY) * 0.055;
+}
+
+/* ============================== cozy pond (fallback bg) ============================== */
+function rr2(c, x, y, w, h, r) { c.beginPath(); if (c.roundRect) c.roundRect(x, y, w, h, r); else c.rect(x, y, w, h); }
+function ellipse2(c, x, y, rx, ry, rot) { c.beginPath(); c.ellipse(x, y, rx, ry, rot || 0, 0, Math.PI * 2); }
+function drawRoom() {
+  const ctx = rctx;
+  // sky
+  const sky = ctx.createLinearGradient(0, 0, 0, floorTop);
+  sky.addColorStop(0, '#8fd3f4'); sky.addColorStop(1, '#dff6ff');
+  ctx.fillStyle = sky; ctx.fillRect(0, 0, W, floorTop + 2);
+  // sun + clouds (parallax drift)
+  ctx.fillStyle = '#fff3b0';
+  ctx.beginPath(); ctx.arc(W * 0.80 + parX * -6, H * 0.09, W * 0.055, 0, Math.PI * 2); ctx.fill();
+  ctx.fillStyle = 'rgba(255,255,255,0.92)';
+  for (const cl of [[0.18, 0.10, 0.16], [0.52, 0.06, 0.12], [0.68, 0.17, 0.10]]) {
+    const cx = W * cl[0] + parX * -14, cy = H * cl[1], s = W * cl[2];
+    ellipse2(ctx, cx, cy, s * 0.5, s * 0.16); ctx.fill();
+    ellipse2(ctx, cx - s * 0.22, cy + s * 0.04, s * 0.32, s * 0.12); ctx.fill();
+    ellipse2(ctx, cx + s * 0.24, cy + s * 0.03, s * 0.30, s * 0.11); ctx.fill();
+  }
+  // distant tree line
+  ctx.fillStyle = '#5da244';
+  ctx.beginPath();
+  ctx.moveTo(0, floorTop);
+  for (let x = 0; x <= W; x += 26) {
+    ctx.lineTo(x, floorTop - 14 - Math.abs(Math.sin(x * 0.045 + parX)) * 22);
+  }
+  ctx.lineTo(W, floorTop); ctx.closePath(); ctx.fill();
+  ctx.fillStyle = '#4e8a38'; ctx.fillRect(0, floorTop - 6, W, 8);
+  // pond water
+  const wt = ctx.createLinearGradient(0, floorTop, 0, H);
+  wt.addColorStop(0, '#6fc3df'); wt.addColorStop(1, '#2f8fb3');
+  ctx.fillStyle = wt; ctx.fillRect(0, floorTop, W, H - floorTop);
+  ctx.fillStyle = 'rgba(255,255,255,0.28)';
+  for (let i = 0; i < 22; i++) {
+    const sx = ((i * 173 + Math.floor(parX * 20)) % Math.max(1, W)), sy = floorTop + 12 + ((i * 97) % Math.max(1, H - floorTop - 24));
+    ctx.fillRect(sx, sy, 16 + (i % 3) * 8, 2.5);
+  }
+  // reeds at the edges
+  ctx.strokeStyle = '#3f7d2e'; ctx.lineWidth = 4; ctx.lineCap = 'round';
+  for (const side of [0.03, 0.97]) {
+    for (let i = 0; i < 5; i++) {
+      const bx = W * side + (i - 2) * 9 + parX * -8;
+      const bh = H * (0.10 + (i % 3) * 0.03);
+      ctx.beginPath(); ctx.moveTo(bx, H * 0.94); ctx.quadraticCurveTo(bx + 6, H * 0.94 - bh * 0.6, bx + (i - 2) * 5, H * 0.94 - bh); ctx.stroke();
+    }
+  }
+  const vg = ctx.createRadialGradient(W / 2, H / 2, Math.min(W, H) * 0.45, W / 2, H / 2, Math.max(W, H) * 0.78);
+  vg.addColorStop(0, 'rgba(10,30,40,0)'); vg.addColorStop(1, 'rgba(10,30,40,0.20)');
+  ctx.fillStyle = vg; ctx.fillRect(0, 0, W, H);
+}
+
+/* ============================== three.js scene ============================== */
+let renderer = null, scene = null, camera = null;
+const CAM_BASE = new THREE.Vector3(0, 1.6, 0.8);
+const CAM_LOOK = new THREE.Vector3(0, 1.25, -3);
+
+function makeBlobTexture() {
+  const c = document.createElement('canvas'); c.width = c.height = 128;
+  const g = c.getContext('2d');
+  const grad = g.createRadialGradient(64, 64, 4, 64, 64, 62);
+  grad.addColorStop(0, 'rgba(0,0,0,0.55)');
+  grad.addColorStop(0.6, 'rgba(0,0,0,0.28)');
+  grad.addColorStop(1, 'rgba(0,0,0,0)');
+  g.fillStyle = grad; g.fillRect(0, 0, 128, 128);
+  return new THREE.CanvasTexture(c);
+}
+let blobGeo = null;
+
+function initGL() {
+  renderer = new THREE.WebGLRenderer({ canvas: document.getElementById('gl'), alpha: true, antialias: true });
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
+  renderer.setSize(window.innerWidth, window.innerHeight);
+  renderer.setClearColor(0x000000, 0);
+  scene = new THREE.Scene();
+  camera = new THREE.PerspectiveCamera(70, window.innerWidth / Math.max(1, window.innerHeight), 0.1, 80);
+  camera.position.copy(CAM_BASE);
+  camera.lookAt(CAM_LOOK);
+  baseCamQ = camera.quaternion.clone();
+  hemiLight = new THREE.HemisphereLight(0xffffff, 0x3a6a8a, lightBase.hemi);
+  scene.add(hemiLight);
+  dirLight = new THREE.DirectionalLight(0xfff1da, lightBase.dir);
+  dirLight.position.set(2.5, 4.5, 3.0);
+  scene.add(dirLight);
+  blobGeo = new THREE.PlaneGeometry(1, 1);
+}
+
+/* a faint "pond" sheet on the floor + reed tufts at the back edge: gives the
+   ducks something to fly over in fallback AND in AR (reads as their pond). */
+const reeds = [];
+function buildPond() {
+  const mat = new THREE.Mesh(
+    new THREE.PlaneGeometry(10.5, 6.4),
+    new THREE.MeshStandardMaterial({ color: 0x3d9dbd, roughness: 0.65, transparent: true, opacity: 0.30 })
+  );
+  mat.rotation.x = -Math.PI / 2;
+  mat.position.set(0, 0, -1.7);
+  scene.add(mat);
+  const rim = new THREE.Mesh(
+    new THREE.PlaneGeometry(10.9, 6.8),
+    new THREE.MeshStandardMaterial({ color: 0x5da244, roughness: 1, transparent: true, opacity: 0.35 })
+  );
+  rim.rotation.x = -Math.PI / 2;
+  rim.position.set(0, -0.01, -1.7);
+  scene.add(rim);
+  const reedMat = new THREE.MeshStandardMaterial({ color: 0x3f7d2e, roughness: 1 });
+  const tipMat = new THREE.MeshStandardMaterial({ color: 0x7a4a21, roughness: 0.9 });
+  for (let i = 0; i < 14; i++) {
+    const g = new THREE.Group();
+    const x = -4.9 + i * 0.75 + rand(-0.15, 0.15);
+    const n = 2 + (i % 3);
+    for (let j = 0; j < n; j++) {
+      const h = rand(0.55, 0.95);
+      const stalk = new THREE.Mesh(new THREE.CylinderGeometry(0.012, 0.02, h, 5), reedMat);
+      stalk.position.set(rand(-0.07, 0.07), h / 2, rand(-0.05, 0.05));
+      stalk.rotation.z = rand(-0.08, 0.08);
+      g.add(stalk);
+      if (j === 0) {
+        const tip = new THREE.Mesh(new THREE.CylinderGeometry(0.028, 0.028, 0.17, 6), tipMat);
+        tip.position.set(stalk.position.x, h + 0.05, stalk.position.z);
+        g.add(tip);
+      }
+    }
+    g.position.set(x, 0, rand(-4.4, -4.0));
+    scene.add(g);
+    reeds.push({ g, ph: rand(0, 6) });
+  }
+}
+
+/* ============================== ducks (all code-drawn) ============================== */
+const DUCK_TYPES = {
+  mallard: { body: 0x8a8f96, head: 0x1f9d4d, wing: 0xa8b6c4, chest: 0x7c4a21, main: '#aeb6bd' },
+  white:   { body: 0xf5f2ea, head: 0xf5f2ea, wing: 0xe3ded0, chest: 0xf5f2ea, main: '#ffffff' },
+  brown:   { body: 0xa9713f, head: 0x7c4a21, wing: 0x8a5a2e, chest: 0xc08b4e, main: '#c98f52' },
+  golden:  { body: 0xffc93c, head: 0xffc93c, wing: 0xf0b429, chest: 0xffd76a, main: '#ffd83c' }
+};
+const GEO = {
+  body: new THREE.SphereGeometry(0.21, 20, 14),
+  head: new THREE.SphereGeometry(0.115, 16, 12),
+  bill: new THREE.BoxGeometry(0.12, 0.035, 0.095),
+  eye: new THREE.SphereGeometry(0.02, 8, 6),
+  tail: new THREE.ConeGeometry(0.075, 0.2, 10),
+  wing: new THREE.BoxGeometry(0.24, 0.022, 0.31),
+  hit: new THREE.SphereGeometry(0.37, 10, 8)
+};
+const MAT = {
+  bill: new THREE.MeshStandardMaterial({ color: 0xff8c1a, roughness: 0.55 }),
+  eye: new THREE.MeshStandardMaterial({ color: 0x14100c, roughness: 0.3 }),
+  gold: new THREE.MeshStandardMaterial({ color: 0xffc93c, roughness: 0.28, metalness: 0.55, emissive: 0x664d00 }),
+  hit: new THREE.MeshBasicMaterial({ visible: false })
+};
+const _typeMats = {};
+function typeMats(kind) {
+  if (_typeMats[kind]) return _typeMats[kind];
+  const t = DUCK_TYPES[kind];
+  const m = kind === 'golden' ? { body: MAT.gold, head: MAT.gold, wing: MAT.gold, chest: MAT.gold } : {
+    body: new THREE.MeshStandardMaterial({ color: t.body, roughness: 0.85 }),
+    head: new THREE.MeshStandardMaterial({ color: t.head, roughness: 0.7 }),
+    wing: new THREE.MeshStandardMaterial({ color: t.wing, roughness: 0.9 }),
+    chest: new THREE.MeshStandardMaterial({ color: t.chest, roughness: 0.9 })
+  };
+  _typeMats[kind] = m;
+  return m;
+}
+
+function buildDuckMesh(kind) {
+  const M = typeMats(kind);
+  const root = new THREE.Group();          // position + heading
+  const bodyG = new THREE.Group();         // bank / tumble
+  root.add(bodyG);
+  const body = new THREE.Mesh(GEO.body, M.body);
+  body.scale.set(1.35, 0.95, 0.9);
+  bodyG.add(body);
+  const chest = new THREE.Mesh(GEO.body, M.chest);
+  chest.scale.set(0.85, 0.78, 0.78);
+  chest.position.set(0.13, -0.03, 0);
+  bodyG.add(chest);
+  const head = new THREE.Mesh(GEO.head, M.head);
+  head.position.set(0.245, 0.135, 0);
+  bodyG.add(head);
+  const bill = new THREE.Mesh(GEO.bill, MAT.bill);
+  bill.position.set(0.375, 0.115, 0);
+  bodyG.add(bill);
+  for (const s of [-1, 1]) {
+    const eye = new THREE.Mesh(GEO.eye, MAT.eye);
+    eye.position.set(0.275, 0.175, 0.095 * s);
+    bodyG.add(eye);
+  }
+  const tail = new THREE.Mesh(GEO.tail, M.wing);
+  tail.position.set(-0.30, 0.07, 0);
+  tail.rotation.z = 2.25;
+  bodyG.add(tail);
+  const wings = [];
+  for (const s of [-1, 1]) {
+    const pivot = new THREE.Group();
+    pivot.position.set(-0.01, 0.11, 0.10 * s);
+    const wing = new THREE.Mesh(GEO.wing, M.wing);
+    wing.position.z = 0.185 * s;
+    pivot.add(wing);
+    bodyG.add(pivot);
+    wings.push(pivot);
+  }
+  const hit = new THREE.Mesh(GEO.hit, MAT.hit);
+  hit.userData.duckRoot = root;
+  bodyG.add(hit);
+  root.traverse(o => { o.userData.duckRoot = root; });
+  // soft blob shadow on the pond/floor below
+  const shadow = new THREE.Mesh(blobGeo, new THREE.MeshBasicMaterial({
+    map: makeBlobTexture(), transparent: true, depthWrite: false, opacity: 0.4
+  }));
+  shadow.rotation.x = -Math.PI / 2;
+  shadow.position.y = 0.012;
+  scene.add(shadow);
+  return { root, bodyG, wings, shadow };
+}
+
+/* ============================== duck lifecycle ============================== */
+const ducks = [];   // every live duck (flying | falling)
+const flying = () => ducks.filter(d => d.state === 'fly');
+const ZBANDS = [-1.5, -2.1, -2.8, -3.6];
+
+function spawnDuck(force) {
+  const f = force || {};
+  const kind = f.kind || (Math.random() < 0.09 ? 'golden' : pick(['mallard', 'white', 'brown']));
+  const ramp = clamp(elapsed / ROUND_LEN, 0, 1);
+  const dirSign = f.dirSign || (Math.random() < 0.5 ? 1 : -1);
+  const startX = f.startX !== undefined ? f.startX : (dirSign > 0 ? -3.4 : 3.4);
+  const z = f.z !== undefined ? f.z : pick(ZBANDS);
+  const baseY = f.baseY !== undefined ? f.baseY : rand(0.8, 2.6);
+  let speed = f.speed !== undefined ? f.speed : rand(1.15, 1.5) * lerp(1, 1.45, ramp);
+  if (kind === 'golden') speed *= 1.35;
+  const zig = f.zig !== undefined ? f.zig : Math.random() < 0.35;
+  const parts = buildDuckMesh(kind);
+  parts.root.position.set(startX, baseY, z);
+  parts.root.rotation.y = dirSign > 0 ? 0 : Math.PI;
+  const s = kind === 'golden' ? 0.85 : rand(0.88, 1.02);
+  parts.root.scale.setScalar(s);
+  scene.add(parts.root);
+  const d = {
+    kind, state: 'fly', t: 0,
+    root: parts.root, bodyG: parts.bodyG, wings: parts.wings, shadow: parts.shadow,
+    dirSign, z, baseY, speed, scale: s,
+    bobAmp: rand(0.07, 0.18), bobFreq: rand(2.0, 3.4), ph: rand(0, 6.28),
+    zig, zigAmp: zig ? rand(0.25, 0.5) : 0, zigFreq: rand(2.4, 3.8),
+    flapPh: rand(0, 6.28), vy: 0, quacked: false
+  };
+  ducks.push(d);
+  return d;
+}
+/* a slow straight duck on the exact center ray — used by the headless bot
+   (and harmless as a QA hook generally) */
+function spawnTestDuck() {
+  return spawnDuck({ kind: 'mallard', dirSign: 1, startX: -3.6, z: -2.0, baseY: 1.34, speed: 1.0, zig: false });
+}
+/* a duck pinned hovering on the exact center ray (y=1.342 is where the
+   crosshair ray crosses z=-2.0) — the bot's reliable target, same QA
+   pattern as bonk-yard's pinned critter */
+function spawnPinnedDuck(kind) {
+  const d = spawnDuck({ kind: kind || 'mallard', dirSign: 1, startX: 0, z: -2.0, baseY: 1.342, speed: 0, zig: false });
+  d.bobAmp = 0;
+  return d;
+}
+
+function freeDuck(d) {
+  scene.remove(d.root);
+  scene.remove(d.shadow);
+  const i = ducks.indexOf(d);
+  if (i >= 0) ducks.splice(i, 1);
+}
+
+function updateDuck(d, dt) {
+  d.t += dt;
+  if (d.state === 'fly') {
+    d.root.position.x += d.dirSign * d.speed * dt;
+    let y = d.baseY + Math.sin(d.t * d.bobFreq + d.ph) * d.bobAmp;
+    if (d.zig) y += Math.sin(d.t * d.zigFreq + d.ph) * d.zigAmp;
+    d.root.position.y = y;
+    // flap — faster when climbing the bob, always busy
+    d.flapPh += dt * (11 + d.speed * 4);
+    const flap = Math.sin(d.flapPh) * 0.8;
+    d.wings[0].rotation.x = flap + 0.32;
+    d.wings[1].rotation.x = -flap - 0.32;
+    // bank into the zigzag
+    d.bodyG.rotation.x = d.zig ? Math.cos(d.t * d.zigFreq + d.ph) * 0.28 : Math.sin(d.t * d.bobFreq + d.ph) * 0.08;
+    // an occasional smug quack shortly after entering
+    if (!d.quacked && Math.abs(d.root.position.x) < 3.4 && Math.random() < dt * 0.7) {
+      d.quacked = true;
+      if (phase === 'playing') sndQuack(0.04);
+    }
+    // escaped off the far side
+    if (Math.abs(d.root.position.x) > 4.2) {
+      freeDuck(d);
+      if (phase === 'playing') { escaped += 1; sndLaugh(); updateHUD(); }
+      return;
+    }
+  } else if (d.state === 'fall') {
+    d.vy -= 6.5 * dt;
+    d.root.position.y += d.vy * dt;
+    d.root.position.x += d.dirSign * d.speed * 0.35 * dt;
+    d.bodyG.rotation.z += 8.5 * dt;
+    d.wings[0].rotation.x = 0.9; d.wings[1].rotation.x = -0.9;
+    if (d.root.position.y <= 0.10) {
+      const p = projectToScreen(d.root.position.x, 0.1, d.root.position.z);
+      if (p) spawnRipple(p.x, p.y);
+      noiseBurst(0.05, 0.06, 0, 1200);
+      freeDuck(d);
+      return;
+    }
+  }
+  // blob shadow tracks below, fading with height
+  d.shadow.position.x = d.root.position.x;
+  d.shadow.position.z = d.root.position.z;
+  const hgt = clamp(d.root.position.y, 0, 3);
+  const ss = (0.55 + hgt * 0.12) * d.scale;
+  d.shadow.scale.set(ss, ss * 0.8, 1);
+  d.shadow.material.opacity = clamp(0.52 - hgt * 0.11, 0.16, 0.52);
+}
+
+/* ============================== fx overlay (feathers, score pops, ripples) ============================== */
+const fx = [];
+const _pv = new THREE.Vector3();
+function projectToScreen(x, y, z) {
+  if (!camera) return null;
+  _pv.set(x, y, z).project(camera);
+  if (_pv.z > 1) return null;
+  return { x: (_pv.x * 0.5 + 0.5) * W, y: (_pv.y * -0.5 + 0.5) * H, ndcX: _pv.x, ndcY: _pv.y };
+}
+function spawnFeathers(sx, sy, color, n) {
+  for (let i = 0; i < n; i++) {
+    const a = rand(0, Math.PI * 2), sp = rand(40, 170);
+    fx.push({ type: 'star', x: sx, y: sy, vx: Math.cos(a) * sp, vy: Math.sin(a) * sp - 70,
+      life: 0, max: rand(0.45, 0.8), size: rand(5, 10), rot: rand(0, 3), color });
+  }
+}
+function spawnScorePop(sx, sy, txt, gold) {
+  fx.push({ type: 'text', x: sx, y: sy - 8, vx: 0, vy: -68, life: 0, max: 0.8, txt, gold: !!gold });
+}
+function spawnRipple(sx, sy) {
+  fx.push({ type: 'ring', x: sx, y: sy, life: 0, max: 0.32 });
+}
+function drawStarShape(r) {
+  fctx.beginPath();
+  for (let i = 0; i < 10; i++) {
+    const ang = (i / 10) * Math.PI * 2 - Math.PI / 2;
+    const rad = i % 2 === 0 ? r : r * 0.45;
+    const px = Math.cos(ang) * rad, py = Math.sin(ang) * rad;
+    if (i === 0) fctx.moveTo(px, py); else fctx.lineTo(px, py);
+  }
+  fctx.closePath();
+}
+function updateFx(dt) {
+  for (let i = fx.length - 1; i >= 0; i--) {
+    const p = fx[i];
+    p.life += dt;
+    if (p.life >= p.max) { fx.splice(i, 1); continue; }
+    if (p.type === 'star') { p.x += p.vx * dt; p.y += p.vy * dt; p.vy += 260 * dt; p.rot += dt * 5; }
+    else if (p.type === 'text') { p.y += p.vy * dt; }
+  }
+}
+function drawFx() {
+  fctx.clearRect(0, 0, W, H);
+  for (const p of fx) {
+    const a = clamp(1 - p.life / p.max, 0, 1);
+    if (p.type === 'star') {
+      fctx.save();
+      fctx.translate(p.x, p.y); fctx.rotate(p.rot);
+      fctx.globalAlpha = a;
+      fctx.fillStyle = p.color || '#fff3b0';
+      fctx.strokeStyle = 'rgba(90,60,0,0.7)'; fctx.lineWidth = 1.1;
+      drawStarShape(p.size);
+      fctx.fill(); fctx.stroke();
+      fctx.restore();
+    } else if (p.type === 'text') {
+      fctx.save();
+      fctx.globalAlpha = a;
+      fctx.font = '900 26px -apple-system, "Segoe UI", Roboto, sans-serif';
+      fctx.textAlign = 'center';
+      fctx.lineWidth = 5; fctx.strokeStyle = 'rgba(20,40,50,0.85)';
+      fctx.strokeText(p.txt, p.x, p.y);
+      fctx.fillStyle = p.gold ? '#ffd83c' : '#ffffff';
+      fctx.fillText(p.txt, p.x, p.y);
+      fctx.restore();
+    } else if (p.type === 'ring') {
+      fctx.save();
+      fctx.globalAlpha = a * 0.8;
+      fctx.strokeStyle = '#ffffff'; fctx.lineWidth = 3;
+      fctx.beginPath();
+      fctx.ellipse(p.x, p.y, 10 + p.life * 90, (10 + p.life * 90) * 0.45, 0, 0, Math.PI * 2);
+      fctx.stroke();
+      fctx.restore();
+    }
+  }
+  fctx.globalAlpha = 1;
+}
+
+/* ============================== scoring / hud ============================== */
+function updateHUD() {
+  scoreEl.textContent = score;
+  hitsEl.textContent = hits;
+  timeLeftEl.textContent = Math.max(0, Math.ceil(timeLeft));
+  timerBar.style.width = (clamp(timeLeft / ROUND_LEN, 0, 1) * 100).toFixed(1) + '%';
+  timeChip.classList.toggle('low', timeLeft <= 10.5);
+  if (streak >= 2) {
+    comboChip.classList.add('show');
+    comboChip.classList.toggle('hot', mult() >= 3);
+    comboTxt.textContent = 'STREAK ' + streak + (mult() > 1 ? ' · ×' + mult() : '');
+  } else comboChip.classList.remove('show');
+  crossEl.classList.toggle('hot', mult() >= 3);
+}
+function bigMsg(txt) {
+  bigMsgEl.textContent = txt;
+  bigMsgEl.classList.remove('pop');
+  void bigMsgEl.offsetWidth;
+  bigMsgEl.classList.add('pop');
+}
+function rankFor(s) {
+  if (s >= 6000) return '🏆 LEGENDARY SHARPSHOOTER!';
+  if (s >= 4200) return '🎯 SHARPSHOOTER!';
+  if (s >= 2600) return '🦆 DUCK MASTER!';
+  if (s >= 1400) return '🔫 BACKYARD BLASTER';
+  return '🌱 KEEP PRACTICING';
+}
+
+/* ============================== shooting ==============================
+   AIM = the look-around (crosshair is screen-center). FIRE = the big
+   SHOOT button ONLY (plus Space/Z on desktop) — tapping/dragging the
+   screen never fires, so looking around can't waste a shot or break a
+   combo by accident. Documented choice, per the light-gun brief. */
+const raycaster = new THREE.Raycaster();
+const _ndc = new THREE.Vector2();
+function fire() {
+  initAudio(); resumeAudio();
+  if (phase !== 'playing') return false;
+  shots += 1;
+  recoil = 1;
+  crossEl.classList.remove('fire'); void crossEl.offsetWidth; crossEl.classList.add('fire');
+  setTimeout(() => crossEl.classList.remove('fire'), 90);
+  sndShot();
+  _ndc.set(0, 0);
+  raycaster.setFromCamera(_ndc, camera);
+  const targets = [];
+  for (const d of ducks) if (d.state === 'fly') targets.push(d.root);
+  const hitsArr = raycaster.intersectObjects(targets, true);
+  let hitDuck = null;
+  if (hitsArr.length) {
+    let o = hitsArr[0].object;
+    while (o && !o.userData.duckRoot) o = o.parent;
+    const root = o ? o.userData.duckRoot : null;
+    hitDuck = ducks.find(d => d.root === root && d.state === 'fly') || null;
+  }
+  if (hitDuck) {
+    hits += 1;
+    const prevMult = mult();
+    streak += 1;
+    bestStreak = Math.max(bestStreak, streak);
+    const m = mult();
+    topMult = Math.max(topMult, m);
+    const base = hitDuck.kind === 'golden' ? 500 : 100;
+    const pts = base * m;
+    score += pts;
+    const p = projectToScreen(hitDuck.root.position.x, hitDuck.root.position.y, hitDuck.root.position.z);
+    if (p) {
+      spawnFeathers(p.x, p.y, DUCK_TYPES[hitDuck.kind].main, hitDuck.kind === 'golden' ? 16 : 11);
+      spawnScorePop(p.x, p.y, '+' + pts, hitDuck.kind === 'golden');
+    }
+    if (hitDuck.kind === 'golden') { sndGold(); bigMsg('⭐ GOLDEN! +' + pts); }
+    else sndHit();
+    if (m > prevMult) { sndCombo(); bigMsg(m >= 5 ? '🔥🔥🔥 ×5 ON FIRE!' : '🔥 COMBO ×' + m + '!'); }
+    hitDuck.state = 'fall';
+    hitDuck.vy = 0.4;
+  } else {
+    if (streak >= 3) bigMsg('💨 COMBO LOST!');
+    streak = 0;
+    sndEmpty();
+  }
+  updateHUD();
+  return !!hitDuck;
+}
+shootBtn.addEventListener('pointerdown', (e) => { e.preventDefault(); fire(); });
+window.addEventListener('keydown', (e) => {
+  if (e.code === 'Space' || e.code === 'KeyZ') { e.preventDefault(); fire(); }
+});
+
+/* ============================== game flow ============================== */
+function resetGame() {
+  for (const d of [...ducks]) freeDuck(d);
+  score = 0; streak = 0; bestStreak = 0; topMult = 1;
+  shots = 0; hits = 0; escaped = 0;
+  timeLeft = ROUND_LEN; elapsed = 0; spawnTimer = 0.3; quackTimer = 2;
+  fx.length = 0;
+  updateHUD();
+}
+function endGame() {
+  phase = 'over';
+  const isBest = score > best;
+  if (isBest) { best = score; try { localStorage.setItem('duckARBest', String(best)); } catch (e) {} }
+  document.getElementById('finalScore').textContent = score;
+  document.getElementById('bestScore').textContent = best;
+  document.getElementById('rankLine').textContent = rankFor(score);
+  document.getElementById('hitLine').textContent = hits + '/' + shots;
+  document.getElementById('accLine').textContent = (shots ? Math.round(hits / shots * 100) : 0) + '%';
+  document.getElementById('bestStreak').textContent = bestStreak + ' (×' + topMult + ')';
+  document.getElementById('escCount').textContent = escaped;
+  document.getElementById('newBest').classList.toggle('hidden', !isBest);
+  endEl.classList.remove('hidden');
+  crossEl.classList.add('hidden');
+  shootBtn.classList.add('hidden');
+  sndJingle();
+  updateHUD();
+}
+function updateGame(dt) {
+  timeLeft -= dt;
+  elapsed += dt;
+  if (timeLeft <= 0) { timeLeft = 0; updateHUD(); endGame(); return; }
+  const ramp = clamp(elapsed / ROUND_LEN, 0, 1);
+  const interval = lerp(1.5, 0.85, ramp);
+  const maxAlive = Math.round(lerp(3, 6, ramp));
+  spawnTimer -= dt;
+  if (spawnTimer <= 0) {
+    spawnTimer = interval * rand(0.75, 1.25);
+    if (flying().length < maxAlive) spawnDuck();
+  }
+  quackTimer -= dt;
+  if (quackTimer <= 0) {
+    quackTimer = rand(1.8, 3.4);
+    if (flying().length) sndQuack2();
+  }
+  updateHUD();
+}
+
+/* ============================== resize ============================== */
+function resize() {
+  const dpr = Math.min(window.devicePixelRatio || 1, 2);
+  W = window.innerWidth; H = window.innerHeight;
+  for (const c of [roomCanvas, fxCanvas]) {
+    c.width = Math.round(W * dpr);
+    c.height = Math.round(H * dpr);
+  }
+  rctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  fctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  floorTop = Math.round(H * 0.60);
+  if (renderer && camera) {
+    renderer.setSize(W, H);
+    camera.aspect = W / Math.max(1, H);
+    camera.updateProjectionMatrix();
+  }
+}
+window.addEventListener('resize', resize);
+
+/* ============================== main loop ============================== */
+let lastT = 0;
+function frame(t) {
+  requestAnimationFrame(frame);
+  const dt = Math.min(0.05, lastT ? (t - lastT) / 1000 : 0.016);
+  lastT = t;
+  updateParallax(t);
+  if (!camOK) { rctx.clearRect(0, 0, W, H); drawRoom(); }
+  if (camera) {
+    recoil *= Math.exp(-dt * 9);
+    camera.position.set(CAM_BASE.x + parX * 0.35, CAM_BASE.y - parY * 0.18 + recoil * 0.035, CAM_BASE.z);
+    if (!applyMotionCamera()) {
+      camera.lookAt(CAM_LOOK.x - parX * 0.22, CAM_LOOK.y + recoil * 0.06, CAM_LOOK.z);
+    }
+  }
+  updateLightMatch(t, dt);
+  for (const r of reeds) r.g.rotation.z = Math.sin(t * 0.0011 + r.ph) * 0.045;
+  if (phase === 'playing') updateGame(dt);
+  for (const d of [...ducks]) updateDuck(d, dt);
+  updateFx(dt);
+  if (renderer) renderer.render(scene, camera);
+  drawFx();
+}
+
+/* ============================== start flow ============================== */
+let camTried = false;
+async function ensureCamera() {
+  if (camTried) return;
+  camTried = true;
+  try {
+    if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) throw new Error('no getUserMedia');
+    const stream = await Promise.race([
+      navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' }, audio: false }),
+      new Promise((_, rej) => setTimeout(() => rej(new Error('camera timeout')), 4500))
+    ]);
+    const video = document.getElementById('cam');
+    video.srcObject = stream;
+    await video.play().catch(() => {});
+    camOK = true;
+  } catch (e) { camOK = false; }
+  // NOTE: motion permission is NOT asked here — by this point the tap's
+  // gesture window has closed (getUserMedia was awaited first). It is
+  // asked synchronously in the START tap handler (askMotionPermission).
+  const video = document.getElementById('cam');
+  video.classList.toggle('hidden', !camOK);
+  roomCanvas.classList.toggle('hidden', camOK);
+  camTagEl.textContent = camOK ? '📷 AR room' : '🏠 cozy pond';
+}
+function beginRound() {
+  MOTION.recal = true;      // "straight ahead" = how she's holding it now
+  motionWatchdog();
+  resetGame();
+  startEl.classList.add('hidden');
+  endEl.classList.add('hidden');
+  hudEl.classList.remove('hidden');
+  crossEl.classList.remove('hidden');
+  shootBtn.classList.remove('hidden');
+  phase = 'playing';
+}
+document.getElementById('startBtn').addEventListener('click', async () => {
+  askMotionPermission();   // FIRST, synchronously — iOS only honors it inside the tap
+  initAudio();
+  await ensureCamera();
+  beginRound();
+});
+document.getElementById('againBtn').addEventListener('click', () => {
+  initAudio();
+  beginRound();
+});
+
+/* ============================== boot + test hook ============================== */
+resize();
+initGL();
+buildPond();
+resize();
+updateHUD();
+requestAnimationFrame(frame);
+
+window.__duck = {
+  get phase() { return phase; },
+  get started() { return phase !== 'start'; },
+  get camOK() { return camOK; },
+  get score() { return score; },
+  get streak() { return streak; },
+  get mult() { return mult(); },
+  get shots() { return shots; },
+  get hits() { return hits; },
+  get escaped() { return escaped; },
+  get timeLeft() { return timeLeft; },
+  get aliveCount() { return flying().length; },
+  ducks: () => ducks.map(d => {
+    const p = projectToScreen(d.root.position.x, d.root.position.y, d.root.position.z);
+    return { kind: d.kind, state: d.state, ndc: p ? { x: +p.ndcX.toFixed(3), y: +p.ndcY.toFixed(3) } : null,
+             screen: p ? { x: Math.round(p.x), y: Math.round(p.y) } : null };
+  }),
+  spawnNow: (kind) => spawnDuck(kind ? { kind } : undefined),
+  spawnTestDuck: () => spawnTestDuck(),
+  spawnPinnedDuck: (kind) => spawnPinnedDuck(kind),
+  fire: () => fire(),
+  setTimeLeft: (s) => { timeLeft = s; },
+  motion: () => ({ ok: MOTION.ok, ever: MOTION.ever, perm: MOTION.perm, needPerm: MOTION.needPerm, hasRef: !!MOTION.refQ }),
+  start: () => document.getElementById('startBtn').click(),
+  again: () => document.getElementById('againBtn').click()
+};
+</script>
+<script id="moth-game-guard-js">
+(function(){
+  var lastEnd=0;
+  function onUi(t){return t&&t.closest&&t.closest('button,a,input,select,textarea,[data-scroll]');}
+  document.addEventListener('touchend',function(e){
+    var now=Date.now();
+    if(!onUi(e.target)&&now-lastEnd<=300&&e.cancelable)e.preventDefault();
+    lastEnd=now;
+  },{passive:false});
+  ['gesturestart','gesturechange','gestureend'].forEach(function(n){
+    document.addEventListener(n,function(e){e.preventDefault();});
+  });
+  document.addEventListener('dblclick',function(e){e.preventDefault();},{passive:false});
+  document.addEventListener('contextmenu',function(e){e.preventDefault();});
+  document.addEventListener('touchmove',function(e){
+    if(e.target&&e.target.closest&&e.target.closest('[data-scroll]'))return;
+    if(e.cancelable)e.preventDefault();
+  },{passive:false});
+})();
+</script>
+</body>
+</html>
