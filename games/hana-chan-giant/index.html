@@ -142,6 +142,7 @@ canvas{touch-action:none}
     <p>Hana-chan, <b>five times bigger</b> — a <b>15-foot</b> Hana-chan standing in <b>your</b> room, still as a statue so you can walk all the way around her.</p>
     <p>Look up at her, walk around her, tap <b>her</b> to say hi.</p>
     <button id="startBtn" type="button">▶ START</button>
+    <p style="margin:10px 0 2px;"><a id="qlBtn" rel="ar" href="hana-giant.usdz" style="display:none;background:#fff;color:#c2437e;border:2px solid #f2a7c3;padding:10px 16px;font-size:15px;font-weight:700;border-radius:999px;text-decoration:none;">🍎 iPhone? See her in your room — Quick Look</a></p>
     <p class="fine">Needs camera + motion for the full AR feel.<br>No camera? No problem — she gets a cozy room instead.</p>
   </div>
 </div>
@@ -154,6 +155,9 @@ import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 const clamp = (v, a, b) => v < a ? a : (v > b ? b : v);
 const lerp = (a, b, t) => a + (b - a) * t;
 const rand = (a, b) => a + Math.random() * (b - a);
+
+/* Quick Look is Apple-only: reveal the button just for iOS. */
+if (/iP(hone|ad|od)/.test(navigator.userAgent)) document.getElementById('qlBtn').style.display = 'inline-block';
 
 /* ============================== audio (soft chime on tap) ============================== */
 let AC = null;
