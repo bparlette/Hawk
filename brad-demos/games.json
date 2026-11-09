@@ -2406,6 +2406,14 @@
    "thumb": "thumbs/bonk-yard.png",
    "title": "NEW MESH HANNAH — Photo Mesh AR",
    "url": "../games/hana-mesh/"
+  },
+  {
+   "category": "AR",
+   "desc": "The photo-generated Hannah, stood up — 4.5m, browser AR plus Quick Look, with Walk/Rotate modes.",
+   "id": "hana-stand",
+   "thumb": "thumbs/bonk-yard.png",
+   "title": "STANDING PHOTO-MESH HANNAH — AR",
+   "url": "../games/hana-stand/"
   }
  ]
 }
