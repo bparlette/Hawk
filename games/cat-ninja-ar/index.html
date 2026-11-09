@@ -1,0 +1,1296 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+<title>CAT NINJA AR — slice the fruit flying at your face</title>
+<style>
+  html, body { height: 100%; }
+  body {
+    margin: 0;
+    overflow: hidden;
+    background: #123528;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    color: #fff;
+    -webkit-user-select: none;
+    user-select: none;
+  }
+  #cam, #room, #gl, #fx {
+    position: fixed; inset: 0;
+    width: 100%; height: 100%;
+    display: block;
+  }
+  #cam { object-fit: cover; background: #123528; z-index: 0; }
+  #room { z-index: 0; }
+  #gl { z-index: 1; }
+  #fx { z-index: 2; pointer-events: none; }
+  #hud {
+    position: fixed;
+    top: calc(env(safe-area-inset-top, 0px) + 8px);
+    left: 10px; right: 10px;
+    z-index: 3;
+    pointer-events: none;
+  }
+  #hudRow { display: flex; gap: 8px; align-items: center; }
+  .chip {
+    background: rgba(8, 30, 20, 0.58);
+    border: 1px solid rgba(255,255,255,0.22);
+    border-radius: 999px;
+    padding: 6px 12px;
+    font-size: 15px; font-weight: 700;
+    letter-spacing: 0.02em;
+    backdrop-filter: blur(3px);
+    white-space: nowrap;
+  }
+  .chip b { font-size: 17px; }
+  #comboChip { color: #ffd76a; opacity: 0; transform: scale(0.8); transition: opacity 0.15s, transform 0.15s; }
+  #comboChip.show { opacity: 1; transform: scale(1); }
+  #livesChip { color: #ff9db0; letter-spacing: 0.12em; }
+  #timeChip { margin-left: auto; }
+  #timeChip.low { color: #ff8a7a; }
+  #camTag { font-size: 11px; font-weight: 700; opacity: 0.85; margin-left: auto; }
+  #timerWrap {
+    margin-top: 6px;
+    height: 7px;
+    border-radius: 99px;
+    background: rgba(0,0,0,0.35);
+    border: 1px solid rgba(255,255,255,0.18);
+    overflow: hidden;
+  }
+  #timerBar {
+    height: 100%; width: 100%;
+    border-radius: 99px;
+    background: linear-gradient(90deg, #7be495, #ffd76a 60%, #ff8a5e);
+    background-size: 100vw 100%;
+  }
+  #bigMsg {
+    position: fixed;
+    left: 50%; top: 24%;
+    transform: translate(-50%, -50%) scale(0.7);
+    z-index: 4;
+    font-size: 40px; font-weight: 900;
+    color: #ffd76a;
+    text-shadow: 0 3px 0 rgba(90,40,0,0.55), 0 6px 18px rgba(0,0,0,0.5);
+    opacity: 0;
+    pointer-events: none;
+    white-space: nowrap;
+  }
+  #bigMsg.pop { animation: msgPop 0.9s ease-out forwards; }
+  @keyframes msgPop {
+    0% { opacity: 0; transform: translate(-50%, -50%) scale(0.6); }
+    18% { opacity: 1; transform: translate(-50%, -50%) scale(1.15); }
+    32% { transform: translate(-50%, -50%) scale(1); }
+    75% { opacity: 1; }
+    100% { opacity: 0; transform: translate(-50%, -62%) scale(1); }
+  }
+  .overlay {
+    position: fixed; inset: 0;
+    z-index: 5;
+    display: flex; align-items: center; justify-content: center;
+    background:
+      radial-gradient(120% 90% at 50% 0%, rgba(110, 255, 190, 0.25), rgba(0,0,0,0) 55%),
+      linear-gradient(180deg, rgba(10, 46, 32, 0.88), rgba(4, 20, 14, 0.94));
+    padding: 20px;
+    box-sizing: border-box;
+  }
+  .card { text-align: center; max-width: 430px; }
+  .card .big { font-size: 56px; line-height: 1.1; }
+  .card h1 {
+    margin: 6px 0 4px;
+    font-size: 38px; font-weight: 900; letter-spacing: 0.01em;
+    text-shadow: 0 3px 0 rgba(0,0,0,0.35);
+  }
+  .card p { margin: 6px 0; font-size: 16px; line-height: 1.45; opacity: 0.92; }
+  .card .scoreLine { font-size: 21px; font-weight: 800; opacity: 1; }
+  .card .scoreLine b { font-size: 30px; color: #ffd76a; }
+  .playBtn {
+    font: inherit;
+    margin-top: 16px;
+    font-size: 21px; font-weight: 900;
+    color: #12350f;
+    background: linear-gradient(180deg, #b6ff9e, #6fe06a);
+    border: 2px solid rgba(18, 90, 40, 0.55);
+    border-radius: 999px;
+    padding: 15px 36px;
+    box-shadow: 0 8px 22px rgba(0,0,0,0.45);
+    cursor: pointer;
+  }
+  .playBtn:active { transform: scale(0.96); }
+  .card .fine { font-size: 13px; opacity: 0.65; margin-top: 14px; }
+  #motionPill {
+    position: fixed;
+    left: 50%; transform: translateX(-50%);
+    bottom: calc(env(safe-area-inset-bottom, 0px) + 24px);
+    z-index: 6;
+    font: inherit; font-size: 15px; font-weight: 800;
+    color: #fff;
+    background: rgba(8, 30, 20, 0.85);
+    border: 2px solid rgba(255, 215, 106, 0.9);
+    border-radius: 999px;
+    padding: 12px 18px;
+    box-shadow: 0 8px 22px rgba(0,0,0,0.5);
+    cursor: pointer;
+    white-space: nowrap;
+  }
+  #motionPill:active { transform: translateX(-50%) scale(0.96); }
+  .hidden { display: none !important; }
+</style>
+<script type="importmap">
+{ "imports": { "three": "./vendor/three.module.js" } }
+</script>
+<style id="moth-game-guard">
+html,body{touch-action:none;overscroll-behavior:none;-webkit-touch-callout:none;-webkit-user-select:none;user-select:none;-webkit-tap-highlight-color:transparent}
+canvas{touch-action:none}
+</style>
+</head>
+<body>
+<video id="cam" autoplay playsinline muted></video>
+<canvas id="room"></canvas>
+<canvas id="gl"></canvas>
+<canvas id="fx"></canvas>
+
+<div id="hud" class="hidden">
+  <div id="hudRow">
+    <div class="chip">🏆 <b><span id="score">0</span></b></div>
+    <div class="chip" id="comboChip">🐾 <span id="comboTxt">×1</span></div>
+    <div class="chip" id="livesChip"><span id="lives">💗💗💗</span></div>
+    <div class="chip" id="timeChip">⏱ <b><span id="timeLeft">75</span></b></div>
+  </div>
+  <div id="timerWrap"><div id="timerBar"></div></div>
+  <div style="display:flex; margin-top:4px;"><div id="camTag">📷 AR room</div></div>
+</div>
+
+<div id="bigMsg"></div>
+
+<button id="motionPill" class="hidden" type="button">📱 Enable motion look-around</button>
+
+<div id="start" class="overlay">
+  <div class="card">
+    <div class="big">🐱🥷</div>
+    <h1>CAT NINJA AR</h1>
+    <p>Fruit launches off <b>your</b> floor and flies at your face — <b>SWIPE to slice it mid-air!</b></p>
+    <p>🍉 Slice <b>3+ fruit in one swipe</b> for a combo bonus · 💣 <b>Never slice a bomb</b> — it costs a life (you have 3) · Dropped fruit just breaks your streak</p>
+    <button id="startBtn" class="playBtn" type="button">▶ PLAY</button>
+    <p class="fine">Needs camera for the full AR feel.<br>No camera? No problem — the dojo room appears instead.</p>
+  </div>
+</div>
+
+<div id="end" class="overlay hidden">
+  <div class="card">
+    <div class="big">⏰</div>
+    <h1 id="endTitle">TIME UP!</h1>
+    <p class="scoreLine">You scored <b><span id="finalScore">0</span></b></p>
+    <p>🏅 Best: <span id="bestScore">0</span> · 🍉 Slices: <span id="sliceCount">0</span> · 🐾 Best combo: <span id="bestComboOut">×0</span></p>
+    <p class="scoreLine">Rank: <b><span id="rankOut">🐣 FURBALL ROOKIE</span></b></p>
+    <p id="newBest" class="scoreLine hidden">🎉 NEW BEST!</p>
+    <button id="againBtn" class="playBtn" type="button">↻ PLAY AGAIN</button>
+  </div>
+</div>
+
+<script type="module">
+import * as THREE from 'three';
+
+'use strict';
+/* ============================== helpers ============================== */
+const clamp = (v, a, b) => v < a ? a : (v > b ? b : v);
+const lerp = (a, b, t) => a + (b - a) * t;
+const rand = (a, b) => a + Math.random() * (b - a);
+const pick = arr => arr[Math.floor(Math.random() * arr.length)];
+
+/* ============================== audio (all synth) ============================== */
+let AC = null, noiseBuf = null;
+function initAudio() {
+  try {
+    if ('audioSession' in navigator) { try { navigator.audioSession.type = 'playback'; } catch (e) {} }
+    if (!AC) {
+      const Ctor = window.AudioContext || window.webkitAudioContext;
+      if (Ctor) AC = new Ctor();
+    }
+    if (AC) {
+      if (AC.state === 'suspended') AC.resume();
+      // 1-sample silent buffer unlock (iOS first-gesture rule)
+      const buf = AC.createBuffer(1, 1, 22050);
+      const src = AC.createBufferSource();
+      src.buffer = buf; src.connect(AC.destination); src.start(0);
+      if (!noiseBuf) {
+        noiseBuf = AC.createBuffer(1, AC.sampleRate, AC.sampleRate);
+        const d = noiseBuf.getChannelData(0);
+        for (let i = 0; i < d.length; i++) d[i] = Math.random() * 2 - 1;
+      }
+    }
+  } catch (e) { /* audio is optional */ }
+}
+function resumeAudio() { try { if (AC && AC.state === 'suspended') AC.resume(); } catch (e) {} }
+document.addEventListener('pointerdown', resumeAudio, true);
+document.addEventListener('touchend', resumeAudio, true);
+document.addEventListener('visibilitychange', () => { if (!document.hidden) resumeAudio(); });
+
+function tone(f0, f1, dur, type, vol, delay) {
+  if (!AC) return;
+  try {
+    const t0 = AC.currentTime + (delay || 0);
+    const o = AC.createOscillator(), g = AC.createGain();
+    o.type = type || 'sine';
+    o.frequency.setValueAtTime(Math.max(30, f0), t0);
+    o.frequency.exponentialRampToValueAtTime(Math.max(30, f1), t0 + dur);
+    g.gain.setValueAtTime(0.0001, t0);
+    g.gain.exponentialRampToValueAtTime(vol || 0.15, t0 + 0.015);
+    g.gain.exponentialRampToValueAtTime(0.0001, t0 + dur);
+    o.connect(g); g.connect(AC.destination);
+    o.start(t0); o.stop(t0 + dur + 0.05);
+  } catch (e) {}
+}
+function noise(dur, fType, f0, f1, vol, delay, q) {
+  if (!AC || !noiseBuf) return;
+  try {
+    const t0 = AC.currentTime + (delay || 0);
+    const src = AC.createBufferSource();
+    src.buffer = noiseBuf; src.loop = true;
+    src.playbackRate.value = rand(0.9, 1.1);
+    const fl = AC.createBiquadFilter();
+    fl.type = fType; fl.Q.value = q || 0.8;
+    fl.frequency.setValueAtTime(f0, t0);
+    fl.frequency.exponentialRampToValueAtTime(Math.max(40, f1), t0 + dur);
+    const g = AC.createGain();
+    g.gain.setValueAtTime(0.0001, t0);
+    g.gain.exponentialRampToValueAtTime(vol, t0 + 0.02);
+    g.gain.exponentialRampToValueAtTime(0.0001, t0 + dur);
+    src.connect(fl); fl.connect(g); g.connect(AC.destination);
+    src.start(t0); src.stop(t0 + dur + 0.05);
+  } catch (e) {}
+}
+const sndWhoosh = () => noise(0.28, 'bandpass', 500, 2200, 0.10, 0, 1.4);       // swipe / launch
+const sndSwipe  = () => noise(0.13, 'bandpass', 900, 2600, 0.07, 0, 1.6);       // fast stroke
+const sndSplat  = () => { noise(0.16, 'lowpass', 900, 220, 0.20); tone(340, 90, 0.14, 'sine', 0.16); };
+const sndHiss   = () => noise(0.5, 'highpass', 3800, 5200, 0.035);              // bomb fuse
+const sndBoom   = () => { noise(0.55, 'lowpass', 3000, 120, 0.5); tone(120, 38, 0.5, 'sine', 0.5); tone(64, 30, 0.65, 'triangle', 0.3, 0.02); };
+const sndThud   = () => { noise(0.09, 'lowpass', 500, 200, 0.10); tone(150, 70, 0.09, 'sine', 0.08); };
+const sndCombo  = () => { [660, 880, 1174].forEach((f, i) => tone(f, f, 0.11, 'triangle', 0.12, i * 0.055)); };
+const sndJingle = () => { [523, 659, 784, 1046].forEach((f, i) => tone(f, f, 0.16, 'triangle', 0.13, i * 0.11)); };
+
+/* ============================== dom / state ============================== */
+const video = document.getElementById('cam');
+const roomCanvas = document.getElementById('room');
+const rctx = roomCanvas.getContext('2d');
+const glCanvas = document.getElementById('gl');
+const fxCanvas = document.getElementById('fx');
+const fctx = fxCanvas.getContext('2d');
+const hudEl = document.getElementById('hud');
+const scoreEl = document.getElementById('score');
+const comboChip = document.getElementById('comboChip');
+const comboTxt = document.getElementById('comboTxt');
+const livesEl = document.getElementById('lives');
+const timeChip = document.getElementById('timeChip');
+const timeLeftEl = document.getElementById('timeLeft');
+const timerBar = document.getElementById('timerBar');
+const camTagEl = document.getElementById('camTag');
+const bigMsgEl = document.getElementById('bigMsg');
+const startEl = document.getElementById('start');
+const endEl = document.getElementById('end');
+
+let W = 0, H = 0, floorTop = 0;
+let camOK = false;
+let phase = 'start';           // 'start' | 'playing' | 'over'
+const ROUND_LEN = 75;
+const MAX_LIVES = 3;
+let score = 0, lives = MAX_LIVES, sliced = 0, streak = 0, bestCombo = 0;
+let timeLeft = ROUND_LEN, elapsed = 0, spawnTimer = 0, wave = 0;
+let shake = 0;
+let best = 0;
+try { best = parseInt(localStorage.getItem('ninjaBest') || '0', 10) || 0; } catch (e) {}
+
+function rankFor(s) {
+  if (s >= 800) return '🏆 GRAND MASTER NYAA';
+  if (s >= 550) return '🥷 CAT NINJA';
+  if (s >= 350) return '🐾 ALLEY ACE';
+  if (s >= 180) return '🐱 KITTEN CLAWS';
+  return '🐣 FURBALL ROOKIE';
+}
+
+/* ================= AR motion: permission-in-gesture + 3DOF look-around =================
+   iOS 13+ Safari delivers deviceorientation events only after
+   DeviceOrientationEvent.requestPermission() resolves 'granted', and the
+   call only counts inside a user-gesture handler — a call made after an
+   `await` (e.g. behind getUserMedia) is silently denied and the scene
+   never moves. So the ask happens synchronously in the START tap (and on
+   the pill, whose own tap re-asks if events still don't flow). */
+let baseCamQ = null;             // camera orientation of the default view (set in initGL)
+let hemiLight = null, dirLight = null;
+const MOTION = {
+  needPerm: (typeof DeviceOrientationEvent !== 'undefined' &&
+             typeof DeviceOrientationEvent.requestPermission === 'function'),
+  perm: 'unknown',               // 'granted' | 'denied' | 'error' | 'n/a'
+  ok: false,                     // orientation events are flowing right now
+  ever: false,                   // at least one real event has arrived
+  lastAt: -1e9,
+  recal: true,                   // capture the reference pose on the next event
+  refQ: null,                    // device quaternion at "straight ahead"
+  devQ: new THREE.Quaternion()   // latest device quaternion
+};
+function askMotionPermission() {
+  if (!MOTION.needPerm) { MOTION.perm = 'n/a'; return; }
+  try {
+    const p = DeviceOrientationEvent.requestPermission();
+    if (p && typeof p.then === 'function') {
+      p.then(r => {
+        MOTION.perm = (r === 'granted') ? 'granted' : 'denied';
+        if (MOTION.perm === 'granted') MOTION.recal = true;
+      }).catch(() => { MOTION.perm = 'error'; });
+    }
+  } catch (e) { MOTION.perm = 'error'; }
+}
+const motionPillEl = document.getElementById('motionPill');
+function showMotionPill() { if (motionPillEl) motionPillEl.classList.remove('hidden'); }
+function hideMotionPill() { if (motionPillEl) motionPillEl.classList.add('hidden'); }
+if (motionPillEl) motionPillEl.addEventListener('click', () => { askMotionPermission(); });
+function motionWatchdog() {
+  // ~1.5 s after starting: if iOS motion exists but no event has arrived,
+  // the in-tap ask didn't land — offer the pill (its own tap re-asks).
+  setTimeout(() => { if (MOTION.needPerm && !MOTION.ever) showMotionPill(); }, 1500);
+}
+window.addEventListener('orientationchange', () => { MOTION.recal = true; });
+
+/* device orientation -> world quaternion (the standard three.js recipe) */
+const _zee = new THREE.Vector3(0, 0, 1);
+const _eul = new THREE.Euler();
+const _q0 = new THREE.Quaternion();
+const _q1 = new THREE.Quaternion(-Math.sqrt(0.5), 0, 0, Math.sqrt(0.5)); // -90 deg about X
+function deviceQuat(out, alphaDeg, betaDeg, gammaDeg) {
+  const orient = (typeof window.orientation === 'number' ? window.orientation : 0) * Math.PI / 180;
+  _eul.set(THREE.MathUtils.degToRad(betaDeg), THREE.MathUtils.degToRad(alphaDeg),
+           THREE.MathUtils.degToRad(-gammaDeg), 'YXZ');
+  out.setFromEuler(_eul);
+  out.multiply(_q1);                                   // camera looks out the back of the phone
+  out.multiply(_q0.setFromAxisAngle(_zee, -orient));   // screen-orientation compensation
+  return out;
+}
+const _invRefQ = new THREE.Quaternion();
+const _targetQ = new THREE.Quaternion();
+function applyMotionCamera() {
+  // True 3DOF look-around: camera orientation = (device rotation since the
+  // reference pose) applied to the default view, eased by slerp.
+  if (!camera || !baseCamQ || !MOTION.refQ) return false;
+  if (performance.now() - MOTION.lastAt > 3000) { MOTION.ok = false; return false; }
+  if (!MOTION.ok) return false;
+  _invRefQ.copy(MOTION.refQ).invert();
+  _targetQ.copy(MOTION.devQ).multiply(_invRefQ).multiply(baseCamQ);
+  camera.quaternion.slerp(_targetQ, 0.16);
+  return true;
+}
+
+/* ================= light matching (sample the camera, ease the lights) ================= */
+const lightBase = { hemi: 1.15, dir: 1.5 };   // this page's tuned defaults
+const _lsCanvas = document.createElement('canvas');
+_lsCanvas.width = 16; _lsCanvas.height = 16;
+const _lsCtx = _lsCanvas.getContext('2d', { willReadFrequently: true });
+const _lightTgt = { m: 1, c: new THREE.Color(1, 1, 1) };
+let _lsNextAt = 0;
+function updateLightMatch(t, dt) {
+  if (!hemiLight || !dirLight) return;
+  if (camOK && video && video.readyState >= 2 && t >= _lsNextAt) {
+    _lsNextAt = t + 500;
+    try {
+      _lsCtx.drawImage(video, 0, 0, 16, 16);
+      const d = _lsCtx.getImageData(0, 0, 16, 16).data;
+      let r = 0, g = 0, b = 0;
+      const n = d.length / 4;
+      for (let i = 0; i < d.length; i += 4) { r += d[i]; g += d[i + 1]; b += d[i + 2]; }
+      r /= n * 255; g /= n * 255; b /= n * 255;
+      const lum = 0.2126 * r + 0.7152 * g + 0.0722 * b;
+      _lightTgt.m = clamp(0.45 + lum * 1.1, 0.45, 1.35);
+      _lightTgt.c.setRGB(lerp(1, Math.min(1, r * 1.7), 0.5),
+                         lerp(1, Math.min(1, g * 1.7), 0.5),
+                         lerp(1, Math.min(1, b * 1.7), 0.5));
+    } catch (e) { /* frame not sampleable yet — keep the last target */ }
+  }
+  if (!camOK) return;   // no camera: the fallback room keeps tuned lighting
+  const k = 1 - Math.exp(-dt * 2.5);
+  hemiLight.intensity += (lightBase.hemi * _lightTgt.m - hemiLight.intensity) * k;
+  dirLight.intensity += (lightBase.dir * _lightTgt.m - dirLight.intensity) * k;
+  hemiLight.color.lerp(_lightTgt.c, k);
+}
+
+/* ============================== parallax ============================== */
+let parX = 0, parY = 0, parTX = 0, parTY = 0;
+let lastOrientAt = -1e9, mouseAt = -1e9, mouseTX = 0, mouseTY = 0;
+window.addEventListener('deviceorientation', (e) => {
+  if (e.gamma == null && e.beta == null && e.alpha == null) return;
+  lastOrientAt = performance.now();
+  parTX = clamp((e.gamma || 0) / 26, -1, 1);
+  parTY = clamp(((e.beta || 0) - 48) / 24, -1, 1);
+  // 3DOF look-around feed
+  MOTION.ever = true; MOTION.ok = true; MOTION.lastAt = lastOrientAt;
+  deviceQuat(MOTION.devQ, e.alpha || 0, e.beta || 0, e.gamma || 0);
+  if (MOTION.recal || !MOTION.refQ) {
+    MOTION.refQ = MOTION.devQ.clone();
+    MOTION.recal = false;
+  }
+  hideMotionPill();
+}, true);
+window.addEventListener('pointermove', (e) => {
+  if (e.pointerType !== 'mouse') return;
+  mouseAt = performance.now();
+  mouseTX = clamp((e.clientX / Math.max(1, W) - 0.5) * 2, -1, 1);
+  mouseTY = clamp((e.clientY / Math.max(1, H) - 0.5) * 2, -1, 1);
+}, true);
+function updateParallax(t) {
+  let tx, ty;
+  if (performance.now() - mouseAt < 2500) { tx = mouseTX; ty = mouseTY; }
+  else if (performance.now() - lastOrientAt < 3000) { tx = parTX; ty = parTY; }
+  else { tx = Math.sin(t * 0.00035) * 0.55; ty = Math.sin(t * 0.00027 + 1.7) * 0.30; }
+  parX += (tx - parX) * 0.055;
+  parY += (ty - parY) * 0.055;
+}
+
+/* ============================== cozy dojo room (fallback bg) ============================== */
+function rr2(c, x, y, w, h, r) { c.beginPath(); if (c.roundRect) c.roundRect(x, y, w, h, r); else c.rect(x, y, w, h); }
+function ellipse2(c, x, y, rx, ry, rot) { c.beginPath(); c.ellipse(x, y, rx, ry, rot || 0, 0, Math.PI * 2); }
+function drawRoom() {
+  const ctx = rctx;
+  const wall = ctx.createLinearGradient(0, 0, 0, floorTop + 30);
+  wall.addColorStop(0, '#ffe9c9'); wall.addColorStop(1, '#f3cf9e');
+  ctx.fillStyle = wall; ctx.fillRect(0, 0, W, floorTop + 2);
+  // shoji-style window with sun
+  const wx = W * 0.60 + parX * -8, wy = H * 0.05, ww = W * 0.30, wh = floorTop * 0.62;
+  ctx.fillStyle = '#fff6dd'; rr2(ctx, wx, wy, ww, wh, 6); ctx.fill();
+  ctx.fillStyle = '#ffb84d'; ctx.beginPath(); ctx.arc(wx + ww * 0.68, wy + wh * 0.34, ww * 0.14, 0, Math.PI * 2); ctx.fill();
+  ctx.strokeStyle = '#8a5a2b'; ctx.lineWidth = 6; rr2(ctx, wx, wy, ww, wh, 6); ctx.stroke();
+  ctx.lineWidth = 3; ctx.beginPath();
+  ctx.moveTo(wx + ww / 2, wy); ctx.lineTo(wx + ww / 2, wy + wh);
+  ctx.moveTo(wx, wy + wh / 2); ctx.lineTo(wx + ww, wy + wh / 2); ctx.stroke();
+  // hanging scroll with a paw
+  const sx = W * 0.10 + parX * -10, sy = H * 0.07, sw = W * 0.16, sh = floorTop * 0.52;
+  ctx.fillStyle = '#fffdf4'; rr2(ctx, sx, sy, sw, sh, 4); ctx.fill();
+  ctx.strokeStyle = '#5a4632'; ctx.lineWidth = 4; rr2(ctx, sx, sy, sw, sh, 4); ctx.stroke();
+  ctx.fillStyle = '#3a2c1c';
+  ellipse2(ctx, sx + sw / 2, sy + sh * 0.58, sw * 0.20, sw * 0.15); ctx.fill();
+  for (const dx of [-0.30, 0, 0.30]) { ellipse2(ctx, sx + sw * (0.5 + dx), sy + sh * 0.33, sw * 0.09, sw * 0.12); ctx.fill(); }
+  ctx.fillStyle = '#fff3e0'; ctx.fillRect(0, floorTop - 7, W, 9);
+  // wood floor
+  const fl = ctx.createLinearGradient(0, floorTop, 0, H);
+  fl.addColorStop(0, '#c98d54'); fl.addColorStop(1, '#9a6636');
+  ctx.fillStyle = fl; ctx.fillRect(0, floorTop, W, H - floorTop);
+  ctx.strokeStyle = 'rgba(90,55,20,0.35)'; ctx.lineWidth = 2;
+  for (let i = 1; i < 6; i++) {
+    const gy = floorTop + (H - floorTop) * (i / 6) + Math.pow(i, 2) * 2;
+    ctx.beginPath(); ctx.moveTo(0, gy); ctx.lineTo(W, gy); ctx.stroke();
+  }
+  // dojo mat
+  const rugX = W * 0.5 + parX * -12, rugY = H * 0.84;
+  ctx.fillStyle = '#1f6f5c'; ellipse2(ctx, rugX, rugY, W * 0.37, H * 0.085); ctx.fill();
+  ctx.fillStyle = '#2a8a72'; ellipse2(ctx, rugX, rugY, W * 0.30, H * 0.064); ctx.fill();
+  const vg = ctx.createRadialGradient(W / 2, H / 2, Math.min(W, H) * 0.45, W / 2, H / 2, Math.max(W, H) * 0.78);
+  vg.addColorStop(0, 'rgba(30,20,5,0)'); vg.addColorStop(1, 'rgba(30,20,5,0.20)');
+  ctx.fillStyle = vg; ctx.fillRect(0, 0, W, H);
+}
+
+/* ============================== three.js scene ============================== */
+let renderer = null, scene = null, camera = null;
+const CAM_BASE = new THREE.Vector3(0, 1.7, 2.4);
+const CAM_LOOK = new THREE.Vector3(0, 0.95, -2);
+const GRAV = -4.6;
+
+function makeBlobTexture() {
+  const c = document.createElement('canvas'); c.width = c.height = 128;
+  const g = c.getContext('2d');
+  const grad = g.createRadialGradient(64, 64, 4, 64, 64, 62);
+  grad.addColorStop(0, 'rgba(0,0,0,0.5)');
+  grad.addColorStop(0.6, 'rgba(0,0,0,0.26)');
+  grad.addColorStop(1, 'rgba(0,0,0,0)');
+  g.fillStyle = grad; g.fillRect(0, 0, 128, 128);
+  return new THREE.CanvasTexture(c);
+}
+let blobGeo = null, blobMat = null;
+
+function initGL() {
+  renderer = new THREE.WebGLRenderer({ canvas: document.getElementById('gl'), alpha: true, antialias: true });
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
+  renderer.setSize(window.innerWidth, window.innerHeight);
+  renderer.setClearColor(0x000000, 0);
+  scene = new THREE.Scene();
+  camera = new THREE.PerspectiveCamera(62, window.innerWidth / Math.max(1, window.innerHeight), 0.1, 80);
+  camera.position.copy(CAM_BASE);
+  camera.lookAt(CAM_LOOK);
+  baseCamQ = camera.quaternion.clone();
+  hemiLight = new THREE.HemisphereLight(0xffffff, 0x3a5a44, lightBase.hemi);
+  scene.add(hemiLight);
+  dirLight = new THREE.DirectionalLight(0xfff1da, lightBase.dir);
+  dirLight.position.set(2.5, 4.5, 3.0);
+  scene.add(dirLight);
+  blobGeo = new THREE.PlaneGeometry(1, 1);
+  blobMat = new THREE.MeshBasicMaterial({ map: makeBlobTexture(), transparent: true, depthWrite: false, opacity: 0.75 });
+}
+
+/* ============================== fruit & bomb models ============================== */
+function canvasTex(size, draw) {
+  const c = document.createElement('canvas'); c.width = c.height = size;
+  draw(c.getContext('2d'), size);
+  const tex = new THREE.CanvasTexture(c);
+  tex.colorSpace = THREE.SRGBColorSpace;
+  return tex;
+}
+const FRUITS = {
+  watermelon: {
+    r: 0.150, juice: 0xff5964,
+    rind: () => canvasTex(128, (g, s) => {
+      g.fillStyle = '#2e9e4f'; g.fillRect(0, 0, s, s);
+      g.strokeStyle = '#176b31'; g.lineWidth = 9;
+      for (let i = 0; i < 6; i++) {
+        g.beginPath();
+        g.moveTo(i * 24 - 6, 0);
+        g.bezierCurveTo(i * 24 + 8, s * 0.33, i * 24 - 12, s * 0.66, i * 24 + 2, s);
+        g.stroke();
+      }
+    }),
+    flesh: () => canvasTex(128, (g, s) => {
+      g.fillStyle = '#ffd9d2'; g.beginPath(); g.arc(64, 64, 63, 0, 7); g.fill();
+      g.fillStyle = '#ff5964'; g.beginPath(); g.arc(64, 64, 55, 0, 7); g.fill();
+      g.fillStyle = '#2b2b2b';
+      for (let i = 0; i < 10; i++) {
+        const a = i / 10 * Math.PI * 2, rr = 26 + (i % 2) * 14;
+        g.beginPath(); g.ellipse(64 + Math.cos(a) * rr, 64 + Math.sin(a) * rr, 3, 4.6, a, 0, 7); g.fill();
+      }
+    })
+  },
+  orange: {
+    r: 0.115, juice: 0xffa62b,
+    rind: () => canvasTex(128, (g, s) => {
+      g.fillStyle = '#f58a1f'; g.fillRect(0, 0, s, s);
+      g.fillStyle = 'rgba(214,106,0,0.5)';
+      for (let i = 0; i < 260; i++) { g.beginPath(); g.arc(rand(0, s), rand(0, s), 1.6, 0, 7); g.fill(); }
+    }),
+    flesh: () => canvasTex(128, (g, s) => {
+      g.fillStyle = '#ffe3ae'; g.beginPath(); g.arc(64, 64, 63, 0, 7); g.fill();
+      g.fillStyle = '#ffb347'; g.beginPath(); g.arc(64, 64, 55, 0, 7); g.fill();
+      g.strokeStyle = '#ffe3ae'; g.lineWidth = 4;
+      for (let i = 0; i < 8; i++) {
+        const a = i / 8 * Math.PI * 2;
+        g.beginPath(); g.moveTo(64, 64); g.lineTo(64 + Math.cos(a) * 55, 64 + Math.sin(a) * 55); g.stroke();
+      }
+      g.fillStyle = '#ffe3ae'; g.beginPath(); g.arc(64, 64, 7, 0, 7); g.fill();
+    })
+  },
+  apple: {
+    r: 0.110, juice: 0xf6e7b8,
+    rind: () => canvasTex(128, (g, s) => {
+      const grad = g.createLinearGradient(0, 0, 0, s);
+      grad.addColorStop(0, '#e8383f'); grad.addColorStop(1, '#b81d24');
+      g.fillStyle = grad; g.fillRect(0, 0, s, s);
+      g.fillStyle = 'rgba(255,255,255,0.35)';
+      g.beginPath(); g.ellipse(38, 36, 16, 24, 0.4, 0, 7); g.fill();
+    }),
+    flesh: () => canvasTex(128, (g, s) => {
+      g.fillStyle = '#c22'; g.beginPath(); g.arc(64, 64, 63, 0, 7); g.fill();
+      g.fillStyle = '#fdf6d8'; g.beginPath(); g.arc(64, 64, 56, 0, 7); g.fill();
+      g.fillStyle = '#7a4a21';
+      g.beginPath(); g.ellipse(58, 64, 4, 6, 0.3, 0, 7); g.fill();
+      g.beginPath(); g.ellipse(70, 64, 4, 6, -0.3, 0, 7); g.fill();
+    })
+  },
+  kiwi: {
+    r: 0.095, juice: 0x9ed45e,
+    rind: () => canvasTex(128, (g, s) => {
+      g.fillStyle = '#6d4c2f'; g.fillRect(0, 0, s, s);
+      g.fillStyle = 'rgba(50,32,16,0.6)';
+      for (let i = 0; i < 380; i++) { g.fillRect(rand(0, s), rand(0, s), 2, 2); }
+      g.fillStyle = 'rgba(140,105,64,0.5)';
+      for (let i = 0; i < 200; i++) { g.fillRect(rand(0, s), rand(0, s), 2, 2); }
+    }),
+    flesh: () => canvasTex(128, (g, s) => {
+      g.fillStyle = '#8fce4e'; g.beginPath(); g.arc(64, 64, 63, 0, 7); g.fill();
+      g.fillStyle = '#e8f5c8'; g.beginPath(); g.arc(64, 64, 20, 0, 7); g.fill();
+      g.strokeStyle = 'rgba(232,245,200,0.8)'; g.lineWidth = 2.5;
+      for (let i = 0; i < 12; i++) {
+        const a = i / 12 * Math.PI * 2;
+        g.beginPath(); g.moveTo(64 + Math.cos(a) * 20, 64 + Math.sin(a) * 20);
+        g.lineTo(64 + Math.cos(a) * 58, 64 + Math.sin(a) * 58); g.stroke();
+      }
+      g.fillStyle = '#20300f';
+      for (let i = 0; i < 16; i++) {
+        const a = i / 16 * Math.PI * 2;
+        g.beginPath(); g.ellipse(64 + Math.cos(a) * 30, 64 + Math.sin(a) * 30, 1.8, 3, a, 0, 7); g.fill();
+      }
+    })
+  }
+};
+const FRUIT_KINDS = Object.keys(FRUITS);
+const fruitTexCache = {};
+function fruitTextures(kind) {
+  if (!fruitTexCache[kind]) {
+    fruitTexCache[kind] = { rind: FRUITS[kind].rind(), flesh: FRUITS[kind].flesh() };
+  }
+  return fruitTexCache[kind];
+}
+const sphereGeoCache = {};
+function sphereGeo(r) {
+  const key = r.toFixed(3);
+  if (!sphereGeoCache[key]) sphereGeoCache[key] = new THREE.SphereGeometry(r, 26, 20);
+  return sphereGeoCache[key];
+}
+const halfGeoCache = {};
+function halfGeo(r) {
+  const key = r.toFixed(3);
+  if (!halfGeoCache[key]) {
+    halfGeoCache[key] = {
+      dome: new THREE.SphereGeometry(r, 26, 18, 0, Math.PI, 0, Math.PI),
+      disc: new THREE.CircleGeometry(r * 0.995, 26)
+    };
+  }
+  return halfGeoCache[key];
+}
+const stemMat = new THREE.MeshStandardMaterial({ color: 0x6b4423, roughness: 1 });
+const leafMat = new THREE.MeshStandardMaterial({ color: 0x3f9e4d, roughness: 0.9, side: THREE.DoubleSide });
+const stemGeo = new THREE.CylinderGeometry(0.008, 0.011, 0.05, 6);
+const leafGeo = new THREE.CircleGeometry(0.03, 8);
+
+function buildFruitMesh(kind) {
+  const def = FRUITS[kind];
+  const tex = fruitTextures(kind);
+  const grp = new THREE.Group();
+  const body = new THREE.Mesh(sphereGeo(def.r), new THREE.MeshStandardMaterial({ map: tex.rind, roughness: 0.55 }));
+  if (kind === 'watermelon') body.scale.set(1, 1.12, 1);
+  grp.add(body);
+  if (kind === 'apple' || kind === 'watermelon') {
+    const stem = new THREE.Mesh(stemGeo, stemMat);
+    stem.position.y = def.r * (kind === 'watermelon' ? 1.12 : 1) + 0.012;
+    stem.rotation.z = 0.25;
+    grp.add(stem);
+    if (kind === 'apple') {
+      const leaf = new THREE.Mesh(leafGeo, leafMat);
+      leaf.position.set(0.035, def.r + 0.028, 0);
+      leaf.rotation.set(-0.7, 0.3, 0.4);
+      leaf.scale.set(1, 0.55, 1);
+      grp.add(leaf);
+    }
+  }
+  const shadow = new THREE.Mesh(blobGeo, blobMat);
+  shadow.rotation.x = -Math.PI / 2;
+  shadow.name = 'shadow';
+  scene.add(shadow);
+  grp.userData.shadow = shadow;
+  return grp;
+}
+
+const bombMats = {
+  shell: new THREE.MeshStandardMaterial({ color: 0x22242a, roughness: 0.32, metalness: 0.45 }),
+  cap: new THREE.MeshStandardMaterial({ color: 0x8f96a3, roughness: 0.4, metalness: 0.7 }),
+  fuse: new THREE.MeshStandardMaterial({ color: 0xc9a86a, roughness: 0.9 }),
+  spark: new THREE.MeshStandardMaterial({ color: 0xffc93c, emissive: 0xff7b00, emissiveIntensity: 2.2 })
+};
+const bombCapGeo = new THREE.CylinderGeometry(0.035, 0.045, 0.035, 10);
+const bombFuseGeo = new THREE.CylinderGeometry(0.007, 0.007, 0.09, 6);
+const bombSparkGeo = new THREE.SphereGeometry(0.016, 8, 8);
+function buildBombMesh() {
+  const grp = new THREE.Group();
+  const shell = new THREE.Mesh(sphereGeo(0.12), bombMats.shell);
+  grp.add(shell);
+  const cap = new THREE.Mesh(bombCapGeo, bombMats.cap);
+  cap.position.y = 0.125;
+  grp.add(cap);
+  const fuse = new THREE.Mesh(bombFuseGeo, bombMats.fuse);
+  fuse.position.set(0.028, 0.175, 0);
+  fuse.rotation.z = -0.55;
+  grp.add(fuse);
+  const spark = new THREE.Mesh(bombSparkGeo, bombMats.spark);
+  spark.position.set(0.052, 0.215, 0);
+  spark.name = 'spark';
+  grp.add(spark);
+  const shadow = new THREE.Mesh(blobGeo, blobMat);
+  shadow.rotation.x = -Math.PI / 2;
+  shadow.name = 'shadow';
+  scene.add(shadow);
+  grp.userData.shadow = shadow;
+  return grp;
+}
+
+/* ============================== juice particles ============================== */
+const P_MAX = 420;
+const pGeo = new THREE.BufferGeometry();
+const pPos = new Float32Array(P_MAX * 3);
+const pCol = new Float32Array(P_MAX * 3);
+const particles = [];
+for (let i = 0; i < P_MAX; i++) {
+  pPos[i * 3 + 1] = -999;
+  particles.push({ life: 0, max: 1, vx: 0, vy: 0, vz: 0, x: 0, y: -999, z: 0 });
+}
+pGeo.setAttribute('position', new THREE.BufferAttribute(pPos, 3));
+pGeo.setAttribute('color', new THREE.BufferAttribute(pCol, 3));
+const pPoints = new THREE.Points(pGeo, new THREE.PointsMaterial({
+  size: 0.045, vertexColors: true, transparent: true, opacity: 0.95, depthWrite: false
+}));
+pPoints.frustumCulled = false;
+const _tmpColor = new THREE.Color();
+function spawnJuice(pos, colorHex, n, spread) {
+  _tmpColor.setHex(colorHex);
+  let spawned = 0;
+  for (let i = 0; i < P_MAX && spawned < n; i++) {
+    const p = particles[i];
+    if (p.life > 0) continue;
+    p.life = p.max = rand(0.35, 0.7);
+    p.x = pos.x; p.y = pos.y; p.z = pos.z;
+    const a = rand(0, Math.PI * 2), e = rand(-1, 1), sp = rand(0.4, 1.6) * (spread || 1);
+    p.vx = Math.cos(a) * Math.sqrt(1 - e * e) * sp;
+    p.vy = e * sp + 0.7;
+    p.vz = Math.sin(a) * Math.sqrt(1 - e * e) * sp;
+    pCol[i * 3] = _tmpColor.r * rand(0.8, 1.15);
+    pCol[i * 3 + 1] = _tmpColor.g * rand(0.8, 1.15);
+    pCol[i * 3 + 2] = _tmpColor.b * rand(0.8, 1.15);
+    spawned++;
+  }
+  pGeo.attributes.color.needsUpdate = true;
+}
+function updateParticles(dt) {
+  let any = false;
+  for (let i = 0; i < P_MAX; i++) {
+    const p = particles[i];
+    if (p.life <= 0) continue;
+    any = true;
+    p.life -= dt;
+    if (p.life <= 0) { pPos[i * 3 + 1] = -999; continue; }
+    p.vy += GRAV * 0.85 * dt;
+    p.x += p.vx * dt; p.y += p.vy * dt; p.z += p.vz * dt;
+    if (p.y < 0.02) { p.y = 0.02; p.vy = 0; p.vx *= 0.8; p.vz *= 0.8; }
+    pPos[i * 3] = p.x; pPos[i * 3 + 1] = p.y; pPos[i * 3 + 2] = p.z;
+  }
+  if (any) pGeo.attributes.position.needsUpdate = true;
+}
+
+/* ============================== flyers (fruit, bombs, halves) ============================== */
+const flyers = [];   // {mesh, vel, spinAxis, spinRate, kind, isBomb, r, dead, sx, sy, sr}
+const halves = [];   // {grp, vel, spin, life}
+const _pv = new THREE.Vector3();
+const _pv2 = new THREE.Vector3();
+const _camRight = new THREE.Vector3();
+const _camUp = new THREE.Vector3();
+
+function launchFlyer(kind, opts) {
+  opts = opts || {};
+  const isBomb = kind === 'bomb';
+  const mesh = isBomb ? buildBombMesh() : buildFruitMesh(kind);
+  const x = opts.x !== undefined ? opts.x : rand(-0.85, 0.85);
+  const z = opts.z !== undefined ? opts.z : rand(-2.4, -1.9);
+  mesh.position.set(x, 0.02, z);
+  scene.add(mesh);
+  const f = {
+    mesh, kind, isBomb,
+    r: isBomb ? 0.12 : FRUITS[kind].r,
+    vel: new THREE.Vector3(
+      opts.vx !== undefined ? opts.vx : -x * rand(0.05, 0.22) + rand(-0.12, 0.12),
+      opts.vy !== undefined ? opts.vy : rand(3.0, 3.6),
+      opts.vz !== undefined ? opts.vz : rand(1.0, 1.55)
+    ),
+    spinAxis: new THREE.Vector3(rand(-1, 1), rand(-1, 1), rand(-1, 1)).normalize(),
+    spinRate: rand(1.5, 4.5),
+    dead: false, sx: -999, sy: -999, sr: 0, vyNow: 0
+  };
+  flyers.push(f);
+  return f;
+}
+function removeFlyer(f) {
+  scene.remove(f.mesh);
+  if (f.mesh.userData.shadow) scene.remove(f.mesh.userData.shadow);
+  const i = flyers.indexOf(f);
+  if (i >= 0) flyers.splice(i, 1);
+}
+function spawnWave() {
+  wave++;
+  const n = elapsed < 40 ? 2 : (Math.random() < 0.55 ? 3 : 2);
+  let bombPlaced = false;
+  for (let i = 0; i < n; i++) {
+    const wantBomb = !bombPlaced && wave > 3 && Math.random() < 0.16;
+    if (wantBomb) { launchFlyer('bomb'); bombPlaced = true; sndHiss(); }
+    else launchFlyer(pick(FRUIT_KINDS));
+  }
+  sndWhoosh();
+}
+function projectFlyers() {
+  if (!camera) return;
+  for (const f of flyers) {
+    _pv.copy(f.mesh.position).project(camera);
+    f.sx = (_pv.x * 0.5 + 0.5) * W;
+    f.sy = (_pv.y * -0.5 + 0.5) * H;
+    _camRight.setFromMatrixColumn(camera.matrixWorld, 0);
+    _pv2.copy(f.mesh.position).addScaledVector(_camRight, f.r).project(camera);
+    const rx = (_pv2.x * 0.5 + 0.5) * W, ry = (_pv2.y * -0.5 + 0.5) * H;
+    f.sr = Math.max(10, Math.hypot(rx - f.sx, ry - f.sy));
+  }
+}
+function updateFlyers(dt) {
+  for (const f of [...flyers]) {
+    f.vel.y += GRAV * dt;
+    f.mesh.position.addScaledVector(f.vel, dt);
+    f.mesh.rotateOnAxis(f.spinAxis, f.spinRate * dt);
+    f.vyNow = f.vel.y;
+    if (f.isBomb) {
+      const spark = f.mesh.getObjectByName('spark');
+      if (spark) { const s = 0.7 + Math.random() * 0.7; spark.scale.set(s, s, s); }
+    }
+    const sh = f.mesh.userData.shadow;
+    if (sh) {
+      sh.position.set(f.mesh.position.x, 0.005, f.mesh.position.z);
+      const hgt = clamp(f.mesh.position.y, 0, 2.2);
+      const sc = f.r * 2.4 * (1 - hgt * 0.22);
+      sh.scale.set(sc, sc, 1);
+      sh.material = blobMat;
+      sh.renderOrder = 1;
+    }
+    // missed: fell back to the floor unsliced
+    if (f.vel.y < 0 && f.mesh.position.y < 0.0) {
+      if (!f.isBomb && phase === 'playing') {
+        spawnJuice(f.mesh.position, FRUITS[f.kind].juice, 8, 0.5);
+        sndThud();
+        if (streak > 0) { streak = 0; updateHUD(); }
+      }
+      removeFlyer(f);
+    }
+  }
+}
+function updateHalves(dt) {
+  for (const h of [...halves]) {
+    h.life -= dt;
+    h.vel.y += GRAV * dt;
+    h.grp.position.addScaledVector(h.vel, dt);
+    h.grp.rotateOnWorldAxis(h.spinAxis, h.spinRate * dt);
+    const fade = clamp(h.life / 0.35, 0, 1);
+    h.grp.traverse(o => { if (o.material && o.material.transparent) o.material.opacity = fade; });
+    if (h.life <= 0 || h.grp.position.y < -0.6) {
+      scene.remove(h.grp);
+      halves.splice(halves.indexOf(h), 1);
+    }
+  }
+}
+
+/* ============================== slicing ============================== */
+function sliceFlyer(f, sepWorld) {
+  const pos = f.mesh.position.clone();
+  if (f.isBomb) {
+    removeFlyer(f);
+    spawnJuice(pos, 0xff8c3a, 26, 1.8);
+    spawnJuice(pos, 0x555c66, 16, 1.4);
+    fxFlash();
+    shake = Math.max(shake, 1);
+    sndBoom();
+    streak = 0;
+    lives -= 1;
+    bigMsg(lives > 0 ? '💣 BOOM! −1 LIFE' : '💣 BOOM!');
+    updateHUD();
+    if (lives <= 0 && phase === 'playing') endGame(false);
+    return;
+  }
+  const def = FRUITS[f.kind];
+  const tex = fruitTextures(f.kind);
+  const geos = halfGeo(def.r);
+  removeFlyer(f);
+  for (const s of [-1, 1]) {
+    const grp = new THREE.Group();
+    const rindMat = new THREE.MeshStandardMaterial({ map: tex.rind, roughness: 0.55, transparent: true });
+    const fleshMat = new THREE.MeshStandardMaterial({ map: tex.flesh, roughness: 0.7, transparent: true });
+    const dome = new THREE.Mesh(geos.dome, rindMat);
+    const disc = new THREE.Mesh(geos.disc, fleshMat);
+    disc.position.z = 0.0015;
+    grp.add(dome); grp.add(disc);
+    grp.position.copy(pos);
+    const dir = sepWorld.clone().multiplyScalar(s);
+    grp.quaternion.setFromUnitVectors(new THREE.Vector3(0, 0, 1), dir.clone().normalize());
+    scene.add(grp);
+    halves.push({
+      grp,
+      vel: f.vel.clone().addScaledVector(sepWorld, s * rand(0.55, 0.9)).add(new THREE.Vector3(0, 0.35, 0)),
+      spinAxis: new THREE.Vector3(rand(-1, 1), rand(-1, 1), rand(-1, 1)).normalize(),
+      spinRate: rand(4, 9) * s,
+      life: 1.05
+    });
+  }
+  spawnJuice(pos, def.juice, 18, 1);
+  sndSplat();
+  sliced++;
+  streak++;
+  score += 10;
+}
+/* score pops / flashes on the 2D fx layer */
+const fx = [];
+function spawnScorePop(sx, sy, txt, gold) {
+  fx.push({ type: 'text', x: sx, y: sy - 10, vy: -70, life: 0, max: 0.8, txt, gold: !!gold });
+}
+function fxFlash() { fx.push({ type: 'flash', life: 0, max: 0.4 }); }
+function updateFx(dt) {
+  for (let i = fx.length - 1; i >= 0; i--) {
+    fx[i].life += dt;
+    if (fx[i].life >= fx[i].max) fx.splice(i, 1);
+  }
+}
+
+/* cat-paw claw trail, drawn on the fx canvas */
+const trailSegs = [];   // {x0,y0,x1,y1,born}
+const pawStamps = [];   // {x,y,born,rot}
+function drawPawStamp(x, y, rot, alpha) {
+  fctx.save();
+  fctx.translate(x, y); fctx.rotate(rot);
+  fctx.globalAlpha = alpha;
+  fctx.fillStyle = '#ff9eb8';
+  fctx.beginPath(); fctx.ellipse(0, 3, 7.5, 6, 0, 0, Math.PI * 2); fctx.fill();
+  for (const dx of [-8, 0, 8]) {
+    fctx.beginPath(); fctx.ellipse(dx, -6, 3.2, 4.4, 0, 0, Math.PI * 2); fctx.fill();
+  }
+  fctx.restore();
+}
+function drawFx(now) {
+  fctx.clearRect(0, 0, W, H);
+  for (const p of fx) {
+    if (p.type === 'text') {
+      const a = clamp(1 - p.life / p.max, 0, 1);
+      p.y += p.vy * 0.016;
+      fctx.save();
+      fctx.globalAlpha = a;
+      fctx.font = '900 26px -apple-system, "Segoe UI", Roboto, sans-serif';
+      fctx.textAlign = 'center';
+      fctx.lineWidth = 5; fctx.strokeStyle = 'rgba(20,50,10,0.85)';
+      fctx.strokeText(p.txt, p.x, p.y);
+      fctx.fillStyle = p.gold ? '#ffd83c' : '#ffffff';
+      fctx.fillText(p.txt, p.x, p.y);
+      fctx.restore();
+    } else if (p.type === 'flash') {
+      const a = clamp(1 - p.life / p.max, 0, 1);
+      const grad = fctx.createRadialGradient(W / 2, H / 2, 10, W / 2, H / 2, Math.max(W, H) * 0.6);
+      grad.addColorStop(0, 'rgba(255,240,210,' + (0.85 * a) + ')');
+      grad.addColorStop(0.5, 'rgba(255,120,50,' + (0.45 * a) + ')');
+      grad.addColorStop(1, 'rgba(255,60,30,0)');
+      fctx.fillStyle = grad;
+      fctx.fillRect(0, 0, W, H);
+    }
+  }
+  // claw trail: three parallel streaks, fading
+  for (let i = trailSegs.length - 1; i >= 0; i--) {
+    const s = trailSegs[i];
+    const age = (now - s.born) / 1000;
+    if (age > 0.22) { trailSegs.splice(i, 1); continue; }
+    const a = 1 - age / 0.22;
+    const dx = s.x1 - s.x0, dy = s.y1 - s.y0;
+    const len = Math.hypot(dx, dy) || 1;
+    const nx = -dy / len, ny = dx / len;
+    fctx.lineCap = 'round';
+    for (const off of [-8, 0, 8]) {
+      fctx.strokeStyle = off === 0 ? 'rgba(255,255,255,' + (0.9 * a) + ')' : 'rgba(255,215,235,' + (0.65 * a) + ')';
+      fctx.lineWidth = off === 0 ? 5 : 3.5;
+      fctx.beginPath();
+      fctx.moveTo(s.x0 + nx * off, s.y0 + ny * off);
+      fctx.lineTo(s.x1 + nx * off, s.y1 + ny * off);
+      fctx.stroke();
+    }
+  }
+  for (let i = pawStamps.length - 1; i >= 0; i--) {
+    const p = pawStamps[i];
+    const age = (now - p.born) / 1000;
+    if (age > 0.5) { pawStamps.splice(i, 1); continue; }
+    drawPawStamp(p.x, p.y, p.rot, 0.75 * (1 - age / 0.5));
+  }
+  fctx.globalAlpha = 1;
+}
+
+/* ============================== swipe input ==============================
+   A fast pointer stroke is the blade. Segments are tested in screen space
+   against each flyer's projected disc (slack included) — the same test the
+   original 2D game used (segment-to-point distance < r + slack). The game
+   guard only blocks browser gestures (zoom/scroll); pointer events on the
+   canvas still flow, so swipes are never eaten. */
+let stroke = null;   // {lastX,lastY,lastT, sliced:Set, dist, stampAt}
+const SWIPE_MIN_SPEED = 300;   // px per second
+function segPointDist(px, py, x0, y0, x1, y1) {
+  const dx = x1 - x0, dy = y1 - y0;
+  const l2 = dx * dx + dy * dy || 1;
+  const t = clamp(((px - x0) * dx + (py - y0) * dy) / l2, 0, 1);
+  return Math.hypot(px - (x0 + dx * t), py - (y0 + dy * t));
+}
+function processSegment(x0, y0, x1, y1, speed) {
+  trailSegs.push({ x0, y0, x1, y1, born: performance.now() });
+  if (speed >= SWIPE_MIN_SPEED) sndSwipe();
+  if (phase !== 'playing' || !stroke) return 0;
+  // world-space separation axis: perpendicular of the swipe, in the camera plane
+  const sdx = x1 - x0, sdy = y1 - y0;
+  const sl = Math.hypot(sdx, sdy) || 1;
+  _camRight.setFromMatrixColumn(camera.matrixWorld, 0);
+  _camUp.setFromMatrixColumn(camera.matrixWorld, 1);
+  const sep = new THREE.Vector3()
+    .addScaledVector(_camRight, -sdy / sl)
+    .addScaledVector(_camUp, -sdx / sl)
+    .normalize();
+  let hits = 0;
+  for (const f of [...flyers]) {
+    if (stroke.sliced.has(f)) continue;
+    if (segPointDist(f.sx, f.sy, x0, y0, x1, y1) < f.sr + 14) {
+      stroke.sliced.add(f);
+      const sx = f.sx, sy = f.sy, wasBomb = f.isBomb;
+      sliceFlyer(f, sep);
+      if (!wasBomb) {
+        hits++;
+        spawnScorePop(sx, sy, '+10', false);
+      }
+    }
+  }
+  if (hits) updateHUD();
+  return hits;
+}
+function endStroke() {
+  if (!stroke) return;
+  const n = [...stroke.sliced].filter(f => !f.isBomb).length;
+  if (phase === 'playing' && n >= 3) {
+    const bonus = (n - 2) * 15;
+    score += bonus;
+    bestCombo = Math.max(bestCombo, n);
+    bigMsg('🐾 COMBO ×' + n + '! +' + bonus);
+    spawnScorePop(W / 2, H * 0.4, 'COMBO ×' + n, true);
+    sndCombo();
+    updateHUD();
+  } else if (n > 0) {
+    bestCombo = Math.max(bestCombo, n);
+  }
+  stroke = null;
+}
+glCanvas.addEventListener('pointerdown', (e) => {
+  initAudio(); resumeAudio();
+  stroke = { lastX: e.clientX, lastY: e.clientY, lastT: e.timeStamp, sliced: new Set(), dist: 0, stampAt: 0 };
+  try { glCanvas.setPointerCapture(e.pointerId); } catch (err) {}
+});
+glCanvas.addEventListener('pointermove', (e) => {
+  if (!stroke) return;
+  const now = e.timeStamp;
+  const dt = Math.max(1, now - stroke.lastT) / 1000;
+  const dist = Math.hypot(e.clientX - stroke.lastX, e.clientY - stroke.lastY);
+  if (dist < 2) return;
+  const speed = dist / dt;
+  if (speed >= SWIPE_MIN_SPEED) {
+    processSegment(stroke.lastX, stroke.lastY, e.clientX, e.clientY, speed);
+  } else {
+    trailSegs.push({ x0: stroke.lastX, y0: stroke.lastY, x1: e.clientX, y1: e.clientY, born: performance.now() });
+  }
+  stroke.dist += dist;
+  if (stroke.dist - stroke.stampAt > 95) {
+    stroke.stampAt = stroke.dist;
+    pawStamps.push({ x: e.clientX, y: e.clientY, born: performance.now(), rot: Math.atan2(e.clientY - stroke.lastY, e.clientX - stroke.lastX) + Math.PI / 2 });
+  }
+  stroke.lastX = e.clientX; stroke.lastY = e.clientY; stroke.lastT = now;
+});
+glCanvas.addEventListener('pointerup', endStroke);
+glCanvas.addEventListener('pointercancel', endStroke);
+
+/* ============================== scoring / hud ============================== */
+function updateHUD() {
+  scoreEl.textContent = score;
+  timeLeftEl.textContent = Math.max(0, Math.ceil(timeLeft));
+  timerBar.style.width = (clamp(timeLeft / ROUND_LEN, 0, 1) * 100).toFixed(1) + '%';
+  timeChip.classList.toggle('low', timeLeft <= 10.5);
+  livesEl.textContent = '💗'.repeat(Math.max(0, lives)) + '🖤'.repeat(Math.max(0, MAX_LIVES - lives));
+  if (streak >= 3) {
+    comboChip.classList.add('show');
+    comboTxt.textContent = 'STREAK ' + streak;
+  } else comboChip.classList.remove('show');
+}
+function bigMsg(txt) {
+  bigMsgEl.textContent = txt;
+  bigMsgEl.classList.remove('pop');
+  void bigMsgEl.offsetWidth;
+  bigMsgEl.classList.add('pop');
+}
+
+/* ============================== game flow ============================== */
+function clearField() {
+  for (const f of [...flyers]) removeFlyer(f);
+  for (const h of [...halves]) { scene.remove(h.grp); }
+  halves.length = 0;
+  fx.length = 0;
+  trailSegs.length = 0;
+  pawStamps.length = 0;
+}
+function resetGame() {
+  clearField();
+  score = 0; lives = MAX_LIVES; sliced = 0; streak = 0; bestCombo = 0;
+  timeLeft = ROUND_LEN; elapsed = 0; spawnTimer = 0.45; wave = 0; shake = 0;
+  updateHUD();
+}
+function endGame(won) {
+  if (phase !== 'playing') return;
+  phase = 'over';
+  for (const f of [...flyers]) removeFlyer(f);
+  const isBest = score > best;
+  if (isBest) { best = score; try { localStorage.setItem('ninjaBest', String(best)); } catch (e) {} }
+  document.getElementById('endTitle').textContent = won === false && lives <= 0 ? '💥 OUT OF LIVES!' : '⏰ TIME UP!';
+  document.getElementById('finalScore').textContent = score;
+  document.getElementById('bestScore').textContent = best;
+  document.getElementById('sliceCount').textContent = sliced;
+  document.getElementById('bestComboOut').textContent = '×' + bestCombo;
+  document.getElementById('rankOut').textContent = rankFor(score);
+  document.getElementById('newBest').classList.toggle('hidden', !isBest);
+  endEl.classList.remove('hidden');
+  sndJingle();
+  updateHUD();
+}
+function updateGame(dt) {
+  timeLeft -= dt;
+  elapsed += dt;
+  if (timeLeft <= 0) { timeLeft = 0; updateHUD(); endGame(true); return; }
+  spawnTimer -= dt;
+  if (spawnTimer <= 0) {
+    spawnTimer = elapsed < 40 ? 1.15 : 0.95;
+    spawnWave();
+  }
+  updateHUD();
+}
+
+/* ============================== resize ============================== */
+function resize() {
+  const dpr = Math.min(window.devicePixelRatio || 1, 2);
+  W = window.innerWidth; H = window.innerHeight;
+  for (const c of [roomCanvas, fxCanvas]) {
+    c.width = Math.round(W * dpr);
+    c.height = Math.round(H * dpr);
+  }
+  rctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  fctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  floorTop = Math.round(H * 0.34);
+  if (renderer && camera) {
+    renderer.setSize(W, H);
+    camera.aspect = W / Math.max(1, H);
+    camera.updateProjectionMatrix();
+  }
+}
+window.addEventListener('resize', resize);
+
+/* ============================== main loop ============================== */
+let lastT = 0;
+function frame(t) {
+  requestAnimationFrame(frame);
+  const dt = Math.min(0.05, lastT ? (t - lastT) / 1000 : 0.016);
+  lastT = t;
+  updateParallax(t);
+  if (!camOK) { rctx.clearRect(0, 0, W, H); drawRoom(); }
+  if (camera) {
+    camera.position.set(CAM_BASE.x + parX * 0.4, CAM_BASE.y - parY * 0.2, CAM_BASE.z);
+    if (!applyMotionCamera()) {
+      camera.lookAt(CAM_LOOK.x - parX * 0.22, CAM_LOOK.y, CAM_LOOK.z);
+    }
+    if (shake > 0.003) {
+      camera.position.x += rand(-1, 1) * shake * 0.045;
+      camera.position.y += rand(-1, 1) * shake * 0.045;
+      camera.rotation.z += rand(-1, 1) * shake * 0.012;
+    }
+    shake *= Math.exp(-dt * 7);
+  }
+  updateLightMatch(t, dt);
+  if (phase === 'playing') updateGame(dt);
+  updateFlyers(dt);
+  updateHalves(dt);
+  updateParticles(dt);
+  projectFlyers();
+  updateFx(dt);
+  if (renderer) renderer.render(scene, camera);
+  drawFx(t);
+}
+
+/* ============================== start flow ============================== */
+let camTried = false;
+async function ensureCamera() {
+  if (camTried) return;
+  camTried = true;
+  try {
+    if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) throw new Error('no getUserMedia');
+    const stream = await Promise.race([
+      navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' }, audio: false }),
+      new Promise((_, rej) => setTimeout(() => rej(new Error('camera timeout')), 4500))
+    ]);
+    video.srcObject = stream;
+    await video.play().catch(() => {});
+    camOK = true;
+  } catch (e) { camOK = false; }
+  // NOTE: motion permission is NOT asked here — by this point the tap's
+  // gesture window has closed (getUserMedia was awaited first). It is
+  // asked synchronously in the START tap handler (askMotionPermission).
+  video.classList.toggle('hidden', !camOK);
+  roomCanvas.classList.toggle('hidden', camOK);
+  camTagEl.textContent = camOK ? '📷 AR room' : '🏠 dojo room';
+}
+function beginRound() {
+  MOTION.recal = true;      // "straight ahead" = how she's holding it now
+  motionWatchdog();
+  resetGame();
+  startEl.classList.add('hidden');
+  endEl.classList.add('hidden');
+  hudEl.classList.remove('hidden');
+  phase = 'playing';
+}
+document.getElementById('startBtn').addEventListener('click', async () => {
+  askMotionPermission();   // FIRST, synchronously — iOS only honors it inside the tap
+  initAudio();
+  await ensureCamera();
+  beginRound();
+});
+document.getElementById('againBtn').addEventListener('click', () => {
+  initAudio();
+  beginRound();
+});
+
+/* ============================== boot + test hook ============================== */
+resize();
+initGL();
+scene.add(pPoints);
+resize();
+updateHUD();
+requestAnimationFrame(frame);
+
+window.__ninja = {
+  get phase() { return phase; },
+  get started() { return phase !== 'start'; },
+  get camOK() { return camOK; },
+  get score() { return score; },
+  get lives() { return lives; },
+  get sliced() { return sliced; },
+  get streak() { return streak; },
+  get bestCombo() { return bestCombo; },
+  get timeLeft() { return timeLeft; },
+  flyers: () => flyers.map(f => ({ kind: f.kind, bomb: f.isBomb, x: f.sx, y: f.sy, r: f.sr, vy: f.vyNow, wy: f.mesh.position.y })),
+  spawn: (kind) => { const f = launchFlyer(kind || pick(FRUIT_KINDS)); projectFlyers(); return { kind: f.kind }; },
+  spawnAt: (kind, x, z, vx, vy, vz) => {
+    const f = launchFlyer(kind, { x, z, vx, vy, vz });
+    projectFlyers();
+    return { kind: f.kind };
+  },
+  /* inject a fast stroke through the exact pointer code path */
+  swipe: (x0, y0, x1, y1) => {
+    stroke = { lastX: x0, lastY: y0, lastT: performance.now(), sliced: new Set(), dist: 0, stampAt: 0 };
+    const hits = processSegment(x0, y0, x1, y1, 3000);
+    endStroke();
+    return hits;
+  },
+  setTimeLeft: (s) => { timeLeft = s; },
+  camQuat: () => camera ? camera.quaternion.toArray() : null,
+  project: (x, y, z) => {
+    if (!camera) return null;
+    _pv.set(x, y, z).project(camera);
+    return { x: (_pv.x * 0.5 + 0.5) * W, y: (_pv.y * -0.5 + 0.5) * H };
+  },
+  motion: () => ({ ok: MOTION.ok, ever: MOTION.ever, perm: MOTION.perm, needPerm: MOTION.needPerm, hasRef: !!MOTION.refQ }),
+  start: () => document.getElementById('startBtn').click(),
+  again: () => document.getElementById('againBtn').click()
+};
+</script>
+<script id="moth-game-guard-js">
+(function(){
+  var lastEnd=0;
+  function onUi(t){return t&&t.closest&&t.closest('button,a,input,select,textarea,[data-scroll]');}
+  document.addEventListener('touchend',function(e){
+    var now=Date.now();
+    if(!onUi(e.target)&&now-lastEnd<=300&&e.cancelable)e.preventDefault();
+    lastEnd=now;
+  },{passive:false});
+  ['gesturestart','gesturechange','gestureend'].forEach(function(n){
+    document.addEventListener(n,function(e){e.preventDefault();});
+  });
+  document.addEventListener('dblclick',function(e){e.preventDefault();},{passive:false});
+  document.addEventListener('contextmenu',function(e){e.preventDefault();});
+  document.addEventListener('touchmove',function(e){
+    if(e.target&&e.target.closest&&e.target.closest('[data-scroll]'))return;
+    if(e.cancelable)e.preventDefault();
+  },{passive:false});
+})();
+</script>
+</body>
+</html>
