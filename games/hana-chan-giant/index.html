@@ -119,6 +119,18 @@
 html,body{touch-action:none;overscroll-behavior:none;-webkit-touch-callout:none;-webkit-user-select:none;user-select:none;-webkit-tap-highlight-color:transparent}
 canvas{touch-action:none}
 </style>
+<style id="hana-mode-css">
+/* BEGIN hana-mode-block CSS: WALK / ROTATE viewing-mode controls */
+#modeBar{position:fixed;left:50%;transform:translateX(-50%);top:calc(env(safe-area-inset-top,0px) + 108px);z-index:4;display:flex;gap:8px}
+.hm-chip{font:inherit;font-size:16px;font-weight:800;color:#fff;background:rgba(20,12,8,.55);border:1.5px solid rgba(255,255,255,.35);border-radius:999px;padding:10px 18px;cursor:pointer;backdrop-filter:blur(3px)}
+.hm-chip.on{background:linear-gradient(180deg,#ffc2d9,#ff8fb8);color:#4a1030;border-color:rgba(122,30,74,.55)}
+#rotPanel{position:fixed;right:10px;bottom:calc(env(safe-area-inset-bottom,0px) + 84px);z-index:4;display:flex;flex-direction:column;gap:8px;align-items:center}
+.hm-btn{font:inherit;width:54px;height:54px;font-size:24px;line-height:1;color:#fff;background:rgba(20,12,8,.6);border:1.5px solid rgba(255,255,255,.35);border-radius:50%;cursor:pointer}
+.hm-btn:active{transform:scale(.93)}
+.hm-wide{font:inherit;font-size:12.5px;font-weight:800;color:#fff;background:rgba(20,12,8,.6);border:1.5px solid rgba(255,255,255,.35);border-radius:999px;padding:9px 6px;cursor:pointer;width:66px}
+.hm-wide.on{background:linear-gradient(180deg,#ffc2d9,#ff8fb8);color:#4a1030;border-color:rgba(122,30,74,.55)}
+/* END hana-mode-block CSS */
+</style>
 </head>
 <body>
 <video id="cam" autoplay playsinline muted></video>
@@ -131,6 +143,19 @@ canvas{touch-action:none}
   <div class="chip" id="heartChip">❤️ <b><span id="heartCount">0</span></b></div>
   <div class="chip" id="camTag">📷 AR room</div>
 </div>
+
+<!-- BEGIN hana-mode-block HTML: viewing-mode toggle + rotate controls -->
+<div id="modeBar" class="hidden">
+  <button id="hmWalk" class="hm-chip on" type="button">🚶 WALK</button>
+  <button id="hmRotate" class="hm-chip" type="button">🔄 ROTATE</button>
+</div>
+<div id="rotPanel" class="hidden">
+  <button id="hmLeft" class="hm-btn" type="button" aria-label="Turn her left">⟲</button>
+  <button id="hmRight" class="hm-btn" type="button" aria-label="Turn her right">⟳</button>
+  <button id="hmAuto" class="hm-wide" type="button">AUTO-SPIN</button>
+  <button id="hmReset" class="hm-wide" type="button">RESET</button>
+</div>
+<!-- END hana-mode-block HTML -->
 
 <div id="hint">Walk around her · Tap Hana-chan to say hi</div>
 <button id="motionPill" class="hidden" type="button">📱 Enable motion look-around</button>
@@ -523,12 +548,138 @@ function petHana(hitY) {
 }
 glCanvas.addEventListener('pointerdown', (e) => {
   if (!started || !hana) return;
+  if (window.__hanaModeState && window.__hanaModeState.mode === 'rotate') return; // ROTATE: hana-mode-block taps on pointerup
   initAudio(); resumeAudio();
   _ndc.set((e.clientX / Math.max(1, W)) * 2 - 1, -((e.clientY / Math.max(1, H)) * 2 - 1));
   raycaster.setFromCamera(_ndc, camera);
   const hits = raycaster.intersectObject(hana.inner, true);
   if (hits.length) petHana(hits[0].point.y);
 });
+
+/* ================= BEGIN hana-mode-block: WALK / ROTATE viewing modes =================
+   Self-contained viewing-mode logic: mode toggle, drag-to-turn with inertia,
+   two-finger pinch zoom (via camera distance), nudge / auto-spin / reset.
+   PORT NOTE: to move this to another page, copy this block plus the
+   hana-mode-css <style> and the hana-mode-block HTML (ids: modeBar, rotPanel,
+   hmWalk, hmRotate, hmLeft, hmRight, hmAuto, hmReset), and keep the one-line
+   rotate guard at the top of the page's own canvas pointerdown handler.
+   It expects these page globals: hana, camera, CAM_BASE, MODEL_Z, started,
+   hintEl, raycaster, _ndc, petHana, initAudio, resumeAudio, clamp, W, H. */
+const HM = {
+  mode: 'walk', yaw: 0, vel: 0, scale: 1, auto: false,
+  dragging: false, moved: 0, downAt: 0, lastX: 0,
+  pointers: new Map(), pinchD: 0
+};
+window.__hanaModeState = HM;
+const HM_BASE_Z = CAM_BASE.z;                 // default camera z (RESET target)
+const HM_DIST = CAM_BASE.z - MODEL_Z;         // framing distance at scale 1 (~7.3 m)
+const hmBar = document.getElementById('modeBar');
+const hmPanel = document.getElementById('rotPanel');
+const hmWalkBtn = document.getElementById('hmWalk');
+const hmRotateBtn = document.getElementById('hmRotate');
+const hmAutoBtn = document.getElementById('hmAuto');
+const HM_HINTS = {
+  walk: 'Walk around her · Tap Hana-chan to say hi',
+  rotate: 'Drag sideways to turn her · Tap her to say hi'
+};
+function hmSetMode(m) {
+  HM.mode = m; HM.vel = 0; HM.dragging = false; HM.pointers.clear(); HM.pinchD = 0;
+  hmWalkBtn.classList.toggle('on', m === 'walk');
+  hmRotateBtn.classList.toggle('on', m === 'rotate');
+  hmPanel.classList.toggle('hidden', m !== 'rotate');
+  hintEl.textContent = HM_HINTS[m];
+  if (started) {
+    hintEl.classList.add('show');
+    clearTimeout(hmSetMode._t);
+    hmSetMode._t = setTimeout(() => hintEl.classList.remove('show'), 2600);
+  }
+}
+hmWalkBtn.addEventListener('click', () => hmSetMode('walk'));
+hmRotateBtn.addEventListener('click', () => hmSetMode('rotate'));
+document.getElementById('hmLeft').addEventListener('click', () => { HM.yaw -= Math.PI / 12; HM.vel = 0; });
+document.getElementById('hmRight').addEventListener('click', () => { HM.yaw += Math.PI / 12; HM.vel = 0; });
+hmAutoBtn.addEventListener('click', () => { HM.auto = !HM.auto; hmAutoBtn.classList.toggle('on', HM.auto); });
+document.getElementById('hmReset').addEventListener('click', () => {
+  HM.yaw = 0; HM.vel = 0; HM.scale = 1; HM.auto = false;
+  hmAutoBtn.classList.remove('on');
+  CAM_BASE.z = HM_BASE_Z;
+});
+function hmPetTap(cx, cy) {
+  _ndc.set((cx / Math.max(1, W)) * 2 - 1, -((cy / Math.max(1, H)) * 2 - 1));
+  raycaster.setFromCamera(_ndc, camera);
+  const hits = raycaster.intersectObject(hana.inner, true);
+  if (hits.length) petHana(hits[0].point.y);
+}
+glCanvas.addEventListener('pointerdown', (e) => {
+  if (!started || !hana || HM.mode !== 'rotate') return;
+  initAudio(); resumeAudio();
+  HM.pointers.set(e.pointerId, { x: e.clientX, y: e.clientY });
+  try { glCanvas.setPointerCapture(e.pointerId); } catch (err) {}
+  if (HM.pointers.size === 1) {
+    HM.dragging = true; HM.moved = 0; HM.downAt = performance.now();
+    HM.lastX = e.clientX; HM.vel = 0;
+  } else if (HM.pointers.size === 2) {
+    const p = [...HM.pointers.values()];
+    HM.pinchD = Math.hypot(p[0].x - p[1].x, p[0].y - p[1].y);
+    HM.dragging = false;
+  }
+});
+glCanvas.addEventListener('pointermove', (e) => {
+  if (HM.mode !== 'rotate' || !HM.pointers.has(e.pointerId)) return;
+  HM.pointers.set(e.pointerId, { x: e.clientX, y: e.clientY });
+  if (HM.pointers.size === 2) {
+    const p = [...HM.pointers.values()];
+    const d = Math.hypot(p[0].x - p[1].x, p[0].y - p[1].y);
+    if (HM.pinchD > 0 && d > 0) {
+      HM.scale = clamp(HM.scale * (d / HM.pinchD), 0.5, 1.5);
+      CAM_BASE.z = MODEL_Z + HM_DIST / HM.scale;
+    }
+    HM.pinchD = d;
+    return;
+  }
+  if (!HM.dragging) return;
+  const dx = e.clientX - HM.lastX;
+  HM.lastX = e.clientX;
+  HM.moved += Math.abs(dx);
+  HM.yaw += dx * 0.009;
+  HM.vel = HM.vel * 0.6 + dx * 0.009 * 0.4;
+});
+function hmPointerEnd(e) {
+  if (!HM.pointers.has(e.pointerId)) return;
+  const wasTap = HM.pointers.size === 1 && HM.dragging && HM.moved < 10 &&
+                 (performance.now() - HM.downAt) < 350;
+  HM.pointers.delete(e.pointerId);
+  if (HM.pointers.size < 2) HM.pinchD = 0;
+  if (HM.pointers.size === 0) {
+    HM.dragging = false;
+    if (wasTap && HM.mode === 'rotate' && hana) hmPetTap(e.clientX, e.clientY);
+  }
+}
+glCanvas.addEventListener('pointerup', hmPointerEnd);
+glCanvas.addEventListener('pointercancel', hmPointerEnd);
+(function hmTick(ts) {
+  requestAnimationFrame(hmTick);
+  hmBar.classList.toggle('hidden', !started);
+  if (!hana) return;
+  if (HM.mode === 'rotate' && !HM.dragging && HM.pointers.size === 0) {
+    HM.yaw += HM.vel;                 // inertia glide
+    HM.vel *= 0.95;
+    if (HM.auto) {
+      const dt = HM._pt ? Math.min(0.05, (ts - HM._pt) / 1000) : 0.016;
+      HM.yaw += 0.21 * dt;            // auto-spin ~12 deg/s, frame-rate independent
+    }
+  }
+  HM._pt = ts;
+  hana.group.rotation.y = HM.yaw;
+})();
+window.__hanaMode = {
+  get mode() { return HM.mode; },
+  get yaw() { return HM.yaw; },
+  get scale() { return HM.scale; },
+  setMode: hmSetMode,
+  stop: () => { HM.vel = 0; }        // QA hook: kill inertia glide deterministically
+};
+/* ================= END hana-mode-block ================= */
 
 /* ============================== resize ============================== */
 function resize() {
