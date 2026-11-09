@@ -1,0 +1,1082 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+<title>VOXEL DEMOLITION AR — flatten the castle on your table</title>
+<style>
+  html, body { height: 100%; }
+  body {
+    margin: 0;
+    overflow: hidden;
+    background: #1d130b;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    color: #fff;
+    -webkit-user-select: none;
+    user-select: none;
+  }
+  #cam, #room, #gl, #fx {
+    position: fixed; inset: 0;
+    width: 100%; height: 100%;
+    display: block;
+  }
+  #cam { object-fit: cover; background: #1d130b; z-index: 0; }
+  #room { z-index: 0; }
+  #gl { z-index: 1; }
+  #fx { z-index: 2; pointer-events: none; }
+  #hud {
+    position: fixed;
+    top: calc(env(safe-area-inset-top, 0px) + 8px);
+    left: 10px; right: 10px;
+    z-index: 3;
+    pointer-events: none;
+  }
+  #hudRow { display: flex; gap: 8px; align-items: center; }
+  .chip {
+    background: rgba(24, 14, 4, 0.58);
+    border: 1px solid rgba(255,255,255,0.22);
+    border-radius: 999px;
+    padding: 6px 12px;
+    font-size: 15px; font-weight: 700;
+    letter-spacing: 0.02em;
+    backdrop-filter: blur(3px);
+    white-space: nowrap;
+  }
+  .chip b { font-size: 17px; }
+  #camTag { font-size: 11px; font-weight: 700; opacity: 0.85; margin-left: auto; }
+  #pctWrap {
+    margin-top: 6px;
+    height: 7px;
+    border-radius: 99px;
+    background: rgba(0,0,0,0.35);
+    border: 1px solid rgba(255,255,255,0.18);
+    overflow: hidden;
+  }
+  #pctBar {
+    height: 100%; width: 0%;
+    border-radius: 99px;
+    background: linear-gradient(90deg, #ffb84d, #ff8a5e 60%, #ff5e4d);
+    background-size: 100vw 100%;
+  }
+  #cross {
+    position: fixed;
+    left: 50%; top: 50%;
+    transform: translate(-50%, -50%);
+    z-index: 3;
+    font-size: 34px; font-weight: 300;
+    color: rgba(255,255,255,0.9);
+    text-shadow: 0 0 6px rgba(0,0,0,0.8), 0 0 2px rgba(0,0,0,0.9);
+    pointer-events: none;
+    line-height: 1;
+  }
+  #fireBtn {
+    position: fixed;
+    right: calc(env(safe-area-inset-right, 0px) + 18px);
+    bottom: calc(env(safe-area-inset-bottom, 0px) + 26px);
+    z-index: 4;
+    width: 92px; height: 92px;
+    border-radius: 50%;
+    font: inherit;
+    font-size: 17px; font-weight: 900; letter-spacing: 0.03em;
+    color: #40180a;
+    background: radial-gradient(circle at 35% 30%, #ffd98a, #ff9a3c 62%, #f2762e);
+    border: 3px solid rgba(120, 50, 10, 0.65);
+    box-shadow: 0 10px 26px rgba(0,0,0,0.5), inset 0 -6px 12px rgba(140,50,0,0.35);
+    cursor: pointer;
+  }
+  #fireBtn:active { transform: scale(0.93); }
+  #fireBtn:disabled { filter: grayscale(0.7) brightness(0.7); }
+  #bigMsg {
+    position: fixed;
+    left: 50%; top: 22%;
+    transform: translate(-50%, -50%) scale(0.7);
+    z-index: 4;
+    font-size: 38px; font-weight: 900;
+    color: #ffd76a;
+    text-shadow: 0 3px 0 rgba(90,40,0,0.55), 0 6px 18px rgba(0,0,0,0.5);
+    opacity: 0;
+    pointer-events: none;
+    white-space: nowrap;
+    text-align: center;
+  }
+  #bigMsg.pop { animation: msgPop 1.1s ease-out forwards; }
+  @keyframes msgPop {
+    0% { opacity: 0; transform: translate(-50%, -50%) scale(0.6); }
+    18% { opacity: 1; transform: translate(-50%, -50%) scale(1.15); }
+    32% { transform: translate(-50%, -50%) scale(1); }
+    75% { opacity: 1; }
+    100% { opacity: 0; transform: translate(-50%, -62%) scale(1); }
+  }
+  .overlay {
+    position: fixed; inset: 0;
+    z-index: 5;
+    display: flex; align-items: center; justify-content: center;
+    background:
+      radial-gradient(120% 90% at 50% 0%, rgba(255, 170, 90, 0.30), rgba(0,0,0,0) 55%),
+      linear-gradient(180deg, rgba(50, 28, 10, 0.88), rgba(22, 11, 3, 0.94));
+    padding: 20px;
+    box-sizing: border-box;
+  }
+  .card { text-align: center; max-width: 430px; }
+  .card .big { font-size: 56px; line-height: 1.1; }
+  .card h1 {
+    margin: 6px 0 4px;
+    font-size: 36px; font-weight: 900; letter-spacing: 0.01em;
+    text-shadow: 0 3px 0 rgba(0,0,0,0.35);
+  }
+  .card p { margin: 6px 0; font-size: 16px; line-height: 1.45; opacity: 0.92; }
+  .card .scoreLine { font-size: 21px; font-weight: 800; opacity: 1; }
+  .card .scoreLine b { font-size: 30px; color: #ffd76a; }
+  .playBtn {
+    font: inherit;
+    margin-top: 16px;
+    font-size: 21px; font-weight: 900;
+    color: #3a2113;
+    background: linear-gradient(180deg, #ffd98a, #ffb84d);
+    border: 2px solid rgba(120, 66, 18, 0.55);
+    border-radius: 999px;
+    padding: 15px 36px;
+    box-shadow: 0 8px 22px rgba(0,0,0,0.45);
+    cursor: pointer;
+  }
+  .playBtn:active { transform: scale(0.96); }
+  .card .fine { font-size: 13px; opacity: 0.65; margin-top: 14px; }
+  #motionPill {
+    position: fixed;
+    left: 50%; transform: translateX(-50%);
+    bottom: calc(env(safe-area-inset-bottom, 0px) + 132px);
+    z-index: 6;
+    font: inherit; font-size: 15px; font-weight: 800;
+    color: #fff;
+    background: rgba(24, 16, 8, 0.85);
+    border: 2px solid rgba(255, 215, 106, 0.9);
+    border-radius: 999px;
+    padding: 12px 18px;
+    box-shadow: 0 8px 22px rgba(0,0,0,0.5);
+    cursor: pointer;
+    white-space: nowrap;
+  }
+  #motionPill:active { transform: translateX(-50%) scale(0.96); }
+  .hidden { display: none !important; }
+</style>
+<script type="importmap">
+{ "imports": { "three": "./vendor/three.module.js" } }
+</script>
+<style id="moth-game-guard">
+html,body{touch-action:none;overscroll-behavior:none;-webkit-touch-callout:none;-webkit-user-select:none;user-select:none;-webkit-tap-highlight-color:transparent}
+canvas{touch-action:none}
+</style>
+</head>
+<body>
+<video id="cam" autoplay playsinline muted></video>
+<canvas id="room"></canvas>
+<canvas id="gl"></canvas>
+<canvas id="fx"></canvas>
+
+<div id="hud" class="hidden">
+  <div id="hudRow">
+    <div class="chip">💥 <b><span id="pct">0</span>%</b></div>
+    <div class="chip">🧨 <b><span id="shells">12</span></b></div>
+    <div class="chip">🧱 <b><span id="down">0</span></b></div>
+    <div id="camTag">📷 AR room</div>
+  </div>
+  <div id="pctWrap"><div id="pctBar"></div></div>
+</div>
+
+<div id="cross" class="hidden">＋</div>
+<button id="fireBtn" class="hidden" type="button">💣<br>FIRE</button>
+<div id="bigMsg"></div>
+
+<button id="motionPill" class="hidden" type="button">📱 Enable motion look-around</button>
+
+<div id="start" class="overlay">
+  <div class="card">
+    <div class="big">🏰💥</div>
+    <h1>VOXEL DEMOLITION AR</h1>
+    <p>A voxel castle just appeared on <b>your</b> table. Aim with your phone — the <b>＋</b> is your sight — and tap <b>💣 FIRE</b> to lob a shell.</p>
+    <p>You have <b>12 shells</b>. Bring down <b>85%</b> of the castle to win!</p>
+    <button id="startBtn" class="playBtn" type="button">▶ PLAY</button>
+    <p class="fine">Needs camera for the full AR feel.<br>No camera? No problem — it gets a cozy room instead.</p>
+  </div>
+</div>
+
+<div id="end" class="overlay hidden">
+  <div class="card">
+    <div class="big" id="endEmoji">🏆</div>
+    <h1 id="endTitle">DEMOLITION COMPLETE!</h1>
+    <p class="scoreLine"><b><span id="finalPct">0</span>%</b> flattened</p>
+    <p>🧱 <span id="finalDown">0</span> voxels down · 💣 <span id="finalShots">0</span> shells fired</p>
+    <p id="newBest" class="scoreLine hidden">🎉 NEW BEST!</p>
+    <button id="againBtn" class="playBtn" type="button">↻ PLAY AGAIN</button>
+  </div>
+</div>
+
+<script type="module">
+import * as THREE from 'three';
+
+'use strict';
+/* ============================== helpers ============================== */
+const clamp = (v, a, b) => v < a ? a : (v > b ? b : v);
+const lerp = (a, b, t) => a + (b - a) * t;
+const rand = (a, b) => a + Math.random() * (b - a);
+
+/* ============================== audio (all synth) ============================== */
+let AC = null, noiseBuf = null;
+function initAudio() {
+  try {
+    if ('audioSession' in navigator) { try { navigator.audioSession.type = 'playback'; } catch (e) {} }
+    if (!AC) {
+      const Ctor = window.AudioContext || window.webkitAudioContext;
+      if (Ctor) AC = new Ctor();
+    }
+    if (AC) {
+      if (AC.state === 'suspended') AC.resume();
+      const buf = AC.createBuffer(1, 1, 22050);
+      const src = AC.createBufferSource();
+      src.buffer = buf; src.connect(AC.destination); src.start(0);
+      if (!noiseBuf) {
+        noiseBuf = AC.createBuffer(1, AC.sampleRate * 1.2, AC.sampleRate);
+        const d = noiseBuf.getChannelData(0);
+        for (let i = 0; i < d.length; i++) d[i] = Math.random() * 2 - 1;
+      }
+    }
+  } catch (e) { /* audio is optional */ }
+}
+function resumeAudio() { try { if (AC && AC.state === 'suspended') AC.resume(); } catch (e) {} }
+document.addEventListener('pointerdown', resumeAudio, true);
+document.addEventListener('touchend', resumeAudio, true);
+document.addEventListener('visibilitychange', () => { if (!document.hidden) resumeAudio(); });
+
+function tone(f0, f1, dur, type, vol, delay) {
+  if (!AC) return;
+  try {
+    const t0 = AC.currentTime + (delay || 0);
+    const o = AC.createOscillator(), g = AC.createGain();
+    o.type = type || 'sine';
+    o.frequency.setValueAtTime(Math.max(30, f0), t0);
+    o.frequency.exponentialRampToValueAtTime(Math.max(30, f1), t0 + dur);
+    g.gain.setValueAtTime(0.0001, t0);
+    g.gain.exponentialRampToValueAtTime(vol || 0.15, t0 + 0.015);
+    g.gain.exponentialRampToValueAtTime(0.0001, t0 + dur);
+    o.connect(g); g.connect(AC.destination);
+    o.start(t0); o.stop(t0 + dur + 0.05);
+  } catch (e) {}
+}
+function noise(dur, vol, fFrom, fTo, type, delay) {
+  if (!AC || !noiseBuf) return;
+  try {
+    const t0 = AC.currentTime + (delay || 0);
+    const src = AC.createBufferSource(); src.buffer = noiseBuf; src.loop = true;
+    const flt = AC.createBiquadFilter(); flt.type = type || 'bandpass'; flt.Q.value = 0.9;
+    flt.frequency.setValueAtTime(fFrom, t0);
+    flt.frequency.exponentialRampToValueAtTime(Math.max(40, fTo), t0 + dur);
+    const g = AC.createGain();
+    g.gain.setValueAtTime(0.0001, t0);
+    g.gain.exponentialRampToValueAtTime(vol, t0 + 0.02);
+    g.gain.exponentialRampToValueAtTime(0.0001, t0 + dur);
+    src.connect(flt); flt.connect(g); g.connect(AC.destination);
+    src.start(t0); src.stop(t0 + dur + 0.05);
+  } catch (e) {}
+}
+const sndWhoosh  = () => noise(0.55, 0.16, 500, 2600, 'bandpass');
+const sndBoom    = () => { tone(120, 34, 0.55, 'sine', 0.5); noise(0.5, 0.34, 900, 120, 'lowpass'); };
+const sndCrumble = () => { noise(0.7, 0.10, 2000, 500, 'bandpass', 0.08); noise(0.35, 0.07, 3000, 900, 'bandpass', 0.3); };
+const sndThud    = () => tone(90, 45, 0.12, 'sine', 0.12);
+const sndWin     = () => { [523, 659, 784, 1046, 1318].forEach((f, i) => tone(f, f, 0.18, 'triangle', 0.14, i * 0.11)); };
+const sndLose    = () => { [392, 330, 262].forEach((f, i) => tone(f, f, 0.2, 'triangle', 0.12, i * 0.13)); };
+
+/* ============================== dom / state ============================== */
+const video = document.getElementById('cam');
+const roomCanvas = document.getElementById('room');
+const rctx = roomCanvas.getContext('2d');
+const glCanvas = document.getElementById('gl');
+const fxCanvas = document.getElementById('fx');
+const fctx = fxCanvas.getContext('2d');
+const hudEl = document.getElementById('hud');
+const pctEl = document.getElementById('pct');
+const shellsEl = document.getElementById('shells');
+const downEl = document.getElementById('down');
+const pctBar = document.getElementById('pctBar');
+const camTagEl = document.getElementById('camTag');
+const bigMsgEl = document.getElementById('bigMsg');
+const startEl = document.getElementById('start');
+const endEl = document.getElementById('end');
+const crossEl = document.getElementById('cross');
+const fireBtn = document.getElementById('fireBtn');
+
+let W = 0, H = 0, floorTop = 0;
+let camOK = false;
+let phase = 'start';           // 'start' | 'playing' | 'over'
+let best = 0;
+try { best = parseInt(localStorage.getItem('voxelDemoBest') || '0', 10) || 0; } catch (e) {}
+
+/* ================= AR motion: permission-in-gesture + 3DOF look-around ================= */
+let baseCamQ = null;
+let hemiLight = null, dirLight = null;
+const MOTION = {
+  needPerm: (typeof DeviceOrientationEvent !== 'undefined' &&
+             typeof DeviceOrientationEvent.requestPermission === 'function'),
+  perm: 'unknown', ok: false, ever: false, lastAt: -1e9, recal: true,
+  refQ: null, devQ: null
+};
+function askMotionPermission() {
+  if (!MOTION.needPerm) { MOTION.perm = 'n/a'; return; }
+  try {
+    const p = DeviceOrientationEvent.requestPermission();
+    if (p && typeof p.then === 'function') {
+      p.then(r => {
+        MOTION.perm = (r === 'granted') ? 'granted' : 'denied';
+        if (MOTION.perm === 'granted') MOTION.recal = true;
+      }).catch(() => { MOTION.perm = 'error'; });
+    }
+  } catch (e) { MOTION.perm = 'error'; }
+}
+const motionPillEl = document.getElementById('motionPill');
+function showMotionPill() { if (motionPillEl) motionPillEl.classList.remove('hidden'); }
+function hideMotionPill() { if (motionPillEl) motionPillEl.classList.add('hidden'); }
+if (motionPillEl) motionPillEl.addEventListener('click', () => { askMotionPermission(); });
+function motionWatchdog() {
+  setTimeout(() => { if (MOTION.needPerm && !MOTION.ever) showMotionPill(); }, 1500);
+}
+window.addEventListener('orientationchange', () => { MOTION.recal = true; });
+
+const _zee = new THREE.Vector3(0, 0, 1);
+const _eul = new THREE.Euler();
+const _q0 = new THREE.Quaternion();
+const _q1 = new THREE.Quaternion(-Math.sqrt(0.5), 0, 0, Math.sqrt(0.5));
+function deviceQuat(out, alphaDeg, betaDeg, gammaDeg) {
+  const orient = (typeof window.orientation === 'number' ? window.orientation : 0) * Math.PI / 180;
+  _eul.set(THREE.MathUtils.degToRad(betaDeg), THREE.MathUtils.degToRad(alphaDeg),
+           THREE.MathUtils.degToRad(-gammaDeg), 'YXZ');
+  out.setFromEuler(_eul);
+  out.multiply(_q1);
+  out.multiply(_q0.setFromAxisAngle(_zee, -orient));
+  return out;
+}
+const _invRefQ = new THREE.Quaternion();
+const _targetQ = new THREE.Quaternion();
+function applyMotionCamera() {
+  if (!camera || !baseCamQ || !MOTION.refQ) return false;
+  if (performance.now() - MOTION.lastAt > 3000) { MOTION.ok = false; return false; }
+  if (!MOTION.ok) return false;
+  _invRefQ.copy(MOTION.refQ).invert();
+  _targetQ.copy(MOTION.devQ).multiply(_invRefQ).multiply(baseCamQ);
+  camera.quaternion.slerp(_targetQ, 0.16);
+  return true;
+}
+
+/* ================= light matching ================= */
+const lightBase = { hemi: 1.15, dir: 1.5 };
+const _lsCanvas = document.createElement('canvas');
+_lsCanvas.width = 16; _lsCanvas.height = 16;
+const _lsCtx = _lsCanvas.getContext('2d', { willReadFrequently: true });
+const _lightTgt = { m: 1, c: new THREE.Color(1, 1, 1) };
+let _lsNextAt = 0;
+function updateLightMatch(t, dt) {
+  if (!hemiLight || !dirLight) return;
+  if (camOK && video && video.readyState >= 2 && t >= _lsNextAt) {
+    _lsNextAt = t + 500;
+    try {
+      _lsCtx.drawImage(video, 0, 0, 16, 16);
+      const d = _lsCtx.getImageData(0, 0, 16, 16).data;
+      let r = 0, g = 0, b = 0;
+      const n = d.length / 4;
+      for (let i = 0; i < d.length; i += 4) { r += d[i]; g += d[i + 1]; b += d[i + 2]; }
+      r /= n * 255; g /= n * 255; b /= n * 255;
+      const lum = 0.2126 * r + 0.7152 * g + 0.0722 * b;
+      _lightTgt.m = clamp(0.45 + lum * 1.1, 0.45, 1.35);
+      _lightTgt.c.setRGB(lerp(1, Math.min(1, r * 1.7), 0.5),
+                         lerp(1, Math.min(1, g * 1.7), 0.5),
+                         lerp(1, Math.min(1, b * 1.7), 0.5));
+    } catch (e) {}
+  }
+  if (!camOK) return;
+  const k = 1 - Math.exp(-dt * 2.5);
+  hemiLight.intensity += (lightBase.hemi * _lightTgt.m - hemiLight.intensity) * k;
+  dirLight.intensity += (lightBase.dir * _lightTgt.m - dirLight.intensity) * k;
+  hemiLight.color.lerp(_lightTgt.c, k);
+}
+
+/* ============================== parallax ============================== */
+let parX = 0, parY = 0, parTX = 0, parTY = 0;
+let lastOrientAt = -1e9, mouseAt = -1e9, mouseTX = 0, mouseTY = 0;
+window.addEventListener('deviceorientation', (e) => {
+  if (e.gamma == null && e.beta == null && e.alpha == null) return;
+  lastOrientAt = performance.now();
+  parTX = clamp((e.gamma || 0) / 26, -1, 1);
+  parTY = clamp(((e.beta || 0) - 48) / 24, -1, 1);
+  MOTION.ever = true; MOTION.ok = true; MOTION.lastAt = lastOrientAt;
+  if (!MOTION.devQ) MOTION.devQ = new THREE.Quaternion();
+  deviceQuat(MOTION.devQ, e.alpha || 0, e.beta || 0, e.gamma || 0);
+  if (MOTION.recal || !MOTION.refQ) {
+    MOTION.refQ = MOTION.devQ.clone();
+    MOTION.recal = false;
+  }
+  hideMotionPill();
+}, true);
+window.addEventListener('pointermove', (e) => {
+  if (e.pointerType !== 'mouse') return;
+  mouseAt = performance.now();
+  mouseTX = clamp((e.clientX / Math.max(1, W) - 0.5) * 2, -1, 1);
+  mouseTY = clamp((e.clientY / Math.max(1, H) - 0.5) * 2, -1, 1);
+}, true);
+function updateParallax(t) {
+  let tx, ty;
+  if (performance.now() - mouseAt < 2500) { tx = mouseTX; ty = mouseTY; }
+  else if (performance.now() - lastOrientAt < 3000) { tx = parTX; ty = parTY; }
+  else { tx = Math.sin(t * 0.00035) * 0.4; ty = Math.sin(t * 0.00027 + 1.7) * 0.22; }
+  parX += (tx - parX) * 0.055;
+  parY += (ty - parY) * 0.055;
+}
+
+/* ============================== cozy room (fallback bg) ============================== */
+function rr2(c, x, y, w, h, r) { c.beginPath(); if (c.roundRect) c.roundRect(x, y, w, h, r); else c.rect(x, y, w, h); }
+function drawRoom() {
+  const ctx = rctx;
+  const wall = ctx.createLinearGradient(0, 0, 0, floorTop + 30);
+  wall.addColorStop(0, '#e8d5b5'); wall.addColorStop(1, '#cbb086');
+  ctx.fillStyle = wall; ctx.fillRect(0, 0, W, floorTop + 2);
+  // window with sky
+  const wx = W * 0.62 + parX * -8, wy = H * 0.07, ww = W * 0.28, wh = floorTop * 0.62;
+  ctx.fillStyle = '#bfe3f2'; rr2(ctx, wx, wy, ww, wh, 8); ctx.fill();
+  ctx.fillStyle = '#fff3b0'; ctx.beginPath(); ctx.arc(wx + ww * 0.72, wy + wh * 0.3, ww * 0.13, 0, Math.PI * 2); ctx.fill();
+  ctx.strokeStyle = '#8a6a45'; ctx.lineWidth = 7; rr2(ctx, wx, wy, ww, wh, 8); ctx.stroke();
+  ctx.lineWidth = 4; ctx.beginPath();
+  ctx.moveTo(wx + ww / 2, wy); ctx.lineTo(wx + ww / 2, wy + wh);
+  ctx.moveTo(wx, wy + wh / 2); ctx.lineTo(wx + ww, wy + wh / 2); ctx.stroke();
+  // picture frame
+  const px = W * 0.12 + parX * -6, py = H * 0.10, pw = W * 0.26, ph = floorTop * 0.45;
+  ctx.fillStyle = '#7a5230'; rr2(ctx, px - 5, py - 5, pw + 10, ph + 10, 6); ctx.fill();
+  ctx.fillStyle = '#f7e8c8'; rr2(ctx, px, py, pw, ph, 3); ctx.fill();
+  ctx.fillStyle = '#c0392b'; ctx.beginPath(); ctx.moveTo(px + pw * 0.2, py + ph * 0.85);
+  ctx.lineTo(px + pw * 0.45, py + ph * 0.3); ctx.lineTo(px + pw * 0.62, py + ph * 0.6);
+  ctx.lineTo(px + pw * 0.8, py + ph * 0.85); ctx.closePath(); ctx.fill();
+  // skirting + wood floor
+  ctx.fillStyle = '#fff3e0'; ctx.fillRect(0, floorTop - 7, W, 9);
+  const fl = ctx.createLinearGradient(0, floorTop, 0, H);
+  fl.addColorStop(0, '#a9763f'); fl.addColorStop(1, '#7c5227');
+  ctx.fillStyle = fl; ctx.fillRect(0, floorTop, W, H - floorTop);
+  ctx.strokeStyle = 'rgba(60,35,10,0.35)'; ctx.lineWidth = 2;
+  for (let i = 0; i < 5; i++) {
+    const gy = floorTop + 12 + i * (H - floorTop) * 0.19;
+    ctx.beginPath(); ctx.moveTo(0, gy); ctx.lineTo(W, gy); ctx.stroke();
+  }
+  const vg = ctx.createRadialGradient(W / 2, H / 2, Math.min(W, H) * 0.45, W / 2, H / 2, Math.max(W, H) * 0.78);
+  vg.addColorStop(0, 'rgba(30,18,5,0)'); vg.addColorStop(1, 'rgba(30,18,5,0.22)');
+  ctx.fillStyle = vg; ctx.fillRect(0, 0, W, H);
+}
+
+/* ============================== three.js scene ============================== */
+let renderer = null, scene = null, camera = null;
+const TOWER_Z = -1.7;                       // anchor: tower centre on the table
+const CAM_BASE = new THREE.Vector3(0, 1.35, 1.55);
+const CAM_LOOK = new THREE.Vector3(0, 0.44, TOWER_Z);
+
+function makeBlobTexture() {
+  const c = document.createElement('canvas'); c.width = c.height = 128;
+  const g = c.getContext('2d');
+  const grad = g.createRadialGradient(64, 64, 4, 64, 64, 62);
+  grad.addColorStop(0, 'rgba(0,0,0,0.5)');
+  grad.addColorStop(0.6, 'rgba(0,0,0,0.26)');
+  grad.addColorStop(1, 'rgba(0,0,0,0)');
+  g.fillStyle = grad; g.fillRect(0, 0, 128, 128);
+  return new THREE.CanvasTexture(c);
+}
+
+function initGL() {
+  renderer = new THREE.WebGLRenderer({ canvas: glCanvas, alpha: true, antialias: true });
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
+  renderer.setSize(window.innerWidth, window.innerHeight);
+  renderer.setClearColor(0x000000, 0);
+  scene = new THREE.Scene();
+  camera = new THREE.PerspectiveCamera(62, window.innerWidth / Math.max(1, window.innerHeight), 0.05, 80);
+  camera.position.copy(CAM_BASE);
+  camera.lookAt(CAM_LOOK);
+  baseCamQ = camera.quaternion.clone();
+  hemiLight = new THREE.HemisphereLight(0xfff6e8, 0x554433, lightBase.hemi);
+  scene.add(hemiLight);
+  dirLight = new THREE.DirectionalLight(0xfff1da, lightBase.dir);
+  dirLight.position.set(2.5, 4.5, 3.0);
+  scene.add(dirLight);
+}
+
+/* the table: a big round wooden disc the castle stands on */
+function buildTable() {
+  const grp = new THREE.Group();
+  const top = new THREE.Mesh(
+    new THREE.CylinderGeometry(1.35, 1.35, 0.035, 40),
+    new THREE.MeshStandardMaterial({ color: 0x9a6a38, roughness: 0.85 })
+  );
+  top.position.y = -0.018;
+  grp.add(top);
+  const rim = new THREE.Mesh(
+    new THREE.TorusGeometry(1.35, 0.022, 8, 40),
+    new THREE.MeshStandardMaterial({ color: 0x77512a, roughness: 0.9 })
+  );
+  rim.rotation.x = Math.PI / 2; rim.position.y = -0.004;
+  grp.add(rim);
+  // plank lines
+  const lineMat = new THREE.MeshBasicMaterial({ color: 0x6e4c22 });
+  for (let i = -2; i <= 2; i++) {
+    if (!i) continue;
+    const l = new THREE.Mesh(new THREE.PlaneGeometry(2.5, 0.008), lineMat);
+    l.rotation.x = -Math.PI / 2;
+    l.position.set(0, 0.0015, i * 0.42);
+    grp.add(l);
+  }
+  const shadow = new THREE.Mesh(
+    new THREE.PlaneGeometry(3.1, 3.1),
+    new THREE.MeshBasicMaterial({ map: makeBlobTexture(), transparent: true, depthWrite: false, opacity: 0.85 })
+  );
+  shadow.rotation.x = -Math.PI / 2;
+  shadow.position.y = -0.038;
+  grp.add(shadow);
+  grp.position.set(0, 0, TOWER_Z);
+  scene.add(grp);
+}
+
+/* ============================== the voxel castle ==============================
+   Mechanics borrowed from the flat original (brad-demos/g/voxel-demolition):
+   a keep + 4 round towers with cone roofs + gate arch + battlements, built
+   into ONE InstancedMesh. Voxels SLEEP until a blast wakes them; a woken
+   voxel chain-wakes the voxel standing on it, so towers cascade down.
+   Ammo 12, win at 85% down — same numbers as the original.
+   AR changes: metric scale (voxel 30 mm, castle ≈ 0.57 m wide, 0.90 m tall)
+   and hollow walls so the count stays phone-friendly (~2.6k, not 9k). */
+const V = 0.033;                 // voxel size (m)
+const GH = 64;                   // grid hash stride
+const solid = new Map();
+const key3 = (x, y, z) => ((x + 32) * GH + y) * GH + (z + 32);
+const vox = [];
+function put(x, y, z, c) {
+  if (y < 0 || y >= GH) return;
+  const k = key3(x, y, z);
+  if (solid.has(k)) return;
+  solid.set(k, vox.length);
+  vox.push({ x, y, z, c, awake: false, landed: false, done: false,
+             vx: 0, vy: 0, vz: 0, px: 0, py: 0, pz: 0,
+             rx: 0, ry: 0, vrx: 0, vry: 0 });
+}
+function buildCastleData() {
+  vox.length = 0; solid.clear();
+  const stone = y => (y % 5 === 4 ? 0xb9a58a : 0xd9c7a6);
+  const darkStone = y => (y % 6 === 5 ? 0xa89878 : 0xc9b794);
+  // keep: hollow square walls, half-size 7, up to y=12, gate arch in front (+z)
+  for (let x = -7; x <= 7; x++) for (let z = -7; z <= 7; z++) {
+    const edge = Math.max(Math.abs(x), Math.abs(z)) === 7;
+    for (let y = 0; y <= 14; y++) {
+      if (!edge && y < 14) continue;                       // hollow interior
+      if (z === 7 && Math.abs(x) <= 1 && y <= 4) continue; // gate arch
+      put(x, y, z, stone(y));
+    }
+    // battlements
+    if (edge && ((x + z) % 2 === 0)) put(x, 15, z, 0xc9b794);
+  }
+  // corner round towers at (±8,±8), radius 3, hollow, to y=17 + cone roofs
+  for (const [tx, tz] of [[-8, -8], [8, -8], [-8, 8], [8, 8]]) {
+    for (let x = tx - 3; x <= tx + 3; x++) for (let z = tz - 3; z <= tz + 3; z++) {
+      const r = Math.hypot(x - tx, z - tz);
+      if (r > 3.1) continue;
+      for (let y = 0; y <= 20; y++) {
+        if (r < 1.7 && y < 20) continue;                   // hollow core
+        put(x, y, z, darkStone(y));
+      }
+      for (let y = 21; y <= 26; y++) {                      // cone roof
+        const rr = 3.1 - (y - 20) * 0.55;
+        if (r <= rr) put(x, y, z, (y % 2 ? 0xc0392b : 0xd04a3a));
+      }
+    }
+  }
+  // centre keep-top block: |d|<=3 walls, y 13..17 + battlements
+  for (let x = -3; x <= 3; x++) for (let z = -3; z <= 3; z++) {
+    const edge = Math.max(Math.abs(x), Math.abs(z)) === 3;
+    if (!edge) continue;
+    for (let y = 15; y <= 20; y++) put(x, y, z, stone(y));
+    if ((x + z) % 2 === 0) put(x, 21, z, 0xc9b794);
+  }
+  // world positions (castle local -> scene, base at table top y=0)
+  for (const v of vox) {
+    v.px = v.x * V;
+    v.py = v.y * V + V / 2;
+    v.pz = TOWER_Z + v.z * V;
+  }
+  // pinned = nothing underneath in the ORIGINAL build (gate-arch lintels,
+  // cone-roof overhangs). Pinned voxels never auto-fall in the support scan;
+  // everything else falls once its support is blasted away.
+  for (const v of vox) v.pinned = v.y > 0 && !solid.has(key3(v.x, v.y - 1, v.z));
+}
+let voxMesh = null;
+const _m4 = new THREE.Matrix4();
+const _q = new THREE.Quaternion();
+const _e = new THREE.Euler();
+const _s = new THREE.Vector3(1, 1, 1);
+const _p = new THREE.Vector3();
+const _col = new THREE.Color();
+function buildCastleMesh() {
+  if (voxMesh) { scene.remove(voxMesh); voxMesh.geometry.dispose(); }
+  const geo = new THREE.BoxGeometry(V * 0.98, V * 0.98, V * 0.98);
+  const mat = new THREE.MeshStandardMaterial({ roughness: 0.95, metalness: 0 });
+  voxMesh = new THREE.InstancedMesh(geo, mat, vox.length);
+  voxMesh.instanceMatrix.setUsage(THREE.DynamicDrawUsage);
+  vox.forEach((v, i) => {
+    _p.set(v.px, v.py, v.pz);
+    _q.identity();
+    _m4.compose(_p, _q, _s);
+    voxMesh.setMatrixAt(i, _m4);
+    voxMesh.setColorAt(i, _col.setHex(v.c).offsetHSL(0, 0, rand(-0.04, 0.04)));
+  });
+  voxMesh.instanceMatrix.needsUpdate = true;
+  if (voxMesh.instanceColor) voxMesh.instanceColor.needsUpdate = true;
+  scene.add(voxMesh);
+}
+
+/* ============================== dust puffs ============================== */
+const PUFF_MAX = 260;
+let puffMesh = null;
+const puffs = [];
+function buildPuffs() {
+  puffMesh = new THREE.InstancedMesh(
+    new THREE.SphereGeometry(0.016, 6, 5),
+    new THREE.MeshBasicMaterial({ color: 0xeadcc0, transparent: true, opacity: 0.55 }),
+    PUFF_MAX
+  );
+  puffMesh.instanceMatrix.setUsage(THREE.DynamicDrawUsage);
+  puffMesh.count = 0;
+  scene.add(puffMesh);
+}
+
+/* ============================== game state ============================== */
+const TOTAL_SHELLS = 12;
+const WIN_PCT = 85;
+const GRAV = 5.5;                       // m/s^2 (the original's 14 u/s^2 at its scale)
+let ammo = TOTAL_SHELLS, shotsFired = 0, killed = 0, settledCount = 0;
+let shell = null;                       // { p, v, t } while flying
+let cooldown = 0, shakeAmp = 0, endTimer = -1, crumbleAt = 0, supportAt = 0;
+const wakeQueue = [];                   // { i, t }
+let shellMesh = null, markerMesh = null, aimProxy = null;
+const aimPoint = new THREE.Vector3(0, 0.46, TOWER_Z);
+let aimOverride = null;                 // QA hook: { p: Vector3, ttl }
+
+function buildProps() {
+  shellMesh = new THREE.Mesh(
+    new THREE.SphereGeometry(0.032, 14, 10),
+    new THREE.MeshStandardMaterial({ color: 0x22242a, roughness: 0.35, metalness: 0.5 })
+  );
+  shellMesh.visible = false;
+  scene.add(shellMesh);
+  markerMesh = new THREE.Mesh(
+    new THREE.RingGeometry(0.035, 0.05, 24),
+    new THREE.MeshBasicMaterial({ color: 0xff3b30, side: THREE.DoubleSide, depthTest: false, transparent: true, opacity: 0.95 })
+  );
+  markerMesh.renderOrder = 9;
+  scene.add(markerMesh);
+  // invisible box the centre-crosshair ray aims against
+  aimProxy = new THREE.Mesh(new THREE.BoxGeometry(0.78, 0.92, 0.78), new THREE.MeshBasicMaterial({ visible: false }));
+  aimProxy.position.set(0, 0.46, TOWER_Z);
+  scene.add(aimProxy);
+}
+
+function wakeVox(i, vx, vy, vz) {
+  const v = vox[i];
+  if (!v || v.awake) return;
+  v.awake = true;
+  v.vx = vx; v.vy = vy; v.vz = vz;
+  v.vrx = rand(-5, 5); v.vry = rand(-5, 5);
+  killed++;
+  solid.delete(key3(v.x, v.y, v.z));
+  const up = solid.get(key3(v.x, v.y + 1, v.z));
+  if (up !== undefined) wakeQueue.push({ i: up, t: 0.05 + rand(0, 0.05) });
+}
+let blastCount = 0;
+function blast(x, y, z) {
+  shakeAmp = 0.012;
+  sndBoom(); sndCrumble();
+  blastCount++;
+  const R = 0.24 + 0.09 * Math.min(1, blastCount / 8);   // grows with blasts, like the original
+  const power = 2.3;
+  for (let i = 0; i < vox.length; i++) {
+    const v = vox[i];
+    if (v.awake) continue;
+    const dx = v.px - x, dy = v.py - y, dz = v.pz - z;
+    const d = Math.hypot(dx, dy, dz);
+    if (d < R) {
+      const f = power * (1 - d / R) + 0.55;
+      wakeVox(i, dx / (d + 0.01) * f + rand(-0.25, 0.25),
+                 dy / (d + 0.01) * f + 0.85,
+                 dz / (d + 0.01) * f + rand(-0.25, 0.25));
+    }
+  }
+  for (let k = 0; k < 16 && puffs.length < PUFF_MAX; k++) {
+    puffs.push({ x: x + rand(-0.05, 0.05), y: y + rand(-0.05, 0.05), z: z + rand(-0.05, 0.05),
+                 vx: rand(-0.5, 0.5), vy: rand(0, 0.8), vz: rand(-0.5, 0.5), l: rand(0.6, 1.1) });
+  }
+  updateHUD();
+}
+const raycaster = new THREE.Raycaster();
+const _pv = new THREE.Vector3();
+function updateAim() {
+  if (aimOverride && aimOverride.ttl > 0) { aimPoint.copy(aimOverride.p); return; }
+  raycaster.setFromCamera(new THREE.Vector2(0, 0), camera);
+  const hits = raycaster.intersectObject(aimProxy);
+  if (hits.length) aimPoint.copy(hits[0].point);
+  else {
+    _pv.copy(raycaster.ray.direction).multiplyScalar(2.4).add(camera.position);
+    aimPoint.copy(_pv);
+  }
+}
+function fire() {
+  if (phase !== 'playing' || shell || cooldown > 0 || ammo <= 0) return;
+  ammo--; shotsFired++; cooldown = 0.45;
+  sndWhoosh();
+  updateAim();
+  const origin = camera.position.clone();
+  origin.y -= 0.22;
+  _pv.set(0, 0, -1).applyQuaternion(camera.quaternion);
+  origin.addScaledVector(_pv, 0.25);
+  const target = aimPoint.clone();
+  const T = 0.75;
+  const vel = target.clone().sub(origin).divideScalar(T);
+  vel.y += 0.5 * GRAV * T;
+  shell = { p: origin, v: vel, t: 0 };
+  shellMesh.visible = true;
+  shellMesh.position.copy(origin);
+  updateHUD();
+}
+fireBtn.addEventListener('click', () => { initAudio(); resumeAudio(); fire(); });
+glCanvas.addEventListener('pointerdown', () => { initAudio(); resumeAudio(); });
+
+function pctDown() { return vox.length ? Math.round(100 * killed / vox.length) : 0; }
+function updateHUD() {
+  pctEl.textContent = pctDown();
+  shellsEl.textContent = ammo;
+  downEl.textContent = killed;
+  pctBar.style.width = pctDown() + '%';
+  fireBtn.disabled = (ammo <= 0 || !!shell);
+}
+function bigMsg(txt) {
+  bigMsgEl.textContent = txt;
+  bigMsgEl.classList.remove('pop');
+  void bigMsgEl.offsetWidth;
+  bigMsgEl.classList.add('pop');
+}
+
+/* ============================== physics step ============================== */
+function stepGame(dt) {
+  cooldown -= dt;
+  if (aimOverride && aimOverride.ttl > 0) aimOverride.ttl -= dt;
+  // shell flight + collision against the sleeping-voxel grid (original's method)
+  if (shell) {
+    shell.t += dt;
+    shell.v.y -= GRAV * dt;
+    shell.p.addScaledVector(shell.v, dt);
+    shellMesh.position.copy(shell.p);
+    const gx = Math.round(shell.p.x / V), gy = Math.floor(shell.p.y / V), gz = Math.round((shell.p.z - TOWER_Z) / V);
+    if (solid.has(key3(gx, gy, gz)) || shell.t > 1.35 || shell.p.y < 0.015) {
+      blast(shell.p.x, Math.max(0.02, shell.p.y), shell.p.z);
+      shell = null;
+      shellMesh.visible = false;
+      updateHUD();
+    }
+  }
+  // chain-wake queue (voxels whose support vanished)
+  for (let qi = wakeQueue.length - 1; qi >= 0; qi--) {
+    wakeQueue[qi].t -= dt;
+    if (wakeQueue[qi].t <= 0) {
+      const e = wakeQueue.splice(qi, 1)[0];
+      wakeVox(e.i, rand(-0.15, 0.15), 0, rand(-0.15, 0.15));
+    }
+  }
+  // support scan (~3x/s): a sleeping, unpinned voxel whose support is gone
+  // drops — slabs and wall-tops follow their blasted bases down
+  supportAt -= dt;
+  if (supportAt <= 0) {
+    supportAt = 0.3;
+    for (let i = 0; i < vox.length; i++) {
+      const v = vox[i];
+      if (v.awake || v.y === 0) continue;
+      if (solid.has(key3(v.x, v.y - 1, v.z))) continue;      // still supported
+      if (v.pinned) {
+        // arch lintels / roof overhangs / slab interiors: held up by their
+        // neighbours — fall once fewer than 2 same-level neighbours remain
+        let n = 0;
+        if (solid.has(key3(v.x + 1, v.y, v.z))) n++;
+        if (solid.has(key3(v.x - 1, v.y, v.z))) n++;
+        if (solid.has(key3(v.x, v.y, v.z + 1))) n++;
+        if (solid.has(key3(v.x, v.y, v.z - 1))) n++;
+        if (n >= 2) continue;
+      }
+      wakeVox(i, rand(-0.1, 0.1), 0, rand(-0.1, 0.1));
+    }
+  }
+  // integrate awake voxels; settle on the table top (y=0)
+  let anyAwakeMoving = false;
+  for (let i = 0; i < vox.length; i++) {
+    const v = vox[i];
+    if (!v.awake || v.landed) continue;
+    anyAwakeMoving = true;
+    v.vy -= GRAV * dt;
+    v.px += v.vx * dt; v.py += v.vy * dt; v.pz += v.vz * dt;
+    v.rx += v.vrx * dt; v.ry += v.vry * dt;
+    if (v.py < V / 2) {
+      v.py = V / 2;
+      if (Math.abs(v.vy) > 0.9 && Math.random() < 0.05 && puffs.length < PUFF_MAX) {
+        puffs.push({ x: v.px, y: 0.03, z: v.pz, vx: rand(-0.2, 0.2), vy: 0.3, vz: rand(-0.2, 0.2), l: 0.7 });
+        if (crumbleAt < performance.now() - 900) { crumbleAt = performance.now(); sndThud(); }
+      }
+      v.vy *= -0.28; v.vx *= 0.68; v.vz *= 0.68; v.vrx *= 0.5; v.vry *= 0.5;
+      if (Math.abs(v.vy) < 0.22 && Math.hypot(v.vx, v.vz) < 0.16) { v.landed = true; settledCount++; }
+    }
+    // rest detection: a voxel barely moving for a while is rubble at rest,
+    // wherever it stopped (also guarantees the out-of-shells ending resolves)
+    if (!v.landed) {
+      const spd = Math.hypot(v.vx, v.vy, v.vz);
+      if (spd < 0.22) { v.restT = (v.restT || 0) + dt; if (v.restT > 1.2) { v.landed = true; settledCount++; } }
+      else v.restT = 0;
+    }
+    // fell off the world edge (past the table) — let it drop out of sight, then land it invisibly
+    if (v.py < -1.2) { v.landed = true; settledCount++; }
+  }
+  // write matrices for awake voxels that haven't finished
+  if (voxMesh) {
+    let dirty = false;
+    for (let i = 0; i < vox.length; i++) {
+      const v = vox[i];
+      if (v.awake && !(v.landed && v.done)) {
+        _p.set(v.px, v.py, v.pz);
+        _e.set(v.rx, v.ry, 0); _q.setFromEuler(_e);
+        _m4.compose(_p, _q, _s);
+        voxMesh.setMatrixAt(i, _m4);
+        if (v.landed) v.done = true;
+        dirty = true;
+      }
+    }
+    if (dirty) voxMesh.instanceMatrix.needsUpdate = true;
+  }
+  // dust
+  for (let i = puffs.length - 1; i >= 0; i--) {
+    const p = puffs[i];
+    p.x += p.vx * dt; p.y += p.vy * dt; p.z += p.vz * dt; p.l -= dt;
+    if (p.l <= 0) puffs.splice(i, 1);
+  }
+  if (puffMesh) {
+    const n = Math.min(PUFF_MAX, puffs.length);
+    for (let i = 0; i < n; i++) {
+      const p = puffs[i];
+      _p.set(p.x, p.y, p.z);
+      _q.identity();
+      const sc = Math.max(0.2, p.l);
+      _m4.compose(_p, _q, _s.set(sc, sc, sc));
+      puffMesh.setMatrixAt(i, _m4);
+    }
+    _s.set(1, 1, 1);
+    puffMesh.count = n;
+    puffMesh.instanceMatrix.needsUpdate = true;
+  }
+  // win / out-of-shells resolution
+  if (phase === 'playing') {
+    if (pctDown() >= WIN_PCT) { endGame(true); return; }
+    if (ammo <= 0 && !shell && !anyAwakeMoving && wakeQueue.length === 0) {
+      if (endTimer < 0) endTimer = 0.9;
+      endTimer -= dt;
+      if (endTimer <= 0) endGame(false);
+    } else endTimer = -1;
+  }
+  // aim marker
+  if (markerMesh) {
+    if (phase === 'playing' && ammo > 0 && !shell) {
+      updateAim();
+      markerMesh.visible = true;
+      markerMesh.position.copy(aimPoint);
+      markerMesh.lookAt(camera.position);
+      const s = 1 + Math.sin(performance.now() * 0.006) * 0.12;
+      markerMesh.scale.set(s, s, s);
+    } else markerMesh.visible = false;
+  }
+}
+
+/* ============================== fx overlay ============================== */
+function drawFx() { fctx.clearRect(0, 0, W, H); }
+
+/* ============================== game flow ============================== */
+function resetGame() {
+  buildCastleData();
+  buildCastleMesh();
+  ammo = TOTAL_SHELLS; shotsFired = 0; killed = 0; settledCount = 0;
+  shell = null; cooldown = 0; endTimer = -1; blastCount = 0; supportAt = 0;
+  wakeQueue.length = 0; puffs.length = 0;
+  if (shellMesh) shellMesh.visible = false;
+  updateHUD();
+}
+function endGame(won) {
+  phase = 'over';
+  crossEl.classList.add('hidden');
+  fireBtn.classList.add('hidden');
+  const p = pctDown();
+  const isBest = p > best;
+  if (isBest) { best = p; try { localStorage.setItem('voxelDemoBest', String(best)); } catch (e) {} }
+  document.getElementById('endEmoji').textContent = won ? '🏆' : '🧨';
+  document.getElementById('endTitle').textContent = won ? 'DEMOLITION COMPLETE!' : 'OUT OF SHELLS!';
+  document.getElementById('finalPct').textContent = p;
+  document.getElementById('finalDown').textContent = killed;
+  document.getElementById('finalShots').textContent = shotsFired;
+  document.getElementById('newBest').classList.toggle('hidden', !isBest);
+  endEl.classList.remove('hidden');
+  if (won) { bigMsg('🏆 DEMOLITION COMPLETE!'); sndWin(); } else sndLose();
+  updateHUD();
+}
+function beginRound() {
+  MOTION.recal = true;
+  motionWatchdog();
+  resetGame();
+  startEl.classList.add('hidden');
+  endEl.classList.add('hidden');
+  hudEl.classList.remove('hidden');
+  crossEl.classList.remove('hidden');
+  fireBtn.classList.remove('hidden');
+  phase = 'playing';
+}
+
+/* ============================== resize ============================== */
+function resize() {
+  const dpr = Math.min(window.devicePixelRatio || 1, 2);
+  W = window.innerWidth; H = window.innerHeight;
+  for (const c of [roomCanvas, fxCanvas]) {
+    c.width = Math.round(W * dpr);
+    c.height = Math.round(H * dpr);
+  }
+  rctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  fctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  floorTop = Math.round(H * 0.34);
+  if (renderer && camera) {
+    renderer.setSize(W, H);
+    camera.aspect = W / Math.max(1, H);
+    camera.updateProjectionMatrix();
+  }
+}
+window.addEventListener('resize', resize);
+
+/* ============================== main loop ============================== */
+let lastT = 0;
+function frame(t) {
+  requestAnimationFrame(frame);
+  const dt = Math.min(0.05, lastT ? (t - lastT) / 1000 : 0.016);
+  lastT = t;
+  updateParallax(t);
+  if (!camOK) { rctx.clearRect(0, 0, W, H); drawRoom(); }
+  if (camera) {
+    let sx = 0, sy = 0;
+    if (shakeAmp > 0.0004) {
+      sx = rand(-shakeAmp, shakeAmp); sy = rand(-shakeAmp, shakeAmp);
+      shakeAmp *= Math.exp(-dt * 7);
+    }
+    camera.position.set(CAM_BASE.x + parX * 0.35 + sx, CAM_BASE.y - parY * 0.18 + sy, CAM_BASE.z);
+    if (!applyMotionCamera()) {
+      camera.lookAt(CAM_LOOK.x - parX * 0.2, CAM_LOOK.y, CAM_LOOK.z);
+    }
+  }
+  updateLightMatch(t, dt);
+  stepGame(dt);
+  drawFx();
+  if (renderer) renderer.render(scene, camera);
+}
+
+/* ============================== start flow ============================== */
+let camTried = false;
+async function ensureCamera() {
+  if (camTried) return;
+  camTried = true;
+  try {
+    if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) throw new Error('no getUserMedia');
+    const stream = await Promise.race([
+      navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' }, audio: false }),
+      new Promise((_, rej) => setTimeout(() => rej(new Error('camera timeout')), 4500))
+    ]);
+    video.srcObject = stream;
+    await video.play().catch(() => {});
+    camOK = true;
+  } catch (e) { camOK = false; }
+  video.classList.toggle('hidden', !camOK);
+  roomCanvas.classList.toggle('hidden', camOK);
+  camTagEl.textContent = camOK ? '📷 AR room' : '🏠 cozy room';
+}
+document.getElementById('startBtn').addEventListener('click', async () => {
+  askMotionPermission();   // FIRST, synchronously inside the tap (iOS rule)
+  initAudio();
+  await ensureCamera();
+  beginRound();
+});
+document.getElementById('againBtn').addEventListener('click', () => {
+  initAudio();
+  beginRound();
+});
+
+/* ============================== boot + QA hooks ============================== */
+resize();
+initGL();
+buildTable();
+buildProps();
+buildPuffs();
+buildCastleData();
+buildCastleMesh();
+resize();
+updateHUD();
+requestAnimationFrame(frame);
+
+window.__demo = {
+  get phase() { return phase; },
+  get started() { return phase !== 'start'; },
+  get camOK() { return camOK; },
+  get pct() { return pctDown(); },
+  get killed() { return killed; },
+  get voxels() { return vox.length; },
+  get ammo() { return ammo; },
+  get shots() { return shotsFired; },
+  get shellActive() { return !!shell; },
+  get awakeMoving() { return vox.some(v => v.awake && !v.landed); },
+  aim: () => aimPoint.toArray(),
+  remnants: () => {
+    const byY = {}, byPinned = { pinned: 0, plain: 0 };
+    let awakeNotLanded = 0;
+    for (const v of vox) {
+      if (!v.awake) { byY[v.y] = (byY[v.y] || 0) + 1; byPinned[v.pinned ? 'pinned' : 'plain']++; }
+      else if (!v.landed) awakeNotLanded++;
+    }
+    return { byY, byPinned, awakeNotLanded };
+  },
+  start: () => document.getElementById('startBtn').click(),
+  again: () => document.getElementById('againBtn').click(),
+  fire: () => { fireBtn.click(); },
+  // QA aim assist: point the next shot's crosshair at a world position
+  // (the headless fallback has no device motion to aim with). Disclosed in the build report.
+  aimAtWorld: (x, y, z) => { aimOverride = { p: new THREE.Vector3(x, y, z), ttl: 2.5 }; },
+  blastAt: (x, y, z) => blast(x, y, z),
+  project: (x, y, z) => {
+    if (!camera) return null;
+    _pv.set(x, y, z).project(camera);
+    return { x: (_pv.x * 0.5 + 0.5) * W, y: (_pv.y * -0.5 + 0.5) * H };
+  },
+  motion: () => ({ ok: MOTION.ok, ever: MOTION.ever, perm: MOTION.perm, needPerm: MOTION.needPerm, hasRef: !!MOTION.refQ })
+};
+</script>
+<script id="moth-game-guard-js">
+(function(){
+  var lastEnd=0;
+  function onUi(t){return t&&t.closest&&t.closest('button,a,input,select,textarea,[data-scroll]');}
+  document.addEventListener('touchend',function(e){
+    var now=Date.now();
+    if(!onUi(e.target)&&now-lastEnd<=300&&e.cancelable)e.preventDefault();
+    lastEnd=now;
+  },{passive:false});
+  ['gesturestart','gesturechange','gestureend'].forEach(function(n){
+    document.addEventListener(n,function(e){e.preventDefault();});
+  });
+  document.addEventListener('dblclick',function(e){e.preventDefault();},{passive:false});
+  document.addEventListener('contextmenu',function(e){e.preventDefault();});
+  document.addEventListener('touchmove',function(e){
+    if(e.target&&e.target.closest&&e.target.closest('[data-scroll]'))return;
+    if(e.cancelable)e.preventDefault();
+  },{passive:false});
+})();
+</script>
+</body>
+</html>
