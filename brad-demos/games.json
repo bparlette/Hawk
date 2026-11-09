@@ -2362,6 +2362,18 @@
    "path": "../games/canyon-drift/index.html",
    "thumb": "thumbs/bonk-yard.png",
    "title": "CANYON DRIFT!"
+  },
+  {
+   "autostart": [],
+   "category": "AR",
+   "id": "the-final-blow",
+   "keys": {},
+   "labels": {},
+   "note": "A 60-second AR movie in your room: Ganon makes his final stand, Zelda holds him with light, Link strikes. Full voice acting, bone-animated models, mouths that move with the lines.",
+   "orientation": "any",
+   "path": "../games/the-final-blow/index.html",
+   "thumb": "thumbs/bonk-yard.png",
+   "title": "THE FINAL BLOW"
   }
  ]
 }
