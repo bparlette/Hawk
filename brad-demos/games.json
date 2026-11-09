@@ -2414,6 +2414,14 @@
    "thumb": "thumbs/bonk-yard.png",
    "title": "STANDING PHOTO-MESH HANNAH — AR",
    "url": "../games/hana-stand/"
+  },
+  {
+   "category": "AR",
+   "desc": "One page, one tap each: every Hana — walking, giant hand-made, photo-mesh seated and standing, with Quick Look buttons.",
+   "id": "hana",
+   "thumb": "thumbs/bonk-yard.png",
+   "title": "HANA — All Look-Arounds",
+   "url": "../games/hana/"
   }
  ]
 }
