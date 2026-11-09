@@ -2389,7 +2389,7 @@
    "desc": "Hana standing still in your room — walk around her. Plus Quick Look USDZ.",
    "id": "hana-chan-giant",
    "thumb": "thumbs/bonk-yard.png",
-   "title": "GIANT HANA — 4.5m Still AR",
+   "title": "GIANT HANA — Still AR",
    "url": "../games/hana-chan-giant/"
   },
   {
@@ -2415,6 +2415,14 @@
    "thumb": "thumbs/bonk-yard.png",
    "title": "STANDING PHOTO-MESH HANNAH — AR",
    "url": "../games/hana-stand/"
+  },
+  {
+   "category": "AR",
+   "desc": "Link generated from a gameplay photo (HY3D) — browser AR plus Quick Look.",
+   "id": "link-hy3d",
+   "thumb": "thumbs/bonk-yard.png",
+   "title": "LINK — 3D Mesh AR",
+   "url": "../games/link-hy3d/"
   },
   {
    "category": "AR",
