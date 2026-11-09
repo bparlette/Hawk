@@ -1,0 +1,466 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+<title>THE CLIMB — a tiny rage-climb with Kip</title>
+<style>
+  html, body { margin:0; padding:0; height:100%; overflow:hidden; background:#79bde8; font-family:ui-rounded, "SF Pro Rounded", system-ui, sans-serif; }
+  #game { position:fixed; inset:0; }
+  canvas { display:block; }
+  /* ---------- HUD ---------- */
+  #hud { position:fixed; top:calc(8px + env(safe-area-inset-top)); left:50%; transform:translateX(-50%);
+         display:flex; gap:8px; z-index:20; pointer-events:none; }
+  .chip { background:rgba(20,32,48,.55); color:#fff; border-radius:999px; padding:6px 13px; font-weight:700;
+          font-size:15px; letter-spacing:.02em; backdrop-filter:blur(3px); white-space:nowrap; box-shadow:0 2px 8px rgba(0,0,0,.18); }
+  .chip small { opacity:.65; font-weight:600; font-size:11px; text-transform:uppercase; letter-spacing:.08em; margin-right:4px; }
+  .chip.gold { color:#ffd94d; }
+  #zone { position:fixed; top:calc(52px + env(safe-area-inset-top)); left:50%; transform:translateX(-50%); z-index:20;
+          color:#fff; font-weight:800; font-size:13px; letter-spacing:.34em; text-transform:uppercase;
+          text-shadow:0 1px 6px rgba(30,60,90,.55); opacity:0; transition:opacity .5s; pointer-events:none; }
+  /* ---------- title / help ---------- */
+  #title { position:fixed; inset:0; z-index:30; display:flex; flex-direction:column; align-items:center; justify-content:flex-end;
+           padding-bottom:15vh; pointer-events:none; text-align:center; }
+  #title h1 { margin:0; color:#fff; font-size:min(15vw,64px); font-weight:900; letter-spacing:.06em;
+              text-shadow:0 3px 0 #2b6ea8, 0 8px 28px rgba(20,50,80,.45); }
+  #title p { margin:10px 18px 0; color:#eaf6ff; font-size:min(4.2vw,16px); font-weight:600; line-height:1.5;
+             text-shadow:0 1px 8px rgba(20,50,80,.6); }
+  #title .keys { opacity:.85; font-size:min(3.6vw,13px); }
+  /* ---------- win card ---------- */
+  #win { position:fixed; inset:0; z-index:40; display:none; align-items:center; justify-content:center; background:rgba(16,30,48,.35); }
+  #win .card { background:linear-gradient(180deg,#fffdf4,#ffedb8); border-radius:22px; padding:30px 38px; text-align:center;
+               box-shadow:0 18px 60px rgba(0,0,0,.4); max-width:84vw; }
+  #win h1 { margin:0 0 4px; font-size:44px; font-weight:900; color:#c9860a; letter-spacing:.04em; }
+  #win p { margin:6px 0 16px; color:#6b5320; font-weight:700; font-size:16px; line-height:1.6; }
+  #win button { pointer-events:auto; background:#f5a623; color:#fff; border:0; border-radius:999px; padding:13px 30px;
+                font-size:17px; font-weight:800; cursor:pointer; box-shadow:0 4px 0 #c47f0e; }
+  #win button:active { transform:translateY(3px); box-shadow:0 1px 0 #c47f0e; }
+  /* ---------- touch ---------- */
+  #touch { position:fixed; inset:0; z-index:15; touch-action:none; }
+  #stickBase, #stickKnob { position:fixed; border-radius:50%; pointer-events:none; z-index:16; display:none; }
+  #stickBase { width:112px; height:112px; border:2px solid rgba(255,255,255,.5); background:rgba(255,255,255,.10); }
+  #stickKnob { width:52px; height:52px; background:rgba(255,255,255,.55); box-shadow:0 2px 10px rgba(0,0,0,.25); }
+  .tbtn { position:fixed; z-index:18; width:74px; height:74px; border-radius:50%; display:none; align-items:center; justify-content:center;
+          color:#fff; font-weight:900; font-size:24px; user-select:none; -webkit-user-select:none; touch-action:none;
+          border:2px solid rgba(255,255,255,.55); box-shadow:0 4px 14px rgba(0,0,0,.25); }
+  .tbtn.on { filter:brightness(1.35); transform:scale(.94); }
+  #btnA { right:22px; bottom:calc(30px + env(safe-area-inset-bottom)); background:rgba(245,166,35,.78); }
+  #btnB { right:112px; bottom:calc(86px + env(safe-area-inset-bottom)); background:rgba(23,182,167,.78); width:62px; height:62px; font-size:20px; }
+  #btnZ { right:30px; bottom:calc(122px + env(safe-area-inset-bottom)); background:rgba(90,110,140,.78); width:56px; height:56px; font-size:15px; }
+  @media (max-width: 540px) {
+    #hud { gap:5px; max-width:100vw; }
+    .chip { font-size:12.5px; padding:5px 9px; }
+    .chip small { font-size:9.5px; margin-right:3px; }
+    #zone { top:calc(46px + env(safe-area-inset-top)); }
+  }
+  body.touch .tbtn { display:flex; }
+  #flash { position:fixed; inset:0; background:#e33; opacity:0; pointer-events:none; z-index:25; transition:opacity .45s; }
+  #vig { position:fixed; inset:0; pointer-events:none; z-index:5; box-shadow:inset 0 0 180px rgba(20,40,70,.28); }
+</style>
+<style id="moth-game-guard">
+html,body{touch-action:none;overscroll-behavior:none;-webkit-touch-callout:none;-webkit-user-select:none;user-select:none;-webkit-tap-highlight-color:transparent}
+canvas{touch-action:none}
+</style>
+</head>
+<body>
+<div id="game"></div>
+<div id="vig"></div>
+<div id="hud">
+  <div class="chip"><small>Height</small><span id="hNow">0.0</span>m</div>
+  <div class="chip"><small>Best</small><span id="hBest">0.0</span>m</div>
+  <div class="chip"><small>Time</small><span id="hTime">0:00</span></div>
+  <div class="chip"><small>Falls</small><span id="hFalls">0</span></div>
+  <div class="chip gold"><small>Coins</small><span id="hCoins">0/26</span></div>
+</div>
+<div id="zone">MEADOW</div>
+<div id="title">
+  <h1>THE CLIMB</h1>
+  <p>One mountain. No checkpoints. Falling costs height, never your life.<br>
+     Run, triple-jump, grab ledges, long-jump, dive and wall-kick your way up with <b>Kip</b>.</p>
+  <p class="keys">WASD / left stick — run &nbsp;·&nbsp; SPACE / A — jump (×3 = triple jump) &nbsp;·&nbsp; J / B — dive &amp; pound<br>
+     SHIFT / Z — crouch: long jump &amp; ground pound &nbsp;·&nbsp; Q / E or drag right side — camera</p>
+</div>
+<div id="win"><div class="card">
+  <h1>🏔️ SUMMIT!</h1>
+  <p id="winStats"></p>
+  <button id="again">Climb again</button>
+</div></div>
+<div id="flash"></div>
+<div id="touch"></div>
+<div id="stickBase"></div><div id="stickKnob"></div>
+<div class="tbtn" id="btnA">A</div>
+<div class="tbtn" id="btnB">B</div>
+<div class="tbtn" id="btnZ">Z</div>
+
+<script type="importmap">{ "imports": { "three": "./three.module.min.js" } }</script>
+<script type="module">
+import * as THREE from 'three';
+import { Sm64Controller } from './controller.js';
+import { COURSE, DECOR, DECO_ISLANDS, ClimbRun, botDrive, zoneOf } from './course.js';
+import { FixedTicker, PlayerInput, FollowCamera, HeroRig, CoinField, buildBoxes, UNIT } from './three-adapter.js';
+
+const params = new URLSearchParams(location.search);
+const BOT = params.get('bot') === '1';
+
+// ---------------- renderer / scene ----------------
+const renderer = new THREE.WebGLRenderer({ antialias: true });
+renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
+renderer.setSize(innerWidth, innerHeight);
+renderer.shadowMap.enabled = true;
+renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+renderer.outputColorSpace = THREE.SRGBColorSpace;
+document.getElementById('game').appendChild(renderer.domElement);
+
+const scene = new THREE.Scene();
+const skyCol = new THREE.Color(0x79bde8), fogCol = new THREE.Color(0x9fd0ee);
+scene.background = skyCol;
+scene.fog = new THREE.Fog(fogCol, 55, 210);
+const camera = new THREE.PerspectiveCamera(58, innerWidth / innerHeight, 0.1, 900);
+
+const hemi = new THREE.HemisphereLight(0xcfe8ff, 0x9a8a6c, 1.1);
+scene.add(hemi);
+const sun = new THREE.DirectionalLight(0xfff2d8, 2.0);
+sun.castShadow = true;
+sun.shadow.mapSize.set(2048, 2048);
+sun.shadow.camera.left = -30; sun.shadow.camera.right = 30;
+sun.shadow.camera.top = 30; sun.shadow.camera.bottom = -30;
+sun.shadow.camera.near = 1; sun.shadow.camera.far = 120;
+sun.shadow.bias = -0.0006;
+scene.add(sun); scene.add(sun.target);
+
+// ---------------- world ----------------
+scene.add(buildBoxes(THREE, COURSE.boxes));
+scene.add(buildBoxes(THREE, DECO_ISLANDS));
+const coins = new CoinField(THREE, COURSE.coins);
+scene.add(coins.group);
+
+const lam = (c, e = 0) => new THREE.MeshLambertMaterial({ color: c, emissive: e });
+function decorMesh(d) {
+  const g = new THREE.Group();
+  if (d.k === 'tree') {
+    const trunk = new THREE.Mesh(new THREE.CylinderGeometry(0.09, 0.13, 0.5, 7), lam(0x7a4a26)); trunk.position.y = 0.25; g.add(trunk);
+    const c1 = new THREE.Mesh(new THREE.ConeGeometry(0.55, 1.1, 8), lam(0x3f9142)); c1.position.y = 0.95; g.add(c1);
+    const c2 = new THREE.Mesh(new THREE.ConeGeometry(0.4, 0.85, 8), lam(0x4da34f)); c2.position.y = 1.5; g.add(c2);
+  } else if (d.k === 'spire') {
+    const s = new THREE.Mesh(new THREE.ConeGeometry(0.8, 3.4, 6), lam(0x8d7460)); s.position.y = 1.2; s.rotation.y = d.x; g.add(s);
+    const tip = new THREE.Mesh(new THREE.ConeGeometry(0.4, 1.2, 6), lam(0xa68a6e)); tip.position.y = 3.2; g.add(tip);
+  } else if (d.k === 'crystal') {
+    const c = new THREE.Mesh(new THREE.OctahedronGeometry(0.42), lam(0xbfe3ff, 0x2a4a66)); c.position.y = 0.5; c.scale.y = 1.9; c.rotation.y = d.z; g.add(c);
+    const c2 = new THREE.Mesh(new THREE.OctahedronGeometry(0.26), lam(0xd8f1ff, 0x2a4a66)); c2.position.set(0.4, 0.3, 0.2); c2.scale.y = 1.7; g.add(c2);
+  } else if (d.k === 'finial') {
+    const post = new THREE.Mesh(new THREE.CylinderGeometry(0.09, 0.12, 0.7, 8), lam(0xb08d3e)); post.position.y = 0.35; g.add(post);
+    const ball = new THREE.Mesh(new THREE.SphereGeometry(0.24, 12, 10), lam(0xffc62e, 0x7a5200)); ball.position.y = 0.9; g.add(ball);
+  }
+  g.position.set(d.x * UNIT, d.y * UNIT, d.z * UNIT);
+  g.scale.setScalar(d.s || 1);
+  g.traverse((o) => { o.castShadow = true; });
+  return g;
+}
+for (const d of DECOR) scene.add(decorMesh(d));
+
+// goal beacon: golden ring + light shaft on the summit deck
+const goal = new THREE.Group();
+const ring = new THREE.Mesh(new THREE.TorusGeometry(1.7, 0.14, 10, 36), lam(0xffc62e, 0x8a5c00));
+goal.add(ring);
+const shaft = new THREE.Mesh(new THREE.CylinderGeometry(1.5, 1.9, 9, 20, 1, true),
+  new THREE.MeshBasicMaterial({ color: 0xffe98a, transparent: true, opacity: 0.13, side: THREE.DoubleSide, depthWrite: false }));
+shaft.position.y = 4.5; goal.add(shaft);
+goal.position.set(COURSE.goal.x * UNIT, COURSE.goal.y * UNIT + 1.8, COURSE.goal.z * UNIT);
+scene.add(goal);
+
+// clouds: soft sprites drifting past the route + two cloud seas
+function cloudTexture() {
+  const c = document.createElement('canvas'); c.width = c.height = 128;
+  const x = c.getContext('2d');
+  const grd = x.createRadialGradient(64, 64, 6, 64, 64, 62);
+  grd.addColorStop(0, 'rgba(255,255,255,0.95)'); grd.addColorStop(0.55, 'rgba(255,255,255,0.55)'); grd.addColorStop(1, 'rgba(255,255,255,0)');
+  x.fillStyle = grd; x.fillRect(0, 0, 128, 128);
+  return new THREE.CanvasTexture(c);
+}
+const cloudTex = cloudTexture();
+const cloudSprites = [];
+function addCloud(x, y, z, s, op) {
+  const sp = new THREE.Sprite(new THREE.SpriteMaterial({ map: cloudTex, transparent: true, opacity: op, depthWrite: false }));
+  sp.position.set(x, y, z); sp.scale.set(s, s * 0.45, 1);
+  sp.userData.v = 0.14 + Math.random() * 0.25;
+  scene.add(sp); cloudSprites.push(sp);
+}
+for (let i = 0; i < 26; i++) {
+  const z = -15 + Math.random() * 205, y = 2 + Math.random() * 34;
+  addCloud((Math.random() < 0.5 ? -1 : 1) * (22 + Math.random() * 45), y, z, 9 + Math.random() * 15, 0.5 + Math.random() * 0.3);
+}
+for (let i = 0; i < 16; i++) addCloud((Math.random() - 0.5) * 190, -7 - Math.random() * 5, -30 + Math.random() * 230, 34 + Math.random() * 30, 0.75);
+for (let i = 0; i < 10; i++) addCloud((Math.random() - 0.5) * 130, 21.5 + Math.random() * 3, 130 + Math.random() * 65, 26 + Math.random() * 22, 0.6);
+
+// ---------------- hero / run ----------------
+let run, hero, rig, bot = null;
+function newRun() {
+  run = new ClimbRun(COURSE);
+  hero = new Sm64Controller(run.world, { ...COURSE.start });
+  if (rig) { scene.remove(rig.group); scene.remove(rig.shadow); }
+  rig = new HeroRig(THREE);
+  scene.add(rig.group); scene.add(rig.shadow);
+  rig.snapshot(hero);
+  bot = BOT ? botDrive(hero, run) : null;
+  cam.focus.set(hero.pos[0] * UNIT, hero.pos[1] * UNIT + 1, hero.pos[2] * UNIT);
+  cam._init = false;
+  document.getElementById('win').style.display = 'none';
+}
+const input = new PlayerInput();
+const cam = new FollowCamera(THREE, camera, { yaw: 0, dist: 10.5, height: 4.0 });
+newRun();
+
+// ---------------- audio (all synthesized) ----------------
+const Audio8 = {
+  ctx: null, master: null, musicGain: null, started: false,
+  init() {
+    if (this.ctx) { if (this.ctx.state === 'suspended') this.ctx.resume(); return; }
+    try { if (navigator.audioSession) navigator.audioSession.type = 'playback'; } catch (e) {}
+    const C = window.AudioContext || window.webkitAudioContext;
+    if (!C) return;
+    this.ctx = new C();
+    this.master = this.ctx.createGain(); this.master.gain.value = 0.5; this.master.connect(this.ctx.destination);
+    this.musicGain = this.ctx.createGain(); this.musicGain.gain.value = 0.16; this.musicGain.connect(this.master);
+    // 1-sample silent buffer inside the gesture unlocks iOS audio
+    const buf = this.ctx.createBuffer(1, 1, 22050), src = this.ctx.createBufferSource();
+    src.buffer = buf; src.connect(this.ctx.destination); src.start();
+    this.started = true;
+    this.musicLoop();
+  },
+  tone(freq, dur, type = 'square', vol = 0.2, slideTo = null, delay = 0, dest = null) {
+    if (!this.ctx) return;
+    const t0 = this.ctx.currentTime + delay, o = this.ctx.createOscillator(), g = this.ctx.createGain();
+    o.type = type; o.frequency.setValueAtTime(freq, t0);
+    if (slideTo) o.frequency.exponentialRampToValueAtTime(slideTo, t0 + dur);
+    g.gain.setValueAtTime(vol, t0); g.gain.exponentialRampToValueAtTime(0.001, t0 + dur);
+    o.connect(g); g.connect(dest || this.master); o.start(t0); o.stop(t0 + dur + 0.02);
+  },
+  thud(vol = 0.3, freq = 90) {
+    if (!this.ctx) return;
+    const t0 = this.ctx.currentTime, o = this.ctx.createOscillator(), g = this.ctx.createGain();
+    o.type = 'sine'; o.frequency.setValueAtTime(freq, t0); o.frequency.exponentialRampToValueAtTime(38, t0 + 0.16);
+    g.gain.setValueAtTime(vol, t0); g.gain.exponentialRampToValueAtTime(0.001, t0 + 0.18);
+    o.connect(g); g.connect(this.master); o.start(t0); o.stop(t0 + 0.2);
+  },
+  sfx(name) {
+    if (!this.ctx) return;
+    switch (name) {
+      case 'jump': this.tone(280, 0.14, 'square', 0.16, 620); break;
+      case 'doubleJump': this.tone(420, 0.13, 'square', 0.16, 880); break;
+      case 'tripleJump': [520, 700, 990].forEach((f, i) => this.tone(f, 0.1, 'square', 0.15, null, i * 0.055)); break;
+      case 'longJump': this.tone(240, 0.3, 'square', 0.15, 540); break;
+      case 'dive': this.tone(900, 0.22, 'sawtooth', 0.08, 220); break;
+      case 'wallKick': this.tone(500, 0.08, 'square', 0.18, 700); this.thud(0.12, 140); break;
+      case 'ledgeGrab': this.thud(0.2, 120); this.tone(300, 0.06, 'square', 0.1); break;
+      case 'land': this.thud(0.14, 100); break;
+      case 'pound': this.thud(0.42, 70); break;
+      case 'coin': this.tone(1318, 0.07, 'sine', 0.2); this.tone(1760, 0.16, 'sine', 0.2, null, 0.06); break;
+      case 'fall': this.tone(600, 0.35, 'sawtooth', 0.07, 140); break;
+      case 'win': [523, 659, 784, 1046, 784, 1046, 1318].forEach((f, i) => this.tone(f, 0.22, 'triangle', 0.22, null, i * 0.12)); break;
+    }
+  },
+  musicLoop() {
+    // gentle pentatonic pluck over a slow chord drift, scheduled bar by bar
+    const chords = [[261.6, 329.6, 392.0], [196.0, 246.9, 392.0], [220.0, 261.6, 329.6], [174.6, 220.0, 349.2]];
+    const penta = [523.3, 587.3, 659.3, 784.0, 880.0, 1046.5];
+    let bar = 0;
+    const step = () => {
+      if (!this.ctx) return;
+      const ch = chords[bar % 4];
+      ch.forEach((f) => this.tone(f, 1.9, 'sine', 0.05, null, 0, this.musicGain));
+      for (let i = 0; i < 4; i++) if (Math.random() < 0.75) this.tone(penta[(Math.random() * penta.length) | 0], 0.32, 'triangle', 0.06, null, i * 0.5 + Math.random() * 0.1, this.musicGain);
+      bar++;
+      this._mt = setTimeout(step, 2000);
+    };
+    step();
+  },
+};
+const unlockAudio = () => Audio8.init();
+addEventListener('pointerdown', unlockAudio);
+addEventListener('touchend', unlockAudio);
+addEventListener('keydown', unlockAudio);
+document.addEventListener('visibilitychange', () => { if (!document.hidden && Audio8.ctx && Audio8.ctx.state === 'suspended') Audio8.ctx.resume(); });
+
+// ---------------- touch (gamepress gptouch semantics) ----------------
+function stickVector(dx, dy, maxRadius = 56, deadzone = 0.18) {
+  const d = Math.hypot(dx, dy);
+  if (d < 1e-4) return { x: 0, y: 0, mag: 0 };
+  const clamped = Math.min(d, maxRadius), mag0 = clamped / maxRadius;
+  const mag = mag0 <= deadzone ? 0 : (mag0 - deadzone) / (1 - deadzone);
+  return { x: (dx / d) * mag, y: (dy / d) * mag, mag };
+}
+const touchState = { stickId: null, ox: 0, oy: 0, orbitId: null, lastX: 0 };
+const overlay = document.getElementById('touch');
+const stickBase = document.getElementById('stickBase'), stickKnob = document.getElementById('stickKnob');
+function showTouchUI() { document.body.classList.add('touch'); }
+overlay.addEventListener('pointerdown', (e) => {
+  showTouchUI(); dismissTitle();
+  if (e.clientX < innerWidth / 2 && touchState.stickId === null) {
+    touchState.stickId = e.pointerId; touchState.ox = e.clientX; touchState.oy = e.clientY;
+    stickBase.style.display = stickKnob.style.display = 'block';
+    stickBase.style.left = (e.clientX - 56) + 'px'; stickBase.style.top = (e.clientY - 56) + 'px';
+    stickKnob.style.left = (e.clientX - 26) + 'px'; stickKnob.style.top = (e.clientY - 26) + 'px';
+    overlay.setPointerCapture(e.pointerId);
+  } else if (touchState.orbitId === null) {
+    touchState.orbitId = e.pointerId; touchState.lastX = e.clientX;
+    overlay.setPointerCapture(e.pointerId);
+  }
+  e.preventDefault();
+});
+overlay.addEventListener('pointermove', (e) => {
+  if (e.pointerId === touchState.stickId) {
+    const dx = e.clientX - touchState.ox, dy = e.clientY - touchState.oy;
+    const v = stickVector(dx, dy);
+    input.touch.x = v.x; input.touch.y = -v.y;
+    const d = Math.hypot(dx, dy), cl = Math.min(d, 56), a = Math.atan2(dy, dx);
+    stickKnob.style.left = (touchState.ox + Math.cos(a) * cl - 26) + 'px';
+    stickKnob.style.top = (touchState.oy + Math.sin(a) * cl - 26) + 'px';
+  } else if (e.pointerId === touchState.orbitId) {
+    cam.yaw -= (e.clientX - touchState.lastX) * 0.0052;
+    touchState.lastX = e.clientX;
+  }
+});
+const endTouch = (e) => {
+  if (e.pointerId === touchState.stickId) {
+    touchState.stickId = null; input.touch.x = 0; input.touch.y = 0;
+    stickBase.style.display = stickKnob.style.display = 'none';
+  }
+  if (e.pointerId === touchState.orbitId) touchState.orbitId = null;
+};
+overlay.addEventListener('pointerup', endTouch);
+overlay.addEventListener('pointercancel', endTouch);
+function bindBtn(id, key) {
+  const el = document.getElementById(id);
+  const on = (e) => { showTouchUI(); dismissTitle(); input.touch[key] = true; el.classList.add('on'); e.preventDefault(); };
+  const off = (e) => { input.touch[key] = false; el.classList.remove('on'); if (e) e.preventDefault(); };
+  el.addEventListener('pointerdown', on);
+  el.addEventListener('pointerup', off);
+  el.addEventListener('pointercancel', off);
+  el.addEventListener('pointerleave', off);
+}
+bindBtn('btnA', 'a'); bindBtn('btnB', 'b'); bindBtn('btnZ', 'z');
+overlay.addEventListener('touchstart', (e) => e.preventDefault(), { passive: false });
+overlay.addEventListener('touchmove', (e) => e.preventDefault(), { passive: false });
+document.addEventListener('gesturestart', (e) => e.preventDefault());
+document.addEventListener('gesturechange', (e) => e.preventDefault());
+
+// ---------------- HUD / title / win ----------------
+const $ = (id) => document.getElementById(id);
+let titleGone = false;
+function dismissTitle() {
+  if (titleGone) return; titleGone = true;
+  const t = $('title'); t.style.transition = 'opacity .6s'; t.style.opacity = '0';
+  setTimeout(() => t.style.display = 'none', 650);
+}
+addEventListener('keydown', dismissTitle);
+if (BOT) dismissTitle(); // spectate mode: no user gesture is coming, hide the title right away
+let lastZone = '';
+function fmtTime(ticks) { const s = Math.floor(ticks / 30); return `${Math.floor(s / 60)}:${String(s % 60).padStart(2, '0')}`; }
+function updateHUD() {
+  $('hNow').textContent = (Math.max(0, hero.pos[1]) / 100).toFixed(1);
+  $('hBest').textContent = (Math.max(0, run.bestY) / 100).toFixed(1);
+  $('hTime').textContent = fmtTime(run.ticks);
+  $('hFalls').textContent = run.falls;
+  $('hCoins').textContent = `${run.coinCount}/${COURSE.coins.length}`;
+  const z = zoneOf(hero.pos[1]).name;
+  if (z !== lastZone) {
+    lastZone = z;
+    const el = $('zone'); el.textContent = z.toUpperCase(); el.style.opacity = '1';
+    clearTimeout(updateHUD._zt); updateHUD._zt = setTimeout(() => el.style.opacity = '0', 1900);
+  }
+}
+$('again').addEventListener('click', () => { newRun(); });
+
+// debug warps for screenshots / testing
+const WARPS = { meadow: null, cliff: [0, 880, 6950], frost: [0, 1720, 13800], shaft: [0, 2040, 17350], summit: [0, 2700, 18420] };
+if (WARPS[params.get('at')]) {
+  const [x, y, z] = WARPS[params.get('at')];
+  hero.pos[0] = x; hero.pos[1] = y; hero.pos[2] = z; hero.floorY = y;
+  rig.snapshot(hero);
+  cam.focus.set(x * UNIT, y * UNIT + 1, z * UNIT); cam._init = false;
+  dismissTitle();
+}
+
+// ---------------- main loop ----------------
+const ticker = new FixedTicker(30);
+const takenSet = new Set();
+let last = performance.now(), fpsEMA = 60, wonShown = false;
+function step() {
+  let inp;
+  if (bot) {
+    const n = bot.next();
+    inp = { stickX: 0, stickY: 0, camYaw: 0, a: false, b: false, z: false, ...(n.done ? {} : n.value) };
+    if (n.done && !run.won) { newRun(); return; }
+  } else {
+    inp = { ...input.read(), camYaw: cam.camYaw };
+  }
+  hero.tick(inp);
+  run.update(hero);
+  rig.snapshot(hero);
+  for (const ev of hero.events) Audio8.sfx(ev);
+  for (const ev of run.events) {
+    Audio8.sfx(ev);
+    if (ev === 'respawn') { const f = $('flash'); f.style.transition = 'none'; f.style.opacity = '0.25'; requestAnimationFrame(() => { f.style.transition = 'opacity .45s'; f.style.opacity = '0'; }); }
+    if (ev === 'win' && !wonShown) {
+      wonShown = true;
+      $('winStats').innerHTML = `Time <b>${fmtTime(run.ticks)}</b> · Falls <b>${run.falls}</b> · Coins <b>${run.coinCount}/${COURSE.coins.length}</b><br>Kip made it. So did you.`;
+      $('win').style.display = 'flex';
+    }
+  }
+  if (!run.won) wonShown = false;
+  run.coins.forEach((c, i) => { if (c.taken) takenSet.add(i); });
+}
+function frame(now) {
+  const dt = Math.min(0.1, (now - last) / 1000); last = now;
+  if (dt > 0) fpsEMA += ((1 / Math.max(dt, 1e-4)) - fpsEMA) * 0.05;
+  const alpha = ticker.advance(dt, step);
+  const orbit = bot ? 0 : input.orbit();
+  rig.update(hero, alpha, dt);
+  cam.update(rig.position, rig.yawRad, Math.abs(hero.fvel), dt, orbit, hero.vel[1]);
+  // sun + shadow box follow the hero
+  sun.position.set(rig.position.x + 14, rig.position.y + 26, rig.position.z + 9);
+  sun.target.position.copy(rig.position);
+  // sky + fog ease toward the zone the hero is in
+  const zn = zoneOf(hero.pos[1]);
+  skyCol.lerp(new THREE.Color(zn.sky), Math.min(1, dt * 1.5));
+  fogCol.lerp(new THREE.Color(zn.fog), Math.min(1, dt * 1.5));
+  scene.fog.near = 55 + hero.pos[1] * 0.004; scene.fog.far = 210 + hero.pos[1] * 0.01;
+  // clouds drift
+  for (const sp of cloudSprites) { sp.position.x += sp.userData.v * dt; if (sp.position.x > 130) sp.position.x = -130; }
+  goal.rotation.y += dt * 0.8;
+  shaft.material.opacity = 0.1 + Math.sin(now / 700) * 0.04;
+  coins.update(dt, takenSet);
+  updateHUD();
+  window.__dbg = { action: hero.action, pos: hero.pos.map((v) => Math.round(v)), height: Math.round(hero.pos[1]) / 100, falls: run.falls, coins: run.coinCount, won: run.won, fps: Math.round(fpsEMA) };
+  renderer.render(scene, camera);
+  requestAnimationFrame(frame);
+}
+requestAnimationFrame(frame);
+addEventListener('resize', () => {
+  camera.aspect = innerWidth / innerHeight;
+  camera.updateProjectionMatrix();
+  renderer.setSize(innerWidth, innerHeight);
+});
+</script>
+<script id="moth-game-guard-js">
+(function(){
+  var lastEnd=0;
+  function onUi(t){return t&&t.closest&&t.closest('button,a,input,select,textarea,[data-scroll]');}
+  document.addEventListener('touchend',function(e){
+    var now=Date.now();
+    if(!onUi(e.target)&&now-lastEnd<=300&&e.cancelable)e.preventDefault();
+    lastEnd=now;
+  },{passive:false});
+  ['gesturestart','gesturechange','gestureend'].forEach(function(n){
+    document.addEventListener(n,function(e){e.preventDefault();});
+  });
+  document.addEventListener('dblclick',function(e){e.preventDefault();},{passive:false});
+  document.addEventListener('contextmenu',function(e){e.preventDefault();});
+  document.addEventListener('touchmove',function(e){
+    if(e.target&&e.target.closest&&e.target.closest('[data-scroll]'))return;
+    if(e.cancelable)e.preventDefault();
+  },{passive:false});
+})();
+</script>
+</body>
+</html>
