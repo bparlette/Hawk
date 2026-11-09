@@ -2170,6 +2170,18 @@
    "path": "../games/outrun-the-hole/index.html",
    "thumb": "thumbs/outrun-the-hole.png",
    "title": "OUTRUN THE HOLE!"
+  },
+  {
+   "autostart": [],
+   "category": "AR",
+   "id": "ar-games",
+   "keys": {},
+   "labels": {},
+   "note": "THE AR HUB: every augmented-reality game and Quick Look scene in one place - camera AR games that play in your room (Pokemon Room, BONK YARD!, Living Room Pets, DRAW & DRIVE!) plus tap-to-place Quick Look scenes (Zelda, Pokemon, Miso). New AR games land here as they ship.",
+   "orientation": "any",
+   "path": "../games/ar-games/index.html",
+   "thumb": "thumbs/pokemon-room.png",
+   "title": "🕶️ ALL AR GAMES"
   }
  ]
 }
