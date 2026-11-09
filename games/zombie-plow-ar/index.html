@@ -1,0 +1,1460 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+<title>Zombie Plow AR — mow the horde on your floor</title>
+<style>
+  html, body { height: 100%; }
+  body {
+    margin: 0;
+    overflow: hidden;
+    background: #10131c;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    color: #fff;
+    -webkit-user-select: none;
+    user-select: none;
+  }
+  #cam, #room, #gl, #fx {
+    position: fixed; inset: 0;
+    width: 100%; height: 100%;
+    display: block;
+  }
+  #cam { object-fit: cover; background: #10131c; z-index: 0; }
+  #room { z-index: 0; }
+  #gl { z-index: 1; }
+  #fx { z-index: 2; pointer-events: none; }
+  #hud {
+    position: fixed;
+    top: calc(env(safe-area-inset-top, 0px) + 10px);
+    left: 10px; right: 10px;
+    display: flex; gap: 8px; align-items: center;
+    z-index: 3;
+    pointer-events: none;
+  }
+  .chip {
+    background: rgba(12, 14, 20, 0.58);
+    border: 1px solid rgba(255,255,255,0.22);
+    border-radius: 999px;
+    padding: 6px 12px;
+    font-size: 15px; font-weight: 700;
+    letter-spacing: 0.02em;
+    backdrop-filter: blur(3px);
+    white-space: nowrap;
+  }
+  .chip b { font-size: 17px; }
+  .chip small { font-weight: 600; opacity: 0.75; }
+  #scoreChip { margin-left: auto; }
+  #comboChip { color: #ffd23e; border-color: rgba(255,210,62,0.65); }
+  #timeChip.low { color: #ff7a6b; border-color: rgba(255,122,107,0.7); }
+  #hint {
+    position: fixed;
+    left: 50%; transform: translateX(-50%);
+    bottom: calc(env(safe-area-inset-bottom, 0px) + 34px);
+    z-index: 3;
+    background: rgba(12, 14, 20, 0.6);
+    border: 1px solid rgba(255,255,255,0.2);
+    border-radius: 999px;
+    padding: 8px 16px;
+    font-size: 14.5px; font-weight: 700;
+    white-space: nowrap;
+    pointer-events: none;
+    opacity: 0;
+    transition: opacity 0.5s ease;
+  }
+  #hint.show { opacity: 1; }
+  #start, #over {
+    position: fixed; inset: 0;
+    z-index: 5;
+    display: flex; align-items: center; justify-content: center;
+    background:
+      radial-gradient(120% 90% at 50% 0%, rgba(255, 140, 40, 0.28), rgba(0,0,0,0) 55%),
+      linear-gradient(180deg, rgba(24, 18, 12, 0.88), rgba(8, 8, 12, 0.94));
+    padding: 20px;
+    box-sizing: border-box;
+  }
+  .card { text-align: center; max-width: 430px; }
+  .card .big { font-size: 54px; line-height: 1.1; }
+  .card h1 {
+    margin: 6px 0 4px;
+    font-size: 34px; font-weight: 900; letter-spacing: 0.01em;
+    text-shadow: 0 3px 0 rgba(0,0,0,0.35);
+  }
+  .card p { margin: 6px 0; font-size: 16px; line-height: 1.45; opacity: 0.92; }
+  .bigBtn {
+    font: inherit;
+    margin-top: 16px;
+    font-size: 20px; font-weight: 900;
+    color: #33200a;
+    background: linear-gradient(180deg, #ffc46b, #ff9a3d);
+    border: 2px solid rgba(120, 66, 18, 0.55);
+    border-radius: 999px;
+    padding: 15px 34px;
+    box-shadow: 0 8px 22px rgba(0,0,0,0.45);
+    cursor: pointer;
+  }
+  .bigBtn:active { transform: scale(0.96); }
+  .card .fine { font-size: 13px; opacity: 0.65; margin-top: 14px; }
+  .stats {
+    display: flex; gap: 10px; justify-content: center; margin-top: 14px;
+  }
+  .stat {
+    background: rgba(255,255,255,0.08);
+    border: 1px solid rgba(255,255,255,0.18);
+    border-radius: 16px;
+    padding: 10px 14px;
+    min-width: 86px;
+  }
+  .stat .n { font-size: 26px; font-weight: 900; }
+  .stat .l { font-size: 12px; font-weight: 700; opacity: 0.75; letter-spacing: 0.04em; }
+  #motionPill {
+    position: fixed;
+    left: 50%; transform: translateX(-50%);
+    top: calc(env(safe-area-inset-top, 0px) + 58px);
+    z-index: 6;
+    font: inherit; font-size: 15px; font-weight: 800;
+    color: #fff;
+    background: rgba(20, 14, 8, 0.88);
+    border: 2px solid rgba(255, 190, 90, 0.9);
+    border-radius: 999px;
+    padding: 12px 18px;
+    box-shadow: 0 8px 22px rgba(0,0,0,0.5);
+    cursor: pointer;
+    white-space: nowrap;
+  }
+  #motionPill:active { transform: translateX(-50%) scale(0.96); }
+  .hidden { display: none !important; }
+</style>
+<script type="importmap">
+{ "imports": {
+    "three": "./vendor/three.module.js",
+    "three/addons/": "./vendor/addons/"
+} }
+</script>
+<style id="moth-game-guard">
+html,body{touch-action:none;overscroll-behavior:none;-webkit-touch-callout:none;-webkit-user-select:none;user-select:none;-webkit-tap-highlight-color:transparent}
+canvas{touch-action:none}
+</style>
+</head>
+<body>
+<video id="cam" autoplay playsinline muted></video>
+<canvas id="room"></canvas>
+<canvas id="gl"></canvas>
+<canvas id="fx"></canvas>
+
+<div id="hud" class="hidden">
+  <div class="chip" id="timeChip">⏱ <b id="timeLeft">1:30</b></div>
+  <div class="chip" id="countChip">🧟 <b id="plowCount">0</b></div>
+  <div class="chip hidden" id="comboChip">🔥 <b id="comboN">×1</b></div>
+  <div class="chip" id="scoreChip">🏆 <b id="scoreN">0</b></div>
+</div>
+
+<div id="hint">👆 Drag on the floor to drive the plow!</div>
+<button id="motionPill" class="hidden" type="button">📱 Enable motion look-around</button>
+
+<div id="start">
+  <div class="card">
+    <div class="big">🚜🧟</div>
+    <h1>Zombie Plow AR</h1>
+    <p>The horde is <b>bursting up through your floor</b>! Drag to drive the plow and <b>mow them down</b> — chain quick kills for combo multipliers. Big ones grab your blade if you're slow!</p>
+    <p>⏱ <b>90 seconds.</b> How many can you plow?</p>
+    <button id="startBtn" class="bigBtn" type="button">▶ START PLOWING</button>
+    <p class="fine">Needs camera + motion for the full AR feel.<br>No camera? No problem — you get a night lot instead.</p>
+  </div>
+</div>
+
+<div id="over" class="hidden">
+  <div class="card">
+    <div class="big">🏁</div>
+    <h1>Time's Up!</h1>
+    <div class="stats">
+      <div class="stat"><div class="n" id="finalCount">0</div><div class="l">🧟 PLOWED</div></div>
+      <div class="stat"><div class="n" id="finalCombo">0</div><div class="l">🔥 BEST CHAIN</div></div>
+      <div class="stat"><div class="n" id="finalScore">0</div><div class="l">🏆 SCORE</div></div>
+    </div>
+    <button id="againBtn" class="bigBtn" type="button">↻ PLOW AGAIN</button>
+    <p class="fine">Tip: hit the big zombies at full speed —<br>slow bumps let them grab the blade.</p>
+  </div>
+</div>
+
+<script type="module">
+import * as THREE from 'three';
+import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js';
+
+'use strict';
+/* ============================== helpers ============================== */
+const clamp = (v, a, b) => v < a ? a : (v > b ? b : v);
+const lerp = (a, b, t) => a + (b - a) * t;
+const rand = (a, b) => a + Math.random() * (b - a);
+const pick = arr => arr[Math.floor(Math.random() * arr.length)];
+function angWrap(a) { while (a > Math.PI) a -= Math.PI * 2; while (a < -Math.PI) a += Math.PI * 2; return a; }
+function angLerp(a, b, t) { return a + angWrap(b - a) * t; }
+
+/* ============================== audio ============================== */
+let AC = null;
+function initAudio() {
+  try {
+    if ('audioSession' in navigator) { try { navigator.audioSession.type = 'playback'; } catch (e) {} }
+    if (!AC) {
+      const Ctor = window.AudioContext || window.webkitAudioContext;
+      if (Ctor) AC = new Ctor();
+    }
+    if (AC) {
+      if (AC.state === 'suspended') AC.resume();
+      const buf = AC.createBuffer(1, 1, 22050);
+      const src = AC.createBufferSource();
+      src.buffer = buf; src.connect(AC.destination); src.start(0);
+    }
+  } catch (e) { /* audio is optional */ }
+}
+function resumeAudio() { try { if (AC && AC.state === 'suspended') AC.resume(); } catch (e) {} }
+document.addEventListener('pointerdown', resumeAudio, true);
+document.addEventListener('touchend', resumeAudio, true);
+document.addEventListener('visibilitychange', () => { if (!document.hidden) resumeAudio(); });
+
+function tone(f0, f1, dur, type, vol, delay) {
+  if (!AC) return;
+  try {
+    const t0 = AC.currentTime + (delay || 0);
+    const o = AC.createOscillator(), g = AC.createGain();
+    o.type = type || 'sine';
+    o.frequency.setValueAtTime(Math.max(25, f0), t0);
+    o.frequency.exponentialRampToValueAtTime(Math.max(25, f1), t0 + dur);
+    g.gain.setValueAtTime(0.0001, t0);
+    g.gain.exponentialRampToValueAtTime(vol || 0.15, t0 + 0.015);
+    g.gain.exponentialRampToValueAtTime(0.0001, t0 + dur);
+    o.connect(g); g.connect(AC.destination);
+    o.start(t0); o.stop(t0 + dur + 0.05);
+  } catch (e) {}
+}
+/* engine hum: saw + sub through a lowpass; frequency/gain follow speed */
+let eng = null;
+function engineStart() {
+  if (!AC || eng) return;
+  try {
+    const o1 = AC.createOscillator(); o1.type = 'sawtooth'; o1.frequency.value = 46;
+    const o2 = AC.createOscillator(); o2.type = 'square'; o2.frequency.value = 23;
+    const f = AC.createBiquadFilter(); f.type = 'lowpass'; f.frequency.value = 220; f.Q.value = 2;
+    const g = AC.createGain(); g.gain.value = 0.0;
+    const g2 = AC.createGain(); g2.gain.value = 0.4;
+    o1.connect(f); o2.connect(g2); g2.connect(f); f.connect(g); g.connect(AC.destination);
+    o1.start(); o2.start();
+    eng = { o1, o2, f, g };
+  } catch (e) { eng = null; }
+}
+function engineUpdate(speedNorm, running) {
+  if (!eng || !AC) return;
+  try {
+    const t = AC.currentTime;
+    const target = running ? 0.028 + speedNorm * 0.05 : 0.0;
+    eng.g.gain.setTargetAtTime(target, t, 0.12);
+    eng.o1.frequency.setTargetAtTime(44 + speedNorm * 58, t, 0.1);
+    eng.o2.frequency.setTargetAtTime(22 + speedNorm * 29, t, 0.1);
+    eng.f.frequency.setTargetAtTime(200 + speedNorm * 420, t, 0.1);
+  } catch (e) {}
+}
+const sndPop = (chain) => { const p = 1 + Math.min(chain, 24) * 0.03; tone(340 * p, 90, 0.10, 'square', 0.09); tone(180 * p, 60, 0.12, 'sine', 0.10); };
+const sndBigPop = () => { tone(160, 45, 0.28, 'square', 0.16); tone(90, 38, 0.32, 'sine', 0.18); };
+const sndGrab = () => { tone(300, 70, 0.35, 'sawtooth', 0.12); };
+const sndShakeOff = () => { tone(120, 320, 0.14, 'square', 0.08); };
+const sndJingle = () => { tone(392, 392, 0.13, 'triangle', 0.14); tone(523, 523, 0.13, 'triangle', 0.14, 0.13); tone(659, 659, 0.22, 'triangle', 0.15, 0.26); };
+
+/* ============================== dom refs ============================== */
+const video = document.getElementById('cam');
+const roomCanvas = document.getElementById('room');
+const rctx = roomCanvas.getContext('2d');
+const glCanvas = document.getElementById('gl');
+const fxCanvas = document.getElementById('fx');
+const fctx = fxCanvas.getContext('2d');
+const hudEl = document.getElementById('hud');
+const timeChipEl = document.getElementById('timeChip');
+const timeLeftEl = document.getElementById('timeLeft');
+const plowCountEl = document.getElementById('plowCount');
+const comboChipEl = document.getElementById('comboChip');
+const comboNEl = document.getElementById('comboN');
+const scoreNEl = document.getElementById('scoreN');
+const hintEl = document.getElementById('hint');
+const startEl = document.getElementById('start');
+const overEl = document.getElementById('over');
+
+let W = 0, H = 0, floorTop = 0;
+let started = false;
+let camOK = false;
+
+/* ================= AR motion: permission-in-gesture + 3DOF look-around =================
+   iOS delivers deviceorientation events only after requestPermission()
+   resolves 'granted', and the call only counts inside a user-gesture
+   handler. So the ask happens synchronously in the START tap (and on the
+   pill, whose own tap re-asks if events still don't flow). */
+let renderer = null, scene = null, camera = null;
+let baseCamQ = null;
+let hemiLight = null, dirLight = null;
+const MOTION = {
+  needPerm: (typeof DeviceOrientationEvent !== 'undefined' &&
+             typeof DeviceOrientationEvent.requestPermission === 'function'),
+  perm: 'unknown', ok: false, ever: false, lastAt: -1e9, recal: true,
+  refQ: null, devQ: null
+};
+function askMotionPermission() {
+  if (!MOTION.needPerm) { MOTION.perm = 'n/a'; return; }
+  try {
+    const p = DeviceOrientationEvent.requestPermission();
+    if (p && typeof p.then === 'function') {
+      p.then(r => {
+        MOTION.perm = (r === 'granted') ? 'granted' : 'denied';
+        if (MOTION.perm === 'granted') MOTION.recal = true;
+      }).catch(() => { MOTION.perm = 'error'; });
+    }
+  } catch (e) { MOTION.perm = 'error'; }
+}
+const motionPillEl = document.getElementById('motionPill');
+function showMotionPill() { if (motionPillEl) motionPillEl.classList.remove('hidden'); }
+function hideMotionPill() { if (motionPillEl) motionPillEl.classList.add('hidden'); }
+if (motionPillEl) motionPillEl.addEventListener('click', () => { askMotionPermission(); });
+function motionWatchdog() {
+  setTimeout(() => { if (MOTION.needPerm && !MOTION.ever) showMotionPill(); }, 1500);
+}
+window.addEventListener('orientationchange', () => { MOTION.recal = true; });
+
+const _zee = new THREE.Vector3(0, 0, 1);
+const _eul = new THREE.Euler();
+const _q0 = new THREE.Quaternion();
+const _q1 = new THREE.Quaternion(-Math.sqrt(0.5), 0, 0, Math.sqrt(0.5));
+function deviceQuat(out, alphaDeg, betaDeg, gammaDeg) {
+  const orient = (typeof window.orientation === 'number' ? window.orientation : 0) * Math.PI / 180;
+  _eul.set(THREE.MathUtils.degToRad(betaDeg), THREE.MathUtils.degToRad(alphaDeg),
+           THREE.MathUtils.degToRad(-gammaDeg), 'YXZ');
+  out.setFromEuler(_eul);
+  out.multiply(_q1);
+  out.multiply(_q0.setFromAxisAngle(_zee, -orient));
+  return out;
+}
+const _invRefQ = new THREE.Quaternion();
+const _targetQ = new THREE.Quaternion();
+function applyMotionCamera() {
+  if (!camera || !baseCamQ || !MOTION.refQ) return false;
+  if (performance.now() - MOTION.lastAt > 3000) { MOTION.ok = false; return false; }
+  if (!MOTION.ok) return false;
+  _invRefQ.copy(MOTION.refQ).invert();
+  _targetQ.copy(MOTION.devQ).multiply(_invRefQ).multiply(baseCamQ);
+  camera.quaternion.slerp(_targetQ, 0.16);
+  return true;
+}
+
+/* ================= light matching ================= */
+const lightBase = { hemi: 1.1, dir: 1.45 };
+const _lsCanvas = document.createElement('canvas');
+_lsCanvas.width = 16; _lsCanvas.height = 16;
+const _lsCtx = _lsCanvas.getContext('2d', { willReadFrequently: true });
+const _lightTgt = { m: 1, c: new THREE.Color(1, 1, 1) };
+let _lsNextAt = 0;
+function updateLightMatch(t, dt) {
+  if (!hemiLight || !dirLight) return;
+  if (camOK && video && video.readyState >= 2 && t >= _lsNextAt) {
+    _lsNextAt = t + 500;
+    try {
+      _lsCtx.drawImage(video, 0, 0, 16, 16);
+      const d = _lsCtx.getImageData(0, 0, 16, 16).data;
+      let r = 0, g = 0, b = 0;
+      const n = d.length / 4;
+      for (let i = 0; i < d.length; i += 4) { r += d[i]; g += d[i + 1]; b += d[i + 2]; }
+      r /= n * 255; g /= n * 255; b /= n * 255;
+      const lum = 0.2126 * r + 0.7152 * g + 0.0722 * b;
+      _lightTgt.m = clamp(0.45 + lum * 1.1, 0.45, 1.35);
+      _lightTgt.c.setRGB(lerp(1, Math.min(1, r * 1.7), 0.5),
+                         lerp(1, Math.min(1, g * 1.7), 0.5),
+                         lerp(1, Math.min(1, b * 1.7), 0.5));
+    } catch (e) {}
+  }
+  if (!camOK) return;
+  const k = 1 - Math.exp(-dt * 2.5);
+  hemiLight.intensity += (lightBase.hemi * _lightTgt.m - hemiLight.intensity) * k;
+  dirLight.intensity += (lightBase.dir * _lightTgt.m - dirLight.intensity) * k;
+  hemiLight.color.lerp(_lightTgt.c, k);
+}
+
+/* ================= parallax (fallback / no-motion drift) ================= */
+let parX = 0, parY = 0, parTX = 0, parTY = 0;
+let lastOrientAt = -1e9;
+let mouseAt = -1e9, mouseTX = 0, mouseTY = 0;
+window.addEventListener('deviceorientation', (e) => {
+  if (e.gamma == null && e.beta == null && e.alpha == null) return;
+  lastOrientAt = performance.now();
+  parTX = clamp((e.gamma || 0) / 26, -1, 1);
+  parTY = clamp(((e.beta || 0) - 48) / 24, -1, 1);
+  MOTION.ever = true; MOTION.ok = true; MOTION.lastAt = lastOrientAt;
+  if (!MOTION.devQ) MOTION.devQ = new THREE.Quaternion();
+  deviceQuat(MOTION.devQ, e.alpha || 0, e.beta || 0, e.gamma || 0);
+  if (MOTION.recal || !MOTION.refQ) { MOTION.refQ = MOTION.devQ.clone(); MOTION.recal = false; }
+  hideMotionPill();
+}, true);
+window.addEventListener('pointermove', (e) => {
+  if (e.pointerType !== 'mouse') return;
+  mouseAt = performance.now();
+  mouseTX = clamp((e.clientX / Math.max(1, W) - 0.5) * 2, -1, 1);
+  mouseTY = clamp((e.clientY / Math.max(1, H) - 0.5) * 2, -1, 1);
+}, true);
+function updateParallax(t) {
+  let tx, ty;
+  if (performance.now() - mouseAt < 2500) { tx = mouseTX; ty = mouseTY; }
+  else if (performance.now() - lastOrientAt < 3000) { tx = parTX; ty = parTY; }
+  else { tx = Math.sin(t * 0.00035) * 0.55; ty = Math.sin(t * 0.00027 + 1.7) * 0.30; }
+  parX += (tx - parX) * 0.055;
+  parY += (ty - parY) * 0.055;
+}
+
+/* ================= fallback backdrop: night parking lot ================= */
+function drawRoom() {
+  const ctx = rctx;
+  const sky = ctx.createLinearGradient(0, 0, 0, floorTop);
+  sky.addColorStop(0, '#131a2e'); sky.addColorStop(1, '#2b3350');
+  ctx.fillStyle = sky; ctx.fillRect(0, 0, W, floorTop + 2);
+  // distant rooftops
+  ctx.fillStyle = '#0d1120';
+  const base = floorTop;
+  ctx.fillRect(W * 0.02, base - H * 0.10, W * 0.22, H * 0.10);
+  ctx.fillRect(W * 0.30, base - H * 0.15, W * 0.18, H * 0.15);
+  ctx.fillRect(W * 0.55, base - H * 0.08, W * 0.26, H * 0.08);
+  ctx.fillRect(W * 0.86, base - H * 0.12, W * 0.13, H * 0.12);
+  // lit windows
+  ctx.fillStyle = 'rgba(255,196,90,0.75)';
+  for (let i = 0; i < 14; i++) {
+    const wx = ((i * 67) % 90) / 100 * W + parX * -4;
+    const wy = base - ((i * 37) % 11) / 100 * H - 8;
+    ctx.fillRect(wx, wy, 5, 7);
+  }
+  // street lamp glows
+  for (const fx of [0.16, 0.5, 0.84]) {
+    const lx = W * fx + parX * -7, ly = floorTop - H * 0.17;
+    const g = ctx.createRadialGradient(lx, ly, 2, lx, ly, W * 0.16);
+    g.addColorStop(0, 'rgba(255,205,110,0.5)'); g.addColorStop(1, 'rgba(255,205,110,0)');
+    ctx.fillStyle = g; ctx.fillRect(lx - W * 0.16, ly - W * 0.16, W * 0.32, W * 0.32);
+    ctx.fillStyle = '#ffd98a';
+    ctx.beginPath(); ctx.arc(lx, ly, 4, 0, Math.PI * 2); ctx.fill();
+    ctx.strokeStyle = '#0a0d18'; ctx.lineWidth = 5;
+    ctx.beginPath(); ctx.moveTo(lx, ly + 2); ctx.lineTo(lx, floorTop); ctx.stroke();
+  }
+  // ground: dark asphalt
+  const fl = ctx.createLinearGradient(0, floorTop, 0, H);
+  fl.addColorStop(0, '#3a3f4c'); fl.addColorStop(1, '#23262f');
+  ctx.fillStyle = fl; ctx.fillRect(0, floorTop, W, H - floorTop);
+  ctx.strokeStyle = 'rgba(255,255,255,0.07)'; ctx.lineWidth = 2;
+  for (let y = floorTop + 34; y < H; y += 46) {
+    ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(W, y); ctx.stroke();
+  }
+  // snow drifts along the back edge
+  ctx.fillStyle = 'rgba(235,242,250,0.85)';
+  ctx.beginPath();
+  ctx.moveTo(0, floorTop + 6);
+  for (let x = 0; x <= W; x += 32) ctx.lineTo(x, floorTop + 2 + Math.sin(x * 0.05) * 4);
+  ctx.lineTo(W, floorTop + 16); ctx.lineTo(0, floorTop + 16);
+  ctx.closePath(); ctx.fill();
+  const vg = ctx.createRadialGradient(W / 2, H / 2, Math.min(W, H) * 0.45, W / 2, H / 2, Math.max(W, H) * 0.78);
+  vg.addColorStop(0, 'rgba(5,5,12,0)'); vg.addColorStop(1, 'rgba(5,5,12,0.35)');
+  ctx.fillStyle = vg; ctx.fillRect(0, 0, W, H);
+}
+
+/* ================= three.js scene ================= */
+const CAM_BASE = new THREE.Vector3(0, 2.05, 3.55);
+const CAM_LOOK = new THREE.Vector3(0, 0.05, -2.0);
+const FIELD = { xMin: -3.0, xMax: 3.0, zMin: -8.6, zMax: 0.9 };
+
+function makeBlobTexture() {
+  const c = document.createElement('canvas'); c.width = c.height = 128;
+  const g = c.getContext('2d');
+  const grad = g.createRadialGradient(64, 64, 4, 64, 64, 62);
+  grad.addColorStop(0, 'rgba(0,0,0,0.55)');
+  grad.addColorStop(0.6, 'rgba(0,0,0,0.28)');
+  grad.addColorStop(1, 'rgba(0,0,0,0)');
+  g.fillStyle = grad; g.fillRect(0, 0, 128, 128);
+  return new THREE.CanvasTexture(c);
+}
+let blobGeo = null, blobMat = null;
+
+function initGL() {
+  renderer = new THREE.WebGLRenderer({ canvas: glCanvas, alpha: true, antialias: true });
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
+  renderer.setSize(W, H);
+  renderer.setClearColor(0x000000, 0);
+  scene = new THREE.Scene();
+  camera = new THREE.PerspectiveCamera(60, W / Math.max(1, H), 0.1, 80);
+  camera.position.copy(CAM_BASE);
+  camera.lookAt(CAM_LOOK);
+  baseCamQ = camera.quaternion.clone();
+  hemiLight = new THREE.HemisphereLight(0xdfe8ff, 0x333a30, 1.1);
+  scene.add(hemiLight);
+  dirLight = new THREE.DirectionalLight(0xfff1da, 1.45);
+  dirLight.position.set(2.5, 4.5, 3.0);
+  scene.add(dirLight);
+  blobGeo = new THREE.PlaneGeometry(1, 1);
+  blobMat = new THREE.MeshBasicMaterial({ map: makeBlobTexture(), transparent: true, depthWrite: false, opacity: 0.8 });
+  // NO fake ground patch (Cherie's rule: as much real AR as possible) —
+  // the plow, zombies, snowbanks and lamps sit directly on the real floor.
+  buildSetDressing();
+  buildPlow();
+  buildZombiePools();
+  buildPuffs();
+  buildCracks();
+  buildDebris();
+}
+
+function buildSetDressing() {
+  const snowMat = new THREE.MeshStandardMaterial({ color: 0xe8eef6, roughness: 1 });
+  const bankGeo = new THREE.BoxGeometry(1, 1, 1);
+  const banks = [
+    { x: 0, z: FIELD.zMin - 0.35, w: 7.6, d: 0.7, h: 0.34 },
+    { x: FIELD.xMin - 0.35, z: -3.85, w: 0.7, d: 10.6, h: 0.30 },
+    { x: FIELD.xMax + 0.35, z: -3.85, w: 0.7, d: 10.6, h: 0.30 },
+    { x: 0, z: FIELD.zMax + 0.4, w: 7.6, d: 0.7, h: 0.22 }
+  ];
+  for (const b of banks) {
+    const m = new THREE.Mesh(bankGeo, snowMat);
+    m.scale.set(b.w, b.h, b.d);
+    m.position.set(b.x, b.h / 2, b.z);
+    m.rotation.y = rand(-0.02, 0.02);
+    scene.add(m);
+  }
+  const poleMat = new THREE.MeshStandardMaterial({ color: 0x2a2e38, roughness: 0.7, metalness: 0.4 });
+  const lampMat = new THREE.MeshStandardMaterial({ color: 0xffd98a, emissive: 0xffb84d, emissiveIntensity: 1.6 });
+  const poleGeo = new THREE.CylinderGeometry(0.03, 0.04, 1.5, 8);
+  const headGeo = new THREE.SphereGeometry(0.075, 10, 8);
+  for (const [lx, lz] of [[-3.3, -1.2], [3.3, -3.4], [-3.3, -6.2], [3.3, -8.2]]) {
+    const p = new THREE.Mesh(poleGeo, poleMat);
+    p.position.set(lx, 0.75, lz);
+    scene.add(p);
+    const hd = new THREE.Mesh(headGeo, lampMat);
+    hd.position.set(lx, 1.52, lz);
+    scene.add(hd);
+  }
+}
+
+/* ================= the plow ================= */
+let plow = null, plowParts = {};
+function buildPlow() {
+  const g = new THREE.Group();
+  const orange = new THREE.MeshStandardMaterial({ color: 0xe8762a, roughness: 0.55, metalness: 0.15 });
+  const orange2 = new THREE.MeshStandardMaterial({ color: 0xc75e1c, roughness: 0.6, metalness: 0.1 });
+  const steel = new THREE.MeshStandardMaterial({ color: 0x9aa4ae, roughness: 0.35, metalness: 0.7 });
+  const dark = new THREE.MeshStandardMaterial({ color: 0x1c1f26, roughness: 0.85 });
+  const glass = new THREE.MeshStandardMaterial({ color: 0x2c4258, roughness: 0.15, metalness: 0.5 });
+  const lampM = new THREE.MeshStandardMaterial({ color: 0xfff3b0, emissive: 0xffdf80, emissiveIntensity: 2.2 });
+  const beaconM = new THREE.MeshStandardMaterial({ color: 0xffa726, emissive: 0xff8f00, emissiveIntensity: 2.5 });
+
+  const body = new THREE.Mesh(new THREE.BoxGeometry(0.34, 0.15, 0.44), orange);
+  body.position.set(0, 0.155, -0.02);
+  g.add(body);
+  const hood = new THREE.Mesh(new THREE.BoxGeometry(0.32, 0.09, 0.16), orange2);
+  hood.position.set(0, 0.20, 0.17);
+  hood.rotation.x = -0.18;
+  g.add(hood);
+  const cab = new THREE.Mesh(new THREE.BoxGeometry(0.32, 0.19, 0.22), orange);
+  cab.position.set(0, 0.325, -0.13);
+  g.add(cab);
+  const win = new THREE.Mesh(new THREE.BoxGeometry(0.28, 0.11, 0.02), glass);
+  win.position.set(0, 0.35, -0.015);
+  win.rotation.x = -0.1;
+  g.add(win);
+  const wheelGeo = new THREE.CylinderGeometry(0.088, 0.088, 0.06, 14);
+  const wheels = [];
+  for (const [wx, wz] of [[-0.18, 0.15], [0.18, 0.15], [-0.18, -0.17], [0.18, -0.17]]) {
+    const w = new THREE.Mesh(wheelGeo, dark);
+    w.rotation.z = Math.PI / 2;
+    w.position.set(wx, 0.088, wz);
+    g.add(w); wheels.push(w);
+  }
+  const stack = new THREE.Mesh(new THREE.CylinderGeometry(0.022, 0.022, 0.17, 8), dark);
+  stack.position.set(0.11, 0.48, -0.2);
+  g.add(stack);
+  const beacon = new THREE.Mesh(new THREE.SphereGeometry(0.032, 10, 8), beaconM);
+  beacon.position.set(0, 0.455, -0.13);
+  g.add(beacon);
+  for (const hx of [-0.11, 0.11]) {
+    const hl = new THREE.Mesh(new THREE.BoxGeometry(0.06, 0.04, 0.015), lampM);
+    hl.position.set(hx, 0.17, 0.262);
+    g.add(hl);
+  }
+  // the blade (front, +Z)
+  const blade = new THREE.Group();
+  const bladeMain = new THREE.Mesh(new THREE.BoxGeometry(0.56, 0.17, 0.035), steel);
+  blade.add(bladeMain);
+  const stripe = new THREE.Mesh(new THREE.BoxGeometry(0.56, 0.035, 0.04), orange);
+  stripe.position.y = -0.065;
+  blade.add(stripe);
+  for (const s of [-1, 1]) {
+    const wing = new THREE.Mesh(new THREE.BoxGeometry(0.16, 0.17, 0.035), steel);
+    wing.position.set(s * 0.345, 0, -0.045);
+    wing.rotation.y = s * 0.6;
+    blade.add(wing);
+  }
+  blade.position.set(0, 0.115, 0.335);
+  blade.rotation.x = -0.42;
+  g.add(blade);
+  // blob shadow
+  const shadow = new THREE.Mesh(blobGeo, blobMat);
+  shadow.rotation.x = -Math.PI / 2;
+  shadow.position.y = 0.012;
+  shadow.scale.set(0.95, 1.25, 1);
+  g.add(shadow);
+  scene.add(g);
+  plowParts = { wheels, beaconM, blade };
+  plow = g;
+}
+
+/* ================= zombies: instanced merged figures ================= */
+const ZCAP_PER_VARIANT = 60;          // 3 variants -> 180 slots, game caps alive at 120
+const ZOMBIE_CAP = 120;
+const zombiePools = [];                // { mesh: InstancedMesh, free: [slotIdx] }
+const zombies = [];                    // live records
+function coloredBox(w, h, d, x, y, z, color, rx, ry, rz) {
+  const geo = new THREE.BoxGeometry(w, h, d);
+  const m = new THREE.Matrix4();
+  const q = new THREE.Quaternion().setFromEuler(new THREE.Euler(rx || 0, ry || 0, rz || 0));
+  m.compose(new THREE.Vector3(x, y, z), q, new THREE.Vector3(1, 1, 1));
+  geo.applyMatrix4(m);
+  const col = new THREE.Color(color);
+  const n = geo.attributes.position.count;
+  const carr = new Float32Array(n * 3);
+  for (let i = 0; i < n; i++) { carr[i * 3] = col.r; carr[i * 3 + 1] = col.g; carr[i * 3 + 2] = col.b; }
+  geo.setAttribute('color', new THREE.BufferAttribute(carr, 3));
+  return geo;
+}
+function zombieGeometry(shirt, skin, pants) {
+  const parts = [
+    coloredBox(0.095, 0.24, 0.11, -0.065, 0.12, 0, pants),                 // legs
+    coloredBox(0.095, 0.24, 0.11, 0.065, 0.12, 0, pants),
+    coloredBox(0.31, 0.30, 0.16, 0, 0.39, 0, shirt),                       // torso
+    coloredBox(0.175, 0.19, 0.175, 0, 0.635, 0.01, skin),                  // head
+    coloredBox(0.075, 0.32, 0.075, -0.205, 0.44, 0.13, skin, -1.15, 0, 0.12),  // arms reaching forward
+    coloredBox(0.075, 0.32, 0.075, 0.205, 0.42, 0.13, skin, -1.25, 0, -0.1)
+  ];
+  return mergeGeometries(parts);
+}
+function buildZombiePools() {
+  const mat = new THREE.MeshStandardMaterial({ vertexColors: true, roughness: 0.95, metalness: 0 });
+  const variants = [
+    zombieGeometry(0x7a4a8c, 0x7fae4c, 0x33383f),
+    zombieGeometry(0x4a6a9c, 0x86b356, 0x2c3038),
+    zombieGeometry(0x9c4a3c, 0x749c46, 0x3a332a)
+  ];
+  const zero = new THREE.Matrix4().makeScale(0, 0, 0);
+  variants.forEach((geo, vi) => {
+    const mesh = new THREE.InstancedMesh(geo, mat, ZCAP_PER_VARIANT);
+    mesh.instanceMatrix.setUsage(THREE.DynamicDrawUsage);
+    mesh.frustumCulled = false;
+    for (let i = 0; i < ZCAP_PER_VARIANT; i++) mesh.setMatrixAt(i, zero);
+    mesh.instanceMatrix.needsUpdate = true;
+    scene.add(mesh);
+    const free = [];
+    for (let i = ZCAP_PER_VARIANT - 1; i >= 0; i--) free.push(i);
+    zombiePools.push({ mesh, free });
+  });
+  // blob shadows, one instanced mesh for all zombies
+  const shGeo = new THREE.PlaneGeometry(1, 1);
+  shadowMesh = new THREE.InstancedMesh(shGeo, blobMat, ZOMBIE_CAP + 8);
+  shadowMesh.instanceMatrix.setUsage(THREE.DynamicDrawUsage);
+  shadowMesh.frustumCulled = false;
+  shadowMesh.renderOrder = 1;
+  for (let i = 0; i < ZOMBIE_CAP + 8; i++) shadowMesh.setMatrixAt(i, zero);
+  shadowMesh.instanceMatrix.needsUpdate = true;
+  scene.add(shadowMesh);
+}
+let shadowMesh = null;
+const _dummy = new THREE.Object3D();
+const _zeroM = new THREE.Matrix4().makeScale(0, 0, 0);
+
+/* ================= green puffs + floating score text ================= */
+const puffs = [];
+let puffPool = [];
+function buildPuffs() {
+  const geo = new THREE.SphereGeometry(0.1, 8, 6);
+  for (let i = 0; i < 24; i++) {
+    const m = new THREE.Mesh(geo, new THREE.MeshBasicMaterial({ color: 0x86d95e, transparent: true, opacity: 0 }));
+    m.visible = false;
+    scene.add(m);
+    puffPool.push(m);
+  }
+}
+function spawnPuff(x, z, big, color) {
+  const m = puffPool.find(p => !p.visible);
+  if (!m) return;
+  m.visible = true;
+  m.material.color.setHex(color || 0x86d95e);
+  m.position.set(x, 0.16, z);
+  puffs.push({ m, t: 0, dur: 0.42, big: big ? 1.7 : 1 });
+}
+
+/* ================= floor-burst dressing: cracks + debris =================
+   Zombies enter by bursting UP through the floor (Cherie's rule: no fake
+   ground — the real surface stays visible; a crack is a decal, not a mat). */
+function makeCrackTexture() {
+  const c = document.createElement('canvas'); c.width = c.height = 256;
+  const g = c.getContext('2d');
+  const cx = 128, cy = 128;
+  // dark broken centre
+  const grad = g.createRadialGradient(cx, cy, 4, cx, cy, 62);
+  grad.addColorStop(0, 'rgba(8,6,5,0.92)');
+  grad.addColorStop(0.55, 'rgba(10,8,7,0.55)');
+  grad.addColorStop(1, 'rgba(10,8,7,0)');
+  g.fillStyle = grad;
+  g.beginPath(); g.ellipse(cx, cy, 62, 50, 0.3, 0, Math.PI * 2); g.fill();
+  // jagged cracks radiating out
+  for (let i = 0; i < 11; i++) {
+    const a = (i / 11) * Math.PI * 2 + rand(-0.25, 0.25);
+    let x = cx, y = cy, ang = a;
+    g.strokeStyle = 'rgba(12,10,9,0.85)';
+    g.lineWidth = rand(2.2, 3.6);
+    g.beginPath(); g.moveTo(x, y);
+    const segs = 4 + Math.floor(rand(0, 3));
+    for (let s = 0; s < segs; s++) {
+      ang += rand(-0.45, 0.45);
+      const len = rand(13, 30) * (1 - s / (segs + 1) * 0.5);
+      x += Math.cos(ang) * len; y += Math.sin(ang) * len * 0.82;
+      g.lineTo(x, y);
+      g.lineWidth = Math.max(0.7, g.lineWidth - 0.6);
+    }
+    g.stroke();
+    // a fork
+    if (Math.random() < 0.6) {
+      g.lineWidth = 1.1;
+      g.beginPath(); g.moveTo(x, y);
+      g.lineTo(x + Math.cos(ang + 0.7) * 20, y + Math.sin(ang + 0.7) * 16);
+      g.stroke();
+    }
+  }
+  // scattered grit
+  for (let i = 0; i < 60; i++) {
+    g.fillStyle = 'rgba(15,12,10,' + rand(0.25, 0.7) + ')';
+    const a = rand(0, Math.PI * 2), r = rand(18, 105);
+    g.fillRect(cx + Math.cos(a) * r, cy + Math.sin(a) * r * 0.82, rand(1.5, 4), rand(1.5, 3.5));
+  }
+  return new THREE.CanvasTexture(c);
+}
+const cracks = [];
+let crackPool = [];
+function buildCracks() {
+  const tex = makeCrackTexture();
+  const geo = new THREE.PlaneGeometry(1, 1);
+  for (let i = 0; i < 18; i++) {
+    const m = new THREE.Mesh(geo, new THREE.MeshBasicMaterial({ map: tex, transparent: true, opacity: 0, depthWrite: false }));
+    m.rotation.x = -Math.PI / 2;
+    m.renderOrder = 2;
+    m.visible = false;
+    scene.add(m);
+    crackPool.push(m);
+  }
+}
+function spawnCrack(x, z, scale) {
+  const m = crackPool.find(p => !p.visible);
+  if (!m) return;
+  m.visible = true;
+  m.position.set(x, 0.006 + Math.random() * 0.004, z);
+  m.rotation.z = rand(0, Math.PI * 2);
+  const s = 1.05 * (scale || 1);
+  m.scale.set(s, s, 1);
+  cracks.push({ m, t: 0, dur: 3.1 });
+}
+function updateCracks(dt) {
+  for (let i = cracks.length - 1; i >= 0; i--) {
+    const c = cracks[i];
+    c.t += dt;
+    const k = c.t / c.dur;
+    if (k >= 1) { c.m.visible = false; cracks.splice(i, 1); continue; }
+    c.m.material.opacity = k < 0.12 ? (k / 0.12) * 0.96 : (k > 0.7 ? 0.96 * (1 - (k - 0.7) / 0.3) : 0.96);
+  }
+}
+const debris = [];
+let debrisPool = [];
+function buildDebris() {
+  const geo = new THREE.TetrahedronGeometry(0.035);
+  const mat = new THREE.MeshStandardMaterial({ color: 0x4a423a, roughness: 1 });
+  for (let i = 0; i < 28; i++) {
+    const m = new THREE.Mesh(geo, mat);
+    m.visible = false;
+    scene.add(m);
+    debrisPool.push(m);
+  }
+}
+function spawnDebris(x, z, big) {
+  let launched = 0;
+  for (const m of debrisPool) {
+    if (m.visible) continue;
+    m.visible = true;
+    const s = rand(0.6, 1.5) * (big ? 1.3 : 1);
+    m.scale.set(s, s, s);
+    m.position.set(x + rand(-0.12, 0.12), 0.05, z + rand(-0.12, 0.12));
+    debris.push({
+      m, t: 0, dur: rand(0.55, 0.85),
+      vx: rand(-0.9, 0.9), vz: rand(-0.9, 0.9), vy: rand(1.2, 2.3),
+      rx: rand(-9, 9), rz: rand(-9, 9)
+    });
+    if (++launched >= (big ? 8 : 6)) break;
+  }
+}
+function updateDebris(dt) {
+  for (let i = debris.length - 1; i >= 0; i--) {
+    const d = debris[i];
+    d.t += dt;
+    if (d.t >= d.dur) { d.m.visible = false; debris.splice(i, 1); continue; }
+    d.vy -= 6.5 * dt;
+    d.m.position.x += d.vx * dt;
+    d.m.position.z += d.vz * dt;
+    d.m.position.y = Math.max(0.02, d.m.position.y + d.vy * dt);
+    d.m.rotation.x += d.rx * dt;
+    d.m.rotation.z += d.rz * dt;
+  }
+}
+let lastBurstSndAt = 0;
+function sndBurst() {
+  const now = performance.now();
+  if (now - lastBurstSndAt < 160) return;   // throttle when the horde pours in
+  lastBurstSndAt = now;
+  tone(95, 38, 0.3, 'sawtooth', 0.055);
+  tone(210, 70, 0.16, 'square', 0.03);
+}
+const floatTexts = [];
+function spawnFloatText(worldX, worldY, worldZ, text, color) {
+  if (!camera) return;
+  _pv.set(worldX, worldY, worldZ).project(camera);
+  if (_pv.z > 1) return;
+  floatTexts.push({
+    x: (_pv.x * 0.5 + 0.5) * W, y: (_pv.y * -0.5 + 0.5) * H,
+    vy: -56, life: 0, max: 0.85, text, color: color || '#ffe14d'
+  });
+}
+const _pv = new THREE.Vector3();
+
+/* ============================== game state ============================== */
+const RUN_SECONDS = 90;
+const BIG_SPEED = 1.35;            // m/s needed to plow a big zombie
+const CHAIN_WINDOW = 1.6;          // s between kills to keep a chain alive
+const game = {
+  phase: 'idle',                   // idle | ready | play | done
+  timeLeft: RUN_SECONDS,
+  elapsed: 0,
+  count: 0, score: 0,
+  chain: 0, chainT: 99, bestChain: 0,
+  spawnT: 0
+};
+const P = {  // the plow's physics state
+  x: 0, z: 0.3, heading: Math.PI, vx: 0, vz: 0,
+  grabT: 0, grabbed: null, roll: 0
+};
+const shadowFree = [];
+for (let i = ZOMBIE_CAP + 7; i >= 0; i--) shadowFree.push(i);
+
+function mult() { return Math.min(1 + Math.floor(game.chain / 6), 5); }
+
+/* ============================== zombies ============================== */
+function spawnZombie(x, z, big, riseDelay) {
+  if (zombies.length >= ZOMBIE_CAP) return null;
+  const order = [0, 1, 2].sort(() => Math.random() - 0.5);
+  let pool = null;
+  for (const vi of order) { if (zombiePools[vi].free.length) { pool = zombiePools[vi]; break; } }
+  if (!pool || !shadowFree.length) return null;
+  const slot = pool.free.pop();
+  const zb = {
+    pool, slot, shadowSlot: shadowFree.pop(),
+    x, z, y: 0,
+    heading: rand(0, Math.PI * 2), wanderHead: 0, headT: rand(0.5, 2),
+    speed: rand(0.22, 0.48) * (big ? 0.62 : 1),
+    scale: big ? 1.45 : rand(0.92, 1.08),
+    big: !!big,
+    bobPh: rand(0, Math.PI * 2),
+    state: 'rise', riseT: -(riseDelay || 0), burstDone: false,
+    dieT: 0, flingVx: 0, flingVz: 0, flingVy: 0, spin: 0, scored: false,
+    noGrabT: 0
+  };
+  zb.wanderHead = zb.heading;
+  zb.y = -0.78 * zb.scale;   // starts fully under the floor
+  zombies.push(zb);
+  return zb;
+}
+function freeZombie(zb) {
+  zb.pool.free.push(zb.slot);
+  shadowFree.push(zb.shadowSlot);
+  zb.pool.mesh.setMatrixAt(zb.slot, _zeroM);
+  zb.pool.mesh.instanceMatrix.needsUpdate = true;
+  shadowMesh.setMatrixAt(zb.shadowSlot, _zeroM);
+  shadowMesh.instanceMatrix.needsUpdate = true;
+  const i = zombies.indexOf(zb);
+  if (i >= 0) zombies.splice(i, 1);
+}
+function spawnBurstZombie(big, riseDelay) {
+  // bursts up through the floor at a random spot inside the field,
+  // never right on top of the plow
+  for (let tries = 0; tries < 8; tries++) {
+    const x = rand(FIELD.xMin + 0.35, FIELD.xMax - 0.35);
+    const z = rand(FIELD.zMin + 0.35, FIELD.zMax - 0.35);
+    if (Math.hypot(x - P.x, z - P.z) < 1.6 && tries < 7) continue;
+    return spawnZombie(x, z, big, riseDelay);
+  }
+  return null;
+}
+function director(dt) {
+  const targetPop = Math.min(46 + game.elapsed * 0.75, 108);
+  game.spawnT -= dt;
+  if (game.spawnT <= 0) {
+    game.spawnT = rand(0.3, 0.65);
+    let active = 0;
+    for (const zb of zombies) if (zb.state === 'walk' || zb.state === 'grabbed' || zb.state === 'rise') active++;
+    if (active < targetPop) {
+      const bigChance = game.elapsed > 18 ? 0.12 : 0.04;
+      spawnBurstZombie(Math.random() < bigChance, 0);
+    }
+  }
+}
+
+function killZombie(zb, scored) {
+  zb.state = 'dying';
+  zb.dieT = 0; zb.scored = scored;
+  const fx = Math.sin(P.heading), fz = Math.cos(P.heading);
+  zb.flingVx = fx * rand(0.8, 1.5) + rand(-0.4, 0.4);
+  zb.flingVz = fz * rand(0.8, 1.5) + rand(-0.4, 0.4);
+  zb.flingVy = rand(1.7, 2.7);
+  zb.spin = rand(4, 9) * (Math.random() < 0.5 ? -1 : 1);
+  spawnPuff(zb.x, zb.z, zb.big);
+  if (scored) {
+    game.chain++;
+    game.chainT = 0;
+    game.bestChain = Math.max(game.bestChain, game.chain);
+    game.count++;
+    const pts = (zb.big ? 30 : 10) * mult();
+    game.score += pts;
+    spawnFloatText(zb.x, 0.8 * zb.scale, zb.z, '+' + pts, zb.big ? '#ff9a3d' : '#ffe14d');
+    if (zb.big) sndBigPop(); else sndPop(game.chain);
+    updateHUD();
+  }
+}
+
+function tryPlow(zb, speed) {
+  if (zb.big && speed < BIG_SPEED) {
+    // GRAB: it latches onto the blade and drags the plow down
+    if (P.grabbed || zb.noGrabT > 0 || game.phase !== 'play') return;
+    zb.state = 'grabbed';
+    P.grabbed = zb;
+    P.grabT = 1.15;
+    sndGrab();
+    return;
+  }
+  killZombie(zb, true);
+}
+
+function updateZombies(dt, t) {
+  const fx = Math.sin(P.heading), fz = Math.cos(P.heading);
+  for (let i = zombies.length - 1; i >= 0; i--) {
+    const zb = zombies[i];
+    if (zb.noGrabT > 0) zb.noGrabT -= dt;
+    if (zb.state === 'dying') {
+      zb.dieT += dt;
+      zb.x += zb.flingVx * dt;
+      zb.z += zb.flingVz * dt;
+      zb.flingVy -= 6.5 * dt;
+      zb.y = Math.max(0, zb.y + zb.flingVy * dt);
+      if (zb.dieT >= 0.62) { freeZombie(zb); continue; }
+    } else if (zb.state === 'grabbed') {
+      zb.x = P.x + fx * 0.44;
+      zb.z = P.z + fz * 0.44;
+      zb.y = 0;
+      zb.heading = P.heading + Math.PI;
+    } else if (zb.state === 'rise') {
+      // bursting up through the floor: crack + debris + dust on entry,
+      // then an ease-out rise from fully buried to standing
+      zb.riseT += dt;
+      if (zb.riseT >= 0 && !zb.burstDone) {
+        zb.burstDone = true;
+        spawnCrack(zb.x, zb.z, zb.scale);
+        spawnDebris(zb.x, zb.z, zb.big);
+        spawnPuff(zb.x, zb.z, zb.big, 0xb9a888);
+        sndBurst();
+      }
+      const p = clamp(zb.riseT / 0.8, 0, 1);
+      zb.riseK = p;
+      const e = 1 - Math.pow(1 - p, 3);
+      zb.y = -0.78 * zb.scale * (1 - e);
+      if (p >= 1) { zb.state = 'walk'; zb.y = 0; zb.riseK = 1; }
+    } else {
+      // wander + drift toward the plow's noise
+      zb.headT -= dt;
+      if (zb.headT <= 0) { zb.headT = rand(1, 2.6); zb.wanderHead = zb.heading + rand(-0.9, 0.9); }
+      let desired = zb.wanderHead;
+      const dxp = P.x - zb.x, dzp = P.z - zb.z;
+      if (dxp * dxp + dzp * dzp < 3.6 * 3.6) desired = Math.atan2(dxp, dzp);
+      zb.heading = angLerp(zb.heading, desired, clamp(dt * 1.8, 0, 1));
+      zb.x += Math.sin(zb.heading) * zb.speed * dt;
+      zb.z += Math.cos(zb.heading) * zb.speed * dt;
+      if (zb.x < FIELD.xMin + 0.15) { zb.x = FIELD.xMin + 0.15; zb.wanderHead = Math.abs(zb.wanderHead); }
+      if (zb.x > FIELD.xMax - 0.15) { zb.x = FIELD.xMax - 0.15; zb.wanderHead = -Math.abs(zb.wanderHead); }
+      zb.z = clamp(zb.z, FIELD.zMin + 0.15, FIELD.zMax - 0.15);
+      zb.y = 0;
+    }
+    // still waiting underground for its burst moment: keep it invisible
+    if (zb.state === 'rise' && zb.riseT < 0) {
+      zb.pool.mesh.setMatrixAt(zb.slot, _zeroM);
+      zb.pool.mesh.instanceMatrix.needsUpdate = true;
+      shadowMesh.setMatrixAt(zb.shadowSlot, _zeroM);
+      shadowMesh.instanceMatrix.needsUpdate = true;
+      continue;
+    }
+    // write instance matrix
+    const bob = zb.state === 'walk' ? Math.abs(Math.sin(t * 0.006 + zb.bobPh)) * 0.03 : 0;
+    _dummy.position.set(zb.x, zb.y + bob, zb.z);
+    if (zb.state === 'dying') {
+      _dummy.rotation.set(zb.dieT * zb.spin, zb.heading, 0);
+      const shrink = zb.dieT > 0.32 ? clamp(1 - (zb.dieT - 0.32) / 0.28, 0, 1) : 1;
+      const s = zb.scale * shrink;
+      _dummy.scale.set(s, s, s);
+    } else if (zb.state === 'grabbed') {
+      _dummy.rotation.set(0.35, zb.heading, Math.sin(t * 0.04) * 0.06);
+      _dummy.scale.set(zb.scale, zb.scale, zb.scale);
+    } else if (zb.state === 'rise') {
+      _dummy.rotation.set(0.22, zb.heading, Math.sin(t * 0.05 + zb.bobPh) * 0.1);
+      _dummy.scale.set(zb.scale, zb.scale, zb.scale);
+    } else {
+      _dummy.rotation.set(0.13 + Math.sin(t * 0.006 + zb.bobPh) * 0.03, zb.heading, Math.sin(t * 0.006 + zb.bobPh) * 0.085);
+      _dummy.scale.set(zb.scale, zb.scale, zb.scale);
+    }
+    _dummy.updateMatrix();
+    zb.pool.mesh.setMatrixAt(zb.slot, _dummy.matrix);
+    zb.pool.mesh.instanceMatrix.needsUpdate = true;
+    // shadow
+    let shScale = zb.scale * (zb.state === 'dying' ? clamp(1 - zb.y * 0.45, 0.2, 1) : 1) * 0.62;
+    if (zb.state === 'rise') shScale *= clamp(zb.riseK || 0, 0, 1);
+    _dummy.position.set(zb.x, 0.012, zb.z);
+    _dummy.rotation.set(-Math.PI / 2, 0, 0);
+    _dummy.scale.set(shScale, shScale * 0.92, 1);
+    _dummy.updateMatrix();
+    shadowMesh.setMatrixAt(zb.shadowSlot, _dummy.matrix);
+    shadowMesh.instanceMatrix.needsUpdate = true;
+  }
+  // light separation so the horde doesn't stack into one blob
+  for (let i = 0; i < zombies.length; i++) {
+    const a = zombies[i];
+    if (a.state !== 'walk') continue;
+    for (let j = i + 1; j < zombies.length; j++) {
+      const b = zombies[j];
+      if (b.state !== 'walk') continue;
+      const dx = b.x - a.x, dz = b.z - a.z;
+      const d2 = dx * dx + dz * dz;
+      if (d2 > 0.0001 && d2 < 0.34 * 0.34) {
+        const d = Math.sqrt(d2), push = (0.34 - d) * 0.5;
+        const ux = dx / d, uz = dz / d;
+        a.x -= ux * push; a.z -= uz * push;
+        b.x += ux * push; b.z += uz * push;
+      }
+    }
+  }
+}
+
+/* ============================== plow update ============================== */
+let steerPointer = null;             // pointerId currently driving
+const steerTarget = { x: 0, z: -2, active: false };
+const keys = {};
+const raycaster = new THREE.Raycaster();
+const _ndc = new THREE.Vector2();
+const _floorPlane = new THREE.Plane(new THREE.Vector3(0, 1, 0), 0);
+const _hitP = new THREE.Vector3();
+function pointerFloor(e) {
+  _ndc.set((e.clientX / Math.max(1, W)) * 2 - 1, -((e.clientY / Math.max(1, H)) * 2 - 1));
+  raycaster.setFromCamera(_ndc, camera);
+  if (raycaster.ray.intersectPlane(_floorPlane, _hitP)) {
+    return { x: clamp(_hitP.x, FIELD.xMin, FIELD.xMax), z: clamp(_hitP.z, FIELD.zMin, FIELD.zMax) };
+  }
+  return null;
+}
+glCanvas.addEventListener('pointerdown', (e) => {
+  if (!started || game.phase === 'done' || game.phase === 'idle') return;
+  initAudio(); resumeAudio();
+  const p = pointerFloor(e);
+  if (p) {
+    steerPointer = e.pointerId;
+    steerTarget.x = p.x; steerTarget.z = p.z; steerTarget.active = true;
+    try { glCanvas.setPointerCapture(e.pointerId); } catch (err) {}
+    if (game.phase === 'ready') { game.phase = 'play'; hintEl.classList.remove('show'); }
+  }
+});
+glCanvas.addEventListener('pointermove', (e) => {
+  if (e.pointerId !== steerPointer || !steerTarget.active) return;
+  const p = pointerFloor(e);
+  if (p) { steerTarget.x = p.x; steerTarget.z = p.z; }
+});
+function endSteer(e) {
+  if (e.pointerId === steerPointer) { steerPointer = null; steerTarget.active = false; }
+}
+glCanvas.addEventListener('pointerup', endSteer);
+glCanvas.addEventListener('pointercancel', endSteer);
+window.addEventListener('keydown', (e) => {
+  keys[e.code] = true;
+  if (game.phase === 'ready' && started && ['KeyW', 'KeyA', 'KeyS', 'KeyD', 'ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'].includes(e.code)) {
+    game.phase = 'play'; hintEl.classList.remove('show');
+  }
+});
+window.addEventListener('keyup', (e) => { keys[e.code] = false; });
+
+function updatePlow(dt, t) {
+  const grabbed = !!P.grabbed;
+  const maxSpeed = grabbed ? 0.55 : 2.3;
+  let dvx = 0, dvz = 0;
+  const keyDrive = keys.KeyW || keys.ArrowUp || keys.KeyS || keys.ArrowDown;
+  if (keys.KeyA || keys.ArrowLeft) P.heading -= 2.3 * dt;
+  if (keys.KeyD || keys.ArrowRight) P.heading += 2.3 * dt;
+  if (keyDrive) {
+    const dir = (keys.KeyS || keys.ArrowDown) ? -0.75 : 1;
+    dvx = Math.sin(P.heading) * maxSpeed * dir;
+    dvz = Math.cos(P.heading) * maxSpeed * dir;
+  } else if (steerTarget.active) {
+    const dx = steerTarget.x - P.x, dz = steerTarget.z - P.z;
+    const dist = Math.hypot(dx, dz);
+    if (dist > 0.04) {
+      const sp = Math.min(maxSpeed, dist * 2.4);
+      dvx = (dx / dist) * sp; dvz = (dz / dist) * sp;
+    }
+  }
+  // accelerate velocity toward desired (vector clamp)
+  const ACCEL = 3.4;
+  let ax = dvx - P.vx, az = dvz - P.vz;
+  const am = Math.hypot(ax, az), maxA = ACCEL * dt;
+  if (am > maxA) { ax = ax / am * maxA; az = az / am * maxA; }
+  P.vx += ax; P.vz += az;
+  P.x += P.vx * dt; P.z += P.vz * dt;
+  if (P.x < FIELD.xMin + 0.3) { P.x = FIELD.xMin + 0.3; P.vx = Math.max(0, P.vx); }
+  if (P.x > FIELD.xMax - 0.3) { P.x = FIELD.xMax - 0.3; P.vx = Math.min(0, P.vx); }
+  if (P.z < FIELD.zMin + 0.3) { P.z = FIELD.zMin + 0.3; P.vz = Math.max(0, P.vz); }
+  if (P.z > FIELD.zMax - 0.25) { P.z = FIELD.zMax - 0.25; P.vz = Math.min(0, P.vz); }
+  const speed = Math.hypot(P.vx, P.vz);
+  // heading follows velocity
+  if (speed > 0.2) {
+    const targetH = Math.atan2(P.vx, P.vz);
+    const diff = angWrap(targetH - P.heading);
+    const step = clamp(diff, -4.6 * dt, 4.6 * dt);
+    P.heading += step;
+    P.roll = lerp(P.roll, clamp(-step / Math.max(dt, 0.001) * speed * 0.012, -0.13, 0.13), 0.25);
+  } else {
+    P.roll = lerp(P.roll, 0, 0.2);
+  }
+  // grab timer
+  if (P.grabbed) {
+    P.grabT -= dt;
+    if (P.grabT <= 0) {
+      const zb = P.grabbed;
+      P.grabbed = null;
+      zb.noGrabT = 2.5;
+      killZombie(zb, false);       // shaken off sideways, no score
+      const side = Math.random() < 0.5 ? -1 : 1;
+      zb.flingVx = Math.cos(P.heading) * 1.7 * side;    // lateral to the blade
+      zb.flingVz = -Math.sin(P.heading) * 1.7 * side;
+      zb.flingVy = 1.1;
+      sndShakeOff();
+    }
+  }
+  // blade contact checks
+  if (game.phase === 'play' && speed > 0.45) {
+    const fx = Math.sin(P.heading), fz = Math.cos(P.heading);
+    for (const zb of zombies) {
+      if (zb.state !== 'walk') continue;
+      const rx = zb.x - P.x, rz = zb.z - P.z;
+      const fwdD = rx * fx + rz * fz;
+      if (fwdD < -0.08 || fwdD > 0.48) continue;
+      const latD = rx * fz - rz * fx;
+      if (Math.abs(latD) > 0.30 + 0.13 * zb.scale) continue;
+      tryPlow(zb, speed);
+    }
+  }
+  // write to scene
+  plow.position.set(P.x, grabbed ? Math.sin(t * 0.045) * 0.008 : 0, P.z);
+  plow.rotation.set(clamp(speed * 0.012, 0, 0.03), P.heading, P.roll);
+  if (plowParts.beaconM) plowParts.beaconM.emissiveIntensity = 1.7 + Math.sin(t * 0.012) * 1.3;
+  engineUpdate(clamp(speed / 2.3, 0, 1), game.phase === 'play' || game.phase === 'ready');
+  return speed;
+}
+
+/* ============================== puffs / fx ============================== */
+function updatePuffs(dt) {
+  for (let i = puffs.length - 1; i >= 0; i--) {
+    const p = puffs[i];
+    p.t += dt;
+    const k = p.t / p.dur;
+    if (k >= 1) { p.m.visible = false; puffs.splice(i, 1); continue; }
+    const s = p.big * (0.6 + k * 2.4);
+    p.m.scale.set(s, s * 0.7, s);
+    p.m.position.y = 0.16 + k * 0.22;
+    p.m.material.opacity = 0.7 * (1 - k);
+  }
+}
+function drawFx(dt) {
+  fctx.clearRect(0, 0, W, H);
+  // grab warning vignette
+  if (P.grabbed) {
+    const a = 0.22 + Math.sin(performance.now() * 0.02) * 0.08;
+    const g = fctx.createRadialGradient(W / 2, H / 2, Math.min(W, H) * 0.36, W / 2, H / 2, Math.max(W, H) * 0.72);
+    g.addColorStop(0, 'rgba(200,30,20,0)');
+    g.addColorStop(1, 'rgba(200,30,20,' + a + ')');
+    fctx.fillStyle = g;
+    fctx.fillRect(0, 0, W, H);
+    fctx.font = '900 22px -apple-system, sans-serif';
+    fctx.textAlign = 'center';
+    fctx.fillStyle = 'rgba(255,120,100,0.95)';
+    fctx.fillText('🧟 IT\'S GOT THE BLADE!', W / 2, H * 0.16);
+  }
+  for (let i = floatTexts.length - 1; i >= 0; i--) {
+    const ft = floatTexts[i];
+    ft.life += dt;
+    if (ft.life >= ft.max) { floatTexts.splice(i, 1); continue; }
+    ft.y += ft.vy * dt;
+    const a = clamp(1 - ft.life / ft.max, 0, 1);
+    fctx.font = '900 21px -apple-system, sans-serif';
+    fctx.textAlign = 'center';
+    fctx.globalAlpha = a;
+    fctx.fillStyle = ft.color;
+    fctx.strokeStyle = 'rgba(0,0,0,0.55)';
+    fctx.lineWidth = 4;
+    fctx.strokeText(ft.text, ft.x, ft.y);
+    fctx.fillText(ft.text, ft.x, ft.y);
+    fctx.globalAlpha = 1;
+  }
+}
+
+/* ============================== HUD / flow ============================== */
+let hudCache = { time: '', count: '', score: '', combo: '' };
+function updateHUD() {
+  const c = String(game.count), s = String(game.score);
+  if (hudCache.count !== c) { hudCache.count = c; plowCountEl.textContent = c; }
+  if (hudCache.score !== s) { hudCache.score = s; scoreNEl.textContent = s; }
+  const showCombo = game.chain >= 3;
+  comboChipEl.classList.toggle('hidden', !showCombo);
+  if (showCombo) {
+    const cb = '×' + mult() + ' · ' + game.chain;
+    if (hudCache.combo !== cb) { hudCache.combo = cb; comboNEl.textContent = cb; }
+  }
+}
+function updateTimeHUD() {
+  const tl = Math.max(0, Math.ceil(game.timeLeft));
+  const str = Math.floor(tl / 60) + ':' + String(tl % 60).padStart(2, '0');
+  if (hudCache.time !== str) {
+    hudCache.time = str;
+    timeLeftEl.textContent = str;
+    timeChipEl.classList.toggle('low', tl <= 10 && game.phase === 'play');
+  }
+}
+function resetGame() {
+  while (zombies.length) freeZombie(zombies[zombies.length - 1]);
+  puffs.length = 0;
+  for (const p of puffPool) p.visible = false;
+  cracks.length = 0;
+  for (const c of crackPool) c.visible = false;
+  debris.length = 0;
+  for (const d of debrisPool) d.visible = false;
+  floatTexts.length = 0;
+  game.phase = 'ready';
+  game.timeLeft = RUN_SECONDS;
+  game.elapsed = 0;
+  game.count = 0; game.score = 0;
+  game.chain = 0; game.chainT = 99; game.bestChain = 0;
+  game.spawnT = 0;
+  P.x = 0; P.z = 0.3; P.heading = Math.PI; P.vx = 0; P.vz = 0;
+  P.grabbed = null; P.grabT = 0;
+  steerTarget.active = false; steerPointer = null;
+  for (let i = 0; i < 26; i++) spawnBurstZombie(false, rand(0, 2.2));
+  updateHUD(); updateTimeHUD();
+}
+function endGame() {
+  game.phase = 'done';
+  steerTarget.active = false;
+  document.getElementById('finalCount').textContent = game.count;
+  document.getElementById('finalCombo').textContent = game.bestChain;
+  document.getElementById('finalScore').textContent = game.score;
+  overEl.classList.remove('hidden');
+  sndJingle();
+}
+document.getElementById('againBtn').addEventListener('click', () => {
+  initAudio();
+  overEl.classList.add('hidden');
+  resetGame();
+  hintEl.classList.add('show');
+  setTimeout(() => hintEl.classList.remove('show'), 5000);
+});
+
+/* ============================== resize ============================== */
+function resize() {
+  const dpr = Math.min(window.devicePixelRatio || 1, 2);
+  W = window.innerWidth; H = window.innerHeight;
+  for (const c of [roomCanvas, fxCanvas]) {
+    c.width = Math.round(W * dpr);
+    c.height = Math.round(H * dpr);
+  }
+  rctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  fctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  floorTop = Math.round(H * 0.34);
+  if (renderer && camera) {
+    renderer.setSize(W, H);
+    camera.aspect = W / Math.max(1, H);
+    camera.updateProjectionMatrix();
+  }
+}
+window.addEventListener('resize', resize);
+
+/* ============================== main loop ============================== */
+let simMs = 0;
+function simulate(dt) {
+  simMs += dt * 1000;
+  if (game.phase === 'play') {
+    game.elapsed += dt;
+    game.timeLeft -= dt;
+    director(dt);
+    if (game.timeLeft <= 0) { game.timeLeft = 0; endGame(); }
+  }
+  updatePlow(dt, simMs);
+  updateZombies(dt, simMs);
+  updatePuffs(dt);
+  updateCracks(dt);
+  updateDebris(dt);
+  // combo chain decay
+  if (game.chain > 0) {
+    game.chainT += dt;
+    if (game.chainT > CHAIN_WINDOW) { game.chain = 0; updateHUD(); }
+    else if (game.chain >= 3) updateHUD();
+  }
+  updateTimeHUD();
+}
+let lastT = 0;
+function frame(t) {
+  requestAnimationFrame(frame);
+  const dt = Math.min(0.05, lastT ? (t - lastT) / 1000 : 0.016);
+  lastT = t;
+  updateParallax(t);
+  if (!camOK) { rctx.clearRect(0, 0, W, H); drawRoom(); }
+  if (camera) {
+    camera.position.set(CAM_BASE.x + parX * 0.45, CAM_BASE.y - parY * 0.22, CAM_BASE.z);
+    if (!applyMotionCamera()) {
+      camera.lookAt(CAM_LOOK.x - parX * 0.25, CAM_LOOK.y, CAM_LOOK.z);
+    }
+  }
+  updateLightMatch(t, dt);
+  if (started && game.phase !== 'idle') simulate(dt);
+  if (renderer) renderer.render(scene, camera);
+  drawFx(dt);
+}
+
+/* ============================== start flow ============================== */
+let startInFlight = false;
+document.getElementById('startBtn').addEventListener('click', async () => {
+  if (startInFlight) return;
+  startInFlight = true;
+  askMotionPermission();   // FIRST, synchronously — iOS only honors it inside the tap
+  initAudio();
+  engineStart();
+  try {
+    if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) throw new Error('no getUserMedia');
+    const stream = await Promise.race([
+      navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' }, audio: false }),
+      new Promise((_, rej) => setTimeout(() => rej(new Error('camera timeout')), 4500))
+    ]);
+    video.srcObject = stream;
+    await video.play().catch(() => {});
+    camOK = true;
+  } catch (e) { camOK = false; }
+  video.classList.toggle('hidden', !camOK);
+  roomCanvas.classList.toggle('hidden', camOK);
+  startEl.classList.add('hidden');
+  hudEl.classList.remove('hidden');
+  started = true;
+  MOTION.recal = true;
+  motionWatchdog();
+  resetGame();
+  hintEl.classList.add('show');
+  setTimeout(() => hintEl.classList.remove('show'), 6000);
+});
+
+/* ============================== boot + test hook ============================== */
+resize();
+initGL();
+resize();
+requestAnimationFrame(frame);
+
+window.__zp = {
+  get started() { return started; },
+  get camOK() { return camOK; },
+  get phase() { return game.phase; },
+  get timeLeft() { return game.timeLeft; },
+  get count() { return game.count; },
+  get score() { return game.score; },
+  get chain() { return game.chain; },
+  get bestChain() { return game.bestChain },
+  get mult() { return mult(); },
+  get alive() { return zombies.filter(z => z.state === 'walk' || z.state === 'grabbed' || z.state === 'rise').length; },
+  get rising() { return zombies.filter(z => z.state === 'rise' && z.riseT >= 0).length; },
+  get cracks() { return cracks.length; },
+  get totalZombies() { return zombies.length; },
+  get grabbed() { return !!P.grabbed; },
+  plow: () => ({ x: P.x, z: P.z, heading: P.heading, speed: Math.hypot(P.vx, P.vz) }),
+  zombies: () => zombies.map(z => ({ x: z.x, z: z.z, big: z.big, state: z.state })),
+  project: (x, y, z) => {
+    if (!camera) return null;
+    _pv.set(x, y, z).project(camera);
+    return { x: (_pv.x * 0.5 + 0.5) * W, y: (_pv.y * -0.5 + 0.5) * H };
+  },
+  setTimeLeft: (s) => { game.timeLeft = s; },
+  /* QA time-stepper: advance the simulation in fixed 1/60 steps without
+     rendering (headless SwiftShader renders at <1 fps in the VM, which
+     would otherwise make a 90 s run take hours of wall time). The real
+     pointer path is exercised separately — this only drives the clock. */
+  step: (seconds) => {
+    const n = Math.max(0, Math.round(seconds * 60));
+    for (let i = 0; i < n; i++) simulate(1 / 60);
+  },
+  driveTo: (x, z) => {
+    steerTarget.x = clamp(x, FIELD.xMin, FIELD.xMax);
+    steerTarget.z = clamp(z, FIELD.zMin, FIELD.zMax);
+    steerTarget.active = true;
+    if (game.phase === 'ready') game.phase = 'play';
+  },
+  releaseDrive: () => { steerTarget.active = false; },
+  spawnCluster: (x, z, n, big) => {
+    let made = 0;
+    for (let i = 0; i < n; i++) {
+      if (spawnZombie(clamp(x + rand(-0.5, 0.5), FIELD.xMin + 0.2, FIELD.xMax - 0.2),
+                      clamp(z + rand(-0.5, 0.5), FIELD.zMin + 0.2, FIELD.zMax - 0.2), !!big)) made++;
+    }
+    return made;
+  },
+  /* synchronous composite grab (room + GL + fx) for verification in
+     environments where CDP screenshots stall: renders once and reads the
+     canvas back in the same task, so no compositor frame is needed. */
+  grab: () => {
+    if (!renderer) return null;
+    renderer.render(scene, camera);
+    const c = document.createElement('canvas');
+    c.width = glCanvas.width; c.height = glCanvas.height;
+    const g = c.getContext('2d');
+    g.fillStyle = '#10131c'; g.fillRect(0, 0, c.width, c.height);
+    if (!camOK) g.drawImage(roomCanvas, 0, 0);
+    g.drawImage(glCanvas, 0, 0);
+    g.drawImage(fxCanvas, 0, 0);
+    return c.toDataURL('image/jpeg', 0.85);
+  },
+  start: () => document.getElementById('startBtn').click(),
+  again: () => document.getElementById('againBtn').click(),
+  motion: () => ({ ok: MOTION.ok, ever: MOTION.ever, perm: MOTION.perm, needPerm: MOTION.needPerm })
+};
+</script>
+<script id="moth-game-guard-js">
+(function(){
+  var lastEnd=0;
+  function onUi(t){return t&&t.closest&&t.closest('button,a,input,select,textarea,[data-scroll]');}
+  document.addEventListener('touchend',function(e){
+    var now=Date.now();
+    if(!onUi(e.target)&&now-lastEnd<=300&&e.cancelable)e.preventDefault();
+    lastEnd=now;
+  },{passive:false});
+  ['gesturestart','gesturechange','gestureend'].forEach(function(n){
+    document.addEventListener(n,function(e){e.preventDefault();});
+  });
+  document.addEventListener('dblclick',function(e){e.preventDefault();},{passive:false});
+  document.addEventListener('contextmenu',function(e){e.preventDefault();});
+  document.addEventListener('touchmove',function(e){
+    if(e.target&&e.target.closest&&e.target.closest('[data-scroll]'))return;
+    if(e.cancelable)e.preventDefault();
+  },{passive:false});
+})();
+</script>
+</body>
+</html>
