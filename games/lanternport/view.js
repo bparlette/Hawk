@@ -47,6 +47,8 @@ export function buildCityView(THREE, city, kit) {
       for (let t = -len / 2 + 1; t < len / 2; t += 2.6) L.crenel.push([alongX ? cx + t : cx, h + 0.55, alongX ? cz : cz + t, alongX ? 1.4 : w, 1.1, alongX ? d : 1.4]);
       continue;
     }
+    if (b.kind === 'fountain' || b.kind === 'stall' || b.kind === 'windmill') continue; // pass 3: built as set pieces below
+    if (b.kind === 'barrel') { L.barrel.push([cx, h / 2, cz, 0.8, h, 0.8, 0xa8763e]); continue; }
     // ---- a house
     const tall = h >= 7.5, top = tall ? h - 2.2 : h, tint = PLASTER[b.hue], roofC = ROOFS[b.roof], shutC = SHUTTER[(b.roof + b.hue) % 4];
     L.wall.push([cx, top / 2, cz, w, top, d, tint]); L.base.push([cx, 0.45, cz, w + 0.16, 0.9, d + 0.16]);
@@ -122,11 +124,13 @@ export function buildCityView(THREE, city, kit) {
       for (let i = 0; i < n; i++) { const x = cx + (R() - 0.5) * gw, z = cz + (R() - 0.5) * gd, s = 0.3 + R() * R() * 0.6, v = 0.8 + R() * 0.4; blades.push([x, 0.06, z, 1 + R(), s, 1, [v, v * (0.95 + R() * 0.1), v * 0.9], R() * 6.28]); }
       for (let i = 0; i < 260; i++) petals.push([cx + (R() - 0.5) * gw, 0.3 + R() * 0.25, cz + (R() - 0.5) * gd, 0.07, 0.05, 0.07, [0xffffff, 0xffe066, 0xff8fb3, 0xb69cff][Math.floor(R() * 4)]]);
     }
-    for (const [fx, fz] of [[0, 0], [1, 0], [1, 1], [0, 1], [0.5, 0], [1, 0.5], [0.5, 1], [0, 0.5]]) { // street lamps
+    const lampAt = (fx, fz) => { // street lamps (positions only — no view RNG)
       const x = (b.x0 + 45 + fx * (b.x1 - b.x0 - 90)) * U, z = (b.z0 + 45 + fz * (b.z1 - b.z0 - 90)) * U, ox = fx === 0 ? -1 : fx === 1 ? 1 : 0, oz = ox ? 0 : fz === 0 ? -1 : 1;
       posts.push([x, 2.1, z, 0.13, 4.2, 0.13]); posts.push([x, 0.25, z, 0.3, 0.5, 0.3]); arms.push([x + ox * 0.35, 4.15, z + oz * 0.35, ox ? 0.8 : 0.07, 0.07, oz ? 0.8 : 0.07]);
       heads.push([x + ox * 0.7, 3.85, z + oz * 0.7, 0.3, 0.42, 0.3]); posts.push([x + ox * 0.7, 4.1, z + oz * 0.7, 0.4, 0.06, 0.4]); glows.push([x + ox * 0.7, 3.85, z + oz * 0.7]);
-    }
+    };
+    for (const [fx, fz] of [[0, 0], [1, 0], [1, 1], [0, 1], [0.5, 0], [1, 0.5], [0.5, 1], [0, 0.5]]) lampAt(fx, fz);
+    if (b.i >= 2 && b.i <= 3 && b.j >= 2 && b.j <= 3) for (const [fx, fz] of [[0.25, 0], [0.75, 0], [0.25, 1], [0.75, 1]]) lampAt(fx, fz); // pass 3: the town centre glows denser
   }
   // bunting strung across the streets between poles
   const FLAGS = [0xe2573f, 0xf2b23a, 0x3fa7a0, 0xf4ead8, 0x7d5bb5, 0x5aa9e6], half = (ROAD / 2 + WALK - 20) * U;
@@ -157,6 +161,56 @@ export function buildCityView(THREE, city, kit) {
       leaves.push([x + dx * s, dy * (0.85 + s * 0.15), z + dz * s, r * s, r * s * 0.82, r * s, LEAF[c], i * 1.7 + dx]);
   });
   inst(new THREE.CylinderGeometry(0.55, 1, 1, 10), toon(0xffffff, { map: T.wood }), trunks); inst(lump, toon(0xffffff, { rim: 0.9 }), leaves);
+
+  // ---- pass 3 set pieces: gold-triangle emblem, plaza fountain, market stalls, windmill, tall grass
+  const gold = toon(0xf2b23a, { rim: 1.3, side: THREE.DoubleSide });
+  const triGeo = new THREE.ShapeGeometry(new THREE.Shape([new THREE.Vector2(-0.42, -0.3), new THREE.Vector2(0.42, -0.3), new THREE.Vector2(0, 0.44)]));
+  const emblem = (s = 1) => { const g = new THREE.Group(); for (const [tx, ty] of [[0, 0.52], [-0.46, -0.34], [0.46, -0.34]]) { const m = new THREE.Mesh(triGeo, gold); m.position.set(tx * s, ty * s, 0); m.scale.setScalar(s); g.add(m); } return g; };
+  if (city.fountain) {
+    const g = new THREE.Group(); g.position.set(city.fountain.x * U, 0, city.fountain.z * U); root.add(g);
+    const stone = toon(0xc9c0b4, { map: T.stone, uv: 0.5, ao: true });
+    kit.part(g, new THREE.CylinderGeometry(3.8, 4.05, 1.3, 24), stone, 0, 0.65, 0, 0);
+    const rim = kit.part(g, new THREE.TorusGeometry(3.8, 0.17, 8, 28), stone, 0, 1.32, 0, 0); rim.rotation.x = Math.PI / 2;
+    const water = new THREE.Mesh(new THREE.CircleGeometry(3.5, 24), glowMat(new THREE.Color(0.4, 0.8, 1.15))); water.rotation.x = -Math.PI / 2; water.position.y = 1.36; g.add(water);
+    kit.part(g, new THREE.CylinderGeometry(0.85, 1.05, 3.9, 12), stone, 0, 2.95, 0, 0);
+    kit.part(g, new THREE.CylinderGeometry(1.7, 1.1, 0.35, 16), stone, 0, 5.0, 0, 0);
+    kit.part(g, new THREE.SphereGeometry(0.42, 12, 10), gold, 0, 5.55, 0, 0.03);
+    for (const a of [0, Math.PI]) { const e = emblem(1.05); e.position.set(Math.sin(a) * 1.02, 3.1, Math.cos(a) * 1.02); e.rotation.y = a; g.add(e); }
+  }
+  for (const s of city.stalls || []) {
+    const g = new THREE.Group(); g.position.set(s.x * U, 0, s.z * U); g.rotation.y = s.face > 0 ? 0 : Math.PI; root.add(g);
+    const woodM = toon(WOOD, { map: T.wood, uv: 0.6, rim: 0.3 });
+    kit.part(g, new THREE.BoxGeometry(5.6, 1.05, 1.1), woodM, 0, 0.55, 0.85, 0.03);            // counter
+    kit.part(g, new THREE.BoxGeometry(5.6, 0.85, 0.7), woodM, 0, 0.45, -1.05, 0.03);          // back shelf
+    for (const px of [-2.6, 2.6]) for (const pz of [-1.35, 1.35]) kit.part(g, new THREE.BoxGeometry(0.18, 2.5, 0.18), woodM, px, 1.25, pz, 0.012);
+    const awn = kit.part(g, awnGeo, toon(ROOFS[s.hue % 4], { map: T.stripes, rim: 0.4 }), 0, 2.85, 0, 0); awn.scale.set(6.0, 0.85, 3.9);
+    kit.part(g, new THREE.BoxGeometry(1.7, 0.55, 0.08), toon(0xf1e6d2, { rim: 0.4 }), 0, 2.05, 1.45, 0.012); // sign board
+    const e = emblem(0.5); e.position.set(0, 2.62, 1.98); g.add(e);
+    for (let q = 0; q < 5; q++) kit.part(g, ball, toon([0xff7aa8, 0xffd04a, 0x6fbf5a, 0x5aa9e6, 0xe2573f][q], { rim: 0.5 }), -1.9 + q * 0.95, 1.22, 0.85, 0.008).scale.setScalar(0.19); // goods on the counter
+    kit.part(g, new THREE.BoxGeometry(0.9, 0.9, 0.9), toon(0xd9a25e, { map: T.wood, uv: 0.9 }), 3.35, 0.45, 0.7, 0.025);
+  }
+  if (city.windmill) {
+    const g = new THREE.Group(); g.position.set(city.windmill.x * U, 0, city.windmill.z * U); root.add(g);
+    kit.part(g, new THREE.CylinderGeometry(1.55, 2.25, 15, 14), toon(0xc9c0b4, { map: T.stone, uv: 0.3, ao: true }), 0, 7.5, 0, 0.05);
+    kit.part(g, new THREE.ConeGeometry(2.5, 2.8, 14), toon(ROOFS[0], { map: T.tiles, uv: 1.1 }), 0, 16.4, 0, 0.04);
+    kit.part(g, new THREE.BoxGeometry(0.9, 1.6, 0.12), toon(0x7a4a30, { map: T.wood }), 1.35, 0.8, 1.35, 0.015).rotation.y = Math.PI / 4;
+    const e = emblem(0.85); e.position.set(1.28, 10.5, 1.28); e.rotation.y = Math.PI / 4; g.add(e);
+    const rotor = new THREE.Group(); rotor.position.set(1.9, 13.6, 1.9); rotor.rotation.y = Math.PI / 4; g.add(rotor); // faces the town centre, spins on local z
+    kit.part(rotor, new THREE.SphereGeometry(0.42, 10, 8), toon(0x7a4a30, { rim: 0.6 }), 0, 0, 0.2, 0.02);
+    for (let q = 0; q < 4; q++) { const bl = kit.part(rotor, new THREE.BoxGeometry(0.62, 4.4, 0.07), toon(0xf4ead8, { rim: 0.4 }), 0, 2.35, 0.2, 0.012), hold = new THREE.Group(); hold.rotation.z = q * Math.PI / 2; rotor.add(hold); hold.add(bl); bl.position.set(0, 2.35, 0.2); }
+    root.userData.rotor = rotor;
+  }
+  if (city.grassPatches && city.grassPatches.length) { // interactive tall grass: one instanced mesh, per-patch height
+    const rows = [], ranges = [];
+    for (const p of city.grassPatches) {
+      const start = rows.length, n = Math.floor(Math.PI * p.r * p.r * U * U * 7);
+      for (let i = 0; i < n; i++) { const a = R() * 6.283, d = Math.sqrt(R()) * p.r * U * 0.96, s = (0.55 + R() * R() * 0.75) * 1.9, v = 0.9 + R() * 0.35; rows.push([p.x * U + Math.cos(a) * d, 0.06, p.z * U + Math.sin(a) * d, 1 + R(), s, 1, [v * 1.02, v, v * 0.78], R() * 6.28]); }
+      ranges.push([start, rows.length]);
+    }
+    const im = inst(grassGeo, toon(0xffffff, { vertexColors: true, wind: 'grass', rim: 0 }), rows, false);
+    const last = new Array(ranges.length).fill(1);
+    root.userData.grassCtl = { set(pi, s) { if (Math.abs(s - last[pi]) < 0.02) return; last[pi] = s; const f = 0.16 + 0.84 * s, [a, b] = ranges[pi]; for (let i = a; i < b; i++) { const e = rows[i]; Q.setFromAxisAngle(UP, e[7] || 0); M.compose(P.set(e[0], e[1], e[2]), Q, S.set(e[3], e[4] * f, e[5])); im.setMatrixAt(i, M); } im.instanceMatrix.needsUpdate = true; } };
+  }
   return root;
 }
 
@@ -180,8 +234,8 @@ export class HeroView {
   constructor(THREE, kit, look) {
     const { part, toon, glowMat } = kit; this.THREE = THREE;
     const g = (this.group = new THREE.Group()), tilt = (this.tilt = new THREE.Group()), body = (this.body = new THREE.Group()); g.add(tilt); tilt.add(body);
-    const coat = toon(look.coat, { rim: 0.9 }), skin = toon(look.skin, { rim: 0.7 }), trim = toon(look.trim, { rim: 0.8 }), hairM = toon(look.hair, { rim: 1.0 });
-    part(body, lathe(THREE, [[0, 1.24], [0.15, 1.22], [0.215, 1.08], [0.2, 0.9], [0.215, 0.82], [0.3, 0.6], [0.37, 0.44], [0.35, 0.42], [0, 0.44]]), coat);
+    const coat = toon(look.coat, { rim: 0.9, gradientMap: kit.rampSoft, emissive: look.coat, emissiveIntensity: 0.35 }), skin = toon(look.skin, { rim: 0.7 }), trim = toon(look.trim, { rim: 0.8 }), hairM = toon(look.hair, { rim: 1.0 });
+    part(body, lathe(THREE, [[0, 0.44], [0.35, 0.42], [0.37, 0.44], [0.3, 0.6], [0.215, 0.82], [0.2, 0.9], [0.215, 1.08], [0.15, 1.22], [0, 1.24]]), coat); // profile runs bottom-to-top: a descending profile flips the lathe normals and the coat shades near-black (pass-3 fix)
     part(body, new THREE.TorusGeometry(0.212, 0.035, 8, 20), toon(0x4a3326), 0, 0.86, 0, 0).rotation.x = Math.PI / 2;                 // belt
     part(body, new THREE.BoxGeometry(0.09, 0.09, 0.05), trim, 0, 0.86, 0.22, 0);                                                    // buckle
     part(body, new THREE.TorusGeometry(0.365, 0.022, 6, 24), trim, 0, 0.44, 0, 0).rotation.x = Math.PI / 2;                          // hem
@@ -331,7 +385,12 @@ export function makeCucco(THREE, kit) {
 }
 export function makePickup(THREE, kit, p) {
   const g = new THREE.Group(), { glowMat, T } = kit, halo = (c, s) => { const m = new THREE.Sprite(new THREE.SpriteMaterial({ map: T.glow, color: c, transparent: true, depthWrite: false, blending: THREE.AdditiveBlending })); m.scale.setScalar(s); g.add(m); };
-  if (p.kind === 'glim' || p.kind === 'coin') { // rupees: elongated gems, colour by value — coin (5 glim) green, glim (10 glim) blue
+  if (p.kind === 'rupee') { // pass 3: denominations — green pays 5 glim, blue 25, red 100; bigger and brighter as the value climbs
+    const look = { 1: [new THREE.Color(0.4, 2.5, 0.8), new THREE.Color(0.1, 0.8, 0.25), 0.2], 5: [new THREE.Color(0.35, 0.6, 3.1), new THREE.Color(0.15, 0.3, 0.95), 0.26], 20: [new THREE.Color(3.1, 0.45, 0.4), new THREE.Color(0.95, 0.15, 0.1), 0.32] }[p.denom || 1];
+    const gem = new THREE.Mesh(new THREE.OctahedronGeometry(look[2]), glowMat(look[0]));
+    gem.scale.set(1, 2.0, 1); g.add(gem); halo(look[1], look[2] * 5);
+  }
+  else if (p.kind === 'glim' || p.kind === 'coin') { // rupees: elongated gems, colour by value — coin (5 glim) green, glim (10 glim) blue
     const glim = p.kind === 'glim', s = glim ? 0.24 : 0.18;
     const gem = new THREE.Mesh(new THREE.OctahedronGeometry(s), glowMat(glim ? new THREE.Color(0.45, 0.95, 2.9) : new THREE.Color(0.4, 2.5, 0.8)));
     gem.scale.set(1, 2.0, 1); g.add(gem); halo(glim ? new THREE.Color(0.15, 0.35, 0.9) : new THREE.Color(0.1, 0.8, 0.25), s * 5);
@@ -341,8 +400,14 @@ export function makePickup(THREE, kit, p) {
   return g;
 }
 const BEACON = { job: [2.4, 1.6, 0.25], goal: [0.3, 1.9, 2.4], tailor: [2.4, 0.6, 1.3], hideout: [0.5, 2.0, 0.5] };
-export function makeBeacon(THREE, kit) {
-  const g = new THREE.Group(), mat = new THREE.MeshBasicMaterial({ map: kit.T.beam, transparent: true, opacity: 0.4, side: THREE.DoubleSide, depthWrite: false, blending: THREE.AdditiveBlending });
+export function makePot(THREE, kit) { // pass 3: a breakable clay pot — lathe body, darker rim and soil
+  const g = new THREE.Group(), { part, toon } = kit;
+  const prof = [[0.001, 0], [0.17, 0], [0.27, 0.05], [0.34, 0.24], [0.31, 0.42], [0.25, 0.5], [0.3, 0.56], [0.33, 0.6], [0.27, 0.6], [0.23, 0.53]];
+  part(g, lathe(THREE, prof, 14), toon(0xb56545, { rim: 0.7 }), 0, 0, 0, 0.03);
+  const soil = part(g, new THREE.CircleGeometry(0.23, 12), toon(0x4a3220, { rim: 0.2 }), 0, 0.53, 0, 0); soil.rotation.x = -Math.PI / 2;
+  return g;
+}
+export function makeBeacon(THREE, kit) {  const g = new THREE.Group(), mat = new THREE.MeshBasicMaterial({ map: kit.T.beam, transparent: true, opacity: 0.4, side: THREE.DoubleSide, depthWrite: false, blending: THREE.AdditiveBlending });
   const col = new THREE.Mesh(new THREE.CylinderGeometry(3, 3, 16, 36, 1, true), mat); col.position.y = 8; g.add(col);
   const ringM = new THREE.MeshBasicMaterial({ transparent: true, opacity: 0.95, side: THREE.DoubleSide, depthWrite: false }), ring = new THREE.Mesh(new THREE.RingGeometry(2.8, 3.1, 48), ringM); ring.rotation.x = -Math.PI / 2; ring.position.y = 0.1; g.add(ring);
   g.userData.set = (kind) => { mat.color.setRGB(...BEACON[kind]).multiplyScalar(0.28); ringM.color.setRGB(...BEACON[kind]); };
