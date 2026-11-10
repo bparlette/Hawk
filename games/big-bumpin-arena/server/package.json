@@ -1,0 +1,16 @@
+{
+  "name": "big-bumpin-arena-server",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "dependencies": {
+    "colyseus": "^0.15.0",
+    "@colyseus/schema": "^2.0.0",
+    "@colyseus/ws-transport": "^0.15.0",
+    "express": "^4.19.2",
+    "cors": "^2.8.5"
+  }
+}
