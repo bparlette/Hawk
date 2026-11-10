@@ -192,7 +192,7 @@ canvas{touch-action:none}
   <button id="autoBtn" type="button">▶ AUTO</button>
   <button id="spawnBtn" type="button">＋ SPAWN POKÉMON</button>
 </div>
-<div id="hint">Tap ＋ SPAWN to fill the room · Tap a Pokémon to pet it</div>
+<div id="hint">Tap ＋ SPAWN to fill the room · They bump & play-fight when they meet · Tap one to pet it</div>
 <button id="motionPill" class="hidden" type="button">📱 Enable motion look-around</button>
 
 <div id="start">
@@ -287,6 +287,10 @@ let camOK = false;
 let pokes = [];           // live Pokémon records
 let hearts = [];
 let autoOn = false;
+let pokeUid = 0;
+const pairState = new Map();   // "uidA:uidB" -> { cdUntil, heat, heatUntil } (bump memory per pair)
+const scuffles = [];           // live play-fight state machines
+let bumpCount = 0, scuffleCount = 0, simTime = 0, lastBumpSnd = -9;
 const CAP = 80;
 const SPECIES = [1, 4, 7, 25, 39, 52, 54, 58, 94, 129, 132, 133, 143, 175, 194, 258, 255, 393, 446, 447, 495, 650, 656, 728];
 
@@ -622,6 +626,7 @@ function spawnPoke(fromAuto) {
     hopT: 0, hopDur: 0.5, hopAmp: 0,
     slideT: -1, slideDur: 1, sx: x, sz: z, tx: x, tz: z,
     idleT: rand(2.5, 8), wanderT: rand(4, 11),
+    uid: ++pokeUid, mode: 'free', dizzyT: 0,
     born: performance.now()
   };
   mesh.userData.poke = p;
@@ -641,6 +646,8 @@ function removePoke(p) {
 function clearRoom() {
   while (pokes.length) removePoke(pokes[pokes.length - 1]);
   hearts.length = 0;
+  scuffles.length = 0;
+  pairState.clear();
   setAuto(false);
   updateHUD();
 }
@@ -657,33 +664,48 @@ function updatePoke(p, dt, t) {
   if (p.popT < 1) p.popT = Math.min(1, p.popT + dt / 0.3);
   const pe = p.popT;
   const popScale = pe >= 1 ? 1 : (1 + 2.7 * Math.pow(pe - 1, 3) + 1.7 * Math.pow(pe - 1, 2)); // easeOutBack-ish
-  // slide (wander)
+  // slide (wander) — free pokes only; scuffles and dizzy spells drive the rest
   let lift = 0;
-  if (p.slideT >= 0) {
-    p.slideT += dt / p.slideDur;
-    if (p.slideT >= 1) {
-      p.slideT = -1;
-      p.x = p.tx; p.z = p.tz;
+  if (p.mode === 'free') {
+    if (p.slideT >= 0) {
+      p.slideT += dt / p.slideDur;
+      if (p.slideT >= 1) {
+        p.slideT = -1;
+        p.x = p.tx; p.z = p.tz;
+      } else {
+        const e = p.slideT * (2 - p.slideT);
+        p.x = lerp(p.sx, p.tx, e);
+        p.z = lerp(p.sz, p.tz, e);
+        lift += Math.sin(p.slideT * Math.PI) * 0.07;
+        p.group.rotation.z = Math.sin(p.slideT * Math.PI) * 0.07 * (p.tx >= p.sx ? -1 : 1);
+        turnToward(p, Math.atan2(p.tx - p.sx, p.tz - p.sz), dt * 5);
+      }
     } else {
-      const e = p.slideT * (2 - p.slideT);
-      p.x = lerp(p.sx, p.tx, e);
-      p.z = lerp(p.sz, p.tz, e);
-      lift += Math.sin(p.slideT * Math.PI) * 0.07;
-      p.group.rotation.z = Math.sin(p.slideT * Math.PI) * 0.07 * (p.tx >= p.sx ? -1 : 1);
-    }
-  } else {
-    p.group.rotation.z *= 0.8;
-    p.wanderT -= dt;
-    if (p.wanderT <= 0) {
-      p.wanderT = rand(5, 12);
-      if (Math.random() < 0.4) {
-        p.sx = p.x; p.sz = p.z;
-        p.tx = clamp(p.x + rand(-1.2, 1.2), FLOOR.xMin, FLOOR.xMax);
-        p.tz = clamp(p.z + rand(-1.0, 1.0), FLOOR.zMin, FLOOR.zMax);
-        p.slideDur = rand(1.1, 1.6);
-        p.slideT = 0;
+      p.group.rotation.z *= 0.8;
+      p.wanderT -= dt;
+      if (p.wanderT <= 0) {
+        p.wanderT = rand(5, 12);
+        if (Math.random() < 0.45) {
+          p.sx = p.x; p.sz = p.z;
+          // often stroll over to a neighbour — that's how meetings (and bumps) happen
+          let gx = null, gz = null;
+          if (pokes.length > 1 && Math.random() < 0.55) {
+            const others = pokes.filter(o => o !== p);
+            const q = others.length ? pick(others) : null;
+            if (q) { const a = rand(0, Math.PI * 2), d = rand(0.5, 0.85); gx = q.x + Math.cos(a) * d; gz = q.z + Math.sin(a) * d; }
+          }
+          p.tx = clamp(gx !== null ? gx : p.x + rand(-1.2, 1.2), FLOOR.xMin, FLOOR.xMax);
+          p.tz = clamp(gz !== null ? gz : p.z + rand(-1.0, 1.0), FLOOR.zMin, FLOOR.zMax);
+          p.slideDur = rand(1.1, 1.6);
+          p.slideT = 0;
+        }
       }
     }
+  } else if (p.mode === 'dizzy') {
+    p.dizzyT -= dt;
+    p.group.rotation.y += dt * 7;
+    p.group.rotation.z = Math.sin(p.dizzyT * 10) * 0.16;
+    if (p.dizzyT <= 0) { p.mode = 'free'; p.group.rotation.z = 0; p.wanderT = rand(3, 6); }
   }
   // hops
   if (p.hopT > 0) {
@@ -694,7 +716,7 @@ function updatePoke(p, dt, t) {
     p.idleT -= dt;
     if (p.idleT <= 0) {
       p.idleT = rand(3, 9);
-      if (Math.random() < 0.3) { p.hopDur = 0.45; p.hopAmp = 0.09; p.hopT = p.hopDur; }
+      if (p.mode === 'free' && Math.random() < 0.3) { p.hopDur = 0.45; p.hopAmp = 0.09; p.hopT = p.hopDur; }
     }
   }
   const bob = Math.sin(t * 0.0022 + p.bobPh) * p.bobAmp;
@@ -721,6 +743,135 @@ function petPoke(p) {
   sndChirp(p.id, 0.15);
 }
 
+/* ====================== bumps + play-fights ======================
+   Deployed pokémon stroll over to each other; when two meet they BUMP
+   (bounce apart, star sparks, thud). Bump the same neighbour twice in a
+   few seconds — or just get unlucky — and a play-fight breaks out:
+   they square up, trade three lunges with star bursts, and the loser
+   ends up dizzy while the winner hops. No HP, no fainting — roughhousing. */
+function turnToward(p, target, maxStep) {
+  let d = target - p.group.rotation.y;
+  while (d > Math.PI) d -= Math.PI * 2;
+  while (d < -Math.PI) d += Math.PI * 2;
+  p.group.rotation.y += clamp(d, -maxStep, maxStep);
+}
+function pokeRadius(p) { const rec = geoms.get(p.id); return clamp((rec ? rec.width : 0.8) * p.scaleT * 0.40, 0.20, 0.62); }
+function pairOf(a, b) {
+  const k = a.uid < b.uid ? a.uid + ':' + b.uid : b.uid + ':' + a.uid;
+  let s = pairState.get(k);
+  if (!s) { s = { cdUntil: 0, heat: 0, heatUntil: 0 }; pairState.set(k, s); }
+  return s;
+}
+function fxAt(x, y, z, n, s) {
+  _pv.set(x, y, z).project(camera);
+  spawnStarsAt((_pv.x * 0.5 + 0.5) * W, (_pv.y * -0.5 + 0.5) * H, n, s);
+}
+function doBump(a, b, dx, dz, dist) {
+  const ps = pairOf(a, b);
+  const overlap = (pokeRadius(a) + pokeRadius(b)) - dist;
+  const nx = dx / (dist || 1), nz = dz / (dist || 1);
+  for (const [p, sgn] of [[a, -1], [b, 1]]) {
+    p.x = clamp(p.x + nx * sgn * (overlap / 2 + 0.02), FLOOR.xMin, FLOOR.xMax);
+    p.z = clamp(p.z + nz * sgn * (overlap / 2 + 0.02), FLOOR.zMin, FLOOR.zMax);
+    p.slideT = -1;
+    if (p.hopT <= 0) { p.hopDur = 0.4; p.hopAmp = 0.15; p.hopT = p.hopDur; }
+    p.group.position.set(p.x, 0, p.z);
+  }
+  bumpCount++;
+  fxAt((a.x + b.x) / 2, 0.55, (a.z + b.z) / 2, 3, 1);
+  if (simTime - lastBumpSnd > 0.15) { lastBumpSnd = simTime; sndThud(); }
+  ps.cdUntil = simTime + 1.0;
+  if (simTime > ps.heatUntil) ps.heat = 0;
+  ps.heat++; ps.heatUntil = simTime + 6;
+  if ((ps.heat >= 2 || Math.random() < 0.22) && scuffles.length < 2) { ps.heat = 0; startScuffle(a, b); }
+}
+function startScuffle(a, b) {
+  if (!a || !b || a === b || a.mode !== 'free' || b.mode !== 'free') return false;
+  a.mode = b.mode = 'scuffle';
+  a.slideT = b.slideT = -1;
+  scuffles.push({ a, b, phase: 'face', phaseT: 0, atk: Math.random() < 0.5 ? a : b, lunges: 0, fx: 0, fz: 0, tx: 0, tz: 0, lx: 0, lz: 0 });
+  scuffleCount++;
+  return true;
+}
+function faceEach(s) {
+  turnToward(s.a, Math.atan2(s.b.x - s.a.x, s.b.z - s.a.z), 0.3);
+  turnToward(s.b, Math.atan2(s.a.x - s.b.x, s.a.z - s.b.z), 0.3);
+}
+function scuffleHop(p) { if (p.hopT <= 0) { p.hopDur = 0.3; p.hopAmp = 0.12; p.hopT = p.hopDur; } }
+function updateScuffle(s, dt) {
+  s.phaseT += dt;
+  if (s.phase === 'face') {
+    faceEach(s);
+    if (s.phaseT > 0.35) { s.phase = 'windup'; s.phaseT = 0; scuffleHop(s.atk); }
+    return;
+  }
+  const atk = s.atk, def = atk === s.a ? s.b : s.a;
+  if (s.phase === 'windup') {
+    faceEach(s);
+    if (s.phaseT >= 0.22) {
+      const dx = def.x - atk.x, dz = def.z - atk.z, d = Math.hypot(dx, dz) || 1;
+      const stop = pokeRadius(atk) + pokeRadius(def) + 0.02;
+      s.fx = atk.x; s.fz = atk.z;
+      s.tx = def.x - (dx / d) * stop; s.tz = def.z - (dz / d) * stop;
+      s.lx = s.tx; s.lz = s.tz;
+      s.phase = 'lunge'; s.phaseT = 0;
+    }
+    return;
+  }
+  if (s.phase === 'lunge') {
+    const k = Math.min(1, s.phaseT / 0.16), e = k * k;
+    atk.x = lerp(s.fx, s.tx, e); atk.z = lerp(s.fz, s.tz, e);
+    atk.group.position.set(atk.x, 0, atk.z);
+    if (k >= 1) {
+      fxAt(s.lx, 0.6, s.lz, 6, 1.1);
+      sndThud(); sndChirp(atk.id, 0.10);
+      const dx = def.x - atk.x, dz = def.z - atk.z, d = Math.hypot(dx, dz) || 1;
+      def.x = clamp(def.x + (dx / d) * 0.3, FLOOR.xMin, FLOOR.xMax);
+      def.z = clamp(def.z + (dz / d) * 0.3, FLOOR.zMin, FLOOR.zMax);
+      def.group.position.set(def.x, 0, def.z);
+      if (def.hopT <= 0) { def.hopDur = 0.38; def.hopAmp = 0.17; def.hopT = def.hopDur; }
+      s.lunges++; s.phase = 'pause'; s.phaseT = 0;
+    }
+    return;
+  }
+  if (s.phase === 'pause') {
+    faceEach(s);
+    if (s.phaseT >= 0.26) {
+      if (s.lunges >= 3) endScuffle(s);
+      else { s.atk = def; s.phase = 'windup'; s.phaseT = 0; scuffleHop(s.atk); }
+    }
+  }
+}
+function endScuffle(s) {
+  const loser = Math.random() < 0.5 ? s.a : s.b;
+  const winner = loser === s.a ? s.b : s.a;
+  loser.mode = 'dizzy'; loser.dizzyT = 1.6;
+  fxAt(loser.x, 1.05 * loser.scaleT, loser.z, 3, 1);
+  winner.mode = 'free'; winner.wanderT = rand(2, 4);
+  winner.hopDur = 0.55; winner.hopAmp = 0.3; winner.hopT = winner.hopDur;
+  sndChirp(winner.id, 0.12);
+  const ps = pairOf(s.a, s.b); ps.cdUntil = simTime + 8; ps.heat = 0;
+  const i = scuffles.indexOf(s); if (i >= 0) scuffles.splice(i, 1);
+}
+function updateInteractions(dt) {
+  for (let i = scuffles.length - 1; i >= 0; i--) updateScuffle(scuffles[i], dt);
+  if (pokes.length < 2) return;
+  for (let i = 0; i < pokes.length; i++) {
+    const a = pokes[i]; if (a.mode !== 'free') continue;
+    for (let j = i + 1; j < pokes.length; j++) {
+      const b = pokes[j]; if (b.mode !== 'free') continue;
+      const dx = b.x - a.x, dz = b.z - a.z;
+      const rr = pokeRadius(a) + pokeRadius(b);
+      if (dx * dx + dz * dz < rr * rr) {
+        const ps = pairOf(a, b);
+        if (simTime < ps.cdUntil) continue;
+        doBump(a, b, dx, dz, Math.sqrt(dx * dx + dz * dz));
+        if (a.mode !== 'free') break; // a got pulled into a scuffle
+      }
+    }
+  }
+}
+
 /* ============================== hearts (fx overlay) ============================== */
 function spawnHeartsAt(sx, sy, n, s) {
   for (let i = 0; i < n; i++) {
@@ -739,6 +890,35 @@ function updateHearts(dt) {
     h.life += dt; h.x += h.vx * dt; h.y += h.vy * dt; h.vy -= 6 * dt;
     if (h.life >= h.max) hearts.splice(i, 1);
   }
+}
+function spawnStarsAt(sx, sy, n, s) {
+  for (let i = 0; i < n; i++) {
+    hearts.push({
+      kind: 'star',
+      x: sx + rand(-14, 14) * (s || 1),
+      y: sy + rand(-8, 8),
+      vx: rand(-26, 26), vy: rand(-64, -26),
+      life: 0, max: rand(0.5, 0.85),
+      size: rand(8, 13) * (s || 1), rot: rand(0, Math.PI)
+    });
+  }
+}
+function drawStar(h) {
+  const a = clamp(1 - h.life / h.max, 0, 1);
+  const s = h.size * (0.6 + 0.4 * (h.life / h.max));
+  fctx.save();
+  fctx.translate(h.x, h.y);
+  fctx.rotate((h.rot || 0) + h.life * 3);
+  fctx.scale(s / 10, s / 10);
+  fctx.fillStyle = 'rgba(255,196,64,' + (a * 0.95) + ')';
+  fctx.beginPath();
+  for (let i = 0; i < 8; i++) {
+    const ang = (i / 8) * Math.PI * 2, r = i % 2 ? 4 : 10;
+    const px = Math.cos(ang) * r, py = Math.sin(ang) * r;
+    if (i === 0) fctx.moveTo(px, py); else fctx.lineTo(px, py);
+  }
+  fctx.closePath(); fctx.fill();
+  fctx.restore();
 }
 function drawHeart(h) {
   const a = clamp(1 - h.life / h.max, 0, 1);
@@ -840,12 +1020,14 @@ function frame(t) {
   }
   updateLightMatch(t, dt);
   if (started) {
+    simTime += dt;
     for (const p of pokes) updatePoke(p, dt, t);
+    updateInteractions(dt);
     updateHearts(dt);
   }
   if (renderer) renderer.render(scene, camera);
   fctx.clearRect(0, 0, W, H);
-  for (const h of hearts) drawHeart(h);
+  for (const h of hearts) { if (h.kind === 'star') drawStar(h); else drawHeart(h); }
 }
 
 /* ============================== start flow ============================== */
@@ -899,6 +1081,20 @@ window.__poke = {
   get loaded() { return loadedIds.length; },
   get hearts() { return hearts.length; },
   pokes,
+  get bumps() { return bumpCount; },
+  get scuffleCount() { return scuffleCount; },
+  get liveScuffles() { return scuffles.length; },
+  clash: (i, j) => startScuffle(pokes[i], pokes[j]),
+  gather: () => {
+    let k = 0;
+    for (const p of pokes) {
+      const a = (k++) * 2.4;
+      p.x = clamp(Math.cos(a) * 0.55, FLOOR.xMin, FLOOR.xMax);
+      p.z = clamp(-4 + Math.sin(a) * 0.55, FLOOR.zMin, FLOOR.zMax);
+      p.slideT = -1;
+      p.group.position.set(p.x, 0, p.z);
+    }
+  },
   spawn: () => spawnPoke(false),
   clearRoom, setAuto,
   petAt: (i) => { if (pokes[i]) petPoke(pokes[i]); },
