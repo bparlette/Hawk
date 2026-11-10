@@ -61,9 +61,14 @@ import { ARENA_INFO } from './src/arenas.js';
 import { Sfx } from './src/audio.js';
 import { hitstopFor, goalTension, moodFor } from './src/feel.js';
 import { Recorder, Replay } from './src/replay.js';
+import { applySnapshot, RemoteInterpolator } from './src/net.js';
 import { TouchController, isTouchDevice } from './vendor/gptouch.js';
 
 const Q = new URLSearchParams(location.search), AUTO = Q.get('auto') === '1' || Q.get('spectate') === '1', $ = (id) => document.getElementById(id);
+// Server URL configurable in one place in the client (?server=... or default localhost)
+export const SERVER_URL = (typeof window !== 'undefined' && window.__BBA_SERVER_URL) || Q.get('server') || 'ws://localhost:2567';
+const ROOM_CODE = Q.get('room') || null;
+let netWs = null, netSeat = 0, interpolator = new RemoteInterpolator();
 const view = new View($('c'), CFG), sfx = new Sfx();
 const clamp = (v, a, b) => Math.max(a, Math.min(b, v)), wrap = (a) => Math.atan2(Math.sin(a), Math.cos(a));
 // Season ladder: themed AI teams; the weight-class mix and bot skill are the difficulty curve.
@@ -211,6 +216,38 @@ function frame(now) {
 }
 window.__replayInfo = () => ({ active: !!rep, shown: repShown.size, t: repT, state: game.state, ticks: game.ticks, score: game.score.join('-') }); // test hook, like __game / __view
 applyStyle(set.style); newMatch();
+
+function setupMultiplayer() {
+  if (!ROOM_CODE && !Q.get('server')) return;
+  try {
+    netWs = new WebSocket(SERVER_URL);
+    netWs.onopen = () => {
+      netWs.send(JSON.stringify({ type: 'join', room: ROOM_CODE }));
+    };
+    netWs.onmessage = (ev) => {
+      try {
+        const msg = JSON.parse(ev.data);
+        if (msg.type === 'init') {
+          netSeat = msg.seat;
+          if (msg.snapshot) applySnapshot(game, msg.snapshot);
+        } else if (msg.type === 'snapshot') {
+          // Desync detector: check digest and resync
+          if (game.digest() !== msg.digest) {
+            applySnapshot(game, msg);
+          }
+          // Update remote targets for interpolation
+          if (msg.cars) {
+            msg.cars.forEach(c => interpolator.updateTarget(c.index, c));
+          }
+        }
+      } catch (err) {}
+    };
+  } catch (err) {
+    console.warn('Multiplayer server unavailable, falling back to local play:', err);
+  }
+}
+setupMultiplayer();
+
 // ?ff=N fast-forwards N ticks before the first frame (?ff=goal: to just after the next goal; ?ff=hot: to a full-heat ball). For screenshots and capture.
 if (Q.get('ff')) { const ff = Q.get('ff'), run = () => tickGame(readHumans());
   if (ff === 'goal') { for (let i = 0; i < 60 * 600 && game.state !== 'goal'; i++) run(); for (let i = 0; i < 20; i++) { run(); view.banner = 1; } }
