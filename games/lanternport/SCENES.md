@@ -1,0 +1,57 @@
+# Lanternport — staged scenes for Shorts: status & how to add one
+
+The point of this file: anyone picking up Lanternport can see in one page what
+filming infrastructure exists, which scenes are built, and exactly how to add
+the next one. Scene specs live in the gamepress repo at
+`docs/fable-prompts/lanternport-refs/<folder>/` (SPEC.md + key stills); the
+build brief is `docs/fable-prompts/fablego.md` in the same repo.
+
+## Filming kit (built, tested)
+
+- **Capture camera** (`capture.js`, wired in `index.html`): freecam (P toggles,
+  drag orbit / Shift-drag pan / WASD fly / wheel dolly, touch orbit + pinch),
+  drift-free timescale 0.25 / 0.5 / 1 / 2 ([ and ] step), 9:16 guide overlay
+  (G), hide-HUD (U). URL: `?freecam=1&ts=0.25&guide=1&hud=0`. State for the
+  external recorder is on `window.__dbg` (freecam, timescale, bookmark, tick,
+  digest, scene).
+- **Digest parity is proven**: `test/lanternport-capture.test.mjs` plays the
+  bot at every timescale and odd frame rates and requires an identical sim
+  digest at every tick. Slow motion cannot change the game.
+- **Scene staging** (`scenes.js`): open `?scene=<id>&seed=<n>` and the scene
+  plays itself deterministically and loops. Number keys **1–8** jump the
+  freecam to `SCENES[n]`'s staged bookmark framing. The scene's event log
+  (name + tick) is on `window.__dbg.scene.events` so a recorder can align
+  captions and cuts. Contract: scenes use only game state + the seeded RNG —
+  no Math.random, no wall clock — and `test/lanternport-scenes.test.mjs`
+  proves determinism + timescale parity for every registered scene.
+
+## How to add a scene
+
+1. Read the scene's SPEC.md and look at its KEY STILLS (gamepress,
+   `docs/fable-prompts/lanternport-refs/`).
+2. Add a definition to `SCENES` in `games/lanternport/scenes.js`: id, title,
+   duration in ticks (30 = 1 s), the bookmark framing that matches the spec's
+   pinned frame, an `input(game, bot, state, tick)` driver (the Bot's
+   walk/drive helpers are the movement primitives), and `events` for the
+   beats a recorder needs.
+3. Add nothing to the determinism tests — they iterate the whole registry.
+   Run `node --test test/lanternport-scenes.test.mjs test/lanternport-capture.test.mjs test/lanternport.test.mjs test/lanternport-pass3.test.mjs`.
+4. Film it: `?scene=<id>&guide=1`, press its number key for the framing,
+   record, done. Update the table below.
+
+## Scene slate
+
+| # | id | spec folder (gamepress) | status |
+|---|----|------------------------|--------|
+| — | `stage-test` | — (framework proof, not a film scene) | ✅ built |
+| 1 | `rooftop-pool` | `03-rooftop-pool` | ⏳ awaiting builder |
+| 2 | `mugshot-flash` | `01-mugshot-flash` | ⏳ awaiting builder |
+| 3 | `gator-store` | `06-gator-store` | ⏳ awaiting builder |
+| 4 | `hammer-neighbor` | `09-hammer-neighbor` | ⏳ awaiting builder |
+| 5 | `plaza-takeover` | `04-cartop-dance` + `17-donut-takeover` | ⏳ awaiting builder |
+| 6 | `release-morning` | `02-gate-shrug` | ⏳ awaiting builder |
+| 7 | `marsh-skiff-run` | `18-marsh-airboat` | ⏳ awaiting builder |
+| 8 | `cucco-swarm` | specced inline in fablego.md | ⏳ awaiting builder |
+
+The town re-dress to the pack's Look (gamepress `00-city-look`) is also still
+to do — it is dressing work in `view.js`/`fx.js`, independent of the scenes.
