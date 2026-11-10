@@ -38,6 +38,7 @@ const DEFS = {
 
   midway: { name: 'THE MIDWAY', blurb: 'Round fairground floor built around a carousel', theme: 'midway', surface: 'asphalt', w: 1900, h: 1400, L: 150, R: 1750, goalHalf: 116,
     top: (a) => arc(a.cx, a.cy, 1, P, 2 * P, 22).slice(1, -1).map(([x, y]) => [a.cx + (x - a.cx) * 800, a.cy + (y - a.cy) * 640]).filter(([x, y]) => !(Math.abs(y - a.cy) < 170 && (x < 230 || x > 1670))),
+    kick: [950, 470],                                                                      // the carousel owns the centre spot
     obstacles: [{ kind: 'carousel', x: 950, y: 700, r: 130, mirror: false }, { kind: 'bollard', x: 950, y: 440, r: 16 }, { kind: 'bollard', x: 690, y: 700, r: 16 }, { kind: 'booth', x: 560, y: 300, w: 110, h: 80, angle: 0.7 }],
     spawns: [['light', 560, -90], ['heavy', 360, 90]], items: [[950, 250], [520, 880]], pads: [[820, 80, 1080, 150, 1]], pylons: [[640, 480], [1260, 480]] },
 };
@@ -59,6 +60,7 @@ export function buildArena(id = 'rink', netDepth = 88) {
   a.obstacles = both(d.obstacles, (o, m) => ({ ...o, x: m ? a.w - o.x : o.x, y: m ? a.h - o.y : o.y, angle: (o.angle || 0) + (m ? P : 0) }));
   a.pits = both(d.pits, (o, m) => ({ ...o, x: m ? a.w - o.x : o.x, y: m ? a.h - o.y : o.y }));
   a.sweepers = both(d.sweepers, (o, m) => ({ ...o, x: m ? a.w - o.x : o.x, y: m ? a.h - o.y : o.y, r: 16 }));
+  a.kick = d.kick ? [d.kick, [a.w - d.kick[0], a.h - d.kick[1]]] : [[a.cx, a.cy], [a.cx, a.cy]]; // ball spot; alternates each face-off when it is off-centre
   a.spawns = d.spawns.map(([cls, x, dy]) => ({ cls, x, y: dy }));                                     // team 0; y is relative to the centre line
   a.items = (d.items || []).flatMap(([x, y]) => [[x, y], [a.w - x, a.h - y]]);                          // boxes alternate between pair 0 and pair 1
   a.items = [a.items[0], a.items[1], a.items[2], a.items[3]];

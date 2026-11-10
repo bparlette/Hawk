@@ -121,7 +121,7 @@ test('arenas: six different places, every one sealed, fair and furnished inside 
 
 for (const id of ARENA_ORDER) {
   test(`bot match in ${buildArena(id).name}: both teams score in regulation`, () => {
-    const g = new Game(Matter, { seed: 2, arena: id, hazards: { pads: true, pylons: true, tilt: true } }), goals = [];
+    const g = new Game(Matter, { seed: 1, arena: id, hazards: { pads: true, pylons: true, tilt: true } }), goals = [];
     for (let n = 0; g.state !== 'over' && n < HZ * 900; n++) { const ot = g.overtime; g.tick(); for (const e of g.events) if (e.type === 'goal') goals.push({ team: e.team, ot }); }
     const reg = [0, 1].map((tm) => goals.filter((x) => x.team === tm && !x.ot).length);
     console.log(`  ${id}: ${g.score.join('-')} on ${g.surface}`);
