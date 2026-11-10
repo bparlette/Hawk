@@ -60,6 +60,7 @@ import { STYLES, STYLE_ORDER } from './src/styles.js';
 import { ARENA_INFO } from './src/arenas.js';
 import { Sfx } from './src/audio.js';
 import { hitstopFor, goalTension, moodFor } from './src/feel.js';
+import { Recorder, Replay } from './src/replay.js';
 import { TouchController, isTouchDevice } from './vendor/gptouch.js';
 
 const Q = new URLSearchParams(location.search), AUTO = Q.get('auto') === '1' || Q.get('spectate') === '1', $ = (id) => document.getElementById(id);
@@ -75,6 +76,8 @@ if (Q.get('hazards')) { const h = Q.get('hazards'); set.hazards = { pads: h === 
 if (!STYLES[set.style]) set.style = 'fairground'; if (!CFG.surfaces[set.surface]) set.surface = 'asphalt';
 let stage = Math.min(LADDER.length - 1, store.get('bba-season', 0));
 let game, started = AUTO || Q.get('autostart') === '1' || !!Q.get('ff'), seed = +(Q.get('seed') || 0) || (Date.now() % 100000) + 1, goT = 0, p2Joined = false, result = {};
+// goal replay: the live match's human inputs are recorded per tick; a second Game re-simulates the last seconds from them (src/replay.js)
+const REPLAYS = Q.get('replay') !== '0', rec = new Recorder(), repShown = new Set(); let matchOpts = null, rep = null, repPre = null, repT = 0, padHeld = false;
 const P2_CAR = Q.get('p2') === 'versus' ? 2 : 1; // second pad: same team by default, ?p2=versus to play against Player 1
 
 function applyStyle(id) { // style packs switch at runtime: renderer + UI theme variables
@@ -93,6 +96,7 @@ function syncMenu() {
 function newMatch() {
   const opts = { seed, seconds: +(Q.get('secs') || 0) || undefined, arena: set.arena, surface: set.surface, hazards: set.hazards };
   if (set.mode === 'season' && !AUTO) { opts.teams = [['light', 'heavy'], LADDER[stage].teams]; opts.skill = [0.8, LADDER[stage].skill]; }
+  matchOpts = opts; rec.reset(); repShown.clear(); rep = repPre = null;
   game = new Game(Matter, opts); window.__game = game; window.__view = view; seed++; result = {}; view.banner = 0;
 }
 $('menu').addEventListener('click', (e) => {
@@ -119,7 +123,7 @@ addEventListener('resize', () => view.resize()); addEventListener('orientationch
 
 // ---- input: keyboard + gamepad + touch (gamepress standard: floating stick on the left half, round buttons bottom right)
 const keys = new Set();
-addEventListener('keydown', (e) => { keys.add(e.code); if (['Space', 'ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight', 'Tab'].includes(e.code)) e.preventDefault(); sfx.unlock();
+addEventListener('keydown', (e) => { if (!e.repeat) skipReplay(); keys.add(e.code); if (['Space', 'ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight', 'Tab'].includes(e.code)) e.preventDefault(); sfx.unlock();
   if (e.code === 'KeyM') sfx.muted = !sfx.muted; if (e.code === 'KeyV') applyStyle(STYLE_ORDER[(STYLE_ORDER.indexOf(set.style) + 1) % STYLE_ORDER.length]);
   if (e.code === 'Equal' || e.code === 'NumpadAdd') view.zoomBy(1.25); if (e.code === 'Minus' || e.code === 'NumpadSubtract') view.zoomBy(1 / 1.25);
   if (e.code === 'Enter' && !started) $('start').click(); else if ((e.code === 'Enter' || e.code === 'Space') && game.state === 'over' && overT > 1.2) toMenu(); });
@@ -134,7 +138,7 @@ function startTouch() {
   TC = new TouchController({ buttons: [{ id: 'a', label: '⚡', size: 84 }, { id: 'b', label: '★', size: 66 }, { id: 'c', label: '◀', size: 58 }, { id: 'd', label: '▶', size: 58 }], maxRadius: 58, deadzone: 0.16 });
 }
 function stopTouch() { if (TC) { TC.destroy(); TC = null; } }
-addEventListener('pointerdown', (e) => { sfx.unlock(); if (started && game.state === 'over' && overT > 1.2 && !e.target.closest('#gear, #zoomctl')) toMenu(); }, true);
+addEventListener('pointerdown', (e) => { skipReplay(); sfx.unlock(); if (started && game.state === 'over' && overT > 1.2 && !e.target.closest('#gear, #zoomctl')) toMenu(); }, true);
 const has = (...c) => c.some((k) => keys.has(k));
 function padInput(pad) {
   const dz = (v) => (Math.abs(v) < 0.16 ? 0 : v), b = (i) => !!pad.buttons[i]?.pressed, val = (i) => pad.buttons[i]?.value || 0;
@@ -174,26 +178,41 @@ function sounds() {
     }
   }
 }
+function tickGame(humans) { rec.record(game.ticks, humans); game.tick(humans); view.onEvents(game.events, game); for (const e of game.events) if (e.type === 'go') rec.markGo(game.ticks); }
+function clearFx() { view.sparks = []; view.rings = []; view.pops = []; view.flash = null; view.banner = 0; view.trauma.v = 0; }
+const padDown = () => (navigator.getGamepads ? [...navigator.getGamepads()].some((p) => p && p.buttons.some((b) => b.pressed)) : false);
+function startReplay() { // called once per goal, at the end of the celebration and before the face-off
+  repShown.add(game.lastGoal.tick); if (!repPre || repPre.goalTick !== game.lastGoal.tick) repPre = new Replay(Game, Matter, matchOpts, rec, game.lastGoal.tick);
+  repPre.seek(); rep = repPre; repPre = null; repT = 0; hold = 0; padHeld = padDown(); clearFx();
+}
+function endReplay() { rep = null; acc = 0; clearFx(); }
+function skipReplay() { if (rep && repT > 0.25) rep.skip(); }   // any key / tap / pad button (the quarter second guards against a held key)
 function step() {
-  if (!started) return;
-  game.tick(readHumans()); view.onEvents(game.events, game); sounds(); hold = Math.max(hold, hitstopFor(game.events) / 1000);
+  if (!started || rep) return;
+  if (REPLAYS && game.state === 'goal' && game.timer <= 1 && game.lastGoal && !repShown.has(game.lastGoal.tick)) { startReplay(); return; }
+  tickGame(readHumans()); sounds(); hold = Math.max(hold, hitstopFor(game.events) / 1000);
   const me = game.cars[0]; if (me.turboOn && !wasTurbo) sfx.turbo(); wasTurbo = me.turboOn;
 }
 function frame(now) {
   const dt = Math.min((now - last) / 1000, 0.1); last = now; let n = 0;
-  if (hold > 0) hold -= dt; else { acc += dt; while (acc >= 1 / HZ && n < 4) { step(); acc -= 1 / HZ; n++; if (hold > 0) break; } if (n === 4) acc = 0; }  // hitstop freezes the picture for 40-80 ms
+  if (rep) { repT += dt; const d = padDown(); if (d && !padHeld) skipReplay(); padHeld = d; rep.update(dt); view.onEvents(rep.events, rep.game); if (rep.done) endReplay(); }
+  else if (hold > 0) hold -= dt; else { acc += dt; while (acc >= 1 / HZ && n < 4) { step(); acc -= 1 / HZ; n++; if (hold > 0) break; } if (n === 4) acc = 0; }  // hitstop freezes the picture for 40-80 ms
   goT = Math.max(0, goT - dt); overT = game.state === 'over' ? overT + dt : 0;
   const me = game.cars[0], v = Matter.Body.getVelocity(me.body), players = AUTO ? {} : { 0: 'P1' }; if (p2Joined) players[P2_CAR] = 'P2';
-  const live = started && game.state !== 'over', A = game.arena, cr = Math.cos(-view.rot), sr = Math.sin(-view.rot), M = AUTO ? { x: A.cx, y: A.cy } : me.body.position;
+  if (REPLAYS && started && !rep && game.state === 'goal' && game.lastGoal && !repShown.has(game.lastGoal.tick)) { // build the clip's start state a little each frame during the celebration, so nothing stalls
+    if (!repPre || repPre.goalTick !== game.lastGoal.tick) repPre = new Replay(Game, Matter, matchOpts, rec, game.lastGoal.tick); repPre.seek(400); }
+  const live = started && game.state !== 'over' && !rep, A = game.arena, cr = Math.cos(-view.rot), sr = Math.sin(-view.rot), M = AUTO ? { x: A.cx, y: A.cy } : me.body.position;
   sfx.setEngines(game.cars.map((c) => { const cv = Matter.Body.getVelocity(c.body), dx = c.body.position.x - M.x, dy = c.body.position.y - M.y, d = Math.hypot(dx, dy);
     return { speed: Math.min(1.4, Math.hypot(cv.x, cv.y) / c.cls.maxSpeed), turbo: c.turboOn, vol: live ? (c === me && !AUTO ? 1 : Math.max(0.12, 1 - d / (A.w * 0.75)) * 0.8) : 0, pan: Math.max(-1, Math.min(1, (dx * cr - dy * sr) / (A.w * 0.35))), pitch: PITCH[c.clsName] || 1 }; }));
-  sfx.setTension(started ? goalTension(game) : 0, started && game.state === 'play'); sfx.setMood(moodFor(game, started));
-  view.draw(game, started ? acc * HZ : 1, dt, { car: AUTO ? null : me, players, goT, ...result });
+  sfx.setTension(started && !rep ? goalTension(game) : 0, started && !rep && game.state === 'play'); sfx.setMood(moodFor(game, started));
+  if (rep) view.draw(rep.game, rep.acc * HZ, dt, { car: AUTO ? null : rep.game.cars[0], players, goT: 0, replay: { k: rep.progress, t: repT, team: game.lastGoal.team }, ...result });
+  else view.draw(game, started ? acc * HZ : 1, dt, { car: AUTO ? null : me, players, goT, ...result });
   requestAnimationFrame(frame);
 }
+window.__replayInfo = () => ({ active: !!rep, shown: repShown.size, t: repT, state: game.state, ticks: game.ticks, score: game.score.join('-') }); // test hook, like __game / __view
 applyStyle(set.style); newMatch();
 // ?ff=N fast-forwards N ticks before the first frame (?ff=goal: to just after the next goal; ?ff=hot: to a full-heat ball). For screenshots and capture.
-if (Q.get('ff')) { const ff = Q.get('ff'), run = () => { game.tick(readHumans()); view.onEvents(game.events, game); };
+if (Q.get('ff')) { const ff = Q.get('ff'), run = () => tickGame(readHumans());
   if (ff === 'goal') { for (let i = 0; i < 60 * 600 && game.state !== 'goal'; i++) run(); for (let i = 0; i < 20; i++) { run(); view.banner = 1; } }
   else if (ff === 'hot') { for (let i = 0; i < 60 * 900 && !(game.ball.heat >= 1 && game.state === 'play'); i++) run(); run(); }
   else for (let i = 0; i < +ff; i++) run();
