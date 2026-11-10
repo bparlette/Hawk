@@ -170,7 +170,7 @@ const POSES = { // [pitch, squash, arms up, tuck]
 };
 const SPINS = { tripleJump: [1, 2, 35], backflip: [-1, 1, 31], sideFlip: [1, 1, 31], rollout: [1, 1, 15] };
 export const LOOKS = [
-  { coat: 0x7d3fa0, trim: 0xf2b23a, hair: 0xd9562e, skin: 0xf6c9a0, legs: 0x35304d, tail: true },   // Juniper
+  { coat: 0x3da35d, trim: 0xf2b23a, hair: 0xeec25a, skin: 0xf6c9a0, legs: 0xefe6d0, cap: true, pointedEars: true, gear: true, iris: 0x2f6fd0 }, // Juniper
   { coat: 0x178f8a, trim: 0xf06a4a, hair: 0x2b2838, skin: 0xc98f62, legs: 0x4a3b34, goggles: true }, // Fen
 ];
 const lathe = (THREE, pts, seg = 20) => new THREE.LatheGeometry(pts.map(([r, y]) => new THREE.Vector2(r, y)), seg);
@@ -191,9 +191,10 @@ export class HeroView {
     const hair = part(this.head, new THREE.SphereGeometry(0.305, 20, 14, 0, Math.PI * 2, 0, Math.PI * 0.56), hairM, 0, 0.03, -0.035); hair.rotation.x = -0.38;
     for (const [x, r] of [[-0.15, 0.5], [0, 0.1], [0.14, -0.45]]) { const f = part(this.head, new THREE.ConeGeometry(0.09, 0.2, 8), hairM, x, 0.22, 0.2, 0.012); f.rotation.set(2.5, 0, r); }
     for (const s of [-1, 1]) {
-      part(this.head, new THREE.SphereGeometry(0.06, 10, 8), skin, 0.275 * s, 0.0, 0.0, 0).scale.set(0.5, 1, 0.8);                               // ear
+      if (look.pointedEars) { const ear = part(this.head, new THREE.ConeGeometry(0.052, 0.34, 8), skin, 0.35 * s, 0.09, -0.01, 0); ear.rotation.set(-0.18, 0, -1.12 * s); ear.scale.set(1, 1, 0.55); } // long pointed ear
+      else part(this.head, new THREE.SphereGeometry(0.06, 10, 8), skin, 0.275 * s, 0.0, 0.0, 0).scale.set(0.5, 1, 0.8);                               // ear
       part(this.head, new THREE.SphereGeometry(0.058, 12, 10), glowMat(0xf6f2ea), 0.105 * s, 0.015, 0.243, 0).scale.set(1, 1.25, 0.5);           // eye white
-      part(this.head, new THREE.SphereGeometry(0.04, 12, 10), glowMat(look.goggles ? 0x3a2a1c : 0x2f5f4f), 0.105 * s, 0.01, 0.262, 0).scale.set(1, 1.25, 0.5);
+      part(this.head, new THREE.SphereGeometry(0.04, 12, 10), glowMat(look.iris || (look.goggles ? 0x3a2a1c : 0x2f5f4f)), 0.105 * s, 0.01, 0.262, 0).scale.set(1, 1.25, 0.5);
       part(this.head, new THREE.SphereGeometry(0.013, 6, 6), glowMat(0xffffff), 0.118 * s, 0.035, 0.283, 0);
       part(this.head, new THREE.BoxGeometry(0.085, 0.018, 0.02), hairM, 0.105 * s, 0.105, 0.262, 0).rotation.z = -0.18 * s;                       // brow
       part(this.head, new THREE.SphereGeometry(0.05, 8, 6), toon(0xff8f7a), 0.185 * s, -0.075, 0.2, 0).scale.set(1, 0.55, 0.4);                  // blush
@@ -204,9 +205,22 @@ export class HeroView {
       for (const s of [-1, 1]) { const r = part(this.head, new THREE.TorusGeometry(0.068, 0.022, 8, 16), toon(0xe0b04a), 0.1 * s, 0.2, 0.2, 0); r.rotation.x = -0.5; const l = part(this.head, new THREE.CircleGeometry(0.06, 14), glowMat(new THREE.Color(0.6, 1.3, 1.5)), 0.1 * s, 0.2, 0.205, 0); l.rotation.x = -0.5; }
       part(this.head, new THREE.TorusGeometry(0.292, 0.02, 6, 24), toon(0x3a2a1c), 0, 0.17, 0, 0).rotation.x = Math.PI / 2 - 0.12;
     }
+    if (look.cap) { const cap = part(this.head, new THREE.ConeGeometry(0.27, 0.78, 14), coat, 0, -0.04, -0.36, 0); cap.rotation.x = -2.08; } // long pointed cap, base buried in the hair, tip trailing to mid-back
     const sc = part(body, new THREE.TorusGeometry(0.19, 0.09, 10, 20), trim, 0, 1.24, 0.01); sc.rotation.x = Math.PI / 2; sc.scale.set(1, 1, 0.9);
     this.scarf = new THREE.Group(); this.scarf.position.set(0.12, 1.24, -0.18); body.add(this.scarf);
-    part(this.scarf, new THREE.BoxGeometry(0.15, 0.05, 0.62), trim, 0, 0, -0.3); part(this.scarf, new THREE.BoxGeometry(0.13, 0.05, 0.46), trim, -0.14, -0.03, -0.22).rotation.y = 0.3;
+    if (!look.cap) { part(this.scarf, new THREE.BoxGeometry(0.15, 0.05, 0.62), trim, 0, 0, -0.3); part(this.scarf, new THREE.BoxGeometry(0.13, 0.05, 0.46), trim, -0.14, -0.03, -0.22).rotation.y = 0.3; }
+    this.scarf.visible = !look.cap;
+    if (look.gear) {
+      const steel = toon(0x8296ad, { rim: 1.1 });
+      const srim = part(body, new THREE.CylinderGeometry(0.185, 0.15, 0.032, 14), trim, 0, 1.02, -0.295, 0); srim.rotation.x = Math.PI / 2 + 0.1;   // shield gold rim
+      const sface = part(body, new THREE.CylinderGeometry(0.168, 0.134, 0.05, 14), steel, 0, 1.02, -0.305, 0); sface.rotation.x = Math.PI / 2 + 0.1; // shield steel face
+      part(body, new THREE.SphereGeometry(0.05, 10, 8), trim, 0, 1.02, -0.335, 0).scale.set(1, 1, 0.5);                                            // shield boss
+      const sword = new THREE.Group(); sword.position.set(0.13, 1.12, -0.375); sword.rotation.z = -0.55; body.add(sword);
+      part(sword, new THREE.BoxGeometry(0.055, 0.6, 0.016), toon(0xc3d2e0, { rim: 1.3 }), 0, -0.05, 0, 0);                                          // blade
+      part(sword, new THREE.BoxGeometry(0.2, 0.045, 0.05), trim, 0, 0.27, 0, 0);                                                                     // crossguard
+      part(sword, new THREE.CylinderGeometry(0.028, 0.028, 0.14, 8), toon(0x2f4fa0), 0, 0.36, 0, 0);                                                // grip
+      part(sword, new THREE.SphereGeometry(0.045, 8, 8), trim, 0, 0.45, 0, 0);                                                                       // pommel
+    }
     this.arms = [-1, 1].map((s) => { const p = new THREE.Group(); p.position.set(0.255 * s, 1.12, 0); body.add(p); part(p, new THREE.CapsuleGeometry(0.068, 0.3, 6, 10), coat, 0.03 * s, -0.2, 0); part(p, new THREE.CylinderGeometry(0.08, 0.08, 0.06, 10), trim, 0.03 * s, -0.38, 0, 0); part(p, new THREE.SphereGeometry(0.07, 10, 8), skin, 0.03 * s, -0.46, 0); return p; });
     this.legs = [-1, 1].map((s) => { const p = new THREE.Group(); p.position.set(0.11 * s, 0.5, 0); body.add(p); part(p, new THREE.CapsuleGeometry(0.075, 0.24, 6, 10), toon(look.legs), 0, -0.2, 0); const bt = part(p, new THREE.CapsuleGeometry(0.085, 0.13, 6, 10), toon(0x4a2f22, { rim: 0.8 }), 0, -0.43, 0.05); bt.rotation.x = Math.PI / 2; part(p, new THREE.CylinderGeometry(0.095, 0.085, 0.1, 10), toon(0x4a2f22), 0, -0.33, 0, 0); return p; });
     this.shadow = new THREE.Mesh(new THREE.CircleGeometry(0.5, 24), new THREE.MeshBasicMaterial({ color: 0x120c20, transparent: true, opacity: 0.4, depthWrite: false })); this.shadow.rotation.x = -Math.PI / 2;
