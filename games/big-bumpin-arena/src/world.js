@@ -47,7 +47,8 @@ export class World {
   /** Put the ball on the centre spot and every car on its face-off spot (ice-bumpers resetPuck). */
   faceOff() {
     const B = this.M.Body, ball = this.ball;
-    B.setPosition(ball.body, { x: this.arena.cx, y: this.arena.cy }); B.setVelocity(ball.body, { x: 0, y: 0 }); B.setAngularVelocity(ball.body, 0); B.setAngle(ball.body, 0);
+    const spot = this.arena.kick[(this.faceOffs = (this.faceOffs || 0) + 1) % 2];
+    B.setPosition(ball.body, { x: spot[0], y: spot[1] }); B.setVelocity(ball.body, { x: 0, y: 0 }); B.setAngularVelocity(ball.body, 0); B.setAngle(ball.body, 0);
     Object.assign(ball, { stuck: 0, heat: 0, curve: 0, laser: 0, lastStrike: null, magnetBy: null });
     for (const c of this.cars) {
       B.setPosition(c.body, { x: c.spawn.x, y: c.spawn.y }); B.setAngle(c.body, c.spawn.angle); B.setVelocity(c.body, { x: 0, y: 0 }); B.setAngularVelocity(c.body, 0);
