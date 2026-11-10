@@ -24,6 +24,9 @@
   .keys { font-size: min(2.9vw, 1.9vh, 13px); line-height: 1.9; opacity: .9; font-weight: 700; max-width: 640px; }
   kbd { background: rgba(255,255,255,.18); border-radius: 6px; padding: 1px 6px; font: inherit; font-weight: 900; }
   #gear { position: fixed; top: 6px; right: 8px; z-index: 2100; width: 40px; height: 38px; border-radius: var(--radius); border: 3px solid var(--ink); background: var(--panel); color: var(--sub); font-size: 20px; font-weight: 900; cursor: pointer; padding: 0; }
+  #zoomctl { position: fixed; top: 52px; right: 8px; z-index: 2100; display: none; flex-direction: column; gap: 8px; }
+  body.touch #zoomctl { display: flex; }
+  #zoomctl button { width: 44px; height: 44px; border-radius: 50%; border: 3px solid var(--ink); background: var(--panel); color: var(--sub); font-size: 24px; font-weight: 900; cursor: pointer; padding: 0; line-height: 1; }
   .touch .desk { display: none; } body:not(.touch) .mob { display: none; }
 </style>
 <style id="moth-game-guard">
@@ -34,6 +37,7 @@ canvas{touch-action:none}
 <body>
 <canvas id="c"></canvas>
 <button id="gear" title="Switch style (V)">◐</button>
+<div id="zoomctl"><button id="zin" title="Zoom in">+</button><button id="zout" title="Zoom out">−</button></div>
 <div id="menu">
   <h1>BIG BUMPIN' <span>ARENA!</span></h1>
   <div class="row" id="rMode"><button class="opt" data-mode="quick">QUICK MATCH</button><button class="opt" data-mode="season">SEASON</button></div>
@@ -44,7 +48,7 @@ canvas{touch-action:none}
   <div class="row" id="rHaz"><label>HAZARDS</label><button class="opt" data-haz="pads">SPEED PADS</button><button class="opt" data-haz="pylons">PYLONS</button><button class="opt" data-haz="tilt">FINAL-MINUTE TILT</button></div>
   <div class="row" id="rStyle"><label>STYLE</label><button class="opt" data-style="cel">CEL</button><button class="opt" data-style="glossy">GLOSSY</button><button class="opt" data-style="pixel">PIXEL</button><button class="opt" data-style="fairground">FAIRGROUND</button><button class="opt" data-style="prime">PRIME</button></div>
   <button id="start">▶ PLAY</button>
-  <div class="keys desk"><kbd>W A S D</kbd> drive &nbsp; <kbd>Shift</kbd> turbo &nbsp; <kbd>Space</kbd> handbrake &nbsp; <kbd>Q</kbd> <kbd>E</kbd> shunt left / right &nbsp; <kbd>F</kbd> power-up &nbsp; <kbd>V</kbd> style<br>Gamepad: stick + triggers, <kbd>A</kbd> turbo, <kbd>B</kbd> handbrake, <kbd>LB</kbd> <kbd>RB</kbd> shunt, <kbd>Y</kbd> power-up. A second pad joins as Player 2.</div>
+  <div class="keys desk"><kbd>W A S D</kbd> drive &nbsp; <kbd>Shift</kbd> turbo &nbsp; <kbd>Space</kbd> handbrake &nbsp; <kbd>Q</kbd> <kbd>E</kbd> shunt left / right &nbsp; <kbd>F</kbd> power-up &nbsp; <kbd>V</kbd> style &nbsp; <kbd>+</kbd> <kbd>−</kbd> / wheel zoom<br>Gamepad: stick + triggers, <kbd>A</kbd> turbo, <kbd>B</kbd> handbrake, <kbd>LB</kbd> <kbd>RB</kbd> shunt, <kbd>Y</kbd> power-up. A second pad joins as Player 2.</div>
   <div class="keys mob">Left thumb: drive toward where you point &nbsp; <kbd>⚡</kbd> turbo &nbsp; <kbd>★</kbd> power-up &nbsp; <kbd>◀</kbd> <kbd>▶</kbd> shunt</div>
 </div>
 <script src="vendor/matter.min.js"></script>
@@ -101,6 +105,9 @@ $('menu').addEventListener('click', (e) => {
   store.set('bba-settings', set); syncMenu();
 });
 $('gear').addEventListener('click', (e) => { e.stopPropagation(); applyStyle(STYLE_ORDER[(STYLE_ORDER.indexOf(set.style) + 1) % STYLE_ORDER.length]); });
+// ---- camera zoom: wheel + / - keys on desktop, round + / - buttons top-right on touch (view-only, resets each match)
+for (const [id, f] of [['zin', 1.25], ['zout', 1 / 1.25]]) { const b = $(id); b.addEventListener('pointerdown', (e) => e.stopPropagation()); b.addEventListener('click', (e) => { e.stopPropagation(); view.zoomBy(f); }); }
+$('c').addEventListener('wheel', (e) => { e.preventDefault(); view.zoomBy(Math.exp(-e.deltaY * 0.0016)); }, { passive: false });
 function toMenu() { stopTouch(); started = false; newMatch(); $('menu').style.display = 'flex'; syncMenu(); }
 
 // ---- phone shell: no pinch, no double-tap zoom, no rubber-band, no long-press menu
@@ -113,6 +120,7 @@ addEventListener('resize', () => view.resize()); addEventListener('orientationch
 const keys = new Set();
 addEventListener('keydown', (e) => { keys.add(e.code); if (['Space', 'ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight', 'Tab'].includes(e.code)) e.preventDefault(); sfx.unlock();
   if (e.code === 'KeyM') sfx.muted = !sfx.muted; if (e.code === 'KeyV') applyStyle(STYLE_ORDER[(STYLE_ORDER.indexOf(set.style) + 1) % STYLE_ORDER.length]);
+  if (e.code === 'Equal' || e.code === 'NumpadAdd') view.zoomBy(1.25); if (e.code === 'Minus' || e.code === 'NumpadSubtract') view.zoomBy(1 / 1.25);
   if (e.code === 'Enter' && !started) $('start').click(); else if ((e.code === 'Enter' || e.code === 'Space') && game.state === 'over' && overT > 1.2) toMenu(); });
 addEventListener('keyup', (e) => keys.delete(e.code)); addEventListener('blur', () => keys.clear());
 // Touch controls are constructed only when a match starts — never while the menu is up —
@@ -125,7 +133,7 @@ function startTouch() {
   TC = new TouchController({ buttons: [{ id: 'a', label: '⚡', size: 84 }, { id: 'b', label: '★', size: 66 }, { id: 'c', label: '◀', size: 58 }, { id: 'd', label: '▶', size: 58 }], maxRadius: 58, deadzone: 0.16 });
 }
 function stopTouch() { if (TC) { TC.destroy(); TC = null; } }
-addEventListener('pointerdown', (e) => { sfx.unlock(); if (started && game.state === 'over' && overT > 1.2 && !e.target.closest('#gear')) toMenu(); }, true);
+addEventListener('pointerdown', (e) => { sfx.unlock(); if (started && game.state === 'over' && overT > 1.2 && !e.target.closest('#gear, #zoomctl')) toMenu(); }, true);
 const has = (...c) => c.some((k) => keys.has(k));
 function padInput(pad) {
   const dz = (v) => (Math.abs(v) < 0.16 ? 0 : v), b = (i) => !!pad.buttons[i]?.pressed, val = (i) => pad.buttons[i]?.value || 0;
