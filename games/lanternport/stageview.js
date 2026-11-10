@@ -37,7 +37,23 @@ function buildPerson(T, kit, o) {
   const mouth = kit.part(head, new T.BoxGeometry(0.08, 0.016, 0.02), glow(T, 0x7a3b33), 0, -0.11, 0.25, 0), grin = kit.part(head, new T.SphereGeometry(0.075, 12, 8, 0, TAU, Math.PI * 0.5, Math.PI * 0.5), glow(T, 0xffffff), 0, -0.07, 0.215, 0); grin.scale.set(1, 0.7, 0.5); grin.visible = false;
   let hat = null, cap = null;
   if (L.hat !== undefined) { hat = new T.Group(); head.add(hat); cyl(T, kit, hat, 0.36, 0.36, 0.03, L.hat, 0, 0.2, 0, 16); cyl(T, kit, hat, 0.18, 0.21, 0.16, L.hat, 0, 0.28, 0, 14); }
-  if (L.cap !== undefined) { cap = kit.part(body, new T.SphereGeometry(0.29, 14, 10, 0, TAU, 0, Math.PI * 0.42), kit.toon(L.cap), 0, 1.52, 0.02, 0.012); }
+  if (L.hero) {
+    // The hero kit — the same look the playable game's Juniper wears (view.js):
+    // long pointed ears, a trailing pointed cap in coat green (it takes the cap
+    // slot, so the capOff pose animates it), shield and sword on the back.
+    for (const s of [-1, 1]) { const ear = kit.part(head, new T.ConeGeometry(0.052, 0.34, 8), skin, 0.26 * s, 0.07, -0.01, 0); ear.rotation.set(-0.18, 0, -1.12 * s); ear.scale.set(1, 1, 0.55); }
+    cap = new T.Group(); cap.position.set(0, 1.52, 0.02); body.add(cap);
+    const pc = kit.part(cap, new T.ConeGeometry(0.27, 0.78, 14), top, 0, -0.02, -0.34, 0); pc.rotation.x = -2.08;
+    const trim = kit.toon(0xf2b23a, { rim: 1.2 }), steel = kit.toon(0x9fb4c8, { rim: 1.2 });
+    const srim = kit.part(body, new T.CylinderGeometry(0.185, 0.15, 0.032, 14), trim, 0, 1.02, -0.27, 0); srim.rotation.x = Math.PI / 2 + 0.1;
+    const sface = kit.part(body, new T.CylinderGeometry(0.168, 0.134, 0.05, 14), steel, 0, 1.02, -0.28, 0); sface.rotation.x = Math.PI / 2 + 0.1;
+    kit.part(body, new T.SphereGeometry(0.05, 10, 8), trim, 0, 1.02, -0.31, 0).scale.set(1, 1, 0.5);
+    const sword = new T.Group(); sword.position.set(0.13, 1.12, -0.34); sword.rotation.z = -0.55; body.add(sword);
+    box(T, kit, sword, 0.055, 0.6, 0.016, 0xc3d2e0, 0, -0.05, 0, 0);
+    box(T, kit, sword, 0.2, 0.045, 0.05, 0xf2b23a, 0, 0.27, 0, 0);
+    cyl(T, kit, sword, 0.028, 0.028, 0.14, 0x2f4fa0, 0, 0.36, 0, 6);
+    kit.part(sword, new T.SphereGeometry(0.045, 8, 8), trim, 0, 0.45, 0, 0);
+  } else if (L.cap !== undefined) { cap = kit.part(body, new T.SphereGeometry(0.29, 14, 10, 0, TAU, 0, Math.PI * 0.42), kit.toon(L.cap), 0, 1.52, 0.02, 0.012); }
   const limb = (x, y, len, mat, hand) => { const p = new T.Group(); p.position.set(x, y, 0); body.add(p); kit.part(p, new T.CapsuleGeometry(0.062, len, 4, 8), mat, 0, -len / 2 - 0.04, 0); if (hand) kit.part(p, new T.SphereGeometry(0.068, 8, 6), skin, 0, -len - 0.12, 0, 0); return p; };
   const arms = [-1, 1].map((s) => limb(0.25 * s, 1.12, 0.32, L.swim ? skin : top, true)), legs = [-1, 1].map((s) => limb(0.11 * s, 0.52, 0.3, bottom, false));
   for (const l of legs) { const b = kit.part(l, new T.CapsuleGeometry(0.08, 0.12, 4, 8), kit.toon(L.swim ? L.skin : 0x4a2f22), 0, -0.44, 0.05); b.rotation.x = Math.PI / 2; }

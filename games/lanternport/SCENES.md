@@ -21,13 +21,25 @@ scenes reuse the same registry slots as they land.
 - **Digest parity is proven**: `test/lanternport-capture.test.mjs` plays the
   bot at every timescale and odd frame rates and requires an identical sim
   digest at every tick. Slow motion cannot change the game.
-- **Scene staging** (`scenes.js`): open `?scene=<id>&seed=<n>` and the scene
-  plays itself deterministically and loops. Number keys **1–8** jump the
-  freecam to `SCENES[n]`'s staged bookmark framing. The scene's event log
-  (name + tick) is on `window.__dbg.scene.events` so a recorder can align
-  captions and cuts. Contract: scenes use only game state + the seeded RNG —
-  no Math.random, no wall clock — and `test/lanternport-scenes.test.mjs`
-  proves determinism + timescale parity for every registered scene.
+- **Scene staging** (`scenes.js`): open `?scene=<id>&seed=<n>`. Number keys
+  **1–8** jump the freecam to `SCENES[n]`'s staged bookmark framing. The
+  scene's event log (name + tick) is on `window.__dbg.scene.events` so a
+  recorder can align captions and cuts. Contract: scenes use only game state
+  + the seeded RNG — no Math.random, no wall clock — and
+  `test/lanternport-scenes.test.mjs` proves determinism + timescale parity
+  for every registered scene.
+- **Watch or play** (`index.html`): a scene link opens in **ready mode** —
+  the set is dressed, the cast holds its first pose, and the player keeps
+  the controls (the full town is playable; walk to the set or peek with
+  1–8). The **▶ WATCH THE SCENE** button (or Enter) starts the performance
+  and frames the bookmark; **🎮 TAKE CONTROL** hands the game back
+  mid-scene; when a performance ends, control stays with the player and the
+  button becomes **↻ WATCH AGAIN**. Filming keeps the old behaviour with
+  `&loop=1` (or `&auto=1`): auto-start, auto-loop, no button. Film scenes
+  (`filmscenes.js` on the `stage.js`/`stageview.js` stage system) register
+  into the same `SCENES` list. Juniper wears the playable game's hero look
+  in scenes too (`look.hero` in `stage.js`: green tunic, pointed cap and
+  ears, shield and sword).
 
 ## How to add a scene
 
@@ -48,6 +60,8 @@ scenes reuse the same registry slots as they land.
 | # | id | spec folder (gamepress) | status |
 |---|----|------------------------|--------|
 | — | `stage-test` | — (framework proof, not a film scene) | ✅ built |
+| 1 | `rooftop-dive` | fablego festival program (built as a film scene) | ✅ built |
+| 2 | `photo-call` | fablego festival program (built as a film scene) | ✅ built |
 | 1 | `rooftop-pool` | `03-rooftop-pool` | ⏳ awaiting builder |
 | 2 | `mugshot-flash` | `01-mugshot-flash` | ⏳ awaiting builder |
 | 3 | `gator-store` | `06-gator-store` | ⏳ awaiting builder |
