@@ -1,0 +1,180 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<title>BIG BUMPIN' ARENA!</title>
+<style>
+  :root { --font: system-ui, sans-serif; --title: #ffd21f; --sub: #fff; --btn: #2e9bff; --btnText: #fff; --page: rgba(26,24,56,.9); --panel: rgba(22,19,46,.9); --radius: 14px; --ink: #16132e; }
+  html, body { margin: 0; height: 100%; overflow: hidden; background: #10151f; color: var(--sub); font-family: var(--font);
+    touch-action: none; overscroll-behavior: none; -webkit-touch-callout: none; -webkit-user-select: none; user-select: none; -webkit-tap-highlight-color: transparent; position: fixed; inset: 0; }
+  canvas { display: block; touch-action: none; }
+  #menu { position: fixed; inset: 0; z-index: 2000; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: min(1.1vh, 10px); text-align: center; background: var(--page); padding: 12px; overflow: hidden; }
+  #menu h1 { margin: 0; font-size: min(9vw, 9vh, 72px); line-height: .95; font-weight: 900; color: var(--title); text-shadow: 0 4px 0 var(--ink); }
+  #menu h1 span { color: var(--sub); }
+  .row { display: flex; gap: 8px; flex-wrap: wrap; justify-content: center; align-items: center; }
+  .row label { font-size: min(3vw, 12px); font-weight: 900; letter-spacing: .12em; opacity: .75; width: 100%; }
+  .opt { font: inherit; font-weight: 900; font-size: min(3.2vw, 2.1vh, 15px); padding: .42em .8em; border-radius: var(--radius); border: 3px solid var(--ink); background: var(--panel); color: var(--sub); cursor: pointer; }
+  .opt.on { background: var(--btn); color: var(--btnText); }
+  #start { font: inherit; font-weight: 900; font-size: min(6vw, 4vh, 28px); padding: .45em 1.6em; border-radius: var(--radius); border: 4px solid var(--ink); background: var(--title); color: var(--ink); cursor: pointer; animation: pulse 1.2s ease-in-out infinite; }
+  @keyframes pulse { 50% { transform: scale(1.05); } }
+  #stage { font-weight: 900; font-size: min(3.6vw, 16px); color: var(--title); min-height: 1.2em; }
+  .keys { font-size: min(2.9vw, 1.9vh, 13px); line-height: 1.9; opacity: .9; font-weight: 700; max-width: 640px; }
+  kbd { background: rgba(255,255,255,.18); border-radius: 6px; padding: 1px 6px; font: inherit; font-weight: 900; }
+  #gear { position: fixed; top: 6px; right: 8px; z-index: 2100; width: 40px; height: 38px; border-radius: var(--radius); border: 3px solid var(--ink); background: var(--panel); color: var(--sub); font-size: 20px; font-weight: 900; cursor: pointer; padding: 0; }
+  .touch .desk { display: none; } body:not(.touch) .mob { display: none; }
+</style>
+</head>
+<body>
+<canvas id="c"></canvas>
+<button id="gear" title="Switch style (V)">◐</button>
+<div id="menu">
+  <h1>BIG BUMPIN' <span>ARENA!</span></h1>
+  <div class="row" id="rMode"><button class="opt" data-mode="quick">QUICK MATCH</button><button class="opt" data-mode="season">SEASON</button></div>
+  <div id="stage"></div>
+  <div class="row" id="rArena"><label>ARENA</label><button class="opt" data-arena="rink">THE RINK</button><button class="opt" data-arena="lot">LOT 7</button><button class="opt" data-arena="pond">FROSTBITE POND</button><button class="opt" data-arena="derby">DUST BOWL</button><button class="opt" data-arena="pinch">THE PINCH</button><button class="opt" data-arena="midway">THE MIDWAY</button></div>
+  <div id="blurb" class="keys"></div>
+  <div class="row" id="rSurface"><label>SURFACE</label><button class="opt" data-surface="asphalt">ASPHALT</button><button class="opt" data-surface="ice">ICE</button><button class="opt" data-surface="dirt">DIRT</button></div>
+  <div class="row" id="rHaz"><label>HAZARDS</label><button class="opt" data-haz="pads">SPEED PADS</button><button class="opt" data-haz="pylons">PYLONS</button><button class="opt" data-haz="tilt">FINAL-MINUTE TILT</button></div>
+  <div class="row" id="rStyle"><label>STYLE</label><button class="opt" data-style="cel">CEL</button><button class="opt" data-style="glossy">GLOSSY</button><button class="opt" data-style="pixel">PIXEL</button><button class="opt" data-style="fairground">FAIRGROUND</button></div>
+  <button id="start">▶ PLAY</button>
+  <div class="keys desk"><kbd>W A S D</kbd> drive &nbsp; <kbd>Shift</kbd> turbo &nbsp; <kbd>Space</kbd> handbrake &nbsp; <kbd>Q</kbd> <kbd>E</kbd> shunt left / right &nbsp; <kbd>F</kbd> power-up &nbsp; <kbd>V</kbd> style<br>Gamepad: stick + triggers, <kbd>A</kbd> turbo, <kbd>B</kbd> handbrake, <kbd>LB</kbd> <kbd>RB</kbd> shunt, <kbd>Y</kbd> power-up. A second pad joins as Player 2.</div>
+  <div class="keys mob">Left thumb: drive toward where you point &nbsp; <kbd>⚡</kbd> turbo &nbsp; <kbd>★</kbd> power-up &nbsp; <kbd>◀</kbd> <kbd>▶</kbd> shunt</div>
+</div>
+<script src="vendor/matter.min.js"></script>
+<script type="module">
+import { Game } from './src/game.js';
+import { CFG, HZ } from './src/config.js';
+import { View } from './src/render.js';
+import { STYLES, STYLE_ORDER } from './src/styles.js';
+import { ARENA_INFO } from './src/arenas.js';
+import { Sfx } from './src/audio.js';
+import { TouchController, isTouchDevice } from './vendor/gptouch.js';
+
+const Q = new URLSearchParams(location.search), AUTO = Q.get('auto') === '1' || Q.get('spectate') === '1', $ = (id) => document.getElementById(id);
+const view = new View($('c'), CFG), sfx = new Sfx();
+const clamp = (v, a, b) => Math.max(a, Math.min(b, v)), wrap = (a) => Math.atan2(Math.sin(a), Math.cos(a));
+// Season ladder: themed AI teams; the weight-class mix and bot skill are the difficulty curve.
+const LADDER = [{ name: 'TRACTOR CREW', teams: ['heavy', 'heavy'], skill: 0.3 }, { name: 'KART KIDS', teams: ['light', 'light'], skill: 0.52 }, { name: 'CHAIR RACERS', teams: ['light', 'light'], skill: 0.78 }, { name: 'DELIVERY VANS', teams: ['heavy', 'heavy'], skill: 1 }];
+const store = { get(k, d) { try { return JSON.parse(localStorage.getItem(k)) ?? d; } catch { return d; } }, set(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch {} } };
+const set = { style: 'cel', arena: 'rink', surface: 'asphalt', hazards: { pads: false, pylons: false, tilt: false }, mode: 'quick', ...store.get('bba-settings', {}) };
+if (Q.get('arena')) { set.arena = Q.get('arena'); if (ARENA_INFO[set.arena]) set.surface = ARENA_INFO[set.arena].surface; } if (!ARENA_INFO[set.arena]) set.arena = 'rink';
+if (Q.get('style')) set.style = Q.get('style'); if (Q.get('surface')) set.surface = Q.get('surface'); if (Q.get('mode')) set.mode = Q.get('mode');
+if (Q.get('hazards')) { const h = Q.get('hazards'); set.hazards = { pads: h === 'all' || h.includes('pads'), pylons: h === 'all' || h.includes('pylons'), tilt: h === 'all' || h.includes('tilt') }; }
+if (!STYLES[set.style]) set.style = 'cel'; if (!CFG.surfaces[set.surface]) set.surface = 'asphalt';
+let stage = Math.min(LADDER.length - 1, store.get('bba-season', 0));
+let game, started = AUTO || Q.get('autostart') === '1' || !!Q.get('ff'), seed = +(Q.get('seed') || 0) || (Date.now() % 100000) + 1, goT = 0, p2Joined = false, result = {};
+const P2_CAR = Q.get('p2') === 'versus' ? 2 : 1; // second pad: same team by default, ?p2=versus to play against Player 1
+
+function applyStyle(id) { // style packs switch at runtime: renderer + UI theme variables
+  set.style = id; view.setStyle(id); const u = STYLES[id].ui, r = document.documentElement.style;
+  r.setProperty('--font', u.font); r.setProperty('--title', u.title); r.setProperty('--sub', u.sub); r.setProperty('--btn', u.button); r.setProperty('--btnText', u.buttonText); r.setProperty('--page', u.page); r.setProperty('--panel', u.panel); r.setProperty('--radius', u.radius + 'px'); r.setProperty('--ink', u.stroke);
+  document.body.style.background = STYLES[id].pal.bg; store.set('bba-settings', set); syncMenu();
+}
+function syncMenu() {
+  document.querySelectorAll('[data-style]').forEach((b) => b.classList.toggle('on', b.dataset.style === set.style));
+  document.querySelectorAll('[data-arena]').forEach((b) => b.classList.toggle('on', b.dataset.arena === set.arena)); $('blurb').textContent = ARENA_INFO[set.arena].blurb;
+  document.querySelectorAll('[data-surface]').forEach((b) => b.classList.toggle('on', b.dataset.surface === set.surface));
+  document.querySelectorAll('[data-haz]').forEach((b) => b.classList.toggle('on', !!set.hazards[b.dataset.haz]));
+  document.querySelectorAll('[data-mode]').forEach((b) => b.classList.toggle('on', b.dataset.mode === set.mode));
+  $('stage').textContent = set.mode === 'season' ? `ROUND ${stage + 1} / ${LADDER.length} · VS ${LADDER[stage].name}` : '';
+}
+function newMatch() {
+  const opts = { seed, seconds: +(Q.get('secs') || 0) || undefined, arena: set.arena, surface: set.surface, hazards: set.hazards };
+  if (set.mode === 'season' && !AUTO) { opts.teams = [['light', 'heavy'], LADDER[stage].teams]; opts.skill = [0.8, LADDER[stage].skill]; }
+  game = new Game(Matter, opts); window.__game = game; window.__view = view; seed++; result = {}; view.banner = 0;
+}
+$('menu').addEventListener('click', (e) => {
+  const b = e.target.closest('button'); if (!b) return; sfx.unlock();
+  if (b.dataset.style) applyStyle(b.dataset.style);
+  else if (b.dataset.arena) { set.arena = b.dataset.arena; set.surface = ARENA_INFO[set.arena].surface; newMatch(); } // each place has its own ground; you can still override it
+  else if (b.dataset.surface) { set.surface = b.dataset.surface; newMatch(); }
+  else if (b.dataset.haz) { set.hazards = { ...set.hazards, [b.dataset.haz]: !set.hazards[b.dataset.haz] }; newMatch(); }
+  else if (b.dataset.mode) { set.mode = b.dataset.mode; newMatch(); }
+  else if (b.id === 'start') { newMatch(); started = true; $('menu').style.display = 'none'; }
+  store.set('bba-settings', set); syncMenu();
+});
+$('gear').addEventListener('click', (e) => { e.stopPropagation(); applyStyle(STYLE_ORDER[(STYLE_ORDER.indexOf(set.style) + 1) % STYLE_ORDER.length]); });
+function toMenu() { started = false; newMatch(); $('menu').style.display = 'flex'; syncMenu(); }
+
+// ---- phone shell: no pinch, no double-tap zoom, no rubber-band, no long-press menu
+for (const ev of ['gesturestart', 'gesturechange', 'gestureend', 'contextmenu', 'dblclick', 'selectstart']) document.addEventListener(ev, (e) => e.preventDefault(), { passive: false });
+document.addEventListener('touchmove', (e) => e.preventDefault(), { passive: false });
+let lastTouchEnd = 0; document.addEventListener('touchend', (e) => { const n = Date.now(); if (n - lastTouchEnd < 320 && !e.target.closest('button')) e.preventDefault(); lastTouchEnd = n; }, { passive: false });
+addEventListener('resize', () => view.resize()); addEventListener('orientationchange', () => setTimeout(() => view.resize(), 250));
+
+// ---- input: keyboard + gamepad + touch (gamepress standard: floating stick on the left half, round buttons bottom right)
+const keys = new Set();
+addEventListener('keydown', (e) => { keys.add(e.code); if (['Space', 'ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight', 'Tab'].includes(e.code)) e.preventDefault(); sfx.unlock();
+  if (e.code === 'KeyM') sfx.muted = !sfx.muted; if (e.code === 'KeyV') applyStyle(STYLE_ORDER[(STYLE_ORDER.indexOf(set.style) + 1) % STYLE_ORDER.length]);
+  if (e.code === 'Enter' && !started) $('start').click(); else if ((e.code === 'Enter' || e.code === 'Space') && game.state === 'over' && overT > 1.2) toMenu(); });
+addEventListener('keyup', (e) => keys.delete(e.code)); addEventListener('blur', () => keys.clear());
+const TC = isTouchDevice() && !AUTO ? new TouchController({ buttons: [{ id: 'a', label: '⚡', size: 84 }, { id: 'b', label: '★', size: 66 }, { id: 'c', label: '◀', size: 58 }, { id: 'd', label: '▶', size: 58 }], maxRadius: 58, deadzone: 0.16 }) : null;
+if (TC) { document.body.classList.add('touch'); view.touchLayout = true; view.resize(); }
+addEventListener('pointerdown', (e) => { sfx.unlock(); if (started && game.state === 'over' && overT > 1.2 && !e.target.closest('#gear')) toMenu(); }, true);
+const has = (...c) => c.some((k) => keys.has(k));
+function padInput(pad) {
+  const dz = (v) => (Math.abs(v) < 0.16 ? 0 : v), b = (i) => !!pad.buttons[i]?.pressed, val = (i) => pad.buttons[i]?.value || 0;
+  let throttle = val(7) - val(6); if (!throttle) throttle = -dz(pad.axes[1] || 0); if (b(12)) throttle = 1; if (b(13)) throttle = -1;
+  let steer = dz(pad.axes[0] || 0); if (b(14)) steer = -1; if (b(15)) steer = 1;
+  return { throttle: clamp(throttle, -1, 1), steer, turbo: b(0), brake: b(1) || b(2), shunt: (b(5) ? 1 : 0) - (b(4) ? 1 : 0), use: b(3), any: pad.buttons.some((x) => x.pressed) };
+}
+function readHumans() {
+  if (AUTO) return {};
+  const pads = navigator.getGamepads ? [...navigator.getGamepads()].filter(Boolean) : [], out = {};
+  const p1 = { throttle: (has('KeyW', 'ArrowUp') ? 1 : 0) - (has('KeyS', 'ArrowDown') ? 1 : 0), steer: (has('KeyD', 'ArrowRight') ? 1 : 0) - (has('KeyA', 'ArrowLeft') ? 1 : 0), turbo: has('ShiftLeft', 'ShiftRight', 'KeyK'), brake: has('Space', 'KeyL'), shunt: (has('KeyE') ? 1 : 0) - (has('KeyQ') ? 1 : 0), use: has('KeyF', 'KeyJ') };
+  if (pads[0]) { const g = padInput(pads[0]); for (const k of ['throttle', 'steer', 'shunt']) p1[k] = p1[k] || g[k]; for (const k of ['turbo', 'brake', 'use']) p1[k] = p1[k] || g[k]; }
+  if (TC) { // point-to-drive: the car turns toward where the thumb points on screen; a hard change of direction pulls the handbrake for you
+    const t = TC.getInput(), mag = Math.hypot(t.x, t.y), me = game.cars[0];
+    if (mag > 0.01) { const c = Math.cos(-view.rot), s = Math.sin(-view.rot), wx = t.x * c - t.y * s, wy = t.x * s + t.y * c, diff = wrap(Math.atan2(wy, wx) - me.body.angle), v = Matter.Body.getVelocity(me.body);
+      p1.steer = clamp(diff * 2.6, -1, 1); p1.throttle = Math.min(1, mag * 1.25) * (Math.abs(diff) > 2.1 ? 0.55 : 1); p1.brake = p1.brake || (Math.abs(diff) > 1.5 && Math.hypot(v.x, v.y) > 3.5); }
+    p1.turbo = p1.turbo || t.a; p1.use = p1.use || t.b; p1.shunt = p1.shunt || (t.d ? 1 : 0) - (t.c ? 1 : 0);
+  }
+  out[0] = p1;
+  if (pads[1]) { const g = padInput(pads[1]); if (g.any) p2Joined = true; if (p2Joined) out[P2_CAR] = g; }
+  return out;
+}
+
+// ---- fixed-step loop (kfarr's accumulator: clamp the frame delta, cap the catch-up steps)
+let acc = 0, last = performance.now(), overT = 0, wasTurbo = false;
+function sounds() {
+  for (const e of game.events) {
+    if (e.type === 'hit') sfx.hit(e.force, e.kind); else if (e.type === 'count') sfx.count(); else if (e.type === 'go') { sfx.go(); goT = 0.7; }
+    else if (e.type === 'goal') { sfx.horn(); sfx.crowd(2.6, 0.26); } else if (e.type === 'over' || e.type === 'overtime') { sfx.whistle(); sfx.crowd(3, 0.2); }
+    else if (e.type === 'shunt') sfx.shunt(); else if (e.type === 'spin') sfx.spin(); else if (e.type === 'pickup') sfx.pickup(); else if (e.type === 'item') sfx.item();
+    else if (e.type === 'shock') sfx.shock(); else if (e.type === 'onetimer') { sfx.zing(); sfx.crowd(1.2, 0.12); } else if (e.type === 'flatten') sfx.splat(); else if (e.type === 'pylon') sfx.thunk(); else if (e.type === 'pit') sfx.splat(); else if (e.type === 'snap') sfx.thunk(); else if (e.type === 'miss') sfx.count();
+    else if (e.type === 'strike' && e.heat > 0.3) sfx.hot(e.heat);
+    if (e.type === 'over' && set.mode === 'season' && !AUTO) { // the ladder: win to move up a rung
+      if (game.winner === 0) { const done = stage === LADDER.length - 1; result = { resultTitle: done ? 'CHAMPIONS!' : `BEAT ${LADDER[stage].name}`, resultSub: done ? '★ ★ ★' : `NEXT: ${LADDER[stage + 1].name}` }; stage = done ? 0 : stage + 1; store.set('bba-season', stage); }
+      else result = { resultSub: `REMATCH: ${LADDER[stage].name}` };
+    }
+  }
+}
+function step() {
+  if (!started) return;
+  game.tick(readHumans()); view.onEvents(game.events, game); sounds();
+  const me = game.cars[0]; if (me.turboOn && !wasTurbo) sfx.turbo(); wasTurbo = me.turboOn;
+}
+function frame(now) {
+  const dt = Math.min((now - last) / 1000, 0.1); last = now; acc += dt;
+  let n = 0; while (acc >= 1 / HZ && n < 4) { step(); acc -= 1 / HZ; n++; } if (n === 4) acc = 0;
+  goT = Math.max(0, goT - dt); overT = game.state === 'over' ? overT + dt : 0;
+  const me = game.cars[0], v = Matter.Body.getVelocity(me.body), players = AUTO ? {} : { 0: 'P1' }; if (p2Joined) players[P2_CAR] = 'P2';
+  sfx.setEngine(Math.min(1.4, Math.hypot(v.x, v.y) / me.cls.maxSpeed), me.turboOn, started && !AUTO && game.state !== 'over');
+  view.draw(game, started ? acc * HZ : 1, dt, { car: AUTO ? null : me, players, goT, ...result });
+  requestAnimationFrame(frame);
+}
+applyStyle(set.style); newMatch();
+// ?ff=N fast-forwards N ticks before the first frame (?ff=goal: to just after the next goal; ?ff=hot: to a full-heat ball). For screenshots and capture.
+if (Q.get('ff')) { const ff = Q.get('ff'), run = () => { game.tick(readHumans()); view.onEvents(game.events, game); };
+  if (ff === 'goal') { for (let i = 0; i < 60 * 600 && game.state !== 'goal'; i++) run(); for (let i = 0; i < 20; i++) { run(); view.banner = 1; } }
+  else if (ff === 'hot') { for (let i = 0; i < 60 * 900 && !(game.ball.heat >= 1 && game.state === 'play'); i++) run(); run(); }
+  else for (let i = 0; i < +ff; i++) run();
+  view.sparks = view.sparks.slice(-40); view.rings = view.rings.slice(-3); view.pops = view.pops.slice(-2); }
+if (started) $('menu').style.display = 'none';
+requestAnimationFrame(frame);
+</script>
+</body>
+</html>
