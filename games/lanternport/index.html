@@ -412,7 +412,7 @@ if (Q.get('ts')) ticker.setScale(+Q.get('ts')); if (Q.get('guide') === '1') setG
 // ---------------------------------------------------------------- watch / play toggle for staged scenes
 const sceneBtn = document.createElement('button');
 sceneBtn.id = 'sceneBtn';
-Object.assign(sceneBtn.style, { position: 'fixed', left: '50%', transform: 'translateX(-50%)', bottom: 'calc(env(safe-area-inset-bottom, 0px) + 188px)', zIndex: 40, padding: '12px 22px', borderRadius: '999px', border: '2px solid rgba(255,246,221,.85)', background: 'rgba(24,18,38,.82)', color: '#fff6dd', font: '700 16px/1 system-ui, sans-serif', letterSpacing: '.04em', cursor: 'pointer', display: 'none', touchAction: 'manipulation' });
+Object.assign(sceneBtn.style, { position: 'fixed', left: '50%', transform: 'translateX(-50%)', bottom: 'calc(env(safe-area-inset-bottom, 0px) + 188px)', zIndex: 1100, padding: '12px 22px', borderRadius: '999px', border: '2px solid rgba(255,246,221,.85)', background: 'rgba(24,18,38,.82)', color: '#fff6dd', font: '700 16px/1 system-ui, sans-serif', letterSpacing: '.04em', cursor: 'pointer', display: 'none', touchAction: 'manipulation' }); // z 1100: must sit ABOVE the gptouch overlay (z 1000) or phone taps never reach it
 document.body.appendChild(sceneBtn);
 function syncSceneBtn() {
   if (!SCENE_DEF || LOOP_SCENE || Q.get('hud') === '0') { sceneBtn.style.display = 'none'; return; }
