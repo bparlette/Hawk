@@ -62,6 +62,28 @@ export class View {
     else { gr.addColorStop(0, lite); gr.addColorStop(0.42, base); gr.addColorStop(1, dark); }
     return gr;
   }
+  /** Shadows go soft (blurred) when the pack asks for it. Call with true before filling a shadow, false after. */
+  _soft(g, on) { const fx = this.style.fx; if (fx && fx.soft && this.canFilter) g.filter = on ? `blur(${fx.soft}px)` : 'none'; }
+  _skids(game, dt) { // persistent tyre marks: a half-scale layer the size of the arena, painted while cars slide
+    const A = game.arena; if (!this.skid || this.skidFor !== A) { this.skid = document.createElement('canvas'); this.skid.width = Math.ceil(A.w / 2); this.skid.height = Math.ceil(A.h / 2); this.skidFor = A; }
+    const q = this.skid.getContext('2d'); q.fillStyle = 'rgba(8,8,12,.22)';
+    for (const c of game.cars) { const v = game.M.Body.getVelocity(c.body), sp = Math.hypot(v.x, v.y); if (sp < 2.2 || !(c.drift || c.slip > 0 || c.spinT > 0 || c.shuntT > 0)) continue;
+      const a = c.body.angle, cx = c.body.position.x, cy = c.body.position.y; for (const sgn of [-1, 1]) { const x = cx - Math.cos(a) * c.cls.len * 0.3 - Math.sin(a) * sgn * c.cls.wid * 0.36, y = cy - Math.sin(a) * c.cls.len * 0.3 + Math.cos(a) * sgn * c.cls.wid * 0.36; q.beginPath(); q.arc(x / 2, y / 2, 3.2, 0, TAU); q.fill(); } }
+  }
+  _grain(m) { // film grain: a small noise tile, tiled over the frame
+    if (!this.noise) { const c = document.createElement('canvas'); c.width = c.height = 128; const q = c.getContext('2d'), d = q.createImageData(128, 128); for (let i = 0; i < d.data.length; i += 4) { const v = Math.random() * 255; d.data[i] = d.data[i + 1] = d.data[i + 2] = v; d.data[i + 3] = 255; } q.putImageData(d, 0, 0); this.noise = c; }
+    m.save(); m.globalAlpha = this.style.fx.grain; m.globalCompositeOperation = 'overlay'; m.fillStyle = m.createPattern(this.noise, 'repeat'); m.translate((Math.random() * 128) | 0, (Math.random() * 128) | 0); m.fillRect(-128, -128, this.w + 256, this.h + 256); m.restore();
+  }
+  _lights(g, game, alpha) { // additive light on the floor: headlight beams, team under-glow, the ball's own light
+    const fx = this.style.fx, P = this.style.pal; if (!fx) return; g.save(); g.globalCompositeOperation = 'lighter';
+    for (const c of game.cars) {
+      if (c.pitT > 0) continue; const x = lerp(c.px, c.body.position.x, alpha), y = lerp(c.py, c.body.position.y, alpha), a = lerpAngle(c.pa, c.body.angle, alpha), L = c.cls.len;
+      if (fx.underglow) { const gr = g.createRadialGradient(x, y, 10, x, y, L * 1.25); gr.addColorStop(0, P.team[c.team]); gr.addColorStop(1, 'rgba(0,0,0,0)'); g.globalAlpha = c.turboOn ? 0.55 : 0.32; g.fillStyle = gr; g.beginPath(); g.arc(x, y, L * 1.25, 0, TAU); g.fill(); }
+      if (fx.headlights) { g.save(); g.translate(x, y); g.rotate(a); const gr = g.createLinearGradient(L / 2, 0, L / 2 + 250, 0); gr.addColorStop(0, 'rgba(255,244,200,.42)'); gr.addColorStop(1, 'rgba(255,244,200,0)'); g.globalAlpha = 1; g.fillStyle = gr; g.beginPath(); g.moveTo(L / 2 - 6, -c.cls.wid * 0.3); g.lineTo(L / 2 + 250, -95); g.lineTo(L / 2 + 250, 95); g.lineTo(L / 2 - 6, c.cls.wid * 0.3); g.fill(); g.restore(); }
+    }
+    if (fx.ballLight) { const b = game.ball, x = lerp(b.px, b.body.position.x, alpha), y = lerp(b.py, b.body.position.y, alpha), rr = 150 + b.heat * 130, gr = g.createRadialGradient(x, y, 12, x, y, rr); gr.addColorStop(0, b.heat > 0.3 ? P.glow : 'rgba(210,225,255,1)'); gr.addColorStop(1, 'rgba(0,0,0,0)'); g.globalAlpha = 0.3 + b.heat * 0.4; g.fillStyle = gr; g.beginPath(); g.arc(x, y, rr, 0, TAU); g.fill(); }
+    g.restore();
+  }
   _ink(g, w) { const S = this.style; if (!S.outline) return; g.lineWidth = w || S.outline; g.strokeStyle = S.pal.ink; g.lineJoin = 'round'; g.stroke(); }
   _font(px, wt) { const u = this.style.ui; return `${wt || u.weight} ${Math.round(px)}px ${u.font}`; }
 
@@ -95,15 +117,17 @@ export class View {
     this.shake *= Math.pow(0.002, dt);
     const sx = (Math.random() - 0.5) * this.shake, sy = (Math.random() - 0.5) * this.shake;
     g.setTransform(k, 0, 0, k, 0, 0); g.translate(this.cx + sx, this.cy + sy); g.rotate(this.rot); g.scale(this.scale, this.scale); g.translate(-this.cam.x, -this.cam.y);
-    this._rink(g, game); this._hazards(g, game); this._boards(g, game); this._pickups(g, game); this._ball(g, game, alpha);
+    if (S.fx && S.fx.skids) this._skids(game, dt);
+    this._rink(g, game); this._hazards(g, game); this._lights(g, game, alpha); this._boards(g, game); this._pickups(g, game); this._ball(g, game, alpha);
     for (const c of game.cars) this._car(g, game, c, alpha, hud.players || {});
     this._above(g, game); this._fx(g, dt);
     if (S.deco === 'beams') this._beams(g, game.arena);
     const m = this.ctx; m.setTransform(1, 0, 0, 1, 0, 0); m.imageSmoothingEnabled = this.k === 1; m.globalAlpha = 1; m.globalCompositeOperation = 'source-over';
     m.drawImage(this.wc, 0, 0, this.wc.width, this.wc.height, 0, 0, this.wc.width * this.k, this.wc.height * this.k);
-    if (S.post.bloom && this.canFilter) { m.save(); m.filter = `blur(${Math.round(9 * this.dpr)}px)`; m.globalCompositeOperation = 'lighter'; m.globalAlpha = S.post.bloom; m.drawImage(this.wc, 0, 0, this.canvas.width, this.canvas.height); m.restore(); }
+    if (S.post.bloom && this.canFilter) { m.save(); m.filter = `blur(${Math.round(9 * this.dpr)}px)`; m.globalCompositeOperation = 'lighter'; m.globalAlpha = S.post.bloom * (game.surface === 'ice' ? 0.3 : game.surface === 'dirt' ? 0.75 : 1); // pale floors need far less bloom m.drawImage(this.wc, 0, 0, this.canvas.width, this.canvas.height); m.restore(); }
     m.setTransform(this.dpr, 0, 0, this.dpr, 0, 0);
     if (S.post.vignette) { const v = m.createRadialGradient(this.w / 2, this.h / 2, Math.min(this.w, this.h) * 0.35, this.w / 2, this.h / 2, Math.max(this.w, this.h) * 0.75); v.addColorStop(0, 'rgba(0,0,0,0)'); v.addColorStop(1, `rgba(0,0,0,${S.post.vignette})`); m.fillStyle = v; m.fillRect(0, 0, this.w, this.h); }
+    if (S.fx && S.fx.grain) this._grain(m);
     if (this.flash) { this.flash.t -= dt * 1.1; if (this.flash.t <= 0) this.flash = null; else { m.globalAlpha = this.flash.t * 0.38; m.fillStyle = P.team[this.flash.team]; m.fillRect(0, 0, this.w, this.h); m.globalAlpha = 1; } }
     this._hud(m, game, hud, dt);
   }
@@ -119,6 +143,18 @@ export class View {
     if (game.surface === 'dirt') for (const [u, v, s] of this.specks) { g.fillStyle = s > 0.5 ? 'rgba(60,30,10,.28)' : 'rgba(255,235,200,.3)'; g.fillRect(B.left + u * fw, B.top + v * fh, 5 + s * 7, 5 + s * 5); }
     drawTheme(g, this, game, 'floor');
     if (S.mat === 'gloss') { const sh = g.createLinearGradient(B.left, B.top, B.right, B.bottom); sh.addColorStop(0, 'rgba(255,255,255,.10)'); sh.addColorStop(0.5, 'rgba(255,255,255,0)'); sh.addColorStop(1, 'rgba(0,0,0,.22)'); g.fillStyle = sh; g.fillRect(B.left, B.top, fw, fh); }
+    if (S.fx && S.fx.skids && this.skid) g.drawImage(this.skid, 0, 0, A.w, A.h);
+    if (S.fx && S.fx.pools) { // floodlight pools, then darkness gathering along the boards
+      g.save(); g.globalCompositeOperation = 'lighter';
+      for (const [u, v] of [[0.25, 0.3], [0.75, 0.3], [0.25, 0.7], [0.75, 0.7], [0.5, 0.5]]) { const x = B.left + fw * u, y = B.top + fh * v, rr = fw * 0.3, gr = g.createRadialGradient(x, y, 0, x, y, rr); gr.addColorStop(0, `rgba(150,175,255,${game.surface === 'ice' ? 0.07 : 0.2})`); gr.addColorStop(1, 'rgba(0,0,0,0)'); g.fillStyle = gr; g.fillRect(x - rr, y - rr, rr * 2, rr * 2); }
+      g.restore();
+      if (this.aoFor !== A) { // the blurred edge-darkening is baked once per arena into a half-scale layer
+        const c = document.createElement('canvas'); c.width = Math.ceil(A.w / 2); c.height = Math.ceil(A.h / 2); const q = c.getContext('2d'); q.scale(0.5, 0.5); if (this.canFilter) q.filter = 'blur(26px)';
+        q.beginPath(); A.poly.forEach(([x, y], i) => (i ? q.lineTo(x, y) : q.moveTo(x, y))); q.closePath(); q.strokeStyle = 'rgba(0,0,8,.55)'; q.lineWidth = 120; q.stroke();
+        for (const o of A.obstacles) { q.beginPath(); q.arc(o.x, o.y, (o.r || Math.max(o.w, o.h) / 2) + 26, 0, TAU); q.fillStyle = 'rgba(0,0,8,.35)'; q.fill(); }
+        this.ao = c; this.aoFor = A; }
+      g.drawImage(this.ao, 0, 0, A.w, A.h);
+    }
     g.strokeStyle = line; g.lineWidth = 4; g.beginPath(); g.moveTo(A.cx, B.top); g.lineTo(A.cx, B.bottom); g.moveTo(A.cx + 96, A.cy); g.arc(A.cx, A.cy, 96, 0, TAU); g.stroke();
     for (const G of A.goals) { g.beginPath(); g.arc(G.x, G.y, G.half + 46, 0, TAU); g.stroke(); }
     g.fillStyle = line; g.beginPath(); g.arc(A.cx, A.cy, 8, 0, TAU); g.fill();
@@ -140,12 +176,14 @@ export class View {
     const S = this.style, P = S.pal, A = game.arena;
     for (const w of this.walls) {
       if (w.kind !== 'wall') continue;
-      g.save(); g.translate(w.x, w.y); g.rotate(w.angle); g.fillStyle = S.mat === 'cel' ? P.wall : this._mat(g, P.wall, P.wallDark, '#ffffff', Math.max(w.w, w.h) * 0.6, w.angle); g.fillRect(-w.w / 2 - 0.5, -w.h / 2 - 0.5, w.w + 1, w.h + 1);
+      if (S.fx && S.fx.depth) { g.save(); g.translate(w.x, w.y); g.rotate(w.angle); g.fillStyle = P.wallDark; g.fillRect(-w.w / 2 - 0.5, -w.h / 2 - 0.5, w.w + 1, w.h + 1); g.restore(); } // the wall's face; its top is drawn raised
+      g.save(); g.translate(w.x, w.y); if (S.fx && S.fx.depth) { g.rotate(-this.rot); g.translate(-S.fx.depth * 0.45, -S.fx.depth); g.rotate(this.rot); } g.rotate(w.angle); g.fillStyle = S.mat === 'cel' ? P.wall : this._mat(g, P.wall, P.wallDark, '#ffffff', Math.max(w.w, w.h) * 0.6, w.angle); g.fillRect(-w.w / 2 - 0.5, -w.h / 2 - 0.5, w.w + 1, w.h + 1);
       if (P.stripe) { g.fillStyle = this._stripes(g); g.fillRect(-w.w / 2, -w.h / 2, w.w, w.h); }
       g.restore();
     }
     this._path(g, A.poly); if (S.outline) { g.lineWidth = S.outline + 5; g.strokeStyle = P.ink; g.lineJoin = 'round'; g.stroke(); }
     g.lineWidth = 5; g.strokeStyle = P.trim || '#ffffff'; g.globalAlpha = 0.92; g.stroke(); g.globalAlpha = 1;
+    if (S.deco === 'led') { this._path(g, A.poly); g.save(); g.globalCompositeOperation = 'lighter'; g.strokeStyle = P.trim; g.lineWidth = 14; g.globalAlpha = 0.28 + 0.08 * Math.sin(this.t * 3); this._soft(g, true); g.stroke(); this._soft(g, false); g.restore(); } // LED strip glow along the boards
     if (S.deco === 'pennants') { g.fillStyle = P.accent; this.bulbs.forEach(([x, y], i) => { const p = A.poly, q = this.bulbs[(i + 1) % this.bulbs.length]; if (Math.hypot(q[0] - x, q[1] - y) > 60) return; g.beginPath(); g.moveTo(x, y); g.lineTo(q[0], q[1]); g.lineTo((x + q[0]) / 2 + (q[1] - y) * 0.45, (y + q[1]) / 2 - (q[0] - x) * 0.45); g.fill(); }); }
     if (S.deco === 'bulbs') this.bulbs.forEach(([x, y], i) => { const on = (i + Math.floor(this.t * 5)) % 3 === 0; g.beginPath(); g.arc(x, y, on ? 9 : 7, 0, TAU); g.fillStyle = on ? P.bulb : '#c98a1c'; g.fill(); g.lineWidth = 2; g.strokeStyle = P.ink; g.stroke(); if (on) { g.globalAlpha = 0.4; g.fillStyle = P.bulb; g.beginPath(); g.arc(x, y, 18, 0, TAU); g.fill(); g.globalAlpha = 1; } });
     for (const w of this.walls) if (w.kind === 'post') { g.beginPath(); g.arc(w.x, w.y, w.r + 5, 0, TAU); g.fillStyle = this._mat(g, '#ffffff', P.wallDark, '#ffffff', w.r + 5); g.fill(); this._ink(g, Math.min(4, S.outline)); }
@@ -184,7 +222,7 @@ export class View {
     if (hz.pylons) for (const p of game.world.pylons) {
       const r = H.pylons.r;
       if (!p.up) { g.strokeStyle = P.ink; g.globalAlpha = 0.45; g.lineWidth = 4; g.setLineDash([10, 8]); g.beginPath(); g.arc(p.x, p.y, r, 0, TAU); g.stroke(); g.setLineDash([]); g.globalAlpha = 1; continue; }
-      const [dx, dy, da] = this.style.light.shadow; g.globalAlpha = da; g.fillStyle = '#000'; g.beginPath(); g.arc(p.x + dx, p.y + dy, r, 0, TAU); g.fill(); g.globalAlpha = 1;
+      const [dx, dy, da] = this.style.light.shadow; g.globalAlpha = da; g.fillStyle = '#000'; g.beginPath(); g.arc(p.x + dx, p.y + dy, r, 0, TAU); this._soft(g, true); g.fill(); this._soft(g, false); g.globalAlpha = 1;
       g.beginPath(); g.arc(p.x, p.y, r, 0, TAU); g.fillStyle = this._mat(g, P.accent, P.ballDark, '#ffffff', r); g.fill(); this._ink(g);
       g.beginPath(); g.arc(p.x, p.y, r * 0.55, 0, TAU); g.fillStyle = '#ffffff'; g.fill(); g.beginPath(); g.arc(p.x, p.y, r * 0.25, 0, TAU); g.fillStyle = P.team[0]; g.fill();
     }
@@ -220,7 +258,7 @@ export class View {
       g.globalAlpha = 0.25 + heat * 0.55; g.fillStyle = gr; g.beginPath(); g.arc(x, y, R2, 0, TAU); g.fill();
       if (heat >= 0.999) for (let i = 0; i < 9; i++) { const a = this.t * 7 + i * 0.7, rr = r * (1.05 + 0.25 * Math.sin(this.t * 19 + i * 2)); g.globalAlpha = 0.9; g.fillStyle = i % 2 ? '#ffffff' : P.glow; g.beginPath(); g.moveTo(x + Math.cos(a - 0.22) * r, y + Math.sin(a - 0.22) * r); g.lineTo(x + Math.cos(a) * rr * 1.45, y + Math.sin(a) * rr * 1.45); g.lineTo(x + Math.cos(a + 0.22) * r, y + Math.sin(a + 0.22) * r); g.fill(); }
     }
-    const [dx, dy, da] = S.light.shadow; g.globalAlpha = da; g.fillStyle = '#000'; g.beginPath(); g.ellipse(x + dx, y + dy, r, r * 0.94, 0, 0, TAU); g.fill(); g.globalAlpha = 1;
+    const [dx, dy, da] = S.light.shadow; g.globalAlpha = da; g.fillStyle = '#000'; g.beginPath(); g.ellipse(x + dx, y + dy, r, r * 0.94, 0, 0, TAU); this._soft(g, true); g.fill(); this._soft(g, false); g.globalAlpha = 1;
     g.beginPath(); g.arc(x, y, r, 0, TAU); g.fillStyle = this._mat(g, hot, mix(P.ballDark, P.glow, heat * 0.5), '#ffffff', r); g.fill();
     g.save(); g.translate(x, y); g.rotate(lerpAngle(b.pa, b.body.angle, alpha)); g.strokeStyle = heat > 0.6 ? '#ffffff' : P.ballDark; g.lineWidth = 5; g.beginPath(); g.arc(0, 0, r * 0.62, 0.3, 2.2); g.stroke(); g.beginPath(); g.arc(0, 0, r * 0.62, 3.44, 5.34); g.stroke(); g.restore();
     g.beginPath(); g.arc(x, y, r, 0, TAU); this._ink(g);
@@ -234,7 +272,7 @@ export class View {
     if (c.pitT > 0) { const age = game.world.ticks - c.pitAt.tick; if (age < 24) { g.save(); g.translate(c.pitAt.x, c.pitAt.y); g.rotate(age * 0.4); const q = 1 - age / 24; g.scale(q, q); g.beginPath(); g.roundRect(-L / 2, -Wd / 2, L, Wd, 16); g.fillStyle = base; g.fill(); this._ink(g); g.restore(); } if (Math.floor(this.t * 10) % 2) return; }
     g.save(); g.translate(x, y);
     if (c.windup > 0) { const p = 1 - c.windup / this.cfg.items.shock.windup; g.strokeStyle = P.accent; g.lineWidth = 8; g.globalAlpha = 0.4 + p * 0.5; g.beginPath(); g.arc(0, 0, 40 + p * 70, 0, TAU); g.stroke(); g.globalAlpha = 1; }
-    g.globalAlpha = da; g.fillStyle = '#000'; g.save(); g.rotate(-this.rot); g.translate(flat ? 0 : dx, flat ? 0 : dy); g.rotate(this.rot + a); g.beginPath(); g.roundRect(-L / 2, -Wd / 2, L, Wd, 12); g.fill(); g.restore(); g.globalAlpha = 1;
+    g.globalAlpha = da; g.fillStyle = '#000'; g.save(); g.rotate(-this.rot); g.translate(flat ? 0 : dx, flat ? 0 : dy); g.rotate(this.rot + a); g.beginPath(); g.roundRect(-L / 2, -Wd / 2, L, Wd, 12); this._soft(g, true); g.fill(); this._soft(g, false); g.restore(); g.globalAlpha = 1;
     g.rotate(a); const sc = flat ? 1.22 : cow ? 1.12 : 1; g.scale(sc, sc);
     if (c.turboOn) { g.fillStyle = P.turbo; g.beginPath(); const f = 20 + Math.random() * 18; g.moveTo(-L / 2, -Wd * 0.28); g.lineTo(-L / 2 - f, 0); g.lineTo(-L / 2, Wd * 0.28); g.fill(); g.fillStyle = '#ffffff'; g.beginPath(); g.moveTo(-L / 2, -Wd * 0.14); g.lineTo(-L / 2 - f * 0.5, 0); g.lineTo(-L / 2, Wd * 0.14); g.fill(); }
     if (c.drafting) { g.strokeStyle = P.turbo; g.lineWidth = 4; g.globalAlpha = 0.5 + 0.4 * Math.sin(this.t * 14); for (const q of [16, 30]) { g.beginPath(); g.moveTo(L / 2 + q, -10); g.lineTo(L / 2 + q + 9, 0); g.lineTo(L / 2 + q, 10); g.stroke(); } g.globalAlpha = 1; }

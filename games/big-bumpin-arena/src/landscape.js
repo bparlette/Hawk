@@ -52,7 +52,7 @@ export function drawTheme(g, V, game, pass) {
   }
 }
 
-function shadow(g, V, fn) { const [dx, dy, da] = V.style.light.shadow; g.save(); g.rotate(-V.rot); g.translate(dx, dy); g.rotate(V.rot); g.globalAlpha = da; g.fillStyle = '#000'; fn(); g.fill(); g.restore(); }
+function shadow(g, V, fn) { const [dx, dy, da] = V.style.light.shadow; g.save(); g.rotate(-V.rot); g.translate(dx, dy); g.rotate(V.rot); g.globalAlpha = da; g.fillStyle = '#000'; fn(); V._soft(g, true); g.fill(); V._soft(g, false); g.restore(); }
 function parked(g, V, x, y, color, angle = Math.PI / 2, w = 150, h = 76) {
   g.save(); g.translate(x, y); g.rotate(angle); shadow(g, V, () => { g.beginPath(); g.roundRect(-w / 2, -h / 2, w, h, 16); });
   g.fillStyle = '#17181d'; for (const [wx, wy] of [[-0.3, -1], [-0.3, 1], [0.3, -1], [0.3, 1]]) g.fillRect(w * wx - 14, wy * (h / 2) - 5, 28, 10);

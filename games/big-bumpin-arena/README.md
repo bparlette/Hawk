@@ -1,88 +1,115 @@
 # BIG BUMPIN' ARENA!
 
-2v2 bumper-car ball in one enclosed rink. Ram an oversized ball into the other team's net. Grounded arcade
-physics: cars shove, bounce and spin, and never flip or leave the floor. Original game, original name, no
-third-party branding.
+2v2 bumper-car ball. Ram an oversized ball into the other team's net. Grounded arcade physics: cars shove,
+bounce and spin, and never flip or leave the floor. Original game and name; no third-party marks or characters.
 
-Status: **Prompt 1 core slice** (`gamepress docs/fable-prompts/big-bumpin-2v2.md`). Placeholder flat colours;
-no art pass yet. Not committed: left in the working tree for verification.
+Built from the gamepress prompts in `docs/fable-prompts/big-bumpin-2v2.md` (Prompt 1 core slice + Prompt 2
+tactics), then extended with six arenas, a fifth style pack and a Roblox port.
 
 ## Run
-Serve the repo (any static server) and open `games/big-bumpin-arena/index.html`. Everything is local:
-Matter.js and the touch controller are vendored in `vendor/`, there is no build step and no network request.
+Serve the repo with any static server and open `games/big-bumpin-arena/index.html`. Everything is local:
+Matter.js and the touch controller are vendored in `vendor/`; there is no build step and no network request.
 
 ```
-node --test games/big-bumpin-arena/test/      # headless bot match + rules (7 tests)
+node --test games/big-bumpin-arena/test/      # 26 headless tests, about 3 s
 ```
 
 | | Keyboard | Gamepad | Touch |
 |---|---|---|---|
-| Drive | W/S or up/down = throttle, brake/reverse; A/D or left/right = steer (heading-relative) | left stick steer, RT/LT throttle (or stick up/down, d-pad) | floating stick on the left half: the car drives toward where you point |
-| Turbo | Shift (or K) | A (or RB) | A button |
-| Handbrake drift | Space (or L) | B / X (or LB) | B button |
+| Drive | W/S throttle and brake/reverse, A/D steer (heading-relative) | left stick, RT/LT (or d-pad) | floating stick on the left half: drive toward where you point; a hard change of direction pulls the handbrake |
+| Turbo | Shift (or K) | A | ⚡ |
+| Handbrake drift | Space (or L) | B / X | automatic |
+| Shunt left / right | Q / E | LB / RB | ◀ ▶ |
+| Power-up | F (or J) | Y | ★ |
 
-M mutes. Player 1 is Red 1 (the kart). A second gamepad that presses any button joins as Red 2 (the
-tractor); `?p2=versus` puts it on Blue 1 instead. Every other car is a bot.
+V (or the ◐ button) switches style pack at any time. M mutes. Player 1 is Red 1. A second gamepad joins as
+Red 2; `?p2=versus` puts it on Blue 1. Every other car is a bot.
 
-URL params: `?seed=N` (bots and kickoff aims), `?auto=1` or `?spectate=1` (four bots, no title),
-`?autostart=1`, `?secs=N` (match length), `?ff=N` / `?ff=goal` (fast-forward the sim before the first frame;
-used for the screenshots in `shots/`).
+URL params: `?arena=`, `?surface=`, `?style=`, `?hazards=all|pads,pylons,tilt`, `?mode=season`, `?seed=N`,
+`?auto=1` / `?spectate=1` (four bots), `?secs=N`, `?ff=N|goal|hot` (fast-forward before the first frame; used
+for the screenshots in `shots/`).
+
+## Arenas (`src/arenas.js`)
+Arenas are data: an outline, goals, furniture, pits, booms and spot positions. Every outline is symmetric
+under a half-turn, so neither end is better. Big arenas use a follow camera and a radar.
+
+| Arena | Size | Shape | What is in it | Ground |
+|---|---|---|---|---|
+| The Rink | 1280 x 908 | rounded rectangle | nothing: the classic | asphalt |
+| Lot 7 | 2100 x 1300 | chamfered rectangle | telephone poles (wires overhead), parked cars, kerb islands, bollards, a trolley bay | asphalt |
+| Frostbite Pond | 2000 x 1300 | irregular pond, no straight walls | rocks, fishing huts, four fishing holes that swallow cars | ice |
+| Dust Bowl | 2000 x 1240 | six-sided | hay bales, tyre stacks, a boom arm swinging about the centre | dirt |
+| The Pinch | 2200 x 1240 | hourglass | shipping containers, bollards, drums; a narrow throat | asphalt |
+| The Midway | 1900 x 1400 | round | a turning carousel in the middle, bollards, booths, bunting | asphalt |
+
+Any arena can be played on any surface, and with any of the three optional hazards.
 
 ## The game
-- **Rink**: 1280 x 908 world, rounded corners, thick boards, a recessed net behind each goal line with
-  round posts. A car-only lip on each goal line keeps cars out of the nets; the ball passes through it.
-- **Weight classes** (`CFG.classes`): tractor (mass 12, slow, big ball punch) and kart (mass 4, quick,
-  easily shoved). Each team fields one of each.
-- **Turbo**: 2.2 s of +50% top speed on a meter that takes 9 s to refill, or 3 s tucked in a teammate's
-  slipstream (chevrons on the car, the meter outline pulses).
-- **Match**: 3:00 clock, 3-2-1 kickoff, goal = flash + horn + cars frozen + clock paused for 2 s, face-off
-  reset, 1 s beat, play. Level at 0:00 = golden-goal overtime. Goals name the scorer; own goals are named.
-- **Bots**: the kart chases (gets behind the ball, drives it at goal), the tractor sweeps (sits between
-  ball and own net, steps up to clear).
+- **Weight classes**: tractor (heavy, slow, big ball punch) and kart (light, quick, easily shoved).
+- **Turbo**: 2.2 s of +50% top speed; refills in 9 s, or 3 s in a teammate's slipstream.
+- **Lateral shunt**: an instant sideways barge of about a car width, 0.7 s cooldown.
+- **T-bone spin-out**: shunt or full-speed ram into an opponent's flank or rear quarter and they spin for 0.75 s.
+- **Ball heat**: consecutive strikes on a moving ball add 12.5% speed each, up to five; at full heat a
+  front-on block is flattened and thrown back. Heat fades when the ball rolls free and dies when it stops.
+- **English**: dragging the bumper across the ball bends the shot.
+- **One-timer**: strike within 1.5 s of a teammate's touch for +30% speed and a dead-straight shot.
+- **Power-ups** (two boxes every 20 s): magnet grille, air-horn shockwave, heavy cowcatcher, oil slick,
+  harpoon tether (snaps when a post gets between you and your catch).
+- **Surfaces**: asphalt, ice (sliding ball, drifting cars), dirt (the ball dies fast).
+- **Hazards** (optional): conveyor speed pads, pop-up bumper pylons, a final-minute floor tilt toward the goals.
+- **Match**: 3:00, 3-2-1 kickoff, goal banner with the scorer's name (own goals named), face-off reset,
+  golden-goal overtime, a result screen with shots, shunts, spin-outs and top speed.
+- **Season**: four AI teams (Tractor Crew, Kart Kids, Chair Racers, Delivery Vans) with rising bot skill
+  and different weight-class mixes.
+
+## Style packs (`src/styles.js`)
+One game, five skins, switchable while playing. A pack is data: palette, material mode (cel / gloss / flat),
+outline pass, lighting rig, post FX (low-res pixel target, bloom, vignette), arena dressing and UI theme.
+
+| Pack | Direction |
+|---|---|
+| CEL (default) | flat colour, ink outlines, pale floor, blue boards with yellow pennants |
+| GLOSSY | dark arena, clearcoat gradients, neon lines, sweeping light beams, bloom |
+| PIXEL | the world is drawn to a 400 px target and scaled up unsmoothed |
+| FAIRGROUND | purple night, magenta boards with gold trim, chasing marquee bulbs |
+| PRIME | the showpiece: soft shadows, raised walls, floodlight pools and edge darkening, headlight beams, team under-glow, a light on the ball, persistent skid marks, film grain |
 
 ## Files
 | File | Layer |
 |---|---|
 | `src/config.js` | Every tuning number. |
-| `src/physics.js` | Factories: named arena walls, net zones, ball, car bodies. |
-| `src/world.js` | Matter engine, fixed 1/60 s step, car handling, turbo and slipstream, collision events. |
+| `src/arenas.js` | Arena data and the builder that turns it into outline, goals, furniture, spots. |
+| `src/physics.js` | Factories: wall slabs from the outline, net zones, ball, car bodies. |
+| `src/world.js` | Matter engine, fixed 1/60 s step, handling, turbo, shunt, spin-outs, ball heat and curve, power-ups, hazards, pits, booms, tethers. |
 | `src/game.js` | Teams, score, clock, state machine, last-touch attribution. Seeded and deterministic. |
-| `src/bots.js` | Chaser and sweeper. |
-| `src/render.js` | Canvas drawing and HUD. Reads the game only; `PALETTE` at the top is the restyle point. |
-| `src/audio.js` | Synth sound and the iOS audio fixes. |
-| `index.html` | Loop, input merge (keyboard, gamepad, gptouch), phone gesture guard. |
-| `test/bot-match.test.mjs` | The headless tests. |
+| `src/bots.js` | Chaser and sweeper roles, obstacle avoidance, shunt and power-up use, a skill dial. |
+| `src/styles.js`, `src/render.js`, `src/landscape.js` | Style packs, the renderer and camera, per-arena scenery and furniture. |
+| `src/audio.js` | Synth sound (engine, impacts, horn, crowd swell) and the iOS audio fixes. |
+| `index.html` | Menu, loop, input merge (keyboard, gamepad, gptouch), phone gesture guard. |
+| `test/*.test.mjs` | Headless tests: bot matches on every arena and surface, each rule, determinism. |
+| `roblox/` | Luau port (see `roblox/README.md`). |
 
-The sim files (`config`, `physics`, `world`, `game`, `bots`) import nothing from the DOM or the renderer.
+The sim files (`config`, `arenas`, `physics`, `world`, `game`, `bots`) import nothing from the DOM or the renderer.
 
-## What came from which donor (dossier: `gamepress docs/fable-prompts/big-bumpin-donors.md`)
+## What came from which donor (dossier: gamepress `docs/fable-prompts/big-bumpin-donors.md`)
 | Donor | Lifted | Where |
 |---|---|---|
-| ice-bumpers `js/game.js` L51-L70, L82 | World size 1280 x 908, goal lines at x = 110 / 1170, ~207 px goal mouth, car-heavier-than-ball mass ratio, 180 s clock | `config.js` |
-| ice-bumpers `mapBounds.json` | The idea that goal mouths are recesses in the wall line. The 40 polygons themselves were not copied: the brief asks for rounded corners, and that file's corners are stepped blocks | `physics.js` |
-| ice-bumpers L229-L269, L387-L394 | Goal choreography (freeze cars, pause clock, 2 s, reset to face-off spots, 1 s, re-enable) and the one-goal-per-ball latch | `game.js` |
-| car-league `game/` layout | config / physics factories / World / Game split, sim separate from rendering | whole `src/` |
-| car-league `config/arena.ts` L27-L153, `World.ts` L132-L146, `Game.ts` L122-L133 | `createArenaWallConfigs()` with named walls and net boxes; goals keyed to named nets | `physics.js`, `world.js` |
-| GameKart `main.js` L983-L1000 | Throttle gated by measured forward speed; sideways speed bled off by a grip factor that drops while drifting | `world.js _drive` |
-| kfarr `rapier-arcade-body` L169-L196 | Steering maths: yaw rate scales with speed, sign flips in reverse | `world.js _drive` |
-| kfarr L146-L157 (the rule) | Rotation exists on the yaw axis only: one 2D rigid body per car, so no flip is possible | `physics.js createCar` |
-| kfarr `rapier-vehicle` L282-L290 | Fixed-step accumulator with clamped delta and capped catch-up | `index.html` |
-| Wocket-Weague `Player.ts` L102-L124 | Grip expressed as a rate (strong normally, weak while drifting) rather than a per-frame kill | `config.js car.gripRate / driftRate` |
-| raycast-vehicle `Vehicle.js` L906-L917 | Grip fades back in over 0.35 s after a big load, so a hit actually moves the car | `world.js` (`slip`) |
-| rocketball L190-L208, carball.io `SoccerBall.js` | Matter ball starting numbers (frictionAir ~0.01, lively restitution, hard speed cap) | `config.js ball` |
-| carball.io `Game.js` L262-L292 | Last-touch attribution with the 5 s own-goal rule | `game.js _goal` |
+| ice-bumpers `js/game.js` L51-L70, L82 | Rink dimensions for The Rink, car-heavier-than-ball mass ratio, 180 s clock | `arenas.js`, `config.js` |
+| ice-bumpers `mapBounds.json` | Goal mouths as recesses in the wall line (the polygons themselves were not copied) | `arenas.js`, `physics.js` |
+| ice-bumpers L229-L269, L387-L394, L211-L217 | Goal choreography; the one-goal-per-ball latch; pole spots for the pylons | `game.js`, `arenas.js` |
+| car-league `game/` | config / physics factories / World / Game split; named walls; goals keyed to named nets | whole `src/` |
+| GameKart `main.js` L983-L1000, L923-L928, L753-L806 | Throttle gated by forward speed, grip that drops while drifting; `triggerSpinOut()` (retuned to 0.75 s); ItemBox collect/respawn flow | `world.js` |
+| kfarr L146-L157, L169-L196, `rapier-vehicle` L282-L290 | Yaw-only rotation rule; steering maths; fixed-step accumulator | `physics.js`, `world.js`, `index.html` |
+| Wocket-Weague `Player.ts` L102-L124 | Grip as a rate | `config.js` |
+| raycast-vehicle `Vehicle.js` L906-L917, `main.js` L552-L613 | Grip fading back in after a hit; exponential camera damping | `world.js`, `render.js` |
+| rocketball, carball.io | Matter ball starting numbers; last-touch attribution with the 5 s own-goal rule | `config.js`, `game.js` |
 
-Watch-outs obeyed: no velocity pinning (forward speed is only added to, sideways speed only decays); no
-`setTimeout` in the sim (tick countdowns); wall names live on the bodies, not in an index-zipped map; no
-variable timestep; spin from collisions is kept; a dead ball pinned on the boards is rolled back into play.
-
-Built new (no donor has it): the bots, the turbo meter and slipstream, weight classes, the car-only goal
-lip, golden-goal overtime.
+Watch-outs obeyed: no velocity pinning; no `setTimeout` in the sim; wall names live on the bodies; fixed
+timestep; collision spin is kept; a dead ball is rolled back into play.
 
 ## Known limits
-- Bots are simple. Across seeds 1-12, both teams scored in 10 of 12 full bot matches (seeds 4 and 9 were
-  shut-outs). The required test uses seed 1.
-- Local 2-player on a second gamepad is wired but has not been tried with two physical pads.
-- Touch was checked in a phone-sized emulated viewport, not on a real phone; the iOS audio path is untested
-  on a device.
-- No art pass, by instruction.
+- Bots are simple. They score on every arena and surface in the tested seeds, but shut-outs happen on others.
+- Bots steer round furniture with a look-ahead rule, not a path planner; they can still wedge briefly.
+- Touch and iOS audio were checked in an emulated phone viewport, not on a device. Two-pad local play is wired but untried on hardware.
+- PRIME uses canvas blur filters; on browsers without `ctx.filter` it falls back to hard shadows and no bloom.
+- The Roblox port has its own small physics and is not tick-identical to this build (details in `roblox/README.md`).

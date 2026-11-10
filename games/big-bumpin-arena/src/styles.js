@@ -8,7 +8,9 @@
 //   deco     arena dressing: 'burst' impact stars, 'beams' sweeping light cones, 'bulbs' marquee chase lights
 //   floor    per surface [a, b, line] : the asphalt / ice / dirt palette swap lives here
 //   ui       theme variables for the HUD and the menus
-export const STYLE_ORDER = ['cel', 'glossy', 'pixel', 'fairground'];
+//   fx       optional premium lighting passes (PRIME): soft shadows, raised walls, floodlight pools + edge occlusion,
+//            headlight beams, a ball light, team under-glow, persistent skid marks, film grain
+export const STYLE_ORDER = ['cel', 'glossy', 'pixel', 'fairground', 'prime'];
 export const STYLES = {
   cel: {
     name: 'CEL', mat: 'cel', outline: 4.5, light: { dir: [-0.55, -0.83], shadow: [7, 9, 0.28], spec: 0.9 }, post: { pixel: 0, bloom: 0, vignette: 0.1 }, deco: 'pennants', groundMix: 0.35,
@@ -38,5 +40,14 @@ export const STYLES = {
     floor: { asphalt: ['#3a1f55', '#432460', 'rgba(255,201,60,.6)'], ice: ['#5fb7c9', '#70c6d6', 'rgba(255,255,255,.7)'], dirt: ['#8a5a3a', '#96633f', 'rgba(255,201,60,.55)'] },
     ui: { font: 'Georgia, "Times New Roman", serif', weight: 900, panel: 'rgba(58,20,8,.9)', panelText: '#fff6dd', radius: 18, stroke: '#3a1408', title: '#ffc93c', sub: '#fff6dd', button: '#e3323f', buttonText: '#fff6dd', page: 'rgba(43,13,28,.92)' },
   },
+};
+// PRIME: the showpiece. Night stadium under floodlights, every lighting pass switched on.
+STYLES.prime = {
+  name: 'PRIME', mat: 'gloss', outline: 0, light: { dir: [-0.45, -0.89], shadow: [12, 18, 0.55], spec: 1 }, post: { pixel: 0, bloom: 0.5, vignette: 0.62 }, deco: 'led', groundMix: 0.86,
+  fx: { soft: 9, depth: 11, pools: true, headlights: true, ballLight: true, underglow: true, skids: true, grain: 0.06 },
+  pal: { bg: '#05070f', wall: '#7f8aa3', wallDark: '#232a3a', trim: '#7df9ff', skirt: '#1a1d29', team: ['#ff2f48', '#1c8dff'], teamDark: ['#6b0817', '#06306e'], teamLite: ['#ffd0d6', '#d3e8ff'],
+    ball: '#fbfdff', ballDark: '#8a94ad', ink: '#03040a', text: '#f2f6ff', turbo: '#7df9ff', accent: '#ffd166', net: 'rgba(255,255,255,.45)', pad: '#7df9ff', glow: '#ff8a1f' },
+  floor: { asphalt: ['#182036', '#1c2540', 'rgba(255,255,255,.5)'], ice: ['#8fc0e0', '#a2cfea', 'rgba(255,255,255,.85)'], dirt: ['#6a4930', '#735036', 'rgba(255,225,180,.55)'] },
+  ui: { font: '"SF Pro Display", "Avenir Next", "Segoe UI", system-ui, sans-serif', weight: 800, panel: 'rgba(8,11,22,.78)', panelText: '#f2f6ff', radius: 10, stroke: '#03040a', title: '#ffd166', sub: '#f2f6ff', button: '#ffd166', buttonText: '#05070f', page: 'rgba(5,7,15,.88)' },
 };
 export const ITEM_ICON = { magnet: 'U', shock: '◎', cow: '▲', oil: '●' }; // drawn as shapes in render.js; these are the fallbacks
