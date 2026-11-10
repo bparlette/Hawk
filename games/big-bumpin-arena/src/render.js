@@ -124,7 +124,7 @@ export class View {
     if (S.deco === 'beams') this._beams(g, game.arena);
     const m = this.ctx; m.setTransform(1, 0, 0, 1, 0, 0); m.imageSmoothingEnabled = this.k === 1; m.globalAlpha = 1; m.globalCompositeOperation = 'source-over';
     m.drawImage(this.wc, 0, 0, this.wc.width, this.wc.height, 0, 0, this.wc.width * this.k, this.wc.height * this.k);
-    if (S.post.bloom && this.canFilter) { m.save(); m.filter = `blur(${Math.round(9 * this.dpr)}px)`; m.globalCompositeOperation = 'lighter'; m.globalAlpha = S.post.bloom * (game.surface === 'ice' ? 0.3 : game.surface === 'dirt' ? 0.75 : 1); // pale floors need far less bloom m.drawImage(this.wc, 0, 0, this.canvas.width, this.canvas.height); m.restore(); }
+    if (S.post.bloom && this.canFilter) { m.save(); m.filter = `blur(${Math.round(9 * this.dpr)}px)`; m.globalCompositeOperation = 'lighter'; m.globalAlpha = S.post.bloom * (game.surface === 'ice' ? 0.3 : game.surface === 'dirt' ? 0.75 : 1); m.drawImage(this.wc, 0, 0, this.canvas.width, this.canvas.height); m.restore(); } // pale floors need far less bloom
     m.setTransform(this.dpr, 0, 0, this.dpr, 0, 0);
     if (S.post.vignette) { const v = m.createRadialGradient(this.w / 2, this.h / 2, Math.min(this.w, this.h) * 0.35, this.w / 2, this.h / 2, Math.max(this.w, this.h) * 0.75); v.addColorStop(0, 'rgba(0,0,0,0)'); v.addColorStop(1, `rgba(0,0,0,${S.post.vignette})`); m.fillStyle = v; m.fillRect(0, 0, this.w, this.h); }
     if (S.fx && S.fx.grain) this._grain(m);
