@@ -76,6 +76,10 @@ export function makeMaterials(THREE, timeU) {
   // Cel ramp: a dark band and a lit band with a short soft edge between them, like hand-painted cel shading.
   const ramp = new THREE.DataTexture(new Uint8Array([34, 34, 36, 60, 214, 255, 255, 255].flatMap((v) => [v, v, v, 255])), 8, 1, THREE.RGBAFormat);
   ramp.minFilter = ramp.magFilter = THREE.LinearFilter; ramp.needsUpdate = true;
+  // Soft ramp: same cel steps with a much higher floor, for hero cloth — a saturated tunic must still read
+  // as its own colour in the shade band instead of collapsing to near-black (pass-3 fix).
+  const rampSoft = new THREE.DataTexture(new Uint8Array([118, 118, 120, 148, 228, 255, 255, 255].flatMap((v) => [v, v, v, 255])), 8, 1, THREE.RGBAFormat);
+  rampSoft.minFilter = rampSoft.magFilter = THREE.LinearFilter; rampSoft.needsUpdate = true;
   /** opts: map, uv (world-space tiling in repeats per metre), ao (darken toward the ground), rim, wind ('grass'|'flag'), plus any MeshToonMaterial option. */
   const toon = (color, o = {}) => {
     const { uv = 0, ao = false, rim = 0.5, wind = '', ...rest } = o;
@@ -121,7 +125,7 @@ export function makeMaterials(THREE, timeU) {
     if (line) { geo.computeBoundingSphere(); const o = new THREE.Mesh(geo, ink); o.scale.setScalar(1 + line / Math.max(0.12, geo.boundingSphere.radius)); m.add(o); }
     return m;
   };
-  return { toon, glowMat, ink, part, ramp };
+  return { toon, glowMat, ink, part, ramp, rampSoft };
 }
 
 // ------------------------------------------------------------------------------------------------ sky

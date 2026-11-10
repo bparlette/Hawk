@@ -63,9 +63,9 @@ canvas{touch-action:none}
 import * as THREE from './lib/three.module.min.js';
 import { FixedTicker, PlayerInput } from './lib/three-adapter.js';
 import { TouchController, isTouchDevice } from './lib/gptouch.js';
-import { Game, VEHICLES, HEROES, EDGE, N, roadAt } from './sim.js';
+import { Game, VEHICLES, HEROES, EDGE, N, roadAt, GRASS_REGROW } from './sim.js';
 import { Bot } from './bot.js';
-import { U, buildCityView, HeroView, LOOKS, makeVehicle, makeFolk, makeCucco, makePickup, makeBeacon } from './view.js';
+import { U, buildCityView, HeroView, LOOKS, makeVehicle, makeFolk, makeCucco, makePickup, makeBeacon, makePot } from './view.js';
 import { SUN_DIR, makeTextures, makeMaterials, makeSky, makeMotes, Post } from './fx.js';
 
 const Q = new URLSearchParams(location.search), AUTO = Q.get('auto') === '1' || Q.get('spectate') === '1', SEED = +(Q.get('seed') || 7), ANG = (Math.PI * 2) / 0x10000;
@@ -85,8 +85,10 @@ sun.castShadow = true; sun.shadow.mapSize.set(4096, 4096); sun.shadow.bias = -0.
 Object.assign(sun.shadow.camera, { left: -62, right: 62, top: 62, bottom: -62, near: 1, far: 420 }); scene.add(sun, sun.target);
 
 let game, bot, cityView, heroViews = [], ents = new Map(), beacons = [];
+const burstDone = new Set(); let bursts = [];
 function restart() {
   if (cityView) scene.remove(cityView); for (const e of ents.values()) scene.remove(e); ents.clear();
+  for (const b of bursts) scene.remove(b.grp); bursts = []; burstDone.clear();
   heroViews.forEach((h) => scene.remove(h.group, h.shadow, h.ring));
   game = new Game(SEED); bot = new Bot(game);
   cityView = buildCityView(THREE, game.city, kit); scene.add(cityView);
@@ -152,7 +154,8 @@ const tune = (notes, type = 'triangle', vol = 0.13) => notes.forEach((n, i) => b
 const SOUNDS = { jump: [330, 660, .13], doubleJump: [392, 784, .14], tripleJump: [523, 1175, .22], backflip: [440, 988, .2], sideFlip: [440, 988, .2], longJump: [300, 900, .25], wallKick: [600, 1100, .12], dive: [500, 250, .15],
   jumpKick: [700, 500, .08], groundPound: [900, 300, .2], pound: [140, 50, .25, 'sawtooth', .2], land: [160, 110, .05, 'triangle', .08], ledgeGrab: [520, 520, .05], coin: [1320, 1760, .12, 'sine', .13],
   enter: [220, 440, .12, 'triangle'], exit: [440, 220, .12, 'triangle'], crash: [180, 40, .3, 'sawtooth', .22], bonk: [300, 90, .2, 'square', .16], ram: [120, 60, .35, 'sawtooth', .25], denied: [140, 120, .12, 'square', .08], step: [660, 990, .18, 'sine'],
-  peck: [950, 480, .07, 'square', .08], cuccoAggro: [1250, 700, .2, 'sawtooth', .13] };
+  peck: [950, 480, .07, 'square', .08], cuccoAggro: [1250, 700, .2, 'sawtooth', .13],
+  potSmash: [1500, 240, .16, 'square', .14], grassCut: [820, 210, .09, 'sawtooth', .06] };
 const TUNES = { missionStart: [392, 523, 659], missionPassed: [523, 659, 784, 1047, 1319], missionFailed: [392, 330, 262, 196], heatUp: [880, 660, 880, 660], heatLost: [523, 784, 1047], busted: [330, 262, 196, 131], switch: [659, 988], lamp: [988, 1319], chest: [523, 784, 1047, 1568], tailor: [784, 988, 1175], jack: [220, 196], cuccoCalm: [660, 880, 990] };
 function play(name) { if (SOUNDS[name]) beep(...SOUNDS[name]); else if (TUNES[name]) tune(TUNES[name], name === 'heatUp' ? 'square' : 'triangle', name === 'heatUp' ? 0.07 : 0.13); }
 
@@ -176,6 +179,18 @@ function sync(list, key, make, place) {
   for (const o of list) { let m = ents.get(key + o.id); if (!m) { m = make(o); ents.set(key + o.id, m); scene.add(m); } m.userData.live = frameNo; place(m, o); }
 }
 let frameNo = 0, heatGlow = 0;
+// ---------------------------------------------------------------- pass 3: pot shard bursts (view-only confetti)
+const shardGeo = new THREE.BoxGeometry(0.11, 0.05, 0.09); let shardMat = null;
+function spawnBurst(x, z) {
+  if (!shardMat) shardMat = kit.toon(0xb56545, { rim: 0.6 });
+  const grp = new THREE.Group(); grp.position.set(x, 0, z); scene.add(grp); const parts = [];
+  for (let i = 0; i < 9; i++) { const m = new THREE.Mesh(shardGeo, shardMat), a = Math.random() * 6.28, sp = 1 + Math.random() * 2.2; m.position.set(0, 0.3, 0); m.rotation.set(Math.random() * 3, Math.random() * 3, 0); grp.add(m); parts.push({ m, vx: Math.cos(a) * sp, vz: Math.sin(a) * sp, vy: 2.4 + Math.random() * 2.4, rx: (Math.random() - 0.5) * 9, rz: (Math.random() - 0.5) * 9 }); }
+  bursts.push({ grp, parts, t: 0 });
+}
+function stepBursts(dt) {
+  for (let i = bursts.length - 1; i >= 0; i--) { const b = bursts[i]; b.t += dt; for (const q of b.parts) { q.vy -= 16 * dt; q.m.position.x += q.vx * dt; q.m.position.y = Math.max(0.04, q.m.position.y + q.vy * dt); q.m.position.z += q.vz * dt; q.m.rotation.x += q.rx * dt; q.m.rotation.z += q.rz * dt; } b.grp.scale.setScalar(Math.max(0.01, 1 - b.t / 0.6)); if (b.t > 0.6) { scene.remove(b.grp); bursts.splice(i, 1); } }
+}
+
 function frame(now) {
   const dt = Math.min(0.1, (now - last) / 1000); last = now; time += dt; frameNo++;
   if (TC) touchState = TC.getInput();
@@ -204,6 +219,11 @@ function frame(now) {
   });
   g.pickups.forEach((p, i) => { if (p.id === undefined) p.id = 'k' + i + p.kind + Math.round(p.x); });
   sync(g.pickups.filter((p) => !p.taken), 'k', (p) => makePickup(THREE, kit, p), (m, p) => { m.position.set(p.x * U, p.y * U + Math.sin(time * 3 + p.x) * 0.08, p.z * U); m.rotation.y = time * 2.4; });
+  sync(g.pots.filter((p) => !p.broken), 'pot', (p) => makePot(THREE, kit), (m, p) => { m.position.set(p.x * U, 0, p.z * U); m.rotation.y = p.rot; });
+  for (const p of g.pots) if (p.broken && !burstDone.has(p.id) && g.ticks - p.brokeTick <= 150) { burstDone.add(p.id); spawnBurst(p.x * U, p.z * U); }
+  stepBursts(dt);
+  const gc = cityView.userData.grassCtl; if (gc) for (let i = 0; i < g.grass.length; i++) { const p = g.grass[i]; gc.set(i, p.trimT > 0 ? 1 - p.trimT / GRASS_REGROW : 1); }
+  if (cityView.userData.rotor) cityView.userData.rotor.rotation.z -= dt * 0.7;
   for (const [k, m] of ents) if (m.userData.live !== frameNo) { scene.remove(m); ents.delete(k); }
   const marks = g.markers(); beacons.forEach((b, i) => { const m = marks[i]; b.visible = !!m; if (m) { b.userData.set(m.kind); b.position.set(m.x * U, 0, m.z * U); b.scale.set(1, 1 + Math.sin(time * 4 + i) * 0.04, 1); } });
 

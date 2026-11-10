@@ -26,6 +26,7 @@ export const VEHICLES = {
   wagon: { max: 70, accel: 1.9, turn: 0.054, r: 165, name: 'Watch wagon' },
   tithe: { max: 34, accel: 0.9, turn: 0.045, r: 185, name: 'tithe wagon' },
 };
+export const GRASS_REGROW = 1200; // ticks (40 s) for a trimmed grass patch to grow back
 export const HEROES = [
   { name: 'Juniper', blurb: 'rooftop courier' },
   { name: 'Fen', blurb: 'skiff pilot' },
@@ -86,7 +87,64 @@ export function buildCity(seed = 7) {
   const sb = blocks.find((b) => b.kind === 'steps'), sw = (sb.x1 - sb.x0 - 2 * WALK) / 4;
   const lampSpots = [[sb.x0 + WALK + 300, 90, sb.z0 + WALK + 250]];
   for (let k = 0; k < 4; k++) lampSpots.push([sb.x0 + WALK + (k + 0.5) * sw, 200 * (k + 1) + 90, (sb.z0 + sb.z1) / 2 + 250]);
-  return { seed, boxes, blocks, trees, glimSpots, lampSpots, places };
+  // ---- pass 3: set dressing + interactive dressing (appended last; nothing above consumes r after this) ----
+  const hitBox = (x0, z0, x1, z1, m = 30) => boxes.some((b) => x0 < b.x1 + m && x1 > b.x0 - m && z0 < b.z1 + m && z1 > b.z0 - m);
+  const plazaC = blocks.find((b) => b.i === 3 && b.j === 2), plazaW = blocks.find((b) => b.i === 1 && b.j === 4);
+  const cOf = (b) => ({ x: (b.x0 + b.x1) / 2, z: (b.z0 + b.z1) / 2 });
+  // fountain at the middle of the central plaza
+  const fc = cOf(plazaC), fountain = { x: fc.x, z: fc.z };
+  boxes.push({ x0: fc.x - 380, x1: fc.x + 380, y0: 0, y1: 130, z0: fc.z - 380, z1: fc.z + 380, kind: 'fountain' });
+  boxes.push({ x0: fc.x - 110, x1: fc.x + 110, y0: 0, y1: 520, z0: fc.z - 110, z1: fc.z + 110, kind: 'fountain' });
+  // market stalls along the plaza edges, fronts facing the plaza middle
+  const stalls = [];
+  const addStall = (x, z, face) => { stalls.push({ x, z, face, hue: stalls.length % 4 }); boxes.push({ x0: x - 280, x1: x + 280, y0: 0, y1: 250, z0: z - 160, z1: z + 160, kind: 'stall', hue: stalls.length % 4 }); };
+  const pc = cOf(plazaC); addStall(pc.x - 820, plazaC.z0 + WALK + 190, 1); addStall(pc.x + 820, plazaC.z0 + WALK + 190, 1);
+  const pw = cOf(plazaW); addStall(pw.x - 820, plazaW.z0 + WALK + 190, 1); addStall(pw.x + 820, plazaW.z0 + WALK + 190, 1); addStall(pw.x, plazaW.z1 - WALK - 190, -1);
+  // windmill on the hideout block's far inner corner, overlooking town
+  const hb = blocks.find((b) => b.i === 0 && b.j === 0), windmill = { x: hb.x0 + WALK + 400, z: hb.z0 + WALK + 400 };
+  boxes.push({ x0: windmill.x - 150, x1: windmill.x + 150, y0: 0, y1: 1500, z0: windmill.z - 150, z1: windmill.z + 150, kind: 'windmill' });
+  // keep trees out of the new footprints
+  const clearNear = (x, z, rad) => { for (let i = trees.length - 1; i >= 0; i--) if (Math.hypot(trees[i].x - x, trees[i].z - z) < rad) trees.splice(i, 1); };
+  clearNear(fountain.x, fountain.z, 820); clearNear(windmill.x, windmill.z, 850);
+  for (const s of stalls) clearNear(s.x, s.z, 480);
+  for (let i = boxes.length - 1; i >= 0; i--) { const b = boxes[i]; if (b.kind === 'trunk' && !trees.some((t) => Math.abs(t.x - (b.x0 + b.x1) / 2) < 1 && Math.abs(t.z - (b.z0 + b.z1) / 2) < 1)) boxes.splice(i, 1); }
+  // interactive tall-grass patches in the green blocks
+  const grassPatches = [];
+  const inL = (b) => ({ x0: b.x0 + WALK, x1: b.x1 - WALK, z0: b.z0 + WALK, z1: b.z1 - WALK });
+  for (const b of blocks) {
+    if (!['plaza', 'hideout', 'docks'].includes(b.kind)) continue;
+    const iw = inL(b).x1 - inL(b).x0, idp = inL(b).z1 - inL(b).z0;
+    for (let k = 0; k < 3; k++) {
+      let px = inL(b).x0 + iw * (0.22 + r() * 0.56), pz = inL(b).z0 + idp * (0.22 + r() * 0.56);
+      let rad = 480 + Math.floor(r() * 300);
+      for (const [ox, oz, min] of [...stalls.map((s) => [s.x, s.z, 900]), [windmill.x, windmill.z, 1250], [fountain.x, fountain.z, 1350]]) {
+        const d = Math.hypot(px - ox, pz - oz); if (d < min && d > 1) { px = ox + (px - ox) / d * min; pz = oz + (pz - oz) / d * min; }
+      }
+      const df = Math.hypot(px - fountain.x, pz - fountain.z); if (df - rad < 480) rad = Math.max(300, df - 480);
+      for (const s of stalls) { const ds = Math.hypot(px - s.x, pz - s.z); if (ds - rad < 300) rad = Math.max(300, ds - 300); }
+      grassPatches.push({ x: Math.round(px), z: Math.round(pz), r: rad });
+    }
+  }
+  // breakable clay pots: plaza clusters first, then doorway corners on the house blocks
+  const pots = [];
+  const addPot = (x, z) => { if (!hitBox(x - 45, z - 45, x + 45, z + 45, 60)) pots.push({ x: Math.round(x), z: Math.round(z), rot: r() * 6.28 }); };
+  for (let k = 0; k < 4; k++) { const a = Math.PI / 4 + k * Math.PI / 2; addPot(fountain.x + Math.cos(a) * 800, fountain.z + Math.sin(a) * 800); }
+  for (const s of stalls) { addPot(s.x - 430, s.z + s.face * 60); addPot(s.x + 430, s.z + s.face * 60); }
+  for (const b of [plazaC, plazaW]) for (const [ox, oz] of [[170, 170], [-170, 170], [170, -170], [-170, -170]]) addPot((ox > 0 ? b.x1 : b.x0) + ox, (oz > 0 ? b.z1 : b.z0) + oz);
+  for (const b of blocks) {
+    if (b.kind !== 'houses' || r() >= 0.45) continue;
+    for (const [ox, oz] of [[170, 170], [-170, -170]]) addPot((ox > 0 ? b.x1 : b.x0) + ox, (oz > 0 ? b.z1 : b.z0) + oz);
+  }
+  // street props: crates + a barrel on the pavements of the two most central house blocks
+  for (const b of blocks) {
+    if (b.kind !== 'houses' || !((b.i === 2 && b.j === 2) || (b.i === 3 && b.j === 3))) continue;
+    const cx = (b.x0 + b.x1) / 2;
+    for (const [px, pz, kind] of [[cx - 420, b.z0 + 180, 'crate'], [cx + 420, b.z0 + 180, 'crate'], [cx, b.z1 - 170, 'barrel']]) {
+      const s = kind === 'crate' ? 100 : 75;
+      if (!hitBox(px - s, pz - s, px + s, pz + s, 50)) boxes.push({ x0: px - s, x1: px + s, y0: 0, y1: kind === 'crate' ? 200 : 170, z0: pz - s, z1: pz + s, kind, hue: 2 });
+    }
+  }
+  return { seed, boxes, blocks, trees, glimSpots, lampSpots, places, pots, grassPatches, fountain, stalls, windmill };
 }
 
 // ------------------------------------------------------------------------------------------------ missions
@@ -159,6 +217,11 @@ export class Game {
       if (k === 0 || !this.vehicles.some((v) => v.ai && v.ai.from[0] === i && v.ai.from[1] === j))
         this.spawnVehicle('cart', roadAt(i) - 300, roadAt(j) + 900, 0, 'npc', { from: [i, j], to });
     }
+    // pass 3: denser street life on fixed routes away from the bakery corridor (no rand — sequence above untouched)
+    for (const [kind, i, j, di, dj] of [['cart', 2, 4, 0, 1], ['cart', 4, 2, 0, 1], ['cart', 5, 4, 0, 1], ['skiff', 1, 3, 0, 1], ['skiff', 3, 5, 0, -1]])
+      this.spawnVehicle(kind, roadAt(i) - 300, roadAt(j) + 900, 0, 'npc', { from: [i, j], to: [i + di, j + dj] });
+    this.spawnVehicle('cart', roadAt(4) - 1600, roadAt(3) - 330, Math.PI / 2, null); // parked by the counting house
+    this.spawnVehicle('skiff', roadAt(4) + 1500, roadAt(4) + 330, Math.PI / 2, null); // parked by the tailor
     const walkers = this.city.blocks.filter((b) => b.kind !== 'steps');
     for (let k = 0; k < 26; k++) {
       const b = walkers[Math.floor(this.rand() * walkers.length)], c = Math.floor(this.rand() * 4), [x, z] = corner(b, c);
@@ -169,6 +232,8 @@ export class Game {
     for (const [bi, bj] of [[3, 2], [1, 4], [0, 0]]) { const cx = roadAt(bi) + PITCH / 2, cz = roadAt(bj) + PITCH / 2; for (let k = 0; k < (bi === 0 ? 2 : 4); k++) cuccoHomes.push([cx + (this.rand() - 0.5) * 1400, cz + (this.rand() - 0.5) * 1400]); }
     for (const [x, z] of cuccoHomes) this.cuccos.push({ id: this.nextId++, x, z, px: x, pz: z, hx: x, hz: z, tx: x, tz: z, yaw: this.rand() * 6.28, state: 'peck', t: 30 + Math.floor(this.rand() * 60), phase: this.rand() * 6.28, peckCd: 0, fx: 0, fz: 0 });
     for (const [x, y, z] of this.city.glimSpots) this.pickups.push({ kind: 'glim', x, y, z, taken: false });
+    this.pots = this.city.pots.map((p) => ({ ...p, id: this.nextId++, broken: false, brokeTick: -1 }));
+    this.grass = this.city.grassPatches.map((p) => ({ ...p, trimT: 0 }));
   }
 
   get hero() { return this.heroes[this.active]; }
@@ -254,6 +319,8 @@ export class Game {
     this._heroVsVehicles();
     this._peds();
     this._cuccos();
+    this._pots();
+    this._grass();
     this._watch();
     this._pickups();
     this._heat();
@@ -469,6 +536,37 @@ export class Game {
     if (this.mission) this._endMission(false);
   }
 
+  // ---- pass 3: breakable pots + cuttable grass. Same strike language as the cuccos: hero tackle actions,
+  // a ground-pound landing, or any vehicle moving at speed. Drops are seeded rolls on this.rand.
+  _pots() {
+    const h = this.hero, hp = this.posOf(h), hv = h.vehicle, act = hv ? '' : h.ctrl.action;
+    const tackle = act === 'dive' || act === 'bellySlide' || act === 'jumpKick' || act === 'longJump' || act === 'tripleJump' || act === 'backflip' || act === 'sideFlip' || act === 'rollout';
+    for (const p of this.pots) {
+      if (p.broken) continue;
+      const hd = Math.hypot(p.x - hp.x, p.z - hp.z);
+      let hit = false;
+      if (!hv && hp.y < 160 && ((tackle && hd < 150) || (act === 'poundLand' && hd < 240))) hit = true;
+      else for (const v of this.vehicles) if (Math.abs(v.fwd) > 12 && Math.hypot(p.x - v.x, p.z - v.z) < VEHICLES[v.kind].r + 55) { hit = true; break; }
+      if (!hit) continue;
+      p.broken = true; p.brokeTick = this.ticks; this.events.push('potSmash');
+      const roll = this.rand();
+      if (roll < 0.55) this.pickups.push({ kind: 'rupee', denom: roll < 0.45 ? 1 : 5, x: p.x + (this.rand() - 0.5) * 90, y: 60, z: p.z + (this.rand() - 0.5) * 90, taken: false, ttl: 1200 });
+    }
+  }
+
+  _grass() {
+    const h = this.hero, hp = this.posOf(h), hv = h.vehicle, act = hv ? '' : h.ctrl.action;
+    const tackle = act === 'dive' || act === 'bellySlide' || act === 'jumpKick' || act === 'longJump' || act === 'tripleJump' || act === 'backflip' || act === 'sideFlip' || act === 'rollout';
+    for (const p of this.grass) {
+      if (p.trimT > 0) { p.trimT--; continue; }
+      if (hv || hp.y >= 200) continue;
+      if (!(tackle || act === 'poundLand')) continue;
+      if (Math.hypot(p.x - hp.x, p.z - hp.z) > p.r + 60) continue;
+      p.trimT = GRASS_REGROW; this.events.push('grassCut');
+      if (this.rand() < 0.15) this.pickups.push({ kind: 'rupee', denom: 1, x: hp.x, y: 60, z: hp.z, taken: false, ttl: 1200 });
+    }
+  }
+
   _pickups() {
     const h = this.hero, hp = this.posOf(h), reach = h.vehicle ? VEHICLES[h.vehicle.kind].r + 90 : 125;
     for (const p of this.pickups) {
@@ -478,6 +576,7 @@ export class Game {
       p.taken = true;
       if (p.kind === 'glim') { this.coins += 10; this.events.push('coin'); }
       else if (p.kind === 'coin') { this.coins += 5; this.events.push('coin'); }
+      else if (p.kind === 'rupee') { this.coins += 5 * (p.denom || 1); this.events.push('coin'); }
       else this.events.push(p.kind);
     }
   }
@@ -526,6 +625,8 @@ export class Game {
       this.coins += d.reward; if (!this.completed.includes(d.id)) this.completed.push(d.id);
       this.unlocked = Math.min(MISSIONS.length - 1, Math.max(this.unlocked, m.k + 1));
       this.events.push('missionPassed'); this.banner = { title: 'Job done', sub: `${d.name}  +${d.reward} glim`, t: 150 };
+      const jp = this.city.places[d.place]; // pass 3: a job well done leaves a red rupee at the job beacon
+      this.pickups.push({ kind: 'rupee', denom: 20, x: jp.x, y: 60, z: jp.z, taken: false, ttl: 1800 });
     } else { this.events.push('missionFailed'); this.banner = { title: 'Job botched', sub: `${d.name}: walk back into the beacon to retry`, t: 150 }; }
   }
   get objective() { const m = this.mission; if (!m) return null; const s = m.def.steps[m.step]; return { text: typeof s.text === 'function' ? s.text(this) : s.text, timer: m.timer, target: s.target ? s.target(this) : null }; }
