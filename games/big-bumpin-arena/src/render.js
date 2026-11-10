@@ -52,6 +52,11 @@ export class View {
     const A = game.arena, fit = this._fit(A.w + 56, A.h + 16), close = this._fit(860 + 56, 620 + 16), aw = (this.portrait ? this.h - this.hudH - this.footH : this.w - 8), ah = (this.portrait ? this.w - 8 : this.h - this.hudH - this.footH);
     const z = this.userZoom || 1;
     let want = { x: A.cx, y: A.cy, s: fit };
+    if (hud.replay) { // broadcast angle for goal replays: tighter than play, tracks the ball and pushes in toward the goal mouth as the shot lands
+      const b = game.ball.body.position, goal = A.goals[1 - hud.replay.team], k = hud.replay.k, pull = k * k * 0.55, s = Math.max(fit, close * (1.05 + 0.45 * k)), vw = aw / s, vh = ah / s;
+      const cl = (c, lo, hi, v) => (v >= hi - lo ? (lo + hi) / 2 : Math.max(lo + v / 2, Math.min(hi - v / 2, c)));
+      want = { s, x: cl(b.x + (goal.x - b.x) * pull, -40, A.w + 40, vw), y: cl(b.y + (goal.y - b.y) * pull, -20, A.h + 20, vh) };
+    } else
     if (fit < close * 0.93 || z > 1) {
       const b = game.ball.body.position, pts = [[b.x, b.y], ...(hud.car ? [[hud.car.body.position.x, hud.car.body.position.y]] : game.cars.map((c) => [c.body.position.x, c.body.position.y]))];
       const xs = pts.map((p) => p[0]), ys = pts.map((p) => p[1]), m = 300, bw = Math.max(...xs) - Math.min(...xs) + m * 2, bh = Math.max(...ys) - Math.min(...ys) + m * 2;
@@ -72,7 +77,7 @@ export class View {
   /** Shadows go soft (blurred) when the pack asks for it. Call with true before filling a shadow, false after. */
   _soft(g, on) { const fx = this.style.fx; if (fx && fx.soft && this.canFilter) g.filter = on ? `blur(${fx.soft}px)` : 'none'; }
   _skids(game, dt) { // persistent tyre marks: a half-scale layer the size of the arena, painted while cars slide
-    const A = game.arena; if (!this.skid || this.skidFor !== A) { this.skid = document.createElement('canvas'); this.skid.width = Math.ceil(A.w / 2); this.skid.height = Math.ceil(A.h / 2); this.skidFor = A; }
+    const A = game.arena; if (!this.skid || this.skidFor !== A.name) { this.skid = document.createElement('canvas'); this.skid.width = Math.ceil(A.w / 2); this.skid.height = Math.ceil(A.h / 2); this.skidFor = A.name; }
     const q = this.skid.getContext('2d'); q.fillStyle = 'rgba(8,8,12,.22)';
     for (const c of game.cars) { const v = game.M.Body.getVelocity(c.body), sp = Math.hypot(v.x, v.y); if (sp < 2.2 || !(c.drift || c.slip > 0 || c.spinT > 0 || c.shuntT > 0)) continue;
       const a = c.body.angle, cx = c.body.position.x, cy = c.body.position.y; for (const sgn of [-1, 1]) { const x = cx - Math.cos(a) * c.cls.len * 0.3 - Math.sin(a) * sgn * c.cls.wid * 0.36, y = cy - Math.sin(a) * c.cls.len * 0.3 + Math.cos(a) * sgn * c.cls.wid * 0.36; q.beginPath(); q.arc(x / 2, y / 2, 3.2, 0, TAU); q.fill(); } }
@@ -118,7 +123,7 @@ export class View {
 
   draw(game, alpha, dt, hud = {}) {
     const S = this.style, P = S.pal, g = this.wg, k = this.dpr / this.k; this.t += dt;
-    if (this.arena !== game.arena) this._setArena(game.arena);
+    if (!this.arena || this.arena.name !== game.arena.name) this._setArena(game.arena);   // by name: a replay's own Game builds an identical arena object
     this._camera(game, dt, hud);
     g.setTransform(1, 0, 0, 1, 0, 0); g.fillStyle = mix(GROUND[game.arena.theme] || P.bg, P.bg, S.groundMix ?? 0.5); g.fillRect(0, 0, this.wc.width, this.wc.height);
     this.trauma.update(dt); const sh = this.trauma.offset(22), sx = sh.x, sy = sh.y;
@@ -135,7 +140,18 @@ export class View {
     if (S.post.vignette) { const v = m.createRadialGradient(this.w / 2, this.h / 2, Math.min(this.w, this.h) * 0.35, this.w / 2, this.h / 2, Math.max(this.w, this.h) * 0.75); v.addColorStop(0, 'rgba(0,0,0,0)'); v.addColorStop(1, `rgba(0,0,0,${S.post.vignette})`); m.fillStyle = v; m.fillRect(0, 0, this.w, this.h); }
     if (S.fx && S.fx.grain) this._grain(m);
     if (this.flash) { this.flash.t -= dt * 1.1; if (this.flash.t <= 0) this.flash = null; else { m.globalAlpha = this.flash.t * 0.38; m.fillStyle = P.team[this.flash.team]; m.fillRect(0, 0, this.w, this.h); m.globalAlpha = 1; } }
+    if (hud.replay) this._replayOverlay(m, hud.replay);   // bars first, so the scoreboard sits on top of them
     this._hud(m, game, hud, dt);
+  }
+
+  /** Replay dressing: letterbox bars sliding in, a blinking REPLAY tag, and the skip hint. */
+  _replayOverlay(g, r) {
+    const w = this.w, h = this.h, bar = Math.min(h * 0.1, 72) * (1 - Math.pow(1 - Math.min(1, r.t / 0.3), 3)), fs = Math.max(14, Math.min(26, bar * 0.45));
+    g.fillStyle = 'rgba(0,0,0,0.9)'; g.fillRect(0, 0, w, bar); g.fillRect(0, h - bar, w, bar); if (bar < 20) return;
+    g.textBaseline = 'middle'; g.textAlign = 'left';
+    if (Math.floor(r.t * 2) % 2 === 0) { g.fillStyle = '#ff3b3b'; g.beginPath(); g.arc(18 + fs * 0.35, bar / 2, fs * 0.32, 0, TAU); g.fill(); }
+    g.fillStyle = '#ffffff'; g.font = this._font(fs, '800'); g.fillText('REPLAY', 18 + fs * 1.1, bar / 2);
+    g.textAlign = 'center'; g.font = this._font(Math.max(12, fs * 0.6)); g.fillStyle = 'rgba(255,255,255,0.8)'; g.fillText(this.touchLayout ? 'TAP TO SKIP' : 'PRESS ANY KEY TO SKIP', w / 2, h - bar / 2);
   }
 
   // ---------------------------------------------------------------------------- arena
