@@ -2490,6 +2490,14 @@
    "thumb": "thumbs/bonk-yard.png",
    "title": "Lanternport",
    "url": "../games/lanternport/"
+  },
+  {
+   "category": "Viral Demos",
+   "desc": "2v2 bumper-car ball: ram an oversized ball into the other team's net — six arenas, five switchable style packs, shunt and T-bone spin-out tactics, items and a season ladder against bots.",
+   "id": "big-bumpin-arena",
+   "thumb": "thumbs/bonk-yard.png",
+   "title": "BIG BUMPIN' ARENA!",
+   "url": "../games/big-bumpin-arena/"
   }
  ]
 }
