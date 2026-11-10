@@ -16,7 +16,7 @@ export class View {
     this.canvas = canvas; this.ctx = canvas.getContext('2d'); this.cfg = cfg; this.arena = null; this.cam = null;
     this.wc = document.createElement('canvas'); this.wg = this.wc.getContext('2d');
     this.canFilter = 'filter' in this.ctx;
-    this.sparks = []; this.rings = []; this.pops = []; this.trail = []; this.shake = 0; this.flash = null; this.t = 0; this.touchLayout = false;
+    this.sparks = []; this.rings = []; this.pops = []; this.trail = []; this.shake = 0; this.flash = null; this.t = 0; this.touchLayout = false; this.userZoom = 1;
     let s = 7; const R = () => ((s = (s * 1664525 + 1013904223) >>> 0) / 4294967296); this.specks = Array.from({ length: 260 }, () => [R(), R(), R()]);
     this.setStyle('cel');
   }
@@ -34,21 +34,27 @@ export class View {
     this.wc.width = Math.ceil(this.canvas.width / this.k); this.wc.height = Math.ceil(this.canvas.height / this.k);
   }
   _setArena(A) { // cache everything that depends on the place
-    this.arena = A; this.walls = createArenaWallConfigs(this.cfg, A); this.cam = null; this.trail.length = 0;
+    this.arena = A; this.walls = createArenaWallConfigs(this.cfg, A); this.cam = null; this.trail.length = 0; this.userZoom = 1; // manual zoom never carries into a new match / arena
     this.bulbs = []; const p = A.poly; // marquee bulbs every ~46 px along the boards, set back onto the wall
     for (let i = 0; i < p.length; i++) { const [x0, y0] = p[i], [x1, y1] = p[(i + 1) % p.length], dx = x1 - x0, dy = y1 - y0, len = Math.hypot(dx, dy), n = Math.floor(len / 46); for (let k = 0; k < n; k++) { const t = (k + 0.5) / n; this.bulbs.push([x0 + dx * t + (dy / len) * 22, y0 + dy * t - (dx / len) * 22]); } }
   }
   /** Scale that shows a w x h world box inside the play area of the screen. */
   _fit(w, h) { const aw = this.w - 8, ah = this.h - this.hudH - this.footH; return this.portrait ? Math.min(aw / h, ah / w) : Math.min(aw / w, ah / h); }
-  // Camera. Small arenas are framed whole. Big ones follow the action: the player and the ball stay in frame, never
-  // zoomed in closer than the classic rink looks, with frame-rate-independent exponential damping (raycast-vehicle lift).
+  /** Manual zoom override: a 1.0-2.2 multiplier on the camera's target scale (wheel / + / - keys / on-screen buttons). View-only. */
+  setUserZoom(z) { this.userZoom = Math.max(1, Math.min(2.2, z)); return this.userZoom; }
+  zoomBy(f) { return this.setUserZoom((this.userZoom || 1) * f); }
+  // Camera. Small arenas are framed whole until the player zooms. Big ones follow the action: the player and the ball
+  // stay in frame, framed about 1.5x closer than the classic rink, with frame-rate-independent exponential damping
+  // (raycast-vehicle lift). Whenever the effective scale beats the whole-arena fit, the view pans to the ball + player
+  // centroid (clamped to the arena) and the radar covers the rest.
   _camera(game, dt, hud) {
-    const A = game.arena, fit = this._fit(A.w + 56, A.h + 16), close = this._fit(1280 + 56, 908 + 16), aw = (this.portrait ? this.h - this.hudH - this.footH : this.w - 8), ah = (this.portrait ? this.w - 8 : this.h - this.hudH - this.footH);
+    const A = game.arena, fit = this._fit(A.w + 56, A.h + 16), close = this._fit(860 + 56, 620 + 16), aw = (this.portrait ? this.h - this.hudH - this.footH : this.w - 8), ah = (this.portrait ? this.w - 8 : this.h - this.hudH - this.footH);
+    const z = this.userZoom || 1;
     let want = { x: A.cx, y: A.cy, s: fit };
-    if (fit < close * 0.93) {
+    if (fit < close * 0.93 || z > 1) {
       const b = game.ball.body.position, pts = [[b.x, b.y], ...(hud.car ? [[hud.car.body.position.x, hud.car.body.position.y]] : game.cars.map((c) => [c.body.position.x, c.body.position.y]))];
       const xs = pts.map((p) => p[0]), ys = pts.map((p) => p[1]), m = 300, bw = Math.max(...xs) - Math.min(...xs) + m * 2, bh = Math.max(...ys) - Math.min(...ys) + m * 2;
-      const s = Math.max(fit, Math.min(close, aw / bw, ah / bh)), vw = aw / s, vh = ah / s, clampAxis = (c, lo, hi, v) => (v >= hi - lo ? (lo + hi) / 2 : Math.max(lo + v / 2, Math.min(hi - v / 2, c)));
+      const base = fit < close * 0.93 ? Math.max(fit, Math.min(close, aw / bw, ah / bh)) : fit, s = base * z, vw = aw / s, vh = ah / s, clampAxis = (c, lo, hi, v) => (v >= hi - lo ? (lo + hi) / 2 : Math.max(lo + v / 2, Math.min(hi - v / 2, c)));
       want = { s, x: clampAxis((Math.max(...xs) + Math.min(...xs)) / 2, -40, A.w + 40, vw), y: clampAxis((Math.max(...ys) + Math.min(...ys)) / 2, -20, A.h + 20, vh) };
     }
     if (!this.cam) this.cam = want; else { const k = 1 - Math.exp(-4.5 * dt), ks = 1 - Math.exp(-2.5 * dt); this.cam.x += (want.x - this.cam.x) * k; this.cam.y += (want.y - this.cam.y) * k; this.cam.s += (want.s - this.cam.s) * ks; }
