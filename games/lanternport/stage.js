@@ -33,7 +33,7 @@ export const hash = (n) => { const s = Math.sin(n * 127.1 + 311.7) * 43758.5453;
 // Lanternport's own two couriers. Juniper wears the hero look from the playable
 // game (green tunic, blonde hair, pointed cap and ears, shield and sword —
 // stageview.js builds the kit when look.hero is set). Fen in teal and coral.
-export const JUNIPER = { skin: 0xf6c9a0, top: 0x3da35d, bottom: 0xefe6d0, hair: 0xeec25a, hero: true };
+export const JUNIPER = { skin: 0xf6c9a0, top: 0x3da35d, bottom: 0xd06a28, hair: 0xeec25a, hero: true }; // hero = the Linkle kit (braids, capelet, compass) — see stageview.js
 export const FEN = { skin: 0xc98f62, top: 0x178f8a, bottom: 0x4a3b34, hair: 0x2b2838, scarf: 0xf06a4a, goggles: true };
 const TOPS = [0xd95f5f, 0x4f97d6, 0x6fbf6f, 0xe6aa3c, 0xa67fd6, 0xf4ead8, 0xe07a9a, 0x3fa7a0], SKINS = [0xf6c9a0, 0xc98f62, 0x9a6844, 0xe8b48a], HAIRS = [0x3a2a1c, 0x8a5a2e, 0xd9b36a, 0x2b2838, 0xa8a8b0, 0x6b3a2a];
 /** A townsperson look picked deterministically from an index. */

@@ -38,13 +38,26 @@ function buildPerson(T, kit, o) {
   let hat = null, cap = null;
   if (L.hat !== undefined) { hat = new T.Group(); head.add(hat); cyl(T, kit, hat, 0.36, 0.36, 0.03, L.hat, 0, 0.2, 0, 16); cyl(T, kit, hat, 0.18, 0.21, 0.16, L.hat, 0, 0.28, 0, 14); }
   if (L.hero) {
-    // The hero kit — the same look the playable game's Juniper wears (view.js):
-    // long pointed ears, a trailing pointed cap in coat green (it takes the cap
-    // slot, so the capOff pose animates it), shield and sword on the back.
-    for (const s of [-1, 1]) { const ear = kit.part(head, new T.ConeGeometry(0.052, 0.34, 8), skin, 0.26 * s, 0.07, -0.01, 0); ear.rotation.set(-0.18, 0, -1.12 * s); ear.scale.set(1, 1, 0.55); }
-    cap = new T.Group(); cap.position.set(0, 1.52, 0.02); body.add(cap);
-    const pc = kit.part(cap, new T.ConeGeometry(0.27, 0.78, 14), top, 0, -0.02, -0.34, 0); pc.rotation.x = -2.08;
+    // The hero kit — Juniper's Linkle look, the same one the playable game
+    // wears (view.js), from Cherie's reference images: long pointed ears,
+    // twin braids with red bands in front of the shoulders, the hood resting
+    // behind the neck (it takes the cap slot, so the capOff pose animates
+    // it), a green capelet, the compass pendant, shield and sword.
     const trim = kit.toon(0xf2b23a, { rim: 1.2 }), steel = kit.toon(0x9fb4c8, { rim: 1.2 });
+    for (const s of [-1, 1]) { const ear = kit.part(head, new T.ConeGeometry(0.052, 0.34, 8), skin, 0.26 * s, 0.07, -0.01, 0); ear.rotation.set(-0.18, 0, -1.12 * s); ear.scale.set(1, 1, 0.55); }
+    for (const s of [-1, 1]) {
+      const bg = new T.Group(); bg.position.set(0.175 * s, 0.08, 0.16); head.add(bg);
+      [[0.055, 0], [0.051, -0.12], [0.045, -0.24], [0.038, -0.35]].forEach(([r, y], i) => { const b = kit.part(bg, new T.SphereGeometry(r, 10, 8), hairM, 0.01 * s * i, y, 0.01 * i, 0); b.scale.set(1, 1.15, 1); });
+      cyl(T, kit, bg, 0.04, 0.04, 0.045, 0xc23b2e, 0.03 * s, -0.43, 0.03, 8);
+      const tip = kit.part(bg, new T.ConeGeometry(0.03, 0.11, 8), hairM, 0.038 * s, -0.51, 0.038, 0); tip.rotation.x = Math.PI;
+    }
+    cap = new T.Group(); cap.position.set(0, 1.52, 0.02); body.add(cap);
+    const hood = kit.part(cap, new T.SphereGeometry(0.23, 14, 10), top, 0, -0.13, -0.2, 0); hood.scale.set(1.15, 0.75, 0.8);
+    if (!L.swim) {
+      const cape = kit.part(body, new T.CylinderGeometry(0.2, 0.42, 0.32, 16, 1, true), top, 0, 1.14, 0, 0); cape.material = cape.material.clone(); cape.material.side = T.DoubleSide;
+      const disc = cyl(T, kit, body, 0.075, 0.075, 0.026, 0xf2b23a, 0, 0.98, 0.21, 18); disc.rotation.x = Math.PI / 2 - 0.25;
+      kit.part(body, new T.SphereGeometry(0.014, 6, 6), kit.toon(0xc23b2e), 0, 0.99, 0.225, 0);
+    }
     const srim = kit.part(body, new T.CylinderGeometry(0.185, 0.15, 0.032, 14), trim, 0, 1.02, -0.27, 0); srim.rotation.x = Math.PI / 2 + 0.1;
     const sface = kit.part(body, new T.CylinderGeometry(0.168, 0.134, 0.05, 14), steel, 0, 1.02, -0.28, 0); sface.rotation.x = Math.PI / 2 + 0.1;
     kit.part(body, new T.SphereGeometry(0.05, 10, 8), trim, 0, 1.02, -0.31, 0).scale.set(1, 1, 0.5);

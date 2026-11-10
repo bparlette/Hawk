@@ -224,7 +224,7 @@ const POSES = { // [pitch, squash, arms up, tuck]
 };
 const SPINS = { tripleJump: [1, 2, 35], backflip: [-1, 1, 31], sideFlip: [1, 1, 31], rollout: [1, 1, 15] };
 export const LOOKS = [
-  { coat: 0x3da35d, trim: 0xf2b23a, hair: 0xeec25a, skin: 0xf6c9a0, legs: 0xefe6d0, cap: true, pointedEars: true, gear: true, iris: 0x2f6fd0 }, // Juniper
+  { coat: 0x3da35d, trim: 0xf2b23a, hair: 0xeec25a, skin: 0xf6c9a0, legs: 0xf6c9a0, linkle: true, pointedEars: true, gear: true, iris: 0x2f6fd0 }, // Juniper — Linkle look (Cherie's refs, Nov 10): twin braids, capelet, compass
   { coat: 0x178f8a, trim: 0xf06a4a, hair: 0x2b2838, skin: 0xc98f62, legs: 0x4a3b34, goggles: true }, // Fen
 ];
 const lathe = (THREE, pts, seg = 20) => new THREE.LatheGeometry(pts.map(([r, y]) => new THREE.Vector2(r, y)), seg);
@@ -260,10 +260,28 @@ export class HeroView {
       part(this.head, new THREE.TorusGeometry(0.292, 0.02, 6, 24), toon(0x3a2a1c), 0, 0.17, 0, 0).rotation.x = Math.PI / 2 - 0.12;
     }
     if (look.cap) { const cap = part(this.head, new THREE.ConeGeometry(0.27, 0.78, 14), coat, 0, -0.04, -0.36, 0); cap.rotation.x = -2.08; } // long pointed cap, base buried in the hair, tip trailing to mid-back
+    if (look.linkle) {
+      // Linkle kit, from Cherie's reference images: twin braids with red bands
+      // hanging in front of the shoulders, the hood resting behind the neck,
+      // a green capelet flaring over the shoulders, and the compass pendant.
+      const band = toon(0xc23b2e, { rim: 0.8 });
+      for (const s of [-1, 1]) {
+        const braid = new THREE.Group(); braid.position.set(0.185 * s, 0.1, 0.17); this.head.add(braid);
+        [[0.058, 0], [0.054, -0.13], [0.048, -0.26], [0.04, -0.38]].forEach(([r, y], i) => { const b = part(braid, new THREE.SphereGeometry(r, 10, 8), hairM, 0.012 * s * i, y, 0.012 * i, 0); b.scale.set(1, 1.15, 1); });
+        part(braid, new THREE.CylinderGeometry(0.042, 0.042, 0.05, 8), band, 0.036 * s, -0.47, 0.036, 0);
+        const tip = part(braid, new THREE.ConeGeometry(0.032, 0.12, 8), hairM, 0.045 * s, -0.56, 0.045, 0); tip.rotation.x = Math.PI;
+      }
+      const hood = part(this.head, new THREE.SphereGeometry(0.24, 14, 10), coat, 0, -0.1, -0.2, 0); hood.scale.set(1.15, 0.75, 0.8);
+      const cape = part(body, new THREE.CylinderGeometry(0.21, 0.44, 0.34, 16, 1, true), coat, 0, 1.13, 0, 0); cape.material = cape.material.clone(); cape.material.side = THREE.DoubleSide;
+      const cord = part(body, new THREE.TorusGeometry(0.155, 0.011, 6, 20), toon(0x6b4a33), 0, 1.12, 0.13, 0); cord.rotation.x = 0.5;
+      const disc = part(body, new THREE.CylinderGeometry(0.078, 0.078, 0.026, 18), trim, 0, 0.97, 0.215, 0); disc.rotation.x = Math.PI / 2 - 0.25;
+      const face = part(body, new THREE.CircleGeometry(0.058, 18), glowMat(0xf3e9d2), 0, 0.978, 0.229, 0); face.rotation.x = -0.25;
+      part(body, new THREE.SphereGeometry(0.014, 6, 6), glowMat(0xc23b2e), 0, 0.978, 0.232, 0);
+    }
     const sc = part(body, new THREE.TorusGeometry(0.19, 0.09, 10, 20), trim, 0, 1.24, 0.01); sc.rotation.x = Math.PI / 2; sc.scale.set(1, 1, 0.9);
     this.scarf = new THREE.Group(); this.scarf.position.set(0.12, 1.24, -0.18); body.add(this.scarf);
     if (!look.cap) { part(this.scarf, new THREE.BoxGeometry(0.15, 0.05, 0.62), trim, 0, 0, -0.3); part(this.scarf, new THREE.BoxGeometry(0.13, 0.05, 0.46), trim, -0.14, -0.03, -0.22).rotation.y = 0.3; }
-    this.scarf.visible = !look.cap;
+    this.scarf.visible = !look.cap && !look.linkle;
     if (look.gear) {
       const steel = toon(0x8296ad, { rim: 1.1 });
       const srim = part(body, new THREE.CylinderGeometry(0.185, 0.15, 0.032, 14), trim, 0, 1.02, -0.295, 0); srim.rotation.x = Math.PI / 2 + 0.1;   // shield gold rim
@@ -277,6 +295,7 @@ export class HeroView {
     }
     this.arms = [-1, 1].map((s) => { const p = new THREE.Group(); p.position.set(0.255 * s, 1.12, 0); body.add(p); part(p, new THREE.CapsuleGeometry(0.068, 0.3, 6, 10), coat, 0.03 * s, -0.2, 0); part(p, new THREE.CylinderGeometry(0.08, 0.08, 0.06, 10), trim, 0.03 * s, -0.38, 0, 0); part(p, new THREE.SphereGeometry(0.07, 10, 8), skin, 0.03 * s, -0.46, 0); return p; });
     this.legs = [-1, 1].map((s) => { const p = new THREE.Group(); p.position.set(0.11 * s, 0.5, 0); body.add(p); part(p, new THREE.CapsuleGeometry(0.075, 0.24, 6, 10), toon(look.legs), 0, -0.2, 0); const bt = part(p, new THREE.CapsuleGeometry(0.085, 0.13, 6, 10), toon(0x4a2f22, { rim: 0.8 }), 0, -0.43, 0.05); bt.rotation.x = Math.PI / 2; part(p, new THREE.CylinderGeometry(0.095, 0.085, 0.1, 10), toon(0x4a2f22), 0, -0.33, 0, 0); return p; });
+    if (look.linkle) for (const p of this.legs) { part(p, new THREE.CylinderGeometry(0.098, 0.09, 0.15, 10), toon(0xd06a28), 0, -0.03, 0, 0); part(p, new THREE.CylinderGeometry(0.09, 0.082, 0.3, 10), toon(0x5a3a26, { rim: 0.8 }), 0, -0.27, 0.01, 0); } // orange shorts + tall brown boots
     this.shadow = new THREE.Mesh(new THREE.CircleGeometry(0.5, 24), new THREE.MeshBasicMaterial({ color: 0x120c20, transparent: true, opacity: 0.4, depthWrite: false })); this.shadow.rotation.x = -Math.PI / 2;
     this.ring = new THREE.Mesh(new THREE.RingGeometry(0.62, 0.7, 36), new THREE.MeshBasicMaterial({ color: new THREE.Color(look.trim).multiplyScalar(2.2), transparent: true, opacity: 0.9, depthWrite: false })); this.ring.rotation.x = -Math.PI / 2;
     this.prev = null; this.cur = [0, 0, 0]; this.prevYaw = 0; this.curYaw = 0; this.stride = 0; this.pose = [0, 1, 0, 0]; this.spinT = 0; this.spinAction = '';
