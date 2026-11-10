@@ -82,7 +82,15 @@ import { StageView } from './stageview.js';
 import { SUN_DIR, makeTextures, makeMaterials, makeSky, makeMotes, Post } from './fx.js';
 
 const Q = new URLSearchParams(location.search), AUTO = Q.get('auto') === '1' || Q.get('spectate') === '1', SEED = +(Q.get('seed') || 7), ANG = (Math.PI * 2) / 0x10000;
-const SCENE_DEF = sceneById(Q.get('scene')); let runner = null; // staged scene (?scene=<id>): plays itself, loops
+const SCENE_DEF = sceneById(Q.get('scene')); let runner = null; // staged scene (?scene=<id>)
+// Watch-or-play: a staged scene link opens in 'ready' mode — the set is dressed,
+// the cast holds its first pose, and YOU hold the controls (play the town freely,
+// walk to the set, keys 1-8 peek at the framing). ▶ WATCH starts the performance;
+// 🎮 TAKE CONTROL hands the game back mid-scene; when a performance ends you keep
+// control (↻ WATCH AGAIN replays it). Filming keeps the old behaviour with
+// &loop=1 (or &auto=1): auto-start, auto-loop, no button.
+const LOOP_SCENE = Q.get('loop') === '1' || Q.get('auto') === '1';
+let sceneMode = !SCENE_DEF ? 'play' : (LOOP_SCENE ? 'watch' : 'ready'), sceneRan = false;
 if (Q.get('clean') === '1' || AUTO || SCENE_DEF) document.body.classList.add('clean');
 const $ = (id) => document.getElementById(id);
 
@@ -111,7 +119,7 @@ function restart() {
   cam.init = false; cam.yaw = Math.PI / 2; window.__game = game;
   // staged film scene: build its set and cast, light it, frame it
   if (stage) { stage.dispose(scene); stage = null; } stopBed(); sceneCues = []; stageS = null;
-  if (SCENE_DEF && SCENE_DEF.set) { stageS = SCENE_DEF.set(game); SCENE_DEF.act(stageS, 0); stage = new StageView(THREE, kit, stageS); scene.add(stage.root); setLight(SCENE_DEF.light || 'golden'); if (Q.get('cam') !== 'free') jumpBookmark(SCENES.indexOf(SCENE_DEF)); }
+  if (SCENE_DEF && SCENE_DEF.set) { stageS = SCENE_DEF.set(game); SCENE_DEF.act(stageS, 0); stage = new StageView(THREE, kit, stageS); scene.add(stage.root); setLight(SCENE_DEF.light || 'golden'); if (Q.get('cam') !== 'free' && sceneMode === 'watch') jumpBookmark(SCENES.indexOf(SCENE_DEF)); }
 }
 let stage = null, stageS = null, sceneCues = [];
 // Light states: where the sun is and what colour the day is. 'golden' is the town's default.
@@ -164,6 +172,7 @@ addEventListener('keydown', (e) => {
   if (e.code === 'KeyP') setFreecam(!free.on); else if (e.code === 'BracketLeft') { ticker.nudge(-1); capNote(); } else if (e.code === 'BracketRight') { ticker.nudge(1); capNote(); }
   else if (e.code === 'KeyG') setGuide(!cap.guide); else if (e.code === 'KeyU') setHud(!cap.hud);
   else if (/^Digit[1-8]$/.test(e.code)) jumpBookmark(+e.code.slice(5) - 1); // 1-8: jump to a scene's staged framing
+  else if (e.code === 'Enter' && SCENE_DEF) toggleScene(); // Enter: watch the scene / take control back
 });
 
 function updateCamera(view, driving, dt, orbit) {
@@ -259,10 +268,10 @@ function sceneSound(def, t) { for (const c of def.sound || []) if (c.at === t) {
 const ticker = new SimClock(30); let last = performance.now(), time = 0, flashMsg = '', flashT = 0;
 function tick() {
   if (!started) return;
-  if (SCENE_DEF && !runner) runner = new SceneRunner(game, SCENE_DEF);
+  if (SCENE_DEF && !runner && sceneMode === 'watch') runner = new SceneRunner(game, SCENE_DEF);
   game.tick(runner ? { ...runner.input(), camYaw: 0 } : AUTO ? { ...bot.input(), camYaw: 0 } : readInput());
   if (runner && stage) { sceneSound(SCENE_DEF, runner.t); for (const c of SCENE_DEF.cuts || []) if (c.at === runner.t && Q.get('cam') !== 'free') { const b = c.cam(game); free.pivot = [...b.pivot]; free.yaw = b.yaw; free.pitch = b.pitch; free.dist = b.dist; } }
-  if (runner && runner.done) { restart(); runner = new SceneRunner(game, SCENE_DEF); } // loop the scene for filming
+  if (runner && runner.done) { restart(); if (LOOP_SCENE) runner = new SceneRunner(game, SCENE_DEF); else { sceneMode = 'ready'; sceneRan = true; syncSceneBtn(); } } // loop only for filming; otherwise the player keeps control
   for (const e of game.events) {
     play(e);
     if (e === 'crash' || e === 'ram' || e === 'pound') cam.shake = Math.max(cam.shake, e === 'ram' ? 1.2 : 0.6);
@@ -327,7 +336,7 @@ function frame(now) {
   for (const [k, m] of ents) if (m.userData.live !== frameNo) { scene.remove(m); ents.delete(k); }
   const marks = g.markers(); beacons.forEach((b, i) => { const m = marks[i]; b.visible = !!m; if (m) { b.userData.set(m.kind); b.position.set(m.x * U, 0, m.z * U); b.scale.set(1, 1 + Math.sin(time * 4 + i) * 0.04, 1); } });
 
-  if (stage && runner) { SCENE_DEF.act(stageS, Math.max(0, runner.t - 1 + a)); stage.update(time); $('flashfx').style.opacity = stageS.flash ? Math.min(0.85, stageS.flash * 0.8) : 0; }
+  if (stage) { SCENE_DEF.act(stageS, runner ? Math.max(0, runner.t - 1 + a) : 0); stage.update(time); $('flashfx').style.opacity = stageS.flash ? Math.min(0.85, stageS.flash * 0.8) : 0; }
   if (free.on) updateFreecam(rdt); else updateCamera(hv, !!hero.vehicle, rdt, AUTO ? 0 : input.orbit());
   sun.target.position.set(cam.focus.x, 0, cam.focus.z); sun.position.copy(sun.target.position).addScaledVector(sunDir, 200);
   timeU.value = time; sky.position.set(camera.position.x, 0, camera.position.z); motes.material.uniforms.uCam.value.copy(camera.position);
@@ -400,11 +409,27 @@ if (started) initTouch();
 
 restart();
 if (Q.get('ts')) ticker.setScale(+Q.get('ts')); if (Q.get('guide') === '1') setGuide(true); if (Q.get('hud') === '0') setHud(false);
+// ---------------------------------------------------------------- watch / play toggle for staged scenes
+const sceneBtn = document.createElement('button');
+sceneBtn.id = 'sceneBtn';
+Object.assign(sceneBtn.style, { position: 'fixed', left: '50%', transform: 'translateX(-50%)', bottom: 'calc(env(safe-area-inset-bottom, 0px) + 188px)', zIndex: 40, padding: '12px 22px', borderRadius: '999px', border: '2px solid rgba(255,246,221,.85)', background: 'rgba(24,18,38,.82)', color: '#fff6dd', font: '700 16px/1 system-ui, sans-serif', letterSpacing: '.04em', cursor: 'pointer', display: 'none', touchAction: 'manipulation' });
+document.body.appendChild(sceneBtn);
+function syncSceneBtn() {
+  if (!SCENE_DEF || LOOP_SCENE || Q.get('hud') === '0') { sceneBtn.style.display = 'none'; return; }
+  sceneBtn.style.display = '';
+  sceneBtn.textContent = sceneMode === 'watch' ? '🎮 TAKE CONTROL' : (sceneRan ? '↻ WATCH AGAIN' : '▶ WATCH THE SCENE');
+}
+function startWatch() { if (!SCENE_DEF || runner) return; sceneMode = 'watch'; sceneRan = true; runner = new SceneRunner(game, SCENE_DEF); if (Q.get('cam') !== 'free') jumpBookmark(SCENES.indexOf(SCENE_DEF)); syncSceneBtn(); }
+function takeControl() { if (!runner) return; runner = null; stopBed(); sceneCues = []; sceneMode = 'ready'; if (SCENE_DEF.act && stageS) SCENE_DEF.act(stageS, 0); syncSceneBtn(); }
+function toggleScene() { if (sceneMode === 'watch') takeControl(); else startWatch(); }
+sceneBtn.addEventListener('click', () => { unlockAudio(); toggleScene(); });
+syncSceneBtn();
+
 // Camera state for the external recorder.
 window.__dbg = { get freecam() { return free.on ? { on: true, pivot: [...free.pivot], yaw: free.yaw, pitch: free.pitch, dist: free.dist } : { on: false }; },
   get timescale() { return ticker.scale; }, get bookmark() { return cap.bookmark; }, get guide() { return cap.guide; }, get hud() { return cap.hud; },
   get tick() { return game.ticks; }, get digest() { return simDigest(game); }, timescales: TIMESCALES,
-  get scene() { return runner ? { id: SCENE_DEF.id, tick: runner.t, duration: SCENE_DEF.duration, events: runner.fired, cues: sceneCues } : null; } };
+  get scene() { if (!SCENE_DEF) return null; return runner ? { id: SCENE_DEF.id, mode: 'watch', tick: runner.t, duration: SCENE_DEF.duration, events: runner.fired, cues: sceneCues } : { id: SCENE_DEF.id, mode: sceneMode, tick: 0, duration: SCENE_DEF.duration, events: [], cues: sceneCues }; } };
 requestAnimationFrame(function first(t) { if (Q.get('freecam') === '1') setFreecam(true); capNote(); frame(t); });
 </script>
 <script id="moth-game-guard-js">

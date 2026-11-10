@@ -192,7 +192,7 @@ canvas{touch-action:none}
   <button id="autoBtn" type="button">▶ AUTO</button>
   <button id="spawnBtn" type="button">＋ SPAWN POKÉMON</button>
 </div>
-<div id="hint">Tap ＋ SPAWN to fill the room · They bump & play-fight when they meet · Tap one to pet it</div>
+<div id="hint">Tap ＋ SPAWN to fill the room · They bump, play-fight & stack into piles · Tap one to pet it</div>
 <button id="motionPill" class="hidden" type="button">📱 Enable motion look-around</button>
 
 <div id="start">
@@ -627,6 +627,7 @@ function spawnPoke(fromAuto) {
     slideT: -1, slideDur: 1, sx: x, sz: z, tx: x, tz: z,
     idleT: rand(2.5, 8), wanderT: rand(4, 11),
     uid: ++pokeUid, mode: 'free', dizzyT: 0,
+    level: 0, mount: null, climb: null, rideT: 0, mox: 0, moz: 0,
     born: performance.now()
   };
   mesh.userData.poke = p;
@@ -665,9 +666,34 @@ function updatePoke(p, dt, t) {
   const pe = p.popT;
   const popScale = pe >= 1 ? 1 : (1 + 2.7 * Math.pow(pe - 1, 3) + 1.7 * Math.pow(pe - 1, 2)); // easeOutBack-ish
   // slide (wander) — free pokes only; scuffles and dizzy spells drive the rest
-  let lift = 0;
+  let lift = 0, yOff = p.mount ? stackYOf(p) : 0;
   if (p.mode === 'free') {
-    if (p.slideT >= 0) {
+    if (p.climb) {
+      const c = p.climb, q = c.target;
+      if (!q || q.mode !== 'free' || q.climb || q.level >= 2 || hasRider(q) || chainHas(q, p)) p.climb = null;
+      else {
+        c.t += dt / c.dur;
+        if (c.t >= 1) {
+          p.mount = q; p.level = q.level + 1; p.mox = rand(-0.08, 0.08); p.moz = rand(-0.08, 0.08); p.climb = null; p.rideT = rand(7, 15);
+          yOff = stackYOf(p);
+          sndPop(0.08);
+          if (p.hopT <= 0) { p.hopDur = 0.3; p.hopAmp = 0.07; p.hopT = p.hopDur; }
+        } else {
+          p.x = lerp(c.fx, q.x, c.t); p.z = lerp(c.fz, q.z, c.t);
+          yOff = lerp(0, stackYOf(q) + unitH(q), c.t);
+          lift += Math.sin(c.t * Math.PI) * 0.3;
+          turnToward(p, Math.atan2(q.x - c.fx, q.z - c.fz), dt * 6);
+        }
+      }
+    } else if (p.mount) {
+      // riding on another pokémon's back: go where it goes, hop off when done
+      if (p.mount.mode !== 'free') { tumbleOff(p); yOff = 0; }
+      else {
+        p.x = p.mount.x + p.mox; p.z = p.mount.z + p.moz;
+        p.rideT -= dt;
+        if (p.rideT <= 0) { tumbleOff(p); yOff = 0; }
+      }
+    } else if (p.slideT >= 0) {
       p.slideT += dt / p.slideDur;
       if (p.slideT >= 1) {
         p.slideT = -1;
@@ -685,11 +711,17 @@ function updatePoke(p, dt, t) {
       p.wanderT -= dt;
       if (p.wanderT <= 0) {
         p.wanderT = rand(5, 12);
-        if (Math.random() < 0.45) {
+        if (hasRider(p)) { p.wanderT = rand(6, 10); /* carrying someone: stay put, be a good mountain */ }
+        else if (Math.random() < 0.45) {
           p.sx = p.x; p.sz = p.z;
           // often stroll over to a neighbour — that's how meetings (and bumps) happen
           let gx = null, gz = null;
-          if (pokes.length > 1 && Math.random() < 0.55) {
+          if (pokes.length > 1 && Math.random() < 0.35) {
+            // head for a stackable neighbour — piles start with an approach
+            const q = findMount(p);
+            if (q) { const a = rand(0, Math.PI * 2); gx = q.x + Math.cos(a) * 1.1; gz = q.z + Math.sin(a) * 1.1; }
+          }
+          if (gx === null && pokes.length > 1 && Math.random() < 0.55) {
             const others = pokes.filter(o => o !== p);
             const q = others.length ? pick(others) : null;
             if (q) { const a = rand(0, Math.PI * 2), d = rand(0.5, 0.85); gx = q.x + Math.cos(a) * d; gz = q.z + Math.sin(a) * d; }
@@ -721,7 +753,7 @@ function updatePoke(p, dt, t) {
   }
   const bob = Math.sin(t * 0.0022 + p.bobPh) * p.bobAmp;
   p.group.position.set(p.x, 0, p.z);
-  p.mesh.position.y = lift + Math.max(0, bob);
+  p.mesh.position.y = yOff + lift + Math.max(0, bob);
   const s = p.scaleT * Math.max(0.01, popScale);
   p.mesh.scale.set(s, s * (1 - clamp(lift, 0, 0.3) * 0.25), s); // tiny squash at hop peak
   // shadow follows on the floor, shrinks as the poke rises
@@ -766,6 +798,50 @@ function fxAt(x, y, z, n, s) {
   _pv.set(x, y, z).project(camera);
   spawnStarsAt((_pv.x * 0.5 + 0.5) * W, (_pv.y * -0.5 + 0.5) * H, n, s);
 }
+/* ====================== stacking (hop on top) ======================
+   A floor pokémon next to a good mount hops onto its back and rides.
+   Piles grow to three high and form mostly in the BACK of the room, so
+   the screen fills vertically. Carriers stop wandering (good mountains
+   don't move); riders hop off after a while, and anyone whose mount
+   gets into a scuffle tumbles off. */
+const BACK_Z = FLOOR.zMin + 3.2;
+function unitH(p) { const rec = geoms.get(p.id); return clamp((rec ? rec.width : 0.8) * p.scaleT * 0.92, 0.45, 1.15); }
+function stackYOf(p) { let y = 0, q = p.mount, guard = 0; while (q && guard++ < 6) { y += unitH(q); q = q.mount; } return y; }
+function chainHas(q, p) { let n = 0; while (q && n++ < 6) { if (q === p) return true; q = q.mount; } return false; }
+function hasRider(q) { return pokes.some(o => o.mount === q); }
+function findMount(p) {
+  let best = null, bestScore = -1;
+  for (const q of pokes) {
+    if (q === p || q.mode !== 'free' || q.climb || q.level >= 2 || hasRider(q)) continue;
+    if (q.mount === p) continue; // never mount your own rider
+    const d = Math.hypot(q.x - p.x, q.z - p.z);
+    if (d > 8) continue;
+    const score = (q.z < BACK_Z ? 3 : 0) + (2 - q.level) - d * 0.15;
+    if (score > bestScore) { bestScore = score; best = q; }
+  }
+  return best;
+}
+function startClimb(p, q) {
+  if (!p || !q || p.mode !== 'free' || p.mount || p.climb) return false;
+  if (q.mode !== 'free' || q.climb || q.level >= 2 || hasRider(q)) return false;
+  if (chainHas(q, p)) return false; // never climb onto your own stack (no mount cycles)
+  p.climb = { t: 0, dur: 0.5, fx: p.x, fz: p.z, target: q };
+  p.slideT = -1;
+  return true;
+}
+const tumbling = new Set();
+function tumbleOff(p) {
+  if (tumbling.has(p)) return; tumbling.add(p);
+  for (const r of pokes.filter(o => o.mount === p)) tumbleOff(r); // riders of this rider first
+  tumbling.delete(p);
+  const m = p.mount; p.mount = null; p.level = 0;
+  const a = rand(0, Math.PI * 2);
+  p.x = clamp((m ? m.x : p.x) + Math.cos(a) * 0.7, FLOOR.xMin, FLOOR.xMax);
+  p.z = clamp((m ? m.z : p.z) + Math.sin(a) * 0.7, FLOOR.zMin, FLOOR.zMax);
+  p.group.position.set(p.x, 0, p.z);
+  if (p.hopT <= 0) { p.hopDur = 0.5; p.hopAmp = 0.22; p.hopT = p.hopDur; }
+  fxAt(p.x, 0.5, p.z, 3, 0.9);
+}
 function doBump(a, b, dx, dz, dist) {
   const ps = pairOf(a, b);
   const overlap = (pokeRadius(a) + pokeRadius(b)) - dist;
@@ -787,6 +863,7 @@ function doBump(a, b, dx, dz, dist) {
 }
 function startScuffle(a, b) {
   if (!a || !b || a === b || a.mode !== 'free' || b.mode !== 'free') return false;
+  for (const r of pokes.filter(o => o.mount === a || o.mount === b)) tumbleOff(r); // riders bail before the fight
   a.mode = b.mode = 'scuffle';
   a.slideT = b.slideT = -1;
   scuffles.push({ a, b, phase: 'face', phaseT: 0, atk: Math.random() < 0.5 ? a : b, lunges: 0, fx: 0, fz: 0, tx: 0, tz: 0, lx: 0, lz: 0 });
@@ -856,10 +933,17 @@ function endScuffle(s) {
 function updateInteractions(dt) {
   for (let i = scuffles.length - 1; i >= 0; i--) updateScuffle(scuffles[i], dt);
   if (pokes.length < 2) return;
+  // stacking opportunities: a floor pokémon beside a good mount sometimes hops on
+  for (const p of pokes) {
+    if (p.mode !== 'free' || p.mount || p.climb) continue;
+    if (Math.random() > dt * 0.5) continue;
+    const q = findMount(p);
+    if (q && Math.hypot(q.x - p.x, q.z - p.z) < 1.5) startClimb(p, q);
+  }
   for (let i = 0; i < pokes.length; i++) {
-    const a = pokes[i]; if (a.mode !== 'free') continue;
+    const a = pokes[i]; if (a.mode !== 'free' || a.mount || a.climb) continue;
     for (let j = i + 1; j < pokes.length; j++) {
-      const b = pokes[j]; if (b.mode !== 'free') continue;
+      const b = pokes[j]; if (b.mode !== 'free' || b.mount || b.climb) continue;
       const dx = b.x - a.x, dz = b.z - a.z;
       const rr = pokeRadius(a) + pokeRadius(b);
       if (dx * dx + dz * dz < rr * rr) {
@@ -1085,6 +1169,9 @@ window.__poke = {
   get scuffleCount() { return scuffleCount; },
   get liveScuffles() { return scuffles.length; },
   clash: (i, j) => startScuffle(pokes[i], pokes[j]),
+  get stacked() { return pokes.filter(p => p.level > 0).length; },
+  mountTop: (i, j) => startClimb(pokes[i], pokes[j]),
+  meshY: (i) => pokes[i] ? pokes[i].mesh.position.y : null,
   gather: () => {
     let k = 0;
     for (const p of pokes) {
