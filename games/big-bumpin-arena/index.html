@@ -93,11 +93,11 @@ $('menu').addEventListener('click', (e) => {
   else if (b.dataset.surface) { set.surface = b.dataset.surface; newMatch(); }
   else if (b.dataset.haz) { set.hazards = { ...set.hazards, [b.dataset.haz]: !set.hazards[b.dataset.haz] }; newMatch(); }
   else if (b.dataset.mode) { set.mode = b.dataset.mode; newMatch(); }
-  else if (b.id === 'start') { newMatch(); started = true; $('menu').style.display = 'none'; }
+  else if (b.id === 'start') { newMatch(); started = true; $('menu').style.display = 'none'; startTouch(); }
   store.set('bba-settings', set); syncMenu();
 });
 $('gear').addEventListener('click', (e) => { e.stopPropagation(); applyStyle(STYLE_ORDER[(STYLE_ORDER.indexOf(set.style) + 1) % STYLE_ORDER.length]); });
-function toMenu() { started = false; newMatch(); $('menu').style.display = 'flex'; syncMenu(); }
+function toMenu() { stopTouch(); started = false; newMatch(); $('menu').style.display = 'flex'; syncMenu(); }
 
 // ---- phone shell: no pinch, no double-tap zoom, no rubber-band, no long-press menu
 for (const ev of ['gesturestart', 'gesturechange', 'gestureend', 'contextmenu', 'dblclick', 'selectstart']) document.addEventListener(ev, (e) => e.preventDefault(), { passive: false });
@@ -111,8 +111,16 @@ addEventListener('keydown', (e) => { keys.add(e.code); if (['Space', 'ArrowUp', 
   if (e.code === 'KeyM') sfx.muted = !sfx.muted; if (e.code === 'KeyV') applyStyle(STYLE_ORDER[(STYLE_ORDER.indexOf(set.style) + 1) % STYLE_ORDER.length]);
   if (e.code === 'Enter' && !started) $('start').click(); else if ((e.code === 'Enter' || e.code === 'Space') && game.state === 'over' && overT > 1.2) toMenu(); });
 addEventListener('keyup', (e) => keys.delete(e.code)); addEventListener('blur', () => keys.clear());
-const TC = isTouchDevice() && !AUTO ? new TouchController({ buttons: [{ id: 'a', label: '⚡', size: 84 }, { id: 'b', label: '★', size: 66 }, { id: 'c', label: '◀', size: 58 }, { id: 'd', label: '▶', size: 58 }], maxRadius: 58, deadzone: 0.16 }) : null;
-if (TC) { document.body.classList.add('touch'); view.touchLayout = true; view.resize(); }
+// Touch controls are constructed only when a match starts — never while the menu is up —
+// so the gptouch overlay can never sit between a tap and the menu (the Lanternport rule).
+// The touch LAYOUT (body class + HUD metrics) still applies from load on touch devices.
+let TC = null;
+if (!AUTO && isTouchDevice()) { document.body.classList.add('touch'); view.touchLayout = true; view.resize(); }
+function startTouch() {
+  if (TC || AUTO || !isTouchDevice()) return;
+  TC = new TouchController({ buttons: [{ id: 'a', label: '⚡', size: 84 }, { id: 'b', label: '★', size: 66 }, { id: 'c', label: '◀', size: 58 }, { id: 'd', label: '▶', size: 58 }], maxRadius: 58, deadzone: 0.16 });
+}
+function stopTouch() { if (TC) { TC.destroy(); TC = null; } }
 addEventListener('pointerdown', (e) => { sfx.unlock(); if (started && game.state === 'over' && overT > 1.2 && !e.target.closest('#gear')) toMenu(); }, true);
 const has = (...c) => c.some((k) => keys.has(k));
 function padInput(pad) {
@@ -173,7 +181,7 @@ if (Q.get('ff')) { const ff = Q.get('ff'), run = () => { game.tick(readHumans())
   else if (ff === 'hot') { for (let i = 0; i < 60 * 900 && !(game.ball.heat >= 1 && game.state === 'play'); i++) run(); run(); }
   else for (let i = 0; i < +ff; i++) run();
   view.sparks = view.sparks.slice(-40); view.rings = view.rings.slice(-3); view.pops = view.pops.slice(-2); }
-if (started) $('menu').style.display = 'none';
+if (started) { $('menu').style.display = 'none'; startTouch(); }
 requestAnimationFrame(frame);
 </script>
 </body>
