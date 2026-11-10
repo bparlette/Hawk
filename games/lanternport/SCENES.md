@@ -2,9 +2,13 @@
 
 The point of this file: anyone picking up Lanternport can see in one page what
 filming infrastructure exists, which scenes are built, and exactly how to add
-the next one. Scene specs live in the gamepress repo at
-`docs/fable-prompts/lanternport-refs/<folder>/` (SPEC.md + key stills); the
-build brief is `docs/fable-prompts/fablego.md` in the same repo.
+the next one. Two build briefs live in the gamepress repo under
+`docs/fable-prompts/`: **`fablego.md`** — the live brief (a festival-metropolis
+program of eight original scenes, self-contained, no external specs) — and
+**`aicitygo.md`** — the original frame-matched scene program, whose specs and
+key stills live at `docs/fable-prompts/lanternport-refs/<folder>/`, held for a
+different builder. The slate table below is the aicitygo program; the fablego
+scenes reuse the same registry slots as they land.
 
 ## Filming kit (built, tested)
 
