@@ -47,6 +47,14 @@ canvas{touch-action:none}
   <div class="row" id="rSurface"><label>SURFACE</label><button class="opt" data-surface="asphalt">ASPHALT</button><button class="opt" data-surface="ice">ICE</button><button class="opt" data-surface="dirt">DIRT</button></div>
   <div class="row" id="rHaz"><label>HAZARDS</label><button class="opt" data-haz="pads">SPEED PADS</button><button class="opt" data-haz="pylons">PYLONS</button><button class="opt" data-haz="tilt">FINAL-MINUTE TILT</button></div>
   <div class="row" id="rStyle"><label>STYLE</label><button class="opt" data-style="cel">CEL</button><button class="opt" data-style="glossy">GLOSSY</button><button class="opt" data-style="pixel">PIXEL</button><button class="opt" data-style="fairground">FAIRGROUND</button><button class="opt" data-style="prime">PRIME</button></div>
+    <div class="row" id="rRoom">
+    <button class="opt" id="btnCreateRoom">HOST ROOM</button>
+    <div id="roomJoinBox" style="display:inline-flex;gap:6px;align-items:center;">
+      <input id="inRoomCode" placeholder="CODE" maxlength="4" style="width:70px;text-transform:uppercase;text-align:center;padding:6px;font-family:var(--font);font-size:16px;border-radius:var(--radius);border:1px solid var(--ink);background:var(--panel);color:var(--btnText);">
+      <button class="opt" id="btnJoinRoom">JOIN</button>
+    </div>
+    <div id="roomStatus" style="font-size:14px;font-weight:bold;color:var(--sub);display:none;"></div>
+  </div>
   <button id="start">▶ PLAY</button>
   <div class="keys desk"><kbd>W A S D</kbd> drive &nbsp; <kbd>Shift</kbd> turbo &nbsp; <kbd>Space</kbd> handbrake &nbsp; <kbd>Q</kbd> <kbd>E</kbd> shunt left / right &nbsp; <kbd>F</kbd> power-up &nbsp; <kbd>V</kbd> style &nbsp; <kbd>+</kbd> <kbd>−</kbd> / wheel zoom<br>Gamepad: stick + triggers, <kbd>A</kbd> turbo, <kbd>B</kbd> handbrake, <kbd>LB</kbd> <kbd>RB</kbd> shunt, <kbd>Y</kbd> power-up. A second pad joins as Player 2.</div>
   <div class="keys mob">Left thumb: drive toward where you point &nbsp; <kbd>⚡</kbd> turbo &nbsp; <kbd>★</kbd> power-up &nbsp; <kbd>◀</kbd> <kbd>▶</kbd> shunt</div>
@@ -217,12 +225,46 @@ function frame(now) {
 window.__replayInfo = () => ({ active: !!rep, shown: repShown.size, t: repT, state: game.state, ticks: game.ticks, score: game.score.join('-') }); // test hook, like __game / __view
 applyStyle(set.style); newMatch();
 
-function setupMultiplayer() {
-  if (!ROOM_CODE && !Q.get('server')) return;
+
+let currentRoomCode = Q.get('room') || null;
+
+function updateRoomUI(code, isHost) {
+  const status = $('roomStatus');
+  if (code) {
+    status.style.display = 'inline-block';
+    status.textContent = (isHost ? 'ROOM: ' : 'JOINED: ') + code;
+    $('btnCreateRoom').classList.toggle('on', !!isHost);
+    $('btnJoinRoom').classList.toggle('on', !isHost);
+  } else {
+    status.style.display = 'none';
+  }
+}
+
+$('btnCreateRoom').addEventListener('click', () => {
+  import('./src/net.js').then(({ makeRoomCode }) => {
+    const code = makeRoomCode();
+    currentRoomCode = code;
+    $('inRoomCode').value = code;
+    updateRoomUI(code, true);
+    connectMultiplayer(code, true);
+  });
+});
+
+$('btnJoinRoom').addEventListener('click', () => {
+  const code = $('inRoomCode').value.trim().toUpperCase();
+  if (code.length === 4) {
+    currentRoomCode = code;
+    updateRoomUI(code, false);
+    connectMultiplayer(code, false);
+  }
+});
+
+function connectMultiplayer(code, isHost) {
+  if (netWs) { try { netWs.close(); } catch(e){} }
   try {
     netWs = new WebSocket(SERVER_URL);
     netWs.onopen = () => {
-      netWs.send(JSON.stringify({ type: 'join', room: ROOM_CODE }));
+      netWs.send(JSON.stringify({ type: isHost ? 'create' : 'join', room: code, opts: { arena: set.arena, surface: set.surface, hazards: set.hazards } }));
     };
     netWs.onmessage = (ev) => {
       try {
@@ -230,23 +272,31 @@ function setupMultiplayer() {
         if (msg.type === 'init') {
           netSeat = msg.seat;
           if (msg.snapshot) applySnapshot(game, msg.snapshot);
+          updateRoomUI(msg.roomCode || code, isHost);
         } else if (msg.type === 'snapshot') {
-          // Desync detector: check digest and resync
           if (game.digest() !== msg.digest) {
             applySnapshot(game, msg);
           }
-          // Update remote targets for interpolation
           if (msg.cars) {
             msg.cars.forEach(c => interpolator.updateTarget(c.index, c));
           }
         }
       } catch (err) {}
     };
-  } catch (err) {
-    console.warn('Multiplayer server unavailable, falling back to local play:', err);
+    netWs.onerror = () => {
+      console.warn('Could not connect to multiplayer server, continuing in local mode');
+    };
+  } catch(err) {
+    console.warn('Server offline, local mode active:', err);
   }
 }
-setupMultiplayer();
+
+if (currentRoomCode) {
+  $('inRoomCode').value = currentRoomCode;
+  updateRoomUI(currentRoomCode, false);
+  connectMultiplayer(currentRoomCode, false);
+}
+
 
 // ?ff=N fast-forwards N ticks before the first frame (?ff=goal: to just after the next goal; ?ff=hot: to a full-heat ball). For screenshots and capture.
 if (Q.get('ff')) { const ff = Q.get('ff'), run = () => tickGame(readHumans());
