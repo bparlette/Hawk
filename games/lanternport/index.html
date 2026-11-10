@@ -76,10 +76,12 @@ import { Game, VEHICLES, HEROES, EDGE, N, roadAt, GRASS_REGROW } from './sim.js'
 import { Bot } from './bot.js';
 import { U, buildCityView, HeroView, LOOKS, makeVehicle, makeFolk, makeCucco, makePickup, makeBeacon, makePot } from './view.js';
 import { SimClock, FreeCam, TIMESCALES, simDigest } from './capture.js';
+import { SCENES, sceneById, SceneRunner } from './scenes.js';
 import { SUN_DIR, makeTextures, makeMaterials, makeSky, makeMotes, Post } from './fx.js';
 
 const Q = new URLSearchParams(location.search), AUTO = Q.get('auto') === '1' || Q.get('spectate') === '1', SEED = +(Q.get('seed') || 7), ANG = (Math.PI * 2) / 0x10000;
-if (Q.get('clean') === '1' || AUTO) document.body.classList.add('clean');
+const SCENE_DEF = sceneById(Q.get('scene')); let runner = null; // staged scene (?scene=<id>): plays itself, loops
+if (Q.get('clean') === '1' || AUTO || SCENE_DEF) document.body.classList.add('clean');
 const $ = (id) => document.getElementById(id);
 
 // Rendering: HDR scene -> contact shading, ink, haze, bloom, filmic grade (all in fx.js). Low sun, long warm light.
@@ -143,9 +145,16 @@ addEventListener('pointermove', (e) => {
   else free.orbit(-dx * 0.005, dy * 0.005);
 }, true);
 addEventListener('wheel', (e) => { if (free.on) free.dolly(e.deltaY > 0 ? 1.1 : 0.9); }, { passive: true });
+function jumpBookmark(n) {
+  const def = SCENES[n]; if (!def || !def.bookmark) return;
+  const b = typeof def.bookmark === 'function' ? def.bookmark(game) : def.bookmark;
+  if (!free.on) setFreecam(true);
+  free.pivot = [...b.pivot]; free.yaw = b.yaw; free.pitch = b.pitch; free.dist = b.dist; cap.bookmark = def.id; capNote();
+}
 addEventListener('keydown', (e) => {
   if (e.code === 'KeyP') setFreecam(!free.on); else if (e.code === 'BracketLeft') { ticker.nudge(-1); capNote(); } else if (e.code === 'BracketRight') { ticker.nudge(1); capNote(); }
   else if (e.code === 'KeyG') setGuide(!cap.guide); else if (e.code === 'KeyU') setHud(!cap.hud);
+  else if (/^Digit[1-8]$/.test(e.code)) jumpBookmark(+e.code.slice(5) - 1); // 1-8: jump to a scene's staged framing
 });
 
 function updateCamera(view, driving, dt, orbit) {
@@ -165,7 +174,7 @@ function updateCamera(view, driving, dt, orbit) {
 }
 
 // ---------------------------------------------------------------- input
-const input = new PlayerInput(); let dragging = false, started = AUTO || Q.get('clean') === '1';
+const input = new PlayerInput(); let dragging = false, started = AUTO || !!SCENE_DEF || Q.get('clean') === '1';
 const extra = { use: false, swap: false };
 function begin() { if (started) return; started = true; $('title').style.display = 'none'; initTouch(); unlockAudio(); }
 addEventListener('keydown', (e) => {
@@ -212,7 +221,9 @@ function play(name) { if (SOUNDS[name]) beep(...SOUNDS[name]); else if (TUNES[na
 const ticker = new SimClock(30); let last = performance.now(), time = 0, flashMsg = '', flashT = 0;
 function tick() {
   if (!started) return;
-  game.tick(AUTO ? { ...bot.input(), camYaw: 0 } : readInput());
+  if (SCENE_DEF && !runner) runner = new SceneRunner(game, SCENE_DEF);
+  game.tick(runner ? { ...runner.input(), camYaw: 0 } : AUTO ? { ...bot.input(), camYaw: 0 } : readInput());
+  if (runner && runner.done) { restart(); runner = new SceneRunner(game, SCENE_DEF); } // loop the scene for filming
   for (const e of game.events) {
     play(e);
     if (e === 'crash' || e === 'ram' || e === 'pound') cam.shake = Math.max(cam.shake, e === 'ram' ? 1.2 : 0.6);
@@ -352,7 +363,8 @@ if (Q.get('ts')) ticker.setScale(+Q.get('ts')); if (Q.get('guide') === '1') setG
 // Camera state for the external recorder.
 window.__dbg = { get freecam() { return free.on ? { on: true, pivot: [...free.pivot], yaw: free.yaw, pitch: free.pitch, dist: free.dist } : { on: false }; },
   get timescale() { return ticker.scale; }, get bookmark() { return cap.bookmark; }, get guide() { return cap.guide; }, get hud() { return cap.hud; },
-  get tick() { return game.ticks; }, get digest() { return simDigest(game); }, timescales: TIMESCALES };
+  get tick() { return game.ticks; }, get digest() { return simDigest(game); }, timescales: TIMESCALES,
+  get scene() { return runner ? { id: SCENE_DEF.id, tick: runner.t, duration: SCENE_DEF.duration, events: runner.fired } : null; } };
 requestAnimationFrame(function first(t) { if (Q.get('freecam') === '1') setFreecam(true); capNote(); frame(t); });
 </script>
 <script id="moth-game-guard-js">
