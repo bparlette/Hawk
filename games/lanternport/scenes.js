@@ -17,6 +17,7 @@
 // timescale — the tests in test/lanternport-scenes.test.mjs prove it for every scene registered here.
 import { Bot } from './bot.js';
 import { roadAt } from './sim.js';
+import { FILM_SCENES } from './filmscenes.js';
 
 export class SceneRunner {
   constructor(game, def) {
@@ -68,6 +69,7 @@ const stageTest = {
   ],
 };
 
-export const SCENES = [stageTest];
+// Registry order = bookmark keys 1-8. The film scenes come first; the framework proof stays last.
+export const SCENES = [...FILM_SCENES, stageTest];
 
 export function sceneById(id) { return SCENES.find((s) => s.id === id) || null; }
