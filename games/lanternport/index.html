@@ -64,6 +64,7 @@ canvas{touch-action:none}
   <b>Shift</b> crouch &nbsp; <b>J</b> dive-tackle &nbsp; <b>Q</b>/<b>E</b> or drag: camera &nbsp; <b>R</b> restart &nbsp; <b>H</b> hide this<br>
   On foot: double and triple jump, backflip (<b>Shift</b> then <b>Space</b>), wall kick, ledge grab. Roofs hide you from the Watch.
 </div>
+<div id="flashfx" style="position:fixed;inset:0;background:#fff;opacity:0;pointer-events:none;z-index:800"></div>
 <div id="guide"><i></i></div>
 <div id="capbar"></div>
 <div id="title" class="ink"><h1>Lanternport</h1><p>Two couriers. One very borrowable city.</p><p style="font-size:14px;opacity:.9">click or press any key</p></div>
@@ -77,6 +78,7 @@ import { Bot } from './bot.js';
 import { U, buildCityView, HeroView, LOOKS, makeVehicle, makeFolk, makeCucco, makePickup, makeBeacon, makePot } from './view.js';
 import { SimClock, FreeCam, TIMESCALES, simDigest } from './capture.js';
 import { SCENES, sceneById, SceneRunner } from './scenes.js';
+import { StageView } from './stageview.js';
 import { SUN_DIR, makeTextures, makeMaterials, makeSky, makeMotes, Post } from './fx.js';
 
 const Q = new URLSearchParams(location.search), AUTO = Q.get('auto') === '1' || Q.get('spectate') === '1', SEED = +(Q.get('seed') || 7), ANG = (Math.PI * 2) / 0x10000;
@@ -91,7 +93,7 @@ document.body.prepend(renderer.domElement);
 const scene = new THREE.Scene(), camera = new THREE.PerspectiveCamera(56, 1, 0.3, 4000), timeU = { value: 0 };
 const kit = { ...makeMaterials(THREE, timeU), T: makeTextures(THREE) }, post = new Post(THREE, renderer);
 const sky = makeSky(THREE, timeU), motes = makeMotes(THREE, timeU, kit.T.glow); scene.add(sky, motes);
-scene.add(new THREE.HemisphereLight(0x9cbcff, 0xe0b488, 2.3));
+const hemi = new THREE.HemisphereLight(0x9cbcff, 0xe0b488, 2.3); scene.add(hemi);
 const sunDir = new THREE.Vector3(...SUN_DIR).normalize(), sun = new THREE.DirectionalLight(0xffdcae, 3.4);
 sun.castShadow = true; sun.shadow.mapSize.set(4096, 4096); sun.shadow.bias = -0.0003; sun.shadow.normalBias = 0.05; sun.shadow.radius = 2.5;
 Object.assign(sun.shadow.camera, { left: -62, right: 62, top: 62, bottom: -62, near: 1, far: 420 }); scene.add(sun, sun.target);
@@ -107,7 +109,14 @@ function restart() {
   heroViews = LOOKS.map((look) => { const h = new HeroView(THREE, kit, look); scene.add(h.group, h.shadow, h.ring); return h; });
   game.heroes.forEach((h, i) => { heroViews[i].snapshot(h); heroViews[i].snapshot(h); });
   cam.init = false; cam.yaw = Math.PI / 2; window.__game = game;
+  // staged film scene: build its set and cast, light it, frame it
+  if (stage) { stage.dispose(scene); stage = null; } stopBed(); sceneCues = []; stageS = null;
+  if (SCENE_DEF && SCENE_DEF.set) { stageS = SCENE_DEF.set(game); SCENE_DEF.act(stageS, 0); stage = new StageView(THREE, kit, stageS); scene.add(stage.root); setLight(SCENE_DEF.light || 'golden'); if (Q.get('cam') !== 'free') jumpBookmark(SCENES.indexOf(SCENE_DEF)); }
 }
+let stage = null, stageS = null, sceneCues = [];
+// Light states: where the sun is and what colour the day is. 'golden' is the town's default.
+const LIGHTS = { golden: { dir: SUN_DIR, sun: [0xffdcae, 3.4], hemi: 2.3 }, noon: { dir: [0.22, 0.95, -0.2], sun: [0xfff6e6, 3.9], hemi: 2.7 }, sunrise: { dir: [-0.78, 0.26, 0.56], sun: [0xffc08a, 3.0], hemi: 1.9 }, dusk: { dir: [0.74, 0.2, 0.64], sun: [0xff9a6a, 1.5], hemi: 1.25 } };
+function setLight(name) { const L = LIGHTS[name] || LIGHTS.golden; sunDir.set(...L.dir).normalize(); sun.color.setHex(L.sun[0]); sun.intensity = L.sun[1]; hemi.intensity = L.hemi; sky.children[0].material.uniforms.uSun.value.copy(sunDir); post.final.uniforms.uSun.value.copy(sunDir); }
 for (let i = 0; i < 6; i++) { const b = makeBeacon(THREE, kit); b.visible = false; scene.add(b); beacons.push(b); }
 
 // ---------------------------------------------------------------- camera: follow, drift behind, never inside a wall
@@ -217,12 +226,42 @@ const SOUNDS = { jump: [330, 660, .13], doubleJump: [392, 784, .14], tripleJump:
 const TUNES = { missionStart: [392, 523, 659], missionPassed: [523, 659, 784, 1047, 1319], missionFailed: [392, 330, 262, 196], heatUp: [880, 660, 880, 660], heatLost: [523, 784, 1047], busted: [330, 262, 196, 131], switch: [659, 988], lamp: [988, 1319], chest: [523, 784, 1047, 1568], tailor: [784, 988, 1175], jack: [220, 196], cuccoCalm: [660, 880, 990] };
 function play(name) { if (SOUNDS[name]) beep(...SOUNDS[name]); else if (TUNES[name]) tune(TUNES[name], name === 'heatUp' ? 'square' : 'triangle', name === 'heatUp' ? 0.07 : 0.13); }
 
+// ---------------------------------------------------------------- film-scene sound: cues and beds, all synthesized, fired by scene tick
+function hiss(dur, freq, vol, type = 'lowpass', delay = 0, q = 0.8, sweepTo = 0) { if (!started || !audio()) return; if (!hiss.buf) { const n = ac.sampleRate, b = ac.createBuffer(1, n, n), d = b.getChannelData(0); for (let i = 0; i < n; i++) d[i] = Math.random() * 2 - 1; hiss.buf = b; }
+  const t = ac.currentTime + delay, s = ac.createBufferSource(), f = ac.createBiquadFilter(), g = ac.createGain(); s.buffer = hiss.buf; s.loop = true; f.type = type; f.Q.value = q; f.frequency.setValueAtTime(freq, t); if (sweepTo) f.frequency.exponentialRampToValueAtTime(sweepTo, t + dur);
+  g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(vol, t + Math.min(0.03, dur * 0.2)); g.gain.exponentialRampToValueAtTime(0.0001, t + dur); s.connect(f); f.connect(g); g.connect(ac.destination); s.start(t); s.stop(t + dur + 0.05); }
+const CUES = { // v = the cue's own volume from the scene (the money beat is the loudest number in each scene's list)
+  boing: (v) => { beep(180, 520, 0.22, 'sine', 0.16 * v); beep(360, 900, 0.18, 'triangle', 0.06 * v, 0.02); }, thump: (v) => { beep(120, 55, 0.14, 'sine', 0.3 * v); hiss(0.08, 300, 0.12 * v); },
+  splash: (v) => { hiss(1.4, 5200, 0.3 * v, 'lowpass', 0, 0.6, 500); hiss(0.5, 1200, 0.28 * v, 'bandpass', 0.02, 0.7); beep(160, 45, 0.5, 'sine', 0.28 * v); for (let i = 0; i < 9; i++) hiss(0.12, 2600 + i * 300, 0.05 * v, 'bandpass', 0.5 + i * 0.09, 4); },
+  squawk: (v) => { beep(900, 1500, 0.09, 'sawtooth', 0.09 * v); beep(1500, 700, 0.2, 'sawtooth', 0.09 * v, 0.09); }, laugh: (v) => { for (let i = 0; i < 6; i++) beep(620 - i * 30, 760 - i * 30, 0.09, 'triangle', 0.1 * v, i * 0.13); },
+  water: (v) => hiss(0.5, 1800, 0.09 * v, 'bandpass', 0, 1.2, 700), drip: (v) => { for (let i = 0; i < 5; i++) beep(1500 + i * 180, 900, 0.05, 'sine', 0.07 * v, i * 0.22); }, gull: (v) => { beep(1300, 1700, 0.16, 'sawtooth', 0.05 * v); beep(1700, 1100, 0.3, 'sawtooth', 0.05 * v, 0.16); },
+  shutter: (v) => { hiss(0.03, 6000, 0.22 * v, 'highpass'); hiss(0.05, 2500, 0.14 * v, 'bandpass', 0.06, 3); beep(2400, 3600, 0.25, 'sine', 0.012 * v, 0.02); }, ooh: (v) => { for (const f of [220, 277, 330]) beep(f, f * 1.12, 0.7, 'triangle', 0.035 * v); hiss(0.7, 700, 0.03 * v, 'bandpass', 0, 2); },
+  brass: (v) => { for (const [f, d] of [[392, 0], [494, 0], [587, 0], [784, 0.02]]) { beep(f, f, 0.9, 'sawtooth', 0.06 * v, d); beep(f * 2, f * 2, 0.6, 'square', 0.015 * v, d); } beep(98, 98, 0.9, 'sawtooth', 0.09 * v); },
+  applause: (v) => { for (let i = 0; i < 70; i++) hiss(0.035, 1800 + ((i * 37) % 9) * 260, 0.045 * v, 'bandpass', i * 0.06 + ((i * 13) % 7) * 0.008, 2.5); }, whoosh: (v) => hiss(0.6, 400, 0.12 * v, 'bandpass', 0, 1.5, 3000),
+};
+let bedNodes = [];
+function stopBed() { for (const n of bedNodes) { try { n.stop(); } catch {} try { n.disconnect(); } catch {} } bedNodes = []; }
+function loopNoise(freq, type, q, vol, lfo) { if (!audio()) return; if (!hiss.buf) hiss(0.01, 100, 0.0001); const s = ac.createBufferSource(), f = ac.createBiquadFilter(), g = ac.createGain(); s.buffer = hiss.buf; s.loop = true; f.type = type; f.frequency.value = freq; f.Q.value = q; g.gain.value = vol; s.connect(f); f.connect(g); g.connect(ac.destination); s.start();
+  if (lfo) { const o = ac.createOscillator(), og = ac.createGain(); o.frequency.value = lfo; og.gain.value = vol * 0.6; o.connect(og); og.connect(g.gain); o.start(); bedNodes.push(o); } bedNodes.push(s); }
+// Music beds are generated note by note from the scene tick (8 ticks = one eighth note), so they are the same every take.
+const BEDS = { band: { scale: [262, 294, 330, 392, 440, 523, 587, 659], bass: [131, 196, 147, 196], wave: 'square' }, pluck: { scale: [330, 392, 440, 494, 587, 659], bass: [165, 147, 131, 147], wave: 'triangle' }, acoustic: { scale: [294, 370, 440, 494, 587, 740], bass: [147, 110, 123, 98], wave: 'triangle' }, dance: { scale: [220, 262, 330, 392, 440, 523], bass: [55, 55, 65, 49], wave: 'sawtooth' } };
+function bedTick(def, t) {
+  const b = def.bed, B = b && BEDS[b.kind]; if (!b) return;
+  if (t === 1) { if (b.kind === 'murmur') { loopNoise(600, 'bandpass', 0.7, b.vol, 0.31); loopNoise(1400, 'bandpass', 1.2, b.vol * 0.4, 0.47); } if (b.loops === 'water') loopNoise(900, 'bandpass', 0.9, 0.012, 0.6); }
+  if (!B || t % 8) return; const step = t / 8, v = b.vol * (b.swell ? b.swell(t) : 1), m = b.muffled ? 0.5 : 1;
+  if (step % 2 === 0) beep(B.bass[(step >> 3) % 4] * (step % 4 ? 1.5 : 1), B.bass[(step >> 3) % 4], 0.2, b.muffled ? 'sine' : B.wave, v * 1.3);
+  const n = B.scale[(step * 5 + (step >> 2) * 3) % B.scale.length]; if ((step * 7) % 5 !== 0) beep(n * m, n * m, 0.16, b.muffled ? 'triangle' : B.wave, v * 0.8);
+  if (b.kind === 'dance' && step % 2 === 0) { beep(110, 40, 0.12, 'sine', v * 2.2); } if (b.kind === 'dance' && step % 2 === 1) hiss(0.04, 7000, v * 0.9, 'highpass');
+}
+function sceneSound(def, t) { for (const c of def.sound || []) if (c.at === t) { (CUES[c.cue] || (() => {}))(c.vol ?? 1); sceneCues.push({ tick: t, cue: c.cue }); } bedTick(def, t); }
+
 // ---------------------------------------------------------------- tick + render
 const ticker = new SimClock(30); let last = performance.now(), time = 0, flashMsg = '', flashT = 0;
 function tick() {
   if (!started) return;
   if (SCENE_DEF && !runner) runner = new SceneRunner(game, SCENE_DEF);
   game.tick(runner ? { ...runner.input(), camYaw: 0 } : AUTO ? { ...bot.input(), camYaw: 0 } : readInput());
+  if (runner && stage) { sceneSound(SCENE_DEF, runner.t); for (const c of SCENE_DEF.cuts || []) if (c.at === runner.t && Q.get('cam') !== 'free') { const b = c.cam(game); free.pivot = [...b.pivot]; free.yaw = b.yaw; free.pitch = b.pitch; free.dist = b.dist; } }
   if (runner && runner.done) { restart(); runner = new SceneRunner(game, SCENE_DEF); } // loop the scene for filming
   for (const e of game.events) {
     play(e);
@@ -283,11 +322,12 @@ function frame(now) {
   sync(g.pots.filter((p) => !p.broken), 'pot', (p) => makePot(THREE, kit), (m, p) => { m.position.set(p.x * U, 0, p.z * U); m.rotation.y = p.rot; });
   for (const p of g.pots) if (p.broken && !burstDone.has(p.id) && g.ticks - p.brokeTick <= 150) { burstDone.add(p.id); spawnBurst(p.x * U, p.z * U); }
   stepBursts(dt);
-  const gc = cityView.userData.grassCtl; if (gc) for (let i = 0; i < g.grass.length; i++) { const p = g.grass[i]; gc.set(i, p.trimT > 0 ? 1 - p.trimT / GRASS_REGROW : 1); }
+  const gc = cityView.userData.grassCtl; if (gc) for (let i = 0; i < g.grass.length; i++) { const p = g.grass[i]; const mown = stageS && stageS.mow && Math.hypot(p.x * U - stageS.origin[0], p.z * U - stageS.origin[2]) < stageS.mow + p.r * U; gc.set(i, mown ? 0 : p.trimT > 0 ? 1 - p.trimT / GRASS_REGROW : 1); } // a film set on a lawn gets its grass cut short (view only)
   if (cityView.userData.rotor) cityView.userData.rotor.rotation.z -= dt * 0.7;
   for (const [k, m] of ents) if (m.userData.live !== frameNo) { scene.remove(m); ents.delete(k); }
   const marks = g.markers(); beacons.forEach((b, i) => { const m = marks[i]; b.visible = !!m; if (m) { b.userData.set(m.kind); b.position.set(m.x * U, 0, m.z * U); b.scale.set(1, 1 + Math.sin(time * 4 + i) * 0.04, 1); } });
 
+  if (stage && runner) { SCENE_DEF.act(stageS, Math.max(0, runner.t - 1 + a)); stage.update(time); $('flashfx').style.opacity = stageS.flash ? Math.min(0.85, stageS.flash * 0.8) : 0; }
   if (free.on) updateFreecam(rdt); else updateCamera(hv, !!hero.vehicle, rdt, AUTO ? 0 : input.orbit());
   sun.target.position.set(cam.focus.x, 0, cam.focus.z); sun.position.copy(sun.target.position).addScaledVector(sunDir, 200);
   timeU.value = time; sky.position.set(camera.position.x, 0, camera.position.z); motes.material.uniforms.uCam.value.copy(camera.position);
@@ -364,7 +404,7 @@ if (Q.get('ts')) ticker.setScale(+Q.get('ts')); if (Q.get('guide') === '1') setG
 window.__dbg = { get freecam() { return free.on ? { on: true, pivot: [...free.pivot], yaw: free.yaw, pitch: free.pitch, dist: free.dist } : { on: false }; },
   get timescale() { return ticker.scale; }, get bookmark() { return cap.bookmark; }, get guide() { return cap.guide; }, get hud() { return cap.hud; },
   get tick() { return game.ticks; }, get digest() { return simDigest(game); }, timescales: TIMESCALES,
-  get scene() { return runner ? { id: SCENE_DEF.id, tick: runner.t, duration: SCENE_DEF.duration, events: runner.fired } : null; } };
+  get scene() { return runner ? { id: SCENE_DEF.id, tick: runner.t, duration: SCENE_DEF.duration, events: runner.fired, cues: sceneCues } : null; } };
 requestAnimationFrame(function first(t) { if (Q.get('freecam') === '1') setFreecam(true); capNote(); frame(t); });
 </script>
 <script id="moth-game-guard-js">
