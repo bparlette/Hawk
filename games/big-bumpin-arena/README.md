@@ -11,7 +11,7 @@ Serve the repo with any static server and open `games/big-bumpin-arena/index.htm
 Matter.js and the touch controller are vendored in `vendor/`; there is no build step and no network request.
 
 ```
-node --test games/big-bumpin-arena/test/      # 26 headless tests, about 3 s
+node --test games/big-bumpin-arena/test/      # 33 headless tests (incl. the Luau suite under lune), about 10 s
 ```
 
 | | Keyboard | Gamepad | Touch |
