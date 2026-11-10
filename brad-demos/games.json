@@ -2482,6 +2482,14 @@
    "thumb": "thumbs/bonk-yard.png",
    "title": "THE CLIMB!",
    "url": "../games/the-climb/"
+  },
+  {
+   "category": "Viral Demos",
+   "desc": "Storybook open-town sandbox: two switchable couriers, borrowable hover-carts, rooftop escapes from the Lantern Watch, three jobs — on the verified SM64-feel controller.",
+   "id": "lanternport",
+   "thumb": "thumbs/bonk-yard.png",
+   "title": "Lanternport",
+   "url": "../games/lanternport/"
   }
  ]
 }

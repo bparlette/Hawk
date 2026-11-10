@@ -1,0 +1,293 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+<title>Lanternport</title>
+<style>
+  html, body { margin: 0; height: 100%; overflow: hidden; background: #9fd4f5; font-family: "Avenir Next", "Trebuchet MS", system-ui, sans-serif; color: #fff; -webkit-user-select: none; user-select: none; touch-action: none; }
+  canvas { display: block; }
+  .ink { text-shadow: 0 2px 0 #2b2438, 2px 0 0 #2b2438, -2px 0 0 #2b2438, 0 -2px 0 #2b2438, 0 4px 0 rgba(43,36,56,.5); }
+  #who { position: fixed; top: 14px; left: 16px; font-weight: 800; font-size: 22px; line-height: 1.15; }
+  #who small { display: block; font-size: 12px; font-weight: 700; opacity: .95; letter-spacing: .08em; text-transform: uppercase; }
+  #glim { font-size: 20px; color: #ffd23c; margin-top: 4px; }
+  #heat { position: fixed; top: 14px; right: 16px; text-align: right; }
+  #heat i { display: inline-block; width: 22px; height: 28px; margin-left: 5px; border-radius: 7px 7px 10px 10px; border: 3px solid #2b2438; background: rgba(43,36,56,.45); box-sizing: border-box; }
+  #heat i.on { background: #ffb347; box-shadow: 0 0 14px #ffb347; }
+  #heat.seen i.on { animation: flash .5s steps(2) infinite; }
+  @keyframes flash { 50% { background: #59d8ff; box-shadow: 0 0 14px #59d8ff; } }
+  #cool { height: 7px; width: 140px; margin: 7px 0 0 auto; border: 2px solid #2b2438; border-radius: 6px; background: rgba(43,36,56,.45); overflow: hidden; visibility: hidden; }
+  #cool b { display: block; height: 100%; width: 0; background: #7be07b; }
+  #heatmsg { font-size: 12px; font-weight: 800; letter-spacing: .08em; margin-top: 4px; min-height: 16px; }
+  #goal { position: fixed; top: 16px; left: 50%; transform: translateX(-50%); max-width: 46vw; text-align: center; font-weight: 800; font-size: 17px; line-height: 1.3; }
+  #goal span { color: #ffd23c; }
+  #prompt { position: fixed; bottom: 86px; left: 50%; transform: translateX(-50%); font-weight: 800; font-size: 17px; background: rgba(43,36,56,.72); border: 3px solid #2b2438; border-radius: 14px; padding: 7px 16px; display: none; }
+  #speed { position: fixed; bottom: 18px; left: 50%; transform: translateX(-50%); font-weight: 800; font-size: 26px; display: none; }
+  #map { position: fixed; left: 16px; bottom: 16px; width: 190px; height: 190px; border-radius: 50%; border: 4px solid #2b2438; background: #d9c3a3; box-shadow: 0 5px 0 rgba(43,36,56,.4); }
+  #help { position: fixed; right: 14px; bottom: 14px; font-size: 12px; line-height: 1.75; background: rgba(43,36,56,.6); padding: 9px 13px; border-radius: 12px; max-width: 330px; font-weight: 600; }
+  #help b { background: rgba(255,255,255,.2); border-radius: 5px; padding: 0 5px; }
+  #banner { position: fixed; left: 0; right: 0; top: 30%; text-align: center; pointer-events: none; opacity: 0; transition: opacity .25s; }
+  #banner div { font-size: 54px; font-weight: 900; letter-spacing: .02em; color: #ffd23c; }
+  #banner p { font-size: 18px; font-weight: 700; margin: 6px 0 0; }
+  #vig { position: fixed; inset: 0; pointer-events: none; box-shadow: inset 0 0 120px 30px rgba(255,140,60,0); transition: box-shadow .3s; }
+  #title { position: fixed; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; background: rgba(43,36,56,.35); text-align: center; cursor: pointer; }
+  #title h1 { font-size: 78px; margin: 0; font-weight: 900; color: #ffd23c; letter-spacing: .01em; }
+  #title p { font-size: 19px; font-weight: 700; margin: 8px 0; }
+  .touch #help { display: none; } .touch #map { left: 14px; right: auto; top: auto; bottom: 14px; width: 110px; height: 110px; }
+  .touch #goal { top: 92px; max-width: 58vw; }
+  .clean #help, .clean #title { display: none; }
+  @media (max-width: 640px) { #who { font-size: 17px; } #goal { top: 78px; max-width: 86vw; font-size: 14px; } #map { width: 120px; height: 120px; } #heat i { width: 16px; height: 21px; margin-left: 3px; } #banner div { font-size: 34px; } #banner p { font-size: 14px; } #title h1 { font-size: 46px; } }
+</style>
+<style id="moth-game-guard">
+html,body{touch-action:none;overscroll-behavior:none;-webkit-touch-callout:none;-webkit-user-select:none;user-select:none;-webkit-tap-highlight-color:transparent}
+canvas{touch-action:none}
+</style>
+</head>
+<body>
+<div id="vig"></div>
+<div id="who" class="ink"><span id="name"></span><small id="blurb"></small><div id="glim"></div></div>
+<div id="heat"><div id="lanterns"></div><div id="cool"><b></b></div><div id="heatmsg" class="ink"></div></div>
+<div id="goal" class="ink"></div>
+<div id="banner" class="ink"><div></div><p></p></div>
+<div id="prompt"></div>
+<div id="speed" class="ink"></div>
+<canvas id="map" width="380" height="380"></canvas>
+<div id="help">
+  <b>WASD</b> move / drive &nbsp; <b>Space</b> jump / handbrake &nbsp; <b>F</b> get in or out &nbsp; <b>Tab</b> switch hero<br>
+  <b>Shift</b> crouch &nbsp; <b>J</b> dive-tackle &nbsp; <b>Q</b>/<b>E</b> or drag: camera &nbsp; <b>R</b> restart &nbsp; <b>H</b> hide this<br>
+  On foot: double and triple jump, backflip (<b>Shift</b> then <b>Space</b>), wall kick, ledge grab. Roofs hide you from the Watch.
+</div>
+<div id="title" class="ink"><h1>Lanternport</h1><p>Two couriers. One very borrowable city.</p><p style="font-size:14px;opacity:.9">click or press any key</p></div>
+
+<script type="module">
+import * as THREE from './lib/three.module.min.js';
+import { FixedTicker, PlayerInput } from './lib/three-adapter.js';
+import { TouchController, isTouchDevice } from './lib/gptouch.js';
+import { Game, VEHICLES, HEROES, EDGE, N, roadAt } from './sim.js';
+import { Bot } from './bot.js';
+import { U, buildCityView, HeroView, LOOKS, makeVehicle, makeFolk, makePickup, makeBeacon } from './view.js';
+import { SUN_DIR, makeTextures, makeMaterials, makeSky, makeMotes, Post } from './fx.js';
+
+const Q = new URLSearchParams(location.search), AUTO = Q.get('auto') === '1' || Q.get('spectate') === '1', SEED = +(Q.get('seed') || 7), ANG = (Math.PI * 2) / 0x10000;
+if (Q.get('clean') === '1' || AUTO) document.body.classList.add('clean');
+const $ = (id) => document.getElementById(id);
+
+// Rendering: HDR scene -> contact shading, ink, haze, bloom, filmic grade (all in fx.js). Low sun, long warm light.
+const renderer = new THREE.WebGLRenderer({ antialias: false, powerPreference: 'high-performance' });
+renderer.setPixelRatio(1); renderer.shadowMap.enabled = true; renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+document.body.prepend(renderer.domElement);
+const scene = new THREE.Scene(), camera = new THREE.PerspectiveCamera(56, 1, 0.3, 4000), timeU = { value: 0 };
+const kit = { ...makeMaterials(THREE, timeU), T: makeTextures(THREE) }, post = new Post(THREE, renderer);
+const sky = makeSky(THREE, timeU), motes = makeMotes(THREE, timeU, kit.T.glow); scene.add(sky, motes);
+scene.add(new THREE.HemisphereLight(0x9cbcff, 0xe0b488, 2.3));
+const sunDir = new THREE.Vector3(...SUN_DIR).normalize(), sun = new THREE.DirectionalLight(0xffdcae, 3.4);
+sun.castShadow = true; sun.shadow.mapSize.set(4096, 4096); sun.shadow.bias = -0.0003; sun.shadow.normalBias = 0.05; sun.shadow.radius = 2.5;
+Object.assign(sun.shadow.camera, { left: -62, right: 62, top: 62, bottom: -62, near: 1, far: 420 }); scene.add(sun, sun.target);
+
+let game, bot, cityView, heroViews = [], ents = new Map(), beacons = [];
+function restart() {
+  if (cityView) scene.remove(cityView); for (const e of ents.values()) scene.remove(e); ents.clear();
+  heroViews.forEach((h) => scene.remove(h.group, h.shadow, h.ring));
+  game = new Game(SEED); bot = new Bot(game);
+  cityView = buildCityView(THREE, game.city, kit); scene.add(cityView);
+  heroViews = LOOKS.map((look) => { const h = new HeroView(THREE, kit, look); scene.add(h.group, h.shadow, h.ring); return h; });
+  game.heroes.forEach((h, i) => { heroViews[i].snapshot(h); heroViews[i].snapshot(h); });
+  cam.init = false; cam.yaw = Math.PI / 2; window.__game = game;
+}
+for (let i = 0; i < 6; i++) { const b = makeBeacon(THREE, kit); b.visible = false; scene.add(b); beacons.push(b); }
+
+// ---------------------------------------------------------------- camera: follow, drift behind, never inside a wall
+const cam = { yaw: 0, dist: 8.5, height: 3.4, focus: new THREE.Vector3(), init: false, swoop: 0, shake: 0, get camYaw() { return Math.round(this.yaw / ANG); } };
+function inBox(x, y, z) { const X = x / U, Y = y / U, Z = z / U; for (const b of game.city.boxes) if (X > b.x0 - 30 && X < b.x1 + 30 && Z > b.z0 - 30 && Z < b.z1 + 30 && Y < b.y1 + 20) return true; return false; }
+function updateCamera(view, driving, dt, orbit) {
+  cam.yaw += orbit * 1.9 * dt;
+  const sp = view.speed, wantD = driving ? 10.5 + sp * 0.05 : 8.5, wantH = driving ? 4.3 : 3.4;
+  cam.dist += (wantD - cam.dist) * Math.min(1, dt * 3); cam.height += (wantH - cam.height) * Math.min(1, dt * 3);
+  if (!orbit && !dragging && sp > (driving ? 3 : 6)) { const d = Math.atan2(Math.sin(view.yawRad - cam.yaw), Math.cos(view.yawRad - cam.yaw)); if (driving || Math.abs(d) < 2.4) cam.yaw += d * Math.min(1, dt * (driving ? 2.6 : 0.9)); }
+  cam.swoop = Math.max(0, cam.swoop - dt / 1.3);
+  const lift = Math.sin(Math.PI * cam.swoop) * 55, k = !cam.init ? 1 : cam.swoop > 0 ? Math.min(1, dt * 3.2) : Math.min(1, dt * 8); cam.init = true;
+  cam.focus.x += (view.position.x - cam.focus.x) * k; cam.focus.z += (view.position.z - cam.focus.z) * k; cam.focus.y += (view.position.y + 1.2 - cam.focus.y) * Math.min(1, dt * 5);
+  const fx = cam.focus.x, fy = cam.focus.y, fz = cam.focus.z, dx = -Math.sin(cam.yaw) * (cam.dist + lift * 0.4), dy = cam.height + lift, dz = -Math.cos(cam.yaw) * (cam.dist + lift * 0.4);
+  let t = 1; if (!lift) for (let s = 1; s <= 12; s++) { const q = s / 12; if (inBox(fx + dx * q, fy + 0.3 + dy * q, fz + dz * q)) { t = Math.max(0.12, (s - 1) / 12); break; } }
+  cam.shake *= Math.pow(0.02, dt); const sh = cam.shake;
+  camera.position.set(fx + dx * t + (Math.random() - 0.5) * sh, fy + dy * Math.max(t, 0.35) + (Math.random() - 0.5) * sh, fz + dz * t);
+  camera.lookAt(fx, fy + 0.3, fz);
+  const fov = 56 + Math.min(16, sp * 0.2); if (Math.abs(camera.fov - fov) > 0.1) { camera.fov += (fov - camera.fov) * Math.min(1, dt * 4); camera.updateProjectionMatrix(); }
+}
+
+// ---------------------------------------------------------------- input
+const input = new PlayerInput(); let dragging = false, started = AUTO || Q.get('clean') === '1';
+const extra = { use: false, swap: false };
+function begin() { if (started) return; started = true; $('title').style.display = 'none'; initTouch(); unlockAudio(); }
+addEventListener('keydown', (e) => {
+  if (!started) { begin(); return; }
+  if (e.code === 'Tab') e.preventDefault();
+  if (e.code === 'KeyR') restart(); if (e.code === 'KeyH') $('help').style.display = $('help').style.display === 'none' ? '' : 'none';
+});
+$('title').addEventListener('pointerdown', () => begin());
+renderer.domElement.addEventListener('pointerdown', () => { dragging = true; });
+addEventListener('pointerup', () => { dragging = false; });
+addEventListener('pointermove', (e) => { if (dragging && e.pointerType === 'mouse') cam.yaw -= e.movementX * 0.006; });
+function readInput() {
+  if (touchState) { const t = input.touch; t.x = touchState.x; t.y = -touchState.y; t.a = touchState.a; t.b = touchState.b; t.z = touchState.z; extra.use = !!touchState.use; extra.swap = !!touchState.swap; }
+  const i = input.read(), k = input.keys, pad = navigator.getGamepads ? [...navigator.getGamepads()].find(Boolean) : null;
+  i.use = k.has('KeyF') || k.has('Enter') || extra.use || !!pad?.buttons[3]?.pressed;
+  i.swap = k.has('Tab') || k.has('KeyT') || extra.swap || !!pad?.buttons[5]?.pressed;
+  i.camYaw = cam.camYaw; return i;
+}
+
+// ---------------------------------------------------------------- sound: a tiny synth, no audio files
+let ac, engine, engineGain;
+function audio() { if (!ac) { try { if (navigator.audioSession) { try { navigator.audioSession.type = 'playback'; } catch {} } ac = new (window.AudioContext || window.webkitAudioContext)(); engine = ac.createOscillator(); engine.type = 'sawtooth'; const f = ac.createBiquadFilter(); f.type = 'lowpass'; f.frequency.value = 420; engineGain = ac.createGain(); engineGain.gain.value = 0; engine.connect(f); f.connect(engineGain); engineGain.connect(ac.destination); engine.start(); } catch {} } return ac; }
+// iOS WebAudio unlock: the 'playback' session (set in audio()) keeps the game audible with the
+// mute switch on; a 1-sample silent buffer inside the first gesture plus resume() on later
+// gestures and on visibilitychange keep the context running.
+let audioUnlocked = false;
+function unlockAudio() { const ctx = audio(); if (!ctx) return; if (ctx.state === 'suspended') ctx.resume();
+  if (!audioUnlocked) { audioUnlocked = true; try { const b = ctx.createBuffer(1, 1, ctx.sampleRate), src = ctx.createBufferSource(); src.buffer = b; src.connect(ctx.destination); src.start(); } catch {} } }
+addEventListener('pointerdown', unlockAudio); addEventListener('touchend', unlockAudio);
+document.addEventListener('visibilitychange', () => { if (!document.hidden && ac && ac.state === 'suspended') ac.resume(); });
+function beep(f0, f1, dur, type = 'square', vol = 0.1, delay = 0) { if (!started || !audio()) return; const t = ac.currentTime + delay, o = ac.createOscillator(), g = ac.createGain(); o.connect(g); g.connect(ac.destination); o.type = type; o.frequency.setValueAtTime(f0, t); o.frequency.exponentialRampToValueAtTime(f1, t + dur); g.gain.setValueAtTime(vol, t); g.gain.exponentialRampToValueAtTime(0.001, t + dur); o.start(t); o.stop(t + dur + 0.02); }
+const tune = (notes, type = 'triangle', vol = 0.13) => notes.forEach((n, i) => beep(n, n, 0.16, type, vol, i * 0.11));
+const SOUNDS = { jump: [330, 660, .13], doubleJump: [392, 784, .14], tripleJump: [523, 1175, .22], backflip: [440, 988, .2], sideFlip: [440, 988, .2], longJump: [300, 900, .25], wallKick: [600, 1100, .12], dive: [500, 250, .15],
+  jumpKick: [700, 500, .08], groundPound: [900, 300, .2], pound: [140, 50, .25, 'sawtooth', .2], land: [160, 110, .05, 'triangle', .08], ledgeGrab: [520, 520, .05], coin: [1320, 1760, .12, 'sine', .13],
+  enter: [220, 440, .12, 'triangle'], exit: [440, 220, .12, 'triangle'], crash: [180, 40, .3, 'sawtooth', .22], bonk: [300, 90, .2, 'square', .16], ram: [120, 60, .35, 'sawtooth', .25], denied: [140, 120, .12, 'square', .08], step: [660, 990, .18, 'sine'] };
+const TUNES = { missionStart: [392, 523, 659], missionPassed: [523, 659, 784, 1047, 1319], missionFailed: [392, 330, 262, 196], heatUp: [880, 660, 880, 660], heatLost: [523, 784, 1047], busted: [330, 262, 196, 131], switch: [659, 988], lamp: [988, 1319], chest: [523, 784, 1047, 1568], tailor: [784, 988, 1175], jack: [220, 196] };
+function play(name) { if (SOUNDS[name]) beep(...SOUNDS[name]); else if (TUNES[name]) tune(TUNES[name], name === 'heatUp' ? 'square' : 'triangle', name === 'heatUp' ? 0.07 : 0.13); }
+
+// ---------------------------------------------------------------- tick + render
+const ticker = new FixedTicker(30); let last = performance.now(), time = 0, flashMsg = '', flashT = 0;
+function tick() {
+  if (!started) return;
+  game.tick(AUTO ? { ...bot.input(), camYaw: 0 } : readInput());
+  for (const e of game.events) {
+    play(e);
+    if (e === 'crash' || e === 'ram' || e === 'pound') cam.shake = Math.max(cam.shake, e === 'ram' ? 1.2 : 0.6);
+    if (e === 'switch') cam.swoop = 1;
+    const msg = { heatLost: 'You lost them', busted: 'Collared! The Watch took a cut', tailor: 'New coat, new face. -40 glim', jack: 'Hey! My cart!', denied: 'Not while the Watch is looking' }[e];
+    if (msg) { flashMsg = msg; flashT = 110; }
+  }
+  if (flashT > 0) flashT--;
+  game.heroes.forEach((h, i) => heroViews[i].snapshot(h));
+}
+function sync(list, key, make, place) {
+  for (const o of list) { let m = ents.get(key + o.id); if (!m) { m = make(o); ents.set(key + o.id, m); scene.add(m); } m.userData.live = frameNo; place(m, o); }
+}
+let frameNo = 0, heatGlow = 0;
+function frame(now) {
+  const dt = Math.min(0.1, (now - last) / 1000); last = now; time += dt; frameNo++;
+  if (TC) touchState = TC.getInput();
+  const a = ticker.advance(dt, tick), L = (p, c) => p + (c - p) * a, g = game, hero = g.hero, hv = heroViews[g.active];
+  g.heroes.forEach((h, i) => heroViews[i].update(h, a, dt, time, i === g.active));
+  sync(g.vehicles, 'v', (v) => makeVehicle(THREE, kit, v), (m, v) => {
+    const dy = Math.atan2(Math.sin(v.yaw - v.pyaw), Math.cos(v.yaw - v.pyaw));
+    m.position.set(L(v.px, v.x) * U, 0, L(v.pz, v.z) * U); m.rotation.y = v.pyaw + dy * a;
+    const b = m.userData.body; b.position.y = 0.18 + Math.sin(time * 3 + v.id) * 0.06; b.rotation.z += (v.steer * Math.min(1, Math.abs(v.fwd) / 30) * 0.22 - b.rotation.z) * Math.min(1, dt * 8); b.rotation.x = -Math.min(0.08, v.fwd * 0.0012);
+    m.userData.glow.material.opacity = 0.55 + Math.min(0.4, Math.abs(v.fwd) / 80) + Math.sin(time * 9 + v.id) * 0.05; m.userData.ring.rotation.z = time * (1 + Math.abs(v.fwd) * 0.15);
+    if (m.userData.beacon) { const on = Math.floor(time * 5) % 2; m.userData.beacon[0].scale.setScalar(on ? 1.6 : 0.7); m.userData.beacon[1].scale.setScalar(on ? 0.7 : 1.6); }
+  });
+  const folk = (guard) => (m, p) => {
+    m.position.set(L(p.px, p.x) * U, 0, L(p.pz, p.z) * U); m.rotation.y = p.yaw; const b = m.userData.body, down = guard ? p.down > 0 : p.state === 'down';
+    b.rotation.x += ((down ? -Math.PI / 2 : 0) - b.rotation.x) * Math.min(1, dt * 12); b.position.y = down ? 0.25 : Math.abs(Math.sin(time * (guard || p.state === 'flee' ? 14 : 7) + p.id)) * 0.07;
+  };
+  sync(g.peds, 'p', (p) => makeFolk(THREE, kit, false, p.hue), folk(false)); sync(g.guards, 'g', () => makeFolk(THREE, kit, true), folk(true));
+  g.pickups.forEach((p, i) => { if (p.id === undefined) p.id = 'k' + i + p.kind + Math.round(p.x); });
+  sync(g.pickups.filter((p) => !p.taken), 'k', (p) => makePickup(THREE, kit, p), (m, p) => { m.position.set(p.x * U, p.y * U + Math.sin(time * 3 + p.x) * 0.08, p.z * U); m.rotation.y = time * 2.4; });
+  for (const [k, m] of ents) if (m.userData.live !== frameNo) { scene.remove(m); ents.delete(k); }
+  const marks = g.markers(); beacons.forEach((b, i) => { const m = marks[i]; b.visible = !!m; if (m) { b.userData.set(m.kind); b.position.set(m.x * U, 0, m.z * U); b.scale.set(1, 1 + Math.sin(time * 4 + i) * 0.04, 1); } });
+
+  updateCamera(hv, !!hero.vehicle, dt, AUTO ? 0 : input.orbit());
+  sun.target.position.set(cam.focus.x, 0, cam.focus.z); sun.position.copy(sun.target.position).addScaledVector(sunDir, 200);
+  timeU.value = time; sky.position.set(camera.position.x, 0, camera.position.z); motes.material.uniforms.uCam.value.copy(camera.position);
+  if (engineGain) { const v = hero.vehicle, s = v ? Math.abs(v.fwd) : 0; engineGain.gain.value += ((v && started ? 0.035 + s * 0.0006 : 0) - engineGain.gain.value) * 0.2; engine.frequency.value = 55 + s * 2.4; }
+  hud(marks); post.render(scene, camera, time, heatGlow += ((g.heat ? (g.seen ? 0.34 : 0.12) : 0) - heatGlow) * Math.min(1, dt * 4)); requestAnimationFrame(frame);
+}
+
+// ---------------------------------------------------------------- HUD + minimap
+const mapCtx = $('map').getContext('2d'); let lastHud = '';
+$('lanterns').innerHTML = '<i></i>'.repeat(5);
+function hud(marks) {
+  const g = game, h = g.hero, o = g.objective, key = [g.active, g.coins, g.heat, g.seen, o && o.text, o && o.timer !== null && Math.ceil(o.timer / 30), g.prompt, g.banner && g.banner.title, flashT > 0 && flashMsg, g.unseen >> 3].join('|');
+  if (key !== lastHud) { lastHud = key;
+    $('name').textContent = HEROES[g.active].name; $('blurb').textContent = HEROES[g.active].blurb; $('glim').textContent = '✦ ' + g.coins;
+    [...$('lanterns').children].forEach((el, i) => el.classList.toggle('on', i < g.heat)); $('heat').classList.toggle('seen', g.seen);
+    $('cool').style.visibility = g.heat && !g.seen ? 'visible' : 'hidden'; $('cool').firstChild.style.width = Math.min(100, (g.unseen / g.heatCooldown) * 100) + '%';
+    $('heatmsg').textContent = flashT > 0 ? flashMsg : g.heat ? (g.seen ? 'THE WATCH SEES YOU' : 'OUT OF SIGHT…') : '';
+    $('goal').innerHTML = o ? o.text + (o.timer !== null ? ` &nbsp;<span>${Math.ceil(o.timer / 30)}s</span>` : '') : (g.completed.length ? '' : 'Walk into the <span>gold beacon</span> at the bakery to start a job');
+    $('prompt').style.display = g.prompt ? 'block' : 'none'; $('prompt').textContent = g.prompt;
+    const b = $('banner'); b.style.opacity = g.banner ? 1 : 0; if (g.banner) { b.children[0].textContent = g.banner.title; b.children[1].textContent = g.banner.sub; }
+  }
+  const v = h.vehicle; $('speed').style.display = v ? 'block' : 'none'; if (v) $('speed').textContent = Math.round(Math.abs(v.fwd) * 1.08) + ' km/h';
+  if (frameNo % 2) return;
+  const c = mapCtx, W = 380, p = g.posOf(h), sc = 0.024, cy = cam.yaw, rx = -Math.cos(cy), rz = Math.sin(cy), fx = Math.sin(cy), fz = Math.cos(cy); // radar turns with the camera
+  c.save(); c.clearRect(0, 0, W, W); c.beginPath(); c.arc(W / 2, W / 2, W / 2, 0, 7); c.clip(); c.fillStyle = '#d9c3a3'; c.fillRect(0, 0, W, W);
+  c.save(); c.translate(W / 2, W / 2); c.transform(rx * sc, -fx * sc, rz * sc, -fz * sc, 0, 0); c.translate(-p.x, -p.z);
+  for (const b of g.city.blocks) { c.fillStyle = b.kind === 'plaza' || b.kind === 'hideout' || b.kind === 'docks' ? '#9bd672' : '#f3e7cf'; c.fillRect(b.x0, b.z0, b.x1 - b.x0, b.z1 - b.z0); }
+  c.fillStyle = '#b79fc4'; for (const b of g.city.boxes) if (b.kind === 'house') c.fillRect(b.x0, b.z0, b.x1 - b.x0, b.z1 - b.z0);
+  c.restore();
+  const dot = (x, z, r, col, ring) => { const wx = x - p.x, wz = z - p.z; let dx = (wx * rx + wz * rz) * sc, dz = -(wx * fx + wz * fz) * sc; const d = Math.hypot(dx, dz), lim = W / 2 - 14; if (d > lim) { if (!ring) return; dx *= lim / d; dz *= lim / d; } c.beginPath(); c.arc(W / 2 + dx, W / 2 + dz, r, 0, 7); c.fillStyle = col; c.fill(); if (ring) { c.lineWidth = 3; c.strokeStyle = '#2b2438'; c.stroke(); } };
+  for (const q of g.vehicles) dot(q.x, q.z, 5, q.driver === 'watch' ? '#3d6bff' : '#8a5a3c'); for (const q of g.guards) dot(q.x, q.z, 6, '#3d6bff');
+  const COL = { job: '#ffd23c', goal: '#49e0ff', tailor: '#ff7ab8', hideout: '#7be07b' }; for (const m of marks) dot(m.x, m.z, 10, COL[m.kind], true);
+  const other = g.posOf(g.heroes[1 - g.active]); dot(other.x, other.z, 7, '#ffffff', true);
+  const yaw = h.vehicle ? h.vehicle.yaw : h.ctrl.yaw * ANG; c.translate(W / 2, W / 2); c.rotate(cy - yaw); c.beginPath(); c.moveTo(0, -14); c.lineTo(10, 11); c.lineTo(0, 5); c.lineTo(-10, 11); c.closePath(); c.fillStyle = '#ff5a4f'; c.fill(); c.lineWidth = 3; c.strokeStyle = '#2b2438'; c.stroke(); c.restore();
+}
+
+function resize() { const pr = Math.min(devicePixelRatio || 1, +(Q.get('pr') || 1.5)), w = Math.round(innerWidth * pr), h = Math.round(innerHeight * pr);
+  renderer.setSize(w, h, false); renderer.domElement.style.width = innerWidth + 'px'; renderer.domElement.style.height = innerHeight + 'px'; post.setSize(w, h); camera.aspect = innerWidth / innerHeight; camera.updateProjectionMatrix(); }
+addEventListener('resize', resize); resize();
+
+// ---------------------------------------------------------------- touch: gamepress standard (lib/gptouch.js)
+// Floating stick anchors under the thumb anywhere on the left half; round buttons sit
+// bottom-right; PointerEvent-based with per-pointerId isolation. Created on game start so
+// its full-screen overlay never swallows the title tap. frame() polls getInput() once per
+// frame into touchState; readInput() merges it into PlayerInput's touch state above.
+let TC = null, touchState = null;
+function initTouch() {
+  if (TC || !isTouchDevice()) return;
+  TC = new TouchController({ buttons: [
+    { id: 'a', label: 'JUMP', size: 84 },
+    { id: 'b', label: 'DIVE', size: 64 },
+    { id: 'z', label: 'DUCK', size: 64 },
+    { id: 'use', label: 'RIDE', size: 64 },
+  ] });
+  document.body.classList.add('touch');
+  // Lanternport has a fifth action (hero SWAP). Stock gptouch lays out four buttons, so SWAP
+  // is registered as an extra button on the same controller: it shares gptouch's own
+  // hit-testing, held/pressed state and pointerId bookkeeping (_hitButton / getInput / release).
+  const swapEl = document.createElement('div');
+  swapEl.textContent = 'SWAP'; swapEl.dataset.gptouch = 'swap';
+  Object.assign(swapEl.style, { position: 'absolute', borderRadius: '50%', border: '2px solid rgba(255,255,255,.45)',
+    background: 'rgba(20,20,35,.38)', color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center',
+    fontFamily: 'system-ui, sans-serif', fontWeight: '800', transform: 'scale(1)', transition: 'transform .06s ease, background .06s ease',
+    WebkitTapHighlightColor: 'transparent', userSelect: 'none', pointerEvents: 'auto', touchAction: 'none',
+    right: '20px', bottom: '196px', width: '56px', height: '56px', fontSize: '18px' });
+  TC._els.overlay.appendChild(swapEl);
+  TC._buttons.swap = { held: false, pressed: false, el: swapEl, pointerId: null, def: { id: 'swap', label: 'SWAP', size: 56 } };
+}
+if (started) initTouch();
+
+restart();
+requestAnimationFrame(frame);
+</script>
+<script id="moth-game-guard-js">
+(function(){
+  var lastEnd=0;
+  function onUi(t){return t&&t.closest&&t.closest('button,a,input,select,textarea,[data-scroll]');}
+  document.addEventListener('touchend',function(e){
+    var now=Date.now();
+    if(!onUi(e.target)&&now-lastEnd<=300&&e.cancelable)e.preventDefault();
+    lastEnd=now;
+  },{passive:false});
+  ['gesturestart','gesturechange','gestureend'].forEach(function(n){
+    document.addEventListener(n,function(e){e.preventDefault();});
+  });
+  document.addEventListener('dblclick',function(e){e.preventDefault();},{passive:false});
+  document.addEventListener('contextmenu',function(e){e.preventDefault();});
+  document.addEventListener('touchmove',function(e){
+    if(e.target&&e.target.closest&&e.target.closest('[data-scroll]'))return;
+    if(e.cancelable)e.preventDefault();
+  },{passive:false});
+})();
+</script>
+</body>
+</html>
