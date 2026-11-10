@@ -59,11 +59,11 @@ const clamp = (v, a, b) => Math.max(a, Math.min(b, v)), wrap = (a) => Math.atan2
 // Season ladder: themed AI teams; the weight-class mix and bot skill are the difficulty curve.
 const LADDER = [{ name: 'TRACTOR CREW', teams: ['heavy', 'heavy'], skill: 0.3 }, { name: 'KART KIDS', teams: ['light', 'light'], skill: 0.52 }, { name: 'CHAIR RACERS', teams: ['light', 'light'], skill: 0.78 }, { name: 'DELIVERY VANS', teams: ['heavy', 'heavy'], skill: 1 }];
 const store = { get(k, d) { try { return JSON.parse(localStorage.getItem(k)) ?? d; } catch { return d; } }, set(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch {} } };
-const set = { style: 'cel', arena: 'rink', surface: 'asphalt', hazards: { pads: false, pylons: false, tilt: false }, mode: 'quick', ...store.get('bba-settings', {}) };
+const set = { style: 'fairground', arena: 'rink', surface: 'asphalt', hazards: { pads: false, pylons: false, tilt: false }, mode: 'quick', ...store.get('bba-settings', {}) };
 if (Q.get('arena')) { set.arena = Q.get('arena'); if (ARENA_INFO[set.arena]) set.surface = ARENA_INFO[set.arena].surface; } if (!ARENA_INFO[set.arena]) set.arena = 'rink';
 if (Q.get('style')) set.style = Q.get('style'); if (Q.get('surface')) set.surface = Q.get('surface'); if (Q.get('mode')) set.mode = Q.get('mode');
 if (Q.get('hazards')) { const h = Q.get('hazards'); set.hazards = { pads: h === 'all' || h.includes('pads'), pylons: h === 'all' || h.includes('pylons'), tilt: h === 'all' || h.includes('tilt') }; }
-if (!STYLES[set.style]) set.style = 'cel'; if (!CFG.surfaces[set.surface]) set.surface = 'asphalt';
+if (!STYLES[set.style]) set.style = 'fairground'; if (!CFG.surfaces[set.surface]) set.surface = 'asphalt';
 let stage = Math.min(LADDER.length - 1, store.get('bba-season', 0));
 let game, started = AUTO || Q.get('autostart') === '1' || !!Q.get('ff'), seed = +(Q.get('seed') || 0) || (Date.now() % 100000) + 1, goT = 0, p2Joined = false, result = {};
 const P2_CAR = Q.get('p2') === 'versus' ? 2 : 1; // second pad: same team by default, ?p2=versus to play against Player 1
