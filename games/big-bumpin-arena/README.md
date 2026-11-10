@@ -3,15 +3,16 @@
 2v2 bumper-car ball. Ram an oversized ball into the other team's net. Grounded arcade physics: cars shove,
 bounce and spin, and never flip or leave the floor. Original game and name; no third-party marks or characters.
 
-Built from the gamepress prompts in `docs/fable-prompts/big-bumpin-2v2.md` (Prompt 1 core slice + Prompt 2
-tactics), then extended with six arenas, a fifth style pack and a Roblox port.
+Built from the gamepress prompts in `docs/fable-prompts/big-bumpin-2v2.md`, then extended with
+six arenas, five switchable style packs, WebAudio feel & synth stems, deterministic goal replay,
+host-authoritative Colyseus friends multiplayer, and a standalone Luau simulation port for Roblox.
 
 ## Run
 Serve the repo with any static server and open `games/big-bumpin-arena/index.html`. Everything is local:
 Matter.js and the touch controller are vendored in `vendor/`; there is no build step and no network request.
 
 ```
-node --test games/big-bumpin-arena/test/      # 33 headless tests (incl. the Luau suite under lune), about 10 s
+node --test games/big-bumpin-arena/test/      # 38 headless tests (incl. the Luau suite under lune and Colyseus two-client soak), about 10 s
 ```
 
 | | Keyboard | Gamepad | Touch |
@@ -86,8 +87,13 @@ outline pass, lighting rig, post FX (low-res pixel target, bloom, vignette), are
 | `src/styles.js`, `src/render.js`, `src/landscape.js` | Style packs, the renderer and camera, per-arena scenery and furniture. |
 | `src/audio.js` | Synth sound (engine, impacts, horn, crowd swell) and the iOS audio fixes. |
 | `index.html` | Menu, loop, input merge (keyboard, gamepad, gptouch), phone gesture guard. |
-| `test/*.test.mjs` | Headless tests: bot matches on every arena and surface, each rule, determinism. |
-| `roblox/` | Luau port (see `roblox/README.md`). |
+| `src/feel.js` | Hitstop calculations, trauma-based camera shake, goal tension, and music mood. |
+| `src/music.js` | 3-stem synthesized adaptive music (calm/play/goal) on an accurate lookahead scheduler. |
+| `src/replay.js` | Deterministic goal replay: re-simulates match run-up with broadcast camera angle. |
+| `src/net.js` | Multiplayer network client: prediction, snapshot reconciliation, and remote interpolation. |
+| `server/` | Host-authoritative Colyseus multiplayer server in Node.js (see `server/README.md`). |
+| `test/*.test.mjs` | Headless tests: bot matches, feel, goal replays, two-client multiplayer soak, tactics. |
+| `roblox/` | Luau headless sim port: own 2D collision physics, generated arena/config data, lune test suite. Does not use Roblox physics and does not port power-ups/pylons yet (see `roblox/README.md`). |
 
 The sim files (`config`, `arenas`, `physics`, `world`, `game`, `bots`) import nothing from the DOM or the renderer.
 
@@ -112,4 +118,4 @@ timestep; collision spin is kept; a dead ball is rolled back into play.
 - Bots steer round furniture with a look-ahead rule, not a path planner; they can still wedge briefly.
 - Touch and iOS audio were checked in an emulated phone viewport, not on a device. Two-pad local play is wired but untried on hardware.
 - PRIME uses canvas blur filters; on browsers without `ctx.filter` it falls back to hard shadows and no bloom.
-- The Roblox port has its own small physics and is not tick-identical to this build (details in `roblox/README.md`).
+- The Roblox port (`roblox/BumpinSim.luau`) implements its own 2D impulse collision model rather than Matter.js; it is deterministic on its own and verified via Lune tests, but is not tick-identical to the web Matter.js build. Power-ups and pylons are not yet ported to Luau.
