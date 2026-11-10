@@ -6,10 +6,10 @@ const clamp = (v, a, b) => (v < a ? a : v > b ? b : v);
 const wrap = (a) => Math.atan2(Math.sin(a), Math.cos(a));
 import { inField } from './arenas.js';
 
-export function makeBotMemory(rand) { return { stuck: 0, rev: 0, revSteer: 1, aim: 0, rand }; }
+export function makeBotMemory(rand) { return { stuck: 0, rev: 0, revSteer: 1, aim: 0, rand, seen: null, seenV: null }; }
 
 /** Called at every face-off so a bot's shots are not all aimed at the same spot. */
-export function botKickoff(mem) { mem.aim = (mem.rand() - 0.5) * 2; mem.stuck = 0; mem.rev = 0; }
+export function botKickoff(mem) { mem.aim = (mem.rand() - 0.5) * 2; mem.stuck = 0; mem.rev = 0; mem.seen = null; mem.seenV = null; }
 
 // Shunts and power-ups. skill 0..1 scales how often a bot spots the chance.
 function tactics(game, car, mem, out, skill) {
@@ -37,9 +37,14 @@ export function botInput(game, car, mem) {
   const dir = car.team === 0 ? 1 : -1, me = car.body.position, ball = game.world.ball.body, bv = B.getVelocity(ball);
   const mate = game.world.cars.find((c) => c.team === car.team && c !== car);
   const og = A.goals[1 - car.team], oppGoal = { x: og.x, y: og.y + mem.aim * og.half * 0.55 }, ownGoal = { x: A.goals[car.team].x, y: A.goals[car.team].y };
-  // lead the ball a little
-  const d0 = Math.hypot(ball.position.x - me.x, ball.position.y - me.y), lead = clamp(d0 / (car.cls.maxSpeed * 1.4), 0, 26);
-  const bp = { x: clamp(ball.position.x + bv.x * lead, R.left + 20, R.right - 20), y: clamp(ball.position.y + bv.y * lead, R.top + 20, R.bottom - 20) };
+  // Skill is real: it sets how fresh the bot's picture of the ball is (reaction), how far ahead it leads it
+  // (positioning), and how well it aims and spends boost. A weak bot chases where the ball WAS.
+  const skill = game.skill ? game.skill[car.team] : 0.8;
+  const weak = clamp((0.8 - skill) / 0.8, 0, 1);              // 0 at the default skill and above, 1 at skill 0
+  if (!mem.seen || weak === 0 || mem.rand() < clamp(skill * 1.25, 0.06, 1)) { mem.seen = { x: ball.position.x, y: ball.position.y }; mem.seenV = { x: bv.x, y: bv.y }; }
+  const sb = mem.seen, sv = mem.seenV;
+  const d0 = Math.hypot(sb.x - me.x, sb.y - me.y), lead = clamp(d0 / (car.cls.maxSpeed * 1.4), 0, 26) * (1 - 0.7 * weak);
+  const bp = { x: clamp(sb.x + sv.x * lead, R.left + 20, R.right - 20), y: clamp(sb.y + sv.y * lead, R.top + 20, R.bottom - 20) };
   const dMe = Math.hypot(bp.x - me.x, bp.y - me.y), dMate = mate ? Math.hypot(bp.x - mate.body.position.x, bp.y - mate.body.position.y) : 1e9;
   const dOwn = Math.hypot(bp.x - ownGoal.x, bp.y - ownGoal.y);
 
@@ -62,11 +67,10 @@ export function botInput(game, car, mem) {
 
   // drive to the target point
   const v = B.getVelocity(car.body), speed = Math.hypot(v.x, v.y), dist = Math.hypot(target.x - me.x, target.y - me.y);
-  const skill = game.skill ? game.skill[car.team] : 0.8;
   if (mem.rev > 0) { mem.rev--; return { throttle: -1, steer: mem.revSteer, turbo: false, brake: false }; }
   if (arrive && dist < 40) { const face = wrap(Math.atan2(bp.y - me.y, bp.x - me.x) - car.body.angle); mem.stuck = 0; return { throttle: 0, steer: clamp(face * 2, -1, 1), turbo: false, brake: false }; }
   const diff = wrap(Math.atan2(target.y - me.y, target.x - me.x) - car.body.angle), ad = Math.abs(diff);
-  let throttle = ad < 1.25 ? 1 : ad > 2.35 && dist < 170 ? -1 : 0.5, steer = clamp(diff * 3, -1, 1);
+  let throttle = ad < 1.25 ? 1 : ad > 2.35 && dist < 170 ? -1 : 0.5, steer = clamp(diff * 3 + (weak > 0 ? (mem.rand() - 0.5) * 1.2 * weak : 0), -1, 1);
   // steer round the furniture: poles, rocks, parked cars, pits, raised pylons, the boom's circle
   const fx = Math.cos(car.body.angle), fy = Math.sin(car.body.angle), look = 150 + speed * 9;
   const things = game.world.pylons.some((p) => p.up) ? [...A.blockers, ...game.world.pylons.filter((p) => p.up).map((p) => ({ x: p.x, y: p.y, r: cfg.hazards.pylons.r }))] : A.blockers;
@@ -78,7 +82,7 @@ export function botInput(game, car, mem) {
   }
   if (throttle < 0) steer = -steer;
   if (speed < 0.35) { if (++mem.stuck > 45) { mem.stuck = 0; mem.rev = 26; mem.revSteer = mem.rand() < 0.5 ? -1 : 1; } } else mem.stuck = 0;
-  const out = { throttle: throttle > 0 ? throttle * (0.72 + 0.28 * skill) : throttle, steer, turbo: turbo && ad < 0.5 && skill > 0.35, brake: ad > 1.0 && speed > 3.6, shunt: 0, use: false };
+  const out = { throttle: throttle > 0 ? throttle * (0.72 + 0.28 * skill) : throttle, steer, turbo: turbo && ad < 0.5 - 0.25 * weak && skill > 0.35 && (weak === 0 || role === 'chaser' || dMe > 400), brake: ad > 1.0 && speed > 3.6, shunt: 0, use: false };
   tactics(game, car, mem, out, skill);
   return out;
 }
