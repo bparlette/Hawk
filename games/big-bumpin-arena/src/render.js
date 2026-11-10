@@ -5,6 +5,7 @@ import { createArenaWallConfigs } from './physics.js';
 import { buildArena } from './arenas.js';
 import { drawTheme, drawObstacle, drawOverhead, GROUND } from './landscape.js';
 import { HZ } from './config.js';
+import { Trauma, traumaFor } from './feel.js';
 import { STYLES, STYLE_ORDER } from './styles.js';
 
 const lerp = (a, b, t) => a + (b - a) * t, TAU = Math.PI * 2;
@@ -16,7 +17,7 @@ export class View {
     this.canvas = canvas; this.ctx = canvas.getContext('2d'); this.cfg = cfg; this.arena = null; this.cam = null;
     this.wc = document.createElement('canvas'); this.wg = this.wc.getContext('2d');
     this.canFilter = 'filter' in this.ctx;
-    this.sparks = []; this.rings = []; this.pops = []; this.trail = []; this.shake = 0; this.flash = null; this.t = 0; this.touchLayout = false; this.userZoom = 1;
+    this.sparks = []; this.rings = []; this.pops = []; this.trail = []; this.trauma = new Trauma(); this.flash = null; this.t = 0; this.touchLayout = false; this.userZoom = 1;
     let s = 7; const R = () => ((s = (s * 1664525 + 1013904223) >>> 0) / 4294967296); this.specks = Array.from({ length: 260 }, () => [R(), R(), R()]);
     this.setStyle('cel');
   }
@@ -97,17 +98,17 @@ export class View {
   onEvents(events, game) {
     const P = this.style.pal, pop = (text, x, y, c) => this.pops.push({ text, x, y, c: c || P.text, life: 1 });
     for (const e of events) {
+      this.trauma.add(traumaFor(e));   // shake scales with impact; decays smoothly (feel.js)
       if (e.type === 'hit' && e.force > 1.2) {
         const n = Math.min(16, 3 + Math.floor(e.force * 1.4)), hot = e.kind.includes('ball');
         for (let i = 0; i < n; i++) { const a = Math.random() * TAU, s = (0.6 + Math.random()) * Math.min(7, 1.5 + e.force * 0.6); this.sparks.push({ x: e.x, y: e.y, vx: Math.cos(a) * s, vy: Math.sin(a) * s, life: 1, c: hot ? P.ball : '#ffffff' }); }
         if (e.force > 4) this.rings.push({ x: e.x, y: e.y, r: 8, max: 26 + e.force * 5, life: 1, c: '#ffffff', star: true });
-        if (e.kind !== 'ball-wall') this.shake = Math.min(16, Math.max(this.shake, e.force * 1.1)); // shake scales with impact force
-      } else if (e.type === 'goal') { this.flash = { team: e.team, t: 1 }; this.shake = 18; this.banner = 0; }
-      else if (e.type === 'shock') { this.rings.push({ x: e.x, y: e.y, r: 30, max: e.r, life: 1, c: P.accent, w: 10 }); this.shake = 14; }
+      } else if (e.type === 'goal') { this.flash = { team: e.team, t: 1 }; this.banner = 0; }
+      else if (e.type === 'shock') { this.rings.push({ x: e.x, y: e.y, r: 30, max: e.r, life: 1, c: P.accent, w: 10 }); }
       else if (e.type === 'pickup') { this.rings.push({ x: e.x, y: e.y, r: 10, max: 70, life: 1, c: P.accent, w: 6 }); }
-      else if (e.type === 'spin') { pop('SPIN!', e.x, e.y - 40, P.accent); this.shake = Math.max(this.shake, 8); }
-      else if (e.type === 'flatten') { pop('FLAT!', e.x, e.y - 40, P.glow); this.shake = 16; this.rings.push({ x: e.x, y: e.y, r: 20, max: 120, life: 1, c: P.glow, w: 8 }); }
-      else if (e.type === 'onetimer') { pop('ONE-TIMER!', e.x, e.y - 50, P.accent); this.shake = Math.max(this.shake, 9); }
+      else if (e.type === 'spin') { pop('SPIN!', e.x, e.y - 40, P.accent); }
+      else if (e.type === 'flatten') { pop('FLAT!', e.x, e.y - 40, P.glow); this.rings.push({ x: e.x, y: e.y, r: 20, max: 120, life: 1, c: P.glow, w: 8 }); }
+      else if (e.type === 'onetimer') { pop('ONE-TIMER!', e.x, e.y - 50, P.accent); }
       else if (e.type === 'pit') { pop('SPLASH!', e.x, e.y - 50, '#bfe9ff'); this.rings.push({ x: e.x, y: e.y, r: 20, max: 110, life: 1, c: '#bfe9ff', w: 8 }); }
       else if (e.type === 'snap' && e.cut) pop('SNAP!', e.x, e.y - 30, P.accent);
       else if (e.type === 'pylon') this.rings.push({ x: e.x, y: e.y, r: 12, max: 60, life: 1, c: '#ffffff', w: 4 });
@@ -120,9 +121,8 @@ export class View {
     if (this.arena !== game.arena) this._setArena(game.arena);
     this._camera(game, dt, hud);
     g.setTransform(1, 0, 0, 1, 0, 0); g.fillStyle = mix(GROUND[game.arena.theme] || P.bg, P.bg, S.groundMix ?? 0.5); g.fillRect(0, 0, this.wc.width, this.wc.height);
-    this.shake *= Math.pow(0.002, dt);
-    const sx = (Math.random() - 0.5) * this.shake, sy = (Math.random() - 0.5) * this.shake;
-    g.setTransform(k, 0, 0, k, 0, 0); g.translate(this.cx + sx, this.cy + sy); g.rotate(this.rot); g.scale(this.scale, this.scale); g.translate(-this.cam.x, -this.cam.y);
+    this.trauma.update(dt); const sh = this.trauma.offset(22), sx = sh.x, sy = sh.y;
+    g.setTransform(k, 0, 0, k, 0, 0); g.translate(this.cx + sx, this.cy + sy); g.rotate(this.rot + sh.rot); g.scale(this.scale, this.scale); g.translate(-this.cam.x, -this.cam.y);
     if (S.fx && S.fx.skids) this._skids(game, dt);
     this._rink(g, game); this._hazards(g, game); this._lights(g, game, alpha); this._boards(g, game); this._pickups(g, game); this._ball(g, game, alpha);
     for (const c of game.cars) this._car(g, game, c, alpha, hud.players || {});
