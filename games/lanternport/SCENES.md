@@ -38,8 +38,11 @@ scenes reuse the same registry slots as they land.
   `&loop=1` (or `&auto=1`): auto-start, auto-loop, no button. Film scenes
   (`filmscenes.js` on the `stage.js`/`stageview.js` stage system) register
   into the same `SCENES` list. Juniper wears the playable game's hero look
-  in scenes too (`look.hero` in `stage.js`: green tunic, pointed cap and
-  ears, shield and sword).
+  in scenes too (`hero: true` in `stage.js`) — since Nov 10 that look is
+  the **Linkle kit** (Cherie's reference images): twin braids with red
+  bands, green capelet, hood down behind the neck, compass pendant,
+  pointed ears, orange shorts, tall boots, shield and sword. The hood
+  takes the old cap slot, so `capOff` poses animate it.
 
 ## How to add a scene
 
@@ -69,7 +72,21 @@ scenes reuse the same registry slots as they land.
 | 5 | `plaza-takeover` | `04-cartop-dance` + `17-donut-takeover` | ⏳ awaiting builder |
 | 6 | `release-morning` | `02-gate-shrug` | ⏳ awaiting builder |
 | 7 | `marsh-skiff-run` | `18-marsh-airboat` | ⏳ awaiting builder |
-| 8 | `cucco-swarm` | specced inline in fablego.md | ⏳ awaiting builder |
+| 8 | `cucco-swarm` | aigo.md Part 2 (Gemini) — reassigned from Fable Nov 10 | ⏳ specced |
+| 9 | `sword-pedestal` | fablego.md §4 (Fable) — Zelda slate | ⏳ specced |
+| 10 | `ocarina-dawn` | fablego.md §4 (Fable) — Zelda slate | ⏳ specced |
+| 11 | `pot-rampage` | aigo.md Part 2 (Gemini) — Zelda slate | ⏳ specced |
+| 12 | `chest-fanfare` | aigo.md Part 2 (Gemini) — Zelda slate | ⏳ specced |
+| 13 | `dock-fishing` | aigo.md Part 2 (Gemini) — Zelda slate | ⏳ specced |
+| 14 | `fairy-orbit` | aigo.md Part 2 (Gemini) — Zelda slate | ⏳ specced |
+
+**Pool frames for `rooftop-dive`** (from Cherie's reference stills, Nov 10 —
+for the scene's owner to fold into its opening/closing holds): the money
+compositions are at the pool *edge*, close — (a) seated on the rim, back
+three-quarter, looking back over her shoulder at camera, cocktail glass
+in the near foreground; (b) chin resting on folded arms on the pool deck,
+front-on, direct look at camera. The dive's rim-sit ending already lands
+near (a); frame (b) is the natural opening hold.
 
 The town re-dress to the pack's Look (gamepress `00-city-look`) is also still
 to do — it is dressing work in `view.js`/`fx.js`, independent of the scenes.
