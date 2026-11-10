@@ -314,9 +314,28 @@ export function makeFolk(THREE, kit, guard, hue = 0) {
   }
   return g;
 }
+/** A cucco: round white plaza bird — red comb, orange beak, tail feathers, flap-ready wings. */
+export function makeCucco(THREE, kit) {
+  const { part, toon, glowMat } = kit, g = new THREE.Group(), b = new THREE.Group(); g.add(b); g.userData.body = b;
+  const white = toon(0xf6f1e6, { rim: 0.7 }), red = toon(0xd23b2e, { rim: 0.9 }), orange = toon(0xf08a1d, { rim: 0.9 });
+  part(b, new THREE.SphereGeometry(0.26, 14, 10), white, 0, 0.32, 0).scale.set(1, 0.92, 1.18);                        // round body
+  for (const e of [-1, 0, 1]) { const t = part(b, new THREE.ConeGeometry(0.07, 0.3, 6), white, 0.07 * e, 0.48, -0.26, 0); t.rotation.x = -0.9; t.rotation.z = -0.35 * e; } // tail feathers
+  const head = new THREE.Group(); head.position.set(0, 0.55, 0.17); b.add(head); g.userData.head = head;
+  part(head, new THREE.SphereGeometry(0.155, 12, 10), white, 0, 0, 0);
+  for (const e of [-1, 0, 1]) part(head, new THREE.SphereGeometry(0.045, 8, 6), red, 0.05 * e, 0.15, 0, 0);             // comb
+  const beak = part(head, new THREE.ConeGeometry(0.05, 0.16, 8), orange, 0, -0.02, 0.17, 0); beak.rotation.x = Math.PI / 2; // beak
+  for (const e of [-1, 1]) part(head, new THREE.SphereGeometry(0.022, 6, 6), glowMat(0x241c28), 0.07 * e, 0.03, 0.125, 0); // eyes
+  g.userData.wings = [-1, 1].map((e) => { const w = new THREE.Group(); w.position.set(0.22 * e, 0.42, -0.02); b.add(w); part(w, new THREE.BoxGeometry(0.3, 0.04, 0.24), white, 0.15 * e, 0, 0); w.rotation.z = -0.15 * e; return w; });
+  for (const e of [-1, 1]) part(b, new THREE.CylinderGeometry(0.016, 0.016, 0.16, 6), orange, 0.08 * e, 0.08, 0, 0);   // legs
+  return g;
+}
 export function makePickup(THREE, kit, p) {
   const g = new THREE.Group(), { glowMat, T } = kit, halo = (c, s) => { const m = new THREE.Sprite(new THREE.SpriteMaterial({ map: T.glow, color: c, transparent: true, depthWrite: false, blending: THREE.AdditiveBlending })); m.scale.setScalar(s); g.add(m); };
-  if (p.kind === 'glim' || p.kind === 'coin') { const s = p.kind === 'glim' ? 0.26 : 0.17; g.add(new THREE.Mesh(new THREE.OctahedronGeometry(s), glowMat(new THREE.Color(2.6, 1.7, 0.3)))); halo(new THREE.Color(0.9, 0.55, 0.1), s * 5); }
+  if (p.kind === 'glim' || p.kind === 'coin') { // rupees: elongated gems, colour by value — coin (5 glim) green, glim (10 glim) blue
+    const glim = p.kind === 'glim', s = glim ? 0.24 : 0.18;
+    const gem = new THREE.Mesh(new THREE.OctahedronGeometry(s), glowMat(glim ? new THREE.Color(0.45, 0.95, 2.9) : new THREE.Color(0.4, 2.5, 0.8)));
+    gem.scale.set(1, 2.0, 1); g.add(gem); halo(glim ? new THREE.Color(0.15, 0.35, 0.9) : new THREE.Color(0.1, 0.8, 0.25), s * 5);
+  }
   else if (p.kind === 'lamp') { g.add(new THREE.Mesh(new THREE.SphereGeometry(0.3, 16, 12), glowMat(new THREE.Color(1.8, 2.8, 3.4)))); kit.part(g, new THREE.TorusGeometry(0.33, 0.045, 6, 20), kit.toon(0xd9a441, { rim: 1.2 }), 0, 0, 0, 0); halo(new THREE.Color(0.4, 0.7, 0.9), 3.2); }
   else { kit.part(g, new THREE.BoxGeometry(0.9, 0.6, 0.6), kit.toon(0x8a5a3c, { map: T.wood })); kit.part(g, new THREE.BoxGeometry(0.94, 0.12, 0.64), kit.toon(0xd9a441, { rim: 1.2 }), 0, 0.12, 0, 0); halo(new THREE.Color(1.0, 0.7, 0.2), 4); }
   return g;
