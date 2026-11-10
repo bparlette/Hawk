@@ -65,7 +65,7 @@ import { FixedTicker, PlayerInput } from './lib/three-adapter.js';
 import { TouchController, isTouchDevice } from './lib/gptouch.js';
 import { Game, VEHICLES, HEROES, EDGE, N, roadAt } from './sim.js';
 import { Bot } from './bot.js';
-import { U, buildCityView, HeroView, LOOKS, makeVehicle, makeFolk, makePickup, makeBeacon } from './view.js';
+import { U, buildCityView, HeroView, LOOKS, makeVehicle, makeFolk, makeCucco, makePickup, makeBeacon } from './view.js';
 import { SUN_DIR, makeTextures, makeMaterials, makeSky, makeMotes, Post } from './fx.js';
 
 const Q = new URLSearchParams(location.search), AUTO = Q.get('auto') === '1' || Q.get('spectate') === '1', SEED = +(Q.get('seed') || 7), ANG = (Math.PI * 2) / 0x10000;
@@ -151,8 +151,9 @@ function beep(f0, f1, dur, type = 'square', vol = 0.1, delay = 0) { if (!started
 const tune = (notes, type = 'triangle', vol = 0.13) => notes.forEach((n, i) => beep(n, n, 0.16, type, vol, i * 0.11));
 const SOUNDS = { jump: [330, 660, .13], doubleJump: [392, 784, .14], tripleJump: [523, 1175, .22], backflip: [440, 988, .2], sideFlip: [440, 988, .2], longJump: [300, 900, .25], wallKick: [600, 1100, .12], dive: [500, 250, .15],
   jumpKick: [700, 500, .08], groundPound: [900, 300, .2], pound: [140, 50, .25, 'sawtooth', .2], land: [160, 110, .05, 'triangle', .08], ledgeGrab: [520, 520, .05], coin: [1320, 1760, .12, 'sine', .13],
-  enter: [220, 440, .12, 'triangle'], exit: [440, 220, .12, 'triangle'], crash: [180, 40, .3, 'sawtooth', .22], bonk: [300, 90, .2, 'square', .16], ram: [120, 60, .35, 'sawtooth', .25], denied: [140, 120, .12, 'square', .08], step: [660, 990, .18, 'sine'] };
-const TUNES = { missionStart: [392, 523, 659], missionPassed: [523, 659, 784, 1047, 1319], missionFailed: [392, 330, 262, 196], heatUp: [880, 660, 880, 660], heatLost: [523, 784, 1047], busted: [330, 262, 196, 131], switch: [659, 988], lamp: [988, 1319], chest: [523, 784, 1047, 1568], tailor: [784, 988, 1175], jack: [220, 196] };
+  enter: [220, 440, .12, 'triangle'], exit: [440, 220, .12, 'triangle'], crash: [180, 40, .3, 'sawtooth', .22], bonk: [300, 90, .2, 'square', .16], ram: [120, 60, .35, 'sawtooth', .25], denied: [140, 120, .12, 'square', .08], step: [660, 990, .18, 'sine'],
+  peck: [950, 480, .07, 'square', .08], cuccoAggro: [1250, 700, .2, 'sawtooth', .13] };
+const TUNES = { missionStart: [392, 523, 659], missionPassed: [523, 659, 784, 1047, 1319], missionFailed: [392, 330, 262, 196], heatUp: [880, 660, 880, 660], heatLost: [523, 784, 1047], busted: [330, 262, 196, 131], switch: [659, 988], lamp: [988, 1319], chest: [523, 784, 1047, 1568], tailor: [784, 988, 1175], jack: [220, 196], cuccoCalm: [660, 880, 990] };
 function play(name) { if (SOUNDS[name]) beep(...SOUNDS[name]); else if (TUNES[name]) tune(TUNES[name], name === 'heatUp' ? 'square' : 'triangle', name === 'heatUp' ? 0.07 : 0.13); }
 
 // ---------------------------------------------------------------- tick + render
@@ -163,8 +164,9 @@ function tick() {
   for (const e of game.events) {
     play(e);
     if (e === 'crash' || e === 'ram' || e === 'pound') cam.shake = Math.max(cam.shake, e === 'ram' ? 1.2 : 0.6);
+    if (e === 'peck') cam.shake = Math.max(cam.shake, 0.4);
     if (e === 'switch') cam.swoop = 1;
-    const msg = { heatLost: 'You lost them', busted: 'Collared! The Watch took a cut', tailor: 'New coat, new face. -40 glim', jack: 'Hey! My cart!', denied: 'Not while the Watch is looking' }[e];
+    const msg = { heatLost: 'You lost them', busted: 'Collared! The Watch took a cut', tailor: 'New coat, new face. -40 glim', jack: 'Hey! My cart!', denied: 'Not while the Watch is looking', cuccoAggro: 'The cuccos are furious!', cuccoCalm: 'The cuccos settle down' }[e];
     if (msg) { flashMsg = msg; flashT = 110; }
   }
   if (flashT > 0) flashT--;
@@ -191,6 +193,15 @@ function frame(now) {
     b.rotation.x += ((down ? -Math.PI / 2 : 0) - b.rotation.x) * Math.min(1, dt * 12); b.position.y = down ? 0.25 : Math.abs(Math.sin(time * (guard || p.state === 'flee' ? 14 : 7) + p.id)) * 0.07;
   };
   sync(g.peds, 'p', (p) => makeFolk(THREE, kit, false, p.hue), folk(false)); sync(g.guards, 'g', () => makeFolk(THREE, kit, true), folk(true));
+  sync(g.cuccos, 'c', () => makeCucco(THREE, kit), (m, c) => {
+    m.position.set(L(c.px, c.x) * U, 0, L(c.pz, c.z) * U); m.rotation.y = c.yaw;
+    const b = m.userData.body, swarm = c.state === 'swarm' || g.swarmT > 0, fleeing = c.state === 'flee';
+    b.position.y = swarm ? 0.5 + Math.sin(time * 7 + c.id * 2.1) * 0.08 : fleeing ? Math.abs(Math.sin(time * 15 + c.id)) * 0.2 : 0;
+    b.rotation.x = swarm ? 0.45 : 0;
+    const flap = swarm ? Math.sin(time * 42 + c.id * 1.7) * 0.75 : fleeing ? Math.sin(time * 28 + c.id) * 0.35 : Math.sin(time * 2 + c.phase) * 0.05;
+    m.userData.wings[0].rotation.z = 0.15 - flap; m.userData.wings[1].rotation.z = -0.15 + flap;
+    m.userData.head.rotation.x = c.state === 'peck' && !swarm ? Math.abs(Math.sin(time * 6 + c.phase)) * 0.55 : swarm ? -0.35 : 0;
+  });
   g.pickups.forEach((p, i) => { if (p.id === undefined) p.id = 'k' + i + p.kind + Math.round(p.x); });
   sync(g.pickups.filter((p) => !p.taken), 'k', (p) => makePickup(THREE, kit, p), (m, p) => { m.position.set(p.x * U, p.y * U + Math.sin(time * 3 + p.x) * 0.08, p.z * U); m.rotation.y = time * 2.4; });
   for (const [k, m] of ents) if (m.userData.live !== frameNo) { scene.remove(m); ents.delete(k); }

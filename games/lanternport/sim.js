@@ -164,6 +164,10 @@ export class Game {
       const b = walkers[Math.floor(this.rand() * walkers.length)], c = Math.floor(this.rand() * 4), [x, z] = corner(b, c);
       this.peds.push({ id: this.nextId++, x, z, px: x, pz: z, yaw: 0, block: b, c, dir: this.rand() < 0.5 ? 1 : -1, state: 'walk', t: 0, hue: Math.floor(this.rand() * 6) });
     }
+    this.cuccos = []; this.swarmT = 0; this.swarmGrace = 0;
+    const cuccoHomes = [];
+    for (const [bi, bj] of [[3, 2], [1, 4], [0, 0]]) { const cx = roadAt(bi) + PITCH / 2, cz = roadAt(bj) + PITCH / 2; for (let k = 0; k < (bi === 0 ? 2 : 4); k++) cuccoHomes.push([cx + (this.rand() - 0.5) * 1400, cz + (this.rand() - 0.5) * 1400]); }
+    for (const [x, z] of cuccoHomes) this.cuccos.push({ id: this.nextId++, x, z, px: x, pz: z, hx: x, hz: z, tx: x, tz: z, yaw: this.rand() * 6.28, state: 'peck', t: 30 + Math.floor(this.rand() * 60), phase: this.rand() * 6.28, peckCd: 0, fx: 0, fz: 0 });
     for (const [x, y, z] of this.city.glimSpots) this.pickups.push({ kind: 'glim', x, y, z, taken: false });
   }
 
@@ -249,6 +253,7 @@ export class Game {
     this._vehicles(input);
     this._heroVsVehicles();
     this._peds();
+    this._cuccos();
     this._watch();
     this._pickups();
     this._heat();
@@ -373,6 +378,57 @@ export class Game {
         this.pickups.push({ kind: 'coin', x: p.x + 90, y: 70, z: p.z + 60, taken: false, ttl: 600 });
       }
     }
+  }
+
+  /** Cuccos: placid plaza birds — until one is struck. Then the whole flock swarms the active hero
+   *  for 12 s, pecking (pressure and knockback, never damage), and the fuss raises Heat to 3 lanterns
+   *  so the Watch joins in: the Zelda layer answered by the GTA layer. */
+  _cuccos() {
+    const h = this.hero, hp = this.posOf(h), hv = h.vehicle, act = hv ? '' : h.ctrl.action;
+    if (this.swarmGrace > 0) this.swarmGrace--;
+    if (this.swarmT > 0) {
+      this.swarmT--; if (this.heat < 3) this.setHeat(3);
+      if (this.swarmT === 0) { this.events.push('cuccoCalm'); this.swarmGrace = 300; for (const c of this.cuccos) { c.state = 'walk'; c.tx = c.hx; c.tz = c.hz; c.t = 900; } }
+    }
+    const tackle = act === 'dive' || act === 'bellySlide' || act === 'jumpKick' || act === 'longJump' || act === 'tripleJump' || act === 'backflip' || act === 'sideFlip' || act === 'rollout';
+    let struck = null;
+    for (const c of this.cuccos) {
+      c.px = c.x; c.pz = c.z; if (c.peckCd > 0) c.peckCd--;
+      const dx = c.x - hp.x, dz = c.z - hp.z, hd = Math.hypot(dx, dz);
+      if (this.swarmT > 0) { // the swarm: fly straight at the hero (airborne — no ground collision), peck on contact
+        if (hd > 60) { c.x += ((hp.x - c.x) / hd) * 21; c.z += ((hp.z - c.z) / hd) * 21; c.yaw = Math.atan2(hp.x - c.x, hp.z - c.z); }
+        if (hd < 110 && c.peckCd === 0) {
+          c.peckCd = 18; this.events.push('peck');
+          if (!hv && hd > 1) { const p = h.ctrl.pos; p[0] = Math.fround(p[0] + ((p[0] - c.x) / hd) * 30); p[2] = Math.fround(p[2] + ((p[2] - c.z) / hd) * 30); }
+        }
+        continue;
+      }
+      if (!struck && this.swarmGrace === 0) { // a strike lands: hero tackle/spin contact, a ground-pound landing nearby, or any vehicle at speed
+        if (!hv && hp.y < 140 && ((tackle && hd < 150) || (act === 'poundLand' && hd < 250))) struck = c;
+        else for (const v of this.vehicles) if (Math.abs(v.fwd) > 12 && Math.hypot(c.x - v.x, c.z - v.z) < VEHICLES[v.kind].r + 60) { struck = c; break; }
+      }
+      if (c.state === 'flee') {
+        const fx = c.x - c.fx, fz = c.z - c.fz, fd = Math.hypot(fx, fz) || 1;
+        c.x += (fx / fd) * 13; c.z += (fz / fd) * 13; c.yaw = Math.atan2(fx, fz);
+        if (--c.t <= 0) { c.state = 'peck'; c.t = 30; }
+      } else {
+        let threat = null; // scatter from anything fast and close
+        if (!hv && hd < 230 && Math.abs(h.ctrl.fvel) > 14) threat = hp;
+        else for (const v of this.vehicles) if (Math.abs(v.fwd) > 10 && Math.hypot(c.x - v.x, c.z - v.z) < 280) { threat = v; break; }
+        if (threat) { c.state = 'flee'; c.t = 42; c.fx = threat.x; c.fz = threat.z; }
+        else if (c.state === 'walk') {
+          const wx = c.tx - c.x, wz = c.tz - c.z, wd = Math.hypot(wx, wz);
+          if (wd < 12 || --c.t <= 0) { c.state = 'peck'; c.t = 40 + Math.floor(this.rand() * 60); }
+          else { c.x += (wx / wd) * 4.5; c.z += (wz / wd) * 4.5; c.yaw = Math.atan2(wx, wz); }
+        } else if (--c.t <= 0) { c.tx = c.hx + (this.rand() - 0.5) * 900; c.tz = c.hz + (this.rand() - 0.5) * 900; c.state = 'walk'; c.t = 320; }
+      }
+      this.collide(c, 40);
+    }
+    for (let a = 0; a < this.cuccos.length; a++) for (let b = a + 1; b < this.cuccos.length; b++) { // gentle separation, no stacking
+      const A = this.cuccos[a], B = this.cuccos[b], dx = B.x - A.x, dz = B.z - A.z, d = Math.hypot(dx, dz);
+      if (d > 1 && d < 80) { const push = (80 - d) * 0.2; A.x -= (dx / d) * push; A.z -= (dz / d) * push; B.x += (dx / d) * push; B.z += (dz / d) * push; }
+    }
+    if (struck) { this.swarmT = 360; if (this.heat < 3) this.setHeat(3); this.events.push('cuccoAggro'); }
   }
 
   _watch() {
