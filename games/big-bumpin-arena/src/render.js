@@ -17,7 +17,7 @@ export class View {
     this.canvas = canvas; this.ctx = canvas.getContext('2d'); this.cfg = cfg; this.arena = null; this.cam = null;
     this.wc = document.createElement('canvas'); this.wg = this.wc.getContext('2d');
     this.canFilter = 'filter' in this.ctx;
-    this.sparks = []; this.rings = []; this.pops = []; this.trail = []; this.trauma = new Trauma(); this.flash = null; this.t = 0; this.touchLayout = false; this.userZoom = 1;
+    this.sparks = []; this.rings = []; this.pops = []; this.trail = []; this.trauma = new Trauma(); this.flash = null; this.t = 0; this.touchLayout = false; this.userZoom = 1; this.intro = 1; // match-start zoom-in progress (see _camera)
     let s = 7; const R = () => ((s = (s * 1664525 + 1013904223) >>> 0) / 4294967296); this.specks = Array.from({ length: 260 }, () => [R(), R(), R()]);
     this.setStyle('cel');
   }
@@ -35,7 +35,7 @@ export class View {
     this.wc.width = Math.ceil(this.canvas.width / this.k); this.wc.height = Math.ceil(this.canvas.height / this.k);
   }
   _setArena(A) { // cache everything that depends on the place
-    this.arena = A; this.walls = createArenaWallConfigs(this.cfg, A); this.cam = null; this.trail.length = 0; this.userZoom = 1; // manual zoom never carries into a new match / arena
+    this.arena = A; this.walls = createArenaWallConfigs(this.cfg, A); this.cam = null; this.trail.length = 0; this.userZoom = 1; this.intro = 0; // manual zoom never carries into a new match / arena; the intro zoom restarts too
     this.bulbs = []; const p = A.poly; // marquee bulbs every ~46 px along the boards, set back onto the wall
     for (let i = 0; i < p.length; i++) { const [x0, y0] = p[i], [x1, y1] = p[(i + 1) % p.length], dx = x1 - x0, dy = y1 - y0, len = Math.hypot(dx, dy), n = Math.floor(len / 46); for (let k = 0; k < n; k++) { const t = (k + 0.5) / n; this.bulbs.push([x0 + dx * t + (dy / len) * 22, y0 + dy * t - (dx / len) * 22]); } }
   }
@@ -62,6 +62,17 @@ export class View {
       const xs = pts.map((p) => p[0]), ys = pts.map((p) => p[1]), m = 300, bw = Math.max(...xs) - Math.min(...xs) + m * 2, bh = Math.max(...ys) - Math.min(...ys) + m * 2;
       const base = fit < close * 0.93 ? Math.max(fit, Math.min(close, aw / bw, ah / bh)) : fit, s = base * z, vw = aw / s, vh = ah / s, clampAxis = (c, lo, hi, v) => (v >= hi - lo ? (lo + hi) / 2 : Math.max(lo + v / 2, Math.min(hi - v / 2, c)));
       want = { s, x: clampAxis((Math.max(...xs) + Math.min(...xs)) / 2, -40, A.w + 40, vw), y: clampAxis((Math.max(...ys) + Math.min(...ys)) / 2, -20, A.h + 20, vh) };
+    }
+    // Cherie's camera rule (Nov 10): every start — the match kickoff and every faceoff after a goal — opens
+    // FULLY ZOOMED OUT on the whole arena, then zooms in to the play framing as play begins (~1.6 s smoothstep
+    // once the state goes live). Goal replays keep their own broadcast camera.
+    if (!hud.replay) {
+      if (game.state === 'kickoff' || game.state === 'faceoff') { this.intro = 0; want = { x: A.cx, y: A.cy, s: fit }; }
+      else if (this.intro < 1) {
+        this.intro = Math.min(1, this.intro + dt / 1.6);
+        const e = this.intro * this.intro * (3 - 2 * this.intro);
+        want = { x: A.cx + (want.x - A.cx) * e, y: A.cy + (want.y - A.cy) * e, s: fit + (want.s - fit) * e };
+      }
     }
     if (!this.cam) this.cam = want; else { const k = 1 - Math.exp(-4.5 * dt), ks = 1 - Math.exp(-2.5 * dt); this.cam.x += (want.x - this.cam.x) * k; this.cam.y += (want.y - this.cam.y) * k; this.cam.s += (want.s - this.cam.s) * ks; }
     this.scale = this.cam.s; this.zoomed = this.cam.s > fit * 1.04;

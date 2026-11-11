@@ -606,7 +606,7 @@ function spawnPoke(fromAuto) {
   const scaleT = rand(0.6, 1.3);
   const group = new THREE.Group();
   group.position.set(x, 0, z);
-  const rotY = rand(-0.85, 0.85);
+  const rotY = 0; // Cherie's rule (Nov 10): pokes always face the camera — they never turn sideways
   group.rotation.y = rotY;
   const mesh = new THREE.Mesh(rec.geo, pokeMat);
   group.add(mesh);
@@ -735,7 +735,7 @@ function updatePoke(p, dt, t) {
     }
   } else if (p.mode === 'dizzy') {
     p.dizzyT -= dt;
-    p.group.rotation.y += dt * 7;
+    // dizzy is a front-facing rock, never a spin (facing stays locked front)
     p.group.rotation.z = Math.sin(p.dizzyT * 10) * 0.16;
     if (p.dizzyT <= 0) { p.mode = 'free'; p.group.rotation.z = 0; p.wanderT = rand(3, 6); }
   }
@@ -782,10 +782,9 @@ function petPoke(p) {
    they square up, trade three lunges with star bursts, and the loser
    ends up dizzy while the winner hops. No HP, no fainting — roughhousing. */
 function turnToward(p, target, maxStep) {
-  let d = target - p.group.rotation.y;
-  while (d > Math.PI) d -= Math.PI * 2;
-  while (d < -Math.PI) d += Math.PI * 2;
-  p.group.rotation.y += clamp(d, -maxStep, maxStep);
+  // Facing is locked front (toward the camera) by Cherie's rule — pokes move,
+  // lunge and climb positionally but never rotate sideways. Kept as a no-op so
+  // the choreography callers stay as they are.
 }
 function pokeRadius(p) { const rec = geoms.get(p.id); return clamp((rec ? rec.width : 0.8) * p.scaleT * 0.40, 0.20, 0.62); }
 function pairOf(a, b) {

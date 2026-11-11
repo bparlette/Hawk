@@ -119,7 +119,7 @@ function restart() {
   cam.init = false; cam.yaw = Math.PI / 2; window.__game = game;
   // staged film scene: build its set and cast, light it, frame it
   if (stage) { stage.dispose(scene); stage = null; } stopBed(); sceneCues = []; stageS = null;
-  if (SCENE_DEF && SCENE_DEF.set) { stageS = SCENE_DEF.set(game); SCENE_DEF.act(stageS, 0); stage = new StageView(THREE, kit, stageS); scene.add(stage.root); setLight(SCENE_DEF.light || 'golden'); if (Q.get('cam') !== 'free' && sceneMode === 'watch') jumpBookmark(SCENES.indexOf(SCENE_DEF)); }
+  if (SCENE_DEF && SCENE_DEF.set) { stageS = SCENE_DEF.set(game); SCENE_DEF.act(stageS, 0); stage = new StageView(THREE, kit, stageS); scene.add(stage.root); setLight(SCENE_DEF.light || 'golden'); if (Q.get('cam') !== 'free' && sceneMode === 'watch') jumpBookmark(SCENES.indexOf(SCENE_DEF)); if (!LOOP_SCENE && sceneMode !== 'watch') placeHeroInScene(); }
 }
 let stage = null, stageS = null, sceneCues = [];
 // Light states: where the sun is and what colour the day is. 'golden' is the town's default.
@@ -336,7 +336,7 @@ function frame(now) {
   for (const [k, m] of ents) if (m.userData.live !== frameNo) { scene.remove(m); ents.delete(k); }
   const marks = g.markers(); beacons.forEach((b, i) => { const m = marks[i]; b.visible = !!m; if (m) { b.userData.set(m.kind); b.position.set(m.x * U, 0, m.z * U); b.scale.set(1, 1 + Math.sin(time * 4 + i) * 0.04, 1); } });
 
-  if (stage) { SCENE_DEF.act(stageS, runner ? Math.max(0, runner.t - 1 + a) : 0); stage.update(time); $('flashfx').style.opacity = stageS.flash ? Math.min(0.85, stageS.flash * 0.8) : 0; }
+  if (stage) { SCENE_DEF.act(stageS, runner ? Math.max(0, runner.t - 1 + a) : 0); if (!runner) { const hj = stageS.actors.find((ac) => ac.look && ac.look.hero); if (hj) hj.vis = false; } stage.update(time); $('flashfx').style.opacity = stageS.flash ? Math.min(0.85, stageS.flash * 0.8) : 0; } // in play mode the player IS the hero — the staged double hides
   if (free.on) updateFreecam(rdt); else updateCamera(hv, !!hero.vehicle, rdt, AUTO ? 0 : input.orbit());
   sun.target.position.set(cam.focus.x, 0, cam.focus.z); sun.position.copy(sun.target.position).addScaledVector(sunDir, 200);
   timeU.value = time; sky.position.set(camera.position.x, 0, camera.position.z); motes.material.uniforms.uCam.value.copy(camera.position);
@@ -419,8 +419,17 @@ function syncSceneBtn() {
   sceneBtn.style.display = '';
   sceneBtn.textContent = sceneMode === 'watch' ? '🎮 TAKE CONTROL' : (sceneRan ? '↻ WATCH AGAIN' : '▶ WATCH THE SCENE');
 }
-function startWatch() { if (!SCENE_DEF || runner) return; sceneMode = 'watch'; sceneRan = true; runner = new SceneRunner(game, SCENE_DEF); if (Q.get('cam') !== 'free') jumpBookmark(SCENES.indexOf(SCENE_DEF)); syncSceneBtn(); }
-function takeControl() { if (!runner) return; runner = null; stopBed(); sceneCues = []; sceneMode = 'ready'; if (SCENE_DEF.act && stageS) SCENE_DEF.act(stageS, 0); syncSceneBtn(); }
+// Take-control means PLAYING in the set, not watching it: the player hero spawns where the staged
+// hero stands, the follow camera comes back (setFreecam(false) also un-hides the touch controls),
+// and while a scene is watched the game hero waits at the hideout so only one Juniper is on screen.
+function placeHeroInScene() {
+  if (!SCENE_DEF) return;
+  if (stageS) { const o = stageS.origin, hj = stageS.actors.find((ac) => ac.look && ac.look.hero); game.place(game.active, (o[0] + (hj ? hj.x : 0)) * 100, o[1] * 100 + 40, (o[2] + (hj ? hj.z : 0)) * 100); }
+  else if (SCENE_DEF.bookmark) { const b = typeof SCENE_DEF.bookmark === 'function' ? SCENE_DEF.bookmark(game) : SCENE_DEF.bookmark; if (b) game.place(game.active, b.pivot[0] * 100, b.pivot[1] * 100 + 40, b.pivot[2] * 100); }
+}
+function parkHero() { const P = game.city.places; game.place(game.active, P.hideout.x, 0, P.hideout.z); }
+function startWatch() { if (!SCENE_DEF || runner) return; sceneMode = 'watch'; sceneRan = true; runner = new SceneRunner(game, SCENE_DEF); parkHero(); if (Q.get('cam') !== 'free') jumpBookmark(SCENES.indexOf(SCENE_DEF)); syncSceneBtn(); }
+function takeControl() { if (!runner) return; runner = null; stopBed(); sceneCues = []; sceneMode = 'ready'; if (SCENE_DEF.act && stageS) SCENE_DEF.act(stageS, 0); setFreecam(false); placeHeroInScene(); syncSceneBtn(); }
 function toggleScene() { if (sceneMode === 'watch') takeControl(); else startWatch(); }
 sceneBtn.addEventListener('click', () => { unlockAudio(); toggleScene(); });
 syncSceneBtn();

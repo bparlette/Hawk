@@ -34,7 +34,13 @@ scenes reuse the same registry slots as they land.
   1–8). The **▶ WATCH THE SCENE** button (or Enter) starts the performance
   and frames the bookmark; **🎮 TAKE CONTROL** hands the game back
   mid-scene; when a performance ends, control stays with the player and the
-  button becomes **↻ WATCH AGAIN**. Filming keeps the old behaviour with
+  button becomes **↻ WATCH AGAIN**. Taking control means playing *in the
+  set*: the freecam releases, the touch controls return, the staged hero
+  double hides, and the player hero spawns where the staged hero stands
+  (the game hero waits at the hideout while a scene is watched, so there
+  is only ever one Juniper on screen). Free-play actions inside a set
+  (swim, board dive, rim sit in the dive set) are specced for the scene
+  owner in fablego.md §5. Filming keeps the old behaviour with
   `&loop=1` (or `&auto=1`): auto-start, auto-loop, no button. Film scenes
   (`filmscenes.js` on the `stage.js`/`stageview.js` stage system) register
   into the same `SCENES` list. Juniper wears the playable game's hero look
