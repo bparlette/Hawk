@@ -105,3 +105,10 @@ Cherie's 8-panel sheet, keyed and deck-line aligned into sprite frames
 sprite in the rooftop-dive set via the registered `surfaceSprite` stage kind
 (`surface.js`). This is composition (b) from the pool-frames note above, as a
 full scene: `?scene=pool-surface`.
+
+**`pool-rimsit` (added Nov 11, 2026, Moth):** the companion composition (a) —
+Juniper seated on the rim, back three-quarter to camera, looking back over her
+shoulder. Cherie's second 8-panel sheet, keyed + seat-line aligned into
+`assets/linkle-rimsit/rimsit_00..07.png`, played on a sprite in the same
+rooftop set via the registered `rimsitSprite` stage kind (`rimsit.js`):
+`?scene=pool-rimsit`. The look-back frames get the long holds.
