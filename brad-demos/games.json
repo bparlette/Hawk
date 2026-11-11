@@ -2506,6 +2506,14 @@
    "thumb": "thumbs/bonk-yard.png",
    "title": "POOL DAY!",
    "url": "../games/pool-day/"
+  },
+  {
+   "category": "Viral Demos",
+   "desc": "Carnival pickleball in Big Bumpin' Fairground style — real rules (kitchen, two-bounce, diagonal serves), three shots (drive, dink, lob), rally scoring, first to 5 under the midway lights.",
+   "id": "big-dinkin",
+   "thumb": "thumbs/bonk-yard.png",
+   "title": "BIG DINKIN'!",
+   "url": "../games/big-dinkin/"
   }
  ]
 }
