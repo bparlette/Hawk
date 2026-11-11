@@ -116,10 +116,10 @@ export const LEVELS = [
     spawns: {
       durationSec: 330,
       table: [
-        { type: 'walker', fromSec: 0, weight: 8, hpMul: 1.8, speedMul: 1.6 },
+        { type: 'walker', fromSec: 0, weight: 8, hpMul: 1.8, speedMul: 1.35 },
         { type: 'runner', fromSec: 0, weight: 5, hpMul: 1.2, speedMul: 1.5 },
-        { type: 'splitter', fromSec: 30, weight: 5, hpMul: 1.5, speedMul: 1.5 },
-        { type: 'brute', fromSec: 45, weight: 4, hpMul: 2.6, speedMul: 1.3 },
+        { type: 'splitter', fromSec: 40, weight: 5, hpMul: 1.5, speedMul: 1.5 },
+        { type: 'brute', fromSec: 60, weight: 4, hpMul: 2.6, speedMul: 1.3 },
       ],
       escalateEverySec: 20,
       pressureMul: 1.8,
