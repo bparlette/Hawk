@@ -2,16 +2,40 @@
 <html lang="zh-CN">
   <head>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover" />
     <title>弹无虚坑 · Trickshot Abyss</title>
     <link
       rel="icon"
       href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Ccircle cx='8' cy='8' r='7' fill='%23e0334f'/%3E%3Crect x='4' y='4' width='3' height='3' fill='%23fff'/%3E%3C/svg%3E"
     />
-    <style>html,body{background:#0d0a14;height:100%;margin:0;overflow:hidden}canvas{touch-action:none;width:100vw;height:100vh;image-rendering:pixelated;cursor:crosshair;display:block}.name-input{box-sizing:border-box;text-align:center;color:#f2e6cc;background:#1d1713;border:2px solid #c9a25e;border-radius:0;outline:none;padding:0 10px;font-family:PingFang SC,Microsoft YaHei,Noto Sans CJK SC,sans-serif;font-weight:700;display:none;position:absolute}</style>
-    <script type="module" crossorigin src="./assets/index-DVDywanH.js"></script>
-  </head>
+    <style>html,body{overscroll-behavior:none;background:#07050b;height:100%;margin:0;overflow:hidden}canvas{touch-action:none;width:100dvw;height:100dvh;image-rendering:pixelated;cursor:crosshair;display:block;position:fixed;inset:0}.name-input{z-index:1200;box-sizing:border-box;text-align:center;color:#f2e6cc;background:#1d1713;border:2px solid #c9a25e;border-radius:0;outline:none;padding:0 10px;font-family:PingFang SC,Microsoft YaHei,Noto Sans CJK SC,sans-serif;font-weight:700;display:none;position:absolute}</style>
+    <script type="module" crossorigin src="./assets/index-CwBezMFZ.js"></script>
+  <style id="moth-game-guard">
+html,body{touch-action:none;overscroll-behavior:none;-webkit-touch-callout:none;-webkit-user-select:none;user-select:none;-webkit-tap-highlight-color:transparent}
+canvas{touch-action:none}
+</style>
+</head>
   <body>
     <canvas id="game"></canvas>
-  </body>
+  <script id="moth-game-guard-js">
+(function(){
+  var lastEnd=0;
+  function onUi(t){return t&&t.closest&&t.closest('button,a,input,select,textarea,[data-scroll]');}
+  document.addEventListener('touchend',function(e){
+    var now=Date.now();
+    if(!onUi(e.target)&&now-lastEnd<=300&&e.cancelable)e.preventDefault();
+    lastEnd=now;
+  },{passive:false});
+  ['gesturestart','gesturechange','gestureend'].forEach(function(n){
+    document.addEventListener(n,function(e){e.preventDefault();});
+  });
+  document.addEventListener('dblclick',function(e){e.preventDefault();},{passive:false});
+  document.addEventListener('contextmenu',function(e){e.preventDefault();});
+  document.addEventListener('touchmove',function(e){
+    if(e.target&&e.target.closest&&e.target.closest('[data-scroll]'))return;
+    if(e.cancelable)e.preventDefault();
+  },{passive:false});
+})();
+</script>
+</body>
 </html>

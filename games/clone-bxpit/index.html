@@ -1,13 +1,19 @@
 <!DOCTYPE html>
 <html>
 <head>
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
 <meta charset="UTF-8">
 <title>Ball x Pit - Pixel Ruins Edition</title>
 <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
-body{background:#0a0a12;overflow:hidden;display:flex;justify-content:center;align-items:center;height:100vh;font-family:'Press Start 2P',monospace;user-select:none}
-canvas{image-rendering:pixelated;image-rendering:crisp-edges;display:block}
+html,body{height:100%}
+body{background:#0a0a12;overflow:hidden;margin:0;height:100vh;height:100dvh;font-family:'Press Start 2P',monospace;user-select:none}
+canvas{image-rendering:pixelated;image-rendering:crisp-edges;display:block;width:100vw;width:100dvw;height:100vh;height:100dvh}
+</style>
+<style id="moth-game-guard">
+html,body{touch-action:none;overscroll-behavior:none;-webkit-touch-callout:none;-webkit-user-select:none;user-select:none;-webkit-tap-highlight-color:transparent}
+canvas{touch-action:none}
 </style>
 </head>
 <body>
@@ -15,7 +21,7 @@ canvas{image-rendering:pixelated;image-rendering:crisp-edges;display:block}
 <script>
 const C=document.getElementById('c'),X=C.getContext('2d'),W=320,H=240;
 C.width=W;C.height=H;X.imageSmoothingEnabled=false;
-function resize(){const s=Math.max(1,Math.floor(Math.min(innerWidth/W,innerHeight/H)));C.style.width=W*s+'px';C.style.height=H*s+'px';}
+function resize(){C.style.width='100dvw';C.style.height='100dvh';}
 addEventListener('resize',resize);resize();
 const P={bg:'#0f0e17',pit:'#1a1a2e',wall:'#2a2a44',wallHi:'#3a3a5e',gold:'#ffcc00',red:'#ff2244',orange:'#ff8844',
 green:'#44ee44',cyan:'#44ccff',blue:'#4466ff',purple:'#9944ff',pink:'#ff66aa',white:'#eeeeee',gray:'#888899',dGray:'#444466',
@@ -343,6 +349,93 @@ function loop(now){requestAnimationFrame(loop);const dt=Math.min(now-lt,50);lt=n
 function upd(){gt++;pollGP();updP();updSh();switch(state){case S.TITLE:if(anyOk()){sfxClick();state=S.VILLAGE;}break;case S.VILLAGE:updVillage();break;case S.DUNGEON:updDungeon();break;case S.LVLUP:break;case S.SEGCLR:break;case S.BOSSIN:break;case S.GOVER:break;}}
 function rnd(){X.fillStyle=P.bg;X.fillRect(0,0,W,H);switch(state){case S.TITLE:drTitle();break;case S.VILLAGE:drVillage();break;case S.DUNGEON:drDungeon();break;case S.LVLUP:drLvlUp();break;case S.SEGCLR:drSegC();break;case S.BOSSIN:drBossIn();break;case S.GOVER:drGO();break;}}
 requestAnimationFrame(loop);
+</script>
+<script type="module">
+import { TouchController, isTouchDevice } from './gptouch.js';
+// ── TOUCH BRIDGE (gamepress mod): gptouch -> the game's OWN input state.
+// The game logic above is untouched. This bridge only writes the same
+// mouse / keys / jp state that the keyboard, mouse and gamepad paths
+// already write, once per frame:
+//   stick X        -> keys.KeyA / keys.KeyD   (paddle move, via padMX)
+//   stick flicks   -> jp.Arrow*               (menu nav, via navD)
+//   stick held     -> mouse aim leads off the paddle (mouse = aimT source)
+//   button A       -> jp.Space                (fire in pit, confirm in menus)
+//   button B       -> jp.Escape               (cancel / close panel)
+//   quick tap      -> mouse position + mouse.click (canvas-drawn menus:
+//                     village buttons, building slots, level-up cards)
+const forceTouch = new URLSearchParams(location.search).get('touch') === '1';
+const TC = new TouchController({ buttons: [{ id: 'a', label: 'A' }, { id: 'b', label: 'B' }], force: forceTouch ? true : undefined });
+window.__gptouch = TC;
+if (TC.enabled) {
+  const owned = { KeyA: false, KeyD: false };
+  const latch = { x: 0, y: 0 };
+  const setHeld = (code, on) => { if (on && !keys[code]) jp[code] = true; keys[code] = on; };
+  const flick = (v, axis, pos, neg) => {
+    if (v > 0.6) { if (latch[axis] !== 1) { jp[pos] = true; latch[axis] = 1; } }
+    else if (v < -0.6) { if (latch[axis] !== -1) { jp[neg] = true; latch[axis] = -1; } }
+    else if (Math.abs(v) < 0.3) latch[axis] = 0;
+  };
+  function poll() {
+    const ti = TC.getInput();
+    const L = ti.x < -0.35, R = ti.x > 0.35;
+    if (L !== owned.KeyA) { setHeld('KeyA', L); owned.KeyA = L; }
+    if (R !== owned.KeyD) { setHeld('KeyD', R); owned.KeyD = R; }
+    flick(ti.x, 'x', 'ArrowRight', 'ArrowLeft');
+    flick(ti.y, 'y', 'ArrowDown', 'ArrowUp');
+    try {
+      if ((Math.abs(ti.x) > 0.35 || Math.abs(ti.y) > 0.35) && D && D.pad) {
+        mouse.x = Math.max(0, Math.min(W, D.pad.x + ti.x * 110));
+        mouse.y = Math.max(0, Math.min(H, D.pad.y - 80 + ti.y * 70));
+      }
+    } catch (e) {}
+    if (ti.aPressed) jp.Space = true;
+    if (ti.bPressed) jp.Escape = true;
+    requestAnimationFrame(poll);
+  }
+  requestAnimationFrame(poll);
+  let pDown = null;
+  const inBtn = (x, y) => {
+    const els = document.querySelectorAll('[data-gptouch]');
+    for (const el of els) { const r = el.getBoundingClientRect();
+      if (x >= r.left - 12 && x <= r.right + 12 && y >= r.top - 12 && y <= r.bottom + 12) return true; }
+    return false;
+  };
+  document.addEventListener('pointerdown', e => {
+    try { initAudio(); if (typeof audioCtx !== 'undefined' && audioCtx && audioCtx.state === 'suspended') audioCtx.resume(); } catch (err) {}
+    pDown = { x: e.clientX, y: e.clientY, t: performance.now(), id: e.pointerId };
+  }, true);
+  document.addEventListener('pointerup', e => {
+    if (!pDown || e.pointerId !== pDown.id) return;
+    const dt = performance.now() - pDown.t, moved = Math.hypot(e.clientX - pDown.x, e.clientY - pDown.y);
+    pDown = null;
+    if (dt > 400 || moved > 16 || inBtn(e.clientX, e.clientY)) return;
+    const r = C.getBoundingClientRect();
+    mouse.x = Math.max(0, Math.min(W, (e.clientX - r.left) / (r.width / W)));
+    mouse.y = Math.max(0, Math.min(H, (e.clientY - r.top) / (r.height / H)));
+    mouse.down = true; mouse.click = true;
+    setTimeout(() => { mouse.down = false; }, 60);
+  }, true);
+}
+</script>
+<script id="moth-game-guard-js">
+(function(){
+  var lastEnd=0;
+  function onUi(t){return t&&t.closest&&t.closest('button,a,input,select,textarea,[data-scroll]');}
+  document.addEventListener('touchend',function(e){
+    var now=Date.now();
+    if(!onUi(e.target)&&now-lastEnd<=300&&e.cancelable)e.preventDefault();
+    lastEnd=now;
+  },{passive:false});
+  ['gesturestart','gesturechange','gestureend'].forEach(function(n){
+    document.addEventListener(n,function(e){e.preventDefault();});
+  });
+  document.addEventListener('dblclick',function(e){e.preventDefault();},{passive:false});
+  document.addEventListener('contextmenu',function(e){e.preventDefault();});
+  document.addEventListener('touchmove',function(e){
+    if(e.target&&e.target.closest&&e.target.closest('[data-scroll]'))return;
+    if(e.cancelable)e.preventDefault();
+  },{passive:false});
+})();
 </script>
 </body>
 </html>
