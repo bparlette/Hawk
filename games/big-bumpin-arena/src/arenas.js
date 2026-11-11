@@ -28,7 +28,7 @@ const DEFS = {
   derby: { name: 'DUST BOWL', blurb: 'Six-sided dirt derby with hay bales, tyre stacks and a swinging boom', theme: 'derby', surface: 'dirt', w: 2000, h: 1240, L: 150, R: 1850, goalHalf: 116,
     top: () => [[150, 400], [520, 60], [1480, 60], [1850, 400]],
     obstacles: [{ kind: 'bale', x: 700, y: 260, w: 130, h: 64, angle: 0.5 }, { kind: 'bale', x: 1280, y: 330, w: 130, h: 64, angle: -0.3 }, { kind: 'tires', x: 480, y: 520, r: 34 }, { kind: 'tires', x: 1000, y: 150, r: 30 }],
-    sweepers: [{ x: 1000, y: 620, len: 210, speed: 0.022, mirror: false }],
+    sweepers: [{ x: 1000, y: 620, len: 170, speed: 0.022, mirror: false }],
     spawns: [['light', 560, -90], ['heavy', 360, 90]], items: [[1000, 330], [640, 760]], pads: [[620, 70, 860, 150, 1], [1140, 70, 1380, 150, 1]], pylons: [[760, 480], [1240, 480]] },
 
   pinch: { name: 'THE PINCH', blurb: 'Freight yard hourglass: wide ends, a narrow throat between stacked containers', theme: 'pinch', surface: 'asphalt', w: 2200, h: 1240, L: 150, R: 2050, goalHalf: 116,

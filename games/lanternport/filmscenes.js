@@ -41,7 +41,7 @@ const rooftopDive = {
         thing('pergola', 'pergola', r.w / 2 - 1.7, 0, -r.d / 2 + 1.6), thing('umb', 'umbrella', 0, 0, -pd / 2 - 1.5),
       ],
       actors: [
-        person('juniper', { ...JUNIPER, swim: true, cap: 0xf2b23a }, bx - 2.4, 1.0, 0, Math.PI / 2),
+        person('juniper', { ...JUNIPER, swim: true, poolLook: true, cap: 0xf2b23a }, bx - 2.4, 1.0, 0, Math.PI / 2),
         person('sun1', { ...townLook(1), swim: true }, -1.3, 0.45, -pd / 2 - 1.5, 0), person('sun2', { ...townLook(6), swim: true, hat: 0xf4ead8 }, 1.3, 0.45, -pd / 2 - 1.5, 0),
         thing('splash', 'splash', 0, 0.6, 0, 0, { p: -1 }), thing('ripple', 'ripple', 0, 0.56, 0, 0, { p: -1 }),
         ...[0, 1, 2, 3, 4].map((i) => thing('gull' + i, 'gull', 0, 0, 0)),
