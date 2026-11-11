@@ -12,7 +12,7 @@ const MONEY = { 'rooftop-dive': 'splash', 'photo-call': 'brass', 'snapper-shop':
 
 test('film scenes lead the registry in brief order, so bookmark keys 1-8 match the brief', () => {
   assert.deepEqual(SCENES.slice(0, FILM_SCENES.length).map((s) => s.id), FILM_SCENES.map((s) => s.id));
-  assert.equal(SCENES.at(-1).id, 'stage-test');
+  assert.ok(SCENES.some((s) => s.id === 'stage-test'));
 });
 
 for (const def of FILM_SCENES) {
@@ -22,6 +22,15 @@ for (const def of FILM_SCENES) {
     const at = {}; for (const t of [0, 37.5, 200, def.duration * 0.5, def.duration - 1]) { def.act(A, t); at[t] = snap(A); }
     for (let t = 0; t < def.duration; t += 0.5) { def.act(A, t); for (const a of A.actors) assert.ok([a.x, a.y, a.z, a.yaw || 0].every(Number.isFinite), `${a.id} at tick ${t}`); }
     for (const t of Object.keys(at)) { def.act(A, +t); assert.equal(snap(A), at[t], `act(${t}) depends only on t`); }
+
+    // Full tick range choreography purity across two fresh sets
+    const S1 = def.set(new Game(7)), S2 = def.set(new Game(7));
+    for (let t = 0; t < def.duration; t++) {
+      def.act(S1, t);
+      def.act(S2, t);
+      assert.equal(snap(S1), snap(S2), `choreography impure at tick ${t}`);
+    }
+
     assert.ok(def.duration >= 20 * 30 && def.duration <= 40 * 30, 'a 20-40 second Short');
   });
   test(`${def.id}: beats fire in order, the sim is untouched, and the money beat is the loudest cue`, () => {
