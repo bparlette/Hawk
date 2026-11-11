@@ -78,6 +78,18 @@ const sfx = {
   point: () => { cheer(); blip(523, 0.1, 'square', 0.10); setTimeout(() => blip(784, 0.16, 'square', 0.10), 90); },
   fault: () => blip(140, 0.22, 'sawtooth', 0.11, -60),
   perfect: () => { blip(880, 0.08, 'square', 0.12); setTimeout(() => blip(1318, 0.14, 'square', 0.12), 70); },
+  whoosh: () => {
+    const ac = audio(); if (!ac) return;
+    const t = ac.currentTime, dur = 0.16;
+    const nb = ac.createBuffer(1, ac.sampleRate * dur, ac.sampleRate);
+    const d = nb.getChannelData(0);
+    for (let i = 0; i < d.length; i++) d[i] = (Math.random() * 2 - 1) * Math.sin(Math.PI * i / d.length);
+    const src = ac.createBufferSource(); src.buffer = nb;
+    const bp = ac.createBiquadFilter(); bp.type = 'bandpass'; bp.Q.value = 1.1;
+    bp.frequency.setValueAtTime(2600, t); bp.frequency.exponentialRampToValueAtTime(500, t + dur);
+    const g = ac.createGain(); g.gain.value = 0.14;
+    src.connect(bp); bp.connect(g); g.connect(ac.destination); src.start(t);
+  },
 };
 
 /* ============================== music (calliope waltz) ============================== */
@@ -166,20 +178,33 @@ function simFlight(x, y, z, vx, vy, vz, maxT = 4) {
 function computeShot(from, to, T, clearZ) {
   // Numeric solve under the real (draggy) physics: seed with the closed-form
   // ballistic answer, then iterate until the simulated flight lands on target
-  // and clears the net by clearZ.
-  let vx = (to.x - from.x) / T, vy = (to.y - from.y) / T, vz = (16 * T * T - from.z) / T;
+  // and clears the net by clearZ. If a flight time can't satisfy both, retry
+  // floatier — a struck ball in this game always lands on its target and
+  // always gets over the net. Points come from placement, not errors.
   const crosses = Math.sign(from.y) !== Math.sign(to.y) && to.y !== from.y;
-  for (let i = 0; i < 6; i++) {
-    const r = simFlight(from.x, from.y, from.z, vx, vy, vz);
-    const ex = to.x - r.x, ey = to.y - r.y;
-    if (Math.abs(ex) < 0.15 && Math.abs(ey) < 0.15 && (!crosses || (r.zNet !== null && r.zNet >= clearZ))) {
-      return { vx, vy, vz, T: r.t };
+  let bestClear = null, bestAny = null;
+  for (const tScale of [1, 1.18, 1.42]) {
+    const TT = T * tScale;
+    let vx = (to.x - from.x) / TT, vy = (to.y - from.y) / TT, vz = (16 * TT * TT - from.z) / TT;
+    let shot = null;
+    for (let i = 0; i < 14; i++) {
+      const r = simFlight(from.x, from.y, from.z, vx, vy, vz);
+      const ex = to.x - r.x, ey = to.y - r.y;
+      const err = Math.hypot(ex, ey);
+      const clears = !crosses || (r.zNet !== null && r.zNet >= clearZ);
+      if (!shot || err < shot.err) shot = { vx, vy, vz, T: r.t, err, clears };
+      if (err < 0.15 && clears) return { vx, vy, vz, T: r.t };
+      vx += ex / TT * 0.92; vy += ey / TT * 0.92;
+      vz += (TT - r.t) * 9;
+      if (crosses && r.zNet !== null && r.zNet < clearZ) vz += (clearZ - r.zNet) * 1.5;
     }
-    vx += ex / T * 0.92; vy += ey / T * 0.92;
-    vz += (T - r.t) * 9;
-    if (crosses && r.zNet !== null && r.zNet < clearZ) vz += (clearZ - r.zNet) * 1.5;
+    if (shot) {
+      if (shot.clears && (!bestClear || shot.err < bestClear.err)) bestClear = shot;
+      if (!bestAny || shot.err < bestAny.err) bestAny = shot;
+    }
   }
-  return { vx, vy, vz, T };
+  const b = bestClear || bestAny;
+  return { vx: b.vx, vy: b.vy, vz: b.vz, T: b.T };
 }
 function predictLanding() {
   const r = simFlight(ball.x, ball.y, ball.z, ball.vx, ball.vy, ball.vz);
@@ -265,9 +290,13 @@ function doServe(who, quality = 1) {
   const srv = who === 'you' ? you : cpu;
   const box = serveBoxFor(who);
   const jx = (1 - quality) * rnd(-4.5, 4.5), jy = (1 - quality) * rnd(-3, 3);
+  // Serves are diagonal, full stop: the target is clamped inside the correct
+  // service box with margin, so a serve always lands in the box it has to.
+  const tx = clamp(box.x + jx, Math.min(box.xMin, box.xMax) + 0.9, Math.max(box.xMin, box.xMax) - 0.9);
+  const ty = clamp(box.y + jy, Math.min(box.yMin, box.yMax) + 0.9, Math.max(box.yMin, box.yMax) - 0.9);
   const shot = computeShot(
     { x: srv.x, y: srv.y, z: 1.2 },
-    { x: clamp(box.x + jx, -10.5, 10.5), y: clamp(box.y + jy, -22.5, 22.5) },
+    { x: tx, y: ty },
     1.02, COURT.NET_Z + 0.55);
   ball.vx = shot.vx; ball.vy = shot.vy; ball.vz = shot.vz;
   S.lastWhy = `serve ${who} from ${srv.x.toFixed(1)},${srv.y.toFixed(1)} v=${shot.vx.toFixed(1)},${shot.vy.toFixed(1)},${shot.vz.toFixed(1)}`;
@@ -302,12 +331,14 @@ function hitBall(who, kind) {
   else if (kind === 'dink') { tx = clamp(ball.x * 0.45 - foe.x * 0.25, -8.6, 8.6); ty = dir * rnd(1.8, 4.4); T = rnd(0.85, 1.0); clear = COURT.NET_Z + 0.55; }
   else { tx = away * 0.7; ty = dir * rnd(18, 21.5); T = rnd(1.35, 1.55); clear = COURT.NET_Z + 4.5; }
   const j = (1 - q) * 3.6;
-  tx = clamp(tx + rnd(-j, j) * 0.8, -10.9, 10.9);
-  ty = clamp(ty + rnd(-j, j) * 0.45 * dir, -22.9, 22.9);
+  // Every return is a good return: targets stay inside the lines with margin,
+  // however scruffy the contact. Placement wins points, never a wild error.
+  tx = clamp(tx + rnd(-j, j) * 0.8, -9.3, 9.3);
+  ty = clamp(ty + rnd(-j, j) * 0.45 * dir, dir > 0 ? 1.1 : -21.6, dir > 0 ? 21.6 : -1.1);
   if (who === 'cpu') T *= kind === 'drive' ? 1.3 : 1.12;   // incoming pace eased: volleys need time
   const shot = computeShot({ x: ball.x, y: ball.y, z: ball.z }, { x: tx, y: ty }, T, clear);
   ball.vx = shot.vx; ball.vy = shot.vy; ball.vz = shot.vz;
-  S.lastHit = who; S.bounces = 0; S.serveFlight = false; S.flightId++;
+  S.lastHit = who; S.bounces = 0; S.serveFlight = false; S.flightId++; S.whiffedBy = null;
   me.swingT = 0.26;
   const ps = proj(ball.x, ball.y, ball.z);
   if (who === 'you' && q > 0.86) { popup(ps.x, ps.y - 46, 'PERFECT!', PAL.trim, true); sfx.perfect(); S.shakeT = 0.09; }
@@ -329,15 +360,17 @@ function stepBall(dt) {
     const f = Math.abs(prevY) / (Math.abs(prevY) + Math.abs(ball.y));
     const zNet = prevZ + (ball.z - prevZ) * f;
     if (zNet < COURT.NET_Z + 0.05) {
-      // Net cord on a serve: real rules play it live if it lands in the box —
-      // kill the pace and let the landing decide.
-      if (S.serveFlight && zNet >= COURT.NET_Z - 0.45) {
+      // Nobody hits it into the net in this game: a clip dribbles over as a
+      // net cord, and anything lower tips over the tape and drops. The rally
+      // always plays out — placement and whiffs decide points.
+      sfx.net();
+      if (zNet >= COURT.NET_Z - 0.5) {
         ball.vx *= 0.32; ball.vy *= 0.32; ball.vz = Math.min(ball.vz, 1.5);
         popup(W / 2, H * 0.42, 'NET CORD!', '#7df9ff');
-        sfx.net();
       } else {
-        sfx.net(); popup(W / 2, H * 0.42, 'INTO THE NET!', '#ff6ab0');
-        return fault(S.lastHit, 'Into the net');
+        const dirOut = ball.y > 0 ? 1 : -1;
+        ball.y = dirOut * 0.2; ball.vx *= 0.15; ball.vy = dirOut * 0.8; ball.vz = 0.4;
+        popup(W / 2, H * 0.42, 'OFF THE NET!', '#7df9ff');
       }
     }
   }
@@ -357,14 +390,16 @@ function stepBall(dt) {
       return;
     }
     if (side === S.lastHit) return fault(S.lastHit, 'Hit it into the ground');
-    if (S.bounces >= 2) return point(S.lastHit, 'It bounced twice');
-    if (!inCourt) return fault(S.lastHit, 'Out!');
+    if (S.bounces >= 2) {
+      // A point is won exactly two ways here: placed where the other can't
+      // get to it, or the other swung at it and missed.
+      const defender = S.lastHit === 'you' ? 'cpu' : 'you';
+      const why = (S.whiffFlight === S.flightId && S.whiffedBy === defender)
+        ? (defender === 'cpu' ? 'Zorp swung and missed!' : 'You swung and missed!')
+        : (S.lastHit === 'you' ? 'Placed out of reach!' : 'Zorp placed it out of reach!');
+      return point(S.lastHit, why);
+    }
     if (S.stage === 'returnFlight') S.stage = 'rally';   // two-bounce rule satisfied
-  }
-  if (S.bounces === 0 && (Math.abs(ball.y) > 34 || Math.abs(ball.x) > 26)) {
-    // sailed away without ever bouncing: an out. (A ball that already bounced
-    // in resolves at its second bounce instead.)
-    return fault(S.lastHit, 'Out!');
   }
 }
 
@@ -440,13 +475,36 @@ function stepCpu(dt) {
     else kind = r < 0.48 ? 'drive' : (r < 0.78 ? 'dink' : 'lob');
     hitBall('cpu', kind);
   }
+  // Swing-and-miss: the ball is on Zorp's side, low and dropping, close
+  // enough to lunge at but out of reach — he swings at air and the point
+  // plays out. Once per flight.
+  if (S.phase === 'flight' && ball.live && S.lastHit === 'you' && S.whiffFlight !== S.flightId && !mustWaitForBounce('cpu')) {
+    const dNow = Math.hypot(ball.x - cpu.x, ball.y - cpu.y);
+    if (ball.y < -0.5 && ball.y > -23 && ball.z < 2.6 && ball.vz < 0 && dNow > 4.6 && dNow < 7.4) {
+      S.whiffedBy = 'cpu'; S.whiffFlight = S.flightId; cpu.swingT = 0.3;
+      sfx.whoosh();
+      const ps = proj(cpu.x, cpu.y, 3); popup(ps.x, ps.y - 40, 'WHIFF!', '#7df9ff');
+    }
+  }
   if (S.phase === 'pres' && S.server === 'cpu') { ball.x = cpu.x; ball.y = cpu.y; }
 }
 function tryYouHit(kind) {
   if (S.mode !== 'play') return;
   if (S.phase === 'pres') { if (S.server === 'you') doServe('you', rnd(0.9, 1)); return; }
   if (ballReachable(you)) hitBall('you', kind);
-  else you.swingT = 0.22; // whiff swing
+  else {
+    you.swingT = 0.22; // whiff swing
+    // a genuine swing at an incoming ball that was in lunge range counts as
+    // the swing-and-miss if the ball then dies — once per flight
+    if (S.phase === 'flight' && ball.live && S.lastHit === 'cpu' && S.whiffFlight !== S.flightId) {
+      const dNow = Math.hypot(ball.x - you.x, ball.y - you.y);
+      if (ball.y > 0.5 && ball.z < 6.5 && dNow > 4.3 && dNow < 7.2) {
+        S.whiffedBy = 'you'; S.whiffFlight = S.flightId;
+        sfx.whoosh();
+        const ps = proj(you.x, you.y, 3); popup(ps.x, ps.y - 40, 'WHIFF!', '#ff6ab0');
+      }
+    }
+  }
 }
 
 /* ============================== main loop ============================== */
