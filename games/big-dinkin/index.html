@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+<title>BIG DINKIN'! — Carnival Pickleball</title>
+<style>
+  * { margin:0; padding:0; box-sizing:border-box; }
+  html, body { width:100%; height:100%; overflow:hidden; background:#170a26; touch-action:none;
+    font-family: Georgia, "Times New Roman", serif; -webkit-user-select:none; user-select:none;
+    -webkit-tap-highlight-color: transparent; }
+  #wrap { position:fixed; inset:0; }
+  canvas { display:block; width:100%; height:100%; }
+  /* ---------- HUD ---------- */
+  #hud { position:absolute; top:0; left:0; right:0; display:flex; justify-content:center; pointer-events:none; z-index:20; }
+  #scoreboard { margin-top:10px; display:flex; align-items:center; gap:14px; background:rgba(58,20,8,.9);
+    border:3px solid #ffc93c; border-radius:18px; padding:6px 18px 8px; color:#fff6dd;
+    box-shadow:0 6px 24px rgba(0,0,0,.45); }
+  .avatar { width:44px; height:44px; border-radius:50%; display:flex; align-items:center; justify-content:center;
+    font-size:24px; border:3px solid #3a1408; }
+  .avatar.you { background:#ff3d5a; } .avatar.cpu { background:#22c3e6; }
+  .score { font-size:34px; font-weight:900; color:#ffc93c; min-width:34px; text-align:center; line-height:1; }
+  .pips { display:flex; gap:4px; margin-top:3px; justify-content:center; }
+  .pip { width:9px; height:9px; border-radius:50%; background:rgba(255,246,221,.22); border:1px solid rgba(255,201,60,.5); }
+  .pip.on { background:#ffc93c; }
+  .scorelabel { font-size:10px; letter-spacing:2px; text-align:center; color:#fff6dd; opacity:.85; }
+  #vs { font-size:15px; font-style:italic; opacity:.8; }
+  #serveTag { position:absolute; top:96px; left:50%; transform:translateX(-50%); background:#e3323f; color:#fff6dd;
+    border:2px solid #ffc93c; border-radius:999px; padding:3px 14px; font-size:13px; font-weight:700;
+    letter-spacing:1px; pointer-events:none; z-index:20; display:none; box-shadow:0 4px 14px rgba(0,0,0,.4); }
+  /* ---------- center message ---------- */
+  #centerMsg { position:absolute; left:0; right:0; top:34%; text-align:center; pointer-events:none; z-index:25;
+    color:#ffc93c; font-weight:900; font-size:min(9vw,54px); text-shadow:0 3px 0 #3a1408, 0 8px 28px rgba(0,0,0,.6);
+    opacity:0; transition:opacity .18s; letter-spacing:1px; }
+  #subMsg { position:absolute; left:0; right:0; top:calc(34% + min(10vw,64px)); text-align:center; pointer-events:none; z-index:25;
+    color:#fff6dd; font-size:min(4.4vw,19px); font-style:italic; text-shadow:0 2px 8px rgba(0,0,0,.8); opacity:0; transition:opacity .18s; }
+  /* ---------- menu ---------- */
+  #menu { position:fixed; inset:0; z-index:2000; display:flex; flex-direction:column; align-items:center; justify-content:center;
+    background:radial-gradient(ellipse at 50% 38%, rgba(23,10,38,.25), rgba(23,10,38,.88) 75%); text-align:center; padding:20px; }
+  #menu h1 { color:#ffc93c; font-size:min(13vw,74px); font-weight:900; letter-spacing:1px; line-height:.95;
+    text-shadow:0 4px 0 #8f1028, 0 10px 34px rgba(0,0,0,.65); }
+  #menu h1 .ball { color:#fff6dd; }
+  #menu p.tag { color:#fff6dd; font-style:italic; font-size:min(4.6vw,20px); margin:12px 0 4px; text-shadow:0 2px 10px #000; }
+  #menu .rules { color:#ffd98a; font-size:min(4vw,15px); max-width:520px; line-height:1.5; margin:8px 0 20px; }
+  .bigbtn { pointer-events:auto; cursor:pointer; background:#e3323f; color:#fff6dd; border:3px solid #ffc93c;
+    border-radius:18px; font-family:inherit; font-weight:900; font-size:min(6vw,26px); padding:13px 42px;
+    box-shadow:0 8px 0 #6e0d3c, 0 14px 30px rgba(0,0,0,.5); letter-spacing:1px; }
+  .bigbtn:active { transform:translateY(5px); box-shadow:0 3px 0 #6e0d3c; }
+  #controls { margin-top:22px; color:#fff6dd; font-size:min(3.8vw,14.5px); line-height:1.9; opacity:.92; }
+  #controls b { color:#ffc93c; background:rgba(58,20,8,.85); border:1.5px solid #ffc93c; border-radius:7px; padding:1px 8px; font-family:inherit; }
+  /* ---------- hint bar ---------- */
+  #hints { position:absolute; bottom:10px; right:12px; z-index:20; display:flex; gap:8px; pointer-events:none; }
+  .hint { background:rgba(58,20,8,.9); border:2px solid #ffc93c; color:#fff6dd; border-radius:999px;
+    padding:4px 13px; font-size:13px; font-weight:700; }
+  .hint b { color:#ffc93c; margin-right:5px; }
+  @media (pointer:coarse) { #hints { display:none; } }
+</style>
+<style id="moth-game-guard">
+html,body{touch-action:none;overscroll-behavior:none;-webkit-touch-callout:none;-webkit-user-select:none;user-select:none;-webkit-tap-highlight-color:transparent}
+canvas{touch-action:none}
+</style>
+</head>
+<body>
+<div id="wrap">
+  <canvas id="game"></canvas>
+  <div id="hud">
+    <div id="scoreboard">
+      <div>
+        <div class="avatar you">🧢</div>
+        <div class="scorelabel">YOU</div>
+        <div class="pips" id="pipsYou"></div>
+      </div>
+      <div class="score" id="scoreYou">0</div>
+      <div id="vs">first<br>to 5</div>
+      <div class="score" id="scoreCpu">0</div>
+      <div>
+        <div class="avatar cpu">🎪</div>
+        <div class="scorelabel">CPU</div>
+        <div class="pips" id="pipsCpu"></div>
+      </div>
+    </div>
+  </div>
+  <div id="serveTag">YOUR SERVE</div>
+  <div id="centerMsg"></div>
+  <div id="subMsg"></div>
+  <div id="hints">
+    <div class="hint"><b>SHIFT</b>RUN</div>
+    <div class="hint"><b>Z</b>DRIVE</div>
+    <div class="hint"><b>X</b>DINK</div>
+    <div class="hint"><b>C</b>LOB</div>
+  </div>
+</div>
+<div id="menu">
+  <h1>BIG<br>DINKIN'<span class="ball">!</span></h1>
+  <p class="tag">Carnival pickleball under the midway lights.</p>
+  <p class="rules">Real pickleball rules: serves go underhand &amp; diagonal and must bounce,
+    returns must bounce, and <b>no volleys in the kitchen</b> — the strip by the net.
+    Rally scoring: every rally is a point. First to 5 takes the match.</p>
+  <button class="bigbtn" id="playBtn">▶ PLAY</button>
+  <div id="controls">
+    <b>WASD / ←↑↓→</b> move &nbsp; <b>SHIFT</b> run<br>
+    <b>Z</b> drive &nbsp; <b>X</b> dink &nbsp; <b>C</b> lob<br>
+    On touch: stick to move, gold buttons to hit.
+  </div>
+</div>
+<script type="module" src="./main.js"></script>
+<script id="moth-game-guard-js">
+(function(){
+  var lastEnd=0;
+  function onUi(t){return t&&t.closest&&t.closest('button,a,input,select,textarea,[data-scroll]');}
+  document.addEventListener('touchend',function(e){
+    var now=Date.now();
+    if(!onUi(e.target)&&now-lastEnd<=300&&e.cancelable)e.preventDefault();
+    lastEnd=now;
+  },{passive:false});
+  ['gesturestart','gesturechange','gestureend'].forEach(function(n){
+    document.addEventListener(n,function(e){e.preventDefault();});
+  });
+  document.addEventListener('dblclick',function(e){e.preventDefault();},{passive:false});
+  document.addEventListener('contextmenu',function(e){e.preventDefault();});
+  document.addEventListener('touchmove',function(e){
+    if(e.target&&e.target.closest&&e.target.closest('[data-scroll]'))return;
+    if(e.cancelable)e.preventDefault();
+  },{passive:false});
+})();
+</script>
+</body>
+</html>
