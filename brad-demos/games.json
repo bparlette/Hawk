@@ -2498,6 +2498,14 @@
    "thumb": "thumbs/bonk-yard.png",
    "title": "BIG BUMPIN' ARENA!",
    "url": "../games/big-bumpin-arena/"
+  },
+  {
+   "category": "Viral Demos",
+   "desc": "Dragon’s Lair-style FMV dive game cut from real captured Lanternport footage — she struts, she bounces, and when the arrow flashes you tap or she flops.",
+   "id": "pool-day",
+   "thumb": "thumbs/bonk-yard.png",
+   "title": "POOL DAY!",
+   "url": "../games/pool-day/"
   }
  ]
 }
