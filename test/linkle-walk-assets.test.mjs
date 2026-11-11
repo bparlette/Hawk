@@ -63,3 +63,24 @@ test('linkle walk test page, contact sheet preview, and audit proof exist', () =
   const proofStat = fs.statSync(proofPath);
   assert.ok(proofStat.size > 50000, 'linkle-walk-proof.png must be valid screenshot');
 });
+
+test('linkle poses: isolated anime game sprites exist on transparent alpha', () => {
+  const poseDir = path.resolve('games/lanternport/assets/linkle-poses/anime');
+  const poses = [
+    'pose_pool_front_lean.png',
+    'pose_pool_back_sit.png',
+    'pose_deck_rail_pose.png',
+    'pose_cartop_dance.png',
+    'pose_field_idle.png'
+  ];
+
+  for (const name of poses) {
+    const p = path.join(poseDir, name);
+    assert(fs.existsSync(p), `Missing pose asset: ${name}`);
+    const stat = fs.statSync(p);
+    assert(stat.size > 50000, `Asset ${name} is too small: ${stat.size} bytes`);
+  }
+  
+  const preview = path.resolve('games/lanternport/audit-assets/anime_poses_contact_sheet.png');
+  assert(fs.existsSync(preview), 'Missing anime_poses_contact_sheet.png preview');
+});
