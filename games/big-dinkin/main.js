@@ -545,12 +545,19 @@ $('playBtn').addEventListener('click', startMatch);
 $('muteBtn').addEventListener('click', () => { audio(); musicStart(); musicToggle(); });
 
 /* ====================== first-person projection ====================== */
-// Wii-style: the camera sits at YOUR eyes, just behind your baseline. You see
-// the court, the alien across the net, and your own floating paddle — never
-// your body. proj returns s = pixels per foot at that depth.
-const CAM = { y: 27.5, z: 5.4 };
+// GoPro-on-the-head view: the camera rides high on YOUR head just behind your
+// baseline, tilted down at the court — more top-down than a flat eye-level
+// view, so you see your own side of the court below and the alien across the
+// net. Your paddle floats at the bottom; your body is never drawn. A slight
+// bob follows your stride, like a head-mounted camera. proj returns
+// s = pixels per foot at that depth.
+const CAM = { y: 29.5, z: 7.6 };
 function camX() { return you.x * 0.45; }
-function horizonY() { return H * 0.40; }
+function horizonY() {
+  const spd = Math.hypot(you.vx, you.vy);
+  const bob = spd > 0.5 ? Math.sin(you.runPh * 2.4) * H * 0.006 : Math.sin(S.time * 1.4) * H * 0.002;
+  return H * 0.30 + bob;
+}
 function focal() { return H * 1.35; }
 function proj(x, y, z = 0) {
   const F = focal();
@@ -575,9 +582,10 @@ function line2(x1, y1, x2, y2, w, color) {
   ctx.lineWidth = w; ctx.strokeStyle = color; ctx.stroke();
 }
 function renderBackdrop() {
-  const sky = ctx.createLinearGradient(0, 0, 0, H * 0.42);
+  const hz = horizonY();
+  const sky = ctx.createLinearGradient(0, 0, 0, hz * 1.05);
   sky.addColorStop(0, '#2a1150'); sky.addColorStop(0.7, '#3a1a5e'); sky.addColorStop(1, PAL.bg);
-  ctx.fillStyle = sky; ctx.fillRect(0, 0, W, H * 0.44);
+  ctx.fillStyle = sky; ctx.fillRect(0, 0, W, hz + H * 0.045);
   // ferris wheel silhouette
   const wx = W * 0.80, wy = H * 0.155, wr = H * 0.115;
   ctx.save(); ctx.strokeStyle = '#241038'; ctx.lineWidth = 5;
@@ -589,16 +597,16 @@ function renderBackdrop() {
     ctx.fillStyle = (i % 2 ? PAL.trim : '#ff6ab0');
     ctx.beginPath(); ctx.arc(wx + Math.cos(a) * wr, wy + Math.sin(a) * wr, 3.4, 0, 6.29); ctx.fill();
   }
-  ctx.beginPath(); ctx.moveTo(wx - wr * 0.5, H * 0.405); ctx.lineTo(wx, wy); ctx.lineTo(wx + wr * 0.5, H * 0.405); ctx.stroke();
+  ctx.beginPath(); ctx.moveTo(wx - wr * 0.5, hz + 2); ctx.lineTo(wx, wy); ctx.lineTo(wx + wr * 0.5, hz + 2); ctx.stroke();
   ctx.restore();
   // midway tents silhouette
   ctx.fillStyle = '#1d0b33';
   for (const [tx, tw] of [[0.06, 0.16], [0.30, 0.11], [0.52, 0.13]]) {
-    const bx = W * tx, bw = W * tw, by = H * 0.405;
+    const bx = W * tx, bw = W * tw, by = hz + 2;
     ctx.beginPath(); ctx.moveTo(bx, by); ctx.lineTo(bx + bw / 2, by - H * 0.075); ctx.lineTo(bx + bw, by); ctx.closePath(); ctx.fill();
     ctx.fillRect(bx + bw * 0.12, by - H * 0.028, bw * 0.76, H * 0.028);
   }
-  ctx.fillRect(0, H * 0.398, W, H * 0.032);
+  ctx.fillRect(0, hz - H * 0.004, W, H * 0.032);
   // bulb strings (chase lights)
   for (let sIdx = 0; sIdx < 3; sIdx++) {
     const y0 = H * (0.045 + sIdx * 0.052), sag = H * 0.045, off = sIdx * 0.33;
@@ -763,7 +771,8 @@ function drawPaddleFP() {
   // forehand/backhand by ball side, stretches to meet a close ball, and
   // swings through on contact.
   const base = proj(you.x, you.y - 0.6, 2.5);
-  let px = clamp(base.x, W * 0.10, W * 0.90);
+  const rNom = Math.min(H * 0.115, W * 0.17);
+  let px = clamp(base.x, rNom * 0.9, W - rNom * 0.9);
   let py = clamp(base.y, H * 0.58, H * 0.94);
   const want = ball.x >= you.x ? 1 : -1;
   you.padSide = you.padSide === undefined ? 1 : you.padSide + (want - you.padSide) * 0.25;
@@ -774,7 +783,7 @@ function drawPaddleFP() {
   }
   const sw = you.swingT > 0 ? Math.sin((0.26 - you.swingT) / 0.26 * Math.PI) : 0;
   py -= sw * H * 0.05; px += you.padSide * sw * W * 0.02;
-  const r = H * 0.115 * (1 + sw * 0.12);
+  const r = rNom * (1 + sw * 0.12);
   // mitt at the grip
   ctx.fillStyle = PAL.team[0];
   ctx.beginPath(); ctx.arc(px - you.padSide * r * 0.1, py + r * 1.28, r * 0.34, 0, 6.29); ctx.fill();
