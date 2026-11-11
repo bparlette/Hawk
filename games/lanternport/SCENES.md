@@ -97,3 +97,11 @@ near (a); frame (b) is the natural opening hold.
 The town re-dress to the pack's Look (gamepress `00-city-look`) is also still
 to do — it is dressing work in `view.js`/`fx.js`, independent of the scenes.
 
+
+**`pool-surface` (added Nov 11, 2026, Moth):** Juniper surfaces at the rooftop
+pool's near rim, pulls up onto her forearms and rests her chin on folded arms —
+Cherie's 8-panel sheet, keyed and deck-line aligned into sprite frames
+(`assets/linkle-surface/surface_00..07.png`) and played on a camera-facing
+sprite in the rooftop-dive set via the registered `surfaceSprite` stage kind
+(`surface.js`). This is composition (b) from the pool-frames note above, as a
+full scene: `?scene=pool-surface`.
