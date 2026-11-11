@@ -36,7 +36,7 @@ const cam = (o, x, y, z, tx, ty, tz) => { const dx = tx - x, dy = ty - y, dz = t
 // Frame beats (ticks @ 30 Hz): she breaks the surface, rises, plants her hands, smiles,
 // folds her arms, and rests. The last frame is the long hold — the money composition.
 const F = [
-  [0, 0], [70, 1], [140, 2], [230, 3], [330, 4], [450, 5], [560, 6], [680, 7],
+  [0, 0], [50, 1], [110, 2], [180, 3], [280, 4], [380, 5], [470, 6], [560, 7],
 ];
 const frameAt = (t) => { let f = 0; for (const [at, fr] of F) if (t >= at) f = fr; return f; };
 const SX = 0.9; // sprite x on the rim (right of centre, where the dive scene's swim ends)
@@ -64,7 +64,7 @@ export const poolSurface = {
     const A = Object.fromEntries(S.actors.map((a) => [a.id, a])), j = A.juniper;
     j.frame = frameAt(t);
     A.splash.p = between(t, 6, 56) ? (t - 6) / 50 : -1;
-    A.ripple.p = between(t, 6, 210) ? (t - 6) / 204 : -1;
+    A.ripple.p = between(t, 6, 170) ? (t - 6) / 164 : -1;
     for (const [id, ph] of [['sun1', 0], ['sun2', 9]]) { // sunbathers glance over as she surfaces, then settle back
       const s = A[id], up = ramp(t, 60 + ph, 90 + ph) * (1 - ramp(t, 380, 470));
       s.pose = { lie: 1 - up * 0.7, sit: up * 0.7, armL: [up * 1.4, 0.4 * up], armR: [up * 1.4, 0.4 * up], headYaw: up * 0.5 };
@@ -72,7 +72,7 @@ export const poolSurface = {
     for (let i = 0; i < 3; i++) { const gu = A['gull' + i], u = (t - 560 - i * 22) / 300; gu.vis = u > 0 && u < 1; gu.x = -30 + u * 62; gu.y = 9 + i * 1.4; gu.z = -20 - i * 3; gu.yaw = Math.PI / 2; gu.flap = t * 0.5 + i; }
   },
   input: () => ({}),
-  events: [{ at: 0, name: 'surface' }, { at: 70, name: 'rise' }, { at: 140, name: 'hands-planted' }, { at: 330, name: 'settle' }, { at: 680, name: 'rest-hold' }, { at: 899, name: 'end' }],
-  sound: [{ at: 0, cue: 'water', vol: 0.3 }, { at: 6, cue: 'splash', vol: 0.9 }, { at: 76, cue: 'water', vol: 0.5 }, { at: 140, cue: 'drip', vol: 0.5 }, { at: 236, cue: 'laugh', vol: 0.35 }, { at: 330, cue: 'drip', vol: 0.4 }, { at: 590, cue: 'gull', vol: 0.35 }, { at: 899, cue: 'water', vol: 0.2 }],
+  events: [{ at: 0, name: 'surface' }, { at: 50, name: 'rise' }, { at: 110, name: 'hands-planted' }, { at: 280, name: 'settle' }, { at: 560, name: 'rest-hold' }, { at: 899, name: 'end' }],
+  sound: [{ at: 0, cue: 'water', vol: 0.3 }, { at: 6, cue: 'splash', vol: 0.9 }, { at: 56, cue: 'water', vol: 0.5 }, { at: 180, cue: 'drip', vol: 0.5 }, { at: 186, cue: 'laugh', vol: 0.35 }, { at: 280, cue: 'drip', vol: 0.4 }, { at: 640, cue: 'gull', vol: 0.35 }, { at: 899, cue: 'water', vol: 0.2 }],
   bed: { kind: 'band', vol: 0.045, muffled: true, loops: 'water' },
 };
