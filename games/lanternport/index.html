@@ -276,10 +276,10 @@ function sceneSound(def, t) { for (const c of def.sound || []) if (c.at === t) {
 const ticker = new SimClock(30); let last = performance.now(), time = 0, flashMsg = '', flashT = 0;
 function tick() {
   if (!started) return;
-  if (SCENE_DEF && !runner && sceneMode === 'watch') runner = new SceneRunner(game, SCENE_DEF);
+  if (SCENE_DEF && !runner && sceneMode === 'watch') { runner = new SceneRunner(game, SCENE_DEF); parkHero(); }
   game.tick(runner ? { ...runner.input(), camYaw: 0 } : AUTO ? { ...bot.input(), camYaw: 0 } : readInput());
   if (runner && stage) { sceneSound(SCENE_DEF, runner.t); for (const c of SCENE_DEF.cuts || []) if (c.at === runner.t && Q.get('cam') !== 'free') { const b = c.cam(game); free.pivot = [...b.pivot]; free.yaw = b.yaw; free.pitch = b.pitch; free.dist = b.dist; } }
-  if (runner && runner.done) { restart(); if (LOOP_SCENE) runner = new SceneRunner(game, SCENE_DEF); else { sceneMode = 'ready'; sceneRan = true; syncSceneBtn(); } } // loop only for filming; otherwise the player keeps control
+  if (runner && runner.done) { restart(); if (LOOP_SCENE) { runner = new SceneRunner(game, SCENE_DEF); parkHero(); } else { sceneMode = 'ready'; sceneRan = true; syncSceneBtn(); } } // loop only for filming; otherwise the player keeps control
   for (const e of game.events) {
     play(e);
     if (e === 'crash' || e === 'ram' || e === 'pound') cam.shake = Math.max(cam.shake, e === 'ram' ? 1.2 : 0.6);
