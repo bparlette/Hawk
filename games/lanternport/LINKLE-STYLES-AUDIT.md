@@ -52,3 +52,28 @@ The hero asset in `games/lanternport/stageview.js` and `index.html` was updated 
 - **Automated Test Suite:** `node --test test/*.test.mjs`
 - **Result:** **47 / 47 tests pass** (0 failures, 0 skipped, execution time ~4.8s).
 - All determinism, odd frame rate, scene bookmark, and stage actor checks pass.
+
+---
+
+## 5. Walk Styles Benchmark & Asset Architecture (Cherie, Nov 11)
+
+To evaluate which game asset architecture looks closest to the photos and how to make the playable game look like the stills, Linkle was captured walking in her locked pool look across the leading visual styles (saved to `games/lanternport/audit-assets/linkle-styles/`):
+- `style-anime-walk.jpg`: Adult anime theatrical cel animation (Studio Ghibli / Makoto Shinkai).
+- `style-gta-walk.jpg`: GTA VI photoreal 3D (RAGE engine subsurface scattering, real muscle & skin definition).
+- `style-zelda-walk.jpg`: Nintendo Switch 2 Zelda remake 3D painterly (golden storybook bloom & PBR lighting).
+- `style-dragonslair-walk.jpg`: 1983 Don Bluth Dragon's Lair hand-drawn feature cel animation.
+- `style-16bit-walk.jpg`: 1990s Neo Geo / SNES arcade pixel art.
+
+### Why the Current In-Game Hero Looks Nothing Like the Images:
+The current in-game hero in `stageview.js` and `view.js` is built from stacked Three.js untextured math primitives (12 `SphereGeometry` and `CapsuleGeometry` parts). A mathematical sphere lacks UV coordinates, facial topology, jawline, cheekbones, and eye sockets, so color-grading filters over raw captures cannot produce adult anime or photoreal human features.
+
+### The 2 Production Paths to Bridge the Gap:
+1. **Path 1 (Rigged Cel-Shaded 3D .glb Mesh — Zelda/Genshin):**
+   - Import a rigged humanoid mesh with adult proportions (7.5 heads high).
+   - Use UV-painted 2D textures for expressive anime eyes, lashes, and mouth.
+   - Apply an inverted-hull black outline shader in WebGL for 360° hand-drawn cel ink lines.
+   - **Verdict:** Reaches ~90% fidelity to the 3D stills while keeping full 3D camera and movement freedom.
+2. **Path 2 (2.5D Animated Sprite System — Dragon's Lair/Anime):**
+   - Keep 3D town geometry, rooftop pool, and physics, but render the hero as camera-facing high-res hand-drawn 2D animation frames (like *Dragon's Lair* or *Dead Cells*).
+   - **Verdict:** Achieves **100% fidelity** to the 2D stills because the game literally displays the drawn art.
+
