@@ -23,8 +23,11 @@ const glow = (T, color) => new T.MeshBasicMaterial({ color });
 function buildPerson(T, kit, o) {
   const L = o.look, g = new T.Group(), body = new T.Group(); g.add(body);
   const skin = kit.toon(L.skin, { rim: 0.7 }), top = kit.toon(L.top, { rim: 0.8 }), bottom = kit.toon(L.swim ? L.skin : L.bottom), hairM = kit.toon(L.hair, { rim: 0.9 });
-  const lathe = (pts) => new T.LatheGeometry(pts.map(([r, y]) => new T.Vector2(r, y)), 16);
-  if (L.swim) { kit.part(body, lathe([[0, 1.24], [0.14, 1.22], [0.19, 1.06], [0.17, 0.86], [0.2, 0.7], [0.19, 0.56], [0, 0.54]]), skin); kit.part(body, lathe([[0.2, 1.1], [0.18, 0.86], [0.21, 0.7], [0.2, 0.55], [0.01, 0.52]]), top, 0, 0, 0, 0); }
+  const lathe = (pts) => new T.LatheGeometry(pts.map(([r, y]) => new T.Vector2(r, y)).reverse(), 16); // profiles are written top-down; LatheGeometry needs bottom-up winding or the torso renders inside-out and kit.part's ink hull covers it in black
+  if (L.poolLook) { kit.part(body, lathe([[0, 1.24], [0.14, 1.22], [0.19, 1.06], [0.17, 0.86], [0.2, 0.7], [0.19, 0.56], [0, 0.54]]), skin); // the pool look (Cherie's ref, Nov 10 21:33): a GREEN BIKINI — chest band + bottom in top green, bare midriff
+    kit.part(body, lathe([[0.155, 1.21], [0.2, 1.12], [0.202, 1.02], [0.192, 0.95], [0.175, 0.93]]), top);
+    kit.part(body, lathe([[0.21, 0.76], [0.215, 0.66], [0.202, 0.55], [0.19, 0.53]]), top); }
+  else if (L.swim) { kit.part(body, lathe([[0, 1.24], [0.14, 1.22], [0.19, 1.06], [0.17, 0.86], [0.2, 0.7], [0.19, 0.56], [0, 0.54]]), skin); kit.part(body, lathe([[0.2, 1.1], [0.18, 0.86], [0.21, 0.7], [0.2, 0.55], [0.01, 0.52]]), top, 0, 0, 0, 0); }
   else if (L.dress) kit.part(body, lathe([[0, 1.24], [0.15, 1.22], [0.2, 1.06], [0.17, 0.86], [0.3, 0.5], [0.4, 0.22], [0.38, 0.2], [0, 0.22]]), top);
   else { kit.part(body, lathe([[0, 1.24], [0.15, 1.22], [0.215, 1.08], [0.2, 0.9], [0.22, 0.8], [L.jacket ? 0.26 : 0.3, 0.56], [L.jacket ? 0.25 : 0.35, 0.46], [0, 0.46]]), top);
     if (L.jacket) { box(T, kit, body, 0.06, 0.5, 0.04, 0xfff6dd, 0, 0.95, 0.2); for (const s of [-1, 1]) box(T, kit, body, 0.12, 0.2, 0.03, kit.toon(L.top), s * 0.09, 1.12, 0.19).rotation.z = s * 0.5; } }
@@ -35,41 +38,70 @@ function buildPerson(T, kit, o) {
   if (L.goggles) for (const s of [-1, 1]) { const r = kit.part(head, new T.TorusGeometry(0.066, 0.022, 8, 14), kit.toon(0xe0b04a), 0.1 * s, 0.2, 0.2, 0); r.rotation.x = -0.5; }
   for (const s of [-1, 1]) { kit.part(head, new T.SphereGeometry(0.055, 10, 8), glow(T, 0xf6f2ea), 0.1 * s, 0.015, 0.232, 0).scale.set(1, 1.2, 0.5); kit.part(head, new T.SphereGeometry(0.036, 10, 8), glow(T, 0x241c28), 0.1 * s, 0.01, 0.252, 0).scale.set(1, 1.2, 0.5); }
   const mouth = kit.part(head, new T.BoxGeometry(0.08, 0.016, 0.02), glow(T, 0x7a3b33), 0, -0.11, 0.25, 0), grin = kit.part(head, new T.SphereGeometry(0.075, 12, 8, 0, TAU, Math.PI * 0.5, Math.PI * 0.5), glow(T, 0xffffff), 0, -0.07, 0.215, 0); grin.scale.set(1, 0.7, 0.5); grin.visible = false;
-  let hat = null, cap = null;
+  let hat = null, cap = null, gear = null;
   if (L.hat !== undefined) { hat = new T.Group(); head.add(hat); cyl(T, kit, hat, 0.36, 0.36, 0.03, L.hat, 0, 0.2, 0, 16); cyl(T, kit, hat, 0.18, 0.21, 0.16, L.hat, 0, 0.28, 0, 14); }
   if (L.hero) {
-    // The hero kit — Juniper's Linkle look, the same one the playable game
-    // wears (view.js), from Cherie's reference images: long pointed ears,
-    // twin braids with red bands in front of the shoulders, the hood resting
-    // behind the neck (it takes the cap slot, so the capOff pose animates
-    // it), a green capelet, the compass pendant, shield and sword.
+    // The hero kit — Juniper's Linkle look, from Cherie's reference images.
+    // Default: the playable game's kit (view.js) — twin braids with red bands,
+    // hood resting behind the neck (the cap slot, so capOff animates it),
+    // capelet, compass pendant, shield and sword.
+    // look.poolLook (rooftop-dive): Cherie's pool look from her uploaded
+    // reference (Nov 10 21:33) — long green pointed cap trailing back, a
+    // SINGLE braid down the back, ears showing, green bikini (body branch
+    // above), brown belt, shield on the back, sword in a scabbard at the
+    // hip, brown bracers, tall brown boots that stay ON in the water. The
+    // back gear hides itself while she is submerged (see the pose fn).
     const trim = kit.toon(0xf2b23a, { rim: 1.2 }), steel = kit.toon(0x9fb4c8, { rim: 1.2 });
     for (const s of [-1, 1]) { const ear = kit.part(head, new T.ConeGeometry(0.052, 0.34, 8), skin, 0.26 * s, 0.07, -0.01, 0); ear.rotation.set(-0.18, 0, -1.12 * s); ear.scale.set(1, 1, 0.55); }
-    for (const s of [-1, 1]) {
+    if (L.poolLook) { // ONE braid down the back, over the shield, red band + tip (the twin-braid builder below, centred)
+      const bg = new T.Group(); bg.position.set(0, 0.06, -0.22); head.add(bg);
+      [[0.058, 0], [0.054, -0.13], [0.049, -0.26], [0.043, -0.39], [0.037, -0.51]].forEach(([r, y], i) => { const b = kit.part(bg, new T.SphereGeometry(r, 10, 8), hairM, 0, y, -0.025 * i, 0); b.scale.set(1, 1.15, 1); });
+      cyl(T, kit, bg, 0.042, 0.042, 0.045, 0xc23b2e, 0, -0.59, -0.13, 8);
+      const tip = kit.part(bg, new T.ConeGeometry(0.03, 0.11, 8), hairM, 0, -0.67, -0.14, 0); tip.rotation.x = Math.PI;
+    }
+    if (!L.poolLook) for (const s of [-1, 1]) {
       const bg = new T.Group(); bg.position.set(0.175 * s, 0.08, 0.16); head.add(bg);
       [[0.055, 0], [0.051, -0.12], [0.045, -0.24], [0.038, -0.35]].forEach(([r, y], i) => { const b = kit.part(bg, new T.SphereGeometry(r, 10, 8), hairM, 0.01 * s * i, y, 0.01 * i, 0); b.scale.set(1, 1.15, 1); });
       cyl(T, kit, bg, 0.04, 0.04, 0.045, 0xc23b2e, 0.03 * s, -0.43, 0.03, 8);
       const tip = kit.part(bg, new T.ConeGeometry(0.03, 0.11, 8), hairM, 0.038 * s, -0.51, 0.038, 0); tip.rotation.x = Math.PI;
     }
     cap = new T.Group(); cap.position.set(0, 1.52, 0.02); body.add(cap);
-    const hood = kit.part(cap, new T.SphereGeometry(0.23, 14, 10), top, 0, -0.13, -0.2, 0); hood.scale.set(1.15, 0.75, 0.8);
-    if (!L.swim) {
+    if (L.poolLook) { // the long green POINTED cap: a hemisphere base with a long cone trailing back and down (still in the cap slot: capOff animates it at the rim-sit)
+      kit.part(cap, new T.SphereGeometry(0.29, 14, 10, 0, TAU, 0, Math.PI * 0.5), kit.toon(L.top, { rim: 0.9 }), 0, -0.04, 0, 0.012);
+      const tail = kit.part(cap, new T.ConeGeometry(0.15, 1.15, 10), kit.toon(L.top, { rim: 0.9 }), 0, 0.02, -0.45, 0); tail.rotation.x = -2.0;
+    }
+    else { const hood = kit.part(cap, new T.SphereGeometry(0.23, 14, 10), top, 0, -0.13, -0.2, 0); hood.scale.set(1.15, 0.75, 0.8); }
+    if (L.poolLook) {
+      const leather = kit.toon(0x5a3a26, { rim: 0.8 });
+      cyl(T, kit, body, 0.198, 0.205, 0.07, leather, 0, 0.76, 0, 16); // brown belt at the waist, over the bikini bottom's band
+      box(T, kit, body, 0.07, 0.05, 0.03, trim, 0, 0.76, 0.2, 0); // buckle
+      const scab = new T.Group(); scab.position.set(0.23, 0.72, -0.02); scab.rotation.z = 0.35; body.add(scab); // sword in its scabbard at the hip
+      box(T, kit, scab, 0.075, 0.52, 0.05, 0x2f4fa0, 0, -0.3, 0, 0); // blue scabbard
+      box(T, kit, scab, 0.09, 0.05, 0.06, trim, 0, -0.06, 0, 0); // gold throat
+      cyl(T, kit, scab, 0.026, 0.026, 0.13, 0x2f4fa0, 0, 0.05, 0, 6); // grip above the belt
+      box(T, kit, scab, 0.17, 0.04, 0.045, trim, 0, 0.12, 0, 0); // crossguard
+    }
+    if (!L.swim && !L.poolLook) {
       const cape = kit.part(body, new T.CylinderGeometry(0.2, 0.42, 0.32, 16, 1, true), top, 0, 1.14, 0, 0); cape.material = cape.material.clone(); cape.material.side = T.DoubleSide;
       const disc = cyl(T, kit, body, 0.075, 0.075, 0.026, 0xf2b23a, 0, 0.98, 0.21, 18); disc.rotation.x = Math.PI / 2 - 0.25;
       kit.part(body, new T.SphereGeometry(0.014, 6, 6), kit.toon(0xc23b2e), 0, 0.99, 0.225, 0);
     }
-    const srim = kit.part(body, new T.CylinderGeometry(0.185, 0.15, 0.032, 14), trim, 0, 1.02, -0.27, 0); srim.rotation.x = Math.PI / 2 + 0.1;
-    const sface = kit.part(body, new T.CylinderGeometry(0.168, 0.134, 0.05, 14), steel, 0, 1.02, -0.28, 0); sface.rotation.x = Math.PI / 2 + 0.1;
-    kit.part(body, new T.SphereGeometry(0.05, 10, 8), trim, 0, 1.02, -0.31, 0).scale.set(1, 1, 0.5);
-    const sword = new T.Group(); sword.position.set(0.13, 1.12, -0.34); sword.rotation.z = -0.55; body.add(sword);
+    if (L.poolLook) { gear = new T.Group(); body.add(gear); } // the shield rides in its own group so the pose fn can hide it while she is under water
+    const bp = gear || body;
+    const srim = kit.part(bp, new T.CylinderGeometry(0.185, 0.15, 0.032, 14), trim, 0, 1.02, -0.27, 0); srim.rotation.x = Math.PI / 2 + 0.1;
+    const sface = kit.part(bp, new T.CylinderGeometry(0.168, 0.134, 0.05, 14), steel, 0, 1.02, -0.28, 0); sface.rotation.x = Math.PI / 2 + 0.1;
+    kit.part(bp, new T.SphereGeometry(0.05, 10, 8), trim, 0, 1.02, -0.31, 0).scale.set(1, 1, 0.5);
+    if (!L.poolLook) { const sword = new T.Group(); sword.position.set(0.13, 1.12, -0.34); sword.rotation.z = -0.55; body.add(sword); // poolLook carries its sword in the hip scabbard instead
     box(T, kit, sword, 0.055, 0.6, 0.016, 0xc3d2e0, 0, -0.05, 0, 0);
     box(T, kit, sword, 0.2, 0.045, 0.05, 0xf2b23a, 0, 0.27, 0, 0);
     cyl(T, kit, sword, 0.028, 0.028, 0.14, 0x2f4fa0, 0, 0.36, 0, 6);
-    kit.part(sword, new T.SphereGeometry(0.045, 8, 8), trim, 0, 0.45, 0, 0);
+    kit.part(sword, new T.SphereGeometry(0.045, 8, 8), trim, 0, 0.45, 0, 0); }
   } else if (L.cap !== undefined) { cap = kit.part(body, new T.SphereGeometry(0.29, 14, 10, 0, TAU, 0, Math.PI * 0.42), kit.toon(L.cap), 0, 1.52, 0.02, 0.012); }
   const limb = (x, y, len, mat, hand) => { const p = new T.Group(); p.position.set(x, y, 0); body.add(p); kit.part(p, new T.CapsuleGeometry(0.062, len, 4, 8), mat, 0, -len / 2 - 0.04, 0); if (hand) kit.part(p, new T.SphereGeometry(0.068, 8, 6), skin, 0, -len - 0.12, 0, 0); return p; };
-  const arms = [-1, 1].map((s) => limb(0.25 * s, 1.12, 0.32, L.swim ? skin : top, true)), legs = [-1, 1].map((s) => limb(0.11 * s, 0.52, 0.3, bottom, false));
-  for (const l of legs) { const b = kit.part(l, new T.CapsuleGeometry(0.08, 0.12, 4, 8), kit.toon(L.swim ? L.skin : 0x4a2f22), 0, -0.44, 0.05); b.rotation.x = Math.PI / 2; }
+  const arms = [-1, 1].map((s) => limb(0.25 * s, 1.12, 0.32, L.swim ? skin : top, true)), legs = [-1, 1].map((s) => limb(0.11 * s, 0.52, 0.3, L.poolLook ? skin : bottom, false)); // poolLook: bare legs above the boots
+  if (L.poolLook) { const brc = kit.toon(0x6b4a2f, { rim: 0.8 }); for (const a of arms) cyl(T, kit, a, 0.08, 0.084, 0.22, brc, 0, -0.3, 0, 10); // brown bracers on the forearms
+    const boot = kit.toon(0x5a3a26, { rim: 0.8 }); for (const l of legs) { cyl(T, kit, l, 0.095, 0.088, 0.36, boot, 0, -0.28, 0, 10); cyl(T, kit, l, 0.104, 0.1, 0.09, boot, 0, -0.13, 0, 10); } } // tall brown boots, cuffed at the top — they stay ON in the pool
+  for (const l of legs) { const b = kit.part(l, new T.CapsuleGeometry(0.08, 0.12, 4, 8), kit.toon(L.swim && !L.poolLook ? L.skin : 0x4a2f22), 0, -0.44, 0.05); b.rotation.x = Math.PI / 2; }
   const peace = arms.map((a) => { const v = new T.Group(); v.position.set(0, -0.5, 0); a.add(v); for (const s of [-1, 1]) { const f = cyl(T, kit, v, 0.018, 0.018, 0.13, L.skin, s * 0.03, -0.06, 0, 6); f.rotation.z = s * 0.3; } v.visible = false; return v; });
   let camProp = null; if (L.camera) { camProp = new T.Group(); body.add(camProp); box(T, kit, camProp, 0.26, 0.18, 0.14, 0x2b2838, 0, 0, 0, 0.012); cyl(T, kit, camProp, 0.07, 0.08, 0.14, 0x55596a, 0, 0, 0.12, 12).rotation.x = Math.PI / 2; }
   const blob = new T.Mesh(new T.CircleGeometry(0.42, 20), new T.MeshBasicMaterial({ color: 0x120c20, transparent: true, opacity: 0.32, depthWrite: false })); blob.rotation.x = -Math.PI / 2; blob.position.y = 0.03; g.add(blob);
@@ -85,6 +117,7 @@ function buildPerson(T, kit, o) {
     if (cap) { const off = p.capOff || 0; cap.position.set(0, 1.52 - off * 0.62, 0.02 + off * 0.3); cap.rotation.x = off * 1.6; }
     if (camProp) { camProp.position.set(0, 1.36 - cr * 0.05, 0.3); }
     blob.visible = !lie && (a.y || 0) > -0.2; blob.position.y = 0.03 - (p.hop || 0);
+    if (gear) gear.visible = (a.y || 0) > -0.2; // the shield stays on the deck while she swims; it is back for the strut and the rim-sit
   };
   return g;
 }

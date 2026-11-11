@@ -49,7 +49,8 @@ export function botInput(game, car, mem) {
   const dOwn = Math.hypot(bp.x - ownGoal.x, bp.y - ownGoal.y);
 
   let role = car.role;
-  if (role === 'sweeper' && (dOwn < 330 || ((bp.x - A.cx) * dir < -60 && dMe < dMate * 0.85))) role = 'chaser';
+  const dOwnReal = Math.hypot(ball.position.x - ownGoal.x, ball.position.y - ownGoal.y);   // the defence reads the real ball, not the led guess: a defender holds the line the ball is actually on
+  if (role === 'sweeper' && (dOwnReal < 330 || ((ball.position.x - A.cx) * dir < -60 && dMe < dMate * 0.85))) role = 'chaser';
   let target, turbo = false, arrive = false;
   if (role === 'chaser') {
     let gx = oppGoal.x - bp.x, gy = oppGoal.y - bp.y; const gl = Math.hypot(gx, gy) || 1; gx /= gl; gy /= gl;
@@ -59,7 +60,7 @@ export function botInput(game, car, mem) {
     else if (along >= -8) { const side = lat >= 0 ? 1 : -1; target = { x: bp.x - gx * (reach + 50) - gy * side * (reach + 40), y: bp.y - gy * (reach + 50) + gx * side * (reach + 40) }; turbo = dMe > 260; } // wrong side: go round
     else { target = { x: bp.x - gx * (reach + 14), y: bp.y - gy * (reach + 14) }; turbo = dMe > 240; }
   } else {
-    const k = 0.36; target = { x: ownGoal.x + (bp.x - ownGoal.x) * k, y: ownGoal.y + (bp.y - ownGoal.y) * k };
+    const k = 0.36; target = { x: ownGoal.x + (ball.position.x - ownGoal.x) * k, y: ownGoal.y + (ball.position.y - ownGoal.y) * k };
     target.x = dir > 0 ? Math.max(target.x, ownGoal.x + 120) : Math.min(target.x, ownGoal.x - 120); arrive = true;
   }
   target.x = clamp(target.x, R.left + 34, R.right - 34); target.y = clamp(target.y, R.top + 34, R.bottom - 34);

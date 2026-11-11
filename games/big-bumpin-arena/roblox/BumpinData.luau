@@ -513,7 +513,7 @@ return {
 			},
 			pits = {  },
 			sweepers = {
-				{ x = 1000, y = 620, len = 210, speed = 0.022, r = 16 },
+				{ x = 1000, y = 620, len = 170, speed = 0.022, r = 16 },
 			},
 			kick = {
 				{ 1000, 620 },
@@ -550,7 +550,7 @@ return {
 				{ x = 1520, y = 720, r = 34, pit = false, soft = false },
 				{ x = 1000, y = 150, r = 30, pit = false, soft = false },
 				{ x = 1000, y = 1090, r = 30, pit = false, soft = false },
-				{ x = 1000, y = 620, r = 168, pit = false, soft = true },
+				{ x = 1000, y = 620, r = 136, pit = false, soft = true },
 			},
 		},
 		pinch = {
