@@ -294,16 +294,17 @@ function hitBall(who, kind) {
   if (S.stage === 'returnPending' && who !== S.server) S.stage = 'returnFlight';
   // ---- quality from contact (forgiving: the paddle stretches to meet it) ----
   const d = Math.max(0, Math.hypot(ball.x - me.x, ball.y - me.y) - 0.9);
-  const q = who === 'cpu' ? me.aiQ : clamp(1.12 - Math.abs(d - 1.15) * 0.26 - Math.max(0, ball.z - 5) * 0.08, 0.3, 1);
+  const q = who === 'cpu' ? me.aiQ : clamp(1.18 - Math.abs(d - 1.5) * 0.17 - Math.max(0, ball.z - 5) * 0.04, 0.45, 1);
   // ---- target by shot kind ----
   let tx, ty, T, clear = COURT.NET_Z + 0.3 + q * 0.5;
   const away = clamp(-foe.x * 0.72 + (who === 'you' ? input.x * 3.4 : rnd(-2, 2)), -9.2, 9.2);
   if (kind === 'drive') { tx = away; ty = dir * rnd(15, 20.5); T = rnd(0.52, 0.62); }
   else if (kind === 'dink') { tx = clamp(ball.x * 0.45 - foe.x * 0.25, -8.6, 8.6); ty = dir * rnd(1.8, 4.4); T = rnd(0.85, 1.0); clear = COURT.NET_Z + 0.55; }
   else { tx = away * 0.7; ty = dir * rnd(18, 21.5); T = rnd(1.35, 1.55); clear = COURT.NET_Z + 4.5; }
-  const j = (1 - q) * 5.0;
+  const j = (1 - q) * 3.6;
   tx = clamp(tx + rnd(-j, j) * 0.8, -10.9, 10.9);
   ty = clamp(ty + rnd(-j, j) * 0.45 * dir, -22.9, 22.9);
+  if (who === 'cpu') T *= kind === 'drive' ? 1.3 : 1.12;   // incoming pace eased: volleys need time
   const shot = computeShot({ x: ball.x, y: ball.y, z: ball.z }, { x: tx, y: ty }, T, clear);
   ball.vx = shot.vx; ball.vy = shot.vy; ball.vz = shot.vz;
   S.lastHit = who; S.bounces = 0; S.serveFlight = false; S.flightId++;
@@ -370,7 +371,7 @@ function stepBall(dt) {
 /* ============================== actors ============================== */
 const input = { x: 0, y: 0, run: false };
 function stepYou(dt) {
-  const sp = input.run || Math.hypot(input.x, input.y) > 0.94 ? 15.5 : 10.5;
+  const sp = input.run || Math.hypot(input.x, input.y) > 0.94 ? 16.5 : 11.5;
   you.vx = input.x * sp; you.vy = input.y * sp;
   you.x = clamp(you.x + you.vx * dt, -11.6, 11.6);
   you.y = clamp(you.y + you.vy * dt, 0.4, 24.2);
@@ -381,7 +382,7 @@ function stepYou(dt) {
 }
 function ballReachable(me) {
   const sideOk = me.side === 'you' ? ball.y > -1.3 : ball.y < 1.3;
-  return ball.live && sideOk && ball.z < 7.4 && Math.hypot(ball.x - me.x, ball.y - me.y) < 3.4;
+  return ball.live && sideOk && ball.z < 8.2 && Math.hypot(ball.x - me.x, ball.y - me.y) < 4.3;
 }
 function mustWaitForBounce(who) {
   return S.bounces === 0 && ((S.stage === 'serve' && S.server !== who) || (S.stage === 'returnFlight' && S.lastHit !== who));
@@ -395,8 +396,8 @@ function autoHitYou() {
   if (mustWaitForBounce('you')) return;
   if (S.bounces === 0 && Math.abs(you.y) < COURT.KITCHEN) return;   // kitchen volley: your call, not the paddle's
   const d = Math.hypot(ball.x - you.x, ball.y - you.y);
-  if (d > 2.15 || ball.z > 6.4 || ball.y < 0.2) return;
-  if (!(S.bounces >= 1 || ball.z < 3.4)) return;                    // let it arrive, don't snatch it high
+  if (d > 3.3 || ball.z > 6.8 || ball.y < 0.2) return;
+  if (!(S.bounces >= 1 || ball.z < 4.6)) return;                    // volleys connect up to chest height
   S.autoUsed = S.flightId;
   const kind = ball.z < 1.7 || Math.abs(ball.y) < 9 ? 'dink' : (you.y > 19 && Math.random() < 0.3 ? 'lob' : 'drive');
   hitBall('you', kind);
@@ -430,13 +431,13 @@ function stepCpu(dt) {
     const land = predictLanding();
     const landingShort = land && Math.abs(land.y) < 9.5;
     const stretched = clamp((dist - 1.2) / 5, 0, 1);
-    cpu.aiQ = clamp(0.88 - stretched * 0.34 + rnd(-0.05, 0.05), 0.35, 0.96);
+    cpu.aiQ = clamp(0.82 - stretched * 0.42 + rnd(-0.05, 0.05), 0.32, 0.88);
     if (mustWaitForBounce('cpu')) return;                 // respect two-bounce
     let kind = 'drive';
     const r = Math.random();
     if (landingShort) kind = r < 0.6 ? 'dink' : 'drive';
     else if (Math.abs(you.y) < 9.5 && r < 0.3) kind = 'lob';
-    else kind = r < 0.62 ? 'drive' : (r < 0.82 ? 'dink' : 'lob');
+    else kind = r < 0.48 ? 'drive' : (r < 0.78 ? 'dink' : 'lob');
     hitBall('cpu', kind);
   }
   if (S.phase === 'pres' && S.server === 'cpu') { ball.x = cpu.x; ball.y = cpu.y; }
