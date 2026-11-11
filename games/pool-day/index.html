@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+<title>POOL DAY! — a tiny FMV dive game</title>
+<style>
+  html, body { margin: 0; padding: 0; height: 100%; background: #071018; overflow: hidden; }
+  body { font-family: system-ui, -apple-system, "Segoe UI", sans-serif; color: #fff6dd; -webkit-user-select: none; user-select: none; }
+  #stage { position: fixed; inset: 0; background: #000; }
+  #vid { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; background: #000; }
+  #hud { position: absolute; inset: 0; pointer-events: none; }
+  #title { position: absolute; top: calc(env(safe-area-inset-top, 0px) + 10px); left: 0; right: 0; text-align: center;
+           font-weight: 900; font-size: clamp(26px, 7vw, 44px); letter-spacing: .06em; color: #ffd94a;
+           text-shadow: 0 2px 0 #b3541e, 0 4px 14px rgba(0,0,0,.55); }
+  #score { position: absolute; top: calc(env(safe-area-inset-top, 0px) + 64px); left: 0; right: 0; text-align: center;
+           font-weight: 700; font-size: clamp(15px, 4.4vw, 20px); color: #fff6dd; text-shadow: 0 1px 6px rgba(0,0,0,.8); }
+  #hint { position: absolute; left: 0; right: 0; bottom: calc(env(safe-area-inset-bottom, 0px) + 18px); text-align: center;
+          font-size: clamp(13px, 3.8vw, 16px); font-weight: 600; color: rgba(255,246,221,.92); text-shadow: 0 1px 6px rgba(0,0,0,.85); }
+  #prompt { position: absolute; left: 50%; top: 56%; transform: translate(-50%, -50%) scale(.6); width: 118px; height: 118px;
+            border-radius: 50%; border: 4px solid #fff6dd; background: radial-gradient(circle at 50% 38%, #ffe97a, #ffb52e 70%);
+            box-shadow: 0 0 0 6px rgba(255,181,46,.35), 0 0 42px 10px rgba(255,197,46,.75); opacity: 0; }
+  #prompt.show { opacity: 1; transform: translate(-50%, -50%) scale(1); transition: opacity .06s, transform .06s; animation: pulse .18s infinite alternate; }
+  #prompt .arrow { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center;
+                   font-size: 58px; line-height: 1; color: #7a2d0e; font-weight: 900; }
+  #prompt .ring { position: absolute; inset: -4px; border-radius: 50%; border: 4px solid rgba(255,246,221,.0); }
+  @keyframes pulse { from { filter: brightness(1); } to { filter: brightness(1.22); } }
+  #flash { position: absolute; inset: 0; background: #fff; opacity: 0; pointer-events: none; }
+  #verdict { position: absolute; left: 0; right: 0; top: 30%; text-align: center; font-weight: 900;
+             font-size: clamp(30px, 9vw, 54px); letter-spacing: .04em; opacity: 0; transform: scale(.7); }
+  #verdict.show { opacity: 1; transform: scale(1); transition: opacity .12s, transform .12s; }
+  #verdict.good { color: #8dff6a; text-shadow: 0 2px 0 #1e6b12, 0 4px 16px rgba(0,0,0,.6); }
+  #verdict.bad { color: #ff7a6a; text-shadow: 0 2px 0 #7a1408, 0 4px 16px rgba(0,0,0,.6); }
+</style>
+<style id="moth-game-guard">
+html,body{touch-action:none;overscroll-behavior:none;-webkit-touch-callout:none;-webkit-user-select:none;user-select:none;-webkit-tap-highlight-color:transparent}
+canvas{touch-action:none}
+</style>
+</head>
+<body>
+<div id="stage">
+  <video id="vid" src="clips/idle.mp4" loop muted playsinline autoplay preload="auto"></video>
+  <div id="flash"></div>
+  <div id="hud">
+    <div id="title">POOL DAY!</div>
+    <div id="score">DIVES 0</div>
+    <div id="verdict"></div>
+    <div id="prompt"><div class="ring"></div><div class="arrow">&#8681;</div></div>
+    <div id="hint">She's bouncing&hellip; when the arrow flashes, TAP or SWIPE DOWN — fast!</div>
+  </div>
+</div>
+<script src="main.js"></script>
+<script id="moth-game-guard-js">
+(function(){
+  var lastEnd=0;
+  function onUi(t){return t&&t.closest&&t.closest('button,a,input,select,textarea,[data-scroll]');}
+  document.addEventListener('touchend',function(e){
+    var now=Date.now();
+    if(!onUi(e.target)&&now-lastEnd<=300&&e.cancelable)e.preventDefault();
+    lastEnd=now;
+  },{passive:false});
+  ['gesturestart','gesturechange','gestureend'].forEach(function(n){
+    document.addEventListener(n,function(e){e.preventDefault();});
+  });
+  document.addEventListener('dblclick',function(e){e.preventDefault();},{passive:false});
+  document.addEventListener('contextmenu',function(e){e.preventDefault();});
+  document.addEventListener('touchmove',function(e){
+    if(e.target&&e.target.closest&&e.target.closest('[data-scroll]'))return;
+    if(e.cancelable)e.preventDefault();
+  },{passive:false});
+})();
+</script>
+</body>
+</html>

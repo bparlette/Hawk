@@ -78,6 +78,7 @@ import { Bot } from './bot.js';
 import { U, buildCityView, HeroView, LOOKS, makeVehicle, makeFolk, makeCucco, makePickup, makeBeacon, makePot } from './view.js';
 import { SimClock, FreeCam, TIMESCALES, simDigest } from './capture.js';
 import { SCENES, sceneById, SceneRunner } from './scenes.js';
+import { frameQuality, FilmRun, Audience, ChatFeed } from './film.js';
 import { StageView } from './stageview.js';
 import { SUN_DIR, makeTextures, makeMaterials, makeSky, makeMotes, Post } from './fx.js';
 
@@ -89,7 +90,7 @@ const SCENE_DEF = sceneById(Q.get('scene')); let runner = null; // staged scene 
 // 🎮 TAKE CONTROL hands the game back mid-scene; when a performance ends you keep
 // control (↻ WATCH AGAIN replays it). Filming keeps the old behaviour with
 // &loop=1 (or &auto=1): auto-start, auto-loop, no button.
-const LOOP_SCENE = Q.get('loop') === '1' || Q.get('auto') === '1';
+const LOOP_SCENE = Q.get('loop') === '1' || Q.get('auto') === '1' || Q.get('film') === '1'; // film=1: the scene loops for the camera operator
 let sceneMode = !SCENE_DEF ? 'play' : (LOOP_SCENE ? 'watch' : 'ready'), sceneRan = false;
 if (Q.get('clean') === '1' || AUTO || SCENE_DEF) document.body.classList.add('clean');
 const $ = (id) => document.getElementById(id);
@@ -347,6 +348,7 @@ function frame(now) {
     if (runner && SCENE_DEF.track && Q.get('cam') !== 'free' && cap.bookmark === SCENE_DEF.id && !capPtr.size) { const b = SCENE_DEF.track(game, st); free.pivot = [...b.pivot]; free.yaw = b.yaw; free.pitch = b.pitch; free.dist = b.dist; }
     $('flashfx').style.opacity = stageS.flash ? Math.min(0.85, stageS.flash * 0.8) : 0; }
   if (free.on) updateFreecam(rdt); else updateCamera(hv, !!hero.vehicle, rdt, AUTO ? 0 : input.orbit());
+  if (film) filmFrame();
   sun.target.position.set(cam.focus.x, 0, cam.focus.z); sun.position.copy(sun.target.position).addScaledVector(sunDir, 200);
   timeU.value = time; sky.position.set(camera.position.x, 0, camera.position.z); motes.material.uniforms.uCam.value.copy(camera.position);
   if (engineGain) { const v = hero.vehicle, s = v ? Math.abs(v.fwd) : 0; engineGain.gain.value += ((v && started ? 0.035 + s * 0.0006 : 0) - engineGain.gain.value) * 0.2; engine.frequency.value = 55 + s * 2.4; }
@@ -443,11 +445,120 @@ function toggleScene() { if (sceneMode === 'watch') takeControl(); else startWat
 sceneBtn.addEventListener('click', () => { unlockAudio(); toggleScene(); });
 syncSceneBtn();
 
+// ---------------------------------------------------------------- FILM-IT mode (?scene=<id>&film=1): you ARE the camera.
+// The scene auto-runs on loop (film=1 implies loop above) and the freecam rig is your phone: drag to
+// orbit/pan it, pinch or the + / − buttons to zoom. Every sim tick the staged hero is projected into the
+// 9:16 viewfinder and scored by film.js (centre / size / smoothness); a fake audience (viewers + chat)
+// reacts to the footage and to the scene's own events. All of it is read-only on the sim — the digest
+// never changes because someone is filming. UI sits at z-index 1200, above the gptouch overlay (z 1000);
+// the overlay is hidden while the freecam is up anyway (setFreecam), so drags reach the camera.
+const FILM = Q.get('film') === '1' && !!SCENE_DEF;
+let film = null, filmDbg = null;
+if (FILM) {
+  const st = document.createElement('style');
+  st.textContent = `
+    #filmui { position: fixed; inset: 0; z-index: 1200; pointer-events: none; font-family: system-ui, sans-serif; color: #fff; }
+    #filmfinder { position: absolute; top: 0; bottom: 0; left: 50%; transform: translateX(-50%); width: calc(100vh * 9 / 16); max-width: 100vw; border-left: 2px solid rgba(255,255,255,.9); border-right: 2px solid rgba(255,255,255,.9); box-shadow: 0 0 0 100vmax rgba(10,8,20,.45); }
+    #filmfinder::after { content: ''; position: absolute; left: 6%; right: 6%; top: 33.33%; height: 33.34%; border-top: 1px solid rgba(255,255,255,.35); border-bottom: 1px solid rgba(255,255,255,.35); }
+    #filmtop { position: absolute; top: calc(env(safe-area-inset-top, 0px) + 12px); left: 10px; right: 10px; display: flex; align-items: center; gap: 8px; }
+    #filmtop .rec { width: 12px; height: 12px; border-radius: 50%; background: #ff3b30; animation: filmblink 1.2s steps(2) infinite; }
+    @keyframes filmblink { 50% { opacity: .25; } }
+    #filmtop .live { background: #ff3b30; font: 800 12px system-ui; letter-spacing: .12em; padding: 3px 8px; border-radius: 6px; }
+    #filmtop .view { margin-left: auto; background: rgba(20,16,34,.72); font: 700 13px system-ui; padding: 4px 10px; border-radius: 999px; }
+    #filmscore { position: absolute; left: 12px; right: 12px; bottom: calc(env(safe-area-inset-bottom, 0px) + 118px); display: flex; align-items: center; gap: 10px; }
+    #filmscore b { font-size: 30px; font-weight: 900; text-shadow: 0 2px 0 #2b2438; min-width: 52px; }
+    #filmscore .bar { flex: 1; height: 10px; border-radius: 6px; background: rgba(20,16,34,.6); border: 2px solid rgba(255,255,255,.7); overflow: hidden; }
+    #filmscore .bar em { display: block; height: 100%; width: 0; background: #7be07b; transition: width .2s; }
+    #filmtip { position: absolute; left: 12px; bottom: calc(env(safe-area-inset-bottom, 0px) + 152px); font: 700 14px system-ui; text-shadow: 0 2px 0 #2b2438; }
+    #filmchat { position: absolute; left: 12px; bottom: calc(env(safe-area-inset-bottom, 0px) + 16px); width: 78%; display: flex; flex-direction: column; gap: 3px; font: 600 13px/1.3 system-ui; text-shadow: 0 1px 3px rgba(0,0,0,.8); }
+    #filmchat div { background: rgba(20,16,34,.45); border-radius: 8px; padding: 3px 8px; width: fit-content; max-width: 100%; }
+    #filmchat div.ev { background: rgba(255,178,44,.55); color: #fff6dd; }
+    #filmzoom { position: absolute; right: 10px; bottom: calc(env(safe-area-inset-bottom, 0px) + 170px); display: flex; flex-direction: column; gap: 10px; pointer-events: auto; }
+    #filmzoom button { width: 48px; height: 48px; border-radius: 50%; border: 2px solid rgba(255,255,255,.8); background: rgba(20,16,34,.7); color: #fff; font: 800 24px system-ui; cursor: pointer; touch-action: manipulation; }
+    #filmcard { position: fixed; left: 50%; top: 24%; transform: translateX(-50%); z-index: 1250; background: rgba(24,18,38,.9); border: 3px solid #ffd23c; border-radius: 18px; padding: 16px 22px; text-align: center; display: none; pointer-events: none; font-family: system-ui, sans-serif; color: #fff; }
+    #filmcard h2 { margin: 0 0 6px; font-size: 24px; color: #ffd23c; }
+    #filmcard p { margin: 3px 0; font-weight: 700; }
+    #filmcard img { width: 108px; border-radius: 8px; margin-top: 8px; display: none; }`;
+  document.head.appendChild(st);
+  const ui = document.createElement('div'); ui.id = 'filmui';
+  ui.innerHTML = `<div id="filmfinder">
+      <div id="filmtop"><span class="rec"></span><span class="live">LIVE</span><span class="view" id="filmview">👁 12</span></div>
+      <div id="filmtip"></div>
+      <div id="filmscore"><b id="filmsnum">0</b><span class="bar"><em id="filmsbar"></em></span></div>
+      <div id="filmchat"></div>
+      <div id="filmzoom"><button id="filmzin" aria-label="zoom in">+</button><button id="filmzout" aria-label="zoom out">−</button></div>
+    </div>`;
+  document.body.appendChild(ui);
+  const card = document.createElement('div'); card.id = 'filmcard'; document.body.appendChild(card);
+  $('filmzin').addEventListener('click', () => free.dolly(0.8));
+  $('filmzout').addEventListener('click', () => free.dolly(1.25));
+
+  const run = new FilmRun(), aud = new Audience(), feed = new ChatFeed();
+  let lastGameTick = 0, lastRunnerT = 0, seenEvents = 0, prevCam = null, peakViewers = 12, bestShot = '', bestShotQ = 0, cardUntil = 0, lastGoodChat = -999, lastLostChat = -999, lastIdleChat = 0;
+  const chatEl = $('filmchat');
+  function filmChat(text, cls) { if (!text) return; const d = document.createElement('div'); if (cls) d.className = cls; d.textContent = text; chatEl.appendChild(d); while (chatEl.children.length > 5) chatEl.firstChild.remove(); }
+  filmChat('you are LIVE — keep her in the frame!', 'ev');
+
+  window.filmFrame = function filmFrame() {
+    if (!stageS || !runner) { filmDbg = { score: run.score, viewers: Math.round(aud.viewers), framing: +run.framing.toFixed(3) }; return; }
+    // scene wrapped (restart made a fresh runner): flash the take card, reset the take
+    if (runner.t < lastRunnerT) {
+      card.innerHTML = `<h2>🎬 TAKE COMPLETE</h2><p>Best frame ${Math.round(run.best * 100)} · Take score ${run.score}</p><p>Peak viewers ${Math.round(peakViewers)}</p>${bestShot ? `<img id="filmbest" src="${bestShot}" style="display:block">` : ''}`;
+      card.style.display = 'block'; cardUntil = performance.now() + 4500;
+      run.reset(); seenEvents = 0; peakViewers = aud.viewers; bestShot = ''; bestShotQ = 0;
+    }
+    lastRunnerT = runner.t;
+    if (card.style.display === 'block' && performance.now() > cardUntil) card.style.display = 'none';
+
+    // camera movement this frame, for the smoothness term
+    let camMove = 0;
+    if (free.on) { const c = { yaw: free.yaw, pitch: free.pitch, dist: free.dist }; if (prevCam) camMove = Math.abs(c.yaw - prevCam.yaw) + Math.abs(c.pitch - prevCam.pitch) + Math.abs(c.dist - prevCam.dist) / Math.max(1, c.dist) * 0.5; prevCam = c; }
+
+    // the staged hero, projected: feet and head -> viewfinder coords (finder spans the full height;
+    // its width in NDC is the finder pixel width over the window width)
+    const hj = stageS.actors.find((ac) => ac.look && ac.look.hero);
+    let parts = { q: 0, center: 0, size: 0, smooth: 1 }, fracH = 0, fx = 9;
+    if (hj && hj.vis !== false) {
+      const o = stageS.origin, feet = new THREE.Vector3(o[0] + hj.x, o[1] + hj.y, o[2] + hj.z), head = new THREE.Vector3(feet.x, feet.y + 1.62, feet.z), dir = new THREE.Vector3();
+      camera.getWorldDirection(dir);
+      const behind = feet.clone().sub(camera.position).dot(dir) <= 0;
+      if (!behind) {
+        const pf = feet.project(camera), ph = head.project(camera), halfW = Math.min(innerWidth, (innerHeight * 9) / 16) / innerWidth;
+        fx = ((pf.x + ph.x) / 2) / halfW; const fy = (pf.y + ph.y) / 2, fh = Math.abs(ph.y - pf.y) / 2; fracH = fh;
+        const dn = Math.max(1, game.ticks - lastGameTick);
+        parts = frameQuality({ fx, fy, visible: Math.abs(fx) <= 1.3 && Math.abs(fy) <= 1.3, fracH, camMove: camMove / dn });
+      }
+    }
+    // accumulate per sim tick elapsed since the last frame
+    const dn = Math.max(0, game.ticks - lastGameTick); lastGameTick = game.ticks;
+    for (let i = 0; i < dn; i++) run.add(parts.q, runner.t);
+    if (dn > 0) aud.update(parts.q, dn);
+    peakViewers = Math.max(peakViewers, aud.viewers);
+    // remember the best frame as a thumbnail for the take card
+    if (parts.q > bestShotQ + 0.02 && parts.q > 0.5) { bestShotQ = parts.q; try { bestShot = renderer.domElement.toDataURL('image/jpeg', 0.55); } catch { bestShot = ''; } }
+    // scene events -> chat + audience spikes
+    while (seenEvents < runner.fired.length) { const ev = runner.fired[seenEvents++]; filmChat(feed.event(ev.name), 'ev'); if (ev.name === 'splash') aud.boost(1.35, 40); }
+    // framing streaks and idle chatter
+    if (run.goodStreak >= 60 && game.ticks - lastGoodChat > 300) { lastGoodChat = game.ticks; filmChat(feed.streak('good')); }
+    if (run.lostStreak >= 45 && game.ticks - lastLostChat > 300) { lastLostChat = game.ticks; filmChat(feed.streak('lost')); }
+    if (game.ticks - Math.max(lastGoodChat, lastLostChat, lastIdleChat) > 420) { lastIdleChat = game.ticks; filmChat(feed.idle()); }
+    // HUD
+    $('filmview').textContent = '👁 ' + Math.round(aud.viewers);
+    $('filmsnum').textContent = run.score;
+    $('filmsbar').style.width = Math.round(parts.q * 100) + '%';
+    $('filmsbar').style.background = parts.q >= 0.6 ? '#7be07b' : parts.q >= 0.3 ? '#ffd23c' : '#ff7a5c';
+    $('filmtip').textContent = !hj || hj.vis === false ? '' : Math.abs(fx) > 1.3 ? 'she left the frame — find her!' : parts.center < 0.5 ? 'centre her in the frame' : fracH > 0.62 && parts.size < 1 ? 'zoom out — she is cropped' : fracH < 0.28 && parts.size < 1 ? 'zoom in — she is tiny' : parts.smooth < 0.5 ? 'hold still…' : 'perfect — hold it!';
+    filmDbg = { score: run.score, viewers: Math.round(aud.viewers), framing: +run.framing.toFixed(3), best: +run.best.toFixed(3), tick: runner.t };
+  };
+  film = { run, aud };
+}
+
 // Camera state for the external recorder.
 window.__dbg = { get freecam() { return free.on ? { on: true, pivot: [...free.pivot], yaw: free.yaw, pitch: free.pitch, dist: free.dist } : { on: false }; },
   get timescale() { return ticker.scale; }, get bookmark() { return cap.bookmark; }, get guide() { return cap.guide; }, get hud() { return cap.hud; },
   get tick() { return game.ticks; }, get digest() { return simDigest(game); }, timescales: TIMESCALES,
-  get scene() { if (!SCENE_DEF) return null; return runner ? { id: SCENE_DEF.id, mode: 'watch', tick: runner.t, duration: SCENE_DEF.duration, events: runner.fired, cues: sceneCues } : { id: SCENE_DEF.id, mode: sceneMode, tick: 0, duration: SCENE_DEF.duration, events: [], cues: sceneCues }; } };
+  get scene() { if (!SCENE_DEF) return null; return runner ? { id: SCENE_DEF.id, mode: 'watch', tick: runner.t, duration: SCENE_DEF.duration, events: runner.fired, cues: sceneCues } : { id: SCENE_DEF.id, mode: sceneMode, tick: 0, duration: SCENE_DEF.duration, events: [], cues: sceneCues }; },
+  get film() { return filmDbg; } };
 requestAnimationFrame(function first(t) { if (Q.get('freecam') === '1') setFreecam(true); capNote(); frame(t); });
 </script>
 <script id="moth-game-guard-js">

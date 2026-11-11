@@ -1,45 +1,78 @@
-// Film scenes (filmscenes.js): every one must be a pure, deterministic function of its tick, keep the sim untouched,
-// fire its beats in order, and mix its money beat loudest. Iterates the registry, so new scenes are covered automatically.
+// FILM-IT mode: the framing maths must reward a centred, right-sized, steady shot and punish losing her.
+// film.js is pure logic — the page feeds it viewfinder projections; the sim is never involved.
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { Game } from '../games/lanternport/sim.js';
-import { simDigest } from '../games/lanternport/capture.js';
-import { SCENES, SceneRunner } from '../games/lanternport/scenes.js';
-import { FILM_SCENES } from '../games/lanternport/filmscenes.js';
+import { frameQuality, FilmRun, Audience, ChatFeed, CHAT } from '../games/lanternport/film.js';
 
-const snap = (S) => JSON.stringify([S.actors.map((a) => [a.id, a.x, a.y, a.z, a.yaw, a.vis, a.pose, a.p, a.on, a.flap]), S.props.map((p) => [p.id, p.flex, p.unfurl]), S.flash || 0]);
-const MONEY = { 'rooftop-dive': 'splash', 'photo-call': 'brass', 'snapper-shop': 'chord', 'garden-guard': 'sting', 'festival-roundabout': 'cheer', 'dawn-shift': 'rollout', 'harbor-run': 'wings' };
-
-test('film scenes lead the registry in brief order, so bookmark keys 1-8 match the brief', () => {
-  assert.deepEqual(SCENES.slice(0, FILM_SCENES.length).map((s) => s.id), FILM_SCENES.map((s) => s.id));
-  assert.ok(SCENES.some((s) => s.id === 'stage-test'));
+test('framing: a centred hero at a good size with a still camera scores high', () => {
+  const r = frameQuality({ fx: 0, fy: 0.08, visible: true, fracH: 0.45, camMove: 0 });
+  assert.ok(r.q > 0.85, `expected > 0.85, got ${r.q}`);
+  assert.equal(r.center, 1); assert.equal(r.size, 1); assert.equal(r.smooth, 1);
 });
 
-for (const def of FILM_SCENES) {
-  test(`${def.id}: set is deterministic, act is a pure function of the tick, nothing goes non-finite`, () => {
-    const A = def.set(new Game(7)), B = def.set(new Game(7));
-    assert.equal(JSON.stringify(A), JSON.stringify(B), 'same seed, same set');
-    const at = {}; for (const t of [0, 37.5, 200, def.duration * 0.5, def.duration - 1]) { def.act(A, t); at[t] = snap(A); }
-    for (let t = 0; t < def.duration; t += 0.5) { def.act(A, t); for (const a of A.actors) assert.ok([a.x, a.y, a.z, a.yaw || 0].every(Number.isFinite), `${a.id} at tick ${t}`); }
-    for (const t of Object.keys(at)) { def.act(A, +t); assert.equal(snap(A), at[t], `act(${t}) depends only on t`); }
+test('framing: an off-frame hero scores zero', () => {
+  for (const [fx, fy] of [[2, 0], [-1.8, 0.3], [0, 2.2], [5, 5]]) {
+    const r = frameQuality({ fx, fy, visible: false, fracH: 0.45, camMove: 0 });
+    assert.equal(r.q, 0);
+  }
+  // visible flag false (underwater / off stage) is always zero, wherever the projection lands
+  assert.equal(frameQuality({ fx: 0, fy: 0, visible: false, fracH: 0.45, camMove: 0 }).q, 0);
+});
 
-    // Full tick range choreography purity across two fresh sets
-    const S1 = def.set(new Game(7)), S2 = def.set(new Game(7));
-    for (let t = 0; t < def.duration; t++) {
-      def.act(S1, t);
-      def.act(S2, t);
-      assert.equal(snap(S1), snap(S2), `choreography impure at tick ${t}`);
-    }
+test('framing: losing the centre bleeds score smoothly, not in steps', () => {
+  const mid = frameQuality({ fx: 0.55, fy: 0.08, visible: true, fracH: 0.45, camMove: 0 }).q;
+  const edge = frameQuality({ fx: 1.0, fy: 0.08, visible: true, fracH: 0.45, camMove: 0 }).q;
+  const out = frameQuality({ fx: 1.35, fy: 0.08, visible: true, fracH: 0.45, camMove: 0 }).q;
+  assert.ok(mid > edge && edge > out && out < 0.1, `mid ${mid} edge ${edge} out ${out}`);
+});
 
-    assert.ok(def.duration >= 20 * 30 && def.duration <= 40 * 30, 'a 20-40 second Short');
-  });
-  test(`${def.id}: beats fire in order, the sim is untouched, and the money beat is the loudest cue`, () => {
-    const g = new Game(7), idle = new Game(7), run = new SceneRunner(g, def);
-    while (!run.done) { g.tick({ ...run.input(), camYaw: 0 }); idle.tick({ camYaw: 0 }); }
-    assert.equal(simDigest(g), simDigest(idle), 'the scene plays on the stage, not in the sim');
-    assert.deepEqual(run.fired.map((e) => e.name), def.events.map((e) => e.name)); assert.deepEqual(run.fired.map((e) => e.tick), [...run.fired.map((e) => e.tick)].sort((a, b) => a - b));
-    assert.ok(def.sound.length > 3, 'has its sound'); assert.ok(def.sound.every((c) => c.at >= 0 && c.at < def.duration));
-    const loud = [...def.sound].sort((a, b) => (b.vol ?? 1) - (a.vol ?? 1))[0]; assert.equal(loud.cue, MONEY[def.id], 'money beat mixed loudest');
-    assert.ok(def.bed && def.light, 'has a music bed and a light state');
-  });
-}
+test('framing: a tiny hero and a cropped hero both score worse than the sweet size', () => {
+  const sweet = frameQuality({ fx: 0, fy: 0.08, visible: true, fracH: 0.45, camMove: 0 }).q;
+  const tiny = frameQuality({ fx: 0, fy: 0.08, visible: true, fracH: 0.1, camMove: 0 }).q;
+  const cropped = frameQuality({ fx: 0, fy: 0.08, visible: true, fracH: 1.1, camMove: 0 }).q;
+  assert.ok(tiny < sweet * 0.6, `tiny ${tiny} vs sweet ${sweet}`);
+  assert.ok(cropped < sweet, `cropped ${cropped} vs sweet ${sweet}`);
+  assert.ok(cropped > tiny, 'cropped should still beat a speck');
+});
+
+test('framing: camera shake is penalised — same shot, worse score', () => {
+  const still = frameQuality({ fx: 0, fy: 0.08, visible: true, fracH: 0.45, camMove: 0 });
+  const whip = frameQuality({ fx: 0, fy: 0.08, visible: true, fracH: 0.45, camMove: 0.12 });
+  assert.equal(whip.smooth, 0);
+  assert.ok(whip.q < still.q * 0.6, `whip ${whip.q} vs still ${still.q}`);
+  const drift = frameQuality({ fx: 0, fy: 0.08, visible: true, fracH: 0.45, camMove: 0.01 });
+  assert.ok(drift.q > whip.q && drift.q < still.q, 'a gentle drift sits between the two');
+});
+
+test('run: score is the 0..100 average, best frame and streaks are tracked', () => {
+  const run = new FilmRun();
+  for (let t = 0; t < 60; t++) run.add(1, t);
+  assert.equal(run.score, 100); assert.equal(run.best, 1); assert.equal(run.bestTick, 59); assert.equal(run.goodStreak, 60);
+  for (let t = 60; t < 120; t++) run.add(0, t);
+  assert.equal(run.score, 50); assert.equal(run.lostStreak, 60); assert.equal(run.goodStreak, 0);
+  run.reset(); assert.equal(run.score, 0); assert.equal(run.bestTick, -1);
+});
+
+test('audience: good footage pulls a crowd, bad footage drains it, events spike it', () => {
+  const a = new Audience(), start = a.viewers;
+  for (let i = 0; i < 200; i++) a.update(0.95);
+  const peak = a.viewers;
+  assert.ok(peak > start * 10, `crowd grew ${start} -> ${peak}`);
+  for (let i = 0; i < 400; i++) a.update(0);
+  assert.ok(a.viewers < peak * 0.3, `crowd drained to ${a.viewers}`);
+  const before = a.viewers; a.boost(1.35, 40);
+  assert.ok(a.viewers > before + 40, 'boost adds viewers');
+  // deterministic: same input sequence, same crowd
+  const b = new Audience(), c = new Audience();
+  for (let i = 0; i < 50; i++) { b.update(0.7); c.update(0.7); }
+  assert.equal(b.viewers, c.viewers);
+});
+
+test('chat: event lines exist for the dive beats, streaks and idle lines cycle without repeats-in-a-row', () => {
+  const feed = new ChatFeed();
+  for (const name of ['splash', 'leap', 'rim-sit', 'strut']) assert.ok(feed.event(name), `no chat for ${name}`);
+  assert.equal(feed.event('no-such-event'), null);
+  const seen = new Set(); for (let i = 0; i < CHAT.good.length; i++) seen.add(feed.streak('good'));
+  assert.ok(seen.size >= CHAT.good.length - 1, 'good lines cycle through the pool');
+  assert.ok(feed.streak('lost').length > 0 && feed.idle().length > 0);
+});
