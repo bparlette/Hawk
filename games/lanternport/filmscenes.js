@@ -76,8 +76,8 @@ const rooftopDive = {
   },
   input: () => ({}),
   events: [{ at: 0, name: 'hold' }, { at: DIVE.strut[0], name: 'strut' }, { at: DIVE.bounce1, name: 'bounce-1' }, { at: DIVE.bounce2, name: 'bounce-2' }, { at: DIVE.leap, name: 'leap' }, { at: DIVE.splash, name: 'splash' }, { at: DIVE.surface, name: 'surface' }, { at: DIVE.sit, name: 'rim-sit' }, { at: DIVE.end - 1, name: 'end' }],
-  sound: [{ at: DIVE.bounce1, cue: 'boing', vol: 0.5 }, { at: DIVE.bounce2 - 2, cue: 'thump', vol: 0.4 }, { at: DIVE.bounce2, cue: 'boing', vol: 0.7 }, { at: DIVE.leap - 2, cue: 'thump', vol: 0.5 }, { at: DIVE.leap, cue: 'boing', vol: 0.9 },
-    { at: DIVE.splash, cue: 'splash', vol: 1.6 }, { at: DIVE.splash + 10, cue: 'squawk', vol: 0.8 }, { at: DIVE.splash + 19, cue: 'squawk', vol: 0.7 }, { at: DIVE.surface, cue: 'laugh', vol: 0.6 }, { at: DIVE.surface + 6, cue: 'water', vol: 0.5 }, { at: DIVE.swim[0], cue: 'water', vol: 0.4 }, { at: DIVE.sit, cue: 'drip', vol: 0.5 }, { at: DIVE.gulls + 30, cue: 'gull', vol: 0.4 }, { at: DIVE.gulls + 90, cue: 'gull', vol: 0.3 }],
+  sound: [{ at: 0, cue: 'water', vol: 0.15 }, { at: DIVE.strut[0], cue: 'boing', vol: 0.25 }, { at: DIVE.bounce1, cue: 'boing', vol: 0.5 }, { at: DIVE.bounce2 - 2, cue: 'thump', vol: 0.4 }, { at: DIVE.bounce2, cue: 'boing', vol: 0.7 }, { at: DIVE.leap - 2, cue: 'thump', vol: 0.5 }, { at: DIVE.leap, cue: 'boing', vol: 0.9 },
+    { at: DIVE.splash, cue: 'splash', vol: 1.6 }, { at: DIVE.splash + 10, cue: 'squawk', vol: 0.8 }, { at: DIVE.splash + 19, cue: 'squawk', vol: 0.7 }, { at: DIVE.surface, cue: 'laugh', vol: 0.6 }, { at: DIVE.surface + 6, cue: 'water', vol: 0.5 }, { at: DIVE.swim[0], cue: 'water', vol: 0.4 }, { at: DIVE.sit, cue: 'drip', vol: 0.5 }, { at: DIVE.gulls + 30, cue: 'gull', vol: 0.4 }, { at: DIVE.gulls + 90, cue: 'gull', vol: 0.3 }, { at: DIVE.end - 1, cue: 'water', vol: 0.2 }],
   bed: { kind: 'band', vol: 0.045, muffled: true, loops: 'water' }, // a bright festival band, far below; pool water lapping
 };
 
@@ -119,8 +119,10 @@ const photoCall = {
   },
   input: () => ({}),
   events: [{ at: 0, name: 'hold' }, { at: PC.usher[0], name: 'ushered-in' }, { at: PC.storm[0], name: 'flash-storm' }, { at: PC.grin, name: 'grin' }, { at: PC.banner[0], name: 'banner' }, { at: PC.end - 1, name: 'end' }],
-  sound: [...FLASHES.map((at, i) => ({ at, cue: 'shutter', vol: 0.35 + hash(i + 40) * 0.25 })), { at: PC.storm[0] + 60, cue: 'ooh', vol: 0.4 }, { at: PC.storm[0] + 150, cue: 'ooh', vol: 0.45 }, { at: PC.grin, cue: 'brass', vol: 1.5 }, { at: PC.grin + 8, cue: 'applause', vol: 0.9 }, { at: PC.banner[0], cue: 'whoosh', vol: 0.5 }],
+  sound: [{ at: 0, cue: 'shutter', vol: 0.15 }, { at: PC.usher[0], cue: 'ooh', vol: 0.2 }, ...FLASHES.map((at, i) => ({ at, cue: 'shutter', vol: 0.35 + hash(i + 40) * 0.25 })), { at: PC.storm[0], cue: 'shutter', vol: 0.4 }, { at: PC.storm[0] + 60, cue: 'ooh', vol: 0.4 }, { at: PC.storm[0] + 150, cue: 'ooh', vol: 0.45 }, { at: PC.grin, cue: 'brass', vol: 1.5 }, { at: PC.grin + 8, cue: 'applause', vol: 0.9 }, { at: PC.banner[0], cue: 'whoosh', vol: 0.5 }, { at: PC.end - 1, cue: 'shutter', vol: 0.15 }],
   bed: { kind: 'murmur', vol: 0.05 },
 };
 
-export const FILM_SCENES = [rooftopDive, photoCall];
+import { FILM_SCENES_2 } from './filmscenes2.js';
+// Scene 8 of the brief (the flock chase) is not built: see SCENES.md.
+export const FILM_SCENES = [rooftopDive, photoCall, ...FILM_SCENES_2];

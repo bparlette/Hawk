@@ -130,7 +130,7 @@ export function makeMaterials(THREE, timeU) {
 
 // ------------------------------------------------------------------------------------------------ sky
 const SKY_FRAG = `
-uniform vec3 uSun; uniform float uTime; varying vec3 vDir;
+uniform vec3 uSun; uniform float uTime, uDusk; varying vec3 vDir;
 float hash(vec2 p){ p = fract(p * vec2(123.34, 456.21)); p += dot(p, p + 45.32); return fract(p.x * p.y); }
 float noise(vec2 p){ vec2 i = floor(p), f = fract(p); f = f * f * (3.0 - 2.0 * f);
   return mix(mix(hash(i), hash(i + vec2(1, 0)), f.x), mix(hash(i + vec2(0, 1)), hash(i + vec2(1, 1)), f.x), f.y); }
@@ -151,11 +151,12 @@ void main(){
     cc = mix(cc, vec3(1.0, 0.8, 0.6), (1.0 - smoothstep(0.0, 0.3, d.y)) * 0.6);
     col = mix(col, cc, c * smoothstep(0.01, 0.16, d.y) * 0.94);
   }
+  col = mix(col, mix(vec3(1.05, 0.42, 0.4), vec3(0.09, 0.07, 0.3), smoothstep(0.0, 0.5, h)) + vec3(1.0, 0.5, 0.3) * pow(sd, 6.0) * 0.6, uDusk); // dusk: pink at the horizon into indigo
   gl_FragColor = vec4(col, 1.0);
 }`;
 export function makeSky(THREE, timeU) {
   const g = new THREE.Group(), sun = new THREE.Vector3(...SUN_DIR).normalize();
-  const dome = new THREE.Mesh(new THREE.SphereGeometry(2600, 32, 20), new THREE.ShaderMaterial({ side: THREE.BackSide, depthWrite: false, fog: false, uniforms: { uSun: { value: sun }, uTime: timeU },
+  const dome = new THREE.Mesh(new THREE.SphereGeometry(2600, 32, 20), new THREE.ShaderMaterial({ side: THREE.BackSide, depthWrite: false, fog: false, uniforms: { uSun: { value: sun }, uDusk: { value: 0 }, uTime: timeU },
     vertexShader: 'varying vec3 vDir; void main(){ vDir = position; gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0); }', fragmentShader: SKY_FRAG }));
   dome.renderOrder = -10; dome.frustumCulled = false; g.add(dome);
   // layered mountain ridges: each farther layer is taller, paler and bluer (aerial perspective)
@@ -195,7 +196,7 @@ const BLUR_FRAG = `uniform sampler2D tColor; uniform vec2 uDir; varying vec2 vUv
 void main(){ vec3 c = texture2D(tColor, vUv).rgb * 0.227; c += (texture2D(tColor, vUv + uDir * 1.385).rgb + texture2D(tColor, vUv - uDir * 1.385).rgb) * 0.316;
   c += (texture2D(tColor, vUv + uDir * 3.231).rgb + texture2D(tColor, vUv - uDir * 3.231).rgb) * 0.0703; gl_FragColor = vec4(c, 1.0); }`;
 const FINAL_FRAG = `
-uniform sampler2D tColor, tDepth, tBloomA, tBloomB; uniform vec2 uPx; uniform float uNear, uFar, uTime, uHeat; uniform mat4 uInvVP; uniform vec3 uCam, uSun; varying vec2 vUv;
+uniform sampler2D tColor, tDepth, tBloomA, tBloomB; uniform vec2 uPx; uniform float uNear, uFar, uTime, uHeat, uDusk; uniform mat4 uInvVP; uniform vec3 uCam, uSun; varying vec2 vUv;
 float lin(float z){ float zn = z * 2.0 - 1.0; return 2.0 * uNear * uFar / (uFar + uNear - zn * (uFar - uNear)); }
 vec3 aces(vec3 x){ return clamp((x * (2.51 * x + 0.03)) / (x * (2.43 * x + 0.59) + 0.14), 0.0, 1.0); }
 void main(){
@@ -218,7 +219,7 @@ void main(){
     vec4 wp = uInvVP * vec4(vUv * 2.0 - 1.0, z * 2.0 - 1.0, 1.0); wp /= wp.w; vec3 ray = wp.xyz - uCam; float dist = length(ray); vec3 rd = ray / dist;
     float f = 1.0 - exp(-dist * 0.0021 * (0.35 + 0.65 * exp(-max(wp.y, 0.0) * 0.03))); f = min(f, 0.6);
     float sd = max(dot(rd, uSun), 0.0);
-    vec3 fc = mix(vec3(0.62, 0.78, 1.05), vec3(1.1, 0.84, 0.6), 0.2 + 0.8 * pow(sd, 2.5)) * (1.0 + 0.5 * pow(sd, 8.0));
+    vec3 fc = mix(vec3(0.62, 0.78, 1.05), vec3(1.1, 0.84, 0.6), 0.2 + 0.8 * pow(sd, 2.5)) * (1.0 + 0.5 * pow(sd, 8.0)); fc = mix(fc, vec3(0.4, 0.25, 0.5), uDusk);
     col = mix(col, fc, f);
   }
   col += texture2D(tBloomA, vUv).rgb * 0.5 + texture2D(tBloomB, vUv).rgb * 0.55;
@@ -238,7 +239,7 @@ export class Post {
     const sm = (frag, uniforms) => new THREE.ShaderMaterial({ vertexShader: QUAD_VERT, fragmentShader: frag, uniforms, depthTest: false, depthWrite: false });
     this.bright = sm(BRIGHT_FRAG, { tColor: { value: null }, uPx: { value: new THREE.Vector2() } });
     this.blur = sm(BLUR_FRAG, { tColor: { value: null }, uDir: { value: new THREE.Vector2() } });
-    this.final = sm(FINAL_FRAG, { tColor: { value: null }, tDepth: { value: null }, tBloomA: { value: null }, tBloomB: { value: null }, uPx: { value: new THREE.Vector2() }, uNear: { value: 0.3 }, uFar: { value: 4000 }, uTime: { value: 0 }, uHeat: { value: 0 },
+    this.final = sm(FINAL_FRAG, { tColor: { value: null }, tDepth: { value: null }, tBloomA: { value: null }, tBloomB: { value: null }, uPx: { value: new THREE.Vector2() }, uNear: { value: 0.3 }, uFar: { value: 4000 }, uTime: { value: 0 }, uHeat: { value: 0 }, uDusk: { value: 0 },
       uInvVP: { value: new THREE.Matrix4() }, uCam: { value: new THREE.Vector3() }, uSun: { value: new THREE.Vector3(...SUN_DIR).normalize() } });
     this.rts = null;
   }

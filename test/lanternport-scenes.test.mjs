@@ -43,6 +43,18 @@ test('stage-test: timescale parity — filming at 0.25x changes nothing', () => 
   assert.equal(film('stage-test', 2, 144).digests.at(-1), ref.digests.at(-1));
 });
 
+test('every registered scene: timescale parity at 0.25x across odd frame rates', () => {
+  for (const s of SCENES) {
+    if (typeof s.input !== 'function') continue;
+    const ref = film(s.id, 1, 60);
+    for (const fps of [24, 50, 144]) {
+      const slow = film(s.id, 0.25, fps);
+      assert.deepEqual(slow.digests, ref.digests, `${s.id} 0.25x at ${fps}fps digests must match 1x`);
+      assert.deepEqual(slow.fired, ref.fired, `${s.id} 0.25x at ${fps}fps fired events must match 1x`);
+    }
+  }
+});
+
 test('every registered scene: bookmark framing is finite numbers', () => {
   const g = new Game(7);
   for (const s of SCENES) {

@@ -78,13 +78,13 @@ scenes reuse the same registry slots as they land.
 | 5 | `plaza-takeover` | `04-cartop-dance` + `17-donut-takeover` | ⏳ awaiting builder |
 | 6 | `release-morning` | `02-gate-shrug` | ⏳ awaiting builder |
 | 7 | `marsh-skiff-run` | `18-marsh-airboat` | ⏳ awaiting builder |
-| 8 | `cucco-swarm` | aigo.md Part 2 (Gemini) — reassigned from Fable Nov 10 | ⏳ specced |
+| 8 | `cucco-swarm` | aigo.md Part 2 (Gemini) — reassigned from Fable Nov 10 | ✅ built & proven |
 | 9 | `sword-pedestal` | fablego.md §4 (Fable) — Zelda slate | ⏳ specced |
 | 10 | `ocarina-dawn` | fablego.md §4 (Fable) — Zelda slate | ⏳ specced |
-| 11 | `pot-rampage` | aigo.md Part 2 (Gemini) — Zelda slate | ⏳ specced |
-| 12 | `chest-fanfare` | aigo.md Part 2 (Gemini) — Zelda slate | ⏳ specced |
-| 13 | `dock-fishing` | aigo.md Part 2 (Gemini) — Zelda slate | ⏳ specced |
-| 14 | `fairy-orbit` | aigo.md Part 2 (Gemini) — Zelda slate | ⏳ specced |
+| 11 | `pot-rampage` | aigo.md Part 2 (Gemini) — Zelda slate | ✅ built & proven |
+| 12 | `chest-fanfare` | aigo.md Part 2 (Gemini) — Zelda slate | ✅ built & proven |
+| 13 | `dock-fishing` | aigo.md Part 2 (Gemini) — Zelda slate | ✅ built & proven |
+| 14 | `fairy-orbit` | aigo.md Part 2 (Gemini) — Zelda slate | ✅ built & proven |
 
 **Pool frames for `rooftop-dive`** (from Cherie's reference stills, Nov 10 —
 for the scene's owner to fold into its opening/closing holds): the money
@@ -96,3 +96,4 @@ near (a); frame (b) is the natural opening hold.
 
 The town re-dress to the pack's Look (gamepress `00-city-look`) is also still
 to do — it is dressing work in `view.js`/`fx.js`, independent of the scenes.
+

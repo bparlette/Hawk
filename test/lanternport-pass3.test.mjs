@@ -70,6 +70,22 @@ test('job bonus: finishing the bread run leaves a red rupee at the bakery beacon
   assert.ok(Math.hypot(red.x - B.x, red.z - B.z) < 200, 'the red rupee is at the bakery');
 });
 
+test('bot: jobs 2 and 3 complete end to end in sequence', () => {
+  const g = new Game(7), bot = new Bot(g);
+  let guard = 0;
+  while (g.completed.length < 3 && guard++ < 5000) g.tick(bot.input());
+  assert.deepEqual(g.completed, ['bread', 'lamps', 'tithe'], 'all three courier jobs complete');
+  assert.equal(g.heat, 0, 'heat lost cleanly at end of tithe mission');
+
+  // Verify bonus red rupees left at both beacon locations
+  const L = g.city.places.lamps;
+  const C = g.city.places.counting;
+  const redLamps = g.pickups.find((p) => p.kind === 'rupee' && p.denom === 20 && Math.hypot(p.x - L.x, p.z - L.z) < 200);
+  const redCounting = g.pickups.find((p) => p.kind === 'rupee' && p.denom === 20 && Math.hypot(p.x - C.x, p.z - C.z) < 200);
+  assert.ok(redLamps, 'red rupee left at lamps beacon');
+  assert.ok(redCounting, 'red rupee left at counting beacon');
+});
+
 test('streets: pass 3 traffic and parked vehicles thicken the roads', () => {
   const g = new Game(7);
   const npc = g.vehicles.filter((v) => v.driver === 'npc');

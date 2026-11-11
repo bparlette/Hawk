@@ -18,6 +18,8 @@
 import { Bot } from './bot.js';
 import { roadAt } from './sim.js';
 import { FILM_SCENES } from './filmscenes.js';
+import { cuccoSwarm } from './cucco.js';
+import { ZELDA_SCENES } from './zelda.js';
 
 export class SceneRunner {
   constructor(game, def) {
@@ -70,6 +72,6 @@ const stageTest = {
 };
 
 // Registry order = bookmark keys 1-8. The film scenes come first; the framework proof stays last.
-export const SCENES = [...FILM_SCENES, stageTest];
+export const SCENES = [...FILM_SCENES, cuccoSwarm, stageTest, ...ZELDA_SCENES];
 
 export function sceneById(id) { return SCENES.find((s) => s.id === id) || null; }
