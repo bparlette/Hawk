@@ -18,19 +18,19 @@ function readPngDimensions(buffer) {
   return { width, height, bitDepth, colorType };
 }
 
-test('linkle walk assets: anime 16-frame cycle and 2048x2048 sheet exist and have valid format', () => {
+test('linkle walk assets: anime 8-frame phase cycle and 2048x1024 sheet exist and have valid format', () => {
   const sheetPath = path.join(animeDir, 'sheet.png');
   assert.ok(fs.existsSync(sheetPath), 'sheet.png must exist');
   const sheetBuf = fs.readFileSync(sheetPath);
   const sheetMeta = readPngDimensions(sheetBuf);
   assert.strictEqual(sheetMeta.width, 2048, 'sheet width must be 2048');
-  assert.strictEqual(sheetMeta.height, 2048, 'sheet height must be 2048');
+  assert.strictEqual(sheetMeta.height, 1024, 'sheet height must be 1024');
   assert.strictEqual(sheetMeta.colorType, 6, 'sheet must be RGBA (colorType 6)');
 
   const hashes = new Set();
   const frameHashes = [];
 
-  for (let i = 0; i < 16; i++) {
+  for (let i = 0; i < 8; i++) {
     const num = String(i).padStart(2, '0');
     const framePath = path.join(animeDir, `walk_${num}.png`);
     assert.ok(fs.existsSync(framePath), `walk_${num}.png must exist`);
@@ -46,9 +46,9 @@ test('linkle walk assets: anime 16-frame cycle and 2048x2048 sheet exist and hav
   }
 
   // Verify uniqueness: all 16 frames must have distinct checksums
-  assert.strictEqual(hashes.size, 16, 'All 16 frames must have unique checksums (no duplicate frames)');
-  // Specifically verify walk_00 != walk_08 (stride 1 passing vs stride 2 passing)
-  assert.notStrictEqual(frameHashes[0], frameHashes[8], 'walk_00 and walk_08 must not be identical');
+  assert.strictEqual(hashes.size, 8, 'All 8 frames must have unique checksums (no duplicate frames)');
+  // Specifically verify walk_00 != walk_04 (contact left vs contact right)
+  assert.notStrictEqual(frameHashes[0], frameHashes[4], 'walk_00 and walk_04 must not be identical');
 });
 
 test('linkle walk test page, contact sheet preview, and audit proof exist', () => {

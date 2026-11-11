@@ -183,7 +183,7 @@
         <h1><span>🚶‍♀️</span> Linkle Walk-Cycle Asset Test</h1>
         <p style="font-size: 12px; color: #8b92a5; margin-top: 4px;">In-game character asset validation page (no scenery)</p>
       </div>
-      <div class="badge" id="assetStatus">16 Distinct Frames • Zero Holes • Grounded y=508</div>
+      <div class="badge" id="assetStatus">8 Drawn Phase Frames • True Passing Poses • Grounded y=508</div>
     </header>
 
     <div class="viewport">
@@ -191,9 +191,9 @@
       <div class="baseline-guide" id="baselineGuide"></div>
       <div class="baseline-label" id="baselineLabel">Foot Baseline: y=508px (Grounded)</div>
       <div class="info-bar">
-        <span class="info-tag" id="tagFrame">Frame: 00 / 15</span>
+        <span class="info-tag" id="tagFrame">Frame: 00 / 07</span>
         <span class="info-tag" id="tagPhase">Phase: Passing 1</span>
-        <span class="info-tag" id="tagFps">16 FPS</span>
+        <span class="info-tag" id="tagFps">10 FPS</span>
       </div>
     </div>
 
@@ -231,8 +231,8 @@
         <span class="label">FPS:</span>
         <div class="btn-group" id="fpsButtons">
           <button onclick="setFps(8)">8 FPS</button>
-          <button onclick="setFps(12)">12 FPS</button>
-          <button class="active" onclick="setFps(16)">16 FPS (1.0s loop)</button>
+          <button onclick="setFps(12)">12 FPS</button><button onclick="setFps(16)">16 FPS</button>
+          <button class="active" onclick="setFps(10)">10 FPS (0.8s loop)</button>
           <button onclick="setFps(24)">24 FPS</button>
         </div>
       </div>
@@ -243,7 +243,7 @@
           <td><strong>Asset Directory:</strong></td>
           <td><code id="metaDir">assets/linkle-walk/anime/</code></td>
           <td><strong>Dimensions:</strong></td>
-          <td>512×512 per frame, 2048×2048 4×4 sheet</td>
+          <td>512×512 per frame, 2048×1024 4×2 sheet</td>
         </tr>
         <tr>
           <td><strong>Locked Look:</strong></td>
@@ -253,7 +253,7 @@
         </tr>
         <tr>
           <td><strong>Kinematics:</strong></td>
-          <td>16 frames (2 full strides), loopable, fixed grounded foot baseline y=508</td>
+          <td>8 frames (contact / down / passing / up × 2), loopable, grounded foot baseline y=508</td>
           <td><strong>Status:</strong></td>
           <td><span style="color: #34d399; font-weight: 600;">ACTIVE IN ENGINE</span></td>
         </tr>
@@ -268,7 +268,7 @@
     let currentStyle = 'anime';
     let currentFrame = 0;
     let isPlaying = true;
-    let fps = 16;
+    let fps = 10;
     let lastTime = 0;
     let frameAccum = 0;
     
@@ -278,34 +278,26 @@
 
     // Phase descriptions
     const phases = [
-      "Passing 1 (Far foot swings forward)",
-      "Reaching 1",
-      "Extension 1",
-      "Pre-Contact 1",
-      "Contact 1 (Max stride - Right foot plant)",
-      "Recoil / Cushion 1",
-      "Passing Prep 1",
-      "Push-Off 1",
-      "Passing 2 (Near foot swings forward)",
-      "Reaching 2",
-      "Extension 2",
-      "Pre-Contact 2",
-      "Contact 2 (Max stride - Left foot plant)",
-      "Recoil / Cushion 2",
-      "Passing Prep 2",
-      "Push-Off 2 (Returns to frame 0)"
+      "Contact Left (heel strike)",
+      "Down Left (weight, lowest)",
+      "Passing Left (knee high, foot off ground)",
+      "Up Left (push-off, highest)",
+      "Contact Right (heel strike)",
+      "Down Right (weight, lowest)",
+      "Passing Right (knee high, foot off ground)",
+      "Up Right (push-off, highest)"
     ];
 
     function loadStyleFrames(style) {
       imagesLoaded = 0;
       frameImages.length = 0;
-      for (let i = 0; i < 16; i++) {
+      for (let i = 0; i < 8; i++) {
         const num = String(i).padStart(2, '0');
         const img = new Image();
         img.src = `assets/linkle-walk/${style}/walk_${num}.png`;
         img.onload = () => {
           imagesLoaded++;
-          if (imagesLoaded === 16) {
+          if (imagesLoaded === 8) {
             renderFrame(currentFrame);
           }
         };
@@ -319,7 +311,7 @@
       if (frameImages[idx] && frameImages[idx].complete) {
         ctx.drawImage(frameImages[idx], 0, 0, 512, 512);
       }
-      document.getElementById('tagFrame').textContent = `Frame: ${String(idx).padStart(2, '0')} / 15`;
+      document.getElementById('tagFrame').textContent = `Frame: ${String(idx).padStart(2, '0')} / 07`;
       document.getElementById('tagPhase').textContent = `Phase: ${phases[idx]}`;
     }
 
@@ -328,11 +320,11 @@
       const dt = (t - lastTime) / 1000;
       lastTime = t;
 
-      if (isPlaying && imagesLoaded === 16) {
+      if (isPlaying && imagesLoaded === 8) {
         frameAccum += dt;
         const frameInterval = 1 / fps;
         while (frameAccum >= frameInterval) {
-          currentFrame = (currentFrame + 1) % 16;
+          currentFrame = (currentFrame + 1) % 8;
           frameAccum -= frameInterval;
         }
         renderFrame(currentFrame);
@@ -349,7 +341,7 @@
     function stepFrame(dir) {
       isPlaying = false;
       document.getElementById('playBtn').textContent = "▶ Play";
-      currentFrame = (currentFrame + dir + 16) % 16;
+      currentFrame = (currentFrame + dir + 8) % 8;
       renderFrame(currentFrame);
     }
 
@@ -380,10 +372,10 @@
     // Expose for automated headless verification
     window.__setFrame = (idx) => {
       isPlaying = false;
-      currentFrame = idx % 16;
+      currentFrame = idx % 8;
       renderFrame(currentFrame);
     };
-    window.__isLoaded = () => imagesLoaded === 16;
+    window.__isLoaded = () => imagesLoaded === 8;
 
     loadStyleFrames(currentStyle);
     requestAnimationFrame(loop);
