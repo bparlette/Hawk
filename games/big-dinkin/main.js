@@ -552,14 +552,14 @@ $('muteBtn').addEventListener('click', () => { audio(); musicStart(); musicToggl
 // net. Your paddle floats at the bottom; your body is never drawn. A slight
 // bob follows your stride, like a head-mounted camera. proj returns
 // s = pixels per foot at that depth.
-const CAM = { y: 29.5, z: 7.6 };
+const CAM = { y: 31.5, z: 7.6 };
 function camX() { return you.x * 0.45; }
 function horizonY() {
   const spd = Math.hypot(you.vx, you.vy);
   const bob = spd > 0.5 ? Math.sin(you.runPh * 2.4) * H * 0.006 : Math.sin(S.time * 1.4) * H * 0.002;
   return H * 0.30 + bob;
 }
-function focal() { return H * 1.35; }
+function focal() { return H * 1.0; }
 function proj(x, y, z = 0) {
   const F = focal();
   const d = Math.max(2.2, CAM.y - y);
