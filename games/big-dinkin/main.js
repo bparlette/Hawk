@@ -206,7 +206,7 @@ function updateScoreboard() {
     const el = $(id); el.innerHTML = '';
     for (let i = 0; i < WIN_SCORE; i++) {
       const d = document.createElement('div');
-      d.className = 'pip' + (i < n ? ' on' : '');
+      d.className = 'pip' + (i < Math.min(n, WIN_SCORE) ? ' on' : '');
       el.appendChild(d);
     }
   }
@@ -225,7 +225,7 @@ function point(winner, why, wx, wy) {
   S.phase = 'pres'; S.pointT = 1.35; ball.live = false;
   updateScoreboard();
   burst(wx ?? 0, wy ?? 0);
-  if (S.score[winner] >= WIN_SCORE) {
+  if (S.score[winner] >= WIN_SCORE && Math.abs(S.score.you - S.score.cpu) >= 2) {
     S.mode = 'over'; S.winner = winner;
     setMsg(winner === 'you' ? '🏆 YOU WIN!' : 'CPU WINS', winner === 'you' ? 'Champion of the midway!' : 'The carnival crown slips away…', 3.2);
     sfx.point();
@@ -328,8 +328,16 @@ function stepBall(dt) {
     const f = Math.abs(prevY) / (Math.abs(prevY) + Math.abs(ball.y));
     const zNet = prevZ + (ball.z - prevZ) * f;
     if (zNet < COURT.NET_Z + 0.05) {
-      sfx.net(); popup(W / 2, H * 0.42, 'INTO THE NET!', '#ff6ab0');
-      return fault(S.lastHit, 'Into the net');
+      // Net cord on a serve: real rules play it live if it lands in the box —
+      // kill the pace and let the landing decide.
+      if (S.serveFlight && zNet >= COURT.NET_Z - 0.45) {
+        ball.vx *= 0.32; ball.vy *= 0.32; ball.vz = Math.min(ball.vz, 1.5);
+        popup(W / 2, H * 0.42, 'NET CORD!', '#7df9ff');
+        sfx.net();
+      } else {
+        sfx.net(); popup(W / 2, H * 0.42, 'INTO THE NET!', '#ff6ab0');
+        return fault(S.lastHit, 'Into the net');
+      }
     }
   }
   if (ball.z <= 0) {
@@ -772,5 +780,6 @@ if (new URLSearchParams(location.search).has('demo')) {
 window.__dbg = {
   get state() { return { mode: S.mode, phase: S.phase, stage: S.stage, server: S.server, score: { ...S.score }, ball: { ...ball }, you: { x: you.x, y: you.y }, cpu: { x: cpu.x, y: cpu.y }, lastWhy: S.lastWhy || '' }; },
   start: startMatch,
+  setScore(y, c) { S.score.you = y; S.score.cpu = c; updateScoreboard(); },
 };
 requestAnimationFrame(frame);
