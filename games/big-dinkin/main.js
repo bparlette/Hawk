@@ -227,13 +227,13 @@ function point(winner, why, wx, wy) {
   burst(wx ?? 0, wy ?? 0);
   if (S.score[winner] >= WIN_SCORE && Math.abs(S.score.you - S.score.cpu) >= 2) {
     S.mode = 'over'; S.winner = winner;
-    setMsg(winner === 'you' ? '🏆 YOU WIN!' : 'CPU WINS', winner === 'you' ? 'Champion of the midway!' : 'The carnival crown slips away…', 3.2);
+    setMsg(winner === 'you' ? '🏆 YOU WIN!' : 'ZORP WINS', winner === 'you' ? 'Champion of the midway!' : 'Zorp keeps the carnival crown…', 3.2);
     sfx.point();
     $('playBtn').textContent = '↻ REMATCH';
     $('menu').style.display = 'flex';
     document.querySelector('#menu .tag').textContent = winner === 'you' ? 'You took the match!' : 'The CPU took that one.';
   } else {
-    setMsg(winner === 'you' ? 'POINT!' : 'CPU POINT', why, 1.15);
+    setMsg(winner === 'you' ? 'POINT!' : 'ZORP POINT', why, 1.15);
     if (winner === 'you') sfx.point(); else sfx.fault();
   }
   resetPositions();
@@ -248,7 +248,7 @@ function resetPositions() {
   ball.x = srv.x; ball.y = srv.y; ball.z = 1.2; ball.vx = ball.vy = ball.vz = 0;
   S.stage = 'serve'; S.serveFlight = true; S.bounces = 0; S.lastHit = null;
   S.serveT = S.server === 'cpu' ? rnd(0.9, 1.3) : 0;
-  $('serveTag').textContent = S.server === 'you' ? 'YOUR SERVE — Z / X / C' : 'CPU SERVE';
+  $('serveTag').textContent = S.server === 'you' ? 'YOUR SERVE — Z / X / C' : 'ZORP SERVE';
   $('serveTag').style.display = S.mode === 'play' ? 'block' : 'none';
 }
 function serveBoxFor(serverSide) {
@@ -544,16 +544,23 @@ function startMatch() {
 $('playBtn').addEventListener('click', startMatch);
 $('muteBtn').addEventListener('click', () => { audio(); musicStart(); musicToggle(); });
 
-/* ============================== projection ============================== */
+/* ====================== first-person projection ====================== */
+// Wii-style: the camera sits at YOUR eyes, just behind your baseline. You see
+// the court, the alien across the net, and your own floating paddle — never
+// your body. proj returns s = pixels per foot at that depth.
+const CAM = { y: 27.5, z: 5.4 };
+function camX() { return you.x * 0.45; }
+function horizonY() { return H * 0.40; }
+function focal() { return H * 1.35; }
 function proj(x, y, z = 0) {
-  const PORT = W < H;
-  const t = clamp((y + COURT.L / 2) / COURT.L, 0, 1);            // 0 far, 1 near
-  const persp = Math.pow(t, 1.28);
-  const farY = PORT ? 0.27 : 0.30, nearY = PORT ? 0.90 : 0.99;
-  const baseY = H * farY + (H * nearY - H * farY) * persp;
-  const s = 0.40 + 0.66 * Math.pow(t, 1.05);
-  const halfW = (W * (PORT ? 0.50 : 0.46)) * ((PORT ? 0.30 : 0.42) + (PORT ? 0.70 : 0.58) * persp);
-  return { x: W / 2 + (x / (COURT.W / 2)) * halfW * 0.92, y: baseY - z * 9.5 * s * (H / 800 + 0.35), s, t };
+  const F = focal();
+  const d = Math.max(2.2, CAM.y - y);
+  return {
+    x: W / 2 + (x - camX()) * F / d,
+    y: horizonY() + (CAM.z - z) * F / d,
+    s: F / d,
+    d,
+  };
 }
 
 /* ============================== rendering ============================== */
@@ -568,9 +575,9 @@ function line2(x1, y1, x2, y2, w, color) {
   ctx.lineWidth = w; ctx.strokeStyle = color; ctx.stroke();
 }
 function renderBackdrop() {
-  const sky = ctx.createLinearGradient(0, 0, 0, H * 0.34);
+  const sky = ctx.createLinearGradient(0, 0, 0, H * 0.42);
   sky.addColorStop(0, '#2a1150'); sky.addColorStop(0.7, '#3a1a5e'); sky.addColorStop(1, PAL.bg);
-  ctx.fillStyle = sky; ctx.fillRect(0, 0, W, H * 0.36);
+  ctx.fillStyle = sky; ctx.fillRect(0, 0, W, H * 0.44);
   // ferris wheel silhouette
   const wx = W * 0.80, wy = H * 0.155, wr = H * 0.115;
   ctx.save(); ctx.strokeStyle = '#241038'; ctx.lineWidth = 5;
@@ -582,16 +589,16 @@ function renderBackdrop() {
     ctx.fillStyle = (i % 2 ? PAL.trim : '#ff6ab0');
     ctx.beginPath(); ctx.arc(wx + Math.cos(a) * wr, wy + Math.sin(a) * wr, 3.4, 0, 6.29); ctx.fill();
   }
-  ctx.beginPath(); ctx.moveTo(wx - wr * 0.5, H * 0.335); ctx.lineTo(wx, wy); ctx.lineTo(wx + wr * 0.5, H * 0.335); ctx.stroke();
+  ctx.beginPath(); ctx.moveTo(wx - wr * 0.5, H * 0.405); ctx.lineTo(wx, wy); ctx.lineTo(wx + wr * 0.5, H * 0.405); ctx.stroke();
   ctx.restore();
   // midway tents silhouette
   ctx.fillStyle = '#1d0b33';
   for (const [tx, tw] of [[0.06, 0.16], [0.30, 0.11], [0.52, 0.13]]) {
-    const bx = W * tx, bw = W * tw, by = H * 0.335;
+    const bx = W * tx, bw = W * tw, by = H * 0.405;
     ctx.beginPath(); ctx.moveTo(bx, by); ctx.lineTo(bx + bw / 2, by - H * 0.075); ctx.lineTo(bx + bw, by); ctx.closePath(); ctx.fill();
     ctx.fillRect(bx + bw * 0.12, by - H * 0.028, bw * 0.76, H * 0.028);
   }
-  ctx.fillRect(0, H * 0.328, W, H * 0.032);
+  ctx.fillRect(0, H * 0.398, W, H * 0.032);
   // bulb strings (chase lights)
   for (let sIdx = 0; sIdx < 3; sIdx++) {
     const y0 = H * (0.045 + sIdx * 0.052), sag = H * 0.045, off = sIdx * 0.33;
@@ -656,64 +663,138 @@ function renderCourt() {
   ctx.lineWidth = 5; ctx.strokeStyle = PAL.text; ctx.stroke();
   for (const p of [nLb, nRb]) { ctx.fillStyle = PAL.ink; ctx.fillRect(p.x - 3, p.y - (nLb.y - nL.y) - 4, 6, (nLb.y - nL.y) + 6); }
 }
-function drawActor(a, idx) {
+function drawAlien(a) {
+  // ZORP — the visiting alien champion, drawn to match the character art:
+  // big green head, huge black eyes, gold-ball antennae, red carnival vest.
   const p = proj(a.x, a.y);
-  const r = 29 * p.s * (H / 760 + 0.45);
-  const bob = Math.sin(a.runPh * 2.4) * (Math.hypot(a.vx, a.vy) > 0.5 ? 2.2 : 0.7) * p.s;
-  const cy = p.y - r * 1.55 + bob;
+  const u = p.s;                                   // px per foot
+  const hgt = 5.1 * u;
+  const bob = Math.sin(a.runPh * 2.4) * (Math.hypot(a.vx, a.vy) > 0.5 ? 0.09 : 0.03) * u;
+  const groundY = p.y, headCY = groundY - hgt * 0.68 + bob, headR = hgt * 0.30;
+  const lean = clamp(a.vx * 0.012, -0.14, 0.14);
+  ctx.save(); ctx.translate(p.x, 0); ctx.rotate(0); ctx.translate(0, 0);
   // shadow
   ctx.fillStyle = 'rgba(10,4,20,.38)';
-  ctx.beginPath(); ctx.ellipse(p.x, p.y + 2, r * 0.95, r * 0.3, 0, 0, 6.29); ctx.fill();
+  ctx.beginPath(); ctx.ellipse(0, groundY + 2, headR * 1.05, headR * 0.26, 0, 0, 6.29); ctx.fill();
+  ctx.translate(0, bob); ctx.rotate(lean);
   // feet
-  ctx.fillStyle = PAL.ink;
-  const fOff = Math.sin(a.runPh * 2.4) * r * 0.3 * (Math.hypot(a.vx, a.vy) > 0.5 ? 1 : 0.15);
-  ctx.beginPath(); ctx.ellipse(p.x - r * 0.38 + fOff, p.y, r * 0.24, r * 0.11, 0, 0, 6.29); ctx.fill();
-  ctx.beginPath(); ctx.ellipse(p.x + r * 0.38 - fOff, p.y, r * 0.24, r * 0.11, 0, 0, 6.29); ctx.fill();
-  // body (glossy ball)
-  const g = ctx.createRadialGradient(p.x - r * 0.35, cy - r * 0.4, r * 0.15, p.x, cy, r * 1.05);
-  g.addColorStop(0, PAL.teamLite[idx]); g.addColorStop(0.45, PAL.team[idx]); g.addColorStop(1, PAL.teamDark[idx]);
-  ctx.beginPath(); ctx.arc(p.x, cy, r, 0, 6.29); ctx.fillStyle = g; ctx.fill();
-  ctx.lineWidth = 2.4; ctx.strokeStyle = PAL.ink; ctx.stroke();
-  ctx.fillStyle = 'rgba(255,255,255,.5)';
-  ctx.beginPath(); ctx.ellipse(p.x - r * 0.36, cy - r * 0.42, r * 0.2, r * 0.12, -0.6, 0, 6.29); ctx.fill();
-  // cap
-  ctx.fillStyle = idx === 0 ? PAL.trim : '#fff6dd';
-  ctx.beginPath(); ctx.arc(p.x, cy - r * 0.52, r * 0.52, Math.PI, 0); ctx.fill();
-  ctx.fillRect(p.x + (idx === 0 ? 0 : -r * 0.55), cy - r * 0.58, r * 0.58, r * 0.13);
-  // eyes track the ball
-  const look = clamp((ball.x - a.x) * 0.06, -2.4, 2.4) * p.s;
-  ctx.fillStyle = '#fff';
-  for (const s of [-1, 1]) { ctx.beginPath(); ctx.arc(p.x + s * r * 0.3 + look, cy - r * 0.12, r * 0.13, 0, 6.29); ctx.fill(); }
-  ctx.fillStyle = PAL.ink;
-  for (const s of [-1, 1]) { ctx.beginPath(); ctx.arc(p.x + s * r * 0.3 + look * 1.5, cy - r * 0.12, r * 0.06, 0, 6.29); ctx.fill(); }
-  // paddle: auto-switches to the side the ball is on, and stretches to MEET
-  // a close ball (the contact point blends toward the ball itself)
-  const sw = a.swingT > 0 ? Math.sin((0.26 - a.swingT) / 0.26 * Math.PI) : 0;
+  ctx.fillStyle = '#57a047';
+  for (const s of [-1, 1]) {
+    const fOff = Math.sin(a.runPh * 2.4 + (s > 0 ? 3.14 : 0)) * u * 0.16 * (Math.hypot(a.vx, a.vy) > 0.5 ? 1 : 0.2);
+    ctx.beginPath(); ctx.ellipse(s * headR * 0.42, groundY - headR * 0.05 + fOff * 0.3 - bob, headR * 0.30, headR * 0.13, 0, 0, 6.29); ctx.fill();
+  }
+  // body: red carnival vest
+  const bodyTop = headCY + headR * 0.72, bodyBot = groundY - headR * 0.18 - bob;
+  const bg2 = ctx.createLinearGradient(0, bodyTop, 0, bodyBot);
+  bg2.addColorStop(0, '#e3323f'); bg2.addColorStop(1, '#8f1028');
+  ctx.beginPath();
+  ctx.moveTo(-headR * 0.52, bodyTop); ctx.lineTo(headR * 0.52, bodyTop);
+  ctx.lineTo(headR * 0.62, bodyBot); ctx.lineTo(-headR * 0.62, bodyBot); ctx.closePath();
+  ctx.fillStyle = bg2; ctx.fill(); ctx.lineWidth = 2; ctx.strokeStyle = PAL.ink; ctx.stroke();
+  ctx.strokeStyle = PAL.trim; ctx.lineWidth = Math.max(1.6, u * 0.05);
+  ctx.beginPath(); ctx.moveTo(0, bodyTop + 2); ctx.lineTo(0, bodyBot - 2); ctx.stroke();
+  ctx.fillStyle = PAL.trim;
+  for (let i = 0; i < 3; i++) { ctx.beginPath(); ctx.arc(headR * 0.22, bodyTop + (bodyBot - bodyTop) * (0.25 + i * 0.25), Math.max(1.6, u * 0.055), 0, 6.29); ctx.fill(); }
+  // free arm (left)
+  ctx.strokeStyle = '#6fbf3f'; ctx.lineWidth = Math.max(2.4, u * 0.11); ctx.lineCap = 'round';
+  ctx.beginPath(); ctx.moveTo(-headR * 0.5, bodyTop + headR * 0.15); ctx.quadraticCurveTo(-headR * 0.85, bodyTop + headR * 0.5, -headR * 0.78, bodyTop + headR * 0.85); ctx.stroke();
+  // head
+  const hg = ctx.createRadialGradient(-headR * 0.3, headCY - headR * 0.35, headR * 0.2, 0, headCY, headR * 1.1);
+  hg.addColorStop(0, '#c8f09a'); hg.addColorStop(0.55, '#9ede6e'); hg.addColorStop(1, '#63b437');
+  ctx.beginPath(); ctx.ellipse(0, headCY, headR, headR * 0.92, 0, 0, 6.29); ctx.fillStyle = hg; ctx.fill();
+  ctx.lineWidth = 2; ctx.strokeStyle = 'rgba(58,20,8,.5)'; ctx.stroke();
+  // antennae (sway)
+  ctx.strokeStyle = '#7cc24a'; ctx.lineWidth = Math.max(2, u * 0.07);
+  for (const s of [-1, 1]) {
+    const sway = Math.sin(S.time * 2.2 + s) * headR * 0.08;
+    const tx = s * headR * 0.42 + sway, ty = headCY - headR * 1.28;
+    ctx.beginPath(); ctx.moveTo(s * headR * 0.3, headCY - headR * 0.78);
+    ctx.quadraticCurveTo(s * headR * 0.38, headCY - headR * 1.1, tx, ty); ctx.stroke();
+    ctx.fillStyle = PAL.trim; ctx.beginPath(); ctx.arc(tx, ty, headR * 0.13, 0, 6.29); ctx.fill();
+    ctx.fillStyle = 'rgba(255,255,255,.55)'; ctx.beginPath(); ctx.arc(tx - headR * 0.04, ty - headR * 0.05, headR * 0.045, 0, 6.29); ctx.fill();
+  }
+  // huge black eyes, tracking the ball
+  const look = clamp((ball.x - a.x) * 0.05, -0.16, 0.16) * headR;
+  for (const s of [-1, 1]) {
+    ctx.save(); ctx.translate(s * headR * 0.38 + look, headCY + headR * 0.02); ctx.rotate(s * -0.18);
+    const eg = ctx.createRadialGradient(-headR * 0.06, -headR * 0.12, headR * 0.03, 0, 0, headR * 0.30);
+    eg.addColorStop(0, '#3a3f4a'); eg.addColorStop(0.4, '#0a0a12'); eg.addColorStop(1, '#000');
+    ctx.beginPath(); ctx.ellipse(0, 0, headR * 0.235, headR * 0.315, 0, 0, 6.29); ctx.fillStyle = eg; ctx.fill();
+    ctx.fillStyle = 'rgba(255,255,255,.85)';
+    ctx.beginPath(); ctx.ellipse(-headR * 0.07, -headR * 0.13, headR * 0.055, headR * 0.085, -0.3, 0, 6.29); ctx.fill();
+    ctx.restore();
+  }
+  // smile
+  ctx.strokeStyle = 'rgba(30,60,20,.75)'; ctx.lineWidth = Math.max(1.6, u * 0.045);
+  ctx.beginPath(); ctx.arc(look * 0.5, headCY + headR * 0.38, headR * 0.16, 0.25, Math.PI - 0.25); ctx.stroke();
+  ctx.restore();
+  // paddle arm + paddle (auto-side, auto-meet like the player's)
   const want = ball.x >= a.x ? 1 : -1;
-  a.padSide = a.padSide === undefined ? want : a.padSide + (want - a.padSide) * 0.22;
+  a.padSide = a.padSide === undefined ? -1 : a.padSide + (want - a.padSide) * 0.22;
   const side = a.padSide;
-  let px = p.x + side * r * (1.02 + sw * 0.35), py = cy + r * 0.25 - sw * r * 0.5;
+  const sw = a.swingT > 0 ? Math.sin((0.26 - a.swingT) / 0.26 * Math.PI) : 0;
+  const shX = p.x + side * headR * 0.55, shY = bodyTop + headR * 0.2 + bob;
+  let px = shX + side * headR * (0.55 + sw * 0.3), py = shY + headR * 0.35 - sw * headR * 0.45;
   const bd = Math.hypot(ball.x - a.x, ball.y - a.y);
   if (ball.live && bd < 5.2) {
     const bp = proj(ball.x, ball.y, ball.z), k = (1 - bd / 5.2) * 0.72;
     px += (bp.x - px) * k; py += (bp.y - py) * k;
   }
-  const armX = p.x + side * r * 0.8, armY = cy + r * 0.3;
-  ctx.strokeStyle = PAL.ink; ctx.lineWidth = 3;
-  ctx.beginPath(); ctx.moveTo(armX, armY); ctx.lineTo(px, py); ctx.stroke();
-  ctx.save(); ctx.translate(px, py); ctx.rotate(side * (-0.5 + sw * 1.1));
-  ctx.fillStyle = PAL.trim; ctx.strokeStyle = PAL.ink; ctx.lineWidth = 2;
-  ctx.beginPath(); ctx.ellipse(0, -r * 0.28, r * 0.30, r * 0.40, 0, 0, 6.29); ctx.fill(); ctx.stroke();
-  ctx.fillStyle = 'rgba(58,20,8,.35)';
-  ctx.beginPath(); ctx.ellipse(0, -r * 0.28, r * 0.19, r * 0.28, 0, 0, 6.29); ctx.fill();
+  ctx.strokeStyle = '#6fbf3f'; ctx.lineWidth = Math.max(2.4, u * 0.11); ctx.lineCap = 'round';
+  ctx.beginPath(); ctx.moveTo(shX, shY); ctx.lineTo(px, py); ctx.stroke();
+  drawPaddleFace(px, py, headR * 0.62, side * (-0.4 + sw * 1.0));
+}
+function drawPaddleFace(cx, cy, r, rot) {
+  ctx.save(); ctx.translate(cx, cy); ctx.rotate(rot);
+  const g = ctx.createLinearGradient(0, -r, 0, r);
+  g.addColorStop(0, '#ffe98a'); g.addColorStop(0.55, PAL.trim); g.addColorStop(1, PAL.ballDark);
+  ctx.beginPath(); ctx.ellipse(0, -r * 0.22, r * 0.78, r * 1.02, 0, 0, 6.29);
+  ctx.fillStyle = g; ctx.fill(); ctx.lineWidth = Math.max(2, r * 0.07); ctx.strokeStyle = PAL.ink; ctx.stroke();
+  ctx.fillStyle = 'rgba(58,20,8,.30)';
+  for (const [hx, hy] of [[-0.32, -0.62], [0, -0.78], [0.32, -0.62], [-0.42, -0.28], [-0.14, -0.38], [0.14, -0.38], [0.42, -0.28], [-0.28, 0.02], [0, -0.08], [0.28, 0.02]]) {
+    ctx.beginPath(); ctx.arc(hx * r, hy * r, r * 0.075, 0, 6.29); ctx.fill();
+  }
+  ctx.fillStyle = '#7a4a21'; ctx.fillRect(-r * 0.13, r * 0.72, r * 0.26, r * 0.5);
+  ctx.strokeStyle = PAL.ink; ctx.lineWidth = Math.max(1.4, r * 0.045); ctx.strokeRect(-r * 0.13, r * 0.72, r * 0.26, r * 0.5);
   ctx.restore();
 }
+function drawPaddleFP() {
+  // Your paddle, Wii-style: it floats where your court position says, flips
+  // forehand/backhand by ball side, stretches to meet a close ball, and
+  // swings through on contact.
+  const base = proj(you.x, you.y - 0.6, 2.5);
+  let px = clamp(base.x, W * 0.10, W * 0.90);
+  let py = clamp(base.y, H * 0.58, H * 0.94);
+  const want = ball.x >= you.x ? 1 : -1;
+  you.padSide = you.padSide === undefined ? 1 : you.padSide + (want - you.padSide) * 0.25;
+  const bd = Math.hypot(ball.x - you.x, ball.y - you.y);
+  if (ball.live && ball.y > 1 && bd < 6.5) {
+    const bp = proj(ball.x, ball.y, ball.z), k = (1 - bd / 6.5) * 0.6;
+    px += (bp.x - px) * k; py += (bp.y - py) * k;
+  }
+  const sw = you.swingT > 0 ? Math.sin((0.26 - you.swingT) / 0.26 * Math.PI) : 0;
+  py -= sw * H * 0.05; px += you.padSide * sw * W * 0.02;
+  const r = H * 0.115 * (1 + sw * 0.12);
+  // mitt at the grip
+  ctx.fillStyle = PAL.team[0];
+  ctx.beginPath(); ctx.arc(px - you.padSide * r * 0.1, py + r * 1.28, r * 0.34, 0, 6.29); ctx.fill();
+  ctx.lineWidth = 2.4; ctx.strokeStyle = PAL.ink; ctx.stroke();
+  drawPaddleFace(px, py, r, you.padSide * (-0.16 + sw * 0.85));
+}
+const ballTrail = [];
 function drawBall() {
   const g = proj(ball.x, ball.y, 0);
   ctx.fillStyle = `rgba(10,4,20,${clamp(0.42 - ball.z * 0.028, 0.1, 0.42)})`;
-  ctx.beginPath(); ctx.ellipse(g.x, g.y + 2, (9 + ball.z * 0.7) * g.s + 3, (3.4 + ball.z * 0.25) * g.s + 1, 0, 0, 6.29); ctx.fill();
+  ctx.beginPath(); ctx.ellipse(g.x, g.y + 2, Math.max(3, 0.30 * g.s), Math.max(1.2, 0.11 * g.s), 0, 0, 6.29); ctx.fill();
   const p = proj(ball.x, ball.y, ball.z);
-  const r = (6.5 * p.s + 2.6) * (ball.bounceT > 0 ? 0.82 : 1);
+  const r = clamp(0.34 * p.s, 2.6, H * 0.085) * (ball.bounceT > 0 ? 0.82 : 1);
+  // motion trail
+  if (ball.live) { ballTrail.push({ x: p.x, y: p.y, r }); if (ballTrail.length > 9) ballTrail.shift(); }
+  else ballTrail.length = 0;
+  ballTrail.forEach((tp, i) => {
+    ctx.fillStyle = `rgba(255,201,60,${(i / ballTrail.length) * 0.20})`;
+    ctx.beginPath(); ctx.arc(tp.x, tp.y, Math.min(tp.r, H * 0.04) * (0.4 + 0.6 * i / ballTrail.length), 0, 6.29); ctx.fill();
+  });
   const grad = ctx.createRadialGradient(p.x - r * 0.3, p.y - r * 0.35, r * 0.2, p.x, p.y, r);
   grad.addColorStop(0, '#ffe98a'); grad.addColorStop(0.6, PAL.ball); grad.addColorStop(1, PAL.ballDark);
   ctx.beginPath(); ctx.arc(p.x, p.y, r, 0, 6.29); ctx.fillStyle = grad; ctx.fill();
@@ -733,15 +814,14 @@ function render() {
   renderBackdrop();
   renderCourt();
   // depth order: cpu (far) -> ball shadow/ball handled inside drawBall -> you (near); ball drawn between by z vs actors approx: draw cpu, ball if ball.y<0 else after you
-  drawActor(cpu, 1);
-  if (ball.y < 0.5) drawBall();
-  drawActor(you, 0);
-  if (ball.y >= 0.5) drawBall();
+  drawAlien(cpu);
+  drawBall();
+  drawPaddleFP();
   // confetti
   for (const c of confetti) {
-    const p = proj(c.x, c.y, c.z);
+    const p = proj(c.x, c.y, c.z), cs = clamp(p.s / 30, 0.35, 2.6);
     ctx.save(); ctx.translate(p.x, p.y); ctx.rotate(c.rot);
-    ctx.fillStyle = c.color; ctx.fillRect(-3.4 * p.s, -2 * p.s, 6.8 * p.s, 4 * p.s);
+    ctx.fillStyle = c.color; ctx.fillRect(-3.4 * cs, -2 * cs, 6.8 * cs, 4 * cs);
     ctx.restore();
   }
   // popups
