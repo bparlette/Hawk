@@ -8,6 +8,7 @@ import { TouchController, isTouchDevice } from './gptouch.js';
 /* ============================== constants ============================== */
 const COURT = { W: 20, L: 44, NET_Z: 2.83, KITCHEN: 7, BALL_R: 0.24 };
 const GRAV = 32;                 // ft/s^2
+const DRAG = 0.5;                // 1/s linear drag — a pickleball bleeds speed fast
 const WIN_SCORE = 5;
 const PAL = {                    // Big Bumpin' FAIRGROUND pack (styles.js)
   bg: '#170a26', wall: '#d81b74', wallDark: '#6e0d3c', trim: '#ffc93c',
@@ -40,14 +41,85 @@ function blip(freq, dur, type = 'square', vol = 0.12, slide = 0) {
   g.gain.exponentialRampToValueAtTime(0.001, ac.currentTime + dur);
   o.connect(g); g.connect(ac.destination); o.start(); o.stop(ac.currentTime + dur);
 }
+// A pickleball paddle pop: short noise burst through a bandpass + a low thump.
+function popSound(hard) {
+  const ac = audio(); if (!ac) return;
+  const t = ac.currentTime;
+  const nb = ac.createBuffer(1, ac.sampleRate * 0.06, ac.sampleRate);
+  const d = nb.getChannelData(0);
+  for (let i = 0; i < d.length; i++) d[i] = (Math.random() * 2 - 1) * (1 - i / d.length);
+  const src = ac.createBufferSource(); src.buffer = nb;
+  const bp = ac.createBiquadFilter(); bp.type = 'bandpass'; bp.frequency.value = hard ? 1150 : 880; bp.Q.value = 1.1;
+  const g = ac.createGain();
+  g.gain.setValueAtTime(hard ? 0.5 : 0.36, t);
+  g.gain.exponentialRampToValueAtTime(0.001, t + 0.07);
+  src.connect(bp); bp.connect(g); g.connect(ac.destination); src.start(t);
+  const o = ac.createOscillator(), og = ac.createGain();
+  o.type = 'sine'; o.frequency.setValueAtTime(hard ? 210 : 175, t);
+  o.frequency.exponentialRampToValueAtTime(80, t + 0.06);
+  og.gain.setValueAtTime(0.28, t); og.gain.exponentialRampToValueAtTime(0.001, t + 0.07);
+  o.connect(og); og.connect(ac.destination); o.start(t); o.stop(t + 0.08);
+}
+function cheer() {
+  const ac = audio(); if (!ac) return;
+  const t = ac.currentTime, dur = 0.55;
+  const nb = ac.createBuffer(1, ac.sampleRate * dur, ac.sampleRate);
+  const d = nb.getChannelData(0);
+  for (let i = 0; i < d.length; i++) d[i] = (Math.random() * 2 - 1) * Math.sin(Math.PI * i / d.length);
+  const src = ac.createBufferSource(); src.buffer = nb;
+  const bp = ac.createBiquadFilter(); bp.type = 'bandpass'; bp.frequency.value = 1200; bp.Q.value = 0.6;
+  const g = ac.createGain(); g.gain.value = 0.12;
+  src.connect(bp); bp.connect(g); g.connect(ac.destination); src.start(t);
+}
 const sfx = {
-  pop: (hard) => blip(hard ? 340 : 260, 0.07, 'square', 0.16, -120),
-  bounce: () => blip(150, 0.05, 'triangle', 0.10, -40),
+  pop: popSound,
+  bounce: () => blip(150, 0.05, 'triangle', 0.09, -40),
   net: () => blip(90, 0.16, 'sawtooth', 0.10, -30),
-  point: () => { blip(523, 0.1, 'square', 0.12); setTimeout(() => blip(784, 0.16, 'square', 0.12), 90); },
-  fault: () => blip(140, 0.22, 'sawtooth', 0.12, -60),
-  perfect: () => { blip(880, 0.08, 'square', 0.13); setTimeout(() => blip(1318, 0.14, 'square', 0.13), 70); },
+  point: () => { cheer(); blip(523, 0.1, 'square', 0.10); setTimeout(() => blip(784, 0.16, 'square', 0.10), 90); },
+  fault: () => blip(140, 0.22, 'sawtooth', 0.11, -60),
+  perfect: () => { blip(880, 0.08, 'square', 0.12); setTimeout(() => blip(1318, 0.14, 'square', 0.12), 70); },
 };
+
+/* ============================== music (calliope waltz) ============================== */
+const MUS = { on: true, timer: null, step: 0 };
+const MEL = [ // original carnival waltz loop, C major, 3/4 — [midi, beats]
+  [72, 1], [76, 1], [79, 1], [81, 1], [79, 1], [76, 1], [77, 1], [81, 1], [84, 1], [81, 2], [77, 1],
+  [76, 1], [79, 1], [83, 1], [79, 2], [76, 1], [74, 1], [77, 1], [81, 1], [79, 1], [76, 1], [74, 1],
+  [72, 1], [76, 1], [79, 1], [81, 1], [79, 1], [76, 1], [77, 1], [76, 1], [74, 1], [72, 3],
+];
+const BASS = [48, 43, 41, 43, 48, 43, 41, 43, 48, 43, 41, 43]; // C G F G per bar
+const mf = (m) => 440 * Math.pow(2, (m - 69) / 12);
+function musNote(midi, t, dur, vol, type = 'triangle') {
+  const ac = AC; if (!ac) return;
+  const o = ac.createOscillator(), g = ac.createGain(), v = ac.createOscillator(), vg = ac.createGain();
+  o.type = type; o.frequency.value = mf(midi);
+  v.type = 'sine'; v.frequency.value = 5.4; vg.gain.value = mf(midi) * 0.006; // calliope wobble
+  v.connect(vg); vg.connect(o.frequency);
+  g.gain.setValueAtTime(0, t); g.gain.linearRampToValueAtTime(vol, t + 0.03);
+  g.gain.setValueAtTime(vol, t + dur * 0.7); g.gain.linearRampToValueAtTime(0, t + dur);
+  o.connect(g); g.connect(ac.destination); o.start(t); o.stop(t + dur + 0.05); v.start(t); v.stop(t + dur + 0.05);
+}
+function musTick() {
+  if (!MUS.on || !AC || AC.state !== 'running') return;
+  const beat = 0.34, t = AC.currentTime + 0.06;
+  // schedule one bar (3 beats) at a time
+  const bar = Math.floor(MUS.step / 3), beatInBar = MUS.step % 3;
+  if (beatInBar === 0) musNote(BASS[bar % BASS.length], t, beat * 0.95, 0.16, 'sine');
+  else musNote(BASS[bar % BASS.length] + 19, t, beat * 0.5, 0.05, 'sine'); // oom-pah-pah
+  let idx = 0, acc = 0, target = MUS.step;
+  for (const [m, b] of MEL) { if (acc === target) { musNote(m, t, beat * b * 0.92, 0.075); break; } acc += b; idx++; }
+  MUS.step = (MUS.step + 1) % 36;
+}
+function musicStart() {
+  if (MUS.timer) return;
+  audio();
+  MUS.timer = setInterval(musTick, 340);
+}
+function musicToggle() {
+  MUS.on = !MUS.on;
+  const b = document.getElementById('muteBtn');
+  if (b) b.textContent = MUS.on ? '🔊' : '🔇';
+}
 
 /* ============================== state ============================== */
 const S = {
@@ -62,6 +134,7 @@ const S = {
   lastHit: null,
   msgT: 0, pointT: 0, serveT: 0, shakeT: 0, time: 0,
   winner: null,
+  flightId: 0, autoUsed: -1,   // auto-hit may fire once per flight
 };
 const ball = { x: 0, y: 23, z: 1.2, vx: 0, vy: 0, vz: 0, live: false, bounceT: 0 };
 const you = { x: 4.6, y: 15, vx: 0, vy: 0, swingT: 0, runPh: 0, side: 'you' };
@@ -71,34 +144,46 @@ const keys = {};
 let touch = null;
 
 /* ============================== physics helpers ============================== */
-function computeShot(from, to, T, clearZ) {
-  // Ballistic solve: land exactly on `to` at t=T, passing y=0 at height >= clearZ
-  // (when the path crosses the net). Falls back to plain solve if already clear.
-  const dx = to.x - from.x, dy = to.y - from.y;
-  let vx = dx / T, vy = dy / T, vz = (16 * T * T - from.z) / T;
-  if (Math.sign(dy) !== 0 && Math.sign(from.y) !== Math.sign(to.y)) {
-    const f = (0 - from.y) / dy;                    // fraction of flight at net
-    if (f > 0.02 && f < 0.98) {
-      const need = clearZ - from.z * (1 - f);
-      if (need > 0) {
-        const T2 = Math.sqrt(need / (16 * f * (1 - f)));
-        const Tc = Math.min(Math.max(T2, T * 0.55), T * 1.9);
-        vx = dx / Tc; vy = dy / Tc; vz = (16 * Tc * Tc - from.z) / Tc;
-        return { vx, vy, vz, T: Tc };
-      }
+// One integrator for everything: the live ball, shot solving, and landing
+// prediction all fly the same physics, so what a shot aims at is what happens.
+function simFlight(x, y, z, vx, vy, vz, maxT = 4) {
+  const dt = 1 / 120;
+  let t = 0, zNet = null, prevY = y, prevZ = z;
+  while (t < maxT) {
+    vz -= GRAV * dt;
+    const dr = 1 - DRAG * dt;
+    vx *= dr; vy *= dr; vz *= dr;
+    x += vx * dt; y += vy * dt; z += vz * dt; t += dt;
+    if (zNet === null && prevY !== 0 && Math.sign(prevY) !== Math.sign(y)) {
+      const f = Math.abs(prevY) / (Math.abs(prevY) + Math.abs(y));
+      zNet = prevZ + (z - prevZ) * f;
     }
+    prevY = y; prevZ = z;
+    if (z <= 0) return { x, y, t, zNet };
+  }
+  return { x, y, t, zNet };
+}
+function computeShot(from, to, T, clearZ) {
+  // Numeric solve under the real (draggy) physics: seed with the closed-form
+  // ballistic answer, then iterate until the simulated flight lands on target
+  // and clears the net by clearZ.
+  let vx = (to.x - from.x) / T, vy = (to.y - from.y) / T, vz = (16 * T * T - from.z) / T;
+  const crosses = Math.sign(from.y) !== Math.sign(to.y) && to.y !== from.y;
+  for (let i = 0; i < 6; i++) {
+    const r = simFlight(from.x, from.y, from.z, vx, vy, vz);
+    const ex = to.x - r.x, ey = to.y - r.y;
+    if (Math.abs(ex) < 0.15 && Math.abs(ey) < 0.15 && (!crosses || (r.zNet !== null && r.zNet >= clearZ))) {
+      return { vx, vy, vz, T: r.t };
+    }
+    vx += ex / T * 0.92; vy += ey / T * 0.92;
+    vz += (T - r.t) * 9;
+    if (crosses && r.zNet !== null && r.zNet < clearZ) vz += (clearZ - r.zNet) * 1.5;
   }
   return { vx, vy, vz, T };
 }
 function predictLanding() {
-  // Simulate the ball forward; return first-bounce spot on the CPU side (or null).
-  let { x, y, z, vx, vy, vz } = ball;
-  const dt = 1 / 60;
-  for (let i = 0; i < 240; i++) {
-    vz -= GRAV * dt; x += vx * dt; y += vy * dt; z += vz * dt;
-    if (z <= 0) { z = 0; return { x, y }; }
-  }
-  return null;
+  const r = simFlight(ball.x, ball.y, ball.z, ball.vx, ball.vy, ball.vz);
+  return r.t < 4 ? { x: r.x, y: r.y } : null;
 }
 const clamp = (v, a, b) => v < a ? a : v > b ? b : v;
 const rnd = (a, b) => a + Math.random() * (b - a);
@@ -134,6 +219,7 @@ function burst(x, y) {
   });
 }
 function point(winner, why, wx, wy) {
+  S.lastWhy = `${why} | lastHit=${S.lastHit} ball=${ball.x.toFixed(1)},${ball.y.toFixed(1)} z=${ball.z.toFixed(1)} bounces=${S.bounces} stage=${S.stage}`;
   S.score[winner]++;
   S.server = winner;
   S.phase = 'pres'; S.pointT = 1.35; ball.live = false;
@@ -184,11 +270,14 @@ function doServe(who, quality = 1) {
     { x: clamp(box.x + jx, -10.5, 10.5), y: clamp(box.y + jy, -22.5, 22.5) },
     1.02, COURT.NET_Z + 0.55);
   ball.vx = shot.vx; ball.vy = shot.vy; ball.vz = shot.vz;
-  ball.live = true; S.phase = 'flight'; S.lastHit = who; S.bounces = 0;
+  S.lastWhy = `serve ${who} from ${srv.x.toFixed(1)},${srv.y.toFixed(1)} v=${shot.vx.toFixed(1)},${shot.vy.toFixed(1)},${shot.vz.toFixed(1)}`;
+  S.serveBox = serveBoxFor(who);
+  ball.live = true; S.phase = 'flight'; S.lastHit = who; S.bounces = 0; S.flightId++;
   srv.swingT = 0.28; sfx.pop(false);
   $('serveTag').style.display = 'none';
 }
 function hitBall(who, kind) {
+  if (S.phase === 'flight' && S.lastHit === who) return false;  // singles: hits alternate — never re-hit your own shot
   const me = who === 'you' ? you : cpu, foe = who === 'you' ? cpu : you;
   const dir = who === 'you' ? -1 : 1;
   // ---- legality ----
@@ -203,21 +292,21 @@ function hitBall(who, kind) {
     return fault(who, 'No volleys in the kitchen!');
   }
   if (S.stage === 'returnPending' && who !== S.server) S.stage = 'returnFlight';
-  // ---- quality from contact ----
-  const d = Math.hypot(ball.x - me.x, ball.y - me.y);
-  const q = who === 'cpu' ? me.aiQ : clamp(1.12 - Math.abs(d - 1.15) * 0.34 - Math.max(0, ball.z - 5) * 0.10, 0.2, 1);
+  // ---- quality from contact (forgiving: the paddle stretches to meet it) ----
+  const d = Math.max(0, Math.hypot(ball.x - me.x, ball.y - me.y) - 0.9);
+  const q = who === 'cpu' ? me.aiQ : clamp(1.12 - Math.abs(d - 1.15) * 0.26 - Math.max(0, ball.z - 5) * 0.08, 0.3, 1);
   // ---- target by shot kind ----
   let tx, ty, T, clear = COURT.NET_Z + 0.3 + q * 0.5;
   const away = clamp(-foe.x * 0.72 + (who === 'you' ? input.x * 3.4 : rnd(-2, 2)), -9.2, 9.2);
   if (kind === 'drive') { tx = away; ty = dir * rnd(15, 20.5); T = rnd(0.52, 0.62); }
   else if (kind === 'dink') { tx = clamp(ball.x * 0.45 - foe.x * 0.25, -8.6, 8.6); ty = dir * rnd(1.8, 4.4); T = rnd(0.85, 1.0); clear = COURT.NET_Z + 0.55; }
   else { tx = away * 0.7; ty = dir * rnd(18, 21.5); T = rnd(1.35, 1.55); clear = COURT.NET_Z + 4.5; }
-  const j = (1 - q) * 6.5;
-  tx = clamp(tx + rnd(-j, j) * 0.8, -11.5, 11.5);
-  ty = clamp(ty + rnd(-j, j) * 0.45 * dir, -23.5, 23.5);
+  const j = (1 - q) * 5.0;
+  tx = clamp(tx + rnd(-j, j) * 0.8, -10.9, 10.9);
+  ty = clamp(ty + rnd(-j, j) * 0.45 * dir, -22.9, 22.9);
   const shot = computeShot({ x: ball.x, y: ball.y, z: ball.z }, { x: tx, y: ty }, T, clear);
   ball.vx = shot.vx; ball.vy = shot.vy; ball.vz = shot.vz;
-  S.lastHit = who; S.bounces = 0; S.serveFlight = false;
+  S.lastHit = who; S.bounces = 0; S.serveFlight = false; S.flightId++;
   me.swingT = 0.26;
   const ps = proj(ball.x, ball.y, ball.z);
   if (who === 'you' && q > 0.86) { popup(ps.x, ps.y - 46, 'PERFECT!', PAL.trim, true); sfx.perfect(); S.shakeT = 0.09; }
@@ -230,6 +319,8 @@ function stepBall(dt) {
   if (!ball.live) return;
   const prevY = ball.y, prevZ = ball.z;
   ball.vz -= GRAV * dt;
+  const drag = 1 - DRAG * dt;
+  ball.vx *= drag; ball.vy *= drag; ball.vz *= drag;
   ball.x += ball.vx * dt; ball.y += ball.vy * dt; ball.z += ball.vz * dt;
   ball.bounceT = Math.max(0, ball.bounceT - dt);
   // net crossing (interpolate z at the net plane)
@@ -246,22 +337,24 @@ function stepBall(dt) {
     const side = ball.y > 0 ? 'you' : 'cpu';
     S.bounces++;
     ball.bounceT = 0.18; sfx.bounce();
-    ball.vz = Math.abs(ball.vz) * 0.86;
-    ball.vx *= 0.94; ball.vy *= 0.94;
+    ball.vz = Math.abs(ball.vz) * 0.72;
+    ball.vx *= 0.82; ball.vy *= 0.82;
     const inCourt = Math.abs(ball.x) <= COURT.W / 2 && Math.abs(ball.y) <= COURT.L;
     if (S.serveFlight) {
-      const box = serveBoxFor(S.server);
+      const box = S.serveBox || serveBoxFor(S.server);
       const inBox = ball.x >= box.xMin && ball.x <= box.xMax && ball.y >= Math.min(box.yMin, box.yMax) && ball.y <= Math.max(box.yMin, box.yMax);
       if (side === S.server || !inBox) return fault(S.server, side === S.server ? 'Serve fell short' : 'Serve missed the box');
       S.serveFlight = false; S.stage = 'returnPending';  // receiver returns; the return must bounce too
       return;
     }
     if (side === S.lastHit) return fault(S.lastHit, 'Hit it into the ground');
-    if (!inCourt) return fault(S.lastHit, 'Out!');
     if (S.bounces >= 2) return point(S.lastHit, 'It bounced twice');
+    if (!inCourt) return fault(S.lastHit, 'Out!');
     if (S.stage === 'returnFlight') S.stage = 'rally';   // two-bounce rule satisfied
   }
-  if (Math.abs(ball.y) > 34 || Math.abs(ball.x) > 26) { // sailed away without bouncing in
+  if (S.bounces === 0 && (Math.abs(ball.y) > 34 || Math.abs(ball.x) > 26)) {
+    // sailed away without ever bouncing: an out. (A ball that already bounced
+    // in resolves at its second bounce instead.)
     return fault(S.lastHit, 'Out!');
   }
 }
@@ -275,11 +368,30 @@ function stepYou(dt) {
   you.y = clamp(you.y + you.vy * dt, 0.4, 24.2);
   you.runPh += Math.hypot(you.vx, you.vy) * dt * 1.6;
   you.swingT = Math.max(0, you.swingT - dt);
-  if (S.phase === 'pres' && S.server === 'you') { ball.x = you.x; ball.y = you.y; }
+  if (S.phase === 'pres' && S.server === 'you') { you.y = clamp(you.y, 22.6, 24.2); ball.x = you.x; ball.y = you.y; }
+  autoHitYou();
 }
 function ballReachable(me) {
   const sideOk = me.side === 'you' ? ball.y > -1.3 : ball.y < 1.3;
-  return ball.live && sideOk && ball.z < 7.4 && Math.hypot(ball.x - me.x, ball.y - me.y) < 2.75;
+  return ball.live && sideOk && ball.z < 7.4 && Math.hypot(ball.x - me.x, ball.y - me.y) < 3.4;
+}
+function mustWaitForBounce(who) {
+  return S.bounces === 0 && ((S.stage === 'serve' && S.server !== who) || (S.stage === 'returnFlight' && S.lastHit !== who));
+}
+// The paddle meets the ball on its own: if an incoming ball gets close and the
+// player hasn't swung, it connects automatically with a sensible shot —
+// unless hitting it would be a fault (kitchen volley / two-bounce pending).
+function autoHitYou() {
+  if (S.mode !== 'play' || S.phase !== 'flight' || !ball.live) return;
+  if (S.lastHit !== 'cpu' || S.autoUsed === S.flightId) return;
+  if (mustWaitForBounce('you')) return;
+  if (S.bounces === 0 && Math.abs(you.y) < COURT.KITCHEN) return;   // kitchen volley: your call, not the paddle's
+  const d = Math.hypot(ball.x - you.x, ball.y - you.y);
+  if (d > 2.15 || ball.z > 6.4 || ball.y < 0.2) return;
+  if (!(S.bounces >= 1 || ball.z < 3.4)) return;                    // let it arrive, don't snatch it high
+  S.autoUsed = S.flightId;
+  const kind = ball.z < 1.7 || Math.abs(ball.y) < 9 ? 'dink' : (you.y > 19 && Math.random() < 0.3 ? 'lob' : 'drive');
+  hitBall('you', kind);
 }
 function stepCpu(dt) {
   cpu.swingT = Math.max(0, cpu.swingT - dt);
@@ -304,14 +416,14 @@ function stepCpu(dt) {
     cpu.runPh += v * dt * 1.6;
   }
   cpu.y = clamp(cpu.y, -24.2, -0.4); cpu.x = clamp(cpu.x, -11.6, 11.6);
+  if (S.phase === 'pres' && S.server === 'cpu') cpu.y = clamp(cpu.y, -24.2, -22.6);
   // hit decision
   if (ballReachable(cpu)) {
     const land = predictLanding();
     const landingShort = land && Math.abs(land.y) < 9.5;
     const stretched = clamp((dist - 1.2) / 5, 0, 1);
-    cpu.aiQ = clamp(0.84 - stretched * 0.36 + rnd(-0.05, 0.05), 0.3, 0.95);
-    const mustWait = S.bounces === 0 && ((S.stage === 'serve' && S.server !== 'cpu') || (S.stage === 'returnFlight' && S.lastHit !== 'cpu'));
-    if (mustWait) return;                                 // respect two-bounce
+    cpu.aiQ = clamp(0.88 - stretched * 0.34 + rnd(-0.05, 0.05), 0.35, 0.96);
+    if (mustWaitForBounce('cpu')) return;                 // respect two-bounce
     let kind = 'drive';
     const r = Math.random();
     if (landingShort) kind = r < 0.6 ? 'dink' : 'drive';
@@ -396,6 +508,7 @@ window.addEventListener('keydown', (e) => {
   if (['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight', 'Space'].includes(e.code)) e.preventDefault();
   keys[e.code] = true; audio();
   if (e.repeat) return;
+  if (e.code === 'KeyM') { audio(); musicStart(); musicToggle(); return; }
   if (S.mode === 'play') {
     if (e.code === 'KeyZ') tryYouHit('drive');
     if (e.code === 'KeyX') tryYouHit('dink');
@@ -413,7 +526,7 @@ if (isTouchDevice()) {
 }
 
 function startMatch() {
-  audio();
+  audio(); musicStart();
   S.mode = 'play'; S.score.you = 0; S.score.cpu = 0; S.server = 'you'; S.phase = 'pres'; S.pointT = 0.4;
   updateScoreboard();
   $('menu').style.display = 'none';
@@ -421,6 +534,7 @@ function startMatch() {
   setMsg('FIRST TO 5', 'Your serve — Z drive · X dink · C lob', 1.5);
 }
 $('playBtn').addEventListener('click', startMatch);
+$('muteBtn').addEventListener('click', () => { audio(); musicStart(); musicToggle(); });
 
 /* ============================== projection ============================== */
 function proj(x, y, z = 0) {
@@ -564,12 +678,21 @@ function drawActor(a, idx) {
   for (const s of [-1, 1]) { ctx.beginPath(); ctx.arc(p.x + s * r * 0.3 + look, cy - r * 0.12, r * 0.13, 0, 6.29); ctx.fill(); }
   ctx.fillStyle = PAL.ink;
   for (const s of [-1, 1]) { ctx.beginPath(); ctx.arc(p.x + s * r * 0.3 + look * 1.5, cy - r * 0.12, r * 0.06, 0, 6.29); ctx.fill(); }
-  // paddle (swings when swingT active)
+  // paddle: auto-switches to the side the ball is on, and stretches to MEET
+  // a close ball (the contact point blends toward the ball itself)
   const sw = a.swingT > 0 ? Math.sin((0.26 - a.swingT) / 0.26 * Math.PI) : 0;
-  const side = idx === 0 ? 1 : -1;
-  const px = p.x + side * r * (1.02 + sw * 0.35), py = cy + r * 0.25 - sw * r * 0.5;
+  const want = ball.x >= a.x ? 1 : -1;
+  a.padSide = a.padSide === undefined ? want : a.padSide + (want - a.padSide) * 0.22;
+  const side = a.padSide;
+  let px = p.x + side * r * (1.02 + sw * 0.35), py = cy + r * 0.25 - sw * r * 0.5;
+  const bd = Math.hypot(ball.x - a.x, ball.y - a.y);
+  if (ball.live && bd < 5.2) {
+    const bp = proj(ball.x, ball.y, ball.z), k = (1 - bd / 5.2) * 0.72;
+    px += (bp.x - px) * k; py += (bp.y - py) * k;
+  }
+  const armX = p.x + side * r * 0.8, armY = cy + r * 0.3;
   ctx.strokeStyle = PAL.ink; ctx.lineWidth = 3;
-  ctx.beginPath(); ctx.moveTo(p.x + side * r * 0.8, cy + r * 0.3); ctx.lineTo(px, py); ctx.stroke();
+  ctx.beginPath(); ctx.moveTo(armX, armY); ctx.lineTo(px, py); ctx.stroke();
   ctx.save(); ctx.translate(px, py); ctx.rotate(side * (-0.5 + sw * 1.1));
   ctx.fillStyle = PAL.trim; ctx.strokeStyle = PAL.ink; ctx.lineWidth = 2;
   ctx.beginPath(); ctx.ellipse(0, -r * 0.28, r * 0.30, r * 0.40, 0, 0, 6.29); ctx.fill(); ctx.stroke();
@@ -638,17 +761,16 @@ if (new URLSearchParams(location.search).has('demo')) {
   setInterval(() => {
     if (S.mode !== 'play') return;
     const land = ball.live && S.lastHit === 'cpu' ? predictLanding() : null;
-    if (land && land.y > 0) { input.x = clamp((land.x - you.x) * 0.4, -1, 1); input.y = clamp((land.y - 1 - you.y) * 0.4, -1, 1); }
-    else { input.x = clamp((0 - you.x) * 0.2, -1, 1); input.y = clamp((15 - you.y) * 0.2, -1, 1); }
+    if (land && land.y > 0) { input.x = clamp((land.x - you.x) * 0.9, -1, 1); input.y = clamp((land.y - 1 - you.y) * 0.9, -1, 1); }
+    else { input.x = clamp((0 - you.x) * 0.5, -1, 1); input.y = clamp((15 - you.y) * 0.5, -1, 1); }
     if (S.phase === 'pres' && S.server === 'you') doServe('you', rnd(0.88, 0.98));
     else if (ballReachable(you)) {
-      const mustWait = S.bounces === 0 && ((S.stage === 'serve' && S.server !== 'you') || (S.stage === 'returnFlight' && S.lastHit !== 'you'));
-      if (!mustWait) hitBall('you', ['drive', 'dink', 'lob'][Math.floor(Math.random() * 3)]);
+      if (!mustWaitForBounce('you')) hitBall('you', ['drive', 'dink', 'lob'][Math.floor(Math.random() * 3)]);
     }
-  }, 90);
+  }, 30);
 }
 window.__dbg = {
-  get state() { return { mode: S.mode, phase: S.phase, stage: S.stage, server: S.server, score: { ...S.score }, ball: { ...ball }, you: { x: you.x, y: you.y }, cpu: { x: cpu.x, y: cpu.y } }; },
+  get state() { return { mode: S.mode, phase: S.phase, stage: S.stage, server: S.server, score: { ...S.score }, ball: { ...ball }, you: { x: you.x, y: you.y }, cpu: { x: cpu.x, y: cpu.y }, lastWhy: S.lastWhy || '' }; },
   start: startMatch,
 };
 requestAnimationFrame(frame);
