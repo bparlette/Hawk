@@ -54,6 +54,9 @@
     padding:4px 13px; font-size:13px; font-weight:700; }
   .hint b { color:#ffc93c; margin-right:5px; }
   @media (pointer:coarse) { #hints { display:none; } }
+  #muteBtn { position:fixed; top:10px; right:10px; z-index:2000; width:42px; height:42px; border-radius:50%;
+    background:rgba(58,20,8,.9); border:2.5px solid #ffc93c; font-size:19px; cursor:pointer; color:#fff6dd;
+    display:flex; align-items:center; justify-content:center; }
 </style>
 <style id="moth-game-guard">
 html,body{touch-action:none;overscroll-behavior:none;-webkit-touch-callout:none;-webkit-user-select:none;user-select:none;-webkit-tap-highlight-color:transparent}
@@ -103,6 +106,7 @@ canvas{touch-action:none}
     On touch: stick to move, gold buttons to hit.
   </div>
 </div>
+<button id="muteBtn" title="Music on/off (M)">🔊</button>
 <script type="module" src="./main.js"></script>
 <script id="moth-game-guard-js">
 (function(){
