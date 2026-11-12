@@ -121,3 +121,14 @@ pool-rimsit way), played on a crossfading sprite via the registered
 `cartopSprite` stage kind, the car built by the `cartopCar` kind in the same
 module (`cartop.js`): `?scene=cartop-dance`. The frames loop continuously —
 a new frame every ~4 ticks — over a dance bed, with a cheer at each loop start.
+
+**`club-stage` (added Nov 11, 2026, Moth):** the cartop dance moved indoors —
+the same 8-frame performance on a raised club stage instead of the car roof:
+deep-red curtain with drapes and a valance, three warm spot cones breathing
+over the stage pool, candlelit cocktail tables, and a dark audience (three on
+the front bench, two standing) between the camera and the stage. The same
+crossfading sprite via the registered `clubSprite` stage kind, the room built
+by the `clubRoom` / `clubTable` / `clubBench` kinds in the same module
+(`clubstage.js`): `?scene=club-stage`. Same dance timing as cartop-dance — a
+new frame every ~4 ticks — over a dance bed, with cheers at the loop start and
+mid-loop.
