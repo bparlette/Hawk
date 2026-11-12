@@ -432,9 +432,11 @@ function pokeSceneBtn() {
   if (sceneBtn.style.display === 'none') return;
   sceneBtn.style.opacity = '1'; sceneBtn.style.pointerEvents = 'auto';
   clearTimeout(btnFadeT);
-  btnFadeT = setTimeout(() => { sceneBtn.style.opacity = '0'; sceneBtn.style.pointerEvents = 'none'; }, 2600);
+  btnFadeT = setTimeout(() => { sceneBtn.style.opacity = '0'; sceneBtn.style.pointerEvents = 'none'; }, 4000);
 }
 addEventListener('pointerdown', pokeSceneBtn, { passive: true });
+addEventListener('touchstart', pokeSceneBtn, { passive: true });
+addEventListener('click', pokeSceneBtn, { passive: true });
 function syncSceneBtn() {
   if (!SCENE_DEF || LOOP_SCENE || Q.get('hud') === '0') { sceneBtn.style.display = 'none'; clearTimeout(btnFadeT); sceneBtn.style.opacity = '1'; sceneBtn.style.pointerEvents = 'auto'; return; }
   sceneBtn.style.display = '';
