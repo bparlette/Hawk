@@ -777,6 +777,11 @@ function swapTo(k) {
 // --- input: gptouch (floating joystick + A/B), keyboard, scripted drive ---
 const touchUI = isTouchDevice() || q.has('touch');
 const tc = new TouchController({ force: touchUI });
+// Cherie Nov 12: the default A/B buttons did nothing a player would want
+// (A was never read; B only teleported her back to spawn). Remove them —
+// this page is stick-only.
+for (const id in tc._buttons) { tc._buttons[id].el.remove(); }
+tc._buttons = {};
 document.body.classList.add(touchUI ? 'touch-on' : 'touch-off');
 const keys = {};
 addEventListener('keydown', (e) => { keys[e.code] = true; });
