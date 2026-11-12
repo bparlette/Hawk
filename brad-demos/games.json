@@ -2554,6 +2554,14 @@
    "thumb": "thumbs/bonk-yard.png",
    "title": "La Grande Jatte — Living Painting",
    "url": "../games/grande-jatte/"
+  },
+  {
+   "category": "Viral Demos",
+   "desc": "Bruegel's Hunters in the Snow, alive — drag on the pond to skate",
+   "id": "hunters-snow",
+   "thumb": "thumbs/bonk-yard.png",
+   "title": "Hunters in the Snow — Living Painting",
+   "url": "../games/hunters-snow/"
   }
  ]
 }
