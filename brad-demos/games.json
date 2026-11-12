@@ -2586,6 +2586,14 @@
    "thumb": "thumbs/bonk-yard.png",
    "title": "LINKLE IN THE STARRY NIGHT — Painted Live",
    "url": "../games/linkle-starry/"
+  },
+  {
+   "category": "Viral Demos",
+   "desc": "The Painted Live plaza re-skinned as cubism — shard brushstrokes, ochre and slate facets, her green the only saturated colour. Same playable, new paint.",
+   "id": "cubism-plaza",
+   "thumb": "thumbs/bonk-yard.png",
+   "title": "CUBISM PLAZA — Painted Live",
+   "url": "../games/cubism-plaza/"
   }
  ]
 }
