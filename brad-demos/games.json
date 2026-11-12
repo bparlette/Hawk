@@ -2541,11 +2541,19 @@
   },
   {
    "category": "Viral Demos",
-   "desc": "The same painted plaza, but each camera angle is painted once and cached — only she repaints as she walks between zones. The A/B twin of Painted Live.",
-   "id": "oil-paint-plaza-once",
+   "desc": "The real Starry Night, alive — drag the sky, tap a star for a shooting star",
+   "id": "starry-night",
    "thumb": "thumbs/bonk-yard.png",
-   "title": "PAINTED PLAZA — Painted Once",
-   "url": "../games/oil-paint-plaza-once/"
+   "title": "The Starry Night — Living Painting",
+   "url": "../games/starry-night/"
+  },
+  {
+   "category": "Viral Demos",
+   "desc": "Seurat's Grande Jatte, alive — drag to sail the white boat, the girl runs, the dogs trot",
+   "id": "grande-jatte",
+   "thumb": "thumbs/bonk-yard.png",
+   "title": "La Grande Jatte — Living Painting",
+   "url": "../games/grande-jatte/"
   }
  ]
 }
