@@ -311,12 +311,18 @@ function deviceQuat(out, alphaDeg, betaDeg, gammaDeg) {
 }
 const _invRefQ = new THREE.Quaternion();
 const _targetQ = new THREE.Quaternion();
+const _relQ = new THREE.Quaternion();
+const MOTION_DEADBAND_RAD = 0.035;   // ~2 deg: hand tremor / sensor noise inside this cone = hold still
 function applyMotionCamera() {
   if (!camera || !baseCamQ || !MOTION.refQ) return false;
   if (performance.now() - MOTION.lastAt > 3000) { MOTION.ok = false; return false; }
   if (!MOTION.ok) return false;
   _invRefQ.copy(MOTION.refQ).invert();
-  _targetQ.copy(MOTION.devQ).multiply(_invRefQ).multiply(baseCamQ);
+  _relQ.copy(MOTION.devQ).multiply(_invRefQ);
+  // angle of the relative rotation from the calibration pose, via |w| (version-proof)
+  const ang = 2 * Math.acos(Math.min(1, Math.abs(_relQ.w)));
+  if (ang < MOTION_DEADBAND_RAD) _targetQ.copy(baseCamQ);
+  else _targetQ.copy(_relQ).multiply(baseCamQ);
   camera.quaternion.slerp(_targetQ, 0.16);
   return true;
 }
@@ -355,17 +361,27 @@ function updateLightMatch(t, dt) {
 
 /* ============================== parallax ============================== */
 let parX = 0, parY = 0, parTX = 0, parTY = 0;
+let parRefG = null, parRefB = null;   // gamma/beta at calibration: parallax is RELATIVE to how she holds the phone at start
 let lastOrientAt = -1e9;
 let mouseAt = -1e9, mouseTX = 0, mouseTY = 0;
+/* one parallax axis: deadzone (deg) around the calibration pose, then rescale, hard-bounded */
+function parAxis(delta, deadDeg, rangeDeg) {
+  const a = Math.abs(delta);
+  if (a < deadDeg) return 0;
+  return clamp(Math.sign(delta) * (a - deadDeg) / rangeDeg, -0.6, 0.6);
+}
 window.addEventListener('deviceorientation', (e) => {
   if (e.gamma == null && e.beta == null && e.alpha == null) return;
   lastOrientAt = performance.now();
-  parTX = clamp((e.gamma || 0) / 26, -1, 1);
-  parTY = clamp(((e.beta || 0) - 48) / 24, -1, 1);
   MOTION.ever = true; MOTION.ok = true; MOTION.lastAt = lastOrientAt;
   if (!MOTION.devQ) MOTION.devQ = new THREE.Quaternion();
   deviceQuat(MOTION.devQ, e.alpha || 0, e.beta || 0, e.gamma || 0);
-  if (MOTION.recal || !MOTION.refQ) { MOTION.refQ = MOTION.devQ.clone(); MOTION.recal = false; }
+  if (MOTION.recal || !MOTION.refQ) {
+    MOTION.refQ = MOTION.devQ.clone(); MOTION.recal = false;
+    parRefG = e.gamma || 0; parRefB = e.beta || 0;
+  }
+  parTX = parAxis((e.gamma || 0) - (parRefG || 0), 3, 22);
+  parTY = parAxis((e.beta || 0) - (parRefB || 0), 3, 20);
   hideMotionPill();
 }, true);
 window.addEventListener('pointermove', (e) => {
@@ -378,7 +394,7 @@ function updateParallax(t) {
   let tx, ty;
   if (performance.now() - mouseAt < 2500) { tx = mouseTX; ty = mouseTY; }
   else if (performance.now() - lastOrientAt < 3000) { tx = parTX; ty = parTY; }
-  else { tx = Math.sin(t * 0.00035) * 0.55; ty = Math.sin(t * 0.00027 + 1.7) * 0.30; }
+  else { tx = 0; ty = 0; }   // no live input: hold perfectly still (no idle sway/wander)
   parX += (tx - parX) * 0.055;
   parY += (ty - parY) * 0.055;
 }
@@ -973,6 +989,13 @@ window.__linkleAr = {
   get airT() { return AIR.t; },
   debugAir: () => ({ t: +AIR.t.toFixed(2), alt: +airAlt(AIR.t).toFixed(2), group: linkFig ? linkFig.group.position.toArray().map(v => +v.toFixed(2)) : null, visible: cuccos.filter(c => c.g.visible).length, phase: window.__linkleAr.airPhase }),
   height: () => modelHeight,
+  screenPos: () => {
+    if (!linkFig || !camera) return null;
+    const gp = linkFig.group.position;
+    _pv.set(gp.x, gp.y + LINK_HEIGHT * 0.55, gp.z).project(camera);
+    return [(_pv.x * 0.5 + 0.5) * W, (_pv.y * -0.5 + 0.5) * H];
+  },
+  par: () => ({ x: +parX.toFixed(3), y: +parY.toFixed(3), tx: +parTX.toFixed(3), ty: +parTY.toFixed(3) }),
   meshReport: () => {
     const out = [];
     linkFig.inner.traverse(o => {
