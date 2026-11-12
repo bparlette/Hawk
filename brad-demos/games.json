@@ -2570,6 +2570,14 @@
    "thumb": "thumbs/bonk-yard.png",
    "title": "Nighthawks — Living Painting",
    "url": "../games/nighthawks/"
+  },
+  {
+   "category": "Viral Demos",
+   "desc": "A paintbrush ninja brawler — every hit bursts into paint and the street keeps the splatter",
+   "id": "ink-ronin",
+   "thumb": "thumbs/bonk-yard.png",
+   "title": "INK RONIN — Paint Ninja Brawler",
+   "url": "../games/ink-ronin/"
   }
  ]
 }
