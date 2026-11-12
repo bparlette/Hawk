@@ -833,8 +833,8 @@ function drawHero() {
   ctx.save();
   if (H.invulnT > 0 && Math.floor(G.t * 14) % 2) ctx.globalAlpha = 0.45;
   const firing = G.t - H.lastShot < 0.22;
-  if (a && a.drawHero) a.drawHero(ctx, H.x, FLOOR - 42, 84, G.t, firing);
-  else stubHero(H.x, FLOOR - 42, 84, firing);
+  if (a && a.drawHero) a.drawHero(ctx, H.x, FLOOR - 42, 64, G.t, firing);
+  else stubHero(H.x, FLOOR - 42, 64, firing);
   ctx.restore();
   if (G.t - H.hitAt < 0.28) { ctx.fillStyle = 'rgba(255,60,80,.20)'; ctx.beginPath(); ctx.arc(H.x, FLOOR - 42, 46, 0, 7); ctx.fill(); }
   // magazine pips under the hero

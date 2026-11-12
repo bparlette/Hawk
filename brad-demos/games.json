@@ -2514,6 +2514,14 @@
    "thumb": "thumbs/bonk-yard.png",
    "title": "BIG DINKIN'!",
    "url": "../games/big-dinkin/"
+  },
+  {
+   "category": "Viral Demos",
+   "desc": "BALL x PIT-style pit survival: Verity, an icy buster-bot at the bottom of a frozen shaft, ricochets shots through grid formations of snow statue heads — catch to refire instantly, fuse orbs, clear 18 handcrafted pits.",
+   "id": "pitball-verity",
+   "thumb": "thumbs/pitball-verity.png",
+   "title": "PITBALL VERITY",
+   "url": "../games/pitball-verity/"
   }
  ]
 }
