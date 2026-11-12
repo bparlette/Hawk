@@ -45,7 +45,7 @@ export const LEVELS = [
         { type: 'splitter', fromSec: 150, weight: 2, hpMul: 0.9, speedMul: 0.95 },
       ],
       escalateEverySec: 30,
-      pressureMul: 1.0,
+      pressureMul: 1.5,
     },
     goal: { type: 'survive', target: 240 },
     intro: 'Verity drops into the Frost Shaft — the core glows far below, and the horde is already thawing.',
