@@ -95,8 +95,8 @@ scene.add(sky.group);
       void main() {
         float n = texture(tNoise, vWorld.xz / 9.0).r;
         float rad = length(vWorld.xz);
-        vec3 c = mix(vec3(0.5, 0.44, 0.35), vec3(0.57, 0.51, 0.41), n); // weathered stone, warm in the late light
-        c = mix(c, vec3(0.46, 0.43, 0.37), smoothstep(18.0, 42.0, rad)); // the town goes on, duller, past the plaza
+        vec3 c = mix(vec3(0.52, 0.37, 0.27), vec3(0.58, 0.42, 0.31), n); // terracotta base under the paving, warm in the late light
+        c = mix(c, vec3(0.47, 0.36, 0.28), smoothstep(18.0, 42.0, rad)); // the town goes on, duller, past the plaza
         outC = vec4(c * 0.92, 1.0);
       }`,
   });
@@ -121,16 +121,18 @@ void makeDab(inout Dab d) {
   vec3 P = vec3(xz.x, heightAt(xz), xz.y);
   float rad = length(xz);
   float lit = sunAt(P + vec3(0.0, 0.25, 0.0));
-  // two weathered stones in a coarse checker, and darker inlay rings round the fountain —
-  // realism values: grey-buff, low saturation, the checker a whisper rather than a shout
+  // two terracotta stones in a coarse checker, and darker inlay rings round the fountain —
+  // the ground is deliberately a different colour from the pale walls (Cherie's call, Nov 12:
+  // the buff paving washed out to the same cream as the houses); sunny terracotta keeps the
+  // warm day but gives the ground its own identity, the checker still a whisper
   float check = mod(floor(xz.x / 1.4) + floor(xz.y / 1.4), 2.0);
-  vec3 L = mix(vec3(0.88, 0.79, 0.62), vec3(0.81, 0.72, 0.55), check);
-  vec3 M = mix(vec3(0.64, 0.55, 0.42), vec3(0.57, 0.48, 0.37), check);
-  vec3 S = vec3(0.34, 0.29, 0.24);
+  vec3 L = mix(vec3(0.80, 0.57, 0.40), vec3(0.73, 0.50, 0.35), check);
+  vec3 M = mix(vec3(0.57, 0.39, 0.28), vec3(0.50, 0.34, 0.24), check);
+  vec3 S = vec3(0.31, 0.21, 0.16);
   vec3 c = paint3(L, M, S, lit, q.y);
   float band = smoothstep(0.32, 0.0, abs(rad - 6.4) - 0.16) + smoothstep(0.32, 0.0, abs(rad - 11.2) - 0.16);
   c = mix(c, c * vec3(0.74, 0.68, 0.66), clamp(band, 0.0, 1.0) * 0.85);
-  c = mix(c, paint3(vec3(0.87, 0.81, 0.68), vec3(0.71, 0.64, 0.51), S, lit, q.y), smoothstep(4.8, 3.2, rad)); // paler apron at the fountain
+  c = mix(c, paint3(vec3(0.85, 0.63, 0.46), vec3(0.64, 0.45, 0.32), S, lit, q.y), smoothstep(4.8, 3.2, rad)); // paler terracotta apron at the fountain
   c = mix(c, c * vec3(0.88, 0.86, 0.8), smoothstep(19.0, 40.0, rad)); // duller past the plaza's edge
   c = jitter(c, r.wzy, 0.16);
   vec2 radial = rad > 0.01 ? xz / rad : vec2(1.0, 0.0);
