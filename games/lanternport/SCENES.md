@@ -112,3 +112,12 @@ shoulder. Cherie's second 8-panel sheet, keyed + seat-line aligned into
 `assets/linkle-rimsit/rimsit_00..07.png`, played on a sprite in the same
 rooftop set via the registered `rimsitSprite` stage kind (`rimsit.js`):
 `?scene=pool-rimsit`. The look-back frames get the long holds.
+
+**`cartop-dance` (added Nov 11, 2026, Moth):** Juniper dances on the roof of a
+glossy red wedge car parked on the festival plaza, townsfolk cheering from the
+kerb — Cherie's 8-frame cartop sheet, keyed and flipped head-left into
+`assets/linkle-cartop/cartop_00..07.png` (drawn ground slab kept, the
+pool-rimsit way), played on a crossfading sprite via the registered
+`cartopSprite` stage kind, the car built by the `cartopCar` kind in the same
+module (`cartop.js`): `?scene=cartop-dance`. The frames loop continuously —
+a new frame every ~4 ticks — over a dance bed, with a cheer at each loop start.

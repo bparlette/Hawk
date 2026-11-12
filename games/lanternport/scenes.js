@@ -22,6 +22,7 @@ import { cuccoSwarm } from './cucco.js';
 import { ZELDA_SCENES } from './zelda.js';
 import { poolSurface } from './surface.js';
 import { poolRimsit } from './rimsit.js';
+import { cartopDance } from './cartop.js';
 
 export class SceneRunner {
   constructor(game, def) {
@@ -74,6 +75,6 @@ const stageTest = {
 };
 
 // Registry order = bookmark keys 1-8. The film scenes come first; the framework proof stays last.
-export const SCENES = [...FILM_SCENES, cuccoSwarm, stageTest, ...ZELDA_SCENES, poolSurface, poolRimsit];
+export const SCENES = [...FILM_SCENES, cuccoSwarm, stageTest, ...ZELDA_SCENES, poolSurface, poolRimsit, cartopDance];
 
 export function sceneById(id) { return SCENES.find((s) => s.id === id) || null; }
