@@ -2522,6 +2522,14 @@
    "thumb": "thumbs/pitball-verity.png",
    "title": "PITBALL VERITY",
    "url": "../games/pitball-verity/"
+  },
+  {
+   "category": "AR",
+   "desc": "Linkle in your room — browser AR plus Quick Look: tap her for a crossbow spin, or call the cucco airlift.",
+   "id": "linkle-blender",
+   "thumb": "thumbs/bonk-yard.png",
+   "title": "LINKLE — Cucco Airlift AR",
+   "url": "../games/linkle-blender/"
   }
  ]
 }
