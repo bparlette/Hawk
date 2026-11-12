@@ -124,6 +124,11 @@ window.addEventListener('pointerdown', e => {
 
 let TC = null;
 try { if (isTouchDevice()) TC = new TouchController({ buttons: [] }); } catch (e) { TC = null; }
+// Cherie Nov 12: the A/B buttons on this game did nothing — and they rendered
+// DESPITE buttons:[] because gptouch treats an empty list as "use the A/B
+// defaults". The game only reads the stick (x/y), so strip the button
+// elements for real; the floating stick stays.
+if (TC) { for (const id in TC._buttons) { TC._buttons[id].el.remove(); } TC._buttons = {}; }
 
 /* ============================================================================
    LEVEL GEOMETRY — built once per level from levels.js data.
