@@ -2562,6 +2562,14 @@
    "thumb": "thumbs/bonk-yard.png",
    "title": "Hunters in the Snow — Living Painting",
    "url": "../games/hunters-snow/"
+  },
+  {
+   "category": "Viral Demos",
+   "desc": "Hopper's Nighthawks, alive — tap a customer with an empty cup and the counterman pours",
+   "id": "nighthawks",
+   "thumb": "thumbs/bonk-yard.png",
+   "title": "Nighthawks — Living Painting",
+   "url": "../games/nighthawks/"
   }
  ]
 }
