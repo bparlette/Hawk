@@ -1,0 +1,869 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>INK RONIN — paint the street!</title>
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+<style>
+  html, body { margin:0; padding:0; height:100%; background:#141430; overflow:hidden; }
+  #game { position:fixed; inset:0; display:block; touch-action:none; }
+</style>
+<script id="moth-game-guard">
+(function(){
+  var lastEnd=0;
+  function onUi(t){return t&&t.closest&&t.closest('button,a,input,select,textarea,[data-scroll]');}
+  document.addEventListener('touchend',function(e){
+    var now=Date.now();
+    if(!onUi(e.target)&&now-lastEnd<=300&&e.cancelable)e.preventDefault();
+    lastEnd=now;
+  },{passive:false});
+  ['gesturestart','gesturechange','gestureend'].forEach(function(n){
+    document.addEventListener(n,function(e){e.preventDefault();});
+  });
+  document.addEventListener('dblclick',function(e){e.preventDefault();},{passive:false});
+  document.addEventListener('contextmenu',function(e){e.preventDefault();});
+  document.addEventListener('touchmove',function(e){
+    if(e.target&&e.target.closest&&e.target.closest('[data-scroll]'))return;
+    if(e.cancelable)e.preventDefault();
+  },{passive:false});
+})();
+</script>
+</head>
+<body>
+<canvas id="game"></canvas>
+<script type="module">
+let TC = null;
+try {
+  const m = await import('./gptouch.js');
+  if (m.isTouchDevice()) TC = new m.TouchController({ buttons: [ { id:'a', label:'A' }, { id:'b', label:'B' } ] });
+} catch (e) { /* keyboard-only fallback */ }
+
+// ---------------------------------------------------------------- setup
+const cv = document.getElementById('game');
+const ctx = cv.getContext('2d');
+let CW = 0, CH = 0, SCALE = 1;               // canvas css size + logical scale
+let VW = 780;                                // logical units visible across the width (set in resize)
+let LH = 540, HORIZON = 300;                 // logical visible height + horizon y (per-frame)
+function resize() {
+  const dpr = Math.min(window.devicePixelRatio || 1, 2);
+  CW = window.innerWidth; CH = window.innerHeight;
+  cv.width = Math.round(CW * dpr); cv.height = Math.round(CH * dpr);
+  cv.style.width = CW + 'px'; cv.style.height = CH + 'px';
+  // Keep the logical height near 740 so sprites stay big and readable in
+  // portrait (fit-width alone would shrink the cast to thumbnails); the
+  // visible street width adapts to the aspect instead.
+  VW = Math.max(340, Math.min(1300, (CW / CH) * 740));
+  SCALE = (CW / VW) * dpr;                   // device px per logical unit
+  LH = CH / (CW / VW);
+  HORIZON = Math.round(LH * 0.54);
+}
+window.addEventListener('resize', resize);
+resize();
+
+// ---------------------------------------------------------------- utils
+const clamp = (v, a, b) => v < a ? a : v > b ? b : v;
+const rnd = (a = 1, b) => b === undefined ? Math.random() * a : a + Math.random() * (b - a);
+const irnd = (a, b) => Math.floor(rnd(a, b + 1));
+function shade(hex, f) { // f<1 darken, f>1 lighten
+  const n = parseInt(hex.slice(1), 16);
+  let r = (n >> 16) & 255, g = (n >> 8) & 255, b = n & 255;
+  if (f < 1) { r *= f; g *= f; b *= f; } else { r += (255 - r) * (f - 1); g += (255 - g) * (f - 1); b += (255 - b) * (f - 1); }
+  return `rgb(${r|0},${g|0},${b|0})`;
+}
+let seed = 7;
+function srand() { seed = (seed * 16807) % 2147483647; return (seed - 1) / 2147483646; }
+
+// ---------------------------------------------------------------- palette
+const PAL = {
+  skyTop:'#171c48', skyMid:'#2c3670', skyLow:'#6e3560', dusk:'#b84a52',
+  moon:'#f7e3ac', roofFar:'#232550', roofMid:'#2e2a55', wallA:'#4a3560', wallB:'#5d3a52',
+  wallC:'#3c4468', winLit:'#ffd98a', winDark:'#241f3d', lantern:'#ffca66', lanternHot:'#fff0bc',
+  ground:'#262340', stone:'#3d3a5e', stoneHi:'#55507a', teal:'#17657a', tealDk:'#0f4356',
+  hero:'#31439f', heroDk:'#212c6e', heroLt:'#4a5cc0', skin:'#f2c094', white:'#f5efe2',
+  gold:'#f5b942', wood:'#6e4526', paint:'#e8382f', paintDk:'#b81f24', paintLt:'#ff6a55',
+  ink:'#12121e', inkHi:'#3a3f58', brute:'#c9cdd6', bruteDk:'#8f95a5', heart:'#ff4457',
+};
+
+// ------------------------------------------------------- dab sprite factory
+// A "dab" is a small offscreen canvas: an ellipse of bristle streaks in one
+// colour, so everything drawn from dabs reads as brushwork, not vector art.
+const dabCache = new Map();
+function dab(color, w, h, variant = 0) {
+  w = Math.max(4, Math.round(w / 4) * 4); h = Math.max(3, Math.round(h / 4) * 4);
+  const key = color + '|' + w + '|' + h + '|' + variant;
+  let c = dabCache.get(key);
+  if (c) return c;
+  c = document.createElement('canvas');
+  const pad = 3;
+  c.width = w + pad * 2; c.height = h + pad * 2;
+  const g = c.getContext('2d');
+  const oldSeed = seed; seed = 1234 + variant * 977 + w * 31 + h * 7;
+  g.save();
+  g.translate(pad + w / 2, pad + h / 2);
+  g.beginPath(); g.ellipse(0, 0, w / 2, h / 2, 0, 0, Math.PI * 2); g.clip();
+  g.fillStyle = color; g.fillRect(-w / 2, -h / 2, w, h);
+  const streaks = Math.max(5, (w * h) / 90);
+  for (let i = 0; i < streaks; i++) {
+    const y = (srand() - 0.5) * h * 0.92;
+    const span = Math.sqrt(Math.max(0, 1 - (2 * y / h) * (2 * y / h))) * w;
+    const x0 = -span / 2 + srand() * span * 0.25;
+    g.strokeStyle = shade(color, 0.82 + srand() * 0.42);
+    g.lineWidth = 0.8 + srand() * Math.max(1.2, h / 7);
+    g.globalAlpha = 0.25 + srand() * 0.4;
+    g.beginPath(); g.moveTo(x0, y); g.lineTo(x0 + span * (0.55 + srand() * 0.45), y + (srand() - 0.5) * 2.5); g.stroke();
+  }
+  // bristle gaps
+  g.globalCompositeOperation = 'destination-out';
+  for (let i = 0; i < streaks / 3; i++) {
+    const y = (srand() - 0.5) * h * 0.9;
+    g.strokeStyle = 'rgba(0,0,0,0.5)'; g.globalAlpha = 0.10 + srand() * 0.12;
+    g.lineWidth = 0.7 + srand() * 1.1;
+    g.beginPath(); g.moveTo(-w / 2, y); g.lineTo(w / 2, y + (srand() - 0.5) * 2); g.stroke();
+  }
+  g.restore();
+  seed = oldSeed;
+  dabCache.set(key, c);
+  return c;
+}
+// draw a dab centred at (x,y) in logical units (ctx already scaled)
+function PD(x, y, w, h, color, rot = 0, alpha = 1, variant = 0) {
+  const img = dab(color, w, h, variant);
+  ctx.save();
+  ctx.translate(x, y); ctx.rotate(rot); ctx.globalAlpha = alpha;
+  ctx.drawImage(img, -img.width / 2, -img.height / 2);
+  ctx.restore();
+}
+function glow(x, y, r, color, alpha) {
+  const gr = ctx.createRadialGradient(x, y, 0, x, y, r);
+  gr.addColorStop(0, color); gr.addColorStop(1, 'rgba(0,0,0,0)');
+  ctx.save(); ctx.globalAlpha = alpha; ctx.fillStyle = gr;
+  ctx.fillRect(x - r, y - r, r * 2, r * 2); ctx.restore();
+}
+
+// ------------------------------------------------------- world constants
+const WORLD_W = 3600;
+const LANE0 = 84, LANEH = 116;               // feet y = HORIZON + LANE0 + lane (0..LANEH)
+const feetY = (lane, jumpH = 0) => HORIZON + LANE0 + lane - jumpH;
+
+// ------------------------------------------------------- pre-rendered layers
+function layerCanvas(w, h) { const c = document.createElement('canvas'); c.width = w; c.height = h; return c; }
+const withCtx = (c, fn) => { const g = c.getContext('2d'); fn(g); return c; };
+
+// FAR: indigo sky, moon, far rooftops (tiled, parallax 0.25) — 1600x620
+const farCv = withCtx(layerCanvas(1600, 620), (g) => {
+  const grad = g.createLinearGradient(0, 0, 0, 620);
+  grad.addColorStop(0, PAL.skyTop); grad.addColorStop(0.55, PAL.skyMid);
+  grad.addColorStop(0.85, PAL.skyLow); grad.addColorStop(1, PAL.dusk);
+  g.fillStyle = grad; g.fillRect(0, 0, 1600, 620);
+  seed = 42;
+  for (let i = 0; i < 900; i++) { // sky dab texture
+    const x = srand() * 1600, y = srand() * 430, w = 22 + srand() * 60;
+    g.globalAlpha = 0.05 + srand() * 0.08;
+    g.drawImage(dab(srand() > 0.5 ? PAL.skyMid : PAL.skyLow, w, w * 0.32, irnd(0, 2)), x, y);
+  }
+  g.globalAlpha = 1;
+  // moon + halo
+  const mg = g.createRadialGradient(1240, 130, 10, 1240, 130, 190);
+  mg.addColorStop(0, 'rgba(247,227,172,0.5)'); mg.addColorStop(1, 'rgba(247,227,172,0)');
+  g.fillStyle = mg; g.fillRect(1030, -60, 420, 400);
+  g.fillStyle = PAL.moon; g.beginPath(); g.arc(1240, 130, 56, 0, Math.PI * 2); g.fill();
+  g.globalAlpha = 0.25; g.drawImage(dab(PAL.dusk, 90, 40, 1), 1180, 96); g.globalAlpha = 1;
+  // far rooftops silhouette along the bottom
+  let x = -20;
+  while (x < 1620) {
+    const bw = 90 + srand() * 150, bh = 60 + srand() * 110, by = 620 - bh;
+    g.globalAlpha = 0.9; g.drawImage(dab(PAL.roofFar, bw, bh, irnd(0, 2)), x, by - 6);
+    g.globalAlpha = 1;
+    g.fillStyle = PAL.roofFar; // gable
+    g.beginPath(); g.moveTo(x - 4, by + 4); g.lineTo(x + bw / 2, by - 26 - srand() * 22); g.lineTo(x + bw + 4, by + 4); g.fill();
+    x += bw + 6 + srand() * 40;
+  }
+});
+
+// MID: shopfronts + lanterns (parallax 0.6 space, 2200 wide, bottom-aligned to ground line)
+const MID_W = 2200, MID_H = 400;
+const midCv = withCtx(layerCanvas(MID_W, MID_H), (g) => {
+  seed = 99;
+  let x = -10;
+  const base = MID_H; // bottom of canvas sits at HORIZON+LANE0 in view space
+  while (x < MID_W + 40) {
+    const bw = 150 + srand() * 130, bh = 190 + srand() * 120, top = base - bh;
+    const wall = [PAL.wallA, PAL.wallB, PAL.wallC][irnd(0, 2)];
+    for (let yy = top; yy < base; yy += 26) g.drawImage(dab(wall, bw, 30, irnd(0, 2)), x, yy);
+    // roof lip + tiles
+    g.fillStyle = PAL.roofMid; g.fillRect(x - 6, top - 12, bw + 12, 16);
+    for (let xx = x - 4; xx < x + bw + 4; xx += 18) g.drawImage(dab(PAL.roofMid, 20, 10, irnd(0, 2)), xx, top - 16);
+    // windows
+    const cols = Math.max(1, Math.floor(bw / 64));
+    for (let cx = 0; cx < cols; cx++) for (let ry = 0; ry < 2; ry++) {
+      const wx = x + 22 + cx * 62, wy = top + 34 + ry * 72;
+      const lit = srand() > 0.42;
+      g.fillStyle = lit ? PAL.winLit : PAL.winDark;
+      g.fillRect(wx, wy, 34, 46);
+      g.globalAlpha = 0.5; g.drawImage(dab(lit ? PAL.lantern : PAL.roofFar, 36, 48, 1), wx - 1, wy - 1); g.globalAlpha = 1;
+      g.fillStyle = 'rgba(20,16,40,0.85)'; g.fillRect(wx + 15, wy, 3, 46); g.fillRect(wx, wy + 21, 34, 3);
+      if (lit) { const lg = g.createRadialGradient(wx + 17, wy + 23, 2, wx + 17, wy + 23, 52); lg.addColorStop(0, 'rgba(255,205,110,0.28)'); lg.addColorStop(1, 'rgba(255,205,110,0)'); g.fillStyle = lg; g.fillRect(wx - 35, wy - 29, 104, 104); }
+    }
+    // shopfront awning (some shops only) + doorway at ground level
+    if (srand() > 0.45) { g.globalAlpha = 0.85; g.drawImage(dab(PAL.paintDk, bw * 0.46, 16, 2), x + bw * 0.1, base - 72); g.globalAlpha = 1; }
+    g.fillStyle = PAL.winDark; g.fillRect(x + bw * 0.36, base - 58, 44, 58);
+    x += bw + 4 + srand() * 26;
+  }
+  // hanging lanterns row
+  for (let lx = 40; lx < MID_W; lx += 150 + srand() * 90) {
+    const ly = base - 128 - srand() * 40;
+    g.strokeStyle = 'rgba(15,12,30,0.9)'; g.lineWidth = 3;
+    g.beginPath(); g.moveTo(lx, ly - 46); g.lineTo(lx, ly - 12); g.stroke();
+    const lg = g.createRadialGradient(lx, ly, 2, lx, ly, 66);
+    lg.addColorStop(0, 'rgba(255,210,120,0.55)'); lg.addColorStop(1, 'rgba(255,210,120,0)');
+    g.fillStyle = lg; g.fillRect(lx - 66, ly - 66, 132, 132);
+    g.drawImage(dab(PAL.lantern, 22, 30, 1), lx - 11, ly - 15);
+    g.fillStyle = PAL.lanternHot; g.fillRect(lx - 4, ly - 8, 8, 14);
+  }
+});
+
+// GROUND strip (world space, parallax 1) — stone dabs
+const groundCv = withCtx(layerCanvas(WORLD_W, 300), (g) => {
+  seed = 1234;
+  for (let yy = 0; yy < 300; yy += 15) for (let xx = -30; xx < WORLD_W + 30; xx += 52) {
+    const r = srand();
+    const c = r < 0.42 ? PAL.ground : r < 0.78 ? PAL.stone : r < 0.93 ? PAL.tealDk : PAL.stoneHi;
+    g.save();
+    g.translate(xx + (yy % 30 === 0 ? 0 : 24), yy + (srand() - 0.5) * 7);
+    g.rotate((srand() - 0.5) * 0.13);
+    g.globalAlpha = 0.88 + srand() * 0.12;
+    const img = dab(c, 62 + srand() * 34, 13 + srand() * 7, irnd(0, 2));
+    g.drawImage(img, -img.width / 2, -img.height / 2);
+    g.restore();
+  }
+  g.globalAlpha = 1;
+  // a painted centre-line of worn gold dashes, like a festival street
+  for (let xx = 30; xx < WORLD_W; xx += 120) { g.globalAlpha = 0.16; g.drawImage(dab(PAL.gold, 62, 9, 0), xx, 128); }
+  g.globalAlpha = 1;
+});
+
+// SPLAT layer (world space): every fight leaves permanent paint here
+const splatCv = layerCanvas(WORLD_W, 320);
+const splatCtx = splatCv.getContext('2d');
+let splatCount = 0;
+function addSplat(wx, dy, color, size) {
+  if (wx < 6 || wx > WORLD_W - 6) return;
+  const g = splatCtx;
+  const n = irnd(2, 4);
+  for (let i = 0; i < n; i++) {
+    g.globalAlpha = 0.55 + Math.random() * 0.4;
+    g.drawImage(dab(color, size * rnd(0.5, 1.15), size * rnd(0.3, 0.55), irnd(0, 2)),
+      wx + rnd(-size, size) - size / 2, dy + rnd(-7, 7) - size / 4);
+  }
+  // drips / satellite dots
+  for (let i = 0; i < 3; i++) {
+    g.globalAlpha = 0.7;
+    g.drawImage(dab(color, rnd(3, 8), rnd(2, 5), 1), wx + rnd(-size * 1.7, size * 1.7), dy + rnd(-10, 12));
+  }
+  g.globalAlpha = 1;
+  splatCount++;
+}
+
+// ---------------------------------------------------------------- input
+const keys = {};
+const keyEdge = {};
+window.addEventListener('keydown', (e) => {
+  if (['ArrowLeft','ArrowRight','ArrowUp','ArrowDown','Space'].includes(e.code)) e.preventDefault();
+  if (!e.repeat) keyEdge[e.code] = true;
+  keys[e.code] = true;
+  anyInput();
+});
+window.addEventListener('keyup', (e) => { keys[e.code] = false; });
+let tapFlag = false;
+window.addEventListener('pointerdown', () => { tapFlag = true; anyInput(); });
+function anyInput() {
+  if (G.state === 'title') startGame();
+  else if ((G.state === 'win' || G.state === 'over') && G.stateT > 0.6) resetGame();
+}
+function readInput() {
+  const ti = TC ? TC.getInput() : null;
+  let mx = 0, my = 0;
+  if (ti) { mx += ti.x; my += ti.y; }
+  if (keys.ArrowLeft || keys.KeyA) mx -= 1;
+  if (keys.ArrowRight || keys.KeyD) mx += 1;
+  if (keys.ArrowUp || keys.KeyW) my -= 1;
+  if (keys.ArrowDown || keys.KeyS) my += 1;
+  const slash = (ti && ti.aPressed) || keyEdge.KeyJ || keyEdge.KeyZ || keyEdge.KeyX;
+  const jump = (ti && ti.bPressed) || keyEdge.KeyK || keyEdge.Space;
+  for (const k in keyEdge) keyEdge[k] = false;
+  return { mx: clamp(mx, -1, 1), my: clamp(my, -1, 1), slash: !!slash, jump: !!jump };
+}
+
+// ---------------------------------------------------------------- state
+const G = {
+  state: 'title', stateT: 0, time: 0, score: 0, camX: 0, shakeT: 0,
+  gate: 0, locked: false, goT: 0, finishT: 0, slowmo: 1,
+};
+const DEMO = new URLSearchParams(location.search).get('demo') === '1';
+const hero = {
+  x: 120, lane: 55, face: 1, jumpH: 0, vy: 0, hp: 5, maxHp: 5,
+  run: 0, slashT: 0, combo: 0, comboWin: 0, hurtT: 0, ifr: 0, dead: false,
+};
+let enemies = [], particles = [], arcs = [], puddles = [], popups = [], projectiles = [];
+const GATES = [
+  { x: 820, n: 3, brute: false },
+  { x: 1620, n: 4, brute: false },
+  { x: 2420, n: 5, brute: false },
+  { x: 3180, n: 2, brute: true },
+];
+let waveSpawned = false, waveLeft = 0;
+
+function resetGame() {
+  hero.x = 120; hero.lane = 55; hero.face = 1; hero.jumpH = 0; hero.vy = 0;
+  hero.hp = hero.maxHp; hero.slashT = 0; hero.combo = 0; hero.hurtT = 0; hero.ifr = 0; hero.dead = false;
+  enemies = []; particles = []; arcs = []; puddles = []; popups = []; projectiles = [];
+  G.score = 0; G.camX = 0; G.gate = 0; G.locked = false; G.goT = 0; G.stateT = 0;
+  waveSpawned = false; waveLeft = 0;
+  splatCtx.clearRect(0, 0, WORLD_W, 320); splatCount = 0;
+  G.state = 'play';
+}
+function startGame() { if (G.state === 'title') { G.state = 'play'; G.stateT = 0; } }
+
+// ---------------------------------------------------------------- enemies
+let enemySeq = 0;
+function spawnSoldier(x, lane) {
+  enemies.push({
+    id: enemySeq++, kind: 'ink', x, lane, hp: 3, maxHp: 3, face: -1,
+    t: rnd(10), speed: rnd(50, 66), state: 'walk', atkT: 0, windup: 0, hurtT: 0, kb: 0, dead: false,
+  });
+}
+function spawnBrute(x, lane) {
+  enemies.push({
+    id: enemySeq++, kind: 'brute', x, lane, hp: 14, maxHp: 14, face: -1,
+    t: 0, speed: 34, state: 'walk', atkT: 0, windup: 0, hurtT: 0, kb: 0, dead: false, squeezeT: 2.2,
+  });
+}
+function spawnWave(gi) {
+  const gt = GATES[gi];
+  for (let i = 0; i < gt.n; i++) spawnSoldier(gt.x + 168 + i * 72, irnd(8, LANEH - 8));
+  if (gt.brute) spawnBrute(gt.x + 215, 55);
+  waveSpawned = true;
+  waveLeft = enemies.length;
+}
+
+// ---------------------------------------------------------------- paint fx
+function burst(x, lane, jumpH, color, n, power = 1) {
+  const fy = feetY(lane, jumpH);
+  for (let i = 0; i < n; i++) {
+    particles.push({
+      x: x + rnd(-14, 14), y: fy - rnd(10, 66) * power, z: 0,
+      vx: rnd(-190, 190) * power, vz: rnd(90, 330) * power,
+      laneDy: LANE0 + lane + rnd(-16, 20), color: Math.random() < 0.75 ? color : PAL.paint,
+      size: rnd(7, 17) * power, v: irnd(0, 2), noSplat: color === PAL.stone,
+    });
+  }
+}
+function spawnArc(x, y, face, step, color) {
+  arcs.push({ x, y, face, step, t: 0, life: step === 2 ? 0.34 : 0.24, color });
+}
+function popup(x, y, txt, color = PAL.gold) { popups.push({ x, y, txt, color, t: 0 }); }
+
+// ---------------------------------------------------------------- combat
+function heroSlash() {
+  if (hero.slashT > 0 || hero.dead) return;
+  const step = hero.comboWin > 0 ? Math.min(hero.combo + 1, 2) : 0;
+  hero.combo = step;
+  hero.slashT = 0.22;
+  hero.comboWin = 0.42;
+  const finisher = step === 2;
+  spawnArc(hero.x + hero.face * 44, feetY(hero.lane, hero.jumpH) - 52, hero.face, step, PAL.paint);
+  if (finisher) { G.finishT = 0.45; G.shakeT = Math.max(G.shakeT, 0.22); }
+  const range = finisher ? 245 : 104;
+  const dmg = finisher ? 2 : 1;
+  let hitAny = false;
+  for (const e of enemies) {
+    if (e.dead) continue;
+    const dx = (e.x - hero.x) * hero.face;
+    if (dx > -14 && dx < range && Math.abs(e.lane - hero.lane) < 52) {
+      damageEnemy(e, dmg, hero.face, finisher);
+      hitAny = true;
+    }
+  }
+  if (hitAny) G.score += finisher ? 15 : 10;
+}
+function damageEnemy(e, dmg, dir, finisher) {
+  e.hp -= dmg; e.hurtT = 0.16;
+  e.kb = dir * (e.kind === 'brute' ? 26 : finisher ? 190 : 110);
+  const col = e.kind === 'brute' ? PAL.paint : PAL.ink;
+  burst(e.x, e.lane, 0, col, finisher ? 18 : 11, e.kind === 'brute' ? 1.25 : 1);
+  popup(e.x, feetY(e.lane) - (e.kind === 'brute' ? 190 : 92), finisher ? 'SPLAT!' : 'HIT!', finisher ? PAL.paintLt : PAL.white);
+  if (e.hp <= 0 && !e.dead) {
+    e.dead = true;
+    G.score += e.kind === 'brute' ? 300 : 50;
+    burst(e.x, e.lane, 0, col, 30, e.kind === 'brute' ? 1.7 : 1.25);
+    for (let i = 0; i < 5; i++) addSplat(e.x + rnd(-46, 46), LANE0 + e.lane + rnd(-14, 22), col, rnd(16, 30));
+    popup(e.x, feetY(e.lane) - 110, e.kind === 'brute' ? '+300' : '+50', PAL.gold);
+    if (e.kind === 'brute') G.shakeT = Math.max(G.shakeT, 0.3);
+  }
+}
+function hurtHero(dir) {
+  if (hero.ifr > 0 || hero.dead) return;
+  hero.hp--; hero.ifr = 1.0; hero.hurtT = 0.3;
+  hero.x += dir * 26;
+  burst(hero.x, hero.lane, hero.jumpH, PAL.paint, 8, 0.8);
+  if (hero.hp <= 0) { hero.dead = true; G.state = 'over'; G.stateT = 0; burst(hero.x, hero.lane, 0, PAL.hero, 26, 1.3); }
+}
+
+// ---------------------------------------------------------------- demo AI
+function demoInput(dt) {
+  const out = { mx: 0, my: 0, slash: false, jump: false };
+  if (G.state === 'title') { startGame(); return out; }
+  if (G.state !== 'play') return out;
+  let tgt = null, best = 1e9;
+  for (const e of enemies) { if (!e.dead && Math.abs(e.x - hero.x) < best) { best = Math.abs(e.x - hero.x); tgt = e; } }
+  const goalX = tgt ? tgt.x - hero.face * 6 : (G.locked ? hero.x : Math.min(hero.x + 300, WORLD_W - 120));
+  const gx = tgt ? tgt.x : goalX;
+  const dx = gx - hero.x;
+  if (tgt && Math.abs(dx) < 100 && Math.abs(tgt.lane - hero.lane) <= 22 && hero.slashT <= 0) {
+    hero.face = Math.sign(tgt.x - hero.x) || 1;
+    out.slash = true;
+  } else if (Math.abs(dx) > 58) out.mx = Math.sign(dx);
+  else if (tgt) {
+    hero.face = Math.sign(tgt.x - hero.x) || 1;
+    if (Math.abs(tgt.lane - hero.lane) > 20) out.my = Math.sign(tgt.lane - hero.lane);
+    else if (hero.slashT <= 0) out.slash = true;
+  }
+  if (tgt && Math.abs(tgt.lane - hero.lane) > 22) out.my = Math.sign(tgt.lane - hero.lane);
+  if (Math.random() < dt * 0.25 && hero.jumpH === 0) out.jump = true;
+  for (const p of puddles) if (Math.abs(p.x - hero.x) < 50 && Math.abs(p.lane - hero.lane) < 30) out.my = hero.lane < 60 ? 1 : -1;
+  return out;
+}
+
+// ---------------------------------------------------------------- update
+function update(dt) {
+  G.time += dt; G.stateT += dt;
+  if (G.shakeT > 0) G.shakeT -= dt;
+  if (G.finishT > 0) G.finishT -= dt;
+  if (G.goT > 0) G.goT -= dt;
+  const inp = DEMO ? demoInput(dt) : (G.state === 'play' ? readInput() : { mx: 0, my: 0, slash: false, jump: false });
+  hero.moving = G.state === 'play' && (Math.abs(inp.mx) > 0.05 || Math.abs(inp.my) > 0.05);
+  if (G.state !== 'play') { updateFx(dt); return; }
+
+  // hero timers
+  if (hero.slashT > 0) hero.slashT -= dt;
+  if (hero.comboWin > 0) { hero.comboWin -= dt; if (hero.comboWin <= 0) hero.combo = 0; }
+  if (hero.hurtT > 0) hero.hurtT -= dt;
+  if (hero.ifr > 0) hero.ifr -= dt;
+
+  // movement (puddles slow)
+  let slow = 1;
+  for (const p of puddles) if (Math.abs(p.x - hero.x) < p.r && Math.abs(p.lane - hero.lane) < 34 && hero.jumpH === 0) slow = 0.45;
+  const spd = 242 * slow;
+  if (inp.mx) { hero.face = Math.sign(inp.mx); hero.x += inp.mx * spd * dt; hero.run += dt * Math.abs(inp.mx) * 11; }
+  if (inp.my) hero.lane = clamp(hero.lane + inp.my * 168 * slow * dt, 0, LANEH);
+  if (inp.jump && hero.jumpH === 0) hero.vy = -660;
+  if (hero.jumpH > 0 || hero.vy < 0) {
+    hero.jumpH -= hero.vy * dt; hero.vy += 1750 * dt;
+    if (hero.jumpH <= 0) { hero.jumpH = 0; hero.vy = 0; burst(hero.x, hero.lane, 0, PAL.stone, 4, 0.5); }
+  }
+  if (inp.slash) heroSlash();
+
+  // gates & waves
+  const gt = GATES[G.gate];
+  if (gt && !waveSpawned && hero.x > gt.x - VW * 0.42) { spawnWave(G.gate); G.locked = true; }
+  if (G.locked) {
+    hero.x = clamp(hero.x, G.camX + 36, G.camX + VW - 46);
+    if (waveSpawned && enemies.every((e) => e.dead)) {
+      enemies = enemies.filter((e) => !e.dead);
+      G.locked = false; waveSpawned = false; G.gate++; G.goT = 2.2;
+      if (G.gate >= GATES.length) { G.state = 'win'; G.stateT = 0; }
+    }
+  }
+  hero.x = clamp(hero.x, 26, WORLD_W - 30);
+
+  // enemies
+  for (const e of enemies) {
+    if (e.dead) continue;
+    e.t += dt;
+    if (e.hurtT > 0) e.hurtT -= dt;
+    if (e.kb) { e.x += e.kb * dt * 6; e.kb *= Math.pow(0.0018, dt); if (Math.abs(e.kb) < 4) e.kb = 0; }
+    const dx = hero.x - e.x, adx = Math.abs(dx), dl = hero.lane - e.lane;
+    e.face = dx >= 0 ? 1 : -1;
+    if (e.state === 'walk') {
+      if (adx > 30) e.x += Math.sign(dx) * e.speed * dt;
+      if (Math.abs(dl) > 8) e.lane += clamp(dl, -1, 1) * 34 * dt;
+      e.lane = clamp(e.lane, 0, LANEH);
+      const range = e.kind === 'brute' ? 66 : 50;
+      if (adx < range && Math.abs(dl) < 34 && hero.jumpH < 42) { e.state = 'windup'; e.windup = e.kind === 'brute' ? 0.42 : 0.34; }
+    } else if (e.state === 'windup') {
+      e.windup -= dt;
+      if (e.windup <= 0) {
+        e.state = 'swipe'; e.atkT = 0.16;
+        const range = e.kind === 'brute' ? 104 : 64;
+        if (Math.abs(hero.x - e.x) < range && Math.abs(hero.lane - e.lane) < 38 && hero.jumpH < 42) hurtHero(Math.sign(hero.x - e.x) || 1);
+      }
+    } else if (e.state === 'swipe') {
+      e.atkT -= dt; if (e.atkT <= 0) { e.state = 'rest'; e.atkT = e.kind === 'brute' ? 0.7 : 0.55; }
+    } else if (e.state === 'rest') {
+      e.atkT -= dt; if (e.atkT <= 0) e.state = 'walk';
+    }
+    // brute paint-puddle squeeze
+    if (e.kind === 'brute') {
+      e.squeezeT -= dt;
+      if (e.squeezeT <= 0 && Math.abs(hero.x - e.x) < 460) {
+        e.squeezeT = 3.2;
+        projectiles.push({ x: e.x, y: feetY(e.lane) - 130, tx: hero.x, tl: hero.lane, t: 0, dur: 0.72, sx: e.x });
+        popup(e.x, feetY(e.lane) - 205, 'SQUEEZE!', PAL.paintLt);
+      }
+    }
+    e.x = clamp(e.x, 20, WORLD_W - 20);
+  }
+  // projectiles -> puddles
+  for (const p of projectiles) {
+    p.t += dt;
+    if (p.t >= p.dur) {
+      puddles.push({ x: p.tx, lane: p.tl, r: 40, life: 6.5 });
+      addSplat(p.tx, LANE0 + p.tl, PAL.paint, 30);
+      p.done = true;
+    }
+  }
+  projectiles = projectiles.filter((p) => !p.done);
+  for (const p of puddles) p.life -= dt;
+  puddles = puddles.filter((p) => p.life > 0);
+
+  // camera
+  const lastGate = G.gate >= GATES.length - 1;
+  const camGoal = G.locked && gt
+    ? (lastGate ? WORLD_W - VW : clamp(gt.x - VW * 0.45, 0, WORLD_W - VW))
+    : clamp(hero.x - VW * 0.38, 0, WORLD_W - VW);
+  G.camX += (camGoal - G.camX) * Math.min(1, dt * 5);
+
+  updateFx(dt);
+}
+function updateFx(dt) {
+  for (const p of particles) {
+    p.x += p.vx * dt; p.vz -= 1500 * dt; p.y -= p.vz * dt;
+    if (p.vz < 0 && p.y >= HORIZON + p.laneDy) {
+      if (!p.noSplat) addSplat(p.x, p.laneDy, p.color, p.size);
+      p.done = true;
+    }
+  }
+  particles = particles.filter((p) => !p.done && p.y < LH + 200);
+  for (const a of arcs) a.t += dt;
+  arcs = arcs.filter((a) => a.t < a.life);
+  for (const p of popups) { p.t += dt; p.y -= 34 * dt; }
+  popups = popups.filter((p) => p.t < 0.9);
+}
+
+// ---------------------------------------------------------------- drawing
+function drawBackdrop() {
+  // far sky (tiled, parallax 0.25)
+  const sx = (G.camX * 0.25) % 1600;
+  const destH = HORIZON + 110;
+  const w1 = Math.min(VW, 1600 - sx);
+  ctx.drawImage(farCv, sx, 0, w1, 620, 0, 0, w1, destH);
+  if (w1 < VW) ctx.drawImage(farCv, 0, 0, VW - w1, 620, w1, 0, VW - w1, destH);
+  // mid shopfronts (parallax 0.6)
+  ctx.drawImage(midCv, G.camX * 0.6, 0, VW * 0.6, MID_H, 0, HORIZON + LANE0 - MID_H, VW, MID_H);
+  // lantern glow pools on the street
+  glow((430 - G.camX * 0.6 % 900 + 900) % 900 - 60, HORIZON + 120, 90, 'rgba(255,180,80,0.5)', 0.10);
+  // ground (world space)
+  ctx.drawImage(groundCv, G.camX, 0, VW, 300, 0, HORIZON + 26, VW, Math.max(60, LH - HORIZON - 26));
+  // permanent paint splatter (world space)
+  ctx.drawImage(splatCv, G.camX, 0, VW, 320, 0, HORIZON, VW, 320);
+  // puddles
+  for (const p of puddles) {
+    const px = p.x - G.camX, py = HORIZON + LANE0 + p.lane;
+    const a = clamp(p.life / 1.2, 0, 1) * 0.9;
+    PD(px, py, p.r * 2, p.r * 0.72, PAL.paintDk, 0, a * 0.75, 1);
+    PD(px - 6, py - 3, p.r * 1.5, p.r * 0.5, PAL.paint, 0.2, a, 2);
+    PD(px - p.r * 0.3, py - p.r * 0.16, p.r * 0.6, p.r * 0.18, PAL.paintLt, 0, a * 0.8, 0);
+  }
+}
+function shadow(x, fy, w, jumpH) {
+  ctx.save();
+  ctx.globalAlpha = clamp(0.34 - jumpH * 0.0016, 0.08, 0.34);
+  ctx.fillStyle = '#0b0a1c';
+  ctx.beginPath(); ctx.ellipse(x, fy + 6, w * (1 - jumpH * 0.001), w * 0.24, 0, 0, Math.PI * 2); ctx.fill();
+  ctx.restore();
+}
+function drawHero() {
+  const sx = hero.x - G.camX, fy = feetY(hero.lane, hero.jumpH), f = hero.face;
+  shadow(sx, feetY(hero.lane, 0), 30, hero.jumpH);
+  const moving = hero.moving && hero.jumpH === 0;
+  const rp = hero.run;
+  const bob = hero.jumpH > 0 ? 0 : (moving ? Math.abs(Math.sin(rp)) * 3 : Math.sin(G.time * 2.1) * 1.6);
+  const by = fy - bob; // body base (feet line adjusted)
+  ctx.save();
+  if (hero.dead) { ctx.translate(sx, fy - 8); ctx.rotate(f * 1.35); ctx.translate(-sx, -(fy - 8)); }
+  const flash = hero.hurtT > 0 && Math.floor(G.time * 20) % 2 === 0;
+  const bodyC = flash ? PAL.white : PAL.hero, darkC = flash ? PAL.white : PAL.heroDk;
+  // legs
+  const tuck = hero.jumpH > 0;
+  const l1 = tuck ? 0.5 : Math.sin(rp) * (moving ? 13 : 2), l2 = tuck ? -0.4 : Math.sin(rp + Math.PI) * (moving ? 13 : 2);
+  PD(sx + l1 * f - 7, by - 20, 15, 30, darkC, (tuck ? 0.5 : Math.sin(rp) * 0.3) * f, 1, 1);
+  PD(sx + l2 * f + 8, by - 20, 15, 30, darkC, (tuck ? -0.4 : Math.sin(rp + Math.PI) * 0.3) * f, 1, 2);
+  PD(sx + l1 * f - 7 + f * 3, by - 4, 17, 8, PAL.ink, 0, 1, 0); // feet
+  PD(sx + l2 * f + 8 + f * 3, by - 4, 17, 8, PAL.ink, 0, 1, 0);
+  // body (gi)
+  const lean = moving ? f * 0.07 : Math.sin(G.time * 2.1) * 0.02;
+  PD(sx, by - 56, 47, 60, bodyC, lean, 1, 0);
+  PD(sx - f * 8, by - 74, 30, 26, flash ? PAL.white : PAL.heroLt, lean, 0.8, 1); // chest light
+  PD(sx, by - 33, 48, 10, PAL.gold, lean, 0.95, 2); // belt
+  // head + headband
+  PD(sx + f * 5, by - 102, 31, 30, flash ? PAL.white : PAL.skin, 0, 1, 1);
+  PD(sx + f * 5, by - 112, 36, 11, PAL.white, 0, 1, 0);
+  PD(sx - f * 14, by - 108, 13, 20, PAL.white, f * 0.5, 0.9, 2); // band tails
+  ctx.fillStyle = PAL.ink;
+  ctx.fillRect(sx + f * 11 - 2, by - 104, 4.4, 6); // eye
+  // brush arm + the great brush
+  let bang; // brush angle
+  if (hero.slashT > 0) {
+    const pr = 1 - hero.slashT / 0.22;
+    if (hero.combo === 0) bang = -2.3 + pr * 3.1;
+    else if (hero.combo === 1) bang = 0.9 - pr * 3.1;
+    else bang = -2.9 + pr * 3.6;
+    bang *= f;
+  } else {
+    bang = f * (moving ? 0.55 + Math.sin(rp) * 0.14 : 0.5 + Math.sin(G.time * 2.1) * 0.05);
+  }
+  const hx = sx + f * 22, hy = by - 62;
+  const bl = 62; // brush length
+  const bx = hx + Math.sin(bang) * bl, byy = hy + Math.cos(bang) * bl * 0.9 - 8;
+  PD(hx + Math.sin(bang) * bl * 0.45, hy + Math.cos(bang) * bl * 0.4 - 4, 11, bl * 0.62, PAL.wood, bang, 1, 0); // handle
+  PD(hx + Math.sin(bang) * bl * 0.78, hy + Math.cos(bang) * bl * 0.7 - 6, 13, 13, PAL.gold, bang, 1, 1); // ferrule
+  PD(bx, byy, 17, 27, flash ? PAL.white : PAL.paint, bang + 0.15, 1, 2); // loaded bristles
+  PD(hx, hy, 15, 15, bodyC, 0, 1, 1); // hand
+  ctx.restore();
+  // slash arcs
+  for (const a of arcs) {
+    const ax = a.x - G.camX, pr = a.t / a.life, al = (1 - pr) * 0.9;
+    const r = 60 + a.step * 10 + pr * 26;
+    const mid = a.face > 0 ? -0.2 : Math.PI + 0.2;
+    const sweep = 2.2 * (a.step === 1 ? -1 : 1) * (a.face > 0 ? 1 : -1);
+    ctx.save();
+    ctx.globalAlpha = al; ctx.strokeStyle = a.color; ctx.lineCap = 'round';
+    ctx.lineWidth = 13 * (1 - pr * 0.45);
+    ctx.beginPath(); ctx.arc(ax, a.y, r, mid - sweep * (0.4 + pr * 0.6), mid + sweep * pr * 0.9, sweep < 0); ctx.stroke();
+    ctx.globalAlpha = al * 0.4; ctx.strokeStyle = PAL.white; ctx.lineWidth = 4;
+    ctx.beginPath(); ctx.arc(ax, a.y, r - 6, mid - sweep * (0.4 + pr * 0.6), mid + sweep * pr * 0.9, sweep < 0); ctx.stroke();
+    for (let i = 0; i < 5; i++) {
+      const ang = mid + sweep * (i / 5) * pr;
+      PD(ax + Math.cos(ang) * r, a.y + Math.sin(ang) * r, 13, 8, a.color, ang, al * 0.8, i % 3);
+    }
+    ctx.restore();
+  }
+  // finisher: one huge stroke across the play area
+  if (G.finishT > 0) {
+    const pr = 1 - G.finishT / 0.45;
+    ctx.save();
+    ctx.globalAlpha = (1 - pr) * 0.95;
+    const x0 = sx - hero.face * 30, y0 = fy - 190, x1 = sx + hero.face * (60 + pr * 480), y1 = fy - 190 + (60 + pr * 300);
+    ctx.strokeStyle = PAL.paint; ctx.lineCap = 'round';
+    ctx.lineWidth = 34 * (0.4 + pr * 0.6);
+    ctx.beginPath(); ctx.moveTo(x0, y0); ctx.lineTo(x1, y1); ctx.stroke();
+    ctx.strokeStyle = PAL.paintLt; ctx.lineWidth = 13;
+    ctx.beginPath(); ctx.moveTo(x0, y0 - 8); ctx.lineTo(x1, y1 - 8); ctx.stroke();
+    for (let i = 0; i < 8; i++) {
+      const k = i / 8 * pr;
+      PD(x0 + (x1 - x0) * k, y0 + (y1 - y0) * k, 30, 18, PAL.paint, 0.7, (1 - pr) * 0.8, i % 3);
+    }
+    ctx.restore();
+  }
+}
+function drawSoldier(e) {
+  const sx = e.x - G.camX, fy = feetY(e.lane), f = e.face;
+  shadow(sx, fy, 26, 0);
+  const wob = Math.sin(e.t * 7 + e.id * 2.4);
+  const w = 46 * (1 + wob * 0.045), h = 54 * (1 - wob * 0.05);
+  const flash = e.hurtT > 0;
+  const bodyC = flash ? PAL.white : PAL.ink;
+  // shuffling feet
+  const st = Math.sin(e.t * 10 + e.id) * (e.state === 'walk' ? 5 : 1);
+  PD(sx - 11 + st, fy - 4, 15, 8, bodyC, 0, 1, 0);
+  PD(sx + 11 - st, fy - 4, 15, 8, bodyC, 0, 1, 1);
+  // glossy blob body
+  PD(sx, fy - h / 2 - 4, w, h, bodyC, wob * 0.03, 1, e.id % 3);
+  PD(sx - w * 0.2, fy - h * 0.78, w * 0.42, h * 0.3, flash ? PAL.white : PAL.inkHi, -0.2, 0.85, 1); // sheen
+  PD(sx - w * 0.24, fy - h * 0.86, 9, 6, PAL.white, -0.3, 0.75, 0); // gloss spot
+  // eyes track the hero
+  const look = clamp((hero.x - e.x) * 0.02, -1.6, 1.6);
+  for (const s of [-1, 1]) {
+    ctx.fillStyle = PAL.white;
+    ctx.beginPath(); ctx.arc(sx + f * 7 + s * 9, fy - h * 0.62, 6.4, 0, Math.PI * 2); ctx.fill();
+    ctx.fillStyle = PAL.ink;
+    ctx.beginPath(); ctx.arc(sx + f * 7 + s * 9 + look, fy - h * 0.62 + 1, 3.1, 0, Math.PI * 2); ctx.fill();
+  }
+  // swipe claw
+  if (e.state === 'windup') PD(sx + f * 26, fy - h * 0.7, 20, 10, bodyC, -f * 0.7, 1, 2);
+  if (e.state === 'swipe') {
+    PD(sx + f * 30, fy - h * 0.45, 26, 11, bodyC, f * 0.9, 1, 2);
+    ctx.save(); ctx.globalAlpha = 0.5; ctx.strokeStyle = PAL.white; ctx.lineWidth = 3; ctx.lineCap = 'round';
+    ctx.beginPath(); ctx.arc(sx, fy - h * 0.5, 40, f > 0 ? -0.9 : Math.PI - 0.4, f > 0 ? 0.5 : Math.PI + 0.9, f < 0); ctx.stroke(); ctx.restore();
+  }
+  if (e.hp < e.maxHp) for (let i = 0; i < e.hp; i++) PD(sx - 12 + i * 12, fy - h - 16, 8, 8, PAL.paint, 0, 0.9, i);
+}
+function drawBrute(e) {
+  const sx = e.x - G.camX, fy = feetY(e.lane), f = e.face;
+  shadow(sx, fy, 52, 0);
+  const flash = e.hurtT > 0;
+  const silv = flash ? PAL.white : PAL.brute, silvD = flash ? PAL.white : PAL.bruteDk;
+  const squash = e.squeezeT < 0.45 ? 0.86 : 1 + Math.sin(e.t * 3) * 0.012;
+  const st = Math.sin(e.t * 6) * 4;
+  PD(sx - 24 + st, fy - 8, 30, 17, silvD, 0, 1, 0); // feet
+  PD(sx + 24 - st, fy - 8, 30, 17, silvD, 0, 1, 1);
+  ctx.save(); ctx.translate(sx, fy); ctx.scale(1, squash); ctx.translate(-sx, -fy);
+  // tube body: stacked dabs, wide base to crimped top
+  PD(sx, fy - 52, 96, 66, silv, 0, 1, 0);
+  PD(sx, fy - 106, 82, 58, silv, 0, 1, 1);
+  PD(sx, fy - 148, 62, 40, silvD, 0, 1, 2); // crimped seal
+  for (let i = 0; i < 4; i++) PD(sx - 24 + i * 16, fy - 166, 12, 12, silvD, 0, 1, i % 2); // crimp teeth
+  // label band with the paint colour it holds
+  PD(sx, fy - 92, 84, 34, flash ? PAL.white : PAL.paint, 0, 1, 2);
+  PD(sx, fy - 92, 60, 10, PAL.white, 0, 0.85, 0);
+  // cap worn as a hat
+  PD(sx + 4, fy - 182, 34, 17, PAL.gold, 0.06, 1, 1);
+  // angry eyes on the tube
+  for (const s of [-1, 1]) {
+    ctx.fillStyle = PAL.white;
+    ctx.beginPath(); ctx.arc(sx + f * 8 + s * 16, fy - 128, 9.5, 0, Math.PI * 2); ctx.fill();
+    ctx.fillStyle = PAL.ink;
+    ctx.beginPath(); ctx.arc(sx + f * 8 + s * 16 + f * 2.5, fy - 128, 4.6, 0, Math.PI * 2); ctx.fill();
+    ctx.strokeStyle = PAL.ink; ctx.lineWidth = 3.4;
+    ctx.beginPath(); ctx.moveTo(sx + f * 8 + s * 24, fy - 142); ctx.lineTo(sx + f * 8 + s * 8, fy - 137); ctx.stroke();
+  }
+  // arms
+  const swing = e.state === 'swipe' ? 1 : 0;
+  PD(sx - 56, fy - 96 + Math.sin(e.t * 6) * 4, 20, 44, silv, 0.25, 1, 1);
+  PD(sx + f * (56 + swing * 22), fy - (swing ? 66 : 96), 20, 46, silv, swing ? f * 1.2 : -0.25, 1, 2);
+  ctx.restore();
+  // hp bar
+  if (e.hp < e.maxHp) {
+    ctx.save();
+    ctx.fillStyle = 'rgba(10,8,24,0.55)'; ctx.fillRect(sx - 52, fy - 206, 104, 10);
+    ctx.fillStyle = PAL.paint; ctx.fillRect(sx - 50, fy - 204, 100 * (e.hp / e.maxHp), 6);
+    ctx.restore();
+  }
+}
+function drawFx() {
+  for (const p of particles) {
+    PD(p.x - G.camX, p.y, p.size, p.size * 0.62, p.color, p.x * 0.02, 0.95, p.v);
+  }
+  for (const p of projectiles) {
+    const k = p.t / p.dur;
+    const px = p.sx + (p.tx - p.sx) * k - G.camX;
+    const py = p.y + (feetY(p.tl) - p.y) * k - Math.sin(k * Math.PI) * 130;
+    PD(px, py, 21, 18, PAL.paint, k * 5, 1, 1);
+    PD(px - 3, py - 5, 9, 7, PAL.paintLt, 0, 0.9, 0);
+  }
+  for (const p of popups) {
+    ctx.save();
+    ctx.globalAlpha = 1 - p.t / 0.9;
+    ctx.font = '800 19px system-ui, sans-serif'; ctx.textAlign = 'center';
+    ctx.lineWidth = 4; ctx.strokeStyle = 'rgba(12,10,26,0.8)';
+    const px = p.x - G.camX;
+    ctx.strokeText(p.txt, px, p.y); ctx.fillStyle = p.color; ctx.fillText(p.txt, px, p.y);
+    ctx.restore();
+  }
+}
+function heart(x, y, s, filled) {
+  ctx.save();
+  ctx.beginPath();
+  ctx.moveTo(x, y + s * 0.85);
+  ctx.bezierCurveTo(x - s * 1.15, y + s * 0.1, x - s * 0.62, y - s * 0.85, x, y - s * 0.25);
+  ctx.bezierCurveTo(x + s * 0.62, y - s * 0.85, x + s * 1.15, y + s * 0.1, x, y + s * 0.85);
+  ctx.fillStyle = filled ? PAL.heart : 'rgba(245,239,226,0.16)';
+  ctx.fill();
+  if (filled) { ctx.globalAlpha = 0.5; ctx.fillStyle = PAL.paintLt; ctx.beginPath(); ctx.arc(x - s * 0.34, y - s * 0.2, s * 0.2, 0, Math.PI * 2); ctx.fill(); }
+  ctx.restore();
+}
+function drawHUD() {
+  ctx.save();
+  for (let i = 0; i < hero.maxHp && i < 12; i++) heart(26 + i * 27, 30, 11, i < hero.hp);
+  ctx.font = '800 21px system-ui, sans-serif'; ctx.textAlign = 'right';
+  ctx.fillStyle = 'rgba(12,10,26,0.45)';
+  const sw = ctx.measureText('SCORE ' + G.score).width;
+  ctx.fillRect(VW - sw - 26, 10, sw + 16, 30);
+  ctx.fillStyle = 'rgba(245,239,226,0.94)';
+  ctx.fillText('SCORE ' + G.score, VW - 18, 33);
+  if (G.locked) {
+    const left = enemies.filter((e) => !e.dead).length;
+    ctx.textAlign = 'center'; ctx.font = '800 14px system-ui, sans-serif';
+    ctx.fillStyle = 'rgba(245,239,226,0.85)';
+    ctx.fillText(left + (left === 1 ? ' FOE' : ' FOES') + ' LEFT', VW / 2, 60);
+  }
+  ctx.restore();
+}
+function card(title, lines, accent) {
+  const w = Math.min(470, VW - 36), h = 62 + lines.length * 30 + 34;
+  const x = (VW - w) / 2, y = LH * 0.34;
+  ctx.save();
+  ctx.fillStyle = 'rgba(16,14,36,0.84)';
+  ctx.beginPath(); ctx.roundRect(x, y, w, h, 18); ctx.fill();
+  for (let xx = x + 12; xx < x + w - 10; xx += 22) { PD(xx, y + 3, 20, 7, accent, 0, 0.9, xx % 3); PD(xx, y + h - 3, 20, 7, accent, 0, 0.9, (xx + 1) % 3); }
+  ctx.textAlign = 'center';
+  ctx.fillStyle = accent; ctx.font = '900 37px Georgia, serif';
+  ctx.fillText(title, VW / 2, y + 52);
+  ctx.fillStyle = 'rgba(245,239,226,0.95)'; ctx.font = '600 17px system-ui, sans-serif';
+  lines.forEach((ln, i) => ctx.fillText(ln, VW / 2, y + 88 + i * 30));
+  ctx.restore();
+}
+function draw() {
+  ctx.setTransform(1, 0, 0, 1, 0, 0);
+  ctx.fillStyle = PAL.skyTop; ctx.fillRect(0, 0, cv.width, cv.height);
+  const shX = G.shakeT > 0 ? rnd(-1, 1) * G.shakeT * 22 : 0;
+  const shY = G.shakeT > 0 ? rnd(-1, 1) * G.shakeT * 14 : 0;
+  ctx.setTransform(SCALE, 0, 0, SCALE, shX * SCALE, shY * SCALE);
+  drawBackdrop();
+  // entities sorted back-to-front by lane
+  const ents = [{ hero: true, lane: hero.lane }, ...enemies.filter((e) => !e.dead).map((e) => ({ hero: false, lane: e.lane, e }))];
+  ents.sort((a, b) => a.lane - b.lane);
+  for (const en of ents) { if (en.hero) drawHero(); else if (en.e.kind === 'brute') drawBrute(en.e); else drawSoldier(en.e); }
+  if (!ents.some((e) => e.hero)) drawHero();
+  drawFx();
+  drawHUD();
+  if (G.goT > 0 && G.state === 'play') {
+    ctx.save();
+    ctx.globalAlpha = clamp(G.goT, 0, 1);
+    ctx.font = '900 44px Georgia, serif'; ctx.textAlign = 'right';
+    const bx = VW - 60 + Math.sin(G.time * 9) * 8;
+    ctx.lineWidth = 7; ctx.strokeStyle = 'rgba(12,10,26,0.7)';
+    ctx.strokeText('GO →', bx, LH * 0.42);
+    ctx.fillStyle = PAL.gold; ctx.fillText('GO →', bx, LH * 0.42);
+    ctx.restore();
+  }
+  if (G.state === 'title') card('INK RONIN', ['paint the street!', DEMO ? '(demo mode — auto-fighting)' : 'drag / WASD · A = slash · B = jump', 'tap or press any key to start'], PAL.gold);
+  else if (G.state === 'win') card('STREET PAINTED!', ['score ' + G.score + '  ·  ' + splatCount + ' paint splats left behind', 'tap to paint it again'], PAL.paintLt);
+  else if (G.state === 'over') card('THE STREET WINS…', ['score ' + G.score + '  ·  the ink dries over you', 'tap to retry'], PAL.teal);
+}
+
+// ---------------------------------------------------------------- loop
+let lastT = performance.now();
+function frame(now) {
+  let dt = Math.min((now - lastT) / 1000, 0.033);
+  lastT = now;
+  G.frames = (G.frames || 0) + 1;
+  hero.moving = false;
+  update(dt);
+  draw();
+  requestAnimationFrame(frame);
+}
+requestAnimationFrame(frame);
+if (DEMO) startGame();
+
+// ---------------------------------------------------------------- debug hook
+window.__dbg = {
+  get state() { return G.state; },
+  get heroHp() { return hero.hp; },
+  get score() { return G.score; },
+  get splats() { return splatCount; },
+  get enemies() { return enemies.filter((e) => !e.dead).length; },
+  get heroX() { return Math.round(hero.x); },
+  get gate() { return G.gate; },
+  get locked() { return G.locked; },
+  get frames() { return G.frames || 0; },
+  start() { startGame(); },
+  warp(x) { hero.x = clamp(x, 30, WORLD_W - 40); },
+  setGate(g) { G.gate = g; waveSpawned = false; G.locked = false; enemies = []; },
+  god() { hero.hp = 99; },
+  slash() { heroSlash(); },
+  hero,
+};
+</script>
+</body>
+</html>
