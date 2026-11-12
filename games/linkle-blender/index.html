@@ -158,17 +158,15 @@ canvas{touch-action:none}
 <!-- END link-mode-block HTML -->
 
 <div id="moveBar" class="hidden">
-  <button id="mvSpin" class="mv-btn" type="button" aria-label="Crossbow spin">🏹</button>
   <button id="mvAir" class="mv-btn" type="button" aria-label="Cucco airlift">🐔</button>
 </div>
 
-<div id="hint">Walk around her · Tap Linkle for a crossbow spin</div>
+<div id="hint">Walk around her · Tap Linkle for a spin</div>
 <button id="motionPill" class="hidden" type="button">📱 Enable motion look-around</button>
 
 <div id="start">
   <a id="exploreBtn" rel="ar" href="explore.usdz" aria-label="Explore her in your room in AR" style="display:none;align-items:center;justify-content:center;gap:10px;background:#fff;color:#2e7d32;border:2px solid #a5d6a7;padding:9px 24px 9px 11px;font-size:19px;font-weight:900;letter-spacing:0.02em;border-radius:999px;text-decoration:none;box-shadow:0 8px 22px rgba(0,0,0,0.35);"><img src="linkle-blender.jpg" alt="" style="width:38px;height:38px;border-radius:50%;object-fit:cover;display:block;">EXPLORE</a>
   <button id="startBtn" type="button">WALK</button>
-  <button id="spinBtn" class="moveStart" type="button">🏹 CROSSBOW SPIN</button>
   <button id="airBtn" class="moveStart" type="button">🐔 CUCCO AIRLIFT</button>
 </div>
 
@@ -481,7 +479,7 @@ let mixer = null;
 let baseInnerY = 0;
 let nativeH = 0;
 const SPIN = { active: false, t: 0, dur: 0.8 };
-const AIR = { active: false, t: 0, dur: 4.6, landed: false };
+const AIR = { active: false, t: 0, dur: 20, landed: false, fadeStart: 0 };
 let cuccos = [];
 let cuccoReady = false;
 let lastFeatherAt = 0;
@@ -519,35 +517,13 @@ function loadLink() {
   }, undefined, () => { modelError = true; });
 }
 
-function loadCrossbows(loader) {
-  loader.load('models/crossbows.glb', (g) => {
-    const bowL = g.scene.getObjectByName('bowL');
-    const bowR = g.scene.getObjectByName('bowR');
-    const handL = linkFig.inner.getObjectByName('bone_19');
-    const handR = linkFig.inner.getObjectByName('bone_20');
-    if (bowL) {
-      const bb = new THREE.Box3().setFromObject(bowL);
-      const sz = new THREE.Vector3(); bb.getSize(sz);
-      const bowLen = Math.max(sz.x, sz.y, sz.z) || 1;
-      const k = ((0.38 / LINK_HEIGHT) * nativeH) / bowLen;
-      for (const [bow, hand] of [[bowL, handL], [bowR, handR]]) {
-        if (!bow || !hand) continue;
-        bow.position.set(0, 0, 0);
-        bow.scale.setScalar(k);
-        bow.rotation.set(Math.PI / 2, 0, 0);
-        hand.add(bow);
-      }
-    }
-  }, undefined, () => {});
-}
-
 function loadCuccos(loader) {
   loader.load('models/cucco.glb', (g) => {
-    for (let i = 0; i < 7; i++) {
+    for (let i = 0; i < 18; i++) {
       const c = g.scene.clone(true);
       c.visible = false;
       scene.add(c);
-      cuccos.push({ g: c, wingL: c.getObjectByName('wingL'), wingR: c.getObjectByName('wingR'), seed: Math.random() * 10 });
+      cuccos.push({ g: c, wingL: c.getObjectByName('wingL'), wingR: c.getObjectByName('wingR'), seed: Math.random() * 10, spawnAt: -1, edge: null, slotA: 0 });
     }
     cuccoReady = true;
   }, undefined, () => {});
@@ -556,11 +532,10 @@ function loadCuccos(loader) {
 /* breathing sway: barely-there, feet stay planted (scale about the floor) */
 function easeIO(x) { return x < 0.5 ? 2 * x * x : 1 - Math.pow(-2 * x + 2, 2) / 2; }
 function airAlt(tA) {
-  if (tA < 0.7) return 0;
-  if (tA < 1.3) return 0.85 * easeIO((tA - 0.7) / 0.6);
-  if (tA < 3.4) return 0.85;
-  if (tA < 4.1) return 0.85 * (1 - easeIO((tA - 3.4) / 0.7));
-  return 0;
+  if (tA < 8) return 0;                                   // gathering at her feet
+  if (tA < 12) return 1.1 * easeIO((tA - 8) / 4);         // the slow lift
+  if (tA < 16) return 1.1;                                // the hover
+  return lerp(1.1, 0.5, easeIO((tA - 16) / 4));           // swooping down toward the lens
 }
 function floorScreen(x, z) {
   _pv.set(x, 0.03, z).project(camera);
@@ -573,18 +548,13 @@ function doSpin() {
   sndSpin();
   _pv.set(0, 0.85, MODEL_Z).project(camera);
   const sx = (_pv.x * 0.5 + 0.5) * W, sy = (_pv.y * -0.5 + 0.5) * H;
-  spawnBolts(sx, sy, 14);
   spawnHeartsAt(sx, sy - 30, 5, 1.3);
 }
 function doAirlift() {
   if (!linkFig || AIR.active || !cuccoReady) return;
-  AIR.active = true; AIR.t = 0; AIR.landed = false;
+  AIR.active = true; AIR.t = 0; AIR.landed = false; AIR.fadeStart = 0; AIR._cluckAt = 0;
+  for (const c of cuccos) c.spawnAt = -1;   // fresh arrival schedule for this run
   sndAirlift();
-  for (const c of cuccos) {
-    c.g.visible = true;
-    const [sx, sy] = floorScreen(c.g.position.x, c.g.position.z);
-    spawnDust(sx, sy, 3);
-  }
 }
 function updateLink(t, dt) {
   if (!linkFig) return;
@@ -603,60 +573,87 @@ function updateLink(t, dt) {
     AIR.t += dt;
     const tA = AIR.t, g = linkFig.group;
     const alt = airAlt(tA);
-    let gx = 0, gz = MODEL_Z;
-    if (tA > 1.3 && tA < 4.1) {
-      const a = (tA - 1.3) * 0.85;
-      gx = Math.sin(a) * 0.45;
-      gz = MODEL_Z + (1 - Math.cos(a)) * 0.22;
-    }
+    // gentle sway once she is being carried (lift + hover), still while gathering
+    const sway = tA < 8 ? 0 : Math.sin(t * 0.0011) * 0.05;
+    // 16-20 s: the flock flies her directly forward, straight at the camera
+    let fwd = 0;
+    if (tA >= 16) { const p = clamp((tA - 16) / 4, 0, 1); fwd = easeIO(p * p) * (CAM_BASE.z - MODEL_Z - 0.35); }
+    const gx = sway, gz = MODEL_Z + fwd;
     g.position.set(gx, alt, gz);
-    linkFig.shadow.material.opacity = 0.85 * (1 - alt * 0.55);
+    // soft-fade figure + flock at closest approach, then reset for a re-run
+    if (tA >= 18.6 && !AIR.fadeStart) AIR.fadeStart = tA;
+    const fo = AIR.fadeStart ? clamp(1 - (tA - AIR.fadeStart) / 1.1, 0, 1) : 1;
+    linkFig.group.traverse(o => { if (o.isMesh) { o.material.transparent = fo < 1; o.material.opacity = fo; } });
+    linkFig.shadow.material.opacity = 0.85 * (1 - alt * 0.55) * fo;
     const shS = 1 + alt * 0.5;
     linkFig.shadow.scale.set(shS, 0.8 * shS, 1);
     linkFig.shadow.position.set(gx, 0.012, gz);
-    if (alt > 0.3 && t - lastFeatherAt > 150) {
+    linkFig.shadow.visible = fwd < 0.3;
+    if (alt > 0.25 && t - lastFeatherAt > 220) {   // feathers drift while she is up
       lastFeatherAt = t;
       _pv.set(gx, alt + LINK_HEIGHT + 0.15, gz).project(camera);
       spawnFeather((_pv.x * 0.5 + 0.5) * W, (_pv.y * -0.5 + 0.5) * H);
     }
-    if (tA >= 4.05 && !AIR.landed) {
-      AIR.landed = true;
-      sndLand();
-      const [sx, sy] = floorScreen(gx, gz);
-      spawnDust(sx, sy, 9);
+    if (tA < 8 && t - AIR._cluckAt > 650) {        // soft clucking while they gather
+      AIR._cluckAt = t; sndCluck(0); if (Math.random() < 0.5) sndCluck(0.09);
     }
     const n = cuccos.length;
     for (let i = 0; i < n; i++) {
-      const c = cuccos[i], th = (i / n) * Math.PI * 2;
-      let px, py, pz, flap = 0;
-      if (tA < 0.7) {                       // hop in from a wide ring
-        const p = easeIO(tA / 0.7), r = lerp(1.7, 0.55, p);
-        px = Math.cos(th) * r; pz = MODEL_Z + Math.sin(th) * r;
-        py = Math.abs(Math.sin(t * 0.011 + c.seed)) * 0.06;
-        flap = (i % 2) * 0.4;
-      } else if (tA < 4.1) {                // cluster above her head, carrying
-        const r = tA < 1.3 ? lerp(0.55, 0.30, easeIO((tA - 0.7) / 0.6)) : 0.30;
-        px = gx + Math.cos(th) * r; pz = gz + Math.sin(th) * r;
+      const c = cuccos[i];
+      if (c.spawnAt < 0) {                          // per-cucco arrival schedule, set once per run
+        c.spawnAt = (i / n) * 7.5;
+        c.slotA = (i / n) * Math.PI * 2 + rand(-0.2, 0.2);
+        c.edge = [
+          [rand(-2.6, 2.6), MODEL_Z - rand(2.2, 3.2)],   // behind her, off the back of the room
+          [rand(-2.6, 2.6), MODEL_Z + rand(1.9, 2.6)],   // between her and the camera
+          [-rand(2.4, 3.2), MODEL_Z + rand(-1.4, 1.2)],  // left edge
+          [rand(2.4, 3.2), MODEL_Z + rand(-1.4, 1.2)]    // right edge
+        ][i % 4];
+      }
+      const at = tA - c.spawnAt;
+      if (at < 0) { c.g.visible = false; continue; }
+      c.g.visible = true;
+      let px, py, pz, flap = 0.5;
+      if (tA < 8) {                                 // flutter in from off screen, gather at her feet
+        const p = clamp(at / 2.2, 0, 1), e = easeIO(p);
+        const gr = 0.55 + (i % 3) * 0.22;
+        px = lerp(c.edge[0], Math.cos(c.slotA) * gr, e);
+        pz = lerp(c.edge[1], MODEL_Z + Math.sin(c.slotA) * gr * 0.8, e);
+        py = p < 1 ? Math.abs(Math.sin(at * 6.5 + c.seed)) * 0.30 * (1 - p * 0.6)
+                   : Math.abs(Math.sin(t * 0.011 + c.seed)) * 0.06;
+        if (i >= n - 6 && tA > 5) {                 // the last arrivals rise and cluster above her head
+          const q = easeIO(clamp((tA - 5) / 3, 0, 1));
+          px = lerp(px, Math.cos(c.slotA) * 0.30, q);
+          pz = lerp(pz, MODEL_Z + Math.sin(c.slotA) * 0.30, q);
+          py = lerp(py, LINK_HEIGHT + 0.24 + Math.sin(t * 0.006 + c.seed) * 0.03, q);
+          flap = 0.8;
+        }
+      } else {                                      // carrying: a ring above her head
+        px = gx + Math.cos(c.slotA) * 0.30; pz = gz + Math.sin(c.slotA) * 0.30;
         py = alt + LINK_HEIGHT + 0.24 + Math.sin(t * 0.006 + c.seed) * 0.03;
-        flap = 0.8;
-      } else {                              // scatter and vanish
-        const p = easeIO(clamp((tA - 4.1) / 0.5, 0, 1)), r = lerp(0.30, 2.3, p);
-        px = gx + Math.cos(th) * r; pz = gz + Math.sin(th) * r;
-        py = Math.max(0, (alt + LINK_HEIGHT + 0.24) * (1 - p));
         flap = 0.8;
       }
       c.g.position.set(px, py, pz);
-      c.g.rotation.y = -th + Math.PI;
-      if (c.wingL) c.wingL.rotation.z = flap ? Math.sin(t * 0.045 + c.seed) * flap : 0;
-      if (c.wingR) c.wingR.rotation.z = flap ? -Math.sin(t * 0.045 + c.seed) * flap : 0;
+      c.g.rotation.y = tA >= 16 ? Math.PI : Math.atan2(gx - px, gz - pz);
+      c.g.traverse(o => { if (o.isMesh) { o.material.transparent = fo < 1; o.material.opacity = fo; } });
+      if (c.wingL) c.wingL.rotation.z = Math.sin(t * 0.045 + c.seed) * flap;
+      if (c.wingR) c.wingR.rotation.z = -Math.sin(t * 0.045 + c.seed) * flap;
     }
     if (tA >= AIR.dur) {
-      AIR.active = false;
+      AIR.active = false; AIR.fadeStart = 0;
       g.position.set(0, 0, MODEL_Z);
+      linkFig.group.traverse(o => { if (o.isMesh) { o.material.opacity = 1; o.material.transparent = false; } });
+      linkFig.shadow.visible = true;
       linkFig.shadow.material.opacity = 0.85;
       linkFig.shadow.scale.set(1.0, 0.8, 1);
       linkFig.shadow.position.set(0, 0.012, MODEL_Z);
-      for (const c of cuccos) c.g.visible = false;
+      for (const c of cuccos) {
+        c.g.visible = false; c.spawnAt = -1;
+        c.g.traverse(o => { if (o.isMesh) { o.material.opacity = 1; o.material.transparent = false; } });
+      }
+      const [sx, sy] = floorScreen(0, MODEL_Z);
+      spawnDust(sx, sy, 7);                          // small dust puff back at the start spot
+      sndLand();
     }
   }
 }
@@ -693,23 +690,8 @@ function drawHeart(h) {
   fctx.restore();
 }
 
-/* ============================== bolts / feathers / dust (fx) ============================== */
-let bolts = [], feathers = [], dusts = [];
-function spawnBolts(sx, sy, n) {
-  for (let i = 0; i < n; i++) {
-    const a = (i / n) * Math.PI * 2 + rand(-0.15, 0.15);
-    bolts.push({ x: sx, y: sy, vx: Math.cos(a) * rand(420, 700), vy: Math.sin(a) * rand(420, 700), life: 0, max: 0.32 });
-  }
-}
-function updateBolts(dt) { for (let i = bolts.length - 1; i >= 0; i--) { const b = bolts[i]; b.life += dt; b.x += b.vx * dt; b.y += b.vy * dt; if (b.life >= b.max) bolts.splice(i, 1); } }
-function drawBolts() {
-  fctx.save(); fctx.strokeStyle = 'rgba(255,230,150,1)'; fctx.lineWidth = 3; fctx.lineCap = 'round';
-  for (const b of bolts) {
-    fctx.globalAlpha = clamp(1 - b.life / b.max, 0, 1);
-    fctx.beginPath(); fctx.moveTo(b.x, b.y); fctx.lineTo(b.x - b.vx * 0.03, b.y - b.vy * 0.03); fctx.stroke();
-  }
-  fctx.restore();
-}
+/* ============================== feathers / dust (fx) ============================== */
+let feathers = [], dusts = [];
 function spawnFeather(sx, sy) { feathers.push({ x: sx + rand(-24, 24), y: sy, vx: rand(-14, 14), vy: rand(18, 40), ph: rand(0, 6.28), life: 0, max: rand(1.4, 2.2), size: rand(6, 10) }); }
 function updateFeathers(dt) { for (let i = feathers.length - 1; i >= 0; i--) { const f = feathers[i]; f.life += dt; f.x += f.vx * dt + Math.sin(f.life * 5 + f.ph) * 22 * dt; f.y += f.vy * dt; if (f.life >= f.max) feathers.splice(i, 1); } }
 function drawFeathers() {
@@ -773,7 +755,7 @@ const hmWalkBtn = document.getElementById('hmWalk');
 const hmRotateBtn = document.getElementById('hmRotate');
 const hmAutoBtn = document.getElementById('hmAuto');
 const HM_HINTS = {
-  walk: 'Walk around her · Tap Linkle for a crossbow spin',
+  walk: 'Walk around her · Tap her for a spin',
   rotate: 'Drag sideways to turn her · Tap her for a spin'
 };
 function hmSetMode(m) {
@@ -900,15 +882,22 @@ function frame(t) {
   if (camera) {
     camera.position.set(CAM_BASE.x + parX * 0.9, CAM_BASE.y - parY * 0.45, CAM_BASE.z);
     if (!applyMotionCamera()) {
-      camera.lookAt(CAM_LOOK.x - parX * 0.5, CAM_LOOK.y - parY * 0.3, CAM_LOOK.z);
+      let lx = CAM_LOOK.x - parX * 0.5, ly = CAM_LOOK.y - parY * 0.3, lz = CAM_LOOK.z;
+      if (AIR.active && linkFig) {   // during the rescue, tilt up and follow her so she stays in frame
+        const alt = airAlt(AIR.t), gp = linkFig.group.position;
+        lx = lerp(lx, gp.x * 0.6, 0.85);
+        ly = lerp(ly, 0.55 + alt * 0.75, 0.85);
+        lz = lerp(lz, gp.z, 0.7);
+      }
+      camera.lookAt(lx, ly, lz);
     }
   }
   updateLightMatch(t, dt);
-  if (started) { updateLink(t, dt); updateHearts(dt); updateBolts(dt); updateFeathers(dt); updateDust(dt); }
+  if (started) { updateLink(t, dt); updateHearts(dt); updateFeathers(dt); updateDust(dt); }
   if (renderer) renderer.render(scene, camera);
   fctx.clearRect(0, 0, W, H);
   for (const h of hearts) drawHeart(h);
-  drawBolts(); drawFeathers(); drawDust();
+  drawFeathers(); drawDust();
   if (started && modelLoaded && queuedMove) {
     const m = queuedMove; queuedMove = null;
     if (m === 'spin') doSpin(); else if (m === 'air') doAirlift();
@@ -950,9 +939,7 @@ function startThen(move) {
   queuedMove = move;
   if (!started) document.getElementById('startBtn').click();
 }
-document.getElementById('spinBtn').addEventListener('click', () => startThen('spin'));
 document.getElementById('airBtn').addEventListener('click', () => startThen('air'));
-document.getElementById('mvSpin').addEventListener('click', () => { initAudio(); doSpin(); });
 document.getElementById('mvAir').addEventListener('click', () => { initAudio(); doAirlift(); });
 
 /* ============================== boot + test hook ============================== */
@@ -970,6 +957,9 @@ window.__linkleAr = {
   get cuccoReady() { return cuccoReady; },
   get spinning() { return SPIN.active; },
   get airborne() { return AIR.active; },
+  get airPhase() { if (!AIR.active) return 'idle'; const tA = AIR.t; return tA < 3 ? 'arrive' : tA < 8 ? 'gather' : tA < 12 ? 'lift' : tA < 16 ? 'hover' : 'approach'; },
+  get airT() { return AIR.t; },
+  debugAir: () => ({ t: +AIR.t.toFixed(2), alt: +airAlt(AIR.t).toFixed(2), group: linkFig ? linkFig.group.position.toArray().map(v => +v.toFixed(2)) : null, visible: cuccos.filter(c => c.g.visible).length, phase: window.__linkleAr.airPhase }),
   height: () => modelHeight,
   meshReport: () => {
     const out = [];
