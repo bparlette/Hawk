@@ -82,15 +82,11 @@ const ART = () => window.PV_ART || null;
 
 /* ---------------- input ---------------- */
 const keys = {};
-let dragX = null;
+let dragX = null, dragY = null;
 window.addEventListener('keydown', e => {
   keys[e.code] = true;
   if (['ArrowLeft', 'ArrowRight', 'Space'].includes(e.code)) e.preventDefault();
-  if (G.state === 'levelup') {
-    if (e.code === 'Digit1') pickCard(0);
-    if (e.code === 'Digit2') pickCard(1);
-    if (e.code === 'Digit3') pickCard(2);
-  } else if (G.state === 'title') {
+  if (G.state === 'title') {
     if (e.code === 'Digit1') selectLevel(0, true);
     if (e.code === 'Digit2') selectLevel(1, true);
     if (e.code === 'Digit3') selectLevel(2, true);
@@ -103,14 +99,13 @@ function toLogicalY(cy) { const r = canvas.getBoundingClientRect(); return (cy -
 canvas.addEventListener('pointerdown', e => {
   audio();
   const lx = toLogical(e.clientX), ly = toLogicalY(e.clientY);
-  if (G.state === 'levelup') { if (!clickCard(lx, ly)) return; }
-  else if (G.state === 'title') { if (!clickLevel(lx, ly)) startRun(); return; }
+  if (G.state === 'title') { if (!clickLevel(lx, ly)) startRun(); return; }
   else if (G.state !== 'play') { advance(); return; }
-  dragX = lx;
+  dragX = lx; dragY = ly;
 });
-canvas.addEventListener('pointermove', e => { if (dragX !== null) dragX = toLogical(e.clientX); });
-window.addEventListener('pointerup', () => { dragX = null; });
-window.addEventListener('pointercancel', () => { dragX = null; });
+canvas.addEventListener('pointermove', e => { if (dragX !== null) { dragX = toLogical(e.clientX); dragY = toLogicalY(e.clientY); } });
+window.addEventListener('pointerup', () => { dragX = null; dragY = null; });
+window.addEventListener('pointercancel', () => { dragX = null; dragY = null; });
 /* Touch fix: on touch devices the gptouch overlay (fixed, z-index 1000) sits
    over the canvas and takes every tap, so the canvas pointerdown above never
    fires — title Play, level select and level-up card picks were all dead on
@@ -123,8 +118,7 @@ window.addEventListener('pointerdown', e => {
   if (G.state === 'play') return;
   audio();
   const lx = toLogical(e.clientX), ly = toLogicalY(e.clientY);
-  if (G.state === 'levelup') { clickCard(lx, ly); }
-  else if (G.state === 'title') { if (!clickLevel(lx, ly)) startRun(); }
+  if (G.state === 'title') { if (!clickLevel(lx, ly)) startRun(); }
   else { advance(); }
 });
 
@@ -282,9 +276,9 @@ function newGame(levelIdx = 0) {
   if (P >= 4) startMag.push('iron');                    // L4 clear: +1 magazine
   if (P >= 12) { const b = bestUnlockedOrb(); if (b) startMag.push(b, b); }   // L12 clear: twin-orb start
   G = {
-    state: DEMO ? 'play' : 'title',   // title | play | levelup | over | win
+    state: DEMO ? 'play' : 'title',   // title | play | over | win (no levelup state: grants are in-flow)
     level: L, levelIdx, t: 0, elapsed: 0, prog: P, gravT: 20, gravPulseT: 0,
-    hero: { x: W / 2, vx: 0, face: 1, lastShot: -9, hitAt: -9, invulnT: 0 },
+    hero: { x: W / 2, y: 0, vx: 0, vy: 0, face: 1, lastShot: -9, hitAt: -9, invulnT: 0 },   // y set below (FLOOR-based)
     hp: 6, maxHp: 6,
     stats: { orbDamage: 12, orbSpeed: 800, fireInterval: 0.21, magnetR: 95, catchMastery: P >= 6 },   // L6 clear: innate
     magPool: [...startMag],
@@ -294,9 +288,10 @@ function newGame(levelIdx = 0) {
     fireCd: 0.2, spawnT: 1.2, formT: 6, rushT: 18, formations: 0, finHits: 0,
     catchStacks: 0, primaryPending: true,
     kills: 0, score: 0, chain: 0, lastKillT: -9,
-    xp: 0, xpLevel: 1, levelUps: 0, cards: [], cardRects: [], levelRects: [], levelupAt: 0,
+    xp: 0, xpLevel: 1, levelUps: 0, cards: [], cardRects: [], levelRects: [], levelupAt: 0, banner: null,
     floorBreaches: 0, shake: 0, selLevel: levelIdx,
   };
+  G.hero.y = FLOOR - 42;   // hero centre home line (roams up-pit from here)
   G.fin = finGeom();   // bot merge-point reference: first divider fin (or null)
 }
 newGame(0);
@@ -383,14 +378,28 @@ function pickCard(i) {
   G.state = 'play';
   blip(740, 0.09, 'square', 0.05);
 }
+/* Power-ups are EARNED IN FLOW (Cherie's rule, Nov 11): no pausing draft.
+   Crossing an XP threshold — or catching a brute's SALVAGE drop — grants a
+   card on the spot, auto-picked with the old demo AI's taste (fusions >
+   orb growth > damage > emergency armor). The run never stops. */
+function grantPower(why) {
+  rollCards();
+  if (!G.cards.length) return;
+  let bi = 0, bs = -1;
+  G.cards.forEach((c, i) => { const s = c.fusion ? 5 : (c.id === 'orb' || BASE_ORBS.includes(c.id)) ? 4 : c.id === 'dmg' ? 3 : c.id === 'hp' && G.hp <= 2 ? 2 : 1; if (s > bs) { bs = s; bi = i; } });
+  const card = G.cards[bi];
+  card.apply();
+  G.cards = []; G.cardRects = [];
+  G.banner = { txt: (why === 'SALVAGE' ? 'SALVAGE: ' : 'POWER UP: ') + card.name, t: 1.7 };
+  G.pops.push({ x: G.hero.x, y: G.hero.y - 110, txt: card.name + '!', t: 0.9, color: '#ffd94d' });
+  sfx.levelup();
+}
 function gainXp(v) {
   G.xp += v;
-  if (G.xp >= xpNeed(G.xpLevel) && G.state === 'play') {
+  while (G.xp >= xpNeed(G.xpLevel) && G.state === 'play') {
     G.xp -= xpNeed(G.xpLevel);
     G.xpLevel += 1; G.levelUps += 1; G.levelupAt = G.t;
-    rollCards();
-    G.state = 'levelup';
-    sfx.levelup();
+    grantPower('LEVEL');
   }
 }
 
@@ -466,7 +475,7 @@ function spawnFormation() {
 /* ---------------- firing: the shots are the balls ------------------------- */
 function fireOrb() {
   const type = G.mag.shift();
-  const hx = G.hero.x + G.hero.face * 8, hy = FLOOR - 92;
+  const hx = G.hero.x + G.hero.face * 8, hy = G.hero.y - 50;
   let ang = 0, best = 1e9;
   let cands = G.enemies;
   if (DEMO && G.fin) {   // bot won't waste shots across the divider fin
@@ -573,6 +582,10 @@ function killEnemy(e) {
     G.shards.push({ x: e.x + (Math.random() - 0.5) * 26, y: e.y + (Math.random() - 0.5) * 14, vx: (Math.random() - 0.5) * 30, vy: 40, v: 1, mag: false });
   if (e.type === 'splitter')
     for (const s of [-1, 1]) { const d = ETYPES.mini; G.enemies.push({ id: enemySeq++, type: 'mini', x: e.x + s * 16, y: e.y, r: d.r * K(), hp: d.hp, maxHp: d.hp, speed: d.speed, phase: Math.random() * 6, slowT: 0, burnT: 0, burnPow: 7, freezeT: 0, curse: 0, flash: 0, form: false, lane: e.lane || 0 }); }
+  if (e.type === 'brute' && Math.random() < 0.7) {   // brutes drop SALVAGE: a power-up earned by the kill, granted on pickup — no pause, no pick
+    G.shards.push({ x: e.x, y: e.y, vx: 0, vy: 30, v: 0, mag: false, salvage: true });
+    G.pops.push({ x: e.x, y: e.y - 24, txt: 'SALVAGE!', t: 0.9, color: '#ffd94d', small: true });
+  }
   sfx.kill();
 }
 function hurtHero(dmg) {
@@ -585,34 +598,38 @@ function hurtHero(dmg) {
 /* ---------------- update --------------------------------------------------- */
 function update(dt) {
   G.t += dt;
-  if (G.state === 'levelup') {
-    if (DEMO && G.t - G.levelupAt > 4) {   // demo AI drafts like a player: fusions, orbs, damage first
-      let bi = 0, bs = -1;
-      G.cards.forEach((c, i) => { const s = c.fusion ? 5 : (c.id === 'orb' || BASE_ORBS.includes(c.id)) ? 4 : c.id === 'dmg' ? 3 : c.id === 'hp' && G.hp <= 2 ? 2 : 1; if (s > bs) { bs = s; bi = i; } });
-      pickCard(bi);
-    }
-    return;
-  }
   if (G.state !== 'play') return;
+  if (G.banner) { G.banner.t -= dt; if (G.banner.t <= 0) G.banner = null; }
   G.elapsed += dt;
   const H = G.hero, L = G.level;
 
-  /* --- movement: left/right ONLY along the floor --- */
-  let move = 0;
-  if (keys.ArrowLeft || keys.KeyA) move -= 1;
-  if (keys.ArrowRight || keys.KeyD) move += 1;
-  if (TC) { const ti = TC.getInput(); if (ti && Math.abs(ti.x) > 0.3) move = Math.sign(ti.x); }
-  let targetX = null;
-  if (DEMO) targetX = botTarget();
-  else if (dragX !== null) targetX = dragX;
+  /* --- movement: free 2D in the pit corridor (the original's model: roam
+     the pit, don't camp a floor line). Bounds: never into the top spawn
+     band, never below the home line; walls taken at the hero's own depth. */
+  let moveX = 0, moveY = 0;
+  if (keys.ArrowLeft || keys.KeyA) moveX -= 1;
+  if (keys.ArrowRight || keys.KeyD) moveX += 1;
+  if (keys.ArrowUp || keys.KeyW) moveY -= 1;
+  if (keys.ArrowDown || keys.KeyS) moveY += 1;
+  if (TC) { const ti = TC.getInput(); if (ti) { if (Math.abs(ti.x) > 0.3) moveX = Math.sign(ti.x); if (Math.abs(ti.y) > 0.3) moveY = Math.sign(ti.y); } }
+  let targetX = null, targetY = null;
+  if (DEMO) { targetX = botTarget(); targetY = botTargetY(); }
+  else if (dragX !== null) { targetX = dragX; targetY = dragY; }
   if (targetX !== null) {
     const dx = targetX - H.x;
     H.vx = Math.max(-640, Math.min(640, dx * 10));
-    if (Math.abs(dx) > 4) move = Math.sign(dx);
-  } else if (move !== 0) H.vx = move * 350;
+    if (Math.abs(dx) > 4) moveX = Math.sign(dx);
+  } else if (moveX !== 0) H.vx = moveX * 350;
   else H.vx *= Math.pow(0.0001, dt);
+  if (targetY !== null) {
+    const dy = targetY - H.y;
+    H.vy = Math.max(-560, Math.min(560, dy * 10));
+  } else if (moveY !== 0) H.vy = moveY * 320;
+  else H.vy *= Math.pow(0.0001, dt);
   H.x += H.vx * dt;
-  H.x = Math.max(pitLeft(FLOOR) + 24, Math.min(pitRight(FLOOR) - 24, H.x));
+  H.y += H.vy * dt;
+  H.x = Math.max(pitLeft(H.y) + 24, Math.min(pitRight(H.y) - 24, H.x));
+  H.y = Math.max(LH * 0.30, Math.min(FLOOR - 42, H.y));
   if (Math.abs(H.vx) > 30) H.face = Math.sign(H.vx);
   if (H.invulnT > 0) H.invulnT -= dt;
 
@@ -738,19 +755,18 @@ function updateOrbs(dt) {
         G.cooling.push({ type: o.type, t: o.coolT || 3 }); G.orbs.splice(oi, 1); gone = true; break;
       }
 
-      // floor: catch zone, NOT a bounce
-      if (o.vy > 0 && o.y >= FLOOR - 64) {
-        if (Math.abs(o.x - G.hero.x) < 62) {   // catch = physical interception (MECHANICS_SPEC: proximity catch)
-          G.mag.push(o.type); G.orbs.splice(oi, 1); gone = true; sfx.catch();
-          if (o.primary) G.primaryPending = true;   // the golden ball comes back golden
-          if (G.stats.catchMastery && G.catchStacks < 3) {
-            G.catchStacks += 1;
-            G.pops.push({ x: G.hero.x, y: FLOOR - 142, txt: 'POWER x' + Math.pow(1.08, G.catchStacks).toFixed(2), t: 0.5, color: '#ffd94d', small: true });
-          }
-          G.pops.push({ x: G.hero.x, y: FLOOR - 118, txt: 'CATCH!', t: 0.45, color: '#aef3ff', small: true });
-        } else if (o.y > FLOOR + 14) {
-          G.cooling.push({ type: o.type, t: 0.7 }); G.orbs.splice(oi, 1); gone = true;   // CHAOS PASS: a missed catch returns in 0.7 s (was 1.2) — more orbs stay in the air
+      // catch: physical interception — be where the orb falls, anywhere in
+      // the corridor (2D proximity catch; the floor is a miss, not a bounce)
+      if (o.vy > 0 && (o.x - G.hero.x) ** 2 + (o.y - G.hero.y) ** 2 < 62 * 62) {
+        G.mag.push(o.type); G.orbs.splice(oi, 1); gone = true; sfx.catch();
+        if (o.primary) G.primaryPending = true;   // the golden ball comes back golden
+        if (G.stats.catchMastery && G.catchStacks < 3) {
+          G.catchStacks += 1;
+          G.pops.push({ x: G.hero.x, y: G.hero.y - 100, txt: 'POWER x' + Math.pow(1.08, G.catchStacks).toFixed(2), t: 0.5, color: '#ffd94d', small: true });
         }
+        G.pops.push({ x: G.hero.x, y: G.hero.y - 76, txt: 'CATCH!', t: 0.45, color: '#aef3ff', small: true });
+      } else if (o.vy > 0 && o.y > FLOOR + 14) {
+        G.cooling.push({ type: o.type, t: 0.7 }); G.orbs.splice(oi, 1); gone = true;   // missed catch returns in 0.7 s — more orbs stay in the air
       }
     }
   }
@@ -801,13 +817,19 @@ function updateEnemies(dt) {
       e.dead = true; G.floorBreaches += 1;
       G.pops.push({ x: e.x, y: FLOOR - 30, txt: '-♥', t: 0.9, color: '#ff5a6e' });
       hurtHero(ETYPES[e.type].dmg);
+    } else if (G.state === 'play' && (e.x - G.hero.x) ** 2 + (e.y - G.hero.y) ** 2 < (e.r + 24) ** 2) {
+      // roaming into the horde costs blood: contact damage (the original's
+      // rule) — hurtHero's 0.9 s invuln window keeps it to one hit at a time
+      e.dead = true;
+      G.pops.push({ x: G.hero.x, y: G.hero.y - 64, txt: 'HIT!', t: 0.7, color: '#ff5a6e' });
+      hurtHero(ETYPES[e.type].dmg);
     }
   }
   G.enemies = G.enemies.filter(e => !e.dead);
 }
 
 function updateShards(dt) {
-  const H = G.hero, hx = H.x, hy = FLOOR - 46;
+  const H = G.hero, hx = H.x, hy = H.y;
   for (let i = G.shards.length - 1; i >= 0; i--) {
     const s = G.shards[i];
     const dx = hx - s.x, dy = hy - s.y, dist = Math.hypot(dx, dy);
@@ -815,7 +837,7 @@ function updateShards(dt) {
     if (s.mag) { const pull = 560; s.vx = dx / (dist || 1) * pull; s.vy = dy / (dist || 1) * pull; }
     else { s.vy = Math.min(s.vy + 30 * dt, 62); s.vx *= 0.98; }
     s.x += s.vx * dt; s.y += s.vy * dt;
-    if (dist < 30) { gainXp(s.v); G.shards.splice(i, 1); blip(1180, 0.04, 'sine', 0.03); }
+    if (dist < 30) { if (s.salvage) grantPower('SALVAGE'); else gainXp(s.v); G.shards.splice(i, 1); blip(1180, 0.04, 'sine', 0.03); }
     else if (s.y > FLOOR + 20) G.shards.splice(i, 1);
   }
 }
@@ -858,6 +880,14 @@ function botTarget() {
   }
   if (sx !== null) return sx;
   return W / 2 + Math.sin(G.t * 0.4) * W * 0.18;
+}
+function botTargetY() {
+  // roam like the new model: press up under a deep threat (staying below
+  // it, out of contact range), otherwise hold the home line
+  let low = null;
+  for (const e of G.enemies) { if (!e.dead && (!low || e.y > low.y)) low = e; }
+  if (low && low.y > LH * 0.45) return Math.max(LH * 0.34, Math.min(FLOOR - 42, low.y + 130));
+  return FLOOR - 42;
 }
 
 /* ---------------- render ---------------------------------------------------- */
@@ -923,8 +953,8 @@ function drawHero() {
   ctx.save();
   if (H.invulnT > 0 && Math.floor(G.t * 14) % 2) ctx.globalAlpha = 0.45;
   const firing = G.t - H.lastShot < 0.22;
-  if (a && a.drawHero) a.drawHero(ctx, H.x, FLOOR - 42, 64, G.t, firing);
-  else stubHero(H.x, FLOOR - 42, 64, firing);
+  if (a && a.drawHero) a.drawHero(ctx, H.x, H.y, 64, G.t, firing);
+  else stubHero(H.x, H.y, 64, firing);
   ctx.restore();
   if (G.t - H.hitAt < 0.28) { ctx.fillStyle = 'rgba(255,60,80,.20)'; ctx.beginPath(); ctx.arc(H.x, FLOOR - 42, 46, 0, 7); ctx.fill(); }
   // magazine pips under the hero
@@ -976,9 +1006,9 @@ function draw() {
   ctx.strokeStyle = P.accent; ctx.lineWidth = 3;
   ctx.beginPath(); ctx.moveTo(pitLeft(FLOOR), FLOOR + 4); ctx.lineTo(pitRight(FLOOR), FLOOR + 4); ctx.stroke();
   ctx.fillStyle = 'rgba(94,231,255,.13)';
-  ctx.fillRect(G.hero.x - 54, FLOOR - 64, 108, 68);
+  ctx.fillRect(G.hero.x - 54, G.hero.y - 22, 108, 68);
 
-  for (const s of G.shards) { if (a && a.drawShard) a.drawShard(ctx, s.x, s.y, 11, G.t); else stubShard(s.x, s.y, 10); }
+  for (const s of G.shards) { if (a && a.drawShard) a.drawShard(ctx, s.x, s.y, s.salvage ? 17 : 11, G.t); else stubShard(s.x, s.y, s.salvage ? 15 : 10); }
   for (const e of G.enemies) drawEnemy(e);
 
   ctx.strokeStyle = 'rgba(253,253,150,.9)'; ctx.lineWidth = 2;
@@ -1034,7 +1064,12 @@ function draw() {
     lines.push('', G.levelIdx + 1 < LEVELS.length ? 'TAP FOR NEXT PIT' : 'TAP TO PLAY AGAIN');
     screenMsg('PIT CLEARED!', lines);
   }
-  if (G.state === 'levelup') drawCards();
+  if (G.state === 'play' && G.banner) {   // in-flow power-up banner (no pause, ever)
+    ctx.globalAlpha = Math.min(1, G.banner.t / 0.4);
+    ctx.textAlign = 'center'; ctx.fillStyle = '#ffd94d'; ctx.font = '900 25px system-ui, sans-serif';
+    ctx.fillText(G.banner.txt, W / 2, LH * 0.30);
+    ctx.globalAlpha = 1;
+  }
   if (G.state === 'play' && G.elapsed < 4.5) {   // level intro card
     ctx.globalAlpha = Math.min(1, (4.5 - G.elapsed) / 1.2, G.elapsed / 0.4 + 0.2);
     ctx.textAlign = 'center'; ctx.fillStyle = P.accent; ctx.font = '900 30px system-ui, sans-serif';
@@ -1221,6 +1256,7 @@ function cssRects(rects) {
 }
 window.__dbg = {
   get heroX() { return Math.round(G.hero.x); },
+  get heroY() { return Math.round(G.hero.y); },
   get orbs() { return G.orbs.length; },
   get magReady() { return G.mag.length; },
   get enemies() { return G.enemies.length; },
