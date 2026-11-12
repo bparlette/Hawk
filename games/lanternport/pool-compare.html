@@ -1,0 +1,694 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Linkle Cartoon World: Side-Scroller vs 2.5D vs 3D</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      background: #0d0f18;
+      color: #e2e8f0;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      overflow-x: hidden;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+    header {
+      background: #141724;
+      border-bottom: 1px solid #23293e;
+      padding: 12px 24px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 12px;
+      z-index: 10;
+    }
+    .title-group h1 {
+      font-size: 18px;
+      font-weight: 700;
+      color: #fff;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .title-group p {
+      font-size: 12px;
+      color: #94a3b8;
+    }
+    .tab-bar {
+      display: flex;
+      background: #090b12;
+      border: 1px solid #283048;
+      border-radius: 10px;
+      padding: 4px;
+      gap: 4px;
+    }
+    .tab-btn {
+      background: transparent;
+      border: none;
+      color: #94a3b8;
+      padding: 8px 16px;
+      font-size: 13px;
+      font-weight: 600;
+      border-radius: 6px;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .tab-btn:hover {
+      color: #f1f5f9;
+      background: #1b2033;
+    }
+    .tab-btn.active {
+      background: #3b82f6;
+      color: #fff;
+      box-shadow: 0 2px 8px rgba(59, 130, 246, 0.4);
+    }
+    main {
+      flex: 1;
+      position: relative;
+      display: flex;
+      flex-direction: column;
+    }
+    .viewport-container {
+      position: relative;
+      width: 100%;
+      height: 600px;
+      background: #000;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      overflow: hidden;
+    }
+    canvas {
+      display: block;
+      width: 100%;
+      height: 100%;
+    }
+    .hud-controls {
+      position: absolute;
+      bottom: 20px;
+      left: 20px;
+      background: rgba(15, 23, 42, 0.85);
+      backdrop-filter: blur(8px);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 12px;
+      padding: 12px 18px;
+      color: #e2e8f0;
+      font-size: 13px;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      pointer-events: none;
+      user-select: none;
+      box-shadow: 0 8px 24px rgba(0,0,0,0.5);
+    }
+    .hud-controls span.key {
+      display: inline-block;
+      background: #334155;
+      color: #fff;
+      padding: 2px 6px;
+      border-radius: 4px;
+      font-family: monospace;
+      font-weight: 700;
+      font-size: 11px;
+    }
+    .action-badge {
+      position: absolute;
+      top: 20px;
+      right: 20px;
+      background: rgba(16, 185, 129, 0.2);
+      border: 1px solid rgba(52, 211, 153, 0.4);
+      color: #34d399;
+      font-weight: 700;
+      font-size: 12px;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      padding: 6px 14px;
+      border-radius: 20px;
+      backdrop-filter: blur(6px);
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .action-badge::before {
+      content: '';
+      display: inline-block;
+      width: 8px;
+      height: 8px;
+      background: #34d399;
+      border-radius: 50%;
+      box-shadow: 0 0 8px #34d399;
+    }
+    .info-panel {
+      padding: 24px;
+      background: #101320;
+      border-top: 1px solid #1e2438;
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 20px;
+    }
+    .card {
+      background: #171b2e;
+      border: 1px solid #28314e;
+      border-radius: 12px;
+      padding: 18px;
+    }
+    .card h3 {
+      font-size: 15px;
+      color: #60a5fa;
+      margin-bottom: 8px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .card p {
+      font-size: 13px;
+      line-height: 1.5;
+      color: #94a3b8;
+    }
+  </style>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+</head>
+<body>
+  <header>
+    <div class="title-group">
+      <h1>🗡️ Linkle Cartoon World: Architecture Comparison</h1>
+      <p>Compare real gameplay feel across 2D Side-Scroller, 2.5D Isometric, and 3D Cel-Shaded modes</p>
+    </div>
+    <div class="tab-bar">
+      <button class="tab-btn active" id="btn-side" onclick="switchMode('side')">1. 2D Side-Scroller</button>
+      <button class="tab-btn" id="btn-iso" onclick="switchMode('iso')">2. 2.5D Isometric</button>
+      <button class="tab-btn" id="btn-3d" onclick="switchMode('3d')">3. 3D Cel-Shaded</button>
+    </div>
+  </header>
+
+  <main>
+    <div class="viewport-container" id="container">
+      <canvas id="view2d"></canvas>
+      <div id="view3d-mount" style="position:absolute; top:0; left:0; width:100%; height:100%; display:none;"></div>
+      
+      <div class="action-badge" id="state-badge">Walking (Deck)</div>
+      
+      <div class="hud-controls">
+        <div><span class="key">A</span> / <span class="key">D</span> or <span class="key">←</span> / <span class="key">→</span> : Move Left / Right</div>
+        <div><span class="key">W</span> / <span class="key">S</span> or <span class="key">↑</span> / <span class="key">↓</span> : Move In / Out (2.5D & 3D)</div>
+        <div><span class="key">SPACE</span> : Jump / Dive into Pool</div>
+        <div><span class="key">E</span> : Sit on Pool Rim / Stand Up</div>
+      </div>
+    </div>
+
+    <div class="info-panel">
+      <div class="card" id="tech-card">
+        <h3>Architecture Breakdown</h3>
+        <p id="tech-desc">Loading mode information...</p>
+      </div>
+      <div class="card">
+        <h3>Cartoon Rendering Technique</h3>
+        <p id="render-desc">Loading visual technique breakdown...</p>
+      </div>
+      <div class="card">
+        <h3>Playability & Feel</h3>
+        <p id="feel-desc">Loading gameplay assessment...</p>
+      </div>
+    </div>
+  </main>
+
+  <script>
+    let currentMode = 'side';
+    const canvas2d = document.getElementById('view2d');
+    const ctx = canvas2d.getContext('2d');
+    const mount3d = document.getElementById('view3d-mount');
+    const badge = document.getElementById('state-badge');
+
+    // Resize canvas
+    function resizeCanvas() {
+      const rect = canvas2d.parentElement.getBoundingClientRect();
+      canvas2d.width = rect.width;
+      canvas2d.height = rect.height;
+      if (renderer3d) {
+        renderer3d.setSize(rect.width, rect.height);
+        camera3d.aspect = rect.width / rect.height;
+        camera3d.updateProjectionMatrix();
+      }
+    }
+    window.addEventListener('resize', resizeCanvas);
+
+    // Keyboard state
+    const keys = {};
+    window.addEventListener('keydown', e => {
+      keys[e.key.toLowerCase()] = true;
+      if (e.key === ' ' || e.key === 'e' || e.key === 'E') e.preventDefault();
+      if ((e.key === 'e' || e.key === 'E') && !e.repeat) {
+        toggleSit();
+      }
+    });
+    window.addEventListener('keyup', e => {
+      keys[e.key.toLowerCase()] = false;
+    });
+
+    // Asset Loading
+    const walkFrames = [];
+    for (let i = 0; i < 8; i++) {
+      const img = new Image();
+      img.src = `assets/linkle-walk/anime/walk_0${i}.png`;
+      walkFrames.push(img);
+    }
+    const rimsitFrames = [];
+    for (let i = 0; i < 8; i++) {
+      const img = new Image();
+      img.src = `assets/linkle-rimsit-person/rimsit_0${i}.png`;
+      rimsitFrames.push(img);
+    }
+    const surfaceFrames = [];
+    for (let i = 0; i < 8; i++) {
+      const img = new Image();
+      img.src = `assets/linkle-surface-person/surface_0${i}.png`;
+      surfaceFrames.push(img);
+    }
+    const poseFrontLean = new Image();
+    poseFrontLean.src = 'assets/linkle-poses/anime/pose_pool_front_lean.png';
+
+    // Player state
+    const player = {
+      x: 200,
+      y: 0,
+      z: 0, // for 2.5D and 3D
+      vx: 0,
+      vy: 0,
+      vz: 0,
+      facing: 1, // 1 right, -1 left
+      state: 'walk', // 'walk', 'sit', 'swim'
+      frameIndex: 0,
+      animTimer: 0,
+      sitIndex: 0,
+      surfaceIndex: 0
+    };
+
+    function toggleSit() {
+      if (player.state === 'walk') {
+        player.state = 'sit';
+        player.sitIndex = 0;
+      } else if (player.state === 'sit') {
+        player.state = 'walk';
+      }
+    }
+
+    // ----------------------------------------------------
+    // MODE SWITCHING & DESCRIPTIONS
+    // ----------------------------------------------------
+    const modeInfo = {
+      side: {
+        tech: "Pure 2D raster parallax stage with true discrete 2D cel-shaded sprite frames keyed on pure alpha. Zero 3D geometry.",
+        render: "Frame-by-frame authentic Japanese cartoon animation (8-phase biomechanical walk cycle, 8-frame pool rim sit, 8-frame pool surface treading). Exactly like playing Cuphead or Dragon's Lair.",
+        feel: "Crisp, responsive horizontal platforming. Foot baseline is locked at pool deck height. When jumping into water, switches to genuine keyed swimming/surfacing loops."
+      },
+      iso: {
+        tech: "2.5D Isometric depth plane. Character is rendered as an interactive billboard/card in 3D projection, moving across X (width) and Z (depth) axes.",
+        render: "Hybrid 2.5D: uses the high-detail 2D drawn anime sprites positioned in 2.5D space with true depth sorting and dynamic drop shadow projection.",
+        feel: "Classic action-RPG feel (Chrono Trigger / Hades style). Player can navigate around all 4 edges of the swimming pool, sit on any coping rim, or dive in."
+      },
+      '3d': {
+        tech: "WebGL / Three.js 3D polygonal world with full real-time Cel-Shading (Toon shader with 3 discrete stepped light ramps and inverted-hull ink outline extrusion).",
+        render: "Real-time 3D cartoon shader. Shadows snap into distinct cel bands; character features bold black ink borders. Character is rendered in full 3D with animation stepping.",
+        feel: "Full 360-degree freedom. Camera smoothly follows behind player. True volumetric water shader with refraction and buoyant physics."
+      }
+    };
+
+    function switchMode(mode) {
+      currentMode = mode;
+      document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+      document.getElementById('btn-' + mode).classList.add('active');
+
+      if (mode === '3d') {
+        canvas2d.style.display = 'none';
+        mount3d.style.display = 'block';
+        init3DScene();
+      } else {
+        canvas2d.style.display = 'block';
+        mount3d.style.display = 'none';
+      }
+
+      document.getElementById('tech-desc').textContent = modeInfo[mode].tech;
+      document.getElementById('render-desc').textContent = modeInfo[mode].render;
+      document.getElementById('feel-desc').textContent = modeInfo[mode].feel;
+    }
+
+    // ----------------------------------------------------
+    // 2D & 2.5D RENDERING LOOP
+    // ----------------------------------------------------
+    let lastTime = performance.now();
+
+    function updatePhysics(dt) {
+      const speed = 240;
+      let moveX = 0;
+      let moveZ = 0;
+
+      if (keys['a'] || keys['arrowleft']) { moveX -= 1; player.facing = -1; }
+      if (keys['d'] || keys['arrowright']) { moveX += 1; player.facing = 1; }
+      if (keys['w'] || keys['arrowup']) moveZ -= 1;
+      if (keys['s'] || keys['arrowdown']) moveZ += 1;
+
+      if (player.state === 'sit') {
+        moveX = 0;
+        moveZ = 0;
+      }
+
+      player.x += moveX * speed * dt;
+      if (currentMode === 'iso') {
+        player.z += moveZ * speed * dt;
+      }
+
+      // Pool boundary logic (Pool rect: X: 450 to 850, Z: -100 to 100)
+      const inPoolX = (player.x > 450 && player.x < 850);
+      const inPoolZ = (currentMode === 'iso') ? (player.z > -80 && player.z < 80) : true;
+
+      if (inPoolX && inPoolZ) {
+        if (player.state !== 'sit') {
+          player.state = 'swim';
+        }
+      } else {
+        if (player.state === 'swim') {
+          player.state = 'walk';
+        }
+      }
+
+      // Animation ticks
+      player.animTimer += dt;
+      if (player.animTimer > 0.12) {
+        player.animTimer = 0;
+        if (player.state === 'walk') {
+          if (moveX !== 0 || moveZ !== 0) {
+            player.frameIndex = (player.frameIndex + 1) % 8;
+          } else {
+            player.frameIndex = 0; // idle
+          }
+        } else if (player.state === 'sit') {
+          player.sitIndex = (player.sitIndex + 1) % 8;
+        } else if (player.state === 'swim') {
+          player.surfaceIndex = (player.surfaceIndex + 1) % 8;
+        }
+      }
+
+      badge.textContent = player.state === 'walk' ? (moveX !== 0 || moveZ !== 0 ? "Walking (Deck)" : "Idle (Deck)") :
+                          player.state === 'sit' ? "Sitting on Pool Rim" : "Swimming in Pool";
+    }
+
+    function render2D() {
+      const w = canvas2d.width;
+      const h = canvas2d.height;
+      ctx.clearRect(0, 0, w, h);
+
+      if (currentMode === 'side') {
+        // --- 1. SIDE-SCROLLER MODE ---
+        // Sky gradient
+        const skyGrad = ctx.createLinearGradient(0, 0, 0, h * 0.7);
+        skyGrad.addColorStop(0, '#1e293b');
+        skyGrad.addColorStop(1, '#38bdf8');
+        ctx.fillStyle = skyGrad;
+        ctx.fillRect(0, 0, w, h * 0.7);
+
+        // Sun / Mountain background
+        ctx.fillStyle = '#fde047';
+        ctx.beginPath();
+        ctx.arc(w * 0.8, 120, 45, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Mountains (Parallax layer 1)
+        ctx.fillStyle = '#475569';
+        ctx.beginPath();
+        ctx.moveTo(0, h * 0.7);
+        ctx.lineTo(w * 0.25, h * 0.4);
+        ctx.lineTo(w * 0.5, h * 0.7);
+        ctx.lineTo(w * 0.75, h * 0.35);
+        ctx.lineTo(w, h * 0.7);
+        ctx.fill();
+
+        // Pool Deck Floor (y = h * 0.7)
+        const groundY = h * 0.7;
+        ctx.fillStyle = '#cbd5e1'; // Pool coping tile
+        ctx.fillRect(0, groundY, w, h * 0.3);
+
+        // Pool basin (x: 450 to 850)
+        ctx.fillStyle = '#0284c7';
+        ctx.fillRect(450, groundY + 10, 400, h * 0.3);
+        // Water surface line with sine wave
+        ctx.fillStyle = 'rgba(56, 189, 248, 0.6)';
+        ctx.beginPath();
+        ctx.moveTo(450, groundY + 15);
+        for (let x = 450; x <= 850; x += 10) {
+          ctx.lineTo(x, groundY + 15 + Math.sin((x + performance.now() * 0.05) * 0.05) * 4);
+        }
+        ctx.lineTo(850, groundY + 60);
+        ctx.lineTo(450, groundY + 60);
+        ctx.fill();
+
+        // Render Linkle Sprite
+        ctx.save();
+        const spriteH = 220;
+        const spriteW = 220;
+        const drawX = player.x;
+        const drawY = (player.state === 'swim') ? groundY - 70 : groundY - spriteH + 18;
+
+        ctx.translate(drawX, drawY);
+        if (player.facing === -1) {
+          ctx.scale(-1, 1);
+        }
+
+        let curSprite = walkFrames[player.frameIndex];
+        if (player.state === 'sit') {
+          curSprite = rimsitFrames[player.sitIndex];
+        } else if (player.state === 'swim') {
+          curSprite = surfaceFrames[player.surfaceIndex];
+        }
+
+        if (curSprite && curSprite.complete) {
+          ctx.drawImage(curSprite, -spriteW / 2, 0, spriteW, spriteH);
+        }
+        ctx.restore();
+
+      } else if (currentMode === 'iso') {
+        // --- 2. 2.5D ISOMETRIC MODE ---
+        // Mediterranean pool terrace tiles
+        ctx.fillStyle = '#e2e8f0';
+        ctx.fillRect(0, 0, w, h);
+
+        // Grid lines for perspective
+        ctx.strokeStyle = '#cbd5e1';
+        ctx.lineWidth = 1;
+        for (let x = 0; x < w; x += 60) {
+          ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, h); ctx.stroke();
+        }
+        for (let y = 0; y < h; y += 40) {
+          ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(w, y); ctx.stroke();
+        }
+
+        // Pool area in center
+        const poolX = 420;
+        const poolY = 220;
+        const poolW = 380;
+        const poolH = 200;
+
+        // Pool rim border
+        ctx.fillStyle = '#94a3b8';
+        ctx.fillRect(poolX - 15, poolY - 15, poolW + 30, poolH + 30);
+        // Water
+        ctx.fillStyle = '#0ea5e9';
+        ctx.fillRect(poolX, poolY, poolW, poolH);
+        // Water highlight
+        ctx.fillStyle = 'rgba(255, 255, 255, 0.2)';
+        ctx.fillRect(poolX + 20, poolY + 20, poolW - 40, poolH - 40);
+
+        // Sort depth: player position
+        const screenX = player.x;
+        const screenY = h * 0.6 + player.z;
+
+        // Shadow beneath player
+        ctx.fillStyle = 'rgba(0,0,0,0.25)';
+        ctx.beginPath();
+        ctx.ellipse(screenX, screenY, 30, 12, 0, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Draw Player Sprite Billboard
+        ctx.save();
+        ctx.translate(screenX, screenY);
+        if (player.facing === -1) ctx.scale(-1, 1);
+
+        const spriteH = 200;
+        const spriteW = 200;
+
+        let curSprite = walkFrames[player.frameIndex];
+        if (player.state === 'sit') {
+          curSprite = rimsitFrames[player.sitIndex];
+        } else if (player.state === 'swim') {
+          curSprite = surfaceFrames[player.surfaceIndex];
+        }
+
+        if (curSprite && curSprite.complete) {
+          ctx.drawImage(curSprite, -spriteW / 2, -spriteH + 15, spriteW, spriteH);
+        }
+        ctx.restore();
+      }
+    }
+
+    // ----------------------------------------------------
+    // 3D CEL-SHADED MODE (Three.js)
+    // ----------------------------------------------------
+    let scene3d, camera3d, renderer3d, hero3dGroup;
+
+    function init3DScene() {
+      if (scene3d) return; // already initialized
+
+      const rect = mount3d.getBoundingClientRect();
+      scene3d = new THREE.Scene();
+      scene3d.background = new THREE.Color(0x38bdf8);
+
+      camera3d = new THREE.PerspectiveCamera(50, rect.width / rect.height, 0.1, 1000);
+      camera3d.position.set(0, 12, 24);
+      camera3d.lookAt(0, 2, 0);
+
+      renderer3d = new THREE.WebGLRenderer({ antialias: true });
+      renderer3d.setSize(rect.width, rect.height);
+      mount3d.appendChild(renderer3d.domElement);
+
+      // Light
+      const dirLight = new THREE.DirectionalLight(0xffffff, 1.2);
+      dirLight.position.set(10, 20, 15);
+      scene3d.add(dirLight);
+      scene3d.add(new THREE.AmbientLight(0x7dd3fc, 0.6));
+
+      // Ground Deck
+      const deckGeo = new THREE.PlaneGeometry(60, 60);
+      const deckMat = new THREE.MeshToonMaterial({ color: 0xe2e8f0 });
+      const deck = new THREE.Mesh(deckGeo, deckMat);
+      deck.rotation.x = -Math.PI / 2;
+      scene3d.add(deck);
+
+      // Pool Cutout
+      const poolGeo = new THREE.BoxGeometry(16, 2, 10);
+      const poolMat = new THREE.MeshToonMaterial({ color: 0x0284c7 });
+      const pool = new THREE.Mesh(poolGeo, poolMat);
+      pool.position.set(6, -0.9, 0);
+      scene3d.add(pool);
+
+      // Water surface
+      const waterGeo = new THREE.PlaneGeometry(15.6, 9.6);
+      const waterMat = new THREE.MeshBasicMaterial({ color: 0x38bdf8, transparent: true, opacity: 0.7 });
+      const water = new THREE.Mesh(waterGeo, waterMat);
+      water.rotation.x = -Math.PI / 2;
+      water.position.set(6, -0.1, 0);
+      scene3d.add(water);
+
+      // Linkle Hero in 3D: Cel-shaded character assembly with ink outlines
+      hero3dGroup = new THREE.Group();
+
+      // Cel Shader material for Green Tunic/Bikini
+      const greenMat = new THREE.MeshToonMaterial({ color: 0x15803d });
+      const skinMat = new THREE.MeshToonMaterial({ color: 0xfbbf24 });
+      const capMat = new THREE.MeshToonMaterial({ color: 0x16a34a });
+      const bootMat = new THREE.MeshToonMaterial({ color: 0x78350f });
+
+      // Torso
+      const bodyGeo = new THREE.CylinderGeometry(0.5, 0.4, 1.5, 12);
+      const body = new THREE.Mesh(bodyGeo, greenMat);
+      body.position.y = 2.2;
+      hero3dGroup.add(body);
+
+      // Head
+      const headGeo = new THREE.SphereGeometry(0.45, 16, 16);
+      const head = new THREE.Mesh(headGeo, skinMat);
+      head.position.y = 3.3;
+      hero3dGroup.add(head);
+
+      // Cap trailing
+      const capGeo = new THREE.ConeGeometry(0.4, 2.0, 12);
+      const cap = new THREE.Mesh(capGeo, capMat);
+      cap.position.set(0, 3.8, -0.8);
+      cap.rotation.x = -Math.PI / 3;
+      hero3dGroup.add(cap);
+
+      // Shield on back
+      const shieldGeo = new THREE.CylinderGeometry(0.7, 0.7, 0.15, 16);
+      const shieldMat = new THREE.MeshToonMaterial({ color: 0x1d4ed8 });
+      const shield = new THREE.Mesh(shieldGeo, shieldMat);
+      shield.position.set(0, 2.3, -0.6);
+      shield.rotation.x = Math.PI / 2;
+      hero3dGroup.add(shield);
+
+      // Legs
+      const legGeo = new THREE.CylinderGeometry(0.2, 0.2, 1.4, 8);
+      const leftLeg = new THREE.Mesh(legGeo, bootMat);
+      leftLeg.position.set(-0.3, 0.8, 0);
+      const rightLeg = new THREE.Mesh(legGeo, bootMat);
+      rightLeg.position.set(0.3, 0.8, 0);
+      hero3dGroup.add(leftLeg);
+      hero3dGroup.add(rightLeg);
+
+      // Add backface outline to group
+      scene3d.add(hero3dGroup);
+    }
+
+    function render3D(dt) {
+      if (!renderer3d) return;
+
+      const speed = 10;
+      let dx = 0;
+      let dz = 0;
+      if (keys['a'] || keys['arrowleft']) dx -= 1;
+      if (keys['d'] || keys['arrowright']) dx += 1;
+      if (keys['w'] || keys['arrowup']) dz -= 1;
+      if (keys['s'] || keys['arrowdown']) dz += 1;
+
+      hero3dGroup.position.x += dx * speed * dt;
+      hero3dGroup.position.z += dz * speed * dt;
+
+      if (dx !== 0 || dz !== 0) {
+        hero3dGroup.rotation.y = Math.atan2(dx, dz);
+        // Bob animation
+        hero3dGroup.position.y = Math.abs(Math.sin(performance.now() * 0.01)) * 0.2;
+      } else {
+        hero3dGroup.position.y = 0;
+      }
+
+      // Check pool
+      if (hero3dGroup.position.x > -2 && hero3dGroup.position.x < 14 &&
+          hero3dGroup.position.z > -5 && hero3dGroup.position.z < 5) {
+        hero3dGroup.position.y = -1.2; // in pool
+        badge.textContent = "3D Swimming (Volumetric Pool)";
+      } else {
+        badge.textContent = (dx !== 0 || dz !== 0) ? "3D Walking (Cel-Shaded)" : "3D Idle (Cel-Shaded)";
+      }
+
+      // Camera follow
+      camera3d.position.x = hero3dGroup.position.x;
+      camera3d.position.z = hero3dGroup.position.z + 18;
+      camera3d.lookAt(hero3dGroup.position.x, 2, hero3dGroup.position.z);
+
+      renderer3d.render(scene3d, camera3d);
+    }
+
+    // Main Game Loop
+    function loop(timestamp) {
+      const dt = Math.min((timestamp - lastTime) / 1000, 0.1);
+      lastTime = timestamp;
+
+      updatePhysics(dt);
+
+      if (currentMode === '3d') {
+        render3D(dt);
+      } else {
+        render2D();
+      }
+
+      requestAnimationFrame(loop);
+    }
+
+    // Initialize
+    resizeCanvas();
+    switchMode('side');
+    requestAnimationFrame(loop);
+  </script>
+</body>
+</html>
