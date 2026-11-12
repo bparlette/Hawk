@@ -2530,6 +2530,22 @@
    "thumb": "thumbs/bonk-yard.png",
    "title": "LINKLE — Cucco Airlift AR",
    "url": "../games/linkle-blender/"
+  },
+  {
+   "category": "Viral Demos",
+   "desc": "The Lanternport fountain plaza as a living oil painting — walk her through it while every brush dab repaints every frame (Smooth/Rich toggle).",
+   "id": "oil-paint-plaza",
+   "thumb": "thumbs/bonk-yard.png",
+   "title": "PAINTED PLAZA — Painted Live",
+   "url": "../games/oil-paint-plaza/"
+  },
+  {
+   "category": "Viral Demos",
+   "desc": "The same painted plaza, but each camera angle is painted once and cached — only she repaints as she walks between zones. The A/B twin of Painted Live.",
+   "id": "oil-paint-plaza-once",
+   "thumb": "thumbs/bonk-yard.png",
+   "title": "PAINTED PLAZA — Painted Once",
+   "url": "../games/oil-paint-plaza-once/"
   }
  ]
 }
