@@ -111,6 +111,22 @@ canvas.addEventListener('pointerdown', e => {
 canvas.addEventListener('pointermove', e => { if (dragX !== null) dragX = toLogical(e.clientX); });
 window.addEventListener('pointerup', () => { dragX = null; });
 window.addEventListener('pointercancel', () => { dragX = null; });
+/* Touch fix: on touch devices the gptouch overlay (fixed, z-index 1000) sits
+   over the canvas and takes every tap, so the canvas pointerdown above never
+   fires — title Play, level select and level-up card picks were all dead on
+   phones. Route menu-state taps through window (overlay taps bubble up to
+   it). Play state is left to the stick; desktop (no TC) keeps the canvas path.
+   State guards make a hypothetical double delivery harmless: whichever
+   handler runs first changes the state, the second then no-ops. */
+window.addEventListener('pointerdown', e => {
+  if (!TC) return;
+  if (G.state === 'play') return;
+  audio();
+  const lx = toLogical(e.clientX), ly = toLogicalY(e.clientY);
+  if (G.state === 'levelup') { clickCard(lx, ly); }
+  else if (G.state === 'title') { if (!clickLevel(lx, ly)) startRun(); }
+  else { advance(); }
+});
 
 let TC = null;
 try { if (isTouchDevice()) TC = new TouchController({ buttons: [] }); } catch (e) { TC = null; }
