@@ -29,7 +29,7 @@
 </head>
 <body>
 <canvas id="stage"></canvas>
-<div id="chip">La Grande Jatte &mdash; drag to sail the white boat</div>
+<div id="chip">La Grande Jatte &mdash; tap somewhere and the squirrel goes there</div>
 <div id="err"><div>The painting could not be loaded.</div></div>
 <script>
 (function () {
@@ -148,11 +148,502 @@
     }).forEach(function (name) { fillHole(g, img, DEFS[name]); });
   }
 
-  // ---- animation state -------------------------------------------------------
-  var hero = { cx: 0.096 * 1, target: null, lastTouch: -1e9 }; // cx set after load (frac)
+  // ==========================================================================
+  // THE SQUIRREL — repainted from dots every frame, in the painting's palette
+  // ==========================================================================
+
+  // ---- walkable geometry, in image fractions, measured off the painting ----
+  // The lawn + shoreline path as one polygon; everything outside it (river,
+  // far shore, sky, treetops) is not ground a squirrel can walk on.
+  var GROUND = [
+    [0.163, 0.318], [0.235, 0.298], [0.330, 0.282], [0.450, 0.262],
+    [0.580, 0.248], [0.720, 0.238], [0.860, 0.228], [1.000, 0.222],
+    [1.000, 1.000], [0.000, 1.000],
+    [0.000, 0.618], [0.028, 0.602], [0.055, 0.582], [0.082, 0.556],
+    [0.105, 0.522], [0.125, 0.482], [0.142, 0.442], [0.154, 0.402],
+    [0.161, 0.362]
+  ];
+  // Obstacles: [cx, cy, rx, ry] — tree trunks and the major figures.
+  var OBST = [
+    [0.108, 0.445, 0.030, 0.155],  // fisherwoman standing at the shore
+    [0.176, 0.475, 0.040, 0.088],  // seated woman in orange, left
+    [0.227, 0.355, 0.024, 0.068],  // standing woman with parasol, mid-left
+    [0.252, 0.355, 0.013, 0.175],  // slender tree trunk, centre-left
+    [0.272, 0.480, 0.035, 0.070],  // white dress + red scarf figure
+    [0.316, 0.445, 0.040, 0.088],  // seated man under the orange parasol
+    [0.357, 0.325, 0.027, 0.118],  // man playing the horn
+    [0.408, 0.285, 0.030, 0.064],  // two soldiers
+    [0.412, 0.362, 0.040, 0.044],  // seated boy and companion, mid-ground
+    [0.490, 0.200, 0.062, 0.046],  // central woman's parasol
+    [0.503, 0.400, 0.038, 0.168],  // central standing woman
+    [0.453, 0.482, 0.028, 0.100],  // little girl in white
+    [0.528, 0.245, 0.011, 0.062],  // thin dark trunk behind her
+    [0.618, 0.235, 0.019, 0.155],  // leaning pale trunk, centre
+    [0.578, 0.398, 0.058, 0.036],  // blue parasol, centre-right
+    [0.615, 0.518, 0.088, 0.132],  // two seated women beneath it
+    [0.667, 0.283, 0.028, 0.086],  // standing couple, background right
+    [0.556, 0.335, 0.017, 0.044],  // seated figure, background centre
+    [0.607, 0.337, 0.027, 0.040],  // seated man, background centre-right
+    [0.702, 0.220, 0.009, 0.052],  // thin trunk, right-mid
+    [0.815, 0.165, 0.013, 0.170],  // right-hand tree trunks
+    [0.858, 0.165, 0.013, 0.170],
+    [0.937, 0.165, 0.013, 0.170],
+    [0.968, 0.165, 0.012, 0.170],
+    [0.752, 0.400, 0.034, 0.270],  // woman in the grey dress, right of centre
+    [0.845, 0.295, 0.072, 0.205],  // big foreground couple, upper bodies
+    [0.862, 0.665, 0.100, 0.238],  // big foreground woman's skirt
+    [0.925, 0.385, 0.067, 0.090],  // seated pair, far right
+    [0.745, 0.820, 0.042, 0.075],  // the monkey on its leash
+    [0.212, 0.640, 0.064, 0.122],  // seated man in the top hat
+    [0.338, 0.665, 0.054, 0.138],  // seated woman in the dark dress
+    [0.152, 0.788, 0.148, 0.112]   // reclining man, bottom-left
+  ];
+
+  function inGround(x, y) {
+    var inside = false;
+    for (var i = 0, j = GROUND.length - 1; i < GROUND.length; j = i++) {
+      var xi = GROUND[i][0], yi = GROUND[i][1], xj = GROUND[j][0], yj = GROUND[j][1];
+      if (((yi > y) !== (yj > y)) && (x < (xj - xi) * (y - yi) / (yj - yi) + xi)) inside = !inside;
+    }
+    return inside;
+  }
+  // inflate > 0 shrinks the walkable world a little (keeps the squirrel's body
+  // visually clear of figure edges and the waterline)
+  function isBlocked(x, y, inflate) {
+    if (!inGround(x, y)) return true;
+    for (var i = 0; i < OBST.length; i++) {
+      var o = OBST[i];
+      var dx = (x - o[0]) / (o[2] + inflate), dy = (y - o[1]) / (o[3] + inflate * 0.7);
+      if (dx * dx + dy * dy < 1) return true;
+    }
+    return false;
+  }
+  // strict test used by the grid: centre + a small cross must all be clear
+  function cellFree(x, y) {
+    if (isBlocked(x, y, 0.004)) return false;
+    var e = 0.005;
+    return !isBlocked(x + e, y, 0.002) && !isBlocked(x - e, y, 0.002) &&
+           !isBlocked(x, y + e, 0.002) && !isBlocked(x, y - e, 0.002);
+  }
+
+  // ---- A* over a 120x80 grid ------------------------------------------------
+  var GW = 120, GH = 80, grid = null;
+  function cellCX(i) { return (i + 0.5) / GW; }
+  function cellCY(j) { return (j + 0.5) / GH; }
+  function buildGrid() {
+    grid = new Uint8Array(GW * GH);
+    for (var j = 0; j < GH; j++)
+      for (var i = 0; i < GW; i++)
+        grid[j * GW + i] = cellFree(cellCX(i), cellCY(j)) ? 1 : 0;
+  }
+  function nearestFreeCell(fx, fy) {
+    var ci = Math.max(0, Math.min(GW - 1, Math.floor(fx * GW)));
+    var cj = Math.max(0, Math.min(GH - 1, Math.floor(fy * GH)));
+    if (grid[cj * GW + ci]) return [ci, cj];
+    for (var r = 1; r < GW; r++) {
+      for (var dj = -r; dj <= r; dj++) {
+        for (var di = -r; di <= r; di++) {
+          if (Math.max(Math.abs(di), Math.abs(dj)) !== r) continue;
+          var i2 = ci + di, j2 = cj + dj;
+          if (i2 < 0 || j2 < 0 || i2 >= GW || j2 >= GH) continue;
+          if (grid[j2 * GW + i2]) return [i2, j2];
+        }
+      }
+    }
+    return [ci, cj];
+  }
+  function findPath(sfx, sfy, tfx, tfy) {
+    var s = nearestFreeCell(sfx, sfy), t = nearestFreeCell(tfx, tfy);
+    var si = s[1] * GW + s[0], ti = t[1] * GW + t[0];
+    var N = GW * GH;
+    var gScore = new Float32Array(N).fill(Infinity);
+    var fScore = new Float32Array(N).fill(Infinity);
+    var came = new Int32Array(N).fill(-1);
+    var closed = new Uint8Array(N);
+    var open = [si];
+    gScore[si] = 0; fScore[si] = 0;
+    function h(idx) {
+      var dx = Math.abs((idx % GW) - t[0]), dy = Math.abs(((idx / GW) | 0) - t[1]);
+      return (dx + dy) + (Math.SQRT2 - 2) * Math.min(dx, dy);
+    }
+    fScore[si] = h(si);
+    var DIRS = [[1, 0, 1], [-1, 0, 1], [0, 1, 1], [0, -1, 1],
+                [1, 1, Math.SQRT2], [1, -1, Math.SQRT2], [-1, 1, Math.SQRT2], [-1, -1, Math.SQRT2]];
+    while (open.length) {
+      var bi = 0;
+      for (var k = 1; k < open.length; k++) if (fScore[open[k]] < fScore[open[bi]]) bi = k;
+      var cur = open.splice(bi, 1)[0];
+      if (cur === ti) {
+        var path = [], c = cur;
+        while (c !== -1) { path.push([cellCX(c % GW), cellCY((c / GW) | 0)]); c = came[c]; }
+        path.reverse();
+        return path;
+      }
+      if (closed[cur]) continue;
+      closed[cur] = 1;
+      var cx = cur % GW, cy = (cur / GW) | 0;
+      for (var d = 0; d < 8; d++) {
+        var nx = cx + DIRS[d][0], ny = cy + DIRS[d][1];
+        if (nx < 0 || ny < 0 || nx >= GW || ny >= GH) continue;
+        var ni = ny * GW + nx;
+        if (!grid[ni] || closed[ni]) continue;
+        if (d >= 4 && (!grid[cy * GW + nx] || !grid[ny * GW + cx])) continue; // no corner cutting
+        var ng = gScore[cur] + DIRS[d][2];
+        if (ng < gScore[ni]) {
+          gScore[ni] = ng; fScore[ni] = ng + h(ni); came[ni] = cur;
+          open.push(ni);
+        }
+      }
+    }
+    return null;
+  }
+  function segClear(x0, y0, x1, y1) {
+    var dist = Math.hypot(x1 - x0, y1 - y0);
+    var steps = Math.max(2, Math.ceil(dist / 0.004));
+    for (var s = 0; s <= steps; s++) {
+      var u = s / steps;
+      if (isBlocked(x0 + (x1 - x0) * u, y0 + (y1 - y0) * u, 0.003)) return false;
+    }
+    return true;
+  }
+  function smoothPath(path) {
+    if (!path || path.length < 3) return path;
+    var out = [path[0]], i = 0;
+    while (i < path.length - 1) {
+      var j = path.length - 1;
+      while (j > i + 1 && !segClear(path[i][0], path[i][1], path[j][0], path[j][1])) j--;
+      out.push(path[j]); i = j;
+    }
+    return out;
+  }
+
+  // ---- palette: the dog's and monkey's own dab mixture, sampled live -------
+  // Measured on the painting: the little dog's body is ~49% plum-grey dabs,
+  // ~38% blue-violet, ~7% green, ~5% near-black, ~1% warm brown — it only
+  // reads "chocolate" through optical mixing at a distance. So the squirrel
+  // is painted from the same classified mixture, in the same proportions,
+  // region by region. (Any single-hue sampling collapses to mud or cream.)
+  var PAL = null;
+  function samplePalette(img) {
+    var c = mkCanvas(IW, IH), g = c.getContext('2d');
+    g.drawImage(img, 0, 0);
+    var ellipses = [
+      [0.665, 0.878, 0.048, 0.030],   // the little brown dog's body
+      [0.748, 0.852, 0.036, 0.052]    // the monkey's body
+    ];
+    var cls = { plum: [0, 0, 0, 0], violet: [0, 0, 0, 0], black: [0, 0, 0, 0], green: [0, 0, 0, 0], warm: [0, 0, 0, 0] };
+    ellipses.forEach(function (e) {
+      var x0 = ((e[0] - e[2]) * IW) | 0, x1 = ((e[0] + e[2]) * IW) | 0;
+      var y0 = ((e[1] - e[3]) * IH) | 0, y1 = ((e[1] + e[3]) * IH) | 0;
+      var d;
+      try { d = g.getImageData(x0, y0, x1 - x0, y1 - y0).data; } catch (err) { return; }
+      var w = x1 - x0;
+      for (var y = 0; y < y1 - y0; y += 2) {
+        for (var x = 0; x < w; x += 2) {
+          var fx = (x0 + x) / IW, fy = (y0 + y) / IH;
+          var qx = (fx - e[0]) / e[2], qy = (fy - e[1]) / e[3];
+          if (qx * qx + qy * qy > 1) continue;
+          var i = (y * w + x) * 4;
+          var R = d[i], G = d[i + 1], B = d[i + 2];
+          var lum = 0.3 * R + 0.59 * G + 0.11 * B;
+          var k;
+          if (lum < 32) k = 'black';
+          else if (B > R + 3) k = 'violet';
+          else if (G > R + 4 && G >= B) k = 'green';
+          else if (R - B >= 14 && R >= G) k = 'warm';
+          else k = 'plum';
+          cls[k][0] += R; cls[k][1] += G; cls[k][2] += B; cls[k][3]++;
+        }
+      }
+    });
+    function mean(k, f, fb) {
+      var a = cls[k];
+      if (!a[3]) return fb;
+      function ch(v) { return Math.max(0, Math.min(255, Math.round(v / a[3] * f))); }
+      return 'rgb(' + ch(a[0]) + ',' + ch(a[1]) + ',' + ch(a[2]) + ')';
+    }
+    // The eye reads the dog as warm russet-brown at viewing distance; the raw
+    // dab means are cooler than that perception. Warm-shift every class 20%
+    // toward russet so the squirrel matches the dog as she is actually seen.
+    function warmShift(css) {
+      var m = /rgb\((\d+),(\d+),(\d+)\)/.exec(css);
+      if (!m) return css;
+      var t = [143, 86, 52], out = [];
+      for (var i = 0; i < 3; i++) out.push(Math.round(+m[i + 1] + (t[i] - m[i + 1]) * 0.13));
+      return 'rgb(' + out.join(',') + ')';
+    }
+    var plum = warmShift(mean('plum', 1, 'rgb(56,47,49)')), violet = warmShift(mean('violet', 1, 'rgb(58,66,65)'));
+    var black = mean('black', 1, 'rgb(27,23,25)'), green = mean('green', 1, 'rgb(57,66,53)');
+    var warm = mean('warm', 1, 'rgb(64,47,45)');
+    function mix(spec) { // [[css, weight], ...] -> flat pick-list
+      var out = [];
+      spec.forEach(function (s) { for (var i = 0; i < s[1]; i++) out.push(s[0]); });
+      return out;
+    }
+    PAL = {
+      // the back: the dog's own proportions, a touch lifted so the animal
+      // separates from the deepest shade-grass it crosses
+      back: mix([[warmShift(mean('plum', 0.88, plum)), 9], [warmShift(mean('violet', 0.88, violet)), 7], [black, 2], [warmShift(mean('warm', 1.15, warm)), 2], [warmShift(mean('green', 0.85, green)), 1]]),
+      belly: mix([[warmShift(mean('plum', 1.12, plum)), 5], [warmShift(mean('violet', 1.10, violet)), 3], [warmShift(mean('warm', 1.32, warm)), 2]]),
+      tail: mix([[warmShift(mean('plum', 0.94, plum)), 5], [warmShift(mean('violet', 0.92, violet)), 3], [warmShift(mean('warm', 1.38, warm)), 5], [black, 2]]),
+      tailTip: mix([[warmShift(mean('plum', 1.24, plum)), 3], [warmShift(mean('warm', 1.55, warm)), 4], [warmShift(mean('violet', 1.22, violet)), 2]]),
+      head: mix([[warmShift(mean('plum', 0.92, plum)), 6], [warmShift(mean('violet', 0.90, violet)), 4], [warmShift(mean('warm', 1.25, warm)), 2]]),
+      dark: mix([[black, 6], [warmShift(mean('plum', 0.8, plum)), 3], [warmShift(mean('violet', 0.8, violet)), 2]]),
+      edge: mix([[warmShift(mean('plum', 0.88, plum)), 5], [warmShift(mean('violet', 0.88, violet)), 3], [black, 2]]),
+      darkest: black
+    };
+    window.__dbg.paletteMix = { plum: plum, violet: violet, black: black, green: green, warm: warm };
+  }
+
+  // ---- the squirrel's dots ---------------------------------------------------
+  // Every dot owns a WALK position and a SIT position (local image px, anchor =
+  // ground contact point, y negative = up, facing +x) plus a colour. Each frame
+  // the dots are re-laid and re-painted — nothing is ever slid as a bitmap.
+  var SQDOTS = [];
+  function mulberry(seed) {
+    return function () {
+      seed |= 0; seed = (seed + 0x6D2B79F5) | 0;
+      var t = Math.imul(seed ^ (seed >>> 15), 1 | seed);
+      t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+      return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+    };
+  }
+  function buildSquirrel() {
+    var rnd = mulberry(20261112);
+    function pick(poolArr) { return poolArr[(rnd() * poolArr.length) | 0]; }
+    var SQS = 1.3; // overall scale — the squirrel stands about the little dog's size
+    function dot(wx, wy, sx, sy, region, colPool, rMin, rMax) {
+      SQDOTS.push({
+        wx: wx * SQS, wy: wy * SQS, sx: sx * SQS, sy: sy * SQS, region: region,
+        col: region === 'eye' ? PAL.darkest : pick(colPool),
+        r: rMin + rnd() * (rMax - rMin),
+        seed: rnd() * 1000
+      });
+    }
+    // jittered-grid fill of an ellipse; sit coords = affine map into the sit ellipse.
+    // Rim dots go dark — a painted edge is what lets a small shape read against
+    // both sunlit grass and deep shade.
+    function fillEllipse(wc, we, sc, se, upperPool, lowerPool, region, step) {
+      for (var y = -we[1]; y <= we[1]; y += step) {
+        for (var x = -we[0]; x <= we[0]; x += step) {
+          var jx = x + (rnd() - 0.5) * step * 0.9, jy = y + (rnd() - 0.5) * step * 0.9;
+          var norm = (jx * jx) / (we[0] * we[0]) + (jy * jy) / (we[1] * we[1]);
+          if (norm > 1) continue;
+          var wx = wc[0] + jx, wy = wc[1] + jy;
+          var sx = sc[0] + (jx / we[0]) * se[0], sy = sc[1] + (jy / we[1]) * se[1];
+          var lower = jy > we[1] * 0.25;
+          dot(wx, wy, sx, sy, region, norm > 0.86 ? PAL.edge : (lower ? lowerPool : upperPool), 3.6, 5.0);
+        }
+      }
+    }
+    // BODY: horizontal when walking, upright pear when sitting
+    fillEllipse([-2, -30], [52, 24], [-4, -40], [33, 40], PAL.back, PAL.belly, 'body', 3.4);
+    // HEAD (+muzzle): rides forward when walking, high when sitting
+    fillEllipse([50, -46], [20, 18], [10, -88], [19, 17], PAL.head, PAL.belly, 'head', 3.2);
+    fillEllipse([63, -40], [11, 9], [23, -81], [10, 8], PAL.belly, PAL.belly, 'head', 3.0);
+    // EARS: two little points on the head
+    [[42, -62, 0, -104], [53, -64, 13, -106]].forEach(function (e) {
+      for (var s = 0; s <= 1.001; s += 0.34) {
+        dot(e[0] + s * -2 + (rnd() - 0.5) * 2, e[1] - s * 11,
+            e[2] + s * -1 + (rnd() - 0.5) * 2, e[3] - s * 11, 'ear', PAL.head, 2.0, 2.9);
+      }
+    });
+    // TAIL: a plume curving up behind when walking; swept around the feet when sitting
+    var tailBase = [-48, -22], tailCtrl = [-95, -55], tailEnd = [-86, -100];
+    var sitC = [4, -6], sitR = 44;
+    for (var t = 0.04; t <= 1.001; t += 0.04) {
+      var mt = 1 - t;
+      var cxp = mt * mt * tailBase[0] + 2 * mt * t * tailCtrl[0] + t * t * tailEnd[0];
+      var cyp = mt * mt * tailBase[1] + 2 * mt * t * tailCtrl[1] + t * t * tailEnd[1];
+      var width = 27 * (1 - t) + 7;
+      var ang = Math.PI * (1.15 - t * 1.25); // sit tail: arc around the front
+      var across = Math.max(1, Math.round(width / 5));
+      for (var a = 0; a < across; a++) {
+        var off = across === 1 ? 0 : (a / (across - 1) - 0.5) * width;
+        var wx = cxp + (rnd() - 0.5) * 4 + off * 0.35, wy = cyp + off * 0.8 + (rnd() - 0.5) * 4;
+        var sx = sitC[0] + Math.cos(ang) * (sitR + off * 0.55);
+        var sy = sitC[1] + Math.sin(ang) * (sitR * 0.30 + off * 0.4);
+        dot(wx, wy, sx, sy, 'tail', t > 0.72 ? PAL.tailTip : PAL.tail, 3.4, 4.8);
+      }
+    }
+    // LEGS when walking -> front paws + hind foot when sitting
+    var legX = [-36, -14, 26, 44];
+    legX.forEach(function (lx, li) {
+      for (var s2 = 0; s2 < 4; s2++) {
+        var wx = lx + (rnd() - 0.5) * 5, wy = -9 + s2 * 2.6;
+        var sx, sy;
+        if (li < 2) { sx = -26 + li * 7 + (rnd() - 0.5) * 4; sy = -5 + s2 * 1.6; }        // hind foot
+        else { sx = 12 + (li - 2) * 8 + (rnd() - 0.5) * 3; sy = -26 + s2 * 6.5; }          // front paws, tucked vertical
+        SQDOTS.push({ wx: wx * SQS, wy: wy * SQS, sx: sx * SQS, sy: sy * SQS, region: 'leg', col: pick(PAL.dark), r: 2.6 + rnd() * 1.3, seed: rnd() * 1000, legPhase: li * Math.PI / 2 });
+      }
+    });
+    // EYE: a single dark bead
+    SQDOTS.push({ wx: 57 * SQS, wy: -49 * SQS, sx: 17 * SQS, sy: -91 * SQS, region: 'eye', col: PAL.darkest, r: 3.0, seed: 7 });
+    SQDOTS.push({ wx: 45 * SQS, wy: -61 * SQS, sx: 5 * SQS, sy: -103 * SQS, region: 'ear', col: pick(PAL.belly), r: 2.2, seed: 9 });
+  }
+
+  // ---- squirrel state ---------------------------------------------------------
+  var SQ_HOME = [0.335, 0.885]; // open lawn, visible in the portrait crop too
+  var sq = null;
+  function initSquirrel() {
+    sq = {
+      x: SQ_HOME[0] * IW, y: SQ_HOME[1] * IH,   // image px
+      dir: 1, mode: 'idle',                      // idle | walk | arrive
+      path: null, pi: 0, tx: null, ty: null,
+      phase: 0, pose: 0,                          // pose: 0 = on all fours, 1 = sat up
+      idleFor: 0, sitState: 'down', sitT: 0, nextSit: 2.2,
+      burstT: 0, bursting: true, look: 0, lookT: 0,
+      violations: 0
+    };
+    window.__dbg.squirrel = { x: SQ_HOME[0], y: SQ_HOME[1] };
+    window.__dbg.target = null; window.__dbg.pathLen = 0; window.__dbg.mode = 'idle';
+  }
+  function sendSquirrelTo(fx, fy) {
+    var start = [sq.x / IW, sq.y / IH];
+    var raw = findPath(start[0], start[1], fx, fy);
+    if (!raw) return false;
+    var path = smoothPath(raw);
+    // pin the real destination (nearest free cell centre came from findPath's snap;
+    // the final point is the snapped target = last raw point)
+    var dest = raw[raw.length - 1];
+    sq.path = path; sq.pi = 1;
+    sq.tx = dest[0]; sq.ty = dest[1];
+    sq.mode = 'walk'; sq.burstT = 0; sq.bursting = true; sq.idleFor = 0; sq.sitState = 'down';
+    window.__dbg.target = { x: Math.round(dest[0] * 1000) / 1000, y: Math.round(dest[1] * 1000) / 1000 };
+    window.__dbg.pathLen = path.length;
+    window.__dbg.mode = 'walk';
+    return true;
+  }
+  function updateSquirrel(dt, t) {
+    var moving = false, speedNow = 0;
+    if (sq.mode === 'walk' && sq.path) {
+      // scamper in bursts: run ~0.6s, check the world for ~0.25s, run again
+      sq.burstT += dt;
+      if (sq.bursting && sq.burstT > 0.62) { sq.bursting = false; sq.burstT = 0; }
+      else if (!sq.bursting && sq.burstT > 0.24) { sq.bursting = true; sq.burstT = 0; }
+      if (sq.bursting) {
+        var wp = sq.path[sq.pi];
+        if (!wp) { arriveSquirrel(); }
+        else {
+          var wx = wp[0] * IW, wy = wp[1] * IH;
+          var dx = wx - sq.x, dy = wy - sq.y, dist = Math.hypot(dx, dy);
+          var SPEED = 335; // image px per second — a brisk scamper at painting scale
+          var step = Math.min(dist, SPEED * dt);
+          if (dist > 0.5) {
+            sq.x += dx / dist * step; sq.y += dy / dist * step;
+            if (Math.abs(dx) > 4) sq.dir = dx > 0 ? 1 : -1;
+            moving = true; speedNow = SPEED;
+            sq.phase += step * 0.21;
+          }
+          if (dist <= Math.max(2, SPEED * dt)) {
+            sq.pi++;
+            if (sq.pi >= sq.path.length) arriveSquirrel();
+          }
+        }
+      }
+    }
+    // pose: sat up when idle (after a beat) or in a burst pause; down while running
+    var wantPose = 0;
+    if (sq.mode === 'idle') {
+      sq.idleFor += dt;
+      if (sq.sitState === 'down' && sq.idleFor > sq.nextSit) { sq.sitState = 'up'; sq.sitT = 0; }
+      else if (sq.sitState === 'up') {
+        sq.sitT += dt;
+        if (sq.sitT > 1.7) { sq.sitState = 'down'; sq.idleFor = 0; sq.nextSit = 1.6 + Math.random() * 2.6; }
+      }
+      wantPose = sq.sitState === 'up' ? 1 : 0;
+    } else if (sq.mode === 'walk' && !sq.bursting) {
+      wantPose = 0.55; // half-rise in the pause, ready to dash
+    } else if (sq.mode === 'arrive') {
+      wantPose = 1;
+    }
+    sq.pose += (wantPose - sq.pose) * Math.min(1, dt * 7);
+    // look-around while sat up: the head drifts side to side
+    if (sq.pose > 0.6) {
+      sq.lookT += dt;
+      if (sq.lookT > 1.15) { sq.lookT = 0; sq.look = (Math.random() * 2 - 1) * 6; }
+    } else sq.look *= 0.9;
+    sq.curLook = (sq.curLook || 0) + (sq.look - (sq.curLook || 0)) * Math.min(1, dt * 5);
+    // honesty check for the tests: the squirrel's feet must never be somewhere
+    // it could not walk
+    if (isBlocked(sq.x / IW, sq.y / IH, 0.0)) sq.violations++;
+    window.__dbg.squirrel = { x: Math.round(sq.x / IW * 1000) / 1000, y: Math.round(sq.y / IH * 1000) / 1000 };
+    window.__dbg.mode = sq.mode + (sq.mode === 'walk' && !sq.bursting ? '/pause' : '');
+    window.__dbg.violations = sq.violations;
+    return { moving: moving, speed: speedNow };
+  }
+  function arriveSquirrel() {
+    sq.mode = 'arrive'; sq.path = null;
+    window.__dbg.mode = 'arrive';
+    setTimeout(function () {
+      if (sq.mode === 'arrive') { sq.mode = 'idle'; sq.idleFor = 0; sq.sitState = 'up'; sq.sitT = 0; window.__dbg.mode = 'idle'; }
+    }, 60);
+  }
+
+  function drawSquirrel(t, frameQ) {
+    var pose = sq.pose;
+    var bob = sq.mode === 'walk' ? Math.abs(Math.sin(sq.phase)) * -3.2 : Math.sin(t * 2.1) * 0.7;
+    var tailAng = Math.sin(sq.phase * 0.5 - 1.05) * 0.13 + Math.sin(t * 1.6) * 0.03;
+    // soft contact shadow: a low cluster of dark dots, painted like everything else
+    ctx.fillStyle = 'rgba(24,32,16,0.20)';
+    for (var s = 0; s < 15; s++) {
+      var sa = (s / 15) * Math.PI * 2, sr = (14 + ((s * 37) % 23)) * 1.3;
+      ctx.beginPath();
+      ctx.arc(sq.x + Math.cos(sa) * sr * 1.5, sq.y + 2 + Math.sin(sa) * sr * 0.30, 4.2, 0, Math.PI * 2);
+      ctx.fill();
+    }
+    var cosT = Math.cos(tailAng), sinT = Math.sin(tailAng);
+    for (var i = 0; i < SQDOTS.length; i++) {
+      var d = SQDOTS[i];
+      var lx = d.wx + (d.sx - d.wx) * pose;
+      var ly = d.wy + (d.sy - d.wy) * pose;
+      if (d.region === 'tail' && pose < 0.85) {
+        // tail plumes lag behind the body: swing about the tail base
+        var bx = (-48 + (4 - (-48)) * pose) * 1.3, by = (-22 + (-6 - (-22)) * pose) * 1.3;
+        var rx = lx - bx, ry = ly - by;
+        lx = bx + rx * cosT - ry * sinT; ly = by + rx * sinT + ry * cosT;
+      }
+      if ((d.region === 'head' || d.region === 'ear' || d.region === 'eye') && pose > 0.05) {
+        lx += sq.curLook * pose; // look-around shifts the head
+      }
+      if (d.region === 'leg' && pose < 0.5 && sq.mode === 'walk') {
+        // scampering feet: dot flicker at the body's base
+        var fl = Math.sin(sq.phase * 2 + (d.legPhase || 0));
+        lx += fl * 3.2; ly -= Math.max(0, fl) * 2.2;
+      }
+      if (d.region !== 'leg') ly += bob * (d.region === 'tail' ? 0.55 : 1);
+      // repaint shimmer: each dot is re-dabbed with a breath of jitter, ~9x/sec
+      var h1 = Math.sin(d.seed * 12.9898 + frameQ * 78.233) * 43758.5453;
+      var h2 = Math.sin(d.seed * 39.346 + frameQ * 11.135) * 24634.6345;
+      var jx = (h1 - Math.floor(h1) - 0.5) * 2.2;
+      var jy = (h2 - Math.floor(h2) - 0.5) * 2.2;
+      ctx.fillStyle = d.col;
+      ctx.beginPath();
+      ctx.arc(sq.x + lx * sq.dir + jx * 0.4, sq.y + ly + jy * 0.4,
+              d.r * (1 + 0.09 * Math.sin(d.seed + frameQ * 1.7)), 0, Math.PI * 2);
+      ctx.fill();
+    }
+  }
+
+  // ---- tap pulse -------------------------------------------------------------
+  var pulse = null;
+  function drawPulse(now) {
+    if (!pulse) return;
+    var age = (now - pulse.t0) / 650;
+    if (age >= 1) { pulse = null; return; }
+    var r = 8 + age * 30, alpha = (1 - age) * 0.75;
+    ctx.fillStyle = 'rgba(247,241,206,' + alpha.toFixed(3) + ')';
+    for (var i = 0; i < 26; i++) {
+      var a = (i / 26) * Math.PI * 2 + age * 0.7;
+      ctx.beginPath();
+      ctx.arc(pulse.x + Math.cos(a) * r, pulse.y + Math.sin(a) * r * 0.72, 2.6, 0, Math.PI * 2);
+      ctx.fill();
+    }
+  }
+
+  // ---- animation state ---------------------------------------------------------
   var state = {};
   function initState() {
-    hero.cx = 0.096; hero.target = null; hero.lastTouch = -1e9;
     state = {
       tug:      { cx: 0.385, dir: 1 },
       yellow:   { cx: 0.048, dir: 1 },
@@ -169,12 +660,16 @@
     canvas.style.width = cw + 'px'; canvas.style.height = ch + 'px';
     var scale = Math.max(cw / IW, ch / IH);
     // cover-fit; on portrait phones anchor the window toward the river (left)
-    // so the sailboat — the thing you steer — is actually in frame.
+    // so the lawn the squirrel starts on is in frame.
     var focusX = (cw / ch < 1) ? 0.27 : 0.5;
     var ox = focusX * IW * scale * -1 + cw / 2;
     ox = Math.min(0, Math.max(cw - IW * scale, ox));
     var oy = (ch - IH * scale) / 2;
     view = { scale: scale, ox: ox, oy: oy, dpr: dpr, cw: cw, ch: ch };
+    window.__dbg.view = { scale: scale, ox: ox, oy: oy, dpr: dpr };
+  }
+  function toScreen(fx, fy) {
+    return { x: fx * IW * view.scale + view.ox, y: fy * IH * view.scale + view.oy };
   }
 
   function drawPatch(p, cxPx, cyPx, flip) {
@@ -194,9 +689,14 @@
     ctx.restore();
   }
 
+  var lastNow = 0;
   function frame(now) {
     var t = now / 1000;
+    var dt = Math.min(0.05, lastNow ? (now - lastNow) / 1000 : 0.016);
+    lastNow = now;
     frames++;
+    var frameQ = Math.floor(now / 110);
+    updateSquirrel(dt, t);
     ctx.setTransform(view.dpr, 0, 0, view.dpr, 0, 0);
     ctx.fillStyle = '#20261c'; ctx.fillRect(0, 0, view.cw, view.ch);
     ctx.setTransform(view.dpr * view.scale, 0, 0, view.dpr * view.scale,
@@ -210,13 +710,9 @@
     var tugCx = tugCxF * IW, tugCy = (DEFS.tug.fy + DEFS.tug.fh / 2) * IH + Math.sin(t * 0.8) * 1.5;
     drawPatch(tugP, tugCx, tugCy, tugS.dir < 0);
 
-    // --- hero sailboat: auto-glides the river; drag to sail her yourself
+    // --- the white sailboat: she sails herself now, a gentle endless glide
     var heroP = patches.hero;
-    var autoCx = 0.225 + Math.sin(t * 0.055) * 0.145;
-    var idle = (now - hero.lastTouch) > 6000;
-    var desired = idle ? autoCx : (hero.target != null ? hero.target : hero.cx);
-    hero.cx += (desired - hero.cx) * (idle ? 0.012 : 0.07);
-    var heroCx = hero.cx * IW;
+    var heroCx = (0.225 + Math.sin(t * 0.055) * 0.145) * IW;
     var heroCy = (DEFS.hero.fy + DEFS.hero.fh / 2) * IH + Math.sin(t * 0.9) * 2.5;
     shadow(heroCx, (DEFS.hero.fy + DEFS.hero.fh) * IH + 4, heroP.w * 1.15, 0.10, true);
     drawPatch(heroP, heroCx, heroCy, false);
@@ -252,38 +748,41 @@
     shadow(brCx, (DEFS.browndog.fy + DEFS.browndog.fh) * IH + 2, brP.w * 0.6, 0.18, false);
     drawPatch(brP, brCx, brCy, brS.dir > 0); // painted facing left; flip when trotting right
 
+    // --- the squirrel, and the tap pulse above the grass
+    drawPulse(now);
+    drawSquirrel(t, frameQ);
+
     window.__dbg.frames = frames;
-    window.__dbg.heroCx = Math.round(hero.cx * 1000) / 1000;
     requestAnimationFrame(frame);
   }
 
-  // ---- steering: horizontal drag anywhere sails the white boat --------------
-  var dragging = false, lastPX = 0;
-  function ptrX(e) { return e.clientX; }
-  canvas.addEventListener('pointerdown', function (e) {
-    dragging = true; lastPX = ptrX(e);
-    hero.lastTouch = performance.now();
-    try { canvas.setPointerCapture(e.pointerId); } catch (_) {}
+  // ---- tap to send the squirrel ------------------------------------------------
+  function handleTap(clientX, clientY) {
+    var fx = (clientX - view.ox) / (IW * view.scale);
+    var fy = (clientY - view.oy) / (IH * view.scale);
+    if (fx < 0 || fx > 1 || fy < 0 || fy > 1) return;
+    // a tap on water or on a figure routes to the nearest walkable point
+    if (sendSquirrelTo(fx, fy)) {
+      var dest = window.__dbg.target;
+      pulse = { x: dest.x * IW, y: dest.y * IH, t0: performance.now() };
+    }
     chip.classList.add('gone');
-  });
-  canvas.addEventListener('pointermove', function (e) {
-    if (!dragging) return;
-    var dxImg = (ptrX(e) - lastPX) / view.scale; // screen px -> image px
-    lastPX = ptrX(e);
-    var base = (hero.target != null ? hero.target : hero.cx);
-    hero.target = Math.min(0.40, Math.max(0.055, base + dxImg / IW));
-    hero.lastTouch = performance.now();
-  });
-  function endDrag() { dragging = false; hero.lastTouch = performance.now(); }
-  canvas.addEventListener('pointerup', endDrag);
-  canvas.addEventListener('pointercancel', endDrag);
+  }
+  canvas.addEventListener('pointerdown', function (e) { handleTap(e.clientX, e.clientY); });
 
   // ---- boot -------------------------------------------------------------------
-  window.__dbg = { frames: 0, heroCx: 0, loaded: false };
+  window.__dbg = { frames: 0, loaded: false, squirrel: null, target: null, pathLen: 0, mode: 'boot', violations: 0 };
+  window.__dbg.toScreen = function (fx, fy) { return toScreen(fx, fy); };
+  window.__dbg.tap = function (fx, fy) { var p = toScreen(fx, fy); handleTap(p.x, p.y); };
   var img = new Image();
   img.onload = function () {
     buildAssets(img);
+    samplePalette(img);
+    buildGrid();
+    buildSquirrel();
+    window.__dbg.dots = SQDOTS.length;
     initState();
+    initSquirrel();
     computeView();
     window.addEventListener('resize', computeView);
     window.__dbg.loaded = true;
