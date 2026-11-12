@@ -1,0 +1,66 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+<title>Oil Paint Plaza — Painted Once</title>
+<style>
+  html, body { margin: 0; height: 100%; background: #14161c; overflow: hidden; }
+  canvas.layer { position: fixed; inset: 0; display: block; pointer-events: none; }
+  #bg { z-index: 0; }
+  #gl { z-index: 1; }
+  #fg { z-index: 2; }
+  #hud {
+    position: fixed; left: 10px; bottom: 10px; z-index: 600; pointer-events: none;
+    font: 12px/1.5 ui-monospace, Menlo, monospace; color: #ffe9b8;
+    background: rgba(12, 12, 20, .55); border: 1px solid rgba(255, 233, 184, .25);
+    border-radius: 8px; padding: 6px 9px; white-space: pre;
+  }
+  #veil {
+    position: fixed; inset: 0; z-index: 500; display: flex; align-items: center; justify-content: center;
+    background: #14161c; color: #e8dcc0; pointer-events: none;
+    font: 600 17px/1.4 system-ui, sans-serif; letter-spacing: .04em; text-align: center;
+    transition: opacity .35s ease;
+  }
+  #veil.gone { opacity: 0; }
+</style>
+<script type="importmap">
+{ "imports": {
+  "three": "./vendor/three.module.js",
+  "three/addons/": "./vendor/addons/"
+} }
+</script>
+<style id="moth-game-guard">
+html,body{touch-action:none;overscroll-behavior:none;-webkit-touch-callout:none;-webkit-user-select:none;user-select:none;-webkit-tap-highlight-color:transparent}
+canvas{touch-action:none}
+</style>
+</head>
+<body>
+<canvas id="bg" class="layer"></canvas>
+<canvas id="gl" class="layer"></canvas>
+<canvas id="fg" class="layer"></canvas>
+<div id="veil">painting the plaza…</div>
+<div id="hud"></div>
+<script type="module" src="./main.js"></script>
+<script id="moth-game-guard-js">
+(function(){
+  var lastEnd=0;
+  function onUi(t){return t&&t.closest&&t.closest('button,a,input,select,textarea,[data-scroll]');}
+  document.addEventListener('touchend',function(e){
+    var now=Date.now();
+    if(!onUi(e.target)&&now-lastEnd<=300&&e.cancelable)e.preventDefault();
+    lastEnd=now;
+  },{passive:false});
+  ['gesturestart','gesturechange','gestureend'].forEach(function(n){
+    document.addEventListener(n,function(e){e.preventDefault();});
+  });
+  document.addEventListener('dblclick',function(e){e.preventDefault();},{passive:false});
+  document.addEventListener('contextmenu',function(e){e.preventDefault();});
+  document.addEventListener('touchmove',function(e){
+    if(e.target&&e.target.closest&&e.target.closest('[data-scroll]'))return;
+    if(e.cancelable)e.preventDefault();
+  },{passive:false});
+})();
+</script>
+</body>
+</html>
