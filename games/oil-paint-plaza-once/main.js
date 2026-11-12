@@ -84,8 +84,10 @@ function buildCameras() {
   camera.fov = aspect < 1 ? 58 : 46;
   camera.aspect = aspect;
   const tanH = Math.tan(THREE.MathUtils.degToRad(camera.fov / 2)) * aspect;
-  const D = THREE.MathUtils.clamp(10.6 / tanH, 15, 46);
-  const H = D * 0.52; // high enough that no rooftop crosses the sight-line to the fountain
+  // Zoomed in ~2x (Cherie, Nov 12: the first framing sat so far back she read as a speck).
+  // Same sight-line geometry, half the distance: she fills the frame, fountain still centred.
+  const D = THREE.MathUtils.clamp(5.4 / tanH, 8, 24);
+  const H = D * 0.52; // original sight-line height kept: the lower 0.38 test put a rooftop slab across half the frame; the win is the halved distance alone
   cameras = [];
   for (let k = 0; k < ZONES; k++) {
     const az = (k + 0.5) * SECTOR + Math.PI; // watch the sector from across the fountain
