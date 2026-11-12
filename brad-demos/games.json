@@ -2586,38 +2586,6 @@
    "thumb": "thumbs/bonk-yard.png",
    "title": "LINKLE IN THE STARRY NIGHT — Painted Live",
    "url": "../games/linkle-starry/"
-  },
-  {
-   "category": "Viral Demos",
-   "desc": "The Painted Live plaza re-skinned as cubism — shard brushstrokes, ochre and slate facets, her green the only saturated colour. Same playable, new paint.",
-   "id": "cubism-plaza",
-   "thumb": "thumbs/bonk-yard.png",
-   "title": "CUBISM PLAZA — Painted Live",
-   "url": "../games/cubism-plaza/"
-  },
-  {
-   "category": "Viral Demos",
-   "desc": "The Painted Live plaza re-skinned as street art — spray-bright colour, neon splashes, purple shadow. Same playable, new paint.",
-   "id": "graffiti-plaza",
-   "thumb": "thumbs/bonk-yard.png",
-   "title": "GRAFFITI PLAZA — Painted Live",
-   "url": "../games/graffiti-plaza/"
-  },
-  {
-   "category": "Viral Demos",
-   "desc": "The Painted Live plaza re-skinned as a flat storybook cartoon — big clean colour patches, cheerful daylight. Same playable, new paint.",
-   "id": "cartoon-plaza",
-   "thumb": "thumbs/bonk-yard.png",
-   "title": "CARTOON PLAZA — Painted Live",
-   "url": "../games/cartoon-plaza/"
-  },
-  {
-   "category": "Viral Demos",
-   "desc": "The Painted Live plaza re-skinned as painterly realism — the finest, densest dabs, natural stone, wood and golden-hour light. Same playable, new paint.",
-   "id": "realism-plaza",
-   "thumb": "thumbs/bonk-yard.png",
-   "title": "REALISM PLAZA — Painted Live",
-   "url": "../games/realism-plaza/"
   }
  ]
 }
