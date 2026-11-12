@@ -2578,6 +2578,14 @@
    "thumb": "thumbs/bonk-yard.png",
    "title": "INK RONIN — Paint Ninja Brawler",
    "url": "../games/ink-ronin/"
+  },
+  {
+   "category": "Viral Demos",
+   "desc": "Linkle walks through a living oil-paint Starry Night — swirling sky, ringed stars, the village and cypress, every dab repainted each frame (Painted Live).",
+   "id": "linkle-starry",
+   "thumb": "thumbs/bonk-yard.png",
+   "title": "LINKLE IN THE STARRY NIGHT — Painted Live",
+   "url": "../games/linkle-starry/"
   }
  ]
 }
