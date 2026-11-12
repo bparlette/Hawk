@@ -1,0 +1,542 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+<title>Hunters in the Snow — a living painting</title>
+<style>
+  html, body {
+    margin: 0; padding: 0; width: 100%; height: 100%;
+    overflow: hidden; background: #2e3a33;
+    touch-action: none; overscroll-behavior: none;
+    -webkit-user-select: none; user-select: none;
+    -webkit-tap-highlight-color: transparent;
+  }
+  #stage { position: fixed; inset: 0; display: block; touch-action: none; }
+  #chip {
+    position: fixed; left: 50%; bottom: calc(env(safe-area-inset-bottom, 0px) + 18px);
+    transform: translateX(-50%);
+    background: rgba(16, 22, 18, 0.72); color: #eef2e6;
+    font: 500 14px/1.35 system-ui, -apple-system, "Segoe UI", sans-serif;
+    padding: 9px 16px; border-radius: 999px; border: 1px solid rgba(255,255,255,0.25);
+    letter-spacing: 0.02em; white-space: nowrap; pointer-events: none;
+    opacity: 1; transition: opacity 1.4s ease; z-index: 10;
+  }
+  #chip b { font-weight: 700; }
+  #chip.gone { opacity: 0; }
+</style>
+</head>
+<body>
+<canvas id="stage"></canvas>
+<div id="chip"><b>Hunters in the Snow</b> &middot; drag on the pond to skate</div>
+<script>
+'use strict';
+/*
+ * Hunters in the Snow (Bruegel, 1565) — living-painting sample.
+ * The artwork IS the painting: movers are patches cut from the painting
+ * itself (colour-keyed against their local background), and a "clean plate"
+ * (the painting with each mover's origin clone-filled from nearby texture)
+ * is drawn under them every frame.
+ */
+(function () {
+  var IW = 1920, IH = 1366; // painting pixel size
+
+  var canvas = document.getElementById('stage');
+  var ctx = canvas.getContext('2d');
+  var chip = document.getElementById('chip');
+
+  window.__dbg = { frames: 0, ready: false, movers: 0, hero: { x: 0, y: 0 } };
+
+  // ---------- view transform (cover-fit, image px -> screen px) ----------
+  var view = { s: 1, ox: 0, oy: 0, w: 0, h: 0 };
+  function resize() {
+    var dpr = Math.min(window.devicePixelRatio || 1, 2);
+    view.w = window.innerWidth; view.h = window.innerHeight;
+    canvas.width = Math.round(view.w * dpr);
+    canvas.height = Math.round(view.h * dpr);
+    canvas.style.width = view.w + 'px';
+    canvas.style.height = view.h + 'px';
+    var s = Math.max(view.w / IW, view.h / IH) * dpr;
+    view.s = s;
+    // cover-fit with a focal point: on portrait phones frame the ponds
+    // (right-hand side of the painting) instead of cropping them away.
+    var fx = view.w < view.h ? 0.68 : 0.5;
+    view.ox = clamp(canvas.width / 2 - fx * IW * s, canvas.width - IW * s, 0);
+    view.oy = (canvas.height - IH * s) / 2;
+  }
+  window.addEventListener('resize', resize);
+  resize();
+
+  function toImage(px, py) {
+    var dpr = Math.min(window.devicePixelRatio || 1, 2);
+    return { x: (px * dpr - view.ox) / view.s, y: (py * dpr - view.oy) / view.s };
+  }
+
+  // ---------- helpers ----------
+  function clamp(v, a, b) { return v < a ? a : (v > b ? b : v); }
+  function smoothstep(a, b, x) {
+    var t = clamp((x - a) / (b - a), 0, 1);
+    return t * t * (3 - 2 * t);
+  }
+  function mkCanvas(w, h) {
+    var c = document.createElement('canvas'); c.width = w; c.height = h;
+    return c;
+  }
+
+  // Cut a patch from the source and colour-key it against its own border
+  // colour, so the painted figure lifts off its ice / sky background.
+  function cutPatch(src, cx, cy, w, h, lo, hi) {
+    var c = mkCanvas(w, h), g = c.getContext('2d');
+    g.drawImage(src, cx - w / 2, cy - h / 2, w, h, 0, 0, w, h);
+    var img = g.getImageData(0, 0, w, h), d = img.data;
+    // background reference from the border, using only its darker 60% of
+    // pixels so a strip of bright snow bank can't poison the reference
+    var border = [], i, x, y;
+    for (x = 0; x < w; x++) { border.push(x * 4); border.push(((h - 1) * w + x) * 4); }
+    for (y = 0; y < h; y++) { border.push((y * w) * 4); border.push((y * w + w - 1) * 4); }
+    border.sort(function (a, b2) {
+      var la = d[a] + d[a + 1] + d[a + 2], lb = d[b2] + d[b2 + 1] + d[b2 + 2];
+      return la - lb;
+    });
+    var keep = Math.floor(border.length * 0.6), r = 0, gg = 0, b = 0, n = 0;
+    for (i = 0; i < keep; i++) {
+      var bi = border[i];
+      r += d[bi]; gg += d[bi + 1]; b += d[bi + 2]; n++;
+    }
+    r /= n; gg /= n; b /= n;
+    var refLum = (r + gg + b) / 3;
+    for (y = 0; y < h; y++) {
+      for (x = 0; x < w; x++) {
+        i = (y * w + x) * 4;
+        var dr = d[i] - r, dg = d[i + 1] - gg, db = d[i + 2] - b;
+        var dist = Math.sqrt(dr * dr + dg * dg + db * db);
+        var a = Math.pow(smoothstep(lo, hi, dist), 1.3); // suppress faint halo
+        // brightness gate: anything far BRIGHTER than the ice is snow bank,
+        // never part of a figure — key it out even though it is "different"
+        var lum = (d[i] + d[i + 1] + d[i + 2]) / 3;
+        a *= 1 - smoothstep(refLum + 38, refLum + 58, lum);
+        var ex = (x - w / 2) / (w / 2), ey = (y - h / 2) / (h / 2);
+        var e = Math.sqrt(ex * ex + ey * ey);
+        var fea = 1 - smoothstep(0.8, 1.0, e);
+        d[i + 3] = Math.round(255 * a * fea);
+      }
+    }
+    g.putImageData(img, 0, 0);
+    return c;
+  }
+
+  // Mean RGB of a rect's border ring on a canvas (sampled just inside it).
+  function borderMean(g, x0, y0, w, h) {
+    var img = g.getImageData(x0, y0, w, h).data;
+    var r = 0, gg = 0, b = 0, n = 0, x, y, i;
+    for (x = 0; x < w; x += 2) {
+      i = x * 4; r += img[i]; gg += img[i + 1]; b += img[i + 2]; n++;
+      i = ((h - 1) * w + x) * 4; r += img[i]; gg += img[i + 1]; b += img[i + 2]; n++;
+    }
+    for (y = 0; y < h; y += 2) {
+      i = (y * w) * 4; r += img[i]; gg += img[i + 1]; b += img[i + 2]; n++;
+      i = (y * w + w - 1) * 4; r += img[i]; gg += img[i + 1]; b += img[i + 2]; n++;
+    }
+    return [r / n, gg / n, b / n];
+  }
+
+  // Erase a rect on the plate: build a stamp by AVERAGING several searched
+  // empty-texture sources (averaging dissolves banks, arches and ghost
+  // figures), colour-match the stamp's border to the ice around the hole,
+  // then lay it in under an elliptical feather.
+  function cloneFill(plateCtx, cx, cy, w, h, offsets) {
+    var x0 = Math.round(cx - w / 2), y0 = Math.round(cy - h / 2);
+    var t = mkCanvas(w, h), tg = t.getContext('2d');
+    var k = offsets.length, i;
+    tg.globalAlpha = 1 / k;
+    for (i = 0; i < k; i++) {
+      tg.drawImage(plateCtx.canvas, x0 + offsets[i].dx, y0 + offsets[i].dy, w, h, 0, 0, w, h);
+    }
+    tg.globalAlpha = 1;
+    // edge-matched colour correction: per column, blend the stamp's tone
+    // from "matches the plate just above the hole" to "matches just below
+    // it", so no tonal step (and no ring) survives at the seam
+    var img = tg.getImageData(0, 0, w, h), d = img.data;
+    var strip = plateCtx.getImageData(x0, y0 - 2, w, h + 4).data;
+    // per-column edge deltas (top row of plate above hole vs stamp top row,
+    // same at the bottom), then heavily smoothed horizontally: a neighbouring
+    // painted figure crossing the sample row must not streak the whole column
+    var dT = [], dB = [], sx, sy;
+    for (sx = 0; sx < w; sx++) {
+      var ti = sx * 4, bi = ((h + 3) * w + sx) * 4, sTop = sx * 4, sBot = ((h - 1) * w + sx) * 4;
+      dT.push([strip[ti] - d[sTop], strip[ti + 1] - d[sTop + 1], strip[ti + 2] - d[sTop + 2]]);
+      dB.push([strip[bi] - d[sBot], strip[bi + 1] - d[sBot + 1], strip[bi + 2] - d[sBot + 2]]);
+    }
+    function blurCols(arr) {
+      for (var pass = 0; pass < 3; pass++) {
+        var srcA = arr.slice();
+        for (var x2 = 0; x2 < w; x2++) {
+          var sr = 0, sg = 0, sb = 0, cnt = 0;
+          for (var o = -5; o <= 5; o++) {
+            var xx = x2 + o;
+            if (xx < 0 || xx >= w) continue;
+            sr += srcA[xx][0]; sg += srcA[xx][1]; sb += srcA[xx][2]; cnt++;
+          }
+          arr[x2] = [sr / cnt, sg / cnt, sb / cnt];
+        }
+      }
+    }
+    blurCols(dT); blurCols(dB);
+    for (sx = 0; sx < w; sx++) {
+      for (sy = 0; sy < h; sy++) {
+        var f = h > 1 ? sy / (h - 1) : 0, idx = (sy * w + sx) * 4;
+        d[idx] = clamp(d[idx] + dT[sx][0] + (dB[sx][0] - dT[sx][0]) * f, 0, 255);
+        d[idx + 1] = clamp(d[idx + 1] + dT[sx][1] + (dB[sx][1] - dT[sx][1]) * f, 0, 255);
+        d[idx + 2] = clamp(d[idx + 2] + dT[sx][2] + (dB[sx][2] - dT[sx][2]) * f, 0, 255);
+      }
+    }
+    tg.putImageData(img, 0, 0);
+    // elliptical feather mask
+    tg.globalCompositeOperation = 'destination-in';
+    tg.save();
+    tg.translate(w / 2, h / 2);
+    tg.scale(1, h / w);
+    var grad = tg.createRadialGradient(0, 0, w * 0.30, 0, 0, w * 0.54);
+    grad.addColorStop(0, 'rgba(0,0,0,1)');
+    grad.addColorStop(1, 'rgba(0,0,0,0)');
+    tg.fillStyle = grad;
+    tg.fillRect(-w / 2, -w / 2, w, w);
+    tg.restore();
+    tg.globalCompositeOperation = 'source-over';
+    plateCtx.drawImage(t, x0, y0);
+  }
+
+  // Search the pristine painting around (cx, cy) for a same-size rect of
+  // empty texture (no dark figures, no bright snow) to clone from, so an
+  // erased skater leaves plain ice — never a snow blob or a ghost figure.
+  function findCloneOffset(srcCtx, cx, cy, w, h, pond) {
+    var data = srcCtx.getImageData(0, 0, IW, IH).data;
+    function pix(x, y) {
+      var i = ((y * IW) + x) * 4;
+      return [data[i], data[i + 1], data[i + 2]];
+    }
+    // reference = average colour of the origin rect's border ring (the ice
+    // immediately around the figure)
+    var br = 0, bg = 0, bb = 0, bn = 0, bx, by;
+    var x0o = Math.round(cx - w / 2), y0o = Math.round(cy - h / 2);
+    for (bx = 0; bx < w; bx += 3) {
+      var p1 = pix(x0o + bx, y0o), p2 = pix(x0o + bx, y0o + h - 1);
+      br += p1[0] + p2[0]; bg += p1[1] + p2[1]; bb += p1[2] + p2[2]; bn += 2;
+    }
+    for (by = 0; by < h; by += 3) {
+      var p3 = pix(x0o, y0o + by), p4 = pix(x0o + w - 1, y0o + by);
+      br += p3[0] + p4[0]; bg += p3[1] + p4[1]; bb += p3[2] + p4[2]; bn += 2;
+    }
+    br /= bn; bg /= bn; bb /= bn;
+    function score(dx, dy) {
+      var x0 = Math.round(cx + dx - w / 2), y0 = Math.round(cy + dy - h / 2);
+      if (x0 < 2 || y0 < 2 || x0 + w > IW - 2 || y0 + h > IH - 2) return 1e9;
+      if (pond) {
+        // the whole source rect must lie on the ice — centre-only checks
+        // let rects near the bank clone in snow
+        var ccx = cx + dx, ccy = cy + dy;
+        if (pondNorm(pond, ccx, ccy) > 0.98) return 1e9;
+        var corners = [[-w / 2, -h / 2], [w / 2, -h / 2], [-w / 2, h / 2], [w / 2, h / 2]];
+        for (var ci = 0; ci < 4; ci++) {
+          if (pondNorm(pond, ccx + corners[ci][0], ccy + corners[ci][1]) > 0.92) return 1e9;
+        }
+      }
+      var sum = 0, out = 0, n = 0;
+      for (var yy = 0; yy < h; yy += 4) {
+        for (var xx = 0; xx < w; xx += 4) {
+          var p = pix(x0 + xx, y0 + yy);
+          var d = Math.sqrt((p[0] - br) * (p[0] - br) + (p[1] - bg) * (p[1] - bg) + (p[2] - bb) * (p[2] - bb));
+          sum += d;
+          if (d > 48) out++;
+          n++;
+        }
+      }
+      return sum / n + out * 7 + Math.sqrt(dx * dx + dy * dy) * 0.004;
+    }
+    // best candidate in each of three angular sectors, so the averaged
+    // stamp mixes texture from different directions
+    var sectorBest = [null, null, null], sectorScore = [1e9, 1e9, 1e9];
+    for (var r = 26; r <= 110; r += 14) {
+      for (var a = 0; a < Math.PI * 2; a += Math.PI / 8) {
+        var dx = Math.round(Math.cos(a) * r), dy = Math.round(Math.sin(a) * r * 0.7);
+        var sec = Math.floor(a / (Math.PI * 2 / 3)) % 3;
+        var sc = score(dx, dy);
+        if (sc < sectorScore[sec]) { sectorScore[sec] = sc; sectorBest[sec] = { dx: dx, dy: dy }; }
+      }
+    }
+    var out = [];
+    for (var s2 = 0; s2 < 3; s2++) if (sectorBest[s2]) out.push(sectorBest[s2]);
+    return out.length ? out : [{ dx: 0, dy: 40 }];
+  }
+
+  // ---------- ponds (image px) ----------
+  var POND_U = { cx: 1526, cy: 772, rx: 317, ry: 66 };   // upper pond
+  var POND_L = { cx: 1363, cy: 936, rx: 259, ry: 61 };   // lower pond
+  function pondNorm(p, x, y) {
+    var nx = (x - p.cx) / p.rx, ny = (y - p.cy) / p.ry;
+    return nx * nx + ny * ny;
+  }
+
+  // ---------- mover definitions: patches cut from the painting ----------
+  // cx, cy = centre of the figure in painting pixels; w, h = cut size.
+  var SKATER_DEFS = [
+    // upper pond
+    { cx: 1307, cy: 785, w: 30, h: 40, pond: POND_U },
+    { cx: 1375, cy: 742, w: 30, h: 40, pond: POND_U },
+    { cx: 1494, cy: 734, w: 30, h: 40, pond: POND_U },
+    { cx: 1602, cy: 755, w: 30, h: 40, pond: POND_U },
+    { cx: 1700, cy: 740, w: 28, h: 38, pond: POND_U },
+    { cx: 1537, cy: 767, w: 46, h: 42, pond: POND_U }, // the pair holding hands
+    // lower pond
+    { cx: 1370, cy: 945, w: 30, h: 38, pond: POND_L },
+    { cx: 1502, cy: 907, w: 32, h: 44, pond: POND_L },
+    { cx: 1542, cy: 920, w: 34, h: 42, pond: POND_L }
+  ];
+  var HERO_DEF = { cx: 1312, cy: 902, w: 52, h: 60 };
+  var MAGPIE_DEF = { cx: 1355, cy: 360, w: 120, h: 115 };
+  var CROW_DEF = { cx: 1096, cy: 258, w: 52, h: 58 };
+  var CROW_PERCH_B = { x: 1158, y: 246 };
+
+  var plate = null;         // clean-plate canvas
+  var skaters = [], hero = null, magpie = null, crow = null;
+  var ready = false;
+
+  function build(img) {
+    var src = mkCanvas(IW, IH);
+    src.getContext('2d').drawImage(img, 0, 0, IW, IH);
+
+    // cut patches first (from the untouched painting)
+    var i, def;
+    for (i = 0; i < SKATER_DEFS.length; i++) {
+      def = SKATER_DEFS[i];
+      skaters.push({
+        patch: cutPatch(src, def.cx, def.cy, def.w, def.h, 16, 55),
+        w: def.w, h: def.h, pond: def.pond,
+        x: def.cx, y: def.cy,
+        ang: Math.random() * Math.PI * 2,
+        speed: 10 + Math.random() * 14,
+        phase: Math.random() * 100
+      });
+    }
+    hero = {
+      patch: cutPatch(src, HERO_DEF.cx, HERO_DEF.cy, HERO_DEF.w, HERO_DEF.h, 16, 55),
+      w: HERO_DEF.w, h: HERO_DEF.h,
+      x: HERO_DEF.cx, y: HERO_DEF.cy, vx: 0, vy: 0,
+      lean: 0, face: 1, prevAng: null
+    };
+    magpie = {
+      patch: cutPatch(src, MAGPIE_DEF.cx, MAGPIE_DEF.cy, MAGPIE_DEF.w, MAGPIE_DEF.h, 20, 70),
+      w: MAGPIE_DEF.w, h: MAGPIE_DEF.h, t: Math.random() * 40
+    };
+    crow = {
+      patch: cutPatch(src, CROW_DEF.cx, CROW_DEF.cy, CROW_DEF.w, CROW_DEF.h, 18, 60),
+      w: CROW_DEF.w, h: CROW_DEF.h,
+      ax: CROW_DEF.cx, ay: CROW_DEF.cy, bx: CROW_PERCH_B.x, by: CROW_PERCH_B.y,
+      atB: false, hopT: -1, wait: 3 + Math.random() * 5, x: CROW_DEF.cx, y: CROW_DEF.cy, face: 1
+    };
+
+    // clean plate: clone-fill every mover's origin with searched empty ice
+    plate = mkCanvas(IW, IH);
+    var pg = plate.getContext('2d');
+    pg.drawImage(src, 0, 0);
+    var srcCtx = src.getContext('2d');
+    for (i = 0; i < SKATER_DEFS.length; i++) {
+      def = SKATER_DEFS[i];
+      cloneFill(pg, def.cx, def.cy, def.w + 20, def.h + 20,
+        findCloneOffset(srcCtx, def.cx, def.cy, def.w + 20, def.h + 20, def.pond));
+    }
+    cloneFill(pg, HERO_DEF.cx, HERO_DEF.cy, HERO_DEF.w + 22, HERO_DEF.h + 22,
+      findCloneOffset(srcCtx, HERO_DEF.cx, HERO_DEF.cy, HERO_DEF.w + 22, HERO_DEF.h + 22, POND_L));
+    cloneFill(pg, MAGPIE_DEF.cx, MAGPIE_DEF.cy, MAGPIE_DEF.w + 20, MAGPIE_DEF.h + 20,
+      [{ dx: -70, dy: -46 }, { dx: 0, dy: -84 }, { dx: 70, dy: -46 }]);
+    cloneFill(pg, CROW_DEF.cx, CROW_DEF.cy, CROW_DEF.w + 12, CROW_DEF.h + 12,
+      [{ dx: -18, dy: -34 }, { dx: 26, dy: -22 }, { dx: -30, dy: 10 }]);
+
+    window.__dbg.movers = skaters.length + 3;
+    ready = true;
+    window.__dbg.ready = true;
+    requestAnimationFrame(frame);
+    setTimeout(function () { chip.classList.add('gone'); }, 4500);
+  }
+
+  // ---------- simulation ----------
+  var pointer = { down: false, x: 0, y: 0 };
+  function setPointer(e) {
+    var p = toImage(e.clientX, e.clientY);
+    pointer.x = p.x; pointer.y = p.y;
+  }
+  canvas.addEventListener('pointerdown', function (e) {
+    pointer.down = true; setPointer(e);
+    if (canvas.setPointerCapture) { try { canvas.setPointerCapture(e.pointerId); } catch (err) {} }
+  });
+  canvas.addEventListener('pointermove', function (e) { if (pointer.down) setPointer(e); });
+  function endPointer() { pointer.down = false; }
+  canvas.addEventListener('pointerup', endPointer);
+  canvas.addEventListener('pointercancel', endPointer);
+
+  function stepSkaters(dt, t) {
+    for (var i = 0; i < skaters.length; i++) {
+      var s = skaters[i];
+      s.ang += Math.sin(t * 0.6 + s.phase) * 0.45 * dt + Math.sin(t * 0.21 + s.phase * 2.7) * 0.3 * dt;
+      if (pondNorm(s.pond, s.x, s.y) > 0.62) {
+        var want = Math.atan2(s.pond.cy - s.y, s.pond.cx - s.x);
+        var diff = want - s.ang;
+        while (diff > Math.PI) diff -= Math.PI * 2;
+        while (diff < -Math.PI) diff += Math.PI * 2;
+        s.ang += clamp(diff, -1.6 * dt, 1.6 * dt);
+      }
+      s.x += Math.cos(s.ang) * s.speed * dt;
+      s.y += Math.sin(s.ang) * s.speed * dt * 0.55; // ice is wide, not tall
+      var n = pondNorm(s.pond, s.x, s.y);
+      if (n > 0.97) { // hard keep-in: pull back toward centre
+        s.x = s.pond.cx + (s.x - s.pond.cx) * 0.97 / Math.sqrt(n);
+        s.y = s.pond.cy + (s.y - s.pond.cy) * 0.97 / Math.sqrt(n);
+      }
+    }
+  }
+
+  function stepHero(dt) {
+    var p = POND_L;
+    if (pointer.down) {
+      var tx = pointer.x, ty = pointer.y;
+      var n = pondNorm(p, tx, ty);
+      if (n > 0.85) { var k = Math.sqrt(0.85 / n); tx = p.cx + (tx - p.cx) * k; ty = p.cy + (ty - p.cy) * k; }
+      hero.vx += (tx - hero.x) * 3.2 * dt;
+      hero.vy += (ty - hero.y) * 3.2 * dt;
+      var damp = Math.exp(-2.4 * dt);
+      hero.vx *= damp; hero.vy *= damp;
+    } else {
+      var fric = Math.exp(-0.55 * dt); // long icy glide
+      hero.vx *= fric; hero.vy *= fric;
+    }
+    var sp = Math.sqrt(hero.vx * hero.vx + hero.vy * hero.vy);
+    var MAX = 170;
+    if (sp > MAX) { hero.vx *= MAX / sp; hero.vy *= MAX / sp; sp = MAX; }
+    hero.x += hero.vx * dt;
+    hero.y += hero.vy * dt;
+    var nn = pondNorm(p, hero.x, hero.y);
+    if (nn > 0.97) {
+      var kk = 0.97 / Math.sqrt(nn);
+      hero.x = p.cx + (hero.x - p.cx) * kk;
+      hero.y = p.cy + (hero.y - p.cy) * kk;
+      hero.vx *= 0.55; hero.vy *= 0.55;
+    }
+    // lean into turns
+    if (sp > 14) {
+      var ang = Math.atan2(hero.vy, hero.vx);
+      if (hero.prevAng !== null) {
+        var d = ang - hero.prevAng;
+        while (d > Math.PI) d -= Math.PI * 2;
+        while (d < -Math.PI) d += Math.PI * 2;
+        var target = clamp(d / Math.max(dt, 0.001) * 0.055, -0.16, 0.16);
+        hero.lean += (target - hero.lean) * Math.min(1, dt * 7);
+      }
+      hero.prevAng = ang;
+      if (hero.vx < -10) hero.face = -1; else if (hero.vx > 10) hero.face = 1;
+    } else {
+      hero.lean += (0 - hero.lean) * Math.min(1, dt * 5);
+      hero.prevAng = null;
+    }
+    window.__dbg.hero.x = Math.round(hero.x);
+    window.__dbg.hero.y = Math.round(hero.y);
+  }
+
+  function magpiePos(t) {
+    var w = Math.PI * 2 / 46; // one full sweep ~46 s
+    var x = 1355 + 310 * Math.sin(w * t);
+    var y = 345 + 52 * Math.sin(2 * w * t + 0.7);
+    var dx = 310 * w * Math.cos(w * t);
+    var dy = 104 * w * Math.cos(2 * w * t + 0.7);
+    return { x: x, y: y, dx: dx, dy: dy };
+  }
+
+  function stepCrow(dt) {
+    if (crow.hopT >= 0) {
+      crow.hopT += dt / 0.45;
+      if (crow.hopT >= 1) {
+        crow.hopT = -1;
+        crow.atB = !crow.atB;
+        crow.x = crow.atB ? crow.bx : crow.ax;
+        crow.y = crow.atB ? crow.by : crow.ay;
+        crow.wait = 4 + Math.random() * 6;
+      } else {
+        var f = crow.hopT;
+        var sx = crow.atB ? crow.bx : crow.ax, sy = crow.atB ? crow.by : crow.ay;
+        var ex = crow.atB ? crow.ax : crow.bx, ey = crow.atB ? crow.ay : crow.by;
+        crow.x = sx + (ex - sx) * f;
+        crow.y = sy + (ey - sy) * f - Math.sin(f * Math.PI) * 13;
+        crow.face = ex > sx ? 1 : -1;
+      }
+    } else {
+      crow.wait -= dt;
+      if (crow.wait <= 0) crow.hopT = 0;
+    }
+  }
+
+  // ---------- render ----------
+  var last = 0, elapsed = 0;
+  function frame(ts) {
+    requestAnimationFrame(frame);
+    var dt = Math.min((ts - last) / 1000 || 0.016, 0.05);
+    last = ts; elapsed += dt;
+    window.__dbg.frames++;
+
+    stepSkaters(dt, elapsed);
+    stepHero(dt);
+    stepCrow(dt);
+    magpie.t = elapsed;
+
+    ctx.setTransform(1, 0, 0, 1, 0, 0);
+    ctx.fillStyle = '#2e3a33';
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+    ctx.setTransform(view.s, 0, 0, view.s, view.ox, view.oy);
+    ctx.drawImage(plate, 0, 0);
+
+    var i, s;
+    for (i = 0; i < skaters.length; i++) {
+      s = skaters[i];
+      ctx.drawImage(s.patch, s.x - s.w / 2, s.y - s.h / 2);
+    }
+
+    // hero, with carve lean + facing flip
+    ctx.save();
+    ctx.translate(hero.x, hero.y);
+    ctx.rotate(hero.lean * hero.face);
+    ctx.scale(hero.face, 1);
+    ctx.drawImage(hero.patch, -hero.w / 2, -hero.h / 2);
+    ctx.restore();
+
+    // crow
+    ctx.save();
+    ctx.translate(crow.x, crow.y);
+    ctx.scale(crow.face, 1);
+    ctx.drawImage(crow.patch, -crow.w / 2, -crow.h / 2);
+    ctx.restore();
+
+    // magpie on its arc
+    var mp = magpiePos(magpie.t);
+    ctx.save();
+    ctx.translate(mp.x, mp.y);
+    var face = mp.dx < 0 ? -1 : 1;
+    ctx.rotate(clamp(Math.atan2(mp.dy, Math.abs(mp.dx)) * 0.5, -0.3, 0.3) * (face === 1 ? 1 : -1));
+    ctx.scale(face, 1);
+    ctx.drawImage(magpie.patch, -magpie.w / 2, -magpie.h / 2);
+    ctx.restore();
+  }
+
+  // ---------- gesture blocking (no zoom / no scroll hijack) ----------
+  ['gesturestart', 'gesturechange', 'gestureend'].forEach(function (name) {
+    document.addEventListener(name, function (e) { e.preventDefault(); }, { passive: false });
+  });
+  document.addEventListener('dblclick', function (e) { e.preventDefault(); }, { passive: false });
+  document.addEventListener('touchmove', function (e) { e.preventDefault(); }, { passive: false });
+
+  // ---------- load ----------
+  var img = new Image();
+  img.onload = function () { build(img); };
+  img.onerror = function () { chip.textContent = 'The painting could not be loaded.'; };
+  img.src = 'painting.jpg';
+})();
+</script>
+</body>
+</html>
