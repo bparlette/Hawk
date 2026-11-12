@@ -423,12 +423,23 @@ if (Q.get('ts')) ticker.setScale(+Q.get('ts')); if (Q.get('guide') === '1') setG
 // ---------------------------------------------------------------- watch / play toggle for staged scenes
 const sceneBtn = document.createElement('button');
 sceneBtn.id = 'sceneBtn';
-Object.assign(sceneBtn.style, { position: 'fixed', left: '50%', transform: 'translateX(-50%)', bottom: 'calc(env(safe-area-inset-bottom, 0px) + 188px)', zIndex: 1100, padding: '12px 22px', borderRadius: '999px', border: '2px solid rgba(255,246,221,.85)', background: 'rgba(24,18,38,.82)', color: '#fff6dd', font: '700 16px/1 system-ui, sans-serif', letterSpacing: '.04em', cursor: 'pointer', display: 'none', touchAction: 'manipulation' }); // z 1100: must sit ABOVE the gptouch overlay (z 1000) or phone taps never reach it
+Object.assign(sceneBtn.style, { position: 'fixed', left: '50%', transform: 'translateX(-50%)', bottom: 'calc(env(safe-area-inset-bottom, 0px) + 188px)', zIndex: 1100, padding: '12px 22px', borderRadius: '999px', border: '2px solid rgba(255,246,221,.85)', background: 'rgba(24,18,38,.82)', color: '#fff6dd', font: '700 16px/1 system-ui, sans-serif', letterSpacing: '.04em', cursor: 'pointer', display: 'none', touchAction: 'manipulation', transition: 'opacity .45s ease' }); // z 1100: must sit ABOVE the gptouch overlay (z 1000) or phone taps never reach it
 document.body.appendChild(sceneBtn);
+// Recording rule (Cherie, Nov 12): the toggle stays out of the way — it fades out after a
+// few idle seconds so the screen is clear for recording, and any tap brings it back briefly.
+let btnFadeT = null;
+function pokeSceneBtn() {
+  if (sceneBtn.style.display === 'none') return;
+  sceneBtn.style.opacity = '1'; sceneBtn.style.pointerEvents = 'auto';
+  clearTimeout(btnFadeT);
+  btnFadeT = setTimeout(() => { sceneBtn.style.opacity = '0'; sceneBtn.style.pointerEvents = 'none'; }, 2600);
+}
+addEventListener('pointerdown', pokeSceneBtn, { passive: true });
 function syncSceneBtn() {
-  if (!SCENE_DEF || LOOP_SCENE || Q.get('hud') === '0') { sceneBtn.style.display = 'none'; return; }
+  if (!SCENE_DEF || LOOP_SCENE || Q.get('hud') === '0') { sceneBtn.style.display = 'none'; clearTimeout(btnFadeT); sceneBtn.style.opacity = '1'; sceneBtn.style.pointerEvents = 'auto'; return; }
   sceneBtn.style.display = '';
   sceneBtn.textContent = sceneMode === 'watch' ? '🎮 TAKE CONTROL' : (sceneRan ? '↻ WATCH AGAIN' : '▶ WATCH THE SCENE');
+  pokeSceneBtn();
 }
 // Take-control means PLAYING in the set, not watching it: the player hero spawns where the staged
 // hero stands, the follow camera comes back (setFreecam(false) also un-hides the touch controls),
