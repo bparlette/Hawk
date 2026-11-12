@@ -233,21 +233,65 @@ try { unlocked = Math.max(1, Math.min(LEVELS.length, parseInt(localStorage.getIt
 if (DEMO) unlocked = LEVELS.length;
 function saveUnlock() { try { localStorage.setItem('pv-unlocked', String(unlocked)); } catch (e) {} }
 
+/* PROGRESSION LADDER (Cherie, Nov 11): no building, no meta layer — ALL
+   long-term progression is advancing through the 18 levels. storedProg =
+   highest level number CLEARED (persisted 'pv-cleared'); fresh profile = 0 =
+   base kit (Iron + generic cards), which is what the bot tests run. DEMO
+   fakes level ACCESS (unlocked) for test navigation but progression stays
+   whatever the profile says — tests can stage it via localStorage.
+     orb draft unlocks (by level reached = previous level cleared):
+       Burn prog>=1 · Freeze prog>=2 · Lightning prog>=4 · Ghost prog>=6
+     permanent character powers (by level cleared):
+       L4  -> +1 magazine            L6  -> Catch Mastery innate
+       L9  -> primary Iron pierces   L12 -> twin-orb start (best unlocked x2)
+       L15 -> gravity pulse (descent reverses 2 s every 20 s)
+   Everything is unlocked by prog 15, so L16–L18 play with the full arsenal. */
+let storedProg = 0;
+try { storedProg = Math.max(0, Math.min(LEVELS.length, parseInt(localStorage.getItem('pv-cleared') || '0', 10) || 0)); } catch (e) {}
+function progLevel() { return DEMO ? storedProg : Math.max(storedProg, unlocked - 1); }
+function saveProg(n) {
+  if (n <= storedProg) return;
+  storedProg = n;
+  try { localStorage.setItem('pv-cleared', String(storedProg)); } catch (e) {}
+}
+const ORB_PROG = { fire: 1, ice: 2, lightning: 4, ghost: 6 };
+function orbUnlocked(type) { return type === 'iron' || progLevel() >= (ORB_PROG[type] ?? 0); }
+function bestUnlockedOrb() {
+  for (const t of ['ghost', 'lightning', 'ice', 'fire']) if (orbUnlocked(t)) return t;
+  return null;
+}
+/* what arriving at / clearing level N (1-based) grants — for the title
+   teases on locked rows and the win-screen UNLOCKED beat */
+const REACH_TEASE = { 2: 'unlocks BURN ORB', 3: 'unlocks FREEZE ORB', 5: 'unlocks LIGHTNING ORB', 7: 'unlocks GHOST ORB' };
+const CLEAR_TEASE = { 4: 'clear: +1 MAGAZINE', 6: 'clear: CATCH MASTERY', 9: 'clear: PIERCING IRON', 12: 'clear: TWIN-ORB START', 15: 'clear: GRAVITY PULSE' };
+const CLEAR_GRANTS = {
+  1: ['BURN ORB joins the draft'], 2: ['FREEZE ORB joins the draft'],
+  4: ['LIGHTNING ORB joins the draft', '+1 MAGAZINE — forever'],
+  6: ['GHOST ORB joins the draft', 'CATCH MASTERY — forever'],
+  9: ['PIERCING IRON — forever'], 12: ['TWIN-ORB START — forever'], 15: ['GRAVITY PULSE — forever'],
+};
+const TEASE_SHORT = { 2: '+ BURN ORB', 3: '+ FREEZE ORB', 4: '+1 MAGAZINE', 5: '+ LIGHTNING ORB', 6: 'CATCH MASTERY', 7: '+ GHOST ORB', 9: 'PIERCING IRON', 12: 'TWIN-ORB START', 15: 'GRAVITY PULSE' };
+
 /* ---------------- game state ---------------- */
 let G;
 function newGame(levelIdx = 0) {
   const L = LEVELS[levelIdx];
+  const P = progLevel();
+  // permanent powers applied at run start (progression ladder):
+  const startMag = ['iron', 'iron', 'iron', 'iron', 'iron', 'iron'];
+  if (P >= 4) startMag.push('iron');                    // L4 clear: +1 magazine
+  if (P >= 12) { const b = bestUnlockedOrb(); if (b) startMag.push(b, b); }   // L12 clear: twin-orb start
   G = {
     state: DEMO ? 'play' : 'title',   // title | play | levelup | over | win
-    level: L, levelIdx, t: 0, elapsed: 0,
+    level: L, levelIdx, t: 0, elapsed: 0, prog: P, gravT: 20, gravPulseT: 0,
     hero: { x: W / 2, vx: 0, face: 1, lastShot: -9, hitAt: -9, invulnT: 0 },
     hp: 6, maxHp: 6,
-    stats: { orbDamage: 10, orbSpeed: 640, fireInterval: 0.26, magnetR: 95, catchMastery: false },
-    magPool: ['iron', 'iron', 'iron', 'iron'],
-    mag: ['iron', 'iron', 'iron', 'iron'],
+    stats: { orbDamage: 12, orbSpeed: 800, fireInterval: 0.21, magnetR: 95, catchMastery: P >= 6 },   // L6 clear: innate
+    magPool: [...startMag],
+    mag: [...startMag],
     cooling: [],
     orbs: [], enemies: [], shards: [], pops: [], dmgPops: [], arcs: [],
-    fireCd: 0.2, spawnT: 1.2, formT: 14, rushT: 18, formations: 0, finHits: 0,
+    fireCd: 0.2, spawnT: 1.2, formT: 6, rushT: 18, formations: 0, finHits: 0,
     catchStacks: 0, primaryPending: true,
     kills: 0, score: 0, chain: 0, lastKillT: -9,
     xp: 0, xpLevel: 1, levelUps: 0, cards: [], cardRects: [], levelRects: [], levelupAt: 0,
@@ -273,10 +317,10 @@ function advance() {  // tap / space on over & win screens
 
 /* ---------------- level-up pool + fusions --------------------------------- */
 const POOL = [
-  { id: 'fire',      name: 'FIRE ORB',      desc: 'Add a fire orb: hits burn over time', ok: () => true, apply() { addOrb('fire'); } },
-  { id: 'ice',       name: 'ICE ORB',       desc: 'Add an ice orb: hits slow the horde', ok: () => true, apply() { addOrb('ice'); } },
-  { id: 'lightning', name: 'VOLT ORB',      desc: 'Add a volt orb: hits chain lightning', ok: () => true, apply() { addOrb('lightning'); } },
-  { id: 'ghost',     name: 'GHOST ORB',     desc: 'Add a ghost orb: pierces, never bounces off foes', ok: () => true, apply() { addOrb('ghost'); } },
+  { id: 'fire',      name: 'FIRE ORB',      desc: 'Add a fire orb: hits burn over time', ok: () => orbUnlocked('fire'), apply() { addOrb('fire'); } },
+  { id: 'ice',       name: 'ICE ORB',       desc: 'Add an ice orb: hits slow the horde', ok: () => orbUnlocked('ice'), apply() { addOrb('ice'); } },
+  { id: 'lightning', name: 'VOLT ORB',      desc: 'Add a volt orb: hits chain lightning', ok: () => orbUnlocked('lightning'), apply() { addOrb('lightning'); } },
+  { id: 'ghost',     name: 'GHOST ORB',     desc: 'Add a ghost orb: pierces, never bounces off foes', ok: () => orbUnlocked('ghost'), apply() { addOrb('ghost'); } },
   { id: 'orb',       name: '+1 IRON ORB',   desc: 'One more orb in your magazine', ok: () => true, apply() { addOrb('iron'); } },
   { id: 'catchmastery', name: 'CATCH MASTERY', desc: 'Caught orbs return stronger: +8% damage per catch, stacks x3', ok: () => !G.stats.catchMastery, apply() { G.stats.catchMastery = true; } },
   { id: 'dmg',       name: 'CHARGE +',      desc: 'Orb damage +25%', ok: () => true, apply() { G.stats.orbDamage *= 1.25; } },
@@ -293,7 +337,8 @@ function ownedCount(type) {
     G.cooling.filter(c => c.type === type).length;
 }
 function availableFusions() {
-  return FUSIONS.filter(f => !G.magPool.includes(f.result) && ownedCount(f.a) >= 1 && ownedCount(f.b) >= 1);
+  // a fusion is draftable only when BOTH parent orbs are progression-unlocked
+  return FUSIONS.filter(f => !G.magPool.includes(f.result) && orbUnlocked(f.a) && orbUnlocked(f.b) && ownedCount(f.a) >= 1 && ownedCount(f.b) >= 1);
 }
 function fusionCard(f) {
   return { id: 'fusion-' + f.result, name: 'FUSE: ' + f.name, desc: f.desc, fusion: f,
@@ -309,13 +354,25 @@ function fusionCard(f) {
 function rollCards() {
   // Offer rule (Bounce_Fit D-024, via the harvest): 3 random picks from ALL
   // currently valid cards — fusions compete in the same pool, no category
-  // guarantee.
-  const avail = POOL.filter(p => p.ok());
+  // guarantee. CHAOS/SNOWBALL weighting (within the progression-unlocked
+  // pool): the rule-bending power cards enter the draw TWICE — orb-adding
+  // cards (magazine growth + the four base orbs, which are also the fusion
+  // enablers and the pierce source) and RAPID RELOAD (fire-rate) — so a run
+  // snowballs from tidy to broken: by the 3rd–4th pick the pit should look
+  // like the reference frames, orbs everywhere. Picking one removes both of
+  // its entries, so a card can never be offered twice in the same draft.
+  const avail = [];
+  for (const p of POOL.filter(p => p.ok())) {
+    avail.push(p);
+    if (p.id === 'orb' || p.id === 'rate' || BASE_ORBS.includes(p.id)) avail.push(p);
+  }
   for (const f of availableFusions()) avail.push(fusionCard(f));
   const picks = [];
   while (picks.length < 3 && avail.length) {
     const i = Math.floor(Math.random() * avail.length);
-    picks.push(avail.splice(i, 1)[0]);
+    const card = avail[i];
+    picks.push(card);
+    for (let j = avail.length - 1; j >= 0; j--) if (avail[j] === card) avail.splice(j, 1);
   }
   G.cards = picks;
 }
@@ -387,9 +444,9 @@ function spawnFormation() {
   let spawned = 0;
   for (const [lo, hi] of lanes) {
     if (hi - lo < cell) continue;   // channel too narrow for a block
-    const cols = Math.max(2, Math.min(7, Math.floor((hi - lo) / cell)));
-    // blocks grow over the run: 2–3 rows in the first minute, up to 6 late
-    const rows = Math.min(6, 2 + Math.floor(G.elapsed / 75) + (Math.random() < 0.5 ? 1 : 0));
+    const cols = Math.max(2, Math.min(10, Math.floor((hi - lo) / cell)));
+    // blocks grow over the run: 3–4 rows in the first minute, up to 7 late
+    const rows = Math.min(7, 3 + Math.floor(G.elapsed / 60) + (Math.random() < 0.5 ? 1 : 0));
     const blockW = cols * cell, x0 = lo + (hi - lo - blockW) / 2 + cell / 2;
     for (let rI = 0; rI < rows; rI++) {
       for (let cI = 0; cI < cols; cI++) {
@@ -439,7 +496,8 @@ function fireOrb() {
   let sp = G.stats.orbSpeed, orad = 10, odmg = 1, primary = false;
   if (type === 'iron' && G.primaryPending) { primary = true; G.primaryPending = false; sp *= 0.85; orad = 13; odmg = 2; }
   G.orbs.push({ type, x: hx, y: hy, vx: Math.sin(ang) * sp, vy: -Math.cos(ang) * sp,
-    r: orad, speed: sp, dmgMul: odmg, primary, chain: 0, hitCool: new Map(), pierced: new Set(), defCool: 0, trail: [] });
+    r: orad, speed: sp, dmgMul: odmg, primary, pierce: primary && G.prog >= 9,   // L9 clear: the golden Iron pierces
+    chain: 0, hitCool: new Map(), pierced: new Set(), defCool: 0, trail: [] });
   G.hero.lastShot = G.t;
   sfx.shoot();
 }
@@ -489,6 +547,7 @@ function damageEnemy(e, dmg, srcOrb, depth = 0) {
         if ((o2.x - e.x) ** 2 + (o2.y - e.y) ** 2 < 78 * 78) damageEnemy(o2, 55, null, 1);
       }
       G.pops.push({ x: e.x, y: e.y, txt: 'BOOM!', t: 0.6, color: '#ffb03a', small: true });
+      G.shake = Math.max(G.shake, 0.4);   // fusion explosion thump (~2px peak, fast decay)
       srcOrb.dead = true; srcOrb.coolT = 3;
     }
     if (ty === 'lightningrod') {
@@ -500,6 +559,7 @@ function damageEnemy(e, dmg, srcOrb, depth = 0) {
 }
 function killEnemy(e) {
   if (e.dead) return; e.dead = true;
+  if (e.type === 'brute') G.shake = Math.max(G.shake, 0.35);   // brute-kill thump (~2px peak, fast decay)
   G.kills += 1;
   if (G.t - G.lastKillT < 2.5) G.chain += 1; else G.chain = 1;
   G.lastKillT = G.t;
@@ -561,11 +621,23 @@ function update(dt) {
   const escSteps = Math.floor(G.elapsed / sp.escalateEverySec);
   const interval = (1.1 / sp.pressureMul) * Math.pow(0.95, escSteps);
   G.spawnT -= dt;
-  if (G.spawnT <= 0 && G.enemies.length < 46) { spawnEnemy(); G.spawnT = interval * (0.7 + Math.random() * 0.6); }
-  // formation director: a grid block every ~13–19 s (the pulse; no extra rush
-  // clusters — the reference game's early waves are small, 4–7 per wave)
+  if (G.spawnT <= 0 && G.enemies.length < 84) { spawnEnemy(); G.spawnT = interval * (0.7 + Math.random() * 0.6); }
+  // formation director: a grid block every ~6–9 s (CHAOS PASS: the pit should
+  // never empty — blocks are the pulse, the trickle fills between them)
   G.formT -= dt;
-  if (G.formT <= 0 && G.enemies.length < 40) { spawnFormation(); G.formT = 13 + Math.random() * 6; }
+  if (G.formT <= 0 && G.enemies.length < 78) { spawnFormation(); G.formT = 6 + Math.random() * 3; }
+
+  /* --- gravity pulse (L15-clear permanent power): every ~20 s the horde's
+     descent reverses for 2 s — the review's gravity quirk, as Verity's own --- */
+  if (G.prog >= 15) {
+    G.gravT -= dt;
+    if (G.gravT <= 0) {
+      G.gravT = 20; G.gravPulseT = 2;
+      G.pops.push({ x: W / 2, y: LH * 0.4, txt: 'GRAVITY PULSE!', t: 0.9, color: '#d3a6ff' });
+      blip(196, 0.3, 'sine', 0.06);
+    }
+  }
+  if (G.gravPulseT > 0) G.gravPulseT -= dt;
 
   /* --- auto-fire, governed by the magazine / catches --- */
   G.fireCd -= dt;
@@ -588,6 +660,7 @@ function update(dt) {
     G.state = 'win';
     unlocked = Math.max(unlocked, Math.min(LEVELS.length, G.levelIdx + 2));   // clearing pit n unlocks pit n+1
     saveUnlock();
+    saveProg(G.levelIdx + 1);   // progression ladder: highest level cleared
   }
 }
 
@@ -639,7 +712,7 @@ function updateOrbs(dt) {
       }
 
       // enemies
-      const piercing = o.type === 'ghost' || o.type === 'wraith' || (o.type === 'assassin' && o.vy < 0);   // Assassin passes through FRONTS (orb moving up)
+      const piercing = o.type === 'ghost' || o.type === 'wraith' || o.pierce || (o.type === 'assassin' && o.vy < 0);   // Assassin passes through FRONTS (orb moving up); o.pierce = L9-clear primary Iron
       for (const e of G.enemies) {
         if (e.dead) continue;
         const dx = o.x - e.x, dy = o.y - e.y, rr = o.r + e.r;
@@ -676,7 +749,7 @@ function updateOrbs(dt) {
           }
           G.pops.push({ x: G.hero.x, y: FLOOR - 118, txt: 'CATCH!', t: 0.45, color: '#aef3ff', small: true });
         } else if (o.y > FLOOR + 14) {
-          G.cooling.push({ type: o.type, t: 1.2 }); G.orbs.splice(oi, 1); gone = true;
+          G.cooling.push({ type: o.type, t: 0.7 }); G.orbs.splice(oi, 1); gone = true;   // CHAOS PASS: a missed catch returns in 0.7 s (was 1.2) — more orbs stay in the air
         }
       }
     }
@@ -716,7 +789,8 @@ function updateEnemies(dt) {
     }
     const sf = e.slowT > 0 ? 0.5 : 1;
     const dive = e.type === 'runner' && !e.form ? 1 + (e.y / LH) * 0.55 : 1;
-    e.y += e.speed * sf * dive * dt;
+    const grav = G.gravPulseT > 0 ? -0.35 : 1;   // gravity pulse: descent briefly reverses
+    e.y += e.speed * sf * dive * grav * dt;
     if (e.beh === 'zigzag') e.x = e.x0 + Math.sin(G.t * 2.3 + e.phase) * 16;   // bxpit MON 'zz' flag
     if (!e.form) {   // formation members march straight; trickle enemies drift
       if (e.type === 'walker' || e.type === 'splitter') e.x += Math.sin(G.t * 1.7 + e.phase) * 14 * dt;
@@ -953,7 +1027,13 @@ function draw() {
   drawHUD();
   if (G.state === 'title') drawTitle();
   if (G.state === 'over') screenMsg('THE PIT WINS', [`Score ${G.score}`, `Kills ${G.kills} · Survived ${fmtTime(G.elapsed)}`, '', 'TAP TO RETRY']);
-  if (G.state === 'win') screenMsg('PIT CLEARED!', [G.level.name, `Score ${G.score}`, `Kills ${G.kills} · Level ${G.xpLevel}`, G.levelIdx + 1 < LEVELS.length ? '' : '', G.levelIdx + 1 < LEVELS.length ? 'TAP FOR NEXT PIT' : 'TAP TO PLAY AGAIN']);
+  if (G.state === 'win') {
+    const grants = CLEAR_GRANTS[G.levelIdx + 1] || [];
+    const lines = [G.level.name, `Score ${G.score}`, `Kills ${G.kills} · Level ${G.xpLevel}`];
+    if (grants.length) lines.push('UNLOCKED: ' + grants.join(' · '));
+    lines.push('', G.levelIdx + 1 < LEVELS.length ? 'TAP FOR NEXT PIT' : 'TAP TO PLAY AGAIN');
+    screenMsg('PIT CLEARED!', lines);
+  }
   if (G.state === 'levelup') drawCards();
   if (G.state === 'play' && G.elapsed < 4.5) {   // level intro card
     ctx.globalAlpha = Math.min(1, (4.5 - G.elapsed) / 1.2, G.elapsed / 0.4 + 0.2);
@@ -1044,10 +1124,12 @@ function drawTitle() {
       ctx.fillText(locked ? `🔒 ${L.name}` : `${i + 1}. ${L.name}`, r.x + 18, r.y + 30);
       ctx.fillStyle = locked ? '#454b70' : '#9fb4ff'; ctx.font = '600 13.5px system-ui, sans-serif';
       const goal = L.goal.type === 'kills' ? `${L.goal.target} kills` : `survive ${fmtTime(L.goal.target)}`;
-      ctx.fillText(locked ? 'Clear the pit before this one' : goal, r.x + 18, r.y + 52);
+      const tease = REACH_TEASE[i + 1] || CLEAR_TEASE[i + 1];
+      ctx.fillText(locked ? (tease || 'Clear the pit before this one') : goal, r.x + 18, r.y + 52);
     } else {   // compressed rows (long level list): name only, centred
       ctx.font = '800 15px system-ui, sans-serif';
-      ctx.fillText(locked ? `🔒 ${L.name}` : `${i + 1}. ${L.name}`, r.x + 14, r.y + r.h / 2 + 5);
+      const tease = locked && TEASE_SHORT[i + 1] ? ` · ${TEASE_SHORT[i + 1]}` : '';
+      ctx.fillText(locked ? `🔒 ${L.name}${tease}` : `${i + 1}. ${L.name}`, r.x + 14, r.y + r.h / 2 + 5);
     }
   });
   ctx.textAlign = 'center'; ctx.fillStyle = '#ffe95e'; ctx.font = '800 18px system-ui, sans-serif';
@@ -1059,7 +1141,7 @@ function clickLevel(lx, ly) {
     const r = rects[i];
     if (lx >= r.x && lx <= r.x + r.w && ly >= r.y && ly <= r.y + r.h) {
       if (i < unlocked) { selectLevel(i, true); return true; }
-      return true;   // tapped a locked pit: swallow, don't start
+      return false;  // locked pit: fall through to startRun — "tap anywhere to drop in" must never feel dead
     }
   }
   return false;
@@ -1160,10 +1242,14 @@ window.__dbg = {
   get finHits() { return G.finHits; },
   get goalProgress() { return Math.round(goalProgress() * 1000) / 1000; },
   get magPool() { return [...G.magPool]; },
+  get prog() { return G.prog; },
+  get gravPulseT() { return Math.round(G.gravPulseT * 100) / 100; },
+  poolIds() { return [...POOL.filter(p => p.ok()).map(p => p.id), ...availableFusions().map(f => 'fusion-' + f.result)]; },
   get cards() { return cssRects(G.cardRects); },
   get cardIds() { return G.cards.map(c => c.id); },
   get levelRects() { return cssRects(G.levelRects || levelRectsCalc()); },
   start() { newGame(G.levelIdx); G.state = 'play'; },
   selectLevel(i) { newGame(i); G.state = 'play'; },
+  grant(type) { addOrb(type); },
   pick(i) { pickCard(i); },
 };
