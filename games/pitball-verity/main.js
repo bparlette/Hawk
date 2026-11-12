@@ -176,7 +176,7 @@ function finGeom() {   // first fin or null — for single-fin call sites (bot m
   const fins = finGeoms();
   return fins.length ? fins[0] : null;
 }
-function xpNeed(lvl) { return 4 + (lvl - 1) * 3; }
+function xpNeed(lvl) { return 3 + (lvl - 1) * 2; }   // lowered Nov 12 (Cherie: power-ups more often)
 
 /* Enemy archetypes — distinct silhouettes (zombie-game lesson). Base descent
    speeds from LEVELS.md conventions (walker 56, runner 118, brute 38,
@@ -280,7 +280,7 @@ function newGame(levelIdx = 0) {
     level: L, levelIdx, t: 0, elapsed: 0, prog: P, gravT: 20, gravPulseT: 0,
     hero: { x: W / 2, y: 0, vx: 0, vy: 0, face: 1, lastShot: -9, hitAt: -9, invulnT: 0 },   // y set below (FLOOR-based)
     hp: 6, maxHp: 6,
-    stats: { orbDamage: 12, orbSpeed: 800, fireInterval: 0.21, magnetR: 95, catchMastery: P >= 6 },   // L6 clear: innate
+    stats: { orbDamage: 24, orbSpeed: 800, fireInterval: 0.21, magnetR: 95, catchMastery: P >= 6 },   // orbDamage doubled Nov 12 (Cherie: firepower x2); L6 clear: catchMastery innate
     magPool: [...startMag],
     mag: [...startMag],
     cooling: [],
@@ -582,7 +582,7 @@ function killEnemy(e) {
     G.shards.push({ x: e.x + (Math.random() - 0.5) * 26, y: e.y + (Math.random() - 0.5) * 14, vx: (Math.random() - 0.5) * 30, vy: 40, v: 1, mag: false });
   if (e.type === 'splitter')
     for (const s of [-1, 1]) { const d = ETYPES.mini; G.enemies.push({ id: enemySeq++, type: 'mini', x: e.x + s * 16, y: e.y, r: d.r * K(), hp: d.hp, maxHp: d.hp, speed: d.speed, phase: Math.random() * 6, slowT: 0, burnT: 0, burnPow: 7, freezeT: 0, curse: 0, flash: 0, form: false, lane: e.lane || 0 }); }
-  if (e.type === 'brute' && Math.random() < 0.7) {   // brutes drop SALVAGE: a power-up earned by the kill, granted on pickup — no pause, no pick
+  if ((e.type === 'brute' || (e.type === 'splitter' && Math.random() < 0.35))) {   // SALVAGE: a power-up earned by the kill, granted on pickup — no pause, no pick. Brutes always (raised from 70% Nov 12), splitters 35% (added Nov 12: power-ups more often)
     G.shards.push({ x: e.x, y: e.y, vx: 0, vy: 30, v: 0, mag: false, salvage: true });
     G.pops.push({ x: e.x, y: e.y - 24, txt: 'SALVAGE!', t: 0.9, color: '#ffd94d', small: true });
   }
