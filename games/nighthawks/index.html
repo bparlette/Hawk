@@ -1,0 +1,315 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+<title>Nighthawks — a living painting</title>
+<style>
+  html, body { margin:0; padding:0; height:100%; overflow:hidden; background:#0a120e;
+    touch-action:none; overscroll-behavior:none; -webkit-user-select:none; user-select:none;
+    -webkit-tap-highlight-color: transparent; }
+  #cv { position:fixed; inset:0; display:block; touch-action:none; }
+  .chip { position:fixed; z-index:10; pointer-events:none; color:#f3ead8;
+    font-family: Georgia, 'Times New Roman', serif; letter-spacing:.04em;
+    background:rgba(8,18,14,.55); border:1px solid rgba(243,234,216,.25);
+    border-radius:999px; backdrop-filter: blur(2px); }
+  #title { top:calc(env(safe-area-inset-top, 0px) + 14px); left:50%; transform:translateX(-50%);
+    padding:9px 18px; font-size:16px; white-space:nowrap; transition:opacity 1.4s ease; }
+  #title small { display:block; text-align:center; font-size:11.5px; opacity:.75; letter-spacing:.08em; margin-top:2px;}
+  #title.gone { opacity:0; }
+  #score { right:12px; bottom:calc(env(safe-area-inset-bottom, 0px) + 12px);
+    padding:6px 13px; font-size:12.5px; letter-spacing:.12em; }
+</style>
+</head>
+<body>
+<canvas id="cv"></canvas>
+<div class="chip" id="title">Nighthawks<small>TAP A CUSTOMER WHOSE CUP IS EMPTY</small></div>
+<div class="chip" id="score">CUPS SERVED · 0</div>
+<script>
+'use strict';
+/* Nighthawks, living-painting sample. All artwork is the painting itself:
+   plate.jpg is the painting with the counterman lifted out (soft clone-fill
+   behind him); the figures are feathered patches cut from the same canvas. */
+const IW = 1920, IH = 1048;
+const cv = document.getElementById('cv');
+const ctx = cv.getContext('2d');
+const scoreEl = document.getElementById('score');
+const titleEl = document.getElementById('title');
+setTimeout(() => titleEl.classList.add('gone'), 5200);
+
+const ASSETS = {
+  plate: 'plate.jpg', man: 'counterman.png', strip: 'strip.png',
+  lone: 'cust_lone.png', cman: 'cust_man.png', woman: 'cust_woman.png'
+};
+const SPR = { // sprite origins in image px (patch boxes cut from the painting)
+  man:   { x: 1525, y: 500 },
+  strip: { x: 565,  y: 683 },
+  lone:  { x: 985,  y: 515 },
+  cman:  { x: 1275, y: 495 },
+  woman: { x: 1355, y: 520 }
+};
+const MAN_HOME_CX = 1618;              // counterman centre-x at home (by the urns)
+const CUSTOMERS = [
+  { name:'lone',  tapX:1072, tapY:620, tapR:135, cupX:1175, cupY:637, serveCX:1150, drain:34 },
+  { name:'cman',  tapX:1338, tapY:585, tapR:120, cupX:1321, cupY:639, serveCX:1385, drain:42 },
+  { name:'woman', tapX:1422, tapY:590, tapR:115, cupX:1498, cupY:639, serveCX:1528, drain:38 }
+];
+
+const imgs = {};
+let ready = false;
+Promise.all(Object.entries(ASSETS).map(([k, src]) => new Promise(res => {
+  const im = new Image();
+  im.onload = () => { imgs[k] = im; res(); };
+  im.onerror = () => { imgs[k] = null; res(); };
+  im.src = src;
+}))).then(() => { ready = true; });
+
+/* ---------------- view: cover-fit with a pannable centre ---------------- */
+let vw = 0, vh = 0, dpr = 1, scale = 1, cxF = 0.5;
+function resize() {
+  dpr = Math.min(window.devicePixelRatio || 1, 2);
+  vw = window.innerWidth; vh = window.innerHeight;
+  cv.width = Math.round(vw * dpr); cv.height = Math.round(vh * dpr);
+  cv.style.width = vw + 'px'; cv.style.height = vh + 'px';
+  scale = Math.max(vw / IW, vh / IH);
+  const visFrac = vw / (IW * scale);
+  if (visFrac >= 1) cxF = 0.5;
+  cxF = clampCx(cxF);
+}
+function clampCx(c) {
+  const half = vw / (IW * scale) / 2;
+  if (half >= 0.5) return 0.5;
+  return Math.max(half, Math.min(1 - half, c));
+}
+function viewOX() { return vw / 2 - cxF * IW * scale; }
+function viewOY() { return vh / 2 - 0.5 * IH * scale; }
+function toImage(px, py) { return { x: (px - viewOX()) / scale, y: (py - viewOY()) / scale }; }
+
+/* ---------------- game state ---------------- */
+const cups = CUSTOMERS.map((c, i) => ({
+  level: [0.8, 0.55, 0.95][i], drainT: c.drain * (0.85 + Math.random() * 0.3), seed: Math.random() * 10
+}));
+const man = { dx: 0, targetDx: 0, state: 'idle', serving: -1, pending: -1, pourT: 0, walkPh: 0, face: 1 };
+let cupsServed = 0;
+const floaters = [];
+const sip = { next: 6 + Math.random() * 6, t: -1, drained: false };
+window.__dbg = {
+  frames: 0, cupsServed: 0, manState: 'idle', manDx: 0,
+  levels: cups.map(c => +c.level.toFixed(2)),
+  empty(i) { cups[i].level = 0; }
+};
+
+function requestServe(i) {
+  if (cups[i].level > 0.05) return;
+  if (man.state === 'idle') startServe(i);
+  else man.pending = i;
+}
+function startServe(i) {
+  man.serving = i;
+  man.targetDx = CUSTOMERS[i].serveCX - MAN_HOME_CX;
+  man.state = 'walk';
+}
+function updateMan(dt) {
+  if (man.state === 'walk') {
+    const diff = man.targetDx - man.dx;
+    const step = 265 * dt;
+    man.face = diff < 0 ? 1 : -1; // painting faces left; flip when walking right
+    if (Math.abs(diff) <= step) {
+      man.dx = man.targetDx;
+      if (man.serving >= 0) { man.state = 'pour'; man.pourT = 0; }
+      else man.state = 'idle';
+    } else {
+      man.dx += Math.sign(diff) * step;
+      man.walkPh += dt * 9;
+    }
+  } else if (man.state === 'pour') {
+    man.pourT += dt;
+    const c = cups[man.serving];
+    c.level = Math.min(1, man.pourT / 1.5);
+    if (man.pourT >= 1.5) {
+      cupsServed++;
+      scoreEl.textContent = 'CUPS SERVED · ' + cupsServed;
+      floaters.push({ x: CUSTOMERS[man.serving].cupX, y: CUSTOMERS[man.serving].cupY - 26, t: 0 });
+      man.serving = -1;
+      if (man.pending >= 0 && cups[man.pending].level <= 0.05) {
+        const p = man.pending; man.pending = -1; startServe(p);
+      } else {
+        man.pending = -1; man.targetDx = 0; man.state = 'walk'; // stroll home
+      }
+    }
+  }
+}
+
+/* ---------------- drawing ---------------- */
+function drawCup(c, liftX, liftY, t) {
+  const x = c.x + (liftX || 0), y = c.y + (liftY || 0);
+  ctx.save();
+  // saucer
+  ctx.fillStyle = 'rgba(216,207,184,0.92)';
+  ctx.beginPath(); ctx.ellipse(x, y + 11, 23, 5.5, 0, 0, Math.PI * 2); ctx.fill();
+  // body
+  const g = ctx.createLinearGradient(x - 16, y, x + 16, y);
+  g.addColorStop(0, '#ddd2ba'); g.addColorStop(0.5, '#f4ecd9'); g.addColorStop(1, '#cfc3a8');
+  ctx.fillStyle = g;
+  ctx.beginPath();
+  ctx.moveTo(x - 16, y - 9); ctx.lineTo(x + 16, y - 9);
+  ctx.lineTo(x + 11.5, y + 10); ctx.lineTo(x - 11.5, y + 10);
+  ctx.closePath(); ctx.fill();
+  ctx.strokeStyle = 'rgba(70,56,40,0.35)'; ctx.lineWidth = 1.4; ctx.stroke();
+  // handle
+  ctx.beginPath(); ctx.arc(x + 17.5, y - 1, 6, -1.1, 1.1); ctx.stroke();
+  // coffee
+  if (c.level > 0.03) {
+    const rx = 12.5 * (0.45 + 0.55 * c.level);
+    ctx.fillStyle = 'rgba(43,27,15,0.96)';
+    ctx.beginPath(); ctx.ellipse(x, y - 7 + (1 - c.level) * 2.5, rx, 3.4, 0, 0, Math.PI * 2); ctx.fill();
+  } else {
+    // empty: beckoning halo
+    const a = 0.30 + 0.22 * Math.sin(t * 3.1 + c.seed);
+    ctx.strokeStyle = 'rgba(255,222,150,' + a.toFixed(3) + ')';
+    ctx.lineWidth = 2.4;
+    ctx.beginPath(); ctx.ellipse(x, y, 27, 17, 0, 0, Math.PI * 2); ctx.stroke();
+  }
+  ctx.restore();
+}
+function drawSteam(x, y, t, seed, strength) {
+  ctx.save();
+  ctx.lineCap = 'round';
+  for (let w = 0; w < 2; w++) {
+    const ph = t * 1.6 + seed * 3 + w * 2.2;
+    const a = 0.20 * strength * (0.75 + 0.25 * Math.sin(ph * 1.3));
+    ctx.strokeStyle = 'rgba(255,252,244,' + a.toFixed(3) + ')';
+    ctx.lineWidth = 3.4 - w;
+    ctx.beginPath();
+    const Hh = 44 * strength;
+    for (let s = 0; s <= 8; s++) {
+      const f = s / 8;
+      const sx = x + (w - 0.5) * 7 + Math.sin(ph + f * 4.2) * 5.5 * f;
+      const sy = y - 13 - f * Hh;
+      if (s === 0) ctx.moveTo(sx, sy); else ctx.lineTo(sx, sy);
+    }
+    ctx.stroke();
+  }
+  ctx.restore();
+}
+function drawScene(t, dt) {
+  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  ctx.fillStyle = '#0a120e'; ctx.fillRect(0, 0, vw, vh);
+  if (!ready) return;
+  ctx.translate(viewOX(), viewOY());
+  ctx.scale(scale, scale);
+
+  if (imgs.plate) ctx.drawImage(imgs.plate, 0, 0);
+
+  // counterman (slides behind the counter; customers/strip drawn over him)
+  if (imgs.man) {
+    const bob = man.state === 'walk' ? Math.sin(man.walkPh) * 1.7 : 0;
+    const dx = SPR.man.x + man.dx, dy = SPR.man.y + bob;
+    ctx.save();
+    if (man.face < 0) {
+      ctx.translate(dx + imgs.man.width, dy); ctx.scale(-1, 1);
+      ctx.drawImage(imgs.man, 0, 0);
+    } else {
+      ctx.drawImage(imgs.man, dx, dy);
+    }
+    ctx.restore();
+  }
+  if (imgs.strip) ctx.drawImage(imgs.strip, SPR.strip.x, SPR.strip.y);
+  if (imgs.lone) ctx.drawImage(imgs.lone, SPR.lone.x, SPR.lone.y);
+  if (imgs.cman) ctx.drawImage(imgs.cman, SPR.cman.x, SPR.cman.y);
+  if (imgs.woman) ctx.drawImage(imgs.woman, SPR.woman.x, SPR.woman.y);
+
+  // diner light: a slow, subtle breathing glow over the interior
+  const glowA = 0.045 + 0.018 * Math.sin(t * 0.65);
+  const rg = ctx.createRadialGradient(1310, 460, 60, 1310, 460, 760);
+  rg.addColorStop(0, 'rgba(255,208,120,' + glowA.toFixed(3) + ')');
+  rg.addColorStop(1, 'rgba(255,208,120,0)');
+  ctx.fillStyle = rg;
+  ctx.fillRect(560, 180, 1360, 700);
+
+  // cups + steam
+  const pouring = man.state === 'pour' ? man.serving : -1;
+  CUSTOMERS.forEach((c, i) => {
+    let lx = 0, ly = 0;
+    if (i === 0 && sip.t >= 0) {
+      const e = Math.sin(Math.PI * Math.min(1, sip.t));
+      lx = -30 * e; ly = -38 * e;
+    }
+    drawCup({ x: c.cupX, y: c.cupY, level: cups[i].level, seed: cups[i].seed }, lx, ly, t);
+    if (cups[i].level > 0.45 || i === pouring) {
+      drawSteam(c.cupX + lx, c.cupY + ly, t, cups[i].seed, i === pouring ? 2.1 : 1);
+    }
+  });
+  // +1 floaters
+  for (let i = floaters.length - 1; i >= 0; i--) {
+    const f = floaters[i]; f.t += dt;
+    if (f.t > 1.3) { floaters.splice(i, 1); continue; }
+    ctx.save();
+    ctx.font = '600 30px Georgia, serif';
+    ctx.fillStyle = 'rgba(243,234,208,' + (1 - f.t / 1.3).toFixed(3) + ')';
+    ctx.fillText('+1', f.x - 12, f.y - f.t * 34);
+    ctx.restore();
+  }
+}
+
+/* ---------------- loop ---------------- */
+let last = performance.now();
+function frame(now) {
+  const dt = Math.min(0.05, (now - last) / 1000); last = now;
+  const t = now / 1000;
+  // drain cups
+  cups.forEach(c => { if (!(man.state === 'pour' && cups[man.serving] === c)) c.level = Math.max(0, c.level - dt / c.drainT); });
+  // lone man's own sip
+  if (sip.t < 0) {
+    sip.next -= dt;
+    if (sip.next <= 0 && cups[0].level > 0.35) { sip.t = 0; sip.drained = false; }
+  } else {
+    sip.t += dt / 1.7;
+    if (sip.t >= 0.5 && !sip.drained) { cups[0].level = Math.max(0, cups[0].level - 0.22); sip.drained = true; }
+    if (sip.t >= 1) { sip.t = -1; sip.next = 8 + Math.random() * 8; }
+  }
+  updateMan(dt);
+  drawScene(t, dt);
+  window.__dbg.frames++;
+  window.__dbg.cupsServed = cupsServed;
+  window.__dbg.manState = man.state;
+  window.__dbg.manDx = Math.round(man.dx);
+  window.__dbg.levels = cups.map(c => +c.level.toFixed(2));
+  requestAnimationFrame(frame);
+}
+
+/* ---------------- input: tap to serve, drag to pan ---------------- */
+let pDown = null;
+cv.addEventListener('pointerdown', e => { pDown = { x: e.clientX, y: e.clientY, t: performance.now(), cx: cxF, moved: false }; });
+cv.addEventListener('pointermove', e => {
+  if (!pDown) return;
+  const dx = e.clientX - pDown.x;
+  if (Math.abs(dx) + Math.abs(e.clientY - pDown.y) > 10) pDown.moved = true;
+  if (pDown.moved) { cxF = clampCx(pDown.cx - dx / (IW * scale)); }
+});
+cv.addEventListener('pointerup', e => {
+  if (pDown && !pDown.moved && performance.now() - pDown.t < 400) {
+    const p = toImage(e.clientX, e.clientY);
+    let best = -1, bestD = 1e9;
+    for (let i = 0; i < CUSTOMERS.length; i++) {
+      const c = CUSTOMERS[i];
+      const d = Math.hypot(p.x - c.tapX, p.y - c.tapY);
+      if (d < c.tapR && d < bestD) { best = i; bestD = d; }
+    }
+    if (best >= 0) requestServe(best);
+  }
+  pDown = null;
+});
+cv.addEventListener('pointercancel', () => { pDown = null; });
+['gesturestart', 'gesturechange', 'gestureend'].forEach(n =>
+  document.addEventListener(n, e => e.preventDefault()));
+document.addEventListener('dblclick', e => e.preventDefault());
+document.addEventListener('contextmenu', e => e.preventDefault());
+
+window.addEventListener('resize', resize);
+cxF = window.innerWidth < window.innerHeight ? 0.71 : 0.5;
+resize();
+requestAnimationFrame(frame);
+</script>
+</body>
+</html>
