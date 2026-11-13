@@ -2882,6 +2882,14 @@
    "thumb": "thumbs/bonk-yard.png",
    "title": "Linkle Arcade D — Paint + Light",
    "url": "../games/linkle-arcade-d/"
+  },
+  {
+   "category": "AR",
+   "desc": "The trap-rage walk home on your real floor — rear-camera AR lays the sidewalk over your room; dodge trees, hydrants, signs, sprinklers & bins for 500m.",
+   "id": "everything-hates-you-ar",
+   "thumb": "thumbs/bonk-yard.png",
+   "title": "EVERYTHING HATES YOU! AR",
+   "url": "../games/everything-hates-you-ar/"
   }
  ]
 }
