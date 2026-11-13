@@ -306,6 +306,10 @@ function selectLevel(i, start = false) {
   newGame(i);
   if (start) startRun();
 }
+/* Favorites-rotation hook: when embedded in the rotation shell, tell the
+   parent one level's run has ended — a clear (win) or a death (over).
+   Harmless standalone: no listener, the message goes nowhere. */
+function notifyRunDone(win) { try { parent.postMessage({ type: 'micro-done', win: !!win, score: Math.round(G.score || 0) }, '*'); } catch (e) {} }
 function startRun() { if (G.state === 'title') G.state = 'play'; }
 function advance() {  // tap / space on over & win screens
   if (G.state === 'over') { newGame(G.levelIdx); G.state = 'play'; }
@@ -597,7 +601,7 @@ function hurtHero(dmg) {
   if (G.hero.invulnT > 0 || G.state !== 'play') return;
   G.hp -= dmg; G.hero.invulnT = 0.9; G.hero.hitAt = G.t; G.shake = 0.35;   // 0.9s invuln window + hit flash
   sfx.hurt();
-  if (G.hp <= 0) { G.hp = 0; G.state = 'over'; }
+  if (G.hp <= 0) { G.hp = 0; G.state = 'over'; notifyRunDone(false); }
 }
 
 /* ---------------- update --------------------------------------------------- */
@@ -683,6 +687,7 @@ function update(dt) {
     unlocked = Math.max(unlocked, Math.min(LEVELS.length, G.levelIdx + 2));   // clearing pit n unlocks pit n+1
     saveUnlock();
     saveProg(G.levelIdx + 1);   // progression ladder: highest level cleared
+    notifyRunDone(true);
   }
 }
 
