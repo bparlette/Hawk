@@ -83,7 +83,6 @@ const ART = () => window.PV_ART || null;
 /* ---------------- input ---------------- */
 const keys = {};
 let dragX = null, dragY = null;
-let aimPtrX = null, aimPtrY = null, aimPtrAt = -9;
 window.addEventListener('keydown', e => {
   keys[e.code] = true;
   if (['ArrowLeft', 'ArrowRight', 'Space'].includes(e.code)) e.preventDefault();
@@ -102,20 +101,9 @@ canvas.addEventListener('pointerdown', e => {
   const lx = toLogical(e.clientX), ly = toLogicalY(e.clientY);
   if (G.state === 'title') { if (!clickLevel(lx, ly)) startRun(); return; }
   else if (G.state !== 'play') { advance(); return; }
-  if (ly < FLOOR - 110 && e.pointerType === 'touch') {
-    aimPtrX = lx; aimPtrY = ly; aimPtrAt = G.t;
-  } else {
-    dragX = lx; dragY = ly;
-    if (ly < G.hero.y - 36) { aimPtrX = lx; aimPtrY = ly; aimPtrAt = G.t; }
-  }
+  dragX = lx; dragY = ly;
 });
-canvas.addEventListener('pointermove', e => {
-  const lx = toLogical(e.clientX), ly = toLogicalY(e.clientY);
-  if (e.pointerType !== 'touch' || dragX === null) {
-    if (ly < G.hero.y - 24) { aimPtrX = lx; aimPtrY = ly; aimPtrAt = G.t; }
-  }
-  if (dragX !== null) { dragX = lx; dragY = ly; }
-});
+canvas.addEventListener('pointermove', e => { if (dragX !== null) { dragX = toLogical(e.clientX); dragY = toLogicalY(e.clientY); } });
 window.addEventListener('pointerup', () => { dragX = null; dragY = null; });
 window.addEventListener('pointercancel', () => { dragX = null; dragY = null; });
 /* Touch fix: on touch devices the gptouch overlay (fixed, z-index 1000) sits
@@ -265,8 +253,8 @@ function saveProg(n) {
   storedProg = n;
   try { localStorage.setItem('pv-cleared', String(storedProg)); } catch (e) {}
 }
-const ORB_PROG = { fire: 0, ice: 0, lightning: 0, ghost: 0 };
-function orbUnlocked(type) { return type === 'iron' || BASE_ORBS.includes(type) || progLevel() >= (ORB_PROG[type] ?? 0); }
+const ORB_PROG = { fire: 1, ice: 2, lightning: 4, ghost: 6 };
+function orbUnlocked(type) { return type === 'iron' || progLevel() >= (ORB_PROG[type] ?? 0); }
 function bestUnlockedOrb() {
   for (const t of ['ghost', 'lightning', 'ice', 'fire']) if (orbUnlocked(t)) return t;
   return null;
@@ -297,8 +285,7 @@ function newGame(levelIdx = 0) {
     level: L, levelIdx, t: 0, elapsed: 0, prog: P, gravT: 20, gravPulseT: 0,
     hero: { x: W / 2, y: 0, vx: 0, vy: 0, face: 1, lastShot: -9, hitAt: -9, invulnT: 0 },   // y set below (FLOOR-based)
     hp: 6, maxHp: 6,
-    stats: { orbDamage: 24, orbSpeed: 800, fireInterval: 0.21, magnetR: 95, catchMastery: P >= 6, babyCount: 1, critChance: 0.08 },   // orbDamage doubled Nov 12 (Cherie: firepower x2); L6 clear: catchMastery innate
-    aimAng: 0,
+    stats: { orbDamage: 24, orbSpeed: 800, fireInterval: 0.21, magnetR: 95, catchMastery: P >= 6 },   // orbDamage doubled Nov 12 (Cherie: firepower x2); L6 clear: catchMastery innate
     magPool: [...startMag],
     mag: [...startMag],
     cooling: [],
@@ -339,8 +326,6 @@ const POOL = [
   { id: 'lightning', name: 'VOLT ORB',      desc: 'Add a volt orb: hits chain lightning', ok: () => orbUnlocked('lightning'), apply() { addOrb('lightning'); } },
   { id: 'ghost',     name: 'GHOST ORB',     desc: 'Add a ghost orb: pierces, never bounces off foes', ok: () => orbUnlocked('ghost'), apply() { addOrb('ghost'); } },
   { id: 'orb',       name: '+1 IRON ORB',   desc: 'One more orb in your magazine', ok: () => true, apply() { addOrb('iron'); } },
-  { id: 'baby',      name: 'BABY BALLS +1', desc: 'Fire +1 extra mini orb per volley', ok: () => G.stats.babyCount < 4, apply() { G.stats.babyCount += 1; } },
-  { id: 'crit',      name: 'CRIT SHOT +',   desc: 'Critical hit chance +10% (1.8× dmg)', ok: () => G.stats.critChance < 0.5, apply() { G.stats.critChance += 0.10; } },
   { id: 'catchmastery', name: 'CATCH MASTERY', desc: 'Caught orbs return stronger: +8% damage per catch, stacks x3', ok: () => !G.stats.catchMastery, apply() { G.stats.catchMastery = true; } },
   { id: 'dmg',       name: 'CHARGE +',      desc: 'Orb damage +25%', ok: () => true, apply() { G.stats.orbDamage *= 1.25; } },
   { id: 'spd',       name: 'VELOCITY +',    desc: 'Orb speed +12% (faster returns, faster fire)', ok: () => true, apply() { G.stats.orbSpeed *= 1.12; } },
@@ -383,9 +368,9 @@ function rollCards() {
   const avail = [];
   for (const p of POOL.filter(p => p.ok())) {
     avail.push(p);
-    if (p.id === 'orb' || p.id === 'rate' || p.id === 'baby' || BASE_ORBS.includes(p.id)) avail.push(p);
+    if (p.id === 'orb' || p.id === 'rate' || BASE_ORBS.includes(p.id)) avail.push(p);
   }
-  for (const f of availableFusions()) { const fc = fusionCard(f); avail.push(fc, fc); }
+  for (const f of availableFusions()) avail.push(fusionCard(f));
   const picks = [];
   while (picks.length < 3 && avail.length) {
     const i = Math.floor(Math.random() * avail.length);
@@ -402,17 +387,19 @@ function pickCard(i) {
   G.state = 'play';
   blip(740, 0.09, 'square', 0.05);
 }
-/* Power-ups are EARNED IN FLOW (no pausing draft, no card choosing):
-   crossing an XP threshold or catching SALVAGE randomly picks one of the
-   rolled upgrades behind the scenes so every run evolves organically. */
+/* Power-ups are EARNED IN FLOW (Cherie's rule, Nov 11): no pausing draft.
+   Crossing an XP threshold — or catching a brute's SALVAGE drop — grants a
+   card on the spot, auto-picked with the old demo AI's taste (fusions >
+   orb growth > damage > emergency armor). The run never stops. */
 function grantPower(why) {
   rollCards();
   if (!G.cards.length) return;
-  const bi = Math.floor(Math.random() * G.cards.length);
+  let bi = 0, bs = -1;
+  G.cards.forEach((c, i) => { const s = c.fusion ? 5 : (c.id === 'orb' || BASE_ORBS.includes(c.id)) ? 4 : c.id === 'dmg' ? 3 : c.id === 'hp' && G.hp <= 2 ? 2 : 1; if (s > bs) { bs = s; bi = i; } });
   const card = G.cards[bi];
   card.apply();
   G.cards = []; G.cardRects = [];
-  G.banner = { txt: (why === 'SALVAGE' ? 'SALVAGE: ' : 'AUTO-PICK: ') + card.name, t: 1.7 };
+  G.banner = { txt: (why === 'SALVAGE' ? 'SALVAGE: ' : 'POWER UP: ') + card.name, t: 1.7 };
   G.pops.push({ x: G.hero.x, y: G.hero.y - 110, txt: card.name + '!', t: 0.9, color: '#ffd94d' });
   sfx.levelup();
 }
@@ -494,64 +481,47 @@ function spawnFormation() {
   if (spawned) G.formations += 1;
 }
 
-/* ---------------- firing: Trickshot aim + main orb + baby balls ----------- */
-function computeAimAngle(hx, hy) {
-  let ang = G.aimAng || 0;
-  if (!DEMO && aimPtrX !== null && G.t - aimPtrAt < 4.0) {
-    ang = Math.atan2(aimPtrX - hx, Math.max(48, hy - aimPtrY));
-    return Math.max(-0.95, Math.min(0.95, ang));
-  }
-  let best = 1e9;
+/* ---------------- firing: the shots are the balls ------------------------- */
+function fireOrb() {
+  const type = G.mag.shift();
+  const hx = G.hero.x + G.hero.face * 8, hy = G.hero.y - 50;
+  let ang = 0, best = 1e9;
   let cands = G.enemies;
-  if (DEMO && G.fin) {
+  if (DEMO && G.fin) {   // bot won't waste shots across the divider fin
     const side = Math.sign(hx - G.fin.x) || 1;
     const same = G.enemies.filter(e => !e.dead && (Math.sign(e.x - G.fin.x) === side || e.y > G.fin.y1));
     if (same.length) cands = same;
   }
   if (DEMO) {
+    // trickshot autopilot aim: rotate among the THREE lowest enemies
+    // (floor(t*1.3) % 3) instead of fixating on one — spreads damage
+    // across the front line like a casual human player.
     const sorted = cands.filter(e => !e.dead).sort((a, b) => b.y - a.y);
     if (sorted.length) {
       const t = sorted[Math.floor(G.t * 1.3) % Math.min(3, sorted.length)];
-      ang = Math.atan2(t.x - hx, Math.max(60, hy - t.y));
+      ang = Math.max(-0.38, Math.min(0.38, Math.atan2(t.x - hx, Math.max(60, hy - t.y))));
     }
   } else {
     for (const e of cands) {
       if (e.dead) continue;
+      // human assist: nearest enemy, weighted toward low ones
       const dd = Math.abs(e.x - hx) + Math.max(0, hy - e.y);
-      if (dd < best) { best = dd; ang = Math.atan2(e.x - hx, Math.max(60, hy - e.y)); }
+      if (dd < best) { best = dd; ang = Math.max(-0.38, Math.min(0.38, Math.atan2(e.x - hx, Math.max(60, hy - e.y)))); }
     }
   }
-  return Math.max(-0.72, Math.min(0.72, ang));
-}
-function fireOrb() {
-  const type = G.mag.shift();
-  const hx = G.hero.x + G.hero.face * 8, hy = G.hero.y - 50;
-  const ang = G.aimAng = computeAimAngle(hx, hy);
   // the golden PRIMARY ball (bxpit single-file clone): the run's first iron
   // orb is bigger, slower, 2x damage — and comes back golden when caught
   let sp = G.stats.orbSpeed, orad = 10, odmg = 1, primary = false;
   if (type === 'iron' && G.primaryPending) { primary = true; G.primaryPending = false; sp *= 0.85; orad = 13; odmg = 2; }
   G.orbs.push({ type, x: hx, y: hy, vx: Math.sin(ang) * sp, vy: -Math.cos(ang) * sp,
     r: orad, speed: sp, dmgMul: odmg, primary, pierce: primary && G.prog >= 9,   // L9 clear: the golden Iron pierces
-    baby: false, returning: false, age: 0,
     chain: 0, hitCool: new Map(), pierced: new Set(), defCool: 0, trail: [] });
-  // Trickshot Abyss baby balls: fast mini-orbs fanned around the main shot
-  const babies = G.stats.babyCount || 0;
-  for (let b = 0; b < babies; b++) {
-    const spread = (b - (babies - 1) / 2) * 0.14 + (Math.random() - 0.5) * 0.08;
-    const ba = Math.max(-1.05, Math.min(1.05, ang + spread));
-    const bsp = sp * 1.15;
-    G.orbs.push({ type: 'iron', x: hx, y: hy, vx: Math.sin(ba) * bsp, vy: -Math.cos(ba) * bsp,
-      r: 5.5, speed: bsp, dmgMul: 0.42, primary: false, pierce: false,
-      baby: true, returning: false, age: 0,
-      chain: 0, hitCool: new Map(), pierced: new Set(), defCool: 0, trail: [] });
-  }
   G.hero.lastShot = G.t;
   sfx.shoot();
 }
 
 /* ---------------- damage / death ------------------------------------------ */
-function dmgPop(e, dmg, crit = false) { G.dmgPops.push({ x: e.x + (Math.random() - 0.5) * 14, y: e.y - e.r - 4, txt: crit ? `${Math.round(dmg)}!` : `${Math.round(dmg)}`, t: crit ? 0.72 : 0.55, crit }); }
+function dmgPop(e, dmg) { G.dmgPops.push({ x: e.x + (Math.random() - 0.5) * 14, y: e.y - e.r - 4, txt: `${Math.round(dmg)}`, t: 0.55 }); }
 function chainLightning(e, dmg, depth) {
   const near = G.enemies.filter(o => o !== e && !o.dead && (o.x - e.x) ** 2 + (o.y - e.y) ** 2 < 135 * 135)
     .sort((a, b) => ((a.x - e.x) ** 2 + (a.y - e.y) ** 2) - ((b.x - e.x) ** 2 + (b.y - e.y) ** 2)).slice(0, 2);
@@ -559,19 +529,17 @@ function chainLightning(e, dmg, depth) {
   if (near.length) sfx.chainZap();
 }
 /* Damage an orb deals right now: base x per-orb multiplier (the golden
-   primary is 2x) x Catch Mastery stacks x bank-shot chain bonus. */
+   primary is 2x) x Catch Mastery stacks (chinxpit's catch variant, adopted
+   as a passive card: x1.08 per catch, max 3 stacks = x1.26). */
 function orbDmg(o) {
   let m = (o && o.dmgMul) || 1;
-  if (o && o.chain > 0) m *= 1 + Math.min(o.chain, 8) * 0.12;   // Trickshot bank-shot reward
   if (G.stats.catchMastery) m *= Math.pow(1.08, G.catchStacks);
   return G.stats.orbDamage * m;
 }
 function damageEnemy(e, dmg, srcOrb, depth = 0) {
   if (e.dead) return;
   if (e.frostburn) dmg *= 1.25;   // Frozen Flame: frostburnt foes take +25% from other sources
-  let crit = false;
-  if (srcOrb && Math.random() < (G.stats.critChance || 0)) { crit = true; dmg *= 1.8; }
-  e.hp -= dmg; e.flash = 0.09; dmgPop(e, dmg, crit);
+  e.hp -= dmg; e.flash = 0.09; dmgPop(e, dmg);
   if (srcOrb) {
     const ty = srcOrb.type;
     if (ty === 'fire') { e.burnT = 2.5; e.burnPow = 7; }
@@ -745,30 +713,9 @@ function updateOrbs(dt) {
   const finSegs = finGeoms().map(f => ({ x1: f.x, y1: f.y0, x2: f.x, y2: f.y1, half: f.half }));
   for (let oi = G.orbs.length - 1; oi >= 0; oi--) {
     const o = G.orbs[oi];
-    o.age = (o.age || 0) + dt;
     // trail: remember recent positions for the fading streak
     o.trail.push({ x: o.x, y: o.y });
-    if (o.trail.length > (o.baby ? 5 : 9)) o.trail.shift();
-
-    // Trickshot Abyss homing return: balls that cross the floor or time out zip back to the hero
-    if (o.returning) {
-      const dx = G.hero.x - o.x, dy = G.hero.y - o.y, dist = Math.hypot(dx, dy) || 1;
-      const rSpd = 560;
-      o.vx = dx / dist * rSpd; o.vy = dy / dist * rSpd;
-      o.x += o.vx * dt; o.y += o.vy * dt;
-      if (dist < 62) {
-        G.mag.push(o.type); G.orbs.splice(oi, 1); sfx.catch();
-        G.fireCd = Math.min(G.fireCd, 0.04);   // catch-to-refire instant burst
-        if (o.primary) G.primaryPending = true;
-        if (G.stats.catchMastery && G.catchStacks < 3) {
-          G.catchStacks += 1;
-          G.pops.push({ x: G.hero.x, y: G.hero.y - 100, txt: 'POWER x' + Math.pow(1.08, G.catchStacks).toFixed(2), t: 0.5, color: '#ffd94d', small: true });
-        }
-        G.pops.push({ x: G.hero.x, y: G.hero.y - 76, txt: 'CATCH!', t: 0.45, color: '#aef3ff', small: true });
-      }
-      continue;
-    }
-
+    if (o.trail.length > 9) o.trail.shift();
     const steps = 2, sdt = dt / steps;
     let gone = false;
     for (let s = 0; s < steps && !gone; s++) {
@@ -777,9 +724,9 @@ function updateOrbs(dt) {
 
       // pit walls (inset profile at this height) + ceiling
       const pl = pitLeft(o.y) + 6, pr = pitRight(o.y) - 6;
-      if (o.x - o.r < pl) { o.x = pl + o.r; o.vx = Math.abs(o.vx); o.chain += 1; sfx.bounce(o.chain); }
-      if (o.x + o.r > pr) { o.x = pr - o.r; o.vx = -Math.abs(o.vx); o.chain += 1; sfx.bounce(o.chain); }
-      if (o.y - o.r < CEIL) { o.y = CEIL + o.r; o.vy = Math.abs(o.vy); o.chain += 1; sfx.bounce(o.chain); }
+      if (o.x - o.r < pl) { o.x = pl + o.r; o.vx = Math.abs(o.vx); o.chain = 0; sfx.bounce(0); }
+      if (o.x + o.r > pr) { o.x = pr - o.r; o.vx = -Math.abs(o.vx); o.chain = 0; sfx.bounce(0); }
+      if (o.y - o.r < CEIL) { o.y = CEIL + o.r; o.vy = Math.abs(o.vy); sfx.bounce(o.chain); }
 
       // angled deflectors
       if (o.defCool > 0) o.defCool -= sdt;
@@ -815,26 +762,21 @@ function updateOrbs(dt) {
         break;
       }
       if (o.dead) {   // consumed (Bomb): long cooldown instead of a return
-        if (!o.baby) G.cooling.push({ type: o.type, t: o.coolT || 3 });
-        G.orbs.splice(oi, 1); gone = true; break;
+        G.cooling.push({ type: o.type, t: o.coolT || 3 }); G.orbs.splice(oi, 1); gone = true; break;
       }
 
       // catch: physical interception — be where the orb falls, anywhere in
-      // the corridor (2D proximity catch; instant catch-to-refire)
-      if (!o.baby && o.vy > 0 && (o.x - G.hero.x) ** 2 + (o.y - G.hero.y) ** 2 < 62 * 62) {
+      // the corridor (2D proximity catch; the floor is a miss, not a bounce)
+      if (o.vy > 0 && (o.x - G.hero.x) ** 2 + (o.y - G.hero.y) ** 2 < 62 * 62) {
         G.mag.push(o.type); G.orbs.splice(oi, 1); gone = true; sfx.catch();
-        G.fireCd = Math.min(G.fireCd, 0.04);   // catch-to-refire instant burst
         if (o.primary) G.primaryPending = true;   // the golden ball comes back golden
         if (G.stats.catchMastery && G.catchStacks < 3) {
           G.catchStacks += 1;
           G.pops.push({ x: G.hero.x, y: G.hero.y - 100, txt: 'POWER x' + Math.pow(1.08, G.catchStacks).toFixed(2), t: 0.5, color: '#ffd94d', small: true });
         }
         G.pops.push({ x: G.hero.x, y: G.hero.y - 76, txt: 'CATCH!', t: 0.45, color: '#aef3ff', small: true });
-      } else if (o.y > FLOOR + 12 || (!o.baby && o.age > 6.5)) {
-        if (o.baby) { G.orbs.splice(oi, 1); gone = true; }
-        else { o.returning = true; break; }
-      } else if (o.baby && o.age > 5.0) {
-        G.orbs.splice(oi, 1); gone = true;
+      } else if (o.vy > 0 && o.y > FLOOR + 14) {
+        G.cooling.push({ type: o.type, t: 0.7 }); G.orbs.splice(oi, 1); gone = true;   // missed catch returns in 0.7 s — more orbs stay in the air
       }
     }
   }
@@ -1016,50 +958,6 @@ function drawEnemy(e) {
   if (e.curse > 0) { ctx.fillStyle = '#8fe6b0'; ctx.font = '900 12px system-ui, sans-serif'; ctx.textAlign = 'center'; ctx.fillText('✦'.repeat(Math.min(5, e.curse)), e.x, e.y - e.r - 14); }
 }
 
-function drawAimLine() {
-  const hx = G.hero.x + G.hero.face * 8, hy = G.hero.y - 50;
-  const ang = computeAimAngle(hx, hy);
-  let vx = Math.sin(ang), vy = -Math.cos(ang);
-  let px = hx, py = hy;
-  const pts = [{ x: px, y: py }];
-  const segs = deflectorSegs().concat(finGeoms().map(f => ({ x1: f.x, y1: f.y0, x2: f.x, y2: f.y1, r: f.half })));
-  let bounced = false;
-  for (let i = 0; i < 42; i++) {
-    px += vx * 14; py += vy * 14;
-    const pl = pitLeft(py) + 14, pr = pitRight(py) - 14;
-    let hit = false;
-    if (px < pl) { px = pl; vx = Math.abs(vx); hit = true; }
-    else if (px > pr) { px = pr; vx = -Math.abs(vx); hit = true; }
-    else if (py < CEIL + 10) { py = CEIL + 10; vy = Math.abs(vy); hit = true; }
-    else {
-      for (const sg of segs) {
-        const dx = sg.x2 - sg.x1, dy = sg.y2 - sg.y1, len2 = dx * dx + dy * dy || 1;
-        const tt = Math.max(0, Math.min(1, ((px - sg.x1) * dx + (py - sg.y1) * dy) / len2));
-        const cx = sg.x1 + tt * dx, cy = sg.y1 + tt * dy;
-        const nx = px - cx, ny = py - cy, dist = Math.hypot(nx, ny);
-        if (dist < 10 + (sg.r || 8) && dist > 0.001) {
-          const ux = nx / dist, uy = ny / dist, dot = vx * ux + vy * uy;
-          if (dot < 0) { vx -= 2 * dot * ux; vy -= 2 * dot * uy; hit = true; break; }
-        }
-      }
-    }
-    pts.push({ x: px, y: py });
-    if (hit) {
-      if (bounced) break;
-      bounced = true;
-      for (let j = 0; j < 10; j++) { px += vx * 14; py += vy * 14; pts.push({ x: px, y: py }); }
-      break;
-    }
-  }
-  ctx.save();
-  for (let i = 1; i < pts.length; i++) {
-    const f = 1 - i / pts.length;
-    ctx.globalAlpha = 0.18 + f * 0.45;
-    ctx.fillStyle = bounced && i > pts.length - 11 ? '#ffe95e' : '#5ee7ff';
-    ctx.beginPath(); ctx.arc(pts[i].x, pts[i].y, 2.2 + f * 1.4, 0, 7); ctx.fill();
-  }
-  ctx.restore();
-}
 function drawHero() {
   const H = G.hero, a = ART();
   ctx.save();
@@ -1113,12 +1011,10 @@ function draw() {
     ctx.fillStyle = P.glow; ctx.beginPath(); ctx.arc(fin.x, fin.y1, fin.half, 0, 7); ctx.fill();
   }
 
-  // floor + catch zone
+  // floor + catch line
   ctx.fillStyle = 'rgba(10,12,28,.85)'; ctx.fillRect(0, FLOOR + 4, W, LH - FLOOR);
   ctx.strokeStyle = P.accent; ctx.lineWidth = 3;
   ctx.beginPath(); ctx.moveTo(pitLeft(FLOOR), FLOOR + 4); ctx.lineTo(pitRight(FLOOR), FLOOR + 4); ctx.stroke();
-  ctx.fillStyle = 'rgba(94,231,255,.13)';
-  ctx.fillRect(G.hero.x - 54, G.hero.y - 22, 108, 68);
 
   for (const s of G.shards) { if (a && a.drawShard) a.drawShard(ctx, s.x, s.y, s.salvage ? 17 : 11, G.t); else stubShard(s.x, s.y, s.salvage ? 15 : 10); }
   for (const e of G.enemies) drawEnemy(e);
@@ -1132,33 +1028,30 @@ function draw() {
 
   // orbs with fading trails
   for (const o of G.orbs) {
-    const col = o.returning ? '#5ee7ff' : orbColor(o.primary ? 'primary' : o.type);
+    const col = orbColor(o.primary ? 'primary' : o.type);
     for (let i = 0; i < o.trail.length; i++) {
       const tp = o.trail[i], f = (i + 1) / o.trail.length;
-      ctx.globalAlpha = f * (o.returning ? 0.18 : 0.30);
+      ctx.globalAlpha = f * 0.30;
       ctx.fillStyle = col;
       ctx.beginPath(); ctx.arc(tp.x, tp.y, o.r * (0.35 + f * 0.55), 0, 7); ctx.fill();
     }
-    ctx.globalAlpha = o.returning ? 0.72 : 1;
+    ctx.globalAlpha = 1;
     ctx.save();
-    ctx.shadowColor = col; ctx.shadowBlur = o.baby ? 8 : 16;
-    ctx.fillStyle = o.returning ? '#aef3ff' : OTYPES[o.type].color; ctx.beginPath(); ctx.arc(o.x, o.y, o.r, 0, 7); ctx.fill();
+    ctx.shadowColor = col; ctx.shadowBlur = 16;
+    ctx.fillStyle = OTYPES[o.type].color; ctx.beginPath(); ctx.arc(o.x, o.y, o.r, 0, 7); ctx.fill();
     ctx.shadowBlur = 0; ctx.fillStyle = 'rgba(255,255,255,.92)';
-    ctx.beginPath(); ctx.arc(o.x - o.r * 0.3, o.y - o.r * 0.3, o.r * 0.36, 0, 7); ctx.fill();
+    ctx.beginPath(); ctx.arc(o.x - 3, o.y - 3, 3.6, 0, 7); ctx.fill();
     if (o.type === 'ghost' || o.type === 'wraith') { ctx.strokeStyle = 'rgba(230,204,255,.6)'; ctx.lineWidth = 2; ctx.beginPath(); ctx.arc(o.x, o.y, o.r + 4 + Math.sin(G.t * 10) * 1.5, 0, 7); ctx.stroke(); }
     ctx.restore();
   }
-  ctx.globalAlpha = 1;
 
-  if (G.state === 'play') drawAimLine();
   drawHero();
 
-  // damage numbers (small white, gold for CRIT!) + score popups (bigger, coloured)
+  // damage numbers (small, white) + score popups (bigger, coloured)
   ctx.textAlign = 'center';
   for (const p of G.dmgPops) {
     ctx.globalAlpha = Math.min(1, p.t * 2.4);
-    ctx.fillStyle = p.crit ? '#ffe95e' : '#ffffff';
-    ctx.font = p.crit ? '900 16px system-ui, sans-serif' : '700 13px system-ui, sans-serif';
+    ctx.fillStyle = '#ffffff'; ctx.font = '700 13px system-ui, sans-serif';
     ctx.fillText(p.txt, p.x, p.y);
   }
   ctx.globalAlpha = 1;
