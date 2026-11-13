@@ -2810,6 +2810,30 @@
    "thumb": "thumbs/everything-hates-you.png",
    "title": "EVERYTHING HATES YOU!",
    "url": "../games/everything-hates-you/"
+  },
+  {
+   "category": "Viral Demos",
+   "desc": "The painted plaza drawn in colored pencil — fine directional hatching in each surface's own color, cross-hatched shade, the warm paper showing through as the light.",
+   "id": "colored-pencil-plaza",
+   "thumb": "thumbs/bonk-yard.png",
+   "title": "Colored Pencil Plaza",
+   "url": "../games/colored-pencil-plaza/"
+  },
+  {
+   "category": "Viral Demos",
+   "desc": "Ride a bicycle through Van Gogh's Starry Night — an endless painted village street under the great spiral sky, lit windows, cypresses, and a headlamp pool on the cobbles. Steer with the stick.",
+   "id": "starry-ride",
+   "thumb": "thumbs/bonk-yard.png",
+   "title": "Starry Night Ride",
+   "url": "../games/starry-ride/"
+  },
+  {
+   "category": "AR",
+   "desc": "Linkle in her pool look doing the car-top dance in your room — browser AR plus Quick Look: place her on a real car roof or the floor, tap for a spin and hearts.",
+   "id": "linkle-ar-dance",
+   "thumb": "thumbs/bonk-yard.png",
+   "title": "Linkle AR Dance",
+   "url": "../games/linkle-ar-dance/"
   }
  ]
 }
