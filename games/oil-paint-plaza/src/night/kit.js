@@ -8,7 +8,7 @@
 // with PAL_L, PAL_M, PAL_S (the three mixes), PAL_O (the thing's own colour, for a lamp) and PAL_G (1: it glows of
 // itself; 2: and steadily, where 1 flickers like a flame) to read from.
 import * as THREE from 'three';
-import { COMMON } from '../oilpaint/common.js';
+import { COMMON, SURFACE_PAINT } from '../oilpaint/common.js';
 import { dabMaterial, dabGeometry, dabMesh } from '../oilpaint/dabs.js';
 import { rng } from '../world/noise.js';
 
@@ -194,13 +194,23 @@ export function createKit(shared, { palettes, head = '', light, origin = [0, 0, 
         void main() { vWorld = position; vN = normal; vPal = aPal; vTone = aTone; gl_Position = projectionMatrix * viewMatrix * vec4(position, 1.0); }`,
       fragmentShader: /* glsl */ `
         ${COMMON}
+        ${SURFACE_PAINT}
         ${PAL}
         in vec3 vWorld; in vec3 vN; in float vPal; in float vTone;
         layout(location = 0) out vec4 outC;
         void main() {
           float r = texture(tNoise, (vWorld.xz + vWorld.y) * 0.9).r;
           vec3 c = kitPaint(vWorld, normalize(vN), int(vPal + 0.5), vTone, r) * 0.82;
-          outC = vec4(${haze ? 'hazed(c, vWorld)' : 'c'}, 1.0);
+          // Brushwork in texture space on the flat face, the valley's strokes sheet read on the face's
+          // own plane at three scales (SURFACE_PAINT): the dabs the kit lays over this stay the near
+          // detail, and these marks — admitted only at screen sizes where they read as marks, never
+          // speckle — are what the face is made of between them.
+          vec3 Nn = normalize(vN);
+          vec2 sp = abs(Nn.y) > 0.7 ? vWorld.xz : (abs(Nn.x) > abs(Nn.z) ? vec2(vWorld.z, vWorld.y) : vec2(vWorld.x, vWorld.y));
+          float t = strokesTone(sp, distance(vWorld, cameraPosition), strokesTilePx(sp));
+          c *= 1.0 + t * 0.38;
+          // alpha below 0.6: underpainting — the finish's paint pass leaves it alone (finish.js)
+          outC = vec4(${haze ? 'hazed(c, vWorld)' : 'c'}, 0.45);
         }`,
     }));
     under.frustumCulled = false;

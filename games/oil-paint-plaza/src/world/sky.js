@@ -33,7 +33,8 @@ export function createSky(shared) {
       ${SKY}
       in vec3 vDir;
       layout(location = 0) out vec4 outC;
-      void main() { outC = vec4(skyColour(normalize(vDir)) * 0.97, 1.0); }`,
+      // alpha below 0.6: already painted — the finish's paint pass leaves the sky alone (finish.js)
+      void main() { outC = vec4(skyColour(normalize(vDir)) * 0.97, 0.4); }`,
   }));
   dome.frustumCulled = false;
   dome.renderOrder = -10;

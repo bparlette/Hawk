@@ -6,8 +6,9 @@
 // Performance note: the painter repaints every dab every frame; on a real phone GPU that is
 // the intended load, on this VM's SwiftShader it crawls — judge speed on a phone, not here.
 import * as THREE from 'three';
-import { createShared, COMMON, EXTENT, LAND_RES } from './src/oilpaint/common.js';
+import { createShared, COMMON, SURFACE_PAINT, EXTENT, LAND_RES } from './src/oilpaint/common.js';
 import { createBrushSheet } from './src/oilpaint/brush.js';
+import { createStrokes } from './src/oilpaint/strokes.js';
 import { createShade } from './src/oilpaint/shade.js';
 import { createFrame } from './src/oilpaint/finish.js';
 import { groundRings } from './src/oilpaint/ground.js';
@@ -37,6 +38,7 @@ document.getElementById('view').appendChild(renderer.domElement);
 const SUN = new THREE.Vector3(-0.55, 0.68, 0.48).normalize(); // from the south-west: house fronts lit, the north-west sky in view stays blue
 const shared = createShared();
 shared.tBrush.value = createBrushSheet();
+shared.tStrokes.value = createStrokes(renderer); // texture-space brushwork for the flat surfaces (strokes.js)
 shared.uSunDir.value.copy(SUN);
 shared.uHaze.value.setRGB(0.58, 0.68, 0.82);
 shared.uHazeSun.value.setRGB(1.0, 0.88, 0.66);
@@ -73,33 +75,130 @@ camera.lookAt(herPos.x, 1.0, herPos.z);
 const sky = createSky(shared);
 scene.add(sky.group);
 
-// --- the ground underpainting: broad warm stone that shows between the dabs ---
+// --- the ground's base paint: broad warm stone that shows between the dabs. The valley's split
+//     (backdrop.js + sky.js): the paint is made ONCE into a picture — its albedo, with the still
+//     world's shade stored beside it as a factor — and afterwards only re-lit each frame from that
+//     picture, never repainted. What is baked is only this flat base, which was a static function
+//     of position already; every dab above it, the plaza's whole live surface, repaints every frame
+//     exactly as before. DEFAULT (Cherie's call, Nov 12): the same paint is computed live per
+//     pixel every frame; ?basebake=1 (or __paint.setBaseBake(true)) opts into the baked picture
+//     for comparison. The paint itself carries the valley's flat-surface work: the
+//     strokes sheet at three scales, speckle-windowed (SURFACE_PAINT), and long strokes lying
+//     across the far paving whose width is held in pixels, not metres.
+const BASE_EXTENT = 170; // the picture covers -170..170 m, the base plane's own span
+const BASE_RES = 2048;
+const baseRT = new THREE.WebGLRenderTarget(BASE_RES, BASE_RES, { generateMipmaps: true });
+baseRT.texture.minFilter = THREE.LinearMipmapLinearFilter;
+baseRT.texture.magFilter = THREE.LinearFilter;
+baseRT.texture.anisotropy = 4;
+// The base paint, shared word for word by the bake and the live fallback. tp is the strokes
+// sheet's three tile spans (screen pixels live; texels in the bake — see bakeBase), sx the long
+// strokes' coordinate and strokeW how much of it one pixel (or texel) covers.
+const BASE_PAINT = /* glsl */ `
+vec3 baseAlbedo(vec2 xz, float dist, vec3 tp, float sx, float strokeW) {
+  float n = texture(tNoise, xz / 9.0).r;
+  float rad = length(xz);
+  vec3 c = mix(vec3(0.62, 0.52, 0.4), vec3(0.72, 0.62, 0.47), n);
+  c = mix(c, vec3(0.55, 0.52, 0.42), smoothstep(18.0, 42.0, rad)); // the town goes on, duller, past the plaza
+  float t = strokesTone(xz, dist, tp);
+  c *= (1.0 + t * 0.55) * mix(vec3(0.94, 1.0, 1.05), vec3(1.07, 1.02, 0.9), clamp(0.5 + t * 1.6, 0.0, 1.0));
+  float rock = stonesAt(xz, dist, tp.y);
+  c = mix(c, vec3(0.5, 0.49, 0.46), smoothstep(0.35, 0.6, rock) * 0.5);
+  c = groundStrokes(c, xz, dist, sx, strokeW);
+  return c;
+}
+float baseStrokeCoord(vec2 xz) {
+  return (dot(xz, vec2(0.8, 0.6)) + 26.0 * texture(tNoise, xz / 160.0 + 0.7).a) / 6.5 + 57.0;
+}`;
+const baseUniforms = {
+  ...shared,
+  tBase: { value: baseRT.texture },
+  uBaseBake: { value: q.get('basebake') === '1' ? 1 : 0 },   // DEFAULT OFF (Cherie, Nov 12: paint all the time — the live plaza paints every pixel every frame; the bake is opt-in via ?basebake=1 or __paint.setBaseBake(true))
+  uBaseSun: { value: new THREE.Vector3(0.92, 0.92, 0.92) },   // the frame's light on the baked paint…
+  uBaseShade: { value: new THREE.Vector3(0.48, 0.46, 0.57) }, // …and its shade, mixed by the stored factor
+};
+const baseMat = new THREE.ShaderMaterial({
+  glslVersion: THREE.GLSL3,
+  uniforms: baseUniforms,
+  vertexShader: /* glsl */ `
+    out vec3 vWorld;
+    void main() { vWorld = position; gl_Position = projectionMatrix * viewMatrix * vec4(position, 1.0); }`,
+  fragmentShader: /* glsl */ `
+    ${COMMON}
+    ${SURFACE_PAINT}
+    uniform sampler2D tBase;
+    uniform float uBaseBake;
+    uniform vec3 uBaseSun;
+    uniform vec3 uBaseShade;
+    in vec3 vWorld;
+    layout(location = 0) out vec4 outC;
+    ${BASE_PAINT}
+    void main() {
+      vec3 col;
+      if (uBaseBake > 0.5) {
+        vec4 b = texture(tBase, vWorld.xz / ${(BASE_EXTENT * 2).toFixed(1)} + 0.5);
+        col = b.rgb * mix(uBaseShade, uBaseSun, b.a); // re-lit from the picture, not repainted
+      } else {
+        float sx = baseStrokeCoord(vWorld.xz);
+        vec3 alb = baseAlbedo(vWorld.xz, distance(vWorld.xz, cameraPosition.xz), strokesTilePx(vWorld.xz), sx, fwidth(sx));
+        col = alb * mix(uBaseShade, uBaseSun, woodSunAt(vWorld + vec3(0.0, 0.25, 0.0)));
+      }
+      // alpha below 0.6: underpainting — the finish's paint pass leaves it alone (finish.js)
+      outC = vec4(col, 0.45);
+    }`,
+});
 {
   const geo = new THREE.PlaneGeometry(340, 340);
   geo.rotateX(-Math.PI / 2);
-  const mat = new THREE.ShaderMaterial({
-    glslVersion: THREE.GLSL3,
-    uniforms: shared,
-    vertexShader: /* glsl */ `
-      out vec3 vWorld;
-      void main() { vWorld = position; gl_Position = projectionMatrix * viewMatrix * vec4(position, 1.0); }`,
-    fragmentShader: /* glsl */ `
-      uniform sampler2D tNoise; uniform vec3 uHaze; uniform vec3 uSunDir;
-      in vec3 vWorld;
-      layout(location = 0) out vec4 outC;
-      void main() {
-        float n = texture(tNoise, vWorld.xz / 9.0).r;
-        float rad = length(vWorld.xz);
-        vec3 c = mix(vec3(0.62, 0.52, 0.4), vec3(0.72, 0.62, 0.47), n);
-        c = mix(c, vec3(0.55, 0.52, 0.42), smoothstep(18.0, 42.0, rad)); // the town goes on, duller, past the plaza
-        outC = vec4(c * 0.92, 1.0);
-      }`,
-  });
-  const m = new THREE.Mesh(geo, mat);
+  const m = new THREE.Mesh(geo, baseMat);
   m.position.y = -0.05;
   m.frustumCulled = false;
   m.renderOrder = -5;
   scene.add(m);
+}
+// The bake itself: one fullscreen pass over the plaza's span. Its distance bands are spatial —
+// distance from the plaza's heart stands in for viewing distance, since the far apron is only
+// ever seen from the plaza — and its stroke widths are in bake texels; the picture's own mipmaps
+// do the rest of the anti-speckle work when it is read from far off.
+const bakeScene = new THREE.Scene();
+const bakeMat = new THREE.ShaderMaterial({
+  glslVersion: THREE.GLSL3,
+  uniforms: {
+    ...shared,
+    uTp: { value: new THREE.Vector3(6, 27, 95).divideScalar((BASE_EXTENT * 2) / BASE_RES) },
+    uStrokeW: { value: ((BASE_EXTENT * 2) / BASE_RES) / 6.5 },
+  },
+  depthTest: false,
+  depthWrite: false,
+  vertexShader: /* glsl */ `
+    out vec2 vUv;
+    void main() { vUv = uv; gl_Position = vec4(position.xy, 0.0, 1.0); }`,
+  fragmentShader: /* glsl */ `
+    ${COMMON}
+    ${SURFACE_PAINT}
+    uniform vec3 uTp;
+    uniform float uStrokeW;
+    in vec2 vUv;
+    layout(location = 0) out vec4 outC;
+    ${BASE_PAINT}
+    void main() {
+      vec2 xz = (vUv * 2.0 - 1.0) * ${BASE_EXTENT.toFixed(1)};
+      float dist = max(length(xz), 8.0);
+      vec3 c = baseAlbedo(xz, dist, uTp, baseStrokeCoord(xz), uStrokeW);
+      outC = vec4(c, woodSunAt(vec3(xz.x, 0.25, xz.y)));
+    }`,
+});
+const bakeQuad = new THREE.Mesh(new THREE.PlaneGeometry(2, 2), bakeMat);
+bakeQuad.frustumCulled = false;
+bakeScene.add(bakeQuad);
+const bakeCam = new THREE.Camera();
+let baseBaked = false;
+function bakeBase() {
+  const before = renderer.getRenderTarget();
+  renderer.setRenderTarget(baseRT);
+  renderer.render(bakeScene, bakeCam);
+  renderer.setRenderTarget(before);
+  baseBaked = true;
 }
 
 // --- the plaza ground: stone dabs in rings, lying flat, in concentric paving bands ---
@@ -111,13 +210,16 @@ void makeDab(inout Dab d) {
   vec4 q = hash4(cell + 31.7, sub + 11.0);
   vec2 xz = (cell + r.xy) * uCell0;
   float lod;
-  d.alive = ringGrow(distance(xz, cameraPosition.xz), lod);
+  float distC = distance(xz, cameraPosition.xz);
+  d.alive = ringGrow(distC, lod);
   if (d.alive <= 0.0) return;
   vec3 P = vec3(xz.x, heightAt(xz), xz.y);
   float rad = length(xz);
   float lit = sunAt(P + vec3(0.0, 0.25, 0.0));
-  // two warm stones in a coarse checker, and darker inlay rings round the fountain
-  float check = mod(floor(xz.x / 1.4) + floor(xz.y / 1.4), 2.0);
+  // two warm stones in a coarse checker, and darker inlay rings round the fountain. The checker
+  // is fine pattern: whole dabs near, its average far off — the valley's rule that no fine pattern
+  // survives distance (it would only shimmer), applied here where each dab's colour is mixed.
+  float check = mix(0.5, mod(floor(xz.x / 1.4) + floor(xz.y / 1.4), 2.0), 1.0 - smoothstep(26.0, 48.0, distC));
   vec3 L = mix(vec3(0.99, 0.9, 0.74), vec3(0.93, 0.8, 0.6), check);
   vec3 M = mix(vec3(0.8, 0.68, 0.5), vec3(0.72, 0.58, 0.42), check);
   vec3 S = vec3(0.44, 0.37, 0.3);
@@ -283,7 +385,8 @@ const crownUnder = [];
       uniform vec3 uSunDir;
       in vec3 vWorld; in vec3 vN;
       layout(location = 0) out vec4 outC;
-      void main() { outC = vec4(vec3(0.05, 0.09, 0.03) * (0.65 + 0.55 * max(normalize(vN).y, 0.0)), 1.0); }`,
+      // alpha below 0.6: underpainting — the finish's paint pass leaves it alone (finish.js)
+      void main() { outC = vec4(vec3(0.05, 0.09, 0.03) * (0.65 + 0.55 * max(normalize(vN).y, 0.0)), 0.45); }`,
   });
   for (const { c, r } of crownUnder) {
     const s = new THREE.Mesh(new THREE.SphereGeometry(r * 0.96, 12, 9), underMat);
@@ -447,7 +550,9 @@ function paintTex(shared, srcMat) {
         c = mix(c, c * vec3(0.86, 0.92, 1.18), (1.0 - lit) * max(Nn.y, 0.0) * 0.6);
         c *= 0.88 + 0.24 * m;
         if (!gl_FrontFacing) c *= 0.62;
-        outC = vec4(hazed(c, vWorld), 1.0);
+        // alpha below 0.6: the figure is exempt from the finish's paint pass, the way the valley's
+        // wanderer writes part-ID alphas to opt out — her detail is hers, not the finish's to round
+        outC = vec4(hazed(c, vWorld), 0.5);
       }`,
   });
 }
@@ -674,6 +779,50 @@ function stepMove(dt) {
 const frame = createFrame(renderer, shared);
 frame.uniforms.uShafts.value = 0.55;
 
+// --- amortised warm-up: the valley's compile() (frame.js, MIT — see strokes.js). Every texture
+//     the scene reads is sent to the GPU first, one per turn, then each material's shader is
+//     compiled as a job of its own — for the frame's own target, since a program is keyed to the
+//     surface it will draw into — yielding through a MessageChannel between jobs, so the loading
+//     page keeps answering instead of holding for one whole-scene compile. Progress is reported
+//     into the loading overlay as it goes.
+async function compileAll() {
+  const turn = () => new Promise((r) => { const c = new MessageChannel(); c.port1.onmessage = () => r(); c.port2.postMessage(0); });
+  const first = new Map();
+  const textures = new Set();
+  const collect = (material) => {
+    if (!material) return;
+    for (const u of Object.values(material.uniforms ?? {})) if (u?.value?.isTexture && !u.value.isRenderTargetTexture && !u.value.isDepthTexture) textures.add(u.value);
+    for (const k of ['map', 'normalMap', 'roughnessMap', 'metalnessMap', 'aoMap', 'emissiveMap', 'alphaMap']) if (material[k]?.isTexture) textures.add(material[k]);
+  };
+  scene.traverse((o) => {
+    if (!(o.isMesh || o.isPoints || o.isLine) || !o.material || Array.isArray(o.material)) return;
+    if (!first.has(o.material)) first.set(o.material, o);
+    collect(o.material);
+  });
+  collect(bakeMat);
+  const lo = document.getElementById('loading');
+  const steps = textures.size + first.size + 2;
+  let done = 0;
+  const step = async () => { if (lo) lo.textContent = `painting the plaza… ${++done}/${steps}`; await turn(); };
+  // textures first: once the shaders are linking the GPU's thread is busy for a while, and a big
+  // upload sent then waits for it, with the page
+  for (const texture of textures) { renderer.initTexture(texture); await step(); }
+  const jobs = [];
+  for (const object of first.values()) {
+    renderer.setRenderTarget(frame.target);
+    jobs.push(renderer.compileAsync(object, camera, scene));
+    renderer.setRenderTarget(null);
+    await step();
+  }
+  jobs.push(frame.compile(renderer, camera));
+  await step();
+  renderer.setRenderTarget(baseRT);
+  jobs.push(renderer.compileAsync(bakeQuad, camera, bakeScene));
+  renderer.setRenderTarget(null);
+  await step();
+  await Promise.all(jobs);
+}
+
 // --- run: fixed-step simulation (the renderer's frame rate is not the game's clock),
 //     one repaint per animation frame, camera trailing her at the proof's azimuth.
 let time = 0, started = false, loaded = false;
@@ -712,10 +861,17 @@ window.__paint = {
   frameMs() { return lastCaptureFrameMs; },
   drive(x, y) { scriptDrive = { x: x || 0, y: y || 0 }; },
   stick() { return { ...frameInput }; },
+  setPaint(v) { frame.uniforms.uPaint.value = v; },
+  setBaseBake(on) { baseUniforms.uBaseBake.value = on ? 1 : 0; },
+  get baseBaked() { return baseBaked; },
   info: { clip: CLIP_NAME, clipDuration: CLIP_DUR, refSpeed: REF_SPEED, calib: CALIB, dense: DENSE },
 };
 {
-  // warm-up at the spawn pose (input is zero): shaders compiled, shade drawn, rings settled
+  // the base paint is made once, now that the shade picture exists for it to store; then the
+  // sliced warm-up compiles everything else before the first frame is asked for
+  bakeBase();
+  await compileAll();
+  // warm-up at the spawn pose (input is zero): shade drawn, rings settled
   pollInput();
   for (let i = 0; i < 3; i++) { simTick(1 / 60); }
   render(1 / 60);
