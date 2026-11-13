@@ -167,7 +167,7 @@ function makeSceneMarkerMesh() {
   const col = new THREE.Mesh(new THREE.CylinderGeometry(0.32, 0.72, 4.2, 16, 1, true), colMat);
   col.position.y = 2.1;
   g.add(ring, col);
-  g.userData = { ringMat, colMat, col };
+  g.userData = { ring, ringMat, colMat, col };
   return g;
 }
 function mountSceneStage(def, { moveHero = true, jumpCam = false } = {}) {
@@ -207,14 +207,14 @@ function restart() {
   if (cityView) scene.remove(cityView); for (const e of ents.values()) scene.remove(e); ents.clear();
   for (const b of bursts) scene.remove(b.grp); bursts = []; burstDone.clear();
   heroViews.forEach((h) => scene.remove(h.group, h.shadow, h.ring));
-  markerMeshes.forEach((m) => scene.remove(m)); markerMeshes = [];
+  markerMeshes.forEach((m) => scene.remove(m.group)); markerMeshes = [];
   game = new Game(SEED); bot = new Bot(game);
   cityView = buildCityView(THREE, game.city, kit); scene.add(cityView);
   heroViews = LOOKS.map((look) => { const h = new HeroView(THREE, kit, look); scene.add(h.group, h.shadow, h.ring); return h; });
   game.heroes.forEach((h, i) => { heroViews[i].snapshot(h); heroViews[i].snapshot(h); });
   cam.init = false; cam.yaw = Math.PI / 2; window.__game = game;
   sceneMarkers = buildSceneMarkers(SCENES, game);
-  markerMeshes = sceneMarkers.map((m) => { const mesh = makeSceneMarkerMesh(); mesh.position.set(m.x, m.y, m.z); scene.add(mesh); return mesh; });
+  markerMeshes = sceneMarkers.map((m, i) => { const mesh = makeSceneMarkerMesh(); mesh.position.set(m.x, m.y, m.z); scene.add(mesh); const u = mesh.userData; return { group: mesh, id: m.id, phase: i * 1.3, ring: u.ring, ringMat: u.ringMat, beam: u.col, beamMat: u.colMat }; });
   // staged film scene: build its set and cast, light it, frame it
   mountSceneStage(activeScene, { moveHero: !LOOP_SCENE && sceneMode !== 'watch', jumpCam: sceneMode === 'watch' });
 }
@@ -821,7 +821,9 @@ window.__dbg = { get freecam() { return free.on ? { on: true, pivot: [...free.pi
   get timescale() { return ticker.scale; }, get bookmark() { return cap.bookmark; }, get guide() { return cap.guide; }, get hud() { return cap.hud; },
   get tick() { return game.ticks; }, get digest() { return simDigest(game); }, timescales: TIMESCALES,
   get scene() { if (!activeScene) return null; return runner ? { id: activeScene.id, mode: 'watch', tick: runner.t, duration: activeScene.duration, events: runner.fired, cues: sceneCues } : { id: activeScene.id, mode: sceneMode, tick: 0, duration: activeScene.duration, events: [], cues: sceneCues }; },
-  get film() { return filmDbg; } };
+  get film() { return filmDbg; },
+  /** Put the freecam anywhere (set-dressing stills): { pivot: [x, y, z] metres, yaw, pitch, dist }. */
+  setCam(c) { if (!free.on) setFreecam(true); free.pivot = [...c.pivot]; free.yaw = c.yaw; free.pitch = c.pitch; free.dist = c.dist; cap.bookmark = null; capNote(); } };
 requestAnimationFrame(function first(t) { if (Q.get('freecam') === '1') setFreecam(true); capNote(); frame(t); });
 </script>
 <script id="moth-game-guard-js">
