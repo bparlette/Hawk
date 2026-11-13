@@ -20,6 +20,8 @@ export function createFrame(renderer, shared, { samples = 4 } = {}) {
     uSteps: { value: 22 },
     uCanvas: { value: 1 },
     uSize: { value: size.clone() },
+    uPaint: { value: 2 }, // the Kuwahara finish's brush size (0: off); see painted() below
+    uPaintTexel: { value: new THREE.Vector2(1 / size.x, 1 / size.y) },
   };
   const material = new THREE.ShaderMaterial({
     glslVersion: THREE.GLSL3,
@@ -39,8 +41,53 @@ export function createFrame(renderer, shared, { samples = 4 } = {}) {
       uniform float uSteps;
       uniform float uCanvas;
       uniform vec2 uSize;
+      uniform float uPaint;
+      uniform vec2 uPaintTexel;
       in vec2 vUv;
       layout(location = 0) out vec4 outC;
+
+      // The frame as paint: round each point, four overlapping patches; the calmest of them gives its
+      // colour. Edges stay where they are and everything between them goes flat, as a loaded brush
+      // leaves it. Ported from Painted Valley's frame.js painted() (MIT, Copyright (c) 2026 Patch —
+      // see strokes.js), with its guardrails kept: the radius never exceeds 2, the quadrant choice is
+      // soft (a hard one flickers), the brush is at full size only in the middle distance — here the
+      // plaza's own band, 4 m to 55 m — and anything that wrote alpha below 0.6 into the picture is
+      // already painted and keeps its detail: the sky, the underpaintings, the figure.
+      vec3 painted(vec2 uv, float away) {
+        int r = int(uPaint);
+        bool done = textureLod(tColor, uv, 0.0).a < 0.6;
+        r = min(r, 2);
+        if (away < 4.0 || away > 55.0) r = 1;
+        if (done) r = 0;
+        vec3 m[4];
+        vec3 s[4];
+        for (int k = 0; k < 4; k++) { m[k] = vec3(0.0); s[k] = vec3(0.0); }
+        for (int j = -r; j <= r; j++) {
+          for (int i = -r; i <= r; i++) {
+            vec3 c = textureLod(tColor, uv + vec2(float(i), float(j)) * uPaintTexel, 0.0).rgb;
+            c = c / (1.0 + c);
+            vec3 cc = c * c;
+            if (i <= 0 && j <= 0) { m[0] += c; s[0] += cc; }
+            if (i >= 0 && j <= 0) { m[1] += c; s[1] += cc; }
+            if (i <= 0 && j >= 0) { m[2] += c; s[2] += cc; }
+            if (i >= 0 && j >= 0) { m[3] += c; s[3] += cc; }
+          }
+        }
+        float n = float((r + 1) * (r + 1));
+        vec3 sum = vec3(0.0);
+        float total = 0.0;
+        for (int k = 0; k < 4; k++) {
+          vec3 mean = m[k] / n;
+          vec3 var = abs(s[k] / n - mean * mean);
+          float v = var.r + var.g + var.b;
+          // (the calmest patch nearly alone, but never a hard choice: a hard one flickers)
+          float w = 1.0 / (1e-7 + v * v * v * v * 1e12);
+          sum += mean * w;
+          total += w;
+        }
+        vec3 o = sum / total;
+        return o / (1.0 - min(o, vec3(0.985)));
+      }
 
       float weave(vec2 p) {
         // warp and weft of a medium linen, each thread a little uneven
@@ -51,13 +98,13 @@ export function createFrame(renderer, shared, { samples = 4 } = {}) {
       }
 
       void main() {
-        vec3 col = texture(tColor, vUv).rgb;
         float depth = texture(tDepth, vUv).r;
         vec4 h = uInvViewProj * vec4(vUv * 2.0 - 1.0, depth * 2.0 - 1.0, 1.0);
         vec3 world = h.xyz / h.w;
         vec3 ray = world - uEye;
         float far = length(ray);
         ray /= far;
+        vec3 col = uPaint > 0.5 ? painted(vUv, far) : texture(tColor, vUv).rgb;
 
         // sun in the mist: walk the line of sight and count how much of the air along it stands in the light
         if (uShafts > 0.0) {
@@ -107,6 +154,16 @@ export function createFrame(renderer, shared, { samples = 4 } = {}) {
       renderer.getDrawingBufferSize(size);
       target.setSize(size.x, size.y);
       uniforms.uSize.value.copy(size);
+      uniforms.uPaintTexel.value.set(1 / size.x, 1 / size.y);
+    },
+    // For the amortised warm-up in main.js: compile this pass's shader the way the valley's frame
+    // compiles its own — as its own job, for the screen it draws to.
+    compile(renderer, camera) {
+      const before = renderer.getRenderTarget();
+      renderer.setRenderTarget(null);
+      const job = renderer.compileAsync(quad, camera, scene);
+      renderer.setRenderTarget(before);
+      return job;
     },
     render(world, camera) {
       renderer.setRenderTarget(target);

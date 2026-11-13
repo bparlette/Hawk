@@ -62,6 +62,7 @@ export function createShared() {
     tLand: { value: blank(0, 0, 128, 0) }, // r path, g open to the sky (the clearing), b moss, a unused
     tNoise: { value: noiseSheet() },
     tBrush: { value: blank(255, 255, 128, 255) },
+    tStrokes: { value: blank(128, 0, 0, 255) }, // texture-space brushwork (strokes.js); main.js installs the real sheet
     tTreeShade: { value: null },
     uTreeShadeMat: { value: new THREE.Matrix4() },
     tFigShade: { value: null },
@@ -95,6 +96,7 @@ uniform sampler2D tHeight;
 uniform sampler2D tLand;
 uniform sampler2D tNoise;
 uniform sampler2D tBrush;
+uniform sampler2D tStrokes;
 uniform sampler2DShadow tTreeShade;
 uniform mat4 uTreeShadeMat;
 uniform sampler2DShadow tFigShade;
@@ -207,5 +209,51 @@ float mistBetween(vec3 world) {
 }
 vec3 hazed(vec3 c, vec3 world) {
   return mix(c, airColour(normalize(world - cameraPosition)), mistBetween(world));
+}
+`;
+
+// Paint for flat surfaces — FRAGMENT SHADERS ONLY (it reads screen-space derivatives, which a vertex shader
+// has not got). The rule throughout, from Painted Valley's glsl.js (MIT, Copyright (c) 2026 Patch — see
+// strokes.js): a mark must stay a few pixels wide or fade out entirely; nothing is allowed to resolve into
+// speckle. Each scale of the brushwork sheet is admitted only while its tile spans enough screen pixels for
+// its strokes to be strokes; below the window the mip has averaged it away, which is the correct far look.
+export const SURFACE_PAINT = /* glsl */ `
+// Screen pixels one tile of the given read spans, from the read's own derivatives.
+float tilePxOf(vec2 uv) {
+  return 1.0 / max(max(length(vec2(dFdx(uv.x), dFdy(uv.x))), length(vec2(dFdx(uv.y), dFdy(uv.y)))), 1e-6);
+}
+// The three reads of paintGround (tiles of 6 m, 27 m, 95 m), as tile spans in screen pixels.
+vec3 strokesTilePx(vec2 p) {
+  return vec3(tilePxOf(p / 6.0), tilePxOf(p.yx / 27.0 + 0.37), tilePxOf(p / 95.0 + 0.11));
+}
+// The valley's paintGround tone: three scales of the strokes sheet at once, the two finer scales windowed by
+// their screen size (the anti-speckle cutoffs, after heroPaint), the coarsest a broad wash that is always
+// admitted. tp is strokesTilePx(p) live, or the bake's tile spans in texels when painting into a picture.
+// dist fades the whole thing toward the valley's far rule: slow broad change only, no fine pattern far off.
+float strokesTone(vec2 p, float dist, vec3 tp) {
+  float nearK = 1.0 - smoothstep(40.0, 110.0, dist);
+  float t = (texture(tStrokes, p / 6.0).r - 0.5) * 0.5 * smoothstep(5.0, 14.0, tp.x);
+  t += (texture(tStrokes, p.yx / 27.0 + 0.37).r - 0.5) * 0.7 * smoothstep(5.0, 14.0, tp.y);
+  t += (texture(tStrokes, p / 95.0 + 0.11).r - 0.5) * 0.9;
+  return t * 0.7 * (0.25 + 0.75 * nearK);
+}
+// Where a stone lies in the sheet (its blue channel), admitted on the same terms and gone with distance.
+float stonesAt(vec2 p, float dist, float tp) {
+  return texture(tStrokes, p / 31.0 + 0.19).b * smoothstep(5.0, 14.0, tp) * (1.0 - smoothstep(30.0, 70.0, dist));
+}
+// Long thin strokes lying across level ground, wandered a little so they are not a map's — the valley's
+// landStrokes with its strokeCoord2 (on level ground the strokes lie across the place, not along a slope).
+// x is the stroke coordinate and w how much of it one pixel covers, which keeps a stroke the same few pixels
+// thick anywhere: live, w is fwidth(x); in a bake, w is the bake's texel in the same units. Some strokes are
+// pale, as a worn track in the stone is; some are deeper. Only here and there, each for a different length,
+// and only in the middle distance — near, the dabs are the brushwork; far, the strokes have averaged away.
+vec3 groundStrokes(vec3 g, vec2 xz, float dist, float x, float w) {
+  float far = smoothstep(6.0, 14.0, dist) * (1.0 - smoothstep(55.0, 110.0, dist));
+  if (far <= 0.0) return g;
+  float line = 1.0 - smoothstep(1.5, 3.2, abs(fract(x) - 0.5) / max(w, 1e-5));
+  float id = floor(x);
+  float here = smoothstep(0.45, 0.53, texture(tNoise, xz / 130.0 + id * 0.37).b);
+  float k = line * here * far;
+  return fract(id * 0.618) < 0.62 ? mix(g, vec3(0.8, 0.7, 0.52), k * 0.55) : g * mix(vec3(1.0), vec3(0.66, 0.64, 0.68), k);
 }
 `;
