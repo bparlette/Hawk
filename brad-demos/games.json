@@ -2850,6 +2850,38 @@
    "thumb": "thumbs/bonk-yard.png",
    "title": "Vice Hyrule",
    "url": "../games/vice-hyrule/"
+  },
+  {
+   "category": "Originals",
+   "desc": "Leaf ride, motorcycle and hang-glide in full painted dabs. Compare build A — the first all-painted attempt.",
+   "id": "linkle-arcade-a",
+   "thumb": "thumbs/bonk-yard.png",
+   "title": "Linkle Arcade A — Full Painted",
+   "url": "../games/linkle-arcade-a/"
+  },
+  {
+   "category": "Originals",
+   "desc": "Leaf ride, motorcycle and hang-glide in clean Hoshi toon style — shader sky, grass tufts, warm grade. Compare build B.",
+   "id": "linkle-arcade-b",
+   "thumb": "thumbs/bonk-yard.png",
+   "title": "Linkle Arcade B — Hoshi Style",
+   "url": "../games/linkle-arcade-b/"
+  },
+  {
+   "category": "Originals",
+   "desc": "Leaf ride down the hill, motorcycle causeway and hang-glide — painted with the fountain's own brush pipeline. Compare build C: pure fountain paint.",
+   "id": "linkle-arcade-c",
+   "thumb": "thumbs/bonk-yard.png",
+   "title": "Linkle Arcade C — Fountain Paint",
+   "url": "../games/linkle-arcade-c/"
+  },
+  {
+   "category": "Originals",
+   "desc": "Leaf ride down the hill, motorcycle causeway and hang-glide — the fountain paint plus Hoshi light, sculpted sky and warm grade. Compare build D.",
+   "id": "linkle-arcade-d",
+   "thumb": "thumbs/bonk-yard.png",
+   "title": "Linkle Arcade D — Paint + Light",
+   "url": "../games/linkle-arcade-d/"
   }
  ]
 }
