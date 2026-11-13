@@ -385,7 +385,7 @@ function tick() {
   if (!started) return;
   if (activeScene && !runner && sceneMode === 'watch') { runner = new SceneRunner(game, activeScene); parkHero(); }
   game.tick(runner ? { ...runner.input(), camYaw: 0 } : AUTO ? { ...bot.input(), camYaw: 0 } : readInput());
-  if (runner && stage) { sceneSound(activeScene, runner.t); sceneLight(activeScene, runner.t); for (const c of activeScene.cuts || []) if (c.at === runner.t && Q.get('cam') !== 'free') { const b = c.cam(game); free.pivot = [...b.pivot]; free.yaw = b.yaw; free.pitch = b.pitch; free.dist = b.dist; } }
+  if (runner && stage) { const st = runner.t - 1; sceneSound(activeScene, st); sceneLight(activeScene, st); for (const c of activeScene.cuts || []) if (c.at === st && Q.get('cam') !== 'free') { const b = c.cam(game); free.pivot = [...b.pivot]; free.yaw = b.yaw; free.pitch = b.pitch; free.dist = b.dist; } }
   if (runner && runner.done) {
     if (tour.active) {
       tour.index = (tour.index + 1) % tour.ids.length;
