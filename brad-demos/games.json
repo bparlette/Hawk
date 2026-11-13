@@ -2762,6 +2762,14 @@
    "thumb": "thumbs/bonk-yard.png",
    "title": "Pool Model — Hunyuan Color-Matched",
    "url": "../games/pool-model-colorfix/"
+  },
+  {
+   "category": "Viral Demos",
+   "desc": "All three pool models rigged and strolling one deck together — Moth, Hunyuan, and the color-matched winner. One joystick walks the trio.",
+   "id": "pool-trio-all",
+   "thumb": "thumbs/bonk-yard.png",
+   "title": "Pool Models — All 3 Rigged",
+   "url": "../games/pool-trio-all/"
   }
  ]
 }
