@@ -537,6 +537,14 @@
         };
 
         this._buildWorld();
+        // Freeze the whole tower solid until the player's first real launch.
+        // Spawned bodies interpenetrate slightly and every beam tier floats a
+        // few px above its supports, so a live solver ejects/settles them at
+        // speed on tick 1 — that velocity was tripping cuccos and, via the
+        // swarm, demolishing the tower with zero input. Static bodies cannot
+        // move, settle or gain velocity; dragEnd unfreezes them (see below).
+        this.towerFrozen = true;
+        for (const ent of this.entities) Matter.Body.setStatic(ent.body, true);
         this._bindCollisions();
       }
 
@@ -1109,6 +1117,13 @@
             y: ny * power - 3.6,
           });
 
+          // First real launch: unfreeze the tower so the strike can wreck it
+          if (this.towerFrozen) {
+            this.towerFrozen = false;
+            for (const ent of this.entities) {
+              if (ent.alive) Matter.Body.setStatic(ent.body, false);
+            }
+          }
           this.armed = true; // first real launch arms the world: hits can now smash, flip and detonate
           this.crane.tethered = false;
           this.crane.ballFreeTicks = 64;
@@ -1203,7 +1218,7 @@
 
           if (ent.kind === 'cucco') {
             ent.flapPhase += 0.35;
-            if (!ent.triggered && Math.hypot(b.velocity.x, b.velocity.y) > 3.2) {
+            if (this.armed && !ent.triggered && Math.hypot(b.velocity.x, b.velocity.y) > 3.2) {
               this._hitCucco(ent);
             }
           }
