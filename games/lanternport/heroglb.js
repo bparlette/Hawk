@@ -5,12 +5,12 @@
 import { GLTFLoader } from './lib/GLTFLoader.js';
 
 export const HERO_GLB_SCALE = 0.0115;
-const STANDING_Y_OFFSET = 84.9 * HERO_GLB_SCALE; // ~0.976 m (soles at y = 0)
+export const STANDING_Y_OFFSET = 84.9 * HERO_GLB_SCALE; // ~0.976 m (soles at y = 0)
 const SEATED_Y_OFFSET = 0.55;                     // rests hips cleanly atop 0.62 m rim when o.y = 0.42
 const SEATED_Z_OFFSET = 0.0;                      // seat ON the ledge, aligned to the procedural anchor (rimsit.js: z = pd/2 - 0.12). Was 0.16, which pushed her forward over the water (Cherie phone verdict, Nov 13)
 const FOUNTAIN_SEATED_Y_OFFSET = 1.02;            // lifts hips atop outer stone fountain coping (o.y = 0.45)
 const FOUNTAIN_SEATED_Z_OFFSET = 2.25;            // pushes model out onto the ~3.8m fountain rim from o=(1,1)
-const SWIM_Y_OFFSET = 0.46;                       // keeps face and shoulders above pool water plane
+export const SWIM_Y_OFFSET = 0.46;                       // keeps face and shoulders above pool water plane
 
 export const CLIP_FILES = [
   'idle-stand',
@@ -239,7 +239,7 @@ function makeFishingRod(THREE) {
   return g;
 }
 
-function buildRigInstance(THREE, assets, cfg) {
+export function buildRigInstance(THREE, assets, cfg) {
   return new Promise((resolve, reject) => {
     const loader = new GLTFLoader();
     loader.parse(assets.rigBytes.slice(0), assets.base, (gltf) => {
