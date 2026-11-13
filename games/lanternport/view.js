@@ -1,6 +1,7 @@
 // Lanternport view: everything you see, built in code from primitives and the procedural materials in fx.js.
 // Reads the simulation, never changes it. `kit` = { toon, glowMat, part, ink, T (textures) }.
 import { EDGE, N, ROAD, WALK, PITCH, roadAt, VEHICLES } from './sim.js';
+import { buildDressing } from './dressing.js';
 
 export const U = 0.01;                       // simulation units -> metres
 const ANG = (Math.PI * 2) / 0x10000;
@@ -11,7 +12,7 @@ const CLOTHES = [0xd95f5f, 0x4f97d6, 0x6fbf6f, 0xe6aa3c, 0xa67fd6, 0x8d6e63];
 const WOOD = 0x5a3b2a, LIT = [3.4, 2.2, 0.85], DARK = [0.2, 0.34, 0.6];
 
 // ------------------------------------------------------------------------------------------------ city
-export function buildCityView(THREE, city, kit) {
+export function buildCityView(THREE, city, kit, opts = {}) {
   const { toon, glowMat, T } = kit, root = new THREE.Group();
   const M = new THREE.Matrix4(), Q = new THREE.Quaternion(), S = new THREE.Vector3(), P = new THREE.Vector3(), C = new THREE.Color(), UP = new THREE.Vector3(0, 1, 0);
   /** Instanced mesh from [x,y,z, sx,sy,sz, color(hex | [r,g,b] linear), rotY] rows. */
@@ -211,6 +212,7 @@ export function buildCityView(THREE, city, kit) {
     const last = new Array(ranges.length).fill(1);
     root.userData.grassCtl = { set(pi, s) { if (Math.abs(s - last[pi]) < 0.02) return; last[pi] = s; const f = 0.16 + 0.84 * s, [a, b] = ranges[pi]; for (let i = a; i < b; i++) { const e = rows[i]; Q.setFromAxisAngle(UP, e[7] || 0); M.compose(P.set(e[0], e[1], e[2]), Q, S.set(e[3], e[4] * f, e[5])); im.setMatrixAt(i, M); } im.instanceMatrix.needsUpdate = true; } };
   }
+  root.userData.dressing = buildDressing(THREE, city, kit, root, opts); // set dressing (dressing.js): view only, deterministic
   return root;
 }
 
