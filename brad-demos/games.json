@@ -2778,6 +2778,22 @@
    "thumb": "thumbs/bonk-yard.png",
    "title": "Surrealism Plaza",
    "url": "../games/surrealism-plaza/"
+  },
+  {
+   "category": "Viral Demos",
+   "desc": "Pitball Verity Level 1 in a painted Hyrule crater — stone statue heads, Chuchu jellies, Bomb-Flower orbs, rupees. Same numbers as the original.",
+   "id": "pitball-verity-zelda",
+   "thumb": "thumbs/pitball-verity.png",
+   "title": "Pitball — Hyrule",
+   "url": "../games/pitball-verity-zelda/"
+  },
+  {
+   "category": "Viral Demos",
+   "desc": "Pitball Verity Level 1 on a painted Vice beach street — car formations, neon beach-ball orbs, cash drops. Same numbers as the original.",
+   "id": "pitball-verity-gta6",
+   "thumb": "thumbs/pitball-verity.png",
+   "title": "Pitball — Vice",
+   "url": "../games/pitball-verity-gta6/"
   }
  ]
 }
