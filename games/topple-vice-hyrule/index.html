@@ -1,0 +1,2330 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
+  <title>TOPPLE: VICE × HYRULE</title>
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      -webkit-tap-highlight-color: transparent;
+      user-select: none;
+      -webkit-user-select: none;
+    }
+    html, body {
+      width: 100%;
+      height: 100%;
+      overflow: hidden;
+      background: #140826;
+      touch-action: none;
+      font-family: 'Impact', 'Arial Black', system-ui, sans-serif;
+    }
+    #stage {
+      position: fixed;
+      inset: 0;
+      width: 100vw;
+      height: 100dvh;
+      overflow: hidden;
+    }
+    #game-canvas {
+      display: block;
+      width: 100%;
+      height: 100%;
+      touch-action: none;
+    }
+    #toolkit-bar {
+      position: fixed;
+      left: 8px;
+      right: 8px;
+      bottom: max(8px, env(safe-area-inset-bottom));
+      display: flex;
+      gap: 6px;
+      justify-content: center;
+      z-index: 20;
+      pointer-events: none;
+    }
+    .tk-btn {
+      pointer-events: auto;
+      border: 2px solid rgba(255, 255, 255, 0.78);
+      border-radius: 999px;
+      padding: 7px 11px;
+      font-family: system-ui, -apple-system, sans-serif;
+      font-weight: 900;
+      font-size: 11px;
+      letter-spacing: 0.4px;
+      color: #fff;
+      background: rgba(20, 8, 42, 0.76);
+      backdrop-filter: blur(6px);
+      box-shadow: 0 3px 12px rgba(0, 0, 0, 0.45);
+      cursor: pointer;
+      transition: transform 0.1s ease, background 0.15s ease;
+    }
+    .tk-btn:active {
+      transform: scale(0.93);
+    }
+    .tk-btn.hot {
+      background: linear-gradient(135deg, #ff2a85, #ff8c00);
+      border-color: #ffe66d;
+    }
+    .tk-btn.cyan {
+      background: linear-gradient(135deg, #00b4d8, #7209b7);
+      border-color: #72efdd;
+    }
+    .tk-btn:disabled {
+      opacity: 0.55;
+      cursor: wait;
+    }
+    #status-pill {
+      position: fixed;
+      top: max(8px, env(safe-area-inset-top));
+      left: 50%;
+      transform: translateX(-50%);
+      padding: 4px 10px;
+      border-radius: 999px;
+      font-family: system-ui, sans-serif;
+      font-weight: 800;
+      font-size: 11px;
+      color: #fff;
+      background: rgba(18, 6, 36, 0.82);
+      border: 1px solid rgba(255, 230, 109, 0.55);
+      z-index: 25;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.2s ease;
+      white-space: nowrap;
+    }
+    #status-pill.show {
+      opacity: 1;
+    }
+  </style>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/matter-js/0.20.0/matter.min.js"></script>
+</head>
+<body>
+  <div id="stage">
+    <canvas id="game-canvas" width="540" height="960"></canvas>
+  </div>
+  <div id="status-pill"></div>
+  <div id="toolkit-bar">
+    <button id="btn-bot" class="tk-btn cyan" type="button">🤖 STUNT BOT</button>
+    <button id="btn-short" class="tk-btn hot" type="button">🎬 MAKE SHORT</button>
+    <button id="btn-replay" class="tk-btn" type="button">🔁 REPLAY</button>
+    <button id="btn-reset" class="tk-btn" type="button">🔄 RESET</button>
+  </div>
+
+  <script type="module">
+    import { SeededRNG, ReplayRecorder, ReplayPlayer, StuntBot, ShortExporter } from './capture-kit/index.js';
+
+    const W = 540;
+    const H = 960;
+    const GROUND_Y = 826;
+    const FIXED_DT = 1000 / 60;
+    const DEFAULT_SEED = 19860221;
+
+    // -------------------------------------------------------------------------
+    // Procedural WebAudio Synthesizer (real live game audio + MediaStream output)
+    // Uses its own local LCG for noise buffer so it never touches simulation RNG.
+    // -------------------------------------------------------------------------
+    class AudioEngine {
+      constructor() {
+        this.ctx = null;
+        this.master = null;
+        this.dest = null;
+        this.noiseBuffer = null;
+        this.bedStarted = false;
+        this.muted = false;
+        this._alarmCount = 0;
+        this._lastSfxTick = {};
+      }
+
+      _initNoise(ctx) {
+        const len = ctx.sampleRate * 1.5;
+        const buf = ctx.createBuffer(1, len, ctx.sampleRate);
+        const data = buf.getChannelData(0);
+        let s = 1337420;
+        for (let i = 0; i < len; i++) {
+          s = (Math.imul(1664525, s) + 1013904223) >>> 0;
+          data[i] = (s / 2147483648) - 1;
+        }
+        return buf;
+      }
+
+      async ensureStarted() {
+        if (typeof AudioContext === 'undefined' && typeof webkitAudioContext === 'undefined') return null;
+        if (!this.ctx) {
+          const AC = window.AudioContext || window.webkitAudioContext;
+          this.ctx = new AC();
+          this.master = this.ctx.createGain();
+          this.master.gain.value = 0.72;
+          this.dest = this.ctx.createMediaStreamDestination();
+          this.master.connect(this.ctx.destination);
+          this.master.connect(this.dest);
+          this.noiseBuffer = this._initNoise(this.ctx);
+        }
+        if (this.ctx.state === 'suspended') {
+          try { await this.ctx.resume(); } catch {}
+        }
+        return this.ctx;
+      }
+
+      async getMediaStream() {
+        await this.ensureStarted();
+        return this.dest ? this.dest.stream : null;
+      }
+
+      startBed() {
+        if (this.bedStarted || !this.ctx) return;
+        this.bedStarted = true;
+        const ctx = this.ctx;
+
+        // Golden-hour ocean surf hiss (filtered continuous noise so MediaRecorder stream stays hot)
+        const surf = ctx.createBufferSource();
+        surf.buffer = this.noiseBuffer;
+        surf.loop = true;
+        const lp = ctx.createBiquadFilter();
+        lp.type = 'lowpass';
+        lp.frequency.value = 340;
+        const surfGain = ctx.createGain();
+        surfGain.gain.value = 0.055;
+        surf.connect(lp);
+        lp.connect(surfGain);
+        surfGain.connect(this.master);
+        surf.start();
+
+        // Subtle Vice synthwave bass drone (D2 + A2 warm pulse)
+        const bass = ctx.createOscillator();
+        bass.type = 'sawtooth';
+        bass.frequency.value = 73.42;
+        const bassLp = ctx.createBiquadFilter();
+        bassLp.type = 'lowpass';
+        bassLp.frequency.value = 210;
+        const bassGain = ctx.createGain();
+        bassGain.gain.value = 0.045;
+        bass.connect(bassLp);
+        bassLp.connect(bassGain);
+        bassGain.connect(this.master);
+        bass.start();
+      }
+
+      _canPlay(key, tick, minGap = 3) {
+        if (!this.ctx || this.ctx.state !== 'running') return false;
+        const prev = this._lastSfxTick[key] ?? -999;
+        if (tick - prev < minGap) return false;
+        this._lastSfxTick[key] = tick;
+        return true;
+      }
+
+      playLaunch(tick) {
+        if (!this._canPlay('launch', tick, 8)) return;
+        const t = this.ctx.currentTime;
+        const osc = this.ctx.createOscillator();
+        const g = this.ctx.createGain();
+        osc.type = 'triangle';
+        osc.frequency.setValueAtTime(140, t);
+        osc.frequency.exponentialRampToValueAtTime(380, t + 0.18);
+        g.gain.setValueAtTime(0.22, t);
+        g.gain.exponentialRampToValueAtTime(0.001, t + 0.22);
+        osc.connect(g);
+        g.connect(this.master);
+        osc.start(t);
+        osc.stop(t + 0.24);
+      }
+
+      playImpact(tick, strength = 1) {
+        if (!this._canPlay('impact', tick, 3)) return;
+        const t = this.ctx.currentTime;
+        const osc = this.ctx.createOscillator();
+        const g = this.ctx.createGain();
+        osc.type = 'sine';
+        const amp = Math.min(0.38, 0.12 + strength * 0.15);
+        osc.frequency.setValueAtTime(145, t);
+        osc.frequency.exponentialRampToValueAtTime(42, t + 0.12);
+        g.gain.setValueAtTime(amp, t);
+        g.gain.exponentialRampToValueAtTime(0.001, t + 0.14);
+        osc.connect(g);
+        g.connect(this.master);
+        osc.start(t);
+        osc.stop(t + 0.15);
+      }
+
+      playPotShatter(tick) {
+        if (!this._canPlay('pot', tick, 2)) return;
+        const t = this.ctx.currentTime;
+        const src = this.ctx.createBufferSource();
+        src.buffer = this.noiseBuffer;
+        const bp = this.ctx.createBiquadFilter();
+        bp.type = 'bandpass';
+        bp.frequency.value = 2600;
+        bp.Q.value = 1.4;
+        const g = this.ctx.createGain();
+        g.gain.setValueAtTime(0.28, t);
+        g.gain.exponentialRampToValueAtTime(0.001, t + 0.16);
+        src.connect(bp);
+        bp.connect(g);
+        g.connect(this.master);
+        src.start(t);
+        src.stop(t + 0.17);
+      }
+
+      playRupee(tick, combo = 1) {
+        if (!this._canPlay('rupee', tick, 2)) return;
+        const t = this.ctx.currentTime;
+        const base = 660 * Math.pow(1.06, Math.min(combo, 12));
+        [base, base * 1.25].forEach((freq, idx) => {
+          const osc = this.ctx.createOscillator();
+          const g = this.ctx.createGain();
+          osc.type = 'sine';
+          osc.frequency.setValueAtTime(freq, t + idx * 0.045);
+          g.gain.setValueAtTime(0.14, t + idx * 0.045);
+          g.gain.exponentialRampToValueAtTime(0.001, t + idx * 0.045 + 0.12);
+          osc.connect(g);
+          g.connect(this.master);
+          osc.start(t + idx * 0.045);
+          osc.stop(t + idx * 0.045 + 0.13);
+        });
+      }
+
+      playExplosion(tick) {
+        if (!this._canPlay('boom', tick, 2)) return;
+        const t = this.ctx.currentTime;
+
+        // Sub-bass punch
+        const sub = this.ctx.createOscillator();
+        const subGain = this.ctx.createGain();
+        sub.type = 'sine';
+        sub.frequency.setValueAtTime(125, t);
+        sub.frequency.exponentialRampToValueAtTime(24, t + 0.55);
+        subGain.gain.setValueAtTime(0.75, t);
+        subGain.gain.exponentialRampToValueAtTime(0.001, t + 0.62);
+        sub.connect(subGain);
+        subGain.connect(this.master);
+        sub.start(t);
+        sub.stop(t + 0.65);
+
+        // Filtered explosion roar
+        const noise = this.ctx.createBufferSource();
+        noise.buffer = this.noiseBuffer;
+        const lp = this.ctx.createBiquadFilter();
+        lp.type = 'lowpass';
+        lp.frequency.setValueAtTime(1400, t);
+        lp.frequency.exponentialRampToValueAtTime(160, t + 0.55);
+        const ng = this.ctx.createGain();
+        ng.gain.setValueAtTime(0.55, t);
+        ng.gain.exponentialRampToValueAtTime(0.001, t + 0.6);
+        noise.connect(lp);
+        lp.connect(ng);
+        ng.connect(this.master);
+        noise.start(t);
+        noise.stop(t + 0.62);
+      }
+
+      playGlassAndAlarm(tick) {
+        if (!this._canPlay('alarm', tick, 12)) return;
+        const t = this.ctx.currentTime;
+
+        // Glass crash
+        const src = this.ctx.createBufferSource();
+        src.buffer = this.noiseBuffer;
+        const hp = this.ctx.createBiquadFilter();
+        hp.type = 'highpass';
+        hp.frequency.value = 3400;
+        const gg = this.ctx.createGain();
+        gg.gain.setValueAtTime(0.28, t);
+        gg.gain.exponentialRampToValueAtTime(0.001, t + 0.25);
+        src.connect(hp);
+        hp.connect(gg);
+        gg.connect(this.master);
+        src.start(t);
+        src.stop(t + 0.26);
+
+        // Dual-tone Vice car alarm chirp-wail
+        for (let i = 0; i < 4; i++) {
+          const osc = this.ctx.createOscillator();
+          const g = this.ctx.createGain();
+          osc.type = 'square';
+          osc.frequency.setValueAtTime(i % 2 === 0 ? 920 : 1240, t + i * 0.14);
+          g.gain.setValueAtTime(0.08, t + i * 0.14);
+          g.gain.exponentialRampToValueAtTime(0.001, t + i * 0.14 + 0.11);
+          osc.connect(g);
+          g.connect(this.master);
+          osc.start(t + i * 0.14);
+          osc.stop(t + i * 0.14 + 0.12);
+        }
+      }
+
+      playCuccoSquawk(tick, frantic = false) {
+        if (!this._canPlay(frantic ? 'swarmCluck' : 'cucco', tick, frantic ? 5 : 4)) return;
+        const t = this.ctx.currentTime;
+        const osc = this.ctx.createOscillator();
+        const g = this.ctx.createGain();
+        osc.type = 'sawtooth';
+        const f0 = frantic ? 760 : 580;
+        osc.frequency.setValueAtTime(f0, t);
+        osc.frequency.exponentialRampToValueAtTime(f0 * 1.45, t + 0.05);
+        osc.frequency.exponentialRampToValueAtTime(f0 * 0.72, t + 0.14);
+        const bp = this.ctx.createBiquadFilter();
+        bp.type = 'bandpass';
+        bp.frequency.value = 1400;
+        bp.Q.value = 2.2;
+        g.gain.setValueAtTime(0.18, t);
+        g.gain.exponentialRampToValueAtTime(0.001, t + 0.15);
+        osc.connect(bp);
+        bp.connect(g);
+        g.connect(this.master);
+        osc.start(t);
+        osc.stop(t + 0.16);
+      }
+
+      playSwarmSiren(tick) {
+        if (!this._canPlay('swarmSiren', tick, 40)) return;
+        const t = this.ctx.currentTime;
+        for (let i = 0; i < 6; i++) {
+          const osc = this.ctx.createOscillator();
+          const g = this.ctx.createGain();
+          osc.type = 'sawtooth';
+          osc.frequency.setValueAtTime(520 + (i % 2) * 320, t + i * 0.09);
+          g.gain.setValueAtTime(0.22, t + i * 0.09);
+          g.gain.exponentialRampToValueAtTime(0.001, t + i * 0.09 + 0.085);
+          osc.connect(g);
+          g.connect(this.master);
+          osc.start(t + i * 0.09);
+          osc.stop(t + i * 0.09 + 0.09);
+        }
+      }
+
+      playSlowMoDrop(tick) {
+        if (!this._canPlay('slowmo', tick, 30)) return;
+        const t = this.ctx.currentTime;
+        const osc = this.ctx.createOscillator();
+        const g = this.ctx.createGain();
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(220, t);
+        osc.frequency.exponentialRampToValueAtTime(34, t + 0.7);
+        g.gain.setValueAtTime(0.55, t);
+        g.gain.exponentialRampToValueAtTime(0.001, t + 0.75);
+        osc.connect(g);
+        g.connect(this.master);
+        osc.start(t);
+        osc.stop(t + 0.78);
+      }
+
+      playFirework(tick) {
+        if (!this._canPlay('firework', tick, 5)) return;
+        const t = this.ctx.currentTime;
+        const src = this.ctx.createBufferSource();
+        src.buffer = this.noiseBuffer;
+        const bp = this.ctx.createBiquadFilter();
+        bp.type = 'bandpass';
+        bp.frequency.setValueAtTime(2200, t);
+        bp.frequency.exponentialRampToValueAtTime(600, t + 0.28);
+        const g = this.ctx.createGain();
+        g.gain.setValueAtTime(0.24, t);
+        g.gain.exponentialRampToValueAtTime(0.001, t + 0.3);
+        src.connect(bp);
+        bp.connect(g);
+        g.connect(this.master);
+        src.start(t);
+        src.stop(t + 0.32);
+      }
+    }
+
+    // -------------------------------------------------------------------------
+    // TOPPLE: VICE × HYRULE Simulation & Renderer
+    // -------------------------------------------------------------------------
+    class ToppleGame {
+      constructor(canvas, audio) {
+        this.canvas = canvas;
+        this.ctx = canvas.getContext('2d');
+        this.audio = audio;
+        this.rng = new SeededRNG(DEFAULT_SEED);
+        this.engine = null;
+        this.world = null;
+        this.entities = [];
+        this.rupees = [];
+        this.particles = [];
+        this.shockwaves = [];
+        this.swarmCuccos = [];
+        this.callouts = [];
+        this.fireworks = [];
+        this.bgStars = [];
+        this.reset(DEFAULT_SEED);
+      }
+
+      reset(seed = DEFAULT_SEED) {
+        this.seed = (seed >>> 0) || 1;
+        this.rng.reset(this.seed);
+        this.rng.installGlobal(Matter.Common);
+
+        if (this.engine) {
+          Matter.Composite.clear(this.engine.world, false);
+          Matter.Engine.clear(this.engine);
+        }
+
+        this.engine = Matter.Engine.create({
+          positionIterations: 8,
+          velocityIterations: 6,
+        });
+        this.engine.gravity.x = 0;
+        this.engine.gravity.y = 1.05;
+        this.world = this.engine.world;
+
+        this.tick = 0;
+        this.timeLeft = 60.0;
+        this.score = 0;
+        this.combo = 1;
+        this.comboTimer = 0;
+        this.cuccoMeter = 0;
+        this.swarmActive = false;
+        this.swarmTimer = 0;
+        this.swarmSpawnRemaining = 0;
+        this.phase = 'play'; // 'play' | 'slowmo' | 'finale'
+        this.slowmoTicks = 0;
+        this.finaleTicks = 0;
+        this.shake = 0;
+        this.flashAlpha = 0;
+        this.flashColor = '#ffffff';
+
+        this.stats = {
+          shotsFired: 0,
+          potsSmashed: 0,
+          rupeesSpawned: 0,
+          rupeesCollected: 0,
+          bombsDetonated: 0,
+          carsFlipped: 0,
+          cratesSmashed: 0,
+          cuccosHit: 0,
+          cuccoSwarmTriggered: false,
+          swarmChickensSpawned: 0,
+          maxCombo: 1,
+          slowmoTriggered: false,
+          finaleTriggered: false,
+        };
+
+        this.entities = [];
+        this.rupees = [];
+        this.particles = [];
+        this.shockwaves = [];
+        this.swarmCuccos = [];
+        this.callouts = [];
+        this.fireworks = [];
+
+        this.bgStars = [];
+        for (let i = 0; i < 36; i++) {
+          this.bgStars.push({
+            x: this.rng.range(12, W - 12),
+            y: this.rng.range(18, 320),
+            r: this.rng.range(0.8, 2.2),
+            phase: this.rng.range(0, Math.PI * 2),
+          });
+        }
+
+        // Crane + wrecking ball state
+        this.crane = {
+          baseX: 82,
+          baseY: GROUND_Y,
+          pivotX: 162,
+          pivotY: 168,
+          restX: 162,
+          restY: 360,
+          dragging: false,
+          dragStart: { x: 162, y: 360 },
+          dragCur: { x: 162, y: 360 },
+          launchCooldown: 0,
+          ballFreeTicks: 0,
+          tethered: true,
+        };
+
+        this._buildWorld();
+        this._bindCollisions();
+      }
+
+      _buildWorld() {
+        const { Bodies, Composite, Constraint } = Matter;
+
+        // Boardwalk floor + invisible right guard bumper so debris still bounces dramatically on screen
+        const floor = Bodies.rectangle(W / 2, GROUND_Y + 40, W + 240, 80, {
+          isStatic: true,
+          friction: 0.85,
+          restitution: 0.25,
+          label: 'floor',
+        });
+        const rightWall = Bodies.rectangle(W + 34, H / 2, 48, H * 2, {
+          isStatic: true,
+          restitution: 0.5,
+          label: 'wall',
+        });
+        const leftWall = Bodies.rectangle(-40, H / 2, 48, H * 2, {
+          isStatic: true,
+          restitution: 0.5,
+          label: 'wall',
+        });
+        Composite.add(this.world, [floor, rightWall, leftWall]);
+
+        // Wrecking ball
+        this.ball = Bodies.circle(this.crane.restX, this.crane.restY, 27, {
+          density: 0.018,
+          restitution: 0.55,
+          friction: 0.2,
+          frictionAir: 0.004,
+          label: 'wrecking_ball',
+        });
+        this.cable = Constraint.create({
+          pointA: { x: this.crane.pivotX, y: this.crane.pivotY },
+          bodyB: this.ball,
+          stiffness: 0.09,
+          damping: 0.05,
+          length: 192,
+        });
+        Composite.add(this.world, [this.ball, this.cable]);
+
+        // Helper to add destructible entity
+        const spawn = (kind, x, y, opts = {}) => {
+          let body;
+          const base = {
+            friction: 0.65,
+            restitution: 0.16,
+            frictionAir: 0.008,
+          };
+          if (kind === 'crate') {
+            const w = opts.w || 46;
+            const h = opts.h || 42;
+            body = Bodies.rectangle(x, y, w, h, {
+              ...base,
+              density: 0.0018,
+              label: 'crate',
+            });
+            this.entities.push({ id: body.id, kind, body, w, h, hp: 35, maxHp: 35, alive: true, color: opts.color || '#d49a4e' });
+          } else if (kind === 'beam') {
+            const w = opts.w || 168;
+            const h = opts.h || 16;
+            body = Bodies.rectangle(x, y, w, h, {
+              ...base,
+              density: 0.0016,
+              label: 'beam',
+            });
+            this.entities.push({ id: body.id, kind, body, w, h, hp: 45, maxHp: 45, alive: true, color: opts.color || '#ff77cc' });
+          } else if (kind === 'pot') {
+            const r = opts.r || 16;
+            body = Bodies.polygon(x, y, 7, r, {
+              ...base,
+              density: 0.0012,
+              restitution: 0.22,
+              label: 'pot',
+            });
+            this.entities.push({
+              id: body.id,
+              kind,
+              body,
+              r,
+              hp: 10,
+              alive: true,
+              tier: opts.tier || 'hyrule',
+              rupeeCount: opts.rupeeCount || 6,
+            });
+          } else if (kind === 'bomb') {
+            const w = 36;
+            const h = 44;
+            body = Bodies.rectangle(x, y, w, h, {
+              ...base,
+              density: 0.0022,
+              label: 'bomb',
+            });
+            this.entities.push({
+              id: body.id,
+              kind,
+              body,
+              w,
+              h,
+              hp: 14,
+              alive: true,
+              fuse: -1,
+            });
+          } else if (kind === 'car') {
+            const w = 86;
+            const h = 34;
+            body = Bodies.rectangle(x, y, w, h, {
+              ...base,
+              density: 0.0028,
+              restitution: 0.32,
+              label: 'car',
+            });
+            this.entities.push({
+              id: body.id,
+              kind,
+              body,
+              w,
+              h,
+              hp: 65,
+              alive: true,
+              flipped: false,
+              alarmTicks: 0,
+              glassBroken: false,
+              carColor: opts.carColor || '#ff4fa3',
+            });
+          } else if (kind === 'cucco') {
+            const r = 14;
+            body = Bodies.circle(x, y, r, {
+              ...base,
+              density: 0.0009,
+              restitution: 0.48,
+              label: 'cucco',
+            });
+            this.entities.push({
+              id: body.id,
+              kind,
+              body,
+              r,
+              alive: true,
+              triggered: false,
+              flapPhase: this.rng.range(0, 6.28),
+            });
+          }
+          body._entity = this.entities[this.entities.length - 1];
+          Composite.add(this.world, body);
+          return body._entity;
+        };
+
+        // --- THE RIDICULOUS TOWER (Vice × Hyrule Mashup Stack) ---
+        // Tier 1: Pier Base (y = 826)
+        spawn('crate', 292, 804, { w: 46, h: 44, color: '#d89d4e' });
+        spawn('bomb', 338, 804);
+        spawn('car', 402, 809, { carColor: '#ff4fa3' }); // Flamingo pink Vice wedge
+        spawn('crate', 474, 804, { w: 46, h: 44, color: '#d89d4e' });
+        spawn('pot', 260, 810, { tier: 'hyrule', rupeeCount: 6 });
+        spawn('pot', 506, 810, { tier: 'gold', rupeeCount: 7 });
+
+        // Tier 2: Neon Deck (y ~ 768)
+        spawn('beam', 384, 770, { w: 224, h: 16, color: '#5ef2d6' });
+        spawn('pot', 302, 746, { tier: 'hyrule', rupeeCount: 6 });
+        spawn('bomb', 342, 740);
+        spawn('crate', 392, 741, { w: 46, h: 42, color: '#c8873c' });
+        spawn('bomb', 442, 740);
+        spawn('pot', 478, 746, { tier: 'royal', rupeeCount: 7 });
+        spawn('cucco', 280, 748);
+
+        // Tier 3: Vice Supercar + Pot Shelf (y ~ 692)
+        spawn('beam', 388, 706, { w: 204, h: 16, color: '#ff66c4' });
+        spawn('car', 348, 681, { carColor: '#00e5ff' }); // Electric cyan supercar
+        spawn('pot', 416, 682, { tier: 'hyrule', rupeeCount: 6 });
+        spawn('pot', 448, 682, { tier: 'royal', rupeeCount: 6 });
+        spawn('bomb', 476, 676);
+        spawn('cucco', 348, 650);
+        spawn('cucco', 462, 646);
+
+        // Tier 4: Mid-Tower Bomb Cluster & Pots (y ~ 604)
+        spawn('beam', 392, 628, { w: 192, h: 16, color: '#ffd166' });
+        spawn('crate', 320, 599, { w: 44, h: 42, color: '#d89d4e' });
+        spawn('bomb', 368, 598);
+        spawn('pot', 404, 604, { tier: 'gold', rupeeCount: 7 });
+        spawn('bomb', 438, 598);
+        spawn('crate', 476, 599, { w: 40, h: 42, color: '#d89d4e' });
+        spawn('cucco', 320, 566);
+
+        // Tier 5: Sunset Supercar & Hyrule Pot Pyramid (y ~ 530)
+        spawn('beam', 396, 558, { w: 184, h: 16, color: '#a855f7' });
+        spawn('pot', 324, 534, { tier: 'hyrule', rupeeCount: 6 });
+        spawn('pot', 354, 534, { tier: 'royal', rupeeCount: 6 });
+        spawn('car', 420, 533, { carColor: '#ffe14d' }); // Sunset yellow supercar
+        spawn('cucco', 420, 502);
+        spawn('cucco', 338, 506);
+
+        // Tier 6: Upper Bomb Flower Terrace (y ~ 450)
+        spawn('beam', 392, 480, { w: 170, h: 16, color: '#5ef2d6' });
+        spawn('bomb', 336, 450);
+        spawn('pot', 372, 456, { tier: 'hyrule', rupeeCount: 7 });
+        spawn('pot', 404, 456, { tier: 'royal', rupeeCount: 7 });
+        spawn('bomb', 444, 450);
+        spawn('cucco', 390, 428);
+
+        // Tier 7: Penthouse Sports Car + Crown Pots (y ~ 372)
+        spawn('beam', 392, 412, { w: 152, h: 16, color: '#ff66c4' });
+        spawn('car', 376, 387, { carColor: '#c084fc' }); // Neon lavender turbo
+        spawn('pot', 440, 388, { tier: 'gold', rupeeCount: 8 });
+        spawn('cucco', 368, 356);
+        spawn('cucco', 440, 358);
+
+        // Crown Tier: Triforce Pot Pyramid (y ~ 310)
+        spawn('beam', 394, 344, { w: 120, h: 14, color: '#ffe66d' });
+        spawn('pot', 364, 320, { tier: 'hyrule', rupeeCount: 7 });
+        spawn('bomb', 396, 314);
+        spawn('pot', 428, 320, { tier: 'gold', rupeeCount: 8 });
+        spawn('cucco', 396, 278);
+      }
+
+      _bindCollisions() {
+        Matter.Events.on(this.engine, 'collisionStart', (event) => {
+          for (const pair of event.pairs) {
+            const { bodyA, bodyB } = pair;
+            const relVx = bodyA.velocity.x - bodyB.velocity.x;
+            const relVy = bodyA.velocity.y - bodyB.velocity.y;
+            const speed = Math.hypot(relVx, relVy);
+            if (speed < 1.8) continue;
+
+            const isBall = bodyA.label === 'wrecking_ball' || bodyB.label === 'wrecking_ball';
+            const impact = isBall ? speed * 2.1 : speed;
+
+            if (isBall && speed > 4.2) {
+              this.audio.playImpact(this.tick, Math.min(2, speed / 10));
+              this.shake = Math.max(this.shake, Math.min(12, speed * 0.7));
+            }
+
+            this._handleBodyHit(bodyA, impact, bodyB);
+            this._handleBodyHit(bodyB, impact, bodyA);
+          }
+        });
+      }
+
+      _handleBodyHit(body, impact, other) {
+        const ent = body._entity;
+        if (!ent || !ent.alive) return;
+
+        if (ent.kind === 'pot' && impact > 2.6) {
+          this._smashPot(ent);
+        } else if (ent.kind === 'bomb' && impact > 3.2) {
+          if (ent.fuse < 0) ent.fuse = 2;
+        } else if (ent.kind === 'cucco' && impact > 2.0) {
+          this._hitCucco(ent);
+        } else if (ent.kind === 'car' && impact > 4.8) {
+          if (!ent.glassBroken) {
+            ent.glassBroken = true;
+            ent.alarmTicks = 210;
+            this.audio.playGlassAndAlarm(this.tick);
+            this._spawnParticles(body.position.x, body.position.y - 10, 14, '#a5f3fc', 'glass');
+            this._addCallout(body.position.x, body.position.y - 28, '🚨 CAR ALARM!', '#38bdf8');
+            this._bumpCombo();
+          }
+          ent.hp -= impact * 1.4;
+          if (ent.hp <= 0 && !ent.flipped) {
+            this._flipCar(ent);
+          }
+        } else if ((ent.kind === 'crate' || ent.kind === 'beam') && impact > 6.5) {
+          ent.hp -= impact * 1.3;
+          if (ent.hp <= 0) {
+            this._smashWood(ent);
+          }
+        }
+      }
+
+      _bumpCombo() {
+        this.combo = Math.min(12, this.combo + 1);
+        this.comboTimer = 95;
+        if (this.combo > this.stats.maxCombo) {
+          this.stats.maxCombo = this.combo;
+        }
+      }
+
+      _addCallout(x, y, text, color = '#ffe66d') {
+        if (this.callouts.length >= 7) this.callouts.shift();
+        let cy = Math.max(155, Math.min(GROUND_Y - 40, y));
+        for (const existing of this.callouts) {
+          if (Math.abs(existing.y - cy) < 24) {
+            cy -= 26;
+          }
+        }
+        this.callouts.push({
+          x: Math.max(95, Math.min(W - 95, x)),
+          y: Math.max(150, cy),
+          vy: -0.95,
+          text,
+          color,
+          life: 44,
+          maxLife: 44,
+          scale: 1.25,
+        });
+      }
+
+      _spawnParticles(x, y, count, color, style = 'spark') {
+        for (let i = 0; i < count; i++) {
+          if (this.particles.length > 360) this.particles.shift();
+          const ang = this.rng.range(0, Math.PI * 2);
+          const spd = this.rng.range(1.8, style === 'fire' ? 11.5 : 8.5);
+          this.particles.push({
+            x,
+            y,
+            vx: Math.cos(ang) * spd,
+            vy: Math.sin(ang) * spd - (style === 'feather' ? 2.5 : 1.5),
+            size: this.rng.range(style === 'fire' ? 6 : 3, style === 'fire' ? 15 : 8),
+            color,
+            style,
+            rot: this.rng.range(0, 6.28),
+            vrot: this.rng.range(-0.25, 0.25),
+            life: this.rng.int(22, 46),
+            maxLife: 46,
+          });
+        }
+      }
+
+      _spawnRupees(x, y, count, tier = 'hyrule') {
+        const table = [
+          { color: '#22c55e', value: 5 },
+          { color: '#38bdf8', value: 10 },
+          { color: '#ef4444', value: 25 },
+          { color: '#c084fc', value: 50 },
+          { color: '#facc15', value: 100 },
+        ];
+        for (let i = 0; i < count; i++) {
+          let pickIdx = this.rng.int(0, 2);
+          if (tier === 'royal') pickIdx = this.rng.int(1, 3);
+          if (tier === 'gold') pickIdx = this.rng.int(2, 4);
+          const spec = table[pickIdx];
+          const ang = this.rng.range(-Math.PI * 0.9, -Math.PI * 0.1);
+          const spd = this.rng.range(4.2, 10.5);
+          this.rupees.push({
+            x,
+            y,
+            vx: Math.cos(ang) * spd,
+            vy: Math.sin(ang) * spd - 2,
+            color: spec.color,
+            value: spec.value * this.combo,
+            spin: this.rng.range(0, 6.28),
+            age: 0,
+            collecting: false,
+          });
+          this.stats.rupeesSpawned++;
+        }
+      }
+
+      _smashPot(ent) {
+        if (!ent.alive) return;
+        ent.alive = false;
+        const { x, y } = ent.body.position;
+        Matter.Composite.remove(this.world, ent.body);
+        this.stats.potsSmashed++;
+        this._bumpCombo();
+        this.audio.playPotShatter(this.tick);
+        this._spawnParticles(x, y, 14, ent.tier === 'gold' ? '#facc15' : '#d97706', 'shard');
+        this._spawnRupees(x, y, ent.rupeeCount, ent.tier);
+        if (this.stats.potsSmashed % 3 === 0) {
+          this._addCallout(x, y - 16, `💎 POT CASCADE ×${this.combo}!`, '#5ef2d6');
+        }
+      }
+
+      _smashWood(ent) {
+        if (!ent.alive) return;
+        ent.alive = false;
+        const { x, y } = ent.body.position;
+        Matter.Composite.remove(this.world, ent.body);
+        this.stats.cratesSmashed++;
+        this._bumpCombo();
+        this._spawnParticles(x, y, 12, ent.color || '#d49a4e', 'shard');
+        this._spawnRupees(x, y, 2, 'hyrule');
+      }
+
+      _flipCar(ent) {
+        if (ent.flipped) return;
+        ent.flipped = true;
+        ent.glassBroken = true;
+        ent.alarmTicks = 240;
+        this.stats.carsFlipped++;
+        this._bumpCombo();
+        const { x, y } = ent.body.position;
+        this.audio.playGlassAndAlarm(this.tick);
+        this._spawnParticles(x, y, 18, '#a5f3fc', 'glass');
+        this._spawnRupees(x, y, 6, 'royal');
+        this._addCallout(x, y - 24, `🚗 CAR WRECKED! +${250 * this.combo}`, '#ff66c4');
+        this.score += 250 * this.combo;
+      }
+
+      _hitCucco(ent) {
+        if (ent.triggered) return;
+        ent.triggered = true;
+        this.stats.cuccosHit++;
+        const { x, y } = ent.body.position;
+        this.audio.playCuccoSquawk(this.tick, false);
+        this._spawnParticles(x, y, 22, '#ffffff', 'feather');
+        Matter.Body.setVelocity(ent.body, {
+          x: this.rng.range(-9, 9),
+          y: -11,
+        });
+        this.cuccoMeter = Math.min(100, this.cuccoMeter + 18);
+        this._addCallout(x, y - 18, '🐔 BAWK!! +CUCCO', '#ffffff');
+        if (this.cuccoMeter >= 100 && !this.swarmActive) {
+          this._triggerCuccoSwarm();
+        }
+      }
+
+      _triggerCuccoSwarm() {
+        this.swarmActive = true;
+        this.swarmTimer = 240;
+        this.swarmSpawnRemaining = 42;
+        this.stats.cuccoSwarmTriggered = true;
+        this.audio.playSwarmSiren(this.tick);
+        this.shake = Math.max(this.shake, 16);
+        this.flashAlpha = 0.45;
+        this.flashColor = '#ff2a85';
+        this._addCallout(W / 2, 230, '🐔🔥 CUCCO SWARM UNLEASHED!! 🔥🐔', '#ffe66d');
+      }
+
+      _spawnSwarmCucco() {
+        const side = this.rng.int(0, 2); // 0=left, 1=right, 2=top
+        let x, y;
+        if (side === 0) {
+          x = -24;
+          y = this.rng.range(180, GROUND_Y - 60);
+        } else if (side === 1) {
+          x = W + 24;
+          y = this.rng.range(180, GROUND_Y - 60);
+        } else {
+          x = this.rng.range(40, W - 40);
+          y = -24;
+        }
+        this.swarmCuccos.push({
+          x,
+          y,
+          vx: 0,
+          vy: 0,
+          speed: this.rng.range(10.5, 15.5),
+          flap: this.rng.range(0, 6.28),
+          life: 215,
+          diveTargetId: null,
+        });
+        this.stats.swarmChickensSpawned++;
+      }
+
+      _detonateBomb(ent) {
+        if (!ent.alive) return;
+        ent.alive = false;
+        const { x, y } = ent.body.position;
+        Matter.Composite.remove(this.world, ent.body);
+        this.stats.bombsDetonated++;
+        this._bumpCombo();
+
+        this.audio.playExplosion(this.tick);
+        this.shake = Math.max(this.shake, 22);
+        this.flashAlpha = Math.max(this.flashAlpha, 0.55);
+        this.flashColor = '#ff9f1c';
+
+        this.shockwaves.push({ x, y, r: 16, maxR: 205, life: 20, maxLife: 20, color: '#ffe66d' });
+        this._spawnParticles(x, y, 28, '#ff5400', 'fire');
+        this._spawnParticles(x, y, 16, '#ffe66d', 'spark');
+        this._spawnRupees(x, y, 5, 'royal');
+        this._addCallout(x, y - 22, `💣 BOMB CHAIN ×${this.combo}!`, '#ff9f1c');
+
+        const blastRadius = 112;
+        for (const other of this.entities) {
+          if (!other.alive || other === ent) continue;
+          const ox = other.body.position.x;
+          const oy = other.body.position.y;
+          const dx = ox - x;
+          const dy = oy - y;
+          const dist = Math.hypot(dx, dy);
+          if (dist > blastRadius) continue;
+
+          const falloff = 1 - dist / blastRadius;
+          const nx = dist > 1 ? dx / dist : 0;
+          const ny = dist > 1 ? dy / dist : -1;
+
+          if (other.kind === 'bomb') {
+            if (other.fuse < 0) {
+              other.fuse = this.rng.int(5, 11);
+            }
+            Matter.Body.setVelocity(other.body, {
+              x: other.body.velocity.x + nx * 10 * falloff,
+              y: other.body.velocity.y + (ny - 0.4) * 10 * falloff,
+            });
+          } else if (other.kind === 'pot') {
+            this._smashPot(other);
+          } else if (other.kind === 'cucco') {
+            this._hitCucco(other);
+          } else if (other.kind === 'crate' || other.kind === 'beam') {
+            Matter.Body.setVelocity(other.body, {
+              x: other.body.velocity.x + nx * 15 * falloff,
+              y: other.body.velocity.y + (ny - 0.5) * 15 * falloff,
+            });
+            Matter.Body.setAngularVelocity(other.body, this.rng.range(-0.3, 0.3));
+            other.hp -= 44 * falloff;
+            if (other.hp <= 0) this._smashWood(other);
+          } else if (other.kind === 'car') {
+            Matter.Body.setVelocity(other.body, {
+              x: other.body.velocity.x + nx * 14 * falloff,
+              y: other.body.velocity.y + (ny - 0.55) * 16 * falloff,
+            });
+            Matter.Body.setAngularVelocity(other.body, this.rng.range(-0.25, 0.25));
+            if (!other.glassBroken) {
+              other.glassBroken = true;
+              other.alarmTicks = 240;
+              this.audio.playGlassAndAlarm(this.tick);
+            }
+            other.hp -= 38 * falloff;
+            if (other.hp <= 0 && !other.flipped) this._flipCar(other);
+          }
+        }
+
+        // Also launch nearby perched cuccos
+        for (const other of this.entities) {
+          if (other.kind === 'cucco' && other.alive) {
+            const dist = Math.hypot(other.body.position.x - x, other.body.position.y - y);
+            if (dist < blastRadius * 1.1) this._hitCucco(other);
+          }
+        }
+      }
+
+      // -----------------------------------------------------------------------
+      // Unified Input Handling (Pointer + StuntBot + ReplayPlayer)
+      // -----------------------------------------------------------------------
+      applyInput(type, data = {}) {
+        if (this.phase !== 'play') return;
+
+        if (type === 'dragStart') {
+          if (this.crane.launchCooldown > 0) return;
+          this.crane.dragging = true;
+          this.crane.dragStart = { x: data.x ?? this.crane.restX, y: data.y ?? this.crane.restY };
+          this.crane.dragCur = { ...this.crane.dragStart };
+        } else if (type === 'dragMove') {
+          if (!this.crane.dragging) return;
+          this.crane.dragCur = { x: data.x ?? this.crane.dragCur.x, y: data.y ?? this.crane.dragCur.y };
+        } else if (type === 'dragEnd') {
+          if (!this.crane.dragging) return;
+          this.crane.dragging = false;
+          const curX = data.x ?? this.crane.dragCur.x;
+          const curY = data.y ?? this.crane.dragCur.y;
+          let pullX = this.crane.dragStart.x - curX;
+          let pullY = this.crane.dragStart.y - curY;
+
+          // If player dragged forward toward the tower instead of pulling back, invert horizontally
+          if (pullX < -12) {
+            pullX = -pullX;
+            pullY = -pullY;
+          }
+
+          const dist = Math.hypot(pullX, pullY);
+          if (dist < 14) return;
+
+          const clamped = Math.min(dist, 185);
+          const nx = pullX / dist;
+          const ny = pullY / dist;
+          const power = clamped * 0.175;
+
+          // Release tether for ballistic wrecking-ball smash, then reel back after 64 ticks
+          if (this.cable) {
+            Matter.Composite.remove(this.world, this.cable);
+            this.cable = null;
+          }
+          Matter.Body.setPosition(this.ball, { x: this.crane.restX - nx * 42, y: this.crane.restY - ny * 26 });
+          Matter.Body.setVelocity(this.ball, {
+            x: Math.max(9, nx * power),
+            y: ny * power - 3.6,
+          });
+
+          this.crane.tethered = false;
+          this.crane.ballFreeTicks = 64;
+          this.crane.launchCooldown = 28;
+          this.stats.shotsFired++;
+          this.audio.playLaunch(this.tick);
+        }
+      }
+
+      _reelBallToCrane() {
+        if (this.cable) return;
+        Matter.Body.setPosition(this.ball, { x: this.crane.restX, y: this.crane.restY });
+        Matter.Body.setVelocity(this.ball, { x: 0, y: 0 });
+        Matter.Body.setAngularVelocity(this.ball, 0);
+        this.cable = Matter.Constraint.create({
+          pointA: { x: this.crane.pivotX, y: this.crane.pivotY },
+          bodyB: this.ball,
+          stiffness: 0.09,
+          damping: 0.05,
+          length: 192,
+        });
+        Matter.Composite.add(this.world, this.cable);
+        this.crane.tethered = true;
+      }
+
+      _checkRemainingTargets() {
+        let potsLeft = 0;
+        let bombsLeft = 0;
+        let carsUnflipped = 0;
+        for (const ent of this.entities) {
+          if (!ent.alive) continue;
+          if (ent.kind === 'pot') potsLeft++;
+          else if (ent.kind === 'bomb') bombsLeft++;
+          else if (ent.kind === 'car' && !ent.flipped) carsUnflipped++;
+        }
+        return { potsLeft, bombsLeft, carsUnflipped, totalLeft: potsLeft + bombsLeft + carsUnflipped };
+      }
+
+      // -----------------------------------------------------------------------
+      // Fixed 60Hz Deterministic Simulation Step
+      // -----------------------------------------------------------------------
+      stepTick() {
+        this.tick++;
+
+        // Time scale for dramatic slow-motion beat
+        const dt = this.phase === 'slowmo' ? FIXED_DT * 0.25 : FIXED_DT;
+        Matter.Engine.update(this.engine, dt);
+
+        if (this.phase === 'play') {
+          this.timeLeft = Math.max(0, this.timeLeft - 1 / 60);
+        }
+
+        if (this.crane.launchCooldown > 0) this.crane.launchCooldown--;
+        if (!this.crane.tethered) {
+          this.crane.ballFreeTicks--;
+          if (this.crane.ballFreeTicks <= 0 || this.ball.position.x > W + 40 || this.ball.position.y > H + 40) {
+            this._reelBallToCrane();
+          }
+        }
+
+        if (this.comboTimer > 0) {
+          this.comboTimer--;
+          if (this.comboTimer === 0) this.combo = 1;
+        }
+
+        if (this.shake > 0) this.shake = Math.max(0, this.shake * 0.86 - 0.15);
+        if (this.flashAlpha > 0) this.flashAlpha = Math.max(0, this.flashAlpha - 0.038);
+
+        // Update entities (bomb fuses, car flip detection, alarms, offscreen cleanup)
+        for (const ent of this.entities) {
+          if (!ent.alive) continue;
+          const b = ent.body;
+
+          if (ent.kind === 'bomb' && ent.fuse >= 0) {
+            ent.fuse--;
+            if (ent.fuse <= 0) {
+              this._detonateBomb(ent);
+              continue;
+            }
+          }
+
+          if (ent.kind === 'car') {
+            if (ent.alarmTicks > 0) ent.alarmTicks--;
+            if (!ent.flipped && (Math.abs(b.angle) > 0.55 || b.position.y > GROUND_Y + 20 || b.position.x > W - 15)) {
+              this._flipCar(ent);
+            }
+          }
+
+          if (ent.kind === 'pot' && (b.position.y > GROUND_Y + 30 || b.position.x > W - 12)) {
+            this._smashPot(ent);
+          }
+
+          if (ent.kind === 'cucco') {
+            ent.flapPhase += 0.35;
+            if (!ent.triggered && Math.hypot(b.velocity.x, b.velocity.y) > 3.2) {
+              this._hitCucco(ent);
+            }
+          }
+        }
+
+        // Update Cucco Swarm
+        if (this.swarmActive) {
+          this.swarmTimer--;
+          if (this.swarmSpawnRemaining > 0 && this.tick % 2 === 0) {
+            this._spawnSwarmCucco();
+            this.swarmSpawnRemaining--;
+            if (this.swarmSpawnRemaining > 0) {
+              this._spawnSwarmCucco();
+              this.swarmSpawnRemaining--;
+            }
+          }
+          if (this.tick % 10 === 0 && this.swarmCuccos.length > 0) {
+            this.audio.playCuccoSquawk(this.tick, true);
+          }
+          if (this.swarmTimer <= 0 && this.swarmCuccos.length === 0) {
+            this.swarmActive = false;
+          }
+        }
+
+        // Move & collide Swarm Cuccos against surviving targets
+        const activeTargets = this.entities.filter(
+          (e) => e.alive && (e.kind === 'pot' || e.kind === 'bomb' || e.kind === 'crate' || (e.kind === 'car' && !e.flipped))
+        );
+        for (let i = this.swarmCuccos.length - 1; i >= 0; i--) {
+          const c = this.swarmCuccos[i];
+          c.flap += 0.65;
+          c.life--;
+
+          let target = activeTargets.find((t) => t.id === c.diveTargetId && t.alive);
+          if (!target && activeTargets.length > 0) {
+            target = this.rng.pick(activeTargets);
+            c.diveTargetId = target ? target.id : null;
+          }
+
+          if (target) {
+            const tx = target.body.position.x;
+            const ty = target.body.position.y;
+            const dx = tx - c.x;
+            const dy = ty - c.y;
+            const dist = Math.hypot(dx, dy) || 1;
+            c.vx = (dx / dist) * c.speed;
+            c.vy = (dy / dist) * c.speed + Math.sin(c.flap) * 2.2;
+            c.x += c.vx;
+            c.y += c.vy;
+
+            if (dist < 28) {
+              this._spawnParticles(c.x, c.y, 10, '#ffffff', 'feather');
+              this.audio.playCuccoSquawk(this.tick, true);
+              if (target.kind === 'pot') {
+                this._smashPot(target);
+              } else if (target.kind === 'bomb') {
+                this._detonateBomb(target);
+              } else if (target.kind === 'crate') {
+                this._smashWood(target);
+              } else if (target.kind === 'car') {
+                Matter.Body.setVelocity(target.body, { x: this.rng.range(-10, 10), y: -12 });
+                Matter.Body.setAngularVelocity(target.body, this.rng.range(-0.35, 0.35));
+                this._flipCar(target);
+              }
+              c.diveTargetId = null;
+            }
+          } else {
+            // Victory chaos circling inside visible viewport
+            c.vx += this.rng.range(-2.2, 2.2);
+            c.vy += this.rng.range(-2.2, 2.2);
+            const spd = Math.hypot(c.vx, c.vy) || 1;
+            c.vx = (c.vx / spd) * c.speed;
+            c.vy = (c.vy / spd) * c.speed;
+            c.x += c.vx;
+            c.y += c.vy;
+            if (c.x < 28) { c.x = 28; c.vx = Math.abs(c.vx); }
+            if (c.x > W - 28) { c.x = W - 28; c.vx = -Math.abs(c.vx); }
+            if (c.y < 165) { c.y = 165; c.vy = Math.abs(c.vy); }
+            if (c.y > GROUND_Y - 16) { c.y = GROUND_Y - 16; c.vy = -Math.abs(c.vy); }
+            if (this.tick % 10 === 0) {
+              this._spawnParticles(c.x, c.y, 3, '#ffffff', 'feather');
+            }
+          }
+
+          if (c.life <= 0) {
+            this.swarmCuccos.splice(i, 1);
+          }
+        }
+
+        // Update Rupees (ballistic bounce -> magnet into collector at top-left HUD)
+        const collectorX = 95;
+        const collectorY = 54;
+        for (let i = this.rupees.length - 1; i >= 0; i--) {
+          const r = this.rupees[i];
+          r.age++;
+          r.spin += 0.22;
+          if (r.age < 26 && !r.collecting) {
+            r.vy += 0.42;
+            r.x += r.vx;
+            r.y += r.vy;
+            if (r.y > GROUND_Y - 10) {
+              r.y = GROUND_Y - 10;
+              r.vy *= -0.55;
+              r.vx *= 0.78;
+            }
+          } else {
+            r.collecting = true;
+            const dx = collectorX - r.x;
+            const dy = collectorY - r.y;
+            const d = Math.hypot(dx, dy) || 1;
+            r.x += (dx / d) * 19;
+            r.y += (dy / d) * 19;
+            if (d < 22) {
+              this.score += r.value;
+              this.stats.rupeesCollected++;
+              this.audio.playRupee(this.tick, this.combo);
+              this.rupees.splice(i, 1);
+            }
+          }
+        }
+
+        // Update Particles
+        for (let i = this.particles.length - 1; i >= 0; i--) {
+          const p = this.particles[i];
+          p.life--;
+          p.x += p.vx;
+          p.y += p.vy;
+          p.rot += p.vrot;
+          p.vy += p.style === 'feather' ? 0.06 : 0.25;
+          if (p.style === 'feather') p.vx *= 0.96;
+          if (p.life <= 0) this.particles.splice(i, 1);
+        }
+
+        // Update Shockwaves
+        for (let i = this.shockwaves.length - 1; i >= 0; i--) {
+          const s = this.shockwaves[i];
+          s.life--;
+          s.r = s.maxR * (1 - s.life / s.maxLife);
+          if (s.life <= 0) this.shockwaves.splice(i, 1);
+        }
+
+        // Update Callouts
+        for (let i = this.callouts.length - 1; i >= 0; i--) {
+          const c = this.callouts[i];
+          c.y += c.vy;
+          c.life--;
+          if (c.life <= 0) this.callouts.splice(i, 1);
+        }
+
+        // Trigger Slow-Mo Beat + Fireworks Finale when final block falls or timer hits 0
+        // (Let an active Cucco Swarm rampage before triggering slow-mo finale)
+        if (this.phase === 'play') {
+          const rem = this._checkRemainingTargets();
+          const swarmBusy = this.swarmActive && this.swarmTimer > 75;
+          if (((rem.totalLeft === 0 && this.rupees.length === 0 && !swarmBusy) || this.timeLeft <= 0)) {
+            this.phase = 'slowmo';
+            this.slowmoTicks = 42;
+            this.stats.slowmoTriggered = true;
+            this.audio.playSlowMoDrop(this.tick);
+            this._addCallout(W / 2, 310, '⚡ FINAL BLOCK TOPPLED! ⚡', '#5ef2d6');
+          }
+        } else if (this.phase === 'slowmo') {
+          this.slowmoTicks--;
+          if (this.slowmoTicks <= 0) {
+            this.phase = 'finale';
+            this.finaleTicks = 115;
+            this.stats.finaleTriggered = true;
+            this._addCallout(W / 2, 260, '🎆 VICE × HYRULE FINALE! 🎆', '#ffe66d');
+          }
+        } else if (this.phase === 'finale') {
+          this.finaleTicks--;
+          if (this.finaleTicks % 10 === 0 && this.finaleTicks > 15) {
+            this._spawnFirework(
+              this.rng.range(60, W - 60),
+              this.rng.range(120, 420),
+              this.rng.pick(['#ff4fa3', '#5ef2d6', '#ffe66d', '#c084fc', '#ff9f1c'])
+            );
+          }
+        }
+
+        // Update Fireworks
+        for (let i = this.fireworks.length - 1; i >= 0; i--) {
+          const fw = this.fireworks[i];
+          fw.life--;
+          for (const sp of fw.sparks) {
+            sp.x += sp.vx;
+            sp.y += sp.vy;
+            sp.vy += 0.08;
+            sp.vx *= 0.97;
+          }
+          if (fw.life <= 0) this.fireworks.splice(i, 1);
+        }
+      }
+
+      _spawnFirework(x, y, color) {
+        this.audio.playFirework(this.tick);
+        const sparks = [];
+        for (let i = 0; i < 24; i++) {
+          const ang = (i / 24) * Math.PI * 2 + this.rng.range(-0.1, 0.1);
+          const spd = this.rng.range(2.2, 6.2);
+          sparks.push({ x, y, vx: Math.cos(ang) * spd, vy: Math.sin(ang) * spd });
+        }
+        this.fireworks.push({ color, sparks, life: 42, maxLife: 42 });
+      }
+
+      isFinaleComplete() {
+        return this.phase === 'finale' && this.finaleTicks <= 0;
+      }
+
+      getScore() {
+        return this.score;
+      }
+
+      getStats() {
+        return { ...this.stats, timeLeft: Math.round(this.timeLeft * 100) / 100 };
+      }
+
+      getDigest() {
+        const r = (n) => Math.round(n * 100) / 100;
+        const aliveCount = this.entities.filter((e) => e.alive).length;
+        return [
+          this.tick,
+          this.score,
+          this.combo,
+          Math.round(this.cuccoMeter),
+          aliveCount,
+          this.stats.potsSmashed,
+          this.stats.bombsDetonated,
+          this.stats.carsFlipped,
+          r(this.ball.position.x),
+          r(this.ball.position.y),
+        ].join('|');
+      }
+
+      // -----------------------------------------------------------------------
+      // Pure Read-Only Renderer (Golden-Hour Vice City × Hyrule Beach Strip)
+      // -----------------------------------------------------------------------
+      render() {
+        const ctx = this.ctx;
+        ctx.save();
+
+        // Screen shake
+        if (this.shake > 0.2) {
+          const sx = Math.sin(this.tick * 1.9) * this.shake;
+          const sy = Math.cos(this.tick * 2.3) * this.shake;
+          ctx.translate(sx, sy);
+        }
+
+        // 1. Golden-hour sky gradient
+        const sky = ctx.createLinearGradient(0, 0, 0, GROUND_Y);
+        sky.addColorStop(0, '#22093a');
+        sky.addColorStop(0.28, '#7b1457');
+        sky.addColorStop(0.58, '#e84855');
+        sky.addColorStop(0.84, '#ff9f1c');
+        sky.addColorStop(1, '#ffe66d');
+        ctx.fillStyle = sky;
+        ctx.fillRect(-20, -20, W + 40, H + 40);
+
+        // Twinkling dusk stars
+        for (const s of this.bgStars) {
+          const a = 0.35 + 0.45 * Math.sin(this.tick * 0.08 + s.phase);
+          ctx.fillStyle = `rgba(255, 245, 210, ${a.toFixed(2)})`;
+          ctx.beginPath();
+          ctx.arc(s.x, s.y, s.r, 0, Math.PI * 2);
+          ctx.fill();
+        }
+
+        // Giant outrun golden-hour sun with scanline slices
+        const sunX = 250;
+        const sunY = 530;
+        const sunR = 112;
+        const sunGrad = ctx.createLinearGradient(0, sunY - sunR, 0, sunY + sunR);
+        sunGrad.addColorStop(0, '#fff380');
+        sunGrad.addColorStop(0.55, '#ff7b00');
+        sunGrad.addColorStop(1, '#ff1e7a');
+        ctx.fillStyle = sunGrad;
+        ctx.beginPath();
+        ctx.arc(sunX, sunY, sunR, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.fillStyle = '#ff8b2e';
+        for (let sy = sunY + 12; sy < sunY + sunR; sy += 16) {
+          ctx.fillRect(sunX - sunR, sy, sunR * 2, 4);
+        }
+
+        // 2. Hyrule rolling green hills + Hyrule Castle Tower (left/background)
+        ctx.fillStyle = '#195e3a';
+        ctx.beginPath();
+        ctx.moveTo(0, 680);
+        ctx.quadraticCurveTo(130, 560, 290, 660);
+        ctx.quadraticCurveTo(420, 610, W, 675);
+        ctx.lineTo(W, 740);
+        ctx.lineTo(0, 740);
+        ctx.closePath();
+        ctx.fill();
+
+        // Hyrule Castle Keep & Spires
+        ctx.fillStyle = '#3b2b59';
+        ctx.fillRect(46, 445, 96, 195);
+        ctx.fillRect(26, 495, 34, 145);
+        ctx.fillRect(128, 495, 34, 145);
+        ctx.fillStyle = '#2563eb'; // Royal blue roofs
+        this._drawCone(ctx, 94, 445, 58, 72);
+        this._drawCone(ctx, 43, 495, 24, 44);
+        this._drawCone(ctx, 145, 495, 24, 44);
+        // Gold Triforce on castle
+        this._drawTriforce(ctx, 94, 520, 18, '#facc15');
+        ctx.fillStyle = '#fde047';
+        ctx.fillRect(82, 558, 8, 16);
+        ctx.fillRect(102, 558, 8, 16);
+
+        // Rolling emerald foreground hill + Pine trees (Hyrule side)
+        ctx.fillStyle = '#238c4e';
+        ctx.beginPath();
+        ctx.moveTo(0, 690);
+        ctx.quadraticCurveTo(155, 622, 315, 705);
+        ctx.lineTo(315, 745);
+        ctx.lineTo(0, 745);
+        ctx.closePath();
+        ctx.fill();
+        this._drawPineTree(ctx, 32, 675, 1.0);
+        this._drawPineTree(ctx, 168, 668, 0.85);
+        this._drawPineTree(ctx, 212, 680, 0.72);
+
+        // 3. Vice City Pastel Art Deco Hotels + Neon Signs + Palm Trees (right side)
+        this._drawArtDecoHotel(ctx, 330, 448, 82, 245, '#7ef9da', '#ff4fa3', 'VICE × HYRULE');
+        this._drawArtDecoHotel(ctx, 420, 488, 68, 205, '#ff85b3', '#ffe66d', 'LON LON');
+        this._drawArtDecoHotel(ctx, 482, 520, 58, 172, '#c084fc', '#5ef2d6', 'RUPEE');
+
+        // Palm trees next to pine trees
+        this._drawPalmTree(ctx, 248, 690, 0.95);
+        this._drawPalmTree(ctx, 310, 695, 0.88);
+        this._drawPalmTree(ctx, 512, 698, 0.92);
+
+        // 4. Golden-hour Ocean Strip
+        const oceanGrad = ctx.createLinearGradient(0, 695, 0, GROUND_Y);
+        oceanGrad.addColorStop(0, '#ff6b4a');
+        oceanGrad.addColorStop(0.45, '#9d174d');
+        oceanGrad.addColorStop(1, '#1e1b4b');
+        ctx.fillStyle = oceanGrad;
+        ctx.fillRect(0, 695, W, GROUND_Y - 695);
+
+        // Shimmering ocean wave sparkles
+        for (let wy = 708; wy < GROUND_Y - 8; wy += 16) {
+          const offset = Math.sin(this.tick * 0.06 + wy) * 14;
+          ctx.fillStyle = 'rgba(255, 230, 120, 0.38)';
+          ctx.fillRect(180 + offset, wy, 130, 3);
+          ctx.fillStyle = 'rgba(94, 242, 214, 0.25)';
+          ctx.fillRect(360 - offset, wy + 5, 95, 2);
+        }
+
+        // 5. Boardwalk Pier
+        ctx.fillStyle = '#4a2511';
+        ctx.fillRect(0, GROUND_Y, W, H - GROUND_Y);
+        ctx.fillStyle = '#7c3f1d';
+        ctx.fillRect(0, GROUND_Y, W, 16);
+        // Neon boardwalk trim
+        ctx.fillStyle = '#ff4fa3';
+        ctx.fillRect(0, GROUND_Y, W, 4);
+        ctx.fillStyle = '#5ef2d6';
+        ctx.fillRect(0, GROUND_Y + 14, W, 3);
+
+        // 6. Crane Rig on the Boardwalk
+        this._drawCrane(ctx);
+
+        // 7. Drag Aim Trajectory Preview
+        if (this.crane.dragging) {
+          this._drawAimGuide(ctx);
+        }
+
+        // 8. Shockwaves
+        for (const s of this.shockwaves) {
+          ctx.strokeStyle = s.color;
+          ctx.globalAlpha = Math.max(0, s.life / s.maxLife);
+          ctx.lineWidth = 6;
+          ctx.beginPath();
+          ctx.arc(s.x, s.y, s.r, 0, Math.PI * 2);
+          ctx.stroke();
+        }
+        ctx.globalAlpha = 1;
+
+        // 9. Physics Entities
+        for (const ent of this.entities) {
+          if (!ent.alive) continue;
+          this._drawEntity(ctx, ent);
+        }
+
+        // 10. Wrecking Ball & Cable
+        if (this.cable) {
+          ctx.strokeStyle = '#cbd5e1';
+          ctx.lineWidth = 4;
+          ctx.beginPath();
+          ctx.moveTo(this.crane.pivotX, this.crane.pivotY);
+          ctx.lineTo(this.ball.position.x, this.ball.position.y);
+          ctx.stroke();
+        }
+        this._drawWreckingBall(ctx);
+
+        // 11. Furious Cucco Swarm
+        for (const c of this.swarmCuccos) {
+          this._drawCuccoSprite(ctx, c.x, c.y, c.vx >= 0 ? 1 : -1, c.flap, true);
+        }
+
+        // 12. Raining Rupees
+        for (const r of this.rupees) {
+          this._drawRupee(ctx, r);
+        }
+
+        // 13. Particles
+        for (const p of this.particles) {
+          const alpha = Math.max(0, p.life / p.maxLife);
+          ctx.save();
+          ctx.translate(p.x, p.y);
+          ctx.rotate(p.rot);
+          ctx.globalAlpha = alpha;
+          ctx.fillStyle = p.color;
+          if (p.style === 'fire') {
+            ctx.beginPath();
+            ctx.arc(0, 0, p.size, 0, Math.PI * 2);
+            ctx.fill();
+          } else if (p.style === 'feather') {
+            ctx.beginPath();
+            ctx.ellipse(0, 0, p.size * 1.1, p.size * 0.4, 0, 0, Math.PI * 2);
+            ctx.fill();
+          } else {
+            ctx.fillRect(-p.size / 2, -p.size / 2, p.size, p.size * 0.7);
+          }
+          ctx.restore();
+        }
+        ctx.globalAlpha = 1;
+
+        // 14. Fireworks Finale
+        for (const fw of this.fireworks) {
+          const a = Math.max(0, fw.life / fw.maxLife);
+          ctx.fillStyle = fw.color;
+          ctx.globalAlpha = a;
+          for (const sp of fw.sparks) {
+            ctx.beginPath();
+            ctx.arc(sp.x, sp.y, 3.2, 0, Math.PI * 2);
+            ctx.fill();
+          }
+        }
+        ctx.globalAlpha = 1;
+
+        // 15. Chaotic Callout Banners
+        for (const c of this.callouts) {
+          const alpha = Math.min(1, c.life / 14);
+          ctx.save();
+          ctx.globalAlpha = alpha;
+          ctx.font = '900 20px Impact, Arial Black, sans-serif';
+          ctx.textAlign = 'center';
+          ctx.lineWidth = 5;
+          ctx.strokeStyle = '#140826';
+          ctx.strokeText(c.text, c.x, c.y);
+          ctx.fillStyle = c.color;
+          ctx.fillText(c.text, c.x, c.y);
+          ctx.restore();
+        }
+
+        // 16. Explosion Screen Flash
+        if (this.flashAlpha > 0.01) {
+          ctx.fillStyle = this.flashColor;
+          ctx.globalAlpha = this.flashAlpha;
+          ctx.fillRect(0, 0, W, H);
+          ctx.globalAlpha = 1;
+        }
+
+        // 17. Canvas HUD (included inside screenshots & exported 9:16 video!)
+        this._drawHUD(ctx);
+
+        ctx.restore();
+      }
+
+      _drawCone(ctx, cx, baseY, w, h) {
+        ctx.beginPath();
+        ctx.moveTo(cx - w / 2, baseY);
+        ctx.lineTo(cx, baseY - h);
+        ctx.lineTo(cx + w / 2, baseY);
+        ctx.closePath();
+        ctx.fill();
+      }
+
+      _drawTriforce(ctx, cx, cy, size, color) {
+        ctx.fillStyle = color;
+        const tri = (tx, ty, s) => {
+          ctx.beginPath();
+          ctx.moveTo(tx, ty - s);
+          ctx.lineTo(tx - s * 0.86, ty + s * 0.5);
+          ctx.lineTo(tx + s * 0.86, ty + s * 0.5);
+          ctx.closePath();
+          ctx.fill();
+        };
+        tri(cx, cy - size * 0.55, size * 0.55);
+        tri(cx - size * 0.5, cy + size * 0.35, size * 0.55);
+        tri(cx + size * 0.5, cy + size * 0.35, size * 0.55);
+      }
+
+      _drawPineTree(ctx, x, baseY, scale) {
+        ctx.fillStyle = '#0f3f26';
+        for (let i = 0; i < 3; i++) {
+          this._drawCone(ctx, x, baseY - i * 24 * scale, (44 - i * 8) * scale, 42 * scale);
+        }
+      }
+
+      _drawPalmTree(ctx, x, baseY, scale) {
+        ctx.strokeStyle = '#3e1f14';
+        ctx.lineWidth = 7 * scale;
+        ctx.beginPath();
+        ctx.moveTo(x, baseY);
+        ctx.quadraticCurveTo(x - 10 * scale, baseY - 62 * scale, x + 6 * scale, baseY - 115 * scale);
+        ctx.stroke();
+
+        const topX = x + 6 * scale;
+        const topY = baseY - 115 * scale;
+        ctx.fillStyle = '#064e3b';
+        for (let i = 0; i < 5; i++) {
+          const ang = -Math.PI * 0.85 + i * 0.62 + Math.sin(this.tick * 0.04 + i) * 0.06;
+          ctx.beginPath();
+          ctx.ellipse(
+            topX + Math.cos(ang) * 26 * scale,
+            topY + Math.sin(ang) * 18 * scale,
+            28 * scale,
+            7 * scale,
+            ang,
+            0,
+            Math.PI * 2
+          );
+          ctx.fill();
+        }
+      }
+
+      _drawArtDecoHotel(ctx, x, y, w, h, bodyColor, neonColor, label) {
+        ctx.fillStyle = bodyColor;
+        ctx.fillRect(x, y, w, h);
+        ctx.fillStyle = 'rgba(20, 8, 38, 0.25)';
+        ctx.fillRect(x + w - 14, y, 14, h);
+        // Stepped Art Deco crown
+        ctx.fillStyle = bodyColor;
+        ctx.fillRect(x + 10, y - 16, w - 20, 16);
+        ctx.fillRect(x + 24, y - 30, w - 48, 14);
+        // Glowing neon trim & sign
+        ctx.strokeStyle = neonColor;
+        ctx.lineWidth = 3;
+        ctx.strokeRect(x + 6, y + 10, w - 12, 22);
+        ctx.fillStyle = '#140826';
+        ctx.fillRect(x + 7, y + 11, w - 14, 20);
+        ctx.fillStyle = neonColor;
+        ctx.font = 'bold 9px system-ui, sans-serif';
+        ctx.textAlign = 'center';
+        ctx.fillText(label, x + w / 2, y + 24);
+        // Lit windows
+        ctx.fillStyle = 'rgba(255, 240, 150, 0.55)';
+        for (let wy = y + 44; wy < y + h - 18; wy += 24) {
+          for (let wx = x + 12; wx < x + w - 16; wx += 18) {
+            ctx.fillRect(wx, wy, 9, 13);
+          }
+        }
+      }
+
+      _drawCrane(ctx) {
+        ctx.save();
+        // Steel crane mast
+        ctx.strokeStyle = '#fbbf24';
+        ctx.lineWidth = 9;
+        ctx.beginPath();
+        ctx.moveTo(this.crane.baseX, this.crane.baseY);
+        ctx.lineTo(this.crane.baseX + 26, 178);
+        ctx.lineTo(this.crane.pivotX, this.crane.pivotY);
+        ctx.stroke();
+
+        // Cross bracing
+        ctx.strokeStyle = '#f59e0b';
+        ctx.lineWidth = 3;
+        for (let y = 210; y < GROUND_Y - 30; y += 56) {
+          ctx.beginPath();
+          ctx.moveTo(this.crane.baseX + 10, y);
+          ctx.lineTo(this.crane.baseX + 28, y + 32);
+          ctx.stroke();
+        }
+
+        // Neon cab
+        ctx.fillStyle = '#ff4fa3';
+        ctx.fillRect(this.crane.baseX - 24, GROUND_Y - 56, 56, 56);
+        ctx.fillStyle = '#5ef2d6';
+        ctx.fillRect(this.crane.baseX - 10, GROUND_Y - 46, 30, 22);
+
+        // Pivot hub
+        ctx.fillStyle = '#ffe66d';
+        ctx.beginPath();
+        ctx.arc(this.crane.pivotX, this.crane.pivotY, 10, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.restore();
+      }
+
+      _drawAimGuide(ctx) {
+        const s = this.crane.dragStart;
+        const c = this.crane.dragCur;
+        let pullX = s.x - c.x;
+        let pullY = s.y - c.y;
+        if (pullX < -12) {
+          pullX = -pullX;
+          pullY = -pullY;
+        }
+        const dist = Math.hypot(pullX, pullY);
+        if (dist < 10) return;
+
+        const clamped = Math.min(dist, 185);
+        const nx = pullX / dist;
+        const ny = pullY / dist;
+        const power = clamped * 0.175;
+        const vx = Math.max(9, nx * power);
+        const vy = ny * power - 3.6;
+
+        let px = this.crane.restX - nx * 42;
+        let py = this.crane.restY - ny * 26;
+
+        ctx.save();
+        ctx.strokeStyle = '#5ef2d6';
+        ctx.lineWidth = 3;
+        ctx.setLineDash([6, 6]);
+        ctx.beginPath();
+        ctx.moveTo(this.crane.pivotX, this.crane.pivotY);
+        ctx.lineTo(px, py);
+        ctx.stroke();
+
+        // Dotted parabolic preview
+        ctx.setLineDash([]);
+        for (let step = 1; step <= 14; step++) {
+          const t = step * 2;
+          const gx = px + vx * t;
+          const gy = py + vy * t + 0.5 * 0.34 * t * t;
+          ctx.fillStyle = `rgba(255, 230, 109, ${(1 - step / 16).toFixed(2)})`;
+          ctx.beginPath();
+          ctx.arc(gx, gy, 5.2 - step * 0.22, 0, Math.PI * 2);
+          ctx.fill();
+        }
+        ctx.restore();
+      }
+
+      _drawWreckingBall(ctx) {
+        const { x, y } = this.ball.position;
+        ctx.save();
+        ctx.translate(x, y);
+        ctx.rotate(this.ball.angle);
+
+        const grad = ctx.createRadialGradient(-8, -8, 4, 0, 0, 28);
+        grad.addColorStop(0, '#f8fafc');
+        grad.addColorStop(0.5, '#64748b');
+        grad.addColorStop(1, '#1e293b');
+        ctx.fillStyle = grad;
+        ctx.beginPath();
+        ctx.arc(0, 0, 27, 0, Math.PI * 2);
+        ctx.fill();
+
+        ctx.strokeStyle = '#ffe66d';
+        ctx.lineWidth = 3;
+        ctx.stroke();
+
+        this._drawTriforce(ctx, 0, 2, 13, '#ffe66d');
+        ctx.restore();
+      }
+
+      _drawEntity(ctx, ent) {
+        const b = ent.body;
+        ctx.save();
+        ctx.translate(b.position.x, b.position.y);
+        ctx.rotate(b.angle);
+
+        if (ent.kind === 'crate') {
+          ctx.fillStyle = ent.color;
+          ctx.fillRect(-ent.w / 2, -ent.h / 2, ent.w, ent.h);
+          ctx.strokeStyle = '#78350f';
+          ctx.lineWidth = 3;
+          ctx.strokeRect(-ent.w / 2, -ent.h / 2, ent.w, ent.h);
+          ctx.beginPath();
+          ctx.moveTo(-ent.w / 2, -ent.h / 2);
+          ctx.lineTo(ent.w / 2, ent.h / 2);
+          ctx.moveTo(ent.w / 2, -ent.h / 2);
+          ctx.lineTo(-ent.w / 2, ent.h / 2);
+          ctx.stroke();
+        } else if (ent.kind === 'beam') {
+          ctx.fillStyle = ent.color;
+          ctx.fillRect(-ent.w / 2, -ent.h / 2, ent.w, ent.h);
+          ctx.strokeStyle = '#ffffff';
+          ctx.lineWidth = 2;
+          ctx.strokeRect(-ent.w / 2, -ent.h / 2, ent.w, ent.h);
+        } else if (ent.kind === 'pot') {
+          const r = ent.r;
+          ctx.fillStyle = ent.tier === 'gold' ? '#f59e0b' : ent.tier === 'royal' ? '#4f46e5' : '#c2592b';
+          ctx.beginPath();
+          ctx.ellipse(0, 2, r * 0.92, r, 0, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.strokeStyle = '#fde68a';
+          ctx.lineWidth = 2.5;
+          ctx.stroke();
+          // Pot rim
+          ctx.fillStyle = '#fef08a';
+          ctx.fillRect(-r * 0.65, -r - 2, r * 1.3, 5);
+        } else if (ent.kind === 'bomb') {
+          const pulse = ent.fuse >= 0 && this.tick % 4 < 2;
+          ctx.fillStyle = pulse ? '#ffffff' : '#1e3a8a';
+          ctx.fillRect(-ent.w / 2, -ent.h / 2, ent.w, ent.h);
+          ctx.strokeStyle = '#ef4444';
+          ctx.lineWidth = 3;
+          ctx.strokeRect(-ent.w / 2, -ent.h / 2, ent.w, ent.h);
+          // Bomb Flower emblem
+          ctx.fillStyle = '#ef4444';
+          ctx.beginPath();
+          ctx.arc(0, 2, 10, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.fillStyle = '#facc15';
+          ctx.fillRect(-3, -14, 6, 8);
+        } else if (ent.kind === 'car') {
+          const w = ent.w;
+          const h = ent.h;
+          ctx.fillStyle = ent.carColor;
+          ctx.beginPath();
+          ctx.moveTo(-w / 2, h / 2);
+          ctx.lineTo(-w / 2 + 6, -h / 4);
+          ctx.lineTo(-w / 4, -h / 2);
+          ctx.lineTo(w / 4, -h / 2);
+          ctx.lineTo(w / 2 - 4, -h / 5);
+          ctx.lineTo(w / 2, h / 2);
+          ctx.closePath();
+          ctx.fill();
+          ctx.strokeStyle = '#ffffff';
+          ctx.lineWidth = 2;
+          ctx.stroke();
+
+          // Windshield (shattered or intact)
+          ctx.fillStyle = ent.glassBroken ? '#334155' : '#67e8f9';
+          ctx.fillRect(-w * 0.2, -h * 0.42, w * 0.4, h * 0.28);
+
+          // Wheels
+          ctx.fillStyle = '#0f172a';
+          ctx.beginPath();
+          ctx.arc(-w * 0.28, h * 0.44, 9, 0, Math.PI * 2);
+          ctx.arc(w * 0.28, h * 0.44, 9, 0, Math.PI * 2);
+          ctx.fill();
+
+          // Flashing car alarm lights
+          if (ent.alarmTicks > 0 && this.tick % 8 < 4) {
+            ctx.fillStyle = '#ef4444';
+            ctx.beginPath();
+            ctx.arc(w * 0.46, 0, 8, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.fillStyle = '#38bdf8';
+            ctx.beginPath();
+            ctx.arc(-w * 0.46, 0, 8, 0, Math.PI * 2);
+            ctx.fill();
+          }
+        } else if (ent.kind === 'cucco') {
+          this._drawCuccoSprite(ctx, 0, 0, 1, ent.flapPhase, ent.triggered);
+        }
+
+        ctx.restore();
+      }
+
+      _drawCuccoSprite(ctx, x, y, dir, flapPhase, angry) {
+        ctx.save();
+        ctx.translate(x, y);
+        ctx.scale(dir, 1);
+
+        // Body
+        ctx.fillStyle = angry ? '#fef2f2' : '#ffffff';
+        ctx.beginPath();
+        ctx.ellipse(0, 2, 13, 10, 0, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.strokeStyle = angry ? '#ef4444' : '#94a3b8';
+        ctx.lineWidth = 2;
+        ctx.stroke();
+
+        // Flapping wing
+        const wingY = Math.sin(flapPhase) * 6;
+        ctx.fillStyle = '#e2e8f0';
+        ctx.beginPath();
+        ctx.ellipse(-2, -1 + wingY, 7, 4, -0.3, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Red comb & beak
+        ctx.fillStyle = '#ef4444';
+        ctx.beginPath();
+        ctx.arc(7, -9, 4, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.fillStyle = '#f59e0b';
+        ctx.beginPath();
+        ctx.moveTo(11, -3);
+        ctx.lineTo(18, 0);
+        ctx.lineTo(11, 3);
+        ctx.closePath();
+        ctx.fill();
+
+        // Eye (furious red glow when triggered / swarming!)
+        ctx.fillStyle = angry ? '#ef4444' : '#0f172a';
+        ctx.beginPath();
+        ctx.arc(8, -3, angry ? 2.8 : 2, 0, Math.PI * 2);
+        ctx.fill();
+
+        ctx.restore();
+      }
+
+      _drawRupee(ctx, r) {
+        ctx.save();
+        ctx.translate(r.x, r.y);
+        const sx = Math.max(0.25, Math.abs(Math.cos(r.spin)));
+        ctx.scale(sx, 1);
+        ctx.fillStyle = r.color;
+        ctx.beginPath();
+        ctx.moveTo(0, -11);
+        ctx.lineTo(7, -4);
+        ctx.lineTo(7, 4);
+        ctx.lineTo(0, 11);
+        ctx.lineTo(-7, 4);
+        ctx.lineTo(-7, -4);
+        ctx.closePath();
+        ctx.fill();
+        ctx.strokeStyle = '#ffffff';
+        ctx.lineWidth = 1.6;
+        ctx.stroke();
+        ctx.restore();
+      }
+
+      _drawHUD(ctx) {
+        ctx.save();
+        // Top translucent bar
+        ctx.fillStyle = 'rgba(18, 6, 38, 0.72)';
+        ctx.fillRect(10, 34, W - 20, 74);
+        ctx.strokeStyle = 'rgba(94, 242, 214, 0.65)';
+        ctx.lineWidth = 2;
+        ctx.strokeRect(10, 34, W - 20, 74);
+
+        // Title stamp
+        ctx.fillStyle = '#ff4fa3';
+        ctx.font = '900 13px Impact, Arial Black, sans-serif';
+        ctx.textAlign = 'center';
+        ctx.fillText('TOPPLE: VICE × HYRULE', W / 2, 52);
+
+        // Rupee Score (left)
+        ctx.fillStyle = '#22c55e';
+        ctx.beginPath();
+        ctx.moveTo(30, 56);
+        ctx.lineTo(38, 65);
+        ctx.lineTo(38, 77);
+        ctx.lineTo(30, 86);
+        ctx.lineTo(22, 77);
+        ctx.lineTo(22, 65);
+        ctx.closePath();
+        ctx.fill();
+        ctx.strokeStyle = '#ffffff';
+        ctx.lineWidth = 1.5;
+        ctx.stroke();
+
+        ctx.fillStyle = '#ffe66d';
+        ctx.font = '900 28px Impact, Arial Black, sans-serif';
+        ctx.textAlign = 'left';
+        ctx.fillText(String(this.score).toLocaleString(), 48, 84);
+
+        // Timer (center)
+        const secs = Math.ceil(this.timeLeft);
+        ctx.fillStyle = secs <= 10 ? '#ff4fa3' : '#ffffff';
+        ctx.font = '900 26px Impact, Arial Black, sans-serif';
+        ctx.textAlign = 'center';
+        ctx.fillText(`${secs}s`, W / 2, 84);
+
+        // Combo Badge (right)
+        ctx.fillStyle = this.combo > 1 ? '#5ef2d6' : '#94a3b8';
+        ctx.font = '900 24px Impact, Arial Black, sans-serif';
+        ctx.textAlign = 'right';
+        ctx.fillText(`×${this.combo} COMBO`, W - 22, 82);
+
+        // Cucco Meter bar
+        const barX = 16;
+        const barY = 114;
+        const barW = W - 32;
+        const barH = 18;
+        ctx.fillStyle = 'rgba(18, 6, 38, 0.8)';
+        ctx.fillRect(barX, barY, barW, barH);
+        const fillRatio = Math.min(1, this.cuccoMeter / 100);
+        const meterGrad = ctx.createLinearGradient(barX, 0, barX + barW, 0);
+        meterGrad.addColorStop(0, '#facc15');
+        meterGrad.addColorStop(0.5, '#ff6b00');
+        meterGrad.addColorStop(1, '#ff1e7a');
+        ctx.fillStyle = this.swarmActive && this.tick % 8 < 4 ? '#ff1e7a' : meterGrad;
+        ctx.fillRect(barX + 2, barY + 2, (barW - 4) * fillRatio, barH - 4);
+        ctx.strokeStyle = '#ffe66d';
+        ctx.lineWidth = 1.5;
+        ctx.strokeRect(barX, barY, barW, barH);
+
+        ctx.font = '900 11px system-ui, sans-serif';
+        ctx.textAlign = 'center';
+        const meterLabel = this.swarmActive
+          ? '🐔 CUCCO SWARM ACTIVE — TOTAL MAYHEM!! 🐔'
+          : `🐔 CUCCO METER: ${Math.round(this.cuccoMeter)}%`;
+        ctx.lineWidth = 3;
+        ctx.strokeStyle = '#140826';
+        ctx.strokeText(meterLabel, W / 2, barY + 13);
+        ctx.fillStyle = '#ffffff';
+        ctx.fillText(meterLabel, W / 2, barY + 13);
+
+        // Subtle drag prompt at start
+        if (this.stats.shotsFired === 0 && !this.crane.dragging && this.tick < 200) {
+          ctx.fillStyle = 'rgba(255, 255, 255, 0.9)';
+          ctx.font = '900 14px system-ui, sans-serif';
+          ctx.fillText('DRAG BACK TO AIM • RELEASE TO WRECK!', W / 2, 152);
+        }
+
+        ctx.restore();
+      }
+    }
+
+    // -------------------------------------------------------------------------
+    // Bootstrap & Expose Public API for Toolkit + Automated Tests
+    // -------------------------------------------------------------------------
+    const canvas = document.getElementById('game-canvas');
+    const audio = new AudioEngine();
+    const game = new ToppleGame(canvas, audio);
+    const recorder = new ReplayRecorder();
+    const replayPlayer = new ReplayPlayer();
+    const stuntBot = new StuntBot({ seed: DEFAULT_SEED });
+    const exporter = new ShortExporter({ fps: 60 });
+
+    const btnBot = document.getElementById('btn-bot');
+    const btnShort = document.getElementById('btn-short');
+    const btnReplay = document.getElementById('btn-replay');
+    const btnReset = document.getElementById('btn-reset');
+    const statusPill = document.getElementById('status-pill');
+
+    let mode = 'manual'; // 'manual' | 'bot' | 'replay' | 'export'
+    let lastReplayLog = null;
+
+    function showStatus(msg, durationMs = 2400) {
+      statusPill.textContent = msg;
+      statusPill.classList.add('show');
+      if (durationMs > 0) {
+        clearTimeout(showStatus._t);
+        showStatus._t = setTimeout(() => statusPill.classList.remove('show'), durationMs);
+      }
+    }
+
+    // Pointer input mapped to logical 540x960 canvas
+    function toCanvasCoords(ev) {
+      const rect = canvas.getBoundingClientRect();
+      return {
+        x: ((ev.clientX - rect.left) / rect.width) * W,
+        y: ((ev.clientY - rect.top) / rect.height) * H,
+      };
+    }
+
+    canvas.addEventListener('pointerdown', async (ev) => {
+      if (mode === 'export' || mode === 'bot' || mode === 'replay') return;
+      ev.preventDefault();
+      await audio.ensureStarted();
+      audio.startBed();
+      canvas.setPointerCapture(ev.pointerId);
+      const pt = toCanvasCoords(ev);
+      if (!recorder.active) recorder.start(game.seed);
+      game.applyInput('dragStart', pt);
+      recorder.record(game.tick, 'dragStart', pt);
+    });
+
+    canvas.addEventListener('pointermove', (ev) => {
+      if (!game.crane.dragging || mode !== 'manual') return;
+      ev.preventDefault();
+      const pt = toCanvasCoords(ev);
+      game.applyInput('dragMove', pt);
+      recorder.record(game.tick, 'dragMove', pt);
+    });
+
+    function endDrag(ev) {
+      if (!game.crane.dragging || mode !== 'manual') return;
+      ev.preventDefault();
+      const pt = toCanvasCoords(ev);
+      game.applyInput('dragEnd', pt);
+      recorder.record(game.tick, 'dragEnd', pt);
+    }
+    canvas.addEventListener('pointerup', endDrag);
+    canvas.addEventListener('pointercancel', endDrag);
+
+    // Prevent double-tap zoom on iOS/mobile browsers
+    let lastTouchEnd = 0;
+    document.addEventListener('touchend', (ev) => {
+      const now = Date.now();
+      if (now - lastTouchEnd <= 300) ev.preventDefault();
+      lastTouchEnd = now;
+    }, { passive: false });
+
+    // Toolkit Buttons
+    btnBot.addEventListener('click', async () => {
+      if (mode === 'export') return;
+      await audio.ensureStarted();
+      audio.startBed();
+      mode = 'bot';
+      stuntBot.start(game, recorder);
+      showStatus('🤖 STUNT BOT LIVE RUN...', 2200);
+    });
+
+    btnReplay.addEventListener('click', async () => {
+      if (mode === 'export') return;
+      if (!lastReplayLog) {
+        // Run headless quick capture if user clicks Replay before any run
+        lastReplayLog = stuntBot.runHeadless(game, recorder).replayLog;
+      }
+      await audio.ensureStarted();
+      audio.startBed();
+      mode = 'replay';
+      replayPlayer.load(lastReplayLog).start(game);
+      showStatus(`🔁 REPLAYING SEED ${lastReplayLog.seed}`, 2200);
+    });
+
+    btnReset.addEventListener('click', () => {
+      if (mode === 'export') return;
+      mode = 'manual';
+      game.reset(DEFAULT_SEED);
+      recorder.start(DEFAULT_SEED);
+      showStatus('🔄 TOWER RESET!', 1500);
+    });
+
+    async function runShortExport() {
+      mode = 'export';
+      btnShort.disabled = true;
+      btnBot.disabled = true;
+      showStatus('🎬 RECORDING 9:16 SHORT...', 0);
+      try {
+        const res = await exporter.exportRun({
+          game,
+          stuntBot,
+          recorder,
+          canvas,
+          audioBus: audio,
+          filename: 'topple-vice-hyrule-short',
+          triggerDownload: true,
+        });
+        lastReplayLog = recorder.lastLog;
+        showStatus(`✅ SHORT READY (${(res.byteLength / 1024).toFixed(0)} KB)`, 3500);
+        return res;
+      } finally {
+        btnShort.disabled = false;
+        btnBot.disabled = false;
+        mode = 'manual';
+      }
+    }
+    btnShort.addEventListener('click', () => { runShortExport(); });
+
+    // Main 60Hz Fixed-Timestep Loop (paused during ShortExporter which drives its own synced RAF loop)
+    let lastRaf = performance.now();
+    let acc = 0;
+    function loop(now) {
+      const dt = Math.min(now - lastRaf, 50);
+      lastRaf = now;
+
+      if (mode !== 'export') {
+        acc += dt;
+        let steps = 0;
+        while (acc >= FIXED_DT && steps < 4) {
+          if (mode === 'bot') {
+            const active = stuntBot.stepTick(game, recorder);
+            if (!active) {
+              lastReplayLog = recorder.lastLog;
+              mode = 'manual';
+              showStatus(`🤖 BOT DONE: ${game.getScore().toLocaleString()} RUPEES!`, 3000);
+            }
+          } else if (mode === 'replay') {
+            const active = replayPlayer.stepTick(game);
+            if (!active) {
+              mode = 'manual';
+              showStatus(`🔁 REPLAY DONE: ${game.getScore().toLocaleString()} RUPEES!`, 3000);
+            }
+          } else {
+            game.stepTick();
+          }
+          acc -= FIXED_DT;
+          steps++;
+        }
+        game.render();
+      }
+      requestAnimationFrame(loop);
+    }
+
+    recorder.start(DEFAULT_SEED);
+    game.render();
+    requestAnimationFrame(loop);
+
+    // Expose deterministic hooks for automated headless verification
+    window.__TOPPLE__ = {
+      game,
+      audio,
+      recorder,
+      replayPlayer,
+      stuntBot,
+      exporter,
+      runBotHeadless: (seed = DEFAULT_SEED) => {
+        const bot = new StuntBot({ seed });
+        const rec = new ReplayRecorder();
+        const out = bot.runHeadless(game, rec);
+        lastReplayLog = out.replayLog;
+        game.render();
+        return out;
+      },
+      runReplayHeadless: (replayLog) => {
+        const player = new ReplayPlayer(replayLog);
+        player.start(game);
+        while (player.stepTick(game)) {}
+        game.render();
+        return {
+          totalTicks: game.tick,
+          finalScore: game.getScore(),
+          digest: game.getDigest(),
+          stats: game.getStats(),
+        };
+      },
+      exportShortRun: () => runShortExport(),
+      stepToTick: (targetTick, replayLog) => {
+        const player = new ReplayPlayer(replayLog);
+        player.start(game);
+        while (game.tick < targetTick && player.stepTick(game)) {}
+        game.render();
+        return {
+          tick: game.tick,
+          score: game.getScore(),
+          stats: game.getStats(),
+          swarmActive: game.swarmActive,
+          shockwaves: game.shockwaves.length,
+        };
+      },
+    };
+  </script>
+</body>
+</html>

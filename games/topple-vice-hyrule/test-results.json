@@ -1,0 +1,95 @@
+{
+  "url": "http://127.0.0.1:52323/",
+  "startedAt": "2026-11-13T17:14:07.948Z",
+  "tests": {
+    "determinism": {
+      "pass": true,
+      "seed": 19860221,
+      "run1Score": 66915,
+      "run2Score": 66915,
+      "run1Digest": "338|66915|1|100|14|14|9|4|162|360.33",
+      "run2Digest": "338|66915|1|100|14|14|9|4|162|360.33",
+      "totalTicks": 338
+    },
+    "stuntBot": {
+      "pass": true,
+      "stats": {
+        "shotsFired": 2,
+        "potsSmashed": 14,
+        "rupeesSpawned": 187,
+        "rupeesCollected": 187,
+        "bombsDetonated": 9,
+        "carsFlipped": 4,
+        "cratesSmashed": 12,
+        "cuccosHit": 10,
+        "cuccoSwarmTriggered": true,
+        "swarmChickensSpawned": 42,
+        "maxCombo": 12,
+        "slowmoTriggered": true,
+        "finaleTriggered": true,
+        "timeLeft": 56.98
+      }
+    },
+    "screenshots": {
+      "pass": true,
+      "explosionTick": 52,
+      "swarmTick": 100,
+      "files": [
+        "screenshot-explosion-chain.png",
+        "screenshot-cucco-swarm.png"
+      ]
+    },
+    "shortExporter": {
+      "pass": true,
+      "file": "topple-vice-hyrule-short.mp4",
+      "mimeType": "video/mp4;codecs=avc1.420020,mp4a.40.2",
+      "sizeBytes": 4312258,
+      "formatDurationSec": 5.908417,
+      "videoStream": {
+        "index": 0,
+        "codec_name": "h264",
+        "codec_type": "video",
+        "width": 540,
+        "height": 960,
+        "r_frame_rate": "60/1",
+        "avg_frame_rate": "2587500/44113",
+        "duration": "5.787667",
+        "nb_read_frames": "345"
+      },
+      "audioStream": {
+        "index": 1,
+        "codec_name": "aac",
+        "codec_type": "audio",
+        "sample_rate": "48000",
+        "channels": 2,
+        "r_frame_rate": "0/0",
+        "avg_frame_rate": "0/0",
+        "duration": "5.908417",
+        "nb_read_frames": "277"
+      },
+      "runScore": 66915,
+      "runStats": {
+        "shotsFired": 2,
+        "potsSmashed": 14,
+        "rupeesSpawned": 187,
+        "rupeesCollected": 187,
+        "bombsDetonated": 9,
+        "carsFlipped": 4,
+        "cratesSmashed": 12,
+        "cuccosHit": 10,
+        "cuccoSwarmTriggered": true,
+        "swarmChickensSpawned": 42,
+        "maxCombo": 12,
+        "slowmoTriggered": true,
+        "finaleTriggered": true,
+        "timeLeft": 56.98
+      }
+    },
+    "zeroConsoleErrors": {
+      "pass": true,
+      "consoleErrors": [],
+      "pageErrors": []
+    }
+  },
+  "elapsedSec": 10.36
+}
