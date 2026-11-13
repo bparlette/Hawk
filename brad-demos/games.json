@@ -2794,6 +2794,14 @@
    "thumb": "thumbs/pitball-verity.png",
    "title": "Pitball — Vice",
    "url": "../games/pitball-verity-gta6/"
+  },
+  {
+   "category": "Viral Demos",
+   "desc": "GTA meets Zelda demolition — smash clay pots for rupees, chain Bomb Flower barrels, flip sports cars, and unleash a 42-bird Cucco Swarm.",
+   "id": "topple-vice-hyrule",
+   "thumb": "thumbs/topple-vice-hyrule.png",
+   "title": "TOPPLE: VICE × HYRULE",
+   "url": "../games/topple-vice-hyrule/"
   }
  ]
 }
