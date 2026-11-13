@@ -2730,6 +2730,14 @@
    "thumb": "thumbs/bonk-yard.png",
    "title": "Fauvism Plaza",
    "url": "../games/fauvism-plaza/"
+  },
+  {
+   "category": "Viral Demos",
+   "desc": "Oil Paint Plaza drawn in crayon — wax scribble, broken grain, paper tooth, true plaza palette.",
+   "id": "crayon-plaza",
+   "thumb": "thumbs/bonk-yard.png",
+   "title": "Crayon Plaza",
+   "url": "../games/crayon-plaza/"
   }
  ]
 }
