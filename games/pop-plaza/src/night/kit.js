@@ -199,7 +199,7 @@ export function createKit(shared, { palettes, head = '', light, origin = [0, 0, 
         layout(location = 0) out vec4 outC;
         void main() {
           float r = texture(tNoise, (vWorld.xz + vWorld.y) * 0.9).r;
-          vec3 c = kitPaint(vWorld, normalize(vN), int(vPal + 0.5), vTone, r) * 0.82;
+          vec3 c = kitPaint(vWorld, normalize(vN), int(vPal + 0.5), vTone, r); // full ink value: in this lane the underpainting IS the print (the old 0.82 assumed a brighter stroke layer on top)
           outC = vec4(${haze ? 'hazed(c, vWorld)' : 'c'}, 1.0);
         }`,
     }));
