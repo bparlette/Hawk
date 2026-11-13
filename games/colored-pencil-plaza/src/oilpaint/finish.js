@@ -1,14 +1,17 @@
 // The sheet of paper. The world is drawn into a picture with a depth beside it; this pass lays that
-// picture down in colored pencil. The scene's true colours are the pigments: each is mixed onto warm
-// off-white paper with a COVERAGE that follows the tone — lights are mostly bare paper with a breath
-// of pigment, darks are pressed full — and the coverage is broken everywhere by the tooth of the
-// paper, so no surface is ever a flat CG fill. Over that laydown the shading is done the colored-
-// pencil way: fine hatch lines IN THE LOCAL PIGMENT, darkened and saturated the way a harder-pressed
-// pencil deepens — one family for the mid-tones, a crossing family for the shades, a third for the
-// deepest darks — anchored to the world on each surface's own plane, so the strokes follow the form
-// and never swim. Silhouettes get a soft drawn line in a darkened local colour, a touch wobbly, never
-// a hard CG outline and never black. At the frame's edge the drawing fades out to the bare sheet —
-// the white paper vignette every one of these drawings sits in. Nothing is brighter than the paper.
+// picture down in colored pencil — LINES ONLY (the Nov 13 rebuild, on Cherie's ruling that colored
+// pencil has no blots). The scene's true colours are the pigments, but they are never laid down as a
+// filled area: under everything sits only a BREATH of pigment (a first pass so light the paper does
+// most of the talking), and every step of tone beyond that breath is built by fine hatch lines IN THE
+// LOCAL PIGMENT, darkened and saturated the way a harder-pressed pencil deepens — a first family for
+// the lights and mid-tones, a crossing family for the shades, a third for the darks, and a fourth,
+// near-level family that exists only in the deepest passages, where a drawing adds lines instead of
+// ever pressing a flat fill. The lines fatten and crowd as the tone deepens, so a dark is dense
+// cross-hatching with the paper's tooth still flecking through it — not a wash. The families are
+// anchored to the world on each surface's own plane, so the strokes follow the form and never swim.
+// Silhouettes get a soft drawn line in a darkened local colour, a touch wobbly, never a hard CG
+// outline and never black. At the frame's edge the drawing fades out to the bare sheet — the white
+// paper vignette every one of these drawings sits in. Nothing is brighter than the paper.
 import * as THREE from 'three';
 import { COMMON } from './common.js';
 
@@ -74,7 +77,10 @@ export function createFrame(renderer, shared, { samples = 4 } = {}) {
         float id = floor(s);
         float f = abs(fract(s) - 0.5) * 2.0; // 0 at a line's heart, 1 midway between lines
         float press = 0.7 + 0.3 * hash4(id * 1.71 + seed * 39.7).x; // each line its own pressure
-        float w = mix(0.3, 1.0, act); // lines fatten as the tone they build deepens
+        float w = mix(0.22, 1.08, act); // lines fatten as the tone they build deepens and crowd
+        // close — but they never quite merge: even at full pressure a hair of paper survives
+        // between lines, so the deepest dark stays visibly MADE of lines (the extra darkness
+        // there comes from the crossing families' density, not from lines swelling into fill)
         float line = 1.0 - smoothstep(w - 0.4, w + 0.1, f);
         // and the pencil lifts: along a line, stretches fade out and come back
         float lift = texture(tNoise, vec2(p.x * 0.008, id * 0.23 + seed * 7.0)).g;
@@ -89,32 +95,38 @@ export function createFrame(renderer, shared, { samples = 4 } = {}) {
         vec3 world = h.xyz / h.w;
         float far = length(world - uEye);
 
-        // Soften the CG edge off the pigment: borrow a little of the neighbours' colour,
-        // the way one pencil pass bleeds a whisper into the next. Then a touch of the
-        // medium's pastel lean: every pigment pulled slightly toward its own lightness.
+        // Borrow only a whisper of the neighbours' colour — the old pass borrowed a third,
+        // and that bleed was one of the things softening every passage into a blot. Then a
+        // touch of the medium's pastel lean: every pigment pulled slightly toward its own
+        // lightness.
         vec2 tx = 1.4 / uSize;
         vec3 blur = texture(tColor, vUv + vec2(tx.x, tx.y)).rgb + texture(tColor, vUv + vec2(-tx.x, tx.y)).rgb
                   + texture(tColor, vUv + vec2(tx.x, -tx.y)).rgb + texture(tColor, vUv + vec2(-tx.x, -tx.y)).rgb;
-        vec3 pig = mix(col, blur * 0.25, 0.35);
+        vec3 pig = mix(col, blur * 0.25, 0.10);
         float L = lum(pig);
-        pig = mix(pig, vec3(L), 0.10);
+        pig = mix(pig, vec3(L), 0.06);
 
-        // The laydown: pigment mixed onto the paper with a coverage that follows the tone.
-        // Highlights are the paper itself showing through a breath of pigment; the deepest
-        // darks are pressed to full coverage. Nothing here is a flat fill, because the
-        // paper's tooth breaks the coverage at two scales — a fine grain and a slower fibre.
-        float cov = mix(0.58, 1.0, smoothstep(0.98, 0.30, L));
+        // The first pass: a BREATH of pigment only — the tone-led whisper a drawing starts
+        // with before a single hatch line is laid. Lights are the paper itself through a
+        // trace of colour; even the deepest tone gets no more than a third coverage from
+        // this pass, and the paper's tooth breaks it hard at two scales — a fine grain and
+        // a slower fibre — so the breath itself never reads as a flat fill either. Every
+        // step of real tone from here on is LINES (below).
+        float cov = mix(0.07, 0.30, smoothstep(0.98, 0.30, L));
         float tooth = texture(tNoise, gl_FragCoord.xy / 640.0).r;
         float fibre = texture(tNoise, gl_FragCoord.xy / 2100.0 + 0.31).g;
-        cov = clamp(cov * (1.0 + ((tooth - 0.5) * 0.36 + (fibre - 0.5) * 0.18) * uCanvas), 0.0, 1.0);
+        cov = clamp(cov * (1.0 + ((tooth - 0.5) * 0.55 + (fibre - 0.5) * 0.25) * uCanvas), 0.0, 1.0);
         vec3 pic = mix(PAPER, pig, cov);
 
-        // The hatching. Coordinates are anchored to the world, so the drawing does not swim
-        // when the eye moves, and laid on whichever plane the surface mostly faces — read from
-        // the depth's own gradient, so the strokes follow the form. Three families, three
-        // angles, switching on as the tone deepens; each is drawn in the local pigment pressed
-        // harder, so a pink wall is shaded with deeper pink, never with gray. The lines are
-        // FINER than the graphite sheet's: 30 to the metre against its 21.
+        // The hatching — which is now the drawing, not a shading over one. Coordinates are
+        // anchored to the world, so the drawing does not swim when the eye moves, and laid
+        // on whichever plane the surface mostly faces — read from the depth's own gradient,
+        // so the strokes follow the form. Four families, four angles, switching on as the
+        // tone deepens; each is drawn in the local pigment pressed harder, so a pink wall is
+        // shaded with deeper pink, never with gray. The lines are FINER than the graphite
+        // sheet's: 30 to the metre against its 21. Where the old pass mixed a line in at
+        // half strength over a full laydown, the line now lands at full drawing strength
+        // over paper and breath — its density IS the tone.
         float band = (floor(L * 7.0) + smoothstep(0.35, 0.65, fract(L * 7.0))) / 7.0;
         float dark = 1.0 - mix(L, band, 0.30);
         vec3 N = normalize(cross(dFdx(world), dFdy(world)) + vec3(1e-5, 0.0, 0.0));
@@ -124,12 +136,22 @@ export function createFrame(renderer, shared, { samples = 4 } = {}) {
         float cA = cos(0.62), sA = sin(0.62);
         float cB = cos(-0.53), sB = sin(-0.53);
         float cC = cos(1.18), sC = sin(1.18);
-        float hA = hatch(vec2(hp.x * cA - hp.y * sA, hp.x * sA + hp.y * cA), smoothstep(0.05, 0.35, dark), 0.13);
-        float hB = hatch(vec2(hp.x * cB - hp.y * sB, hp.x * sB + hp.y * cB), smoothstep(0.44, 0.70, dark), 0.41);
-        float hC = hatch(vec2(hp.x * cC - hp.y * sC, hp.x * sC + hp.y * cC), smoothstep(0.64, 0.86, dark), 0.79);
-        pic = mix(pic, pressed(pig, 0.60), hA * 0.50);
-        pic = mix(pic, pressed(pig, 0.47), hB * 0.46);
-        pic = mix(pic, pressed(pig, 0.38), hC * 0.38);
+        float cD = cos(0.05), sD = sin(0.05);
+        float hA = hatch(vec2(hp.x * cA - hp.y * sA, hp.x * sA + hp.y * cA), smoothstep(0.02, 0.22, dark), 0.13);
+        float hB = hatch(vec2(hp.x * cB - hp.y * sB, hp.x * sB + hp.y * cB), smoothstep(0.40, 0.66, dark), 0.41);
+        float hC = hatch(vec2(hp.x * cC - hp.y * sC, hp.x * sC + hp.y * cC), smoothstep(0.62, 0.84, dark), 0.79);
+        float hD = hatch(vec2(hp.x * cD - hp.y * sD, hp.x * sD + hp.y * cD), smoothstep(0.80, 0.95, dark), 0.97);
+        pic = mix(pic, pressed(pig, 0.72), hA * 0.66);
+        pic = mix(pic, pressed(pig, 0.55), hB * 0.68);
+        pic = mix(pic, pressed(pig, 0.44), hC * 0.60);
+        pic = mix(pic, pressed(pig, 0.36), hD * 0.55);
+
+        // Even in the densest passage the paper is never quite buried: the tooth leaves
+        // sparse flecks of the bare sheet showing through the cross-hatching, the way a
+        // heavily worked colored-pencil dark still sparkles with paper grain. This is what
+        // keeps the deepest dark a drawing instead of a pool of fill.
+        float fleck = texture(tNoise, gl_FragCoord.xy / 300.0).b;
+        pic = mix(pic, PAPER, smoothstep(0.86, 0.99, fleck) * 0.30 * dark * uCanvas);
 
         // Drawn lines: where the depth steps hard between neighbouring pixels — a silhouette,
         // an eave, the fountain's rim — lay a soft pencil line in a darkened LOCAL colour,

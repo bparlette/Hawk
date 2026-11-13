@@ -2,9 +2,9 @@
 // one mark laid along +v: r is how high the pigment stands (for the light that rakes across it), g is how
 // much pigment is deposited (the finish and the dab shader read it as coverage), b is a slow grain along
 // the stroke. A colored-pencil mark is never a flat fill: it is lines — a dense bundle of FINE parallel
-// hatch lines, or a patch of one or two fine crossing line families over a light laydown — with the paper
-// showing in the gaps. Everything here is finer and denser than the graphite sheet, and far finer than
-// crayon's coarse wax streaks: that fineness is the medium.
+// hatch lines, or a patch of one or two fine crossing line families with NOTHING under them — with the
+// paper showing in the gaps. Everything here is finer and denser than the graphite sheet, and far finer
+// than crayon's coarse wax streaks: that fineness is the medium.
 import * as THREE from 'three';
 
 export const BRUSH_COLS = 4;
@@ -30,7 +30,10 @@ const sstep = (a, b, x) => smooth(Math.min(1, Math.max(0, (x - a) / (b - a))));
 // one mark in colored pencil. kind 0: a bundle of hatch lines running along the stroke (v), side by side across
 // u, each line with its own pressure and its own start and end — the way a hand lays a patch of hatching
 // in one pass, paper showing between the lines. kind 1: a cross-hatch patch — two crossing line families
-// inside a soft blob, over a light smudge. kind 2: the same patch with a single line family (mid-tones).
+// inside a soft blob outline. kind 2: the same patch with a single line family (mid-tones). NO kind lays
+// down a fill: between the lines the coverage stays under the dab shader's discard threshold, so a patch
+// deposits pigment on its lines and nowhere else — the tone of a passage is the density of its lines,
+// never a soft-edged wash of colour (the lines-only rebuild: Cherie's ruling, Nov 13).
 function mark(u, v, seed, kind) {
   if (kind === 1 || kind === 2) {
     // a blob with an irregular, worried edge — a scribbled patch, not a cut shape
@@ -39,21 +42,22 @@ function mark(u, v, seed, kind) {
     const r = Math.hypot(u / 0.72, (v - 0.5) / 0.46) / edge;
     const mask = 1 - sstep(0.8, 1.0, r);
     if (mask <= 0) return [0, 0, 0.5];
-    // the light laydown under the lines: a thin, uneven first pass of pigment everywhere in
-    // the patch — lighter than graphite's stump smudge, because the lines must do the work
-    let g = 0.36 + 0.10 * n2(u * 3.1, v * 2.2, seed + 20);
+    // NO laydown under the lines: what sits between them is a breath of pigment far under
+    // the dab shader's 0.3 discard, so it deposits nothing — the patch is its lines alone,
+    // and whatever shows between them is the surface beneath (underpainting, then paper).
+    let g = 0.07 + 0.04 * n2(u * 3.1, v * 2.2, seed + 20);
     // line families: a coordinate across the family; a line wherever it passes a whole number.
     // the coordinate wobbles a little, because the hand is not a ruler. The families are FINE:
     // more lines across the patch, each one thinner, than either the graphite or crayon sheets.
     const fam = (su, sv, freq) => {
       const s = (u * su + (v - 0.5) * sv) * freq + (n1(v * 4 + u * 2, seed + 5) - 0.5) * 0.7;
       const f = Math.abs(s - Math.round(s));
-      return 1 - sstep(0.05, 0.17, f);
+      return 1 - sstep(0.04, 0.19, f);
     };
     const a = fam(1.0, 0.55, 8.0);
     let line = a;
-    if (kind === 1) line = Math.max(a, fam(1.0, -0.55, 8.0) * 0.9); // the second family crosses the first
-    g = Math.max(g, line * (0.88 + 0.12 * n1(u * 9, seed + 31)));
+    if (kind === 1) line = Math.max(a, fam(1.0, -0.55, 8.0) * 0.92); // the second family crosses the first
+    g = Math.max(g, line * (0.94 + 0.06 * n1(u * 9, seed + 31)));
     g *= mask;
     const height = g * (0.30 + 0.20 * line); // pigment lies flatter than graphite, far flatter than wax
     return [height, g, n2(u * 3.4, v * 1.1, seed + 20)];
