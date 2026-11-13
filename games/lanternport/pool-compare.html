@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
   <title>Linkle Cartoon World: Side-Scroller vs 2.5D vs 3D</title>
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -24,7 +24,8 @@
       align-items: center;
       flex-wrap: wrap;
       gap: 12px;
-      z-index: 10;
+      position: relative;
+      z-index: 1200;
     }
     .title-group h1 {
       font-size: 18px;
@@ -171,17 +172,21 @@
     }
   </style>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<style id="moth-game-guard">
+html,body{touch-action:none;overscroll-behavior:none;-webkit-touch-callout:none;-webkit-user-select:none;user-select:none;-webkit-tap-highlight-color:transparent}
+canvas{touch-action:none}
+</style>
 </head>
 <body>
   <header>
     <div class="title-group">
       <h1>🗡️ Linkle Cartoon World: Architecture Comparison</h1>
-      <p>Compare real gameplay feel across 2D Side-Scroller, 2.5D Isometric, and 3D Cel-Shaded modes</p>
+      <p>Compare real gameplay feel across 2D Side-Scroller, 2.5D Isometric, and 3D Real-Shaded modes</p>
     </div>
     <div class="tab-bar">
       <button class="tab-btn active" id="btn-side" onclick="switchMode('side')">1. 2D Side-Scroller</button>
       <button class="tab-btn" id="btn-iso" onclick="switchMode('iso')">2. 2.5D Isometric</button>
-      <button class="tab-btn" id="btn-3d" onclick="switchMode('3d')">3. 3D Cel-Shaded</button>
+      <button class="tab-btn" id="btn-3d" onclick="switchMode('3d')">3. 3D Real-Shaded</button>
     </div>
   </header>
 
@@ -193,6 +198,7 @@
       <div class="action-badge" id="state-badge">Walking (Deck)</div>
       
       <div class="hud-controls">
+        <div><span class="key">🕹️</span> : Touch stick — touch & drag on the left half of the game area : Move</div>
         <div><span class="key">A</span> / <span class="key">D</span> or <span class="key">←</span> / <span class="key">→</span> : Move Left / Right</div>
         <div><span class="key">W</span> / <span class="key">S</span> or <span class="key">↑</span> / <span class="key">↓</span> : Move In / Out (2.5D & 3D)</div>
         <div><span class="key">SPACE</span> : Jump / Dive into Pool</div>
@@ -311,8 +317,8 @@
         feel: "Classic action-RPG feel (Chrono Trigger / Hades style). Player can navigate around all 4 edges of the swimming pool, sit on any coping rim, or dive in."
       },
       '3d': {
-        tech: "WebGL / Three.js 3D polygonal world with full real-time Cel-Shading (Toon shader with 3 discrete stepped light ramps and inverted-hull ink outline extrusion).",
-        render: "Real-time 3D cartoon shader. Shadows snap into distinct cel bands; character features bold black ink borders. Character is rendered in full 3D with animation stepping.",
+        tech: "WebGL / Three.js 3D polygonal world with real standard shading — MeshStandardMaterial lit by a directional sun plus hemisphere sky/ground light, so every surface carries a true light gradient.",
+        render: "Real-time 3D with real shading: forms are lit, not flat-filled — light falls off across the character, deck and pool. Character is rendered in full 3D with animation stepping.",
         feel: "Full 360-degree freedom. Camera smoothly follows behind player. True volumetric water shader with refraction and buoyant physics."
       }
     };
@@ -350,6 +356,17 @@
       if (keys['d'] || keys['arrowright']) { moveX += 1; player.facing = 1; }
       if (keys['w'] || keys['arrowup']) moveZ -= 1;
       if (keys['s'] || keys['arrowdown']) moveZ += 1;
+
+      // Touch stick (gptouch) merged with keyboard — vector is -1..1 per axis
+      const tv = window.__touchVec || { x: 0, y: 0 };
+      if (tv.x !== 0 || tv.y !== 0) {
+        moveX += tv.x;
+        moveZ += tv.y;
+        if (tv.x < -0.3) player.facing = -1;
+        if (tv.x > 0.3) player.facing = 1;
+        moveX = Math.max(-1, Math.min(1, moveX));
+        moveZ = Math.max(-1, Math.min(1, moveZ));
+      }
 
       if (player.state === 'sit') {
         moveX = 0;
@@ -534,7 +551,7 @@
     }
 
     // ----------------------------------------------------
-    // 3D CEL-SHADED MODE (Three.js)
+    // 3D REAL-SHADED MODE (Three.js)
     // ----------------------------------------------------
     let scene3d, camera3d, renderer3d, hero3dGroup;
 
@@ -553,42 +570,43 @@
       renderer3d.setSize(rect.width, rect.height);
       mount3d.appendChild(renderer3d.domElement);
 
-      // Light
-      const dirLight = new THREE.DirectionalLight(0xffffff, 1.2);
+      // Light — directional sun + hemisphere sky/ground fill, so the
+      // standard materials shade with real gradients instead of flat fills
+      const dirLight = new THREE.DirectionalLight(0xffffff, 1.15);
       dirLight.position.set(10, 20, 15);
       scene3d.add(dirLight);
-      scene3d.add(new THREE.AmbientLight(0x7dd3fc, 0.6));
+      scene3d.add(new THREE.HemisphereLight(0xcfe8ff, 0x6b5a43, 0.55));
 
       // Ground Deck
       const deckGeo = new THREE.PlaneGeometry(60, 60);
-      const deckMat = new THREE.MeshToonMaterial({ color: 0xe2e8f0 });
+      const deckMat = new THREE.MeshStandardMaterial({ color: 0xe2e8f0, roughness: 0.9, metalness: 0 });
       const deck = new THREE.Mesh(deckGeo, deckMat);
       deck.rotation.x = -Math.PI / 2;
       scene3d.add(deck);
 
       // Pool Cutout
       const poolGeo = new THREE.BoxGeometry(16, 2, 10);
-      const poolMat = new THREE.MeshToonMaterial({ color: 0x0284c7 });
+      const poolMat = new THREE.MeshStandardMaterial({ color: 0x0284c7, roughness: 0.85, metalness: 0 });
       const pool = new THREE.Mesh(poolGeo, poolMat);
       pool.position.set(6, -0.9, 0);
       scene3d.add(pool);
 
       // Water surface
       const waterGeo = new THREE.PlaneGeometry(15.6, 9.6);
-      const waterMat = new THREE.MeshBasicMaterial({ color: 0x38bdf8, transparent: true, opacity: 0.7 });
+      const waterMat = new THREE.MeshStandardMaterial({ color: 0x38bdf8, transparent: true, opacity: 0.7, roughness: 0.25, metalness: 0 });
       const water = new THREE.Mesh(waterGeo, waterMat);
       water.rotation.x = -Math.PI / 2;
       water.position.set(6, -0.1, 0);
       scene3d.add(water);
 
-      // Linkle Hero in 3D: Cel-shaded character assembly with ink outlines
+      // Linkle Hero in 3D: real-shaded character assembly
       hero3dGroup = new THREE.Group();
 
-      // Cel Shader material for Green Tunic/Bikini
-      const greenMat = new THREE.MeshToonMaterial({ color: 0x15803d });
-      const skinMat = new THREE.MeshToonMaterial({ color: 0xfbbf24 });
-      const capMat = new THREE.MeshToonMaterial({ color: 0x16a34a });
-      const bootMat = new THREE.MeshToonMaterial({ color: 0x78350f });
+      // Real-shaded materials (standard PBR, matte) — same colors as before
+      const greenMat = new THREE.MeshStandardMaterial({ color: 0x15803d, roughness: 0.8, metalness: 0 });
+      const skinMat = new THREE.MeshStandardMaterial({ color: 0xfbbf24, roughness: 0.8, metalness: 0 });
+      const capMat = new THREE.MeshStandardMaterial({ color: 0x16a34a, roughness: 0.8, metalness: 0 });
+      const bootMat = new THREE.MeshStandardMaterial({ color: 0x78350f, roughness: 0.8, metalness: 0 });
 
       // Torso
       const bodyGeo = new THREE.CylinderGeometry(0.5, 0.4, 1.5, 12);
@@ -611,7 +629,7 @@
 
       // Shield on back
       const shieldGeo = new THREE.CylinderGeometry(0.7, 0.7, 0.15, 16);
-      const shieldMat = new THREE.MeshToonMaterial({ color: 0x1d4ed8 });
+      const shieldMat = new THREE.MeshStandardMaterial({ color: 0x1d4ed8, roughness: 0.8, metalness: 0 });
       const shield = new THREE.Mesh(shieldGeo, shieldMat);
       shield.position.set(0, 2.3, -0.6);
       shield.rotation.x = Math.PI / 2;
@@ -626,7 +644,6 @@
       hero3dGroup.add(leftLeg);
       hero3dGroup.add(rightLeg);
 
-      // Add backface outline to group
       scene3d.add(hero3dGroup);
     }
 
@@ -640,6 +657,13 @@
       if (keys['d'] || keys['arrowright']) dx += 1;
       if (keys['w'] || keys['arrowup']) dz -= 1;
       if (keys['s'] || keys['arrowdown']) dz += 1;
+
+      // Touch stick (gptouch) merged with keyboard
+      const tv3 = window.__touchVec || { x: 0, y: 0 };
+      dx += tv3.x;
+      dz += tv3.y;
+      dx = Math.max(-1, Math.min(1, dx));
+      dz = Math.max(-1, Math.min(1, dz));
 
       hero3dGroup.position.x += dx * speed * dt;
       hero3dGroup.position.z += dz * speed * dt;
@@ -658,7 +682,7 @@
         hero3dGroup.position.y = -1.2; // in pool
         badge.textContent = "3D Swimming (Volumetric Pool)";
       } else {
-        badge.textContent = (dx !== 0 || dz !== 0) ? "3D Walking (Cel-Shaded)" : "3D Idle (Cel-Shaded)";
+        badge.textContent = (dx !== 0 || dz !== 0) ? "3D Walking (Real-Shaded)" : "3D Idle (Real-Shaded)";
       }
 
       // Camera follow
@@ -690,5 +714,67 @@
     switchMode('side');
     requestAnimationFrame(loop);
   </script>
+
+  <!-- Touch controls: gamepress standard gptouch.js — floating stick on the
+       left half, stick-only (no action buttons on this page). The module
+       polls getInput() once per frame into window.__touchVec, which the
+       movement code above merges with the keyboard state. -->
+  <script type="module">
+    import { TouchController, isTouchDevice } from './gptouch.js';
+
+    window.__touchVec = { x: 0, y: 0 };
+    if (isTouchDevice()) {
+      const tc = new TouchController({ zIndex: 1100 });
+      // Stick-only: remove gptouch's default A/B buttons entirely.
+      if (tc._buttons) {
+        for (const id in tc._buttons) {
+          const b = tc._buttons[id];
+          if (b.el) b.el.remove();
+        }
+        tc._buttons = {};
+      }
+      // Keep the stick overlay over the game area only (header tabs stay
+      // tappable above it; the info cards below stay scrollable).
+      const ov = tc._els && tc._els.overlay;
+      const fitOverlay = () => {
+        if (!ov) return;
+        const c = document.getElementById('container');
+        if (!c) return;
+        const r = c.getBoundingClientRect();
+        ov.style.bottom = 'auto';
+        ov.style.height = Math.max(0, Math.round(r.bottom)) + 'px';
+      };
+      fitOverlay();
+      window.addEventListener('resize', fitOverlay);
+
+      const pollTouch = () => {
+        const ti = tc.getInput();
+        window.__touchVec.x = ti.x;
+        window.__touchVec.y = ti.y;
+        requestAnimationFrame(pollTouch);
+      };
+      requestAnimationFrame(pollTouch);
+    }
+  </script>
+<script id="moth-game-guard-js">
+(function(){
+  var lastEnd=0;
+  function onUi(t){return t&&t.closest&&t.closest('button,a,input,select,textarea,[data-scroll]');}
+  document.addEventListener('touchend',function(e){
+    var now=Date.now();
+    if(!onUi(e.target)&&now-lastEnd<=300&&e.cancelable)e.preventDefault();
+    lastEnd=now;
+  },{passive:false});
+  ['gesturestart','gesturechange','gestureend'].forEach(function(n){
+    document.addEventListener(n,function(e){e.preventDefault();});
+  });
+  document.addEventListener('dblclick',function(e){e.preventDefault();},{passive:false});
+  document.addEventListener('contextmenu',function(e){e.preventDefault();});
+  document.addEventListener('touchmove',function(e){
+    if(e.target&&e.target.closest&&e.target.closest('[data-scroll]'))return;
+    if(e.cancelable)e.preventDefault();
+  },{passive:false});
+})();
+</script>
 </body>
 </html>
