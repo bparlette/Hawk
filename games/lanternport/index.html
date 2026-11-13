@@ -756,6 +756,7 @@ function startWatch() {
   journal.markWatched(activeScene.id);
   if (festival.active) festival.recordStop(activeScene.id, false);
   runner = new SceneRunner(game, activeScene); parkHero();
+  if (stageS) { const hj = stageS.actors.find((ac) => ac.look && ac.look.hero); if (hj) hj.vis = true; } // ready mode hides the staged hero every frame (you are the hero); some scenes' act() never restores vis, so un-hide once as the performance starts
   if (Q.get('cam') !== 'free') jumpBookmark(SCENES.indexOf(activeScene));
   syncSceneBtn();
 }
