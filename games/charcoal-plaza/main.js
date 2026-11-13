@@ -134,13 +134,13 @@ void makeDab(inout Dab d) {
   c = mix(c, c * 0.72, clamp(band, 0.0, 1.0) * 0.85); // darker inlay rings rubbed round the fountain
   c = mix(c, paint3(vec3(0.88, 0.855, 0.815), vec3(0.68, 0.655, 0.615), S, lit, q.y), smoothstep(4.8, 3.2, rad)); // paler apron at the fountain, near-erased
   c = mix(c, c * 0.85, smoothstep(19.0, 40.0, rad)); // darker past the plaza's edge
-  c = jitter(c, r.wzy, 0.45);
+  c = jitter(c, r.wzy, 0.30);
   vec2 radial = rad > 0.01 ? xz / rad : vec2(1.0, 0.0);
   d.dir = vec3(radial.x, 0.0, radial.y); // strokes run outward from the fountain, like spokes of the paving
   d.pos = P;
   d.size = uCell0 * vec2(1.05 + 0.5 * r.z, 1.7 + 0.9 * r.w) * lod;
   d.c1 = hazed(c, P);
-  d.c2 = d.c1; // one flat colour per ground patch: no second tone streaked through it
+  d.c2 = hazed(c * 1.17 + vec3(0.010, 0.008, 0.005), P); // a second, lighter tone worked through every patch: the sheet's tone field blends across each mass instead of leaving it flat
   d.seed = dot(cell, vec2(1.0, 57.0)) + sub * 0.37;
   d.turnabout = 1.0;
   d.lie = 1.0;
@@ -231,8 +231,8 @@ for (const s of [1, -1]) {
 }
 
 // --- the fountain ---
-kit.round(0, 0.34, 0, 2.6, 0.68, 'stone', { sides: 22, stroke: [0.09, 0.24] });
-kit.round(0, 0.72, 0, 2.72, 0.12, 'stonePale', { sides: 22, stroke: [0.08, 0.2] });
+kit.round(0, 0.34, 0, 2.6, 0.68, 'stone', { sides: 22, stroke: [0.10, 0.36] });
+kit.round(0, 0.72, 0, 2.72, 0.12, 'stonePale', { sides: 22, stroke: [0.09, 0.28] });
 kit.round(0, 0.8, 0, 0.44, 1.6, 'stone', { sides: 14, stroke: [0.07, 0.18] });
 kit.round(0, 1.62, 0, 1.08, 0.2, 'stonePale', { sides: 18, stroke: [0.07, 0.16] });
 kit.round(0, 1.8, 0, 0.07, 0.26, 'stone', { sides: 8 });
@@ -292,9 +292,21 @@ const crownUnder = [];
       void main() { vec4 w = modelMatrix * vec4(position, 1.0); vWorld = w.xyz; vN = mat3(modelMatrix) * normal; gl_Position = projectionMatrix * viewMatrix * w; }`,
     fragmentShader: /* glsl */ `
       uniform vec3 uSunDir;
+      uniform sampler2D tNoise;
       in vec3 vWorld; in vec3 vN;
       layout(location = 0) out vec4 outC;
-      void main() { outC = vec4(vec3(0.135, 0.13, 0.122) * (0.7 + 0.5 * max(normalize(vN).y, 0.0)), 1.0); }`, // deep rubbed tone under the crowns
+      void main() {
+        vec3 N = normalize(vN);
+        vec3 V = normalize(cameraPosition - vWorld);
+        // no silhouette: the under-mass is rubbed away at its rim, dissolving into the air
+        // behind it, and its tone is worked, never flat — a thumb passed over it many times
+        float rim = pow(1.0 - abs(dot(N, V)), 1.5);
+        float n = texture(tNoise, vWorld.xz * 0.33 + vWorld.yy * 0.21).r;
+        float n2 = texture(tNoise, vWorld.xz * 0.06 + 0.41).g;
+        vec3 c = vec3(0.135, 0.13, 0.122) * (0.60 + 0.48 * max(N.y, 0.0)) * (0.72 + 0.55 * n) * (0.85 + 0.3 * n2);
+        c = mix(c, vec3(0.56, 0.535, 0.495), rim * 0.8);
+        outC = vec4(c, 1.0);
+      }`, // deep rubbed tone under the crowns, its edge melted off
   });
   for (const { c, r } of crownUnder) {
     const s = new THREE.Mesh(new THREE.SphereGeometry(r * 0.96, 12, 9), underMat);
@@ -312,17 +324,17 @@ const crowns = dabMesh(dabGeometry(crownCount, {
     void makeDab(inout Dab d) {
       vec4 r = hash4(aPos.x * 13.7 + aPos.y * 7.1 + aPos.z * 3.3);
       vec3 Nn = normalize(aNrm);
-      if (dot(Nn, normalize(cameraPosition - aPos)) < -0.1) { d.alive = 0.0; return; }
+      if (dot(Nn, normalize(cameraPosition - aPos)) < -0.35) { d.alive = 0.0; return; }
       float x = dayOn(aPos, Nn);
-      vec3 c = paint3(vec3(0.52, 0.50, 0.475), vec3(0.33, 0.318, 0.30), vec3(0.085, 0.08, 0.075), x, r.y); // foliage as tonal mass: pale rubbed top, near-black core
+      vec3 c = paint3(vec3(0.56, 0.54, 0.51), vec3(0.37, 0.355, 0.335), vec3(0.135, 0.128, 0.12), x, r.y); // foliage as tonal mass: rubbed gray top, deep core that still holds dragged variation — never a void
       c = jitter(c, r.wzy, 0.5);
       d.pos = aPos;
       d.dir = aDir;
-      d.size = vec2(0.19, 0.36) * (0.8 + 0.5 * r.x);
+      d.size = vec2(0.23, 0.44) * (0.8 + 0.5 * r.x);
       d.c1 = hazed(c, aPos);
-      d.c2 = hazed(c * 1.25, aPos);
+      d.c2 = hazed(c * 1.35, aPos);
       d.seed = r.x * 977.0;
-      d.lift = 0.35;
+      d.lift = 0.22;
       d.turnabout = 1.0;
     }`,
   minPx: [5, 9], maxPx: [120, 240], cells: [0, 8],
@@ -457,12 +469,12 @@ function paintTex(shared, srcMat) {
         // her tonal place: what the texel is worth, pushed up where the sun models her and down
         // where it leaves her — then blended through the same smudged paint3 as the whole plaza
         float tone = clamp(lum * 1.15 + (lit - 0.5) * 0.8, 0.0, 1.0);
-        vec3 c = paint3(vec3(0.78, 0.76, 0.72), vec3(0.46, 0.445, 0.42), vec3(0.055, 0.052, 0.048), tone, n);
+        vec3 c = paint3(vec3(0.82, 0.80, 0.76), vec3(0.50, 0.485, 0.46), vec3(0.095, 0.09, 0.083), tone, n);
         // ERASED HIGHLIGHTS: where the light is strongest, the kneaded eraser lifts the tone back
         // out to paper white — crisp-ish pale shapes sitting on the smudge, gated toward her
         // brighter materials so the black of her shadow side is never touched by them
-        float erase = smoothstep(0.80, 0.97, lit) * (0.35 + 0.65 * smoothstep(0.35, 0.8, lum));
-        c = mix(c, vec3(0.94, 0.92, 0.87), erase * 0.85);
+        float erase = smoothstep(0.74, 0.95, lit) * (0.35 + 0.65 * smoothstep(0.35, 0.8, lum));
+        c = mix(c, vec3(0.94, 0.92, 0.87), erase * 0.9);
         c += uBounce * max(-Nn.y, 0.0) * (1.0 - lit) * 0.5;
         c *= 0.94 + 0.12 * m; // powder variation across her surface, so the tone is hand-worked, not sprayed
         if (!gl_FrontFacing) c *= 0.6;
