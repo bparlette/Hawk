@@ -1,0 +1,671 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+<title>Pool Models — All 3 Rigged</title>
+<style>
+  html, body { margin:0; padding:0; height:100%; overflow:hidden; background:#79c7e3;
+    touch-action:none; overscroll-behavior:none; -webkit-user-select:none; user-select:none;
+    -webkit-tap-highlight-color: transparent; font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; }
+  #app { position:fixed; inset:0; }
+  canvas { display:block; }
+  .pill { position:fixed; z-index:1100; background:rgba(10,35,55,.72); color:#fff; border-radius:999px;
+    padding:8px 16px; font-weight:700; letter-spacing:.02em; box-shadow:0 2px 10px rgba(0,0,0,.25);
+    pointer-events:none; backdrop-filter: blur(3px); }
+  #titlePill { top:calc(10px + env(safe-area-inset-top)); left:12px; font-size:13px; font-weight:600; opacity:.92; }
+  #coinPill  { top:calc(10px + env(safe-area-inset-top)); left:50%; transform:translateX(-50%); font-size:19px; }
+  #coinPill.pop { animation:cpop .28s ease; }
+  @keyframes cpop { 40% { transform:translateX(-50%) scale(1.18); } }
+  #timePill  { top:calc(10px + env(safe-area-inset-top)); right:12px; font-size:15px; font-variant-numeric:tabular-nums; }
+  #hint { position:fixed; z-index:1100; left:50%; bottom:calc(16px + env(safe-area-inset-bottom)); transform:translateX(-50%);
+    color:#fff; background:rgba(10,35,55,.55); border-radius:999px; padding:7px 14px; font-size:13px;
+    pointer-events:none; white-space:nowrap; transition:opacity .6s; }
+  #joyBase { position:fixed; z-index:1200; width:116px; height:116px; border-radius:50%; display:none;
+    border:2px solid rgba(255,255,255,.75); background:rgba(255,255,255,.14); pointer-events:none;
+    transform:translate(-50%,-50%); }
+  #joyKnob { position:fixed; z-index:1201; width:52px; height:52px; border-radius:50%; display:none;
+    background:rgba(255,255,255,.85); box-shadow:0 2px 8px rgba(0,0,0,.35); pointer-events:none;
+    transform:translate(-50%,-50%); }
+  #overlay { position:fixed; inset:0; z-index:1300; display:flex; flex-direction:column; gap:14px;
+    align-items:center; justify-content:center; text-align:center; padding:24px;
+    background:linear-gradient(180deg,#7ec8e3,#3d8fb8); color:#fff; }
+  #overlay h1 { margin:0; font-size:24px; }
+  #overlay p { margin:0; font-size:16px; opacity:.95; max-width:420px; }
+  .spin { width:44px; height:44px; border-radius:50%; border:5px solid rgba(255,255,255,.35);
+    border-top-color:#fff; animation:sp 0.9s linear infinite; }
+  @keyframes sp { to { transform:rotate(360deg); } }
+  #card { position:fixed; inset:0; z-index:1300; display:none; align-items:center; justify-content:center;
+    background:rgba(8,30,48,.45); }
+  #cardInner { background:#fff; border-radius:20px; padding:26px 30px; text-align:center; max-width:82vw;
+    box-shadow:0 12px 40px rgba(0,0,0,.35); }
+  #cardInner h2 { margin:0 0 6px; font-size:26px; color:#0b3d5c; }
+  #cardInner p { margin:0 0 16px; font-size:17px; color:#345; }
+  #againBtn { pointer-events:auto; font-size:17px; font-weight:700; color:#fff; background:#0e7fb8;
+    border:none; border-radius:999px; padding:12px 26px; min-height:52px; cursor:pointer; }
+  #againBtn:active { background:#0a6a9c; }
+</style>
+<script type="importmap">
+{ "imports": {
+    "three": "./three.module.js",
+    "three/addons/": "./addons/"
+} }
+</script>
+</head>
+<body>
+<div id="app"></div>
+
+<div id="titlePill" class="pill">Pool Models — All 3 Rigged</div>
+<div id="coinPill" class="pill">🪙 0 / 10</div>
+<div id="timePill" class="pill">⏱ 0:00.0</div>
+<div id="hint">👆 Left thumb: walk the trio &nbsp;·&nbsp; Right thumb: camera</div>
+<div id="joyBase"></div><div id="joyKnob"></div>
+
+<div id="overlay">
+  <h1>Pool Models — All 3 Rigged</h1>
+  <div class="spin" id="spin"></div>
+  <p id="ovText">Loading…</p>
+</div>
+
+<div id="card">
+  <div id="cardInner">
+    <h2>🏆 Deck cleared!</h2>
+    <p id="cardText">All 10 coins in 0:00.0</p>
+    <button id="againBtn">↻ Play again</button>
+  </div>
+</div>
+
+<script type="module">
+import * as THREE from 'three';
+import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
+
+/* ---------------- gesture guard: no double-tap zoom / pinch / pull-refresh ---------------- */
+document.addEventListener('touchmove', e => e.preventDefault(), { passive:false });
+document.addEventListener('gesturestart', e => e.preventDefault());
+document.addEventListener('dblclick', e => e.preventDefault());
+window.addEventListener('wheel', e => { if (e.ctrlKey) e.preventDefault(); }, { passive:false });
+document.addEventListener('contextmenu', e => e.preventDefault());
+
+/* ---------------- audio (created/resumed inside first user gesture) ---------------- */
+let AC = null;
+function audio() {
+  if (!AC) {
+    try { AC = new (window.AudioContext || window.webkitAudioContext)(); } catch (e) { AC = null; }
+    try { if (navigator.audioSession) navigator.audioSession.type = 'playback'; } catch (e) {}
+  }
+  if (AC && AC.state === 'suspended') AC.resume();
+  return AC;
+}
+function blip(f0, f1, t, dur, vol) {
+  const ac = audio(); if (!ac) return;
+  const o = ac.createOscillator(), g = ac.createGain(), s = ac.currentTime + t;
+  o.type = 'sine';
+  o.frequency.setValueAtTime(f0, s);
+  o.frequency.exponentialRampToValueAtTime(f1, s + dur);
+  g.gain.setValueAtTime(vol, s);
+  g.gain.exponentialRampToValueAtTime(0.001, s + dur);
+  o.connect(g).connect(ac.destination);
+  o.start(s); o.stop(s + dur + 0.02);
+}
+const popSound = () => { blip(740, 1240, 0, 0.12, 0.20); blip(1480, 1860, 0.03, 0.09, 0.08); };
+const winSound = () => { [660, 830, 990, 1320].forEach((f, i) => blip(f, f, i * 0.11, 0.22, 0.16)); };
+
+/* ---------------- scene ---------------- */
+const app = document.getElementById('app');
+const renderer = new THREE.WebGLRenderer({ antialias:true });
+renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
+renderer.setSize(innerWidth, innerHeight);
+renderer.shadowMap.enabled = true;
+renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+renderer.toneMapping = THREE.ACESFilmicToneMapping;
+renderer.toneMappingExposure = 1.06;
+app.appendChild(renderer.domElement);
+
+const scene = new THREE.Scene();
+scene.background = new THREE.Color(0x9fd8ef);
+scene.fog = new THREE.Fog(0x9fd8ef, 45, 120);
+
+const camera = new THREE.PerspectiveCamera(55, innerWidth / innerHeight, 0.1, 300);
+
+const hemi = new THREE.HemisphereLight(0xcfeeff, 0x8a7a5f, 1.15);
+scene.add(hemi);
+const sun = new THREE.DirectionalLight(0xfff1d6, 2.6);
+sun.position.set(14, 20, 9);
+sun.castShadow = true;
+sun.shadow.mapSize.set(1024, 1024);
+sun.shadow.camera.left = -20; sun.shadow.camera.right = 20;
+sun.shadow.camera.top = 20; sun.shadow.camera.bottom = -20;
+sun.shadow.camera.far = 60;
+sun.shadow.bias = -0.0004;
+scene.add(sun);
+
+/* ---------------- procedural textures ---------------- */
+function canvasTex(w, h, draw, rx = 1, ry = 1) {
+  const c = document.createElement('canvas'); c.width = w; c.height = h;
+  draw(c.getContext('2d'), w, h);
+  const t = new THREE.CanvasTexture(c);
+  t.wrapS = t.wrapT = THREE.RepeatWrapping; t.repeat.set(rx, ry);
+  t.colorSpace = THREE.SRGBColorSpace; t.anisotropy = 4;
+  return t;
+}
+const deckTex = canvasTex(512, 512, (g, w, h) => {
+  g.fillStyle = '#c8a06b'; g.fillRect(0, 0, w, h);
+  const rows = 8;
+  for (let i = 0; i < rows; i++) {
+    const y = i * h / rows, l = 58 + Math.random() * 10;
+    g.fillStyle = `hsl(33, 42%, ${l}%)`; g.fillRect(0, y + 2, w, h / rows - 4);
+    g.fillStyle = 'rgba(90,60,30,.55)'; g.fillRect(0, y, w, 2.5);
+    g.strokeStyle = 'rgba(120,85,45,.18)';
+    for (let s = 0; s < 7; s++) {
+      g.beginPath(); const yy = y + 6 + Math.random() * (h / rows - 12);
+      g.moveTo(0, yy); g.bezierCurveTo(w * .3, yy + 3, w * .6, yy - 3, w, yy); g.stroke();
+    }
+    g.fillStyle = 'rgba(70,45,20,.5)';
+    g.fillRect(Math.random() * w, y + h / rows - 4, w, 0); // keep loop cheap; seams below
+    g.fillRect((i * 197) % w, y, 2.5, h / rows);
+  }
+}, 3, 3);
+const tileTex = canvasTex(256, 256, (g, w, h) => {
+  g.fillStyle = '#a8dde8'; g.fillRect(0, 0, w, h);
+  g.strokeStyle = 'rgba(255,255,255,.8)'; g.lineWidth = 3;
+  for (let i = 0; i <= 4; i++) {
+    g.beginPath(); g.moveTo(i * w / 4, 0); g.lineTo(i * w / 4, h); g.stroke();
+    g.beginPath(); g.moveTo(0, i * h / 4); g.lineTo(w, i * h / 4); g.stroke();
+  }
+}, 6, 3);
+
+/* ---------------- pool deck ---------------- */
+const DECK = { x: 15, z: 10 };                    // half extents; deck top at y=0
+const POOL = { x0: -6.5, x1: 6.5, z0: -6.5, z1: 0.5 };
+const deckMat = new THREE.MeshStandardMaterial({ map: deckTex, roughness: .85, metalness: 0 });
+function deckSlab(cx, cz, w, d) {
+  const m = new THREE.Mesh(new THREE.BoxGeometry(w, 0.4, d), deckMat);
+  m.position.set(cx, -0.2, cz); m.receiveShadow = true; scene.add(m); return m;
+}
+deckSlab(0, (-DECK.z + POOL.z0) / 2, DECK.x * 2, POOL.z0 + DECK.z);            // north strip
+deckSlab(0, (POOL.z1 + DECK.z) / 2, DECK.x * 2, DECK.z - POOL.z1);            // south strip
+deckSlab((POOL.x0 - DECK.x) / 2 + 0, (POOL.z0 + POOL.z1) / 2, POOL.x0 + DECK.x, POOL.z1 - POOL.z0); // west
+deckSlab((POOL.x1 + DECK.x) / 2, (POOL.z0 + POOL.z1) / 2, DECK.x - POOL.x1, POOL.z1 - POOL.z0);     // east
+
+const grass = new THREE.Mesh(new THREE.CircleGeometry(90, 40),
+  new THREE.MeshStandardMaterial({ color: 0x77b255, roughness: 1 }));
+grass.rotation.x = -Math.PI / 2; grass.position.y = -0.42; grass.receiveShadow = true; scene.add(grass);
+
+/* pool basin + water */
+const basinMat = new THREE.MeshStandardMaterial({ map: tileTex, roughness: .35 });
+const floor = new THREE.Mesh(new THREE.PlaneGeometry(POOL.x1 - POOL.x0, POOL.z1 - POOL.z0), basinMat);
+floor.rotation.x = -Math.PI / 2;
+floor.position.set((POOL.x0 + POOL.x1) / 2, -1.05, (POOL.z0 + POOL.z1) / 2);
+scene.add(floor);
+function basinWall(w, x, z, ry) {
+  const m = new THREE.Mesh(new THREE.PlaneGeometry(w, 1.05), basinMat);
+  m.position.set(x, -0.525, z); m.rotation.y = ry; scene.add(m);
+}
+basinWall(POOL.x1 - POOL.x0, 0, POOL.z0, 0);
+basinWall(POOL.x1 - POOL.x0, 0, POOL.z1, Math.PI);
+basinWall(POOL.z1 - POOL.z0, POOL.x0, 0, Math.PI / 2);
+basinWall(POOL.z1 - POOL.z0, POOL.x1, 0, -Math.PI / 2);
+
+const rimMat = new THREE.MeshStandardMaterial({ color: 0xe8e2d4, roughness: .6 });
+function rim(w, d, x, z) {
+  const m = new THREE.Mesh(new THREE.BoxGeometry(w, 0.13, d), rimMat);
+  m.position.set(x, 0.065, z); m.castShadow = true; m.receiveShadow = true; scene.add(m);
+}
+rim(POOL.x1 - POOL.x0 + 0.7, 0.35, 0, POOL.z0 - 0.175);
+rim(POOL.x1 - POOL.x0 + 0.7, 0.35, 0, POOL.z1 + 0.175);
+rim(0.35, POOL.z1 - POOL.z0 - 0.7, POOL.x0 - 0.175, 0 - 3);
+rim(0.35, POOL.z1 - POOL.z0 - 0.7, POOL.x1 + 0.175, 0 - 3);
+
+const waterGeo = new THREE.PlaneGeometry(POOL.x1 - POOL.x0, POOL.z1 - POOL.z0, 30, 16);
+const waterBase = waterGeo.attributes.position.array.slice();
+const water = new THREE.Mesh(waterGeo, new THREE.MeshPhongMaterial({
+  color: 0x2fb3d8, transparent: true, opacity: 0.78, shininess: 160, specular: 0xbfefff }));
+water.rotation.x = -Math.PI / 2;
+water.position.set(0, -0.24, (POOL.z0 + POOL.z1) / 2);
+scene.add(water);
+
+/* ---------------- furniture (simple low-poly, built in code) ---------------- */
+function loungeChair(x, z, ry, color) {
+  const g = new THREE.Group();
+  const frame = new THREE.MeshStandardMaterial({ color: 0xf4f1ea, roughness: .5 });
+  const sling = new THREE.MeshStandardMaterial({ color, roughness: .8 });
+  const base = new THREE.Mesh(new THREE.BoxGeometry(0.62, 0.3, 1.45), frame);
+  base.position.y = 0.15; g.add(base);
+  const seat = new THREE.Mesh(new THREE.BoxGeometry(0.6, 0.07, 0.95), sling);
+  seat.position.set(0, 0.33, 0.22); g.add(seat);
+  const back = new THREE.Mesh(new THREE.BoxGeometry(0.6, 0.07, 0.85), sling);
+  back.position.set(0, 0.62, -0.48); back.rotation.x = -0.72; g.add(back);
+  g.position.set(x, 0, z); g.rotation.y = ry;
+  g.traverse(o => { if (o.isMesh) { o.castShadow = true; o.receiveShadow = true; } });
+  scene.add(g);
+}
+function umbrella(x, z, color) {
+  const g = new THREE.Group();
+  const pole = new THREE.Mesh(new THREE.CylinderGeometry(0.045, 0.045, 2.6, 10),
+    new THREE.MeshStandardMaterial({ color: 0xd8d3c8, roughness: .4, metalness: .5 }));
+  pole.position.y = 1.3; g.add(pole);
+  const top = new THREE.Mesh(new THREE.ConeGeometry(1.8, 0.55, 9),
+    new THREE.MeshStandardMaterial({ color, roughness: .75, flatShading: true }));
+  top.position.y = 2.55; g.add(top);
+  const tip = new THREE.Mesh(new THREE.SphereGeometry(0.07, 8, 8), pole.material);
+  tip.position.y = 2.9; g.add(tip);
+  g.position.set(x, 0, z); g.rotation.z = 0.05;
+  g.traverse(o => { if (o.isMesh) o.castShadow = true; });
+  scene.add(g);
+}
+function ball(x, z, color) {
+  const m = new THREE.Mesh(new THREE.SphereGeometry(0.32, 20, 16),
+    new THREE.MeshStandardMaterial({ color, roughness: .35 }));
+  m.position.set(x, 0.32, z); m.castShadow = true; scene.add(m);
+}
+loungeChair(-9.6, -3.4, Math.PI / 2, 0xffd166);
+loungeChair(-9.6, -1.2, Math.PI / 2, 0xffd166);
+loungeChair(9.6, -3.4, -Math.PI / 2, 0x4cc9f0);
+loungeChair(9.6, -1.2, -Math.PI / 2, 0x4cc9f0);
+loungeChair(-3.4, 3.6, Math.PI, 0xf72585);
+loungeChair(3.4, 3.6, Math.PI, 0x4361ee);
+umbrella(-9.6, -2.3, 0xff7f66);
+umbrella(9.6, -2.3, 0x2ec4b6);
+umbrella(-6.4, 5.2, 0xffb703);
+ball(-8.2, 5.4, 0xff5964); ball(11.8, 6.8, 0xffe74c); ball(-12.4, -6.2, 0x06d6a0);
+
+/* ---------------- coins ---------------- */
+const COIN_POS = [
+  [-12.5, -8.5], [12.5, -8.5], [-13.5, 2.0], [13.5, 2.5], [-10, 8.8],
+  [10, 8.8], [0, 4.2], [-3.2, -8.8], [3.4, -8.8], [5.5, 8.8]
+];
+const coinGeo = new THREE.CylinderGeometry(0.34, 0.34, 0.09, 26);
+const coinMat = new THREE.MeshStandardMaterial({ color: 0xffc61a, metalness: .85, roughness: .28, emissive: 0x7a5200, emissiveIntensity: .55 });
+let coins = [];
+function spawnCoins() {
+  for (const c of coins) scene.remove(c.pivot);
+  coins = COIN_POS.map(([x, z], i) => {
+    const pivot = new THREE.Group();
+    const mesh = new THREE.Mesh(coinGeo, coinMat);
+    mesh.rotation.x = Math.PI / 2;             // disc stands upright, faces ±Z
+    mesh.castShadow = true;
+    pivot.add(mesh);
+    pivot.position.set(x, 0.75, z);
+    scene.add(pivot);
+    return { pivot, x, z, phase: i * 0.7, taken: false };
+  });
+}
+spawnCoins();
+
+/* ---------------- characters: all three rigged models in formation ---------------- */
+const LEADER_SPAWN = { x: 0, z: 7.6 };
+const leader = { x: LEADER_SPAWN.x, z: LEADER_SPAWN.z };   // joystick-driven group anchor
+let gHeading = Math.PI;                                     // group heading (face -Z, toward the pool)
+
+/* formation slots in (forward, right) offsets from the leader, metres */
+const MODEL_DEFS = [
+  { name: 'Moth',             file: 'model-moth.glb',     f:  1.05, r:  0    },
+  { name: 'Hunyuan',          file: 'model-hunyuan.glb',  f: -1.05, r: -1.25 },
+  { name: 'Hunyuan · matched', file: 'model-colorfix.glb', f: -1.05, r:  1.25 },
+];
+
+function makeLabel(text) {
+  const c = document.createElement('canvas'); c.width = 512; c.height = 96;
+  const g = c.getContext('2d');
+  const label = ' ' + text + ' ';
+  g.font = '700 44px system-ui, -apple-system, sans-serif';
+  const tw = Math.min(500, g.measureText(label).width + 44);
+  const x0 = (512 - tw) / 2;
+  g.fillStyle = 'rgba(10,35,55,.72)';
+  g.beginPath(); g.roundRect(x0, 14, tw, 68, 34); g.fill();
+  g.fillStyle = '#fff'; g.textAlign = 'center'; g.textBaseline = 'middle';
+  g.fillText(text, 256, 50);
+  const tex = new THREE.CanvasTexture(c);
+  tex.colorSpace = THREE.SRGBColorSpace; tex.anisotropy = 4;
+  const sp = new THREE.Sprite(new THREE.SpriteMaterial({ map: tex, transparent: true, depthWrite: false }));
+  sp.scale.set(2.05, 0.385, 1);
+  sp.position.y = 2.06;
+  return sp;
+}
+
+const models = MODEL_DEFS.map((def, i) => {
+  const charGroup = new THREE.Group();          // position + heading
+  const bobGroup = new THREE.Group();           // idle breathing (walk clip owns the bob while walking)
+  charGroup.add(bobGroup);
+  charGroup.add(makeLabel(def.name));
+  scene.add(charGroup);
+  const m = {
+    ...def, idx: i, group: charGroup, bob: bobGroup,
+    heading: Math.PI, loaded: false, loadErr: null,
+    mixer: null, walk: null, testBone: null, walking: false, speed: 0,
+  };
+  charGroup.rotation.y = m.heading;
+  return m;
+});
+/* place everyone on their spawn slot right away (labels visible while loading) */
+function slotPos(def, hx, hz, heading) {
+  const fx = Math.sin(heading), fz = Math.cos(heading);
+  const rx = Math.cos(heading), rz = -Math.sin(heading);
+  return { x: hx + fx * def.f + rx * def.r, z: hz + fz * def.f + rz * def.r };
+}
+for (const m of models) {
+  const s = slotPos(m, leader.x, leader.z, gHeading);
+  m.group.position.set(s.x, 0, s.z);
+}
+
+let loadedCount = 0;
+const ovText = document.getElementById('ovText');
+function maybeHideOverlay() {
+  if (loadedCount < models.length) {
+    ovText.textContent = `Loading… ${loadedCount} / ${models.length}`;
+    return;
+  }
+  window.__dbg.modelLoaded = true;
+  const ov = document.getElementById('overlay');
+  ov.style.transition = 'opacity .5s'; ov.style.opacity = '0';
+  setTimeout(() => ov.style.display = 'none', 550);
+}
+for (const m of models) {
+  new GLTFLoader().load(m.file,
+    (gltf) => {
+      const model = gltf.scene;
+      model.traverse(o => {
+        if (o.isMesh) {
+          // Hunyuan exports ship without normals — three.js needs them for lighting.
+          if (!o.geometry.attributes.normal) o.geometry.computeVertexNormals();
+          o.castShadow = true;
+          // Hunyuan exports omit metallicFactor; the glTF spec default is 1.0 (full metal),
+          // which renders near-black without an environment map. Skin/cloth is not metal —
+          // the Moth export declares 0, so normalize every lane to 0.
+          const mats = Array.isArray(o.material) ? o.material : [o.material];
+          mats.forEach(mt => { if ('metalness' in mt) mt.metalness = 0; });
+        }
+      });
+      const box = new THREE.Box3().setFromObject(model);
+      const size = box.getSize(new THREE.Vector3());
+      const s = 1.8 / size.y;                    // consistent 1.8 m height for all three
+      model.scale.setScalar(s);
+      model.position.y = -box.min.y * s;         // feet on the deck
+      m.bob.add(model);
+      /* rigged walk clip (Walk_07_01 on Fable's bone contract) */
+      m.mixer = new THREE.AnimationMixer(model);
+      const clip = gltf.animations.find(a => a.name === 'Walk_07_01') || gltf.animations[0];
+      if (clip) {
+        m.walk = m.mixer.clipAction(clip);
+        m.walk.setLoop(THREE.LoopRepeat);
+      }
+      const bones = [];
+      model.traverse(o => { if (o.isBone) bones.push(o); });
+      m.testBone = bones.find(b => /foot/i.test(b.name)) || bones.find(b => /ankle|toe/i.test(b.name)) ||
+                   bones.find(b => /shin|calf|leg/i.test(b.name)) || bones[bones.length - 1] || null;
+      m.loaded = true;
+      loadedCount++;
+      maybeHideOverlay();
+    },
+    undefined,
+    (err) => {
+      m.loadErr = String(err && err.message || err);
+      window.__dbg.loadError = m.name + ': ' + m.loadErr;
+      document.getElementById('spin').style.display = 'none';
+      ovText.textContent = `⚠️ Could not load ${m.name} (${m.file}). ` + (err && err.message ? err.message : '');
+      ovText.style.color = '#ffe1e1';
+    });
+}
+ovText.textContent = 'Loading… 0 / 3';
+
+/* ---------------- input: floating joystick (left) + camera drag (right) + keys ---------------- */
+const joyBase = document.getElementById('joyBase'), joyKnob = document.getElementById('joyKnob');
+let joyId = null, joyAnchor = { x: 0, y: 0 }, joyVec = { x: 0, y: 0 };
+let lookId = null, lookLast = { x: 0, y: 0 };
+let camYaw = 0, camPitch = 0.5;
+const keys = {};
+let hintHidden = false;
+
+function hideHint() {
+  if (!hintHidden) { hintHidden = true; document.getElementById('hint').style.opacity = '0'; }
+}
+addEventListener('pointerdown', (e) => {
+  audio(); hideHint();
+  if (e.target.closest('#card') || e.target.closest('#overlay')) return;
+  if (e.clientX < innerWidth / 2 && joyId === null) {
+    joyId = e.pointerId; joyAnchor = { x: e.clientX, y: e.clientY }; joyVec = { x: 0, y: 0 };
+    joyBase.style.left = joyAnchor.x + 'px'; joyBase.style.top = joyAnchor.y + 'px';
+    joyKnob.style.left = joyAnchor.x + 'px'; joyKnob.style.top = joyAnchor.y + 'px';
+    joyBase.style.display = joyKnob.style.display = 'block';
+  } else if (lookId === null) {
+    lookId = e.pointerId; lookLast = { x: e.clientX, y: e.clientY };
+  }
+});
+addEventListener('pointermove', (e) => {
+  if (e.pointerId === joyId) {
+    let dx = e.clientX - joyAnchor.x, dy = e.clientY - joyAnchor.y;
+    const len = Math.hypot(dx, dy), max = 48;
+    if (len > max) { dx *= max / len; dy *= max / len; }
+    joyVec = { x: dx / max, y: dy / max };
+    joyKnob.style.left = (joyAnchor.x + dx) + 'px'; joyKnob.style.top = (joyAnchor.y + dy) + 'px';
+  } else if (e.pointerId === lookId) {
+    camYaw -= (e.clientX - lookLast.x) * 0.0052;
+    camPitch = THREE.MathUtils.clamp(camPitch + (e.clientY - lookLast.y) * 0.0035, 0.14, 1.15);
+    lookLast = { x: e.clientX, y: e.clientY };
+  }
+});
+function endPointer(e) {
+  if (e.pointerId === joyId) { joyId = null; joyVec = { x: 0, y: 0 }; joyBase.style.display = joyKnob.style.display = 'none'; }
+  if (e.pointerId === lookId) lookId = null;
+}
+addEventListener('pointerup', endPointer);
+addEventListener('pointercancel', endPointer);
+addEventListener('keydown', (e) => { keys[e.key.toLowerCase()] = true; audio(); hideHint(); });
+addEventListener('keyup', (e) => { keys[e.key.toLowerCase()] = false; });
+
+/* ---------------- game state ---------------- */
+let collected = 0, startTime = null, elapsed = 0, cleared = false;
+const coinPill = document.getElementById('coinPill'), timePill = document.getElementById('timePill');
+const fmt = (t) => `${Math.floor(t / 60)}:${(t % 60).toFixed(1).padStart(4, '0')}`;
+function updateHUD() {
+  coinPill.textContent = `🪙 ${collected} / 10`;
+  timePill.textContent = `⏱ ${fmt(elapsed)}`;
+}
+document.getElementById('againBtn').addEventListener('click', () => {
+  audio();
+  collected = 0; cleared = false; startTime = null; elapsed = 0;
+  spawnCoins(); updateHUD();
+  document.getElementById('card').style.display = 'none';
+});
+updateHUD();
+
+/* ---------------- debug hook (used by the automated smoke test) ---------------- */
+function boneQOf(m) {
+  if (!m.testBone) return null;
+  const q = new THREE.Quaternion(); m.testBone.getWorldQuaternion(q);
+  return { x: +q.x.toFixed(4), y: +q.y.toFixed(4), z: +q.z.toFixed(4), w: +q.w.toFixed(4) };
+}
+function bonePosOf(m) {
+  if (!m.testBone) return null;
+  const v = new THREE.Vector3(); m.testBone.getWorldPosition(v);
+  return { x: +v.x.toFixed(3), y: +v.y.toFixed(3), z: +v.z.toFixed(3) };
+}
+window.__dbg = {
+  modelLoaded: false, loadError: null, timeScale: 1, ready: false,
+  pos: () => ({ x: +leader.x.toFixed(3), z: +leader.z.toFixed(3) }),
+  heading: () => +gHeading.toFixed(3),
+  camYaw: () => +camYaw.toFixed(4),
+  collected: () => collected,
+  coins: () => coins.map(c => ({ x: c.x, z: c.z, taken: c.taken })),
+  cleared: () => cleared,
+  frames: () => frameCount,
+  loadedCount: () => loadedCount,
+  models: () => models.map(m => ({
+    name: m.name,
+    x: +m.group.position.x.toFixed(3), z: +m.group.position.z.toFixed(3),
+    loaded: m.loaded, walking: m.walking, speed: +m.speed.toFixed(2),
+    anim: m.walk ? { t: +m.walk.time.toFixed(2), w: +m.walk.getEffectiveWeight().toFixed(2) } : null,
+    boneQ: boneQOf(m),
+    bonePos: bonePosOf(m),
+  })),
+};
+
+/* ---------------- deck/pool collision (same AABB rules as the single-model variants) ---------------- */
+function clampToDeck(p) {
+  const R = 0.38;
+  p.x = THREE.MathUtils.clamp(p.x, -DECK.x + R + 0.1, DECK.x - R - 0.1);
+  p.z = THREE.MathUtils.clamp(p.z, -DECK.z + R + 0.1, DECK.z - R - 0.1);
+  if (p.x > POOL.x0 - R && p.x < POOL.x1 + R && p.z > POOL.z0 - R && p.z < POOL.z1 + R) {
+    const dxl = p.x - (POOL.x0 - R), dxr = (POOL.x1 + R) - p.x;
+    const dzl = p.z - (POOL.z0 - R), dzr = (POOL.z1 + R) - p.z;
+    const mn = Math.min(dxl, dxr, dzl, dzr);
+    if (mn === dxl) p.x = POOL.x0 - R; else if (mn === dxr) p.x = POOL.x1 + R;
+    else if (mn === dzl) p.z = POOL.z0 - R; else p.z = POOL.z1 + R;
+  }
+}
+function turnToward(cur, target, rate, dt) {
+  let d = target - cur;
+  while (d > Math.PI) d -= Math.PI * 2;
+  while (d < -Math.PI) d += Math.PI * 2;
+  return { angle: cur + d * Math.min(1, dt * rate), delta: d };
+}
+
+/* ---------------- main loop ---------------- */
+const clock = new THREE.Clock();
+let waterT = 0, frameCount = 0;
+const camTarget = new THREE.Vector3();
+camera.position.set(leader.x, 4.6, leader.z + 9.5);
+
+function animate() {
+  requestAnimationFrame(animate);
+  frameCount++;
+  const dt = Math.min(clock.getDelta(), 0.05) * (window.__dbg.timeScale || 1);
+  const t = clock.elapsedTime;
+
+  /* water waves */
+  waterT += dt;
+  const wp = waterGeo.attributes.position;
+  for (let i = 0; i < wp.count; i++) {
+    const x = waterBase[i * 3], y = waterBase[i * 3 + 1];
+    wp.setZ(i, Math.sin(x * 1.6 + waterT * 2.1) * 0.045 + Math.cos(y * 2.3 + waterT * 1.6) * 0.035);
+  }
+  wp.needsUpdate = true;
+  waterGeo.computeVertexNormals();
+
+  /* input → wish direction (camera-relative) */
+  let ix = joyVec.x, iy = joyVec.y;
+  if (keys['w'] || keys['arrowup']) iy -= 1;
+  if (keys['s'] || keys['arrowdown']) iy += 1;
+  if (keys['a'] || keys['arrowleft']) ix -= 1;
+  if (keys['d'] || keys['arrowright']) ix += 1;
+  const mag = Math.min(1, Math.hypot(ix, iy));
+  let mx = 0, mz = 0, driving = false;
+  if (mag > 0.12) {
+    const il = Math.hypot(ix, iy) || 1;
+    const nx = ix / il, ny = iy / il;
+    const f = { x: -Math.sin(camYaw), z: -Math.cos(camYaw) };   // camera forward on XZ
+    const r = { x: Math.cos(camYaw), z: -Math.sin(camYaw) };    // camera right on XZ
+    mx = r.x * nx + f.x * (-ny);
+    mz = r.z * nx + f.z * (-ny);
+    driving = true;
+    if (startTime === null && !cleared) startTime = performance.now();
+  }
+
+  /* leader moves with the joystick; group heading follows the drive direction */
+  const SPEED = 3.3;
+  if (driving) {
+    leader.x += mx * SPEED * mag * dt;
+    leader.z += mz * SPEED * mag * dt;
+    const lp = { x: leader.x, z: leader.z };
+    clampToDeck(lp);
+    leader.x = lp.x; leader.z = lp.z;
+    gHeading = turnToward(gHeading, Math.atan2(mx, mz), 8, dt).angle;
+  }
+
+  /* each model steers to its formation slot, walks while catching up, settles at rest */
+  const allLoaded = loadedCount === models.length;
+  for (const m of models) {
+    const p = m.group.position;
+    const slot = slotPos(m, leader.x, leader.z, gHeading);
+    const dx = slot.x - p.x, dz = slot.z - p.z;
+    const distS = Math.hypot(dx, dz);
+    let vx = 0, vz = 0, spd = 0;
+    if (distS > 0.06) {
+      spd = Math.min(4.6, distS * 3.2);
+      vx = dx / distS * spd; vz = dz / distS * spd;
+      p.x += vx * dt; p.z += vz * dt;
+      clampToDeck(p);
+      const turn = turnToward(m.heading, Math.atan2(vx, vz), 10, dt);
+      m.heading = turn.angle;
+      m.bob.rotation.z = THREE.MathUtils.clamp(-turn.delta * 0.12, -0.07, 0.07);
+    } else {
+      m.heading = turnToward(m.heading, gHeading, 5, dt).angle;
+      m.bob.rotation.z *= 0.9;
+    }
+    m.group.rotation.y = m.heading;
+    m.speed = spd;
+    const isMoving = m.loaded && spd > 0.25;
+
+    /* skeletal walk: fade Walk_07_01 in while moving, out to rest pose when stopped */
+    if (m.mixer) {
+      if (isMoving) {
+        if (m.walk && !m.walking) {
+          m.walking = true;
+          if (!m.walk.isRunning()) m.walk.reset();
+          m.walk.fadeIn(0.18).play();
+        }
+        if (m.walk) m.walk.timeScale = 0.8 + 0.55 * Math.min(1, spd / SPEED);
+      } else if (m.walking) {
+        m.walking = false;
+        if (m.walk) m.walk.fadeOut(0.28);
+      }
+      m.mixer.update(dt);
+    }
+    /* the walk clip owns the bob while walking; only a whisper of idle breathing at rest */
+    if (isMoving) {
+      m.bob.position.y *= 0.8;
+      m.bob.rotation.x *= 0.8;
+    } else {
+      m.bob.position.y = Math.sin(t * 1.7 + m.idx * 1.3) * 0.008;
+      m.bob.rotation.x *= 0.9;
+    }
+  }
+
+  /* coins: spin, bob, collect when ANY model reaches one */
+  for (const c of coins) {
+    if (c.taken) continue;
+    c.pivot.rotation.y += dt * 2.6;
+    c.pivot.position.y = 0.75 + Math.sin(t * 2.2 + c.phase) * 0.08;
+    if (!allLoaded) continue;
+    let hit = false;
+    for (const m of models) {
+      const dx = m.group.position.x - c.x, dz = m.group.position.z - c.z;
+      if (dx * dx + dz * dz < 0.55 * 0.55) { hit = true; break; }
+    }
+    if (hit) {
+      c.taken = true; scene.remove(c.pivot);
+      collected++; popSound();
+      coinPill.classList.remove('pop'); void coinPill.offsetWidth; coinPill.classList.add('pop');
+      if (collected >= 10 && !cleared) {
+        cleared = true; winSound();
+        document.getElementById('cardText').textContent = `All 10 coins in ${fmt(elapsed)}`;
+        document.getElementById('card').style.display = 'flex';
+      }
+    }
+  }
+
+  /* timer */
+  if (startTime !== null && !cleared) elapsed = (performance.now() - startTime) / 1000;
+  updateHUD();
+
+  /* follow camera framing the whole group (wider/higher than the single-model variants) */
+  const dist = 8.6;
+  const cx = leader.x + Math.sin(camYaw) * Math.cos(camPitch) * dist;
+  const cz = leader.z + Math.cos(camYaw) * Math.cos(camPitch) * dist;
+  const cy = 0.4 + Math.sin(camPitch) * dist;
+  camera.position.lerp(camTarget.set(cx, cy, cz), 1 - Math.pow(0.0001, dt));
+  camera.lookAt(leader.x, 1.15, leader.z);
+
+  renderer.render(scene, camera);
+  window.__dbg.ready = allLoaded;
+}
+animate();
+
+addEventListener('resize', () => {
+  camera.aspect = innerWidth / innerHeight;
+  camera.updateProjectionMatrix();
+  renderer.setSize(innerWidth, innerHeight);
+});
+</script>
+</body>
+</html>
