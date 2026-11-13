@@ -8,8 +8,9 @@
 // 13: dock-fishing   (cast, bite, strike, landed, release)
 // 14: fairy-orbit    (appear, orbit, swat, dodge, trail) — registers reusable 'fairy' stage kind
 import * as T from './lib/three.module.min.js';
-import { kf, ramp, person, thing, JUNIPER, FEN, townLook } from './stage.js';
+import { kf, ramp, person, thing, hash, JUNIPER, FEN, townLook } from './stage.js';
 import { registerStageKind } from './stageview.js';
+import { GLTFLoader } from './lib/GLTFLoader.js';
 
 const M = 0.01;
 
@@ -52,12 +53,157 @@ registerStageKind('fairy', (_T, kit, o) => {
   return g;
 });
 
-// Also register bigpot prop kind
-registerStageKind('bigpot', (_T, kit) => {
-  const g = new T.Group();
-  const clay = kit.toon(0xb45a3c, { rim: 0.8 });
-  kit.part(g, new T.SphereGeometry(0.55, 14, 10), clay, 0, 0.5, 0).scale.set(1.1, 0.9, 1.1);
-  kit.part(g, new T.CylinderGeometry(0.35, 0.45, 0.25, 12), clay, 0, 0.95, 0);
+// -----------------------------------------------------------------------------
+// Scene-quality pass (pot-rampage sample): real stocked assets under Lanternport's
+// own painterly finish, so the set can stand next to the rigged GLB hero.
+// Props + the merchant are Polyfork free low-poly GLBs (dual-licensed CC BY 4.0 /
+// Polyfork licence; credit lines in SCENES-STATUS / the enhance report). The ground
+// texture is Poly Haven cobblestone_floor_01 diffuse 1k (CC0). Imported meshes are
+// re-finished through kit.toon (same cel ramp + warm rim as the rest of the town;
+// vertex colours carry the stock palette) — the in-engine equivalent of the
+// Painted Live finish for imports. Loading is lazy and browser-only: node tests
+// import this module without ever building a stage.
+const ENH_FILES = { pot: 'pf-pot.glb', bigpot: 'pf-amphora.glb', stall: 'pf-stall.glb', merchant: 'pf-merchant.glb', crate: 'pf-crate.glb', barrel: 'pf-barrel.glb', sack: 'pf-sack.glb', planter: 'pf-planter.glb' };
+let enhPromise = null;
+function loadEnhance() {
+  if (enhPromise) return enhPromise;
+  if (typeof window === 'undefined' || typeof fetch !== 'function') { enhPromise = Promise.resolve({}); return enhPromise; }
+  window.__enhancePending = (window.__enhancePending || 0) + 1;
+  const loader = new GLTFLoader();
+  enhPromise = (async () => {
+    const out = {};
+    await Promise.all(Object.entries(ENH_FILES).map(async ([k, f]) => {
+      try { out[k] = await loader.loadAsync(new URL(`./assets/enhance/${f}`, import.meta.url).href); } catch (e) { /* a missing asset leaves its blob shadow, never a crash */ }
+    }));
+    window.__enhancePending = Math.max(0, (window.__enhancePending || 1) - 1);
+    return out;
+  })();
+  enhPromise.catch(() => {});
+  return enhPromise;
+}
+/** Re-finish an imported GLB in the town's materials: cel ramp + rim, vertex colours kept, real shadows on. */
+function paintify(THREE, kit, root, tint = 0xffffff) {
+  root.traverse((m) => {
+    if (!m.isMesh) return;
+    m.castShadow = true; m.receiveShadow = true; m.frustumCulled = false;
+    const src = Array.isArray(m.material) ? m.material[0] : m.material;
+    const col = new THREE.Color(tint); if (src && src.color) col.multiply(src.color);
+    m.material = kit.toon(col.getHex(), { vertexColors: !!(m.geometry && m.geometry.attributes && m.geometry.attributes.color), rim: 0.55 });
+  });
+  return root;
+}
+const blobShadow = (THREE, r, opacity = 0.28) => {
+  const m = new THREE.Mesh(new THREE.CircleGeometry(r, 20), new THREE.MeshBasicMaterial({ color: 0x120c20, transparent: true, opacity, depthWrite: false }));
+  m.rotation.x = -Math.PI / 2; return m;
+};
+/** A group that fills itself with a painted stock GLB when the shared load lands. Unskinned props are cloned per instance. */
+function enhInstance(THREE, kit, key, { scale = 1, tint = 0xffffff } = {}) {
+  const g = new THREE.Group(), inner = new THREE.Group(); g.add(inner);
+  loadEnhance().then((assets) => {
+    const src = assets[key]; if (!src) return;
+    const inst = src.scene.clone(true);
+    paintify(THREE, kit, inst, tint);
+    inst.scale.setScalar(scale);
+    inner.add(inst);
+  }).catch(() => {});
+  g.userData.enhInner = inner;
+  return g;
+}
+
+registerStageKind('pot', (THREE, kit, o) => {
+  const v = ((o.variant || 0) % 4 + 4) % 4;
+  const tint = [0xffffff, 0xeec39e, 0xd9906a, 0x9fc4b4][v]; // fired range: natural, pale, deep terracotta, glazed
+  const seed = [...(o.id || 'pot')].reduce((a, c) => a + c.charCodeAt(0), 0);
+  const s = 1.14 + hash(seed) * 0.14;
+  const g = enhInstance(THREE, kit, 'pot', { scale: s, tint });
+  g.userData.enhInner.rotation.y = hash(seed * 3 + v) * 6.28;
+  const blob = blobShadow(THREE, 0.3 * s, 0.24); blob.position.y = 0.006; g.add(blob);
+  if (o.tipped) { g.userData.enhInner.rotation.z = 1.82; g.userData.enhInner.position.y = 0.27 * s; blob.scale.set(1.5, 0.8, 1); }
+  return g;
+});
+
+// The big pot she lifts overhead: a crafted clay amphora (Polyfork), scaled to ~1.12 m.
+registerStageKind('bigpot', (THREE, kit) => {
+  const g = enhInstance(THREE, kit, 'bigpot', { scale: 1.4 });
+  const blob = blobShadow(THREE, 0.52, 0.3); blob.position.y = 0.006; g.add(blob);
+  return g;
+});
+
+// The pottery stall backdrop (Polyfork Medieval Village kit market stall).
+registerStageKind('stall', (THREE, kit) => {
+  const g = enhInstance(THREE, kit, 'stall', { scale: 1.3 });
+  const blob = blobShadow(THREE, 1.5, 0.18); blob.position.y = 0.004; blob.scale.set(1, 0.55, 1); g.add(blob);
+  return g;
+});
+
+// The display bench the pots line up on: a market table in the town's wood.
+registerStageKind('bench', (THREE, kit) => {
+  const g = new THREE.Group();
+  const wood = kit.toon(0xa97c50, { map: kit.T.wood, uv: 0.9, rim: 0.4 }), dark = kit.toon(0x8a5a3c, { map: kit.T.wood, uv: 0.9, rim: 0.4 });
+  const top = kit.part(g, new THREE.BoxGeometry(5.0, 0.09, 1.05), wood, 0, 0.405, 0, 0.012); top.receiveShadow = true; top.castShadow = false;
+  kit.part(g, new THREE.BoxGeometry(5.0, 0.14, 0.07), dark, 0, 0.33, 0.49, 0.012);
+  for (const sx of [-1, 1]) for (const sz of [-1, 1]) kit.part(g, new THREE.BoxGeometry(0.13, 0.38, 0.13), dark, sx * 2.32, 0.19, sz * 0.4, 0.012);
+  kit.part(g, new THREE.BoxGeometry(4.6, 0.05, 0.8), dark, 0, 0.13, 0, 0.012);
+  return g;
+});
+
+// Market-square ground apron: Poly Haven cobblestone (CC0) under the town's toon finish; receives the real sun shadows.
+registerStageKind('stagefloor', (THREE, kit) => {
+  const g = new THREE.Group();
+  const tex = new THREE.TextureLoader().load(new URL('./assets/enhance/ground-cobble.jpg', import.meta.url).href);
+  tex.wrapS = tex.wrapT = THREE.RepeatWrapping; tex.repeat.set(3, 2); tex.colorSpace = THREE.SRGBColorSpace; tex.anisotropy = 4;
+  const m = new THREE.Mesh(new THREE.BoxGeometry(11.5, 0.03, 7.5), kit.toon(0xd9d0bf, { map: tex, rim: 0 }));
+  m.position.y = 0.015; m.receiveShadow = true; m.castShadow = false; g.add(m);
+  return g;
+});
+
+const pfKind = (key, scale, blobR) => (THREE, kit, o) => {
+  const g = enhInstance(THREE, kit, key, { scale: scale * (o.scale || 1) });
+  const blob = blobShadow(THREE, blobR * (o.scale || 1), 0.22); blob.position.y = 0.006; g.add(blob);
+  return g;
+};
+registerStageKind('pfcrate', pfKind('crate', 1, 0.5));
+registerStageKind('pfbarrel', pfKind('barrel', 1, 0.48));
+registerStageKind('pfsack', pfKind('sack', 1, 0.36));
+registerStageKind('pfplanter', pfKind('planter', 1.15, 0.5));
+
+// The clerk: Polyfork's merchant — a rigged character on the 31-joint Mixamo-named
+// skeleton, posed per-frame from the same pose fields the procedural cast uses
+// (armL/armR [raise, spread], lean, crouch, walk), so act() choreography is unchanged.
+registerStageKind('clerk', (THREE, kit) => {
+  const g = new THREE.Group(), holder = new THREE.Group(); g.add(holder);
+  const blob = blobShadow(THREE, 0.42, 0.3); blob.position.y = 0.03; g.add(blob);
+  let bones = null, baseHipY = 0;
+  loadEnhance().then((assets) => {
+    const src = assets.merchant; if (!src) return;
+    paintify(THREE, kit, src.scene, 0xffffff);
+    holder.add(src.scene);
+    bones = {}; src.scene.traverse((n) => { if (n.isBone) bones[n.name] = n; });
+    if (bones.Hips) baseHipY = bones.Hips.position.y;
+  }).catch(() => {});
+  g.userData.pose = (a) => {
+    if (!bones) return;
+    const p = a.pose || {}, B = (n) => bones[n], set = (n, x = 0, y = 0, z = 0) => { const b = B(n); if (b) b.rotation.set(x, y, z); };
+    const lean = p.lean || 0, cr = p.crouch || 0, w = p.walk === null || p.walk === undefined ? null : p.walk;
+    set('Spine', lean * 0.55 + cr * 0.55, 0, 0);
+    set('Spine1', lean * 0.35 + cr * 0.3, 0, 0);
+    set('Head', -lean * 0.35 - cr * 0.15, p.headYaw || 0, 0);
+    if (B('Hips')) B('Hips').position.y = baseHipY - cr * 0.34;
+    set('LeftUpLeg', -cr * 0.85 + (w !== null ? Math.sin(w) * 0.55 : 0), 0, 0);
+    set('RightUpLeg', -cr * 0.85 + (w !== null ? -Math.sin(w) * 0.55 : 0), 0, 0);
+    set('LeftLeg', cr * 1.25 + (w !== null ? Math.max(0, -Math.sin(w)) * 0.5 : 0), 0, 0);
+    set('RightLeg', cr * 1.25 + (w !== null ? Math.max(0, Math.sin(w)) * 0.5 : 0), 0, 0);
+    const armPose = (side, v, swing) => {
+      const s = side === 'Left' ? 1 : -1;
+      let x = 0, z = -s * 1.12; // rest: arm hangs down from the T-pose (this rig's arm bones roll the other way)
+      if (v) { x = -v[0] * 0.85; z = -s * Math.max(0.12, 1.12 - v[0] * 0.52) + s * (v[1] || 0) * 0.35; }
+      else if (swing !== null) x = swing * 0.45;
+      set(side + 'Arm', x, 0, z);
+      set(side + 'ForeArm', v && v[0] > 1.55 ? -0.85 : (v ? -0.25 : -0.12), 0, 0);
+    };
+    armPose('Left', p.armL, w !== null ? -Math.sin(w) : null);
+    armPose('Right', p.armR, w !== null ? Math.sin(w) : null);
+  };
   return g;
 });
 
@@ -85,17 +231,30 @@ export const potRampage = {
     return {
       origin: o,
       props: [
-        thing('stall', 'stall', 0, 0, -1.8, 0),
+        thing('floor', 'stagefloor', 0.5, 0, 0.4, 0),
+        thing('stall', 'stall', 0, 0, -1.9, 0),
         thing('bench', 'bench', 0, 0, 0.5, 0),
+        // Market dressing (stock GLBs, painted in the town finish)
+        thing('crate1', 'pfcrate', -3.7, 0, -0.7, 0.4),
+        thing('crate2', 'pfcrate', -3.55, 0.61, -0.75, -0.2, { scale: 0.85 }),
+        thing('barrel1', 'pfbarrel', 4.35, 0, -0.95, 0),
+        thing('sack1', 'pfsack', 3.6, 0, -1.55, 0.5),
+        thing('sack2', 'pfsack', 4.15, 0, -1.7, -0.4, { scale: 0.85 }),
+        thing('planter1', 'pfplanter', -4.35, 0, 1.75, 0),
+        thing('planter2', 'pfplanter', 4.55, 0, 1.9, 0, { scale: 0.9 }),
+        thing('pot5', 'pot', 3.45, 0, 1.25, 0.7, { variant: 1 }),
+        thing('pot6', 'pot', 3.95, 0, 0.8, 2.1, { variant: 3 }),
+        thing('pot7', 'pot', 3.15, 0, 1.8, 0, { variant: 2, tipped: true }),
       ],
       actors: [
         person('juniper', { ...JUNIPER }, -3.5, 0, 0.5, Math.PI / 2),
-        person('clerk', { ...townLook(3), broom: true }, 2.5, 0, -1.2, -Math.PI / 3),
+        thing('clerk', 'clerk', 2.5, 0, -1.2, -Math.PI / 3),
         // Staged prop pots
-        thing('pot1', 'pot', -1.8, 0.45, 0.5),
-        thing('pot2', 'pot', -0.6, 0.45, 0.5),
-        thing('pot3', 'pot', 0.6, 0.45, 0.5),
-        thing('pot4', 'pot', 1.8, 0.45, 0.5),
+        thing('pot0', 'pot', -2.35, 0.45, 0.5, 0, { variant: 2 }),
+        thing('pot1', 'pot', -1.8, 0.45, 0.5, 0, { variant: 0 }),
+        thing('pot2', 'pot', -0.6, 0.45, 0.5, 0, { variant: 1 }),
+        thing('pot3', 'pot', 0.6, 0.45, 0.5, 0, { variant: 3 }),
+        thing('pot4', 'pot', 1.8, 0.45, 0.5, 0, { variant: 2 }),
         thing('bigpot', 'bigpot', 2.8, 0, 0.5),
       ],
     };
