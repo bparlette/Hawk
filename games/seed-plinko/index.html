@@ -2791,6 +2791,7 @@ function updatePlant(p, dt) {
     const earned = TIER_POLLEN[p.sp.tier];
     save.pollen += earned;
     sessionPollen += earned;
+    if (blooms >= 8 && !window.__rotDone) { window.__rotDone = true; try { parent.postMessage({ type: "micro-done", win: true, score: save.pollen | 0 }, "*"); } catch (e) {} } // favorites-rotation: one run = 8 blooms
     save.journal[p.sp.id] = (save.journal[p.sp.id] || 0) + 1;
     if (totalBlooms > (save.best || 0)) save.best = totalBlooms;
     persist();
