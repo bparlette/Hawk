@@ -11,9 +11,11 @@ vec3 skyColour(vec3 v) {
   vec3 low = airColour(v);
   vec3 high = mix(vec3(0.5, 0.65, 0.86), vec3(0.74, 0.79, 0.81), sunward * sunward); // realism: the upper sky keeps its blue
   vec3 c = mix(low, high, smoothstep(0.0, 0.55, v.y));
-  // golden hour: a warm band sits on the sun's side of the horizon, under the blue
-  c = mix(c, vec3(0.99, 0.78, 0.52), pow(sunward, 3.0) * smoothstep(0.45, 0.0, v.y) * 0.55);
-  c = mix(c, vec3(1.0, 0.95, 0.78), pow(sunward, 24.0) * 0.9);
+  // REALISM REBUILD: sunny daylight, not golden hour — the warm band on the sun's side of the
+  // horizon is a whisper (0.55 -> 0.16) and the sun's own glow is halved, so the sky reads as a
+  // clear-day gradient with a bright spot where the sun is, nothing more theatrical.
+  c = mix(c, vec3(0.99, 0.78, 0.52), pow(sunward, 3.0) * smoothstep(0.45, 0.0, v.y) * 0.16);
+  c = mix(c, vec3(1.0, 0.95, 0.78), pow(sunward, 24.0) * 0.55);
   return c;
 }
 `;
@@ -59,10 +61,13 @@ export function createSky(shared) {
         vec3 level = normalize(cross(vec3(0.0, 1.0, 0.0), v));
         vec3 ring = normalize(cross(uSunDir, v) + 1e-4);
         d.dir = normalize(mix(level, ring, 0.45) + vec3(0.0, (r.x - 0.5) * 0.3, 0.0));
-        d.size = vec2(30.0 + 26.0 * r.y, 100.0 + 80.0 * r.z); // realism: broad but not slab-like, so the sky grades instead of swirling
+        d.size = vec2(30.0 + 26.0 * r.y, 100.0 + 80.0 * r.z); // broad soft washes under the gradient
         vec3 c = skyColour(v);
-        d.c1 = jitter(c, r.yzw, 0.09);
-        d.c2 = jitter(c * 1.02, r.wxy, 0.12);
+        // REALISM REBUILD: the strokes' colours now sit within ~2% of the dome's own gradient at
+        // the same point, so they melt into it — v1's 9-12% jitter is what drew white slashes
+        // across the v1 sky. The dome gradient carries the sky; the strokes only soften it.
+        d.c1 = jitter(c, r.yzw, 0.02);
+        d.c2 = jitter(c * 1.01, r.wxy, 0.03);
         d.seed = aDir.w;
         d.lift = 0.0;
       }`,

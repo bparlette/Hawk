@@ -23,40 +23,17 @@ const n2 = (x, y, seed) => {
 };
 const sstep = (a, b, x) => smooth(Math.min(1, Math.max(0, (x - a) / (b - a))));
 
-// one mark: kind 0 a long stroke that runs dry, 1 a short fat dab, 2 a stroke with a curve to it
+// CEL REBUILD: a mark is no longer a brush stroke at all. It is a cut-paper shape — a clean
+// rounded patch with a hard edge, perfectly level (r is a constant 0.5, so no light can rake
+// across it) and with NO streak channel (b is 0, below the dab shader's two-tone mix step, so
+// a patch can only ever show one flat colour). The only irregularity left is a whisper of
+// hand-cut wobble on the rim, so patches read as drawn shapes, not as geometry.
 function mark(u, v, seed, kind) {
-  const bend = kind === 2 ? (seed % 2 ? 0.34 : -0.34) : (hash(seed * 3.1) - 0.5) * 0.12;
-  const ub = u - bend * (4 * (v - 0.5) * (v - 0.5) - 0.5);
-  const wob = (n1(v * 5, seed + 3) - 0.5) * 0.1;
-  const a = Math.abs(ub + wob);
-  let half, start, end;
-  if (kind === 1) {
-    // a pressed dab, cartoon-flat: a solid blob with a clean edge, its paint nearly level
-    const r = Math.hypot(ub / 0.66, (v - 0.5) / 0.44);
-    const edge = 1 + (n1(Math.atan2(v - 0.5, ub) * 2.2 + 9, seed) - 0.5) * 0.18;
-    half = 0.66; start = 0; end = 1;
-    const inside = 1 - sstep(edge - 0.1, edge, r);
-    const alpha = inside;
-    const ridge = n1(ub * 13 + n1(v * 3, seed) * 1.5, seed + 31);
-    const height = alpha * (0.5 + 0.06 * ridge);
-    return [height, alpha, n2(ub * 3.2, v * 1.3, seed + 20)];
-  }
-  half = 0.6 * (0.8 + 0.2 * Math.sin(Math.PI * Math.min(1, v * 1.15))) * (1 + (n1(v * 7, seed + 1) - 0.5) * 0.1);
-  start = 0.05 + 0.05 * n1(ub * 5, seed + 2);
-  end = 0.95 - 0.3 * n1(ub * 4.5 + 2, seed + 4) - 0.06 * n1(ub * 19, seed + 6);
-  const side = 1 - sstep(half - 0.07, half, a);
-  const head = sstep(start, start + 0.035, v);
-  const tail = 1 - sstep(end - 0.02, end + 0.015, v);
-  // the brush runs dry toward the end: single bristles give out and leave gaps
-  const dryness = sstep(end - 0.2, end, v);
-  const bristle = n1(ub * 13, seed + 8) * 0.7 + n1(ub * 31, seed + 9) * 0.3;
-  const gap = 1 - sstep(dryness * 0.55 - 0.08, dryness * 0.55, bristle) < 0.5 ? 1.0 : 0.0;
-  const alpha = side * head * tail * gap;
-  const furrow = n1(ub * 12 + n1(v * 2.5, seed + 12) * 1.2, seed + 33) * 0.7 + n1(ub * 29, seed + 34) * 0.3;
-  const load = 1 - 0.55 * sstep(0.1, 0.9, v); // thick where the brush touched down, thin where it left
-  const squeezed = sstep(half - 0.3, half - 0.06, a); // paint pushed out to the sides of the stroke
-  const height = alpha * (0.3 + 0.22 * furrow * (0.5 + 0.5 * n1(ub * 11, seed + 13)) + 0.3 * squeezed + 0.25 * load * (1 - sstep(start, start + 0.25, v)) + 0.1 * n2(ub * 3, v * 7, seed + 14));
-  return [Math.min(1, height), alpha, n2(ub * 3.4, v * 1.1, seed + 20)];
+  const ang = Math.atan2(v - 0.5, u);
+  const wob = (n1(ang * 2.0 + 9, seed) - 0.5) * 0.05;
+  const r = Math.hypot(u / 0.68, (v - 0.5) / 0.46) + wob;
+  const alpha = 1 - sstep(0.965, 1.0, r);
+  return [0.5 * alpha, alpha, 0.0];
 }
 
 export function createBrushSheet() {

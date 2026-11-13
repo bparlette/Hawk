@@ -1,6 +1,15 @@
-// The brush sheet: eight marks of a loaded bristle brush, made here rather than drawn by anyone. Each cell holds
-// one mark laid along +v: r is how thick the paint stands (for the light that rakes across it), g is where there
-// is paint at all, b is a slow streak along the bristles (where a second colour was picked up and not mixed in).
+// The brush sheet: eight marks, made here rather than drawn by anyone. Each cell holds one mark laid along +v:
+// r is how thick the paint stands (for the light that rakes across it), g is where there is paint at all, b is a
+// slow variation across the mark (where the colour shifts a little inside one touch).
+//
+// REALISM REBUILD (style-rebuild copy): the v1 sheet was a loaded bristle brush — dry-bristle gaps, broken
+// edges, deep furrows — and those marks read as paint no matter how small they were laid. This sheet is the
+// opposite instrument: a soft, fully loaded micro-mark. Coverage is 1 across the whole interior and feathers
+// out over the outer half of the mark, so overlapping touches cross-blend into a continuous film instead of
+// sitting side by side as flakes. The height channel is nearly flat (a whisper of fine grain, nothing for
+// light to rake across), and the b channel is a smooth, slow gradient, so the c1/c2 mix inside one mark is a
+// gentle shift, never a streak. What painterly texture survives lives at this grain scale only — on close
+// inspection, not at reading distance.
 import * as THREE from 'three';
 
 export const BRUSH_COLS = 4;
@@ -23,42 +32,25 @@ const n2 = (x, y, seed) => {
 };
 const sstep = (a, b, x) => smooth(Math.min(1, Math.max(0, (x - a) / (b - a))));
 
-// one mark: kind 0 a long stroke that runs dry, 1 a short fat dab, 2 a stroke with a curve to it
+// one mark: kind 0 a soft stroke, 1 a soft round dab, 2 a soft stroke with the least bend in it.
+// All three are the same instrument at heart: full coverage inside, a wide feather at the rim,
+// near-flat height, and a slow gradient across — a touch of an airbrush-soft mop, not a bristle brush.
 function mark(u, v, seed, kind) {
-  const bend = kind === 2 ? (seed % 2 ? 0.34 : -0.34) : (hash(seed * 3.1) - 0.5) * 0.12;
+  const bend = kind === 2 ? (seed % 2 ? 0.1 : -0.1) : (hash(seed * 3.1) - 0.5) * 0.05;
   const ub = u - bend * (4 * (v - 0.5) * (v - 0.5) - 0.5);
-  const wob = (n1(v * 5, seed + 3) - 0.5) * 0.1;
-  const a = Math.abs(ub + wob);
-  let half, start, end;
+  // a whisper of edge wobble so the feather is not a perfect ellipse (perfect ellipses read as CGI)
+  const wob = 1 + (n1(v * 3.0, seed + 3) - 0.5) * 0.06;
+  let r;
   if (kind === 1) {
-    // a pressed dab: fat in the middle, ragged all round
-    const r = Math.hypot(ub / 0.66, (v - 0.5) / 0.44);
-    const edge = 1 + (n1(Math.atan2(v - 0.5, ub) * 2.2 + 9, seed) - 0.5) * 0.34;
-    half = 0.66; start = 0; end = 1;
-    const inside = 1 - sstep(edge - 0.16, edge, r);
-    const bristle = n1(ub * 11, seed + 11);
-    const dry = sstep(0.55, 1.0, r) * 0.9;
-    const alpha = inside * (bristle > dry * 0.8 ? 1 : 0.25);
-    const ridge = n1(ub * 13 + n1(v * 3, seed) * 1.5, seed + 31);
-    const height = alpha * (0.4 + 0.22 * ridge * n1(ub * 9, seed + 5) + 0.3 * sstep(0.45, 0.95, r) + 0.12 * n2(ub * 4, v * 6, seed));
-    return [height, alpha, n2(ub * 3.2, v * 1.3, seed + 20)];
+    r = Math.hypot((ub / 0.98) * wob, (v - 0.5) / 0.6); // the round dab fills its cell
+  } else {
+    r = Math.hypot((ub / 0.92) * wob, (v - 0.5) / 1.02); // the stroke runs the length of its cell
   }
-  half = 0.6 * (0.8 + 0.2 * Math.sin(Math.PI * Math.min(1, v * 1.15))) * (1 + (n1(v * 7, seed + 1) - 0.5) * 0.1);
-  start = 0.05 + 0.05 * n1(ub * 5, seed + 2);
-  end = 0.95 - 0.3 * n1(ub * 4.5 + 2, seed + 4) - 0.06 * n1(ub * 19, seed + 6);
-  const side = 1 - sstep(half - 0.07, half, a);
-  const head = sstep(start, start + 0.035, v);
-  const tail = 1 - sstep(end - 0.02, end + 0.015, v);
-  // the brush runs dry toward the end: single bristles give out and leave gaps
-  const dryness = sstep(end - 0.2, end, v);
-  const bristle = n1(ub * 13, seed + 8) * 0.7 + n1(ub * 31, seed + 9) * 0.3;
-  const gap = 1 - sstep(dryness * 0.55 - 0.08, dryness * 0.55, bristle) < 0.5 ? 1.0 : 0.0;
-  const alpha = side * head * tail * gap;
-  const furrow = n1(ub * 12 + n1(v * 2.5, seed + 12) * 1.2, seed + 33) * 0.7 + n1(ub * 29, seed + 34) * 0.3;
-  const load = 1 - 0.55 * sstep(0.1, 0.9, v); // thick where the brush touched down, thin where it left
-  const squeezed = sstep(half - 0.3, half - 0.06, a); // paint pushed out to the sides of the stroke
-  const height = alpha * (0.3 + 0.22 * furrow * (0.5 + 0.5 * n1(ub * 11, seed + 13)) + 0.3 * squeezed + 0.25 * load * (1 - sstep(start, start + 0.25, v)) + 0.1 * n2(ub * 3, v * 7, seed + 14));
-  return [Math.min(1, height), alpha, n2(ub * 3.4, v * 1.1, seed + 20)];
+  const cover = 1 - sstep(0.42, 1.0, r); // whole paint until past the middle, then a long soft fall
+  const grain = n2(ub * 7, v * 7, seed + 31) * 0.55 + n2(ub * 15, v * 15, seed + 9) * 0.45;
+  const height = 0.5 + (grain - 0.5) * 0.07; // nearly flat: micro-grain only, no furrows for the light
+  const grad = 0.5 + ub * 0.22 + (n2(ub * 2.5, v * 1.2, seed + 20) - 0.5) * 0.3; // a slow shift across the touch
+  return [height, cover, Math.min(1, Math.max(0, grad))];
 }
 
 export function createBrushSheet() {

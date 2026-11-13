@@ -33,7 +33,7 @@ export function createKit(shared, { palettes, head = '', light, origin = [0, 0, 
     for (const [v, nn] of [[pa, na], [pb, nb], [pc, nc]]) { mesh.pos.push(v.x + O.x, v.y + O.y, v.z + O.z); mesh.nrm.push(nn.x, nn.y, nn.z); mesh.pal.push(index(pal)); mesh.tone.push(tone); }
   }
   /** Strokes scattered evenly over a triangle. grain: the way they run (a vector), or null for along its first edge. */
-  function scatter(pa, pb, pc, na, nb, nc, pal, { grain = null, stroke: size = [0.07, 0.2], density = 1, tone = 1, free = false, lift = 0 }) {
+  function scatter(pa, pb, pc, na, nb, nc, pal, { grain = null, stroke: size = [0.18, 0.5], density = 1, tone = 1, free = false, lift = 0 }) {
     e1.subVectors(pb, pa); e2.subVectors(pc, pa);
     n.crossVectors(e1, e2);
     const area = n.length() / 2;
@@ -200,8 +200,14 @@ export function createKit(shared, { palettes, head = '', light, origin = [0, 0, 
         in vec3 vWorld; in vec3 vN; in float vPal; in float vTone;
         layout(location = 0) out vec4 outC;
         void main() {
-          float r = texture(tNoise, (vWorld.xz + vWorld.y) * 0.9).r;
-          vec3 c = kitPaint(vWorld, normalize(vN), int(vPal + 0.5), vTone, r) * 0.82;
+          // CUBISM, STROKE REBUILD: the underpainting is faceted, not graded. Each ~0.65 m
+          // cell of the surface takes ONE hash for the whole cell: it chooses the cell's
+          // paint3 step and its flat value, so a wall is a field of large discrete planes
+          // with hard angular breaks where cells meet — the same fracture the shards lay
+          // over it, at the same structural scale, instead of a smooth wash behind them.
+          vec4 fh = facetHash(vWorld, 0.65);
+          vec3 c = kitPaint(vWorld, normalize(vN), int(vPal + 0.5), vTone, fh.x) * 0.82;
+          c *= 0.88 + 0.24 * fh.y;
           outC = vec4(${haze ? 'hazed(c, vWorld)' : 'c'}, 1.0);
         }`,
     }));
@@ -219,7 +225,9 @@ export function createKit(shared, { palettes, head = '', light, origin = [0, 0, 
           int k = int(aData.w + 0.5);
           vec3 c = kitPaint(aPos, Nn, k, aMore.x, r.y);
           float wild = PAL_G[k] > 0.5 ? 0.12 : 0.3;
-          vec3 c1 = jitter(c, r.wzy, wild), c2 = c * 1.22 + vec3(0.012, 0.008, 0.004);
+          // STROKE REBUILD: the second facet tone of a shard sits further from the first,
+          // so the hard cut inside every shard reads at a glance, not as a shading nuance
+          vec3 c1 = jitter(c, r.wzy, wild), c2 = c * 1.3 + vec3(0.016, 0.011, 0.005);
           d.pos = aPos;
           d.dir = aDir;
           d.size = aData.yz;

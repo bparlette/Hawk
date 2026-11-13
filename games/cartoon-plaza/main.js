@@ -1,8 +1,11 @@
 // Cartoon Plaza — the Painted Live fountain plaza re-skinned flat: the same set, the same
-// Juniper walk figure, the same controls, but blendi's painter (src/oilpaint) is tuned to cel —
-// two-tone paint3 with a sliver of half-tone, near-zero jitter, flat pressed-blob dabs, no
-// impasto, no canvas weave, cool blue shade tones, and dark outlines laid by a depth-edge
-// pass in the finish plus a rim line on the figure. She roams under a floating joystick
+// Juniper walk figure, the same controls, but blendi's painter (src/oilpaint) is tuned to cel.
+// CEL REBUILD (v2): v1 only retuned the painter and still read as a recolour, so the stroke
+// itself was rebuilt — hard-step cel bands in paint3, cut-paper flat marks with no bristle
+// texture and no impasto, kit architecture carried by its flat underpainting alone, the
+// figure posterised into flat cel bands with a real inverted-hull ink outline, and a bold
+// multi-radius depth-ink pass in the finish. No gradients anywhere: no shafts, no varnish,
+// no canvas weave, cool blue shade tones. She roams under a floating joystick
 // (gamepress gptouch standard) or WASD/arrows, with a smooth follow camera.
 //   ?paint=rich    full part-1 dab density (default: smooth = the proof's reduced video density)
 //   ?paint=smooth  reduced density + smaller drawing buffer — the real-time default
@@ -235,6 +238,11 @@ kit.add(new THREE.SphereGeometry(0.17, 10, 8), kit.place(0, 1.98, 0), 'stonePale
 // trees' trunks ride in the same kit
 for (const [tx, tz] of [[-12, -7.5], [12, -9.5], [-13, 7]]) kit.round(tx, 1.15, tz, 0.17, 2.3, 'bark', { sides: 8, stroke: [0.06, 0.22] });
 const built = kit.build();
+// CEL REBUILD: a cel fill is ONE flat colour per face. The kit's underpainting already lays
+// exactly that (same geometry, same palettes, same cel lighting) — the dab stroke layer on
+// top of it was what made every wall a patchwork of near-miss tones. It is switched off;
+// the underpainting carries the architecture alone.
+built.strokes.visible = false;
 scene.add(built.group);
 
 // --- the water: its own kit, lit by the sky it gives back and the sun's glint ---
@@ -254,7 +262,9 @@ const waterKit = createKit(shared, {
   waterKit.add(new THREE.CircleGeometry(2.38, 26), flat(0.55), 'water', { stroke: [0.06, 0.15], density: 1.2 });
   waterKit.add(new THREE.CircleGeometry(0.92, 20), flat(1.66), 'water', { stroke: [0.05, 0.12], density: 1.2 });
 }
-scene.add(waterKit.build().group);
+const waterBuilt = waterKit.build();
+waterBuilt.strokes.visible = false; // CEL REBUILD: flat water from its underpainting, as with the kit above
+scene.add(waterBuilt.group);
 
 // --- trees: dark crowns for underpainting, then dabs over them (the pines' way, in leaf) ---
 const crownData = { pos: [], dir: [], nrm: [] };
@@ -289,7 +299,7 @@ const crownUnder = [];
       uniform vec3 uSunDir;
       in vec3 vWorld; in vec3 vN;
       layout(location = 0) out vec4 outC;
-      void main() { outC = vec4(vec3(0.16, 0.32, 0.13) * (0.7 + 0.5 * max(normalize(vN).y, 0.0)), 1.0); }`,
+      void main() { outC = vec4(vec3(0.16, 0.32, 0.13) * (0.78 + 0.42 * step(0.25, normalize(vN).y)), 1.0); }`, // CEL REBUILD: two flat tones, no gradient
   });
   for (const { c, r } of crownUnder) {
     const s = new THREE.Mesh(new THREE.SphereGeometry(r * 0.96, 12, 9), underMat);
@@ -443,20 +453,17 @@ function paintTex(shared, srcMat) {
         vec3 Nn = normalize(vN);
         if (!gl_FrontFacing) Nn = -Nn;
         vec3 tex = texture(tMap, vUv).rgb * uTint;
-        float n = texture(tNoise, vBind.xy * 0.024 + vBind.z * 0.017).r;
-        float m = texture(tNoise, vBind.yx * 0.007 + 0.4).g;
-        float lit = sunAt(vWorld + Nn * 0.08) * clamp(dot(Nn, uSunDir) * 0.85 + 0.42, 0.0, 1.0);
-        vec3 L = min(tex * 1.55 + vec3(0.05, 0.04, 0.02), vec3(1.2));
-        vec3 S = tex * vec3(0.36, 0.4, 0.64); // her shade tone runs cool blue, the cel way
-        vec3 c = paint3(L, tex, S, lit, n);
-        c += uBounce * max(-Nn.y, 0.0) * (1.0 - lit);
-        c = mix(c, c * vec3(0.86, 0.92, 1.18), (1.0 - lit) * max(Nn.y, 0.0) * 0.6);
-        c *= 0.95 + 0.1 * m; // near-flat: the texture's own variation carries her, not a noise wash
-        if (!gl_FrontFacing) c *= 0.62;
-        // her outline: where her surface turns edge-on to the eye, lay the dark line a cartoonist inks
-        vec3 V = normalize(cameraPosition - vWorld);
-        float line = smoothstep(0.36, 0.17, clamp(dot(Nn, V), 0.0, 1.0));
-        c = mix(c, vec3(0.09, 0.07, 0.11), line * 0.8);
+        // CEL REBUILD: the model's own texture carries soft painted shading; posterise it
+        // into a handful of flat print tones so her surfaces are flat colour fields, then
+        // light those fields in hard cel bands. No noise wobble, no bounce gradient, no
+        // sky-mix, no fresnel rim — her outline is real geometry now (the ink hull below).
+        vec3 post = floor(tex * 6.0 + 0.5) / 6.0;
+        tex = mix(tex, post, 0.5);
+        float lit = sunAt(vWorld + Nn * 0.08) * clamp(dot(Nn, uSunDir) * 0.7 + 0.46, 0.0, 1.0);
+        vec3 L = min(tex * vec3(1.5, 1.44, 1.3) + vec3(0.04, 0.03, 0.01), vec3(1.15));
+        vec3 S = tex * vec3(0.42, 0.46, 0.68); // her shade tone runs cool blue, the cel way
+        vec3 c = paint3(L, tex, S, lit, 0.5);
+        if (!gl_FrontFacing) c *= 0.6;
         outC = vec4(hazed(c, vWorld), 1.0);
       }`,
   });
@@ -475,6 +482,46 @@ gltf.scene.traverse((o) => {
   if (o.name === 'bone_7') footL = o;
   if (o.name === 'bone_8') footR = o;
 });
+// --- CEL REBUILD: her ink outline is real geometry — an inverted hull on every one of her
+//     meshes. Each hull shares her geometry and skeleton, sits exactly where its mesh sits,
+//     and its vertex shader pushes the skinned surface out along its normals by a fixed
+//     world thickness (~1.6 cm), drawn back-side only in flat ink. It rides layer 0 only,
+//     so the figure-shadow camera (layer 1) never sees it and her shadow stays true.
+//     uWidth is in raw GLB units: her rig is ~160 units tall for 1.55 m, so 1.6 cm ≈ 1.7.
+{
+  const hullMat = new THREE.ShaderMaterial({
+    glslVersion: THREE.GLSL3,
+    side: THREE.BackSide,
+    uniforms: { uWidth: { value: 1.7 }, uInk: { value: new THREE.Color(0.08, 0.06, 0.1) } },
+    vertexShader: /* glsl */ `
+      #include <common>
+      #include <skinning_pars_vertex>
+      uniform float uWidth;
+      void main() {
+        #include <beginnormal_vertex>
+        #include <skinbase_vertex>
+        #include <skinnormal_vertex>
+        #include <begin_vertex>
+        #include <skinning_vertex>
+        transformed += objectNormal * uWidth;
+        gl_Position = projectionMatrix * modelViewMatrix * vec4(transformed, 1.0);
+      }`,
+    fragmentShader: /* glsl */ `
+      uniform vec3 uInk;
+      layout(location = 0) out vec4 outC;
+      void main() { outC = vec4(uInk, 1.0); }`,
+  });
+  for (const o of HER_MESH_OBJS) {
+    const hull = new THREE.SkinnedMesh(o.geometry, hullMat);
+    hull.bind(o.skeleton, o.bindMatrix);
+    hull.position.copy(o.position);
+    hull.quaternion.copy(o.quaternion);
+    hull.scale.copy(o.scale);
+    hull.frustumCulled = false;
+    o.parent.add(hull);
+  }
+  window.__inkHull = hullMat; // debug/probe hook, same spirit as window.__paint
+}
 let heading = CAM_AZ + Math.PI; // spawn facing the fountain, away from the camera
 const herYaw = new THREE.Group();
 herYaw.position.copy(herPos);
@@ -682,7 +729,7 @@ function stepMove(dt) {
 
 // --- the canvas finish ---
 const frame = createFrame(renderer, shared);
-frame.uniforms.uShafts.value = 0.3; // a little sun-glow, but flat colour does the talking
+frame.uniforms.uShafts.value = 0.0; // CEL REBUILD: no volumetric sun-glow — a soft gradient over the whole picture is the opposite of a cel
 frame.uniforms.uCanvas.value = 0; // no canvas weave: a cartoon is printed, not woven
 
 // --- run: fixed-step simulation (the renderer's frame rate is not the game's clock),

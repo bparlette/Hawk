@@ -47,14 +47,14 @@ export function createKit(shared, { palettes, head = '', light, origin = [0, 0, 
     const x = new THREE.Vector3().crossVectors(n, g), e3 = new THREE.Vector3().subVectors(e2, e1);
     const long = Math.max(Math.abs(e1.dot(g)), Math.abs(e2.dot(g)), Math.abs(e3.dot(g))), wide = Math.max(Math.abs(e1.dot(x)), Math.abs(e2.dot(x)), Math.abs(e3.dot(x)));
     if (!free) size = [Math.max(0.012, Math.min(size[0], wide * 1.05)), Math.max(0.02, Math.min(size[1], long * 1.05))];
-    // REALISM VARIANT (realism-plaza copy): every stroke is laid at ~0.6x the authored size, so the
-    // same faces are painted with finer, denser touches; the count formula below divides by the
-    // (now smaller) stroke area, so coverage rises on its own. Sizes also vary less stroke to
-    // stroke (see the stroke() call), and the lay direction wobbles less — a real wall is painted
-    // in even, deliberate passes, not confetti.
-    size = [size[0] * 0.6, size[1] * 0.62];
+    // REALISM REBUILD (style-rebuild copy): v1 laid strokes at 0.6x; this lays them at ~0.4x, so
+    // with the soft full-coverage marks the faces are a cross-blended film over the underpainting
+    // rather than a scatter of touches — the strokes survive as fine surface grain only. The pull
+    // toward each face's centre is halved (0.35): soft micro-marks can sit near an edge without
+    // reading as spill, so coverage evens out instead of bunching in the middle of every face.
+    size = [size[0] * 0.4, size[1] * 0.42];
     const centre = new THREE.Vector3().copy(pa).add(pb).add(pc).divideScalar(3);
-    const pull = free ? 0 : 0.7 * Math.min(1, Math.max(size[0] / Math.max(wide, 1e-4), size[1] / Math.max(long, 1e-4)));
+    const pull = free ? 0 : 0.35 * Math.min(1, Math.max(size[0] / Math.max(wide, 1e-4), size[1] / Math.max(long, 1e-4)));
     const want = (area / (size[0] * size[1])) * 2.6 * density;
     const count = Math.min(3000, Math.floor(want + rand()));
     for (let i = 0; i < count; i++) {
@@ -65,8 +65,8 @@ export function createKit(shared, { palettes, head = '', light, origin = [0, 0, 
       d.copy(grain ?? e1);
       d.addScaledVector(nn, -d.dot(nn));
       if (d.lengthSq() < 1e-6) d.copy(e1);
-      d.normalize().addScaledVector(new THREE.Vector3().crossVectors(nn, d), (rand() - 0.5) * 0.16); // realism: less directional scatter
-      stroke(p, nn, d, size[0] * (0.9 + 0.2 * rand()), size[1] * (0.88 + 0.24 * rand()), pal, tone * (0.93 + 0.14 * rand()), lift * (0.4 + 1.2 * rand()));
+      d.normalize().addScaledVector(new THREE.Vector3().crossVectors(nn, d), (rand() - 0.5) * 0.05); // realism rebuild: near-parallel lay, a worked surface not a scatter
+      stroke(p, nn, d, size[0] * (0.94 + 0.12 * rand()), size[1] * (0.93 + 0.14 * rand()), pal, tone * (0.96 + 0.08 * rand()), lift * (0.4 + 1.2 * rand()));
     }
   }
 
@@ -222,8 +222,8 @@ export function createKit(shared, { palettes, head = '', light, origin = [0, 0, 
           vec4 r = hash4(aData.x);
           int k = int(aData.w + 0.5);
           vec3 c = kitPaint(aPos, Nn, k, aMore.x, r.y);
-          float wild = PAL_G[k] > 0.5 ? 0.06 : 0.11; // realism: broken colour kept on a short leash
-          vec3 c1 = jitter(c, r.wzy, wild), c2 = c * 1.09 + vec3(0.006, 0.004, 0.002);
+          float wild = PAL_G[k] > 0.5 ? 0.02 : 0.035; // realism rebuild: broken colour is now just grain — neighbouring strokes must agree
+          vec3 c1 = jitter(c, r.wzy, wild), c2 = c * 1.045 + vec3(0.003, 0.002, 0.001);
           d.pos = aPos;
           d.dir = aDir;
           d.size = aData.yz;

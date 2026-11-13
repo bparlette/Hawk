@@ -166,14 +166,15 @@ float sunAt(vec3 world) { return min(woodSunAt(world), figSunAt(world)); }
 
 // The painter's three mixes. x is how lit the spot is; r moves the edges about so that one zone breaks into
 // the next dab by dab.
-// REALISM VARIANT (realism-plaza copy): the bands are opened right out — light, half-tone and shade
-// blend across most of the range instead of snapping at two hard edges, so a cheek, a wall or a
-// stone rounds gradually the way a real painted surface does, and the per-dab edge jitter is
-// halved so neighbouring dabs disagree less.
+// REALISM REBUILD (style-rebuild copy): v1 opened the bands part-way; this opens them right
+// across the whole range — shade eases into half-tone from 0.02 to 0.62 and half-tone into light
+// from 0.38 to 0.97, so the two blends overlap in the middle and there is no point anywhere a
+// surface steps from one mix to the next. The per-dab edge jitter is quartered (0.05): at micro
+// dab sizes neighbouring touches must agree, or the surface turns to noise.
 vec3 paint3(vec3 cl, vec3 cm, vec3 cs, float x, float r) {
-  x += (r - 0.5) * 0.1;
-  vec3 c = mix(cs, cm, smoothstep(0.04, 0.58, x));
-  return mix(c, cl, smoothstep(0.42, 0.94, x));
+  x += (r - 0.5) * 0.05;
+  vec3 c = mix(cs, cm, smoothstep(0.02, 0.62, x));
+  return mix(c, cl, smoothstep(0.38, 0.97, x));
 }
 
 // Broken colour: every dab is mixed a little differently on the palette (value, hue, strength).

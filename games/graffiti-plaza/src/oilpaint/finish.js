@@ -1,6 +1,6 @@
 // The canvas. The world is painted into a picture with a depth beside it; this then lays in the one thing dabs
-// can't do, the sun standing in the mist between the trunks, and finishes the surface: the weave of the canvas
-// under thin paint, and a little varnish.
+// can't do, the sun standing in the mist between the trunks, and finishes the surface: a fine settled dust of
+// overspray over everything (spray has no canvas weave), and a little varnish.
 import * as THREE from 'three';
 import { COMMON } from './common.js';
 
@@ -42,12 +42,12 @@ export function createFrame(renderer, shared, { samples = 4 } = {}) {
       in vec2 vUv;
       layout(location = 0) out vec4 outC;
 
-      float weave(vec2 p) {
-        // warp and weft of a medium linen, each thread a little uneven
-        vec2 q = p / 2.6;
-        float n = texture(tNoise, p / 310.0).r;
-        float a = sin(q.x * 3.14159) * sin(q.y * 3.14159 + floor(q.x) * 3.14159);
-        return a * (0.3 + 1.4 * n * n);
+      float grain(vec2 p) {
+        // no canvas weave under spray paint: a fine settled dust of overspray over the whole
+        // picture instead — one near-pixel speckle field and one coarser dusting
+        float fine = texture(tNoise, p / 130.0).a;
+        float dust = texture(tNoise, p / 29.0).b;
+        return (fine - 0.5) * 0.6 + (dust - 0.5) * 0.4;
       }
 
       void main() {
@@ -81,9 +81,9 @@ export function createFrame(renderer, shared, { samples = 4 } = {}) {
 
         if (uCanvas > 0.0) {
           vec2 px = vUv * uSize;
-          float w = weave(px);
-          float dx = weave(px + vec2(1.0, 0.0)) - w, dy = weave(px + vec2(0.0, 1.0)) - w;
-          col *= 1.0 + (0.6 * dx - 0.8 * dy) * 0.022 * uCanvas + w * 0.006 * uCanvas;
+          float g0 = grain(px);
+          float gx = grain(px + vec2(1.0, 0.0)) - g0, gy = grain(px + vec2(0.0, 1.0)) - g0;
+          col *= 1.0 + (g0 * 0.05 + (0.6 * gx - 0.8 * gy) * 0.014) * uCanvas;
         }
         // the brightest passages roll off toward the white of the paint and never past it
         vec3 over = max(col - 0.8, 0.0);

@@ -126,23 +126,34 @@ in vec4 vGlaze;
 layout(location = 0) out vec4 outC;
 void main() {
   vec4 t = texture(tBrush, vUv);
-  if (t.g < 0.3) discard;
-  vec2 e = vec2(1.5 / 512.0, 0.0);
-  float hu = texture(tBrush, vUv + e.xy).r - texture(tBrush, vUv - e.xy).r;
-  float hv = texture(tBrush, vUv + e.yx).r - texture(tBrush, vUv - e.yx).r;
-  // the paint stands up off the canvas and the room's light, from the upper left, rakes across it
-  vec2 g = vAxis.xy * hu + vAxis.zw * hv;
-  float rake = 0.5 * g.x - 0.7 * g.y;
-  vec3 col = mix(vC1, vC2, smoothstep(0.52, 0.78, t.b));
+  float cover = t.g; // how much spray landed here: 1 in the core of a pass, feathering to 0 in the mist
+  if (cover < 0.012) discard;
+  // Droplet breakup, done per pixel: two speckle fields over the mark. In the core they barely nibble;
+  // in the mist they eat the thin deposit first wherever the speckle runs dry, so a soft edge does not
+  // fade smoothly — it dissolves into separate droplets, and past the droplets a faint overspray halo
+  // of sparse specks reaches almost to the card's edge. This, not the sheet's outline, is the edge of
+  // a spray mark.
+  float sp1 = texture(tNoise, vUv * vec2(150.0, 300.0)).r;
+  float sp2 = texture(tNoise, vUv * vec2(38.0, 76.0) + 0.37).g;
+  float mist = 1.0 - smoothstep(0.32, 0.72, cover);
+  float eat = mix(0.05, 0.88, mist) * (sp1 * 0.62 + sp2 * 0.38);
+  float alpha = clamp(cover * (1.14 - eat), 0.0, 1.0);
+  if (alpha < 0.01) discard;
+  vec3 col = mix(vC1, vC2, smoothstep(0.45, 0.8, t.b));
+  // Layered build: where the deposit is thick (t.r) the colour stands deeper and a touch more
+  // saturated — pass over pass of the same can — while the feather stays thin and pale.
+  float lum = dot(col, vec3(0.3, 0.59, 0.11));
+  col = mix(col * 0.97, mix(vec3(lum), col, 1.13) * 1.03, smoothstep(0.3, 0.95, t.r));
+  // the grain of the paint itself: micro light/dark speckle right through the body of the mark
+  col *= 0.93 + 0.12 * sp2 + 0.05 * sp1;
   if (vGlaze.w > 0.5) {
     // the wanderer's shadow: a soft plum glaze that slides over the paint and follows its streaks a little
     float lit = figSunSoft(vGlaze.xyz + vec3((t.b - 0.5) * 0.012, (t.r - 0.5) * 0.012, 0.0));
     col = mix(col * uGlazeMul + uGlazeAdd, col, lit);
   }
-  col *= mix(0.95, 1.04, t.r);
-  col *= 1.0 + rake * 1.25 * uImpasto;
-  col += vec3(1.0, 0.97, 0.9) * pow(max(rake, 0.0), 2.0) * 1.2 * uImpasto;
-  outC = vec4(col, smoothstep(0.3, 0.62, t.g));
+  // No relief, no rake: spray lies flat on the wall, so the sheet's old height shading is gone —
+  // a mark is lit by the light its surface was given (in c1/c2), never by its own thickness.
+  outC = vec4(col, alpha);
 }
 `;
 

@@ -127,21 +127,15 @@ layout(location = 0) out vec4 outC;
 void main() {
   vec4 t = texture(tBrush, vUv);
   if (t.g < 0.3) discard;
-  vec2 e = vec2(1.5 / 512.0, 0.0);
-  float hu = texture(tBrush, vUv + e.xy).r - texture(tBrush, vUv - e.xy).r;
-  float hv = texture(tBrush, vUv + e.yx).r - texture(tBrush, vUv - e.yx).r;
-  // the paint stands up off the canvas and the room's light, from the upper left, rakes across it
-  vec2 g = vAxis.xy * hu + vAxis.zw * hv;
-  float rake = 0.5 * g.x - 0.7 * g.y;
-  vec3 col = mix(vC1, vC2, smoothstep(0.56, 0.66, t.b)); // a hard graphic step, not a streaked blend
+  // CEL REBUILD: a patch is one flat colour, full stop. No rake across a brush height (the
+  // sheet's height channel is constant now anyway), no streaked second tone (the sheet's
+  // streak channel is 0, and vC2 is not even read), no level shimmer. The only modulation
+  // left is the wanderer's cast shadow, and that lands as a single hard shape.
+  vec3 col = vC1;
   if (vGlaze.w > 0.5) {
-    // the wanderer's shadow: a soft plum glaze that slides over the paint and follows its streaks a little
-    float lit = figSunSoft(vGlaze.xyz + vec3((t.b - 0.5) * 0.012, (t.r - 0.5) * 0.012, 0.0));
+    float lit = figSunAt(vGlaze.xyz);
     col = mix(col * uGlazeMul + uGlazeAdd, col, lit);
   }
-  col *= mix(0.985, 1.015, t.r); // the paint is level: the sheet's height barely moves the colour
-  col *= 1.0 + rake * 1.25 * uImpasto;
-  col += vec3(1.0, 0.97, 0.9) * pow(max(rake, 0.0), 2.0) * 1.2 * uImpasto;
   outC = vec4(col, smoothstep(0.44, 0.56, t.g)); // a crisp patch edge, so patches read as cut shapes
 }
 `;

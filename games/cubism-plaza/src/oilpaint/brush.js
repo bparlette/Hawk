@@ -75,15 +75,19 @@ function mark(u, v, seed, kind) {
       break;
     }
   }
-  // a hair of hand-cut raggedness so no edge is laser straight
-  const rag = (n1(v * 34 + u * 21, seed + 4) - 0.5) * 0.035;
+  // STROKE REBUILD: only a whisper of hand-cut raggedness — the edge of a shard is a cut,
+  // not a tear, and at the sizes the shards are now laid it must read as a straight plane edge.
+  const rag = (n1(v * 34 + u * 21, seed + 4) - 0.5) * 0.02;
   const inside = slack + rag > 0 ? 1 : 0;
   if (!inside) return [0, 0, 0.5];
-  // flat facets: the tone channel sits well below / above the dab shader's mix step, so each facet
-  // reads as one flat colour; the height steps with the facet so the cut between facets catches light
-  const tone = [0.22, 0.82, 0.55][facet];
-  const bevel = 0.6 + 0.4 * clamp01(slack / 0.09); // chiselled down near the edge
-  const height = ([0.62, 0.44, 0.53][facet]) * bevel;
+  // flat facets: the tone channel places each facet relative to the dab shader's mix step —
+  // facet 0 far below it (pure c1), facet 1 far above it (pure c2), facet 2 parked exactly
+  // mid-step, where the mix is a constant half-and-half: a genuine third flat tone, not a blend
+  // gradient, because the tone never varies inside the facet. The height steps hard with the
+  // facet so the cut between facets catches the raking light as a bright seam
+  const tone = [0.14, 0.9, 0.61][facet];
+  const bevel = 0.74 + 0.26 * clamp01(slack / 0.055); // chiselled down only in a hair at the very edge
+  const height = ([0.68, 0.38, 0.53][facet]) * bevel;
   return [height, 1, tone];
 }
 

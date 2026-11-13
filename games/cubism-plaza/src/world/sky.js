@@ -11,7 +11,10 @@ vec3 skyColour(vec3 v) {
   vec3 low = airColour(v);
   // CUBISM: the sky is planes of slate blue and grey, warming only to a muted gold at the sun.
   vec3 high = mix(vec3(0.42, 0.5, 0.66), vec3(0.58, 0.58, 0.55), sunward * sunward);
-  vec3 c = mix(low, high, smoothstep(0.0, 0.75, v.y));
+  // STROKE REBUILD: the dome does not grade from horizon to zenith, it STACKS — five flat
+  // bands with hard seams, so the sky behind the shard strokes is already fractured planes.
+  float band = floor(clamp(v.y, 0.0, 0.98) * 4.5) / 4.5;
+  vec3 c = mix(low, high, band * 0.85);
   c = mix(c, vec3(0.9, 0.78, 0.52), pow(sunward, 24.0) * 0.85);
   return c;
 }
