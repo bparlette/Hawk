@@ -105,6 +105,6 @@ export const poolSurface = {
   },
   input: () => ({}),
   events: [{ at: 0, name: 'surface' }, { at: 50, name: 'rise' }, { at: 110, name: 'hands-planted' }, { at: 280, name: 'settle' }, { at: 560, name: 'rest-hold' }, { at: 899, name: 'end' }],
-  sound: [{ at: 0, cue: 'water', vol: 0.3 }, { at: 6, cue: 'splash', vol: 0.9 }, { at: 56, cue: 'water', vol: 0.5 }, { at: 180, cue: 'drip', vol: 0.5 }, { at: 186, cue: 'laugh', vol: 0.35 }, { at: 280, cue: 'drip', vol: 0.4 }, { at: 640, cue: 'gull', vol: 0.35 }, { at: 899, cue: 'water', vol: 0.2 }],
+  sound: [{ at: 0, cue: 'water', vol: 0.3 }, { at: 6, cue: 'splash', vol: 0.9 }, { at: 50, cue: 'water', vol: 0.5 }, { at: 110, cue: 'drip', vol: 0.45 }, { at: 180, cue: 'drip', vol: 0.5 }, { at: 186, cue: 'laugh', vol: 0.35 }, { at: 280, cue: 'drip', vol: 0.4 }, { at: 560, cue: 'gull', vol: 0.35 }, { at: 899, cue: 'water', vol: 0.2 }],
   bed: { kind: 'band', vol: 0.045, muffled: true, loops: 'water' },
 };

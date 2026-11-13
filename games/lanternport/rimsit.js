@@ -72,6 +72,6 @@ export const poolRimsit = {
   },
   input: () => ({}),
   events: [{ at: 0, name: 'sit' }, { at: 240, name: 'turn' }, { at: 360, name: 'look-back' }, { at: 630, name: 'turn-away' }, { at: 810, name: 'settled' }, { at: 899, name: 'end' }],
-  sound: [{ at: 0, cue: 'water', vol: 0.3 }, { at: 240, cue: 'drip', vol: 0.4 }, { at: 360, cue: 'laugh', vol: 0.3 }, { at: 512, cue: 'drip', vol: 0.3 }, { at: 640, cue: 'gull', vol: 0.35 }, { at: 899, cue: 'water', vol: 0.2 }],
+  sound: [{ at: 0, cue: 'water', vol: 0.3 }, { at: 240, cue: 'drip', vol: 0.4 }, { at: 360, cue: 'laugh', vol: 0.3 }, { at: 510, cue: 'drip', vol: 0.3 }, { at: 630, cue: 'gull', vol: 0.35 }, { at: 810, cue: 'drip', vol: 0.25 }, { at: 899, cue: 'water', vol: 0.2 }],
   bed: { kind: 'band', vol: 0.045, muffled: true, loops: 'water' },
 };
