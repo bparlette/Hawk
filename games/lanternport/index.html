@@ -290,6 +290,7 @@ function restart() {
   cityView = buildCityView(THREE, game.city, kit, { keepOut: sceneKeepOut(game) }); scene.add(cityView);
   heroViews = LOOKS.map((look) => { const h = new HeroView(THREE, kit, look); scene.add(h.group, h.shadow, h.ring); return h; });
   game.heroes.forEach((h, i) => { heroViews[i].snapshot(h); heroViews[i].snapshot(h); });
+  ensurePlayerRig(); // the rigged walker is the hero from spawn, free roam included — start loading her assets now
   cam.init = false; cam.yaw = Math.PI / 2; window.__game = game;
   sceneMarkers = buildSceneMarkers(SCENES, game);
   markerMeshes = sceneMarkers.map((m, i) => { const mesh = makeSceneMarkerMesh(); mesh.position.set(m.x, m.y, m.z); scene.add(mesh); const u = mesh.userData; return { group: mesh, id: m.id, phase: i * 1.3, ring: u.ring, ringMat: u.ringMat, beam: u.col, beamMat: u.colMat }; });
@@ -297,8 +298,9 @@ function restart() {
   mountSceneStage(activeScene, { moveHero: !LOOP_SCENE && sceneMode !== 'watch', jumpCam: sceneMode === 'watch' });
 }
 let stage = null, stageS = null, sceneCues = [], sceneLightCues = [];
-// The rigged take-control hero (playerrig.js): built lazily the first time a
-// converted scene mounts, shared with the staged performance's asset cache.
+// The rigged hero (playerrig.js): built at restart so Juniper is the rigged
+// walker from spawn, and preloaded again when a converted scene mounts;
+// shares the staged performance's asset cache.
 let playerRig = null;
 function ensurePlayerRig() {
   if (playerRig) return playerRig;
@@ -577,25 +579,32 @@ function frame(now) {
     heroViews[i].shadow.visible = !hideFreeHero;
     if (hideFreeHero) heroViews[i].ring.visible = false;
   });
-  // Take control = play as the rigged hero: inside a converted scene, while the
-  // player holds control as Juniper (not watching, not in a vehicle), the
-  // procedural HeroView is swapped for juniper_rig.glb driven by her live
-  // movement state — the same model the staged performance used, so taking
-  // control never pops in a different character.
+  // The rigged walker IS the hero (Cherie, Nov 13): wherever Juniper
+  // (heroes[0]) is on screen outside a staged performance — free roam, jobs,
+  // Festival play, scene ready / take-control, replays — she is drawn by
+  // juniper_rig.glb driven by her live movement state, and her procedural
+  // HeroView is never shown. The one exception is a staged watch (live or in
+  // a replay), where the scene's own staged GLB hero owns the screen and
+  // hideFreeHero has already hidden every free hero. In a vehicle she stays
+  // rigged, seated on the sit-rim clip at the seat position. Until the rig
+  // finishes loading, the HeroView stands in — the same load fallback the
+  // staged scenes use.
   if (playerRig) {
-    const rigOn = Boolean(playerRig.ready && stage && activeScene && playerRigScene(activeScene.id)
-      && sceneMode !== 'watch' && !replay.active && g.active === 0 && !hero.vehicle);
+    const h0 = g.heroes[0], hv0 = heroViews[0];
+    const rigOn = Boolean(playerRig.ready && hv0 && !hideFreeHero);
     if (rigOn) {
-      const inPool = Boolean(stageS && stageS.pw
-        && Math.abs(hv.position.x - stageS.origin[0]) < stageS.pw / 2 - 0.1
-        && Math.abs(hv.position.z - stageS.origin[2]) < stageS.pd / 2 - 0.1
-        && hv.position.y < stageS.origin[1] + 0.45);
+      const seated = Boolean(h0.vehicle);
+      const inPool = Boolean(!seated && stageS && stageS.pw
+        && Math.abs(hv0.position.x - stageS.origin[0]) < stageS.pw / 2 - 0.1
+        && Math.abs(hv0.position.z - stageS.origin[2]) < stageS.pd / 2 - 0.1
+        && hv0.position.y < stageS.origin[1] + 0.45);
       playerRig.setVisible(true);
-      playerRig.update(dt, hv.position, hv.yawRad, pickPlayerClip({
-        action: hero.ctrl.action, speed: Math.abs(hero.ctrl.fvel),
-        swimming: inPool, danceClip: PLAYER_DANCE_CLIPS[activeScene.id] || null,
+      playerRig.update(dt, hv0.position, hv0.yawRad, pickPlayerClip({
+        action: h0.ctrl.action, speed: Math.abs(h0.ctrl.fvel),
+        swimming: inPool, seated,
+        danceClip: (g.active === 0 && stage && activeScene) ? (PLAYER_DANCE_CLIPS[activeScene.id] || null) : null,
       }));
-      hv.group.visible = false; hv.shadow.visible = false; hv.ring.visible = false;
+      hv0.group.visible = false; hv0.shadow.visible = false; hv0.ring.visible = false;
     } else playerRig.setVisible(false);
   }
   sync(g.vehicles, 'v', (v) => makeVehicle(THREE, kit, v), (m, v) => {
