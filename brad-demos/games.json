@@ -2834,6 +2834,22 @@
    "thumb": "thumbs/bonk-yard.png",
    "title": "Linkle AR Dance",
    "url": "../games/linkle-ar-dance/"
+  },
+  {
+   "category": "Viral Demos",
+   "desc": "All 15 Pixelmon GTA x Zelda mashup sprites on one page — the heroine, the hero, cars, cucco, chest, gems and more, each labeled with its role in Vice Hyrule.",
+   "id": "mashup-sprites",
+   "thumb": "thumbs/bonk-yard.png",
+   "title": "Mashup Sprites — GTA × Zelda Set",
+   "url": "../games/mashup-sprites/"
+  },
+  {
+   "category": "Viral Demos",
+   "desc": "Top-down beach-town sandbox built from the mashup sprite set: drive the sports car, smash plants for coins, dodge the police, survive the cucco swarm, collect 10 gems and crack Linkle's chest.",
+   "id": "vice-hyrule",
+   "thumb": "thumbs/bonk-yard.png",
+   "title": "Vice Hyrule",
+   "url": "../games/vice-hyrule/"
   }
  ]
 }
