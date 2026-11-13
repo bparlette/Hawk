@@ -2802,6 +2802,14 @@
    "thumb": "thumbs/topple-vice-hyrule.png",
    "title": "TOPPLE: VICE × HYRULE",
    "url": "../games/topple-vice-hyrule/"
+  },
+  {
+   "category": "Viral Demos",
+   "desc": "Trap-rage walk home — every tree, hydrant, caution sign, sprinkler, and bin down the street tries to flatten you. Dodge 500m to the porch before Rage hits 100%.",
+   "id": "everything-hates-you",
+   "thumb": "thumbs/everything-hates-you.png",
+   "title": "EVERYTHING HATES YOU!",
+   "url": "../games/everything-hates-you/"
   }
  ]
 }
