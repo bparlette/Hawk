@@ -638,7 +638,7 @@ function hud(marks) {
     $('cool').style.visibility = g.heat && !g.seen ? 'visible' : 'hidden'; $('cool').firstChild.style.width = Math.min(100, (g.unseen / g.heatCooldown) * 100) + '%';
     $('heatmsg').textContent = flashT > 0 ? flashMsg : g.heat ? (g.seen ? 'THE WATCH SEES YOU' : 'OUT OF SIGHT…') : '';
     const festStop = !o && festival.active && festival.currentId() ? `🎪 ${festival.index + 1}/${festival.order.length} · <span>${festival.currentId()}</span>` : '';
-    $('goal').innerHTML = o ? o.text + (o.timer !== null ? ` &nbsp;<span>${Math.ceil(o.timer / 30)}s</span>` : '') : (festStop || (g.completed.length ? '' : 'Walk into the <span>gold beacon</span> at the bakery to start a job'));
+    $('goal').innerHTML = o ? o.text + (o.timer !== null ? ` &nbsp;<span>${Math.ceil(o.timer / 30)}s</span>` : '') : (festStop || '');
     $('prompt').style.display = g.prompt ? 'block' : 'none'; $('prompt').textContent = g.prompt;
     const b = $('banner'); b.style.opacity = g.banner ? 1 : 0; if (g.banner) { b.children[0].textContent = g.banner.title; b.children[1].textContent = g.banner.sub; }
   }
