@@ -110,13 +110,24 @@ export const PROPS = {
     row(L, 'iron', F, 0, 0.75, 0.22, 0.12, 1.5, 0.12, IRON, 0.12); row(L, 'iron', F, 0, 1.3, 0.22, 0.7, 0.1, 0.1, IRON, 0.12); row(L, 'iron', F, 0.05, 0.2, 0.22, 0.9, 0.12, 0.12, IRON, 0.12);
     for (const s of [-1, 1]) row(L, 'iron', F, 0.05 + s * 0.45, 0.36, 0.22, 0.12, 0.34, 0.12, IRON, -s * 0.5);
   },
+  cargo(L, F, h) {
+    row(L, 'plank', F, -0.7, 0.65, 0.75, 1.3, 1.3, 1.3, 0xd9a25e); row(L, 'plank', F, 0.75, 0.55, 0.65, 1.1, 1.1, 1.1, 0xc48d4c); row(L, 'plank', F, -0.5, 1.75, 0.7, 0.9, 0.9, 0.9, 0xcf9a58);
+    for (const [t, w, y] of [[-0.7, 1.34, 0.65], [0.75, 1.14, 0.55]]) { row(L, 'timber', F, t, y, 0.75 + (w - 1.3) / 2 + 0.66, w, 0.12, 0.04, TIMBER); row(L, 'timber', F, t, y, 0.75 + (w - 1.3) / 2 + 0.66, 0.12, w, 0.04, TIMBER); }
+    row(L, 'cloth', F, 0.75, 1.13, 0.65, 1.2, 0.06, 1.2, pick([0x3f6b5c, 0x8a3b32, 0x2f4f7a], h)); row(L, 'barrel', F, 1.75, 0.5, 0.5, 0.8, 1.0, 0.8, 0xa8763e);
+    if (h > 0.45) row(L, 'barrel', F, 2.5, 0.5, 0.55, 0.8, 1.0, 0.8, 0xb07a45); row(L, 'rope', F, -1.75, 0.12, 0.6, 0.8, 0.24, 0.8, ROPE);
+  },
+  wallBanner(L, F, h) {                                                   // a long festival hanging for a high wall
+    const c = pick(CLOTH, h);
+    row(L, 'timber', F, 0, 11.6, 0.14, 2.3, 0.14, 0.14, TIMBER); row(L, 'cloth', F, 0, 8.6, 0.12, 1.9, 5.9, 0.04, c); row(L, 'cloth', F, 0, 5.75, 0.13, 1.9, 0.3, 0.05, 0xf2b23a);
+    row(L, 'cloth', F, 0, 9.4, 0.15, 0.9, 0.9, 0.03, 0xf4ead8, Math.PI / 4); row(L, 'bloom', F, 0, 9.4, 0.17, 0.26, 0.26, 0.04, c);
+  },
   bollard(L, F) {
     row(L, 'pot', F, 0, 0.35, 0.6, 0.36, 0.7, 0.36, 0x3a3644); row(L, 'pot', F, 0, 0.74, 0.6, 0.5, 0.12, 0.5, 0x3a3644); row(L, 'rope', F, 0, 0.3, 0.6, 0.52, 0.2, 0.52, ROPE);
   },
 };
 const STREET = ['bench', 'planter', 'barrels', 'crates', 'pottedTree', 'cart', 'noticeBoard', 'planter', 'pottedTree'];
 const ALLEY = ['barrels', 'crates'];
-const QUAY = ['lobsterPots', 'netRack', 'barrels', 'crates', 'anchor', 'bollard', 'lobsterPots', 'bollard'];
+const QUAY = ['lobsterPots', 'netRack', 'barrels', 'cargo', 'anchor', 'bollard', 'cargo', 'lobsterPots', 'crates'];
 
 // ------------------------------------------------------------------------------------------------ the plan
 /** The stage roof (tallest roomy building nearest the middle): the same choice the rooftop scenes make. */
@@ -200,6 +211,17 @@ export function planDressing(city, opts = {}) {
       const x0 = cx - w / 2 + (tall ? 1.5 : 0.7), x1 = cx + w / 2 - (tall ? 1.5 : 0.7), z0 = cz - d / 2 + (tall ? 1.5 : 0.7), z1 = cz + d / 2 - (tall ? 1.5 : 0.7), y = h;
       if (x1 - x0 > 2.5 && z1 - z0 > 2.5) {
         const kit = Math.floor(seed * 4), flat = !tall;
+        if (flat) {                                                                                            // low flat roofs: a kerb round the edge and glass roof lights (flush: these roofs are walked on)
+          for (const sz of [-1, 1]) L.stone.push([cx, y + 0.09, cz + sz * (d / 2 + 0.12), w + 0.5, 0.18, 0.26, 0xb8ab9c, 0, 0, 0]);
+          for (const sx of [-1, 1]) L.stone.push([cx + sx * (w / 2 + 0.12), y + 0.09, cz, 0.26, 0.18, d + 0.5, 0xb8ab9c, 0, 0, 0]);
+          const nx = Math.floor((x1 - x0) / 4.5), nz = Math.floor((z1 - z0) / 4.5);
+          for (let i = 0; i < nx; i++) for (let j = 0; j < nz; j++) {
+            const lx = x0 + (i + 0.5) * ((x1 - x0) / nx), lz = z0 + (j + 0.5) * ((z1 - z0) / nz);
+            if (Math.hypot(lx - cx, lz - cz) < 2.4 || hash(lx, lz) < 0.25) continue;
+            L.cream.push([lx, y + 0.07, lz, 1.9, 0.14, 1.3, 0xd8cdbc, 0, 0, 0]); L.glass.push([lx, y + 0.1, lz, 1.6, 0.12, 1.0, hash(lz, lx) < 0.4 ? LIT : DARK, 0, 0, 0]);
+            L.cream.push([lx, y + 0.12, lz, 0.08, 0.1, 1.02, 0xd8cdbc, 0, 0, 0]);
+          }
+        }
         // a second chimney stack with pots, on every roof
         const qx = hash(seed, 21) < 0.5 ? x0 + 0.3 : x1 - 0.3, qz = hash(seed, 22) < 0.5 ? z0 + 0.4 : z1 - 0.4;
         L.stone.push([qx, y + 0.7, qz, 1.1, 1.4, 0.7, 0xa85a42, 0, 0, 0]); L.timber.push([qx, y + 1.44, qz, 1.26, 0.1, 0.86, TIMBER, 0, 0, 0]);
@@ -245,7 +267,7 @@ export function planDressing(city, opts = {}) {
     const quay = b.kind === 'docks';
     for (const [fx, fz] of [[0, 0], [1, 0], [1, 1], [0, 1]]) {
       const x = (b.x0 + 330 + fx * (b.x1 - b.x0 - 660)) * U, z = (b.z0 + 330 + fz * (b.z1 - b.z0 - 660)) * U, hh = hash(x, z);
-      if (blocked(x, z, 1.5)) continue;
+      if (blocked(x, z, -3)) continue;
       const c = pick(CLOTH, hh), ry = Math.atan2(fx - 0.5, fz - 0.5);
       L.stone.push([x, 0.2, z, 0.9, 0.4, 0.9, STONE, ry, 0, 0]); L.pole.push([x, 3.4, z, 0.14, 6.8, 0.14, quay ? TIMBER : 0xf4ead8, 0, 0, 0]); L.bloom.push([x, 6.9, z, 0.2, 0.2, 0.2, 0xf2b23a, 0, 0, 0]);
       L.timber.push([x + Math.cos(ry) * 0.45, 6.3, z - Math.sin(ry) * 0.45, 1.0, 0.07, 0.07, TIMBER, ry, 0, 0]);
@@ -281,18 +303,28 @@ export function planDressing(city, opts = {}) {
     L.bloom.push([x - wx * 4.2, 15.9, z - wz * 4.2, 0.24, 0.16, 0.34, 0xf4f4f0, hh * 6, 0, 0]);                                                        // a gull on the battlement
   }
   // quay gear along the inside foot of the two sea walls, at the harbour corner only
-  for (const [wx, wz] of seaWalls) for (let i = 0; i < 16; i++) {
-    const along = 62 + i * 4.3, hh = hash(i + 3, wx * 5 + wz * 11);
-    if (hh < 0.18) continue;
+  for (const [wx, wz] of seaWalls) for (let i = 0; i < 20; i++) {
+    const along = 60 + i * 3.4, hh = hash(i + 3, wx * 5 + wz * 11);
+    if (along > E - 9) continue;                                         // the corner tower stands here
     const x = wx ? E : along, z = wz ? E : along; if (blocked(x - wx, z - wz, 1.5)) continue;
     const G = frame(x, z, -wx, -wz);
+    if (i === 8) {                                                         // the cargo crane: post, jib, brace, and a crate on a rope
+      row(L, 'stone', G, 0, 0.3, 0.8, 1.6, 0.6, 1.6, STONE); row(L, 'pole', G, 0, 5.6, 0.8, 0.5, 10.4, 0.5, TIMBER);
+      row(L, 'pole', G, 0, 10.3, 3.2, 0.32, 6.4, 0.32, TIMBER, 0, 1.15); row(L, 'pole', G, 0, 8.4, 1.9, 0.2, 3.4, 0.2, TIMBER, 0, 0.7);
+      row(L, 'rope', G, 0, 8.6, 5.9, 0.06, 5.6, 0.06, ROPE); row(L, 'plank', G, 0, 5.2, 5.9, 1.3, 1.3, 1.3, 0xd9a25e); row(L, 'rope', G, 0, 5.9, 5.9, 1.0, 0.12, 1.0, ROPE);
+      row(L, 'iron', G, 0, 11.65, 5.95, 0.3, 0.3, 0.3, IRON);
+      continue;
+    }
     PROPS[pick(QUAY, hash(hh, 2))](L, G, hash(hh, 6));
-    if (i % 3 === 0) { row(L, 'cloth', G, 0.3, 4.6 + hh, 0.06, 3.4, 3.0, 0.03, i % 2 ? 0xb9a57a : 0x9fb0a0); row(L, 'bloom', G, -2.2, 3.2, 0.14, 0.42, 0.42, 0.1, 0xe2573f); row(L, 'bloom', G, -2.2, 3.2, 0.16, 0.24, 0.24, 0.1, 0xf4ead8); } // drying net + life ring on the wall
+    if (i % 4 === 1) { row(L, 'pole', G, 0.3, 6.3, 0.12, 0.1, 3.8, 0.1, TIMBER, Math.PI / 2); row(L, 'cloth', G, 0.3, 4.7, 0.1, 3.4, 3.0, 0.03, i % 8 === 1 ? 0xb9a57a : 0x9fb0a0); for (let q = 0; q < 5; q++) row(L, 'bloom', G, -1.1 + q * 0.7, 3.25, 0.14, 0.14, 0.14, 0.14, pick([0xe2573f, 0xf2b23a, 0xf4ead8], hash(q, i))); } // a net hung to dry, floats along its foot
+    if (i % 4 === 3) { row(L, 'bloom', G, 0, 2.6, 0.12, 0.42, 0.42, 0.1, 0xe2573f); row(L, 'bloom', G, 0, 2.6, 0.15, 0.24, 0.24, 0.1, 0xf4ead8); }       // life ring
   }
-  { // the cargo crane in the harbour corner: a timber post, a jib and a crate on a rope
-    const x = E - 1.3, z = E - 1.3; L.stone.push([x, 0.3, z, 1.6, 0.6, 1.6, STONE, 0.78, 0, 0]); L.pole.push([x, 5.3, z, 0.5, 10, 0.5, TIMBER, 0, 0, 0]);
-    L.pole.push([x - 2.3, 10.3, z - 2.3, 0.3, 8.6, 0.3, TIMBER, Math.PI / 4, 0, -1.05]); L.pole.push([x - 0.9, 8.0, z - 0.9, 0.2, 4.2, 0.2, TIMBER, Math.PI / 4, 0, 0.7]);
-    L.rope.push([x - 4.9, 8.6, z - 4.9, 0.06, 6.6, 0.06, ROPE, 0, 0, 0]); L.plank.push([x - 4.9, 4.9, z - 4.9, 1.2, 1.2, 1.2, 0xd9a25e, 0.5, 0, 0]); L.rope.push([x - 4.9, 5.6, z - 4.9, 0.9, 0.12, 0.9, ROPE, 0, 0, 0]);
+  // ---- the town walls: festival hangings and ivy all the way round (inside faces)
+  for (const [wx, wz] of [[1, 0], [-1, 0], [0, 1], [0, -1]]) for (let i = 0; i < 11; i++) {
+    const along = -105 + i * 21, x = wx ? wx * E : along, z = wz ? wz * E : along, hh = hash(i + 1, wx * 3 + wz * 7 + 2), G = frame(x, z, -wx, -wz);
+    if (!((wx > 0 || wz > 0) && along > 56)) PROPS.wallBanner(L, G, hh);
+    const n = 16, off = 10.5;                                              // an ivy cascade from the battlements, between the hangings
+    for (let q = 0; q < n; q++) { const u = q / n, sz = 0.55 + hash(q, hh) * 0.5; row(L, 'leaf', G, off + (hash(hh, q) - 0.5) * (1.2 + u * 3.4), 13.6 - u * (4 + hh * 5), 0.12, sz, sz, 0.22, pick(LEAVES, hash(q, i))); }
   }
 
   const counts = {}; let total = 0; for (const [n, l] of Object.entries(L)) { counts[n] = l.length; total += l.length; }
