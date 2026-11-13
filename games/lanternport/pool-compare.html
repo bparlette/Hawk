@@ -172,6 +172,7 @@
     }
   </style>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/GLTFLoader.js"></script>
 <style id="moth-game-guard">
 html,body{touch-action:none;overscroll-behavior:none;-webkit-touch-callout:none;-webkit-user-select:none;user-select:none;-webkit-tap-highlight-color:transparent}
 canvas{touch-action:none}
@@ -318,7 +319,7 @@ canvas{touch-action:none}
       },
       '3d': {
         tech: "WebGL / Three.js 3D polygonal world with real standard shading — MeshStandardMaterial lit by a directional sun plus hemisphere sky/ground light, so every surface carries a true light gradient.",
-        render: "Real-time 3D with real shading: forms are lit, not flat-filled — light falls off across the character, deck and pool. Character is rendered in full 3D with animation stepping.",
+        render: "Real-time 3D with real shading: forms are lit, not flat-filled — light falls off across the character, deck and pool. The character is the actual rigged Linkle model — the same GLB hero the Lanternport scenes use — animated with real motion clips (idle, walk, swim, rim-sit) crossfaded by state.",
         feel: "Full 360-degree freedom. Camera smoothly follows behind player. True volumetric water shader with refraction and buoyant physics."
       }
     };
@@ -382,13 +383,18 @@ canvas{touch-action:none}
       const inPoolX = (player.x > 450 && player.x < 850);
       const inPoolZ = (currentMode === 'iso') ? (player.z > -80 && player.z < 80) : true;
 
-      if (inPoolX && inPoolZ) {
-        if (player.state !== 'sit') {
-          player.state = 'swim';
-        }
-      } else {
-        if (player.state === 'swim') {
-          player.state = 'walk';
+      // 3D mode runs its own pool/state logic in render3D; the shared 2D
+      // player coordinates drifting through this rect must not flip the
+      // state there (a spurious 'swim' would break the E sit toggle).
+      if (currentMode !== '3d') {
+        if (inPoolX && inPoolZ) {
+          if (player.state !== 'sit') {
+            player.state = 'swim';
+          }
+        } else {
+          if (player.state === 'swim') {
+            player.state = 'walk';
+          }
         }
       }
 
@@ -553,7 +559,8 @@ canvas{touch-action:none}
     // ----------------------------------------------------
     // 3D REAL-SHADED MODE (Three.js)
     // ----------------------------------------------------
-    let scene3d, camera3d, renderer3d, hero3dGroup;
+    let scene3d, camera3d, renderer3d, hero3dGroup, rigRoot;
+    let heroMixer = null, heroActions = {}, heroCurrent = null, heroLoadState = 'idle';
 
     function init3DScene() {
       if (scene3d) return; // already initialized
@@ -563,8 +570,8 @@ canvas{touch-action:none}
       scene3d.background = new THREE.Color(0x38bdf8);
 
       camera3d = new THREE.PerspectiveCamera(50, rect.width / rect.height, 0.1, 1000);
-      camera3d.position.set(0, 12, 24);
-      camera3d.lookAt(0, 2, 0);
+      camera3d.position.set(-8, 3.6, 8);
+      camera3d.lookAt(-8, 1.05, 0);
 
       renderer3d = new THREE.WebGLRenderer({ antialias: true });
       renderer3d.setSize(rect.width, rect.height);
@@ -599,52 +606,80 @@ canvas{touch-action:none}
       water.position.set(6, -0.1, 0);
       scene3d.add(water);
 
-      // Linkle Hero in 3D: real-shaded character assembly
+      // Linkle Hero in 3D: the real rigged GLB model — the same
+      // juniper_rig.glb + motion clips the Lanternport scenes use.
       hero3dGroup = new THREE.Group();
-
-      // Real-shaded materials (standard PBR, matte) — same colors as before
-      const greenMat = new THREE.MeshStandardMaterial({ color: 0x15803d, roughness: 0.8, metalness: 0 });
-      const skinMat = new THREE.MeshStandardMaterial({ color: 0xfbbf24, roughness: 0.8, metalness: 0 });
-      const capMat = new THREE.MeshStandardMaterial({ color: 0x16a34a, roughness: 0.8, metalness: 0 });
-      const bootMat = new THREE.MeshStandardMaterial({ color: 0x78350f, roughness: 0.8, metalness: 0 });
-
-      // Torso
-      const bodyGeo = new THREE.CylinderGeometry(0.5, 0.4, 1.5, 12);
-      const body = new THREE.Mesh(bodyGeo, greenMat);
-      body.position.y = 2.2;
-      hero3dGroup.add(body);
-
-      // Head
-      const headGeo = new THREE.SphereGeometry(0.45, 16, 16);
-      const head = new THREE.Mesh(headGeo, skinMat);
-      head.position.y = 3.3;
-      hero3dGroup.add(head);
-
-      // Cap trailing
-      const capGeo = new THREE.ConeGeometry(0.4, 2.0, 12);
-      const cap = new THREE.Mesh(capGeo, capMat);
-      cap.position.set(0, 3.8, -0.8);
-      cap.rotation.x = -Math.PI / 3;
-      hero3dGroup.add(cap);
-
-      // Shield on back
-      const shieldGeo = new THREE.CylinderGeometry(0.7, 0.7, 0.15, 16);
-      const shieldMat = new THREE.MeshStandardMaterial({ color: 0x1d4ed8, roughness: 0.8, metalness: 0 });
-      const shield = new THREE.Mesh(shieldGeo, shieldMat);
-      shield.position.set(0, 2.3, -0.6);
-      shield.rotation.x = Math.PI / 2;
-      hero3dGroup.add(shield);
-
-      // Legs
-      const legGeo = new THREE.CylinderGeometry(0.2, 0.2, 1.4, 8);
-      const leftLeg = new THREE.Mesh(legGeo, bootMat);
-      leftLeg.position.set(-0.3, 0.8, 0);
-      const rightLeg = new THREE.Mesh(legGeo, bootMat);
-      rightLeg.position.set(0.3, 0.8, 0);
-      hero3dGroup.add(leftLeg);
-      hero3dGroup.add(rightLeg);
-
+      // Spawn ON THE DECK beside the pool (pool spans x -2..14, z -5..5);
+      // the old spawn at (0,0,0) put her inside the pool bounds.
+      hero3dGroup.position.set(-8, 0, 0);
+      rigRoot = new THREE.Group();
+      hero3dGroup.add(rigRoot);
       scene3d.add(hero3dGroup);
+      loadHeroGLB();
+    }
+
+    // Rig offsets, same constants heroglb.js uses for the staged scenes:
+    // the rig is authored ~87 units per metre with its origin mid-body.
+    const HERO_SCALE = 0.0115;
+    const STAND_Y = 84.9 * HERO_SCALE; // ~0.976 — soles rest on the deck (y = 0)
+    const SEAT_Y = 0.55;               // seated pose hip height (heroglb SEATED_Y_OFFSET)
+    const SWIM_Y = 0.36;               // origin 0.46 above the water plane (y = -0.1), as in the staged swim scene
+
+    function loadHeroGLB() {
+      if (!THREE.GLTFLoader) { heroLoadState = 'error'; return; }
+      heroLoadState = 'loading';
+      const loader = new THREE.GLTFLoader();
+      loader.load('assets/juniper/juniper_rig.glb', (gltf) => {
+        const model = gltf.scene;
+        model.scale.setScalar(HERO_SCALE);
+        model.traverse((obj) => {
+          if (obj.isMesh) {
+            obj.frustumCulled = false;
+            // Keep the model's own textured materials, but guard the
+            // metalness-default trap (a missing metallicFactor reads as
+            // 1.0 and renders near-black without an env map).
+            const mats = Array.isArray(obj.material) ? obj.material : [obj.material];
+            mats.forEach((m) => { if (m && 'metalness' in m) m.metalness = 0; });
+          }
+        });
+        rigRoot.add(model);
+        heroMixer = new THREE.AnimationMixer(model);
+
+        const clipFiles = { idle: 'idle-stand', walk: '07_01', swim: 'swim-surface', sit: 'sit-rim' };
+        const names = Object.keys(clipFiles);
+        let pending = names.length;
+        const done = () => {
+          if (--pending === 0) {
+            heroLoadState = 'ready';
+            setHeroAnim('idle', 0);
+          }
+        };
+        names.forEach((key) => {
+          loader.load('assets/juniper/clips/' + clipFiles[key] + '.glb', (cg) => {
+            if (cg.animations && cg.animations.length) {
+              const act = heroMixer.clipAction(cg.animations[0]);
+              act.enabled = false;
+              act.play();
+              heroActions[key] = act;
+            }
+            done();
+          }, undefined, done);
+        });
+      }, undefined, () => { heroLoadState = 'error'; });
+    }
+
+    function setHeroAnim(name, fade) {
+      if (!heroMixer || heroCurrent === name) return;
+      const next = heroActions[name];
+      if (!next) return;
+      const prev = heroActions[heroCurrent];
+      next.reset();
+      next.enabled = true;
+      next.setEffectiveWeight(1);
+      next.fadeIn(fade == null ? 0.25 : fade);
+      next.play();
+      if (prev && prev !== next) prev.fadeOut(fade == null ? 0.25 : fade);
+      heroCurrent = name;
     }
 
     function render3D(dt) {
@@ -665,30 +700,46 @@ canvas{touch-action:none}
       dx = Math.max(-1, Math.min(1, dx));
       dz = Math.max(-1, Math.min(1, dz));
 
+      // Sitting (E) freezes movement, as in the 2D modes
+      const sitting = player.state === 'sit';
+      if (sitting) { dx = 0; dz = 0; }
+
       hero3dGroup.position.x += dx * speed * dt;
       hero3dGroup.position.z += dz * speed * dt;
 
-      if (dx !== 0 || dz !== 0) {
+      const moving = (dx !== 0 || dz !== 0);
+      if (moving) {
         hero3dGroup.rotation.y = Math.atan2(dx, dz);
-        // Bob animation
-        hero3dGroup.position.y = Math.abs(Math.sin(performance.now() * 0.01)) * 0.2;
-      } else {
-        hero3dGroup.position.y = 0;
       }
 
       // Check pool
-      if (hero3dGroup.position.x > -2 && hero3dGroup.position.x < 14 &&
-          hero3dGroup.position.z > -5 && hero3dGroup.position.z < 5) {
-        hero3dGroup.position.y = -1.2; // in pool
+      const inPool = hero3dGroup.position.x > -2 && hero3dGroup.position.x < 14 &&
+                     hero3dGroup.position.z > -5 && hero3dGroup.position.z < 5;
+
+      // Animation state for the rigged hero: swim > sit > walk > idle,
+      // crossfaded by setHeroAnim; rig height eases between state offsets.
+      const visState = inPool ? 'swim' : sitting ? 'sit' : moving ? 'walk' : 'idle';
+      setHeroAnim(visState);
+      const targetRigY = visState === 'swim' ? SWIM_Y : visState === 'sit' ? SEAT_Y : STAND_Y;
+      if (rigRoot) {
+        rigRoot.position.y += (targetRigY - rigRoot.position.y) * Math.min(1, dt * 8);
+      }
+      if (heroMixer) heroMixer.update(dt);
+
+      if (inPool) {
         badge.textContent = "3D Swimming (Volumetric Pool)";
+      } else if (sitting) {
+        badge.textContent = "3D Sitting (Real-Shaded)";
       } else {
-        badge.textContent = (dx !== 0 || dz !== 0) ? "3D Walking (Real-Shaded)" : "3D Idle (Real-Shaded)";
+        badge.textContent = moving ? "3D Walking (Real-Shaded)" : "3D Idle (Real-Shaded)";
       }
 
-      // Camera follow
+      // Camera follow — framed for the real ~1.7 m model (the old framing
+      // was set for the 3.75-unit placeholder figure and left her a dot)
       camera3d.position.x = hero3dGroup.position.x;
-      camera3d.position.z = hero3dGroup.position.z + 18;
-      camera3d.lookAt(hero3dGroup.position.x, 2, hero3dGroup.position.z);
+      camera3d.position.y = 3.6;
+      camera3d.position.z = hero3dGroup.position.z + 8;
+      camera3d.lookAt(hero3dGroup.position.x, 1.05, hero3dGroup.position.z);
 
       renderer3d.render(scene3d, camera3d);
     }
@@ -713,6 +764,24 @@ canvas{touch-action:none}
     resizeCanvas();
     switchMode('side');
     requestAnimationFrame(loop);
+
+    // Verification handle (same spirit as Lanternport's window.__dbg)
+    window.__poolCompare = {
+      get mode() { return currentMode; },
+      player: player,
+      hero3d: function () { return hero3dGroup; },
+      heroState: function () {
+        return {
+          load: heroLoadState,
+          anim: heroCurrent,
+          rigY: rigRoot ? rigRoot.position.y : null,
+          pos: hero3dGroup ? { x: hero3dGroup.position.x, y: hero3dGroup.position.y, z: hero3dGroup.position.z } : null
+        };
+      },
+      camera3d: function () { return camera3d; },
+      renderer3d: function () { return renderer3d; },
+      scene3d: function () { return scene3d; }
+    };
   </script>
 
   <!-- Touch controls: gamepress standard gptouch.js — floating stick on the
@@ -734,18 +803,26 @@ canvas{touch-action:none}
         tc._buttons = {};
       }
       // Keep the stick overlay over the game area only (header tabs stay
-      // tappable above it; the info cards below stay scrollable).
+      // tappable above it; the info cards below stay scrollable). Fit it
+      // EXACTLY to the container rect (top + height, not just a height
+      // from the viewport top), and re-fit whenever layout may have
+      // settled or changed — a one-shot measure taken before fonts and
+      // layout settle can leave touches landing off the game area.
       const ov = tc._els && tc._els.overlay;
       const fitOverlay = () => {
         if (!ov) return;
         const c = document.getElementById('container');
         if (!c) return;
         const r = c.getBoundingClientRect();
+        ov.style.top = Math.round(r.top) + 'px';
         ov.style.bottom = 'auto';
-        ov.style.height = Math.max(0, Math.round(r.bottom)) + 'px';
+        ov.style.height = Math.round(r.height) + 'px';
       };
       fitOverlay();
       window.addEventListener('resize', fitOverlay);
+      window.addEventListener('orientationchange', fitOverlay);
+      window.addEventListener('load', fitOverlay);
+      setTimeout(fitOverlay, 600);
 
       const pollTouch = () => {
         const ti = tc.getInput();
