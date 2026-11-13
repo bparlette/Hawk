@@ -243,7 +243,7 @@ function mountSceneStage(def, { moveHero = true, jumpCam = false } = {}) {
   activeScene = def;
   if (!def) { setLight('golden'); return; }
   if (def.set) {
-    stageS = def.set(game); def.act(stageS, 0);
+    stageS = def.set(game); stageS.sceneId = def.id; def.act(stageS, 0);
     stage = new StageView(THREE, kit, stageS); scene.add(stage.root);
     setLight(def.light || 'golden');
     if (jumpCam && Q.get('cam') !== 'free') jumpBookmark(SCENES.indexOf(def));
@@ -558,7 +558,13 @@ function frame(now) {
   const dt = pausedReplay ? 0 : rdt * ticker.scale; time += dt; // everything drawn (animation, bursts, wind) slows with the sim; the camera itself stays on real time
   if (TC) touchState = TC.getInput();
   const a = replay.active ? (pausedReplay ? replay.lastAlpha : (replay.lastAlpha = ticker.advance(rdt, tick))) : ticker.advance(rdt, tick), L = (p, c) => p + (c - p) * a, g = game, hero = g.hero, hv = heroViews[g.active];
-  g.heroes.forEach((h, i) => heroViews[i].update(h, a, dt, time, i === g.active));
+  const hideFreeHero = Boolean((stage && activeScene && sceneMode === 'watch') || (replay.active && stage && replay.player?.sceneState?.mode === 'watch'));
+  g.heroes.forEach((h, i) => {
+    heroViews[i].update(h, a, dt, time, i === g.active);
+    heroViews[i].group.visible = !hideFreeHero;
+    heroViews[i].shadow.visible = !hideFreeHero;
+    if (hideFreeHero) heroViews[i].ring.visible = false;
+  });
   sync(g.vehicles, 'v', (v) => makeVehicle(THREE, kit, v), (m, v) => {
     const dy = Math.atan2(Math.sin(v.yaw - v.pyaw), Math.cos(v.yaw - v.pyaw));
     m.position.set(L(v.px, v.x) * U, 0, L(v.pz, v.z) * U); m.rotation.y = v.pyaw + dy * a;
@@ -594,9 +600,9 @@ function frame(now) {
     const ss = replay.player.sceneState, st = ss && ss.mode === 'watch' ? Math.max(0, (ss.sceneTick || 1) - 1 + (pausedReplay ? replay.lastAlpha : a)) : 0;
     replay.stageDef.act(stageS, st);
     if (!ss || ss.mode !== 'watch') { const hj = stageS.actors.find((ac) => ac.look && ac.look.hero); if (hj) hj.vis = false; }
-    stage.update(time);
+    stage.update(time, st);
     $('flashfx').style.opacity = stageS.flash ? Math.min(0.85, stageS.flash * 0.8) : 0;
-  } else if (stage && activeScene) { const st = runner ? Math.max(0, runner.t - 1 + a) : 0; activeScene.act(stageS, st); if (!runner) { const hj = stageS.actors.find((ac) => ac.look && ac.look.hero); if (hj) hj.vis = false; } stage.update(time);
+  } else if (stage && activeScene) { const st = runner ? Math.max(0, runner.t - 1 + a) : 0; activeScene.act(stageS, st); if (!runner && sceneMode !== 'watch') { const hj = stageS.actors.find((ac) => ac.look && ac.look.hero); if (hj) hj.vis = false; } stage.update(time, st);
     if (runner && activeScene.track && Q.get('cam') !== 'free' && cap.bookmark === activeScene.id && !capPtr.size) { const b = activeScene.track(game, st); free.pivot = [...b.pivot]; free.yaw = b.yaw; free.pitch = b.pitch; free.dist = b.dist; }
     $('flashfx').style.opacity = stageS.flash ? Math.min(0.85, stageS.flash * 0.8) : 0; }
   const showMarkers = !replay.active && !tour.active && !FILM && !LOOP_SCENE;
@@ -1084,6 +1090,7 @@ function syncReplayStage(ss) {
   if (!replay.stageDef) { setLight('golden'); $('flashfx').style.opacity = 0; return; }
   if (replay.stageDef.set) {
     stageS = replay.stageDef.set(game);
+    stageS.sceneId = replay.stageDef.id;
     replay.stageDef.act(stageS, ss.mode === 'watch' ? Math.max(0, (ss.sceneTick || 1) - 1) : 0);
     stage = new StageView(THREE, kit, stageS);
     scene.add(stage.root);

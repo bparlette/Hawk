@@ -2,17 +2,26 @@
 // materials. Reads stage state, never changes it. Everything is primitives + kit.toon, like the rest of the town.
 const TAU = Math.PI * 2;
 
+import { attachHeroGLB } from './heroglb.js';
+
 export class StageView {
   constructor(THREE, kit, S) {
     this.THREE = THREE; this.kit = kit; this.S = S; this.root = new THREE.Group(); this.root.position.set(...S.origin); this.nodes = new Map();
+    this._disposed = false; this._heroGLB = null; this.readyPromise = Promise.resolve(null);
     for (const p of S.props) this._add(p); for (const a of S.actors) this._add(a);
   }
-  _add(o) { const b = BUILD[o.kind]; if (!b) return; const n = b(this.THREE, this.kit, o, this.S); n.userData.o = o; this.root.add(n); this.nodes.set(o.id, n); }
-  /** Call every frame after scene.act(S, t). time = seconds for idle wobble (already timescaled). */
-  update(time) {
-    for (const [, n] of this.nodes) { const o = n.userData.o; n.visible = o.vis !== false; if (!n.visible) continue; n.position.set(o.x, o.y, o.z); n.rotation.y = o.yaw || 0; if (n.userData.pose) n.userData.pose(o, time); }
+  _add(o) {
+    const b = BUILD[o.kind]; if (!b) return; const n = b(this.THREE, this.kit, o, this.S); n.userData.o = o; this.root.add(n); this.nodes.set(o.id, n);
+    if (this.S && this.S.sceneId) {
+      const h = attachHeroGLB(this.THREE, n, o, this.S.sceneId, () => this._disposed);
+      if (h) { this._heroGLB = h.state; this.readyPromise = h.readyPromise; }
+    }
   }
-  dispose(scene) { scene.remove(this.root); }
+  /** Call every frame after scene.act(S, t). time = seconds for idle wobble (already timescaled). */
+  update(time, tick = null) {
+    for (const [, n] of this.nodes) { const o = n.userData.o; n.visible = o.vis !== false; if (!n.visible) continue; n.position.set(o.x, o.y, o.z); n.rotation.y = o.yaw || 0; if (n.userData.pose) n.userData.pose(o, time, tick); }
+  }
+  dispose(scene) { this._disposed = true; scene.remove(this.root); }
 }
 
 const box = (T, kit, parent, w, h, d, color, x = 0, y = 0, z = 0, line = 0) => kit.part(parent, new T.BoxGeometry(w, h, d), typeof color === 'number' ? kit.toon(color) : color, x, y, z, line);
