@@ -186,6 +186,7 @@ import { FESTIVAL_DAY_ORDER, tourSceneIds, buildSceneMarkers, SceneJournal, Fest
 import { frameQuality, FilmRun, Audience, ChatFeed } from './film.js';
 import { REPLAY_SPEEDS, SessionRecorder, TakeStore, ReplayPlayer } from './replay.js';
 import { StageView } from './stageview.js';
+import { PlayerRig, pickPlayerClip, playerRigScene, PLAYER_DANCE_CLIPS } from './playerrig.js';
 import { SUN_DIR, makeTextures, makeMaterials, makeSky, makeMotes, Post } from './fx.js';
 
 const Q = new URLSearchParams(location.search), AUTO = Q.get('auto') === '1' || Q.get('spectate') === '1', SEED = +(Q.get('seed') || 7), ANG = (Math.PI * 2) / 0x10000;
@@ -253,6 +254,7 @@ function mountSceneStage(def, { moveHero = true, jumpCam = false } = {}) {
     if (jumpCam && Q.get('cam') !== 'free') jumpBookmark(SCENES.indexOf(def));
     if (moveHero) placeHeroInScene();
   }
+  if (playerRigScene(def.id)) ensurePlayerRig(); // preload so TAKE CONTROL is instant
 }
 function clearSceneStage() {
   runner = null; stopBed(); sceneCues = []; sceneLightCues = [];
@@ -295,6 +297,16 @@ function restart() {
   mountSceneStage(activeScene, { moveHero: !LOOP_SCENE && sceneMode !== 'watch', jumpCam: sceneMode === 'watch' });
 }
 let stage = null, stageS = null, sceneCues = [], sceneLightCues = [];
+// The rigged take-control hero (playerrig.js): built lazily the first time a
+// converted scene mounts, shared with the staged performance's asset cache.
+let playerRig = null;
+function ensurePlayerRig() {
+  if (playerRig) return playerRig;
+  playerRig = new PlayerRig(THREE);
+  scene.add(playerRig.group);
+  playerRig.load();
+  return playerRig;
+}
 // Light states: where the sun is and what colour the day is. 'golden' is the town's default.
 const LIGHTS = { golden: { dir: SUN_DIR, sun: [0xffdcae, 3.4], hemi: 2.3 }, noon: { dir: [0.22, 0.95, -0.2], sun: [0xfff6e6, 3.9], hemi: 2.7 }, sunrise: { dir: [-0.78, 0.26, 0.56], sun: [0xffc08a, 3.0], hemi: 1.9 }, dusk: { dir: [0.74, 0.2, 0.64], sun: [0xff8f7a, 1.25], hemi: 0.95, dusk: 1 } };
 function setLight(name) { const L = typeof name === 'object' ? { ...LIGHTS[name.base || 'golden'], ...name } : LIGHTS[name] || LIGHTS.golden; const dusk = L.dusk || 0; sky.children[0].material.uniforms.uDusk.value = dusk; post.final.uniforms.uDusk.value = dusk; sunDir.set(...L.dir).normalize(); sun.color.setHex(L.sun[0]); sun.intensity = L.sun[1]; hemi.intensity = L.hemi; sky.children[0].material.uniforms.uSun.value.copy(sunDir); post.final.uniforms.uSun.value.copy(sunDir); }
@@ -565,6 +577,27 @@ function frame(now) {
     heroViews[i].shadow.visible = !hideFreeHero;
     if (hideFreeHero) heroViews[i].ring.visible = false;
   });
+  // Take control = play as the rigged hero: inside a converted scene, while the
+  // player holds control as Juniper (not watching, not in a vehicle), the
+  // procedural HeroView is swapped for juniper_rig.glb driven by her live
+  // movement state — the same model the staged performance used, so taking
+  // control never pops in a different character.
+  if (playerRig) {
+    const rigOn = Boolean(playerRig.ready && stage && activeScene && playerRigScene(activeScene.id)
+      && sceneMode !== 'watch' && !replay.active && g.active === 0 && !hero.vehicle);
+    if (rigOn) {
+      const inPool = Boolean(stageS && stageS.pw
+        && Math.abs(hv.position.x - stageS.origin[0]) < stageS.pw / 2 - 0.1
+        && Math.abs(hv.position.z - stageS.origin[2]) < stageS.pd / 2 - 0.1
+        && hv.position.y < stageS.origin[1] + 0.45);
+      playerRig.setVisible(true);
+      playerRig.update(dt, hv.position, hv.yawRad, pickPlayerClip({
+        action: hero.ctrl.action, speed: Math.abs(hero.ctrl.fvel),
+        swimming: inPool, danceClip: PLAYER_DANCE_CLIPS[activeScene.id] || null,
+      }));
+      hv.group.visible = false; hv.shadow.visible = false; hv.ring.visible = false;
+    } else playerRig.setVisible(false);
+  }
   sync(g.vehicles, 'v', (v) => makeVehicle(THREE, kit, v), (m, v) => {
     const dy = Math.atan2(Math.sin(v.yaw - v.pyaw), Math.cos(v.yaw - v.pyaw));
     m.position.set(L(v.px, v.x) * U, 0, L(v.pz, v.z) * U); m.rotation.y = v.pyaw + dy * a;
