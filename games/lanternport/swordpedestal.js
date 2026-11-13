@@ -157,7 +157,7 @@ export const swordPedestal = {
         thing('shaft', 'lightShaft', 0, 0.8, 0, 0, { power: 0 }),
         thing('ring', 'shockRing', 0, 0.08, 0, 0, { p: -1 }),
         thing('heldSword', 'heldSword', 0, 0, 0, 0),
-        person('juniper', JUNIPER, -4.4, 0, 4.2, Math.PI * 0.75),
+        person('juniper', JUNIPER, -4.4, 0, 0.2, Math.atan2(4.4, -0.2)),
         person('fen', FEN, 2.7, 0, 2.6, -Math.PI * 0.72),
         ...crowd,
         ...sparkles,
@@ -175,11 +175,15 @@ export const swordPedestal = {
     S.flash = 0;
 
     if (t < SP.hold) {
-      // Opening hold: Juniper small in frame facing the glowing pedestal
-      j.x = -4.4; j.y = 0; j.z = 4.2; j.yaw = Math.atan2(4.4, -4.2);
+      // Opening hold: Juniper small in frame facing the glowing pedestal.
+      // Spawn z=0.2 (not 4.2): the entry follow-cam sits 8.5m west of her, and
+      // from z=4.2 its sightline to her passed through the plaza tree at stage
+      // (-7.9, 3.4) — she was hidden in foliage on entry. At z=0.2 the line
+      // clears the trunk by ~3.2m and the pedestal is straight ahead of her.
+      j.x = -4.4; j.y = 0; j.z = 0.2; j.yaw = Math.atan2(4.4, -0.2);
       ped.glow = 0.25 + Math.sin(t * 0.08) * 0.1;
     } else if (t < SP.reachBase) {
-      walk(j, t, [[SP.hold, -4.4, 4.2], [SP.reachBase, -0.55, 1.55]], 0.9);
+      walk(j, t, [[SP.hold, -4.4, 0.2], [SP.reachBase, -0.55, 1.55]], 0.9);
       j.y = 0;
       ped.glow = 0.35;
     } else if (t < SP.grip) {
