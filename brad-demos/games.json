@@ -2722,6 +2722,14 @@
    "thumb": "thumbs/bonk-yard.png",
    "title": "Mosaic Plaza",
    "url": "../games/mosaic-plaza/"
+  },
+  {
+   "category": "Viral Demos",
+   "desc": "Oil Paint Plaza in Fauvist slabs — flat unblended colour, warm/cool bands, orange contours.",
+   "id": "fauvism-plaza",
+   "thumb": "thumbs/bonk-yard.png",
+   "title": "Fauvism Plaza",
+   "url": "../games/fauvism-plaza/"
   }
  ]
 }
