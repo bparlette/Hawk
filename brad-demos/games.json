@@ -2690,6 +2690,22 @@
    "thumb": "thumbs/bonk-yard.png",
    "title": "LINKLE IN THE STARRY NIGHT — Painted Live",
    "url": "../games/linkle-starry/"
+  },
+  {
+   "category": "Viral Demos",
+   "desc": "Oil Paint Plaza re-rendered at 180px on the DawnBringer palette with Bayer dither.",
+   "id": "pixel-plaza",
+   "thumb": "thumbs/bonk-yard.png",
+   "title": "Pixel Plaza",
+   "url": "../games/pixel-plaza/"
+  },
+  {
+   "category": "Viral Demos",
+   "desc": "Oil Paint Plaza rebuilt as stained glass — leaded panes, jewel tones.",
+   "id": "stained-glass-plaza",
+   "thumb": "thumbs/bonk-yard.png",
+   "title": "Stained Glass Plaza",
+   "url": "../games/stained-glass-plaza/"
   }
  ]
 }
