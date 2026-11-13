@@ -38,7 +38,7 @@
   .clean #help, .clean #title { display: none; }
   /* capture kit: hide-HUD and the 9:16 guide */
   .nohud #who, .nohud #heat, .nohud #goal, .nohud #prompt, .nohud #speed, .nohud #map, .nohud #help, .nohud #banner, .nohud #capbar, .nohud #festbar { display: none !important; }
-  #festbar { position: fixed; top: 14px; left: 50%; transform: translateX(-50%); display: flex; gap: 6px; z-index: 1100; align-items: center; flex-wrap: wrap; justify-content: center; pointer-events: none; }
+  #festbar { position: fixed; top: 14px; left: 50%; transform: translateX(-50%); display: flex; gap: 6px; z-index: 1100; align-items: center; flex-wrap: wrap; justify-content: center; pointer-events: none; width: max-content; max-width: calc(100vw - 320px); }
   .fbtn { pointer-events: auto; background: rgba(24,18,38,.78); color: #fff6dd; border: 2px solid rgba(255,246,221,.8); border-radius: 999px; padding: 6px 12px; font: 800 12px/1 system-ui, sans-serif; letter-spacing: .04em; cursor: pointer; touch-action: manipulation; white-space: nowrap; }
   .fbtn.gold { border-color: #ffd23c; color: #ffd23c; }
   .title-acts { display: flex; gap: 10px; margin-top: 14px; flex-wrap: wrap; justify-content: center; z-index: 1100; }
@@ -60,7 +60,35 @@
   #guide i::after { content: ''; position: absolute; left: 0; right: 0; top: 33.33%; height: 33.34%; border-top: 1px solid rgba(255,255,255,.3); border-bottom: 1px solid rgba(255,255,255,.3); }
   .guide #guide { display: block; }
   #capbar { position: fixed; left: 50%; bottom: 56px; transform: translateX(-50%); font: 800 13px system-ui, sans-serif; background: rgba(20,20,35,.75); color: #fff; padding: 5px 12px; border-radius: 10px; display: none; z-index: 950; white-space: nowrap; }
-  @media (max-width: 640px) { #who { font-size: 17px; } #goal { top: 78px; max-width: 86vw; font-size: 14px; } #map { width: 120px; height: 120px; } #heat i { width: 16px; height: 21px; margin-left: 3px; } #banner div { font-size: 34px; } #banner p { font-size: 14px; } #title h1 { font-size: 46px; } }
+  /* Film mode: record toggle, saved named takes drawer, and FreeCam replay transport bar */
+  .fbtn.rec { border-color: #ff5a4f; background: rgba(180,22,22,.88); color: #fff; }
+  .fbtn.active { border-color: #ffd23c; background: #ffd23c; color: #181226; }
+  #recBtn .rdot { display: inline-block; width: 8px; height: 8px; border-radius: 50%; background: #ff4f45; margin-right: 5px; vertical-align: middle; }
+  @keyframes recblink { 50% { opacity: .25; } }
+  #recBtn.rec .rdot { background: #fff; animation: recblink 1s steps(2) infinite; }
+  #takesModal { position: fixed; inset: 0; display: none; align-items: center; justify-content: center; background: rgba(18,14,28,.7); z-index: 1210; }
+  #takesBox { background: rgba(24,18,38,.96); border: 3px solid #ffd23c; border-radius: 18px; padding: 16px 18px; color: #fff6dd; width: min(460px, 92vw); max-height: 78vh; display: flex; flex-direction: column; gap: 10px; box-sizing: border-box; box-shadow: 0 12px 32px rgba(0,0,0,.55); }
+  #takesHead { display: flex; align-items: center; justify-content: space-between; font: 900 16px system-ui, sans-serif; color: #ffd23c; gap: 8px; }
+  #takesActions { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+  #takesNameIn { flex: 1; min-width: 140px; background: rgba(255,255,255,.1); border: 2px solid rgba(255,246,221,.35); border-radius: 999px; padding: 7px 12px; color: #fff; font: 700 13px system-ui, sans-serif; outline: none; }
+  #takesNameIn:focus { border-color: #ffd23c; }
+  #takesList { overflow-y: auto; display: flex; flex-direction: column; gap: 7px; padding-right: 4px; -webkit-overflow-scrolling: touch; min-height: 60px; }
+  .trow { display: flex; align-items: center; gap: 6px; background: rgba(255,255,255,.08); border-radius: 12px; padding: 8px 10px; font: 700 13px system-ui, sans-serif; }
+  .tmeta { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px; }
+  .tname { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: #fff6dd; }
+  .tsub { font-size: 11px; color: #cbd5e1; opacity: .9; }
+  .trow input.trename { width: 100%; box-sizing: border-box; background: rgba(0,0,0,.35); border: 1px solid #ffd23c; border-radius: 8px; padding: 4px 8px; color: #fff; font: 700 13px system-ui, sans-serif; }
+  #replayBar { position: fixed; left: 50%; bottom: calc(env(safe-area-inset-bottom, 0px) + 16px); transform: translateX(-50%); display: none; flex-direction: column; align-items: center; gap: 6px; width: min(560px, 95vw); z-index: 1220; pointer-events: none; }
+  .rb-card { pointer-events: auto; background: rgba(24,18,38,.9); border: 2px solid #ffd23c; border-radius: 16px; padding: 8px 10px; display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: 6px; width: 100%; box-sizing: border-box; box-shadow: 0 8px 24px rgba(0,0,0,.5); }
+  .rb-meta { width: 100%; display: flex; align-items: center; justify-content: space-between; gap: 8px; font: 800 12px system-ui, sans-serif; color: #fff6dd; padding: 0 2px; }
+  .rb-title { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 52%; color: #ffd23c; }
+  .rb-badge { padding: 2px 7px; border-radius: 999px; font-size: 10px; text-transform: uppercase; letter-spacing: .04em; background: rgba(255,255,255,.14); color: #cbd5e1; }
+  .rb-badge.ok { background: rgba(123,224,123,.25); color: #9eff9e; }
+  .rb-badge.err { background: rgba(255,90,79,.3); color: #ffb3ad; }
+  .rb-btns { display: flex; flex-wrap: wrap; gap: 5px; justify-content: center; align-items: center; width: 100%; }
+  .rb-btns .fbtn { padding: 7px 10px; font-size: 12px; }
+  .replaying #festbar, .replaying #sceneBtn, .replaying #help, .replaying #capbar { display: none !important; }
+  @media (max-width: 640px) { #who { font-size: 17px; } #goal, .touch #goal { top: 146px; max-width: calc(100vw - 24px); font-size: 14px; } .replaying #goal, .replaying.touch #goal { top: 82px; } #map { width: 120px; height: 120px; } .replaying #map, .replaying.touch #map { bottom: 134px; left: 10px; width: 92px; height: 92px; } #heat i { width: 16px; height: 21px; margin-left: 3px; } #banner div { font-size: 34px; } #banner p { font-size: 14px; } #title h1 { font-size: 46px; } #festbar { top: 82px; left: 8px; right: 8px; transform: none; width: auto; max-width: none; gap: 4px; } .fbtn { padding: 6px 9px; font-size: 11px; } .rb-btns .fbtn { padding: 8px 10px; font-size: 12px; } }
 </style>
 <style id="moth-game-guard">
 html,body{touch-action:none;overscroll-behavior:none;-webkit-touch-callout:none;-webkit-user-select:none;user-select:none;-webkit-tap-highlight-color:transparent}
@@ -89,11 +117,43 @@ canvas{touch-action:none}
   <button id="festBtn" class="fbtn gold" type="button">▶ FESTIVAL DAY</button>
   <button id="tourBtn" class="fbtn" type="button">🎬 TOUR</button>
   <button id="festNextBtn" class="fbtn gold" type="button" style="display:none">NEXT ▶</button>
+  <button id="recBtn" class="fbtn" type="button"><span class="rdot"></span>REC</button>
+  <button id="takesBtn" class="fbtn" type="button">🎞 TAKES</button>
 </div>
 <div id="journalModal">
   <div id="journalBox">
     <div id="journalHead"><span>📖 SCENES</span><button id="journalClose" class="fbtn" type="button">✕</button></div>
     <div id="journalList" data-scroll></div>
+  </div>
+</div>
+<div id="takesModal">
+  <div id="takesBox">
+    <div id="takesHead"><span>🎞 FILM TAKES</span><button id="takesClose" class="fbtn" type="button">✕</button></div>
+    <div id="takesActions">
+      <input id="takesNameIn" type="text" maxlength="40" placeholder="Next take name (optional)">
+      <button id="takesRecBtn" class="fbtn" type="button"><span class="rdot"></span>REC NOW</button>
+      <button id="takesFreshBtn" class="fbtn gold" type="button">● FRESH t=0</button>
+    </div>
+    <div id="takesList" data-scroll></div>
+  </div>
+</div>
+<div id="replayBar" aria-label="Replay controls">
+  <div class="rb-card">
+    <div class="rb-meta">
+      <span id="rbTitle" class="rb-title">Take</span>
+      <span id="rbClock">00:00.0 / 00:00.0</span>
+      <span id="rbBadge" class="rb-badge">REPLAY</span>
+    </div>
+    <div class="rb-btns">
+      <button id="rbPlayBtn" class="fbtn gold" type="button">⏸ PAUSE</button>
+      <button id="rbRestartBtn" class="fbtn" type="button">↻ RESTART</button>
+      <button id="rbSpd05" class="fbtn rb-spd" data-spd="0.5" type="button">0.5x</button>
+      <button id="rbSpd1" class="fbtn rb-spd active" data-spd="1" type="button">1x</button>
+      <button id="rbSpd2" class="fbtn rb-spd" data-spd="2" type="button">2x</button>
+      <button id="rbGuideBtn" class="fbtn" type="button">9:16</button>
+      <button id="rbAimBtn" class="fbtn" type="button">⌖ HERO</button>
+      <button id="rbExitBtn" class="fbtn" type="button">✕ EXIT</button>
+    </div>
   </div>
 </div>
 <div id="dayDoneCard">
@@ -124,6 +184,7 @@ import { SimClock, FreeCam, TIMESCALES, simDigest } from './capture.js';
 import { SCENES, sceneById, SceneRunner } from './scenes.js';
 import { FESTIVAL_DAY_ORDER, tourSceneIds, buildSceneMarkers, SceneJournal, FestivalDayState } from './festival.js';
 import { frameQuality, FilmRun, Audience, ChatFeed } from './film.js';
+import { REPLAY_SPEEDS, SessionRecorder, TakeStore, ReplayPlayer } from './replay.js';
 import { StageView } from './stageview.js';
 import { SUN_DIR, makeTextures, makeMaterials, makeSky, makeMotes, Post } from './fx.js';
 
@@ -209,12 +270,21 @@ function enterSceneReady(def) {
   setFreecam(false);
   syncSceneBtn();
 }
+const session = new SessionRecorder(SEED);
+const takeStore = new TakeStore(typeof localStorage !== 'undefined' ? localStorage : null);
+const replay = { active: false, player: null, take: null, savedLive: null, stageDef: null, mountedSceneKey: '', lastAlpha: 0 };
+
 function restart() {
+  if (!replay.active && session.isRecording) {
+    if (session.recordedTicks > 0) finishAndSaveRecording();
+    else { session.stopRecording(game); syncRecUi(); }
+  }
   if (cityView) scene.remove(cityView); for (const e of ents.values()) scene.remove(e); ents.clear();
   for (const b of bursts) scene.remove(b.grp); bursts = []; burstDone.clear();
   heroViews.forEach((h) => scene.remove(h.group, h.shadow, h.ring));
   markerMeshes.forEach((m) => scene.remove(m.group)); markerMeshes = [];
   game = new Game(SEED); bot = new Bot(game);
+  if (!replay.active) session.reset(SEED);
   cityView = buildCityView(THREE, game.city, kit, { keepOut: sceneKeepOut(game) }); scene.add(cityView);
   heroViews = LOOKS.map((look) => { const h = new HeroView(THREE, kit, look); scene.add(h.group, h.shadow, h.ring); return h; });
   game.heroes.forEach((h, i) => { heroViews[i].snapshot(h); heroViews[i].snapshot(h); });
@@ -248,14 +318,19 @@ function setFreecam(on) {
 function setGuide(on) { cap.guide = on; document.body.classList.toggle('guide', on); capNote(); }
 function setHud(on) { cap.hud = on; document.body.classList.toggle('nohud', !on); }
 function updateFreecam(dt) {
-  const k = input.keys, sp = (k.has('ShiftLeft') ? 30 : 10) * dt, f = (k.has('KeyW') || k.has('ArrowUp') ? 1 : 0) - (k.has('KeyS') || k.has('ArrowDown') ? 1 : 0), r = (k.has('KeyD') || k.has('ArrowRight') ? 1 : 0) - (k.has('KeyA') || k.has('ArrowLeft') ? 1 : 0), u = (k.has('KeyE') ? 1 : 0) - (k.has('KeyQ') ? 1 : 0);
+  const typing = document.activeElement && document.activeElement.tagName === 'INPUT';
+  const k = input.keys, sp = (k.has('ShiftLeft') ? 30 : 10) * dt;
+  const f = typing ? 0 : (k.has('KeyW') || k.has('ArrowUp') ? 1 : 0) - (k.has('KeyS') || k.has('ArrowDown') ? 1 : 0);
+  const r = typing ? 0 : (k.has('KeyD') || k.has('ArrowRight') ? 1 : 0) - (k.has('KeyA') || k.has('ArrowLeft') ? 1 : 0);
+  const u = typing ? 0 : (k.has('KeyE') ? 1 : 0) - (k.has('KeyQ') ? 1 : 0);
   if (f || r || u) free.fly(f * sp, r * sp, u * sp);
   const p = free.position(); camera.position.set(p[0], Math.max(0.2, p[1]), p[2]); camera.lookAt(free.pivot[0], free.pivot[1], free.pivot[2]);
   if (Math.abs(camera.fov - 56) > 0.1) { camera.fov = 56; camera.updateProjectionMatrix(); }
   cam.focus.set(free.pivot[0], free.pivot[1], free.pivot[2]); // shadows and haze follow the freecam
 }
 const capPtr = new Map(); let capPinch = 0;
-addEventListener('pointerdown', (e) => { if (free.on) capPtr.set(e.pointerId, [e.clientX, e.clientY, e.button]); }, true);
+const onCapUi = (el) => !!(el && el.closest && el.closest('#replayBar,#takesModal,#festbar,#journalModal,#filmzoom,button,input,select,textarea'));
+addEventListener('pointerdown', (e) => { if (free.on && !onCapUi(e.target)) capPtr.set(e.pointerId, [e.clientX, e.clientY, e.button]); }, true);
 addEventListener('pointerup', (e) => { capPtr.delete(e.pointerId); capPinch = 0; }, true);
 addEventListener('pointercancel', (e) => { capPtr.delete(e.pointerId); capPinch = 0; }, true);
 addEventListener('pointermove', (e) => {
@@ -264,7 +339,7 @@ addEventListener('pointermove', (e) => {
   else if (e.shiftKey || q[2] === 2) free.pan(-dx * free.dist * 0.0016, dy * free.dist * 0.0016);
   else free.orbit(-dx * 0.005, dy * 0.005);
 }, true);
-addEventListener('wheel', (e) => { if (free.on) free.dolly(e.deltaY > 0 ? 1.1 : 0.9); }, { passive: true });
+addEventListener('wheel', (e) => { if (free.on && !onCapUi(e.target)) free.dolly(e.deltaY > 0 ? 1.1 : 0.9); }, { passive: true });
 function jumpBookmark(n) {
   const def = SCENES[n]; if (!def || !def.bookmark) return;
   const b = typeof def.bookmark === 'function' ? def.bookmark(game) : def.bookmark;
@@ -272,11 +347,13 @@ function jumpBookmark(n) {
   free.pivot = [...b.pivot]; free.yaw = b.yaw; free.pitch = b.pitch; free.dist = b.dist; cap.bookmark = def.id; capNote();
 }
 addEventListener('keydown', (e) => {
-  if (e.code === 'KeyP') setFreecam(!free.on); else if (e.code === 'BracketLeft') { ticker.nudge(-1); capNote(); } else if (e.code === 'BracketRight') { ticker.nudge(1); capNote(); }
-  else if (e.code === 'KeyG') setGuide(!cap.guide); else if (e.code === 'KeyU') setHud(!cap.hud);
+  if (document.activeElement && document.activeElement.tagName === 'INPUT') return;
+  if (e.code === 'KeyP' && !replay.active) setFreecam(!free.on); else if (e.code === 'BracketLeft') { ticker.nudge(-1); capNote(); syncReplayBar(); } else if (e.code === 'BracketRight') { ticker.nudge(1); capNote(); syncReplayBar(); }
+  else if (e.code === 'KeyG') { setGuide(!cap.guide); syncReplayBar(); } else if (e.code === 'KeyU') setHud(!cap.hud);
   else if (/^Digit[1-8]$/.test(e.code)) jumpBookmark(+e.code.slice(5) - 1); // 1-8: jump to a scene's staged framing
+  else if (e.code === 'Escape' && replay.active) exitReplay();
   else if (e.code === 'Escape' && tour.active) exitTour();
-  else if (e.code === 'Enter' && activeScene) toggleScene(); // Enter: watch the scene / take control back
+  else if (e.code === 'Enter' && activeScene && !replay.active) toggleScene(); // Enter: watch the scene / take control back
 });
 
 function updateCamera(view, driving, dt, orbit) {
@@ -300,9 +377,10 @@ const input = new PlayerInput(); let dragging = false, started = AUTO || !!activ
 const extra = { use: false, swap: false };
 function begin() { if (started) return; started = true; $('title').style.display = 'none'; initTouch(); unlockAudio(); }
 addEventListener('keydown', (e) => {
+  if (document.activeElement && document.activeElement.tagName === 'INPUT') return;
   if (!started) { begin(); return; }
   if (e.code === 'Tab') e.preventDefault();
-  if (e.code === 'KeyR') restart(); if (e.code === 'KeyH') $('help').style.display = $('help').style.display === 'none' ? '' : 'none';
+  if (e.code === 'KeyR') { if (replay.active) restartReplayTake(); else restart(); } if (e.code === 'KeyH') $('help').style.display = $('help').style.display === 'none' ? '' : 'none';
 });
 $('title').addEventListener('pointerdown', () => begin());
 renderer.domElement.addEventListener('pointerdown', () => { dragging = !free.on; });
@@ -381,10 +459,41 @@ function sceneLight(def, t) { for (const c of def.lightCues || []) if (c.at === 
 
 // ---------------------------------------------------------------- tick + render
 const ticker = new SimClock(30); let last = performance.now(), time = 0, flashMsg = '', flashT = 0;
+function applyGameEvents(evts) {
+  for (const e of evts) {
+    play(e);
+    if (e === 'crash' || e === 'ram' || e === 'pound') cam.shake = Math.max(cam.shake, e === 'ram' ? 1.2 : 0.6);
+    if (e === 'peck') cam.shake = Math.max(cam.shake, 0.4);
+    if (e === 'switch') cam.swoop = 1;
+    const msg = { heatLost: 'You lost them', busted: 'Collared! The Watch took a cut', tailor: 'New coat, new face. -40 glim', jack: 'Hey! My cart!', denied: 'Not while the Watch is looking', cuccoAggro: 'The cuccos are furious!', cuccoCalm: 'The cuccos settle down' }[e];
+    if (msg) { flashMsg = msg; flashT = 110; }
+  }
+  if (flashT > 0) flashT--;
+}
+function replayTick() {
+  const p = replay.player;
+  if (!p || p.paused || p.done) return;
+  if (!p.step()) { syncReplayBar(); return; }
+  syncReplayStage(p.sceneState);
+  if (replay.stageDef && stage && p.sceneState && p.sceneState.mode === 'watch') {
+    const rst = Math.max(0, (p.sceneState.sceneTick || 1) - 1);
+    sceneSound(replay.stageDef, rst);
+    sceneLight(replay.stageDef, rst);
+  }
+  applyGameEvents(game.events);
+  game.heroes.forEach((h, i) => heroViews[i].snapshot(h));
+  if (p.done) p.paused = true;
+  syncReplayBar();
+}
 function tick() {
   if (!started) return;
+  if (replay.active) { replayTick(); return; }
   if (activeScene && !runner && sceneMode === 'watch') { runner = new SceneRunner(game, activeScene); parkHero(); }
-  game.tick(runner ? { ...runner.input(), camYaw: 0 } : AUTO ? { ...bot.input(), camYaw: 0 } : readInput());
+  if (activeScene) session.recordSceneState(activeScene.id, runner ? 'watch' : sceneMode, runner ? runner.t : 0);
+  else session.recordSceneState(null, 'play', 0);
+  const rawInp = runner ? { ...runner.input(), camYaw: 0 } : AUTO ? { ...bot.input(), camYaw: 0 } : readInput();
+  const normInp = session.recordTick(rawInp);
+  game.tick(normInp);
   if (runner && stage) { const st = runner.t - 1; sceneSound(activeScene, st); sceneLight(activeScene, st); for (const c of activeScene.cuts || []) if (c.at === st && Q.get('cam') !== 'free') { const b = c.cam(game); free.pivot = [...b.pivot]; free.yaw = b.yaw; free.pitch = b.pitch; free.dist = b.dist; } }
   if (runner && runner.done) {
     if (tour.active) {
@@ -423,16 +532,9 @@ function tick() {
       }
     }
   }
-  for (const e of game.events) {
-    play(e);
-    if (e === 'crash' || e === 'ram' || e === 'pound') cam.shake = Math.max(cam.shake, e === 'ram' ? 1.2 : 0.6);
-    if (e === 'peck') cam.shake = Math.max(cam.shake, 0.4);
-    if (e === 'switch') cam.swoop = 1;
-    const msg = { heatLost: 'You lost them', busted: 'Collared! The Watch took a cut', tailor: 'New coat, new face. -40 glim', jack: 'Hey! My cart!', denied: 'Not while the Watch is looking', cuccoAggro: 'The cuccos are furious!', cuccoCalm: 'The cuccos settle down' }[e];
-    if (msg) { flashMsg = msg; flashT = 110; }
-  }
-  if (flashT > 0) flashT--;
+  applyGameEvents(game.events);
   game.heroes.forEach((h, i) => heroViews[i].snapshot(h));
+  if (session.isRecording) syncRecUi();
 }
 function sync(list, key, make, place) {
   for (const o of list) { let m = ents.get(key + o.id); if (!m) { m = make(o); ents.set(key + o.id, m); scene.add(m); } m.userData.live = frameNo; place(m, o); }
@@ -452,9 +554,10 @@ function stepBursts(dt) {
 
 function frame(now) {
   const rdt = Math.min(0.1, (now - last) / 1000); last = now; frameNo++;
-  const dt = rdt * ticker.scale; time += dt; // everything drawn (animation, bursts, wind) slows with the sim; the camera itself stays on real time
+  const pausedReplay = replay.active && replay.player && (replay.player.paused || replay.player.done);
+  const dt = pausedReplay ? 0 : rdt * ticker.scale; time += dt; // everything drawn (animation, bursts, wind) slows with the sim; the camera itself stays on real time
   if (TC) touchState = TC.getInput();
-  const a = ticker.advance(rdt, tick), L = (p, c) => p + (c - p) * a, g = game, hero = g.hero, hv = heroViews[g.active];
+  const a = replay.active ? (pausedReplay ? replay.lastAlpha : (replay.lastAlpha = ticker.advance(rdt, tick))) : ticker.advance(rdt, tick), L = (p, c) => p + (c - p) * a, g = game, hero = g.hero, hv = heroViews[g.active];
   g.heroes.forEach((h, i) => heroViews[i].update(h, a, dt, time, i === g.active));
   sync(g.vehicles, 'v', (v) => makeVehicle(THREE, kit, v), (m, v) => {
     const dy = Math.atan2(Math.sin(v.yaw - v.pyaw), Math.cos(v.yaw - v.pyaw));
@@ -487,10 +590,16 @@ function frame(now) {
   for (const [k, m] of ents) if (m.userData.live !== frameNo) { scene.remove(m); ents.delete(k); }
   const marks = g.markers(); beacons.forEach((b, i) => { const m = marks[i]; b.visible = !!m; if (m) { b.userData.set(m.kind); b.position.set(m.x * U, 0, m.z * U); b.scale.set(1, 1 + Math.sin(time * 4 + i) * 0.04, 1); } });
 
-  if (stage && activeScene) { const st = runner ? Math.max(0, runner.t - 1 + a) : 0; activeScene.act(stageS, st); if (!runner) { const hj = stageS.actors.find((ac) => ac.look && ac.look.hero); if (hj) hj.vis = false; } stage.update(time);
+  if (replay.active && stage && replay.stageDef) {
+    const ss = replay.player.sceneState, st = ss && ss.mode === 'watch' ? Math.max(0, (ss.sceneTick || 1) - 1 + (pausedReplay ? replay.lastAlpha : a)) : 0;
+    replay.stageDef.act(stageS, st);
+    if (!ss || ss.mode !== 'watch') { const hj = stageS.actors.find((ac) => ac.look && ac.look.hero); if (hj) hj.vis = false; }
+    stage.update(time);
+    $('flashfx').style.opacity = stageS.flash ? Math.min(0.85, stageS.flash * 0.8) : 0;
+  } else if (stage && activeScene) { const st = runner ? Math.max(0, runner.t - 1 + a) : 0; activeScene.act(stageS, st); if (!runner) { const hj = stageS.actors.find((ac) => ac.look && ac.look.hero); if (hj) hj.vis = false; } stage.update(time);
     if (runner && activeScene.track && Q.get('cam') !== 'free' && cap.bookmark === activeScene.id && !capPtr.size) { const b = activeScene.track(game, st); free.pivot = [...b.pivot]; free.yaw = b.yaw; free.pitch = b.pitch; free.dist = b.dist; }
     $('flashfx').style.opacity = stageS.flash ? Math.min(0.85, stageS.flash * 0.8) : 0; }
-  const showMarkers = !tour.active && !FILM && !LOOP_SCENE;
+  const showMarkers = !replay.active && !tour.active && !FILM && !LOOP_SCENE;
   const targetId = festival.active ? festival.currentId() : null;
   for (const mm of markerMeshes) {
     mm.group.visible = showMarkers;
@@ -616,10 +725,25 @@ function syncSceneBtn() {
 // and while a scene is watched the game hero waits at the hideout so only one Juniper is on screen.
 function placeHeroInScene() {
   if (!activeScene) return;
-  if (stageS) { const o = stageS.origin, hj = stageS.actors.find((ac) => ac.look && ac.look.hero); game.place(game.active, (o[0] + (hj ? hj.x : 0)) * 100, o[1] * 100 + 40, (o[2] + (hj ? hj.z : 0)) * 100); }
-  else if (activeScene.bookmark) { const b = typeof activeScene.bookmark === 'function' ? activeScene.bookmark(game) : activeScene.bookmark; if (b) game.place(game.active, b.pivot[0] * 100, b.pivot[1] * 100 + 40, b.pivot[2] * 100); }
+  if (stageS) {
+    const o = stageS.origin, hj = stageS.actors.find((ac) => ac.look && ac.look.hero);
+    const px = (o[0] + (hj ? hj.x : 0)) * 100, py = o[1] * 100 + 40, pz = (o[2] + (hj ? hj.z : 0)) * 100;
+    game.place(game.active, px, py, pz);
+    if (!replay.active) session.recordPlace(game.active, px, py, pz);
+  } else if (activeScene.bookmark) {
+    const b = typeof activeScene.bookmark === 'function' ? activeScene.bookmark(game) : activeScene.bookmark;
+    if (b) {
+      const px = b.pivot[0] * 100, py = b.pivot[1] * 100 + 40, pz = b.pivot[2] * 100;
+      game.place(game.active, px, py, pz);
+      if (!replay.active) session.recordPlace(game.active, px, py, pz);
+    }
+  }
 }
-function parkHero() { const P = game.city.places; game.place(game.active, P.hideout.x, 0, P.hideout.z); }
+function parkHero() {
+  const P = game.city.places;
+  game.place(game.active, P.hideout.x, 0, P.hideout.z);
+  if (!replay.active) session.recordPlace(game.active, P.hideout.x, 0, P.hideout.z);
+}
 function startWatch() {
   if (!activeScene || runner) return;
   sceneMode = 'watch'; sceneRan = true;
@@ -831,12 +955,289 @@ if (FILM) {
   film = { run, aud };
 }
 
+// ---------------------------------------------------------------- Film Mode UI: record toggle, saved named takes, FreeCam replay controls
+let currentCitySeed = SEED, lastRecHtml = '', lastTakeCount = -1;
+const fmtSec = (ticks) => {
+  const s = (ticks || 0) / 30;
+  const m = Math.floor(s / 60);
+  const rem = (s - m * 60).toFixed(1).padStart(4, '0');
+  return `${m}:${rem}`;
+};
+function syncRecUi() {
+  const cnt = takeStore.list().length;
+  if (cnt !== lastTakeCount) { lastTakeCount = cnt; $('takesBtn').textContent = cnt ? `🎞 TAKES (${cnt})` : '🎞 TAKES'; }
+  const recOn = !replay.active && session.isRecording;
+  const label = recOn ? `<span class="rdot"></span>■ ${fmtSec(session.recordedTicks)}` : '<span class="rdot"></span>REC';
+  if (label !== lastRecHtml) {
+    lastRecHtml = label;
+    $('recBtn').innerHTML = label;
+    $('recBtn').classList.toggle('rec', recOn);
+    $('takesRecBtn').innerHTML = recOn ? `<span class="rdot"></span>■ STOP (${fmtSec(session.recordedTicks)})` : '<span class="rdot"></span>REC NOW';
+    $('takesRecBtn').classList.toggle('rec', recOn);
+  }
+}
+function finishAndSaveRecording() {
+  if (!session.isRecording) return null;
+  const custom = ($('takesNameIn').value || '').trim();
+  const defName = takeStore.nextName(activeScene ? activeScene.id : 'Take');
+  const take = session.stopRecording(game, { name: custom || defName, sceneId: activeScene ? activeScene.id : null });
+  if (custom) $('takesNameIn').value = '';
+  const res = takeStore.save(take);
+  syncRecUi();
+  if ($('takesModal').style.display === 'flex') renderTakes();
+  flashMsg = res.ok ? `Saved "${take.name}" (${fmtSec(take.durationTicks)})` : `Save failed: ${res.error || 'storage'}`;
+  flashT = 110;
+  return take;
+}
+function toggleRecording() {
+  if (replay.active) return;
+  if (!started) begin();
+  if (session.isRecording) {
+    finishAndSaveRecording();
+  } else {
+    const custom = ($('takesNameIn').value || '').trim();
+    session.startRecording(game, {
+      name: custom,
+      sceneId: activeScene ? activeScene.id : null,
+      sceneMode: runner ? 'watch' : sceneMode,
+      sceneTick: runner ? runner.t : 0,
+    });
+    syncRecUi();
+    flashMsg = 'Recording take…'; flashT = 75;
+  }
+}
+function startFreshRecording() {
+  if (replay.active) exitReplay();
+  if (!started) begin();
+  if (session.isRecording) finishAndSaveRecording();
+  $('takesModal').style.display = 'none';
+  restart();
+  if (activeScene && sceneMode === 'watch' && !runner) { runner = new SceneRunner(game, activeScene); parkHero(); }
+  const custom = ($('takesNameIn').value || '').trim();
+  session.startRecording(game, {
+    name: custom,
+    sceneId: activeScene ? activeScene.id : null,
+    sceneMode: runner ? 'watch' : sceneMode,
+    sceneTick: runner ? runner.t : 0,
+  });
+  syncRecUi();
+  flashMsg = 'Recording fresh t=0 take…'; flashT = 85;
+}
+function renderTakes() {
+  const list = $('takesList'), takes = takeStore.list();
+  list.innerHTML = '';
+  if (!takes.length) {
+    const empty = document.createElement('div');
+    empty.className = 'trow';
+    empty.innerHTML = '<span class="tmeta"><span class="tname">No takes yet</span><span class="tsub">Tap ● REC while playing free roam or any staged scene.</span></span>';
+    list.append(empty);
+    return;
+  }
+  for (const take of takes) {
+    const row = document.createElement('div'); row.className = 'trow';
+    const meta = document.createElement('div'); meta.className = 'tmeta';
+    const nameEl = document.createElement('span'); nameEl.className = 'tname'; nameEl.textContent = take.name;
+    const subEl = document.createElement('span'); subEl.className = 'tsub';
+    subEl.textContent = `${take.sceneId || 'Free Play'} · ${fmtSec(take.durationTicks)} · ${take.durationTicks}t`;
+    meta.append(nameEl, subEl);
+    const playBtn = document.createElement('button'); playBtn.className = 'fbtn gold'; playBtn.type = 'button'; playBtn.textContent = '▶'; playBtn.title = 'Replay take';
+    playBtn.addEventListener('click', () => { unlockAudio(); enterReplay(take); });
+    const renBtn = document.createElement('button'); renBtn.className = 'fbtn'; renBtn.type = 'button'; renBtn.textContent = '✎'; renBtn.title = 'Rename take';
+    renBtn.addEventListener('click', () => {
+      const inp = document.createElement('input'); inp.className = 'trename'; inp.type = 'text'; inp.maxLength = 40; inp.value = take.name;
+      const commit = (ok) => {
+        if (ok && inp.value.trim()) takeStore.rename(take.id, inp.value.trim());
+        renderTakes();
+      };
+      inp.addEventListener('keydown', (ev) => { ev.stopPropagation(); if (ev.key === 'Enter') commit(true); else if (ev.key === 'Escape') commit(false); });
+      inp.addEventListener('keyup', (ev) => ev.stopPropagation());
+      inp.addEventListener('blur', () => commit(true));
+      nameEl.replaceWith(inp);
+      inp.focus(); inp.select();
+    });
+    const delBtn = document.createElement('button'); delBtn.className = 'fbtn'; delBtn.type = 'button'; delBtn.textContent = '✕'; delBtn.title = 'Delete take';
+    delBtn.addEventListener('click', () => { takeStore.remove(take.id); syncRecUi(); renderTakes(); });
+    row.append(meta, playBtn, renBtn, delBtn);
+    list.append(row);
+  }
+}
+function clearWorldEntities() {
+  for (const e of ents.values()) scene.remove(e);
+  ents.clear();
+  for (const b of bursts) scene.remove(b.grp);
+  bursts = []; burstDone.clear();
+}
+function ensureCityViewSeed(seed) {
+  if (currentCitySeed === seed && cityView) return;
+  if (cityView) scene.remove(cityView);
+  cityView = buildCityView(THREE, game.city, kit, { keepOut: sceneKeepOut(game) });
+  scene.add(cityView);
+  currentCitySeed = seed;
+}
+function syncReplayStage(ss) {
+  const id = (ss && ss.sceneId) || null;
+  if (id === replay.mountedSceneKey && (!id || stageS)) return;
+  if (stage) { stage.dispose(scene); stage = null; }
+  stopBed(); sceneCues = []; sceneLightCues = []; stageS = null;
+  replay.mountedSceneKey = id;
+  replay.stageDef = sceneById(id);
+  if (!replay.stageDef) { setLight('golden'); $('flashfx').style.opacity = 0; return; }
+  if (replay.stageDef.set) {
+    stageS = replay.stageDef.set(game);
+    replay.stageDef.act(stageS, ss.mode === 'watch' ? Math.max(0, (ss.sceneTick || 1) - 1) : 0);
+    stage = new StageView(THREE, kit, stageS);
+    scene.add(stage.root);
+  }
+  setLight(replay.stageDef.light || 'golden');
+}
+function aimReplayCamAtHero() {
+  const hp = game.posOf(game.hero);
+  if (!free.on) setFreecam(true);
+  free.pivot = [hp.x * U, hp.y * U + 1.1, hp.z * U];
+  free.yaw = free.yaw || 0.4;
+  free.pitch = Math.max(0.15, Math.min(0.65, free.pitch || 0.28));
+  free.dist = Math.max(5.5, Math.min(18, free.dist || 9.5));
+}
+function syncReplayBar() {
+  if (!replay.active || !replay.player) return;
+  const p = replay.player;
+  $('rbTitle').textContent = replay.take.name;
+  $('rbClock').textContent = `${fmtSec(p.cursor)} / ${fmtSec(p.totalTicks)}`;
+  const badge = $('rbBadge');
+  if (p.done) {
+    const exact = !!(p.preludeMatch && p.digestMatch);
+    badge.className = `rb-badge ${exact ? 'ok' : 'err'}`;
+    badge.textContent = exact ? '✓ DIGEST EXACT' : '✗ DIVERGED';
+  } else {
+    badge.className = 'rb-badge';
+    badge.textContent = p.paused ? 'PAUSED' : 'PLAYING';
+  }
+  $('rbPlayBtn').textContent = (p.paused || p.done) ? '▶ PLAY' : '⏸ PAUSE';
+  document.querySelectorAll('.rb-spd').forEach((btn) => btn.classList.toggle('active', +btn.dataset.spd === ticker.scale));
+  $('rbGuideBtn').classList.toggle('active', cap.guide);
+}
+function enterReplay(take) {
+  if (!take) return;
+  if (!started) begin();
+  if (session.isRecording && !replay.active) finishAndSaveRecording();
+  if (!replay.active) {
+    replay.savedLive = {
+      game, bot, activeScene, runner, stageS, sceneMode, sceneRan, cooldownMarkerId,
+      scale: ticker.scale, guide: cap.guide, freeOn: free.on, flashMsg, flashT,
+    };
+  }
+  if (stage) { stage.dispose(scene); stage = null; }
+  stopBed(); sceneCues = []; sceneLightCues = []; stageS = null;
+  clearWorldEntities();
+  $('takesModal').style.display = 'none';
+  $('journalModal').style.display = 'none';
+  replay.take = take;
+  replay.player = new ReplayPlayer(take);
+  replay.stageDef = null;
+  replay.mountedSceneKey = '__init__';
+  replay.lastAlpha = 0;
+  replay.active = true;
+  game = replay.player.game; window.__game = game;
+  ensureCityViewSeed(take.seed);
+  game.heroes.forEach((h, i) => { heroViews[i].snapshot(h); heroViews[i].snapshot(h); });
+  syncReplayStage(replay.player.sceneState);
+  document.body.classList.add('replaying');
+  $('replayBar').style.display = 'flex';
+  if (!free.on) setFreecam(true);
+  if (replay.stageDef && replay.stageDef.bookmark && replay.player.sceneState?.mode === 'watch') {
+    const b = typeof replay.stageDef.bookmark === 'function' ? replay.stageDef.bookmark(game) : replay.stageDef.bookmark;
+    if (b) { free.pivot = [...b.pivot]; free.yaw = b.yaw; free.pitch = b.pitch; free.dist = b.dist; }
+  } else {
+    aimReplayCamAtHero();
+  }
+  if (!REPLAY_SPEEDS.includes(ticker.scale)) ticker.setScale(1);
+  capNote();
+  syncReplayBar();
+}
+function restartReplayTake() {
+  if (!replay.active || !replay.player) return;
+  stopBed();
+  if (stage) { stage.dispose(scene); stage = null; }
+  stageS = null; replay.mountedSceneKey = '__init__';
+  clearWorldEntities();
+  replay.player.reset();
+  replay.player.paused = false;
+  replay.lastAlpha = 0;
+  game = replay.player.game; window.__game = game;
+  game.heroes.forEach((h, i) => { heroViews[i].snapshot(h); heroViews[i].snapshot(h); });
+  syncReplayStage(replay.player.sceneState);
+  syncReplayBar();
+}
+function exitReplay() {
+  if (!replay.active) return;
+  const s = replay.savedLive;
+  stopBed();
+  if (stage) { stage.dispose(scene); stage = null; }
+  stageS = null;
+  clearWorldEntities();
+  replay.active = false; replay.player = null; replay.take = null; replay.savedLive = null;
+  replay.stageDef = null; replay.mountedSceneKey = '';
+  document.body.classList.remove('replaying');
+  $('replayBar').style.display = 'none';
+  if (s) {
+    game = s.game; bot = s.bot; activeScene = s.activeScene; runner = s.runner;
+    sceneMode = s.sceneMode; sceneRan = s.sceneRan; cooldownMarkerId = s.cooldownMarkerId;
+    flashMsg = s.flashMsg; flashT = s.flashT;
+    window.__game = game;
+    ensureCityViewSeed(SEED);
+    game.heroes.forEach((h, i) => { heroViews[i].snapshot(h); heroViews[i].snapshot(h); });
+    mountSceneStage(activeScene, { moveHero: false, jumpCam: false });
+    if (activeScene && runner && stageS) activeScene.act(stageS, Math.max(0, runner.t - 1));
+    setFreecam(s.freeOn);
+    setGuide(s.guide);
+    ticker.setScale(s.scale);
+  } else {
+    restart();
+    setFreecam(false);
+  }
+  syncSceneBtn(); syncRecUi(); capNote();
+}
+
+$('recBtn').addEventListener('click', (e) => { e.stopPropagation(); unlockAudio(); toggleRecording(); });
+$('takesBtn').addEventListener('click', (e) => { e.stopPropagation(); unlockAudio(); if (!started) begin(); renderTakes(); syncRecUi(); $('takesModal').style.display = 'flex'; });
+$('takesClose').addEventListener('click', () => { $('takesModal').style.display = 'none'; });
+$('takesModal').addEventListener('click', (e) => { if (e.target === $('takesModal')) $('takesModal').style.display = 'none'; });
+$('takesNameIn').addEventListener('keydown', (e) => { e.stopPropagation(); if (e.key === 'Enter') $('takesNameIn').blur(); });
+$('takesNameIn').addEventListener('keyup', (e) => e.stopPropagation());
+$('takesRecBtn').addEventListener('click', () => { unlockAudio(); toggleRecording(); renderTakes(); });
+$('takesFreshBtn').addEventListener('click', () => { unlockAudio(); startFreshRecording(); });
+$('rbPlayBtn').addEventListener('click', () => {
+  if (!replay.active || !replay.player) return;
+  if (replay.player.done) restartReplayTake();
+  else replay.player.paused = !replay.player.paused;
+  syncReplayBar();
+});
+$('rbRestartBtn').addEventListener('click', () => { unlockAudio(); restartReplayTake(); });
+document.querySelectorAll('.rb-spd').forEach((btn) => {
+  btn.addEventListener('click', () => { ticker.setScale(+btn.dataset.spd); capNote(); syncReplayBar(); });
+});
+$('rbGuideBtn').addEventListener('click', () => { setGuide(!cap.guide); syncReplayBar(); });
+$('rbAimBtn').addEventListener('click', () => aimReplayCamAtHero());
+$('rbExitBtn').addEventListener('click', () => exitReplay());
+syncRecUi();
+
 // Camera state for the external recorder.
 window.__dbg = { get freecam() { return free.on ? { on: true, pivot: [...free.pivot], yaw: free.yaw, pitch: free.pitch, dist: free.dist } : { on: false }; },
   get timescale() { return ticker.scale; }, get bookmark() { return cap.bookmark; }, get guide() { return cap.guide; }, get hud() { return cap.hud; },
   get tick() { return game.ticks; }, get digest() { return simDigest(game); }, timescales: TIMESCALES,
   get scene() { if (!activeScene) return null; return runner ? { id: activeScene.id, mode: 'watch', tick: runner.t, duration: activeScene.duration, events: runner.fired, cues: sceneCues, lightCues: sceneLightCues } : { id: activeScene.id, mode: sceneMode, tick: 0, duration: activeScene.duration, events: [], cues: sceneCues, lightCues: sceneLightCues }; },
   get film() { return filmDbg; },
+  get replay() {
+    const p = replay.player;
+    return {
+      recording: session.isRecording, recordedTicks: session.recordedTicks,
+      active: replay.active, paused: p ? p.paused : false, done: p ? p.done : false,
+      cursor: p ? p.cursor : 0, totalTicks: p ? p.totalTicks : 0, speed: ticker.scale,
+      preludeMatch: p ? p.preludeMatch : null, digestMatch: p ? p.digestMatch : null,
+      actualStartDigest: p ? p.actualStartDigest : null, actualEndDigest: p ? p.actualEndDigest : null,
+      takeCount: takeStore.list().length,
+    };
+  },
   /** Put the freecam anywhere (set-dressing stills): { pivot: [x, y, z] metres, yaw, pitch, dist }. */
   setCam(c) { if (!free.on) setFreecam(true); free.pivot = [...c.pivot]; free.yaw = c.yaw; free.pitch = c.pitch; free.dist = c.dist; cap.bookmark = null; capNote(); } };
 requestAnimationFrame(function first(t) { if (Q.get('freecam') === '1') setFreecam(true); capNote(); frame(t); });
