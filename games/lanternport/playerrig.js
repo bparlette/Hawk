@@ -1,9 +1,11 @@
-// Take-control rigged hero (Cherie, Nov 13: "Take control has to be the rigged
-// version as well"). When the player takes control inside a converted staged
-// scene, the hero they drive is the SAME juniper_rig.glb + clip library as the
-// staged performance (heroglb.js) — not the procedural HeroView figure. The
-// staged actor and this player rig are two instances of one model/clip set, so
-// handing control over never swaps in a different character.
+// The rigged hero (Cherie, Nov 13: "Take control has to be the rigged version
+// as well", then "The whole game of Lanternport should be the rigged walker").
+// Wherever Juniper is the hero on screen outside a staged performance — free
+// roam, jobs, Festival play, scene ready / take-control, replays — she is the
+// SAME juniper_rig.glb + clip library as the staged performance (heroglb.js),
+// not the procedural HeroView figure. The staged actor and this player rig are
+// two instances of one model/clip set, so handing control over never swaps in
+// a different character.
 //
 // View-layer only: the sim, colliders, controls and camera are untouched. This
 // module reads the controlled hero's live movement state (action, forward
@@ -38,15 +40,22 @@ export function playerRigScene(sceneId) {
   return sceneId ? HERO_GLB_SCENES[sceneId] || null : null;
 }
 
+/** Model Y offset while seated in a vehicle: mirrors heroglb.js SEATED_Y_OFFSET (the rim-sit rest height). */
+export const VEHICLE_SEAT_Y_OFFSET = 0.55;
+
 /**
  * Pure clip decision from the controlled hero's live state.
- * sel: { action, speed, swimming, danceClip }
+ * sel: { action, speed, swimming, danceClip, seated }
  *   action    — Sm64Controller action string ('idle', 'dive', ...)
  *   speed     — |ctrl.fvel| in sim units (walk tops out around 32)
  *   swimming  — hero is standing in the current stage's pool
  *   danceClip — the scene's dance clip name, or null outside dance scenes
+ *   seated    — hero is in a vehicle: she sits (the sit-rim clip at seat height)
  */
 export function pickPlayerClip(sel) {
+  if (sel.seated) {
+    return { clip: 'sit-rim', loop: true, rate: 1, yOffset: VEHICLE_SEAT_Y_OFFSET };
+  }
   if (sel.swimming) {
     return { clip: 'swim-surface', loop: true, rate: sel.speed > 1 ? 1 : 0.55, yOffset: SWIM_Y_OFFSET };
   }
