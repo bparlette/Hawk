@@ -1,31 +1,19 @@
 // pool-rimsit: Juniper sits on the rooftop pool rim with her back to camera, cap and braid
 // down her back, and turns to look back over her shoulder — the seated rim composition
-// from SCENES.md's pool-frames note. The performance is Cherie's second 8-panel sheet
-// (Nov 11), keyed + seat-line aligned by the same pipeline as pool-surface and played
-// on a camera-facing sprite at the rim of the rooftop-dive set.
-// Frames: games/lanternport/assets/linkle-rimsit/rimsit_00..07.png (512x576 RGBA).
+// from SCENES.md's pool-frames note, on the rooftop-dive set.
+// Nov 12 (Cherie): the original build played the 8-panel portrait sheet on a camera-facing
+// sprite — "basically a still flat image, and it shows as soon as you turn the camera."
+// Retired. She is now the real 3D pool-look figure (the same person() build as
+// rooftop-dive), seated by the pose system, and the look-back is a smooth head turn
+// across the same beat ticks the sheet used. The rimsit_*.png sheet is no longer loaded.
 // act() is a pure function of (S, t): deterministic at any timescale.
-import { ramp, person, thing, townLook } from './stage.js';
-import { registerStageKind } from './stageview.js';
-
-const FRAMES = 8;
-registerStageKind('rimsitSprite', (T, kit, o) => {
-  const loader = new T.TextureLoader();
-  const maps = [];
-  for (let i = 0; i < FRAMES; i++) {
-    const tex = loader.load(`assets/linkle-rimsit/rimsit_0${i}.png`);
-    if ('colorSpace' in tex && T.SRGBColorSpace) tex.colorSpace = T.SRGBColorSpace;
-    maps.push(tex);
-  }
-  const sp = new T.Sprite(new T.SpriteMaterial({ map: maps[0], transparent: true }));
-  const h = o.h || 2.2;
-  sp.scale.set(h * (512 / 576), h, 1);
-  sp.center.set(0.5, 0); // node position = bottom-centre of the sprite
-  sp.userData.pose = (a) => { sp.material.map = maps[Math.max(0, Math.min(FRAMES - 1, a.frame | 0))]; };
-  return sp;
-});
+import { ramp, person, thing, townLook, JUNIPER } from './stage.js';
 
 const M = 0.01; // sim units -> metres (same convention as filmscenes.js)
+// Look-back envelope over the sheet's beat ticks: still sit, slow turn (240-360),
+// the look held (to 630), then she turns away and settles (810). Smooth ramps
+// replace the sheet's 8 stepped frames.
+const turnAt = (t) => ramp(t, 240, 360) * (1 - ramp(t, 630, 810));
 function roofOf(city) { // the tallest roomy building nearest the middle of town (same pick as rooftop-dive)
   const hs = city.boxes.filter((b) => b.kind === 'house' && b.y1 >= 1500 && b.x1 - b.x0 >= 1000 && b.z1 - b.z0 >= 900);
   hs.sort((a, b) => b.y1 - a.y1 || Math.hypot((a.x0 + a.x1) / 2, (a.z0 + a.z1) / 2) - Math.hypot((b.x0 + b.x1) / 2, (b.z0 + b.z1) / 2));
@@ -33,13 +21,7 @@ function roofOf(city) { // the tallest roomy building nearest the middle of town
 }
 const cam = (o, x, y, z, tx, ty, tz) => { const dx = tx - x, dy = ty - y, dz = tz - z, d = Math.hypot(dx, dy, dz); return { pivot: [o[0] + tx, o[1] + ty, o[2] + tz], yaw: Math.atan2(dx, dz), pitch: Math.asin(-dy / d), dist: d }; };
 
-// Frame beats (ticks @ 30 Hz): a long still sit, a slow turn, the look back held,
-// then she turns away and settles. The look-back frames are the money beats — hold them.
-const F = [
-  [0, 0], [120, 1], [240, 2], [360, 3], [510, 4], [630, 5], [720, 6], [810, 7],
-];
-const frameAt = (t) => { let f = 0; for (const [at, fr] of F) if (t >= at) f = fr; return f; };
-const SX = 0.2; // sprite x on the rim
+const SX = 0.2; // her seat x on the rim
 
 export const poolRimsit = {
   id: 'pool-rimsit', title: 'Pool rim sit: Juniper sits at the rim, back to camera, and looks back over her shoulder', duration: 900, light: 'golden',
@@ -54,7 +36,7 @@ export const poolRimsit = {
         thing('pergola', 'pergola', r.w / 2 - 1.7, 0, -r.d / 2 + 1.6), thing('umb', 'umbrella', 0, 0, -pd / 2 - 1.5),
       ],
       actors: [
-        thing('juniper', 'rimsitSprite', SX, 0.28, pd / 2 - 0.12, 0, { frame: 0, h: 2.2 }),
+        person('juniper', { ...JUNIPER, swim: true, poolLook: true, cap: 0xf2b23a }, SX, 0.42, pd / 2 - 0.12, Math.PI),
         person('sun1', { ...townLook(1), swim: true }, -1.3, 0.45, -pd / 2 - 1.5, 0), person('sun2', { ...townLook(6), swim: true, hat: 0xf4ead8 }, 1.3, 0.45, -pd / 2 - 1.5, 0),
         thing('ripple', 'ripple', SX + 0.4, 0.53, pd / 2 - 0.5, 0, { p: -1 }),
         ...[0, 1, 2].map((i) => thing('gull' + i, 'gull', 0, 0, 0)),
@@ -62,7 +44,8 @@ export const poolRimsit = {
   },
   act(S, t) {
     const A = Object.fromEntries(S.actors.map((a) => [a.id, a])), j = A.juniper;
-    j.frame = frameAt(t);
+    const turn = turnAt(t); // seated the whole scene; the head turn carries the performance
+    j.pose = { sit: 1, headYaw: -2.05 * turn, sway: 0.16 * turn, grin: turn > 0.85 ? 1 : 0, armL: [-0.45, 0.18], armR: [-0.45, 0.18] };
     A.ripple.p = (t % 300) < 190 ? (t % 300) / 190 : -1; // her toes trail the water: a slow repeating ripple
     for (const [id, ph] of [['sun1', 0], ['sun2', 9]]) { // across the pool, one sunbather props up on an elbow at the look-back
       const s = A[id], up = id === 'sun1' ? ramp(t, 350, 400) * (1 - ramp(t, 640, 700)) : 0;
