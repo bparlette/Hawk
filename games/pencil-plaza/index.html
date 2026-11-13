@@ -1,0 +1,68 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Pencil Plaza — walk her round the fountain</title>
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+<style>
+  html, body { margin: 0; height: 100%; background: #ece4d0; overflow: hidden; }
+  #view { position: fixed; inset: 0; }
+  canvas { display: block; }
+  #loading {
+    position: fixed; inset: 0; display: flex; align-items: center; justify-content: center;
+    color: #3a362e; font-family: Georgia, 'Times New Roman', serif; font-size: 20px;
+    letter-spacing: .04em; background: #ece4d0; z-index: 1200; text-align: center; padding: 24px;
+  }
+  #hud {
+    position: fixed; left: 12px; top: 10px; z-index: 1100; pointer-events: none;
+    color: rgba(43, 39, 33, .92); font-family: system-ui, sans-serif; font-size: 13px;
+    text-shadow: 0 1px 3px rgba(255, 253, 245, .65); line-height: 1.45;
+  }
+  #hud b { font-family: Georgia, serif; font-size: 15px; letter-spacing: .03em; }
+  #paintBtn {
+    position: fixed; right: 12px; top: 10px; z-index: 1100;
+    font-family: system-ui, sans-serif; font-size: 13px; font-weight: 700;
+    color: #33302a; background: rgba(247, 242, 230, .78); border: 2px solid rgba(50, 46, 40, .5);
+    border-radius: 999px; padding: 8px 14px; cursor: pointer; touch-action: none;
+    -webkit-tap-highlight-color: transparent;
+  }
+</style>
+<script type="importmap">
+{ "imports": {
+  "three": "./vendor/three/build/three.module.js",
+  "three/addons/": "./vendor/three/examples/jsm/"
+} }
+</script>
+<style id="moth-game-guard">
+html,body{touch-action:none;overscroll-behavior:none;-webkit-touch-callout:none;-webkit-user-select:none;user-select:none;-webkit-tap-highlight-color:transparent}
+canvas{touch-action:none}
+</style>
+</head>
+<body>
+<div id="view"></div>
+<div id="loading">sketching the plaza…</div>
+<div id="hud"><b>Pencil Plaza</b><br>drag on the left half to walk her · WASD / arrows work too · hold 🏃 to hurry</div>
+<button id="paintBtn" type="button">Paint: Smooth</button>
+<script type="module" src="./main.js"></script>
+<script id="moth-game-guard-js">
+(function(){
+  var lastEnd=0;
+  function onUi(t){return t&&t.closest&&t.closest('button,a,input,select,textarea,[data-scroll]');}
+  document.addEventListener('touchend',function(e){
+    var now=Date.now();
+    if(!onUi(e.target)&&now-lastEnd<=300&&e.cancelable)e.preventDefault();
+    lastEnd=now;
+  },{passive:false});
+  ['gesturestart','gesturechange','gestureend'].forEach(function(n){
+    document.addEventListener(n,function(e){e.preventDefault();});
+  });
+  document.addEventListener('dblclick',function(e){e.preventDefault();},{passive:false});
+  document.addEventListener('contextmenu',function(e){e.preventDefault();});
+  document.addEventListener('touchmove',function(e){
+    if(e.target&&e.target.closest&&e.target.closest('[data-scroll]'))return;
+    if(e.cancelable)e.preventDefault();
+  },{passive:false});
+})();
+</script>
+</body>
+</html>
