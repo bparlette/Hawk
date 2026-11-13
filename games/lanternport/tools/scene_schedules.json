@@ -1,0 +1,71 @@
+{
+  "$schema": "lanternport-scene-schedules-v1",
+  "clips": [
+    "pot-rampage",
+    "chest-fanfare",
+    "sword-pedestal",
+    "ocarina-dawn",
+    "dawn-shift",
+    "festival-roundabout"
+  ],
+  "scenes": {
+    "pot-rampage": {
+      "actorId": "juniper",
+      "clips": ["07_01", "pot-rampage", "idle-stand"],
+      "segments": [
+        { "untilTick": 95, "clip": "07_01", "startTick": 0, "loop": true, "rate": 1.0, "yOffset": "STANDING_Y_OFFSET" },
+        { "untilTick": 170, "clip": "pot-rampage", "startTick": 95, "loop": false, "rate": 1.0, "yOffset": "STANDING_Y_OFFSET" },
+        { "untilTick": 260, "clip": "idle-stand", "startTick": 170, "loop": true, "rate": 1.0, "yOffset": "STANDING_Y_OFFSET" },
+        { "untilTick": 620, "clip": "07_01", "startTick": 260, "loop": true, "rate": 1.25, "yOffset": "STANDING_Y_OFFSET" },
+        { "untilTick": 780, "clip": "pot-rampage", "startTick": 620, "loop": false, "rate": 0.9, "yOffset": "STANDING_Y_OFFSET" },
+        { "clip": "07_01", "startTick": 780, "loop": true, "rate": 1.15, "yOffset": "STANDING_Y_OFFSET" }
+      ]
+    },
+    "chest-fanfare": {
+      "actorId": "juniper",
+      "clips": ["idle-stand", "07_01", "chest-fanfare"],
+      "segments": [
+        { "untilTick": 120, "clip": "idle-stand", "startTick": 0, "loop": true, "rate": 1.0, "yOffset": "STANDING_Y_OFFSET" },
+        { "untilTick": 260, "clip": "07_01", "startTick": 120, "loop": true, "rate": 1.0, "yOffset": "STANDING_Y_OFFSET" },
+        { "clip": "chest-fanfare", "startTick": 260, "loop": false, "rate": 1.0, "yOffset": "STANDING_Y_OFFSET" }
+      ]
+    },
+    "sword-pedestal": {
+      "actorId": "juniper",
+      "clips": ["idle-stand", "07_01", "sword-pedestal"],
+      "segments": [
+        { "untilTick": 60, "clip": "idle-stand", "startTick": 0, "loop": true, "rate": 1.0, "yOffset": "STANDING_Y_OFFSET" },
+        { "untilTick": 195, "clip": "07_01", "startTick": 60, "loop": true, "rate": 1.0, "yOffset": "STANDING_Y_OFFSET" },
+        { "clip": "sword-pedestal", "startTick": 195, "loop": false, "rate": 0.34, "yOffset": "STANDING_Y_OFFSET" }
+      ]
+    },
+    "ocarina-dawn": {
+      "actorId": "juniper",
+      "clips": ["idle-stand", "ocarina-dawn"],
+      "segments": [
+        { "untilTick": 90, "clip": "idle-stand", "startTick": 0, "loop": true, "rate": 1.0, "yOffset": "STANDING_Y_OFFSET" },
+        { "untilTick": 710, "clip": "ocarina-dawn", "startTick": 90, "loop": false, "rate": 0.3, "yOffset": "STANDING_Y_OFFSET" },
+        { "clip": "idle-stand", "startTick": 710, "loop": true, "rate": 1.0, "yOffset": "STANDING_Y_OFFSET" }
+      ]
+    },
+    "dawn-shift": {
+      "actorId": "juniper",
+      "clips": ["idle-stand", "07_01", "dawn-shift"],
+      "attachDawnProps": true,
+      "segments": [
+        { "untilTick": 60, "clip": "idle-stand", "startTick": 0, "loop": true, "rate": 1.0, "yOffset": "STANDING_Y_OFFSET" },
+        { "untilTick": 200, "clip": "07_01", "startTick": 60, "loop": true, "rate": 1.0, "yOffset": "STANDING_Y_OFFSET" },
+        { "untilTick": 300, "clip": "dawn-shift", "startTick": 200, "loop": false, "rate": 0.45, "yOffset": "STANDING_Y_OFFSET" },
+        { "untilTick": 380, "clip": "07_01", "startTick": 300, "loop": true, "rate": 1.0, "yOffset": "STANDING_Y_OFFSET" },
+        { "clip": "dawn-shift", "startTick": 380, "clipOffsetFrames": 60, "loop": false, "rate": 0.75, "yOffset": "STANDING_Y_OFFSET" }
+      ]
+    },
+    "festival-roundabout": {
+      "actorId": "dancer",
+      "clips": ["festival-roundabout"],
+      "segments": [
+        { "clip": "festival-roundabout", "startTick": 0, "loop": true, "rate": 1.0, "yOffset": "STANDING_Y_OFFSET" }
+      ]
+    }
+  }
+}

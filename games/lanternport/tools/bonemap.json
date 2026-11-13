@@ -1,0 +1,89 @@
+{
+  "_comment": "Bone map for the heroine rig (from juniper/BONEMAP.md). Every rig-specific fact the pipeline needs lives here; the code is model-agnostic. Axes are given in glTF space (Y up). The rig faces +Z in glTF space (= -Y in Blender) so +X is her left; the CMU BVH actor also faces +Z with +X on his left, so no mirroring is needed.",
+  "target": {
+    "forward": [0, 0, 1],
+    "up": [0, 1, 0],
+    "left": [1, 0, 0],
+    "ground_y": null,
+    "_ground_y": "null = derive from the lowest mesh vertex of the rig GLB (rest pose); set a number to override"
+  },
+  "source": {
+    "forward": [0, 0, 1],
+    "up": [0, 1, 0],
+    "left": [1, 0, 0]
+  },
+  "bones": {
+    "Hips":          {"target": "bone_2",   "align": "relative", "root": true},
+    "LowerBack":     {"target": "bone_9",   "align": "relative"},
+    "Spine":         {"target": "bone_10",  "align": "relative"},
+    "Spine1":        {"target": "bone_11",  "align": "relative"},
+    "Neck":          {"target": "bone_12",  "align": "relative"},
+    "Head":          {"target": "bone_500", "align": "relative"},
+    "LeftShoulder":  {"target": "bone_13",  "align": "direction", "child": "LeftArm"},
+    "LeftArm":       {"target": "bone_15",  "align": "direction", "child": "LeftForeArm"},
+    "LeftForeArm":   {"target": "bone_17",  "align": "direction", "child": "LeftHand"},
+    "LeftHand":      {"target": "bone_19",  "align": "relative"},
+    "RightShoulder": {"target": "bone_14",  "align": "direction", "child": "RightArm"},
+    "RightArm":      {"target": "bone_16",  "align": "direction", "child": "RightForeArm"},
+    "RightForeArm":  {"target": "bone_18",  "align": "direction", "child": "RightHand"},
+    "RightHand":     {"target": "bone_20",  "align": "relative"},
+    "LeftUpLeg":     {"target": "bone_3",   "align": "direction", "child": "LeftLeg"},
+    "LeftLeg":       {"target": "bone_5",   "align": "direction", "child": "LeftFoot"},
+    "LeftFoot":      {"target": "bone_7",   "align": "relative"},
+    "LeftToeBase":   {"target": "bone_23",  "align": "relative"},
+    "RightUpLeg":    {"target": "bone_4",   "align": "direction", "child": "RightLeg"},
+    "RightLeg":      {"target": "bone_6",   "align": "direction", "child": "RightFoot"},
+    "RightFoot":     {"target": "bone_8",   "align": "relative"},
+    "RightToeBase":  {"target": "bone_24",  "align": "relative"}
+  },
+  "_align": "relative = transfer the source bone's rotation change from its own rest pose (both rest poses must be the same pose for that bone: trunk, head, feet). direction = make the target bone point where the source bone points (needed where the mocap rest pose is not a real pose: the CMU rest splays the thighs 20 degrees and holds the arms dead level while this rig droops them 15 degrees).",
+  "limbs": {
+    "left_leg":  {"hip": "LeftUpLeg",  "knee": "LeftLeg",  "ankle": "LeftFoot",  "toe": "LeftToeBase"},
+    "right_leg": {"hip": "RightUpLeg", "knee": "RightLeg", "ankle": "RightFoot", "toe": "RightToeBase"},
+    "left_arm":  {"shoulder": "LeftArm",  "elbow": "LeftForeArm",  "wrist": "LeftHand"},
+    "right_arm": {"shoulder": "RightArm", "elbow": "RightForeArm", "wrist": "RightHand"},
+    "torso": "Spine1",
+    "pelvis": "Hips"
+  },
+  "tuning": {
+    "arm_swing_gain": 1.5,
+    "trunk_gain": 1.5,
+    "pelvis_gain": 1.15,
+    "sway_gain": 1.15,
+    "hip_drop": 0.012,
+    "stance_widen": 0.045,
+    "_stance_widen": "Each ankle is moved outwards by this fraction of a leg length: the actor walks a narrow line and this rig's boots are bulky, so an exact transfer crosses the feet.",
+    "by_kind": {
+      "run": {"arm_swing_gain": 1.0, "trunk_gain": 1.15, "pelvis_gain": 1.0, "sway_gain": 1.0,
+              "accessory": {"default": {"freq_hz": 3.0, "damping": 0.55, "max_deg": 30}}}
+    },
+    "_by_kind": "Per-gait overrides of any tuning knob (applied after the clip is classified walk / run).",
+    "accessory": {"bake": true, "seam_tol": 0.002, "default": {"freq_hz": 2.0, "damping": 0.35, "max_deg": 30}},
+    "_accessory": "Baked in-cycle follow-through for the accessory chains: spring frequency (Hz), damping ratio and swing limit per chain name (or default). The solve runs to a periodic steady state; a chain that drifts more than seam_tol leg-lengths between its last two passes fails the clip. Root-driven lag (starts, stops, turns) is the player's job - see player/secondary.js.",
+    "primary_clips": {"walk": "07_01", "run": "09_01"},
+    "_primary_clips": "Listed first in the manifest; the player takes the first clip of each kind.",
+    "_gains": "trunk_gain scales the counter-rotation of the spine chain against the pelvis about its cycle mean; pelvis_gain does the same for the pelvis itself. hip_drop lowers the pelvis by this fraction of a leg length so the stance leg never has to lock straight.",
+    "_arm_swing_gain": "Multiplies the fore/aft swing of each whole arm about the shoulder (measured in the torso frame, about the per-clip mean). 1.0 = exactly the actor. A modest gain makes the swing read past the capelet that hides the shoulders.",
+    "contact_height_tol": 0.06,
+    "contact_speed_tol": 0.35,
+    "_contact": "Foot-contact detection: a heel/toe point counts as planted when it is within contact_height_tol * leg_length of the ground and its horizontal speed in travel space is below contact_speed_tol * leg_length per second.",
+    "ik_blend_frames": 3,
+    "foot_skate_max_ratio": 0.12,
+    "foot_skate_max_abs": 0.10,
+    "penetration_tol": 0.015,
+    "knee_flip_tol_deg": 2.0,
+    "_quality": "Clips fail when planted-foot skate exceeds foot_skate_max_ratio * ground_speed (or foot_skate_max_abs leg-lengths/s when the clip is near-stationary), when a foot point sinks below -penetration_tol * leg_length, or when a knee bends backwards by more than knee_flip_tol_deg.",
+    "kind_run_speed": 2.4,
+    "kind_idle_speed": 0.25,
+    "_kind": "Ground speed in source leg-lengths per second: above kind_run_speed = run, below kind_idle_speed = idle, otherwise walk.",
+    "idle_seconds": 2.0
+  },
+  "accessory_chains": {
+    "_comment": "For the secondary-motion milestone (player side, not baked by this pipeline).",
+    "braid_left": ["bone_602", "bone_603", "bone_604"],
+    "braid_right": ["bone_605", "bone_606", "bone_607"],
+    "compass_pendant": ["bone_450", "bone_451", "bone_452", "bone_453", "bone_454"],
+    "hood_cloth_grid": {"parent": "bone_12", "range": ["bone_200", "bone_241"]},
+    "ignore_helpers": {"ranges": [["bone_300", "bone_312"]], "names": ["bone_600", "bone_601"]}
+  }
+}

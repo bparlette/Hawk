@@ -23,7 +23,25 @@ export const CLIP_FILES = [
   'swim-surface',
   'fish-cast',
   'dive',
+  // <GENERATED_CLIPS_START>
+  'pot-rampage',
+  'chest-fanfare',
+  'sword-pedestal',
+  'ocarina-dawn',
+  'dawn-shift',
+  'festival-roundabout',
+  // <GENERATED_CLIPS_END>
 ];
+
+function compileSegments(segments) {
+  return (tick) => {
+    for (let i = 0; i < segments.length; i++) {
+      const seg = segments[i];
+      if (seg.untilTick === undefined || tick < seg.untilTick) return seg;
+    }
+    return segments[segments.length - 1];
+  };
+}
 
 /** Staged scenes converted to the rigged Juniper GLB and their clip schedules. */
 export const HERO_GLB_SCENES = {
@@ -103,6 +121,66 @@ export const HERO_GLB_SCENES = {
       return { clip: 'sit-rim', loop: true, rate: 1, t0: 600 / 30, yOffset: SEATED_Y_OFFSET, zOffset: SEATED_Z_OFFSET };
     },
   },
+  // <GENERATED_SCENES_START>
+  'pot-rampage': {
+    actorId: 'juniper',
+    clips: ['07_01', 'pot-rampage', 'idle-stand'],
+    schedule: compileSegments([
+      { untilTick: 95, clip: '07_01', loop: true, rate: 1, t0: 0, yOffset: STANDING_Y_OFFSET },
+      { untilTick: 170, clip: 'pot-rampage', loop: false, rate: 1, t0: 95 / 30, yOffset: STANDING_Y_OFFSET },
+      { untilTick: 260, clip: 'idle-stand', loop: true, rate: 1, t0: 170 / 30, yOffset: STANDING_Y_OFFSET },
+      { untilTick: 620, clip: '07_01', loop: true, rate: 1.25, t0: 260 / 30, yOffset: STANDING_Y_OFFSET },
+      { untilTick: 780, clip: 'pot-rampage', loop: false, rate: 0.9, t0: 620 / 30, yOffset: STANDING_Y_OFFSET },
+      { clip: '07_01', loop: true, rate: 1.15, t0: 780 / 30, yOffset: STANDING_Y_OFFSET },
+    ]),
+  },
+  'chest-fanfare': {
+    actorId: 'juniper',
+    clips: ['idle-stand', '07_01', 'chest-fanfare'],
+    schedule: compileSegments([
+      { untilTick: 120, clip: 'idle-stand', loop: true, rate: 1, t0: 0, yOffset: STANDING_Y_OFFSET },
+      { untilTick: 260, clip: '07_01', loop: true, rate: 1, t0: 120 / 30, yOffset: STANDING_Y_OFFSET },
+      { clip: 'chest-fanfare', loop: false, rate: 1, t0: 260 / 30, yOffset: STANDING_Y_OFFSET },
+    ]),
+  },
+  'sword-pedestal': {
+    actorId: 'juniper',
+    clips: ['idle-stand', '07_01', 'sword-pedestal'],
+    schedule: compileSegments([
+      { untilTick: 60, clip: 'idle-stand', loop: true, rate: 1, t0: 0, yOffset: STANDING_Y_OFFSET },
+      { untilTick: 195, clip: '07_01', loop: true, rate: 1, t0: 60 / 30, yOffset: STANDING_Y_OFFSET },
+      { clip: 'sword-pedestal', loop: false, rate: 0.34, t0: 195 / 30, yOffset: STANDING_Y_OFFSET },
+    ]),
+  },
+  'ocarina-dawn': {
+    actorId: 'juniper',
+    clips: ['idle-stand', 'ocarina-dawn'],
+    schedule: compileSegments([
+      { untilTick: 90, clip: 'idle-stand', loop: true, rate: 1, t0: 0, yOffset: STANDING_Y_OFFSET },
+      { untilTick: 710, clip: 'ocarina-dawn', loop: false, rate: 0.3, t0: 90 / 30, yOffset: STANDING_Y_OFFSET },
+      { clip: 'idle-stand', loop: true, rate: 1, t0: 710 / 30, yOffset: STANDING_Y_OFFSET },
+    ]),
+  },
+  'dawn-shift': {
+    actorId: 'juniper',
+    clips: ['idle-stand', '07_01', 'dawn-shift'],
+    attachDawnProps: true,
+    schedule: compileSegments([
+      { untilTick: 60, clip: 'idle-stand', loop: true, rate: 1, t0: 0, yOffset: STANDING_Y_OFFSET },
+      { untilTick: 200, clip: '07_01', loop: true, rate: 1, t0: 60 / 30, yOffset: STANDING_Y_OFFSET },
+      { untilTick: 300, clip: 'dawn-shift', loop: false, rate: 0.45, t0: 200 / 30, yOffset: STANDING_Y_OFFSET },
+      { untilTick: 380, clip: '07_01', loop: true, rate: 1, t0: 300 / 30, yOffset: STANDING_Y_OFFSET },
+      { clip: 'dawn-shift', loop: false, rate: 0.75, t0: 380 / 30, clipOffset: 60 / 30, yOffset: STANDING_Y_OFFSET },
+    ]),
+  },
+  'festival-roundabout': {
+    actorId: 'dancer',
+    clips: ['festival-roundabout'],
+    schedule: compileSegments([
+      { clip: 'festival-roundabout', loop: true, rate: 1, t0: 0, yOffset: STANDING_Y_OFFSET },
+    ]),
+  },
+  // <GENERATED_SCENES_END>
 };
 
 export function isHeroGLBTarget(sceneId, actor) {
@@ -182,6 +260,30 @@ function buildRigInstance(THREE, assets, cfg) {
         const hand = model.getObjectByName('bone_22');
         if (hand) hand.add(makeFishingRod(THREE));
       }
+      let dawnCrate = null;
+      let dawnCup = null;
+      if (cfg.attachDawnProps) {
+        const handR = model.getObjectByName('bone_22') || model.getObjectByName('bone_20');
+        const chest = model.getObjectByName('bone_11');
+        if (chest) {
+          dawnCrate = new THREE.Mesh(
+            new THREE.BoxGeometry(30, 22, 30),
+            new THREE.MeshStandardMaterial({ color: 0xb67d47, roughness: 0.8 }),
+          );
+          dawnCrate.position.set(-16, 18, 6);
+          dawnCrate.castShadow = true;
+          chest.add(dawnCrate);
+        }
+        if (handR) {
+          dawnCup = new THREE.Mesh(
+            new THREE.CylinderGeometry(4.5, 3.8, 10, 10),
+            new THREE.MeshStandardMaterial({ color: 0xf4ead8, roughness: 0.5 }),
+          );
+          dawnCup.position.set(0, 2, 4);
+          dawnCup.visible = false;
+          handR.add(dawnCup);
+        }
+      }
       if (cfg.stageLight) {
         const key = new THREE.PointLight(0xffe9d2, 2.2, 8);
         key.position.set(40, 180, 140);
@@ -197,13 +299,13 @@ function buildRigInstance(THREE, assets, cfg) {
         act.play();
         actions[name] = { act, clip };
       }
-      resolve({ model, mixer, actions, boundBones, meshCount });
+      resolve({ model, mixer, actions, boundBones, meshCount, dawnCrate, dawnCup });
     }, reject);
   });
 }
 
 function clipTimeForSegment(seg, timeSec, duration) {
-  const localT = Math.max(0, timeSec - seg.t0) * (seg.rate ?? 1);
+  const localT = (seg.clipOffset || 0) + Math.max(0, timeSec - seg.t0) * (seg.rate ?? 1);
   if (seg.loop === false) return Math.min(localT, Math.max(0, duration - 1e-4));
   return duration > 0 ? (localT % duration) : 0;
 }
@@ -247,6 +349,8 @@ export function evaluateHeroSchedule(handle, cfg, tick) {
   const targetY = prevW > 0
     ? prevSeg.yOffset * prevW + seg.yOffset * curW
     : seg.yOffset;
+  if (handle.dawnCrate) handle.dawnCrate.visible = tick < 392;
+  if (handle.dawnCup) handle.dawnCup.visible = tick >= 424;
   handle.model.position.set(seg.xOffset || 0, targetY, seg.zOffset || 0);
   handle.model.rotation.y = seg.rotY || 0;
   handle.mixer.time = 0;
