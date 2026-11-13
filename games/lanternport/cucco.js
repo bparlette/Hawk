@@ -5,7 +5,27 @@
 // the fountain rim and the flock breaks off, victorious, as he sits dripping on the far side.
 // Bookmark: fountain-side three-quarter, plaza and stalls behind.
 // Duration ~30 s (900 ticks). Events: clip, swarm, circuit, vault, break-off.
+import * as T from './lib/three.module.min.js';
 import { kf, ramp, person, thing, JUNIPER, townLook } from './stage.js';
+import { registerStageKind } from './stageview.js';
+
+// The cucco: a round white hen with a red comb and orange beak/legs; the
+// scene's act() drives `flap` (wing flutter) and the node position/yaw.
+registerStageKind('cucco', (_T, kit) => {
+  const g = new T.Group(), b = new T.Group(); g.add(b);
+  const w = kit.toon(0xf4f1e8, { rim: 0.9 });
+  kit.part(b, new T.SphereGeometry(0.2, 12, 10), w, 0, 0.26, 0).scale.set(0.9, 0.95, 1.2);
+  const head = new T.Group(); head.position.set(0, 0.42, 0.16); b.add(head);
+  kit.part(head, new T.SphereGeometry(0.1, 10, 8), w, 0, 0.06, 0.02);
+  kit.part(head, new T.ConeGeometry(0.035, 0.09, 5), kit.toon(0xf2a23a), 0, 0.05, 0.13, 0).rotation.x = Math.PI / 2;
+  kit.part(head, new T.SphereGeometry(0.045, 6, 5), kit.toon(0xd9342a), 0, 0.17, 0.02).scale.set(0.5, 1, 1.2);
+  for (const sd of [-1, 1]) kit.part(head, new T.SphereGeometry(0.018, 5, 4), new T.MeshBasicMaterial({ color: 0x1a1420 }), sd * 0.07, 0.08, 0.08);
+  kit.part(b, new T.ConeGeometry(0.1, 0.22, 6), w, 0, 0.36, -0.24, 0).rotation.x = -0.9;
+  const wings = [-1, 1].map((sd) => { const p = new T.Group(); p.position.set(sd * 0.16, 0.32, 0); b.add(p); kit.part(p, new T.SphereGeometry(0.13, 8, 6), w, sd * 0.06, -0.04, 0, 0.006).scale.set(0.4, 0.8, 1.1); return p; });
+  for (const sd of [-1, 1]) kit.part(g, new T.CylinderGeometry(0.012, 0.012, 0.12, 4), kit.toon(0xf2a23a), sd * 0.06, 0.06, 0);
+  g.userData.pose = (a) => { const f = Math.sin(a.flap || 0) * 1.1; wings[0].rotation.z = -Math.abs(f); wings[1].rotation.z = Math.abs(f); b.rotation.x = a.flap ? -0.15 : 0; };
+  return g;
+});
 
 const M = 0.01;
 const CUCCO_COUNT = 32;
