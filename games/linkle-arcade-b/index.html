@@ -1,0 +1,167 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Linkle Arcade — Leaf Surf · Moto Ride · Hang Glide</title>
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+<style>
+  html, body { margin: 0; height: 100%; background: #79a86b; overflow: hidden; }
+  #view { position: fixed; inset: 0; }
+  canvas { display: block; }
+  #loading {
+    position: fixed; inset: 0; display: flex; align-items: center; justify-content: center;
+    color: #fffbe9; font-family: Georgia, 'Times New Roman', serif; font-size: 20px;
+    letter-spacing: .04em; background: #79a86b; z-index: 1300; text-align: center; padding: 24px;
+    text-shadow: 0 2px 8px rgba(40,60,20,.5);
+  }
+  /* ---------- HUD: icons + numbers only ---------- */
+  #hud {
+    position: fixed; top: calc(8px + env(safe-area-inset-top)); left: 10px; right: 10px; z-index: 1100;
+    display: none; justify-content: space-between; align-items: flex-start; pointer-events: none;
+    font-family: system-ui, sans-serif; color: #fffbe9;
+  }
+  #hud .chip {
+    background: rgba(24, 38, 16, .45); border-radius: 999px; padding: 5px 12px;
+    font-size: 17px; font-weight: 700; letter-spacing: .02em; text-shadow: 0 1px 3px rgba(0,0,0,.45);
+    backdrop-filter: blur(2px);
+  }
+  #hudLevelsBtn {
+    pointer-events: auto; border: 0; cursor: pointer; color: #fffbe9;
+    background: rgba(24, 38, 16, .45); border-radius: 999px; width: 40px; height: 40px;
+    font-size: 19px; line-height: 1; text-shadow: 0 1px 3px rgba(0,0,0,.45);
+  }
+  #popups { position: fixed; inset: 0; z-index: 1150; pointer-events: none; overflow: hidden; }
+  .pop {
+    position: absolute; transform: translate(-50%, -50%); font-family: Georgia, serif; font-weight: 700;
+    color: #ffe066; font-size: 24px; text-shadow: 0 2px 6px rgba(30,40,10,.65), 0 0 2px rgba(0,0,0,.4);
+    animation: rise 0.95s ease-out forwards; white-space: nowrap;
+  }
+  @keyframes rise { 0% { opacity: 0; margin-top: 14px; } 15% { opacity: 1; } 100% { opacity: 0; margin-top: -44px; } }
+  /* ---------- level select ---------- */
+  #menu {
+    position: fixed; inset: 0; z-index: 1200; display: flex; flex-direction: column;
+    align-items: center; justify-content: flex-end; padding: 0 18px calc(20px + env(safe-area-inset-bottom));
+    background: linear-gradient(to bottom, rgba(20,34,12,.28) 0%, rgba(20,34,12,0) 30%, rgba(20,34,12,0) 55%, rgba(20,34,12,.42) 100%);
+  }
+  #menu h1 {
+    margin: 0 0 2px; font-family: Georgia, serif; color: #fffbe9; font-size: 40px; letter-spacing: .05em;
+    text-shadow: 0 3px 10px rgba(30,50,15,.6); text-align: center;
+  }
+  #menu .sub {
+    margin: 0 0 14px; color: #fdf6d8; font-family: Georgia, serif; font-style: italic; font-size: 16px;
+    text-shadow: 0 2px 6px rgba(30,50,15,.6);
+  }
+  .card {
+    width: 100%; max-width: 430px; margin-top: 10px; border: 2px solid rgba(255,251,233,.75); cursor: pointer;
+    border-radius: 18px; padding: 13px 16px 12px; text-align: left; color: #fffbe9;
+    font-family: Georgia, serif; box-shadow: 0 6px 18px rgba(20,35,10,.4);
+  }
+  .card:active { transform: scale(.985); }
+  .card .t { font-size: 23px; font-weight: 700; letter-spacing: .03em; display: flex; justify-content: space-between; align-items: baseline; }
+  .card .best { font-size: 14px; font-weight: 400; opacity: .9; font-family: system-ui, sans-serif; }
+  .card .d { font-size: 14.5px; font-family: system-ui, sans-serif; opacity: .95; margin-top: 2px; line-height: 1.35; }
+  #card-leaf { background: linear-gradient(135deg, rgba(64,128,44,.88), rgba(38,92,32,.88)); }
+  #card-moto { background: linear-gradient(135deg, rgba(38,110,140,.88), rgba(24,74,104,.88)); }
+  #card-glide { background: linear-gradient(135deg, rgba(148,104,40,.88), rgba(104,72,26,.88)); }
+  #menu .hint { margin-top: 14px; color: #fdf6d8; font-size: 13.5px; font-family: system-ui, sans-serif; text-shadow: 0 1px 4px rgba(30,50,15,.7); }
+  /* ---------- banner / toast ---------- */
+  #banner {
+    position: fixed; inset: 0; z-index: 1250; display: none; align-items: center; justify-content: center;
+    background: rgba(18, 30, 10, .38); padding: 22px;
+  }
+  #banner .box {
+    background: linear-gradient(160deg, #fdf6d8, #f3e3ae); border-radius: 20px; padding: 24px 22px 18px;
+    max-width: 400px; width: 100%; text-align: center; box-shadow: 0 14px 40px rgba(10,20,5,.5);
+    font-family: Georgia, serif; color: #2e4418;
+  }
+  #banner h2 { margin: 0 0 4px; font-size: 30px; letter-spacing: .03em; }
+  #banner .score { font-size: 21px; margin: 6px 0 2px; }
+  #banner .detail { font-size: 15px; font-family: system-ui, sans-serif; color: #55663a; min-height: 20px; }
+  #banner .row { display: flex; gap: 9px; justify-content: center; margin-top: 16px; flex-wrap: wrap; }
+  #banner button, #toastBtn {
+    border: 0; border-radius: 999px; padding: 11px 20px; font-size: 16.5px; font-weight: 700; cursor: pointer;
+    font-family: system-ui, sans-serif; background: #4a7c2f; color: #fffbe9; box-shadow: 0 4px 10px rgba(40,60,20,.35);
+  }
+  #banner button.alt { background: #8a6d3b; }
+  #banner button:active { transform: scale(.97); }
+  #toast {
+    position: fixed; left: 50%; bottom: calc(108px + env(safe-area-inset-bottom)); transform: translateX(-50%);
+    z-index: 1180; display: none; text-align: center;
+  }
+  #toastBtn { font-size: 19px; padding: 13px 26px; background: rgba(46, 88, 30, .92); }
+</style>
+<script type="importmap">
+{ "imports": {
+  "three": "./vendor/three/build/three.module.js",
+  "three/addons/": "./vendor/three/examples/jsm/"
+} }
+</script>
+<style id="moth-game-guard">
+html,body{touch-action:none;overscroll-behavior:none;-webkit-touch-callout:none;-webkit-user-select:none;user-select:none;-webkit-tap-highlight-color:transparent}
+canvas{touch-action:none}
+</style>
+</head>
+<body>
+<div id="view"></div>
+<div id="loading">painting the valley…</div>
+
+<div id="hud">
+  <div class="chip" id="hudMain">💎 0</div>
+  <button id="hudLevelsBtn" aria-label="Level select">☰</button>
+  <div class="chip" id="hudSide">⏱ 0</div>
+</div>
+<div id="popups"></div>
+<div id="toast"><button id="toastBtn">▶ START</button></div>
+
+<div id="menu">
+  <h1>LINKLE ARCADE</h1>
+  <p class="sub">three little journeys in ghibli light</p>
+  <button class="card" id="card-leaf">
+    <span class="t"><span>🍃 LEAF SURF</span><span class="best" id="best-leaf"></span></span>
+    <span class="d">Ride a giant leaf down the green hills. Catch air off the crests, dodge the trees, gather rupees.</span>
+  </button>
+  <button class="card" id="card-moto">
+    <span class="t"><span>🏍️ MOTO RIDE</span><span class="best" id="best-moto"></span></span>
+    <span class="d">A winding road, a long bridge over teal water. Thread the barrels — near misses pay.</span>
+  </button>
+  <button class="card" id="card-glide">
+    <span class="t"><span>🪂 HANG GLIDE</span><span class="best" id="best-glide"></span></span>
+    <span class="d">Leap from the summit, ride the thermals, thread the rings, stick the landing.</span>
+  </button>
+  <p class="hint">push the left side of the screen to steer · arrow keys work too</p>
+</div>
+
+<div id="banner"><div class="box">
+  <h2 id="bannerTitle">FINISH!</h2>
+  <div class="score" id="bannerScore">0</div>
+  <div class="detail" id="bannerDetail"></div>
+  <div class="row">
+    <button id="btnNext">NEXT ▶</button>
+    <button id="btnRetry" class="alt">↻ RETRY</button>
+    <button id="btnLevels" class="alt">☰ LEVELS</button>
+  </div>
+</div></div>
+
+<script type="module" src="./main.js"></script>
+<script id="moth-game-guard-js">
+(function(){
+  var lastEnd=0;
+  function onUi(t){return t&&t.closest&&t.closest('button,a,input,select,textarea,[data-scroll]');}
+  document.addEventListener('touchend',function(e){
+    var now=Date.now();
+    if(!onUi(e.target)&&now-lastEnd<=300&&e.cancelable)e.preventDefault();
+    lastEnd=now;
+  },{passive:false});
+  ['gesturestart','gesturechange','gestureend'].forEach(function(n){
+    document.addEventListener(n,function(e){e.preventDefault();});
+  });
+  document.addEventListener('dblclick',function(e){e.preventDefault();},{passive:false});
+  document.addEventListener('contextmenu',function(e){e.preventDefault();});
+  document.addEventListener('touchmove',function(e){
+    if(e.target&&e.target.closest&&e.target.closest('[data-scroll]'))return;
+    if(e.cancelable)e.preventDefault();
+  },{passive:false});
+})();
+</script>
+</body>
+</html>
