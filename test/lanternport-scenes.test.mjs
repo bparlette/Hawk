@@ -5,6 +5,7 @@ import assert from 'node:assert/strict';
 import { Game } from '../games/lanternport/sim.js';
 import { SimClock, simDigest } from '../games/lanternport/capture.js';
 import { SCENES, SceneRunner, sceneById } from '../games/lanternport/scenes.js';
+import { FESTIVAL_DAY_ORDER } from '../games/lanternport/festival.js';
 
 /** Play a scene headless for its full duration; returns the per-tick digests and the fired event log. */
 function play(id, seed = 7) {
@@ -96,4 +97,16 @@ test('ocarina-dawn: deterministic events and lightCues dusk -> sunrise transitio
   assert.ok(runner.lightCues.length >= 2, 'ocarina-dawn must emit lightCues');
   assert.equal(runner.lightCues[0].tick, dawnTick, 'first lightCue fires at dawn tick');
   assert.equal(runner.lightCues.at(-1).light, 'sunrise', 'lightCues finish at sunrise');
+});
+
+test('cue beats: every phase boundary in Festival Day + Zelda finale scenes has an aligned sound cue', () => {
+  for (const id of [...FESTIVAL_DAY_ORDER, 'sword-pedestal', 'ocarina-dawn']) {
+    const def = sceneById(id);
+    assert.ok(def, `missing scene ${id}`);
+    const sndTicks = new Set((def.sound || []).map((c) => c.at));
+    for (const ev of def.events || []) {
+      if (ev.at === undefined) continue;
+      assert.ok(sndTicks.has(ev.at), `${id}: event ${ev.name}@${ev.at} missing aligned sound cue`);
+    }
+  }
 });
