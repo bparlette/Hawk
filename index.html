@@ -642,7 +642,7 @@ function takeControl() {
 function toggleScene() { if (sceneMode === 'watch') takeControl(); else startWatch(); }
 sceneBtn.addEventListener('click', () => { unlockAudio(); toggleScene(); });
 
-const STATE_LBL = { 'not found': 'not yet', watched: 'watched', played: 'played' };
+const STATE_LBL = { 'not found': 'not watched', watched: 'watched', played: 'played' };
 function renderJournal() {
   const list = $('journalList');
   list.innerHTML = '';
