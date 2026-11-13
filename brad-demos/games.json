@@ -2629,6 +2629,14 @@
   },
   {
    "category": "Viral Demos",
+   "desc": "The painted plaza carved as a woodcut — black ink masses and white gouge cuts on paper.",
+   "id": "woodcut-plaza",
+   "thumb": "thumbs/bonk-yard.png",
+   "title": "Woodcut Plaza",
+   "url": "../games/woodcut-plaza/"
+  },
+  {
+   "category": "Viral Demos",
    "desc": "The real Starry Night, alive — drag the sky, tap a star for a shooting star",
    "id": "starry-night",
    "thumb": "thumbs/bonk-yard.png",
