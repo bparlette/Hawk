@@ -1,0 +1,865 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+<title>Lanternport</title>
+<style>
+  html, body { margin: 0; height: 100%; overflow: hidden; background: #9fd4f5; font-family: "Avenir Next", "Trebuchet MS", system-ui, sans-serif; color: #fff; -webkit-user-select: none; user-select: none; touch-action: none; }
+  canvas { display: block; }
+  .ink { text-shadow: 0 2px 0 #2b2438, 2px 0 0 #2b2438, -2px 0 0 #2b2438, 0 -2px 0 #2b2438, 0 4px 0 rgba(43,36,56,.5); }
+  #who { position: fixed; top: 14px; left: 16px; font-weight: 800; font-size: 22px; line-height: 1.15; }
+  #who small { display: block; font-size: 12px; font-weight: 700; opacity: .95; letter-spacing: .08em; text-transform: uppercase; }
+  #glim { font-size: 20px; color: #ffd23c; margin-top: 4px; }
+  #heat { position: fixed; top: 14px; right: 16px; text-align: right; }
+  #heat i { display: inline-block; width: 22px; height: 28px; margin-left: 5px; border-radius: 7px 7px 10px 10px; border: 3px solid #2b2438; background: rgba(43,36,56,.45); box-sizing: border-box; }
+  #heat i.on { background: #ffb347; box-shadow: 0 0 14px #ffb347; }
+  #heat.seen i.on { animation: flash .5s steps(2) infinite; }
+  @keyframes flash { 50% { background: #59d8ff; box-shadow: 0 0 14px #59d8ff; } }
+  #cool { height: 7px; width: 140px; margin: 7px 0 0 auto; border: 2px solid #2b2438; border-radius: 6px; background: rgba(43,36,56,.45); overflow: hidden; visibility: hidden; }
+  #cool b { display: block; height: 100%; width: 0; background: #7be07b; }
+  #heatmsg { font-size: 12px; font-weight: 800; letter-spacing: .08em; margin-top: 4px; min-height: 16px; }
+  #goal { position: fixed; top: 50px; left: 50%; transform: translateX(-50%); max-width: 46vw; text-align: center; font-weight: 800; font-size: 17px; line-height: 1.3; }
+  #goal span { color: #ffd23c; }
+  #prompt { position: fixed; bottom: 86px; left: 50%; transform: translateX(-50%); font-weight: 800; font-size: 17px; background: rgba(43,36,56,.72); border: 3px solid #2b2438; border-radius: 14px; padding: 7px 16px; display: none; }
+  #speed { position: fixed; bottom: 18px; left: 50%; transform: translateX(-50%); font-weight: 800; font-size: 26px; display: none; }
+  #map { position: fixed; left: 16px; bottom: 16px; width: 190px; height: 190px; border-radius: 50%; border: 4px solid #2b2438; background: #d9c3a3; box-shadow: 0 5px 0 rgba(43,36,56,.4); }
+  #help { position: fixed; right: 14px; bottom: 14px; font-size: 12px; line-height: 1.75; background: rgba(43,36,56,.6); padding: 9px 13px; border-radius: 12px; max-width: 330px; font-weight: 600; }
+  #help b { background: rgba(255,255,255,.2); border-radius: 5px; padding: 0 5px; }
+  #banner { position: fixed; left: 0; right: 0; top: 30%; text-align: center; pointer-events: none; opacity: 0; transition: opacity .25s; }
+  #banner div { font-size: 54px; font-weight: 900; letter-spacing: .02em; color: #ffd23c; }
+  #banner p { font-size: 18px; font-weight: 700; margin: 6px 0 0; }
+  #vig { position: fixed; inset: 0; pointer-events: none; box-shadow: inset 0 0 120px 30px rgba(255,140,60,0); transition: box-shadow .3s; }
+  #title { position: fixed; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; background: rgba(43,36,56,.35); text-align: center; cursor: pointer; }
+  #title h1 { font-size: 78px; margin: 0; font-weight: 900; color: #ffd23c; letter-spacing: .01em; }
+  #title p { font-size: 19px; font-weight: 700; margin: 8px 0; }
+  .touch #help { display: none; } .touch #map { left: 14px; right: auto; top: auto; bottom: 14px; width: 110px; height: 110px; }
+  .touch #goal { top: 92px; max-width: 58vw; }
+  .clean #help, .clean #title { display: none; }
+  /* capture kit: hide-HUD and the 9:16 guide */
+  .nohud #who, .nohud #heat, .nohud #goal, .nohud #prompt, .nohud #speed, .nohud #map, .nohud #help, .nohud #banner, .nohud #capbar, .nohud #festbar { display: none !important; }
+  #festbar { position: fixed; top: 14px; left: 50%; transform: translateX(-50%); display: flex; gap: 6px; z-index: 1100; align-items: center; flex-wrap: wrap; justify-content: center; pointer-events: none; }
+  .fbtn { pointer-events: auto; background: rgba(24,18,38,.78); color: #fff6dd; border: 2px solid rgba(255,246,221,.8); border-radius: 999px; padding: 6px 12px; font: 800 12px/1 system-ui, sans-serif; letter-spacing: .04em; cursor: pointer; touch-action: manipulation; white-space: nowrap; }
+  .fbtn.gold { border-color: #ffd23c; color: #ffd23c; }
+  .title-acts { display: flex; gap: 10px; margin-top: 14px; flex-wrap: wrap; justify-content: center; z-index: 1100; }
+  .title-acts .fbtn { padding: 11px 18px; font-size: 15px; }
+  #journalModal, #dayDoneCard { position: fixed; inset: 0; display: none; align-items: center; justify-content: center; background: rgba(18,14,28,.65); z-index: 1150; }
+  #journalBox, #dayDoneBox { background: rgba(24,18,38,.95); border: 3px solid #ffd23c; border-radius: 18px; padding: 16px 18px; color: #fff6dd; width: min(440px, 90vw); max-height: 76vh; display: flex; flex-direction: column; gap: 10px; box-shadow: 0 12px 32px rgba(0,0,0,.5); }
+  #journalHead { display: flex; align-items: center; justify-content: space-between; font: 900 16px system-ui, sans-serif; color: #ffd23c; }
+  #journalList { overflow-y: auto; display: flex; flex-direction: column; gap: 6px; padding-right: 4px; -webkit-overflow-scrolling: touch; }
+  .jrow { display: flex; align-items: center; gap: 8px; background: rgba(255,255,255,.07); border-radius: 10px; padding: 7px 10px; font: 700 13px system-ui, sans-serif; }
+  .jrow .jid { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .jrow .jst { font-size: 11px; text-transform: uppercase; padding: 3px 7px; border-radius: 999px; background: rgba(255,255,255,.12); color: #cbd5e1; }
+  .jrow .jst.watched { background: rgba(89,216,255,.22); color: #7be8ff; }
+  .jrow .jst.played { background: rgba(123,224,123,.25); color: #9eff9e; }
+  #dayDoneBox { text-align: center; align-items: center; max-width: 340px; }
+  #dayDoneBox h2 { margin: 0; font: 900 22px system-ui, sans-serif; color: #ffd23c; }
+  #dayDoneStats { font: 800 15px system-ui, sans-serif; display: flex; gap: 18px; margin: 4px 0; }
+  #guide { position: fixed; inset: 0; pointer-events: none; display: none; z-index: 900; }
+  #guide i { position: absolute; top: 0; bottom: 0; left: 50%; width: calc(100vh * 9 / 16); max-width: 100vw; transform: translateX(-50%); box-shadow: 0 0 0 100vmax rgba(0,0,0,.55); border-left: 2px dashed rgba(255,255,255,.8); border-right: 2px dashed rgba(255,255,255,.8); box-sizing: border-box; }
+  #guide i::after { content: ''; position: absolute; left: 0; right: 0; top: 33.33%; height: 33.34%; border-top: 1px solid rgba(255,255,255,.3); border-bottom: 1px solid rgba(255,255,255,.3); }
+  .guide #guide { display: block; }
+  #capbar { position: fixed; left: 50%; bottom: 56px; transform: translateX(-50%); font: 800 13px system-ui, sans-serif; background: rgba(20,20,35,.75); color: #fff; padding: 5px 12px; border-radius: 10px; display: none; z-index: 950; white-space: nowrap; }
+  @media (max-width: 640px) { #who { font-size: 17px; } #goal { top: 78px; max-width: 86vw; font-size: 14px; } #map { width: 120px; height: 120px; } #heat i { width: 16px; height: 21px; margin-left: 3px; } #banner div { font-size: 34px; } #banner p { font-size: 14px; } #title h1 { font-size: 46px; } }
+</style>
+<style id="moth-game-guard">
+html,body{touch-action:none;overscroll-behavior:none;-webkit-touch-callout:none;-webkit-user-select:none;user-select:none;-webkit-tap-highlight-color:transparent}
+canvas{touch-action:none}
+</style>
+</head>
+<body>
+<div id="vig"></div>
+<div id="who" class="ink"><span id="name"></span><small id="blurb"></small><div id="glim"></div></div>
+<div id="heat"><div id="lanterns"></div><div id="cool"><b></b></div><div id="heatmsg" class="ink"></div></div>
+<div id="goal" class="ink"></div>
+<div id="banner" class="ink"><div></div><p></p></div>
+<div id="prompt"></div>
+<div id="speed" class="ink"></div>
+<canvas id="map" width="380" height="380"></canvas>
+<div id="help">
+  <b>WASD</b> move / drive &nbsp; <b>Space</b> jump / handbrake &nbsp; <b>F</b> get in or out &nbsp; <b>Tab</b> switch hero<br>
+  <b>Shift</b> crouch &nbsp; <b>J</b> dive-tackle &nbsp; <b>Q</b>/<b>E</b> or drag: camera &nbsp; <b>R</b> restart &nbsp; <b>H</b> hide this<br>
+  On foot: double and triple jump, backflip (<b>Shift</b> then <b>Space</b>), wall kick, ledge grab. Roofs hide you from the Watch.
+</div>
+<div id="flashfx" style="position:fixed;inset:0;background:#fff;opacity:0;pointer-events:none;z-index:800"></div>
+<div id="guide"><i></i></div>
+<div id="capbar"></div>
+<div id="festbar">
+  <button id="journalBtn" class="fbtn" type="button">📖 SCENES</button>
+  <button id="festBtn" class="fbtn gold" type="button">▶ FESTIVAL DAY</button>
+  <button id="tourBtn" class="fbtn" type="button">🎬 TOUR</button>
+  <button id="festNextBtn" class="fbtn gold" type="button" style="display:none">NEXT ▶</button>
+</div>
+<div id="journalModal">
+  <div id="journalBox">
+    <div id="journalHead"><span>📖 SCENES</span><button id="journalClose" class="fbtn" type="button">✕</button></div>
+    <div id="journalList" data-scroll></div>
+  </div>
+</div>
+<div id="dayDoneCard">
+  <div id="dayDoneBox">
+    <h2>🎪 FESTIVAL DAY</h2>
+    <div id="dayDoneStats"></div>
+    <button id="dayDoneBtn" class="fbtn gold" type="button">▶ FREE ROAM</button>
+  </div>
+</div>
+<div id="title" class="ink">
+  <h1>Lanternport</h1>
+  <p>Two couriers. One very borrowable city.</p>
+  <p style="font-size:14px;opacity:.9">click or press any key</p>
+  <div class="title-acts">
+    <button id="titleFestBtn" class="fbtn gold" type="button">▶ FESTIVAL DAY</button>
+    <button id="titleTourBtn" class="fbtn" type="button">🎬 TOUR</button>
+  </div>
+</div>
+
+<script type="module">
+import * as THREE from './lib/three.module.min.js';
+import { FixedTicker, PlayerInput } from './lib/three-adapter.js';
+import { TouchController, isTouchDevice } from './lib/gptouch.js';
+import { Game, VEHICLES, HEROES, EDGE, N, roadAt, GRASS_REGROW } from './sim.js';
+import { Bot } from './bot.js';
+import { U, buildCityView, HeroView, LOOKS, makeVehicle, makeFolk, makeCucco, makePickup, makeBeacon, makePot } from './view.js';
+import { SimClock, FreeCam, TIMESCALES, simDigest } from './capture.js';
+import { SCENES, sceneById, SceneRunner } from './scenes.js';
+import { FESTIVAL_DAY_ORDER, tourSceneIds, buildSceneMarkers, SceneJournal, FestivalDayState } from './festival.js';
+import { frameQuality, FilmRun, Audience, ChatFeed } from './film.js';
+import { StageView } from './stageview.js';
+import { SUN_DIR, makeTextures, makeMaterials, makeSky, makeMotes, Post } from './fx.js';
+
+const Q = new URLSearchParams(location.search), AUTO = Q.get('auto') === '1' || Q.get('spectate') === '1', SEED = +(Q.get('seed') || 7), ANG = (Math.PI * 2) / 0x10000;
+let activeScene = sceneById(Q.get('scene')), runner = null; // staged scene (?scene=<id> or in-world trigger)
+const journal = new SceneJournal(typeof localStorage !== 'undefined' ? localStorage : null);
+const festival = new FestivalDayState(FESTIVAL_DAY_ORDER);
+const tour = { active: false, ids: tourSceneIds(SCENES), index: 0, armedAt: 0 };
+// Watch-or-play: a staged scene link opens in 'ready' mode — the set is dressed,
+// the cast holds its first pose, and YOU hold the controls (play the town freely,
+// walk to the set, keys 1-8 peek at the framing). ▶ WATCH starts the performance;
+// 🎮 TAKE CONTROL hands the game back mid-scene; when a performance ends you keep
+// control (↻ WATCH AGAIN replays it). Filming keeps the old behaviour with
+// &loop=1 (or &auto=1): auto-start, auto-loop, no button.
+const LOOP_SCENE = Q.get('loop') === '1' || Q.get('auto') === '1' || Q.get('film') === '1'; // film=1: the scene loops for the camera operator
+let sceneMode = !activeScene ? 'play' : (LOOP_SCENE ? 'watch' : 'ready'), sceneRan = false;
+if (Q.get('clean') === '1' || AUTO || activeScene) document.body.classList.add('clean');
+const $ = (id) => document.getElementById(id);
+
+// Rendering: HDR scene -> contact shading, ink, haze, bloom, filmic grade (all in fx.js). Low sun, long warm light.
+const renderer = new THREE.WebGLRenderer({ antialias: false, powerPreference: 'high-performance' });
+renderer.setPixelRatio(1); renderer.shadowMap.enabled = true; renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+document.body.prepend(renderer.domElement);
+const scene = new THREE.Scene(), camera = new THREE.PerspectiveCamera(56, 1, 0.3, 4000), timeU = { value: 0 };
+const kit = { ...makeMaterials(THREE, timeU), T: makeTextures(THREE) }, post = new Post(THREE, renderer);
+const sky = makeSky(THREE, timeU), motes = makeMotes(THREE, timeU, kit.T.glow); scene.add(sky, motes);
+const hemi = new THREE.HemisphereLight(0x9cbcff, 0xe0b488, 2.3); scene.add(hemi);
+const sunDir = new THREE.Vector3(...SUN_DIR).normalize(), sun = new THREE.DirectionalLight(0xffdcae, 3.4);
+sun.castShadow = true; sun.shadow.mapSize.set(4096, 4096); sun.shadow.bias = -0.0003; sun.shadow.normalBias = 0.05; sun.shadow.radius = 2.5;
+Object.assign(sun.shadow.camera, { left: -62, right: 62, top: 62, bottom: -62, near: 1, far: 420 }); scene.add(sun, sun.target);
+
+let game, bot, cityView, heroViews = [], ents = new Map(), beacons = [], sceneMarkers = [], markerMeshes = [];
+let cooldownMarkerId = null;
+const burstDone = new Set(); let bursts = [];
+/** Discs [x, z, r] (metres) the set dressing must leave empty: every staged scene's set, from its camera bookmark. */
+function sceneKeepOut(g) {
+  const out = [];
+  for (const def of SCENES) { if (!def.bookmark || def.id === 'stage-test') continue; const b = typeof def.bookmark === 'function' ? def.bookmark(g) : def.bookmark; if (b && b.pivot[1] < 6) out.push([b.pivot[0], b.pivot[2], 10]); }
+  return out;
+}
+function makeSceneMarkerMesh() {
+  const g = new THREE.Group();
+  const ringMat = new THREE.MeshBasicMaterial({ color: 0x49e0ff, transparent: true, opacity: 0.85, side: THREE.DoubleSide, depthWrite: false });
+  const ring = new THREE.Mesh(new THREE.RingGeometry(0.95, 1.35, 28), ringMat);
+  ring.rotation.x = -Math.PI / 2;
+  const colMat = new THREE.MeshBasicMaterial({ map: kit.T.glow, color: 0x49e0ff, transparent: true, opacity: 0.35, side: THREE.DoubleSide, depthWrite: false, blending: THREE.AdditiveBlending });
+  const col = new THREE.Mesh(new THREE.CylinderGeometry(0.32, 0.72, 4.2, 16, 1, true), colMat);
+  col.position.y = 2.1;
+  g.add(ring, col);
+  g.userData = { ring, ringMat, colMat, col };
+  return g;
+}
+function mountSceneStage(def, { moveHero = true, jumpCam = false } = {}) {
+  if (stage) { stage.dispose(scene); stage = null; }
+  stopBed(); sceneCues = []; sceneLightCues = []; stageS = null;
+  activeScene = def;
+  if (!def) { setLight('golden'); return; }
+  if (def.set) {
+    stageS = def.set(game); def.act(stageS, 0);
+    stage = new StageView(THREE, kit, stageS); scene.add(stage.root);
+    setLight(def.light || 'golden');
+    if (jumpCam && Q.get('cam') !== 'free') jumpBookmark(SCENES.indexOf(def));
+    if (moveHero) placeHeroInScene();
+  } else {
+    setLight(def.light || 'golden');
+    if (jumpCam && Q.get('cam') !== 'free') jumpBookmark(SCENES.indexOf(def));
+    if (moveHero) placeHeroInScene();
+  }
+}
+function clearSceneStage() {
+  runner = null; stopBed(); sceneCues = []; sceneLightCues = [];
+  if (stage) { stage.dispose(scene); stage = null; }
+  stageS = null; activeScene = null; sceneMode = 'play'; sceneRan = false;
+  setLight('golden'); setFreecam(false);
+  $('flashfx').style.opacity = 0;
+  syncSceneBtn();
+}
+function enterSceneReady(def) {
+  if (!def) return;
+  cooldownMarkerId = def.id;
+  runner = null; sceneMode = 'ready'; sceneRan = false;
+  mountSceneStage(def, { moveHero: true, jumpCam: false });
+  setFreecam(false);
+  syncSceneBtn();
+}
+function restart() {
+  if (cityView) scene.remove(cityView); for (const e of ents.values()) scene.remove(e); ents.clear();
+  for (const b of bursts) scene.remove(b.grp); bursts = []; burstDone.clear();
+  heroViews.forEach((h) => scene.remove(h.group, h.shadow, h.ring));
+  markerMeshes.forEach((m) => scene.remove(m.group)); markerMeshes = [];
+  game = new Game(SEED); bot = new Bot(game);
+  cityView = buildCityView(THREE, game.city, kit, { keepOut: sceneKeepOut(game) }); scene.add(cityView);
+  heroViews = LOOKS.map((look) => { const h = new HeroView(THREE, kit, look); scene.add(h.group, h.shadow, h.ring); return h; });
+  game.heroes.forEach((h, i) => { heroViews[i].snapshot(h); heroViews[i].snapshot(h); });
+  cam.init = false; cam.yaw = Math.PI / 2; window.__game = game;
+  sceneMarkers = buildSceneMarkers(SCENES, game);
+  markerMeshes = sceneMarkers.map((m, i) => { const mesh = makeSceneMarkerMesh(); mesh.position.set(m.x, m.y, m.z); scene.add(mesh); const u = mesh.userData; return { group: mesh, id: m.id, phase: i * 1.3, ring: u.ring, ringMat: u.ringMat, beam: u.col, beamMat: u.colMat }; });
+  // staged film scene: build its set and cast, light it, frame it
+  mountSceneStage(activeScene, { moveHero: !LOOP_SCENE && sceneMode !== 'watch', jumpCam: sceneMode === 'watch' });
+}
+let stage = null, stageS = null, sceneCues = [], sceneLightCues = [];
+// Light states: where the sun is and what colour the day is. 'golden' is the town's default.
+const LIGHTS = { golden: { dir: SUN_DIR, sun: [0xffdcae, 3.4], hemi: 2.3 }, noon: { dir: [0.22, 0.95, -0.2], sun: [0xfff6e6, 3.9], hemi: 2.7 }, sunrise: { dir: [-0.78, 0.26, 0.56], sun: [0xffc08a, 3.0], hemi: 1.9 }, dusk: { dir: [0.74, 0.2, 0.64], sun: [0xff8f7a, 1.25], hemi: 0.95, dusk: 1 } };
+function setLight(name) { const L = typeof name === 'object' ? { ...LIGHTS[name.base || 'golden'], ...name } : LIGHTS[name] || LIGHTS.golden; const dusk = L.dusk || 0; sky.children[0].material.uniforms.uDusk.value = dusk; post.final.uniforms.uDusk.value = dusk; sunDir.set(...L.dir).normalize(); sun.color.setHex(L.sun[0]); sun.intensity = L.sun[1]; hemi.intensity = L.hemi; sky.children[0].material.uniforms.uSun.value.copy(sunDir); post.final.uniforms.uSun.value.copy(sunDir); }
+for (let i = 0; i < 6; i++) { const b = makeBeacon(THREE, kit); b.visible = false; scene.add(b); beacons.push(b); }
+
+// ---------------------------------------------------------------- camera: follow, drift behind, never inside a wall
+const cam = { yaw: 0, dist: 8.5, height: 3.4, focus: new THREE.Vector3(), init: false, swoop: 0, shake: 0, get camYaw() { return Math.round(this.yaw / ANG); } };
+function inBox(x, y, z) { const X = x / U, Y = y / U, Z = z / U; for (const b of game.city.boxes) if (X > b.x0 - 30 && X < b.x1 + 30 && Z > b.z0 - 30 && Z < b.z1 + 30 && Y < b.y1 + 20) return true; return false; }
+// ---------------------------------------------------------------- capture camera (capture.js): freecam, timescale, 9:16 guide, hide-HUD
+// Keys: P freecam on/off (off = back to the follow cam) · [ and ] timescale down/up (0.25 / 0.5 / 1 / 2) · G 9:16 guide · U hide HUD.
+// Freecam: drag = orbit, Shift+drag or right-drag = pan, W A S D = fly, Q / E = down / up, wheel = dolly.
+// Touch: one finger = orbit, two fingers = pan, pinch = dolly. The sim keeps running throughout.
+// URL: ?freecam=1&ts=0.25&guide=1&hud=0.  State is on window.__dbg.
+const free = new FreeCam(), cap = { guide: false, hud: true, bookmark: null };
+function capNote() { const el = $('capbar'), on = free.on || ticker.scale !== 1 || cap.guide; el.style.display = on ? 'block' : 'none'; el.textContent = `${free.on ? 'FREECAM · P to return' : 'FOLLOW'} · ${ticker.scale}x${cap.guide ? ' · 9:16' : ''}`; }
+function setFreecam(on) {
+  if (on && !free.on) free.takeOver([camera.position.x, camera.position.y, camera.position.z], [cam.focus.x, cam.focus.y + 0.3, cam.focus.z]); else if (!on) { free.release(); cam.init = false; }
+  if (TC && TC._els) TC._els.overlay.style.display = free.on ? 'none' : ''; // free the screen for camera drags
+  input.keys.clear(); capNote();
+}
+function setGuide(on) { cap.guide = on; document.body.classList.toggle('guide', on); capNote(); }
+function setHud(on) { cap.hud = on; document.body.classList.toggle('nohud', !on); }
+function updateFreecam(dt) {
+  const k = input.keys, sp = (k.has('ShiftLeft') ? 30 : 10) * dt, f = (k.has('KeyW') || k.has('ArrowUp') ? 1 : 0) - (k.has('KeyS') || k.has('ArrowDown') ? 1 : 0), r = (k.has('KeyD') || k.has('ArrowRight') ? 1 : 0) - (k.has('KeyA') || k.has('ArrowLeft') ? 1 : 0), u = (k.has('KeyE') ? 1 : 0) - (k.has('KeyQ') ? 1 : 0);
+  if (f || r || u) free.fly(f * sp, r * sp, u * sp);
+  const p = free.position(); camera.position.set(p[0], Math.max(0.2, p[1]), p[2]); camera.lookAt(free.pivot[0], free.pivot[1], free.pivot[2]);
+  if (Math.abs(camera.fov - 56) > 0.1) { camera.fov = 56; camera.updateProjectionMatrix(); }
+  cam.focus.set(free.pivot[0], free.pivot[1], free.pivot[2]); // shadows and haze follow the freecam
+}
+const capPtr = new Map(); let capPinch = 0;
+addEventListener('pointerdown', (e) => { if (free.on) capPtr.set(e.pointerId, [e.clientX, e.clientY, e.button]); }, true);
+addEventListener('pointerup', (e) => { capPtr.delete(e.pointerId); capPinch = 0; }, true);
+addEventListener('pointercancel', (e) => { capPtr.delete(e.pointerId); capPinch = 0; }, true);
+addEventListener('pointermove', (e) => {
+  const q = capPtr.get(e.pointerId); if (!free.on || !q) return; const dx = e.clientX - q[0], dy = e.clientY - q[1]; q[0] = e.clientX; q[1] = e.clientY;
+  if (capPtr.size >= 2) { const [a, b] = [...capPtr.values()], d = Math.hypot(a[0] - b[0], a[1] - b[1]); if (capPinch) free.dolly(capPinch / d); capPinch = d; free.pan(-dx * free.dist * 0.0008, dy * free.dist * 0.0008); }
+  else if (e.shiftKey || q[2] === 2) free.pan(-dx * free.dist * 0.0016, dy * free.dist * 0.0016);
+  else free.orbit(-dx * 0.005, dy * 0.005);
+}, true);
+addEventListener('wheel', (e) => { if (free.on) free.dolly(e.deltaY > 0 ? 1.1 : 0.9); }, { passive: true });
+function jumpBookmark(n) {
+  const def = SCENES[n]; if (!def || !def.bookmark) return;
+  const b = typeof def.bookmark === 'function' ? def.bookmark(game) : def.bookmark;
+  if (!free.on) setFreecam(true);
+  free.pivot = [...b.pivot]; free.yaw = b.yaw; free.pitch = b.pitch; free.dist = b.dist; cap.bookmark = def.id; capNote();
+}
+addEventListener('keydown', (e) => {
+  if (e.code === 'KeyP') setFreecam(!free.on); else if (e.code === 'BracketLeft') { ticker.nudge(-1); capNote(); } else if (e.code === 'BracketRight') { ticker.nudge(1); capNote(); }
+  else if (e.code === 'KeyG') setGuide(!cap.guide); else if (e.code === 'KeyU') setHud(!cap.hud);
+  else if (/^Digit[1-8]$/.test(e.code)) jumpBookmark(+e.code.slice(5) - 1); // 1-8: jump to a scene's staged framing
+  else if (e.code === 'Escape' && tour.active) exitTour();
+  else if (e.code === 'Enter' && activeScene) toggleScene(); // Enter: watch the scene / take control back
+});
+
+function updateCamera(view, driving, dt, orbit) {
+  cam.yaw += orbit * 1.9 * dt;
+  const sp = view.speed, wantD = driving ? 10.5 + sp * 0.05 : 8.5, wantH = driving ? 4.3 : 3.4;
+  cam.dist += (wantD - cam.dist) * Math.min(1, dt * 3); cam.height += (wantH - cam.height) * Math.min(1, dt * 3);
+  if (!orbit && !dragging && sp > (driving ? 3 : 6)) { const d = Math.atan2(Math.sin(view.yawRad - cam.yaw), Math.cos(view.yawRad - cam.yaw)); if (driving || Math.abs(d) < 2.4) cam.yaw += d * Math.min(1, dt * (driving ? 2.6 : 0.9)); }
+  cam.swoop = Math.max(0, cam.swoop - dt / 1.3);
+  const lift = Math.sin(Math.PI * cam.swoop) * 55, k = !cam.init ? 1 : cam.swoop > 0 ? Math.min(1, dt * 3.2) : Math.min(1, dt * 8); cam.init = true;
+  cam.focus.x += (view.position.x - cam.focus.x) * k; cam.focus.z += (view.position.z - cam.focus.z) * k; cam.focus.y += (view.position.y + 1.2 - cam.focus.y) * Math.min(1, dt * 5);
+  const fx = cam.focus.x, fy = cam.focus.y, fz = cam.focus.z, dx = -Math.sin(cam.yaw) * (cam.dist + lift * 0.4), dy = cam.height + lift, dz = -Math.cos(cam.yaw) * (cam.dist + lift * 0.4);
+  let t = 1; if (!lift) for (let s = 1; s <= 12; s++) { const q = s / 12; if (inBox(fx + dx * q, fy + 0.3 + dy * q, fz + dz * q)) { t = Math.max(0.12, (s - 1) / 12); break; } }
+  cam.shake *= Math.pow(0.02, dt); const sh = cam.shake;
+  camera.position.set(fx + dx * t + (Math.random() - 0.5) * sh, fy + dy * Math.max(t, 0.35) + (Math.random() - 0.5) * sh, fz + dz * t);
+  camera.lookAt(fx, fy + 0.3, fz);
+  const fov = 56 + Math.min(16, sp * 0.2); if (Math.abs(camera.fov - fov) > 0.1) { camera.fov += (fov - camera.fov) * Math.min(1, dt * 4); camera.updateProjectionMatrix(); }
+}
+
+// ---------------------------------------------------------------- input
+const input = new PlayerInput(); let dragging = false, started = AUTO || !!activeScene || Q.get('clean') === '1';
+const extra = { use: false, swap: false };
+function begin() { if (started) return; started = true; $('title').style.display = 'none'; initTouch(); unlockAudio(); }
+addEventListener('keydown', (e) => {
+  if (!started) { begin(); return; }
+  if (e.code === 'Tab') e.preventDefault();
+  if (e.code === 'KeyR') restart(); if (e.code === 'KeyH') $('help').style.display = $('help').style.display === 'none' ? '' : 'none';
+});
+$('title').addEventListener('pointerdown', () => begin());
+renderer.domElement.addEventListener('pointerdown', () => { dragging = !free.on; });
+addEventListener('pointerup', () => { dragging = false; });
+addEventListener('pointermove', (e) => { if (dragging && e.pointerType === 'mouse') cam.yaw -= e.movementX * 0.006; });
+function readInput() {
+  if (touchState) { const t = input.touch; t.x = touchState.x; t.y = -touchState.y; t.a = touchState.a; t.b = touchState.b; t.z = touchState.z; extra.use = !!touchState.use; extra.swap = !!touchState.swap; }
+  const i = input.read(), k = input.keys, pad = navigator.getGamepads ? [...navigator.getGamepads()].find(Boolean) : null;
+  i.use = k.has('KeyF') || k.has('Enter') || extra.use || !!pad?.buttons[3]?.pressed;
+  i.swap = k.has('Tab') || k.has('KeyT') || extra.swap || !!pad?.buttons[5]?.pressed;
+  i.camYaw = cam.camYaw;
+  if (free.on) { i.stickX = 0; i.stickY = 0; i.a = i.b = i.z = false; i.use = i.swap = false; } // the keys are flying the camera
+  return i;
+}
+
+// ---------------------------------------------------------------- sound: a tiny synth, no audio files
+let ac, engine, engineGain;
+function audio() { if (!ac) { try { if (navigator.audioSession) { try { navigator.audioSession.type = 'playback'; } catch {} } ac = new (window.AudioContext || window.webkitAudioContext)(); engine = ac.createOscillator(); engine.type = 'sawtooth'; const f = ac.createBiquadFilter(); f.type = 'lowpass'; f.frequency.value = 420; engineGain = ac.createGain(); engineGain.gain.value = 0; engine.connect(f); f.connect(engineGain); engineGain.connect(ac.destination); engine.start(); } catch {} } return ac; }
+// iOS WebAudio unlock: the 'playback' session (set in audio()) keeps the game audible with the
+// mute switch on; a 1-sample silent buffer inside the first gesture plus resume() on later
+// gestures and on visibilitychange keep the context running.
+let audioUnlocked = false;
+function unlockAudio() { const ctx = audio(); if (!ctx) return; if (ctx.state === 'suspended') ctx.resume();
+  if (!audioUnlocked) { audioUnlocked = true; try { const b = ctx.createBuffer(1, 1, ctx.sampleRate), src = ctx.createBufferSource(); src.buffer = b; src.connect(ctx.destination); src.start(); } catch {} } }
+addEventListener('pointerdown', unlockAudio); addEventListener('touchend', unlockAudio);
+document.addEventListener('visibilitychange', () => { if (!document.hidden && ac && ac.state === 'suspended') ac.resume(); });
+function beep(f0, f1, dur, type = 'square', vol = 0.1, delay = 0) { if (!started || !audio()) return; const t = ac.currentTime + delay, o = ac.createOscillator(), g = ac.createGain(); o.connect(g); g.connect(ac.destination); o.type = type; o.frequency.setValueAtTime(f0, t); o.frequency.exponentialRampToValueAtTime(f1, t + dur); g.gain.setValueAtTime(vol, t); g.gain.exponentialRampToValueAtTime(0.001, t + dur); o.start(t); o.stop(t + dur + 0.02); }
+const tune = (notes, type = 'triangle', vol = 0.13) => notes.forEach((n, i) => beep(n, n, 0.16, type, vol, i * 0.11));
+const SOUNDS = { jump: [330, 660, .13], doubleJump: [392, 784, .14], tripleJump: [523, 1175, .22], backflip: [440, 988, .2], sideFlip: [440, 988, .2], longJump: [300, 900, .25], wallKick: [600, 1100, .12], dive: [500, 250, .15],
+  jumpKick: [700, 500, .08], groundPound: [900, 300, .2], pound: [140, 50, .25, 'sawtooth', .2], land: [160, 110, .05, 'triangle', .08], ledgeGrab: [520, 520, .05], coin: [1320, 1760, .12, 'sine', .13],
+  enter: [220, 440, .12, 'triangle'], exit: [440, 220, .12, 'triangle'], crash: [180, 40, .3, 'sawtooth', .22], bonk: [300, 90, .2, 'square', .16], ram: [120, 60, .35, 'sawtooth', .25], denied: [140, 120, .12, 'square', .08], step: [660, 990, .18, 'sine'],
+  peck: [950, 480, .07, 'square', .08], cuccoAggro: [1250, 700, .2, 'sawtooth', .13],
+  potSmash: [1500, 240, .16, 'square', .14], grassCut: [820, 210, .09, 'sawtooth', .06] };
+const TUNES = { missionStart: [392, 523, 659], missionPassed: [523, 659, 784, 1047, 1319], missionFailed: [392, 330, 262, 196], heatUp: [880, 660, 880, 660], heatLost: [523, 784, 1047], busted: [330, 262, 196, 131], switch: [659, 988], lamp: [988, 1319], chest: [523, 784, 1047, 1568], tailor: [784, 988, 1175], jack: [220, 196], cuccoCalm: [660, 880, 990] };
+function play(name) { if (SOUNDS[name]) beep(...SOUNDS[name]); else if (TUNES[name]) tune(TUNES[name], name === 'heatUp' ? 'square' : 'triangle', name === 'heatUp' ? 0.07 : 0.13); }
+
+// ---------------------------------------------------------------- film-scene sound: cues and beds, all synthesized, fired by scene tick
+function hiss(dur, freq, vol, type = 'lowpass', delay = 0, q = 0.8, sweepTo = 0) { if (!started || !audio()) return; if (!hiss.buf) { const n = ac.sampleRate, b = ac.createBuffer(1, n, n), d = b.getChannelData(0); for (let i = 0; i < n; i++) d[i] = Math.random() * 2 - 1; hiss.buf = b; }
+  const t = ac.currentTime + delay, s = ac.createBufferSource(), f = ac.createBiquadFilter(), g = ac.createGain(); s.buffer = hiss.buf; s.loop = true; f.type = type; f.Q.value = q; f.frequency.setValueAtTime(freq, t); if (sweepTo) f.frequency.exponentialRampToValueAtTime(sweepTo, t + dur);
+  g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(vol, t + Math.min(0.03, dur * 0.2)); g.gain.exponentialRampToValueAtTime(0.0001, t + dur); s.connect(f); f.connect(g); g.connect(ac.destination); s.start(t); s.stop(t + dur + 0.05); }
+const CUES = { // v = the cue's own volume from the scene (the money beat is the loudest number in each scene's list)
+  boing: (v) => { beep(180, 520, 0.22, 'sine', 0.16 * v); beep(360, 900, 0.18, 'triangle', 0.06 * v, 0.02); }, thump: (v) => { beep(120, 55, 0.14, 'sine', 0.3 * v); hiss(0.08, 300, 0.12 * v); },
+  splash: (v) => { hiss(1.4, 5200, 0.3 * v, 'lowpass', 0, 0.6, 500); hiss(0.5, 1200, 0.28 * v, 'bandpass', 0.02, 0.7); beep(160, 45, 0.5, 'sine', 0.28 * v); for (let i = 0; i < 9; i++) hiss(0.12, 2600 + i * 300, 0.05 * v, 'bandpass', 0.5 + i * 0.09, 4); },
+  squawk: (v) => { beep(900, 1500, 0.09, 'sawtooth', 0.09 * v); beep(1500, 700, 0.2, 'sawtooth', 0.09 * v, 0.09); }, laugh: (v) => { for (let i = 0; i < 6; i++) beep(620 - i * 30, 760 - i * 30, 0.09, 'triangle', 0.1 * v, i * 0.13); },
+  water: (v) => hiss(0.5, 1800, 0.09 * v, 'bandpass', 0, 1.2, 700), drip: (v) => { for (let i = 0; i < 5; i++) beep(1500 + i * 180, 900, 0.05, 'sine', 0.07 * v, i * 0.22); }, gull: (v) => { beep(1300, 1700, 0.16, 'sawtooth', 0.05 * v); beep(1700, 1100, 0.3, 'sawtooth', 0.05 * v, 0.16); },
+  shutter: (v) => { hiss(0.03, 6000, 0.22 * v, 'highpass'); hiss(0.05, 2500, 0.14 * v, 'bandpass', 0.06, 3); beep(2400, 3600, 0.25, 'sine', 0.012 * v, 0.02); }, ooh: (v) => { for (const f of [220, 277, 330]) beep(f, f * 1.12, 0.7, 'triangle', 0.035 * v); hiss(0.7, 700, 0.03 * v, 'bandpass', 0, 2); },
+  brass: (v) => { for (const [f, d] of [[392, 0], [494, 0], [587, 0], [784, 0.02]]) { beep(f, f, 0.9, 'sawtooth', 0.06 * v, d); beep(f * 2, f * 2, 0.6, 'square', 0.015 * v, d); } beep(98, 98, 0.9, 'sawtooth', 0.09 * v); },
+  applause: (v) => { for (let i = 0; i < 70; i++) hiss(0.035, 1800 + ((i * 37) % 9) * 260, 0.045 * v, 'bandpass', i * 0.06 + ((i * 13) % 7) * 0.008, 2.5); }, whoosh: (v) => hiss(0.6, 400, 0.12 * v, 'bandpass', 0, 1.5, 3000),
+  scrape: (v) => hiss(0.16, 2400, 0.05 * v, 'bandpass', 0, 5, 1200), soft: (v) => { beep(110, 60, 0.18, 'sine', 0.2 * v); hiss(0.05, 400, 0.05 * v); }, chop: (v) => { hiss(0.04, 3000, 0.16 * v, 'highpass'); beep(300, 120, 0.06, 'square', 0.08 * v, 0.01); },
+  chord: (v) => { for (const [f, d] of [[262, 0], [330, 0.05], [392, 0.1], [523, 0.15], [659, 0.22]]) beep(f, f, 1.6, 'triangle', 0.07 * v, d); beep(131, 131, 1.8, 'sine', 0.1 * v); }, sigh: (v) => hiss(0.9, 900, 0.07 * v, 'bandpass', 0, 1.2, 300),
+  peck: (v) => beep(1400, 700, 0.05, 'square', 0.12 * v), sting: (v) => { for (const [f, d] of [[880, 0], [932, 0.05], [988, 0.1], [1047, 0.15], [1319, 0.2]]) beep(f, f * 1.02, 0.14, 'sawtooth', 0.07 * v, d); beep(1319, 1319, 0.5, 'sawtooth', 0.07 * v, 0.26); },
+  cluck: (v) => { beep(520, 760, 0.07, 'square', 0.1 * v); beep(760, 480, 0.12, 'square', 0.1 * v, 0.07); }, flutter: (v) => { for (let i = 0; i < 9; i++) hiss(0.05, 1500 + i * 120, 0.08 * v, 'bandpass', i * 0.055, 2); },
+  squeal: (v) => { beep(1900, 1500, 0.5, 'sawtooth', 0.035 * v); hiss(0.5, 3200, 0.06 * v, 'bandpass', 0, 6); }, cheer: (v) => { hiss(1.6, 1300, 0.12 * v, 'bandpass', 0, 0.8, 2200); for (const f of [392, 494, 587]) beep(f, f * 1.08, 0.9, 'triangle', 0.02 * v); },
+  hinge: (v) => { beep(520, 300, 0.7, 'sawtooth', 0.035 * v); beep(310, 420, 0.5, 'sawtooth', 0.03 * v, 0.6); }, rollout: (v) => { hiss(2.2, 240, 0.14 * v, 'lowpass', 0, 1, 520); for (const f of [147, 220, 294]) beep(f, f, 1.8, 'triangle', 0.05 * v); },
+  wings: (v) => { for (let i = 0; i < 46; i++) hiss(0.07, 900 + ((i * 53) % 11) * 240, 0.07 * v, 'bandpass', i * 0.035 + ((i * 7) % 5) * 0.01, 1.6); for (let i = 0; i < 6; i++) beep(1500 + i * 130, 1900, 0.09, 'sawtooth', 0.02 * v, 0.1 + i * 0.16); }, chirp: (v) => { beep(2600, 3400, 0.06, 'sine', 0.035 * v); beep(3000, 2500, 0.07, 'sine', 0.03 * v, 0.09); },
+  ocarina: (v) => { beep(440, 444, 0.55, 'sine', 0.11 * v); beep(880, 884, 0.45, 'triangle', 0.025 * v); },
+  ocarina2: (v) => { beep(523.25, 526, 0.55, 'sine', 0.11 * v); beep(1046.5, 1050, 0.45, 'triangle', 0.025 * v); },
+  ocarina3: (v) => { beep(587.33, 592, 0.85, 'sine', 0.12 * v); beep(1174.66, 1180, 0.7, 'triangle', 0.03 * v); },
+};
+let bedNodes = [];
+function stopBed() { for (const n of bedNodes) { try { n.stop(); } catch {} try { n.disconnect(); } catch {} } bedNodes = []; }
+function loopNoise(freq, type, q, vol, lfo) { if (!audio()) return; if (!hiss.buf) hiss(0.01, 100, 0.0001); const s = ac.createBufferSource(), f = ac.createBiquadFilter(), g = ac.createGain(); s.buffer = hiss.buf; s.loop = true; f.type = type; f.frequency.value = freq; f.Q.value = q; g.gain.value = vol; s.connect(f); f.connect(g); g.connect(ac.destination); s.start();
+  if (lfo) { const o = ac.createOscillator(), og = ac.createGain(); o.frequency.value = lfo; og.gain.value = vol * 0.6; o.connect(og); og.connect(g.gain); o.start(); bedNodes.push(o); } bedNodes.push(s); }
+// Music beds are generated note by note from the scene tick (8 ticks = one eighth note), so they are the same every take.
+const BEDS = { band: { scale: [262, 294, 330, 392, 440, 523, 587, 659], bass: [131, 196, 147, 196], wave: 'square' }, pluck: { scale: [330, 392, 440, 494, 587, 659], bass: [165, 147, 131, 147], wave: 'triangle' }, acoustic: { scale: [294, 370, 440, 494, 587, 740], bass: [147, 110, 123, 98], wave: 'triangle' }, dance: { scale: [220, 262, 330, 392, 440, 523], bass: [55, 55, 65, 49], wave: 'sawtooth' } };
+function bedTick(def, t) {
+  const b = def.bed, B = b && BEDS[b.kind]; if (!b) return;
+  if (t === 1) { if (b.kind === 'murmur') { loopNoise(600, 'bandpass', 0.7, b.vol, 0.31); loopNoise(1400, 'bandpass', 1.2, b.vol * 0.4, 0.47); } if (b.loops === 'water') loopNoise(900, 'bandpass', 0.9, 0.012, 0.6); if (b.loops === 'hum') loopNoise(120, 'lowpass', 1, 0.05); if (b.loops === 'mower') loopNoise(180, 'bandpass', 4, 0.012, 7); if (b.loops === 'engine') { loopNoise(90, 'lowpass', 2, 0.09, 11); loopNoise(700, 'bandpass', 0.6, 0.03, 0.2); } if (b.loops === 'fan') { loopNoise(160, 'bandpass', 3, 0.07, 23); loopNoise(1100, 'bandpass', 0.7, 0.025, 0.7); } }
+  if (!B || t % 8) return; const step = t / 8, v = b.vol * (b.swell ? b.swell(t) : 1), m = b.muffled ? 0.5 : 1;
+  if (step % 2 === 0) beep(B.bass[(step >> 3) % 4] * (step % 4 ? 1.5 : 1), B.bass[(step >> 3) % 4], 0.2, b.muffled ? 'sine' : B.wave, v * 1.3);
+  const n = B.scale[(step * 5 + (step >> 2) * 3) % B.scale.length]; if ((step * 7) % 5 !== 0) beep(n * m, n * m, 0.16, b.muffled ? 'triangle' : B.wave, v * 0.8);
+  if (b.kind === 'dance' && step % 2 === 0) { beep(110, 40, 0.12, 'sine', v * 2.2); } if (b.kind === 'dance' && step % 2 === 1) hiss(0.04, 7000, v * 0.9, 'highpass');
+}
+function sceneSound(def, t) { for (const c of def.sound || []) if (c.at === t) { (CUES[c.cue] || (() => {}))(c.vol ?? 1); sceneCues.push({ tick: t, cue: c.cue }); } bedTick(def, t); }
+function sceneLight(def, t) { for (const c of def.lightCues || []) if (c.at === t) { setLight(c.light); sceneLightCues.push({ tick: t, light: c.light }); } }
+
+// ---------------------------------------------------------------- tick + render
+const ticker = new SimClock(30); let last = performance.now(), time = 0, flashMsg = '', flashT = 0;
+function tick() {
+  if (!started) return;
+  if (activeScene && !runner && sceneMode === 'watch') { runner = new SceneRunner(game, activeScene); parkHero(); }
+  game.tick(runner ? { ...runner.input(), camYaw: 0 } : AUTO ? { ...bot.input(), camYaw: 0 } : readInput());
+  if (runner && stage) { const st = runner.t - 1; sceneSound(activeScene, st); sceneLight(activeScene, st); for (const c of activeScene.cuts || []) if (c.at === st && Q.get('cam') !== 'free') { const b = c.cam(game); free.pivot = [...b.pivot]; free.yaw = b.yaw; free.pitch = b.pitch; free.dist = b.dist; } }
+  if (runner && runner.done) {
+    if (tour.active) {
+      tour.index = (tour.index + 1) % tour.ids.length;
+      const nextDef = sceneById(tour.ids[tour.index]);
+      runner = null;
+      mountSceneStage(nextDef, { moveHero: false, jumpCam: true });
+      runner = new SceneRunner(game, nextDef); parkHero();
+    } else if (festival.active) {
+      festival.recordStop(activeScene.id, false);
+      const nextId = festival.advance();
+      clearSceneStage();
+      if (!nextId) showDayComplete();
+    } else {
+      restart();
+      if (LOOP_SCENE) { runner = new SceneRunner(game, activeScene); parkHero(); }
+      else { sceneMode = 'ready'; sceneRan = true; syncSceneBtn(); }
+    }
+  } // loop only for filming; otherwise the player keeps control
+  // In-world triggers: walking into a glowing marker in free-roam opens that scene's ready mode
+  if (!runner && !tour.active && sceneMarkers.length) {
+    const hp = game.hero.ctrl.pos, hx = hp[0] * U, hy = hp[1] * U, hz = hp[2] * U;
+    if (cooldownMarkerId) {
+      const cm = sceneMarkers.find((m) => m.id === cooldownMarkerId);
+      if (!cm || Math.hypot(hx - cm.x, hz - cm.z) > 3.4) cooldownMarkerId = null;
+    }
+    if (!cooldownMarkerId && !activeScene) {
+      const targetId = festival.currentId();
+      const ordered = targetId ? [sceneMarkers.find((m) => m.id === targetId), ...sceneMarkers.filter((m) => m.id !== targetId)].filter(Boolean) : sceneMarkers;
+      for (const m of ordered) {
+        if (Math.hypot(hx - m.x, hz - m.z) < 2.2 && Math.abs(hy - m.y) < 3.2) {
+          const def = sceneById(m.id);
+          if (def) enterSceneReady(def);
+          break;
+        }
+      }
+    }
+  }
+  for (const e of game.events) {
+    play(e);
+    if (e === 'crash' || e === 'ram' || e === 'pound') cam.shake = Math.max(cam.shake, e === 'ram' ? 1.2 : 0.6);
+    if (e === 'peck') cam.shake = Math.max(cam.shake, 0.4);
+    if (e === 'switch') cam.swoop = 1;
+    const msg = { heatLost: 'You lost them', busted: 'Collared! The Watch took a cut', tailor: 'New coat, new face. -40 glim', jack: 'Hey! My cart!', denied: 'Not while the Watch is looking', cuccoAggro: 'The cuccos are furious!', cuccoCalm: 'The cuccos settle down' }[e];
+    if (msg) { flashMsg = msg; flashT = 110; }
+  }
+  if (flashT > 0) flashT--;
+  game.heroes.forEach((h, i) => heroViews[i].snapshot(h));
+}
+function sync(list, key, make, place) {
+  for (const o of list) { let m = ents.get(key + o.id); if (!m) { m = make(o); ents.set(key + o.id, m); scene.add(m); } m.userData.live = frameNo; place(m, o); }
+}
+let frameNo = 0, heatGlow = 0;
+// ---------------------------------------------------------------- pass 3: pot shard bursts (view-only confetti)
+const shardGeo = new THREE.BoxGeometry(0.11, 0.05, 0.09); let shardMat = null;
+function spawnBurst(x, z) {
+  if (!shardMat) shardMat = kit.toon(0xb56545, { rim: 0.6 });
+  const grp = new THREE.Group(); grp.position.set(x, 0, z); scene.add(grp); const parts = [];
+  for (let i = 0; i < 9; i++) { const m = new THREE.Mesh(shardGeo, shardMat), a = Math.random() * 6.28, sp = 1 + Math.random() * 2.2; m.position.set(0, 0.3, 0); m.rotation.set(Math.random() * 3, Math.random() * 3, 0); grp.add(m); parts.push({ m, vx: Math.cos(a) * sp, vz: Math.sin(a) * sp, vy: 2.4 + Math.random() * 2.4, rx: (Math.random() - 0.5) * 9, rz: (Math.random() - 0.5) * 9 }); }
+  bursts.push({ grp, parts, t: 0 });
+}
+function stepBursts(dt) {
+  for (let i = bursts.length - 1; i >= 0; i--) { const b = bursts[i]; b.t += dt; for (const q of b.parts) { q.vy -= 16 * dt; q.m.position.x += q.vx * dt; q.m.position.y = Math.max(0.04, q.m.position.y + q.vy * dt); q.m.position.z += q.vz * dt; q.m.rotation.x += q.rx * dt; q.m.rotation.z += q.rz * dt; } b.grp.scale.setScalar(Math.max(0.01, 1 - b.t / 0.6)); if (b.t > 0.6) { scene.remove(b.grp); bursts.splice(i, 1); } }
+}
+
+function frame(now) {
+  const rdt = Math.min(0.1, (now - last) / 1000); last = now; frameNo++;
+  const dt = rdt * ticker.scale; time += dt; // everything drawn (animation, bursts, wind) slows with the sim; the camera itself stays on real time
+  if (TC) touchState = TC.getInput();
+  const a = ticker.advance(rdt, tick), L = (p, c) => p + (c - p) * a, g = game, hero = g.hero, hv = heroViews[g.active];
+  g.heroes.forEach((h, i) => heroViews[i].update(h, a, dt, time, i === g.active));
+  sync(g.vehicles, 'v', (v) => makeVehicle(THREE, kit, v), (m, v) => {
+    const dy = Math.atan2(Math.sin(v.yaw - v.pyaw), Math.cos(v.yaw - v.pyaw));
+    m.position.set(L(v.px, v.x) * U, 0, L(v.pz, v.z) * U); m.rotation.y = v.pyaw + dy * a;
+    const b = m.userData.body; b.position.y = 0.18 + Math.sin(time * 3 + v.id) * 0.06; b.rotation.z += (v.steer * Math.min(1, Math.abs(v.fwd) / 30) * 0.22 - b.rotation.z) * Math.min(1, dt * 8); b.rotation.x = -Math.min(0.08, v.fwd * 0.0012);
+    m.userData.glow.material.opacity = 0.55 + Math.min(0.4, Math.abs(v.fwd) / 80) + Math.sin(time * 9 + v.id) * 0.05; m.userData.ring.rotation.z = time * (1 + Math.abs(v.fwd) * 0.15);
+    if (m.userData.beacon) { const on = Math.floor(time * 5) % 2; m.userData.beacon[0].scale.setScalar(on ? 1.6 : 0.7); m.userData.beacon[1].scale.setScalar(on ? 0.7 : 1.6); }
+  });
+  const folk = (guard) => (m, p) => {
+    m.position.set(L(p.px, p.x) * U, 0, L(p.pz, p.z) * U); m.rotation.y = p.yaw; const b = m.userData.body, down = guard ? p.down > 0 : p.state === 'down';
+    b.rotation.x += ((down ? -Math.PI / 2 : 0) - b.rotation.x) * Math.min(1, dt * 12); b.position.y = down ? 0.25 : Math.abs(Math.sin(time * (guard || p.state === 'flee' ? 14 : 7) + p.id)) * 0.07;
+  };
+  sync(g.peds, 'p', (p) => makeFolk(THREE, kit, false, p.hue), folk(false)); sync(g.guards, 'g', () => makeFolk(THREE, kit, true), folk(true));
+  sync(g.cuccos, 'c', () => makeCucco(THREE, kit), (m, c) => {
+    m.position.set(L(c.px, c.x) * U, 0, L(c.pz, c.z) * U); m.rotation.y = c.yaw;
+    const b = m.userData.body, swarm = c.state === 'swarm' || g.swarmT > 0, fleeing = c.state === 'flee';
+    b.position.y = swarm ? 0.5 + Math.sin(time * 7 + c.id * 2.1) * 0.08 : fleeing ? Math.abs(Math.sin(time * 15 + c.id)) * 0.2 : 0;
+    b.rotation.x = swarm ? 0.45 : 0;
+    const flap = swarm ? Math.sin(time * 42 + c.id * 1.7) * 0.75 : fleeing ? Math.sin(time * 28 + c.id) * 0.35 : Math.sin(time * 2 + c.phase) * 0.05;
+    m.userData.wings[0].rotation.z = 0.15 - flap; m.userData.wings[1].rotation.z = -0.15 + flap;
+    m.userData.head.rotation.x = c.state === 'peck' && !swarm ? Math.abs(Math.sin(time * 6 + c.phase)) * 0.55 : swarm ? -0.35 : 0;
+  });
+  g.pickups.forEach((p, i) => { if (p.id === undefined) p.id = 'k' + i + p.kind + Math.round(p.x); });
+  sync(g.pickups.filter((p) => !p.taken), 'k', (p) => makePickup(THREE, kit, p), (m, p) => { m.position.set(p.x * U, p.y * U + Math.sin(time * 3 + p.x) * 0.08, p.z * U); m.rotation.y = time * 2.4; });
+  sync(g.pots.filter((p) => !p.broken), 'pot', (p) => makePot(THREE, kit), (m, p) => { m.position.set(p.x * U, 0, p.z * U); m.rotation.y = p.rot; });
+  for (const p of g.pots) if (p.broken && !burstDone.has(p.id) && g.ticks - p.brokeTick <= 150) { burstDone.add(p.id); spawnBurst(p.x * U, p.z * U); }
+  stepBursts(dt);
+  const gc = cityView.userData.grassCtl; if (gc) for (let i = 0; i < g.grass.length; i++) { const p = g.grass[i]; const mown = stageS && stageS.mow && Math.hypot(p.x * U - stageS.origin[0], p.z * U - stageS.origin[2]) < stageS.mow + p.r * U; gc.set(i, mown ? 0 : p.trimT > 0 ? 1 - p.trimT / GRASS_REGROW : 1); } // a film set on a lawn gets its grass cut short (view only)
+  if (cityView.userData.rotor) cityView.userData.rotor.rotation.z -= dt * 0.7;
+  for (const [k, m] of ents) if (m.userData.live !== frameNo) { scene.remove(m); ents.delete(k); }
+  const marks = g.markers(); beacons.forEach((b, i) => { const m = marks[i]; b.visible = !!m; if (m) { b.userData.set(m.kind); b.position.set(m.x * U, 0, m.z * U); b.scale.set(1, 1 + Math.sin(time * 4 + i) * 0.04, 1); } });
+
+  if (stage && activeScene) { const st = runner ? Math.max(0, runner.t - 1 + a) : 0; activeScene.act(stageS, st); if (!runner) { const hj = stageS.actors.find((ac) => ac.look && ac.look.hero); if (hj) hj.vis = false; } stage.update(time);
+    if (runner && activeScene.track && Q.get('cam') !== 'free' && cap.bookmark === activeScene.id && !capPtr.size) { const b = activeScene.track(game, st); free.pivot = [...b.pivot]; free.yaw = b.yaw; free.pitch = b.pitch; free.dist = b.dist; }
+    $('flashfx').style.opacity = stageS.flash ? Math.min(0.85, stageS.flash * 0.8) : 0; }
+  const showMarkers = !tour.active && !FILM && !LOOP_SCENE;
+  const targetId = festival.active ? festival.currentId() : null;
+  for (const mm of markerMeshes) {
+    mm.group.visible = showMarkers;
+    if (!showMarkers) continue;
+    const isTarget = mm.id === targetId;
+    const pulse = 0.5 + 0.5 * Math.sin(time * (isTarget ? 5.5 : 3) + mm.phase);
+    mm.ringMat.color.setHex(isTarget ? 0xffd23c : 0x49e0ff);
+    mm.beamMat.color.setHex(isTarget ? 0xffd23c : 0x49e0ff);
+    mm.ringMat.opacity = (isTarget ? 0.55 : 0.28) + pulse * 0.3;
+    mm.beamMat.opacity = (isTarget ? 0.28 : 0.1) + pulse * 0.15;
+    mm.beam.scale.y = isTarget ? 1.5 + pulse * 0.4 : 0.85 + pulse * 0.15;
+    mm.ring.scale.setScalar((isTarget ? 1.25 : 0.95) + pulse * 0.15);
+  }
+  if (free.on) updateFreecam(rdt); else updateCamera(hv, !!hero.vehicle, rdt, AUTO ? 0 : input.orbit());
+  if (film) filmFrame();
+  sun.target.position.set(cam.focus.x, 0, cam.focus.z); sun.position.copy(sun.target.position).addScaledVector(sunDir, 200);
+  timeU.value = time; sky.position.set(camera.position.x, 0, camera.position.z); motes.material.uniforms.uCam.value.copy(camera.position);
+  if (engineGain) { const v = hero.vehicle, s = v ? Math.abs(v.fwd) : 0; engineGain.gain.value += ((v && started ? 0.035 + s * 0.0006 : 0) - engineGain.gain.value) * 0.2; engine.frequency.value = 55 + s * 2.4; }
+  hud(marks); post.render(scene, camera, time, heatGlow += ((g.heat ? (g.seen ? 0.34 : 0.12) : 0) - heatGlow) * Math.min(1, dt * 4)); requestAnimationFrame(frame);
+}
+
+// ---------------------------------------------------------------- HUD + minimap
+const mapCtx = $('map').getContext('2d'); let lastHud = '';
+$('lanterns').innerHTML = '<i></i>'.repeat(5);
+function hud(marks) {
+  const g = game, h = g.hero, o = g.objective, key = [g.active, g.coins, g.heat, g.seen, o && o.text, o && o.timer !== null && Math.ceil(o.timer / 30), g.prompt, g.banner && g.banner.title, flashT > 0 && flashMsg, g.unseen >> 3].join('|');
+  if (key !== lastHud) { lastHud = key;
+    $('name').textContent = HEROES[g.active].name; $('blurb').textContent = HEROES[g.active].blurb; $('glim').textContent = '✦ ' + g.coins;
+    [...$('lanterns').children].forEach((el, i) => el.classList.toggle('on', i < g.heat)); $('heat').classList.toggle('seen', g.seen);
+    $('cool').style.visibility = g.heat && !g.seen ? 'visible' : 'hidden'; $('cool').firstChild.style.width = Math.min(100, (g.unseen / g.heatCooldown) * 100) + '%';
+    $('heatmsg').textContent = flashT > 0 ? flashMsg : g.heat ? (g.seen ? 'THE WATCH SEES YOU' : 'OUT OF SIGHT…') : '';
+    const festStop = !o && festival.active && festival.currentId() ? `🎪 ${festival.index + 1}/${festival.order.length} · <span>${festival.currentId()}</span>` : '';
+    $('goal').innerHTML = o ? o.text + (o.timer !== null ? ` &nbsp;<span>${Math.ceil(o.timer / 30)}s</span>` : '') : (festStop || (g.completed.length ? '' : 'Walk into the <span>gold beacon</span> at the bakery to start a job'));
+    $('prompt').style.display = g.prompt ? 'block' : 'none'; $('prompt').textContent = g.prompt;
+    const b = $('banner'); b.style.opacity = g.banner ? 1 : 0; if (g.banner) { b.children[0].textContent = g.banner.title; b.children[1].textContent = g.banner.sub; }
+  }
+  const v = h.vehicle; $('speed').style.display = v ? 'block' : 'none'; if (v) $('speed').textContent = Math.round(Math.abs(v.fwd) * 1.08) + ' km/h';
+  if (frameNo % 2) return;
+  const c = mapCtx, W = 380, p = g.posOf(h), sc = 0.024, cy = cam.yaw, rx = -Math.cos(cy), rz = Math.sin(cy), fx = Math.sin(cy), fz = Math.cos(cy); // radar turns with the camera
+  c.save(); c.clearRect(0, 0, W, W); c.beginPath(); c.arc(W / 2, W / 2, W / 2, 0, 7); c.clip(); c.fillStyle = '#d9c3a3'; c.fillRect(0, 0, W, W);
+  c.save(); c.translate(W / 2, W / 2); c.transform(rx * sc, -fx * sc, rz * sc, -fz * sc, 0, 0); c.translate(-p.x, -p.z);
+  for (const b of g.city.blocks) { c.fillStyle = b.kind === 'plaza' || b.kind === 'hideout' || b.kind === 'docks' ? '#9bd672' : '#f3e7cf'; c.fillRect(b.x0, b.z0, b.x1 - b.x0, b.z1 - b.z0); }
+  c.fillStyle = '#b79fc4'; for (const b of g.city.boxes) if (b.kind === 'house') c.fillRect(b.x0, b.z0, b.x1 - b.x0, b.z1 - b.z0);
+  c.restore();
+  const dot = (x, z, r, col, ring) => { const wx = x - p.x, wz = z - p.z; let dx = (wx * rx + wz * rz) * sc, dz = -(wx * fx + wz * fz) * sc; const d = Math.hypot(dx, dz), lim = W / 2 - 14; if (d > lim) { if (!ring) return; dx *= lim / d; dz *= lim / d; } c.beginPath(); c.arc(W / 2 + dx, W / 2 + dz, r, 0, 7); c.fillStyle = col; c.fill(); if (ring) { c.lineWidth = 3; c.strokeStyle = '#2b2438'; c.stroke(); } };
+  for (const q of g.vehicles) dot(q.x, q.z, 5, q.driver === 'watch' ? '#3d6bff' : '#8a5a3c'); for (const q of g.guards) dot(q.x, q.z, 6, '#3d6bff');
+  const COL = { job: '#ffd23c', goal: '#49e0ff', tailor: '#ff7ab8', hideout: '#7be07b' }; for (const m of marks) dot(m.x, m.z, 10, COL[m.kind], true);
+  const fTarget = festival.active ? festival.currentId() : null;
+  for (const sm of sceneMarkers) { const isF = sm.id === fTarget; dot(sm.x, sm.z, isF ? 7 : 4, isF ? '#ffd23c' : '#49e0ff', isF); }
+  const other = g.posOf(g.heroes[1 - g.active]); dot(other.x, other.z, 7, '#ffffff', true);
+  const yaw = h.vehicle ? h.vehicle.yaw : h.ctrl.yaw * ANG; c.translate(W / 2, W / 2); c.rotate(cy - yaw); c.beginPath(); c.moveTo(0, -14); c.lineTo(10, 11); c.lineTo(0, 5); c.lineTo(-10, 11); c.closePath(); c.fillStyle = '#ff5a4f'; c.fill(); c.lineWidth = 3; c.strokeStyle = '#2b2438'; c.stroke(); c.restore();
+}
+
+function resize() { const pr = Math.min(devicePixelRatio || 1, +(Q.get('pr') || 1.5)), w = Math.round(innerWidth * pr), h = Math.round(innerHeight * pr);
+  renderer.setSize(w, h, false); renderer.domElement.style.width = innerWidth + 'px'; renderer.domElement.style.height = innerHeight + 'px'; post.setSize(w, h); camera.aspect = innerWidth / innerHeight; camera.updateProjectionMatrix(); }
+addEventListener('resize', resize); resize();
+
+// ---------------------------------------------------------------- touch: gamepress standard (lib/gptouch.js)
+// Floating stick anchors under the thumb anywhere on the left half; round buttons sit
+// bottom-right; PointerEvent-based with per-pointerId isolation. Created on game start so
+// its full-screen overlay never swallows the title tap. frame() polls getInput() once per
+// frame into touchState; readInput() merges it into PlayerInput's touch state above.
+let TC = null, touchState = null;
+function initTouch() {
+  if (TC || !isTouchDevice()) return;
+  TC = new TouchController({ buttons: [
+    { id: 'a', label: 'JUMP', size: 84 },
+    { id: 'b', label: 'DIVE', size: 64 },
+    { id: 'z', label: 'DUCK', size: 64 },
+    { id: 'use', label: 'RIDE', size: 64 },
+  ] });
+  document.body.classList.add('touch');
+  // Lanternport has a fifth action (hero SWAP). Stock gptouch lays out four buttons, so SWAP
+  // is registered as an extra button on the same controller: it shares gptouch's own
+  // hit-testing, held/pressed state and pointerId bookkeeping (_hitButton / getInput / release).
+  const swapEl = document.createElement('div');
+  swapEl.textContent = 'SWAP'; swapEl.dataset.gptouch = 'swap';
+  Object.assign(swapEl.style, { position: 'absolute', borderRadius: '50%', border: '2px solid rgba(255,255,255,.45)',
+    background: 'rgba(20,20,35,.38)', color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center',
+    fontFamily: 'system-ui, sans-serif', fontWeight: '800', transform: 'scale(1)', transition: 'transform .06s ease, background .06s ease',
+    WebkitTapHighlightColor: 'transparent', userSelect: 'none', pointerEvents: 'auto', touchAction: 'none',
+    right: '20px', bottom: '196px', width: '56px', height: '56px', fontSize: '18px' });
+  TC._els.overlay.appendChild(swapEl);
+  TC._buttons.swap = { held: false, pressed: false, el: swapEl, pointerId: null, def: { id: 'swap', label: 'SWAP', size: 56 } };
+}
+if (started) initTouch();
+
+restart();
+if (Q.get('ts')) ticker.setScale(+Q.get('ts')); if (Q.get('guide') === '1') setGuide(true); if (Q.get('hud') === '0') setHud(false);
+// ---------------------------------------------------------------- watch / play toggle for staged scenes
+const sceneBtn = document.createElement('button');
+sceneBtn.id = 'sceneBtn';
+Object.assign(sceneBtn.style, { position: 'fixed', left: '50%', transform: 'translateX(-50%)', bottom: 'calc(env(safe-area-inset-bottom, 0px) + 188px)', zIndex: 1100, padding: '12px 22px', borderRadius: '999px', border: '2px solid rgba(255,246,221,.85)', background: 'rgba(24,18,38,.82)', color: '#fff6dd', font: '700 16px/1 system-ui, sans-serif', letterSpacing: '.04em', cursor: 'pointer', display: 'none', touchAction: 'manipulation', transition: 'opacity .45s ease' }); // z 1100: must sit ABOVE the gptouch overlay (z 1000) or phone taps never reach it
+document.body.appendChild(sceneBtn);
+// Recording rule (Cherie, Nov 12): the toggle stays out of the way — it fades out after a
+// few idle seconds so the screen is clear for recording, and any tap brings it back briefly.
+// Refinement (Nov 12, phone report): the fade applies only while WATCHING (sceneMode 'watch',
+// when the screen is being recorded). In ready mode the button is the only way into the scene,
+// so it stays solid — a faded ▶ WATCH THE SCENE reads as a dead button.
+let btnFadeT = null;
+function pokeSceneBtn() {
+  if (sceneBtn.style.display === 'none') return;
+  sceneBtn.style.opacity = '1'; sceneBtn.style.pointerEvents = 'auto';
+  clearTimeout(btnFadeT);
+  if (sceneMode !== 'watch') return;
+  btnFadeT = setTimeout(() => { sceneBtn.style.opacity = '0'; sceneBtn.style.pointerEvents = 'none'; }, 4000);
+}
+addEventListener('pointerdown', pokeSceneBtn, { passive: true });
+addEventListener('touchstart', pokeSceneBtn, { passive: true });
+addEventListener('click', pokeSceneBtn, { passive: true });
+function syncSceneBtn() {
+  const showNext = festival.active && activeScene && !runner && !tour.active;
+  $('festNextBtn').style.display = showNext ? '' : 'none';
+  $('festBtn').textContent = festival.active ? `🎪 ${festival.index + 1}/${festival.order.length}` : '▶ FESTIVAL DAY';
+  $('tourBtn').textContent = tour.active ? '✕ EXIT' : '🎬 TOUR';
+  if (!activeScene || LOOP_SCENE || tour.active || Q.get('hud') === '0') { sceneBtn.style.display = 'none'; clearTimeout(btnFadeT); sceneBtn.style.opacity = '1'; sceneBtn.style.pointerEvents = 'auto'; return; }
+  sceneBtn.style.display = '';
+  sceneBtn.textContent = sceneMode === 'watch' ? '🎮 TAKE CONTROL' : (sceneRan ? '↻ WATCH AGAIN' : '▶ WATCH THE SCENE');
+  pokeSceneBtn();
+}
+// Take-control means PLAYING in the set, not watching it: the player hero spawns where the staged
+// hero stands, the follow camera comes back (setFreecam(false) also un-hides the touch controls),
+// and while a scene is watched the game hero waits at the hideout so only one Juniper is on screen.
+function placeHeroInScene() {
+  if (!activeScene) return;
+  if (stageS) { const o = stageS.origin, hj = stageS.actors.find((ac) => ac.look && ac.look.hero); game.place(game.active, (o[0] + (hj ? hj.x : 0)) * 100, o[1] * 100 + 40, (o[2] + (hj ? hj.z : 0)) * 100); }
+  else if (activeScene.bookmark) { const b = typeof activeScene.bookmark === 'function' ? activeScene.bookmark(game) : activeScene.bookmark; if (b) game.place(game.active, b.pivot[0] * 100, b.pivot[1] * 100 + 40, b.pivot[2] * 100); }
+}
+function parkHero() { const P = game.city.places; game.place(game.active, P.hideout.x, 0, P.hideout.z); }
+function startWatch() {
+  if (!activeScene || runner) return;
+  sceneMode = 'watch'; sceneRan = true;
+  journal.markWatched(activeScene.id);
+  if (festival.active) festival.recordStop(activeScene.id, false);
+  runner = new SceneRunner(game, activeScene); parkHero();
+  if (Q.get('cam') !== 'free') jumpBookmark(SCENES.indexOf(activeScene));
+  syncSceneBtn();
+}
+function takeControl() {
+  if (!runner) return;
+  if (activeScene) {
+    journal.markPlayed(activeScene.id);
+    if (festival.active) festival.recordStop(activeScene.id, true);
+  }
+  runner = null; stopBed(); sceneCues = []; sceneLightCues = []; sceneMode = 'ready';
+  if (activeScene && activeScene.act && stageS) activeScene.act(stageS, 0);
+  setFreecam(false); placeHeroInScene(); syncSceneBtn();
+}
+function toggleScene() { if (sceneMode === 'watch') takeControl(); else startWatch(); }
+sceneBtn.addEventListener('click', () => { unlockAudio(); toggleScene(); });
+
+const STATE_LBL = { 'not found': 'not yet', watched: 'watched', played: 'played' };
+function renderJournal() {
+  const list = $('journalList');
+  list.innerHTML = '';
+  for (const s of SCENES) {
+    const st = journal.status(s.id);
+    const row = document.createElement('div'); row.className = 'jrow';
+    const idEl = document.createElement('span'); idEl.className = 'jid'; idEl.textContent = s.id;
+    const stEl = document.createElement('span'); stEl.className = `jst ${st === 'not found' ? 'nf' : st}`; stEl.textContent = STATE_LBL[st] || st;
+    const btn = document.createElement('button'); btn.className = 'fbtn'; btn.type = 'button'; btn.textContent = '▶';
+    btn.addEventListener('click', () => {
+      unlockAudio();
+      $('journalModal').style.display = 'none';
+      if (tour.active) exitTour();
+      if (!started) { started = true; $('title').style.display = 'none'; }
+      enterSceneReady(s);
+    });
+    row.append(idEl, stEl, btn);
+    list.append(row);
+  }
+}
+function showDayComplete() {
+  const s = festival.summary();
+  $('dayDoneStats').textContent = `${s.watched} watched · ${s.played} played · ${s.total} stops`;
+  $('dayDoneCard').style.display = 'flex';
+  syncSceneBtn();
+}
+function startFestivalDay() {
+  if (tour.active) exitTour();
+  $('journalModal').style.display = 'none';
+  $('dayDoneCard').style.display = 'none';
+  clearSceneStage();
+  festival.start();
+  if (!started) { started = true; $('title').style.display = 'none'; }
+  syncSceneBtn();
+}
+function advanceFestivalStop() {
+  if (!festival.active) return;
+  if (activeScene) festival.recordStop(activeScene.id, sceneMode === 'ready');
+  const nextId = festival.advance();
+  clearSceneStage();
+  if (!nextId) showDayComplete();
+  else syncSceneBtn();
+}
+function startTour() {
+  if (!tour.ids.length) return;
+  $('journalModal').style.display = 'none';
+  $('dayDoneCard').style.display = 'none';
+  if (festival.active) festival.stop();
+  clearSceneStage();
+  tour.active = true; tour.index = 0; tour.armedAt = performance.now() + 250;
+  if (!started) { started = true; $('title').style.display = 'none'; }
+  const def = sceneById(tour.ids[0]);
+  mountSceneStage(def, { moveHero: false, jumpCam: true });
+  sceneMode = 'watch';
+  runner = new SceneRunner(game, def); parkHero();
+  document.body.classList.add('nohud');
+  syncSceneBtn();
+}
+function exitTour() {
+  if (!tour.active) return;
+  tour.active = false;
+  document.body.classList.toggle('nohud', !cap.hud);
+  clearSceneStage();
+  syncSceneBtn();
+}
+
+$('journalBtn').addEventListener('click', (e) => { e.stopPropagation(); unlockAudio(); renderJournal(); $('journalModal').style.display = 'flex'; });
+$('journalClose').addEventListener('click', () => { $('journalModal').style.display = 'none'; });
+$('journalModal').addEventListener('click', (e) => { if (e.target === $('journalModal')) $('journalModal').style.display = 'none'; });
+$('festBtn').addEventListener('click', (e) => { e.stopPropagation(); unlockAudio(); if (festival.active) { festival.stop(); clearSceneStage(); syncSceneBtn(); } else startFestivalDay(); });
+$('festNextBtn').addEventListener('click', (e) => { e.stopPropagation(); unlockAudio(); advanceFestivalStop(); });
+$('tourBtn').addEventListener('click', (e) => { e.stopPropagation(); unlockAudio(); if (tour.active) exitTour(); else startTour(); });
+$('dayDoneBtn').addEventListener('click', () => { festival.stop(); $('dayDoneCard').style.display = 'none'; clearSceneStage(); syncSceneBtn(); });
+$('titleFestBtn').addEventListener('click', (e) => { e.stopPropagation(); unlockAudio(); startFestivalDay(); });
+$('titleTourBtn').addEventListener('click', (e) => { e.stopPropagation(); unlockAudio(); startTour(); });
+// Tour exit is deliberate only: the 🎬 TOUR button (✕ EXIT while touring) or Esc.
+// A stray screen touch must not kill a tour mid-filming (phone report, Nov 12).
+
+syncSceneBtn();
+
+// ---------------------------------------------------------------- FILM-IT mode (?scene=<id>&film=1): you ARE the camera.
+// The scene auto-runs on loop (film=1 implies loop above) and the freecam rig is your phone: drag to
+// orbit/pan it, pinch or the + / − buttons to zoom. Every sim tick the staged hero is projected into the
+// 9:16 viewfinder and scored by film.js (centre / size / smoothness); a fake audience (viewers + chat)
+// reacts to the footage and to the scene's own events. All of it is read-only on the sim — the digest
+// never changes because someone is filming. UI sits at z-index 1200, above the gptouch overlay (z 1000);
+// the overlay is hidden while the freecam is up anyway (setFreecam), so drags reach the camera.
+const FILM = Q.get('film') === '1' && !!activeScene;
+let film = null, filmDbg = null;
+if (FILM) {
+  const st = document.createElement('style');
+  st.textContent = `
+    #filmui { position: fixed; inset: 0; z-index: 1200; pointer-events: none; font-family: system-ui, sans-serif; color: #fff; }
+    #filmfinder { position: absolute; top: 0; bottom: 0; left: 50%; transform: translateX(-50%); width: calc(100vh * 9 / 16); max-width: 100vw; border-left: 2px solid rgba(255,255,255,.9); border-right: 2px solid rgba(255,255,255,.9); box-shadow: 0 0 0 100vmax rgba(10,8,20,.45); }
+    #filmfinder::after { content: ''; position: absolute; left: 6%; right: 6%; top: 33.33%; height: 33.34%; border-top: 1px solid rgba(255,255,255,.35); border-bottom: 1px solid rgba(255,255,255,.35); }
+    #filmtop { position: absolute; top: calc(env(safe-area-inset-top, 0px) + 12px); left: 10px; right: 10px; display: flex; align-items: center; gap: 8px; }
+    #filmtop .rec { width: 12px; height: 12px; border-radius: 50%; background: #ff3b30; animation: filmblink 1.2s steps(2) infinite; }
+    @keyframes filmblink { 50% { opacity: .25; } }
+    #filmtop .live { background: #ff3b30; font: 800 12px system-ui; letter-spacing: .12em; padding: 3px 8px; border-radius: 6px; }
+    #filmtop .view { margin-left: auto; background: rgba(20,16,34,.72); font: 700 13px system-ui; padding: 4px 10px; border-radius: 999px; }
+    #filmscore { position: absolute; left: 12px; right: 12px; bottom: calc(env(safe-area-inset-bottom, 0px) + 118px); display: flex; align-items: center; gap: 10px; }
+    #filmscore b { font-size: 30px; font-weight: 900; text-shadow: 0 2px 0 #2b2438; min-width: 52px; }
+    #filmscore .bar { flex: 1; height: 10px; border-radius: 6px; background: rgba(20,16,34,.6); border: 2px solid rgba(255,255,255,.7); overflow: hidden; }
+    #filmscore .bar em { display: block; height: 100%; width: 0; background: #7be07b; transition: width .2s; }
+    #filmtip { position: absolute; left: 12px; bottom: calc(env(safe-area-inset-bottom, 0px) + 152px); font: 700 14px system-ui; text-shadow: 0 2px 0 #2b2438; }
+    #filmchat { position: absolute; left: 12px; bottom: calc(env(safe-area-inset-bottom, 0px) + 16px); width: 78%; display: flex; flex-direction: column; gap: 3px; font: 600 13px/1.3 system-ui; text-shadow: 0 1px 3px rgba(0,0,0,.8); }
+    #filmchat div { background: rgba(20,16,34,.45); border-radius: 8px; padding: 3px 8px; width: fit-content; max-width: 100%; }
+    #filmchat div.ev { background: rgba(255,178,44,.55); color: #fff6dd; }
+    #filmzoom { position: absolute; right: 10px; bottom: calc(env(safe-area-inset-bottom, 0px) + 170px); display: flex; flex-direction: column; gap: 10px; pointer-events: auto; }
+    #filmzoom button { width: 48px; height: 48px; border-radius: 50%; border: 2px solid rgba(255,255,255,.8); background: rgba(20,16,34,.7); color: #fff; font: 800 24px system-ui; cursor: pointer; touch-action: manipulation; }
+    #filmcard { position: fixed; left: 50%; top: 24%; transform: translateX(-50%); z-index: 1250; background: rgba(24,18,38,.9); border: 3px solid #ffd23c; border-radius: 18px; padding: 16px 22px; text-align: center; display: none; pointer-events: none; font-family: system-ui, sans-serif; color: #fff; }
+    #filmcard h2 { margin: 0 0 6px; font-size: 24px; color: #ffd23c; }
+    #filmcard p { margin: 3px 0; font-weight: 700; }
+    #filmcard img { width: 108px; border-radius: 8px; margin-top: 8px; display: none; }`;
+  document.head.appendChild(st);
+  const ui = document.createElement('div'); ui.id = 'filmui';
+  ui.innerHTML = `<div id="filmfinder">
+      <div id="filmtop"><span class="rec"></span><span class="live">LIVE</span><span class="view" id="filmview">👁 12</span></div>
+      <div id="filmtip"></div>
+      <div id="filmscore"><b id="filmsnum">0</b><span class="bar"><em id="filmsbar"></em></span></div>
+      <div id="filmchat"></div>
+      <div id="filmzoom"><button id="filmzin" aria-label="zoom in">+</button><button id="filmzout" aria-label="zoom out">−</button></div>
+    </div>`;
+  document.body.appendChild(ui);
+  const card = document.createElement('div'); card.id = 'filmcard'; document.body.appendChild(card);
+  $('filmzin').addEventListener('click', () => free.dolly(0.8));
+  $('filmzout').addEventListener('click', () => free.dolly(1.25));
+
+  const run = new FilmRun(), aud = new Audience(), feed = new ChatFeed();
+  let lastGameTick = 0, lastRunnerT = 0, seenEvents = 0, prevCam = null, peakViewers = 12, bestShot = '', bestShotQ = 0, cardUntil = 0, lastGoodChat = -999, lastLostChat = -999, lastIdleChat = 0;
+  const chatEl = $('filmchat');
+  function filmChat(text, cls) { if (!text) return; const d = document.createElement('div'); if (cls) d.className = cls; d.textContent = text; chatEl.appendChild(d); while (chatEl.children.length > 5) chatEl.firstChild.remove(); }
+  filmChat('you are LIVE — keep her in the frame!', 'ev');
+
+  window.filmFrame = function filmFrame() {
+    if (!stageS || !runner) { filmDbg = { score: run.score, viewers: Math.round(aud.viewers), framing: +run.framing.toFixed(3) }; return; }
+    // scene wrapped (restart made a fresh runner): flash the take card, reset the take
+    if (runner.t < lastRunnerT) {
+      card.innerHTML = `<h2>🎬 TAKE COMPLETE</h2><p>Best frame ${Math.round(run.best * 100)} · Take score ${run.score}</p><p>Peak viewers ${Math.round(peakViewers)}</p>${bestShot ? `<img id="filmbest" src="${bestShot}" style="display:block">` : ''}`;
+      card.style.display = 'block'; cardUntil = performance.now() + 4500;
+      run.reset(); seenEvents = 0; peakViewers = aud.viewers; bestShot = ''; bestShotQ = 0;
+    }
+    lastRunnerT = runner.t;
+    if (card.style.display === 'block' && performance.now() > cardUntil) card.style.display = 'none';
+
+    // camera movement this frame, for the smoothness term
+    let camMove = 0;
+    if (free.on) { const c = { yaw: free.yaw, pitch: free.pitch, dist: free.dist }; if (prevCam) camMove = Math.abs(c.yaw - prevCam.yaw) + Math.abs(c.pitch - prevCam.pitch) + Math.abs(c.dist - prevCam.dist) / Math.max(1, c.dist) * 0.5; prevCam = c; }
+
+    // the staged hero, projected: feet and head -> viewfinder coords (finder spans the full height;
+    // its width in NDC is the finder pixel width over the window width)
+    const hj = stageS.actors.find((ac) => ac.look && ac.look.hero);
+    let parts = { q: 0, center: 0, size: 0, smooth: 1 }, fracH = 0, fx = 9;
+    if (hj && hj.vis !== false) {
+      const o = stageS.origin, feet = new THREE.Vector3(o[0] + hj.x, o[1] + hj.y, o[2] + hj.z), head = new THREE.Vector3(feet.x, feet.y + 1.62, feet.z), dir = new THREE.Vector3();
+      camera.getWorldDirection(dir);
+      const behind = feet.clone().sub(camera.position).dot(dir) <= 0;
+      if (!behind) {
+        const pf = feet.project(camera), ph = head.project(camera), halfW = Math.min(innerWidth, (innerHeight * 9) / 16) / innerWidth;
+        fx = ((pf.x + ph.x) / 2) / halfW; const fy = (pf.y + ph.y) / 2, fh = Math.abs(ph.y - pf.y) / 2; fracH = fh;
+        const dn = Math.max(1, game.ticks - lastGameTick);
+        parts = frameQuality({ fx, fy, visible: Math.abs(fx) <= 1.3 && Math.abs(fy) <= 1.3, fracH, camMove: camMove / dn });
+      }
+    }
+    // accumulate per sim tick elapsed since the last frame
+    const dn = Math.max(0, game.ticks - lastGameTick); lastGameTick = game.ticks;
+    for (let i = 0; i < dn; i++) run.add(parts.q, runner.t);
+    if (dn > 0) aud.update(parts.q, dn);
+    peakViewers = Math.max(peakViewers, aud.viewers);
+    // remember the best frame as a thumbnail for the take card
+    if (parts.q > bestShotQ + 0.02 && parts.q > 0.5) { bestShotQ = parts.q; try { bestShot = renderer.domElement.toDataURL('image/jpeg', 0.55); } catch { bestShot = ''; } }
+    // scene events -> chat + audience spikes
+    while (seenEvents < runner.fired.length) { const ev = runner.fired[seenEvents++]; filmChat(feed.event(ev.name), 'ev'); if (ev.name === 'splash') aud.boost(1.35, 40); }
+    // framing streaks and idle chatter
+    if (run.goodStreak >= 60 && game.ticks - lastGoodChat > 300) { lastGoodChat = game.ticks; filmChat(feed.streak('good')); }
+    if (run.lostStreak >= 45 && game.ticks - lastLostChat > 300) { lastLostChat = game.ticks; filmChat(feed.streak('lost')); }
+    if (game.ticks - Math.max(lastGoodChat, lastLostChat, lastIdleChat) > 420) { lastIdleChat = game.ticks; filmChat(feed.idle()); }
+    // HUD
+    $('filmview').textContent = '👁 ' + Math.round(aud.viewers);
+    $('filmsnum').textContent = run.score;
+    $('filmsbar').style.width = Math.round(parts.q * 100) + '%';
+    $('filmsbar').style.background = parts.q >= 0.6 ? '#7be07b' : parts.q >= 0.3 ? '#ffd23c' : '#ff7a5c';
+    $('filmtip').textContent = !hj || hj.vis === false ? '' : Math.abs(fx) > 1.3 ? 'she left the frame — find her!' : parts.center < 0.5 ? 'centre her in the frame' : fracH > 0.62 && parts.size < 1 ? 'zoom out — she is cropped' : fracH < 0.28 && parts.size < 1 ? 'zoom in — she is tiny' : parts.smooth < 0.5 ? 'hold still…' : 'perfect — hold it!';
+    filmDbg = { score: run.score, viewers: Math.round(aud.viewers), framing: +run.framing.toFixed(3), best: +run.best.toFixed(3), tick: runner.t };
+  };
+  film = { run, aud };
+}
+
+// Camera state for the external recorder.
+window.__dbg = { get freecam() { return free.on ? { on: true, pivot: [...free.pivot], yaw: free.yaw, pitch: free.pitch, dist: free.dist } : { on: false }; },
+  get timescale() { return ticker.scale; }, get bookmark() { return cap.bookmark; }, get guide() { return cap.guide; }, get hud() { return cap.hud; },
+  get tick() { return game.ticks; }, get digest() { return simDigest(game); }, timescales: TIMESCALES,
+  get scene() { if (!activeScene) return null; return runner ? { id: activeScene.id, mode: 'watch', tick: runner.t, duration: activeScene.duration, events: runner.fired, cues: sceneCues, lightCues: sceneLightCues } : { id: activeScene.id, mode: sceneMode, tick: 0, duration: activeScene.duration, events: [], cues: sceneCues, lightCues: sceneLightCues }; },
+  get film() { return filmDbg; },
+  /** Put the freecam anywhere (set-dressing stills): { pivot: [x, y, z] metres, yaw, pitch, dist }. */
+  setCam(c) { if (!free.on) setFreecam(true); free.pivot = [...c.pivot]; free.yaw = c.yaw; free.pitch = c.pitch; free.dist = c.dist; cap.bookmark = null; capNote(); } };
+requestAnimationFrame(function first(t) { if (Q.get('freecam') === '1') setFreecam(true); capNote(); frame(t); });
+</script>
+<script id="moth-game-guard-js">
+(function(){
+  var lastEnd=0;
+  function onUi(t){return t&&t.closest&&t.closest('button,a,input,select,textarea,[data-scroll]');}
+  document.addEventListener('touchend',function(e){
+    var now=Date.now();
+    if(!onUi(e.target)&&now-lastEnd<=300&&e.cancelable)e.preventDefault();
+    lastEnd=now;
+  },{passive:false});
+  ['gesturestart','gesturechange','gestureend'].forEach(function(n){
+    document.addEventListener(n,function(e){e.preventDefault();});
+  });
+  document.addEventListener('dblclick',function(e){e.preventDefault();},{passive:false});
+  document.addEventListener('contextmenu',function(e){e.preventDefault();});
+  document.addEventListener('touchmove',function(e){
+    if(e.target&&e.target.closest&&e.target.closest('[data-scroll]'))return;
+    if(e.cancelable)e.preventDefault();
+  },{passive:false});
+})();
+</script>
+</body>
+</html>
