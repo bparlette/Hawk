@@ -611,5 +611,7 @@ export function buildDressing(THREE, city, kit, root, opts = {}) {
     im.castShadow = !small; im.receiveShadow = name !== 'glass'; im.frustumCulled = false; im.name = 'dress:' + name; group.add(im); drawCalls++;
   }
   root.add(group);
-  return { group, counts: plan.counts, drawCalls };
+  const res = { group, counts: plan.counts, drawCalls };
+  if (typeof window !== 'undefined') window.__dressing = res;
+  return res;
 }
