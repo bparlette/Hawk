@@ -1,0 +1,201 @@
+// The canvas. The world is painted into a picture with a depth beside it; this then lays in the one thing dabs
+// can't do, the sun standing in the mist between the trunks, and finishes the surface: the weave of the canvas
+// under thin paint, and a little varnish.
+//
+// SURREALISM: this pass is where the dream lives. Before anything else is read, the picture's own coordinates
+// are warped — space melts and breathes, mostly at the edges, easing to nothing at the middle so the wanderer
+// stands in still air while the world round her gives a little. Colour and depth are both read through the
+// warp, so outlines, sun-shafts and haze all inherit the same bent geometry. After the painting, the picture
+// is graded into the dream: shade sinks toward indigo, light stays lamplit-warm, bright passages bloom a
+// little, and the corners darken into blue — the Empire of Light contradiction, a lit room under an evening sky.
+import * as THREE from 'three';
+import { COMMON } from './common.js';
+
+export function createFrame(renderer, shared, { samples = 4 } = {}) {
+  const size = renderer.getDrawingBufferSize(new THREE.Vector2());
+  const target = new THREE.WebGLRenderTarget(size.x, size.y, { samples, depthBuffer: true, generateMipmaps: false });
+  target.depthTexture = new THREE.DepthTexture(size.x, size.y, THREE.UnsignedIntType);
+  target.texture.minFilter = target.texture.magFilter = THREE.LinearFilter;
+
+  const uniforms = {
+    ...shared,
+    tColor: { value: target.texture },
+    tDepth: { value: target.depthTexture },
+    uInvViewProj: { value: new THREE.Matrix4() },
+    uEye: { value: new THREE.Vector3() },
+    uShafts: { value: 1 },
+    uSteps: { value: 22 },
+    uCanvas: { value: 1 },
+    uOutline: { value: 1 },
+    uOutlineCol: { value: new THREE.Color(0.09, 0.07, 0.11) },
+    uSize: { value: size.clone() },
+  };
+  const material = new THREE.ShaderMaterial({
+    glslVersion: THREE.GLSL3,
+    uniforms,
+    depthTest: false,
+    depthWrite: false,
+    vertexShader: /* glsl */ `
+      out vec2 vUv;
+      void main() { vUv = uv; gl_Position = vec4(position.xy, 0.0, 1.0); }`,
+    fragmentShader: /* glsl */ `
+      ${COMMON}
+      uniform sampler2D tColor;
+      uniform sampler2D tDepth;
+      uniform mat4 uInvViewProj;
+      uniform vec3 uEye;
+      uniform float uShafts;
+      uniform float uSteps;
+      uniform float uCanvas;
+      uniform float uOutline;
+      uniform vec3 uOutlineCol;
+      uniform vec2 uSize;
+      in vec2 vUv;
+      layout(location = 0) out vec4 outC;
+
+      // The dream warp: slow wrongnesses, all scaled by 'edge' — the squared distance from the
+      // middle of the picture — so the centre (where she stands) is nearly still and the frame's rim is
+      // where space misbehaves. Pure UV arithmetic: no extra passes, no extra taps. The strengths are
+      // set so the melt reads in a single still frame, not only in motion: uprights bend near the rim,
+      // the corners draw in, and the foot of the frame stretches and sags like a soft clock.
+      vec2 dreamWarp(vec2 uv) {
+        vec2 c = (uv - 0.5) * vec2(uSize.x / uSize.y, 1.0);
+        float edge = smoothstep(0.01, 0.36, dot(c, c));
+        float breathe = sin(uTime * 0.21) * 0.6 + sin(uTime * 0.13 + 1.7) * 0.4; // slow, never repeats quickly
+        vec2 w = uv;
+        // the canvas softens: the edges draw inward, more and less as the dream breathes
+        w = 0.5 + (w - 0.5) * (1.0 - 0.13 * edge * (0.75 + 0.25 * breathe));
+        // the whole picture sways a fraction, as if hung in warm air
+        float ang = 0.05 * edge * sin(uTime * 0.11 + 0.8);
+        float ca = cos(ang), sa = sin(ang);
+        w = 0.5 + mat2(ca, -sa, sa, ca) * (w - 0.5);
+        // it melts: slow ripples run down the frame and bend every upright near the rim
+        float melt = sin(uv.y * 10.0 - uTime * 0.33) * 0.6 + sin(uv.x * 7.0 + uTime * 0.19) * 0.4;
+        w.x += melt * 0.020 * edge;
+        w.y += sin(uv.x * 8.0 - uTime * 0.26) * 0.010 * edge;
+        // and it droops: the rim sags under its own weight, worst at the corners — a steady
+        // extra pull on the sampling so roofs and rims hang visibly even in a still
+        w.y += 0.05 * edge * edge * (0.8 + 0.2 * breathe);
+        // the foot of the frame stretches as it melts: forms elongate toward the bottom rim
+        float foot = edge * smoothstep(0.45, 0.02, uv.y);
+        w.y = mix(w.y, 0.5 + (w.y - 0.5) * 0.86, foot * 0.6);
+        return w;
+      }
+
+      float weave(vec2 p) {
+        // warp and weft of a medium linen, each thread a little uneven
+        vec2 q = p / 2.6;
+        float n = texture(tNoise, p / 310.0).r;
+        float a = sin(q.x * 3.14159) * sin(q.y * 3.14159 + floor(q.x) * 3.14159);
+        return a * (0.3 + 1.4 * n * n);
+      }
+
+      void main() {
+        vec2 wUv = dreamWarp(vUv); // every read below goes through the warp: one bent geometry for all of it
+        vec3 col = texture(tColor, wUv).rgb;
+        float depth = texture(tDepth, wUv).r;
+        vec4 h = uInvViewProj * vec4(wUv * 2.0 - 1.0, depth * 2.0 - 1.0, 1.0);
+        vec3 world = h.xyz / h.w;
+        vec3 ray = world - uEye;
+        float far = length(ray);
+        ray /= far;
+
+        // Cartoon outlines: where the depth steps hard between neighbouring pixels — a silhouette, an
+        // eave, the fountain's rim — lay a dark line. The step is judged against the distance, so the
+        // ground running away at a slant (a smooth depth ramp) never trips it, and the line fades out
+        // with distance the way a drawn one thins.
+        if (uOutline > 0.0) {
+          vec2 tx = 2.0 / uSize;
+          float e = 0.0;
+          for (int i = 0; i < 4; i++) {
+            vec2 off = (i == 0 ? vec2(tx.x, 0.0) : i == 1 ? vec2(-tx.x, 0.0) : i == 2 ? vec2(0.0, tx.y) : vec2(0.0, -tx.y));
+            float dn = texture(tDepth, wUv + off).r;
+            vec4 hn = uInvViewProj * vec4((wUv + off) * 2.0 - 1.0, dn * 2.0 - 1.0, 1.0);
+            float farn = length(hn.xyz / hn.w - uEye);
+            e = max(e, abs(far - farn) / (0.03 + 0.025 * far));
+          }
+          float line = smoothstep(0.7, 1.7, e) * (1.0 - smoothstep(35.0, 80.0, far));
+          col = mix(col, uOutlineCol, clamp(line, 0.0, 1.0) * 0.85 * uOutline);
+        }
+
+        // sun in the mist: walk the line of sight and count how much of the air along it stands in the light
+        if (uShafts > 0.0) {
+          float reach = min(far, 85.0);
+          float jit = fract(52.9829189 * fract(dot(gl_FragCoord.xy, vec2(0.06711056, 0.00583715))));
+          float lit = 0.0, weight = 0.0;
+          for (float i = 0.0; i < uSteps; i++) {
+            float t = (i + jit) / uSteps;
+            float w = exp(-t * reach * 0.022);
+            lit += sunAt(uEye + ray * (t * reach)) * w;
+            weight += w;
+          }
+          lit /= max(weight, 1e-3);
+          float sunward = max(dot(ray, uSunDir), 0.0);
+          float thick = 1.0 - exp(-reach * 0.03);
+          // lit air glows toward the sun; shaded air is a touch darker and cooler than the plain mist
+          float streak = 0.75 + 0.5 * texture(tNoise, vec2(dot(world.xz, vec2(uSunDir.z, -uSunDir.x)) * 0.11, world.y * 0.02)).g;
+          vec3 glow = vec3(1.0, 0.86, 0.56) * (0.16 + 0.95 * pow(sunward, 2.5));
+          col += glow * (lit - 0.34) * thick * streak * uShafts * 0.8;
+        }
+
+        // luminous haze: the bright passages of the dream bleed a little light into their neighbours —
+        // four cheap taps of the already-warped picture, thresholded so only true light blooms
+        {
+          vec2 bOff = 7.0 / uSize;
+          vec3 soft = texture(tColor, wUv + vec2(bOff.x, 0.0)).rgb
+                    + texture(tColor, wUv - vec2(bOff.x, 0.0)).rgb
+                    + texture(tColor, wUv + vec2(0.0, bOff.y)).rgb
+                    + texture(tColor, wUv - vec2(0.0, bOff.y)).rgb;
+          soft *= 0.25;
+          float glowAmt = smoothstep(0.5, 1.05, dot(soft, vec3(0.3333)));
+          col += soft * vec3(1.0, 0.9, 0.74) * glowAmt * 0.38;
+        }
+
+        if (uCanvas > 0.0) {
+          vec2 px = vUv * uSize;
+          float w = weave(px);
+          float dx = weave(px + vec2(1.0, 0.0)) - w, dy = weave(px + vec2(0.0, 1.0)) - w;
+          col *= 1.0 + (0.6 * dx - 0.8 * dy) * 0.022 * uCanvas + w * 0.006 * uCanvas;
+        }
+        // the brightest passages roll off toward the white of the paint and never past it
+        vec3 over = max(col - 0.8, 0.0);
+        col = min(col, 0.8) + over / (1.0 + over * 5.0);
+        // --- the dream grade ---
+        float lum = dot(col, vec3(0.299, 0.587, 0.114));
+        col = mix(vec3(lum), col, 1.16); // colours lean in, a little more than life allows
+        col += vec3(0.012, 0.02, 0.052) * (1.0 - smoothstep(0.0, 0.5, lum)); // shade sinks toward indigo
+        col += vec3(0.05, 0.032, 0.0) * smoothstep(0.55, 1.0, lum); // lit things stay lamplit-warm
+        // the dream darkens at its edges, into deep blue — the picture is a room you are inside
+        vec2 vc = (vUv - 0.5) * vec2(uSize.x / uSize.y, 1.0);
+        float vig = smoothstep(0.98, 0.32, length(vc));
+        col = mix(vec3(0.014, 0.02, 0.055), col, 0.32 + 0.68 * vig);
+        outC = vec4(col, 1.0);
+      }`,
+  });
+  const quad = new THREE.Mesh(new THREE.PlaneGeometry(2, 2), material);
+  quad.frustumCulled = false;
+  const scene = new THREE.Scene();
+  scene.add(quad);
+  const flat = new THREE.Camera();
+  const viewProj = new THREE.Matrix4();
+
+  return {
+    target,
+    uniforms,
+    resize() {
+      renderer.getDrawingBufferSize(size);
+      target.setSize(size.x, size.y);
+      uniforms.uSize.value.copy(size);
+    },
+    render(world, camera) {
+      renderer.setRenderTarget(target);
+      renderer.clear();
+      renderer.render(world, camera);
+      renderer.setRenderTarget(null);
+      viewProj.multiplyMatrices(camera.projectionMatrix, camera.matrixWorldInverse);
+      uniforms.uInvViewProj.value.copy(viewProj).invert();
+      uniforms.uEye.value.copy(camera.position);
+      renderer.render(scene, flat);
+    },
+  };
+}
