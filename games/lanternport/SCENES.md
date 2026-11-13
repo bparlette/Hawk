@@ -132,3 +132,14 @@ by the `clubRoom` / `clubTable` / `clubBench` kinds in the same module
 (`clubstage.js`): `?scene=club-stage`. Same dance timing as cartop-dance — a
 new frame every ~4 ticks — over a dance bed, with cheers at the loop start and
 mid-loop.
+
+---
+
+## Festival Day
+
+A connective wrapper (`festival.js` + HUD in `index.html`) ties the registered scenes together into a playable town tour without altering the 30 Hz sim or scene/bookmark numbering:
+
+- **Scene Journal (`📖 SCENES`):** lists every registered scene in `SCENES` with its persisted state (`not found` / `watched` / `played` in `localStorage`) and a `▶` button to open that scene in ready mode.
+- **In-World Triggers:** every registered scene places a glowing ring-and-beam marker at its bookmark set position (and a dot on the minimap). Walking into a marker during free-roam opens that scene's ready mode.
+- **Festival Day (`▶ FESTIVAL DAY`):** runs the 11 built scenes as an ordered day with live traffic and Heat between stops, highlighting the active stop in gold and ending with a day-complete summary card (`watched` / `played` counts) before returning to free-roam. Order: `rooftop-dive` → `photo-call` → `cartop-dance` → `club-stage` → `pool-surface` → `pool-rimsit` → `pot-rampage` → `chest-fanfare` → `dock-fishing` → `fairy-orbit` → `cucco-swarm`.
+- **Play-All Tour (`🎬 TOUR`):** chains the built scenes back-to-back on the capture camera for filming; any tap/click or `Esc` exits to free-roam.
