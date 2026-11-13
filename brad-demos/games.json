@@ -2637,6 +2637,14 @@
   },
   {
    "category": "Viral Demos",
+   "desc": "The painted plaza in pure pointillist dots — colour blends in your eye, not on the canvas.",
+   "id": "pointillism-plaza",
+   "thumb": "thumbs/bonk-yard.png",
+   "title": "Pointillism Plaza",
+   "url": "../games/pointillism-plaza/"
+  },
+  {
+   "category": "Viral Demos",
    "desc": "The real Starry Night, alive — drag the sky, tap a star for a shooting star",
    "id": "starry-night",
    "thumb": "thumbs/bonk-yard.png",
