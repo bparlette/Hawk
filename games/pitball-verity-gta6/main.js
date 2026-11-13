@@ -1011,12 +1011,10 @@ function draw() {
     ctx.fillStyle = P.glow; ctx.beginPath(); ctx.arc(fin.x, fin.y1, fin.half, 0, 7); ctx.fill();
   }
 
-  // floor + catch zone
+  // floor + catch line
   ctx.fillStyle = 'rgba(24,8,26,.88)'; ctx.fillRect(0, FLOOR + 4, W, LH - FLOOR);
   ctx.strokeStyle = P.accent; ctx.lineWidth = 3;
   ctx.beginPath(); ctx.moveTo(pitLeft(FLOOR), FLOOR + 4); ctx.lineTo(pitRight(FLOOR), FLOOR + 4); ctx.stroke();
-  ctx.fillStyle = 'rgba(94,231,255,.13)';
-  ctx.fillRect(G.hero.x - 54, G.hero.y - 22, 108, 68);
 
   for (const s of G.shards) { if (a && a.drawShard) a.drawShard(ctx, s.x, s.y, s.salvage ? 17 : 11, G.t); else stubShard(s.x, s.y, s.salvage ? 15 : 10); }
   for (const e of G.enemies) drawEnemy(e);
