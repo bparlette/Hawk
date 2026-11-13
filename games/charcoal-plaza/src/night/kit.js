@@ -60,7 +60,7 @@ export function createKit(shared, { palettes, head = '', light, origin = [0, 0, 
       d.addScaledVector(nn, -d.dot(nn));
       if (d.lengthSq() < 1e-6) d.copy(e1);
       d.normalize().addScaledVector(new THREE.Vector3().crossVectors(nn, d), (rand() - 0.5) * 0.35);
-      stroke(p, nn, d, size[0] * (0.8 + 0.4 * rand()), size[1] * (0.75 + 0.5 * rand()), pal, tone * (0.88 + 0.24 * rand()), lift * (0.4 + 1.2 * rand()));
+      stroke(p, nn, d, size[0] * (0.8 + 0.4 * rand()), size[1] * (0.75 + 0.5 * rand()), pal, tone * (0.94 + 0.12 * rand()), lift * (0.4 + 1.2 * rand()));
     }
   }
 
