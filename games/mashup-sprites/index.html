@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Mashup Sprites — the GTA × Zelda Set</title>
+<style>
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body { background:#12241a; color:#f3eede; font-family:system-ui, sans-serif; padding:18px 14px 40px; }
+  h1 { font-size:26px; letter-spacing:.5px; text-align:center; color:#ffd94a; text-shadow:2px 2px 0 #7a4b00; }
+  .sub { text-align:center; opacity:.85; font-size:14px; margin:8px auto 4px; max-width:520px; line-height:1.45; }
+  .play { display:block; margin:18px auto 22px; max-width:420px; text-align:center; background:#e33d2e; color:#fff;
+          font-weight:800; font-size:21px; letter-spacing:1px; text-decoration:none; padding:16px 10px;
+          border-radius:14px; border:3px solid #ffd94a; box-shadow:0 4px 0 #7a1408; }
+  .play:active { transform:translateY(3px); box-shadow:0 1px 0 #7a1408; }
+  .grid { display:grid; grid-template-columns:repeat(auto-fill, minmax(150px, 1fr)); gap:12px; max-width:860px; margin:0 auto; }
+  .card { background:#f7f3e6; border-radius:12px; padding:10px 8px 12px; text-align:center; border:3px solid #2e5d3a; }
+  .card .imgbox { height:128px; display:flex; align-items:center; justify-content:center;
+    background:repeating-conic-gradient(#e8e2cf 0% 25%, #fbf8ee 0% 50%) 0 0/24px 24px; border-radius:8px; }
+  .card img { max-width:92%; max-height:120px; image-rendering:pixelated; }
+  .card h2 { color:#17351f; font-size:16px; margin:9px 0 3px; }
+  .card p { color:#4c5546; font-size:12.5px; line-height:1.4; }
+  .card .seed { display:inline-block; margin-top:6px; font-size:11px; font-weight:700; color:#8a6d00; background:#ffedb0;
+    border-radius:20px; padding:2px 8px; }
+  footer { text-align:center; opacity:.65; font-size:12px; margin-top:26px; line-height:1.5; }
+  footer a { color:#ffd94a; }
+</style>
+</head>
+<body>
+<h1>🎮 MASHUP SPRITES 🎮</h1>
+<p class="sub">The full GTA × Zelda sprite set — 15 pixel-art sprites generated with Pixelmon
+(SDXL + Pixel&nbsp;Art&nbsp;XL) at the 512 standard. Every one of them is in the game.</p>
+<a class="play" href="../vice-hyrule/">▶ PLAY VICE HYRULE</a>
+
+<div class="grid">
+  <div class="card"><div class="imgbox"><img src="sprites/linkle-512.png" alt="Linkle, the heroine"></div>
+    <h2>Linkle</h2><p>The heroine — keeper sprite of the set. In the game she guards the chest plaza and marks your goal.</p><span class="seed">KEEPER</span></div>
+  <div class="card"><div class="imgbox"><img src="sprites/s201-hero.png" alt="Elf boy hero"></div>
+    <h2>Elf Boy Hero</h2><p>That's you. Sword, shield, green tunic — on foot or behind the wheel.</p><span class="seed">SEED 201</span></div>
+  <div class="card"><div class="imgbox"><img src="sprites/s202-chicken.png" alt="Angry white chicken — a cucco"></div>
+    <h2>The Cucco</h2><p>One angry white chicken wandering the plaza. Hit it three times and you'll find out why everybody says don't.</p><span class="seed">SEED 202</span></div>
+  <div class="card"><div class="imgbox"><img src="sprites/s203-fairy.png" alt="Glowing fairy"></div>
+    <h2>Fairy</h2><p>A winged glow-orb drifting by the fountain. Touch her to get a heart back.</p><span class="seed">SEED 203</span></div>
+  <div class="card"><div class="imgbox"><img src="sprites/s204-sportscar.png" alt="Red sports car, top-down"></div>
+    <h2>Red Sports Car</h2><p>Your ride. Fast, red, and very good at knocking over beach furniture.</p><span class="seed">SEED 204</span></div>
+  <div class="card"><div class="imgbox"><img src="sprites/s205-sedan.png" alt="Blue sedan, top-down"></div>
+    <h2>Blue Sedan</h2><p>Parked by the west road. Keys are in it. Probably.</p><span class="seed">SEED 205</span></div>
+  <div class="card"><div class="imgbox"><img src="sprites/s206-police.png" alt="Police car, top-down"></div>
+    <h2>Police Car</h2><p>The law. Cause enough mayhem and it comes for you — get caught on foot and you're busted.</p><span class="seed">SEED 206</span></div>
+  <div class="card"><div class="imgbox"><img src="sprites/s207-pickup.png" alt="Teal pickup truck, top-down"></div>
+    <h2>Teal Pickup</h2><p>Parked on the east road. Also drivable, also smash-capable.</p><span class="seed">SEED 207</span></div>
+  <div class="card"><div class="imgbox"><img src="sprites/s208-palm.png" alt="Palm trees"></div>
+    <h2>Palm Trees</h2><p>Beach dressing, generated as a whole grove — the game plants a single-tree crop of it along the sand.</p><span class="seed">SEED 208</span></div>
+  <div class="card"><div class="imgbox"><img src="sprites/s209-chest.png" alt="Treasure chest, open, full of gems"></div>
+    <h2>Treasure Chest</h2><p>The goal. It only opens once you've collected 10 green gems.</p><span class="seed">SEED 209</span></div>
+  <div class="card"><div class="imgbox"><img src="sprites/s210-pot.png" alt="A potted plant"></div>
+    <h2>Potted Plant</h2><p>Ordered as a clay pot, generated as a plant — so it's a plant. Drive through it for coins.</p><span class="seed">SEED 210</span></div>
+  <div class="card"><div class="imgbox"><img src="sprites/s211-gem.png" alt="Green gem"></div>
+    <h2>Green Gem</h2><p>Rupees, basically. Scattered around town and hiding in the plants. Collect 10 to unlock the chest.</p><span class="seed">SEED 211</span></div>
+  <div class="card"><div class="imgbox"><img src="sprites/s212-heart.png" alt="Red hearts"></div>
+    <h2>Red Heart</h2><p>Health. Generated as a whole sheet of hearts — the game uses a single-heart crop for pickups and the HUD.</p><span class="seed">SEED 212</span></div>
+  <div class="card"><div class="imgbox"><img src="sprites/s213-coin.png" alt="Gold coin"></div>
+    <h2>Gold Coin</h2><p>Mayhem money. Smash plants and umbrellas, get coins.</p><span class="seed">SEED 213</span></div>
+  <div class="card"><div class="imgbox"><img src="sprites/s214-umbrella.png" alt="Beach umbrella, top-down"></div>
+    <h2>Beach Umbrella</h2><p>Shade for somebody else's beach day. Extremely knock-over-able.</p><span class="seed">SEED 214</span></div>
+</div>
+
+<footer>All 15 sprites, as generated — no substitutions.<br>
+<a href="../vice-hyrule/">▶ Play Vice Hyrule — the game built from this set</a></footer>
+</body>
+</html>
