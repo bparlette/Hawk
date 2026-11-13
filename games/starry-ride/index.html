@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="utf-8">
-<title>Starry Night Ride — a bicycle ride through Van Gogh's painting (sample)</title>
+<title>Starry Night Ride — a bicycle ride through Van Gogh's painting</title>
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
 <style>
   html, body { margin: 0; height: 100%; background: #141c3a; overflow: hidden; }
@@ -15,7 +15,7 @@
   }
   #hud {
     position: fixed; left: 12px; top: 10px; z-index: 1100; pointer-events: none;
-    color: rgba(255, 248, 230, .92); font-family: system-ui, sans-serif; font-size: 13px;
+    color: rgba(255, 248, 230, .92); font-family: system-ui, sans-serif; font-size: 19px;
     text-shadow: 0 1px 4px rgba(0,0,0,.55); line-height: 1.45;
   }
   #hud b { font-family: Georgia, serif; font-size: 15px; letter-spacing: .03em; }
@@ -34,7 +34,7 @@ canvas{touch-action:none}
 <body>
 <div id="view"></div>
 <div id="loading">painting the starry night…</div>
-<div id="hud"><b>Starry Night Ride</b><br>push the left side to steer · arrow keys work too</div>
+<div id="hud">✦ <span id="shardCount">0</span></div>
 <script type="module" src="./main.js"></script>
 <script id="moth-game-guard-js">
 (function(){
