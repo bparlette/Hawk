@@ -2714,6 +2714,14 @@
    "thumb": "thumbs/bonk-yard.png",
    "title": "Charcoal Plaza",
    "url": "../games/charcoal-plaza/"
+  },
+  {
+   "category": "Viral Demos",
+   "desc": "Oil Paint Plaza re-laid as mosaic — world-anchored tesserae, grout lines, glassy lifts.",
+   "id": "mosaic-plaza",
+   "thumb": "thumbs/bonk-yard.png",
+   "title": "Mosaic Plaza",
+   "url": "../games/mosaic-plaza/"
   }
  ]
 }
