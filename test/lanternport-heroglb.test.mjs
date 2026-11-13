@@ -56,13 +56,13 @@ test('juniper binary assets: rig size matches source and all scheduled GLB clips
   }
 });
 
-test('isHeroGLBTarget matches only the 7 converted scenes and their target actor IDs', () => {
-  assert.equal(Object.keys(HERO_GLB_SCENES).length, 7);
+test('isHeroGLBTarget matches only the 8 converted scenes and their target actor IDs', () => {
+  assert.equal(Object.keys(HERO_GLB_SCENES).length, 8);
   assert.equal(isHeroGLBTarget('pool-rimsit', { id: 'juniper' }), true);
   assert.equal(isHeroGLBTarget('club-stage', { id: 'dancer' }), true);
   assert.equal(isHeroGLBTarget('dock-fishing', { id: 'fen' }), true);
   assert.equal(isHeroGLBTarget('pool-rimsit', { id: 'fen' }), false);
-  assert.equal(isHeroGLBTarget('rooftop-dive', { id: 'juniper' }), false);
+  assert.equal(isHeroGLBTarget('rooftop-dive', { id: 'juniper' }), true);
   assert.equal(isHeroGLBTarget('sword-pedestal', { id: 'juniper' }), false);
   assert.equal(isHeroGLBTarget(null, { id: 'juniper' }), false);
 });
@@ -93,6 +93,14 @@ test('HERO_GLB_SCENES clip schedules and deterministic crossfade evaluation', ()
   assert.equal(HERO_GLB_SCENES['fairy-orbit'].schedule(100).clip, '07_01');
   assert.equal(HERO_GLB_SCENES['fairy-orbit'].schedule(400).clip, 'idle-stand');
   assert.equal(HERO_GLB_SCENES['fairy-orbit'].schedule(700).clip, '07_01');
+
+  // rooftop-dive (filmscenes.js DIVE beats): hold, strut, dive oneshot timed to the splash tick, swim, rim-sit
+  assert.equal(HERO_GLB_SCENES['rooftop-dive'].schedule(30).clip, 'idle-stand');
+  assert.equal(HERO_GLB_SCENES['rooftop-dive'].schedule(120).clip, '07_01');
+  assert.equal(HERO_GLB_SCENES['rooftop-dive'].schedule(260).clip, 'dive');
+  assert.equal(HERO_GLB_SCENES['rooftop-dive'].schedule(260).loop, false);
+  assert.equal(HERO_GLB_SCENES['rooftop-dive'].schedule(450).clip, 'swim-surface');
+  assert.equal(HERO_GLB_SCENES['rooftop-dive'].schedule(700).clip, 'sit-rim');
 
   // Verify evaluateHeroSchedule blends deterministically during transition window
   const makeMockAction = (dur) => ({
@@ -132,7 +140,7 @@ test('HERO_GLB_SCENES clip schedules and deterministic crossfade evaluation', ()
 });
 
 const CHROME = findChrome();
-test('headless Chrome: all 7 converted scenes load juniper_rig.glb with 127 bound bones and zero runtime errors', { skip: !CHROME }, async () => {
+test('headless Chrome: all 8 converted scenes load juniper_rig.glb with 127 bound bones and zero runtime errors', { skip: !CHROME }, async () => {
   const server = http.createServer((req, res) => {
     const cleanUrl = (req.url || '/').split('?')[0];
     const rel = cleanUrl === '/' ? '/index.html' : decodeURIComponent(cleanUrl);
