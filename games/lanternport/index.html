@@ -158,6 +158,12 @@ Object.assign(sun.shadow.camera, { left: -62, right: 62, top: 62, bottom: -62, n
 let game, bot, cityView, heroViews = [], ents = new Map(), beacons = [], sceneMarkers = [], markerMeshes = [];
 let cooldownMarkerId = null;
 const burstDone = new Set(); let bursts = [];
+/** Discs [x, z, r] (metres) the set dressing must leave empty: every staged scene's set, from its camera bookmark. */
+function sceneKeepOut(g) {
+  const out = [];
+  for (const def of SCENES) { if (!def.bookmark || def.id === 'stage-test') continue; const b = typeof def.bookmark === 'function' ? def.bookmark(g) : def.bookmark; if (b && b.pivot[1] < 6) out.push([b.pivot[0], b.pivot[2], 10]); }
+  return out;
+}
 function makeSceneMarkerMesh() {
   const g = new THREE.Group();
   const ringMat = new THREE.MeshBasicMaterial({ color: 0x49e0ff, transparent: true, opacity: 0.85, side: THREE.DoubleSide, depthWrite: false });
@@ -209,7 +215,7 @@ function restart() {
   heroViews.forEach((h) => scene.remove(h.group, h.shadow, h.ring));
   markerMeshes.forEach((m) => scene.remove(m.group)); markerMeshes = [];
   game = new Game(SEED); bot = new Bot(game);
-  cityView = buildCityView(THREE, game.city, kit); scene.add(cityView);
+  cityView = buildCityView(THREE, game.city, kit, { keepOut: sceneKeepOut(game) }); scene.add(cityView);
   heroViews = LOOKS.map((look) => { const h = new HeroView(THREE, kit, look); scene.add(h.group, h.shadow, h.ring); return h; });
   game.heroes.forEach((h, i) => { heroViews[i].snapshot(h); heroViews[i].snapshot(h); });
   cam.init = false; cam.yaw = Math.PI / 2; window.__game = game;
