@@ -2770,6 +2770,14 @@
    "thumb": "thumbs/bonk-yard.png",
    "title": "Pool Models — All 3 Rigged",
    "url": "../games/pool-trio-all/"
+  },
+  {
+   "category": "Viral Demos",
+   "desc": "The painted plaza as a dream — warped space, impossible shadows, an evening sky over a daylit square. Walk her through it.",
+   "id": "surrealism-plaza",
+   "thumb": "thumbs/bonk-yard.png",
+   "title": "Surrealism Plaza",
+   "url": "../games/surrealism-plaza/"
   }
  ]
 }
