@@ -164,16 +164,27 @@ float figSunSoft(vec3 f) {
 float figSunAt(vec3 world) { return figSunSoft((uFigShadeMat * vec4(world, 1.0)).xyz); }
 float sunAt(vec3 world) { return min(woodSunAt(world), figSunAt(world)); }
 
-// The painter's three mixes. x is how lit the spot is; r moves the edges about so that one zone breaks into
-// the next dab by dab.
-// CUBISM: the transitions are narrowed and pushed apart, so the mid mix becomes a broad flat plateau
-// and a surface breaks into large planes of shade / mid / light with hard steps between them —
-// fractured, flatter light. The per-dab edge wobble stays, so neighbouring facets land in different
-// bands even on one smooth surface.
+// The painter's three mixes. x is how lit the spot is; r is a per-facet random (constant across
+// one facet — a dab, a stroke, or a hashed cell of a surface).
+// CUBISM, STROKE REBUILD: the light is not graded, it is STEPPED. x is first snapped to a
+// six-step staircase, and the facet's own r shifts it a step up or down, so one smooth surface
+// fractures into discrete flat planes of shade / mid / light whose boundaries follow the
+// geometry (where the light changes, and where one facet's cell gives way to the next) — never
+// a smooth gradient, never a per-pixel wobble. The two mixes then cut at near-step edges, so
+// each of the six steps lands wholly in one mix: six flat tones, nothing between.
 vec3 paint3(vec3 cl, vec3 cm, vec3 cs, float x, float r) {
-  x += (r - 0.5) * 0.22;
-  vec3 c = mix(cs, cm, smoothstep(0.30, 0.365, x));
-  return mix(c, cl, smoothstep(0.615, 0.68, x));
+  float stepped = clamp((floor(x * 6.0 + (r - 0.5) * 1.5) + 0.5) / 6.0, 0.02, 0.98);
+  vec3 c = mix(cs, cm, smoothstep(0.295, 0.35, stepped));
+  return mix(c, cl, smoothstep(0.65, 0.695, stepped));
+}
+
+// One flat facet of a continuous surface: the hash of the surface's cell, cells "scale" metres
+// across. Surfaces that are shaded per pixel (the kit's underpainting, the walker) read their
+// facet from world or bind position through this, so a whole cell shares one tone and the
+// boundary between two cells is a hard angular break — the fractured plane, at structural size.
+vec4 facetHash(vec3 p, float scale) {
+  vec3 cell = floor(p / scale);
+  return hash4(cell.x + cell.y * 57.0 + cell.z * 131.0);
 }
 
 // Broken colour: every dab is mixed a little differently on the palette (value, hue, strength).

@@ -1,8 +1,12 @@
 // CUBISM PLAZA — the Painted Live fountain plaza (identical set, controls, camera and walk)
-// re-skinned as Picasso cubism: the dab sheet is cut shards instead of bristle marks, light is
-// flat fractured planes (paint3 plateaus in common.js), stroke directions step by facet, and
-// the whole palette is ochre / grey / slate blue / brown / muted gold — with the walker's own
-// green kept as the one saturated accent. Re-skin only: gameplay code is the plaza's, untouched.
+// as Picasso cubism. STROKE REBUILD (v2): v1 only retuned the palette and dab mix of the oil
+// painter, and on a phone it read as a recolour — it was killed for that. This version changes
+// the stroke itself: every mark is a big flat polygonal shard (no round dabs anywhere), the
+// light is a stepped staircase of six flat tones instead of a gradient (paint3 in common.js),
+// continuous surfaces are fractured into ~0.65 m hashed facet cells that each hold one tone
+// (kit underpainting), the sky stacks in hard bands, and the walker herself is faceted in
+// ~12 cm bind-pose cells (paintTex) — fractured planes at structural size, not mosaic.
+// Re-skin only: gameplay code is the plaza's, untouched.
 //   ?paint=rich    full part-1 dab density (default: smooth = the proof's reduced video density)
 //   ?paint=smooth  reduced density + smaller drawing buffer — the real-time default
 // Performance note: the painter repaints every dab every frame; on a real phone GPU that is
@@ -91,12 +95,18 @@ scene.add(sky.group);
       uniform sampler2D tNoise; uniform vec3 uHaze; uniform vec3 uSunDir;
       in vec3 vWorld;
       layout(location = 0) out vec4 outC;
+      float hash21(vec2 p) { p = fract(p * vec2(234.34, 435.345)); p += dot(p, p + 34.23); return fract(p.x * p.y); }
       void main() {
-        float n = texture(tNoise, vWorld.xz / 9.0).r;
+        // STROKE REBUILD: the underpainting is cut into large flat cells too — a smooth
+        // gradient here would show between the ground shards as un-cubist wash at distance.
+        vec2 cell = floor(vWorld.xz / 1.35);
+        float h = hash21(cell);
+        float n = floor(texture(tNoise, vWorld.xz / 9.0).r * 4.0) / 4.0;
         float rad = length(vWorld.xz);
         vec3 c = mix(vec3(0.55, 0.47, 0.36), vec3(0.63, 0.55, 0.4), n);
-        c = mix(c, vec3(0.47, 0.46, 0.43), smoothstep(18.0, 42.0, rad)); // the town goes on, greyer, past the plaza
-        outC = vec4(c * 0.92, 1.0);
+        c = mix(c, vec3(0.47, 0.46, 0.43), smoothstep(26.0, 31.0, rad)); // the town goes on, greyer, past the plaza
+        c *= 0.92 * (0.88 + 0.24 * h);
+        outC = vec4(c, 1.0);
       }`,
   });
   const m = new THREE.Mesh(geo, mat);
@@ -130,16 +140,19 @@ void makeDab(inout Dab d) {
   c = mix(c, c * vec3(0.62, 0.52, 0.44), clamp(band, 0.0, 1.0) * 0.85);
   c = mix(c, paint3(vec3(0.82, 0.74, 0.55), vec3(0.62, 0.54, 0.38), S, lit, q.y), smoothstep(4.8, 3.2, rad)); // pale bone apron at the fountain
   c = mix(c, c * vec3(0.85, 0.85, 0.84), smoothstep(19.0, 40.0, rad)); // greyer past the plaza's edge
-  c = jitter(c, r.wzy, 0.45);
+  c = jitter(c, r.wzy, 0.55);
   // CUBISM: the paving spokes no longer flow radially — each cell's direction snaps to a 45°
   // facet angle at or one step past the true radial, so the ground breaks into cut planes.
   float ang = rad > 0.01 ? atan(xz.y, xz.x) : 0.0;
   float snapped = (floor(ang / 0.7853981 + q.x * 0.9)) * 0.7853981;
   d.dir = vec3(cos(snapped), 0.0, sin(snapped));
   d.pos = P;
-  d.size = uCell0 * vec2(1.05 + 0.5 * r.z, 1.7 + 0.9 * r.w) * lod;
+  // STROKE REBUILD: v1's shards were confetti — a fifth of a metre long, thousands of them,
+  // reading as mosaic texture. These are structural: 0.4–0.6 m across and 0.7–1.1 m long at
+  // true size, so the paving is a field of big cut planes whose edges the eye can follow.
+  d.size = uCell0 * vec2(2.6 + 1.3 * r.z, 4.8 + 2.4 * r.w) * lod;
   d.c1 = hazed(c, P);
-  d.c2 = hazed(jitter(c * 1.14, q.wzy, 0.4), P);
+  d.c2 = hazed(jitter(c * 1.24, q.wzy, 0.45), P);
   d.seed = dot(cell, vec2(1.0, 57.0)) + sub * 0.37;
   d.turnabout = 1.0;
   d.lie = 1.0;
@@ -189,16 +202,18 @@ const slab = (cx, cy, cz, rotX, rotZ, w, thick, len, pal, grain) => {
     new THREE.Vector3(cx, cy, cz),
     new THREE.Quaternion().setFromEuler(new THREE.Euler(rotX, 0, rotZ)),
     new THREE.Vector3(1, 1, 1));
-  kit.add(new THREE.BoxGeometry(w, thick, len), m, pal, { grain: new THREE.Vector3(...grain), stroke: [0.09, 0.3] });
+  kit.add(new THREE.BoxGeometry(w, thick, len), m, pal, { grain: new THREE.Vector3(...grain), stroke: [0.34, 1.0] });
 };
 
 // --- house A: cream, terracotta roof, ridge along x ---
-kit.box(-7.5, 2.2, -13, 8, 4.4, 6, 'cream', { stroke: [0.09, 0.26] });
-kit.tri([-3.5, 4.4, -16], [-3.5, 6.3, -13], [-3.5, 4.4, -10], 'cream', { stroke: [0.09, 0.24] });
-kit.tri([-11.5, 4.4, -10], [-11.5, 6.3, -13], [-11.5, 4.4, -16], 'cream', { stroke: [0.09, 0.24] });
+// STROKE REBUILD: wall/roof strokes are structural planes now (~0.3 m across, ~0.85 m long),
+// where v1 laid 9 cm touches that read as grain. Small faces still cap the size in scatter.
+kit.box(-7.5, 2.2, -13, 8, 4.4, 6, 'cream', { stroke: [0.3, 0.85] });
+kit.tri([-3.5, 4.4, -16], [-3.5, 6.3, -13], [-3.5, 4.4, -10], 'cream', { stroke: [0.3, 0.8] });
+kit.tri([-11.5, 4.4, -10], [-11.5, 6.3, -13], [-11.5, 4.4, -16], 'cream', { stroke: [0.3, 0.8] });
 slab(-7.5, 5.32, -11.55, 0.564, 0, 8.9, 0.16, 3.9, 'tile', [0, -0.5, 0.85]);
 slab(-7.5, 5.32, -14.45, -0.564, 0, 8.9, 0.16, 3.9, 'tile', [0, -0.5, -0.85]);
-kit.box(-9.6, 5.4, -14.6, 0.95, 2.8, 0.95, 'stone', { stroke: [0.08, 0.2] });
+kit.box(-9.6, 5.4, -14.6, 0.95, 2.8, 0.95, 'stone', { stroke: [0.2, 0.5] });
 kit.box(-7.5, 1.05, -9.92, 1.15, 2.1, 0.16, 'timber', { grain: 'y' });
 kit.box(-9.9, 2.7, -9.92, 1.3, 1.5, 0.14, 'glass');
 kit.box(-5.1, 2.7, -9.92, 1.3, 1.5, 0.14, 'glass');
@@ -206,9 +221,9 @@ kit.box(-7.5, 3.45, -9.92, 0.9, 1.0, 0.14, 'glass');
 kit.box(-7.5, 0.09, -9.35, 1.7, 0.18, 0.95, 'stone');
 
 // --- house B: rose, verdigris roof ---
-kit.box(6, 1.9, -13.5, 7, 3.8, 5.5, 'rose', { stroke: [0.09, 0.24] });
-kit.tri([9.5, 3.8, -16.25], [9.5, 5.5, -13.5], [9.5, 3.8, -10.75], 'rose', { stroke: [0.09, 0.22] });
-kit.tri([2.5, 3.8, -10.75], [2.5, 5.5, -13.5], [2.5, 3.8, -16.25], 'rose', { stroke: [0.09, 0.22] });
+kit.box(6, 1.9, -13.5, 7, 3.8, 5.5, 'rose', { stroke: [0.3, 0.85] });
+kit.tri([9.5, 3.8, -16.25], [9.5, 5.5, -13.5], [9.5, 3.8, -10.75], 'rose', { stroke: [0.28, 0.75] });
+kit.tri([2.5, 3.8, -10.75], [2.5, 5.5, -13.5], [2.5, 3.8, -16.25], 'rose', { stroke: [0.28, 0.75] });
 slab(6, 4.62, -12.15, 0.554, 0, 7.6, 0.16, 3.6, 'tealRoof', [0, -0.5, 0.85]);
 slab(6, 4.62, -14.85, -0.554, 0, 7.6, 0.16, 3.6, 'tealRoof', [0, -0.5, -0.85]);
 kit.box(6, 0.95, -10.68, 1.05, 1.9, 0.16, 'timber', { grain: 'y' });
@@ -219,24 +234,24 @@ kit.box(8.1, 2.3, -10.68, 1.15, 1.3, 0.14, 'glass');
 for (const s of [1, -1]) {
   const cx = 12.5 * s, cz = s > 0 ? -3 : 2, awn = s > 0 ? 'awningRed' : 'awningGold';
   for (const px of [11.6, 13.4]) for (const pz of [cz - 1.7, cz + 1.7]) kit.box(px * s, 1.15, pz, 0.12, 2.3, 0.12, 'timber', { grain: 'y' });
-  kit.box(11.9 * s, 0.55, cz, 0.9, 1.1, 3.6, 'timber', { stroke: [0.08, 0.3] });
-  kit.box(13.3 * s, 0.5, cz, 0.5, 1.0, 3.4, 'timber', { stroke: [0.08, 0.28] });
+  kit.box(11.9 * s, 0.55, cz, 0.9, 1.1, 3.6, 'timber', { stroke: [0.26, 0.8] });
+  kit.box(13.3 * s, 0.5, cz, 0.5, 1.0, 3.4, 'timber', { stroke: [0.24, 0.75] });
   slab(cx, 2.62, cz, 0, 0.3 * s, 3.4, 0.09, 4.2, awn, [-s, 0, 0]);
   kit.box(11.8 * s, 0.3, cz - 2.3, 0.6, 0.6, 0.6, 'timber');
   kit.box(11.8 * s, 0.85, cz - 2.3, 0.5, 0.5, 0.5, 'timber', { tone: 0.85 });
-  kit.round(13.2 * s, 0.28, cz + 2.4, 0.26, 0.56, 'pot', { sides: 10, stroke: [0.05, 0.12] });
-  for (let i = 0; i < 5; i++) kit.add(new THREE.SphereGeometry(0.09, 8, 6), kit.place(11.9 * s, 1.17, cz - 0.8 + i * 0.4), 'fruit', { smooth: true, stroke: [0.04, 0.07] });
+  kit.round(13.2 * s, 0.28, cz + 2.4, 0.26, 0.56, 'pot', { sides: 10, stroke: [0.14, 0.34] });
+  for (let i = 0; i < 5; i++) kit.add(new THREE.SphereGeometry(0.09, 8, 6), kit.place(11.9 * s, 1.17, cz - 0.8 + i * 0.4), 'fruit', { smooth: true, stroke: [0.06, 0.1] });
 }
 
 // --- the fountain ---
-kit.round(0, 0.34, 0, 2.6, 0.68, 'stone', { sides: 22, stroke: [0.09, 0.24] });
-kit.round(0, 0.72, 0, 2.72, 0.12, 'stonePale', { sides: 22, stroke: [0.08, 0.2] });
-kit.round(0, 0.8, 0, 0.44, 1.6, 'stone', { sides: 14, stroke: [0.07, 0.18] });
-kit.round(0, 1.62, 0, 1.08, 0.2, 'stonePale', { sides: 18, stroke: [0.07, 0.16] });
+kit.round(0, 0.34, 0, 2.6, 0.68, 'stone', { sides: 22, stroke: [0.26, 0.66] });
+kit.round(0, 0.72, 0, 2.72, 0.12, 'stonePale', { sides: 22, stroke: [0.24, 0.55] });
+kit.round(0, 0.8, 0, 0.44, 1.6, 'stone', { sides: 14, stroke: [0.2, 0.5] });
+kit.round(0, 1.62, 0, 1.08, 0.2, 'stonePale', { sides: 18, stroke: [0.2, 0.45] });
 kit.round(0, 1.8, 0, 0.07, 0.26, 'stone', { sides: 8 });
-kit.add(new THREE.SphereGeometry(0.17, 10, 8), kit.place(0, 1.98, 0), 'stonePale', { smooth: true, stroke: [0.05, 0.09] });
+kit.add(new THREE.SphereGeometry(0.17, 10, 8), kit.place(0, 1.98, 0), 'stonePale', { smooth: true, stroke: [0.08, 0.14] });
 // trees' trunks ride in the same kit
-for (const [tx, tz] of [[-12, -7.5], [12, -9.5], [-13, 7]]) kit.round(tx, 1.15, tz, 0.17, 2.3, 'bark', { sides: 8, stroke: [0.06, 0.22] });
+for (const [tx, tz] of [[-12, -7.5], [12, -9.5], [-13, 7]]) kit.round(tx, 1.15, tz, 0.17, 2.3, 'bark', { sides: 8, stroke: [0.16, 0.55] });
 const built = kit.build();
 scene.add(built.group);
 
@@ -249,13 +264,14 @@ const waterKit = createKit(shared, {
       vec3 v = normalize(P - cameraPosition);
       float glint = pow(max(dot(reflect(v, vec3(0.0, 1.0, 0.0)), uSunDir), 0.0), 24.0);
       float shimmer = 0.72 + 0.28 * sin(uTime * 1.7 + P.x * 6.0 + P.z * 8.0 + r * 9.0);
+      shimmer = (floor(shimmer * 4.0) + 0.5) / 4.0; // STROKE REBUILD: the water's light steps too — no smooth shimmer
       return paint3(PAL_L[k], PAL_M[k], PAL_S[k], shimmer, r) * tone + vec3(0.9, 0.82, 0.6) * glint * 0.55;
     }`,
 });
 {
   const flat = (y) => new THREE.Matrix4().compose(new THREE.Vector3(0, y, 0), new THREE.Quaternion().setFromEuler(new THREE.Euler(-Math.PI / 2, 0, 0)), new THREE.Vector3(1, 1, 1));
-  waterKit.add(new THREE.CircleGeometry(2.38, 26), flat(0.55), 'water', { stroke: [0.06, 0.15], density: 1.2 });
-  waterKit.add(new THREE.CircleGeometry(0.92, 20), flat(1.66), 'water', { stroke: [0.05, 0.12], density: 1.2 });
+  waterKit.add(new THREE.CircleGeometry(2.38, 26), flat(0.55), 'water', { stroke: [0.16, 0.4], density: 1.2 });
+  waterKit.add(new THREE.CircleGeometry(0.92, 20), flat(1.66), 'water', { stroke: [0.14, 0.34], density: 1.2 });
 }
 scene.add(waterKit.build().group);
 
@@ -292,7 +308,12 @@ const crownUnder = [];
       uniform vec3 uSunDir;
       in vec3 vWorld; in vec3 vN;
       layout(location = 0) out vec4 outC;
-      void main() { outC = vec4(vec3(0.16, 0.15, 0.1) * (0.65 + 0.55 * max(normalize(vN).y, 0.0)), 1.0); }`,
+      void main() {
+        // STROKE REBUILD: flat-shaded per triangle (derivative normal), so the crown mass
+        // under the dabs is already a faceted solid, not a smooth blob showing through.
+        vec3 fn = normalize(cross(dFdx(vWorld), dFdy(vWorld)));
+        outC = vec4(vec3(0.16, 0.15, 0.1) * (0.65 + 0.55 * max(fn.y, 0.0)), 1.0);
+      }`,
   });
   for (const { c, r } of crownUnder) {
     const s = new THREE.Mesh(new THREE.SphereGeometry(r * 0.96, 12, 9), underMat);
@@ -317,7 +338,7 @@ const crowns = dabMesh(dabGeometry(crownCount, {
       c = jitter(c, r.wzy, 0.5);
       d.pos = aPos;
       d.dir = aDir;
-      d.size = vec2(0.19, 0.36) * (0.8 + 0.5 * r.x);
+      d.size = vec2(0.34, 0.62) * (0.8 + 0.5 * r.x); // STROKE REBUILD: crown shards at structural size, not leaf touches
       d.c1 = hazed(c, aPos);
       d.c2 = hazed(c * 1.3, aPos);
       d.seed = r.x * 977.0;
@@ -447,19 +468,26 @@ function paintTex(shared, srcMat) {
         vec3 Nn = normalize(vN);
         if (!gl_FrontFacing) Nn = -Nn;
         vec3 tex = texture(tMap, vUv).rgb * uTint;
-        float n = texture(tNoise, vBind.xy * 0.024 + vBind.z * 0.017).r;
-        float m = texture(tNoise, vBind.yx * 0.007 + 0.4).g;
+        // CUBISM, STROKE REBUILD: v1 lit her per pixel with smooth noise, so she stayed a
+        // smooth-lit model standing in a fractured world — the one thing the eye reads first
+        // was the one thing not cubist. Now she is built of planes like everything else:
+        // facets are ~12-unit cells of her bind pose (about 12 cm on the body), pinned to
+        // her so they travel with the walk; each facet picks one step of a five-step light
+        // staircase and one flat value, so her hood, dress and limbs break into large flat
+        // facets with hard angular boundaries that shift as she turns — fractured, not graded.
+        vec4 fh = facetHash(vBind, 12.0);
         float lit = sunAt(vWorld + Nn * 0.08) * clamp(dot(Nn, uSunDir) * 0.85 + 0.42, 0.0, 1.0);
+        lit = clamp((floor(lit * 5.0 + fh.x * 1.4) + 0.5) / 5.0, 0.03, 0.97);
         vec3 L = min(tex * 1.45 + vec3(0.05, 0.04, 0.02), vec3(1.2));
         vec3 S = tex * vec3(0.34, 0.36, 0.48);
-        vec3 c = paint3(L, tex, S, lit, n);
+        vec3 c = paint3(L, tex, S, lit, fh.y);
         // CUBISM: she carries the picture's one saturated colour — lift her saturation a
         // little against the muted ochre/slate world so she never gets lost in it.
         float lum = dot(c, vec3(0.3, 0.59, 0.11));
         c = mix(vec3(lum), c, 1.22);
         c += uBounce * max(-Nn.y, 0.0) * (1.0 - lit);
         c = mix(c, c * vec3(0.86, 0.92, 1.18), (1.0 - lit) * max(Nn.y, 0.0) * 0.6);
-        c *= 0.88 + 0.24 * m;
+        c *= 0.86 + 0.28 * fh.z; // one flat value per facet — no smooth modulation anywhere on her
         if (!gl_FrontFacing) c *= 0.62;
         outC = vec4(hazed(c, vWorld), 1.0);
       }`,

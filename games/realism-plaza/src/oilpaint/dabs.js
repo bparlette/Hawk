@@ -126,23 +126,26 @@ in vec4 vGlaze;
 layout(location = 0) out vec4 outC;
 void main() {
   vec4 t = texture(tBrush, vUv);
-  if (t.g < 0.3) discard;
+  if (t.g < 0.18) discard;
   vec2 e = vec2(1.5 / 512.0, 0.0);
   float hu = texture(tBrush, vUv + e.xy).r - texture(tBrush, vUv - e.xy).r;
   float hv = texture(tBrush, vUv + e.yx).r - texture(tBrush, vUv - e.yx).r;
-  // the paint stands up off the canvas and the room's light, from the upper left, rakes across it
+  // REALISM REBUILD: the sheet's height is nearly flat now, so this rake term has almost nothing
+  // to bite on even before uImpasto (set ~0 in main.js) — a mark catches no fake room light.
   vec2 g = vAxis.xy * hu + vAxis.zw * hv;
   float rake = 0.5 * g.x - 0.7 * g.y;
-  vec3 col = mix(vC1, vC2, smoothstep(0.52, 0.78, t.b));
+  // the two mixes inside a mark blend across most of its width now, not in one narrow band:
+  // a gentle gradient inside the touch instead of a visible second-colour streak
+  vec3 col = mix(vC1, vC2, smoothstep(0.2, 0.8, t.b));
   if (vGlaze.w > 0.5) {
-    // the wanderer's shadow: a soft plum glaze that slides over the paint and follows its streaks a little
+    // the wanderer's shadow: a soft neutral glaze that slides over the paint and follows it a little
     float lit = figSunSoft(vGlaze.xyz + vec3((t.b - 0.5) * 0.012, (t.r - 0.5) * 0.012, 0.0));
     col = mix(col * uGlazeMul + uGlazeAdd, col, lit);
   }
-  col *= mix(0.95, 1.04, t.r);
+  col *= mix(0.985, 1.015, t.r); // was ±5%: per-mark value flicker is now micro-texture only
   col *= 1.0 + rake * 1.25 * uImpasto;
   col += vec3(1.0, 0.97, 0.9) * pow(max(rake, 0.0), 2.0) * 1.2 * uImpasto;
-  outC = vec4(col, smoothstep(0.3, 0.62, t.g));
+  outC = vec4(col, smoothstep(0.22, 0.8, t.g)); // a long soft alpha edge, cross-blended by coverage
 }
 `;
 

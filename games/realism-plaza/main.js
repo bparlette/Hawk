@@ -1,10 +1,15 @@
 // Painted-Realism Plaza — the Oil-Paint Plaza, re-skinned: the identical set, character,
-// controls and camera, repainted as classical painterly realism. Same painter (src/oilpaint),
-// tuned the other way from the Van Gogh plaza: the finest, densest dabs the system sustains,
-// naturalistic palettes, low impasto, gentle per-dab variation, and paint3's three mixes opened
-// into continuous gradients (src/oilpaint/common.js in this copy), all under a low golden-hour
-// sun. The kit scatters every stroke at ~0.6x size in this copy (src/night/kit.js), so made
-// things are painted in finer touches throughout.
+// controls and camera, repainted as classical painterly realism.
+// REALISM REBUILD (style-rebuild copy): v1 only retuned this painter (finer dabs, softer
+// palettes, lower impasto) and on a phone it still read as the same painting in bleached
+// colours — because the mark itself never changed. This rebuild changes the mark: the brush
+// sheet (src/oilpaint/brush.js) is now a soft, full-coverage micro-mark with a near-flat
+// height channel and a wide feathered edge, laid at ~0.4x in the kit and on 0.075 m ground
+// cells, so touches cross-blend into a continuous film; paint3's mixes are opened across the
+// whole range (src/oilpaint/common.js); per-dab jitter is cut to grain levels; the impasto
+// rake and canvas weave are effectively off; and the light is honest sunny daylight — a high
+// sun, pale blue air, neutral-cool shadow glaze — instead of v1's golden hour. What texture
+// survives is micro-grain, visible on close inspection only.
 //   ?paint=rich    full part-1 dab density (default: smooth = the proof's reduced video density)
 //   ?paint=smooth  reduced density + smaller drawing buffer — the real-time default
 // Performance note: the painter repaints every dab every frame; on a real phone GPU that is
@@ -37,19 +42,19 @@ renderer.autoClear = false;
 renderer.outputColorSpace = THREE.LinearSRGBColorSpace;
 document.getElementById('view').appendChild(renderer.domElement);
 
-// --- golden hour: a low warm sun from the south-west, air the colour of late light ---
-const SUN = new THREE.Vector3(-0.58, 0.46, 0.5).normalize(); // lower than the day plaza's: long shadows, raking light across the stone
+// --- sunny daylight: a high sun, pale blue air, shadows that fall where shadows fall ---
+const SUN = new THREE.Vector3(-0.42, 0.92, 0.38).normalize(); // high midday sun: short shadows, modelling from above, not v1's long golden raking light
 const shared = createShared();
 shared.tBrush.value = createBrushSheet();
 shared.uSunDir.value.copy(SUN);
-shared.uHaze.value.setRGB(0.52, 0.55, 0.62); // duskier blue-grey air — round 1's flat neutral grey washed the sky out
-shared.uHazeSun.value.setRGB(1.0, 0.78, 0.48); // deep gold toward the sun
-shared.uHazeGlow.value.setRGB(0.17, 0.11, 0.04);
-shared.uHazeDensity.value = 0.003; // a touch clearer: realism wants the far houses to stay readable
-shared.uBounce.value.setRGB(0.11, 0.07, 0.03);
-shared.uGlazeMul.value.setRGB(0.62, 0.53, 0.55); // her shadow glaze a little softer than the day plaza's
-shared.uGlazeAdd.value.setRGB(0.018, 0.014, 0.028);
-shared.uImpasto.value = 0.38; // the paint lies flatter: a realist canvas is worked smooth, not sculpted
+shared.uHaze.value.setRGB(0.55, 0.63, 0.74); // clear-day pale blue air (v1's duskier grey-gold read as evening)
+shared.uHazeSun.value.setRGB(1.0, 0.96, 0.88); // barely-warm white toward the sun, not deep gold
+shared.uHazeGlow.value.setRGB(0.07, 0.06, 0.04);
+shared.uHazeDensity.value = 0.0026; // clear air: the far houses stay readable and true-coloured
+shared.uBounce.value.setRGB(0.085, 0.08, 0.075); // neutral bounce (sky + stone), not warm brown
+shared.uGlazeMul.value.setRGB(0.58, 0.60, 0.68); // her shadow glaze is neutral-cool now: real shade is lit by blue sky, not plum paint
+shared.uGlazeAdd.value.setRGB(0.012, 0.014, 0.022);
+shared.uImpasto.value = 0.03; // effectively no impasto: marks catch no raking fake light (and the sheet's height is near-flat anyway)
 
 // --- flat land: the plaza is level, so the height map is all zeros and the land map unused ---
 {
@@ -95,9 +100,12 @@ scene.add(sky.group);
       void main() {
         float n = texture(tNoise, vWorld.xz / 9.0).r;
         float rad = length(vWorld.xz);
-        vec3 c = mix(vec3(0.52, 0.37, 0.27), vec3(0.58, 0.42, 0.31), n); // terracotta base under the paving, warm in the late light
-        c = mix(c, vec3(0.47, 0.36, 0.28), smoothstep(18.0, 42.0, rad)); // the town goes on, duller, past the plaza
-        outC = vec4(c * 0.92, 1.0);
+        // realism rebuild: the underpainting sits close to the dabs' own average tone now — where
+        // a soft dab edge feathers out, what shows through is nearly the same colour, so the
+        // feather reads as a blend, not as a dark seam between chips (v1's darker base did that)
+        vec3 c = mix(vec3(0.6, 0.44, 0.32), vec3(0.66, 0.5, 0.37), n); // terracotta base under the paving
+        c = mix(c, vec3(0.55, 0.43, 0.33), smoothstep(18.0, 42.0, rad)); // the town goes on, duller, past the plaza
+        outC = vec4(c * 0.97, 1.0);
       }`,
   });
   const m = new THREE.Mesh(geo, mat);
@@ -134,13 +142,13 @@ void makeDab(inout Dab d) {
   c = mix(c, c * vec3(0.74, 0.68, 0.66), clamp(band, 0.0, 1.0) * 0.85);
   c = mix(c, paint3(vec3(0.85, 0.63, 0.46), vec3(0.64, 0.45, 0.32), S, lit, q.y), smoothstep(4.8, 3.2, rad)); // paler terracotta apron at the fountain
   c = mix(c, c * vec3(0.88, 0.86, 0.8), smoothstep(19.0, 40.0, rad)); // duller past the plaza's edge
-  c = jitter(c, r.wzy, 0.16);
+  c = jitter(c, r.wzy, 0.02); // realism rebuild: v1's 0.16 made every stone a different chip of confetti; even 0.05 still tiled, so this is grain-level
   vec2 radial = rad > 0.01 ? xz / rad : vec2(1.0, 0.0);
   d.dir = vec3(radial.x, 0.0, radial.y); // strokes run outward from the fountain, like spokes of the paving
   d.pos = P;
   d.size = uCell0 * vec2(1.05 + 0.5 * r.z, 1.7 + 0.9 * r.w) * lod;
   d.c1 = hazed(c, P);
-  d.c2 = hazed(jitter(c * 1.06, q.wzy, 0.14), P);
+  d.c2 = hazed(jitter(c * 1.015, q.wzy, 0.02), P); // the second mix inside a ground dab barely differs now
   d.seed = dot(cell, vec2(1.0, 57.0)) + sub * 0.37;
   d.turnabout = 1.0;
   d.lie = 1.0;
@@ -148,18 +156,21 @@ void makeDab(inout Dab d) {
   d.height = (0.02 + 0.05 * q.z) * pow(lod, 0.35);
   d.glaze = 1.0;
 }`;
-// realism density: finer cells (0.10 m against the day plaza's 0.15) and one more ring level, so
-// the paving is laid in smaller touches at every distance; per stays 2/3 — the instance count grows
-// only by the extra level, the fineness comes from the cells.
-const plaza = groundRings(shared, { body: plazaBody, per: DENSE ? 3 : 2, n: 192, cell0: 0.1, levels: 7, minPx: [3, 5], maxPx: [4000, 4000], cells: [0, 8] });
+// realism rebuild density: cells down to 0.075 m (v1: 0.10, day plaza: 0.15) and a smaller
+// minimum on-screen dab size, so the paving is a finer, denser film of touches at every
+// distance; instance counts are unchanged (the rings hold n x n x per per level regardless
+// of cell size) — the fineness comes from the cells and the soft marks, not from more dabs.
+const plaza = groundRings(shared, { body: plazaBody, per: DENSE ? 3 : 2, n: 192, cell0: 0.075, levels: 7, minPx: [2, 3], maxPx: [4000, 4000], cells: [0, 8] });
 scene.add(plaza.group);
 
 // --- how the kit's paint is lit on a day like this ---
 const DAY = /* glsl */ `
 float dayOn(vec3 P, vec3 Nn) {
   float s = sunAt(P + Nn * 0.25);
-  float face = clamp(dot(Nn, uSunDir) * 1.3 + 0.3, 0.0, 1.0);
-  return clamp(s * face + max(Nn.y, 0.0) * 0.16, 0.0, 1.0);
+  // realism rebuild: a softer wrap (1.18 slope, 0.38 lift) and a stronger sky-ambient term, so
+  // turned-away faces fall off gradually into blue-lit shade instead of snapping dark
+  float face = clamp(dot(Nn, uSunDir) * 1.18 + 0.38, 0.0, 1.0);
+  return clamp(s * face + max(Nn.y, 0.0) * 0.2, 0.0, 1.0);
 }`;
 const KIT_LIGHT = DAY + /* glsl */ `
 vec3 kitPaint(vec3 P, vec3 Nn, int k, float tone, float r) {
@@ -172,8 +183,10 @@ const kit = createKit(shared, {
   // naturalistic values: real materials are greyer and darker than the day plaza's storybook
   // mixes — weathered stone, lime plaster, aged wood, fired clay, oxidized copper.
   palettes: {
-    stone: { l: [0.88, 0.81, 0.69], m: [0.66, 0.59, 0.48], s: [0.39, 0.34, 0.28], own: [0.8, 0.73, 0.6] },
-    stonePale: { l: [0.88, 0.84, 0.72], m: [0.7, 0.65, 0.53], s: [0.45, 0.4, 0.33], own: [0.82, 0.77, 0.63] },
+    // realism rebuild: the stone mixes are greyed toward real weathered stone — v1's pale cream
+    // mixes are what bleached the fountain white in the sun; plaster (cream/rose) keeps its warmth
+    stone: { l: [0.8, 0.77, 0.71], m: [0.58, 0.55, 0.5], s: [0.34, 0.32, 0.29], own: [0.72, 0.69, 0.63] },
+    stonePale: { l: [0.82, 0.79, 0.72], m: [0.6, 0.58, 0.52], s: [0.4, 0.38, 0.34], own: [0.75, 0.72, 0.65] },
     cream: { l: [0.93, 0.86, 0.72], m: [0.75, 0.67, 0.53], s: [0.45, 0.39, 0.31], own: [0.85, 0.78, 0.62] },
     rose: { l: [0.9, 0.68, 0.55], m: [0.73, 0.5, 0.4], s: [0.44, 0.3, 0.25], own: [0.82, 0.56, 0.43] },
     timber: { l: [0.42, 0.29, 0.18], m: [0.27, 0.18, 0.11], s: [0.14, 0.09, 0.06], own: [0.45, 0.3, 0.17] },
@@ -182,7 +195,7 @@ const kit = createKit(shared, {
     tealRoof: { l: [0.36, 0.57, 0.51], m: [0.24, 0.42, 0.38], s: [0.12, 0.24, 0.23], own: [0.3, 0.5, 0.45] },
     awningRed: { l: [0.8, 0.3, 0.24], m: [0.6, 0.2, 0.17], s: [0.37, 0.12, 0.11], own: [0.72, 0.26, 0.2] },
     awningGold: { l: [0.87, 0.65, 0.3], m: [0.68, 0.48, 0.19], s: [0.42, 0.28, 0.12], own: [0.8, 0.58, 0.24] },
-    glass: { l: [0.38, 0.42, 0.42], m: [0.22, 0.27, 0.3], s: [0.1, 0.13, 0.17], own: [0.3, 0.35, 0.36] },
+    glass: { l: [0.36, 0.44, 0.48], m: [0.21, 0.28, 0.33], s: [0.09, 0.13, 0.18], own: [0.28, 0.36, 0.4] },
     pot: { l: [0.77, 0.44, 0.29], m: [0.56, 0.31, 0.2], s: [0.33, 0.18, 0.12], own: [0.7, 0.38, 0.22] },
     fruit: { l: [0.94, 0.52, 0.16], m: [0.75, 0.36, 0.09], s: [0.42, 0.19, 0.06], own: [0.88, 0.46, 0.12] },
   },
@@ -252,14 +265,14 @@ const waterKit = createKit(shared, {
     vec3 kitPaint(vec3 P, vec3 Nn, int k, float tone, float r) {
       vec3 v = normalize(P - cameraPosition);
       float glint = pow(max(dot(reflect(v, vec3(0.0, 1.0, 0.0)), uSunDir), 0.0), 24.0);
-      float shimmer = 0.76 + 0.2 * sin(uTime * 1.7 + P.x * 6.0 + P.z * 8.0 + r * 9.0);
+      float shimmer = 0.8 + 0.11 * sin(uTime * 1.7 + P.x * 6.0 + P.z * 8.0 + r * 9.0); // gentler: real water shimmers, it doesn't ripple in bands
       return paint3(PAL_L[k], PAL_M[k], PAL_S[k], shimmer, r) * tone + vec3(1.0, 0.93, 0.74) * glint * 0.5;
     }`,
 });
 {
   const flat = (y) => new THREE.Matrix4().compose(new THREE.Vector3(0, y, 0), new THREE.Quaternion().setFromEuler(new THREE.Euler(-Math.PI / 2, 0, 0)), new THREE.Vector3(1, 1, 1));
-  waterKit.add(new THREE.CircleGeometry(2.38, 26), flat(0.55), 'water', { stroke: [0.06, 0.15], density: 1.2 });
-  waterKit.add(new THREE.CircleGeometry(0.92, 20), flat(1.66), 'water', { stroke: [0.05, 0.12], density: 1.2 });
+  waterKit.add(new THREE.CircleGeometry(2.38, 26), flat(0.55), 'water', { stroke: [0.045, 0.11], density: 1.2 });
+  waterKit.add(new THREE.CircleGeometry(0.92, 20), flat(1.66), 'water', { stroke: [0.04, 0.09], density: 1.2 });
 }
 scene.add(waterKit.build().group);
 
@@ -317,12 +330,12 @@ const crowns = dabMesh(dabGeometry(crownCount, {
       if (dot(Nn, normalize(cameraPosition - aPos)) < -0.1) { d.alive = 0.0; return; }
       float x = dayOn(aPos, Nn);
       vec3 c = paint3(vec3(0.46, 0.58, 0.24), vec3(0.28, 0.41, 0.16), vec3(0.11, 0.19, 0.09), x, r.y);
-      c = jitter(c, r.wzy, 0.22);
+      c = jitter(c, r.wzy, 0.09); // realism rebuild: foliage varies leaf-cluster to leaf-cluster, not dab to dab
       d.pos = aPos;
       d.dir = aDir;
-      d.size = vec2(0.13, 0.26) * (0.85 + 0.3 * r.x);
+      d.size = vec2(0.1, 0.2) * (0.85 + 0.3 * r.x);
       d.c1 = hazed(c, aPos);
-      d.c2 = hazed(c * 1.14, aPos);
+      d.c2 = hazed(c * 1.08, aPos);
       d.seed = r.x * 977.0;
       d.lift = 0.35;
       d.turnabout = 1.0;
@@ -357,7 +370,7 @@ const jets = dabMesh(dabGeometry(90), dabMaterial(shared, {
       d.seed = id * 3.1;
       d.lift = 0.0;
     }`,
-  uniforms: { uImpasto: { value: 0.3 } },
+  uniforms: { uImpasto: { value: 0.05 } },
   minPx: [2, 3], maxPx: [60, 120], cells: [0, 6], depthWrite: false,
 }), 21);
 jets.material.transparent = true;
@@ -382,7 +395,7 @@ const sparkles = dabMesh(dabGeometry(42), dabMaterial(shared, {
       d.height = 0.012;
       d.lift = 0.0;
     }`,
-  uniforms: { uImpasto: { value: 0.2 } },
+  uniforms: { uImpasto: { value: 0.05 } },
   minPx: [2, 2], maxPx: [30, 30], cells: [0, 6], depthWrite: false,
 }), 22);
 sparkles.material.transparent = true;
@@ -452,17 +465,21 @@ function paintTex(shared, srcMat) {
         vec3 tex = texture(tMap, vUv).rgb * uTint;
         float n = texture(tNoise, vBind.xy * 0.024 + vBind.z * 0.017).r;
         float m = texture(tNoise, vBind.yx * 0.007 + 0.4).g;
-        float lit = sunAt(vWorld + Nn * 0.08) * clamp(dot(Nn, uSunDir) * 0.85 + 0.42, 0.0, 1.0);
-        // realism: her texture is a real surface, not three poster inks — the light mix barely
-        // lifts it, the shade mix cools it only slightly, and paint3's opened gradients (this
-        // copy's common.js) do the rounding the poster steps used to fake.
-        vec3 L = min(tex * 1.3 + vec3(0.035, 0.03, 0.018), vec3(1.15));
-        vec3 S = tex * vec3(0.48, 0.48, 0.53);
+        float lit = sunAt(vWorld + Nn * 0.08) * clamp(dot(Nn, uSunDir) * 0.8 + 0.5, 0.0, 1.0);
+        // REALISM REBUILD: she carries no dabs at all — she is the smooth path, lit continuously
+        // off her own texture. The mixes now stay close to the texel: the light mix lifts it only
+        // ~16% (v1: 30% plus a warm add, which bleached her sun side), and the shade mix keeps
+        // 56-62% of the real colour, cooled (real shade is the same surface lit by the blue sky,
+        // not a darker ink — v1's 48% is what turned her shadow side near-black). With paint3
+        // opened across the whole range there is no step anywhere on her: light rounds over her
+        // the way it rounds over skin and cloth.
+        vec3 L = min(tex * 1.16 + vec3(0.02, 0.018, 0.012), vec3(1.1));
+        vec3 S = tex * vec3(0.56, 0.57, 0.62);
         vec3 c = paint3(L, tex, S, lit, n);
         c += uBounce * max(-Nn.y, 0.0) * (1.0 - lit);
-        c = mix(c, c * vec3(0.92, 0.96, 1.08), (1.0 - lit) * max(Nn.y, 0.0) * 0.35);
-        c *= 0.93 + 0.14 * m;
-        if (!gl_FrontFacing) c *= 0.62;
+        c = mix(c, c * vec3(0.92, 0.96, 1.08), (1.0 - lit) * max(Nn.y, 0.0) * 0.3);
+        c *= 0.965 + 0.07 * m; // the broad tonal mottling is halved: skin and cloth are even surfaces
+        if (!gl_FrontFacing) c *= 0.72;
         outC = vec4(hazed(c, vWorld), 1.0);
       }`,
   });
@@ -688,8 +705,8 @@ function stepMove(dt) {
 
 // --- the canvas finish ---
 const frame = createFrame(renderer, shared);
-frame.uniforms.uShafts.value = 0.34; // golden-hour air, not a cathedral: the light shafts stay a suggestion
-frame.uniforms.uCanvas.value = 0.55; // a finer, quieter weave under the thinner paint
+frame.uniforms.uShafts.value = 0.0; // realism rebuild: no god-rays — a sunny plaza's air does not stand in visible shafts
+frame.uniforms.uCanvas.value = 0.05; // the weave is now a whisper of micro-texture, felt on close inspection only
 
 // --- run: fixed-step simulation (the renderer's frame rate is not the game's clock),
 //     one repaint per animation frame, camera trailing her at the proof's azimuth.

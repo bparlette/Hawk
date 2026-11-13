@@ -63,22 +63,26 @@ export function createFrame(renderer, shared, { samples = 4 } = {}) {
         float far = length(ray);
         ray /= far;
 
-        // Cartoon outlines: where the depth steps hard between neighbouring pixels — a silhouette, an
-        // eave, the fountain's rim — lay a dark line. The step is judged against the distance, so the
-        // ground running away at a slant (a smooth depth ramp) never trips it, and the line fades out
-        // with distance the way a drawn one thins.
+        // INK OUTLINES, CEL REBUILD: where the depth steps between neighbouring pixels — a
+        // silhouette, an eave, the fountain's rim — lay a bold dark line. Eight directions
+        // at 2px (v1 used four; diagonals keep lines even on slopes). The step is judged
+        // against the distance with v1's proven normaliser and threshold: a keener one was
+        // tried and inked every overlapping ground dab and every curved surface into a
+        // black web — the ground running away at a slant and the dabs' height steps must
+        // stay under the line, and these constants are the ones that keep them there.
+        // The mix is full-strength now (v1: 0.85) and the line holds across the whole
+        // plaza, thinning only far past it.
         if (uOutline > 0.0) {
-          vec2 tx = 2.0 / uSize;
           float e = 0.0;
-          for (int i = 0; i < 4; i++) {
-            vec2 off = (i == 0 ? vec2(tx.x, 0.0) : i == 1 ? vec2(-tx.x, 0.0) : i == 2 ? vec2(0.0, tx.y) : vec2(0.0, -tx.y));
+          for (int i = 0; i < 8; i++) {
+            vec2 off = vec2(cos(float(i) * 0.7853981), sin(float(i) * 0.7853981)) * 2.0 / uSize;
             float dn = texture(tDepth, vUv + off).r;
             vec4 hn = uInvViewProj * vec4((vUv + off) * 2.0 - 1.0, dn * 2.0 - 1.0, 1.0);
             float farn = length(hn.xyz / hn.w - uEye);
             e = max(e, abs(far - farn) / (0.03 + 0.025 * far));
           }
-          float line = smoothstep(0.7, 1.7, e) * (1.0 - smoothstep(35.0, 80.0, far));
-          col = mix(col, uOutlineCol, clamp(line, 0.0, 1.0) * 0.85 * uOutline);
+          float line = smoothstep(0.7, 1.7, e) * (1.0 - smoothstep(70.0, 160.0, far));
+          col = mix(col, uOutlineCol, clamp(line, 0.0, 1.0) * uOutline);
         }
 
         // sun in the mist: walk the line of sight and count how much of the air along it stands in the light
@@ -107,11 +111,9 @@ export function createFrame(renderer, shared, { samples = 4 } = {}) {
           float dx = weave(px + vec2(1.0, 0.0)) - w, dy = weave(px + vec2(0.0, 1.0)) - w;
           col *= 1.0 + (0.6 * dx - 0.8 * dy) * 0.022 * uCanvas + w * 0.006 * uCanvas;
         }
-        // the brightest passages roll off toward the white of the paint and never past it
-        vec3 over = max(col - 0.8, 0.0);
-        col = min(col, 0.8) + over / (1.0 + over * 5.0);
-        // varnish, barely: flat cartoon colour stays flat
-        col = mix(col, col * col * (3.0 - 2.0 * col), 0.08);
+        // CEL REBUILD: no soft highlight rolloff and no varnish curve — both were gentle
+        // gradients laid over the whole picture, and a cel has none. Brights clamp hard.
+        col = min(col, vec3(1.0));
         outC = vec4(col, 1.0);
       }`,
   });

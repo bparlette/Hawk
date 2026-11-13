@@ -1,16 +1,19 @@
 // Graffiti Plaza — the fountain plaza from the oil-paint proof, re-skinned as spray-paint street
-// art and painted live with blendi's painter (src/oilpaint, with a spray-can brush sheet), and
-// playable exactly as the plaza is: the Juniper walk figure roams it under a floating joystick
-// (gamepress gptouch standard) or WASD/arrows, with a smooth follow camera. Same set, same
-// controls, same camera — only the paint changed: wildstyle palette, splatter-edged spray dabs,
-// halftone accents, inked shade, warm sunset light.
+// art and painted live with blendi's painter (src/oilpaint, rebuilt around an aerosol deposit
+// model), and playable exactly as the plaza is: the Juniper walk figure roams it under a floating
+// joystick (gamepress gptouch standard) or WASD/arrows, with a smooth follow camera. Same set,
+// same controls, same camera, same wildstyle palette as the first graffiti build — what changed
+// is the stroke itself: every mark is a spray deposit with a feathered mist edge that dissolves
+// into droplets, an overspray halo, satellite splatter and flat, layered build-up instead of
+// relief-lit dabs; the walls carry drips, the ground is sprayed concrete, and she is shaded in
+// feathered spray layers with speckle, not ink.
 //   ?paint=rich    full part-1 dab density (default: smooth = the proof's reduced video density)
 //   ?paint=smooth  reduced density + smaller drawing buffer — the real-time default
 // Performance note: the painter repaints every dab every frame; on a real phone GPU that is
 // the intended load, on this VM's SwiftShader it crawls — judge speed on a phone, not here.
 import * as THREE from 'three';
 import { createShared, COMMON, EXTENT, LAND_RES } from './src/oilpaint/common.js';
-import { createBrushSheet } from './src/oilpaint/brush.js';
+import { createBrushSheet, createDripSheet } from './src/oilpaint/brush.js';
 import { createShade } from './src/oilpaint/shade.js';
 import { createFrame } from './src/oilpaint/finish.js';
 import { groundRings } from './src/oilpaint/ground.js';
@@ -49,7 +52,7 @@ shared.uHazeDensity.value = 0.0042;
 shared.uBounce.value.setRGB(0.16, 0.05, 0.13);
 shared.uGlazeMul.value.setRGB(0.40, 0.28, 0.52);
 shared.uGlazeAdd.value.setRGB(0.02, 0.01, 0.05);
-shared.uImpasto.value = 0.8; // spray paint lies flatter than oil: less raking relief, harder colour
+shared.uImpasto.value = 0.0; // spray lies perfectly flat: the dab shader no longer rakes light across marks at all
 
 // --- flat land: the plaza is level, so the height map is all zeros and the land map unused ---
 {
@@ -97,6 +100,16 @@ scene.add(sky.group);
         float rad = length(vWorld.xz);
         vec3 c = mix(vec3(0.30, 0.24, 0.36), vec3(0.38, 0.30, 0.44), n);
         c = mix(c, vec3(0.23, 0.19, 0.30), smoothstep(18.0, 42.0, rad)); // the town goes on, duller, past the plaza
+        // sprayed concrete: broad soft fields of colour breathed over the stone at arm's length —
+        // they feather in and out with no edge anywhere — and a speckled grain right through it,
+        // dense fine speckle with a sparse throw of lighter and darker specks on top
+        float field = texture(tNoise, vWorld.xz / 26.0).b;
+        float field2 = texture(tNoise, vWorld.xz / 17.0 + 0.43).a;
+        c = mix(c, c * vec3(1.13, 0.80, 1.10), smoothstep(0.52, 0.88, field) * 0.38);
+        c = mix(c, c * vec3(0.82, 1.06, 1.13), smoothstep(0.52, 0.88, field2) * 0.30);
+        float spk = texture(tNoise, vWorld.xz / 0.33).g;
+        c *= 0.93 + 0.13 * spk;
+        c *= 1.0 + step(0.93, spk) * 0.11 - step(spk, 0.06) * 0.11;
         outC = vec4(c * 0.92, 1.0);
       }`,
   });
@@ -143,14 +156,14 @@ void makeDab(inout Dab d) {
   vec2 radial = rad > 0.01 ? xz / rad : vec2(1.0, 0.0);
   d.dir = vec3(radial.x, 0.0, radial.y); // strokes run outward from the fountain, like spokes of the paving
   d.pos = P;
-  d.size = uCell0 * vec2(1.3 + 0.6 * r.z, 2.1 + 1.1 * r.w) * lod; // broader than the oil sheet's paving strokes
+  d.size = uCell0 * vec2(1.75 + 0.7 * r.z, 2.8 + 1.3 * r.w) * lod; // broad soft spray fields, wider than any dab: their mists overlap and the paving stops reading as separate marks
   d.c1 = hazed(c, P);
   d.c2 = hazed(jitter(c * 1.14, q.wzy, 0.4), P);
   d.seed = dot(cell, vec2(1.0, 57.0)) + sub * 0.37;
   d.turnabout = 1.0;
   d.lie = 1.0;
   d.nrm = vec3(0.0, 1.0, 0.0);
-  d.height = (0.02 + 0.05 * q.z) * pow(lod, 0.35);
+  d.height = (0.004 + 0.016 * q.z) * pow(lod, 0.35); // spray lies almost on the stone: a whisper of stacking, just enough that later passes sit over earlier ones
   d.glaze = 1.0;
 }`;
 const plaza = groundRings(shared, { body: plazaBody, per: DENSE ? 3 : 2, n: 192, cell0: 0.15, levels: 6, minPx: [5, 9], maxPx: [4000, 4000], cells: [0, 8] });
@@ -392,6 +405,54 @@ sparkles.material.blending = THREE.AdditiveBlending;
 sparkles.material.alphaToCoverage = false;
 scene.add(sparkles);
 
+// --- drips: thin vertical runs down the two house fronts, laid over the walls' own paint the way
+//     a real run sits over the piece under it. They draw from their own brush sheet (createDripSheet:
+//     a head, a shaft, a bead at the bottom) swapped in through the material's uniforms, and each
+//     lies on its wall a touch proud of the kit's strokes. Tasteful count: nine, in the accents.
+const DRIPS = [
+  // [x, topY, z, length, colour] — house A's front wall is the plane z = -10, house B's z = -10.75,
+  // and each drip hangs a whisper in front of its wall
+  [-10.9, 4.32, -9.982, 1.6, [1.06, 0.30, 0.78]],
+  [-8.3, 4.32, -9.982, 1.1, [0.28, 0.96, 1.06]],
+  [-4.15, 4.32, -9.982, 2.1, [0.95, 0.93, 0.90]],
+  [-5.6, 1.98, -9.982, 0.55, [1.02, 0.88, 0.16]],
+  [-6.6, 2.12, -9.982, 0.7, [1.06, 0.30, 0.78]],
+  [3.1, 3.72, -10.732, 1.4, [1.02, 0.88, 0.16]],
+  [5.0, 3.72, -10.732, 1.0, [1.06, 0.30, 0.78]],
+  [7.2, 3.72, -10.732, 1.9, [0.28, 0.96, 1.06]],
+  [8.8, 1.68, -10.732, 0.6, [0.95, 0.93, 0.90]],
+];
+{
+  const pos = [], col = [], dat = [];
+  for (const [x, top, z, len, c] of DRIPS) {
+    pos.push(x, top - len / 2, z);
+    col.push(...c);
+    dat.push(len, Math.abs(x * 13.7 + z * 7.9));
+  }
+  const drips = dabMesh(dabGeometry(DRIPS.length, {
+    aPos: [new Float32Array(pos), 3], aCol: [new Float32Array(col), 3], aData: [new Float32Array(dat), 2],
+  }), dabMaterial(shared, {
+    head: /* glsl */ `in vec3 aPos; in vec3 aCol; in vec2 aData;`,
+    body: /* glsl */ `
+      void makeDab(inout Dab d) {
+        vec4 r = hash4(aData.y * 7.31 + 1.7);
+        d.pos = aPos;
+        d.dir = vec3(0.0, -1.0, 0.0); // a run goes down the wall; the sheet's bead sits at +v, the bottom
+        d.size = vec2(0.05 + 0.035 * r.x, aData.x);
+        d.c1 = aCol;
+        d.c2 = aCol * 0.7;
+        d.seed = aData.y;
+        d.cell = floor(r.z * 7.99);
+        d.lie = 1.0;
+        d.nrm = vec3(0.0, 0.0, 1.0);
+        d.height = 0.03; // over the wall's strokes, as a drip lies over paint
+      }`,
+    uniforms: { tBrush: { value: createDripSheet() } },
+    minPx: [1.5, 3], maxPx: [90, 1400], cells: [0, 8],
+  }), 4);
+  scene.add(drips);
+}
+
 // --- the still world's shade, baked once from plain shapes. (No stand-in for her here — unlike
 //     the on-the-spot proof, she roams, so her shadow comes from the shade system's second
 //     picture, redrawn round her every frame; her meshes ride layer 1 so that camera sees her.)
@@ -410,8 +471,9 @@ const shadeScene = new THREE.Scene();
 const shade = createShade(renderer, shared, shadeScene, { sun: SUN, size: [2048, 2048], box: [30, 26], centre: [0, 1, -3], back: 110, near: 30, far: 240 });
 
 // --- Her, walking: the Juniper walk GLB under this same painter. Her own texture colours are
-//     posterised into the painter's three mixes (light = texel warmed up, mid = texel, shade =
-//     texel cooled down) and lit by the same sun and shade pictures as everything else.
+//     built up in three feathered spray layers (light = texel warmed up, mid = texel, shade =
+//     texel cooled down) with speckle through them, and lit by the same sun and shade pictures
+//     as everything else.
 //     The clip plays on her bones; her hips are re-anchored over herPos every tick so her body —
 //     not the bone — stays where the controls put her, and she travels at the speed her stride
 //     was measured to cover (see REF_SPEED below), so feet and ground agree.
@@ -448,33 +510,47 @@ function paintTex(shared, srcMat) {
       uniform sampler2D tMap; uniform vec3 uTint;
       in vec3 vWorld; in vec3 vN; in vec3 vBind; in vec2 vUv;
       layout(location = 0) out vec4 outC;
+      // three spray layers instead of three paint mixes: the bands are twice as wide and the
+      // boundary between them is pushed about by fine noise, so light crosses her the way spray
+      // builds — feathered, denser in the middle of a form, dissolving at the edges — and no
+      // tone ever ends in a line.
+      vec3 spray3(vec3 cl, vec3 cm, vec3 cs, float x, float r) {
+        x += (r - 0.5) * 0.36;
+        vec3 c = mix(cs, cm, smoothstep(0.14, 0.52, x));
+        return mix(c, cl, smoothstep(0.46, 0.84, x));
+      }
       void main() {
         vec3 Nn = normalize(vN);
         if (!gl_FrontFacing) Nn = -Nn;
         vec3 tex = texture(tMap, vUv).rgb * uTint;
         float n = texture(tNoise, vBind.xy * 0.024 + vBind.z * 0.017).r;
         float m = texture(tNoise, vBind.yx * 0.007 + 0.4).g;
+        float fine = texture(tNoise, vBind.xy * 0.11 + vBind.z * 0.09).b; // layer-boundary dither
+        float grain = texture(tNoise, vBind.xy * 0.55 + vBind.z * 0.47).a; // the speckle itself
         float lit = sunAt(vWorld + Nn * 0.08) * clamp(dot(Nn, uSunDir) * 0.85 + 0.42, 0.0, 1.0);
         vec3 L = min(tex * 1.5 + vec3(0.06, 0.03, 0.01), vec3(1.2));
         vec3 S = tex * vec3(0.28, 0.20, 0.48);
-        vec3 c = paint3(L, tex, S, lit, n);
-        // the spray treatment: harder saturation; a scatter of overspray flecks in the wildstyle
-        // accents; and an inked rim where her surface turns away from the eye, so she is outlined
-        // against the plaza like a character cut out of a comic
+        vec3 c = spray3(L, tex, S, lit, fine * 0.65 + n * 0.35);
         float lum = dot(c, vec3(0.3, 0.59, 0.11));
-        c = mix(vec3(lum), c, 1.35);
+        c = mix(vec3(lum), c, 1.3);
+        // speckle all through the paint: micro light/dark grain, sparse overspray flecks of the
+        // accent colours sitting ON her (soft, sparse — dust from the plaza's spraying, not confetti)
+        c *= 0.92 + 0.15 * grain;
         float sp = texture(tNoise, vBind.xy * 0.45 + vBind.z * 0.39).b;
-        if (sp > 0.925) {
+        if (sp > 0.945) {
           float pick = texture(tNoise, vBind.yz * 0.11 + 0.7).r;
           vec3 fleck = pick < 0.5 ? vec3(1.06, 0.30, 0.78) : vec3(0.28, 0.96, 1.06);
-          c = mix(c, fleck, 0.55);
+          c = mix(c, fleck, 0.38);
         }
         c += uBounce * max(-Nn.y, 0.0) * (1.0 - lit);
         c = mix(c, c * vec3(0.92, 0.84, 1.16), (1.0 - lit) * max(Nn.y, 0.0) * 0.6);
         c *= 0.88 + 0.24 * m;
+        // the silhouette: a soft sprayed shadow where her surface turns away — a feathered
+        // violet-grey build-up, NOT the old ink line that cut her out like a comic character
         vec3 vdir = normalize(cameraPosition - vWorld);
-        c *= mix(0.38, 1.0, smoothstep(0.04, 0.5, abs(dot(Nn, vdir))));
-        if (!gl_FrontFacing) c *= 0.62;
+        float rim = 1.0 - smoothstep(0.02, 0.55, abs(dot(Nn, vdir)));
+        c = mix(c, vec3(0.15, 0.10, 0.26), rim * 0.36);
+        if (!gl_FrontFacing) c *= 0.7;
         outC = vec4(hazed(c, vWorld), 1.0);
       }`,
   });

@@ -133,9 +133,10 @@ void main() {
   // the paint stands up off the canvas and the room's light, from the upper left, rakes across it
   vec2 g = vAxis.xy * hu + vAxis.zw * hv;
   float rake = 0.5 * g.x - 0.7 * g.y;
-  // CUBISM: the shard's two tones meet at a hard cut, not a streaked blend — the step is narrow,
-  // so each facet of a shard reads as one flat plane of colour.
-  vec3 col = mix(vC1, vC2, smoothstep(0.56, 0.66, t.b));
+  // CUBISM, STROKE REBUILD: the shard's facets meet at a knife cut, not a streaked blend —
+  // the step is a hair wide and the sheet's facet tones sit far either side of it, so each
+  // facet of a shard is one flat plane of colour, full stop.
+  vec3 col = mix(vC1, vC2, smoothstep(0.575, 0.645, t.b));
   if (vGlaze.w > 0.5) {
     // the wanderer's shadow: a soft plum glaze that slides over the paint and follows its streaks a little
     float lit = figSunSoft(vGlaze.xyz + vec3((t.b - 0.5) * 0.012, (t.r - 0.5) * 0.012, 0.0));

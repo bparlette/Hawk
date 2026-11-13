@@ -159,23 +159,28 @@ float figSunSoft(vec3 f) {
   s += texture(tFigShade, vec3(f.xy + vec2(-e * 0.4, e), z)) * 0.18;
   s += texture(tFigShade, vec3(f.xy + vec2(-e, -e * 0.4), z)) * 0.18;
   s += texture(tFigShade, vec3(f.xy + vec2(e * 0.4, -e), z)) * 0.18;
-  return s;
+  // CEL REBUILD: v1's five-tap average, but pushed through a contrast step — her shadow on
+  // the ground lands as one hard-edged shape, while the averaging still suppresses the
+  // shadow-map acne a single tap let through (it mottled her back and legs black).
+  return smoothstep(0.22, 0.78, s);
 }
 float figSunAt(vec3 world) { return figSunSoft((uFigShadeMat * vec4(world, 1.0)).xyz); }
 float sunAt(vec3 world) { return min(woodSunAt(world), figSunAt(world)); }
 
-// The cartoonist's two tones. x is how lit the spot is; the half-tone survives only as a thin sliver
-// between flat shade and flat light, and r barely moves the edge, so a lit zone reads as one clean shape.
+// The cartoonist's two tones, CEL REBUILD: x is how lit the spot is, and the bands are now
+// hard steps — the half-tone survives only as a thin sliver (x 0.43..0.52) between flat shade
+// and flat light, the boundary crossings are a hair wide (0.03, just enough to not shimmer),
+// and r no longer moves the edge at all: a band boundary is where the light puts it, clean.
 vec3 paint3(vec3 cl, vec3 cm, vec3 cs, float x, float r) {
-  x += (r - 0.5) * 0.05;
-  vec3 c = mix(cs, cm, smoothstep(0.34, 0.40, x));
-  return mix(c, cl, smoothstep(0.47, 0.53, x));
+  vec3 c = mix(cs, cm, smoothstep(0.415, 0.445, x));
+  return mix(c, cl, smoothstep(0.505, 0.535, x));
 }
 
-// Broken colour, mostly un-broken: every dab is mixed only a little differently on the palette, so a
-// patch of one tone stays one flat colour.
+// Broken colour, un-broken: CEL REBUILD — the per-patch palette wobble is cut to a whisper
+// (amount scaled by 0.04, was 0.22), so a wall of patches stays one flat printed colour
+// instead of a patchwork of near-misses.
 vec3 jitter(vec3 c, vec3 r, float amount) {
-  amount *= 0.22;
+  amount *= 0.04;
   float a = (r.y - 0.5) * 0.9 * amount;
   vec3 k = vec3(0.57735);
   c = c * cos(a) + cross(k, c) * sin(a) + k * dot(k, c) * (1.0 - cos(a));
