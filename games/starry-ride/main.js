@@ -59,13 +59,13 @@ const skyTex = canvasTex(2048, 1024, (ctx, W, H) => {
   // rotation.y = PI, texture u = 0.25 faces dead ahead (-z), and a feature at u sits
   // at screen azimuth -(u - 0.25) * 360 degrees (positive = screen right).
   const g = ctx.createLinearGradient(0, 0, 0, H);
-  g.addColorStop(0.00, '#101f4d'); g.addColorStop(0.25, '#1d3a78');
-  g.addColorStop(0.42, '#2c529c'); g.addColorStop(0.485, '#4a6fb4');
-  g.addColorStop(0.52, '#3d63a8'); g.addColorStop(0.62, '#33508c');
-  g.addColorStop(0.80, '#22345f'); g.addColorStop(1.00, '#1c2c55');
+  g.addColorStop(0.00, '#040b26'); g.addColorStop(0.25, '#0b1e4e');
+  g.addColorStop(0.42, '#142f68'); g.addColorStop(0.485, '#224586');
+  g.addColorStop(0.52, '#1d3b78'); g.addColorStop(0.62, '#183262');
+  g.addColorStop(0.80, '#0f2044'); g.addColorStop(1.00, '#0a1736');
   ctx.fillStyle = g; ctx.fillRect(0, 0, W, H);
   // flowing impasto: two passes of SHORT dabs, dense enough that no flat canvas shows
-  const bandPal = ['#274f92', '#3563ab', '#4a7cc4', '#6b9ad8', '#93bde8', '#c2dcf2', '#3d8fae', '#2a5aa2'];
+  const bandPal = ['#122f6e', '#1b3f85', '#274f96', '#38639f', '#4a76b8', '#256f8e', '#173a80', '#22498f'];
   const flowAngle = (x, y) => {
     // near the spiral centre the strokes swing tangent to it — the sky rotates there
     const dx = x - W * 0.25, dy = (y - H * 0.383) * 1.35, d2 = dx * dx + dy * dy;
@@ -73,13 +73,13 @@ const skyTex = canvasTex(2048, 1024, (ctx, W, H) => {
     const wgt = Math.max(0, 1 - d2 / (330 * 330));
     return tang * wgt + Math.sin(x * 0.0035 + y * 0.02) * 0.14 * (1 - wgt);
   };
-  for (const pass of [{ rows: 150, len: 40, wdt: 11, a: 0.42 }, { rows: 190, len: 26, wdt: 7, a: 0.4 }]) {
+  for (const pass of [{ rows: 150, len: 40, wdt: 11, a: 0.34 }, { rows: 190, len: 26, wdt: 7, a: 0.32 }]) {
     for (let row = 0; row < pass.rows; row++) {
       const yBase = 8 + row * (H / pass.rows);
       const pale = yBase > H * 0.44 && yBase < H * 0.495; // the famous light band, just above the horizon
       for (let x = -40; x < W + 40; x += pass.len * (0.6 + r() * 0.45)) {
         const y = yBase + Math.sin(x * 0.0035 + row * 0.55) * 7 + (r() - 0.5) * 5;
-        const col = pale && r() < 0.55 ? ['#e6efd2', '#d7e6c2', '#c9dcb4', '#eef3da'][Math.floor(r() * 4)] : bandPal[Math.floor(r() * bandPal.length)];
+        const col = pale && r() < 0.4 ? ['#dfe9c8', '#cfe0b4', '#c2d6a8', '#e8f0d4'][Math.floor(r() * 4)] : bandPal[Math.floor(r() * bandPal.length)];
         dab(ctx, x, y, pass.len * (0.8 + r() * 0.5), flowAngle(x, y) + (r() - 0.5) * 0.22,
           pass.wdt * (0.75 + r() * 0.6), col, pass.a * (0.6 + r() * 0.7));
       }
@@ -102,9 +102,10 @@ const skyTex = canvasTex(2048, 1024, (ctx, W, H) => {
     }
     ctx.globalAlpha = 1;
   };
-  const star = (u, v, rad) => {
+  const star = (u, v, rad0) => {
+    const rad = rad0 * 1.6; // bigger, more radiant — the reference sky's stars dominate
     const x = u * W, y = v * H;
-    glowAt(x, y, rad * 2.2, 'rgba(250,230,150,0.5)', 0.55);
+    glowAt(x, y, rad * 2.6, 'rgba(250,230,150,0.5)', 0.6);
     rings(x, y, rad);
     ctx.fillStyle = '#f7e08a'; ctx.beginPath(); ctx.arc(x, y, rad, 0, Math.PI * 2); ctx.fill();
     ctx.fillStyle = '#fffbe8'; ctx.beginPath(); ctx.arc(x, y, rad * 0.55, 0, Math.PI * 2); ctx.fill();
@@ -120,17 +121,17 @@ const skyTex = canvasTex(2048, 1024, (ctx, W, H) => {
     ctx.fillStyle = '#ffffff'; ctx.beginPath(); ctx.arc(x, y, 5, 0, Math.PI * 2); ctx.fill(); }
   // the great spiral, dead ahead and high
   { const cx = 0.25 * W, cy = 0.383 * H;
-    glowAt(cx, cy, 200, 'rgba(160,205,245,0.5)', 0.75);
-    const cols = ['#eaf4ff', '#bcd8f5', '#7fb0e8', '#5d94d8', '#d9ecfa', '#f5e9b8'];
-    for (let i = 0; i < 340; i++) {
-      const t = i / 340, ang = t * Math.PI * 4.4 + 0.7, rad = 24 + t * 132;
+    glowAt(cx, cy, 190, 'rgba(160,205,245,0.5)', 0.5);
+    const cols = ['#6ba3e0', '#4f8bd0', '#7fb0e8', '#5d94d8', '#93bde8', '#6ba3e0'];
+    for (let i = 0; i < 420; i++) {
+      const t = i / 420, ang = t * Math.PI * 4.4 + 0.7, rad = 26 + t * 168;
       const x = cx + Math.cos(ang) * rad * 1.35, y = cy + Math.sin(ang) * rad * 0.78;
-      dab(ctx, x, y, 30 - t * 12, ang + Math.PI / 2 + (r() - 0.5) * 0.3, 13 - t * 6, cols[i % cols.length], 0.5 + r() * 0.35);
+      dab(ctx, x, y, 36 - t * 14, ang + Math.PI / 2 + (r() - 0.5) * 0.3, 16 - t * 7, cols[i % cols.length], 0.45 + r() * 0.25);
     }
-    glowAt(cx, cy, 34, 'rgba(220,238,255,0.5)', 0.7); }
+    glowAt(cx, cy, 44, 'rgba(220,238,255,0.5)', 0.75); }
   // crescent moon, upper right of ahead
   { const x = 0.172 * W, y = 0.317 * H;
-    glowAt(x, y, 95, 'rgba(250,225,150,0.55)', 0.85); rings(x, y, 20, '#f7e08a', '#e8d9a8');
+    glowAt(x, y, 70, 'rgba(250,225,150,0.55)', 0.6); rings(x, y, 20, '#f7e08a', '#e8d9a8');
     ctx.fillStyle = '#f7dc7e'; ctx.beginPath(); ctx.arc(x, y, 19, 0, Math.PI * 2); ctx.fill();
     ctx.fillStyle = '#2a4d8f'; ctx.beginPath(); ctx.arc(x + 9, y - 4, 16, 0, Math.PI * 2); ctx.fill();
     // repaint a few sky strokes over the bite so it blends into the painting
@@ -219,15 +220,15 @@ const renderer = new THREE.WebGLRenderer({ antialias: true, powerPreference: 'hi
 renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
 renderer.setSize(innerWidth, innerHeight);
 renderer.toneMapping = THREE.ACESFilmicToneMapping;
-renderer.toneMappingExposure = 1.22;
+renderer.toneMappingExposure = 1.14;
 view.appendChild(renderer.domElement);
 
 const scene = new THREE.Scene();
 scene.fog = new THREE.Fog(0x1a2c58, 55, 285);
 const camera = new THREE.PerspectiveCamera(62, innerWidth / innerHeight, 0.1, 900);
 
-scene.add(new THREE.HemisphereLight(0x93b4e8, 0x24351f, 1.05));
-const moon = new THREE.DirectionalLight(0xaac4ff, 0.8);
+scene.add(new THREE.HemisphereLight(0x93b4e8, 0x24351f, 0.88));
+const moon = new THREE.DirectionalLight(0xaac4ff, 0.68);
 moon.position.set(40, 80, -60);
 scene.add(moon);
 
@@ -242,7 +243,7 @@ scene.add(sky);
 /* ------------------------------- materials ------------------------------- */
 const std = (map, extra = {}) => new THREE.MeshStandardMaterial({ map, roughness: 0.95, metalness: 0, ...extra });
 const rep = (tex, x, y) => { const t = tex.clone(); t.repeat.set(x, y); t.needsUpdate = true; return t; };
-const matGround = std(rep(groundTex, 20, 3));
+const matGround = std(rep(groundTex, 24, 1));
 const matRoad = std(cobbleTex);
 const matShoulder = std(shoulderTex);
 const matHill = std(rep(hillTex, 3, 1));
@@ -306,12 +307,15 @@ const glowSpriteMat = (color, opacity) => new THREE.SpriteMaterial({
 const ROAD_W = 7, ROAD_HALF = ROAD_W / 2, CHUNK = 60, NCHUNK = 9;
 const centerX = (d) => 9 * Math.sin(d * 0.0085) + 3.5 * Math.sin(d * 0.021 + 1.7);
 const centerDX = (d) => 9 * 0.0085 * Math.cos(d * 0.0085) + 3.5 * 0.021 * Math.cos(d * 0.021 + 1.7);
+/* rolling elevation: long swells + medium rolls + a small ripple. Max grade ~0.17. */
+const roadY = (d) => 5.5 * Math.sin(d * 0.0105 + 0.8) + 3.0 * Math.sin(d * 0.021 + 2.3) + 1.1 * Math.sin(d * 0.047 + 0.4);
+const roadDY = (d) => 5.5 * 0.0105 * Math.cos(d * 0.0105 + 0.8) + 3.0 * 0.021 * Math.cos(d * 0.021 + 2.3) + 1.1 * 0.047 * Math.cos(d * 0.047 + 0.4);
 
-function ribbonGeo(start, width, vScale) {
+function ribbonGeo(start, width, vScale, yOff = 0) {
   const SEG = 24, pos = [], uv = [], idx = [];
   for (let i = 0; i <= SEG; i++) {
-    const d = start + (CHUNK * i) / SEG, cx = centerX(d), z = -(CHUNK * i) / SEG;
-    pos.push(cx - width / 2, 0, z, cx + width / 2, 0, z);
+    const d = start + (CHUNK * i) / SEG, cx = centerX(d), z = -(CHUNK * i) / SEG, y = roadY(d) + yOff;
+    pos.push(cx - width / 2, y, z, cx + width / 2, y, z);
     uv.push(0, d * vScale, 1, d * vScale);
     if (i < SEG) { const a = i * 2; idx.push(a, a + 1, a + 2, a + 1, a + 3, a + 2); }
   }
@@ -328,7 +332,7 @@ function bermGeo(start, side) {
     for (let j = 0; j < COLS; j++) {
       const off = 14 + j * 6, f = j / (COLS - 1);
       const h = Math.pow(f, 1.5) * (4.5 + 2.2 * Math.sin(d * 0.045 + side * 2.1) + 1.3 * Math.sin(d * 0.013 + side));
-      pos.push(cx + side * off, Math.max(h, 0), z);
+      pos.push(cx + side * off, roadY(d) + Math.max(h, 0), z);
       uv.push(f * 2, d / 12);
     }
     if (i < SEG) for (let j = 0; j < COLS - 1; j++) {
@@ -359,33 +363,44 @@ function bermGeo(start, side) {
 
 /* ------------------------------- builders ------------------------------- */
 function buildHouse(r, group, d, side, setback) {
-  const w = 4 + r() * 2.4, h = 3 + r() * 1.7, dep = 4 + r() * 1.6;
+  // 3–4 storeys now — the reference street is a wall of tall painted houses
+  const w = 4.4 + r() * 2.6, h = 5.4 + r() * 3.4, dep = 4 + r() * 1.6;
   const house = new THREE.Group();
   const body = new THREE.Mesh(unitBox, wallMats[Math.floor(r() * wallMats.length)]);
   body.scale.set(w, h, dep); body.position.y = h / 2;
   house.add(body);
   const roofH = 1.3 + r() * 0.9;
-  const roof = new THREE.Mesh(roofGeo, roofMats[Math.floor(r() * roofMats.length)]);
+  const roofMat = roofMats[Math.floor(r() * roofMats.length)];
+  const roof = new THREE.Mesh(roofGeo, roofMat);
   roof.scale.set(w * 1.1, roofH, dep * 1.14); roof.position.y = h;
   house.add(roof);
-  if (r() < 0.4) {
+  if (r() < 0.5) {
     const chim = new THREE.Mesh(unitBox, trunkMat);
     chim.scale.set(0.42, 0.95, 0.42);
     chim.position.set((r() - 0.5) * w * 0.5, h + roofH * 0.75, (r() - 0.5) * dep * 0.3);
     house.add(chim);
   }
-  // windows on the road-facing front (+z local)
-  const cols = w > 5.2 ? 3 : 2, rows = h > 3.9 ? 2 : 1;
+  // windows on the road-facing front (+z local): a full grid, most of them lit
+  const cols = w > 6 ? 4 : (w > 5 ? 3 : 2), rows = Math.max(2, Math.round(h / 2.15));
   for (let cx = 0; cx < cols; cx++) for (let cy = 0; cy < rows; cy++) {
-    if (cols === 3 && cx === 1 && cy === 0) continue; // door slot
-    const win = new THREE.Mesh(windowGeo, r() < 0.85 ? winMats[Math.floor(r() * winMats.length)] : winDimMat);
-    win.position.set((cx - (cols - 1) / 2) * (w / (cols + 0.4)), 1.25 + cy * 1.55, dep / 2 + 0.02);
-    win.scale.setScalar(1.15 + r() * 0.4);
+    if (cx === Math.floor(cols / 2) && cy === 0 && cols > 2) continue; // door slot
+    const win = new THREE.Mesh(windowGeo, r() < 0.88 ? winMats[Math.floor(r() * winMats.length)] : winDimMat);
+    win.position.set((cx - (cols - 1) / 2) * (w / (cols + 0.35)), 1.2 + cy * 2.05, dep / 2 + 0.02);
+    win.scale.setScalar(1.1 + r() * 0.35);
     house.add(win);
   }
   const door = new THREE.Mesh(doorGeo, doorMat);
-  door.position.set(cols === 3 ? 0 : (r() - 0.5) * w * 0.4, 0.78, dep / 2 + 0.02);
+  door.position.set(cols > 2 ? 0 : (r() - 0.5) * w * 0.4, 0.78, dep / 2 + 0.02);
   house.add(door);
+  // awnings over the ground floor on many houses — painted canvas, sloped to the street
+  if (r() < 0.55) {
+    const awn = new THREE.Mesh(unitBox, roofMat);
+    const awnW = (r() < 0.5 ? w * 0.92 : w * 0.45);
+    awn.scale.set(awnW, 0.07, 1.15);
+    awn.position.set((r() - 0.5) * w * 0.2, 2.15, dep / 2 + 0.5);
+    awn.rotation.x = 0.42;
+    house.add(awn);
+  }
   house.position.set(centerX(d) + side * (ROAD_HALF + setback + dep / 2), 0, 0);
   house.rotation.y = side > 0 ? -Math.PI / 2 : Math.PI / 2;
   house.rotation.y += (r() - 0.5) * 0.07;
@@ -419,6 +434,31 @@ function buildChurch(r, group, d) {
   group.add(g);
   return g;
 }
+/* church-square plaza: a cobbled disc beside the church, a fountain, a ring of lamps —
+   an event space the street bends past on every church chunk */
+function buildPlaza(r, group, d) {
+  const g = new THREE.Group();
+  const cxp = centerX(d) + ROAD_HALF + 6.8;
+  const disc = new THREE.Mesh(new THREE.CircleGeometry(6.4, 26), std(rep(cobbleTex, 3, 3)));
+  disc.rotation.x = -Math.PI / 2 - Math.atan(roadDY(d)) * 0.9;
+  disc.position.set(cxp, 0.06, 0);
+  g.add(disc);
+  // fountain: basin, column, and a pale painted-water disc that catches the lamps
+  const stone = std(wallTexture('#cfc4a6', ['#bfb28e', '#ded2b2', '#a99c7c'], 17));
+  const basin = new THREE.Mesh(new THREE.CylinderGeometry(1.7, 1.85, 0.55, 14), stone);
+  basin.position.set(cxp, 0.28, 0); g.add(basin);
+  const water = new THREE.Mesh(new THREE.CircleGeometry(1.5, 14),
+    new THREE.MeshBasicMaterial({ map: poolTex, transparent: true, opacity: 0.4, blending: THREE.AdditiveBlending, depthWrite: false }));
+  water.rotation.x = -Math.PI / 2; water.position.set(cxp, 0.57, 0); g.add(water);
+  const col = new THREE.Mesh(new THREE.CylinderGeometry(0.16, 0.24, 1.15, 8), stone);
+  col.position.set(cxp, 1.05, 0); g.add(col);
+  const finial = new THREE.Sprite(glowSpriteMat(0xbfe0ff, 0.8));
+  finial.scale.setScalar(1.7); finial.position.set(cxp, 1.95, 0); g.add(finial);
+  g.userData.d = d;
+  g.userData.isPlaza = true;
+  group.add(g);
+  return g;
+}
 function buildCypress(r, group, d, side, setback) {
   const c = new THREE.Group();
   const trunk = new THREE.Mesh(new THREE.CylinderGeometry(0.05, 0.07, 0.5, 5), trunkMat);
@@ -442,7 +482,7 @@ function buildLamp(r, group, d, side) {
   const glow = new THREE.Sprite(glowSpriteMat(0xffca7a, 0.75));
   glow.scale.setScalar(2.3); glow.position.copy(head.position); g.add(glow);
   const pool = new THREE.Mesh(poolGeo, new THREE.MeshBasicMaterial({
-    map: poolTex, transparent: true, opacity: 0.16, blending: THREE.AdditiveBlending, depthWrite: false,
+    map: poolTex, transparent: true, opacity: 0.22, blending: THREE.AdditiveBlending, depthWrite: false,
   }));
   pool.scale.setScalar(1.6); pool.position.set(-side * 1.15, 0.03, 0); g.add(pool);
   g.position.set(centerX(d) + side * (ROAD_HALF + 0.55), 0, 0);
@@ -460,12 +500,12 @@ function buildChunk(chunk) {
   chunk.own = [];
   const start = index * CHUNK;
   const r = mulberry32(index * 7919 + 101);
-  const ground = new THREE.Mesh(groundGeo, matGround);
-  ground.position.set(0, -0.02, -CHUNK / 2); group.add(ground);
-  const shoulder = new THREE.Mesh(ribbonGeo(start, ROAD_W + 3.6, 1 / 6), matShoulder);
-  shoulder.position.y = 0.012; group.add(shoulder); chunk.own.push(shoulder.geometry);
-  const road = new THREE.Mesh(ribbonGeo(start, ROAD_W, 1 / 7.5), matRoad);
-  road.position.y = 0.025; group.add(road); chunk.own.push(road.geometry);
+  const ground = new THREE.Mesh(ribbonGeo(start, 190, 1 / 16, -0.06), matGround);
+  group.add(ground); chunk.own.push(ground.geometry);
+  const shoulder = new THREE.Mesh(ribbonGeo(start, ROAD_W + 3.6, 1 / 6, 0.012), matShoulder);
+  group.add(shoulder); chunk.own.push(shoulder.geometry);
+  const road = new THREE.Mesh(ribbonGeo(start, ROAD_W, 1 / 7.5, 0.025), matRoad);
+  group.add(road); chunk.own.push(road.geometry);
   for (const side of [-1, 1]) {
     const berm = new THREE.Mesh(bermGeo(start, side), matHill);
     group.add(berm); chunk.own.push(berm.geometry);
@@ -474,14 +514,19 @@ function buildChunk(chunk) {
   const churchD = start + CHUNK * 0.55;
   const placed = []; // local-z positioned later from userData.d
   for (const side of [-1, 1]) {
-    const n = 3 + Math.floor(r() * 2);
+    const n = 4 + (r() < 0.6 ? 1 : 0);
     for (let i = 0; i < n; i++) {
-      const d = start + ((i + 0.5) / n) * CHUNK + (r() - 0.5) * 8;
-      if (isChurch && side > 0 && Math.abs(d - churchD) < 11) continue;
-      placed.push(buildHouse(r, group, d, side, 3.4 + r() * 3.2));
+      const d = start + ((i + 0.5) / n) * CHUNK + (r() - 0.5) * 7;
+      if (isChurch && side > 0 && Math.abs(d - churchD) < 13) continue;
+      placed.push(buildHouse(r, group, d, side, 1.7 + r() * 2.3));
     }
   }
-  if (isChurch) placed.push(buildChurch(r, group, churchD));
+  if (isChurch) {
+    placed.push(buildChurch(r, group, churchD));
+    placed.push(buildPlaza(r, group, churchD));
+    placed.push(buildLamp(r, group, churchD - 5.5, 1));
+    placed.push(buildLamp(r, group, churchD + 5.5, 1));
+  }
   const nCyp = 2 + Math.floor(r() * 3);
   for (let i = 0; i < nCyp; i++) {
     placed.push(buildCypress(r, group, start + r() * CHUNK, r() < 0.5 ? -1 : 1, 2.6 + r() * 8));
@@ -490,10 +535,15 @@ function buildChunk(chunk) {
     placed.push(buildCypress(r, group, churchD - 7, 1, 4.5));
     placed.push(buildCypress(r, group, churchD + 8, 1, 5.5));
   }
-  placed.push(buildLamp(r, group, start + 14, index % 2 ? 1 : -1));
-  placed.push(buildLamp(r, group, start + 44, index % 2 ? -1 : 1));
-  // local z from absolute travel distance
-  for (const o of placed) o.position.z = -(o.userData.d - start);
+  const lampSide = index % 2 ? 1 : -1;
+  placed.push(buildLamp(r, group, start + 10, lampSide));
+  placed.push(buildLamp(r, group, start + 30, -lampSide));
+  placed.push(buildLamp(r, group, start + 50, lampSide));
+  // local z from absolute travel distance, base y from the elevation at that distance
+  for (const o of placed) {
+    o.position.z = -(o.userData.d - start);
+    o.position.y = roadY(o.userData.d) - (o.userData.isPlaza ? 0.02 : 0.25);
+  }
   group.position.z = -start; // will be corrected per-frame as (dist - start)
 }
 for (let i = -1; i < NCHUNK - 1; i++) {
@@ -510,6 +560,135 @@ function updateChunks(dist) {
       buildChunk(chunk);
     }
     chunk.group.position.z = dist - chunk.index * CHUNK;
+  }
+}
+
+/* --------------------- chaseables: shards, rings, gates --------------------- */
+const spiralTex = canvasTex(256, 256, (ctx, w, h) => {
+  ctx.clearRect(0, 0, w, h);
+  const r = mulberry32(7);
+  const cols = ['#eaf4ff', '#bcd8f5', '#7fb0e8', '#f5e9b8'];
+  for (let i = 0; i < 170; i++) {
+    const t = i / 170, ang = t * Math.PI * 4.2 + 0.5, rad = 8 + t * 102;
+    dab(ctx, 128 + Math.cos(ang) * rad, 128 + Math.sin(ang) * rad,
+      22 - t * 8, ang + Math.PI / 2, 10 - t * 5, cols[i % cols.length], 0.55 + r() * 0.3);
+  }
+});
+spiralTex.wrapS = spiralTex.wrapT = THREE.ClampToEdgeWrapping;
+
+const itemGroup = new THREE.Group(); scene.add(itemGroup);
+const items = [];
+let shardTotal = 0;
+function addShard(d) {
+  const g = new THREE.Group();
+  const glow = new THREE.Sprite(glowSpriteMat(0xffdf7a, 0.85)); glow.scale.setScalar(1.9); g.add(glow);
+  const core = new THREE.Sprite(glowSpriteMat(0xffffff, 1)); core.scale.setScalar(0.62); g.add(core);
+  itemGroup.add(g);
+  items.push({ kind: 'shard', d, x: 2.2 * Math.sin(d * 0.05), phase: d * 1.7, taken: false, group: g });
+}
+function addRing(d) {
+  const g = new THREE.Group();
+  const tor = new THREE.Mesh(new THREE.TorusGeometry(1.55, 0.075, 10, 36),
+    new THREE.MeshBasicMaterial({ color: 0xffd76a, fog: false }));
+  g.add(tor);
+  const glow = new THREE.Sprite(glowSpriteMat(0xffca7a, 0.5)); glow.scale.setScalar(4.6); g.add(glow);
+  itemGroup.add(g);
+  items.push({ kind: 'ring', d, x: 1.8 * Math.sin(d * 0.033 + 1), phase: d, taken: false, group: g });
+}
+function addGate(d) {
+  const g = new THREE.Group();
+  for (const s of [-1, 1]) {
+    const c = new THREE.Mesh(cypressGeo, matCypress);
+    c.scale.set(1.15, 1.75, 1.15); c.position.set(s * (ROAD_HALF + 0.9), 0.3, 0);
+    g.add(c);
+  }
+  const sm = new THREE.SpriteMaterial({ map: spiralTex, transparent: true, opacity: 0.95, depthWrite: false, fog: false });
+  const spr = new THREE.Sprite(sm); spr.scale.setScalar(8.5); spr.position.set(0, 5.6, 0); g.add(spr);
+  itemGroup.add(g);
+  items.push({ kind: 'gate', d, x: 0, taken: false, group: g, spiral: sm });
+}
+for (let i = 0; i < 10; i++) addShard(30 + i * 30);
+addRing(95); addRing(245); addRing(395);
+addGate(210); addGate(440);
+
+/* sparkle bursts on collect */
+const burstPool = [];
+for (let i = 0; i < 24; i++) {
+  const s = new THREE.Sprite(glowSpriteMat(0xffe98a, 0));
+  s.visible = false; scene.add(s);
+  burstPool.push({ s, life: 0, max: 1, vel: new THREE.Vector3() });
+}
+function burst(pos, n, col) {
+  let made = 0;
+  for (const b of burstPool) {
+    if (b.life > 0) continue;
+    b.max = b.life = 0.55 + Math.random() * 0.25;
+    b.s.visible = true;
+    b.s.material.color.setHex(col);
+    b.s.material.opacity = 0.95;
+    b.s.position.copy(pos);
+    b.s.scale.setScalar(0.35 + Math.random() * 0.3);
+    b.vel.set((Math.random() - 0.5) * 2.6, 1 + Math.random() * 2.2, (Math.random() - 0.5) * 2.6);
+    if (++made >= n) break;
+  }
+}
+
+/* speed streaks: pale dashes lying on the road that only appear when it rushes */
+const streaks = [];
+const streakGeo = new THREE.PlaneGeometry(0.09, 1); streakGeo.rotateX(-Math.PI / 2);
+for (let i = 0; i < 26; i++) {
+  const m = new THREE.Mesh(streakGeo, new THREE.MeshBasicMaterial({
+    color: 0xcfe0ff, transparent: true, opacity: 0, blending: THREE.AdditiveBlending, depthWrite: false, fog: false,
+  }));
+  scene.add(m);
+  streaks.push({ m, d: 20 + i * 7 + Math.random() * 8, x: (Math.random() < 0.5 ? -1 : 1) * (0.4 + Math.random() * 5) });
+}
+
+function updateItems(dt) {
+  for (const it of items) {
+    if (it.d < S.dist - 8) { // recycle ahead, keeping each kind's spacing pattern
+      if (it.kind === 'shard') { it.d += 300; it.x = 2.2 * Math.sin(it.d * 0.05); }
+      else if (it.kind === 'ring') { it.d += 450; it.x = 1.8 * Math.sin(it.d * 0.033 + 1); }
+      else it.d += 460;
+      it.taken = false; it.group.visible = true;
+    }
+    const z = S.dist - it.d;
+    if (it.kind === 'gate') {
+      it.group.position.set(centerX(it.d), roadY(it.d), z);
+      it.spiral.rotation += dt * 0.35;
+      continue;
+    }
+    const bob = it.kind === 'shard' ? Math.sin(S.t * 3 + it.phase) * 0.16 : 0;
+    const h = it.kind === 'shard' ? 1.05 : 1.7;
+    it.group.position.set(centerX(it.d) + it.x, roadY(it.d) + h + bob, z);
+    if (it.kind === 'ring') it.group.rotation.y = Math.sin(S.t * 1.3 + it.phase) * 0.14;
+    if (!it.taken && Math.abs(S.dist - it.d) < 1.05 && Math.abs(S.steerPos - it.x) < 1.15) {
+      it.taken = true; it.group.visible = false;
+      shardTotal += it.kind === 'ring' ? 3 : 1;
+      const el = document.getElementById('shardCount');
+      if (el) el.textContent = shardTotal;
+      burst(it.group.position, it.kind === 'ring' ? 14 : 8, it.kind === 'ring' ? 0xffd76a : 0xffe98a);
+      if (ac) (it.kind === 'ring' ? chimeRing : chimeShard)();
+    }
+  }
+  for (const b of burstPool) {
+    if (b.life <= 0) continue;
+    b.life -= dt;
+    if (b.life <= 0) { b.s.visible = false; continue; }
+    b.vel.y -= 3.5 * dt;
+    b.s.position.addScaledVector(b.vel, dt);
+    b.s.position.z += S.speed * dt; // bursts stay with the world as it scrolls past
+    b.s.material.opacity = 0.95 * (b.life / b.max);
+  }
+  const sOp = clamp((S.speed - 7.5) / 7, 0, 0.55);
+  for (const s of streaks) {
+    if (s.d < S.dist - 3) {
+      s.d = S.dist + 50 + Math.random() * 130;
+      s.x = (Math.random() < 0.5 ? -1 : 1) * (0.4 + Math.random() * 5);
+    }
+    s.m.position.set(centerX(s.d) + s.x, roadY(s.d) + 0.07, S.dist - s.d);
+    s.m.scale.set(1, 1, 1 + S.speed * 0.28);
+    s.m.material.opacity = sOp;
   }
 }
 
@@ -675,7 +854,20 @@ function readInput() {
 }
 
 /* ------------------------------- audio ------------------------------- */
-let ac = null;
+let ac = null, windGain = null, windFilter = null;
+function blip(f, delay, dur, vol, type = 'sine') {
+  if (!ac) return;
+  const t0 = ac.currentTime + delay;
+  const o = ac.createOscillator(), g = ac.createGain();
+  o.type = type; o.frequency.value = f;
+  g.gain.setValueAtTime(0, t0);
+  g.gain.linearRampToValueAtTime(vol, t0 + 0.015);
+  g.gain.exponentialRampToValueAtTime(0.0001, t0 + dur);
+  o.connect(g); g.connect(ac.destination);
+  o.start(t0); o.stop(t0 + dur + 0.05);
+}
+const chimeShard = () => { blip(1318, 0, 0.35, 0.14); blip(1975, 0.07, 0.45, 0.12); };
+const chimeRing = () => { blip(880, 0, 0.5, 0.13, 'triangle'); blip(1108, 0.08, 0.5, 0.12, 'triangle'); blip(1318, 0.16, 0.7, 0.12, 'triangle'); };
 function initAudio() {
   if (ac) { if (ac.state === 'suspended') ac.resume(); return; }
   try {
@@ -694,6 +886,12 @@ function initAudio() {
     lfo.connect(lfoGain); lfoGain.connect(filt.frequency);
     src.connect(filt); filt.connect(gain); gain.connect(ac.destination);
     src.start(); lfo.start();
+    // wind: a second noise stream through a bandpass — silent at cruise, whooshes at speed
+    const wsrc = ac.createBufferSource(); wsrc.buffer = buf; wsrc.loop = true; wsrc.playbackRate.value = 1.7;
+    windFilter = ac.createBiquadFilter(); windFilter.type = 'bandpass'; windFilter.frequency.value = 600; windFilter.Q.value = 0.6;
+    windGain = ac.createGain(); windGain.gain.value = 0;
+    wsrc.connect(windFilter); windFilter.connect(windGain); windGain.connect(ac.destination);
+    wsrc.start();
     // one silent-buffer unlock tick, per the iOS pattern
     const s = ac.createBufferSource(); s.buffer = ac.createBuffer(1, 1, ac.sampleRate); s.connect(ac.destination); s.start();
   } catch { ac = null; }
@@ -703,8 +901,8 @@ addEventListener('touchend', initAudio);
 addEventListener('keydown', initAudio);
 
 /* ------------------------------- the ride ------------------------------- */
-const S = { dist: 0, steer: 0, steerPos: 0, steerVel: 0, lean: 0, t: 0, camMode: 'chase' };
-const SPEED = 5.2;
+const S = { dist: 0, steer: 0, steerPos: 0, steerVel: 0, lean: 0, t: 0, camMode: 'chase', speed: 6.1, skyLock: false };
+const CRUISE = 6.1;
 const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
 function step(dt) {
   S.t += dt;
@@ -713,12 +911,19 @@ function step(dt) {
   const prev = S.steerPos;
   S.steerPos = clamp(S.steerPos + S.steer * 3.4 * dt, -2.7, 2.7);
   S.steerVel = dt > 0 ? (S.steerPos - prev) / dt : 0;
-  S.dist += SPEED * dt;
+  // speed: pedalling pulls back toward cruise, gravity works the slope — downhills rush
+  const slope = roadDY(S.dist);
+  S.speed += (CRUISE - S.speed) * 0.32 * dt - slope * 26 * dt;
+  if (S.speed > 12) S.speed -= (S.speed - 12) * 0.5 * dt;
+  S.speed = clamp(S.speed, 3.4, 15.5);
+  S.dist += S.speed * dt;
   const pedal = S.dist * 1.35;
   updateChunks(S.dist);
   const cx = centerX(S.dist), dcx = centerDX(S.dist);
-  bike.position.set(cx + S.steerPos, 0, 0);
+  const by = roadY(S.dist);
+  bike.position.set(cx + S.steerPos, by, 0);
   bike.rotation.y = Math.atan2(-dcx, 1) - S.steerPos * 0.02;
+  bike.rotation.x = Math.atan(slope) * 0.9;
   const leanTgt = clamp(-S.steerVel * 0.055 - dcx * 0.3, -0.16, 0.16);
   S.lean += (leanTgt - S.lean) * Math.min(1, dt * 6);
   lean.rotation.z = S.lean;
@@ -731,19 +936,33 @@ function step(dt) {
   tail.rotation.x = 0.45 + Math.sin(S.t * 7) * 0.06;
   spot.intensity = 36 + Math.sin(S.t * 31) * 1.2;
   updateLegs(pedal);
-  // camera
-  const bob = Math.sin(pedal * 2) * 0.035;
+  updateItems(dt);
+  // camera — rides the elevation; the look target sits up the road so crests open into vistas
+  const bob = Math.sin(pedal * 2) * 0.035 + (S.speed > 9 ? Math.sin(S.t * 39) * 0.018 * (S.speed - 9) / 6 : 0);
   if (S.camMode === 'front') {
-    camera.position.set(centerX(S.dist + 8.6) + S.steerPos * 0.5, 2.1 + bob, -8.6);
-    camera.lookAt(bike.position.x, 1.15, 0);
+    camera.position.set(centerX(S.dist + 8.6) + S.steerPos * 0.5, roadY(S.dist + 8.6) + 2.1 + bob, -8.6);
+    camera.lookAt(bike.position.x, by + 1.15, 0);
   } else if (S.camMode === 'sky') {
-    camera.position.set(centerX(S.dist - 7.4) + S.steerPos * 0.55, 2.6 + bob, 7.4);
-    camera.lookAt(bike.position.x, 9.5, -26);
+    camera.position.set(centerX(S.dist - 7.4) + S.steerPos * 0.55, roadY(S.dist - 7.4) + 2.6 + bob, 7.4);
+    camera.lookAt(bike.position.x, by + 9.5, -26);
   } else {
-    camera.position.set(centerX(S.dist - 7.4) + S.steerPos * 0.55, 2.95 + bob, 7.4);
-    camera.lookAt(bike.position.x + dcx * 3.2, 1.5, -3.9);
+    camera.position.set(centerX(S.dist - 7.4) + S.steerPos * 0.55, roadY(S.dist - 7.4) + 2.95 + bob, 7.4);
+    camera.lookAt(bike.position.x + dcx * 3.2, roadY(S.dist + 3.9) + 1.4, -3.9);
   }
   sky.position.set(camera.position.x, 0, camera.position.z);
+  if (!S.skyLock) sky.rotation.y = Math.PI + Math.sin(S.t * 0.045) * 0.055; // the painted sky slowly drifts
+  // FOV stretches as the downhill rush builds
+  const fovT = 62 + clamp(S.speed - 6.5, 0, 9) * 1.7;
+  if (Math.abs(camera.fov - fovT) > 0.05) {
+    camera.fov += (fovT - camera.fov) * Math.min(1, dt * 4);
+    camera.updateProjectionMatrix();
+  }
+  // wind whoosh tracks speed
+  if (ac && windGain) {
+    const target = clamp((S.speed - 6.5) / 8.5, 0, 1) * 0.13;
+    windGain.gain.value += (target - windGain.gain.value) * Math.min(1, dt * 3);
+    if (windFilter) windFilter.frequency.value = 380 + S.speed * 55;
+  }
 }
 const captureMode = new URLSearchParams(location.search).has('capture');
 let last = performance.now();
@@ -769,6 +988,8 @@ window.__ride = {
   clearSteer() { captureSteer = null; },
   teleport(d) { S.dist = d; updateChunks(d); step(0); renderer.render(scene, camera); },
   setCam(m) { S.camMode = m; },
-  setSkyRot(y) { sky.rotation.y = y; },
-  state() { return { dist: Math.round(S.dist * 10) / 10, steerPos: Math.round(S.steerPos * 100) / 100, camMode: S.camMode }; },
+  setSkyRot(y) { S.skyLock = true; sky.rotation.y = y; },
+  setSpeed(v) { S.speed = v; },
+  roadY(d) { return roadY(d); },
+  state() { return { dist: Math.round(S.dist * 10) / 10, steerPos: Math.round(S.steerPos * 100) / 100, camMode: S.camMode, speed: Math.round(S.speed * 10) / 10, shards: shardTotal, y: Math.round(roadY(S.dist) * 10) / 10 }; },
 };
