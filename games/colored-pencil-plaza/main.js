@@ -1,16 +1,16 @@
 // Colored Pencil Plaza — the Painted Live fountain plaza drawn in colored pencil: the same
 // set, the same Juniper walk figure, the same controls, but the stroke itself is a colored
 // pencil's. The scene keeps its true colours — they are the pigments. The marks are FINE,
-// DENSE hatch-line bundles and fine cross-hatch patches (src/oilpaint/brush.js), and the
-// finish (src/oilpaint/finish.js) lays every pigment onto warm off-white paper with a
-// coverage that follows the tone — highlights are the paper showing through, darks are
-// pressed full — then shades with hatch families IN THE LOCAL PIGMENT, darkened and
-// saturated the way a harder-pressed pencil deepens (one direction for the mid-tones, a
-// crossing family for the shades, a third for the deepest darks), soft drawn edges in a
-// darkened local colour, the tooth of the paper breaking the pigment everywhere, and a
-// gentle white paper vignette at the frame's edge. Nothing in the picture is brighter than
-// the sheet. She roams under a floating joystick (gamepress gptouch standard) or
-// WASD/arrows, with a smooth follow camera.
+// DENSE hatch-line bundles and fine cross-hatch patches with NOTHING under their lines
+// (src/oilpaint/brush.js), and the finish (src/oilpaint/finish.js) is LINES ONLY: a breath
+// of pigment on warm off-white paper, and every step of tone built by hatch families IN
+// THE LOCAL PIGMENT whose density is the tone — darkened and saturated the way a harder-
+// pressed pencil deepens (one direction for the lights and mid-tones, a crossing family
+// for the shades, a third for the darks, a fourth for the deepest passages — lines instead
+// of fill, always), soft drawn edges in a darkened local colour, the tooth of the paper
+// breaking the pigment everywhere, and a gentle white paper vignette at the frame's edge.
+// Nothing in the picture is brighter than the sheet. She roams under a floating joystick
+// (gamepress gptouch standard) or WASD/arrows, with a smooth follow camera.
 //   ?paint=rich    full part-1 dab density (default: smooth = the proof's reduced video density)
 //   ?paint=smooth  reduced density + smaller drawing buffer — the real-time default
 // Performance note: the painter repaints every dab every frame; on a real phone GPU that is
@@ -297,9 +297,20 @@ const crownUnder = [];
       void main() { vec4 w = modelMatrix * vec4(position, 1.0); vWorld = w.xyz; vN = mat3(modelMatrix) * normal; gl_Position = projectionMatrix * viewMatrix * w; }`,
     fragmentShader: /* glsl */ `
       uniform vec3 uSunDir;
+      uniform sampler2D tNoise;
       in vec3 vWorld; in vec3 vN;
       layout(location = 0) out vec4 outC;
-      void main() { outC = vec4(vec3(0.13, 0.20, 0.08) * (0.7 + 0.5 * max(normalize(vN).y, 0.0)), 1.0); }`,
+      void main() {
+        float tone = 0.7 + 0.5 * max(normalize(vN).y, 0.0);
+        // the underpaint is CHOPPED, never washed smooth (lines-only rebuild): ragged cells
+        // of differing depth break the gradient into touches, so the finish's hatching reads
+        // a broken field of darks — a drawn crown — instead of one soft-shaded ball of fill
+        vec3 wob = texture(tNoise, vWorld.xz * 0.11 + vWorld.y * 0.07).rgb - 0.5;
+        vec3 cell = floor(vWorld * 5.0 + wob * 2.4);
+        float h = fract(sin(dot(cell, vec3(12.9898, 78.355, 37.719))) * 43758.5453);
+        tone *= 0.70 + 0.60 * h;
+        outC = vec4(vec3(0.13, 0.20, 0.08) * tone, 1.0);
+      }`,
   });
   for (const { c, r } of crownUnder) {
     const s = new THREE.Mesh(new THREE.SphereGeometry(r * 0.96, 12, 9), underMat);
