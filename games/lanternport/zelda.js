@@ -207,6 +207,69 @@ registerStageKind('clerk', (THREE, kit) => {
   return g;
 });
 
+// Alignment pass (Nov 13): builders for the remaining zelda.js kinds that had
+// no registered builder anywhere — StageView silently skips unregistered
+// kinds, so the chest, rupee, pier and crate never rendered.
+// Banded treasure chest (chest-fanfare): the lid is hinged at the back top
+// edge and opens with the staged `open` state (0..1 over the open beat); a
+// warm glow plane inside is revealed as it opens. Front (lock side) faces +Z,
+// toward the kneeling hero.
+registerStageKind('chest', (_T, kit) => {
+  const g = new T.Group();
+  const wood = kit.toon(0x8a5a3c, { map: kit.T.wood });
+  const dark = kit.toon(0x4a3421, { rim: 0.5 });
+  const gold = kit.toon(0xf2c249, { rim: 1.1 });
+  kit.part(g, new T.BoxGeometry(0.95, 0.48, 0.62), wood, 0, 0.24, 0, 0.012);
+  for (const bx of [-0.3, 0.3]) kit.part(g, new T.BoxGeometry(0.1, 0.5, 0.66), dark, bx, 0.24, 0, 0.012);
+  kit.part(g, new T.BoxGeometry(0.16, 0.2, 0.04), gold, 0, 0.32, 0.32, 0.012);
+  const glowM = new T.MeshBasicMaterial({ color: 0xffd97a, transparent: true, opacity: 0 });
+  const glowPlane = new T.Mesh(new T.PlaneGeometry(0.8, 0.47), glowM);
+  glowPlane.rotation.x = -Math.PI / 2;
+  glowPlane.position.y = 0.47;
+  g.add(glowPlane);
+  const lid = new T.Group();
+  lid.position.set(0, 0.48, -0.31);
+  g.add(lid);
+  kit.part(lid, new T.BoxGeometry(0.95, 0.2, 0.62), wood, 0, 0.1, 0.31, 0.012);
+  for (const bx of [-0.3, 0.3]) kit.part(lid, new T.BoxGeometry(0.1, 0.22, 0.66), dark, bx, 0.1, 0.31, 0.012);
+  g.userData.pose = (a) => {
+    lid.rotation.x = -(a.open || 0) * 1.85;
+    glowM.opacity = (a.open || 0) * 0.85;
+  };
+  return g;
+});
+
+// Rupee crystal (chest-fanfare): colour by denomination (20 = red), spinning
+// gently while held overhead.
+registerStageKind('rupee', (_T, kit, o) => {
+  const g = new T.Group();
+  const denom = (o && o.denom) || 1;
+  const color = denom >= 20 ? 0xe8402f : denom >= 5 ? 0x3f6fd8 : 0x2fbf71;
+  const m = new T.Mesh(new T.OctahedronGeometry(0.17, 0), new T.MeshBasicMaterial({ color }));
+  m.scale.set(0.75, 1.5, 0.45);
+  g.add(m);
+  g.userData.pose = (a, time) => { m.rotation.y = (time || 0) * 1.5; };
+  return g;
+});
+
+// Dock pier (dock-fishing): plank deck whose top is at y~0 so the fisher
+// stands on it, posts dropping toward the water, reaching toward +Z where
+// the snapper surfaces.
+registerStageKind('pier', (_T, kit) => {
+  const g = new T.Group();
+  const wood = kit.toon(0x8a5a3c, { map: kit.T.wood });
+  kit.part(g, new T.BoxGeometry(2.6, 0.14, 6.4), kit.toon(0xa97a4e, { map: kit.T.wood }), 0, -0.05, 1.4, 0.012);
+  for (const px of [-1.1, 1.1]) for (const pz of [-1.2, 1.4, 4.0]) kit.part(g, new T.CylinderGeometry(0.09, 0.11, 1.6, 8), wood, px, -0.85, pz);
+  return g;
+});
+
+// Wooden crate (fairy-orbit set dressing at the plaza origin).
+registerStageKind('crate', (_T, kit) => {
+  const g = new T.Group();
+  kit.part(g, new T.BoxGeometry(0.52, 0.38, 0.44), kit.toon(0xc98d4b, { map: kit.T.wood }), 0, 0.19, 0, 0.014);
+  return g;
+});
+
 // ----------------------------------------------------------------------------- 11. pot-rampage
 const PR = {
   hold: 60,
