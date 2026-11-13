@@ -19,7 +19,7 @@
   #cool { height: 7px; width: 140px; margin: 7px 0 0 auto; border: 2px solid #2b2438; border-radius: 6px; background: rgba(43,36,56,.45); overflow: hidden; visibility: hidden; }
   #cool b { display: block; height: 100%; width: 0; background: #7be07b; }
   #heatmsg { font-size: 12px; font-weight: 800; letter-spacing: .08em; margin-top: 4px; min-height: 16px; }
-  #goal { position: fixed; top: 16px; left: 50%; transform: translateX(-50%); max-width: 46vw; text-align: center; font-weight: 800; font-size: 17px; line-height: 1.3; }
+  #goal { position: fixed; top: 50px; left: 50%; transform: translateX(-50%); max-width: 46vw; text-align: center; font-weight: 800; font-size: 17px; line-height: 1.3; }
   #goal span { color: #ffd23c; }
   #prompt { position: fixed; bottom: 86px; left: 50%; transform: translateX(-50%); font-weight: 800; font-size: 17px; background: rgba(43,36,56,.72); border: 3px solid #2b2438; border-radius: 14px; padding: 7px 16px; display: none; }
   #speed { position: fixed; bottom: 18px; left: 50%; transform: translateX(-50%); font-weight: 800; font-size: 26px; display: none; }
@@ -37,7 +37,24 @@
   .touch #goal { top: 92px; max-width: 58vw; }
   .clean #help, .clean #title { display: none; }
   /* capture kit: hide-HUD and the 9:16 guide */
-  .nohud #who, .nohud #heat, .nohud #goal, .nohud #prompt, .nohud #speed, .nohud #map, .nohud #help, .nohud #banner, .nohud #capbar { display: none !important; }
+  .nohud #who, .nohud #heat, .nohud #goal, .nohud #prompt, .nohud #speed, .nohud #map, .nohud #help, .nohud #banner, .nohud #capbar, .nohud #festbar { display: none !important; }
+  #festbar { position: fixed; top: 14px; left: 50%; transform: translateX(-50%); display: flex; gap: 6px; z-index: 1100; align-items: center; flex-wrap: wrap; justify-content: center; pointer-events: none; }
+  .fbtn { pointer-events: auto; background: rgba(24,18,38,.78); color: #fff6dd; border: 2px solid rgba(255,246,221,.8); border-radius: 999px; padding: 6px 12px; font: 800 12px/1 system-ui, sans-serif; letter-spacing: .04em; cursor: pointer; touch-action: manipulation; white-space: nowrap; }
+  .fbtn.gold { border-color: #ffd23c; color: #ffd23c; }
+  .title-acts { display: flex; gap: 10px; margin-top: 14px; flex-wrap: wrap; justify-content: center; z-index: 1100; }
+  .title-acts .fbtn { padding: 11px 18px; font-size: 15px; }
+  #journalModal, #dayDoneCard { position: fixed; inset: 0; display: none; align-items: center; justify-content: center; background: rgba(18,14,28,.65); z-index: 1150; }
+  #journalBox, #dayDoneBox { background: rgba(24,18,38,.95); border: 3px solid #ffd23c; border-radius: 18px; padding: 16px 18px; color: #fff6dd; width: min(440px, 90vw); max-height: 76vh; display: flex; flex-direction: column; gap: 10px; box-shadow: 0 12px 32px rgba(0,0,0,.5); }
+  #journalHead { display: flex; align-items: center; justify-content: space-between; font: 900 16px system-ui, sans-serif; color: #ffd23c; }
+  #journalList { overflow-y: auto; display: flex; flex-direction: column; gap: 6px; padding-right: 4px; -webkit-overflow-scrolling: touch; }
+  .jrow { display: flex; align-items: center; gap: 8px; background: rgba(255,255,255,.07); border-radius: 10px; padding: 7px 10px; font: 700 13px system-ui, sans-serif; }
+  .jrow .jid { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .jrow .jst { font-size: 11px; text-transform: uppercase; padding: 3px 7px; border-radius: 999px; background: rgba(255,255,255,.12); color: #cbd5e1; }
+  .jrow .jst.watched { background: rgba(89,216,255,.22); color: #7be8ff; }
+  .jrow .jst.played { background: rgba(123,224,123,.25); color: #9eff9e; }
+  #dayDoneBox { text-align: center; align-items: center; max-width: 340px; }
+  #dayDoneBox h2 { margin: 0; font: 900 22px system-ui, sans-serif; color: #ffd23c; }
+  #dayDoneStats { font: 800 15px system-ui, sans-serif; display: flex; gap: 18px; margin: 4px 0; }
   #guide { position: fixed; inset: 0; pointer-events: none; display: none; z-index: 900; }
   #guide i { position: absolute; top: 0; bottom: 0; left: 50%; width: calc(100vh * 9 / 16); max-width: 100vw; transform: translateX(-50%); box-shadow: 0 0 0 100vmax rgba(0,0,0,.55); border-left: 2px dashed rgba(255,255,255,.8); border-right: 2px dashed rgba(255,255,255,.8); box-sizing: border-box; }
   #guide i::after { content: ''; position: absolute; left: 0; right: 0; top: 33.33%; height: 33.34%; border-top: 1px solid rgba(255,255,255,.3); border-bottom: 1px solid rgba(255,255,255,.3); }
@@ -67,7 +84,34 @@ canvas{touch-action:none}
 <div id="flashfx" style="position:fixed;inset:0;background:#fff;opacity:0;pointer-events:none;z-index:800"></div>
 <div id="guide"><i></i></div>
 <div id="capbar"></div>
-<div id="title" class="ink"><h1>Lanternport</h1><p>Two couriers. One very borrowable city.</p><p style="font-size:14px;opacity:.9">click or press any key</p></div>
+<div id="festbar">
+  <button id="journalBtn" class="fbtn" type="button">📖 SCENES</button>
+  <button id="festBtn" class="fbtn gold" type="button">▶ FESTIVAL DAY</button>
+  <button id="tourBtn" class="fbtn" type="button">🎬 TOUR</button>
+  <button id="festNextBtn" class="fbtn gold" type="button" style="display:none">NEXT ▶</button>
+</div>
+<div id="journalModal">
+  <div id="journalBox">
+    <div id="journalHead"><span>📖 SCENES</span><button id="journalClose" class="fbtn" type="button">✕</button></div>
+    <div id="journalList" data-scroll></div>
+  </div>
+</div>
+<div id="dayDoneCard">
+  <div id="dayDoneBox">
+    <h2>🎪 FESTIVAL DAY</h2>
+    <div id="dayDoneStats"></div>
+    <button id="dayDoneBtn" class="fbtn gold" type="button">▶ FREE ROAM</button>
+  </div>
+</div>
+<div id="title" class="ink">
+  <h1>Lanternport</h1>
+  <p>Two couriers. One very borrowable city.</p>
+  <p style="font-size:14px;opacity:.9">click or press any key</p>
+  <div class="title-acts">
+    <button id="titleFestBtn" class="fbtn gold" type="button">▶ FESTIVAL DAY</button>
+    <button id="titleTourBtn" class="fbtn" type="button">🎬 TOUR</button>
+  </div>
+</div>
 
 <script type="module">
 import * as THREE from './lib/three.module.min.js';
@@ -78,12 +122,16 @@ import { Bot } from './bot.js';
 import { U, buildCityView, HeroView, LOOKS, makeVehicle, makeFolk, makeCucco, makePickup, makeBeacon, makePot } from './view.js';
 import { SimClock, FreeCam, TIMESCALES, simDigest } from './capture.js';
 import { SCENES, sceneById, SceneRunner } from './scenes.js';
+import { FESTIVAL_DAY_ORDER, tourSceneIds, buildSceneMarkers, SceneJournal, FestivalDayState } from './festival.js';
 import { frameQuality, FilmRun, Audience, ChatFeed } from './film.js';
 import { StageView } from './stageview.js';
 import { SUN_DIR, makeTextures, makeMaterials, makeSky, makeMotes, Post } from './fx.js';
 
 const Q = new URLSearchParams(location.search), AUTO = Q.get('auto') === '1' || Q.get('spectate') === '1', SEED = +(Q.get('seed') || 7), ANG = (Math.PI * 2) / 0x10000;
-const SCENE_DEF = sceneById(Q.get('scene')); let runner = null; // staged scene (?scene=<id>)
+let activeScene = sceneById(Q.get('scene')), runner = null; // staged scene (?scene=<id> or in-world trigger)
+const journal = new SceneJournal(typeof localStorage !== 'undefined' ? localStorage : null);
+const festival = new FestivalDayState(FESTIVAL_DAY_ORDER);
+const tour = { active: false, ids: tourSceneIds(SCENES), index: 0, armedAt: 0 };
 // Watch-or-play: a staged scene link opens in 'ready' mode — the set is dressed,
 // the cast holds its first pose, and YOU hold the controls (play the town freely,
 // walk to the set, keys 1-8 peek at the framing). ▶ WATCH starts the performance;
@@ -91,8 +139,8 @@ const SCENE_DEF = sceneById(Q.get('scene')); let runner = null; // staged scene 
 // control (↻ WATCH AGAIN replays it). Filming keeps the old behaviour with
 // &loop=1 (or &auto=1): auto-start, auto-loop, no button.
 const LOOP_SCENE = Q.get('loop') === '1' || Q.get('auto') === '1' || Q.get('film') === '1'; // film=1: the scene loops for the camera operator
-let sceneMode = !SCENE_DEF ? 'play' : (LOOP_SCENE ? 'watch' : 'ready'), sceneRan = false;
-if (Q.get('clean') === '1' || AUTO || SCENE_DEF) document.body.classList.add('clean');
+let sceneMode = !activeScene ? 'play' : (LOOP_SCENE ? 'watch' : 'ready'), sceneRan = false;
+if (Q.get('clean') === '1' || AUTO || activeScene) document.body.classList.add('clean');
 const $ = (id) => document.getElementById(id);
 
 // Rendering: HDR scene -> contact shading, ink, haze, bloom, filmic grade (all in fx.js). Low sun, long warm light.
@@ -107,20 +155,68 @@ const sunDir = new THREE.Vector3(...SUN_DIR).normalize(), sun = new THREE.Direct
 sun.castShadow = true; sun.shadow.mapSize.set(4096, 4096); sun.shadow.bias = -0.0003; sun.shadow.normalBias = 0.05; sun.shadow.radius = 2.5;
 Object.assign(sun.shadow.camera, { left: -62, right: 62, top: 62, bottom: -62, near: 1, far: 420 }); scene.add(sun, sun.target);
 
-let game, bot, cityView, heroViews = [], ents = new Map(), beacons = [];
+let game, bot, cityView, heroViews = [], ents = new Map(), beacons = [], sceneMarkers = [], markerMeshes = [];
+let cooldownMarkerId = null;
 const burstDone = new Set(); let bursts = [];
+function makeSceneMarkerMesh() {
+  const g = new THREE.Group();
+  const ringMat = new THREE.MeshBasicMaterial({ color: 0x49e0ff, transparent: true, opacity: 0.85, side: THREE.DoubleSide, depthWrite: false });
+  const ring = new THREE.Mesh(new THREE.RingGeometry(0.95, 1.35, 28), ringMat);
+  ring.rotation.x = -Math.PI / 2;
+  const colMat = new THREE.MeshBasicMaterial({ map: kit.T.glow, color: 0x49e0ff, transparent: true, opacity: 0.35, side: THREE.DoubleSide, depthWrite: false, blending: THREE.AdditiveBlending });
+  const col = new THREE.Mesh(new THREE.CylinderGeometry(0.32, 0.72, 4.2, 16, 1, true), colMat);
+  col.position.y = 2.1;
+  g.add(ring, col);
+  g.userData = { ringMat, colMat, col };
+  return g;
+}
+function mountSceneStage(def, { moveHero = true, jumpCam = false } = {}) {
+  if (stage) { stage.dispose(scene); stage = null; }
+  stopBed(); sceneCues = []; stageS = null;
+  activeScene = def;
+  if (!def) { setLight('golden'); return; }
+  if (def.set) {
+    stageS = def.set(game); def.act(stageS, 0);
+    stage = new StageView(THREE, kit, stageS); scene.add(stage.root);
+    setLight(def.light || 'golden');
+    if (jumpCam && Q.get('cam') !== 'free') jumpBookmark(SCENES.indexOf(def));
+    if (moveHero) placeHeroInScene();
+  } else {
+    setLight(def.light || 'golden');
+    if (jumpCam && Q.get('cam') !== 'free') jumpBookmark(SCENES.indexOf(def));
+    if (moveHero) placeHeroInScene();
+  }
+}
+function clearSceneStage() {
+  runner = null; stopBed(); sceneCues = [];
+  if (stage) { stage.dispose(scene); stage = null; }
+  stageS = null; activeScene = null; sceneMode = 'play'; sceneRan = false;
+  setLight('golden'); setFreecam(false);
+  $('flashfx').style.opacity = 0;
+  syncSceneBtn();
+}
+function enterSceneReady(def) {
+  if (!def) return;
+  cooldownMarkerId = def.id;
+  runner = null; sceneMode = 'ready'; sceneRan = false;
+  mountSceneStage(def, { moveHero: true, jumpCam: false });
+  setFreecam(false);
+  syncSceneBtn();
+}
 function restart() {
   if (cityView) scene.remove(cityView); for (const e of ents.values()) scene.remove(e); ents.clear();
   for (const b of bursts) scene.remove(b.grp); bursts = []; burstDone.clear();
   heroViews.forEach((h) => scene.remove(h.group, h.shadow, h.ring));
+  markerMeshes.forEach((m) => scene.remove(m)); markerMeshes = [];
   game = new Game(SEED); bot = new Bot(game);
   cityView = buildCityView(THREE, game.city, kit); scene.add(cityView);
   heroViews = LOOKS.map((look) => { const h = new HeroView(THREE, kit, look); scene.add(h.group, h.shadow, h.ring); return h; });
   game.heroes.forEach((h, i) => { heroViews[i].snapshot(h); heroViews[i].snapshot(h); });
   cam.init = false; cam.yaw = Math.PI / 2; window.__game = game;
+  sceneMarkers = buildSceneMarkers(SCENES, game);
+  markerMeshes = sceneMarkers.map((m) => { const mesh = makeSceneMarkerMesh(); mesh.position.set(m.x, m.y, m.z); scene.add(mesh); return mesh; });
   // staged film scene: build its set and cast, light it, frame it
-  if (stage) { stage.dispose(scene); stage = null; } stopBed(); sceneCues = []; stageS = null;
-  if (SCENE_DEF && SCENE_DEF.set) { stageS = SCENE_DEF.set(game); SCENE_DEF.act(stageS, 0); stage = new StageView(THREE, kit, stageS); scene.add(stage.root); setLight(SCENE_DEF.light || 'golden'); if (Q.get('cam') !== 'free' && sceneMode === 'watch') jumpBookmark(SCENES.indexOf(SCENE_DEF)); if (!LOOP_SCENE && sceneMode !== 'watch') placeHeroInScene(); }
+  mountSceneStage(activeScene, { moveHero: !LOOP_SCENE && sceneMode !== 'watch', jumpCam: sceneMode === 'watch' });
 }
 let stage = null, stageS = null, sceneCues = [];
 // Light states: where the sun is and what colour the day is. 'golden' is the town's default.
@@ -173,7 +269,8 @@ addEventListener('keydown', (e) => {
   if (e.code === 'KeyP') setFreecam(!free.on); else if (e.code === 'BracketLeft') { ticker.nudge(-1); capNote(); } else if (e.code === 'BracketRight') { ticker.nudge(1); capNote(); }
   else if (e.code === 'KeyG') setGuide(!cap.guide); else if (e.code === 'KeyU') setHud(!cap.hud);
   else if (/^Digit[1-8]$/.test(e.code)) jumpBookmark(+e.code.slice(5) - 1); // 1-8: jump to a scene's staged framing
-  else if (e.code === 'Enter' && SCENE_DEF) toggleScene(); // Enter: watch the scene / take control back
+  else if (e.code === 'Escape' && tour.active) exitTour();
+  else if (e.code === 'Enter' && activeScene) toggleScene(); // Enter: watch the scene / take control back
 });
 
 function updateCamera(view, driving, dt, orbit) {
@@ -193,7 +290,7 @@ function updateCamera(view, driving, dt, orbit) {
 }
 
 // ---------------------------------------------------------------- input
-const input = new PlayerInput(); let dragging = false, started = AUTO || !!SCENE_DEF || Q.get('clean') === '1';
+const input = new PlayerInput(); let dragging = false, started = AUTO || !!activeScene || Q.get('clean') === '1';
 const extra = { use: false, swap: false };
 function begin() { if (started) return; started = true; $('title').style.display = 'none'; initTouch(); unlockAudio(); }
 addEventListener('keydown', (e) => {
@@ -276,10 +373,46 @@ function sceneSound(def, t) { for (const c of def.sound || []) if (c.at === t) {
 const ticker = new SimClock(30); let last = performance.now(), time = 0, flashMsg = '', flashT = 0;
 function tick() {
   if (!started) return;
-  if (SCENE_DEF && !runner && sceneMode === 'watch') { runner = new SceneRunner(game, SCENE_DEF); parkHero(); }
+  if (activeScene && !runner && sceneMode === 'watch') { runner = new SceneRunner(game, activeScene); parkHero(); }
   game.tick(runner ? { ...runner.input(), camYaw: 0 } : AUTO ? { ...bot.input(), camYaw: 0 } : readInput());
-  if (runner && stage) { sceneSound(SCENE_DEF, runner.t); for (const c of SCENE_DEF.cuts || []) if (c.at === runner.t && Q.get('cam') !== 'free') { const b = c.cam(game); free.pivot = [...b.pivot]; free.yaw = b.yaw; free.pitch = b.pitch; free.dist = b.dist; } }
-  if (runner && runner.done) { restart(); if (LOOP_SCENE) { runner = new SceneRunner(game, SCENE_DEF); parkHero(); } else { sceneMode = 'ready'; sceneRan = true; syncSceneBtn(); } } // loop only for filming; otherwise the player keeps control
+  if (runner && stage) { sceneSound(activeScene, runner.t); for (const c of activeScene.cuts || []) if (c.at === runner.t && Q.get('cam') !== 'free') { const b = c.cam(game); free.pivot = [...b.pivot]; free.yaw = b.yaw; free.pitch = b.pitch; free.dist = b.dist; } }
+  if (runner && runner.done) {
+    if (tour.active) {
+      tour.index = (tour.index + 1) % tour.ids.length;
+      const nextDef = sceneById(tour.ids[tour.index]);
+      runner = null;
+      mountSceneStage(nextDef, { moveHero: false, jumpCam: true });
+      runner = new SceneRunner(game, nextDef); parkHero();
+    } else if (festival.active) {
+      festival.recordStop(activeScene.id, false);
+      const nextId = festival.advance();
+      clearSceneStage();
+      if (!nextId) showDayComplete();
+    } else {
+      restart();
+      if (LOOP_SCENE) { runner = new SceneRunner(game, activeScene); parkHero(); }
+      else { sceneMode = 'ready'; sceneRan = true; syncSceneBtn(); }
+    }
+  } // loop only for filming; otherwise the player keeps control
+  // In-world triggers: walking into a glowing marker in free-roam opens that scene's ready mode
+  if (!runner && !tour.active && sceneMarkers.length) {
+    const hp = game.hero.ctrl.pos, hx = hp[0] * U, hy = hp[1] * U, hz = hp[2] * U;
+    if (cooldownMarkerId) {
+      const cm = sceneMarkers.find((m) => m.id === cooldownMarkerId);
+      if (!cm || Math.hypot(hx - cm.x, hz - cm.z) > 3.4) cooldownMarkerId = null;
+    }
+    if (!cooldownMarkerId && !activeScene) {
+      const targetId = festival.currentId();
+      const ordered = targetId ? [sceneMarkers.find((m) => m.id === targetId), ...sceneMarkers.filter((m) => m.id !== targetId)].filter(Boolean) : sceneMarkers;
+      for (const m of ordered) {
+        if (Math.hypot(hx - m.x, hz - m.z) < 2.2 && Math.abs(hy - m.y) < 3.2) {
+          const def = sceneById(m.id);
+          if (def) enterSceneReady(def);
+          break;
+        }
+      }
+    }
+  }
   for (const e of game.events) {
     play(e);
     if (e === 'crash' || e === 'ram' || e === 'pound') cam.shake = Math.max(cam.shake, e === 'ram' ? 1.2 : 0.6);
@@ -344,9 +477,23 @@ function frame(now) {
   for (const [k, m] of ents) if (m.userData.live !== frameNo) { scene.remove(m); ents.delete(k); }
   const marks = g.markers(); beacons.forEach((b, i) => { const m = marks[i]; b.visible = !!m; if (m) { b.userData.set(m.kind); b.position.set(m.x * U, 0, m.z * U); b.scale.set(1, 1 + Math.sin(time * 4 + i) * 0.04, 1); } });
 
-  if (stage) { const st = runner ? Math.max(0, runner.t - 1 + a) : 0; SCENE_DEF.act(stageS, st); if (!runner) { const hj = stageS.actors.find((ac) => ac.look && ac.look.hero); if (hj) hj.vis = false; } stage.update(time);
-    if (runner && SCENE_DEF.track && Q.get('cam') !== 'free' && cap.bookmark === SCENE_DEF.id && !capPtr.size) { const b = SCENE_DEF.track(game, st); free.pivot = [...b.pivot]; free.yaw = b.yaw; free.pitch = b.pitch; free.dist = b.dist; }
+  if (stage && activeScene) { const st = runner ? Math.max(0, runner.t - 1 + a) : 0; activeScene.act(stageS, st); if (!runner) { const hj = stageS.actors.find((ac) => ac.look && ac.look.hero); if (hj) hj.vis = false; } stage.update(time);
+    if (runner && activeScene.track && Q.get('cam') !== 'free' && cap.bookmark === activeScene.id && !capPtr.size) { const b = activeScene.track(game, st); free.pivot = [...b.pivot]; free.yaw = b.yaw; free.pitch = b.pitch; free.dist = b.dist; }
     $('flashfx').style.opacity = stageS.flash ? Math.min(0.85, stageS.flash * 0.8) : 0; }
+  const showMarkers = !tour.active && !FILM && !LOOP_SCENE;
+  const targetId = festival.active ? festival.currentId() : null;
+  for (const mm of markerMeshes) {
+    mm.group.visible = showMarkers;
+    if (!showMarkers) continue;
+    const isTarget = mm.id === targetId;
+    const pulse = 0.5 + 0.5 * Math.sin(time * (isTarget ? 5.5 : 3) + mm.phase);
+    mm.ringMat.color.setHex(isTarget ? 0xffd23c : 0x49e0ff);
+    mm.beamMat.color.setHex(isTarget ? 0xffd23c : 0x49e0ff);
+    mm.ringMat.opacity = (isTarget ? 0.55 : 0.28) + pulse * 0.3;
+    mm.beamMat.opacity = (isTarget ? 0.28 : 0.1) + pulse * 0.15;
+    mm.beam.scale.y = isTarget ? 1.5 + pulse * 0.4 : 0.85 + pulse * 0.15;
+    mm.ring.scale.setScalar((isTarget ? 1.25 : 0.95) + pulse * 0.15);
+  }
   if (free.on) updateFreecam(rdt); else updateCamera(hv, !!hero.vehicle, rdt, AUTO ? 0 : input.orbit());
   if (film) filmFrame();
   sun.target.position.set(cam.focus.x, 0, cam.focus.z); sun.position.copy(sun.target.position).addScaledVector(sunDir, 200);
@@ -365,7 +512,8 @@ function hud(marks) {
     [...$('lanterns').children].forEach((el, i) => el.classList.toggle('on', i < g.heat)); $('heat').classList.toggle('seen', g.seen);
     $('cool').style.visibility = g.heat && !g.seen ? 'visible' : 'hidden'; $('cool').firstChild.style.width = Math.min(100, (g.unseen / g.heatCooldown) * 100) + '%';
     $('heatmsg').textContent = flashT > 0 ? flashMsg : g.heat ? (g.seen ? 'THE WATCH SEES YOU' : 'OUT OF SIGHT…') : '';
-    $('goal').innerHTML = o ? o.text + (o.timer !== null ? ` &nbsp;<span>${Math.ceil(o.timer / 30)}s</span>` : '') : (g.completed.length ? '' : 'Walk into the <span>gold beacon</span> at the bakery to start a job');
+    const festStop = !o && festival.active && festival.currentId() ? `🎪 ${festival.index + 1}/${festival.order.length} · <span>${festival.currentId()}</span>` : '';
+    $('goal').innerHTML = o ? o.text + (o.timer !== null ? ` &nbsp;<span>${Math.ceil(o.timer / 30)}s</span>` : '') : (festStop || (g.completed.length ? '' : 'Walk into the <span>gold beacon</span> at the bakery to start a job'));
     $('prompt').style.display = g.prompt ? 'block' : 'none'; $('prompt').textContent = g.prompt;
     const b = $('banner'); b.style.opacity = g.banner ? 1 : 0; if (g.banner) { b.children[0].textContent = g.banner.title; b.children[1].textContent = g.banner.sub; }
   }
@@ -380,6 +528,8 @@ function hud(marks) {
   const dot = (x, z, r, col, ring) => { const wx = x - p.x, wz = z - p.z; let dx = (wx * rx + wz * rz) * sc, dz = -(wx * fx + wz * fz) * sc; const d = Math.hypot(dx, dz), lim = W / 2 - 14; if (d > lim) { if (!ring) return; dx *= lim / d; dz *= lim / d; } c.beginPath(); c.arc(W / 2 + dx, W / 2 + dz, r, 0, 7); c.fillStyle = col; c.fill(); if (ring) { c.lineWidth = 3; c.strokeStyle = '#2b2438'; c.stroke(); } };
   for (const q of g.vehicles) dot(q.x, q.z, 5, q.driver === 'watch' ? '#3d6bff' : '#8a5a3c'); for (const q of g.guards) dot(q.x, q.z, 6, '#3d6bff');
   const COL = { job: '#ffd23c', goal: '#49e0ff', tailor: '#ff7ab8', hideout: '#7be07b' }; for (const m of marks) dot(m.x, m.z, 10, COL[m.kind], true);
+  const fTarget = festival.active ? festival.currentId() : null;
+  for (const sm of sceneMarkers) { const isF = sm.id === fTarget; dot(sm.x, sm.z, isF ? 7 : 4, isF ? '#ffd23c' : '#49e0ff', isF); }
   const other = g.posOf(g.heroes[1 - g.active]); dot(other.x, other.z, 7, '#ffffff', true);
   const yaw = h.vehicle ? h.vehicle.yaw : h.ctrl.yaw * ANG; c.translate(W / 2, W / 2); c.rotate(cy - yaw); c.beginPath(); c.moveTo(0, -14); c.lineTo(10, 11); c.lineTo(0, 5); c.lineTo(-10, 11); c.closePath(); c.fillStyle = '#ff5a4f'; c.fill(); c.lineWidth = 3; c.strokeStyle = '#2b2438'; c.stroke(); c.restore();
 }
@@ -438,7 +588,11 @@ addEventListener('pointerdown', pokeSceneBtn, { passive: true });
 addEventListener('touchstart', pokeSceneBtn, { passive: true });
 addEventListener('click', pokeSceneBtn, { passive: true });
 function syncSceneBtn() {
-  if (!SCENE_DEF || LOOP_SCENE || Q.get('hud') === '0') { sceneBtn.style.display = 'none'; clearTimeout(btnFadeT); sceneBtn.style.opacity = '1'; sceneBtn.style.pointerEvents = 'auto'; return; }
+  const showNext = festival.active && activeScene && !runner && !tour.active;
+  $('festNextBtn').style.display = showNext ? '' : 'none';
+  $('festBtn').textContent = festival.active ? `🎪 ${festival.index + 1}/${festival.order.length}` : '▶ FESTIVAL DAY';
+  $('tourBtn').textContent = tour.active ? '✕ EXIT' : '🎬 TOUR';
+  if (!activeScene || LOOP_SCENE || tour.active || Q.get('hud') === '0') { sceneBtn.style.display = 'none'; clearTimeout(btnFadeT); sceneBtn.style.opacity = '1'; sceneBtn.style.pointerEvents = 'auto'; return; }
   sceneBtn.style.display = '';
   sceneBtn.textContent = sceneMode === 'watch' ? '🎮 TAKE CONTROL' : (sceneRan ? '↻ WATCH AGAIN' : '▶ WATCH THE SCENE');
   pokeSceneBtn();
@@ -447,15 +601,111 @@ function syncSceneBtn() {
 // hero stands, the follow camera comes back (setFreecam(false) also un-hides the touch controls),
 // and while a scene is watched the game hero waits at the hideout so only one Juniper is on screen.
 function placeHeroInScene() {
-  if (!SCENE_DEF) return;
+  if (!activeScene) return;
   if (stageS) { const o = stageS.origin, hj = stageS.actors.find((ac) => ac.look && ac.look.hero); game.place(game.active, (o[0] + (hj ? hj.x : 0)) * 100, o[1] * 100 + 40, (o[2] + (hj ? hj.z : 0)) * 100); }
-  else if (SCENE_DEF.bookmark) { const b = typeof SCENE_DEF.bookmark === 'function' ? SCENE_DEF.bookmark(game) : SCENE_DEF.bookmark; if (b) game.place(game.active, b.pivot[0] * 100, b.pivot[1] * 100 + 40, b.pivot[2] * 100); }
+  else if (activeScene.bookmark) { const b = typeof activeScene.bookmark === 'function' ? activeScene.bookmark(game) : activeScene.bookmark; if (b) game.place(game.active, b.pivot[0] * 100, b.pivot[1] * 100 + 40, b.pivot[2] * 100); }
 }
 function parkHero() { const P = game.city.places; game.place(game.active, P.hideout.x, 0, P.hideout.z); }
-function startWatch() { if (!SCENE_DEF || runner) return; sceneMode = 'watch'; sceneRan = true; runner = new SceneRunner(game, SCENE_DEF); parkHero(); if (Q.get('cam') !== 'free') jumpBookmark(SCENES.indexOf(SCENE_DEF)); syncSceneBtn(); }
-function takeControl() { if (!runner) return; runner = null; stopBed(); sceneCues = []; sceneMode = 'ready'; if (SCENE_DEF.act && stageS) SCENE_DEF.act(stageS, 0); setFreecam(false); placeHeroInScene(); syncSceneBtn(); }
+function startWatch() {
+  if (!activeScene || runner) return;
+  sceneMode = 'watch'; sceneRan = true;
+  journal.markWatched(activeScene.id);
+  if (festival.active) festival.recordStop(activeScene.id, false);
+  runner = new SceneRunner(game, activeScene); parkHero();
+  if (Q.get('cam') !== 'free') jumpBookmark(SCENES.indexOf(activeScene));
+  syncSceneBtn();
+}
+function takeControl() {
+  if (!runner) return;
+  if (activeScene) {
+    journal.markPlayed(activeScene.id);
+    if (festival.active) festival.recordStop(activeScene.id, true);
+  }
+  runner = null; stopBed(); sceneCues = []; sceneMode = 'ready';
+  if (activeScene && activeScene.act && stageS) activeScene.act(stageS, 0);
+  setFreecam(false); placeHeroInScene(); syncSceneBtn();
+}
 function toggleScene() { if (sceneMode === 'watch') takeControl(); else startWatch(); }
 sceneBtn.addEventListener('click', () => { unlockAudio(); toggleScene(); });
+
+const STATE_LBL = { 'not found': 'not found', watched: 'watched', played: 'played' };
+function renderJournal() {
+  const list = $('journalList');
+  list.innerHTML = '';
+  for (const s of SCENES) {
+    const st = journal.status(s.id);
+    const row = document.createElement('div'); row.className = 'jrow';
+    const idEl = document.createElement('span'); idEl.className = 'jid'; idEl.textContent = s.id;
+    const stEl = document.createElement('span'); stEl.className = `jst ${st === 'not found' ? 'nf' : st}`; stEl.textContent = STATE_LBL[st] || st;
+    const btn = document.createElement('button'); btn.className = 'fbtn'; btn.type = 'button'; btn.textContent = '▶';
+    btn.addEventListener('click', () => {
+      unlockAudio();
+      $('journalModal').style.display = 'none';
+      if (tour.active) exitTour();
+      if (!started) { started = true; $('title').style.display = 'none'; }
+      enterSceneReady(s);
+    });
+    row.append(idEl, stEl, btn);
+    list.append(row);
+  }
+}
+function showDayComplete() {
+  const s = festival.summary();
+  $('dayDoneStats').textContent = `${s.watched} watched · ${s.played} played · ${s.total} stops`;
+  $('dayDoneCard').style.display = 'flex';
+  syncSceneBtn();
+}
+function startFestivalDay() {
+  if (tour.active) exitTour();
+  $('journalModal').style.display = 'none';
+  $('dayDoneCard').style.display = 'none';
+  clearSceneStage();
+  festival.start();
+  if (!started) { started = true; $('title').style.display = 'none'; }
+  syncSceneBtn();
+}
+function advanceFestivalStop() {
+  if (!festival.active) return;
+  if (activeScene) festival.recordStop(activeScene.id, sceneMode === 'ready');
+  const nextId = festival.advance();
+  clearSceneStage();
+  if (!nextId) showDayComplete();
+  else syncSceneBtn();
+}
+function startTour() {
+  if (!tour.ids.length) return;
+  $('journalModal').style.display = 'none';
+  $('dayDoneCard').style.display = 'none';
+  if (festival.active) festival.stop();
+  clearSceneStage();
+  tour.active = true; tour.index = 0; tour.armedAt = performance.now() + 250;
+  if (!started) { started = true; $('title').style.display = 'none'; }
+  const def = sceneById(tour.ids[0]);
+  mountSceneStage(def, { moveHero: false, jumpCam: true });
+  sceneMode = 'watch';
+  runner = new SceneRunner(game, def); parkHero();
+  document.body.classList.add('nohud');
+  syncSceneBtn();
+}
+function exitTour() {
+  if (!tour.active) return;
+  tour.active = false;
+  document.body.classList.toggle('nohud', !cap.hud);
+  clearSceneStage();
+  syncSceneBtn();
+}
+
+$('journalBtn').addEventListener('click', (e) => { e.stopPropagation(); unlockAudio(); renderJournal(); $('journalModal').style.display = 'flex'; });
+$('journalClose').addEventListener('click', () => { $('journalModal').style.display = 'none'; });
+$('journalModal').addEventListener('click', (e) => { if (e.target === $('journalModal')) $('journalModal').style.display = 'none'; });
+$('festBtn').addEventListener('click', (e) => { e.stopPropagation(); unlockAudio(); if (festival.active) { festival.stop(); clearSceneStage(); syncSceneBtn(); } else startFestivalDay(); });
+$('festNextBtn').addEventListener('click', (e) => { e.stopPropagation(); unlockAudio(); advanceFestivalStop(); });
+$('tourBtn').addEventListener('click', (e) => { e.stopPropagation(); unlockAudio(); if (tour.active) exitTour(); else startTour(); });
+$('dayDoneBtn').addEventListener('click', () => { festival.stop(); $('dayDoneCard').style.display = 'none'; clearSceneStage(); syncSceneBtn(); });
+$('titleFestBtn').addEventListener('click', (e) => { e.stopPropagation(); unlockAudio(); startFestivalDay(); });
+$('titleTourBtn').addEventListener('click', (e) => { e.stopPropagation(); unlockAudio(); startTour(); });
+addEventListener('pointerdown', () => { if (tour.active && performance.now() > tour.armedAt) exitTour(); }, true);
+
 syncSceneBtn();
 
 // ---------------------------------------------------------------- FILM-IT mode (?scene=<id>&film=1): you ARE the camera.
@@ -465,7 +715,7 @@ syncSceneBtn();
 // reacts to the footage and to the scene's own events. All of it is read-only on the sim — the digest
 // never changes because someone is filming. UI sits at z-index 1200, above the gptouch overlay (z 1000);
 // the overlay is hidden while the freecam is up anyway (setFreecam), so drags reach the camera.
-const FILM = Q.get('film') === '1' && !!SCENE_DEF;
+const FILM = Q.get('film') === '1' && !!activeScene;
 let film = null, filmDbg = null;
 if (FILM) {
   const st = document.createElement('style');
@@ -570,7 +820,7 @@ if (FILM) {
 window.__dbg = { get freecam() { return free.on ? { on: true, pivot: [...free.pivot], yaw: free.yaw, pitch: free.pitch, dist: free.dist } : { on: false }; },
   get timescale() { return ticker.scale; }, get bookmark() { return cap.bookmark; }, get guide() { return cap.guide; }, get hud() { return cap.hud; },
   get tick() { return game.ticks; }, get digest() { return simDigest(game); }, timescales: TIMESCALES,
-  get scene() { if (!SCENE_DEF) return null; return runner ? { id: SCENE_DEF.id, mode: 'watch', tick: runner.t, duration: SCENE_DEF.duration, events: runner.fired, cues: sceneCues } : { id: SCENE_DEF.id, mode: sceneMode, tick: 0, duration: SCENE_DEF.duration, events: [], cues: sceneCues }; },
+  get scene() { if (!activeScene) return null; return runner ? { id: activeScene.id, mode: 'watch', tick: runner.t, duration: activeScene.duration, events: runner.fired, cues: sceneCues } : { id: activeScene.id, mode: sceneMode, tick: 0, duration: activeScene.duration, events: [], cues: sceneCues }; },
   get film() { return filmDbg; } };
 requestAnimationFrame(function first(t) { if (Q.get('freecam') === '1') setFreecam(true); capNote(); frame(t); });
 </script>
