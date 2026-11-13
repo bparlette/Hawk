@@ -41,7 +41,7 @@ function mark(u, v, seed, kind) {
     const ang = Math.atan2(v - 0.5, ub);
     const edge = 1 + (n1(ang * 1.8 + 9, seed) - 0.5) * 0.55 + (n1(ang * 6.5 + 4, seed + 5) - 0.5) * 0.22;
     half = 0.68; start = 0; end = 1;
-    const alpha = 1 - sstep(edge - 0.5, edge + 0.22, r);
+    const alpha = 1 - sstep(edge - 0.64, edge + 0.30, r);
     // b channel: broad tonal drift + fine powder grain, the two scales charcoal varies at
     const tone = n2(ub * 2.6, v * 1.6, seed + 20) * 0.5 + n2(ub * 9, v * 6, seed + 21) * 0.28 + n2(ub * 26, v * 18, seed + 22) * 0.22;
     const height = alpha * (0.42 + 0.1 * n1(ub * 11 + n1(v * 3, seed) * 1.5, seed + 31));

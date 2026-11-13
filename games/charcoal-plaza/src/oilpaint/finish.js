@@ -78,6 +78,44 @@ export function createFrame(renderer, shared, { samples = 4 } = {}) {
           col += glow * (lit - 0.34) * thick * streak * uShafts * 0.8;
         }
 
+        // THE RUB: charcoal is finished by dragging a thumb or a stump across the sheet — every
+        // hard little boundary the dabs left is smeared into its neighbours. The smear runs along
+        // a direction taken from a broad paper-space field (nearby passages smear the same way,
+        // like one pass of the hand), reaches a few pixels, and is depth-aware: it mixes freely
+        // WITHIN a surface — that is where the dab-cell edges live — and only leans across a
+        // silhouette, so forms soften without smearing across the scene.
+        {
+          vec2 texel = 1.0 / uSize;
+          float ang = texture(tNoise, vUv * uSize / 130.0).r * 6.2831;
+          vec2 dir = vec2(cos(ang), sin(ang));
+          vec2 perp = vec2(-dir.y, dir.x);
+          const vec2 OFFS[8] = vec2[8](
+            vec2(2.6, 0.0), vec2(-2.6, 0.0), vec2(1.3, 0.0), vec2(-1.3, 0.0),
+            vec2(0.0, 1.7), vec2(0.0, -1.7), vec2(1.8, 1.2), vec2(-1.8, -1.2));
+          const float WS[8] = float[8](0.85, 0.85, 1.0, 1.0, 0.8, 0.8, 0.6, 0.6);
+          vec3 acc = col * 2.0;
+          float wsum = 2.0;
+          for (int i = 0; i < 8; i++) {
+            vec2 off = (dir * OFFS[i].x + perp * OFFS[i].y) * texel * 3.6;
+            vec2 uv2 = vUv + off;
+            float dep2 = texture(tDepth, uv2).r;
+            vec4 hh = uInvViewProj * vec4(uv2 * 2.0 - 1.0, dep2 * 2.0 - 1.0, 1.0);
+            float far2 = length(hh.xyz / hh.w - uEye);
+            float agree = 1.0 / (1.0 + abs(far2 - far) * 1.4);
+            float wgt = WS[i] * (0.20 + 0.80 * agree);
+            acc += texture(tColor, uv2).rgb * wgt;
+            wsum += wgt;
+          }
+          col = mix(col, acc / wsum, 0.62);
+          // THE WIPE: where the tone already rides high and a broad mask agrees, the kneaded
+          // eraser has been — highlights gather into broad clean paper passages instead of
+          // surviving as speckled dab tops.
+          float bl = texture(tNoise, vUv * uSize / 170.0).g;
+          float lumS = dot(col, vec3(0.3, 0.59, 0.11));
+          float wipe = smoothstep(0.76, 0.97, lumS + (bl - 0.5) * 0.24);
+          col = mix(col, vec3(0.93, 0.905, 0.85), wipe * 0.45);
+        }
+
         if (uCanvas > 0.0) {
           // the paper's tooth: a broad unevenness in the sheet and a fine powder grain over it,
           // so even an empty passage of paper is visibly paper, not a flat fill

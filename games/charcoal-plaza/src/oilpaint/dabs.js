@@ -23,6 +23,7 @@ out vec3 vC1;
 out vec3 vC2;
 out vec4 vAxis;
 out vec4 vGlaze;
+out vec3 vWorld;
 struct Dab {
   vec3 pos;    // where it is pinned
   vec3 dir;    // the way the stroke runs, in the world
@@ -82,6 +83,7 @@ void main() {
       }
     }
     vc.xyz += a * position.y + b * position.x;
+    vWorld = world;
     along = normalize(a.xy + 1e-6);
     across = normalize(b.xy + 1e-6);
   } else {
@@ -103,6 +105,7 @@ void main() {
     vc.xyz *= 1.0 - min(lift / dist, 0.3);
     float t = mix(position.y, position.y + 1.0, d.base);
     vc.xy += across * position.x * half_.x + along * t * half_.y;
+    vWorld = (inverse(viewMatrix) * vc).xyz;
   }
   gl_Position = projectionMatrix * vc;
   float cell = d.cell >= 0.0 ? d.cell : uCells.x + floor(r.z * uCells.y * 0.999);
@@ -123,10 +126,11 @@ in vec3 vC1;
 in vec3 vC2;
 in vec4 vAxis;
 in vec4 vGlaze;
+in vec3 vWorld;
 layout(location = 0) out vec4 outC;
 void main() {
   vec4 t = texture(tBrush, vUv);
-  if (t.g < 0.3) discard;
+  if (t.g < 0.02) discard;
   vec2 e = vec2(1.5 / 512.0, 0.0);
   float hu = texture(tBrush, vUv + e.xy).r - texture(tBrush, vUv - e.xy).r;
   float hv = texture(tBrush, vUv + e.yx).r - texture(tBrush, vUv - e.yx).r;
@@ -142,10 +146,25 @@ void main() {
   col *= mix(0.985, 1.015, t.r); // the deposit is nearly level: the sheet's height barely moves the tone
   col *= 1.0 + rake * 1.25 * uImpasto;
   col += vec3(1.0, 0.97, 0.9) * pow(max(rake, 0.0), 2.0) * 1.2 * uImpasto;
+  // SMUDGE DRIFT: a tonal field pinned to the WORLD, not to the dab — broad rubbed variation that
+  // flows straight across dab boundaries, so neighbouring masses share one continuous tone weather
+  // instead of each sitting at its own flat level (the patchwork/camouflage failure). Two scales:
+  // a slow drift over metres and a nearer rub over a stride or two.
+  float drift = texture(tNoise, vec2(vWorld.x * 0.045 + vWorld.y * 0.030, vWorld.z * 0.045 + vWorld.y * 0.052)).r;
+  float rub = texture(tNoise, vec2(vWorld.x * 0.17 + vWorld.y * 0.11 + 0.37, vWorld.z * 0.17 + vWorld.y * 0.19 + 0.61)).g;
+  col *= (0.87 + 0.26 * drift) * (0.92 + 0.16 * rub);
+  // DRAGGED GRIT: the stick was dragged along the stroke, so its grain runs along the stroke too —
+  // streak noise stretched down the dab's length, strongest as broken dark threads in the tone.
+  vec2 cell = floor(vUv * vec2(${BRUSH_COLS}.0, ${BRUSH_ROWS}.0));
+  float cellHash = fract(sin(dot(cell, vec2(12.9898, 78.233))) * 43758.5453);
+  vec2 luv = fract(vUv * vec2(${BRUSH_COLS}.0, ${BRUSH_ROWS}.0));
+  float grit = texture(tNoise, vec2(luv.x * 2.6, luv.y * 0.30) + cellHash * 0.73).b;
+  float band = texture(tNoise, vec2(luv.x * 1.15, luv.y * 0.11) + cellHash * 0.31).r;
+  col *= 1.0 - (grit - 0.5) * 0.17 - (band - 0.5) * 0.10;
   // powder: charcoal dust sits in the paper's tooth — a fine per-pixel grain over every mass,
   // so no area of tone is ever machine-smooth
-  col *= 1.0 + (texture(tNoise, gl_FragCoord.xy / 3.0).b - 0.5) * 0.17;
-  outC = vec4(col, smoothstep(0.16, 0.62, t.g)); // a soft smudged edge: coverage fades out like a thumb dragged through dust
+  col *= 1.0 + (texture(tNoise, gl_FragCoord.xy / 3.0).b - 0.5) * 0.13;
+  outC = vec4(col, smoothstep(0.02, 0.8, t.g)); // coverage dissolves across nearly the whole mark: a thumb dragged through dust, no contour
 }
 `;
 
