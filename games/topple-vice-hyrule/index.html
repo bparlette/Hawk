@@ -470,6 +470,7 @@
         this.world = this.engine.world;
 
         this.tick = 0;
+        this.armed = false; // world stays inert until the player's first launch (set in dragEnd)
         this.timeLeft = 60.0;
         this.score = 0;
         this.combo = 1;
@@ -778,6 +779,7 @@
       _handleBodyHit(body, impact, other) {
         const ent = body._entity;
         if (!ent || !ent.alive) return;
+        if (!this.armed) return; // pre-launch, spawn-settle collisions must not smash pots, light bombs or flip cars
 
         if (ent.kind === 'pot' && impact > 2.6) {
           this._smashPot(ent);
@@ -1107,6 +1109,7 @@
             y: ny * power - 3.6,
           });
 
+          this.armed = true; // first real launch arms the world: hits can now smash, flip and detonate
           this.crane.tethered = false;
           this.crane.ballFreeTicks = 64;
           this.crane.launchCooldown = 28;
@@ -1155,7 +1158,7 @@
         Matter.Engine.update(this.engine, dt);
 
         if (this.phase === 'play') {
-          this.timeLeft = Math.max(0, this.timeLeft - 1 / 60);
+          if (this.armed) this.timeLeft = Math.max(0, this.timeLeft - 1 / 60); // round clock also waits for the first launch
         }
 
         if (this.crane.launchCooldown > 0) this.crane.launchCooldown--;
@@ -1189,12 +1192,12 @@
 
           if (ent.kind === 'car') {
             if (ent.alarmTicks > 0) ent.alarmTicks--;
-            if (!ent.flipped && (Math.abs(b.angle) > 0.55 || b.position.y > GROUND_Y + 20 || b.position.x > W - 15)) {
+            if (this.armed && !ent.flipped && (Math.abs(b.angle) > 0.55 || b.position.y > GROUND_Y + 20 || b.position.x > W - 15)) {
               this._flipCar(ent);
             }
           }
 
-          if (ent.kind === 'pot' && (b.position.y > GROUND_Y + 30 || b.position.x > W - 12)) {
+          if (this.armed && ent.kind === 'pot' && (b.position.y > GROUND_Y + 30 || b.position.x > W - 12)) {
             this._smashPot(ent);
           }
 
