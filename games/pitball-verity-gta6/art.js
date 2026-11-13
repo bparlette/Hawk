@@ -618,7 +618,7 @@
     t = t || 0;
     const u = s / 34;
     const bob = Math.sin(t * 2.3) * 0.9 * u;
-    const seedRnd = mulberry32(4242);
+    const SKIN = '#eebd90', SKIN_D = '#cf9668';
     ctx.save();
     ctx.translate(x, y + bob);
     // soft shadow
@@ -626,47 +626,124 @@
     ctx.beginPath();
     ctx.ellipse(0, s * 0.40, s * 0.46, s * 0.20, 0, 0, Math.PI * 2);
     ctx.fill();
-    // shoes peeking south
-    ctx.fillStyle = '#123a3a';
-    rr(ctx, -0.26 * s, 0.24 * s, 0.20 * s, 0.20 * s, 2.5 * u); ctx.fill();
-    rr(ctx, 0.06 * s, 0.24 * s, 0.20 * s, 0.20 * s, 2.5 * u); ctx.fill();
-    ctx.fillStyle = '#ff4fa3';
-    ctx.fillRect(-0.26 * s, 0.24 * s, 0.20 * s, 0.045 * s);
-    ctx.fillRect(0.06 * s, 0.24 * s, 0.20 * s, 0.045 * s);
-    // torso: teal shirt, painted, with pink hibiscus flecks
-    paintPath(ctx, () => rr(ctx, -0.30 * s, -0.02 * s, 0.60 * s, 0.36 * s, 4 * u), '#17b8a6', 777001, {
-      box: [-0.30 * s, -0.02 * s, 0.30 * s, 0.34 * s], dabs: 22, dabLen: 8 * u, dabW: 3.4 * u,
+    // legs: cream chinos south from the shirt hem
+    for (const sgn of [-1, 1]) {
+      const lx = sgn < 0 ? -0.225 * s : 0.045 * s;
+      paintPath(ctx, () => rr(ctx, lx, 0.20 * s, 0.18 * s, 0.16 * s, 2.5 * u), '#e8e0cc', sgn < 0 ? 777010 : 777011, {
+        box: [lx, 0.20 * s, lx + 0.18 * s, 0.36 * s], dabs: 7, dabLen: 5 * u, dabW: 2.6 * u, ang: Math.PI / 2,
+        stroke: 'rgba(90,70,40,0.55)', strokeW: 1 * u
+      });
+    }
+    // sneakers: teal with pink stripe, white sole, lace ticks
+    for (const sgn of [-1, 1]) {
+      const lx = sgn < 0 ? -0.26 * s : 0.06 * s;
+      ctx.fillStyle = '#f2ede2';
+      rr(ctx, lx - 0.015 * s, 0.40 * s, 0.23 * s, 0.075 * s, 2.5 * u); ctx.fill();
+      paintPath(ctx, () => rr(ctx, lx, 0.315 * s, 0.20 * s, 0.115 * s, 2.5 * u), '#0f6e6e', sgn < 0 ? 777012 : 777013, {
+        box: [lx, 0.315 * s, lx + 0.20 * s, 0.43 * s], dabs: 8, dabLen: 5 * u, dabW: 2.6 * u,
+        stroke: 'rgba(10,30,30,0.8)', strokeW: 1.1 * u
+      });
+      ctx.fillStyle = '#ff4fa3';
+      ctx.fillRect(lx, 0.345 * s, 0.20 * s, 0.04 * s);
+      ctx.strokeStyle = 'rgba(255,255,255,0.8)'; ctx.lineWidth = 1 * u;
+      for (let i = 0; i < 3; i++) {
+        const ly = (0.375 + i * 0.028) * s;
+        ctx.beginPath(); ctx.moveTo(lx + 0.055 * s, ly); ctx.lineTo(lx + 0.145 * s, ly); ctx.stroke();
+      }
+    }
+    // torso: teal Vice shirt — shaped, open collar, hibiscus print, buttons
+    const shirtPath = () => {
+      ctx.beginPath();
+      ctx.moveTo(-0.315 * s, -0.03 * s);
+      ctx.quadraticCurveTo(-0.325 * s, 0.12 * s, -0.27 * s, 0.26 * s);
+      ctx.lineTo(0.27 * s, 0.26 * s);
+      ctx.quadraticCurveTo(0.325 * s, 0.12 * s, 0.315 * s, -0.03 * s);
+      ctx.quadraticCurveTo(0, -0.10 * s, -0.315 * s, -0.03 * s);
+      ctx.closePath();
+    };
+    paintPath(ctx, shirtPath, '#17b8a6', 777001, {
+      box: [-0.315 * s, -0.03 * s, 0.315 * s, 0.26 * s], dabs: 24, dabLen: 8 * u, dabW: 3.4 * u,
       stroke: 'rgba(20,6,26,0.85)', strokeW: 1.5 * u
     });
     ctx.fillStyle = '#ff9ecf';
-    for (const [fx, fy] of [[-0.16, 0.10], [0.05, 0.20], [0.17, 0.06]]) {
-      ctx.beginPath(); ctx.arc(fx * s, fy * s, 0.045 * s, 0, Math.PI * 2); ctx.fill();
-      ctx.beginPath(); ctx.arc((fx + 0.05) * s, (fy + 0.045) * s, 0.032 * s, 0, Math.PI * 2); ctx.fill();
+    for (const [fx, fy, fr] of [[-0.17, 0.09, 0.045], [0.04, 0.185, 0.04], [0.185, 0.05, 0.048], [-0.05, 0.13, 0.03], [0.13, 0.16, 0.028]]) {
+      ctx.beginPath(); ctx.arc(fx * s, fy * s, fr * s, 0, Math.PI * 2); ctx.fill();
+      ctx.beginPath(); ctx.arc((fx + fr * 0.9) * s, (fy + fr * 0.9) * s, fr * 0.7 * s, 0, Math.PI * 2); ctx.fill();
+      ctx.fillStyle = '#ffd94d';
+      ctx.beginPath(); ctx.arc(fx * s, fy * s, fr * 0.32 * s, 0, Math.PI * 2); ctx.fill();
+      ctx.fillStyle = '#ff9ecf';
     }
-    // left arm: sleeve + skin forearm
-    ctx.fillStyle = '#17b8a6';
-    ctx.beginPath(); ctx.arc(-0.40 * s, -0.05 * s, 0.20 * s, 0, Math.PI * 2); ctx.fill();
-    ctx.strokeStyle = 'rgba(20,6,26,0.85)'; ctx.lineWidth = 1.4 * u;
-    ctx.beginPath(); ctx.arc(-0.40 * s, -0.05 * s, 0.20 * s, 0, Math.PI * 2); ctx.stroke();
-    ctx.fillStyle = '#e8b08a';
-    ctx.beginPath(); ctx.arc(-0.42 * s, 0.10 * s, 0.10 * s, 0, Math.PI * 2); ctx.fill();
-    // right arm up, holding the launcher
-    ctx.fillStyle = '#17b8a6';
-    ctx.beginPath(); ctx.arc(0.40 * s, -0.05 * s, 0.20 * s, 0, Math.PI * 2); ctx.fill();
-    ctx.strokeStyle = 'rgba(20,6,26,0.85)';
-    ctx.beginPath(); ctx.arc(0.40 * s, -0.05 * s, 0.20 * s, 0, Math.PI * 2); ctx.stroke();
-    ctx.fillStyle = '#e8b08a';
-    ctx.beginPath(); ctx.arc(0.40 * s, -0.20 * s, 0.095 * s, 0, Math.PI * 2); ctx.fill();
-    // launcher tube (the orb cannon, Vice-styled: plum tube, neon rings)
+    // open collar: skin V + gold chain
+    ctx.fillStyle = SKIN;
+    ctx.beginPath();
+    ctx.moveTo(-0.095 * s, -0.075 * s);
+    ctx.lineTo(0.095 * s, -0.075 * s);
+    ctx.lineTo(0, 0.075 * s);
+    ctx.closePath(); ctx.fill();
+    ctx.strokeStyle = '#ffd94d'; ctx.lineWidth = 1.6 * u; ctx.lineCap = 'round';
+    ctx.beginPath(); ctx.moveTo(-0.062 * s, -0.045 * s); ctx.quadraticCurveTo(0, 0.035 * s, 0.062 * s, -0.045 * s); ctx.stroke();
+    ctx.fillStyle = '#ffd94d';
+    ctx.beginPath(); ctx.arc(0, 0.038 * s, 0.016 * s, 0, Math.PI * 2); ctx.fill();
+    // collar flaps + button line
+    ctx.fillStyle = '#0f9484';
+    ctx.beginPath(); ctx.moveTo(-0.115 * s, -0.085 * s); ctx.lineTo(-0.02 * s, -0.055 * s); ctx.lineTo(-0.085 * s, 0.03 * s); ctx.closePath(); ctx.fill();
+    ctx.beginPath(); ctx.moveTo(0.115 * s, -0.085 * s); ctx.lineTo(0.02 * s, -0.055 * s); ctx.lineTo(0.085 * s, 0.03 * s); ctx.closePath(); ctx.fill();
+    ctx.fillStyle = 'rgba(240,255,250,0.85)';
+    for (const by of [0.115, 0.175, 0.23]) { ctx.beginPath(); ctx.arc(0, by * s, 0.011 * s, 0, Math.PI * 2); ctx.fill(); }
+    // LEFT arm: short sleeve, forearm down, gold watch, hand
+    paintPath(ctx, () => { ctx.beginPath(); ctx.arc(-0.375 * s, -0.02 * s, 0.115 * s, 0, Math.PI * 2); }, '#17b8a6', 777014, {
+      box: [-0.49 * s, -0.135 * s, -0.26 * s, 0.095 * s], dabs: 8, dabLen: 5 * u, dabW: 2.8 * u,
+      stroke: 'rgba(20,6,26,0.85)', strokeW: 1.3 * u
+    });
+    ctx.fillStyle = SKIN;
+    ctx.save();
+    ctx.translate(-0.415 * s, 0.075 * s); ctx.rotate(0.25);
+    rr(ctx, -0.055 * s, -0.02 * s, 0.11 * s, 0.17 * s, 3 * u); ctx.fill();
+    ctx.fillStyle = SKIN_D;
+    ctx.fillRect(-0.055 * s, 0.115 * s, 0.11 * s, 0.022 * s);
+    ctx.restore();
+    ctx.fillStyle = '#ffd94d';   // watch
+    ctx.beginPath(); ctx.arc(-0.435 * s, 0.155 * s, 0.028 * s, 0, Math.PI * 2); ctx.fill();
+    ctx.fillStyle = '#123a3a';
+    ctx.beginPath(); ctx.arc(-0.435 * s, 0.155 * s, 0.016 * s, 0, Math.PI * 2); ctx.fill();
+    ctx.fillStyle = SKIN;        // hand
+    ctx.beginPath(); ctx.arc(-0.44 * s, 0.215 * s, 0.058 * s, 0, Math.PI * 2); ctx.fill();
+    ctx.strokeStyle = 'rgba(150,95,50,0.7)'; ctx.lineWidth = 1 * u;
+    ctx.beginPath(); ctx.moveTo(-0.465 * s, 0.20 * s); ctx.lineTo(-0.465 * s, 0.235 * s); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(-0.44 * s, 0.205 * s); ctx.lineTo(-0.44 * s, 0.24 * s); ctx.stroke();
+    // RIGHT arm: sleeve up high, forearm to the launcher grip, hand on it
+    paintPath(ctx, () => { ctx.beginPath(); ctx.arc(0.375 * s, -0.05 * s, 0.115 * s, 0, Math.PI * 2); }, '#17b8a6', 777015, {
+      box: [0.26 * s, -0.165 * s, 0.49 * s, 0.065 * s], dabs: 8, dabLen: 5 * u, dabW: 2.8 * u,
+      stroke: 'rgba(20,6,26,0.85)', strokeW: 1.3 * u
+    });
+    ctx.fillStyle = SKIN;
+    ctx.save();
+    ctx.translate(0.40 * s, -0.145 * s); ctx.rotate(-0.2);
+    rr(ctx, -0.055 * s, -0.10 * s, 0.11 * s, 0.16 * s, 3 * u); ctx.fill();
+    ctx.restore();
+    // launcher: plum tube, neon rings, grip, muzzle (same anchors as before)
     paintPath(ctx, () => rr(ctx, 0.30 * s, -0.52 * s, 0.21 * s, 0.36 * s, 3 * u), '#3a2348', 777002, {
-      box: [0.30 * s, -0.52 * s, 0.51 * s, -0.16 * s], dabs: 10, dabLen: 6 * u, dabW: 3 * u,
+      box: [0.30 * s, -0.52 * s, 0.51 * s, -0.16 * s], dabs: 12, dabLen: 6 * u, dabW: 3 * u,
       stroke: 'rgba(16,4,22,0.9)', strokeW: 1.3 * u
     });
+    ctx.fillStyle = '#2a1836';
+    rr(ctx, 0.325 * s, -0.235 * s, 0.16 * s, 0.075 * s, 2 * u); ctx.fill();
+    ctx.fillStyle = SKIN;   // hand wrapped on the grip
+    ctx.beginPath(); ctx.arc(0.405 * s, -0.185 * s, 0.062 * s, 0, Math.PI * 2); ctx.fill();
+    ctx.strokeStyle = 'rgba(150,95,50,0.7)'; ctx.lineWidth = 1 * u;
+    ctx.beginPath(); ctx.moveTo(0.375 * s, -0.215 * s); ctx.lineTo(0.375 * s, -0.16 * s); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(0.405 * s, -0.22 * s); ctx.lineTo(0.405 * s, -0.155 * s); ctx.stroke();
     ctx.fillStyle = '#ff4fa3';
     ctx.fillRect(0.30 * s, -0.40 * s, 0.21 * s, 0.045 * s);
-    ctx.fillRect(0.30 * s, -0.26 * s, 0.21 * s, 0.045 * s);
+    ctx.fillRect(0.30 * s, -0.27 * s, 0.21 * s, 0.045 * s);
+    ctx.fillStyle = 'rgba(255,255,255,0.25)';
+    ctx.fillRect(0.315 * s, -0.50 * s, 0.035 * s, 0.32 * s);
+    ctx.fillStyle = '#57406e';
+    ctx.beginPath(); ctx.arc(0.405 * s, -0.52 * s, 0.095 * s, 0, Math.PI * 2); ctx.fill();
     ctx.fillStyle = '#12081c';
-    ctx.beginPath(); ctx.arc(0.405 * s, -0.52 * s, 0.085 * s, 0, Math.PI * 2); ctx.fill();
+    ctx.beginPath(); ctx.arc(0.405 * s, -0.52 * s, 0.072 * s, 0, Math.PI * 2); ctx.fill();
+    ctx.fillStyle = 'rgba(120,220,255,0.35)';
+    ctx.beginPath(); ctx.arc(0.405 * s, -0.52 * s, 0.034 * s, 0, Math.PI * 2); ctx.fill();
     if (firing) {
       const fl = 0.75 + 0.25 * Math.sin(t * 41);
       const mg = ctx.createRadialGradient(0.405 * s, -0.60 * s, 0, 0.405 * s, -0.60 * s, 0.42 * s * fl);
@@ -678,38 +755,65 @@
       ctx.fillStyle = '#fffbe8';
       ctx.beginPath(); ctx.arc(0.405 * s, -0.585 * s, 0.075 * s * fl, 0, Math.PI * 2); ctx.fill();
     }
-    // head: skin, bleached swoop hair, shades, grin
-    const hg = ctx.createRadialGradient(-0.10 * s, -0.22 * s, s * 0.06, 0, -0.08 * s, s * 0.42);
-    hg.addColorStop(0, '#f4c69a');
-    hg.addColorStop(0.6, '#e8b08a');
-    hg.addColorStop(1, '#cf9668');
+    // neck + ears
+    ctx.fillStyle = SKIN_D;
+    rr(ctx, -0.075 * s, -0.16 * s, 0.15 * s, 0.10 * s, 2 * u); ctx.fill();
+    ctx.fillStyle = SKIN;
+    ctx.beginPath(); ctx.arc(-0.305 * s, -0.075 * s, 0.055 * s, 0, Math.PI * 2); ctx.fill();
+    ctx.beginPath(); ctx.arc(0.305 * s, -0.075 * s, 0.055 * s, 0, Math.PI * 2); ctx.fill();
+    // head: skin with a jaw, bleached swoop hair, shades, grin
+    const hg = ctx.createRadialGradient(-0.09 * s, -0.24 * s, s * 0.05, 0, -0.07 * s, s * 0.38);
+    hg.addColorStop(0, '#f6cfa2');
+    hg.addColorStop(0.6, SKIN);
+    hg.addColorStop(1, SKIN_D);
     ctx.fillStyle = hg;
     ctx.strokeStyle = 'rgba(20,6,26,0.9)';
     ctx.lineWidth = 1.6 * u;
-    ctx.beginPath(); ctx.arc(0, -0.08 * s, 0.335 * s, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
-    // hair: blond swoop across the top, dab-painted
+    ctx.beginPath(); ctx.arc(0, -0.085 * s, 0.315 * s, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
+    // jaw shading + nose hint
+    ctx.fillStyle = 'rgba(160,100,55,0.18)';
+    ctx.beginPath(); ctx.ellipse(0, 0.10 * s, 0.17 * s, 0.08 * s, 0, 0, Math.PI * 2); ctx.fill();
+    ctx.strokeStyle = 'rgba(150,95,50,0.75)'; ctx.lineWidth = 1.1 * u; ctx.lineCap = 'round';
+    ctx.beginPath(); ctx.moveTo(0.01 * s, -0.03 * s); ctx.lineTo(-0.005 * s, 0.015 * s); ctx.stroke();
+    // hair: blond swoop across the top with strand cuts, dark undercut sides
     ctx.save();
-    ctx.beginPath(); ctx.arc(0, -0.08 * s, 0.335 * s, 0, Math.PI * 2); ctx.clip();
-    paintPath(ctx, () => rr(ctx, -0.34 * s, -0.46 * s, 0.68 * s, 0.30 * s, 6 * u), '#f2d06b', 777003, {
-      box: [-0.34 * s, -0.46 * s, 0.34 * s, -0.16 * s], dabs: 16, dabLen: 7 * u, dabW: 3.2 * u, ang: 0.5
+    ctx.beginPath(); ctx.arc(0, -0.085 * s, 0.315 * s, 0, Math.PI * 2); ctx.clip();
+    paintPath(ctx, () => rr(ctx, -0.325 * s, -0.44 * s, 0.65 * s, 0.29 * s, 6 * u), '#f2d06b', 777003, {
+      box: [-0.325 * s, -0.44 * s, 0.325 * s, -0.15 * s], dabs: 16, dabLen: 7 * u, dabW: 3.2 * u, ang: 0.5
     });
-    ctx.fillStyle = 'rgba(160,120,50,0.5)';
-    ctx.fillRect(-0.34 * s, -0.20 * s, 0.68 * s, 0.035 * s);
+    ctx.fillStyle = '#c9962e';
+    ctx.fillRect(-0.325 * s, -0.44 * s, 0.65 * s, 0.045 * s);
+    ctx.strokeStyle = 'rgba(150,105,30,0.6)'; ctx.lineWidth = 1.2 * u;
+    for (const hx of [-0.20, -0.08, 0.05, 0.17]) {
+      ctx.beginPath(); ctx.moveTo(hx * s, -0.42 * s); ctx.quadraticCurveTo((hx + 0.05) * s, -0.30 * s, (hx + 0.10) * s, -0.20 * s); ctx.stroke();
+    }
+    ctx.fillStyle = 'rgba(120,84,32,0.55)';
+    ctx.fillRect(-0.325 * s, -0.185 * s, 0.07 * s, 0.16 * s);
+    ctx.fillRect(0.255 * s, -0.185 * s, 0.07 * s, 0.16 * s);
+    ctx.fillStyle = 'rgba(160,120,50,0.45)';
+    ctx.fillRect(-0.325 * s, -0.175 * s, 0.65 * s, 0.028 * s);
     ctx.restore();
-    // sunglasses band + teal glint
+    // sunglasses: two lenses + bridge + temple arms, teal glint
     ctx.fillStyle = '#12081c';
-    rr(ctx, -0.21 * s, -0.115 * s, 0.42 * s, 0.115 * s, 3 * u); ctx.fill();
+    rr(ctx, -0.225 * s, -0.135 * s, 0.20 * s, 0.125 * s, 3.5 * u); ctx.fill();
+    rr(ctx, 0.025 * s, -0.135 * s, 0.20 * s, 0.125 * s, 3.5 * u); ctx.fill();
+    ctx.fillRect(-0.03 * s, -0.105 * s, 0.06 * s, 0.028 * s);
+    ctx.fillRect(-0.315 * s, -0.115 * s, 0.095 * s, 0.026 * s);
+    ctx.fillRect(0.22 * s, -0.115 * s, 0.095 * s, 0.026 * s);
     ctx.fillStyle = '#2ee6c8';
-    rr(ctx, -0.175 * s, -0.088 * s, 0.35 * s, 0.045 * s, 2 * u); ctx.fill();
+    rr(ctx, -0.20 * s, -0.112 * s, 0.15 * s, 0.042 * s, 2 * u); ctx.fill();
+    rr(ctx, 0.05 * s, -0.112 * s, 0.15 * s, 0.042 * s, 2 * u); ctx.fill();
     ctx.fillStyle = 'rgba(255,255,255,0.9)';
-    ctx.fillRect(-0.13 * s, -0.080 * s, 0.10 * s, 0.026 * s);
-    // grin
+    ctx.fillRect(-0.155 * s, -0.104 * s, 0.085 * s, 0.024 * s);
+    ctx.fillRect(0.095 * s, -0.104 * s, 0.085 * s, 0.024 * s);
+    // grin with a teeth line
     ctx.strokeStyle = '#7a4a26';
-    ctx.lineWidth = 1.6 * u;
-    ctx.beginPath(); ctx.arc(0, 0.06 * s, 0.10 * s, Math.PI * 0.25, Math.PI * 0.75); ctx.stroke();
+    ctx.lineWidth = 1.7 * u;
+    ctx.beginPath(); ctx.arc(0, 0.045 * s, 0.105 * s, Math.PI * 0.22, Math.PI * 0.78); ctx.stroke();
+    ctx.strokeStyle = 'rgba(255,255,255,0.85)'; ctx.lineWidth = 1.2 * u;
+    ctx.beginPath(); ctx.arc(0, 0.052 * s, 0.088 * s, Math.PI * 0.30, Math.PI * 0.70); ctx.stroke();
     ctx.restore();
   }
-
   /* ================= ORBS + SHARD (cash) ================= */
   const ORB_COLORS = {
     iron: '#46f2dd', primary: '#ffd94d', fire: '#ff8a3c', ice: '#a8f4ff',
