@@ -477,6 +477,7 @@ muteBtn.addEventListener('click', (e) => {
 const cv = document.getElementById('game');
 const ctx = cv.getContext('2d');
 const STREET_W = 420;
+const ZOOM = 1.25; // Cherie 2026-11-13: zoom in so the dotted seam lines in the outer grass leave the frame
 let CW = 420, CH = 860, DPR = 1, SCALE = 1, LH = 860, LW = 420;
 
 function resize() {
@@ -489,13 +490,12 @@ function resize() {
   cv.style.height = CH + 'px';
   if (CW / CH <= STREET_W / 860) {
     SCALE = CW / STREET_W;
-    LW = STREET_W;
-    LH = CH / SCALE;
   } else {
     SCALE = CH / 860;
-    LH = 860;
-    LW = CW / SCALE;
   }
+  SCALE *= ZOOM;
+  LW = CW / SCALE;
+  LH = CH / SCALE;
 }
 window.addEventListener('resize', resize);
 resize();
