@@ -14,7 +14,6 @@ import { createShared, COMMON, EXTENT, LAND_RES } from './src/oilpaint/common.js
 import { createBrushSheet } from './src/oilpaint/brush.js';
 import { createShade } from './src/oilpaint/shade.js';
 import { createFrame } from './src/oilpaint/finish.js';
-import { groundRings } from './src/oilpaint/ground.js';
 import { dabMaterial, dabGeometry, dabMesh } from './src/oilpaint/dabs.js';
 import { createKit } from './src/night/kit.js';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
@@ -79,7 +78,12 @@ camera.lookAt(herPos.x, 1.0, herPos.z);
 const sky = createSky(shared);
 scene.add(sky.group);
 
-// --- the ground underpainting: broad warm stone that shows between the dabs ---
+// --- the ground: one printed sheet, no dabs on it at all. (Ground fix, 2026-11-13: the
+//     dab rings that used to pave the plaza read through the finish as soft blotches and
+//     streaks, and this plane — the old gap-filler under them — was noise-posterised into
+//     organic bands that showed between the dabs. Now the plane IS the ground: per-pixel
+//     flat ink, hard checker, hard inlay rings, paint3 shade steps, zero noise anywhere,
+//     so the Ben-Day screen in the finish prints on clean ink and on nothing else.) ---
 {
   const geo = new THREE.PlaneGeometry(340, 340);
   geo.rotateX(-Math.PI / 2);
@@ -88,68 +92,51 @@ scene.add(sky.group);
     uniforms: shared,
     vertexShader: /* glsl */ `
       out vec3 vWorld;
-      void main() { vWorld = position; gl_Position = projectionMatrix * viewMatrix * vec4(position, 1.0); }`,
+      void main() { vec4 w = modelMatrix * vec4(position, 1.0); vWorld = w.xyz; gl_Position = projectionMatrix * viewMatrix * w; }`,
     fragmentShader: /* glsl */ `
-      uniform sampler2D tNoise; uniform vec3 uHaze; uniform vec3 uSunDir;
+      ${COMMON}
       in vec3 vWorld;
       layout(location = 0) out vec4 outC;
       void main() {
-        float n = texture(tNoise, vWorld.xz / 9.0).r;
-        float rad = length(vWorld.xz);
-        vec3 c = mix(vec3(0.78, 0.68, 0.52), vec3(0.86, 0.77, 0.61), n);
-        c = mix(c, vec3(0.68, 0.66, 0.58), smoothstep(18.0, 42.0, rad)); // the town goes on, duller, past the plaza
-        c = floor(c * 5.0 + 0.5) / 5.0; // posterised into flat bands: no gradient under the print
-        outC = vec4(c * 0.92, 1.0);
+        vec3 P = vWorld;
+        float rad = length(P.xz);
+        // the kit's day, with the normal straight up: sun and the shade pictures, per pixel,
+        // so shadow edges land where the shadows are, not where a dab happened to sit
+        float s = sunAt(P + vec3(0.0, 0.25, 0.0));
+        float face = clamp(uSunDir.y * 1.3 + 0.3, 0.0, 1.0);
+        float x = clamp(s * face + 0.16, 0.0, 1.0);
+        // two near-white stones in a coarse checker; the shade tone is print blue
+        float check = mod(floor(P.x / 1.4) + floor(P.z / 1.4), 2.0);
+        vec3 L = mix(vec3(1.0, 0.99, 0.94), vec3(0.97, 0.96, 0.9), check);
+        vec3 M = mix(vec3(0.83, 0.83, 0.86), vec3(0.78, 0.78, 0.82), check);
+        vec3 S = vec3(0.38, 0.44, 0.8);
+        // paler apron at the fountain, one hard edge
+        float apron = step(rad, 4.0);
+        L = mix(L, vec3(1.0, 0.97, 0.8), apron);
+        M = mix(M, vec3(0.9, 0.85, 0.6), apron);
+        // the inlay rings round the fountain print red, hard-edged, shaded like the stone
+        float ring = max(step(abs(rad - 6.4), 0.16), step(abs(rad - 11.2), 0.16));
+        L = mix(L, vec3(0.95, 0.2, 0.15), ring);
+        M = mix(M, vec3(0.85, 0.1, 0.1), ring);
+        S = mix(S, vec3(0.5, 0.08, 0.12), ring);
+        vec3 c = paint3(L, M, S, x, 0.5);
+        // duller past the plaza's edge, in two hard steps — no gradient under the print
+        float dull = (step(19.0, rad) + step(40.0, rad)) * 0.5;
+        c = mix(c, c * vec3(0.88, 0.86, 0.8), dull);
+        outC = vec4(hazed(c, P), 1.0);
       }`,
   });
   const m = new THREE.Mesh(geo, mat);
-  m.position.y = -0.05;
+  m.position.y = -0.01;
   m.frustumCulled = false;
   m.renderOrder = -5;
   scene.add(m);
 }
 
-// --- the plaza ground: stone dabs in rings, lying flat, in concentric paving bands ---
-const plazaBody = /* glsl */ `
-void makeDab(inout Dab d) {
-  vec2 cell; float sub;
-  if (!ringCell(0.0, true, cell, sub)) { d.alive = 0.0; return; }
-  vec4 r = hash4(cell, sub * 3.0 + 1.0);
-  vec4 q = hash4(cell + 31.7, sub + 11.0);
-  vec2 xz = (cell + r.xy) * uCell0;
-  float lod;
-  d.alive = ringGrow(distance(xz, cameraPosition.xz), lod);
-  if (d.alive <= 0.0) return;
-  vec3 P = vec3(xz.x, heightAt(xz), xz.y);
-  float rad = length(xz);
-  float lit = sunAt(P + vec3(0.0, 0.25, 0.0));
-  // two near-white stones in a coarse checker; the shade tone is print blue, and the
-  // inlay rings round the fountain print red
-  float check = mod(floor(xz.x / 1.4) + floor(xz.y / 1.4), 2.0);
-  vec3 L = mix(vec3(1.0, 0.99, 0.94), vec3(0.97, 0.96, 0.9), check);
-  vec3 M = mix(vec3(0.83, 0.83, 0.86), vec3(0.78, 0.78, 0.82), check);
-  vec3 S = vec3(0.38, 0.44, 0.8);
-  vec3 c = paint3(L, M, S, lit, q.y);
-  float band = smoothstep(0.32, 0.0, abs(rad - 6.4) - 0.16) + smoothstep(0.32, 0.0, abs(rad - 11.2) - 0.16);
-  c = mix(c, vec3(0.88, 0.16, 0.14), clamp(band, 0.0, 1.0) * 0.8);
-  c = mix(c, paint3(vec3(1.0, 0.97, 0.8), vec3(0.9, 0.85, 0.6), S, lit, q.y), smoothstep(4.8, 3.2, rad)); // paler apron at the fountain
-  c = mix(c, c * vec3(0.88, 0.86, 0.8), smoothstep(19.0, 40.0, rad)); // duller past the plaza's edge
-  c = jitter(c, r.wzy, 0.05);
-  vec2 radial = rad > 0.01 ? xz / rad : vec2(1.0, 0.0);
-  d.dir = vec3(radial.x, 0.0, radial.y); // strokes run outward from the fountain, like spokes of the paving
-  d.pos = P;
-  d.size = uCell0 * vec2(1.05 + 0.5 * r.z, 1.7 + 0.9 * r.w) * lod;
-  d.c1 = hazed(c, P);
-  d.c2 = d.c1; // one flat colour per ground patch: no second tone streaked through it
-  d.seed = dot(cell, vec2(1.0, 57.0)) + sub * 0.37;
-  d.turnabout = 1.0;
-  d.lie = 1.0;
-  d.nrm = vec3(0.0, 1.0, 0.0);
-  d.height = (0.02 + 0.05 * q.z) * pow(lod, 0.35);
-  d.glaze = 1.0;
-}`;
-const plaza = groundRings(shared, { body: plazaBody, per: DENSE ? 3 : 2, n: 192, cell0: 0.24, levels: 6, minPx: [8, 14], maxPx: [4000, 4000], cells: [0, 8] });
-scene.add(plaza.group);
+// --- the plaza ground is the printed plane above (ground fix, 2026-11-13): the dab
+//     rings that used to pave it are gone — per-dab colour, jitter and brush-silhouette
+//     edges were exactly the blotches the audit flagged, and no per-dab treatment can
+//     print cleaner than one flat sheet shaded per pixel. ---
 
 // --- how the kit's paint is lit on a day like this ---
 const DAY = /* glsl */ `
@@ -239,7 +226,11 @@ kit.add(new THREE.SphereGeometry(0.17, 10, 8), kit.place(0, 1.98, 0), 'stonePale
 // trees' trunks ride in the same kit
 for (const [tx, tz] of [[-12, -7.5], [12, -9.5], [-13, 7]]) kit.round(tx, 1.15, tz, 0.17, 2.3, 'bark', { sides: 8, stroke: [0.06, 0.22] });
 const built = kit.build();
-scene.add(built.group);
+// Print fix (2026-11-13): only the underpainting goes on stage. The kit's dab stroke
+// layer — per-stroke jitter, tone scatter and brush-silhouette patch edges — was the
+// streaky mottle showing through the dot screen on walls, roof and fountain. The
+// underpainting is the same geometry shaded per pixel: flat ink, hard paint3 steps.
+scene.add(built.under);
 
 // --- the water: its own kit, lit by the sky it gives back and the sun's glint ---
 const waterKit = createKit(shared, {
@@ -258,7 +249,7 @@ const waterKit = createKit(shared, {
   waterKit.add(new THREE.CircleGeometry(2.38, 26), flat(0.55), 'water', { stroke: [0.06, 0.15], density: 1.2 });
   waterKit.add(new THREE.CircleGeometry(0.92, 20), flat(1.66), 'water', { stroke: [0.05, 0.12], density: 1.2 });
 }
-scene.add(waterKit.build().group);
+scene.add(waterKit.build().under); // underpainting only, same print fix as the main kit
 
 // --- trees: dark crowns for underpainting, then dabs over them (the pines' way, in leaf) ---
 const crownData = { pos: [], dir: [], nrm: [] };
@@ -739,7 +730,6 @@ function render(rdt) {
   renderer.getDrawingBufferSize(size);
   shared.uPixel.value = (2 * Math.tan(THREE.MathUtils.degToRad(camera.fov) / 2)) / size.y;
   shared.uFocus.value.set(herPos.x, 1.0, herPos.z);
-  plaza.follow(camera.position.x, camera.position.z);
   shade.update(scene, herPos);
   frame.render(scene, camera);
 }
