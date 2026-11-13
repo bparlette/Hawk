@@ -63,3 +63,37 @@ test('every registered scene: bookmark framing is finite numbers', () => {
     assert.ok(b.pivot.every(Number.isFinite) && Number.isFinite(b.yaw) && Number.isFinite(b.pitch) && b.dist > 0, `${s.id} bookmark`);
   }
 });
+
+test('sword-pedestal: deterministic events (hold, grip, strain, drawn, raised) and stage pose', () => {
+  const a = play('sword-pedestal'), b = play('sword-pedestal');
+  assert.deepEqual(b.digests, a.digests);
+  assert.deepEqual(b.fired, a.fired);
+  assert.deepEqual(
+    a.fired.map((e) => e.name),
+    ['hold', 'grip', 'strain', 'drawn', 'raised', 'end'],
+    `events fired: ${JSON.stringify(a.fired)}`,
+  );
+  const def = sceneById('sword-pedestal');
+  const S = def.set(new Game(7));
+  def.act(S, 510);
+  const ped = S.actors.find((ac) => ac.id === 'pedestal');
+  const hs = S.actors.find((ac) => ac.id === 'heldSword');
+  assert.equal(ped.drawn, true);
+  assert.equal(hs.vis, true);
+});
+
+test('ocarina-dawn: deterministic events and lightCues dusk -> sunrise transition', () => {
+  const g = new Game(7), def = sceneById('ocarina-dawn'), runner = new SceneRunner(g, def), digests = [];
+  while (!runner.done) { g.tick({ ...runner.input(), camYaw: 0 }); digests.push(simDigest(g)); }
+  const b = play('ocarina-dawn');
+  assert.deepEqual(b.digests, digests);
+  assert.deepEqual(
+    runner.fired.map((e) => e.name),
+    ['raise', 'notes', 'dawn', 'wake', 'end'],
+    `events fired: ${JSON.stringify(runner.fired)}`,
+  );
+  const dawnTick = runner.fired.find((e) => e.name === 'dawn').tick;
+  assert.ok(runner.lightCues.length >= 2, 'ocarina-dawn must emit lightCues');
+  assert.equal(runner.lightCues[0].tick, dawnTick, 'first lightCue fires at dawn tick');
+  assert.equal(runner.lightCues.at(-1).light, 'sunrise', 'lightCues finish at sunrise');
+});

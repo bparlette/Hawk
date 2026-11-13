@@ -25,11 +25,12 @@ import { poolRimsit } from './rimsit.js';
 import { cartopDance } from './cartop.js';
 import { clubStage } from './clubstage.js';
 import { swordPedestal } from './swordpedestal.js';
+import { ocarinaDawn } from './ocarinadawn.js';
 
 export class SceneRunner {
   constructor(game, def) {
     this.g = game; this.def = def; this.bot = new Bot(game);
-    this.t = 0; this.fired = []; this._whenFired = new Set();
+    this.t = 0; this.fired = []; this.lightCues = []; this._whenFired = new Set();
     this.state = def.setup ? def.setup(game, this.bot) : {};
   }
   /** Call exactly once per sim tick, before game.tick. Returns the input to feed the game. */
@@ -37,6 +38,9 @@ export class SceneRunner {
     for (const [i, e] of (this.def.events || []).entries()) {
       if (e.at !== undefined && e.at === this.t) this.fired.push({ tick: this.t, name: e.name });
       else if (e.when && !this._whenFired.has(i) && e.when(this.g, this.state)) { this._whenFired.add(i); this.fired.push({ tick: this.t, name: e.name }); }
+    }
+    for (const lc of this.def.lightCues || []) {
+      if (lc.at === this.t) this.lightCues.push({ tick: this.t, light: lc.light });
     }
     const inp = this.def.input(this.g, this.bot, this.state, this.t);
     this.t++;
@@ -77,6 +81,6 @@ const stageTest = {
 };
 
 // Registry order = bookmark keys 1-8. The film scenes come first; the framework proof stays last.
-export const SCENES = [...FILM_SCENES, cuccoSwarm, stageTest, ...ZELDA_SCENES, poolSurface, poolRimsit, cartopDance, clubStage, swordPedestal];
+export const SCENES = [...FILM_SCENES, cuccoSwarm, stageTest, ...ZELDA_SCENES, poolSurface, poolRimsit, cartopDance, clubStage, swordPedestal, ocarinaDawn];
 
 export function sceneById(id) { return SCENES.find((s) => s.id === id) || null; }

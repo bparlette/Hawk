@@ -172,7 +172,7 @@ function makeSceneMarkerMesh() {
 }
 function mountSceneStage(def, { moveHero = true, jumpCam = false } = {}) {
   if (stage) { stage.dispose(scene); stage = null; }
-  stopBed(); sceneCues = []; stageS = null;
+  stopBed(); sceneCues = []; sceneLightCues = []; stageS = null;
   activeScene = def;
   if (!def) { setLight('golden'); return; }
   if (def.set) {
@@ -188,7 +188,7 @@ function mountSceneStage(def, { moveHero = true, jumpCam = false } = {}) {
   }
 }
 function clearSceneStage() {
-  runner = null; stopBed(); sceneCues = [];
+  runner = null; stopBed(); sceneCues = []; sceneLightCues = [];
   if (stage) { stage.dispose(scene); stage = null; }
   stageS = null; activeScene = null; sceneMode = 'play'; sceneRan = false;
   setLight('golden'); setFreecam(false);
@@ -218,7 +218,7 @@ function restart() {
   // staged film scene: build its set and cast, light it, frame it
   mountSceneStage(activeScene, { moveHero: !LOOP_SCENE && sceneMode !== 'watch', jumpCam: sceneMode === 'watch' });
 }
-let stage = null, stageS = null, sceneCues = [];
+let stage = null, stageS = null, sceneCues = [], sceneLightCues = [];
 // Light states: where the sun is and what colour the day is. 'golden' is the town's default.
 const LIGHTS = { golden: { dir: SUN_DIR, sun: [0xffdcae, 3.4], hemi: 2.3 }, noon: { dir: [0.22, 0.95, -0.2], sun: [0xfff6e6, 3.9], hemi: 2.7 }, sunrise: { dir: [-0.78, 0.26, 0.56], sun: [0xffc08a, 3.0], hemi: 1.9 }, dusk: { dir: [0.74, 0.2, 0.64], sun: [0xff8f7a, 1.25], hemi: 0.95, dusk: 1 } };
 function setLight(name) { const L = typeof name === 'object' ? { ...LIGHTS[name.base || 'golden'], ...name } : LIGHTS[name] || LIGHTS.golden; const dusk = L.dusk || 0; sky.children[0].material.uniforms.uDusk.value = dusk; post.final.uniforms.uDusk.value = dusk; sunDir.set(...L.dir).normalize(); sun.color.setHex(L.sun[0]); sun.intensity = L.sun[1]; hemi.intensity = L.hemi; sky.children[0].material.uniforms.uSun.value.copy(sunDir); post.final.uniforms.uSun.value.copy(sunDir); }
@@ -352,6 +352,9 @@ const CUES = { // v = the cue's own volume from the scene (the money beat is the
   squeal: (v) => { beep(1900, 1500, 0.5, 'sawtooth', 0.035 * v); hiss(0.5, 3200, 0.06 * v, 'bandpass', 0, 6); }, cheer: (v) => { hiss(1.6, 1300, 0.12 * v, 'bandpass', 0, 0.8, 2200); for (const f of [392, 494, 587]) beep(f, f * 1.08, 0.9, 'triangle', 0.02 * v); },
   hinge: (v) => { beep(520, 300, 0.7, 'sawtooth', 0.035 * v); beep(310, 420, 0.5, 'sawtooth', 0.03 * v, 0.6); }, rollout: (v) => { hiss(2.2, 240, 0.14 * v, 'lowpass', 0, 1, 520); for (const f of [147, 220, 294]) beep(f, f, 1.8, 'triangle', 0.05 * v); },
   wings: (v) => { for (let i = 0; i < 46; i++) hiss(0.07, 900 + ((i * 53) % 11) * 240, 0.07 * v, 'bandpass', i * 0.035 + ((i * 7) % 5) * 0.01, 1.6); for (let i = 0; i < 6; i++) beep(1500 + i * 130, 1900, 0.09, 'sawtooth', 0.02 * v, 0.1 + i * 0.16); }, chirp: (v) => { beep(2600, 3400, 0.06, 'sine', 0.035 * v); beep(3000, 2500, 0.07, 'sine', 0.03 * v, 0.09); },
+  ocarina: (v) => { beep(440, 444, 0.55, 'sine', 0.11 * v); beep(880, 884, 0.45, 'triangle', 0.025 * v); },
+  ocarina2: (v) => { beep(523.25, 526, 0.55, 'sine', 0.11 * v); beep(1046.5, 1050, 0.45, 'triangle', 0.025 * v); },
+  ocarina3: (v) => { beep(587.33, 592, 0.85, 'sine', 0.12 * v); beep(1174.66, 1180, 0.7, 'triangle', 0.03 * v); },
 };
 let bedNodes = [];
 function stopBed() { for (const n of bedNodes) { try { n.stop(); } catch {} try { n.disconnect(); } catch {} } bedNodes = []; }
@@ -368,6 +371,7 @@ function bedTick(def, t) {
   if (b.kind === 'dance' && step % 2 === 0) { beep(110, 40, 0.12, 'sine', v * 2.2); } if (b.kind === 'dance' && step % 2 === 1) hiss(0.04, 7000, v * 0.9, 'highpass');
 }
 function sceneSound(def, t) { for (const c of def.sound || []) if (c.at === t) { (CUES[c.cue] || (() => {}))(c.vol ?? 1); sceneCues.push({ tick: t, cue: c.cue }); } bedTick(def, t); }
+function sceneLight(def, t) { for (const c of def.lightCues || []) if (c.at === t) { setLight(c.light); sceneLightCues.push({ tick: t, light: c.light }); } }
 
 // ---------------------------------------------------------------- tick + render
 const ticker = new SimClock(30); let last = performance.now(), time = 0, flashMsg = '', flashT = 0;
@@ -375,7 +379,7 @@ function tick() {
   if (!started) return;
   if (activeScene && !runner && sceneMode === 'watch') { runner = new SceneRunner(game, activeScene); parkHero(); }
   game.tick(runner ? { ...runner.input(), camYaw: 0 } : AUTO ? { ...bot.input(), camYaw: 0 } : readInput());
-  if (runner && stage) { sceneSound(activeScene, runner.t); for (const c of activeScene.cuts || []) if (c.at === runner.t && Q.get('cam') !== 'free') { const b = c.cam(game); free.pivot = [...b.pivot]; free.yaw = b.yaw; free.pitch = b.pitch; free.dist = b.dist; } }
+  if (runner && stage) { sceneSound(activeScene, runner.t); sceneLight(activeScene, runner.t); for (const c of activeScene.cuts || []) if (c.at === runner.t && Q.get('cam') !== 'free') { const b = c.cam(game); free.pivot = [...b.pivot]; free.yaw = b.yaw; free.pitch = b.pitch; free.dist = b.dist; } }
   if (runner && runner.done) {
     if (tour.active) {
       tour.index = (tour.index + 1) % tour.ids.length;
@@ -621,7 +625,7 @@ function takeControl() {
     journal.markPlayed(activeScene.id);
     if (festival.active) festival.recordStop(activeScene.id, true);
   }
-  runner = null; stopBed(); sceneCues = []; sceneMode = 'ready';
+  runner = null; stopBed(); sceneCues = []; sceneLightCues = []; sceneMode = 'ready';
   if (activeScene && activeScene.act && stageS) activeScene.act(stageS, 0);
   setFreecam(false); placeHeroInScene(); syncSceneBtn();
 }
@@ -820,7 +824,7 @@ if (FILM) {
 window.__dbg = { get freecam() { return free.on ? { on: true, pivot: [...free.pivot], yaw: free.yaw, pitch: free.pitch, dist: free.dist } : { on: false }; },
   get timescale() { return ticker.scale; }, get bookmark() { return cap.bookmark; }, get guide() { return cap.guide; }, get hud() { return cap.hud; },
   get tick() { return game.ticks; }, get digest() { return simDigest(game); }, timescales: TIMESCALES,
-  get scene() { if (!activeScene) return null; return runner ? { id: activeScene.id, mode: 'watch', tick: runner.t, duration: activeScene.duration, events: runner.fired, cues: sceneCues } : { id: activeScene.id, mode: sceneMode, tick: 0, duration: activeScene.duration, events: [], cues: sceneCues }; },
+  get scene() { if (!activeScene) return null; return runner ? { id: activeScene.id, mode: 'watch', tick: runner.t, duration: activeScene.duration, events: runner.fired, cues: sceneCues, lightCues: sceneLightCues } : { id: activeScene.id, mode: sceneMode, tick: 0, duration: activeScene.duration, events: [], cues: sceneCues, lightCues: sceneLightCues }; },
   get film() { return filmDbg; },
   /** Put the freecam anywhere (set-dressing stills): { pivot: [x, y, z] metres, yaw, pitch, dist }. */
   setCam(c) { if (!free.on) setFreecam(true); free.pivot = [...c.pivot]; free.yaw = c.yaw; free.pitch = c.pitch; free.dist = c.dist; cap.bookmark = null; capNote(); } };

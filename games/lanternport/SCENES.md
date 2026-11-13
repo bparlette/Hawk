@@ -80,7 +80,7 @@ scenes reuse the same registry slots as they land.
 | 7 | `marsh-skiff-run` | `18-marsh-airboat` | ⏳ awaiting builder |
 | 8 | `cucco-swarm` | aigo.md Part 2 (Gemini) — reassigned from Fable Nov 10 | ✅ built & proven |
 | 9 | `sword-pedestal` | fablego.md §4 (Gemini) — Zelda slate | ✅ built & proven |
-| 10 | `ocarina-dawn` | fablego.md §4 (Fable) — Zelda slate | ⏳ specced |
+| 10 | `ocarina-dawn` | fablego.md §4 (Gemini) — Zelda slate | ✅ built & proven |
 | 11 | `pot-rampage` | aigo.md Part 2 (Gemini) — Zelda slate | ✅ built & proven |
 | 12 | `chest-fanfare` | aigo.md Part 2 (Gemini) — Zelda slate | ✅ built & proven |
 | 13 | `dock-fishing` | aigo.md Part 2 (Gemini) — Zelda slate | ✅ built & proven |
