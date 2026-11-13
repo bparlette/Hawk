@@ -33,3 +33,8 @@ None (Part 2 complete).
   - Desktop (`1280x720`): live `#recBtn` capture (`localStorage` save -> `#takesBtn` replay) and live `cucco-swarm` staged-scene capture both finished with `preludeMatch: true`, `digestMatch: true`, bit-identical `window.__dbg.digest === savedTake.endDigest`, working `FreeCam` orbit, `9:16` guide toggle, `0.5x`/`1x`/`2x` speeds, pause, restart, and `0` runtime exceptions.
   - Phone (`390x844`, touch emulation `.touch` active): zero HUD bounding-box overlaps and `document.elementFromPoint` hit-testing passed (`topMatches: true`) for every button in `#festbar`, `#takesModal`, and `#replayBar` above the `gptouch` overlay.
 - **Full Lanternport Suite:** **57/57 passed, 0 failed**.
+
+## Re-Verification (`2026-11-13`)
+
+- Re-ran `node --test test/lanternport-replay.test.mjs`: **4/4 passed** (bit-exact `0.5x`/`1x`/`2x` replay, mid-session `place()` prelude, staged scene watch -> Take Control, `TakeStore` round-trip).
+- Re-ran full Lanternport suite (`node --test test/lanternport*.test.mjs test/linkle-walk-assets.test.mjs test/headless-pages.test.mjs`): **57/57 passed, 0 failed**. No fixes required in Lanternport film mode.
