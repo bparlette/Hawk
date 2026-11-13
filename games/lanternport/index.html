@@ -587,11 +587,15 @@ Object.assign(sceneBtn.style, { position: 'fixed', left: '50%', transform: 'tran
 document.body.appendChild(sceneBtn);
 // Recording rule (Cherie, Nov 12): the toggle stays out of the way — it fades out after a
 // few idle seconds so the screen is clear for recording, and any tap brings it back briefly.
+// Refinement (Nov 12, phone report): the fade applies only while WATCHING (sceneMode 'watch',
+// when the screen is being recorded). In ready mode the button is the only way into the scene,
+// so it stays solid — a faded ▶ WATCH THE SCENE reads as a dead button.
 let btnFadeT = null;
 function pokeSceneBtn() {
   if (sceneBtn.style.display === 'none') return;
   sceneBtn.style.opacity = '1'; sceneBtn.style.pointerEvents = 'auto';
   clearTimeout(btnFadeT);
+  if (sceneMode !== 'watch') return;
   btnFadeT = setTimeout(() => { sceneBtn.style.opacity = '0'; sceneBtn.style.pointerEvents = 'none'; }, 4000);
 }
 addEventListener('pointerdown', pokeSceneBtn, { passive: true });
@@ -638,7 +642,7 @@ function takeControl() {
 function toggleScene() { if (sceneMode === 'watch') takeControl(); else startWatch(); }
 sceneBtn.addEventListener('click', () => { unlockAudio(); toggleScene(); });
 
-const STATE_LBL = { 'not found': 'not found', watched: 'watched', played: 'played' };
+const STATE_LBL = { 'not found': 'not watched', watched: 'watched', played: 'played' };
 function renderJournal() {
   const list = $('journalList');
   list.innerHTML = '';
@@ -714,7 +718,8 @@ $('tourBtn').addEventListener('click', (e) => { e.stopPropagation(); unlockAudio
 $('dayDoneBtn').addEventListener('click', () => { festival.stop(); $('dayDoneCard').style.display = 'none'; clearSceneStage(); syncSceneBtn(); });
 $('titleFestBtn').addEventListener('click', (e) => { e.stopPropagation(); unlockAudio(); startFestivalDay(); });
 $('titleTourBtn').addEventListener('click', (e) => { e.stopPropagation(); unlockAudio(); startTour(); });
-addEventListener('pointerdown', () => { if (tour.active && performance.now() > tour.armedAt) exitTour(); }, true);
+// Tour exit is deliberate only: the 🎬 TOUR button (✕ EXIT while touring) or Esc.
+// A stray screen touch must not kill a tour mid-filming (phone report, Nov 12).
 
 syncSceneBtn();
 
