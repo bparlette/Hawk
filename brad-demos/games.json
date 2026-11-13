@@ -2706,6 +2706,14 @@
    "thumb": "thumbs/bonk-yard.png",
    "title": "Stained Glass Plaza",
    "url": "../games/stained-glass-plaza/"
+  },
+  {
+   "category": "Viral Demos",
+   "desc": "Oil Paint Plaza redrawn in charcoal — smudged masses, velvet blacks, warm paper.",
+   "id": "charcoal-plaza",
+   "thumb": "thumbs/bonk-yard.png",
+   "title": "Charcoal Plaza",
+   "url": "../games/charcoal-plaza/"
   }
  ]
 }
