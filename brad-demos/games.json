@@ -2738,6 +2738,30 @@
    "thumb": "thumbs/bonk-yard.png",
    "title": "Crayon Plaza",
    "url": "../games/crayon-plaza/"
+  },
+  {
+   "category": "Viral Demos",
+   "desc": "The pool model with Moth's own texture bake, rigged to Fable's bone contract — she really walks. Pool Deck Stroll coin game.",
+   "id": "pool-model-moth",
+   "thumb": "thumbs/bonk-yard.png",
+   "title": "Pool Model — Moth Bake",
+   "url": "../games/pool-model-moth/"
+  },
+  {
+   "category": "Viral Demos",
+   "desc": "The pool model with Hunyuan's texture, rigged to Fable's bone contract — she really walks. Pool Deck Stroll coin game.",
+   "id": "pool-model-hunyuan",
+   "thumb": "thumbs/bonk-yard.png",
+   "title": "Pool Model — Hunyuan",
+   "url": "../games/pool-model-hunyuan/"
+  },
+  {
+   "category": "Viral Demos",
+   "desc": "Hunyuan's texture with skin tones color-matched to Moth's bake, rigged to Fable's bone contract — she really walks. Pool Deck Stroll coin game.",
+   "id": "pool-model-colorfix",
+   "thumb": "thumbs/bonk-yard.png",
+   "title": "Pool Model — Hunyuan Color-Matched",
+   "url": "../games/pool-model-colorfix/"
   }
  ]
 }
