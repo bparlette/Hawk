@@ -297,5 +297,6 @@ export const swordPedestal = {
     { at: SP.drawn + 4, cue: 'whoosh', vol: 0.8 },
     { at: SP.raised, cue: 'ooh', vol: 0.75 },
     { at: SP.raised + 45, cue: 'applause', vol: 0.5 },
+    { at: SP.end - 1, cue: 'water', vol: 0.15 },
   ],
 };
