@@ -2541,6 +2541,94 @@
   },
   {
    "category": "Viral Demos",
+   "desc": "The Lanternport fountain plaza rebuilt in cubist facets — same walk, every surface fractured into planes.",
+   "id": "cubism-plaza",
+   "thumb": "thumbs/bonk-yard.png",
+   "title": "Cubism Plaza",
+   "url": "../games/cubism-plaza/"
+  },
+  {
+   "category": "Viral Demos",
+   "desc": "The painted plaza at photographic grade — real light and texture, still repainted live every frame.",
+   "id": "realism-plaza",
+   "thumb": "thumbs/bonk-yard.png",
+   "title": "Realism Plaza",
+   "url": "../games/realism-plaza/"
+  },
+  {
+   "category": "Viral Demos",
+   "desc": "The painted plaza in spray paint and marker — bold colour, hard outlines.",
+   "id": "graffiti-plaza",
+   "thumb": "thumbs/bonk-yard.png",
+   "title": "Graffiti Plaza",
+   "url": "../games/graffiti-plaza/"
+  },
+  {
+   "category": "Viral Demos",
+   "desc": "The painted plaza cel-inked — flat colour bands and thick ink outlines.",
+   "id": "cartoon-plaza",
+   "thumb": "thumbs/bonk-yard.png",
+   "title": "Cartoon Plaza",
+   "url": "../games/cartoon-plaza/"
+  },
+  {
+   "category": "Viral Demos",
+   "desc": "The painted plaza in wet watercolor washes — colours bleed and the paper shows through.",
+   "id": "watercolor-plaza",
+   "thumb": "thumbs/bonk-yard.png",
+   "title": "Watercolor Plaza",
+   "url": "../games/watercolor-plaza/"
+  },
+  {
+   "category": "Viral Demos",
+   "desc": "The painted plaza as leaded stained glass — glowing panes divided by black leading.",
+   "id": "stained-plaza",
+   "thumb": "thumbs/bonk-yard.png",
+   "title": "Stained Glass Plaza",
+   "url": "../games/stained-plaza/"
+  },
+  {
+   "category": "Viral Demos",
+   "desc": "The painted plaza drawn in graphite — hatched shading on warm paper.",
+   "id": "pencil-plaza",
+   "thumb": "thumbs/bonk-yard.png",
+   "title": "Pencil Plaza",
+   "url": "../games/pencil-plaza/"
+  },
+  {
+   "category": "Viral Demos",
+   "desc": "The painted plaza as a De Stijl grid — red, blue, yellow, black and white.",
+   "id": "mondrian-plaza",
+   "thumb": "thumbs/bonk-yard.png",
+   "title": "Mondrian Plaza",
+   "url": "../games/mondrian-plaza/"
+  },
+  {
+   "category": "Viral Demos",
+   "desc": "The painted plaza in Ben-Day dots — comic-print colour, halftone shade, black contours.",
+   "id": "pop-plaza",
+   "thumb": "thumbs/bonk-yard.png",
+   "title": "Pop Art Plaza",
+   "url": "../games/pop-plaza/"
+  },
+  {
+   "category": "Viral Demos",
+   "desc": "The painted plaza as a woodblock print — flat mineral inks and sumi key lines.",
+   "id": "ukiyoe-plaza",
+   "thumb": "thumbs/bonk-yard.png",
+   "title": "Ukiyo-e Plaza",
+   "url": "../games/ukiyoe-plaza/"
+  },
+  {
+   "category": "Viral Demos",
+   "desc": "The painted plaza in Van Gogh impasto — swirling directional strokes, violet against chrome yellow.",
+   "id": "vangogh-plaza",
+   "thumb": "thumbs/bonk-yard.png",
+   "title": "Van Gogh Plaza",
+   "url": "../games/vangogh-plaza/"
+  },
+  {
+   "category": "Viral Demos",
    "desc": "The real Starry Night, alive — drag the sky, tap a star for a shooting star",
    "id": "starry-night",
    "thumb": "thumbs/bonk-yard.png",
