@@ -80,7 +80,10 @@ export function createFrame(renderer, shared, { samples = 4 } = {}) {
             float farn = length(hn.xyz / hn.w - uEye);
             e = max(e, abs(far - farn) / (0.03 + 0.025 * far));
           }
-          float line = smoothstep(0.5, 1.15, e) * (1.0 - smoothstep(120.0, 300.0, far));
+          // the step must be a FORM step (a rim, an eave, a silhouette — decimetres and
+          // up): centimetre-scale steps between neighbouring paint patches are not key
+          // lines, and inking them freckled the flat ground with dark dashes
+          float line = smoothstep(1.25, 2.1, e) * (1.0 - smoothstep(120.0, 300.0, far));
           col = mix(col, uOutlineCol, clamp(line, 0.0, 1.0) * uOutline);
         }
 
