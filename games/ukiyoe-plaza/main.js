@@ -95,11 +95,12 @@ scene.add(sky.group);
       in vec3 vWorld;
       layout(location = 0) out vec4 outC;
       void main() {
-        // the sheet under the paving blocks: one flat warm stone ink, one step duller past
-        // the plaza's edge — flat steps, the print way, where the dabs thin out
+        // the sheet under the paving blocks: the SAME flat stone ink the ground blocks
+        // carry, one paler flat step past the plaza's edge — so where the dabs thin out
+        // the sheet never shows a different tone through them
         float rad = length(vWorld.xz);
-        vec3 c = vec3(0.79, 0.72, 0.58);
-        c = mix(c, vec3(0.68, 0.64, 0.55), step(19.0, rad));
+        vec3 c = vec3(0.86, 0.80, 0.65);
+        c = mix(c, vec3(0.78, 0.74, 0.63), step(19.0, rad));
         outC = vec4(c, 1.0);
       }`,
   });
@@ -123,19 +124,15 @@ void makeDab(inout Dab d) {
   if (d.alive <= 0.0) return;
   vec3 P = vec3(xz.x, heightAt(xz), xz.y);
   float rad = length(xz);
-  float lit = sunAt(P + vec3(0.0, 0.25, 0.0));
-  // two flat stone inks in a coarse checker, and darker inlay rings round the fountain;
-  // the shade ink is ai indigo — in a print, shadow is a blue block, not a brown gradient
-  float check = mod(floor(xz.x / 1.4) + floor(xz.y / 1.4), 2.0);
-  vec3 L = mix(vec3(0.87, 0.80, 0.65), vec3(0.82, 0.74, 0.59), check);
-  vec3 M = mix(vec3(0.74, 0.66, 0.51), vec3(0.68, 0.60, 0.46), check);
-  vec3 S = vec3(0.33, 0.38, 0.56);
-  vec3 c = paint3(L, M, S, lit, q.y);
-  float band = smoothstep(0.32, 0.0, abs(rad - 6.4) - 0.16) + smoothstep(0.32, 0.0, abs(rad - 11.2) - 0.16);
-  c = mix(c, c * vec3(0.7, 0.62, 0.6), clamp(band, 0.0, 1.0) * 0.85);
-  c = mix(c, paint3(vec3(0.90, 0.84, 0.69), vec3(0.78, 0.71, 0.57), S, lit, q.y), smoothstep(4.8, 3.2, rad)); // paler apron at the fountain
-  c = mix(c, c * vec3(0.9, 0.88, 0.84), smoothstep(19.0, 40.0, rad)); // a touch duller past the plaza's edge
-  c = jitter(c, r.wzy, 0.15);
+  // ONE flat stone ink for the whole plaza ground — no checker, no inlay rings, no
+  // smoothstep blends. Where the still world's shade falls, the ground is printed in
+  // the shade ink instead: the shade picture read as a HARD step, so a cast shadow is
+  // one flat shape with a clean edge, never a penumbra. A paler apron rings the
+  // fountain, cut at a hard radius the same printed way. Her own moving shadow is not
+  // baked here at all — it arrives pixel by pixel through the glaze (d.glaze below).
+  float sh = step(0.5, woodSunAt(P + vec3(0.0, 0.25, 0.0)));
+  vec3 c = mix(vec3(0.36, 0.40, 0.57), vec3(0.86, 0.80, 0.65), sh);
+  c = mix(c, mix(vec3(0.43, 0.47, 0.63), vec3(0.90, 0.85, 0.70), sh), step(rad, 4.2));
   vec2 radial = rad > 0.01 ? xz / rad : vec2(1.0, 0.0);
   d.dir = vec3(radial.x, 0.0, radial.y); // strokes run outward from the fountain, like spokes of the paving
   d.pos = P;
@@ -146,7 +143,7 @@ void makeDab(inout Dab d) {
   d.turnabout = 1.0;
   d.lie = 1.0;
   d.nrm = vec3(0.0, 1.0, 0.0);
-  d.height = (0.02 + 0.05 * q.z) * pow(lod, 0.35);
+  d.height = (0.02 + 0.006 * q.z) * pow(lod, 0.35); // near-ONE layer height for all ground patches: the old 2–7 cm spread made every proud patch edge a depth step, and the finish's key-line pass inked those steps as scattered dark dashes across the flat ground
   d.glaze = 1.0;
 }`;
 const plaza = groundRings(shared, { body: plazaBody, per: DENSE ? 3 : 2, n: 192, cell0: 0.24, levels: 6, minPx: [8, 14], maxPx: [4000, 4000], cells: [0, 8] });
@@ -155,9 +152,14 @@ scene.add(plaza.group);
 // --- how the kit's paint is lit on a day like this ---
 const DAY = /* glsl */ `
 float dayOn(vec3 P, vec3 Nn) {
-  float s = sunAt(P + Nn * 0.25);
-  float face = clamp(dot(Nn, uSunDir) * 1.3 + 0.3, 0.0, 1.0);
-  return clamp(s * face + max(Nn.y, 0.0) * 0.16, 0.0, 1.0);
+  // A woodblock knows two states of light, not a scale: the sun reaches a face or it
+  // does not. The shade picture is read as a hard step (no penumbra survives), and a
+  // face is lit whole or not at all by which way it turns — so every block of a form,
+  // flat wall or round drum alike, prints in ONE flat ink: its light ink, or its shade
+  // ink where the face turns from the sun or the world's shade covers it.
+  float s = step(0.5, sunAt(P + Nn * 0.25));
+  float face = step(0.12, dot(Nn, uSunDir));
+  return s * face;
 }`;
 const KIT_LIGHT = DAY + /* glsl */ `
 vec3 kitPaint(vec3 P, vec3 Nn, int k, float tone, float r) {
@@ -317,12 +319,11 @@ const crowns = dabMesh(dabGeometry(crownCount, {
       if (dot(Nn, normalize(cameraPosition - aPos)) < -0.1) { d.alive = 0.0; return; }
       float x = dayOn(aPos, Nn);
       vec3 c = paint3(vec3(0.44, 0.60, 0.27), vec3(0.31, 0.48, 0.21), vec3(0.15, 0.29, 0.20), x, r.y); // uguisu greens
-      c = jitter(c, r.wzy, 0.15);
       d.pos = aPos;
       d.dir = aDir;
       d.size = vec2(0.19, 0.36) * (0.8 + 0.5 * r.x);
       d.c1 = hazed(c, aPos);
-      d.c2 = hazed(c * 1.1, aPos);
+      d.c2 = d.c1; // one flat ink per crown dab: no lighter second tone blotched through it
       d.seed = r.x * 977.0;
       d.lift = 0.35;
       d.turnabout = 1.0;
@@ -453,13 +454,13 @@ function paintTex(shared, srcMat) {
         vec3 tex = texture(tMap, vUv).rgb * uTint;
         tex = floor(tex * 5.0 + 0.5) / 5.0; // her colours snapped to the block: five steps a channel
         float n = texture(tNoise, vBind.xy * 0.024 + vBind.z * 0.017).r;
-        float m = texture(tNoise, vBind.yx * 0.007 + 0.4).g;
-        float lit = sunAt(vWorld + Nn * 0.08) * clamp(dot(Nn, uSunDir) * 0.85 + 0.42, 0.0, 1.0);
+        // she is printed like everything else on the sheet: two states of light only.
+        // A fragment faces the sun and stands clear of shade, or it does not — no
+        // continuous lit term, no bounce, no uneven-print wobble across her body.
+        float lit = step(0.5, sunAt(vWorld + Nn * 0.08)) * step(0.10, dot(Nn, uSunDir));
         vec3 L = min(tex * 1.32 + vec3(0.04, 0.03, 0.015), vec3(1.15));
         vec3 S = tex * vec3(0.30, 0.35, 0.58); // her shade: the same ink sunk toward ai indigo
         vec3 c = paint3(L, tex, S, lit, n);
-        c += uBounce * max(-Nn.y, 0.0) * (1.0 - lit);
-        c *= 0.98 + 0.04 * m; // the ink sits even: only a breath of uneven printing across her
         if (!gl_FrontFacing) c *= 0.8;
         // her key line: where her surface turns edge-on to the eye, the sumi line that locks
         // a woodblock figure inside its shapes — narrower and blacker than an inked cartoon's
@@ -693,7 +694,7 @@ function stepMove(dt) {
 const frame = createFrame(renderer, shared);
 frame.uniforms.uShafts.value = 0; // no sun-glow shafts: a print's air is flat ink, not misty light
 frame.uniforms.uCanvas.value = 0; // no canvas weave under a woodblock
-frame.uniforms.uPaper.value = 1; // washi grain over the whole sheet, paper white in the thin ink
+frame.uniforms.uPaper.value = 0; // NO washi grain: the audit killed it — a woodblock surface is flat ink, and the fibre noise read as texture grain over every wall
 frame.uniforms.uOutlineCol.value.setRGB(0.05, 0.045, 0.07); // the key block's sumi
 
 // --- run: fixed-step simulation (the renderer's frame rate is not the game's clock),
