@@ -505,7 +505,14 @@ function buildFortress() {
      and muzzlePos() ballistics are byte-for-byte as before; only the
      barrel mesh rides 0.10 lower inside the pitch group (parallel to
      the shot line), and the shell still spawns at the muzzle and
-     visibly leaves it. */
+     visibly leaves it.
+     ROUND 3 — HALF AGAIN (Cherie, Nov 14, later still): "bring cannon
+     even closer to screen only want to see half as much." Every cannon
+     mesh sank ~0.20 further inside its group and nudged toward the
+     gunner (+z), so the frame's bottom edge crops it: only the top
+     sliver of barrel/breech shows. Pivots and muzzlePos() STILL
+     untouched — the offset from the true shot line is now ~0.30, the
+     shell reads as leaving the muzzle area; aim/solve/score identical. */
   fortress = new THREE.Group();
   fortress.position.copy(FORT_POS);
   // ghost materials — local to the cannon (NOT the shared mat() cache,
@@ -521,32 +528,32 @@ function buildFortress() {
   // it leans away from the gunner and hides behind the breech/carriage, so
   // from the gunner's seat it reads as one narrow ghost spine at the very
   // bottom-center — NOT a splayed trestle filling the frame)
-  const post = box(fortress, 0.06, 0.52, 0.08, 0, 0.27, -0.10, postMat);
+  const post = box(fortress, 0.06, 0.42, 0.08, 0, 0.21, -0.10, postMat);
   post.rotation.x = 0.16;
   const plate = new THREE.Mesh(new THREE.CylinderGeometry(0.12, 0.135, 0.035, 18), postMat);
   plate.position.set(0, 0.018, -0.14); fortress.add(plate);
-  box(fortress, 0.20, 0.04, 0.26, 0, 0.545, -0.02, woodD); // mount cap under the pivot
+  box(fortress, 0.20, 0.04, 0.26, 0, 0.42, -0.02, woodD); // mount cap under the pivot (sunk in round 3)
   // cannon: yaw group -> pitch group -> barrel (same pivot as the old build)
   cannonYaw = new THREE.Group(); cannonYaw.position.set(0, 0.65, 0.05); fortress.add(cannonYaw);
   cannonPitch = new THREE.Group(); cannonYaw.add(cannonPitch);
   const barrel = new THREE.Mesh(new THREE.CylinderGeometry(0.052, 0.040, 0.46, 14), iron);
-  barrel.rotation.x = Math.PI / 2; barrel.position.set(0, -0.10, -0.15); cannonPitch.add(barrel);
+  barrel.rotation.x = Math.PI / 2; barrel.position.set(0, -0.30, -0.06); cannonPitch.add(barrel);
   const muzzleRing = new THREE.Mesh(new THREE.CylinderGeometry(0.060, 0.060, 0.055, 14), ringMat);
-  muzzleRing.rotation.x = Math.PI / 2; muzzleRing.position.set(0, -0.10, -0.3625); cannonPitch.add(muzzleRing);
+  muzzleRing.rotation.x = Math.PI / 2; muzzleRing.position.set(0, -0.30, -0.2725); cannonPitch.add(muzzleRing);
   // tiny sight bead on top of the muzzle ring — the aim-direction anchor
-  box(cannonPitch, 0.016, 0.030, 0.016, 0, -0.032, -0.3625, ghost(0x2f3339, 0.5, 0.65));
+  box(cannonPitch, 0.016, 0.030, 0.016, 0, -0.232, -0.2725, ghost(0x2f3339, 0.5, 0.65));
   const breech = new THREE.Mesh(new THREE.SphereGeometry(0.068, 14, 12), ironD);
-  breech.position.set(0, -0.10, 0.03); cannonPitch.add(breech);
+  breech.position.set(0, -0.30, 0.10); cannonPitch.add(breech);
   const knob = new THREE.Mesh(new THREE.SphereGeometry(0.024, 10, 8), wood);
-  knob.position.set(0, -0.10, 0.095); cannonPitch.add(knob);
+  knob.position.set(0, -0.30, 0.165); cannonPitch.add(knob);
   // carriage cheeks + spoked-look wheels either side of the breech
-  box(cannonYaw, 0.035, 0.09, 0.20, -0.082, -0.155, 0.0, wood);
-  box(cannonYaw, 0.035, 0.09, 0.20, 0.082, -0.155, 0.0, wood);
+  box(cannonYaw, 0.035, 0.09, 0.20, -0.082, -0.335, 0.06, wood);
+  box(cannonYaw, 0.035, 0.09, 0.20, 0.082, -0.335, 0.06, wood);
   const wheelGeo = new THREE.CylinderGeometry(0.088, 0.088, 0.030, 16);
   for (const sx of [-1, 1]) {
     const wheel = new THREE.Mesh(wheelGeo, woodD);
     wheel.rotation.z = Math.PI / 2;
-    wheel.position.set(sx * 0.118, -0.175, 0.0);
+    wheel.position.set(sx * 0.118, -0.355, 0.06);
     cannonYaw.add(wheel);
     const hub = new THREE.Mesh(new THREE.CylinderGeometry(0.030, 0.030, 0.036, 10), iron);
     hub.rotation.z = Math.PI / 2; hub.position.copy(wheel.position); cannonYaw.add(hub);
