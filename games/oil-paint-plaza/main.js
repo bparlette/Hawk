@@ -497,12 +497,19 @@ const shadeScene = new THREE.Scene();
 }
 const shade = createShade(renderer, shared, shadeScene, { sun: SUN, size: [2048, 2048], box: [30, 26], centre: [0, 1, -3], back: 110, near: 30, far: 240 });
 
-// --- Her, walking: the Juniper walk GLB under this same painter. Her own texture colours are
-//     posterised into the painter's three mixes (light = texel warmed up, mid = texel, shade =
-//     texel cooled down) and lit by the same sun and shade pictures as everything else.
+// --- Her, walking. NOT the stock painted figure: the hero is the LANTERNPORT heroine —
+//     the hooded dress Juniper (the plaza's own mesh + skeleton) playing Fable's GOOD
+//     walk clip 07_01, the gait Cherie approved in Lanternport, transplanted into the
+//     plaza GLB by glTF surgery (the file's old baked gait is gone; see
+//     ~/workspace/charcoal-dress/REPORT.md). Brought in AS IS: she keeps her own PBR
+//     materials and real shading, and is the only unpainted thing in the plaza. The
+//     paintTex() painter below is retained from the stock build but no longer applied to her.
 //     The clip plays on her bones; her hips are re-anchored over herPos every tick so her body —
 //     not the bone — stays where the controls put her, and she travels at the speed her stride
-//     was measured to cover (see REF_SPEED below), so feet and ground agree.
+//     was measured to cover (see REF_SPEED below), so feet and ground agree. The calibration
+//     further down is model-agnostic (it measures her skinned bounds, stride and gait cycle
+//     herself), and this rig's bones carry the same names it looks for (bone_2 hips,
+//     bone_7 / bone_8 feet), so scale, grounding and pace carry over unchanged.
 function paintTex(shared, srcMat) {
   const tint = srcMat.color ? [srcMat.color.r, srcMat.color.g, srcMat.color.b] : [1, 1, 1];
   let map = srcMat.map || null;
@@ -556,12 +563,49 @@ function paintTex(shared, srcMat) {
       }`,
   });
 }
+// --- daylight for the one unpainted thing: every painted surface here uses custom shaders
+//     and ignores scene lights, so these two lights exist only for her real materials.
+//     Colours follow the real-walker recipe the swaps were proven under; the sun is swung to
+//     the plaza's own SUN so her shading agrees with the painted light (and with the figure
+//     shadow the shade pass draws of her each frame). No shadow maps — her ground shadow is
+//     the shade system's figure picture, exactly as in the stock build.
+scene.add(new THREE.HemisphereLight(0xcfeeff, 0x8a7a5f, 1.0));
+const herSun = new THREE.DirectionalLight(0xfff1d6, 1.9);
+herSun.position.copy(SUN).multiplyScalar(40);
+scene.add(herSun);
+
 const gltf = await new GLTFLoader().loadAsync('./assets/juniper_walk.glb');
 const HER_MESH_OBJS = [];
 let hipsBone = null, footL = null, footR = null;
 gltf.scene.traverse((o) => {
   if (o.isMesh) {
-    o.material = paintTex(shared, o.material);
+    // AS IS — she keeps her own materials. Two load-time normalizations, both carried over
+    // from the real-walker swaps: (1) metalness goes to 0 — this frame has no environment
+    // map, so metallic PBR response would render near-black; (2) opacity 0.5 (blending
+    // stays off, so nothing about her rendering changes)
+    // writes the same frame-target alpha the painted figure wrote — alpha below 0.6 is how
+    // the finish's paint pass knows a surface is already painted and keeps its detail
+    // (finish.js painted()), so the Kuwahara finish leaves her alone like it left the sky.
+    const mats = Array.isArray(o.material) ? o.material : [o.material];
+    for (const m of mats) {
+      if ('metalness' in m) m.metalness = 0;
+      m.opacity = 0.5;
+      // Her own display transform, restored: her material outputs linear light, which in
+      // her own games the renderer then tone-mapped and sRGB-encoded on the way to the
+      // screen. This plaza's frame is a linear-display pipeline (the painter's shaders
+      // author display-ready values and the finish writes them raw), so without the encode
+      // she reads near-black. Adding the sRGB encode to her fragment tail only — her
+      // colours, textures and shading model are untouched; this is the same class of
+      // load-time fix as the metalness normalization, not a paint treatment.
+      m.onBeforeCompile = (sh) => {
+        sh.fragmentShader = sh.fragmentShader.replace(
+          '#include <colorspace_fragment>',
+          `#include <colorspace_fragment>
+           gl_FragColor.rgb = mix(gl_FragColor.rgb * 12.92,
+             1.055 * pow(max(gl_FragColor.rgb, vec3(0.0)), vec3(1.0 / 2.4)) - 0.055,
+             step(vec3(0.0031308), gl_FragColor.rgb));`);
+      };
+    }
     o.frustumCulled = false;
     o.layers.enable(1); // the shade system's figure camera (layer 1) must see her for her shadow
     HER_MESH_OBJS.push(o);
