@@ -47,7 +47,18 @@ export function createFrame(renderer, shared, { samples = 4 } = {}) {
       layout(location = 0) out vec4 outC;
 
       void main() {
-        vec3 col = texture(tColor, vUv).rgb;
+        vec4 src = texture(tColor, vUv);
+        // THE ONE UNRUBBED THING: the figure writes alpha 0.5 into the picture — the marker
+        // this frame pipeline has always carried for "already finished; keep its detail and
+        // colour" (the painted plazas' finish reads the same alpha for its paint pass). She
+        // is real, not drawn, so she stands outside the medium entirely: no light shafts,
+        // no rub, no wipe, no paper grain — and above all no grade, which would take her
+        // colour the way it takes every coloured thing on the sheet. Her raw colour stands.
+        // (Every world writer on the sheet writes alpha 1.0 or composites over it, so the
+        // marker is hers alone; the rub below still leans across her silhouette from the
+        // paper side, the way it leans across any form's edge.)
+        if (src.a < 0.6) { outC = vec4(src.rgb, 1.0); return; }
+        vec3 col = src.rgb;
         float depth = texture(tDepth, vUv).r;
         vec4 h = uInvViewProj * vec4(vUv * 2.0 - 1.0, depth * 2.0 - 1.0, 1.0);
         vec3 world = h.xyz / h.w;
