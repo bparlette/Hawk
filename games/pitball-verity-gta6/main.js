@@ -38,6 +38,14 @@ const K = () => W / 540;              // horizontal scale from levels.js space
 const FLOOR = 884;                    // floor line in v2 (logical y); pit floor of levels.js (960) maps here
 const YMAP = y => y * (FLOOR / 960);  // levels.js y -> v2 y
 const CEIL = 16;                      // orb ceiling bounce line
+/* Endless-climb model (Cherie, Nov 13): no beach, no finish — the strip
+   scrolls up forever. The hero rides at RIDE_LINE (lower third); pushing
+   past it scrolls the whole world down (applyScroll) and G.camY — total
+   world px climbed, one-way only — becomes the run's score clock.
+   PX_PER_M converts camY px to the HUD distance counter. */
+const RIDE_LINE = 620;                // hero's ride line in v2 space (lower third of 960)
+const PX_PER_M = 50;                  // world px per metre on the distance counter
+const SEG = 960;                      // one world segment = one screen of climb
 const DEMO = new URLSearchParams(location.search).get('demo') === '1';
 
 /* ---------------- audio (tiny WebAudio blips) ---------------- */
@@ -148,20 +156,56 @@ function insetAt(level, side, y960) {
   if (!mine.length) return 0;
   return y960 < mine[0].y0 ? mine[0].inset0 : mine[mine.length - 1].inset1;
 }
+/* The shaft is endless now: wall inset is a function of WORLD height
+   (camY + height above the screen bottom), not of position in one fixed
+   level. The base inset is the level's own; a slow two-wave wobble makes
+   the walls breathe gently as you climb so the shaft never reads as one
+   repeating stamp. Same value everywhere the old code asked. */
+function heightAt(y) { return (G && G.camY ? G.camY : 0) + (LH - y); }   // world height of a v2 screen y
 function pitLeft(y) {  // y in v2 space
-  const y960 = Math.max(0, Math.min(960, y / (FLOOR / 960)));
-  return insetAt(G.level, 'L', y960) * K();
+  const base = insetAt(G.level, 'L', 480);
+  const h = heightAt(y);
+  const wob = Math.sin(h * 0.0016) * 5 + Math.sin(h * 0.00043 + 2.1) * 4;
+  return Math.max(2, (base + wob) * K());
 }
 function pitRight(y) {
-  const y960 = Math.max(0, Math.min(960, y / (FLOOR / 960)));
-  return W - insetAt(G.level, 'R', y960) * K();
+  const base = insetAt(G.level, 'R', 480);
+  const h = heightAt(y);
+  const wob = Math.sin(h * 0.0016 + 1.3) * 5 + Math.sin(h * 0.00043 + 4.2) * 4;
+  return W - Math.max(2, (base + wob) * K());
+}
+/* Deflectors are per-SEGMENT world features: segment n re-deals the level's
+   deflector set with a hashed variant (0 as-authored — segment 0 always
+   is, so a run starts exactly like the old pit — 1 mirrored, 2 flipped,
+   3 single, 4 breather/none). Their screen y derives from camY each call,
+   so they ride the scroll with no stored state to desync. */
+function hashN(n, k) { let h = (n * 374761393 + (k || 0) * 668265263) | 0; h = Math.imul(h ^ (h >>> 13), 1274126177); return ((h ^ (h >>> 16)) >>> 0) / 4294967296; }
+function segDeflectors(n) {
+  const defs = (G.level.pit && G.level.pit.deflectors) || [];
+  if (!defs.length) return [];
+  const v = n === 0 ? 0 : Math.floor(hashN(n, 7) * 5);
+  let list = defs.map(d => ({ x: d.x, y: d.y, len: d.len, angleDeg: d.angleDeg, r: d.r }));
+  if (v === 1) list = list.map(d => ({ ...d, x: 540 - d.x, angleDeg: -d.angleDeg }));
+  else if (v === 2) list = list.map(d => ({ ...d, y: 960 - d.y, angleDeg: -d.angleDeg }));
+  else if (v === 3) list = [list[n % list.length]];
+  else if (v === 4) list = [];
+  return list.map(d => {
+    const h = n * SEG + (SEG - YMAP(d.y));        // world height of this deflector
+    return { x: d.x * K(), y: LH - (h - G.camY), len: d.len, angleDeg: d.angleDeg, r: d.r };
+  });
 }
 function deflectorSegs() {   // collision segments in v2 space, with surface radius
-  return G.level.pit.deflectors.map(d => {
-    const a = d.angleDeg * Math.PI / 180, hl = d.len * K() / 2;
-    const cx = d.x * K(), cy = YMAP(d.y);
-    return { x1: cx - Math.cos(a) * hl, y1: cy - Math.sin(a) * hl, x2: cx + Math.cos(a) * hl, y2: cy + Math.sin(a) * hl, r: d.r * K() * 0.6 + 3 };
-  });
+  if (!G || !G.level) return [];
+  const segs = [];
+  const n0 = Math.max(0, Math.floor(G.camY / SEG)), n1 = Math.floor((G.camY + LH) / SEG);
+  for (let n = n0; n <= n1; n++) {
+    for (const d of segDeflectors(n)) {
+      if (d.y < -90 || d.y > LH + 90) continue;
+      const a = d.angleDeg * Math.PI / 180, hl = d.len * K() / 2;
+      segs.push({ x1: d.x - Math.cos(a) * hl, y1: d.y - Math.sin(a) * hl, x2: d.x + Math.cos(a) * hl, y2: d.y + Math.sin(a) * hl, r: d.r * K() * 0.6 + 3 });
+    }
+  }
+  return segs;
 }
 /* Divider fins: scene prop 'divider-fin' marks presence; exact geometry per
    level id from the FINS tables in LEVELS.md (L3) + LEVELS-MORE.md (L4–L18).
@@ -292,12 +336,16 @@ function newGame(levelIdx = 0) {
     orbs: [], enemies: [], shards: [], pops: [], dmgPops: [], arcs: [],
     fireCd: 0.2, spawnT: 1.2, formT: 6, rushT: 18, formations: 0, finHits: 0,
     catchStacks: 0, primaryPending: true,
+    camY: 0, distM: 0, spawnDebt: 0, nextFormAt: 430, nextBruteAt: 150,   // endless climb state
     kills: 0, score: 0, chain: 0, lastKillT: -9,
     xp: 0, xpLevel: 1, levelUps: 0, cards: [], cardRects: [], levelRects: [], levelupAt: 0, banner: null,
     floorBreaches: 0, shake: 0, selLevel: levelIdx,
   };
   G.hero.y = FLOOR - 42;   // hero centre home line (roams up-pit from here)
   G.fin = finGeom();   // bot merge-point reference: first divider fin (or null)
+  G.needsSeed = true;   // first play frame seeds the opening formation —
+                        // deferred because newGame(0) runs at module load,
+                        // before the spawner's module state exists
 }
 newGame(0);
 
@@ -415,7 +463,9 @@ function gainXp(v) {
 /* ---------------- spawning: timed table director + formations ------------- */
 let enemySeq = 1;
 function pickSpawnEntry() {
-  const open = G.level.spawns.table.filter(s => G.elapsed >= s.fromSec);
+  // the table's fromSec now gates on METRES CLIMBED (the endless model):
+  // walkers from the kerb, runners from 45 m, splitters from 150 m.
+  const open = G.level.spawns.table.filter(s => G.distM >= s.fromSec);
   if (!open.length) return null;
   const tot = open.reduce((a, s) => a + s.weight, 0);
   let roll = Math.random() * tot;
@@ -424,7 +474,7 @@ function pickSpawnEntry() {
 }
 function makeEnemy(type, x, y, entry, formation) {
   const d = ETYPES[type];
-  const hp = d.hp * (entry ? entry.hpMul : 1);
+  const hp = d.hp * (entry ? entry.hpMul : 1) * (1 + (G.distM || 0) / 400);   // hides toughen with distance climbed
   const sp = d.speed * (entry ? entry.speedMul : 1);
   return { id: enemySeq++, type, x, y, r: d.r * K(), hp, maxHp: hp, speed: sp,
     phase: Math.random() * Math.PI * 2, slowT: 0, burnT: 0, burnPow: 7,
@@ -463,8 +513,8 @@ function spawnFormation() {
   for (const [lo, hi] of lanes) {
     if (hi - lo < cell) continue;   // channel too narrow for a block
     const cols = Math.max(2, Math.min(10, Math.floor((hi - lo) / cell)));
-    // blocks grow over the run: 3–4 rows in the first minute, up to 7 late
-    const rows = Math.min(7, 3 + Math.floor(G.elapsed / 60) + (Math.random() < 0.5 ? 1 : 0));
+    // blocks grow with the climb: 3–4 rows near the kerb, up to 7 deep in
+    const rows = Math.min(7, 3 + Math.floor(G.distM / 45) + (Math.random() < 0.5 ? 1 : 0));
     const blockW = cols * cell, x0 = lo + (hi - lo - blockW) / 2 + cell / 2;
     for (let rI = 0; rI < rows; rI++) {
       for (let cI = 0; cI < cols; cI++) {
@@ -605,16 +655,39 @@ function hurtHero(dmg) {
 }
 
 /* ---------------- update --------------------------------------------------- */
+/* Scroll the world down by `shift` px: the camera climbs, everything in
+   the world rides down-screen, spawn debt accrues (advancing is what
+   brings the fight to you). Entities the climb leaves far below the floor
+   are recycled — arrays stay bounded no matter how long the run gets. */
+function applyScroll(shift) {
+  G.camY += shift;
+  G.distM = G.camY / PX_PER_M;
+  G.spawnDebt += shift;
+  for (const e of G.enemies) e.y += shift;
+  for (const o of G.orbs) { o.y += shift; for (const tp of o.trail) tp.y += shift; }
+  for (const s of G.shards) s.y += shift;
+  for (const p of G.pops) p.y += shift;
+  for (const p of G.dmgPops) p.y += shift;
+  for (const a of G.arcs) { a.y1 += shift; a.y2 += shift; }
+  G.enemies = G.enemies.filter(e => e.y < LH + 200);
+  G.shards = G.shards.filter(s => s.y < LH + 200);
+}
+
 function update(dt) {
   G.t += dt;
   if (G.state !== 'play') return;
+  if (G.needsSeed) {   // opening traffic: one formation ahead + a trickle pair
+    G.needsSeed = false;
+    spawnFormation(); spawnEnemy(); spawnEnemy();
+  }
   if (G.banner) { G.banner.t -= dt; if (G.banner.t <= 0) G.banner = null; }
   G.elapsed += dt;
   const H = G.hero, L = G.level;
 
   /* --- movement: free 2D in the pit corridor (the original's model: roam
-     the pit, don't camp a floor line). Bounds: never into the top spawn
-     band, never below the home line; walls taken at the hero's own depth. */
+     the pit, don't camp a floor line). Bounds: never below the home line;
+     the top bound is the RIDE_LINE — pushing past it climbs (applyScroll);
+     walls taken at the hero's own depth. */
   let moveX = 0, moveY = 0;
   if (keys.ArrowLeft || keys.KeyA) moveX -= 1;
   if (keys.ArrowRight || keys.KeyD) moveX += 1;
@@ -638,20 +711,40 @@ function update(dt) {
   H.x += H.vx * dt;
   H.y += H.vy * dt;
   H.x = Math.max(pitLeft(H.y) + 24, Math.min(pitRight(H.y) - 24, H.x));
-  H.y = Math.max(LH * 0.30, Math.min(FLOOR - 42, H.y));
+  H.y = Math.min(FLOOR - 42, H.y);
+  /* --- the climb: the hero rides at RIDE_LINE in the lower third.
+     Pushing up past it doesn't move the hero further up-screen — it
+     scrolls the whole strip down (applyScroll). The camera only ever
+     moves up: there is no going back down the strip. --- */
+  if (H.y < RIDE_LINE) {
+    const shift = RIDE_LINE - H.y;
+    H.y = RIDE_LINE;
+    applyScroll(shift);
+  }
   if (Math.abs(H.vx) > 30) H.face = Math.sign(H.vx);
   if (H.invulnT > 0) H.invulnT -= dt;
 
-  /* --- directors: trickle (table + pressure ramp + escalation steps) --- */
+  /* --- directors: DISTANCE-driven now (was a clock). Enemies no longer
+     stream down at a parked player: every px you climb accrues spawn
+     debt, and the debt is spent on traffic AHEAD of you (above the
+     screen). Stop advancing and the debt stops — finish the stragglers
+     and the strip goes calm until you push on. Escalation (cheaper
+     spawns, bigger blocks, tougher hides, new types) is keyed to
+     metres climbed; the table's fromSec values now read as metres. --- */
   const sp = L.spawns;
-  const escSteps = Math.floor(G.elapsed / sp.escalateEverySec);
-  const interval = (1.1 / sp.pressureMul) * Math.pow(0.95, escSteps);
-  G.spawnT -= dt;
-  if (G.spawnT <= 0 && G.enemies.length < 84) { spawnEnemy(); G.spawnT = interval * (0.7 + Math.random() * 0.6); }
-  // formation director: a grid block every ~6–9 s (CHAOS PASS: the pit should
-  // never empty — blocks are the pulse, the trickle fills between them)
-  G.formT -= dt;
-  if (G.formT <= 0 && G.enemies.length < 78) { spawnFormation(); G.formT = 6 + Math.random() * 3; }
+  const escSteps = Math.floor(G.distM / sp.escalateEverySec);
+  const spawnCost = Math.max(52, (135 / sp.pressureMul) * Math.pow(0.95, escSteps));
+  if (G.spawnDebt > spawnCost * 6) G.spawnDebt = spawnCost * 6;   // no hoarding
+  while (G.spawnDebt >= spawnCost && G.enemies.length < 84) { G.spawnDebt -= spawnCost; spawnEnemy(); }
+  // formation director: a grid block every ~430–590 world px of climb
+  if (G.camY >= G.nextFormAt && G.enemies.length < 78) { spawnFormation(); G.nextFormAt = G.camY + 430 + Math.random() * 160; }
+  // heavy traffic milestone: a brute rolls out every 200 m from 150 m
+  if (G.distM >= G.nextBruteAt) {
+    G.nextBruteAt += 200;
+    const bx = pitLeft(0) + (pitRight(0) - pitLeft(0)) * (0.3 + Math.random() * 0.4);
+    G.enemies.push(makeEnemy('brute', bx, -76, null, false));
+    G.pops.push({ x: W / 2, y: LH * 0.30, txt: '⚠ HEAVY TRAFFIC ⚠', t: 1.1, color: '#ff9ecf' });
+  }
 
   /* --- gravity pulse (L15-clear permanent power): every ~20 s the horde's
      descent reverses for 2 s — the review's gravity quirk, as Verity's own --- */
@@ -679,16 +772,8 @@ function update(dt) {
   for (let i = G.arcs.length - 1; i >= 0; i--) { G.arcs[i].t -= dt; if (G.arcs[i].t <= 0) G.arcs.splice(i, 1); }
   if (G.shake > 0) G.shake -= dt;
 
-  /* --- level end (goal from levels.js) --- */
-  const goal = L.goal;
-  const cleared = goal.type === 'kills' ? G.kills >= goal.target : G.elapsed >= goal.target;
-  if (cleared && G.state === 'play') {
-    G.state = 'win';
-    unlocked = Math.max(unlocked, Math.min(LEVELS.length, G.levelIdx + 2));   // clearing pit n unlocks pit n+1
-    saveUnlock();
-    saveProg(G.levelIdx + 1);   // progression ladder: highest level cleared
-    notifyRunDone(true);
-  }
+  /* --- no level end: the climb is endless. The run ends only in the
+     ground (state 'over' via hurtHero, which reports the distance). --- */
 }
 
 /* Orb physics: constant speed; specular bounce off walls / ceiling /
@@ -892,11 +977,13 @@ function botTarget() {
   return W / 2 + Math.sin(G.t * 0.4) * W * 0.18;
 }
 function botTargetY() {
-  // roam like the new model: press up under a deep threat (staying below
-  // it, out of contact range), otherwise hold the home line
+  // roam like the climb model: press up under a deep threat (staying below
+  // it, out of contact range — pressing past the ride line scrolls the
+  // strip, which is how the bot advances), otherwise hold the home line
   let low = null;
   for (const e of G.enemies) { if (!e.dead && (!low || e.y > low.y)) low = e; }
-  if (low && low.y > LH * 0.45) return Math.max(LH * 0.34, Math.min(FLOOR - 42, low.y + 130));
+  if (!low) return RIDE_LINE - 80;   // strip is calm: advance — new traffic only exists up-strip now
+  if (low.y > LH * 0.45) return Math.max(RIDE_LINE + 30, Math.min(FLOOR - 42, low.y + 130));
   return FLOOR - 42;
 }
 
@@ -983,7 +1070,7 @@ function draw() {
   ctx.setTransform(view.s, 0, 0, view.s, view.ox, view.oy);
   if (G.shake > 0) ctx.translate((Math.random() - 0.5) * 10 * G.shake, (Math.random() - 0.5) * 8 * G.shake);
 
-  if (a && a.drawBackdrop) a.drawBackdrop(ctx, L.scene, W, LH, G.t); else stubBackdrop(L.scene);
+  if (a && a.drawBackdrop) a.drawBackdrop(ctx, L.scene, W, LH, G.t, G.camY); else stubBackdrop(L.scene);
 
   // pit walls from the inset profile
   ctx.fillStyle = P.wall;
@@ -1086,14 +1173,7 @@ function draw() {
 
   drawHUD();
   if (G.state === 'title') drawTitle();
-  if (G.state === 'over') screenMsg('THE STRIP WINS', [`Cash $${G.score}`, `Kills ${G.kills} · Survived ${fmtTime(G.elapsed)}`, '', 'TAP TO RETRY']);
-  if (G.state === 'win') {
-    const grants = CLEAR_GRANTS[G.levelIdx + 1] || [];
-    const lines = [G.level.name, `Cash $${G.score}`, `Kills ${G.kills} · Level ${G.xpLevel}`];
-    if (grants.length) lines.push('UNLOCKED: ' + grants.join(' · '));
-    lines.push('', G.levelIdx + 1 < LEVELS.length ? 'TAP FOR NEXT PIT' : 'TAP TO PLAY AGAIN');
-    screenMsg('STRIP CLEARED!', lines);
-  }
+  if (G.state === 'over') screenMsg('THE STRIP WINS', [`${Math.floor(G.distM)}m UP THE STRIP`, `Cash $${G.score}`, `Kills ${G.kills} · Survived ${fmtTime(G.elapsed)}`, '', 'TAP TO RETRY']);
   if (G.state === 'play' && G.banner) {   // in-flow power-up banner (no pause, ever)
     ctx.globalAlpha = Math.min(1, G.banner.t / 0.4);
     ctx.textAlign = 'center'; ctx.fillStyle = '#ffd94d'; ctx.font = '900 25px system-ui, sans-serif';
@@ -1112,18 +1192,18 @@ function draw() {
 
 function fmtTime(s) { const m = Math.floor(s / 60), ss = Math.floor(s % 60); return `${m}:${String(ss).padStart(2, '0')}`; }
 function goalProgress() {
-  const g = G.level.goal;
-  return Math.max(0, Math.min(1, g.type === 'kills' ? G.kills / g.target : G.elapsed / g.target));
+  // endless: progress = fraction of the current 100 m band climbed
+  return (G.distM % 100) / 100;
 }
 
 function drawHUD() {
   // XP bar across the very top
   ctx.fillStyle = 'rgba(255,255,255,.14)'; ctx.fillRect(0, 0, W, 8);
   ctx.fillStyle = '#54ffb0'; ctx.fillRect(0, 0, W * Math.min(1, G.xp / xpNeed(G.xpLevel)), 8);
-  // top row: score centre, timer right, XP level left
+  // top row: score centre, DISTANCE right (the endless score), XP level left
   ctx.font = '800 21px system-ui, sans-serif';
   ctx.fillStyle = '#fff'; ctx.textAlign = 'center'; ctx.fillText('$' + G.score, W / 2, 36);
-  ctx.textAlign = 'right'; ctx.fillStyle = '#aef3ff'; ctx.fillText(fmtTime(G.elapsed), W - 16, 36);
+  ctx.textAlign = 'right'; ctx.fillStyle = '#aef3ff'; ctx.fillText(Math.floor(G.distM) + 'm', W - 16, 36);
   ctx.textAlign = 'left'; ctx.fillStyle = '#9fb4ff'; ctx.font = '700 14px system-ui, sans-serif';
   ctx.fillText(`LV ${G.xpLevel}`, 52, 33);
   // bottom-left: HP hearts
@@ -1142,15 +1222,15 @@ function drawHUD() {
     ctx.fillStyle = '#fff'; ctx.textAlign = 'left'; ctx.fillText(`×${counts[t]}`, 30, ry + 5);
     ry += 38;
   }
-  // right side: level progress / depth bar
+  // right side: climb gauge — fills toward the next 100 m band
   const bx = W - 16, by0 = 84, by1 = FLOOR - 60;
   ctx.fillStyle = 'rgba(255,255,255,.16)'; ctx.fillRect(bx - 3, by0, 6, by1 - by0);
   ctx.fillStyle = G.level.scene.palette.glow;
   const ph = (by1 - by0) * goalProgress();
   ctx.fillRect(bx - 3, by1 - ph, 6, ph);
   ctx.fillStyle = '#fff'; ctx.font = '900 13px system-ui, sans-serif'; ctx.textAlign = 'center';
-  ctx.fillText('▼', bx, by0 - 8);
-  ctx.fillText(`${Math.round(goalProgress() * 100)}%`, bx, by1 + 20);
+  ctx.fillText('▲', bx, by0 - 8);
+  ctx.fillText(`${Math.floor(G.distM)}m`, bx, by1 + 20);
   ctx.textAlign = 'right'; ctx.fillStyle = '#9fb4ff'; ctx.font = '700 13px system-ui, sans-serif';
   ctx.fillText(G.level.name, W - 30, 60);
 }
@@ -1174,9 +1254,9 @@ function drawTitle() {
   ctx.fillText('PITBALL', W / 2, LH * 0.26);
   ctx.fillStyle = '#ff4fa3'; ctx.fillText('VICE', W / 2, LH * 0.26 + 52);
   ctx.fillStyle = '#e8eeff'; ctx.font = '600 16.5px system-ui, sans-serif';
-  ctx.fillText('Move ◀ ▶ — the launcher fires on its own.', W / 2, LH * 0.26 + 92);
-  ctx.fillText('Catch the falling orbs to reload instantly.', W / 2, LH * 0.26 + 116);
-  ctx.fillText('Nothing reaches the floor.', W / 2, LH * 0.26 + 140);
+  ctx.fillText('Push ▲ up the strip — the launcher fires on its own.', W / 2, LH * 0.26 + 92);
+  ctx.fillText('The traffic only comes if you go to it. How far up?', W / 2, LH * 0.26 + 116);
+  ctx.fillText('Catch the falling orbs to reload instantly.', W / 2, LH * 0.26 + 140);
   const rects = levelRectsCalc(); G.levelRects = rects;
   LEVELS.forEach((L, i) => {
     const r = rects[i], locked = i >= unlocked, sel = i === G.selLevel;
@@ -1188,7 +1268,7 @@ function drawTitle() {
       ctx.font = '800 19px system-ui, sans-serif';
       ctx.fillText(locked ? `🔒 ${L.name}` : `${i + 1}. ${L.name}`, r.x + 18, r.y + 30);
       ctx.fillStyle = locked ? '#454b70' : '#9fb4ff'; ctx.font = '600 13.5px system-ui, sans-serif';
-      const goal = L.goal.type === 'kills' ? `${L.goal.target} kills` : `survive ${fmtTime(L.goal.target)}`;
+      const goal = 'ENDLESS CLIMB — distance is the score';
       const tease = REACH_TEASE[i + 1] || CLEAR_TEASE[i + 1];
       ctx.fillText(locked ? (tease || 'Clear the pit before this one') : goal, r.x + 18, r.y + 52);
     } else {   // compressed rows (long level list): name only, centred
@@ -1297,6 +1377,8 @@ window.__dbg = {
   get maxHp() { return G.maxHp; },
   get state() { return G.state; },
   get score() { return G.score; },
+  get camY() { return Math.round(G.camY); },
+  get distM() { return Math.round(G.distM * 10) / 10; },
   get elapsed() { return Math.round(G.elapsed); },
   get floorBreaches() { return G.floorBreaches; },
   get levelUps() { return G.levelUps; },
