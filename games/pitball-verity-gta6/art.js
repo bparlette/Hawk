@@ -4,8 +4,11 @@
  * Enemies are painted blocky CARS (pre-rendered to offscreen sprite
  * canvases at load, per kind x damage x variant — full speed in play),
  * the hero is a tiny top-down vice driver, shards are painted cash bills,
- * and the backdrop is a cached painted street: ocean strip at the top,
- * sand band, lane-marked asphalt, palm silhouettes, neon light spill.
+ * and the backdrop is a cached painted street — lane-marked asphalt,
+ * palm silhouettes, neon light spill — that now scrolls ENDLESSLY upward:
+ * drawBackdrop tiles the street with a mirror-flip so the strip never
+ * ends and there is no beach at the top any more; palms, crosswalks and
+ * the road-painted VICE are world-anchored and pass by as you climb.
  * All canvas code-drawn. No external assets. No Rockstar anything —
  * original Vice-flavoured art only.
  */
@@ -215,15 +218,9 @@
         ctx.restore();
       }
     }
-    // crosswalk near the hero's end
-    ctx.save();
-    for (let i = 0; i < 6; i++) {
-      const x = 34 + i * ((W - 68) / 6);
-      ctx.globalAlpha = 0.13 + hash2(i, 8, 5) * 0.08;
-      ctx.fillStyle = '#f2ead6';
-      ctx.fillRect(x, H * 0.815 + (hash2(i, 2, 5) - 0.5) * 4, (W - 68) / 6 - 14, 26);
-    }
-    ctx.restore();
+    // (crosswalks are world-anchored now — drawn in drawBackdrop so they
+    // pass by as the strip scrolls; the cached tile itself must contain
+    // only features that read fine mirrored: dashes, manholes, stains.)
     // manholes
     for (const [mx, my] of [[W * 0.32, H * 0.44], [W * 0.68, H * 0.62]]) {
       ctx.fillStyle = 'rgba(12,6,18,0.5)';
@@ -247,68 +244,19 @@
     gl = ctx.createRadialGradient(W, H * 0.58, 0, W, H * 0.58, W * 0.55);
     gl.addColorStop(0, 'rgba(46,230,200,0.11)'); gl.addColorStop(1, 'rgba(46,230,200,0)');
     ctx.fillStyle = gl; ctx.fillRect(0, 0, W, H);
-    // road-painted VICE, worn, along the left-center lane
-    ctx.save();
-    ctx.translate(W * 0.30, H * 0.30);
-    ctx.rotate(-Math.PI / 2);
-    ctx.font = '900 44px system-ui, sans-serif';
-    ctx.textAlign = 'center';
-    ctx.globalAlpha = 0.16;
-    ctx.fillStyle = '#ff9ecf';
-    ctx.fillText('V I C E', 0, 0);
-    ctx.restore();
-
-    /* sand band + ocean strip across the top (the beach end of the pit) */
-    // sand
-    paintPath(ctx, () => ctx.rect(-4, 52, W + 8, 56), '#c9a05f', 5150, {
-      box: [0, 52, W, 108], dabs: 120, dabLen: 12, dabW: 5
-    });
-    for (let i = 0; i < 130; i++) {
-      ctx.fillStyle = rnd() < 0.5 ? 'rgba(90,64,30,0.25)' : 'rgba(255,240,200,0.22)';
-      ctx.fillRect(rnd() * W, 56 + rnd() * 48, 1.6 + rnd() * 2, 1.4 + rnd() * 1.6);
-    }
-    // a couple of painted shells / a starfish on the sand
-    ctx.fillStyle = 'rgba(255,150,120,0.75)';
-    const sx = W * 0.78, sy = 84;
-    for (let k = 0; k < 5; k++) {
-      const a = -Math.PI / 2 + k * (Math.PI * 2 / 5);
-      ctx.beginPath();
-      ctx.moveTo(sx, sy);
-      ctx.lineTo(sx + Math.cos(a - 0.32) * 4, sy + Math.sin(a - 0.32) * 4);
-      ctx.lineTo(sx + Math.cos(a) * 9, sy + Math.sin(a) * 9);
-      ctx.lineTo(sx + Math.cos(a + 0.32) * 4, sy + Math.sin(a + 0.32) * 4);
-      ctx.closePath(); ctx.fill();
-    }
-    // ocean: layered teal dab strokes, deeper at the very top
-    const og = ctx.createLinearGradient(0, 0, 0, 58);
-    og.addColorStop(0, '#0a4a55'); og.addColorStop(0.75, '#117a74'); og.addColorStop(1, '#1fa8a0');
-    ctx.fillStyle = og; ctx.fillRect(0, 0, W, 58);
-    for (let i = 0; i < 210; i++) {
-      const y = rnd() * 54;
-      dab(ctx, rnd() * W, y, 10 + rnd() * 22, (rnd() - 0.5) * 0.12, 2.4 + rnd() * 2.4,
-        rnd() < 0.6 ? '#35c4b5' : '#e8fff8', 0.10 + rnd() * 0.16);
-    }
-    // foam line where the water meets the sand
-    for (let x = 2; x < W; x += 7) {
-      if (rnd() < 0.25) continue;
-      dab(ctx, x, 57 + (rnd() - 0.5) * 2.5, 5 + rnd() * 6, 0, 2.6, '#f4fffa', 0.5 + rnd() * 0.4);
-    }
-    // sunset wash + low sun glow over the water
+    // Road-painted VICE and the palm silhouettes are NOT baked into the
+    // tile any more: the tile is mirror-flipped every other screen while
+    // scrolling (text would read backwards, palms would grow downward).
+    // Both are drawn world-anchored in drawBackdrop instead. The sand
+    // band, ocean strip, shells/starfish, foam line and over-water sun
+    // are GONE entirely — there is no beach at the top of the strip now;
+    // the street runs off the top edge and never ends. A soft sunset
+    // wash stays over the asphalt itself.
     const sg = ctx.createRadialGradient(W * 0.5, -10, 0, W * 0.5, -10, H * 0.52);
-    sg.addColorStop(0, 'rgba(255,150,80,0.34)');
-    sg.addColorStop(0.4, 'rgba(255,100,120,0.13)');
+    sg.addColorStop(0, 'rgba(255,150,80,0.20)');
+    sg.addColorStop(0.4, 'rgba(255,100,120,0.08)');
     sg.addColorStop(1, 'rgba(255,100,120,0)');
     ctx.fillStyle = sg; ctx.fillRect(0, 0, W, H * 0.55);
-    const sun = ctx.createRadialGradient(W * 0.5, 6, 0, W * 0.5, 6, 66);
-    sun.addColorStop(0, 'rgba(255,214,150,0.85)');
-    sun.addColorStop(0.55, 'rgba(255,160,90,0.35)');
-    sun.addColorStop(1, 'rgba(255,160,90,0)');
-    ctx.fillStyle = sun; ctx.fillRect(0, 0, W, 130);
-
-    /* palm silhouettes at the edges */
-    palm(ctx, 26, H * 0.52, 120, 1, 777);
-    palm(ctx, W - 18, H * 0.78, 140, -1, 888);
-    palm(ctx, W - 44, 150, 84, -1, 999);
 
     return cv;
   }
@@ -329,21 +277,80 @@
         }
   }
 
-  function drawBackdrop(ctx, scene, W, H, t) {
+  function drawBackdrop(ctx, scene, W, H, t, scrollY) {
     if (!prewarmed) { prewarmed = true; prewarmSprites(); }
     const key = 'vice:' + W + 'x' + H;
     let cv = bgCache.get(key);
     if (!cv) { cv = renderBackdrop(W, H); bgCache.set(key, cv); }
-    ctx.drawImage(cv, 0, 0);
     t = t || 0;
-    // animated life: sparkles on the water + a breathing neon flicker
-    for (let i = 0; i < 16; i++) {
-      const px = hash2(i, 31, 7) * W, py = 4 + hash2(i, 57, 7) * 46;
-      const a = 0.15 + 0.5 * Math.abs(Math.sin(t * 1.8 + i * 1.93));
-      ctx.fillStyle = 'rgba(240,255,250,' + a.toFixed(3) + ')';
-      const s = 1.3 + (i % 3) * 0.6;
-      ctx.fillRect(px - s / 2, py - s / 2, s, s);
+    /* --- endless upward scroll -------------------------------------------
+     * scrollY = world px climbed (camera). One tile = one screen of street
+     * (SEG = H world px). Segments alternate normal / vertically mirrored:
+     * at every seam both sides present the same tile row, so the join is
+     * invisible for ANY tile content — the street just never ends. The top
+     * of the screen is always mid-street: no sand, no water, no terminus. */
+    const sy = Math.max(0, scrollY || 0);
+    const SEG = H;
+    const off = sy % SEG;
+    const segBase = Math.floor(sy / SEG);
+    for (let k = 0; k < 3; k++) {
+      const topY = H + off - (k + 1) * SEG;
+      if (topY > H || topY + SEG < 0) continue;
+      if ((segBase + k) % 2 === 0) {
+        ctx.drawImage(cv, 0, topY);
+      } else {
+        ctx.save();
+        ctx.translate(0, topY + SEG); ctx.scale(1, -1);
+        ctx.drawImage(cv, 0, 0);
+        ctx.restore();
+      }
     }
+    // world-anchored dressing: screen y for a world height h
+    const yFor = h => H - (h - sy);
+    // palms pass by at hashed intervals (~every 430 world px), alternating
+    // sides — distance-band variety without a repeating stamp
+    const p0 = Math.floor(sy / 430) - 1, p1 = Math.floor((sy + H) / 430) + 1;
+    for (let i = p0; i <= p1; i++) {
+      if (i < 0) continue;
+      const h = i * 430 + hash2(i, 5, 77) * 190;
+      const y = yFor(h);
+      if (y < -190 || y > H + 80) continue;
+      const right = hash2(i, 9, 77) < 0.5;
+      const x = right ? W - 12 - hash2(i, 3, 77) * 24 : 12 + hash2(i, 3, 77) * 24;
+      palm(ctx, x, y, 92 + hash2(i, 7, 77) * 46, right ? -1 : 1, 500 + i * 131);
+    }
+    // crosswalk bands every ~6 screens of climb
+    const cwStep = SEG * 6;
+    for (let k = Math.floor(sy / cwStep); k <= Math.floor((sy + H) / cwStep) + 1; k++) {
+      if (k <= 0) continue;
+      const y = yFor(k * cwStep + SEG * 0.5);
+      if (y < -40 || y > H + 40) continue;
+      ctx.save();
+      for (let i = 0; i < 6; i++) {
+        const x = 34 + i * ((W - 68) / 6);
+        ctx.globalAlpha = 0.13 + hash2(i, 8, 5 + k) * 0.08;
+        ctx.fillStyle = '#f2ead6';
+        ctx.fillRect(x, y + (hash2(i, 2, 5 + k) - 0.5) * 4, (W - 68) / 6 - 14, 26);
+      }
+      ctx.restore();
+    }
+    // road-painted VICE every ~4 screens of climb, always upright
+    const vStep = SEG * 4;
+    for (let k = Math.floor(sy / vStep); k <= Math.floor((sy + H) / vStep) + 1; k++) {
+      const y = yFor(k * vStep + SEG * 1.6);
+      if (y < -70 || y > H + 70) continue;
+      ctx.save();
+      ctx.translate(W * 0.30, y);
+      ctx.rotate(-Math.PI / 2);
+      ctx.font = '900 44px system-ui, sans-serif';
+      ctx.textAlign = 'center';
+      ctx.globalAlpha = 0.16;
+      ctx.fillStyle = '#ff9ecf';
+      ctx.fillText('V I C E', 0, 0);
+      ctx.restore();
+    }
+    // animated life: a breathing neon flicker (the water sparkles went
+    // with the ocean — there is no water any more)
     const fl = 0.05 + 0.028 * Math.sin(t * 6.3) * Math.sin(t * 1.7 + 2.0);
     const gl = ctx.createRadialGradient(0, H * 0.34, 0, 0, H * 0.34, W * 0.5);
     gl.addColorStop(0, 'rgba(255,79,163,' + Math.max(0.015, fl).toFixed(3) + ')');
