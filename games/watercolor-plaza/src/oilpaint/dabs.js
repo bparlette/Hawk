@@ -120,6 +120,7 @@ void main() {
 const FRAG = /* glsl */ `
 ${COMMON}
 uniform vec2 uWash; // how much pigment a wash lays down: at its heart, and added at its pooled rim
+uniform float uPoolCol; // how strongly pooling deepens a wash's colour (less lets washes share one tone)
 in vec2 vUv;
 in vec3 vC1;
 in vec3 vC2;
@@ -135,14 +136,14 @@ void main() {
   // broken tone inside the wash: the second colour settles in soft patches, never a step
   vec3 col = mix(vC1, vC2, smoothstep(0.28, 0.78, gran) * 0.55);
   // the dried edge: deeper and a little richer than the heart of the wash
-  col *= 1.0 - 0.36 * pool;
-  col += col * pool * 0.1;
+  col *= 1.0 - 0.3 * pool * uPoolCol;
+  col += col * pool * 0.1 * uPoolCol;
   if (vGlaze.w > 0.5) {
     // the wanderer's shadow: another cool wash laid over this one, soft at its edges
     float lit = figSunSoft(vGlaze.xyz + vec3((gran - 0.5) * 0.012, (pool - 0.5) * 0.012, 0.0));
     col = mix(col * uGlazeMul + uGlazeAdd, col, lit);
   }
-  col *= 0.93 + 0.13 * gran; // granulation moves the value, patch by patch
+  col *= 0.95 + 0.10 * gran; // granulation moves the value, patch by patch
   // a wash is translucent: the paper and every wash beneath show through, and overlapping
   // washes build toward full pigment — the rim, pooled with pigment, lays down the most
   float alpha = cover * clamp(uWash.x + uWash.y * pool, 0.0, 0.92);
@@ -160,7 +161,8 @@ export function dabMaterial(shared, { head = '', body, uniforms = {}, minPx = [5
       uMinPx: { value: new THREE.Vector2(...minPx) },
       uMaxPx: { value: new THREE.Vector2(...maxPx) },
       uCells: { value: new THREE.Vector2(...cells) },
-      uWash: { value: new THREE.Vector2(0.5, 0.36) }, // a standard wash: half-strength at heart, pooled rim on top
+      uWash: { value: new THREE.Vector2(0.55, 0.32) }, // a standard wash: a little over half-strength at heart, pooled reach on top
+      uPoolCol: { value: 1.0 },
       ...uniforms,
     },
     side: THREE.DoubleSide,

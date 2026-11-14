@@ -38,6 +38,10 @@ export function createKit(shared, { palettes, head = '', light, origin = [0, 0, 
     n.crossVectors(e1, e2);
     const area = n.length() / 2;
     n.normalize();
+    // watercolour is laid in washes, not touches: each stroke is a broad sheet of wet pigment, over
+    // twice the size its oil-paint measure would suggest, so washes overlap deep into one another
+    // and merge into fields instead of sitting as separate marks on the surface
+    size = [size[0] * 2.4, size[1] * 2.4];
     // a stroke is never larger than the face it is on (a window bar is painted with small touches, not planks),
     // unless the face is one of many that make a single surface (free: a roof of snow), where strokes cross them
     const g = new THREE.Vector3().copy(grain ?? e1);
@@ -48,8 +52,11 @@ export function createKit(shared, { palettes, head = '', light, origin = [0, 0, 
     const long = Math.max(Math.abs(e1.dot(g)), Math.abs(e2.dot(g)), Math.abs(e3.dot(g))), wide = Math.max(Math.abs(e1.dot(x)), Math.abs(e2.dot(x)), Math.abs(e3.dot(x)));
     if (!free) size = [Math.max(0.012, Math.min(size[0], wide * 1.05)), Math.max(0.02, Math.min(size[1], long * 1.05))];
     const centre = new THREE.Vector3().copy(pa).add(pb).add(pc).divideScalar(3);
-    const pull = free ? 0 : 0.7 * Math.min(1, Math.max(size[0] / Math.max(wide, 1e-4), size[1] / Math.max(long, 1e-4)));
-    const want = (area / (size[0] * size[1])) * 2.6 * density;
+    // washes are spread nearly even across the face (only a gentle pull inward, so a small facet
+    // never gathers its washes into a cluster at its middle) and laid over four deep, so wherever
+    // the eye falls several washes have already merged there — the surface reads as one wet field
+    const pull = free ? 0 : 0.45 * Math.min(1, Math.max(size[0] / Math.max(wide, 1e-4), size[1] / Math.max(long, 1e-4)));
+    const want = (area / (size[0] * size[1])) * 4.2 * density;
     const count = Math.min(3000, Math.floor(want + rand()));
     for (let i = 0; i < count; i++) {
       let s = rand(), t = rand();
@@ -199,11 +206,16 @@ export function createKit(shared, { palettes, head = '', light, origin = [0, 0, 
         layout(location = 0) out vec4 outC;
         void main() {
           float r = texture(tNoise, (vWorld.xz + vWorld.y) * 0.9).r;
-          // the underpainting is only the FIRST wash: a whisper of the thing's colour laid over
-          // the paper, granulated a little — the strokes over it are the washes that build the
-          // thing up to its full tone, two or three deep where they overlap
+          // the underpainting is the first wash AND the field the later washes swim in: more than
+          // half the thing's colour laid over the paper in one continuous sheet, its tone wandering
+          // in broad soft fields (a wall is never one flat mix — the wash settles unevenly across
+          // metres, not across centimetres), so lit passages read as pale wash over paper and the
+          // strokes over it only deepen, pool and granulate what is already a wash
+          float mottle = texture(tNoise, vWorld.xz / 5.2 + vWorld.y / 4.1 + 0.31).g;
+          float mottle2 = texture(tNoise, vWorld.xz / 1.9 - vWorld.y / 2.6 + 0.73).r;
           vec3 paint = kitPaint(vWorld, normalize(vN), int(vPal + 0.5), vTone, r);
-          vec3 c = mix(vec3(0.955, 0.925, 0.85), paint, 0.42) * (0.96 + 0.07 * r);
+          paint *= 0.9 + 0.17 * mottle + 0.05 * mottle2;
+          vec3 c = mix(vec3(0.955, 0.925, 0.85), paint, 0.56) * (0.98 + 0.04 * r);
           outC = vec4(${haze ? 'hazed(c, vWorld)' : 'c'}, 1.0);
         }`,
     }));
@@ -220,7 +232,10 @@ export function createKit(shared, { palettes, head = '', light, origin = [0, 0, 
           vec4 r = hash4(aData.x);
           int k = int(aData.w + 0.5);
           vec3 c = kitPaint(aPos, Nn, k, aMore.x, r.y);
-          float wild = PAL_G[k] > 0.5 ? 0.12 : 0.3;
+          // neighbouring washes on a made thing are mixed almost alike — a wall is one batch of
+          // pigment, varied by where it settled, not a new mix per stroke — so their union reads
+          // as a single field instead of a tiling of separate touches
+          float wild = PAL_G[k] > 0.5 ? 0.12 : 0.12;
           vec3 c1 = jitter(c, r.wzy, wild), c2 = c * 1.22 + vec3(0.012, 0.008, 0.004);
           d.pos = aPos;
           d.dir = aDir;
@@ -233,6 +248,10 @@ export function createKit(shared, { palettes, head = '', light, origin = [0, 0, 
           d.nrm = Nn;
           d.height = 0.004 + aMore.y + 0.01 * r.z;
         }`,
+      // a made thing's washes are laid deeper than a standard wash: two-thirds pigment at the
+      // heart, so overlaps reach full tone quickly and no pale seam survives between neighbours;
+      // and pooling deepens their colour only gently, so no wash carries an outline of itself
+      uniforms: { uWash: { value: new THREE.Vector2(0.68, 0.26) }, uPoolCol: { value: 0.45 } },
       minPx: [3, 5], maxPx: [4000, 4000], cells: [0, 8],
     }), order);
     const group = new THREE.Group();

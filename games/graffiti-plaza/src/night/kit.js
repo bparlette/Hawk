@@ -216,8 +216,8 @@ export function createKit(shared, { palettes, head = '', light, origin = [0, 0, 
           vec4 r = hash4(aData.x);
           int k = int(aData.w + 0.5);
           vec3 c = kitPaint(aPos, Nn, k, aMore.x, r.y);
-          float wild = PAL_G[k] > 0.5 ? 0.12 : 0.3;
-          vec3 c1 = jitter(c, r.wzy, wild), c2 = c * 1.22 + vec3(0.012, 0.008, 0.004);
+          float wild = PAL_G[k] > 0.5 ? 0.10 : 0.16; // piece fills are flat: a stroke differs from its neighbour only a little
+          vec3 c1 = jitter(c, r.wzy, wild), c2 = c * 1.12 + vec3(0.008, 0.005, 0.003);
           d.pos = aPos;
           d.dir = aDir;
           d.size = aData.yz;

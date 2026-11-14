@@ -95,11 +95,14 @@ scene.add(sky.group);
       in vec3 vWorld;
       layout(location = 0) out vec4 outC;
       void main() {
-        float n = texture(tNoise, vWorld.xz / 9.0).r;
+        // GROUND FIX (post-audit): the sheet under the dabs is the ground's own flat
+        // fill — the dabs' base tone inside the plaza's edge, the same flat tone
+        // dulled past it, one hard step between — so any gap between dabs shows
+        // flat ground, never the soft noise blotches this sheet used to carry.
         float rad = length(vWorld.xz);
-        vec3 c = mix(vec3(0.78, 0.68, 0.52), vec3(0.86, 0.77, 0.61), n);
-        c = mix(c, vec3(0.68, 0.66, 0.58), smoothstep(18.0, 42.0, rad)); // the town goes on, duller, past the plaza
-        outC = vec4(c * 0.92, 1.0);
+        vec3 base = vec3(1.02, 0.94, 0.77);
+        vec3 c = mix(base, base * vec3(0.88, 0.86, 0.8), step(29.0, rad)); // the town goes on, duller, past the plaza
+        outC = vec4(c, 1.0);
       }`,
   });
   const m = new THREE.Mesh(geo, mat);
@@ -123,22 +126,35 @@ void makeDab(inout Dab d) {
   vec3 P = vec3(xz.x, heightAt(xz), xz.y);
   float rad = length(xz);
   float lit = sunAt(P + vec3(0.0, 0.25, 0.0));
-  // two bright stones in a coarse checker, and darker inlay rings round the fountain;
-  // the shade tone is cool — cartoon shadow runs blue, not brown
-  float check = mod(floor(xz.x / 1.4) + floor(xz.y / 1.4), 2.0);
-  vec3 L = mix(vec3(1.02, 0.94, 0.77), vec3(0.97, 0.86, 0.65), check);
-  vec3 M = mix(vec3(0.87, 0.75, 0.56), vec3(0.79, 0.66, 0.49), check);
+  // GROUND FIX (post-audit): a cartoon ground is ONE flat fill plus hard-edged tone
+  // bands, so every dab in a band carries the identical colour. Gone: the 1.4 m
+  // checker that flipped two tones stone to stone, the smoothstep mixes (rings,
+  // apron, distance-dull) whose soft falloffs mottled neighbouring dabs into
+  // blotches, and the per-dab jitter. What remains can only change at a crisp
+  // boundary: paint3's hard light/shade steps from lit (cast shadows land as
+  // single flat shapes), the paler fountain apron inside 4 m, two inlay rings
+  // with hard edges, and one flat duller field past the plaza's edge at 29 m.
+  // Identical neighbours merge into one flat shape; the shade tone is cool —
+  // cartoon shadow runs blue, not brown.
+  vec3 L = vec3(1.02, 0.94, 0.77);
+  vec3 M = vec3(0.87, 0.75, 0.56);
   vec3 S = vec3(0.4, 0.43, 0.63);
+  float apron = step(rad, 4.0);
+  L = mix(L, vec3(1.0, 0.95, 0.84), apron);
+  M = mix(M, vec3(0.86, 0.78, 0.64), apron);
   vec3 c = paint3(L, M, S, lit, q.y);
-  float band = smoothstep(0.32, 0.0, abs(rad - 6.4) - 0.16) + smoothstep(0.32, 0.0, abs(rad - 11.2) - 0.16);
-  c = mix(c, c * vec3(0.7, 0.6, 0.58), clamp(band, 0.0, 1.0) * 0.85);
-  c = mix(c, paint3(vec3(1.0, 0.95, 0.84), vec3(0.86, 0.78, 0.64), S, lit, q.y), smoothstep(4.8, 3.2, rad)); // paler apron at the fountain
-  c = mix(c, c * vec3(0.88, 0.86, 0.8), smoothstep(19.0, 40.0, rad)); // duller past the plaza's edge
-  c = jitter(c, r.wzy, 0.45);
+  float ring = step(abs(rad - 6.4), 0.16) + step(abs(rad - 11.2), 0.16);
+  c = mix(c, c * vec3(0.7, 0.6, 0.58), clamp(ring, 0.0, 1.0) * 0.85);
+  c = mix(c, c * vec3(0.88, 0.86, 0.8), step(29.0, rad)); // duller past the plaza's edge, as one flat tone
   vec2 radial = rad > 0.01 ? xz / rad : vec2(1.0, 0.0);
   d.dir = vec3(radial.x, 0.0, radial.y); // strokes run outward from the fountain, like spokes of the paving
   d.pos = P;
-  d.size = uCell0 * vec2(1.05 + 0.5 * r.z, 1.7 + 0.9 * r.w) * lod;
+  // GROUND FIX, second half: each dab is an ellipse, so at the old size the field
+  // was full of lens-shaped gaps and the sheet beneath flecked through everywhere
+  // (proven with a magenta probe sheet). Dabs are half again as large now, so
+  // neighbours overlap the gaps shut; with one flat colour per band the larger
+  // patches change nothing else about the read.
+  d.size = uCell0 * vec2(1.05 + 0.5 * r.z, 1.7 + 0.9 * r.w) * 1.5 * lod;
   d.c1 = hazed(c, P);
   d.c2 = d.c1; // one flat colour per ground patch: no second tone streaked through it
   d.seed = dot(cell, vec2(1.0, 57.0)) + sub * 0.37;

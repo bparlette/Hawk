@@ -1,14 +1,16 @@
-// The brush sheet, aerosol edition: eight marks of a spray can, made here rather than drawn by anyone.
-// A mark is not a bristle stroke any more — it is a DEPOSIT of spray: what the sheet stores is how much
-// paint landed at each point of the mark, and the dab shader (dabs.js) turns that into colour and cover.
+// The brush sheet, aerosol edition — PIECE marks: eight marks of a spray can laying down a fill the
+// way a writer lays one: a HARD-EDGED body of full-strength paint (a fat cap at close range does not
+// feather its fill; the edge is a line, not a gradient), a THIN overspray halo just outside that edge
+// (the only soft part, and it belongs to the halo, never to the fill), and satellite splatter thrown
+// off as accents. What the sheet stores is how much paint landed at each point of the mark, and the
+// dab shader (dabs.js) turns that into colour and cover.
 //
-// Channels: r is deposit density (thick in the middle of a pass, thin at the feather), g is cover — the
-// deposit field itself, with a long soft tail: a solid core, then a mist that thins out over most of the
-// cell, then nothing; b is a slow streak along the spray (where a second colour was picked up and not
-// mixed in). There is no height channel any more: spray lies flat, and nothing in the painter rakes light
-// across it. Every mark also throws satellite splatter — small soft droplets sitting apart from the body —
-// and the mist of one dab is meant to reach the edge of its card, so neighbouring dabs' overspray overlaps
-// on the surface and the marks stop reading as separate objects.
+// Channels: r is deposit density (~1 right through the body, falling only at the edge), g is cover —
+// the deposit field itself: ~1 inside the hard edge, a step down across two or three pixels, then the
+// faint halo skirt, then nothing; b is a slow streak along the spray (where a second colour was
+// picked up and not mixed in), compressed toward the middle so the fill stays flat with only a
+// gentle fade across it. There is no height channel: spray lies flat, and nothing rakes light
+// across it.
 //
 // A second sheet (createDripSheet) holds one thing only: drips — thin vertical runs with a head, a shaft
 // and a bead at the bottom — for the dab field in main.js that lays them down the house walls.
@@ -52,34 +54,38 @@ function satellites(u, v, seed, wide) {
 }
 
 // one mark: kind 0 a long spray pass, 1 a round splat from a fat cap, 2 a pass with a curve to it.
-// Returns [density, cover, streak]. Cover is a smooth field on purpose: the droplet breakup of the
-// mist is done per-pixel in the dab shader, so what is baked here is the shape of the deposit —
-// dense in the middle of the form, feathering out at the edges, the layered build of real spray.
+// Returns [density, cover, streak]. The body is a HARD fill: cover holds ~1 until the shape's edge,
+// then steps down across a few pixels — the droplet breakup in the dab shader nibbles that step into
+// a spray edge (stippled, never airbrushed). Outside the edge rides a faint halo skirt (cover ~0.13)
+// that the shader's mist-eating dissolves into sparse overspray dots: the halo is an accent around
+// the fill, not the fill's own softness. The streak channel is compressed toward 0.5 so a fill reads
+// flat, with only a broad gentle fade where the second colour was picked up.
 function mark(u, v, seed, kind) {
   const bend = kind === 2 ? (seed % 2 ? 0.40 : -0.40) : (hash(seed * 3.1) - 0.5) * 0.12;
   const ub = u - bend * (4 * (v - 0.5) * (v - 0.5) - 0.5);
   const wob = (n1(v * 5, seed + 3) - 0.5) * 0.07;
   const a = Math.abs(ub + wob);
-  const mottle = 0.84 + 0.32 * n2(u * 22, v * 44, seed + 77); // the can's unevenness, baked in gently
+  const mottle = 0.93 + 0.11 * n2(u * 22, v * 44, seed + 77); // the can's unevenness, kept shallow: a fill is flat first
+  const streak = 0.5 + (n2(ub * 3.4, v * 1.1, seed + 20) - 0.5) * 0.65;
   if (kind === 1) {
-    // a splat: a soft round body with a very long mist tail, splatter thrown off round it
+    // a splat: a hard round body, a whisper of halo round it, splatter thrown off
     const r = Math.hypot(ub / 0.74, (v - 0.5) / 0.46);
-    let cover = (1 - sstep(0.42, 1.18, r)) * mottle;
+    let cover = (1 - sstep(0.60, 0.68, r)) * mottle;
+    cover = Math.max(cover, 0.13 * (1 - sstep(0.68, 1.02, r)));
     cover = Math.max(cover, satellites(ub, v, seed + 40, 0.74));
-    const density = 1 - sstep(0.05, 0.85, r);
-    return [density, Math.min(1, cover), n2(ub * 3.2, v * 1.3, seed + 20)];
+    const density = 1 - sstep(0.30, 0.72, r);
+    return [density, Math.min(1, cover), streak];
   }
-  // a spray pass: wide misted core, soft start and end (the can is moving before and after the mark),
-  // cover feathering over most of the cell width so the halo reaches the card's edge
+  // a spray pass laid as a fill: hard sides, near-square ends (the can starts and stops on the
+  // shape, it does not drift through it), the halo skirt outside the sides only
   const half = 0.58 * (0.86 + 0.14 * Math.sin(Math.PI * Math.min(1, v * 1.1))) * (1 + (n1(v * 7, seed + 1) - 0.5) * 0.08);
-  const head = sstep(0.0, 0.17, v);
-  const tail = 1 - sstep(0.70, 1.0, v);
-  let cover = (1 - sstep(half - 0.44, half + 0.52, a)) * head * tail * mottle;
+  const head = sstep(0.0, 0.05, v);
+  const tail = 1 - sstep(0.95, 1.0, v);
+  let cover = (1 - sstep(half - 0.045, half + 0.045, a)) * head * tail * mottle;
+  cover = Math.max(cover, 0.13 * (1 - sstep(half + 0.03, half + 0.40, a)) * head * tail);
   cover = Math.max(cover, satellites(ub, v, seed, half) * head * tail);
-  const density = (1 - sstep(0.0, half + 0.06, a)) * head * tail;
-  // a few pinholes where the can stuttered — only in the body, the mist is broken up in the shader
-  if (cover > 0.55 && n2(u * 58, v * 116, seed + 78) > 0.955) cover *= 0.45;
-  return [density, Math.min(1, cover), n2(ub * 3.4, v * 1.1, seed + 20)];
+  const density = (1 - sstep(half - 0.10, half + 0.02, a)) * head * tail;
+  return [density, Math.min(1, cover), streak];
 }
 
 function sheet(kinds, markFn) {
@@ -124,9 +130,11 @@ function dripMark(u, v, seed) {
   const a = Math.abs(uc);
   const gauss = (c, w) => Math.exp(-((v - c) / w) * ((v - c) / w));
   const hw = 0.085 + 0.085 * gauss(0.07, 0.075) + 0.13 * gauss(0.90, 0.06);
-  let cover = (1 - sstep(hw - 0.055, hw + 0.10, a)) * sstep(0.004, 0.045, v) * (1 - sstep(0.955, 1.0, v));
-  cover *= 0.85 + 0.3 * n2(u * 20, v * 60, seed + 77);
-  const density = (1 - sstep(hw * 0.5 - 0.03, hw * 0.5 + 0.06, a)) * (0.55 + 0.45 * gauss(0.90, 0.09));
+  // a run is liquid paint, not mist: the shaft's cover is a hard column (a step at its edge, like
+  // the piece fills), so a drip reads at a glance across the plaza instead of dissolving
+  let cover = (1 - sstep(hw - 0.018, hw + 0.030, a)) * sstep(0.004, 0.045, v) * (1 - sstep(0.955, 1.0, v));
+  cover *= 0.92 + 0.14 * n2(u * 20, v * 60, seed + 77);
+  const density = (1 - sstep(hw * 0.6 - 0.02, hw * 0.6 + 0.05, a)) * (0.7 + 0.3 * gauss(0.90, 0.09));
   // a speck or two flicked off near the head
   cover = Math.max(cover, satellites(u * 0.55, v, seed + 9, 0.30) * (1 - sstep(0.25, 0.5, v)) * 0.7);
   return [Math.min(1, density), Math.min(1, cover), 0.5];

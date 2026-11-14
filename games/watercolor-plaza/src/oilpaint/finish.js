@@ -18,6 +18,7 @@ export function createFrame(renderer, shared, { samples = 4 } = {}) {
     uEye: { value: new THREE.Vector3() },
     uShafts: { value: 1 },
     uSteps: { value: 22 },
+    uBleed: { value: 0 },
     uCanvas: { value: 1 },
     uOutline: { value: 1 },
     uOutlineCol: { value: new THREE.Color(0.09, 0.07, 0.11) },
@@ -39,6 +40,7 @@ export function createFrame(renderer, shared, { samples = 4 } = {}) {
       uniform vec3 uEye;
       uniform float uShafts;
       uniform float uSteps;
+      uniform float uBleed;
       uniform float uCanvas;
       uniform float uOutline;
       uniform vec3 uOutlineCol;
@@ -58,6 +60,28 @@ export function createFrame(renderer, shared, { samples = 4 } = {}) {
         vec3 ray = world - uEye;
         float far = length(ray);
         ray /= far;
+
+        // The wet bleed: while a watercolour is wet, neighbouring pigment creeps into neighbouring
+        // pigment — no mark keeps a private boundary. The picture is finished dry, but this pass
+        // lends it a breath of that wetness: each pixel drinks a little of its neighbours, weighted
+        // by how surely they stand on the same surface (a near-equal depth), so washes melt into
+        // each other across a wall or a reach of ground while a silhouette — the fountain against
+        // the sky, her figure against the plaza — stays exactly where it was drawn.
+        if (uBleed > 0.0) {
+          vec2 bx = vec2(1.7, 0.0) / uSize, by = vec2(0.0, 1.7) / uSize;
+          vec3 acc = col;
+          float wsum = 1.0;
+          for (int i = 0; i < 4; i++) {
+            vec2 off = (i == 0 ? bx : i == 1 ? -bx : i == 2 ? by : -by);
+            float dn = texture(tDepth, vUv + off).r;
+            vec4 hn = uInvViewProj * vec4((vUv + off) * 2.0 - 1.0, dn * 2.0 - 1.0, 1.0);
+            float farn = length(hn.xyz / hn.w - uEye);
+            float w = 1.0 / (1.0 + abs(far - farn) * 2.2);
+            acc += texture(tColor, vUv + off).rgb * w;
+            wsum += w;
+          }
+          col = mix(col, acc / wsum, uBleed);
+        }
 
         // Cartoon outlines: where the depth steps hard between neighbouring pixels — a silhouette, an
         // eave, the fountain's rim — lay a dark line. The step is judged against the distance, so the

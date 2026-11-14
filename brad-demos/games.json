@@ -2906,6 +2906,22 @@
    "thumb": "thumbs/bonk-yard.png",
    "title": "Bumper Balls",
    "url": "../games/bumper-balls/"
+  },
+  {
+   "category": "Originals",
+   "desc": "Drive the MTA bus round Toad City's Baltimore — pick up waving riders at 15 landmark stops and chain drop-offs for combo fares before the clock runs out.",
+   "id": "bus-it-baltimore",
+   "thumb": "thumbs/bonk-yard.png",
+   "title": "BUS IT! Baltimore",
+   "url": "../games/bus-it-baltimore/"
+  },
+  {
+   "category": "Viral Demos",
+   "desc": "The painted plaza starts as a grey pencil sketch — walk her through it and watercolor blooms only where she walks.",
+   "id": "watercolor-walk-plaza",
+   "thumb": "thumbs/bonk-yard.png",
+   "title": "Watercolor Walk Plaza",
+   "url": "../games/watercolor-walk-plaza/"
   }
  ]
 }

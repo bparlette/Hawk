@@ -125,29 +125,40 @@ void makeDab(inout Dab d) {
   vec3 P = vec3(xz.x, heightAt(xz), xz.y);
   float rad = length(xz);
   float lit = sunAt(P + vec3(0.0, 0.25, 0.0));
-  // two bright stones in a coarse checker, and darker inlay rings round the fountain;
-  // the shade tone is a cool violet-grey — watercolour shadow is a blue wash, not a brown one
+  // the ground is laid as broad wash FIELDS, not stones: its tone wanders smoothly over metres —
+  // two octaves of world-space unevenness decide whether this reach of plaza runs warm or cool,
+  // light or settled — and the old paving checker survives only as the faintest breath of
+  // alternation inside the field, never as one tone per stone. The shade tone is a cool
+  // violet-grey — watercolour shadow is a blue wash, not a brown one
   float check = mod(floor(xz.x / 1.4) + floor(xz.y / 1.4), 2.0);
-  vec3 L = mix(vec3(1.02, 0.94, 0.77), vec3(0.97, 0.86, 0.65), check);
-  vec3 M = mix(vec3(0.87, 0.75, 0.56), vec3(0.79, 0.66, 0.49), check);
+  vec3 L = mix(vec3(1.02, 0.94, 0.77), vec3(0.97, 0.86, 0.65), check * 0.35);
+  vec3 M = mix(vec3(0.87, 0.75, 0.56), vec3(0.79, 0.66, 0.49), check * 0.35);
   vec3 S = vec3(0.42, 0.45, 0.66);
   vec3 c = paint3(L, M, S, lit, q.y);
+  float field = texture(tNoise, xz / 6.5).r;        // the broad reach of one wash: ~6 m fields
+  float field2 = texture(tNoise, xz / 2.3 + 7.0).g; // a finer settle wandering inside them
+  c *= 0.9 + 0.19 * field;
+  c = mix(c, c * vec3(1.05, 1.0, 0.88), field2 * 0.45); // warm drifts settle through the fields
+  c = mix(c, c * vec3(0.9, 0.92, 1.06), (1.0 - field) * field2 * 0.3); // and cooler ones, faintly blue
   float band = smoothstep(0.32, 0.0, abs(rad - 6.4) - 0.16) + smoothstep(0.32, 0.0, abs(rad - 11.2) - 0.16);
   c = mix(c, c * vec3(0.7, 0.6, 0.58), clamp(band, 0.0, 1.0) * 0.85);
   c = mix(c, paint3(vec3(1.0, 0.95, 0.84), vec3(0.86, 0.78, 0.64), S, lit, q.y), smoothstep(4.8, 3.2, rad)); // paler apron at the fountain
   c = mix(c, c * vec3(0.88, 0.86, 0.8), smoothstep(19.0, 40.0, rad)); // duller past the plaza's edge
-  c = jitter(c, r.wzy, 0.7); // each stone wash mixed a little differently, the pigment never twice the same
+  c = jitter(c, r.wzy, 0.22); // a whisper of wash-to-wash difference — the field's tone rules, not the stone's
   vec2 radial = rad > 0.01 ? xz / rad : vec2(1.0, 0.0);
-  d.dir = vec3(radial.x, 0.0, radial.y); // strokes run outward from the fountain, like spokes of the paving
+  d.dir = vec3(radial.x, 0.0, radial.y); // washes run outward from the fountain, like spokes of the paving
   d.pos = P;
-  d.size = uCell0 * vec2(1.05 + 0.5 * r.z, 1.7 + 0.9 * r.w) * lod;
+  // each wash spreads over many cells — three wide, four long — so the water of one reach of ground
+  // is continuous: washes overlap two, three, four deep everywhere and their soft reaches bleed
+  // together into fields; no single wash keeps a shape of its own for the eye to read as a stone
+  d.size = uCell0 * vec2(2.7 + 1.3 * r.z, 4.3 + 2.0 * r.w) * lod;
   d.c1 = hazed(c, P);
   d.c2 = d.c1 * vec3(1.05, 1.03, 0.98); // a whisper of a second tone settling through the wash
   d.seed = dot(cell, vec2(1.0, 57.0)) + sub * 0.37;
   d.turnabout = 1.0;
   d.lie = 1.0;
   d.nrm = vec3(0.0, 1.0, 0.0);
-  d.height = (0.02 + 0.05 * q.z) * pow(lod, 0.35);
+  d.height = (0.02 + 0.09 * q.z) * pow(lod, 0.35);
   d.glaze = 1.0;
 }`;
 const plaza = groundRings(shared, { body: plazaBody, per: DENSE ? 3 : 2, n: 192, cell0: 0.24, levels: 6, minPx: [8, 14], maxPx: [4000, 4000], cells: [0, 8] });
@@ -231,11 +242,13 @@ for (const s of [1, -1]) {
 }
 
 // --- the fountain ---
-kit.round(0, 0.34, 0, 2.6, 0.68, 'stone', { sides: 22, stroke: [0.09, 0.24] });
-kit.round(0, 0.72, 0, 2.72, 0.12, 'stonePale', { sides: 22, stroke: [0.08, 0.2] });
-kit.round(0, 0.8, 0, 0.44, 1.6, 'stone', { sides: 14, stroke: [0.07, 0.18] });
-kit.round(0, 1.62, 0, 1.08, 0.2, 'stonePale', { sides: 18, stroke: [0.07, 0.16] });
-kit.round(0, 1.8, 0, 0.07, 0.26, 'stone', { sides: 8 });
+// free: its washes are laid across the facets, not one batch per facet, so the drum and basin
+// read as single washed stones with no column of marks at every facet seam
+kit.round(0, 0.34, 0, 2.6, 0.68, 'stone', { sides: 22, stroke: [0.09, 0.24], free: true });
+kit.round(0, 0.72, 0, 2.72, 0.12, 'stonePale', { sides: 22, stroke: [0.08, 0.2], free: true });
+kit.round(0, 0.8, 0, 0.44, 1.6, 'stone', { sides: 14, stroke: [0.07, 0.18], free: true });
+kit.round(0, 1.62, 0, 1.08, 0.2, 'stonePale', { sides: 18, stroke: [0.07, 0.16], free: true });
+kit.round(0, 1.8, 0, 0.07, 0.26, 'stone', { sides: 8, free: true });
 kit.add(new THREE.SphereGeometry(0.17, 10, 8), kit.place(0, 1.98, 0), 'stonePale', { smooth: true, stroke: [0.05, 0.09] });
 // trees' trunks ride in the same kit
 for (const [tx, tz] of [[-12, -7.5], [12, -9.5], [-13, 7]]) kit.round(tx, 1.15, tz, 0.17, 2.3, 'bark', { sides: 8, stroke: [0.06, 0.22] });
@@ -294,9 +307,10 @@ const crownUnder = [];
       uniform vec3 uSunDir;
       in vec3 vWorld; in vec3 vN;
       layout(location = 0) out vec4 outC;
-      // the crown's first wash: a pale sage ghost of the leaf colour over the paper — the
-      // washes over it build the crown up from here, darkest where they pile in the shade
-      void main() { outC = vec4(mix(vec3(0.955, 0.925, 0.85), vec3(0.3, 0.46, 0.2), 0.5) * (0.82 + 0.3 * max(normalize(vN).y, 0.0)), 1.0); }`,
+      // the crown's first wash: a sage wash laid over the paper, more than a ghost — the crown's
+      // own continuous body of colour, which the washes over it deepen and granulate; where one
+      // of them thins out, this is what shows, so the crown never breaks into dotted marks
+      void main() { outC = vec4(mix(vec3(0.955, 0.925, 0.85), vec3(0.3, 0.46, 0.2), 0.68) * (0.82 + 0.3 * max(normalize(vN).y, 0.0)), 1.0); }`,
   });
   for (const { c, r } of crownUnder) {
     const s = new THREE.Mesh(new THREE.SphereGeometry(r * 0.96, 12, 9), underMat);
@@ -317,10 +331,13 @@ const crowns = dabMesh(dabGeometry(crownCount, {
       if (dot(Nn, normalize(cameraPosition - aPos)) < -0.1) { d.alive = 0.0; return; }
       float x = dayOn(aPos, Nn);
       vec3 c = paint3(vec3(0.58, 0.87, 0.35), vec3(0.36, 0.69, 0.26), vec3(0.15, 0.39, 0.24), x, r.y);
-      c = jitter(c, r.wzy, 0.5);
+      c = jitter(c, r.wzy, 0.32);
       d.pos = aPos;
       d.dir = aDir;
-      d.size = vec2(0.19, 0.36) * (0.8 + 0.5 * r.x);
+      // broad leaf washes, not dabs of leaf: each spreads wide enough to drown its neighbours'
+      // edges, so the crown reads as bled masses of green with soft watery rims, darkening where
+      // the washes pile in the shade — never as a cluster of separate dots
+      d.size = vec2(0.46, 0.85) * (0.8 + 0.5 * r.x);
       d.c1 = hazed(c, aPos);
       d.c2 = hazed(c * 1.12, aPos); // the settle tone inside a leaf wash is only a breath lighter
       d.seed = r.x * 977.0;
@@ -698,6 +715,7 @@ function stepMove(dt) {
 // --- the canvas finish ---
 const frame = createFrame(renderer, shared);
 frame.uniforms.uShafts.value = 0.3; // a little sun-glow in the air
+frame.uniforms.uBleed.value = 0.5; // the wet bleed: washes creep into one another within a surface
 frame.uniforms.uOutline.value = 0; // no ink outline anywhere: a watercolour's edges are dried pigment, not lines
 frame.uniforms.uCanvas.value = 1; // the paper's tooth and mottle over the whole picture
 
