@@ -1,4 +1,4 @@
-export const W = 15, H = 13, T = 16;
+export const W = 13, H = 21, T = 16;   // screen-fill retrofit (Nov 14): arena reshaped 15x13 -> 13x21 so the field fills the portrait screen (~79% height at full width) instead of sitting in a 420x364 band
 export const FUSE = 150, FLAME = 30, END_DELAY = 120, SUDDEN = 5400, SUDDEN_EVERY = 8;
 const HALF = 6.5;
 const EMPTY = 0, HARD = 1, SOFT = 2;

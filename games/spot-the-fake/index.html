@@ -1,0 +1,695 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+<title>SPOT THE FAKE!</title>
+<style>
+  html,body{margin:0;padding:0;background:#14101f;height:100%;overflow:hidden}
+  body{display:flex;align-items:center;justify-content:center;font-family:-apple-system,'Segoe UI',Roboto,Helvetica,Arial,sans-serif}
+  #wrap{position:relative;width:min(100vw, calc(100dvh * 420 / 860));aspect-ratio:420/860;max-height:100dvh}
+  canvas{position:absolute;inset:0;width:100%;height:100%;display:block;border-radius:6px}
+  .panel{position:absolute;inset:0;z-index:1300;display:flex;flex-direction:column;align-items:center;justify-content:center;
+    background:rgba(16,10,28,.88);text-align:center;padding:24px;box-sizing:border-box}
+  .panel h1{margin:0 0 6px;font-size:46px;letter-spacing:1px;color:#ffd23e;text-shadow:0 3px 0 #b25f00,0 6px 18px rgba(0,0,0,.6)}
+  .panel h2{margin:0 0 14px;font-size:17px;letter-spacing:3px;color:#5eead4;font-weight:700}
+  .panel p{color:#f2f0e9;font-size:16px;line-height:1.5;max-width:320px;margin:5px 0}
+  .panel .big{font-size:21px}
+  .bigbtn{margin-top:18px;pointer-events:auto;background:#ec2c8c;color:#fff;border:3px solid #191324;border-radius:14px;
+    font-size:22px;font-weight:900;padding:13px 36px;box-shadow:0 4px 0 #191324;cursor:pointer;font-family:inherit}
+  .bigbtn:active{transform:translateY(3px);box-shadow:0 1px 0 #191324}
+  .hidden{display:none!important}
+  #overStats{font-size:19px;color:#ffd23e;line-height:1.7;font-weight:700}
+</style>
+<style id="moth-game-guard">
+html,body{touch-action:none;overscroll-behavior:none;-webkit-touch-callout:none;-webkit-user-select:none;user-select:none;-webkit-tap-highlight-color:transparent}
+canvas{touch-action:none}
+</style>
+</head>
+<body>
+<div id="wrap">
+  <canvas id="cv" width="420" height="860"></canvas>
+  <div id="menu" class="panel">
+    <h1>SPOT THE<br>FAKE!</h1>
+    <h2>ONE IS WRONG. FIND IT.</h2>
+    <p class="big">🔍 Every round, a set of goods hits the counter — and <b style="color:#ffd23e">exactly one is a forgery</b>.</p>
+    <p>👆 Tap the fake before time runs out.<br>🔥 Streaks multiply your score.<br>❌ Wrong taps and slow eyes cost hearts.</p>
+    <button id="startbtn" class="bigbtn">▶ PLAY</button>
+  </div>
+  <div id="over" class="panel hidden">
+    <h1>⏰ TIME'S UP!</h1>
+    <h2 id="overTitle">THE FORGER GOT AWAY…</h2>
+    <div id="overStats"></div>
+    <p>Think your eye is sharper?</p>
+    <button id="againbtn" class="bigbtn">↻ PLAY AGAIN</button>
+  </div>
+</div>
+
+<script>
+'use strict';
+/* ================= SPOT THE FAKE! =================
+   One-verb score attack: a grid of procedurally drawn near-identical
+   goods; exactly one carries a single controlled "wrong" detail.
+   Tap it before the clock drains. All art is code — no images. */
+
+const W = 420, H = 860;
+const cv = document.getElementById('cv');
+const ctx = cv.getContext('2d');
+
+/* ---------- deterministic rng (per-round variety) ---------- */
+let _s = 1234567;
+function srand(seed){ _s = seed >>> 0 || 1; }
+function rnd(){ _s = (_s * 1664525 + 1013904223) >>> 0; return _s / 4294967296; }
+function rr(a,b){ return a + rnd()*(b-a); }
+function pick(arr){ return arr[Math.floor(rnd()*arr.length)]; }
+
+/* ---------- audio (iOS-safe synth) ---------- */
+let AC = null, master = null;
+function audioInit(){
+  try { if (navigator.audioSession) navigator.audioSession.type = 'playback'; } catch(e){}
+  if (AC){ if (AC.state === 'suspended') AC.resume(); return; }
+  try {
+    AC = new (window.AudioContext || window.webkitAudioContext)();
+    master = AC.createGain(); master.gain.value = 0.45; master.connect(AC.destination);
+    const len = Math.floor(AC.sampleRate * 0.05), buf = AC.createBuffer(1, len, AC.sampleRate);
+    const src = AC.createBufferSource(); src.buffer = buf; src.connect(master); src.start();
+  } catch(e){ AC = null; }
+}
+function tone(f0,f1,dur,type,vol,when){
+  if (!AC) return; const t = AC.currentTime + (when||0);
+  const o = AC.createOscillator(), g = AC.createGain();
+  o.type = type || 'sine'; o.frequency.setValueAtTime(f0,t);
+  o.frequency.exponentialRampToValueAtTime(Math.max(20,f1), t+dur);
+  g.gain.setValueAtTime(vol||0.2,t); g.gain.exponentialRampToValueAtTime(0.001,t+dur);
+  o.connect(g); g.connect(master); o.start(t); o.stop(t+dur+0.03);
+}
+const sfx = {
+  good(){ tone(880,880,.09,'sine',.22); tone(1318,1318,.14,'sine',.22,.07); },
+  great(){ tone(784,784,.08,'square',.14); tone(1046,1046,.08,'square',.14,.06); tone(1568,1568,.16,'square',.16,.12); },
+  bad(){ tone(220,110,.22,'sawtooth',.20); },
+  tick(){ tone(1200,1200,.05,'sine',.10); },
+  over(){ tone(523,523,.14,'triangle',.2); tone(392,392,.14,'triangle',.2,.13); tone(330,262,.30,'triangle',.2,.26); },
+  pop(){ tone(500,900,.06,'sine',.15); }
+};
+addEventListener('pointerdown', audioInit, {passive:true});
+addEventListener('touchend', ()=>{ if (AC && AC.state==='suspended') AC.resume(); }, {passive:true});
+document.addEventListener('visibilitychange', ()=>{ if (!document.hidden && AC && AC.state==='suspended') AC.resume(); });
+
+/* ---------- game state ---------- */
+const G = {
+  mode: 'menu',           // menu | play | reveal | over
+  score: 0, lives: 3, streak: 0, bestStreak: 0,
+  round: 0, correct: 0, taps: 0,
+  timeLeft: 0, timeMax: 10,
+  type: null, cells: [], fakeIndex: -1, mut: null,
+  revealT: 0, shake: 0, flashRed: 0, flashGreen: 0,
+  floaters: [], wrongMarks: new Set(), lastTickSec: -1
+};
+
+/* difficulty curve */
+function roundSpec(round){
+  let count, tier;
+  if (round <= 2){ count = 4; tier = 1; }
+  else if (round <= 4){ count = 6; tier = 1; }
+  else if (round <= 6){ count = 6; tier = 2; }
+  else if (round <= 8){ count = 9; tier = 2; }
+  else if (round <= 11){ count = 9; tier = 3; }
+  else { count = 12; tier = 3; }
+  if (tier > 1 && rnd() < 0.25) tier -= 1;           // occasional breather
+  const time = Math.max(4, 10.5 - round * 0.55);
+  return { count, tier, time };
+}
+function gridFor(count){
+  if (count === 4) return {cols:2, rows:2};
+  if (count === 6) return {cols:2, rows:3};
+  if (count === 9) return {cols:3, rows:3};
+  return {cols:3, rows:4};
+}
+
+/* ---------- the fake-detail catalogue ----------
+   Every mutation: draw-time flag + a reveal caption players learn from. */
+const MUTS = {
+  coin: [
+    {id:'star6',      tier:1, label:'⭐ SIX points on the star!'},
+    {id:'earNone',    tier:1, label:'🌾 A laurel branch is missing!'},
+    {id:'dots7',      tier:2, label:'🔘 Only 7 rim dots — should be 8!'},
+    {id:'starDown',   tier:2, label:'⭐ The star points DOWN!'},
+    {id:'ringGap',    tier:3, label:'⭕ A gap in the inner ring!'},
+    {id:'dotTiny',    tier:3, label:'🔘 One rim dot is tiny!'}
+  ],
+  face: [
+    {id:'browMissing',tier:1, label:'🤨 A missing eyebrow!'},
+    {id:'earMissing', tier:1, label:'👂 One ear is gone!'},
+    {id:'eyeColor',   tier:2, label:'👁️ One eye is BROWN, not blue!'},
+    {id:'smileTilt',  tier:2, label:'😏 The smile leans the wrong way!'},
+    {id:'moleExtra',  tier:3, label:'✦ An extra mole on the cheek!'},
+    {id:'noseFlip',   tier:3, label:'👃 The nose curves backwards!'}
+  ],
+  hand: [
+    {id:'extraFinger',tier:1, label:'🖐️ SIX fingers!'},
+    {id:'ringWrong',  tier:2, label:'💍 The ring is on the wrong finger!'},
+    {id:'nailMissing',tier:2, label:'💅 A missing fingernail!'},
+    {id:'nailPink',   tier:3, label:'💅 One nail is painted PINK!'},
+    {id:'knuckle',    tier:3, label:'🦴 A knuckle crease is missing!'}
+  ],
+  gem: [
+    {id:'sparkle3',   tier:1, label:'✨ THREE sparkles — real ones have two!'},
+    {id:'facetExtra', tier:2, label:'🔷 An extra facet line!'},
+    {id:'crownTall',  tier:2, label:'👑 The crown sits too tall!'},
+    {id:'facetMissing',tier:3,label:'🔷 A facet line is missing!'},
+    {id:'facetShade', tier:3, label:'🔷 One facet is shaded wrong!'}
+  ],
+  shoe: [
+    {id:'stripes2',   tier:1, label:'👟 Only TWO stripes — should be three!'},
+    {id:'heelTab',    tier:2, label:'👟 The heel tab is missing!'},
+    {id:'laceSkip',   tier:2, label:'🪢 A lace crossing is skipped!'},
+    {id:'soleLine',   tier:3, label:'👟 The sole stripe is the wrong colour!'},
+    {id:'toeDot',     tier:3, label:'👟 A dot on the toe cap!'}
+  ],
+  note: [
+    {id:'denom10',    tier:1, label:'💵 One corner says 10, not 100!'},
+    {id:'seal6',      tier:2, label:'⭐ The seal star has SIX points!'},
+    {id:'serialDigit',tier:2, label:'🔢 The serial ends in 7, not 3!'},
+    {id:'wink',       tier:3, label:'😉 The portrait is WINKING!'},
+    {id:'borderNotch',tier:3, label:'💵 A notch cut from the border!'}
+  ]
+};
+const TYPES = Object.keys(MUTS);
+
+/* ---------- item painters ----------
+   Each painter draws ONE item centred in rect r, with per-item jitter v
+   (identical across the set) and mutation m (null for genuine items). */
+function star(cx, cy, R, r2, points, rot){
+  ctx.beginPath();
+  for (let i = 0; i < points * 2; i++){
+    const rad = i % 2 === 0 ? R : r2, a = rot + i * Math.PI / points - Math.PI/2;
+    const x = cx + Math.cos(a) * rad, y = cy + Math.sin(a) * rad;
+    i === 0 ? ctx.moveTo(x,y) : ctx.lineTo(x,y);
+  }
+  ctx.closePath();
+}
+function drawCoin(r, v, m){
+  const cx = r.x + r.w/2 + v.jx, cy = r.y + r.h/2 + v.jy, R = Math.min(r.w, r.h) * 0.40;
+  ctx.fillStyle = '#f7c948'; ctx.beginPath(); ctx.arc(cx, cy, R, 0, 7); ctx.fill();
+  ctx.lineWidth = 3; ctx.strokeStyle = '#b8860b'; ctx.stroke();
+  ctx.strokeStyle = '#d99a16'; ctx.lineWidth = 2.5;
+  ctx.beginPath();
+  if (m === 'ringGap') ctx.arc(cx, cy, R*0.80, 0.5, 5.4); else ctx.arc(cx, cy, R*0.80, 0, 7);
+  ctx.stroke();
+  // laurel branches (two arcs of leaves), skip left if earNone
+  ctx.fillStyle = '#d99a16';
+  for (const side of [-1, 1]){
+    if (m === 'earNone' && side === -1) continue;
+    for (let i = 0; i < 4; i++){
+      const a = side * (0.65 + i * 0.28) + (side < 0 ? Math.PI : 0);
+      const lx = cx + Math.cos(a + (side<0?0.35:-0.35)) * R * 0.62, ly = cy + Math.sin(a + (side<0?0.35:-0.35)) * R * 0.62;
+      ctx.beginPath(); ctx.ellipse(lx, ly, R*0.10, R*0.05, a, 0, 7); ctx.fill();
+    }
+  }
+  // rim dots
+  const dots = m === 'dots7' ? 7 : 8;
+  for (let i = 0; i < dots; i++){
+    const a = i / dots * Math.PI * 2 + 0.39;
+    const rad = (m === 'dotTiny' && i === 3) ? R*0.035 : R*0.055;
+    ctx.fillStyle = '#b8860b';
+    ctx.beginPath(); ctx.arc(cx + Math.cos(a)*R*0.90, cy + Math.sin(a)*R*0.90, rad, 0, 7); ctx.fill();
+  }
+  // centre star
+  ctx.fillStyle = '#ffe08a'; ctx.strokeStyle = '#b8860b'; ctx.lineWidth = 2;
+  star(cx, cy, R*0.34, R*0.15, m === 'star6' ? 6 : 5, m === 'starDown' ? Math.PI : 0);
+  ctx.fill(); ctx.stroke();
+}
+function drawFace(r, v, m){
+  const cx = r.x + r.w/2 + v.jx, cy = r.y + r.h/2 + v.jy, R = Math.min(r.w, r.h) * 0.38;
+  // hair
+  ctx.fillStyle = '#5b3a29'; ctx.beginPath(); ctx.arc(cx, cy - R*0.10, R*1.04, Math.PI*0.95, Math.PI*2.05); ctx.fill();
+  // ears
+  ctx.fillStyle = '#f2c094';
+  if (m !== 'earMissing'){ ctx.beginPath(); ctx.arc(cx - R*0.98, cy + R*0.05, R*0.16, 0, 7); ctx.fill(); }
+  ctx.beginPath(); ctx.arc(cx + R*0.98, cy + R*0.05, R*0.16, 0, 7); ctx.fill();
+  // head
+  ctx.beginPath(); ctx.arc(cx, cy, R, 0, 7); ctx.fillStyle = '#f7cf9f'; ctx.fill();
+  ctx.lineWidth = 2.5; ctx.strokeStyle = '#c68b4e'; ctx.stroke();
+  // hair fringe
+  ctx.fillStyle = '#5b3a29'; ctx.beginPath(); ctx.arc(cx, cy - R*0.34, R*0.92, Math.PI*1.08, Math.PI*1.92); ctx.lineTo(cx + R*0.86, cy - R*0.30);
+  ctx.quadraticCurveTo(cx, cy - R*0.62, cx - R*0.86, cy - R*0.30); ctx.closePath(); ctx.fill();
+  // brows
+  ctx.strokeStyle = '#4a2e1c'; ctx.lineWidth = R*0.07; ctx.lineCap = 'round';
+  ctx.beginPath(); ctx.moveTo(cx - R*0.52, cy - R*0.28); ctx.quadraticCurveTo(cx - R*0.34, cy - R*0.40, cx - R*0.16, cy - R*0.29); ctx.stroke();
+  if (m !== 'browMissing'){
+    ctx.beginPath(); ctx.moveTo(cx + R*0.16, cy - R*0.29); ctx.quadraticCurveTo(cx + R*0.34, cy - R*0.40, cx + R*0.52, cy - R*0.28); ctx.stroke();
+  }
+  // eyes: white + iris
+  for (const s of [-1, 1]){
+    ctx.fillStyle = '#fff'; ctx.beginPath(); ctx.ellipse(cx + s*R*0.34, cy - R*0.06, R*0.15, R*0.11, 0, 0, 7); ctx.fill();
+    const winkRight = (m === 'wink' && s === 1);
+    ctx.fillStyle = (m === 'eyeColor' && s === 1) ? '#7a4a21' : '#2b6cb0';
+    if (!winkRight){ ctx.beginPath(); ctx.arc(cx + s*R*0.34, cy - R*0.06, R*0.065, 0, 7); ctx.fill(); }
+    ctx.fillStyle = '#1a202c'; if (!winkRight){ ctx.beginPath(); ctx.arc(cx + s*R*0.34, cy - R*0.06, R*0.03, 0, 7); ctx.fill(); }
+  }
+  // nose
+  ctx.strokeStyle = '#c68b4e'; ctx.lineWidth = R*0.055;
+  ctx.beginPath();
+  if (m === 'noseFlip'){ ctx.moveTo(cx + R*0.05, cy + R*0.08); ctx.quadraticCurveTo(cx - R*0.08, cy + R*0.22, cx + R*0.03, cy + R*0.30); }
+  else { ctx.moveTo(cx - R*0.05, cy + R*0.08); ctx.quadraticCurveTo(cx + R*0.08, cy + R*0.22, cx - R*0.03, cy + R*0.30); }
+  ctx.stroke();
+  // freckles + optional extra mole
+  ctx.fillStyle = '#d99a5b';
+  for (const s of [-1,1]) for (let i = 0; i < 3; i++){
+    ctx.beginPath(); ctx.arc(cx + s*R*(0.42 + i*0.10), cy + R*0.30, R*0.022, 0, 7); ctx.fill();
+  }
+  if (m === 'moleExtra'){ ctx.fillStyle = '#4a2e1c'; ctx.beginPath(); ctx.arc(cx - R*0.55, cy + R*0.52, R*0.045, 0, 7); ctx.fill(); }
+  // smile
+  ctx.strokeStyle = '#8a4b2a'; ctx.lineWidth = R*0.065;
+  ctx.beginPath();
+  if (m === 'smileTilt') ctx.arc(cx + R*0.06, cy + R*0.28, R*0.42, Math.PI*0.18, Math.PI*0.78);
+  else ctx.arc(cx, cy + R*0.26, R*0.44, Math.PI*0.15, Math.PI*0.85);
+  ctx.stroke();
+}
+function drawHand(r, v, m){
+  const cx = r.x + r.w/2 + v.jx, cy = r.y + r.h/2 + v.jy, S = Math.min(r.w, r.h);
+  const skin = '#f7cf9f', line = '#c68b4e';
+  ctx.lineWidth = 2.5; ctx.strokeStyle = line; ctx.fillStyle = skin;
+  // fingers: x offsets + lengths (index..pinky), plus fake 6th
+  const fingers = [ {dx:-0.27, len:0.46}, {dx:-0.09, len:0.54}, {dx:0.09, len:0.49}, {dx:0.26, len:0.37} ];
+  if (m === 'extraFinger') fingers.push({dx:0.40, len:0.24});
+  const fw = S*0.13;
+  for (const f of fingers){
+    const fx = cx + f.dx*S, fy = cy + S*0.07, fh = f.len*S;
+    ctx.beginPath();
+    ctx.moveTo(fx - fw/2, fy); ctx.lineTo(fx - fw/2, fy - fh + fw/2);
+    ctx.arc(fx, fy - fh + fw/2, fw/2, Math.PI, 0);
+    ctx.lineTo(fx + fw/2, fy); ctx.closePath(); ctx.fill(); ctx.stroke();
+    // nail (middle finger nail dropped when nailMissing; index nail pink when nailPink)
+    const isMid = Math.abs(f.dx + 0.09) < 0.01, isIdx = Math.abs(f.dx + 0.27) < 0.01;
+    if (!(m === 'nailMissing' && isMid)){
+      ctx.fillStyle = (m === 'nailPink' && isIdx) ? '#ff7eb6' : '#ffe9d6';
+      ctx.beginPath(); ctx.ellipse(fx, fy - fh + fw*0.55, fw*0.30, fw*0.38, 0, 0, 7); ctx.fill();
+      ctx.strokeStyle = line; ctx.lineWidth = 1.2; ctx.stroke(); ctx.lineWidth = 2.5; ctx.strokeStyle = line; ctx.fillStyle = skin;
+    }
+    // knuckle crease on ring finger (third), missing in fake
+    if (Math.abs(f.dx - 0.09) < 0.01 && m !== 'knuckle'){
+      ctx.strokeStyle = '#a06a35'; ctx.lineWidth = 2.2;
+      ctx.beginPath(); ctx.moveTo(fx - fw*0.32, fy - fh*0.45); ctx.lineTo(fx + fw*0.32, fy - fh*0.45); ctx.stroke();
+      ctx.lineWidth = 2.5;
+    }
+  }
+  // thumb: a rotated capsule hugging the left palm edge, base tucked under palm
+  ctx.save();
+  ctx.translate(cx - S*0.335, cy + S*0.02); ctx.rotate(0.62);
+  ctx.beginPath(); ctx.ellipse(0, 0, S*0.085, S*0.21, 0, 0, 7);
+  ctx.fillStyle = skin; ctx.fill(); ctx.stroke();
+  ctx.restore();
+  // palm
+  ctx.beginPath();
+  ctx.moveTo(cx - S*0.33, cy + S*0.05);
+  ctx.lineTo(cx + S*0.35, cy + S*0.05);
+  ctx.quadraticCurveTo(cx + S*0.38, cy + S*0.30, cx + S*0.27, cy + S*0.45);
+  ctx.lineTo(cx - S*0.21, cy + S*0.45);
+  ctx.quadraticCurveTo(cx - S*0.35, cy + S*0.28, cx - S*0.33, cy + S*0.05);
+  ctx.closePath(); ctx.fill(); ctx.stroke();
+  // ring: on ring finger (3rd, dx .09) genuine; on middle (dx -.09) fake
+  const ringDx = (m === 'ringWrong') ? -0.09 : 0.09;
+  ctx.strokeStyle = '#e8b923'; ctx.lineWidth = S*0.045;
+  ctx.beginPath(); ctx.moveTo(cx + ringDx*S - fw/2 - 1, cy - S*0.06); ctx.lineTo(cx + ringDx*S + fw/2 + 1, cy - S*0.06); ctx.stroke();
+  ctx.fillStyle = '#5eead4'; ctx.beginPath(); ctx.arc(cx + ringDx*S, cy - S*0.10, S*0.035, 0, 7); ctx.fill();
+}
+function drawGem(r, v, m){
+  const cx = r.x + r.w/2 + v.jx, cy = r.y + r.h/2 + v.jy, S = Math.min(r.w, r.h);
+  const Wd = S*0.72, crownH = S * (m === 'crownTall' ? 0.30 : 0.22), pavH = S*0.44;
+  const topY = cy - (crownH + pavH)/2, midY = topY + crownH, botY = midY + pavH;
+  const xl = cx - Wd/2, xr = cx + Wd/2, tl = cx - Wd*0.30, tr = cx + Wd*0.30;
+  // pavilion
+  ctx.beginPath(); ctx.moveTo(xl, midY); ctx.lineTo(xr, midY); ctx.lineTo(cx, botY); ctx.closePath();
+  ctx.fillStyle = '#7dd3fc'; ctx.fill();
+  // crown
+  ctx.beginPath(); ctx.moveTo(tl, topY); ctx.lineTo(tr, topY); ctx.lineTo(xr, midY); ctx.lineTo(xl, midY); ctx.closePath();
+  ctx.fillStyle = '#bae6fd'; ctx.fill();
+  ctx.lineWidth = 2.5; ctx.strokeStyle = '#0369a1';
+  ctx.beginPath(); ctx.moveTo(tl, topY); ctx.lineTo(tr, topY); ctx.lineTo(xr, midY); ctx.lineTo(cx, botY); ctx.lineTo(xl, midY); ctx.closePath(); ctx.stroke();
+  // facet lines (one pavilion line dropped when facetMissing)
+  ctx.lineWidth = 1.6; ctx.strokeStyle = 'rgba(3,105,161,.75)';
+  ctx.beginPath(); ctx.moveTo(tl, topY); ctx.lineTo(xl, midY); ctx.moveTo(tr, topY); ctx.lineTo(xr, midY); ctx.stroke();
+  ctx.beginPath(); ctx.moveTo(xl, midY); ctx.lineTo(cx, botY); ctx.moveTo(xr, midY); ctx.lineTo(cx, botY); ctx.stroke();
+  ctx.beginPath(); ctx.moveTo(cx - Wd*0.18, midY); ctx.lineTo(cx, botY); ctx.stroke();
+  if (m !== 'facetMissing'){ ctx.beginPath(); ctx.moveTo(cx + Wd*0.18, midY); ctx.lineTo(cx, botY); ctx.stroke(); }
+  if (m === 'facetExtra'){ ctx.beginPath(); ctx.moveTo(cx, topY); ctx.lineTo(cx, midY); ctx.stroke(); }
+  ctx.beginPath(); ctx.moveTo(tl, topY); ctx.lineTo(tr, topY); ctx.moveTo(xl, midY); ctx.lineTo(xr, midY); ctx.stroke();
+  // shaded facet (wrong one shaded when facetShade)
+  ctx.fillStyle = 'rgba(2,132,199,.35)';
+  ctx.beginPath();
+  if (m === 'facetShade'){ ctx.moveTo(cx, midY); ctx.lineTo(xr, midY); ctx.lineTo(cx, botY); }
+  else { ctx.moveTo(xl, midY); ctx.lineTo(cx, midY); ctx.lineTo(cx, botY); }
+  ctx.closePath(); ctx.fill();
+  // sparkles
+  const sparks = [[cx - Wd*0.52, topY - S*0.02], [cx + Wd*0.54, midY - S*0.06]];
+  if (m === 'sparkle3') sparks.push([cx + Wd*0.10, topY - S*0.13]);
+  ctx.fillStyle = '#fff7ae';
+  for (const [sx, sy] of sparks){
+    ctx.beginPath();
+    ctx.moveTo(sx, sy - S*0.055); ctx.quadraticCurveTo(sx, sy, sx + S*0.055, sy);
+    ctx.quadraticCurveTo(sx, sy, sx, sy + S*0.055); ctx.quadraticCurveTo(sx, sy, sx - S*0.055, sy);
+    ctx.quadraticCurveTo(sx, sy, sx, sy - S*0.055); ctx.fill();
+  }
+}
+function drawShoe(r, v, m){
+  const cx = r.x + r.w/2 + v.jx, cy = r.y + r.h/2 + v.jy, S = Math.min(r.w, r.h);
+  const w = S*0.86, h = S*0.44, x0 = cx - w/2, yBase = cy + h*0.55;
+  // body (side profile, toe right)
+  ctx.beginPath();
+  ctx.moveTo(x0, yBase - h*0.30);
+  ctx.lineTo(x0, yBase - h*0.78);
+  ctx.quadraticCurveTo(x0 + w*0.06, yBase - h*0.98, x0 + w*0.22, yBase - h*0.96);
+  ctx.lineTo(x0 + w*0.40, yBase - h*0.52);
+  ctx.quadraticCurveTo(x0 + w*0.62, yBase - h*0.18, x0 + w*0.88, yBase - h*0.16);
+  ctx.quadraticCurveTo(x0 + w*1.0, yBase - h*0.14, x0 + w*1.0, yBase - h*0.30);
+  ctx.closePath();
+  ctx.fillStyle = '#e53e3e'; ctx.fill(); ctx.lineWidth = 2.5; ctx.strokeStyle = '#7f1d1d'; ctx.stroke();
+  // toe cap
+  ctx.beginPath();
+  ctx.moveTo(x0 + w*0.78, yBase - h*0.20);
+  ctx.quadraticCurveTo(x0 + w*0.86, yBase - h*0.05, x0 + w*0.80, yBase - h*0.30);
+  ctx.lineTo(x0 + w*1.0, yBase - h*0.30);
+  ctx.quadraticCurveTo(x0 + w*1.0, yBase - h*0.14, x0 + w*0.88, yBase - h*0.16);
+  ctx.closePath(); ctx.fillStyle = '#fff5f5'; ctx.fill(); ctx.stroke();
+  if (m === 'toeDot'){ ctx.fillStyle = '#7f1d1d'; ctx.beginPath(); ctx.arc(x0 + w*0.90, yBase - h*0.22, S*0.028, 0, 7); ctx.fill(); }
+  // stripes
+  const n = m === 'stripes2' ? 2 : 3;
+  ctx.strokeStyle = '#fff'; ctx.lineWidth = S*0.045; ctx.lineCap = 'round';
+  for (let i = 0; i < n; i++){
+    ctx.beginPath(); ctx.moveTo(x0 + w*(0.16 + i*0.09), yBase - h*0.62); ctx.lineTo(x0 + w*(0.26 + i*0.09), yBase - h*0.32); ctx.stroke();
+  }
+  // laces (one crossing skipped in fake)
+  ctx.strokeStyle = '#fff'; ctx.lineWidth = S*0.028;
+  for (let i = 0; i < 4; i++){
+    if (m === 'laceSkip' && i === 2) continue;
+    const lx = x0 + w*(0.44 + i*0.085);
+    ctx.beginPath(); ctx.moveTo(lx, yBase - h*0.52 + i*h*0.015); ctx.lineTo(lx + w*0.055, yBase - h*0.36 + i*h*0.015); ctx.stroke();
+  }
+  // heel tab
+  if (m !== 'heelTab'){
+    ctx.fillStyle = '#fff5f5'; ctx.fillRect(x0 - S*0.005, yBase - h*0.86, S*0.045, h*0.24);
+    ctx.strokeStyle = '#7f1d1d'; ctx.lineWidth = 1.6; ctx.strokeRect(x0 - S*0.005, yBase - h*0.86, S*0.045, h*0.24);
+  }
+  // sole
+  ctx.fillStyle = '#fff5f5';
+  ctx.beginPath(); ctx.moveTo(x0 - S*0.01, yBase - h*0.30); ctx.lineTo(x0 + w + S*0.01, yBase - h*0.30); ctx.lineTo(x0 + w + S*0.01, yBase); ctx.lineTo(x0 - S*0.01, yBase); ctx.closePath(); ctx.fill();
+  ctx.strokeStyle = '#7f1d1d'; ctx.lineWidth = 2.2; ctx.stroke();
+  ctx.strokeStyle = (m === 'soleLine') ? '#3182ce' : '#e53e3e'; ctx.lineWidth = S*0.035;
+  ctx.beginPath(); ctx.moveTo(x0, yBase - h*0.13); ctx.lineTo(x0 + w, yBase - h*0.13); ctx.stroke();
+}
+function drawNote(r, v, m){
+  // true banknote ratio (~1.9:1), fitted inside the cell either way
+  let w = Math.min(r.w*0.92, r.h*1.30), h = w*0.52;
+  if (h > r.h*0.74){ h = r.h*0.74; w = h/0.52; }
+  const x = r.x + (r.w - w)/2 + v.jx, y = r.y + (r.h - h)/2 + v.jy;
+  ctx.fillStyle = '#a7c796'; ctx.fillRect(x, y, w, h);
+  ctx.lineWidth = 3; ctx.strokeStyle = '#3f6212'; ctx.strokeRect(x, y, w, h);
+  ctx.lineWidth = 1.4; ctx.strokeRect(x + 6, y + 6, w - 12, h - 12);
+  if (m === 'borderNotch'){
+    ctx.fillStyle = '#20242e'; ctx.fillRect(x + w*0.44, y - 2, w*0.10, 8);
+    ctx.fillStyle = '#a7c796'; ctx.fillRect(x, y, w, h); ctx.lineWidth = 3; ctx.strokeStyle = '#3f6212'; ctx.strokeRect(x, y, w, h);
+    ctx.fillStyle = '#20242e'; ctx.beginPath(); ctx.moveTo(x + w*0.45, y); ctx.lineTo(x + w*0.55, y); ctx.lineTo(x + w*0.50, y + h*0.11); ctx.closePath(); ctx.fill();
+  }
+  // corner denominations
+  ctx.fillStyle = '#365314'; ctx.font = `900 ${Math.round(h*0.24)}px Arial`; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+  ctx.fillText('100', x + w*0.13, y + h*0.20);
+  ctx.fillText('100', x + w*0.87, y + h*0.80);
+  ctx.fillText(m === 'denom10' ? '10' : '100', x + w*0.87, y + h*0.20);
+  ctx.fillText('100', x + w*0.13, y + h*0.80);
+  // portrait oval
+  ctx.beginPath(); ctx.ellipse(x + w/2, y + h/2, w*0.15, h*0.34, 0, 0, 7);
+  ctx.fillStyle = '#cbe3b8'; ctx.fill(); ctx.lineWidth = 1.6; ctx.strokeStyle = '#3f6212'; ctx.stroke();
+  ctx.fillStyle = '#5b7a43';
+  ctx.beginPath(); ctx.arc(x + w/2, y + h*0.42, w*0.055, 0, 7); ctx.fill();      // head
+  ctx.beginPath(); ctx.ellipse(x + w/2, y + h*0.68, w*0.085, h*0.13, 0, 0, 7); ctx.fill(); // shoulders
+  ctx.fillStyle = '#365314';
+  ctx.beginPath(); ctx.arc(x + w/2 - w*0.022, y + h*0.41, w*0.008, 0, 7); ctx.fill();
+  if (m === 'wink'){ ctx.fillRect(x + w/2 + w*0.012, y + h*0.405, w*0.024, 2); }
+  else { ctx.beginPath(); ctx.arc(x + w/2 + w*0.022, y + h*0.41, w*0.008, 0, 7); ctx.fill(); }
+  // seal
+  const sx = x + w*0.80, sy = y + h*0.52;
+  ctx.fillStyle = '#365314'; star(sx, sy, h*0.13, h*0.06, m === 'seal6' ? 6 : 5, 0); ctx.fill();
+  // serial
+  ctx.font = `700 ${Math.round(h*0.13)}px 'Courier New',monospace`; ctx.fillStyle = '#365314';
+  ctx.fillText('XF 40291' + (m === 'serialDigit' ? '7' : '3'), x + w*0.26, y + h*0.86);
+  ctx.fillText('ONE HUNDRED', x + w/2, y + h*0.13);
+}
+const PAINTERS = { coin: drawCoin, face: drawFace, hand: drawHand, gem: drawGem, shoe: drawShoe, note: drawNote };
+const TYPE_LABEL = { coin:'🪙 GOLD COINS', face:'🙂 FACES', hand:'🖐️ HANDS', gem:'💎 GEMS', shoe:'👟 SNEAKERS', note:'💵 BANKNOTES' };
+
+/* ---------- rounds ---------- */
+function newRound(){
+  G.round++;
+  const spec = roundSpec(G.round);
+  srand(9000 + G.round * 131 + Math.floor(Math.random()*997));
+  G.type = pick(TYPES);
+  const tierMuts = MUTS[G.type].filter(mm => mm.tier <= spec.tier);
+  const hardMuts = MUTS[G.type].filter(mm => mm.tier === spec.tier);
+  G.mut = (hardMuts.length && rnd() < 0.7) ? pick(hardMuts) : pick(tierMuts);
+  G.fakeIndex = Math.floor(rnd() * spec.count);
+  G.timeMax = spec.time; G.timeLeft = spec.time; G.lastTickSec = -1;
+  G.wrongMarks = new Set();
+  const { cols, rows } = gridFor(spec.count);
+  const gx = 14, gy = 176, gw = W - 28, gh = 664;
+  const cw = gw / cols, ch = gh / rows;
+  G.cells = [];
+  for (let i = 0; i < spec.count; i++){
+    const c = i % cols, rw = Math.floor(i / cols);
+    G.cells.push({ x: gx + c*cw + 5, y: gy + rw*ch + 5, w: cw - 10, h: ch - 10,
+                   jx: rr(-2,2), jy: rr(-2,2), rot: rr(-0.02,0.02) });
+  }
+  G.mode = 'play';
+}
+function floater(x, y, text, color){
+  G.floaters.push({x, y, text, color, t: 0});
+}
+function endRound(win){
+  G._revealWin = !!win;
+  if (win){
+    const timeBonus = Math.round(G.timeLeft) * 15;
+    const mult = 1 + Math.min(G.streak, 8) * 0.25;
+    const pts = Math.round((100 + timeBonus) * mult);
+    G.streak++; G.bestStreak = Math.max(G.bestStreak, G.streak); G.correct++;
+    G.score += pts;
+    const c = G.cells[G.fakeIndex];
+    floater(c.x + c.w/2, c.y + 6, '+' + pts, '#7CFC00');
+    if (G.streak >= 3) sfx.great(); else sfx.good();
+    G.flashGreen = 0.25;
+  }
+  G.mode = 'reveal'; G.revealT = 1.15;
+}
+function loseLife(reason){
+  G.lives--; G.streak = 0; G.flashRed = 0.3; G.shake = 0.35;
+  sfx.bad();
+  if (G.lives <= 0){ gameOver(); }
+  else if (reason === 'time'){ G.mode = 'reveal'; G.revealT = 1.15; }
+}
+function gameOver(){
+  G.mode = 'over'; sfx.over();
+  document.getElementById('overStats').innerHTML =
+    `🏆 SCORE&nbsp; ${G.score}<br>🔥 BEST STREAK&nbsp; ×${G.bestStreak}<br>🎯 FAKES CAUGHT&nbsp; ${G.correct}/${G.round}` +
+    (G.taps ? `<br>👁️ ACCURACY&nbsp; ${Math.round(100*G.correct/Math.max(1,G.taps))}%` : '');
+  document.getElementById('overTitle').textContent =
+    G.correct >= 12 ? 'EAGLE EYE! 🦅' : G.correct >= 7 ? 'SHARP EYE! 👁️' : G.correct >= 4 ? 'THE FORGER GOT LUCKY…' : 'THE FORGER GOT AWAY…';
+  document.getElementById('over').classList.remove('hidden');
+}
+function startGame(){
+  audioInit();
+  G.score = 0; G.lives = 3; G.streak = 0; G.bestStreak = 0;
+  G.round = 0; G.correct = 0; G.taps = 0; G.floaters = [];
+  document.getElementById('menu').classList.add('hidden');
+  document.getElementById('over').classList.add('hidden');
+  srand(Date.now() % 100000);
+  newRound();
+}
+
+/* ---------- input ---------- */
+function cellAt(px, py){
+  for (let i = 0; i < G.cells.length; i++){
+    const c = G.cells[i];
+    if (px >= c.x && px <= c.x + c.w && py >= c.y && py <= c.y + c.h) return i;
+  }
+  return -1;
+}
+function tapCell(i){
+  if (G.mode !== 'play' || i < 0 || G.wrongMarks.has(i)) return false;
+  G.taps++;
+  if (i === G.fakeIndex){ endRound(true); return true; }
+  G.wrongMarks.add(i);
+  const c = G.cells[i];
+  floater(c.x + c.w/2, c.y + c.h/2, '✗ REAL!', '#ff6b6b');
+  G.timeLeft = Math.max(0, G.timeLeft - 1);
+  loseLife('wrong');
+  return false;
+}
+function canvasPoint(e){
+  const r = cv.getBoundingClientRect();
+  return { x: (e.clientX - r.left) * (W / r.width), y: (e.clientY - r.top) * (H / r.height) };
+}
+cv.addEventListener('pointerdown', e => {
+  audioInit();
+  const p = canvasPoint(e);
+  tapCell(cellAt(p.x, p.y));
+});
+document.getElementById('startbtn').addEventListener('click', startGame);
+document.getElementById('againbtn').addEventListener('click', startGame);
+
+/* ---------- drawing ---------- */
+function roundRect(x, y, w, h, rad){
+  ctx.beginPath();
+  ctx.moveTo(x + rad, y);
+  ctx.arcTo(x + w, y, x + w, y + h, rad); ctx.arcTo(x + w, y + h, x, y + h, rad);
+  ctx.arcTo(x, y + h, x, y, rad); ctx.arcTo(x, y, x + w, y, rad);
+  ctx.closePath();
+}
+function draw(){
+  ctx.save();
+  if (G.shake > 0) ctx.translate(rr(-1,1) * G.shake * 14, rr(-1,1) * G.shake * 10);
+  // backdrop: shop counter
+  const bg = ctx.createLinearGradient(0, 0, 0, H);
+  bg.addColorStop(0, '#241a3d'); bg.addColorStop(0.6, '#1d1430'); bg.addColorStop(1, '#170f26');
+  ctx.fillStyle = bg; ctx.fillRect(-20, -20, W + 40, H + 40);
+  ctx.fillStyle = 'rgba(255,210,62,.06)';
+  for (let i = 0; i < 12; i++) ctx.fillRect(0, 190 + i * 56, W, 2);
+
+  /* HUD (top ~120px = 14%) */
+  ctx.textBaseline = 'middle';
+  ctx.fillStyle = '#ffd23e'; ctx.font = '900 25px Arial'; ctx.textAlign = 'left';
+  ctx.fillText('🏆 ' + G.score, 14, 30);
+  ctx.textAlign = 'right'; ctx.fillStyle = '#fff'; ctx.font = '900 22px Arial';
+  ctx.fillText('R' + Math.max(1, G.round), W - 14, 30);
+  // hearts
+  ctx.textAlign = 'left'; ctx.font = '24px Arial';
+  for (let i = 0; i < 3; i++) ctx.fillText(i < G.lives ? '❤️' : '🖤', 14 + i * 32, 66);
+  // streak
+  if (G.streak >= 2){
+    ctx.fillStyle = '#ff9f1c'; ctx.font = '900 22px Arial'; ctx.textAlign = 'right';
+    ctx.fillText('🔥×' + (1 + Math.min(G.streak, 8) * 0.25).toFixed(2).replace(/\.?0+$/,''), W - 14, 66);
+  }
+  // timer bar
+  const tw = W - 28, frac = G.mode === 'menu' ? 1 : Math.max(0, G.timeLeft / G.timeMax);
+  ctx.fillStyle = 'rgba(255,255,255,.14)'; roundRect(14, 88, tw, 16, 8); ctx.fill();
+  ctx.fillStyle = frac > 0.45 ? '#3ddc84' : frac > 0.22 ? '#ffd23e' : '#ff5252';
+  if (frac > 0){ roundRect(14, 88, tw * frac, 16, 8); ctx.fill(); }
+  ctx.fillStyle = '#fff'; ctx.font = '900 15px Arial'; ctx.textAlign = 'center';
+  if (G.mode !== 'menu') ctx.fillText('⏱ ' + Math.max(0, G.timeLeft).toFixed(1), W/2, 96.5);
+
+  /* prompt */
+  if (G.mode === 'play' || G.mode === 'reveal'){
+    ctx.fillStyle = '#f2f0e9'; ctx.font = '900 21px Arial'; ctx.textAlign = 'center';
+    ctx.fillText('ONE IS FAKE — TAP IT!', W/2, 128);
+    ctx.fillStyle = '#5eead4'; ctx.font = '700 16px Arial';
+    ctx.fillText(TYPE_LABEL[G.type] + '  ·  ' + G.cells.length + ' on the counter', W/2, 154);
+  }
+
+  /* cells */
+  if (G.mode !== 'menu'){
+    for (let i = 0; i < G.cells.length; i++){
+      const c = G.cells[i];
+      const isFake = i === G.fakeIndex;
+      // card
+      ctx.fillStyle = '#2e2450'; roundRect(c.x, c.y, c.w, c.h, 14); ctx.fill();
+      ctx.lineWidth = 2; ctx.strokeStyle = 'rgba(255,255,255,.10)'; ctx.stroke();
+      // item (clipped to card, tiny rotation so the set isn't pixel-cloned)
+      ctx.save();
+      ctx.beginPath(); roundRect(c.x + 2, c.y + 2, c.w - 4, c.h - 4, 12); ctx.clip();
+      ctx.translate(c.x + c.w/2, c.y + c.h/2); ctx.rotate(c.rot); ctx.translate(-(c.x + c.w/2), -(c.y + c.h/2));
+      PAINTERS[G.type]({x: c.x, y: c.y, w: c.w, h: c.h}, c, isFake ? G.mut.id : null);
+      ctx.restore();
+      // wrong mark
+      if (G.wrongMarks.has(i)){
+        ctx.fillStyle = 'rgba(20,8,8,.45)'; roundRect(c.x, c.y, c.w, c.h, 14); ctx.fill();
+        ctx.strokeStyle = '#ff5252'; ctx.lineWidth = 7; ctx.lineCap = 'round';
+        const p = 16;
+        ctx.beginPath();
+        ctx.moveTo(c.x + p, c.y + p); ctx.lineTo(c.x + c.w - p, c.y + c.h - p);
+        ctx.moveTo(c.x + c.w - p, c.y + p); ctx.lineTo(c.x + p, c.y + c.h - p);
+        ctx.stroke();
+      }
+      // reveal highlight
+      if (G.mode === 'reveal' && isFake){
+        ctx.lineWidth = 6; ctx.strokeStyle = '#7CFC00';
+        roundRect(c.x - 2, c.y - 2, c.w + 4, c.h + 4, 16); ctx.stroke();
+        ctx.fillStyle = '#7CFC00'; ctx.font = '900 19px Arial'; ctx.textAlign = 'center';
+        ctx.fillText('FAKE!', c.x + c.w/2, c.y + 20);
+      }
+    }
+    // reveal caption
+    if (G.mode === 'reveal'){
+      ctx.fillStyle = 'rgba(10,6,20,.92)'; roundRect(24, H - 108, W - 48, 62, 12); ctx.fill();
+      ctx.lineWidth = 2; ctx.strokeStyle = '#7CFC00'; ctx.stroke();
+      ctx.fillStyle = '#eaffea'; ctx.font = '800 17px Arial'; ctx.textAlign = 'center';
+      ctx.fillText(G._revealWin ? '✅ CAUGHT IT!' : '⏰ IT WAS THIS ONE:', W/2, H - 92);
+      ctx.fillStyle = '#ffd23e'; ctx.font = '800 16px Arial';
+      ctx.fillText(G.mut.label, W/2, H - 64);
+    }
+  }
+
+  /* flashes */
+  if (G.flashRed > 0){ ctx.fillStyle = `rgba(255,40,40,${G.flashRed * 0.55})`; ctx.fillRect(-20, -20, W + 40, H + 40); }
+  if (G.flashGreen > 0){ ctx.fillStyle = `rgba(60,255,120,${G.flashGreen * 0.4})`; ctx.fillRect(-20, -20, W + 40, H + 40); }
+
+  /* floaters */
+  ctx.textAlign = 'center';
+  for (const f of G.floaters){
+    ctx.globalAlpha = Math.max(0, 1 - f.t / 0.9);
+    ctx.fillStyle = f.color; ctx.font = '900 24px Arial';
+    ctx.fillText(f.text, f.x, f.y - f.t * 44);
+  }
+  ctx.globalAlpha = 1;
+  ctx.restore();
+}
+
+/* ---------- main loop ---------- */
+let lastT = performance.now();
+function loop(now){
+  const dt = Math.min(0.05, (now - lastT) / 1000); lastT = now;
+  if (G.mode === 'play'){
+    G.timeLeft -= dt;
+    const sec = Math.ceil(G.timeLeft);
+    if (sec !== G.lastTickSec){ G.lastTickSec = sec; if (sec <= 3 && sec > 0) sfx.tick(); }
+    if (G.timeLeft <= 0){ G.timeLeft = 0; G._revealWin = false; loseLife('time'); }
+  } else if (G.mode === 'reveal'){
+    G.revealT -= dt;
+    if (G.revealT <= 0 && G.mode === 'reveal') newRound();
+  }
+  if (G.flashRed > 0) G.flashRed -= dt;
+  if (G.flashGreen > 0) G.flashGreen -= dt;
+  if (G.shake > 0) G.shake -= dt;
+  for (const f of G.floaters) f.t += dt;
+  G.floaters = G.floaters.filter(f => f.t < 0.95);
+  draw();
+  requestAnimationFrame(loop);
+}
+requestAnimationFrame(loop);
+
+/* hooks for scripted verification */
+window.__STF = {
+  G, tapCell, cellAt, startGame, newRound,
+  setTimeLeft(s){ G.timeLeft = s; },
+  cellCenter(i){ const c = G.cells[i]; return { x: c.x + c.w/2, y: c.y + c.h/2 }; }
+};
+</script>
+<script id="moth-game-guard-js">
+(function(){
+  var lastEnd=0;
+  function onUi(t){return t&&t.closest&&t.closest('button,a,input,select,textarea,[data-scroll]');}
+  document.addEventListener('touchend',function(e){
+    var now=Date.now();
+    if(!onUi(e.target)&&now-lastEnd<=300&&e.cancelable)e.preventDefault();
+    lastEnd=now;
+  },{passive:false});
+  ['gesturestart','gesturechange','gestureend'].forEach(function(n){
+    document.addEventListener(n,function(e){e.preventDefault();});
+  });
+  document.addEventListener('dblclick',function(e){e.preventDefault();},{passive:false});
+  document.addEventListener('contextmenu',function(e){e.preventDefault();});
+  document.addEventListener('touchmove',function(e){
+    if(e.target&&e.target.closest&&e.target.closest('[data-scroll]'))return;
+    if(e.cancelable)e.preventDefault();
+  },{passive:false});
+})();
+</script>
+</body>
+</html>

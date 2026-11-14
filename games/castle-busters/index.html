@@ -15,10 +15,14 @@
   #hud{position:absolute;left:0;right:0;top:0;height:40px;display:flex;align-items:center;gap:5px;
     padding:4px 6px;box-sizing:border-box;z-index:1200;pointer-events:none;}
   .chip{background:rgba(16,8,20,.72);color:#fff;border:1.5px solid rgba(255,255,255,.28);border-radius:11px;
-    font-size:14px;font-weight:800;padding:3px 8px;letter-spacing:.3px;white-space:nowrap;line-height:1;}
+    font-size:13.5px;font-weight:800;padding:3px 7px;letter-spacing:.3px;white-space:nowrap;line-height:1;}
   .chip small{font-size:10px;font-weight:700;opacity:.75;}
   #hudScore{margin-left:auto;color:#ffd94d;border-color:rgba(255,217,77,.55);}
   #hudLevel{color:#9be7ff;}
+  #hudYou{color:#9be77f;}
+  #hudFoe{color:#ff9bb0;}
+  #hudTurn{color:#ffd94d;}
+  #hudTurn.ai{color:#ff8a75;}
   /* ---------- weapon cards ---------- */
   #cards{position:absolute;left:0;right:0;bottom:0;height:88px;display:flex;gap:6px;padding:6px;box-sizing:border-box;z-index:1200;
     background:linear-gradient(to top,rgba(10,4,14,.82),rgba(10,4,14,0));}
@@ -48,55 +52,68 @@
     background:rgba(20,6,10,.8);border:2px solid #ffd94d;color:#fff;font-weight:900;font-size:17px;letter-spacing:.5px;
     padding:7px 16px;border-radius:12px;opacity:0;transition:opacity .18s;white-space:nowrap;}
 </style>
+<style id="moth-game-guard">
+html,body{touch-action:none;overscroll-behavior:none;-webkit-touch-callout:none;-webkit-user-select:none;user-select:none;-webkit-tap-highlight-color:transparent}
+canvas{touch-action:none}
+</style>
 </head>
 <body>
 <div id="wrap"><div id="stage">
   <canvas id="cv" width="840" height="1720"></canvas>
   <div id="hud">
-    <div class="chip" id="hudLevel">L1</div>
-    <div class="chip" id="hudHP">🏰 100<small>%</small></div>
-    <div class="chip" id="hudCrew">👥 4</div>
-    <div class="chip" id="hudTime">⏱ 60</div>
+    <div class="chip" id="hudLevel">M1</div>
+    <div class="chip" id="hudYou">🏰 100<small>%</small></div>
+    <div class="chip" id="hudFoe">💀 100<small>%</small></div>
+    <div class="chip" id="hudTurn">⚔️ YOU</div>
     <div class="chip" id="hudScore">⭐ 0</div>
   </div>
   <div id="toast"></div>
   <div id="cards"></div>
   <div class="ovl" id="intro">
     <h1>CASTLE BUSTERS</h1>
-    <h2 id="introTitle">LEVEL 1 · HYRULE ON TREADS</h2>
-    <p id="introText">A Hyrule castle on tank treads is rolling through Vice Beach straight at your base.</p>
-    <p>🎯 <b>Pull back, aim, release</b> to fire a swarm.<br>
-       💥 Collapse towers to <b>expose the glowing core</b>.<br>
-       ⚡ Hit the exposed core — finish it in one shot!</p>
+    <h2 id="introTitle">MATCH 1 · HYRULE vs VICE</h2>
+    <p id="introText">Your Hyrule castle faces the Vice tower across one very large hill.</p>
+    <p>🏰 <b>Take turns</b> firing at the enemy castle.<br>
+       ⛰️ The hill blocks flat shots — <b>arc everything over it</b>.<br>
+       💥 Collapse their towers to <b>expose the glowing core</b>, then finish it!</p>
     <button class="bigbtn" id="btnGo">▶ START</button>
   </div>
   <div class="ovl hidden" id="end">
     <h1 id="endTitle">CASTLE DOWN!</h1>
     <div class="stars" id="endStars">★★★</div>
     <div class="breakdown" id="endBreak"></div>
-    <button class="bigbtn" id="btnNext">NEXT LEVEL ▶</button>
-    <button class="bigbtn alt" id="btnRetry">↻ REPLAY</button>
+    <button class="bigbtn" id="btnNext">NEXT MATCH ▶</button>
+    <button class="bigbtn alt" id="btnRetry">↻ REMATCH</button>
   </div>
 </div></div>
 <script src="matter.min.js"></script>
 <script>
 'use strict';
 /* ============================================================
-   CASTLE BUSTERS — Vice × Hyrule
-   A rolling castle on tank treads advances on your base line.
-   Fire weapon SWARMS (every projectile a real physics body),
-   collapse the structure, expose the core, finish it.
+   CASTLE BUSTERS — Vice × Hyrule · DUEL EDITION
+   Two castles face off across a giant hill and take TURNS
+   firing weapon swarms at each other. Everything must arc
+   over the hill. Collapse the enemy castle, expose its core,
+   finish it. Match 1: you are Hyrule. Match 2: you are Vice.
    ============================================================ */
 const {Engine, Bodies, Body, Composite, Composites, Constraint, Events, Vector} = Matter;
 
 /* ---------------- constants ---------------- */
 const W = 420, H = 860;                 // logical playfield
 const GROUND_Y = 716;                   // top surface of the ground
-const BASE_LINE = 86;                   // castle front reaching this x = ram
-const MUZZLE = {x: 66, y: 648};         // launcher position
-const DECK_W = 198, DECK_H = 24;
-const DECK_TOP = GROUND_Y - 46;         // deck top surface y (treads below)
+const DECK_H = 24;
+const DECK_TOP = GROUND_Y - 46;         // castle deck top surface y
 const STEP = 1000/60;
+const HILL = { peak:{x:210,y:462}, baseL:{x:148,y:716}, baseR:{x:272,y:716},
+               midL:{x:182,y:545}, midR:{x:238,y:545} };
+/* Hill tuning (restructure verification, Nov 14): the first duel hill peaked
+   at y=486 — level with the Vice muzzle (476) and only 10px above Hyrule's
+   (496) — so near-flat volleys skimmed the crest and still wrecked the far
+   castle (measured: -5° arrows destroyed 17% without ever lobbing). Raising
+   the peak to y=438 overcorrected: at this gravity a ballistic arc that
+   clears it cannot come down on a castle only ~145px away. y=462 is the
+   measured middle: flat fire dies on the upper slope, a real arc clears the
+   crest and detonates down the far slope into the enemy face. */
 
 /* ---------------- canvas ---------------- */
 const cv = document.getElementById('cv');
@@ -174,66 +191,85 @@ cv.addEventListener('touchmove',e=>e.preventDefault(),{passive:false});
 document.addEventListener('visibilitychange',()=>{ if(!document.hidden) audioInit(); });
 document.addEventListener('pointerdown',()=>audioInit(),{passive:true});
 
-/* ---------------- engine ---------------- */
+/* ---------------- engine + static world ---------------- */
 const engine = Engine.create({enableSleeping:true});
 engine.gravity.y = 1;
 const world = engine.world;
-// preview engine (exact trajectory dots)
+// preview engine (exact trajectory dots) — holds ground + hill replicas
 const pvEngine = Engine.create(); pvEngine.gravity.y = 1;
 
-const ground = Bodies.rectangle(430,GROUND_Y+72,1300,144,{isStatic:true,friction:0.95,plugin:{kind:'ground'}});
-const wallL  = Bodies.rectangle(-26,430,52,940,{isStatic:true,plugin:{kind:'wall'}});
-const wallR  = Bodies.rectangle(566,430,52,940,{isStatic:true,plugin:{kind:'wall'}});
-Composite.add(world,[ground,wallL,wallR]);
+const ground = Bodies.rectangle(210,GROUND_Y+72,1100,144,{isStatic:true,friction:0.95,plugin:{kind:'ground'}});
+const wallL  = Bodies.rectangle(-30,430,52,940,{isStatic:true,plugin:{kind:'wall'}});
+const wallR  = Bodies.rectangle(450,430,52,940,{isStatic:true,plugin:{kind:'wall'}});
+// THE HILL — one convex static body; blocks every flat shot between the castles
+const hillVerts = [HILL.baseL, HILL.midL, HILL.peak, HILL.midR, HILL.baseR].map(p=>({x:p.x,y:p.y}));
+function makeHill(plugin){
+  const h = Body.create({vertices:hillVerts.map(p=>({x:p.x,y:p.y})), isStatic:true, friction:0.55, plugin:plugin||{kind:'hill'}});
+  // Body.create recentres vertices on their centroid — shift back so the peak lands exactly on HILL.peak
+  Body.setPosition(h, {x: h.position.x + (HILL.peak.x - h.vertices[2].x),
+                       y: h.position.y + (HILL.peak.y - h.vertices[2].y)});
+  return h;
+}
+const hill = makeHill();
+Composite.add(world,[ground,wallL,wallR,hill]);
+{
+  const pvGround = Bodies.rectangle(210,GROUND_Y+72,1100,144,{isStatic:true,friction:0.95});
+  const pvHill = makeHill({kind:'hill'});
+  Composite.add(pvEngine.world,[pvGround,pvHill]);
+}
+let pvBody = null;   // the single simulated body in the preview engine
 
 /* ---------------- global state ---------------- */
+function newCastle(idx, theme, cx){
+  return { idx, theme, cx, deck:null, core:null, heroBody:null,
+    coreExposed:false, firstExposeAt:-1, coreKilledAt:-1, totalHP:1,
+    muzzle:{x:cx, y:500, dir: idx===0?1:-1}, cds:[0,0,0,0],
+    duckUntil:0, cheerUntil:0, lastAim:-0.72 };
+}
 const G = {
-  phase:'intro',           // intro | play | won | lost
-  level:1,
-  score:0, shotsFired:0,
-  blocks:[], crew:[], mounts:[], barrels:[],
-  deck:null, core:null, heroBody:null,
-  totalHP:1, startIntegrity:1,
-  coreExposed:false, firstExposeAt:-1, coreKilledAt:-1,
-  castleSpeed:4.3, trackPhase:0, castleStopped:false,
-  shake:0, time:0, tick:0, curSp:0,
+  phase:'intro',           // intro | play | won | lost   (from the player's perspective)
+  match:1, score:0,
+  CS:[null,null],          // CS[0] = player (left), CS[1] = AI (right)
+  turn:0,                  // 0 = player, 1 = AI
+  ts:'aim',                // aim | busy | aiDelay | aiAim | over
+  round:1, playerTurns:0, lastBusy:0, aiAt:0, aiFireAt:0, aiPlan:null,
+  blocks:[], crew:[], barrels:[],
+  shake:0, time:0, tick:0,
   projectiles:[], spawnQueue:[], attachments:[], fireZones:[], particles:[],
   explosions:[],           // visual rings
   hitStop:0, zoomPunch:0, punchX:210, punchY:400,   // game-feel: freeze + camera punch
   ghosts:[], destroyLog:[],
   aim:null,                // {angle,power,tx} while dragging
-  weapon:0, cooldowns:[0,0,0,0],
-  sinkT:0, endShown:false,
+  weapon:0,
+  endShown:false,
   stats:{crewKO:0, blocksBroken:0},
   windmillA:0,
 };
-const LEVELS = {
-  1:{ name:'HYRULE ON TREADS', sub:'A Hyrule castle on tank treads is rolling through Vice Beach straight at your base.',
-      speed:4.3,
-      weapons:[
-        {id:'rockets', name:'ROCKET SWARM', icon:'🚀', cd:1150},
-        {id:'car',     name:'CAR DROP',     icon:'🚗', cd:2700, drop:true},
-        {id:'sticky',  name:'STICKY BOMBS', icon:'💣', cd:2100},
-        {id:'molotov', name:'MOLOTOV RAIN', icon:'🔥', cd:1750},
-      ]},
-  2:{ name:'VICE TOWER ON TREADS', sub:'A neon Vice high-rise on treads is rolling through the Hyrule field. The windmills are not ready.',
-      speed:4.0,
-      weapons:[
-        {id:'arrows',    name:'BOMB ARROWS',   icon:'🏹', cd:1150},
-        {id:'cuccos',    name:'CUCCO SWARM',   icon:'🐔', cd:2500},
-        {id:'avalanche', name:'ROCK AVALANCHE',icon:'🪨', cd:3100, special:true},
-        {id:'sword',     name:'MASTER SWORD',  icon:'🗡️', cd:3500, drop:true},
-      ]},
-};
-function weapons(){ return LEVELS[G.level].weapons; }
-function curWeapon(){ return weapons()[G.weapon]; }
+const HYRULE_WEAPONS = [
+  {id:'arrows',    name:'BOMB ARROWS',   icon:'🏹', cd:900},
+  {id:'cuccos',    name:'CUCCO SWARM',   icon:'🐔', cd:1400},
+  {id:'avalanche', name:'ROCK AVALANCHE',icon:'🪨', cd:2200, special:true},
+  {id:'sword',     name:'MASTER SWORD',  icon:'🗡️', cd:2600, drop:true},
+];
+const VICE_WEAPONS = [
+  {id:'rockets', name:'ROCKET SWARM', icon:'🚀', cd:900},
+  {id:'car',     name:'CAR DROP',     icon:'🚗', cd:2400, drop:true},
+  {id:'sticky',  name:'STICKY BOMBS', icon:'💣', cd:1500},
+  {id:'molotov', name:'MOLOTOV RAIN', icon:'🔥', cd:1300},
+];
+function weaponsOf(c){ return c.theme==='hyrule' ? HYRULE_WEAPONS : VICE_WEAPONS; }
+function playerCastle(){ return G.CS[0]; }
+function aiCastle(){ return G.CS[1]; }
+function curWeapon(){ return weaponsOf(playerCastle())[G.weapon]; }
 
 /* ============================================================
    CASTLE CONSTRUCTION
    Blocks rest in a support chain: every block is mounted to the
-   block below it (bottom row to the deck) with a stiff but
-   BREAKABLE constraint. Kill a support or tear a block loose and
-   everything above it comes down — that's the collapse engine.
+   block below it (bottom row to its own castle's deck). Kill a
+   support or tear a block loose and everything above it comes
+   down — that's the collapse engine. Intact bodies are static
+   (riders); a body goes dynamic when wrecked, torn loose, or
+   its support chain to its deck is broken.
    ============================================================ */
 const MATS = {
   stone:{hp:72, density:0.0021, col:'#a6abb3'},
@@ -255,17 +291,13 @@ function addBlock(x,y,w,h,mat,kind,extra){
   G.blocks.push(b);
   return b;
 }
-function addBarrel(x,y){
+function addBarrel(x,y,owner){
   const b = Bodies.circle(x,y,11,{density:0.0012,friction:0.6,restitution:0.1,sleepThreshold:0});
-  b.plugin = {kind:'barrel', mat:'barrel', hp:12, maxHp:12, id:bodySeq++, w:22,h:22, seed:hash(bodySeq), dead:false};
+  b.plugin = {kind:'barrel', mat:'barrel', hp:12, maxHp:12, id:bodySeq++, w:22,h:22, seed:hash(bodySeq), dead:false, owner};
   Composite.add(world,b); G.blocks.push(b); G.barrels.push(b);
-  makeRider(b, sceneSupport(x, y+11));
+  makeRider(b, sceneSupport(x, y+11, owner));
   return b;
 }
-/* The castle rides KINEMATICALLY: intact bodies are static and are
-   translated with the deck each step (zero self-collision noise).
-   A body becomes dynamic when it is wrecked (low HP), torn loose by a
-   big hit, or its support chain to the deck is broken. */
 function makeRider(b, support){
   b.plugin.support = support || null;
   b.plugin.ride = true;
@@ -277,13 +309,13 @@ function convertBody(b){
   Body.setStatic(b, false);
   b.plugin.ride = false;
   if(b.plugin.kind==='core'){ b.friction=1.2; b.frictionAir=0.05; }  // the heart thuds down, doesn't roll away
-  Body.setVelocity(b,{x:-G.curSp/60 + rand(-0.3,0.3), y:b.velocity.y});
+  Body.setVelocity(b,{x:rand(-0.4,0.4), y:b.velocity.y});
 }
 function unmount(body){ convertBody(body); }
 function isSupported(b){
   const seen=new Set(); let cur=b;
   while(cur){
-    if(cur===G.deck) return true;
+    if(cur.plugin && cur.plugin.kind==='deck') return true;
     if(cur.plugin.dead || !cur.isStatic) return false;
     if(seen.has(cur)) return false;
     seen.add(cur); cur=cur.plugin.support;
@@ -294,35 +326,35 @@ function updateSupport(){
   let changed=true, guard=0;
   while(changed && guard++<6){
     changed=false;
-    for(const b of [...G.blocks, ...G.crew, ...(G.core?[G.core]:[])]){
+    for(const b of [...G.blocks, ...G.crew, ...G.CS.filter(Boolean).map(c=>c.core).filter(Boolean)]){
       if(!b.plugin.ride || b.plugin.dead) continue;
       if(!isSupported(b)){ convertBody(b); changed=true; }
     }
   }
 }
-function sceneSupport(x, yBottom){
-  // nearest block whose top sits just below (x, yBottom) — for barrels
+function sceneSupport(x, yBottom, owner){
+  // nearest block of the same castle whose top sits just below (x, yBottom)
   let best=null, bd=1e9;
   for(const b of G.blocks){
-    if(b.plugin.kind!=='block') continue;
+    if(b.plugin.kind!=='block' || b.plugin.owner!==owner) continue;
     const top=b.position.y-b.plugin.h/2;
     const d=Math.abs(top-yBottom)+Math.abs(b.position.x-x)*1.4;
-    if(Math.abs(b.position.x-x)<24 && top>=yBottom-4 && d<bd){ bd=d; best=b; }
+    if(Math.abs(b.position.x-x)<22 && top>=yBottom-4 && d<bd){ bd=d; best=b; }
   }
-  return best||G.deck;
+  return best||G.CS[owner].deck;
 }
 /* grid builder: rows are strings, row 0 = bottom. cell chars:
    S stone · W wood · G glass · F frame · B stone+banner · R stone+roof
-   N glass+neon · P stone platform(gold trim) · . empty · (space = core cell) */
-function buildFromGrid(cols, rows, cellW, cellH, deckCx){
+   N glass+neon · P stone platform(gold trim) · . empty */
+function buildFromGrid(cols, rows, cellW, cellH, cx, owner){
   const grid = {};   // "c,r" -> body
-  const x0 = deckCx - (cols*cellW)/2 + cellW/2;
+  const x0 = cx - (cols*cellW)/2 + cellW/2;
   for(let r=0;r<rows.length;r++){
     const row = rows[r];
     for(let c=0;c<cols;c++){
       const ch = row[c]; if(!ch || ch==='.' || ch===' ') continue;
       const x = x0 + c*cellW, y = DECK_TOP - cellH/2 - r*cellH;
-      let mat='stone', extra={};
+      let mat='stone', extra={owner};
       if(ch==='S') mat='stone';
       else if(ch==='W') mat='wood';
       else if(ch==='G') mat='glass';
@@ -332,122 +364,120 @@ function buildFromGrid(cols, rows, cellW, cellH, deckCx){
       else if(ch==='N'){ mat='glass'; extra.deco='neon'; extra.letter='VICE★'[ (c+r)%5 ]; }
       else if(ch==='P'){ mat='stone'; extra.deco='platform'; }
       else continue;
-      if(hash(c*7.3+r*13.1)>0.62 && mat==='stone' && !extra.deco) extra.deco='window';
+      if(hash(c*7.3+r*13.1+owner*31)>0.62 && mat==='stone' && !extra.deco) extra.deco='window';
       const b = addBlock(x,y,cellW-2,cellH-2,mat,'block',extra);
       grid[c+','+r]=b;
     }
   }
   // support links: block below; a block spanning an opening links
   // SIDEWAYS to a same-row neighbour (lintel); bottom row links the deck.
+  const deck = G.CS[owner].deck;
   for(const key in grid){
     const [c,r] = key.split(',').map(Number);
     const b = grid[key];
     let support = null;
-    if(r===0) support = G.deck;
-    else support = grid[c+','+(r-1)] || grid[(c-1)+','+r] || grid[(c+1)+','+r] || G.deck;
+    if(r===0) support = deck;
+    else support = grid[c+','+(r-1)] || grid[(c-1)+','+r] || grid[(c+1)+','+r] || deck;
     makeRider(b, support);
   }
   return grid;
 }
-function addCrew(x,y,type){
+function addCrew(x,y,type,owner){
   const b = Bodies.rectangle(x,y,17,32,{density:0.0009,friction:0.7,chamfer:{radius:5},sleepThreshold:0});
-  b.plugin = {kind:'crew', crew:type, hp:22, maxHp:22, id:bodySeq++, w:17,h:32, seed:hash(bodySeq*1.3), dead:false, ko:false};
+  b.plugin = {kind:'crew', crew:type, hp:22, maxHp:22, id:bodySeq++, w:17,h:32, seed:hash(bodySeq*1.3), dead:false, ko:false, owner};
   Composite.add(world,b); G.crew.push(b);
   return b;
 }
 function mountCrew(crew, support){ makeRider(crew, support); }
+function standOn(body){ return body.position.y - body.plugin.h/2 - 16; }   // crew centre y standing on a block
 
-function buildCastle(level){
-  // ---- deck: static chassis; the game loop translates it (and every
-  // intact rider) left each step — the castle rolls as one rigid machine
-  const deck = Bodies.rectangle(340, DECK_TOP+DECK_H/2, DECK_W, DECK_H, {isStatic:true, friction:1});
-  deck.plugin = {kind:'deck', w:DECK_W, h:DECK_H, id:0};
-  Composite.add(world, deck); G.deck = deck;
-  const cx = 340;
-
-  if(level===1){
-    // Hyrule stone castle: twin blue-roofed towers, banners, vaulted keep
-    const rows = [
-      'SSSSSS',   // 0
-      'SSWWSS',   // 1
-      'SWSSWS',   // 2
-      'SSPPSS',   // 3 platform row (hero + core stand on this)
-      'S....S',   // 4 the great arch opening
-      'SSSSSS',   // 5 vault ceiling over the core
-      'S.SS.S',   // 6
-      'R.BB.R',   // 7 roofs + banners
-    ];
-    const grid = buildFromGrid(6, rows, 34, 22, cx);
-    // bomb barrels on the platform + one up between the roofs
-    addBarrel(cx-72, DECK_TOP-4*22-12); addBarrel(cx+62, DECK_TOP-4*22-12);
-    addBarrel(cx+4,  DECK_TOP-8*22-12);
-    // crew: knights on both tower tops, one on the platform
-    const k1 = addCrew(cx-85, DECK_TOP-8*22-16, 'knight'); mountCrew(k1, grid['0,7']);
-    const k2 = addCrew(cx+85, DECK_TOP-8*22-16, 'knight'); mountCrew(k2, grid['5,7']);
-    const k3 = addCrew(cx-52, DECK_TOP-4*22-16, 'knight'); mountCrew(k3, grid['1,3']);
-    // hero + core on the platform, center opening
-    const hero = addCrew(cx-20, DECK_TOP-4*22-16, 'hero'); mountCrew(hero, grid['2,3']);
-    G.heroBody = hero;
-    const core = Bodies.circle(cx+22, DECK_TOP-4*22-14, 13, {density:0.001, friction:0.5, sleepThreshold:0});
-    core.plugin = {kind:'core', hp:95, maxHp:95, id:bodySeq++, w:26,h:26, seed:0.5, dead:false};
-    Composite.add(world, core); G.core = core;
-    mountCrew(core, grid['3,3']);
-    G.coreHome = {dx:22, dy:DECK_TOP-4*22-14-(DECK_TOP+DECK_H/2)};
-  } else {
-    // Vice glass high-rise: glass slabs, dark frame columns, neon, rooftop props
-    const rows = [
-      'FFFFF',   // 0 dark base
-      'GGGGG',   // 1
-      'FGNGF',   // 2
-      'GGGGG',   // 3 (boss + core stand on this)
-      'F...F',   // 4 open penthouse level — core inside
-      'GGGGG',   // 5
-      'GGGGG',   // 6
-      'GG.GG',   // 7 balcony opening (thug stands on row 6)
-      'FGNGF',   // 8
-      'GGGGG',   // 9
-      'GGGGG',   // 10 parapet (props drawn on top)
-    ];
-    const grid = buildFromGrid(5, rows, 37, 21, cx);
-    G.roofGrid = grid;
-    // avalanche chute: a real static ramp down the hill's crest (rocks pour off the lip)
-    const ramp = Bodies.rectangle(390,142,158,16,{isStatic:true, angle:-0.947, friction:0.25});
-    ramp.plugin = {kind:'rock', w:158, h:16};
-    Composite.add(world, ramp);
-    // propane tanks up on the roof
-    addBarrel(cx-76, DECK_TOP-11*21-12); addBarrel(cx+76, DECK_TOP-11*21-12);
-    // crew: thugs on rooftop + balcony, boss guards the core
-    const t1 = addCrew(cx-52, DECK_TOP-11*21-16, 'thug'); mountCrew(t1, grid['1,10']);
-    const t2 = addCrew(cx+55, DECK_TOP-11*21-16, 'thug'); mountCrew(t2, grid['3,10']);
-    const t3 = addCrew(cx+2, DECK_TOP-7*21-16, 'thug');  mountCrew(t3, grid['3,6']);
-    const boss = addCrew(cx-24, DECK_TOP-4*21-16, 'boss'); mountCrew(boss, grid['1,3']);
-    G.heroBody = boss;
-    const core = Bodies.circle(cx+16, DECK_TOP-4*21-13, 12, {density:0.001, friction:0.5, sleepThreshold:0});
-    core.plugin = {kind:'core', hp:95, maxHp:95, id:bodySeq++, w:24,h:24, seed:0.5, dead:false};
-    Composite.add(world, core); G.core = core;
-    mountCrew(core, grid['2,3']);
-    G.coreHome = {dx:16, dy:DECK_TOP-4*21-13-(DECK_TOP+DECK_H/2)};
-  }
-  G.totalHP = G.blocks.reduce((s,b)=>s+b.plugin.maxHp,0) + G.core.plugin.maxHp;
+function buildHyrule(c){
+  const cx=c.cx, owner=c.idx;
+  const rows = [
+    'SSSSSS',   // 0
+    'SSWWSS',   // 1
+    'SWSSWS',   // 2
+    'SSPPSS',   // 3 platform row (hero + core stand on this)
+    'S....S',   // 4 the great arch opening
+    'SSSSSS',   // 5 vault ceiling over the core
+    'S.SS.S',   // 6
+    'R.BB.R',   // 7 roofs + banners
+  ];
+  const grid = buildFromGrid(6, rows, 23, 20, cx, owner);
+  const platTop = DECK_TOP-4*20;                       // top of platform row = 590
+  // barrels live on the ROOF (same as Vice): a powder keg beside the core
+  // chamber chain-nuked the whole castle from one lucky hit — measured
+  // +52% destruction from a single round-1 AI volley before this move
+  addBarrel(cx-52, DECK_TOP-8*20-11, owner); addBarrel(cx+50, DECK_TOP-8*20-11, owner);
+  addBarrel(cx+4,  DECK_TOP-8*20-11, owner);
+  const k1 = addCrew(grid['0,7'].position.x, standOn(grid['0,7']), 'knight', owner); mountCrew(k1, grid['0,7']);
+  const k2 = addCrew(grid['4,5'].position.x, standOn(grid['4,5']), 'knight', owner); mountCrew(k2, grid['4,5']);
+  const k3 = addCrew(grid['1,3'].position.x, standOn(grid['1,3']), 'knight', owner); mountCrew(k3, grid['1,3']);
+  const hero = addCrew(grid['2,3'].position.x, standOn(grid['2,3']), 'hero', owner); mountCrew(hero, grid['2,3']);
+  c.heroBody = hero;
+  const core = Bodies.circle(cx+12, platTop-13, 13, {density:0.001, friction:0.5, sleepThreshold:0});
+  core.plugin = {kind:'core', hp:95, maxHp:95, id:bodySeq++, w:26,h:26, seed:0.5, dead:false, owner};
+  Composite.add(world, core); c.core = core;
+  mountCrew(core, grid['3,3']);
+  c.muzzle = {x: cx + c.muzzle.dir*50, y: DECK_TOP-8*20-14, dir: c.muzzle.dir};
+}
+function buildVice(c){
+  const cx=c.cx, owner=c.idx;
+  const rows = [
+    'FFFFF',   // 0 dark base
+    'GGGGG',   // 1
+    'FGNGF',   // 2
+    'GGGGG',   // 3 (boss + core stand on this)
+    'F...F',   // 4 open penthouse level — core inside
+    'GGGGG',   // 5
+    'GGGGG',   // 6
+    'GG.GG',   // 7 balcony opening (thug stands on row 6)
+    'FGNGF',   // 8
+    'GGGGG',   // 9 parapet
+  ];
+  const grid = buildFromGrid(5, rows, 26, 18, cx, owner);
+  const roofTop = DECK_TOP-10*18;                      // 490
+  addBarrel(cx-52, roofTop-11, owner); addBarrel(cx+52, roofTop-11, owner);
+  const t1 = addCrew(grid['1,9'].position.x, standOn(grid['1,9']), 'thug', owner); mountCrew(t1, grid['1,9']);
+  const t2 = addCrew(grid['3,9'].position.x, standOn(grid['3,9']), 'thug', owner); mountCrew(t2, grid['3,9']);
+  const t3 = addCrew(grid['3,6'].position.x, standOn(grid['3,6']), 'thug', owner);  mountCrew(t3, grid['3,6']);
+  const boss = addCrew(grid['1,3'].position.x, standOn(grid['1,3']), 'boss', owner); mountCrew(boss, grid['1,3']);
+  c.heroBody = boss;
+  const platTop = DECK_TOP-4*18;                       // 598
+  const core = Bodies.circle(cx+13, platTop-12, 12, {density:0.001, friction:0.5, sleepThreshold:0});
+  core.plugin = {kind:'core', hp:95, maxHp:95, id:bodySeq++, w:24,h:24, seed:0.5, dead:false, owner};
+  Composite.add(world, core); c.core = core;
+  mountCrew(core, grid['2,3']);
+  c.muzzle = {x: cx + c.muzzle.dir*48, y: DECK_TOP-10*18-14, dir: c.muzzle.dir};
+}
+function buildCastle(c){
+  const deckW = c.theme==='hyrule' ? 154 : 146;
+  const deck = Bodies.rectangle(c.cx, DECK_TOP+DECK_H/2, deckW, DECK_H, {isStatic:true, friction:1});
+  deck.plugin = {kind:'deck', w:deckW, h:DECK_H, id:0, owner:c.idx};
+  Composite.add(world, deck); c.deck = deck;
+  if(c.theme==='hyrule') buildHyrule(c); else buildVice(c);
+  c.totalHP = G.blocks.filter(b=>b.plugin.owner===c.idx).reduce((s,b)=>s+b.plugin.maxHp,0) + c.core.plugin.maxHp;
 }
 
 /* ============================================================
    DAMAGE + DESTRUCTION
    ============================================================ */
-function integrity(){
-  let s=0; for(const b of G.blocks) if(!b.plugin.dead) s+=Math.max(0,b.plugin.hp);
-  return s / Math.max(1,G.totalHP - G.core.plugin.maxHp);
+function castleOf(b){ return G.CS[b.plugin.owner||0]; }
+function integrity(c){
+  let s=0; for(const b of G.blocks) if(b.plugin.owner===c.idx && !b.plugin.dead) s+=Math.max(0,b.plugin.hp);
+  return s / Math.max(1,c.totalHP - (c.core?c.core.plugin.maxHp:0));
 }
-function destructionPct(){ return Math.round((1-integrity())*100); }
+function destructionPct(c){ return Math.round((1-integrity(c))*100); }
 
 function damageBody(b, dmg, cause){
   const p = b.plugin; if(!p || p.dead || dmg<=0) return;
   if(p.kind==='core'){
-    if(!G.coreExposed){ if(cause!=='fire') sfx.clang(); spawnSparks(b.position.x,b.position.y,4); return; }
+    const c = castleOf(b);
+    if(!c.coreExposed){ if(cause!=='fire') sfx.clang(); spawnSparks(b.position.x,b.position.y,4); return; }
     p.hp -= dmg;
     G.hitStop=Math.max(G.hitStop, 50);          // HIT-STOP: a real core hit lands
     spawnSparks(b.position.x,b.position.y,6);
-    if(p.hp<=0) killCore();
+    if(p.hp<=0) killCore(c);
     return;
   }
   if(p.kind==='crew'){
@@ -457,11 +487,9 @@ function damageBody(b, dmg, cause){
     return;
   }
   if(p.kind==='block' || p.kind==='barrel'){
-    const before = p.hp/p.maxHp;
     p.hp -= dmg;
-    const after = p.hp/p.maxHp;
     if(p.hp<=0) destroyBlock(b, cause);
-    else if(after<=0.45) convertBody(b);                 // crumbling loose
+    else if(p.hp/p.maxHp<=0.45) convertBody(b);          // crumbling loose
     else if(cause==='impact' && dmg>24) convertBody(b);  // torn off by a huge hit
     else if(cause==='blast' && dmg>30) convertBody(b);   // blown off the structure
   }
@@ -470,25 +498,25 @@ function destroyBlock(b, cause){
   const p=b.plugin; if(p.dead) return; p.dead=true;
   Composite.remove(world,b);
   const i=G.blocks.indexOf(b); if(i>=0) G.blocks.splice(i,1);
-  G.stats.blocksBroken++;
+  const bi=G.barrels.indexOf(b); if(bi>=0) G.barrels.splice(bi,1);
+  if(p.owner===1) { G.stats.blocksBroken++; addScore(10); }   // wrecking THEIR castle scores
   // HIT-STOP when a collapse cascades (3+ blocks gone inside 250ms)
   G.destroyLog.push(G.time); G.destroyLog=G.destroyLog.filter(t=>G.time-t<250);
   if(G.destroyLog.length>=3) G.hitStop=Math.max(G.hitStop,70);
-  addScore(10);
-  spawnDebris(b.position.x,b.position.y,p.mat, p.w>30?7:5);
+  spawnDebris(b.position.x,b.position.y,p.mat, p.w>26?7:5);
   if(p.mat==='glass') sfx.crack();
   if(p.kind==='barrel'){
     // chain explosion, a beat later for cascade feel
     G.spawnQueue.push({at:G.time+80, fn:()=>{ explode(b.position.x,b.position.y,62,37,'barrel'); }});
   }
-  checkCoreExposure();
+  const c = G.CS[p.owner]; if(c) checkCoreExposure(c);
 }
 function koCrew(b){
   const p=b.plugin; p.ko=true; p.dead=true;
   unmount(b);
-  Body.setVelocity(b,{x:b.velocity.x+rand(-2,2)-2.5, y:-6.5});
+  Body.setVelocity(b,{x:b.velocity.x+rand(-2.4,2.4), y:-6.5});
   Body.setAngularVelocity(b, rand(-0.3,0.3));
-  G.stats.crewKO++; addScore(150);
+  if(p.owner===1){ G.stats.crewKO++; addScore(150); }
   spawnSparks(b.position.x,b.position.y-10,7,'★');
   sfx.squawk();
   setTimeout(()=>{ if(b.parent) Composite.remove(world,b); const i=G.crew.indexOf(b); if(i>=0)G.crew.splice(i,1); }, 1100);
@@ -501,6 +529,10 @@ function explode(x,y,r,dmg,cause){
   // HIT-STOP on the big ones
   if(r>=62) G.hitStop=Math.max(G.hitStop, 60);
   spawnFireball(x,y,r);
+  // crews near a blast DUCK (comedy + readability), crews of the other side cheer a big hit
+  for(const c of G.CS){ if(!c) continue;
+    if(Math.abs(x-c.cx)<150 && y>380) c.duckUntil = Math.max(c.duckUntil, G.time+750);
+  }
   const all = Composite.allBodies(world);
   for(const b of all){
     const p=b.plugin; if(!p || p.dead) continue;
@@ -518,36 +550,40 @@ function explode(x,y,r,dmg,cause){
     }
   }
 }
-/* core exposure: the core is shielded while structure covers it */
-function coreBlockers(){
-  if(!G.core) return 99;
-  const cx=G.core.position.x, cy=G.core.position.y;
+/* core exposure: a castle's core is shielded while structure covers it */
+function coreBlockers(c){
+  if(!c.core) return 99;
+  const cx=c.core.position.x, cy=c.core.position.y;
   let n=0;
   for(const b of G.blocks){
-    if(b.plugin.kind!=='block') continue;
+    if(b.plugin.kind!=='block' || b.plugin.owner!==c.idx) continue;
     const dx=b.position.x-cx, dy=b.position.y-cy;
-    if(Math.abs(dx)<62 && dy<-4 && dy>-150) n++;
-    else if(Math.abs(dx)<40 && Math.abs(dy)<=26) n++;
+    if(Math.abs(dx)<56 && dy<-4 && dy>-140) n++;
+    else if(Math.abs(dx)<38 && Math.abs(dy)<=26) n++;
   }
   return n;
 }
-function checkCoreExposure(){
-  if(!G.core || G.core.plugin.dead || G.coreExposed) return;
-  if(coreBlockers()<=1 || integrity()<0.45){
-    G.coreExposed = true;
-    if(G.firstExposeAt<0) G.firstExposeAt = G.time;
-    toast('⚡ CORE EXPOSED!');
+function checkCoreExposure(c){
+  if(!c.core || c.core.plugin.dead || c.coreExposed) return;
+  if(coreBlockers(c)<=1 || integrity(c)<0.45){
+    c.coreExposed = true;
+    if(c.firstExposeAt<0) c.firstExposeAt = G.time;
+    const foe = G.CS[1-c.idx];
+    if(foe) foe.cheerUntil = G.time+1000;
+    c.duckUntil = Math.max(c.duckUntil, G.time+900);
+    if(c.idx===1) toast('⚡ ENEMY CORE EXPOSED!');
+    else toast('⚠️ YOUR CORE IS EXPOSED!');
     sfx.shing();
   }
 }
-function killCore(){
-  const c=G.core; if(!c||c.plugin.dead) return;
-  c.plugin.dead=true; G.coreKilledAt=G.time;
+function killCore(c){
+  const core=c.core; if(!core||core.plugin.dead) return;
+  core.plugin.dead=true; c.coreKilledAt=G.time;
   G.hitStop=95;                                  // HIT-STOP: the ~0.09s freeze before slow-mo
-  explode(c.position.x,c.position.y,84,10,'core');
-  spawnSparks(c.position.x,c.position.y,26,'★');
-  addScore(500);
-  winLevel();
+  explode(core.position.x,core.position.y,84,10,'core');
+  spawnSparks(core.position.x,core.position.y,26,'★');
+  if(c.idx===1) addScore(500);
+  endMatch(c.idx===1);
 }
 function addScore(n){ G.score+=n; }
 function toast(msg){
@@ -559,7 +595,7 @@ function toast(msg){
 /* ============================================================
    PARTICLES
    ============================================================ */
-function P(o){ if(G.particles.length<420) G.particles.push(Object.assign({at:G.time,life:600,vx:0,vy:0,grav:0,size:3,kind:'dot',col:'#fff',txt:null},o)); }
+function P(o){ if(G.particles.length<460) G.particles.push(Object.assign({at:G.time,life:600,vx:0,vy:0,grav:0,size:3,kind:'dot',col:'#fff',txt:null},o)); }
 function spawnDebris(x,y,mat,n){
   const cols={stone:['#8f959d','#b9bec6','#6e747d'],wood:['#8a5a30','#b07f45','#6e4525'],
               glass:['#aee9f7','#5fb8cc','#dffaff'],frame:['#454d57','#2c3138'],barrel:['#c33','#722']};
@@ -597,7 +633,9 @@ function updateParticles(dt){
 }
 
 /* ============================================================
-   WEAPONS — every projectile is a real physics body
+   WEAPONS — every projectile is a real physics body.
+   fireWeapon(w, angle, power, tx, from): `from` is the firing
+   castle (0 = player/left, 1 = AI/right); it shoots at 1-from.
    ============================================================ */
 function projBody(x,y,opts,plugin){
   const b = Bodies.circle(x,y,plugin.r||5,Object.assign({density:0.0016,friction:0.4,restitution:0.15},opts||{}));
@@ -607,20 +645,23 @@ function projBody(x,y,opts,plugin){
 }
 function aimVelocity(angle,power){ const sp=11+power*12.5; return {x:Math.cos(angle)*sp, y:Math.sin(angle)*sp}; }
 
-function fireWeapon(w, angle, power, tx){
+function fireWeapon(w, angle, power, tx, from){
   if(G.phase!=='play') return false;
-  const wi = weapons().indexOf(w);
-  if(G.cooldowns[wi]>0) return false;
-  G.cooldowns[wi]=w.cd; G.shotsFired++;
-  const av = aimVelocity(angle,power);
-  const mx=MUZZLE.x, my=MUZZLE.y;
+  const c = G.CS[from], foe = G.CS[1-from];
+  const wi = weaponsOf(c).indexOf(w);
+  if(c.cds[wi]>0) return false;
+  c.cds[wi]=w.cd;
+  if(from===0){ G.playerTurns++; }
+  c.lastAim = angle;
+  foe.duckUntil = Math.max(foe.duckUntil, G.time+600);       // incoming! their crew ducks
+  const mx=c.muzzle.x, my=c.muzzle.y, dir=c.muzzle.dir;
   const q=(delay,fn)=>G.spawnQueue.push({at:G.time+delay,fn});
   sfx.launch();
 
   if(w.id==='rockets'){
     for(let i=0;i<14;i++) q(i*46,()=>{
       const a=angle+rand(-0.05,0.05), sp=(11+power*12.5)*rand(0.92,1.08);
-      const b=projBody(mx,my-4,{},{r:5,proj:'rocket'});
+      const b=projBody(mx,my-4,{},{r:5,proj:'rocket',tgt:1-from});
       Body.setVelocity(b,{x:Math.cos(a)*sp,y:Math.sin(a)*sp});
       Body.setAngle(b,a);
       sfx.whoosh();
@@ -629,60 +670,63 @@ function fireWeapon(w, angle, power, tx){
   else if(w.id==='arrows'){
     for(let i=0;i<12;i++) q(i*40,()=>{
       const a=angle+rand(-0.035,0.035), sp=(12.5+power*13)*rand(0.94,1.06);
-      const b=projBody(mx,my-4,{density:0.0011},{r:4,proj:'arrow'});
+      const b=projBody(mx,my-4,{density:0.0011},{r:4,proj:'arrow',tgt:1-from});
       Body.setVelocity(b,{x:Math.cos(a)*sp,y:Math.sin(a)*sp});
     });
   }
   else if(w.id==='sticky'){
     for(let i=0;i<6;i++) q(i*70,()=>{
       const a=angle+rand(-0.06,0.06), sp=(10.5+power*11)*rand(0.92,1.05);
-      const b=projBody(mx,my-4,{restitution:0.3},{r:6,proj:'sticky'});
+      const b=projBody(mx,my-4,{restitution:0.3},{r:6,proj:'sticky',tgt:1-from});
       Body.setVelocity(b,{x:Math.cos(a)*sp,y:Math.sin(a)*sp});
     });
   }
   else if(w.id==='molotov'){
     for(let i=0;i<10;i++) q(i*55,()=>{
       const a=angle+rand(-0.09,0.09), sp=(10+power*11.5)*rand(0.9,1.08);
-      const b=projBody(mx,my-4,{restitution:0.1},{r:5,proj:'molotov'});
+      const b=projBody(mx,my-4,{restitution:0.1},{r:5,proj:'molotov',tgt:1-from});
       Body.setVelocity(b,{x:Math.cos(a)*sp,y:Math.sin(a)*sp});
       Body.setAngularVelocity(b,rand(-0.4,0.4));
     });
   }
   else if(w.id==='car'){
-    const x=clamp(tx||300,120,428);
+    const x=clamp(tx||foe.cx,36,384);
     q(60,()=>{
       const b=Bodies.rectangle(x,-30,66,21,{density:0.0035,friction:0.5,restitution:0.25,chamfer:{radius:6}});
-      b.plugin={kind:'proj',proj:'car',id:bodySeq++,born:G.time,dead:false,r:20,w:66,h:21,hitDone:false};
+      b.plugin={kind:'proj',proj:'car',id:bodySeq++,born:G.time,dead:false,r:20,w:66,h:21,hitDone:false,tgt:1-from};
       Composite.add(world,b); G.projectiles.push(b);
       Body.setVelocity(b,{x:0,y:3});
       sfx.whoosh();
     });
   }
   else if(w.id==='sword'){
-    const x=clamp(tx||300,110,430);
+    const x=clamp(tx||foe.cx,30,390);
     q(60,()=>{
       const b=Bodies.rectangle(x,-70,9,96,{density:0.004,friction:0.2,restitution:0,chamfer:{radius:2}});
-      b.plugin={kind:'proj',proj:'sword',id:bodySeq++,born:G.time,dead:false,r:16,w:9,h:96,hitSet:{}};
+      b.plugin={kind:'proj',proj:'sword',id:bodySeq++,born:G.time,dead:false,r:16,w:9,h:96,hitSet:{},tgt:1-from};
       Composite.add(world,b); G.projectiles.push(b);
       Body.setVelocity(b,{x:0,y:9});
       sfx.shing();
     });
   }
   else if(w.id==='cuccos'){
-    for(let i=0;i<16;i++) q(i*85,()=>{
-      const b=projBody(mx+rand(-6,6),my-16-rand(0,26),{isSensor:false,density:0.0006,frictionAir:0.012},
-        {r:8,proj:'cucco',target:null,retargetAt:0});
-      Body.setVelocity(b,{x:rand(4,6.5),y:rand(-4.5,-2.5)});
-      sfx.squawk();
+    // THE SWARM: 30 birds in a dense stream — they plaster the enemy face.
+    for(let i=0;i<30;i++) q(i*52,()=>{
+      const b=projBody(mx+rand(-8,8),my-14-rand(0,34),{isSensor:false,density:0.0006,frictionAir:0.012},
+        {r:8,proj:'cucco',target:null,retargetAt:0,tgt:1-from});
+      Body.setVelocity(b,{x:dir*rand(4.2,6.8),y:rand(-4.5,-2.2)});
+      if(i%3===0) sfx.squawk();
     });
   }
   else if(w.id==='avalanche'){
-    for(let i=0;i<20;i++) q(i*48,()=>{
+    // rocks rain onto the hill crest and POUR down the enemy slope
+    for(let i=0;i<22;i++) q(i*46,()=>{
       const r=rand(8.5,15);
-      const b=Bodies.circle(rand(392,436),rand(56,110),r,{density:0.003,friction:0.35,restitution:0.25});
-      b.plugin={kind:'proj',proj:'boulder',id:bodySeq++,born:G.time,dead:false,r,w:r*2,h:r*2,seed:hash(bodySeq)};
+      const bx = HILL.peak.x + dir*rand(-6,52) + rand(-8,8);
+      const b=Bodies.circle(bx, rand(28,120), r, {density:0.003,friction:0.35,restitution:0.25});
+      b.plugin={kind:'proj',proj:'boulder',id:bodySeq++,born:G.time,dead:false,r,w:r*2,h:r*2,seed:hash(bodySeq),tgt:1-from};
       Composite.add(world,b); G.projectiles.push(b);
-      Body.setVelocity(b,{x:rand(-2.4,-1.2),y:rand(0,1)});
+      Body.setVelocity(b,{x:dir*rand(1.2,2.6),y:rand(0,1)});
     });
     sfx.crumble();
   }
@@ -717,7 +761,7 @@ function updateAttachments(){
       }
       if(G.time-a.at>5600){ // had enough — flies off
         G.attachments.splice(i,1);
-        P({x:pos.x,y:pos.y,vx:rand(1.5,3),vy:-3,life:900,kind:'cuccofly',col:'#fff',size:8});
+        P({x:pos.x,y:pos.y,vx:rand(1.5,3)*(Math.random()<0.5?-1:1),vy:-3,life:900,kind:'cuccofly',col:'#fff',size:8});
       }
     }
   }
@@ -733,7 +777,10 @@ function addFireZone(x,y,host){
   sfx.boom(false);
 }
 function zonePos(z){
-  if(z.host && !z.host.plugin.dead && z.host.parent){
+  // addFireZone only stores local offsets for a host that was dynamic at
+  // ignition. A static rider block has no lx/ly; use its ignition position
+  // (it cannot move while static) rather than manufacturing NaN coordinates.
+  if(z.host && !z.host.plugin.dead && z.host.parent && Number.isFinite(z.lx) && Number.isFinite(z.ly)){
     const c=Math.cos(z.host.angle), s=Math.sin(z.host.angle);
     return {x:z.host.position.x+z.lx*c-z.ly*s, y:z.host.position.y+z.lx*s+z.ly*c};
   }
@@ -769,13 +816,15 @@ function updateProjectiles(){
   for(const b of [...G.projectiles]){
     const p=b.plugin;
     const age=G.time-p.born;
-    if(b.position.y>H+40 || b.position.x<-70 || age>9000){ removeProj(b); continue; }
+    if(b.position.y>H+40 || b.position.x<-70 || b.position.x>W+70 || age>9000){ removeProj(b); continue; }
+    if(p.proj==='sticky' && p.boomAt && G.time>=p.boomAt){   // landed somewhere inert — still goes off
+      explode(b.position.x,b.position.y,50,38,'sticky'); removeProj(b); continue;
+    }
     if(p.proj==='rocket'){
-      // curving seeker — steers toward the core if exposed, else the castle heart
-      let tx,ty;
-      if(G.coreExposed && G.core && !G.core.plugin.dead){ tx=G.core.position.x; ty=G.core.position.y; }
-      else if(G.deck){ tx=G.deck.position.x+rand(-2,2); ty=DECK_TOP-100; }
-      else { tx=b.position.x+50; ty=b.position.y; }
+      // curving seeker — steers toward the target castle's core if exposed, else its heart
+      const tc = G.CS[p.tgt]; let tx,ty;
+      if(tc.coreExposed && tc.core && !tc.core.plugin.dead){ tx=tc.core.position.x; ty=tc.core.position.y; }
+      else { tx=tc.cx+rand(-2,2); ty=DECK_TOP-95; }
       const sp=Math.max(13.5, Math.hypot(b.velocity.x,b.velocity.y));
       const cur=Math.atan2(b.velocity.y,b.velocity.x);
       let want=Math.atan2(ty-b.position.y, tx-b.position.x);
@@ -793,11 +842,21 @@ function updateProjectiles(){
       if(age>3600){ explode(b.position.x,b.position.y,45,27,'rocket'); removeProj(b); }
     }
     else if(p.proj==='cucco'){
-      // steering flight toward a block on the tower, then PLASTER onto it
+      // steering flight toward a block on the TARGET castle, then PLASTER onto it
       if(!p.target || p.target.plugin.dead || G.time>p.retargetAt){
-        const alive=G.blocks.filter(x=>x.plugin.kind==='block');
-        if(alive.length){ alive.sort((m,n)=>(m.position.y-n.position.y)); p.target=alive[irand(0,Math.min(alive.length-1,9))]; }
-        p.tOff={x:rand(-17,17), y:rand(-13,3)};
+        const alive=G.blocks.filter(x=>x.plugin.kind==='block' && x.plugin.owner===p.tgt);
+        if(alive.length){
+          // bias to the face toward the attacker + upper rows: sort by (facing distance, height)
+          const dir=G.CS[p.tgt].muzzle.dir;   // target's own firing dir points back at the attacker
+          alive.sort((m,n)=>{
+            const faceX = G.CS[p.tgt].cx + dir*40;   // the face turned toward the attacker
+            const fm=Math.abs(m.position.x - faceX) + m.position.y*0.55;
+            const fn=Math.abs(n.position.x - faceX) + n.position.y*0.55;
+            return fm-fn;
+          });
+          p.target=alive[irand(0,Math.min(alive.length-1,11))];
+        }
+        p.tOff={x:rand(-16,16), y:rand(-12,3)};
         p.retargetAt=G.time+700;
       }
       if(p.target){
@@ -808,7 +867,7 @@ function updateProjectiles(){
         if(d<17){ attachTo(b,p.target); sfx.squawk(); continue; }
       }
       if(age>4600){ // missed the tower — flutter down and off
-        Body.setVelocity(b,{x:b.velocity.x+0.4,y:1.5});
+        Body.setVelocity(b,{x:b.velocity.x+0.4*G.CS[p.tgt].muzzle.dir,y:1.5});
         if(b.position.y>GROUND_Y-6) removeProj(b);
       }
     }
@@ -825,22 +884,27 @@ function updateProjectiles(){
       }
       Body.setVelocity(b,{x:0,y:Math.min(30,b.velocity.y+1.6)});
       Body.setAngle(b,0);
-      // pierce: damage blocks it passes through
+      // pierce: damage blocks it passes through (only the TARGET castle's)
       const tipY=b.position.y+48;
       for(const blk of [...G.blocks]){
-        if(blk.plugin.kind!=='block') continue;
+        if(blk.plugin.kind!=='block' || blk.plugin.owner!==p.tgt) continue;
         if(Math.abs(blk.position.x-b.position.x)<20 && Math.abs(blk.position.y-tipY)<26 && !p.hitSet[blk.plugin.id]){
           p.hitSet[blk.plugin.id]=1; damageBody(blk,46,'sword'); spawnSparks(blk.position.x,tipY,3);
         }
       }
-      if(G.coreExposed && G.core && !G.core.plugin.dead && !p.hitSet.core){
-        if(Math.abs(G.core.position.x-b.position.x)<22 && Math.abs(G.core.position.y-tipY)<30){
-          p.hitSet.core=1; damageBody(G.core,64,'sword');
+      const tc=G.CS[p.tgt];
+      if(tc.coreExposed && tc.core && !tc.core.plugin.dead && !p.hitSet.core){
+        if(Math.abs(tc.core.position.x-b.position.x)<22 && Math.abs(tc.core.position.y-tipY)<30){
+          p.hitSet.core=1; damageBody(tc.core,64,'sword');
         }
       }
     }
     else if(p.proj==='car'){
       Body.setAngularVelocity(b, clamp(b.angularVelocity,-0.06,0.06));
+      if(p.hitDone && p.hitAt && G.time-p.hitAt>600) removeProj(b);   // wreck clears on game-time
+    }
+    else if(p.proj==='boulder'){
+      if(age>2600 && b.speed<1.2) removeProj(b);                     // settled rocks stop blocking the turn
     }
   }
 }
@@ -869,7 +933,7 @@ function handleProjHit(p, other){
   }
   else if(kind==='sticky'){
     if(isCastleBody(other)){ attachTo(p,other); sfx.beep(880); }
-    else if(other===ground){ setTimeout(()=>{ if(!p.plugin.dead){ explode(p.position.x,p.position.y,50,38,'sticky'); removeProj(p);} },700); }
+    else if(!p.boomAt){ p.boomAt=G.time+700; }              // stuck to the hill / ground — timed fuse
   }
   else if(kind==='molotov'){
     if(other.plugin && other.plugin.kind==='wall') { removeProj(p); return; }
@@ -881,7 +945,7 @@ function handleProjHit(p, other){
   else if(kind==='car'){
     if(!p.plugin.hitDone && other!==wallL && other!==wallR){
       // DELAY-BEFORE-POP: the car crumples, sparks, and only then blows (130ms)
-      p.plugin.hitDone=true;
+      p.plugin.hitDone=true; p.plugin.hitAt=G.time;
       sfx.thud(); spawnSparks(p.position.x,p.position.y,7);
       G.shake=Math.min(12,G.shake+3);
       const bx=p.position.x, by=p.position.y;
@@ -892,7 +956,7 @@ function handleProjHit(p, other){
     }
   }
   else if(kind==='sword'){
-    if(!p.plugin.planted && (other===ground || isCastleBody(other))){
+    if(!p.plugin.planted && (other===ground || other===hill || isCastleBody(other))){
       // DELAY-BEFORE-POP: the blade plants and cracks glow for 110ms, then bursts
       p.plugin.planted=true; p.plugin.plantAt=G.time;
       Body.setVelocity(p,{x:0,y:5});
@@ -923,87 +987,149 @@ function impactDamage(victim, other){
 }
 
 /* ============================================================
-   LEVEL LIFECYCLE + MAIN LOOP
+   MATCH LIFECYCLE + TURN MACHINE
    ============================================================ */
 function clearWorld(){
   for(const b of Composite.allBodies(world)){
-    if(b!==ground && b!==wallL && b!==wallR) Composite.remove(world,b);
+    if(b!==ground && b!==wallL && b!==wallR && b!==hill) Composite.remove(world,b);
   }
   for(const c of Composite.allConstraints(world)) Composite.remove(world,c);
-  G.blocks=[]; G.crew=[]; G.mounts=[]; G.barrels=[]; G.projectiles=[];
+  G.blocks=[]; G.crew=[]; G.barrels=[]; G.projectiles=[];
   G.attachments=[]; G.fireZones=[]; G.particles=[]; G.spawnQueue=[]; G.explosions=[];
   G.ghosts=[]; G.destroyLog=[]; G.hitStop=0; G.zoomPunch=0;
-  G.deck=null; G.core=null; G.heroBody=null; G.coreExposed=false;
-  G.firstExposeAt=-1; G.coreKilledAt=-1; G.castleStopped=false; G.sinkT=0; G.endShown=false;
+  G.CS=[null,null]; G.endShown=false; G.aim=null;
 }
-function startLevel(level, skipIntro){
+function startMatch(match, skipIntro){
   clearWorld();
-  G.level=level; G.score=0; G.shotsFired=0; G.weapon=0;
-  G.cooldowns=[0,0,0,0]; G.stats={crewKO:0,blocksBroken:0};
-  G.castleSpeed=LEVELS[level].speed; G.trackPhase=0; G.shake=0;
-  buildCastle(level);
+  G.match=match; G.score=0; G.weapon=0;
+  G.round=1; G.playerTurns=0; G.stats={crewKO:0,blocksBroken:0};
+  G.shake=0; G.turn=0; G.ts='aim'; G.aiPlan=null;
+  // player always holds the LEFT castle; match 2 swaps the themes
+  const leftTheme  = match===1 ? 'hyrule' : 'vice';
+  const rightTheme = match===1 ? 'vice'   : 'hyrule';
+  G.CS[0]=newCastle(0,leftTheme,80);
+  G.CS[1]=newCastle(1,rightTheme,340);
+  buildCastle(G.CS[0]);
+  buildCastle(G.CS[1]);
   buildCards();
   document.getElementById('end').classList.add('hidden');
   const intro=document.getElementById('intro');
   document.getElementById('introTitle').textContent =
-    (level===1?'LEVEL 1 · ':'LEVEL 2 · ')+LEVELS[level].name;
-  document.getElementById('introText').textContent = LEVELS[level].sub;
-  if(skipIntro){ intro.classList.add('hidden'); G.phase='play'; }
+    match===1 ? 'MATCH 1 · HYRULE (YOU) vs VICE' : 'MATCH 2 · VICE (YOU) vs HYRULE';
+  document.getElementById('introText').textContent =
+    match===1 ? 'Your Hyrule castle faces the Vice tower across one very large hill. Trade volleys over it — expose their core and finish it!'
+              : 'Now YOU hold the Vice tower: rockets, sticky bombs, a flying car. Their Hyrule castle shoots back. Same hill. Same grudge.';
+  if(skipIntro){ intro.classList.add('hidden'); G.phase='play'; G.playStart=G.time; }
   else { intro.classList.remove('hidden'); G.phase='intro'; }
   updateHUD(true);
 }
-function elapsedSec(){ return (G.time-(G.playStart||0))/1000; }
-function winLevel(crumbled){
+function endMatch(playerWon){
   if(G.phase!=='play') return;
-  G.phase='won'; G.castleStopped=true;
-  const oneShot = G.firstExposeAt>=0 && (G.coreKilledAt-G.firstExposeAt)<=1600 && !crumbled;
-  const tBonus = Math.max(0, Math.round((80-elapsedSec())*8));
-  let bonus = tBonus + G.stats.crewKO*0; // crew already scored live
-  if(oneShot) bonus += 1000;
-  G.score += bonus;
-  G._endInfo = {oneShot, tBonus, bonus, crumbled:!!crumbled, dest:destructionPct(), time:elapsedSec()};
-  // slow-mo finish, then the wreck loses its footing and crumbles
+  G.phase = playerWon?'won':'lost'; G.ts='over';
+  const loser = playerWon? aiCastle() : playerCastle();
+  const winner = playerWon? playerCastle() : aiCastle();
+  const oneShot = playerWon && loser.firstExposeAt>=0 && (loser.coreKilledAt-loser.firstExposeAt)<=1700;
+  let bonus=0, hpBonus=0, turnBonus=0;
+  if(playerWon){
+    hpBonus = Math.round(integrity(playerCastle())*400);
+    turnBonus = Math.max(0,(10-G.playerTurns))*50;
+    bonus = hpBonus + turnBonus + (oneShot?1000:0);
+    G.score += bonus;
+  }
+  G._endInfo = {oneShot, hpBonus, turnBonus, bonus,
+    foeDest: destructionPct(aiCastle()), youDest: destructionPct(playerCastle()),
+    youInt: Math.round(integrity(playerCastle())*100), turns: G.playerTurns};
+  winner.cheerUntil = G.time+2400;
+  // slow-mo finish, then the loser's wreck loses its footing and crumbles
   engine.timing.timeScale = 0.26;
   setTimeout(()=>{ engine.timing.timeScale = 1; }, 950);
-  for(const b of [...G.blocks, ...G.crew]) convertBody(b);
+  for(const b of [...G.blocks, ...G.crew]) if(b.plugin.owner===loser.idx) convertBody(b);
   let n=0;
   const burnInt=setInterval(()=>{
-    const alive=G.blocks.filter(b=>!b.plugin.dead);
+    const alive=G.blocks.filter(b=>!b.plugin.dead && b.plugin.owner===loser.idx);
     if(alive.length){ const b=alive[irand(0,alive.length-1)]; spawnFireball(b.position.x,b.position.y,16); }
-    if(++n>7 || G.phase!=='won') clearInterval(burnInt);
+    if(++n>7 || (G.phase!=='won'&&G.phase!=='lost')) clearInterval(burnInt);
   },260);
-  sfx.win();
+  if(playerWon) sfx.win(); else sfx.lose();
   setTimeout(showEnd, 2100);
-}
-function loseLevel(){
-  if(G.phase!=='play') return;
-  G.phase='lost'; G.castleStopped=true;
-  explode(BASE_LINE+16, GROUND_Y-30, 90, 5, 'ram');
-  G.shake=16; sfx.boom(true); sfx.lose();
-  G._endInfo={dest:destructionPct(), time:elapsedSec()};
-  setTimeout(showEnd, 1200);
 }
 function showEnd(){
   if(G.endShown) return; G.endShown=true;
   const e=document.getElementById('end'), info=G._endInfo||{};
   const won = G.phase==='won';
   document.getElementById('endTitle').textContent =
-    won ? (info.crumbled?'IT CRUMBLED AT THE GATE!':'CASTLE DOWN!') : 'YOUR BASE GOT RAMMED!';
+    won ? (G.match===1?'VICE TOWER DOWN!':'HYRULE CASTLE DOWN!') : 'YOUR CASTLE FELL!';
   let stars=0;
-  if(won){ stars=1 + (info.dest>=55?1:0) + ((info.oneShot||info.time<=48)?1:0); }
+  if(won){ stars=1 + (info.youInt>=40?1:0) + ((info.oneShot||info.turns<=8)?1:0); }
   document.getElementById('endStars').textContent = '★★★'.slice(0,stars)+'☆☆☆'.slice(0,3-stars);
   document.getElementById('endBreak').innerHTML = won
-    ? `💥 Destruction <b>${info.dest}%</b> · 👥 Crew KO <b>${G.stats.crewKO}</b><br>`+
-      `⏱ Time <b>${info.time.toFixed(0)}s</b> (+${info.tBonus})`+
+    ? `💥 Enemy castle wrecked <b>${info.foeDest}%</b> · 👥 Their crew KO <b>${G.stats.crewKO}</b><br>`+
+      `🏰 Your castle standing <b>${info.youInt}%</b> (+${info.hpBonus}) · 🎯 Turns <b>${info.turns}</b> (+${info.turnBonus})`+
       (info.oneShot?'<br>⚡ <b>ONE-SHOT FINISH!</b> (+1000)':'')+
       `<br>⭐ SCORE <b>${G.score}</b>`
-    : `💥 You wrecked <b>${info.dest}%</b> of it — not enough.<br>⭐ SCORE <b>${G.score}</b>`;
+    : `💥 You wrecked <b>${info.foeDest}%</b> of theirs — they wrecked <b>${info.youDest}%</b> of yours.<br>⭐ SCORE <b>${G.score}</b>`;
   const nx=document.getElementById('btnNext');
-  if(won && G.level===1){ nx.textContent='NEXT LEVEL ▶'; nx.style.display=''; }
-  else if(won && G.level===2){ nx.textContent='↻ PLAY AGAIN'; nx.style.display=''; }
+  if(won && G.match===1){ nx.textContent='NEXT MATCH ▶'; nx.style.display=''; }
+  else if(won && G.match===2){ nx.textContent='↻ PLAY AGAIN'; nx.style.display=''; }
   else nx.style.display='none';
   e.classList.remove('hidden');
 }
+/* ------- turn machine ------- */
+function volleyBusy(){
+  return G.projectiles.length>0 || G.spawnQueue.length>0 ||
+         G.attachments.some(a=>a.kind==='sticky');
+}
+function endTurn(){
+  if(G.phase!=='play') return;
+  G.turn = 1-G.turn;
+  if(G.turn===1){ G.ts='aiDelay'; G.aiAt=G.time+650; toast('🤖 ENEMY TURN'); }
+  else { G.ts='aim'; G.round++; toast('⚔️ YOUR TURN'); }
+  updateHUD(true);
+}
+function aiPlan(){
+  const ai=aiCastle(), foe=playerCastle();
+  const ws=weaponsOf(ai);
+  // error shrinks as the match goes on — but stays human: wild early,
+  // decent late, never laser (floor 22px over 9 rounds)
+  const err = lerp(56, 22, clamp((G.round-1)/9,0,1));
+  let pick=null;
+  const finisher = ws.find(w=>w.drop);
+  if(foe.coreExposed && foe.core && !foe.core.plugin.dead && ai.cds[ws.indexOf(finisher)]<=0){
+    pick={w:finisher, tx: foe.core.position.x + rand(-err,err)*0.5, drop:true};
+  } else {
+    const ready = ws.filter(w=>ai.cds[ws.indexOf(w)]<=0);
+    const arc = ready.filter(w=>!w.drop && !w.special);
+    const sp  = ready.filter(w=>w.special);
+    if(sp.length && (G.round%3===0 || Math.random()<0.3)) pick={w:sp[0], special:true};
+    else if(arc.length){
+      const w=arc[irand(0,arc.length-1)];
+      // aim at the castle BODY, not the core's cover — a human aims at the
+      // structure; only the exposed-core finisher branch above snipes cores
+      const heart = foe.coreExposed && foe.core ? foe.core.position : {x:foe.cx + rand(-34,34), y:DECK_TOP-92 + rand(-36,26)};
+      const txp=heart.x+rand(-err,err), typ=heart.y+rand(-err,err)*0.6;
+      const sol=solveAim(ai.muzzle, txp, typ);
+      pick={w, angle: sol?sol.angle:Math.PI-0.9, power: sol?sol.power:0.8};
+    } else if(ready.length){
+      pick={w:ready[0], tx: foe.cx+rand(-err,err), drop:!!ready[0].drop, special:!!ready[0].special};
+    }
+  }
+  G.aiPlan=pick;
+  G.ts='aiAim'; G.aiFireAt=G.time+850;
+  if(pick && pick.angle!==undefined) ai.lastAim=pick.angle;
+}
+function aiFire(){
+  const p=G.aiPlan; G.aiPlan=null;
+  if(!p){ endTurn(); return; }
+  const ai=aiCastle();
+  let ok=false;
+  if(p.drop) ok=fireWeapon(p.w, 0, 0, p.tx, 1);
+  else if(p.special) ok=fireWeapon(p.w, -0.7, 0.8, ai.cx, 1);
+  else ok=fireWeapon(p.w, p.angle, p.power, 0, 1);
+  G.ts = ok ? 'busy' : 'aiDelay';
+  if(!ok) G.aiAt=G.time+400;
+  G.lastBusy=G.time;
+}
+
 /* ------- per-step simulation ------- */
 function stepGame(){
   G.time += STEP; G.tick++;
@@ -1014,26 +1140,17 @@ function stepGame(){
   for(let i=G.spawnQueue.length-1;i>=0;i--){
     if(G.time>=G.spawnQueue[i].at){ const f=G.spawnQueue[i].fn; G.spawnQueue.splice(i,1); f(); }
   }
-  for(let i=0;i<4;i++) G.cooldowns[i]=Math.max(0,G.cooldowns[i]-STEP);
-  // castle advance: translate the deck + every intact rider as one machine
-  if(G.deck && G.phase==='play' && !G.castleStopped){
-    const integ=integrity();
-    const sp=G.castleSpeed*(integ<0.35?0.5:integ<0.6?0.78:1);
-    G.curSp=sp;
-    const dx=sp*STEP/1000;
-    const riders=[G.deck, ...G.blocks, ...G.crew, ...(G.core?[G.core]:[])];
-    for(const b of riders){
-      if(b===G.deck || (b.plugin.ride && !b.plugin.dead))
-        Body.setPosition(b,{x:b.position.x-dx, y:b.position.y});
-    }
-    G.trackPhase+=dx;
-    const front=G.deck.position.x-DECK_W/2;
-    if(front<=BASE_LINE){
-      if(destructionPct()>=60) winLevel(true); else loseLevel();
-    }
+  for(const c of G.CS){ if(!c) continue; for(let i=0;i<4;i++) c.cds[i]=Math.max(0,c.cds[i]-STEP); }
+  // turn machine
+  if(G.phase==='play'){
+    if(G.ts==='busy'){
+      if(volleyBusy()) G.lastBusy=G.time;
+      else if(G.time-G.lastBusy>750) endTurn();
+    } else if(G.ts==='aiDelay' && G.time>=G.aiAt){ aiPlan(); }
+    else if(G.ts==='aiAim' && G.time>=G.aiFireAt){ aiFire(); }
   }
   updateSupport();
-  if(G.tick%18===0) checkCoreExposure();
+  if(G.tick%18===0){ for(const c of G.CS) if(c) checkCoreExposure(c); }
   updateProjectiles();
   Engine.update(engine, STEP);
   // velocity safety clamp — no supersonic debris
@@ -1047,39 +1164,42 @@ function stepGame(){
   G.shake=Math.max(0,G.shake-STEP*0.02);
   G.windmillA+=0.0035;
 }
-function wp(body, pt){
-  const c=Math.cos(body.angle), s=Math.sin(body.angle);
-  return {x:body.position.x + pt.x*c - pt.y*s, y:body.position.y + pt.x*s + pt.y*c};
-}
 /* ------- HUD ------- */
 const hudEls={};
-['hudLevel','hudHP','hudCrew','hudTime','hudScore'].forEach(id=>hudEls[id]=document.getElementById(id));
-function etaSec(){
-  if(!G.deck) return 0;
-  const front=G.deck.position.x-DECK_W/2;
-  const sp=Math.max(1.2,G.castleSpeed*(integrity()<0.35?0.5:0.8));
-  return Math.max(0,Math.ceil((front-BASE_LINE)/sp));
+['hudLevel','hudYou','hudFoe','hudTurn','hudScore'].forEach(id=>hudEls[id]=document.getElementById(id));
+function castleState(c){
+  return { integrity:+integrity(c).toFixed(3), destruction:destructionPct(c),
+    coreHP:c.core?Math.max(0,Math.round(c.core.plugin.hp)):0,
+    coreExposed:c.coreExposed, blockers:coreBlockers(c),
+    coreX:c.core?Math.round(c.core.position.x):-1, coreY:c.core?Math.round(c.core.position.y):-1,
+    crew:G.crew.filter(x=>!x.plugin.dead && x.plugin.owner===c.idx).length,
+    blocks:G.blocks.filter(x=>x.plugin.owner===c.idx).length, x:c.cx, theme:c.theme };
 }
 function updateHUD(force){
-  hudEls.hudLevel.textContent='L'+G.level;
-  hudEls.hudHP.innerHTML='🏰 '+Math.round(integrity()*100)+'<small>%</small>';
-  hudEls.hudCrew.textContent='👥 '+G.crew.filter(c=>!c.plugin.dead).length;
-  hudEls.hudTime.textContent='⏱ '+etaSec();
+  if(!playerCastle()) return;
+  hudEls.hudLevel.textContent='M'+G.match;
+  hudEls.hudYou.innerHTML='🏰 '+Math.round(integrity(playerCastle())*100)+'<small>%</small>';
+  hudEls.hudFoe.innerHTML='💀 '+Math.round(integrity(aiCastle())*100)+'<small>%</small>';
+  const myTurn = G.phase==='play' && G.turn===0;
+  hudEls.hudTurn.textContent = G.phase==='play' ? (myTurn?'⚔️ YOU':'🤖 FOE') : (G.phase==='won'?'🏆':'💀');
+  hudEls.hudTurn.classList.toggle('ai', G.phase==='play' && !myTurn);
   hudEls.hudScore.textContent='⭐ '+G.score;
-  const ws=weapons();
+  const ws=weaponsOf(playerCastle()), pc=playerCastle();
   document.querySelectorAll('.card').forEach((el,i)=>{
+    if(!ws[i]) return;
     const cd=el.querySelector('.cd'), cdt=el.querySelector('.cdt');
-    const frac=G.cooldowns[i]/ws[i].cd;
+    const frac=pc.cds[i]/ws[i].cd;
     cd.style.height=(frac*100)+'%';
-    el.classList.toggle('cooling', G.cooldowns[i]>0);
-    if(G.cooldowns[i]>0) cdt.textContent=(G.cooldowns[i]/1000).toFixed(1);
+    el.classList.toggle('cooling', pc.cds[i]>0);
+    if(pc.cds[i]>0) cdt.textContent=(pc.cds[i]/1000).toFixed(1);
     el.classList.toggle('sel', G.weapon===i);
+    el.style.opacity = (G.phase==='play' && G.turn===0 && G.ts==='aim') ? 1 : 0.55;
   });
 }
 /* ------- weapon cards ------- */
 function buildCards(){
   const wrap=document.getElementById('cards'); wrap.innerHTML='';
-  weapons().forEach((w,i)=>{
+  weaponsOf(playerCastle()).forEach((w,i)=>{
     const b=document.createElement('button');
     b.className='card'+(i===G.weapon?' sel':'');
     b.innerHTML=`<span class="ic">${w.icon}</span><span class="nm">${w.name}</span><div class="cd"></div><div class="cdt"></div>`;
@@ -1087,24 +1207,24 @@ function buildCards(){
     wrap.appendChild(b);
   });
 }
-/* ------- input: pull-back aim, release to fire ------- */
+/* ------- input: drag aim from YOUR muzzle, release to fire ------- */
 let aiming=false;
 function ptrPos(e){
   const r=cv.getBoundingClientRect();
   return {x:(e.clientX-r.left)*(W/r.width), y:(e.clientY-r.top)*(H/r.height)};
 }
 function computeAim(p){
-  const w=curWeapon();
-  if(w.drop || w.special) return {tx:clamp(p.x,100,436), drop:true};
+  const w=curWeapon(), mz=playerCastle().muzzle;
+  if(w.drop || w.special) return {tx:clamp(p.x,26,394), drop:true};
   let angle, power;
-  const dx=p.x-MUZZLE.x, dy=p.y-MUZZLE.y;
-  if(p.x>MUZZLE.x+8 && p.y<MUZZLE.y-8){
+  const dx=p.x-mz.x, dy=p.y-mz.y;
+  if(dx>8 && dy<-8){
     // direct aim: pointing up-field
     angle=Math.atan2(dy,dx);
     power=clamp((Math.hypot(dx,dy)-50)/180,0.15,1);
   } else {
     // slingshot: pull back from the muzzle
-    const sx=MUZZLE.x-p.x, sy=MUZZLE.y-p.y;
+    const sx=mz.x-p.x, sy=mz.y-p.y;
     angle=Math.atan2(sy,sx);
     power=clamp((Math.hypot(sx,sy)-26)/190,0,1);
   }
@@ -1113,18 +1233,20 @@ function computeAim(p){
 }
 cv.addEventListener('pointerdown',e=>{
   audioInit();
-  if(G.phase!=='play') return;
+  if(G.phase!=='play' || G.turn!==0 || G.ts!=='aim') return;
   aiming=true; cv.setPointerCapture(e.pointerId);
   G.aim=computeAim(ptrPos(e));
 });
 cv.addEventListener('pointermove',e=>{ if(aiming) G.aim=computeAim(ptrPos(e)); });
 function endAim(e){
   if(!aiming) return; aiming=false;
-  if(G.phase==='play' && G.aim){
+  if(G.phase==='play' && G.turn===0 && G.ts==='aim' && G.aim){
     const w=curWeapon();
-    if(w.special) fireWeapon(w, -0.7, 0.8, G.aim.tx);
-    else if(w.drop) fireWeapon(w, 0, 0, G.aim.tx);
-    else if(G.aim.power>0.06) fireWeapon(w, G.aim.angle, G.aim.power, G.aim.tx);
+    let ok=false;
+    if(w.special) ok=fireWeapon(w, -0.7, 0.8, playerCastle().cx, 0);
+    else if(w.drop) ok=fireWeapon(w, 0, 0, G.aim.tx, 0);
+    else if(G.aim.power>0.06) ok=fireWeapon(w, G.aim.angle, G.aim.power, G.aim.tx, 0);
+    if(ok){ G.ts='busy'; G.lastBusy=G.time; }
   }
   G.aim=null;
 }
@@ -1133,34 +1255,38 @@ cv.addEventListener('pointercancel',()=>{ aiming=false; G.aim=null; });
 document.addEventListener('keydown',e=>{
   const n=parseInt(e.key); if(n>=1&&n<=4){ G.weapon=n-1; updateHUD(true); }
 });
-/* ------- trajectory preview (exact, via a clone engine) ------- */
-function previewDots(angle,power){
-  const pts=[];
-  Composite.clear(pvEngine.world,false);
-  const b=Bodies.circle(MUZZLE.x,MUZZLE.y-4,5,{density:0.0016,friction:0.4,restitution:0.15});
-  Composite.add(pvEngine.world,b);
+/* ------- trajectory preview + aim solver (exact, via the clone engine) ------- */
+function simShot(mx,my,angle,power,steps){
+  if(pvBody){ Composite.remove(pvEngine.world,pvBody); pvBody=null; }
+  const b=Bodies.circle(mx,my-4,5,{density:0.0016,friction:0.4,restitution:0.15});
+  pvBody=b; Composite.add(pvEngine.world,b);
   const v=aimVelocity(angle,power);
   Body.setVelocity(b,v);
-  for(let i=0;i<46;i++){
+  const pts=[]; let minD=1e12, minPt=null;
+  for(let i=0;i<steps;i++){
     Engine.update(pvEngine,STEP);
-    if(i%3===0) pts.push({x:b.position.x,y:b.position.y});
-    if(b.position.y>GROUND_Y) break;
+    pts.push({x:b.position.x,y:b.position.y});
+    if(b.position.y>GROUND_Y+6) break;
   }
-  return pts;
+  return {pts, body:b};
 }
-/* solve an angle for a target at fixed power (bot + hooks) */
-function solveAim(tx,ty,power){
-  let best=null,bd=1e9;
-  for(let deg=-84;deg<=-10;deg+=2){
-    const a=deg*Math.PI/180, v=aimVelocity(a,power);
-    Composite.clear(pvEngine.world,false);
-    const b=Bodies.circle(MUZZLE.x,MUZZLE.y-4,4,{density:0.0011});
-    Composite.add(pvEngine.world,b); Body.setVelocity(b,v);
-    for(let i=0;i<70;i++){
-      Engine.update(pvEngine,STEP);
-      const d=dist2(b.position.x,b.position.y,tx,ty);
-      if(d<bd){ bd=d; best=a; }
-      if(b.position.y>GROUND_Y+4) break;
+function previewDots(angle,power){
+  const mz=playerCastle().muzzle;
+  const {pts}=simShot(mz.x,mz.y,angle,power,58);
+  return pts.filter((_,i)=>i%2===0);
+}
+/* solve an angle+power for a target from a muzzle (AI + bot hooks) */
+function solveAim(mz, tx, ty){
+  let best=null, bd=1e12;
+  const base = mz.dir>0 ? 0 : Math.PI;
+  for(const power of [0.55,0.7,0.85,1.0]){
+    for(let off=8; off<=84; off+=3.5){
+      const a = base + mz.dir*(-off*Math.PI/180);
+      const {pts}=simShot(mz.x,mz.y,a,power,80);
+      for(const pt of pts){
+        const d=dist2(pt.x,pt.y,tx,ty);
+        if(d<bd){ bd=d; best={angle:a,power}; }
+      }
     }
   }
   return best;
@@ -1171,49 +1297,80 @@ document.getElementById('btnGo').addEventListener('click',()=>{
   document.getElementById('intro').classList.add('hidden');
   G.phase='play'; G.playStart=G.time;
 });
-document.getElementById('btnRetry').addEventListener('click',()=>{ audioInit(); startLevel(G.level,true); G.playStart=G.time; });
+document.getElementById('btnRetry').addEventListener('click',()=>{ audioInit(); startMatch(G.match,true); });
 document.getElementById('btnNext').addEventListener('click',()=>{
   audioInit();
-  if(G.level===1) startLevel(2,false); else startLevel(1,false);
+  if(G.match===1) startMatch(2,false); else startMatch(1,false);
 });
 /* ------- scripted-play hooks ------- */
 window.__game = {
-  start(level){ startLevel(level||1,true); G.playStart=G.time; },
-  restart(){ startLevel(G.level,true); G.playStart=G.time; },
+  start(match){ startMatch(match||1,true); },
+  restart(){ startMatch(G.match,true); },
   select(i){ G.weapon=i; },
   fire(wid, angleDeg, power){
-    const ws=weapons(); const idx=typeof wid==='number'?wid:ws.findIndex(w=>w.id===wid);
+    if(G.phase!=='play'||G.turn!==0||G.ts!=='aim') return false;
+    const ws=weaponsOf(playerCastle()); const idx=typeof wid==='number'?wid:ws.findIndex(w=>w.id===wid);
     if(idx<0) return false;
-    G.weapon=idx; G.cooldowns[idx]=0;
-    return fireWeapon(ws[idx], (angleDeg||-50)*Math.PI/180, power==null?0.75:power, 300);
+    const w=ws[idx]; G.weapon=idx; playerCastle().cds[idx]=0;
+    let ok=false;
+    if(w.special) ok=fireWeapon(w,-0.7,0.8,playerCastle().cx,0);
+    else if(w.drop) ok=fireWeapon(w,0,0,aiCastle().cx,0);
+    else ok=fireWeapon(w,(angleDeg||-50)*Math.PI/180, power==null?0.75:power, 0, 0);
+    if(ok){ G.ts='busy'; G.lastBusy=G.time; }
+    return ok;
   },
   fireAt(wid, tx, ty){
-    const ws=weapons(); const idx=typeof wid==='number'?wid:ws.findIndex(w=>w.id===wid);
+    if(G.phase!=='play'||G.turn!==0||G.ts!=='aim') return false;
+    const ws=weaponsOf(playerCastle()); const idx=typeof wid==='number'?wid:ws.findIndex(w=>w.id===wid);
     if(idx<0) return false;
-    const w=ws[idx]; G.weapon=idx; G.cooldowns[idx]=0;
-    if(w.drop||w.special) return fireWeapon(w,0,0,tx);
-    const a=solveAim(tx,ty,0.72);
-    return fireWeapon(w, a==null?-0.9:a, 0.72, tx);
+    const w=ws[idx]; G.weapon=idx; playerCastle().cds[idx]=0;
+    let ok=false;
+    if(w.drop) ok=fireWeapon(w,0,0,tx,0);
+    else if(w.special) ok=fireWeapon(w,-0.7,0.8,playerCastle().cx,0);
+    else { const s=solveAim(playerCastle().muzzle,tx,ty); ok=fireWeapon(w, s?s.angle:-0.9, s?s.power:0.75, tx, 0); }
+    if(ok){ G.ts='busy'; G.lastBusy=G.time; }
+    return ok;
+  },
+  aimAt(tx,ty){   // set a visible aim (for screenshots)
+    const w=curWeapon();
+    if(w.drop||w.special){ G.aim={tx:clamp(tx,26,394), drop:true}; return; }
+    const s=solveAim(playerCastle().muzzle,tx,ty);
+    if(s) G.aim={angle:s.angle, power:s.power, tx};
+  },
+  expose(side){   // test hook: blast away the cover over a castle's core
+    const c=G.CS[side]; if(!c||!c.core) return false;
+    const cx=c.core.position.x, cy=c.core.position.y;
+    for(const b of [...G.blocks]){
+      if(b.plugin.owner!==side || b.plugin.kind!=='block') continue;
+      const dx=b.position.x-cx, dy=b.position.y-cy;
+      if((Math.abs(dx)<34 && dy<-4 && dy>-125) || (Math.abs(dx)<40 && Math.abs(dy)<=28)) damageBody(b,999,'blast');
+    }
+    checkCoreExposure(c);
+    return c.coreExposed;
   },
   state(){
-    return { phase:G.phase, level:G.level, t:Math.round(G.time),
-      integrity:+integrity().toFixed(3), destruction:destructionPct(),
-      coreHP:G.core?Math.max(0,Math.round(G.core.plugin.hp)):0,
-      coreExposed:G.coreExposed, blockers:coreBlockers(),
-      crew:G.crew.filter(c=>!c.plugin.dead).length,
-      blocks:G.blocks.length, score:G.score, shots:G.shotsFired,
-      castleFront:G.deck?Math.round(G.deck.position.x-DECK_W/2):-1,
-      castleX:G.deck?Math.round(G.deck.position.x):-1,
-      coreX:G.core?Math.round(G.core.position.x):-1, coreY:G.core?Math.round(G.core.position.y):-1,
-      eta:etaSec(), won:G.phase==='won', lost:G.phase==='lost',
-      weapon:curWeapon().id, cooldowns:G.cooldowns.map(c=>Math.round(c)) };
+    const you=playerCastle()?castleState(playerCastle()):null;
+    const foe=aiCastle()?castleState(aiCastle()):null;
+    return { phase:G.phase, match:G.match, t:Math.round(G.time),
+      turn: G.turn===0?'player':'ai', turnState:G.ts, busy:volleyBusy(),
+      round:G.round, playerTurns:G.playerTurns, score:G.score,
+      you, foe,
+      // convenience mirrors of the FOE (the bot's target)
+      coreExposed:foe?foe.coreExposed:false, coreHP:foe?foe.coreHP:0,
+      coreX:foe?foe.coreX:-1, coreY:foe?foe.coreY:-1, castleX:foe?foe.x:-1,
+      destruction:foe?foe.destruction:0, integrity:you?you.integrity:1,
+      won:G.phase==='won', lost:G.phase==='lost',
+      weapon:playerCastle()?curWeapon().id:null,
+      cooldowns:playerCastle()?playerCastle().cds.map(c=>Math.round(c)):[0,0,0,0],
+      attachments:G.attachments.length, projectiles:G.projectiles.length };
   },
+  attachedCuccos(){ return G.attachments.filter(a=>a.kind==='cucco').length; },
   audioDest:()=>audioDest,
   stepFrames(n){ for(let i=0;i<n;i++) stepGame(); draw(); updateHUD(); },
-  version:'castle-busters-1.0',
+  version:'castle-busters-2.0-duel',
 };
 /* ------- boot + main loop ------- */
-startLevel(1,false);
+startMatch(1,false);
 let lastT=performance.now(), acc=0;
 function frame(now){
   requestAnimationFrame(frame);
@@ -1239,11 +1396,12 @@ function draw(){
   }
   drawBackground();
   drawGround();
-  drawBaseAndLauncher();
-  if(G.deck) drawDeck();
+  drawHill();
+  for(const c of G.CS){ if(c&&c.deck) drawCastleBase(c); }
+  drawLaunchers();
   for(const b of [...G.blocks]) drawBody(b);
   for(const c of [...G.crew]) drawCrewBody(c);
-  if(G.core && !G.core.plugin.dead) drawCore();
+  for(const c of G.CS){ if(c&&c.core && !c.core.plugin.dead) drawCore(c); }
   drawFireZones();
   drawAttachments();
   drawGhosts();
@@ -1253,51 +1411,47 @@ function draw(){
   drawAim();
   ctx.restore();
 }
-/* ---------- scenery ---------- */
+/* ---------- scenery: each half of the world wears its castle's theme ---------- */
 function drawBackground(){
-  const L=G.level;
   const sky=ctx.createLinearGradient(0,0,0,GROUND_Y);
-  if(L===1){ sky.addColorStop(0,'#ffd9a3'); sky.addColorStop(0.55,'#ffb37a'); sky.addColorStop(1,'#ff8a5c'); }
-  else { sky.addColorStop(0,'#ffe7ba'); sky.addColorStop(0.6,'#ffc98f'); sky.addColorStop(1,'#ff9e6e'); }
+  sky.addColorStop(0,'#ffd9a3'); sky.addColorStop(0.55,'#ffb37a'); sky.addColorStop(1,'#ff8a5c');
   ctx.fillStyle=sky; ctx.fillRect(-20,-20,W+40,GROUND_Y+20);
-  // sun
-  const sx=L===1?332:74, sy=L===1?138:118;
-  ctx.fillStyle='rgba(255,244,196,0.5)'; ctx.beginPath(); ctx.arc(sx,sy,44,0,7); ctx.fill();
-  ctx.fillStyle='#fff3c4'; ctx.beginPath(); ctx.arc(sx,sy,27,0,7); ctx.fill();
+  // sun, high over the hill
+  ctx.fillStyle='rgba(255,244,196,0.5)'; ctx.beginPath(); ctx.arc(210,104,44,0,7); ctx.fill();
+  ctx.fillStyle='#fff3c4'; ctx.beginPath(); ctx.arc(210,104,27,0,7); ctx.fill();
   // clouds (flat, drifting)
   ctx.fillStyle='rgba(255,255,255,0.5)';
   for(let i=0;i<4;i++){
     const cx=((i*137 + G.time*0.004*(i%2?1:-1))%(W+120)+(W+120))%(W+120)-60, cy=52+i*36;
     ctx.beginPath(); ctx.ellipse(cx,cy,30,7,0,0,7); ctx.ellipse(cx+22,cy+2,20,5.5,0,0,7); ctx.fill();
   }
-  if(L===1){
-    // Vice skyline silhouettes + neon
-    ctx.fillStyle='#58355c';
-    const bl=[[0,596,44,120],[40,628,30,88],[252,606,52,110],[300,640,34,76],[336,618,44,98],[378,644,42,72],[196,646,30,70]];
-    for(const [x,y,w,h] of bl){ ctx.fillRect(x,y,w,h); }
-    ctx.fillStyle='#40264a'; ctx.fillRect(150,652,48,64);
-    neonText('VICE',268,632,'#ff4fd8',13); neonText('HOTEL',352,660,'#57e6ff',9); neonText('★',168,676,'#ffd94d',13);
-    // palms
-    for(const px of [120,214,398]) drawPalm(px,GROUND_Y,0.8+((px*7)%3)*0.14);
-  } else {
-    // Hyrule hills + windmills (the video's horizon)
-    ctx.fillStyle='#8fae5f';
-    ctx.beginPath(); ctx.moveTo(-20,GROUND_Y);
-    for(let x=-20;x<=W+20;x+=40) ctx.lineTo(x, GROUND_Y-118+Math.sin(x*0.021+2)*22);
-    ctx.lineTo(W+20,GROUND_Y); ctx.fill();
-    ctx.fillStyle='#6f9a4e';
-    ctx.beginPath(); ctx.moveTo(-20,GROUND_Y);
-    for(let x=-20;x<=W+20;x+=40) ctx.lineTo(x, GROUND_Y-64+Math.sin(x*0.03+5)*16);
-    ctx.lineTo(W+20,GROUND_Y); ctx.fill();
-    drawWindmill(96,GROUND_Y-118); drawWindmill(238,GROUND_Y-96); drawWindmill(352,GROUND_Y-124);
-    // the big avalanche hill, right side (rocks pour off its crest)
-    ctx.fillStyle='#77512f';
-    ctx.beginPath(); ctx.moveTo(292,GROUND_Y); ctx.lineTo(360,330); ctx.lineTo(398,176); ctx.lineTo(428,92);
-    ctx.lineTo(446,92); ctx.lineTo(446,GROUND_Y); ctx.closePath(); ctx.fill();
-    ctx.fillStyle='#8a6238';
-    ctx.beginPath(); ctx.moveTo(398,176); ctx.lineTo(428,92); ctx.lineTo(446,92); ctx.lineTo(438,240); ctx.lineTo(416,220); ctx.closePath(); ctx.fill();
-    ctx.fillStyle='#5d8a48';
-    ctx.beginPath(); ctx.moveTo(292,GROUND_Y); ctx.lineTo(360,330); ctx.lineTo(398,176); ctx.lineTo(410,208); ctx.lineTo(372,352); ctx.lineTo(318,GROUND_Y); ctx.closePath(); ctx.fill();
+  if(!G.CS[0]) return;
+  for(const c of G.CS){
+    ctx.save();
+    ctx.beginPath(); ctx.rect(c.idx===0?-20:210, -20, 250, GROUND_Y+20); ctx.clip();
+    if(c.theme==='vice'){
+      // Vice skyline silhouettes + neon, behind the tower
+      ctx.fillStyle='#58355c';
+      const bl = c.idx===0
+        ? [[0,596,44,120],[40,628,30,88],[196,646,30,70],[150,652,48,64]]
+        : [[252,606,52,110],[300,640,34,76],[336,618,44,98],[378,644,42,72],[228,646,26,70]];
+      for(const [x,y,w,h] of bl){ ctx.fillRect(x,y,w,h); }
+      if(c.idx===0){ neonText('VICE',60,632,'#ff4fd8',13); neonText('★',168,676,'#ffd94d',13); }
+      else { neonText('VICE',330,632,'#ff4fd8',13); neonText('HOTEL',386,660,'#57e6ff',9); }
+      drawPalm(c.idx===0?196:224,GROUND_Y,0.9);
+    } else {
+      // Hyrule rolling hills + a windmill on the horizon
+      ctx.fillStyle='#8fae5f';
+      ctx.beginPath(); ctx.moveTo(-20,GROUND_Y);
+      for(let x=-20;x<=W+20;x+=40) ctx.lineTo(x, GROUND_Y-118+Math.sin(x*0.021+2+c.idx*3)*22);
+      ctx.lineTo(W+20,GROUND_Y); ctx.fill();
+      ctx.fillStyle='#6f9a4e';
+      ctx.beginPath(); ctx.moveTo(-20,GROUND_Y);
+      for(let x=-20;x<=W+20;x+=40) ctx.lineTo(x, GROUND_Y-64+Math.sin(x*0.03+5+c.idx*2)*16);
+      ctx.lineTo(W+20,GROUND_Y); ctx.fill();
+      drawWindmill(c.idx===0?52:368, GROUND_Y-118);
+    }
+    ctx.restore();
   }
 }
 function neonText(txt,x,y,col,size){
@@ -1328,91 +1482,136 @@ function drawWindmill(x,gy){
   ctx.restore();
 }
 function drawGround(){
-  const L=G.level;
-  if(L===1){
-    ctx.fillStyle='#eec27f'; ctx.fillRect(-20,GROUND_Y,W+40,74);
-    ctx.fillStyle='#dfa95e'; for(let i=0;i<26;i++){ const x=hash(i*3.1)*W, y=GROUND_Y+6+hash(i*7.7)*56; ctx.fillRect(x,y,3,2); }
-    ctx.fillStyle='#2e9db8'; ctx.fillRect(-20,GROUND_Y+74,W+40,H-GROUND_Y-74+20);
-    ctx.fillStyle='rgba(255,255,255,0.5)';
-    for(let i=0;i<12;i++){ const x=(hash(i*5.3)*W + G.time*0.01*(1+i%3))%W; ctx.fillRect(x,GROUND_Y+82+hash(i*9.1)*52,8,2); }
-    ctx.fillStyle='rgba(255,255,255,0.75)'; ctx.fillRect(-20,GROUND_Y+71,W+40,3);
-  } else {
-    ctx.fillStyle='#5da24f'; ctx.fillRect(-20,GROUND_Y,W+40,H-GROUND_Y+20);
-    ctx.fillStyle='#4c8a41'; ctx.fillRect(-20,GROUND_Y,W+40,7);
-    // dirt track the castle rolls on
-    ctx.fillStyle='#9a744a'; ctx.fillRect(-20,GROUND_Y+16,W+40,20);
-    ctx.fillStyle='#86603a'; for(let i=0;i<20;i++) ctx.fillRect(hash(i*4.3)*W, GROUND_Y+20+hash(i*6.1)*12, 6,3);
-    // flowers
-    for(let i=0;i<16;i++){
-      const x=hash(i*8.9)*W, y=GROUND_Y+48+hash(i*3.7)*70;
-      ctx.fillStyle=['#ff6b9d','#ffd94d','#c39bff'][i%3];
-      ctx.beginPath(); ctx.arc(x,y,2.4,0,7); ctx.fill();
-      ctx.fillStyle='#3f7a34'; ctx.fillRect(x-0.7,y,1.4,5);
+  // split ground: each side wears its own theme, hill covers the middle
+  for(const c of G.CS.filter(Boolean)){
+    ctx.save();
+    ctx.beginPath(); ctx.rect(c.idx===0?-20:210,-20,250,H+40); ctx.clip();
+    if(c.theme==='vice'){
+      ctx.fillStyle='#eec27f'; ctx.fillRect(-20,GROUND_Y,W+40,74);
+      ctx.fillStyle='#dfa95e'; for(let i=0;i<26;i++){ const x=hash(i*3.1)*W, y=GROUND_Y+6+hash(i*7.7)*56; ctx.fillRect(x,y,3,2); }
+    } else {
+      ctx.fillStyle='#5da24f'; ctx.fillRect(-20,GROUND_Y,W+40,H-GROUND_Y+20);
+      ctx.fillStyle='#4c8a41'; ctx.fillRect(-20,GROUND_Y,W+40,7);
+      ctx.fillStyle='#9a744a'; ctx.fillRect(-20,GROUND_Y+16,W+40,20);
+      ctx.fillStyle='#86603a'; for(let i=0;i<20;i++) ctx.fillRect(hash(i*4.3)*W, GROUND_Y+20+hash(i*6.1)*12, 6,3);
+      for(let i=0;i<16;i++){
+        const x=hash(i*8.9)*W, y=GROUND_Y+48+hash(i*3.7)*70;
+        ctx.fillStyle=['#ff6b9d','#ffd94d','#c39bff'][i%3];
+        ctx.beginPath(); ctx.arc(x,y,2.4,0,7); ctx.fill();
+        ctx.fillStyle='#3f7a34'; ctx.fillRect(x-0.7,y,1.4,5);
+      }
     }
+    ctx.restore();
   }
-  // base line
-  ctx.strokeStyle='rgba(255,217,77,0.9)'; ctx.lineWidth=2.5; ctx.setLineDash([7,6]);
-  ctx.beginPath(); ctx.moveTo(BASE_LINE,GROUND_Y-150); ctx.lineTo(BASE_LINE,GROUND_Y+2); ctx.stroke();
-  ctx.setLineDash([]);
+  // water strip along the very bottom (Vice beach edge)
+  ctx.fillStyle='#2e9db8'; ctx.fillRect(-20,GROUND_Y+74,W+40,H-GROUND_Y-74+20);
+  ctx.fillStyle='rgba(255,255,255,0.5)';
+  for(let i=0;i<12;i++){ const x=(hash(i*5.3)*W + G.time*0.01*(1+i%3))%W; ctx.fillRect(x,GROUND_Y+82+hash(i*9.1)*52,8,2); }
+  ctx.fillStyle='rgba(255,255,255,0.75)'; ctx.fillRect(-20,GROUND_Y+71,W+40,3);
 }
-function drawBaseAndLauncher(){
-  const L=G.level;
-  // flag
-  ctx.strokeStyle='#5b4632'; ctx.lineWidth=3;
-  ctx.beginPath(); ctx.moveTo(BASE_LINE-8,GROUND_Y); ctx.lineTo(BASE_LINE-8,GROUND_Y-64); ctx.stroke();
-  ctx.fillStyle= L===1?'#ff4fd8':'#37b24d';
-  ctx.beginPath(); ctx.moveTo(BASE_LINE-8,GROUND_Y-64); ctx.lineTo(BASE_LINE+14,GROUND_Y-56); ctx.lineTo(BASE_LINE-8,GROUND_Y-48); ctx.fill();
-  // wooden fort + swarm launcher
-  ctx.fillStyle='#7a5230'; ctx.fillRect(6,GROUND_Y-26,84,26);
-  ctx.fillStyle='#96683c'; ctx.fillRect(6,GROUND_Y-32,84,8);
-  ctx.fillStyle='#c9a35f';
-  for(let i=0;i<3;i++){ ctx.beginPath(); ctx.ellipse(20+i*26,GROUND_Y-36,13,6,0,0,7); ctx.fill(); }
-  ctx.fillStyle='#5b3d22'; for(let i=0;i<3;i++) ctx.fillRect(16+i*26,GROUND_Y-38,3,7);
-  // turret
-  const ang = G.aim && G.aim.angle!==undefined ? G.aim.angle : -0.72;
-  ctx.save(); ctx.translate(MUZZLE.x,MUZZLE.y);
-  ctx.fillStyle='#4c4c55'; ctx.beginPath(); ctx.arc(0,6,13,0,7); ctx.fill();
-  ctx.rotate(ang);
-  ctx.fillStyle='#63636e'; ctx.fillRect(0,-8,34,16);
-  ctx.fillStyle='#3c3c44'; ctx.fillRect(28,-8,7,16);
-  ctx.fillStyle='#d8404f'; for(const oy of [-4.5,0,4.5]){ ctx.beginPath(); ctx.moveTo(35,oy); ctx.lineTo(41,oy); ctx.lineTo(35,oy+ (oy<0?-2:2)); ctx.fill(); }
-  ctx.restore();
-  ctx.fillStyle='#2b2b31'; ctx.beginPath(); ctx.arc(MUZZLE.x,MUZZLE.y+6,6,0,7); ctx.fill();
-}
-function drawDeck(){
-  const d=G.deck, x=d.position.x, y=d.position.y, L=G.level;
-  ctx.save(); ctx.translate(x,y);
-  if(G.phase==='won') ctx.rotate(0.02);
-  // treads: two units, bottoms resting on the ground line
-  for(const tx of [-60,56]){
-    ctx.fillStyle='#1d1d22';
-    roundRect(tx-38,6,80,28,13); ctx.fill();
-    ctx.fillStyle='#33333b';
-    const off=G.trackPhase%13;
-    for(let i=0;i<6;i++){ ctx.beginPath(); ctx.arc(tx-32+((i*13+off)%72),20,3.4,0,7); ctx.fill(); }
-    for(const wx of [-24,0,24]){
-      ctx.fillStyle='#4a4a55'; ctx.beginPath(); ctx.arc(tx+wx,20,8.4,0,7); ctx.fill();
-      ctx.strokeStyle='#22222a'; ctx.lineWidth=2;
-      const a=G.trackPhase/8.4;
-      for(let s=0;s<3;s++){ ctx.beginPath(); ctx.moveTo(tx+wx,20);
-        ctx.lineTo(tx+wx+Math.cos(a+s*2.09)*7.4, 20+Math.sin(a+s*2.09)*7.4); ctx.stroke(); }
-    }
+function drawHill(){
+  // the giant in the middle — deep red dirt like the reference, grass cap, flowers
+  ctx.beginPath();
+  ctx.moveTo(HILL.baseL.x-26,GROUND_Y+2);
+  ctx.quadraticCurveTo(HILL.midL.x-14,HILL.midL.y, HILL.peak.x-16,HILL.peak.y+16);
+  ctx.quadraticCurveTo(HILL.peak.x,HILL.peak.y-8, HILL.peak.x+16,HILL.peak.y+16);
+  ctx.quadraticCurveTo(HILL.midR.x+14,HILL.midR.y, HILL.baseR.x+26,GROUND_Y+2);
+  ctx.closePath();
+  const g=ctx.createLinearGradient(0,HILL.peak.y,0,GROUND_Y);
+  g.addColorStop(0,'#a8433a'); g.addColorStop(0.5,'#93362f'); g.addColorStop(1,'#77291f');
+  ctx.fillStyle=g; ctx.fill();
+  // shading + speckles
+  ctx.fillStyle='rgba(0,0,0,0.13)';
+  for(let i=0;i<22;i++){
+    const x=168+hash(i*6.7)*84, y=520+hash(i*3.3)*180;
+    ctx.beginPath(); ctx.arc(x,y,2+hash(i)*3,0,7); ctx.fill();
   }
-  // hull (matches the physical deck body)
-  ctx.fillStyle= L===1?'#4e4238':'#26232e'; roundRect(-DECK_W/2,-DECK_H/2,DECK_W,DECK_H,4); ctx.fill();
-  ctx.fillStyle= L===1?'#c9a227':'#ff4fd8'; ctx.fillRect(-DECK_W/2,-DECK_H/2,DECK_W,3.4);
-  if(L===2){ ctx.fillStyle='rgba(255,79,216,0.35)'; ctx.fillRect(-DECK_W/2,DECK_H/2-5,DECK_W,4); }
-  // front plow
-  ctx.fillStyle='#3a3a44';
-  ctx.beginPath(); ctx.moveTo(-DECK_W/2,-4); ctx.lineTo(-DECK_W/2-15,10); ctx.lineTo(-DECK_W/2,20); ctx.closePath(); ctx.fill();
-  ctx.restore();
-  // exhaust puffs while rolling
-  if(G.phase==='play' && Math.random()<0.12) spawnSmoke(x+DECK_W/2-6,y-DECK_H/2-4,false);
+  ctx.fillStyle='rgba(255,255,255,0.10)';
+  for(let i=0;i<10;i++){ const x=180+hash(i*9.4)*60, y=510+hash(i*4.1)*120; ctx.fillRect(x,y,5,2); }
+  // grassy cap along the crest
+  ctx.strokeStyle='#58a34c'; ctx.lineWidth=5; ctx.lineCap='round';
+  ctx.beginPath();
+  ctx.moveTo(HILL.baseL.x-20,GROUND_Y-2);
+  ctx.quadraticCurveTo(HILL.midL.x-12,HILL.midL.y, HILL.peak.x-15,HILL.peak.y+15);
+  ctx.quadraticCurveTo(HILL.peak.x,HILL.peak.y-7, HILL.peak.x+15,HILL.peak.y+15);
+  ctx.quadraticCurveTo(HILL.midR.x+12,HILL.midR.y, HILL.baseR.x+20,GROUND_Y-2);
+  ctx.stroke();
+  // tiny flowers on the slopes
+  for(let i=0;i<12;i++){
+    const t=i/11, side=t<0.5?-1:1, f=Math.abs(t-0.5)*2;
+    const x=HILL.peak.x + side*(18+f*66), y=HILL.peak.y + 26 + f*f*190;
+    ctx.fillStyle=['#ffd94d','#ff6b9d','#fff'][i%3];
+    ctx.beginPath(); ctx.arc(x,y,2.2,0,7); ctx.fill();
+  }
 }
 function roundRect(x,y,w,h,r){
   ctx.beginPath();
   ctx.moveTo(x+r,y); ctx.arcTo(x+w,y,x+w,y+h,r); ctx.arcTo(x+w,y+h,x,y+h,r);
   ctx.arcTo(x,y+h,x,y,r); ctx.arcTo(x,y,x+w,y,r); ctx.closePath();
+}
+/* ---------- castle bases + launchers ---------- */
+function drawCastleBase(c){
+  const d=c.deck, x=d.position.x, y=d.position.y, w=c.deck.plugin.w;
+  ctx.save(); ctx.translate(x,y);
+  if(G.phase==='won' || G.phase==='lost'){
+    const loserIdx = G.phase==='won'?1:0;
+    if(c.idx===loserIdx) ctx.rotate(0.02);
+  }
+  // treads: two units, bottoms resting on the ground line
+  for(const tx of [-w/4-14, w/4+14]){
+    ctx.fillStyle='#1d1d22';
+    roundRect(tx-38,6,80,28,13); ctx.fill();
+    ctx.fillStyle='#33333b';
+    for(let i=0;i<6;i++){ ctx.beginPath(); ctx.arc(tx-32+i*13,20,3.4,0,7); ctx.fill(); }
+    for(const wx of [-24,0,24]){
+      ctx.fillStyle='#4a4a55'; ctx.beginPath(); ctx.arc(tx+wx,20,8.4,0,7); ctx.fill();
+      ctx.strokeStyle='#22222a'; ctx.lineWidth=2;
+      for(let s=0;s<3;s++){ const a=s*2.09+tx; ctx.beginPath(); ctx.moveTo(tx+wx,20);
+        ctx.lineTo(tx+wx+Math.cos(a)*7.4, 20+Math.sin(a)*7.4); ctx.stroke(); }
+    }
+  }
+  // hull (matches the physical deck body)
+  ctx.fillStyle= c.theme==='hyrule'?'#4e4238':'#26232e'; roundRect(-w/2,-DECK_H/2,w,DECK_H,4); ctx.fill();
+  ctx.fillStyle= c.theme==='hyrule'?'#c9a227':'#ff4fd8'; ctx.fillRect(-w/2,-DECK_H/2,w,3.4);
+  if(c.theme==='vice'){ ctx.fillStyle='rgba(255,79,216,0.35)'; ctx.fillRect(-w/2,DECK_H/2-5,w,4); }
+  ctx.restore();
+}
+function drawLaunchers(){
+  for(const c of G.CS){
+    if(!c) continue;
+    const mz=c.muzzle;
+    let ang;
+    if(c.idx===0){
+      ang = (G.aim && G.aim.angle!==undefined) ? G.aim.angle
+          : (G.ts==='busy'&&G.turn===0 ? c.lastAim : -0.72);
+    } else {
+      ang = (G.ts==='aiAim'&&G.aiPlan&&G.aiPlan.angle!==undefined) ? G.aiPlan.angle
+          : (c.lastAim!==undefined && G.turn===1 ? c.lastAim : Math.PI+0.72);
+      if(G.turn!==1 && G.ts!=='aiAim') ang = Math.PI+0.72;
+    }
+    // mast down to the deck: the launcher rides the chassis, so it never floats
+    ctx.strokeStyle='#3a3230'; ctx.lineWidth=5;
+    ctx.beginPath(); ctx.moveTo(mz.x,DECK_TOP+2); ctx.lineTo(mz.x,mz.y+8); ctx.stroke();
+    ctx.strokeStyle='rgba(30,24,22,0.6)'; ctx.lineWidth=2;
+    ctx.beginPath(); ctx.moveTo(mz.x,DECK_TOP-24); ctx.lineTo(mz.x-mz.dir*11,mz.y+22);
+    ctx.moveTo(mz.x,DECK_TOP-24); ctx.lineTo(mz.x+mz.dir*11,mz.y+22); ctx.stroke();
+    ctx.save(); ctx.translate(mz.x,mz.y);
+    // little fort platform under the turret
+    ctx.fillStyle= c.theme==='hyrule' ? '#7a5230' : '#33333f';
+    ctx.fillRect(-13,7,26,6);
+    ctx.fillStyle='#4c4c55'; ctx.beginPath(); ctx.arc(0,5,10.5,0,7); ctx.fill();
+    ctx.rotate(ang);
+    ctx.fillStyle='#63636e'; ctx.fillRect(0,-6.5,26,13);
+    ctx.fillStyle='#3c3c44'; ctx.fillRect(21,-6.5,6,13);
+    ctx.fillStyle='#d8404f'; for(const oy of [-3.6,0,3.6]){ ctx.beginPath(); ctx.moveTo(27,oy); ctx.lineTo(32,oy); ctx.lineTo(27,oy+(oy<0?-1.6:1.6)); ctx.fill(); }
+    ctx.restore();
+    ctx.fillStyle='#2b2b31'; ctx.beginPath(); ctx.arc(mz.x,mz.y+5,5,0,7); ctx.fill();
+    // side flag
+    ctx.strokeStyle='#5b4632'; ctx.lineWidth=2.4;
+    ctx.beginPath(); ctx.moveTo(mz.x-mz.dir*16,mz.y+14); ctx.lineTo(mz.x-mz.dir*16,mz.y-16); ctx.stroke();
+    ctx.fillStyle= c.idx===0 ? '#37b24d' : '#ff4fd8';
+    ctx.beginPath(); ctx.moveTo(mz.x-mz.dir*16,mz.y-16); ctx.lineTo(mz.x-mz.dir*16+mz.dir*15,mz.y-11); ctx.lineTo(mz.x-mz.dir*16,mz.y-6); ctx.fill();
+  }
 }
 /* ---------- bodies ---------- */
 function drawBody(b){
@@ -1466,7 +1665,7 @@ function drawBody(b){
     ctx.beginPath(); ctx.moveTo(0,-3); ctx.lineTo(4,3.4); ctx.lineTo(-4,3.4); ctx.closePath(); ctx.fill();
   }
   if(p.deco==='roof'){
-    ctx.fillStyle= G.level===1?'#2f4f9e':'#374151';
+    ctx.fillStyle='#2f4f9e';
     ctx.beginPath(); ctx.moveTo(-w/2-5,-h/2+2); ctx.lineTo(0,-h/2-21); ctx.lineTo(w/2+5,-h/2+2); ctx.closePath(); ctx.fill();
     ctx.fillStyle='rgba(255,255,255,0.25)'; ctx.beginPath(); ctx.moveTo(0,-h/2-21); ctx.lineTo(w/2+5,-h/2+2); ctx.lineTo(2,-h/2+2); ctx.closePath(); ctx.fill();
     ctx.fillStyle='#f2c229'; ctx.beginPath(); ctx.arc(0,-h/2-21,2.2,0,7); ctx.fill();
@@ -1496,7 +1695,7 @@ function shade(hex,amt){
 }
 function drawBarrel(b){
   ctx.save(); ctx.translate(b.position.x,b.position.y); ctx.rotate(b.angle);
-  if(G.level===1){
+  if(G.CS[b.plugin.owner] && G.CS[b.plugin.owner].theme==='hyrule'){
     // powder keg: black barrel, iron bands, hazard diamond
     ctx.fillStyle='#26221f';
     roundRect(-8.6,-11,17.2,22,4); ctx.fill();
@@ -1516,8 +1715,14 @@ function drawBarrel(b){
 }
 /* ---------- characters (proper little figures, drawn) ---------- */
 function drawCrewBody(b){
+  const p=b.plugin, c=G.CS[p.owner];
   ctx.save(); ctx.translate(b.position.x,b.position.y); ctx.rotate(b.angle);
-  const t=b.plugin.crew, dead=b.plugin.dead;
+  // REACTIONS: duck under fire, bounce when cheering
+  if(c && !p.dead){
+    if(G.time<c.duckUntil){ ctx.translate(0,4.2); ctx.scale(1.07,0.78); }
+    else if(G.time<c.cheerUntil){ ctx.translate(0,-Math.abs(Math.sin(G.time*0.018+p.id*1.7))*3.6); }
+  }
+  const t=p.crew, dead=p.dead;
   ctx.lineWidth=2.6; ctx.lineCap='round';
   if(t==='knight'){
     ctx.strokeStyle='#3c414c'; ctx.beginPath(); ctx.moveTo(-3,16); ctx.lineTo(-3.6,9); ctx.moveTo(3,16); ctx.lineTo(3.6,9); ctx.stroke();
@@ -1568,9 +1773,9 @@ function drawCrewBody(b){
   }
   ctx.restore();
 }
-function drawCore(){
-  const c=G.core, x=c.position.x, y=c.position.y, L=G.level;
-  const exposed=G.coreExposed;
+function drawCore(c){
+  const core=c.core, x=core.position.x, y=core.position.y;
+  const exposed=c.coreExposed;
   const pulse=exposed? (0.5+0.5*Math.sin(G.time*0.012)) : 0;
   ctx.save(); ctx.translate(x,y);
   if(exposed){
@@ -1579,7 +1784,7 @@ function drawCore(){
     ctx.strokeStyle='rgba(255,240,150,'+(0.75-0.4*pulse)+')'; ctx.lineWidth=2;
     ctx.beginPath(); ctx.arc(0,0,18+6*pulse,0,7); ctx.stroke();
   }
-  if(L===1){
+  if(c.theme==='hyrule'){
     ctx.rotate(Math.sin(G.time*0.002)*0.14);
     ctx.fillStyle='#2fbf71';
     ctx.beginPath(); ctx.moveTo(0,-13); ctx.lineTo(8.6,0); ctx.lineTo(0,13); ctx.lineTo(-8.6,0); ctx.closePath(); ctx.fill();
@@ -1592,7 +1797,7 @@ function drawCore(){
   }
   ctx.restore();
   if(exposed){ // HP pip arc
-    const f=Math.max(0,c.plugin.hp/c.plugin.maxHp);
+    const f=Math.max(0,core.plugin.hp/core.plugin.maxHp);
     ctx.strokeStyle='rgba(0,0,0,0.45)'; ctx.lineWidth=3.4;
     ctx.beginPath(); ctx.arc(x,y-24,9,0,7); ctx.stroke();
     ctx.strokeStyle='#ffe14d';
@@ -1726,6 +1931,7 @@ function drawAttachments(){
 function drawFireZones(){
   for(const z of G.fireZones){
     const pos=zonePos(z);
+    if(!pos || !Number.isFinite(pos.x) || !Number.isFinite(pos.y) || !Number.isFinite(z.r) || z.r<=0) continue;
     const g=ctx.createRadialGradient(pos.x,pos.y,2,pos.x,pos.y,z.r);
     g.addColorStop(0,'rgba(255,160,40,0.5)'); g.addColorStop(1,'rgba(255,60,20,0)');
     ctx.fillStyle=g; ctx.beginPath(); ctx.arc(pos.x,pos.y,z.r,0,7); ctx.fill();
@@ -1761,7 +1967,19 @@ function drawExplosionRings(){
   }
 }
 function drawAim(){
-  if(!G.aim || G.phase!=='play') return;
+  if(G.phase!=='play') return;
+  // AI telegraph: show their planned arc, pulsing red
+  if(G.ts==='aiAim' && G.aiPlan && G.aiPlan.angle!==undefined){
+    const mz=aiCastle().muzzle;
+    const {pts}=simShot(mz.x,mz.y,G.aiPlan.angle,G.aiPlan.power||0.8,44);
+    ctx.fillStyle='rgba(255,90,80,0.85)';
+    pts.forEach((pt,i)=>{ if(i%3===0){ ctx.beginPath(); ctx.arc(pt.x,pt.y,2.8,0,7); ctx.fill(); } });
+    ctx.font='900 13px Arial'; ctx.textAlign='center';
+    ctx.fillStyle='rgba(255,120,110,'+(0.65+0.35*Math.sin(G.time*0.02))+')';
+    ctx.fillText('⚠ INCOMING ⚠', aiCastle().cx, 402);
+    return;
+  }
+  if(!G.aim || G.turn!==0 || G.ts!=='aim') return;
   const w=curWeapon();
   if(w.drop){
     const tx=G.aim.tx;
@@ -1778,16 +1996,39 @@ function drawAim(){
     if(G.aim.power<=0.06) return;
     const pts=previewDots(G.aim.angle,G.aim.power);
     pts.forEach((pt,i)=>{
-      ctx.fillStyle='rgba(255,255,255,'+(0.9-i*0.05)+')';
-      ctx.beginPath(); ctx.arc(pt.x,pt.y,3.1,0,7); ctx.fill();
+      ctx.fillStyle='rgba(40,16,24,'+(0.55-i*0.016)+')';
+      ctx.beginPath(); ctx.arc(pt.x,pt.y,4.1,0,7); ctx.fill();
+      ctx.fillStyle='rgba(255,255,255,'+(0.95-i*0.03)+')';
+      ctx.beginPath(); ctx.arc(pt.x,pt.y,3.2,0,7); ctx.fill();
     });
     // pull-back band
+    const mz=playerCastle().muzzle;
     ctx.strokeStyle='rgba(255,217,77,0.8)'; ctx.lineWidth=2.4;
-    ctx.beginPath(); ctx.moveTo(MUZZLE.x,MUZZLE.y);
-    ctx.lineTo(MUZZLE.x-Math.cos(G.aim.angle)*G.aim.power*52, MUZZLE.y-Math.sin(G.aim.angle)*G.aim.power*52);
+    ctx.beginPath(); ctx.moveTo(mz.x,mz.y);
+    ctx.lineTo(mz.x-Math.cos(G.aim.angle)*G.aim.power*52, mz.y-Math.sin(G.aim.angle)*G.aim.power*52);
     ctx.stroke();
   }
 }
+</script>
+<script id="moth-game-guard-js">
+(function(){
+  var lastEnd=0;
+  function onUi(t){return t&&t.closest&&t.closest('button,a,input,select,textarea,[data-scroll]');}
+  document.addEventListener('touchend',function(e){
+    var now=Date.now();
+    if(!onUi(e.target)&&now-lastEnd<=300&&e.cancelable)e.preventDefault();
+    lastEnd=now;
+  },{passive:false});
+  ['gesturestart','gesturechange','gestureend'].forEach(function(n){
+    document.addEventListener(n,function(e){e.preventDefault();});
+  });
+  document.addEventListener('dblclick',function(e){e.preventDefault();},{passive:false});
+  document.addEventListener('contextmenu',function(e){e.preventDefault();});
+  document.addEventListener('touchmove',function(e){
+    if(e.target&&e.target.closest&&e.target.closest('[data-scroll]'))return;
+    if(e.cancelable)e.preventDefault();
+  },{passive:false});
+})();
 </script>
 </body>
 </html>

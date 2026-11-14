@@ -1,0 +1,606 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+<title>Booksquirm</title>
+<style>
+  html,body{margin:0;padding:0;height:100%;background:#241407;overflow:hidden;overscroll-behavior:none;
+    font-family:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;-webkit-user-select:none;user-select:none;
+    -webkit-tap-highlight-color:transparent}
+  #wrap{position:fixed;inset:0;display:flex;align-items:center;justify-content:center}
+  canvas{display:block;touch-action:none}
+  .iconbtn{position:fixed;top:calc(8px + env(safe-area-inset-top));z-index:1100;width:42px;height:42px;
+    border-radius:50%;border:2px solid rgba(255,255,255,.75);background:rgba(46,26,8,.55);color:#fff;
+    font-size:20px;line-height:1;display:flex;align-items:center;justify-content:center;cursor:pointer;
+    touch-action:none;padding:0}
+  #btnMute{right:58px}
+  #btnRestart{right:10px}
+</style>
+<style id="moth-game-guard">
+html,body{touch-action:none;overscroll-behavior:none;-webkit-touch-callout:none;-webkit-user-select:none;user-select:none;-webkit-tap-highlight-color:transparent}
+canvas{touch-action:none}
+</style>
+</head>
+<body>
+<div id="wrap"><canvas id="game" width="420" height="860"></canvas></div>
+<button class="iconbtn" id="btnMute" aria-label="mute">🔊</button>
+<button class="iconbtn" id="btnRestart" aria-label="restart">↻</button>
+<script>
+"use strict";
+/* ============================================================
+   BOOKSQUIRM — minigame #7 (ranked 31-list)
+   "Hole in the Wall" in a library: a giant storybook with a
+   pose-shaped hole punched through it zooms toward you. Tap a
+   pose button to match the silhouette before the book arrives.
+   Slip through = score; wrong pose = BONK. 3 bonks and the
+   library closes. All art drawn in code (articulated figure —
+   the same skeleton drives the hero, the wall cutout, and the
+   button icons, so what you see is exactly what fits).
+   Controls: tap pose buttons (pointer-native), keys 1–5.
+   Mechanic reference: davidchoo12/hole-in-the-wall-game (MIT) —
+   pose-matching/scoring core, webcam poses swapped for an
+   on-screen pose selector. No code copied; original build.
+   ============================================================ */
+const W=420, H=860;
+const cv=document.getElementById('game'), ctx=cv.getContext('2d');
+function fit(){const s=Math.min(innerWidth/W, innerHeight/H);cv.style.width=(W*s)+'px';cv.style.height=(H*s)+'px';}
+addEventListener('resize',fit); fit();
+
+/* ---------- layout (screen-fill: field = room between HUD and buttons) ---------- */
+const HUD_H=60;              // top HUD strip
+const FIELD_Y0=HUD_H, FIELD_Y1=768;   // library room: 708px = 82.3% of height
+const BTN_Y0=768;            // pose-button bar
+const GROUND_Y=716;          // player's feet
+const PLAYER_X=210;
+
+/* ---------- audio: all synthesized ---------- */
+let AC=null, muted=false;
+function audio(){ if(!AC){ try{ AC=new (window.AudioContext||window.webkitAudioContext)(); }catch(e){} }
+  if(AC&&AC.state==='suspended')AC.resume();
+  try{ if(navigator.audioSession)navigator.audioSession.type='playback'; }catch(e){} }
+addEventListener('pointerdown',audio);
+addEventListener('touchend',()=>{ if(AC&&AC.state==='suspended')AC.resume(); },{passive:true});
+document.addEventListener('visibilitychange',()=>{ if(!document.hidden)audio(); });
+function tone(f0,f1,dur,type,g,delay){ if(!AC||muted)return; const t=AC.currentTime+(delay||0),o=AC.createOscillator(),v=AC.createGain();
+  o.type=type||'sine'; o.frequency.setValueAtTime(f0,t); o.frequency.exponentialRampToValueAtTime(Math.max(30,f1),t+dur);
+  v.gain.setValueAtTime(g||0.12,t); v.gain.exponentialRampToValueAtTime(0.001,t+dur);
+  o.connect(v).connect(AC.destination); o.start(t); o.stop(t+dur+0.02); }
+function noiseBurst(dur,g,freq,delay){ if(!AC||muted)return; const t=AC.currentTime+(delay||0);
+  const len=Math.floor(AC.sampleRate*dur), buf=AC.createBuffer(1,len,AC.sampleRate), d=buf.getChannelData(0);
+  for(let i=0;i<len;i++)d[i]=(Math.random()*2-1)*(1-i/len);
+  const src=AC.createBufferSource(); src.buffer=buf;
+  const f=AC.createBiquadFilter(); f.type='bandpass'; f.frequency.value=freq||1200; f.Q.value=0.8;
+  const v=AC.createGain(); v.gain.value=g||0.15;
+  src.connect(f).connect(v).connect(AC.destination); src.start(t); }
+function sndSelect(){ tone(620,880,0.07,'square',0.06); }
+function sndPass(streak){ tone(523,523,0.09,'sine',0.14); tone(659,659,0.09,'sine',0.14,0.07); tone(784,784,0.14,'sine',0.16,0.14);
+  if(streak>=3) tone(1046,1318,0.16,'triangle',0.12,0.2); noiseBurst(0.25,0.10,2400); }
+function sndBonk(){ tone(170,55,0.28,'sawtooth',0.20); noiseBurst(0.18,0.22,300); tone(90,60,0.3,'square',0.10,0.02); }
+function sndWhoosh(){ noiseBurst(0.35,0.05,700); }
+function sndOver(){ tone(392,392,0.16,'triangle',0.14); tone(330,330,0.16,'triangle',0.14,0.16); tone(262,196,0.34,'triangle',0.14,0.32); }
+function sndStart(){ tone(392,392,0.09,'triangle',0.12); tone(523,523,0.09,'triangle',0.12,0.09); tone(659,659,0.12,'triangle',0.12,0.18); }
+
+/* ============================================================
+   THE FIGURE — one articulated skeleton, three jobs:
+   hero (detailed), wall cutout (silhouette), button icons.
+   Pose params are joint angles; the hero's live pose springs
+   toward the target pose, which is the "squirm".
+   ============================================================ */
+const SEG={thigh:40, shin:38, upperArm:30, foreArm:26, torso:52, headR:17};
+const POSES=[
+  {name:'STAND', aL:0.15,aR:0.15, bL:0.30,bR:0.30, hL:0.05,hR:0.05, knee:0.0,  lean:0.0,  crouch:0.0 },
+  {name:'STAR',  aL:2.55,aR:2.55, bL:0.10,bR:0.10, hL:0.45,hR:0.45, knee:0.0,  lean:0.0,  crouch:0.0 },
+  {name:'LEFT',  aL:2.95,aR:0.15, bL:0.45,bR:0.30, hL:0.08,hR:0.05, knee:0.0,  lean:-0.07,crouch:0.0 },
+  {name:'RIGHT', aL:0.15,aR:2.95, bL:0.30,bR:0.45, hL:0.05,hR:0.08, knee:0.0,  lean:0.07, crouch:0.0 },
+  {name:'SQUAT', aL:0.50,aR:0.50, bL:0.25,bR:0.25, hL:0.95,hR:0.95, knee:1.50, lean:0.0,  crouch:0.55},
+];
+const POSE_KEYS=['aL','aR','bL','bR','hL','hR','knee','lean','crouch'];
+function lerpPose(a,b,t){ const o={}; for(const k of POSE_KEYS)o[k]=a[k]+(b[k]-a[k])*t; return o; }
+
+/* Compute joint points in local space (ground = y 0, feet planted
+   by construction: after posing, shift so the lower foot is at 0). */
+function skeleton(p){
+  const hip={x:0,y:-78};
+  const torsoV=SEG.torso*(1-p.crouch*0.32);
+  const neck={x:hip.x+Math.sin(p.lean)*torsoV, y:hip.y-Math.cos(p.lean)*torsoV};
+  const head={x:neck.x+Math.sin(p.lean)*(SEG.headR+6), y:neck.y-Math.cos(p.lean)*(SEG.headR+6)};
+  const perp={x:Math.cos(p.lean), y:Math.sin(p.lean)};
+  const shL={x:neck.x-perp.x*11, y:neck.y-perp.y*11+2}, shR={x:neck.x+perp.x*11, y:neck.y+perp.y*11+2};
+  function arm(sh,a,b,side){ // side -1 = screen-left arm
+    const d1={x:side*Math.sin(a), y:Math.cos(a)};
+    const el={x:sh.x+d1.x*SEG.upperArm, y:sh.y+d1.y*SEG.upperArm};
+    const a2=a+b, d2={x:side*Math.sin(a2), y:Math.cos(a2)};
+    const hand={x:el.x+d2.x*SEG.foreArm, y:el.y+d2.y*SEG.foreArm};
+    return {sh,el,hand};
+  }
+  function leg(h,knee,side){
+    const d1={x:side*Math.sin(h), y:Math.cos(h)};
+    const kn={x:hip.x+d1.x*SEG.thigh, y:hip.y+d1.y*SEG.thigh};
+    const h2=h-knee, d2={x:side*Math.sin(h2), y:Math.cos(h2)};
+    const foot={x:kn.x+d2.x*SEG.shin, y:kn.y+d2.y*SEG.shin};
+    return {kn,foot};
+  }
+  const armL=arm(shL,p.aL,p.bL,-1), armR=arm(shR,p.aR,p.bR,1);
+  const legL=leg(p.hL,p.knee,-1), legR=leg(p.hR,p.knee,1);
+  const dy=-Math.max(legL.foot.y,legR.foot.y);
+  const pts={hip,neck,head,shL,shR,armL,armR,legL,legR};
+  (function shift(o){ for(const k in o){ if(o[k]&&typeof o[k]==='object'){ if('x' in o[k])o[k].y+=dy; else shift(o[k]); } } })(pts);
+  return pts;
+}
+function traceFigure(c,p,lw){
+  const s=skeleton(p);
+  c.lineCap='round'; c.lineJoin='round';
+  c.lineWidth=lw.leg; c.beginPath();
+  c.moveTo(s.hip.x,s.hip.y); c.lineTo(s.legL.kn.x,s.legL.kn.y); c.lineTo(s.legL.foot.x,s.legL.foot.y);
+  c.moveTo(s.hip.x,s.hip.y); c.lineTo(s.legR.kn.x,s.legR.kn.y); c.lineTo(s.legR.foot.x,s.legR.foot.y); c.stroke();
+  c.lineWidth=lw.torso; c.beginPath(); c.moveTo(s.hip.x,s.hip.y); c.lineTo(s.neck.x,s.neck.y); c.stroke();
+  c.lineWidth=lw.arm; c.beginPath();
+  c.moveTo(s.shL.x,s.shL.y); c.lineTo(s.armL.el.x,s.armL.el.y); c.lineTo(s.armL.hand.x,s.armL.hand.y);
+  c.moveTo(s.shR.x,s.shR.y); c.lineTo(s.armR.el.x,s.armR.el.y); c.lineTo(s.armR.hand.x,s.armR.hand.y); c.stroke();
+  c.beginPath(); c.arc(s.head.x,s.head.y,SEG.headR+1.5,0,Math.PI*2); c.fill();
+  return s;
+}
+const SIL_LW={leg:15, torso:34, arm:13.5};
+function drawSilhouette(c,p,color,lw){
+  c.save(); c.strokeStyle=color; c.fillStyle=color; traceFigure(c,p,lw||SIL_LW); c.restore();
+}
+/* Detailed hero. blink01 = 1 eyes open, 0 closed. */
+function drawHero(c,p,blink01,hopY){
+  const s=skeleton(p);
+  c.save(); c.translate(0,hopY||0);
+  c.lineCap='round'; c.lineJoin='round';
+  // legs (trousers) + shoes
+  c.strokeStyle='#3a5a8c'; c.lineWidth=13;
+  c.beginPath();
+  c.moveTo(s.hip.x,s.hip.y); c.lineTo(s.legL.kn.x,s.legL.kn.y); c.lineTo(s.legL.foot.x,s.legL.foot.y);
+  c.moveTo(s.hip.x,s.hip.y); c.lineTo(s.legR.kn.x,s.legR.kn.y); c.lineTo(s.legR.foot.x,s.legR.foot.y); c.stroke();
+  c.fillStyle='#5b3423';
+  for(const f of [s.legL.foot,s.legR.foot]){ c.beginPath(); c.ellipse(f.x+(f===s.legL.foot?-3:3),f.y-1,9,5,0,0,Math.PI*2); c.fill(); }
+  // torso: bookworm-green sweater capsule + cream stripe + pocket book
+  c.strokeStyle='#3f9e4d'; c.lineWidth=35;
+  c.beginPath(); c.moveTo(s.hip.x,s.hip.y); c.lineTo(s.neck.x,s.neck.y); c.stroke();
+  c.strokeStyle='#f3e5c3'; c.lineWidth=6;
+  const bx=s.hip.x+(s.neck.x-s.hip.x)*0.38, by=s.hip.y+(s.neck.y-s.hip.y)*0.38;
+  c.beginPath(); c.moveTo(bx-13,by); c.lineTo(bx+13,by); c.stroke();
+  c.fillStyle='#b03a48'; c.fillRect(s.neck.x+4,s.neck.y+16,9,12);
+  c.fillStyle='#f3e5c3'; c.fillRect(s.neck.x+6,s.neck.y+18,5,3);
+  // head: skin, hair cap, face, round bookworm glasses
+  c.fillStyle='#f2c79b';
+  c.beginPath(); c.arc(s.head.x,s.head.y,SEG.headR,0,Math.PI*2); c.fill();
+  c.fillStyle='#6b4423';
+  c.beginPath(); c.arc(s.head.x,s.head.y-2,SEG.headR,Math.PI*1.02,Math.PI*1.98); c.lineTo(s.head.x+SEG.headR,s.head.y-6); c.lineTo(s.head.x-SEG.headR,s.head.y-6); c.closePath(); c.fill();
+  c.fillStyle='rgba(240,120,130,0.5)';
+  c.beginPath(); c.arc(s.head.x-10,s.head.y+5,3.6,0,Math.PI*2); c.arc(s.head.x+10,s.head.y+5,3.6,0,Math.PI*2); c.fill();
+  c.fillStyle='#263238';
+  if(blink01>0.4){ c.beginPath(); c.arc(s.head.x-6,s.head.y+1,1.9,0,Math.PI*2); c.arc(s.head.x+6,s.head.y+1,1.9,0,Math.PI*2); c.fill(); }
+  else { c.strokeStyle='#263238'; c.lineWidth=1.6; c.beginPath();
+    c.moveTo(s.head.x-8,s.head.y+1); c.lineTo(s.head.x-4,s.head.y+1); c.moveTo(s.head.x+4,s.head.y+1); c.lineTo(s.head.x+8,s.head.y+1); c.stroke(); }
+  c.strokeStyle='#263238'; c.lineWidth=1.8;
+  c.beginPath(); c.arc(s.head.x,s.head.y+4,5,Math.PI*0.25,Math.PI*0.75); c.stroke();
+  c.lineWidth=2; c.beginPath();
+  c.arc(s.head.x-6,s.head.y+0.5,6.4,0,Math.PI*2); c.arc(s.head.x+6,s.head.y+0.5,6.4,0,Math.PI*2);
+  c.moveTo(s.head.x-0.5,s.head.y+0.5); c.lineTo(s.head.x+0.5,s.head.y+0.5); c.stroke();
+  // arms LAST (over the head's edge) so a raised arm reads clearly;
+  // hands get an explicit skin fill (a leftover fillStyle once made them shoe-brown)
+  for(const A of [{sh:s.shL,el:s.armL.el,hand:s.armL.hand},{sh:s.shR,el:s.armR.el,hand:s.armR.hand}]){
+    c.strokeStyle='#359548'; c.lineWidth=12;
+    c.beginPath(); c.moveTo(A.sh.x,A.sh.y); c.lineTo(A.el.x,A.el.y); c.stroke();
+    c.strokeStyle='#f2c79b'; c.lineWidth=10;
+    c.beginPath(); c.moveTo(A.el.x,A.el.y); c.lineTo(A.hand.x,A.hand.y); c.stroke();
+    c.fillStyle='#f2c79b';
+    c.beginPath(); c.arc(A.hand.x,A.hand.y,5.5,0,Math.PI*2); c.fill();
+  }
+  c.restore();
+  return s;
+}
+/* The worm mascot — segmented little bookworm with glasses, bobbing on the rug. */
+function drawWorm(c,x,y,t,blink01){
+  c.save(); c.translate(x,y+Math.sin(t*2.2)*2);
+  const cols=['#57b25e','#4ca856','#57b25e','#4ca856','#63bd6a'];
+  for(let i=4;i>=1;i--){ c.fillStyle=cols[i]; c.beginPath(); c.arc(-i*13, -6-Math.sin(t*2.2+i)*1.5, 9.5,0,Math.PI*2); c.fill(); }
+  c.fillStyle='#63bd6a'; c.beginPath(); c.arc(2,-10,12,0,Math.PI*2); c.fill();
+  c.strokeStyle='#3c7a44'; c.lineWidth=2;
+  c.beginPath(); c.moveTo(-2,-20); c.quadraticCurveTo(-6,-28,-10,-27); c.moveTo(4,-21); c.quadraticCurveTo(6,-29,11,-28); c.stroke();
+  c.fillStyle='#3c7a44'; c.beginPath(); c.arc(-10,-27,2.4,0,Math.PI*2); c.arc(11,-28,2.4,0,Math.PI*2); c.fill();
+  c.strokeStyle='#263238'; c.lineWidth=1.6;
+  c.beginPath(); c.arc(-3.5,-10,4.6,0,Math.PI*2); c.arc(6.5,-10,4.6,0,Math.PI*2); c.moveTo(1,-10); c.lineTo(2,-10); c.stroke();
+  c.fillStyle='#263238';
+  if(blink01>0.4){ c.beginPath(); c.arc(-3.5,-10,1.4,0,Math.PI*2); c.arc(6.5,-10,1.4,0,Math.PI*2); c.fill(); }
+  c.strokeStyle='#263238'; c.lineWidth=1.4; c.beginPath(); c.arc(1.5,-5.5,3.4,Math.PI*0.2,Math.PI*0.8); c.stroke();
+  c.restore();
+}
+
+/* ============================================================
+   BACKGROUND — the library room, pre-rendered once.
+   ============================================================ */
+const bgCv=document.createElement('canvas'); bgCv.width=W; bgCv.height=H;
+(function paintBG(){
+  const c=bgCv.getContext('2d');
+  const wall=c.createLinearGradient(0,0,0,FIELD_Y1);
+  wall.addColorStop(0,'#4a2c14'); wall.addColorStop(1,'#5d3a1a');
+  c.fillStyle=wall; c.fillRect(0,0,W,FIELD_Y1);
+  // bookshelves: 3 units with rows of book spines
+  const spineCols=['#b03a48','#2a7f7f','#6b4a8f','#c9862b','#33518c','#3f9e4d','#8c3a5e','#27635e'];
+  let seed=7; const rnd=()=>{ seed=(seed*16807)%2147483647; return seed/2147483647; };
+  for(let u=0;u<3;u++){
+    const sx=14+u*136, sw=124;
+    c.fillStyle='#33200e'; c.fillRect(sx-4,FIELD_Y0+8,sw+8,560);
+    for(let r=0;r<4;r++){
+      const sy=FIELD_Y0+22+r*138;
+      c.fillStyle='#241505'; c.fillRect(sx,sy,sw,112);
+      let bx=sx+5;
+      while(bx<sx+sw-10){
+        const bw=9+rnd()*10, bh=78+rnd()*22, lean=rnd()<0.08?2:0;
+        c.fillStyle=spineCols[Math.floor(rnd()*spineCols.length)];
+        c.fillRect(bx,sy+112-bh,bw,bh);
+        c.fillStyle='rgba(243,229,195,0.75)'; c.fillRect(bx+1.5,sy+112-bh+6,bw-3,3);
+        bx+=bw+2.5;
+      }
+      c.fillStyle='#6b4423'; c.fillRect(sx-4,sy+112,sw+8,10);
+    }
+  }
+  // warm lamp glows
+  for(const lx of [70,350]){
+    const g=c.createRadialGradient(lx,150,6,lx,150,120);
+    g.addColorStop(0,'rgba(255,196,86,0.30)'); g.addColorStop(1,'rgba(255,196,86,0)');
+    c.fillStyle=g; c.fillRect(lx-120,30,240,240);
+    c.fillStyle='#ffcf6e'; c.beginPath(); c.arc(lx,150,7,0,Math.PI*2); c.fill();
+    c.fillStyle='#2c1a08'; c.fillRect(lx-2,96,4,48);
+  }
+  // wooden floor
+  const fl=c.createLinearGradient(0,600,0,FIELD_Y1);
+  fl.addColorStop(0,'#7a4d22'); fl.addColorStop(1,'#96622c');
+  c.fillStyle=fl; c.fillRect(0,600,W,FIELD_Y1-600);
+  c.strokeStyle='rgba(46,26,8,0.5)'; c.lineWidth=2;
+  for(let i=0;i<5;i++){ const y=622+i*32; c.beginPath(); c.moveTo(0,y); c.lineTo(W,y); c.stroke(); }
+  for(let i=0;i<7;i++){ const x=i*66+((i%2)*22); c.beginPath(); c.moveTo(x,600); c.lineTo(x-18,FIELD_Y1); c.stroke(); }
+  c.fillStyle='rgba(46,26,8,0.65)'; c.fillRect(0,598,W,4);
+  // rug under the hero
+  c.fillStyle='#8e2f3c'; c.beginPath(); c.ellipse(PLAYER_X,GROUND_Y+16,128,22,0,0,Math.PI*2); c.fill();
+  c.fillStyle='#a83a48'; c.beginPath(); c.ellipse(PLAYER_X,GROUND_Y+16,110,17,0,0,Math.PI*2); c.fill();
+  c.strokeStyle='#f3e5c3'; c.lineWidth=2.5; c.beginPath(); c.ellipse(PLAYER_X,GROUND_Y+16,96,13,0,0,Math.PI*2); c.stroke();
+})();
+
+/* ============================================================
+   THE WALL-BOOK — pre-rendered per wall (cover + punched hole
+   with a gold rim), then scaled in each frame.
+   Book units: 330 x 600, hole figure feet at local (0, 278).
+   ============================================================ */
+const BOOK_W=330, BOOK_H=600, HOLE_FEET_Y=278, WALL_SCALE=1.2;
+const wallCv=document.createElement('canvas'); wallCv.width=480; wallCv.height=780;
+const COVERS=['#b03a48','#2a7f7f','#6b4a8f','#c9862b','#33518c'];
+function shade(hex,f){ const n=parseInt(hex.slice(1),16),r=(n>>16)&255,g=(n>>8)&255,b=n&255;
+  return `rgb(${Math.round(r*f)},${Math.round(g*f)},${Math.round(b*f)})`; }
+function renderWallBook(poseIdx,cover){
+  const c=wallCv.getContext('2d');
+  c.clearRect(0,0,480,780);
+  c.save(); c.translate(240,390); c.scale(WALL_SCALE,WALL_SCALE);
+  // pages block (offset right = page edges)
+  c.fillStyle='#e8d9b0'; rr(c,-BOOK_W/2+12,-BOOK_H/2+8,BOOK_W-8,BOOK_H-16,14); c.fill();
+  c.strokeStyle='rgba(120,96,50,0.5)'; c.lineWidth=1.4;
+  for(let i=0;i<7;i++){ const x=BOOK_W/2-6-i*3; c.beginPath(); c.moveTo(x,-BOOK_H/2+18); c.lineTo(x,BOOK_H/2-18); c.stroke(); }
+  // cover
+  c.fillStyle=cover; rr(c,-BOOK_W/2,-BOOK_H/2,BOOK_W,BOOK_H,18); c.fill();
+  c.fillStyle=shade(cover,0.72); c.fillRect(-BOOK_W/2,-BOOK_H/2,30,BOOK_H);
+  c.fillStyle='rgba(255,220,120,0.85)'; c.fillRect(-BOOK_W/2+34,-BOOK_H/2,3,BOOK_H);
+  // title plate with mini pose icon + title squiggles
+  c.fillStyle='rgba(243,229,195,0.92)'; rr(c,-58,-268,158,86,9); c.fill();
+  c.save(); c.translate(-22,-196); c.scale(0.34,0.34); drawSilhouette(c,POSES[poseIdx],'#4a2c14'); c.restore();
+  c.strokeStyle='#4a2c14'; c.lineWidth=4; c.lineCap='round';
+  c.beginPath(); c.moveTo(28,-238); c.lineTo(84,-238); c.moveTo(28,-222); c.lineTo(70,-222); c.stroke();
+  // corner flourishes
+  c.strokeStyle='rgba(255,220,120,0.7)'; c.lineWidth=3;
+  for(const [fx,fy] of [[-140,-276],[140,-276],[-140,276],[140,276]]){
+    c.beginPath(); c.arc(fx,fy,10,0,Math.PI*2); c.stroke();
+  }
+  // gold rim (halo), then punch the hole
+  c.save(); c.translate(0,HOLE_FEET_Y);
+  drawSilhouette(c,POSES[poseIdx],'#ffcf6e',{leg:SIL_LW.leg+8, torso:SIL_LW.torso+8, arm:SIL_LW.arm+8});
+  c.globalCompositeOperation='destination-out';
+  drawSilhouette(c,POSES[poseIdx],'#000');
+  c.globalCompositeOperation='source-over'; c.restore();
+  c.restore();
+}
+function rr(c,x,y,w,h,r){ c.beginPath(); c.moveTo(x+r,y); c.arcTo(x+w,y,x+w,y+h,r); c.arcTo(x+w,y+h,x,y+h,r); c.arcTo(x,y+h,x,y,r); c.arcTo(x,y,x+w,y,r); c.closePath(); }
+
+/* ============================================================
+   GAME STATE
+   ============================================================ */
+const G={
+  mode:'title',           // title | play | over
+  hearts:3, score:0, best:0, cleared:0, streak:0, bonks:0,
+  poseIdx:0, cur:JSON.parse(JSON.stringify(POSES[0])),
+  hop:0, hopV:0, shake:0, flash:0, flashCol:'255,60,60',
+  blinkT:2.4, t:0, msg:'', msgT:0,
+};
+try{ G.best=+localStorage.getItem('booksquirm-best')||0; }catch(e){}
+let wall=null;   // {pose, p, dur, state:'in'|'pass'|'bonk', st, cover}
+let gapT=0.8, particles=[], floaters=[];
+function approachDur(){ return Math.max(1.5, 3.2 - 0.07*G.cleared); }
+function spawnWall(){
+  let pool=G.cleared<3?[0,1,2,3]:[0,1,2,3,4];
+  let pi=pool[Math.floor(Math.random()*pool.length)];
+  if(wall&&pi===wall.pose&&Math.random()<0.6) pi=pool[(pool.indexOf(pi)+1)%pool.length];
+  wall={pose:pi, p:0, dur:approachDur(), state:'in', st:0, cover:COVERS[G.cleared%COVERS.length]};
+  renderWallBook(pi,wall.cover);
+  sndWhoosh();
+}
+function setPose(i){
+  if(i===G.poseIdx) return;
+  G.poseIdx=i; sndSelect();
+}
+function judge(){
+  if(G.poseIdx===wall.pose){
+    const quick=wall.p<0.55, gained=100+Math.min(90,G.streak*10)+(quick?25:0);
+    G.score+=gained; G.streak++; G.cleared++;
+    wall.state='pass'; wall.st=0;
+    G.hopV=-560;
+    floaters.push({x:PLAYER_X,y:470,txt:'+'+gained+(quick?' ⚡':''),t:0,col:'#8be26a'});
+    if(G.streak>=3) floaters.push({x:PLAYER_X,y:428,txt:'🔥 '+G.streak+' IN A ROW',t:0,col:'#ffb84d'});
+    burstPages(PLAYER_X,430,10,'#f3e5c3');
+    sndPass(G.streak);
+    if(G.score>G.best){ G.best=G.score; try{ localStorage.setItem('booksquirm-best',G.best); }catch(e){} }
+  } else {
+    G.hearts--; G.bonks++; G.streak=0;
+    wall.state='bonk'; wall.st=0;
+    G.shake=14; G.flash=0.55; G.flashCol='255,60,60';
+    floaters.push({x:PLAYER_X,y:470,txt:'💥 BONK!',t:0,col:'#ff7a6b'});
+    burstPages(PLAYER_X,430,16,wall.cover);
+    sndBonk();
+    if(G.hearts<=0){ /* game over after the bonk anim */ }
+  }
+}
+function burstPages(x,y,n,col){
+  for(let i=0;i<n;i++) particles.push({x:x+(Math.random()-0.5)*60, y:y+(Math.random()-0.5)*60,
+    vx:(Math.random()-0.5)*260, vy:-Math.random()*260-40, rot:Math.random()*6.3, vr:(Math.random()-0.5)*9,
+    w:9+Math.random()*9, h:12+Math.random()*10, col:Math.random()<0.6?'#f3e5c3':col, t:0, life:0.8+Math.random()*0.5});
+}
+function startGame(){
+  G.mode='play'; G.hearts=3; G.score=0; G.cleared=0; G.streak=0; G.bonks=0;
+  G.poseIdx=0; particles=[]; floaters=[]; wall=null; gapT=0.6;
+  sndStart();
+}
+function update(dt){
+  G.t+=dt;
+  G.blinkT-=dt; if(G.blinkT<-0.13)G.blinkT=2.2+Math.random()*1.6;
+  // spring the pose (the squirm)
+  const target=POSES[G.poseIdx], k=1-Math.pow(0.0001,dt); // ~fast smooth
+  const cur=lerpPose(G.cur,target,Math.min(1,k));
+  // add a touch of overshoot wobble on the lean
+  G.cur=cur;
+  // hop physics
+  if(G.hop>0||G.hopV<0){ G.hopV+=2400*dt; G.hop+=G.hopV*dt; if(G.hop>=0){G.hop=0;G.hopV=0;} }
+  G.shake=Math.max(0,G.shake-40*dt); G.flash=Math.max(0,G.flash-1.6*dt);
+  for(const pt of particles){ pt.t+=dt; pt.vy+=700*dt; pt.x+=pt.vx*dt; pt.y+=pt.vy*dt; pt.rot+=pt.vr*dt; }
+  particles=particles.filter(pt=>pt.t<pt.life&&pt.y<GROUND_Y+40);
+  for(const f of floaters){ f.t+=dt; f.y-=44*dt; }
+  floaters=floaters.filter(f=>f.t<1.1);
+  if(G.mode!=='play')return;
+  if(!wall){ gapT-=dt; if(gapT<=0)spawnWall(); return; }
+  if(wall.state==='in'){
+    wall.p+=dt/wall.dur;
+    if(wall.p>=1){ wall.p=1; judge(); }
+  } else {
+    wall.st+=dt;
+    const doneAt=wall.state==='pass'?0.38:0.75;
+    if(wall.st>=doneAt){
+      const wasBonk=wall.state==='bonk';
+      wall=null; gapT=wasBonk?0.75:0.45;
+      if(wasBonk&&G.hearts<=0){ G.mode='over'; sndOver(); }
+    }
+  }
+}
+/* wall scale from progress (slow start so the hole reads early) */
+function wallScale(w){
+  if(w.state==='pass')return 1.05+ w.st*0.9;
+  if(w.state==='bonk')return 1.05;
+  return 0.34+0.71*Math.pow(w.p,1.35);
+}
+
+/* ---------- pose buttons (canvas-drawn, pointer-native) ---------- */
+const BTN_W=76, BTN_H=80, BTN_GAP=6;
+const BTN_X0=(W-(BTN_W*5+BTN_GAP*4))/2, BTN_Y=BTN_Y0+6;
+function btnRect(i){ return {x:BTN_X0+i*(BTN_W+BTN_GAP), y:BTN_Y, w:BTN_W, h:BTN_H}; }
+const PLAY_BTN={x:W/2-95, y:452, w:190, h:64};
+const AGAIN_BTN={x:W/2-105, y:560, w:210, h:64};
+let downPos=null;
+cv.addEventListener('pointerdown',e=>{
+  audio();
+  const r=cv.getBoundingClientRect();
+  const x=(e.clientX-r.left)*W/r.width, y=(e.clientY-r.top)*H/r.height;
+  downPos={x,y};
+  if(G.mode==='play'){
+    for(let i=0;i<5;i++){ const b=btnRect(i);
+      if(x>=b.x&&x<=b.x+b.w&&y>=b.y&&y<=b.y+b.h){ setPose(i); return; } }
+  }
+});
+cv.addEventListener('pointerup',e=>{
+  if(!downPos)return;
+  const r=cv.getBoundingClientRect();
+  const x=(e.clientX-r.left)*W/r.width, y=(e.clientY-r.top)*H/r.height;
+  const inR=(b)=>x>=b.x&&x<=b.x+b.w&&y>=b.y&&y<=b.y+b.h&&downPos.x>=b.x&&downPos.x<=b.x+b.w&&downPos.y>=b.y&&downPos.y<=b.y+b.h;
+  if(G.mode==='title'&&inR(PLAY_BTN))startGame();
+  else if(G.mode==='over'&&G.t>0&&inR(AGAIN_BTN))startGame();
+  downPos=null;
+});
+addEventListener('keydown',e=>{
+  if(G.mode==='play'){
+    const n={'1':0,'2':1,'3':2,'4':3,'5':4}[e.key]; if(n!==undefined)setPose(n);
+    if(e.key==='ArrowLeft')setPose(Math.max(0,G.poseIdx-1));
+    if(e.key==='ArrowRight')setPose(Math.min(4,G.poseIdx+1));
+  } else if(e.key===' '||e.key==='Enter'){ startGame(); }
+});
+document.getElementById('btnMute').addEventListener('click',function(){ muted=!muted; this.textContent=muted?'🔇':'🔊'; audio(); });
+document.getElementById('btnRestart').addEventListener('click',()=>{ if(G.mode!=='title')startGame(); });
+
+/* ============================================================
+   RENDER
+   ============================================================ */
+function drawWall(){
+  if(!wall)return;
+  const s=wallScale(wall);
+  const cx=PLAYER_X;
+  let cy=400+(424-400)*Math.min(1,s);
+  if(wall.state==='pass')cy=GROUND_Y-HOLE_FEET_Y*s; // pin the hole to the hero's feet as it grows past
+  // floor shadow grows as it nears
+  ctx.fillStyle='rgba(30,16,4,'+(0.10+0.20*Math.min(1,s))+')';
+  ctx.beginPath(); ctx.ellipse(cx,GROUND_Y+22,180*s,20*s,0,0,Math.PI*2); ctx.fill();
+  ctx.save();
+  if(wall.state==='bonk'){ const wob=Math.sin(wall.st*30)*(1-wall.st)*6; ctx.translate(cx+wob,cy); ctx.rotate(0.10*Math.min(1,wall.st*2)); }
+  else ctx.translate(cx,cy);
+  if(wall.state==='pass')ctx.globalAlpha=Math.max(0,1-wall.st/0.38);
+  if(wall.state==='bonk')ctx.globalAlpha=Math.max(0,1-Math.max(0,wall.st-0.4)/0.35);
+  const dw=480*(BOOK_W*s)/(BOOK_W*WALL_SCALE), dh=780*(BOOK_W*s)/(BOOK_W*WALL_SCALE);
+  ctx.drawImage(wallCv,-dw/2,-dh/2,dw,dh);
+  ctx.restore();
+  ctx.globalAlpha=1;
+}
+function drawButtons(){
+  ctx.fillStyle='#2c1a08'; ctx.fillRect(0,BTN_Y0,W,H-BTN_Y0);
+  ctx.fillStyle='rgba(255,207,110,0.5)'; ctx.fillRect(0,BTN_Y0,W,2);
+  for(let i=0;i<5;i++){
+    const b=btnRect(i), sel=i===G.poseIdx;
+    ctx.fillStyle=sel?'#3f9e4d':'#4a2c14';
+    rr(ctx,b.x,b.y+(sel?-3:0),b.w,b.h,12); ctx.fill();
+    ctx.strokeStyle=sel?'#ffcf6e':'rgba(243,229,195,0.35)'; ctx.lineWidth=sel?3:2;
+    rr(ctx,b.x,b.y+(sel?-3:0),b.w,b.h,12); ctx.stroke();
+    ctx.save(); ctx.translate(b.x+b.w/2,b.y+(sel?-3:0)+52); ctx.scale(0.30,0.30);
+    drawSilhouette(ctx,POSES[i],sel?'#ffffff':'#d8c49a'); ctx.restore();
+    ctx.fillStyle=sel?'#ffffff':'#d8c49a';
+    ctx.font='700 10px system-ui,sans-serif'; ctx.textAlign='center';
+    ctx.fillText(POSES[i].name,b.x+b.w/2,b.y+(sel?-3:0)+72);
+  }
+}
+function drawHUD(){
+  ctx.fillStyle='rgba(36,20,7,0.88)'; ctx.fillRect(0,0,W,HUD_H);
+  ctx.font='22px system-ui'; ctx.textAlign='left';
+  let hearts=''; for(let i=0;i<3;i++)hearts+=i<G.hearts?'❤️':'🖤';
+  ctx.fillText(hearts,10,38);
+  ctx.font='700 21px system-ui,sans-serif'; ctx.fillStyle='#ffcf6e'; ctx.textAlign='center';
+  ctx.fillText('⭐ '+G.score,W/2-16,38);
+  ctx.fillStyle='#f3e5c3'; ctx.textAlign='right';
+  ctx.font='700 19px system-ui,sans-serif';
+  ctx.fillText('📚 '+G.cleared,262,38);
+  if(G.streak>=2){ ctx.fillStyle='#ffb84d'; ctx.textAlign='left'; ctx.font='700 15px system-ui,sans-serif';
+    ctx.fillText('🔥'+G.streak,102,38); }
+  // wall progress bar
+  if(wall&&wall.state==='in'){
+    ctx.fillStyle='rgba(255,255,255,0.18)'; ctx.fillRect(0,HUD_H-6,W,6);
+    ctx.fillStyle=wall.p>0.75?'#ff5a4d':'#ffcf6e';
+    ctx.fillRect(0,HUD_H-6,W*wall.p,6);
+  }
+}
+function bigButton(b,label,col){
+  ctx.fillStyle=col; rr(ctx,b.x,b.y,b.w,b.h,16); ctx.fill();
+  ctx.strokeStyle='#f3e5c3'; ctx.lineWidth=3; rr(ctx,b.x,b.y,b.w,b.h,16); ctx.stroke();
+  ctx.fillStyle='#fff'; ctx.font='800 26px system-ui,sans-serif'; ctx.textAlign='center';
+  ctx.fillText(label,b.x+b.w/2,b.y+b.h/2+9);
+}
+function drawHeroUnit(){
+  const blink=(G.blinkT<0)?0:1;
+  const bobY=Math.sin(G.t*2.2)*1.6;
+  ctx.save(); ctx.translate(PLAYER_X,GROUND_Y+bobY);
+  if(wall&&wall.state==='in'&&G.poseIdx===wall.pose){
+    ctx.strokeStyle='rgba(139,226,106,'+(0.55+0.3*Math.sin(G.t*8))+')'; ctx.lineWidth=4;
+    ctx.beginPath(); ctx.ellipse(0,14,86,17,0,0,Math.PI*2); ctx.stroke();
+  }
+  drawHero(ctx,G.cur,blink,-G.hop);
+  ctx.restore();
+}
+function render(){
+  ctx.save();
+  if(G.shake>0)ctx.translate((Math.random()-0.5)*G.shake,(Math.random()-0.5)*G.shake);
+  ctx.drawImage(bgCv,0,0);
+  const blink=(G.blinkT<0)?0:1;
+  if(G.mode!=='title'){
+    drawWorm(ctx,96,GROUND_Y+8,G.t,blink);
+    // depth: hero in FRONT of the approaching book; during the pass the
+    // book comes toward camera, so the hero slips behind it (through the hole)
+    if(wall&&wall.state==='pass'){ drawHeroUnit(); drawWall(); }
+    else { drawWall(); drawHeroUnit(); }
+  }
+  // particles + floaters
+  for(const pt of particles){ ctx.save(); ctx.translate(pt.x,pt.y); ctx.rotate(pt.rot);
+    ctx.globalAlpha=Math.max(0,1-pt.t/pt.life); ctx.fillStyle=pt.col; ctx.fillRect(-pt.w/2,-pt.h/2,pt.w,pt.h); ctx.restore(); }
+  ctx.globalAlpha=1;
+  ctx.font='800 21px system-ui,sans-serif'; ctx.textAlign='center';
+  for(const f of floaters){ ctx.globalAlpha=Math.max(0,1-f.t/1.1); ctx.fillStyle=f.col; ctx.fillText(f.txt,f.x,f.y); }
+  ctx.globalAlpha=1;
+  ctx.restore();
+  if(G.flash>0){ ctx.fillStyle=`rgba(${G.flashCol},${G.flash*0.35})`; ctx.fillRect(0,0,W,H); }
+  drawHUD();
+  if(G.mode==='play'||G.mode==='over')drawButtons();
+  if(G.mode==='title'){
+    ctx.fillStyle='rgba(30,16,4,0.55)'; ctx.fillRect(0,HUD_H,W,FIELD_Y1-HUD_H);
+    ctx.fillStyle='#ffcf6e'; ctx.font='900 52px system-ui,sans-serif'; ctx.textAlign='center';
+    ctx.fillText('BOOK',W/2,196); ctx.fillText('SQUIRM',W/2,252);
+    ctx.fillStyle='#f3e5c3'; ctx.font='600 19px system-ui,sans-serif';
+    ctx.fillText('📖 A giant book is coming —',W/2,318);
+    ctx.fillText('match the pose in its hole!',W/2,346);
+    ctx.fillText('Tap a pose before the book reaches you.',W/2,388);
+    ctx.fillText('💥 3 bonks and the library closes!',W/2,416);
+    // demo hero cycling poses + worm mascot
+    const demo=POSES[Math.floor(G.t/0.9)%5];
+    drawWorm(ctx,96,GROUND_Y+8,G.t,1);
+    ctx.save(); ctx.translate(PLAYER_X,GROUND_Y); drawHero(ctx,lerpPose(demo,POSES[(Math.floor(G.t/0.9)+1)%5],(G.t%0.9)/0.9),1,0); ctx.restore();
+    bigButton(PLAY_BTN,'▶ PLAY','#3f9e4d');
+    if(G.best>0){ ctx.fillStyle='#d8c49a'; ctx.font='700 16px system-ui,sans-serif'; ctx.fillText('⭐ BEST '+G.best,W/2,706); }
+  }
+  if(G.mode==='over'){
+    ctx.fillStyle='rgba(30,16,4,0.62)'; ctx.fillRect(0,HUD_H,W,FIELD_Y1-HUD_H);
+    ctx.fillStyle='#ff7a6b'; ctx.font='900 40px system-ui,sans-serif'; ctx.textAlign='center';
+    ctx.fillText('LIBRARY',W/2,300); ctx.fillText('CLOSED!',W/2,348);
+    ctx.fillStyle='#f3e5c3'; ctx.font='700 24px system-ui,sans-serif';
+    ctx.fillText('⭐ '+G.score,W/2,420);
+    ctx.font='600 19px system-ui,sans-serif';
+    ctx.fillText('📚 '+G.cleared+' book'+(G.cleared===1?'':'s')+' slipped through',W/2,456);
+    ctx.fillText('⭐ BEST '+G.best,W/2,488);
+    bigButton(AGAIN_BTN,'↻ READ AGAIN','#3f9e4d');
+  }
+}
+/* ---------- main loop (freeze/step hooks for verification) ---------- */
+let frozen=false, lastTs=0;
+function frame(ts){
+  requestAnimationFrame(frame);
+  const dt=Math.min(0.05,(ts-lastTs)/1000||0.016); lastTs=ts;
+  if(frozen)return;
+  update(dt); render();
+}
+requestAnimationFrame(frame);
+window.__game={
+  state:()=>({mode:G.mode,hearts:G.hearts,score:G.score,cleared:G.cleared,streak:G.streak,bonks:G.bonks,
+    pose:G.poseIdx, need:wall?wall.pose:null, wallP:wall?+wall.p.toFixed(3):null, wallState:wall?wall.state:null}),
+  layout:{hudH:HUD_H,fieldY0:FIELD_Y0,fieldY1:FIELD_Y1,btnY0:BTN_Y0,W,H,
+    fieldCoverage:+(((FIELD_Y1-FIELD_Y0)/H)*100).toFixed(1), fieldWidthPct:100},
+  btnRect:(i)=>btnRect(i), playBtn:()=>({...PLAY_BTN}), againBtn:()=>({...AGAIN_BTN}),
+  start:()=>startGame(),
+  setPose:(i)=>setPose(i),
+  spawn:(pose,dur)=>{ wall={pose,p:0,dur:dur||2.5,state:'in',st:0,cover:COVERS[0]}; renderWallBook(pose,wall.cover); },
+  setWallP:(p)=>{ if(wall)wall.p=p; },
+  freeze:()=>{ frozen=true; }, unfreeze:()=>{ frozen=false; },
+  step:(n)=>{ for(let i=0;i<n;i++){ update(1/60); } render(); },
+};
+</script>
+<script id="moth-game-guard-js">
+(function(){
+  var lastEnd=0;
+  function onUi(t){return t&&t.closest&&t.closest('button,a,input,select,textarea,[data-scroll]');}
+  document.addEventListener('touchend',function(e){
+    var now=Date.now();
+    if(!onUi(e.target)&&now-lastEnd<=300&&e.cancelable)e.preventDefault();
+    lastEnd=now;
+  },{passive:false});
+  ['gesturestart','gesturechange','gestureend'].forEach(function(n){
+    document.addEventListener(n,function(e){e.preventDefault();});
+  });
+  document.addEventListener('dblclick',function(e){e.preventDefault();},{passive:false});
+  document.addEventListener('contextmenu',function(e){e.preventDefault();});
+  document.addEventListener('touchmove',function(e){
+    if(e.target&&e.target.closest&&e.target.closest('[data-scroll]'))return;
+    if(e.cancelable)e.preventDefault();
+  },{passive:false});
+})();
+</script>
+</body>
+</html>

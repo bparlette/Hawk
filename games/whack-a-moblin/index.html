@@ -1,0 +1,751 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+<title>Whack-a-Moblin — Vice Beach</title>
+<style>
+  *{margin:0;padding:0;box-sizing:border-box}
+  html,body{height:100%;overflow:hidden;background:#0b0e1a;font-family:Verdana,Geneva,sans-serif;-webkit-user-select:none;user-select:none}
+  #app{position:fixed;inset:0;display:flex;flex-direction:column}
+  /* ---------- HUD (icons + numbers only, 62px tall) ---------- */
+  #hud{height:62px;flex:0 0 62px;display:flex;align-items:center;justify-content:space-between;
+       padding:0 14px;background:linear-gradient(180deg,#141830,#0d1022);border-bottom:3px solid #ff2e88;z-index:5}
+  .hudItem{display:flex;align-items:center;gap:6px;color:#fff;font-weight:900;font-size:22px;text-shadow:0 2px 0 #000}
+  .hudItem .ico{font-size:24px;filter:drop-shadow(0 2px 2px rgba(0,0,0,.6))}
+  #hudCombo{color:#ffd23e;min-width:86px;justify-content:center}
+  #hudCombo.hot{color:#ff7b2e;animation:pulse .3s infinite alternate}
+  @keyframes pulse{from{transform:scale(1)}to{transform:scale(1.14)}}
+  #hudTime{color:#54f0ff}
+  #hudTime.low{color:#ff4757;animation:pulse .25s infinite alternate}
+  /* ---------- Board ---------- */
+  #boardWrap{flex:1 1 auto;position:relative;min-height:0}
+  canvas#game{position:absolute;inset:0;width:100%;height:100%;display:block;touch-action:none}
+  /* ---------- Overlays ---------- */
+  .overlay{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;
+           gap:16px;background:rgba(8,8,24,.72);z-index:10;text-align:center;padding:20px}
+  .overlay.hidden{display:none}
+  .title{font-size:42px;font-weight:900;color:#ffd23e;letter-spacing:1px;line-height:1.05;
+         text-shadow:0 0 18px #ff2e88,0 4px 0 #7a1040,0 6px 14px #000}
+  .title small{display:block;font-size:19px;color:#54f0ff;text-shadow:0 0 12px #0aa;letter-spacing:3px}
+  .howto{color:#e8ecff;font-size:15px;line-height:1.55;max-width:330px;font-weight:700}
+  .howto b{color:#ffd23e}.howto .bad{color:#ff8fa3}
+  .bigBtn{font-family:inherit;font-size:24px;font-weight:900;letter-spacing:1px;color:#10240f;background:linear-gradient(180deg,#8dff57,#37c81e);
+          border:0;border-radius:16px;padding:16px 42px;box-shadow:0 6px 0 #1d7a10,0 10px 22px rgba(0,0,0,.6);cursor:pointer;touch-action:manipulation}
+  .bigBtn:active{transform:translateY(4px);box-shadow:0 2px 0 #1d7a10}
+  .statGrid{display:grid;grid-template-columns:1fr 1fr;gap:10px 26px;color:#fff;font-size:18px;font-weight:800}
+  .statGrid span{color:#ffd23e;font-size:26px}
+  .endTitle{font-size:38px;font-weight:900;color:#54f0ff;text-shadow:0 0 16px #06c,0 4px 0 #063a5e}
+</style>
+<style id="moth-game-guard">
+html,body{touch-action:none;overscroll-behavior:none;-webkit-touch-callout:none;-webkit-user-select:none;user-select:none;-webkit-tap-highlight-color:transparent}
+canvas{touch-action:none}
+</style>
+</head>
+<body>
+<div id="app">
+  <div id="hud">
+    <div class="hudItem"><span class="ico">🪙</span><span id="hudScore">0</span></div>
+    <div class="hudItem" id="hudCombo"><span class="ico">🔥</span><span id="hudComboV">×0</span></div>
+    <div class="hudItem" id="hudTime"><span class="ico">⏱️</span><span id="hudTimeV">60</span></div>
+  </div>
+  <div id="boardWrap">
+    <canvas id="game"></canvas>
+
+    <div class="overlay" id="startScreen">
+      <div class="title">WHACK-A-MOBLIN<small>★ VICE BEACH ★</small></div>
+      <div class="howto">👆 <b>Tap a Moblin</b> to bonk it with the Master Sword!<br>
+        Chain bonks to build your <b>🔥 combo</b>.<br>
+        Miss or let one escape and the combo dies.<br>
+        <span class="bad">🐔 NEVER bonk the white Cucco…</span></div>
+      <button class="bigBtn" id="startBtn">▶ START</button>
+    </div>
+
+    <div class="overlay hidden" id="endScreen">
+      <div class="endTitle">⏰ TIME UP!</div>
+      <div class="statGrid">
+        <div>🪙<br><span id="endScore">0</span></div>
+        <div>🔥 MAX<br><span id="endCombo">×0</span></div>
+        <div>⚔️ BONKS<br><span id="endBonks">0</span></div>
+        <div>🐔 CUCCOS<br><span id="endCuccos">0</span></div>
+      </div>
+      <button class="bigBtn" id="restartBtn">↻ PLAY AGAIN</button>
+    </div>
+  </div>
+</div>
+
+<script>
+'use strict';
+/* ============================================================
+   WHACK-A-MOBLIN — Zelda × GTA whack-a-mole
+   Moblins pop from Vice Beach manholes & cop-car hoods.
+   Bonk with the Master Sword. Never bonk the Cucco.
+   ============================================================ */
+const canvas = document.getElementById('game');
+let ctx = canvas.getContext('2d');
+let backLayer = null, frontLayer = null;
+function buildLayers(){
+  backLayer = document.createElement('canvas'); frontLayer = document.createElement('canvas');
+  for (const L of [backLayer, frontLayer]){ L.width = Math.round(W * DPR); L.height = Math.round(H * DPR); }
+  const main = ctx;
+  ctx = backLayer.getContext('2d'); ctx.setTransform(DPR, 0, 0, DPR, 0, 0);
+  drawBackground();
+  for (const s of slots) s.isCar ? drawCarBack(s, false) : drawManholeBack(s);
+  ctx = frontLayer.getContext('2d'); ctx.setTransform(DPR, 0, 0, DPR, 0, 0);
+  for (const s of slots) s.isCar ? drawCarFront(s) : drawManholeFront(s);
+  ctx = main;
+}
+const wrap = document.getElementById('boardWrap');
+const hudScore = document.getElementById('hudScore');
+const hudComboV = document.getElementById('hudComboV');
+const hudComboEl = document.getElementById('hudCombo');
+const hudTimeV = document.getElementById('hudTimeV');
+const hudTimeEl = document.getElementById('hudTime');
+const startScreen = document.getElementById('startScreen');
+const endScreen = document.getElementById('endScreen');
+
+let W = 0, H = 0, DPR = 1;
+function resize(){
+  const r = wrap.getBoundingClientRect();
+  DPR = Math.min(2, window.devicePixelRatio || 1);
+  W = Math.max(280, r.width); H = Math.max(380, r.height);
+  canvas.width = Math.round(W * DPR); canvas.height = Math.round(H * DPR);
+  layoutSlots();
+  buildLayers();
+}
+window.addEventListener('resize', resize);
+
+/* ---------------- Slots: 3 cols × 4 rows = 12 holes ----------------
+   Slots 4 and 7 (middle rows) are cop cars; the rest are manholes. */
+const COLS = 3, ROWS = 4, CAR_SLOTS = new Set([4, 7]);
+let slots = [];
+function layoutSlots(){
+  slots = [];
+  const padX = 10, topPad = 54, botPad = 14;
+  const cw = (W - padX * 2) / COLS;
+  const ch = (H - topPad - botPad) / ROWS;
+  for (let i = 0; i < COLS * ROWS; i++){
+    const c = i % COLS, r = Math.floor(i / COLS);
+    slots.push({
+      i, cx: padX + cw * (c + 0.5), groundY: topPad + ch * (r + 0.86),
+      cellW: cw, cellH: ch, isCar: CAR_SLOTS.has(i)
+    });
+  }
+}
+
+/* ---------------- Audio (all synthesized) ---------------- */
+let AC = null;
+try { if (navigator.audioSession) navigator.audioSession.type = 'playback'; } catch(e){}
+function audio(){
+  if (!AC){
+    const Ctor = window.AudioContext || window.webkitAudioContext;
+    if (!Ctor) return null;
+    AC = new Ctor();
+  }
+  if (AC.state === 'suspended') AC.resume();
+  return AC;
+}
+function unlockAudio(){
+  const ac = audio(); if (!ac) return;
+  // 1-sample silent buffer unlock (iOS)
+  try {
+    const b = ac.createBuffer(1, 1, 22050), s = ac.createBufferSource();
+    s.buffer = b; s.connect(ac.destination); s.start(0);
+  } catch(e){}
+}
+['pointerdown','touchend'].forEach(ev => document.addEventListener(ev, unlockAudio, {passive:true}));
+document.addEventListener('visibilitychange', () => { if (!document.hidden) audio(); });
+
+function tone(freq, dur, type, vol, slideTo, delay){
+  const ac = audio(); if (!ac) return;
+  const t0 = ac.currentTime + (delay || 0);
+  const o = ac.createOscillator(), g = ac.createGain();
+  o.type = type || 'square'; o.frequency.setValueAtTime(freq, t0);
+  if (slideTo) o.frequency.exponentialRampToValueAtTime(Math.max(20, slideTo), t0 + dur);
+  g.gain.setValueAtTime(vol || 0.12, t0);
+  g.gain.exponentialRampToValueAtTime(0.001, t0 + dur);
+  o.connect(g); g.connect(ac.destination); o.start(t0); o.stop(t0 + dur + 0.02);
+}
+function noiseBurst(dur, vol, freq, delay){
+  const ac = audio(); if (!ac) return;
+  const t0 = ac.currentTime + (delay || 0);
+  const n = Math.floor(ac.sampleRate * dur), buf = ac.createBuffer(1, n, ac.sampleRate);
+  const d = buf.getChannelData(0);
+  for (let i = 0; i < n; i++) d[i] = (Math.random() * 2 - 1) * (1 - i / n);
+  const src = ac.createBufferSource(); src.buffer = buf;
+  const f = ac.createBiquadFilter(); f.type = 'bandpass'; f.frequency.value = freq || 900; f.Q.value = 0.8;
+  const g = ac.createGain(); g.gain.value = vol || 0.2;
+  src.connect(f); f.connect(g); g.connect(ac.destination); src.start(t0);
+}
+const sfx = {
+  bonk(){ noiseBurst(0.09, 0.30, 700); tone(190, 0.10, 'square', 0.16, 60); },
+  squeal(){ tone(880, 0.16, 'sawtooth', 0.10, 1600); tone(1170, 0.12, 'sawtooth', 0.07, 1900, 0.03); },
+  miss(){ noiseBurst(0.06, 0.10, 2400); },
+  chime(combo){ const base = 520 + Math.min(8, Math.floor(combo / 3)) * 60; tone(base, 0.10, 'triangle', 0.14); tone(base * 1.5, 0.14, 'triangle', 0.12, null, 0.05); },
+  squawk(){ tone(1400, 0.09, 'square', 0.13, 700); tone(1500, 0.09, 'square', 0.13, 650, 0.10); tone(1350, 0.12, 'square', 0.13, 500, 0.20); },
+  cluck(){ tone(900 + Math.random() * 500, 0.05, 'square', 0.07, 500); },
+  rise(){ tone(300, 0.07, 'sine', 0.05, 520); },
+  jingle(){ [523,659,784,1046].forEach((f,i)=>tone(f, 0.18, 'triangle', 0.14, null, i*0.11)); }
+};
+
+/* ---------------- Game state ---------------- */
+const ROUND = 60;
+const G = {
+  playing:false, over:false,
+  score:0, combo:0, maxCombo:0, bonks:0, cuccosHit:0, penaltyTotal:0, lastPenalty:0,
+  timeLeft:ROUND, spawnT:0.4, hitStop:0, flash:0, trauma:0,
+  swarmUntil:0, cluckT:0, startedAt:0
+};
+let targets = [];   // active pop-ups
+let pops = [];      // floating score text
+let swords = [];    // sword swing animations
+let swarmBirds = []; // cucco swarm flyers
+let particles = [];
+
+function progress(){ return 1 - Math.max(0, G.timeLeft) / ROUND; }
+function spawnInterval(){ return 0.95 - 0.52 * progress(); }          // 0.95s → 0.43s
+function upTime(){ return Math.max(0.62, 1.30 - 0.62 * progress()); } // 1.30s → 0.68s
+function maxConcurrent(){ return progress() < 0.35 ? 2 : (progress() < 0.7 ? 3 : 4); }
+function multiplier(){ return Math.min(5, 1 + Math.floor(G.combo / 5)); }
+function swarmActive(){ return performance.now() < G.swarmUntil; }
+
+function freeSlot(){
+  const used = new Set(targets.map(t => t.slot));
+  const free = slots.filter(s => !used.has(s.i));
+  if (!free.length) return null;
+  return free[Math.floor(Math.random() * free.length)];
+}
+function spawn(type, forceLong){
+  const slot = freeSlot(); if (!slot) return null;
+  const t = {
+    slot: slot.i, type: type || (Math.random() < 0.17 ? 'cucco' : 'moblin'),
+    age: 0, life: forceLong ? 3.2 : upTime() * (0.85 + Math.random() * 0.35),
+    state: 'up', bonkT: 0, seed: Math.random() * 1000,
+    sx: 1, sy: 1, svx: 0, svy: 0, headX: 0, headY: 0, pop: 0
+  };
+  targets.push(t); sfx.rise();
+  return t;
+}
+
+/* ---------------- Bonk logic ---------------- */
+function addPop(x, y, text, color){
+  pops.push({x, y, text, color: color || '#ffd23e', t: 0});
+}
+function springKick(t){ // FEEL.md hit squash (1.31, 0.69)
+  t.sx = 1.31; t.sy = 0.69; t.svx = 0; t.svy = 0;
+}
+function bonkMoblin(t, x, y){
+  G.combo++; G.maxCombo = Math.max(G.maxCombo, G.combo);
+  const pts = 10 * multiplier();
+  G.score += pts; G.bonks++;
+  t.state = 'bonked'; t.bonkT = 0; springKick(t);
+  G.hitStop = 0.09; G.flash = 0.35; G.trauma = Math.min(1, G.trauma + 0.25);
+  addPop(x, y - 46, '+' + pts, '#ffd23e');
+  for (let i = 0; i < 10; i++) particles.push({x, y, vx:(Math.random()-0.5)*320, vy:-Math.random()*260-40, t:0, life:0.4+Math.random()*0.25, c:['#fff','#ffd23e','#ff2e88'][i%3]});
+  sfx.bonk(); sfx.squeal();
+  if (G.combo > 0 && G.combo % 5 === 0) sfx.chime(G.combo);
+  syncHud();
+}
+function bonkCucco(t, x, y){
+  const pen = 50;
+  G.lastPenalty = pen; G.penaltyTotal += pen;
+  G.score = Math.max(0, G.score - pen); G.cuccosHit++;
+  G.combo = 0;
+  t.state = 'bonked'; t.bonkT = 0; springKick(t);
+  G.hitStop = 0.09; G.flash = 0.35; G.trauma = 1;
+  G.swarmUntil = performance.now() + 2500;
+  startSwarm();
+  addPop(x, y - 46, '-' + pen, '#ff5b74');
+  sfx.bonk(); sfx.squawk();
+  syncHud();
+}
+function startSwarm(){
+  swarmBirds = [];
+  for (let i = 0; i < 26; i++){
+    const dir = Math.random() < 0.5 ? 1 : -1;
+    swarmBirds.push({
+      x: dir > 0 ? -60 - Math.random() * 260 : W + 60 + Math.random() * 260,
+      y: 40 + Math.random() * (H - 120), vx: dir * (170 + Math.random() * 230),
+      flap: Math.random() * 6.28, s: 0.75 + Math.random() * 0.6
+    });
+  }
+}
+
+/* ---------------- Input (pointer-native taps) ---------------- */
+function handleTap(clientX, clientY){
+  unlockAudio();
+  if (!G.playing) return;
+  const r = canvas.getBoundingClientRect();
+  const x = clientX - r.left, y = clientY - r.top;
+  swords.push({x, y, t: 0});
+  // topmost / most-popped target whose head contains the point
+  let hit = null;
+  for (const t of targets){
+    if (t.state !== 'up' || t.pop < 0.35) continue;
+    const dx = x - t.headX, dy = y - t.headY;
+    if (dx * dx + dy * dy < 52 * 52) { hit = t; break; }
+  }
+  if (hit){
+    if (hit.type === 'cucco') bonkCucco(hit, x, y); else bonkMoblin(hit, x, y);
+  } else {
+    // missed tap → combo reset
+    if (G.combo > 0){ G.combo = 0; syncHud(); }
+    sfx.miss();
+  }
+}
+canvas.addEventListener('pointerdown', e => { e.preventDefault(); handleTap(e.clientX, e.clientY); });
+
+/* ---------------- HUD / flow ---------------- */
+function syncHud(){
+  hudScore.textContent = G.score;
+  hudComboV.textContent = '×' + G.combo;
+  hudComboEl.classList.toggle('hot', G.combo >= 5);
+}
+function startGame(){
+  unlockAudio();
+  G.playing = true; G.over = false;
+  G.score = 0; G.combo = 0; G.maxCombo = 0; G.bonks = 0; G.cuccosHit = 0;
+  G.penaltyTotal = 0; G.lastPenalty = 0;
+  G.timeLeft = ROUND; G.spawnT = 0.35; G.hitStop = 0; G.flash = 0; G.trauma = 0;
+  G.swarmUntil = 0; G.startedAt = performance.now();
+  targets = []; pops = []; swords = []; swarmBirds = []; particles = [];
+  startScreen.classList.add('hidden'); endScreen.classList.add('hidden');
+  spawn('moblin', true);
+  syncHud();
+}
+function endGame(){
+  G.playing = false; G.over = true;
+  document.getElementById('endScore').textContent = G.score;
+  document.getElementById('endCombo').textContent = '×' + G.maxCombo;
+  document.getElementById('endBonks').textContent = G.bonks;
+  document.getElementById('endCuccos').textContent = G.cuccosHit;
+  endScreen.classList.remove('hidden');
+  sfx.jingle();
+}
+document.getElementById('startBtn').addEventListener('click', startGame);
+document.getElementById('restartBtn').addEventListener('click', startGame);
+
+/* ---------------- Update ---------------- */
+function update(dt){
+  // squash springs (underdamped, FEEL.md §3)
+  for (const t of targets){
+    const k = 190, d = 11;
+    t.svx += ((1 - t.sx) * k - t.svx * d) * dt; t.sx += t.svx * dt;
+    t.svy += ((1 - t.sy) * k - t.svy * d) * dt; t.sy += t.svy * dt;
+  }
+  if (!G.playing) return;
+  G.timeLeft -= dt;
+  if (G.timeLeft <= 0){ G.timeLeft = 0; endGame(); return; }
+
+  G.spawnT -= dt;
+  if (G.spawnT <= 0 && targets.filter(t => t.state === 'up').length < maxConcurrent()){
+    spawn(); G.spawnT = spawnInterval() * (0.7 + Math.random() * 0.6);
+  }
+  for (let i = targets.length - 1; i >= 0; i--){
+    const t = targets[i];
+    if (t.state === 'up'){
+      t.age += dt;
+      const rise = 0.16, fall = 0.14;
+      if (t.age < rise) t.pop = easeOutBack(t.age / rise);
+      else if (t.age > t.life - fall) t.pop = Math.max(0, (t.life - t.age) / fall);
+      else t.pop = 1;
+      if (t.age >= t.life){
+        if (t.type === 'moblin' && G.combo > 0){ G.combo = 0; syncHud(); } // escape breaks combo
+        targets.splice(i, 1);
+      }
+    } else { // bonked: linger with squash, then sink
+      t.bonkT += dt; t.pop = t.bonkT > 0.22 ? Math.max(0, 1 - (t.bonkT - 0.22) / 0.13) : 1;
+      if (t.bonkT > 0.36) targets.splice(i, 1);
+    }
+  }
+  for (let i = pops.length - 1; i >= 0; i--){ pops[i].t += dt; if (pops[i].t > 0.7) pops.splice(i, 1); }
+  for (let i = particles.length - 1; i >= 0; i--){
+    const p = particles[i]; p.t += dt; p.x += p.vx * dt; p.y += p.vy * dt; p.vy += 900 * dt;
+    if (p.t > p.life) particles.splice(i, 1);
+  }
+  // swarm birds
+  if (swarmActive()){
+    G.trauma = Math.max(G.trauma, 0.45);
+    G.cluckT -= dt; if (G.cluckT <= 0){ sfx.cluck(); G.cluckT = 0.09 + Math.random() * 0.14; }
+    for (const b of swarmBirds){ b.x += b.vx * dt; b.flap += dt * 22; }
+  } else if (swarmBirds.length){ swarmBirds = []; }
+  hudTimeV.textContent = Math.ceil(G.timeLeft);
+  hudTimeEl.classList.toggle('low', G.timeLeft <= 10);
+}
+function easeOutBack(x){ const c = 1.70158; return 1 + (c + 1) * Math.pow(x - 1, 3) + c * Math.pow(x - 1, 2); }
+
+/* ============================================================
+   DRAWING — characters are layered canvas vector sprites.
+   Moblin: pointed ears, pink pig snout w/ nostrils + tusks,
+   angry brows, vest. Cucco: white fluff, red comb, yellow beak.
+   ============================================================ */
+function drawMoblin(cx, groundY, pop, t){
+  const y = groundY + 96 - pop * 98; // bottom sits at the hole when pop=1; sunk & clipped when pop=0
+  const wob = Math.sin(performance.now() / 180 + t.seed) * 0.04;
+  ctx.save();
+  ctx.translate(cx, y); ctx.rotate(wob); ctx.scale(t.sx, t.sy);
+  const bonked = t.state === 'bonked';
+  // body / vest peeking out
+  ctx.fillStyle = '#274b9f';
+  roundRect(-30, -26, 60, 34, 10); ctx.fill();
+  ctx.fillStyle = '#ffd23e'; ctx.fillRect(-3, -26, 6, 30);
+  // ears (big pointed, pink inner)
+  ctx.fillStyle = '#a63d24';
+  ctx.beginPath(); ctx.moveTo(-30, -58); ctx.lineTo(-50, -88); ctx.lineTo(-14, -72); ctx.closePath(); ctx.fill();
+  ctx.beginPath(); ctx.moveTo(30, -58); ctx.lineTo(50, -88); ctx.lineTo(14, -72); ctx.closePath(); ctx.fill();
+  ctx.fillStyle = '#e88a7a';
+  ctx.beginPath(); ctx.moveTo(-31, -62); ctx.lineTo(-43, -80); ctx.lineTo(-19, -69); ctx.closePath(); ctx.fill();
+  ctx.beginPath(); ctx.moveTo(31, -62); ctx.lineTo(43, -80); ctx.lineTo(19, -69); ctx.closePath(); ctx.fill();
+  // head
+  const hg = ctx.createLinearGradient(0, -78, 0, -16);
+  hg.addColorStop(0, '#d2603c'); hg.addColorStop(1, '#a63d24');
+  ctx.fillStyle = hg;
+  roundRect(-34, -78, 68, 64, 20); ctx.fill();
+  ctx.strokeStyle = 'rgba(60,15,5,.55)'; ctx.lineWidth = 3; roundRect(-34, -78, 68, 64, 20); ctx.stroke();
+  // head tuft
+  ctx.strokeStyle = '#5d2413'; ctx.lineWidth = 4; ctx.lineCap = 'round';
+  ctx.beginPath(); ctx.moveTo(-6, -76); ctx.quadraticCurveTo(0, -88, 6, -76); ctx.stroke();
+  // eyes + angry brows
+  if (bonked){
+    ctx.strokeStyle = '#2b0d05'; ctx.lineWidth = 4;
+    for (const ex of [-16, 16]){
+      ctx.beginPath();
+      ctx.moveTo(ex - 7, -56); ctx.lineTo(ex + 7, -42); ctx.moveTo(ex + 7, -56); ctx.lineTo(ex - 7, -42);
+      ctx.stroke();
+    }
+  } else {
+    for (const ex of [-16, 16]){
+      ctx.fillStyle = '#fff'; ctx.beginPath(); ctx.ellipse(ex, -49, 9, 8, 0, 0, 6.29); ctx.fill();
+      ctx.fillStyle = '#7a0d0d'; ctx.beginPath(); ctx.arc(ex, -48, 4, 0, 6.29); ctx.fill();
+      ctx.fillStyle = '#111'; ctx.beginPath(); ctx.arc(ex, -48, 2, 0, 6.29); ctx.fill();
+    }
+    ctx.strokeStyle = '#3d1408'; ctx.lineWidth = 6;
+    ctx.beginPath(); ctx.moveTo(-26, -64); ctx.lineTo(-7, -56); ctx.moveTo(26, -64); ctx.lineTo(7, -56); ctx.stroke();
+  }
+  // snout — the pig read
+  const sg = ctx.createLinearGradient(0, -40, 0, -14);
+  sg.addColorStop(0, '#ffb3a0'); sg.addColorStop(1, '#f2826d');
+  ctx.fillStyle = sg;
+  ctx.beginPath(); ctx.ellipse(0, -27, 19, 13, 0, 0, 6.29); ctx.fill();
+  ctx.strokeStyle = 'rgba(120,40,25,.6)'; ctx.lineWidth = 2.5; ctx.stroke();
+  ctx.fillStyle = '#8c2f1d';
+  ctx.beginPath(); ctx.ellipse(-7, -27, 3.4, 5, 0, 0, 6.29); ctx.fill();
+  ctx.beginPath(); ctx.ellipse(7, -27, 3.4, 5, 0, 0, 6.29); ctx.fill();
+  // tusks + frown
+  ctx.fillStyle = '#fffbe8';
+  ctx.beginPath(); ctx.moveTo(-17, -15); ctx.lineTo(-13, -24); ctx.lineTo(-9, -15); ctx.closePath(); ctx.fill();
+  ctx.beginPath(); ctx.moveTo(17, -15); ctx.lineTo(13, -24); ctx.lineTo(9, -15); ctx.closePath(); ctx.fill();
+  if (!bonked){
+    ctx.strokeStyle = '#571f10'; ctx.lineWidth = 3;
+    ctx.beginPath(); ctx.arc(0, -6, 8, 3.5, 5.9); ctx.stroke();
+  }
+  ctx.restore();
+  if (bonked){ // impact stars
+    ctx.save(); ctx.translate(cx, y - 66); ctx.rotate(performance.now() / 130);
+    ctx.fillStyle = '#ffd23e';
+    for (let i = 0; i < 3; i++){
+      const a = i * 2.09; star(Math.cos(a) * 34, Math.sin(a) * 12, 7);
+    }
+    ctx.restore();
+  }
+  return { headX: cx, headY: y - 44 };
+}
+function star(x, y, r){
+  ctx.beginPath();
+  for (let i = 0; i < 10; i++){
+    const a = i * Math.PI / 5 - Math.PI / 2, rr = i % 2 ? r * 0.45 : r;
+    const px = x + Math.cos(a) * rr, py = y + Math.sin(a) * rr;
+    i ? ctx.lineTo(px, py) : ctx.moveTo(px, py);
+  }
+  ctx.closePath(); ctx.fill();
+}
+function drawCucco(cx, groundY, pop, t, scaleMul){
+  const s = scaleMul || 1;
+  const y = groundY + 78 - pop * 80;
+  const flap = Math.sin(performance.now() / 90 + t.seed) * (t.state === 'bonked' ? 0.5 : 0.16);
+  ctx.save(); ctx.translate(cx, y); ctx.scale(t.sx * s, t.sy * s);
+  // tail feathers
+  ctx.strokeStyle = '#e8e4da'; ctx.lineWidth = 6; ctx.lineCap = 'round';
+  for (const a of [-0.5, -0.15, 0.2]){
+    ctx.beginPath(); ctx.moveTo(20, -30);
+    ctx.lineTo(20 + Math.cos(a - 1.2) * -26, -30 + Math.sin(a - 1.2) * 26 - 12); ctx.stroke();
+  }
+  // wings
+  ctx.fillStyle = '#f4f1e8';
+  for (const side of [-1, 1]){
+    ctx.save(); ctx.translate(side * 22, -30); ctx.rotate(side * flap);
+    ctx.beginPath(); ctx.ellipse(side * 8, 2, 15, 9, side * 0.5, 0, 6.29); ctx.fill();
+    ctx.strokeStyle = '#cfc9ba'; ctx.lineWidth = 2; ctx.stroke(); ctx.restore();
+  }
+  // body (fluffy: stacked circles)
+  ctx.fillStyle = '#fffdf6';
+  ctx.beginPath(); ctx.arc(-12, -22, 17, 0, 6.29); ctx.fill();
+  ctx.beginPath(); ctx.arc(10, -20, 19, 0, 6.29); ctx.fill();
+  ctx.beginPath(); ctx.arc(0, -30, 22, 0, 6.29); ctx.fill();
+  ctx.strokeStyle = '#d8d2c2'; ctx.lineWidth = 2;
+  ctx.beginPath(); ctx.arc(0, -30, 22, 0.3, 2.6); ctx.stroke();
+  // head
+  ctx.fillStyle = '#fffdf6';
+  ctx.beginPath(); ctx.arc(14, -56, 15, 0, 6.29); ctx.fill();
+  // comb (3 red bumps) + wattle
+  ctx.fillStyle = '#e63946';
+  for (const dx of [4, 12, 20]){ ctx.beginPath(); ctx.arc(14 + dx - 12, -70 - (dx === 12 ? 3 : 0), 5.5, 0, 6.29); ctx.fill(); }
+  ctx.beginPath(); ctx.ellipse(24, -44, 4, 6, 0, 0, 6.29); ctx.fill();
+  // beak
+  ctx.fillStyle = '#ffb703';
+  ctx.beginPath(); ctx.moveTo(26, -58); ctx.lineTo(40, -52); ctx.lineTo(26, -47); ctx.closePath(); ctx.fill();
+  ctx.strokeStyle = '#d98e04'; ctx.lineWidth = 1.5; ctx.stroke();
+  // eye
+  if (t.state === 'bonked'){
+    ctx.strokeStyle = '#333'; ctx.lineWidth = 3;
+    ctx.beginPath(); ctx.moveTo(12, -60); ctx.lineTo(20, -52); ctx.moveTo(20, -60); ctx.lineTo(12, -52); ctx.stroke();
+  } else {
+    ctx.fillStyle = '#16161a'; ctx.beginPath(); ctx.arc(16, -56, 3.4, 0, 6.29); ctx.fill();
+    ctx.fillStyle = '#fff'; ctx.beginPath(); ctx.arc(17.2, -57.4, 1.2, 0, 6.29); ctx.fill();
+  }
+  ctx.restore();
+  return { headX: cx, headY: y - 42 };
+}
+function roundRect(x, y, w, h, r){
+  ctx.beginPath();
+  ctx.moveTo(x + r, y);
+  ctx.arcTo(x + w, y, x + w, y + h, r); ctx.arcTo(x + w, y + h, x, y + h, r);
+  ctx.arcTo(x, y + h, x, y, r); ctx.arcTo(x, y, x + w, y, r);
+  ctx.closePath();
+}
+
+/* ---- holes: manhole (back, character, front lip) & cop car ---- */
+function drawManholeBack(s){
+  const g = ctx.createRadialGradient(s.cx, s.groundY, 6, s.cx, s.groundY, 56);
+  g.addColorStop(0, '#05060a'); g.addColorStop(0.75, '#10131c'); g.addColorStop(1, 'rgba(16,19,28,0)');
+  ctx.fillStyle = g;
+  ctx.beginPath(); ctx.ellipse(s.cx, s.groundY, 56, 17, 0, 0, 6.29); ctx.fill();
+}
+function drawManholeFront(s){
+  ctx.strokeStyle = '#4a5163'; ctx.lineWidth = 6;
+  ctx.beginPath(); ctx.ellipse(s.cx, s.groundY, 52, 15, 0, 0.15, Math.PI - 0.15); ctx.stroke();
+  ctx.strokeStyle = '#79839c'; ctx.lineWidth = 2.5;
+  ctx.beginPath(); ctx.ellipse(s.cx, s.groundY, 52, 15, 0, 0.3, Math.PI - 0.3); ctx.stroke();
+  ctx.fillStyle = '#39404f';
+  for (const dx of [-34, 0, 34]){ ctx.beginPath(); ctx.arc(s.cx + dx, s.groundY + 7, 3, 0, 6.29); ctx.fill(); }
+}
+function drawCarBack(s, flashOn){
+  const x = s.cx - 62, y = s.groundY - 66, w = 124, h = 78;
+  // body
+  const g = ctx.createLinearGradient(0, y, 0, y + h);
+  g.addColorStop(0, '#3d6fe0'); g.addColorStop(0.55, '#2456c4'); g.addColorStop(1, '#173a86');
+  ctx.fillStyle = g; roundRect(x, y, w, h, 16); ctx.fill();
+  ctx.fillStyle = '#f4f7ff'; ctx.fillRect(x, y + 30, w, 17); // white police band
+  // windshield
+  ctx.fillStyle = '#9fdcff';
+  roundRect(x + 16, y + 6, w - 32, 20, 8); ctx.fill();
+  ctx.fillStyle = 'rgba(255,255,255,.55)'; ctx.fillRect(x + 22, y + 9, 26, 5);
+  // light bar
+  ctx.fillStyle = '#22242e'; roundRect(x + 30, y - 7, 64, 11, 5); ctx.fill();
+  ctx.fillStyle = flashOn ? '#ff3b4e' : '#8c1420'; roundRect(x + 33, y - 5, 28, 7, 3); ctx.fill();
+  ctx.fillStyle = flashOn ? '#274bff' : '#ffd23e'; roundRect(x + 63, y - 5, 28, 7, 3); ctx.fill();
+  // open hood slot (dark) where heads pop out
+  ctx.fillStyle = '#0a0c14';
+  ctx.beginPath(); ctx.ellipse(s.cx, s.groundY - 6, 46, 13, 0, 0, 6.29); ctx.fill();
+}
+function drawCarFront(s){
+  const x = s.cx - 62, y = s.groundY - 66, w = 124;
+  ctx.fillStyle = '#173a86'; roundRect(x, y + 58, w, 20, 9); ctx.fill(); // bumper
+  ctx.fillStyle = '#ffe98a';
+  ctx.beginPath(); ctx.arc(x + 16, y + 66, 6, 0, 6.29); ctx.fill();
+  ctx.beginPath(); ctx.arc(x + w - 16, y + 66, 6, 0, 6.29); ctx.fill();
+  ctx.fillStyle = '#101322'; roundRect(x + 44, y + 60, 36, 12, 3); ctx.fill();
+  ctx.fillStyle = '#ffd23e'; ctx.font = '900 9px Verdana'; ctx.textAlign = 'center';
+  ctx.fillText('VCPD', s.cx, y + 69);
+}
+
+/* ---- background: neon beach-town street ---- */
+function drawBackground(){
+  const g = ctx.createLinearGradient(0, 0, 0, H);
+  g.addColorStop(0, '#333a52'); g.addColorStop(0.25, '#2a2f45'); g.addColorStop(1, '#1b1e2c');
+  ctx.fillStyle = g; ctx.fillRect(0, 0, W, H);
+  // neon skyline band at top
+  const sky = ctx.createLinearGradient(0, 0, 0, 48);
+  sky.addColorStop(0, '#120e33'); sky.addColorStop(1, '#3b1150');
+  ctx.fillStyle = sky; ctx.fillRect(0, 0, W, 48);
+  ctx.fillStyle = '#0d0a24';
+  const bh = [26, 38, 20, 34, 28, 40, 24, 33, 21, 36];
+  for (let i = 0; i < bh.length; i++) ctx.fillRect(i * (W / 10) + 2, 48 - bh[i], W / 10 - 5, bh[i]);
+  ctx.fillStyle = '#ffd76a';
+  for (let i = 0; i < 26; i++){
+    const wx = (i * 67) % W, wy = 8 + ((i * 37) % 26);
+    if ((i * 13) % 3) ctx.fillRect(wx, wy, 3, 4);
+  }
+  ctx.fillStyle = '#ff2e88'; ctx.font = '900 15px Verdana'; ctx.textAlign = 'left';
+  ctx.shadowColor = '#ff2e88'; ctx.shadowBlur = 12;
+  ctx.fillText('VICE BEACH', 10, 20);
+  ctx.shadowBlur = 0;
+  ctx.fillStyle = '#54f0ff'; ctx.font = '900 11px Verdana'; ctx.textAlign = 'right';
+  ctx.fillText('★ ARCADE ★', W - 10, 20);
+  // side neon strips (sidewalks)
+  ctx.fillStyle = '#ff2e88'; ctx.fillRect(0, 48, 5, H - 48);
+  ctx.fillStyle = '#19d3ff'; ctx.fillRect(W - 5, 48, 5, H - 48);
+  // lane dashes between rows
+  ctx.strokeStyle = 'rgba(255,210,62,.35)'; ctx.lineWidth = 4; ctx.setLineDash([22, 18]);
+  for (let r = 1; r < ROWS; r++){
+    const y = 54 + ((H - 68) / ROWS) * r + ((H - 68) / ROWS) * 0.28;
+    ctx.beginPath(); ctx.moveTo(14, y); ctx.lineTo(W - 14, y); ctx.stroke();
+  }
+  ctx.setLineDash([]);
+}
+
+/* ---- sword swing ---- */
+function drawSword(sw){
+  const p = sw.t / 0.20; if (p >= 1) return;
+  const ang = (-2.2 + p * 2.5) ; // sweep down across the tap point
+  ctx.save(); ctx.translate(sw.x, sw.y); ctx.rotate(ang);
+  ctx.globalAlpha = p < 0.75 ? 1 : 1 - (p - 0.75) / 0.25;
+  // motion arc
+  ctx.strokeStyle = 'rgba(160,240,255,.35)'; ctx.lineWidth = 10; ctx.lineCap = 'round';
+  ctx.beginPath(); ctx.arc(0, 0, 74, -0.5, 0.6); ctx.stroke();
+  // blade (points up-right from grip at origin)
+  ctx.fillStyle = '#eaf6ff';
+  ctx.beginPath(); ctx.moveTo(6, -8); ctx.lineTo(88, -4); ctx.lineTo(98, 0); ctx.lineTo(88, 4); ctx.lineTo(6, 8); ctx.closePath(); ctx.fill();
+  ctx.fillStyle = '#9fd8ef'; ctx.fillRect(12, -1.5, 74, 3);
+  // guard + grip (Master Sword: blue winged guard, purple grip)
+  ctx.fillStyle = '#3b5bdb';
+  ctx.beginPath(); ctx.moveTo(2, -16); ctx.lineTo(12, -6); ctx.lineTo(12, 6); ctx.lineTo(2, 16); ctx.lineTo(-4, 6); ctx.lineTo(-4, -6); ctx.closePath(); ctx.fill();
+  ctx.fillStyle = '#ffd23e'; ctx.beginPath(); ctx.arc(4, 0, 3.4, 0, 6.29); ctx.fill();
+  ctx.fillStyle = '#5b2a86'; roundRect(-24, -4.5, 22, 9, 4); ctx.fill();
+  ctx.fillStyle = '#3b5bdb'; ctx.beginPath(); ctx.arc(-26, 0, 5, 0, 6.29); ctx.fill();
+  ctx.restore(); ctx.globalAlpha = 1;
+}
+
+/* ---------------- Render ---------------- */
+let flashOn = false;
+function render(){
+  ctx.setTransform(DPR, 0, 0, DPR, 0, 0);
+  // camera shake (trauma² offsets, FEEL.md §2)
+  const sh = G.trauma * G.trauma * 9;
+  const ox = (Math.random() * 2 - 1) * sh, oy = (Math.random() * 2 - 1) * sh;
+  ctx.save(); ctx.translate(ox, oy);
+  flashOn = (performance.now() % 640) < 320;
+  if (backLayer) ctx.drawImage(backLayer, 0, 0, W, H);
+  // cop light bars blink (dynamic, above the cached back layer)
+  for (const s of slots){
+    if (!s.isCar) continue;
+    ctx.fillStyle = flashOn ? '#ff3b4e' : '#8c1420'; roundRect(s.cx - 29, s.groundY - 71, 28, 7, 3); ctx.fill();
+    ctx.fillStyle = flashOn ? '#274bff' : '#ffd23e'; roundRect(s.cx + 1, s.groundY - 71, 28, 7, 3); ctx.fill();
+  }
+  // characters (sorted by row so lower rows overlap), clipped at the hole line
+  const sorted = [...targets].sort((a, b) => slots[a.slot].groundY - slots[b.slot].groundY);
+  for (const t of sorted){
+    const s = slots[t.slot];
+    ctx.save();
+    ctx.beginPath(); ctx.rect(s.cx - 66, s.groundY - 140, 132, 146); ctx.clip();
+    const pos = t.type === 'cucco' ? drawCucco(s.cx, s.groundY, t.pop, t) : drawMoblin(s.cx, s.groundY, t.pop, t);
+    ctx.restore();
+    t.headX = pos.headX; t.headY = pos.headY;
+  }
+  if (frontLayer) ctx.drawImage(frontLayer, 0, 0, W, H);
+  // particles
+  for (const p of particles){
+    ctx.globalAlpha = 1 - p.t / p.life; ctx.fillStyle = p.c;
+    ctx.fillRect(p.x - 3, p.y - 3, 6, 6);
+  }
+  ctx.globalAlpha = 1;
+  // swords
+  for (const sw of swords) drawSword(sw);
+  // score pops
+  for (const p of pops){
+    ctx.globalAlpha = 1 - p.t / 0.7;
+    ctx.font = '900 24px Verdana'; ctx.textAlign = 'center';
+    ctx.lineWidth = 5; ctx.strokeStyle = 'rgba(0,0,0,.75)';
+    const yy = p.y - p.t * 44;
+    ctx.strokeText(p.text, p.x, yy); ctx.fillStyle = p.color; ctx.fillText(p.text, p.x, yy);
+  }
+  ctx.globalAlpha = 1;
+  // swarm overlay
+  if (swarmBirds.length){
+    for (const b of swarmBirds){
+      ctx.save(); ctx.translate(b.x, b.y); ctx.scale((b.vx < 0 ? -1 : 1) * b.s, b.s);
+      const fake = {state:'up', seed: b.flap, sx: 1, sy: 1};
+      drawCucco(0, 44, 1, fake, 1);
+      ctx.restore();
+    }
+    ctx.fillStyle = 'rgba(255,210,62,.92)'; ctx.font = '900 21px Verdana'; ctx.textAlign = 'center';
+    ctx.lineWidth = 6; ctx.strokeStyle = 'rgba(0,0,0,.8)';
+    ctx.strokeText('🐔 CUCCO SWARM! 🐔', W / 2, 78); ctx.fillText('🐔 CUCCO SWARM! 🐔', W / 2, 78);
+  }
+  ctx.restore();
+  // white flash (FEEL.md §4: 0.35 alpha)
+  if (G.flash > 0.003){
+    ctx.fillStyle = 'rgba(255,255,255,' + Math.min(0.35, G.flash).toFixed(3) + ')';
+    ctx.fillRect(0, 0, W, H);
+  }
+}
+
+/* ---------------- Main loop (hit-stop freezes game dt) ---------------- */
+let last = performance.now();
+let frozen = false; // screenshot hook: hold a static frame so captures complete
+function frame(now){
+  requestAnimationFrame(frame);
+  if (frozen) { last = now; return; }
+  let rdt = Math.min(0.1, (now - last) / 1000); last = now;
+  if (G.flash > 0) G.flash = Math.max(0, G.flash - rdt * 2.9);
+  G.trauma = Math.max(0, G.trauma - rdt * 0.9);
+  for (let i = swords.length - 1; i >= 0; i--){ swords[i].t += rdt; if (swords[i].t > 0.22) swords.splice(i, 1); }
+  let gdt = rdt;
+  if (G.hitStop > 0){ G.hitStop -= rdt; gdt = 0; } // freeze world, keep rendering
+  update(gdt);
+  render();
+}
+
+/* ---------------- Test hooks ---------------- */
+function snapshot(){
+  const r = canvas.getBoundingClientRect();
+  return {
+    playing: G.playing, over: G.over,
+    score: G.score, combo: G.combo, maxCombo: G.maxCombo,
+    bonks: G.bonks, cuccosHit: G.cuccosHit,
+    penaltyTotal: G.penaltyTotal, lastPenalty: G.lastPenalty,
+    timeLeft: +G.timeLeft.toFixed(2), swarmActive: swarmActive(),
+    targets: targets.filter(t => t.state === 'up').map(t => ({
+      type: t.type, slot: t.slot, pop: +t.pop.toFixed(2),
+      x: Math.round(r.left + t.headX), y: Math.round(r.top + t.headY),
+      cx: Math.round(t.headX), cy: Math.round(t.headY)
+    })),
+    boardRect: {x: r.x, y: r.y, width: r.width, height: r.height}
+  };
+}
+window.__game = {
+  get state(){ return snapshot(); },
+  start: startGame,
+  forceSpawn(type){ const t = spawn(type || 'moblin', true); if (t) { const s = slots[t.slot]; t.pop = 1; t.age = 0.2; } return snapshot(); },
+  setTimeLeft(sec){ G.timeLeft = sec; },
+  setFrozen(v){ frozen = !!v; if (!frozen) last = performance.now(); },
+  endNow(){ G.timeLeft = 0.01; },
+  boardRect(){ const r = canvas.getBoundingClientRect(); return {x: r.x, y: r.y, width: r.width, height: r.height}; }
+};
+
+resize();
+syncHud();
+requestAnimationFrame(frame);
+</script>
+<script id="moth-game-guard-js">
+(function(){
+  var lastEnd=0;
+  function onUi(t){return t&&t.closest&&t.closest('button,a,input,select,textarea,[data-scroll]');}
+  document.addEventListener('touchend',function(e){
+    var now=Date.now();
+    if(!onUi(e.target)&&now-lastEnd<=300&&e.cancelable)e.preventDefault();
+    lastEnd=now;
+  },{passive:false});
+  ['gesturestart','gesturechange','gestureend'].forEach(function(n){
+    document.addEventListener(n,function(e){e.preventDefault();});
+  });
+  document.addEventListener('dblclick',function(e){e.preventDefault();},{passive:false});
+  document.addEventListener('contextmenu',function(e){e.preventDefault();});
+  document.addEventListener('touchmove',function(e){
+    if(e.target&&e.target.closest&&e.target.closest('[data-scroll]'))return;
+    if(e.cancelable)e.preventDefault();
+  },{passive:false});
+})();
+</script>
+</body>
+</html>

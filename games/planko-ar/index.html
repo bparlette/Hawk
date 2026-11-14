@@ -1,0 +1,1271 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+<title>PLANKO SEED GARDEN AR — drop seeds, snip blooms</title>
+<style>
+  html, body { height: 100%; }
+  body {
+    margin: 0; overflow: hidden; background: #141021;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    color: #fff; -webkit-user-select: none; user-select: none;
+  }
+  #cam, #room, #gl { position: fixed; inset: 0; width: 100%; height: 100%; display: block; }
+  #cam { object-fit: cover; background: #141021; z-index: 0; }
+  #room { z-index: 0; }
+  #gl { z-index: 1; }
+  #hud {
+    position: fixed; top: calc(env(safe-area-inset-top, 0px) + 8px); left: 10px; right: 10px;
+    z-index: 3; pointer-events: none;
+  }
+  #hudRow { display: flex; gap: 6px; align-items: center; }
+  .chip {
+    background: rgba(24, 16, 44, 0.58); border: 1px solid rgba(255,255,255,0.22);
+    border-radius: 999px; padding: 6px 10px; font-size: 14px; font-weight: 700;
+    backdrop-filter: blur(3px); white-space: nowrap;
+  }
+  .chip b { font-size: 16px; }
+  #camTag { font-size: 11px; font-weight: 700; opacity: 0.85; margin-left: auto; }
+  #bigMsg {
+    position: fixed; left: 50%; top: 22%; transform: translate(-50%, -50%) scale(0.7);
+    z-index: 4; font-size: 32px; font-weight: 900; color: #ffe066;
+    text-shadow: 0 3px 0 rgba(60,30,0,0.55), 0 6px 18px rgba(0,0,0,0.5);
+    opacity: 0; pointer-events: none; white-space: nowrap; text-align: center;
+  }
+  #bigMsg.pop { animation: msgPop 1.1s ease-out forwards; }
+  @keyframes msgPop {
+    0% { opacity: 0; transform: translate(-50%, -50%) scale(0.6); }
+    18% { opacity: 1; transform: translate(-50%, -50%) scale(1.12); }
+    32% { transform: translate(-50%, -50%) scale(1); }
+    78% { opacity: 1; }
+    100% { opacity: 0; transform: translate(-50%, -62%) scale(1); }
+  }
+  .overlay {
+    position: fixed; inset: 0; z-index: 5;
+    display: flex; align-items: center; justify-content: center;
+    background:
+      radial-gradient(120% 90% at 50% 0%, rgba(150, 220, 140, 0.22), rgba(0,0,0,0) 55%),
+      linear-gradient(180deg, rgba(28, 34, 16, 0.84), rgba(10, 16, 8, 0.92));
+    padding: 20px; box-sizing: border-box;
+  }
+  .card { text-align: center; max-width: 430px; }
+  .card .big { font-size: 54px; line-height: 1.1; }
+  .card h1 { margin: 6px 0 4px; font-size: 34px; font-weight: 900; text-shadow: 0 3px 0 rgba(0,0,0,0.35); color: #a8e063; }
+  .card p { margin: 6px 0; font-size: 16px; line-height: 1.45; opacity: 0.92; }
+  .card .scoreLine { font-size: 21px; font-weight: 800; opacity: 1; }
+  .card .scoreLine b { font-size: 30px; color: #ffe066; }
+  .playBtn {
+    font: inherit; margin-top: 16px; font-size: 21px; font-weight: 900; color: #274a12;
+    background: linear-gradient(180deg, #d8f79a, #8fd14f);
+    border: 2px solid rgba(30,60,10,0.55); border-radius: 999px; padding: 15px 36px;
+    box-shadow: 0 8px 22px rgba(0,0,0,0.45); cursor: pointer;
+  }
+  .playBtn:active { transform: scale(0.96); }
+  .card .fine { font-size: 13px; opacity: 0.65; margin-top: 14px; }
+  #motionPill {
+    position: fixed; left: 50%; transform: translateX(-50%);
+    bottom: calc(env(safe-area-inset-bottom, 0px) + 30px); z-index: 6;
+    font: inherit; font-size: 15px; font-weight: 800; color: #fff;
+    background: rgba(24, 16, 44, 0.88); border: 2px solid rgba(255, 224, 102, 0.9);
+    border-radius: 999px; padding: 12px 18px; box-shadow: 0 8px 22px rgba(0,0,0,0.5);
+    cursor: pointer; white-space: nowrap;
+  }
+  .hidden { display: none !important; }
+</style>
+<style id="moth-game-guard">
+html,body{touch-action:none;overscroll-behavior:none;-webkit-touch-callout:none;-webkit-user-select:none;user-select:none;-webkit-tap-highlight-color:transparent}
+canvas{touch-action:none}
+</style>
+</head>
+<body>
+<video id="cam" autoplay playsinline muted></video>
+<canvas id="room"></canvas>
+<canvas id="gl"></canvas>
+
+<div id="hud" class="hidden">
+  <div id="hudRow">
+    <div class="chip">🌰 <b><span id="seeds">12</span></b></div>
+    <div class="chip">✂️ <b><span id="cuts">0</span></b></div>
+    <div class="chip">🏆 <b><span id="score">0</span></b></div>
+    <div class="chip" id="camTag">📷 AR room</div>
+  </div>
+</div>
+
+<div id="bigMsg"></div>
+<button id="motionPill" class="hidden" type="button">📱 Enable motion parallax</button>
+
+<div id="start" class="overlay">
+  <div class="card">
+    <div class="big">🌸</div>
+    <h1>PLANKO SEED GARDEN AR</h1>
+    <p>A floating trellis in <b>your room</b>, a flower garden on <b>your floor</b>.</p>
+    <p>👆 <b>Touch HIGH:</b> drag to slide the seed dropper — let go to <b>drop a seed</b>. It bounces down the pegs and blooms where it lands!</p>
+    <p>👇 <b>Touch LOW:</b> drag to walk the <b>little gardener</b>. Reach a bloom and he <b>snips</b> it — ✂️ that's your score!</p>
+    <button id="startBtn" class="playBtn" type="button">▶ PLAY</button>
+    <p class="fine">Needs camera for the full AR feel.<br>No camera? The garden grows in a cozy sunroom instead.</p>
+  </div>
+</div>
+
+<div id="end" class="overlay hidden">
+  <div class="card">
+    <div class="big">🌼</div>
+    <h1>GARDEN CLEARED!</h1>
+    <p class="scoreLine">You scored <b><span id="finalScore">0</span></b></p>
+    <p>✂️ Blooms snipped: <span id="finalCuts">0</span> · 🌰 Seeds planted: <span id="finalPlanted">0</span></p>
+    <p>🏅 Best: <span id="bestScore">0</span></p>
+    <p id="newBest" class="scoreLine hidden">🎉 NEW BEST!</p>
+    <button id="againBtn" class="playBtn" type="button">↻ PLAY AGAIN</button>
+  </div>
+</div>
+
+<script>
+'use strict';
+/* ============================== helpers ============================== */
+const clamp = (v, a, b) => v < a ? a : (v > b ? b : v);
+const lerp = (a, b, t) => a + (b - a) * t;
+const rand = (a, b) => a + Math.random() * (b - a);
+function rr(c, x, y, w, h, r) { c.beginPath(); if (c.roundRect) c.roundRect(x, y, w, h, r); else c.rect(x, y, w, h); }
+function mulberry(seed) { let a = seed >>> 0; return function () { a |= 0; a = a + 0x6D2B79F5 | 0; let t = Math.imul(a ^ a >>> 15, 1 | a); t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t; return ((t ^ t >>> 14) >>> 0) / 4294967296; }; }
+const easeOutBack = t => { const c1 = 1.70158, c3 = c1 + 1; return 1 + c3 * Math.pow(t - 1, 3) + c1 * Math.pow(t - 1, 2); };
+
+/* ============================== audio (all synth, iOS rules) ============================== */
+let AC = null;
+function initAudio() {
+  try {
+    if ('audioSession' in navigator) { try { navigator.audioSession.type = 'playback'; } catch (e) {} }
+    if (!AC) { const Ctor = window.AudioContext || window.webkitAudioContext; if (Ctor) AC = new Ctor(); }
+    if (AC) {
+      if (AC.state === 'suspended') AC.resume();
+      const buf = AC.createBuffer(1, 1, 22050);
+      const src = AC.createBufferSource(); src.buffer = buf; src.connect(AC.destination); src.start(0);
+    }
+  } catch (e) {}
+}
+function resumeAudio() { try { if (AC && AC.state === 'suspended') AC.resume(); } catch (e) {} }
+document.addEventListener('pointerdown', resumeAudio, true);
+document.addEventListener('touchend', resumeAudio, true);
+document.addEventListener('visibilitychange', () => { if (!document.hidden) resumeAudio(); });
+
+function tone(f0, f1, dur, type, vol, delay) {
+  if (!AC) return;
+  try {
+    const t0 = AC.currentTime + (delay || 0);
+    const o = AC.createOscillator(), g = AC.createGain();
+    o.type = type || 'sine';
+    o.frequency.setValueAtTime(Math.max(30, f0), t0);
+    o.frequency.exponentialRampToValueAtTime(Math.max(30, f1), t0 + dur);
+    g.gain.setValueAtTime(0.0001, t0);
+    g.gain.exponentialRampToValueAtTime(vol || 0.15, t0 + 0.012);
+    g.gain.exponentialRampToValueAtTime(0.0001, t0 + dur);
+    o.connect(g); g.connect(AC.destination);
+    o.start(t0); o.stop(t0 + dur + 0.05);
+  } catch (e) {}
+}
+let _noiseBuf = null;
+function noiseBuf() {
+  if (!_noiseBuf) {
+    _noiseBuf = AC.createBuffer(1, AC.sampleRate * 0.5, AC.sampleRate);
+    const d = _noiseBuf.getChannelData(0);
+    for (let i = 0; i < d.length; i++) d[i] = Math.random() * 2 - 1;
+  }
+  return _noiseBuf;
+}
+function noiseBurst(dur, vol, freq, type) {
+  if (!AC) return;
+  try {
+    const t0 = AC.currentTime;
+    const src = AC.createBufferSource(); src.buffer = noiseBuf();
+    const f = AC.createBiquadFilter(); f.type = type || 'lowpass'; f.frequency.value = freq || 3000;
+    const g = AC.createGain();
+    g.gain.setValueAtTime(vol, t0);
+    g.gain.exponentialRampToValueAtTime(0.0001, t0 + dur);
+    src.connect(f); f.connect(g); g.connect(AC.destination);
+    src.start(t0); src.stop(t0 + dur + 0.05);
+  } catch (e) {}
+}
+/* peg voices by kind, pitched by row (after Planko v10's sndPlink ladder) */
+function sndPeg(kind, rowFrac, strength) {
+  const base = 480 + rowFrac * 620;
+  if (kind === 'dew') { tone(base * 1.3, base * 0.8, 0.09, 'sine', 0.10 * strength + 0.03); noiseBurst(0.04, 0.03, 5000, 'highpass'); }
+  else if (kind === 'firefly') { tone(base * 1.9, base * 2.2, 0.06, 'sine', 0.07 * strength + 0.02); tone(base * 2.6, base * 2.9, 0.07, 'sine', 0.05, 0.045); }
+  else { tone(base, base * 0.7, 0.055, 'triangle', 0.11 * strength + 0.03); }
+}
+const sndDrop  = () => { tone(700, 420, 0.10, 'sine', 0.08); };
+const sndPlant = () => { noiseBurst(0.09, 0.14, 700); tone(180, 90, 0.10, 'sine', 0.10); };
+const sndBloom = (radiant) => { tone(659, 659, 0.10, 'triangle', 0.10); tone(880, 880, 0.14, 'triangle', 0.10, 0.07); if (radiant) tone(1318, 1318, 0.18, 'sine', 0.09, 0.14); };
+const sndSnip  = () => { noiseBurst(0.035, 0.22, 6500, 'highpass'); tone(1500, 500, 0.05, 'square', 0.06, 0.01); noiseBurst(0.05, 0.10, 3000, 'highpass'); };
+const sndStep  = () => noiseBurst(0.03, 0.035, 900);
+const sndJingle = () => { [523, 659, 784, 1046].forEach((f, i) => tone(f, f, 0.13, 'triangle', 0.10, i * 0.08)); };
+const sndFanfare = () => { [523, 659, 784].forEach((f, i) => tone(f, f, 0.16, 'triangle', 0.12, i * 0.1)); tone(1046, 1046, 0.3, 'triangle', 0.12, 0.32); };
+
+/* ============================== dom / state ============================== */
+const video = document.getElementById('cam');
+const roomCanvas = document.getElementById('room');
+const rctx = roomCanvas.getContext('2d');
+const glCanvas = document.getElementById('gl');
+const ctx = glCanvas.getContext('2d');
+const hudEl = document.getElementById('hud');
+const seedsEl = document.getElementById('seeds');
+const cutsEl = document.getElementById('cuts');
+const scoreEl = document.getElementById('score');
+const camTagEl = document.getElementById('camTag');
+const bigMsgEl = document.getElementById('bigMsg');
+const startEl = document.getElementById('start');
+const endEl = document.getElementById('end');
+
+let W = 0, H = 0;
+let camOK = false;
+let phase = 'start';           // 'start' | 'playing' | 'lastsnips' | 'over'
+let score = 0, cuts = 0, planted = 0, elapsed = 0;
+let seedsLeft = 12, lastSnipsT = 0;
+let best = 0;
+try { best = parseInt(localStorage.getItem('plankoARBest') || '0', 10) || 0; } catch (e) {}
+
+function updateHUD() { seedsEl.textContent = seedsLeft; cutsEl.textContent = cuts; scoreEl.textContent = score; }
+function bigMsg(txt) {
+  bigMsgEl.textContent = txt;
+  bigMsgEl.classList.remove('pop'); void bigMsgEl.offsetWidth; bigMsgEl.classList.add('pop');
+}
+
+/* ============================== layout ============================== */
+/* Board (trellis) floats upper-middle; garden floor below. All in CSS px,
+   recomputed on resize. Board top ≈8% H, garden bottom ≈95% H. */
+const L = {};
+let pegs = [];
+let bedSpecks = [[], []];
+function layout() {
+  L.boardLeft = W * 0.065;
+  L.boardRight = W * 0.935;
+  L.railY = H * 0.088;
+  L.boardTop = H * 0.105;
+  L.boardBottom = H * 0.545;
+  L.gardenTop = H * 0.565;
+  L.rowsY = [H * 0.715, H * 0.865];        // back row, front row (feet lines)
+  L.rowScale = [0.78, 1.06];
+  L.manMinY = H * 0.60;
+  L.manMaxY = H * 0.945;
+  buildPegs();
+  // static soil speckles per bed (seeded so they don't swim on resize)
+  const srnd = mulberry(42);
+  bedSpecks = L.rowsY.map((ry, ri) => {
+    const arr = [];
+    for (let i = 0; i < 46; i++) arr.push({ fx: 0.03 + srnd() * 0.94, dy: (srnd() - 0.5) * 20 * L.rowScale[ri], r: 0.8 + srnd() * 1.8, a: 0.10 + srnd() * 0.16 });
+    return arr;
+  });
+}
+const PEG_REST = { dew: 0.58, stone: 0.44, firefly: 0.52 };   // from Planko v10
+function buildPegs() {
+  pegs = [];
+  const rnd = mulberry(1337);
+  const rows = 7;
+  const innerL = L.boardLeft + W * 0.045, innerR = L.boardRight - W * 0.045;
+  const y0 = L.boardTop + H * 0.045, y1 = L.boardBottom - H * 0.035;
+  const spacing = (innerR - innerL) / 5;
+  for (let r = 0; r < rows; r++) {
+    const n = (r % 2 === 0) ? 6 : 5;
+    const y = lerp(y0, y1, rows === 1 ? 0 : r / (rows - 1));
+    for (let i = 0; i < n; i++) {
+      // odd rows sit in the GAPS of even rows (true plinko stagger) —
+      // no vertical dead channels a seed can fall through untouched
+      const x = (r % 2 === 0) ? innerL + spacing * i : innerL + spacing * (i + 0.5);
+      const hsh = rnd();
+      const kind = hsh < 0.62 ? 'dew' : (hsh < 0.90 ? 'stone' : 'firefly');
+      pegs.push({ x, y, row: r, kind, r: kind === 'firefly' ? 10 : 9, flash: 0, lastHit: -1e9, seed: hsh });
+    }
+  }
+}
+
+/* ============================== species (palettes from Planko v10) ============================== */
+const SPECIES = [
+  { id: 'daisy',     name: 'Meadow Daisy',  form: 'rosette', h: 0.62, petals: 14, pal: { p: ['#e8ecf4', '#ffffff'], a: '#fdfdf8', c: '#f6c445', c2: '#d9932a', s: '#4d7c3a', l: '#5d9046' }, seed: ['#8a5a2b', '#a9763f'] },
+  { id: 'tulipred',  name: 'Scarlet Tulip', form: 'cup',     h: 0.66, petals: 3,  pal: { p: ['#d92b3a', '#ff7a6b'], a: '#ffb3a0', c: '#7d1f16', s: '#477636', l: '#548544' }, seed: ['#7a4a22', '#96622f'] },
+  { id: 'sunflower', name: 'Sunflower',     form: 'disc',    h: 1.00, petals: 16, pal: { p: ['#f0a51e', '#ffd94d'], a: '#ffe98a', c: '#6b4218', c2: '#4a2c0d', s: '#4d7c3a', l: '#598c40' }, seed: ['#5b4632', '#2f2318'] },
+  { id: 'poppy',     name: 'Poppy',         form: 'rosette', h: 0.72, petals: 5,  pal: { p: ['#e83a26', '#ff7a52'], a: '#ffb59d', c: '#2e2a33', c2: '#17141f', s: '#5c8446', l: '#679552' }, seed: ['#3c3630', '#57504a'] },
+  { id: 'lavender',  name: 'Lavender',      form: 'spike',   h: 0.70, petals: 0,  pal: { p: ['#7a5cc0', '#b49ae0'], a: '#d5c6f2', c: '#5b4396', s: '#557c48', l: '#648c54' }, seed: ['#6b5133', '#86703f'] },
+  { id: 'marigold',  name: 'Marigold',      form: 'pompom',  h: 0.58, petals: 0,  pal: { p: ['#e07f16', '#ffb52e'], a: '#ffd968', c: '#c25e0e', s: '#4d7c3a', l: '#598c40' }, seed: ['#4a3520', '#63502e'] },
+  { id: 'bluebell',  name: 'Bluebell',      form: 'cup',     h: 0.68, petals: 3,  pal: { p: ['#5b6fd6', '#93a5f2'], a: '#c3cffb', c: '#3c4aa0', s: '#4d7c3a', l: '#5d9046' }, seed: ['#5e4526', '#78603a'] }
+];
+const pickSpecies = () => SPECIES[Math.floor(Math.random() * SPECIES.length)];
+
+/* ============================== dropper & seed ============================== */
+const dropper = { x: 0, tx: 0, loaded: null, loadT: 0, sway: 0 };
+let seed = null;               // falling seed or null
+let lastDrop = null;           // stats of the most recent landed seed
+function loadSeed() {
+  dropper.loaded = pickSpecies();
+  dropper.loadT = 0;
+}
+function dropSeed() {
+  if (phase !== 'playing' || seed || !dropper.loaded || seedsLeft <= 0) return false;
+  const sp = dropper.loaded;
+  seed = {
+    x: dropper.x, y: L.railY + 16, vx: rand(-26, 26), vy: 30, r: 6.5, sp,
+    spin: 0, age: 0, restT: 0, px: dropper.x, py: L.railY + 16,
+    hits: 0, kinds: { dew: 0, stone: 0, firefly: 0 }, lastKind: null,
+    row: Math.random() < 0.55 ? 1 : 0, planted: false
+  };
+  dropper.loaded = null;
+  seedsLeft--;
+  updateHUD();
+  sndDrop();
+  return true;
+}
+
+/* ============================== flowers ============================== */
+let flowers = [];              // {x, row, sp, tier, value, grow, state:'bud'|'bloom', budT, sway, headR, stemH}
+let budQueue = [];             // timers to respawn buds after cuts
+function plantFlower(x, row, sp, tier) {
+  const sc = L.rowScale[row];
+  const f = {
+    x, row, sp, tier,
+    value: tier === 2 ? 30 : (tier === 1 ? 20 : 10),
+    grow: 0, state: 'bloom', budT: 0,
+    sway: rand(0, Math.PI * 2),
+    stemH: (44 + 42 * sp.h) * sc,
+    headR: (10 + 8 * sp.h) * sc * (tier === 1 ? 1.25 : 1)
+  };
+  flowers.push(f);
+  return f;
+}
+function spawnBud() {
+  const row = Math.random() < 0.5 ? 0 : 1;
+  let x = rand(W * 0.10, W * 0.90);
+  for (let tries = 0; tries < 8; tries++) {
+    if (!flowers.some(f => f.row === row && Math.abs(f.x - x) < 30)) break;
+    x = rand(W * 0.10, W * 0.90);
+  }
+  flowers.push({
+    x, row, sp: pickSpecies(), tier: Math.random() < 0.22 ? 1 : 0,
+    value: 0, grow: 0, state: 'bud', budT: rand(1.6, 2.6),
+    sway: rand(0, Math.PI * 2),
+    stemH: (44 + 42 * 0.65) * L.rowScale[row], headR: 12 * L.rowScale[row]
+  });
+}
+
+/* ============================== particles & pops ============================== */
+let parts = [];
+let pops = [];
+function spawnParts(arr) { for (const p of arr) { if (parts.length < 260) parts.push(p); } }
+function pegSpark(p, strength) {
+  const cols = { dew: ['#bfe3ff', '#e8f6ff'], stone: ['#cfd4da', '#9aa0a8'], firefly: ['#ffd94d', '#fff3a3'] }[p.kind];
+  const arr = [];
+  const n = 3 + Math.round(strength * 3);
+  for (let i = 0; i < n; i++) arr.push({ kind: 'spark', x: p.x, y: p.y, vx: rand(-70, 70), vy: rand(-90, 10), g: 260, life: rand(0.25, 0.45), t: 0, col: cols[i % 2], size: rand(1.2, 2.6) });
+  if (p.kind === 'dew') arr.push({ kind: 'ring', x: p.x, y: p.y, r: 4, vr: 60, life: 0.4, t: 0, col: 'rgba(160,215,255,0.8)' });
+  spawnParts(arr);
+}
+function soilPuff(x, y) {
+  const arr = [];
+  for (let i = 0; i < 10; i++) arr.push({ kind: 'soil', x: x + rand(-6, 6), y, vx: rand(-60, 60), vy: rand(-130, -30), g: 420, life: rand(0.3, 0.55), t: 0, col: i % 2 ? '#6b4a2a' : '#8a6238', size: rand(1.6, 3.4) });
+  arr.push({ kind: 'ring', x, y, r: 5, vr: 90, life: 0.45, t: 0, col: 'rgba(255,235,190,0.85)' });
+  spawnParts(arr);
+}
+function petalBurst(f) {
+  const arr = [];
+  const hy = f.row != null ? L.rowsY[f.row] - f.stemH * f.grow : f.y;
+  for (let i = 0; i < 11; i++) {
+    const a = (i / 11) * Math.PI * 2 + rand(-0.3, 0.3);
+    arr.push({ kind: 'petal', x: f.x, y: hy, vx: Math.cos(a) * rand(40, 130), vy: Math.sin(a) * rand(30, 110) - 60, g: 300, life: rand(0.6, 1.0), t: 0, col: f.sp.pal.p[i % 2], size: rand(3.5, 6), rot: rand(0, 6), vr: rand(-6, 6) });
+  }
+  arr.push({ kind: 'petal', x: f.x, y: hy, vx: rand(-30, 30), vy: -70, g: 300, life: 0.8, t: 0, col: f.sp.pal.c, size: 4.5, rot: 0, vr: 3 });
+  spawnParts(arr);
+}
+
+/* ============================== the little man ============================== */
+const man = {
+  x: 0, y: 0, vx: 0, vy: 0, face: 1, walkPh: 0, moving: false,
+  state: 'idle', snipT: 0, snipTarget: null, stepT: 0
+};
+const MAN_SPEED = 215;
+function manScale() { return 0.72 + 0.5 * clamp((man.y - L.gardenTop) / Math.max(1, H * 0.95 - L.gardenTop), 0, 1); }
+function updateMan(dt, input) {
+  let ix = 0, iy = 0;
+  if (input && input.active) { ix = input.x; iy = input.y; }
+  else if (keyVec.x || keyVec.y) { ix = keyVec.x; iy = keyVec.y; }
+  const mag = Math.hypot(ix, iy);
+  man.moving = mag > 0.12 && man.state !== 'snip';
+  if (man.state === 'snip') {
+    man.snipT -= dt;
+    if (man.snipT <= 0.14 && man.snipTarget) {
+      const f = man.snipTarget; man.snipTarget = null;
+      cutFlower(f);
+    }
+    if (man.snipT <= 0) man.state = 'idle';
+    man.vx = 0; man.vy = 0;
+  } else if (man.moving) {
+    const sp = MAN_SPEED * clamp(mag, 0, 1);
+    man.vx = (ix / (mag || 1)) * sp;
+    man.vy = (iy / (mag || 1)) * sp * 0.82;
+    man.x = clamp(man.x + man.vx * dt, W * 0.05, W * 0.95);
+    man.y = clamp(man.y + man.vy * dt, L.manMinY, L.manMaxY);
+    if (Math.abs(man.vx) > 12) man.face = man.vx > 0 ? 1 : -1;
+    man.walkPh += dt * (6 + 7 * clamp(mag, 0, 1));
+    man.stepT -= dt;
+    if (man.stepT <= 0) { sndStep(); man.stepT = 0.24; }
+  } else { man.vx = 0; man.vy = 0; }
+
+  // snip check — near a fully-bloomed flower
+  if (man.state !== 'snip' && (phase === 'playing' || phase === 'lastsnips')) {
+    for (const f of flowers) {
+      if (f.state !== 'bloom' || f.grow < 1) continue;
+      const fy = L.rowsY[f.row];
+      const d = Math.hypot(f.x - man.x, (fy - man.y) * 1.6);
+      if (d < 44) {
+        man.state = 'snip'; man.snipT = 0.34; man.snipTarget = f;
+        man.face = f.x >= man.x ? 1 : -1;
+        break;
+      }
+    }
+  }
+}
+function cutFlower(f) {
+  const i = flowers.indexOf(f);
+  if (i < 0) return;
+  flowers.splice(i, 1);
+  petalBurst(f);
+  sndSnip();
+  score += f.value; cuts++;
+  pops.push({ x: f.x, y: L.rowsY[f.row] - f.stemH - 14, text: '+' + f.value, t: 0, life: 0.9 });
+  budQueue.push(rand(2.2, 3.4));
+  updateHUD();
+}
+
+/* ============================== seed physics ============================== */
+function stepSeed(dt) {
+  const s = seed;
+  s.age += dt;
+  s.vy += 1600 * dt;
+  const sp = Math.hypot(s.vx, s.vy);
+  if (sp > 920) { s.vx *= 920 / sp; s.vy *= 920 / sp; }
+  s.x += s.vx * dt;
+  s.y += s.vy * dt;
+  s.spin += s.vx * dt * 0.02;
+  // board side rails
+  if (s.x < L.boardLeft + s.r) { s.x = L.boardLeft + s.r; s.vx = Math.abs(s.vx) * 0.6; }
+  if (s.x > L.boardRight - s.r) { s.x = L.boardRight - s.r; s.vx = -Math.abs(s.vx) * 0.6; }
+  // pegs (only inside the board)
+  if (s.y < L.boardBottom + 4) {
+    for (const p of pegs) {
+      const dx = s.x - p.x, dy = s.y - p.y;
+      const rr2 = s.r + p.r;
+      const d2 = dx * dx + dy * dy;
+      if (d2 >= rr2 * rr2 || d2 === 0) continue;
+      const d = Math.sqrt(d2), nx = dx / d, ny = dy / d;
+      s.x = p.x + nx * rr2; s.y = p.y + ny * rr2;
+      const vn = s.vx * nx + s.vy * ny;
+      if (vn < 0) {
+        const rest = PEG_REST[p.kind];
+        s.vx -= (1 + rest) * vn * nx;
+        s.vy -= (1 + rest) * vn * ny;
+        // tangential settle + a touch of jitter so seeds never loop forever
+        s.vx *= 0.985; s.vy *= 0.995;
+        s.vx += rand(-14, 14);
+        if (p.kind === 'firefly') { s.vx += rand(-46, 46); s.vy -= rand(0, 42); }  // flutter kick
+        const now = performance.now();
+        if (now - p.lastHit > 55) {
+          p.lastHit = now; p.flash = 1;
+          s.hits++; s.kinds[p.kind]++; s.lastKind = p.kind;
+          sndPeg(p.kind, p.row / 6, clamp(Math.abs(vn) / 420, 0.25, 1));
+          pegSpark(p, clamp(Math.abs(vn) / 420, 0.25, 1));
+        }
+      }
+    }
+  }
+  // stalled-in-a-pocket rescue: no real progress for 0.5 s while still on
+  // the board -> decisive sideways shove off whatever it is resting on
+  if (s.y < L.boardBottom) {
+    if (Math.hypot(s.x - s.px, s.y - s.py) > 7) { s.px = s.x; s.py = s.y; s.restT = 0; }
+    else {
+      s.restT += dt;
+      if (s.restT > 0.5) {
+        let near = null, nd = 1e9;
+        for (const p of pegs) { const d = Math.hypot(p.x - s.x, p.y - s.y); if (d < nd) { nd = d; near = p; } }
+        const dir = near ? Math.sign(s.x - near.x) || (Math.random() < 0.5 ? -1 : 1) : 1;
+        s.vx = dir * 230; s.vy = -60;
+        s.restT = 0; s.px = s.x; s.py = s.y;
+      }
+    }
+  }
+  // landing: reached its garden row line
+  const floorY = L.rowsY[s.row] - 2;
+  if ((s.y >= floorY && s.vy > 0) || s.age > 7) {
+    plantSeed(s);
+  }
+}
+function plantSeed(s) {
+  // keep the bloom near where the seed fell, nudged off neighbours
+  let x = clamp(s.x, W * 0.07, W * 0.93);
+  for (let tries = 0; tries < 8; tries++) {
+    const clash = flowers.find(f => f.row === s.row && Math.abs(f.x - x) < 30);
+    if (!clash) break;
+    x = clamp(x + (x < W / 2 ? 34 : -34), W * 0.07, W * 0.93);
+  }
+  const tier = s.kinds.firefly > 0 ? 2 : (s.kinds.dew >= 4 ? 1 : 0);
+  const f = plantFlower(x, s.row, s.sp, tier);
+  planted++;
+  lastDrop = { pegHits: s.hits, kinds: { dew: s.kinds.dew, stone: s.kinds.stone, firefly: s.kinds.firefly }, landedX: Math.round(x), row: s.row, tier, species: s.sp.id };
+  soilPuff(x, L.rowsY[s.row]);
+  sndPlant();
+  setTimeout(() => { if (flowers.includes(f) && f.grow >= 0.98) sndBloom(tier === 2); }, 1150);
+  if (tier === 2) bigMsg('✨ RADIANT BLOOM!');
+  seed = null;
+  if (seedsLeft > 0) { dropper.loadT = 0.0001; }  // reload shortly (timer in update)
+  checkRoundEnd();
+}
+function checkRoundEnd() {
+  if (phase === 'playing' && seedsLeft <= 0 && !seed) {
+    phase = 'lastsnips'; lastSnipsT = 6;
+    bigMsg('✂️ LAST SNIPS!');
+  }
+}
+
+/* ============================== input — Cherie's two zones ============================== */
+/* HIGH zone (y < 56% H): drag slides the dropper; release drops the seed.
+   LOW zone: drag is a virtual stick — vector from the touch anchor steers
+   the man. pointerId-tracked, so both zones work simultaneously. */
+const pointers = new Map();
+let lowInput = { active: false, x: 0, y: 0 };
+const keyVec = { x: 0, y: 0 };
+const keysDown = new Set();
+function zoneOf(y) { return y < H * 0.56 ? 'high' : 'low'; }
+glCanvas.addEventListener('pointerdown', (e) => {
+  initAudio(); resumeAudio();
+  const zone = zoneOf(e.clientY);
+  pointers.set(e.pointerId, { zone, sx: e.clientX, sy: e.clientY, cx: e.clientX, cy: e.clientY });
+  if (zone === 'high') { dropper.tx = clamp(e.clientX, L.boardLeft + 14, L.boardRight - 14); }
+  else { lowInput.active = true; lowInput.x = 0; lowInput.y = 0; }
+  try { glCanvas.setPointerCapture(e.pointerId); } catch (err) {}
+  e.preventDefault();
+});
+glCanvas.addEventListener('pointermove', (e) => {
+  const p = pointers.get(e.pointerId);
+  if (!p) return;
+  p.cx = e.clientX; p.cy = e.clientY;
+  if (p.zone === 'high') {
+    dropper.tx = clamp(e.clientX, L.boardLeft + 14, L.boardRight - 14);
+  } else {
+    const dx = e.clientX - p.sx, dy = e.clientY - p.sy;
+    const len = Math.hypot(dx, dy);
+    if (len > 8) {
+      const m = clamp(len / 62, 0, 1);
+      lowInput.x = (dx / len) * m; lowInput.y = (dy / len) * m;
+    } else { lowInput.x = 0; lowInput.y = 0; }
+  }
+  e.preventDefault();
+});
+function pointerEnd(e) {
+  const p = pointers.get(e.pointerId);
+  if (!p) return;
+  pointers.delete(e.pointerId);
+  if (p.zone === 'high') {
+    if (phase === 'playing') dropSeed();       // release = drop
+  } else if (![...pointers.values()].some(q => q.zone === 'low')) {
+    lowInput.active = false; lowInput.x = 0; lowInput.y = 0;
+  }
+}
+glCanvas.addEventListener('pointerup', pointerEnd);
+glCanvas.addEventListener('pointercancel', pointerEnd);
+/* mouse parallax fallback lives in the motion section (pointermove on window) */
+
+/* keyboard: arrows/WASD walk the man; A/D slide the dropper; SPACE drops */
+function refreshKeys() {
+  keyVec.x = (keysDown.has('ArrowRight') ? 1 : 0) - (keysDown.has('ArrowLeft') ? 1 : 0);
+  keyVec.y = (keysDown.has('ArrowDown') ? 1 : 0) - (keysDown.has('ArrowUp') ? 1 : 0);
+}
+window.addEventListener('keydown', (e) => {
+  if (e.code === 'Space') { e.preventDefault(); if (phase === 'playing') dropSeed(); return; }
+  if (e.code === 'KeyA') dropper.tx = clamp(dropper.tx - W * 0.09, L.boardLeft + 14, L.boardRight - 14);
+  if (e.code === 'KeyD') dropper.tx = clamp(dropper.tx + W * 0.09, L.boardLeft + 14, L.boardRight - 14);
+  keysDown.add(e.code); refreshKeys();
+});
+window.addEventListener('keyup', (e) => { keysDown.delete(e.code); refreshKeys(); });
+
+/* ================= AR motion: permission-in-gesture + parallax ================= */
+const MOTION = {
+  needPerm: (typeof DeviceOrientationEvent !== 'undefined' &&
+             typeof DeviceOrientationEvent.requestPermission === 'function'),
+  perm: 'unknown', ok: false, ever: false, lastAt: -1e9
+};
+function askMotionPermission() {
+  if (!MOTION.needPerm) { MOTION.perm = 'n/a'; return; }
+  try {
+    const p = DeviceOrientationEvent.requestPermission();
+    if (p && typeof p.then === 'function') {
+      p.then(r => { MOTION.perm = (r === 'granted') ? 'granted' : 'denied'; })
+       .catch(() => { MOTION.perm = 'error'; });
+    }
+  } catch (e) { MOTION.perm = 'error'; }
+}
+const motionPillEl = document.getElementById('motionPill');
+if (motionPillEl) motionPillEl.addEventListener('click', () => { askMotionPermission(); });
+function motionWatchdog() {
+  setTimeout(() => { if (MOTION.needPerm && !MOTION.ever) motionPillEl.classList.remove('hidden'); }, 1500);
+}
+let parX = 0, parY = 0, parTX = 0, parTY = 0;
+let lastOrientAt = -1e9, mouseAt = -1e9, mouseTX = 0, mouseTY = 0;
+window.addEventListener('deviceorientation', (e) => {
+  if (e.gamma == null && e.beta == null) return;
+  lastOrientAt = performance.now();
+  MOTION.ever = true; MOTION.ok = true; MOTION.lastAt = lastOrientAt;
+  parTX = clamp((e.gamma || 0) / 26, -1, 1);
+  parTY = clamp(((e.beta || 0) - 48) / 24, -1, 1);
+  motionPillEl.classList.add('hidden');
+}, true);
+window.addEventListener('pointermove', (e) => {
+  if (e.pointerType !== 'mouse') return;
+  mouseAt = performance.now();
+  mouseTX = clamp((e.clientX / Math.max(1, W) - 0.5) * 2, -1, 1);
+  mouseTY = clamp((e.clientY / Math.max(1, H) - 0.5) * 2, -1, 1);
+}, true);
+function updateParallax(t) {
+  let tx, ty;
+  if (performance.now() - mouseAt < 2500) { tx = mouseTX; ty = mouseTY; }
+  else if (performance.now() - lastOrientAt < 3000) { tx = parTX; ty = parTY; }
+  else { tx = Math.sin(t * 0.00035) * 0.55; ty = Math.sin(t * 0.00027 + 1.7) * 0.30; }
+  parX += (tx - parX) * 0.055;
+  parY += (ty - parY) * 0.055;
+}
+
+/* ============================== fallback sunroom (#room) ============================== */
+/* The sunroom is fully static — painted once per resize into an offscreen
+   cache and blitted each frame (repainting its gradients every frame was
+   the single biggest CPU cost under software rendering). */
+let roomCache = null;
+function paintRoom() {
+  roomCache = document.createElement('canvas');
+  const dpr = Math.min(window.devicePixelRatio || 1, 2);
+  roomCache.width = Math.round(W * dpr); roomCache.height = Math.round(H * dpr);
+  const c = roomCache.getContext('2d');
+  c.setTransform(dpr, 0, 0, dpr, 0, 0);
+  drawRoomInto(c);
+}
+function drawRoom() { if (roomCache) rctx.drawImage(roomCache, 0, 0, W, H); }
+function drawRoomInto(c) {
+  const horizon = H * 0.56;
+  // wall
+  const wall = c.createLinearGradient(0, 0, 0, horizon);
+  wall.addColorStop(0, '#f3e2c2'); wall.addColorStop(1, '#e8cf9f');
+  c.fillStyle = wall; c.fillRect(0, 0, W, horizon);
+  // window with sun glow (left) + plant silhouette (right)
+  const wx = W * 0.08, wy = H * 0.07, ww = W * 0.34, wh = H * 0.30;
+  const glow = c.createRadialGradient(wx + ww / 2, wy + wh / 2, 6, wx + ww / 2, wy + wh / 2, W * 0.42);
+  glow.addColorStop(0, 'rgba(255,246,200,0.75)'); glow.addColorStop(1, 'rgba(255,246,200,0)');
+  c.fillStyle = glow; c.fillRect(0, 0, W, horizon);
+  c.fillStyle = '#bfe0ea'; rr(c, wx, wy, ww, wh, 8); c.fill();
+  const sky = c.createLinearGradient(0, wy, 0, wy + wh);
+  sky.addColorStop(0, '#a8d8f0'); sky.addColorStop(1, '#e6f6d8');
+  c.fillStyle = sky; rr(c, wx + 4, wy + 4, ww - 8, wh - 8, 6); c.fill();
+  c.fillStyle = '#fff8d8'; c.beginPath(); c.arc(wx + ww * 0.68, wy + wh * 0.3, ww * 0.13, 0, Math.PI * 2); c.fill();
+  c.strokeStyle = '#8a6a44'; c.lineWidth = 5; rr(c, wx, wy, ww, wh, 8); c.stroke();
+  c.lineWidth = 3; c.beginPath(); c.moveTo(wx + ww / 2, wy); c.lineTo(wx + ww / 2, wy + wh); c.moveTo(wx, wy + wh / 2); c.lineTo(wx + ww, wy + wh / 2); c.stroke();
+  // hanging plant, right side
+  const px = W * 0.82, py = H * 0.05;
+  c.strokeStyle = '#7a5a34'; c.lineWidth = 2;
+  c.beginPath(); c.moveTo(px, 0); c.lineTo(px, py + 12); c.stroke();
+  c.fillStyle = '#b5542c'; rr(c, px - 15, py + 10, 30, 20, 5); c.fill();
+  c.strokeStyle = '#4d7c3a'; c.lineWidth = 2.4;
+  for (let i = -2; i <= 2; i++) {
+    c.beginPath(); c.moveTo(px + i * 5, py + 26);
+    c.quadraticCurveTo(px + i * 9, py + 48, px + i * 12, py + 62 + Math.abs(i) * -4); c.stroke();
+    c.fillStyle = '#5d9046';
+    c.beginPath(); c.ellipse(px + i * 12, py + 60 - Math.abs(i) * 4, 5, 2.6, i * 0.5, 0, Math.PI * 2); c.fill();
+  }
+  // baseboard
+  c.fillStyle = '#c9a86a'; c.fillRect(0, horizon - 10, W, 10);
+  c.fillStyle = 'rgba(120,90,40,0.5)'; c.fillRect(0, horizon - 2, W, 2);
+  // wooden floor with perspective planks
+  const fl = c.createLinearGradient(0, horizon, 0, H);
+  fl.addColorStop(0, '#b0824f'); fl.addColorStop(1, '#8a6238');
+  c.fillStyle = fl; c.fillRect(0, horizon, W, H - horizon);
+  c.strokeStyle = 'rgba(70,45,20,0.35)'; c.lineWidth = 1.6;
+  for (let i = 0; i <= 6; i++) {
+    const fx = (W / 6) * i;
+    c.beginPath(); c.moveTo(W / 2 + (fx - W / 2) * 0.55, horizon); c.lineTo(fx, H); c.stroke();
+  }
+  for (let i = 1; i <= 4; i++) {
+    const fy = horizon + (H - horizon) * Math.pow(i / 4, 1.6);
+    c.beginPath(); c.moveTo(0, fy); c.lineTo(W, fy); c.stroke();
+  }
+  // soft light pool on the floor (under the garden)
+  const pool = c.createRadialGradient(W / 2, H * 0.8, 10, W / 2, H * 0.8, W * 0.55);
+  pool.addColorStop(0, 'rgba(255,244,190,0.20)'); pool.addColorStop(1, 'rgba(255,244,190,0)');
+  c.fillStyle = pool; c.fillRect(0, horizon, W, H - horizon);
+}
+
+/* ============================== painters ============================== */
+function drawSeedShape(c, x, y, r, sp, spin) {
+  c.save(); c.translate(x, y); c.rotate(spin || 0);
+  const g = c.createLinearGradient(0, -r, 0, r);
+  g.addColorStop(0, sp.seed[1]); g.addColorStop(1, sp.seed[0]);
+  c.fillStyle = g;
+  c.beginPath(); c.ellipse(0, r * 0.12, r * 0.82, r * 1.02, 0, 0, Math.PI * 2); c.fill();
+  c.fillStyle = 'rgba(60,35,15,0.85)';
+  c.beginPath(); c.ellipse(0, -r * 0.62, r * 0.84, r * 0.42, 0, Math.PI, Math.PI * 2); c.fill();
+  c.fillStyle = '#5b3a1c'; c.fillRect(-r * 0.12, -r * 1.28, r * 0.24, r * 0.3);
+  c.fillStyle = 'rgba(255,255,255,0.5)';
+  c.beginPath(); c.ellipse(-r * 0.3, r * 0.05, r * 0.2, r * 0.34, 0.3, 0, Math.PI * 2); c.fill();
+  c.restore();
+}
+
+function drawFlower(c, f, t) {
+  const baseY = L.rowsY[f.row];
+  const sc = L.rowScale[f.row];
+  const swayA = Math.sin(t * 0.0016 + f.sway) * 0.06;
+  if (f.state === 'bud') {
+    // closed bud: little green-teardrop on a short stem
+    const bh = 20 * sc * (0.6 + 0.4 * (1 - f.budT / 2.6));
+    c.save(); c.translate(f.x, baseY);
+    c.strokeStyle = '#4d7c3a'; c.lineWidth = 2.6 * sc; c.lineCap = 'round';
+    c.beginPath(); c.moveTo(0, 0); c.quadraticCurveTo(2 * sc, -bh * 0.5, swayA * 20, -bh); c.stroke();
+    c.translate(swayA * 20, -bh);
+    const bg = c.createLinearGradient(0, -8 * sc, 0, 6 * sc);
+    bg.addColorStop(0, f.sp.pal.p[1]); bg.addColorStop(1, '#4d7c3a');
+    c.fillStyle = bg;
+    c.beginPath(); c.ellipse(0, 0, 5.5 * sc, 8.5 * sc, 0, 0, Math.PI * 2); c.fill();
+    c.fillStyle = '#4d7c3a';
+    c.beginPath(); c.ellipse(-4 * sc, 5 * sc, 3.4 * sc, 5 * sc, 0.7, 0, Math.PI * 2); c.fill();
+    c.beginPath(); c.ellipse(4 * sc, 5 * sc, 3.4 * sc, 5 * sc, -0.7, 0, Math.PI * 2); c.fill();
+    c.restore();
+    return;
+  }
+  const g = easeOutBack(clamp(f.grow, 0, 1));
+  const stemH = f.stemH * g;
+  const headR = f.headR * clamp(g, 0.05, 1.12);
+  const tipX = f.x + Math.sin(swayA) * stemH * 0.35;
+  const tipY = baseY - stemH;
+  c.save();
+  // stem + leaves
+  c.strokeStyle = f.sp.pal.s; c.lineWidth = 3 * sc; c.lineCap = 'round';
+  c.beginPath(); c.moveTo(f.x, baseY);
+  c.quadraticCurveTo(f.x + Math.sin(swayA) * stemH * 0.16, baseY - stemH * 0.55, tipX, tipY); c.stroke();
+  c.fillStyle = f.sp.pal.l;
+  const leafAt = (fr, side) => {
+    const lx = f.x + Math.sin(swayA) * stemH * 0.16 * fr * 1.4, ly = baseY - stemH * fr;
+    c.save(); c.translate(lx, ly); c.rotate(side * (0.5 + Math.sin(t * 0.002 + f.sway) * 0.05));
+    c.beginPath(); c.ellipse(side * 7 * sc, 0, 8 * sc, 3.2 * sc, 0, 0, Math.PI * 2); c.fill();
+    c.restore();
+  };
+  if (f.grow > 0.4) { leafAt(0.38, -1); leafAt(0.6, 1); }
+  // radiant halo
+  if (f.tier === 2 && f.grow >= 1) {
+    const pulse = 0.75 + Math.sin(t * 0.004 + f.sway) * 0.25;
+    const halo = c.createRadialGradient(tipX, tipY, 2, tipX, tipY, headR * 2.3);
+    halo.addColorStop(0, `rgba(255,225,120,${0.34 * pulse})`); halo.addColorStop(1, 'rgba(255,225,120,0)');
+    c.fillStyle = halo; c.beginPath(); c.arc(tipX, tipY, headR * 2.3, 0, Math.PI * 2); c.fill();
+  }
+  // head by form
+  c.translate(tipX, tipY);
+  const P = f.sp.pal;
+  const petal = (ang, len, wid, colA, colB) => {
+    c.save(); c.rotate(ang);
+    const pg = c.createLinearGradient(0, 0, len, 0);
+    pg.addColorStop(0, colA); pg.addColorStop(1, colB);
+    c.fillStyle = pg;
+    c.beginPath(); c.ellipse(len * 0.55, 0, len * 0.55, wid, 0, 0, Math.PI * 2); c.fill();
+    c.restore();
+  };
+  if (f.sp.form === 'rosette' || f.sp.form === 'disc') {
+    const n = f.sp.petals;
+    for (let i = 0; i < n; i++) petal((i / n) * Math.PI * 2 + f.sway * 0.2, headR * (f.sp.form === 'disc' ? 1.25 : 1.05), headR * 0.34, P.p[0], P.p[1]);
+    c.fillStyle = P.c; c.beginPath(); c.arc(0, 0, headR * (f.sp.form === 'disc' ? 0.62 : 0.42), 0, Math.PI * 2); c.fill();
+    c.fillStyle = P.c2 || P.c;
+    const dots = f.sp.form === 'disc' ? 7 : 5;
+    for (let i = 0; i < dots; i++) { const a = i * 2.4, rd = headR * 0.22 * (0.4 + (i % 3) * 0.3); c.beginPath(); c.arc(Math.cos(a) * rd, Math.sin(a) * rd, headR * 0.07, 0, Math.PI * 2); c.fill(); }
+  } else if (f.sp.form === 'cup') {
+    // tulip/bluebell: three overlapping cup petals
+    for (const [ang, sc2] of [[-0.55, 0.82], [0.55, 0.82], [0, 1]]) {
+      c.save(); c.rotate(ang); c.translate(0, -headR * 0.25);
+      const pg = c.createLinearGradient(0, headR * 0.5, 0, -headR * 0.9);
+      pg.addColorStop(0, P.p[0]); pg.addColorStop(1, P.p[1]);
+      c.fillStyle = pg;
+      c.beginPath();
+      c.moveTo(-headR * 0.52 * sc2, headR * 0.5);
+      c.quadraticCurveTo(-headR * 0.6 * sc2, -headR * 0.55, 0, -headR * 0.88 * sc2);
+      c.quadraticCurveTo(headR * 0.6 * sc2, -headR * 0.55, headR * 0.52 * sc2, headR * 0.5);
+      c.quadraticCurveTo(0, headR * 0.72, -headR * 0.52 * sc2, headR * 0.5);
+      c.fill(); c.restore();
+    }
+    c.fillStyle = P.c; c.beginPath(); c.ellipse(0, headR * 0.42, headR * 0.3, headR * 0.16, 0, 0, Math.PI * 2); c.fill();
+  } else if (f.sp.form === 'spike') {
+    // lavender: buds stacked up the spike
+    const spikeH = headR * 2.6;
+    for (let i = 0; i < 9; i++) {
+      const fr = i / 8, by = headR * 0.8 - fr * spikeH;
+      const off = (i % 2 === 0 ? -1 : 1) * headR * 0.30 * (1 - fr * 0.5);
+      c.fillStyle = i % 2 ? P.p[1] : P.p[0];
+      c.beginPath(); c.ellipse(off, by, headR * (0.30 - fr * 0.1), headR * (0.36 - fr * 0.1), off * 0.04, 0, Math.PI * 2); c.fill();
+    }
+    c.fillStyle = P.a; c.beginPath(); c.ellipse(0, headR * 0.8 - spikeH - headR * 0.2, headR * 0.16, headR * 0.22, 0, 0, Math.PI * 2); c.fill();
+  } else if (f.sp.form === 'pompom') {
+    for (const [ringR, n, pr] of [[0.95, 9, 0.42], [0.62, 7, 0.38], [0.3, 5, 0.34]]) {
+      for (let i = 0; i < n; i++) {
+        const a = (i / n) * Math.PI * 2 + ringR * 3;
+        c.fillStyle = (i % 2) ? P.p[1] : P.p[0];
+        c.beginPath(); c.arc(Math.cos(a) * headR * ringR, Math.sin(a) * headR * ringR, headR * pr, 0, Math.PI * 2); c.fill();
+      }
+    }
+    c.fillStyle = P.a; c.beginPath(); c.arc(0, 0, headR * 0.34, 0, Math.PI * 2); c.fill();
+    c.fillStyle = P.c; c.beginPath(); c.arc(0, 0, headR * 0.15, 0, Math.PI * 2); c.fill();
+  }
+  c.restore();
+}
+
+/* the little gardener — flat-design, distinct parts (hat/head/overalls/shears) */
+function drawMan(c, t) {
+  const s = manScale();
+  const walking = man.moving;
+  const stride = walking ? Math.sin(man.walkPh) : 0;
+  const bob = walking ? Math.abs(Math.sin(man.walkPh)) * 2.2 * s : Math.sin(t * 0.0022) * 0.8 * s;
+  c.save();
+  c.translate(man.x, man.y);
+  // contact shadow
+  c.fillStyle = 'rgba(0,0,0,0.30)';
+  c.beginPath(); c.ellipse(0, 2 * s, 20 * s, 5 * s, 0, 0, Math.PI * 2); c.fill();
+  c.translate(0, -bob);
+  c.scale(man.face, 1);
+  const snipping = man.state === 'snip';
+  const snipP = snipping ? 1 - man.snipT / 0.34 : 0;    // 0→1 over the snip
+  // legs (denim) + boots
+  c.strokeStyle = '#3a5a8c'; c.lineWidth = 9 * s; c.lineCap = 'round';
+  c.beginPath(); c.moveTo(-5 * s, -40 * s); c.lineTo((-5 + stride * 9) * s, -12 * s); c.stroke();
+  c.beginPath(); c.moveTo(5 * s, -40 * s); c.lineTo((5 - stride * 9) * s, -12 * s); c.stroke();
+  c.fillStyle = '#5b3a22';
+  rr(c, (-11 + stride * 9) * s, -13 * s, 13 * s, 6 * s, 2.5 * s); c.fill();
+  rr(c, (-1 - stride * 9) * s, -13 * s, 13 * s, 6 * s, 2.5 * s); c.fill();
+  // torso: red shirt + denim overalls bib
+  c.fillStyle = '#d94f3d'; rr(c, -14 * s, -70 * s, 28 * s, 32 * s, 7 * s); c.fill();
+  c.fillStyle = '#4a6fa5'; rr(c, -10 * s, -58 * s, 20 * s, 20 * s, 3 * s); c.fill();
+  c.fillRect(-10 * s, -70 * s, 5 * s, 13 * s); c.fillRect(5 * s, -70 * s, 5 * s, 13 * s);
+  c.fillStyle = '#ffd94d';
+  c.beginPath(); c.arc(-7.5 * s, -57 * s, 1.8 * s, 0, Math.PI * 2); c.fill();
+  c.beginPath(); c.arc(7.5 * s, -57 * s, 1.8 * s, 0, Math.PI * 2); c.fill();
+  // left arm (swings with walk)
+  c.strokeStyle = '#d94f3d'; c.lineWidth = 7 * s;
+  c.beginPath(); c.moveTo(-13 * s, -64 * s); c.lineTo((-17 - stride * 6) * s, -44 * s); c.stroke();
+  c.fillStyle = '#ffcf9f'; c.beginPath(); c.arc((-17 - stride * 6) * s, -43 * s, 3.6 * s, 0, Math.PI * 2); c.fill();
+  // right arm + shears (raises when snipping)
+  const armAng = snipping ? lerp(0.5, 1.25, Math.sin(Math.min(1, snipP) * Math.PI)) : 0.35 + (walking ? -stride * 0.18 : 0);
+  const hx = 13 * s + Math.sin(armAng) * 17 * s, hy = -64 * s + Math.cos(armAng) * 17 * s;
+  c.strokeStyle = '#d94f3d'; c.lineWidth = 7 * s;
+  c.beginPath(); c.moveTo(13 * s, -64 * s); c.lineTo(hx, hy); c.stroke();
+  c.fillStyle = '#ffcf9f'; c.beginPath(); c.arc(hx, hy, 3.8 * s, 0, Math.PI * 2); c.fill();
+  // shears: two blades + handle loops, opening closes at the snip beat
+  const open = snipping ? (snipP < 0.42 ? lerp(0.5, 0.06, snipP / 0.42) : lerp(0.06, 0.5, (snipP - 0.42) / 0.58)) : 0.42;
+  c.save(); c.translate(hx + 3 * s, hy); c.rotate(-0.5);
+  c.fillStyle = '#c8ccd2';
+  for (const sgn of [-1, 1]) {
+    c.save(); c.rotate(sgn * open * 0.5);
+    c.beginPath(); c.moveTo(2 * s, 0); c.lineTo(17 * s, -2.2 * s); c.lineTo(17 * s, 2.2 * s); c.closePath(); c.fill();
+    c.restore();
+  }
+  c.strokeStyle = '#8a4a22'; c.lineWidth = 2.2 * s;
+  for (const sgn of [-1, 1]) {
+    c.beginPath(); c.ellipse(-3.5 * s, sgn * 4.5 * s, 3.6 * s, 2.4 * s, sgn * 0.5, 0, Math.PI * 2); c.stroke();
+  }
+  c.fillStyle = '#5b6068'; c.beginPath(); c.arc(1.5 * s, 0, 1.8 * s, 0, Math.PI * 2); c.fill();
+  c.restore();
+  // head
+  c.fillStyle = '#ffcf9f'; c.beginPath(); c.arc(0, -80 * s, 11.5 * s, 0, Math.PI * 2); c.fill();
+  c.beginPath(); c.arc(-11 * s, -79 * s, 3 * s, 0, Math.PI * 2); c.fill(); // ear
+  c.fillStyle = '#22242a'; c.beginPath(); c.arc(4.6 * s, -81 * s, 1.5 * s, 0, Math.PI * 2); c.fill();
+  c.strokeStyle = '#22242a'; c.lineWidth = 1.3 * s; c.lineCap = 'round';
+  c.beginPath(); c.arc(3.5 * s, -76.5 * s, 4 * s, 0.15 * Math.PI, 0.75 * Math.PI); c.stroke();
+  c.fillStyle = 'rgba(244,130,110,0.55)'; c.beginPath(); c.arc(8 * s, -76 * s, 2.6 * s, 0, Math.PI * 2); c.fill();
+  // straw hat
+  c.fillStyle = '#e8c96a';
+  c.beginPath(); c.ellipse(0, -88 * s, 19 * s, 5 * s, 0, 0, Math.PI * 2); c.fill();
+  c.beginPath(); c.arc(0, -88 * s, 10.5 * s, Math.PI, Math.PI * 2); c.fill();
+  c.fillStyle = '#b5542c'; c.fillRect(-10.5 * s, -89.5 * s, 21 * s, 3.4 * s);
+  c.restore();
+}
+
+/* ============================== world drawing ============================== */
+const motes = Array.from({ length: 20 }, () => ({ x: Math.random(), y: rand(0.12, 0.9), r: rand(0.8, 2.0), ph: rand(0, 6) }));
+function drawWorld(t) {
+  const c = ctx;
+  c.clearRect(0, 0, W, H);
+  c.save();
+  c.translate(parX * 11, parY * 6);
+
+  // drifting motes (AR depth)
+  c.fillStyle = 'rgba(255,255,235,0.35)';
+  for (const m of motes) {
+    const dx = Math.sin(t * 0.0004 + m.ph) * 9;
+    c.beginPath(); c.arc(m.x * W + dx, m.y * H, m.r, 0, Math.PI * 2); c.fill();
+  }
+
+  /* ---- the floating trellis ---- */
+  // ghost frame: translucent posts + top rail (NOT a solid wall)
+  c.save();
+  c.fillStyle = 'rgba(96,64,32,0.34)';
+  rr(c, L.boardLeft - 7, L.railY - 14, 9, L.boardBottom - L.railY + 22, 4); c.fill();
+  rr(c, L.boardRight - 2, L.railY - 14, 9, L.boardBottom - L.railY + 22, 4); c.fill();
+  rr(c, L.boardLeft - 10, L.railY - 16, (L.boardRight - L.boardLeft) + 20, 9, 4); c.fill();
+  c.strokeStyle = 'rgba(255,244,214,0.35)'; c.lineWidth = 1.4;
+  rr(c, L.boardLeft - 7, L.railY - 14, 9, L.boardBottom - L.railY + 22, 4); c.stroke();
+  rr(c, L.boardRight - 2, L.railY - 14, 9, L.boardBottom - L.railY + 22, 4); c.stroke();
+  // vine tendrils curling along the top rail
+  c.strokeStyle = 'rgba(93,144,70,0.65)'; c.lineWidth = 2.2; c.lineCap = 'round';
+  c.beginPath();
+  for (let x = L.boardLeft; x <= L.boardRight; x += 6) {
+    const y = L.railY - 11 + Math.sin((x - L.boardLeft) * 0.055) * 3.4;
+    if (x === L.boardLeft) c.moveTo(x, y); else c.lineTo(x, y);
+  }
+  c.stroke();
+  c.fillStyle = 'rgba(93,144,70,0.65)';
+  for (let i = 0; i < 7; i++) {
+    const lx = lerp(L.boardLeft + 12, L.boardRight - 12, i / 6);
+    c.beginPath(); c.ellipse(lx, L.railY - 11 + Math.sin((lx - L.boardLeft) * 0.055) * 3.4 - 4, 5, 2.4, (i % 2 ? -0.5 : 0.5), 0, Math.PI * 2); c.fill();
+  }
+  // exit glow line at board bottom
+  const exg = c.createLinearGradient(L.boardLeft, 0, L.boardRight, 0);
+  exg.addColorStop(0, 'rgba(140,255,170,0)'); exg.addColorStop(0.5, 'rgba(140,255,170,0.30)'); exg.addColorStop(1, 'rgba(140,255,170,0)');
+  c.fillStyle = exg; c.fillRect(L.boardLeft, L.boardBottom + 2, L.boardRight - L.boardLeft, 3);
+  c.restore();
+
+  // pegs
+  for (const p of pegs) {
+    p.flash = Math.max(0, p.flash - 0.06);
+    const fl = p.flash;
+    if (p.kind === 'dew') {
+      c.save();
+      if (fl > 0) { c.shadowColor = 'rgba(150,210,255,0.9)'; c.shadowBlur = 14 * fl; }
+      const g = c.createRadialGradient(p.x - 2.4, p.y - 2.6, 1, p.x, p.y, p.r + fl * 2);
+      g.addColorStop(0, '#ffffff'); g.addColorStop(0.45, '#bfe3ff'); g.addColorStop(1, '#6fa8d8');
+      c.fillStyle = g; c.beginPath(); c.arc(p.x, p.y, p.r + fl * 1.6, 0, Math.PI * 2); c.fill();
+      c.fillStyle = 'rgba(255,255,255,0.85)';
+      c.beginPath(); c.arc(p.x - 2.4, p.y - 2.8, 1.9, 0, Math.PI * 2); c.fill();
+      c.restore();
+    } else if (p.kind === 'stone') {
+      c.save();
+      c.fillStyle = fl > 0 ? '#c9ced6' : '#9aa0a8';
+      c.beginPath(); c.arc(p.x, p.y, p.r + fl * 1.2, 0, Math.PI * 2); c.fill();
+      c.strokeStyle = 'rgba(70,74,82,0.8)'; c.lineWidth = 1.4;
+      c.beginPath(); c.arc(p.x, p.y, p.r - 0.7, 0, Math.PI * 2); c.stroke();
+      c.fillStyle = 'rgba(255,255,255,0.35)';
+      c.beginPath(); c.arc(p.x - 2, p.y - 2.4, 1.6, 0, Math.PI * 2); c.fill();
+      c.restore();
+    } else { // firefly
+      c.save();
+      const pulse = 0.7 + Math.sin(t * 0.005 + p.seed * 40) * 0.3;
+      const halo = c.createRadialGradient(p.x, p.y, 1, p.x, p.y, (p.r + 9) * pulse + fl * 6);
+      halo.addColorStop(0, `rgba(255,217,77,${0.5 * pulse + fl * 0.3})`); halo.addColorStop(1, 'rgba(255,217,77,0)');
+      c.fillStyle = halo; c.beginPath(); c.arc(p.x, p.y, (p.r + 9) * pulse + fl * 6, 0, Math.PI * 2); c.fill();
+      c.fillStyle = '#ffe98a'; c.beginPath(); c.arc(p.x, p.y, p.r * 0.62 + fl * 1.4, 0, Math.PI * 2); c.fill();
+      c.fillStyle = '#fffbe8'; c.beginPath(); c.arc(p.x - 1.4, p.y - 1.6, 1.7, 0, Math.PI * 2); c.fill();
+      c.restore();
+    }
+  }
+
+  // dropper on its rail
+  dropper.sway = Math.sin(t * 0.0016) * 1.6;
+  const dx = dropper.x, dy = L.railY + dropper.sway * 0.3;
+  c.save();
+  c.strokeStyle = 'rgba(255,244,214,0.5)'; c.lineWidth = 2;
+  c.beginPath(); c.moveTo(L.boardLeft - 4, L.railY - 4); c.lineTo(L.boardRight + 4, L.railY - 4); c.stroke();
+  // hopper: little funnel cart
+  c.fillStyle = 'rgba(70,44,20,0.85)';
+  rr(c, dx - 15, dy - 12, 30, 9, 3); c.fill();
+  c.beginPath();
+  c.moveTo(dx - 12, dy - 3); c.lineTo(dx + 12, dy - 3); c.lineTo(dx + 4.5, dy + 11); c.lineTo(dx - 4.5, dy + 11); c.closePath();
+  const hg = c.createLinearGradient(dx - 12, 0, dx + 12, 0);
+  hg.addColorStop(0, '#8a6238'); hg.addColorStop(0.5, '#c09a5e'); hg.addColorStop(1, '#8a6238');
+  c.fillStyle = hg; c.fill();
+  c.strokeStyle = 'rgba(255,240,200,0.55)'; c.lineWidth = 1.3; c.stroke();
+  c.fillStyle = '#3a2a16';
+  c.beginPath(); c.arc(dx - 9, dy - 13, 2.6, 0, Math.PI * 2); c.fill();
+  c.beginPath(); c.arc(dx + 9, dy - 13, 2.6, 0, Math.PI * 2); c.fill();
+  if (dropper.loaded) {
+    const pop = dropper.loadT < 0.25 ? easeOutBack(clamp(dropper.loadT / 0.25, 0, 1)) : 1;
+    drawSeedShape(c, dx, dy - 8, 6.5 * pop, dropper.loaded, 0);
+  }
+  c.restore();
+
+  /* ---- the garden floor: bed decals on the REAL floor ---- */
+  for (let ri = 0; ri < 2; ri++) {
+    const ry = L.rowsY[ri], sc = L.rowScale[ri];
+    const bw = W * 0.92, bx = W * 0.04, bh = 30 * sc;
+    c.save();
+    // soft glow pool under the bed
+    const bg2 = c.createRadialGradient(W / 2, ry, 4, W / 2, ry, bw * 0.55);
+    bg2.addColorStop(0, 'rgba(120,200,90,0.10)'); bg2.addColorStop(1, 'rgba(120,200,90,0)');
+    c.fillStyle = bg2; c.fillRect(0, ry - bh * 1.7, W, bh * 3.4);
+    // soil bed decal — translucent, floor shows through (light decal, not a slab)
+    c.fillStyle = 'rgba(74,50,28,0.40)';
+    rr(c, bx, ry - bh * 0.36, bw, bh * 0.72, bh * 0.36); c.fill();
+    c.strokeStyle = 'rgba(255,228,170,0.28)'; c.lineWidth = 1.6;
+    rr(c, bx, ry - bh * 0.36, bw, bh * 0.72, bh * 0.36); c.stroke();
+    c.fillStyle = 'rgba(46,30,16,1)';
+    for (const sp2 of bedSpecks[ri]) {
+      c.globalAlpha = sp2.a;
+      c.beginPath(); c.arc(bx + sp2.fx * bw, ry + sp2.dy, sp2.r, 0, Math.PI * 2); c.fill();
+    }
+    c.globalAlpha = 1;
+    c.restore();
+  }
+  // soft ring decal under each flower
+  for (const f of flowers) {
+    const sc = L.rowScale[f.row];
+    ctx.save();
+    ctx.fillStyle = 'rgba(255,246,200,0.10)';
+    ctx.beginPath(); ctx.ellipse(f.x, L.rowsY[f.row] + 3, 15 * sc, 4.6 * sc, 0, 0, Math.PI * 2); ctx.fill();
+    ctx.strokeStyle = 'rgba(255,246,200,0.20)'; ctx.lineWidth = 1.2;
+    ctx.beginPath(); ctx.ellipse(f.x, L.rowsY[f.row] + 3, 15 * sc, 4.6 * sc, 0, 0, Math.PI * 2); ctx.stroke();
+    ctx.restore();
+  }
+
+  // low-zone stick hint (anchor + knob) while a low pointer is down
+  for (const p of pointers.values()) {
+    if (p.zone !== 'low') continue;
+    c.save();
+    c.strokeStyle = 'rgba(255,255,255,0.4)'; c.lineWidth = 2;
+    c.beginPath(); c.arc(p.sx, p.sy, 30, 0, Math.PI * 2); c.stroke();
+    c.fillStyle = 'rgba(255,255,255,0.45)';
+    c.beginPath(); c.arc(p.cx, p.cy, 12, 0, Math.PI * 2); c.fill();
+    c.restore();
+  }
+
+  // flowers + man, painter-sorted by floor depth
+  const drawables = flowers.map(f => ({ y: L.rowsY[f.row], f }));
+  drawables.push({ y: man.y, man: true });
+  drawables.sort((a, b) => a.y - b.y);
+  for (const d of drawables) {
+    if (d.man) drawMan(c, t); else drawFlower(c, d.f, t);
+  }
+
+  // falling seed (over the garden once it leaves the board)
+  if (seed) drawSeedShape(c, seed.x, seed.y, seed.r, seed.sp, seed.spin);
+
+  // particles
+  for (const p of parts) {
+    const a = 1 - p.t / p.life;
+    if (p.kind === 'spark' || p.kind === 'soil') {
+      ctx.save(); ctx.globalAlpha = a; ctx.fillStyle = p.col;
+      ctx.beginPath(); ctx.arc(p.x, p.y, p.size * (p.kind === 'soil' ? (0.6 + 0.4 * a) : a), 0, Math.PI * 2); ctx.fill(); ctx.restore();
+    } else if (p.kind === 'ring') {
+      ctx.save(); ctx.globalAlpha = a * 0.9; ctx.strokeStyle = p.col; ctx.lineWidth = 1.8;
+      ctx.beginPath(); ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2); ctx.stroke(); ctx.restore();
+    } else if (p.kind === 'petal') {
+      ctx.save(); ctx.globalAlpha = a; ctx.translate(p.x, p.y); ctx.rotate(p.rot);
+      ctx.fillStyle = p.col;
+      ctx.beginPath(); ctx.ellipse(0, 0, p.size, p.size * 0.45, 0, 0, Math.PI * 2); ctx.fill(); ctx.restore();
+    }
+  }
+  // score pops
+  for (const p of pops) {
+    const a = 1 - p.t / p.life;
+    ctx.save();
+    ctx.globalAlpha = a;
+    ctx.font = `900 ${Math.round(20 * manScale())}px -apple-system, sans-serif`;
+    ctx.textAlign = 'center';
+    ctx.lineWidth = 4; ctx.strokeStyle = 'rgba(20,30,10,0.85)';
+    ctx.strokeText(p.text, p.x, p.y);
+    ctx.fillStyle = '#ffe066'; ctx.fillText(p.text, p.x, p.y);
+    ctx.restore();
+  }
+  c.restore();
+}
+
+/* ============================== updates ============================== */
+function updateGame(dt) {
+  elapsed += dt;
+  // dropper glide toward target
+  dropper.x += (dropper.tx - dropper.x) * Math.min(1, dt * 14);
+  if (dropper.loadT > 0) {
+    dropper.loadT += dt;
+    if (!dropper.loaded && dropper.loadT > 0.38 && seedsLeft > 0 && phase === 'playing') loadSeed();
+    if (dropper.loaded && dropper.loadT > 10) dropper.loadT = 0.3; // settle (keep pop anim sane)
+  }
+  if (dropper.loaded) dropper.loadT += dt;
+  // seed physics with substeps
+  if (seed) {
+    let rem = dt;
+    while (rem > 0 && seed) { const h = Math.min(rem, 1 / 240); stepSeed(h); rem -= h; }
+  }
+  // flowers grow / buds open
+  for (const f of flowers) {
+    if (f.state === 'bud') {
+      f.budT -= dt;
+      if (f.budT <= 0) {
+        f.state = 'bloom'; f.grow = 0;
+        f.stemH = (44 + 42 * f.sp.h) * L.rowScale[f.row];
+        f.headR = (10 + 8 * f.sp.h) * L.rowScale[f.row] * (f.tier === 1 ? 1.25 : 1);
+        f.value = f.tier === 1 ? 20 : 10;
+        sndBloom(false);
+      }
+    } else if (f.grow < 1) f.grow = Math.min(1, f.grow + dt / 1.5);
+  }
+  // bud respawns after cuts
+  for (let i = budQueue.length - 1; i >= 0; i--) {
+    budQueue[i] -= dt;
+    if (budQueue[i] <= 0) { budQueue.splice(i, 1); spawnBud(); }
+  }
+  // the man (also walks during lastsnips)
+  updateMan(dt, lowInput);
+  // particles & pops
+  for (const p of parts) {
+    p.t += dt;
+    if (p.vy !== undefined) { p.vy += (p.g || 0) * dt; p.x += p.vx * dt; p.y += p.vy * dt; }
+    if (p.kind === 'ring') p.r += p.vr * dt;
+    if (p.kind === 'petal') p.rot += p.vr * dt;
+  }
+  parts = parts.filter(p => p.t < p.life);
+  for (const p of pops) { p.t += dt; p.y -= 44 * dt; }
+  pops = pops.filter(p => p.t < p.life);
+  // last-snips countdown
+  if (phase === 'lastsnips') {
+    lastSnipsT -= dt;
+    const anyBlooms = flowers.some(f => f.state === 'bloom');
+    if (lastSnipsT <= 0 || !anyBlooms) endGame();
+  }
+}
+
+/* ============================== main loop ============================== */
+let lastT = 0;
+function frame(t) {
+  requestAnimationFrame(frame);
+  window.__frames = (window.__frames || 0) + 1;
+  const dt = Math.min(0.05, lastT ? (t - lastT) / 1000 : 0.016);
+  lastT = t;
+  updateParallax(t);
+  if (!camOK) { rctx.clearRect(0, 0, W, H); drawRoom(); }
+  if (phase === 'playing' || phase === 'lastsnips') updateGame(dt);
+  else { // gentle idle sway for flowers behind the start card
+    for (const f of flowers) if (f.state === 'bloom' && f.grow < 1) f.grow = Math.min(1, f.grow + dt / 1.5);
+  }
+  drawWorld(t);
+}
+
+/* ============================== resize ============================== */
+function resize() {
+  const dpr = Math.min(window.devicePixelRatio || 1, 2);
+  W = window.innerWidth; H = window.innerHeight;
+  for (const cv of [roomCanvas, glCanvas]) { cv.width = Math.round(W * dpr); cv.height = Math.round(H * dpr); }
+  rctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  layout();
+  paintRoom();
+  dropper.x = clamp(dropper.x || W / 2, L.boardLeft + 14, L.boardRight - 14);
+  dropper.tx = clamp(dropper.tx || W / 2, L.boardLeft + 14, L.boardRight - 14);
+  man.x = man.x || W / 2; man.y = man.y || H * 0.82;
+  man.x = clamp(man.x, W * 0.05, W * 0.95);
+  man.y = clamp(man.y, L.manMinY, L.manMaxY);
+}
+window.addEventListener('resize', resize);
+
+/* ============================== start flow ============================== */
+let camTried = false;
+async function ensureCamera() {
+  if (camTried) return;
+  camTried = true;
+  try {
+    if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) throw new Error('no getUserMedia');
+    const stream = await Promise.race([
+      navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' }, audio: false }),
+      new Promise((_, rej) => setTimeout(() => rej(new Error('camera timeout')), 4500))
+    ]);
+    video.srcObject = stream;
+    await video.play().catch(() => {});
+    camOK = true;
+  } catch (e) { camOK = false; }
+  // NOTE: motion permission is NOT asked here — it is asked synchronously
+  // in the START tap handler, before this await (house AR rule).
+  video.classList.toggle('hidden', !camOK);
+  roomCanvas.classList.toggle('hidden', camOK);
+  camTagEl.textContent = camOK ? '📷 AR room' : '🏠 sunroom';
+}
+function resetGame() {
+  score = 0; cuts = 0; planted = 0; elapsed = 0;
+  seedsLeft = 12; lastSnipsT = 0;
+  seed = null; lastDrop = null;
+  flowers = []; parts = []; pops = []; budQueue = [];
+  pointers.clear();
+  lowInput.active = false; lowInput.x = 0; lowInput.y = 0;
+  man.x = W / 2; man.y = H * 0.82; man.state = 'idle'; man.snipTarget = null;
+  dropper.x = W / 2; dropper.tx = W / 2;
+  loadSeed();
+  updateHUD();
+}
+function beginRound() {
+  motionWatchdog();
+  resetGame();
+  startEl.classList.add('hidden');
+  endEl.classList.add('hidden');
+  hudEl.classList.remove('hidden');
+  phase = 'playing';
+  bigMsg('🌰 Drag HIGH · ✂️ Drag LOW');
+}
+function endGame() {
+  if (phase === 'over') return;
+  phase = 'over';
+  const isBest = score > best;
+  if (isBest) { best = score; try { localStorage.setItem('plankoARBest', String(best)); } catch (e) {} }
+  document.getElementById('finalScore').textContent = score;
+  document.getElementById('finalCuts').textContent = cuts;
+  document.getElementById('finalPlanted').textContent = planted;
+  document.getElementById('bestScore').textContent = best;
+  document.getElementById('newBest').classList.toggle('hidden', !isBest);
+  endEl.classList.remove('hidden');
+  sndFanfare();
+}
+document.getElementById('startBtn').addEventListener('click', async () => {
+  askMotionPermission();   // FIRST, synchronously — iOS only honors it inside the tap
+  initAudio();
+  sndJingle();
+  await ensureCamera();
+  beginRound();
+});
+document.getElementById('againBtn').addEventListener('click', () => { initAudio(); beginRound(); });
+
+/* ============================== boot + test hook ============================== */
+resize();
+updateHUD();
+requestAnimationFrame(frame);
+
+window.__game = {
+  get phase() { return phase; },
+  get camOK() { return camOK; },
+  get score() { return score; },
+  get cuts() { return cuts; },
+  get planted() { return planted; },
+  get seedsLeft() { return seedsLeft; },
+  dropper: () => ({ x: Math.round(dropper.x), frac: +((dropper.x - L.boardLeft) / (L.boardRight - L.boardLeft)).toFixed(3), loaded: !!dropper.loaded }),
+  seedState: () => seed ? 'falling' : (dropper.loaded ? 'loaded' : 'empty'),
+  seedPos: () => seed ? { x: Math.round(seed.x), y: Math.round(seed.y) } : null,
+  seedVel: () => seed ? { vx: +seed.vx.toFixed(1), vy: +seed.vy.toFixed(1), age: +seed.age.toFixed(2), restT: +seed.restT.toFixed(2) } : null,
+  frames: () => window.__frames || 0,
+  lastDrop: () => lastDrop,
+  flowers: () => flowers.map(f => ({ x: Math.round(f.x), y: Math.round(L.rowsY[f.row]), row: f.row, state: f.state, grow: +f.grow.toFixed(2), tier: f.tier, value: f.value, species: f.sp.id })),
+  man: () => ({ x: Math.round(man.x), y: Math.round(man.y), state: man.state, moving: man.moving, face: man.face }),
+  zoneSplit: () => Math.round(H * 0.56),
+  board: () => ({ left: Math.round(L.boardLeft), right: Math.round(L.boardRight), top: Math.round(L.boardTop), bottom: Math.round(L.boardBottom), railY: Math.round(L.railY) }),
+  start: () => document.getElementById('startBtn').click(),
+  again: () => document.getElementById('againBtn').click(),
+  drop: () => dropSeed(),
+  setDropper: (frac) => { dropper.tx = lerp(L.boardLeft + 14, L.boardRight - 14, clamp(frac, 0, 1)); },
+  motion: () => ({ ok: MOTION.ok, ever: MOTION.ever, perm: MOTION.perm, needPerm: MOTION.needPerm })
+};
+</script>
+<script id="moth-game-guard-js">
+(function(){
+  var lastEnd=0;
+  function onUi(t){return t&&t.closest&&t.closest('button,a,input,select,textarea,[data-scroll]');}
+  document.addEventListener('touchend',function(e){
+    var now=Date.now();
+    if(!onUi(e.target)&&now-lastEnd<=300&&e.cancelable)e.preventDefault();
+    lastEnd=now;
+  },{passive:false});
+  ['gesturestart','gesturechange','gestureend'].forEach(function(n){
+    document.addEventListener(n,function(e){e.preventDefault();});
+  });
+  document.addEventListener('dblclick',function(e){e.preventDefault();},{passive:false});
+  document.addEventListener('contextmenu',function(e){e.preventDefault();});
+  document.addEventListener('touchmove',function(e){
+    if(e.target&&e.target.closest&&e.target.closest('[data-scroll]'))return;
+    if(e.cancelable)e.preventDefault();
+  },{passive:false});
+})();
+</script>
+</body>
+</html>

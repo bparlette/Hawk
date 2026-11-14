@@ -243,6 +243,29 @@
   <div class="albl sm" id="albl-l">&#9664; CAM</div><div class="albl sm" id="albl-r">CAM &#9654;</div>
   <div id="aring"></div>
 </div></footer>
+<style>
+  #gtaMenu { position: fixed; z-index: 1200; top: calc(env(safe-area-inset-top, 0px) + 6px); left: 50%; transform: translateX(-50%); display: flex; gap: 6px; pointer-events: auto; }
+  #gtaMenu button { all: unset; cursor: pointer; padding: 7px 10px; border-radius: 8px; background: rgba(20,16,31,.88); color: #ffe08a; border: 2px solid #ffd23c; font: 900 11px/1 system-ui, sans-serif; letter-spacing: .4px; box-shadow: 2px 2px 0 #14101f; white-space: nowrap; }
+  #gtaMenu button:active { background: #ffd23c; color: #14101f; }
+  #gtaHud { position: fixed; z-index: 1200; top: calc(env(safe-area-inset-top, 0px) + 44px); left: 50%; transform: translateX(-50%); text-align: center; pointer-events: none; display: none; }
+  #gtaHud.on { display: block; }
+  #gtaMeters { font: 900 13px/1.3 system-ui, sans-serif; color: #fff; text-shadow: 2px 2px 0 #14101f; letter-spacing: .5px; white-space: nowrap; }
+  #gtaMeters b { color: #7fe8ff; }
+  #gtaPrompt { margin-top: 4px; font: 900 12px/1.3 system-ui, sans-serif; color: #ffd23c; text-shadow: 2px 2px 0 #14101f; white-space: nowrap; }
+  #gtaFade { position: fixed; inset: 0; background: #000; opacity: 0; pointer-events: none; transition: opacity .45s; z-index: 1500; }
+</style>
+<nav id="gtaMenu" aria-label="GTA scenes">
+  <button id="gtaDrive" type="button">🚗 DRIVE</button>
+  <button id="gtaSky" type="button">🪂 SKYDIVE</button>
+  <button id="gtaBase" type="button">🏢 BASE JUMP</button>
+</nav>
+<div id="gtaHud"><div id="gtaMeters"></div><div id="gtaPrompt"></div></div>
+<div id="gtaFade"></div>
+<script>
+// Deep links: ?feature=car|chute|base jumps straight into a GTA pack feature.
+// Translates to the pack's built-in ?gta= hook before game.js (a deferred module) reads the query string.
+(function () { try { var u = new URL(location.href), f = (u.searchParams.get('feature') || '').toLowerCase(), m = { car: 'drive', chute: 'sky', base: 'base' }; if (m[f] && !u.searchParams.has('gta')) { u.searchParams.set('gta', m[f]); history.replaceState(null, '', u); } } catch (e) {} })();
+</script>
 <script type="module" src="game.js"></script>
 <script type="module" src="voice.js"></script>
 </body>
