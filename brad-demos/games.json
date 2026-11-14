@@ -2898,6 +2898,14 @@
    "thumb": "thumbs/bonk-yard.png",
    "title": "Bomb Bloom",
    "url": "../games/bomb-bloom/"
+  },
+  {
+   "category": "Originals",
+   "desc": "Ride a glossy ball and ram the whole neighborhood off a floating stone disc over a neon sea — last ball standing wins.",
+   "id": "bumper-balls",
+   "thumb": "thumbs/bonk-yard.png",
+   "title": "Bumper Balls",
+   "url": "../games/bumper-balls/"
   }
  ]
 }
