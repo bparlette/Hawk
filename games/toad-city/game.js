@@ -5891,6 +5891,7 @@ function frame(now) {
     if (window.__cel && __cel.pause) { draw(); return; }
     if (MODE.duel) { MODE.duel.frame(rdt); return; } // a boss duel owns input, sim and the draw
     if (RB.mode) { RB.frame(rdt); return; } // racer bosses (src/06h_racers.js): Al's chase / the Duchess's arena (own scenes) or a harbour boat ride
+    if (window.__GTA && __GTA.on) { __GTA.frame(rdt); return; } // GTA pack (10_gta.js): driveable coupe / skydive / BASE jump own the frame while active
     if (BOT) botThink(rdt);
     readInput(); gateInput();
     if (POSE) { poseView(rdt); updateCycle(rdt); draw(); return; }
@@ -8390,3 +8391,429 @@ const DUELS = (function () {
   // entrance: the ring in the middle of the Harborplace (Light St) plaza
   const L = LANDMARKS.find((l) => l.id === 'harborplace'); if (L && L.boss) DUELS.addTrigger('chipkid', L, L.boss.x, L.boss.z, L.boss.x + 2.2, L.boss.z - 1.8, '#ffd23c'); // on the promenade in front of the Light St pavilion
 })();
+
+
+// ================= 10_gta.js — GTA PACK: driveable coupe · skydive · BASE jump (WTC) =================
+// Original assets only: the coupe is a new procedural mesh in the GTA house style (no ripped model, no real brand),
+// the canopy is a new modeled ram-air wing, the jumper is Harold himself (the game's hero rig).
+// Physics are GTA-flavoured: freefall terminal ~53 m/s belly / ~88 head-down, canopy ~10.5 m/s forward, flare sink ~2 m/s.
+// Modes own the frame exactly like RB/DERBY: the main loop calls __GTA.frame() and returns while GTA.on.
+const GTA = (() => {
+  const phong = (c, sh = 60, spec = '#555555') => new THREE.MeshPhongMaterial({ color: c, shininess: sh, specular: spec });
+  const lamb = (c) => new THREE.MeshLambertMaterial({ color: c });
+  const basic = (c) => new THREE.MeshBasicMaterial({ color: c });
+  const WIND = { x: 1.8, z: 0.6 };                 // harbour breeze, m/s
+  const WTC = { x: -12, z: -22.5, roofY: CURB + 62.2, r: 6.2 }; // pentagon tower: cylinder h=62 at CURB, cone cap +3.4 at the axis
+  const wtcRoofY = (x, z) => { const r = Math.hypot(x - WTC.x, z - WTC.z); return CURB + 62 + (r < 6.6 ? (1 - r / 6.6) * 3.4 : 0) + 0.2; }; // stand ON the cap cone, not inside it
+  const GOLD = { sky: { x: 20, z: -19 }, base: { x: 3, z: -22 } }; // landing target rings (Aquarium pier / WTC pier)
+
+  // ---------------- the coupe: extruded side profile (real silhouette, not a box) + modeled details ----------------
+  function profileGeo(pts, width, bevel = 0.045) {
+    const sh = new THREE.Shape(); sh.moveTo(pts[0][0], pts[0][1]);
+    for (let i = 1; i < pts.length; i++) sh.lineTo(pts[i][0], pts[i][1]);
+    sh.closePath();
+    const g = new THREE.ExtrudeGeometry(sh, { depth: width - bevel * 2, bevelEnabled: true, bevelThickness: bevel, bevelSize: bevel, bevelSegments: 2, steps: 1 });
+    g.translate(0, 0, -(width - bevel * 2) / 2); g.rotateY(-Math.PI / 2); // shape X (length) -> +Z (front), extrusion -> X (width)
+    return g;
+  }
+  function buildCarMesh() {
+    const root = new THREE.Group(), bodyG = new THREE.Group(); root.add(bodyG);
+    const paint = phong('#c22434', 90, '#888888'), dark = lamb('#17181c'), glass = phong('#101722', 140, '#aaccdd');
+    const body = new THREE.Mesh(profileGeo([[2.34, 0.30], [2.36, 0.60], [1.95, 0.72], [1.15, 0.79], [0.55, 0.85], [-1.45, 0.87], [-2.28, 0.85], [-2.34, 0.62], [-2.30, 0.34], [-1.95, 0.24], [1.95, 0.24]], 1.70), paint);
+    body.castShadow = true; bodyG.add(body);
+    const cabin = new THREE.Mesh(profileGeo([[0.66, 0.82], [0.30, 1.10], [-0.12, 1.27], [-1.02, 1.29], [-1.38, 1.10], [-1.66, 0.83]], 1.46, 0.04), glass);
+    cabin.castShadow = true; bodyG.add(cabin);
+    const add = (geo, mat, x, y, z, parent = bodyG) => { const m = new THREE.Mesh(geo, mat); m.position.set(x, y, z); parent.add(m); return m; };
+    add(new THREE.BoxGeometry(1.78, 0.20, 0.16), phong('#8f1a26', 70), 0, 0.36, 2.30);            // front bumper
+    add(new THREE.BoxGeometry(1.78, 0.20, 0.16), phong('#8f1a26', 70), 0, 0.36, -2.30);           // rear bumper
+    add(new THREE.BoxGeometry(1.30, 0.15, 0.05), dark, 0, 0.55, 2.40);                            // grille
+    const headMat = basic('#fff2c0');
+    add(new THREE.BoxGeometry(0.44, 0.11, 0.05), headMat, -0.58, 0.66, 2.39);                     // headlights
+    add(new THREE.BoxGeometry(0.44, 0.11, 0.05), headMat, 0.58, 0.66, 2.39);
+    const brakeMat = basic('#5a0f16');
+    add(new THREE.BoxGeometry(1.52, 0.10, 0.05), brakeMat, 0, 0.72, -2.40);                       // tail bar (brake light)
+    add(new THREE.BoxGeometry(0.34, 0.08, 0.05), basic('#e8f2ff'), 0.62, 0.58, -2.40);             // reverse light
+    add(new THREE.BoxGeometry(0.52, 0.15, 0.03), lamb('#e8e8e8'), 0, 0.47, -2.41);                 // plate
+    add(new THREE.BoxGeometry(0.05, 0.15, 2.1), dark, -0.865, 0.27, 0);                           // side skirts
+    add(new THREE.BoxGeometry(0.05, 0.15, 2.1), dark, 0.865, 0.27, 0);
+    add(new THREE.BoxGeometry(0.02, 0.46, 0.92), phong('#9c1f2d', 80), -0.878, 0.60, 0.28);       // door panel lines
+    add(new THREE.BoxGeometry(0.02, 0.46, 0.92), phong('#9c1f2d', 80), 0.878, 0.60, 0.28);
+    add(new THREE.BoxGeometry(0.02, 0.05, 0.30), dark, -0.885, 0.66, 0.72);                       // door handles
+    add(new THREE.BoxGeometry(0.02, 0.05, 0.30), dark, 0.885, 0.66, 0.72);
+    for (const s of [-1, 1]) { const st = add(new THREE.BoxGeometry(0.05, 0.05, 0.16), dark, s * 0.92, 1.00, 0.58); const mh = add(new THREE.BoxGeometry(0.07, 0.11, 0.20), paint, s * 0.99, 1.06, 0.58); } // mirrors
+    add(new THREE.BoxGeometry(0.07, 0.15, 0.07), dark, -0.55, 0.94, -2.02);                       // spoiler posts
+    add(new THREE.BoxGeometry(0.07, 0.15, 0.07), dark, 0.55, 0.94, -2.02);
+    add(new THREE.BoxGeometry(1.62, 0.05, 0.34), paint, 0, 1.04, -2.06);                          // spoiler wing
+    add(new THREE.CylinderGeometry(0.05, 0.05, 0.20, 8).rotateX(Math.PI / 2), phong('#999daa', 120), -0.55, 0.30, -2.38); // exhausts
+    add(new THREE.CylinderGeometry(0.05, 0.05, 0.20, 8).rotateX(Math.PI / 2), phong('#999daa', 120), 0.55, 0.30, -2.38);
+    add(new THREE.BoxGeometry(0.16, 0.05, 0.34), dark, 0, 1.33, -0.95);                           // roof fin antenna
+    // wheels: steering pivot -> spin group -> tyre + rim + spokes + disc (the rig)
+    function wheel(x, z) {
+      const piv = new THREE.Group(); piv.position.set(x, 0.34, z); root.add(piv);
+      const spin = new THREE.Group(); piv.add(spin);
+      const tyre = new THREE.Mesh(new THREE.CylinderGeometry(0.34, 0.34, 0.26, 20).rotateZ(Math.PI / 2), lamb('#1b1b1e')); tyre.castShadow = true; spin.add(tyre);
+      const rim = new THREE.Mesh(new THREE.CylinderGeometry(0.20, 0.20, 0.27, 12).rotateZ(Math.PI / 2), phong('#cfd4da', 130, '#ffffff')); spin.add(rim);
+      for (let k = 0; k < 3; k++) { const sp = new THREE.Mesh(new THREE.BoxGeometry(0.28, 0.37, 0.07), phong('#aab0b8', 110)); sp.rotation.x = k * Math.PI / 3; spin.add(sp); }
+      const disc = new THREE.Mesh(new THREE.CylinderGeometry(0.12, 0.12, 0.28, 10).rotateZ(Math.PI / 2), phong('#7a4a20', 60)); spin.add(disc);
+      return { piv, spin };
+    }
+    const wheels = { fl: wheel(-0.84, 1.48), fr: wheel(0.84, 1.48), rl: wheel(-0.84, -1.48), rr: wheel(0.84, -1.48) };
+    root.traverse((o) => { if (o.isMesh) o.castShadow = true; });
+    return { root, bodyG, wheels, brakeMat };
+  }
+
+  // ---------------- the canopy: ram-air wing (3-panel arc, cell stripes) + suspension lines ----------------
+  function buildCanopy() {
+    const grp = new THREE.Group();
+    const cols = ['#ff8a2a', '#ffd23c', '#ff8a2a', '#7fe8ff', '#ff8a2a', '#ffd23c', '#ff8a2a'];
+    const wing = new THREE.Group(); grp.add(wing);
+    const segW = 7.6 / 7;
+    for (let i = 0; i < 7; i++) {
+      const cx = -3.8 + segW * (i + 0.5), droop = Math.pow(Math.abs(i - 3) / 3, 2) * 0.55, ang = (i - 3) / 3 * 0.42;
+      const cell = new THREE.Mesh(new THREE.BoxGeometry(segW - 0.04, 0.16, 2.6), lamb(cols[i]));
+      cell.position.set(cx, -droop, 0); cell.rotation.z = -ang; cell.castShadow = true; wing.add(cell);
+      const rib = new THREE.Mesh(new THREE.BoxGeometry(0.05, 0.20, 2.62), lamb('#20242c')); rib.position.set(cx - segW / 2, -droop, 0); rib.rotation.z = -ang; wing.add(rib);
+    }
+    const lineMat = new THREE.LineBasicMaterial({ color: '#14181f' });
+    const lp = [];
+    for (const [lx, lz] of [[-3.5, 0.9], [-3.5, -0.9], [-1.2, 1.1], [-1.2, -1.1], [1.2, 1.1], [1.2, -1.1], [3.5, 0.9], [3.5, -0.9], [0, 1.15], [0, -1.15]])
+      lp.push(lx, -Math.pow(Math.abs(lx) / 3.8, 2) * 0.55 - 0.05, lz, 0, -3.05, 0.12);
+    const lg = new THREE.BufferGeometry(); lg.setAttribute('position', new THREE.Float32BufferAttribute(lp, 3));
+    grp.add(new THREE.LineSegments(lg, lineMat));
+    grp.visible = false; scene.add(grp);
+    return { grp, wing };
+  }
+
+  // ---------------- audio: engine + wind (WebAudio, lazy, guarded) ----------------
+  const AU = { eng: null, eng2: null, engG: null, wind: null, windG: null, windF: null };
+  function audio(on) {
+    if (!AC) return;
+    try {
+      if (on && !AU.eng) {
+        AU.eng = AC.createOscillator(); AU.eng.type = 'sawtooth'; AU.eng2 = AC.createOscillator(); AU.eng2.type = 'square';
+        AU.engG = AC.createGain(); AU.engG.gain.value = 0; const f = AC.createBiquadFilter(); f.type = 'lowpass'; f.frequency.value = 700;
+        AU.eng.connect(f); AU.eng2.connect(f); f.connect(AU.engG); AU.engG.connect(SFXBUS || AC.destination); AU.eng.start(); AU.eng2.start();
+        const src = AC.createBufferSource(); src.buffer = NOISE; src.loop = true;
+        AU.windF = AC.createBiquadFilter(); AU.windF.type = 'bandpass'; AU.windF.frequency.value = 500; AU.windF.Q.value = 0.7;
+        AU.windG = AC.createGain(); AU.windG.gain.value = 0; src.connect(AU.windF); AU.windF.connect(AU.windG); AU.windG.connect(SFXBUS || AC.destination); src.start(); AU.wind = src;
+      }
+      if (!on && AU.eng) { AU.eng.stop(); AU.eng2.stop(); AU.wind.stop(); AU.eng = AU.eng2 = AU.wind = null; }
+    } catch (e) { /* audio optional */ }
+  }
+  function honk() { if (!AC || AC.state !== 'running') return; try { const t = AC.currentTime, o = AC.createOscillator(), g = AC.createGain(); o.type = 'square'; o.frequency.value = 370; o.connect(g); g.connect(SFXBUS || AC.destination); g.gain.setValueAtTime(0.12, t); g.gain.exponentialRampToValueAtTime(0.0001, t + 0.22); o.start(t); o.stop(t + 0.24); } catch (e) {} }
+
+  // ---------------- shared state ----------------
+  const G = {
+    on: false, mode: null, // 'drive' | 'roof' | 'fly'
+    carMesh: buildCarMesh(), chute: buildCanopy(),
+    car: { x: -8, z: -44.2, yaw: Math.PI / 2, vx: 0, vz: 0, speed: 0, steer: 0, honkT: 0, susp: 0 }, // parked on Pratt St in the clear stretch between the parked rows (room for the chase cam behind)
+    fly: null, camPos: new THREE.Vector3(), camInit: false, lastLanding: null, exitCd: 0,
+  };
+  G.carMesh.root.position.set(G.car.x, 0, G.car.z); G.carMesh.root.rotation.y = G.car.yaw; scene.add(G.carMesh.root);
+  const ringGold = new THREE.Mesh(new THREE.RingGeometry(3.2, 4.1, 28), new THREE.MeshBasicMaterial({ color: '#ffd23c', transparent: true, opacity: 0.95, depthWrite: false, side: THREE.DoubleSide }));
+  ringGold.rotation.x = -Math.PI / 2; ringGold.visible = false; ringGold.renderOrder = 4; scene.add(ringGold);
+  const ringPred = new THREE.Mesh(new THREE.RingGeometry(1.1, 1.55, 22), new THREE.MeshBasicMaterial({ color: '#7dff6b', transparent: true, opacity: 0.9, depthWrite: false, side: THREE.DoubleSide }));
+  ringPred.rotation.x = -Math.PI / 2; ringPred.visible = false; ringPred.renderOrder = 4; scene.add(ringPred);
+
+  function surfY(x, z) { // highest standable surface: building roof (BLD tops) or terrain/water
+    let y = groundY(x, z); if (isWater(x, z)) y = WY;
+    for (const b of BLD) if (x >= b.x0 && x <= b.x1 && z >= b.z0 && z <= b.z1 && b.h > y && b.h < 90) y = b.h;
+    return y;
+  }
+  function seatPose() { const p = blank(); p.lgL = [-1.35, 0, 0.14]; p.knL = [0.3, 0, 0]; p.lgR = [-1.35, 0, -0.14]; p.knR = [0.3, 0, 0]; p.shL = [-0.78, 0, 0.48]; p.elL = [-0.45, 0, 0]; p.shR = [-0.78, 0, -0.48]; p.elR = [-0.45, 0, 0]; p.torso = [0.12, 0, 0]; p.y = -0.32; return p; }
+  function freePose(t, dive) { const p = blank(); const w = Math.sin(t * 7) * 0.08;
+    p.shL = [-0.15 + w, 0, 1.52]; p.shR = [-0.15 - w, 0, -1.52]; p.elL = [-0.3, 0, 0]; p.elR = [-0.3, 0, 0];
+    p.lgL = [-0.35 - dive * 0.5, 0, 0.40]; p.lgR = [-0.35 - dive * 0.5, 0, -0.40]; p.knL = [0.5, 0, 0]; p.knR = [0.5, 0, 0];
+    p.torso = [0.30 + dive * 0.35, 0, 0]; p.neck = [-0.5, 0, 0]; return p; }
+  function canopyPose(flare) { const p = blank();
+    p.lgL = [-1.45 + flare * 0.25, 0, 0.16]; p.knL = [0.35, 0, 0]; p.lgR = [-1.45 + flare * 0.25, 0, -0.16]; p.knR = [0.35, 0, 0];
+    p.shL = [-2.65, 0, 0.55]; p.elL = [-0.4, 0, 0]; p.shR = [-2.65, 0, -0.55]; p.elR = [-0.4, 0, 0]; p.torso = [0.18, 0, 0]; return p; }
+  const hudEl = () => $('gtaHud'), metEl = () => $('gtaMeters'), prmEl = () => $('gtaPrompt');
+  function hud(meters, prompt) { const h = hudEl(); if (!h) return; h.classList.add('on'); metEl().innerHTML = meters || ''; prmEl().textContent = prompt || ''; }
+  function hudOff() { const h = hudEl(); if (h) h.classList.remove('on'); }
+  function setAct(label, kind) { if (APANEL) APANEL.setAct(label ? { kind: kind || 'act', label } : null, 1); }
+  function enterCommon(far) {
+    if (CINE.intro) { CINE.intro = null; $('title').classList.remove('on'); $('hint').style.opacity = '1'; } // end the title intro the same way introCamera does, else gateInput starves the mode
+    G.camInit = false;
+    if (far) { scene.fog.near = 150; scene.fog.far = 1200; camera.far = 1600; } else { scene.fog.far = 150; camera.far = 260; }
+    camera.updateProjectionMatrix();
+  }
+  function exitCommon() {
+    G.on = false; G.mode = null; G.fly = null; audio(false);
+    scene.fog.near = 40; scene.fog.far = 150; camera.far = 260; camera.fov = 58; camera.updateProjectionMatrix();
+    hero.root.rotation.x = 0; hero.y = 0; hero.vel.set(0, 0);
+    G.chute.grp.visible = false; ringGold.visible = false; ringPred.visible = false;
+    hudOff(); setAct(null);
+    CAM.yaw = wrapA(hero.yaw + Math.PI); CAM.pivot.set(hero.pos.x, hero.pos.y + 1.55, hero.pos.z);
+    if (hero.state !== 'down') hero.set('move');
+  }
+
+  // ---------------- DRIVE ----------------
+  function startDrive() {
+    if (G.on) return; const c = G.car;
+    hero.pos.set(c.x, groundY(c.x, c.z), c.z); hero.yaw = c.yaw;
+    G.on = true; G.mode = 'drive'; G.exitCd = 0.4; enterCommon(false); audio(true);
+    banner('VULCAN GT', 1.2); hud('', '');
+  }
+  function exitDrive() {
+    const c = G.car, sx = Math.cos(c.yaw), sz = -Math.sin(c.yaw); // left side of the car
+    let ex = c.x + sx * 2.2, ez = c.z + sz * 2.2;
+    if (isWater(ex, ez)) { ex = c.x - sx * 2.2; ez = c.z - sz * 2.2; }
+    hero.pos.set(ex, groundY(ex, ez), ez); hero.yaw = c.yaw;
+    if (RIDE.v) { const v = RIDE.v; RIDE.v = null; if (v.exit && v.exit !== exitDriveShim) { /* boat entries: ignore */ } }
+    exitCommon();
+  }
+  function exitDriveShim() {}
+  function driveFrame(dt) {
+    const c = G.car, M = G.carMesh; G.exitCd = Math.max(0, G.exitCd - dt);
+    const th = IN.my, steerIn = clamp(IN.mx, -1, 1);
+    const hb = KEYS.has(' ') || KEYS.has('k');
+    if (th > 0) c.speed += 11.5 * th * dt;
+    else if (th < 0) { if (c.speed > 0.6) c.speed -= 24 * -th * dt; else c.speed -= 7.5 * -th * dt; }
+    c.speed -= c.speed * 0.32 * dt; if (!th) c.speed -= Math.sign(c.speed) * Math.min(Math.abs(c.speed), 1.1 * dt);
+    if (hb) c.speed -= Math.sign(c.speed) * Math.min(Math.abs(c.speed), 5.5 * dt);
+    c.speed = clamp(c.speed, -9, 38);
+    c.steer = damp(c.steer, steerIn, 8, dt);
+    const steerAng = c.steer * 0.55 / (1 + Math.abs(c.speed) * 0.045);
+    if (Math.abs(c.speed) > 0.05) c.yaw += (c.speed / 2.95) * Math.tan(steerAng) * (hb ? 1.65 : 1) * dt;
+    const dx = Math.sin(c.yaw), dz = Math.cos(c.yaw), grip = hb ? 2.0 : 8.5;
+    c.vx = damp(c.vx, dx * c.speed, grip, dt); c.vz = damp(c.vz, dz * c.speed, grip, dt);
+    c.x += c.vx * dt; c.z += c.vz * dt;
+    c.x = clamp(c.x, WB.x0 + 2, WB.x1 - 2); c.z = clamp(c.z, WB.z0 + 2, WB.z1 - 2);
+    // collisions: world boxes + round props (bounce + honk, no damage)
+    let hit = 0;
+    for (const b of COLL) {
+      if (b.r !== undefined) { const ddx = c.x - b.x, ddz = c.z - b.z, d = Math.hypot(ddx, ddz), m = b.r + 1.25; if (d < m && d > 1e-4) { c.x = b.x + ddx / d * m; c.z = b.z + ddz / d * m; hit = Math.max(hit, Math.abs(c.speed)); const vn = c.vx * (ddx / d) + c.vz * (ddz / d); if (vn < 0) { c.vx -= 1.4 * vn * (ddx / d); c.vz -= 1.4 * vn * (ddz / d); c.speed *= 0.35; } } }
+      else if (c.x > b.x0 - 1.15 && c.x < b.x1 + 1.15 && c.z > b.z0 - 1.15 && c.z < b.z1 + 1.15) {
+        const o = [c.x - (b.x0 - 1.15), b.x1 + 1.15 - c.x, c.z - (b.z0 - 1.15), b.z1 + 1.15 - c.z], k = o.indexOf(Math.min(...o));
+        hit = Math.max(hit, Math.abs(c.speed));
+        if (k === 0) { c.x = b.x0 - 1.15; c.vx = -Math.abs(c.vx) * 0.3; } else if (k === 1) { c.x = b.x1 + 1.15; c.vx = Math.abs(c.vx) * 0.3; }
+        else if (k === 2) { c.z = b.z0 - 1.15; c.vz = -Math.abs(c.vz) * 0.3; } else { c.z = b.z1 + 1.15; c.vz = Math.abs(c.vz) * 0.3; }
+        c.speed *= 0.35;
+      }
+    }
+    c.honkT = Math.max(0, c.honkT - dt);
+    for (const e of [...enemies, partner]) { // pedestrians: shove + honk, never hurt
+      if (!e.alive) continue; const ddx = e.pos.x - c.x, ddz = e.pos.z - c.z, d = Math.hypot(ddx, ddz);
+      if (d < 1.9 && d > 1e-4 && Math.abs(c.speed) > 1) { e.pos.x += ddx / d * (1.9 - d + 0.4); e.pos.z += ddz / d * (1.9 - d + 0.4); e.yaw = Math.atan2(ddx, ddz); if (c.honkT <= 0) { honk(); c.honkT = 0.6; } }
+    }
+    if (hit > 6 && c.honkT <= 0) { honk(); c.honkT = 0.6; S.shake = Math.min(0.7, hit * 0.02); }
+    if (isWater(c.x, c.z)) { banner('IN THE HARBOR!', 1.6); splashFx(c.x, c.z, 1.4); c.speed = 0; c.vx = c.vz = 0; exitDrive(); hero.pos.set(hero.dry ? hero.dry.x : HERO_START.x, 0, hero.dry ? hero.dry.z : HERO_START.z); hero.pos.y = groundY(hero.pos.x, hero.pos.z); return; }
+    const gy = groundY(c.x, c.z);
+    c.susp = damp(c.susp, Math.sin(S.time * 31) * 0.012 * Math.min(1, Math.abs(c.speed) / 18) + (hit > 3 ? 0.05 : 0), 10, dt);
+    M.root.position.set(c.x, gy + 0.02 + Math.abs(c.susp) * 0.4, c.z); M.root.rotation.y = c.yaw;
+    M.bodyG.rotation.z = -c.steer * Math.min(1, Math.abs(c.speed) / 22) * 0.055; M.bodyG.rotation.x = clamp(-(th * 0.02), -0.02, 0.03) + c.susp;
+    M.wheels.fl.piv.rotation.y = steerAng; M.wheels.fr.piv.rotation.y = steerAng;
+    const wsp = c.speed * dt / 0.34; for (const w of [M.wheels.fl, M.wheels.fr, M.wheels.rl, M.wheels.rr]) w.spin.rotation.x += wsp;
+    M.brakeMat.color.set(th < 0 && c.speed > 0.6 ? '#ff2233' : hb ? '#ff5030' : '#5a0f16');
+    // hero rides in the seat
+    hero.pos.set(c.x, gy, c.z); hero.y = 0; hero.yaw = c.yaw; applyPose(hero.J, seatPose(), 18, dt); hero.sync(dt);
+    // audio: engine pitch with speed
+    if (AU.eng) { const rp = Math.abs(c.speed) / 38; AU.eng.frequency.value = 55 + rp * 165 + (th > 0 ? 12 : 0); AU.eng2.frequency.value = 28 + rp * 82; AU.engG.gain.value = 0.045 + rp * 0.05; }
+    // camera: GTA chase
+    const back = 8.6 + Math.abs(c.speed) * 0.13, hgt = 3.1 + Math.abs(c.speed) * 0.03;
+    _v.set(c.x - dx * back, gy + hgt, c.z - dz * back);
+    if (!G.camInit) { G.camPos.copy(_v); G.camInit = true; }
+    G.camPos.x = damp(G.camPos.x, _v.x, 5, dt); G.camPos.y = damp(G.camPos.y, _v.y, 5, dt); G.camPos.z = damp(G.camPos.z, _v.z, 5, dt);
+    const gyCam = surfY(G.camPos.x, G.camPos.z); if (G.camPos.y < gyCam + 0.6) G.camPos.y = gyCam + 0.6;
+    for (const b of COLL) if (b.x0 !== undefined && G.camPos.x > b.x0 - 0.4 && G.camPos.x < b.x1 + 0.4 && G.camPos.z > b.z0 - 0.4 && G.camPos.z < b.z1 + 0.4 && G.camPos.y < 2.3) G.camPos.y = 2.3; // never sink inside a parked car
+    camera.position.copy(G.camPos); camera.lookAt(c.x + dx * 5.5, gy + 1.25, c.z + dz * 5.5);
+    camera.fov = damp(camera.fov, 62 + Math.min(15, Math.abs(c.speed) * 0.42), 4, dt); camera.updateProjectionMatrix();
+    hud('🚗 <b>' + Math.round(Math.abs(c.speed) * 3.6) + '</b> km/h', G.exitCd <= 0 ? 'E — GET OUT · SPACE — HANDBRAKE' : '');
+    setAct(G.exitCd <= 0 ? 'GET OUT' : null, 'car');
+    if (G.exitCd <= 0 && pressed('e', 'f')) exitDrive();
+  }
+  function splashFx(x, z, big = 1) { for (let k = 0; k < 10 * big; k++) { const a = rnd(0, TAU), s = rnd(1, 3.6); spawnSprite(FXT.puff, _v.set(x + Math.sin(a) * 0.5, WY + 0.35, z + Math.cos(a) * 0.5), rnd(0.6, 1.1) * big, 0.55, { kind: 'grow', depth: true, vel: new THREE.Vector3(Math.sin(a) * s, rnd(3, 6), Math.cos(a) * s) }); } }
+
+  // ---------------- ROOF (BASE jump staging on the WTC) ----------------
+  function startBase() {
+    if (G.on) return;
+    hero.pos.set(WTC.x + 4.4, wtcRoofY(WTC.x + 4.4, WTC.z + 0.5), WTC.z + 0.5); hero.y = 0; hero.yaw = Math.PI / 2; // spawn near the east edge, harbour at his back
+    G.on = true; G.mode = 'roof'; G.exitCd = 0.4; enterCommon(true);
+    banner('WORLD TRADE CENTER — ROOF', 1.8);
+  }
+  function roofFrame(dt) {
+    G.exitCd = Math.max(0, G.exitCd - dt);
+    const sp = 2.4, mx = IN.my * sp, mz = -IN.mx * sp; // camera looks east: stick fwd = +x (toward the jump edge)
+    hero.pos.x = clamp(hero.pos.x + mx * dt, WTC.x - 5.4, WTC.x + 5.4);
+    hero.pos.z = clamp(hero.pos.z + mz * dt, WTC.z - 5.4, WTC.z + 5.4);
+    const ddx = hero.pos.x - WTC.x, ddz = hero.pos.z - WTC.z, d = Math.hypot(ddx, ddz);
+    if (d > 5.5) { hero.pos.x = WTC.x + ddx / d * 5.5; hero.pos.z = WTC.z + ddz / d * 5.5; }
+    hero.pos.y = wtcRoofY(hero.pos.x, hero.pos.z);
+    const moving = Math.abs(mx) + Math.abs(mz) > 0.3;
+    if (moving) hero.yaw = damp(hero.yaw, Math.atan2(mx, mz), 10, dt);
+    applyPose(hero.J, moving ? HERO_POSES.run(hero.at += dt, 2.2) : HERO_POSES.idle(hero.at += dt), 16, dt); hero.sync(dt);
+    const edge = Math.hypot(hero.pos.x - WTC.x, hero.pos.z - WTC.z) > 4.4;
+    camera.position.set(hero.pos.x - 7.0, hero.pos.y + 3.4, hero.pos.z + 3.4); // across the roof, hero framed against the harbour drop
+    camera.lookAt(hero.pos.x + 2.5, hero.pos.y + 0.7, hero.pos.z);
+    camera.fov = damp(camera.fov, 60, 5, dt); camera.updateProjectionMatrix();
+    hud('🏢 <b>' + Math.round(hero.pos.y) + '</b> m', edge ? 'E — JUMP!' : 'WALK TO THE EDGE · E — LEAVE');
+    setAct(edge ? 'JUMP!' : null, 'drop');
+    if (edge && G.exitCd <= 0 && pressed('e', 'j', 'k', ' ')) startFly('base');
+    else if (!edge && G.exitCd <= 0 && pressed('e')) { hero.pos.set(HERO_START.x, 0, HERO_START.z); hero.pos.y = groundY(hero.pos.x, hero.pos.z); hero.yaw = HERO_START.yaw; exitCommon(); banner('BACK AT STREET LEVEL', 1.2); }
+  }
+
+  // ---------------- FLY: freefall + canopy (shared by skydive and BASE) ----------------
+  function startSky() {
+    if (G.on) return;
+    hero.pos.set(26, 385, 4); hero.y = 0; hero.yaw = -Math.PI / 2;
+    G.on = true; G.mode = 'fly'; enterCommon(true);
+    beginFall('sky');
+    banner('SKYDIVE — INNER HARBOR', 1.8);
+  }
+  function startFly(kind) { // from the WTC roof edge
+    G.mode = 'fly'; enterCommon(true); beginFall(kind);
+    const F = G.fly, dx = Math.sin(hero.yaw), dz = Math.cos(hero.yaw);
+    F.vx = dx * 5.5; F.vz = dz * 5.5; F.vy = 0.5;
+    banner('BASE!', 1.0);
+  }
+  function beginFall(kind) {
+    G.fly = { kind, phase: 'free', vx: Math.sin(hero.yaw) * 11, vy: 0, vz: Math.cos(hero.yaw) * 11, openT: 0, stallT: 0, collT: 0, recT: 0, t: 0, deployed: false, startY: hero.pos.y };
+    G.chute.grp.visible = false; G.camInit = false;
+    const gold = kind === 'base' ? GOLD.base : GOLD.sky;
+    ringGold.position.set(gold.x, surfY(gold.x, gold.z) + 0.15, gold.z); ringGold.visible = true; ringPred.visible = true;
+  }
+  function deploy() {
+    const F = G.fly; if (!F || F.phase !== 'free') return;
+    F.phase = 'open'; F.openT = 0; F.deployed = true; G.chute.grp.visible = true;
+    sfx('jump'); banner('CANOPY OUT!', 0.9);
+  }
+  function flyFrame(dt) {
+    const F = G.fly; F.t += dt;
+    const dx = Math.sin(hero.yaw), dz = Math.cos(hero.yaw);
+    const surf = surfY(hero.pos.x, hero.pos.z);
+    if (F.phase === 'free') {
+      const dive = clamp(IN.my, -1, 1);
+      hero.yaw += clamp(IN.mx, -1, 1) * 1.5 * dt;
+      const term = dive > 0 ? lerp(53, 88, dive) : lerp(53, 38, -dive);
+      F.vy = damp(F.vy, -term, 0.55, dt);
+      const fwdT = dive > 0 ? lerp(11, 24, dive) : lerp(11, 7, -dive);
+      F.vx = damp(F.vx, Math.sin(hero.yaw) * fwdT + WIND.x, 1.1, dt); F.vz = damp(F.vz, Math.cos(hero.yaw) * fwdT + WIND.z, 1.1, dt);
+      hero.root.rotation.x = 0; // (set after sync below)
+      applyPose(hero.J, freePose(F.t, Math.max(0, dive)), 14, dt);
+      if (pressed('e', 'j')) deploy();
+    } else {
+      // canopy flight: differential toggles steer, both toggles = flare
+      if (F.phase === 'open') { F.openT += dt; F.vy = damp(F.vy, -5.3, 3.2, dt); if (F.openT >= 0.85) F.phase = 'canopy'; }
+      const turnIn = clamp(IN.mx, -1, 1), brakeIn = clamp(-IN.my, 0, 1) + (KEYS.has(' ') || KEYS.has('k') ? 1 : 0);
+      const tL = clamp(-turnIn + brakeIn, 0, 1), tR = clamp(turnIn + brakeIn, 0, 1), brake = Math.min(tL, tR);
+      const yawRate = (tL - tR) * 1.05;
+      let fwdT = lerp(10.5, 3.2, brake), sinkT = lerp(5.3, 1.9, brake) + Math.abs(yawRate) * 1.7;
+      if (IN.my > 0.4) { fwdT += 2.2; sinkT += 1.1; }
+      if (F.phase === 'canopy') {
+        if (brake > 0.9) F.stallT += dt; else F.stallT = Math.max(0, F.stallT - dt * 2);
+        if (F.stallT > 0.85) { F.phase = 'collapse'; F.collT = 0; F.recT = 0; banner('STALL!', 0.8); sfx('hurt'); }
+      }
+      if (F.phase === 'collapse') {
+        F.collT += dt; fwdT = 2.5; sinkT = 13;
+        if (Math.abs(turnIn) < 0.2 && IN.my > -0.3) F.recT += dt; else F.recT = 0;
+        if (F.recT > 1.0 || F.collT > 2.4) { F.phase = 'canopy'; F.stallT = 0; banner('CANOPY BACK!', 0.8); }
+      }
+      if (F.phase !== 'open') { hero.yaw += yawRate * dt; F.vy = damp(F.vy, -sinkT, 2.6, dt); }
+      const ndx = Math.sin(hero.yaw), ndz = Math.cos(hero.yaw);
+      F.vx = damp(F.vx, ndx * fwdT + WIND.x, 1.8, dt); F.vz = damp(F.vz, ndz * fwdT + WIND.z, 1.8, dt);
+      F.flare = brake;
+      applyPose(hero.J, canopyPose(brake), 14, dt);
+      // canopy visuals: grows on opening, banks in turns, shrivels on collapse
+      const C = G.chute, open = F.phase === 'open' ? ease(clamp(F.openT / 0.85, 0, 1)) : 1;
+      C.grp.position.set(hero.pos.x, hero.pos.y + 3.15, hero.pos.z);
+      C.grp.rotation.set(0, hero.yaw, 0); C.grp.rotation.z = -yawRate * 0.45; C.grp.rotation.x = brake * 0.22;
+      const cw = F.phase === 'collapse' ? 0.45 : 1;
+      C.grp.scale.set(damp(C.grp.scale.x, cw * open, 8, dt), open, damp(C.grp.scale.z, open, 8, dt));
+    }
+    hero.pos.x += F.vx * dt; hero.pos.y += F.vy * dt; hero.pos.z += F.vz * dt;
+    hero.pos.x = clamp(hero.pos.x, WB.x0 - 60, WB.x1 + 60); hero.pos.z = clamp(hero.pos.z, WB.z0 - 60, WB.z1 + 60);
+    hero.y = 0; hero.sync(dt);
+    if (F.phase === 'free') hero.root.rotation.x = -1.15 - clamp(IN.my, 0, 1) * 0.75; else hero.root.rotation.x = 0;
+    // predicted touchdown ring
+    const sink = Math.max(1.2, -F.vy), tLand = clamp((hero.pos.y - surf) / sink, 0, 30);
+    const px = hero.pos.x + F.vx * tLand, pz = hero.pos.z + F.vz * tLand, ps = surfY(px, pz);
+    ringPred.position.set(px, ps + 0.18, pz);
+    ringPred.material.color.set(isWater(px, pz) && ps <= WY + 0.01 ? '#7fe8ff' : '#7dff6b');
+    // wind audio + air streaks
+    if (AU.windG) { const sp = Math.hypot(F.vx, F.vy, F.vz); AU.windG.gain.value = clamp(sp * 0.004, 0, 0.22); AU.windF.frequency.value = 320 + sp * 14; }
+    if (F.phase === 'free' && Math.random() < dt * 22) spawnSprite(FXT.puff, _v.set(hero.pos.x + rnd(-1.4, 1.4), hero.pos.y + rnd(-0.4, 1), hero.pos.z + rnd(-1.4, 1.4)), rnd(0.35, 0.6), 0.3, { kind: 'grow', depth: true });
+    // camera: behind + above, speed FOV in freefall
+    const sp3 = Math.hypot(F.vx, F.vy, F.vz), back = F.phase === 'free' ? 8.5 : 10.5, hgt = F.phase === 'free' ? 2.2 : 4.2;
+    _v.set(hero.pos.x - Math.sin(hero.yaw) * back, hero.pos.y + hgt, hero.pos.z - Math.cos(hero.yaw) * back);
+    if (!G.camInit) { G.camPos.copy(_v); G.camInit = true; }
+    G.camPos.x = damp(G.camPos.x, _v.x, 6, dt); G.camPos.y = damp(G.camPos.y, _v.y, 6, dt); G.camPos.z = damp(G.camPos.z, _v.z, 6, dt);
+    for (const b of BLD) if (G.camPos.x > b.x0 - 0.6 && G.camPos.x < b.x1 + 0.6 && G.camPos.z > b.z0 - 0.6 && G.camPos.z < b.z1 + 0.6 && G.camPos.y < b.h + 0.5) { G.camPos.x = lerp(G.camPos.x, hero.pos.x, 0.65); G.camPos.z = lerp(G.camPos.z, hero.pos.z, 0.65); G.camPos.y = Math.max(G.camPos.y, Math.min(b.h + 1.2, hero.pos.y + 2.5)); } // never park the camera inside a tower (the BASE exit starts against the WTC face)
+    camera.position.copy(G.camPos);
+    camera.lookAt(hero.pos.x + F.vx * 0.22, hero.pos.y + (F.phase === 'free' ? F.vy * 0.22 : 1.1), hero.pos.z + F.vz * 0.22); // freefall: look down the velocity vector so the city fills the frame
+    camera.fov = damp(camera.fov, F.phase === 'free' ? 62 + Math.min(20, sp3 * 0.3) : 60, 4, dt); camera.updateProjectionMatrix();
+    // HUD + prompts
+    const alt = Math.max(0, hero.pos.y - surf), kmh = Math.round(Math.hypot(F.vx, F.vz) * 3.6);
+    if (F.phase === 'free') { hud('🪂 ALT <b>' + Math.round(alt) + '</b> m · <b>' + Math.round(-F.vy) + '</b> m/s', alt < 90 ? '⚠ PULL! — E' : 'E — DEPLOY · STEER ◀ ▶ · PUSH — DIVE'); setAct('DEPLOY', 'drop'); }
+    else { hud('🪂 ALT <b>' + Math.round(alt) + '</b> m · <b>' + kmh + '</b> km/h · SINK <b>' + (-F.vy).toFixed(1) + '</b>', F.phase === 'collapse' ? 'STALL — HANDS UP!' : '◀ ▶ — TOGGLES · ▼ / SPACE — FLARE'); setAct(null); }
+    if (F.t > 0.4 && hero.pos.y < F.startY - 1.0 && hero.pos.y <= surf + 0.05 && F.vy < 0) land(surf); // armed only after clearing the jump surface (a BASE exit starts ON the roof box)
+  }
+  function land(surf) {
+    const F = G.fly, sink = -F.vy, spd = Math.hypot(F.vx, F.vz), x = hero.pos.x, z = hero.pos.z;
+    const gold = F.kind === 'base' ? GOLD.base : GOLD.sky, gd = Math.hypot(x - gold.x, z - gold.z);
+    G.lastLanding = { kind: F.kind, x: +x.toFixed(1), z: +z.toFixed(1), sink: +sink.toFixed(1), spd: +spd.toFixed(1), deployed: F.deployed, goldDist: +gd.toFixed(1) };
+    if (!F.deployed && sink > 16) return splat(); // no canopy at terminal velocity is fatal on any surface
+    if (isWater(x, z) && surf <= WY + 0.01) {
+      splashFx(x, z, 1.6); sfx('ko'); banner('SPLASHDOWN!', 1.8);
+      hero.pos.set(x, 0, z < 0 ? -32.5 : 32.5); hero.pos.y = groundY(hero.pos.x, hero.pos.z); hero.set('move');
+      exitCommon(); return;
+    }
+    hero.pos.y = surf;
+    let rating, col = '#7dff6b';
+    if (F.deployed && sink <= 3.2 && spd <= 6.5) rating = 'STANDING LANDING!';
+    else if (F.deployed && sink <= 5.6 && spd <= 9.5) rating = 'RUN-OUT LANDING!';
+    else { rating = 'HARD LANDING!'; col = '#ff5f5f'; }
+    if (gd < 4.2) rating += ' 🎯 TARGET!';
+    banner(rating, 2.0); sfx(rating.includes('HARD') ? 'hurt' : 'ko');
+    const hard = rating.includes('HARD');
+    exitCommon();
+    if (hard) { hero.hp = Math.max(10, hero.hp - 15); hero.set('down'); }
+  }
+  function splat() {
+    const el = $('gtaFade'); if (el) el.style.opacity = '1';
+    banner('SPLAT!', 2.0); sfx('hurt');
+    hero.hp = Math.max(10, hero.hp - 30);
+    setTimeout(() => { if (el) el.style.opacity = '0'; }, 700);
+    hero.pos.set(HERO_START.x, 0, HERO_START.z); hero.pos.y = groundY(hero.pos.x, hero.pos.z); hero.yaw = HERO_START.yaw;
+    G.lastLanding = Object.assign(G.lastLanding || {}, { splat: true });
+    exitCommon();
+  }
+
+  // ---------------- frame dispatch (called from the main loop) ----------------
+  function frame(rdt) {
+    try {
+      const dt = Math.min(0.05, rdt);
+      readInput(); gateInput();
+      S.time += dt; hero.at += 0;
+      if (G.mode === 'drive') driveFrame(dt);
+      else if (G.mode === 'roof') roofFrame(dt);
+      else if (G.mode === 'fly') flyFrame(dt);
+      // sun + shadow follow the subject (same pattern as the main loop)
+      const tx = SHR * 2 / SHM, sx = Math.round(hero.pos.x / tx) * tx, sz = Math.round(hero.pos.z / tx) * tx;
+      sun.target.position.set(sx, 0, sz); sun.position.set(sx + SUN_DIR.x * 70, SUN_DIR.y * 70, sz + SUN_DIR.z * 70);
+      if (window.__sky) __sky.position.copy(camera.position);
+      updateSprites(dt); updateSlashes(dt);
+      if (bannerT > 0) { bannerT -= dt; if (bannerT <= 0) $('banner').classList.remove('on'); }
+      PRESS.clear();
+      draw();
+    } catch (err) { __celErr.n++; __celErr.last = String(err && err.stack || err); if (__celErr.n < 4) console.error(err); }
+  }
+
+  // ---------------- registration: in-world entry points + menu + test hooks ----------------
+  VEHICLES.push({ kind: 'car', label: 'DRIVE', x: G.car.x, z: G.car.z, r: 2.8, enter: () => startDrive(), exit: () => exitDrive() });
+  ACTIONS.push({ kind: 'climb', label: 'WTC ROOF', x: WTC.x + 7.4, z: WTC.z, r: 2.4, y: 2.2, ok: () => !G.on, go: () => startBase() });
+  const bind = (id, fn) => { const el = $(id); if (el) el.addEventListener('click', () => { audioInit(); if (AC && AC.state === 'suspended') AC.resume().catch(() => {}); fn(); }); };
+  bind('gtaDrive', () => { if (!G.on) { hero.pos.set(G.car.x + 2.5, 0, G.car.z + 1); hero.pos.y = groundY(hero.pos.x, hero.pos.z); startDrive(); } });
+  bind('gtaSky', () => { if (!G.on) startSky(); });
+  bind('gtaBase', () => { if (!G.on) startBase(); });
+  if (Q.has('gta')) { const m = Q.get('gta'); setTimeout(() => { if (m === 'drive') $('gtaDrive').click(); else if (m === 'sky') startSky(); else if (m === 'base') startBase(); }, 700); }
+  return {
+    get on() { return G.on; }, frame, startDrive, startSky, startBase, exitDrive,
+    exit: () => { if (G.mode === 'drive') exitDrive(); else if (G.on) { hero.pos.set(HERO_START.x, 0, HERO_START.z); hero.pos.y = groundY(hero.pos.x, hero.pos.z); exitCommon(); } },
+    deploy, state: () => ({ on: G.on, mode: G.mode, car: { x: +G.car.x.toFixed(1), z: +G.car.z.toFixed(1), yaw: +G.car.yaw.toFixed(2), speed: +G.car.speed.toFixed(1) }, fly: G.fly ? { phase: G.fly.phase, alt: +hero.pos.y.toFixed(1), vy: +G.fly.vy.toFixed(1), vx: +G.fly.vx.toFixed(1), vz: +G.fly.vz.toFixed(1) } : null, lastLanding: G.lastLanding }),
+    debug: { setAlt: (y) => { hero.pos.y = y; }, setCar: (x, z, yaw) => { G.car.x = x; G.car.z = z; if (yaw !== undefined) G.car.yaw = yaw; }, teleport: (x, z) => { hero.pos.x = x; hero.pos.z = z; } },
+    G,
+  };
+})();
+window.__GTA = GTA;
+if (window.__cel) __cel.GTA = GTA;
