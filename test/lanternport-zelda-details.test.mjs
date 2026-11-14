@@ -32,6 +32,7 @@ test('pot-rampage: all staged pots end broken', () => {
   def.act(S, def.duration - 1);
   // Pots now end BROKEN (real shatter state) instead of invisible: the staged
   // actor stays vis=true so StageView keeps posing it and the shard debris shows.
+  assert.equal(S.actors.find(a => a.id === 'pot0').broken, true, 'the first pot on the bench breaks too (it had no break in the choreography — Cherie, Nov 13: "not the first one")');
   assert.equal(S.actors.find(a => a.id === 'pot1').broken, true);
   assert.equal(S.actors.find(a => a.id === 'pot2').broken, true);
   assert.equal(S.actors.find(a => a.id === 'pot3').broken, true);
