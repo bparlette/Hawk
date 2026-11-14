@@ -15,7 +15,7 @@ vec3 skyColour(vec3 v) {
   vec3 pale = vec3(0.84, 0.86, 0.82);  // wiped to paper
   vec3 c = mix(pale, deep, pow(band, 0.85));
   float sunward = max(dot(v, uSunDir), 0.0);
-  c = mix(c, vec3(0.95, 0.86, 0.66), pow(sunward, 18.0) * 0.5); // a flat warm breath round the sun
+  c = mix(c, vec3(0.95, 0.86, 0.66), step(0.93, sunward) * 0.5); // the sun as a hard-edged flat disc, not a soft glow graded across the sky
   return c;
 }
 `;
@@ -63,8 +63,8 @@ export function createSky(shared) {
         d.dir = normalize(mix(level, ring, 0.45) + vec3(0.0, (r.x - 0.5) * 0.5, 0.0));
         d.size = vec2(62.0 + 54.0 * r.y, 200.0 + 175.0 * r.z); // fewer, broader bands: a printed sky, not a brushed one
         vec3 c = skyColour(v);
-        d.c1 = jitter(c, r.yzw, 0.22);
-        d.c2 = jitter(c * 1.05, r.wxy, 0.3);
+        d.c1 = c;
+        d.c2 = c; // one flat ink per sky band stroke: no jittered second tone through it
         d.seed = aDir.w;
         d.lift = 0.0;
       }`,
