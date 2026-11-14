@@ -30,8 +30,7 @@
   .ov .btn:active { transform: scale(.94); }
   #endTitle { font-size:44px; }
 </style>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/matter-js/0.20.0/matter.min.js"></script>
-<script>if (!window.Matter) { document.write('<script src="./matter.min.js"><\/script>'); }</script>
+<script src="./matter.min.js"></script>
 <style id="moth-game-guard">
 html,body{touch-action:none;overscroll-behavior:none;-webkit-touch-callout:none;-webkit-user-select:none;user-select:none;-webkit-tap-highlight-color:transparent}
 canvas{touch-action:none}
@@ -111,17 +110,20 @@ const sfx = {
 };
 
 /* ============================== INPUT ============================== */
-const tc = new TouchController({ force: true });
-// No buttons in this game: strip the default A/B cluster the kit builds.
-for (const id in tc._buttons) { const b = tc._buttons[id]; if (b.el && b.el.remove) b.el.remove(); }
-tc._buttons = {};
+const tc = new TouchController({ force: true, buttons: [{ id: 'b', label: '💨', size: 84 }] });
+// One button only: B = DASH (v2 upgrade). Its element doubles as the cooldown dial.
 const keys = {};
-addEventListener('keydown', (e) => { keys[e.code] = true; });
+let dashQueued = false;
+addEventListener('keydown', (e) => {
+  keys[e.code] = true;
+  if (!e.repeat && (e.code === 'Space' || e.code === 'ShiftLeft' || e.code === 'ShiftRight')) dashQueued = true;
+});
 addEventListener('keyup', (e) => { keys[e.code] = false; });
 let stickVec = { x: 0, y: 0 };
 function readInput() {
   const ti = tc.getInput();
   stickVec = { x: ti.x, y: ti.y };
+  if (ti.bPressed) dashQueued = true;
 }
 function mergedInput() {
   if (Math.hypot(stickVec.x, stickVec.y) > 0.06) return stickVec;
@@ -245,6 +247,7 @@ let engine = null, balls = [], falling = [], particles = [], ripples = [];
 let phase = 'boot';           // attract | play | over
 let R = 0, timeLeft = 90, roundT = 0, shrinkWarned = false, overtime = false;
 let speedMul = 1, spectate = false, shake = 0, winner = null, endTimer = -1, lastScrape = 0, lastHitT = -9, suddenT = 0;
+let holdBots = false;   // test hook: freeze bot steering (dash-collision measurements)
 const hAlive = document.getElementById('hAlive'), hTime = document.getElementById('hTime'), hKo = document.getElementById('hKo');
 const startOv = document.getElementById('startOv'), endOv = document.getElementById('endOv');
 const endTitle = document.getElementById('endTitle'), endSub = document.getElementById('endSub');
@@ -256,7 +259,7 @@ function makeBall(i, x, y, isPlayer) {
     restitution: 0.6, friction: 0.02, frictionStatic: 0, frictionAir: 0.02,
     density: 0.0018, label: 'ball',
   });
-  const b = { i, body, f, isPlayer, alive: true, ko: 0, lastHit: null, ai: PERSONALITIES[i] || { maxSpd: 6.0, accel: 0.52, aggro: 0.75, caution: 0.65 }, phase: Math.random() * 7, target: null, retarget: 0 };
+  const b = { i, body, f, isPlayer, alive: true, ko: 0, lastHit: null, lastDash: -9, dashUntil: 0, dirx: 1, diry: 0, ai: PERSONALITIES[i] || { maxSpd: 6.0, accel: 0.52, aggro: 0.75, caution: 0.65 }, phase: Math.random() * 7, target: null, retarget: 0 };
   body.plugin = { ball: b };
   return b;
 }
@@ -279,11 +282,49 @@ function startRound(mode) {
   hKo.textContent = '0';
   syncHud();
 }
+/* ============================== DASH (v2 upgrade) ==============================
+   The one genuinely missing mechanic from the external review: a Dash Burst.
+   2.2s cooldown, 180ms burst window, +9.5 impulse along the dash direction,
+   and while the window is open the dasher's hits carry 1.65x knockback —
+   applied as a post-solve bonus impulse (Matter's solver owns the base hit). */
+const DASH_CD = 2.2, DASH_WINDOW = 0.18, DASH_IMPULSE = 9.5, DASH_KB = 1.65;
+let pendingHits = [];   // dash hits recorded in onCollide, applied after Engine.update
+function tryDash(b, dx, dy, now) {
+  if (!b.alive || now - b.lastDash < DASH_CD) return false;
+  let m = Math.hypot(dx, dy);
+  if (m < 0.05) { const v = b.body.velocity; m = Math.hypot(v.x, v.y); if (m > 0.5) { dx = v.x / m; dy = v.y / m; } else { dx = b.dirx; dy = b.diry; m = 1; } }
+  dx /= m; dy /= m;
+  b.lastDash = now; b.dashUntil = now + DASH_WINDOW;
+  const v = b.body.velocity;
+  Body.setVelocity(b.body, { x: v.x + dx * DASH_IMPULSE, y: v.y + dy * DASH_IMPULSE });
+  sfx.thud(0.35);
+  return true;
+}
+function applyDashHits(now) {
+  for (const h of pendingHits) {
+    const atk = h.atk, vic = h.vic;
+    if (!atk.alive || !vic.alive) continue;
+    const v = vic.body.velocity;
+    Body.setVelocity(vic.body, { x: v.x + h.nx * h.bonus, y: v.y + h.ny * h.bonus });
+    shake = Math.min(9, shake + 2.2);
+    for (let k = 0; k < 6; k++) particles.push({ x: h.x, y: h.y, vx: h.nx * (1 + Math.random() * 2) + (Math.random() - 0.5), vy: h.ny * (1 + Math.random() * 2) + (Math.random() - 0.5), life: 1, decay: 0.09, col: '#a5f3ff', r: 2, type: 'spark' });
+  }
+  pendingHits = [];
+}
 function onCollide(ev) {
   const now = performance.now() / 1000;
   for (const pair of ev.pairs) {
     const A = pair.bodyA.plugin && pair.bodyA.plugin.ball, B = pair.bodyB.plugin && pair.bodyB.plugin.ball;
     if (!A || !B) continue;
+    // dash knockback: exactly one side dashing -> victim takes the 1.65x hit
+    const aDash = now < A.dashUntil, bDash = now < B.dashUntil;
+    if (aDash !== bDash) {
+      const atk = aDash ? A : B, vic = aDash ? B : A;
+      const ap = atk.body.position, vp = vic.body.position;
+      let nx = vp.x - ap.x, ny = vp.y - ap.y; const nm = Math.hypot(nx, ny) || 1; nx /= nm; ny /= nm;
+      const atkN = Math.max(0, atk.body.velocity.x * nx + atk.body.velocity.y * ny);
+      pendingHits.push({ atk, vic, nx, ny, bonus: (DASH_KB - 1) * atkN, x: vp.x, y: vp.y });
+    }
     const va = pair.bodyA.velocity, vb = pair.bodyB.velocity;
     const rel = Math.hypot(va.x - vb.x, va.y - vb.y);
     A.lastHit = { by: B, t: now }; B.lastHit = { by: A, t: now };
@@ -301,6 +342,7 @@ function onCollide(ev) {
   }
 }
 function driveBall(b, dx, dy, maxSpd, accel) {
+  if (Math.hypot(dx, dy) > 0.05) { b.dirx = dx; b.diry = dy; }
   accel *= driveRamp;
   if (b.recoilUntil && performance.now() / 1000 < b.recoilUntil) accel *= 0.25; // recoil: no jackhammer plowing
   const v = b.body.velocity;
@@ -332,7 +374,7 @@ function botThink(b, now) {
     ax = aimX - p.x; ay = aimY - p.y;
     const dT = Math.hypot(tp.x - p.x, tp.y - p.y);
     const align = dT > 1 ? ((tp.x - p.x) / dT) * (ox / om) + ((tp.y - p.y) / dT) * (oy / om) : 0;
-    if (dT < 95 && align > 0.45) { spd = ai.maxSpd * 1.15; accel = ai.accel * 1.3; } // CHARGE
+    if (dT < 95 && align > 0.45) { spd = ai.maxSpd * 1.15; accel = ai.accel * 1.3; tryDash(b, ax, ay, now); } // CHARGE (+ dash when off cooldown)
   }
   // unstick: barely moving away from the middle -> dash inward with a random slant
   if (Math.hypot(v.x, v.y) < 0.35 && dC > R * 0.25) {
@@ -370,10 +412,14 @@ function tick(dt) {
   roundT += dt;
   driveRamp = Math.min(1, 0.15 + roundT / 2.5);
   // --- shrink / timer ---
+  // v2 retime (review gap: shrink existed but started at 30s and bottomed at
+  // 58%): shrink now runs over the final 45s down to 45% of R0 — at 20s left
+  // the arena is ~69% — then the pre-existing overtime shrink + sudden death
+  // still guarantee the round ends.
   if (phase === 'play') {
     timeLeft -= dt;
-    if (timeLeft <= 30.5 && !shrinkWarned) { shrinkWarned = true; sfx.beep(); }
-    if (timeLeft <= 30 && timeLeft > 0) R = R0 * (0.58 + 0.42 * (timeLeft / 30));
+    if (timeLeft <= 45.5 && !shrinkWarned) { shrinkWarned = true; sfx.beep(); }
+    if (timeLeft <= 45 && timeLeft > 0) R = R0 * (0.45 + 0.55 * (timeLeft / 45));
     if (timeLeft <= 0) {
       overtime = true;
       R = Math.max(R0 * 0.14, R - R0 * 0.16 * dt);
@@ -409,10 +455,16 @@ function tick(dt) {
     }
     if (b.isPlayer && phase === 'play' && !spectate) {
       const inp = mergedInput(), im = Math.hypot(inp.x, inp.y);
+      if (dashQueued) { dashQueued = false; if (im > 0.05) tryDash(b, inp.x, inp.y, now); else tryDash(b, 0, 0, now); }
       if (im > 0.05) driveBall(b, inp.x / Math.max(1, im), inp.y / Math.max(1, im), 5.6 * Math.min(1, im + 0.25), 0.42);
       // no input: no brake — frictionAir + the bowl lip do the work, knockbacks stay honest
     } else {
-      botThink(b, now);
+      if (!holdBots) botThink(b, now);
+    }
+    // dash trail
+    if (now < b.dashUntil) {
+      const p2 = b.body.position;
+      particles.push({ x: p2.x + (Math.random() - 0.5) * 14, y: p2.y + (Math.random() - 0.5) * 14, vx: -b.body.velocity.x * 0.12, vy: -b.body.velocity.y * 0.12, life: 0.7, decay: 0.12, col: '#a5f3ff', r: 2.4, type: 'spark' });
     }
     // rim scrape
     if (dC > R * 0.88 && Math.hypot(b.body.velocity.x, b.body.velocity.y) > 1.6 && now - lastScrape > 0.11) {
@@ -420,6 +472,7 @@ function tick(dt) {
     }
   }
   Engine.update(engine, 1000 / 60);
+  applyDashHits(now);
   // --- falls ---
   let fell = false;
   for (const b of balls) {
@@ -558,7 +611,7 @@ function render(now) {
   // stone disc (prerendered sprite, scaled to the current radius)
   if (discCanvas) ctx.drawImage(discCanvas, CX - R - 2, CY - R - 2, (R + 2) * 2, (R + 2) * 2);
   // neon rim (layered strokes, no shadowBlur — software rasterizers choke on it)
-  const shrinking = (phase === 'play' && timeLeft <= 30) || (phase === 'attract' && roundT > 55);
+  const shrinking = (phase === 'play' && timeLeft <= 45) || (phase === 'attract' && roundT > 55);
   const rimCol = shrinking ? '255,46,136' : '34,211,238';
   ctx.strokeStyle = `rgba(${rimCol},.16)`; ctx.lineWidth = 13;
   ctx.beginPath(); ctx.arc(CX, CY, R, 0, 7); ctx.stroke();
@@ -603,6 +656,13 @@ function frame(nowMs) {
   } else if (phase === 'over') {
     ambientFx(ft);
   }
+  // dash cooldown dial on the 💨 button (conic sweep = time until ready)
+  const bBtn = tc._buttons && tc._buttons.b;
+  if (bBtn && bBtn.el) {
+    const p = balls[0], nowS = performance.now() / 1000;
+    const frac = p ? Math.max(0, Math.min(1, (nowS - p.lastDash) / DASH_CD)) : 1;
+    bBtn.el.style.background = frac >= 1 ? 'rgba(20,20,35,.38)' : `conic-gradient(rgba(165,243,255,.55) ${frac * 360}deg, rgba(20,20,35,.38) 0deg)`;
+  }
   if (phase === 'play') {
     const tl = Math.max(0, Math.ceil(timeLeft));
     hTime.textContent = overtime ? '⚠ ' + tl : '⏱ ' + tl;
@@ -631,6 +691,16 @@ window.__dbg = {
   playerState() { const b = balls[0]; return b ? { alive: b.alive, x: Math.round(b.body.position.x), y: Math.round(b.body.position.y) } : null; },
   start() { startOv.classList.add('hidden'); startRound('play'); },
   speed(m) { speedMul = m; },
+  // --- v2 test hooks ---
+  get R0() { return R0; },
+  get timeLeft() { return timeLeft; },
+  setTimeLeft(s) { timeLeft = s; },
+  dash() { dashQueued = true; },
+  dashInfo() { const p = balls[0]; if (!p) return null; const n = performance.now() / 1000; return { cdLeft: +Math.max(0, DASH_CD - (n - p.lastDash)).toFixed(2), dashing: n < p.dashUntil }; },
+  teleport(i, x, y, vx, vy) { const b = balls[i]; if (!b) return; Body.setPosition(b.body, { x, y }); Body.setVelocity(b.body, { x: vx, y: vy }); },
+  setLastHit(vIdx, aIdx, agoSec) { const v = balls[vIdx], a = balls[aIdx]; if (v && a) v.lastHit = { by: a, t: performance.now() / 1000 - agoSec }; },
+  setHoldBots(v) { holdBots = !!v; },
+  center() { return { x: CX, y: CY }; },
 };
 </script>
 <script id="moth-game-guard-js">
