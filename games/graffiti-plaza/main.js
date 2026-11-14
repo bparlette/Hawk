@@ -3,10 +3,13 @@
 // model), and playable exactly as the plaza is: the Juniper walk figure roams it under a floating
 // joystick (gamepress gptouch standard) or WASD/arrows, with a smooth follow camera. Same set,
 // same controls, same camera, same wildstyle palette as the first graffiti build — what changed
-// is the stroke itself: every mark is a spray deposit with a feathered mist edge that dissolves
-// into droplets, an overspray halo, satellite splatter and flat, layered build-up instead of
-// relief-lit dabs; the walls carry drips, the ground is sprayed concrete, and she is shaded in
-// feathered spray layers with speckle, not ink.
+// is the stroke itself. V3 (the piece pass): the v2 aerosol marks were all feather and no fill,
+// so the plaza read as the dab scene spray-tinted. Now every mark is a PIECE fill — a hard-edged
+// body of flat colour with the overspray halo outside the edge where a halo belongs, stipple
+// riding on top of the fill instead of replacing it — the finish pass inks a bold outline
+// wherever the surface breaks (silhouette or corner), and drips run down the fountain drum,
+// the stem, the stall fronts and both house walls. She is still shaded in feathered spray
+// layers with speckle; the ink is in the finish, on the forms.
 //   ?paint=rich    full part-1 dab density (default: smooth = the proof's reduced video density)
 //   ?paint=smooth  reduced density + smaller drawing buffer — the real-time default
 // Performance note: the painter repaints every dab every frame; on a real phone GPU that is
@@ -99,14 +102,15 @@ scene.add(sky.group);
         float n = texture(tNoise, vWorld.xz / 9.0).r;
         float rad = length(vWorld.xz);
         vec3 c = mix(vec3(0.30, 0.24, 0.36), vec3(0.38, 0.30, 0.44), n);
-        c = mix(c, vec3(0.23, 0.19, 0.30), smoothstep(18.0, 42.0, rad)); // the town goes on, duller, past the plaza
-        // sprayed concrete: broad soft fields of colour breathed over the stone at arm's length —
-        // they feather in and out with no edge anywhere — and a speckled grain right through it,
-        // dense fine speckle with a sparse throw of lighter and darker specks on top
+        c = mix(c, vec3(0.23, 0.19, 0.30), smoothstep(24.0, 31.0, rad)); // the town goes on, duller, past the plaza
+        // blocked concrete: broad fields of colour laid over the stone in piece-style blocks —
+        // their borders step over a short distance instead of feathering away — and a speckled
+        // grain right through it, dense fine speckle with a sparse throw of lighter and
+        // darker specks on top
         float field = texture(tNoise, vWorld.xz / 26.0).b;
         float field2 = texture(tNoise, vWorld.xz / 17.0 + 0.43).a;
-        c = mix(c, c * vec3(1.13, 0.80, 1.10), smoothstep(0.52, 0.88, field) * 0.38);
-        c = mix(c, c * vec3(0.82, 1.06, 1.13), smoothstep(0.52, 0.88, field2) * 0.30);
+        c = mix(c, c * vec3(1.13, 0.80, 1.10), smoothstep(0.64, 0.74, field) * 0.42);
+        c = mix(c, c * vec3(0.82, 1.06, 1.13), smoothstep(0.64, 0.74, field2) * 0.34);
         float spk = texture(tNoise, vWorld.xz / 0.33).g;
         c *= 0.93 + 0.13 * spk;
         c *= 1.0 + step(0.93, spk) * 0.11 - step(spk, 0.06) * 0.11;
@@ -141,8 +145,8 @@ void makeDab(inout Dab d) {
   vec3 M = mix(vec3(0.36, 0.32, 0.50), vec3(0.30, 0.27, 0.44), check);
   vec3 S = vec3(0.10, 0.08, 0.17);
   vec3 c = paint3(L, M, S, lit, q.y);
-  float bandM = smoothstep(0.32, 0.0, abs(rad - 6.4) - 0.16);
-  float bandC = smoothstep(0.32, 0.0, abs(rad - 11.2) - 0.16);
+  float bandM = smoothstep(0.10, 0.0, abs(rad - 6.4) - 0.16);
+  float bandC = smoothstep(0.10, 0.0, abs(rad - 11.2) - 0.16);
   c = mix(c, paint3(vec3(1.06, 0.30, 0.78), vec3(0.85, 0.12, 0.58), S, lit, q.y), clamp(bandM, 0.0, 1.0) * 0.92);
   c = mix(c, paint3(vec3(0.28, 0.96, 1.06), vec3(0.08, 0.70, 0.86), S, lit, q.y), clamp(bandC, 0.0, 1.0) * 0.92);
   c = mix(c, paint3(vec3(0.88, 0.66, 0.46), vec3(0.66, 0.46, 0.32), S, lit, q.y), smoothstep(4.8, 3.2, rad)); // sunset-lit apron at the fountain
@@ -152,13 +156,13 @@ void makeDab(inout Dab d) {
     c = paint3(acc * 1.05, acc * 0.78, S, lit, q.y);
   }
   c = mix(c, c * vec3(0.85, 0.82, 0.9), smoothstep(19.0, 40.0, rad)); // duller past the plaza's edge
-  c = jitter(c, r.wzy, 0.6);
+  c = jitter(c, r.wzy, 0.35);
   vec2 radial = rad > 0.01 ? xz / rad : vec2(1.0, 0.0);
   d.dir = vec3(radial.x, 0.0, radial.y); // strokes run outward from the fountain, like spokes of the paving
   d.pos = P;
-  d.size = uCell0 * vec2(1.75 + 0.7 * r.z, 2.8 + 1.3 * r.w) * lod; // broad soft spray fields, wider than any dab: their mists overlap and the paving stops reading as separate marks
+  d.size = uCell0 * vec2(2.35 + 0.95 * r.z, 3.8 + 1.75 * r.w) * lod; // broad fill fields, wider than any dab: laid edge to edge they block the paving into piece-style colour fields
   d.c1 = hazed(c, P);
-  d.c2 = hazed(jitter(c * 1.14, q.wzy, 0.4), P);
+  d.c2 = hazed(jitter(c * 1.07, q.wzy, 0.22), P);
   d.seed = dot(cell, vec2(1.0, 57.0)) + sub * 0.37;
   d.turnabout = 1.0;
   d.lie = 1.0;
@@ -187,8 +191,8 @@ const kit = createKit(shared, {
   // the wildstyle palette: every shade mix drops to the same deep urban ink, so the lit faces
   // carry the colour and the turned faces fall to near-black violet — the inked look
   palettes: {
-    stone: { l: [0.55, 0.52, 0.67], m: [0.36, 0.34, 0.50], s: [0.13, 0.11, 0.23], own: [0.45, 0.43, 0.58] },
-    stonePale: { l: [0.68, 0.64, 0.80], m: [0.46, 0.43, 0.61], s: [0.18, 0.16, 0.30], own: [0.57, 0.54, 0.69] },
+    stone: { l: [0.50, 0.44, 0.78], m: [0.31, 0.26, 0.60], s: [0.10, 0.08, 0.24], own: [0.40, 0.35, 0.66] },
+    stonePale: { l: [0.66, 0.60, 0.88], m: [0.42, 0.37, 0.68], s: [0.14, 0.12, 0.30], own: [0.54, 0.49, 0.74] },
     cream: { l: [1.04, 0.72, 0.40], m: [0.86, 0.48, 0.28], s: [0.32, 0.16, 0.22], own: [0.92, 0.56, 0.32] },
     rose: { l: [1.02, 0.42, 0.74], m: [0.80, 0.22, 0.56], s: [0.29, 0.09, 0.29], own: [0.86, 0.30, 0.60] },
     timber: { l: [0.32, 0.22, 0.34], m: [0.20, 0.13, 0.24], s: [0.07, 0.05, 0.11], own: [0.26, 0.17, 0.26] },
@@ -405,50 +409,78 @@ sparkles.material.blending = THREE.AdditiveBlending;
 sparkles.material.alphaToCoverage = false;
 scene.add(sparkles);
 
-// --- drips: thin vertical runs down the two house fronts, laid over the walls' own paint the way
-//     a real run sits over the piece under it. They draw from their own brush sheet (createDripSheet:
-//     a head, a shaft, a bead at the bottom) swapped in through the material's uniforms, and each
-//     lies on its wall a touch proud of the kit's strokes. Tasteful count: nine, in the accents.
+// --- drips: hard liquid runs down the fountain drum and stem, the stall fronts and the two
+//     house fronts, laid over each surface's own paint the way a real run sits over the piece
+//     under it. They draw from their own brush sheet (createDripSheet: a head, a shaft, a bead
+//     at the bottom) swapped in through the material's uniforms, each drip carries the normal
+//     of the surface it runs down, and each lies a touch proud of the kit's strokes. V3 made
+//     them a feature, not a whisper: wider shafts, hard cover, and enough of them that the
+//     plaza's verticals all weep a little paint.
+const MAGENTA = [1.06, 0.30, 0.78], CYAN = [0.28, 0.96, 1.06], GOLD = [1.02, 0.88, 0.16], WHITE = [0.95, 0.93, 0.90];
 const DRIPS = [
-  // [x, topY, z, length, colour] — house A's front wall is the plane z = -10, house B's z = -10.75,
-  // and each drip hangs a whisper in front of its wall
-  [-10.9, 4.32, -9.982, 1.6, [1.06, 0.30, 0.78]],
-  [-8.3, 4.32, -9.982, 1.1, [0.28, 0.96, 1.06]],
-  [-4.15, 4.32, -9.982, 2.1, [0.95, 0.93, 0.90]],
-  [-5.6, 1.98, -9.982, 0.55, [1.02, 0.88, 0.16]],
-  [-6.6, 2.12, -9.982, 0.7, [1.06, 0.30, 0.78]],
-  [3.1, 3.72, -10.732, 1.4, [1.02, 0.88, 0.16]],
-  [5.0, 3.72, -10.732, 1.0, [1.06, 0.30, 0.78]],
-  [7.2, 3.72, -10.732, 1.9, [0.28, 0.96, 1.06]],
-  [8.8, 1.68, -10.732, 0.6, [0.95, 0.93, 0.90]],
+  // [x, topY, z, length, colour, nx, ny, nz] — house A's front wall is the plane z = -10,
+  // house B's z = -10.75, and each drip hangs a whisper in front of its wall
+  [-10.9, 4.32, -9.982, 1.6, MAGENTA, 0, 0, 1],
+  [-8.3, 4.32, -9.982, 1.1, CYAN, 0, 0, 1],
+  [-4.15, 4.32, -9.982, 2.1, WHITE, 0, 0, 1],
+  [-3.55, 4.32, -9.982, 1.7, CYAN, 0, 0, 1],
+  [-10.2, 4.32, -9.982, 0.85, GOLD, 0, 0, 1],
+  [-5.6, 1.98, -9.982, 0.55, GOLD, 0, 0, 1],
+  [-6.6, 2.12, -9.982, 0.7, MAGENTA, 0, 0, 1],
+  [-9.9, 1.95, -9.982, 0.9, MAGENTA, 0, 0, 1],
+  [-5.1, 1.95, -9.982, 0.7, WHITE, 0, 0, 1],
+  [3.1, 3.72, -10.732, 1.4, GOLD, 0, 0, 1],
+  [5.0, 3.72, -10.732, 1.0, MAGENTA, 0, 0, 1],
+  [7.2, 3.72, -10.732, 1.9, CYAN, 0, 0, 1],
+  [8.8, 1.68, -10.732, 0.6, WHITE, 0, 0, 1],
+  [3.9, 1.65, -10.732, 0.8, CYAN, 0, 0, 1],
+  [8.1, 1.65, -10.732, 0.65, MAGENTA, 0, 0, 1],
+  // the stall counters: the east stall's plaza face is x = 11.45 (normal -x), the west
+  // stall's is x = -11.45 (normal +x); runs start just under the counter top
+  [11.45, 1.06, -4.1, 0.62, CYAN, -1, 0, 0],
+  [11.45, 1.06, -3.0, 0.74, MAGENTA, -1, 0, 0],
+  [11.45, 1.06, -1.9, 0.5, GOLD, -1, 0, 0],
+  [-11.45, 1.06, 0.9, 0.7, MAGENTA, 1, 0, 0],
+  [-11.45, 1.06, 2.0, 0.55, CYAN, 1, 0, 0],
+  [-11.45, 1.06, 3.1, 0.66, WHITE, 1, 0, 0],
 ];
+// the fountain: runs starting under the rim (y 0.70) down the drum (r 2.6), and under the
+// top disc (y 1.52) down the stem (r 0.44) — each with its radial normal
+for (const [ang, len, c] of [
+  [-0.55, 0.60, MAGENTA], [0.12, 0.50, CYAN], [0.78, 0.62, WHITE], [1.42, 0.44, GOLD],
+  [2.15, 0.58, CYAN], [2.85, 0.48, MAGENTA], [-1.35, 0.54, GOLD], [-2.25, 0.60, CYAN],
+]) DRIPS.push([Math.sin(ang) * 2.6, 0.70, Math.cos(ang) * 2.6, len, c, Math.sin(ang), 0, Math.cos(ang)]);
+for (const [ang, len, c] of [
+  [0.35, 0.62, MAGENTA], [1.5, 0.5, WHITE], [2.75, 0.7, CYAN], [-0.95, 0.55, GOLD], [-2.1, 0.66, MAGENTA],
+]) DRIPS.push([Math.sin(ang) * 0.44, 1.52, Math.cos(ang) * 0.44, len, c, Math.sin(ang), 0, Math.cos(ang)]);
 {
-  const pos = [], col = [], dat = [];
-  for (const [x, top, z, len, c] of DRIPS) {
+  const pos = [], col = [], dat = [], nrm = [];
+  for (const [x, top, z, len, c, nx, ny, nz] of DRIPS) {
     pos.push(x, top - len / 2, z);
     col.push(...c);
     dat.push(len, Math.abs(x * 13.7 + z * 7.9));
+    nrm.push(nx, ny, nz);
   }
   const drips = dabMesh(dabGeometry(DRIPS.length, {
-    aPos: [new Float32Array(pos), 3], aCol: [new Float32Array(col), 3], aData: [new Float32Array(dat), 2],
+    aPos: [new Float32Array(pos), 3], aCol: [new Float32Array(col), 3], aData: [new Float32Array(dat), 2], aNrm: [new Float32Array(nrm), 3],
   }), dabMaterial(shared, {
-    head: /* glsl */ `in vec3 aPos; in vec3 aCol; in vec2 aData;`,
+    head: /* glsl */ `in vec3 aPos; in vec3 aCol; in vec2 aData; in vec3 aNrm;`,
     body: /* glsl */ `
       void makeDab(inout Dab d) {
         vec4 r = hash4(aData.y * 7.31 + 1.7);
         d.pos = aPos;
-        d.dir = vec3(0.0, -1.0, 0.0); // a run goes down the wall; the sheet's bead sits at +v, the bottom
-        d.size = vec2(0.05 + 0.035 * r.x, aData.x);
+        d.dir = vec3(0.0, -1.0, 0.0); // a run goes down its surface; the sheet's bead sits at +v, the bottom
+        d.size = vec2(0.12 + 0.06 * r.x, aData.x);
         d.c1 = aCol;
         d.c2 = aCol * 0.7;
         d.seed = aData.y;
         d.cell = floor(r.z * 7.99);
         d.lie = 1.0;
-        d.nrm = vec3(0.0, 0.0, 1.0);
-        d.height = 0.03; // over the wall's strokes, as a drip lies over paint
+        d.nrm = aNrm;
+        d.height = 0.03; // over the surface's strokes, as a drip lies over paint
       }`,
     uniforms: { tBrush: { value: createDripSheet() } },
-    minPx: [1.5, 3], maxPx: [90, 1400], cells: [0, 8],
+    minPx: [1.5, 3], maxPx: [110, 1400], cells: [0, 8],
   }), 4);
   scene.add(drips);
 }
